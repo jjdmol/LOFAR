@@ -24,6 +24,7 @@
 
 //## begin module%3C7B7F2F0248.includes preserve=yes
 #include "TID-PSCF.h"
+#include "DataRecord.h"
 //## end module%3C7B7F2F0248.includes
 
 // PSCFDebugContext
@@ -71,6 +72,33 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
                 	public BlockableObject  //## Inherits: <unnamed>%3C960F080308
 {
   //## begin Message%3C7B6A2D01F0.initialDeclarations preserve=yes
+  public:
+      // some predefined priority levels
+      // a priority<0 is considered "none"
+      static const int PRI_LOWEST  = 0,
+                       PRI_LOWER   = 0x10,
+                       PRI_LOW     = 0x20,
+                       PRI_NORMAL  = 0x100,
+                       PRI_HIGH    = 0x200,
+                       PRI_HIGHER  = 0x400,
+                       PRI_EVENT   = 0x800;
+                       
+      // message delivery/subscription scope
+      typedef enum {
+           GLOBAL        = 2,
+           HOST          = 1,
+           PROCESS       = 0,
+           LOCAL         = 0
+      } MessageScope;
+           
+      // message processing results (returned by WPInterface::receive(), etc.)
+      typedef enum {  
+        ACCEPT   = 0, // message processed, OK to remove from queue
+        HOLD     = 1, // hold the message (and block queue) until something else happens
+        REQUEUE  = 2, // requeue the message and try again
+        CANCEL   = 3  // for input()/timeout()/signal(), cancel the input or timeout
+      } MessageResults;
+           
   //## end Message%3C7B6A2D01F0.initialDeclarations
 
   public:
@@ -81,22 +109,22 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
 
     //## Constructors (specified)
       //## Operation: Message%3C8CB2CE00DC
-      explicit Message (const HIID &id1, short pri = 0);
+      explicit Message (const HIID &id1, int pri = PRI_NORMAL);
 
       //## Operation: Message%3C7B9C490384
-      Message (const HIID &id1, BlockableObject *pload, int flags = 0, int pri = 0);
+      Message (const HIID &id1, BlockableObject *pload, int flags = 0, int pri = PRI_NORMAL);
 
       //## Operation: Message%3C7B9D0A01FB
-      Message (const HIID &id1, ObjRef &pload, int flags = 0, int pri = 0);
+      Message (const HIID &id1, ObjRef &pload, int flags = 0, int pri = PRI_NORMAL);
 
       //## Operation: Message%3C7B9D3B02C3
-      Message (const HIID &id1, SmartBlock *bl, int flags = 0, int pri = 0);
+      Message (const HIID &id1, SmartBlock *bl, int flags = 0, int pri = PRI_NORMAL);
 
       //## Operation: Message%3C7B9D59014A
-      Message (const HIID &id1, BlockRef &bl, int flags = 0, int pri = 0);
+      Message (const HIID &id1, BlockRef &bl, int flags = 0, int pri = PRI_NORMAL);
 
       //## Operation: Message%3C7BB3BD0266
-      Message (const HIID &id1, const char *data, size_t sz, int pri = 0);
+      Message (const HIID &id1, const char *data, size_t sz, int pri = PRI_NORMAL);
 
     //## Destructor (generated)
       ~Message();
@@ -180,6 +208,10 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
       int state () const;
       void setState (int value);
 
+      //## Attribute: hops%3CC952D7039B
+      short hops () const;
+      void setHops (short value);
+
     //## Get and Set Operations for Associations (generated)
 
       //## Association: OCTOPUSSY::<unnamed>%3C7B70FF033D
@@ -205,55 +237,40 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
       //## Role: Message::block%3C7B97990388
       const BlockRef& block () const;
 
+      //## Association: OCTOPUSSY::<unnamed>%3CC9530802FB
+      //## Role: Message::forwarder%3CC9530903D9
+      const MsgAddress& forwarder () const;
+      void setForwarder (const MsgAddress& value);
+
     // Additional Public Declarations
       //## begin Message%3C7B6A2D01F0.public preserve=yes
       ObjRef& payload ();
       BlockRef& block ();
-      
+
+      short addHop ();
+            
       // explicit versions of [] for string IDs
+      NestableContainer::ConstHook operator [] (AtomicID id1) const
+      { return (*this)[HIID(id1)]; }
       NestableContainer::ConstHook operator [] (const string &id1) const
       { return (*this)[HIID(id1)]; }
       NestableContainer::ConstHook operator [] (const char *id1) const
+      { return (*this)[HIID(id1)]; }
+      NestableContainer::Hook operator [] (AtomicID id1) 
       { return (*this)[HIID(id1)]; }
       NestableContainer::Hook operator [] (const string &id1) 
       { return (*this)[HIID(id1)]; }
       NestableContainer::Hook operator [] (const char *id1) 
       { return (*this)[HIID(id1)]; }
       
-      // some predefined priority levels
-      // a priority<0 is considered "none"
-      static const int PRI_LOWEST  = 0,
-                       PRI_LOWER   = 0x10,
-                       PRI_LOW     = 0x20,
-                       PRI_NORMAL  = 0x100,
-                       PRI_HIGH    = 0x200,
-                       PRI_HIGHER  = 0x400,
-                       PRI_EVENT   = 0x800;
-      
       typedef CountedRef<Message> Ref;
       
-      typedef enum {  
-        ACCEPT   = 0, // message processed, OK to remove from queue
-        HOLD     = 1, // hold the message (and block queue) until something else happens
-        REQUEUE  = 2, // requeue the message and try again
-
-        CANCEL   = 3  // for input()/timeout()/signal(), cancel the input or timeout
-
-      } MessageResults;
-      
-      typedef enum {
-           GLOBAL        = 2,
-           HOST          = 1,
-           PROCESS       = 0,
-           LOCAL         = 0
-      } PublicationScope;
-           
-      typedef struct {
-        WPQueue *wpq;
-        int handle;
-        HIID id;
-        void *data;
-      } TimeoutData;
+//       typedef struct {
+//         WPQueue *wpq;
+//         int handle;
+//         HIID id;
+//         void *data;
+//       } TimeoutData;
       
       // This is a typical debug() method setup. The sdebug()
       // method creates a debug info string at the given level of detail.
@@ -294,6 +311,10 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
       int state_;
       //## end Message::state%3C7E33F40330.attr
 
+      //## begin Message::hops%3CC952D7039B.attr preserve=no  public: short {U} 
+      short hops_;
+      //## end Message::hops%3CC952D7039B.attr
+
     // Data Members for Associations
 
       //## Association: OCTOPUSSY::<unnamed>%3C7B70FF033D
@@ -321,12 +342,19 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
       BlockRef block_;
       //## end Message::block%3C7B97990388.role
 
+      //## Association: OCTOPUSSY::<unnamed>%3CC9530802FB
+      //## begin Message::forwarder%3CC9530903D9.role preserve=no  public: MsgAddress { -> 1VHgN}
+      MsgAddress forwarder_;
+      //## end Message::forwarder%3CC9530903D9.role
+
     // Additional Implementation Declarations
       //## begin Message%3C7B6A2D01F0.implementation preserve=yes
       typedef struct {  int priority,state,idsize,fromsize,tosize;
+                        short hops;
                         bool has_block;
                         TypeId payload_type; 
                      }  HeaderBlock;
+                     
       //## end Message%3C7B6A2D01F0.implementation
 };
 
@@ -353,11 +381,11 @@ typedef Message::Ref MessageRef;
 
 // Class Message 
 
-inline Message::Message (const HIID &id1, short pri)
+inline Message::Message (const HIID &id1, int pri)
   //## begin Message::Message%3C8CB2CE00DC.hasinit preserve=no
   //## end Message::Message%3C8CB2CE00DC.hasinit
   //## begin Message::Message%3C8CB2CE00DC.initialization preserve=yes
-   : priority_(pri),state_(0),id_(id1)
+   : priority_(pri),state_(0),hops_(0),id_(id1)
   //## end Message::Message%3C8CB2CE00DC.initialization
 {
   //## begin Message::Message%3C8CB2CE00DC.body preserve=yes
@@ -370,7 +398,10 @@ inline Message::Message (const HIID &id1, short pri)
 inline NestableContainer::Hook Message::operator [] (const HIID &id)
 {
   //## begin Message::operator []%3C7F56ED007D.body preserve=yes
-  FailWhen( !payload_.valid() || !payload_->isNestable(),"payload is not a container" ); 
+  if( payload_.valid() )
+  { FailWhen( !payload_->isNestable(),"payload is not a container" ); }
+  else
+    payload_.attach(new DataRecord,DMI::ANON|DMI::WRITE|DMI::PERSIST);
   return (*static_cast<NestableContainer*>(
       const_cast<BlockableObject*>(&payload_.deref())))[id];
   //## end Message::operator []%3C7F56ED007D.body
@@ -379,7 +410,11 @@ inline NestableContainer::Hook Message::operator [] (const HIID &id)
 inline NestableContainer::Hook Message::operator [] (int n)
 {
   //## begin Message::operator []%3C7E4C310348.body preserve=yes
-  FailWhen( !payload_.valid() || !payload_->isNestable(),"payload is not a container" ); 
+  if( payload_.valid() )
+  { FailWhen( !payload_->isNestable(),"payload is not a container" ); }
+  else
+    payload_.attach(new DataRecord,DMI::ANON|DMI::WRITE|DMI::PERSIST);
+  
   return (*static_cast<NestableContainer*>(
       const_cast<BlockableObject*>(&payload_.deref())))[n];
   //## end Message::operator []%3C7E4C310348.body
@@ -459,6 +494,20 @@ inline void Message::setState (int value)
   //## end Message::setState%3C7E33F40330.set
 }
 
+inline short Message::hops () const
+{
+  //## begin Message::hops%3CC952D7039B.get preserve=no
+  return hops_;
+  //## end Message::hops%3CC952D7039B.get
+}
+
+inline void Message::setHops (short value)
+{
+  //## begin Message::setHops%3CC952D7039B.set preserve=no
+  hops_ = value;
+  //## end Message::setHops%3CC952D7039B.set
+}
+
 //## Get and Set Operations for Associations (inline)
 
 inline const MsgAddress& Message::to () const
@@ -517,6 +566,20 @@ inline const BlockRef& Message::block () const
   //## end Message::block%3C7B97990388.get
 }
 
+inline const MsgAddress& Message::forwarder () const
+{
+  //## begin Message::forwarder%3CC9530903D9.get preserve=no
+  return forwarder_;
+  //## end Message::forwarder%3CC9530903D9.get
+}
+
+inline void Message::setForwarder (const MsgAddress& value)
+{
+  //## begin Message::setForwarder%3CC9530903D9.set preserve=no
+  forwarder_ = value;
+  //## end Message::setForwarder%3CC9530903D9.set
+}
+
 //## begin module%3C7B7F2F0248.epilog preserve=yes
 inline ObjRef& Message::payload () 
 {
@@ -528,6 +591,10 @@ inline BlockRef& Message::block ()
   return block_;
 }
 
+inline short Message::addHop ()                               
+{ 
+  return ++hops_; 
+}
 //## end module%3C7B7F2F0248.epilog
 
 

@@ -27,6 +27,7 @@
 //#include <sys/types.h>
 #include <resolv.h>
 #include <errno.h>
+#include <sys/un.h>
 //#include <netinet/in.h>
 //#include <netdb.h>
 //#include <fcntl.h>
@@ -55,7 +56,7 @@
 class Socket 
 {
   //## begin Socket%3C90CE58024E.initialDeclarations preserve=yes
-  LocalDebugContext(public);
+  LocalDebugSubContext(public);
   //## end Socket%3C90CE58024E.initialDeclarations
 
   public:
@@ -135,6 +136,12 @@ class Socket
       //## Attribute: connected%3C90CE59009B
       bool isConnected () const;
 
+      //## Attribute: host%3CC00CDC00EA
+      const string& host () const;
+
+      //## Attribute: port%3CC00CE902E8
+      const string& port () const;
+
     // Data Members for Class Attributes
 
       //## Attribute: sigpipe_counter%3C90CE5803B3
@@ -144,7 +151,12 @@ class Socket
 
     // Additional Public Declarations
       //## begin Socket%3C90CE58024E.public preserve=yes
-      typedef enum { UDP,TCP } Protocols;
+      typedef enum { 
+          UDP,         // UDP datagram socket
+          TCP,         // TCP (stream) socket over network
+          UNIX,        // unix socket (local)
+          LOCAL=UNIX 
+      } SocketTypes;
       typedef enum {
           SK_OK         =  0,   // Ok
           SOCKET        = -1,   // Can't create socket
@@ -168,6 +180,9 @@ class Socket
           SHUTDOWN      = -19,  // shutdown() failure
           NOINIT        = -20   // uninitialized socket
       } ErrorCodes;
+
+      // helper function: prints formatted data from buffer
+      static void printData (const void *buf,int n);
       
       Declare_sdebug( );
       Declare_debug( );
@@ -177,7 +192,10 @@ class Socket
       //## Operation: Socket%4760B82BFEED; C++
       //	Constructs a generic socket for an incoming connection on a server
       //	socket.
-      Socket (int id, struct sockaddr* sa);
+      Socket (int id, struct sockaddr_in &sa);
+
+      //## Operation: Socket%3CC95D6E032A
+      Socket (int id, struct sockaddr_un &sa);
 
 
     //## Other Operations (specified)
@@ -231,6 +249,14 @@ class Socket
       bool connected;
       //## end Socket::connected%3C90CE59009B.attr
 
+      //## begin Socket::host%3CC00CDC00EA.attr preserve=no  public: string {U} 
+      string host_;
+      //## end Socket::host%3CC00CDC00EA.attr
+
+      //## begin Socket::port%3CC00CE902E8.attr preserve=no  public: string {U} 
+      string port_;
+      //## end Socket::port%3CC00CE902E8.attr
+
       //## Attribute: sbuflen%3C90CE59009C
       //## begin Socket::sbuflen%3C90CE59009C.attr preserve=no  protected: int {V} 
       int sbuflen;
@@ -243,7 +269,9 @@ class Socket
 
     // Additional Implementation Declarations
       //## begin Socket%3C90CE58024E.implementation preserve=yes
-      struct sockaddr_in rmt_addr; // connected client address
+      bool bound;
+      struct sockaddr_in rmt_addr;  // connected client address (TCP)
+      struct sockaddr_un unix_addr; // connected client address (UNIX)
       //## end Socket%3C90CE58024E.implementation
 };
 
@@ -317,6 +345,20 @@ inline bool Socket::isConnected () const
   //## begin Socket::isConnected%3C90CE59009B.get preserve=no
   return connected;
   //## end Socket::isConnected%3C90CE59009B.get
+}
+
+inline const string& Socket::host () const
+{
+  //## begin Socket::host%3CC00CDC00EA.get preserve=no
+  return host_;
+  //## end Socket::host%3CC00CDC00EA.get
+}
+
+inline const string& Socket::port () const
+{
+  //## begin Socket::port%3CC00CE902E8.get preserve=no
+  return port_;
+  //## end Socket::port%3CC00CE902E8.get
 }
 
 //## begin module%3C90D43B0094.epilog preserve=yes

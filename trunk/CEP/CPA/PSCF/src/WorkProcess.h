@@ -33,7 +33,7 @@
 //## end module%3C7B7F3000C3.declarations
 
 //## begin module%3C7B7F3000C3.additionalDeclarations preserve=yes
-#pragma aid /MsgLog /LogNormal /LogWarning /LogError /LogDebug
+#pragma aid /MsgLog /LogNormal /LogWarning /LogError /LogFatal /LogDebug
 //## end module%3C7B7F3000C3.additionalDeclarations
 
 

@@ -37,12 +37,15 @@
 #include "PSCFDebugContext.h"
 // Message
 #include "Message.h"
+// DataRecord
+#include "DataRecord.h"
 
 
 //## begin module%3C7B7F300041.declarations preserve=no
 //## end module%3C7B7F300041.declarations
 
 //## begin module%3C7B7F300041.additionalDeclarations preserve=yes
+#pragma aid Argv
 
 // Event flags
 const int EV_CONT = 0,      // continuous event (keeps firing until removed)
@@ -84,6 +87,9 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
 {
   //## begin Dispatcher%3C7B6A3E00A0.initialDeclarations preserve=yes
   public:
+      Debug::SubContext DebugContext; 
+      ::Debug::Context & getDebugContext() { return DebugContext; };
+      
       // iterator type (for iterate(), below)
       typedef map<WPID,WPRef>::const_iterator WPIter;
   //## end Dispatcher%3C7B6A3E00A0.initialDeclarations
@@ -141,9 +147,6 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       //## Operation: stopPolling%3CA09EB503C1
       void stopPolling ();
 
-      //## Operation: setWPPolling%3CB55CE00220
-      void setWPPolling (WPInterface* pwp, bool enable);
-
       //## Operation: addTimeout%3C7D28C30061
       void addTimeout (WPInterface* pwp, const Timestamp &period, const HIID &id, int flags, int priority);
 
@@ -181,6 +184,18 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       //## Operation: getOption%3CA0341E03A6
       bool getOption (const string &name, int &out);
 
+      //## Operation: addLocalData%3CBEDDD8001A
+      void addLocalData (const HIID &id, ObjRef ref);
+
+      //## Operation: addLocalData%3CBEE41702F4
+      DataField & addLocalData (const HIID &id);
+
+      //## Operation: localData%3CC405480057
+      NestableContainer::Hook localData (const HIID &id);
+
+      //## Operation: hasLocalData%3CC00549020D
+      bool hasLocalData (const HIID &id);
+
     //## Get and Set Operations for Class Attributes (generated)
 
       //## Attribute: address%3C7CD390002C
@@ -191,6 +206,12 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
 
       //## Attribute: tick%3CA1A2B70107
       ulong getTick () const;
+
+    //## Get and Set Operations for Associations (generated)
+
+      //## Association: OCTOPUSSY::<unnamed>%3CBEDD600298
+      //## Role: Dispatcher::localData%3CBEDD61016D
+      const DataRecord& localData () const;
 
     // Additional Public Declarations
       //## begin Dispatcher%3C7B6A3E00A0.public preserve=yes
@@ -357,6 +378,11 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       map<WPID,WPInterface*> gateways;
       //## end Dispatcher::gateways%3C907A5D01E6.role
 
+      //## Association: OCTOPUSSY::<unnamed>%3CBEDD600298
+      //## begin Dispatcher::localData%3CBEDD61016D.role preserve=no  public: DataRecord { -> 1VHgN}
+      DataRecord localData_;
+      //## end Dispatcher::localData%3CBEDD61016D.role
+
     // Additional Implementation Declarations
       //## begin Dispatcher%3C7B6A3E00A0.implementation preserve=yes
       typedef map<WPID,WPRef>::iterator WPI;
@@ -408,6 +434,15 @@ inline ulong Dispatcher::getTick () const
   //## begin Dispatcher::getTick%3CA1A2B70107.get preserve=no
   return tick;
   //## end Dispatcher::getTick%3CA1A2B70107.get
+}
+
+//## Get and Set Operations for Associations (inline)
+
+inline const DataRecord& Dispatcher::localData () const
+{
+  //## begin Dispatcher::localData%3CBEDD61016D.get preserve=no
+  return localData_;
+  //## end Dispatcher::localData%3CBEDD61016D.get
 }
 
 //## begin module%3C7B7F300041.epilog preserve=yes

@@ -69,10 +69,17 @@ void LoggerWP::init ()
   dsp()->getOption("logfile",filename_);
   
   int lev;
-  if( dsp()->getOption("loglev",lev) )
-    level_ = lev;
-  if( dsp()->getOption("logcon",lev) )
-    consoleLevel_ = lev;
+  if( dsp()->getOption("-lc",lev) )
+  {
+    level_ = consoleLevel_ = lev;
+  }
+  else
+  {
+    if( dsp()->getOption("loglev",lev) )
+      level_ = lev;
+    if( dsp()->getOption("logcon",lev) )
+      consoleLevel_ = lev;
+  }
   if( dsp()->getOption("logscope",lev) )
     scope_ = lev;
   
@@ -116,7 +123,7 @@ void LoggerWP::init ()
   dprintf(0)("opened log file %s\n",filename_.c_str());
   
   // write header record
-  string hdr = Debug::ssprintf("%s: logger started, level=%d, scope=%d",
+  string hdr = Debug::ssprintf("%s|logger started, level=%d, scope=%d",
               Timestamp::now().toString("%d/%m/%y").c_str(),level_,scope_);
   struct stat st;
   if( !fstat(fd,&st) && st.st_size > 0 )
@@ -128,6 +135,19 @@ void LoggerWP::init ()
 void LoggerWP::stop ()
 {
   //## begin LoggerWP::stop%3CA05A7E01CE.body preserve=yes
+  logMessage(address().toString(),"processing remaining messages",0,LogNormal);
+  MessageRef mref;
+  for(;;)
+  {
+    dequeue(MsgLog|AidWildcard,&mref);
+    if( mref.valid() )
+    {
+      receive(mref);
+      mref.detach();
+    }
+    else
+      break;
+  }
   logMessage(address().toString(),"logger stopped",0,LogNormal);
   if( fd >= 0 )
     close(fd);
@@ -139,7 +159,8 @@ int LoggerWP::receive (MessageRef &mref)
 {
   //## begin LoggerWP::receive%3CA0450C0103.body preserve=yes
   const Message &msg = mref.deref();
-  if( msg.id()[0] == MsgLog )
+  // process Log messages, but ignore from myself
+  if( msg.id()[0] == MsgLog && msg.from() != address() )
   {
     int idlen = msg.id().size();
     AtomicID type = idlen>1 ? msg.id()[1] : LogNormal;
@@ -177,13 +198,13 @@ void LoggerWP::logMessage (const string &source, const string &msg, int level, A
     ts = ts.substr(3);
   
   // form full output record
-  out =  Timestamp::now().toString("%H:%M:%S ") + 
-         source + " " + ts + Debug::ssprintf("/%d ",level) +
+  out =  Timestamp::now().toString("%T|") + 
+         source + "|" + ts + Debug::ssprintf("|%d|",level) +
          ( out.length() ? out : string("{null message}") ) + "\n";
 
   // log to console
   if( level <= consoleLevel() )
-    cerr<<"LOG:"<<out;
+    cerr<<">>>"<<out;
 
   // log to file
   if( fd < 0 )

@@ -26,12 +26,12 @@
 #include <list>
 //## end module%3C95AADB016E.includes
 
-// Socket
-#include "Socket.h"
 // GatewayWP
 #include "GatewayWP.h"
 // WorkProcess
 #include "WorkProcess.h"
+// Socket
+#include "Socket.h"
 //## begin module%3C95AADB016E.declarations preserve=no
 //## end module%3C95AADB016E.declarations
 
@@ -58,22 +58,23 @@ class GWClientWP : public WorkProcess  //## Inherits: <unnamed>%3C95A941009C
 {
   //## begin GWClientWP%3C95A941002E.initialDeclarations preserve=yes
   public:
-      typedef struct { string    host,port;
+      typedef struct { string    host;
+                       int       port;
+                       int       type;
                        Socket   *sock;
                        int       state; 
-                       Timestamp retry,fail;
+                       Timestamp retry,fail,give_up;
+                       bool      reported_failure;
       // When we spawn a child gateway, we watch for its bye message
       // to know when to start connecting again. This holds its address.
                        MsgAddress gw;
-      // Address of remote peer, initialized once we have discovered it.
-                       MsgAddress remote_peer;
               } Connection;
   //## end GWClientWP%3C95A941002E.initialDeclarations
 
   public:
     //## Constructors (specified)
       //## Operation: GWClientWP%3C95A9410081
-      GWClientWP (const vector<string> &connlist);
+      GWClientWP (const string &host = string(), int port = 0, int type = Socket::TCP);
 
     //## Destructor (generated)
       ~GWClientWP();
@@ -95,12 +96,6 @@ class GWClientWP : public WorkProcess  //## Inherits: <unnamed>%3C95A941009C
       //## Operation: receive%3C95A9410095
       int receive (MessageRef& mref);
 
-      //## Operation: find%3CA1C0030307
-      GWClientWP::Connection * find (const string &host, const string &port);
-
-      //## Operation: find%3CA1C52E0108
-      GWClientWP::Connection * find (const MsgAddress &gw);
-
     // Additional Public Declarations
       //## begin GWClientWP%3C95A941002E.public preserve=yes
       typedef enum { STOPPED=0,WAITING=1,CONNECTING=2,CONNECTED=3 } States;
@@ -108,11 +103,22 @@ class GWClientWP : public WorkProcess  //## Inherits: <unnamed>%3C95A941009C
   protected:
     // Additional Protected Declarations
       //## begin GWClientWP%3C95A941002E.protected preserve=yes
+      // maintain connection list
+      Connection &  addConnection    (const string &host,int port,int type);
+      bool          removeConnection (const string &host,int port);
+      GWClientWP::Connection * find (const string &host, const string &port);
+      GWClientWP::Connection * find (const MsgAddress &gw);
+      
+      // begins connecting
+      void activate ();
       // tries to open and connect the socket
       void tryConnect ( Connection &cx );
+      
       Timestamp now;
       bool reconnect_timeout_set;
-       
+      
+      ObjRef peerref;
+      DataRecord & peerlist;
       //## end GWClientWP%3C95A941002E.protected
   private:
     //## Constructors (generated)
@@ -128,6 +134,13 @@ class GWClientWP : public WorkProcess  //## Inherits: <unnamed>%3C95A941009C
       //## end GWClientWP%3C95A941002E.private
 
   private: //## implementation
+    // Data Members for Class Attributes
+
+      //## Attribute: hostname%3CC951FA0127
+      //## begin GWClientWP::hostname%3CC951FA0127.attr preserve=no  private: string {U} 
+      string hostname;
+      //## end GWClientWP::hostname%3CC951FA0127.attr
+
     // Data Members for Associations
 
       //## Association: OCTOPUSSY::<unnamed>%3C95A941009D

@@ -18,6 +18,7 @@
 //## end module%3C90BFDD0240.additionalIncludes
 
 //## begin module%3C90BFDD0240.includes preserve=yes
+#include "Gateways.h"
 //## end module%3C90BFDD0240.includes
 
 // GatewayWP
@@ -26,6 +27,7 @@
 //## end module%3C90BFDD0240.declarations
 
 //## begin module%3C90BFDD0240.additionalDeclarations preserve=yes
+
 // all packet headers must start with this signature
 static const char PacketSignature[] = "oMs";
 
@@ -49,6 +51,8 @@ GatewayWP::GatewayWP (Socket* sk)
   memcpy(wr_header.signature,PacketSignature,sizeof(wr_header.signature));
   setState(0);
   setPeerState(INITIALIZING);
+  peerlist = 0;
+  rprocess = rhost = 0;
   //## end GatewayWP::GatewayWP%3C95C53D00AE.body
 }
 
@@ -64,10 +68,25 @@ GatewayWP::~GatewayWP()
 
 
 //## Other Operations (implementation)
+void GatewayWP::init ()
+{
+  //## begin GatewayWP::init%3CC9500602CC.body preserve=yes
+   // subscribe to local subscribe notifications and Bye messages
+  // (they will be forwarded to peer as-is)
+  subscribe(MsgSubscribe|AidWildcard,Message::LOCAL);
+  subscribe(MsgBye|AidWildcard,Message::LOCAL);
+  //## end GatewayWP::init%3CC9500602CC.body
+}
+
 bool GatewayWP::start ()
 {
   //## begin GatewayWP::start%3C90BF460080.body preserve=yes
   WorkProcess::start();
+  // this must exist by now (client GWs are always started!)
+  ObjRef plref = dsp()->localData(GWPeerList)[0].ref(DMI::WRITE);
+  peerlist = dynamic_cast<DataRecord*>(plref.dewr_p());
+  FailWhen(!peerlist,"Local peer-list does not seem to be a DataRecord");
+  
   // handle & ignore SIGURG -- out-of-band data on socket. 
   // addInput() will catch an exception on the fd anyway
   addSignal(SIGURG,EV_IGNORE);
@@ -82,11 +101,13 @@ bool GatewayWP::start ()
   const WPInterface *pwp;
   
   while( dsp()->getWPIter(iter,id,pwp) )
+  {
     if( id.wpclass() != AidGatewayWP ) // ignore gateway WPs
     {
       nwp++;
       datasize += pwp->getSubscriptions().packSize() + pwp->address().packSize();
     }
+  }
   size_t hdrsize = (1+2*nwp)*sizeof(size_t);
   // form block containing addresses and subscriptions
   SmartBlock *block = new SmartBlock(hdrsize+datasize);
@@ -107,12 +128,8 @@ bool GatewayWP::start ()
   // put this block into a message and send it to peer
   MessageRef msg(new Message(AidSubscriptions,blockref),DMI::ANON|DMI::WRITE);
   msg().setFrom(address());
+  msg()[AidPeers] = plref.copy(DMI::READONLY);
   prepareMessage(msg);
-  
-  // subscribe to local subscribe notifications and Bye messages
-  // (they will be forwarded to peer as-is)
-  subscribe(AidSubscribe,Message::LOCAL);
-  subscribe(AidBye,Message::LOCAL);
   
   // init timeouts
   addTimeout(to_init,AidInit,EV_ONESHOT);
@@ -151,11 +168,30 @@ bool GatewayWP::willForward (const Message &msg) const
   // We're doing a simple everybody-connects-to-everybody topology.
   // This determines the logic below:
   dprintf(3)("willForward(%s)",msg.sdebug(1).c_str());
-  // Only forward messages of local origin (this avoids loops)
-  if( msg.from().process() != address().process() ||
-      msg.from().host() != address().host() )
+  // Normally, messages will only be forwarded once (i.e, only
+  // when hopcount=0).
+  // GwServerBound are the exception: they're forwarded up to three times.
+  // This insures that when, e.g, the following link ("=") is established:
+  //    A1\       /B1
+  //       A0 = B0
+  //    A2/       \B2
+  // ... A1/A2/B1/B2 can quickly learn about each other's server ports.
+  if( msg.id().matches(MsgGWServerOpen|AidWildcard) )
   {
-    dprintf(3)("no, non-local origin\n");
+    if( msg.forwarder() == address() )
+    {
+      dprintf(3)("no, we were the forwarder\n");
+      return False;
+    }
+    if( msg.hops() > 3 )
+    {
+      dprintf(3)("no, hopcount = %d\n",msg.hops() );
+      return False;
+    }
+  }
+  else if( msg.hops() > 0 )
+  {
+    dprintf(3)("no, non-local origin, hopcount = %d\n",msg.hops() );
     return False;
   }
   // Check that to-scope of message matches remote 
@@ -195,12 +231,20 @@ bool GatewayWP::willForward (const Message &msg) const
 int GatewayWP::receive (MessageRef& mref)
 {
   //## begin GatewayWP::receive%3C90BF63005A.body preserve=yes
-  // ignore all messages from other gateways,
-  // and any messages out of the remote's scope
-  if( mref->from().wpclass() == AidGatewayWP ||
-      !rprocess.matches(mref->to().process()) ||
+  // ignore any messages out of the remote's scope
+  if( !rprocess.matches(mref->to().process()) ||
       !rhost.matches(mref->to().host()) )
+  {
+    dprintf(3)("ignoring [%s]: does not match remote process/host\n",mref->sdebug(1).c_str());
     return Message::ACCEPT;
+  }
+  // ignore any messages from GatewayWPs, with the exception of Remote.Up
+  if( mref->from().wpclass() == AidGatewayWP &&
+      !mref->id().matches(MsgGWRemoteUp) )
+  {
+    dprintf(3)("ignoring [%s]: from a gateway\n",mref->sdebug(1).c_str());
+    return Message::ACCEPT;
+  }
   // hold off while still initializing the connection
   if( peerState() == INITIALIZING )
     return Message::HOLD;
@@ -218,6 +262,7 @@ int GatewayWP::receive (MessageRef& mref)
   else // no, write state is idle, so start sending
   {
     prepareMessage(mref);
+    dprintf(5)("enabling write input on socket\n");
     addInput(sock->getSid(),EV_FDWRITE);  // enable write input
     Timestamp::now(&last_write_to);
   }
@@ -249,7 +294,7 @@ int GatewayWP::timeout (const HIID &id)
     if( (statmon.counter++)%4 == 0 )
     {
       double now = Timestamp::now(), d = now - statmon.ts;
-      lprintf(1,"%.2f seconds elapsed since last stats report\n"
+      lprintf(3,"%.2f seconds elapsed since last stats report\n"
                  "read %llu bytes (%.3f MB/s)\n"
                  "wrote %llu bytes (%.3f MB/s)\n",
                  d,statmon.read,statmon.read/(1024*1024*d),
@@ -276,45 +321,65 @@ int GatewayWP::input (int fd, int flags)
     
   }
   // then handle writing
-  if( flags&EV_FDWRITE )
+  while( flags&EV_FDWRITE )
   {
     // write is idle? disable the write input
     if( writeState() == IDLE )
     {
+      dprintf(5)("write state is IDLE, removing input\n");
       removeInput(fd,EV_FDWRITE);
-      return input(fd,flags&~EV_FDWRITE);    // call us again
+      flags &= ~EV_FDWRITE;    
+      continue;   // call us again
     }
     // write data from current block
-    int n = sock->write(write_buf + nwritten,write_buf_size - nwritten);
-    if( n < 0 )
+    while( nwritten < write_buf_size )
     {
-      // on write error, just commit harakiri. GWClient/ServerWP will
-      // take care of reopening a connection, eventually
-      lprintf(1,"error: socket write(): %s. Aborting.\n",sock->errstr().c_str());
-      shutdown();
-      return Message::CANCEL; 
+      int n = sock->write(write_buf + nwritten,write_buf_size - nwritten);
+      dprintf(5)("write(buf+%d,%d)=%d\n",nwritten,write_buf_size-nwritten,n);
+      if( n < 0 )
+      {
+        // on write error, just commit harakiri. GWClient/ServerWP will
+        // take care of reopening a connection, eventually
+        lprintf(1,"error: socket write(): %s. Aborting.\n",sock->errstr().c_str());
+        shutdown();
+        return Message::CANCEL; 
+      }
+      else if( n == 0 ) // nothing written at all, so clear the write bit
+      {
+        flags &= ~EV_FDWRITE;
+        break;
+      }
+      else 
+      {
+        statmon.written += n;
+        last_write_to = Timestamp::now(&last_write);
+        // update checksum and advance the nread pointer
+        #if GATEWAY_CHECKSUM
+        for( ; n>0; n--,nwritten++ )
+          write_checksum += write_buf[nwritten];
+        #else
+        nwritten += n;
+        #endif
+      }
     }
-    else if( n > 0 )
-    {
-      statmon.written += n;
-      last_write_to = Timestamp::now(&last_write);
-    }
-    else // nothing written at all, so clear the write bit
-      flags &= ~EV_FDWRITE;  
-    // update checksum and advance the nread pointer
-    for( ; n>0; n--,nwritten++ )
-      write_checksum += write_buf[nwritten];
-    // if buffer incomplete, then try it again
+    // in case we broke out of the loop
     if( nwritten < write_buf_size )
-      return input(fd,flags);    
-    nwritten = 0;
+      break;
     // chunk written, advance to next one?
     if( writeState() == HEADER ) 
     {
       if( !write_queue.size() ) // were sending header but queue is empty
       {
+        // if GW is being closed, detach now
+        if( peerState() == CLOSING )
+        {
+          lprintf(2,LogError,"write finished, shutting down");
+          detachMyself();
+          return Message::ACCEPT;
+        }
         // make sure we haven't been sending a data header
         FailWhen(wr_header.type == MT_DATA,"write queue empty after data header");
+        dprintf(5)("wrote lone header, now IDLE\n");
         setWriteState( IDLE );
       }
       else // were sending header and queue is not empty, must be data header then
@@ -329,57 +394,73 @@ int GatewayWP::input (int fd, int flags)
     }
     else if( writeState() == TRAILER ) 
     {
-      if( write_queue.size() ) // something else in queue? send next header
+      // if GW is being closed, detach now
+      if( peerState() == CLOSING )
+      {
+        lprintf(2,LogError,"write finished, shutting down");
+        detachMyself();
+        return Message::ACCEPT;
+      }
+      // something else in queue? send next header
+      if( write_queue.size() ) 
         prepareHeader();
       else
+      {
+        dprintf(5)("nothing else in write queue, now IDLE\n");
         setWriteState( IDLE );
+      }
     }
     // have we changed state to IDLE? 
     if( writeState() == IDLE )
     {
       if( pending_msg.valid() )        // send pending message, if any
         prepareMessage(pending_msg);
-      else                    
-      {
-        // else disable the write input
-        removeInput(fd,EV_FDWRITE);
-        flags &= ~EV_FDWRITE;
-      }
     }
   }
   // now handle reading
-  if( flags&EV_FDREAD )
+  while( flags&EV_FDREAD )
   {
     // read up to full buffer
-    int n = sock->read(read_buf + nread,read_buf_size - nread);
-    if( n < 0 )
+    while( nread < read_buf_size )
     {
-      // on read error, just commit harakiri. GWClient/ServerWP will
-      // take care of reopening a connection, eventually
-      lprintf(1,"error: socket read(): %s. Aborting.\n",sock->errstr().c_str());
-      shutdown();
-      return Message::CANCEL; 
+      int n = sock->read(read_buf + nread,read_buf_size - nread);
+      dprintf(5)("read(buf+%d,%d)=%d\n",nread,read_buf_size-nread,n);
+      if( n < 0 )
+      {
+        // on read error, just commit harakiri. GWClient/ServerWP will
+        // take care of reopening a connection, eventually
+        lprintf(1,"error: socket read(): %s. Aborting.\n",sock->errstr().c_str());
+        shutdown();
+        return Message::CANCEL; 
+      }
+      else if( n == 0 ) // nothing read at all, so clear the read bit
+      {
+        flags &= ~EV_FDREAD;
+        break;
+      }
+      else // read something
+      {
+        statmon.read += n;
+        Timestamp::now(&last_read);
+        // update checksum and advance the nread pointer
+        #if GATEWAY_CHECKSUM
+        for( ; n>0; n--,nread++ )
+          read_checksum += read_buf[nread];
+        #else
+        nread += n;
+        #endif
+      }
     }
-    else if( n > 0 )
-    {
-      statmon.read += n;
-      Timestamp::now(&last_read);
-    }
-    else // nothing read at all, so clear the read bit
-      flags &= ~EV_FDREAD;
-    // update checksum and advance the nread pointer
-    for( ; n>0; n--,nread++ )
-      read_checksum += read_buf[nread];
-    // if buffer incomplete, then try again
+    // in case we broke out of the loop
     if( nread < read_buf_size )
-      return input(fd,flags);     
-    nread = 0;
-    // else we have a complete buffer, so dispose of it according to mode
+      break;
+    // since we got here, we have a complete buffer, so dispose of it according to mode
     if( readState() == HEADER ) // got a packet header?
     {
       if( memcmp(header.signature,PacketSignature,sizeof(header.signature)) ||
           header.type > MT_MAXTYPE )
       {
+        dprintf(5)("header does not start with signature\n");
         // invalid header -- flush it
         if( !read_junk )
         {
@@ -390,6 +471,7 @@ int GatewayWP::input (int fd, int flags)
         void *pos = memchr(&header,PacketSignature[0],sizeof(header));
         if( !pos ) // not found? flush everything
         {
+          dprintf(5)("no signature found, flushing everything\n");
           nread = 0;
           read_junk += sizeof(header);
         }
@@ -399,6 +481,7 @@ int GatewayWP::input (int fd, int flags)
           nread = sizeof(header) - njunk;
           read_junk += njunk;
           memmove(&header,pos,nread);
+          dprintf(5)("signature found, flushing %d junk bytes\n",njunk);
         }
         // retry
         return input(fd,flags);
@@ -413,15 +496,18 @@ int GatewayWP::input (int fd, int flags)
       switch( header.type )
       {
         case MT_PING: 
+            dprintf(5)("PING packet, ignoring\n");
             break; // ignore ping message
-        
+
         case MT_DATA:       // data block coming up
             readyForData(header); // sets buffers and read states accordingly
             break;
-            
+
         case MT_ACK:         // acknowledgement of data message
+            dprintf(5)("ACK packet, ignoring\n");
             // to do later
         case MT_RETRY:       // retry data message
+            dprintf(5)("RETRY packet, ignoring\n");
             // to do later
             break;
         default:
@@ -437,7 +523,9 @@ int GatewayWP::input (int fd, int flags)
     {
       // to do: check sequence number
       // verify checksum
+      #if GATEWAY_CHECKSUM
       if( incoming_checksum == trailer.checksum )
+      #endif
       {
         dprintf(4)("received block #%d of size %d, checksum OK\n",
             trailer.seq,read_bset.back()->size());
@@ -457,21 +545,18 @@ int GatewayWP::input (int fd, int flags)
         // expect header next
         readyForHeader(); // sets buffers and read states accordingly
       }
+      #if GATEWAY_CHECKSUM
       else
       {
         dprintf(2)("block #%d: bad checksum\n",trailer.seq);
         requestRetry();  // ask for retry, clear buffer
       }
+      #endif
     }
     else
       Throw("unexpected read state");
   }
-  // go at it again if something remains in flags (read and write will clear
-  // their bits once a read/write truly fails (i.e., returns 0))
-  if( flags )
-    return input(fd,flags); 
-  else
-    return Message::ACCEPT;
+  return Message::ACCEPT;
   //## end GatewayWP::input%3C90BF6F00ED.body
 }
 
@@ -496,7 +581,9 @@ int GatewayWP::readyForHeader ()
 {
   read_buf_size = sizeof(header);
   read_buf = reinterpret_cast<char*>(&header);
+  nread = 0;
   setReadState( HEADER );
+  dprintf(5)("read state is now HEADER\n");
   return 0;
 }
 
@@ -504,7 +591,9 @@ int GatewayWP::readyForTrailer ()
 {
   read_buf_size = sizeof(trailer);
   read_buf = reinterpret_cast<char*>(&trailer);
+  nread = 0;
   setReadState( TRAILER );
+  dprintf(5)("read state is now TRAILER\n");
   return 0;
 }
 
@@ -516,10 +605,12 @@ int GatewayWP::readyForData ( const PacketHeader &hdr )
     lprintf(1,"error: block size too big (%d), aborting\n",read_buf_size);
     return requestResync();
   }
+  nread = 0;
   SmartBlock * bl = new SmartBlock(read_buf_size);
   read_bset.pushNew().attach(bl,DMI::ANON|DMI::WRITE);
   read_buf = static_cast<char*>(bl->data());
   setReadState( BLOCK );
+  dprintf(5)("read state is now BLOCK\n");
   read_checksum = 0;
   return 0;
 }
@@ -527,6 +618,7 @@ int GatewayWP::readyForData ( const PacketHeader &hdr )
 void GatewayWP::prepareMessage (MessageRef &mref)
 {
   FailWhen(write_queue.size(),"write queue is not empty??");
+  dprintf(5)("write-queueing [%s]\n",mref->sdebug(1).c_str());
   // convert the message to blocks, placing them into the write queue
   write_msgsize = mref->toBlock(write_queue);
   // release ref, so as to minimize the blocks' ref counts
@@ -555,6 +647,7 @@ void GatewayWP::prepareHeader ()
   write_checksum = 0;
   nwritten = 0;
   setWriteState( HEADER );
+  dprintf(5)("write state is now HEADER\n");
 }
 
 void GatewayWP::prepareData ()
@@ -566,6 +659,7 @@ void GatewayWP::prepareData ()
   write_checksum = 0;
   nwritten = 0;
   setWriteState( BLOCK );
+  dprintf(5)("write state is now BLOCK\n");
 }
 
 void GatewayWP::prepareTrailer ()
@@ -582,12 +676,17 @@ void GatewayWP::prepareTrailer ()
   write_checksum = 0;
   nwritten = 0;
   setWriteState( TRAILER );
+  dprintf(5)("write state is now TRAILER\n");
 }
 
 void GatewayWP::processIncoming()
 {
   MessageRef ref = MessageRef(new Message,DMI::ANON|DMI::WRITE);
   ref().fromBlock(read_bset);
+  Message &msg = ref;
+  msg.setForwarder(address());
+  msg.addHop(); // increment message hop-count
+  dprintf(5)("received from remote [%s]\n",msg.sdebug(1).c_str());
   if( read_bset.size() )
   {
     lprintf(2,"warning: %d unclaimed incoming blocks were discarded\n",read_bset.size());
@@ -597,27 +696,27 @@ void GatewayWP::processIncoming()
   if( peerState() == CONNECTED )
   {
     // Bye message from remote: drop WP from routing table
-    if( ref->id()[0] == AidBye )
+    if( msg.id().prefixedBy(MsgBye) )
     {
-      RSI iter = remote_subs.find(ref->from());
+      RSI iter = remote_subs.find(msg.from());
       if( iter == remote_subs.end() )
-        lprintf(1,"warning: got Bye [%s] from unknown remote WP\n",ref->sdebug(1).c_str());
+        lprintf(1,"warning: got Bye [%s] from unknown remote WP\n",msg.sdebug(1).c_str());
       else
       {
-        dprintf(2)("got Bye [%s], deleting routing entry\n",ref->sdebug(1).c_str());
+        dprintf(2)("got Bye [%s], deleting routing entry\n",msg.sdebug(1).c_str());
         remote_subs.erase(iter);
       }
     } 
     // Subscribe message from remote: update table
-    else if( ref->id()[0] == AidSubscribe )
+    else if( msg.id().prefixedBy(MsgSubscribe) )
     {
       // unpack subscriptions block, catching any exceptions
       Subscriptions subs;
       bool success = False;
-      if( ref->data() )
+      if( msg.data() )
       {
         try {
-          subs.unpack(ref->data(),ref->datasize());
+          subs.unpack(msg.data(),msg.datasize());
           success = True;
         } catch( std::exception &exc ) {
           lprintf(2,"warning: failed to unpack Subscribe message: %s\n",exc.what());
@@ -626,12 +725,12 @@ void GatewayWP::processIncoming()
       if( success )
       {
         dprintf(2)("got Subscriptions [%s]: %d subscriptions\n",
-                    ref->sdebug(1).c_str(),subs.size());
-        RSI iter = remote_subs.find(ref->from());
+                    msg.sdebug(1).c_str(),subs.size());
+        RSI iter = remote_subs.find(msg.from());
         if( iter == remote_subs.end() )
         {
           dprintf(2)("inserting new entry into routing table\n");
-          remote_subs[ref->from()] = subs;
+          remote_subs[msg.from()] = subs;
         }
         else
         {
@@ -641,50 +740,99 @@ void GatewayWP::processIncoming()
       }
       else
       {
-        lprintf(2,"warning: ignoring bad Subscriptions message [%s]\n",ref->sdebug(1).c_str());
+        lprintf(2,"warning: ignoring bad Subscriptions message [%s]\n",msg.sdebug(1).c_str());
       }
     }
     // send the message on, regardless of the above
-    dsp()->send(ref,ref->to());
+    // (call Dispatcher directly in order to bypass WPInterface::send,
+    // thus retaining the original from address and hopcount)
+    dsp()->send(ref,msg.to());
   }
 // if initializing, then it must be a Subscriptions message from peer
 // (see start(), above)
   else if( peerState() == INITIALIZING ) 
   {
-    dprintf(1)("received init message from peer: %s\n",ref->sdebug(1).c_str());
-    if( ref->id() != HIID(AidSubscriptions) )
+    dprintf(1)("received init message from peer: %s\n",msg.sdebug(1).c_str());
+    if( msg.id() != HIID(AidSubscriptions) )
     {
       lprintf(1,"error: unexpected init message\n");
       shutdown();
       return;
     }
-    // catch all excpetions during processing of init message
-    try {
-      processInitMessage(ref->data(),ref->datasize());
-    } catch( std::exception &exc ) {
+    // catch all exceptions during processing of init message
+    try 
+    {
+      // remote peer process/host id
+      rprocess = msg.from().process();
+      rhost = msg.from().host();
+      HIID peerid(rprocess|rhost);
+      // paranoid case: if we already have a connection to the peer, shutdown
+      // (this really ought not to happen)
+      if( (*peerlist)[peerid].exists() )
+      {
+        lprintf(1,LogError,"already connected to %s (%s:%s %s), closing gateway",
+            peerid.toString().c_str(),
+            (*peerlist)[peerid][AidHost].as_string().c_str(),
+            (*peerlist)[peerid][AidPort].as_int(),
+            (*peerlist)[peerid][AidTimestamp].as_Timestamp().toString("%T").c_str());
+        Message *msg1 = new Message(MsgGWRemoteDuplicate|peerid);
+        MessageRef mref1; mref1 <<= msg1;
+        (*msg1)[AidHost] = sock->host();
+        (*msg1)[AidPort] = atoi(sock->port().c_str());
+        publish(mref1,Message::LOCAL);
+        setPeerState(CLOSING);
+        // if not writing anything, detach ourselves immediately
+        if( writeState() == IDLE )
+        {
+          lprintf(2,LogError,"shutting down immediately");
+          detachMyself();
+        }
+        else
+        {
+          // else stop reading, and allow the writing to finish
+          lprintf(2,LogError,"will shut down once write is complete");
+          removeInput(sock->getSid(),EV_FDREAD);
+        }
+        return;
+      }
+      // add this connection to the local peerlist
+      DataRecord *rec = new DataRecord;
+      (*peerlist)[peerid] <<= rec;
+      (*rec)[AidTimestamp] = Timestamp::now();
+      (*rec)[AidHost] = sock->host();
+      (*rec)[AidPort] = atoi(sock->port().c_str());
+      // process remote subscriptions data
+      processInitMessage(msg.data(),msg.datasize());
+      // set states
+      setPeerState(CONNECTED);
+      lprintf(2,("connected to remote peer " + msg.from().toString() +
+                "; initialized routing for %d remote WPs\n").c_str(),
+                 remote_subs.size());
+      // re-publish the init message as Remote.Up 
+      msg.setId(MsgGWRemoteUp|peerid);
+      msg[AidHost] = sock->host();
+      msg[AidPort] = atoi(sock->port().c_str());
+      publish(ref,Message::GLOBAL);
+    }
+    catch( std::exception &exc ) 
+    {
       lprintf(1,"error: processing init message: %s\n",exc.what());
       shutdown();
       return;
     }
-    rprocess = ref->from().process();
-    rhost    = ref->from().host();
-    setPeerState(CONNECTED);
-    lprintf(2,("connected to remote peer " + ref->from().toString() +
-              "\ninitialized routing for %d remote WPs\n").c_str(),
-               remote_subs.size());
-    // tell dispatcher that we can forward messages now
-    dsp()->declareForwarder(this);
-    // publish a Remote.Up message
-    MessageRef mref(new Message(AidRemote|AidUp|rprocess|rhost),DMI::ANON);
-    publish(mref,Message::LOCAL);
     // publish (locally only) fake Hello messages on behalf of remote WPs
     for( CRSI iter = remote_subs.begin(); iter != remote_subs.end(); iter++ )
     {
-      mref.attach(new Message(AidHello|iter->first),DMI::ANON|DMI::WRITE );
+      MessageRef mref;
+      mref.attach(new Message(MsgHello|iter->first),DMI::ANON|DMI::WRITE );
       mref().setFrom(iter->first);
       dsp()->send(mref,MsgAddress(AidPublish,AidPublish,
                                 address().process(),address().host()));
     }
+    // tell dispatcher that we can forward messages now
+    // (note that doing it here ensures that the GWRemoteUp message is
+    // only published to peers on "this" side of the connection)
+    dsp()->declareForwarder(this);
   }
   else
   {
@@ -728,10 +876,14 @@ void GatewayWP::shutdown ()
 {
   if( peerState() == CONNECTED )     // publish a Remote.Down message
   {
-    MessageRef mref(new Message(AidRemote|AidDown|rprocess|rhost),DMI::ANON);
+    HIID peerid = rprocess|rhost;
+    lprintf(1,"shutting down connection to %s",(rprocess|rhost).toString().c_str());
+    MessageRef mref(new Message(MsgGWRemoteDown|peerid),DMI::ANON);
+    (*peerlist)[peerid].remove();
     publish(mref,Message::LOCAL);
   }
-  lprintf(1,"shutting down\n");
+  else
+    lprintf(1,"shutting down");
   setPeerState(CLOSING); 
   detachMyself();
 }

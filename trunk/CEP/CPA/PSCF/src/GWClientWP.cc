@@ -18,6 +18,7 @@
 //## end module%3C95AADB0170.additionalIncludes
 
 //## begin module%3C95AADB0170.includes preserve=yes
+#include "Gateways.h"
 //## end module%3C95AADB0170.includes
 
 // GWClientWP
@@ -28,44 +29,37 @@
 //## begin module%3C95AADB0170.additionalDeclarations preserve=yes
 const Timeval ReconnectTimeout(.2),
               ReopenTimeout(2.0),
-              FailConnectTimeout(10.0);
+// how long to try connect() (if operation in progress is returned)
+              FailConnectTimeout(10.0),
+// how long to try connects() before giving up on a transient connection
+              GiveUpTimeout(30.0);
               
-const HIID    BYE(AidBye|AidGatewayWP|AidWildcard),
-              REMOTE_UP(AidRemote|AidUp|AidWildcard),
-              SERVER_LIST(AidServer|AidList);
 //## end module%3C95AADB0170.additionalDeclarations
 
 
 // Class GWClientWP 
 
-GWClientWP::GWClientWP (const vector<string> &connlist)
+GWClientWP::GWClientWP (const string &host, int port, int type)
   //## begin GWClientWP::GWClientWP%3C95A9410081.hasinit preserve=no
   //## end GWClientWP::GWClientWP%3C95A9410081.hasinit
   //## begin GWClientWP::GWClientWP%3C95A9410081.initialization preserve=yes
-  : WorkProcess(AidGWClientWP)
+  : WorkProcess(AidGWClientWP),
+    peerref(new DataRecord,DMI::ANONWR),
+    peerlist(dynamic_cast<DataRecord&>(peerref.dewr()))
   //## end GWClientWP::GWClientWP%3C95A9410081.initialization
 {
   //## begin GWClientWP::GWClientWP%3C95A9410081.body preserve=yes
-  // parse the connection list
-  for( vector<string>::const_iterator iter = connlist.begin(); iter != connlist.end(); iter++ )
+  // add default connection, if specified
+  if( host.length() )
   {
-    string::size_type pos = iter->find(':');
-    if( pos < iter->length()-1 )
-    {
-      string host = pos>0 ? iter->substr(0,pos) : "localhost";
-      string port = iter->substr(pos+1);
-      if( !find(host,port) )
-      {
-        Connection cx;
-        cx.host = pos>0 ? iter->substr(0,pos) : "localhost";
-        cx.port = iter->substr(pos+1);
-        cx.sock = 0;
-        cx.state = STOPPED;
-        conns.push_back(cx);
-      }
-    }
+    FailWhen(!port,"both host and port must be specified");
+    addConnection(host,port,type);
   }
   setState(STOPPED);
+  // get the local hostname
+  char hname[1024];
+  FailWhen(gethostname(hname,sizeof(hname))<0,"gethostname(): "+string(strerror(errno)));
+  hostname = hname;
   //## end GWClientWP::GWClientWP%3C95A9410081.body
 }
 
@@ -85,26 +79,32 @@ GWClientWP::~GWClientWP()
 void GWClientWP::init ()
 {
   //## begin GWClientWP::init%3CA1C0C300FA.body preserve=yes
+  // add our peerlist to local data
+  dsp()->addLocalData(GWPeerList,peerref.copy(DMI::WRITE));
+  if( !dsp()->hasLocalData(GWNetworkServer) )
+    dsp()->localData(GWNetworkServer) = -1;
+  if( !dsp()->hasLocalData(GWLocalServer) )
+    dsp()->localData(GWLocalServer) = "";
+  // messages from server gateway tell us when it fails to bind
+  // to a port/when it binds/when it gives up
+  subscribe(MsgGWServer|AidWildcard,Message::LOCAL);
+  // subscribe to server advertisements
+  subscribe(MsgGWServerOpenNetwork,Message::GLOBAL);
+  subscribe(MsgGWServerOpenLocal,Message::HOST);
   // Bye messages from child gateways tell us when they have closed
   // (and thus need to be reopened)
-  subscribe(BYE,Message::LOCAL);
-  // Remote.Up messages tell us when a new remote node has been spotted
-  subscribe(REMOTE_UP,Message::LOCAL);
+  subscribe(MsgBye|AidGatewayWP|AidWildcard,Message::LOCAL);
+  // Remote messages for remote node management
+  subscribe(MsgGWRemote|AidWildcard,Message::LOCAL);
+  subscribe(MsgGWRemoteUp|AidWildcard,Message::GLOBAL);
   //## end GWClientWP::init%3CA1C0C300FA.body
 }
 
 bool GWClientWP::start ()
 {
   //## begin GWClientWP::start%3C95A941008B.body preserve=yes
-  WorkProcess::start();
-  Timestamp::now(&now);
-  setState(CONNECTING);
-  // initiate connection on every socket
-  for( CLI iter = conns.begin(); iter != conns.end(); iter++ )
-    tryConnect(*iter);
-  // add a re-open timeout
-  addTimeout(ReopenTimeout,AidReopen);
-  return False;
+  activate();
+  return WorkProcess::start();
   //## end GWClientWP::start%3C95A941008B.body
 }
 
@@ -138,8 +138,7 @@ int GWClientWP::timeout (const HIID &id)
       case CONNECTING:  // connecting?
         if( now >= iter->fail ) // check for timeout
         {
-          lprintf(1,"error: timeout connecting to %s:%s\n",
-              iter->host.c_str(),iter->port.c_str());
+          lprintf(1,"connect(%s:%d) timeout; will retry later",iter->host.c_str(),iter->port);
           delete iter->sock; iter->sock = 0;
           iter->state = WAITING;
           iter->retry = now + ReopenTimeout;
@@ -153,8 +152,8 @@ int GWClientWP::timeout (const HIID &id)
         break;
       
       default:
-        lprintf(1,"error: unexpected state %d for %s:%s\n",iter->state,
-            iter->host.c_str(),iter->port.c_str());
+        lprintf(1,"error: unexpected state %d for %s:%d\n",iter->state,
+            iter->host.c_str(),iter->port);
     }
     if( iter->state == CONNECTING )
       connecting = True;
@@ -181,52 +180,184 @@ int GWClientWP::receive (MessageRef& mref)
   //## begin GWClientWP::receive%3C95A9410095.body preserve=yes
   const Message &msg = mref.deref();
   const HIID &id = msg.id();
-  // bye message from child? Have to reopen its gateway then
-  if( id.matches(BYE) )
+  if( id == MsgGWServerBindError )
+  {
+    // server has failed to bind to a port -- assume a local peer has already
+    // bound to it, so add it to our connection list
+    int type = msg[AidType];
+    if( type == Socket::UNIX )
+    {
+      string host = msg[AidHost];
+      int port = msg[AidPort];
+      Connection &cx = addConnection(host,port,type);
+      lprintf(2,LogNormal,"adding %s:%d to connection list",host.c_str(),port);
+      if( state() != STOPPED )
+        tryConnect(cx);
+    }
+  }
+  // a non-local server advertisement: see if we need to establish
+  // a connection to it
+  else if( id.matches(MsgGWServerOpen|AidWildcard) && !isLocal(msg) )
+  {
+    // ignore local server advertisements from non-local hosts
+    if( id == MsgGWServerOpenLocal && msg.from().host() != address().host() )
+      return Message::ACCEPT;
+    // ignore network server advertisements from local host
+    if( id == MsgGWServerOpenNetwork && msg.from().host() == address().host() )
+      return Message::ACCEPT;
+    HIID peerid = msg.from().peerid();
+    if( peerlist[peerid].exists() )
+    {
+      lprintf(3,"peer-adv %s: already connected (%s:%d %s), ignoring",
+          peerid.toString().c_str(),
+          peerlist[peerid][AidHost].as_string().c_str(),
+          peerlist[peerid][AidPort].as_int(),
+          peerlist[peerid][AidTimestamp].as_Timestamp().toString("%T").c_str());
+    }
+    else
+    {
+      // initiate a connection only if (a) we don't have a server ourselves, 
+      // or (b) our peerid is < remote
+      // This ensures that only one peer of any given pair actually makes the 
+      // connection.
+      string host = msg[AidHost];
+      int port = msg[AidPort];
+      int type = msg[AidType];
+      // advertisement for a local connection?
+      if( type == Socket::UNIX )
+      {
+        if( !dsp()->localData(GWLocalServer).as_string().length() )
+          lprintf(2,"peer-adv %s@%s:%d: no unix server here, initiating connection",peerid.toString().c_str(),host.c_str(),port); 
+        else if( address().peerid() < peerid )
+          lprintf(2,"peer-adv %s@%s:%d: higher rank, initiating connection",peerid.toString().c_str(),host.c_str(),port);
+        else
+        {
+          lprintf(2,"peer-adv %s@%s:%d: lower rank, ignoring and waiting for connection",peerid.toString().c_str(),host.c_str(),port);   
+          return Message::ACCEPT;
+        }
+      }
+      else // network connection
+      {
+        if( !dsp()->localData(GWNetworkServer).as_int() < 0 )
+          lprintf(2,"peer-adv %s@%s:%d: no network server here, initiating connection",peerid.toString().c_str(),host.c_str(),port); 
+        else if( address().peerid() < peerid )
+          lprintf(2,"peer-adv %s@%s:%d: higher rank, initiating connection",peerid.toString().c_str(),host.c_str(),port);
+        else
+        {
+          lprintf(2,"peer-adv %s@%s:%d: lower rank, ignoring and waiting for connection",peerid.toString().c_str(),host.c_str(),port);   
+          return Message::ACCEPT;
+        }
+        if( host == hostname )
+          host = "localhost";
+      }
+      // create the connection
+      Connection &cx = addConnection(host,port,type);
+      cx.give_up = Timestamp::now() + GiveUpTimeout;
+      if( state() != STOPPED )
+        tryConnect(cx);
+    }
+  }
+  else if( id.prefixedBy(MsgGWRemoteDuplicate) )
+  {
+    // message from child gateway advises us of a duplicate connection -- better
+    // remove this from the connection list
+    if( msg[AidHost].exists() )
+    {
+      const string &host = msg[AidHost];
+      int port = msg[AidPort];
+      if( removeConnection(host,port) )
+        lprintf(2,LogNormal,"removed duplicate connection %s:%d",host.c_str(),port);
+      else
+        lprintf(2,LogWarning,"%s:%d not known, ignoring [%s]",
+            host.c_str(),port,msg.sdebug(1).c_str());
+    }
+  }
+  // bye message from child? Reopen its gateway then
+  // (unless the connection has been removed by MsgGWRemoteDuplicate, above)
+  else if( id.prefixedBy(MsgBye|AidGatewayWP) )
   {
     Connection *cx = find(msg.from());
     if( cx )
     {
-      lprintf(1,"caught Bye from child gateway for %s:%s, waking up\n",
-          cx->host.c_str(),cx->port.c_str());
+      lprintf(2,"caught Bye from child gateway for %s:%d, waking up\n",
+          cx->host.c_str(),cx->port);
       if( cx->state == CONNECTED ) // just to make sure it's not a stray message
       {
+        if( cx->give_up )
+          cx->give_up = Timestamp::now() + GiveUpTimeout;
         cx->state = WAITING;
         tryConnect(*cx);
       }
-    }
-    else
-    {
-      lprintf(1,"error: caught Bye from unknown child gateway %s\n",
-          msg.from().toString().c_str());
     }
   }
   return Message::ACCEPT;
   //## end GWClientWP::receive%3C95A9410095.body
 }
 
+// Additional Declarations
+  //## begin GWClientWP%3C95A941002E.declarations preserve=yes
+GWClientWP::Connection & GWClientWP::addConnection (const string &host,int port,int type)
+{
+  for( CLI iter = conns.begin(); iter != conns.end(); iter++ )
+    if( iter->host == host && iter->port == port )
+      return *iter;
+  Connection cx;
+  cx.host = host;
+  cx.port = port;
+  cx.type = type;
+  cx.sock = 0;
+  cx.state = STOPPED;
+  cx.give_up = Timestamp(0,0);
+  cx.reported_failure = False;
+  conns.push_back(cx);
+  return conns.back();
+}
+    
+bool GWClientWP::removeConnection (const string &host,int port)
+{
+  bool localhost = (host == "localhost");
+  bool res = False;
+  for( CLI iter = conns.begin(); iter != conns.end(); )
+    if( iter->port == port &&
+        ( iter->host == host || ( localhost && iter->host == "localhost" ) ) )
+    {
+      conns.erase(iter++);
+      res = True;
+    }
+    else
+      iter++;
+  return res;
+}
+
 GWClientWP::Connection * GWClientWP::find (const string &host, const string &port)
 {
-  //## begin GWClientWP::find%3CA1C0030307.body preserve=yes
   for( CLI iter = conns.begin(); iter != conns.end(); iter++ )
     if( iter->host == host && iter->port == port )
       return &(*iter);
   return 0;
-  //## end GWClientWP::find%3CA1C0030307.body
 }
 
 GWClientWP::Connection * GWClientWP::find (const MsgAddress &gw)
 {
-  //## begin GWClientWP::find%3CA1C52E0108.body preserve=yes
   for( CLI iter = conns.begin(); iter != conns.end(); iter++ )
     if( iter->gw == gw )
       return &(*iter);
   return 0;
-  //## end GWClientWP::find%3CA1C52E0108.body
 }
 
-// Additional Declarations
-  //## begin GWClientWP%3C95A941002E.declarations preserve=yes
+
+    
+void GWClientWP::activate ()
+{
+  Timestamp::now(&now);
+  setState(CONNECTING);
+  // initiate connection on every socket
+  for( CLI iter = conns.begin(); iter != conns.end(); iter++ )
+    tryConnect(*iter);
+  // add a re-open timeout
+  addTimeout(ReopenTimeout,AidReopen);
+}
+
 void GWClientWP::tryConnect (Connection &cx)
 {
   if( cx.state == CONNECTED ) // ignore if connected
@@ -235,9 +366,9 @@ void GWClientWP::tryConnect (Connection &cx)
   {
     if( cx.sock )
       delete cx.sock;
-    lprintf(1,"creating client socket for %s:%s\n",
-              cx.host.c_str(),cx.port.c_str());
-    cx.sock = new Socket("cx.sock/"+wpname(),cx.host,cx.port,Socket::TCP,-1);
+    lprintf(4,"creating client socket for %s:%d\n",
+              cx.host.c_str(),cx.port);
+    cx.sock = new Socket("cx.sock/"+wpname(),cx.host,num2str(cx.port),cx.type,-1);
     cx.state = CONNECTING;
     cx.fail = now  + FailConnectTimeout; 
     // fall thru to connection attempt, below
@@ -246,16 +377,17 @@ void GWClientWP::tryConnect (Connection &cx)
     return;
   // [re]try connection attempt
   int res = cx.sock->connect(0);
-  dprintf(3)("connect(%s:%s): %d (%s)\n",cx.host.c_str(),cx.port.c_str(),
+  dprintf(3)("connect(%s:%d): %d (%s)\n",cx.host.c_str(),cx.port,
                   res,cx.sock->errstr().c_str());
   if( res > 0 ) // connection established
   {
-    lprintf(1,"connected to %s:%s, spawning child gateway\n",
-                      cx.host.c_str(),cx.port.c_str());
+    lprintf(1,"connected to %s:%d, spawning child gateway\n",
+                      cx.host.c_str(),cx.port);
     cx.state = CONNECTED;
     // spawn a new child gateway, subscribe to its Bye message
     cx.gw   = attachWP( new GatewayWP(cx.sock),DMI::ANON );
     cx.sock = 0; // socket is taken over by child
+    cx.reported_failure = False;
   }
   else if( !res )  // in progress
   {
@@ -268,10 +400,22 @@ void GWClientWP::tryConnect (Connection &cx)
   }
   else // else it is a fatal error, close and retry
   {
-    lprintf(2,"error: %s\nwill retry later",cx.sock->errstr().c_str());
-    delete cx.sock; cx.sock = 0;
-    cx.state = WAITING;
-    cx.retry = now + ReopenTimeout;
+    if( cx.give_up && now > cx.give_up )
+    {
+      lprintf(2,"connect(%s:%d) error: %s; giving up",
+          cx.host.c_str(),cx.port,cx.sock->errstr().c_str());
+      delete cx.sock;
+      removeConnection(cx.host,cx.port);
+    }
+    else
+    {
+      lprintf(cx.reported_failure?4:2,"connect(%s:%d) error: %s; will keep trying",
+          cx.host.c_str(),cx.port,cx.sock->errstr().c_str());
+      cx.reported_failure = True;
+      delete cx.sock; cx.sock = 0;
+      cx.state = WAITING;
+      cx.retry = now + ReopenTimeout;
+    }
   }
 }
   //## end GWClientWP%3C95A941002E.declarations

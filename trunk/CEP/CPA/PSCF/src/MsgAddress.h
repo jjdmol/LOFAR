@@ -139,6 +139,8 @@ class MsgAddress : public WPID  //## Inherits: <unnamed>%3C8F9A8F0199
 
     // Additional Public Declarations
       //## begin MsgAddress%3C7B6F790197.public preserve=yes
+      HIID peerid () const
+      { return process()|host(); }
       
       static const size_t byte_size = 4*sizeof(int);
       //## end MsgAddress%3C7B6F790197.public

@@ -25,17 +25,17 @@
 //## begin module%3C90BFDD0236.includes preserve=yes
 //## end module%3C90BFDD0236.includes
 
-// Socket
-#include "Socket.h"
 // Subscriptions
 #include "Subscriptions.h"
 // WorkProcess
 #include "WorkProcess.h"
+// Socket
+#include "Socket.h"
 //## begin module%3C90BFDD0236.declarations preserve=no
 //## end module%3C90BFDD0236.declarations
 
 //## begin module%3C90BFDD0236.additionalDeclarations preserve=yes
-#pragma aid Remote Up Down Subscriptions Init Heartbeat
+#pragma aid Subscriptions Init Heartbeat
 //## end module%3C90BFDD0236.additionalDeclarations
 
 
@@ -65,6 +65,9 @@ class GatewayWP : public WorkProcess  //## Inherits: <unnamed>%3C90BF100390
 
 
     //## Other Operations (specified)
+      //## Operation: init%3CC9500602CC
+      virtual void init ();
+
       //## Operation: start%3C90BF460080
       virtual bool start ();
 
@@ -108,6 +111,7 @@ class GatewayWP : public WorkProcess  //## Inherits: <unnamed>%3C90BF100390
                      MT_ABORT=4,MT_MAXTYPE=4 } PacketTypes;
       
       typedef enum { IDLE=0,HEADER=1,BLOCK=2,TRAILER=3 } DataState;
+      
       typedef enum { INITIALIZING = 0, 
                      CONNECTED    = 1, 
                      CONN_ERROR   = 2, 
@@ -123,8 +127,8 @@ class GatewayWP : public WorkProcess  //## Inherits: <unnamed>%3C90BF100390
       int writeState () const    { return (state()&0xFF00)>>8; };
       int peerState () const     { return (state()&0xFF0000)>>16; };
       
-      void setReadState  (int st)  { setState((state()&~0xFF)|st); };
-      void setWriteState (int st)  { setState((state()&~0xFF00)|(st<<8)); };
+      void setReadState  (int st)  { setState((state()&~0xFF)|st,True); };
+      void setWriteState (int st)  { setState((state()&~0xFF00)|(st<<8),True); };
       void setPeerState  (int st)  { setState((state()&~0xFF0000)|(st<<16)); };
       
       // Helper functions for reading from socket
@@ -197,8 +201,8 @@ class GatewayWP : public WorkProcess  //## Inherits: <unnamed>%3C90BF100390
 
     // Additional Private Declarations
       //## begin GatewayWP%3C90BEF001E5.private preserve=yes
+      DataRecord *peerlist;
       //## end GatewayWP%3C90BEF001E5.private
-
   private: //## implementation
     // Data Members for Associations
 

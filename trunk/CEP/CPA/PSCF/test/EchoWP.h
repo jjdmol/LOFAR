@@ -83,13 +83,13 @@ class EchoWP : public WorkProcess  //## Inherits: <unnamed>%3C8F26580162
   protected:
     // Additional Protected Declarations
       //## begin EchoWP%3C7E498E00D1.protected preserve=yes
-      int pcount,blocksize,pipeline;
+      int pcount,blocksize,pipeline,fill;
       bool invert;
   
       long   bytecount,msgcount;
-      double ts;
+      double ts,timecount;
       
-      void stepCounters ( size_t nb );
+      void stepCounters ( size_t nb,const Timestamp &stamp );
   
       void sendPing ();
       //## end EchoWP%3C7E498E00D1.protected

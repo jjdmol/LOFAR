@@ -28,7 +28,7 @@
 //## end module%3C7E49E90399.declarations
 
 //## begin module%3C7E49E90399.additionalDeclarations preserve=yes
-HIID MsgPing("Ping"),MsgPong("Pong");
+const HIID MsgPing("Ping"),MsgPong("Pong"),MsgHelloEchoWP(MsgHello|"EchoWP.*");
 //## end module%3C7E49E90399.additionalDeclarations
 
 
@@ -42,10 +42,12 @@ EchoWP::EchoWP (int pingcount)
   //## end EchoWP::EchoWP%3C7E49B60327.initialization
 {
   //## begin EchoWP::EchoWP%3C7E49B60327.body preserve=yes
-  blocksize = 64*1024;
+  blocksize = 64;
   pipeline = 1;
   invert = True;
+  fill = 0x07070707;
   msgcount = bytecount = 0;
+  timecount = 0;
   ts = Timestamp::now();
   //## end EchoWP::EchoWP%3C7E49B60327.body
 }
@@ -74,6 +76,9 @@ void EchoWP::init ()
 
   dsp()->getOption("pipe",pipeline);  
   lprintf(0,"setting pipeline = %d\n",pipeline);
+
+  dsp()->getOption("fill",fill);  
+  lprintf(0,"setting fill = %d\n",fill);
   
   int inv;
   if( dsp()->getOption("invert",inv) )
@@ -86,7 +91,7 @@ void EchoWP::init ()
   else if( pcount<0 )
   {
     subscribe("Ping");
-    subscribe("Hello.EchoWP.*");
+    subscribe(MsgHelloEchoWP);
   }
   //## end EchoWP::init%3C7F884A007D.body
 }
@@ -97,6 +102,7 @@ bool EchoWP::start ()
   WorkProcess::start();
   if( pcount>0 )
     sendPing();
+  return False;
   //## end EchoWP::start%3C7E4AC70261.body
 }
 
@@ -132,11 +138,12 @@ int EchoWP::receive (MessageRef& mref)
       dsp()->stopPolling();
     else
     {
-      stepCounters(mref.deref()["Data"].size()*sizeof(int));
+      const Message &msg = mref.deref();
+      stepCounters(msg["Data"].size()*sizeof(int),msg["Timestamp"]);
       sendPing();
     }
   }
-  else if( mref->id().matches("Hello.EchoWP.*") )
+  else if( mref->id().matches(MsgHelloEchoWP) )
   {
     if( mref->from() != address() ) // not our own?
     {
@@ -163,11 +170,12 @@ int EchoWP::timeout (const HIID &)
 
 // Additional Declarations
   //## begin EchoWP%3C7E498E00D1.declarations preserve=yes
-void EchoWP::stepCounters ( size_t sz )
+void EchoWP::stepCounters ( size_t sz,const Timestamp &stamp )
 {
-  msgcount ++;
+  msgcount++;
   bytecount += sz;
   double ts1 = Timestamp::now();
+  timecount += ts1 - (double)stamp;
   if( ts1 - ts > 10 )
   {
     lprintf(0,"%.2f seconds elapsed since last report\n",ts1-ts);
@@ -175,8 +183,10 @@ void EchoWP::stepCounters ( size_t sz )
             bytecount,bytecount*2/(1024*1024*(ts1-ts)));
     lprintf(0,"%ld round-trips (%.1f /s)\n",
             msgcount,msgcount/(ts1-ts));
+    lprintf(0,"%.3f ms average round-trip time\n",timecount/msgcount*1000);
     bytecount = msgcount = 0;
     ts = ts1;
+    timecount = 0;
   }
 }
     
@@ -190,11 +200,14 @@ void EchoWP::sendPing ()
     msg["Invert"] = invert;
     msg["Data"] <<= new DataField(Tpint,blocksize);
     msg["Count"] = pcount;
-    int sz = msg["Data"].size();
-    int *data = &msg["Data"];
-    lprintf(4,"filling %d ints at %x\n",sz,(int)data);
-    for( int i=0; i<sz; i++ )
-      data[i] = 0x07070707;
+    if( fill )
+    {
+      int sz = msg["Data"].size();
+      int *data = &msg["Data"];
+      lprintf(4,"filling %d ints at %x\n",sz,(int)data);
+      for( int i=0; i<sz; i++ )
+        data[i] = 0x07070707;
+    }
     lprintf(4,"ping %d, publishing %s\n",pcount,msg.debug(1));
     lprintf(3,"sending ping(%d)\n",msg["Count"].as_int());
     MessageRef ref(msg,DMI::ANON|DMI::WRITE);
