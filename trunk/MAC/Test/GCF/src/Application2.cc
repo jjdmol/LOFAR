@@ -3,6 +3,7 @@
 #include <GCF/GCF_PVInteger.h>
 #include <GCF/GCF_PVDouble.h>
 #include <GCF/PAL/GCF_Property.h>
+#include <GCF/PAL/GCF_ExtProperty.h>
 #include <math.h>
 #include <stdio.h>
 #include "TST_Protocol.ph"
@@ -22,6 +23,7 @@ Application::Application() :
   _propertySetD1("A_H",   propertySetD1, &_supTask3.getAnswerObj()),  
   _propertySetB4("A_K",   propertySetB4, &_supTask3.getAnswerObj(), GCFMyPropertySet::USE_DB_DEFAULTS),
   _ePropertySetAC("A_C",  propertySetB1, &_supTask3.getAnswerObj()), 
+  _ePropertySetAE("A_E",  propertySetB1, &_supTask3.getAnswerObj()), 
   _ePropertySetAH("A_H",  propertySetD1, &_supTask3.getAnswerObj()), 
   _ePropertySetAK("A_K",  propertySetB4, &_supTask3.getAnswerObj()) 
 {
@@ -37,7 +39,7 @@ GCFEvent::TResult Application::initial(GCFEvent& e, GCFPortInterface& /*p*/)
   {
     case F_INIT:
       _supTask3.getPort().init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
-      NEXT_TEST(1_1);
+      NEXT_TEST(1_1, "Port connection, one client, one server");
       break;
 
     default:
@@ -76,7 +78,7 @@ GCFEvent::TResult Application::test1_1(GCFEvent& e, GCFPortInterface& p)
       TSTTestrespEvent r;
       r.testnr = 101;
       TESTC(_supTask3.getPort().send(r) == SIZEOF_EVENT(r));
-      NEXT_TEST(1_2);
+      NEXT_TEST(1_2, "Port connection, multiple client, one server");
       break;
     }
      
@@ -155,14 +157,14 @@ GCFEvent::TResult Application::test1_2(GCFEvent& e, GCFPortInterface& p)
         if (TESTC(_pSTPort1))
           TESTC(_pSTPort1->send(r) == SIZEOF_EVENT(r));
         else
-          FAIL_AND_DONE("Pointer error");
+          ABORT_TESTS;
       }
       else if (_counter == 2)
       {
         if (TESTC(_pSTPort2))
           TESTC(_pSTPort2->send(r) == SIZEOF_EVENT(r));
         else
-          FAIL_AND_DONE("Pointer error");
+          ABORT_TESTS;
       }
       break;
     }  
@@ -173,10 +175,10 @@ GCFEvent::TResult Application::test1_2(GCFEvent& e, GCFPortInterface& p)
       if (TESTC(_pSTPort1))
       {
         TESTC(_pSTPort1->send(r) == SIZEOF_EVENT(r));
-        NEXT_TEST(2_5);
+        NEXT_TEST(2_5, "Enable/Disable mulitple temp. prop. sets");
       }  
       else
-        FAIL_AND_DONE("Pointer error");
+        ABORT_TESTS;
       break;
     } 
     default:
@@ -203,18 +205,9 @@ GCFEvent::TResult Application::test2_5(GCFEvent& e, GCFPortInterface& p)
     case F_ENTRY:
       if (_curRemoteTestNr != 203) break;
       _counter = 2;
-      if (!TESTC(_propertySetC1.enable() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("Could not enable propset C1");
-      }      
-      else if (!TESTC(_propertySetD1.enable() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("Could not enable propset D1");
-      }      
-      else
-      {
-        _supTask3.getPort().setTimer(10.0);
-      }
+      TESTC_ABORT_ON_FAIL(_propertySetC1.enable() == GCF_NO_ERROR);
+      TESTC_ABORT_ON_FAIL(_propertySetD1.enable() == GCF_NO_ERROR);
+      _supTask3.getPort().setTimer(10.0);
       break;
 
     case F_MYPS_ENABLED:
@@ -244,18 +237,9 @@ GCFEvent::TResult Application::test2_5(GCFEvent& e, GCFPortInterface& p)
       {
         _counter = 2;
         _supTask3.getPort().cancelAllTimers();        
-        if (!TESTC(_propertySetC1.disable() == GCF_NO_ERROR))
-        {
-          FAIL_AND_DONE("Could not disable propset C1");
-        }      
-        else if (!TESTC(_propertySetD1.disable() == GCF_NO_ERROR))
-        {
-          FAIL_AND_DONE("Could not disable propset D1");
-        }      
-        else
-        {
-          _supTask3.getPort().setTimer(10.0);
-        }
+        TESTC_ABORT_ON_FAIL(_propertySetC1.disable() == GCF_NO_ERROR);
+        TESTC_ABORT_ON_FAIL(_propertySetD1.disable() == GCF_NO_ERROR);
+        _supTask3.getPort().setTimer(10.0);
       }
       break;
     }  
@@ -284,12 +268,12 @@ GCFEvent::TResult Application::test2_5(GCFEvent& e, GCFPortInterface& p)
       if (_counter == 0)
       {
         _supTask3.getPort().cancelAllTimers();        
-        NEXT_TEST(3_1);
+        NEXT_TEST(3_1, "Enable permanent prop. set");
       }      
       break;
     }
     case F_TIMER:
-      FAIL_AND_DONE("Gets not response on disable request in time.");
+      FAIL_AND_ABORT("Gets not response on disable request in time.");
       break;
 
     default:
@@ -314,10 +298,7 @@ GCFEvent::TResult Application::test3_1(GCFEvent& e, GCFPortInterface& p)
     }
     case F_ENTRY:
       if (_curRemoteTestNr != 205) break;           
-      if (!TESTC(_propertySetB4.enable() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("Could not enable propset B4");
-      }      
+      TESTC_ABORT_ON_FAIL(_propertySetB4.enable() == GCF_NO_ERROR);
       break;
 
     case F_MYPS_ENABLED:
@@ -331,7 +312,7 @@ GCFEvent::TResult Application::test3_1(GCFEvent& e, GCFPortInterface& p)
       TESTC(&p == &_supTask3.getPort());
       TESTC(_propertySetB4.isEnabled());
       TESTC(!_supTask3.getProxy().exists("A_K_temp"));
-      NEXT_TEST(3_2);
+      NEXT_TEST(3_2, "Disable permanent prop. set");
       break;
     }  
 
@@ -350,10 +331,7 @@ GCFEvent::TResult Application::test3_2(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_ENTRY:
-      if (!TESTC(_propertySetB4.disable() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("Could not disable propset B4");
-      }      
+      TESTC_ABORT_ON_FAIL(_propertySetB4.disable() == GCF_NO_ERROR);
       break;
 
     case F_MYPS_DISABLED:
@@ -367,7 +345,7 @@ GCFEvent::TResult Application::test3_2(GCFEvent& e, GCFPortInterface& p)
       TESTC(&p == &_supTask3.getPort());
       TESTC(!_propertySetB4.isEnabled());
       TESTC(!_supTask3.getProxy().exists("A_K_temp"));
-      NEXT_TEST(3_3);
+      NEXT_TEST(3_3, "Disable permanent prop. set, which was not loaded");
       break;
     }  
 
@@ -393,10 +371,7 @@ GCFEvent::TResult Application::test3_3(GCFEvent& e, GCFPortInterface& /*p*/)
     }
     case F_ENTRY:
       if (_curRemoteTestNr != 205) break;           
-      if (!TESTC(_propertySetB4.enable() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("Could not enable propset B4");
-      }      
+      TESTC_ABORT_ON_FAIL(_propertySetB4.enable() == GCF_NO_ERROR);
       break;
 
     case F_MYPS_ENABLED:
@@ -408,10 +383,7 @@ GCFEvent::TResult Application::test3_3(GCFEvent& e, GCFPortInterface& /*p*/)
         TESTC(pResponse->result == GCF_NO_ERROR);
       }
             
-      if (!TESTC(_propertySetB4.disable() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("Could not disable propset B4");
-      }      
+      TESTC_ABORT_ON_FAIL(_propertySetB4.disable() == GCF_NO_ERROR);
       break;
     }
     
@@ -424,17 +396,11 @@ GCFEvent::TResult Application::test3_3(GCFEvent& e, GCFPortInterface& /*p*/)
         TESTC(pResponse->result == GCF_NO_ERROR);
       }      
       
-      if (!TESTC(_propertySetB4.disable() != GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("This should not be possible");
-      }      
-      else
-      {
-        TSTTestreadyEvent r;
-        r.testnr = 303;
-        _pSTPort1->send(r);        
-        NEXT_TEST(4_1);
-      }
+      TESTC_ABORT_ON_FAIL(_propertySetB4.disable() != GCF_NO_ERROR);
+      TSTTestreadyEvent r;
+      r.testnr = 303;
+      _pSTPort1->send(r);        
+      NEXT_TEST(4_1, "Load property set");
       break;
     }  
 
@@ -460,14 +426,8 @@ GCFEvent::TResult Application::test4_1(GCFEvent& e, GCFPortInterface& /*p*/)
     }
     case F_ENTRY:
       if (_curRemoteTestNr != 401) break;           
-      if (!TESTC(_ePropertySetAC.load() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("Could not load propset A_C");
-      }      
-      else
-      {
-        _supTask3.getPort().setTimer(10.0);
-      }
+      TESTC_ABORT_ON_FAIL(_ePropertySetAC.load() == GCF_NO_ERROR);
+      _supTask3.getPort().setTimer(10.0);
       break;
 
     case F_EXTPS_LOADED:
@@ -480,19 +440,13 @@ GCFEvent::TResult Application::test4_1(GCFEvent& e, GCFPortInterface& /*p*/)
       }
             
       _supTask3.getPort().cancelAllTimers();        
-      if (TESTC(_ePropertySetAC.isLoaded()))
-      {
-        NEXT_TEST(4_2);
-      }      
-      else
-      {
-        FAIL_AND_DONE("Could not load propset A_C");
-      }
+      TESTC_ABORT_ON_FAIL(_ePropertySetAC.isLoaded());
+      NEXT_TEST(4_2, "Unload prop. set");
       break;
     }
     
     case F_TIMER:
-      FAIL_AND_DONE("Gets not response on load request in time.");
+      FAIL_AND_ABORT("Gets not response on load request in time.");
       break;
 
     default:
@@ -510,14 +464,8 @@ GCFEvent::TResult Application::test4_2(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_ENTRY:
-      if (!TESTC(_ePropertySetAC.unload() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("Could not unload propset A_C");
-      }      
-      else
-      {
-        _supTask3.getPort().setTimer(10.0);
-      }
+      TESTC_ABORT_ON_FAIL(_ePropertySetAC.unload() == GCF_NO_ERROR);
+      _supTask3.getPort().setTimer(10.0);
       break;
 
     case F_EXTPS_UNLOADED:
@@ -530,22 +478,18 @@ GCFEvent::TResult Application::test4_2(GCFEvent& e, GCFPortInterface& /*p*/)
       }
             
       _supTask3.getPort().cancelAllTimers();        
-      if (TESTC(!_ePropertySetAC.isLoaded()))
-      {
-        TSTTestreadyEvent r;
-        r.testnr = 402;
-        _pSTPort1->send(r);        
-        NEXT_TEST(4_3);
-      }      
-      else
-      {
-        FAIL_AND_DONE("Could not unload propset A_C");
-      }
+      TESTC_ABORT_ON_FAIL(!_ePropertySetAC.isLoaded());
+
+      TSTTestreadyEvent r;
+      r.testnr = 402;
+      _pSTPort1->send(r);        
+
+      NEXT_TEST(4_3, "Check property usecount");
       break;
     }
     
     case F_TIMER:
-      FAIL_AND_DONE("Gets not response on unload request in time.");
+      FAIL_AND_ABORT("Gets not response on unload request in time.");
       break;
 
     default:
@@ -564,10 +508,7 @@ GCFEvent::TResult Application::test4_3(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_ENTRY:
-      if (!TESTC(_ePropertySetAC.load() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("Could not load propset A_C");
-      }      
+      TESTC_ABORT_ON_FAIL(_ePropertySetAC.load() == GCF_NO_ERROR);
       break;
 
     case F_EXTPS_LOADED:
@@ -579,26 +520,17 @@ GCFEvent::TResult Application::test4_3(GCFEvent& e, GCFPortInterface& /*p*/)
         TESTC(pResponse->result == GCF_NO_ERROR);
       }
             
-      if (TESTC(_ePropertySetAC.isLoaded()))
+      TESTC_ABORT_ON_FAIL(_ePropertySetAC.isLoaded());
+      TSTTestreadyEvent r;
+      r.testnr = 403;
+      _pSTPort1->send(r); 
+             
+      if (_curRemoteTestNr != 402) 
       {
-        TSTTestreadyEvent r;
-        r.testnr = 403;
-        _pSTPort1->send(r); 
-               
-        if (_curRemoteTestNr != 402) 
-        {
-          delayedUnload = true;
-          break;       
-        }    
-        if (!TESTC(_ePropertySetAC.unload() == GCF_NO_ERROR))
-        {
-          FAIL_AND_DONE("Could not unload propset A_C");
-        }                
-      }      
-      else
-      {
-        FAIL_AND_DONE("Could not load propset A_C");
-      }
+        delayedUnload = true;
+        break;       
+      }    
+      TESTC_ABORT_ON_FAIL(_ePropertySetAC.unload() == GCF_NO_ERROR);
       break;
     }
 
@@ -611,17 +543,8 @@ GCFEvent::TResult Application::test4_3(GCFEvent& e, GCFPortInterface& /*p*/)
         TESTC(pResponse->result == GCF_NO_ERROR);
       }
             
-      if (TESTC(!_ePropertySetAC.isLoaded()))
-      {
-        TSTTestreadyEvent r;
-        r.testnr = 403;
-        //_pSTPort1->send(r);          
-        NEXT_TEST(4_4);
-      }      
-      else
-      {
-        FAIL_AND_DONE("Could not unload propset A_C");
-      }
+      TESTC_ABORT_ON_FAIL(!_ePropertySetAC.isLoaded());
+      NEXT_TEST(4_4, "Stability; Reload multiple prop. sets");
       break;
     }
 
@@ -631,10 +554,7 @@ GCFEvent::TResult Application::test4_3(GCFEvent& e, GCFPortInterface& /*p*/)
       _curRemoteTestNr = indicationIn.testnr;
       if (!delayedUnload) break;           
       if (_curRemoteTestNr != 402) break;  
-      if (!TESTC(_ePropertySetAC.unload() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("Could not unload propset A_C");
-      }
+      TESTC_ABORT_ON_FAIL(_ePropertySetAC.unload() == GCF_NO_ERROR);
       break;
     }
 
@@ -660,14 +580,8 @@ GCFEvent::TResult Application::test4_4(GCFEvent& e, GCFPortInterface& /*p*/)
     }
     case F_ENTRY:
       if (_curRemoteTestNr != 403) break;           
-      if (!TESTC(_propertySetB4.enable() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("Could not enable propset B4");
-      }
-      else if (!TESTC(_propertySetD1.enable() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("Could not enable propset D1");
-      }
+      TESTC_ABORT_ON_FAIL(_propertySetB4.enable() == GCF_NO_ERROR);
+      TESTC_ABORT_ON_FAIL(_propertySetD1.enable() == GCF_NO_ERROR);
       break;
 
     case F_MYPS_ENABLED:
@@ -680,18 +594,9 @@ GCFEvent::TResult Application::test4_4(GCFEvent& e, GCFPortInterface& /*p*/)
       if (_propertySetB4.isEnabled() && _propertySetD1.isEnabled())
       {
         _counter = 0;
-        if (!TESTC(_ePropertySetAC.load() == GCF_NO_ERROR)) 
-        {
-          FAIL_AND_DONE("Could not load propset A_C");
-        }
-        else if (!TESTC(_ePropertySetAH.load() == GCF_NO_ERROR)) 
-        {
-          FAIL_AND_DONE("Could not load propset A_H");
-        }         
-        else if (!TESTC(_ePropertySetAK.load() == GCF_NO_ERROR)) 
-        {
-          FAIL_AND_DONE("Could not load propset A_K");
-        }
+        TESTC_ABORT_ON_FAIL(_ePropertySetAC.load() == GCF_NO_ERROR); 
+        TESTC_ABORT_ON_FAIL(_ePropertySetAH.load() == GCF_NO_ERROR); 
+        TESTC_ABORT_ON_FAIL(_ePropertySetAK.load() == GCF_NO_ERROR);
       }            
       break;
     }
@@ -707,18 +612,9 @@ GCFEvent::TResult Application::test4_4(GCFEvent& e, GCFPortInterface& /*p*/)
           _ePropertySetAH.isLoaded() && 
           _ePropertySetAK.isLoaded())
       {
-        if (!TESTC(_ePropertySetAC.unload() == GCF_NO_ERROR)) 
-        {
-          FAIL_AND_DONE("Could not unload propset A_C");
-        }
-        else if (!TESTC(_ePropertySetAH.unload() == GCF_NO_ERROR)) 
-        {
-          FAIL_AND_DONE("Could not unload propset A_H");
-        }         
-        else if (!TESTC(_ePropertySetAK.unload() == GCF_NO_ERROR)) 
-        {
-          FAIL_AND_DONE("Could not unload propset A_K");
-        }
+        TESTC_ABORT_ON_FAIL(_ePropertySetAC.unload() == GCF_NO_ERROR); 
+        TESTC_ABORT_ON_FAIL(_ePropertySetAH.unload() == GCF_NO_ERROR); 
+        TESTC_ABORT_ON_FAIL(_ePropertySetAK.unload() == GCF_NO_ERROR);
       }
       break;    
     }
@@ -736,22 +632,13 @@ GCFEvent::TResult Application::test4_4(GCFEvent& e, GCFPortInterface& /*p*/)
         _counter++;
         if (_counter < 100)
         {
-          if (!TESTC(_ePropertySetAC.load() == GCF_NO_ERROR)) 
-          {
-            FAIL_AND_DONE("Could not load propset A_C");
-          }
-          else if (!TESTC(_ePropertySetAH.load() == GCF_NO_ERROR)) 
-          {
-            FAIL_AND_DONE("Could not load propset A_H");
-          }         
-          else if (!TESTC(_ePropertySetAK.load() == GCF_NO_ERROR)) 
-          {
-            FAIL_AND_DONE("Could not load propset A_K");
-          }
+          TESTC_ABORT_ON_FAIL(_ePropertySetAC.load() == GCF_NO_ERROR); 
+          TESTC_ABORT_ON_FAIL(_ePropertySetAH.load() == GCF_NO_ERROR); 
+          TESTC_ABORT_ON_FAIL(_ePropertySetAK.load() == GCF_NO_ERROR);
         }
         else
         {
-          NEXT_TEST(5_3);
+          NEXT_TEST(5_3, "Configure prop. set with a non-existing APC file");
         }
       }
       break;   
@@ -791,23 +678,11 @@ GCFEvent::TResult Application::test5_3(GCFEvent& e, GCFPortInterface& /*p*/)
     case F_PS_CONFIGURED:
     {
       GCFConfAnswerEvent* pResponse = (GCFConfAnswerEvent*)(&e);
-      if (TESTC(pResponse))
-      {
-        TESTC(strcmp(pResponse->pScope, _ePropertySetAK.getScope().c_str()) == 0);
-        TESTC(strcmp(pResponse->pApcName, "e2") == 0);
-        if (!TESTC(pResponse->result != GCF_NO_ERROR))
-        {
-          FAIL_AND_DONE("PA has not reported configure error: e2.apc does not exist");
-        }
-        else
-        {
-          FINISHED;
-        }
-      }
-      else
-      {
-        FAIL_AND_DONE("Event problems");
-      }
+      TESTC_ABORT_ON_FAIL(pResponse);
+      TESTC(strcmp(pResponse->pScope, _ePropertySetAK.getScope().c_str()) == 0);
+      TESTC(strcmp(pResponse->pApcName, "e2") == 0); 
+      TESTC_ABORT_ON_FAIL(pResponse->result != GCF_NO_ERROR);
+      NEXT_TEST(6_3, "Subscribe to property in DB, receive changes");
       break;
     }    
     case F_EXIT:
@@ -818,6 +693,64 @@ GCFEvent::TResult Application::test5_3(GCFEvent& e, GCFPortInterface& /*p*/)
         _pSTPort1->send(r);
       break;
     } 
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult Application::test6_3(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  static GCFExtProperty* pProperty = 0;
+  switch (e.signal)
+  {
+    case TST_TESTREADY:
+    {
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
+      //intentional fall through
+    }
+    case F_ENTRY:
+      if (_curRemoteTestNr != 602) break;           
+      TESTC_ABORT_ON_FAIL(_ePropertySetAE.load() == GCF_NO_ERROR);
+      break;
+    case F_EXTPS_LOADED:
+    {
+      GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
+      if (TESTC(pResponse))
+      {
+        TESTC(strcmp(pResponse->pScope, _ePropertySetAE.getScope().c_str()) == 0);
+        TESTC(pResponse->result == GCF_NO_ERROR);
+      }
+            
+      TESTC_ABORT_ON_FAIL(_ePropertySetAE.isLoaded());
+      pProperty = (GCFExtProperty*) (&_ePropertySetAE["P1"]);
+      pProperty->subscribe();
+      break;
+    }    
+    case F_SUBSCRIBED:
+    {
+      GCFPropAnswerEvent* pResponse = (GCFPropAnswerEvent*)(&e);
+      TESTC(strcmp(pResponse->pPropName, "A_E.P1") == 0);
+      TESTC_ABORT_ON_FAIL(pProperty->isSubscribed());
+      TSTTestreadyEvent r;
+      r.testnr = 603;
+      assert(_pSTPort1);
+      _pSTPort1->send(r);        
+      break;
+    }    
+    case F_VCHANGEMSG:
+    {
+      GCFPropValueEvent* pResponse = (GCFPropValueEvent*)(&e);
+      TESTC(pResponse->pValue->getType() == LPT_INTEGER);
+      TESTC(strcmp(pResponse->pPropName, "A_E.P1") == 0);
+      TESTC(((GCFPVInteger*)pResponse->pValue)->getValue() == 22);
+      FINISH;
+      break;
+    }
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -1275,11 +1208,13 @@ GCFEvent::TResult Application::finished(GCFEvent& e, GCFPortInterface& /*p*/)
     }
     case F_ENTRY:
     {
-      //if (_curRemoteTestNr != 999) break;           
+      if (_curRemoteTestNr != 999) break;           
       TSTTestreadyEvent r;
       r.testnr = 999;
       if (_pSTPort1->isConnected())
-        _pSTPort1->send(r);
+      {
+      //  _pSTPort1->send(r);
+      }
       GCFTask::stop();    
       break;
     }

@@ -13,31 +13,44 @@
 #define CHECK_DB {}
 #endif
 
-#define NEXT_TEST(_test_) \
-{ \
-  reportSubTest(); \
-  setCurSubTest(#_test_); \
-  TRAN(Application::test##_test_); \
-}
+#define NEXT_TEST(_test_, _descr_) \
+  { \
+    setCurSubTest(#_test_, _descr_); \
+    TRAN(Application::test##_test_); \
+  }
 
-#define FAIL_AND_NEXT_TEST(_txt_, _test_) \
-{ \
-  FAIL(_txt_); \
-  NEXT_TEST(_test_); \
-}
+#define FINISH \
+  { \
+    reportSubTest(); \
+    TRAN(Application::finished); \
+  }
 
-#define FAIL_AND_DONE(_txt_) \
-{ \
-  FAIL(_txt_);  \
-  reportSubTest(); \
-  TRAN(Application::finished); \
-}
+#define ABORT_TESTS \
+  { \
+    FINISH; \
+  }
 
-#define FINISHED \
-{ \
-  reportSubTest(); \
-  TRAN(Application::finished); \
-}
+#define FAIL_AND_ABORT(_txt_) \
+  { \
+    FAIL(_txt_);  \
+    ABORT_TESTS; \
+  }
+
+#define TESTC_ABORT_ON_FAIL(cond) \
+  if (!TESTC(cond)) \
+  { \
+    ABORT_TESTS; \
+    break; \
+  }
+
+#define TESTC_DESCR_ABORT_ON_FAIL(cond, _descr_) \
+  if (!TESTC_DESCR(cond, _descr_)) \
+  { \
+    ABORT_TESTS; \
+    break; \
+  }
+
+
 
 #define GCF_READWRITE_PROP (GCF_READABLE_PROP | GCF_WRITABLE_PROP)
 // property sets

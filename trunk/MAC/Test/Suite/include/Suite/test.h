@@ -35,12 +35,14 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_iosfwd.h>
 #include <Common/lofar_map.h>
+#include <Common/lofar_list.h>
 
 // The following have underscores because they are macros
 // (and it's impolite to usurp other users' functions!).
 // For consistency, _succeed() also has an underscore.
-#define TESTC(cond) do_test(cond, #cond, __FILE__, __LINE__)
-#define FAIL(str) do_fail(str, __FILE__, __LINE__)
+#define TESTC(cond) do_test(cond, #cond, 0, __FILE__, __LINE__)
+#define TESTC_DESCR(cond, _descr_) do_test(cond, #cond, _descr_, __FILE__, __LINE__)
+#define FAIL(str) do_fail("", str, __FILE__, __LINE__)
 
 class Test
 {
@@ -58,12 +60,13 @@ class Test
     virtual void reset();
 
   protected:
-    bool do_test(bool cond, const string& lbl,
+    bool do_test(bool cond, const string& lbl, const char* descr, 
                  const char* fname, long lineno);
     void do_fail(const string& lbl,
+                 const char* descr,
                  const char* fname, long lineno);
     
-    void setCurSubTest(const char* testname);
+    void setCurSubTest(const char* testname, const char* description);
     void reportSubTest();      
 
   private:
@@ -81,12 +84,16 @@ class Test
     
     typedef map<string /*testname*/, TSubTest> TSubTests;
     TSubTests m_subTests;
+    typedef list<string /*failurestring*/> TFailures;
+    TFailures m_failures;
     string m_curSubTest;
 
     // Disallowed:
     Test(const Test&);
     Test& operator=(const Test&);
-    void succeed();
+    void succeed(const string& lbl,
+                 const char* descr,
+                 const char* fname, long lineno);
 };
 
 inline

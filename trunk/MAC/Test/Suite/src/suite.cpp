@@ -80,7 +80,7 @@ long Suite::report() const
     if (m_osptr)
     {
         long totFail = 0;
-        *m_osptr << "Suite \"" << m_name << "\"\n=======";
+        *m_osptr << "Test suite \"" << m_name << "\"\n=======";
         size_t i;
         for (i = 0; i < m_name.size(); ++i)
             *m_osptr << '=';
