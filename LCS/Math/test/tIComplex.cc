@@ -23,6 +23,8 @@
 #include <Math/IComplex.h>
 #include <Common/LofarLogger.h>
 
+using namespace LOFAR;
+
 template<typename IC1, typename IC2>
 void doIt()
 {

@@ -28,6 +28,7 @@
 #include <vector>
 #include <sstream>
 
+using namespace LOFAR;
 
 void doIt (int nr1, int nr2)
 {

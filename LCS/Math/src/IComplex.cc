@@ -21,22 +21,26 @@
 //# $Id$
 
 #include <Math/IComplex.h>
-#include <iostream>
+#include <Common/lofar_iostream.h>
 
-std::ostream& operator<< (std::ostream& os, const IComplex8& val)
+namespace LOFAR
 {
-  os << '(' << int(val.re()) << ',' << int(val.im()) << ')';
-  return os;
-}
+  ostream& operator<< (ostream& os, const IComplex8& val)
+  {
+    os << '(' << int(val.re()) << ',' << int(val.im()) << ')';
+    return os;
+  }
 
-std::ostream& operator<< (std::ostream& os, const IComplex16& val)
-{
-  os << '(' << val.re() << ',' << val.im() << ')';
-  return os;
-}
+  ostream& operator<< (ostream& os, const IComplex16& val)
+  {
+    os << '(' << val.re() << ',' << val.im() << ')';
+    return os;
+  }
 
-std::ostream& operator<< (std::ostream& os, const IComplex32& val)
-{
-  os << '(' << val.re() << ',' << val.im() << ')';
-  return os;
-}
+  ostream& operator<< (ostream& os, const IComplex32& val)
+  {
+    os << '(' << val.re() << ',' << val.im() << ')';
+    return os;
+  }
+
+} // namespace LOFAR

@@ -25,834 +25,837 @@
 
 //# Includes
 #include <Common/LofarTypes.h>
-#include <iosfwd>
+#include <Common/lofar_iosfwd.h>
 
-//# Forward Declarations
-class IComplex8;
-class IComplex16;
-class IComplex32;
-
-
-class IComplex8 {
-public:
-  //# Constructors
-  // From one or two ints (note for gnu use)
-  IComplex8();
-  IComplex8 (char re);
-  IComplex8 (char re, char im);
-
-  char re() const;
-  char im() const;
-
-  bool operator== (const IComplex8& that) const;
-  bool operator== (const IComplex16& that) const;
-  bool operator== (const IComplex32& that) const;
-  bool operator!= (const IComplex8& that) const;
-  bool operator!= (const IComplex16& that) const;
-  bool operator!= (const IComplex32& that) const;
-
-  void operator+= (const IComplex8&);
-  void operator-= (const IComplex8&);
-  void operator*= (const IComplex8&);
-  void operator/= (const IComplex8&);
-  void mulconj    (const IComplex8&);
-
-private:
-  char itsre;
-  char itsim;
-};
+namespace LOFAR
+{
+  //# Forward Declarations
+  class IComplex8;
+  class IComplex16;
+  class IComplex32;
 
 
-class IComplex16 {
-public:
-  //# Constructors
-  // From one or two ints (note for gnu use)
-  IComplex16();
-  IComplex16 (int16 re);
-  IComplex16 (int16 re, int16 im);
+  class IComplex8 {
+  public:
+    //# Constructors
+    // From one or two ints (note for gnu use)
+    IComplex8();
+    IComplex8 (char re);
+    IComplex8 (char re, char im);
 
-  int16 re() const;
-  int16 im() const;
+    char re() const;
+    char im() const;
 
-  bool operator== (const IComplex8& that) const;
-  bool operator== (const IComplex16& that) const;
-  bool operator== (const IComplex32& that) const;
-  bool operator!= (const IComplex8& that) const;
-  bool operator!= (const IComplex16& that) const;
-  bool operator!= (const IComplex32& that) const;
+    bool operator== (const IComplex8& that) const;
+    bool operator== (const IComplex16& that) const;
+    bool operator== (const IComplex32& that) const;
+    bool operator!= (const IComplex8& that) const;
+    bool operator!= (const IComplex16& that) const;
+    bool operator!= (const IComplex32& that) const;
 
-  void operator+= (const IComplex8&);
-  void operator+= (const IComplex16&);
-  void operator-= (const IComplex8&);
-  void operator-= (const IComplex16&);
-  void operator*= (const IComplex8&);
-  void operator*= (const IComplex16&);
-  void operator/= (const IComplex8&);
-  void operator/= (const IComplex16&);
-  void mulconj    (const IComplex8&);
-  void mulconj    (const IComplex16&);
+    void operator+= (const IComplex8&);
+    void operator-= (const IComplex8&);
+    void operator*= (const IComplex8&);
+    void operator/= (const IComplex8&);
+    void mulconj    (const IComplex8&);
 
-private:
-  int16 itsre;
-  int16 itsim;
-};
+  private:
+    char itsre;
+    char itsim;
+  };
 
 
-class IComplex32 {
-public:
-  //# Constructors
-  // From one or two ints (note for gnu use)
-  IComplex32();
-  IComplex32 (int32 re);
-  IComplex32 (int32 re, int32 im);
+  class IComplex16 {
+  public:
+    //# Constructors
+    // From one or two ints (note for gnu use)
+    IComplex16();
+    IComplex16 (int16 re);
+    IComplex16 (int16 re, int16 im);
 
-  int32 re() const;
-  int32 im() const;
+    int16 re() const;
+    int16 im() const;
 
-  bool operator== (const IComplex8& that) const;
-  bool operator== (const IComplex16& that) const;
-  bool operator== (const IComplex32& that) const;
-  bool operator!= (const IComplex8& that) const;
-  bool operator!= (const IComplex16& that) const;
-  bool operator!= (const IComplex32& that) const;
+    bool operator== (const IComplex8& that) const;
+    bool operator== (const IComplex16& that) const;
+    bool operator== (const IComplex32& that) const;
+    bool operator!= (const IComplex8& that) const;
+    bool operator!= (const IComplex16& that) const;
+    bool operator!= (const IComplex32& that) const;
 
-  void operator+= (const IComplex8&);
-  void operator+= (const IComplex16&);
-  void operator+= (const IComplex32&);
-  void operator-= (const IComplex8&);
-  void operator-= (const IComplex16&);
-  void operator-= (const IComplex32&);
-  void operator*= (const IComplex8&);
-  void operator*= (const IComplex16&);
-  void operator*= (const IComplex32&);
-  void operator/= (const IComplex8&);
-  void operator/= (const IComplex16&);
-  void operator/= (const IComplex32&);
-  void mulconj    (const IComplex8&);
-  void mulconj    (const IComplex16&);
-  void mulconj    (const IComplex32&);
+    void operator+= (const IComplex8&);
+    void operator+= (const IComplex16&);
+    void operator-= (const IComplex8&);
+    void operator-= (const IComplex16&);
+    void operator*= (const IComplex8&);
+    void operator*= (const IComplex16&);
+    void operator/= (const IComplex8&);
+    void operator/= (const IComplex16&);
+    void mulconj    (const IComplex8&);
+    void mulconj    (const IComplex16&);
 
-private:
-  int32 itsre;
-  int32 itsim;
-};
+  private:
+    int16 itsre;
+    int16 itsim;
+  };
 
 
-// Show on ostream.
-std::ostream& operator<< (std::ostream& os, const IComplex8&);
-std::ostream& operator<< (std::ostream& os, const IComplex16&);
-std::ostream& operator<< (std::ostream& os, const IComplex32&);
+  class IComplex32 {
+  public:
+    //# Constructors
+    // From one or two ints (note for gnu use)
+    IComplex32();
+    IComplex32 (int32 re);
+    IComplex32 (int32 re, int32 im);
 
-// Take conjugate.
-IComplex8  conj (const IComplex8& x);
-IComplex16 conj (const IComplex16& x);
-IComplex32 conj (const IComplex32& x);
+    int32 re() const;
+    int32 im() const;
 
-// Take norm (re^2+im^2).
-int32 norm (const IComplex8& x);
-int32 norm (const IComplex16& x);
-int32 norm (const IComplex32& x);
+    bool operator== (const IComplex8& that) const;
+    bool operator== (const IComplex16& that) const;
+    bool operator== (const IComplex32& that) const;
+    bool operator!= (const IComplex8& that) const;
+    bool operator!= (const IComplex16& that) const;
+    bool operator!= (const IComplex32& that) const;
 
-// left+right
-IComplex8  operator+ (const IComplex8&  left, const IComplex8&  right);
-IComplex16 operator+ (const IComplex16& left, const IComplex16& right);
-IComplex16 operator+ (const IComplex16& left, const IComplex8&  right);
-IComplex16 operator+ (const IComplex8&  left, const IComplex16& right);
-IComplex32 operator+ (const IComplex32& left, const IComplex32& right);
-IComplex32 operator+ (const IComplex32& left, const IComplex16& right);
-IComplex32 operator+ (const IComplex32& left, const IComplex8&  right);
-IComplex32 operator+ (const IComplex16& left, const IComplex32& right);
-IComplex32 operator+ (const IComplex8&  left, const IComplex32& right);
-IComplex8  add8  (const IComplex8&  left, const IComplex8&  right);
-IComplex16 add16 (const IComplex8&  left, const IComplex8&  right);
-IComplex16 add16 (const IComplex8&  left, const IComplex16& right);
-IComplex16 add16 (const IComplex16& left, const IComplex8&  right);
-IComplex16 add16 (const IComplex16& left, const IComplex16& right);
-IComplex32 add32 (const IComplex8&  left, const IComplex8&  right);
-IComplex32 add32 (const IComplex8&  left, const IComplex16& right);
-IComplex32 add32 (const IComplex16& left, const IComplex8&  right);
-IComplex32 add32 (const IComplex16& left, const IComplex16& right);
-IComplex32 add32 (const IComplex8&  left, const IComplex32& right);
-IComplex32 add32 (const IComplex32& left, const IComplex8&  right);
-IComplex32 add32 (const IComplex16& left, const IComplex32& right);
-IComplex32 add32 (const IComplex32& left, const IComplex16& right);
-IComplex32 add32 (const IComplex32& left, const IComplex32& right);
+    void operator+= (const IComplex8&);
+    void operator+= (const IComplex16&);
+    void operator+= (const IComplex32&);
+    void operator-= (const IComplex8&);
+    void operator-= (const IComplex16&);
+    void operator-= (const IComplex32&);
+    void operator*= (const IComplex8&);
+    void operator*= (const IComplex16&);
+    void operator*= (const IComplex32&);
+    void operator/= (const IComplex8&);
+    void operator/= (const IComplex16&);
+    void operator/= (const IComplex32&);
+    void mulconj    (const IComplex8&);
+    void mulconj    (const IComplex16&);
+    void mulconj    (const IComplex32&);
 
-// left-right
-IComplex8  operator- (const IComplex8&  left, const IComplex8&  right);
-IComplex16 operator- (const IComplex16& left, const IComplex16& right);
-IComplex16 operator- (const IComplex16& left, const IComplex8&  right);
-IComplex16 operator- (const IComplex8&  left, const IComplex16& right);
-IComplex32 operator- (const IComplex32& left, const IComplex32& right);
-IComplex32 operator- (const IComplex32& left, const IComplex16& right);
-IComplex32 operator- (const IComplex32& left, const IComplex8&  right);
-IComplex32 operator- (const IComplex16& left, const IComplex32& right);
-IComplex32 operator- (const IComplex8&  left, const IComplex32& right);
-IComplex8  sub8  (const IComplex8&  left, const IComplex8&  right);
-IComplex16 sub16 (const IComplex8&  left, const IComplex8&  right);
-IComplex16 sub16 (const IComplex8&  left, const IComplex16& right);
-IComplex16 sub16 (const IComplex16& left, const IComplex8&  right);
-IComplex16 sub16 (const IComplex16& left, const IComplex16& right);
-IComplex32 sub32 (const IComplex8&  left, const IComplex8&  right);
-IComplex32 sub32 (const IComplex8&  left, const IComplex16& right);
-IComplex32 sub32 (const IComplex16& left, const IComplex8&  right);
-IComplex32 sub32 (const IComplex16& left, const IComplex16& right);
-IComplex32 sub32 (const IComplex8&  left, const IComplex32& right);
-IComplex32 sub32 (const IComplex32& left, const IComplex8&  right);
-IComplex32 sub32 (const IComplex16& left, const IComplex32& right);
-IComplex32 sub32 (const IComplex32& left, const IComplex16& right);
-IComplex32 sub32 (const IComplex32& left, const IComplex32& right);
-
-// left*right
-IComplex8  operator* (const IComplex8&  left, const IComplex8&  right);
-IComplex16 operator* (const IComplex16& left, const IComplex16& right);
-IComplex16 operator* (const IComplex16& left, const IComplex8&  right);
-IComplex16 operator* (const IComplex8&  left, const IComplex16& right);
-IComplex32 operator* (const IComplex32& left, const IComplex32& right);
-IComplex32 operator* (const IComplex32& left, const IComplex16& right);
-IComplex32 operator* (const IComplex32& left, const IComplex8&  right);
-IComplex32 operator* (const IComplex16& left, const IComplex32& right);
-IComplex32 operator* (const IComplex8&  left, const IComplex32& right);
-IComplex8  mul8 ( const IComplex8&  left, const IComplex8&  right);
-IComplex16 mul16 (const IComplex8&  left, const IComplex8&  right);
-IComplex16 mul16 (const IComplex8&  left, const IComplex16& right);
-IComplex16 mul16 (const IComplex16& left, const IComplex8&  right);
-IComplex16 mul16 (const IComplex16& left, const IComplex16& right);
-IComplex32 mul32 (const IComplex8&  left, const IComplex8&  right);
-IComplex32 mul32 (const IComplex8&  left, const IComplex16& right);
-IComplex32 mul32 (const IComplex16& left, const IComplex8&  right);
-IComplex32 mul32 (const IComplex16& left, const IComplex16& right);
-IComplex32 mul32 (const IComplex8&  left, const IComplex32& right);
-IComplex32 mul32 (const IComplex32& left, const IComplex8&  right);
-IComplex32 mul32 (const IComplex16& left, const IComplex32& right);
-IComplex32 mul32 (const IComplex32& left, const IComplex16& right);
-IComplex32 mul32 (const IComplex32& left, const IComplex32& right);
-
-// left/right
-IComplex8  operator/ (const IComplex8&  left, const IComplex8&  right);
-IComplex16 operator/ (const IComplex16& left, const IComplex16& right);
-IComplex16 operator/ (const IComplex16& left, const IComplex8&  right);
-IComplex16 operator/ (const IComplex8&  left, const IComplex16& right);
-IComplex32 operator/ (const IComplex32& left, const IComplex32& right);
-IComplex32 operator/ (const IComplex32& left, const IComplex16& right);
-IComplex32 operator/ (const IComplex32& left, const IComplex8&  right);
-IComplex32 operator/ (const IComplex16& left, const IComplex32& right);
-IComplex32 operator/ (const IComplex8&  left, const IComplex32& right);
-IComplex8  div8  (const IComplex8&  left, const IComplex8&  right);
-IComplex16 div16 (const IComplex8&  left, const IComplex8&  right);
-IComplex16 div16 (const IComplex8&  left, const IComplex16& right);
-IComplex16 div16 (const IComplex16& left, const IComplex8&  right);
-IComplex16 div16 (const IComplex16& left, const IComplex16& right);
-IComplex32 div32 (const IComplex8&  left, const IComplex8&  right);
-IComplex32 div32 (const IComplex8&  left, const IComplex16& right);
-IComplex32 div32 (const IComplex16& left, const IComplex8&  right);
-IComplex32 div32 (const IComplex16& left, const IComplex16& right);
-IComplex32 div32 (const IComplex8&  left, const IComplex32& right);
-IComplex32 div32 (const IComplex32& left, const IComplex8&  right);
-IComplex32 div32 (const IComplex16& left, const IComplex32& right);
-IComplex32 div32 (const IComplex32& left, const IComplex16& right);
-IComplex32 div32 (const IComplex32& left, const IComplex32& right);
-
-// left*conj(right)
-IComplex8  mulconj (const IComplex8&  left, const IComplex8&  right);
-IComplex16 mulconj (const IComplex16& left, const IComplex16& right);
-IComplex16 mulconj (const IComplex16& left, const IComplex8&  right);
-IComplex16 mulconj (const IComplex8&  left, const IComplex16& right);
-IComplex32 mulconj (const IComplex32& left, const IComplex32& right);
-IComplex32 mulconj (const IComplex32& left, const IComplex16& right);
-IComplex32 mulconj (const IComplex32& left, const IComplex8&  right);
-IComplex32 mulconj (const IComplex16& left, const IComplex32& right);
-IComplex32 mulconj (const IComplex8&  left, const IComplex32& right);
-IComplex8  mulconj8 ( const IComplex8&  left, const IComplex8&  right);
-IComplex16 mulconj16 (const IComplex8&  left, const IComplex8&  right);
-IComplex16 mulconj16 (const IComplex8&  left, const IComplex16& right);
-IComplex16 mulconj16 (const IComplex16& left, const IComplex8&  right);
-IComplex16 mulconj16 (const IComplex16& left, const IComplex16& right);
-IComplex32 mulconj32 (const IComplex8&  left, const IComplex8&  right);
-IComplex32 mulconj32 (const IComplex8&  left, const IComplex16& right);
-IComplex32 mulconj32 (const IComplex16& left, const IComplex8&  right);
-IComplex32 mulconj32 (const IComplex16& left, const IComplex16& right);
-IComplex32 mulconj32 (const IComplex8&  left, const IComplex32& right);
-IComplex32 mulconj32 (const IComplex32& left, const IComplex8&  right);
-IComplex32 mulconj32 (const IComplex16& left, const IComplex32& right);
-IComplex32 mulconj32 (const IComplex32& left, const IComplex16& right);
-IComplex32 mulconj32 (const IComplex32& left, const IComplex32& right);
+  private:
+    int32 itsre;
+    int32 itsim;
+  };
 
 
+  // Show on ostream.
+  ostream& operator<< (ostream& os, const IComplex8&);
+  ostream& operator<< (ostream& os, const IComplex16&);
+  ostream& operator<< (ostream& os, const IComplex32&);
 
-inline IComplex8::IComplex8()
-: itsre(0),
-  itsim(0)
-{}
-inline IComplex8::IComplex8 (char re)
-: itsre(re),
-  itsim(0)
-{}
-inline IComplex8::IComplex8 (char re, char im)
-: itsre(re),
-  itsim(im)
-{}
+  // Take conjugate.
+  IComplex8  conj (const IComplex8& x);
+  IComplex16 conj (const IComplex16& x);
+  IComplex32 conj (const IComplex32& x);
 
-inline char IComplex8::re() const
+  // Take norm (re^2+im^2).
+  int32 norm (const IComplex8& x);
+  int32 norm (const IComplex16& x);
+  int32 norm (const IComplex32& x);
+
+  // left+right
+  IComplex8  operator+ (const IComplex8&  left, const IComplex8&  right);
+  IComplex16 operator+ (const IComplex16& left, const IComplex16& right);
+  IComplex16 operator+ (const IComplex16& left, const IComplex8&  right);
+  IComplex16 operator+ (const IComplex8&  left, const IComplex16& right);
+  IComplex32 operator+ (const IComplex32& left, const IComplex32& right);
+  IComplex32 operator+ (const IComplex32& left, const IComplex16& right);
+  IComplex32 operator+ (const IComplex32& left, const IComplex8&  right);
+  IComplex32 operator+ (const IComplex16& left, const IComplex32& right);
+  IComplex32 operator+ (const IComplex8&  left, const IComplex32& right);
+  IComplex8  add8  (const IComplex8&  left, const IComplex8&  right);
+  IComplex16 add16 (const IComplex8&  left, const IComplex8&  right);
+  IComplex16 add16 (const IComplex8&  left, const IComplex16& right);
+  IComplex16 add16 (const IComplex16& left, const IComplex8&  right);
+  IComplex16 add16 (const IComplex16& left, const IComplex16& right);
+  IComplex32 add32 (const IComplex8&  left, const IComplex8&  right);
+  IComplex32 add32 (const IComplex8&  left, const IComplex16& right);
+  IComplex32 add32 (const IComplex16& left, const IComplex8&  right);
+  IComplex32 add32 (const IComplex16& left, const IComplex16& right);
+  IComplex32 add32 (const IComplex8&  left, const IComplex32& right);
+  IComplex32 add32 (const IComplex32& left, const IComplex8&  right);
+  IComplex32 add32 (const IComplex16& left, const IComplex32& right);
+  IComplex32 add32 (const IComplex32& left, const IComplex16& right);
+  IComplex32 add32 (const IComplex32& left, const IComplex32& right);
+
+  // left-right
+  IComplex8  operator- (const IComplex8&  left, const IComplex8&  right);
+  IComplex16 operator- (const IComplex16& left, const IComplex16& right);
+  IComplex16 operator- (const IComplex16& left, const IComplex8&  right);
+  IComplex16 operator- (const IComplex8&  left, const IComplex16& right);
+  IComplex32 operator- (const IComplex32& left, const IComplex32& right);
+  IComplex32 operator- (const IComplex32& left, const IComplex16& right);
+  IComplex32 operator- (const IComplex32& left, const IComplex8&  right);
+  IComplex32 operator- (const IComplex16& left, const IComplex32& right);
+  IComplex32 operator- (const IComplex8&  left, const IComplex32& right);
+  IComplex8  sub8  (const IComplex8&  left, const IComplex8&  right);
+  IComplex16 sub16 (const IComplex8&  left, const IComplex8&  right);
+  IComplex16 sub16 (const IComplex8&  left, const IComplex16& right);
+  IComplex16 sub16 (const IComplex16& left, const IComplex8&  right);
+  IComplex16 sub16 (const IComplex16& left, const IComplex16& right);
+  IComplex32 sub32 (const IComplex8&  left, const IComplex8&  right);
+  IComplex32 sub32 (const IComplex8&  left, const IComplex16& right);
+  IComplex32 sub32 (const IComplex16& left, const IComplex8&  right);
+  IComplex32 sub32 (const IComplex16& left, const IComplex16& right);
+  IComplex32 sub32 (const IComplex8&  left, const IComplex32& right);
+  IComplex32 sub32 (const IComplex32& left, const IComplex8&  right);
+  IComplex32 sub32 (const IComplex16& left, const IComplex32& right);
+  IComplex32 sub32 (const IComplex32& left, const IComplex16& right);
+  IComplex32 sub32 (const IComplex32& left, const IComplex32& right);
+
+  // left*right
+  IComplex8  operator* (const IComplex8&  left, const IComplex8&  right);
+  IComplex16 operator* (const IComplex16& left, const IComplex16& right);
+  IComplex16 operator* (const IComplex16& left, const IComplex8&  right);
+  IComplex16 operator* (const IComplex8&  left, const IComplex16& right);
+  IComplex32 operator* (const IComplex32& left, const IComplex32& right);
+  IComplex32 operator* (const IComplex32& left, const IComplex16& right);
+  IComplex32 operator* (const IComplex32& left, const IComplex8&  right);
+  IComplex32 operator* (const IComplex16& left, const IComplex32& right);
+  IComplex32 operator* (const IComplex8&  left, const IComplex32& right);
+  IComplex8  mul8 ( const IComplex8&  left, const IComplex8&  right);
+  IComplex16 mul16 (const IComplex8&  left, const IComplex8&  right);
+  IComplex16 mul16 (const IComplex8&  left, const IComplex16& right);
+  IComplex16 mul16 (const IComplex16& left, const IComplex8&  right);
+  IComplex16 mul16 (const IComplex16& left, const IComplex16& right);
+  IComplex32 mul32 (const IComplex8&  left, const IComplex8&  right);
+  IComplex32 mul32 (const IComplex8&  left, const IComplex16& right);
+  IComplex32 mul32 (const IComplex16& left, const IComplex8&  right);
+  IComplex32 mul32 (const IComplex16& left, const IComplex16& right);
+  IComplex32 mul32 (const IComplex8&  left, const IComplex32& right);
+  IComplex32 mul32 (const IComplex32& left, const IComplex8&  right);
+  IComplex32 mul32 (const IComplex16& left, const IComplex32& right);
+  IComplex32 mul32 (const IComplex32& left, const IComplex16& right);
+  IComplex32 mul32 (const IComplex32& left, const IComplex32& right);
+
+  // left/right
+  IComplex8  operator/ (const IComplex8&  left, const IComplex8&  right);
+  IComplex16 operator/ (const IComplex16& left, const IComplex16& right);
+  IComplex16 operator/ (const IComplex16& left, const IComplex8&  right);
+  IComplex16 operator/ (const IComplex8&  left, const IComplex16& right);
+  IComplex32 operator/ (const IComplex32& left, const IComplex32& right);
+  IComplex32 operator/ (const IComplex32& left, const IComplex16& right);
+  IComplex32 operator/ (const IComplex32& left, const IComplex8&  right);
+  IComplex32 operator/ (const IComplex16& left, const IComplex32& right);
+  IComplex32 operator/ (const IComplex8&  left, const IComplex32& right);
+  IComplex8  div8  (const IComplex8&  left, const IComplex8&  right);
+  IComplex16 div16 (const IComplex8&  left, const IComplex8&  right);
+  IComplex16 div16 (const IComplex8&  left, const IComplex16& right);
+  IComplex16 div16 (const IComplex16& left, const IComplex8&  right);
+  IComplex16 div16 (const IComplex16& left, const IComplex16& right);
+  IComplex32 div32 (const IComplex8&  left, const IComplex8&  right);
+  IComplex32 div32 (const IComplex8&  left, const IComplex16& right);
+  IComplex32 div32 (const IComplex16& left, const IComplex8&  right);
+  IComplex32 div32 (const IComplex16& left, const IComplex16& right);
+  IComplex32 div32 (const IComplex8&  left, const IComplex32& right);
+  IComplex32 div32 (const IComplex32& left, const IComplex8&  right);
+  IComplex32 div32 (const IComplex16& left, const IComplex32& right);
+  IComplex32 div32 (const IComplex32& left, const IComplex16& right);
+  IComplex32 div32 (const IComplex32& left, const IComplex32& right);
+
+  // left*conj(right)
+  IComplex8  mulconj (const IComplex8&  left, const IComplex8&  right);
+  IComplex16 mulconj (const IComplex16& left, const IComplex16& right);
+  IComplex16 mulconj (const IComplex16& left, const IComplex8&  right);
+  IComplex16 mulconj (const IComplex8&  left, const IComplex16& right);
+  IComplex32 mulconj (const IComplex32& left, const IComplex32& right);
+  IComplex32 mulconj (const IComplex32& left, const IComplex16& right);
+  IComplex32 mulconj (const IComplex32& left, const IComplex8&  right);
+  IComplex32 mulconj (const IComplex16& left, const IComplex32& right);
+  IComplex32 mulconj (const IComplex8&  left, const IComplex32& right);
+  IComplex8  mulconj8 ( const IComplex8&  left, const IComplex8&  right);
+  IComplex16 mulconj16 (const IComplex8&  left, const IComplex8&  right);
+  IComplex16 mulconj16 (const IComplex8&  left, const IComplex16& right);
+  IComplex16 mulconj16 (const IComplex16& left, const IComplex8&  right);
+  IComplex16 mulconj16 (const IComplex16& left, const IComplex16& right);
+  IComplex32 mulconj32 (const IComplex8&  left, const IComplex8&  right);
+  IComplex32 mulconj32 (const IComplex8&  left, const IComplex16& right);
+  IComplex32 mulconj32 (const IComplex16& left, const IComplex8&  right);
+  IComplex32 mulconj32 (const IComplex16& left, const IComplex16& right);
+  IComplex32 mulconj32 (const IComplex8&  left, const IComplex32& right);
+  IComplex32 mulconj32 (const IComplex32& left, const IComplex8&  right);
+  IComplex32 mulconj32 (const IComplex16& left, const IComplex32& right);
+  IComplex32 mulconj32 (const IComplex32& left, const IComplex16& right);
+  IComplex32 mulconj32 (const IComplex32& left, const IComplex32& right);
+
+
+
+  inline IComplex8::IComplex8()
+    : itsre(0),
+      itsim(0)
+  {}
+  inline IComplex8::IComplex8 (char re)
+    : itsre(re),
+      itsim(0)
+  {}
+  inline IComplex8::IComplex8 (char re, char im)
+    : itsre(re),
+      itsim(im)
+  {}
+
+  inline char IComplex8::re() const
   { return itsre; }
-inline char IComplex8::im() const
+  inline char IComplex8::im() const
   { return itsim; }
 
-inline bool IComplex8::operator== (const IComplex8& that) const
+  inline bool IComplex8::operator== (const IComplex8& that) const
   { return itsre == that.re()  &&  itsim == that.im(); }
-inline bool IComplex8::operator== (const IComplex16& that) const
+  inline bool IComplex8::operator== (const IComplex16& that) const
   { return itsre == that.re()  &&  itsim == that.im(); }
-inline bool IComplex8::operator== (const IComplex32& that) const
+  inline bool IComplex8::operator== (const IComplex32& that) const
   { return itsre == that.re()  &&  itsim == that.im(); }
-inline bool IComplex8::operator!= (const IComplex8& that) const
+  inline bool IComplex8::operator!= (const IComplex8& that) const
   { return itsre != that.re()  ||  itsim != that.im(); }
-inline bool IComplex8::operator!= (const IComplex16& that) const
+  inline bool IComplex8::operator!= (const IComplex16& that) const
   { return itsre != that.re()  ||  itsim != that.im(); }
-inline bool IComplex8::operator!= (const IComplex32& that) const
+  inline bool IComplex8::operator!= (const IComplex32& that) const
   { return itsre != that.re()  ||  itsim != that.im(); }
 
 
-inline IComplex16::IComplex16()
-: itsre(0),
-  itsim(0)
-{}
-inline IComplex16::IComplex16 (int16 re)
-: itsre(re),
-  itsim(0)
-{}
-inline IComplex16::IComplex16 (int16 re, int16 im)
-: itsre(re),
-  itsim(im)
-{}
+  inline IComplex16::IComplex16()
+    : itsre(0),
+      itsim(0)
+  {}
+  inline IComplex16::IComplex16 (int16 re)
+    : itsre(re),
+      itsim(0)
+  {}
+  inline IComplex16::IComplex16 (int16 re, int16 im)
+    : itsre(re),
+      itsim(im)
+  {}
 
-inline int16 IComplex16::re() const
+  inline int16 IComplex16::re() const
   { return itsre; }
-inline int16 IComplex16::im() const
+  inline int16 IComplex16::im() const
   { return itsim; }
 
-inline bool IComplex16::operator== (const IComplex8& that) const
+  inline bool IComplex16::operator== (const IComplex8& that) const
   { return itsre == that.re()  &&  itsim == that.im(); }
-inline bool IComplex16::operator== (const IComplex16& that) const
+  inline bool IComplex16::operator== (const IComplex16& that) const
   { return itsre == that.re()  &&  itsim == that.im(); }
-inline bool IComplex16::operator== (const IComplex32& that) const
+  inline bool IComplex16::operator== (const IComplex32& that) const
   { return itsre == that.re()  &&  itsim == that.im(); }
-inline bool IComplex16::operator!= (const IComplex8& that) const
+  inline bool IComplex16::operator!= (const IComplex8& that) const
   { return itsre != that.re()  ||  itsim != that.im(); }
-inline bool IComplex16::operator!= (const IComplex16& that) const
+  inline bool IComplex16::operator!= (const IComplex16& that) const
   { return itsre != that.re()  ||  itsim != that.im(); }
-inline bool IComplex16::operator!= (const IComplex32& that) const
+  inline bool IComplex16::operator!= (const IComplex32& that) const
   { return itsre != that.re()  ||  itsim != that.im(); }
 
 
-inline IComplex32::IComplex32()
-: itsre(0),
-  itsim(0)
-{}
-inline IComplex32::IComplex32 (int32 re)
-: itsre(re),
-  itsim(0)
-{}
-inline IComplex32::IComplex32 (int32 re, int32 im)
-: itsre(re),
-  itsim(im)
-{}
+  inline IComplex32::IComplex32()
+    : itsre(0),
+      itsim(0)
+  {}
+  inline IComplex32::IComplex32 (int32 re)
+    : itsre(re),
+      itsim(0)
+  {}
+  inline IComplex32::IComplex32 (int32 re, int32 im)
+    : itsre(re),
+      itsim(im)
+  {}
 
-inline int32 IComplex32::re() const
+  inline int32 IComplex32::re() const
   { return itsre; }
-inline int32 IComplex32::im() const
+  inline int32 IComplex32::im() const
   { return itsim; }
 
-inline bool IComplex32::operator== (const IComplex8& that) const
+  inline bool IComplex32::operator== (const IComplex8& that) const
   { return itsre == that.re()  &&  itsim == that.im(); }
-inline bool IComplex32::operator== (const IComplex16& that) const
+  inline bool IComplex32::operator== (const IComplex16& that) const
   { return itsre == that.re()  &&  itsim == that.im(); }
-inline bool IComplex32::operator== (const IComplex32& that) const
+  inline bool IComplex32::operator== (const IComplex32& that) const
   { return itsre == that.re()  &&  itsim == that.im(); }
-inline bool IComplex32::operator!= (const IComplex8& that) const
+  inline bool IComplex32::operator!= (const IComplex8& that) const
   { return itsre != that.re()  ||  itsim != that.im(); }
-inline bool IComplex32::operator!= (const IComplex16& that) const
+  inline bool IComplex32::operator!= (const IComplex16& that) const
   { return itsre != that.re()  ||  itsim != that.im(); }
-inline bool IComplex32::operator!= (const IComplex32& that) const
+  inline bool IComplex32::operator!= (const IComplex32& that) const
   { return itsre != that.re()  ||  itsim != that.im(); }
 
 
 
-inline IComplex8 conj (const IComplex8& x)
+  inline IComplex8 conj (const IComplex8& x)
   { return IComplex8 (x.re(), -x.im()); }
-inline IComplex16 conj (const IComplex16& x)
+  inline IComplex16 conj (const IComplex16& x)
   { return IComplex16 (x.re(), -x.im()); }
-inline IComplex32 conj (const IComplex32& x)
+  inline IComplex32 conj (const IComplex32& x)
   { return IComplex32 (x.re(), -x.im()); }
 
-inline int32 norm (const IComplex8& x)
+  inline int32 norm (const IComplex8& x)
   { return int32(x.re())*x.re() + int32(x.im())*x.im(); }
-inline int32 norm (const IComplex16& x)
+  inline int32 norm (const IComplex16& x)
   { return int32(x.re())*x.re() + int32(x.im())*x.im(); }
-inline int32 norm (const IComplex32& x)
+  inline int32 norm (const IComplex32& x)
   { return x.re()*x.re() + x.im()*x.im(); }
 
-inline void IComplex8::operator+= (const IComplex8& that)
+  inline void IComplex8::operator+= (const IComplex8& that)
   { itsre += that.re(); itsim += that.im(); }
-inline void IComplex16::operator+= (const IComplex8& that)
+  inline void IComplex16::operator+= (const IComplex8& that)
   { itsre += that.re(); itsim += that.im(); }
-inline void IComplex16::operator+= (const IComplex16& that)
+  inline void IComplex16::operator+= (const IComplex16& that)
   { itsre += that.re(); itsim += that.im(); }
-inline void IComplex32::operator+= (const IComplex8& that)
+  inline void IComplex32::operator+= (const IComplex8& that)
   { itsre += that.re(); itsim += that.im(); }
-inline void IComplex32::operator+= (const IComplex16& that)
+  inline void IComplex32::operator+= (const IComplex16& that)
   { itsre += that.re(); itsim += that.im(); }
-inline void IComplex32::operator+= (const IComplex32& that)
+  inline void IComplex32::operator+= (const IComplex32& that)
   { itsre += that.re(); itsim += that.im(); }
 
-inline void IComplex8::operator-= (const IComplex8& that)
+  inline void IComplex8::operator-= (const IComplex8& that)
   { itsre -= that.re(); itsim -= that.im(); }
-inline void IComplex16::operator-= (const IComplex8& that)
+  inline void IComplex16::operator-= (const IComplex8& that)
   { itsre -= that.re(); itsim -= that.im(); }
-inline void IComplex16::operator-= (const IComplex16& that)
+  inline void IComplex16::operator-= (const IComplex16& that)
   { itsre -= that.re(); itsim -= that.im(); }
-inline void IComplex32::operator-= (const IComplex8& that)
+  inline void IComplex32::operator-= (const IComplex8& that)
   { itsre -= that.re(); itsim -= that.im(); }
-inline void IComplex32::operator-= (const IComplex16& that)
+  inline void IComplex32::operator-= (const IComplex16& that)
   { itsre -= that.re(); itsim -= that.im(); }
-inline void IComplex32::operator-= (const IComplex32& that)
+  inline void IComplex32::operator-= (const IComplex32& that)
   { itsre -= that.re(); itsim -= that.im(); }
 
-inline void IComplex8::operator*= (const IComplex8& that)
+  inline void IComplex8::operator*= (const IComplex8& that)
   { char re = itsre * that.re() - itsim * that.im();
-      itsim = itsre * that.im() + itsim * that.re(); itsre = re; }
-inline void IComplex16::operator*= (const IComplex8& that)
+  itsim = itsre * that.im() + itsim * that.re(); itsre = re; }
+  inline void IComplex16::operator*= (const IComplex8& that)
   { int16 re = itsre * that.re() - itsim * that.im();
-       itsim = itsre * that.im() + itsim * that.re(); itsre = re; }
-inline void IComplex16::operator*= (const IComplex16& that)
+  itsim = itsre * that.im() + itsim * that.re(); itsre = re; }
+  inline void IComplex16::operator*= (const IComplex16& that)
   { int16 re = itsre * that.re() - itsim * that.im();
-       itsim = itsre * that.im() + itsim * that.re(); itsre = re; }
-inline void IComplex32::operator*= (const IComplex8& that)
+  itsim = itsre * that.im() + itsim * that.re(); itsre = re; }
+  inline void IComplex32::operator*= (const IComplex8& that)
   { int32 re = itsre * that.re() - itsim * that.im();
-       itsim = itsre * that.im() + itsim * that.re(); itsre = re; }
-inline void IComplex32::operator*= (const IComplex16& that)
+  itsim = itsre * that.im() + itsim * that.re(); itsre = re; }
+  inline void IComplex32::operator*= (const IComplex16& that)
   { int32 re = itsre * that.re() - itsim * that.im();
-       itsim = itsre * that.im() + itsim * that.re(); itsre = re; }
-inline void IComplex32::operator*= (const IComplex32& that)
+  itsim = itsre * that.im() + itsim * that.re(); itsre = re; }
+  inline void IComplex32::operator*= (const IComplex32& that)
   { int32 re = itsre * that.re() - itsim * that.im();
-       itsim = itsre * that.im() + itsim * that.re(); itsre = re; }
+  itsim = itsre * that.im() + itsim * that.re(); itsre = re; }
 
-inline void IComplex8::operator/= (const IComplex8& that)
+  inline void IComplex8::operator/= (const IComplex8& that)
   { int32 n = norm(that);
-    int32 re = (itsre * that.re() + itsim * that.im()) / n;
-       itsim = (itsim * that.re() - itsre * that.im()) / n; itsre = re; }
-inline void IComplex16::operator/= (const IComplex8& that)
+  int32 re = (itsre * that.re() + itsim * that.im()) / n;
+  itsim = (itsim * that.re() - itsre * that.im()) / n; itsre = re; }
+  inline void IComplex16::operator/= (const IComplex8& that)
   { int32 n = norm(that);
-    int32 re = (itsre * that.re() + itsim * that.im()) / n;
-       itsim = (itsim * that.re() - itsre * that.im()) / n; itsre = re; }
-inline void IComplex16::operator/= (const IComplex16& that)
+  int32 re = (itsre * that.re() + itsim * that.im()) / n;
+  itsim = (itsim * that.re() - itsre * that.im()) / n; itsre = re; }
+  inline void IComplex16::operator/= (const IComplex16& that)
   { int32 n = norm(that);
-    int32 re = (itsre * that.re() + itsim * that.im()) / n;
-       itsim = (itsim * that.re() - itsre * that.im()) / n; itsre = re; }
-inline void IComplex32::operator/= (const IComplex8& that)
+  int32 re = (itsre * that.re() + itsim * that.im()) / n;
+  itsim = (itsim * that.re() - itsre * that.im()) / n; itsre = re; }
+  inline void IComplex32::operator/= (const IComplex8& that)
   { int32 n = norm(that);
-    int32 re = (itsre * that.re() + itsim * that.im()) / n;
-       itsim = (itsim * that.re() - itsre * that.im()) / n; itsre = re; }
-inline void IComplex32::operator/= (const IComplex16& that)
+  int32 re = (itsre * that.re() + itsim * that.im()) / n;
+  itsim = (itsim * that.re() - itsre * that.im()) / n; itsre = re; }
+  inline void IComplex32::operator/= (const IComplex16& that)
   { int32 n = norm(that);
-    int32 re = (itsre * that.re() + itsim * that.im()) / n;
-       itsim = (itsim * that.re() - itsre * that.im()) / n; itsre = re; }
-inline void IComplex32::operator/= (const IComplex32& that)
+  int32 re = (itsre * that.re() + itsim * that.im()) / n;
+  itsim = (itsim * that.re() - itsre * that.im()) / n; itsre = re; }
+  inline void IComplex32::operator/= (const IComplex32& that)
   { int32 n = norm(that);
-    int32 re = (itsre * that.re() + itsim * that.im()) / n;
-       itsim = (itsim * that.re() - itsre * that.im()) / n; itsre = re; }
+  int32 re = (itsre * that.re() + itsim * that.im()) / n;
+  itsim = (itsim * that.re() - itsre * that.im()) / n; itsre = re; }
 
-inline void IComplex8::mulconj (const IComplex8& that)
+  inline void IComplex8::mulconj (const IComplex8& that)
   { char re = itsre * that.re() + itsim * that.im();
-      itsim = itsim * that.re() - itsre * that.im(); itsre = re; }
-inline void IComplex16::mulconj (const IComplex8& that)
+  itsim = itsim * that.re() - itsre * that.im(); itsre = re; }
+  inline void IComplex16::mulconj (const IComplex8& that)
   { int16 re = itsre * that.re() + itsim * that.im();
-       itsim = itsim * that.re() - itsre * that.im(); itsre = re; }
-inline void IComplex16::mulconj (const IComplex16& that)
+  itsim = itsim * that.re() - itsre * that.im(); itsre = re; }
+  inline void IComplex16::mulconj (const IComplex16& that)
   { int32 re = itsre * that.re() + itsim * that.im();
-       itsim = itsim * that.re() - itsre * that.im(); itsre = re; }
-inline void IComplex32::mulconj (const IComplex8& that)
+  itsim = itsim * that.re() - itsre * that.im(); itsre = re; }
+  inline void IComplex32::mulconj (const IComplex8& that)
   { int32 re = itsre * that.re() + itsim * that.im();
-       itsim = itsim * that.re() - itsre * that.im(); itsre = re; }
-inline void IComplex32::mulconj (const IComplex16& that)
+  itsim = itsim * that.re() - itsre * that.im(); itsre = re; }
+  inline void IComplex32::mulconj (const IComplex16& that)
   { int32 re = itsre * that.re() + itsim * that.im();
-       itsim = itsim * that.re() - itsre * that.im(); itsre = re; }
-inline void IComplex32::mulconj (const IComplex32& that)
+  itsim = itsim * that.re() - itsre * that.im(); itsre = re; }
+  inline void IComplex32::mulconj (const IComplex32& that)
   { int32 re = itsre * that.re() + itsim * that.im();
-       itsim = itsim * that.re() - itsre * that.im(); itsre = re; }
+  itsim = itsim * that.re() - itsre * that.im(); itsre = re; }
 
 
-inline IComplex8 operator+ (const IComplex8& left, const IComplex8& right)
+  inline IComplex8 operator+ (const IComplex8& left, const IComplex8& right)
   { return add8 (left, right); }
-inline IComplex16 operator+ (const IComplex16& left, const IComplex16& right)
+  inline IComplex16 operator+ (const IComplex16& left, const IComplex16& right)
   { return add16 (left, right); }
-inline IComplex16 operator+ (const IComplex16& left, const IComplex8& right)
+  inline IComplex16 operator+ (const IComplex16& left, const IComplex8& right)
   { return add16 (left, right); }
-inline IComplex16 operator+ (const IComplex8& left, const IComplex16& right)
+  inline IComplex16 operator+ (const IComplex8& left, const IComplex16& right)
   { return add16 (left, right); }
-inline IComplex32 operator+ (const IComplex32& left, const IComplex32& right)
+  inline IComplex32 operator+ (const IComplex32& left, const IComplex32& right)
   { return add32 (left, right); }
-inline IComplex32 operator+ (const IComplex32& left, const IComplex16& right)
+  inline IComplex32 operator+ (const IComplex32& left, const IComplex16& right)
   { return add32 (left, right); }
-inline IComplex32 operator+ (const IComplex32& left, const IComplex8& right)
+  inline IComplex32 operator+ (const IComplex32& left, const IComplex8& right)
   { return add32 (left, right); }
-inline IComplex32 operator+ (const IComplex16& left, const IComplex32& right)
+  inline IComplex32 operator+ (const IComplex16& left, const IComplex32& right)
   { return add32 (left, right); }
-inline IComplex32 operator+ (const IComplex8& left, const IComplex32& right)
+  inline IComplex32 operator+ (const IComplex8& left, const IComplex32& right)
   { return add32 (left, right); }
 
-inline IComplex8 operator- (const IComplex8& left, const IComplex8& right)
+  inline IComplex8 operator- (const IComplex8& left, const IComplex8& right)
   { return sub8 (left, right); }
-inline IComplex16 operator- (const IComplex16& left, const IComplex16& right)
+  inline IComplex16 operator- (const IComplex16& left, const IComplex16& right)
   { return sub16 (left, right); }
-inline IComplex16 operator- (const IComplex16& left, const IComplex8& right)
+  inline IComplex16 operator- (const IComplex16& left, const IComplex8& right)
   { return sub16 (left, right); }
-inline IComplex16 operator- (const IComplex8& left, const IComplex16& right)
+  inline IComplex16 operator- (const IComplex8& left, const IComplex16& right)
   { return sub16 (left, right); }
-inline IComplex32 operator- (const IComplex32& left, const IComplex32& right)
+  inline IComplex32 operator- (const IComplex32& left, const IComplex32& right)
   { return sub32 (left, right); }
-inline IComplex32 operator- (const IComplex32& left, const IComplex16& right)
+  inline IComplex32 operator- (const IComplex32& left, const IComplex16& right)
   { return sub32 (left, right); }
-inline IComplex32 operator- (const IComplex32& left, const IComplex8& right)
+  inline IComplex32 operator- (const IComplex32& left, const IComplex8& right)
   { return sub32 (left, right); }
-inline IComplex32 operator- (const IComplex16& left, const IComplex32& right)
+  inline IComplex32 operator- (const IComplex16& left, const IComplex32& right)
   { return sub32 (left, right); }
-inline IComplex32 operator- (const IComplex8& left, const IComplex32& right)
+  inline IComplex32 operator- (const IComplex8& left, const IComplex32& right)
   { return sub32 (left, right); }
 
-inline IComplex8 operator* (const IComplex8& left, const IComplex8& right)
+  inline IComplex8 operator* (const IComplex8& left, const IComplex8& right)
   { return mul8 (left, right); }
-inline IComplex16 operator* (const IComplex16& left, const IComplex16& right)
+  inline IComplex16 operator* (const IComplex16& left, const IComplex16& right)
   { return mul16 (left, right); }
-inline IComplex16 operator* (const IComplex16& left, const IComplex8& right)
+  inline IComplex16 operator* (const IComplex16& left, const IComplex8& right)
   { return mul16 (left, right); }
-inline IComplex16 operator* (const IComplex8& left, const IComplex16& right)
+  inline IComplex16 operator* (const IComplex8& left, const IComplex16& right)
   { return mul16 (left, right); }
-inline IComplex32 operator* (const IComplex32& left, const IComplex32& right)
+  inline IComplex32 operator* (const IComplex32& left, const IComplex32& right)
   { return mul32 (left, right); }
-inline IComplex32 operator* (const IComplex32& left, const IComplex16& right)
+  inline IComplex32 operator* (const IComplex32& left, const IComplex16& right)
   { return mul32 (left, right); }
-inline IComplex32 operator* (const IComplex32& left, const IComplex8& right)
+  inline IComplex32 operator* (const IComplex32& left, const IComplex8& right)
   { return mul32 (left, right); }
-inline IComplex32 operator* (const IComplex16& left, const IComplex32& right)
+  inline IComplex32 operator* (const IComplex16& left, const IComplex32& right)
   { return mul32 (left, right); }
-inline IComplex32 operator* (const IComplex8& left, const IComplex32& right)
+  inline IComplex32 operator* (const IComplex8& left, const IComplex32& right)
   { return mul32 (left, right); }
 
-inline IComplex8 operator/ (const IComplex8& left, const IComplex8& right)
+  inline IComplex8 operator/ (const IComplex8& left, const IComplex8& right)
   { return div8 (left, right); }
-inline IComplex16 operator/ (const IComplex16& left, const IComplex16& right)
+  inline IComplex16 operator/ (const IComplex16& left, const IComplex16& right)
   { return div16 (left, right); }
-inline IComplex16 operator/ (const IComplex16& left, const IComplex8& right)
+  inline IComplex16 operator/ (const IComplex16& left, const IComplex8& right)
   { return div16 (left, right); }
-inline IComplex16 operator/ (const IComplex8& left, const IComplex16& right)
+  inline IComplex16 operator/ (const IComplex8& left, const IComplex16& right)
   { return div16 (left, right); }
-inline IComplex32 operator/ (const IComplex32& left, const IComplex32& right)
+  inline IComplex32 operator/ (const IComplex32& left, const IComplex32& right)
   { return div32 (left, right); }
-inline IComplex32 operator/ (const IComplex32& left, const IComplex16& right)
+  inline IComplex32 operator/ (const IComplex32& left, const IComplex16& right)
   { return div32 (left, right); }
-inline IComplex32 operator/ (const IComplex32& left, const IComplex8& right)
+  inline IComplex32 operator/ (const IComplex32& left, const IComplex8& right)
   { return div32 (left, right); }
-inline IComplex32 operator/ (const IComplex16& left, const IComplex32& right)
+  inline IComplex32 operator/ (const IComplex16& left, const IComplex32& right)
   { return div32 (left, right); }
-inline IComplex32 operator/ (const IComplex8& left, const IComplex32& right)
+  inline IComplex32 operator/ (const IComplex8& left, const IComplex32& right)
   { return div32 (left, right); }
 
-inline IComplex8 mulconj (const IComplex8& left, const IComplex8& right)
+  inline IComplex8 mulconj (const IComplex8& left, const IComplex8& right)
   { return mulconj8 (left, right); }
-inline IComplex16 mulconj (const IComplex16& left, const IComplex16& right)
+  inline IComplex16 mulconj (const IComplex16& left, const IComplex16& right)
   { return mulconj16 (left, right); }
-inline IComplex16 mulconj (const IComplex16& left, const IComplex8& right)
+  inline IComplex16 mulconj (const IComplex16& left, const IComplex8& right)
   { return mulconj16 (left, right); }
-inline IComplex16 mulconj (const IComplex8& left, const IComplex16& right)
+  inline IComplex16 mulconj (const IComplex8& left, const IComplex16& right)
   { return mulconj16 (left, right); }
-inline IComplex32 mulconj (const IComplex32& left, const IComplex32& right)
+  inline IComplex32 mulconj (const IComplex32& left, const IComplex32& right)
   { return mulconj32 (left, right); }
-inline IComplex32 mulconj (const IComplex32& left, const IComplex16& right)
+  inline IComplex32 mulconj (const IComplex32& left, const IComplex16& right)
   { return mulconj32 (left, right); }
-inline IComplex32 mulconj (const IComplex32& left, const IComplex8& right)
+  inline IComplex32 mulconj (const IComplex32& left, const IComplex8& right)
   { return mulconj32 (left, right); }
-inline IComplex32 mulconj (const IComplex16& left, const IComplex32& right)
+  inline IComplex32 mulconj (const IComplex16& left, const IComplex32& right)
   { return mulconj32 (left, right); }
-inline IComplex32 mulconj (const IComplex8& left, const IComplex32& right)
+  inline IComplex32 mulconj (const IComplex8& left, const IComplex32& right)
   { return mulconj32 (left, right); }
 
 
-inline IComplex8 add8 (const IComplex8& left, const IComplex8& right)
+  inline IComplex8 add8 (const IComplex8& left, const IComplex8& right)
   { return IComplex8 (left.re() + right.re(),
 		      left.im() + right.im()); }
-inline IComplex16 add16 (const IComplex8& left, const IComplex8& right)
+  inline IComplex16 add16 (const IComplex8& left, const IComplex8& right)
   { return IComplex16 (int16(left.re()) + right.re(),
 		       int16(left.im()) + right.im()); }
-inline IComplex16 add16 (const IComplex8& left, const IComplex16& right)
+  inline IComplex16 add16 (const IComplex8& left, const IComplex16& right)
   { return IComplex16 (left.re() + right.re(),
 		       left.im() + right.im()); }
-inline IComplex16 add16 (const IComplex16& left, const IComplex8& right)
+  inline IComplex16 add16 (const IComplex16& left, const IComplex8& right)
   { return IComplex16 (left.re() + right.re(),
 		       left.im() + right.im()); }
-inline IComplex16 add16 (const IComplex16& left, const IComplex16& right)
+  inline IComplex16 add16 (const IComplex16& left, const IComplex16& right)
   { return IComplex16 (left.re() + right.re(),
 		       left.im() + right.im()); }
-inline IComplex32 add32 (const IComplex8& left, const IComplex8& right)
+  inline IComplex32 add32 (const IComplex8& left, const IComplex8& right)
   { return IComplex32 (int32(left.re()) + right.re(),
 		       int32(left.im()) + right.im()); }
-inline IComplex32 add32 (const IComplex8& left, const IComplex16& right)
+  inline IComplex32 add32 (const IComplex8& left, const IComplex16& right)
   { return IComplex32 (int32(left.re()) + right.re(),
 		       int32(left.im()) + right.im()); }
-inline IComplex32 add32 (const IComplex16& left, const IComplex8& right)
+  inline IComplex32 add32 (const IComplex16& left, const IComplex8& right)
   { return IComplex32 (int32(left.re()) + right.re(),
 		       int32(left.im()) + right.im()); }
-inline IComplex32 add32 (const IComplex16& left, const IComplex16& right)
+  inline IComplex32 add32 (const IComplex16& left, const IComplex16& right)
   { return IComplex32 (int32(left.re()) + right.re(),
 		       int32(left.im()) + right.im()); }
-inline IComplex32 add32 (const IComplex8& left, const IComplex32& right)
+  inline IComplex32 add32 (const IComplex8& left, const IComplex32& right)
   { return IComplex32 (left.re() + right.re(),
 		       left.im() + right.im()); }
-inline IComplex32 add32 (const IComplex32& left, const IComplex8& right)
+  inline IComplex32 add32 (const IComplex32& left, const IComplex8& right)
   { return IComplex32 (left.re() + right.re(),
 		       left.im() + right.im()); }
-inline IComplex32 add32 (const IComplex16& left, const IComplex32& right)
+  inline IComplex32 add32 (const IComplex16& left, const IComplex32& right)
   { return IComplex32 (left.re() + right.re(),
 		       left.im() + right.im()); }
-inline IComplex32 add32 (const IComplex32& left, const IComplex16& right)
+  inline IComplex32 add32 (const IComplex32& left, const IComplex16& right)
   { return IComplex32 (left.re() + right.re(),
 		       left.im() + right.im()); }
-inline IComplex32 add32 (const IComplex32& left, const IComplex32& right)
+  inline IComplex32 add32 (const IComplex32& left, const IComplex32& right)
   { return IComplex32 (left.re() + right.re(),
 		       left.im() + right.im()); }
 
-inline IComplex8 sub8 (const IComplex8& left, const IComplex8& right)
+  inline IComplex8 sub8 (const IComplex8& left, const IComplex8& right)
   { return IComplex8 (left.re() - right.re(),
 		      left.im() - right.im()); }
-inline IComplex16 sub16 (const IComplex8& left, const IComplex8& right)
+  inline IComplex16 sub16 (const IComplex8& left, const IComplex8& right)
   { return IComplex16 (int16(left.re()) - right.re(),
 		       int16(left.im()) - right.im()); }
-inline IComplex16 sub16 (const IComplex8& left, const IComplex16& right)
+  inline IComplex16 sub16 (const IComplex8& left, const IComplex16& right)
   { return IComplex16 (left.re() - right.re(),
 		       left.im() - right.im()); }
-inline IComplex16 sub16 (const IComplex16& left, const IComplex8& right)
+  inline IComplex16 sub16 (const IComplex16& left, const IComplex8& right)
   { return IComplex16 (left.re() - right.re(),
 		       left.im() - right.im()); }
-inline IComplex16 sub16 (const IComplex16& left, const IComplex16& right)
+  inline IComplex16 sub16 (const IComplex16& left, const IComplex16& right)
   { return IComplex16 (left.re() - right.re(),
 		       left.im() - right.im()); }
-inline IComplex32 sub32 (const IComplex8& left, const IComplex8& right)
+  inline IComplex32 sub32 (const IComplex8& left, const IComplex8& right)
   { return IComplex32 (int32(left.re()) - right.re(),
 		       int32(left.im()) - right.im()); }
-inline IComplex32 sub32 (const IComplex8& left, const IComplex16& right)
+  inline IComplex32 sub32 (const IComplex8& left, const IComplex16& right)
   { return IComplex32 (int32(left.re()) - right.re(),
 		       int32(left.im()) - right.im()); }
-inline IComplex32 sub32 (const IComplex16& left, const IComplex8& right)
+  inline IComplex32 sub32 (const IComplex16& left, const IComplex8& right)
   { return IComplex32 (int32(left.re()) - right.re(),
 		       int32(left.im()) - right.im()); }
-inline IComplex32 sub32 (const IComplex16& left, const IComplex16& right)
+  inline IComplex32 sub32 (const IComplex16& left, const IComplex16& right)
   { return IComplex32 (int32(left.re()) - right.re(),
 		       int32(left.im()) - right.im()); }
-inline IComplex32 sub32 (const IComplex8& left, const IComplex32& right)
+  inline IComplex32 sub32 (const IComplex8& left, const IComplex32& right)
   { return IComplex32 (left.re() - right.re(),
 		       left.im() - right.im()); }
-inline IComplex32 sub32 (const IComplex32& left, const IComplex8& right)
+  inline IComplex32 sub32 (const IComplex32& left, const IComplex8& right)
   { return IComplex32 (left.re() - right.re(),
 		       left.im() - right.im()); }
-inline IComplex32 sub32 (const IComplex16& left, const IComplex32& right)
+  inline IComplex32 sub32 (const IComplex16& left, const IComplex32& right)
   { return IComplex32 (left.re() - right.re(),
 		       left.im() - right.im()); }
-inline IComplex32 sub32 (const IComplex32& left, const IComplex16& right)
+  inline IComplex32 sub32 (const IComplex32& left, const IComplex16& right)
   { return IComplex32 (left.re() - right.re(),
 		       left.im() - right.im()); }
-inline IComplex32 sub32 (const IComplex32& left, const IComplex32& right)
+  inline IComplex32 sub32 (const IComplex32& left, const IComplex32& right)
   { return IComplex32 (left.re() - right.re(),
 		       left.im() - right.im()); }
 
-inline IComplex8 mul8 (const IComplex8& left, const IComplex8& right)
+  inline IComplex8 mul8 (const IComplex8& left, const IComplex8& right)
   { return IComplex8 (left.re() * right.re() - left.im() * right.im(),
 		      left.re() * right.im() + left.im() * right.re()); }
-inline IComplex16 mul16 (const IComplex8& left, const IComplex8& right)
+  inline IComplex16 mul16 (const IComplex8& left, const IComplex8& right)
   { return IComplex16 (int16(left.re()) * right.re() -
 		       int16(left.im()) * right.im(),
 		       int16(left.re()) * right.im() +
 		       int16(left.im()) * right.re()); }
-inline IComplex16 mul16 (const IComplex8& left, const IComplex16& right)
+  inline IComplex16 mul16 (const IComplex8& left, const IComplex16& right)
   { return IComplex16 (left.re() * right.re() - left.im() * right.im(),
 		       left.re() * right.im() + left.im() * right.re()); }
-inline IComplex16 mul16 (const IComplex16& left, const IComplex8& right)
+  inline IComplex16 mul16 (const IComplex16& left, const IComplex8& right)
   { return IComplex16 (left.re() * right.re() - left.im() * right.im(),
 		       left.re() * right.im() + left.im() * right.re()); }
-inline IComplex16 mul16 (const IComplex16& left, const IComplex16& right)
+  inline IComplex16 mul16 (const IComplex16& left, const IComplex16& right)
   { return IComplex16 (left.re() * right.re() - left.im() * right.im(),
 		       left.re() * right.im() + left.im() * right.re()); }
-inline IComplex32 mul32 (const IComplex8& left, const IComplex8& right)
+  inline IComplex32 mul32 (const IComplex8& left, const IComplex8& right)
   { return IComplex32 (int32(left.re()) * right.re() -
 		       int32(left.im()) * right.im(),
 		       int32(left.re()) * right.im() +
 		       int32(left.im()) * right.re()); }
-inline IComplex32 mul32 (const IComplex8& left, const IComplex16& right)
+  inline IComplex32 mul32 (const IComplex8& left, const IComplex16& right)
   { return IComplex32 (int32(left.re()) * right.re() -
 		       int32(left.im()) * right.im(),
 		       int32(left.re()) * right.im() +
 		       int32(left.im()) * right.re()); }
-inline IComplex32 mul32 (const IComplex16& left, const IComplex8& right)
+  inline IComplex32 mul32 (const IComplex16& left, const IComplex8& right)
   { return IComplex32 (int32(left.re()) * right.re() -
 		       int32(left.im()) * right.im(),
 		       int32(left.re()) * right.im() +
 		       int32(left.im()) * right.re()); }
-inline IComplex32 mul32 (const IComplex16& left, const IComplex16& right)
+  inline IComplex32 mul32 (const IComplex16& left, const IComplex16& right)
   { return IComplex32 (int32(left.re()) * right.re() -
 		       int32(left.im()) * right.im(),
 		       int32(left.re()) * right.im() +
 		       int32(left.im()) * right.re()); }
-inline IComplex32 mul32 (const IComplex8& left, const IComplex32& right)
+  inline IComplex32 mul32 (const IComplex8& left, const IComplex32& right)
   { return IComplex32 (left.re() * right.re() - left.im() * right.im(),
 		       left.re() * right.im() + left.im() * right.re()); }
-inline IComplex32 mul32 (const IComplex32& left, const IComplex8& right)
+  inline IComplex32 mul32 (const IComplex32& left, const IComplex8& right)
   { return IComplex32 (left.re() * right.re() - left.im() * right.im(),
 		       left.re() * right.im() + left.im() * right.re()); }
-inline IComplex32 mul32 (const IComplex16& left, const IComplex32& right)
+  inline IComplex32 mul32 (const IComplex16& left, const IComplex32& right)
   { return IComplex32 (left.re() * right.re() - left.im() * right.im(),
 		       left.re() * right.im() + left.im() * right.re()); }
-inline IComplex32 mul32 (const IComplex32& left, const IComplex16& right)
+  inline IComplex32 mul32 (const IComplex32& left, const IComplex16& right)
   { return IComplex32 (left.re() * right.re() - left.im() * right.im(),
 		       left.re() * right.im() + left.im() * right.re()); }
-inline IComplex32 mul32 (const IComplex32& left, const IComplex32& right)
+  inline IComplex32 mul32 (const IComplex32& left, const IComplex32& right)
   { return IComplex32 (left.re() * right.re() - left.im() * right.im(),
 		       left.re() * right.im() + left.im() * right.re()); }
 
-inline IComplex8 div8 (const IComplex8& left, const IComplex8& right)
+  inline IComplex8 div8 (const IComplex8& left, const IComplex8& right)
   { int32 n = norm(right);
-    return IComplex8 ((int32(left.re()) * right.re() +
-		       int32(left.im()) * right.im()) / n,
-		      (int32(left.im()) * right.re() -
-		       int32(left.re()) * right.im()) / n); }
-inline IComplex16 div16 (const IComplex8& left, const IComplex8& right)
+  return IComplex8 ((int32(left.re()) * right.re() +
+                     int32(left.im()) * right.im()) / n,
+                    (int32(left.im()) * right.re() -
+                     int32(left.re()) * right.im()) / n); }
+  inline IComplex16 div16 (const IComplex8& left, const IComplex8& right)
   { int32 n = norm(right);
-    return IComplex16 ((int32(left.re()) * right.re() +
-			int32(left.im()) * right.im()) / n,
-		       (int32(left.im()) * right.re() -
-			int32(left.re()) * right.im()) / n); }
-inline IComplex16 div16 (const IComplex8& left, const IComplex16& right)
+  return IComplex16 ((int32(left.re()) * right.re() +
+                      int32(left.im()) * right.im()) / n,
+                     (int32(left.im()) * right.re() -
+                      int32(left.re()) * right.im()) / n); }
+  inline IComplex16 div16 (const IComplex8& left, const IComplex16& right)
   { int32 n = norm(right);
-    return IComplex16 ((int32(left.re()) * right.re() +
-			int32(left.im()) * right.im()) / n,
-		       (int32(left.im()) * right.re() -
-			int32(left.re()) * right.im()) / n); }
-inline IComplex16 div16 (const IComplex16& left, const IComplex8& right)
+  return IComplex16 ((int32(left.re()) * right.re() +
+                      int32(left.im()) * right.im()) / n,
+                     (int32(left.im()) * right.re() -
+                      int32(left.re()) * right.im()) / n); }
+  inline IComplex16 div16 (const IComplex16& left, const IComplex8& right)
   { int32 n = norm(right);
-    return IComplex16 ((int32(left.re()) * right.re() +
-			int32(left.im()) * right.im()) / n,
-		       (int32(left.im()) * right.re() -
-			int32(left.re()) * right.im()) / n); }
-inline IComplex16 div16 (const IComplex16& left, const IComplex16& right)
+  return IComplex16 ((int32(left.re()) * right.re() +
+                      int32(left.im()) * right.im()) / n,
+                     (int32(left.im()) * right.re() -
+                      int32(left.re()) * right.im()) / n); }
+  inline IComplex16 div16 (const IComplex16& left, const IComplex16& right)
   { int32 n = norm(right);
-    return IComplex16 ((int32(left.re()) * right.re() +
-			int32(left.im()) * right.im()) / n,
-		       (int32(left.im()) * right.re() -
-			int32(left.re()) * right.im()) / n); }
-inline IComplex32 div32 (const IComplex8& left, const IComplex8& right)
+  return IComplex16 ((int32(left.re()) * right.re() +
+                      int32(left.im()) * right.im()) / n,
+                     (int32(left.im()) * right.re() -
+                      int32(left.re()) * right.im()) / n); }
+  inline IComplex32 div32 (const IComplex8& left, const IComplex8& right)
   { int32 n = norm(right);
-    return IComplex32 ((int32(left.re()) * right.re() +
-			int32(left.im()) * right.im()) / n,
-		       (int32(left.im()) * right.re() -
-			int32(left.re()) * right.im()) / n); }
-inline IComplex32 div32 (const IComplex8& left, const IComplex16& right)
+  return IComplex32 ((int32(left.re()) * right.re() +
+                      int32(left.im()) * right.im()) / n,
+                     (int32(left.im()) * right.re() -
+                      int32(left.re()) * right.im()) / n); }
+  inline IComplex32 div32 (const IComplex8& left, const IComplex16& right)
   { int32 n = norm(right);
-    return IComplex32 ((int32(left.re()) * right.re() +
-			int32(left.im()) * right.im()) / n,
-		       (int32(left.im()) * right.re() -
-			int32(left.re()) * right.im()) / n); }
-inline IComplex32 div32 (const IComplex16& left, const IComplex8& right)
+  return IComplex32 ((int32(left.re()) * right.re() +
+                      int32(left.im()) * right.im()) / n,
+                     (int32(left.im()) * right.re() -
+                      int32(left.re()) * right.im()) / n); }
+  inline IComplex32 div32 (const IComplex16& left, const IComplex8& right)
   { int32 n = norm(right);
-    return IComplex32 ((int32(left.re()) * right.re() +
-			int32(left.im()) * right.im()) / n,
-		       (int32(left.im()) * right.re() -
-			int32(left.re()) * right.im()) / n); }
-inline IComplex32 div32 (const IComplex16& left, const IComplex16& right)
+  return IComplex32 ((int32(left.re()) * right.re() +
+                      int32(left.im()) * right.im()) / n,
+                     (int32(left.im()) * right.re() -
+                      int32(left.re()) * right.im()) / n); }
+  inline IComplex32 div32 (const IComplex16& left, const IComplex16& right)
   { int32 n = norm(right);
-    return IComplex32 ((int32(left.re()) * right.re() +
-			int32(left.im()) * right.im()) / n,
-		       (int32(left.im()) * right.re() -
-			int32(left.re()) * right.im()) / n); }
-inline IComplex32 div32 (const IComplex8& left, const IComplex32& right)
+  return IComplex32 ((int32(left.re()) * right.re() +
+                      int32(left.im()) * right.im()) / n,
+                     (int32(left.im()) * right.re() -
+                      int32(left.re()) * right.im()) / n); }
+  inline IComplex32 div32 (const IComplex8& left, const IComplex32& right)
   { int32 n = norm(right);
-    return IComplex32 ((left.re() * right.re() +
-			left.im() * right.im()) / n,
-		       (left.im() * right.re() -
-			left.re() * right.im()) / n); }
-inline IComplex32 div32 (const IComplex32& left, const IComplex8& right)
+  return IComplex32 ((left.re() * right.re() +
+                      left.im() * right.im()) / n,
+                     (left.im() * right.re() -
+                      left.re() * right.im()) / n); }
+  inline IComplex32 div32 (const IComplex32& left, const IComplex8& right)
   { int32 n = norm(right);
-    return IComplex32 ((left.re() * right.re() +
-			left.im() * right.im()) / n,
-		       (left.im() * right.re() -
-			left.re() * right.im()) / n); }
-inline IComplex32 div32 (const IComplex16& left, const IComplex32& right)
+  return IComplex32 ((left.re() * right.re() +
+                      left.im() * right.im()) / n,
+                     (left.im() * right.re() -
+                      left.re() * right.im()) / n); }
+  inline IComplex32 div32 (const IComplex16& left, const IComplex32& right)
   { int32 n = norm(right);
-    return IComplex32 ((left.re() * right.re() +
-			left.im() * right.im()) / n,
-		       (left.im() * right.re() -
-			left.re() * right.im()) / n); }
-inline IComplex32 div32 (const IComplex32& left, const IComplex16& right)
+  return IComplex32 ((left.re() * right.re() +
+                      left.im() * right.im()) / n,
+                     (left.im() * right.re() -
+                      left.re() * right.im()) / n); }
+  inline IComplex32 div32 (const IComplex32& left, const IComplex16& right)
   { int32 n = norm(right);
-    return IComplex32 ((left.re() * right.re() +
-			left.im() * right.im()) / n,
-		       (left.im() * right.re() -
-			left.re() * right.im()) / n); }
-inline IComplex32 div32 (const IComplex32& left, const IComplex32& right)
+  return IComplex32 ((left.re() * right.re() +
+                      left.im() * right.im()) / n,
+                     (left.im() * right.re() -
+                      left.re() * right.im()) / n); }
+  inline IComplex32 div32 (const IComplex32& left, const IComplex32& right)
   { int32 n = norm(right);
-    return IComplex32 ((left.re() * right.re() +
-			left.im() * right.im()) / n,
-		       (left.im() * right.re() -
-			left.re() * right.im()) / n); }
+  return IComplex32 ((left.re() * right.re() +
+                      left.im() * right.im()) / n,
+                     (left.im() * right.re() -
+                      left.re() * right.im()) / n); }
 
-inline IComplex8 mulconj8 (const IComplex8& left, const IComplex8& right)
+  inline IComplex8 mulconj8 (const IComplex8& left, const IComplex8& right)
   { return IComplex8 (left.re() * right.re() + left.im() * right.im(),
 		      left.im() * right.re() - left.re() * right.im()); }
-inline IComplex16 mulconj16 (const IComplex8& left, const IComplex8& right)
+  inline IComplex16 mulconj16 (const IComplex8& left, const IComplex8& right)
   { return IComplex16 (int16(left.re()) * right.re() +
 		       int16(left.im()) * right.im(),
 		       int16(left.im()) * right.re() -
 		       int16(left.re()) * right.im()); }
-inline IComplex16 mulconj16 (const IComplex8& left, const IComplex16& right)
+  inline IComplex16 mulconj16 (const IComplex8& left, const IComplex16& right)
   { return IComplex16 (left.re() * right.re() + left.im() * right.im(),
 		       left.im() * right.re() - left.re() * right.im()); }
-inline IComplex16 mulconj16 (const IComplex16& left, const IComplex8& right)
+  inline IComplex16 mulconj16 (const IComplex16& left, const IComplex8& right)
   { return IComplex16 (left.re() * right.re() + left.im() * right.im(),
 		       left.im() * right.re() - left.re() * right.im()); }
-inline IComplex16 mulconj16 (const IComplex16& left, const IComplex16& right)
+  inline IComplex16 mulconj16 (const IComplex16& left, const IComplex16& right)
   { return IComplex16 (left.re() * right.re() + left.im() * right.im(),
 		       left.im() * right.re() - left.re() * right.im()); }
-inline IComplex32 mulconj32 (const IComplex8& left, const IComplex8& right)
+  inline IComplex32 mulconj32 (const IComplex8& left, const IComplex8& right)
   { return IComplex32 (int32(left.re()) * right.re() +
 		       int32(left.im()) * right.im(),
 		       int32(left.im()) * right.re() -
 		       int32(left.re()) * right.im()); }
-inline IComplex32 mulconj32 (const IComplex8& left, const IComplex16& right)
+  inline IComplex32 mulconj32 (const IComplex8& left, const IComplex16& right)
   { return IComplex32 (int32(left.re()) * right.re() +
 		       int32(left.im()) * right.im(),
 		       int32(left.im()) * right.re() -
 		       int32(left.re()) * right.im()); }
-inline IComplex32 mulconj32 (const IComplex16& left, const IComplex8& right)
+  inline IComplex32 mulconj32 (const IComplex16& left, const IComplex8& right)
   { return IComplex32 (int32(left.re()) * right.re() +
 		       int32(left.im()) * right.im(),
 		       int32(left.im()) * right.re() -
 		       int32(left.re()) * right.im()); }
-inline IComplex32 mulconj32 (const IComplex16& left, const IComplex16& right)
+  inline IComplex32 mulconj32 (const IComplex16& left, const IComplex16& right)
   { return IComplex32 (int32(left.re()) * right.re() +
 		       int32(left.im()) * right.im(),
 		       int32(left.im()) * right.re() -
 		       int32(left.re()) * right.im()); }
-inline IComplex32 mulconj32 (const IComplex8& left, const IComplex32& right)
+  inline IComplex32 mulconj32 (const IComplex8& left, const IComplex32& right)
   { return IComplex32 (left.re() * right.re() + left.im() * right.im(),
 		       left.im() * right.re() - left.re() * right.im()); }
-inline IComplex32 mulconj32 (const IComplex32& left, const IComplex8& right)
+  inline IComplex32 mulconj32 (const IComplex32& left, const IComplex8& right)
   { return IComplex32 (left.re() * right.re() + left.im() * right.im(),
 		       left.im() * right.re() - left.re() * right.im()); }
-inline IComplex32 mulconj32 (const IComplex16& left, const IComplex32& right)
+  inline IComplex32 mulconj32 (const IComplex16& left, const IComplex32& right)
   { return IComplex32 (left.re() * right.re() + left.im() * right.im(),
 		       left.im() * right.re() - left.re() * right.im()); }
-inline IComplex32 mulconj32 (const IComplex32& left, const IComplex16& right)
+  inline IComplex32 mulconj32 (const IComplex32& left, const IComplex16& right)
   { return IComplex32 (left.re() * right.re() + left.im() * right.im(),
 		       left.im() * right.re() - left.re() * right.im()); }
-inline IComplex32 mulconj32 (const IComplex32& left, const IComplex32& right)
+  inline IComplex32 mulconj32 (const IComplex32& left, const IComplex32& right)
   { return IComplex32 (left.re() * right.re() + left.im() * right.im(),
 		       left.im() * right.re() - left.re() * right.im()); }
 
+} // namespace LOFAR
 
 #endif
