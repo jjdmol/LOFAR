@@ -23,22 +23,14 @@
 #include <lofar_config.h>
 
 #include <BBS3/Solver.h>
-
+#include <Common/VectorUtil.h>
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
-
-#include <casa/Arrays/Vector.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/OS/Timer.h>
-
-#include <Common/BlobIStream.h>
-#include <Common/BlobIBufStream.h>
-#include <Common/BlobArray.h>
 
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
+
 
 namespace LOFAR
 {
@@ -79,133 +71,123 @@ Solver::~Solver()
 //
 //----------------------------------------------------------------------
 
-void Solver::solve(bool useSVD, vector<string>& resultParmNames, 
-		   vector<double>& resultParmValues,
-		   Quality& resultQuality)
+void Solver::solve (bool useSVD,
+		    Quality& resultQuality)
 {
-  //  LOG_INFO_STR( "solve using file " << itsDataMap->getFileName());
+  LOG_INFO_STR( "solve using file ");
 
-//   Timer timer;
-//   NSTimer solveTimer, totTimer;
-//   totTimer.start();
-//   if (itsNrScid == 0) {
-//     throw AipsError ("No parameters are set to solvable");
-//   }
-//   int nrpoint = 0;
+  NSTimer timer;
+  timer.start();
+  ASSERT (itsSolvableValues.size() > 0);
 
-//   double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
-//   double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
-//   int nrchan = 1+itsLastChan-itsFirstChan;
+  // Solve the equation. 
+  uint rank;
+  double fit;
+  LOG_INFO_STR( "Solution before: " << itsSolvableValues);
+  bool solFlag = itsSolver.solveLoop (fit, rank, itsSolvableValues, useSVD);
+  LOG_INFO_STR( "Solution after:  " << itsSolvableValues);
 
-//   bool showd = false;
-  
-//   // Complex values are separated in real and imaginary.
-//   // Loop over all times in current time interval.
-//   for (unsigned int tStep=0; tStep<itsNrTimes; tStep++)
-//   {
-//     unsigned int timeOffset = tStep*itsNrBl*itsNrChan*itsNPol;
-//     double time = itsTimes[itsTimeIndex-itsNrTimes+tStep];
-//     double interv = itsIntervals[itsTimeIndex-itsNrTimes+tStep];
- 
-//     MeqDomain domain(time-interv/2, time+interv/2, startFreq, endFreq);
-//     MeqRequest request(domain, 1, nrchan, itsNrScid);
+  resultQuality.init();
+  resultQuality.itsSolFlag = solFlag;
+  resultQuality.itsRank = rank;
+  resultQuality.itsFit = fit;
+  resultQuality.itsMu = itsSolver.getWeightedSD();
+  resultQuality.itsStddev = itsSolver.getSD();
+  resultQuality.itsChi = itsSolver.getChi();
+  cout << resultQuality << endl;
 
-//     for (unsigned int bl=0; bl<itsNrBl; bl++)
-//     {
-//       uInt ant1 = itsAnt1Data(bl);
-//       uInt ant2 = itsAnt2Data(bl);
-//       if (itsBLSelection(ant1,ant2) == true)
-//       {
-//        // Get condition equations (measured-predicted and all derivatives).
-//         vector<MeqResult> res = getCondeq (request, bl, ant1, ant2, showd);
-//         // Add them all to the solver.
-//       } // Matches: if (itsBLSelection== )
-//     } // End loop baselines
-//   } // End loop timesteps
-
-
-//   // The actual solve
-//   //  if (Debug(1)) timer.show("fill ");
-
-//   ASSERT (nrpoint >= itsNrScid);
-//   // Solve the equation. 
-//   uInt rank;
-//   double fit;
-
-//   LOG_INFO_STR( "Solution before: " << itsSolution);
-//   //  cout << "Solution before: " << itsSolution << endl;
-//   // It looks as if LSQ has a bug so that solveLoop and getCovariance
-//   // interact badly (maybe both doing an invert).
-//   // So make a copy to separate them.
-//   Matrix<double> covar;
-//   Vector<double> errors;
-// ///   LSQaips tmpSolver = itsSolver;
-// ///   tmpSolver.getCovariance (covar);
-// ///   tmpSolver.getErrors (errors);
-//   int nrs = itsSolution.nelements();
-//   Vector<double> sol(nrs);
-//   double* solData = itsSolution.doubleStorage();
-//   for (int i=0; i<itsSolution.nelements(); i++) {
-//     sol[i] = solData[i];
-//   }
-//   solveTimer.start();
-//   bool solFlag = itsSolver.solveLoop (fit, rank, sol, useSVD);
-//   solveTimer.stop();
-//   for (int i=0; i<itsSolution.nelements(); i++) {
-//     solData[i] = sol[i];
-//   }
-//   //  if (Debug(1)) timer.show("solve");
-//   LOG_INFO_STR( "Solution after:  " << itsSolution );
-//   //cout << "Solution after:  " << itsSolution << endl;
-
-
-  
-//   resultParmValues.clear();
-//   for (int nr=0; nr < itsSolution.nx(); nr++)
-//   {
-//     resultParmValues.push_back(itsSolution.getDouble(nr, 0));
-//   }
-
-//   resultParmNames.clear();
- 
-//   // Update all parameters.
-//   const vector<MeqParm*>& parmList = MeqParm::getParmList();
-//   int i=0;
-//   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-//        iter != parmList.end();
-//        iter++)
-//   {
-//     if (itsIsParmSolvable[i]) {
-//       resultParmNames.push_back((*iter)->getName());
-
-//       (*iter)->update (itsSolution);
-//     }
-//     i++;
-//   }
-
-//   resultQuality.init();
-//   resultQuality.itsSolFlag = solFlag;
-//   resultQuality.itsRank = rank;
-//   resultQuality.itsFit = fit;
-//   resultQuality.itsMu = itsSolver.getWeightedSD();;
-//   resultQuality.itsStddev = itsSolver.getSD();;
-//   resultQuality.itsChi = itsSolver.getChi();
-//   cout << resultQuality << endl;
-
-//   totTimer.stop();
-//   cout << "BBSTest: solver     " << solveTimer << endl;
-//   cout << "BBSTest: total-iter " << totTimer << endl;
-//   timer.show("BBSTest: solve ");
-
+  timer.stop();
+  cout << "BBSTest: solver     " << timer << endl;
   return;
 }
 
 
 void Solver::setEquations (const dcomplex* data, int nresult, int nrspid,
-		   int nrtime, int nrfreq, int prediffer)
-{}
+			   int nrtime, int nrfreq, int prediffer)
+{
+  ASSERT (uint(prediffer) < itsIndices.size());
+  vector<int>& predInx = itsIndices[prediffer];
+  ASSERT (uint(nrspid) = predInx.size());
+  // Use a consecutive vector to assemble all derivatives.
+  vector<double> derivVec(nrspid);
+  double* derivs = &(derivVec[0]);
+  // Treat a dcomplex as 2 doubles.
+  int nrval = 2*nrtime*nrfreq;
+  const double* ddata = (const double*)(data);
+  // Each result is a 2d array of [nrval,nrspid+1] (nrval varies most rapidly).
+  // The first value is the difference; the others the derivatives. 
+  for (int i=0; i<nresult; ++i) {
+    for (int j=0; j<nrval; ++j) {
+      // Each value result,time,freq gives an equation.
+      double diff = ddata[0];
+      const double* derivdata = ddata + nrval;
+      for (int k=0; k<nrspid; ++k) {
+	derivs[k] = derivdata[k*nrval];
+      }
+      itsSolver.makeNorm (predInx.size(), predInx, derivVec, 1., diff);
+      // Go to next time,freq value.
+      ddata++;
+    }
+    // Go to next result (note that ddata has already been increment nrval
+    // time, so here we use nrspid instead of nrspid+1.
+    ddata += nrspid*nrval;
+  }
+}
 
-void Solver::setSolvableParmData (const ParmData&, int prediffer)
-{}
+void Solver::initSolvableParmData (int nrPrediffers)
+{
+  itsSolvableMap.clear();
+  itsSolvableParms.resize (0);
+  itsIndices.resize (nrPrediffers);
+  itsSolvableValues.resize (0);
+}
+
+// The solvable parameters coming from the prediffers have to be collected
+// and put into a single solvercollection.
+// It means that the prediffer spids have to be mapped to a solver spids.
+void Solver::setSolvableParmData (const std::vector<ParmData>& data,
+				  int prediffer)
+{
+  if (data.size() == 0) {
+    return;
+  }
+  // Usually the last entry has the highest spid; so use that to reserve to
+  // avoid (hopefully) resizes.
+  vector<int> predInx;
+  predInx.reserve (data[data.size()-1].getLastSpid() + 1);
+  // Loop through all parm entries and see if already used.
+  for (uint i=0; i<data.size(); ++i) {
+    int parminx = itsSolvableMap.size();
+    int spidinx = itsSolvableValues.size();
+    ParmData parm(data[i]);
+    map<string,int>::const_iterator value =
+                                     itsSolvableMap.find (parm.getName());
+    if (value == itsSolvableMap.end()) {
+      // Not in use yet; so add it to the map.
+      itsSolvableMap[parm.getName()] = parminx;
+      // Its first solver spid is the length of the vector so far.
+      parm.setFirstSpid (spidinx);
+      // Save the parm.
+      itsSolvableParms.push_back (parm);
+      // Store the current values in the vector.
+      const double* value = parm.getValues().doubleStorage();
+      for (int i=0; i<parm.getNrSpid(); ++i) {
+	itsSolvableValues.push_back (value[i]);
+      }
+    } else {
+      // The parameter has already been used. Get its index.
+      parminx = value->second;
+      ASSERT (itsSolvableParms[parminx] == parm);
+      spidinx = itsSolvableParms[parminx].getFirstSpid();
+    }
+    // Store the solver spid to get a mapping of prediffer spid to solver spid.
+    int spidnr = parm.getFirstSpid();
+    for (int i=0; i<parm.getNrSpid(); ++i) {
+      predInx.push_back (spidnr++);
+    }
+  }
+  ASSERT (uint(prediffer) < itsIndices.size());
+  itsIndices[prediffer] = predInx;
+}
 
 } // namespace LOFAR

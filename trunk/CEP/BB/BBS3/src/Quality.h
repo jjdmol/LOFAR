@@ -29,23 +29,16 @@
 namespace LOFAR
 {
 
-//# Forward Declarations
-
-
-
-// Description of class.
+// This struct contains metrics defining the quality of a solution.
 class Quality {
     
- public:
+public:
   Quality();
-  ~Quality();
-  
-  //! reset all attributed to zero
+
+  // Reset all attributes to zero.
   void init();
 
-  //  ostream& operator<<(ostream& os, const Quality& solution);
-
-  void show(ostream& os) const;
+  void show (ostream& os) const;
   
   bool   itsSolFlag;
   int    itsRank;
@@ -55,7 +48,8 @@ class Quality {
   double itsChi;
 };
 
-inline ostream& operator<< (ostream& os, const Quality& qual) {
+inline ostream& operator<< (ostream& os, const Quality& qual)
+{
   qual.show(os); 
   return os; 
 }

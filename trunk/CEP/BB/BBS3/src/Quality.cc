@@ -27,36 +27,28 @@
 namespace LOFAR
 {
 
-Quality::Quality():
-  itsSolFlag(false),
-  itsRank(0),
-    itsFit(0.),
-  itsMu(0.),
-  itsStddev(0.),
-  itsChi(0.) {
-}
-
-Quality::~Quality() {
+Quality::Quality()
+{
+  init();
 }
 
 void Quality::init() {
   itsSolFlag = false;
-  itsRank = 0;
-  itsFit = 0.;
-  itsMu = 0.;
-  itsStddev = 0.;
-  itsChi = 0.;
+  itsRank    = 0;
+  itsFit     = 0.;
+  itsMu      = 0.;
+  itsStddev  = 0.;
+  itsChi     = 0.;
 }
 
-void Quality::show(ostream& os) const {
-/*
+void Quality::show(ostream& os) const
+{
   os << "itsSolFlag: " <<  itsSolFlag << endl;
   os << "itsRank   : " <<  itsRank    << endl;
   os << "itsFit    : " <<  itsFit     << endl;
   os << "itsMu     : " <<  itsMu      << endl;
   os << "itsStddev : " <<  itsStddev  << endl;
   os << "itsChi    : " <<  itsChi     << endl;
-*/
 }
 
 } // namespace LOFAR
