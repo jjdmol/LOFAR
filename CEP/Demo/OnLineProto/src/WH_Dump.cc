@@ -121,8 +121,9 @@ void WH_Dump::process()
     if (0 == itsIndex % PLOTSIZE) {
 
       // the buffer is filled, we can plot the resulting graph
-
-//       plotBuffer = sqrt ( sqr ( imag ( itsBuffer ) ) +
+      
+      
+//       plotBuffer = sqrt ( sqr ( imag ( itsBuffer ) ) + 
 // 			  sqr ( real ( itsBuffer ) ) );
 
 //       gnuplot_plot_x ( handle, 
@@ -132,11 +133,28 @@ void WH_Dump::process()
 
 //      gnuplot_close(handle);usleep(50);
       handle = gnuplot_init();
-      gnuplot_plot_x ( handle, 
-		       real ( itsBuffer ).data(),
-		       itsBuffer.size(), 
-		       "Real part of correlation between station 0 and 99 over time" );
 
+      plotBuffer = imag ( itsBuffer ) ;
+
+      gnuplot_plot_x ( handle, 
+		       plotBuffer.data(),
+		       itsBuffer.size(), 
+		       "Imag part of correlation between station 0 and 1 over time" );
+
+      plotBuffer = real ( itsBuffer ) ;
+
+      gnuplot_plot_x ( handle, 
+		       plotBuffer.data(),
+		       itsBuffer.size(), 
+		       "Real part of correlation between station 0 and 1 over time" );
+
+      plotBuffer = sqrt ( sqr ( real ( itsBuffer ) ) +
+			  sqr ( imag ( itsBuffer ) ) );
+
+      gnuplot_plot_x ( handle, 
+		       plotBuffer.data(),
+		       itsBuffer.size(), 
+		       "Power part of correlation between station 0 and 1 over time" );
     }
     itsIndex++;
   }
