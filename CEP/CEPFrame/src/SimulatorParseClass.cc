@@ -38,7 +38,8 @@
 
 extern char *SimulatorTokenizetext;
 
-#include <strstream.h>
+#include <sstream>
+using namespace std;
 
 
 // Initialize statics.
@@ -164,16 +165,13 @@ SimulatorParseError::SimulatorParseError (const string& message)
 
 void SimulatorParseerror (char*)
 {
-  ostrstream os1;
+  ostringstream os1;
   os1 << SimulatorParse::line() + 1 << ends;
-  ostrstream os2;
+  ostringstream os2;
   os2 << SimulatorParse::position() << ends;
-  string s1(os1.str());
-  string s2(os2.str());
-  delete [] os1.str();
-  delete [] os2.str();
-  throw SimulatorParseError("parse error at line " + s1 + ", position "
-			    + s2 + " (at or near '" +
+
+  throw SimulatorParseError("parse error at line " + os1.str() + ", position "
+			    + os2.str() + " (at or near '" +
 			    string(SimulatorTokenizetext) + "')");
 }
 
