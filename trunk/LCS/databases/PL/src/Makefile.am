@@ -31,12 +31,13 @@ TCCHDRS = \
 	PersistenceBroker.tcc \
 	TPersistentObject.tcc
 
-DOCHDRS = \
-	$(INSTHDRS) \
-	$(NOINSTHDRS)
+include_HEADERS = $(INSTHDRS) $(TCCHDRS)
 
-lib_LTLIBRARIES = \
-	libpl.la
+noinst_HEADERS = $(NOINSTHDRS)
+
+DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
+
+lib_LTLIBRARIES = libpl.la
 
 libpl_la_SOURCES = $(DOCHDRS) \
 	Attrib.cc \

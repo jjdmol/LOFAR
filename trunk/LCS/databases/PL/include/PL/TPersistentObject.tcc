@@ -26,6 +26,8 @@
 #include <PL/DTLBase.h>
 #include <PL/Exception.h>
 #include <PL/TPersistentObject.h>
+#include <PL/Query.h>
+#include <PL/Collection.h>
 #include <Common/Debug.h>
 #include <sstream>
 
