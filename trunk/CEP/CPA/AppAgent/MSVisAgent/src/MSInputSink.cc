@@ -47,6 +47,8 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/TableParse.h>
 
+using namespace LOFAR;
+
 namespace MSVisAgent
 {
 using namespace VisAgent;

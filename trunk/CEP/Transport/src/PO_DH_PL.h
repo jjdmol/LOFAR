@@ -32,6 +32,7 @@
 namespace LOFAR {
   namespace PL {
 
+    template<>
     class DBRep<DH_PL>
     {
     public:

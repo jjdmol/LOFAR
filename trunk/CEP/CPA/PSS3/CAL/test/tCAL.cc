@@ -74,6 +74,8 @@ void solve(MeqCalibrater& mc, int loopcnt, bool realsol)
   }
 }
 
+using namespace LOFAR;
+
 int main(int argc, char* argv[])
 {
   // run ../../gnu_opt/demo/michiel.demo 0 ../../gnu_opt/demo/michiel.demo_gsm  LOFAR.RI solve 0 1 0 0 "all([ANTENNA1,ANTENNA2] in 4*[0:20])" 0,1,2 0

@@ -109,6 +109,7 @@ inline const DH_Example2::BufferType* DH_Example2::getBuffer() const
   // Define the class needed to tell PL that the counter should be
   // stored as an extra field in the database table.
   namespace PL {                                                //PL
+    template<>                                                  //PL
     class DBRep<DH_Example2> : public DBRep<DH_PL>              //PL
     {                                                           //PL
     public:                                                     //PL
