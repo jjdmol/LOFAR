@@ -25,7 +25,7 @@ check_PROGRAMS			= Example 		\
 				  shmem_alloc1		\
 				  shmem_alloc2		\
 				  CyclicBufferTest	\
-				  tmat
+				  tmat	                
 
 Example_SOURCES 		= Example.cc
 Simulator_Example_SOURCES	= Simulator_Example.cc Simulator_Example.h

@@ -32,6 +32,16 @@ DH_Empty::DH_Empty (const string& name)
 {
 }
 
+DH_Empty::DH_Empty(const DH_Empty& that)
+  : DataHolder(that)
+{
+}
+
 DH_Empty::~DH_Empty()
 {
+}
+
+DataHolder* DH_Empty::clone() const
+{
+  return new DH_Empty(*this);
 }

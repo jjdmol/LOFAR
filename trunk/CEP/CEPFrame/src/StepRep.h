@@ -52,7 +52,7 @@ public:
   /** Normally used basic constructor
       a pointer to a workholder (containing the dataholders) is passed 
   */
-  StepRep (const WorkHolder& worker, 
+  StepRep (WorkHolder& worker, 
 	   const string& name,
 	   bool addNameSuffix,
 	   bool monitor);
@@ -178,6 +178,10 @@ public:
 			   int   nrSteps, // nr of Steps in aStep[] array
 			   const TransportHolder& prototype);
 
+  // Connect named parameter of aStep to that of the current step
+  bool connectParam(const string& name, Step* aStep,
+		    const TransportHolder& prototype);
+
   // Check the connection.
   virtual bool checkConnections (ostream&, const StepRep* parent);
 
@@ -246,6 +250,11 @@ protected:
 			   DataHolder& sourceData, DataHolder& targetData);
 
 private:
+
+  /// Connect 2 ParamHolders with the given transport holder prototype.
+  bool connectParamHolders (ParamHolder& srcParam, ParamHolder& tgtParam,
+			    const TransportHolder& prototype);
+
   int         itsRefCount;
   WorkHolder* itsWorker;
   // The parent Simul.
@@ -259,6 +268,7 @@ private:
   // Profiling output
   static int          theirProcessProfilerState; 
   static unsigned int theirNextID;
+  static unsigned int theirNextConnID; // the ID of the next Param connection  
   int                 itsID;   // the ID of the step
   int                 itsNode; // the node to run this step on
   int                 itsAppl; // the application to run this step in
@@ -286,16 +296,16 @@ inline WorkHolder* StepRep::getWorker ()
   { return itsWorker; }
 
 inline DataHolder& StepRep::getInData (int dhIndex)
-  { return *itsWorker->getInHolder(dhIndex); }
+  { return *itsWorker->getDataManager().getGeneralInHolder(dhIndex); }
 
 inline DataHolder& StepRep::getOutData (int dhIndex)
-  { return *itsWorker->getOutHolder(dhIndex); }
+  { return *itsWorker->getDataManager().getGeneralOutHolder(dhIndex); }
 
 inline Transport& StepRep::getInTransport (int dhIndex) const
-  { return itsWorker->getInHolder(dhIndex)->getTransport(); }
+  { return itsWorker->getDataManager().getGeneralInHolder(dhIndex)->getTransport(); }
 
 inline Transport& StepRep::getOutTransport (int dhIndex) const
-  { return itsWorker->getOutHolder(dhIndex)->getTransport(); }
+  { return itsWorker->getDataManager().getGeneralOutHolder(dhIndex)->getTransport(); }
 
 inline const string& StepRep::getName() const
   { return itsName; } 

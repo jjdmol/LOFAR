@@ -60,19 +60,13 @@ public:
 				const ParamBlock&);
 
   /// Make a fresh copy of the WH object.
-  virtual WH_Example* make (const string& name) const;
+  virtual WH_Example* make (const string& name);
 
   /// Do a process step.
   virtual void process();
 
   /// Show the work holder on stdout.
-  virtual void dump() const;
-
-  /// Get a pointer to the i-th input DataHolder.
-  virtual DH_Example* getInHolder (int channel);
-
-  /// Get a pointer to the i-th output DataHolder.
-  virtual DH_Example* getOutHolder (int channel);
+  virtual void dump();
 
 private:
   /// Forbid copy constructor.
@@ -80,12 +74,6 @@ private:
 
   /// Forbid assignment.
   WH_Example& operator= (const WH_Example&);
-
-
-  /// Pointer to the array of input DataHolders.
-  DH_Example** itsInHolders;
-  /// Pointer to the array of output DataHolders.
-  DH_Example** itsOutHolders;
 
   /// Length of DH_Example buffers.
   int itsBufLength;

@@ -88,6 +88,8 @@ public:
 
   virtual bool connectionPossible(int srcRank, int dstRank) const;
 
+  virtual bool isBlocking() const { return false; }
+
   /// Declare a TH_ShMem prototype variable
   /// that can be used in functions
   /// requiring a TransportHolder prototype

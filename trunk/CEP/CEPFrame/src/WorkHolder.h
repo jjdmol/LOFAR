@@ -32,6 +32,8 @@
 
 #include "CEPFrame/BaseSim.h"
 #include "CEPFrame/DataHolder.h"
+#include "CEPFrame/DataManager.h"
+#include "CEPFrame/ParamManager.h"
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
@@ -78,13 +80,13 @@ public:
       Its DataHolders get the names from the given WorkHolder.
       Making the actual copy is done by the virtual function make.
   */
-  WorkHolder* baseMake() const;
+  WorkHolder* baseMake();
 
   /** The dump() method produces output to the user. By default, the
       data in the last output DataHolders are shown to cout, but
       other output sources or targets are valid as well.
   */
-  virtual void dump() const;
+  virtual void dump();
 
   /** The preprocess method is called before process.
       It can be used to initialize the WorkHolder.
@@ -121,23 +123,15 @@ public:
   /** Find the input or output channel for the DataHolder with the given name.
       -1 is returned if the name is not found.
   */
-  int getInChannel (const string& name) const;
-  int getOutChannel (const string& name) const;
+  int getInChannel (const string& name);
+  int getOutChannel (const string& name);
 
-  /** @name DataHolder access functions
-      @memo Get the i-th input or output DataHolder of the work holder.
-      @doc Get the i-th input or output DataHolder of the work holder.
-  */
-  //@{
-  virtual DataHolder* getInHolder (int channel) = 0;
-  virtual DataHolder* getOutHolder (int channel) = 0;
-  const DataHolder* getConstInHolder (int channel) const;
-  const DataHolder* getConstOutHolder (int channel) const;
-  //@}
+  // Get/set its DataManager
+  DataManager& getDataManager();
+  void setDataManager(DataManager* dmptr);
 
-  /// Get the number of inputs or outputs.
-  int getInputs() const;
-  int getOutputs() const;
+  // Get its ParamManager
+  ParamManager& getParamManager();
 
   /**  The ProcMode determines the type of processing performed in the
        process() method. This setting is especially usefull for
@@ -167,11 +161,10 @@ private:
       for the input and output DataHolders.
       An error is given if DataHolder names are not unique.
   */
-  void fillMaps() const;
+  void fillMaps();
 
   /// Let the derived class make the actual copy.
-  virtual WorkHolder* make (const string& name) const = 0;
-
+  virtual WorkHolder* make (const string& name) = 0;
 
   int itsNinputs;
   int itsNoutputs;
@@ -181,15 +174,22 @@ private:
   ProcMode itsProcMode;  
   mutable map<string,int> itsInMap;
   mutable map<string,int> itsOutMap;
+  DataManager* itsDataManager;
+  ParamManager itsParamManager;
+  bool itsFirstProcessCall;
 
   static map<string,WHConstruct*>* itsConstructMap;
 };
 
 
-inline const DataHolder* WorkHolder::getConstInHolder (int channel) const
-  { return const_cast<WorkHolder*>(this)->getInHolder (channel); }
-inline const DataHolder* WorkHolder::getConstOutHolder (int channel) const
-  { return const_cast<WorkHolder*>(this)->getOutHolder (channel); }
+inline DataManager& WorkHolder::getDataManager()
+  { return *itsDataManager; }
+
+inline void WorkHolder::setDataManager(DataManager* dmptr)
+  { itsDataManager = dmptr; }
+
+inline ParamManager& WorkHolder::getParamManager()
+  { return itsParamManager; }
 
 inline const string& WorkHolder::getType() const
   { return itsType; }
@@ -198,11 +198,6 @@ inline void WorkHolder::setName (const string& name)
   { itsName = name; }
 inline const string& WorkHolder::getName() const
   { return itsName; }
-
-inline int WorkHolder::getInputs() const
-  { return itsNinputs; }
-inline int WorkHolder::getOutputs() const
-  { return itsNoutputs; }
 
 inline WorkHolder::ProcMode WorkHolder::getProcMode() const
   { return (itsProcMode); }

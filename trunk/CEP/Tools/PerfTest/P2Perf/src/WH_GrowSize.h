@@ -61,7 +61,7 @@ public:
   
   virtual ~WH_GrowSize();
 
-  virtual WorkHolder* make(const string& name) const;
+  virtual WorkHolder* make(const string& name);
 
   //virtual void preprocess();
 
@@ -69,13 +69,8 @@ public:
   virtual void process();
 
   /// Show the work holder on stdout.
-  virtual void dump() const;
+  virtual void dump() ;
 
-  /// Get a pointer to the i-th input DataHolder.
-  virtual DH_GrowSize* getInHolder (int channel);
-
-  /// Get a pointer to the i-th output DataHolder.
-  virtual DH_GrowSize* getOutHolder (int channel);
 
   /// determine whether performance reporting is wanted
   void setReportPerformance(bool);
@@ -89,12 +84,6 @@ private:
 
   /// Forbid assignment.
   WH_GrowSize& operator= (const WH_GrowSize&);
-
-
-  /// Pointer to the array of input DataHolders.
-  DH_GrowSize** itsInHolders;
-  /// Pointer to the array of output DataHolders.
-  DH_GrowSize** itsOutHolders;
 
   /// Length of DH_GrowSize buffers.
   int itsBufLength;

@@ -33,6 +33,17 @@ DH_Tester::DH_Tester (const string& name)
   setDataPacket (&itsDataPacket, sizeof(itsDataPacket));
 }
 
+DH_Tester::DH_Tester(const DH_Tester& that)
+  : DataHolder(that)
+{
+  setDataPacket (&itsDataPacket, sizeof(itsDataPacket));
+}
+
 DH_Tester::~DH_Tester()
 {
+}
+
+DataHolder* DH_Tester::clone() const
+{
+  return new DH_Tester(*this);
 }

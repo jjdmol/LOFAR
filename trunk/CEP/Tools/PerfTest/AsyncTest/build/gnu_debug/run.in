@@ -1,0 +1,6 @@
+define
+        fixedsize=150,
+        synchronous=0
+;
+run 3003;
+quit

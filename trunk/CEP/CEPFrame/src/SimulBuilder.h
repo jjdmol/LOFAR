@@ -66,12 +66,12 @@ public:
   /** The getWorker method is used by the Step constructor to obtain a
       reference to the workholder.
   */
-  const WorkHolder& getWorker() const;
+  WorkHolder& getWorker();
 
   /** The setWorker method is used by constructors of derived classes
       to set the itsWorker.
   */
-  void setWorker (const WorkHolder&);
+  void setWorker (WorkHolder&);
 
 private:
   /// Forbid copy constructor.
@@ -91,10 +91,10 @@ inline SimulBuilder::SimulBuilder()
 : itsWorker (0)
 {}
 
-inline const WorkHolder& SimulBuilder::getWorker() const
+inline WorkHolder& SimulBuilder::getWorker()
 { return *itsWorker; }
 
-inline void SimulBuilder::setWorker (const WorkHolder& worker)
+inline void SimulBuilder::setWorker (WorkHolder& worker)
 { itsWorker = worker.baseMake(); }
 
 

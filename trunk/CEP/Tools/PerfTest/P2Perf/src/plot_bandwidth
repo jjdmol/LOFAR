@@ -17,6 +17,7 @@ set multiplot
 plot [][$1:$2] "$0.out" using 2:3 notitle w p pt 1 
 plot [][$1:$2] "$0.out" using 2:5 notitle w p pt 2
 plot [][$1:$2] "$0.out" using 2:7 notitle w p pt 3 
+plot [][$1:$2] "$0.out" using 2:9 notitle w p pt 4 
 set nomultiplot
 
 #Now, make a sceen plot
@@ -27,4 +28,5 @@ set multiplot
 plot [][$1:$2] "$0.out" using 2:3 notitle w p pt 1 
 plot [][$1:$2] "$0.out" using 2:5 notitle w p pt 2
 plot [][$1:$2] "$0.out" using 2:7 notitle w p pt 3
+plot [][$1:$2] "$0.out" using 2:9 notitle w p pt 4
 set nomultiplot

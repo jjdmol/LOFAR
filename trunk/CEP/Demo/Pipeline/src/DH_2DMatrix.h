@@ -55,6 +55,8 @@ public:
 
   virtual ~DH_2DMatrix();
 
+  virtual DataHolder* clone() const;
+
   /// Allocate the buffers.
   virtual void preprocess();
   
@@ -72,10 +74,12 @@ public:
 
   const int getXSize();
   const int getYSize();
-
+  
   const string& getXName();
   const string& getYName();
   const string& getZName();
+
+  void dump() const;
 
 protected:
   class DataPacket: public DataHolder::DataPacket
@@ -91,9 +95,9 @@ protected:
     DataType itsBuffer[];
   };
 
+  DH_2DMatrix (const DH_2DMatrix&);  
+
 private:
-  /// Forbid copy constructor.
-  DH_2DMatrix (const DH_2DMatrix&);
   /// Forbid assignment.
   DH_2DMatrix& operator= (const DH_2DMatrix&);
 

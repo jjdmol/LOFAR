@@ -59,7 +59,7 @@ public:
   /** Normally used basic constructor.
       A pointer to a workholder (containing the dataholders) is passed.
   */
-  SimulRep (const WorkHolder& worker,
+  SimulRep (WorkHolder& worker,
 	    const string& name,
 	    bool addnameSuffix,
 	    bool controllable,

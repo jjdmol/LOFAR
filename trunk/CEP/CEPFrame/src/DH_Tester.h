@@ -44,7 +44,10 @@ public:
   typedef complex<float> DataBufferType;
 
   explicit DH_Tester (const string& name);
+  DH_Tester (const DH_Tester&);
   virtual ~DH_Tester();
+
+  DataHolder* clone() const;
 
   void setCounter (int counter);
   int getCounter() const;
@@ -62,8 +65,6 @@ protected:
   };
 
 private:
-  /// Forbid copy constructor.
-  DH_Tester (const DH_Tester&);
   /// Forbid assignment.
   DH_Tester& operator= (const DH_Tester&);
 

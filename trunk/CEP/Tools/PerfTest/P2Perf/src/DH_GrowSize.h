@@ -49,6 +49,8 @@ public:
 
   virtual ~DH_GrowSize();
 
+  DataHolder* clone() const;
+
   virtual void preprocess();
   virtual void postprocess();
 
@@ -64,6 +66,8 @@ public:
 
   // increaseSize: increase the size returned by getDataPacketSize
   bool increaseSize(float factor);
+
+  virtual void dump();
 
   // override getDataPacketSize accessor methods
   int getDataPacketSize();
@@ -82,9 +86,10 @@ protected:
     BufferType* itsBuffer;
   };
 
-private:
-  /// Forbid copy constructor.
   DH_GrowSize (const DH_GrowSize&);
+
+private:
+
   /// Forbid assignment.
   DH_GrowSize& operator= (const DH_GrowSize&);
 

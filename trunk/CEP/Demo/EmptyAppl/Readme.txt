@@ -11,7 +11,7 @@ Actions necessary to create your own application "YourFirstApp" using
 EmptyAppl:
 
 * Copy EmptyAppl directory and rename to "YourFirstApp". (Don't forget to
-  remove the CVS directory!)
+  remove the CVS directories!)
 
 * Rename files src/EmptyAppl.h and src/EmptyAppl.cc to src/YourFirstApp.h
   and src/YourFirstApp.cc.

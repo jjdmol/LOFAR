@@ -52,7 +52,7 @@ public:
   
   virtual ~WH_Correlate();
 
-  virtual WorkHolder* make(const string& name) const;
+  virtual WorkHolder* make(const string& name);
 
   virtual void preprocess();
 
@@ -60,13 +60,7 @@ public:
   virtual void process();
 
   /// Show the work holder on stdout.
-  virtual void dump() const;
-
-  /// Get a pointer to the i-th input DataHolder.
-  virtual DH_2DMatrix* getInHolder (int channel);
-
-  /// Get a pointer to the i-th output DataHolder.
-  virtual DH_Correlations* getOutHolder (int channel);
+  virtual void dump();
 
 private:
   /// Forbid copy constructor.
@@ -75,11 +69,6 @@ private:
   /// Forbid assignment.
   WH_Correlate& operator= (const WH_Correlate&);
 
-
-  /// Pointer to the array of input DataHolders.
-  DH_2DMatrix** itsInHolders;
-  /// Pointer to the array of output DataHolders.
-  DH_Correlations** itsOutHolders;
 
   int itsTime;
   int itsStationDim;
@@ -94,20 +83,5 @@ private:
   static int          theirProcessProfilerState; 
   
 };
-
-inline DH_2DMatrix* WH_Correlate::getInHolder (int channel) {
-  DbgAssertStr (channel >= 0,          "input channel too low");
-  DbgAssertStr (channel < getInputs(), "input channel too high");
-  TRACER4("channel = " << channel);
-  return itsInHolders[channel];
-}
-
-
-inline DH_Correlations* WH_Correlate::getOutHolder (int channel) {
-  DbgAssertStr (channel >= 0,           "output channel too low");
-  DbgAssertStr (channel < getOutputs(), "output channel too high");
-  return itsOutHolders[channel];
-}
-
 
 #endif

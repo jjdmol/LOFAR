@@ -53,7 +53,7 @@ public:
   void  setCorrectionVector(int Field, myComplex8 Value);
   void  setCorrectionVector(myComplex8 *Value);
 
-  virtual WorkHolder* make(const string& name) const;
+  virtual WorkHolder* make(const string& name);
 
   virtual void preprocess();
 
@@ -61,13 +61,7 @@ public:
   virtual void process();
 
   /// Show the work holder on stdout.
-  virtual void dump() const;
-
-  /// Get a pointer to the i-th input DataHolder.
-  virtual DH_2DMatrix* getInHolder (int channel);
-
-  /// Get a pointer to the i-th output DataHolder.
-  virtual DH_2DMatrix* getOutHolder (int channel);
+  virtual void dump();
 
 private:
   /// Forbid copy constructor.
@@ -75,12 +69,6 @@ private:
 
   /// Forbid assignment.
   WH_PreCorrect& operator= (const WH_PreCorrect&);
-
-
-  /// Pointer to the array of input DataHolders.
-  DH_2DMatrix** itsInHolders;
-  /// Pointer to the array of output DataHolders.
-  DH_2DMatrix** itsOutHolders;
 
   int itsTime;
   int itsStationDim;

@@ -52,7 +52,7 @@ int SimulRep::theirOutWriteProfilerState=0;
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-SimulRep::SimulRep (const WorkHolder& worker, 
+SimulRep::SimulRep (WorkHolder& worker, 
 		    const string& name,
 		    bool addNameSuffix, 
 		    bool controllable,
@@ -250,8 +250,8 @@ bool SimulRep::connect_thisOut_Out (Step* aStep,
     return false;
   }
   // determine how much channels to loop
-  int loopSize = min(aStep->getWorker()->getOutputs(),
-		     this->getWorker()->getOutputs());
+  int loopSize = min(aStep->getWorker()->getDataManager().getOutputs(),
+		     this->getWorker()->getDataManager().getOutputs());
   for (int channel=0; channel < loopSize ; channel += skip+1) {
     int thischannel = channel+thisChannelOffset;   // channel nr in this Step
     int thatchannel = channel+thatChannelOffset;   // channel nr in aStep
@@ -279,8 +279,8 @@ bool SimulRep::connect_thisIn_In (Step* aStep,
   }
 
   // determine how much channels to loop
-  int loopSize = min(aStep->getWorker()->getInputs(),
-		     this->getWorker()->getInputs());
+  int loopSize = min(aStep->getWorker()->getDataManager().getInputs(),
+		     this->getWorker()->getDataManager().getInputs());
   for (int channel=0; channel < loopSize ; channel += skip+1) {
     int thischannel = channel+thisChannelOffset;  // channel nr in this Step
     int thatchannel = channel+thatChannelOffset;  // channel nr in aStep
@@ -309,8 +309,8 @@ bool SimulRep::connectInputToArray (Step* aStep[],   // pointer to  array of ptr
   if (aStep==NULL) return false;
   int channelOffset=0;
   for (int item=offset; item<nrItems; item ++) {
-    AssertStr(getWorker()->getInputs()  
-	    >=  channelOffset + aStep[item]->getWorker()->getInputs() - skip,
+    AssertStr(getWorker()->getDataManager().getInputs()  
+	    >=  channelOffset + aStep[item]->getWorker()->getDataManager().getInputs() - skip,
 		 "Step::connectInputToArray not enough inputs");
     connect_thisIn_In (aStep[item],
 		       channelOffset, // offset in this
@@ -318,7 +318,7 @@ bool SimulRep::connectInputToArray (Step* aStep[],   // pointer to  array of ptr
 		       skip,         // offset in aStep
 		       prototype);
 
-    channelOffset += aStep[item]->getWorker()->getInputs() - skip;
+    channelOffset += aStep[item]->getWorker()->getDataManager().getInputs() - skip;
   }
   return true;
   
@@ -337,15 +337,15 @@ bool SimulRep::connectOutputToArray (Step* aStep[],  // array of ptrs to Steps
   if (aStep==NULL) return false;
   int channelOffset=0;
   for (int item=0; item<nrItems; item++) {
-    AssertStr (getWorker()->getOutputs() >=
-	       channelOffset + aStep[item]->getWorker()->getOutputs(),
+    AssertStr (getWorker()->getDataManager().getOutputs() >=
+	       channelOffset + aStep[item]->getWorker()->getDataManager().getOutputs(),
 	       "Step::connectOutputToArray not enough outputs");
     connect_thisOut_Out (aStep[item],
 			 channelOffset, // offset in this
 			 offset,
 			 skip,
 			 prototype);
-    channelOffset += aStep[item]->getWorker()->getOutputs() - skip;
+    channelOffset += aStep[item]->getWorker()->getDataManager().getOutputs() - skip;
   }
   return true;
 }
@@ -367,10 +367,10 @@ bool SimulRep::checkConnections (ostream& os, const StepRep* parent)
 void SimulRep::shortcutConnections()
 {
   // Make a shortcut (if possible) for the DataHolders of this Simul.
-  for (int ch=0; ch<getWorker()->getInputs(); ch++) {
+  for (int ch=0; ch<getWorker()->getDataManager().getInputs(); ch++) {
     doShortcut (getInTransport(ch));
   }
-  for (int ch=0; ch<getWorker()->getOutputs(); ch++) {
+  for (int ch=0; ch<getWorker()->getDataManager().getOutputs(); ch++) {
     doShortcut (getOutTransport(ch));
   }
   // Do the same for all simuls in this Simul.
@@ -396,7 +396,7 @@ void SimulRep::doShortcut (Transport& tp)
     // Also if both run on the same node, a single TH_Mem connection
     // can be used.
     bool replaced = false;
-    if (srctp.getNode() == dsttp.getNode()) {
+    if (src->getNode() == dst->getNode()) {
       srctp.makeTransportHolder (TH_Mem());
       dsttp.makeTransportHolder (TH_Mem());
       replaced = true;
@@ -498,14 +498,15 @@ void SimulRep::process()
   if (onRightNode) {
     // Simuls run on ALL nodes.
     // Only read and write of the simul is on your own node
-    for (int ch=0; ch < getWorker()->getInputs(); ch++) {
+    for (int ch=0; ch < getWorker()->getDataManager().getInputs(); ch++) {
       // Read the source of inTransport
       Profiler::enterState (theirInReadProfilerState);
-      getInTransport(ch).read();
+      getWorker()->getDataManager().getInHolder(ch);
+      getWorker()->getDataManager().readyWithInHolder(ch);
       Profiler::leaveState (theirInReadProfilerState);
       // Write the InTransport to the first step of this simul
       Profiler::enterState (theirInWriteProfilerState);
-      getInTransport(ch).write();
+      getWorker()->getDataManager().getInHolder(ch)->getTransport().write();
       Profiler::leaveState (theirInWriteProfilerState);
     }  
   }
@@ -522,14 +523,14 @@ void SimulRep::process()
   }
   
   if (onRightNode) {
-    for (int ch=0; ch < getWorker()->getOutputs(); ch++) {
+    for (int ch=0; ch < getWorker()->getDataManager().getOutputs(); ch++) {
       // Fill the outdata buffer by reading from last step
       Profiler::enterState (theirOutReadProfilerState);
-      getOutTransport(ch).read();
+      getWorker()->getDataManager().getOutHolder(ch)->getTransport().read();
       Profiler::leaveState (theirOutReadProfilerState);
       // Write the Outtransport
       Profiler::enterState (theirOutWriteProfilerState);
-      getOutTransport(ch).write();
+      getWorker()->getDataManager().readyWithOutHolder(ch);
       Profiler::leaveState (theirOutWriteProfilerState);
     }  
   }

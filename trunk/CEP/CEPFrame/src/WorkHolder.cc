@@ -38,85 +38,99 @@ map<string,WorkHolder::WHConstruct*>* WorkHolder::itsConstructMap = 0;
 WorkHolder::WorkHolder (int inputs, int outputs,
 			const string& name,
 			const string& type)
-: itsNinputs     (inputs), 
-  itsNoutputs    (outputs),
-  itsName        (name),
-  itsType        (type),
-  itsProcMode    (Process)
-{}
+: itsNinputs          (inputs), 
+  itsNoutputs         (outputs),
+  itsName             (name),
+  itsType             (type),
+  itsProcMode         (Process),
+  itsFirstProcessCall (true)
+{
+  TRACER2("WorkHolder constructor");
+  itsDataManager = new DataManager(inputs, outputs);
+}
 
 WorkHolder::WorkHolder (const WorkHolder& that)
-: itsNinputs     (that.itsNinputs), 
-  itsNoutputs    (that.itsNoutputs),
-  itsName        (that.itsName),
-  itsType        (that.itsType),
-  itsProcMode    (that.itsProcMode)
+: itsNinputs          (that.itsNinputs), 
+  itsNoutputs         (that.itsNoutputs),
+  itsName             (that.itsName),
+  itsType             (that.itsType),
+  itsProcMode         (that.itsProcMode),
+  itsDataManager      (0),
+  itsFirstProcessCall (that.itsFirstProcessCall)
 {}
 
 WorkHolder::~WorkHolder()
 {
+  delete itsDataManager;
 }
 
 WorkHolder& WorkHolder::operator= (const WorkHolder& that)
 {
   if (this != &that) {
-    itsNinputs     = that.itsNinputs; 
-    itsNoutputs    = that.itsNoutputs;
-    itsName        = that.itsName;
-    itsType        = that.itsType;
-    itsProcMode    = that.itsProcMode;
+    itsNinputs          = that.itsNinputs; 
+    itsNoutputs         = that.itsNoutputs;
+    itsName             = that.itsName;
+    itsType             = that.itsType;
+    itsProcMode         = that.itsProcMode;
+    itsDataManager      = 0;
+    itsFirstProcessCall = that.itsFirstProcessCall;
   }
   return *this;
 }
 
-WorkHolder* WorkHolder::baseMake() const
+WorkHolder* WorkHolder::baseMake()
 {
-  WorkHolder* whp = make (getName());
-  Assert (whp->getInputs() == getInputs());
-  Assert (whp->getOutputs() == getOutputs());
-  for (int i=0; i<getInputs(); i++) {
-    whp->getInHolder(i)->setName (getConstInHolder(i)->getName());
-  }
-  for (int i=0; i<getOutputs(); i++) {
-    whp->getOutHolder(i)->setName (getConstOutHolder(i)->getName());
-  }
+  WorkHolder* whp = const_cast<WorkHolder*>(this)->make (getName());
+  Assert (whp->getDataManager().getInputs() == getDataManager().getInputs());
+  Assert (whp->getDataManager().getOutputs() == getDataManager().getOutputs());
+
   return whp;
 }
 
 
-void WorkHolder::dump() const
+void WorkHolder::dump()
 {
   for (int i=0; i<itsNinputs; i++) {
-    getConstInHolder(i)->dump();
+   getDataManager().getInHolder(i)->dump();
   }
   for (int i=0; i<itsNoutputs; i++) {
-    getConstOutHolder(i)->dump();
+    getDataManager().getOutHolder(i)->dump();
   }
 }
 
 void WorkHolder::basePreprocess()
 {
+  getDataManager().preprocess();
+  getParamManager().preprocess();
   preprocess();
-  for (int input=0; input<itsNinputs; input++)	{
-    getInHolder(input)->basePreprocess();
-  }
-  for (int output=0; output<itsNoutputs; output++)	{
-    getOutHolder(output)->basePreprocess();
-  }
 }
 
 void WorkHolder::preprocess()
-{}
+{
+}
 
 void WorkHolder::baseProcess ()
 {
   TRACER4("WorkHolder::baseprocess()");
-  for (int input=0; input<itsNinputs; input++) {
-    if (getInHolder(input)->doHandle()) {
-      getInHolder(input)->read ();
+  if (itsFirstProcessCall)
+  {
+    getDataManager().initializeInputs();
+    itsFirstProcessCall = false;
+  }
+  else
+  {
+    for (int input=0; input<itsNinputs; input++) {
+    
+      if (getDataManager().getGeneralInHolder(input)->doHandle()) {
+	if (getDataManager().hasInputSelector() == false)
+	{
+	  getDataManager().getInHolder(input);
+	}
+	getDataManager().readyWithInHolder(input); // Will cause reading of new data
+      }
     }
-  }        
-  
+  } 
+
   switch (WorkHolder::getProcMode()) {
   case Process:
     process();
@@ -124,13 +138,13 @@ void WorkHolder::baseProcess ()
   case Zeroes:
     // initialize all output
     for (int output=0; output<itsNoutputs; output++) {
-      getOutHolder(output)->setZeroes();
+      getDataManager().getOutHolder(output)->setZeroes();
     }
     break;
   case Ones :
     // initialize all output
     for (int output=0; output<itsNoutputs; output++) {
-      getOutHolder(output)->setOnes();
+      getDataManager().getOutHolder(output)->setOnes();
     }
     break;
   default :
@@ -138,28 +152,36 @@ void WorkHolder::baseProcess ()
   }
 
   for (int output=0; output<itsNoutputs; output++)	{
-    if (getOutHolder(output)->doHandle()) {
-      getOutHolder(output)->write ();
+    if (getDataManager().getGeneralOutHolder(output)->doHandle()) {
+      if (getDataManager().hasOutputSelector() == false)
+      {
+	getDataManager().getOutHolder(output);
+      }
+      getDataManager().readyWithOutHolder(output); // Will cause writing of data
     }
-  }     
+  }
+
 }
 
 void WorkHolder::basePostprocess()
 {
+  TRACER4("WorkHolder::basePostprocess()");
   postprocess();
   for (int input=0; input<itsNinputs; input++)	{
-    getInHolder(input)->basePostprocess();
+    getDataManager().getInHolder(input)->basePostprocess();
   }
   for (int output=0; output<itsNoutputs; output++)	{
-    getOutHolder(output)->basePostprocess();
+    getDataManager().getOutHolder(output)->basePostprocess();
   }
+  getDataManager().postprocess();
+  getParamManager().postprocess();
 }
 
 void WorkHolder::postprocess()
 {}
 
 
-int WorkHolder::getInChannel (const string& name) const
+int WorkHolder::getInChannel (const string& name)
 {
   if (itsInMap.empty()) {
     fillMaps();
@@ -170,7 +192,7 @@ int WorkHolder::getInChannel (const string& name) const
   return itsInMap[name];
 }
 
-int WorkHolder::getOutChannel (const string& name) const
+int WorkHolder::getOutChannel (const string& name)
 {
   if (itsOutMap.empty()) {
     fillMaps();
@@ -181,12 +203,12 @@ int WorkHolder::getOutChannel (const string& name) const
   return itsOutMap[name];
 }
 
-void WorkHolder::fillMaps() const
+void WorkHolder::fillMaps()
 {
   if (itsInMap.empty()) {
     for (int i=0; i<itsNinputs; i++) {
       // Error if DataHolder name is already used.
-      const string& name = getConstInHolder(i)->getName();
+      const string& name = getDataManager().getGeneralInHolder(i)->getName();
       AssertStr (itsInMap.find(name) == itsInMap.end(),
 		 "DataHolder name " << name <<
 		 " already used in WorkHolder " << itsName);
@@ -196,7 +218,7 @@ void WorkHolder::fillMaps() const
   if (itsOutMap.empty()) {
     for (int i=0; i<itsNoutputs; i++) {
       // Error if DataHolder name is already used.
-      const string& name = getConstOutHolder(i)->getName();
+      const string& name = getDataManager().getGeneralOutHolder(i)->getName();
       AssertStr (itsOutMap.find(name) == itsOutMap.end(),
 		 "DataHolder name " << name <<
 		 " already used in WorkHolder " << itsName);

@@ -41,50 +41,45 @@ WH_Dump::WH_Dump (const string& name,
 		  int stationDim,
 		  int pols)
 : WorkHolder    (nin, 1, name),
-  itsInHolders  (0),
-  itsOutHolders (0),
   itsStationDim (stationDim),
   itsPols       (pols)
 {
-  itsInHolders  = new DH_Correlations* [nin];
-  itsOutHolders = new DH_Empty* [1];
   char str[8];
   for (unsigned int i=0; i<nin; i++) {
     sprintf (str, "%d", i);
     TRACER3("Create WH_Dump InhHolder[" << i << "]");
-    itsInHolders[i] = new DH_Correlations (std::string("in_") + str,
-					   stationDim,
-					   1,
-					   pols*pols);
+    
+    getDataManager().addInDataHolder(i, 
+				     new DH_Correlations (std::string("in_") + str,
+				     stationDim,
+				     1,
+				     pols*pols));
   }
+
   for (unsigned int i=0; i<1; i++) {
     sprintf (str, "%d", i);
     TRACER3("Create WH_Dump OutHolder[" << i << "]");
-    itsOutHolders[i] = new DH_Empty(std::string("out_") + str);
+
+    getDataManager().addOutDataHolder(i,
+				      new DH_Empty(std::string("out_") + str));
+
   }
 
   if (theirProcessProfilerState == 0) {
     theirProcessProfilerState = Profiler::defineState("WH_Dump","green");
   }
+
 }
 
 
 WH_Dump::~WH_Dump()
 {
-  for (int i=0; i<getInputs(); i++) {
-    delete itsInHolders[i];
-  }
-  for (int i=0; i<getOutputs(); i++) {
-    delete itsOutHolders[i];
-  }
-  delete [] itsInHolders;
-  delete [] itsOutHolders;
 }
 
-WorkHolder* WH_Dump::make(const string& name) const
+WorkHolder* WH_Dump::make(const string& name)
 {
   return new WH_Dump(name, 
-		     getInputs(), 
+		     getDataManager().getInputs(), 
 		     itsStationDim,
 		     itsPols);
 }
@@ -95,19 +90,11 @@ void WH_Dump::preprocess() {
 
 
 void WH_Dump::process()
-{  
+{ 
+
 }
 
-void WH_Dump::dump() const
+void WH_Dump::dump()
 {
 }
 
-DH_Correlations* WH_Dump::getInHolder (int channel)
-{
-  return itsInHolders[channel];
-}
-
-DH_Empty* WH_Dump::getOutHolder (int channel)
-{
-  return itsOutHolders[channel];
-}

@@ -51,7 +51,7 @@ public:
   
   virtual ~WH_Transpose();
 
-  virtual WorkHolder* make(const string& name) const;
+  virtual WorkHolder* make(const string& name);
 
   virtual void preprocess();
 
@@ -59,13 +59,7 @@ public:
   virtual void process();
 
   /// Show the work holder on stdout.
-  virtual void dump() const;
-
-  /// Get a pointer to the i-th input DataHolder.
-  virtual DH_2DMatrix* getInHolder (int channel);
-
-  /// Get a pointer to the i-th output DataHolder.
-  virtual DH_2DMatrix* getOutHolder (int channel);
+  virtual void dump();
 
 private:
   /// Forbid copy constructor.
@@ -73,12 +67,6 @@ private:
 
   /// Forbid assignment.
   WH_Transpose& operator= (const WH_Transpose&);
-
-
-  /// Pointer to the array of input DataHolders.
-  DH_2DMatrix** itsInHolders;
-  /// Pointer to the array of output DataHolders.
-  DH_2DMatrix** itsOutHolders;
 
   int itsTimeDim;
   int itsFreqDim;
@@ -88,20 +76,6 @@ private:
   static int          theirProcessProfilerState; 
   
 };
-
-inline DH_2DMatrix* WH_Transpose::getInHolder (int channel)
-{
-  DbgAssertStr (channel >= 0,          "input channel too low");
-  DbgAssertStr (channel < getInputs(), "input channel too high");
-  return itsInHolders[channel];
-}
-
-inline DH_2DMatrix* WH_Transpose::getOutHolder (int channel)
-{
-  DbgAssertStr (channel >= 0,           "output channel too low");
-  DbgAssertStr (channel < getOutputs(), "output channel too high");
-  return itsOutHolders[channel];
-}
 
 
 #endif

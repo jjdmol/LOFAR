@@ -46,7 +46,11 @@ public:
 
   explicit DH_Example (const string& name, unsigned int nbuffer = 10);
 
+  DH_Example(const DH_Example&);
+
   virtual ~DH_Example();
+
+  DataHolder* clone() const;
 
   /// Set the Counter attribute in the DataPacket.
   void setCounter (int counter);
@@ -76,8 +80,6 @@ protected:
   };
 
 private:
-  /// Forbid copy constructor.
-  DH_Example (const DH_Example&);
   /// Forbid assignment.
   DH_Example& operator= (const DH_Example&);
 

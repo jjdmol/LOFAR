@@ -95,12 +95,12 @@ void Simul2XML::outputWorkHolder (WorkHolder *wh, ofstream &file, int indent)
   es[indent] = 0;
   file << es << "<workholder";
   file << " class=\"" << wh->getType() << "\">" << endl;
-  for (int i=0; i<wh->getInputs(); i++) {
-    dh = wh->getInHolder(i);
+  for (int i=0; i<wh->getDataManager().getInputs(); i++) {
+    dh = wh->getDataManager().getGeneralInHolder(i);
     outputDataHolder(dh,file,true,indent+INDENT);
   }
-  for (int i=0; i<wh->getOutputs(); i++) {
-    dh = wh->getOutHolder(i);
+  for (int i=0; i<wh->getDataManager().getOutputs(); i++) {
+    dh = wh->getDataManager().getGeneralOutHolder(i);
     outputDataHolder(dh,file,false,indent+INDENT);
   }
   file << es << "</workholder>" << endl;

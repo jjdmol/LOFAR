@@ -26,13 +26,12 @@
 #include "CEPFrame/Simul.h"
 #include "CEPFrame/SimulBuilder.h"
 
-
 Simul::Simul()
 : Step(),
   itsSimul(0)
 {}
 
-Simul::Simul (const WorkHolder& worker, 
+Simul::Simul (WorkHolder& worker, 
 	      const string& name,
 	      bool addNameSuffix,
 	      bool controllable,
@@ -43,7 +42,7 @@ Simul::Simul (const WorkHolder& worker,
   itsRep = itsSimul;
 }
 
-Simul::Simul (const WorkHolder* worker, 
+Simul::Simul (WorkHolder* worker, 
 	      const string& name,
 	      bool addNameSuffix,
 	      bool controllable,
@@ -54,7 +53,7 @@ Simul::Simul (const WorkHolder* worker,
   itsRep = itsSimul;
 }
 
-Simul::Simul (const SimulBuilder& aBuilder, 
+Simul::Simul (SimulBuilder& aBuilder, 
 	      const string& name,
 	      bool addNameSuffix,
 	      bool controllable,
@@ -103,7 +102,7 @@ bool Simul::connectInputArray (Simul* aSimul[],
 			       const TransportHolder& prototype)
 {
   if (nrItems < 0) {  // set nr_items automatically
-    nrItems = getWorker()->getInputs();
+    nrItems = getWorker()->getDataManager().getInputs();
   }
   Step** stepPtrs = new Step* [nrItems];
   for (int i=0; i<nrItems; i++) {

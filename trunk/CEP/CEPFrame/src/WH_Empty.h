@@ -52,19 +52,13 @@ class WH_Empty: public WorkHolder
 				const ParamBlock&);
 
   /// Make a fresh copy of the WH object.
-  virtual WH_Empty* make (const string& name) const;
+  virtual WH_Empty* make (const string& name);
 
   /// Do a process step.
   void process();
 
   /// Show the work holder on stdout.
-  void dump() const;
-
-  /// Get a pointer to the i-th input DataHolder.
-  virtual DataHolder* getInHolder (int channel);
-
-  /// Get a pointer to the i-th output DataHolder.
-  virtual DataHolder* getOutHolder (int channel);
+  void dump();
 
   /// Example Monitoring output
   virtual int getMonitorValue(const char* name);
@@ -76,9 +70,6 @@ private:
   /// Forbid assignment.
   WH_Empty& operator= (const WH_Empty&);
 
-
-  DH_Empty itsInDataHolder;
-  DH_Empty itsOutDataHolder;
 };
 
 

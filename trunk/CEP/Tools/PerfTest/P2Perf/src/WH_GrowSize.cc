@@ -45,8 +45,6 @@ WH_GrowSize::WH_GrowSize (const string& name,
 			  bool destside,
 			  bool sizeFixed)
 : WorkHolder    (nin, nout, name),
-  itsInHolders  (0),
-  itsOutHolders (0),
   itsBufLength  (nbuffer),
   itsIsDestSide (destside),
   itsSizeFixed (sizeFixed),
@@ -55,29 +53,38 @@ WH_GrowSize::WH_GrowSize (const string& name,
   itsTime(0),
   itsReportPerformance(false)
 {
-  AssertStr (nin > 0,     "0 input DH_IntArray is not possible");
-  AssertStr (nout > 0,    "0 output DH_IntArray is not possible");
+    AssertStr (nin > 0,     "0 input DH_IntArray is not possible");
+    AssertStr (nout > 0,    "0 output DH_IntArray is not possible");
   //   AssertStr (nout == nin, "number of inputs and outputs must match");
   
-  itsInHolders  = new DH_GrowSize* [nin];
-  itsOutHolders = new DH_GrowSize* [nout];
   char str[8];
+
   for (unsigned int i=0; i<nin; i++) {
     sprintf (str, "%d", i);
-    itsInHolders[i] = new DH_GrowSize (std::string("in_") + str, nbuffer,
-				       itsSizeFixed);
+    getDataManager().addInDataHolder(i, new DH_GrowSize (std::string("in_") + str,
+				     nbuffer, itsSizeFixed), true);
+
     if (itsSizeFixed)
     {
-      itsInHolders[i]->setInitialDataPacketSize(nbuffer);
+      DbgAssertStr(getDataManager().getInHolder(0)->getType() == "DH_GrowSize",
+               "DataHolder is not of type DH_GrowSize");    
+
+      ((DH_GrowSize*)getDataManager().getGeneralInHolder(i))->
+      setInitialDataPacketSize(nbuffer);
     }
   }
+  
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
-    itsOutHolders[i] = new DH_GrowSize (std::string("out_") + str, nbuffer,
-					itsSizeFixed);
+    getDataManager().addOutDataHolder(i, new DH_GrowSize(std::string("out_") + str,
+				      nbuffer, itsSizeFixed), true);
     if (itsSizeFixed)
     {
-      itsOutHolders[i]->setInitialDataPacketSize(nbuffer);
+      DbgAssertStr(getDataManager().getOutHolder(0)->getType() == "DH_GrowSize",
+               "DataHolder is not of type DH_GrowSize");    
+
+      ((DH_GrowSize*)getDataManager().getGeneralOutHolder(i))->
+	setInitialDataPacketSize(nbuffer);
     }
   }
 
@@ -91,22 +98,14 @@ WH_GrowSize::WH_GrowSize (const string& name,
 
 WH_GrowSize::~WH_GrowSize()
 {
-  for (int i=0; i<getInputs(); i++) {
-    delete itsInHolders[i];
-  }
-  for (int i=0; i<getOutputs(); i++) {
-    delete itsOutHolders[i];
-  }
-  delete [] itsInHolders;
-  delete [] itsOutHolders;
 }
 
-WorkHolder* WH_GrowSize::make(const string& name) const
+WorkHolder* WH_GrowSize::make(const string& name)
 {
   return new WH_GrowSize(name, 
 			 itsFirst, 
-			 getInputs(), 
-			 getOutputs(), 
+			 getDataManager().getInputs(), 
+			 getDataManager().getOutputs(), 
 			 itsBufLength, 
 			 itsIsDestSide,
 			 itsSizeFixed);
@@ -118,17 +117,20 @@ WorkHolder* WH_GrowSize::make(const string& name) const
 
 void WH_GrowSize::process()
 {  
-  itsOutHolders[0]->setTimeStamp(itsTime++);
+  getDataManager().getOutHolder(0)->setTimeStamp(itsTime++);
+  getDataManager().getInHolder(0);
+
   if (itsReportPerformance){
     if (!itsFirstcall) {
-      watch.stop();
+       watch.stop();
 
 #ifdef DO_WORK
-      char* pcInData = (char*)getInHolder(0)->getDataPtr();
-      char* pcOutData = (char*)getOutHolder(0)->getDataPtr();
+      char* pcInData = (char*)getDataManager().getInHolder(0)->getDataPtr();
+      char* pcOutData = (char*)getDataManager().getOutHolder(0)->getDataPtr();
+
       for (int i=0; i < 2; i++)
       {
-	for (int j=0; j < getInHolder(0)->getDataPacketSize(); j++)
+	for (int j=0; j < getDataManager().getInHolder(0)->getDataPacketSize(); j++)
 	{
 	  pcOutData[j] = pcInData[j] * 2;
 	}
@@ -138,17 +140,19 @@ void WH_GrowSize::process()
       if (itsIteration == 0) {
 	// first measurement; print packet sizes etc.
 	cout << endl;
-	itsLastSize = itsInHolders[0]->getDataPacketSize(); 
+	itsLastSize = getDataManager().getInHolder(0)->getDataPacketSize(); 
 	cout <<  itsLastSize << " "
 	     << log10(itsLastSize) << " ";
       }
       // report the bandwidth per output channel (in MB/s)
-      itsLastPerf = (int)(itsOutHolders[0]->getDataPacketSize() * getOutputs()
+      itsLastPerf = (int)(getDataManager().getOutHolder(0)->getDataPacketSize() * getDataManager().getOutputs()
 		     /(1024.*1024.*watch.elapsed()));
       cout << itsLastPerf 
 	   << "  "
 	   << watch.elapsed()
 	   << "  ";
+      watch.start();
+     
     } else {
       if (itsIteration == 1) itsFirstcall = false;
     }
@@ -161,34 +165,25 @@ void WH_GrowSize::process()
 	itsIteration = itsMeasurements;
 	if (!itsSizeFixed)
 	{
-	  for (int i=0; i<getInputs(); i++) {
+	  for (int i=0; i<getDataManager().getInputs(); i++) {
 	    TRACER3("Increase size of " << getName() << " input " << i);
-	    (void)itsInHolders[i]->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
+	    DbgAssertStr(getDataManager().getOutHolder(0)->getType() == 
+			 "DH_GrowSize", "DataHolder is not of type DH_GrowSize");  
+	    (void)((DH_GrowSize*)getDataManager().getInHolder(i))->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
 	  }
-	  for (int i=0; i<getOutputs(); i++) {
+	  for (int i=0; i<getDataManager().getOutputs(); i++) {
 	    TRACER3("Increase size of " << getName() << " output " << i);
-	    (void)itsOutHolders[i]->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
+	    DbgAssertStr(getDataManager().getOutHolder(0)->getType() == 
+			 "DH_GrowSize", "DataHolder is not of type DH_GrowSize");  
+	    (void)((DH_GrowSize*)getDataManager().getOutHolder(i))->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
 	  }
 	}
       }
   }
 }
 
-void WH_GrowSize::dump() const
+void WH_GrowSize::dump()
 {
-}
-
-DH_GrowSize* WH_GrowSize::getInHolder (int channel)
-{
-  DbgAssertStr (channel >= 0,          "input channel too low");
-  DbgAssertStr (channel < getInputs(), "input channel too high");
-  return itsInHolders[channel];
-}
-DH_GrowSize* WH_GrowSize::getOutHolder (int channel)
-{
-  DbgAssertStr (channel >= 0,           "output channel too low");
-  DbgAssertStr (channel < getOutputs(), "output channel too high");
-  return itsOutHolders[channel];
 }
 
 /**

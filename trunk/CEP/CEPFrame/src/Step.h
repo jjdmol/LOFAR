@@ -55,11 +55,11 @@ public:
       by default the suffix _n is added to the name when the Step is
       added to a Simul (where n is the sequence number starting with 0).
   */
-  explicit Step (const WorkHolder& worker,
+  explicit Step (WorkHolder& worker,
 		 const string& name = "aStep",
 		 bool addNameSuffix = true,
 		 bool monitor       = false); // flag for Corbamonitor object
-  explicit Step (const WorkHolder* worker,
+  explicit Step (WorkHolder* worker,
 		 const string& name = "aStep",
 		 bool addNameSuffix = true,
 		 bool monitor       = false); // flag for Corbamonitor object
@@ -205,6 +205,13 @@ public:
 			   int   nrSteps=-1, // nr of Steps in aStep[] array
 			   const TransportHolder& prototype = TRANSPORTER())
     { return itsRep->connectOutputArray (aStep, nrSteps, prototype); }
+
+  /** 
+      Connect named parameter of step1 with that of step2 with given prototype
+  */ 
+  bool connectParam(const string& name, Step* aStep,
+                    const TransportHolder& prototype)
+    { return itsRep->connectParam(name, aStep, prototype); }
 
   /** Check if all connections are correct and if everything is connected.
       By default messages are written to cerr.

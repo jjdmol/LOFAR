@@ -52,7 +52,7 @@ public:
   
   virtual ~WH_Dump();
 
-  virtual WorkHolder* make(const string& name) const;
+  virtual WorkHolder* make(const string& name);
 
   virtual void preprocess();
 
@@ -60,13 +60,7 @@ public:
   virtual void process();
 
   /// Show the work holder on stdout.
-  virtual void dump() const;
-
-  /// Get a pointer to the i-th input DataHolder.
-  virtual DH_Correlations* getInHolder (int channel);
-
-  /// Get a pointer to the i-th output DataHolder.
-  virtual DH_Empty* getOutHolder (int channel);
+  virtual void dump();
 
 private:
   /// Forbid copy constructor.
@@ -74,12 +68,6 @@ private:
 
   /// Forbid assignment.
   WH_Dump& operator= (const WH_Dump&);
-
-
-  /// Pointer to the array of input DataHolders.
-  DH_Correlations** itsInHolders;
-  /// Pointer to the array of output DataHolders.
-  DH_Empty** itsOutHolders;
 
   int itsStationDim;
   int itsPols;

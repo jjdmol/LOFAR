@@ -41,12 +41,15 @@ map<int, TH_Mem::Msg> TH_Mem::messages;
 TH_Mem TH_Mem::proto;
 
 TH_Mem::TH_Mem() :
-  itsFirstCall(true),
+  itsFirstSendCall(true),
+  itsFirstRecvCall(true),
   itsDataSource(0)
-{}
+{
+}
 
 TH_Mem::~TH_Mem()
-{}
+{
+}
 
 TH_Mem* TH_Mem::make() const
 {
@@ -69,16 +72,15 @@ bool TH_Mem::connectionPossible(int srcRank, int dstRank) const
 
 bool TH_Mem::recv(void* buf, int nbytes, int, int tag)
 { 
-  if (itsFirstCall) 
+  if (itsFirstRecvCall) 
   {
 
     Msg m;
-    
-    AssertStr(messages.end() != messages.find(tag), "no matching send for recv");
-    
+
+    AssertStr(messages.end() != messages.find(tag), "no matching send for recv"); 
     m = messages[tag];
 
-    if (   (m.isAvailable())
+    if ( (m.isAvailable())
            && (nbytes == m.getNBytes()))
     {
       itsDataSource = m.getBuf();
@@ -97,7 +99,7 @@ bool TH_Mem::recv(void* buf, int nbytes, int, int tag)
       Throw("No matching send for recv: ");
     }
 
-    itsFirstCall = false;
+    itsFirstRecvCall = false;
 
   }
   else
@@ -105,10 +107,10 @@ bool TH_Mem::recv(void* buf, int nbytes, int, int tag)
     AssertStr(itsDataSource != 0, "No matching send for recv");
 
     memcpy(buf, itsDataSource, nbytes);
-
   }
 
   return true;
+
 }
 
 /**
@@ -117,14 +119,14 @@ bool TH_Mem::recv(void* buf, int nbytes, int, int tag)
 bool TH_Mem::send(void* buf, int nbytes, int, int tag)
 {
 
-  if (itsFirstCall)
+  if (itsFirstSendCall)
   { 
 
     Msg      m(buf, nbytes, tag);
-    
+
     messages[tag] = m;
 
-    itsFirstCall = false;
+    itsFirstSendCall = false;
 	
   }
 

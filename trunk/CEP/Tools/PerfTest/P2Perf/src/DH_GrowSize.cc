@@ -42,8 +42,21 @@ DH_GrowSize::DH_GrowSize (const string& name, unsigned int nbuffer,
 {
 }
 
+DH_GrowSize::DH_GrowSize (const DH_GrowSize& that)
+  : DataHolder(that),
+    itsBufSize(that.itsBufSize),
+    itsSizeFixed(that.itsSizeFixed),
+    reportedDataPacketSize(that.reportedDataPacketSize)
+{
+}
+
 DH_GrowSize::~DH_GrowSize()
 {
+}
+
+DataHolder* DH_GrowSize::clone() const
+{
+  return new DH_GrowSize(*this);
 }
 
 void DH_GrowSize::preprocess()
@@ -53,7 +66,7 @@ void DH_GrowSize::preprocess()
   // Determine the number of bytes needed for DataPacket and buffer.
   // the size is that of the DataPacket object, plus the size of the Buffer
   unsigned int size = sizeof(DataPacket) + (itsBufSize * sizeof(BufferType));
-  // allocate the memmory
+  // allocate the memory
   char* ptr = (char*)allocate(size);
   
   // Fill in the data packet pointer and initialize the memory.
@@ -80,7 +93,11 @@ void DH_GrowSize::preprocess()
 
 void DH_GrowSize::postprocess()
 {
-  // delete the allocated memmory for the DataPacket object, 
+  // delete the allocated memory for the DataPacket object, 
   // including the buffer
   deallocate((void*)itsDataPacket);
+}
+
+void DH_GrowSize::dump()
+{
 }

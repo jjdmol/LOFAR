@@ -26,8 +26,11 @@ Step.h						\
 StepRep.h					\
 TH_MPI.h					\
 TH_Mem.h					\
+TH_Mem_Bl.h					\
 TH_File.h					\
+BaseTransport.h					\
 Transport.h					\
+ParamTransport.h				\
 TransportHolder.h				\
 WH_Empty.h					\
 WH_Example.h					\
@@ -38,7 +41,19 @@ realft.h					\
 Simul2XML.h					\
 Lock.h						\
 CyclicBuffer.h					\
-TH_Database.h
+TH_Database.h					\
+CyclicOWBuffer.h				\
+DHPoolManager.h					\
+CycBufferManager.h				\
+SynchronisityManager.h				\
+DataManager.h					\
+ParamTransportManager.h				\
+ParamManager.h					\
+PH_Int.h					\
+Selector.h					\
+Sel_RoundRobin.h				\
+Sel_Linked.h					
+
 
 lib_LTLIBRARIES 	= libcepframe.la
 
@@ -67,7 +82,10 @@ StepRep.cc					\
 TH_MPI.cc					\
 TH_File.cc					\
 TH_Mem.cc					\
+TH_Mem_Bl.cc					\
+BaseTransport.cc				\
 Transport.cc					\
+ParamTransport.cc				\
 TransportHolder.cc				\
 WH_Empty.cc					\
 WH_Example.cc					\
@@ -77,7 +95,18 @@ four1.cc					\
 matlabmex.cc					\
 realft.cc					\
 Simul2XML.cc					\
-TH_Database.cc
+TH_Database.cc					\
+DHPoolManager.cc				\
+CycBufferManager.cc				\
+SynchronisityManager.cc				\
+DataManager.cc					\
+ParamTransportManager.cc			\
+ParamManager.cc					\
+PH_Int.cc					\
+Selector.cc					\
+Sel_RoundRobin.cc				\
+Sel_Linked.cc					
+
 
 EXTRA_DIST = assay
 

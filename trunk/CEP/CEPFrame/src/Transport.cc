@@ -28,59 +28,75 @@
 #include <memory.h>
 
 #include "CEPFrame/Transport.h"
-#include "CEPFrame/TransportHolder.h"
-#include "CEPFrame/DataHolder.h"
-#include "CEPFrame/Step.h"
 #include "Common/Debug.h"
+#include "CEPFrame/StepRep.h"
+#include "CEPFrame/Step.h"
 
 Transport::Transport (DataHolder* dataHolderPtr)
-: itsDataHolder      (dataHolderPtr),
-  itsTransportHolder (0),
+: BaseTransport(),
+  itsDataHolder      (dataHolderPtr),
   itsSourceAddr      (0),
   itsTargetAddr      (0),
-  itsStep            (0),
-  itsID              (-1),
-  itsReadTag         (-1),
-  itsWriteTag        (-1),
-  itsRate            (1),
-  itsStatus          (Unknown)
+  itsRate            (1)
 {}
 
 Transport::~Transport()
 {
-  delete itsTransportHolder;
 }
 
-int Transport::getNode() const
+Transport::Transport(const Transport& that)
+  : BaseTransport(that),
+    itsDataHolder(0),
+    itsSourceAddr(that.itsSourceAddr),
+    itsTargetAddr(that.itsTargetAddr),
+    itsRate(that.itsRate)
 {
-  return itsStep==0  ?  -1 : itsStep->getNode();
-} 
+}
 
-void Transport::read()
+Transport* Transport::clone() const
 {
+  return new Transport(*this);
+}
+
+bool Transport::doHandle() const
+{
+  return Step::getEventCount() % itsRate == 0;
+}
+
+bool Transport::read()
+{
+  bool result = false;
+
   if (doHandle()) {
-    if (itsTransportHolder && getReadTag() >= 0) {
-      TRACER3("Transport::read; call recv(" << getDataPtr() << "," << getDataPacketSize() << ",....)");
-      itsTransportHolder->recv((void*)getDataPtr(),
+    if (getTransportHolder() && getReadTag() >= 0) {
+      TRACER3("Transport::read; call recv(" << getDataPtr() << "," 
+             << getDataPacketSize() << ",....)");
+      result = getTransportHolder()->recv((void*)getDataPtr(),
 			       getDataPacketSize(),
-			       getSourceAddr()->getTransport().getStep().getNode(),
+			       getSourceAddr()->getStep().getNode(),
 			       getReadTag());
       setStatus(Transport::Clean);
+    }
+    else
+    {
+      TRACER2("Skip Transport::read itsTransportHolder or getReadTag <= 0");
     }
   } else {
     TRACER2("skip read");
   }
+  
+  return result;
 
 }
 
 void Transport::write()
 {
   if (doHandle()) {
-    if (itsTransportHolder && getWriteTag() >= 0) {
+    if (getTransportHolder() && getWriteTag() >= 0) {
       TRACER3("Transport::write; call send(" << getDataPtr() << "," << getDataPacketSize() << ",....)");
-      itsTransportHolder->send((void*)getDataPtr(),
+      getTransportHolder()->send((void*)getDataPtr(),
 	       getDataPacketSize(),
-	       getTargetAddr()->getTransport().getStep().getNode(),
+	       getTargetAddr()->getStep().getNode(),
 	       getWriteTag());
       setStatus(Transport::Dirty);
     }
@@ -89,44 +105,21 @@ void Transport::write()
   }
 }
 
-bool Transport::doHandle() const
-{
-  return Step::getEventCount() % itsRate == 0;
-}
-
-void Transport::makeTransportHolder (const TransportHolder& prototype)
-{
-  delete itsTransportHolder;
-  itsTransportHolder = 0;
-  itsTransportHolder = prototype.make();
-  itsTransportHolder -> setTransport (this);
-}
-
 void Transport::dump() const
 {
   cout <<  "Transport: ID = " << getItsID();
-  if (itsStep != 0) {
-    cout << "(node " << itsStep->getNode() << ")";
+  if (&(itsDataHolder->getStep()) != 0) {
+    cout << "(node " << itsDataHolder->getStep().getNode() << ")";
   }
   if (itsSourceAddr != 0) {
     cout << " inDH = " << itsSourceAddr->getName()
-	 << '(' << itsSourceAddr->getTransport().getNode() << ')';
+	 << '(' << itsSourceAddr->getNode() << ')';
   }
   if (itsTargetAddr != 0) {
     cout << " outDH = " << itsTargetAddr->getName()
-	 << '(' << itsTargetAddr->getTransport().getNode() << ')';
+	 << '(' << itsTargetAddr->getNode() << ')';
   }
   cout << " ReadTag = " << getReadTag() << endl;
   cout << " WriteTag = " << getWriteTag() << endl;
-}
-
-void Transport::setReadTag (int tag)
-{
-    itsReadTag = tag; 
-}
-
-void Transport::setWriteTag (int tag)
-{
-    itsWriteTag = tag; 
 }
 

@@ -29,7 +29,10 @@
 
 WH_Empty::WH_Empty (const string& name)
 : WorkHolder (1, 1, name,"WH_Empty")
-{}
+{
+  getDataManager().addInDataHolder(0, new DH_Empty());
+  getDataManager().addOutDataHolder(0, new DH_Empty());
+}
 
 WH_Empty::~WH_Empty()
 {}
@@ -40,7 +43,7 @@ WorkHolder* WH_Empty::construct (const string& name, int, int,
   return new WH_Empty (name);
 }
 
-WH_Empty* WH_Empty::make (const string& name) const
+WH_Empty* WH_Empty::make (const string& name)
 {
   return new WH_Empty (name);
 }
@@ -48,20 +51,9 @@ WH_Empty* WH_Empty::make (const string& name) const
 void WH_Empty::process()
 {}
 
-void WH_Empty::dump() const
+void WH_Empty::dump()
 {
   TRACER2("WH_Empty Dump");
-}
-
-
-DataHolder* WH_Empty::getInHolder (int)
-{
-  return &itsInDataHolder; 
-}
-
-DataHolder* WH_Empty::getOutHolder (int)
-{
-  return &itsOutDataHolder;
 }
 
 
