@@ -79,6 +79,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
   LOG_TRACE_FLOW_STR("Read KVM parameters");
   char H_name[128];
   int slow_rate = itsKVM.getInt("samples",256000)/itsKVM.getInt("NoPacketsInFrame",8);
+  cout<<"slow_rate: "<<slow_rate<<endl;
 
   LOG_TRACE_FLOW_STR("Create the top-level composite");
   WH_Empty empty;
@@ -175,7 +176,9 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     sprintf(H_name, "DumpNode_%d_of_%d", i, itsNdump);
     LOG_TRACE_LOOP_STR("Create Dump workholder/Step " << H_name);
 
-    WH_Dump whDump(H_name, itsKVM);
+    string oFile  = itsKVM["outFileName"].getVecString()[i];
+
+    WH_Dump whDump(H_name, itsKVM, oFile);
     Step dumpstep(whDump, H_name);
     dumpstep.setInRate(slow_rate);
     dumpstep.setProcessRate(slow_rate);
@@ -231,7 +234,7 @@ int main (int argc, const char** argv) {
     cout << "defined" << endl;
     correlator.basePrerun();
     cout << "init done" << endl;
-    correlator.baseRun(10000);
+    correlator.baseRun(20);
     cout << "run" << endl;
     correlator.baseDump();
     correlator.baseQuit();

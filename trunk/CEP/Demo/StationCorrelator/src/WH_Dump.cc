@@ -23,13 +23,13 @@
 using namespace LOFAR;
 
 
-WH_Dump::WH_Dump(const string& name, const KeyValueMap& kvm)
+WH_Dump::WH_Dump(const string& name, const KeyValueMap& kvm, const string& fileName)
   : WorkHolder(kvm.getInt("NoWH_Correlator",7)/kvm.getInt("NoWH_Dump", 2), 0, name, "WH_Dump"),
     itsOutputFile(0),
     itsBandwidth(0),
     itsKvm(kvm)
 {
-  itsOutputFileName = kvm.getString("outFileName", "StatCor.out");
+  itsOutputFileName = fileName;
   itsNelements      = kvm.getInt("NoWH_RSP", 2);
   itsNchannels      = kvm.getInt("NoRSPBeamlets", 92)/kvm.getInt("NoWH_Correlator", 92);
   itsNpolarisations = kvm.getInt("polarisations", 2);
@@ -55,13 +55,14 @@ WH_Dump::~WH_Dump() {
 }
 
 WorkHolder* WH_Dump::construct (const string& name, 
-				const KeyValueMap& kvm)
+				const KeyValueMap& kvm,
+				const string& fileName)
 {
-  return new WH_Dump(name, kvm);
+  return new WH_Dump(name, kvm, fileName);
 }
 
 WH_Dump* WH_Dump::make(const string& name) {
-  return new WH_Dump(name, itsKvm); 
+  return new WH_Dump(name, itsKvm, itsOutputFileName); 
 }
 
 void WH_Dump::preprocess() {
