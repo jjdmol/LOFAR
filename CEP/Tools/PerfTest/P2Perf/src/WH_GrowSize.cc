@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.5  2001/10/31 11:34:18  wierenga
+//  LOFAR CVS Repository structure change and transition to autotools (autoconf, automake and libtool).
+//
 //  Revision 1.4  2001/10/26 10:06:28  wierenga
 //  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
 //
@@ -99,22 +102,29 @@ WorkHolder* WH_GrowSize::make(const string& name) const
 
 void WH_GrowSize::process()
 {
+  const short Measurements=3;
   if (!strncmp("GrowSize[1]", getName().c_str(), 11))
   {
     if (iteration > 0)
-    {
-      watch.stop();
-      printf("%d %g\n",
-	     itsInHolders[0]->getDataPacketSize(),
-	     (itsInHolders[0]->getDataPacketSize() / (1024.0 * 1024.0)) / watch.elapsed());
-    }
+      {
+	watch.stop();
+	if (iteration % Measurements == 1) {
+	  // first measurement; print packet sizes etc.
+	  cout << endl;
+	  cout << itsInHolders[0]->getDataPacketSize() << " "
+	       << log10(itsInHolders[0]->getDataPacketSize()) << " ";
+	}
+	cout << (itsInHolders[0]->getDataPacketSize() / (1024. * 1024.) / watch.elapsed()) 
+	     << "  ";
+      }
     watch.start();
   }
 
   if (!strncmp("GrowSize[1]", getName().c_str(), 11)
       || (iteration > 0))
   {
-    if (iteration % 5 == 0)
+    // perform every measurement Measurements times
+    if (iteration % Measurements == 0)
     {
       for (int i=0; i<getInputs(); i++)
       {
