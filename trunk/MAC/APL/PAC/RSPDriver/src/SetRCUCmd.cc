@@ -62,18 +62,20 @@ void SetRCUCmd::ack(CacheBuffer& /*cache*/)
 
 void SetRCUCmd::apply(CacheBuffer& cache)
 {
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_BLPS", i) * 2; cache_rcu++)
+  for (int cache_rcu = 0;
+       cache_rcu < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL;
+       cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      if (cache_rcu < GET_CONFIG("N_BLPS", i) * 2)
+      if (cache_rcu < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL)
       {
 	cache.getRCUSettings()()(cache_rcu) = m_event->settings()(0);
       }
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("N_BLPS", i) * 2));
+			      cache_rcu, GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * 2));
       }
     }
     
@@ -97,7 +99,7 @@ void SetRCUCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetRCUCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_BLPS", i) * 2)
+  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL)
 	  && (1 == m_event->settings().dimensions())
 	  && (1 == m_event->settings().extent(firstDim)));
 }

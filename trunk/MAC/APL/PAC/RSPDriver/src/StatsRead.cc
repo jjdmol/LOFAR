@@ -73,8 +73,10 @@ void StatsRead::sendrequest_status()
   // intentionally left empty
 }
 
+/**
+ * Function to cast a complex<uint16> to a complex<double>
+ */
 BZ_DECLARE_FUNCTION_RET(convert_uint16_to_double, complex<double>)
-
 inline complex<double> convert_uint16_to_double(complex<uint16> val)
 {
   return complex<double>((double)val.real(),
@@ -92,50 +94,16 @@ GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port
     Array<complex<uint16>, 2> stats((complex<uint16>*)&ack.stat,
  				    shape(N_SUBBANDS, N_POL),
  				    neverDeleteData);
-    //Array<complex<double>, 2> dstats(N_SUBBANDS, N_POL);
-    //dstats = convert_uint16_to_double(stats);
-
-    //cout << stats(Range::all(), 0) << endl;
-    //cout << stats(Range::all(), 1) << endl;
-
-#if 1
 
     Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getSubbandStats()());
-    
-    cache(m_type, global_blp * 2,     Range::all()) = convert_uint16_to_double(stats(Range::all(), 0)); //dstats(Range::all(), 0);
-    cache(m_type, global_blp * 2 + 1, Range::all()) = convert_uint16_to_double(stats(Range::all(), 1)); //dstats(Range::all(), 1);
-    
-    //cout << cache(m_type, global_blp * 2,     Range::all()) << endl;
-    //cout << cache(m_type, global_blp * 2 + 1, Range::all()) << endl;
-    cout << "writing to (" << (int)m_type << ", " << global_blp*2   << ", all)"
-	 << " at address " << cache(m_type, global_blp*2+1, Range::all()).data() << endl;
-    cout << "writing to (" << (int)m_type << ", " << global_blp*2+1 << ", all)"
-	 << " at address " << cache(m_type, global_blp*2+1, Range::all()).data() << endl;
 
-#else
-    complex<double>* cacheptr =
-      Cache::getInstance().getBack().getSubbandStats()()((int)m_type, global_blp * 2, Range::all()).data();
-    complex<uint16>* msgptr = stats.data();
-    
-    // copy stats for x-polarization, convert from uint16 to double
-    for (int bl = 0; bl < N_SUBBANDS; bl++)
-    {
-      *cacheptr++ = *msgptr++;
-      msgptr++; // skip over y-polarization
-    }
+    // x-pol subband statistics: copy and convert to double
+    cache(m_type, global_blp * 2,     Range::all()) =
+      convert_uint16_to_double(stats(Range::all(), 0));
 
-    cacheptr =
-      Cache::getInstance().getBack().getSubbandStats()()((int)m_type, global_blp * 2 + 1, Range::all()).data();
-    msgptr = stats.data();
-    
-    // copy stats for y-polarization, convert from uint16 to double
-    msgptr++; // skip x-part
-    for (int bl = 0; bl < N_SUBBANDS; bl++)
-    {
-      *cacheptr++ = *msgptr++;
-      msgptr++;
-    }
-#endif
+    // y-pol subband statistics: copy and convert to double
+    cache(m_type, global_blp * 2 + 1, Range::all()) =
+      convert_uint16_to_double(stats(Range::all(), 1));
   }
   else
   {
@@ -145,36 +113,17 @@ GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port
 				    shape(N_BEAMLETS, N_POL),
 				    neverDeleteData);
 
-    complex<double>* cacheptr = Cache::getInstance().getBack().getBeamletStats()()((int)m_type - Statistics::BEAMLET_MEAN,
-										   global_blp * 2, Range::all()).data();
-    complex<uint16>* msgptr = stats.data();
-    
-    // copy stats for x-polarization, convert from uint16 to double
-    for (int bl = 0; bl < N_BEAMLETS; bl++)
-    {
-      *cacheptr++ = *msgptr++;
-      *msgptr++; // skip to next
-    }
+    Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getBeamletStats()());
 
-    cacheptr = Cache::getInstance().getBack().getBeamletStats()()((int)m_type - Statistics::BEAMLET_MEAN,
-								  global_blp * 2 + 1, Range::all()).data();
-    msgptr = stats.data();
-    
-    // copy stats for y-polarization, convert from uint16 to double
-    msgptr++; // skip x-part
-    for (int bl = 0; bl < N_BEAMLETS; bl++)
-    {
-      *cacheptr++ = *msgptr++;
-      msgptr++;
-    }
+    // x-pol beamlet statistics: copy and convert to double
+    cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2,     Range::all()) =
+      convert_uint16_to_double(stats(Range::all(), 0));
+
+    // y-pol beamlet statistics: copy and convert to double
+    cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2 + 1, Range::all()) =
+      convert_uint16_to_double(stats(Range::all(), 1));
+
   }
-
-#if 0
-  memcpy(stats()(MEPHeader::MEAN,
-		 (getBoardId() * GET_CONFIG("N_BLPS", i)) + ack.hdr.m_fields.addr.dstid,
-		 Range::all()).data(),
-	 &ack.stat, N_BEAMLETS * sizeof(uint16));
-#endif
 
   return GCFEvent::HANDLED;
 }

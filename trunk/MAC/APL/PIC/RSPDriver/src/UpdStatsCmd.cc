@@ -80,35 +80,31 @@ void UpdStatsCmd::complete(CacheBuffer& cache)
   }
   
   int result_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_BLPS", i) * N_POL; cache_rcu++)
+  for (int cache_rcu = 0;
+       cache_rcu < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL;
+       cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      if (cache_rcu < GET_CONFIG("N_BLPS", i) * N_POL)
+      if (cache_rcu < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL)
       {
 	if (m_event->type <= Statistics::SUBBAND_POWER)
 	{
 	  ack.stats()(0, result_rcu, Range::all())
 	    = cache.getSubbandStats()()(m_event->type,
 					cache_rcu, Range::all());
-	  cout << "reading from (" << (int)m_event->type << ", " << cache_rcu << ", all)"
-	       << " at address " << cache.getSubbandStats()()(m_event->type, cache_rcu, Range::all()).data()
-	       << endl;
 	}
 	else
 	{
 	  ack.stats()(0, result_rcu, Range::all())
 	    = cache.getBeamletStats()()(m_event->type - Statistics::BEAMLET_MEAN,
 					cache_rcu, Range::all());
-	  cout << "reading from (" << (int)m_event->type << ", " << cache_rcu << ", all)"
-	       << " at address " << cache.getBeamletStats()()(m_event->type - Statistics::BEAMLET_MEAN, cache_rcu, Range::all()).data()
-	       << endl;
 	}
       }
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("N_BLPS", i) * N_POL));
+			      cache_rcu, GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL));
       }
       
       result_rcu++;
@@ -133,6 +129,6 @@ void UpdStatsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool UpdStatsCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_BLPS", i) * N_POL)
+  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL)
 	  && (m_event->type < Statistics::N_STAT_TYPES));
 }

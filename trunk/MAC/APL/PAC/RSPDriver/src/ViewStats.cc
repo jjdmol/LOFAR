@@ -47,6 +47,12 @@ using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
+//
+// These are the parameters for the MAC-EPA increment 2
+//
+#define N_RSPBOARDS 3
+#define N_BLPS      2
+
 #define START_TEST(_test_, _descr_) \
   setCurSubTest(#_test_, _descr_)
 
@@ -102,7 +108,7 @@ GCFEvent::TResult ViewStats::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_ENTRY:
     {
-      m_server.open();
+      if (!m_server.isConnected()) m_server.open();
     }
     break;
 
@@ -154,7 +160,11 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
       substats.type = m_type;
       substats.reduction = SUM;
       
-      TESTC_ABORT(m_server.send(substats) > 0, ViewStats::final);
+      if (!m_server.send(substats))
+      {
+	LOG_FATAL("failed to subscribe");
+	exit(EXIT_FAILURE);
+      }
     }
     break;
 
@@ -162,7 +172,11 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
     {
       RSPSubstatsackEvent ack(e);
 
-      TESTC_ABORT(ack.status == SUCCESS, ViewStats::final);
+      if (SUCCESS != ack.status)
+      {
+	LOG_FATAL("failed to subscribe");
+	exit(EXIT_FAILURE);
+      }
       LOG_INFO_STR("ack.time=" << ack.timestamp);
     }
     break;
@@ -171,7 +185,12 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
     {
       RSPUpdstatsEvent upd(e);
 
-      TESTC_ABORT(upd.status == SUCCESS, ViewStats::final);
+      if (SUCCESS != upd.status)
+      {
+	LOG_FATAL("invalid update");
+	exit(EXIT_FAILURE);
+      }
+
       LOG_INFO_STR("upd.time=" << upd.timestamp);
       LOG_INFO_STR("upd.handle=" << upd.handle);
       
@@ -185,21 +204,25 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
     {
       RSPUnsubstatsackEvent ack(e);
 
-      TESTC_ABORT(ack.status == SUCCESS, ViewStats::final);
+      if (SUCCESS != ack.status)
+      {
+	LOG_FATAL("unsubscribe failure");
+	exit(EXIT_FAILURE);
+      }
+
       LOG_INFO_STR("ack.time=" << ack.timestamp);
 
       LOG_INFO_STR("ack.handle=" << ack.handle);
 
       port.close();
-      TRAN(ViewStats::final);
+      TRAN(ViewStats::initial);
     }
     break;
 
     case F_DISCONNECTED:
     {
       port.close();
-
-      FAIL_ABORT("unexpected disconnect", ViewStats::final);
+      TRAN(ViewStats::initial);
     }
     break;
 
@@ -212,27 +235,6 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult ViewStats::final(GCFEvent& e, GCFPortInterface& /*port*/)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch(e.signal)
-  {
-      case F_ENTRY:
-	  GCFTask::stop();
-	  break;
-      
-      case F_EXIT:
-	  break;
-
-      default:
-	  status = GCFEvent::NOT_HANDLED;
-	  break;
   }
 
   return status;
@@ -301,23 +303,23 @@ void ViewStats::plot_statistics(Array<complex<double>, 3>& stats)
 
   gnuplot_resetplot(handle);
 
-  char* title = 0;
+  char title[128];
   switch (m_type)
   {
     case Statistics::SUBBAND_MEAN:
-      title = "Subband Mean Value";
+      snprintf(title, 128, "Subband Mean Value (RCU=%d)", m_rcu);
       break;
     case Statistics::SUBBAND_POWER:
-      title = "Subband Power";
+      snprintf(title, 128, "Subband Power (RCU=%d)", m_rcu);
       break;
     case Statistics::BEAMLET_MEAN:
-      title = "Beamlet Mean Value";
+      snprintf(title, 128, "Beamlet Mean Value (RCU=%d)", m_rcu);
       break;
     case Statistics::BEAMLET_POWER:
-      title = "Beamlet Power";
+      snprintf(title, 128, "Beamlet Power (RCU=%d)", m_rcu);
       break;
     default:
-      title = "ERROR: Invalid m_type";
+      snprintf(title, 128, "ERROR: Invalid m_type");
       break;
   }
 
@@ -348,9 +350,9 @@ int main(int argc, char** argv)
 
   cout << "Which RCU? ";
   int rcu = atoi(fgets(buf, 32, stdin));  
-  if (rcu < 0 || rcu > 3 * 2)
+  if (rcu < 0 || rcu >= N_RSPBOARDS * N_BLPS)
   {
-    LOG_FATAL(formatString("Invalid RCU index, should be >= 0 && < %d", N_BLP * 2));
+    LOG_FATAL(formatString("Invalid RCU index, should be >= 0 && < %d", N_RSPBOARDS * N_BLPS));
     exit(EXIT_FAILURE);
   }
   

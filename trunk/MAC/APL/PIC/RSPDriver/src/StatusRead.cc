@@ -74,10 +74,10 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
 	 sizeof(BoardStatus));
 
   // copy rcu status
-  for (int ap = 0; ap < GET_CONFIG("N_BLPS", i); ap++)
+  for (int blp = 0; blp < GET_CONFIG("N_BLPS", i); blp++)
   {
-    memcpy(&status.rcu()((getBoardId() * GET_CONFIG("N_BLPS", i)) + ap),
-	   &ack.rcu[ap],
+    memcpy(&status.rcu()((getBoardId() * GET_CONFIG("N_BLPS", i)) + blp),
+	   &ack.rcu[blp],
 	   sizeof(RCUStatus));
   }
 
