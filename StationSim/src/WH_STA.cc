@@ -37,7 +37,7 @@ WH_STA::WH_STA (const string& name, unsigned int nin, unsigned int nout,
 		unsigned int nant, unsigned int maxnrfi, unsigned int buflength)
 : WorkHolder    (nin, nout, name, "WH_STA"),
   itsInHolders  (0),
-  itsOutHolder  (0),
+  itsOutHolders (0),
   itsNrcu       (nant),
   itsMaxRFI     (maxnrfi),
   itsBufLength  (4),
@@ -54,9 +54,11 @@ WH_STA::WH_STA (const string& name, unsigned int nin, unsigned int nout,
   }
   
   if (nout > 0) {
+    itsOutHolders = new DH_SampleC* [nout];
     // Define a space large enough to contain the max number of 
     // RFI sources. This should be implemented more elegantly.
-    itsOutHolder = new DH_SampleC("out", itsNrcu, itsMaxRFI);
+    itsOutHolders[0] = new DH_SampleC("out", itsNrcu, itsMaxRFI);    
+    itsOutHolders[1] = new DH_SampleC("mdl",1, 1);
   }
 
   // init the buffer
@@ -77,7 +79,10 @@ WH_STA::~WH_STA()
   }
   delete [] itsInHolders;
   
-  delete itsOutHolder;
+  delete itsOutHolders[0];
+  delete itsOutHolders[1];
+
+  delete [] itsOutHolders;
 }
 
 WH_STA* WH_STA::make (const string& name) const
@@ -119,10 +124,10 @@ void WH_STA::process()
 //   // Use either EVD or SVD for updating
 
 //   // EVD - first calculate the ACM
-  cout << "Buffer : "<<itsBuffer << endl;
+//  cout << "Buffer : "<<itsBuffer << endl;
   LoMat_dcomplex itsAcm (itsNrcu, itsNrcu) ;
   itsAcm = LCSMath::acm(itsBuffer);
-  cout << "ACM : "<< itsAcm << endl;
+  //  cout << "ACM : "<< itsAcm << endl;
 //   // EVD - using the ACM, calculate eigen vectors and values.
 //   LoMat_dcomplex itsEvectors;
 //   LoVec_double   itsEvalues;
@@ -148,8 +153,9 @@ void WH_STA::process()
   // Now assign the calculated weight vector to the output
   
 
-  //  memcpy(itsOutHolder->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
-  
+//   memcpy(itsOutHolders[0]->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
+//   memcpy(itsOutHolders[1]->getBuffer(), mdl, sizeof(DH_SampleC::BufferType));
+
   
 //   cout << itsBuffer << endl;
 //   cout << itsAcm << endl;
@@ -174,6 +180,6 @@ DH_SampleC* WH_STA::getInHolder (int channel)
 DH_SampleC* WH_STA::getOutHolder (int channel)
 {
   AssertStr (channel < getOutputs(), "output channel too high"); 
-  return itsOutHolder;
+  return itsOutHolders[channel];
 }
 

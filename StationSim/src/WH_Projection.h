@@ -96,5 +96,6 @@ private:
 
   LoVec_dcomplex WH_Projection::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) ;
   LoVec_dcomplex WH_Projection::getWeights (LoMat_dcomplex B, LoVec_dcomplex d) ;
+  LoVec_dcomplex WH_Projection::mv_mult(LoMat_dcomplex A, LoVec_dcomplex B) ;
 };
 #endif
