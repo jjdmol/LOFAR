@@ -4,7 +4,7 @@
 
 #include "WH_RingOut.h"
 #include "WH_Ring.h" // need NOTADDRESSED value
-#include "firewalls.h"
+#include "Debug.h"
 
 
 //////////////////////////////////////////////////////////////////////
@@ -58,9 +58,7 @@ void WH_RingOut::process ()
   if (itsInDataHolders[0]->getPacket()->destination == itsSeqNr) {
   
   short aSourceID = itsInDataHolders[0]->getPacket()->SourceID;
-  Firewall::Assert((( aSourceID >= 0) && (aSourceID < 10)),
-		   __HERE__,
-		   "SourceID out of range");
+  AssertStr((( aSourceID >= 0) && (aSourceID < 10)), "SourceID out of range");
 
   DH_Ring<DH_Test>* aDH = new DH_Ring<DH_Test>();
   memcpy((void*)aDH->getPacket(),
@@ -75,12 +73,10 @@ void WH_RingOut::process ()
   cout << "Added to Q " << itsSeqNr << " size now is " << itsQDataHolders.size() 
        << "\t " << aDH->getBuffer()[0] << endl;
 
-  Firewall::Assert(itsQDataHolders.size() <= 50,
-		   __HERE__,
-		   "Queue length too long!! %i",itsQDataHolders.size());
+  AssertStr(itsQDataHolders.size() <= 50, "Queue length too long!!");
 
-  TRACER(monitor,"WH_RingOut " << itsSeqNr 
-	 << " Filled DHBuffer[" << aSourceID << "] ");
+  TRACER1("WH_RingOut " << itsSeqNr 
+	  << " Filled DHBuffer[" << aSourceID << "] ");
   }
   
   if (getOutHolder(0)->doHandle())

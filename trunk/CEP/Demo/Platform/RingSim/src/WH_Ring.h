@@ -12,7 +12,7 @@
 #include "DH_Test.h"
 #include "DH_Ring.h"
 #include "Step.h"
-#include "firewalls.h"
+#include "Debug.h"
 
 template <class T> 
 class WH_Ring:public WorkHolder
@@ -193,9 +193,7 @@ itsLastBufferSent(true)
   itsOutDataHolders.push_back(aDH1); // Slot1
   itsOutDataHolders.push_back(aDH2); // Slot2
   
-  Firewall::Assert(itsSeqNr != NOTADDRESSED
-		   ,__HERE__,
-		   "itsSeqNr == NOTADDRESSED flag %i",NOTADDRESSED);
+  AssertStr(itsSeqNr != NOTADDRESSED, "itsSeqNr == NOTADDRESSED");
   
   for (int destination = 0; destination<10; destination++) {
     if (itsSeqNr <= 4) { // first ring
@@ -254,9 +252,7 @@ inline void WH_Ring<T>::process ()
 /*        << itsInDataHolders[0]->getBuffer()[0] << endl; */
 
   if (getInHolder(0)->doHandle()) {    
-    Firewall::Assert(itsLastBufferSent,
-		     __HERE__,
-		     "Overwriting undelivered data");
+    AssertStr(itsLastBufferSent, "Overwriting undelivered data");
     // reset the flag
     if (!inputIsEmpty())itsLastBufferSent = false;
   }
