@@ -24,6 +24,8 @@ using namespace LOFAR;
 
 int main (int argc, const char** argv) {
 
+  INIT_LOGGER("CorrelatorLogger");
+
   KeyValueMap kvm;
   try {
     kvm = KeyParser::parseFile("TestRange");
@@ -48,11 +50,11 @@ int main (int argc, const char** argv) {
 //   const std::string frontend_ip = kvm.getString("frontend_ip");
 //   const std::string backend_ip = kvm.getString("backend_ip");
   
-  const std::string loggerfile = kvm.getString("loggerfile", "CorrelatorLogger.prop");
+  //const std::string loggerfile = kvm.getString("loggerfile", "CorrelatorLogger.prop");
 
   kvm.show(cout);
+  //INIT_LOGGER(loggerfile);
 
-  INIT_LOGGER(loggerfile);
 
 #ifdef HAVE_MPI
   TH_MPI::init(argc, argv);
