@@ -10,6 +10,7 @@ AppControllerParseClass.cc 	\
 Transporter.cc			\
 BaseDataHolder.cc		\
 ParamHolder.cc			\
+DataHolder.cc			\
 DH_PL.cc			\
 TransportHolder.cc		\
 TH_File.cc			\
