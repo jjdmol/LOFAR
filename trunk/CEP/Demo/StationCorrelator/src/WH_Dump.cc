@@ -64,7 +64,6 @@ WH_Dump* WH_Dump::make(const string& name) {
 }
 
 void WH_Dump::preprocess() {
-  cout<<"opening "<<itsOutputFileName<<endl;
   int openFlags = O_WRONLY | O_CREAT | O_TRUNC | O_LARGEFILE;
   mode_t permissions = S_IREAD | S_IWRITE | S_IRGRP | S_IROTH;
   itsOutputFile = open(itsOutputFileName.c_str(), openFlags, permissions);
@@ -72,7 +71,6 @@ void WH_Dump::preprocess() {
 }
 
 void WH_Dump::process() {
-  cout<<"in wh process"<<endl;
 
   struct timeval newTime;
   long recSize = 0;
