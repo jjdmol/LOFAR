@@ -184,6 +184,8 @@ int Solver::getResult (Result::Ref &resref,
   // Instead, all operations will go via the ref.
   Request::Ref reqref;
   reqref <<= new Request(request.cells(),calcDeriv,rqid);
+  // rider of original request gets sent up the first time
+  reqref().copyRider(request);
   if( state()[FSolvable].exists() ) {
     DataRecord& rider = Rider::getRider(reqref);
     rider[itsParmGroup].replace() <<= wstate()[FSolvable].as_wp<DataRecord>();
@@ -324,7 +326,7 @@ int Solver::getResult (Result::Ref &resref,
     DataRecord& solRec = metricsRec[step] <<= new DataRecord;
     solve (solution, reqref, solRec, resref, child_results,
            false, step==itsCurNumIter-1);
-    // increment the solce-dependent parts of the request ID
+    // increment the solve-dependent parts of the request ID
     incrSubId(rqid,getGenSymDepMask());
     reqref().setId(rqid);
     // Unlock all parm tables used.
@@ -361,6 +363,7 @@ void Solver::solve (Vector<double>& solution,Request::Ref &reqref,
   else if( !reqref.isWritable() )
     reqref.privatize(DMI::WRITE);
   Request &req = reqref();
+  req.clearRider();
   // It looks as if in LSQ solveLoop and getCovariance
   // interact badly (maybe both doing an invert).
   // So make a copy to separate them.
