@@ -28,7 +28,6 @@
 
 #include "TestAutoTrigger.h"
 #include "CEPFrame/SimulatorParseClass.h"
-#include "CEPFrame/ParamBlock.h"
 #include "CEPFrame/Transport.h"
 #include "CEPFrame/Step.h"
 #include "CEPFrame/BaseSim.h"
@@ -36,7 +35,8 @@
 #include "CEPFrame/WH_Empty.h"
 #include "CEPFrame/WH_TestAutoTrigger.h"
 #include "CEPFrame/Profiler.h"
-#include "Common/Debug.h"
+#include <Common/KeyValueMap.h>
+#include <Common/Debug.h>
 #include <Common/lofar_iostream.h>
 
 using namespace LOFAR;
@@ -44,7 +44,7 @@ using namespace LOFAR;
 TestAutoTrigger::~TestAutoTrigger()
 {}
 
-void TestAutoTrigger::define (const ParamBlock& params)
+void TestAutoTrigger::define (const KeyValueMap& params)
 {
   params.show (cout);
   int rank = TRANSPORTER::getCurrentRank ();

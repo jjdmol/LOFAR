@@ -45,7 +45,7 @@ class TestAutoTrigger: public LOFAR::Simulator
 public:
   virtual ~TestAutoTrigger();
 
-  virtual void define (const LOFAR::ParamBlock&);
+  virtual void define (const LOFAR::KeyValueMap&);
   virtual void run (int nsteps);
   virtual void dump() const;
   virtual void quit();
