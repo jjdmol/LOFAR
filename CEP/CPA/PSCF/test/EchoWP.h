@@ -64,9 +64,6 @@ class EchoWP : public WorkProcess  //## Inherits: <unnamed>%3C8F26580162
 
 
     //## Other Operations (specified)
-      //## Operation: opname%3C9094FF03D4
-      void opname ();
-
       //## Operation: init%3C7F884A007D
       virtual void init ();
 
@@ -75,6 +72,9 @@ class EchoWP : public WorkProcess  //## Inherits: <unnamed>%3C8F26580162
 
       //## Operation: receive%3C7E49AC014C
       virtual int receive (MessageRef& mref);
+
+      //## Operation: timeout%3C98CB600343
+      virtual int timeout (const HIID &);
 
     // Additional Public Declarations
       //## begin EchoWP%3C7E498E00D1.public preserve=yes

@@ -10,14 +10,20 @@ int main (int argc,const char *argv[])
 {
 //  Debug::DebugContext.setLevel(10);
 //  CountedRefBase::DebugContext.setLevel(10);
+//   int pcount = 0;
+//   if( argc>1 )
+//     pcount = atoi(argv[1]);
+//   cerr<<"Staring EchoWP with a ping count of "<<pcount<<endl;
+  
+  Socket::DebugContext.setLevel(10);
   PSCFDebugContext::DebugContext.setLevel(10);
+  
   Debug::initLevels(argc,argv);
   
   try 
   {
     Dispatcher *dsp = new Dispatcher(getpid(),1);
-    dsp->attach(new EchoWP,DMI::ANON);
-    dsp->attach(new EchoWP(5),DMI::ANON);
+    dsp->attach(new EchoWP(-1),DMI::ANON);
     dsp->attach(new GWServerWP("4808"),DMI::ANON);
     dsp->start();
     dsp->pollLoop();
