@@ -37,7 +37,7 @@ TransportHolder::~TransportHolder()
 {}
 
 bool TransportHolder::init()
-{}
+{ return true; }
 
 bool TransportHolder::recvBlocking (void*, int, int, int)
 {
