@@ -111,7 +111,7 @@ bool TH_Ethernet::recvBlocking(void* buf, int32 nbytes, int32 tag)
 
   // if necessary, use offset to prevent that dataholder-header will be overwritten
   if (itsDHheader) {
-    (char*)buf += itsDHheaderSize; 
+    buf = (char *) buf + itsDHheaderSize; 
   }
 
   // Pointer to received data excl. ethernetheader
