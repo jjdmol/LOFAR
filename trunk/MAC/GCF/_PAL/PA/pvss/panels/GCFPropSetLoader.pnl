@@ -6,9 +6,16 @@ PANEL,40 57 321 243 N "_3DFace" 1
 "#uses \"gcfpa-pml.ctl\"
 
 main()
+{	
+	pID = gcfInit(\"gcfTestCallBack\");
+}" 0
+ "main()
 {
-	setValue(\"lID\", \"text\", gcfInit(\"gcfTestCallBack\"));
-}
+	gcfLeave(pID);
+}" 0
+ E E E 1 -1 -1 0  20 19
+""0  1
+E "unsigned pID = 0;
 
 void gcfTestCallBack(dyn_string response)
 {
@@ -71,13 +78,7 @@ bool deletePS(string& scope, bool deleteAll)
 		bUnload.enabled = FALSE;
 	}
 }" 0
- "main()
-{
-	gcfLeave((string)lID.text);
-}" 0
- E E E 1 -1 -1 0  20 19
-""0  1
-E E 2
+ 2
 "CBRef""1"
 "EClose"E
 ""
@@ -109,7 +110,7 @@ LANG:1 4 Load
 {
 	if (tScope.text != \"\")
 	{
-		gcfLoadPS((string) lID.text, tScope.text);
+		gcfLoadPS(pID, tScope.text);
 	}
 	tStatus.text = \"\";
 }" 0
@@ -139,7 +140,7 @@ LANG:1 9 Configure
 	string scope = lbLoadedPropsets.selectedText;
 	if (scope != \"\" && tApcname.text != \"\")
 	{
-		gcfConfigurePS((string) lID.text, scope, tApcname.text);
+		gcfConfigurePS(pID, scope, tApcname.text);
 	}	
 	tStatus.text = \"\";
 }" 0
@@ -281,31 +282,11 @@ LANG:1 6 Unload
 	string scope = lbLoadedPropsets.selectedText;
 	if (scope != \"\")
 	{
-		gcfUnloadPS((string) lID.text, scope);
+		gcfUnloadPS(pID, scope);
 	}
 	tStatus.text = \"\";
 }" 0
  E E E
-2 12
-"lID"
-""
-1 180 207 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
- E E
-11 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 0 0 0 1 E U  1 E 290 210 290 210
-1 2 2 "s" 0 0 0 192 0 0  290 210 1
-1
-LANG:1 61 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1
-0
-"" 1
-LANG:1 2 bc
 0
 LAYER, 1 
 1
