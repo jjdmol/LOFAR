@@ -22,6 +22,8 @@
 
 #include <MEQ/UVW.h>
 #include <MEQ/Request.h>
+#include <MEQ/Result.h>
+#include <MEQ/Cells.h>
 #include <aips/Measures/MBaseline.h>
 #include <aips/Measures/MPosition.h>
 #include <aips/Measures/MEpoch.h>
@@ -112,74 +114,105 @@ void UVW::checkChildren()
 
 
 
-U::U()
+UVWFunc::UVWFunc()
 : itsUVW(0)
+{}
+
+UVWFunc::~UVWFunc()
+{}
+
+void UVWFunc::makeResult (Result::Ref& resref, const Request& request,
+			  const Result& res)
+{
+  // Get cells.
+  const Cells& cells = request.cells();
+  int nfreq = cells.nfreq();
+  int ntime = cells.ntime();
+  // Create result object and attach to the ref that was passed in.
+  Result& result = resref <<= new Result();
+  // Evaluate the main value.
+  LoMat_double& arr = result.setReal (nfreq,ntime);
+  const LoMat_double& val = res.getValue().getRealArray();
+  for (int i=0; i<ntime; i++) {
+    double time = cells.time(i);
+    for (int j=0; j<nfreq; j++) {
+      arr(j,i) = val(1,i);
+    }
+  }
+  // Evaluate the perturbed values.
+  for (int k=0; k<res.nperturbed(); k++) {
+    LoMat_double& arr = result.setPerturbedReal (k,nfreq,ntime);
+    const LoMat_double& val = res.getPerturbedValue(k).getRealArray();
+    for (int i=0; i<ntime; i++) {
+      double time = cells.time(i);
+      for (int j=0; j<nfreq; j++) {
+	arr(j,i) = val(1,i);
+      }
+    }
+  }
+  result.setSpids (res.getSpids());
+}
+
+void UVWFunc::checkChildren()
+{
+  if (Function::convertChildren (1)) {
+    itsUVW = dynamic_cast<UVW*>(children()[0]);
+    AssertMsg (itsUVW, "Child of MeqU,MeqV,MeqW node must be a MeqUVW");
+  }
+}
+
+
+
+U::U()
 {}
 
 U::~U()
 {}
 
-int U::getResultImpl (Result::Ref& resref, const Request& req, bool newReq)
+int U::getResultImpl (Result::Ref& resref, const Request& request, bool)
 {
-  int flag = itsUVW->getResult (resref, req);
-  if (flag) resref.copy (itsUVW->getU());
-  return flag;
-}
-
-void U::checkChildren()
-{
-  if (Function::convertChildren (1)) {
-    itsUVW = dynamic_cast<UVW*>(children()[0]);
-    AssertMsg (itsUVW, "Child of MeqU node must be a MeqUVW");
+  Result::Ref tmp;
+  int flag = itsUVW->getResult (tmp, request);
+  if (flag) {
+    makeResult (resref, request, itsUVW->getU().deref());
   }
+  return flag;
 }
 
 
 
 V::V()
-: itsUVW(0)
 {}
 
 V::~V()
 {}
 
-int V::getResultImpl (Result::Ref& resref, const Request& req, bool newReq)
+int V::getResultImpl (Result::Ref& resref, const Request& request, bool)
 {
-  int flag = itsUVW->getResult (resref, req);
-  if (flag) resref.copy (itsUVW->getV());
-  return flag;
-}
-
-void V::checkChildren()
-{
-  if (Function::convertChildren (1)) {
-    itsUVW = dynamic_cast<UVW*>(children()[0]);
-    AssertMsg (itsUVW, "Child of MeqV node must be a MeqUVW");
+  Result::Ref tmp;
+  int flag = itsUVW->getResult (tmp, request);
+  if (flag) {
+    makeResult (resref, request, itsUVW->getU().deref());
   }
+  return flag;
 }
 
 
 
 W::W()
-: itsUVW(0)
 {}
 
 W::~W()
 {}
 
-int W::getResultImpl (Result::Ref& resref, const Request& req, bool newReq)
+int W::getResultImpl (Result::Ref& resref, const Request& request, bool)
 {
-  int flag = itsUVW->getResult (resref, req);
-  if (flag) resref.copy (itsUVW->getW());
-  return flag;
-}
-
-void W::checkChildren()
-{
-  if (Function::convertChildren (1)) {
-    itsUVW = dynamic_cast<UVW*>(children()[0]);
-    AssertMsg (itsUVW, "Child of MeqW node must be a MeqUVW");
+  Result::Ref tmp;
+  int flag = itsUVW->getResult (tmp, request);
+  if (flag) {
+    makeResult (resref, request, itsUVW->getU().deref());
   }
+  return flag;
 }
 
 
