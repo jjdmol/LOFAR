@@ -185,7 +185,7 @@ void FillTable() {
 #if USE_STRUCTS
 	AllFlds								ins_rec = { someDate, 10.1, 20.2, 30.3, 40.4, 50.5, 60.6, 70.7, 80.8, 90.9 };
 #else
-	AllFlds								ins_rec = AllFlds (someDate, 10.1, 20.2, 30.3, 40.4, 50.5, 60.6, 70.7, 80.8, 90.9 );
+	AllFlds								ins_rec = AllFlds (someDate, 10.1, 20.2, 30.3, 40.4, 50.5, 60.6, 70.7, 80.8, 90.9876543210123456789 );
 #endif
 	
 	for (int i = 0; i < 10; ++i) {
@@ -395,16 +395,16 @@ int main ()
 		DBStmt("DROP TABLE dtl_example").Execute();
 
 		cout << "Creating new table.." << endl;
-		DBStmt("CREATE TABLE dtl_example (
-				timestamp	TIMESTAMP NOT NULL PRIMARY KEY, 
-				f10 		FLOAT, 
-				f20 		FLOAT, 
-				f30 		FLOAT, 
-				f40 		FLOAT, 
-				f50 		FLOAT, 
-				f60 		FLOAT, 
-				f70 		FLOAT, 
-				f80 		FLOAT, 
+		DBStmt("CREATE TABLE dtl_example ( \
+				timestamp	TIMESTAMP NOT NULL PRIMARY KEY, 	\
+				f10 		FLOAT, 	\
+				f20 		FLOAT, 	\
+				f30 		FLOAT, 	\
+				f40 		FLOAT, 	\
+				f50 		FLOAT, 	\
+				f60 		FLOAT, 	\
+				f70 		FLOAT, 	\
+				f80 		FLOAT, 	\
 				f90 		FLOAT)").Execute();
 
 		FillTable();

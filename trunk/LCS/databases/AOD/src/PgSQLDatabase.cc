@@ -145,6 +145,10 @@ void	PgSQLDatabase::try2connect ()
 		return;
 	}
 
+	struct timeval	t1, t2;
+	int				ds, du;
+	gettimeofday(&t1, 0L);
+
 	// Allocate connection and try to connect
 	char	connectParams [256];
 	sprintf (connectParams, "host='%s' user='%s' dbname='%s'", 
@@ -157,12 +161,20 @@ void	PgSQLDatabase::try2connect ()
 	// Update state
 	LofarDatabase::connected(true);
 
+	gettimeofday(&t2, 0L);
+	ds = t2.tv_sec - t1.tv_sec;
+	du = t2.tv_usec - t1.tv_usec;
+	if (t2.tv_usec < t1.tv_usec) {
+		ds -= 1;
+		du += 1000000;
+	}
+	cout << "connect time: " << ds << "." << du << endl;
 }
 
 int		PgSQLDatabase::add		(const char	*fields,
 								 const char	*values)
 {
-	char	sqlCmd[512];
+	char	sqlCmd[4096];
 
 	// Construct an INSERT statement
 	sprintf (sqlCmd, "INSERT INTO %s (%s) VALUES (%s)", tablename(), fields,
@@ -178,7 +190,7 @@ int		PgSQLDatabase::add		(const char	*fields,
 
 int		PgSQLDatabase::remove	(const char	*condition)
 {
-	char	sqlCmd[512];
+	char	sqlCmd[4096];
 
 	// Construct an DELETE statement
 	if (condition && *condition)
@@ -204,7 +216,7 @@ int		PgSQLDatabase::find		(const char	*fields,
 								 char		**result)
 
 {
-	char			sqlCmd[512];
+	char			sqlCmd[4096];
 	const char		*fieldList = "*";
 	struct timeval	t1, t2;
 	int				ds, du;
@@ -221,6 +233,7 @@ int		PgSQLDatabase::find		(const char	*fields,
 																	condition);
 	else
 		sprintf (sqlCmd, "SELECT %s FROM %s", fieldList, tablename());
+	cout << "Query: " << sqlCmd << endl;
 
 	// Execute the query
 	gettimeofday(&t1, 0L);
@@ -235,9 +248,8 @@ int		PgSQLDatabase::find		(const char	*fields,
 
 
 	// Show some results
-	cout << "Query: " << sqlCmd << endl;
 	cout << "Found " << res.size() << " records" << endl;
-	cout << "time: " << ds << "." << du << endl;
+	cout << "find time: " << ds << "." << du << endl;
 
 	if (res.size() < 10) {
 		// variables for showing the results
@@ -268,7 +280,9 @@ int		PgSQLDatabase::find		(const char	*fields,
 int		PgSQLDatabase::update	(const char	*condition,
 								 const char	*modification)
 {
-	char	sqlCmd[512];
+	char	sqlCmd[4096];
+	struct timeval	t1, t2;
+	int				ds, du;
 
 	// Construct an SELECT statement
 	if (condition && *condition)
@@ -278,9 +292,18 @@ int		PgSQLDatabase::update	(const char	*condition,
 		sprintf (sqlCmd, "UPDATE %s SET %s", tablename(), modification);
 
 	// Execute the query
+	gettimeofday(&t1, 0L);
 	Result res = itsTrans->Exec(sqlCmd);
+	gettimeofday(&t2, 0L);
+	ds = t2.tv_sec - t1.tv_sec;
+	du = t2.tv_usec - t1.tv_usec;
+	if (t2.tv_usec < t1.tv_usec) {
+		ds -= 1;
+		du += 1000000;
+	}
 
-	printf ("%d rows were modified by the cmd: %s\n", res.size(), sqlCmd);
+	cout << res.size() << "rows were modified by the cmd:" << sqlCmd << endl;
+	cout << "update time: " << ds << "." << du << endl;
 
 	return res.size();
 }

@@ -391,16 +391,16 @@ int main ()
 		DBStmt("DROP TABLE dtl_example").Execute();
 
 		cout << "Creating new table.." << endl;
-		DBStmt("CREATE TABLE dtl_example (
-				timestamp	TIMESTAMP NOT NULL PRIMARY KEY, 
-				f10 		FLOAT, 
-				f20 		FLOAT, 
-				f30 		FLOAT, 
-				f40 		FLOAT, 
-				f50 		FLOAT, 
-				f60 		FLOAT, 
-				f70 		FLOAT, 
-				f80 		FLOAT, 
+		DBStmt("CREATE TABLE dtl_example (	\
+				timestamp	TIMESTAMP NOT NULL PRIMARY KEY, \
+				f10 		FLOAT, \
+				f20 		FLOAT, \
+				f30 		FLOAT, \
+				f40 		FLOAT, \
+				f50 		FLOAT, \
+				f60 		FLOAT, \
+				f70 		FLOAT, \
+				f80 		FLOAT, \
 				f90 		FLOAT)").Execute();
 
 		FillTable();
