@@ -43,18 +43,32 @@ namespace LCS
       // Default constructor. If \c doGenerate is true, \c itsOid will be
       // lazily initialized when get() is called, else \c itsOid will be 
       // set equal to \c NullId and marked as set.
-      ObjectId(bool doGenerate = true);
-
-      // Set the stored object-id equal to \c aOid.
-      // \post \c itsOidIsSet is true.
-      void set(const oid_t& aOid);
+      explicit ObjectId(bool doGenerate = true) : 
+	itsOid(NullId), itsOidIsSet(!doGenerate) 
+      {}
 
       // Return the stored object-id.
       // \post \c itsOid will have been set if it wasn't already.
       // \post \c itsOidIsSet is true.
       const oid_t& get() const;
 
+      // Reset the attributes of this class to their default values.
+      // \post \c itsOid is equal to \c NullId, 
+      // \post \c itsOidIsSet is equal to \c false.
+      void reset();
+
+      // Set the stored object-id equal to \c aOid.
+      // \post \c itsOidIsSet is true.
+      void set(const oid_t& aOid);
+
     private:
+
+      // @name Diallow copying and assignment.
+      //@{
+      ObjectId(const ObjectId&);
+      ObjectId& operator=(const ObjectId&);
+      //@}
+
       // Flag indicating whether the random generator has been initialized.
       static bool theirRandomGeneratorIsInitialized;
 
