@@ -28,6 +28,15 @@ namespace LCS
   namespace PL
   {
 
+    ////////////////////////////////////////////////////////////////
+    //                                                            //
+    //                 PersistentObject::MetaData                 //
+    //                                                            //
+    ////////////////////////////////////////////////////////////////
+
+    const boost::shared_ptr<ObjectId> 
+    PersistentObject::MetaData::theirNullOid(new ObjectId(0));
+
 //     PersistentObject::MetaData* PersistentObject::MetaData::clone() const
 //     {
 //       MetaData* md = new MetaData();
@@ -39,14 +48,20 @@ namespace LCS
 
     void PersistentObject::MetaData::reset() const
     {
-      itsOid->reset();
       // We do not want to reset the owner-id. Owner-ids don't need to be
       // (re)generated; they are simply attached to an exisiting object-id, 
       // according to the relationship between owning and owned TPOs. This
-      // is done in the init() method.
-      // itsOwnerOid->set(0); 
+      // is done in PersistentObject::init().
+      itsOid->reset();
       *itsVersionNr = 0;
     }
+
+
+    ////////////////////////////////////////////////////////////////
+    //                                                            //
+    //                      PersistentObject                      //
+    //                                                            //
+    ////////////////////////////////////////////////////////////////
 
     void PersistentObject::erase() const
     {
@@ -77,7 +92,7 @@ namespace LCS
       doRetrieve(oid, isOwned());
       POContainer::const_iterator it;
       for(it = itsOwnedPOs.begin(); it != itsOwnedPOs.end(); ++it) {
-	(*it)->retrieve(oid);
+	(*it)->retrieve(*metaData().oid());
       }
       // where doRetrieve is defined pure virtual and must be
       // implemented in TPersistentObject<T>.

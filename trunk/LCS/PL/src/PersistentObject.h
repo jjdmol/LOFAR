@@ -64,7 +64,7 @@ namespace LCS
         // Default constructor. 
         MetaData() : 
           itsOid(new ObjectId()), 
-          itsOwnerOid(ObjectId::nullId()), 
+          itsOwnerOid(theirNullOid),
           itsVersionNr(new uint(0))
         {}
 
@@ -86,6 +86,11 @@ namespace LCS
         // Return a reference to the version number of this PersistentObject.
         uint& versionNr() const { return *itsVersionNr; }
 
+        // Return a shared pointer to the "global" null object-id.
+        static const boost::shared_ptr<ObjectId>& nullOid() { 
+          return theirNullOid; 
+        }
+
       private:
   
         // @name Data members of MetaData
@@ -95,6 +100,14 @@ namespace LCS
         // lead to potential inconsistencies in the meta data.
 
         //@{
+
+        // One "global" null object-id, which can be used to quickly
+        // initialize object-ids.  
+        // \note As \c theirNullOid is created in the static initialization
+        // phase, there is little we can do to detect failures. This is not a
+        // real concern as ObjectId is a relatively simple object that does
+        // not allocate resources other than memory.
+        static const boost::shared_ptr<ObjectId> theirNullOid;
 
         // ObjectId is used to uniquely identify every instance of a
         // PersistentObject.
@@ -172,9 +185,9 @@ namespace LCS
       // Return whether this PersistentObject is in the database.
       bool isPersistent() const { return metaData().versionNr() != 0; }
 
-      // Return whether this PersistentObject is ownerd by another one.
+      // Return whether this PersistentObject is owned by another one.
       bool isOwned() const { 
-        return metaData().ownerOid() != ObjectId::nullId();
+        return metaData().ownerOid() != MetaData::nullOid();
       }
 
     protected:
@@ -241,7 +254,6 @@ namespace LCS
     {
       return lhs.metaData().oid() == rhs.metaData().oid();
     }
-
 
   } // namespace PL
 
