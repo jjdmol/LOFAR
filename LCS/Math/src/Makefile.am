@@ -1,6 +1,7 @@
 DOCHDRS	= \
 LCSMath.h \
-IComplex.h
+IComplex.h \
+ComplexFunc.h
 
 lib_LTLIBRARIES 	= libmath.la
 
