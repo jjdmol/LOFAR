@@ -1,6 +1,6 @@
 SUBDIRS	= .
 
-DOCHDRS		 	= 			\
+INSTHDRS =		 			\
 MeqDomain.h					\
 MeqExpr.h					\
 MeqHist.h					\
@@ -35,10 +35,23 @@ MeqStoredParmPolc.h				\
 MeqUVWPolc.h					\
 MeqWsrtInt.h					\
 MeqWsrtPoint.h					\
-ParmTable.h ParmtableAIPS.h ParmTableDB.h	\
+ParmTable.h ParmTableAIPS.h ParmTableDB.h	\
 MeqParmHolder.h TPOParm.h					
 
-lib_LTLIBRARIES 	= libmns.la
+NOINSTHDRS = 
+
+TCCHDRS = 
+
+include_HEADERS = $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS = $(NOINSTHDRS)
+
+DOCHDRS = \
+	$(INSTHDRS) \
+	$(NOINSTHDRS)
+
+#lib_LTLIBRARIES 	= libmns.la
+noinst_LTLIBRARIES 	= libmns.la
 
 libmns_la_SOURCES 	= $(DOCHDRS)		\
 MeqDomain.cc					\
@@ -76,10 +89,7 @@ MeqWsrtPoint.cc					\
 ParmTable.cc ParmTableAIPS.cc ParmTableDB.cc	\
 TPOParm.cc					
 
-#EXTRA_DIST		=			\
-#Beam.m						\
-#spectralfft.m					\
-#Simulate.out
+EXTRA_DIST = 
 
 bin_PROGRAMS 		= parmdb
 
