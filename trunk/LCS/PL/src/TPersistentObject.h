@@ -25,12 +25,15 @@
 
 //# Includes
 #include <PL/TPersistentObjectBase.h>
-#include <iostream>
 
 namespace LCS 
 {
   namespace PL
   {
+    //# Forward Declarations
+    class Query;
+    template<typename T> class Collection;
+    template<typename T> class TPersistentObject;
 
     //
     // This templated class acts as a surrogate container class for instances
@@ -45,7 +48,17 @@ namespace LCS
     class TPersistentObject : public TPersistentObjectBase<T>
     {
     public:
-  
+
+      // We need a default constructor, because we want to be able to
+      // create e.g. a Collection of TPersistentObject<T>. The default
+      // constructor of TPersistentObjectBase<T> will create a default
+      // constructed object \c T on the free store, which will be deleted
+      // when \c *this is destroyed.
+      TPersistentObject() :
+        TPersistentObjectBase<T>()
+      {
+      }
+
       // \c T is passed by refererence, not const reference, because this
       // documents more explicitly that \c t can be easily changed, using
       // the value() method, which also returns a reference, instead of a 
@@ -61,23 +74,15 @@ namespace LCS
       {
       }
       
-      // Dynamically create a new TPersistentObject. It will contain an 
-      // instance of a default constructed object T.
-      static TPersistentObject<T>& create()
-      { 
-        T* anObject(new T());
-        TPersistentObject<T>* aTPO(new TPersistentObject<T>(*anObject));
-        aTPO->itsObjectSharedPtr(anObject);
-        return *aTPO;
+      static Collection<TPersistentObject<T> > 
+      retrieve(const Query& query, int maxObjects)
+      {
+        return doRetrieve(query, maxObjects);
       }
 
-      friend bool operator==(const TPersistentObject<T>& lhs, 
-                             const TPersistentObject<T>& rhs)
-      {
-        return lhs.itsOid == rhs.itsOid;
-      }
-      
     private:
+      typedef typename PersistentObject::MetaData MetaData;
+
       // @name Methods that must be implemented using template specialization
       // The implementation of the following methods will depend on the
       // class type \c T. Therefore, there is no default implementation 
@@ -91,7 +96,8 @@ namespace LCS
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
       // \throw NotImplemented
-      virtual void doErase(const ObjectId& poid) {
+      virtual void doErase(MetaData& md) const 
+      {
  	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
       }
@@ -99,7 +105,8 @@ namespace LCS
       // This method is responsible for actually inserting the \e primitive
       // data members of \c T.
       // \throw NotImplemented
-      virtual void doInsert(const ObjectId& poid) {
+      virtual void doInsert(MetaData& md) const 
+      {
  	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
       }
@@ -107,7 +114,9 @@ namespace LCS
       // This method is responsible for actually retrieving the \e primitive
       // data members of \c T.
       // \throw NotImplemented
-      virtual void doRetrieve(const ObjectId& poid) {
+      static Collection<TPersistentObject<T> > 
+      doRetrieve(const Query& query, int maxObjects)
+      {
  	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
       }
@@ -115,7 +124,8 @@ namespace LCS
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
       // \throw NotImplemented
-      virtual void doUpdate(const ObjectId& poid) {
+      virtual void doUpdate(MetaData& md) const 
+      {
  	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
       }
