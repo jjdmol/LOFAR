@@ -24,3 +24,20 @@ UVPDataHeader::UVPDataHeader(int                  correlation,
     itsFieldName(fieldName)
 {
 }
+
+
+
+
+
+//====================>>>  operator << <<<====================
+
+std::ostream &operator <<(std::ostream &out, const UVPDataHeader &header)
+{
+  out << header.itsFieldName << ": #"
+      << header.itsFieldID << ", Channels = "
+      << header.itsNumberOfChannels << ", Timeslots = " 
+      << header.itsNumberOfTimeslots << ", Baselines = "
+      << header.itsNumberOfBaselines;
+
+  return out;
+}
