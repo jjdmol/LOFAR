@@ -152,8 +152,10 @@ public:
   // Get a pointer to the data (in the blob).
   void* getDataPtr();
 
+  /// Set the node number the BaseDataHolder runs on.
+  void runOnNode(int aNode);
+
   // Get the node the BaseDataHolder runs on.
-  // -1 is returned if the BaseDataHolder is not used in a Step.
   int getNode() const;
 
   // Get the type of the BaseDataHolder.
@@ -231,11 +233,13 @@ private:
   BlobString*     itsData;
   BlobOBufString* itsDataBlob;
   DataPacket*  itsDataPacketPtr;
-  Transporter  itsTransporter;
+   Transporter  itsTransporter;
   string       itsName;
   string       itsType;
   int          itsReadConvert;  //# conversion needed after a read?
                                 //# 0=no, 1=yes, else=not known yet
+
+  int          itsNode;  // Node number on which this BaseDataHolder runs.
 
   // The read delay for a BaseDataHolder.
   int itsReadDelay;
@@ -311,6 +315,11 @@ inline const string& BaseDataHolder::getType () const
 inline void BaseDataHolder::setType(const string& type)
   { itsType = type; }
 
+inline void BaseDataHolder::runOnNode(int aNode)
+{ itsNode = aNode; }
+
+inline int BaseDataHolder::getNode() const
+  { return itsNode; } 
 
 inline BlobFieldBase& BaseDataHolder::getDataField (uint fieldIndex)
 {
@@ -348,7 +357,6 @@ inline void dataConvert (DataFormat fmt,
     dataConvertDouble (fmt, &(buf[i].itsTimeStamp));
   }
 }
-
 
 } // end namespace
 

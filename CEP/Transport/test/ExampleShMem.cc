@@ -50,7 +50,7 @@ int main(int argc, const char* argv[])
   //  TR2.setSourceAddr(15);
   
   // connect DH1 to DH2
-  TR2.connectTo(&TR1, TH_ShMem::proto);
+  TR1.connectTo(&TR2, TH_ShMem::proto);
     
   // initialize the DataHolders
   DH1.init();

@@ -87,8 +87,8 @@ namespace LOFAR
     targetTP->setWriteTag (targetTP->getItsID());
 
     // Set the source and target DataHolder 
-    targetTP->setSourceAddr(sourceTP->getSourceAddr());
-    sourceTP->setTargetAddr(targetTP->getSourceAddr());
+    targetTP->setSourceAddr(sourceTP->getBaseDataHolder());
+    sourceTP->setTargetAddr(targetTP->getBaseDataHolder());
     
     return true;
   }

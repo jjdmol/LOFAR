@@ -42,6 +42,7 @@ BaseDataHolder::BaseDataHolder(const string& name, const string& type)
     itsName           (name),
     itsType           (type),
     itsReadConvert    (-1),
+    itsNode           (-1),
     itsReadDelay      (0),
     itsWriteDelay     (0),
     itsReadDelayCount (0),
@@ -58,6 +59,7 @@ BaseDataHolder::BaseDataHolder(const BaseDataHolder& that)
     itsName           (that.itsName),
     itsType           (that.itsType),
     itsReadConvert    (that.itsReadConvert),
+    itsNode           (that.itsNode),
     itsReadDelay      (that.itsReadDelay),
     itsWriteDelay     (that.itsWriteDelay),
     itsReadDelayCount (that.itsReadDelayCount),
@@ -193,11 +195,6 @@ bool BaseDataHolder::isValid() const
 {
   return itsTransporter.isValid();
 }
-
-int BaseDataHolder::getNode() const
-{
-  return 1;
-} 
 
 void BaseDataHolder::setReadDelay (int delay)
 {
