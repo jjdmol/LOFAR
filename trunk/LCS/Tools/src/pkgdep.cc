@@ -26,6 +26,7 @@
 #include <sstream>
 #include <set>
 #include <map>
+#include <vector>
 
 using namespace std;
 
@@ -149,7 +150,7 @@ void writeJS (ostream& os, const string& pkg, UsedMap& dep,
 void writeXHTMLHeader (ostream& os, const string& hdrtxt, const string& pkg)
 {
   os << "<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>" << endl;
-  os << "  <head>" << endl;
+  os << " <head>" << endl;
   os << "    <meta http-equiv='Content-Type' content='text/xhtml;charset='iso-8859-1' />" << endl;
   os << "    <meta http-equiv='Content-Style-Type' content='text/css' />" << endl;
   os << "    <meta http-equiv='Content-Language' content='en' />" << endl;
@@ -254,45 +255,58 @@ void writeXHTMLHeader (ostream& os, const string& hdrtxt, const string& pkg)
   os << "" << endl;
   os << "    // End script hiding --> " << endl;       
   os << "    </script>" << endl;
-  os << "  </head>" << endl;
+  os << " </head>" << endl;
   os << "" << endl;
-  os << "  <body>" << endl;
-  os << "    <div class='directory'>" << endl;
-  os << "      <h2>" << hdrtxt << "</h2>" << endl;
+  os << " <body>" << endl;
+  os << "  <div class='directory'>" << endl;
+  os << "   <h2>" << hdrtxt << "</h2>" << endl;
   if (! pkg.empty()) {
-    os << "      <h3>" << pkg << "</h3>" << endl;
+    os << "   <h3>" << pkg << "</h3>" << endl;
   }
-  os << "      <div style='display: block;'>" << endl;
+  os << "   <div style='display: block;'>" << endl;
 }
 
 void writeXHTMLFooter (ostream& os)
 {
-  os << "      </div>" << endl;
-  os << "    </div>" << endl;
-  os << "  </body>" << endl;
+  os << "   </div>" << endl;
+  os << "  </div>" << endl;
+  os << " </body>" << endl;
   os << "</html>" << endl;
 }
 
 // Write the dependency tree in XHTML format.
 void writeXHTML (ostream& os, const string& pkg, UsedMap& dep,
-		 const string& parent,
+		 const string& parent, const string& indent,
 		 int depth, int maxdepth, int seqnr, bool strip,
-		 const string& hreftxt)
+		 const string& hreftxt, bool isLast,
+		 const std::vector<bool>& parentIsLast)
 {
   // Form the name for this node.
   ostringstream oss;
   oss << parent << '_' << seqnr+1;
   // Get children.
   set<string> uses = dep[pkg].itsUses;
-  os << "<p>";
+  os << indent << "<p>";
   for (int i=0; i<depth; ++i) {
-    os << "<img src='ftv2vertline.png' alt='|' width=16 height=22 />";
+    if (parentIsLast[i]) {
+      os << "<img src='ftv2blank.png' alt='&nbsp' width=16 height=22 />";
+    } else {
+      os << "<img src='ftv2vertline.png' alt='|' width=16 height=22 />";
+    }
   }
   if (uses.empty()) {
-    os << "<img src='ftv2node.png' alt='o' width=16 height=22 />";
+    if (isLast) {
+      os << "<img src='ftv2lastnode.png' alt='/' width=16 height=22 />";
+    } else {
+      os << "<img src='ftv2node.png' alt='o' width=16 height=22 />";
+    }
     os << "<img src='ftv2doc.png' alt='*' width=24 height=22 />";
   } else {
-    os << "<img src='ftv2pnode.png' alt='o' width=16 height=22 onclick='toggleFolder(";
+    if (isLast) {
+      os << "<img src='ftv2plastnode.png' alt='\\' width=16 height=22 onclick='toggleFolder(";
+    } else {
+      os << "<img src='ftv2pnode.png' alt='o' width=16 height=22 onclick='toggleFolder(";
+    }
     os << '"' << "node" << oss.str() << '"';
     os << ", this)'/>";
     os << "<img src='ftv2folderclosed.png' alt='+' width=24 height=22 onclick='toggleFolder(";
@@ -317,12 +331,16 @@ void writeXHTML (ostream& os, const string& pkg, UsedMap& dep,
     os << "<div id='node" << oss.str() << "'>" << endl;
     // Write used packages if any and if maxdepth not reached.
     if (maxdepth < 0  ||  depth < maxdepth) {
-      int newSeqnr = 0;
+      string newIndent = indent + ' ';
+      std::vector<bool> newParentIsLast(parentIsLast);
+      newParentIsLast.push_back (isLast);
+      uint newSeqnr = 1;
       for (set<string>::const_iterator iter = uses.begin();
 	   iter != uses.end();
 	   ++iter, ++newSeqnr) {
-	writeXHTML (os, *iter, dep, oss.str(), depth+1, maxdepth, newSeqnr,
-		    strip, hreftxt);
+	writeXHTML (os, *iter, dep, oss.str(), newIndent,
+		    depth+1, maxdepth, newSeqnr, strip, hreftxt,
+		    newSeqnr == uses.size(), newParentIsLast);
       }
     }
     os << "</div>" << endl;
@@ -352,7 +370,7 @@ void writeHeader (ostream& os, OutType outtype, const string& hdrtxt,
 
 void writeBody (ostream& os, OutType outtype, const string& pkg, UsedMap& dep,
 		int maxdepth, int seqnr, bool strip,
-		const string& hreftxt)
+		const string& hreftxt, bool isLast)
 {
   switch (outtype) {
   case ASCII:
@@ -362,7 +380,9 @@ void writeBody (ostream& os, OutType outtype, const string& pkg, UsedMap& dep,
     writeJS (os, pkg, dep, "", 0, maxdepth, seqnr, strip, hreftxt);
     break;
   case XHTML:
-    writeXHTML (os, pkg, dep, "", 0, maxdepth, seqnr, strip, hreftxt);
+    std::vector<bool> parentIsLast;
+    writeXHTML (os, pkg, dep, "", "    ", 0, maxdepth, seqnr, strip,
+		hreftxt, isLast, parentIsLast);
     break;
   }
 }
@@ -482,22 +502,32 @@ int main(int argc, const char* argv[])
   }
   // Write the dependencies starting at all root packages
   // (i.e. packages not used by others).
-  int seqnr = 0;
+  // First count how many to write to find the last one.
+  uint nrout = 0;
   for (UsedMap::const_iterator iter = depPtr->begin();
        iter != depPtr->end();
-       ++iter, ++seqnr) {
+       ++iter) {
+    if (!top  ||  iter->second.itsNused == 0) {
+      nrout++;
+    }
+  }
+  uint seqnr = 1;
+  for (UsedMap::const_iterator iter = depPtr->begin();
+       iter != depPtr->end();
+       ++iter) {
     if (!top  ||  iter->second.itsNused == 0) {
       if (split) {
 	string name = replaceSlash(iter->first) + ext;
 	ofstream ofs(name.c_str());
 	writeHeader (ofs, outtype, hdrtxt, iter->first);
 	writeBody (ofs, outtype, iter->first, *depPtr,
-		   maxdepth, seqnr, strip, hreftxt);
+		   maxdepth, seqnr, strip, hreftxt, true);
 	writeFooter (ofs, outtype);
       } else {
 	writeBody (cout, outtype, iter->first, *depPtr,
-		   maxdepth, seqnr, strip, hreftxt);
+		   maxdepth, seqnr, strip, hreftxt, seqnr==nrout);
       }
+      seqnr++;
     }
   }
   if (!split) {
