@@ -136,8 +136,8 @@ bool DH_WorkOrder::RetrieveFromDatabase(int, int, char*, int)
 
     q1 << "SELECT * FROM BBWorkOrders WHERE "      // Look for own name and general workOrders
        << "status = 0 AND "
-       << "kstype = 'KS' OR " 
-       << "kstype = '" << getName() << "' ORDER BY kstype DESC, woid ASC;";      
+       << "(kstype = 'KS' OR " 
+       << "kstype = '" << getName() << "') ORDER BY kstype DESC, woid ASC;";      
 
     TRACER1("DH_WorkOrder::RetrieveFromDatabase <<< WorkOrder QUERY: " << q1.str ());
 
