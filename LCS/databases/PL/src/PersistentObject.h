@@ -270,11 +270,11 @@ namespace LOFAR
       // properly set in their associated MetaData objects.
       virtual void init() = 0;
 
-      friend struct DBRepMeta;
+//       friend struct DBRepMeta;
 
-      void toDBRepMeta(DBRepMeta& dest) const;
+//       void toDBRepMeta(DBRepMeta& dest) const;
 
-      void fromDBRepMeta(const DBRepMeta& org);
+//       void fromDBRepMeta(const DBRepMeta& org);
 
     private:
 

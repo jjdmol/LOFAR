@@ -30,7 +30,7 @@
 #endif
 
 //# Includes
-#include <PL/DBRep.h>
+#include <PL/DBRepHolder.h>
 /* #include <dtl/DTL.h> */
 #include <dtl/DBView.h>
 #include <dtl/select_iterator.h>
@@ -39,42 +39,47 @@ namespace LOFAR
 {
   namespace PL
   {
+    //# Forward Declarations
+
     // The BCA template class is a helper class. It provides a generic
-    // interface for operator() by defining a typedef for DBRep<T>.
+    // interface for operator() by defining a typedef for DBRepHolder<T>.
     template<typename T> 
     class BCA
     {
     public:
-      typedef DBRep<T> DataObj;
-      void operator()(dtl::BoundIOs& boundIOs, DataObj& rowbuf);
+      typedef DBRepHolder<T> DataObj;
+      void operator()(dtl::BoundIOs& boundIOs, DataObj& rowbuf)
+      {
+        rowbuf.rep().bindColsMeta(boundIOs);
+        rowbuf.rep().bindCols(boundIOs);
+      }
     };
+
 
     //@name Template specializations
     //@{
 
+    // ObjectId is part of the meta data of a persistent object. Hence, we
+    // must define a specialization, because we cannot call metaBindCols() on
+    // a DBRep<ObjectId> object.
     template<>
-    class BCA<ObjectId>
+    void BCA<ObjectId>::operator()(dtl::BoundIOs& boundIOs, DataObj& rowbuf)
     {
-    public:
-      typedef DBRepOid DataObj;
-      void operator()(dtl::BoundIOs& cols, DataObj& rowbuf)
-      {
-        cols["ObjId"] == rowbuf.itsOid;
-      }
-    };
+      rowbuf.rep().bindCols(boundIOs);
+    }
 
-    template<>
-    class BCA<PersistentObject::MetaData>
-    {
-    public:
-      typedef DBRepMeta DataObj;
-      void operator()(dtl::BoundIOs& cols, DataObj& rowbuf)
-      {
-        cols["ObjId"] == rowbuf.itsOid;
-        cols["Owner"] == rowbuf.itsOwnerOid;
-        cols["VersionNr"] == rowbuf.itsVersionNr;
-      }
-    };
+//     template<>
+//     class BCA<PersistentObject::MetaData>
+//     {
+//     public:
+//       typedef DBRepMeta DataObj;
+//       void operator()(dtl::BoundIOs& cols, DataObj& rowbuf)
+//       {
+//         cols["ObjId"] == rowbuf.itsOid;
+//         cols["Owner"] == rowbuf.itsOwnerOid;
+//         cols["VersionNr"] == rowbuf.itsVersionNr;
+//       }
+//     };
 
     //@}
 

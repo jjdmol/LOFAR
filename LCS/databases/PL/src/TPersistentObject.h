@@ -25,7 +25,7 @@
 
 //# Includes
 #include <PL/PersistentObject.h>
-#include <loki/static_check.h>
+#include <PL/DBRepHolder.h>
 #include <climits>
 
 namespace LOFAR 
@@ -115,10 +115,10 @@ namespace LOFAR
       // associated MetaData objects.
       // \attention This method must be implemented using template
       // specialization.
-      void init()
-      {
-  	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
-      }
+      void init();
+//       {
+//   	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
+//       }
 
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
@@ -162,18 +162,16 @@ namespace LOFAR
       // class.
       static attribmap_t theirAttribMap;
 
-      // The DBRep<T> struct needs to have access to our private data members,
-      // because it will update them when e.g. data is read form the database.
-      friend struct DBRep<T>;
+//       // The DBRep<T> struct needs to have access to our private data members,
+//       // because it will update them when e.g. data is read form the database.
+//       friend struct DBRep<T>;
 
       // Convert the data in our persistent object class to DBRep format,
       // which stores all data members contiguously in memory.
-      template<typename U>
-      void toDBRep(DBRep<U>& dest) const;
+      void toDBRep(DBRepHolder<T>& dest) const;
 
       // Convert the data from DBRep format to our persistent object.
-      template<typename U>
-      void fromDBRep(const DBRep<U>& org);
+      void fromDBRep(const DBRepHolder<T>& org);
 
     };
 

@@ -34,11 +34,29 @@ namespace LOFAR
   namespace PL
   {
 
+    template<typename T> typename TPersistentObject<T>::attribmap_t
+    TPersistentObject<T>::theirAttribMap;
+
+
+    template<typename T>
+    const typename TPersistentObject<T>::attribmap_t& 
+    TPersistentObject<T>::attribMap() const
+    {
+      static bool initialized(false);
+      if (!initialized)
+      {
+        initAttribMap();
+        initialized = true;
+      }
+      return theirAttribMap; 
+    }
+
+
     template<typename T>
     Collection< TPersistentObject<T> > 
     TPersistentObject<T>::retrieve(const QueryObject& query, int maxObjects)
     {
-      typedef dtl::DBView< DBRep<T> >  DBViewType;
+      typedef dtl::DBView< DBRepHolder<T> >  DBViewType;
 
       Collection< TPersistentObject<T> > ctpo;
 
@@ -48,7 +66,6 @@ namespace LOFAR
       for (int nr = 0; iter != view.end() && nr < maxObjects; ++iter, ++nr) {
 	TPersistentObject<T> tpo;
 	tpo.tableName (tableName());
-        tpo.fromDBRepMeta((DBRepMeta&)(*iter));
 	tpo.fromDBRep(*iter);
         // If the object T is spread among several tables we must call
         // retrieve() in order to get the data from all the tables. If we
@@ -67,13 +84,13 @@ namespace LOFAR
     template<typename T>
     void TPersistentObject<T>::doErase() const
     {
-      typedef dtl::DBView< DBRep<ObjectId> > DBViewType;
+      typedef dtl::DBView< DBRepHolder<ObjectId> > DBViewType;
       DBViewType view(tableName(), BCA<ObjectId>());
       DBViewType::delete_iterator iter = view;
 
       // setup the selection parameters
-      DBRep<ObjectId> rec;
-      rec.itsOid = metaData().oid()->get();
+      DBRepHolder<ObjectId> rec;
+      rec.rep().toDBRep(*metaData().oid());
 
       // delete this record
       *iter = rec;
@@ -87,45 +104,19 @@ namespace LOFAR
     template<typename T>
     void TPersistentObject<T>::doInsert() const
     {
-      typedef dtl::DBView< DBRep<T> > DBViewType;
+      typedef dtl::DBView< DBRepHolder<T> > DBViewType;
 
       DBViewType view(tableName(), BCA<T>());
       typename DBViewType::insert_iterator  iter = view;
 
-      // copy info of the T to the DBRep<T> class
-      DBRep<T>    rec;
-      toDBRepMeta ((DBRepMeta&)rec);
+      // copy info of the T to the DBRepHolder<T> class
+      DBRepHolder<T>    rec;
       toDBRep (rec);
 
       // save this record
       *iter = rec;
 
       // Once we've reached here, the insert was successful.
-      // Increment the version number.
-      metaData().versionNr()++;
-    }
-
-
-    template<typename T>
-    void TPersistentObject<T>::doUpdate() const
-    {
-      std::ostringstream whereClause;
-      whereClause << "WHERE ObjId=" << metaData().oid()->get();
-
-      typedef dtl::DBView< DBRep<T>, DBRep<ObjectId> > DBViewType;
-
-      DBViewType view(tableName(), BCA<T>(), whereClause.str());
-      typename DBViewType::update_iterator iter = view;
-
-      // copy info of the T to the DBRep<T> class
-      DBRep<T>    rec;
-      toDBRepMeta ((DBRepMeta&)rec);
-      toDBRep (rec);
-
-      // save this record
-      *iter = rec;
-
-      // Once we've reached here, the update was successful.
       // Increment the version number.
       metaData().versionNr()++;
     }
@@ -140,33 +131,56 @@ namespace LOFAR
       else
         whereClause << "WHERE ObjId=" << oid.get();
 
-      typedef dtl::DBView< DBRep<T>, DBRep<ObjectId> > DBViewType;
+      typedef dtl::DBView< DBRepHolder<T>, DBRepHolder<ObjectId> > DBViewType;
       DBViewType view(tableName(), BCA<T>(), whereClause.str());
       typename DBViewType::select_iterator iter = view.begin();
 
       // We should find a match! Otherwise there's some kind of logic error.
       AssertStr(iter != view.end(), "oid=" << oid.get()
                 << ", isOwnerOid=" << (isOwnerOid ? "true" : "false") );  
-      fromDBRepMeta((DBRepMeta&)(*iter));
       fromDBRep(*iter);
 
     }
 
+
     template<typename T>
-    const typename TPersistentObject<T>::attribmap_t& 
-    TPersistentObject<T>::attribMap() const
+    void TPersistentObject<T>::doUpdate() const
     {
-      static bool initialized(false);
-      if (!initialized)
-      {
-        initAttribMap();
-        initialized = true;
-      }
-      return theirAttribMap; 
+      std::ostringstream whereClause;
+      whereClause << "WHERE ObjId=" << metaData().oid()->get();
+
+      typedef dtl::DBView< DBRepHolder<T>, DBRepHolder<ObjectId> > DBViewType;
+
+      DBViewType view(tableName(), BCA<T>(), whereClause.str());
+      typename DBViewType::update_iterator iter = view;
+
+      // copy info of the T to the DBRepHolder<T> class
+      DBRepHolder<T>    rec;
+      toDBRep (rec);
+
+      // save this record
+      *iter = rec;
+
+      // Once we've reached here, the update was successful.
+      // Increment the version number.
+      metaData().versionNr()++;
     }
 
-    template<typename T> typename TPersistentObject<T>::attribmap_t
-    TPersistentObject<T>::theirAttribMap;
+
+    template<typename T>
+    void TPersistentObject<T>::toDBRep(DBRepHolder<T>& dest) const
+    {
+      dest.rep().toDBRepMeta(*this); 
+      dest.rep().toDBRep(*itsObjectPtr); 
+    }
+
+
+    template<typename T>
+    void TPersistentObject<T>::fromDBRep(const DBRepHolder<T>& org)
+    {
+      org.rep().fromDBRepMeta(*this);
+      org.rep().fromDBRep(*itsObjectPtr);
+    }
 
 
   } // namespace PL
