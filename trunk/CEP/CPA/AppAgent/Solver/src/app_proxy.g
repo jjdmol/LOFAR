@@ -125,7 +125,7 @@ const define_app_proxy := function (ref self,ref public,
       self.update_command_dialog(command,data);
   }
   # Sends an app control command to the app
-  const public.command := function (message,payload=F,update_gui=T,set_default=F)
+  const public.command := function (message,payload=F,update_gui=T,set_default=F,priority=5)
   {
     wider self;
     wider public;
@@ -135,7 +135,7 @@ const define_app_proxy := function (ref self,ref public,
       # report as event to relay
       self.relay->[spaste('sending_command_',message)](payload);
       return self.octo.publish(spaste(self.appid,".In.App.Control.",message),
-                  priority=10,
+                  priority=priority,
                   rec=payload);
     }
   }
@@ -190,7 +190,7 @@ const define_app_proxy := function (ref self,ref public,
   {
     wider public;
     wider self;
-    public.command("Resume",rec);
+    public.command("Resume",rec,priority=10);
   }
   # Returns current state, pause state and state string
   const public.state := function ()
@@ -263,8 +263,8 @@ const define_app_proxy := function (ref self,ref public,
     if( has_field(self,'gui') && has_field(self.gui,'dialog') &&
         has_field(self.gui.dialog,command) )
     {
-      text := rec2string(payload);
-      self.gui.dialog[command].browser.settext(text);
+      text := val2string(payload,skip_braces=T);
+      self.gui.dialog[command].browser.settext(paste(text,sep='\n'));
     }
   }
   const self.make_command_dialog := function (name,command,button=F,size=[40,20])
@@ -277,7 +277,7 @@ const define_app_proxy := function (ref self,ref public,
     
     rec.label := dws.label(rec.topfr,paste(self.appid,': ',name));
     if( has_field(self.last_cmd_arg,command) )
-      text := rec2string(self.last_cmd_arg[command]); 
+      text := paste(val2string(self.last_cmd_arg[command],skip_braces=T),sep='\n'); 
     else
       text := '';
     rec.browser := self.make_text_frame(rec.topfr,disabled=F,
@@ -302,7 +302,7 @@ const define_app_proxy := function (ref self,ref public,
     whenever rec.reset->press do
     {
       if( has_field(self.last_cmd_arg,command) )
-        text := rec2string(self.last_cmd_arg[command]); 
+        text := spaste(val2string(self.last_cmd_arg[command],skip_braces=T),sep='\n'); 
       else
         text := '';
       rec.browser.settext(text);
@@ -311,7 +311,7 @@ const define_app_proxy := function (ref self,ref public,
     {
       str := rec.browser.text->get('0.0','end');
 #      print 'browser contents: ',str;
-      data := string2rec(str);
+      data := string2val(str);
       # failed conversion?
       if( is_fail(data) )
       {
@@ -353,8 +353,8 @@ const define_app_proxy := function (ref self,ref public,
                                relief='sunken',disabled=T);
     # create command buttons
     self.gui.cmd_frame := dws.frame(parent=self.gui.topframe,side='left',expand='none');
-    self.gui.pause := dws.button(self.gui.cmd_frame,'PAUSE');
-    self.gui.resume := dws.button(self.gui.cmd_frame,'RESUME');
+    self.gui.pause := dws.button(self.gui.cmd_frame,'PAUSE',disabled=T);
+    self.gui.resume := dws.button(self.gui.cmd_frame,'RESUME',disabled=T);
     self.gui.updstatus := dws.button(self.gui.cmd_frame,'Update status');
     self.gui.resume_pad := dws.frame(self.gui.cmd_frame,expand='none',width=20,height=5);
     self.gui.init := dws.button(self.gui.cmd_frame,'INIT');
@@ -363,7 +363,8 @@ const define_app_proxy := function (ref self,ref public,
     self.gui.stop_pad := dws.frame(self.gui.cmd_frame,expand='none',width=20,height=5);
     self.gui.halt := dws.button(self.gui.cmd_frame,'HALT');
     # register event handlers for command buttons
-    whenever self.gui.pause->press do public.pause(from_gui=T);
+    whenever self.gui.pause->press do 
+    { self.gui.pause->relief('sunken'); public.pause(from_gui=T); }
     whenever self.gui.resume->press do public.resume(from_gui=T);
     whenever self.gui.stop->press do public.stop(from_gui=T);
     whenever self.gui.halt->press do public.halt(from_gui=T);
@@ -394,6 +395,9 @@ const define_app_proxy := function (ref self,ref public,
       {
         self.gui.state->delete('0','end');
         self.gui.state->insert($value.state_string);
+        self.gui.pause->relief('raised');
+        self.gui.pause->disabled($value.paused);
+        self.gui.resume->disabled(!$value.paused);
       }
       # update status record
       else if( name =~ s/^app_update_status_// )
@@ -425,7 +429,8 @@ const define_app_proxy := function (ref self,ref public,
       # update event log
       if( report )
       {
-        self.gui.eventlog.text->append(spaste($name,': ',$value,'\n'),'event');
+        str := sprintf('%.120s\n',spaste($name,': ',$value));
+        self.gui.eventlog.text->append(str,'event');
         if( has_field($value,'text') )
         {
           tag := 'text';
@@ -451,10 +456,10 @@ const define_app_proxy := function (ref self,ref public,
   {
     self.dprint(5,"original event: ",$name);
     # check that event is intended for us
-    ev := split($name,'_');
-    if( len(ev) > 2 && ev[1] == self.lappid && ev[2] == 'out' )
+    shortname := eval(spaste("'",$name,"'~s/^",self.lappid,"_out_//"));
+    self.dprint(5,"short event name: ",shortname);
+    if( shortname != $name )
     {
-      shortname := paste(ev[3:len(ev)],sep='_');
       # process state events
       if( shortname == 'app_notify_state' )
       {

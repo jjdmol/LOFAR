@@ -73,9 +73,9 @@ int BatchAgent::startDomain (const DataRecord::Ref &data)
 }
 
 //##ModelId=3E70A1C501BB
-int BatchAgent::endSolution (DataRecord::Ref &endrec)
+int BatchAgent::endSolution (const DataRecord::Ref::Copy &data,DataRecord::Ref &endrec)
 {
-  int res = SolverControlAgent::endSolution(endrec);
+  int res = SolverControlAgent::endSolution(data,endrec);
   // no more solutions pending? Force NEXT_DOMAIN state
   if( res == IDLE && solveQueue().empty() )
     return setState(NEXT_DOMAIN);

@@ -51,8 +51,8 @@
 #pragma aid SolvableParm SolvableFlag Peel Pred Index Apply
 #pragma aid Ant1 Ant2 AntMode CorrSel Niter UseSVD
 #pragma aid CalcUVW ModelType MEP GSM
-#pragma aid Save Parms Residuals
-#pragma aid SolvParams Rank Fit Errors CoVar Flag Mu StdDev Chi
+#pragma aid Save Solvable Param Params Residuals
+#pragma aid Names Values Rank Fit Errors CoVar Flag Mu StdDev Chi
 
 #pragma aid Domain Solve Iter Num Intermediate Final 
 #pragma aid Current Start End Time Tile Count
@@ -69,8 +69,8 @@ namespace SolverControl
   const HIID  FMEPName            = AidMEP|AidName;
   const HIID  FGSMName            = AidGSM|AidName;
 
-  const HIID  SolvableParm        = AidSolvableParm;
-  const HIID  SolvableFlag        = AidSolvableFlag;
+  const HIID  SolvableParm        = AidSolvable|AidParams;
+  const HIID  SolvableFlag        = AidSolvable|AidFlag;
   const HIID  PeelNrs             = AidPeel|AidIndex;
   const HIID  PredNrs             = AidPred|AidIndex;
   const HIID  Ant1                = AidAnt1;
@@ -79,7 +79,7 @@ namespace SolverControl
   const HIID  CorrSel             = AidCorrSel;
   const HIID  UseSVD              = AidUseSVD;
 
-  const HIID  SaveParms           = AidSave|AidParms;
+  const HIID  SaveParms           = AidSave|AidParams;
   const HIID  SaveResiduals       = AidSave|AidResiduals;
   const HIID  ApplyPeel           = AidApply|AidPeel;
   
@@ -94,18 +94,21 @@ namespace SolverControl
   
   // status record fields
   const HIID  StTileCount          = AidTile|AidCount;
-  const HIID  StDomainStart        = AidDomain|AidStart|AidTime;
-  const HIID  StDomainEnd          = AidDomain|AidEnd|AidTime;
-  const HIID  StDomainCurrent      = AidDomain|AidCurrent|AidTime;
-  const HIID  StSolutionSolvParams = AidSolution|AidSolvParams;
-  const HIID  StSolutionRank       = AidSolution|AidRank;
-  const HIID  StSolutionFit        = AidSolution|AidFit;
-  const HIID  StSolutionErrors     = AidSolution|AidErrors;
-  const HIID  StSolutionCoVar      = AidSolution|AidCoVar;
-  const HIID  StSolutionFlag       = AidSolution|AidFlag;
-  const HIID  StSolutionMu         = AidSolution|AidMu;
-  const HIID  StSolutionStdDev     = AidSolution|AidStdDev;
-  const HIID  StSolutionChi        = AidSolution|AidChi;
+  const HIID  StSolutionTileCount  = AidSolution|AidTile|AidCount;
+  const HIID  StDomainStart        = AidStart|AidTime;
+  const HIID  StDomainEnd          = AidEnd|AidTime;
+  const HIID  StDomainCurrent      = AidCurrent|AidTime;
+  
+  const HIID  StParamValues   = AidParam|AidValues;
+  const HIID  StParamNames    = AidParam|AidNames;
+  const HIID  StRank          = AidRank;
+  const HIID  StFit           = AidFit;
+  const HIID  StErrors        = AidErrors;
+  const HIID  StCoVar         = AidCoVar;
+  const HIID  StFlag          = AidFlag;
+  const HIID  StMu            = AidMu;
+  const HIID  StStdDev        = AidStdDev;
+  const HIID  StChi           = AidChi;
 };
 
 
@@ -187,9 +190,10 @@ private:
   
   VisTile::Format::Ref tileformat_;
   int  dataset_seq_num_;
+  DataRecord::Ref solution_;
     
     //##ModelId=3EC9F6EC01E6
-  int ntiles;
+  int ntiles_;
 
     //##ModelId=3EC9F6EC01E7
   vector<VisTile::Ref>  itsVisTiles;

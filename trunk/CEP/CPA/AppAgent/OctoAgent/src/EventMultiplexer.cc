@@ -178,29 +178,44 @@ int EventMultiplexer::checkQueue (const HIID& mask,int wait,int sink_id)
     const Message &msg = queue().front().mref.deref();
     cdebug(3)<<"checking message "<<msg.sdebug(2)<<endl;
     // check against input map of every sink
+    bool assigned = False;
     for( uint i=0; i<sinks.size(); i++ )
     {
       if( sinks[i]().mapReceiveEvent(assigned_event,msg.id()) )
       {
+        assigned = True;
         pheadmsg = &msg;
         assigned_sink = i;
         assigned_data.copy(msg.payload(),DMI::PRESERVE_RW);
         assigned_source = msg.from();
         cdebug(3)<<"maps to "<<sinks[i]->sdebug(1)<<", event "<<assigned_event<<endl;
-        if( i == uint(sink_id) && assigned_event.matches(mask) )
+        if( i == uint(sink_id) )
         {
-          queue().pop_front();
-          return SUCCESS;
+          if( assigned_event.matches(mask) )
+          {
+            queue().pop_front();
+            return SUCCESS;
+          }
+          else if( wait != AppEvent::BLOCK ) // message for this sink, doesn't match
+            return OUTOFSEQ;
         }
-        else
+        else if( wait != AppEvent::BLOCK ) // message for other sink
           return OUTOFSEQ;
+        break;
       }
     }
-    // if we fell through to here, the message has not been assigned to any sink.
-    // Discard it and go back for another try
-    cdebug(3)<<"unmapped message, discarding\n";
-    queue().pop_front();
-    // go back for another try
+    // message assigned but not returned -- must be in blocking mode then,
+    // so wait for the queue to change
+    if( assigned )
+      queueCondition().wait();
+    else
+    {
+      // the message has not been assigned to any sink.
+      // Discard it and go back for another try
+      cdebug(3)<<"unmapped message, discarding\n";
+      queue().pop_front();
+      // go back for another try
+    }
   }
 }
 

@@ -83,6 +83,9 @@ const HIID
     //    Posted when the solver exits with an error
     SolverErrorEvent    = AidSolver|AidError,
     
+    //    Generic catch-all message event
+    SolverNotifyEvent   = AidSolver|AidNotify,
+    
     //    Posted when a solution is terminated with an external event
     StopSolutionEvent   = AidStop|AidSolution,
     //    Posted when the solution is stopped due to convergence
@@ -137,11 +140,8 @@ const HIID
     StSolution           = AidSolution,
     // solver control status sub-record
     StSolverControl      = AidSolver|AidControl,
-      //    Iteration number 
-    StIterationNumber    = StSolution|AidSlash|FIterationNumber,
-    //    Convergence parameter
-    StConvergence        = StSolution|AidSlash|FConvergence,
     //    Domain number
+    StDomain             = AidDomain,  
     StDomainNumber       = AidDomain|AidIndex,
     //    Ending message
     StMessage            = AidMessage,
@@ -267,7 +267,7 @@ class SolverControlAgent : public AppControlAgent
     //##    ENDSOLVE       (>0):  end of this solution, please call 
     //##                          endSolution() to pick up end record.
     //##    terminal state (<=0): see class documentation above.
-    virtual int endIteration (double conv);
+    virtual int endIteration (const DataRecord::Ref::Copy &data);
     
     //##ModelId=3E00650B036F
     //##Documentation
@@ -279,7 +279,7 @@ class SolverControlAgent : public AppControlAgent
     //## Returns the current state, which will be one of:
     //##    IDLE (>0): proceed
     //##    terminal state (<=0): see class documentation above.
-    virtual int endSolution  (DataRecord::Ref &endrec);
+    virtual int endSolution  (const DataRecord::Ref::Copy &data,DataRecord::Ref &endrec);
     
     
     // called if a solution has failed

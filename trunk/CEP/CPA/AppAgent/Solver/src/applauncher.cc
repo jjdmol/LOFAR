@@ -145,10 +145,16 @@ int main (int argc,const char *argv[])
     Debug::setLevel("Solver",3);
     Debug::initLevels(argc,argv);
     
-    cout<<"=================== initializing OCTOPUSSY components ==========\n";
+    cout<<"=================== initializing OCTOPUSSY =====================\n";
+    OctopussyConfig::initGlobal(argc,argv);
     Octopussy::init();
-    Octopussy::dispatcher().attach(
+    
+    if( glish )
+    {
+      cout<<"=================== initializing Glish gateway =================\n";
+      Octopussy::dispatcher().attach(
           makeGlishClientWP(argc,argv,True),DMI::ANON);
+    }
     
     cout<<"=================== starting OCTOPUSSY thread =================\n";
     Octopussy::initThread(True);

@@ -79,7 +79,7 @@ class BatchAgent : public SolverControlAgent
     //## Returns the current state, which will be one of:
     //##    IDLE (>0): proceed
     //##    terminal state (<=0): see class documentation above.
-    virtual int endSolution(DataRecord::Ref &endrec);
+    virtual int endSolution(const DataRecord::Ref::Copy &data,DataRecord::Ref &endrec);
 
 
   private:

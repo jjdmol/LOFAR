@@ -86,4 +86,4 @@ img := function ()
 }
 
 
-mtest(verbose=0)
+mtest(verbose=0,suspend=F)
