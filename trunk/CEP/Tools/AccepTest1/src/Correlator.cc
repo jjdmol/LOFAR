@@ -76,6 +76,14 @@ void Correlator::define(const KeyValueMap& /*params*/) {
       TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getNumberOfNodes()+TH_MPI::getCurrentRank(), true, false) );
 }
 
+void Correlator::undefine() {
+  delete itsWH->getDataManager().getInHolder(0)->getTransporter().getTransportHolder();
+  delete itsWH->getDataManager().getOutHolder(0)->getTransporter().getTransportHolder();
+
+  delete itsWH;
+}
+
+
 void Correlator::init() {
   itsWH->basePreprocess();
 }
@@ -148,12 +156,12 @@ int parse_config() {
 int main (int argc, const char** argv) {
 
   INIT_LOGGER("CorrelatorLogger.prop");
+  TH_MPI::init(argc, argv);
 
   for (int samples = min_samples; samples <= max_samples; samples++) {
     for (int elements = min_elements; elements <= max_elements; elements++) {
       
       // init the MPI environment.
-      TH_MPI::init(argc, argv);
       
       try {
 	
@@ -183,10 +191,10 @@ int main (int argc, const char** argv) {
       }
       
       // finalize the MPI environment
-      TH_MPI::finalize();
       
     }
   }
 
+  TH_MPI::finalize();
   return 0;
 }

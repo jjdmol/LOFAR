@@ -49,6 +49,7 @@ FrontEnd::FrontEnd (bool frontend, int port, int elements,
 
 
 FrontEnd::~FrontEnd() {
+  this->undefine();
 }
 
 void FrontEnd::define(const KeyValueMap& /*params*/) {
@@ -102,39 +103,42 @@ void FrontEnd::define(const KeyValueMap& /*params*/) {
 
 void FrontEnd::undefine() {
 
-  cout << "Undefine" << endl;
   vector<WorkHolder*>::iterator it = itsWHs.begin();
   for (; it!=itsWHs.end(); it++) {
-    delete *it;
+    delete (*it)->getDataManager().getInHolder(0)->getTransporter().getTransportHolder();
+    delete (*it)->getDataManager().getOutHolder(0)->getTransporter().getTransportHolder();
+
   }
   itsWHs.clear();
 }
 
 void FrontEnd::init() {
-
-  itsWHs[0]->basePreprocess();
-//   itsWHs[1]->basePreprocess();
-
-}
-
-void FrontEnd::run(int nsteps) {
-
-  for (int s = 0; s < nsteps; s++) {
-
-    itsWHs[0]->baseProcess();
-//     itsWHs[1]->baseProcess();
-
+  vector<WorkHolder*>::iterator it = itsWHs.begin();
+  for (; it != itsWHs.end(); it++) {
+    (*it)->basePreprocess();
   }
 }
 
-void FrontEnd::dump() const {
-  
-  itsWHs[0]->dump();  
-//   itsWHs[1]->dump();
+void FrontEnd::run(int nsteps) {
+  vector<WorkHolder*>::iterator it;
+
+  for (int s = 0; s < nsteps; s++) {
+    for (it = itsWHs.begin(); it != itsWHs.end(); it++) {
+      (*it)->baseProcess();
+    }
+  }
 
 }
 
+void FrontEnd::dump() const {
+//   vector<WorkHolder*>::iterator it = itsWHs.begin();
+//   for (; it != itsWHs.end(); it++) {
+//     (*it)->dump();
+//   }
+}
+
 void FrontEnd::quit() {
+  this->undefine();
 }
 
 int parse_config() {

@@ -62,7 +62,6 @@ WH_Correlator::WH_Correlator(const string& name,
 }
 
 WH_Correlator::~WH_Correlator() {
-
 }
 
 WorkHolder* WH_Correlator::construct (const string& name, 
@@ -123,9 +122,11 @@ void WH_Correlator::process() {
   stoptime = timer();
 
   cmults = itsNsamples * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
-  cout << "Performance: " << 10e-6*cmults/(stoptime-starttime) << " Mcprod/sec" << endl;
+  //  cout << "Performance: " << 10e-6*cmults/(stoptime-starttime) << " Mcprod/sec" << endl;
+  cout << itsNsamples << " " << itsNelements << " " << 10e-6*cmults/(stoptime-starttime) << endl;
 
   memcpy(((DH_Vis*)getDataManager().getOutHolder(0))->getBuffer(), corr, itsNelements * itsNelements * sizeof(DH_Vis::BufferType));
+  free(corr);
 }				     
 
 void WH_Correlator::dump() {
