@@ -66,6 +66,9 @@ elif [ "$DBTYPE" = "monet" ]; then
 elif [ "$DBTYPE" = "aips" ]; then
 # for aips:
     SQLCLIENT=""
+elif [ "$DBTYPE" = "bdb" ]; then
+# for Berkeley DB:
+    SQLCLIENT=""
 else
     echo "Unkown dbtype"
     exit 1
@@ -85,6 +88,12 @@ if [ "$DBTYPE" = "aips" ]; then
     done
     echo "exit" >> aipscreate
     $AIPSTABLECREATOR < aipscreate
+# we need to fill the default tables again
+    ../../src/fillDefaultTables -host $HOST -dbtype $DBTYPE -user $USER
+elif [ "$DBTYPE" = "bdb" ]; then
+    rm -rf *.bdb
+# we need to fill the default tables again
+    ../../src/fillDefaultTables -host $HOST -dbtype $DBTYPE -user $USER
 else
 # for sql databases: clear tables
     echo " " > sql_clear
