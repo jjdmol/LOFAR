@@ -105,9 +105,9 @@ libcommon_la_SOURCES 	= \
         Debug.cc \
         Exception.cc \
         hexdump.cc \
-        KeyParser.cc \
         KeyParse.yy \
         KeyTokenize.ll \
+        KeyParser.cc \
         KeyValue.cc \
         KeyValueMap.cc \
         LofarLogCout.cc \
