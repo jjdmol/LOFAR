@@ -57,8 +57,8 @@ WH_BandSep::WH_BandSep (const string& name, unsigned int nsubband,
 
   // DEBUG
   handle = gnuplot_init();
-//   itsFileOutReal.open ((string ("/home/alex/gerdes/subband_real_") + name + string (".txt")).c_str ());
-//   itsFileOutComplex.open ((string ("/home/alex/gerdes/subband_complex_") + name + string (".txt")).c_str ());
+  itsFileOutReal.open ((string ("/home/alex/gerdes/subband_real_") + name + string (".txt")).c_str ());
+  itsFileOutComplex.open ((string ("/home/alex/gerdes/subband_complex_") + name + string (".txt")).c_str ());
 }
 
 WH_BandSep::~WH_BandSep()
@@ -71,8 +71,8 @@ WH_BandSep::~WH_BandSep()
 
   // DEBUG
   gnuplot_close (handle);
-//   itsFileOutReal.close ();
-//   itsFileOutComplex.close ();
+  itsFileOutReal.close ();
+  itsFileOutComplex.close ();
 }
 
 WorkHolder* WH_BandSep::construct(const string& name, int ninput, int noutput, const ParamBlock& params)
@@ -109,23 +109,23 @@ void WH_BandSep::process()
 	itsPos = (itsPos + 1) % itsBuffer.size ();
 
 	// filter the signal
-	if (itsPos == 0) {
+	if (itsOutHolders[0]->doHandle()) {
 	  subbandSignals = itsFilterbank->filter(itsBuffer);
 	  
 	  // Copy to other output buffers.
 	  for (int j = 0; j < itsNout; j++) {
-	    for (int i = 0; i < itsNsubband; i++) {
-	      getOutHolder (i + j * itsNsubband)->getBuffer ()[0] = subbandSignals (i, 0);
-	    }
+		for (int i = 0; i < itsNsubband; i++) {
+		  getOutHolder (i + j * itsNsubband)->getBuffer ()[0] = subbandSignals (i, 0);
+		}
 	  }
-
+	  	  
 	  // DEBUG
-// 	  for (int i = 0; i < itsNsubband; i++) {
-// 		itsFileOutReal << real (itsOutHolders[i]->getBuffer ()[0]) << " ";
-// 		itsFileOutComplex << imag (itsOutHolders[i]->getBuffer ()[0]) << " ";
-// 	  }
-// 	  itsFileOutReal << endl;	
-// 	  itsFileOutComplex << endl;	
+	  for (int i = 0; i < itsNsubband; i++) {
+		itsFileOutReal << real (itsOutHolders[i]->getBuffer ()[0]) << " ";
+		itsFileOutComplex << imag (itsOutHolders[i]->getBuffer ()[0]) << " ";
+	  }
+	  itsFileOutReal << endl;	
+	  itsFileOutComplex << endl;	
 	}
   }
 }

@@ -78,6 +78,10 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
     itsOutHolders[i] = new DH_SampleC (string("out_") + str, 1, 1);
   }
   sample.resize(itsNrcu);
+
+  //DEBUG
+  itsFileOutReal.open ((string ("/home/alex/gerdes/BF_real_") + name + string (".txt")).c_str ());
+  itsFileOutComplex.open ((string ("/home/alex/gerdes/BF_complex_") + name + string (".txt")).c_str ());
 }
 
 
@@ -93,6 +97,13 @@ WH_BeamFormer::~WH_BeamFormer()
     delete itsOutHolders[i];
   }
   delete [] itsOutHolders;
+
+  // DEBUG
+  itsFileOutReal.close ();
+  itsFileOutComplex.close ();
+
+  itsFileOutReal.precision(10);
+  itsFileOutComplex.precision(10);
 }
 
 
@@ -117,20 +128,26 @@ WH_BeamFormer* WH_BeamFormer::make (const string& name) const
 void WH_BeamFormer::process()
 {
   for (int i = 0; i < itsNrcu; i++) {
-    sample(i) = *itsInHolders[i]->getBuffer();
-    
+    sample(i) = (dcomplex)itsInHolders[i]->getBuffer()[0]; 
+	//	cout << itsInHolders[i]->getBuffer()[0] << " ";
   }
+  //cout << sample << endl;
 
   // the weights are calculated in WH_AWE
   if (getOutputs() > 0) {
     
     LoVec_dcomplex weight(itsWeight->getBuffer(), itsNrcu, duplicateData);    
-    sample *= weight;
+	//    sample *= weight;
 
     for (int j = 0; j < itsNrcu; j++) {
       // copy the sample to the outHolders
       itsOutHolders[j]->getBuffer ()[0] = sample(j);
     }
+
+	// DEBUG
+	//	cout << sample << " " << real(sample(0)) << " " << imag(sample(0)) << endl;
+	itsFileOutReal << real (sample(0)) << " " << endl;;
+	itsFileOutComplex << imag (sample(0)) << " " << endl;;	
   }
 }
 

@@ -126,7 +126,7 @@ void WH_STA::process()
   // Now assign the calculated weight vector to the output
   
 
-  memcpy(itsOutHolder->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
+  //  memcpy(itsOutHolder->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
   
   
 //   cout << itsBuffer << endl;
@@ -140,26 +140,18 @@ void WH_STA::process()
 
 void WH_STA::dump() const
 {
-  using namespace blitz;
-
-//   LoVec_dcomplex weight(itsOutHolder->getBuffer(), itsNrcu, duplicateData);    
-
-//   cout << "Weight vector Buffer: " << endl;
-//   cout << weight<< endl;
 }
 
 
 DH_SampleC* WH_STA::getInHolder (int channel)
 {
   AssertStr (channel < getInputs(), "Input channel too high");
-
   return itsInHolders[channel];
 }
 
 DH_SampleC* WH_STA::getOutHolder (int channel)
 {
-  AssertStr (channel < getOutputs(), "output channel too high");
-  
+  AssertStr (channel < getOutputs(), "output channel too high"); 
   return itsOutHolder;
 }
 
