@@ -4,6 +4,7 @@
 #include <GCF/GCF_PVDouble.h>
 #include <GCF/GCF_Property.h>
 #include <math.h>
+#include <stdio.h>
 #define DECLARE_SIGNAL_NAMES
 #include "TST_Protocol.ph"
 
@@ -1366,7 +1367,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
       if (_propertySetB4.load() != GCF_NO_ERROR)
       {
         failed(306);
-        TRAN(Application::test403);
+        TRAN(Application::finished);
       }
       break;
   
@@ -1381,7 +1382,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
         if (_apcT1K.load(false) != GCF_NO_ERROR)
         {
           failed(306);
-          TRAN(Application::test403);
+          TRAN(Application::finished);
         }
         else
           _counter = 1;
@@ -1389,7 +1390,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
       else
       {
         failed(306);
-        TRAN(Application::test403);
+        TRAN(Application::finished);
       }      
       break;
     }
@@ -1405,13 +1406,13 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
         if (_supTask3.getProxy().subscribeProp("A_K_P1") != GCF_NO_ERROR)
         {
           failed(306);
-          TRAN(Application::test403);
+          TRAN(Application::finished);
         }
       }
       else
       {
         failed(306);
-        TRAN(Application::test403);
+        TRAN(Application::finished);
       }   
       break;
     }
@@ -1456,7 +1457,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
       if (_supTask3.getProxy().setPropValue("A_C_P1", iv) != GCF_NO_ERROR)
       {
         failed(306);
-        TRAN(Application::test403);
+        TRAN(Application::finished);
       }
       break;
     }
@@ -1470,12 +1471,12 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
       if (nrOfSucceded == 1000)
       {
         passed(306);
-        TRAN(Application::test403);
+        TRAN(Application::finished);
       }
       else if (nrOfSucceded + nrOfFaults == 1000)
       {
         failed(306);
-        TRAN(Application::test403);
+        TRAN(Application::finished);
       }      
       break;
     }
@@ -1616,13 +1617,14 @@ GCFEvent::TResult Application::test402(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult Application::test403(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult Application::finished(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
     case F_ENTRY_SIG:
+      fprintf(stderr, "Ready with tests: passed %d, failed %d\n", _passed, _failed);    
       GCFTask::stop();    
       break;
 

@@ -8,4 +8,4 @@ PVSS II 2.12.1 (see MAC/GCF)
 LCS/Common
 MAC/Tools/LofarLogger
 MAC/GCF
-log4cplus
+log4cplus (see LofarLogger)

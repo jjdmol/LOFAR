@@ -56,8 +56,10 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_MPI(0)
 lofar_PVSS(1)
-lofar_PACKAGE(MAC/Tools/LofarLogger)
+lofar_EXTERNAL(common,1,Common/LofarTypes.h,,~/workspace3/LOFAR/installed/gnu_debug)
+lofar_EXTERNAL(lofarlogger,1,LofarLogger/LofarLogger.h,,~/workspace3/LOFAR/installed/gnu_debug)
 lofar_EXTERNAL(xercesc,1,xercesc/sax2/SAX2XMLReader.hpp,xerces-c,)
+lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
 
 dnl
 dnl Output Makefiles
