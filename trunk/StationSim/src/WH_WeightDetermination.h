@@ -93,6 +93,6 @@ private:
 
   vector<float> itsDipoleLoc;
   ArrayConfig *itsArray;
-
+  string itsArrayFile;
 };
 #endif
