@@ -6,10 +6,10 @@
 //}
 
 //##ModelId=3F43290401D9
-TopLevelStrategy * TopLevelStrategy::_instance = 0;
+TopLevelStrategy * TopLevelStrategy::_instance = NULL;
 
 //##ModelId=3F43262B0291
-TopLevelStrategy &TopLevelStrategy::Instance()
+TopLevelStrategy::run()
 {
    if (_instance == 0) {
      _instance = new TopLevelStrategy();
@@ -22,4 +22,9 @@ TopLevelStrategy::TopLevelStrategy()
 {
 }
 
+
+//##ModelId=3F43262B0291
+TopLevelStrategy &TopLevelStrategy::Instance()
+{
+}
 

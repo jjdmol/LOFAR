@@ -8,6 +8,7 @@ class BlackBoard;
 class Control
 {
   public:
+    //##ModelId=3F4CB6D80203
     Control():blackboard((BlackBoard*)(0)),theDirective((Directive*)(0)){}
     //##ModelId=3F3B90830399
     //##Documentation
