@@ -22,19 +22,19 @@ namespace ABS_Protocol
 	 * all beams together can not be larger
 	 * than this value.
 	 */
-	static const int N_BEAMLETS = 256;
+	static const int N_BEAMLETS = 128;
 
 	/** Maximum number of input subbands of the
 	 * system. Each spectral window should have
 	 * n_subbands <= N_SUBBANDS.
 	 */
-	static const int N_SUBBANDS = 1024;
+	static const int N_SUBBANDS = 128;
 
 	enum {
-	     STATUS_SUCCESS = 0,
-	     STATUS_ERR_RANGE,     // range error in message parameters
-	     STATUS_ERR_BEAMALLOC, // could not allocate beam
-	     STATUS_ERR_BEAMFREE,  // could not free beam
+	     SUCCESS = 0,
+	     ERR_RANGE,     // range error in message parameters
+	     ERR_BEAMALLOC, // could not allocate beam
+	     ERR_BEAMFREE,  // could not free beam
 	};
 };
 

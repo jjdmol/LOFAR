@@ -51,11 +51,16 @@ namespace ABS
 	 */
 	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
 
+	//@{
 	/**
-	 * The enabled state. This state is reached when the
-	 * beam_server port is connected.
+	 * All the test states
 	 */
-	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
+	GCFEvent::TResult test001(GCFEvent& e, GCFPortInterface &p);
+	GCFEvent::TResult test002(GCFEvent& e, GCFPortInterface &p);
+	GCFEvent::TResult test003(GCFEvent& e, GCFPortInterface &p);
+	GCFEvent::TResult test004(GCFEvent& e, GCFPortInterface &p);
+	GCFEvent::TResult done(GCFEvent& e, GCFPortInterface &p);
+	//@}
 
 	/**
 	 * The test run method. This should start the task
