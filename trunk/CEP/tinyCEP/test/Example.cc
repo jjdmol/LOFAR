@@ -22,6 +22,9 @@
 
 #include <iostream>
 #include <Transport/DataHolder.h>
+#ifdef HAVE_MPI
+#include <Transport/TH_MPI.h>
+#endif
 #include <tinyCEP/SimulatorParseClass.h>
 
 #include <DH_Example.h>
@@ -37,7 +40,7 @@ int main(int argc, const char** argv)
 {
   
 #ifdef HAVE_MPI
-  MPI_Init(&argc, (char***)&argv);
+  TH_MPI::init(argc, argv);
 #endif
 
   // set trace levels
