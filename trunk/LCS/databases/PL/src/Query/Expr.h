@@ -76,12 +76,16 @@ namespace LOFAR
         Expr operator! () const;
         //@}
 
+        // @name SQL-like operators
+        //@{
+
         // The BETWEEN operator is used to test if a value is within a given
-        // interval.
+        // closed interval.
         Expr between(const Expr& lhs, const Expr& rhs) const;
 
         // The NOT BETWEEN operator is used to test if a value is not within a
-        // given interval.
+        // given closed interval.
+        // \see Expr::between()
         Expr notBetween(const Expr& lhs, const Expr& rhs) const;
 
         // The IN operator is used to test if an expression is contained in a
@@ -90,15 +94,30 @@ namespace LOFAR
 
         // The NOT IN operator is used to test if an expression is not
         // contained in a set of expressions.
+        // \see Expr::in()
         Expr notIn(const Collection<Expr>& set) const;
 
-        // The LIKE operator is used to test if a value has a match with a
-        // pattern expression.
-        Expr like(const Expr& exp) const;
+        // The LIKE operator is used to test if a value matches with the
+        // pattern string in \a str. You can use the wildcard characters \c *
+        // and \c ?, where \c * expands to zero or more characters, and \c ? 
+        // expands to exactly one character. If you want to match a literal \c
+        // * or \c ?, you should use the escape character \c \. Consequently,
+        // if you want to match a literal \c \, you should escape it with
+        // another \c \.
+        //
+        // \attention Remember that the backslash character \c \ is also used
+        // as an escape character in the C/C++ language. Hence, if you want
+        // the pattern string \a str to contain \c "\", then \a str should
+        // contain \c "\\". Consequently, if you want the pattern string \a
+        // str to expand to \c "\", then \a str should contain \c "\\\\".
+        Expr like(const std::string& str) const;
 
         // The NOT LIKE operator is used to test if a value does not have a
         // match with a pattern expression.
-        Expr notLike(const Expr& exp) const;
+        // \see Expr::like()
+        Expr notLike(const std::string& str) const;
+
+        //@}
 
       private:
 

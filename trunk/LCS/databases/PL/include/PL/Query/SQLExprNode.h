@@ -138,8 +138,8 @@ namespace LOFAR
       class LikeExprNode : public ExprNode
       {
       public:
-        LikeExprNode(const std::string& oper,
-                     const Expr& lhs, const Expr& rhs);
+        LikeExprNode(const std::string& oper, const Expr& value, 
+                     const std::string& pattern);
 
         virtual ~LikeExprNode();
         
@@ -154,8 +154,8 @@ namespace LOFAR
 
         // @name The operands
         //@{
-        const Expr itsLeft;
-        const Expr itsRight;
+        const Expr        itsOperand;
+        const std::string itsPattern;
         //@}
 
       };
