@@ -2,16 +2,19 @@ check_PROGRAMS			= tDebug \
                                   tBlobString tBlobHeader tBlobArrayHeader \
                                   tBlobStream tBlobArray tDataConvert \
 				  tKeyValueMap \
-				  tStringUtil
-# tLorrays
+				  tStringUtil 
+#				  tLorrays
 
 TESTS	= tDebug_test.sh \
-          tBlobString tBlobHeader tBlobArrayHeader \
-          tBlobStream_test.sh tBlobArray tDataConvert \
+          tBlobString_test.sh \
+	  tBlobHeader_test.sh \
+	  tBlobArrayHeader_test.sh \
+          tBlobStream_test.sh \
+	  tBlobArray_test.sh \
+	  tDataConvert_test.sh \
 	  tKeyValueMap_test.sh \
-	  tStringUtil_test.sh
-
-# tLorrays_test.sh				
+	  tStringUtil_test.sh 
+#	  tLorrays_test.sh				
 
 tDebug_SOURCES			= tDebug.cc
 tDebug_LDADD			= ../src/libcommon.la
@@ -49,16 +52,11 @@ tStringUtil_SOURCES		= tStringUtil.cc
 tStringUtil_LDADD		= ../src/libcommon.la	
 tStringUtil_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
 
-# tLorrays_SOURCES		= tLorrays.cc
-# tLorrays_LDADD		= ../src/libcommon.la	
-# tLoarrays_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
+#tLorrays_SOURCES		= tLorrays.cc
+#tLorrays_LDADD			= ../src/libcommon.la	
+#tLorrays_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir)
-
-
-
-EXTRA_DIST = 					\
-	tDebug_test.sh # tLorrays_test.sh
 
 
 include $(lofar_sharedir)/Makefile.common
