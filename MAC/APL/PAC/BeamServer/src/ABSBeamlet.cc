@@ -175,6 +175,7 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 3>&          pos,
 	  if (beamlet->spw())
 	  {
 	      freq = beamlet->spw()->getFrequency(beamlet->subband());
+	      LOG_DEBUG_STR("freq = " << freq);
 	  }
 
   	  for (int si = 0; si < nelements; si++)
@@ -193,35 +194,14 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 3>&          pos,
 	    }
 	  }
 
-#if 1
 	  weights(all, all, bi, all) =
 	      exp((I_COMPLEX * ((W_TYPE)2.0) * ((W_TYPE)M_PI) * freq) * weights(all, all, bi, all) / SPEED_OF_LIGHT_MS);
-#endif
       }
       else
       {
 	  weights(all, all, bi, all) = complex<W_TYPE>(0.0, 0.0);
       }
   }
-  
-  //cout << "M0(t=0) = " << weights(0, all, 0, 0) << endl;
-
-#if 0
-  for (int bi = 0; bi < m_ninstances; bi++)
-  {
-    Beamlet* beamlet = &m_beamlets[bi];
-    if (beamlet && beamlet->allocated())
-    {
-      W_TYPE freq = 0.0;
-      if (beamlet->spw())
-	{
-	  freq = beamlet->spw()->getFrequency(beamlet->subband());
-	}
-      weights(all, all, bi, all) =
-	exp((I_COMPLEX * ((W_TYPE)2.0) * ((W_TYPE)M_PI) * freq) * weights(all, all, bi, all) / SPEED_OF_LIGHT_MS);
-    }
-  }
-#endif
 
   //cout << "weights(t=0) = " << weights(0,all,0,0) << endl;
 

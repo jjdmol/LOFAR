@@ -77,7 +77,8 @@ namespace ABS
 
   inline double SpectralWindow::getFrequency(int subband) const
       {
-	  return (0.5 * m_width) + m_start + (subband * m_width);
+	//return (0.5 * m_width) + m_start + (subband * m_width);
+	return m_start + (subband * m_width);
       }
 };
 

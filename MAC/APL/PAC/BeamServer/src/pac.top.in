@@ -5,13 +5,13 @@ rspdriver=RSP:acceptor
 #intentially left empty
 
 [EPATest]
-beam_server=ABS:client
+beam_server=ABS:acceptor
 
 [SweepTest]
-beam_server=ABS:client
+beam_server=ABS:acceptor
 
 [SetFreq]
-beam_server=ABS:client
+beam_server=ABS:acceptor
 
 [EPAStub]
 #intenionally left empty

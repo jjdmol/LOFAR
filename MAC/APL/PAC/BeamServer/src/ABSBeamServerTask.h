@@ -56,6 +56,11 @@ namespace ABS
 	// state methods
 
 	/**
+	 * Method to clean up disconnected client ports.
+	 */
+	void collect_garbage();
+
+	/**
 	 * @return true if ready to transition to the enabled
 	 * state.
 	 */
@@ -144,6 +149,7 @@ namespace ABS
 	 */
 	void send_sbselection();
 
+#if 0
 	/**
 	 * Defer an event from m_client to the save queue
 	 * for later processing.
@@ -164,6 +170,7 @@ namespace ABS
 	 * Clear the saveq.
 	 */
 	void saveq_clear();
+#endif
 
     private:
 	// member variables
@@ -174,14 +181,14 @@ namespace ABS
 	std::map<int, SpectralWindow*> m_spws;
 
 	/**
-	 * Set of currently allocated beams by index.
-	 */
-	std::set<Beam*> m_beams;
-
-	/**
 	 * Current subband selection
 	 */
 	std::map<int, int> m_sbsel;
+
+	/**
+	 * Set of curently allocated beams.
+	 */
+	std::set<Beam*> m_beams;
 
 	/**
 	 * Current WG settings.
@@ -205,7 +212,12 @@ namespace ABS
 
     private:
 	// ports
-	GCFPort          m_client;
+	GCFTCPPort       m_acceptor; // list for clients on this port
+	std::list<GCFPortInterface*> m_client_list; // list of currently connected clients
+	std::list<GCFPortInterface*> m_garbage_list; // list of disconnected clients to be removed
+
+	std::map<GCFPortInterface*, std::set<int> > m_client_beams; // mapping from client port to set of beam handles
+
 	GCFPort          m_rspdriver;
 	std::list<char*> m_saveq;
 	bool             m_subbands_modified;

@@ -61,12 +61,13 @@ libabs_la_SOURCES = \
 	ABSBeam.cc \
 	ABSBeamlet.h \
 	ABSBeamlet.cc \
-	ABSBeamletStats.h \
-	ABSBeamletStats.cc \
-	ABSBeamletStatsPSet.h \
 	gnuplot_i.h \
 	gnuplot_i.cc \
 	$(top_builddir)/src/ABS_Protocol.cc
+
+#	ABSBeamletStats.h \
+#	ABSBeamletStats.cc \
+#	ABSBeamletStatsPSet.h
 
 bin_PROGRAMS = BeamServer
 
