@@ -69,7 +69,7 @@ using namespace RSP_Protocol;
 
 #define SCALE (1<<(16-2))
 
-#define SYSTEM_CLOCK_FREQ 80e6 // 80 MHz
+#define SYSTEM_CLOCK_FREQ 120e6 // 120 MHz
 
 BeamServerTask::BeamServerTask(string name)
     : GCFTask((State)&BeamServerTask::initial, name),
@@ -88,7 +88,7 @@ BeamServerTask::BeamServerTask(string name)
   (void)Beamlet::init(MEPHeader::N_BEAMLETS);
 
   m_wgsetting.frequency     = 1.5625e6; // 1.5625 MHz
-  m_wgsetting.amplitude     = 0x8000 / 256;
+  m_wgsetting.amplitude     = 128;
   m_wgsetting.enabled       = false;
 
   m_pos = 0;
@@ -514,8 +514,12 @@ void BeamServerTask::wgsettings_action(ABSWgsettingsEvent& wgs,
   sa.status = ABS_Protocol::SUCCESS;
 
   // max allowed frequency = 20MHz
+#if 0
   if ((wgs.frequency >= 1e-6)
       && (wgs.frequency <= SYSTEM_CLOCK_FREQ/4.0))
+#else
+  if (1)
+#endif
   {
     m_wgsetting.frequency     = wgs.frequency;
     m_wgsetting.amplitude     = wgs.amplitude;
@@ -541,8 +545,9 @@ void BeamServerTask::wgenable_action()
   // scale and convert to uint16
   wg.settings()(0).freq = (uint16)(((m_wgsetting.frequency * (1 << 16)) / SYSTEM_CLOCK_FREQ) + 0.5);
   wg.settings()(0).ampl = m_wgsetting.amplitude;
-  wg.settings()(0).nof_samples = 0;
-  wg.settings()(0).mode = WGSettings::MODE_SINE;
+  wg.settings()(0).phase = 0;
+  wg.settings()(0).nof_samples = 512;
+  wg.settings()(0).mode = WGSettings::MODE_USER_REPEAT;
   wg.settings()(0)._pad = 0; /* stop valgrind complaining */
 
   m_rspdriver.send(wg);
@@ -558,6 +563,7 @@ void BeamServerTask::wgdisable_action()
   wg.settings().resize(1);
   wg.settings()(0).freq = 0;
   wg.settings()(0).ampl = 0;
+  wg.settings()(0).phase = 0;
   wg.settings()(0).nof_samples = 0;
   wg.settings()(0).mode = WGSettings::MODE_OFF;
   wg.settings()(0)._pad = 0; /* stop valgrind complaining */
