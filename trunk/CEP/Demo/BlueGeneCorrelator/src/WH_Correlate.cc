@@ -51,7 +51,14 @@ WH_Correlate::WH_Correlate(const string& name,
     getDataManager().addInDataHolder(i, 
 				     new DH_CorrCube(string("in_")+str));
     getDataManager().addOutDataHolder(i, 
-				      new DH_Vis(string("out_")+str));
+				      new DH_Vis(string("out_")+str)); 
+  }
+
+  if (myrank == 0) {
+
+    (void*)sig_buf  = malloc(NSTATIONS*NSAMPLES*NCHANNELS*sizeof(DH_CorrCube::BufferType));
+    (void*)corr_buf = malloc(NSTATIONS*NSTATIONS*NCHANNELS*sizeof(DH_Vis::BufferType));
+
   }
 }
 
@@ -372,7 +379,7 @@ void WH_Correlate::master() {
 	     SEND_TASK_ID, 
 	     MPI_COMM_WORLD);
 
-    MPI_Send(&sig_buf, //+(task_id*NSTATIONS*NSAMPLES),
+    MPI_Send(sig_buf+task_id*NSTATIONS*NSAMPLES,
 	     NSTATIONS*NSAMPLES,
 	     my_complex,
 	     i, 
@@ -397,7 +404,7 @@ void WH_Correlate::master() {
       
       sending_node = status.MPI_SOURCE;
 
-      MPI_Recv(&corr_buf,//+(result_id*NSTATIONS*NSTATIONS), 
+      MPI_Recv(corr_buf+result_id*NSTATIONS*NSTATIONS, 
 	       NSTATIONS*NSTATIONS,
 	       my_complex,
 	       sending_node,
@@ -413,7 +420,7 @@ void WH_Correlate::master() {
 	       SEND_TASK_ID,
 	       MPI_COMM_WORLD);
 
-      MPI_Send(&sig_buf,//+(task_id*NSTATIONS*NSAMPLES),
+      MPI_Send(sig_buf+task_id*NSTATIONS*NSAMPLES,
 	       NSTATIONS*NSAMPLES, 
 	       my_complex,
 	       sending_node,
@@ -439,7 +446,7 @@ void WH_Correlate::master() {
       sending_node = status.MPI_SOURCE;
 
       /* Receive the corresponding result matrix */ 
-      MPI_Recv(&corr_buf,//+(result_id*NSTATIONS*NSTATIONS),
+      MPI_Recv(corr_buf+result_id*NSTATIONS*NSTATIONS,
 	       NSTATIONS*NSTATIONS,
 	       my_complex,
 	       sending_node,
