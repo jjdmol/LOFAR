@@ -1,3 +1,25 @@
+//# Example.cc: Test program for basic libTransport classes
+//#
+//# Copyright (C) 2004
+//# ASTRON (Netherlands Foundation for Research in Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//# This program is free software; you can redistribute it and/or modify
+//# it under the terms of the GNU General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or
+//# (at your option) any later version.
+//#
+//# This program is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License
+//# along with this program; if not, write to the Free Software
+//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//# $Id$
+
 #include <iostream>
 
 #include <libTransport/Transporter.h>
@@ -14,30 +36,27 @@ int main()
   DH_Example DH1("dh1", 1);
   DH_Example DH2("dh2", 1);
     
-  // Create the Transporter objects containing the DataHolders
-  Transporter TR1(&DH1);
-  Transporter TR2(&DH2);
-    
   // Assign an ID for each transporter by hand for now
   // This will be done by the framework later on
+  Transporter& TR1 = DH1.getTransporter();
+  Transporter& TR2 = DH2.getTransporter();
   TR1.setItsID(1);
   TR2.setItsID(2);
 
   // TH_Mem doesn't implement a blocking send
   TR1.setIsBlocking(false);
   TR2.setIsBlocking(false);
-  
 
-  TR1.setSourceAddr(TR1.getBaseDataHolder());
-  TR2.setSourceAddr(TR2.getBaseDataHolder());
+  TR1.setSourceAddr(&DH1);
+  TR2.setSourceAddr(&DH2);
   //  TR2.setSourceAddr(15);
   
   // connect DH1 to DH2
   TR2.connectTo(&TR1, TH_Mem::proto);
     
   // initialize the DataHolders
-  DH1.init();
-  DH2.init();
+  TR1.init();
+  TR2.init();
     
   // fill the DataHolders with some initial data
   DH1.getBuffer()[0] = fcomplex(17,-3.5);
