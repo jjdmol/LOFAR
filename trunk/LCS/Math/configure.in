@@ -54,7 +54,6 @@ lofar_DEBUG_OPTIMIZE
 #lofar_QT
 lofar_QATOOLS
 lofar_DOCXX
-lofar_AIPSPP
 lofar_BLITZ(1)
 lofar_FFTW
 lofar_LAPACK
