@@ -1597,22 +1597,25 @@ void MeqCalibrater::saveParms()
 
 //----------------------------------------------------------------------
 //
-// ~saveAllParms
+// ~saveAllSolvableParms
 //
-// Save all parameters.
+// Save all solvable parameters.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::saveAllParms()
+void MeqCalibrater::saveAllSolvableParms()
 {
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
-  cdebug(1) << "saveAllParms" << endl;
+  cdebug(1) << "saveAllSolvableParms" << endl;
 
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
        iter++)
   {
+    if ((*iter)->isSolvable())
+    {
       (*iter)->save();
+    }
   }
   // Unlock the parm tables.
   itsMEP.unlock();
@@ -2383,7 +2386,7 @@ void MeqCalibrater::getParmValues (vector<string>& names,
        iter != parmList.end();
        iter++)
   {
-    if (itsIsParmSolvable[i]) {
+    if ((*iter)->isSolvable()) {
       names.push_back ((*iter)->getName());
       (*iter)->getCurrentValue (val, false);
       values.push_back (val);

@@ -31,9 +31,10 @@
 #include <PSS3/Quality.h>
 
 //# Forward Declarations
-class Calibrator;
+class CalibratorOld;
 
-// This is a base class for all calibration strategies.
+/* This is an abstract base class for all calibration strategies.
+*/
 
 class StrategyImpl
 {
@@ -48,10 +49,16 @@ public:
  		       vector<string>& resultParmNames,// Solved parameters
 		       vector<double>& resultParmValues, // Solved parameter values
 		       Quality& resultQuality,        // Fitness of solution
-		       int& resultIterNo) = 0;       // Source number of solution
+		       int& resultIterNo) = 0;        // Source number of solution
    
   /// Get strategy implementation type
   virtual string getType() const = 0;
+
+  virtual void useParms(const vector<string>& parmNames,
+			const vector<double>& parmValues,
+			const vector<int>& srcNumbers) {};// Use these 
+                                                          // parameter 
+                                                          // values
 
  private:
 };

@@ -31,10 +31,10 @@
 #include <PSS3/Quality.h>
 
 //# Forward Declarations
-class Calibrator;
+class CalibratorOld;
 class StrategyImpl;
 
-// This class defines the interface to calibration strategies. It creates
+// This class defines an interface to calibration strategies. It creates
 // and contains a reference to a concrete calibration strategy implementation 
 // (StrategyImpl class). (Bridge pattern)
 
@@ -42,7 +42,7 @@ class StrategyImpl;
 class Strategy
 {
 public:
-  Strategy(int strategyNo, Calibrator* cal, int varArgSize, char* varArgs);
+  Strategy(int strategyNo, CalibratorOld* cal, int varArgSize, char* varArgs);
 
   virtual ~Strategy();
 
@@ -51,7 +51,11 @@ public:
 	       vector<string>& resultParmNames,// Solved parameters
 	       vector<double>& resultParmValues, // Solved parameter values
 	       Quality& resultQuality,        // Fitness of solution
-	       int& resultIterNo);           // Source number of solution    
+	       int& resultIterNo);            // Source number of solution    
+  
+  bool useParms(const vector<string>& pNames,
+		const vector<double>& pValues,
+		const vector<int>& srcNumbers);  // Use these parameter values
 
  private:
   StrategyImpl* itsImpl;      // The strategy implementation

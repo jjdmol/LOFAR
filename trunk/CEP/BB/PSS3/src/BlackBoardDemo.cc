@@ -162,7 +162,7 @@ void BlackBoardDemo::define(const KeyValueMap& params)
 
   for (int index = 0; index < itsNumberKS; index++)
   {
-    itsKSSteps[index]->connect(itsKSInSteps[index], 0, 0, 1, TH_Database::proto);
+    itsKSSteps[index]->connect(itsKSInSteps[index], 0, 0, 2, TH_Database::proto);
   }
 
   for (int index = 0; index < itsNumberKS; index++)

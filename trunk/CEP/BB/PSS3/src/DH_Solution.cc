@@ -30,6 +30,13 @@
 
 using namespace LOFAR;
 
+string dtos(double dbl) // Convert double to string
+{
+  char buf[10];
+  sprintf(buf, "%.15g", dbl);
+  return buf;
+}
+
 DH_Solution::DH_Solution (const string& name, const string& type)
   : DH_Postgresql    (name, "DH_Solution"),
     itsType          (type),
@@ -87,16 +94,16 @@ bool DH_Solution::StoreInDatabase(int, int, char*, int)
 
   for (int sourceNo = 1; sourceNo <= 10; sourceNo++)
   {
-    q1 << getRAValue(sourceNo) << ", "
-       << getDECValue(sourceNo) << ", "
-       << getStokesIValue(sourceNo) << ", ";
+    q1 << dtos(getRAValue(sourceNo))  << ", "
+       << dtos(getDECValue(sourceNo)) << ", "
+       << dtos(getStokesIValue(sourceNo)) << ", ";
   }
   
   q1 << getIterationNo() << ", "
-     << getQuality()->itsFit << ", "
-     << getQuality()->itsMu << ", "
-     << getQuality()->itsStddev << ", "
-     << getQuality()->itsChi << "); ";
+     << dtos(getQuality()->itsFit) << ", "
+     << dtos(getQuality()->itsMu) << ", "
+     << dtos(getQuality()->itsStddev) << ", "
+     << dtos(getQuality()->itsChi) << "); ";
   
   TRACER1("DH_Solution::StoreInDatabase <<< Insert Solution QUERY: " 
 	  << q1.str ());
@@ -134,7 +141,7 @@ bool DH_Solution::RetrieveFromDatabase(int, int, char*, int)
     // Block until a packet appears in the table
     do 
       {
-	cerr << '.';
+	//	cerr << '.';
 	res1 = PQexec (DH_Postgresql::theirConnection, (q1.str ()).c_str ());
     
 	AssertStr (PQresultStatus (res1) == PGRES_TUPLES_OK,
@@ -163,7 +170,7 @@ bool DH_Solution::RetrieveFromDatabase(int, int, char*, int)
     // Block until a packet appears in the table
     do 
       {
-	cerr << '.';
+	//	cerr << '.';
 	res2 = PQexec (DH_Postgresql::theirConnection, (q2.str ()).c_str ());
     
 	AssertStr (PQresultStatus (res2) == PGRES_TUPLES_OK,
@@ -178,9 +185,9 @@ bool DH_Solution::RetrieveFromDatabase(int, int, char*, int)
     for (int sourceNo = 1; sourceNo <= 10; sourceNo++)
     { 
       base = 3*sourceNo;
-      setRAValue(sourceNo, atoi(PQgetvalue(res2, 0, base-1)));
-      setDECValue(sourceNo, atoi(PQgetvalue(res2, 0, base)));
-      setStokesIValue(sourceNo, atoi(PQgetvalue(res2, 0, base+1)));
+      setRAValue(sourceNo, atof(PQgetvalue(res2, 0, base-1)));
+      setDECValue(sourceNo, atof(PQgetvalue(res2, 0, base)));
+      setStokesIValue(sourceNo, atof(PQgetvalue(res2, 0, base+1)));
     }
 
      PQclear (res2);
@@ -203,7 +210,7 @@ bool DH_Solution::RetrieveFromDatabase(int, int, char*, int)
     // Block until a packet appears in the table
     do 
       {
-	cerr << '.';
+	//	cerr << '.';
 	resSol = PQexec (DH_Postgresql::theirConnection, (q1.str ()).c_str ());
     
 	AssertStr (PQresultStatus (resSol) == PGRES_TUPLES_OK,
@@ -221,14 +228,14 @@ bool DH_Solution::RetrieveFromDatabase(int, int, char*, int)
     for (int sourceNo = 1; sourceNo <= 10; sourceNo++)
     { 
       base = 3*sourceNo;
-      setRAValue(sourceNo, atoi(PQgetvalue(resSol, 0, base-1)));
-      setDECValue(sourceNo, atoi(PQgetvalue(resSol, 0, base)));
-      setStokesIValue(sourceNo, atoi(PQgetvalue(resSol, 0, base+1)));
+      setRAValue(sourceNo, atof(PQgetvalue(resSol, 0, base-1)));
+      setDECValue(sourceNo, atof(PQgetvalue(resSol, 0, base)));
+      setStokesIValue(sourceNo, atof(PQgetvalue(resSol, 0, base+1)));
     }
 
     PQclear (resSol);
 
-    TRACER1("------ End of Controller read from database --------");
+    TRACER1("------ End of Knowledge Source read from BlackBoard --------");
   }
 
   return true;

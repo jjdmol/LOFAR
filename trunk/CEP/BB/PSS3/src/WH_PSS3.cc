@@ -30,28 +30,14 @@
 #include <Common/Debug.h>
 #include <PSS3/DH_WorkOrder.h>
 #include <PSS3/DH_Solution.h>
-#include <PSS3/Calibrator.h>
+#include <PSS3/CalibratorOld.h>
 #include <PSS3/Strategy.h>
 
 using namespace LOFAR;
 
 const int DefaultAntennaCount = 21;
 
-// WH_PSS3::WH_PSS3 (const string& name,  bool outputAllIter, int number)
-//   : WorkHolder        (1, 1, name, "WH_PSS3"),
-//     itsCal            (0),
-//     itsOutputAllIter  (outputAllIter),
-//     itsNumber         (number)
-
-// {
-//   TRACER4("WH_PSS3 construction");
-//   getDataManager().addInDataHolder(0, new DH_WorkOrder("in_0", "KS")); 
-//   getDataManager().addOutDataHolder(0, new DH_WorkOrder("out_0", "KS"),
-//    				    true);
-//   // switch output channel trigger off
-//   getDataManager().setAutoTriggerOut(0, false);
-// }
-
+const int MaxNumberOfParms = 30;
 
 WH_PSS3::WH_PSS3 (const string& name, const string & msName, 
 		  const string& meqModel, const string& skyModel,
@@ -79,7 +65,7 @@ WH_PSS3::WH_PSS3 (const string& name, const string & msName,
 
 {
   TRACER4("WH_PSS3 construction");
-  getDataManager().addInDataHolder(0, new DH_WorkOrder("in_0"));
+  getDataManager().addInDataHolder(0, new DH_WorkOrder(name));
   getDataManager().addInDataHolder(1, new DH_Solution("in_1", "KS"));
   getDataManager().addOutDataHolder(0, new DH_Solution("out_0", "KS"),true);
   // switch input and output channel trigger off
@@ -91,21 +77,17 @@ WH_PSS3::WH_PSS3 (const string& name, const string & msName,
     itsAnt1.push_back (4 * i);
     itsAnt2.push_back (4 * i);
   }
-
 }
 
 WH_PSS3::~WH_PSS3()
 {
   TRACER4("WH_PSS3 destructor");
-  if (itsCal != 0)
-  {
-    delete itsCal;
-  }
+  if (itsCal != 0)    
+  {                  
+    delete itsCal;   
+  }                  
 }
-// WH_PSS3* WH_PSS3::make (const string& name)
-// {
-//   return new WH_PSS3 (name, itsOutputAllIter, itsNumber);
-// }
+
 
 WH_PSS3* WH_PSS3::make (const string& name)
 {
@@ -118,8 +100,8 @@ WH_PSS3* WH_PSS3::make (const string& name)
 void WH_PSS3::preprocess()
 {
   TRACER4("WH_PSS3 preprocess()");
-  itsCal = new Calibrator(itsMSName, itsMeqModel, itsSkyModel, itsDbType, 
-			  itsDbName, itsDbPwd);
+  itsCal = new CalibratorOld(itsMSName, itsMeqModel, itsSkyModel, itsDbType, 
+			     itsDbName, itsDbPwd);
 }
 
 void WH_PSS3::process()
@@ -142,15 +124,20 @@ void WH_PSS3::process()
   if (inp->getSolutionNumber() != -1)
   {
     TRACER1("Use start solution number " << inp->getSolutionNumber());
-    DH_Solution* solObj = (DH_Solution*)getDataManager().getGeneralInHolder(1);
+    DH_Solution* solObj = (DH_Solution*)getDataManager().getInHolder(1);
     solObj->setSolutionID(inp->getSolutionNumber());
+    getDataManager().readyWithInHolder(1);
+    vector<string> startNames;
+    vector<double> startValues;
+    vector<int> startSource;
     startSol = (DH_Solution*)getDataManager().getInHolder(1);
-    // To do: Use a previous solution    
+    putSolutionIntoVectors(startSol, startNames, startValues, startSource);
+    strat.useParms(startNames, startValues,startSource); 
     getDataManager().readyWithInHolder(1);
   }
 
-  vector<string> resPNames(3);
-  vector<double> resPValues(3);
+  vector<string> resPNames(MaxNumberOfParms);
+  vector<double> resPValues(MaxNumberOfParms);
   int iterNo = -1;
 
   DH_Solution* outp;
@@ -165,20 +152,8 @@ void WH_PSS3::process()
     TRACER1("Executed strategy");
     outp = (DH_Solution*)getDataManager().getOutHolder(0);
     outp->setWorkOrderID(inp->getWorkOrderID());
-    int size = resPNames[0].size();
-    int sourceNo = atoi(&resPNames[0][size-1]);
-    if (sourceNo == 0)          // If source number is 10
-    {
-      outp->setRAValue(10, resPValues[0]);
-      outp->setDECValue(10, resPValues[1]);
-      outp->setStokesIValue(10, resPValues[2]);
-    }
-    else 
-    {
-      outp->setRAValue(sourceNo, resPValues[0]);
-      outp->setDECValue(sourceNo, resPValues[1]);
-      outp->setStokesIValue(sourceNo, resPValues[2]);
-    }
+
+    putVectorsIntoSolution(outp, resPNames, resPValues);
 
     outp->setIterationNo(iterNo);
     outp->getQuality()->itsFit = resQuality.itsFit;
@@ -205,3 +180,61 @@ void WH_PSS3::dump()
 {
 }
 
+void WH_PSS3::putVectorsIntoSolution(DH_Solution* dh, const vector<string>& pNames, 
+				const vector<double>& pValues)
+{
+  // Warning: this method assumes there are always 3 parameters solved for
+  //          each source!
+  DbgAssertStr(pNames.size() == pValues.size(), 
+	       "Sizes of resulting name and values vectors are not equal");
+  int numberOfSources = pNames.size()/3;
+  int index;
+  int strSize;
+  int sourceNo;
+  for (int count = 0; count < numberOfSources; count++)
+  {
+    index = count * 3;
+    strSize = pNames[index].size();
+    sourceNo = atoi(&pNames[index][strSize-1]);
+    if (sourceNo == 0)          // If source number is 10
+    {
+      sourceNo = 10;
+    }
+    dh->setRAValue(sourceNo, pValues[index]);
+    dh->setDECValue(sourceNo, pValues[index+1]);
+    dh->setStokesIValue(sourceNo, pValues[index+2]);
+  }
+}
+
+void WH_PSS3::putSolutionIntoVectors(DH_Solution* dh, vector<string>& pNames, 
+				     vector<double>& pValues, vector<int>& pSources)
+{
+  // Warning: this method assumes there are always 3 parameters solved for
+  //          each source and maximum number of sources is 10
+
+  TRACER1("WH_PSS3::putSolutionIntoVectors");
+
+  string RAname = "RA.CP";
+  string DECname = "DEC.CP";
+  string StokesIname = "StokesI.CP";
+
+  for (int srcNo = 1; srcNo <= 10; srcNo++)
+  {
+    if (dh->getRAValue(srcNo) != 0)
+    {
+      char* src;
+      sprintf(src, "%d", srcNo);
+      RAname += src;
+      pNames.push_back(RAname);
+      pValues.push_back(dh->getRAValue(srcNo));
+      pSources.push_back(srcNo);
+      DECname += src;
+      pNames.push_back(DECname);
+      pValues.push_back(dh->getDECValue(srcNo));
+      StokesIname += src;
+      pNames.push_back(StokesIname);
+      pValues.push_back(dh->getStokesIValue(srcNo));
+    }
+  }
+  
+}

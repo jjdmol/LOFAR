@@ -31,6 +31,8 @@
 #include <PSS3/DH_WorkOrder.h>
 #include <PSS3/DH_Solution.h>
 #include <PSS3/SI_Peeling.h>
+#include <PSS3/SI_Simple.h>
+#include <PSS3/SI_WaterCal.h>
 
 using namespace LOFAR;
 
@@ -56,36 +58,86 @@ void WH_Evaluate::process()
 {
   TRACER3("WH_Evaluate process()");
 
-  // Define new work order
-  DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
-  outp->setStatus(DH_WorkOrder::New);
-  outp->setKSType("PSS3");
-  outp->setStrategyNo(1);
+//   // Define new simple work order
+//   DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
+//   outp->setStatus(DH_WorkOrder::New);
+//   outp->setKSType("KS");
+//   outp->setStrategyNo(1);
+//   // Set arguments for peeling
+//   int size = sizeof(SI_Simple::Simple_data);
+//   outp->setArgSize(size);
+//   SI_Simple::Simple_data* data = 
+//     (SI_Simple::Simple_data*)outp->getVarArgsPtr();
+//   data->nIter = 20;
+//   data->nSources = 2;
+//   data->timeInterval = 3600.;
+//   // To be added: Set parameter names
+//   getDataManager().readyWithOutHolder(0);
+
+//   // Define new peeling work order
+//   DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
+//   outp->setStatus(DH_WorkOrder::New);
+//   outp->setKSType("KS");
+//   outp->setStrategyNo(2);
+//   // Set arguments for peeling
+//   int size = sizeof(SI_Peeling::Peeling_data);
+//   outp->setArgSize(size);
+//   SI_Peeling::Peeling_data* data = 
+//     (SI_Peeling::Peeling_data*)outp->getVarArgsPtr();
+//   data->nIter = 4;
+//   data->nSources = 1;
+//   data->startSource = 1;
+//   data->timeInterval = 3600.;
+//   // To be added: Set parameter names
+//   getDataManager().readyWithOutHolder(0);
+
+//   // Define next peeling work order
+//   DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
+//   outp->setStatus(DH_WorkOrder::New);
+//   outp->setKSType("KS");
+//   outp->setStrategyNo(2);
+//   // Set arguments for peeling
+//   int size = sizeof(SI_Peeling::Peeling_data);
+//   outp->setArgSize(size);
+//   SI_Peeling::Peeling_data* data = (SI_Peeling::Peeling_data*)outp->getVarArgsPtr();
+//   data->nIter = 5;
+//   data->nSources = 2;
+//   data->startSource = 1;
+//   data->timeInterval = 3600.;
+//   // To be added: set parameter names
+//   getDataManager().readyWithOutHolder(0);
+
+  // Define next WaterCal work order
+   DH_WorkOrder* outp3 = (DH_WorkOrder*)getDataManager().getOutHolder(0);
+  outp3->setStatus(DH_WorkOrder::New);
+  outp3->setKSType("KS1");
+  outp3->setStrategyNo(3);
+  //outp3->useSolutionNumber(10005);
   // Set arguments for peeling
-  int size = sizeof(SI_Peeling::Peeling_data);
-  outp->setArgSize(size);
-  SI_Peeling::Peeling_data* data = 
-    (SI_Peeling::Peeling_data*)outp->getVarArgsPtr();
-  data->nIter = 15;
-  data->nSources = 1;
-  data->startSource = 1;
-  data->timeInterval = 3600.;
-  // To be added: Set parameter names
+  int size3 = sizeof(SI_WaterCal::WaterCal_data);
+  outp3->setArgSize(size3);
+  SI_WaterCal::WaterCal_data* data3 = 
+    (SI_WaterCal::WaterCal_data*)outp3->getVarArgsPtr();
+  data3->nIter = 5;
+  data3->sourceNo = 1;
+  data3->timeInterval = 3600.;
+  // To be added: set parameter names
   getDataManager().readyWithOutHolder(0);
 
-  // Define next work order
-  outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
-  outp->setStatus(DH_WorkOrder::New);
-  outp->setKSType("PSS3");
-  outp->setStrategyNo(1);
+  // Define next WaterCal work order
+   DH_WorkOrder* outp4 = (DH_WorkOrder*)getDataManager().getOutHolder(0);
+  outp4->setStatus(DH_WorkOrder::New);
+  outp4->setKSType("KS2");
+  outp4->setStrategyNo(3);
+  outp4->useSolutionNumber(10004);
   // Set arguments for peeling
-  size = sizeof(SI_Peeling::Peeling_data);
-  outp->setArgSize(size);
-  data = (SI_Peeling::Peeling_data*)outp->getVarArgsPtr();
-  data->nIter = 15;
-  data->nSources = 1;
-  data->startSource = 2;
-  data->timeInterval = 3600.;
+  int size4 = sizeof(SI_WaterCal::WaterCal_data);
+  outp4->setArgSize(size4);
+  SI_WaterCal::WaterCal_data* data4 = 
+    (SI_WaterCal::WaterCal_data*)outp4->getVarArgsPtr();
+  data4->nIter = 5;
+  data4->sourceNo = 2;
+  data4->timeInterval = 3600.;
   // To be added: set parameter names
   getDataManager().readyWithOutHolder(0);
 }

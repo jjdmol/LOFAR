@@ -133,8 +133,8 @@ public:
   //! Save solved parameters to the MEP database.
   void saveParms();
 
-  //! Save all parameters to the MEP database.
-  void saveAllParms();
+  //! Save all solvable parameters to the MEP database.
+  void saveAllSolvableParms();
 
   /*!
    * Save residual data in the itsResColName column.

@@ -1,4 +1,4 @@
-//#  SI_Peeling.h: The peeling calibration strategy
+//#  SI_Simple.h: A simple calibration strategy
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef PSS3_SI_PEELING_H
-#define PSS3_SI_PEELING_H
+#ifndef PSS3_SI_SIMPLE_H
+#define PSS3_SI_SIMPLE_H
 
 #include <lofar_config.h>
 
@@ -31,25 +31,23 @@
 
 //# Forward Declarations
 
-// This is a class which implements the peeling strategy.
-// This strategy solves for a number of sources. It starts with solving all 
-// parameters of one source (all iterations and intervals) and then moves 
-// on to the next source.
+// This is a class which implements a simple calibration strategy.
+// This strategy solves for all parameters of a number of sources at the same
+// time.
 
-class SI_Peeling : public StrategyImpl
+class SI_Simple : public StrategyImpl
 {
 public:
 
- typedef struct {       // Struct containing data specific for peeling strategy
+ typedef struct {       // Struct containing data specific for simple strategy
    int    nIter;
    int    nSources;
-   int    startSource;
    double timeInterval;
- }Peeling_data;
+ }Simple_data;
 
-  SI_Peeling(CalibratorOld* cal, int argSize, char* args);
+  SI_Simple(CalibratorOld* cal, int argSize, char* args);
 
-  virtual ~SI_Peeling();
+  virtual ~SI_Simple();
 
   /// Execute the strategy
   virtual bool execute(vector<string>& parmNames,      // Parameters for which
@@ -63,21 +61,19 @@ public:
   virtual string getType() const;
 
  private:
-  SI_Peeling(const SI_Peeling&);
-  SI_Peeling& operator=(const SI_Peeling&);
+  SI_Simple(const SI_Simple&);
+  SI_Simple& operator=(const SI_Simple&);
 
   CalibratorOld*    itsCal;             // The calibrator
   int            itsNIter;           // Number of iterations
   int            itsNSources;        // Number of sources for which to solve
   double         itsTimeInterval;    // Time interval for which to solve
   int            itsCurIter;         // The current iteration
-  int            itsStartSource;     // Start source number
-  int            itsCurSource;       // The current source
   bool           itsFirstCall;
 };
 
-inline string SI_Peeling::getType() const
-{ return "Peeling"; }
+inline string SI_Simple::getType() const
+{ return "Simple"; }
 
 
 #endif

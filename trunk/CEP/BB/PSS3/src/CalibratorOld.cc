@@ -274,14 +274,14 @@ void CalibratorOld::commitPeelSourcesAndMasks (void) {
 void CalibratorOld::Run (void) {
   itsPSS3CalibratorImpl -> solve (true);
 }
-/*
+
 void CalibratorOld::Run (vector<string>& resultParmNames,
-                      vector<double>& resultParmValues,
-                      Quality& resultQuality) {
+			 vector<double>& resultParmValues,
+			 Quality& resultQuality) {
   itsPSS3CalibratorImpl -> solve (false, resultParmNames, resultParmValues, 
                                   resultQuality);
 }
-*/
+
 void CalibratorOld::SubtractOptimizedSources (void) {
   itsPSS3CalibratorImpl -> saveResidualData ();
 }
@@ -290,6 +290,9 @@ void CalibratorOld::CommitOptimizedParameters (void) {
   itsPSS3CalibratorImpl -> saveParms ();
 }
 
+void CalibratorOld::commitAllSolvableParameters (void) {
+  itsPSS3CalibratorImpl -> saveAllSolvableParms ();
+}
 
 void CalibratorOld::getParmValues (vector<string>& names, 
 				vector<double>& values) {
