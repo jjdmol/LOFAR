@@ -97,7 +97,7 @@ int main (int argc, char *argv[])
 
   cout << endl << "END OF SIMUL on node " << rank << endl;
 
-  Simul2XML xml(&RingSim);
+  Simul2XML xml(RingSim);
   xml.write("ringsim.xml");
  
  
