@@ -66,7 +66,7 @@ MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
     if (name.substr(0,2) == "CP") {
       istringstream istr(name.substr(2));
       istr >> srcnr;
-      srcs.push_back (srcnr);
+      srcs[i] = srcnr-1;
     }
   }
   // Sort the srcnrs uniquely.
@@ -82,8 +82,8 @@ MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
     bool fnd = true;
     if (srcnrs.nelements() > 0) {
       fnd = false;
-      for (unsigned int i=0; i<srcnrs.nelements(); i++) {
-	if (srcnr == srcnrs[i]) {
+      for (unsigned int j=0; j<srcnrs.nelements(); j++) {
+	if (srcnr == srcnrs[j]) {
 	  fnd = true;
 	  break;
 	}
