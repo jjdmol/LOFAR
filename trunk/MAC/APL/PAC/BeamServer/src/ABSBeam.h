@@ -32,6 +32,7 @@
 #include <map>
 
 #include <blitz/array.h>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace ABS
 {
@@ -113,7 +114,7 @@ namespace ABS
 	   * @endcode
 	   * starting at time.
 	   */
-	  int convertPointings(struct timeval fromtime);
+	  int convertPointings(boost::posix_time::time_period period);
 
 	  /**
 	   * Get converted time-stamped coordinates from the queue.
@@ -158,7 +159,7 @@ namespace ABS
 	   */
 	  blitz::Array<double,2> m_azels; // az,el coordinates
 	  blitz::Array<double,2> m_lms;  // l,m coordinates
-	  struct timeval m_track_time;
+	  boost::posix_time::ptime m_track_time;
 
 	  /**
 	   * Set of beamlets belonging to this beam.

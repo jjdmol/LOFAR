@@ -9,6 +9,8 @@ prefix = "ABS"; // for the signal names
 // specify extra include files
 // e.g.
 include = '<sys/time.h>';
+include = '<boost/date_time/gregorian/gregorian.hpp>';
+include = '<boost/date_time/posix_time/posix_time.hpp>';
 
 prelude = << PRELUDE_END
 enum {
@@ -111,10 +113,11 @@ event = {
       param = {
             // time at which the new direction should be effective
 	    name = "time";
-	    type = "struct timeval";
+	    type = "boost::posix_time::ptime";
+	    init = "boost::posix_time::ptime(boost::gregorian::date(1970,1,1))";
       };
       param = {
-	    name = "type"; // 1 == J2000, 2 = AZEL, 3 = LMN
+	    name = "type"; // 1 == J2000, 2 = AZEL, 3 = LOFAR_LMN
 	    type = "int";
       };
       param = {

@@ -32,10 +32,12 @@
 #include "ABSBeamlet.h"
 
 #include <iostream>
-#include <sys/time.h>
+#include <time.h>
 #include <string.h>
 
 #include <netinet/in.h>
+
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #undef PACKAGE
 #undef VERSION
@@ -45,6 +47,8 @@ using namespace LOFAR;
 
 using namespace ABS;
 using namespace std;
+using namespace boost::posix_time;
+using namespace boost::gregorian;
 
 #define MAX_N_SPECTRAL_WINDOWS 1
 #define COMPUTE_INTERVAL 10
@@ -59,7 +63,6 @@ BeamServerTask::BeamServerTask(string name)
   client.init(*this, "client", GCFPortInterface::SPP, ABS_PROTOCOL);
   //board.init(*this, "board", GCFPortInterface::SAP, EPA_PROTOCOL, true);
 
-  // COMPUTE_INTERVAL seconds compute_interval
   (void)Beam::init(ABS_Protocol::N_BEAMLETS,
 		   UPDATE_INTERVAL, COMPUTE_INTERVAL);
   (void)Beamlet::init(ABS_Protocol::N_SUBBANDS);
@@ -148,165 +151,161 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
   static unsigned long compute_timer = (unsigned long)-1;
   
   switch (e.signal)
-  {
+    {
 #if 0
-      case F_ACCEPT_REQ_SIG:
-	  client.getPortProvider().accept();
-	  break;
+    case F_ACCEPT_REQ_SIG:
+      client.getPortProvider().accept();
+      break;
 #endif
-      case F_ENTRY_SIG:
+    case F_ENTRY_SIG:
       {
-	  struct timeval now;
+	ptime nowtime = from_time_t(time(0)); 
+	time_duration now = nowtime - ptime(date(1970,1,1));
 
-	  // start second timer, exactly on the next second
-	  gettimeofday(&now, 0);
+	// update timer, once every UPDATE_INTERVAL exactly on the second
+	update_timer = board.setTimer((2 * UPDATE_INTERVAL) -
+				      (now.total_seconds() % UPDATE_INTERVAL), 0,
+				      UPDATE_INTERVAL, 0);
 
-	  // update timer, once every UPDATE_INTERVAL exactly on the second
-	  update_timer = board.setTimer((2 * UPDATE_INTERVAL) -
-					(now.tv_sec % UPDATE_INTERVAL),
-					(long)1e6-now.tv_usec,
-					UPDATE_INTERVAL, 0);
-
-	  // compute timer, once every COMPUTE_INTERVAL exactly on the second
-	  compute_timer = board.setTimer((2 * COMPUTE_INTERVAL)
-					 - (now.tv_sec % COMPUTE_INTERVAL),
-					 (long)1e6-now.tv_usec,
-					 COMPUTE_INTERVAL, 0);
+	// compute timer, once every COMPUTE_INTERVAL exactly on the second
+	compute_timer = board.setTimer((2 * COMPUTE_INTERVAL)
+				       - (now.total_seconds() % COMPUTE_INTERVAL), 0,
+				       COMPUTE_INTERVAL, 0);
       }
       break;
 
-      case F_TIMER_SIG:
+    case F_TIMER_SIG:
       {
-	  GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
-	  struct timeval now;
-	  gettimeofday(&now, 0);
+	GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
 
-	  LOG_INFO(formatString("timer=(%d,%d)", timer->sec, timer->usec));
-	  if (timer->id == update_timer)
+	LOG_INFO(formatString("timer=(%d,%d)", timer->sec, timer->usec));
+	if (timer->id == update_timer)
 	  {
-	      LOG_INFO(formatString("update_timer=(%d,%d)", now.tv_sec, now.tv_usec));
-	      compute_timeout_action();
+	    LOG_INFO(formatString("update_timer=(%d,%d)", timer->sec, timer->usec));
 	  }
-	  else if (timer->id == compute_timer)
+	else if (timer->id == compute_timer)
 	  {
-	      LOG_INFO(formatString("compute_timer=(%d,%d)", now.tv_sec, now.tv_usec));
+	    LOG_INFO(formatString("compute_timer=(%d,%d)", timer->sec, timer->usec));
+	    compute_timeout_action(timer->sec);
 	  }
-	  else
+	else
 	  {
-	      LOG_INFO(formatString("unknown timer %d", timer->id));
+	    LOG_INFO(formatString("unknown timer %d", timer->id));
 	  }
       }
       break;
 
-      case ABS_BEAMALLOC:
+    case ABS_BEAMALLOC:
       {
-	  ABSBeamallocEvent* event = static_cast<ABSBeamallocEvent*>(&e);
-	  beamalloc_action(event, port);
+	ABSBeamallocEvent* event = static_cast<ABSBeamallocEvent*>(&e);
+	beamalloc_action(event, port);
 
-	  if (m_beams.size() == 1)
+	if (m_beams.size() == 1)
 	  {
-	      // enable on the first beam
-	      wgenable_action();
+	    // enable on the first beam
+	    wgenable_action();
 	  }
       }
       break;
 
-      case ABS_BEAMFREE:
+    case ABS_BEAMFREE:
       {
-	  ABSBeamfreeEvent* event = static_cast<ABSBeamfreeEvent*>(&e);
-	  beamfree_action(event, port);
+	ABSBeamfreeEvent* event = static_cast<ABSBeamfreeEvent*>(&e);
+	beamfree_action(event, port);
 
-	  if (m_beams.size() == 0)
+	if (m_beams.size() == 0)
 	  {
-	      // no more beams, disable WG
-	      wgdisable_action();
+	    // no more beams, disable WG
+	    wgdisable_action();
 	  }
       }
       break;
 
-      case ABS_BEAMPOINTTO:
+    case ABS_BEAMPOINTTO:
       {
-	  ABSBeampointtoEvent* event = static_cast<ABSBeampointtoEvent*>(&e);
-	  beampointto_action(event, port);
+	ABSBeampointtoEvent* event = static_cast<ABSBeampointtoEvent*>(&e);
+	beampointto_action(event, port);
       }
       break;
 
-      case ABS_WGSETTINGS:
+    case ABS_WGSETTINGS:
       {
-	  ABSWgsettingsEvent* event = static_cast<ABSWgsettingsEvent*>(&e);
-	  wgsettings_action(event, port);
-	  if (m_wgsetting.enabled) wgenable_action();
+	ABSWgsettingsEvent* event = static_cast<ABSWgsettingsEvent*>(&e);
+	wgsettings_action(event, port);
+	if (m_wgsetting.enabled) wgenable_action();
       }
       break;
 
-      case ABS_WGENABLE:
+    case ABS_WGENABLE:
       {
-	  wgenable_action();
+	wgenable_action();
       }
       break;
 
-      case ABS_WGDISABLE:
+    case ABS_WGDISABLE:
       {
-	  wgdisable_action();
+	wgdisable_action();
       }
       break;
 
-      case F_DATAIN_SIG:
+    case F_DATAIN_SIG:
       {
-	  char data[ETH_DATA_LEN];
-	  // ignore DATAIN
-	  ssize_t length = board.recv(data, ETH_DATA_LEN);
-	  //cout << "received " << length << endl;
+	char data[ETH_DATA_LEN];
+	// ignore DATAIN
+	ssize_t length = board.recv(data, ETH_DATA_LEN);
+	//cout << "received " << length << endl;
 
-	  length=length; // keep compiler happy
+	length=length; // keep compiler happy
 
 #if 0
-	  EPADataEvent de;
+	EPADataEvent de;
 	  
-	  memcpy((void*)&de.fill, (void*)data, sizeof(de)-sizeof(GCFEvent));
+	memcpy((void*)&de.fill, (void*)data, sizeof(de)-sizeof(GCFEvent));
 
-	  cout << "sizeof(GCFEvent) = " << sizeof(GCFEvent) << endl;
-	  cout << "sizeof(de) = " << sizeof(de) << endl;
+	cout << "sizeof(GCFEvent) = " << sizeof(GCFEvent) << endl;
+	cout << "sizeof(de) = " << sizeof(de) << endl;
 #endif
 
-	  unsigned int* seqnr = (unsigned int*)&data[2];
-	  cerr << "seqnr=" << *seqnr << endl;
+#if 0
+	unsigned int* seqnr = (unsigned int*)&data[2];
+	cerr << "seqnr=" << *seqnr << endl;
+#endif
       }
       break;
 
-      case F_DATAOUT_SIG:
-	  LOG_DEBUG("dataout");
-	  break;
+    case F_DATAOUT_SIG:
+      LOG_DEBUG("dataout");
+      break;
 
-      case F_DISCONNECTED_SIG:
-     {
-	 LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
-
-	 TRAN(BeamServerTask::initial);
-     }
-     break;
-
-      case F_EXIT_SIG:
+    case F_DISCONNECTED_SIG:
       {
-	  // deallocate all beams
-	  for (set<Beam*>::iterator bi = m_beams.begin();
-	       bi != m_beams.end(); ++bi)
+	LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+
+	TRAN(BeamServerTask::initial);
+      }
+      break;
+
+    case F_EXIT_SIG:
+      {
+	// deallocate all beams
+	for (set<Beam*>::iterator bi = m_beams.begin();
+	     bi != m_beams.end(); ++bi)
 	  {
-	      (*bi)->deallocate();
+	    (*bi)->deallocate();
 	  }
 
-	  // disable the waveform generator
-	  wgdisable_action();
+	// disable the waveform generator
+	wgdisable_action();
 
-	  // cancel timers
-	  board.cancelAllTimers();
+	// cancel timers
+	board.cancelAllTimers();
       }
       break;
 
-      default:
-	  status = GCFEvent::NOT_HANDLED;
-	  break;
-  }
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+    }
 
   return status;
 }
@@ -458,20 +457,19 @@ void BeamServerTask::wgdisable_action()
  * This method is called once every second
  * to calculate the weights for all beamlets.
  */
-void BeamServerTask::compute_timeout_action()
+void BeamServerTask::compute_timeout_action(long current_seconds)
 {
   // convert_pointings for all beams for the next deadline
+  time_period compute_period = time_period(
+					   from_time_t((time_t)current_seconds)
+					   + time_duration(seconds(COMPUTE_INTERVAL)),
+					   seconds(COMPUTE_INTERVAL));
 
-  static struct timeval lasttime = { 0, 0 };
-  struct timeval fromtime = lasttime;
-  gettimeofday(&lasttime, 0);
-  lasttime.tv_sec += COMPUTE_INTERVAL;
-  
   // iterate over all beams
   for (set<Beam*>::iterator bi = m_beams.begin();
        bi != m_beams.end(); ++bi)
   {
-      (*bi)->convertPointings(fromtime);
+    (*bi)->convertPointings(compute_period);
   }
 
   calculate_weights();

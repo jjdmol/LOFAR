@@ -102,8 +102,9 @@ namespace ABS
 			      
 	/**
 	 * Time to compute some more weights.
+	 * @param current_seconds Time in seconds since 1 Jan 1970
 	 */
-	void compute_timeout_action();
+	void compute_timeout_action(long current_seconds);
 
 	/**
 	 * Calculate beam former weights.

@@ -29,6 +29,10 @@
 #include <blitz/array.h>
 using namespace blitz;
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+using namespace boost::gregorian;
+using namespace boost::posix_time;
+
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
@@ -47,7 +51,7 @@ unsigned short Beam::m_compute_interval = 0;
 //static const int _n_timesteps_var = Beam::N_TIMESTEPS;
 
 Beam::Beam() :
-    m_allocated(false), m_pointing(), m_index(-1)
+  m_allocated(false), m_pointing(), m_index(-1), m_track_time(date(1970,1,1))
 {}
 
 Beam::~Beam()
@@ -98,8 +102,8 @@ int Beam::init(int            ninstances,
   {
       // inplace constructor
       m_beams[i].m_index = i; // assign index
-      m_beams[i].m_azels.resize(2,compute_interval);
-      m_beams[i].m_lms.resize(2,compute_interval);
+      m_beams[i].m_azels.resize(compute_interval,2);
+      m_beams[i].m_lms.resize(compute_interval,2);
   }
 
   m_update_interval = update_interval;
@@ -181,93 +185,113 @@ int Beam::addPointing(const Pointing& pointing)
   return 0;
 }
 
-int Beam::convertPointings(struct timeval fromtime)
+int Beam::convertPointings(time_period period)
 {
+  // remember last pointing from previous call
+  Pointing current_pointing = m_pointing;
+
+  bool pset[m_compute_interval];
+  for (int i = 0; i < m_compute_interval; i++) pset[i] = false;
+
   // only works on allocated beams
   if (!allocated()) return -1;
 
-  Pointing from(Direction(0.0,0.0,Direction::LOFAR_LMN), fromtime);
-  struct timeval totime = fromtime;
-  totime.tv_sec += m_compute_interval;
-  Pointing deadline(Direction(0.0,0.0,Direction::LOFAR_LMN), totime);
-
-  // Always push the current pointing on the head
-  // of the queue. To make sure we continue
-  // with the current pointing
-  m_pointing.setTime(fromtime);
-  m_pointing_queue.push(m_pointing);
+  if (period.length().seconds() != m_compute_interval)
+  {
+    LOG_ERROR("invalid time period");
+    return -1;
+  }
 
   // update track starttime
-  m_track_time = fromtime;
+  m_track_time = period.begin();
 
   // reset azel, lm arrays
   m_azels = 0.0;
   m_lms = 0.0;
 
+  LOG_INFO_STR("Period=" << to_simple_string(period));
+
   do
   {
       Pointing pointing = m_pointing_queue.top();
 
-      if (pointing < from)
-      {
-	  // discard
-	  m_pointing_queue.pop();
+      LOG_INFO_STR("Pointing time=" << to_simple_string(pointing.time()));
 
-	  LOG_WARN(formatString("Deadline missed for pointing (%f,%f)",
-				pointing.direction().angle1(),
-				pointing.direction().angle2()));
+      if (pointing.direction().type() != Direction::LOFAR_LMN)
+      {
+	LOG_ERROR("Direction type not supported yet, pointing discarded.");
+	continue;
       }
-      else if ((pointing < deadline)
-	       || !pointing.isTimeSet())
+
+      if (pointing.time() < period.end())
       {
-	  // remove pointing, next pointing can be accessed as top().
-	  m_pointing_queue.pop();
-	  if (pointing.direction().type() != Direction::LOFAR_LMN)
-	  {
-	      LOG_ERROR("Direction type not supported yet, pointing discarded.");
-	  }
-	  else
-	  {
-	      Pointing p = pointing;
-	      Pointing nextp = m_pointing_queue.top();
+	  //
+	  // convert direction
+	  // INSERT COORDINATE CONVERSION CALL
+	  // converts from Direction -> AZEL
+	  //
 
-	      //
-	      // convert direction
-	      // INSERT COORDINATE CONVERSION CALL
-	      // converts from Direction -> AZEL
-	      //
+	  //
+	  // insert converted LM coordinate at correct 
+	  // position in the m_lms array
+	  //
+	  time_duration t = pointing.time() - period.begin();
 
-	      for (long sec = p.time().tv_sec;
-		   sec < nextp.time().tv_sec; sec++)
-	      {
-		  if ((sec < fromtime.tv_sec)
-		      || (sec >= fromtime.tv_sec + m_compute_interval))
-		  {
-		      LOG_ERROR("invalid time index");
-		  }
-		  else
-		  {
-		      //
-		      // TODO
-		      // convert poiting to AZEL,
-		      // store result in pointing
-		      //
-		      int t = (int)(sec - fromtime.tv_sec);
-		      m_lms[0][t] = p.direction().angle1();
-		      m_lms[1][t] = p.direction().angle2();
-		  }
-	      }
+	  if ( (t.seconds() < 0) || (t.seconds() >= m_compute_interval) )
+	  {
+	    LOG_ERROR_STR("invalid pointing time" << to_simple_string(pointing.time()));
+	    continue;
 	  }
+	  
+	  m_lms(t.seconds(),0) = pointing.direction().angle1();
+	  m_lms(t.seconds(),1) = pointing.direction().angle2();
+	  pset[t.seconds()] = true;
+
+	  m_pointing = pointing; // remember current pointing
+
+	  m_pointing_queue.pop(); // move on to next pointing
       }
-      else
+      else if (pointing.time() < period.begin())
       {
-	  // the current pointing should be updated
-	  m_pointing = pointing;
+	LOG_WARN(formatString("Deadline missed (%f,%f) @ %s",
+			      pointing.direction().angle1(),
+			      pointing.direction().angle2(),
+			      to_simple_string(pointing.time()).c_str()));
 
-	  break; // done
+	m_pointing_queue.pop(); // discard pointing
+      }
+      else if (pointing.time() >= period.end())
+      {
+	// done with this period
+	break;
       }
   } while (!m_pointing_queue.empty());
   
+  //
+  // m_lms array will have unset values because
+  // there are not necessarily pointings at each second
+  // these wholes are fixed up in this loop
+  //
+  time_iterator thetime(period.begin(), seconds(m_update_interval));
+  for (int t=0; t < m_compute_interval; ++t, ++thetime)
+  {
+    if (!pset[t])
+    {
+      m_lms(t,0) = current_pointing.direction().angle1();
+      m_lms(t,1) = current_pointing.direction().angle2();
+    }
+    else
+    {
+      double a1 = m_lms(t,0);
+      double a2 = m_lms(t,1);
+      current_pointing.setDirection(Direction(a1,a2));
+    }
+
+    LOG_INFO(formatString("direction@%s=(%f,%f)",
+			  to_simple_string(*thetime).c_str(),
+			  m_lms(t,0), m_lms(t,1)));
+  }
+
   return 0;
 }
 

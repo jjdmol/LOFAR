@@ -22,15 +22,17 @@
 
 #include "ABSPointing.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+using namespace boost::gregorian;
+using namespace boost::posix_time;
+
 using namespace ABS;
 
-Pointing::Pointing()
+Pointing::Pointing() : m_time(ptime(date(1970,1,1)))
 {
-  m_time.tv_sec  = 0;
-  m_time.tv_usec = 0;
 }
 
-Pointing::Pointing(const Direction direction, struct timeval time) :
+Pointing::Pointing(const Direction direction, ptime time) :
     m_direction(direction), m_time(time)
 {}
 
