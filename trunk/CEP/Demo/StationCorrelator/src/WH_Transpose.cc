@@ -75,8 +75,6 @@ WH_Transpose* WH_Transpose::make(const string& name) {
 }
 
 void WH_Transpose::process() {
-  // note that this transpose only works for our initial demo of two RSP boards
-  // it is not generic enough to handle other configurations
 
   int first_block_id = static_cast<DH_StationData*>(getDataManager().getInHolder(0))->getBlockID();
   int out_flag = 0;
@@ -105,18 +103,41 @@ void WH_Transpose::process() {
   for (int sample = 0; sample < itsNpacketsinframe; sample++) {
     for (int channel = 0; channel < itsNchannels; channel++) {
       for (int polarisation = 0; polarisation < itsNpolarisations; polarisation++) {
+	int i = 0;
 	for (vector<DH_StationData::BufferType*>::iterator it = val_ptrs.begin(); it != val_ptrs.end(); it++) {
 
 	  myDH->setBufferElement(channel, 
 				 itsCurrentSample, 
-				 0,
+				 i++,
 				 polarisation,
 				 *it+offset);
-	 
 	} 
 	offset++;
 	itsCurrentSample = (itsCurrentSample+1) % itsNsamples;
       }
     }
+  }
+}
+
+
+void WH_Transpose::dump() {
+  
+
+  
+  cout << "DUMP WH_Transpose output:  " << endl;
+
+  DH_CorrCube* myDH = static_cast<DH_CorrCube*>(getDataManager().getOutHolder(0));
+
+  for (int i = 0; i < itsNchannels; i++) {
+    for (int l = 0; l < itsNsamples; l++) {
+      for (int j = 0; j < itsNstations; j++) {
+	cout << "( " ;
+	for (int k = 0; k < itsNpolarisations; k++) {
+	  cout << *myDH->getBufferElement(i, l, j, k) << " ";
+	}
+	cout << ") ";
+      }
+    }
+    cout << endl;
   }
 }
