@@ -51,7 +51,7 @@ namespace ABS
 
 	  /**
 	   * Update statistics from a raw ethernet frame.
-	   * power_sum has dimensions: N_BEAMLETS / 2, N_POLARIZATIONS, 2
+	   * power_sum has dimensions: N_BEAMLETS / 2, N_POL, 2
 	   */
 	  void update(blitz::Array<unsigned int, 3>& power_sum, unsigned int seqnr);
 

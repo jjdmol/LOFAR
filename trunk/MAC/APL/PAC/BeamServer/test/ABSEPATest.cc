@@ -128,9 +128,8 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 
 	// send wgenable
 	ABSWgsettingsEvent wgs;
-	wgs.frequency=1.5e6; // 1.5625MHz
-	wgs.amplitude=128; // was 128
-	wgs.sample_period=2;
+	wgs.frequency=1.5625e6; // 1.5625MHz
+	wgs.amplitude=0x8000; // 16-bits value
 
 	TESTC(beam_server.send(wgs));
       }
@@ -139,8 +138,8 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
       case ABS_WGSETTINGS_ACK:
       {
 	// check acknowledgement
-	ABSWgsettingsAckEvent* wgsa = static_cast<ABSWgsettingsAckEvent*>(&e);
-	TESTC(SUCCESS == wgsa->status);
+	ABSWgsettingsAckEvent wgsa(e);
+	TESTC(ABS_Protocol::SUCCESS == wgsa.status);
 
 	// send WGENABLE
 	ABSWgenableEvent wgenable;
@@ -162,15 +161,15 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 
       case ABS_BEAMALLOC_ACK:
       {
-	ABSBeamallocAckEvent* ack = static_cast<ABSBeamallocAckEvent*>(&e);
-	TESTC(SUCCESS == ack->status);
+	ABSBeamallocAckEvent ack(e);
+	TESTC(ABS_Protocol::SUCCESS == ack.status);
 
-	beam_handle = ack->handle;
+	beam_handle = ack.handle;
 	LOG_DEBUG(formatString("got beam_handle=%d", beam_handle));
 
 	// send pointto command (zenith)
 	ABSBeampointtoEvent pointto;
-	pointto.handle = ack->handle;
+	pointto.handle = ack.handle;
 	pointto.type=(int)Direction::LOFAR_LMN;
 
 	time_t now = time(0);
@@ -200,9 +199,9 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 
       case ABS_BEAMFREE_ACK:
       {
-	ABSBeamfreeAckEvent* ack = static_cast<ABSBeamfreeAckEvent*>(&e);
-	TESTC(SUCCESS == ack->status);
-	TESTC(beam_handle == ack->handle);
+	ABSBeamfreeAckEvent ack(e);
+	TESTC(ABS_Protocol::SUCCESS == ack.status);
+	TESTC(beam_handle == ack.handle);
 
 	// test completed, next test
 	TRAN(EPATest::done);

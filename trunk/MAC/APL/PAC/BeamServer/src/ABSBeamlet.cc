@@ -137,7 +137,7 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 3>&          pos,
       || (pos.extent(firstDim) != nelements)
       || (pos.extent(secondDim) != npolarizations))
   {
-      LOG_ERROR("mismatching pos and weight array shapes");
+      LOG_ERROR("\nmismatching pos and weight array shapes\n");
       return;
   }
 
@@ -151,14 +151,14 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 3>&          pos,
 	  // get coordinates from beam
 	  if (!beam)
 	  {
-	      LOG_ERROR(formatString("no beam for beamlet %d?", beamlet->m_index));
+	      LOG_ERROR(formatString("\nno beam for beamlet %d?\n", beamlet->m_index));
 	      continue;
 	  }
 	  lmn = &beam->getLMNCoordinates();
 
 	  if (!lmn)
 	  {
-	      LOG_ERROR(formatString("invalid (l,m,n) vector for beamlet %d", beamlet->m_index));
+	      LOG_ERROR(formatString("\ninvalid (l,m,n) vector for beamlet %d\n", beamlet->m_index));
 	      continue;
 	  }
 
@@ -166,7 +166,7 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 3>&          pos,
 
 	  if (compute_interval != lmn->extent(firstDim))
 	  {
-	      LOG_ERROR(formatString("lmn vector length (%d) != compute_interval (%d)",
+	      LOG_ERROR(formatString("\nlmn vector length (%d) != compute_interval (%d)\n",
 				     lmn->extent(firstDim), compute_interval));
 	      continue;
 	  }

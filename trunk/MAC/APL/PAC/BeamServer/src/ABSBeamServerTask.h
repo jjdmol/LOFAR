@@ -33,6 +33,7 @@
 
 #include <set>
 #include <map>
+#include <list>
 
 namespace ABS
 {
@@ -90,34 +91,28 @@ namespace ABS
 	// action methods
 
 	/**
-	 * Process a statistics packet form the
-	 * filter board.
-	 */
-	void process_statistics();
-	
-	/**
 	 * allocate a new beam
 	 */
-	void beamalloc_action(ABSBeamallocEvent* ba,
+	void beamalloc_action(ABSBeamallocEvent& ba,
 			      GCFPortInterface& port);
 
 	/**
 	 * free a beam
 	 */
-	void beamfree_action(ABSBeamfreeEvent* bf,
+	void beamfree_action(ABSBeamfreeEvent& bf,
 			     GCFPortInterface& port);
 
 	/**
 	 * Change the direction of a beam.
 	 */
-	void beampointto_action(ABSBeampointtoEvent* pt,
+	void beampointto_action(ABSBeampointtoEvent& pt,
 				GCFPortInterface& port);
 
 	/**
 	 * Enable or change setting of the waveform generator.
 	 * Enabling the waveform generator disables the ADC input.
 	 */
-	void wgsettings_action(ABSWgsettingsEvent* we,
+	void wgsettings_action(ABSWgsettingsEvent& we,
 			       GCFPortInterface& port);
 	void wgenable_action();
 
@@ -131,13 +126,12 @@ namespace ABS
 	 * Time to compute some more weights.
 	 * @param current_seconds Time in seconds since 1 Jan 1970
 	 */
-	void compute_timeout_action(long current_seconds);
+	void compute_weights(long current_seconds);
 
 	/**
 	 * Send weights to the board.
 	 */
 	void send_weights();
-	void send_weights(int period);
 
 	/**
 	 * Determine the new subband selection after a beam
@@ -149,6 +143,27 @@ namespace ABS
 	 * Send subbands selection to the board.
 	 */
 	void send_sbselection();
+
+	/**
+	 * Defer an event from m_client to the save queue
+	 * for later processing.
+	 */
+	void saveq_defer(GCFEvent& e);
+
+	/**
+	 * Recall the least recently deferred event.
+	 */
+	GCFEvent* saveq_recall();
+
+	/**
+	 * Pop and delete the event.
+	 */
+	void saveq_pop();
+
+	/**
+	 * Clear the saveq.
+	 */
+	void saveq_clear();
 
     private:
 	// member variables
@@ -173,8 +188,7 @@ namespace ABS
 	 */
 	struct {
 	    double        frequency;
-	    unsigned char amplitude;
-	    unsigned char sample_period;
+	    unsigned short amplitude;
 	    bool          enabled;
 	} m_wgsetting;
 
@@ -189,16 +203,11 @@ namespace ABS
 	blitz::Array<std::complex<W_TYPE>,  4> m_weights;
 	blitz::Array<std::complex<int16_t>, 4> m_weights16;
 
-	/**
-	 * Subband statistics object to aggregate statistics
-	 * and to export the statistics as a property.
-	 */
-	BeamletStats m_stats;
-
     private:
 	// ports
 	GCFPort       m_client;
 	GCFPort       m_rspdriver;
+	std::list<char*> m_saveq;
     };
 
 };

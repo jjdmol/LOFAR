@@ -194,7 +194,7 @@ int Beam::convertPointings(time_period period)
 
   if (period.length().seconds() != m_compute_interval)
   {
-    LOG_ERROR("invalid time period");
+    LOG_ERROR("\ninvalid time period\n");
     return -1;
   }
 
@@ -213,7 +213,7 @@ int Beam::convertPointings(time_period period)
       if (pointing.direction().type() != Direction::LOFAR_LMN)
       {
 	m_pointing_queue.pop(); // discard pointing
-	LOG_ERROR("Direction type not supported yet, pointing discarded.");
+	LOG_ERROR("\nDirection type not supported yet, pointing discarded.\n");
 	continue;
       }
 
@@ -236,7 +236,7 @@ int Beam::convertPointings(time_period period)
 
 	  if ( (tsec < 0) || (tsec >= m_compute_interval) )
 	  {
-	    LOG_ERROR_STR("invalid pointing time" << to_simple_string(pointing.time()));
+	    LOG_ERROR_STR("\ninvalid pointing time\n" << to_simple_string(pointing.time()));
 	    continue;
 	  }
 
@@ -290,7 +290,7 @@ int Beam::convertPointings(time_period period)
     if ((fabs(m_lmns(t,0)) > 1.0)
 	|| (fabs(m_lmns(t,1)) > 1.0))
     {
-	LOG_ERROR("l or m coordinate out of range -1.0 < l < 1.0, setting to (l,m) to (0.0, 0.0)");
+	LOG_ERROR("\nl or m coordinate out of range -1.0 < l < 1.0, setting to (l,m) to (0.0, 0.0)\n");
 	m_lmns(t,0) = 0.0;
 	m_lmns(t,1) = 0.0;
 	m_lmns(t,2) = 0.0;
