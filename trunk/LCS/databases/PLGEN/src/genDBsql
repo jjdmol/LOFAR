@@ -145,8 +145,8 @@ addCreateTriggerCommand()
 {
 	Table=$1
 
-	echo "CREATE TRIGGER ${Table}_update_versionnr BEFORE INSERT OR UPDATE ON ${Table}"
-	echo "FOR EACH ROW EXECUTE PROCEDURE update_versionnr();"
+	echo "CREATE TRIGGER ${Table}UpdateVersionNr BEFORE INSERT OR UPDATE ON ${Table}"
+	echo "FOR EACH ROW EXECUTE PROCEDURE UpdateVersionNr();"
 	echo ""
 }
 
