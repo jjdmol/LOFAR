@@ -133,6 +133,15 @@ class AVTLogicalDevice : public GCFTask,
     /**
      * Implementation of the Claim method is done in the derived classes. 
      */
+     
+/*******************************************
+ * 
+ * Remove the following abstract methods. Combine their implementations with the
+ * F_INIT_SIG handling in their concrete_...ing_state methods that are entered
+ * just before calling them
+ * 
+ * ********************************************/
+ 
     virtual void concreteClaim(GCFPortInterface& port)=0;
     /**
      * Implementation of the Prepare method is done in the derived classes. 
