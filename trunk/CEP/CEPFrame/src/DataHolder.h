@@ -34,8 +34,9 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_fstream.h>
 
-#include "CEPFrame/BaseSim.h"
-#include "CEPFrame/TransportHolder.h"
+#include <CEPFrame/BaseSim.h>
+#include <CEPFrame/TransportHolder.h>
+#include <CEPFrame/Transportable.h>
 
 //# Forward Declarations
 class Transport;
@@ -66,7 +67,7 @@ class Transport;
   \endcode
 */
 
-class DataHolder
+class DataHolder: public Transportable
 {
 protected:
   /** Standard data type class
