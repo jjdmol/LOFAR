@@ -8,6 +8,9 @@ board=EPAStub:client
 [EPATest]
 beam_server=ABS:client
 
+[SweepTest]
+beam_server=ABS:client
+
 [EPAStub]
 #intenionally left empty
 

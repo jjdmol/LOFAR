@@ -24,7 +24,8 @@ check_PROGRAMS = \
 	CheckWeightsTest2 \
 	AVTStub \
 	EPAStub \
-	EPATest
+	EPATest \
+	SweepTest
 
 BeamServerTest_SOURCES = \
 	BeamServerTest.cc
@@ -61,6 +62,15 @@ EPATest_SOURCES = \
 	ABSEPATest.cc
 
 EPATest_LDADD = \
+	$(top_builddir)/src/libabs.la \
+	$(top_builddir)/test/libunittest.la \
+	 -ltm -lgcfcommon
+
+SweepTest_SOURCES = \
+	ABSSweepTest.h \
+	ABSSweepTest.cc
+
+SweepTest_LDADD = \
 	$(top_builddir)/src/libabs.la \
 	$(top_builddir)/test/libunittest.la \
 	 -ltm -lgcfcommon
