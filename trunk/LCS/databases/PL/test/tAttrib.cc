@@ -103,6 +103,7 @@ int main(int argc, const char* argv[])
   }
   catch (LOFAR::Exception& e) {
     cerr << e << endl;
+    return 1;
   }
   return 0;
 }
