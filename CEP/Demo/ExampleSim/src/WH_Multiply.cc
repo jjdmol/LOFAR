@@ -36,9 +36,9 @@ WH_Multiply::WH_Multiply (const string& name, int nin)
   {
     sprintf(str, "%d", i);
     getDataManager().addInDataHolder(i, 
-			       new DH_ExampleSim(string("in_") + str), true);
+			       new DH_ExampleSim(string("in_") + str));
   }
-  getDataManager().addOutDataHolder(0, new DH_ExampleSim("out"), true);
+  getDataManager().addOutDataHolder(0, new DH_ExampleSim("out"));
 }
 
 

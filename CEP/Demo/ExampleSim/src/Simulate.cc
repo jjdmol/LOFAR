@@ -26,10 +26,10 @@
 #include <config.h>
 #endif
 
-#include "CEPFrame/SimulatorParseClass.h"
+#include <tinyCEP/SimulatorParseClass.h>
 #include <Common/lofar_iostream.h>
 #include <Common/Debug.h>
-#include "ExampleSim/ExampleSim.h"
+#include <ExampleSim/ExampleSim.h>
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
@@ -53,6 +53,14 @@ int main (int argc, const char** argv)
 	    
       cout << x.what() << endl;       
     }
+  }
+  catch (LOFAR::Exception& e)
+  {
+    cout << "Lofar exception: " << e.what() << endl;
+  }
+  catch (std::exception& e)
+  {
+    cout << "Standard exception: " << e.what() << endl;
   }
   catch (...) {
     cout << "Unexpected exception in Simulate" << endl;

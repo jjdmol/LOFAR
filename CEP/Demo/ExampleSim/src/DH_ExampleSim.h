@@ -26,13 +26,9 @@
 #ifndef EXAMPLESIM_DH_EXAMPLESIM_H
 #define EXAMPLESIM_DH_EXAMPLESIM_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <Common/lofar_complex.h>
-#include "CEPFrame/DataHolder.h"
-#include "CEPFrame/BaseSim.h"
+#include <Transport/DataHolder.h>
+#include <Transport/BaseSim.h>
 
 /**
    This class is a DataHolder example class used in ExampleSim.
@@ -54,35 +50,33 @@ public:
   int* getBuffer();
   const int* getBuffer() const;
 
-protected:
-  class DataPacket: public DataHolder::DataPacket
-  {
-  public:
-    DataPacket() : itsCounter(0) {};
-    int itsBuffer[10];
-    int itsCounter;
-  };
+  virtual void preprocess();
+
+  virtual void postprocess();
 
 private:
   /// Forbid assignment.
   DH_ExampleSim& operator= (const DH_ExampleSim&);
 
+ // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
+  virtual void fillDataPointers();
 
-  DataPacket itsDataPacket;
+  int*  itsCounter;
+  int*  itsBuffer;
 };
 
 
 inline void DH_ExampleSim::setCounter (int counter)
-  { itsDataPacket.itsCounter = counter; }
+  { *itsCounter = counter; }
 
 inline int DH_ExampleSim::getCounter() const
-  { return itsDataPacket.itsCounter; }
+  { return *itsCounter; }
 
 inline int* DH_ExampleSim::getBuffer()
-  { return itsDataPacket.itsBuffer; }
+  { return itsBuffer; }
 
 inline const int* DH_ExampleSim::getBuffer() const
-  { return itsDataPacket.itsBuffer; }
+  { return itsBuffer; }
 
 
 #endif 

@@ -28,19 +28,14 @@
 #include <stdlib.h>
 #include <Common/lofar_string.h>
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <Common/Debug.h>
-#include "CEPFrame/Transport.h"
-#include "CEPFrame/Step.h"
-#include "CEPFrame/Simul.h"
-#include "CEPFrame/WH_Empty.h"
-#include "ExampleSim/ExampleSim.h"
-#include "ExampleSim/WH_Source.h"
-#include "ExampleSim/WH_Multiply.h"
-#include "ExampleSim/WH_Add.h"
+#include <CEPFrame/Step.h>
+#include <CEPFrame/Composite.h>
+#include <CEPFrame/WH_Empty.h>
+#include <ExampleSim/ExampleSim.h>
+#include <ExampleSim/WH_Source.h>
+#include <ExampleSim/WH_Multiply.h>
+#include <ExampleSim/WH_Add.h>
 
 #include TRANSPORTERINCLUDE
 
@@ -64,13 +59,13 @@ void ExampleSim::define(const KeyValueMap& params)
   // Free any memory previously allocated
   undefine();
 
-  // Create the top-level Simul
-  Simul topSimul(new WH_Empty(), "ExampleSim");
-  setSimul(topSimul);
+  // Create the top-level Composite
+  Composite topComposite(new WH_Empty(), "ExampleSim");
+  setComposite(topComposite);
 
-  // Set node and application number of Simul
-  topSimul.runOnNode(0);
-  topSimul.setCurAppl(0);
+  // Set node and application number of Composite
+  topComposite.runOnNode(0);
+  topComposite.setCurAppl(0);
 
   // Get correction factor argument from input
   int corrFactor = params.getInt("corrfactor", 0);
@@ -87,26 +82,26 @@ void ExampleSim::define(const KeyValueMap& params)
 
   // Create a composite Step
   WH_Multiply WHcomp("Composite", 2);
-  Simul composite(WHcomp, "calcComposite");
+  Composite composite(WHcomp, "calcComposite");
   composite.addStep(multStep);
   composite.addStep(addStep);
   // and make the internal connections
   Step* stepPtr = &multStep;
-  composite.connectInputToArray(&stepPtr, 1);
-  addStep.connectInput(&multStep);
+  composite.connectInputToArray(&stepPtr, 1, 0, 0, TH_Mem(), false);
+  addStep.connectInput(&multStep, TH_Mem(), false);
   stepPtr = &addStep;
-  composite.connectOutputToArray(&stepPtr, 1);
+  composite.connectOutputToArray(&stepPtr, 1, 0, 0, TH_Mem(), false);
 
   // Determine the node for each step to run on
   sourceStep.runOnNode(0);
   composite.runOnNode(1);
 
-  // Add all Step(s) to Simul
-  topSimul.addStep(sourceStep);
-  topSimul.addStep(composite);
+  // Add all Step(s) to Composite
+  topComposite.addStep(sourceStep);
+  topComposite.addStep(composite);
 
   // Create the connections between Steps
-  composite.connectInput(&sourceStep);
+  composite.connectInput(&sourceStep, TH_Mem(), false);
 
 
 }
@@ -119,7 +114,7 @@ void ExampleSim::run(int nSteps) {
   TRACER4("Start Processing simul");    
   for (int i=0; i<nSteps; i++) {
     TRACER2("Call simul.process() ");
-    getSimul().process();
+    getComposite().process();
   }
 
   TRACER4("END OF SIMUL on node " << TRANSPORTER::getCurrentRank () );
@@ -132,7 +127,7 @@ void ExampleSim::run(int nSteps) {
 }
 
 void ExampleSim::dump() const {
-  getSimul().dump();
+  getComposite().dump();
 }
 
 void ExampleSim::quit() {  
