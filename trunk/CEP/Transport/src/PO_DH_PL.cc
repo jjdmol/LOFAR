@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#include <libTransport/PO_DH_PL.h>
+#include <Transport/PO_DH_PL.h>
 #include <PL/TPersistentObject.h>
 #include <Common/BlobOBufString.h>
 #include <Common/BlobIBufString.h>

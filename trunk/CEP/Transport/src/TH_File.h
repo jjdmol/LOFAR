@@ -25,7 +25,7 @@
 
 #include <lofar_config.h>
 
-#include <libTransport/TransportHolder.h>
+#include <Transport/TransportHolder.h>
 #include <stdio.h>
 
 namespace LOFAR

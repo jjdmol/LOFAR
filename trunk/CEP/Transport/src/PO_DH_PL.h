@@ -27,7 +27,7 @@
 
 #include <PL/TPersistentObject.h>
 #include <PL/DBRep.h>
-#include <libTransport/DH_PL.h>
+#include <Transport/DH_PL.h>
 
 namespace LOFAR {
   namespace PL {

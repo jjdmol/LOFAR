@@ -23,11 +23,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#include <libTransport/ShMem/TH_ShMem.h>
+#include <Transport/ShMem/TH_ShMem.h>
 
 #ifdef HAVE_MPI
 
-#include <libTransport/BaseSim.h>
+#include <Transport/BaseSim.h>
 #include <Common/Debug.h>
 #include <Common/shmem/shmem_alloc.h>
 

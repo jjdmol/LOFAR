@@ -25,8 +25,8 @@
 
 
 #include <lofar_config.h>
-#include <libTransport/DH_PL.h>
-#include <libTransport/PO_DH_PL.h>                              //PL
+#include <Transport/DH_PL.h>
+#include <Transport/PO_DH_PL.h>                              //PL
 #include <Common/lofar_complex.h>
 
 

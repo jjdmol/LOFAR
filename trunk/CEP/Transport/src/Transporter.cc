@@ -23,8 +23,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include <libTransport/Transporter.h>
-#include <libTransport/BaseDataHolder.h>
+#include <Transport/Transporter.h>
+#include <Transport/BaseDataHolder.h>
 #include <Common/Debug.h>
 #include <Common/lofar_iostream.h>
 #include <stdlib.h>

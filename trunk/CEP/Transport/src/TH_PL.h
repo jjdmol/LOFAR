@@ -23,8 +23,8 @@
 #ifndef LIBTRANSPORT_TH_PL_H
 #define LIBTRANSPORT_TH_PL_H
 
-#include <libTransport/TransportHolder.h>
-#include <libTransport/DH_PL.h>
+#include <Transport/TransportHolder.h>
+#include <Transport/DH_PL.h>
 #include <PL/PersistenceBroker.h>		// for PersistenceBroker
 #include <Common/LofarTypes.h>                  // for int64
 

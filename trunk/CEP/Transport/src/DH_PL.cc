@@ -22,8 +22,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <libTransport/DH_PL.h>		        // for class definition
-#include <libTransport/PO_DH_PL.h>
+#include <Transport/DH_PL.h>		        // for class definition
+#include <Transport/PO_DH_PL.h>
 #include <Common/lofar_iostream.h>		// for cout, cerr
 #include <Common/Debug.h>			// for AssertStr
 #include <sstream>				// for ostrstream

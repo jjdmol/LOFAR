@@ -25,7 +25,7 @@
 
 #include <lofar_config.h>
 
-#include <libTransport/TransportHolder.h>
+#include <Transport/TransportHolder.h>
 #include <Common/lofar_map.h>
 #include <pthread.h>
 
