@@ -1,0 +1,531 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,295 138 917 684 N "_3DFace" 5
+"$configDatapoint"
+"$datapoint"
+"$selectedElementDpType"
+"$selectedView"
+"$viewName"
+EEE E E 1 -1 -1 0  40 120
+"" 0 1
+E"#uses \"gcfnav_view.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 35
+"Border3"
+""
+1 10 249 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+26 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 222 585 249
+6 34
+"Border2"
+""
+1 10 274 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+25 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 247 203 274
+1 9 1 "" 57
+0
+2 13
+"Text3"
+""
+1 20 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 62 198 78
+0 2 0 "s" 0 0 0 64 0 0  22 62
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 28 Selected list-view for type:
+2 14
+"txt_dpTypeName"
+""
+1 200 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+	if (dpExists($datapoint))
+	{
+	  setValue(\"\", \"text\", dpTypeName($datapoint));
+	}
+	else
+	{
+    setValue(\"\", \"text\", \"datapoint type not found\");
+  }
+}" 0
+ E 0 1 1 0 1 E U  0 E 202 62 468 78
+0 2 0 "s" 0 0 0 64 0 0  202 62
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
+1 15 2 "" 0
+0
+1 16 2 "" 4
+0
+1 17 2 "" 1
+0
+1 18 2 "" 2
+0
+1 19 2 "" 3
+0
+2 21
+"Text4"
+""
+1 31 225 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+12 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 33 227 127 243
+0 2 0 "s" 0 0 0 192 0 0  33 227
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 16 Selection query:
+2 29
+"Text5"
+""
+1 250 380 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+20 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 252 382 348 398
+0 2 0 "s" 0 0 0 64 0 0  252 382
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 result
+2 30
+"Text6"
+""
+1 21 251 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+21 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 23 253 128 269
+0 2 0 "s" 0 0 0 192 0 0  23 253
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 17 Selection amount:
+6 39
+"Border10"
+""
+1 11 220 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+30 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 11 190 583 220
+2 41
+"Text12"
+""
+1 21 194 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+32 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 23 196 54 212
+0 2 0 "s" 0 0 0 64 0 0  23 196
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Title
+6 45
+"Border4"
+""
+1 10 349 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+36 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 322 585 349
+19 8
+"RadioButton2"
+""
+1 198 100 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+196 98 390 147
+2
+T 
+1
+LANG:1 17 Default list-view
+ 1
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+T 
+1
+LANG:1 16 Custom list-view
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+ 1
+"main()
+{
+  int customList, SelectedItem;
+
+	if (dpExists($configDatapoint + \".customList\"))
+	{
+    dpGet($configDatapoint + \".customList\", customList);
+
+    if (!customList)
+      SelectedItem = 0;
+    else if (customList)
+      SelectedItem = 1;
+    else
+    {
+      SelectedItem = 0;
+      dpSet($configDatapoint + \".customList\", 1);
+    }
+    setValue (\"RadioButton2\", \"number\", SelectedItem);
+  }
+  else
+  {
+    setValue (\"RadioButton2\", \"enabled\", FALSE);
+  }
+
+  if (dpGetElementName($datapoint)!=\"\")
+  {
+    setValue (\"RadioButton2\", \"enabled\", FALSE);
+  }
+
+    
+
+}" 0
+
+"main(int button)
+{
+  string DedicatedPanelName, subViewName;
+  getSubviewName(subViewName);
+
+  if (0==RadioButton2.number())         // Standard trend-plot 1  
+  {
+    dpSet($configDatapoint + \".customList\", FALSE);
+  }
+  else if (1==RadioButton2.number())   // Standard trend-plot 1 and 2  
+  {
+    dpSet($configDatapoint + \".customList\", TRUE);
+  }
+/*
+  else if (2==RadioButton2.number())  //Dedicated trend-plot panel
+  {
+    dpSet($configDatapoint + \".Standard\", FALSE);
+    dpSet($configDatapoint + \".Trend2Active\", FALSE);
+    dpSet($configDatapoint + \".Dedicated\", TRUE);
+    // Transport dedicated panel-name to subview
+    dpGet($configDatapoint + \".DedicatedPanelName:_online.._value\", DedicatedPanelName);
+    DebugN(\"1. DedicatedPanelName: \" + DedicatedPanelName);
+    DebugN(\"1. subViewName: \"+subViewName);
+    if (\"\" == DedicatedPanelName)
+    {
+      dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", \"error_no_panel.pnl\");
+      DebugN(\"dpSet error panel\");
+    }
+    else
+    {
+      dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", DedicatedPanelName);
+    }
+
+  }
+  */
+}" 0
+
+1 10 1 "" 54
+0
+1 11 1 "" 55
+0
+1 12 1 "" 58
+0
+14 24
+"txt_amountRetrieved"
+""
+1 240 323 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+15 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+238 321 322 348
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+1 27 4 "" 0
+0
+1 28 5 "" 0
+0
+22 32
+"ComboBox"
+""
+1 131 249 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+23 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+129 247 203 274
+0
+"main()
+{
+  // Is it a datapoint element? then disable control
+	// This includes that this control is only suitable for DP-Types
+  dyn_string content = makeDynString(\"10\",\"20\",\"30\",\"40\",\"50\",\"75\",\"100\",\"150\",\"200\");
+  
+  if(!dpExists($datapoint))
+  {
+    ComboBox.backCol = \"DpDoesNotExist\";  
+  }
+	else if (dpGetElementName($datapoint)!=\"\")
+  {
+    setValue (\"\", \"enabled\", FALSE);
+  }
+  else
+  {
+    int selectionAmount;
+    dpGet($configDatapoint + \".maxAmountToRetrieve\", selectionAmount);
+    for(int i=1 ; i<=dynlen(content); i++)
+    {
+      ComboBox.appendItem(content[i]);
+      if (selectionAmount==content[i])
+ 	  		{
+	  			ComboBox.selectedPos = ComboBox.itemCount;
+	  	  } 
+    }
+  }
+}
+" 0
+
+"main()
+{
+  dpSet($configDatapoint + \".maxAmountToRetrieve\", ComboBox.text);
+}" 0
+
+E
+ 0 0
+13 42
+"Button1"
+""
+1 400 390 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+33 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+398 388 542 432
+T 
+1
+LANG:1 7 Button1
+"main()
+{
+  dyn_dyn_anytype tab;
+
+  dpQuery(\"SELECT 'COUNT(_online.._value)' FROM 'System1:PIC_*' \", tab);
+  DebugN(tab[2][2]);
+/*  for(int i=2 ; i<=dynlen(tab) ; i++)
+  {
+    string temp =tab[i][1];
+    temp = substr(temp, (strlen($datapoint)+1), strlen(temp));
+    TableProperties.appendLine(\"propertyName\", temp ,\"value\", \"\");
+    if(((dynlen(strsplit(temp, \"_\")))==1) && ((dynlen(strsplit(temp, \".\")))==1))
+    {
+      propNames[i-1] = $datapoint + \".\" + temp + \":_online.._value\";
+    }
+    else
+    {
+      propNames[i-1] = $datapoint + \"_\" + temp + \":_online.._value\";
+    }
+  }
+  */
+}" 0
+ E E E
+13 43
+"Button3"
+""
+1 12 324 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+34 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+10 322 134 349
+T 
+1
+LANG:1 14 Test selection
+"main()
+{
+  dyn_dyn_anytype tab;
+  //$configDatapoint + \".selectionQuery\"
+  string selectionQuery;
+  dpGet($configDatapoint + \".selectionQuery\", selectionQuery);
+  DebugN(\"selectionQuery: \" + selectionQuery);
+  dpQuery(\"SELECT 'COUNT(_online.._value)' FROM '\" + $datapoint + selectionQuery + \"' \", tab);
+  if (dynlen(tab)>=2)
+  {
+    setValue(\"txt_amountRetrieved\", \"text\", tab[2][2]);
+    DebugN(\"Retrieved: \"  + tab[2][2]);
+  }
+  else
+  {
+    setValue(\"txt_amountRetrieved\", \"text\", 0);
+    DebugN(\"Retrieved: \"  + 0);
+  }
+
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 1 ""
+"navigator\\navigator_config_tab.pnl" 90 0 T 7 1 0 1  -71 44  
+4
+"$configDatapoint""$configDatapoint"
+"$selectedElementDpType""$selectedElementDpType"
+"$selectedView""$selectedView"
+"$viewName""$viewName"
+3 2 "Group4"
+"objects\\Nav\\info_config disabled_because_dpe.pnl" 90 600 T 10 1 0 1  10 70  
+1
+"$datapoint""$datapoint"
+3 4 ""
+"objects\\Nav\\editString.pnl" 140 422 T 18 1 0 1  -9 -199  
+3
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+"$elementName""selectionQuery"
+3 5 "Group8"
+"objects\\Nav\\editString.pnl" 150 270 T 19 1 0 1  -19 -77  
+3
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+"$elementName""Title"
+0

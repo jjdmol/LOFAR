@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 11 Subrack_RCU
-PANEL,321 171 139 149 N "_3DFace" 3
+PANEL,483 137 139 149 N "_3DFace" 3
 "$APNr"
 "$RCUNr"
 "$datapoint"
@@ -25,33 +25,12 @@ dyn_errClass err;
     return;
   }
 
-  dpConnect(\"EP_setBackColorCB\", 
+  dpConnect(\"setBackGroundColorAEM\", 
             $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_Maintenance.status:_online.._value\",
             $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\".status:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
-}
-
-
-EP_setBackColorCB(string dpSource1, unsigned RCU_main,
-									string dpSource2, unsigned RCU_stat)
-{
-	//Set visibility for Maintenance Sign is RCU OR BP in Maintenance
-  setValue(\"icon_maintenance\", \"visible\", (RCU_main == 1));
-//  setValue(\"Sign2\", \"visible\", (RCU_main == 1));
-
-	//Set background color of rectangle [RCU]
-  if (RCU_main == 1)
-  {
-    setValue(\"rect_RCU\", \"backCol\", \"Lofar_maintenance\");
-  }
-  else if (RCU_stat==1)
-      setValue(\"rect_RCU\", \"backCol\", \"Red\");
-  else
-  {
-    setValue(\"rect_RCU\", \"backCol\", \"Lofar_device_active\");
-  }
 }
 " 0
 EE E E 1 -1 -1 0  20 140
@@ -65,7 +44,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 2
-"rect_RCU"
+"backGround"
 ""
 1 40 110 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E "// SimpleCtrlScriptStart {valid}
 main(int iType)

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,295 138 502 319 N "_3DFace" 4
+PANEL,548 150 502 319 N "_3DFace" 4
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"

@@ -1,10 +1,11 @@
 V 10
 1
 LANG:1 12 LFA Antennas
-PANEL,174 150 994 514 N "_3DFace" 0
+PANEL,295 138 994 514 N "_3DFace" 0
 EEE E E 1 -1 -1 0  210 99
 "" 0 1
-EE 2
+E"#uses \"gcfnav_view.ctl\"" 0
+ 2
 "CBRef""1"
 "EClose"E
 ""

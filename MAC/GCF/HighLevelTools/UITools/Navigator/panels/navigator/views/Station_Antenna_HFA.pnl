@@ -1,10 +1,12 @@
 V 10
 1
 LANG:1 12 HFA Antennas
-PANEL,244 145 994 514 N "_3DFace" 0
+PANEL,406 182 994 514 N "_3DFace" 1
+"$datapoint"
 EEE E E 1 -1 -1 0  28 10
 "" 0 1
-EE 2
+E"#uses \"gcfnav_view.ctl\"" 0
+ 2
 "CBRef""1"
 "EClose"E
 ""
@@ -4427,7 +4429,7 @@ E E 0 1 1 0 1 E U  1 E 825 271 10 10
 2 1789
 "Text1"
 ""
-1 11 116 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 115 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 240 0 0 0 0 0
 EE E
@@ -4436,8 +4438,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 118 20 132
-0 2 0 "s" 0 0 0 192 0 0  13 118
+E E 0 1 1 0 1 E U  0 E 13 117 20 131
+0 2 0 "s" 0 0 0 192 0 0  13 117
  1
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -4447,7 +4449,7 @@ LANG:1 1 X
 2 1790
 "Text2"
 ""
-1 10 149 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 148 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 241 0 0 0 0 0
 EE E
@@ -4456,8 +4458,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 151 20 165
-0 2 0 "s" 0 0 0 192 0 0  12 151
+E E 0 1 1 0 1 E U  0 E 12 150 20 164
+0 2 0 "s" 0 0 0 192 0 0  12 150
  1
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -4467,7 +4469,7 @@ LANG:1 1 Y
 2 1791
 "Text13"
 ""
-1 11 186 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 185 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 242 0 0 0 0 0
 EE E
@@ -4476,8 +4478,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 188 20 202
-0 2 0 "s" 0 0 0 192 0 0  13 188
+E E 0 1 1 0 1 E U  0 E 13 187 20 201
+0 2 0 "s" 0 0 0 192 0 0  13 187
  1
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -4487,7 +4489,7 @@ LANG:1 1 X
 2 1792
 "Text14"
 ""
-1 10 219 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 218 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 243 0 0 0 0 0
 EE E
@@ -4496,8 +4498,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 221 20 235
-0 2 0 "s" 0 0 0 192 0 0  12 221
+E E 0 1 1 0 1 E U  0 E 12 220 20 234
+0 2 0 "s" 0 0 0 192 0 0  12 220
  1
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -4507,7 +4509,7 @@ LANG:1 1 Y
 2 1793
 "Text15"
 ""
-1 11 256 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 255 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 244 0 0 0 0 0
 EE E
@@ -4516,8 +4518,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 258 20 272
-0 2 0 "s" 0 0 0 192 0 0  13 258
+E E 0 1 1 0 1 E U  0 E 13 257 20 271
+0 2 0 "s" 0 0 0 192 0 0  13 257
  1
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -4527,7 +4529,7 @@ LANG:1 1 X
 2 1794
 "Text16"
 ""
-1 10 289 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 288 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 245 0 0 0 0 0
 EE E
@@ -4536,8 +4538,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 291 20 305
-0 2 0 "s" 0 0 0 192 0 0  12 291
+E E 0 1 1 0 1 E U  0 E 12 290 20 304
+0 2 0 "s" 0 0 0 192 0 0  12 290
  1
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -4547,7 +4549,7 @@ LANG:1 1 Y
 2 1795
 "Text17"
 ""
-1 12 326 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 12 325 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 246 0 0 0 0 0
 EE E
@@ -4556,8 +4558,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 14 328 21 342
-0 2 0 "s" 0 0 0 192 0 0  14 328
+E E 0 1 1 0 1 E U  0 E 14 327 21 341
+0 2 0 "s" 0 0 0 192 0 0  14 327
  1
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -4567,7 +4569,7 @@ LANG:1 1 X
 2 1796
 "Text18"
 ""
-1 11 359 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 358 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 247 0 0 0 0 0
 EE E
@@ -4576,8 +4578,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 361 21 375
-0 2 0 "s" 0 0 0 192 0 0  13 361
+E E 0 1 1 0 1 E U  0 E 13 360 21 374
+0 2 0 "s" 0 0 0 192 0 0  13 360
  1
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -4587,7 +4589,7 @@ LANG:1 1 Y
 2 1797
 "Text19"
 ""
-1 11 398 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 11 397 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 248 0 0 0 0 0
 EE E
@@ -4596,8 +4598,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 400 20 414
-0 2 0 "s" 0 0 0 192 0 0  13 400
+E E 0 1 1 0 1 E U  0 E 13 399 20 413
+0 2 0 "s" 0 0 0 192 0 0  13 399
  1
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -4607,7 +4609,7 @@ LANG:1 1 X
 2 1798
 "Text20"
 ""
-1 10 431 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 430 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 249 0 0 0 0 0
 EE E
@@ -4616,8 +4618,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 433 20 447
-0 2 0 "s" 0 0 0 192 0 0  12 433
+E E 0 1 1 0 1 E U  0 E 12 432 20 446
+0 2 0 "s" 0 0 0 192 0 0  12 432
  1
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -4850,6 +4852,29 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-200-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 23 High Frequency Antennas
+14 1817
+"TextField1"
+""
+1 220 60 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+267 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+218 58 502 85
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+setValue(\"\", \"text\", \"$datapoint: \" + $datapoint);
+}" 0
+
+E
 0
 LAYER, 1 
 1
@@ -4880,224 +4905,224 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 0 ""
-"objects\\PIC\\STS_Antenna_HFA.pnl" 116 141 T 1 1 0 1  -94 0  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 116 141 T 1 1 0 1  -94 -1  
 4
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""1"
 3 3 ""
-"objects\\PIC\\STS_Antenna_HFA.pnl" 149 176 T 4 1 0 1  -127 -5  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 149 176 T 4 1 0 1  -127 -6  
 4
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""1"
 3 4 "Group7"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 160 60 T 5 1 0 1  -108 81  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 160 60 T 5 1 0 1  -108 80  
 4
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""1"
 3 5 "Group8"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 160 90 T 6 1 0 1  -108 81  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 160 90 T 6 1 0 1  -108 80  
 4
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""1"
 3 6 "Group11"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 190 60 T 7 1 0 1  -108 81  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 190 60 T 7 1 0 1  -108 80  
 4
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""1"
 3 7 "Group12"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 190 90 T 8 1 0 1  -108 81  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 190 90 T 8 1 0 1  -108 80  
 4
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""1"
 3 8 "Group15"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 220 60 T 9 1 0 1  -108 81  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 220 60 T 9 1 0 1  -108 80  
 4
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""1"
 3 9 "Group16"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 220 90 T 10 1 0 1  -108 81  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 220 90 T 10 1 0 1  -108 80  
 4
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""1"
 3 10 "Group25"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 160 60 T 24 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 160 60 T 24 1 0 1  -138 150  
 4
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""2"
 3 11 "Group26"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 160 90 T 25 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 160 90 T 25 1 0 1  -138 150  
 4
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""2"
 3 12 "Group27"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 190 60 T 26 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 190 60 T 26 1 0 1  -138 150  
 4
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""2"
 3 13 "Group28"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 190 90 T 27 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 190 90 T 27 1 0 1  -138 150  
 4
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""2"
 3 14 "Group29"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 220 60 T 28 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 220 60 T 28 1 0 1  -138 150  
 4
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""2"
 3 15 "Group30"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 220 90 T 29 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 220 90 T 29 1 0 1  -138 150  
 4
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""2"
 3 16 "2"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 250 60 T 30 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 250 60 T 30 1 0 1  -138 150  
 4
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""2"
 3 17 "Group32"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 250 90 T 31 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 250 90 T 31 1 0 1  -138 150  
 4
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""2"
 3 18 "Group41"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 160 130 T 32 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 160 130 T 32 1 0 1  -138 150  
 4
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""3"
 3 19 "Group42"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 160 160 T 33 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 160 160 T 33 1 0 1  -138 150  
 4
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""3"
 3 20 "Group43"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 190 130 T 34 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 190 130 T 34 1 0 1  -138 150  
 4
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""3"
 3 21 "Group44"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 190 160 T 35 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 190 160 T 35 1 0 1  -138 150  
 4
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""3"
 3 22 "Group45"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 220 130 T 36 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 220 130 T 36 1 0 1  -138 150  
 4
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""3"
 3 23 "Group46"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 220 160 T 37 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 220 160 T 37 1 0 1  -138 150  
 4
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""3"
 3 24 "Group47"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 250 130 T 38 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 250 130 T 38 1 0 1  -138 150  
 4
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""3"
 3 25 "Group48"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 250 160 T 39 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 250 160 T 39 1 0 1  -138 150  
 4
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""3"
 3 26 "Group57"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 160 200 T 40 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 160 200 T 40 1 0 1  -138 150  
 4
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""4"
 3 27 "Group58"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 160 230 T 41 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 160 230 T 41 1 0 1  -138 150  
 4
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""4"
 3 28 "Group59"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 190 200 T 42 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 190 200 T 42 1 0 1  -138 150  
 4
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""4"
 3 29 "Group60"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 190 230 T 43 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 190 230 T 43 1 0 1  -138 150  
 4
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""4"
 3 30 "Group61"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 220 200 T 44 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 220 200 T 44 1 0 1  -138 150  
 4
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""4"
 3 31 "Group62"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 220 230 T 45 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 220 230 T 45 1 0 1  -138 150  
 4
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""4"
 3 32 "Group63"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 250 200 T 46 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 250 200 T 46 1 0 1  -138 150  
 4
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""4"
 3 33 "Group64"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 250 230 T 47 1 0 1  -138 151  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 250 230 T 47 1 0 1  -138 150  
 4
 "$APNr""4"
 "$RCUNr""2"
@@ -6000,56 +6025,56 @@ LANG:1 6 Layer8
 "$RackNr""5"
 "$SubrackNr""4"
 3 162 "Group353"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 680 60 T 176 1 0 1  -658 361  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 680 60 T 176 1 0 1  -658 360  
 4
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""1"
 3 163 "Group354"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 680 90 T 177 1 0 1  -658 361  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 680 90 T 177 1 0 1  -658 360  
 4
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""1"
 3 164 "Group355"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 710 60 T 178 1 0 1  -658 361  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 710 60 T 178 1 0 1  -658 360  
 4
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""1"
 3 165 "Group356"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 710 90 T 179 1 0 1  -658 361  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 710 90 T 179 1 0 1  -658 360  
 4
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""1"
 3 166 "Group357"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 740 60 T 180 1 0 1  -658 361  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 740 60 T 180 1 0 1  -658 360  
 4
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""1"
 3 167 "Group358"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 740 90 T 181 1 0 1  -658 361  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 740 90 T 181 1 0 1  -658 360  
 4
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""1"
 3 168 "Group359"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 770 60 T 182 1 0 1  -658 361  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 770 60 T 182 1 0 1  -658 360  
 4
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""1"
 3 169 "Group360"
-"objects\\PIC\\STS_Antenna_HFA.pnl" 770 90 T 183 1 0 1  -658 361  
+"objects\\PIC\\STS_Antenna_HFA.pnl" 770 90 T 183 1 0 1  -658 360  
 4
 "$APNr""4"
 "$RCUNr""2"

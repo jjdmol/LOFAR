@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 Subrack_AP
-PANEL,250 138 184 193 N "_3DFace" 2
+PANEL,370 211 184 193 N "_3DFace" 2
 "$APNr"
 "$datapoint"
 "main()
@@ -40,16 +40,22 @@ ControlGUIAP(string dp1, float temperature,
   setValue(\"text_Temp\", \"text\", temperature );  // Display the temperature with with format xx.x
   
 	//Calculate the Backcolor of the AP
-  if (status == 1)
+  if (status == 0)
+  {
+    setValue(\"rect_AP\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"btn_details\", \"backCol\", \"Lofar_device_active\");
+  }
+  else if (status == 1)
 	{
     setValue(\"rect_AP\", \"backCol\", \"Red\");
     setValue(\"btn_details\", \"backCol\", \"Red\");
   }
   else
-  {
-    setValue(\"rect_AP\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"btn_details\", \"backCol\", \"Lofar_device_active\");
+	{
+    setValue(\"rect_AP\", \"backCol\", \"Red\");
+    setValue(\"btn_details\", \"backCol\", \"Red\");
   }
+
   if (version !=0)
     setValue(\"txt_version\", \"text\", \"ver: \" +version);
   else

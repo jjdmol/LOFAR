@@ -1,14 +1,14 @@
 V 10
 1
 LANG:1 14 19inch_Subrack
-PANEL,295 138 182 113 N "_3DFace" 3
+PANEL,343 200 182 113 N "_3DFace" 3
 "$RackNr"
 "$SubrackNr"
 "$datapoint"
 "main()
 {
   EP_setBackColor();	
-  setValue(\"text_SubrackNr\", \"text\", $SubrackNr );
+//  setValue(\"text_SubrackNr\", \"text\", $SubrackNr );
 }
 
 EP_setBackColor()
@@ -299,9 +299,13 @@ EP_setBackColorCB(string dpSource1,  unsigned AP1_RCU1_stat, string dpSource2,  
 //  setValue(\"Sign2\", \"visible\", (Subrack_main == 1));
 
   if (Subrack_main == 1)
-	   setValue(\"rect_Subrack\", \"backCol\", \"Lofar_maintenance\");
+  {
+    setValue(\"rect_Subrack\", \"backCol\", \"Lofar_maintenance\");
+	}
   else
+  {
     setValue(\"rect_Subrack\", \"backCol\", \"white\");
+  }
 //    setValue(\"rect_Subrack\", \"backCol\", \"lightgrey\"); Test if white is OK! 
 
 }" 0
