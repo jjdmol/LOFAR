@@ -1,4 +1,4 @@
- //  PO_DH_Database.h: Standard database persistent DH_Database
+//  PO_DH_Database.h: Standard database persistent DH_Database
 //
 //  Copyright (C) 2000, 2002
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,7 +28,8 @@
 
 #include <Common/lofar_string.h>
 
-bool ConnectDatabase (void);
+bool ConnectDatabase (char * hostname);
+bool DisconnectDatabase (void);
 
 // ==========================================
 // [>] DatabaseRecord
@@ -99,13 +100,17 @@ private:
 };
 
 
+#define DB_HOSTNAME "dop49"
+
 
 class PO_DH_Database : public DatabaseRecord {
 
+  bool isConnected;
+
 public:
 
-  bool Store ();
-  bool Retrieve ();
+  bool Store (unsigned long wrseqno);
+  bool Retrieve (unsigned long rdweqno);
 
 };
 
