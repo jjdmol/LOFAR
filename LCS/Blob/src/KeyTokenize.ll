@@ -52,6 +52,8 @@ IMAG      {FLINT}"i"
 DIMAG     {DBINT}"i"
 TRUE      T
 FALSE     F
+DMS       ({INT})?"."({INT})?"."({INT}|{FLOAT}|{DOUBLE})?
+HMS       ({INT})?":"({INT})?":"({INT}|{FLOAT}|{DOUBLE})?
 
 QSTRING   \"[^\"\n]*\"
 ASTRING   \'[^\'\n]*\'
@@ -71,6 +73,16 @@ ESCNAME   ([A-Za-z0-9._~$]|(\\.))+
           }
 
  /* Literals */
+{DMS}     {
+            KeyParser::position() += yyleng;
+            lvalp->val = new KeyValue (KeyTokenizetext, KeyValue::DMS);
+	    return LITERAL;
+	  }
+{HMS}     {
+            KeyParser::position() += yyleng;
+            lvalp->val = new KeyValue (KeyTokenizetext, KeyValue::HMS);
+	    return LITERAL;
+	  }
 {DCOMPLEX} {
             KeyParser::position() += yyleng;
             double value;

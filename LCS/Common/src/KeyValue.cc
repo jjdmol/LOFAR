@@ -25,6 +25,8 @@
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 #include <stdexcept>
+#include <sstream>
+#include <Common/Debug.h>
 
 namespace LOFAR {
 
@@ -134,6 +136,12 @@ KeyValue::KeyValue (const KeyValueMap& value)
 : itsDataType (DTValueMap),
   itsExtDT    (DTValueMap),
   itsValuePtr (new KeyValueMap(value))
+{}
+
+KeyValue::KeyValue (const string& value, KeyValue::AngleType atype)
+: itsDataType (DTDouble),
+  itsExtDT    (DTDouble),
+  itsValuePtr (new double(parsePos(value, atype)))
 {}
 
 KeyValue::KeyValue (const KeyValue& that)
@@ -903,5 +911,68 @@ BlobIStream& operator>> (BlobIStream& bs, KeyValue& param)
   }
   return bs;
 }
+
+double KeyValue::parsePos (const string& value, KeyValue::AngleType atype)
+{
+  const double pi = 3.141592653589793238462643;
+  switch (atype) {
+  case DMS:
+    return parse (value, '.', pi/180);
+  case HMS:
+    return parse (value, ':', pi*15/180);
+  default:
+    throw Exception("KeyValue: unknow AngleType given");
+  }
+}
+
+double KeyValue::parse (const string& value, char sep, double factor)
+{
+  if (value.size() == 0) {
+    return 0.;
+  }
+  // Determine if the position value is negative.
+  string::size_type spos = 0;
+  string::size_type epos = 0;
+  double sign = 1;
+  if (value[0] == '-') {
+    sign = -1;
+    spos = 1;
+  }
+  // Loop through the string separating it at sep.
+  // factr keeps track of the part scaling factor (minutes, seconds, etc.).
+  double val = 0;
+  double factr = 1;
+  while (epos != string::npos  &&  spos < value.size()) {
+    // There can only be 3 parts, so take last one till the end.
+    // In that way something like 12.34.56.78 is parsed correctly.
+    if (factr > 100.) {
+      epos = string::npos;
+    } else {
+      epos = value.find (sep, spos);
+    }
+    string part;
+    if (epos == string::npos) {
+      part = value.substr (spos);
+    } else {
+      part = value.substr (spos, epos-spos);
+    }
+    // A part can be empty.
+    if (part.size() > 0) {
+      std::istringstream istr(part);
+      double v;
+      istr >> v;
+      // Check if all characters of the part have been read.
+      if (int(istr.tellg()) != int(part.size())) {
+	throw Exception("KeyValue: " + value +
+			" is an invalid HMS or DMS value at part " + part);
+      }
+      val += v*factor/factr;
+    }
+    factr *= 60;
+    spos = epos + 1;
+  }
+  return val*sign;
+}
+
 
 } // end namespace
