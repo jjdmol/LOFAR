@@ -30,7 +30,7 @@ using namespace LOFAR;
 using namespace std;
 
 
-void doReq (DFTAll& dft,
+bool doReq (DFTAll& dft,
 	    double startFreq, double stepFreq, int nfreq,
 	    double startTime, double stepTime, int ntime,
 	    double startUVW, double stepUVW, double L, double M,
@@ -118,46 +118,50 @@ void doReq (DFTAll& dft,
     }
   }
   cout << "maxdiffre=" << maxdre << ", maxdiffim=" << maxdim << endl;
+  return (maxdre<1e-10 && maxdim<1e-10);
 }
 
-void doIt()
+bool doIt()
 {
   DFTAll dft;
+  bool ok = true;
   {
     int nant = 4;
     int nfreq = 10;
     int ntime = 5;
-    doReq (dft,
-	   1e8, 1e6, nfreq,     // start,step,n freq
-	   50., 2., ntime,      // start,step,n time
-	   1., 0.1,             // start,step uvw
-	   0.4, 0.6,            // L,M
-	   0, 1, nant);         // start,step,n ant
+    ok = ok && doReq (dft,
+		      1e8, 1e6, nfreq,     // start,step,n freq
+		      50., 2., ntime,      // start,step,n time
+		      1., 0.1,             // start,step uvw
+		      0.4, 0.6,            // L,M
+		      0, 1, nant);         // start,step,n ant
   }
   {
     int nant = 4;
     int nfreq = 512;
     int ntime = 5;
-    doReq (dft,
-	   1e8, 1e6, nfreq,     // start,step,n freq
-	   50., 2., ntime,      // start,step,n time
-	   1., 0.1,             // start,step uvw
-	   0.4, 0.6,            // L,M
-	   0, 1, nant);         // start,step,n ant
+    ok = ok && doReq (dft,
+		      1e8, 1e6, nfreq,     // start,step,n freq
+		      50., 2., ntime,      // start,step,n time
+		      1., 0.1,             // start,step uvw
+		      0.4, 0.6,            // L,M
+		      0, 1, nant);         // start,step,n ant
   }
   // Set end.
   dft.quit();
+  return ok;
 }
 
 int main()
 {
+  bool ok = true;
   try {
     // Initialize the LOFAR logger
     INIT_LOGGER("tDFTServer.log_prop");
-    doIt();
+    ok = doIt();
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;
   }
-  return 0;
+  return (ok ? 0:1);
 }
