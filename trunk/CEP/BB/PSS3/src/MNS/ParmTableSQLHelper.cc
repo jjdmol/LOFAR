@@ -178,6 +178,7 @@ MeqMatrix ParmTableSQLHelper::getMeqMatrix(char** resRow, int column)
      << MPH.getStation()
      << ")";
   string s=qs.str();
+  //  cout<<"query: "<<s<<endl;
   return s;
 }
 
@@ -188,7 +189,7 @@ MeqMatrix ParmTableSQLHelper::getMeqMatrix(char** resRow, int column)
 {
   std::ostringstream qs;
   qs.precision(PRECISION);
-  qs << "INSERT INTO " << tableName << " ("
+  qs << "INSERT INTO " << tableName << "def ("
      << " Coeff, SimCoeff, PertSimCoeff, pertvalue, isrelpert, t0, f0, normalized, name, srcnr, statnr"
      << ") VALUES ('"
      << MeqMat2string(MPH.getPolc().getCoeff()) << "', '"

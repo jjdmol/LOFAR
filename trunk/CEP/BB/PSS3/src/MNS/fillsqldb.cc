@@ -146,6 +146,51 @@ MeqMatrix getArray (const KeyValueMap& kvmap, const std::string& arrName,
   return mat;
 }
 
+MeqDomain getDomain (const KeyValueMap& kvmap, const std::string& arrName)
+{
+  KeyValueMap::const_iterator value = kvmap.find(arrName);
+  if (value == kvmap.end()) {
+    MeqDomain MDdef (0, 1, 0, 1);
+    return MDdef;
+  }
+  vector<double> vec;
+  if (value->second.dataType() == KeyValue::DTValueVector) {
+    const vector<KeyValue>& vvec = value->second.getVector();
+    for (uint i=0; i<vvec.size(); i++) {
+      vec.push_back (vvec[i].getDouble());
+    }
+  } else {
+    value->second.get (vec);
+  }
+  if (vec.size()!=4) {
+    cerr<<"wrong number of domain values"<<endl;
+    exit(1);
+  }
+  MeqDomain MD(vec[0], vec[1], vec[2], vec[3]);
+  return MD;
+}
+
+void newParm (const std::string& tableName, const std::string& parmName,
+		 KeyValueMap& kvmap)
+{
+  int srcnr = kvmap.getInt ("srcnr", -1);
+  int statnr = kvmap.getInt ("statnr", -1);
+  MeqPolc polc;
+  polc.setCoeff (getArray (kvmap, "values", kvmap.getInt("nx", 1)));
+  polc.setSimCoeff (polc.getCoeff().clone());
+  MeqMatrix mat(double(0), polc.getCoeff().nx(), polc.getCoeff().ny());
+  polc.setPertSimCoeff (mat);
+  polc.setNormalize (kvmap.getBool ("normalize", true));
+  double diff = kvmap.getDouble ("diff", 1e-6);
+  bool diffrel = kvmap.getBool ("diffrel", true);
+  polc.setPerturbation (diff, diffrel);
+  polc.setX0 (kvmap.getDouble ("time0", 0.));
+  polc.setY0 (kvmap.getDouble ("freq0", 0.));
+  polc.setDomain (getDomain (kvmap, "domain"));
+  //  cout<<"now putting "<<parmName<<endl;
+  PTR->putNewCoeff(parmName, srcnr, statnr, polc);
+}
+
 void newParmDef (const std::string& tableName, const std::string& parmName,
 		 KeyValueMap& kvmap)
 {
@@ -162,19 +207,19 @@ void newParmDef (const std::string& tableName, const std::string& parmName,
   polc.setPerturbation (diff, diffrel);
   polc.setX0 (kvmap.getDouble ("time0", 0.));
   polc.setY0 (kvmap.getDouble ("freq0", 0.));
-
   PTR->putNewDefCoeff(parmName, srcnr, statnr, polc);
 }
 
 void doIt()
 {
   PTR=0;
-  char cstra[1024];
-  char* cstr = cstra;
+  int buffersize=1024;
+  char cstra[buffersize];
   // Loop until stop is given.
   while (true) {
     //    try {
-      if (! cin.getline (cstr, sizeof(cstra))) {
+      char* cstr = cstra;
+      if (! cin.getline (cstr, buffersize)) {
 	cerr << "Error while reading command" << endl;
 	break;
       } 
@@ -196,24 +241,27 @@ void doIt()
 	dbType = kvmap.getString ("dbtype", "postgres");
 	tableName = kvmap.getString ("tablename", "MeqParm");
 	if (dbType=="postgres"){
-	  PTR = new ParmTablePGSQL (dbHost, dbUser, tableName+"def");
+	  PTR = new ParmTablePGSQL (dbHost, dbUser, tableName);
 	} else if (dbType=="mysql") {
-	  PTR = new ParmTableMySQL (dbHost, dbUser, tableName+"def");
+	  PTR = new ParmTableMySQL (dbHost, dbUser, tableName);
 	} else if (dbType=="monet") {
-	  PTR = new ParmTableMonet (dbHost, dbUser, tableName+"def", true);
+	  PTR = new ParmTableMonet (dbHost, dbUser, tableName, true);
 	} else if (dbType=="aips") {
 	  PTR = new ParmTableAIPS (tableName);
 	} else {
 	  cerr<<"Unknown database type: '"<<dbType<<"'"<<endl;
 	  exit(1);
 	};
-	cout << "Connected to " << dbType << " database " << dbName
-	     << endl;
+	//cout << "Connected to " << dbType << " database " << dbName
+	//     << endl;
       } else {
 	parmName = getParmName (cstr);
 	KeyValueMap kvmap = KeyParser::parse (cstr);
 	if (command == 12) {
 	  newParmDef (tableName, parmName, kvmap);
+	}
+	if (command == 2) {
+	  newParm (tableName, parmName, kvmap);
 	}
 	      }
       //    } catch (std::exception& x) {
