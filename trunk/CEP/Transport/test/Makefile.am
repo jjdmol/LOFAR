@@ -14,7 +14,7 @@ CXXFLAGS += \
 	-DMORECORE_CANNOT_TRIM=1 \
 	-DSHMEM_ALLOC
 
-check_PROGRAMS			= Example ExampleMemBL ExamplePL ExamplePL2 ExamplePL3 ExampleShMem ExampleSocket ExampleSocketPerf
+check_PROGRAMS			= Example TestBidirectional ExampleMemBL ExamplePL ExamplePL2 ExamplePL3 ExampleShMem ExampleSocket ExampleSocketPerf 
 
 
 Example_SOURCES 		= Example.cc DH_Example.cc
@@ -32,6 +32,8 @@ ExampleShMem_SOURCES 		= ExampleShMem.cc DH_Example.cc
 ExampleSocket_SOURCES		= ExampleSocket.cc DH_Example.cc
 
 ExampleSocketPerf_SOURCES	= ExampleSocketPerf.cc DH_Example.cc StopWatch.cc
+
+TestBidirectional_SOURCES 	= TestBidirectional.cc DH_Example.cc
 
 LDADD				= ../src/libtransport.la 
 DEPENDENCIES			= ../src/libtransport.la $(LOFAR_DEPEND)
