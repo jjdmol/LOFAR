@@ -92,14 +92,22 @@ namespace LCS
       // PersistentObject.
       ObjectId itsOid;
 
-      // Each PersistentObject may have a parent. In order to be able to
-      // recreate an instance of an object, we need to retain the parent-child
-      // relationship. The child holds this reference, because the child's
-      // multiplicity is always one.
-      // \note "Parent" should not be interpreted as "being derived from".
-      // From the data point-of-view containment of one class instance by
-      // another is also considered a parent-child relation. 
-      ObjectId itsParentOid;
+      // Each PersistentObject may be owned by another PersistentObject. 
+      // We say that an object is owned by another object, when either 
+      // \li the object is contained by (it is a member of) another object,
+      // or 
+      // \li the object is the parent (or base class) of another object.
+      //
+      // In order to be able to recreate an instance of an object, we need to
+      // record the "ownership" as well. The owned object will record a
+      // reference to its owner, because each object will have at most
+      // one owner.
+      //
+      // \note Strictly speaking, it is strange to say that a child class owns
+      // its parent. However, from a data point of view it is very practical,
+      // because the member data of the parent object appear to be part of the
+      // child object.
+      ObjectId itsOwnerOid;
 
       // The date and time of last modification of this PersistentObject in
       // the database.
