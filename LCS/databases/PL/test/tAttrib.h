@@ -24,77 +24,82 @@
 #define LOFAR_PL_TEST_TATTRIB_H
 
 #include <PL/PLfwd.h>
-#include <string>
+#include <Common/lofar_string.h>
 
-//@defgroup tAttrib tAttrib: User-defined classes
-//@{
-
-class A
+namespace LOFAR 
 {
-public:
-  A() : s("A") {}
-private:
-  friend class LOFAR::PL::TPersistentObject<A>;
-  std::string s;
-};
 
-class B
-{
-public:
-  B() : s("B") {}
-private:
-  friend class LOFAR::PL::TPersistentObject<B>;
-  std::string s;
-};
+  //@defgroup tAttrib tAttrib: User-defined classes
+  //@{
 
-class C : public A
-{
-public:
-  C() : s("C") {}
-private:
-  friend class LOFAR::PL::TPersistentObject<C>;
-  std::string s;
-};
+  class A
+  {
+  public:
+    A() : s("A") {}
+  private:
+    friend class LOFAR::PL::TPersistentObject<A>;
+    string s;
+  };
 
-class D : public B
-{
-public:
-  D() : s("D") {}
-private:
-  friend class LOFAR::PL::TPersistentObject<D>;
-  std::string s;
-  C c;
-};
+  class B
+  {
+  public:
+    B() : s("B") {}
+  private:
+    friend class LOFAR::PL::TPersistentObject<B>;
+    string s;
+  };
 
-class E
-{
-public:
-  E() : s("E") {}
-private:
-  friend class LOFAR::PL::TPersistentObject<E>;
-  std::string s;
-};
+  class C : public A
+  {
+  public:
+    C() : s("C") {}
+  private:
+    friend class LOFAR::PL::TPersistentObject<C>;
+    string s;
+  };
 
-class F
-{
-public:
-  F() : s("F") {}
-private:
-  friend class LOFAR::PL::TPersistentObject<F>;
-  std::string s;
-  E e;
-};
+  class D : public B
+  {
+  public:
+    D() : s("D") {}
+  private:
+    friend class LOFAR::PL::TPersistentObject<D>;
+    string s;
+    C c;
+  };
 
-class G : public D
-{
-public:
-  G() : s("G") {}
-private:
-  friend class LOFAR::PL::TPersistentObject<G>;
-  std::string s;
-  F f;
-};
+  class E
+  {
+  public:
+    E() : s("E") {}
+  private:
+    friend class LOFAR::PL::TPersistentObject<E>;
+    string s;
+  };
 
-//@}
+  class F
+  {
+  public:
+    F() : s("F") {}
+  private:
+    friend class LOFAR::PL::TPersistentObject<F>;
+    string s;
+    E e;
+  };
+
+  class G : public D
+  {
+  public:
+    G() : s("G") {}
+  private:
+    friend class LOFAR::PL::TPersistentObject<G>;
+    string s;
+    F f;
+  };
+
+  //@}
+
+} // namespace LOFAR
 
 #endif
