@@ -15,9 +15,11 @@ class Dataclass:
 
   tablename = None;
   id = None;
+  username="bb";
+  dbname="bb";
 
   def mkConnection(self):
-    self.db = pg.DB(dbname="bb");
+    self.db = pg.DB(dbname=self.dbname, user=self.username);
     
 
   def __init__(self):

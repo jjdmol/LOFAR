@@ -40,7 +40,7 @@ class Engine(Dataclass,KnowledgeSource):
     """ find an assigned action and perform """
     import pgdb
     """pgdb must be patched not to search for typprtlen in pg_type"""
-    newdb = pgdb.connect(database="bb")
+    newdb = pgdb.connect(database=Dataclass.dbname, user=Dataclass.username)
     cursor = newdb.cursor();
     cursor.execute("SELECT oid FROM workloads WHERE engine_id = " + str(self.id) + " AND status = 'new'")
     record = cursor.fetchone();

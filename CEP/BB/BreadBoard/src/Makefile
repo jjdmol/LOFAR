@@ -1,5 +1,5 @@
 CFLAGS+=-I/usr/include/python2.2
-CPPFLAGS+=-I/usr/include/python2.3
+CPPFLAGS+=-I/usr/local/include/python2.3
 
 %.cc:	%.cxx
 	cp $< $@
@@ -10,12 +10,13 @@ CPPFLAGS+=-I/usr/include/python2.3
 all:
 	cd selfcal; make
 
-_array.so:	array_wrap.o
+_array.so:	array.o array_wrap.o
 	ld -shared -o $@ $^
 
 clean:
 	-@rm *.o
-	-@rm _selfcal.so
+	-@rm _*.so
 	-@rm selfcal_wrap.*
 	-@rm selfcal.py
 	-@rm core
+	cd selfcal; make clean

@@ -16,6 +16,6 @@ db = None;
 def init():
   import pg;
   global db;
-  db = pg.DB(dbname="bb");
+  db = pg.DB(dbname="bb",user="bb");
 
 init();
