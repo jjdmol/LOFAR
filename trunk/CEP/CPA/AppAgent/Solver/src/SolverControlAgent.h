@@ -31,7 +31,7 @@ class AppEventSink;
 #pragma aidgroup Solver
 #pragma aid Start End Stop Iteration Solution Solver Control Message Convergence 
 #pragma aid Next Step Domain Data Num All Params Solved Index Peel Accept
-#pragma aid When Max Converged Iter Command Add Queue Size Single Step
+#pragma aid When Max Converged Iter Command Add Queue Size Single Step Defer
 
 
 namespace AppState
@@ -70,6 +70,8 @@ const HIID
     EndSolutionEvent    = AidEnd|AidSolution,
     //    Posted when a domain has been solved for
     EndDomainEvent      = AidEnd|AidDomain,
+    //    Posted when a next-domain transition has been deferred
+    NextDomainDeferEvent= AidNext|AidDomain|AidDefer,
     //    Posted on close(), when the solver is finished
     SolverEndEvent      = AidSolver|AidEnd,
     //    Normally posted when the application indicates end-of-data
@@ -379,6 +381,7 @@ class SolverControlAgent : public AppControlAgent
 
     //##ModelId=3E5F675C02FC
     int setEndSolutionState ();
+    int setNextDomainState ();
     
     //##ModelId=3E56568200E6
     std::deque<DataRecord::Ref> solve_queue_;

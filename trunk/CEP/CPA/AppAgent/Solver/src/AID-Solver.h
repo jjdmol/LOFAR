@@ -83,10 +83,25 @@ const int AidConvergence_int = -1143;
 const AtomicID AidCorrSel(-1359);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:15
 const int AidCorrSel_int = -1359;
 #endif
+#ifndef _defined_id_AidCount
+#define _defined_id_AidCount 1
+const AtomicID AidCount(-1108);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/test/Testing.aidlist:1
+const int AidCount_int = -1108;
+#endif
+#ifndef _defined_id_AidCurrent
+#define _defined_id_AidCurrent 1
+const AtomicID AidCurrent(-1390);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:17
+const int AidCurrent_int = -1390;
+#endif
 #ifndef _defined_id_AidData
 #define _defined_id_AidData 1
 const AtomicID AidData(-1107);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/test/Testing.aidlist:2
 const int AidData_int = -1107;
+#endif
+#ifndef _defined_id_AidDefer
+#define _defined_id_AidDefer 1
+const AtomicID AidDefer(-1389);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:19
+const int AidDefer_int = -1389;
 #endif
 #ifndef _defined_id_AidDomain
 #define _defined_id_AidDomain 1
@@ -95,7 +110,7 @@ const int AidDomain_int = -1144;
 #endif
 #ifndef _defined_id_AidENDSOLVE
 #define _defined_id_AidENDSOLVE 1
-const AtomicID AidENDSOLVE(-1341);                // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:18
+const AtomicID AidENDSOLVE(-1341);                // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:21
 const int AidENDSOLVE_int = -1341;
 #endif
 #ifndef _defined_id_AidEnd
@@ -105,17 +120,17 @@ const int AidEnd_int = -1131;
 #endif
 #ifndef _defined_id_AidErrors
 #define _defined_id_AidErrors 1
-const AtomicID AidErrors(-1374);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:20
+const AtomicID AidErrors(-1374);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:23
 const int AidErrors_int = -1374;
 #endif
 #ifndef _defined_id_AidFinal
 #define _defined_id_AidFinal 1
-const AtomicID AidFinal(-1385);                   // from /home/oms/LOFAR/CEP/CPA/AppAgent/Solver/src/MeqCalSolver.h:57
+const AtomicID AidFinal(-1385);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:24
 const int AidFinal_int = -1385;
 #endif
 #ifndef _defined_id_AidFit
 #define _defined_id_AidFit 1
-const AtomicID AidFit(-1373);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:21
+const AtomicID AidFit(-1373);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:25
 const int AidFit_int = -1373;
 #endif
 #ifndef _defined_id_AidFlag
@@ -125,12 +140,12 @@ const int AidFlag_int = -1207;
 #endif
 #ifndef _defined_id_AidGSM
 #define _defined_id_AidGSM 1
-const AtomicID AidGSM(-1365);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:23
+const AtomicID AidGSM(-1365);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:27
 const int AidGSM_int = -1365;
 #endif
 #ifndef _defined_id_AidIDLE
 #define _defined_id_AidIDLE 1
-const AtomicID AidIDLE(-1340);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:24
+const AtomicID AidIDLE(-1340);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:28
 const int AidIDLE_int = -1340;
 #endif
 #ifndef _defined_id_AidIndex
@@ -140,12 +155,12 @@ const int AidIndex_int = -1045;
 #endif
 #ifndef _defined_id_AidIntermediate
 #define _defined_id_AidIntermediate 1
-const AtomicID AidIntermediate(-1386);            // from /home/oms/LOFAR/CEP/CPA/AppAgent/Solver/src/MeqCalSolver.h:57
+const AtomicID AidIntermediate(-1386);            // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:30
 const int AidIntermediate_int = -1386;
 #endif
 #ifndef _defined_id_AidIter
 #define _defined_id_AidIter 1
-const AtomicID AidIter(-1334);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:26
+const AtomicID AidIter(-1334);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:31
 const int AidIter_int = -1334;
 #endif
 #ifndef _defined_id_AidIteration
@@ -155,17 +170,17 @@ const int AidIteration_int = -1148;
 #endif
 #ifndef _defined_id_AidJob
 #define _defined_id_AidJob 1
-const AtomicID AidJob(-1231);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:28
+const AtomicID AidJob(-1231);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:33
 const int AidJob_int = -1231;
 #endif
 #ifndef _defined_id_AidJobs
 #define _defined_id_AidJobs 1
-const AtomicID AidJobs(-1229);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:29
+const AtomicID AidJobs(-1229);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:34
 const int AidJobs_int = -1229;
 #endif
 #ifndef _defined_id_AidMEP
 #define _defined_id_AidMEP 1
-const AtomicID AidMEP(-1358);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:30
+const AtomicID AidMEP(-1358);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:35
 const int AidMEP_int = -1358;
 #endif
 #ifndef _defined_id_AidMax
@@ -180,27 +195,27 @@ const int AidMessage_int = -1067;
 #endif
 #ifndef _defined_id_AidModelType
 #define _defined_id_AidModelType 1
-const AtomicID AidModelType(-1364);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:33
+const AtomicID AidModelType(-1364);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:38
 const int AidModelType_int = -1364;
 #endif
 #ifndef _defined_id_AidMu
 #define _defined_id_AidMu 1
-const AtomicID AidMu(-1377);                      // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:34
+const AtomicID AidMu(-1377);                      // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:39
 const int AidMu_int = -1377;
 #endif
 #ifndef _defined_id_AidNEXT_DOMAIN
 #define _defined_id_AidNEXT_DOMAIN 1
-const AtomicID AidNEXT_DOMAIN(-1342);             // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:35
+const AtomicID AidNEXT_DOMAIN(-1342);             // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:40
 const int AidNEXT_DOMAIN_int = -1342;
 #endif
 #ifndef _defined_id_AidNext
 #define _defined_id_AidNext 1
-const AtomicID AidNext(-1150);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:36
+const AtomicID AidNext(-1150);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:41
 const int AidNext_int = -1150;
 #endif
 #ifndef _defined_id_AidNiter
 #define _defined_id_AidNiter 1
-const AtomicID AidNiter(-1356);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:37
+const AtomicID AidNiter(-1356);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:42
 const int AidNiter_int = -1356;
 #endif
 #ifndef _defined_id_AidNum
@@ -210,97 +225,97 @@ const int AidNum_int = -1140;
 #endif
 #ifndef _defined_id_AidParameter
 #define _defined_id_AidParameter 1
-const AtomicID AidParameter(-1232);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:39
+const AtomicID AidParameter(-1232);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:44
 const int AidParameter_int = -1232;
 #endif
 #ifndef _defined_id_AidParams
 #define _defined_id_AidParams 1
-const AtomicID AidParams(-1135);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:19
+const AtomicID AidParams(-1135);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:20
 const int AidParams_int = -1135;
 #endif
 #ifndef _defined_id_AidParms
 #define _defined_id_AidParms 1
-const AtomicID AidParms(-1370);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:41
+const AtomicID AidParms(-1370);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:46
 const int AidParms_int = -1370;
 #endif
 #ifndef _defined_id_AidPeel
 #define _defined_id_AidPeel 1
-const AtomicID AidPeel(-1333);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:42
+const AtomicID AidPeel(-1333);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:47
 const int AidPeel_int = -1333;
 #endif
 #ifndef _defined_id_AidPeelNrs
 #define _defined_id_AidPeelNrs 1
-const AtomicID AidPeelNrs(-1363);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:43
+const AtomicID AidPeelNrs(-1363);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:48
 const int AidPeelNrs_int = -1363;
 #endif
 #ifndef _defined_id_AidPredNrs
 #define _defined_id_AidPredNrs 1
-const AtomicID AidPredNrs(-1357);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:44
+const AtomicID AidPredNrs(-1357);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:49
 const int AidPredNrs_int = -1357;
 #endif
 #ifndef _defined_id_AidQueue
 #define _defined_id_AidQueue 1
-const AtomicID AidQueue(-1339);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:45
+const AtomicID AidQueue(-1339);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:50
 const int AidQueue_int = -1339;
 #endif
 #ifndef _defined_id_AidRank
 #define _defined_id_AidRank 1
-const AtomicID AidRank(-1372);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:46
+const AtomicID AidRank(-1372);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:51
 const int AidRank_int = -1372;
 #endif
 #ifndef _defined_id_AidResiduals
 #define _defined_id_AidResiduals 1
-const AtomicID AidResiduals(-1257);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:22
+const AtomicID AidResiduals(-1257);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:23
 const int AidResiduals_int = -1257;
 #endif
 #ifndef _defined_id_AidSave
 #define _defined_id_AidSave 1
-const AtomicID AidSave(-1369);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:48
+const AtomicID AidSave(-1369);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:53
 const int AidSave_int = -1369;
 #endif
 #ifndef _defined_id_AidSingle
 #define _defined_id_AidSingle 1
-const AtomicID AidSingle(-1354);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:49
+const AtomicID AidSingle(-1354);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:54
 const int AidSingle_int = -1354;
 #endif
 #ifndef _defined_id_AidSize
 #define _defined_id_AidSize 1
-const AtomicID AidSize(-1127);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:24
+const AtomicID AidSize(-1127);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:26
 const int AidSize_int = -1127;
 #endif
 #ifndef _defined_id_AidSolution
 #define _defined_id_AidSolution 1
-const AtomicID AidSolution(-1147);                // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:51
+const AtomicID AidSolution(-1147);                // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:56
 const int AidSolution_int = -1147;
 #endif
 #ifndef _defined_id_AidSolvParams
 #define _defined_id_AidSolvParams 1
-const AtomicID AidSolvParams(-1378);              // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:52
+const AtomicID AidSolvParams(-1378);              // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:57
 const int AidSolvParams_int = -1378;
 #endif
 #ifndef _defined_id_AidSolvableFlag
 #define _defined_id_AidSolvableFlag 1
-const AtomicID AidSolvableFlag(-1366);            // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:53
+const AtomicID AidSolvableFlag(-1366);            // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:58
 const int AidSolvableFlag_int = -1366;
 #endif
 #ifndef _defined_id_AidSolvableParm
 #define _defined_id_AidSolvableParm 1
-const AtomicID AidSolvableParm(-1362);            // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:54
+const AtomicID AidSolvableParm(-1362);            // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:59
 const int AidSolvableParm_int = -1362;
 #endif
 #ifndef _defined_id_AidSolve
 #define _defined_id_AidSolve 1
-const AtomicID AidSolve(-1384);                   // from /home/oms/LOFAR/CEP/CPA/AppAgent/Solver/src/MeqCalSolver.h:57
+const AtomicID AidSolve(-1384);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:60
 const int AidSolve_int = -1384;
 #endif
 #ifndef _defined_id_AidSolved
 #define _defined_id_AidSolved 1
-const AtomicID AidSolved(-1230);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:55
+const AtomicID AidSolved(-1230);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:61
 const int AidSolved_int = -1230;
 #endif
 #ifndef _defined_id_AidSolver
 #define _defined_id_AidSolver 1
-const AtomicID AidSolver(-1146);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:56
+const AtomicID AidSolver(-1146);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:62
 const int AidSolver_int = -1146;
 #endif
 #ifndef _defined_id_AidStart
@@ -310,12 +325,12 @@ const int AidStart_int = -1134;
 #endif
 #ifndef _defined_id_AidStdDev
 #define _defined_id_AidStdDev 1
-const AtomicID AidStdDev(-1375);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:58
+const AtomicID AidStdDev(-1375);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:64
 const int AidStdDev_int = -1375;
 #endif
 #ifndef _defined_id_AidStep
 #define _defined_id_AidStep 1
-const AtomicID AidStep(-1142);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:59
+const AtomicID AidStep(-1142);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:65
 const int AidStep_int = -1142;
 #endif
 #ifndef _defined_id_AidStop
@@ -323,14 +338,24 @@ const int AidStep_int = -1142;
 const AtomicID AidStop(-1138);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:68
 const int AidStop_int = -1138;
 #endif
+#ifndef _defined_id_AidTile
+#define _defined_id_AidTile 1
+const AtomicID AidTile(-1123);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:10
+const int AidTile_int = -1123;
+#endif
+#ifndef _defined_id_AidTime
+#define _defined_id_AidTime 1
+const AtomicID AidTime(-1218);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/VisCube/src/VisCube.aidlist:74
+const int AidTime_int = -1218;
+#endif
 #ifndef _defined_id_AidUseSVD
 #define _defined_id_AidUseSVD 1
-const AtomicID AidUseSVD(-1361);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:61
+const AtomicID AidUseSVD(-1361);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:69
 const int AidUseSVD_int = -1361;
 #endif
 #ifndef _defined_id_AidWhen
 #define _defined_id_AidWhen 1
-const AtomicID AidWhen(-1335);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:62
+const AtomicID AidWhen(-1335);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/Solver/src/Solver.aidlist:70
 const int AidWhen_int = -1335;
 #endif
 
