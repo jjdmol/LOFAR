@@ -59,6 +59,13 @@ namespace LOFAR
   void dataConvert (DataFormat, dcomplex* inout, uint nrval);
   // <group>
 
+  // A convert of a char or uchar.
+  // Currently it simply returns the input.
+  // <group>
+  char dataConvert (DataFormat, char in);
+  unsigned char dataConvert (DataFormat, unsigned char in);
+  // </group>
+
   // Convert 16 bit integers.
   // <group>
   int16 dataConvert (DataFormat, int16 in);
@@ -173,6 +180,11 @@ namespace LOFAR
     { dataConvert32 (fmt, inout, 2*nrval); }
   inline void dataConvert (DataFormat fmt, dcomplex* inout, uint nrval)
     { dataConvert64 (fmt, inout, 2*nrval); }
+
+  inline char dataConvert (DataFormat, char in)
+    { return in; }
+  inline unsigned char dataConvert (DataFormat, unsigned char in)
+    { return in; }
 
   inline int16 dataConvert (DataFormat, int16 in)
     { return byteSwap (in); }
