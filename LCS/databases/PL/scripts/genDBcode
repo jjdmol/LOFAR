@@ -324,7 +324,7 @@ TPOaddInitRoutine()
 	done
 
 	echo "	// set the correct database table name"
-	echo "	tableName(\"${Class}\");"
+	echo "	tableName(\"${Table}\");"
 	echo "}"
 	echo ""
 }
