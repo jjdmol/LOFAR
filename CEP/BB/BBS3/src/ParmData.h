@@ -38,13 +38,16 @@ class ParmData
 public:
   ParmData ();
   // Constructor.
-  ParmData (const std::string& name, int nrSpid, int firstSpid,
+  ParmData (const std::string& name, int itsParmTableIndex,
+	    int nrSpid, int firstSpid,
 	    const MeqMatrix& values);
 
   // Get the properties.
   // <group>
   const std::string& getName() const
     { return itsName; }
+  int getIndex() const
+    { return itsTableIndex; }
   int getNrSpid() const
     { return itsNrSpid; }
   int getFirstSpid() const
@@ -80,6 +83,7 @@ public:
 private:
   int itsNrSpid;
   int itsFirstSpid;
+  int itsTableIndex;
   std::string itsName;
   MeqMatrix itsValues;
 };

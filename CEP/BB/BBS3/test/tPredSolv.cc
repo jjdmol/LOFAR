@@ -68,7 +68,7 @@ void doSolve (Prediffer& pre1, const vector<string>& solv)
     } else {
       ASSERT (more);
     }
-    solver.setEquations (buffer, nreq, shape[1], shape[0], 0);
+    solver.setEquations (buffer, nreq, shape[1]-1, shape[0], 0);
   }
 
   // Do the solve.

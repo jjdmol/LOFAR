@@ -158,7 +158,10 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
       dxy[i] = l11[i]*sf12 + l12[i]*sf22;
       dyx[i] = l21[i]*sf11 + l22[i]*sf21;
       dyy[i] = l21[i]*sf12 + l22[i]*sf22;
+
     }
+    ///    cout << "MeqLofarPoint " << srcnr << ' ' << resl11.getValue()
+    ///	 << resr11.getValue() << xx << endl;
     // Evaluate (if needed) for the perturbed parameter values.
     MeqMatrix perturbation;
     for (int spinx=0; spinx<request.nspid(); spinx++) {

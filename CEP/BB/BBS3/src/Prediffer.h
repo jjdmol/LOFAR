@@ -199,6 +199,7 @@ private:
   ParmTable             itsMEP;         //# Common parmtable
   string                itsGSMMEPName;  //# GSM parameters parmtable name
   ParmTable             itsGSMMEP;      //# parmtable for GSM parameters
+  MeqParmGroup          itsParmGroup;   //# container for all parms
   bool                  itsCalcUVW;
 
   MeqPhaseRef           itsPhaseRef;    //# Phase reference position in J2000

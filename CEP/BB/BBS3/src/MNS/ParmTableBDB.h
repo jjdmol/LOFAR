@@ -57,28 +57,22 @@ namespace LOFAR {
     // matches the domain exactly.
     // Note that the requested domain may contain multiple polcs.
     virtual vector<MeqPolc> getPolcs (const string& parmName,
-				      int sourceNr, int station,
 				      const MeqDomain& domain);
 
     // Get the initial polynomial coefficients for the given parameter.
-    virtual MeqPolc getInitCoeff (const string& parmName,
-				  int sourceNr, int station);
+    virtual MeqPolc getInitCoeff (const string& parmName);
 
     // Put the polynomial coefficient for the given parameter and domain.
     virtual void putCoeff (const string& parmName,
-			   int sourceNr, int station,
 			   const MeqPolc& polc);
 
     // Put the default coefficients
     virtual void putDefCoeff (const string& parmName,
-			      int srcnr, int statnr,
 			      const MeqPolc& polc);
 
     virtual void putNewCoeff (const string& parmName,
-			      int srcnr, int statnr,
 			      const MeqPolc& polc);
     virtual void putNewDefCoeff (const string& parmName,
-				 int srcnr, int statnr,
 				 const MeqPolc& polc);
 
     // Get the names of all sources in the table.
@@ -134,8 +128,6 @@ namespace LOFAR {
       double perturbation;
       double x0;
       double y0;
-      int sourceNr;
-      int station;
       MeqDomain domain;
       bool isRelPerturbation;
       bool isNormalized;

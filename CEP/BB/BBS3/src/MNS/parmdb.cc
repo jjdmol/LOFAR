@@ -187,10 +187,8 @@ MeqDomain getDomain (const KeyValueMap& kvmap, const std::string& arrName)
 
 // IMPLEMENTATION OF THE COMMANDS
 void newParm (const std::string& tableName, const std::string& parmName,
-		 KeyValueMap& kvmap)
+	      KeyValueMap& kvmap)
 {
-  int srcnr = kvmap.getInt ("srcnr", -1);
-  int statnr = kvmap.getInt ("statnr", -1);
   MeqPolc polc;
  
   polc.setSimCoeff (getArray (kvmap, "values", kvmap.getInt("nx", 1)));
@@ -206,14 +204,12 @@ void newParm (const std::string& tableName, const std::string& parmName,
   polc.setY0 (kvmap.getDouble ("freq0", 0.));
   polc.setDomain (getDomain (kvmap, "domain"));
   //  cout<<"now putting "<<parmName<<endl;
-  PTR->putNewCoeff(parmName, srcnr, statnr, polc);
+  PTR->putNewCoeff(parmName, polc);
 }
 
 void newParmDef (const std::string& tableName, const std::string& parmName,
 		 KeyValueMap& kvmap)
 {
-  int srcnr = kvmap.getInt ("srcnr", -1);
-  int statnr = kvmap.getInt ("statnr", -1);
   MeqPolc polc;
   polc.setSimCoeff (getArray (kvmap, "values", kvmap.getInt("nx", 1)));
   polc.setPertSimCoeff(getArray (kvmap, "absPertValues", kvmap.getInt("nx", 1), 0));
@@ -233,13 +229,11 @@ void newParmDef (const std::string& tableName, const std::string& parmName,
   polc.setPerturbation (diff, diffrel);
   polc.setX0 (kvmap.getDouble ("time0", 0.));
   polc.setY0 (kvmap.getDouble ("freq0", 0.));
-  PTR->putNewDefCoeff(parmName, srcnr, statnr, polc);
+  PTR->putNewDefCoeff(parmName, polc);
 }
 void updateDef (const std::string& tableName, const std::string& parmName,
 		KeyValueMap& kvmap)
 {
-  int srcnr = kvmap.getInt ("srcnr", -1);
-  int statnr = kvmap.getInt ("statnr", -1);
   MeqPolc polc;
   polc.setSimCoeff (getArray (kvmap, "values", kvmap.getInt("nx", 1)));
   polc.setPertSimCoeff(getArray (kvmap, "absPertValues", kvmap.getInt("nx", 1), 0));
@@ -259,12 +253,12 @@ void updateDef (const std::string& tableName, const std::string& parmName,
   polc.setPerturbation (diff, diffrel);
   polc.setX0 (kvmap.getDouble ("time0", 0.));
   polc.setY0 (kvmap.getDouble ("freq0", 0.));
-  PTR->putDefCoeff(parmName, srcnr, statnr, polc);
+  PTR->putDefCoeff(parmName, polc);
 }
 
 void ShowDef(string name){
   cout<<name<<" : "<<endl;
-  MeqPolc MP = PTR->getInitCoeff(name, -1, -1);
+  MeqPolc MP = PTR->getInitCoeff(name);
   cout<<" coeff        : "<<MP.getCoeff()<<endl;
   cout<<" Simcoeff     : "<<MP.getSimCoeff()<<endl;
   cout<<" PertSimcoeff : "<<MP.getPertSimCoeff()<<endl;
@@ -273,7 +267,7 @@ void ShowDef(string name){
 }
 
 void Show(string name, MeqDomain &domain){
-  vector<MeqPolc> VMP = PTR->getPolcs(name, -1, -1, domain);
+  vector<MeqPolc> VMP = PTR->getPolcs(name, domain);
   for (uint i=0; i<VMP.size(); i++){
     cout<<name<<" : "<<endl;
     cout<<" coeff        : "<<VMP[i].getCoeff()<<endl;

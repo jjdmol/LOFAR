@@ -29,8 +29,9 @@
 
 namespace LOFAR {
 
-MeqParmSingle::MeqParmSingle (const string& name, double value)
-: MeqParm         (name),
+MeqParmSingle::MeqParmSingle (const string& name, MeqParmGroup* group,
+			      double value)
+: MeqParm         (name, group),
   itsInitialValue (value),
   itsCurValue     (value),
   itsSolveIndex   (-1)

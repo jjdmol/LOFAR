@@ -34,12 +34,11 @@ class MeqParmDefHolder
 {
 public:
   MeqParmDefHolder()
-    : itsSrcnr(0), itsStatnr(0)
     {}
 
-  MeqParmDefHolder (const string& name, int srcnr, int statnr,
-		    const MeqPolc& polc)
-    : itsName(name), itsSrcnr(srcnr), itsStatnr(statnr), itsPolc(polc)
+  MeqParmDefHolder (const string& name, const MeqPolc& polc)
+    : itsName(name),
+      itsPolc(polc)
     {}
 
   const string& getName() const
@@ -47,18 +46,6 @@ public:
 
   void setName (const string& name)
     { itsName = name; }
-
-  int getSourceNr() const
-    { return itsSrcnr; }
-
-  void setSourceNr (int srcnr)
-    { itsSrcnr = srcnr; }
-
-  int getStation() const
-    { return itsStatnr; }
-
-  void setStation (int statnr)
-    { itsStatnr = statnr; }
 
   const MeqPolc& getPolc() const
     { return itsPolc; }
@@ -71,8 +58,6 @@ public:
 
 private:
   string  itsName;
-  int     itsSrcnr;
-  int     itsStatnr;
   MeqPolc itsPolc;
 };
 
@@ -83,9 +68,8 @@ public:
   MeqParmHolder()
     {}
 
-  MeqParmHolder (const string& name, int srcnr, int statnr,
-		 const MeqPolc& polc)
-    : MeqParmDefHolder (name, srcnr, statnr, polc)
+  MeqParmHolder (const string& name, const MeqPolc& polc)
+    : MeqParmDefHolder (name, polc)
     {}
 };
 

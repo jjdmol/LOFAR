@@ -29,11 +29,9 @@ using namespace casa;
 
 namespace LOFAR {
 
-MeqStoredParmPolc::MeqStoredParmPolc (const string& name, int srcnr,
-				      int statnr, ParmTable* table)
-: MeqParmPolc (name),
-  itsSrcnr    (srcnr),
-  itsStatnr   (statnr),
+MeqStoredParmPolc::MeqStoredParmPolc (const string& name, MeqParmGroup* group,
+				      ParmTable* table)
+: MeqParmPolc (name, group),
   itsTable    (table)
 {}
 
@@ -43,13 +41,11 @@ MeqStoredParmPolc::~MeqStoredParmPolc()
 void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
 {
   // Find the polc(s) for the given domain.
-  vector<MeqPolc> polcs = itsTable->getPolcs (getName(), getSourceNr(),
-					      getStation(), domain);
+  vector<MeqPolc> polcs = itsTable->getPolcs (getName(), domain);
   // If none found, try to get a default value.
   // If no default found, use a 2nd order polynomial with values 1.
   if (polcs.size() == 0) {
-    MeqPolc polc = itsTable->getInitCoeff (getName(),  getSourceNr(),
-					   getStation());
+    MeqPolc polc = itsTable->getInitCoeff (getName());
     AssertMsg (!polc.getCoeff().isNull(), "No value found for parameter "
 	       << getName());
     polc.setDomain (domain);
@@ -58,7 +54,7 @@ void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
       polc.setCoeffOnly (polc.normalize(polc.getCoeff(), domain));
       polc.setSimCoeff  (polc.normalize(polc.getSimCoeff(), domain));
     }
-    ///    itsTable->putCoeff (getName(), getSourceNr(), getStation(), polc);
+    ///    itsTable->putCoeff (getName(), polc);
     polcs.push_back (polc);
   } else {
     // Check if the polc domains cover the entire domain and if they
@@ -100,7 +96,7 @@ void MeqStoredParmPolc::save()
 {
   const vector<MeqPolc>& polcs = getPolcs();
   for (unsigned int i=0; i<polcs.size(); i++) {
-    itsTable->putCoeff (getName(), getSourceNr(), getStation(), polcs[i]);
+    itsTable->putCoeff (getName(), polcs[i]);
   }
   MeqParmPolc::save();
 }

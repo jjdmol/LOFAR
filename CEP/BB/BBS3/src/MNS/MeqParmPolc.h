@@ -48,7 +48,7 @@ class MeqParmPolc: public MeqParm
 {
 public:
   // Create a 2-dim polynomial with order 0 in x and y.
-  MeqParmPolc (const string& name);
+  MeqParmPolc (const string& name, MeqParmGroup*);
 
   virtual ~MeqParmPolc();
 

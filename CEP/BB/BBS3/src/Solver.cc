@@ -130,7 +130,7 @@ void Solver::setEquations (const double* data, int nresult, int nrspid,
     itsDoSet = false;
   }
   vector<int>& predInx = itsIndices[prediffer];
-  ASSERT (uint(nrspid) = predInx.size());
+  ASSERT (uint(nrspid) == predInx.size());
   // Use a consecutive vector to assemble all derivatives.
   vector<double> derivVec(nrspid);
   double* derivs = &(derivVec[0]);

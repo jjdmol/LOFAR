@@ -40,16 +40,10 @@ class MeqStoredParmPolc: public MeqParmPolc
 {
 public:
   // Create a stored paramater with the given name and type.
-  MeqStoredParmPolc (const string& name, int sourceNr, int station,
+  MeqStoredParmPolc (const string& name, MeqParmGroup*,
 		     ParmTable* table);
 
   virtual ~MeqStoredParmPolc();
-
-  int getSourceNr() const
-    { return itsSrcnr; }
-
-  int getStation() const
-    { return itsStatnr; }
 
   // Read the polcs for the given domain.
   virtual void readPolcs (const MeqDomain& domain);
@@ -62,8 +56,6 @@ public:
   virtual void save();
 
 private:
-  int        itsSrcnr;
-  int        itsStatnr;
   ParmTable* itsTable;
   MeqDomain  itsDomain;
 };

@@ -47,33 +47,25 @@ public:
   // matches the domain exactly.
   // Note that the requested domain may contain multiple polcs.
   virtual vector<MeqPolc> getPolcs (const string& parmName,
-				    int sourceNr, int station,
 				    const MeqDomain& domain);
 
   // Get the initial polynomial coefficients for the given parameter.
-  virtual MeqPolc getInitCoeff (const string& parmName,
-				int sourceNr, int station);
+  virtual MeqPolc getInitCoeff (const string& parmName);
 
   // Put the polynomial coefficient for the given parameter and domain.
   virtual void putCoeff (const string& parmName,
-			 int sourceNr, int station,
 			 const MeqPolc& polc);
 
   // Put the default coefficients
   virtual void putDefCoeff (const string& parmName,
-			    int srcnr, int statnr,
 			    const MeqPolc& polc);
 
   // Insert new coefficients
-  void putNewCoeff( const string& parmName, 
-		    int srcnr,
-		    int statnr,
+  void putNewCoeff (const string& parmName, 
 		    const MeqPolc& polc);
 
   // Insert new default coefficients
-  void putNewDefCoeff( const string& parmName, 
-		       int srcnr,
-		       int statnr,
+  void putNewDefCoeff (const string& parmName, 
 		       const MeqPolc& polc);
 
   // Get the names of all sources in the table.
@@ -82,18 +74,17 @@ public:
   // Unlock the underlying table.
   virtual void unlock();
 
-  // Connect to the database
+  // Connect to the database.
   virtual void connect();
-  // Create the database or table
-  static void createTable(const string& userName, const string& tableName);
-  // clear database or table
+  // Create the database or table.
+  static void createTable (const string& userName, const string& tableName);
+  // Clear database or table.
   virtual void clearTable();
 
 private:
   // Find the table subset containing the parameter values for the
   // requested domain.
   casa::Table find (const string& parmName, 
-		    int sourceNr, int station,
 		    const MeqDomain& domain);
 
   casa::Table                  itsTable;
