@@ -60,6 +60,14 @@ BlobOBufChar::~BlobOBufChar()
   }
 }
 
+void BlobOBufChar::clear()
+{
+  // Let derived class set its size to 0.
+  doExpand (0, 0);
+  itsSize = 0;
+  itsPos  = 0;
+}
+
 uint BlobOBufChar::put (const void* buffer, uint nbytes)
 {
   // Expand the buffer if needed (and possible).

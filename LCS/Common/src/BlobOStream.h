@@ -56,6 +56,9 @@ public:
   // Destructor.
   ~BlobOStream();
 
+  // Clear the object. I.e., reset the current level and length.
+  void clear();
+
   // Get the total size.
   uint64 size() const;
 
@@ -176,6 +179,12 @@ private:
   BlobOBuffer*       itsStream;
 };
 
+
+inline void BlobOStream::clear()
+{
+  itsCurLength = 0;
+  itsLevel     = 0;
+}
 
 inline uint BlobOStream::putStart (int objectVersion)
   { return doPutStart ("", 0, objectVersion); }
