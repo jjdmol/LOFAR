@@ -90,7 +90,7 @@ namespace LOFAR
     };
 
     // Compare two ObjectIds.
-    // \note If any of the two ObjectIds \c lhs or \c rhs was not set,
+    // \note If any of the two ObjectIds \a lhs or \a rhs was not set,
     // the action of comparing the two will set the ObjectId, because
     // the get() method will do this.
     inline bool operator==(const ObjectId& lhs, const ObjectId& rhs)

@@ -37,7 +37,9 @@ namespace LOFAR
       class Expr;
 
       // @defgroup ExprNode Expression Nodes
-      //
+
+      //@{
+
       // ExprNode is an abstract base class that represents the node of an
       // expression query. We will need to derive specific expression node
       // classes (e.g. BinaryExprNode) from it.
@@ -63,6 +65,8 @@ namespace LOFAR
         virtual bool isNull() const;
 
       };
+
+      //@}
 
     } // namespace Query
 

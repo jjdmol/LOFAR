@@ -36,14 +36,6 @@ namespace LOFAR
     // The query class provides a user-friendly interface for composing
     // queries.
     //
-    // \todo Do we need the constructors that take a string argument? At the
-    // moment they interfere with the constructor that takes an
-    // expression. Furthermore, there's currently no link between the two
-    // private data members \c itsQueryExpr and \c itsSqlString, although this
-    // link should definitely be made! Probably \c itsSqlString should be
-    // dependent on \c itsQueryExpr (or maybe \c itsSqlString should be
-    // removed completely).
-    //
     class QueryObject
     {
     public:

@@ -40,7 +40,7 @@ namespace LOFAR
       // @ingroup ExprNode
       //
       // These classes represent constant expression nodes. A constant
-      // expression is an expression that can be evaluated compile-time and
+      // expression is an expression that can be evaluated at compile-time and
       // has a primitive type like int, double or string.
 
       //@{
@@ -68,7 +68,7 @@ namespace LOFAR
         const int itsOperand;
       };
 
-      // This class represents a expression node for a double.
+      // This class represents an expression node for a double.
       class DoubleExprNode : public ExprNode
       {
       public:

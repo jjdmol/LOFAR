@@ -42,11 +42,11 @@ namespace LOFAR
       //
       // This class represents a logcial unary expression node. A logical
       // unary expression is a unary expression that represents a unary
-      // logcial operator (e.g. !). The main difference between an ordinary
-      // UnaryExprNode and a LogicalUnaryExprNode is that the latter does not
-      // have an associated constraint. The reason for this is that a
-      // constraint can only be associated with a \e branch of a logical
-      // expression node.
+      // logcial operator (e.g. \c operator!). The main difference
+      // between an ordinary UnaryExprNode and a LogicalUnaryExprNode is that
+      // the latter does not have an associated constraint. The reason for
+      // this is that a constraint can only be associated with the \e branch
+      // emanating from a logical expression node, not with the node itself.
       //
       // \note We do not need to override the method getConstraint(), because
       // there is no constraint associated with a logical unary expression

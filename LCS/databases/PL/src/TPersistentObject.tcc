@@ -113,7 +113,7 @@ namespace LOFAR
       }
       
       // Once we've reached here, the update was successful.
-      // Reset the meta data structure.
+      // Reset the metadata structure.
       metaData().reset();
     }
 

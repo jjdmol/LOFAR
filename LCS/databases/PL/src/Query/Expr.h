@@ -59,7 +59,7 @@ namespace LOFAR
         Expr(ExprNode* const node);
 
         // Print the expression into an output stream.
-        // \attention This method will \e only print the expression itself, \b
+        // \attention This method will \e only print the expression itself, \e
         // not its associated constraint.
         void print(std::ostream& os) const;
 
@@ -76,26 +76,29 @@ namespace LOFAR
         Expr operator! () const;
         //@}
 
-        //@{
-        // The BETWEEN operator is used to test if a value is within an
+        // The BETWEEN operator is used to test if a value is within a given
         // interval.
         Expr between(const Expr& lhs, const Expr& rhs) const;
-        Expr notBetween(const Expr& lhs, const Expr& rhs) const;
-        //@}
 
-        //@{
+        // The NOT BETWEEN operator is used to test if a value is not within a
+        // given interval.
+        Expr notBetween(const Expr& lhs, const Expr& rhs) const;
+
         // The IN operator is used to test if an expression is contained in a
         // set of expressions.
         Expr in (const Collection<Expr>& set) const;
-        Expr notIn(const Collection<Expr>& set) const;
-        //@}
 
-        //@{
+        // The NOT IN operator is used to test if an expression is not
+        // contained in a set of expressions.
+        Expr notIn(const Collection<Expr>& set) const;
+
         // The LIKE operator is used to test if a value has a match with a
         // pattern expression.
         Expr like(const Expr& exp) const;
+
+        // The NOT LIKE operator is used to test if a value does not have a
+        // match with a pattern expression.
         Expr notLike(const Expr& exp) const;
-        //@}
 
       private:
 
