@@ -107,10 +107,13 @@ const _define_meqcalibrater := function(ref agent, id) {
     }
     
     self.solveRec := [_method="solve", _sequence=self.id._sequence]
-    public.solve := function() {
+    public.solve := function (datacolname = "DATA") {
     
         wider self;
         
+        # argument assignment
+        self.solveRec.datacolname := datacolname
+
         # return
         return defaultservers.run(self.agent, self.solveRec);
     }
