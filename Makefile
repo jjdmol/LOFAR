@@ -38,6 +38,8 @@ PACKAGE = \
          BaseSim \
          LOFARSim \
          StationSim \
+	 LCS/CRD/Coord \
+	 LCS/CRD/CoordServer \
          CEP/Tools/PerfTest/P2Perf \
          CEP/CPA/OCTOPUSSY \
          CEP/CPA/UVD \
