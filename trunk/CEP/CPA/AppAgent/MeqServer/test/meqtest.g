@@ -411,16 +411,46 @@ const flagger_test := function (verbose=4,gui=use_gui)
   defrec.flag_bit := 32;
   mqs.meq('Create.Node',defrec,T);
 
-  # create merge for !=0
+  # create merge of everything
   defrec := meq.node('MeqMergeFlags','flag',children="flag1 flag2 flag3 flag4 flag5 flag6");
-  #  defrec.flag_bit := 32;
+  mqs.meq('Create.Node',defrec,T);
+  
+  # create function
+  defrec := meq.node('MeqAdd','add1',children="flag flag1 flag2 flag3");
+  defrec.flag_mask := [ 8+16,-1,-1,-1];
+  mqs.meq('Create.Node',defrec,T);
+  
+  # create another function
+  defrec := meq.node('MeqAdd','add2',children="flag4 flag5 flag");
+  defrec.flag_mask := 12;
   mqs.meq('Create.Node',defrec,T);
 
+  # create another function
+  defrec := meq.node('MeqAdd','add3',children="flag1 flag2 flag3");
+  mqs.meq('Create.Node',defrec,T);
   
-  mqs.meq('Node.Resolve.Children',[name='flag'],T);
+  # create another function
+  defrec := meq.node('MeqAdd','add4',children="flag1 flag2 flag3");
+  defrec.flag_mask := 0;
+  mqs.meq('Create.Node',defrec,T);
   
-  global result;
-  result := mqs.meq('Node.Execute',[name='flag',request=request],T);
+  # create another function
+  defrec := meq.node('MeqAdd','add5',children="flag1 flag2 flag3");
+  defrec.flag_mask := -1;
+  mqs.meq('Create.Node',defrec,T);
+  
+  mqs.meq('Node.Resolve.Children',[name='add1'],T);
+  mqs.meq('Node.Resolve.Children',[name='add2'],T);
+  mqs.meq('Node.Resolve.Children',[name='add3'],T);
+  mqs.meq('Node.Resolve.Children',[name='add4'],T);
+  mqs.meq('Node.Resolve.Children',[name='add5'],T);
+  
+  global res1,res2,res3,res4,res5;
+  res1 := mqs.meq('Node.Execute',[name='add1',request=request],T);
+  res2 := mqs.meq('Node.Execute',[name='add2',request=request],T);
+  res3 := mqs.meq('Node.Execute',[name='add3',request=request],T);
+  res4 := mqs.meq('Node.Execute',[name='add4',request=request],T);
+  res5 := mqs.meq('Node.Execute',[name='add5',request=request],T);
 #   result := mqs.meq('Node.Execute',[name='flag2',request=request],T);
 #   result := mqs.meq('Node.Execute',[name='flag3',request=request],T);
 #   result := mqs.meq('Node.Execute',[name='flag4',request=request],T);
