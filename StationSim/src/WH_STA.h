@@ -32,14 +32,6 @@
 #include <StationSim/DH_SampleC.h>
 #include <Common/Lorrays.h>
 
-/**
-   This workholder contains the main AWE procedure.
-   This includes processing of the snapshot fifo, 
-   selection of the adaptive algorithm and calling 
-   the specified algorithm. Inputs consist of a 
-   snapshot vector and a fifo. Outputs are a weight 
-   vector, and an updated fifo.
-*/
 
 class WH_STA: public WorkHolder
 {
@@ -64,7 +56,6 @@ public:
   /// Make a fresh copy of the WH object.
   virtual WH_STA* make (const string& name) const;
 
-  /// Generate a snapshot matrix from the FIFO
   virtual void preprocess();
 
   /// Do a process step.
@@ -100,7 +91,7 @@ private:
   unsigned int itsBufLength;
 
   LoMat_dcomplex itsBuffer;
-
-
+  LoVec_dcomplex itsSnapshot;
+  unsigned int itsCurPos;
 };
 #endif

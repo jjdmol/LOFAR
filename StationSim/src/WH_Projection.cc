@@ -94,6 +94,7 @@ void WH_Projection::dump() const
 DH_SampleC* WH_Projection::getInHolder (int channel)
 {
   AssertStr (channel < getInputs(), "Input channel too high");  
+
   return itsInHolders[channel];
 }
 

@@ -20,6 +20,9 @@
 //#
 //#  $Id$
 //#
+//#  Chris Broekema, january 2003
+//#
+
 
 #ifndef STATIONSIM_WH_BEAMFORMER_H
 #define STATIONSIM_WH_BEAMFORMER_H
@@ -85,7 +88,6 @@ private:
   int itsMaxNtarget; // Maximum number of targets to track
   int itsMaxNrfi;    // Maximum number of RFI signals that can be detected
 
-  //  LoMat_dcomplex itsFifo;
   LoVec_dcomplex sample; // current sample in Blitz format
 
   //DEBUG

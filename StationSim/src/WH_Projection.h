@@ -35,9 +35,6 @@
 #include <StationSim/DataGenConfig.h>
 #include <Common/Lorrays.h>
 
-/**
-
-*/
 
 class WH_Projection: public WorkHolder
 {
@@ -61,7 +58,6 @@ public:
   /// Make a fresh copy of the WH object.
   virtual WH_Projection* make (const string& name) const;
 
-  /// Generate a snapshot matrix from the FIFO
   virtual void preprocess();
 
   /// Do a process step.
