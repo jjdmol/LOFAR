@@ -37,7 +37,7 @@ lofar_stack.h					\
 lofar_iosfwd.h					\
 lofar_string.h					\
 Profiling/PerfProfile.h \
-LofarLogger.h
+LofarLogger.h LofarLog4Cplus.h LofarLogCout.h
 
 NOINSTHDRS =
 
@@ -70,7 +70,7 @@ Net/Socket.cc \
 Thread/Thread.cc \
 Thread/SmartLock.cc \
 Profiling/PerfProfile.cc \
-LofarLogger.cc
+LofarLogger.cc LofarLogCout.cc
 
 AM_YFLAGS		= -d -p KeyParse
 AM_LFLAGS		= -PKeyTokenize
