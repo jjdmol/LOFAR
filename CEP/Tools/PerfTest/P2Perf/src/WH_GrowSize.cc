@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.20  2002/06/20 07:53:07  wierenga
+//  %[BugId: 33]%
+//
+//  First working reader thread implementation.
+//
 //  Revision 1.19  2002/06/20 06:54:34  wierenga
 //
 //  %[BugId: 33]%
@@ -106,12 +111,14 @@ WH_GrowSize::WH_GrowSize (const string& name,
 			  unsigned int nin, 
 			  unsigned int nout,
 			  unsigned int nbuffer,
-			  bool destside)
+			  bool destside,
+			  bool sizeFixed)
 : WorkHolder    (nin, nout, name),
   itsInHolders  (0),
   itsOutHolders (0),
   itsBufLength  (nbuffer),
   itsIsDestSide (destside),
+  itsSizeFixed (sizeFixed),
   itsFirst      (first),
   itsIteration(itsMeasurements),
   itsTime(0),
@@ -126,11 +133,22 @@ WH_GrowSize::WH_GrowSize (const string& name,
   char str[8];
   for (unsigned int i=0; i<nin; i++) {
     sprintf (str, "%d", i);
-    itsInHolders[i] = new DH_GrowSize (std::string("in_") + str, nbuffer);
+    itsInHolders[i] = new DH_GrowSize (std::string("in_") + str, nbuffer,
+				       itsSizeFixed);
+    cout << "WH itsSizeFixed = " << itsSizeFixed << endl;
+    if (itsSizeFixed)
+    {
+      itsInHolders[i]->setInitialDataPacketSize(nbuffer);
+    }
   }
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
-    itsOutHolders[i] = new DH_GrowSize (std::string("out_") + str, nbuffer);
+    itsOutHolders[i] = new DH_GrowSize (std::string("out_") + str, nbuffer,
+					itsSizeFixed);
+    if (itsSizeFixed)
+    {
+      itsOutHolders[i]->setInitialDataPacketSize(nbuffer);
+    }
   }
 
   // decrease the iteration counter at the destination side for
@@ -160,7 +178,8 @@ WorkHolder* WH_GrowSize::make(const string& name) const
 			 getInputs(), 
 			 getOutputs(), 
 			 itsBufLength, 
-			 itsIsDestSide);
+			 itsIsDestSide,
+			 itsSizeFixed);
 }
 
 //  void WH_GrowSize::preprocess() {
@@ -210,13 +229,16 @@ void WH_GrowSize::process()
     if (itsIteration-- == 0 )
       {
 	itsIteration = itsMeasurements;
-	for (int i=0; i<getInputs(); i++) {
-	  TRACER3("Increase size of " << getName() << " input " << i);
-	  (void)itsInHolders[i]->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
-	}
-	for (int i=0; i<getOutputs(); i++) {
-	  TRACER3("Increase size of " << getName() << " output " << i);
-	  (void)itsOutHolders[i]->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
+	if (!itsSizeFixed)
+	{
+	  for (int i=0; i<getInputs(); i++) {
+	    TRACER3("Increase size of " << getName() << " input " << i);
+	    (void)itsInHolders[i]->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
+	  }
+	  for (int i=0; i<getOutputs(); i++) {
+	    TRACER3("Increase size of " << getName() << " output " << i);
+	    (void)itsOutHolders[i]->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
+	  }
 	}
       }
   }

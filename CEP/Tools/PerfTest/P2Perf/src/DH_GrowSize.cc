@@ -22,6 +22,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.9  2002/07/12 09:07:34  schaaf
+//  %[BugId: 11]%
+//  removed compiler warning (comparision int vs unsigned int)
+//
 //  Revision 1.8  2002/05/13 12:50:57  schaaf
 //  removed screen debug output
 //
@@ -61,10 +65,12 @@
     allowed buffer size. the CurDataPacketSize is set to a default
     determined by the nbuffer argument.
  */
-DH_GrowSize::DH_GrowSize (const string& name, unsigned int nbuffer)
+DH_GrowSize::DH_GrowSize (const string& name, unsigned int nbuffer,
+			  bool sizeFixed)
   : DataHolder (name, "DH_GrowSize"),
     itsBufSize(nbuffer),
-    itsDataPacket(0)
+    itsDataPacket(0),
+    itsSizeFixed(sizeFixed)
 {
 }
 
@@ -97,8 +103,11 @@ void DH_GrowSize::preprocess()
   // Initialize base class.
   setDataPacket (itsDataPacket, size);
 
-  // set initial reported datapacket size to zero buffer length
-  reportedDataPacketSize = (float) sizeof(DataPacket); 
+  if (!itsSizeFixed)
+  {
+    // set initial reported datapacket size to zero buffer length
+    reportedDataPacketSize = (float) sizeof(DataPacket); 
+  }
 }
 
 void DH_GrowSize::postprocess()
