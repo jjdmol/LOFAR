@@ -21,12 +21,12 @@
 //# $Id$
 
 
-#include <Common/lofar_iostream.h>
-#include <stdexcept>
-
 #include <Transport/DataHolder.h>
+#include <Transport/DataBlobExtra.h>
 #include <Common/BlobField.h>
 #include <Common/BlobStringType.h>
+#include <Common/BlobOStream.h>
+#include <Common/BlobIStream.h>
 #include <Common/BlobIBufString.h>
 #include <Common/Debug.h>
 
@@ -40,20 +40,28 @@ DataHolder::DataHolder(const string& name, const string& type)
     itsTransporter    (this),
     itsName           (name),
     itsType           (type),
-    itsReadConvert    (-1)
+    itsReadConvert    (-1),
+    itsExtraPtr       (0)
 {
   initDataFields();
 }
 
 DataHolder::DataHolder(const DataHolder& that)
-  : itsDataFields     (that.itsDataFields),
+  : itsDataFields     (that.itsType),
     itsData           (0),
     itsDataBlob       (0),
     itsTransporter    (that.itsTransporter, this),
     itsName           (that.itsName),
     itsType           (that.itsType),
-    itsReadConvert    (that.itsReadConvert)
+    itsReadConvert    (that.itsReadConvert),
+    itsExtraPtr       (0)
 {
+  initDataFields();
+  if (that.itsExtraPtr != 0) {
+    itsExtraPtr = new DataBlobExtra (itsExtraPtr->getName(),
+				     itsExtraPtr->getVersion(),
+				     this);
+  }
   // Copying is always done before preprocess is called, so there is
   // no need to copy the data buffers.
   // Note that also the copy constructors of all derived DH classes
@@ -71,6 +79,14 @@ DataHolder::~DataHolder()
 {
   delete itsData;
   delete itsDataBlob;
+  delete itsExtraPtr;
+}
+
+void DataHolder::setExtraBlob (const string& name, int version)
+{
+  delete itsExtraPtr;
+  itsExtraPtr = 0;
+  itsExtraPtr = new DataBlobExtra (name, version, this);
 }
 
 void DataHolder::init() {
@@ -94,11 +110,10 @@ void DataHolder::basePostprocess()
   itsData = 0;
   delete itsDataBlob;
   itsDataBlob = 0;
-  initDataFields();
+  delete itsExtraPtr;
+  itsExtraPtr = 0;
   // Make sure only the DataPacket is part of the data fields.
-  BlobFieldSet fset(itsType);
-  fset.add (BlobField<DataPacket>(1));
-  itsDataFields = fset;
+  initDataFields();
 }
 
 void DataHolder::postprocess()
@@ -114,16 +129,12 @@ bool DataHolder::read()
 {
   bool result = false;
   // If the data block is fixed shape and has version 1, we can simply read.
-  if (itsDataFields.hasFixedShape()  &&  itsDataFields.version() == 1) {
-    result = itsTransporter.read();
-  } else {
-    // Otherwise do 2 separate reads (one for header and one for data).
-    ////result = itsTransporter.readHeader();
-      ////result = itsTransporter.readData();
-  }
-  if (result)
-  {
+  bool fixedSized = itsDataFields.hasFixedShape()  &&
+                    itsDataFields.version() == 1;
+  result = itsTransporter.read (fixedSized);
+  if (result) {
     // Check and convert data if needed.
+    // It also handles variable sized data blobs.
     handleDataRead();
   }
   return result;
@@ -137,6 +148,10 @@ void DataHolder::handleDataRead()
   itsDataFields.checkHeader (bibc, itsType.c_str(),
                              itsDataFields.version(), 0);
 #endif
+  // If variable sized, reopen the blob.
+  if (!(itsDataFields.hasFixedShape()  && itsDataFields.version() == 1)) {
+    openDataBlock();
+  }
   // Convert the data (swap bytes) if needed.
   // todo: note that for, say, TH_PL it is possible that the database is filled
   // from different sources; in such a case it should be checked for each
@@ -159,16 +174,21 @@ void DataHolder::handleDataRead()
 }
 
 void DataHolder::write()
-{ 
+{
+  // If there might be extra data, we have to write it.
+  if (itsExtraPtr) {
+    itsExtraPtr->write();
+  }
+  // Let the transporter write all data.
   itsTransporter.write();
 }
 
-bool DataHolder::connectTo(DataHolder& thatDH,
-			   const TransportHolder& prototype,
-			   bool blockingComm)
+bool DataHolder::connectTo (DataHolder& thatDH,
+			    const TransportHolder& prototype,
+			    bool blockingComm)
 {
-  return itsTransporter.connect(thatDH.getTransporter(), 
-				prototype, blockingComm);
+  return itsTransporter.connect (thatDH.getTransporter(), 
+				 prototype, blockingComm);
 }
 
 
@@ -218,6 +238,7 @@ BlobStringType DataHolder::blobStringType()
 
 void DataHolder::createDataBlock()
 {
+  // Allocate buffer if needed. Otherwise clear it.
   if (itsData) {
     itsData->resize(0);
   } else {
@@ -225,8 +246,7 @@ void DataHolder::createDataBlock()
     itsDataBlob = new BlobOBufString (*itsData);
   }
   itsDataFields.createBlob (*itsDataBlob);
-  itsDataPacketPtr = itsDataFields[0].getData<DataPacket> (*itsDataBlob);
-  fillDataPointers();
+  fillAllDataPointers();
 }
 
 void DataHolder::openDataBlock()
@@ -234,8 +254,33 @@ void DataHolder::openDataBlock()
   Assert (itsData);
   BlobIBufString bis(*itsData);
   itsDataFields.openBlob (bis);
-  itsDataPacketPtr = itsDataFields[0].getData<DataPacket> (*itsDataBlob);
-  fillDataPointers();
+  fillAllDataPointers();
+}
+
+void DataHolder::resizeBuffer (uint newSize)
+{
+  itsData->resize (newSize);
+}
+
+BlobOStream& DataHolder::createExtraBlob()
+{
+  Assert (itsExtraPtr != 0);
+  return itsExtraPtr->createBlock();
+}
+
+BlobIStream& DataHolder::openExtraBlob (int& version)
+{
+  Assert (itsExtraPtr != 0);
+  return itsExtraPtr->openBlock (version);
+}
+
+void DataHolder::putExtra (const void* data, uint size)
+{
+  char* oldPtr = itsData->data();
+  itsDataBlob->put (data, size);
+  if (oldPtr != itsData->data()) {
+    fillAllDataPointers();
+  }
 }
 
 void DataHolder::fillDataPointers()

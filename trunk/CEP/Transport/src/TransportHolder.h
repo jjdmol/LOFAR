@@ -67,6 +67,14 @@ public:
   /// until data has been received into buf.
   virtual bool recvBlocking (void* buf, int nbytes, int tag);
 
+  /// Get the length in case of a variable length send.
+  // If -1 is returned, the length cannot be obtained directly
+  // and recvHeaderBlocking will be used by Transporter::read.
+  virtual int recvLengthBlocking (int tag);
+
+  /// Get the header (of the blob) in case of a variable length send.
+  virtual bool recvHeaderBlocking (void* buf, int nbytes, int tag);
+
   /// Start receiving the data sent by the connected TransportHolder.
   virtual bool recvNonBlocking (void* buf, int nbytes, int tag);
 

@@ -91,7 +91,32 @@ void TH_Mem_Bl::initConditionVariables(int tag)
   }
 }
 
-bool TH_Mem_Bl::recvBlocking(void* buf, int nbytes, int, int tag)
+int TH_Mem_Bl::recvLengthBlocking(int tag)
+{ 
+  cerr << "Warning: TH_Mem_Bl::recvLengthBlocking() "  
+       << "Using blocking in-memory transport can cause a dead-lock." 
+       << endl;
+  Msg m;
+  pthread_mutex_lock(&theirTHMemLock);
+  if (itsFirstCall)
+  {
+    initConditionVariables(tag);
+    itsFirstCall = false;
+  }
+
+  if (messages.end() == messages.find(tag))
+  {
+    pthread_cond_wait(&dataAvailable[tag], &theirTHMemLock); // Wait for sent message
+  }
+    
+  m = messages[tag];
+
+  int leng = m.getNBytes();
+  pthread_mutex_unlock(&theirTHMemLock);
+  return leng;
+}
+
+bool TH_Mem_Bl::recvBlocking(void* buf, int nbytes, int tag)
 { 
   cerr << "Warning: TH_Mem_Bl::recvBlocking() "  
        << "Using blocking in-memory transport can cause a dead-lock." 
@@ -135,7 +160,7 @@ bool TH_Mem_Bl::recvBlocking(void* buf, int nbytes, int, int tag)
 /**
    The send function must now add the buffer to the map containing messages.
  */
-bool TH_Mem_Bl::sendBlocking(void* buf, int nbytes, int, int tag)
+bool TH_Mem_Bl::sendBlocking(void* buf, int nbytes, int tag)
 {
   cerr << "Warning: TH_Mem_Bl::sendBlocking() "  
        << "Using blocking in-memory transport can cause a dead-lock." 
@@ -157,7 +182,7 @@ bool TH_Mem_Bl::sendBlocking(void* buf, int nbytes, int, int tag)
   return true;
 }
 
-bool TH_Mem_Bl::sendNonBlocking(void* buf, int nbytes, int, int tag)
+bool TH_Mem_Bl::sendNonBlocking(void* buf, int nbytes, int tag)
 {
   pthread_mutex_lock(&theirTHMemLock);
   if (itsFirstCall)
@@ -179,12 +204,12 @@ bool TH_Mem_Bl::sendNonBlocking(void* buf, int nbytes, int, int tag)
   return true;
 }
 
-bool TH_Mem_Bl::waitForSent(void* buf, int nbytes, int destination, int tag)
+bool TH_Mem_Bl::waitForSent(void* buf, int nbytes, int tag)
 {
-  return waitForRecvAck(buf, nbytes, destination, tag);
+  return waitForRecvAck(buf, nbytes, tag);
 }
 
-bool TH_Mem_Bl::waitForRecvAck(void*, int, int, int tag)
+bool TH_Mem_Bl::waitForRecvAck(void*, int, int tag)
 {
   pthread_mutex_lock(&theirTHMemLock);
   if (messages.find(tag) != messages.end())  // Wait for send to finish

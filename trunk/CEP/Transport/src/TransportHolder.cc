@@ -45,6 +45,17 @@ bool TransportHolder::recvBlocking (void*, int, int)
 	+ getType());
 }
 
+int TransportHolder::recvLengthBlocking (int)
+{
+  return -1;
+}
+
+bool TransportHolder::recvHeaderBlocking (void*, int, int)
+{
+  Throw("No blocking receive header method implemented in this TransportHolder: " 
+	+ getType());
+}
+
 bool TransportHolder::recvNonBlocking (void*, int, int)
 {
   Throw("No non-blocking receive method implemented in this TransportHolder: "

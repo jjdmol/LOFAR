@@ -124,7 +124,7 @@ bool Transporter::connect(Transporter& thatTP,
 }
 
 
-bool Transporter::read()
+bool Transporter::read (bool fixedSized)
 {
   bool result = false;
 
@@ -133,9 +133,27 @@ bool Transporter::read()
 	    << getDataSize() << ",....)");
     if (isBlocking())
     {
-      result = getTransportHolder()->recvBlocking(getDataPtr(),
-						  getCurDataSize(),
-						  getReadTag());
+      if (fixedSized) {
+	result = getTransportHolder()->recvBlocking(getDataPtr(),
+						    getCurDataSize(),
+						    getReadTag());
+      } else {
+	int nrread = 0;
+	int leng = getTransportHolder()->recvLengthBlocking (getReadTag());
+	if (leng < 0) {
+	  nrread = getDataHolder()->getHeaderSize();
+	  getDataHolder()->resizeBuffer (nrread);
+	  result = getTransportHolder()->recvHeaderBlocking (getDataPtr(),
+							     nrread,
+							     getReadTag());
+	  leng = getDataHolder()->getDataLength (getDataPtr());
+	}
+	getDataHolder()->resizeBuffer (leng);
+	getTransportHolder()->recvBlocking
+	                       (static_cast<char*>(getDataPtr())+nrread,
+				leng-nrread,
+				getReadTag());
+      }
     }
     else
     {
