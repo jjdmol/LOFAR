@@ -19,8 +19,14 @@ bb-requirements.pdf: \
 
 clean:
 	-@rm *~
+	-@rm *.ass
 	-@rm *.aux
 	-@rm *.dvi
+	-@rm *.lof
 	-@rm *.log
+	-@rm *.lot
 	-@rm *.out
 	-@rm *.pdf
+	-@rm *.ref
+	-@rm *.req
+	-@rm *.toc
