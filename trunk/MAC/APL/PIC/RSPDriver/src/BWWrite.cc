@@ -77,32 +77,38 @@ void BWWrite::sendrequest()
   switch (m_regid)
   {
     case MEPHeader::BF_XROUT:
-      bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS);
+      bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+		      MEPHeader::WRITE, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
     case MEPHeader::BF_XIOUT:
-      bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS);
+      bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+		      MEPHeader::WRITE, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
     case MEPHeader::BF_YROUT:
-      bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS);
+      bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+		      MEPHeader::WRITE, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
     case MEPHeader::BF_YIOUT:
-      bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS);
+      bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+		      MEPHeader::WRITE, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
   }
   
   // copy weights from the cache to the message
-  Array<complex<int16>, 2> weights((complex<int16>*)&bfcoefs.coef + offset,
-				   shape(MEPHeader::FRAGMENT_SIZE / sizeof(int16) / MEPHeader::N_POL, MEPHeader::N_POL),
+  Array<complex<int16>, 2> weights((complex<int16>*)&bfcoefs.coef,
+				   shape(N_COEF / MEPHeader::N_PHASEPOL, MEPHeader::N_POL),
 				   neverDeleteData);
 
-  LOG_FATAL_STR("offset=" << offset << "; global_blp=" << (int)global_blp << "; blp=" << getCurrentBLP() / BF_N_FRAGMENTS);
-  LOG_FATAL_STR("weights shape=" << weights.shape());
-  LOG_FATAL_STR("weights range=" << Range(offset / MEPHeader::N_PHASE,
-					  (MEPHeader::FRAGMENT_SIZE / sizeof(int16)) / MEPHeader::N_PHASE));
-
+#if 0
+  LOG_DEBUG_STR("offset=" << offset << "; global_blp=" << (int)global_blp << "; blp=" << getCurrentBLP() / BF_N_FRAGMENTS);
+  LOG_DEBUG_STR("weights shape=" << weights.shape());
+  LOG_DEBUG_STR("weights range=" << Range(offset / MEPHeader::N_PHASEPOL,
+					  (offset /MEPHeader::N_PHASEPOL) + (N_COEF / MEPHeader::N_PHASEPOL) - 1));
+#endif
+  
   weights = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp,
-								 Range(offset / MEPHeader::N_PHASE,
-								       (MEPHeader::FRAGMENT_SIZE / sizeof(int16)) / MEPHeader::N_PHASE),
+								 Range(offset / MEPHeader::N_PHASEPOL,
+								       (offset / MEPHeader::N_PHASEPOL) + (N_COEF / MEPHeader::N_PHASEPOL) - 1),
 								 Range::all());
 
   switch (m_regid)
