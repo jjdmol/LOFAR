@@ -43,7 +43,6 @@ class AVTPropertySetAnswer : public GCFAnswer
     virtual void handleAnswer(GCFEvent& answer);
     
   protected:
-    // protected default constructor
     AVTPropertySetAnswer();
     // protected copy constructor
     AVTPropertySetAnswer(const AVTPropertySetAnswer&);

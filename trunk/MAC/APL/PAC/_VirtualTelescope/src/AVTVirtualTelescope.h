@@ -30,6 +30,9 @@
 #include <Common/lofar_string.h>
 //# GCF Includes
 #include <GCF/GCF_Port.h>
+
+#include "../../../APLCommon/src/APLInterTaskPort.h"
+
 //# VirtualTelescope Includes
 #include "AVTLogicalDevice.h"
 
@@ -95,7 +98,8 @@ class AVTVirtualTelescope : public AVTLogicalDevice
     // The BeamFormer task    
     AVTStationBeamformer& m_stationBeamformer;
     // The BeamFormer SAP
-    GCFPort m_beamFormerClient;
+//    GCFPort m_beamFormerClient;
+    APLInterTaskPort m_beamFormerClient;
     
     time_t m_startTime;
     time_t m_stopTime;

@@ -1,0 +1,8 @@
+Local Task			SPP/SAP	Remote Task	Port Name		Port number
+-------------------------------------------------------------------------------------------
+AVTTest				SPP	-		BeamServer		21040
+AVTLogicalDeviceScheduler	SAP	AVTTestVT1	AVTTestVT1_server	-
+AVTTestVT1			SPP	-		AVTTestVT1_server	21042
+AVTTestVT1			SAP	AVTTestSBF1	AVTTestSBF1_server	-
+AVTTestSBF1			SPP	-		AVTTestSBF1_server	21041
+AVTTestSBF1			SAP	AVTTest		BeamServer		-

@@ -23,9 +23,9 @@
 #include "AVTTestAnswer.h"
 #include <GCF/GCF_Task.h>
 
-AVTTestAnswer::AVTTestAnswer(GCFTask& t) : 
+AVTTestAnswer::AVTTestAnswer() : 
   m_dummyPort(),
-  m_task(t)
+  m_task(0)
 {
 }
 
@@ -33,7 +33,13 @@ AVTTestAnswer::~AVTTestAnswer()
 {
 }
 
+void AVTTestAnswer::setTask(GCFTask* pTask)
+{
+  m_task=pTask;
+}
+
 void AVTTestAnswer::handleAnswer(GCFEvent& answer)
 {
-  m_task.dispatch(answer,m_dummyPort);
+  if(m_task!=0)
+    m_task->dispatch(answer,m_dummyPort);
 }

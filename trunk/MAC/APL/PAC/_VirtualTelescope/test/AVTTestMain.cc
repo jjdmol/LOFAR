@@ -20,6 +20,7 @@
 //#
 //#  $Id$
 
+#include <CmdLine.h>
 #include <GCF/GCF_Task.h>
 #include "../../../APLCommon/src/suite.h"
 #include "AVTTest.h"
@@ -31,6 +32,14 @@ int main(int argc, char* argv[])
   
   {
     GCFTask::init(argc, argv);
+
+    CCmdLine cmdLine;
+
+    // parse argc,argv 
+    if (cmdLine.SplitLine(argc, argv) > 0)
+    {
+      AVTTestTask::m_sBeamServerOnly=cmdLine.HasSwitch("-b");
+    }
     
     Suite s("MAC.APL.PAC VirtualTelescope Test",&cout);
   

@@ -60,7 +60,8 @@ void AVTUtilities::decodeParameters(const string& parametersString, vector<strin
     }
     if(nextDelim>delim)
     {
-      parameters.push_back(parametersString.substr(delim,nextDelim-delim));
+      string param(parametersString.substr(delim,nextDelim-delim));
+      parameters.push_back(param);
       delim=nextDelim+1;
     } 
   } while(delim<parametersStringLen);

@@ -31,14 +31,15 @@
 #include <boost/shared_ptr.hpp>
 
 //# GCF Includes
-#include <GCF/GCF_Port.h>
 #include <GCF/GCF_Task.h>
 #include <GCF/GCF_MyPropertySet.h>
+#include <GCF/GCF_Apc.h>
 
 //# local includes
 #include "AVTPropertySetAnswerHandlerInterface.h"
 #include "AVTPropertySetAnswer.h"
 #include "AVTLogicalDevice.h"
+#include "APLInterTaskPort.h"
 
 // forward declaration
 
@@ -50,7 +51,8 @@ class AVTLogicalDeviceScheduler : public GCFTask,
     AVTLogicalDeviceScheduler(); 
     virtual ~AVTLogicalDeviceScheduler();
 
-    string& getServerPortName();
+    bool isInitialized();
+    bool findClientPort(GCFPortInterface& port,string& key);
     
     /**
      * The initial state handler. This handler is passed to the GCFTask constructor
@@ -80,6 +82,8 @@ class AVTLogicalDeviceScheduler : public GCFTask,
 
     AVTPropertySetAnswer  m_propertySetAnswer;
     GCFMyPropertySet      m_properties;
+    GCFApc                m_apcLDS;
+    bool                  m_initialized;
     
     typedef struct LogicalDeviceInfoT
     {
@@ -92,7 +96,7 @@ class AVTLogicalDeviceScheduler : public GCFTask,
     typedef struct SchedulableLogicalDeviceInfoT
     {
       boost::shared_ptr<AVTLogicalDevice> logicalDevice;
-      boost::shared_ptr<GCFPort>          clientPort;
+      boost::shared_ptr<APLInterTaskPort> clientPort;
       int                                 startTime;
       int                                 stopTime;
       vector<string>                      parameters;

@@ -2,15 +2,24 @@ noinst_PROGRAMS 		= avttest
 
 TESTS			= #avttest
 
+AUTOGEN = autogen
+SUFFIXES = .ph
+%.ph: %.prot
+	$(AUTOGEN) -L $(top_srcdir)/../MACCommon/autogen $< && \
+	chmod a+w $@
+
+avttest_CPPFLAGS= \
+	-I$(top_srcdir)/../GCF/GCFCommon/src 
+
 avttest_SOURCES 		= \
 	AVTTestAnswer.cc \
 	AVTTest.cc \
 	AVTTestTask.cc \
 	AVTTestMain.cc
 	
-avttest_LDADD		= ../src/libvirtualtelescope.la \
+avttest_LDADD		= \
 	$(top_builddir)/APLCommon/src/libaplcommon.la
-avttest_DEPENDENCIES	= ../src/libvirtualtelescope.la $(LOFAR_DEPEND) \
+avttest_DEPENDENCIES	= \
 	$(top_builddir)/APLCommon/src/libaplcommon.la
 
 BUILT_SOURCES = \

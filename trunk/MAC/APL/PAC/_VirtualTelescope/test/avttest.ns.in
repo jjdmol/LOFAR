@@ -77,3 +77,13 @@ client.type=TCP   # SAP
 server.port=21042 # MSPP
 server.type=TCP
 
+[AVTLogicalDeviceScheduler_server]
+host=localhost
+client.type=TCP   # SAP
+server.port=21043 # MSPP
+server.type=TCP
+
+[AVTTest]
+host=localhost
+client.type=TCP
+

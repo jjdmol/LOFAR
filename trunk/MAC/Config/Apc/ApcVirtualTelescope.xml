@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<VirtualTelescope>
+  <command> 
+  	<MACType> MACString  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</command>
+  <status> 
+  	<MACType> MACString  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</status>
+</VirtualTelescope>

@@ -1,4 +1,4 @@
-//#  AVTTestAnswer.h
+//#  AVTLogicalDeviceServerMain.cc: Main entry for the Logical Device Server
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,26 +20,17 @@
 //#
 //#  $Id$
 
-#ifndef AVTTESTANSWER_H
-#define AVTTESTANSWER_H
+#include "AVTLogicalDeviceScheduler.h"
 
-#include <GCF/GCF_Answer.h>
-#include <GCF/GCF_Port.h>
-
-class GCFEvent;
-class GCFTask;
-
-class AVTTestAnswer : public GCFAnswer
+int main(int argc, char* argv[])
 {
-  public:
-    AVTTestAnswer();
-    ~AVTTestAnswer();
-
-    void setTask(GCFTask* t);
-    void handleAnswer(GCFEvent& answer);
+  GCFTask::init(argc, argv);
     
-  private:    
-    GCFPort  m_dummyPort;
-    GCFTask* m_task;
-};
-#endif
+  AVTLogicalDeviceScheduler lds;
+  lds.start(); // make initial transition
+
+  GCFTask::run();
+    
+  return 0;
+}
+

@@ -32,10 +32,6 @@
 #include <GCF/GCF_Property.h>
 #include <boost/shared_ptr.hpp>
 
-//# VirtualTelescope Includes
-#include "../src/AVTVirtualTelescope.h"
-#include "../src/AVTStationBeamformer.h"
-
 #include "AVTTestAnswer.h"
 
 // forward declaration
@@ -49,6 +45,8 @@ class AVTTestTask : public GCFTask
     AVTTestTask(AVTTest& tester);
     virtual ~AVTTestTask();
 
+    static bool   m_sBeamServerOnly;
+
   protected:
     // protected copy constructor
     AVTTestTask(const AVTTestTask&);
@@ -57,6 +55,7 @@ class AVTTestTask : public GCFTask
     
   private: 
     GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test1(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test2(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test3(GCFEvent& e, GCFPortInterface& p);
@@ -67,18 +66,22 @@ class AVTTestTask : public GCFTask
     GCFEvent::TResult test8(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test9(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult handleBeamServerEvents(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult beamServer(GCFEvent& e, GCFPortInterface& p);
+    
     
     static string m_taskName;
     
     AVTTest&        m_tester;
     AVTTestAnswer   m_answer;
+    GCFPort         m_beamserver;
+
     GCFProperty     m_propertyLDScommand;
     GCFProperty     m_propertyLDSstatus;
     GCFProperty     m_propertySBFdirectionType;
     GCFProperty     m_propertySBFdirectionAngle1;
     GCFProperty     m_propertySBFdirectionAngle2;
     GCFProperty     m_propertySBFstatus;
-    
 };
 
 #endif
