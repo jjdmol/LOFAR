@@ -52,12 +52,12 @@ void lofarLoggerInitNode(void);
 //								monitor any changes in the properties file.
 //								An intervaltime in millisecs must be provided.
 #define INIT_LOGGER(filename) \
-	lofarLoggerInitNode(); \
+	LOFAR::lofarLoggerInitNode(); \
 	LofarInitTracingModule \
 	log4cplus::PropertyConfigurator::doConfigure(filename);
 
 #define INIT_LOGGER_AND_WATCH(filename,watchinterval) \
-	lofarLoggerInitNode(); \
+	LOFAR::lofarLoggerInitNode(); \
 	LofarInitTracingModule \
 	log4cplus::ConfigureAndWatchThread	tmpWatchThread(filename,watchinterval);
 
@@ -230,7 +230,7 @@ void	initTraceModule(void);
 }
 // Internal macro to define (or not) the initialisation routine of the
 // trace module.
-#define	LofarInitTracingModule	initTraceModule();
+#define	LofarInitTracingModule	LOFAR::initTraceModule();
 
 // Internal macro used by the LOG_TRACE_<level> macros.
 #define LofarLogTrace(level,message) \
