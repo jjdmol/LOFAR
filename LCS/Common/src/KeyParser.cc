@@ -25,6 +25,7 @@
 #include <Common/KeyParse.h>
 #include <Common/lofar_iostream.h>
 #include <sstream>
+#include <stdio.h>
 
 //# Define extern symbols in KeyTokenize.cc.
 //extern int yy_start;
