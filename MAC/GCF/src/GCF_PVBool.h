@@ -33,7 +33,7 @@
 class GCFPVBool : public GCFPValue
 {
   public: 
-  	GCFPVBool (bool val = false) : GCFPValue(BOOL_VAL), _value(val) {;}
+  	GCFPVBool (bool val = false) : GCFPValue(LPT_BOOL), _value(val) {;}
   	virtual ~GCFPVBool () {;}
     
     /** Changes the value of this object */

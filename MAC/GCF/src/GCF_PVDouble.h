@@ -33,7 +33,7 @@
 class GCFPVDouble : public GCFPValue
 {
   public: 
-  	GCFPVDouble (double val = 0.0) : GCFPValue(DOUBLE_VAL), _value(val) {;}
+  	GCFPVDouble (double val = 0.0) : GCFPValue(LPT_DOUBLE), _value(val) {;}
   	virtual ~GCFPVDouble () {;}
     
     /** Changes the value of this object */

@@ -32,7 +32,7 @@
 class GCFPVString : public GCFPValue
 {
   public:
-  	GCFPVString(string val = "") : GCFPValue(STRING_VAL), _value(val) {;}
+  	GCFPVString(string val = "") : GCFPValue(LPT_STRING), _value(val) {;}
   	virtual ~GCFPVString() {;}
     
     /** Changes the value of this object */

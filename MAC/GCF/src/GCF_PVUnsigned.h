@@ -32,7 +32,7 @@
 class GCFPVUnsigned : public GCFPValue
 {
   public:
-  	GCFPVUnsigned(unsigned int val = 0) : GCFPValue(UNSIGNED_VAL), _value(val) {;}
+  	GCFPVUnsigned(unsigned int val = 0) : GCFPValue(LPT_UNSIGNED), _value(val) {;}
   	virtual ~GCFPVUnsigned() {;}
     
     /** Changes the value of this object */
