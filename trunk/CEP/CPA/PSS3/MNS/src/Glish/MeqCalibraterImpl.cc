@@ -31,26 +31,86 @@
 
 #include <aips/MeasurementSets/MeasurementSet.h>
 #include <aips/Utilities/Regex.h>
+#include <aips/Exceptions/Error.h>
 
 #include <MNS/MeqParm.h>
+#include <MNS/MeqStoredParmPolc.h>
+#include <MNS/MeqMatrix.h>
+#include <MNS/MeqRequest.h>
+#include <aips/Arrays/Matrix.h>
 
 MeqCalibrater::MeqCalibrater(const String& msName,
 			     const String& meqModel,
 			     const String& skyModel,
-			     const String& mepDB,
 			     const Int     spw)
   :
-  // ms(msName),
-  mep(mepDB),
-  timeIteration(10),
-  fitValue(10.0)
+  itsMs(msName),
+  itsMEP(meqModel + ".MEP"),
+  itsTimeIteration(10),
+  itsFitValue(10.0)
 {
   cout << "MeqCalibrater constructor (";
   cout << "'" << msName   << "', ";
   cout << "'" << meqModel << "', ";
   cout << "'" << skyModel << "', ";
-  cout << "'" << mepDB    << "', ";
   cout << spw << ")" << endl;
+
+  //
+  // create the MeqTree corresponding to the meqModel name
+  // 
+
+  // tree = ...
+
+#if 1
+  // 
+  // Initialize some parmpolcs for testing purposes.
+  //
+  MeqStoredParmPolc* p0 = new MeqStoredParmPolc("a.c.d.e", &itsMEP);
+  MeqStoredParmPolc* p1 = new MeqStoredParmPolc("a.b.c.d.e", &itsMEP);
+  MeqStoredParmPolc* p2 = new MeqStoredParmPolc("f.g.h.i.j", &itsMEP);
+  MeqStoredParmPolc* p3 = new MeqStoredParmPolc("f.g.h.i.j.0", &itsMEP);
+  MeqStoredParmPolc* p4 = new MeqStoredParmPolc("f.g.h.i.j.1", &itsMEP);
+  MeqStoredParmPolc* p5 = new MeqStoredParmPolc("f.g.h.i.j.2", &itsMEP);
+  MeqStoredParmPolc* p6 = new MeqStoredParmPolc("f.g.h.i.j.3", &itsMEP);
+  MeqStoredParmPolc* p7 = new MeqStoredParmPolc("f.g.h.i.j.4", &itsMEP);
+  MeqStoredParmPolc* p8 = new MeqStoredParmPolc("f.g.h.i.j.5", &itsMEP);
+  MeqStoredParmPolc* p9 = new MeqStoredParmPolc("f.g.h.i.j.6", &itsMEP);
+  MeqStoredParmPolc* p10 = new MeqStoredParmPolc("f.g.h.i.j.7", &itsMEP);
+  MeqStoredParmPolc* p11 = new MeqStoredParmPolc("f.g.h.i.j.8", &itsMEP);
+  MeqStoredParmPolc* p12 = new MeqStoredParmPolc("f.g.h.i.j.9", &itsMEP);
+
+  // keep compiler happy
+  p0  = p0 ;
+  p1  = p1 ;
+  p2  = p2 ;
+  p3  = p3 ;
+  p4  = p4 ;
+  p5  = p5 ;
+  p6  = p6 ;
+  p7  = p7 ;
+  p8  = p8 ;
+  p9  = p9 ;
+  p10 = p10;
+  p11 = p11;
+  p12 = p12;
+#endif
+}
+
+void MeqCalibrater::initParms(MeqDomain& /* theDomain */)
+{
+  const vector<MeqParm*>& parmList = MeqParm::getParmList();
+
+  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+       iter != parmList.end();
+       iter++)
+  {
+    if (*iter)
+    {
+#if 0
+      (*iter)->initDomain(theDomain, 0); // what should the spidIndex be?
+#endif
+    }
+  }
 }
 
 MeqCalibrater::~MeqCalibrater()
@@ -67,20 +127,37 @@ void MeqCalibrater::resetTimeIterator()
 {
   cout << "resetTimeIterator" << endl;
 
-  timeIteration = 10;
-  fitValue = 10.0;
+  //
+  // set the domain to the beginning
+  //
+  initParms(itsDomain);
+
+#if 1
+  // Dummy implementation
+  itsTimeIteration = 10;
+  itsFitValue = 10.0;
+#endif
 }
 
 Bool MeqCalibrater::nextTimeInterval()
 {
   Bool returnval;
 
+  //
+  // Go to next time domain, update domain
+  //
+
+  // domain = ...
+
+#if 1
+  // Dummy implementation
   cout << "nextTimeInterval" << endl;
 
-  if (0 == --timeIteration) returnval = False;
+  if (0 == --itsTimeIteration) returnval = False;
   else returnval = True;
 
-  fitValue = 10.0;
+  itsFitValue = 10.0;
+#endif
 
   return returnval;
 }
@@ -95,7 +172,11 @@ void MeqCalibrater::clearSolvableParms()
        iter != parmList.end();
        iter++)
   {
-    if (*iter) (*iter)->setSolvable(false);
+    if (*iter)
+    {
+      cout << "clearSolvable: " << (*iter)->getName() << endl;
+      (*iter)->setSolvable(false);
+    }
   }
 }
 
@@ -117,6 +198,7 @@ void MeqCalibrater::setSolvableParms(Vector<String>& parmPatterns, Bool isSolvab
       {
 	if (String((*iter)->getName()).matches(pattern))
 	{
+	  cout << "setSolvable: " << (*iter)->getName() << endl;
 	  (*iter)->setSolvable(isSolvable);
 	}
       }
@@ -129,15 +211,24 @@ void MeqCalibrater::setSolvableParms(Vector<String>& parmPatterns, Bool isSolvab
 void MeqCalibrater::predict(const String& modelColName)
 {
   cout << "predict('" << modelColName << "')" << endl;
+
+
 }
 
 Double MeqCalibrater::solve()
 {
   cout << "solve" << endl;
 
-  fitValue /= 2.0;
+  // invoke solver for the current domain
 
-  return fitValue;
+  // update the paramters
+
+#if 1
+  // Dummy implementation
+  itsFitValue /= 2.0;
+#endif
+
+  return itsFitValue;
 }
 
 void MeqCalibrater::saveParms()
@@ -150,7 +241,11 @@ void MeqCalibrater::saveParms()
        iter != parmList.end();
        iter++)
   {
-    if (*iter) (*iter)->save();
+    if (*iter)
+    {
+      cout << "saveParm: " << (*iter)->getName() << endl;
+      (*iter)->save();
+    }
   }
 }
 
@@ -163,19 +258,57 @@ void MeqCalibrater::saveResidualData(const String& colAName,
 				     const String& colBName,
 				     const String& residualColName)
 {
+  if (colAName == residualColName)
+  {
+    throw(AipsError("residualcolname can not be the same as colaname"));
+  }
+  if (colBName == residualColName)
+  {
+    throw(AipsError("residualcolname can not be the same as colbname"));
+  }
+
   cout << "saveResidualData('" << colAName << "', '" << colBName << "', ";
   cout << "'" << residualColName << "')" << endl;
 }
 
-GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns)
+void addParm(MeqParm* parm, GlishRecord* rec)
+{
+  GlishRecord parmRec;
+
+#if 0
+
+  //
+  // In order to fill in the result for the current domain
+  // we need some specification of the current domain.
+  // The domain should be set in the nextTimeInterval method.
+  //
+
+  MeqRequest mr(MeqDomain(0,1,0,1), 1, 1);
+  MeqMatrix mm = parm->getResult(mr).getValue();	    
+  if (mm.isDouble()) rec->add("result", mm.getDoubleMatrix());
+  else               rec->add("result", mm.getDComplexMatrix());
+#endif
+
+  parmRec.add("parmid", Int(parm->getParmId()));
+  
+  rec->add(parm->getName(), parmRec);
+}
+
+GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns,
+				    Vector<String>& excludePatterns)
 {
   GlishRecord rec;
   bool parmDone = false;
+  vector<MeqParm*> parmVector;
 
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
   cout << "getParms: " << endl;
 
+
+  //
+  // Find all parms matching the parmPatterns
+  //
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
        iter++)
@@ -190,19 +323,53 @@ GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns)
       {
 	if (String((*iter)->getName()).matches(pattern))
 	{
-	  GlishRecord parmRec;
-
-	  // only add each parm once
 	  parmDone = true;
-
-	  parmRec.add("name", String((*iter)->getName()));
-	  parmRec.add("parmid", Int((*iter)->getParmId()));
-	  
-	  rec.add((*iter)->getName(), parmRec);
+	  parmVector.push_back(*iter);
 	}
       }
     }
   }
+
+  //
+  // Make record of parms to return, but exclude parms
+  // matching the excludePatterns
+  //
+  for (vector<MeqParm*>::iterator iter = parmVector.begin();
+       iter != parmVector.end();
+       iter++)
+  {
+    if (0 == excludePatterns.nelements())
+    {
+      if (*iter) addParm((*iter), &rec);
+    }
+    else
+    {
+      for (int i=0; i < (int)excludePatterns.nelements(); i++)
+      {
+	Regex pattern(Regex::fromPattern(excludePatterns[i]));
+	
+	if (*iter)
+	{
+	  if (! String((*iter)->getName()).matches(pattern))
+	  {
+	    addParm((*iter), &rec);
+	  }
+	}
+      }
+    }
+  }
+
+  return rec;
+}
+
+GlishRecord MeqCalibrater::getSolveDomain()
+{
+  GlishRecord rec;
+
+  rec.add("offsetx", itsDomain.offsetX());
+  rec.add("scalex",  itsDomain.scaleX());
+  rec.add("offsety", itsDomain.offsetY());
+  rec.add("scaley",  itsDomain.scaleY());
 
   return rec;
 }
@@ -214,7 +381,7 @@ String MeqCalibrater::className() const
 
 Vector<String> MeqCalibrater::methods() const
 {
-  Vector<String> method(11);
+  Vector<String> method(12);
 
   method(0)  = "settimeintervalsize";
   method(1)  = "resettimeiterator";
@@ -227,6 +394,7 @@ Vector<String> MeqCalibrater::methods() const
   method(8)  = "savedata";
   method(9)  = "saveresidualdata";
   method(10) = "getparms";
+  method(11) = "getsolvedomain";
 
   return method;
 }
@@ -335,10 +503,21 @@ MethodResult MeqCalibrater::runMethod(uInt which,
     {
       Parameter<Vector<String> > parmPatterns(inputRecord, "parmpatterns",
 					      ParameterSet::In);
+      Parameter<Vector<String> > excludePatterns(inputRecord, "excludepatterns",
+						 ParameterSet::In);
       Parameter<GlishRecord> returnval(inputRecord, "returnval",
 				       ParameterSet::Out);
 
-      if (runMethod) returnval() = getParms(parmPatterns());
+      if (runMethod) returnval() = getParms(parmPatterns(), excludePatterns());
+    }
+    break;
+
+  case 11: // getsolvedomain
+    {
+      Parameter<GlishRecord> returnval(inputRecord, "returnval",
+				       ParameterSet::Out);
+
+      if (runMethod) returnval() = getSolveDomain();
     }
     break;
 
@@ -359,15 +538,15 @@ MethodResult MeqCalibraterFactory::make(ApplicationObject*& newObject,
 
   if (whichConstructor == "meqcalibrater")
     {
-      Parameter<String> msName(inputRecord, "msname", ParameterSet::In);
+      Parameter<String>   msName(inputRecord, "msname",   ParameterSet::In);
       Parameter<String> meqModel(inputRecord, "meqmodel", ParameterSet::In);
       Parameter<String> skyModel(inputRecord, "skymodel", ParameterSet::In);
-      Parameter<String> mepDB(inputRecord, "mepdb", ParameterSet::In);
-      Parameter<Int>    spw(inputRecord, "spw", ParameterSet::In);
+      Parameter<Int>         spw(inputRecord, "spw",      ParameterSet::In);
 
       if (runConstructor)
 	{
-	  newObject = new MeqCalibrater(msName(), meqModel(), skyModel(), mepDB(), spw());
+	  newObject = new MeqCalibrater(msName(), meqModel(),
+					skyModel(), spw());
 	}
     }
   else
