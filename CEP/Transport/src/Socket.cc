@@ -1,4 +1,6 @@
-//#  Socket.cc: Implements a TCP/IP socket
+//#  Socket.cc: Creates an object used to access the sys/socket
+//#             system calls. Extra checks and administration is 
+//#             added to these access methods for  ease of use.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
