@@ -39,7 +39,7 @@ c=299792458.0;
 % calculate weights dimensions 7 timesteps, 7 elements, 2 subbands
 %
 M0 = zeros(7,7);
-M0 = lmn_t(:,2) * pos(:,1)' - lmn_t(:,1) * pos(:,2)' - lmn_t(:,3) * pos(:,3)';
+M0 = lmn_t(:,2) * pos(:,1)' - lmn_t(:,1) * pos(:,2)' + lmn_t(:,3) * pos(:,3)';
 % M0(1,:)
 
 %
