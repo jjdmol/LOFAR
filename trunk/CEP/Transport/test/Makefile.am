@@ -19,7 +19,6 @@ CXXFLAGS += \
 	-DSHMEM_ALLOC
 
 check_PROGRAMS			= Example 		
-				  
 
 Example_SOURCES 		= Example.cc
 
