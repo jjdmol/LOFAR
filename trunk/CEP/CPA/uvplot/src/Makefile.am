@@ -9,8 +9,8 @@ libuvplot_la_SOURCES := UVPGraphSettings.cc    \
                         UVPDataAtomHeader.cc   \
                         UVPDataAtom.cc         \
                         UVPDataAtomVector.cc   \
-                        UVPDataCacheElement.cc \
-                        AID-uvplot-Registry.cc
+                        UVPDataCacheElement.cc
+
 
 
 

@@ -33,6 +33,7 @@ class QPushButton;
 class QComboBox;
 class QVBoxLayout;
 class QHBoxLayout;
+class QCheckBox;
 
 /*
 #include <qlineedit.h>
@@ -72,7 +73,7 @@ public slots:
   void slot_correlationChanged(int corr);
   void slot_columnChanged     (int column);
   void slot_fieldChanged      ();
-  void slot_spectralWindowChanged();
+  //  void slot_spectralWindowChanged();
 
 
 signals:
