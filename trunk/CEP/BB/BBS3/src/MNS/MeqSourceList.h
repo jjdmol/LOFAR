@@ -23,12 +23,18 @@
 #if !defined(MNS_MEQSOURCELIST_H)
 #define MNS_MEQSOURCELIST_H
 
+// \file MNS/MeqSourceList.h
+// List of sources
+
 //# Includes
 #include <BBS3/MNS/MeqPointSource.h>
 #include <Common/lofar_vector.h>
 
-
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 class MeqSourceList
 {
@@ -60,6 +66,8 @@ private:
   vector<MeqPointSource> itsSources;
   vector<int>            itsSelected;
 };
+
+// @}
 
 }
 

@@ -23,10 +23,17 @@
 #if !defined(MNS_MEQJONESNODE_H)
 #define MNS_MEQJONESNODE_H
 
+// \file MNS/MeqJonesNode.h
+// A node in a Jones matrix expression.
+
 //# Includes
 #include <BBS3/MNS/MeqJonesExpr.h>
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 //# Forward Declarations
 class MeqExpr;
@@ -52,6 +59,8 @@ private:
   MeqExpr* itsExpr21;
   MeqExpr* itsExpr22;
 };
+
+// @}
 
 }
 

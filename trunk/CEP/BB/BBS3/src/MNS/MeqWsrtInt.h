@@ -23,10 +23,17 @@
 #if !defined(MNS_MEQWSRTINT_H)
 #define MNS_MEQWSRTINT_H
 
+// \file MNS/MeqWsrtInt.h
+// The base class of an expression
+
 //# Includes
 #include <BBS3/MNS/MeqJonesExpr.h>
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 //# Forward declarations
 class MeqWsrtPoint;
@@ -51,6 +58,8 @@ private:
   MeqJonesExpr* itsStat1;
   MeqJonesExpr* itsStat2;
 };
+
+// @}
 
 }
 

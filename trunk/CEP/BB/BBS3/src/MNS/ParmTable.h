@@ -23,6 +23,9 @@
 #if !defined(MNS_PARMTABLE_H)
 #define MNS_PARMTABLE_H
 
+// \file MNS/ParmTable.h
+// Object to hold parameters in a table.
+
 //# Includes
 #include <BBS3/MNS/MeqPolc.h>
 #include <BBS3/MNS/MeqSourceList.h>
@@ -38,6 +41,10 @@ namespace LOFAR {
 }
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 class ParmTableRep
 {
@@ -170,6 +177,8 @@ private:
   ParmTableRep* itsRep;
 
 };
+
+// @}
 
 }
 

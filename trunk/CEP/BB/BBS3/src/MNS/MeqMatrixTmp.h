@@ -23,6 +23,8 @@
 #if !defined(MNS_MEQMATRIXTMP_H)
 #define MNS_MEQMATRIXTMP_H
 
+// \file MNS/MeqMatrixTmp.h
+// Temporary matrix for Mns
 
 //# Includes
 #include <BBS3/MNS/MeqMatrixRep.h>
@@ -32,6 +34,10 @@
 
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 class MeqMatrixTmp
 {
@@ -168,6 +174,8 @@ private:
 
 inline ostream& operator<< (ostream& os, const MeqMatrixTmp& vec)
   { vec.show (os); return os; }
+
+// @}
 
 }
 

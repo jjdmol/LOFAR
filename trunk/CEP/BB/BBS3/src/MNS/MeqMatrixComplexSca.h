@@ -23,13 +23,18 @@
 #if !defined(MNS_MEQMATRIXCOMPLEXSCA_H)
 #define MNS_MEQMATRIXCOMPLEXSCA_H
 
+// \file MNS/MeqMatrixComplexSca.h
+// Temporary matrix for Mns
 
 //# Includes
 #include <BBS3/MNS/MeqMatrixRep.h>
 #include <Common/lofar_complex.h>
 
-
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MSN
+// @{
 
 class MeqMatrixComplexSca : public MeqMatrixRep
 {
@@ -93,6 +98,8 @@ private:
 
   complex<double> itsValue;
 };
+
+// @}
 
 }
 

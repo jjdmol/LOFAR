@@ -23,11 +23,17 @@
 #ifndef MNS_MEQPOLC_H
 #define MNS_MEQPOLC_H
 
+// \file MNS/MeqPolc.h
+// Ordinary polynomial with coefficients valid for a given domain
+
 //# Includes
 #include <BBS3/MNS/MeqFunklet.h>
 
 namespace LOFAR {
 
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 // This class defines a polynomial as a specialization of a funklet.
 
@@ -43,6 +49,8 @@ public:
   // Calculate the value and possible perturbations.
   virtual MeqResult getResult (const MeqRequest&);
 };
+
+// @}
 
 }
 

@@ -23,14 +23,20 @@
 #if !defined(MNS_MEQSTATEXPR_H)
 #define MNS_MEQSTATEXPR_H
 
+// \file MNS/MeqStatExpr.h
+// The Jones expression for a station
+
 //# Includes
 #include <BBS3/MNS/MeqJonesExpr.h>
 
 namespace LOFAR {
 
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
+
 //# Forward Declarations
 class MeqExpr;
-
 
 // This class is a node in a Jones matrix expression.
 
@@ -56,6 +62,8 @@ private:
   MeqExpr* itsGain1;
   MeqExpr* itsGain2;
 };
+
+// @}
 
 }
 

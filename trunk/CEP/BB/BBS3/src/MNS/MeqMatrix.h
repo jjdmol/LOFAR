@@ -23,6 +23,8 @@
 #if !defined(MNS_MEQMATRIX_H)
 #define MNS_MEQMATRIX_H
 
+// \file MNS/MeqMatrix.h
+// Matrix for Mns
 
 //# Includes
 #include <BBS3/MNS/MeqMatrixRep.h>
@@ -39,6 +41,10 @@ class MeqMatrixTmp;
 }
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 class MeqMatrix
 {
@@ -212,6 +218,8 @@ inline ostream& operator<< (ostream& os, const MeqMatrix& vec)
 LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& os, const MeqMatrix& vec);
 
 LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& os, MeqMatrix& vec);
+
+// @}
 
 }
 

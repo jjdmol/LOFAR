@@ -23,6 +23,9 @@
 #if !defined(MNS_MEQPARM_H)
 #define MNS_MEQPARM_H
 
+// \file MNS/MeqParm.h
+// The base class for a parameter
+
 //# Includes
 #include <BBS3/MNS/MeqExpr.h>
 #include <BBS3/MNS/MeqResult.h>
@@ -30,6 +33,10 @@
 #include <Common/lofar_vector.h>
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 //# Forward declarations
 class MeqDomain;
@@ -143,6 +150,8 @@ private:
   unsigned int     itsNparm;
   vector<MeqParm*> itsParms;
 };
+
+// @}
 
 }
 

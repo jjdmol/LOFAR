@@ -23,6 +23,8 @@
 #if !defined(MNS_MEQMATRIXREP_H)
 #define MNS_MEQMATRIXREP_H
 
+// \file MNS/MeqMatrixRep.h
+// Temporary matrix for Mns
 
 //# Includes
 #include <Common/lofar_complex.h>
@@ -30,6 +32,10 @@
 #include <casa/iosfwd.h>
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 //# Forward Declarations
 class MeqMatrixRealSca;
@@ -166,6 +172,8 @@ private:
   bool itsInPool;
   bool itsIsMalloced;
 };
+
+// @}
 
 }
 

@@ -23,12 +23,19 @@
 #ifndef MNS_MEQFUNKLET_H
 #define MNS_MEQFUNKLET_H
 
+// \file MNS/MeqFunklet.h
+// Parameter function with coeffients valid for a given domain
+
 //# Includes
 #include <BBS3/MNS/MeqDomain.h>
 #include <BBS3/MNS/MeqMatrix.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 //# Forward declarations
 class MeqRequest;
@@ -150,6 +157,8 @@ protected:
   double       itsX0;
   double       itsY0;
 };
+
+// @}
 
 }
 

@@ -23,12 +23,18 @@
 #if !defined(MNS_MEQPHASEREF_H)
 #define MNS_MEQPHASEREF_H
 
+// \file MNS/MeqPhaseRef.h
+// Phase reference position and derived values
+
 //# Includes
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 
-
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 class MeqPhaseRef
 {
@@ -69,6 +75,8 @@ private:
   casa::MDirection itsDir;
   casa::MPosition  itsEarthPos;
 };
+
+// @}
 
 }
 

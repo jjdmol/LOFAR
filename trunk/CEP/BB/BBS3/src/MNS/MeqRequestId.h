@@ -23,11 +23,19 @@
 #if !defined(MNS_MEQREQUESTID_H)
 #define MNS_MEQREQUESTID_H
 
+// \file MNS/MeqRequestId.h
+// Class holding an interferometer
 
 namespace LOFAR {
 
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
+
   typedef int MeqRequestId;
   const MeqRequestId InitMeqRequestId = -1;
+
+// @}
 
 }
 

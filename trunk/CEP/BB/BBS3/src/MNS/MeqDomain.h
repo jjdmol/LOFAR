@@ -23,6 +23,8 @@
 #if !defined(MNS_MEQDOMAIN_H)
 #define MNS_MEQDOMAIN_H
 
+// \file MNS/MeqDomain.h
+// The domain for an expression
 
 // This class represents a domain for which an expression has to be
 // evaluated.
@@ -34,6 +36,10 @@
 
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 class MeqDomain
 {
@@ -80,6 +86,8 @@ private:
   double itsOffsetY;
   double itsScaleY;
 };
+
+// @}
 
 }
 
