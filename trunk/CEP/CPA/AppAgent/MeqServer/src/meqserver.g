@@ -1,32 +1,50 @@
 pragma include once
 include 'appagent/app_proxy.g'
 
+# use_suspend  := T;
+# use_nostart  := T;
+# use_valgrind := T;
+use_valgrind_opts := [ "",
+#  "--gdb-attach=yes",          # use either this...
+  "--logfile=meqserver",       # ...or this, not both
+#  "--gdb-path=/usr/bin/ddd", 
+  ""];
+
 # find path to server binary
 if( has_field(lofar_software,'meq') && has_field(lofar_software.meq,'servers') )
   for( f in lofar_software.meq.servers )
     if( len(stat(f)) )
     {
       print 'Found path to meqserver binary:',f;
-      const _meqserver_binary := f;
+      if( use_valgrind )
+        _meqserver_binary := f;
+      else
+        _meqserver_binary := f;
       break;
     }
 # not found? try default
 if( !is_defined('_meqserver_binary') )
 {
-  const _meqserver_binary := 'meqserver';
+  _meqserver_binary := 'meqserver';
   print 'Will use default meqserver binary, hope this works';
 }
+# define the server binary specification, using the valgrind options
+# set above
+const _meqserver_binary := 
+    define_octoserver(_meqserver_binary,
+                      valgrind=use_valgrind,valgrind_opts=use_valgrind_opts,
+                      nostart=use_nostart,suspend=F);
+  
 
 const meqserver := function (appid='MeqServer',
     server=_meqserver_binary,options="-d0 -meq:M:M:MeqServer",
-    suspend=F,verbose=1,
-    gui=F,ref parent_frame=F,ref widgetset=dws,
+    verbose=1,gui=F,ref parent_frame=F,ref widgetset=dws,
     ref self=[=],ref public=[=])
 {
   # construct base app_proxy object
   if( is_fail( app_proxy(appid,server=server,options=options,
-                         suspend=suspend,verbose=verbose,
-                         gui=gui,parent_frame=parent_frame,widgetset=widgetset,
+                         verbose=verbose,gui=gui,
+                         parent_frame=parent_frame,widgetset=widgetset,
                          self=self,public=public) ))
     fail;
   # define meqserver-specific methods
@@ -68,7 +86,7 @@ const meqnode := function (class,name,children=F,default=[=] )
 
 const meqparm := function (name,default=[=] )
 {
-  return meqnode('MeqParmPolcStored',name,default=default);
+  return meqnode('MeqParm',name,default=default);
 }
 
 const meqdomain := function (startfreq,endfreq,starttime,endtime)
@@ -99,7 +117,7 @@ const meqserver_test := function ()
 {
   global mqs;
   # create meqserver object
-  mqs := meqserver(verbose=4,suspend=F);
+  mqs := meqserver(verbose=4);
   # set verbose debugging messages
   mqs.setdebug('MeqNode',5);
   # initialize meqserver
@@ -152,11 +170,10 @@ const meqserver_test := function ()
 const meqsink_test := function ()
 {
   global mqs;
-  # create meqserver object
-  mqs := meqserver(verbose=4,options="-d0 -meq:M:M:MeqServer",suspend=T);
+  mqs := meqserver(verbose=4,options="-d0 -meq:M:M:MeqServer");
   # set verbose debugging messages
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
-  mqs.setdebug("MeqServ MeqVisHandler",3);
+  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",1);
+  mqs.setdebug("MeqServ MeqVisHandler",1);
   mqs.setdebug("MeqServer",1);
   # initialize meqserver
   mqs.init([output_col="PREDICT"],wait=T);
@@ -164,7 +181,7 @@ const meqsink_test := function ()
   # create a small subtree
   defval1 := array(as_double(1),2,2);
   defval2 := array(as_double(2),1,1);
-  addrec := meqnode('Meqcompare','compare',
+  addrec := meqnode('meqCompare','compare',
               children=[ x=meqparm('p1',default=defval1), 
                          y='spigot1' ]);
   print mqs.meq('Create.Node',addrec);

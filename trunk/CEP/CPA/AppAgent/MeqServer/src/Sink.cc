@@ -120,6 +120,7 @@ int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref,
 {
   const VisTile &tile = *tileref;
   const VisTile::Format * pformat = &(tile.format());
+  int ncorr = tileref->ncorr();
   
   cdebug(3)<<"deliver: processing tile "<<tile.tileId()<<" of "<<tile.ntime()<<" timeslots"<<endl;
   
@@ -139,8 +140,21 @@ int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref,
   {
     FailWhen(flags[ichild]&RES_WAIT,"Meq::Sink can't cope with a WAIT result code yet");
     int icol = output_cols[ichild], icorr = child_icorrs[ichild];
-    if( icol >= 0 && icorr >= 0 )
+    if( flags[ichild] == RES_FAIL )
     {
+      cdebug(3)<<"child "<<ichild<<" result is FAIL, skipping"<<endl;
+    }
+    else if( icol<0 || icorr<0 )
+    {
+      cdebug(3)<<"child "<<ichild<<" output disabled, skipping"<<endl;
+    }
+    else if( icorr >= ncorr )
+    {
+      cdebug(3)<<"child "<<ichild<<" correlation not available, skipping"<<endl;
+    }
+    else // OK, write it
+    {
+      cdebug(3)<<"child "<<ichild<<" result is "<<flags[ichild]<<endl;
       // make tile writable if so required
       if( !ptile )
       {
@@ -176,32 +190,21 @@ int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref,
       TypeId coltype = pformat->type(icol);
       LoShape colshape = pformat->shape(icol);
       colshape.push_back(tile.nrow()); // add third dimension to column shape
-      if( flags[ichild] != RES_FAIL )
+      // get the values out, and copy them to tile column
+      const Vells &vells = resref[ichild]->getValue();
+      if( vells.isReal() ) // real values
       {
-        cdebug(3)<<"child "<<ichild<<" result is "<<flags[ichild]<<endl;
-        // get the values out, and copy them to tile column
-        const Vells &vells = resref[ichild]->getValue();
-        if( vells.isReal() ) // real values
-        {
-          FailWhen(coltype!=Tpdouble,"type mismatch: double Vells, "+coltype.toString()+" column");
-          fillTileColumn(static_cast<double*>(coldata),colshape,vells.getRealArray(),icorr);
-        }
-        else  // complex values
-        {
-          FailWhen(coltype!=Tpfcomplex,"type mismatch: complex Vells, "+coltype.toString()+" column");
-          fillTileColumn(static_cast<fcomplex*>(coldata),colshape,vells.getComplexArray(),icorr);
-        }
-        result_flag |= RES_UPDATED;
+        FailWhen(coltype!=Tpdouble,"type mismatch: double Vells, "+coltype.toString()+" column");
+        fillTileColumn(static_cast<double*>(coldata),colshape,vells.getRealArray(),icorr);
       }
-      else
+      else  // complex values
       {
-        cdebug(3)<<"child "<<ichild<<" result is FAIL, skipping"<<endl;
+        FailWhen(coltype!=Tpfcomplex,"type mismatch: complex Vells, "+coltype.toString()+" column");
+        fillTileColumn(static_cast<fcomplex*>(coldata),colshape,vells.getComplexArray(),icorr);
       }
+      result_flag |= RES_UPDATED;
     }
-    else
-    {
-      cdebug(3)<<"child "<<ichild<<" output disabled, skipping"<<endl;
-    }
+    // detach from result ref
     resref[ichild].detach();
   }
   return result_flag;
