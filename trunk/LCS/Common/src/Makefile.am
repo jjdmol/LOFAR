@@ -1,7 +1,8 @@
 SUBDIRS	= shmem .
 
 DOCHDRS	=	\
-Debug.h						\
+Debug.h \
+LofarTypes.h \
 Exception.h \
 Net/Socket.h \
 Thread/Thread.h \
