@@ -44,7 +44,6 @@ libpml_la_SOURCES= $(DOCHDRS) \
 	GPM_Controller.cc \
 	GPM_PropertyService.cc \
 	GCF_PropertyProxy.cc \
-	GPM_PropertyProxy.cc \
 	PA_Protocol.cc
 
 libpml_la_CPPFLAGS= -I$(top_srcdir)/include \

@@ -42,12 +42,16 @@ GCFRawPort::GCFRawPort(GCFTask& task,
     GCFPortInterface(&task, name, type, protocol, transportRawData),   
     _pMaster(0)
 {
+  _pTimerHandler = GTMTimerHandler::instance(); 
+  assert(_pTimerHandler);
 }
 
 GCFRawPort::GCFRawPort() :
     GCFPortInterface(0, "", SAP, 0, false),   
     _pMaster(0)
 {
+  _pTimerHandler = GTMTimerHandler::instance(); 
+  assert(_pTimerHandler);
 }
 
 void GCFRawPort::init(GCFTask& task, 
@@ -63,6 +67,9 @@ void GCFRawPort::init(GCFTask& task,
 GCFRawPort::~GCFRawPort()
 {
   cancelAllTimers();
+  assert(_pTimerHandler);
+  GTMTimerHandler::release();
+  _pTimerHandler = 0;
 }
 
 void GCFRawPort::setMaster(GCFPort* pMaster)
@@ -163,7 +170,8 @@ long GCFRawPort::setTimer(long delay_sec, long delay_usec,
 			  long interval_sec, long interval_usec,
 			  void* arg)
 {
-  return GTMTimerHandler::instance()->setTimer(*this, 
+  assert(_pTimerHandler);
+  return _pTimerHandler->setTimer(*this, 
           (unsigned long) (delay_sec * 1000000 + delay_usec), 
           (unsigned long) (interval_sec * 1000000 + interval_usec),
           arg);  
@@ -173,7 +181,8 @@ long GCFRawPort::setTimer(double delay_seconds,
 			  double interval_seconds,
 			  void* arg)
 {
-  return GTMTimerHandler::instance()->setTimer(*this, 
+  assert(_pTimerHandler);
+  return _pTimerHandler->setTimer(*this, 
          (unsigned long) (delay_seconds * 1000000.0), 
          (unsigned long) (interval_seconds * 1000000.0),
          arg);
@@ -181,12 +190,14 @@ long GCFRawPort::setTimer(double delay_seconds,
 
 int GCFRawPort::cancelTimer(long timerid, void **arg)
 {
-  return GTMTimerHandler::instance()->cancelTimer(timerid, arg);
+  assert(_pTimerHandler);
+  return _pTimerHandler->cancelTimer(timerid, arg);
 }
 
 int GCFRawPort::cancelAllTimers()
 {
-  return GTMTimerHandler::instance()->cancelAllTimers(*this);
+  assert(_pTimerHandler);
+  return _pTimerHandler->cancelAllTimers(*this);
 }
 
 int GCFRawPort::resetTimerInterval(long timerid,
@@ -282,10 +293,8 @@ GCFEvent::TResult GCFRawPort::recvEvent()
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
   
   GCFEvent e;
-  ssize_t bytesRead = recv(&e.signal, sizeof(e.signal));
-  assert(bytesRead == sizeof(e.signal));
-  bytesRead = recv(&e.length, sizeof(e.length));
-  assert(bytesRead == sizeof(e.length));
+  if (recv(&e.signal, sizeof(e.signal)) == -1) return status;
+  if (recv(&e.length, sizeof(e.length)) == -1) return status;
   
   if (e.length > 0)
   {
@@ -295,17 +304,11 @@ GCFEvent::TResult GCFRawPort::recvEvent()
     memcpy(event_buf, &e, sizeof(e));
     
     event_buf += sizeof(e);
-    bytesRead = 0;    
-    ssize_t payloadLength = e.length;
-    do 
-    {
-      bytesRead += recv(event_buf + bytesRead, payloadLength);
-      payloadLength = e.length - bytesRead;
-                          
-    } while (payloadLength > 0);
-        
-    status = dispatch(*full_event);
-    
+
+    if (recv(event_buf, e.length) > 0)
+    {          
+      status = dispatch(*full_event);
+    }    
     event_buf -= sizeof(e);
     delete [] event_buf;
   }

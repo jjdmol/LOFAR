@@ -21,15 +21,15 @@
 //#  $Id$
 
 #include <GPM_RTController.h>
-#include "GCF_RTMyPropertySet.h"
+#include <GCF/PALlight/GCF_RTMyPropertySet.h>
 #include <stdio.h>
-#include <Utils.h>
+#include <GCF/Utils.h>
 #include <PI_Protocol.ph>
 
 static string sPMLTaskName("PMLlite");
-GPMRTController* GPMRTController::_pInstance = 0;
+GPMRTHandler* GPMRTHandler::_pInstance = 0;
 
-extern void logResult(TPAResult result, GCFRTMyPropertySet& propSet);
+extern void logResult(TPIResult result, GCFRTMyPropertySet& propSet);
 
 GPMRTController::GPMRTController() :
   GCFTask((State)&GPMRTController::initial, sPMLTaskName)
@@ -41,22 +41,31 @@ GPMRTController::GPMRTController() :
   _propertyInterface.init(*this, "client", GCFPortInterface::SAP, PI_PROTOCOL);
 }
 
-GPMRTController::~GPMRTController()
+GPMRTController* GPMRTController::instance(bool temporary)
 {
-}
-
-GPMRTController* GPMRTController::instance()
-{
-  if (0 == _pInstance)
-  {
-    _pInstance = new GPMRTController();
-    _pInstance->start();
+  if (0 == GPMRTHandler::_pInstance)
+  {    
+    GPMRTHandler::_pInstance = new GPMRTHandler();
+    assert(!GPMRTHandler::_pInstance->mayDeleted());
+    GPMRTHandler::_pInstance->_controller.start();
   }
-
-  return _pInstance;
+  if (!temporary) GPMRTHandler::_pInstance->use();
+  return &GPMRTHandler::_pInstance->_controller;
 }
 
-void GPMController::deletePropSet(const GCFRTMyPropertySet& propSet)
+void GPMRTController::release()
+{
+  assert(GPMRTHandler::_pInstance);
+  assert(!GPMRTHandler::_pInstance->mayDeleted());
+  GPMRTHandler::_pInstance->leave(); 
+  if (GPMRTHandler::_pInstance->mayDeleted())
+  {
+    delete GPMRTHandler::_pInstance;
+    assert(!GPMRTHandler::_pInstance);
+  }
+}
+
+void GPMRTController::deletePropSet(const GCFRTMyPropertySet& propSet)
 {
   for (TActionSeqList::iterator iter = _actionSeqList.begin();
        iter != _actionSeqList.end(); ++iter)
@@ -69,7 +78,7 @@ void GPMController::deletePropSet(const GCFRTMyPropertySet& propSet)
   }
 }
 
-TPMResult GPMController::registerScope(GCFRTMyPropertySet& propSet)
+TPMResult GPMRTController::registerScope(GCFRTMyPropertySet& propSet)
 {
   TPMResult result(PM_NO_ERROR);
   TMyPropertySets::iterator iter = _myPropertySets.find(propSet.getScope());
@@ -93,7 +102,7 @@ TPMResult GPMController::registerScope(GCFRTMyPropertySet& propSet)
   return result;
 }
 
-TPMResult GPMController::unregisterScope(GCFRTMyPropertySet& propSet)
+TPMResult GPMRTController::unregisterScope(GCFRTMyPropertySet& propSet)
 {
   TPMResult result(PM_NO_ERROR);
  
@@ -109,9 +118,9 @@ TPMResult GPMController::unregisterScope(GCFRTMyPropertySet& propSet)
   return result;
 }
 
-unsigned short GPMController::registerAction(GCFRTMyPropertySet& propSet)
+unsigned short GPMRTController::registerAction(GCFRTMyPropertySet& propSet)
 {
-  unsigned short seqnr(0);
+  unsigned short seqnr(1); // 0 is reserved for internal use in PA
   TActionSeqList::const_iterator iter;
   do   
   {
@@ -124,9 +133,9 @@ unsigned short GPMController::registerAction(GCFRTMyPropertySet& propSet)
   return seqnr;
 }
 
-void GPMController::propertiesLinked(const string& scope,                            
+void GPMRTController::propertiesLinked(const string& scope,                            
                                      list<string>& propsToSubscribe, 
-                                     TPAResult result)
+                                     TPIResult result)
 {
   _propertyInterface.cancelAllTimers();
   if (_propertyInterface.isConnected())
@@ -134,13 +143,13 @@ void GPMController::propertiesLinked(const string& scope,
     PIPropSetLinkedEvent response;
     response.result = result;
     response.scope = scope;
-    Utils::getPropertyListString(responseOut.propList, propsToSubscribe);
+    Utils::getPropertyListString(response.propList, propsToSubscribe);
     _propertyInterface.send(response);
   }
 }
 
-void GPMController::propertiesUnlinked(const string& scope, 
-                                       TPAResult result)
+void GPMRTController::propertiesUnlinked(const string& scope, 
+                                       TPIResult result)
 {
   if (_propertyInterface.isConnected())
   {
@@ -270,7 +279,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
         LOG_DEBUG(LOFAR::formatString ( 
             "Property set with scope %d was deleted in the meanwhile", 
             request.scope.c_str()));
-        PAPropSetLinkedEvent response;
+        PIPropSetLinkedEvent response;
         response.result = PI_PS_GONE;
         _propertyInterface.send(response);
       }
@@ -292,7 +301,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
         LOG_DEBUG(LOFAR::formatString ( 
             "Property set with scope %d was deleted in the meanwhile", 
             request.scope.c_str()));
-        PAPropSetUnlinkedEvent response;
+        PIPropSetUnlinkedEvent response;
         response.result = PI_PS_GONE;
         _propertyInterface.send(response);
       }
@@ -303,11 +312,11 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
       PIValueChangedEvent indicationIn(e);
 
       LOG_INFO(LOFAR::formatString ( 
-          "SS-MSG: Property %s changed", 
+          "PI-MSG: Property %s changed", 
           indicationIn.name.c_str()));
       string scope;
       scope.assign(indicationIn.name, 0, indicationIn.scopeLength);
-      GCFRTMyPropertySet* pPropertySet = _propertySets[scope];
+      GCFRTMyPropertySet* pPropertySet = _myPropertySets[scope];
       if (pPropertySet)
       {
         assert(indicationIn.value._pValue);
@@ -377,11 +386,6 @@ void logResult(TPIResult result, GCFRTMyPropertySet& propSet)
     case PI_PA_INTERNAL_ERROR:
       LOG_FATAL(LOFAR::formatString ( 
           "Internal error in PA. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
-      break;
-    case PI_APC_NOT_EXISTS:
-      LOG_ERROR(LOFAR::formatString ( 
-          "APC not exists. (%s:%s)",
           propSet.getType(), propSet.getScope().c_str()));
       break;
     default:

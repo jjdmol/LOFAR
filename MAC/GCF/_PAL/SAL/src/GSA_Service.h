@@ -35,6 +35,7 @@ class DpHLGroup;
 class Variable;
 class CharString;
 class DpIdentifier;
+class GSASCADAHandler;
 
 /**
  * This is the abstract class, which provides the possibility to invoke all 
@@ -102,6 +103,7 @@ class GSAService
     
   private: // data members    
     GSAWaitForAnswer* _pWFA;
+    GSASCADAHandler*  _pSCADAHandler;
 };                                 
 
 #endif

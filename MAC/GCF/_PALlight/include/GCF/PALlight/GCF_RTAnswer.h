@@ -122,13 +122,13 @@ enum {
  */
 enum {
   F_VCHANGEMSG_ID = 1,
-  F_MYPLOADED_ID,
-  F_MYPUNLOADED_ID,
+  F_MYPS_ENABLED_ID,
+  F_MYPS_DISABLED_ID,
 };
 
 #define F_VCHANGEMSG    F_SIGNAL(F_PML_PROTOCOL, F_VCHANGEMSG_ID,    F_IN)
-#define F_MYPLOADED     F_SIGNAL(F_PML_PROTOCOL, F_MYPLOADED_ID,     F_IN)
-#define F_MYPUNLOADED   F_SIGNAL(F_PML_PROTOCOL, F_MYPUNLOADED_ID,   F_IN)
+#define F_MYPS_ENABLED  F_SIGNAL(F_PML_PROTOCOL, F_MYPS_ENABLED_ID,     F_IN)
+#define F_MYPS_DISABLED F_SIGNAL(F_PML_PROTOCOL, F_MYPS_DISABLED_ID,   F_IN)
 
 /// NOTE: These structs cannot be used to send messages by real port 
 /// implementations like TCP. 

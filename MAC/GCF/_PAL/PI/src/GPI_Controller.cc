@@ -39,6 +39,7 @@ GPIController::GPIController() :
 
 GPIController::~GPIController()
 {
+  LOG_INFO("Deleting PropertyInterface");
 }
 
 GCFEvent::TResult GPIController::initial(GCFEvent& e, GCFPortInterface& p)

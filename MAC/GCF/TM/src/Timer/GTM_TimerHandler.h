@@ -25,8 +25,6 @@
 
 #include <GCF/TM/GCF_Handler.h>
 #include <Common/lofar_map.h>
-#include <sys/time.h>
-#include <time.h>
 
 class GTMTimer;
 class GCFRawPort;
@@ -40,23 +38,23 @@ class GTMTimerHandler : GCFHandler
 {
   public:
     static GTMTimerHandler* instance ();
+    static void release ();
+    virtual ~GTMTimerHandler ();
 
     void workProc ();
     void stop ();
 
     unsigned long setTimer (GCFRawPort& port, 
-                            unsigned long delay_seconds, 
-                            unsigned long interval_seconds = 0,
+                            unsigned long delaySeconds, 
+                            unsigned long intervalSeconds = 0,
                             void*  arg        = 0);
     int cancelTimer (unsigned long timerid, void** arg = 0);
     int cancelAllTimers (GCFRawPort& port);
 
   private: // helper methods
-      void saveDateTime ();
   
   private:
     GTMTimerHandler ();
-    virtual ~GTMTimerHandler () {};
     static GTMTimerHandler* _pInstance;
 
     /**
@@ -65,10 +63,8 @@ class GTMTimerHandler : GCFHandler
     GTMTimerHandler (const GTMTimerHandler&);
     GTMTimerHandler& operator= (const GTMTimerHandler&);
     
-    timeval     _lastTime;
-    struct tm   _lastDateTime;
     bool        _running;
-    map<unsigned long, GTMTimer*> _timers;
-    typedef map<unsigned long, GTMTimer*>::iterator TTimerIter;
+    typedef map<unsigned long, GTMTimer*> TTimers;
+    TTimers _timers;
 };
 #endif

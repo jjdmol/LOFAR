@@ -39,10 +39,8 @@ GCFExtPropertySet::~GCFExtPropertySet()
 {
   if (_isLoaded)
   {
-    GPMController* pController = GPMController::instance();  
-    assert(pController);
-  
-    pController->unloadPropSet(*this);  
+    assert(_pController);
+    _pController->unloadPropSet(*this);  
   }
 }
 
@@ -83,12 +81,16 @@ TGCFResult GCFExtPropertySet::load()
         "REQ: Load ext. property set %s",
         getScope().c_str()));
 
-    GPMController* pController = GPMController::instance();
-    assert(pController);
-    TPMResult pmResult = pController->loadPropSet(*this);
+    assert(_pController);
+    TPMResult pmResult = _pController->loadPropSet(*this);
+    
     if (pmResult == PM_NO_ERROR)
     {
       _isBusy = true;
+    }
+    else
+    {
+      result = GCF_EXTPS_LOAD_ERROR;
     }
   }
   return result;
@@ -99,15 +101,63 @@ void GCFExtPropertySet::loaded(TGCFResult result)
   assert(_isBusy);
   assert(!_isLoaded);
   _isBusy = false;
+  LOG_INFO(LOFAR::formatString ( 
+      "PA-RESP: Prop. set '%s' is loaded%s",
+      getScope().c_str(), 
+      (result == GCF_NO_ERROR ? "" : " (with errors)")));
   if (result == GCF_NO_ERROR)
   {
-    LOG_INFO(LOFAR::formatString ( 
-        "PA-RESP: Prop. set '%s' is loaded",
-        getScope().c_str()));
     _isLoaded = true;
   }
 
   dispatchAnswer(F_EXTPS_LOADED, result);
+}
+
+TGCFResult GCFExtPropertySet::unload()
+{  
+  TGCFResult result(GCF_NO_ERROR);
+  
+  if (_isBusy)
+  {
+    LOG_INFO(LOFAR::formatString ( 
+        "This property set with Instance name (%s) is busy with an action. Ignored!",
+        getScope().c_str()));
+    result = GCF_BUSY;
+  }
+  else if (!_isLoaded)
+  {
+    LOG_INFO(LOFAR::formatString ( 
+        "This instance of the property set with Instance name (%s) was not loaded here. Ignored!",
+        getScope().c_str()));
+    result = GCF_NOT_LOADED;
+  }
+  else if (getScope().length() == 0 || 
+           !Utils::isValidPropName(getScope().c_str()))
+  {
+    LOG_INFO(LOFAR::formatString ( 
+        "Instance name not set or meets not the naming convention (%s). Ignored!",
+        getScope().c_str()));
+    result = GCF_NO_PROPER_DATA;
+  }
+  else
+  {    
+    LOG_INFO(LOFAR::formatString ( 
+        "REQ: Unload ext. property set %s",
+        getScope().c_str()));
+
+    assert(_pController);
+    TPMResult pmResult = _pController->unloadPropSet(*this);
+    
+    if (pmResult == PM_NO_ERROR)
+    {
+      _isBusy = true;
+    }
+    else
+    {
+      result = GCF_EXTPS_UNLOAD_ERROR;
+    }
+  }
+  return result;
 }
 
 void GCFExtPropertySet::unloaded(TGCFResult result)
@@ -115,12 +165,11 @@ void GCFExtPropertySet::unloaded(TGCFResult result)
   assert(_isBusy);
   assert(_isLoaded);
   _isBusy = false;
-  if (result == GCF_NO_ERROR)
-  {
-    LOG_INFO(LOFAR::formatString ( 
-        "PA-RESP: Prop. set '%s' is unloaded",
-        getScope().c_str()));
-  }
+  LOG_INFO(LOFAR::formatString ( 
+      "PA-RESP: Prop. set '%s' is unloaded%s",
+      getScope().c_str(), 
+      (result == GCF_NO_ERROR ? "" : " (with errors)")));
+
   _isLoaded = false;
   
   GCFExtProperty* pProperty(0);
@@ -160,48 +209,6 @@ void GCFExtPropertySet::serverIsGone()
   }
 
   dispatchAnswer(F_SERVER_GONE, GCF_NO_ERROR);  
-}
-
-TGCFResult GCFExtPropertySet::unload()
-{  
-  TGCFResult result(GCF_NO_ERROR);
-  
-  if (_isBusy)
-  {
-    LOG_INFO(LOFAR::formatString ( 
-        "This property set with Instance name (%s) is busy with an action. Ignored!",
-        getScope().c_str()));
-    result = GCF_BUSY;
-  }
-  else if (!_isLoaded)
-  {
-    LOG_INFO(LOFAR::formatString ( 
-        "This instance of the property set with Instance name (%s) was not loaded here. Ignored!",
-        getScope().c_str()));
-    result = GCF_NOT_LOADED;
-  }
-  else if (getScope().length() == 0 || 
-           !Utils::isValidPropName(getScope().c_str()))
-  {
-    LOG_INFO(LOFAR::formatString ( 
-        "Instance name not set or meets not the naming convention (%s). Ignored!",
-        getScope().c_str()));
-    result = GCF_NO_PROPER_DATA;
-  }
-  else
-  {    
-    GPMController* pController = GPMController::instance();
-    assert(pController);
-    LOG_INFO(LOFAR::formatString ( 
-        "REQ: Unload ext. property set %s",
-        getScope().c_str()));
-    TPMResult pmResult = pController->unloadPropSet(*this);
-    if (pmResult == PM_NO_ERROR)
-    {
-      _isBusy = true;
-    }
-  }
-  return result;
 }
 
 TGCFResult GCFExtPropertySet::requestValue(const string propName) const

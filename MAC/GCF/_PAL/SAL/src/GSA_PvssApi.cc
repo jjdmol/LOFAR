@@ -32,6 +32,8 @@
 #include <CharString.hxx>
 #include <StartDpInitSysMsg.hxx>
 
+#include <unistd.h>
+
 // -------------------------------------------------------------------------
 // Our manager class
 
@@ -45,13 +47,22 @@ GSAPvssApi::GSAPvssApi() :
 // Start our ApiTest manager
 void GSAPvssApi::init()
 {
-	long sec, usec;
-
+  // The PVSS API 3.0.1 redirects stdout and stderr output automatically to 
+  // a file created by the API
+  // We don't want this, so we have to repair this
+  int savedOutFD = dup(1);
+  int savedErrFD = dup(2);
+  
   // First connect to Data manager.
   // We want Typecontainer and Identification so we can resolve names
   // This call succeeds or the manager will exit
 	connectToData(StartDpInitSysMsg::TYPE_CONTAINER | StartDpInitSysMsg::DP_IDENTIFICATION);
 
+  dup2(savedOutFD, 1);
+  dup2(savedErrFD, 2);
+
+  long sec, usec;
+  
   // While we are in STATE_INIT  we are initialized by the Data manager
   while (getManagerState() == STATE_INIT)
   {
@@ -90,6 +101,5 @@ void GSAPvssApi::workProc()
 
 void GSAPvssApi::stop()
 {
-  // TODO: Find out this is necessary or not
-  // Manager::exit(1);
+
 }

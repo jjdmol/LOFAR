@@ -31,15 +31,42 @@ GTMTimerHandler* GTMTimerHandler::instance()
   if (0 == _pInstance)
   {
     _pInstance = new GTMTimerHandler();
+    assert(!_pInstance->mayDeleted());
   }
-
+  _pInstance->use();
   return _pInstance;
 }
 
+void GTMTimerHandler::release()
+{
+  assert(_pInstance);
+  assert(!_pInstance->mayDeleted());
+  _pInstance->leave(); 
+  if (_pInstance->mayDeleted())
+  {
+    delete _pInstance;
+    assert(!_pInstance);
+  }
+}
+
 GTMTimerHandler::GTMTimerHandler() :
-  GCFHandler(), _running(true)
+  _running(true)
 {  
   GCFTask::registerHandler(*this);
+}
+
+GTMTimerHandler::~GTMTimerHandler()
+{ 
+  GTMTimer* pCurTimer(0);
+  for (TTimers::iterator iter = _timers.begin(); 
+       iter != _timers.end(); ++iter)
+  {
+    pCurTimer = iter->second;
+    assert(pCurTimer);
+    delete pCurTimer;
+  }
+  _timers.clear();
+  _pInstance = 0;
 }
 
 void GTMTimerHandler::stop()
@@ -50,61 +77,36 @@ void GTMTimerHandler::stop()
 void GTMTimerHandler::workProc()
 {
   GTMTimer* pCurTimer(0);
-  unsigned long microSecDiff(0);
 
-  map<unsigned long, GTMTimer*> tempTimers;
-  
+  TTimers tempTimers;
   tempTimers.insert(_timers.begin(), _timers.end());
-  if (!tempTimers.empty())
-  {
-    timeval curTime;
-    struct timezone timeZone;
-    gettimeofday(&curTime, &timeZone);
-    microSecDiff = ((unsigned long) (curTime.tv_usec) + 
-                    (unsigned long) (curTime.tv_sec) * 1000000) - 
-                   ((unsigned long) (_lastTime.tv_usec) +
-                    (unsigned long) (_lastTime.tv_sec) * 1000000);
-  }
-  for (TTimerIter iter = tempTimers.begin(); iter != tempTimers.end() && _running; ++iter)
+    
+  for (TTimers::iterator iter = tempTimers.begin(); 
+       iter != tempTimers.end() && _running; ++iter)
   {
     pCurTimer = iter->second;
-    if (pCurTimer)
+    assert(pCurTimer);
+    if (pCurTimer->isElapsed() || pCurTimer->isCanceled())
     {
-      if (pCurTimer->isElapsed() || pCurTimer->isCanceled())
-      {
-        delete pCurTimer;
-        _timers.erase(iter->first);
-      }
-      else
-        pCurTimer->decreaseTime(microSecDiff);             
-    }  
-  }
-  if (!_timers.empty())
-  {
-    saveDateTime();
+      delete pCurTimer;
+      _timers.erase(iter->first);
+    }
+    else
+    {
+      pCurTimer->decreaseTime();
+    }
   }
 }
-
-void GTMTimerHandler::saveDateTime()
-{
-  struct timezone timeZone;
-  time_t now = time(NULL);
-  localtime_r(&now, &_lastDateTime);
-  gettimeofday(&_lastTime, &timeZone);
-}
-
 
 unsigned long GTMTimerHandler::setTimer(GCFRawPort& port, 
-					unsigned long delay_seconds, 
-					unsigned long interval_seconds,
+					unsigned long delaySeconds, 
+					unsigned long intervalSeconds,
 					void*  arg)
 {
-  unsigned long timerid(0);
-
-  if (_timers.empty()) saveDateTime(); // start timer
+  unsigned long timerid(1);
 
   // search the first unused timerid
-  TTimerIter iter;
+  TTimers::iterator iter;
   do 
   {
     timerid++;
@@ -114,8 +116,8 @@ unsigned long GTMTimerHandler::setTimer(GCFRawPort& port,
 
   GTMTimer* pNewTimer = new GTMTimer(port, 
 				     timerid,
-				     delay_seconds, 
-				     interval_seconds,
+				     delaySeconds, 
+				     intervalSeconds,
 				     arg);
   _timers[timerid] = pNewTimer;
 
@@ -126,17 +128,16 @@ int GTMTimerHandler::cancelTimer(unsigned long timerid, void** arg)
 {
   int result(0);
   GTMTimer* pCurTimer(0);
-  TTimerIter iter = _timers.find(timerid);
+  TTimers::iterator iter = _timers.find(timerid);
+  if (arg) *arg = 0;
   if (iter == _timers.end())
     return result;
-  pCurTimer = iter->second; //second is of type GTMTimer*
-  if (pCurTimer)
-  {
-    result = 1;
-    if (arg)
-      *arg = pCurTimer->getTimerArg();
-    pCurTimer->cancel();
-  }
+  pCurTimer = iter->second;
+
+  assert(pCurTimer);
+  result = 1;
+  if (arg) *arg = pCurTimer->getTimerArg();
+  pCurTimer->cancel();
   
   return result;
 }
@@ -146,17 +147,15 @@ int GTMTimerHandler::cancelAllTimers(GCFRawPort& port)
   int result(0);
   GTMTimer* pCurTimer(0);
   
-  for (TTimerIter iter = _timers.begin(); 
+  for (TTimers::iterator iter = _timers.begin(); 
        iter != _timers.end(); ++iter)
   {
     pCurTimer = iter->second;
-    if (pCurTimer)
-    {
-      if (&(pCurTimer->getPort()) == &port)
-      {  
-        pCurTimer->cancel();
-        if (!result) result = 1;
-      }
+    assert(pCurTimer);
+    if (&(pCurTimer->getPort()) == &port)
+    {  
+      pCurTimer->cancel();
+      result++;
     }
   }
   return result;

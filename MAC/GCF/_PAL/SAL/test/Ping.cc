@@ -52,6 +52,11 @@ Ping::Ping(string name)
   client.init(*this, "client", GCFPortInterface::SAP, ECHO_PROTOCOL);
 }
 
+Ping::~Ping()
+{
+  cout << "Deleting (SAL)ping" << endl;
+}
+
 GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;

@@ -139,12 +139,12 @@ int GCFTCPPort::open()
 
 ssize_t GCFTCPPort::send(GCFEvent& e)
 {
-  size_t written = 0;
+  ssize_t written = 0;
 
   assert(_pSocket);
 
   if (MSPP == getType())  
-    return 0; // no messages can be send by this type of port
+    return -1; // no messages can be send by this type of port
 
  
   unsigned int packsize;
@@ -158,15 +158,11 @@ ssize_t GCFTCPPort::send(GCFEvent& e)
       getTask()->getName().c_str(), 
       getName().c_str()));
   }
-  if ((written = _pSocket->send(buf, packsize)) != packsize)
-  {
-    LOG_DEBUG(LOFAR::formatString (
-        "truncated send, error: %s",
-        strerror(errno)));
-        
+  if ((written = _pSocket->send(buf, packsize)) != (ssize_t) packsize)
+  {       
     schedule_disconnected();
     
-    written = 0;
+    written = -1;
   }
  
   return written;

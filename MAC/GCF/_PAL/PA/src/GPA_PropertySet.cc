@@ -195,6 +195,7 @@ void GPAPropertySet::disable(PAUnregisterScopeEvent& request)
         }
       }
       
+      _usecount = 0;
       if (_counter == 0)
       {
         _state = S_DISABLED;
@@ -204,7 +205,6 @@ void GPAPropertySet::disable(PAUnregisterScopeEvent& request)
       {
         _savedResult = response.result;
       }
-      _usecount = 0;
       break;
     }
     default:
@@ -239,14 +239,10 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
           response.result = PA_INTERNAL_ERROR;        
         }                 
       }
-      else
-      {
-        link();
-      }
       if (response.result != PA_NO_ERROR)
       {
-        _controller.sendAndNext(response);
         _state = S_ENABLED;
+        _controller.sendAndNext(response);
       }
       else
       {
@@ -280,6 +276,13 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
           _psClients.push_back(psClient);
         }
         _usecount++;
+        
+        // on permanent prop. sets no DP's needed to be created
+        // so it can be linked immediately
+        if (!_isTemporary)
+        {
+          link();
+        }
       }
       break;
     }
@@ -321,6 +324,8 @@ void GPAPropertySet::link()
     LOG_INFO(LOFAR::formatString(
         "Prop. set '%s' will be linked",
         _name.c_str()));
+    // send a message to the state machine of the controller
+    // so that the controller can switch its state
     PALinkPropSetEvent request;
     request.scope = _name;
     _controller.dispatch(request, _serverPort);
@@ -372,44 +377,7 @@ void GPAPropertySet::unload(PAUnloadPropSetEvent& request, const GCFPortInterfac
       LOG_INFO(LOFAR::formatString(
           "Decrease the usecount to %d",          
           _usecount));
-      if (_usecount == 0)
-      {         
-        _state = S_UNLINKING;        
-        if (_isTemporary)
-        {
-          LOG_INFO("Must delete related DP's due to usecount is null");
-          _counter = 0;
-          if (dpDelete(_name) != SA_NO_ERROR)
-          {
-            response.result = PA_INTERNAL_ERROR;        
-          }            
-          else
-          {
-            _counter += 1;
-          }     
-        }
-        else
-        {
-          unlink();
-        }
-      }
-      else
-      {
-        _controller.sendAndNext(response);
-      }
 
-      if (response.result != PA_NO_ERROR)
-      {
-        if (_counter == 0)
-        {
-          _state = S_ENABLED;
-          _controller.sendAndNext(response);
-        }
-        else
-        {
-          _savedResult = response.result;
-        }
-      }
       // decrease the load counter and remove the client (if counter == 0),
       // see also 'load'
       TPSClient* pPSClient = findClient(p);
@@ -421,6 +389,31 @@ void GPAPropertySet::unload(PAUnloadPropSetEvent& request, const GCFPortInterfac
           _psClients.remove(*pPSClient);
         }
       }
+
+      if (_usecount == 0)
+      {         
+        _state = S_UNLINKING;        
+        if (_isTemporary)
+        {
+          LOG_INFO("Must delete related DP due to usecount is null");
+          if (dpDelete(_name) != SA_NO_ERROR)
+          {
+            response.result = PA_INTERNAL_ERROR;        
+            _state = S_ENABLED;
+            _controller.sendAndNext(response);
+          }
+          // else waiting for the response in dpDeleted method            
+        }
+        else
+        {
+          unlink();
+        }
+      }
+      else
+      {
+        _controller.sendAndNext(response);
+      }
+
       break;
     }
       
@@ -439,6 +432,8 @@ void GPAPropertySet::unlink()
     LOG_INFO(LOFAR::formatString(
         "Prop. set '%s' will be unlinked",
         _name.c_str()));
+    // send a message to the state machine of the controller
+    // so that the controller can switch its state
     PAUnlinkPropSetEvent request;
     request.scope = _name;
     _controller.dispatch(request, _serverPort);
@@ -519,37 +514,25 @@ void GPAPropertySet::configure(PAConfPropSetEvent& request)
   _controller.sendAndNext(response);
 }
 
-void GPAPropertySet::deleteClient(const GCFPortInterface& p)
+void GPAPropertySet::clientGone(GCFPortInterface& p)
 {
-  if (&p == &_serverPort)
-  { 
-    // This property set must be disabled because the server does not
-    // exists anymore.
-    // So pretend a disable request is received
-    PAUnregisterScopeEvent request;
+  assert (&p != &_serverPort);
+  // This means that all load requests of client 'p' have to be undone.
+  // So pretend a unload request is received
+  TPSClient* pPSClient = findClient(p);
+  if (pPSClient)
+  {
+    // this manipulation of the _usecount and the load counter pretends 
+    // that this is the last unload request of the client 'p' for this
+    // property set
+    _usecount -= (pPSClient->count - 1);
+    pPSClient->count = 1;
+
+    PAUnloadPropSetEvent request;
     request.scope = _name;
     request.seqnr = 0;
-    disable(request);
-  }
-  else
-  {
-    // This means that all load requests of client 'p' have to be undone.
-    // So pretend a unload request is received
-    TPSClient* pPSClient = findClient(p);
-    if (pPSClient)
-    {
-      // this manipulation of the _usecount and the load counter pretends 
-      // that this is the last unload request of the client 'p' for this
-      // property set
-      _usecount -= (pPSClient->count - 1);
-      pPSClient->count = 1;
-
-      PAUnloadPropSetEvent request;
-      request.scope = _name;
-      request.seqnr = 0;
-      unload(request, p);
-    }  
-  }
+    unload(request, p);
+  }  
 }
 
 void GPAPropertySet::dpCreated(const string& dpName)
@@ -592,11 +575,7 @@ void GPAPropertySet::dpDeleted(const string& /*dpName*/)
       }
       break;
     case S_UNLINKING:
-      _counter--;
-      if (_counter == 0)
-      {
-        unlink();
-      }
+      unlink();
       break;
     default:
       wrongState("dpDeleted");

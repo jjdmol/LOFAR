@@ -116,7 +116,7 @@ class GCFAnswer
 };
 
 enum {
-  F_PML_PROTOCOL = F_GCF_PROTOCOL + 2,
+  F_PML_PROTOCOL = F_GCF_PROTOCOL,
 };
 /**
  * F_PML_PROTOCOL signals

@@ -57,7 +57,7 @@ class GPAPropertySet : public GSAService
     void linked(PAPropSetLinkedEvent& response);
     void unlinked(PAPropSetUnlinkedEvent& response);
     
-    void deleteClient(const GCFPortInterface& p);
+    void clientGone(GCFPortInterface& p);
     
     bool isOwner(const GCFPortInterface& p) const { return (&p == &_serverPort); }
     bool mayDelete() const { return (_state == S_DISABLED); }

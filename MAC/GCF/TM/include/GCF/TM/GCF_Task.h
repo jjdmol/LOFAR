@@ -90,8 +90,8 @@ class GCFTask : public GCFFsm
     const char* evtstr(const GCFEvent& e) const;
    
   protected:
-		GCFTask (State initial, 
-             string& name); 
+		explicit GCFTask (State initial, 
+                      string& name); 
 		virtual ~GCFTask();
     /**
     * Register the protocol. This is used for logging. The name of each event
@@ -107,11 +107,11 @@ class GCFTask : public GCFFsm
 		/// Is private to avoid initialising a task without giving an inital state and the task name
     GCFTask();
     string _name;
-    static vector<GCFHandler*> _handlers;
-    typedef vector<GCFHandler*>::iterator THandlerIter;
+    typedef vector<GCFHandler*> THandlers;
+    static THandlers _handlers;
 
-    static map<unsigned short, const char**> _protocols;
-    typedef map<unsigned short, const char**>::iterator TProtocolIter;
+    typedef map<unsigned short, const char**> TProtocols;
+    static TProtocols _protocols;
 
     static void signalHandler(int sig);
     static bool _doExit;

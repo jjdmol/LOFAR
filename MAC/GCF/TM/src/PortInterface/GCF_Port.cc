@@ -207,7 +207,7 @@ ssize_t GCFPort::send(GCFEvent& e)
 
   if (SPP == _type)
   {
-    if (F_EVT_INOUT(e) & F_IN)
+    if (!(F_EVT_INOUT(e) & F_OUT))
     {
       LOG_ERROR(LOFAR::formatString (
           "Trying to send IN event '%s' on SPP "
@@ -219,7 +219,7 @@ ssize_t GCFPort::send(GCFEvent& e)
   }
   else if (SAP == _type)
   {
-    if (F_EVT_INOUT(e) & F_OUT)
+    if (!(F_EVT_INOUT(e) & F_IN))
     {
       LOG_ERROR(LOFAR::formatString (
           "Trying to send OUT event '%s' on SAP "

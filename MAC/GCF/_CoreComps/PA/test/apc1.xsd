@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-
-<xs:complexType name ="receptor">
-  <xs:sequence>
-    <xs:element name = ?status? type = ?ByteProperty?/>
-    <xs:element name = ?gain? type = ?FloatProperty?/>
-    <xs:element name = ?sn? type = ?FloatProperty?/>
-  </xs:sequence>
-</xs:complexType>

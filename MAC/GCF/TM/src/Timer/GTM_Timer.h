@@ -23,6 +23,9 @@
 #ifndef GTM_TIMER_H
 #define GTM_TIMER_H
 
+#include <sys/time.h>
+#include <time.h>
+
 class GCFRawPort;
 class GTMTimerHandler;
 
@@ -33,11 +36,9 @@ class GTMTimerHandler;
  */
 class GTMTimer
 {
-  private:
-    friend class GTMTimerHandler;
-    
+  public:
     GTMTimer (GCFRawPort& port,
-	      unsigned long id,
+  	          unsigned long id,
               unsigned long timeVal, 
               unsigned long intervalTime = 0, 
               void* arg = 0);
@@ -56,8 +57,13 @@ class GTMTimer
      * determines the elapsed time to the previous workProc invocation for all 
      * registered timers once.
      */
-    void decreaseTime (unsigned long microSec);
+    void decreaseTime ();
 
+  private: // helper methods
+    void saveTime ();
+    unsigned long getElapsedTime();
+
+  private: // attributes
     GCFRawPort&     _port;
     unsigned long   _id;
     unsigned long   _time;
@@ -66,5 +72,7 @@ class GTMTimer
     void*     _arg; // this pointer should NEVER be modified by the GTMTimer class!!
     bool  _elapsed;
     bool  _canceled;
+
+    timeval     _savedTime;
 };
 #endif

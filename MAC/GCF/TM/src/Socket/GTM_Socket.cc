@@ -38,13 +38,18 @@
 
 GTMSocket::GTMSocket(GCFRawPort& port) :
   _socketFD(-1),
-  _port(port)
+  _port(port),
+  _pHandler(0)
 {
+  _pHandler = GTMSocketHandler::instance();
+  assert(_pHandler);
 }
 
 GTMSocket::~GTMSocket()
 {
   close();
+  GTMSocketHandler::release();
+  _pHandler = 0;
 }
 
 int GTMSocket::close()
@@ -53,7 +58,8 @@ int GTMSocket::close()
   
   if (_socketFD > -1)
   { 
-    GTMSocketHandler::instance()->deregisterSocket(*this);
+    assert(_pHandler);
+    _pHandler->deregisterSocket(*this);
     result = ::close(_socketFD);
     _socketFD = -1;
   }
@@ -69,7 +75,8 @@ int GTMSocket::setFD(int fd)
       close();
     }
     _socketFD = fd;
-    GTMSocketHandler::instance()->registerSocket(*this);
+    assert(_pHandler);
+    _pHandler->registerSocket(*this);
   }
   return (fd);    
 }

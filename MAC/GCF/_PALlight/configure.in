@@ -1,11 +1,11 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(src/GCF_Task.h)
+AC_INIT(include/GCF/PALlight/GCF_RTMyProperty.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(GCF, 2.0)
+AM_INIT_AUTOMAKE(GCF/PALlight, 4.0)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -55,36 +55,16 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_MPI(0)
-lofar_PVSS(1)
 lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
-lofar_EXTERNAL(lofarlogger,1,LofarLogger/LofarLogger.h,,)
-lofar_EXTERNAL(xercesc,1,xercesc/sax2/SAX2XMLReader.hpp,xerces-c,)
 lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
+lofar_EXTERNAL(gcfcommon,1,GCF/GCF_Defines.h,,)
+lofar_EXTERNAL(gcftm,1,GCF/TM/GCF_Task.h,,)
 
 dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
-GCFCommon/src/Makefile
-GCFCommon/Makefile
-CoreComps/PA/src/Makefile
-CoreComps/PA/Makefile
-CoreComps/PML/src/Makefile
-CoreComps/PML/Makefile
-CoreComps/SAL/src/Makefile
-CoreComps/SAL/test/Makefile
-CoreComps/SAL/Makefile
-CoreComps/TM/src/Makefile
-CoreComps/TM/test/Makefile
-CoreComps/TM/Makefile
-CoreComps/Makefile
-Services/PI/src/Makefile
-Services/PI/Makefile
-Services/SupServer/src/Makefile
-Services/SupServer/Makefile
-Services/PMLlite/src/Makefile
-Services/PMLlite/Makefile
-Services/Makefile
-src/Makefile
+PMLlight/src/Makefile
+PMLlight/Makefile
 Makefile
 )

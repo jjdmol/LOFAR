@@ -42,12 +42,12 @@ class GCFTCPPort : public GCFRawPort
 
     /// Construction methods
     /** @param protocol NOT USED */    
-    GCFTCPPort (GCFTask& task,
+    explicit GCFTCPPort (GCFTask& task,
           	    string name,
           	    TPortType type,
                 int protocol, 
                 bool transportRawData = false);
-    GCFTCPPort ();
+    explicit GCFTCPPort ();
   
     virtual ~GCFTCPPort ();
   

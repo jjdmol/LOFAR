@@ -42,7 +42,7 @@
 class GCFDummyPort : public GCFPortInterface
 {
   public:
-    GCFDummyPort (GCFTask* pTask, 
+    explicit GCFDummyPort (GCFTask* pTask, 
                   string name, 
                   int protocol) : 
       GCFPortInterface(pTask, name, SPP, protocol, false) 
@@ -120,7 +120,7 @@ class GCFFsm
   public:
     typedef GCFEvent::TResult (GCFFsm::*State)(GCFEvent& event, GCFPortInterface& port); // ptr to state handler type
     
-    GCFFsm (State initial) : _state(initial) {;} 
+    explicit  GCFFsm (State initial) : _state(initial) {;} 
     virtual ~GCFFsm () {;}
   
     void initFsm ();

@@ -27,7 +27,6 @@
 #include <Common/lofar_iostream.h>
 #include "Echo_Protocol.ph"
 
-
 Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 {
   // register the protocol for debugging purposes
@@ -35,6 +34,11 @@ Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 
   // initialize the port
   server.init(*this, "server", GCFPortInterface::SPP, ECHO_PROTOCOL);
+}
+
+Echo::~Echo()
+{
+  cout << "Deleting (SAL)echoapp" << endl;
 }
 
 GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
@@ -83,7 +87,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       service.dpDelete(propName);
       service.dpDelete(propName + "_test");
       cout << "Lost connection to client" << endl;
-      TRAN(Echo::initial);
+      GCFTask::stop();
       break;
 
     case ECHO_PING:
@@ -182,7 +186,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 int main(int argc, char* argv[])
 {
   GCFTask::init(argc, argv);
-  
+
   Echo echo_task("ECHO");  
   echo_task.start(); // make initial transition
   

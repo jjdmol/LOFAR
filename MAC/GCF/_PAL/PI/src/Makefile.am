@@ -33,10 +33,12 @@ bin_PROGRAMS   		= PropertyInterface
   
 PropertyInterface_SOURCES		= GPI_Main.cc
 PropertyInterface_LDADD		      	= libpi.la  \
+	$(top_builddir)/PML/src/libpml.la \
 	$(top_builddir)/SAL/src/libsal.la \
 	$(LOFAR_DEPEND)
 	
 PropertyInterface_DEPENDENCIES	= libpi.la \
+	$(top_builddir)/PML/src/libpml.la \
 	$(top_builddir)/SAL/src/libsal.la \
 	$(LOFAR_DEPEND) 
 
