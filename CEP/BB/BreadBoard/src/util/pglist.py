@@ -21,15 +21,21 @@ def pgArray2list(s):
   """next is a bracket, a field terminated with a comma or whitespace """
   s = string.strip(s);
   if(debug):
-    print "start string: " + s;
+    print "start string: ", s;
 ##  s = s[1:len(s)];
   (nextfield , commapos) = getField(s);
+  if(debug):
+    print "nextfield: ", nextfield;
+    print "commapos: ", commapos;
   lst.append(nextfield);
   while(commapos != -1):
     s = s[(commapos + 1):];
     rc = getField(s);
     if(rc):
       (nextfield , commapos) = rc;
+      if(debug):
+        print "nextfield: ", nextfield;
+        print "commapos: ", commapos;
     else:
       commapos = -1;
     lst.append(nextfield);
@@ -76,9 +82,19 @@ def getField(s):
     rc =  (pgArray2list(s[1:right]), next);
   else:
     next = string.find(s,",");
+    ## this is a very ugly hack to deal with an bug:
+
+    ## the string pg returns contains spaces and these somehow prevent
+    ## that the ',' is stripped?????
+    
+    if(next == 0):
+      s = s[1:];
+      next = string.find(s,",");
     if(next > 0):
       s = s[:next];
     """ check for a number """
+    if debug:
+      print "s: " , s;
     try:
       s = int(s)
     except:
@@ -91,7 +107,7 @@ def getField(s):
           """do nothing"""
     rc =  (s, next);
   if(debug):
-    print rc;
+    print "rc: ", rc;
   return rc;
 
 def find_matching_bracket(s):
@@ -121,7 +137,12 @@ def list2pgArray(l):
       tmplst.append(list2pgArray(elem));
     strrep = "{" + string.join(tmplst,", ") + "}";
   else:
-    strrep = str(l);
+    if l == True:
+      strrep =  't';
+    elif l == False:
+      strrep = 'f';
+    else:
+      strrep = str(l);
   return strrep;
 
 def isList(v):

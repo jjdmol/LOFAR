@@ -16,6 +16,8 @@ import BlackBoardController;
 from Dataclass import Dataclass;
 import threading;
 
+debug = False;
+
 class BlackBoard(threading.Thread,Dataclass):
   """something containing information about a problem to be solved."""
 
@@ -36,16 +38,20 @@ class BlackBoard(threading.Thread,Dataclass):
     threading.Thread.__init__(self, name=str(self.id));
 
   def run(self):
-    for i in self.knowledgeSources.values():
-      i.start();
+    self.startChildren();
     while not self.stopevent.isSet():
       self.action();
       self.stopevent.wait(0.1);
 
-  def join(self,timeout = None):
-    print "stopping bb: " , self.id;
+  def startChildren(self):
     for i in self.knowledgeSources.values():
+      i.start();
+
+  def join(self,timeout = None):
+    for i in self.knowledgeSources.values():
+      print "stopping ", i;
       i.join();
+    print "about to stop bb: " , self.id;
     threading.Thread.join(self,timeout)
     
 
@@ -126,5 +132,19 @@ class BlackBoard(threading.Thread,Dataclass):
     return representation;
 
   def action(self):
+    debug = True;
+    if debug:
+      print self.id , " performing action";
     self.stopevent.wait(1);
-    print "b!",;
+    done = True;
+    for i in self.knowledgeSources.values():
+      if i.isAlive():
+        print i, " is alive";
+        done = False;
+    if done:
+      if debug:
+        print "stopevent set for ", self
+      self.stopevent.set();
+    if debug:
+      print "thread count  : ", threading.activeCount();
+##      print "active threads: ", threading.enumerate();

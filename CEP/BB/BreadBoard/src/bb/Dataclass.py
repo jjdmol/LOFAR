@@ -8,6 +8,10 @@ $Id$
 """
 
 import pg;
+<<<<<<< variant A
+import threading;
+>>>>>>> variant B
+======= end
 
 debug = False;
 class Dataclass:

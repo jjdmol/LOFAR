@@ -21,7 +21,7 @@ debug = False;
 class Workload(Assignment,Dataclass):
   """ something to do """
 
-  def __init__(self,workload=None,id = None):
+  def __init__(self,workload=None,id = None , parent = None):
     self.id = id;
     Dataclass.__init__(self);
     self.tablename = "workloads"
@@ -40,11 +40,14 @@ class Workload(Assignment,Dataclass):
         print self.record["parameterset"];
       qstr ="UPDATE " + self.tablename + " SET jobassignment = '"+ str(self.record["jobassignment"]) +"' , parameterset = '" + str(self.record["parameterset"]) + "' WHERE oid = " + str(self.id)
       data = self.db.query(qstr);
+    if parent:
+      self.parent(parent);
 
   def getWl(self):
     wl = {};
     wl["jobassignment"] = self.record["jobassignment"];
     wl["parameterset"] = self.record["parameterset"];
+    wl["deltas"] = self.record["deltas"];
     wl["status"] = self.record["status"];    
     return wl;
 
@@ -58,19 +61,59 @@ class Workload(Assignment,Dataclass):
       data = self.db.query(qstr);
     return self.record["engine_id"];
 
+  def parent(self, par=None):
+    if(par):
+      if par.__class__() == 0:
+        self.record["parent_id"] = par;
+      else:
+        self.record["parent"] = par.id;
+      qstr ="UPDATE " + self.tablename + " SET parent_id = "+ str(self.record["parent_id"]) + " WHERE oid = " + str(self.id)
+      data = self.db.query(qstr);
+    return self.record["parent_id"];
+
   def job(self,j=None):
     if(j):
+      if debug:
+        print "job to set: ", j;
       self.record["jobassignment"] = util.pglist.list2pgArray(j);
+      if debug:
+        print "pg repres.: ", self.record["jobassignment"];
       qstr ="UPDATE " + self.tablename + " SET jobassignment = '"+ str(self.record["jobassignment"]) + "' WHERE oid = " + str(self.id)
+      if debug:
+        print qstr;
       data = self.db.query(qstr);
-    return self.record["jobassignment"];
+    # this should really return a python list, not a postgresql one.
+    return util.pglist.pgArray2booleanList(self.record["jobassignment"]);
 
   def parameters(self,p=None):
     if(p):
-      self.record["parameterset"] = util.pglist.list2pgArray(p);
+      parr = util.pglist.list2pgArray(p);
+      if debug:
+        print "p: " , parr;
+      self.record["parameterset"] = parr;
       qstr ="UPDATE " + self.tablename + " SET parameterset = '" + str(self.record["parameterset"]) + "' WHERE oid = " + str(self.id)
       data = self.db.query(qstr);
-    return self.record["parameterset"];
+    # this should really return a python list, not a postgresql one.
+      if debug:
+        print "p: " , self.record["parameterset"];
+    return util.pglist.pgArray2list(self.record["parameterset"])[0];
+
+  def deltas(self,d=None):
+    debug = False
+    if(d):
+      dees = util.pglist.list2pgArray(d);
+      if debug:
+        print "d before: " , dees;
+      self.record["deltas"] = dees;
+      qstr ="UPDATE " + self.tablename + " SET deltas = '" + str(self.record["deltas"]) + "' WHERE oid = " + str(self.id)
+      if debug:
+        print qstr;
+      data = self.db.query(qstr);
+      debug = False
+    # this should really return a python list, not a postgresql one.
+      if debug:
+        print "d after : " , self.record["deltas"];
+    return util.pglist.pgArray2list(self.record["deltas"])[0];
 
   def status(self,s=None):
     if(s):

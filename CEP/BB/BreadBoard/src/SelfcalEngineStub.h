@@ -65,6 +65,7 @@ class SelfcalEngineStub
   void dump();
 
  private:
+  bool debug;
   int    itsLen;
   float *itsParamValues;
   
