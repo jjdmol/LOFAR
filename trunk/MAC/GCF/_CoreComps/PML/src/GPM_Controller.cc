@@ -246,12 +246,12 @@ TPMResult GPMController::getMyOldValue(const string& propName, GCFPValue** pValu
   return result;  
 }
 
-void GPMController::valueChanged(string& propName, GCFPValue& value)
+void GPMController::valueChanged(const string& propName, const GCFPValue& value)
 {
   _supervisedTask.valueChanged(propName, value);
 }
 
-void GPMController::valueGet(string& propName, GCFPValue& value)
+void GPMController::valueGet(const string& propName, const GCFPValue& value)
 {
   _supervisedTask.valueGet(propName, value);
 }

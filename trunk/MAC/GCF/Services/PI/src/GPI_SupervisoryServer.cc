@@ -22,15 +22,35 @@
 
 #include "GPI_SupervisoryServer.h"
 #include "GPI_Controller.h"
+#include <stdio.h>
+
+#include "SS/FPBoolValue.h"
+#include "SS/FPCharValue.h"
+#include "SS/FPStringValue.h"
+#include "SS/FPIntegerValue.h"
+#include "SS/FPUnsignedValue.h"
+#include "SS/FPDoubleValue.h"
+#include "SS/FPDynArrValue.h"
+#include "SS/FProperty.h"
+
+#include <SAL/GCF_PVBool.h>
+#include <SAL/GCF_PVChar.h>
+#include <SAL/GCF_PVInteger.h>
+#include <SAL/GCF_PVUnsigned.h>
+#include <SAL/GCF_PVDouble.h>
+#include <SAL/GCF_PVString.h>
+#include <SAL/GCF_PVDynArr.h>
+
 #define DECLARE_SIGNAL_NAMES
 #include "F_Supervisory_Protocol.ph"
-#include "PA_Protocol.ph"
+#include <PA/PA_Protocol.ph>
 
 static string sSSTaskName("SS");
 
 GPISupervisoryServer::GPISupervisoryServer(GPIController& controller) : 
   GCFTask((State)&GPISupervisoryServer::initial, sSSTaskName),
   _controller(controller),
+  _propProxy(*this),
   _isBusy(false)
 {
   // register the protocols for debugging purposes only
@@ -38,9 +58,9 @@ GPISupervisoryServer::GPISupervisoryServer(GPIController& controller) :
   registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
 
   // initialize the port to the real supervisory server 
-  _ssPort.init(*this, "ss", GCFPortInterface::SPP, PI_PROTOCOL);
+  _ssPort.init(*this, "server", GCFPortInterface::SPP, F_SUPERVISORY_PROTOCOL);
   // initialize the port to the the Property Agent (acts as a PML)
-  _propertyAgent.init(*this, "pml", GCFPortInterface::SAP, PA_PROTOCOL);
+  _propertyAgent.init(*this, "client", GCFPortInterface::SAP, PA_PROTOCOL);
 }
 
 GPISupervisoryServer::~GPISupervisoryServer()
@@ -57,14 +77,14 @@ int GPISupervisoryServer::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_ENTRY_SIG:
-      _controller.getPortProvider()->accept(_ssPort);
+      _controller.getPortProvider().accept(_ssPort);
       // intential fall through
     case F_TIMER_SIG:
-      _propertAgent.open();
+      _propertyAgent.open();
       break;
 
     case F_CONNECTED_SIG:
-      if (_ssPort.isConnected() && _propertAgent.isConnected())
+      if (_ssPort.isConnected() && _propertyAgent.isConnected())
         TRAN(&GPISupervisoryServer::connected);
       break;
 
@@ -87,11 +107,8 @@ int GPISupervisoryServer::connected(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_ENTRY_SIG:
-    {
-      SSGetnameEvent e;
-      _ssPort.send(e);
       break;
-    }  
+  
     case F_DISCONNECTED_SIG:      
       if (&p == &_ssPort)
       {
@@ -99,22 +116,12 @@ int GPISupervisoryServer::connected(GCFEvent& e, GCFPortInterface& p)
       }
       break;
      
-    case SS_NAMEGET:
+    case F_SV_NAME:
     {
-      SSNamegetEvent* pResponse = static_cast<SSNamegetEvent*>(&e);
-      if (pResponse)
-      {
-        if (pResponse->result == 0) // no error
-        {
-          char* pResponseData = ((char*)pResponse) + sizeof(SSNamegetEvent);
-          unsigned int ssNameLength(0);
-          sscanf(pResponseData, "%03x", &ssNameLength);
-          _name.copy(pResponseData + 3, ssNameLength);
-          registerScope(_name);
-          break;
-        }
-      }
-      _ssPort.close();
+      char* pResponseData = ((char*)(&e)) + sizeof(GCFEvent);
+      unsigned int ssNameLength(e.length - sizeof(GCFEvent));
+      _name.assign(pResponseData, ssNameLength);
+      registerScope(_name);
       break;
     }
     
@@ -123,7 +130,7 @@ int GPISupervisoryServer::connected(GCFEvent& e, GCFPortInterface& p)
       PAScoperegisteredEvent* pResponse = static_cast<PAScoperegisteredEvent*>(&e);
       if (pResponse)
       {
-        if (pResponse->result == 0) // no error
+        if (pResponse->result == 1) // no error
         {
           TRAN(&GPISupervisoryServer::operational);
           break;
@@ -182,32 +189,34 @@ int GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterface& p)
     }
     case F_SV_SUBSCRIBED:
     {
-      SubscribedEvent *pResponse = static_cast<SubscribedEvent*>(&e);
+      F_SVSubscribedEvent *pResponse = static_cast<F_SVSubscribedEvent*>(&e);
       if (pResponse->result >= NO_ERROR)
       {
-        char* pListData = ((char*)pResponse) + sizeof(SubscribedEvent);
         list<string> propertyList;
-        unpackPropertyList(pListData, propertyList);
-        unSubscribeProperties(propertyList, (pResponse->result != UNSUBSCRIBED));
+        unpackPropertyList(
+            ((char*)pResponse) + sizeof(F_SVSubscribedEvent), 
+            e.length - sizeof(F_SVSubscribedEvent),
+            propertyList);
+        unLinkProperties(propertyList, (pResponse->result != UNSUBSCRIBED));
       }
       break;
     }
     case F_SV_VALUESET:
     {
-      ValuesetEvent *pEvent = static_cast<ValuesetEvent*>(&e);
+      F_SVValuesetEvent *pEvent = static_cast<F_SVValuesetEvent*>(&e);
       switch (pEvent->result)
       {
         case NO_ERROR:
         {
-         deregisterSequence(pEvent->seqNr);
-         cerr << "Value was set succesfully" << endl;
+          cerr << "Value was set succesfully" << endl;
         }
       }
       break;
     }
     case F_SV_VALUECHANGED:
     {
-      localValueChanged(e, p);
+      if (&p == &_ssPort)
+        localValueChanged(e);
       break;                                          
     }
 
@@ -255,9 +264,9 @@ void GPISupervisoryServer::registerScope(const string& scope)
   delete [] buffer;
 }
 
-void GPIController::subscribe(char* data, bool onOff)
+void GPISupervisoryServer::subscribe(char* data, bool onOff)
 {
-  SubscribeEvent e;
+  F_SVSubscribeEvent e;
   unsigned int datalength(0);
   sscanf(data, "%03x", &datalength);
   e.onOff = onOff;
@@ -266,28 +275,27 @@ void GPIController::subscribe(char* data, bool onOff)
   _ssPort.send(e, data + 3, datalength);
 }
 
-void GPIController::unpackPropertyList(char* pListData, list<string>& propertyList)
+void GPISupervisoryServer::unpackPropertyList(
+    char* pListData,
+    unsigned int listDataLength,
+    list<string>& propertyList)
 {
-  unsigned int dataLength;
-  char* pPropertyData;
-  sscanf(pListData, "%03x", &dataLength);
-  pPropertyData = pListData + 3;
   propertyList.clear();
-  if (dataLength > 0)
+  if (listDataLength > 0)
   {
     string propName;
-    char* pPropName = strtok(pPropertyData, "|");
-    while (pPropName && dataLength > 0)
+    char* pPropName = strtok(pListData, "|");
+    while (pPropName && listDataLength > 0)
     {
-      propName = pPropName;      
-      pPropName = strtok(NULL, "|");
-      dataLength -= (propName.size() + 1);
+      propName = pPropName;
+      listDataLength -= (propName.size() + 1);
       propertyList.push_front(propName);
+      pPropName = strtok(NULL, "|");
     }
   }
 }
 
-TPIResult GPIController::unLinkProperties(list<string>& properties, bool onOff)
+TPIResult GPISupervisoryServer::unLinkProperties(list<string>& properties, bool onOff)
 {
   
   TPIResult result(PI_NO_ERROR);
@@ -297,38 +305,42 @@ TPIResult GPIController::unLinkProperties(list<string>& properties, bool onOff)
   }
   else 
   {
+    string propName;
     for (list<string>::iterator iter = properties.begin(); 
          iter != properties.end(); ++iter)
     {
+      propName = _name + "_" + *iter;
       if (onOff)
       {
-        result = (_propProxy.subscribe(_name + "_" + *iter) == GCF_NO_ERROR ?
+        result = (_propProxy.subscribe(propName) == SA_NO_ERROR ?
                   PI_NO_ERROR :
                   PI_SCADA_ERROR);
       }
       else
       {
-        result = (_propProxy.unsubscribe(_name + "_" + *iter) == GCF_NO_ERROR ?
+        result = (_propProxy.unsubscribe(propName) == SA_NO_ERROR ?
                   PI_NO_ERROR :
                   PI_SCADA_ERROR);
       }
-      _counter++;        
+      if (result == PI_NO_ERROR)
+        _counter++;        
     }
   }
     
   return result;
 }
 
-void GPIController::propSubscribed(string& propName)
+void GPISupervisoryServer::propSubscribed(const string& /*propName*/)
 {
   _counter--;
   if (_counter == 0 && _propertyAgent.isConnected())
   {
-    PAPropertieslinkedEvent e(0, PM_NO_ERROR);
+    PAPropertieslinkedEvent e(0, 1);
     string allPropNames;
-    unsigned short bufLength(scope.size() + allPropNames.size() + 6);
+    // PA does expect but not use a property name list (for now)
+    unsigned short bufLength(_name.size() + allPropNames.size() + 6);
     char* buffer = new char[bufLength + 1];
-    sprintf(buffer, "%03x%s%03x%s", scope.size(), scope.c_str(), 
+    sprintf(buffer, "%03x%s%03x%s", _name.size(), _name.c_str(), 
                                     allPropNames.size(), allPropNames.c_str());
     e.length += bufLength;
     _propertyAgent.send(e, buffer, bufLength);
@@ -336,16 +348,17 @@ void GPIController::propSubscribed(string& propName)
   }
 }
 
-void GPIController::propUnsubscribed(string& propName)
+void GPISupervisoryServer::propUnsubscribed(const string& /*propName*/)
 {
   _counter--;
   if (_counter == 0 && _propertyAgent.isConnected())
   {
-    PAPropertiesunlinkedEvent e(0, NO_ERROR);
+    PAPropertiesunlinkedEvent e(0, 1);
     string allPropNames;
-    unsigned short bufLength(scope.size() + allPropNames.size() + 6);
+    // PA does expect but not use a property name list (for now)
+    unsigned short bufLength(_name.size() + allPropNames.size() + 6);
     char* buffer = new char[bufLength + 1];
-    sprintf(buffer, "%03x%s%03x%s", scope.size(), scope.c_str(), 
+    sprintf(buffer, "%03x%s%03x%s", _name.size(), _name.c_str(), 
                                     allPropNames.size(), allPropNames.c_str());
     e.length += bufLength;
     _propertyAgent.send(e, buffer, bufLength);
@@ -353,35 +366,109 @@ void GPIController::propUnsubscribed(string& propName)
   }
 }
 
-void GPIController::propValueChanged(string& propName, GCFPValue& value)
+void GPISupervisoryServer::propValueChanged(const string& propName, const GCFPValue& value)
 {
-  unsigned short bufLength;
-  FProperty* pFProperty(0);
+  unsigned short bufLength(0);
   FPValue* pVal(0);
-  static char* buffer[1024];
+  static char buffer[1024];
   
   switch (value.getType())
   {
     case GCFPValue::BOOL_VAL:
-      pVal = new FPBoolValue(((GCFPVInteger *)&value)->getValue());
-      pFProperty = new FProperty(propName, FPValue::BOOL_VAL);
+      pVal = new FPBoolValue(((GCFPVBool*)&value)->getValue());
       break;
-   
-    default:
+    case GCFPValue::CHAR_VAL:
+      pVal = new FPCharValue(((GCFPVChar*)&value)->getValue());
+      break;
+    case GCFPValue::INTEGER_VAL:
+      pVal = new FPIntegerValue(((GCFPVInteger*)&value)->getValue());
+      break;
+    case GCFPValue::UNSIGNED_VAL:
+      pVal = new FPUnsignedValue(((GCFPVUnsigned*)&value)->getValue());
+      break;
+    case GCFPValue::DOUBLE_VAL:
+      pVal = new FPDoubleValue(((GCFPVDouble*)&value)->getValue());
+      break;
+    case GCFPValue::STRING_VAL:
+      pVal = new FPStringValue(((GCFPVString*)&value)->getValue());
+      break;
+
+    default: 
+      if (value.getType() > GCFPValue::DYNARR_VAL && 
+          value.getType() <= (GCFPValue::DYNARR_VAL & GCFPValue::STRING_VAL))
+      {
+        FPValueArray arrayTo;
+        FPValue* pItemValue;
+        FPValue::ValueType type(FPValue::NO_VAL);
+        // the type for the new FPValue must be determined 
+        // separat, because the array could be empty
+        switch (value.getType())
+        {
+          case GCFPValue::DYNBOOL_VAL:
+            type = FPValue::DYNBOOL_VAL;
+            break;
+          case GCFPValue::DYNCHAR_VAL:
+            type = FPValue::DYNCHAR_VAL;
+            break;
+          case GCFPValue::DYNINTEGER_VAL:
+            type = FPValue::DYNINTEGER_VAL;
+            break;
+          case GCFPValue::DYNUNSIGNED_VAL:
+            type = FPValue::DYNUNSIGNED_VAL;
+            break;
+          case GCFPValue::DYNDOUBLE_VAL:
+            type = FPValue::DYNDOUBLE_VAL;
+            break;
+          case GCFPValue::DYNSTRING_VAL:
+            type = FPValue::DYNSTRING_VAL;
+            break;
+        }
+        GCFPValue* pValue;
+        const GCFPValueArray& arrayFrom(((GCFPVDynArr*)&value)->getValue());
+        for (GCFPValueArray::const_iterator iter = arrayFrom.begin();
+             iter != arrayFrom.end(); ++iter)
+        {
+          pValue = (*iter);
+          switch (pValue->getType())
+          {
+            case GCFPValue::BOOL_VAL:
+              pItemValue  = new FPBoolValue(((GCFPVBool*)pValue)->getValue());
+              break;
+            case GCFPValue::CHAR_VAL:
+              pItemValue  = new FPCharValue(((GCFPVChar*)pValue)->getValue());
+              break;
+            case GCFPValue::INTEGER_VAL:
+              pItemValue  = new FPIntegerValue(((GCFPVInteger*)pValue)->getValue());
+              break;
+            case GCFPValue::UNSIGNED_VAL:
+              pItemValue  = new FPUnsignedValue(((GCFPVUnsigned*)pValue)->getValue());
+              break;
+            case GCFPValue::DOUBLE_VAL:
+              pItemValue  = new FPDoubleValue(((GCFPVDouble*)pValue)->getValue());
+              break;
+            case GCFPValue::STRING_VAL:
+              pItemValue  = new FPStringValue(((GCFPVString*)pValue)->getValue());
+              break;
+          }
+          arrayTo.push_back(pItemValue);
+        }
+        pVal = new FPDynArrValue(type, arrayTo);
+      }
       break;
   }
-  if (pFProperty && pVal)
+  if (pVal)
   {
-    pSetProperty->setValue(*pVal);
-    bufLength = pSetProperty->pack(buffer);
+    FProperty property(propName.c_str(), *pVal);
+    bufLength = property.pack(buffer);
     delete pVal;
-    delete pSetProperty;
   }
+  F_SVSetvalueEvent e;
+  e.seqNr = 0;
   e.length += bufLength;
-  pPort->send(e, buffer, bufLength);
+  _ssPort.send(e, buffer, bufLength);
 }
 
-void GPIController::localValueChanged(GCFEvent& e, GCFPortInterface& p)
+void GPISupervisoryServer::localValueChanged(GCFEvent& e)
 {
   char* buffer = ((char*)&e) + sizeof(GCFEvent);
   unsigned char propNameLength(0);
@@ -392,13 +479,14 @@ void GPIController::localValueChanged(GCFEvent& e, GCFPortInterface& p)
   static char taskName[256];
   string propName;
 
-  memcpy((void *) &propNameLength, buffer, sizeof(unsigned char));
+  memcpy((void*) &propNameLength, buffer, sizeof(unsigned char));
   buffer += sizeof(unsigned char);
   memcpy(locPropName, buffer, propNameLength);
   locPropName[propNameLength] = 0;
   buffer += propNameLength;
-  FProperty newProperty(locPropName, (FPValue::ValueType) buffer[0]);
-  bytesRead = newProperty.unpack(buffer);
+  FPValue* pVal = FPValue::createValueObject((FPValue::ValueType) buffer[0]);
+  if (pVal)
+    bytesRead = pVal->unpack(buffer);
   buffer += bytesRead;
 
   memcpy((void *) &taskNameLength, buffer, sizeof(unsigned char));
@@ -406,28 +494,105 @@ void GPIController::localValueChanged(GCFEvent& e, GCFPortInterface& p)
   memcpy(taskName, buffer, taskNameLength);
   taskName[taskNameLength] = 0;
 
-  sprintf(totalPropName, "%s_%s_%s", _name, taskName, locPropName);
+  sprintf(totalPropName, "%s_%s_%s", _name.c_str(), taskName, locPropName);
   propName = locPropName;
 
   GCFPValue *pGCFVal(0);
-  
-  const FPValue *pVal = newProperty.getValue();
-  
+   
   switch (pVal->getType())
   {
     case FPValue::BOOL_VAL:
-      pGCFVal = new GCFPVBool(((FPBoolValue *)pVal)->getValue());
+      pGCFVal = new GCFPVBool(((FPBoolValue*)pVal)->getValue());
       break;
-      
+    case FPValue::INTEGER_VAL:
+      pGCFVal = new GCFPVInteger(((FPIntegerValue*)pVal)->getValue());
+      break;
+    case FPValue::UNSIGNED_VAL:
+      pGCFVal = new GCFPVUnsigned(((FPUnsignedValue*)pVal)->getValue());
+      break;
+    case FPValue::DOUBLE_VAL:
+      pGCFVal = new GCFPVDouble(((FPDoubleValue*)pVal)->getValue());
+      break;
+    case FPValue::STRING_VAL:
+      pGCFVal = new GCFPVString(((FPStringValue*)pVal)->getValue());
+      break;
+    case FPValue::CHAR_VAL:
+      pGCFVal = new GCFPVChar(((FPCharValue*)pVal)->getValue());
+      break;
     default:
-      cerr << "Error not support this type at this moment" << endl;
+      if (pVal->getType() > FPValue::DYNARR_VAL && 
+          pVal->getType() <= FPValue::DYNDATETIME_VAL)
+      {
+        GCFPValueArray arrayTo;
+        GCFPValue* pItemValue(0);
+        GCFPValue::TMACValueType type(GCFPValue::DYNARR_VAL);
+        // the type for the new FPValue must be determined 
+        // separat, because the array could be empty
+        switch (pVal->getType())
+        {
+          case FPValue::DYNBOOL_VAL:
+            type = GCFPValue::DYNBOOL_VAL;
+            break;
+          case FPValue::DYNCHAR_VAL:
+            type = GCFPValue::DYNCHAR_VAL;
+            break;
+          case FPValue::DYNINTEGER_VAL:
+            type = GCFPValue::DYNINTEGER_VAL;
+            break;
+          case FPValue::DYNUNSIGNED_VAL:
+            type = GCFPValue::DYNUNSIGNED_VAL;
+            break;
+          case FPValue::DYNDOUBLE_VAL:
+            type = GCFPValue::DYNDOUBLE_VAL;
+            break;
+          case FPValue::DYNSTRING_VAL:
+            type = GCFPValue::DYNSTRING_VAL;
+            break;
+        }
+        FPValue* pValue(0);
+        const FPValueArray& arrayFrom(((FPDynArrValue*)pVal)->getValue());
+        for (FPValueArray::const_iterator iter = arrayFrom.begin();
+             iter != arrayFrom.end(); ++iter)
+        {
+          pValue = (*iter);
+          switch (pValue->getType())
+          {
+            case FPValue::BOOL_VAL:
+              pItemValue  = new GCFPVBool(((FPBoolValue*)pValue)->getValue());
+              break;
+            case FPValue::CHAR_VAL:
+              pItemValue  = new GCFPVChar(((FPCharValue*)pValue)->getValue());
+              break;
+            case FPValue::INTEGER_VAL:
+              pItemValue  = new GCFPVInteger(((FPIntegerValue*)pValue)->getValue());
+              break;
+            case FPValue::UNSIGNED_VAL:
+              pItemValue  = new GCFPVUnsigned(((FPUnsignedValue*)pValue)->getValue());
+              break;
+            case FPValue::DOUBLE_VAL:
+              pItemValue  = new GCFPVDouble(((FPDoubleValue*)pValue)->getValue());
+              break;
+            case FPValue::STRING_VAL:
+              pItemValue  = new GCFPVString(((FPStringValue*)pValue)->getValue());
+              break;
+          }
+          arrayTo.push_back(pItemValue);
+        }
+        pGCFVal = new GCFPVDynArr(type, arrayTo);
+      }
       break;
   }
   
-  if (_propProxy.set(propName, &pGCFVal) == GCF_NO_ERROR)
-    cerr << "Set value error: " << pVar->formatValue(CharString()) << endl;
   if (pGCFVal)
+  {
+    if (_propProxy.set(propName, *pGCFVal) != SA_NO_ERROR)
+    {
+      LOFAR_LOG_ERROR(PI_STDOUT_LOGGER, (
+        "Value of property '%s' could not be set in the SCADA DB", 
+        propName.c_str()));
+    }   
     delete pGCFVal;
+  }
+  if (pVal)
+    delete pVal;
 }
-
-

@@ -37,32 +37,36 @@ class FProperty;
 
 class FPValue
 {
-public:
-  enum ValueType {BOOL_VAL = 1, CHAR_VAL, INTEGER_VAL, UNSIGNED_VAL, FLOAT_VAL,
-                  STRING_VAL, BLOB_VAL, BIT32_VAL, DATETIME_VAL, DYN_VAL = 0x80};
- 
-	FPValue(ValueType type) : type_(type) {;}
-	virtual ~FPValue() {;}
-  /** Read property of ValueType type_. */
-  inline const ValueType& getType() const {return type_;}
-  /** No descriptions */
-  virtual FPValue* clone() const = 0;
-  /** No descriptions */
-  virtual void copy(const FPValue* value) = 0;
-  /** No descriptions */
-  virtual uint unpack(const char* valBuf) = 0;
-  /** No descriptions */
-  virtual uint pack(char* valBuf) const = 0;
- 
-protected: // Protected attributes
-  /** No descriptions */
-  uint unpackBase(const char* valBuf);
-  /** No descriptions */
-  uint packBase(char* valBuf) const;
-  /**  */
-  ValueType type_;
-  timeval setTime_;
-  friend class FProperty;
+  public:
+    enum ValueType {NO_VAL = 0, BOOL_VAL, CHAR_VAL, INTEGER_VAL, UNSIGNED_VAL, DOUBLE_VAL,
+                    STRING_VAL, BLOB_VAL, BIT32_VAL, DATETIME_VAL, 
+                    DYNARR_VAL = 0x80,
+                    DYNBOOL_VAL, DYNCHAR_VAL, DYNINTEGER_VAL, DYNUNSIGNED_VAL, DYNDOUBLE_VAL,
+                    DYNSTRING_VAL, DYNBLOB_VAL, DYNBIT32_VAL, DYNDATETIME_VAL};
+   
+  	FPValue(ValueType type) : type_(type) {;}
+  	virtual ~FPValue() {;}
+    /** Read property of ValueType type_. */
+    inline const ValueType& getType() const {return type_;}
+    /** No descriptions */
+    virtual FPValue* clone() const = 0;
+    /** No descriptions */
+    virtual void copy(const FPValue& value) = 0;
+    /** No descriptions */
+    virtual uint unpack(const char* valBuf) = 0;
+    /** No descriptions */
+    virtual uint pack(char* valBuf) const = 0;
+    
+    static FPValue* createValueObject(ValueType type);
+    
+  protected: // Protected attributes
+    /** No descriptions */
+    uint unpackBase(const char* valBuf);
+    /** No descriptions */
+    uint packBase(char* valBuf) const;
+    /**  */
+    ValueType type_;
+    timeval setTime_;
 };
 
 #endif

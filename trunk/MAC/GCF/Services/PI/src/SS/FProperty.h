@@ -30,8 +30,10 @@
 class FProperty
 {
 public:
-	FProperty(const char* name, FPValue::ValueType type);
-	virtual ~FProperty();
+  FProperty(const char* name, FPValue::ValueType type);
+  FProperty(const char* name, const FPValue& value);
+  
+  virtual ~FProperty();
   /** Read property of FPValue* pOnlineValue_. */
   virtual const FPValue* getValue() const;
   /** No descriptions */

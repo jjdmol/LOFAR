@@ -55,8 +55,8 @@ class GPMController : public GCFTask
     TPMResult set(const string& propName, const GCFPValue& value);
     TPMResult get(const string& propName);
     TPMResult getMyOldValue(const string& propName, GCFPValue** value);
-    void valueChanged(string& propName, GCFPValue& value);
-    void valueGet(string& propName, GCFPValue& value);
+    void valueChanged(const string& propName, const GCFPValue& value);
+    void valueGet(const string& propName, const GCFPValue& value);
     void propertiesLinked(const string& scope, list<string>& notLinkedProps);
     void propertiesUnlinked(const string& scope, list<string>& notUnlinkedProps);
   

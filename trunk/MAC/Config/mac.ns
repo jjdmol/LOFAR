@@ -36,3 +36,12 @@ client.type=TCP   # SAP
 host=localhost
 server.port=20040 # MSPP
 server.type=TCP
+
+[PI]
+host=localhost
+server.port=20199 # MSPP
+server.type=TCP
+
+[SS]
+host=localhost
+client.type=TCP

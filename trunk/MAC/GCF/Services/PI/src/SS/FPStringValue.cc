@@ -1,4 +1,4 @@
-//#  FPBoolValue.cc: 
+//#  FPStringValue.cc: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,43 +20,45 @@
 //#
 //#  $Id$
 
-#include "FPBoolValue.h"
-
+#include "FPStringValue.h"
+#include <string.h>
 /** No descriptions */
-uint FPBoolValue::unpack(const char* valBuf)
+uint FPStringValue::unpack(const char* valBuf)
 {
   uint result(0);
   uint unpackedBytes = unpackBase(valBuf);
   if (unpackedBytes > 0)
   {
-    value_ = (valBuf[unpackedBytes] == 1 ? true : false);
-    result = unpackedBytes + 1;
+    uint stringLength(0);
+    memcpy((void *) &stringLength, valBuf + unpackedBytes, sizeof(uint));
+    value_.clear();
+    value_.append(valBuf + unpackedBytes + sizeof(uint), stringLength); 
+    result = sizeof(uint) + unpackedBytes + stringLength;
   }
   return result;
 }
 
 /** No descriptions */
-uint FPBoolValue::pack(char* valBuf) const
+uint FPStringValue::pack(char* valBuf) const
 {
-  uint result(0);
-
   uint packedBytes = packBase(valBuf);
-  valBuf[packedBytes] = (value_ ? 1 : 0);
-  result = packedBytes + 1;
+  uint stringLength(value_.length());
+  memcpy(valBuf + packedBytes, (void *) &stringLength, sizeof(uint));
+  memcpy(valBuf + packedBytes + sizeof(uint), (void *) value_.c_str(), stringLength);
 
-  return result;
+  return sizeof(uint) + packedBytes + stringLength;
 }
 
 /** No descriptions */
-FPValue* FPBoolValue::clone() const
+FPValue* FPStringValue::clone() const
 {
-  FPValue* pNewValue = new FPBoolValue(value_);
+  FPValue* pNewValue = new FPStringValue(value_);
   return pNewValue;
 }
 
 /** No descriptions */
-void FPBoolValue::copy(const FPValue& newVal)
+void FPStringValue::copy(const FPValue& newVal)
 {
   if (newVal.getType() == getType())
-    value_ = ((FPBoolValue *)&newVal)->getValue();
+    value_ = ((FPStringValue *)&newVal)->getValue();
 }

@@ -22,7 +22,7 @@
 
 #include "GPI_Controller.h"
 #include "GPI_SupervisoryServer.h"
-#include "PI_Protocol.ph"
+#include "F_Supervisory_Protocol.ph"
 
 static string sPITaskName("PI");
 
@@ -31,10 +31,10 @@ GPIController::GPIController() :
   _isBusy(false)
 {
   // register the protocol for debugging purposes
-  registerProtocol(F_SUPERVISORY_PROTOCOL, F_SUPERVISORY_PROTOCOL_signalnames, 0);
+  registerProtocol(F_SUPERVISORY_PROTOCOL, F_SUPERVISORY_PROTOCOL_signalnames);
 
   // initialize the port provider
-  _ssPortProvider.init(*this, "pi", GCFPortInterface::MSPP, PI_PROTOCOL);
+  _ssPortProvider.init(*this, "server", GCFPortInterface::MSPP, F_SUPERVISORY_PROTOCOL);
 }
 
 GPIController::~GPIController()
@@ -85,12 +85,11 @@ int GPIController::connected(GCFEvent& e, GCFPortInterface& p)
       }
       break;
 
-    case F_ACCEPT_REQ:
+    case F_ACCEPT_REQ_SIG:
     {
-      GPISupervisoryServer* newSS = new GPISupervisoryServer(*this);
-      newSS->start();
-      _supervisoryServers.push_back(newSS);
-      _ssPortProvider.accept(*newSS);
+      GPISupervisoryServer* pNewSS = new GPISupervisoryServer(*this);
+      pNewSS->start();
+      _supervisoryServers.push_back(pNewSS);
       break;
     }
      
@@ -99,11 +98,19 @@ int GPIController::connected(GCFEvent& e, GCFPortInterface& p)
       GCFTimerEvent* pTimer = static_cast<GCFTimerEvent*>(&e);
       if (pTimer->arg)
       {
-        GPISupervisoryServer* pSS = static_cast<GPISupervisoryServer*>(pTimer->arg);
+        const GPISupervisoryServer* pSS = static_cast<const GPISupervisoryServer*>(pTimer->arg);
         if (pSS)
         {
-          _supervisoryServers.remove(pSS);
-          delete pSS;
+          for (TSupervisoryServers::iterator iter = _supervisoryServers.begin();
+               iter != _supervisoryServers.end(); ++iter)
+          {
+            if ((*iter) == pSS)
+            {
+              _supervisoryServers.erase(iter);
+              delete pSS;
+              break;
+            }
+          }
         }
       }      
       break;

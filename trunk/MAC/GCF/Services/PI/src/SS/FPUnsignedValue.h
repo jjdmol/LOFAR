@@ -1,4 +1,4 @@
-//#  GPM_Service.h: 
+//#  FPUnsignedValue.h: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,33 +20,31 @@
 //#
 //#  $Id$
 
-#ifndef GPM_SERVICE_H
-#define GPM_SERVICE_H
+#ifndef FPUNSIGNEDVALUE_H
+#define FPUNSIGNEDVALUE_H
 
-#include <SAL/GSA_Service.h>
+#include "FPValue.h"
 
-class GPMController;
-
-class GPMService : public GSAService
+class FPUnsignedValue : public FPValue
 {
   public:
-    GPMService(GPMController& controller) : _controller(controller) {;}
-    virtual ~GPMService() {;}
-
-    TSAResult get(const string& propName);
-    TSAResult set(const string& propName, const GCFPValue& value);
-    bool exists(const string& propName);
-
-  protected:
-    inline void propCreated(const string& /*propName*/) {};
-    inline void propDeleted(const string& /*propName*/) {};
-    inline void propSubscribed(const string& /*propName*/) {};
-    inline void propUnsubscribed(const string& /*propName*/) {};
-    void propValueGet(const string& propName, const GCFPValue& value);
-    inline void propValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {};
+  	FPUnsignedValue(unsigned int val = 0) : FPValue(UNSIGNED_VAL), value_(val) {;}
+  	virtual ~FPUnsignedValue() {;}
+    /** Write property of unsigned integer value_. */
+    virtual inline void setValue( const unsigned int newVal) {value_ = newVal;}
+    /** Read property of unsigned integer value_. */
+    virtual inline unsigned int getValue() const {return value_;}
+    /** No descriptions */
+    virtual FPValue* clone() const;
+    /** No descriptions */
+    virtual void copy(const FPValue& value);
+    /** No descriptions */
+    virtual uint unpack(const char* valBuf);
+    /** No descriptions */
+    virtual uint pack(char* valBuf) const;
   
-  private:
-    GPMController& _controller;
+  private: // Private attributes
+    /**  */
+    volatile unsigned int value_;
 };
-
 #endif

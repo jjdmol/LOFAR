@@ -1,4 +1,4 @@
-//#  GPM_Service.h: 
+//#  FPCharValue.h: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,33 +20,32 @@
 //#
 //#  $Id$
 
-#ifndef GPM_SERVICE_H
-#define GPM_SERVICE_H
+#ifndef FPCHARVALUE_H
+#define FPCHARVALUE_H
 
-#include <SAL/GSA_Service.h>
+#include "FPValue.h"
 
-class GPMController;
-
-class GPMService : public GSAService
+class FPCharValue : public FPValue  
 {
   public:
-    GPMService(GPMController& controller) : _controller(controller) {;}
-    virtual ~GPMService() {;}
-
-    TSAResult get(const string& propName);
-    TSAResult set(const string& propName, const GCFPValue& value);
-    bool exists(const string& propName);
-
-  protected:
-    inline void propCreated(const string& /*propName*/) {};
-    inline void propDeleted(const string& /*propName*/) {};
-    inline void propSubscribed(const string& /*propName*/) {};
-    inline void propUnsubscribed(const string& /*propName*/) {};
-    void propValueGet(const string& propName, const GCFPValue& value);
-    inline void propValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {};
+  	FPCharValue(char val = 0) : FPValue(CHAR_VAL), value_(val) {;}
+  	virtual ~FPCharValue() {;}
+    /** Write property of char value_. */
+    inline void setValue( const char newVal) {value_ = newVal;}
+    /** Read property of char value_. */
+    inline char getValue() const {return value_;}
+    /** No descriptions */
+    virtual FPValue* clone() const;
+    /** No descriptions */
+    virtual void copy(const FPValue& value);
+    /** No descriptions */
+    virtual uint unpack(const char* valBuf);
+    /** No descriptions */
+    virtual uint pack(char* valBuf) const;
   
-  private:
-    GPMController& _controller;
+  private: // Private attributes
+    /**  */
+    volatile char value_;
 };
 
 #endif

@@ -24,17 +24,20 @@
 #define GPI_DEFINES_H
 
 #include <GCFCommon/GCF_Defines.h>
-
+#include <TM/GCF_TMProtocols.h>
 #define CORE_COMPS_PI_LOGGER  (GCF_LOGGER_ROOT + string(".CoreComps.PI"))
 
-#define PI_STDOUT_LOGGER      (CORE_COMPS_TM_LOGGER + string(".Logger"))
+#define PI_STDOUT_LOGGER      (CORE_COMPS_PI_LOGGER + string(".Logger"))
 
-enum TPMResult {
+enum { F_SUPERVISORY_PROTOCOL = F_GCF_PROTOCOL};
+
+enum TPIResult {
   PI_NO_ERROR = 1, 
   PI_UNKNOWN_ERROR = 0,
   PI_PA_NOTCONNECTED,
   PI_IS_BUSY,
   PI_SCADA_ERROR,
+  PI_SS_BUSY
 };
 
 #endif

@@ -1,7 +1,8 @@
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../GCFCommon/autogen $<
+	$(AUTOGEN) -L $(top_srcdir)/../../GCFCommon/autogen $< &&
+	chmod a+w $@
 
 DOCHDRS	=	\
 	GPM_Controller.h \

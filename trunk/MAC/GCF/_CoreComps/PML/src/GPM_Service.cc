@@ -38,7 +38,7 @@ bool GPMService::exists(const string& propName)
   return GSAService::exists(propName);
 }
 
-void GPMService::propValueGet(string& propName, GCFPValue& value)
+void GPMService::propValueGet(const string& propName, const GCFPValue& value)
 {
   _controller.valueGet(propName, value);
 }

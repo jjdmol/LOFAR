@@ -23,6 +23,11 @@
 #include "GPM_Property.h"
 #include <SAL/GCF_PVBool.h>
 #include <SAL/GCF_PVDouble.h>
+#include <SAL/GCF_PVChar.h>
+#include <SAL/GCF_PVString.h>
+#include <SAL/GCF_PVInteger.h>
+#include <SAL/GCF_PVUnsigned.h>
+#include <SAL/GCF_PVDynArr.h>
 
 GPMProperty::GPMProperty(GCFPValue::TMACValueType type, string name) :
   _isLinked(false), _name(name)
@@ -129,9 +134,6 @@ GCFPValue* GPMProperty::createValue(GCFPValue::TMACValueType type) const
     case GCFPValue::BOOL_VAL:
       pResult = new GCFPVBool();
       break;
-/*    case GCFPValue::BIT32_VAL:
-      pResult = new GCFPVBit32();
-      break;
     case GCFPValue::CHAR_VAL:
       pResult = new GCFPVChar();
       break;
@@ -139,13 +141,16 @@ GCFPValue* GPMProperty::createValue(GCFPValue::TMACValueType type) const
       pResult = new GCFPVUnsigned();
       break;
     case GCFPValue::INTEGER_VAL:
-      pResult = new GCFVPInteger();
-      break;*/
+      pResult = new GCFPVInteger();
+      break;
     case GCFPValue::DOUBLE_VAL:
       pResult = new GCFPVDouble();
       break;
-/*    case GCFPValue::STRING_VAL:
+    case GCFPValue::STRING_VAL:
       pResult = new GCFPVString();
+      break;
+/*    case GCFPValue::BIT32_VAL:
+      pResult = new GCFPVBit32();
       break;
     case GCFPValue::REF_VAL:
       pResult = new GCFPVRef();
@@ -157,9 +162,17 @@ GCFPValue* GPMProperty::createValue(GCFPValue::TMACValueType type) const
       pResult = new GCFPVDateTime();
       break;*/
     default:
-      LOFAR_LOG_ERROR(PML_STDOUT_LOGGER, (
-          "Type of MAC value is unknown or not supported yet: '%d'", 
-          type));
+      if (type > GCFPValue::DYNARR_VAL &&
+          type <= GCFPValue::DYNSTRING_VAL)
+      {
+        pResult = new GCFPVDynArr(type);
+      }
+      else
+      {
+        LOFAR_LOG_ERROR(PML_STDOUT_LOGGER, (
+            "Type of MAC value is unknown or not supported yet: '%d'", 
+            type));
+      }
       break;
   }  
   

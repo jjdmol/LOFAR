@@ -25,11 +25,8 @@
 
 #include <Common/lofar_string.h>
 #include <SAL/GSA_Defines.h>
+#include "GCF_PValue.h"
 
-// GCF forwards
-class GCFPValue;
-
-// GCF/SAL forwards
 class GSAWaitForAnswer;
 
 // PVSS forwards
@@ -46,7 +43,8 @@ class GSAService
     virtual ~GSAService();
 
   protected:
-    virtual TSAResult createProp(const string& macType, const string& propName);
+    virtual TSAResult createProp(const string& propName, 
+                                 GCFPValue::TMACValueType macType);
     virtual TSAResult deleteProp(const string& propName);
     virtual TSAResult subscribe(const string& propName);
     virtual TSAResult unsubscribe(const string& propName);
@@ -54,25 +52,27 @@ class GSAService
     virtual TSAResult set(const string& propName, const GCFPValue& value);
     virtual bool exists(const string& propName);
     
-    virtual void propCreated(string& propName) = 0;
-    virtual void propDeleted(string& propName) = 0;
-    virtual void propSubscribed(string& propName) = 0;
-    virtual void propUnsubscribed(string& propName) = 0;
-    virtual void propValueGet(string& propName, GCFPValue& value) = 0;
-    virtual void propValueChanged(string& propName, GCFPValue& value) = 0;
+    virtual void propCreated(const string& propName) = 0;
+    virtual void propDeleted(const string& propName) = 0;
+    virtual void propSubscribed(const string& propName) = 0;
+    virtual void propUnsubscribed(const string& propName) = 0;
+    virtual void propValueGet(const string& propName, const GCFPValue& value) = 0;
+    virtual void propValueChanged(const string& propName, const GCFPValue& value) = 0;
         
   private: // methods
     // interface for GSAWaitForAnswer
     void handleHotLink(const DpMsgAnswer& answer);
     void handleHotLink(const DpHLGroup& group);
     friend class GSAWaitForAnswer;
-    
+  
+  private:  
     // helper methods to convert PVSS dpTypes to MAC types and visa versa
     TSAResult convertPVSSToMAC(const Variable& variable, 
                           const CharString& typeName, 
                           GCFPValue** pMacValue) const;
                           
     TSAResult convertMACToPVSS(const GCFPValue& macValue, Variable** pVar) const;
+    bool getPVSSType(GCFPValue::TMACValueType macType, CharString& pvssTypeName) const;
 
     // helper methods
     TSAResult getDpId(const string& dpName, DpIdentifier& dpId) const;

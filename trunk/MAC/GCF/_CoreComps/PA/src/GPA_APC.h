@@ -30,6 +30,8 @@
 #include <xercesc/dom/DOMBuilder.hpp>
 #include <Common/lofar_list.h>
 
+class GCFPValue;
+
 XERCES_CPP_NAMESPACE_USE
 
 class GPAAPC
@@ -44,6 +46,11 @@ class GPAAPC
   private: //helper methods
     TPAResult makePropList(DOMNode* pN, string path);
     TPAResult getValue(DOMNode* pN, string& value);
+    TPAResult createMACValueObject(
+      const string& macType, 
+      const string& valueData, 
+      bool defaultSet,
+      GCFPValue** pReturnValue);
     
   private:
     

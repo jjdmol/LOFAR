@@ -43,18 +43,14 @@ class GPAUsecountManager : public GSAService
     bool waitForAsyncResponses();
 			
   protected:
-    void propCreated(string& propName);
-    void propDeleted(string& propName);
-    void propValueChanged(string& propName, GCFPValue& value) {};
-    void propValueGet(string& propName, GCFPValue& value) {};
-    void propSubscribed(string& propName) {};
-    void propUnsubscribed(string& propName) {};
+    void propCreated(const string& propName);
+    void propDeleted(const string& propName);
+    inline void propValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {};
+    inline void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {};
+    inline void propSubscribed(const string& /*propName*/) {};
+    inline void propUnsubscribed(const string& /*propName*/) {};
 
   private: // helper methods
-    TPAResult createMACValueObject(
-      const string& macType, 
-      const string& valueData, 
-      GCFPValue** pValue);
     
   private: // data members
     GPAController&	_controller;

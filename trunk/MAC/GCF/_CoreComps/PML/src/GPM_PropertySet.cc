@@ -49,12 +49,13 @@ GPMPropertySet::~GPMPropertySet()
   }
 }
 
-void GPMPropertySet::propSubscribed(string& propName)
+void GPMPropertySet::propSubscribed(const string& propName)
 {
   // TODO: Make this more secure (see linkProperties)
-  cutScope(propName);
-  _properties[propName]->setLink(true);
-  _tempLinkList.remove(propName);
+  string shortPropName(propName);
+  cutScope(shortPropName);
+  _properties[shortPropName]->setLink(true);
+  _tempLinkList.remove(shortPropName);
   _counter--;
   if (_counter == 0)
   {
@@ -62,12 +63,13 @@ void GPMPropertySet::propSubscribed(string& propName)
   }
 }
 
-void GPMPropertySet::propUnsubscribed(string& propName)
+void GPMPropertySet::propUnsubscribed(const string& propName)
 {
   // TODO: Make this more secure (see unlinkProperties)
-  cutScope(propName);
+  string shortPropName(propName);
+  cutScope(shortPropName);
   _properties[propName]->setLink(false);
-  _tempLinkList.remove(propName);
+  _tempLinkList.remove(shortPropName);
   _counter--;
   if (_counter == 0)
   {
@@ -75,15 +77,17 @@ void GPMPropertySet::propUnsubscribed(string& propName)
   }
 }
 
-void GPMPropertySet::propValueChanged(string& propName, GCFPValue& value)
+void GPMPropertySet::propValueChanged(const string& propName, const GCFPValue& value)
 {
-  string fullPropName = propName;
-  cutScope(propName);
-  GPMProperty* pProperty = _properties[propName];
+  string shortPropName(propName);
+  
+  cutScope(shortPropName);
+  
+  GPMProperty* pProperty = _properties[shortPropName];
   if (pProperty->isLinked())
   {
     pProperty->setValue(value);
-    _controller.valueChanged(fullPropName, value);
+    _controller.valueChanged(propName, value);
   }
 }
 

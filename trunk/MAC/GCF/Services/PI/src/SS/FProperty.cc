@@ -23,14 +23,7 @@
 //
 
 #include "FProperty.h"
-#include "FPByteValue.h"
-/*#include "FPWordValue.h"
-#include "FPDWordValue.h"
-#include "FPFloatValue.h"
-#include "FPDoubleValue.h"
-#include "FPBoolValue.h"
-#include "FPLongLongValue.h"
-*/
+
 #include <string.h>
 
 FProperty::FProperty(const char* name, FPValue::ValueType type) :
@@ -40,51 +33,17 @@ FProperty::FProperty(const char* name, FPValue::ValueType type) :
   name_ = new char[strlen(name) + 1];
   strcpy(name_, name);
   
-  switch (type)
-  {
-  case FPValue::BOOL_VAL:
-    pOnlineValue_ = new FPBoolValue();
-    break;
-/*  case FPValue::UCHAR_VAL:
-    pOnlineValue_ = new FPUCharValue();
-    break;
-  case FPValue::CHAR_VAL:
-    pOnlineValue_ = new FPCharValue();
-    break;
-  case FPValue::USHORT_VAL:
-    pOnlineValue_ = new FPUShortValue();
-    break;
-  case FPValue::SHORT_VAL:
-    pOnlineValue_ = new FPShortValue();
-    break;
-  case FPValue::ULONG_VAL:
-    pOnlineValue_ = new FPULongValue();
-    break;
-  case FPValue::LONG_VAL:
-    pOnlineValue_ = new FPLongValue();
-    break;
-  case FPValue::ULONGLONG_VAL:
-    pOnlineValue_ = new FPULongLongValue();
-    break;
-  case FPValue::LONGLONG_VAL:
-    pOnlineValue_ = new FPLongLongValue();
-    break;
-  case FPValue::FLOAT_VAL:
-    pOnlineValue_ = new FPFloatValue();
-    break;
-  case FPValue::COMPLEX_FLOAT_VAL:
-    pOnlineValue_ = new FPComplexFloatValue();
-    break;
-  case FPValue::DOUBLE_VAL:
-    pOnlineValue_ = new FPDoubleValue();
-    break;
-  case FPValue::COMPLEX_DOUBLE_VAL:
-    pOnlineValue_ = new FPComplexDoubleValue();
-    break;
-*/
-  default:
-    break; 
-  }
+  pOnlineValue_ = FPValue::createValueObject(type);
+}
+
+FProperty::FProperty(const char* name, const FPValue& newVal) :
+  pOnlineValue_(0),
+  name_(0)
+{
+  name_ = new char[strlen(name) + 1];
+  strcpy(name_, name);
+  
+  pOnlineValue_ = newVal.clone();
 }
 
 FProperty::~FProperty()
@@ -110,7 +69,7 @@ short FProperty::setValue( const FPValue& newVal)
   
   if (pOnlineValue_->getType() == newVal.getType())
   {
-	  pOnlineValue_->copy(&newVal); /* copy new value to online value*/
+	  pOnlineValue_->copy(newVal); /* copy new value to online value*/
     result = 1;
   }
   return result;

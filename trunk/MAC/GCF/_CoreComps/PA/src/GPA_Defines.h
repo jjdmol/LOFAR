@@ -29,6 +29,8 @@
 
 #define PA_STDOUT_LOGGER      (CORE_COMPS_PA_LOGGER + string(".Logger"))
 
+class GCFPValue;
+
 enum TPAResult {
   PA_NO_ERROR = 1, 
   PA_UNKNOWN_ERROR = 0,
@@ -44,9 +46,8 @@ enum TPAResult {
 
 typedef struct
 {
-  string macType;
   string name;
-  string defaultValue;
+  GCFPValue* pValue;
   bool  defaultSet;
 } TAPCProperty;
 

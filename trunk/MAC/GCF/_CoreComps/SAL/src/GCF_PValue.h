@@ -28,9 +28,12 @@
 class GCFPValue
 {
   public:
-    enum TMACValueType {BOOL_VAL = 1, CHAR_VAL, UNSIGNED_VAL, INTEGER_VAL, 
+    enum TMACValueType {NO_VAL, BOOL_VAL, CHAR_VAL, UNSIGNED_VAL, INTEGER_VAL, 
                     BIT32_VAL, BLOB_VAL, REF_VAL, DOUBLE_VAL, DATETIME_VAL,
-                    STRING_VAL, DYNARR_VAL = 0x80};
+                    STRING_VAL, DYNARR_VAL = 0x80,
+                    DYNBOOL_VAL, DYNCHAR_VAL, DYNUNSIGNED_VAL, DYNINTEGER_VAL, 
+                    DYNBIT32_VAL, DYNBLOB_VAL, DYNREF_VAL, DYNDOUBLE_VAL, DYNDATETIME_VAL,
+                    DYNSTRING_VAL };
    
     GCFPValue(TMACValueType type) : _type(type) {};
     virtual ~GCFPValue() {};

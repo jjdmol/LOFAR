@@ -24,7 +24,7 @@
 
 int main(int argc, char *argv[])
 {
-	//GCFTask::init(argc, argv);
+	GCFTask::init(argc, argv);
 
 	GPIController propertyInterace;
 
