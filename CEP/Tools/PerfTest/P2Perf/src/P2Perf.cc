@@ -1,4 +1,4 @@
-//  SeqSim.cc: Concrete Simulator class for ring structure
+//  P2Perf.cc: Concrete Simulator class for ring structure
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.10  2001/10/26 10:06:28  wierenga
+//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
+//
 //  Revision 1.9  2001/10/26 08:55:01  schaaf
 //  minor changes
 //
@@ -54,7 +57,7 @@
 #include <stdio.h>
 #include "Transport.h"
 #include "Step.h"
-#include "SeqSim.h"
+#include "P2Perf.h"
 #include "Simul.h"
 #include "Profiler.h"
 #include "WH_Empty.h"
@@ -78,22 +81,22 @@
    This class is an example of a concrete Simulator.
 */
 
-SeqSim::SeqSim()
+P2Perf::P2Perf()
 {
   workholders = NULL;
   steps       = NULL;
 }
 
-SeqSim::~SeqSim()
+P2Perf::~P2Perf()
 {
   undefine();
 }
 
 /**
-   define function for the SeqSim simulation. It defines a list
+   define function for the P2Perf simulation. It defines a list
    of steps that each process a part of the data.
  */
-void SeqSim::define(const ParamBlock& params)
+void P2Perf::define(const ParamBlock& params)
 {
 #ifdef HAVE_CORBA
   // Start Orb Environment
@@ -130,11 +133,11 @@ void SeqSim::define(const ParamBlock& params)
     }
   }
 
-  cout << "SeqSim Processor " << rank << " of " << size << " operational."
+  cout << "P2Perf Processor " << rank << " of " << size << " operational."
        << flush << endl;
 
   WH_Empty empty;
-  Simul simul(empty, "SeqSim");
+  Simul simul(empty, "P2Perf");
   setSimul(simul);
   simul.runOnNode(0);
 
@@ -205,27 +208,27 @@ void doIt (Simul& simul, const std::string& name, int nsteps)
   TRANSPORTER::finalize();
 }
 
-void SeqSim::run(int nSteps)
+void P2Perf::run(int nSteps)
 
 {
 
   nSteps = nSteps;
 
-  doIt(getSimul(), "SeqSimulator", nSteps);
+  doIt(getSimul(), "P2Perf Simulator", nSteps);
 
 }
 
-void SeqSim::dump() const
+void P2Perf::dump() const
 {
   getSimul().dump();
 }
 
-void SeqSim::quit()
+void P2Perf::quit()
 {
   
 }
 
-void SeqSim::undefine()
+void P2Perf::undefine()
 {
   if (workholders)
   {

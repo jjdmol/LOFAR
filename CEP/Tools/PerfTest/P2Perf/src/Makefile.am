@@ -1,20 +1,20 @@
 if HAVE_CORBA
 INCLUDES 	= \
-	-I$(top_srcdir)/BaseSim \
-	-I$(top_srcdir)/BaseSim/Corba \
-	-I$(top_builddir)/BaseSim/Corba
+	-I$(top_srcdir)/../../../../BaseSim/src \
+	-I$(top_srcdir)/../../../../BaseSim/src/Corba \
+	-I$(top_builddir)/BaseSim/src/Corba
 else
-INCLUDES	= -I$(top_srcdir)/BaseSim
+INCLUDES	= -I$(top_srcdir)/../../../../BaseSim/src
 endif
 
-bin_PROGRAMS	= SeqTest
-SeqTest_SOURCES = \
+bin_PROGRAMS	= P2Perf
+P2Perf_SOURCES = \
 DH_GrowSize.cc					\
 DH_GrowSize.h					\
 DH_IntArray.cc					\
 DH_IntArray.h					\
-SeqSim.cc					\
-SeqSim.h					\
+P2Perf.cc					\
+P2Perf.h					\
 Simulate.cc					\
 StopWatch.cc					\
 StopWatch.h					\
@@ -24,11 +24,11 @@ WH_Square.cc					\
 WH_Square.h
 
 if HAVE_CORBA
-SeqTest_LDADD = \
-	$(top_builddir)/BaseSim/libbasesim.la \
-	$(top_builddir)/BaseSim/Corba/libth_corba.la
+P2Perf_LDADD = \
+	$(top_builddir)/../../../../../BaseSim/build/src/libbasesim.la \
+	$(top_builddir)/../../../../../BaseSim/build/src/Corba/libth_corba.la
 else
-SeqTest_LDADD = \
-	$(top_builddir)/BaseSim/libbasesim.la
+P2Perf_LDADD = \
+	$(top_builddir)/../../../../../BaseSim/build/src/libbasesim.la
 endif
 

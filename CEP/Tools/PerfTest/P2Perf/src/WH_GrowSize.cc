@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.4  2001/10/26 10:06:28  wierenga
+//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
+//
 //  Revision 1.3  2001/09/19 08:10:51  wierenga
 //  Changes to do perform bandwidth tests.
 //
@@ -41,7 +44,7 @@
 
 #include "WH_GrowSize.h"
 #include "StopWatch.h"
-#include "SeqSim.h"
+#include "P2Perf.h"
 
 WH_GrowSize::WH_GrowSize (const string& name, bool first,
 			unsigned int nin, unsigned int nout,

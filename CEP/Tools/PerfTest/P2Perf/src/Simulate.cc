@@ -1,4 +1,4 @@
-#include "SeqSim.h"
+#include "P2Perf.h"
 #include "SimulatorParseClass.h"
 #include <iostream>
 
@@ -12,7 +12,7 @@ int atexit(void (*function)(void))
 int main (int argc, char** argv)
 {
   try {
-    SeqSim simulator;
+    P2Perf simulator;
     simulator.setarg (argc, argv);
 #ifndef HAVE_MPI
         cout << endl;
@@ -33,7 +33,7 @@ int main (int argc, char** argv)
 	cout << "It was a pleasure working with you!" << endl << endl;
 
 #else
-	cout << "Welcome to SeqSim" <<endl;
+	cout << "Welcome to P2Perf" <<endl;
 	cout << "Running in batch mode " << endl;
 	cout << endl;
 	cout << "Call Define" << endl;
