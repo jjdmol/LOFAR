@@ -22,12 +22,17 @@
 
 #include <UVPGraphSettingsWidget.h>
 
+#include <qlineedit.h>
+#include <qlabel.h>
+#include <qslider.h>
+#include <qpushbutton.h>
+#include <qcombobox.h>
 #include <qlayout.h>
 
 #include <sstream>
 
 
-//=================>>>  UVPGraphSettingsWidget::UVPGraphSettingsWidget  <<<=================
+//==========>>>  UVPGraphSettingsWidget::UVPGraphSettingsWidget  <<<==========
 
 UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
                                                QWidget *    parent,
@@ -36,14 +41,21 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
   : QWidget(parent, name, f),
     itsNumberOfAntennae(0)
 {
+  itsVLayout        = new QVBoxLayout(this);
+
+  itsFieldLabel     = new QLabel("Field(s)", this);
+  itsFieldLayout    = new QHBoxLayout(itsVLayout);
+  
+  setNumberOfFields(1);
+  
   itsAntenna1Label  = new QLabel("Antenna 1: ", this);
   itsAntenna1Slider = new QSlider(1, numOfAntennae, 1, 1,
                                   QSlider::Horizontal, this, "Antenna 1");
 
-  itsColumnLabel      = new QLabel("Load column:", this);
-  itsColumnCombo      = new QComboBox(true, this);
+  itsColumnLabel    = new QLabel("Load column:", this);
+  itsColumnCombo    = new QComboBox(true, this);
 
-  itsLoadButton    = new QPushButton("Load ant1/column", this);
+  itsLoadButton     = new QPushButton("Load ant1/column", this);
   itsLoadButton->setPalette( QPalette( green ) );
 
   itsAntenna2Label  = new QLabel("Antenna 2: ", this);
@@ -54,22 +66,21 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
   itsCorrelationLabel = new QLabel("Correlation:", this);
   
 
-
   itsSettings.setAntenna1(itsAntenna1Slider->value()-1);
   itsSettings.setAntenna2(itsAntenna2Slider->value()-1);
   
-  QVBoxLayout *BaselineVLayout = new QVBoxLayout(this);
-  BaselineVLayout->addWidget(itsAntenna1Label);
-  BaselineVLayout->addWidget(itsAntenna1Slider);
-  BaselineVLayout->addWidget(itsColumnLabel);
-  BaselineVLayout->addWidget(itsColumnCombo);
-  BaselineVLayout->addWidget(itsLoadButton);
-  BaselineVLayout->addWidget(itsAntenna2Label);
-  BaselineVLayout->addWidget(itsAntenna2Slider);
-  BaselineVLayout->addWidget(itsCorrelationLabel);
-  BaselineVLayout->addWidget(itsCorrelationCombo);
-  BaselineVLayout->addStretch();
-  BaselineVLayout->activate();
+  itsVLayout->addWidget(itsFieldLabel);
+  itsVLayout->addWidget(itsAntenna1Label);
+  itsVLayout->addWidget(itsAntenna1Slider);
+  itsVLayout->addWidget(itsColumnLabel);
+  itsVLayout->addWidget(itsColumnCombo);
+  itsVLayout->addWidget(itsLoadButton);
+  itsVLayout->addWidget(itsAntenna2Label);
+  itsVLayout->addWidget(itsAntenna2Slider);
+  itsVLayout->addWidget(itsCorrelationLabel);
+  itsVLayout->addWidget(itsCorrelationCombo);
+  itsVLayout->addStretch();
+  itsVLayout->activate();
 
   itsCorrelationCombo->insertItem("Not selected", 0);
   itsCorrelationCombo->insertItem( "I",  1);
@@ -118,7 +129,7 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
 
 
 
-//=================>>>  UVPGraphSettingsWidget::~UVPGraphSettingsWidget  <<<=================
+//==========>>>  UVPGraphSettingsWidget::~UVPGraphSettingsWidget  <<<==========
 
 UVPGraphSettingsWidget::~UVPGraphSettingsWidget()
 {
@@ -128,7 +139,7 @@ UVPGraphSettingsWidget::~UVPGraphSettingsWidget()
 
 
 
-//=================>>>  UVPGraphSettingsWidget::setNumberOfAntennae  <<<=================
+//============>>>  UVPGraphSettingsWidget::setNumberOfAntennae  <<<============
 
 void UVPGraphSettingsWidget::setNumberOfAntennae(unsigned int numberOfAntennae)
 {
@@ -139,10 +150,33 @@ void UVPGraphSettingsWidget::setNumberOfAntennae(unsigned int numberOfAntennae)
 
 
 
+//=============>>>  UVPGraphSettingsWidget::setNumberOfFields  <<<=============
+
+void UVPGraphSettingsWidget::setNumberOfFields(unsigned int numberOfFields)
+{
+  unsigned int N = itsFieldSelections.size();
+  for(unsigned int i = 0; i < N; i++){
+    delete itsFieldSelections[i];
+    itsFieldSelections[i] = 0;
+  }
+  itsFieldSelections.clear();
+
+  for(unsigned int i = 0; i < numberOfFields; i++) {
+    std::ostringstream num;
+    num << i + 1;
+    itsFieldSelections.push_back(new QCheckBox(num.str(), this));
+    itsFieldLayout->addWidget(itsFieldSelections[i]);
+    QObject::connect(itsFieldSelections[i], SIGNAL(toggled()),
+                     this, SLOT(slot_fieldChanged())); 
+  }
+    
+  itsSettings.setNumberOfFields(numberOfFields);
+}
 
 
 
-//===============>>>  UVPGraphSettingsWidget::slot_antenna1Changed  <<<===============
+
+//===========>>>  UVPGraphSettingsWidget::slot_antenna1Changed  <<<===========
 
 void UVPGraphSettingsWidget::slot_antenna1Changed(int antenna1)
 {
@@ -195,6 +229,21 @@ void UVPGraphSettingsWidget::slot_columnChanged(int /*column*/)
 {
   itsSettings.setColumnName(itsColumnCombo->currentText().latin1());
   emit signalColumnChanged(itsColumnCombo->currentText().latin1());
+}
+
+
+
+
+
+//============>>>  UVPGraphSettingsWidget::slot_fieldChanged  <<<============
+
+void UVPGraphSettingsWidget::slot_fieldChanged()
+{
+  for(unsigned int i = 0; i < itsFieldSelections.size(); i++) {
+    itsSettings.setPoltField(i,itsFieldSelections[i]->isOn());
+  }
+
+  emit signalFieldsChanged();
 }
 
 
