@@ -18,9 +18,8 @@ ln -s ../../../../test/cp2web.sh .
 rm -f ./*~
 
 rm -f demo{3,3p,10}-1.MS.{dat,des,uvw}
-ln -s $MSDIR/demo3/demo.dat demo3-1.MS.dat
-ln -s $MSDIR/demo3/demo.des demo3-1.MS.des
-ln -s $MSDIR/demo3/demo.uvw demo3-1.MS.uvw
+
+ln -s $MSDIR/demo3_p1.MS demo3_p1.MS
 ln -s $MSDIR/demo3p/demo.dat demo3p-1.MS.dat
 ln -s $MSDIR/demo3p/demo.des demo3p-1.MS.des
 ln -s $MSDIR/demo3p/demo.uvw demo3p-1.MS.uvw

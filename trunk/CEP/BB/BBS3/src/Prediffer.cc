@@ -235,7 +235,7 @@ void Prediffer::readDescriptiveData(const string& fileName)
 {
   // Get meta data from description file.
   string name(fileName+"/vis.des");
-  cout << fileName << endl;
+  cout << name << endl;
   std::ifstream istr(name.c_str());
   BlobIBufStream bbs(istr);
   BlobIStream bis(bbs);
