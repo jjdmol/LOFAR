@@ -43,20 +43,20 @@ void MeqUVWPolc::calcCoeff (const Vector<double>& times,
   for (int i=0; i<nr; i++) {
     normTimes(i) = domain.normalizeX (times(i));
   }
-  vector<MeqPolc> polc(1);
-  polc[0].setDomain (domain);
+  MeqPolc polc;
+  polc.setDomain (domain);
   Vector<double> sigma(nr, 1);
   Vector<Double> sol = itsFitter.fit (normTimes, uvws.row(0), sigma);
-  polc[0].setCoeff (Matrix<double>(sol));
-  itsUCoeff.setPolcs (polc);
+  polc.setCoeff (Matrix<double>(sol));
+  itsUCoeff.addPolc (polc);
   sigma = 1;
   sol = itsFitter.fit (normTimes, uvws.row(1), sigma);
-  polc[0].setCoeff (Matrix<double>(sol));
-  itsVCoeff.setPolcs (polc);
+  polc.setCoeff (Matrix<double>(sol));
+  itsVCoeff.addPolc (polc);
   sigma = 1;
   sol = itsFitter.fit (normTimes, uvws.row(2), sigma);
-  polc[0].setCoeff (Matrix<double>(sol));
-  itsWCoeff.setPolcs (polc);
+  polc.setCoeff (Matrix<double>(sol));
+  itsWCoeff.addPolc (polc);
 }
 
 void MeqUVWPolc::calcUVW (const MeqRequest& request)

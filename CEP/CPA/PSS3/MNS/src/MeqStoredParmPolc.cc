@@ -60,7 +60,7 @@ void MeqStoredParmPolc::save()
 {
   const vector<MeqPolc>& polcs = getPolcs();
   for (unsigned int i=0; i<polcs.size(); i++) {
-    itsTable->putValues (getName(), polcs[i].getDomain(), polcs[i].getCoeff());
+    itsTable->putValues (getName(), polcs[i].domain(), polcs[i].getCoeff());
   }
   MeqParmPolc::save();
 }

@@ -42,6 +42,7 @@ public:
   MeqUVWPolc();
 
   // Calculate the polynomial coefficients by fitting to the given values.
+  // It results in a polynomial for the given times and all frequencies.
   void calcCoeff (const Vector<double>& times, const Matrix<double>& uvws);
 
   // Calculate the UVW for the given domain.

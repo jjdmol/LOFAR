@@ -42,6 +42,11 @@ int MeqParmPolc::initDomain (const MeqDomain&, int spidIndex)
 {
   int nr = 0;
   if (itsIsSolvable) {
+    // For the time being we allow only one polc if the parameter
+    // has to be solved.
+    AssertStr (itsPolcs.size() == 1,
+	       "Multiple polcs used in the solve domain for parameter "
+	       << getName());
     for (unsigned int i=0; i<itsPolcs.size(); i++) {
       int nrs = itsPolcs[i].makeSolvable (spidIndex);
       nr += nrs;
@@ -51,10 +56,195 @@ int MeqParmPolc::initDomain (const MeqDomain&, int spidIndex)
   return nr;
 }
 
+/*
 MeqResult MeqParmPolc::getResult (const MeqRequest& request)
 {
-  Assert (itsPolcs.size() == 1);
-  return itsPolcs[0].getResult (request);
+  if (itsPolcs.size() == 1) {
+    return itsPolcs[0].getResult (request);
+  }
+  const MeqDomain& domain = request.domain();
+  MeqResult result(0);
+  int ndx = request.nx();
+  int ndy = request.ny();
+  double* datar;
+  complex<double>* datac;
+  if (itsNPolcsY == 1) {
+    double stepx = request.stepX();
+    // Note that this can be optimized a bit by ensuring that the polcs
+    // are in increasing order of x.
+    // The question is what to do in the general 2-dim case.
+    double midx = request.startX() + stepx/2; 
+    int inx = 0;
+    while (inx < ndx) {
+      for (unsigned int i=0; i<itsPolcs.size(); i++) {
+	MeqPolc& polc = itsPolcs[i];
+	if (midx >= polc.startX()  &&  midx < polc.endX()) {
+	  int nrx = ndx - inx;
+	  double stx = midx - stepx/2;
+	  double endx = stx + nrx*stepx;
+	  if (endx-stepx/2 > polc.endX()) {
+	    nrx = int((polc.endX() + stepx/2 - stx) / stepx);
+	    endx = stx + nrx*stepx;
+	  }
+	  if (inx == 0) {
+	    if (nrx == ndx) {
+	      return polc.getResult (request);
+	    }
+	    if (itsPolcs[0].isDouble()) {
+	      result.setValue (MeqMatrix(double(), ndx. ndy));
+	      datar = result.getValueRW().doubleStorage();
+	    } else {
+	      result.setValue (MeqMatrix(complex<double>(), ndx. ndy));
+	      datac = result.getValueRW().dcomplexStorage();
+	    }
+	  }
+	  MeqDomain partDom(stx, endx, domain.startY(), domain.endY());
+	  MeqRequest partReq(partDom, nrx, request.ny());
+	  MeqResult partRes = polc.getResult (partReq);
+	  if (itsPolcs[0].isDouble()) {
+	    const double* from = partRes.gtValue().doubleStorage();
+	    double* to = datar + inx;
+	    for (int iy=0; iy<ndy; iy++) {
+	      for (int ix=0; iy<nrx; ix++) {
+		to[ix] = from++;
+	      }
+	      to += ndx;
+	    }
+	  } else {
+	  }
+	  inx += nrx;
+	  midx += nrx*stepx;
+	  break;
+	}
+      }
+    }
+  }
+  return result;
+}
+*/
+
+MeqResult MeqParmPolc::getResult (const MeqRequest& request)
+{
+  // A single polc can be evaluated immediately.
+  if (itsPolcs.size() == 1) {
+    return itsPolcs[0].getResult (request);
+  }
+  // Get the domain, etc.
+  const MeqDomain& domain = request.domain();
+  MeqResult result(0);
+  int ndx = request.nx();
+  int ndy = request.ny();
+  double* datar = 0;
+  complex<double>* datac = 0;
+  double stepx = request.stepX();
+  double stepy = request.stepY();
+  double halfStepx = stepx / 2;
+  double halfStepy = stepy / 2;
+  double firstMidx = domain.startX() + halfStepx;
+  double firstMidy = domain.startY() + halfStepy; 
+  double lastMidx = firstMidx + (ndx-1) * stepx;
+  double lastMidy = firstMidy + (ndy-1) * stepy;
+  // Iterate over all polynomials.
+  // Evaluate one if its domain overlaps the request domain.
+  for (unsigned int i=0; i<itsPolcs.size(); i++) {
+    MeqPolc& polc = itsPolcs[i];
+    const MeqDomain& polDom = polc.domain();
+    if (firstMidx < polDom.endX()  &&  lastMidx > polDom.startX()
+    &&  firstMidy < polDom.endY()  &&  lastMidy > polDom.startY()) {
+      // Determine which part of the request domain is covered by the
+      // polynomial.
+      int stx = 0;
+      if (firstMidx < polDom.startX()) {
+	stx = 1 + int((polDom.startX() - firstMidx) / stepx);
+      }
+      int nrx = ndx - stx;
+      if (lastMidx > polDom.endX()) {
+	int remx = 1 + int((lastMidx - polDom.endX()) / stepx);
+	nrx -= remx;
+      }
+      int sty = 0;
+      if (firstMidy < polDom.startY()) {
+	sty = 1 + int((polDom.startY() - firstMidy) / stepy);
+      }
+      int nry = ndy - sty;
+      if (lastMidy > polDom.endY()) {
+	int remy = 1 + int((lastMidy - polDom.endY()) / stepy);
+	nry -= remy;
+      }
+      // If the overlap is full, only this polynomial needs to be evaluated.
+      if (stx == 0  &&  nrx == ndx  &&  sty == 0  &&  nry == ndy) {
+	return polc.getResult (request);
+      }
+      // Form the domain and request for the overlapping part
+      // and evaluate the polynomial.
+      double startx = domain.startX() + stx*stepx;
+      double starty = domain.startY() + sty*stepy;
+      MeqDomain partDom(startx, startx + nrx*stepx,
+			starty, starty + nry*stepy);
+      MeqRequest partReq(partDom, nrx, nry);
+      MeqResult partRes = polc.getResult (partReq);
+      if (itsPolcs[0].getCoeff().isDouble()) {
+	// Create the result matrix if it is the first time.
+	// Now it is initialized with zeroes (to see possiible errors).
+	// In the future the outcommnented statement can be used
+	// which saves the initialization time. It requires that the
+	// request domain is entirely covered by the polcs.
+	if (datar == 0) {
+	  Matrix<double> mat(ndx, ndy);
+	  mat = 0;
+	  ////	  result.setValue (MeqMatrix(double(), ndx. ndy));
+	  result.setValue (mat);
+	  datar = result.getValueRW().doubleStorage();
+	}
+	// Move the values to the correct place in the output result.
+	// Note that in principle a polynomial could be a single coefficient
+	// in which case it returns a single value.
+	const double* from = partRes.getValue().doubleStorage();
+	double* to = datar + stx + sty*ndx;
+	if (partRes.getValue().nelements() == 1) {
+	  for (int iy=0; iy<nry; iy++) {
+	    for (int ix=0; ix<nrx; ix++) {
+	      to[ix] = *from;
+	    }
+	    to += ndx;
+	  }
+	} else {
+	  for (int iy=0; iy<nry; iy++) {
+	    for (int ix=0; ix<nrx; ix++) {
+	      to[ix] = *from++;
+	    }
+	    to += ndx;
+	  }
+	}
+      } else {
+	if (datac == 0) {
+	  Matrix<complex<double> > mat(ndx, ndy);
+	  mat = complex<double>();
+	  ////	  result.setValue (MeqMatrix(double(), ndx. ndy));
+	  result.setValue (mat);
+	  datac = result.getValueRW().dcomplexStorage();
+	}
+	const complex<double>* from = partRes.getValue().dcomplexStorage();
+	complex<double>* to = datac + stx + sty*ndx;
+	if (partRes.getValue().nelements() == 1) {
+	  for (int iy=0; iy<nry; iy++) {
+	    for (int ix=0; ix<nrx; ix++) {
+	      to[ix] = *from;
+	    }
+	    to += ndx;
+	  }
+	} else {
+	  for (int iy=0; iy<nry; iy++) {
+	    for (int ix=0; ix<nrx; ix++) {
+	      to[ix] = *from++;
+	    }
+	    to += ndx;
+	  }
+	}
+      }
+    }
+  }
+  return result;
 }
 
 void MeqParmPolc::update (const MeqMatrix& value)
