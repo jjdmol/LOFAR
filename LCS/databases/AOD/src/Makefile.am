@@ -1,17 +1,15 @@
 DOCHDRS		 		= \
 LofarDatabase.h	
 
-lib_LTLIBRARIES 	= liblofardatabase.la ##libBlobStream.la
+lib_LTLIBRARIES 	= liblofardatabase.la 
 
 liblofardatabase_la_SOURCES 	= $(DOCHDRS)		\
 								  LofarDatabase.cc	\
 								  MySQLDatabase.cc  \
 								  PgSQLDatabase.cc
 
-##libBlobStream_la_SOURCES 		= BlobStream.cc
-
 bin_PROGRAMS			= testAOD testDTL testOTL updateDTL \
-						  DTLdemo_no_index DTLdemo_indexed DTLallinone
+						  DTLdemo_no_index DTLdemo_indexed
 
 ### testAOD ###
 testAOD_SOURCES 		= testAOD.cc
@@ -48,11 +46,5 @@ DTLdemo_no_index_SOURCES 		= DTLdemo_no_index.cc
 DTLdemo_no_index_CXXFLAGS		= -I../../../src/DTL/lib
 DTLdemo_no_index_LDADD			= -L../../../src/DTL/lib/release -lDTL -lodbc
 DTLdemo_no_index_DEPENDENCIES	= $(LOFAR_DEPEND)
-
-### DTLallinone ###
-DTLallinone_SOURCES 		= DTLallinone.cc
-DTLallinone_CXXFLAGS		= -I../../../src/DTL/lib
-DTLallinone_LDADD			= -L../../../src/DTL/lib/release -lDTL -lodbc
-DTLallinone_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common
