@@ -215,19 +215,19 @@ void WH_Correlator::process() {
     int c_addr = itsNpolarisations*itsNelements*itsNsamples*fchannel;
     for (int station1 = 0; station1 < itsNelements; station1++) {
       for (int station2 = 0; station2 <= station1; station2++) {
-	int s1_addr = c_addr+itsNsamples*itsNpolarisations*station1;
-	int s2_addr = c_addr+itsNsamples*itsNpolarisations*station2;
+	int s1_addr = c_addr+itsNpolarisations*station1;
+	int s2_addr = c_addr+itsNpolarisations*station2;
 
  	out_ptr = reinterpret_cast<_Complex double*> (outDH->getBufferElement(station1, station2, fchannel, 0));
 //	out_ptr = outDH->getBufferElement(station1, station2, fchannel, 0);
 
 	for (int sample = 0; sample < itsNsamples; sample++) {
-	  *out_ptr     += *(in_buffer+s1_addr+sample) * *(in_buffer+s2_addr+sample);     // XX
-	  *(out_ptr+1) += *(in_buffer+s1_addr+sample) * *(in_buffer+s2_addr+sample+1);   // XY
-	  *(out_ptr+2) += *(in_buffer+s1_addr+sample+1) * *(in_buffer+s2_addr+sample);   // YX
-	  *(out_ptr+3) += *(in_buffer+s1_addr+sample+1) * *(in_buffer+s2_addr+sample+1); // YY
-	  s1_addr++; 
-	  s2_addr++;
+	  *out_ptr     += *(in_buffer+s1_addr) * *(in_buffer+s2_addr);     // XX
+	  *(out_ptr+1) += *(in_buffer+s1_addr) * *(in_buffer+s2_addr+1);   // XY
+	  *(out_ptr+2) += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr);   // YX
+	  *(out_ptr+3) += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr+1); // YY
+	  s1_addr+=itsNpolarisations*itsNelements; 
+	  s2_addr+=itsNpolarisations*itsNelements;
 	} // sample
       } // station2
     } // station1
