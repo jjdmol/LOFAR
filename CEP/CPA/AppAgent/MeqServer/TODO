@@ -3,13 +3,17 @@ MEQ in general:
   * reconsider order or events in execute(): should cache be checked
     only after node_state and rider have been processed? Note that for
     repeated requests, this step is skipped, regardless. 
-
+    
   * Specify child labels in node constructor; check them in init().
     Process named children properly.
   
   * Delete.All.Nodes command
   
   * Persistent nodes
+  
+  * Implement request ID hierarchy
+      
+  * Keep thinking about COWs. 
   
         + Document the two types of node_state lookups
         + Document pollChildren()
@@ -34,8 +38,6 @@ MEQ in general:
         + think through writability & privatization issues. Perhaps finally
           implement simple copy-on-write as the default policy in DMI?
           27/11/03: good to go for now. Still thinking about COW.
-      
-  * Keep thinking about COWs. 
 
 Result:
 
@@ -76,9 +78,9 @@ Function:
           12/12/03
 
 General:
-  
-  * GlishUtil: interpret record field name "#nnn" as AtomicID(atoi("nnn"))
 
+  * MSOutputSink: output to new column doesn't work, column stays 'dummy'
+  
   * Check how a zero-length string or hiid array from Glish shows up in
     AppAgent -- because it looked like a 1-element DataField when 
     processing child specs.
