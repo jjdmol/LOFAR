@@ -22,6 +22,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.6  2002/05/24 14:17:18  schaaf
+//  %[BugId: 11]%
+//  Use Parameter block for definition of source/dest steps etc.
+//
 //  Revision 1.5  2002/05/23 15:38:57  schaaf
 //
 //  %[BugId: 11]%
@@ -66,6 +70,8 @@
 #include "BaseSim/Corba/TH_Corba.h"
 #endif
 
+#include "BaseSim/ShMem/TH_ShMem.h"
+
 
 Transpose::Transpose():
   itsSourceSteps(0),
@@ -92,7 +98,7 @@ void Transpose::define(const ParamBlock& params)
   // Start Orb Environment
   AssertStr (BS_Corba::init(), "Could not initialise CORBA environment");
 #endif
-  
+
 #ifdef HAVE_MPI
   // TH_ShMem only works in combination with MPI
   // initialize TH_ShMem
@@ -224,7 +230,8 @@ void Transpose::define(const ParamBlock& params)
 #endif
     }
   }
-  // simul.optimizeConnectionsWith(TH_ShMem::proto);
+
+  //simul.optimizeConnectionsWith(TH_ShMem::proto);
 }
 
 void doIt (Simul& simul, const std::string& name, int nsteps) {
