@@ -1,7 +1,7 @@
 % -----------------------  Define your Preamble Here 
 \documentclass[]{lofar}
 \usepackage{layout}
-%
+
 \include{definitions}
 %\usepackage{amsmath,amsthm, amsfonts, amssymb, amsxtra,amsopn}
 %\usepackage{graphicx}
@@ -9,15 +9,22 @@
 %\usepackage{times}
 %\usepackage{algorithmic}
 \usepackage[dvips]{hyperref}
+\usepackage{theorem}
 \DeclareGraphicsExtensions{.eps}
-% ------------------------  End of you preamble.
-%  \title{the implementation details of selfcal}
-%\author{Daan Hoogland \and Kjeld van der Schaaf}
+
+\newtheorem{requirement}{Requirement}[subsection]
+\newtheorem{assumption}{Assumption}[section]
+\newtheorem{prerequisite}[enumi]{Prerequisite}
+
+% ------------------------  End of your preamble.
 \begin{document}
 
   \maketitle
 
   \begin{abstract}
+
+    \em{The implementation details of a blackboard application
+      framework for self calibration in the LOFAR Central Processor}
 
     For the LOFAR project a self-calibration program shall be
     written. The idea is that this program will have the architectural
@@ -26,6 +33,12 @@
    
   \end{abstract}
 
+  \tableofcontents
+
+  \listoffigures
+
+%  \listoftables
+
   \section{introduction}
   \label{sec:introduction}\hypertarget{sec:introduction}{}
 
@@ -33,7 +46,7 @@
     \label{subsec:purpose}\hypertarget{subsec:purpose}{}
 
       This document describes how the Blackboard architectural pattern
-      is implemented to fit the need and requirement for the LOFAR
+      is implemented to fit the needs and requirements for the LOFAR
       self-calibration-application. An demo application has been made,
       and test-runs have been performed in order to get a feeling of
       what is really needed. Those are described in
@@ -54,23 +67,10 @@
     The major classes of storage requirements are
 
     \begin{itemize}
-
-      \item 
-
-        parameters
-
-      \item 
-
-        datasets
-
-      \item 
-
-        the strategy
-
-      \item 
-
-        the blackboard logistics
-
+      \item parameters
+      \item datasets
+      \item the strategy
+      \item the blackboard logistics
     \end{itemize}
 
     \subsection{Parameter administration}
@@ -79,6 +79,28 @@
       Parameters are solved locally, on subclusters of the LOFAR
       central processor and then distributed or discarded along the
       rest of the cluster.
+
+      \begin{prerequisite}
+        A full fledged database management system (DBMS),
+        object oriented or relational, must be available.
+        \label{pre:dbms}
+      \end{prerequisite}
+
+      \begin{prerequisite}
+        The DBMS must be able to perform transaction based processing.
+        \label{pre:transactions}
+      \end{prerequisite}
+
+      \begin{prerequisite}
+        The DBMS should support table inheritance.
+        \label{pre:table-inheritance}
+      \end{prerequisite}
+
+      \begin{requirement}
+        There must be a mechanism that can cleverly distribute
+        parameters to any interested party upon request by the
+        originator.\label{req:parameter-distribution}
+      \end{requirement}
 
       \begin{figure}
         \includegraphics[]{../figures/local-_global-commit.eps}
@@ -110,7 +132,7 @@
       important. We need only one level of nesting.
 
       \subsubsection{nested cooperative transactions}
-      \label{subsubsec:nested-cooperative-transaction}\hypertarget{subsubsec:nested-cooperative-transaction}{}%
+      \label{subsubsec:nested-cooperative-transaction}\hypertarget{subsubsec:nested-cooperative-transaction}{}
 
         One solution for this requirement is that transactions in fact
         can be nested by virtue of the database-vendor. Let's assume
@@ -137,13 +159,9 @@
         he can close the global transaction. This closing can be a
         commit as well as a rollback, both with the expected result.
      
-        \begin{em}\large{Note: }
-
-          Should participants be notified of the closing of the transaction?
-
-          No, they will notice when trying to manipulate data.
-
-        \end{em}
+        So should participants be notified of the closing of the
+        transaction?  No, they will notice when trying to manipulate
+        data.
 
         \begin{figure}
           \includegraphics[]{../figures/nestedTransaction.eps}
@@ -166,6 +184,17 @@
       mostly copies. Using a database engine would be to much of a
       CPU-cycle and memory hog.
 
+      \begin{assumption}
+        There is a measurement-set package in AIPS++ that will be used
+        for manipulating measurement data
+        \label{ass:aips++}
+      \end{assumption}
+
+      \begin{prerequisite}
+        A package for manipulation of measurement sets.
+        \label{pre:aips++}
+      \end{prerequisite}
+
     \subsection{The strategy}{A high level script}
     \label{subsec:strategy}\hypertarget{subsec:strategy}{}
 
@@ -183,8 +212,9 @@
 
       The in core storage of the script byte be python byte code, but
       it might be a database as well. It must be taken into account
-      that user representation of both database and in-core code, will
-      be hard to implement.
+      that user representation for both database and in-core code
+      being synchronized and with integrity guaranteed, will be hard
+      to implement.
 
       \begin{figure}
         \includegraphics[]{../figures/strategy_interpreter.eps}
@@ -193,7 +223,7 @@
       \end{figure}
 
     \subsection{The blackboard logistics}
-    \label{subsec:blackboard-logistics}\hypertarget{subsec:blackboard-logistics}{}%
+    \label{subsec:blackboard-logistics}\hypertarget{subsec:blackboard-logistics}{}
 
       For the blackboard to function several protocols need to be
       described. To guarantee loose coupling between components it is
@@ -203,8 +233,25 @@
       \hyperlink{sec:logistical-datamodel}{Section
       \ref{sec:logistical-datamodel}}.
 
+      \begin{requirement}
+        Protocol dialogues should be asynchronous.
+        \label{req:asynchronous}
+      \end{requirement}
+
   \section{distributed hierarchical blackboard}
   \label{sec:distributed-hierarchical-blackboard}\hypertarget{sec:distributed-hierarchical-blackboard}{}%
+
+%%       \begin{figure}
+%%         \includegraphics[]{../figures/start.usecase.eps}
+%%         \hypertarget{fig:start.usecase}{}
+%%         \caption{a simplified use-case for a self-calibration run\label{fig:start.usecase}}
+%%       \end{figure}
+
+      \begin{figure}
+        \includegraphics[]{../figures/main.usecase.eps}
+        \hypertarget{fig:main.usecase}{}
+        \caption{the main use-cases for the calibration program\label{fig:main.usecase}}
+      \end{figure}
 
     \subsection{distribution over nodes and sub-clusters}
     \label{subsec:distribution}\hypertarget{subsec:distribution}{}%
@@ -237,10 +284,17 @@
       parameters, is opportune. This is based on the order of
       magnitude that the volume of data is bigger then the amount of
       parameters. The data has a limited number of dimensions.
-      \begin{em}\large{Note: }
-        The number of dimensions is four as far as
-        we can tell right now
-      \end{em}
+
+      \begin{assumption}
+        The number of dimensions in a measurement set is four.
+        \label{ass:dimensions}
+      \end{assumption}
+
+      \begin{assumption}
+        Data can be partitioned over the dimensions in the dataset,
+        without disturbing the self-calibration process.
+        \label{ass:partitioning}
+      \end{assumption}
 
       These are.
 
@@ -260,43 +314,78 @@
 
 	\item 
 
-          observatory-direction
+          observatory-direction or field.
 
       \end{itemize}
 
       The Blackboard will be configured to delegate tasks to children,
       divided along one of these dimensions.
-      \begin{em}\large{Note: }
-        It doesn't seem
-        necessary to divide along a dimension more then once.
-      \end{em}
 
-    \subsection{controllers}
-    \label{subsec:controllers}\hypertarget{subsec:controllers}{}%
+      \begin{assumption}
+        It isn't necessary to divide along a dimension more then once.
+        \label{ass:devision}
+      \end{assumption}
 
-      A Blackboard has a controller that can be asked to start a
-      process for a blackboard. Such a process can be a
-      child-blackboard including its controller, or one of the
-      knowledge sources associated with the blackboard.
+    \subsection{components}
+    \label{subsec:components}\hypertarget{subsec:components}{}
 
-      \begin{figure}
-        \includegraphics[]{../figures/start.usecase.eps}
-        \hypertarget{fig:start.usecase}{}
-        \caption{a simple demo use-case\label{fig:start.usecase}}
-      \end{figure}
+      \subsubsection{controllers}
+      \label{subsubsec:controllers}\hypertarget{subsubsec:controllers}{}
+
+        A Blackboard has a controller that can be asked to start a
+        process for a blackboard. Such a process can be a
+        child-blackboard including its controller, or one of the
+        knowledge sources associated with the blackboard.
+
+      \subsubsection{watchers}
+      \label{subsubsec:watchers}\hypertarget{subsubsec:watchers}{}
+
+        \paragraph{simple watchers}
+        \label{par:simple-watchers}\hypertarget{par:simple-watchers}{}
+          \begin{figure}
+            \includegraphics[]{../figures/watch.eps}
+            \hypertarget{fig:watchers}{}
+            \caption{The case that a watcher decides to advice
+            abandoning a solution thread.\label{fig:watchers}}
+          \end{figure}
+
+          A watcher polls for changes in a couple of solution
+          threads. It might decide that one of them is remarkably more
+          sound then the others(see
+          hyperlink{fig:watchers}{[\ref{fig:watchers}]}).
+
+          Usually it will have to decide that it can't decide yet.
+
+          \begin{requirement}
+            A watcher has to be able to make a tristate decision on
+            which of two threads is leading to desirable results.
+            \label{req:no-decision}
+          \end{requirement}
+
+        \paragraph{more complex watchers}
+        \label{par:complex-watchers}\hypertarget{par:complex-watchers}{}
+
+          More complex watcher could decide that the results of two or
+          more threads should be merged.
+
+          \begin{requirement}
+            A watcher should be able to see a possibility to merge the
+            results of two solution threads.
+            \label{req:merge}
+          \end{requirement}
 
   \section{logistical database}
   \label{sec:logistical-datamodel}
   \hypertarget{sec:logistical-datamodel}{}
 
     \subsection{Workload distribution}
-    \label{id2721376}\hypertarget{id2721376}{}
+    \label{subsec:workload-distribution-2}\hypertarget{subsec:workload-distribution-2}{}
 
       The data, resulting from an observation will be several TB in
       volume
       \hyperlink{LOFAR-ASTRON-MEM-035}{[LOFAR-ASTRON-MEM-035]}. To
       conveniently handle this it will have to be partitioned. To
-      handle part of the data a specialized sub-cluster will be
+      handle part of the data a specialised sub-cluster will be
       defined. (see \hyperlink{subcluster}{Figure 1}).
 
       \begin{figure}
@@ -336,17 +425,21 @@
 	\item 
 
           "time" is a time range this blackboard is concerned with.
-          \begin{em}\large{Note: }
-            We'll assume no time-gaps for now.
-          \end{em}
+          \begin{assumption}
+            There are no time-gaps in a measurement set.
+            \label{ass:time-gaps}
+          \end{assumption}
 
 	\item 
 
           "frequency" is the frequency range or band this blackboard
           is concerned with.
-          \begin{em}\large{Note: }
-            We'll assume a single continuous band for now.
-          \end{em}
+
+          \begin{assumption}
+            There is a single continuous band of frequencies in a
+            measurement set.
+            \label{ass:one-band}
+          \end{assumption}
 
 	\item 
 
@@ -371,7 +464,7 @@
       of the parents fields with the same name.
 
     \subsection{Workload level}
-    \label{id2721606}\hypertarget{id2721606}{}%
+    \label{subsec:workload-level}\hypertarget{subsec:workload-level}{}%
 
       The idea is that several analysis threads can exist
       simultaneously. In each of these threads several processes are
@@ -401,7 +494,7 @@
       All three have their controlling BB tables.
 
       \subsubsection{SelfcalEngine}
-      \label{id2721640}\hypertarget{id2721640}{}%
+      \label{subsubsec:SelfcalEngine}\hypertarget{subsubsec:SelfcalEngine}{}
 
         A SelfcalEngine solves for a set of parameters based on part
         of the data.
@@ -441,7 +534,7 @@
         \end{itemize}
 
       \subsubsection{SelfcalController}
-      \label{id2721696}\hypertarget{id2721696}{}%
+      \label{subsubsec:SelfcalController}\hypertarget{subsubsec:SelfcalController}{}
 
         A SelfcalController writes records of workloads like the
         SelfcalEngine, except the it does give a quality and it
@@ -450,14 +543,14 @@
         calculation. When it is finished it writes the deltas for all
         parameters and the quality.
 
-        A SelfcalController decides what the next step in a anaysis
+        A SelfcalController decides what the next step in a analysis
         path should be. The range might be smaller then that of the
         parent dataset.
 
         \{controller-id\}1, \{strategy-description\}1, \{range\}1, \{child-id\}0-*
 
       \subsubsection{SelfcalWatcher}
-      \label{id2721718}\hypertarget{id2721718}{}%
+      \label{subsubsec:SelfcalWatcher}\hypertarget{subsubsec:SelfcalWatcher}{}
 
         A SelfcalWatcher has to have access to the records of the
         engines. It has a domain to watch containing several analysis
@@ -466,13 +559,93 @@
         \{watcher-id\}1 \{controller-id\}2-*
 
   \section{to do}
+  \label{sec:todo}\hypertarget{sec:todo}{}
+
+    Whether in code or in configuration, it should be easy to adjust
+    the BlackBoard. This should result in a different
+    state-machine. An interface has to be written for that. It will
+    include definitions of preconditions, postconditions and
+    quality-of-results types for different knowledge-sources.
+
+    All of this can be hard-coded in c++, as long as it is easy to
+    write and in the first place efficient to run.
+
+    \subsection{extra figures}
+    \begin{figure}
+      \includegraphics[]{../figures/control-hierarchy.eps}
+    \end{figure}
+
+    \subsection{extra figures}
+    \begin{figure}
+      \includegraphics[]{../figures/fork.eps}
+    \end{figure}
+
+    \subsection{extra figures}
+    \begin{figure}
+      \includegraphics[]{../figures/solve-step.eps}
+    \end{figure}
+
+    \subsection{extra figures}
+    \begin{figure}
+      \includegraphics[]{../figures/strategy-distribution.eps}
+    \end{figure}
 
 \newcommand{\dbappendix}[1]{\section{#1}}%
 
 \appendix
 
+  \dbappendix{assumptions}
+  \label{app:assumptions}\hypertarget{app:assumptions}{}
+
+    \begin{itemize}
+      \item [\ref{ass:aips++}]There is a measurement-set package in
+        AIPS++ that will be used for manipulating measurement data.
+      \item [\ref{ass:dimensions}]The number of dimensions in a
+        measurement set is four.
+      \item [\ref{ass:partitioning}]Data can be partitioned over the
+        dimensions in the dataset, without disturbing the
+        self-calibration process.
+      \item [\ref{ass:devision}]It isn't necessary to divide along a
+        dimension more then once.
+      \item [\ref{ass:time-gaps}]There are no time-gaps in a
+        measurement set.
+      \item [\ref{ass:one-band}]There is a single continuous band of
+        frequencies in a measurement set.
+    \end{itemize}
+
+  \dbappendix{prerequisites}
+  \label{app:prerequisites}\hypertarget{app:prerequisites}{}
+
+    \begin{itemize}
+      \item [\ref{pre:dbms}]A full fledged database management system
+        (DBMS), object oriented or relational, must be available.
+      \item [\ref{pre:transactions}]The DBMS must be able to perform
+        transaction based processing.
+      \item [\ref{pre:table-inheritance}]The DBMS should support table
+        inheritance.
+      \item [\ref{pre:aips++}]A package for manipulation of
+        measurement sets.
+    \end{itemize}
+
+  \dbappendix{requirements-list}
+  \label{app:requirements-list}\hypertarget{app:requirements-list}{}%
+
+    \begin{itemize}
+      \item [\ref{req:parameter-distribution}]There must be a
+        mechanism that can cleverly distribute parameters to any
+        interested party upon request by the originator.
+      \item [\ref{req:asynchronous}]The protocol dialogs, for the
+        communications between BlackBoard components, should be
+        asynchronous.
+      \item [\ref{req:no-decision}]A simple watcher has to be able to
+        make a tristate decision on which of two threads is leading to
+        desirable results.
+      \item [\ref{req:merge}]A watcher should be able to see a
+        possibility to merge the results of two solution threads.
+    \end{itemize}
+
   \dbappendix{revision log}
-  \label{id2721729}\hypertarget{id2721729}{}%
+  \label{app:revision-log}\hypertarget{app:revision-log}{}%
 
     Hand copy log entries from the cvs log, or make up your own.
 
