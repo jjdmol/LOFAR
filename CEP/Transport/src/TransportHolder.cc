@@ -71,9 +71,9 @@ bool TransportHolder::waitForSent(void*, int, int, int)
   Throw("No waitForSent() method implemented in this TransportHolder");
 }
 
-bool TransportHolder::waitForSendAcknowledged(void*, int, int, int)
+bool TransportHolder::waitForRecvAck(void*, int, int, int)
 {
-  Throw("No waitForSendAcknowledged() method implemented in this TransportHolder");
+  Throw("No waitForRecvAck() method implemented in this TransportHolder");
 }
 
 BlobStringType TransportHolder::blobStringType() const
