@@ -37,7 +37,11 @@
 namespace LOFAR {
   namespace ACC {
 
-ApplControlClient::ApplControlClient(const string&	hostID,
+ApplControlClient::ApplControlClient(const string&	aUniqUserName,
+								  	 uint16			aNrProcs,
+								  	 uint32			aExpectedLifeTime,
+								  	 uint16			anActivityLevel,
+								  	 uint16			anArchitecture,
 									 bool			syncClient) :
 	ApplControl()
 {
@@ -48,13 +52,16 @@ ApplControlClient::ApplControlClient(const string&	hostID,
 
 	//TODO define constant for 3800 and hostname
 	// Connect to ACdaemon
-	Socket		reqSocket("ACClient", hostID, "3800");
+	Socket		reqSocket("ACClient", "localhost", "3800");
 	reqSocket.setBlocking(true);
 	reqSocket.connect(-1);
 
-	if (gethostname(aRequest.itsRequester, ACREQUESTNAMESIZE-1) < 0) {
-		strcpy (aRequest.itsRequester, "Unknown host");
-	}
+	strncpy (aRequest.itsRequester, aUniqUserName.c_str(), ACREQUESTNAMESIZE-1);
+	aRequest.itsRequester[ACREQUESTNAMESIZE-1] = '\0';
+	aRequest.itsNrProcs       = aNrProcs;
+	aRequest.itsLifetime      = aExpectedLifeTime;
+	aRequest.itsActivityLevel = anActivityLevel;
+	aRequest.itsArchitecture  = anArchitecture;
 	reqSocket.write(static_cast<void*>(&aRequest), reqSize);
 
 	// wait for reply
@@ -67,16 +74,16 @@ ApplControlClient::ApplControlClient(const string&	hostID,
 	string	host = inet_ntoa(IPaddr);
 	uint16	port = ntohs(aRequest.itsPort);
 	LOG_DEBUG(formatString("Private ACserver is at %s:%d, trying to connect", 
-															host.c_str(), port));
+														host.c_str(), port));
 	DH_ApplControl*		DH_CtrlClient = new DH_ApplControl;
 	DH_ApplControl		DH_CtrlServer;
 	DH_CtrlClient->setID(3);
 	DH_CtrlServer.setID(4);
 
 	DH_CtrlClient->connectBidirectional(DH_CtrlServer, 
-							 			TH_Socket(host, "", port, false, syncClient),
-							 			TH_Socket("", host, port, true,  syncClient),
-										true);	// blocking
+					 			TH_Socket(host, "", port, false, syncClient),
+					 			TH_Socket("", host, port, true,  syncClient),
+								true);	// blocking
 	DH_CtrlClient->init();
 
 	itsCommChan = new ApplControlComm(syncClient);

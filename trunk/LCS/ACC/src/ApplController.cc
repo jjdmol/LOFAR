@@ -36,25 +36,26 @@ namespace LOFAR {
 // ApplController(Parameterset*		aPS)
 //
 ApplController::ApplController(const string&	configID) :
-	itsParamSet		(new ParameterSet),
-	itsApplParamSet	(new ParameterSet),
-	itsProcList		(0),
-	itsNodeList     (0),
-	itsACCmdImpl    (new ACCmdImpl),
-	itsCmdStack     (new CmdStack),
-    itsAPAPool      (0),
-	itsServerStub	(0),
-	itsProcListener (0),
-	itsCurTime      (0),
-	itsIsRunning    (false),
-	itsStateEngine  (new StateEngine),
-	itsCurState     (StateNone),
-	itsCurACMsg		(0)
+	itsBootParamSet	 (new ParameterSet),
+	itsObsParamSet	 (new ParameterSet),
+	itsResultParamSet(new ParameterSet),
+	itsProcList		 (0),
+	itsNodeList      (0),
+	itsACCmdImpl     (new ACCmdImpl),
+	itsCmdStack      (new CmdStack),
+    itsAPAPool       (0),
+	itsServerStub	 (0),
+	itsProcListener  (0),
+	itsCurTime       (0),
+	itsIsRunning     (false),
+	itsStateEngine   (new StateEngine),
+	itsCurState      (StateNone),
+	itsCurACMsg		 (0)
 {
 	LOG_TRACE_OBJ ("ApplController constructor");
 
 	// Read in the parameterfile with network parameters
-	itsParamSet->adoptFile(configID);			// May throw
+	itsBootParamSet->adoptFile(configID);			// May throw
 
 	// Get pointer to singleton APAdminPool
     itsAPAPool = &(APAdminPool::getInstance());
@@ -69,17 +70,23 @@ ApplController::~ApplController()
 {
 	LOG_TRACE_OBJ ("ApplController destructor");
 
-	if (itsParamSet)     {	delete itsParamSet;     }
-	if (itsApplParamSet) {	delete itsApplParamSet; }
-	if (itsProcList)     {	delete itsProcList;     }
-	if (itsNodeList)     {	delete itsNodeList;     }
-	if (itsACCmdImpl)    {	delete itsACCmdImpl;    }
-	if (itsCmdStack)     {	delete itsCmdStack;     }
-    if (itsAPAPool)      {	delete itsAPAPool;      }
-	if (itsServerStub)   {	delete itsServerStub;   }
-	if (itsProcListener) {	delete itsProcListener; }
-	if (itsCurACMsg)	 {	delete itsCurACMsg; 	}
-	if (itsStateEngine)	 {	delete itsStateEngine; 	}
+	// Save results from the processes to a file.
+	if (itsResultParamSet && itsObsParamSet) { 
+		itsResultParamSet->writeFile(itsObsParamSet->getString("AC.resultfile"));
+	}
+
+	if (itsBootParamSet)   { delete itsBootParamSet;   }
+	if (itsObsParamSet)    { delete itsObsParamSet;    }
+	if (itsResultParamSet) { delete itsResultParamSet; }
+	if (itsProcList)       { delete itsProcList;       }
+	if (itsNodeList)       { delete itsNodeList;       }
+	if (itsACCmdImpl)      { delete itsACCmdImpl;      }
+	if (itsCmdStack)       { delete itsCmdStack;       }
+    if (itsAPAPool)        { delete itsAPAPool;        }
+	if (itsServerStub)     { delete itsServerStub;     }
+	if (itsProcListener)   { delete itsProcListener;   }
+	if (itsCurACMsg)	   { delete itsCurACMsg; 	   }
+	if (itsStateEngine)	   { delete itsStateEngine;    }
 
 }
 
@@ -93,14 +100,15 @@ void ApplController::startupNetwork()
 	LOG_TRACE_FLOW("ApplController:startupNetwork()");
 
 	// Setup listener for ACC user and wait (max 10 sec) for connection
-	itsServerStub = new ApplControlServer(itsParamSet->getInt("AC.portnr"), 
-																	itsACCmdImpl);
+	itsServerStub = new ApplControlServer(
+									itsBootParamSet->getInt("AC.userportnr"), 
+									itsACCmdImpl);
 
 	// Setup listener for application processes
 	itsProcListener = new Socket("APlistener", 
-								 itsParamSet->getString("AC.process.APportnr"),
-								 Socket::TCP, 
-								 itsParamSet->getInt("AC.backlog"));
+							 itsBootParamSet->getString("AC.processportnr"),
+							 Socket::TCP, 
+							 itsBootParamSet->getInt("AC.backlog"));
 	ASSERTSTR(itsProcListener->ok(), 
 						"Can't start listener for application processes");
 
@@ -153,6 +161,8 @@ void ApplController::handleProcMessage(APAdmin*	anAP)
 		LOG_TRACE_OBJ("PCCmdQuit received");
 		itsAPAPool->markAsOffline(anAP);		// don't send new commands
 		itsAPAPool->registerAck(command, anAP);
+cout << "---" << DHProcPtr->getOptions() << "---" << endl;
+		itsResultParamSet->adoptBuffer(DHProcPtr->getOptions());
 		break;
 
 	default:
@@ -208,7 +218,7 @@ void ApplController::sendExecutionResult(uint16			result,
 void ApplController::createParSubsets()
 {
 	ItemList::iterator	iter;
-	string				applName = itsApplParamSet->getString("AC.application");
+	string				applName = itsObsParamSet->getString("AC.application");
 	string				prevBaseProc;
 	int32				procNr;
 	ParameterSet		basePS;
@@ -217,7 +227,7 @@ void ApplController::createParSubsets()
 	if (itsProcList) {
 		delete itsProcList;
 	}
-	itsProcList = new ItemList(*itsApplParamSet, "AC.process");
+	itsProcList = new ItemList(*itsObsParamSet, "AC.process");
 
 	// make a subset for all process in the process list.
 	for (iter = itsProcList->begin(), procNr = 1; iter != itsProcList->end(); 
@@ -242,7 +252,7 @@ void ApplController::createParSubsets()
 		// [A] this set can be the same for many processes. Only if procName
 		//     differs from previous make a new paramset
 		if (baseProcName.compare(prevBaseProc)) {
-			basePS = itsApplParamSet->makeSubset(
+			basePS = itsObsParamSet->makeSubset(
 										applName+"."+baseProcName+"[0].", 
 										procName+".");
 		}
@@ -256,7 +266,7 @@ void ApplController::createParSubsets()
 		// merge the two subsets, take baseSet as a basis (sounds logical)
 		ParameterSet	procPS(basePS);
 		// overwrite/extend with proc specific settings
-		procPS.adoptCollection(itsApplParamSet->makeSubset(
+		procPS.adoptCollection(itsObsParamSet->makeSubset(
 											applName+"."+procNameIndexed+".", 
 											procName+"."));
 
@@ -264,7 +274,7 @@ void ApplController::createParSubsets()
 		// TODO add some more like hostname and others?
 		procPS.add("process.name", procName);
 		procPS.add(procName+".ACport", 
-								 itsParamSet->getString("AC.process.APportnr"));
+						 itsBootParamSet->getString("AC.processportnr"));
 
 
 		// Step 2: The start/stop information (ruler info) is not for the
@@ -324,9 +334,9 @@ void ApplController::startCmdState()
 		break;
 	case StateInitController:
 		// read in the Application Parameter file
-		itsApplParamSet->adoptFile(itsCurACMsg->getOptions());// May throw
+		itsObsParamSet->adoptFile(itsCurACMsg->getOptions());// May throw
 		// StateEngine needs to know the timeout values for the states
-		itsStateEngine->init(itsApplParamSet);
+		itsStateEngine->init(itsObsParamSet);
 		itsStateEngine->ready();				// report this state is ready.
 	case StatePowerUpNodes:
 		// TODO: Communicate with Node Manager
@@ -348,6 +358,7 @@ void ApplController::startCmdState()
 		// the incomming acks decide the result of the start action
 		break;
 	case StateKillAppl:
+		sleep (5);								// give procs some extra time
 		itsProcRuler.stopAll();
 		itsStateEngine->ready();				// report this state is ready.
 		break;

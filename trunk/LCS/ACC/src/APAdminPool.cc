@@ -118,17 +118,15 @@ APAdmin*	APAdminPool::poll(time_t		waitTime)
 }
 
 //
-// void writeToAll(command, waitTime, options)
+// void writeToAll(command, options)
 //
 void APAdminPool::writeToAll(PCCmd			command,
-							time_t			waitTime,
-							const string&	options)
+							 const string&	options)
 {
 	// Construct a APAdmin with the info to send to all processes.
 	DH_ProcControl      DHCommand;
 	DHCommand.init();
 	DHCommand.setCommand (command);
-	DHCommand.setWaitTime(waitTime);
 	DHCommand.setOptions (options);
 	DHCommand.setResult  (0);
 	DHCommand.pack();           // Construct the messagebuffer

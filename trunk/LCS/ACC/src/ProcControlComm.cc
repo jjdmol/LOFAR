@@ -68,21 +68,18 @@ bool	ProcControlComm::waitForResponse() const
 
 
 void	ProcControlComm::sendCmd(const PCCmd		theCmd,
-							 const time_t		theWaitTime,
-						     const string&		theOptions) const
+						     	 const string&		theOptions) const
 {
 	itsDataHolder->setCommand 	   (theCmd);
-	itsDataHolder->setWaitTime 	   (theWaitTime);
 	itsDataHolder->setOptions	   (theOptions);
 
 	itsDataHolder->write();
 }
  
 bool	ProcControlComm::doRemoteCmd(const PCCmd		theCmd,
-								 const time_t		theWaitTime,
-								 const string&		theOptions) const
+								 	 const string&		theOptions) const
 {
-	sendCmd(theCmd, theWaitTime, theOptions);
+	sendCmd(theCmd, theOptions);
 
 	return (waitForResponse());
 }

@@ -1,7 +1,7 @@
 #
 # Parameter file for ACDaemon
 #
-ACDaemon.portnr	  = 3800
-ACDaemon.poolport = 3820
-ACDaemon.poolsize = 30
-ACDaemon.command  = ./Applcontroller AC.param
+ACDaemon.portnr	  = 3800		# listener for daemon
+ACDaemon.poolport = 3820		# ports the AC may use.
+ACDaemon.poolsize = 30			# size of AC port pool
+ACDaemon.command  = ./ApplController AC.param

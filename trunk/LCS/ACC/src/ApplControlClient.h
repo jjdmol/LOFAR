@@ -60,8 +60,12 @@ public:
 	// for this ApplControlClient object. <br>
 	// The returned AC object knows who its AC is and is already connected to 
 	// it. 
-	ApplControlClient(const string&	hostIDFrontEnd,
-					  bool			syncClient);
+	ApplControlClient(const string&		aUniqUserName,
+				  	  uint16			aNrProcs,
+				  	  uint32			aExpectedLifeTime,
+				  	  uint16			anActivityLevel,
+				  	  uint16			anArchitecture,
+					  bool				syncClient);
 
 	// Closes the connection with the server.
 	virtual ~ApplControlClient();

@@ -58,7 +58,6 @@ public:
 
 	// Constructs a command and sends it to the other side.
 	void	sendCmd(const PCCmd			theCmd,
-				 	const time_t		theWaitTime = 0,
 					const string&		theOptions = "") const;
 
 	// Is called after a message is sent to the server. Returns true in async
@@ -69,7 +68,6 @@ public:
 	// Executes the given command: fills a dataholder, send it to the sender,
 	// and do a 'waitForResponse'.
 	bool	doRemoteCmd(const PCCmd			theCmd,
-					    const time_t		theWaitTime = 0,
 						const string&		theOptions = "") const;
 
 	// Returns a pointer to the dataholder.

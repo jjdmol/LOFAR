@@ -35,8 +35,17 @@
 namespace LOFAR {
   namespace ACC {
 
-ACSyncClient::ACSyncClient(const string&	hostID) :
-	ApplControlClient(hostID, true)
+ACSyncClient::ACSyncClient(const string&	aUniqUserName,
+				  		   uint16			aNrProcs,
+				  		   uint32			aExpectedLifeTime,
+				  		   uint16			anActivityLevel,
+				  		   uint16			anArchitecture) :
+ 	ApplControlClient(aUniqUserName, 
+					  aNrProcs, 
+					  aExpectedLifeTime,
+					  anActivityLevel,
+					  anArchitecture, 
+					  true)
 {
 }
 

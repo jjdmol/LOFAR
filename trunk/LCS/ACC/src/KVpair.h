@@ -1,4 +1,4 @@
-//#  ACRequest.h: small structure used for comm. with ACDaemon
+//#  KVpair.h: one line description
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,55 +20,33 @@
 //#
 //#  $Id$
 
-#ifndef ACC_ACREQUEST_H
-#define ACC_ACREQUEST_H
+#ifndef ACC_KVPAIR_H
+#define ACC_KVPAIR_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-//#include <otherpackage/file.h>
+#include <Common/lofar_map.h>
 
 namespace LOFAR {
   namespace ACC {
 
-#define	ACREQUESTNAMESIZE 80
-
-// The ACRequest structure is exchanged with the ACDaemon to request an
-// Application Controller.
-struct ACRequest
+// Description of class.
+class KVpair : public pair<string, string>
 {
-	// \name Request
-	// The following fields are send by the requester.
-	// @{
+public:
+	KVpair(const string&	aKey, const string&		aValue);
+	KVpair(const string&	aKey, bool				aValue);
+	KVpair(const string&	aKey, int				aValue);
+	KVpair(const string&	aKey, double			aValue);
+	KVpair(const string&	aKey, float				aValue);
+	KVpair(const string&	aKey, time_t			aValue);
 
-	// Uniq request information sent by the client
-	char	itsRequester [ACREQUESTNAMESIZE];
+	~KVpair();
 
-	// Number of processes the user will start
-	uint16	itsNrProcs;
-
-	// Expected lifetime of application in minutes
-	uint32	itsLifetime;
-
-	// Activity of AC (1/2/3: low/medium/high)
-	uint16	itsActivityLevel;
-
-	// Architecture code (0 = Intel, 1 = Blue Gene)
-	uint16	itsArchitecture;
-	// @}
-
-	// \name Answer
-	// Based on the information provided by the requester the ACDaemon
-	// (re)assigns an AC to the requester.
-	// @{
-
-	// Address of the machine the AP is started on (htonl format)
-	uint32	itsAddr;			// in_addr_t
-
-	// portnr the AP will be listening on (htons format)
-	uint16	itsPort;			// in_port_t
-	// @}
-
+	// Copying is allowed
+	KVpair(const KVpair&	that);
+	KVpair& operator=(const KVpair& that);
 };
 
   } // namespace ACC

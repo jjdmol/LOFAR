@@ -18,6 +18,7 @@ DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 lib_LTLIBRARIES                 = libacc.la
 
 libacc_la_SOURCES = \
+					KVpair.cc \
 					ParameterCollection.cc \
 					ParameterTemplate.cc \
 					TemplateUnion.cc \
@@ -51,8 +52,9 @@ ApplController_SOURCES      = ACCmdImpl.cc \
 ApplController_DEPENDENCIES = $(LOFAR_DEPEND) libacc.la
 ApplController_LDADD        = libacc.la
 
-### ApplController ###
-ACDaemon_SOURCES      = ACDaemon.cc \
+### ACDaemon ###
+ACDaemon_SOURCES      = ACRequestPool.cc \
+						ACDaemon.cc \
 					    ACDaemonMain.cc
 ACDaemon_DEPENDENCIES = $(LOFAR_DEPEND) libacc.la
 ACDaemon_LDADD        = libacc.la

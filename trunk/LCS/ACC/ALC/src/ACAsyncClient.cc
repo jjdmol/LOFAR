@@ -34,8 +34,17 @@ namespace LOFAR {
   namespace ACC {
 
 ACAsyncClient::ACAsyncClient(ACClientFunctions*	ACClntFuncts,
-				  			 const string&		hostID) :
-	ApplControlClient(hostID, false),
+				  			 const string&		aUniqUserName,
+				  			 uint16				aNrProcs,
+				  			 uint32				aExpectedLifeTime,
+				  			 uint16				anActivityLevel,
+				  			 uint16				anArchitecture) :
+ 	ApplControlClient(aUniqUserName, 
+					  aNrProcs, 
+					  aExpectedLifeTime,
+					  anActivityLevel,
+					  anArchitecture, 
+					  false),
 	itsClientFuncts(ACClntFuncts)
 {
 }
@@ -57,10 +66,11 @@ bool	ACAsyncClient::processACmsgFromServer()	const
 	}
 
 	ACCmd	cmdType = DHPtr->getCommand();
-	LOG_TRACE_VAR_STR ("ACASyncClient:proccessACmsgFromServer:cmdType=" << cmdType);
+	LOG_TRACE_VAR_STR ("ACASyncClient:proccessACmsgFromServer:cmdType=" 
+					   << cmdType);
 	switch (cmdType) {
 	case ACCmdInfo:		
-		itsCommChan->sendCmd(ACCmdAnswer, 0, 0, supplyInfo(DHPtr->getOptions()));
+		itsCommChan->sendCmd(ACCmdAnswer, 0,0, supplyInfo(DHPtr->getOptions()));
 		break;
 	case ACCmdAnswer:		
 		handleAnswerMessage(DHPtr->getOptions());

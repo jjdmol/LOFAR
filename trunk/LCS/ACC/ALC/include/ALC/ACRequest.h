@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef ACC_FILENAME_H
-#define ACC_FILENAME_H
+#ifndef ACC_ACREQUEST_H
+#define ACC_ACREQUEST_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -37,14 +37,38 @@ namespace LOFAR {
 // Application Controller.
 struct ACRequest
 {
+	// \name Request
+	// The following fields are send by the requester.
+	// @{
+
 	// Uniq request information sent by the client
 	char	itsRequester [ACREQUESTNAMESIZE];
+
+	// Number of processes the user will start
+	uint16	itsNrProcs;
+
+	// Expected lifetime of application in minutes
+	uint32	itsLifetime;
+
+	// Activity of AC (1/2/3: low/medium/high)
+	uint16	itsActivityLevel;
+
+	// Architecture code (0 = Intel, 1 = Blue Gene)
+	uint16	itsArchitecture;
+	// @}
+
+	// \name Answer
+	// Based on the information provided by the requester the ACDaemon
+	// (re)assigns an AC to the requester.
+	// @{
 
 	// Address of the machine the AP is started on (htonl format)
 	uint32	itsAddr;			// in_addr_t
 
 	// portnr the AP will be listening on (htons format)
 	uint16	itsPort;			// in_port_t
+	// @}
+
 };
 
   } // namespace ACC
