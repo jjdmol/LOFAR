@@ -37,18 +37,16 @@ int main()
 
     DH_Example2 DH1("dh1", 1);
     DH_Example2 DH2("dh2", 1);
-    
-    // Create the Transporter objects containing the DataHolders
-    Transporter TR1(&DH1);
-    Transporter TR2(&DH2);
+    Transporter& TR1 = DH1.getTransporter();
+    Transporter& TR2 = DH2.getTransporter();
     
     // Assign an ID for each transporter by hand for now
     // This will be done by the framework later on
     TR1.setItsID(1);
     TR2.setItsID(2);
 
-    TR1.setSourceAddr(TR1.getBaseDataHolder());
-    TR2.setSourceAddr(TR2.getBaseDataHolder());
+    TR1.setSourceAddr(&DH1);
+    TR2.setSourceAddr(&DH2);
     //  TR2.setSourceAddr(15);
   
     // connect DH1 to DH2
