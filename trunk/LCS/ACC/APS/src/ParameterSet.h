@@ -39,11 +39,16 @@ namespace LOFAR {
 
 //# Description of the class.
 // The ParameterSet class is a ParameterCollection that is used during runtime
-// to feed an application with its runtime values.
-// The restrictions of this collections are:
-// 1. The firstline must be a versionnr key with a valid versionnumber.
-// 2. All values must be filled in.
+// to feed an application with its runtime values.<br>
+// The restrictions of this collections are:<br>
+// 1) It must contain a \c versionnr key with a valid versionnumber.
+// 2) All values must be filled in.<br>
+// This can be checked with the \c check method.
 //
+// Since ParameterSet is derived from ParameterCollection all manipulation
+// methods of this base class are available. The only extra functionality
+// ParameterSet offers is the \c check method the checks if the ParameterSet
+// is conform the restrictions.
 class ParameterSet : public ParameterCollection
 {
 public:
@@ -61,7 +66,8 @@ public:
 	ParameterSet(const ParameterSet& that);
 	ParameterSet& 	operator=(const ParameterSet& that);
 
-	// Check if the contents is a valid ParameterSet.
+	// Check if the contents of the Parameterset meets the restrictions. The
+	// \c errorReport string contains the violations that were found.
 	bool check(string&	errorReport) const;
 
 	friend std::ostream& operator<<(std::ostream& os, const ParameterCollection &thePS);

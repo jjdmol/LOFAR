@@ -35,10 +35,9 @@
 namespace LOFAR {
   namespace ACC {
 
-//# Forward Declarations
-//class forward;
-
-// Make list of supported commands.
+// The PCCmd enumeration is a list of command(numbers) that are used to tell 
+// the ProcControl server-side (= application process) what command should be
+// executed.
 enum PCCmd {    PCCmdNone = 0, 
 				PCCmdStart = 100, PCCmdQuit, 
 				PCCmdDefine,      PCCmdInit,
@@ -48,14 +47,12 @@ enum PCCmd {    PCCmdNone = 0,
 				PCCmdInfo,        PCCmdAnswer,
 				PCCmdReport,      PCCmdAsync,
 				PCCmdResult = 0x1000
-//				PCCmdCheckParSet, PCCmdLoadParSet
 };
 
 
 //# Description of class.
 // The DH_ProcControl class is responsible for packing and unpacking
 // Process Control commands.
-//
 class DH_ProcControl : public DataHolder
 {
 public:
@@ -65,19 +62,30 @@ public:
 	// Destructor
 	virtual ~DH_ProcControl();
 
+	// \name libTransport methods
+	// @{
+
 	// Copying only by cloning
 	DH_ProcControl*		clone() const;
 
-	// Redefines the preprocess function.
+	// Implements the preprocess function.
 	virtual void 	preprocess();
+	// @}
+
+	// \name Additional methods
+	// Allows the DH_ProcControl to be used without libTransport.
+	// @{
 
 	// Pack data into buffer before writing
 	void pack();
 
 	// Unpack received data
 	void unpack();
+	// @}
 
-	// The real data-accessor functions
+	// \name Data-accessor methods
+	// @{
+
 	void	setCommand		(const PCCmd		theCmd);
 	void	setWaitTime	    (const time_t		theWaitTime);
 	void	setOptions		(const string&		theOptions);
@@ -87,59 +95,83 @@ public:
 	time_t	getWaitTime     () const;
 	string	getOptions		() ;
 	uint16	getResult		() const;
+	// @}
 
 private:
-	// forbit default construction and assignment operator
+	// Copying is not allowed this way.
 	DH_ProcControl& 	operator=(const DH_ProcControl& that);
+
+	// Copying is not allowed this way.
 	DH_ProcControl(const DH_ProcControl& that);
 
 	// Implement the initialisation of the pointers
 	virtual void	fillDataPointers();
 
-	// fields transferred between the server and the client
+	//# --- DataMembers ---
 	uint16		*itsVersionNumber;
 	int16		*itsCommand;
 	time_t		*itsWaitTime;
 	uint16		*itsResult;
 };
 
+//#
+//# setWaitTime(waitTime)
+//#
 inline void	DH_ProcControl::setWaitTime (const time_t theWaitTime)
 {
 	*itsWaitTime = theWaitTime;
 }
 
+//#
+//# setCommand(command)
+//#
 inline void	DH_ProcControl::setCommand (const PCCmd theCmd)
 {
 	*itsCommand = theCmd;
 }
 
+//#
+//# setOptions(options)
+//#
 inline void	DH_ProcControl::setOptions (const string& theOptions)
 {
-	BlobOStream&	bos = createExtraBlob();	// attached to dataholder
+	BlobOStream&	bos = createExtraBlob();	//# attached to dataholder
 	bos << theOptions;
 }
 
+//#
+//# setResult(result)
+//#
 inline void	DH_ProcControl::setResult (const uint16 theResult)
 {
 	*itsResult = theResult;
 }
 
 
+//#
+//# getWaitTime()
+//#
 inline time_t	DH_ProcControl::getWaitTime () const
 {
-	// no version support necc. yet.
+	//# no version support necc. yet.
 	return (*itsWaitTime);
 }
 
+//#
+//# getCommand()
+//#
 inline PCCmd	DH_ProcControl::getCommand () const
 {
-	// no version support necc. yet.
+	//# no version support necc. yet.
 	return static_cast<PCCmd>(*itsCommand);
 }
 
+//#
+//# getOptions()
+//#
 inline string	DH_ProcControl::getOptions ()
 {
-	// no version support necc. yet.
+	//# no version support necc. yet.
 	int32			version;
 	bool			found;
 	BlobIStream&	bis = getExtraBlob(found, version);
@@ -154,17 +186,26 @@ inline string	DH_ProcControl::getOptions ()
 	return (theOptions);
 }
 
+//#
+//# getResult()
+//#
 inline uint16	DH_ProcControl::getResult () const
 {
-	// no version support necc. yet.
+	//# no version support necc. yet.
 	return (*itsResult);
 }
 
+//#
+//# pack()
+//#
 inline void DH_ProcControl::pack() 
 {
 	writeExtra();
 }
 
+//#
+//# unpack()
+//#
 inline void DH_ProcControl::unpack() 
 {
 	handleDataRead();

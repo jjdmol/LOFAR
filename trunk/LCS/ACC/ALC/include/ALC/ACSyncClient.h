@@ -39,33 +39,36 @@ namespace LOFAR {
 
 
 //# Description of class.
-// The ApplControl class implements the interface the Application Controller
-// will support.
+// The ACSyncClient class implements the interface of the Application Controller
+// for synchroon communication.
 //
 class ACSyncClient : public ApplControlClient 
 {
 public:
-	// Note: default constructor is private
-	// With this call an ApplController is created. It is most likely the
-	// AC is created on the machine you passed as an argument but this is not
-	// guaranteed. The AC server who handles the request (and does run on this
-	// machine) may decide that the AC should run on another node.
+	// When constructing an ApplControllerClient object an Application
+	// Controller process is started on a runtime determined host.
+	// The \c hostIDFrontEnd argument of th constructor is the hostname
+	// of the machine on which the AC-daemon runs which launches the AC
+	// for this ApplControlClient object. <br>
 	// The returned AC object knows who its AC is and is already connected to 
-	// it. Call serverInfo if you are interested in this information.
+	// it. 
 	explicit ACSyncClient(const string&	hostIDFrontEnd);
 
 	// Destructor;
 	virtual ~ACSyncClient();
 
-	// ---------- support for asynchrone communication ----------
+	// Always returns 'false'.
 	inline bool isAsync() const 
 		{ return (false);	}
 
 private:
 	// NOT default constructable;
 	ACSyncClient();
+
 	// Copying is also not allowed.
 	ACSyncClient(const ACSyncClient& that);
+
+	// Copying is also not allowed.
 	ACSyncClient& 	operator=(const ACSyncClient& that);
 
 };

@@ -36,13 +36,11 @@
 namespace LOFAR {
   namespace ACC {
 
-//# Forward Declarations
-//class forward;
-
 
 //# Description of class.
-// The ProcControl class implements the service the Application Processes
-// will support.
+// The ProcControl class provides some functions for the server-side program
+// (= application process) for easy handling and dispatching the commands that
+// are received from the client(=Application controller).
 //
 class ProcControlServer
 {

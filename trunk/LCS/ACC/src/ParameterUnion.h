@@ -38,11 +38,11 @@ namespace LOFAR {
 
 
 //# Description of class.
-// The ParameterUnion class is a ParameterCollection that is used by SAS
-// to fill in the runtimes values for an application.
-// The restrictions of this collections are:
-// 1. The firstline must be a versionnr key with a valid versionnumber.
-// 2. No other versionumberkey should be present
+// The ParameterUnion class is a ParameterCollection that contains all the
+// runtime key-value pairs for an application.
+// The restrictions of this collections are:<br>
+// 1) The firstline must be a versionnr key with a valid versionnumber.<br>
+// 2) No other versionumberkey should be present<br>
 //
 class ParameterUnion : public ParameterCollection
 {
@@ -61,6 +61,8 @@ public:
 	ParameterUnion(const ParameterUnion& that);
 	ParameterUnion& 	operator=(const ParameterUnion& that);
 
+	// Check if the contents of the ParameterUnion meets the restrictions.
+	// The \c errorReport string contains the violations that were found.
 	bool check(string&	errorReport) const;
 
 	friend std::ostream& operator<<(std::ostream& os, const ParameterCollection &thePS);

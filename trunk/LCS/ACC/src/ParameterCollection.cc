@@ -577,8 +577,9 @@ bool isValidVersionNrRef(const string& versionNr)
 
 }
 
+#if 0
 //#
-//# isValidSeqNr(aString)
+//# seqNr(aString)
 //#
 //# Check is given string is a valid sequencenumber
 //#
@@ -594,6 +595,7 @@ uint32	seqNr(const string& aString)
 
 	return (theNumber);
 }
+#endif
 
 //#
 //# keyName(fullKeyName)
@@ -605,7 +607,7 @@ string keyName(const string& fullKeyName)
 	char*	lastPoint = strrchr(fullKeyName.c_str(), '.');
 
 	if (!lastPoint) {
-		return ("");
+		return (fullKeyName);
 	}
 
 	return (fullKeyName.substr(lastPoint + 1 - fullKeyName.c_str()));

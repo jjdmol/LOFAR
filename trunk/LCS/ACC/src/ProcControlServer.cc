@@ -47,9 +47,9 @@ ProcControlServer::ProcControlServer(const uint16				portnr,
 	DH_PC_Server->setID(4);
 
 	DH_PC_Client.connectBidirectional(*DH_PC_Server, 
-					 			TH_Socket("", "localhost", portnr, true,  false),
-					 			TH_Socket("localhost", "", portnr, false, false),
-								false);	// blocking
+				 			TH_Socket("", "localhost", portnr, true,  false),
+				 			TH_Socket("localhost", "", portnr, false, false),
+							false);	// blocking
 	DH_PC_Server->init();
 
 	itsCommChan = new ProcControlComm(false);		// async
@@ -118,7 +118,7 @@ bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg)
 		result = itsPCImpl->run(scheduleTime);			
 		break;
 	case PCCmdPause:		
-		result = itsPCImpl->pause(scheduleTime, waitTime, options);	
+		result = itsPCImpl->pause(scheduleTime, options);	
 		break;
 	case PCCmdQuit:		
 		itsPCImpl->quit(scheduleTime);
