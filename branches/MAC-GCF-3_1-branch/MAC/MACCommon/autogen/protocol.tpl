@@ -30,7 +30,7 @@
 
 using namespace [+ (base-name) +];
 
-const char* [+ protocol_name +]_signalnames[] = 
+const char* [+ protocol_name +]_signalnames[] =
 {
   "[+ protocol_name +]: invalid signal",[+ FOR event "," +]
   "[+ signal_name +] ([+ (get "dir") +])"[+ ENDFOR +]
@@ -63,6 +63,8 @@ const char* [+ protocol_name +]_signalnames[] =
 #include <string>
 #endif
 
+[+ (get "prelude") +]
+
 //
 // Define protocol ID
 //
@@ -70,6 +72,7 @@ enum {
   [+ protocol_name +] = [+ protocol_id +]
 };
 
+[+ (get "prelude") +]
 //
 // Define protocol message types
 //
