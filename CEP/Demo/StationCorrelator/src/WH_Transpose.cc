@@ -47,10 +47,6 @@ WH_Transpose::WH_Transpose(const string& name,
 
   int bufsize = (itsNbeamletsinpacket / itsNcorrelators) * itsNpolarisations * itsNpacketsinframe;
 
-  itsNinputs = itsKVM.getInt("noWH_RSP", 2);
-  itsNoutputs = 1; // there is one connection to the corresponding WH_Correlator
-
-
   for (int i = 0; i < itsNinputs; i++) {
     snprintf(str, 128, "input_%d_of_%d", i, itsNinputs);
     getDataManager().addInDataHolder(i, new DH_StationData(str, bufsize));
