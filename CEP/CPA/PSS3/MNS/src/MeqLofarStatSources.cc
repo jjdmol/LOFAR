@@ -23,7 +23,6 @@
 #include <Common/Profiling/PerfProfile.h>
 
 #include <MNS/MeqLofarStatSources.h>
-#include <MNS/MeqStatSources.h>
 #include <MNS/MeqRequest.h>
 #include <MNS/MeqMatrix.h>
 #include <MNS/MeqMatrixTmp.h>
@@ -51,26 +50,26 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
   int nfreq = request.ny();
   complex<double>* kdat = itsK.setDComplex (1, nfreq);
   // Multiply the station J matrices by the source contribution K.
-  for (unsigned int i=0; i<itsStat.size(); i++) {
+  int nrsrc = itsSrc->nsources();
+  for (int i=0; i<nrsrc; i++) {
     req.setSourceNr (i);
-    MeqJonesExpr* jjones = itsStat[i];
+    int srcnr = itsSrc->actualSourceNr(i);
+    MeqJonesExpr* jjones = itsStat[srcnr];
     const MeqResult& kjones = itsSrc->getResult (req);
-    const MeqResult& kn = itsSrc->getN (req);
     const MeqResult* kdel = 0;
     // Get the value of the first channel (exp(2.pi.i(ul+vm+wn))/sqrt(n)
     // See also MeqStatSources for more info.
     // Note that a baseline AB has uvw coordinates u(B) - u(A).
     // Therefore the conjugate is applied to the J Jones.
-    complex<double> val0 = kjones.getValue().getDComplex() /
-                           sqrt(kn.getValue().getDouble());
-    kdat[0] = conj(val0);
+    complex<double> val0 = conj(kjones.getValue().getDComplex());
+    kdat[0] = val0;
     if (nfreq > 1) {
       // The next channels are times a constant factor.
       kdel = &(itsSrc->getDelta (req));
-      complex<double> delta = kdel->getValue().getDComplex();
+      complex<double> delta = conj(kdel->getValue().getDComplex());
       for (int i=1; i<nfreq; i++) {
 	val0 *= delta;
-	kdat[i] = conj(val0);
+	kdat[i] = val0;
       }
     }
     // Get the J Jones matrices.
@@ -108,7 +107,7 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
     // Now multiple the J Jones with K and keep the result in J.
     {
       MeqMatrix& val = j11.getValueRW();
-      if (val.nelements() == nfreq) {
+      if (val.nelements() == nfreq  &&  !val.isDouble()) {
 	val *= itsK;
       } else {
 	val = val * itsK;
@@ -116,7 +115,7 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
     }
     {
       MeqMatrix& val = j12.getValueRW();
-      if (val.nelements() == nfreq) {
+      if (val.nelements() == nfreq  &&  !val.isDouble()) {
 	val *= itsK;
       } else {
 	val = val * itsK;
@@ -124,7 +123,7 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
     }
     {
       MeqMatrix& val = j21.getValueRW();
-      if (val.nelements() == nfreq) {
+      if (val.nelements() == nfreq  &&  !val.isDouble()) {
 	val *= itsK;
       } else {
 	val = val * itsK;
@@ -132,13 +131,15 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
     }
     {
       MeqMatrix& val = j22.getValueRW();
-      if (val.nelements() == nfreq) {
+      if (val.nelements() == nfreq  &&  !val.isDouble()) {
 	val *= itsK;
       } else {
 	val = val * itsK;
       }
     }
-
+//     cout << "j11.getValue before: ";
+//     j11.getValue().show(cout);
+//     cout << endl;
     // Do the same for the perturbed values.
     MeqMatrix perturbation;
     for (int j=0; j<request.nspid(); j++) {
@@ -148,21 +149,20 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
 	kpmat = &itsPertK;
 	eval = true;
 	perturbation = kjones.getPerturbation(j);
-	kdat = itsPertK.setDComplex (1, nfreq);
-	val0 = kjones.getPerturbedValue(j).getDComplex() /
-               sqrt(kn.getPerturbedValue(j).getDouble());
-	kdat[0] = conj(val0);
+	complex<double>* kdatp = itsPertK.setDComplex (1, nfreq);
+	val0 = conj(kjones.getPerturbedValue(j).getDComplex());
+	kdatp[0] = val0;
 	if (nfreq > 1) {
-	  complex<double> delta = kdel->getPerturbedValue(j).getDComplex();
+	  complex<double> delta = conj(kdel->getPerturbedValue(j).getDComplex());
 	  for (int i=1; i<nfreq; i++) {
 	    val0 *= delta;
-	    kdat[i] = conj(val0);
+	    kdatp[i] = val0;
 	  }
 	}
       }
       if (eval || j11.isDefined(j)) {
 	MeqMatrix& val = j11.getPerturbedValueRW(j);
-	if (val.nelements() == nfreq) {
+	if (val.nelements() == nfreq  &&  !val.isDouble()) {
 	  val *= *kpmat;
 	} else {
 	  val = val * *kpmat;
@@ -170,7 +170,7 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
       }
       if (eval || j12.isDefined(j)) {
 	MeqMatrix& val = j12.getPerturbedValueRW(j);
-	if (val.nelements() == nfreq) {
+	if (val.nelements() == nfreq  &&  !val.isDouble()) {
 	  val *= *kpmat;
 	} else {
 	  val = val * *kpmat;
@@ -178,7 +178,7 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
       }
       if (eval || j21.isDefined(j)) {
 	MeqMatrix& val = j21.getPerturbedValueRW(j);
-	if (val.nelements() == nfreq) {
+	if (val.nelements() == nfreq  &&  !val.isDouble()) {
 	  val *= *kpmat;
 	} else {
 	  val = val * *kpmat;
@@ -186,13 +186,25 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
       }
       if (eval || j22.isDefined(j)) {
 	MeqMatrix& val = j22.getPerturbedValueRW(j);
-	if (val.nelements() == nfreq) {
+	if (val.nelements() == nfreq  &&  !val.isDouble()) {
 	  val *= *kpmat;
 	} else {
 	  val = val * *kpmat;
 	}
       }
+//       cout << "LSS " << j << ' ' << j11.getValue() << ' '
+//  	   << j11.getPerturbedValue(j) << endl
+// 	   << "     " << j12.getValue()
+//  	   << j12.getPerturbedValue(j) << endl
+// 	   << "     " << j21.getValue()
+//  	   << j21.getPerturbedValue(j) << endl
+// 	   << "     " << j22.getValue()
+//  	   << j22.getPerturbedValue(j) << endl
+//  	   << endl;
     }
+//     cout << "j11.getValue after: ";
+//     j11.getValue().show(cout);
+//     cout << endl;
   }
   itsLastReqId = request.getId();
 }

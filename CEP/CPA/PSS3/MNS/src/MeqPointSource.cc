@@ -39,10 +39,12 @@ MeqPointSource::MeqPointSource()
   itsDec      (0)
 {}
 
-MeqPointSource::MeqPointSource (MeqExpr* fluxI, MeqExpr* fluxQ,
+MeqPointSource::MeqPointSource (const string& name,
+				MeqExpr* fluxI, MeqExpr* fluxQ,
 				MeqExpr* fluxU, MeqExpr* fluxV,
 				MeqExpr* ra, MeqExpr* dec)
-: itsI   (fluxI),
+: itsName(name),
+  itsI   (fluxI),
   itsQ   (fluxQ),
   itsU   (fluxU),
   itsV   (fluxV),
@@ -94,18 +96,18 @@ void MeqPointSource::calculate (const MeqRequest& request)
       eval = true;
     }
     if (eval) {
-      lk = pcosdec * sin(pradiff);
-      mk = sin(deck.getPerturbedValue(spinx)) * refCosDec -
+      MeqMatrix plk = pcosdec * sin(pradiff);
+      MeqMatrix pmk = sin(deck.getPerturbedValue(spinx)) * refCosDec -
 	   pcosdec * refSinDec * cos(pradiff);
-      MeqMatrixTmp nks = MeqMatrixTmp(1.) - sqr(lk) - sqr(mk);
+      MeqMatrixTmp nks = MeqMatrixTmp(1.) - sqr(plk) - sqr(pmk);
       AssertStr (min(nks).getDouble() > 0, "perturbed source " << itsSourceNr
 		 << " too far from phaseref " << refRa << ", " << refDec);
-      nk = sqrt(nks);
-      itsL.setPerturbedValue (spinx, lk);
+      MeqMatrix pnk = sqrt(nks);
+      itsL.setPerturbedValue (spinx, plk);
       itsL.setPerturbation   (spinx, perturbation);
-      itsM.setPerturbedValue (spinx, mk);
+      itsM.setPerturbedValue (spinx, pmk);
       itsM.setPerturbation   (spinx, perturbation);
-      itsN.setPerturbedValue (spinx, nk);
+      itsN.setPerturbedValue (spinx, pnk);
       itsN.setPerturbation   (spinx, perturbation);
     }
   }

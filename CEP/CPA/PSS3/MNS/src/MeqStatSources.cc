@@ -78,14 +78,12 @@ void MeqStatSources::calculate (const MeqRequest& request)
     MeqResult result(request.nspid());
     MeqMatrix r1 = (u*lrk.getValue() + v*mrk.getValue() + w*nrk.getValue()) *
                    wavel0;
-    MeqMatrix res = tocomplex(cos(r1), sin(r1));
-    result.setValue (res);
+    result.setValue (tocomplex(cos(r1), sin(r1)));
     MeqResult delta;
     if (calcDelta) {
       delta = MeqResult(request.nspid());
       r1 *= dwavel;
-      res = tocomplex(cos(r1), sin(r1));
-      delta.setValue (res);
+      delta.setValue (tocomplex(cos(r1), sin(r1)));
     }
 
     // Evaluate (if needed) for the perturbed parameter values.
@@ -117,23 +115,24 @@ void MeqStatSources::calculate (const MeqRequest& request)
 	eval = true;
       }
       if (eval) {
-	r1 = resU.getPerturbedValue(spinx) * lrk.getPerturbedValue(spinx) +
-	     resV.getPerturbedValue(spinx) * mrk.getPerturbedValue(spinx) +
-	     resW.getPerturbedValue(spinx) * nrk.getPerturbedValue(spinx);
-	res = tocomplex(cos(r1), sin(r1));
-	result.setPerturbedValue (spinx, res);
+	r1 = (resU.getPerturbedValue(spinx) * lrk.getPerturbedValue(spinx) +
+	      resV.getPerturbedValue(spinx) * mrk.getPerturbedValue(spinx) +
+	      resW.getPerturbedValue(spinx) * nrk.getPerturbedValue(spinx))
+	  * wavel0;
+	result.setPerturbedValue (spinx, tocomplex(cos(r1), sin(r1)));
 	result.setPerturbation (spinx, perturbation);
 	if (calcDelta) {
 	  r1 *= dwavel;
-	  res = tocomplex(cos(r1), sin(r1));
-	  delta.setPerturbedValue (spinx, res);
+	  delta.setPerturbedValue (spinx, tocomplex(cos(r1), sin(r1)));
 	}
       }
     }
     *iterRes = result;
     ++iterRes;
-    *iterDelta = delta;
-    ++iterDelta;
+    if (calcDelta) {
+      *iterDelta = delta;
+      ++iterDelta;
+    }
   }
   itsLastReqId = request.getId();
 }

@@ -46,11 +46,8 @@ int MeqStoredParmPolc::initDomain (const MeqDomain& domain, int spidIndex)
   if (polcs.size() == 0) {
     MeqPolc polc = itsTable->getInitCoeff (getName(),  getSourceNr(),
 					   getStation());
-    if (polc.getCoeff().isNull()) {
-      Matrix<double> defCoeff(3,3);
-      defCoeff = 1;
-      polc.setCoeff (defCoeff);
-    }
+    AssertMsg (!polc.getCoeff().isNull(), "No value found for parameter "
+	       << getName());
     polc.setDomain (domain);
     polcs.push_back (polc);
   } else if (isSolvable()) {

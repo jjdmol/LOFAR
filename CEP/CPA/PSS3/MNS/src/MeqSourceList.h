@@ -42,6 +42,10 @@ public:
   int size() const
     { return itsSelected.size(); }
 
+  // Get the actual source number in the source list.
+  int actualSourceNr (int sourceNr) const
+    { return itsSelected[sourceNr]; }
+
   // Get the i-th selected source.
   MeqPointSource& operator[] (int i)
     { return itsSources[itsSelected[i]]; }
