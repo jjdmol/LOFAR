@@ -6,7 +6,8 @@
 #if !defined(UVPDATAHEADER_H)
 #define UVPDATAHEADER_H
 
-
+#include <iostream>
+#include <string>
 
 class UVPDataHeader
 {
@@ -30,6 +31,9 @@ class UVPDataHeader
  protected:
  private:
 };
+
+
+std::ostream &operator <<(std::ostream &out, const UVPDataHeader &header);
 
 
 
