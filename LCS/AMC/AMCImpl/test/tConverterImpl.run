@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Set up the AIPS environment, which is needed by the coordinate server
+source /lofarbuild/aips++/weekly/aipsinit.sh
+
+# Execute test test program
+tConverterImpl
