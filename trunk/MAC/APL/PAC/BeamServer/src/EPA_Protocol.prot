@@ -202,7 +202,7 @@ event = {
       dir = IN;
       param = {
 	    name = "fill";
-	    type = "char";
+	    type = "unsigned short";
       };
       param = {
 	    name = "seqnr";
