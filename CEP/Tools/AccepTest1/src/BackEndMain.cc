@@ -27,7 +27,7 @@ using namespace LOFAR;
 
 int main (int argc, const char** argv) {
 
-  // INIT_LOGGER("CorrelatorLogger.prop");
+  INIT_LOGGER("CorrelatorLogger.prop");
 #ifdef HAVE_MPI
   TH_MPI::init(argc, argv);
 #endif
@@ -36,15 +36,22 @@ int main (int argc, const char** argv) {
     for (int elements = min_elements; elements <= max_elements; elements=elements+stp_elements) {
       
       try {
-		
-	AH_BackEnd simulator(port, elements, samples, channels, polarisations, runs, targets);
+	AH_BackEnd* simulator;
+
+	if ((samples+elements) % 2 == 0) {
+	  simulator = new AH_BackEnd(port, elements, samples, channels, polarisations, runs, targets);
+	} else {
+	  simulator = new AH_BackEnd(port+2*targets, elements, samples, channels, polarisations, runs, targets);
+	}
 	
-	simulator.setarg(argc, argv);
-	simulator.baseDefine();
-	simulator.basePrerun();
-	simulator.baseRun(runs);
- 	simulator.baseDump();
-	simulator.baseQuit();
+	simulator->setarg(argc, argv);
+	simulator->baseDefine();
+	simulator->basePrerun();
+	simulator->baseRun(runs);
+ 	simulator->baseDump();
+	simulator->baseQuit();
+
+	delete simulator;
 
 // 	sleep(1);
 
