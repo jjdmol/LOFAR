@@ -22,6 +22,12 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.10  2002/08/19 20:33:44  schaaf
+//  %[BugId: 11]%
+//  Use input parameters
+//  Modified deployment (correlator)
+//  Performance output
+//
 //  Revision 1.9  2002/07/18 09:39:40  schaaf
 //  %[BugId: 11]%
 //  Input parameter handling (a.o. profiling)
@@ -302,7 +308,9 @@ void Transpose::run(int nSteps) {
     getSimul().process();
     if (i==10 && itsDoLogProfile) Profiler::deActivate();
 
+#ifdef HAVE_MPI
     if ((rank==0) && (i%10000 == 0)) cout << i/(MPI_Wtime()-starttime) << endl;
+#endif
   }
 #ifdef HAVE_MPI
   double endtime=MPI_Wtime();
