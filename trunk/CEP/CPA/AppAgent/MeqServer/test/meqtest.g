@@ -1,4 +1,4 @@
-# use_suspend  := T;
+ use_suspend  := T;
 # use_nostart  := T;
 # use_valgrind := T;
 use_valgrind_opts := [ "",
@@ -153,6 +153,16 @@ const meqsel_test := function ()
   print res;
 }
 
-
 cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
 request := meqrequest(cells,1);
+
+const freq_test := function ()
+{
+  meqsel_test();
+  mqs.setverbose(5);
+  mqs.setdebug("MeqNode",4);
+  dom:=meqdomain(10,20,10,20);
+  cells:=meqcells(dom,10,[11.0,12,13],[1.,1,1]);
+  mqs.meq('Create.Node',[class='MeqFreq',name='f']);
+  print a:=mqs.meq('Get.Result',[name='f',request=meqrequest(cells)],T);
+}

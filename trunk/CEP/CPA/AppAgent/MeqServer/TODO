@@ -85,6 +85,8 @@ General:
     AppAgent -- because it looked like a 1-element DataField when 
     processing child specs.
     
+  * Ditto for zero-length arrays ('[]'), i.e., uninitialized domain, etc.
+    
   * Figure out why the hell it freezes on a single-CPU machine sometimes. A
     race condition somewhere? NB: a sure way to do it (on zeppelin) seems to
     enable wait_reply=T in the Resolve.Children calls in meqtest.g.
