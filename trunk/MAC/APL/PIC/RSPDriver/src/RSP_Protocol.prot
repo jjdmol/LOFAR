@@ -30,6 +30,9 @@ namespace RSP_Protocol
 {
   static const int N_RCUBITS = 256;
   static const int N_BEAMLETS = EPA_Protocol::MEPHeader::SUBBANDSELECT_SIZE / sizeof(uint8);
+  static const int N_SUBBANDS = N_BEAMLETS; // for the MAC-EPA prototype 2 these are the same
+  static const int MAX_N_BEAMLETS = N_BEAMLETS;
+  static const int MAX_N_SUBBANDS = N_SUBBANDS;
   static const int SUCCESS = 1;
   static const int FAILURE = 0;
 };

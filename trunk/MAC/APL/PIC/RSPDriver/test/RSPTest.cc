@@ -117,12 +117,9 @@ GCFEvent::TResult RSPTest::test001(GCFEvent& e, GCFPortInterface& port)
       sw.timestamp.setNow(10);
       cout << "sw.time=" << sw.timestamp << endl;
       sw.rcumask.reset();
-      sw.weights.weights().resize(1, 1, N_BEAMLETS);
+      sw.weights().resize(1, 1, N_BEAMLETS);
 
-      //for (int i = 0; i < sw.weights.weights().extent(2); i++)
-      //{
-      sw.weights.weights()(0, 0, Range::all()) = 0xbeaf;
-      //}
+      sw.weights()(0, 0, Range::all()) = 0xbeaf;
 	  
       sw.rcumask.set(0);
 
@@ -190,7 +187,7 @@ GCFEvent::TResult RSPTest::test002(GCFEvent& e, GCFPortInterface& port)
       {
 	  RSPGetweightsackEvent ack(e);
 
-	  cout << "ack.weights = " << ack.weights.weights() << endl;
+	  cout << "ack.weights = " << ack.weights() << endl;
 	  cout << "ack.time= " << ack.timestamp << endl;
 
 	  TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
@@ -237,12 +234,9 @@ GCFEvent::TResult RSPTest::test003(GCFEvent& e, GCFPortInterface& port)
       sw.timestamp = Timestamp(0,0);
       cout << "sw.time=" << sw.timestamp << endl;
       sw.rcumask.reset();
-      sw.weights.weights().resize(1, 1, N_BEAMLETS);
+      sw.weights().resize(1, 1, N_BEAMLETS);
 
-      //for (int i = 0; i < sw.weights.weights().extent(1); i++)
-      //{
-      sw.weights.weights()(0, 0, Range::all()) = 0xbeaf;
-      //}
+      sw.weights()(0, 0, Range::all()) = 0xbeaf;
 	  
       sw.rcumask.set(0);
 
@@ -303,12 +297,9 @@ GCFEvent::TResult RSPTest::test004(GCFEvent& e, GCFPortInterface& port)
       sw.rcumask.reset();
 
       // send weights for 10 timesteps
-      sw.weights.weights().resize(10, 1, N_BEAMLETS);
+      sw.weights().resize(10, 1, N_BEAMLETS);
 
-      //for (int i = 0; i < sw.weights.weights().extent(2); i++)
-      //{
-      sw.weights.weights()(Range::all(), 0, Range::all()) = 0xbeaf;
-      //}
+      sw.weights()(Range::all(), 0, Range::all()) = 0xbeaf;
 	  
       sw.rcumask.set(0);
 
@@ -366,11 +357,19 @@ GCFEvent::TResult RSPTest::test005(GCFEvent& e, GCFPortInterface& port)
       ss.timestamp.setNow(10);
       ss.rcumask.reset();
       ss.rcumask.set(0);
+      ss.rcumask.set(1);
       
-      ss.subbands().resize(1, 1);
+      ss.subbands().resize(1, 10); // 10 subbands selected
+      ss.subbands.nrsubbands().resize(1);
+
+      LOG_INFO_STR("dim subbands=" << ss.subbands().dimensions());
+      LOG_INFO_STR("dim nrsubband=" << ss.subbands.nrsubbands().dimensions());
       
       // set all values to 0x77
       ss.subbands() = 0x77;
+
+      // nr of subbands = 10
+      ss.subbands.nrsubbands() = 10;
       
       TESTC_ABORT(m_server.send(ss), RSPTest::final);
     }

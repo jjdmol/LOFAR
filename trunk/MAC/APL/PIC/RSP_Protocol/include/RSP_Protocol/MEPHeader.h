@@ -119,7 +119,7 @@ namespace EPA_Protocol
       /**
        * Read/write sizes in octets (= bytes)
        */
-      static const uint16 RSPSTATUS_SIZE     = 24; // 22 in EPA documentation!
+      static const uint16 RSPSTATUS_SIZE     = 44;
 
       static const uint16 SELFTEST_SIZE      = 1;
 

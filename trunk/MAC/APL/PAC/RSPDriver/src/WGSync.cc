@@ -40,7 +40,7 @@ WGSync::~WGSync()
   /* TODO: delete event? */
 }
 
-GCFEvent::TResult WGSync::initial_state(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult WGSync::initial_state(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
 {
   return GCFEvent::HANDLED;
 }

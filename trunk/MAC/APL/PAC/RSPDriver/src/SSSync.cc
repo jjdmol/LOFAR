@@ -20,10 +20,13 @@
 //#
 //#  $Id$
 
-#include "SSSync.h"
-
 #include "RSP_Protocol.ph"
 #include "EPA_Protocol.ph"
+
+#include "SSSync.h"
+#include "Cache.h"
+
+#include <blitz/array.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -32,6 +35,7 @@
 
 using namespace RSP;
 using namespace LOFAR;
+using namespace blitz;
 
 #define N_RETRIES 3
 
@@ -137,7 +141,7 @@ GCFEvent::TResult SSSync::readstatus_state(GCFEvent& event, GCFPortInterface& /*
       EPARspstatusEvent rspstatus(event);
       
       // check status of previous write
-      if (rspstatus.rsp == 0)
+      if (rspstatus.write_status.error == 0)
       {
 	// OK, move on to the next BLP
 	m_current_blp++;
@@ -186,29 +190,19 @@ void SSSync::writedata(uint8 blp)
   MEP_SUBBANDSELECT(ss.hdr, MEPHeader::WRITE, 0);
   ss.hdr.m_fields.addr.dstid = blp;
   
-#if 0
-  // copy weights from the cache to the message
-  Array<int16, 1> weights((int16*)&ss.ch,
-			  shape(RSP_Protocol::N_BEAMLETS),
-			  neverDeleteData);
+  // create array to contain the subband selection
+  uint16 nr_subbands = Cache::getInstance().getBack().getSubbandSelection().nrsubbands()(blp);
+  Array<uint16, 1> subbands(nr_subbands);
+  ss.ch    = subbands.data();
+  ss.chDim = nr_subbands;
+
+  subbands = 0; // init
   
-  //
-  // TODO
-  // Make sure we're actually sending the correct weights.
-  //
-  if (0 == (m_regid % 2))
-  {
-    weights = real(Cache::getInstance().getBack().getBeamletWeights().\
-		   weights()(0, blp, Range::all()));
-  }
-  else
-  {
-    weights = imag(Cache::getInstance().getBack().getBeamletWeights().\
-		   weights()(0, blp, Range::all()));
-  }
-#endif
+  subbands = Cache::getInstance().getBack().getSubbandSelection()()(blp, Range(0, nr_subbands - 1));
 
   getBoardPort().send(ss);
+
+  subbands.free();
 }
 
 void SSSync::readstatus()
@@ -216,8 +210,9 @@ void SSSync::readstatus()
   // send read status request to check status of the write
   EPARspstatusEvent rspstatus;
   MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
-
-  memset(&rspstatus.rsp, 0, MEPHeader::RSPSTATUS_SIZE);
+  
+  // clear from first field onwards
+  memset(&rspstatus.rsp_status, 0, MEPHeader::RSPSTATUS_SIZE);
 
 #if 0
   // on the read request don't send the data

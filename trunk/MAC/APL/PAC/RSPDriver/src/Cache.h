@@ -32,87 +32,86 @@ namespace RSP
 {
 
   class CacheBuffer
-      {
-      public:
-	  /**
-	   * Constructors for a Cache object.
-	   */
-	  CacheBuffer();
+  {
+    public:
+      /**
+       * Constructors for a Cache object.
+       */
+      CacheBuffer();
 	  
-	  /* Destructor for Cache. */
-	  virtual ~CacheBuffer();
+      /* Destructor for Cache. */
+      virtual ~CacheBuffer();
 
-	  /*@{*/
-	  /**
-	   * Data access methods.
-	   */
-	  RSP_Protocol::BeamletWeights&   getBeamletWeights();
-	  RSP_Protocol::SubbandSelection& getSubbandSelection(int rcu);
-	  RSP_Protocol::RCUSettings&      getRCUSettings(int rcu);
-	  RSP_Protocol::WGSettings&       getWGSettings(int rcu);
-	  RSP_Protocol::SystemStatus&     getSystemStatus();
-	  RSP_Protocol::Statistics&       getStatistics(int rcu);
-	  RSP_Protocol::Versions&         getVersions();
-	  /*@}*/
+      /*@{*/
+      /**
+       * Data access methods.
+       */
+      RSP_Protocol::BeamletWeights&   getBeamletWeights();
+      RSP_Protocol::SubbandSelection& getSubbandSelection();
+      RSP_Protocol::RCUSettings&      getRCUSettings(int rcu);
+      RSP_Protocol::WGSettings&       getWGSettings(int rcu);
+      RSP_Protocol::SystemStatus&     getSystemStatus();
+      RSP_Protocol::Statistics&       getStatistics(int rcu);
+      RSP_Protocol::Versions&         getVersions();
+      /*@}*/
 
-      private:
-	  RSP_Protocol::Timestamp        m_timestamp;
+    private:
+      RSP_Protocol::Timestamp                    m_timestamp;
 
-	  BeamletWeights                                  m_beamletweights;
-	  blitz::Array<RSP_Protocol::SubbandSelection, 1> m_subbandselection;
-	  blitz::Array<RSP_Protocol::RCUSettings, 1>      m_rcusettings;
-	  blitz::Array<RSP_Protocol::WGSettings, 1>       m_wgsettings;
-	  blitz::Array<RSP_Protocol::Statistics, 1>       m_statistics;
-
-	  RSP_Protocol::SystemStatus m_systemstatus;
-	  RSP_Protocol::Versions     m_versions;
-      };
+      RSP_Protocol::BeamletWeights               m_beamletweights;
+      RSP_Protocol::SubbandSelection             m_subbandselection;
+      blitz::Array<RSP_Protocol::RCUSettings, 1> m_rcusettings;
+      blitz::Array<RSP_Protocol::WGSettings, 1>  m_wgsettings;
+      blitz::Array<RSP_Protocol::Statistics, 1>  m_statistics;
+      RSP_Protocol::SystemStatus                 m_systemstatus;
+      RSP_Protocol::Versions                     m_versions;
+  };
 
   /**
    * Singleton class containing the data caches.
    */
   class Cache
-      {
-      public:
-	  /*@{*/
-	  /**
-	   * Constructor/destructor
-	   */
-	  static Cache& getInstance();
-	  virtual ~Cache();
-	  /*@}*/
+  {
+    public:
+      /*@{*/
+      /**
+       * Constructor/destructor
+       */
+      static Cache& getInstance();
+      virtual ~Cache();
+      /*@}*/
 
-	  /**
-	   * Swap front and back buffers
-	   */
-	  void swapBuffers();
+      /**
+       * Swap front and back buffers
+       */
+      void swapBuffers();
 
-	  /**
-	   * Get front/back buffers.
-	   */
-	  CacheBuffer& getFront();
-	  CacheBuffer& getBack();
+      /**
+       * Get front/back buffers.
+       */
+      CacheBuffer& getFront();
+      CacheBuffer& getBack();
 
-      private:
+    private:
 
-	  /**
-	   * Direct construction not allowed.
-	   */
-	  Cache();
+      /**
+       * Direct construction not allowed.
+       */
+      Cache();
 
-	  /*@{*/
-	  /**
-	   * Front and back buffers.
-	   */
-	  CacheBuffer* m_front;
-	  CacheBuffer* m_back;
-	  /*@}*/
+      /*@{*/
+      /**
+       * Front and back buffers.
+       */
+      CacheBuffer* m_front;
+      CacheBuffer* m_back;
+      /*@}*/
 
-	  /**
-	   * Singleton class.
-	   */
-	  static Cache* m_instance;
-      };
+      /**
+       * Singleton class.
+       */
+      static Cache* m_instance;
+  };
 };
      
 #endif /* CACHE_H_ */

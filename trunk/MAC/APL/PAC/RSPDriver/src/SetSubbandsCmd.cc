@@ -62,18 +62,20 @@ void SetSubbandsCmd::ack(CacheBuffer& /*cache*/)
 
 void SetSubbandsCmd::apply(CacheBuffer& cache)
 {
-  int input_rcu = 0;
-
+  uint16 nr_subbands = m_event->subbands.nrsubbands()(0);
   for (int cache_rcu = 0; cache_rcu < RSPDriverTask::N_RCU; cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      cache.getSubbandSelection(cache_rcu)()(Range::all())
-	= m_event->subbands()(Range(input_rcu, input_rcu), Range::all());
+      cache.getSubbandSelection()()(cache_rcu, Range(0, nr_subbands - 1))
+	= m_event->subbands()(0, Range(0, nr_subbands - 1));
 
-      input_rcu++;
+      cache.getSubbandSelection().nrsubbands()(cache_rcu) = nr_subbands;
     }
   }
+
+  //LOG_INFO_STR("cache.ss=" << cache.getSubbandSelection()());
+  //LOG_INFO_STR("cache.nrsubbands=" << cache.getSubbandSelection().nrsubbands());
 }
 
 void SetSubbandsCmd::complete(CacheBuffer& /*cache*/)
@@ -95,6 +97,7 @@ bool SetSubbandsCmd::validate() const
 {
   return ((m_event->rcumask.count() <= (unsigned int)RSPDriverTask::N_RCU)
 	  && (2 == m_event->subbands().dimensions())
+	  && (1 == m_event->subbands.nrsubbands().dimensions())
 	  && (1 == m_event->subbands().extent(firstDim))
-	  && (m_event->rcumask.count() == (unsigned int)m_event->subbands().extent(secondDim)));
+	  && (1 == m_event->subbands.nrsubbands().extent(firstDim)));
 }

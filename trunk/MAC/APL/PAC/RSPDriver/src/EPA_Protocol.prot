@@ -34,6 +34,41 @@ namespace EPA_Protocol
   static const int N_SUBBANDS    = MEPHeader::SUBBANDSELECT_SIZE / sizeof(uint8); /* should be 256 */
   static const int N_STATS       = MEPHeader::STSTATS_SIZE / sizeof(uint16);      /* should be 512 */
   /*@}*/
+
+  typedef struct RSPStatus
+  {
+      uint8 voltage_15;
+      uint8 voltage_22;
+      uint16 ffi;
+  };
+
+  typedef struct FPGAStatus
+  {
+      uint8 status;
+      uint8 temp;
+  };
+
+  typedef struct ETHStatus
+  {
+      uint32 nof_frame;
+      uint32 nof_errors;
+      uint8  last_error;
+      uint8  ffi0;
+      uint8  ffi1;
+      uint8  ffi2;
+  };
+  
+  typedef struct MEPStatus
+  {
+      uint16 seqnr;
+      uint8  error;
+      uint8  ffi;
+  };
+
+  typedef struct RCUStatus
+  {
+      uint16 status;
+  };
 };
 
 PRELUDE_END;
@@ -53,21 +88,33 @@ event = {
     type = "EPA_Protocol::MEPHeader";
     userdefined;
   };
+
+  /**
+   * RSP status fields.
+   */
   param = {
-    name = "rsp";
-    type = "uint16";
+    name = "rsp_status";
+    type = "RSPStatus";
   };
   param = {
-    name = "ap";
-    type = "uint16 [N_AP]";
+    name = "bp_status";
+    type = "FPGAStatus";
   };
   param = {
-    name = "blp";
-    type = "uint8[N_BLP]";
+    name = "ap_status";
+    type = "FPGAStatus[4]";
   };
   param = {
-    name = "eth";
-    type = "uint32";
+    name = "read_status";
+    type = "MEPStatus";
+  };
+  param = {
+    name = "write_status";
+    type = "MEPStatus";
+  };
+  param = {
+    name = "rcu_status";
+    type = "RCUStatus[4]";
   };
 };
 
@@ -169,7 +216,7 @@ event = {
   };
   param = {
     name = "ch";
-    type = "uint8[]";
+    type = "uint16[]";
   };
 };
 

@@ -36,8 +36,8 @@ using namespace blitz;
 unsigned int SubbandSelection::getSize()
 {
   return
-    ((2 * sizeof(int32))
-     + (m_subbands.size() * sizeof(uint16)));
+    ((2 * sizeof(int32)) + (m_subbands.size() * sizeof(uint16))
+     + (sizeof(int32) + (m_nrsubbands.size() * sizeof(uint16))));
 }
 
 unsigned int SubbandSelection::pack  (void* buffer)
@@ -45,6 +45,9 @@ unsigned int SubbandSelection::pack  (void* buffer)
   char* bufptr = (char*)buffer;
   unsigned int offset = 0;
 
+  /**
+   * Pack shape of subbands array.
+   */
   for (int dim = firstDim; dim < firstDim + m_subbands.dimensions(); dim++)
   {
     int32 extent = m_subbands.extent(dim);
@@ -52,6 +55,9 @@ unsigned int SubbandSelection::pack  (void* buffer)
     offset += sizeof(int32);
   }
 
+  /**
+   * Pack subbands array itself.
+   */
   if (m_subbands.isStorageContiguous())
   {
     memcpy(bufptr + offset, m_subbands.data(), m_subbands.size() * sizeof(uint16));
@@ -59,9 +65,31 @@ unsigned int SubbandSelection::pack  (void* buffer)
   }
   else
   {
-    cerr << "NON-CONTIGUOUS ARRAY STORAGE!" << endl;
+    LOG_FATAL("subbands array must contiguous");
+    exit(EXIT_FAILURE);
   }
-    
+
+  /**
+   * Pack shape of nrsubbands array.
+   */
+  int32 extent = m_nrsubbands.extent(firstDim);
+  memcpy(bufptr + offset, &extent, sizeof(int32));
+  offset += sizeof(int32);
+
+  /**
+   * Pack nrsubbands array itself.
+   */
+  if (m_nrsubbands.isStorageContiguous())
+  {
+    memcpy(bufptr + offset, m_nrsubbands.data(), m_nrsubbands.size() * sizeof(uint16));
+    offset += m_nrsubbands.size() * sizeof(uint16);
+  }
+  else
+  {
+    LOG_FATAL("nrsubbands array must contiguous");
+    exit(EXIT_FAILURE);
+  }
+
   return offset;
 }
 
@@ -71,6 +99,9 @@ unsigned int SubbandSelection::unpack(void *buffer)
   unsigned int offset = 0;
   TinyVector<int, 2> extent;
 
+  /**
+   * Unpack shape of subbands array.
+   */
   for (int dim = firstDim; dim < firstDim + m_subbands.dimensions(); dim++)
   {
     int32 extenttmp = m_subbands.extent(dim);
@@ -79,19 +110,26 @@ unsigned int SubbandSelection::unpack(void *buffer)
     extent(dim - firstDim) = extenttmp;
   }
 
-  // resize the array to the correct size
+  /**
+   * Unpack subbands array itself.
+   */
   m_subbands.resize(extent);
+  memcpy(m_subbands.data(), bufptr+offset, m_subbands.size() * sizeof(uint16));
+  offset += m_subbands.size() * sizeof(uint16);
+    
+  /**
+   * Unpack shape of nrsubbands array.
+   */
+  int32 nrsubbands_size = 0;
+  memcpy(&nrsubbands_size, bufptr + offset, sizeof(int32));
+  offset += sizeof(int32);
 
-  if (m_subbands.isStorageContiguous())
-  {
-    memcpy(m_subbands.data(), bufptr+offset, m_subbands.size() * sizeof(uint16));
-    offset += m_subbands.size() * sizeof(uint16);
-  }
-  else
-  {
-    LOG_FATAL("NON-CONTIGUOUS ARRAY STORAGE!");
-    exit(EXIT_FAILURE);
-  }
+  /**
+   * Unpack nrsubbands array itself.
+   */
+  m_nrsubbands.resize(nrsubbands_size);
+  memcpy(m_nrsubbands.data(), bufptr + offset, m_nrsubbands.size() * sizeof(uint16));
+  offset += m_nrsubbands.size() * sizeof(uint16);
     
   return offset;
 }
@@ -100,4 +138,11 @@ Array<uint16,2>& SubbandSelection::operator()()
 {
   return m_subbands;
 }
+
+Array<uint16,1>& SubbandSelection::nrsubbands()
+{
+  return m_nrsubbands;
+}
+
+
 
