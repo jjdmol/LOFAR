@@ -92,7 +92,7 @@ public:
   // true as long as the MeqCalImpl object is able to process the
   // next interval. Therefore, this method can best be used in the
   // while conidition for the loop over all time intervals.
-  bool advanceTimeIntervalIterator (void);
+  bool advanceTimeIntervalIterator (bool callInitParms = true);
 
   // Clears the CalibratorOld list of sources which are to be taken into
   // account during calibration of a single iteration.
