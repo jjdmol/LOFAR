@@ -93,7 +93,7 @@ void WH_PreProcess::process()
   TRACER4("WH_PreProcess::Process()");
 
   complex<float> phase;
-  complex<float> imag (0,1);
+  complex<float> i2pi (0,2*pi);
   int b =  itsMac.getNumberOfBeamlets();
   Station* station = itsMac.getStations();
 
@@ -108,20 +108,19 @@ void WH_PreProcess::process()
 	 float t_i;
 	 // calculate time delay
 	 if (itsStationID == 0) {
-	   t_i = (station[itsStationID].getY() * sin(ha) * cos (itsMac.getDeclination()) 
-			+ station[itsStationID].getX() * cos (ha) * cos (itsMac.getDeclination())) / itsMac.getC();
+	   t_i = (station[itsStationID].getY() * sin(ha) * cos(itsMac.getDeclination()) 
+			+ station[itsStationID].getX() * cos(ha) * cos(itsMac.getDeclination())) / itsMac.getC();
 	 } else {
-	   t_i = (350000 * cos (ha) * cos (itsMac.getDeclination())) / itsMac.getC();
+	   t_i = (350000 * cos(ha) * cos(itsMac.getDeclination())) / itsMac.getC();
 	 }
 
 	 //cout << "WH_PreProcess, time delay : " << t_i << endl;	 
 
 	 // delay tracking phase rotation
-	 phase = exp (imag * (complex<float>)2 * (complex<float>)pi * 
-		      (complex<float>)(i *(32000000/32768)*256  + j * 32000000/32768)  * t_i);
+	 phase = exp (i2pi * (complex<float>)(i *(32000000/32768)*256  + j * 32000000/32768 + 32000000/(32768*2))  * t_i);
 	 
 	 // fringe stopping phase rotation
-	 phase *= exp (imag * (complex<float>)2 * (complex<float>)pi * (complex<float>)224000000 * t_i);
+	 phase *= exp (i2pi * (complex<float>)224000000 * t_i);
 
 	 // cout << "WH_PreProcess, phase rotation : " << phase << endl;
 	 
