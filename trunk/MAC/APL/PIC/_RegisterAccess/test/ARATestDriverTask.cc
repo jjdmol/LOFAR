@@ -59,6 +59,9 @@ ARATestDriverTask::ARATestDriverTask() :
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
 
+  m_systemStatus.board().resize(N_BOARDS_PER_SUBRACK);
+  m_systemStatus.rcu().resize(N_RCUS);
+
   // fill APCs map
   addPropertySet(SCOPE_PIC);
   addPropertySet(SCOPE_PIC_Maintenance);
@@ -387,12 +390,15 @@ void ARATestDriverTask::updateETHstatus(string& propName,const GCFPValue* pvalue
 void ARATestDriverTask::updateAPstatus(string& propName,const GCFPValue* pvalue)
 {
   LOG_INFO(formatString("updateAPstatus %s", propName.c_str()));
-  
+ 
+  int testI(0); 
   GCFPVUnsigned pvUnsigned;
   GCFPVDouble   pvDouble;
   pvUnsigned.copy(*pvalue);
   pvDouble.copy(*pvalue);
   
+  LOG_INFO(formatString("updateAPstatus hier?? %d", ++testI));
+
   int rack;
   int subrack;
   int board;
@@ -400,6 +406,8 @@ void ARATestDriverTask::updateAPstatus(string& propName,const GCFPValue* pvalue)
 
   sscanf(propName.c_str(),SCOPE_PIC_RackN_SubRackN_BoardN_APN,&rack,&subrack,&board,&ap);
   
+  LOG_INFO(formatString("updateAPstatus hier?? %d (rack=%d,subrack=%d,board=%d,ap=%d)", ++testI,rack,subrack,board,ap));
+
   EPA_Protocol::FPGAStatus apStatus = m_systemStatus.board()(board-1).ap[ap-1];
 
   // layout fpga status: 
@@ -487,7 +495,9 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
   sscanf(propName.c_str(),SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,&rack,&subrack,&board,&ap,&rcu);
   int rcuNumber = rcu + N_RCUS_PER_AP*(ap-1) + N_RCUS_PER_AP*N_APS_PER_BOARD*(board-1);
   
-  uint8 rcuStatus = m_systemStatus.rcu()(rcuNumber-1).status;
+  uint8 rcuStatus;
+  rcuStatus = m_systemStatus.rcu()(rcuNumber).status;
+  rcuStatus = m_systemStatus.rcu()(rcuNumber-1).status;
   
   // layout rcu status: 
   // 7 6       5       4       3 2 1 0
@@ -685,21 +695,24 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       // ETH status or RCU status;
       string propName(pPropAnswer->pPropName);
 
-      if(propName.find(string("_ETH_"),0) != string::npos)
+      if(propName.find(string("_Maintenance_"),0) == string::npos)
       {
-        updateETHstatus(propName,pPropAnswer->pValue);
-      }
-      else if(propName.find(string("_BP_"),0) != string::npos)
-      {
-        updateBPstatus(propName,pPropAnswer->pValue);
-      }
-      else if(propName.find(string("_AP"),0) != string::npos)
-      {
-        updateAPstatus(propName,pPropAnswer->pValue);
-      }
-      else if(propName.find(string("_RCU"),0) != string::npos)
-      {
-        updateRCUstatus(propName,pPropAnswer->pValue);
+        if(propName.find(string("_ETH_"),0) != string::npos)
+        {
+          updateETHstatus(propName,pPropAnswer->pValue);
+        }
+        else if(propName.find(string("_BP_"),0) != string::npos)
+        {
+          updateBPstatus(propName,pPropAnswer->pValue);
+        }
+        else if(propName.find(string("_RCU"),0) != string::npos)
+        {
+          updateRCUstatus(propName,pPropAnswer->pValue);
+        }
+        else if(propName.find(string("_AP"),0) != string::npos)
+        {
+          updateAPstatus(propName,pPropAnswer->pValue);
+        }
       }
       break;
     }
@@ -719,7 +732,7 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
     }
 
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestDriverTask(%s)::test1, default",getName().c_str()));
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestDriverTask(%s)::enabled, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
