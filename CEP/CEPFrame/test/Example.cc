@@ -27,7 +27,7 @@
 #include <CEPFrame/Composite.h>
 #include <Transport/TH_Mem.h>
 #include <CEPFrame/WH_Example.h>
-#include <CEPFrame/Profiler.h>
+#include <tinyCEP/Profiler.h>
 #include <Common/Debug.h>
 
 using namespace LOFAR;

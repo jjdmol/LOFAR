@@ -30,7 +30,7 @@
 #include "CEPFrame/Simul.h"
 #include "CEPFrame/DH_Tester.h"
 #include "CEPFrame/WH_TestOnDemandData.h"
-#include "CEPFrame/Profiler.h"
+#include "tinyCEP/Profiler.h"
 #include "Common/Debug.h"
 
 int main (int argc, char *argv[])

@@ -31,7 +31,7 @@
 #include <CEPFrame/Composite.h>
 #include <CEPFrame/DH_Tester.h>
 #include <CEPFrame/WH_Tester.h>
-#include <CEPFrame/Profiler.h>
+#include <tinyCEP/Profiler.h>
 #include <Common/Debug.h>
 
 using namespace LOFAR;
