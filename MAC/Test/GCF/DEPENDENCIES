@@ -1,9 +1,11 @@
 Compiler version:
 Default compiler of RedHat 8 (gcc3.x)
 
-EXTERNAL PACKAGES:
-PVSS II 3.0 (see MAC/GCF)
+EXTERNAL PACKAGES (see for example in MAC/Test/GCF/configure.in):
+PVSS II 3.0.1 (see MAC/GCF)
 LCS/Common
-MAC/Tools/LofarLogger
-MAC/GCF
-log4cplus (see LofarLogger)
+MAC/GCF/GCFCommon
+MAC/GCF/TM
+MAC/GCF/PAL
+MAC/GCF/PALlight
+log4cplus (see LCS/Common)
