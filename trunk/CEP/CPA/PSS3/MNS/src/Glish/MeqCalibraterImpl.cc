@@ -25,10 +25,14 @@
 #include <trial/Tasking/Parameter.h>
 #include <trial/Tasking/MethodResult.h>
 #include <aips/Glish/GlishRecord.h>
+#include <aips/Glish/GlishArray.h>
 #include <aips/Glish/GlishValue.h>
 #include <aips/Arrays/Vector.h>
 
 #include <aips/MeasurementSets/MeasurementSet.h>
+#include <aips/Utilities/Regex.h>
+
+#include <MNS/MeqParm.h>
 
 MeqCalibrater::MeqCalibrater(const String& msName,
 			     const String& meqModel,
@@ -37,7 +41,9 @@ MeqCalibrater::MeqCalibrater(const String& msName,
 			     const Int     spw)
   :
   // ms(msName),
-  timeIteration(10)
+  mep(mepDB),
+  timeIteration(10),
+  fitValue(10.0)
 {
   cout << "MeqCalibrater constructor (";
   cout << "'" << msName   << "', ";
@@ -62,6 +68,7 @@ void MeqCalibrater::resetTimeIterator()
   cout << "resetTimeIterator" << endl;
 
   timeIteration = 10;
+  fitValue = 10.0;
 }
 
 Bool MeqCalibrater::nextTimeInterval()
@@ -73,21 +80,47 @@ Bool MeqCalibrater::nextTimeInterval()
   if (0 == --timeIteration) returnval = False;
   else returnval = True;
 
+  fitValue = 10.0;
+
   return returnval;
 }
 
 void MeqCalibrater::clearSolvableParms()
 {
+  const vector<MeqParm*>& parmList = MeqParm::getParmList();
+
   cout << "clearSolvableParms" << endl;
+
+  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+       iter != parmList.end();
+       iter++)
+  {
+    if (*iter) (*iter)->setSolvable(false);
+  }
 }
 
 void MeqCalibrater::setSolvableParms(Vector<String>& parmPatterns, Bool isSolvable)
 {
+  const vector<MeqParm*>& parmList = MeqParm::getParmList();
+
   cout << "setSolvableParms" << endl;
 
-  for (int i=0; i < (int)parmPatterns.nelements(); i++)
+  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+       iter != parmList.end();
+       iter++)
   {
-    cout << parmPatterns[i] << endl;
+    for (int i=0; i < (int)parmPatterns.nelements(); i++)
+    {
+      Regex pattern(Regex::fromPattern(parmPatterns[i]));
+
+      if (*iter)
+      {
+	if (String((*iter)->getName()).matches(pattern))
+	{
+	  (*iter)->setSolvable(isSolvable);
+	}
+      }
+    }
   }
 
   cout << "isSolvable = " << isSolvable << endl;
@@ -100,18 +133,25 @@ void MeqCalibrater::predict(const String& modelColName)
 
 Double MeqCalibrater::solve()
 {
-  static Double returnval = 10.0;
-
   cout << "solve" << endl;
 
-  returnval /= 2.0;
+  fitValue /= 2.0;
 
-  return returnval;
+  return fitValue;
 }
 
 void MeqCalibrater::saveParms()
 {
+  const vector<MeqParm*>& parmList = MeqParm::getParmList();
+
   cout << "saveParms" << endl;
+
+  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+       iter != parmList.end();
+       iter++)
+  {
+    if (*iter) (*iter)->save();
+  }
 }
 
 void MeqCalibrater::saveData(const String& dataColName)
@@ -130,11 +170,38 @@ void MeqCalibrater::saveResidualData(const String& colAName,
 GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns)
 {
   GlishRecord rec;
+  bool parmDone = false;
+
+  const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
   cout << "getParms: " << endl;
-  for (int i=0; i < (int)parmPatterns.nelements(); i++)
+
+  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+       iter != parmList.end();
+       iter++)
   {
-    cout << parmPatterns[i] << endl;
+    parmDone = false;
+
+    for (int i=0; i < (int)parmPatterns.nelements(); i++)
+    {
+      Regex pattern(Regex::fromPattern(parmPatterns[i]));
+
+      if (*iter && !parmDone)
+      {
+	if (String((*iter)->getName()).matches(pattern))
+	{
+	  GlishRecord parmRec;
+
+	  // only add each parm once
+	  parmDone = true;
+
+	  parmRec.add("name", String((*iter)->getName()));
+	  parmRec.add("parmid", Int((*iter)->getParmId()));
+	  
+	  rec.add((*iter)->getName(), parmRec);
+	}
+      }
+    }
   }
 
   return rec;

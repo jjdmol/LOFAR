@@ -202,7 +202,7 @@ const meqcalibratertest := function()
     local mc := meqcalibrater('test','meqModel','skyModel','mepDB');
 
     if (is_fail(mc)) {
-	print "TEST> could not instantiate meqcalibrater"
+	print "meqcalibratertest(): could not instantiate meqcalibrater"
 	fail
     }
 
@@ -211,17 +211,16 @@ const meqcalibratertest := function()
     mc.setsolvableparms("a.*.b d.e.*", T);
     
     mc.resettimeiterator()
+    i := 0
     while (mc.nexttimeinterval())
     {
-	print 'TEST> iteration';
-
  	fit := 1.0;
 	while (fit > 0.0001 || fit < -0.0001)
 	{
 	  mc.predict('MODEL_DATA');
 	  fit := mc.solve();
-	  
-	  print 'TEST> fit = ', fit
+
+	  print 'iteration = ', i, ' fit = ', fit
 	}
 
 	mc.savedata('MODEL_DATA');
@@ -229,6 +228,8 @@ const meqcalibratertest := function()
 	mc.saveparms();
 	
 	p := mc.getparms("a.b.* a.b.c.*.d");
+
+	i+:=1;
     }
 
     mc.done();
