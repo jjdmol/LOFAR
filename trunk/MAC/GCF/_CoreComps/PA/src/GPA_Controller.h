@@ -27,8 +27,10 @@
 #include <GPA_UsecountManager.h>
 #include <GPA_RequestManager.h>
 #include <GPA_ScopeManager.h>
+#include <GPA_APC.h>
 #include <TM/GCF_Task.h>
 #include <TM/Socket/GCF_TCPPort.h>
+
 
 class GCFEvent;
 class GCFPortInterface; 
@@ -38,6 +40,8 @@ class GPAController : public GCFTask
 	public:
 		GPAController();
 		virtual ~GPAController();
+  
+    void loadAPCTest();
 
 	private: // GPAUsecountManager call back methods
     friend class GPAUsecountManager;
@@ -60,7 +64,6 @@ class GPAController : public GCFTask
     void sendAPCActionResponse(GCFEvent& e);
     void sendUnLinkActionResponse(GCFEvent& e);
     void unpackAPCActionData(char* pActionData);
-    TPAResult setDefaults(map<string, GCFPValue*>& defaults);
     
 	private: // state methods
 		int initial(GCFEvent& e, GCFPortInterface& p);
@@ -80,7 +83,7 @@ class GPAController : public GCFTask
     GCFPortInterface* _curRequestPort;
     bool _isBusy;
     unsigned int _counter;
-  
+    GPAAPC _apc;
 };
 
 #endif

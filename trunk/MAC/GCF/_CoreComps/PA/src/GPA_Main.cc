@@ -1,33 +1,35 @@
-/*
-  The main of the API test manager
-  This will copy the values from one datapoint to another.
-  To do this the manager will connect to the first datapoint and
-  for everey hotlink it receives it will set the second one.
-  The names of both datapoints can be given in the config file.
-*/
+//#  GPA_Main.cc: 
+//#
+//#  Copyright (C) 2002-2003
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
 
 #include <GPA_Controller.h>
 #include <TM/GCF_Control.h>
 
-int main(int argc, char *argv[])
+int main(int argC, char *argV[])
 {
-  const char* ns_file  = "tutorial";
-
-  if (GTMNameService::instance()->init(ns_file) < 0)
-  {
-    cerr << "Could not open NameService configuration file: " << ns_file << endl;
-    exit(1);
-  }
-  if (GTMTopologyService::instance()->init(ns_file) < 0)
-  {
-    cerr << "Could not open TopologyService configuration file: " << ns_file << endl;
-    exit(1);
-  }
+  GCFTask::init(argC, argV);
   
-  GCFTask::_argc = argc;
-  GCFTask::_argv = argv;
+  GPAController propertyAgent; 
   
-  GPAController propertyAgent;  
+  propertyAgent.loadAPCTest(); 
   propertyAgent.start(); // make initial transition
   
   GCFTask::run();

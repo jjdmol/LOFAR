@@ -35,13 +35,14 @@ class GPAUsecountManager : public GSAService
   public:
   	GPAUsecountManager(GPAController& controller);
   	virtual ~GPAUsecountManager();
-  	TPAResult incrementUsecount(list<string>& propList);
-  	TPAResult decrementUsecount(list<string>& propList);
+  	TPAResult incrementUsecount(const list<TAPCProperty>& propList);
+  	TPAResult decrementUsecount(const list<TAPCProperty>& propList);
   	TPAResult deletePropertiesByScope(const string& scope, list<string>& subScopes);
+    TPAResult setDefaults(const list<TAPCProperty>& propsFromAPC);
     void deleteAllProperties();
     bool waitForAsyncResponses();
 			
-  private:
+  protected:
     void propCreated(string& propName);
     void propDeleted(string& propName);
     void propValueChanged(string& propName, GCFPValue& value) {};
@@ -50,11 +51,15 @@ class GPAUsecountManager : public GSAService
     void propUnsubscribed(string& propName) {};
 
   private: // helper methods
+    TPAResult createMACValueObject(
+      const string& macType, 
+      const string& valueData, 
+      GCFPValue** pValue);
     
   private: // data members
     GPAController&	_controller;
     
-    map<string, unsigned int> _propList;
+    map<string /*propName*/, unsigned int /*usecount*/> _propList;
     typedef map<string, unsigned int>::iterator TPropListIter;	
     
   private: // admin. data members
