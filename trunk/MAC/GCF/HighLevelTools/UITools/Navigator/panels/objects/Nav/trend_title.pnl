@@ -1,0 +1,83 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,496 593 438 25 N "_3DFace" 2
+"$TrendNr"
+"$datapoint"
+EEE E E 1 -1 -1 0  0 0
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+14 0
+"txt_trend1_title"
+""
+1 0 0 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+-2 -2 436 25
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+  string InsertedText;
+  dpGet(\"System1:__nav_\" + dpTypeName($datapoint) + \"_Trend.\" + $TrendNr + \".Title:_online.._value\", InsertedText);
+	setValue(\"\", \"text\", InsertedText);
+}" 0
+
+"main()
+{
+  string InsertedText;
+  string CombinedText;
+  
+  getValue(\"\", \"text\", InsertedText);
+//  CombinedText= $TraceNr + \".\" + InsertedText;
+//  DebugN(\"CombinedText: \"+CombinedText);
+  dpSet(\"System1:__nav_\"+dpTypeName($datapoint)+\"_Trend.\"+$TrendNr+\".Title\", InsertedText);
+ 	DisplayText(\"txt_trend1_title\", \" Ok\", InsertedText);
+
+}" 0
+
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
