@@ -71,7 +71,7 @@ void DBRep<MeqParmDefHolder>::toDBRep (const MeqParmDefHolder& obj)
   BlobStringType bstype(true);
   BlobString bstr(bstype);
   BlobOBufString bb(bstr);
-  BlobOStream bs(&bb);
+  BlobOStream bs(bb);
   {
     bstr.resize(0);
     bs << obj.getPolc().getCoeff();
@@ -111,21 +111,21 @@ void DBRep<MeqParmDefHolder>::fromDBRep (MeqParmDefHolder& obj) const
   MeqPolc polc;
   {
     BlobIBufChar bb(itsCoeff.data(), itsCoeff.size());
-    BlobIStream bs(&bb);
+    BlobIStream bs(bb);
     MeqMatrix mat;
     bs >> mat;
     polc.setCoeff (mat);
   }
   {
     BlobIBufChar bb(itsSimCoeff.data(), itsSimCoeff.size());
-    BlobIStream bs(&bb);
+    BlobIStream bs(bb);
     MeqMatrix mat;
     bs >> mat;
     polc.setSimCoeff (mat);
   }
   {
     BlobIBufChar bb(itsPertSimCoeff.data(), itsPertSimCoeff.size());
-    BlobIStream bs(&bb);
+    BlobIStream bs(bb);
     MeqMatrix mat;
     bs >> mat;
     polc.setPertSimCoeff (mat);
