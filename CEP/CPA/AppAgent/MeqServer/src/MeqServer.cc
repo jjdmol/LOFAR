@@ -29,11 +29,12 @@ MeqServer::MeqServer()
 {
   command_map["Create.Node"] = &MeqServer::createNode;
   command_map["Delete.Node"] = &MeqServer::deleteNode;
-  command_map["Get.Node.State"] = &MeqServer::getNodeState;
-  command_map["Set.Node.State"] = &MeqServer::setNodeState;
   command_map["Resolve.Children"] = &MeqServer::resolveChildren;
   command_map["Get.Node.List"] = &MeqServer::getNodeList;
-  command_map["Get.Result"] = &MeqServer::getNodeResult;
+  
+  command_map["Node.Get.State"] = &MeqServer::getNodeState;
+  command_map["Node.Set.State"] = &MeqServer::setNodeState;
+  command_map["Node.Execute"] = &MeqServer::getNodeResult;
 }
 
 //##ModelId=3F6196800325
@@ -142,26 +143,26 @@ void MeqServer::getNodeResult (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   cdebug(2)<<"getNodeResult for node "<<node.name()<<endl;
   const Request & req = (*in)[AidRequest].as<Request>();
   cdebug(3)<<"    request is "<<req.sdebug(DebugLevel-1,"    ")<<endl;
-  ResultSet::Ref resset;
-  int flags = node.getResult(resset,req);
+  Result::Ref resref;
+  int flags = node.execute(resref,req);
   cdebug(2)<<"  getResult returns flags "<<flags<<" with result"<<endl;
-  cdebug(3)<<"    result set is "<<resset.sdebug(DebugLevel-1,"    ")<<endl;
-  if( DebugLevel>3 && resset.valid() )
+  cdebug(3)<<"    result is "<<resref.sdebug(DebugLevel-1,"    ")<<endl;
+  if( DebugLevel>3 && resref.valid() )
   {
-    for( int i=0; i<resset->numResults(); i++ ) 
+    for( int i=0; i<resref->numVellSets(); i++ ) 
     {
-      const Result &res = resset->resultConst(i);
-      if( res.isFail() ) {
-        cdebug(4)<<"  plane "<<i<<": FAIL"<<endl;
+      const VellSet &vs = resref->vellSetConst(i);
+      if( vs.isFail() ) {
+        cdebug(4)<<"  vellset "<<i<<": FAIL"<<endl;
       } else {
-        cdebug(4)<<"  plane "<<i<<": "<<res.getValue()<<endl;
+        cdebug(4)<<"  vellset "<<i<<": "<<vs.getValue()<<endl;
       }
     }
   }
   out <<= new DataRecord;
   out()[AidResult|AidCode] = flags;
-  if( resset.valid() )
-    out()[AidResult] <<= resset;
+  if( resref.valid() )
+    out()[AidResult] <<= resref;
 }
 
 //##ModelId=3F608106021C

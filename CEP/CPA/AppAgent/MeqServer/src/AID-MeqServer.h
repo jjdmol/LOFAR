@@ -68,6 +68,11 @@ const int AidDelete_int = -1335;
 const AtomicID AidError(-1084);                   // from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/Gateways.h:19
 const int AidError_int = -1084;
 #endif
+#ifndef _defined_id_AidExecute
+#define _defined_id_AidExecute 1
+const AtomicID AidExecute(-1372);                 // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:13
+const int AidExecute_int = -1372;
+#endif
 #ifndef _defined_id_AidFormat
 #define _defined_id_AidFormat 1
 const AtomicID AidFormat(-1293);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgentVocabulary.h:34

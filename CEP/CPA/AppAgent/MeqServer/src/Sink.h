@@ -53,7 +53,7 @@ class Sink : public VisHandlerNode
     
   protected:
     //##ModelId=3F98DAE60217
-    virtual int getResultImpl (ResultSet::Ref &resref, const Request &req,bool newreq);
+    virtual int getResult (Result::Ref &resref, const Request &req,bool newreq);
 
   private:
 //    //##ModelId=3F98DD7400A9

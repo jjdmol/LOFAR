@@ -41,9 +41,9 @@ const meqserver_test := function ()
   print mqs.meq('Resolve.Children',[name='test1'],T);
   
   # get node state, node specified via name
-  print mqs.meq('Get.Node.State',[name='test1'],T);
+  print mqs.meq('Node.Get.State',[name='test1'],T);
   # get node state, node specified via index
-  print mqs.meq('Get.Node.State',[nodeindex=1],T);
+  print mqs.meq('Node.Get.State',[nodeindex=1],T);
 
   # test creating a sub-tree
   defval1 := array(as_double(1),2,2);
@@ -59,8 +59,8 @@ const meqserver_test := function ()
   
   cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
   request := meqrequest(cells);
-  print mqs.meq('Get.Result',[name='add1_2',request=request],T);
-  print mqs.meq('Get.Node.State',[name='add1_2'],T);
+  print mqs.meq('Node.Execute',[name='add1_2',request=request],T);
+  print mqs.meq('Node.Get.State',[name='add1_2'],T);
 }
 
 const meqsink_test := function ()
@@ -150,7 +150,7 @@ const meqsel_test := function ()
   global cells,request,res;
   cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
   request := meqrequest(cells);
-  res := mqs.meq('Get.Result',[name='select3',request=request],T);
+  res := mqs.meq('Node.Execute',[name='select3',request=request],T);
   print res;
 }
 
@@ -165,5 +165,5 @@ const freq_test := function ()
   dom:=meqdomain(10,20,10,20);
   cells:=meqcells(dom,10,[11.0,12,13],[1.,1,1]);
   mqs.meq('Create.Node',[class='MeqFreq',name='f']);
-  print a:=mqs.meq('Get.Result',[name='f',request=meqrequest(cells)],T);
+  print a:=mqs.meq('Node.Execute',[name='f',request=meqrequest(cells)],T);
 }

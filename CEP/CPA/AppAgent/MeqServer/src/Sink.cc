@@ -3,7 +3,7 @@
 #include <DMI/DataField.h>
 #include <VisCube/VisVocabulary.h>
 #include <MEQ/Request.h>
-#include <MEQ/Result.h>
+#include <MEQ/VellSet.h>
 
 namespace Meq {
 
@@ -71,9 +71,9 @@ void Sink::setState (const DataRecord &rec)
 }
 
 //##ModelId=3F9509770277
-int Sink::getResultImpl (ResultSet::Ref &resref,const Request &req,bool)
+int Sink::getResult (Result::Ref &resref,const Request &req,bool)
 {
-  return getChild(0).getResult(resref,req);
+  return getChild(0).execute(resref,req);
 }
 
 template<class T,class U>
@@ -107,40 +107,40 @@ int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref,
   cdebug(3)<<"deliver: processing tile "<<tileref->tileId()<<" of "
             <<tileref->ntime()<<" timeslots"<<endl;
   // get results from all child nodes 
-  ResultSet::Ref resref;
-  cdebug(5)<<"calling getResult() on child "<<endl;
-  int resflag = getChild(0).getResult(resref,req);
+  Result::Ref resref;
+  cdebug(5)<<"calling execute() on child "<<endl;
+  int resflag = getChild(0).execute(resref,req);
   FailWhen(resflag&RES_WAIT,"Meq::Sink can't cope with a WAIT result code yet");
   if( resflag == RES_FAIL )
   {
     cdebug(3)<<"child result is FAIL, ignoring"<<endl;
     return RES_FAIL;
   }
-  int nres = resref->numResults();
-  cdebug(3)<<"child returns "<<nres<<" results, resflag "<<resflag<<endl;
+  int nvs = resref->numVellSets();
+  cdebug(3)<<"child returns "<<nvs<<" vellsets, resflag "<<resflag<<endl;
   if( output_col<0 )
   {
     cdebug(3)<<"output disabled, skipping"<<endl;
     return resflag;
   }
   // store resulting Vells into the tile
-  // loop over results and get a tf-plane from each
+  // loop over vellsets and get a tf-plane from each
   VisTile *ptile = 0;  // we will privatize the tile for writing as needed
   const VisTile::Format *pformat = 0;
   void *coldata; 
   TypeId coltype;
   LoShape colshape; 
   int ncorr = tileref->ncorr();
-  for( int ires = 0; ires < nres; ires++ )
+  for( int ivs = 0; ivs < nvs; ivs++ )
   {
-    int icorr = mapOutputCorr(ires);
+    int icorr = mapOutputCorr(ivs);
     if( icorr<0 )
     {
-      cdebug(3)<<"plane "<<ires<<" output disabled, skipping"<<endl;
+      cdebug(3)<<"vellset "<<ivs<<" output disabled, skipping"<<endl;
     }
     else if( icorr >= ncorr )
     {
-      cdebug(3)<<"child "<<ires<<" correlation not available, skipping"<<endl;
+      cdebug(3)<<"child "<<ivs<<" correlation not available, skipping"<<endl;
     }
     else // OK, write it
     {
@@ -181,7 +181,7 @@ int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref,
         colshape.push_back(ptile->nrow()); // add third dimension to column shape
       }
       // get the values out, and copy them to tile column
-      const Vells &vells = resref->resultConst(ires).getValue();
+      const Vells &vells = resref->vellSetConst(ivs).getValue();
       if( vells.isReal() ) // real values
       {
         FailWhen(coltype!=Tpdouble,"type mismatch: double Vells, "+coltype.toString()+" column");
