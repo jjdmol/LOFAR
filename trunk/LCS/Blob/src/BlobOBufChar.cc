@@ -62,7 +62,7 @@ BlobOBufChar::~BlobOBufChar()
 uint BlobOBufChar::put (const void* buffer, uint nbytes)
 {
   // Expand the buffer if needed (and possible).
-  if (! expandIfNeeded (itsPos+nbytes)) {
+  if (! resizeIfNeeded (itsPos+nbytes)) {
     return 0;
   }
   // Copy the data and set new position and size.
@@ -86,7 +86,7 @@ int64 BlobOBufChar::setPos (int64 pos)
   // Expand the buffer if needed.
   // Initialize the new buffer positions with zeroes.
   if (pos > itsSize) {
-    AssertMsg (expandIfNeeded (pos),
+    AssertMsg (resizeIfNeeded (pos),
 	       "BlobOBufChar::setPos - buffer cannot be expanded");
     for (; itsSize<pos; itsSize++) {
       itsBuffer[itsSize] = 0;
@@ -127,6 +127,14 @@ void BlobOBufChar::doExpand (uint newReservedSize, uint)
     }
     itsBuffer  = newBuffer;
     itsIsOwner = true;
+  }
+}
+
+void BlobOBufChar::reserve (uint newReservedSize)
+{
+  if (newReservedSize > itsReservedSize) {
+    doExpand (newReservedSize, itsSize);
+    itsReservedSize = newReservedSize;
   }
 }
 
