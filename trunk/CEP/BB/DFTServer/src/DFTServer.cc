@@ -77,7 +77,7 @@ void DFTServer::run (int nsteps)
   if (nsteps < 0) {
     nsteps = 10;
   }
-  TRACER2("Ready with definition of configuration");
+  LOG_TRACE_FLOW_STR("Ready with definition of configuration");
   Profiler::init();
 
   cout << endl <<  "Start Process" << endl;    
