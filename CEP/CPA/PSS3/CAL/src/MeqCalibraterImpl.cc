@@ -293,16 +293,22 @@ void MeqCalibrater::calcUVWPolc (const Table& ms)
     // Loop through the data in periods of one hour.
     // Take care that the remainder is evenly spread over the chunks.
     int nrdone = 0;
+
+    char baselineName[64];
+    snprintf(baselineName, 64, ".ST_%d_%d", ant1, ant2);
+
     for (int i=0; i<chunkRem; i++) {
       itsUVWPolc[blindex]->calcCoeff (dt(Slice(nrdone,chunkLength+1)),
 				      uvws(Slice(0,3),
 					   Slice(nrdone,chunkLength+1)));
+      itsUVWPolc[blindex]->setName(baselineName);
       nrdone += chunkLength+1;
     }
     for (int i=chunkRem; i<nrChunk; i++) {
       itsUVWPolc[blindex]->calcCoeff (dt(Slice(nrdone,chunkLength)),
 				      uvws(Slice(0,3),
 					   Slice(nrdone,chunkLength)));
+      itsUVWPolc[blindex]->setName(baselineName);
       nrdone += chunkLength;
     }
     Assert (nrdone == nrtim);
@@ -625,8 +631,10 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
 	       excIter++)
 	  {
 	    if (parmName.matches(*excIter))
-	    parmExc = true;
-	    break;
+	    {
+	      parmExc = true;
+	      break;
+	    }
 	  }
 	  if (!parmExc) {
 	    cout << "setSolvable: " << (*iter)->getName() << endl;
@@ -1088,22 +1096,29 @@ void MeqCalibrater::addParm(const MeqParm& parm, GlishRecord& rec)
 
   MeqMatrix m;
   m = MeqMatrix (complex<double>(), itsNrScid, 1);
-  parm.getCurrentValue(m);
   
-  Matrix<DComplex> coefs(m.nx(), m.ny());
-
-  for (int i=0; i < m.nx(); i++)
-  {
-    for (int j=0; j < m.ny(); j++)
-    {
-      coefs(i,j) = m.getDComplex(i,j);
-    }
-  }
-
-  GlishArray ga(coefs);
-
   parmRec.add("parmid", Int(parm.getParmId()));
-  parmRec.add("value",  ga);
+
+  try
+  {
+    parm.getCurrentValue(m);
+    Matrix<DComplex> coefs(m.nx(), m.ny());
+    
+    for (int i=0; i < m.nx(); i++)
+    {
+      for (int j=0; j < m.ny(); j++)
+      {
+	coefs(i,j) = m.getDComplex(i,j);
+      }
+    }
+
+    GlishArray ga(coefs);
+    parmRec.add("value",  ga);
+  }
+  catch (...)
+  {
+    parmRec.add("value", "<?>");
+  }
   
   rec.add(parm.getName(), parmRec);
 }
@@ -1121,7 +1136,7 @@ GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns,
 				    Vector<String>& excludePatterns)
 {
   GlishRecord rec;
-  vector<MeqParm*> parmVector;
+  //  vector<MeqParm*> parmVector;
 
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
@@ -1159,8 +1174,10 @@ GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns,
 	       excIter++)
 	  {
 	    if (parmName.matches(*excIter))
-	    parmExc = true;
-	    break;
+	    {
+	      parmExc = true;
+	      break;
+	    }
 	  }
 	  if (!parmExc) {
 	    addParm (**iter, rec);
@@ -1171,6 +1188,85 @@ GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns,
     }
   }
   return rec;
+}
+
+//----------------------------------------------------------------------
+//
+// ~getParmNames
+//
+// Get the names of the parameters whose name matches the parmPatterns.
+// Exclude the names that match the excludePatterns.
+// E.g. getParmNames("*") returns all parameter names.
+//
+//----------------------------------------------------------------------
+GlishArray MeqCalibrater::getParmNames(Vector<String>& parmPatterns,
+				       Vector<String>& excludePatterns)
+{
+  const int PARMNAMES_CHUNKSIZE = 100;
+  int maxlen = PARMNAMES_CHUNKSIZE;
+  int current=0;
+  Vector<String> parmNameVector(maxlen);
+  //  vector<MeqParm*> parmVector;
+
+  const vector<MeqParm*>& parmList = MeqParm::getParmList();
+
+  cout << "getParmNames: " << endl;
+
+  // Convert patterns to regexes.
+  vector<Regex> parmRegex;
+  for (unsigned int i=0; i<parmPatterns.nelements(); i++) {
+    parmRegex.push_back (Regex::fromPattern(parmPatterns[i]));
+  }
+  vector<Regex> excludeRegex;
+  for (unsigned int i=0; i<excludePatterns.nelements(); i++) {
+    excludeRegex.push_back (Regex::fromPattern(excludePatterns[i]));
+  }
+  //
+  // Find all parms matching the parmPatterns
+  // Exclude them if matching an excludePattern
+  //
+  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+       iter != parmList.end();
+       iter++)
+  {
+    String parmName ((*iter)->getName());
+
+    for (vector<Regex>::const_iterator incIter = parmRegex.begin();
+	 incIter != parmRegex.end();
+	 incIter++)
+    {
+      {
+	if (parmName.matches(*incIter))
+	{
+	  bool parmExc = false;
+	  for (vector<Regex>::const_iterator excIter = excludeRegex.begin();
+	       excIter != excludeRegex.end();
+	       excIter++)
+	  {
+	    if (parmName.matches(*excIter))
+	    {
+	      parmExc = true;
+	      break;
+	    }
+	  }
+	  if (!parmExc) {
+	    if (current >= maxlen)
+	    {
+	      maxlen += PARMNAMES_CHUNKSIZE;
+	      parmNameVector.resize(maxlen, True);
+	    }
+	    parmNameVector[current++] = parmName;
+	  }
+	  break;
+	}
+      }
+    }
+  }
+
+  parmNameVector.resize(current, True);
+  GlishArray arr(parmNameVector);
+
+  return arr;
 }
 
 //----------------------------------------------------------------------
@@ -1228,7 +1324,7 @@ Bool MeqCalibrater::select(const String& where, int firstChan, int lastChan)
 
 //----------------------------------------------------------------------
 //
-// ~getParms
+// ~getStatistics
 //
 // Get a description of the parameters whose name matches the
 // parmPatterns pattern. The description shows the result of the
@@ -1297,7 +1393,7 @@ String MeqCalibrater::className() const
 //----------------------------------------------------------------------
 Vector<String> MeqCalibrater::methods() const
 {
-  Vector<String> method(13);
+  Vector<String> method(14);
 
   method(0)  = "settimeinterval";
   method(1)  = "resetiterator";
@@ -1312,6 +1408,7 @@ Vector<String> MeqCalibrater::methods() const
   method(10) = "getsolvedomain";
   method(11) = "select";
   method(12) = "getstatistics";
+  method(13) = "getparmnames";
 
   return method;
 }
@@ -1469,6 +1566,19 @@ MethodResult MeqCalibrater::runMethod(uInt which,
 				       ParameterSet::Out);
 
       if (runMethod) returnval() = getStatistics (detailed(), clear());
+    }
+    break;
+
+  case 13: // getparmnames
+    {
+      Parameter<Vector<String> > parmPatterns(inputRecord, "parmpatterns",
+					      ParameterSet::In);
+      Parameter<Vector<String> > excludePatterns(inputRecord, "excludepatterns",
+						 ParameterSet::In);
+      Parameter<GlishArray> returnval(inputRecord, "returnval",
+				      ParameterSet::Out);
+
+      if (runMethod) returnval() = getParmNames(parmPatterns(), excludePatterns());
     }
     break;
 

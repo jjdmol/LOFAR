@@ -32,6 +32,9 @@
 #include <aips/Tables/TableIter.h>
 #include <aips/Utilities/String.h>
 #include <aips/aips.h>
+#include <aips/Glish/GlishArray.h>
+#include <aips/Glish/GlishRecord.h>
+#include <aips/Glish/GlishValue.h>
 #include <trial/Tasking/ApplicationObject.h>
 
 #include <MNS/MeqDomain.h>
@@ -121,6 +124,14 @@ public:
    */
   GlishRecord getParms (Vector<String>& parmPatterns,
 			Vector<String>& excludePatterns);
+
+  /*!
+   * Get the names of the parameters whose name matches the parmPatterns,
+   * but does not match the excludePatterns.
+   * E.g. getParmNames("*") returns all parameter names.
+   */
+  GlishArray getParmNames(Vector<String>& parmPatterns,
+			  Vector<String>& excludePatterns);
 
   /*!
    * Get a description of the current solve domain, which changes

@@ -175,6 +175,56 @@ solvepos := function(fname='michiel.demo', niter=1)
     return ref annotator;
 }
 
+solvegain := function(fname='michiel.demo', niter=1)
+{
+    mc := meqcalibrater(spaste(fname,'.MS'), fname, fname);
+    if (is_fail(mc)) {
+	print "meqcalibratertest(): could not instantiate meqcalibrater"
+	fail
+    }
+
+    mc.select('all([ANTENNA1,ANTENNA2] in [0:10])', 0, 0);
+
+    mc.settimeinterval(3600); # calibrate per 1 hour
+    mc.clearsolvableparms();
+
+    mc.setsolvableparms("gain.11.ST_{0,1,2,3,4,5,6,7,8,9,10}");
+    mc.setsolvableparms("gain.22.ST_{0,1,2,3,4,5,6,7,8,9,10}");
+
+    parms := mc.getparmnames("*");
+    print 'ALL PARMS = ', parms;
+
+    mc.resetiterator()
+    while (mc.nextinterval())
+    {
+	d := mc.getsolvedomain();
+	print 'solvedomain = ', d;
+
+	for (i in [1:niter])
+	{
+	    print "iteration", i
+	    mc.solve('MODEL_DATA');
+
+	    parms := mc.getparms("gain.11.*");
+	    print 'GAIN SOLUTION = ';
+	    for (k in [1:11])
+	    {
+		print parms[k].value[1];
+	    }
+
+	    parms := mc.getparms("gain.22.*");
+	    print 'GAIN SOLUTION = ';
+	    for (k in [1:11])
+	    {
+		print parms[k].value[1];
+	    }
+        }
+	print mc.getstatistics()
+    }
+
+    mc.done();
+}
+
 initparms := function(fname='michiel.demo')
 {
   pt := parmtable(spaste(fname,'.MEP'), T);
@@ -262,5 +312,13 @@ demo := function(solver=0,niter=10,fname='michiel.demo')
 	{
 		annotator:=solvepos(fname=fname, niter=niter);
 	}
+}
+
+demogain := function(niter=10)
+{
+	setparms();
+	setgsm();
+
+	solvegain(niter=niter);
 }
 

@@ -191,6 +191,19 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.getstatisticsRec);
     }
     
+    self.getparmnamesRec := [_method="getparmnames", _sequence=self.id._sequence]
+    public.getparmnames := function(parmpatterns, excludepatterns="u.* v.* w.*") {
+    
+        wider self;
+        
+        # argument assignment
+        self.getparmnamesRec.parmpatterns    := parmpatterns
+	self.getparmnamesRec.excludepatterns := excludepatterns
+        
+        # return
+        return defaultservers.run(self.agent, self.getparmnamesRec);
+    }
+
     public.id := function() {
 	wider self;
 	return self.id.objectid;
