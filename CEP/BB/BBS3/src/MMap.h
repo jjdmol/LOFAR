@@ -56,7 +56,7 @@ class MMap
 
   // Guarantee this memory range is resident in RAM (disable paging). The memory range
   // must be part of a mapped area.
-  void lockMappedMemory(void* addr, size_t nrBytes);
+  void lockMappedMemory();
 
   // Reenable paging 
   void unlockMappedMemory();
@@ -80,8 +80,6 @@ class MMap
   void*  itsPtr;            // Pointer to the start of requested map area
   protection itsProtection; // Read/write protection of mapped area
 
-  void*  itsLockAddr;       // Start address for memory lock
-  size_t itsLockBytes;      // Number of memory locked bytes
 };
 
 inline void* MMap::getStart()

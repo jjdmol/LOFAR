@@ -40,5 +40,6 @@ KSparams=[
   meqTableName="demo10-",   // Meq model table name *       
   skyTableName="demo10_gsm-", // Sky model table name *
   calcUVW=F,               // Calculate UVW coordinates?
+  lockMappedMem=F,         // Call mlock immediately after mapping?
   writeAllSols=F           // Write DH_Solutions in the BB database for every iteration?
 ]

@@ -36,9 +36,7 @@ MMap::MMap(const string& fileName, protection prot)
     itsNrBytes   (0),
     itsPageStart (0),
     itsPtr       (0),
-    itsProtection(prot),
-    itsLockAddr  (0),
-    itsLockBytes (0)
+    itsProtection(prot)
 {
   // Open file
   int pr;
@@ -113,7 +111,7 @@ void MMap::mapFile(long long startOffset, size_t nrBytes)
     
   // Do mmap
   itsPageStart = mmap ( 0, itsNrBytes, protect, MAP_SHARED, itsFd, pageStartOffset);
-  ASSERTSTR (itsPtr != MAP_FAILED, "mmap failed: " << strerror(errno) ); 
+  ASSERTSTR (itsPageStart != MAP_FAILED, "mmap failed: " << strerror(errno) ); 
   char* reqPtr = (char*)itsPageStart + startOffset - pageStartOffset;   // requested pointer
   itsPtr = reqPtr;
 }
@@ -131,26 +129,20 @@ void MMap::unmapFile()
   }
 }
 
-void MMap::lockMappedMemory(void* addr, size_t nrBytes)
+void MMap::lockMappedMemory()
 {
   ASSERTSTR(itsPtr > 0, "No area has been mapped. ");
-  char* req = reinterpret_cast<char*>(addr);
-  char* mpd = reinterpret_cast<char*>(itsPageStart);
-  ASSERTSTR((req >= mpd) && (req+nrBytes <= mpd+itsNrBytes), 
-	    "Indicated range to lock does not correspond to the currently mapped area");
   int res;
-  res = mlock(addr, nrBytes);
+  res = mlock(itsPageStart, itsNrBytes);
   ASSERTSTR(res != 0, "mlock failed: " << strerror(errno) ); 
 }
 
 void MMap::unlockMappedMemory()
 {
-  if (itsLockAddr != 0)
+  if (itsPageStart != 0)
   {
-    int res = munlock(itsLockAddr, itsLockBytes);
+    int res = munlock(itsPageStart, itsNrBytes);
     ASSERTSTR (res == 0, "munlock failed: " << strerror(errno));
-    itsLockAddr = 0;
-    itsLockBytes = 0;
   }
 }
 

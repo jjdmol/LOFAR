@@ -83,7 +83,8 @@ public:
 		 uInt ddid,
 		 const vector<int>& ant,
 		 const String& modelType,
-		 Bool calcUVW);
+		 Bool calcUVW,
+		 bool lockMappedMem);
 
   //! Destructor
   ~MeqCalibrater();
@@ -314,6 +315,7 @@ private:
   unsigned int   itsTimeIndex;         // The index of the current time
   unsigned int   itsNrTimes;           // The number of times in the time interval
   MMap*          itsDataMap;           // Data file to map
+  bool           itsLockMappedMem;     // Lock memory immediately after mapping?
 
   /*@}*/
 };
