@@ -627,12 +627,21 @@ GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
   if (1 == GET_CONFIG("RSPDriver.SOFTPPS", i))
   {
     // Send SoftPPS signal to all boards
-    EPACrrSoftppsEvent softpps;
-    softpps.hdr.m_fields = MEPHeader::CRR_SOFTRESET_HDR;
+    EPACrrSoftppsEvent bp_pps;
+    bp_pps.hdr.m_fields = MEPHeader::CRR_SOFTPPS_HDR;
+
+    EPACrbSoftppsEvent ap_pps;
+    ap_pps.hdr.m_fields = MEPHeader::CRB_SOFTPPS_HDR;
 
     for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i); i++)
     {
-      m_board[i].send(softpps);
+      for (int j = 0; j < GET_CONFIG("RS.N_BLPS", i); j++)
+      {
+	ap_pps.hdr.m_fields.addr.dstid = j;
+	m_board[i].send(ap_pps);
+      }
+      
+      m_board[i].send(bp_pps);
     }
   }
 	
