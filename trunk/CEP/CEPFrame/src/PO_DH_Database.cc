@@ -25,12 +25,29 @@
 #include <PO_DH_Database.h>
 #include <Common/lofar_iostream.h>
 
+#include <pgsql/libpq-fe.h>
+
 #include <sstream>
 using namespace std;
 
+PGconn * pgconn;
+int pgSeqNo;
+
+bool ConnectDatabase (void) {
+  pgSeqNo = 0;
+  pgconn = PQconnectdb ("dbname=testdb01");
+  if (PQstatus (pgconn) != CONNECTION_OK) {
+    cout << "CEPFrame::PO_DH_Database.cc::ConnectDatabase ():" << endl;
+    cout << "Failed to connect to postgress database." << endl;
+    cout << PQerrorMessage (pgconn);
+    return false;
+  }
+  return true;
+}
+
 // ==========================================
 // [>] Database implementation
-
+/*
 #define TH_ARRAY_SIZE       (512)
 
 typedef enum { msgPending, msgDiscarded } msgStatus;
@@ -50,7 +67,7 @@ string        MessageType       [TH_ARRAY_SIZE];
 string        MessageName       [TH_ARRAY_SIZE];
 string        HumanReadableForm [TH_ARRAY_SIZE];
 string        PseudoBlob        [TH_ARRAY_SIZE];
-
+*/
 // ==========================================
 // [>] DatabaseRecord
 
@@ -68,6 +85,39 @@ void DatabaseRecord::CopyToByteString (char * src, int size) {
 // [>] PO_DH_Database
 
 bool PO_DH_Database::Store () {
+  // First create blob:
+  int i;
+  ostringstream ostr;
+
+  cout << "{S}";
+
+  for (i = 0; i < getByteStringLength (); i ++) {  
+    ostr << (int) (getByteString ()) [i] << ' ';
+  }
+  ostr << "-1";
+
+  // Create inseertion command
+  ostringstream q;
+
+  q << "INSERT INTO message VALUES ("
+    << 123 << ", "
+    << getMessageTag () << ", "
+    << pgSeqNo << ", "
+    << "'Pending', "  
+    << getByteStringLength () << ", "
+    << "'" << getTimeStamp ()<< "', "
+    << "'" << getType () << "', "
+    << "'" << getName () << "', "
+    << "'" << ostr.str() << "');";
+
+  pgSeqNo ++;
+
+  PGresult * res;
+  string query = q.str ();
+  res = PQexec (pgconn, (q.str ()).c_str());
+
+  return true;
+  /*
   if (NrOfMessages == TH_ARRAY_SIZE - 1) {
     cout << "Fatal error in TH_Database::send (). Maximum number of message transfers reached." << endl;
     return false;
@@ -93,27 +143,88 @@ bool PO_DH_Database::Store () {
   MessageType [NrOfMessages] = getType ();
   MessageName [NrOfMessages] = getName ();
 
-  int i;
-  ostringstream ostr;
-
-  for (i = 0; i < getByteStringLength (); i ++) {  
-    ostr << (unsigned int) (getByteString ()) [i] << ' ';
-  }
-  ostr << "-1";
-
   PseudoBlob [NrOfMessages] = ostr.str ();
 
   NrOfMessages ++;
 
   return true;
+  */
 }
 
 
 bool PO_DH_Database::Retrieve () {
   int i;
-
   i = 0;
 
+  cout << "{R}" << endl;;
+
+  // Construct query
+  ostringstream q;
+
+  q << "SELECT * FROM message WHERE "
+    << "appid = " << 123 << " AND "
+    << "tag = " << getMessageTag () << ";";
+
+  //  cout << q.str() << endl;
+
+  // Do the query
+  PGresult * res;
+
+  res = PQexec (pgconn, (q.str ()).c_str ());
+  if (PQresultStatus (res) != PGRES_TUPLES_OK) {
+    cout << "Query failed." << endl;
+    return false;
+  }
+  
+  int nRows;
+  nRows = PQntuples (res);
+  if (nRows != 1) {
+    cout << "ERROR: Found less or more than 1 message in database (" 
+	 << nRows << ")." << endl;
+    return false;
+  }
+  
+
+  // Read the found tuple
+  setMessageTag       (atoi (PQgetvalue (res, 0, 1)));
+  setByteStringLength (atoi (PQgetvalue (res, 0, 4)));
+  setTimeStamp        (atoi (PQgetvalue (res, 0, 5)));
+  setType             (PQgetvalue (res, 0, 6));
+  setName             (PQgetvalue (res, 0, 7));
+
+  int j, idx=0;
+  istringstream istr (PQgetvalue (res, 0, 8));
+
+  istr >> j;
+  while (j != -1) {
+    * (getByteString () + idx) = (char) j;
+ idx ++;
+    istr >> j;
+  }
+
+  // Construct the deletion query
+  ostringstream qq;
+  qq << "DELETE FROM message WHERE "
+     << "appid = " << 123 << " AND "
+     << "tag = " << getMessageTag () << ";";
+
+  //  cout << qq.str() << endl;
+
+  // What happens to the old PQres? Do I have to free it?
+
+  // Do the query
+  res = PQexec (pgconn, (qq.str ()).c_str ());
+  //if (PQresultStatus (res) != PGRES_TUPLES_OK) {
+  /*
+  if (PQcmdTuples (res) != 1) {
+    cout << "Deletion query failed." << endl;
+    return false;
+  }
+  */
+  //  cout << "Deletion result: " << PQcmdStatus (res) << endl;
+  
+  return true;
+  /*
   // Search for the record with the correct tag.
   while (! (MessageTag [i] == getMessageTag () 
     && MessageStatus [i] == msgPending)) {
@@ -141,19 +252,20 @@ bool PO_DH_Database::Retrieve () {
 
   cout << "PseudoBlob(Receive): " << PseudoBlob [i] << endl;
 
-  int j, idx=0;
-  istringstream istr (PseudoBlob[i]);
-
-  istr >> j;
-  while (j != -1) {
-    * (getByteString () + idx) = (char) j;
-    idx ++;
-    istr >> j;
-  }
-
-  NrOfMessages ++;
+//  int j, idx=0;
+//  istringstream istr (PseudoBlob[i]);
+//
+//  istr >> j;
+//  while (j != -1) {
+//    * (getByteString () + idx) = (char) j;
+//    idx ++;
+//    istr >> j;
+//  }
+//
+//  NrOfMessages ++;
 
   return true;
+  */
 }
 
 
