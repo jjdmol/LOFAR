@@ -32,7 +32,7 @@
 #include <Common/lofar_mdl.h>
 #include <Common/lofar_pastd.h>
 #include <Common/Lorrays.h>
-#include <Common/ArrayOperations.h>
+#include <Math/LCSMath.h>
 
 WH_AWE::WH_AWE (const string& name, unsigned int nin, unsigned int nout,
 		unsigned int nant, unsigned int buflength)
@@ -103,12 +103,12 @@ void WH_AWE::process()
 
   // EVD - first calculate the ACM
   LoMat_dcomplex itsAcm (itsNrcu, itsNrcu) ;
-  itsAcm = ArrayOperations::acm(itsBuffer);
+  itsAcm = LCSMath::acm(itsBuffer);
   
   // EVD - using the ACM, calculate eigen vectors and values.
   LoMat_dcomplex itsEvectors;
   LoVec_double   itsEvalues;
-  ArrayOperations::eig(itsAcm, itsEvectors, itsEvalues);
+  LCSMath::eig(itsAcm, itsEvectors, itsEvalues);
 
   // EVD - Determine the number of sources in the signal
   // TODO: fit MDL into Common library.
@@ -180,8 +180,8 @@ LoVec_dcomplex WH_AWE::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) {
   } else {
     LoVec_dcomplex temp(B.size());
     
-    temp = ArrayOperations::MatMult(B, 1/ArrayOperations::MatMultReduce(B, B)) ;
-    w = d - ArrayOperations::MatMult( ArrayOperations::MatMult( B, temp ), d );
+	//    temp = LCSMath::matMult(B, 1/LCSMath::matMultReduce(B, B)) ;
+	//    w = d - LCSMath::matMult( LCSMath::matMult( B, temp ), d );
   }
   return w;
 }
@@ -194,10 +194,10 @@ LoVec_dcomplex WH_AWE::getWeights (LoMat_dcomplex B, LoVec_dcomplex d) {
   } else {
     LoMat_dcomplex temp(B.cols(),B.rows());
 
-    temp = ArrayOperations::MatMult(pow(ArrayOperations::MatMult(B.transpose(firstDim, secondDim), B), -1), 
+    temp = LCSMath::matMult(pow(LCSMath::matMult(B.transpose(firstDim, secondDim), B), -1), 
 				    B.transpose(firstDim,secondDim)) ;
 
-    w = d - ArrayOperations::MatMult( ArrayOperations::MatMult( B, temp ), d );
+    w = d - LCSMath::matMult( LCSMath::matMult( B, temp ), d );
   }
   return w;
 }

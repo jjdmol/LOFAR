@@ -29,15 +29,13 @@
 
 WH_BandSep::WH_BandSep (const string& name,
 						unsigned int nsubband,
-						const string& coeffFileName,
-						bool plot)
+						const string& coeffFileName)
 : WorkHolder   (1, nsubband, name, "WH_BandSep"),
   itsInHolder  ("in", 1, 1),
   itsOutHolders(0),
   itsNsubband  (nsubband),
   itsCoeffName (coeffFileName),
-  itsPos       (0),
-  itsDoPlot    (plot)
+  itsPos       (0)
 {
   // Allocate blocks to hold pointers to input and output DH-s.
   if (nsubband > 0) {
@@ -54,7 +52,8 @@ WH_BandSep::WH_BandSep (const string& name,
 
   // DEBUG
   handle = gnuplot_init();
-  itsFileOut.open ("/home/alex/gerdes/subband.txt");
+  itsFileOutReal.open ((string ("/home/alex/gerdes/subband_real_") + name + string (".txt")).c_str ());
+  itsFileOutComplex.open ((string ("/home/alex/gerdes/subband_complex_") + name + string (".txt")).c_str ());
 }
 
 WH_BandSep::~WH_BandSep()
@@ -66,9 +65,9 @@ WH_BandSep::~WH_BandSep()
   delete [] itsOutHolders;
 
   // DEBUG
-  gnuplot_close(handle);
-  itsFileOut << " ]" << endl;
-  itsFileOut.close();
+  gnuplot_close (handle);
+  itsFileOutReal.close ();
+  itsFileOutComplex.close ();
 }
 
 WorkHolder* WH_BandSep::construct(const string& name, 
@@ -77,13 +76,12 @@ WorkHolder* WH_BandSep::construct(const string& name,
 {
   return new WH_BandSep(name, 
 						params.getInt("nsubband", 10), 
-						params.getString("coeffname", "filter.coeff"),
-						false);
+						params.getString("coeffname", "filter.coeff"));
 }
 
 WH_BandSep* WH_BandSep::make(const string& name) const
 {
-  return new WH_BandSep (name, itsNsubband, itsCoeffName, itsDoPlot);
+  return new WH_BandSep (name, itsNsubband, itsCoeffName);
 }
 
 void WH_BandSep::preprocess()
@@ -96,9 +94,7 @@ void WH_BandSep::preprocess()
   AssertStr (itsNsubband == itsFilterbank->getItsNumberOfBands(), "The coefficientfile isn't correct!");
 
   // DEBUG
-  if (itsDoPlot) {
-	itsFileOut << itsNsubband << " x 100" << endl << "[ ";
-  }
+  //  itsFileOut << itsNsubband << " x 100" << endl << "[ ";
 }
 
 void WH_BandSep::process()
@@ -114,17 +110,18 @@ void WH_BandSep::process()
 	if (itsPos == 0) {
       subbandSignals = itsFilterbank->filter(itsBuffer);
 
-	  // DEBUG
-	  for (int i = 0; i < itsNsubband && itsDoPlot; i++) {
-		itsFileOut << "(" << real (itsOutHolders[i]->getBuffer ()[0]) << "," 
-				   << imag (itsOutHolders[i]->getBuffer ()[0]) << ") ";
-	  }
-	  itsFileOut << endl;	
-	
 	  // Copy to other output buffers.
 	  for (int i = 0; i < itsNsubband; i++) {
 		getOutHolder (i)->getBuffer ()[0] = subbandSignals (i, 0);
 	  }
+
+	  // DEBUG
+	  for (int i = 0; i < itsNsubband; i++) {
+		itsFileOutReal << real (itsOutHolders[i]->getBuffer ()[0]) << " ";
+		itsFileOutComplex << imag (itsOutHolders[i]->getBuffer ()[0]) << " ";
+	  }
+	  itsFileOutReal << endl;	
+	  itsFileOutComplex << endl;	
 	}
   }
 }

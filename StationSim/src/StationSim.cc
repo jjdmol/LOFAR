@@ -185,33 +185,18 @@ void StationSim::define (const ParamBlock& params)
 
   // Create the subband filterbank
   for (int i = 0; i < nrcu; ++i) {
-      sprintf (suffix, "%d", i);
+	sprintf (suffix, "%d", i);
 	  
-	  if (i == 0) {
-		Step subband_filter (WH_BandSep("",
-										nsubband,
-										coeffFileNameSub,
-										true),
-							 string ("subband_filter_") + suffix,
-							 false);
-		subband_filter.getInData (0).setReadDelay (delayMod + delayPhase);
-		for (int j = 0; j < nsubband; ++j) {
-		  subband_filter.getOutData (j).setWriteDelay (delayMod + delayPhase + delaySubFilt);
-		}
-		simul.addStep (subband_filter);
-	  } else {
-		Step subband_filter (WH_BandSep("",
-										nsubband,
-										coeffFileNameSub,
-										true),
-							 string ("subband_filter_") + suffix,
-							 false);
-		subband_filter.getInData (0).setReadDelay (delayMod + delayPhase);
-		for (int j = 0; j < nsubband; ++j) {
-		  subband_filter.getOutData (j).setWriteDelay (delayMod + delayPhase + delaySubFilt);
-		}
-		simul.addStep (subband_filter);
-	  }
+	Step subband_filter (WH_BandSep(suffix,
+									nsubband,
+									coeffFileNameSub),
+						 string ("subband_filter_") + suffix,
+						 false);
+	subband_filter.getInData (0).setReadDelay (delayMod + delayPhase);
+	for (int j = 0; j < nsubband; ++j) {
+	  subband_filter.getOutData (j).setWriteDelay (delayMod + delayPhase + delaySubFilt);
+	}
+	simul.addStep (subband_filter);	
   }
 
 
