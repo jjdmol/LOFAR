@@ -28,7 +28,7 @@
 #
 # $Id$
 #
-VERSION="v1.2"
+VERSION="v1.4"
 
 #---------------------------- Global routines ---------------------------------
 #
@@ -56,7 +56,7 @@ cleanupWorkFiles()
 {
 	rm -f ${ADDINGWORKFILE} ${FUNCTIONWORKFILE} ${GREPWORKFILE}	\
 		  ${MAPPEDWORKFILE} ${MEMBERWORKFILE}   ${MISSINGWORKFILE}	\
-		  ${NEEDEDWORKFILE} ${TYPEDEFWORKFILE}
+		  ${NEEDEDWORKFILE} ${TYPEDEFWORKFILE}  ${USINGWORKFILE}
 }
 
 #
@@ -89,6 +89,8 @@ analyseInfoFile()
 
 	awk -v TYPEDEFFILE=${TYPEDEFWORKFILE} 		\
 		-v FUNCTIONFILE=${FUNCTIONWORKFILE}		\
+		-v GREPFILE=${GREPWORKFILE}				\
+		-v USINGFILE=${USINGWORKFILE}			\
 		-v MEMBERFILE=${MEMBERWORKFILE}		'
 	# First define some functions for handling difficult actions
 
@@ -146,6 +148,20 @@ analyseInfoFile()
 	}
 
 	#
+	# handleUsing 
+	#
+	# The second form is stored in the USING file
+	# A using-statement can have two forms:
+	# using namespace xxx;   or using xxx::yyy;
+	#
+	function handleUsing(    theTD) {
+		theTD=getTillNext(";");					# find first ;
+		if (index(theTD, ":") != 0) {			# : char in using?
+			gsub ("using[ \t]*", "", theTD)				# remove double spaces
+			print theTD >> USINGFILE
+		}
+	}
+	#
 	# handleFunction 
 	#
 	# Cuts the function definition from the inputstream and stores it 
@@ -161,6 +177,31 @@ analyseInfoFile()
 			}
 		}
 		print theFunct >> FUNCTIONFILE
+	}
+
+	#
+	# resolveNameSpace someType
+	#
+	# Searches the given variable_type in the using-file created in
+	# the analyze-phase. When found it returns the namespace of the type;
+	# Otherwise an empty string is returned.
+	#
+	function resolveNameSpace(varType,   theOrgType) {
+		# note: the get a result from a system command into awk we must
+		# pass it to a file and then read the file again.
+		Command=sprintf("grep %c::%s%c %s >%s 2>/dev/null", 39, varType, 39, USINGFILE, GREPFILE);
+		system(Command)							# execute grep
+
+		theOrgType=""							# reset result
+		getline theOrgType < GREPFILE			# get grep result
+		close(GREPFILE)							# not needed anymore
+		if (length(theOrgType) <= 0) {			# not found?
+			return ""							# return failure
+		}
+
+		gsub("[ a-zA-Z0-9;_]*$", "", theOrgType)	# cut off ::xxx;
+		printf "."									# feedback to user
+		return theOrgType
 	}
 
 	#
@@ -205,7 +246,7 @@ analyseInfoFile()
 						  epos=index($0,"]")		# replace it with @@@
 						  $0=substr($0,1,bpos) "@@@" substr($0,epos)
 						}
-	/^using /			{ next }					# skip using commands
+	/^using /			{ handleUsing() }
 	/^friend/			{ next }					# skip friend lines
 	/^public[ \t]*:/	{ Mode="publ" ; gsub("public[ \t]*:[ \t]*"   ,"") }
 	/^protected[ \t]*:/	{ Mode="prot" ; gsub("protected[ \t]*:[ \t]*","") }
@@ -269,7 +310,10 @@ analyseInfoFile()
 	  }
 
 	  # This must be a variable declaration
-	  printf "%s@%s@%s@%s@%s\n", File, NameSpace, Class, Mode, $0 >MEMBERFILE
+	  PresumedType=$0
+	  gsub(" [a-zA-Z][^;]+;", "", PresumedType)	# cut off last word
+	  NSVariable=resolveNameSpace(PresumedType)
+	  printf "%s@%s@%s@%s@%s%s\n", File, NameSpace, Class, Mode, NSVariable, $0 >MEMBERFILE
 	  nrMembers++
 	}
 	'
@@ -333,7 +377,10 @@ addToMapFile()
 	# Recursively tries to resolve the given C-type to a basictype
 	# known by Postgres.
 	#
+	# NOTE: C-type may be of the form scope::type.
+	#
 	function resolveVariableType(Ctype) {
+		gsub("[a-zA-Z0-9_]*::", "", Ctype);
 		if (Ctype in BasicType) {			# basic type?
 			return BasicType[Ctype]			# life is easy sometimes.
 		}
@@ -583,6 +630,7 @@ MEMBERWORKFILE=/tmp/members.LCS.$$			# datamembers in the inputfile
 MISSINGWORKFILE=/tmp/missing.LCS.$$			# classes not in the inputfile
 NEEDEDWORKFILE=/tmp/needed.LCS.$$			# subclasses to add later
 TYPEDEFWORKFILE=/tmp/typedefs.LCS.$$		# typedefs in the inputfile
+USINGWORKFILE=/tmp/using.LCS.$$				# using stmts in the inputfile
 
 # make sure there are no old workfiles left
 cleanupWorkFiles
