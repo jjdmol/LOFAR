@@ -63,21 +63,16 @@ public:
 
   virtual ~TH_ShMem();
 
-  /// method to make a TH_ShMem instance; used for prototype pattern
-  virtual TH_ShMem* make() const;
-
   /**
      Receive the data. This call does the actual data transport
      by memcpy'ing the data from the sender.
   */
   void initRecv(void* buf, int tag);
-  virtual bool recvBlocking(void* buf, int nbytes, int tag);
-  virtual bool recvVarBlocking(int tag);
-  virtual bool recvNonBlocking(void* buf, int nbytes, int tag);
-  virtual bool recvVarNonBlocking(int tag);
+  virtual bool recvBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
+  virtual bool recvNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
 
   // Wait for the data to be received
-  virtual bool waitForReceived(void* bug, int nbytes, int tag);
+  virtual void waitForReceived(void* bug, int nbytes, int tag);
 
   /**
      Send the data.
@@ -87,12 +82,10 @@ public:
      The only thing it does is setting the status.
   */
   void initSend(void* buf, int tag);
-  virtual bool sendBlocking(void* buf, int nbytes, int tag);
-  virtual bool sendVarBlocking(int tag);
-  virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
-  virtual bool sendVarNonBlocking(int tag);
+  virtual bool sendBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
+  virtual bool sendNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
 
-  virtual bool waitForSent(void* buf, int nbytes, int tag);
+  virtual void waitForSent(void* buf, int nbytes, int tag);
 
   /// Get the type of transport.
   virtual string getType() const;
@@ -103,7 +96,6 @@ public:
   // A data buffer can not grow.
   virtual bool canDataGrow() const;
 
-  virtual bool connectionPossible(int srcRank, int dstRank) const;
  
   static void   init (int argc, const char *argv[]);
   static void   finalize();

@@ -58,14 +58,14 @@ public:
   TH_Mem();
   virtual ~TH_Mem();
 
-  /// method to make a TH_Mem instance
-  virtual TH_Mem* make() const;
-
   /**
      Receive fixed sized data. This call does the actual data transport
      by memcpy'ing the data from the sender.
+     Note: when using these non-blocking methods be very careful not to change 
+     the data between a sendNonBlocking and recvNonBlocking call! 
   */
-  virtual bool recvNonBlocking(void* buf, int nbytes, int tag);
+  virtual bool recvNonBlocking(void* buf, int nbytes, int tag, 
+			       int nrBytesRead=0, DataHolder* dh=0);
 
   /**
      Send fixed sized data.
@@ -74,20 +74,15 @@ public:
      which can be matched by the recv call.
      The only thing it does is setting the status.
   */
-  virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
-
-  /**
-     Receive variable sized data. This call does the actual data transport
-     by memcpy'ing the data from the sender.
-  */
-  virtual bool recvVarNonBlocking(int tag);
+  virtual bool sendNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
 
   /**
      Receive fixed size data. This call does the actual data transport
      by memcpy'ing the data from the sender and sending out a
      received notification.
   */
-  virtual bool recvBlocking(void* buf, int nbytes, int tag);
+  virtual bool recvBlocking(void* buf, int nbytes, int tag, int nrBytesRead=0, 
+			    DataHolder* dh=0);
 
  /**
      Send fixed size data.
@@ -97,22 +92,11 @@ public:
      The only things it does are setting the status and waiting for
      a notification of the receiver.
   */
-  virtual bool sendBlocking(void* buf, int nbytes, int tag);
-
-  /**
-     Receive variable size data. This call does the actual data transport
-     by memcpy'ing the data from the sender and sending out a
-     received notification.
-  */
-  virtual bool recvVarBlocking(int tag);
+  virtual bool sendBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
 
   /// Get the type of transport.
   virtual string getType() const;
 
-  virtual bool connectionPossible(int srcRank, int dstRank) const;
-
-  virtual bool isBidirectional() const;
- 
   // Static functions which are the same as those in TH_ShMem and TH_MPI.
   // They don't do anything. In this way templating on TH type can be done.
   // <group>
@@ -134,7 +118,7 @@ public:
   /**
      The map from tag to source DataHolder object.
    */
-  static map<int, DataHolder*> theSources;
+  static map<int, DataHolder*> theirSources;
 
 #ifdef USE_THREADS
   // Maps which hold condition variables.
@@ -147,13 +131,10 @@ public:
 
   bool        itsFirstSendCall;
   bool        itsFirstRecvCall;
-  DataHolder* itsDataSource;
+  DataHolder* itsDataSource;   // Pointer to current source DataHolder
 
   bool        itsFirstCall;
 };
-
-inline bool TH_Mem::isBidirectional() const
-  { return true; }
 
 }
 

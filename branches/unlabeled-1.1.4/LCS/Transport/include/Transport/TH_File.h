@@ -56,53 +56,40 @@ public:
   TH_File(string    aFileName, direction aDirection);
   virtual ~TH_File();
 
-  /// method to make a TH_File instance;
-  virtual TH_File* make() const;
-
   /**
      Receive the data. If the Direction is defined as Read, this method reads 
      the next DataHolder from file.
   */
-  virtual bool recvBlocking(void* buf, int nbytes, int tag);
+  virtual bool recvBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
 
   /**
      This method calls the blocking receive method.
   */
-  virtual bool recvNonBlocking(void* buf, int nbytes, int tag);  
+  virtual bool recvNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);  
 
   /**
      Send the data. If the Direction is defined as Write, this method writes 
      the next DataHolder to file.
   */
-  virtual bool sendBlocking(void* buf, int nbytes, int tag);
+  virtual bool sendBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
 
   /**
      This method calls the blocking receive method.
   */
-  virtual bool sendNonBlocking(void* buf, int nbytes,int tag);
+  virtual bool sendNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
 
   // Wait until the data has been sent
-  virtual bool waitForSent(void* buf, int nbytes, int tag); 
+  virtual void waitForSent(void* buf, int nbytes, int tag); 
 
   // Wait until the data has been received
-  virtual bool waitForReceived(void* bug, int nbytes, int tag);
+  virtual void waitForReceived(void* bug, int nbytes, int tag);
 
   /// Get the type of transport, i.e. "TH_File"
   virtual string getType() const;
 
-  /**
-     return wheterher the proposed connection between srcRank and dstRank 
-     would be possible with this TransportHolder specialisation.
-  **/
-  virtual bool connectionPossible(int srcRank, int dstRank) const;
-
   static void finalize();
-  static void waitForBroadCast();
-  static void waitForBroadCast (unsigned long& aVar);
-  static void sendBroadCast (unsigned long timeStamp);
   static int getCurrentRank();
   static int getNumberOfNodes();
-  static void synchroniseAllProcesses();
 
  private:
   string    itsFileName;

@@ -63,12 +63,12 @@ namespace LOFAR
 			   const bool		blocking = true);
     
     virtual ~TH_Socket();
-    
-	// Make an instance of the transportholder
-    virtual TH_Socket* make() const;
 
-	// Sets up the connection(s) between server and client
-	virtual bool	init();
+        // Make an instance of the transportholder
+    virtual TH_Socket* make() const;
+ 
+    // Sets up the connection(s) between server and client
+    virtual bool	init();
      
     /// Get the type of transport.
     virtual string getType() const;

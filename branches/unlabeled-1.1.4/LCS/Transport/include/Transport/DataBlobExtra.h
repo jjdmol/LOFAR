@@ -65,7 +65,7 @@ public:
   void openBlock (const BlobString& data);
 
   // Write the extra block into the main block.
-  void write();
+  void pack();
 
   // Get the name of the extra data blob.
   const std::string& getName() const;
