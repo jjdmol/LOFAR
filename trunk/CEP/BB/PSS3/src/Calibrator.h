@@ -41,38 +41,27 @@
 
 class MeqCalibrater;
 
-// Usage:
-// First insantiate Calibrator
-
 class Calibrator 
 {
 public:
   LocalDebugContext
 
   // Initialize all Calibrator members to their default values. 
-  // Note: This method does not affect the MeqCalImpl object.
-/*   Calibrator (); */
- 
-  Calibrator (const string& msName,
-	      const string& meqModel,
-	      const string& skyModel,
-	      const string& dbType,
-	      const string& dbName,
-	      const string& dbPwd,
-              unsigned int ddid,
-              const vector<int>& ant1,
-              const vector<int>& ant2,
-              const string& modelType,
-              bool calcUVW,
-              const string& dataColName,
-              const string& residualColName);
+  // Note: This method does not affect the MeqCalImpl object. 
+  Calibrator ();
 
   // Destroys the MeqCalImpl object.
   virtual ~Calibrator ();
 
-  // Create the MeqCalImpl object and initialize it with the values in
-  // the Calibrator members.
+  // Change the time domain setting (aka time interval). Default is 3600
+  // sec.
+  void setTimeInterval (double secs);
+
+  // Create the MeqCalImpl object.
   void Initialize (void);
+
+  // Display all the settings for the MeqCalImpl object on cout.
+  void ShowSettings (void);
 
   // Clear the Calibrator list of solvable parameters.
   // Note: This method does not affect the MeqCalImpl object. 
@@ -81,6 +70,10 @@ public:
   // Add a new source to the Calibrator list of solvable parameters.
   // Note: This method does not affect the MeqCalImpl object. 
   void addSolvableParm (string parmName, int srcNo);
+
+  // Add a new source specification to the Calibrator list of solvable 
+  // parameters.Note: This method does not affect the MeqCalImpl object. 
+  void addSolvableParm (string parmName);
 
   // Commit the Calibrator list of solvable parameters to the MeqCalImpl
   // object. The MeqCalImplObject must already be initialized using
@@ -99,7 +92,7 @@ public:
   bool advanceTimeIntervalIterator (void);
 
   // Clears the Calibrator list of sources which are to be taken into
-  // account during calibration of a single iteration. 
+  // account during calibration of a single iteration.
   // Note: This method does not affect the MeqCalImpl object. 
   void clearPeelSources (void);
 
@@ -129,8 +122,7 @@ public:
   // using addPeelMask (), for the current interval as advanced using
   // advanceTimeIntervalIterator (). The Run () method executes the
   // PSS3 algorithm for exactly one iteration.
-  void Run (vector<string>& resultParmNames, vector<double>& resultParmValues, 
-	    Quality& resultQuality);
+  void Run (void);
 
   // After optimization, subtracts the calculated sources from the model
   // as optimized during the previous call to Run ().
@@ -140,51 +132,33 @@ public:
   // model), commits the parameters to the internal storage of MeqCalImpl.
   void CommitOptimizedParameters (void);
 
-  // This method is an example of one of the ways in which the Calibrator
-  // class can be used. It has the same effect as calibrating the first
-  // three sources in twenty iterations each. The method demonstrates the
-  // sequence of calls to the Calibrator class to obtain the same behaviour
-  // as the original PSS3 algorithm.
-  void ExamplePSS3Run (void);
-
-  // Temporary place-holder. Will be removed.
-  void ExperimentalOptimizeSource (int src);
-
-  // Temporary place-holder. Will be removed.
-  void OptimizeSource (int, int);
-
-  // Temporary place-holder. Will be removed.
-  void OptimizeSourceWOSaveRes (int, int);
-
 private:
   // The Calibrator members contain values which are used to initialize
   // and control the MeqCalImpl object:
-
-  MeqCalibrater * itsPSS3CalibratorImpl;
-
-  string itsTblMeasurementSet;
-  string itsTblMeqModel;
-  string itsTblSkyModel;
-  string itsDbType;
-  string itsDbName;
-  string itsDbPwd;
-  uint   itsDDID;
-
-  const vector<int>& itsPrimaryAntennae;
-  const vector<int>& itsSecondaryAntennae;
+  string itsMSName;
+  string itsMEPName;
+  string itsGSMName;
+  string itsDBType;
+  string itsDBName;
+  string itsDBPasswd;
   string itsModelType;
-
+  uint   itsDDID;
+  string itsScenario;
+  string itsSolvParms;
+  int    itsStChan;
+  int    itsEndChan;
+  string itsSelStr;
   bool   itsCalcUVW;
-
+  float  itsTimeInterval;
   string itsDataColumn;
   string itsCorrectedDataColumn;
 
-  float  itsTimeInterval;
-
+  // The following members are for administration purposes at the Calibrator
+  // object level. These affect the MeqCalImpl object indirectly:
+  vector<int>    itsPeelSources;
+  vector<int>    itsPeelMasks;
   vector<string> itsSolvableParms;
-
-  vector<int> itsPeelSources;
-  vector<int> itsPeelMasks;
+  MeqCalibrater  * itsPSS3CalibratorImpl;
 };
 
 
