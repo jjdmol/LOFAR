@@ -21,37 +21,37 @@
 //# $Id$
 
 #include <Math/IComplex.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 template<typename IC1, typename IC2>
 void doIt()
 {
   IC1 ic1 (1,2);
   IC2 ic2 (3,5);
-  Assert (ic2.re() == 3);
-  Assert (ic2.im() == 5);
-  Assert (conj(ic2) == IC2(3,-5));
-  Assert (norm(ic2) == 34);
-  Assert (ic1+ic2 == IC2(4,7));
-  Assert (ic1-ic2 == IC2(-2,-3));
-  Assert (ic1*ic2 == IC2(-7,11));
-  Assert (ic2/ic1 == IC2(13/5,-1/5));
-  Assert (mulconj(ic1,ic2) == IC2(13,1));
+  ASSERT (ic2.re() == 3);
+  ASSERT (ic2.im() == 5);
+  ASSERT (conj(ic2) == IC2(3,-5));
+  ASSERT (norm(ic2) == 34);
+  ASSERT (ic1+ic2 == IC2(4,7));
+  ASSERT (ic1-ic2 == IC2(-2,-3));
+  ASSERT (ic1*ic2 == IC2(-7,11));
+  ASSERT (ic2/ic1 == IC2(13/5,-1/5));
+  ASSERT (mulconj(ic1,ic2) == IC2(13,1));
   IC1 ic3 = ic1;
   ic3.mulconj(ic2);
-  Assert (ic3 == ic1*conj(ic2));
-  Assert (ic3 == IC2(13,1));
+  ASSERT (ic3 == ic1*conj(ic2));
+  ASSERT (ic3 == IC2(13,1));
   IC1 ic4;
   ic4 = ic3;
   ic4/=IC2(ic1.re(),ic1.im());
-  Assert (ic4 == IC2(15/5,-25/5));
-  Assert (ic4*ic1 == ic3);
+  ASSERT (ic4 == IC2(15/5,-25/5));
+  ASSERT (ic4*ic1 == ic3);
 }
 
 int main(int argc, const char* argv[])
 {
   try {
-    Debug::initLevels (argc, argv);
+    INIT_LOGGER("tIComplex.log_prop");
     doIt<IComplex8, IComplex8>();
     //    doIt<IComplex8, IComplex16>();
     //    doIt<IComplex8, IComplex32>();
