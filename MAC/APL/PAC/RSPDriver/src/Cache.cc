@@ -39,7 +39,6 @@ using namespace blitz;
  * Instance pointer for the Cache singleton class.
  */
 Cache* Cache::m_instance = 0;
-bool   Cache::m_ledstatus = 0;
 
 /**
  * CacheBuffer implementation
@@ -224,16 +223,3 @@ CacheBuffer& Cache::getBack()
 {
   return *m_back;
 }
-
-#ifdef TOGGLE_LEDS
-bool Cache::ledstatus()
-{
-  return m_ledstatus;
-}
-
-void Cache::ledflip()
-{
-  m_ledstatus = !m_ledstatus;
-}
-#endif
-

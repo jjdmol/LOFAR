@@ -105,10 +105,6 @@ GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& /*port*/)
     scheduleCommands();
     processCommands();
 
-#ifdef TOGGLE_LEDS
-    Cache::getInstance().ledflip();
-#endif
-
     initiateSync(event); // matched by completeSync
   }
   else
