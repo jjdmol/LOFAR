@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 15 LOFAR Navigator
-PANEL,84 70 1120 697 N "_3DFace" 0
+PANEL,280 57 1120 697 N "_3DFace" 0
 "main()
 {
 	Navigator_HandleEventInitialize();
@@ -14,7 +14,7 @@ PANEL,84 70 1120 697 N "_3DFace" 0
 ""0  1
 E "// global functions. All event handlers are implemented here
 
-#uses \"navigator_functions.ctl\"
+#uses \"gcfnav-functions.ctl\"
 
 " 0
  2
@@ -80,6 +80,8 @@ E E 0 1 1 0 1 E U  1 E 4 -106 130
 -120 140
 -106 120
  0
+1 80 3 "" 2
+0
 1 65 2 "16" 0
 0
 1 66 2 "16" 1
@@ -168,34 +170,6 @@ LANG:1 0
 	ButtonMaximize_HandleEventClick();
 }" 0
  E E E
-17 78
-"TreeList1"
-""
-1 8 38 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-16 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-0
-1
-LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
-0
-""  8 38 272 602
-0
-
-E
-"main()
-{
-  TreeCtrl_HandleEventOnSelChange(TreeList1.selectedPos());
-}
-" 0
-
-E
-
-3 1
 29 79
 "FlyTreeXCtrl1"
 ""
@@ -439,7 +413,9 @@ LANG:1 0
 "OLECompleteDrag"
 "(long Effect)"
 ""
-E0
+E1 81 3 "" 0
+0
+0
 LAYER, 1 
 1
 LANG:1 6 Layer2
@@ -471,4 +447,12 @@ LANG:1 6 Layer8
 3 2 ""
 "navigator_infoPanel_3_1.pnl" 20 580 T 2 1 0 1 340 80
 0
+3 3 "TreeView1"
+"fwTreeView\\fwTreeView.pnl" 30 30 T 17 1 0 1 -17 13
+5
+"$sOnCollapse"""
+"$sOnExpand"""
+"$sOnInit""TreeView_OnInit"
+"$sOnRightClick"""
+"$sOnSelect""TreeView_OnSelect"
 0
