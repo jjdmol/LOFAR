@@ -1,12 +1,30 @@
-    - review ModRes arguments (specifically, factor) for consistency 
-      with auto-resample
+  * what to do about too many events? One idea: add a silent flag to
+    each command: no reply if command is successful.
 
-    - add ReqSeq node
+  * add a create_or_link flag to initrecord: if the node already exists,
+    throw away the init record and link to it.
+    
+  * add Node.Exists command to MeqServer
 
-    - change Result constructor to take a Cells argument; change it to do
-      copy-or-attach (perhaps move this function to CountedRef?)
+  * allow initrec.children=F for no children
+
+  * revise auto_resample to support resolution drivers, compute Result cells,
+    revise getResult() to take a Cells argument
+
+  * make linearly interpolating upsampler
+
+  * make WSum node
+
+  * make ReqSeq node
+
+  * change Result constructor to take a Cells argument; change it to do
+    copy-or-attach (perhaps move this function to CountedRef?)
+
+  * add resampled child result caching to Node 
+  
+    - new name for Polc? Maybe Fitfunc? Repfunc?
+      Funclet!!
       
-    - add child result caching to Node 
 
     - Add integrate/sample flag to Result -- not to VellSet
       13/04/04 done
@@ -14,12 +32,6 @@
     - Add flag to Cells for equisized cells
       13/04/04 done: included in segment comparison
    
-    - Make ResampleMachine
-      13/04/04: done
-  
-    - Modify Resampler
-      13/04/04: done
-  
     - Handle integrated flag in Compose  
       13/04/04: done
 
@@ -30,37 +42,12 @@
       Parm: from config?   impl
       13/04/04: done
       
-    - Add capability to recalc the dependency mask on the fly -- must 
-      remember the dependency masks then.
-      Note that parm should return different masks depending on whether a predict
-      or solve is done.
-      Propagate dependency handling throughout the system:
-      add request modification to nodes that generate new requests
-      18/04/04: done, fucking eh!
-
     - Add debug flag to Node that enables extra sanity checking
       18/04/04: added, not really used yet
       
-    - figure out caching of cells in ModRes: comparing rqid is wrong wrong wrong
-      18/04/04: actually our own dependMask() is right -- the cached cells
-      depend on request only
+  * review init()/reinit(): could they perhaps be merged? Can we serialize
+    a node before a resolveChildren() call?
       
-    - All nodes that generate requests (Sink, Solver, ModRes) must send up
-      the symdeps that they generate.
-      Is there perhaps an easier way to do it?
-      19/04/04: yes there is, done: see Node::setGenSymDeps()
-      
-    - Add Init.Dep.Masks command to MeqServer; change ResolveChildren to a command
-      19/04/04: somewhat done, see next item
-
-    - rework this whole pollChildren() business as it is a mess (in ModRes and
-      Solver)
-      19/04/04: done, it's OK. Have the redefined pollChildren() defer to the
-      standard method if the request has no cells.
-
-    - Make sure Solver passes on cell-less requests transparently
-      19/04/04: done in pollChildren()
-
   * Start using the depmask in Node::getCacheResult()
   
   * Possibly use empty Cells to indicate constant values? Propagate these
@@ -103,6 +90,42 @@ MEQ in general:
     01/01/04: done, need to test w/glish (glish not working on my laptop)
     16/01/04: tested with default tests; now need to make some nodes
               with child labels
+              
+        + figure out caching of cells in ModRes: comparing rqid is wrong wrong wrong
+          18/04/04: actually our own dependMask() is right -- the cached cells
+          depend on request only
+
+        + All nodes that generate requests (Sink, Solver, ModRes) must send up
+          the symdeps that they generate.
+          Is there perhaps an easier way to do it?
+          19/04/04: yes there is, done: see Node::setGenSymDeps()
+
+        + Add Init.Dep.Masks command to MeqServer; change ResolveChildren to a command
+          19/04/04: somewhat done, see next item
+
+        + rework this whole pollChildren() business as it is a mess (in ModRes and
+          Solver)
+          19/04/04: done, it's OK. Have the redefined pollChildren() defer to the
+          standard method if the request has no cells.
+
+        + Make sure Solver passes on cell-less requests transparently
+          19/04/04: done in pollChildren()
+
+              
+        + Add capability to recalc the dependency mask on the fly -- must 
+          remember the dependency masks then.
+          Note that parm should return different masks depending on whether a predict
+          or solve is done.
+          Propagate dependency handling throughout the system:
+          add request modification to nodes that generate new requests
+          18/04/04: done, fucking eh!
+
+        + Make ResampleMachine
+          13/04/04: done
+
+        + Modify Resampler
+          13/04/04: done
+
               
         + Add automatic resampling to Function node; handle integrated flag
           14/04/04: done, at node level
@@ -186,6 +209,13 @@ MEQ in general:
         + think through writability & privatization issues. Perhaps finally
           implement simple copy-on-write as the default policy in DMI?
           27/11/03: good to go for now. Still thinking about COW.
+          
+Nodes:
+
+    + review ModRes arguments (specifically, factor) for consistency 
+      with auto-resample
+      14/05/04: done
+
           
 Solver:
 

@@ -12,13 +12,14 @@
 #pragma aid Create Delete Get Set State Request Resolve Child Children List
 #pragma aid App Command Args Result Data Processing Error Message Code
 #pragma aid Execute Clear Cache Save Load Forest Recursive 
-#pragma aid Publish Results Enable Disable Event Id
+#pragma aid Publish Results Enable Disable Event Id Silent
 #pragma aid addstate
     
 namespace Meq
 {
   const HIID  
     FArgs             = AidArgs,
+    FSilent           = AidSilent,
       
     FRecursive        = AidRecursive, 
     FFileName         = AidFile|AidName,
@@ -54,6 +55,8 @@ class MeqServer : public VisRepeater, public EventRecepient
     void resolveChildren (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=3F98D91B0064
     void getNodeList (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    
+    void getNodeIndex (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     
     //##ModelId=400E5B6C015E
     void nodeExecute (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);

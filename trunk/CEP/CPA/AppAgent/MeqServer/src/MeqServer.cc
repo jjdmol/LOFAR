@@ -34,6 +34,7 @@ MeqServer::MeqServer()
   command_map["Delete.Node"] = &MeqServer::deleteNode;
   command_map["Resolve.Children"] = &MeqServer::resolveChildren;
   command_map["Get.Node.List"] = &MeqServer::getNodeList;
+  command_map["Get.NodeIndex"] = &MeqServer::getNodeIndex;
   
   command_map["Node.Get.State"] = &MeqServer::nodeGetState;
   command_map["Node.Set.State"] = &MeqServer::nodeSetState;
@@ -118,6 +119,12 @@ void MeqServer::nodeGetState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   cdebug(5)<<"Returned state is: "<<out->sdebug(20)<<endl;
 }
 
+void MeqServer::getNodeIndex (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
+{
+  string name = in[AidName].as<string>();
+  out[AidNodeIndex] = forest.findIndex(name);
+}
+
 void MeqServer::nodeSetState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
 {
   DataRecord::Ref rec = in;
@@ -187,7 +194,7 @@ void MeqServer::nodeExecute (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   cdebug(3)<<"    request is "<<req.sdebug(DebugLevel-1,"    ")<<endl;
   Result::Ref resref;
   int flags = node.execute(resref,req);
-  cdebug(2)<<"  execute() returns flags "<<flags<<" with result"<<endl;
+  cdebug(2)<<"  execute() returns flags "<<ssprintf("0x%x",flags)<<endl;
   cdebug(3)<<"    result is "<<resref.sdebug(DebugLevel-1,"    ")<<endl;
   if( DebugLevel>3 && resref.valid() )
   {
@@ -500,12 +507,14 @@ void MeqServer::run ()
         cmdid = cmdid.subId(AppCommandMask.length()-1);
         cdebug(3)<<"received app command "<<cmdid.toString()<<endl;
         int request_id = 0;
+        bool silent = false;
         DataRecord::Ref retval(DMI::ANONWR);
-        have_error = false;
+        have_error = true;
         try
         {
           request_id = cmddata[FRequestId].as<int>(0);
           ObjRef ref = cmddata[FArgs].remove();
+          silent     = cmddata[FSilent].as<bool>(false);
           DataRecord::Ref args;
           if( ref.valid() )
           {
@@ -517,6 +526,8 @@ void MeqServer::run ()
           {
             // execute the command, catching any errors
             (this->*(iter->second))(retval,args);
+            // got here? success!
+            have_error = false;
           }
           else // command not found
             error_str = "unknown command "+cmdid.toString();
@@ -531,13 +542,18 @@ void MeqServer::run ()
           have_error = true;
           error_str = "unknown exception while processing command";
         }
-        // in case of error, insert error message into return value
-        if( have_error )
-          retval[AidError] = error_str;
-        HIID reply_id = CommandResultPrefix|cmdid;
-        if( request_id )
-          reply_id |= request_id;
-        control().postEvent(reply_id,retval);
+        // send back reply if quiet flag has not been raised;
+        // errors are always sent back
+        if( !silent || have_error )
+        {
+          // in case of error, insert error message into return value
+          if( have_error )
+            retval[AidError] = error_str;
+          HIID reply_id = CommandResultPrefix|cmdid;
+          if( request_id )
+            reply_id |= request_id;
+          control().postEvent(reply_id,retval);
+        }
       }
       // .. but ignore them since we only watch for state changes anyway
     }

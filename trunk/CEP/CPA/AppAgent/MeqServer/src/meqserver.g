@@ -84,11 +84,15 @@ const meq.server := function (appid='MeqServer',
   self.results_log := [=];
   
   # define meqserver-specific methods
-  const public.meq := function (cmd_name,args=[=],wait_reply=F)
+  const public.meq := function (cmd_name,args=[=],wait_reply=F,silent=F)
   {
     wider self,public;
     if( wait_reply )
     {
+      if( silent )
+      {
+        self.dprint(0,'warning: both wait_reply and silent specified, ignoring silent flag');
+      }
       rqid := self.new_requestid();
       reqname := spaste('Command.',cmd_name);
       replyname := to_lower(cmd_name ~ s/\./_/g);
@@ -107,9 +111,9 @@ const meq.server := function (appid='MeqServer',
     }
     else
     {
-      self.dprint(3,'sending command ',cmd_name,' with no wait');
+      self.dprint(3,'sending command ',cmd_name,' with no wait, silent=',silent);
       self.dprint(5,'arguments are ',args);
-      return public.command(spaste('Command.',cmd_name),[args=args]);
+      return public.command(spaste('Command.',cmd_name),[args=args,silent=silent]);
     }
   }
   
@@ -127,10 +131,10 @@ const meq.server := function (appid='MeqServer',
   # define shortcuts for common methods
   # ------ createnode()
   
-  const public.createnode := function (initrec,wait_reply=F)
+  const public.createnode := function (initrec,wait_reply=F,silent=F)
   {
     wider public;
-    return public.meq('Create.Node',initrec,wait_reply=wait_reply);
+    return public.meq('Create.Node',initrec,wait_reply=wait_reply,silent=silent);
   }
   
   # ------ getnodestate()
@@ -141,6 +145,20 @@ const meq.server := function (appid='MeqServer',
     rec := self.makenodespec(node);
     return public.meq('Node.Get.State',rec,wait_reply=T);
   }
+  
+  # ------ getnodeindex()
+  
+  const public.getnodeindex := function (name)
+  {
+    wider self,public;
+    rec := self.makenodespec(name);
+    retval := public.meq('Get.NodeIndex',rec,wait_reply=T);
+    if( is_record(retval) && has_field(retval,'nodeindex') )
+      return retval.nodeindex;
+    else
+      fail 'MeqServer did not return a nodeindex field';
+  }
+  
   
   # ------ getnodelist()
   
