@@ -8,4 +8,4 @@ cp $1/../src/DFTServer.param .
 
 ../src/DFTServer > tDFTServer_tmp.outs1 &
 ./tDFTServer > tDFTServer_tmp.outc1
-cat DFTServer_tmp.outs1 DFTServer_tmp.outc1
+cat tDFTServer_tmp.outs1 tDFTServer_tmp.outc1
