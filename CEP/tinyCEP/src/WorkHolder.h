@@ -95,14 +95,14 @@ public:
       transform the data in the input DataHolders into the output
       DataHolders.     
    */
-  void baseProcess();
+  virtual void baseProcess();
   virtual void process() = 0;
 
   /** The postprocess method is called after process.
       It can be used to clean up the WorkHolder.
       The default implementation calls basePostprocess for all DataHolders.
   */
-  void basePostprocess();
+  virtual void basePostprocess();
   virtual void postprocess();
 
   /// Get the type of the work holder.
@@ -161,6 +161,9 @@ protected:
   int itsCurRank;   // Rank of the current run. 
   int itsProcessStep;
 
+  int itsNinputs;
+  int itsNoutputs;
+  bool itsFirstProcessCall;
 private:
   /** Make a map of all DataHolders names. A separate map is made
       for the input and output DataHolders.
@@ -171,14 +174,11 @@ private:
   /// Let the derived class make the actual copy.
   virtual WorkHolder* make (const string& name) = 0;
 
-  int itsNinputs;
-  int itsNoutputs;
   int itsIndex;
   string itsName;
   string itsType;
   mutable map<string,int> itsInMap;
   mutable map<string,int> itsOutMap;
-  bool itsFirstProcessCall;
   
   static int theirCurAppl; // The application number of this run.
 
@@ -186,6 +186,9 @@ private:
   int itsAppl;  // The application to run this WorkHolder in.
 
   static map<string,WHConstruct*>* itsConstructMap;
+  static int          theirReadProfilerState; 
+  static int          theirProcessProfilerState; 
+  static int          theirWriteProfilerState; 
 
 };
 

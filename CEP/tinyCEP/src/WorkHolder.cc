@@ -25,6 +25,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include <tinyCEP/WorkHolder.h>
+#include <tinyCEP/Profiler.h>
 
 #include TRANSPORTERINCLUDE
 
@@ -39,6 +40,9 @@ int WorkHolder::theirCurAppl=0;
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
+int WorkHolder::theirReadProfilerState=0;
+int WorkHolder::theirProcessProfilerState=0;
+int WorkHolder::theirWriteProfilerState=0;
 
 //WorkHolder::WorkHolder[not-in-charge](int, int, 
 //std::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, 
@@ -60,6 +64,15 @@ WorkHolder::WorkHolder (int inputs, int outputs,
 //   TRACER2("WorkHolder constructor");
   itsDataManager = new TinyDataManager(inputs, outputs);
   itsCurRank = TRANSPORTER::getCurrentRank();
+  if (theirReadProfilerState == 0) {
+    theirReadProfilerState = Profiler::defineState("WH::Read","green");
+  }
+  if (theirProcessProfilerState == 0) {
+    theirProcessProfilerState = Profiler::defineState("WH::Process","red");
+  }
+  if (theirWriteProfilerState == 0) {
+    theirWriteProfilerState = Profiler::defineState("WH::Write","blue");
+  }
 }
 
 WorkHolder::WorkHolder (const WorkHolder& that)
@@ -135,6 +148,7 @@ void WorkHolder::baseProcess ()
  if (shouldProcess()) 
  {
 //    TRACER4("WorkHolder::baseprocess()");
+   Profiler::enterState (theirReadProfilerState);
    if (itsFirstProcessCall) {
      getDataManager().initializeInputs();
      itsFirstProcessCall = false;
@@ -167,14 +181,19 @@ void WorkHolder::baseProcess ()
        }
        
      }
-   } 
+   }
+   Profiler::leaveState (theirReadProfilerState);
+ 
    
    // Now we have the input data avialable
    // and it is time to do the real work; call the process()
    if ( (itsProcessStep % getDataManager().getProcessRate()) == 0) {
+     Profiler::enterState (theirProcessProfilerState);
      process();
+     Profiler::leaveState (theirProcessProfilerState);
    }
    
+   Profiler::enterState (theirWriteProfilerState);
    for (int output=0; output<itsNoutputs; output++)	{
      
      //     if (getDataManager().getGeneralOutHolder(output)->doHandle()) {
@@ -192,9 +211,9 @@ void WorkHolder::baseProcess ()
 			  << itsProcessStep << "   rate = " << getDataManager().getOutputRate(output));
      }
      
-   } 
-   
-   
+   }
+   Profiler::leaveState (theirWriteProfilerState);
+    
    itsProcessStep++;
  }
 
