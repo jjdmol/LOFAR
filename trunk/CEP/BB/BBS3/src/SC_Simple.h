@@ -38,7 +38,8 @@ class SC_Simple : public StrategyController
 {
 public:
   SC_Simple(int id, DH_Solution* inDH, DH_WOPrediff* woPD, 
-	    DH_WOSolve* woSolve, const KeyValueMap& args);
+	    DH_WOSolve* woSolve, int nrPrediffers,
+	    const KeyValueMap& args);
 
   virtual ~SC_Simple();
 
@@ -60,6 +61,11 @@ public:
   int         itsNrIterations;
   int         itsCurIter;
   double      itsCurStartTime;
+  bool        itsControlParmUpd;    // Does this Controller update the parameters?
+  double      itsStartTime;
+  double      itsTimeLength;
+  double      itsStartFreq;
+  double      itsFreqLength;
 };
 
 inline string SC_Simple::getType() const

@@ -42,7 +42,11 @@ DH_Prediff::DH_Prediff (const string& name)
   : DataHolder    (name, "DH_Prediff", 1),
     itsDataSize   (0),
     itsDataBuffer (0),
-    itsMoreData   (0)
+    itsMoreData   (0),
+    itsStartFreq  (0),
+    itsEndFreq    (0),
+    itsStartTime  (0),
+    itsEndTime    (0)
 {
   LOG_TRACE_FLOW("DH_Prediff constructor");
   setExtraBlob("Extra", 1);
@@ -52,7 +56,11 @@ DH_Prediff::DH_Prediff(const DH_Prediff& that)
   : DataHolder    (that),
     itsDataSize   (0),
     itsDataBuffer (0),
-    itsMoreData   (0)
+    itsMoreData   (0),
+    itsStartFreq  (0),
+    itsEndFreq    (0),
+    itsStartTime  (0),
+    itsEndTime    (0)
 {
   LOG_TRACE_FLOW("DH_Prediff copy constructor");
   setExtraBlob("Extra", 1);
@@ -74,10 +82,21 @@ void DH_Prediff::preprocess()
   // Add the fields to the data definition.
   addField ("DataSize", BlobField<unsigned int>(1));
   addField ("MoreData", BlobField<unsigned int>(1));
+  addField ("StartFreq", BlobField<double>(1));
+  addField ("EndFreq", BlobField<double>(1));
+  addField ("StartTime", BlobField<double>(1));
+  addField ("EndTime", BlobField<double>(1));
   addField ("DataBuf", BlobField<double>(1, 0, 0, 0, false));
 
   // Create the data blob (which calls fillPointers).
   createDataBlock();
+
+  *itsDataSize = 0;
+  *itsMoreData = 0;
+  *itsStartFreq = 0;
+  *itsEndFreq = 0;
+  *itsStartTime = 0;
+  *itsEndTime = 0;
 }
 
 void DH_Prediff::fillDataPointers()
@@ -86,6 +105,10 @@ void DH_Prediff::fillDataPointers()
   itsDataSize = getData<unsigned int> ("DataSize");
   itsDataBuffer = getData<double> ("DataBuf");
   itsMoreData = getData<unsigned int> ("MoreData");
+  itsStartFreq = getData<double> ("StartFreq");
+  itsEndFreq = getData<double> ("EndFreq");
+  itsStartTime = getData<double> ("StartTime");
+  itsEndTime = getData<double> ("EndTime");
 }
 
 
@@ -147,11 +170,23 @@ const vector<uint32>& DH_Prediff::getBufferSize()
   return getDataField("DataBuf").getShape();
 }
 
+void DH_Prediff::setDomain(double fStart, double fEnd, double tStart, double tEnd)
+{
+  *itsStartFreq = fStart;
+  *itsEndFreq = fEnd;
+  *itsStartTime = tStart;
+  *itsEndTime = tEnd;
+}
+
 void DH_Prediff::dump()
 {
   cout << "DH_Prediff: " << endl;
   cout << "More data to come = " << moreDataToCome() << endl;
   cout << "Parm data : " << endl;
+  cout << "Start frequency = " << getStartFreq() << endl;
+  cout << "End frequency = " << getEndFreq() << endl;
+  cout << "Start time = " << getStartTime() << endl;
+  cout << "End time = " << getEndTime() << endl;
   vector<ParmData> pData;
   getParmData(pData);
   for (uint i=0; i<pData.size(); i++)

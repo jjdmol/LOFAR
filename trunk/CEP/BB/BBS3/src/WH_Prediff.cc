@@ -31,13 +31,15 @@
 #include <BBS3/DH_Solution.h>
 #include <BBS3/DH_Prediff.h>
 #include <BBS3/Prediffer.h>
+#include <BBS3/MNS/MeqDomain.h>
 
 namespace LOFAR
 {
 
 WH_Prediff::WH_Prediff(const string& name, int id)
   : WorkHolder   (2, 3, name, "WH_Prediff"),
-    itsID        (id)
+    itsID        (id),
+    itsFirstCall (true)
 {
   LOG_TRACE_FLOW("WH_Prediff constructor");
   getDataManager().addInDataHolder(0, new DH_WOPrediff(name+"_in0"));
@@ -95,15 +97,8 @@ void WH_Prediff::process()
   vector<int> peelSrcs;
   wo->getVarData(args, ant, pNames, peelSrcs);
   int contrID = wo->getStrategyControllerID();
-  Prediffer* pred = getPrediffer(contrID, args, ant);
-  int solID = wo->getSolutionID();
-  vector<ParmData> solVec;
-
-  // Read solution
-  if (solID != -1)
-  {
-    readSolution(solID, solVec);
-  }
+  bool isNew = false;
+  Prediffer* pred = getPrediffer(contrID, args, ant, isNew);
 
   // Execute workorder
   if (wo->getNewBaselines())
@@ -118,14 +113,6 @@ void WH_Prediff::process()
     pred->clearSolvableParms();
     vector<string> emptyP(0);
     pred->setSolvableParms(pNames, emptyP, true);
-    if (solVec.size() == 0)
-    {
-      pred->updateSolvableParms();
-    }
-    else
-    {
-      pred->updateSolvableParms(solVec);
-    }
 
     vector<uint32> dataShape = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
 					       wo->getStartTime(), wo->getTimeLength());
@@ -144,14 +131,6 @@ void WH_Prediff::process()
     pred->clearSolvableParms();
     vector<string> emptyP(0);
     pred->setSolvableParms(pNames, emptyP, true);
-    if (solVec.size() == 0)
-    {
-      pred->updateSolvableParms();
-    }
-    else
-    {
-      pred->updateSolvableParms(solVec);
-    }
 
     vector<uint32> dataShape = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
 					       wo->getStartTime(), wo->getTimeLength());
@@ -169,24 +148,21 @@ void WH_Prediff::process()
     pred->clearSolvableParms();
     vector<string> emptyP(0);
     pred->setSolvableParms(pNames, emptyP, true);
-    if (solVec.size() == 0)
-    {
-      pred->updateSolvableParms();
-    }
-    else
-    {
-      pred->updateSolvableParms(solVec);
-    }
   }
-  else
+
+  // Parameter update
+  if (wo->getUpdateParms())
   {
-    if (solVec.size() == 0)
+    int solID = wo->getSolutionID();
+    if (solID != -1)             // Read solution and update parameters
     {
-      pred->updateSolvableParms();
+      vector<ParmData> solVec;
+      readSolution(solID, solVec);
+      pred->updateSolvableParms(solVec);
     }
     else
-    {
-      pred->updateSolvableParms(solVec);
+    {                            // Reread parameter values from table
+      pred->updateSolvableParms();
     }
   }
 
@@ -197,6 +173,8 @@ void WH_Prediff::process()
   {
     dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(2));
     more = pred->getEquations(dhRes->getDataBuffer(), dhRes->getBufferSize(), nresult);
+    MeqDomain domain = pred->getDomain();
+    dhRes->setDomain(domain.startX(), domain.endX(), domain.startY(), domain.endY());
     dhRes->setMoreData(more);
     dhRes->setDataSize(nresult);
     // send result to solver
@@ -228,12 +206,13 @@ void WH_Prediff::dump()
 }
 
 Prediffer* WH_Prediff::getPrediffer(int id, const KeyValueMap& args, 
-				 const vector<int>& antNrs)
+				    const vector<int>& antNrs, bool& isNew)
 {
   PrediffMap::iterator iter;
   iter = itsPrediffs.find(id);
   if (iter != itsPrediffs.end())
   {
+    isNew = false;
     return (*iter).second;
   }
   else
@@ -256,6 +235,7 @@ Prediffer* WH_Prediff::getPrediffer(int id, const KeyValueMap& args,
 				    modelType, calcUVW,lockMappedMem);
     // add to map
     itsPrediffs.insert(PrediffMap::value_type(id, pred));
+    isNew = true;
     return pred;
   }
 }

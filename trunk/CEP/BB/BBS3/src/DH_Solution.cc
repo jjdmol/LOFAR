@@ -52,7 +52,11 @@ DH_Solution::DH_Solution (const string& name)
     itsMu           (0),
     itsStdDev       (0),
     itsChi          (0),
-    itsPODHSOL      (0)
+    itsPODHSOL      (0),
+    itsStartFreq    (0),
+    itsEndFreq      (0),
+    itsStartTime    (0),
+    itsEndTime      (0)
 {
   setExtraBlob("Extra", 1);
 }
@@ -64,7 +68,11 @@ DH_Solution::DH_Solution(const DH_Solution& that)
     itsMu           (0),
     itsStdDev       (0),
     itsChi          (0),
-    itsPODHSOL      (0)
+    itsPODHSOL      (0),
+    itsStartFreq    (0),
+    itsEndFreq      (0),
+    itsStartTime    (0),
+    itsEndTime      (0)
 {
   setExtraBlob("Extra", 1);
 }
@@ -98,6 +106,10 @@ void DH_Solution::preprocess()
   addField ("Mu", BlobField<double>(1));
   addField ("StdDev", BlobField<double>(1));
   addField ("Chi", BlobField<double>(1));
+  addField ("StartFreq", BlobField<double>(1));
+  addField ("EndFreq", BlobField<double>(1));
+  addField ("StartTime", BlobField<double>(1));
+  addField ("EndTime", BlobField<double>(1));
 
   // Create the data blob (which calls fillPointers).
   createDataBlock();
@@ -107,6 +119,11 @@ void DH_Solution::preprocess()
   *itsMu = 0;
   *itsStdDev =0;
   *itsChi = 0;
+  *itsStartFreq = 0;
+  *itsEndFreq = 0;
+  *itsStartTime = 0;
+  *itsEndTime = 0;
+
 }
 
 void DH_Solution::fillDataPointers()
@@ -117,6 +134,10 @@ void DH_Solution::fillDataPointers()
   itsMu = getData<double> ("Mu");
   itsStdDev = getData<double> ("StdDev");
   itsChi = getData<double> ("Chi");
+  itsStartFreq = getData<double> ("StartFreq");
+  itsEndFreq = getData<double> ("EndFreq");
+  itsStartTime = getData<double> ("StartTime");
+  itsEndTime = getData<double> ("EndTime");
 }
 
 void DH_Solution::postprocess()
@@ -126,6 +147,10 @@ void DH_Solution::postprocess()
   itsMu = 0;
   itsStdDev = 0;
   itsChi = 0;
+  itsStartFreq = 0;
+  itsEndFreq = 0;
+  itsStartTime = 0;
+  itsEndTime = 0;
 }
 
 Quality DH_Solution::getQuality() const
@@ -184,12 +209,22 @@ void DH_Solution::setSolution(const vector<ParmData>& pData)
   }
 }
 
+void DH_Solution::setDomain(double fStart, double fEnd, double tStart, double tEnd)
+{
+  *itsStartFreq = fStart;
+  *itsEndFreq = fEnd;
+  *itsStartTime = tStart;
+  *itsEndTime = tEnd;
+}
+
+
 void DH_Solution::clearData()
 {
   setWorkOrderID(-1);
   Quality q;
   setQuality(q);
   clearExtraBlob();
+  setDomain(0, 0, 0, 0);
 }
 
 void DH_Solution::dump()
@@ -202,7 +237,13 @@ void DH_Solution::dump()
   {
     cout << pData[i] << endl;
   }
+
   cout << "Quality = " << getQuality() << endl;
+
+  cout << "Start frequency = " << getStartFreq() << endl;
+  cout << "End frequency = " << getEndFreq() << endl;
+  cout << "Start time = " << getStartTime() << endl;
+  cout << "End time = " << getEndTime() << endl;
 
 }
 
@@ -216,6 +257,10 @@ void DBRep<DH_Solution>::bindCols (dtl::BoundIOs& cols)
   cols["MU"] == itsMu;
   cols["STDDEV"] == itsStdDev;
   cols["CHI"] == itsChi;
+  cols["STARTFREQ"] == itsStartFreq;
+  cols["ENDFREQ"] == itsEndFreq;
+  cols["STARTTIME"] == itsStartTime;
+  cols["ENDTIME"] == itsEndTime;
 }
 
 void DBRep<DH_Solution>::toDBRep (const DH_Solution& obj)
@@ -226,6 +271,10 @@ void DBRep<DH_Solution>::toDBRep (const DH_Solution& obj)
   itsMu = obj.getQuality().itsMu;
   itsStdDev = obj.getQuality().itsStddev;
   itsChi = obj.getQuality().itsChi;
+  itsStartFreq = obj.getStartFreq();
+  itsEndFreq = obj.getEndFreq();
+  itsStartTime = obj.getStartTime();
+  itsEndTime = obj.getEndTime();
 }
 
 //# Force the instantiation of the templates.

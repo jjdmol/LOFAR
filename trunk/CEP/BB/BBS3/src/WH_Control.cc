@@ -43,9 +43,10 @@ string i2str(int i) {
   return string(str);
 }
 
-WH_Control::WH_Control (const string& name,
+  WH_Control::WH_Control (const string& name, int nrPrediffers,
 			const KeyValueMap& args)
   : WorkHolder     (3, 3, name,"WH_Control"),
+    itsNrPrediffers(nrPrediffers),
     itsArgs        (args),
     itsFirstCall   (true)
 {
@@ -74,10 +75,10 @@ WH_Control::~WH_Control()
   itsControllers.clear();
 }
 
-WorkHolder* WH_Control::construct (const string& name, 
+WorkHolder* WH_Control::construct (const string& name, int nrPrediffers,
 				    const KeyValueMap& args)
 {
-  return new WH_Control (name, args);
+  return new WH_Control (name, nrPrediffers,args);
 }
 
 void WH_Control::preprocess()
@@ -85,7 +86,7 @@ void WH_Control::preprocess()
 
 WH_Control* WH_Control::make (const string& name)
 {
-  return new WH_Control(name, itsArgs);
+  return new WH_Control(name, itsNrPrediffers, itsArgs);
 }
 
 void WH_Control::process()
@@ -138,7 +139,7 @@ void WH_Control::createStrategyControllers()
     // Create StrategyController and add to list
     if (stratType == "Simple")
     {
-      SC_Simple* sc = new SC_Simple(i, inp, pd, sv, params);  // Each StrategyController
+      SC_Simple* sc = new SC_Simple(i, inp, pd, sv, itsNrPrediffers, params);  // Each StrategyController
       itsControllers.push_back(sc);                           // must get an unique ID
     }
     else

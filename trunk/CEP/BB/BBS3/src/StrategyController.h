@@ -27,6 +27,7 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 #include <BBS3/Quality.h>
+#include <BBS3/ParmWriter.h>
 
 namespace LOFAR
 {
@@ -42,10 +43,13 @@ class DH_WOSolve;
 class StrategyController
 {
 public:
+  // Creation of a StrategyController with its DataHolders to read and write.
   StrategyController(int id, DH_Solution* inDH, 
 		     DH_WOPrediff* outWOPD, 
-		     DH_WOSolve* outWOSolve);
+		     DH_WOSolve* outWOSolve,
+		     int nrPrediffers);
 
+  // Destructor
   virtual ~StrategyController();
 
   /// Execute the strategy
@@ -66,12 +70,19 @@ public:
 
   int getID() const;
 
+  int getNumberOfPrediffers() const;
+
+  ParmWriter& getParmWriter();
+
  protected:
   DH_Solution*  itsInDH;
   DH_WOPrediff* itsWOPD;
   DH_WOSolve*   itsWOSolve;
- private:
+  int           itsNrPrediffers;
+ 
+private:
   int           itsID;
+  ParmWriter    itsParmWriter;
 };
 
 inline DH_Solution* StrategyController::getSolution() const
@@ -94,6 +105,12 @@ inline void StrategyController::setSolveWorkOrder(DH_WOSolve* dhPtr)
 
 inline int StrategyController::getID() const
 { return itsID; }
+
+inline ParmWriter& StrategyController::getParmWriter()
+{ return itsParmWriter; }
+
+inline int StrategyController::getNumberOfPrediffers() const
+{ return itsNrPrediffers; }
 
 } // namespace LOFAR
 

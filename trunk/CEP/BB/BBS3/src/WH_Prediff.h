@@ -71,7 +71,8 @@ class WH_Prediff : public LOFAR::WorkHolder
   // Create a Prediffer object or get it from the Map
   Prediffer* getPrediffer(int id, 
 			  const KeyValueMap& args, 
-			  const vector<int>& antNrs);
+			  const vector<int>& antNrs,
+			  bool& isNew);
   // Read the next workorder
   void readWorkOrder();
 
@@ -81,7 +82,9 @@ class WH_Prediff : public LOFAR::WorkHolder
   int         itsID;         // Identification number
   KeyValueMap itsArgs;       // Arguments
   PrediffMap  itsPrediffs;   // Map of Prediffer objects, each associated
-                                   // with a strategy (controller)
+  // with a strategy (controller)
+
+  bool        itsFirstCall;  // Temporary!!! Needs to be done correctly for multiple strategies
 };
 
 } // namespace LOFAR

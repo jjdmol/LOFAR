@@ -1,4 +1,4 @@
-//#  SC_Simple.cc:  The peeling calibration strategy
+//#  SC_Simple.cc:  A simple calibration strategy
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -34,15 +34,36 @@ namespace LOFAR
 {
 
 SC_Simple::SC_Simple(int id, DH_Solution* inDH, DH_WOPrediff* woPD,
-		     DH_WOSolve* woSolve, const KeyValueMap& args)
-  : StrategyController(id, inDH, woPD, woSolve),
+		     DH_WOSolve* woSolve, int nrPrediffers,
+		     const KeyValueMap& args)
+  : StrategyController(id, inDH, woPD, woSolve, nrPrediffers),
     itsFirstCall      (true),
     itsPrevWOID       (0),
     itsArgs           (args),
     itsCurIter        (-1),
-    itsCurStartTime   (0)
+    itsCurStartTime   (0),
+    itsControlParmUpd (false),
+    itsStartTime      (0),
+    itsTimeLength     (0),
+    itsStartFreq      (0),
+    itsFreqLength     (0)
 {
   itsNrIterations = itsArgs.getInt("nrIterations", 0);
+  KeyValueMap msParams = (const_cast<KeyValueMap&>(itsArgs))["MSDBparams"].getValueMap();
+  string dbType = msParams.getString("DBType", "notfound");
+  string meqTableName = msParams.getString("meqTableName", "notfound");
+  string skyTableName = msParams.getString("skyTableName", "notfound");
+  string dbName = msParams.getString("DBName", "notfound");
+  string dbPwd = msParams.getString("DBPwd", "");
+  string dbHost = msParams.getString("DBHost", "");
+  getParmWriter().useTable(dbType, meqTableName, dbName, dbPwd, dbHost);
+  getParmWriter().useTable(dbType, skyTableName, dbName, dbPwd, dbHost);
+
+  itsControlParmUpd = itsArgs.getBool ("controlParmUpdate", false);
+  itsStartTime = itsArgs.getFloat ("startTime", 0);
+  itsTimeLength = itsArgs.getFloat ("timeLength", 0);
+  itsStartFreq = itsArgs.getFloat ("startFreq", 0);
+  itsFreqLength = itsArgs.getFloat ("freqLength", 0);
 }
 
 SC_Simple::~SC_Simple()
@@ -59,6 +80,7 @@ bool SC_Simple::execute()
     itsWOPD->setNewBaselines(true);
     itsWOPD->setNewPeelSources(true);
     itsWOPD->setSubtractSources(false);
+    itsWOPD->setUpdateParms(false);
     itsWOSolve->setNewDomain(true);
     itsCurStartTime = itsArgs.getFloat ("startTime", 0);
   }
@@ -70,17 +92,32 @@ bool SC_Simple::execute()
     itsWOPD->setNewBaselines(false);
     itsWOPD->setNewPeelSources(false);
     itsWOPD->setSubtractSources(false);
+    itsWOPD->setUpdateParms(true);
     itsWOSolve->setNewDomain(false);
 
-    // Use the previous solution (parameter values).
-    itsWOPD->setSolutionID(itsPrevWOID);
+    if (itsControlParmUpd)   // If Controller handles parameter writing
+    {
+      // Controller writes new parameter values directly to the tables
+      vector<ParmData> pData;
+      getSolution()->getSolution(pData);
+      double fStart = getSolution()->getStartFreq();
+      double fEnd = getSolution()->getEndFreq();
+      double tStart = getSolution()->getStartTime();
+      double tEnd = getSolution()->getEndTime();
+      getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
+    }
+    else
+    {
+      // Send the (reference to) parameter values to Prediffers.
+      itsWOPD->setSolutionID(itsPrevWOID);
+    }
 
     // If solution for this interval is good enough, go to next. TBA
     // For now: if number of iterations reached: go to next interval.
     if (fmod(itsCurIter, itsNrIterations) == 0)
     {
       nextInter = true;
-      itsCurStartTime += itsArgs.getFloat ("timeInterval", 10);
+      itsCurStartTime += itsArgs.getFloat ("timeLength", 10);
     }
   }
 
@@ -126,6 +163,18 @@ bool SC_Simple::execute()
 
   // Insert WorkOrders into database
   itsWOPD->insertDB();
+
+  // Send workorders the same workorders to other prediffers (if there are more than 1)
+  int nrPred = getNumberOfPrediffers();
+  for (int i = 2; i <= nrPred; i++)
+  {
+    itsWOPD->setNewWorkOrderID();
+    char str[32];
+    sprintf(str, "%i", i);
+    itsWOPD->setKSType("Prediff"+string(str));
+    itsWOPD->insertDB();
+  }
+
   itsWOSolve->insertDB();
 
   return true;
