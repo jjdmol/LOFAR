@@ -31,6 +31,8 @@
 
 namespace Meq {
 
+InitDebugContext(Parm,"MeqParm");
+
 //##ModelId=3F86886F021B
 Parm::Parm()
 : Function      (),
@@ -67,7 +69,6 @@ void Parm::init (DataRecord::Ref::Xfer& initrec, Forest* frst)
 //##ModelId=3F86886F0226
 int Parm::initDomain (const Domain& domain)
 {
-  itsCurrentDomain = domain;
   wstate()[FDomain].replace() <<= new Domain(domain);
   // Find the polc(s) for the given domain.
   cdebug(2)<<"initializing for domain "<<domain<<endl;
@@ -141,6 +142,11 @@ int Parm::initSolvable ()
     FailWhen( itsPolcs.size() != 1,"multiple polcs in solvable Parm");
     int spidIndex = 256*nodeIndex();
     nr += itsPolcs[0]().makeSolvable(spidIndex);
+    if( itsPolcs[0]->getPerturbation() == 0 )
+    {
+      cdebug(3)<<"warning: null polc perturbation, using default 1e-6"<<endl;
+      itsPolcs[0]().setPerturbation(1e-6);
+    }
   } 
   else 
   {
@@ -295,16 +301,17 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
     protectStateField(rec,FPolcs);
   }
   Function::setStateImpl(rec,initializing);
+  getStateField(itsCurrentDomainId,rec,FDomainId);
   // Get solvable flag; clear domain if it changes (to force 
   // initDomain call next time 'round)
   bool oldSolvable = itsIsSolvable;
   getStateField(itsIsSolvable,rec,FSolvable);
   if (oldSolvable != itsIsSolvable) {
-    itsCurrentDomain = Domain();
+    itsCurrentDomainId = HIID();
   }
-  getStateField(itsCurrentDomainId,rec,FDomainId);
   // Are polcs specified? 
   int npolcs = rec[FPolcs].size(TpMeqPolc);
+  FailWhen(npolcs<0,"illegal "+FPolcs.toString()+" state field");
   if( npolcs )
   {
     itsPolcs.resize(npolcs);

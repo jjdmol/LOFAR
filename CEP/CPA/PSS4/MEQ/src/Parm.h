@@ -111,6 +111,8 @@ public:
   //## Standard debug info method
   virtual string sdebug (int detail = 1, const string& prefix = "",
 			 const char* name = 0) const;
+  
+  LocalDebugContext;
 
 protected:
   // initializes polcs based on value of solvable flag
@@ -150,9 +152,6 @@ private:
   Polc::Ref    itsDefault;
     //##ModelId=400E535000C1
   vector<Polc::Ref> itsPolcs;
-  
-    //##ModelId=400E535100D0
-  Domain       itsCurrentDomain;
   
   HIID         itsCurrentDomainId;
 };
