@@ -2,7 +2,7 @@
 #define TOPLEVELSTRATEGY_H_HEADER_INCLUDED_C0C4B372
 #include "IntermediateLevelStrategy.h"
 #include "Strategy.h"
-#include "MPIProgramEntry.h"
+#include "blackboard/MPIProgramEntry.h"
 
 //##ModelId=3F3A4C45002E
 //##Documentation
@@ -12,7 +12,7 @@ class TopLevelStrategy : public Strategy, public MPIProgramEntry
 {
   public:
     //##ModelId=3F4225A301D4
-    run();
+  //    void run();
     //##ModelId=3F43262B0291
     static TopLevelStrategy &Instance();
 

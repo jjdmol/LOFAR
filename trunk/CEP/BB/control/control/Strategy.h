@@ -3,7 +3,7 @@
 #include "Control.h"
 
 //##ModelId=3F3A4BDA00DA
-class Strategy : virtual public Control
+class Strategy : public Control
 {
 };
 

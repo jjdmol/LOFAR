@@ -6,7 +6,7 @@ class MPIProgramEntry
 {
   public:
     //##ModelId=3F41E52F0138
-    virtual void run() = 0;
+    virtual void run();
 
 };
 

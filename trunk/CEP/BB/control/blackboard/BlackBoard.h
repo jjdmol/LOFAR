@@ -7,7 +7,9 @@ class BlackBoard : public MPIProgramEntry
 {
   public:
     //##ModelId=3F41E570032C
-    void run();
+  //    void run();
+
+    void skip();
 
 };
 
