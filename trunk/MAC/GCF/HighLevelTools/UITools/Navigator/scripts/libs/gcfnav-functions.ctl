@@ -406,10 +406,15 @@ void treeAddDatapoints(dyn_string names)
 // 
 // builds a datapoint path from a node in the treeview
 ///////////////////////////////////////////////////////////////////////////
-string buildPathFromNode(long Node, string& datapointPath)
+string buildPathFromNode(long Node)
 {
-  datapointPath = g_itemID2datapoint[Node];
+	string datapointPath = "";
+	if(Node >= 1)
+	{
+  	datapointPath = g_itemID2datapoint[Node];
+  }
   LOG_TRACE("buildPathFromNode(",Node,") returns ",datapointPath);
+  return datapointPath;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -698,8 +703,7 @@ void TabViews_HandleEventSelectionChanged()
     long selectedNode = getSelectedNode();
     if(selectedNode != 0)
     {
-      string datapointPath;
-      buildPathFromNode(selectedNode, datapointPath);
+      string datapointPath = buildPathFromNode(selectedNode);
       string dpViewConfig = navConfigGetViewConfig(datapointPath);
       if(selectedNode!=0 && dpExists(dpViewConfig))
       {
@@ -785,8 +789,7 @@ void TreeCtrl_HandleEventOnSelChange(long Node)
       LOG_TRACE("TreeCtrl_HandleEventOnSelChange  ",Node);
       if(Node != 0)
       {
-        string datapointPath;
-        buildPathFromNode(Node, datapointPath);
+        string datapointPath = buildPathFromNode(Node);
         string dpViewConfig = navConfigGetViewConfig(datapointPath);
  
         showView(dpViewConfig,datapointPath);
@@ -811,8 +814,7 @@ void TreeCtrl_HandleEventOnExpand(long Node)
     LOG_DEBUG("TreeCtrl_HandleEventOnExpand ",Node);
     if(Node != 0)
     {
-      string datapointPath;
-      buildPathFromNode(Node, datapointPath);
+      string datapointPath = buildPathFromNode(Node);
  
       // get top level resources. "" means no parent, 1 means: 1 level deep
       dyn_string resources = navConfigGetResources(datapointPath,1);
@@ -877,8 +879,7 @@ void ButtonMaximize_HandleEventClick()
   long Node = getSelectedNode();
   if(Node != 0)
   {
-    string datapointPath;
-    buildPathFromNode(Node, datapointPath);
+    string datapointPath = buildPathFromNode(Node);
     string dpViewConfig = navConfigGetViewConfig(datapointPath);
     LOG_TRACE("ButtonMaximize_HandleEventClick",Node,dpViewConfig);
     if(Node!=0 && dpExists(dpViewConfig))
