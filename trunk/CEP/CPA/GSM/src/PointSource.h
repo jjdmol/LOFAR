@@ -50,7 +50,7 @@ public:
                          unsigned int row);
 
   virtual MeqDomain store(Table&       table,
-                          unsigned int row);
+                          unsigned int row) const;
 
   virtual unsigned int getParameters(std::vector<MeqParmPolc*> &parameters);
   virtual unsigned int getParameters(std::vector<const MeqParmPolc*> &parameters) const;
