@@ -594,7 +594,8 @@ void Prediffer::initParms (const MeqDomain& domain)
       if (nr > 0) {
 	itsParmData.push_back (ParmData((*iter)->getName(),
 					(*iter)->getTableName(),
-					(*iter)->getTableType(),
+					(*iter)->getDBType(),
+					(*iter)->getDBName(),
 					nr, itsNrScid,
 					(*iter)->getCoeffValues()));
 	itsNrScid += nr;
@@ -1389,7 +1390,7 @@ void Prediffer::updateSolvableParms()
     if ((*iter)->isSolvable()) {
       MeqParmPolc* ppc = dynamic_cast<MeqParmPolc*>(*iter);
       ASSERT (ppc);
-      ppc->readPolcs (itsDomain);
+      ppc->updateFromTable();
     }
   }
   resetEqLoop();

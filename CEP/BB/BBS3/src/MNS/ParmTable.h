@@ -88,18 +88,23 @@ public:
 
   // Set or get the name and type.
   // <group>
-  const string& getName() const
-    { return itsName; }
-  const string& getType() const
-    { return itsType; }
-  void setName (const string& name)
-    { itsName = name; }
-  void setType (const string& type)
-    { itsType = type; }
+  const string& getTableName() const
+    { return itsTableName; }
+  const string& getDBType() const
+    { return itsDBType; }
+  const string& getDBName() const
+    { return itsDBName; }
+  void setTableName (const string& name)
+    { itsTableName = name; }
+  void setDBType (const string& type)
+    { itsDBType = type; }
+  void setDBName (const string& name)
+    { itsDBName = name; }
   // </group>
 private:
-  string itsName;
-  string itsType;
+  string itsTableName;
+  string itsDBType;
+  string itsDBName;
 };
 
 
@@ -150,10 +155,12 @@ public:
 
   // Get the name and type.
   // <group>
-  const string& getName() const
-    { return itsRep->getName(); }
-  const string& getType() const
-    { return itsRep->getType(); }
+  const string& getTableName() const
+    { return itsRep->getTableName(); }
+  const string& getDBType() const
+    { return itsRep->getDBType(); }
+  const string& getDBName() const
+    { return itsRep->getDBName(); }
 
 private:
   // Forbid copy and assignment.

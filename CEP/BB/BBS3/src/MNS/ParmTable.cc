@@ -44,8 +44,9 @@ ParmTable::ParmTable (const string& dbType, const string& tableName,
   } else {
     ASSERT (dbType=="aips");
   }
-  itsRep->setName (tableName);
-  itsRep->setType (dbType);
+  itsRep->setTableName (tableName);
+  itsRep->setDBType    (dbType);
+  itsRep->setDBName    (userName);
   itsRep->connect();
 }
 

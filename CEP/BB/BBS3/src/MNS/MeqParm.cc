@@ -46,7 +46,11 @@ string MeqParm::getTableName() const
 {
   return "";
 }
-string MeqParm::getTableType() const
+string MeqParm::getDBType() const
+{
+  return "";
+}
+string MeqParm::getDBName() const
 {
   return "";
 }

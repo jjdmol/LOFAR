@@ -86,6 +86,11 @@ public:
   // at the spid index of this parameter.
   virtual void update (const vector<double>& value);
 
+  // Update the solvable parameter coefficients with the new values
+  // in the table.
+  // The default implementation throws a "not implemented" exception.
+  virtual void updateFromTable();
+
   // Make the new values persistent.
   virtual void save();
 

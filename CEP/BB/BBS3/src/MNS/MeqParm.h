@@ -56,11 +56,12 @@ public:
   void setName (const string& name)
     { itsName = name; }
 
-  // Get the name and type of the table holding the parameter.
+  // Get the name and type of the database and table holding the parameter.
   // By default it returns an empty string.
   // <group>
   virtual string getTableName() const;
-  virtual string getTableType() const;
+  virtual string getDBType() const;
+  virtual string getDBName() const;
   // </group>
 
   // Get the parameter id.
