@@ -52,7 +52,7 @@ public:
               char* rMac, 
               char* oMac, 
               uint16 etype  = 0x0000, 
-              bool dhheader = true);
+              bool dhheader = false);
   
   virtual ~TH_Ethernet();
 
