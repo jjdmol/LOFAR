@@ -60,7 +60,7 @@ VARLINES = $(shell if [ -f ../builds.$(HOST) ]; then egrep "^make\..*\.variants:
 VARIANT = $(shell for NM in $(VARLINES); do cmp=`echo $$NM | sed -e "s%/.*%%"`; vars=`echo $$NM | sed -e "s%.*/%%" -e "s%,% %g"`; for VAR in $$vars; do echo $${cmp}_$$VAR; done; done)
 VARIANTS = $(VARIANT)
 VARIANTNAMES = $(addsuffix .variant, $(VARIANTS))
-DOCPACKAGES = $(addsuffix /src, $(addprefix ./,$(PACKAGES)))
+DOCPACKAGES = $(addprefix ./,$(PACKAGES))
 
 #
 # Keep the make directory (which is LOFAR).
