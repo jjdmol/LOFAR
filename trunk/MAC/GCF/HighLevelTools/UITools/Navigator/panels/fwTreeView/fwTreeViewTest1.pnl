@@ -1,0 +1,134 @@
+V 10
+1
+LANG:1 0 
+PANEL,280 45 387 668 N "FwBackground" 0
+"/** example of panel using fwTreeView/fwTreeView.pnl reference panel to display items in a tree,
+ * with implementation of a sOnSelect callback function.
+ *  This panel display a dummy unix filesystem structure with some arbitary file sizes.
+ *  associated library: fwTreeViewTest.ctl
+ * @see fwTreeView/fwTreeView.pnl, fwTreeView.ctl
+ * @author Ph. Gras, CERN/EP -  University of Karlsruhe
+ * @version v2.0
+ */
+ 
+main(){
+//do nothing
+}" 0
+EE E E 1 -1 -1 0  43 20
+"" 0 1
+E"#uses \"fwTreeViewTest.ctl\"
+" 0
+ 2
+"CBRef""0"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 3
+"Text1"
+""
+1 22 582 E E E 1 E 1 E N {0,0,0} E N "FwBackground" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 22 582 145 598
+0 2 2 "s" 0 0 0 192 0 0  22 582
+ 1
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-90-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 21 Directory disk usage:
+1 6 2 "" 2
+0
+14 4
+"dir"
+""
+1 62 602 E E E 1 E 1 E N "FwForegroundInputText" E N "FwBackgroundInputText" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+62 602 322 629
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+13 5
+"close"
+""
+1 112 631 E E E 1 E 1 E N {0,0,0} E N "FwBackground" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-90-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+112 631 252 658
+T 
+1
+LANG:1 5 Close
+"main(){
+	//release ressources used by the tree.pnl referenced panel:
+	fwTreeView_close();
+	//close the current panel
+	PanelOff();
+}" 0
+ E E E
+1 8 2 "" 0
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 2 ""
+"fwTreeView/fwTreeView.pnl" 72 22 T 0 1 0 1  -1 -11  
+5
+"$sOnCollapse"""
+"$sOnExpand"""
+"$sOnInit""fwTreeView_TestInit"
+"$sOnRightClick"""
+"$sOnSelect""fwTreeView_TestSelect"
+0
