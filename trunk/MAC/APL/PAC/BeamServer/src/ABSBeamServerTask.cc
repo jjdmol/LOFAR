@@ -582,18 +582,25 @@ void BeamServerTask::compute_timeout_action(long current_seconds)
 					   + time_duration(seconds(COMPUTE_INTERVAL)),
 					   seconds(COMPUTE_INTERVAL));
 
+  Array<W_TYPE,2> lmns(COMPUTE_INTERVAL, 3);  // l,m,n coordinates
+
   // iterate over all beams
   for (set<Beam*>::iterator bi = m_beams.begin();
        bi != m_beams.end(); ++bi)
   {
     (*bi)->convertPointings(compute_period);
 
+    lmns = (*bi)->getLMNCoordinates();
     LOG_DEBUG(formatString("current_pointing=(%f,%f)",
 			   (*bi)->pointing().direction().angle1(),
 			   (*bi)->pointing().direction().angle2()));
   }
 
+  cout << "lmns = " << lmns << endl;
+  
   Beamlet::calculate_weights(m_pos, m_weights);
+
+  cout << "m_weights(t=,element=0,subband=10,pol=all) = " << m_weights(0,0,10,Range::all()) << endl;
 
   // show weights for timestep 0, element 0, all subbands, both polarizations
   //Range all = Range::all();
@@ -611,9 +618,11 @@ void BeamServerTask::compute_timeout_action(long current_seconds)
       for (int k = 0; k < N_SUBBANDS; k++)
 	for (int l = 0; l < N_POLARIZATIONS; l++)
 	  {
-	    m_weights16(i,j,k,l) = conj(m_weights16(i,j,k,l));
-	    m_weights16(i,j,k,l) = complex<int16_t>(htons((int16_t)round(m_weights(i,j,k,l).real()*SCALE)),
-						    htons((int16_t)round(m_weights(i,j,k,l).imag()*SCALE)));
+	      //
+	      // -1 * imaginary part to take complex conjugate of the weight
+	      //
+	      m_weights16(i,j,k,l) = complex<int16_t>(htons(   (int16_t)round(m_weights(i,j,k,l).real()*SCALE)),
+						      htons(-1*(int16_t)round(m_weights(i,j,k,l).imag()*SCALE)));
 	  }
 #endif
 
