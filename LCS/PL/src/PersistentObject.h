@@ -64,7 +64,7 @@ namespace LCS
         // Default constructor. 
         MetaData() : 
           itsOid(new ObjectId()), 
-          itsOwnerOid(new ObjectId(0)), 
+          itsOwnerOid(ObjectId::nullId()), 
           itsVersionNr(new uint(0))
         {}
 
@@ -145,11 +145,9 @@ namespace LCS
 //       // another process or thread changed the data in the database.
 //       void retrieve();
       
-//       // Set the data in this PersistentObject equal to the data in the
-//       // database belonging to the object with the specified ObjectId. \c
-//       // isOwnerOid is used to indicate whether \c oid refers to the object
-//       // itself or to its owner.
-//       void retrieve(const ObjectId& oid);
+      // Set the data in this PersistentObject equal to the data in the
+      // database belonging to the object with the specified ObjectId.
+      void retrieve(const ObjectId& oid);
 
       // Store the PersistentObject into the database. This method will
       // typically be called by the PersistenceBroker, because at this level 
@@ -210,9 +208,10 @@ namespace LCS
       // data members of \c T.
       virtual void doInsert() const = 0;
 
-//       // This method is responsible for actually retrieving the \e primitive
-//       // data members of \c T.
-//       virtual void doRetrieve(const ObjectId& oid, bool isOwnerOid) const = 0;
+      // This method is responsible for actually retrieving the \e primitive
+      // data members of \c T. \c isOwnerOid is used to indicate whether \c
+      // oid refers to the object itself or to its owner.
+      virtual void doRetrieve(const ObjectId& oid, bool isOwnerOid) = 0;
 
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.

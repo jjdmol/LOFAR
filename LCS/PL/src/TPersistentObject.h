@@ -91,17 +91,17 @@ namespace LCS
       // existing PersistentObject. We will have at least one existing
       // TPersistentObject<T> anyway, because we can only add instances of
       // TPersistentObject<T> to our Collection.
-      static Collection<TPersistentObject<T> > 
-      retrieve(const Query& query, int maxObjects)
-      {
-	return doRetrieve(query, maxObjects);
-      }
+//       static Collection<TPersistentObject<T> > 
+//       retrieve(const Query& query, int maxObjects)
+//       {
+// 	return doRetrieve(query, maxObjects);
+//       }
 
-      static TPersistentObject<T>
-      retrieve(const ObjectId& oid)
-      {
-	return doRetrieve(oid);
-      }
+//       static TPersistentObject<T>
+//       retrieve(const ObjectId& oid)
+//       {
+// 	return doRetrieve(oid);
+//       }
 
     private:
       
@@ -144,10 +144,12 @@ namespace LCS
 // 	      "Method should be implemented using template specialization"); 
       }
 
-      static TPersistentObject<T>
-      doRetrieve(const ObjectId& oid)
+      // This method is responsible for actually retrieving the \e primitive
+      // data members of \c T. \c isOwnerOid is used to indicate whether \c
+      // oid refers to the object itself or to its owner.
+      virtual void doRetrieve(const ObjectId& oid, bool isOwnerOid)
       {
-  	STATIC_CHECK(0, ERROR__Use_Explicit_Member_Specialization);
+  	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
 //   	THROW(NotImplemented, 
 //  	      "Method should be implemented using template specialization"); 
       }
@@ -168,7 +170,7 @@ namespace LCS
       static Collection<TPersistentObject<T> > 
       doRetrieve(const Query& query, int maxObjects)
       {
-  	STATIC_CHECK(0, ERROR__Use_Explicit_Member_Specialization);
+  	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
 //   	THROW(NotImplemented, 
 //  	      "Method should be implemented using template specialization"); 
       }
