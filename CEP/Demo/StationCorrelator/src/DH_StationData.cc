@@ -67,7 +67,7 @@ void DH_StationData::preprocess() {
   addField("StationID", BlobField<int>(1, 1));
   addField("BlockID", BlobField<int>(1, 1));
   addField("Flag", BlobField<int>(1, 1));
-  addField("Buffer", BlobField<BufferType>(1, 1));
+  addField("Buffer", BlobField<BufferType>(1, itsBufSize));
 
   // Create the data blob
   createDataBlock();
