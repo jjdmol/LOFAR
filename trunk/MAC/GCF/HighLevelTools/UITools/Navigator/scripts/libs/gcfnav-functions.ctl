@@ -158,23 +158,25 @@ void showView(string dpViewConfig, string datapointPath)
   shape tabCtrl = getTabCtrl();
   string viewsPath = navConfigGetViewsPath();
   int selectedViewTabId=1;
+  int tabId;
 
   navConfigSetSelectedElement(datapointPath);
   dyn_string panelParameters = makeDynString("$datapoint:" + datapointPath);
   // get the selected tab
   string selectedViewCaption = navConfigGetSelectedView();
+  LOG_DEBUG("showView","selected View:",selectedViewCaption);
 
   // get tab properties
   dyn_string views = navConfigGetViews(dpViewConfig);
   
-  for(int tabId=1;tabId<=dynlen(views);tabId++)
+  for(tabId=1;tabId<=dynlen(views);tabId++)
   {
     if(dpExists(views[tabId]))
     {
       string caption = navConfigGetViewCaption(views[tabId]);
       if(strlen(caption)>0)
       {
-        LOG_TRACE("showView","making tab visible: ",tabId);
+        LOG_DEBUG("showView","making tab visible: ",tabId,caption);
         tabCtrl.namedColumnHeader("tab"+tabId) = caption;
         tabCtrl.registerPanel(tabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
         tabCtrl.registerVisible(tabId-1)=TRUE;
@@ -204,9 +206,6 @@ void showView(string dpViewConfig, string datapointPath)
     LOG_TRACE("showView","tab undefined; making tab invisible: ",i);
     tabCtrl.registerVisible(i-1)=FALSE;
   }
-  
-  // make the currently selected view active
-  tabCtrl.activeRegister(selectedViewTabId-1);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -690,6 +689,7 @@ void InitializeTree()
   }
   
   dyn_string resources = navConfigGetResources();
+  LOG_TRACE("adding resources: ",resources);
   treeAddDatapoints(resources);
 
   if(ActiveXSupported())
@@ -813,22 +813,16 @@ void ButtonMaximize_HandleEventClick()
       dyn_int  nrOfSubViews;
       dyn_string subViews;
       dyn_string configs;
-      dpGet(dpViewConfig+".selectedView",selectedView,
-            dpViewConfig+".selectedSubView",selectedSubView,
-            dpViewConfig+".nrOfSubViews",nrOfSubViews,
-            dpViewConfig+".subViews",subViews,
-            dpViewConfig+".configs",configs);
       
-      err = getLastError(); //test whether no errors
-      if(dynlen(err) > 0)
+      if(navConfigGetViewConfigElements(dpViewConfig,
+            selectedView,
+            selectedSubView,
+            views,
+            nrOfSubViews,
+            subViews,
+            configs))
       {
-        errorDialog(err);
-        // open dialog box with errors
-        throwError(err); // write errors to stderr
-      }
-      else
-      {
-        LOG_TRACE("dpGet:",g_selectedView,selectedSubView,views,nrOfSubViews,subViews,configs);
+        LOG_TRACE("viewConfig:",selectedView,selectedSubView,views,nrOfSubViews,subViews,configs);
     
         // create the mapping
         int beginSubViews=1;
@@ -843,20 +837,9 @@ void ButtonMaximize_HandleEventClick()
         // get subviews config
         string subViewCaption;
         string subViewFileName;
-        dpGet(subViews[beginSubViews+selectedSubView-1] + ".caption",subViewCaption,
-              subViews[beginSubViews+selectedSubView-1] + ".filename",subViewFileName);
-        err = getLastError(); //test whether no errors
-        if(dynlen(err) > 0)
+        if(navConfigGetSubViewConfigElements(subViews[beginSubViews+selectedSubView-1],subViewCaption,subViewFileName))
         {
-          errorDialog(err);
-          // open dialog box with errors
-          throwError(err); // write errors to stderr
-        }
-        else
-        {
-          string viewsPath = "navigator/views/";
-          dpGet(DPNAME_NAVIGATOR+".viewsPath",viewsPath);
-
+          string viewsPath = navConfigGetViewsPath();
           LOG_DEBUG("subviewcaption,subviewfilename:",subViewCaption,viewsPath+subViewFileName);
 
           dyn_string panelParameters = makeDynString(
@@ -880,7 +863,7 @@ TreeView_OnCollapse(unsigned pos)
 	TreeCtrl_EventOnCollapsed(pos);
 
   // call the default implementation?
-  fwTreeView_defaultCollapse(pos);
+//  fwTreeView_defaultCollapse(pos);
   
   // the last line of code of each fwTreeView event handler MUST be the following:
   id = -1; 
@@ -897,7 +880,7 @@ TreeView_OnExpand(unsigned pos)
 	TreeCtrl_EventOnExpanded(pos);
 
   // call the default implementation?
-  fwTreeView_defaultExpand(pos);
+//  fwTreeView_defaultExpand(pos);
   
   // the last line of code of each fwTreeView event handler MUST be the following:
   id = -1; 
