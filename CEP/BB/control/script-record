@@ -23,10 +23,8 @@ insert into scripts values ('start',
             // another division
 
         }
-// The next one should not exist in a uncompiled script,
-// but this is a user responsibility
-        part start.1.2  // some controversial comment
       }
     }
   }
-}');
+}
+');
