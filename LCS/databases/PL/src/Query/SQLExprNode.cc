@@ -49,7 +49,7 @@ namespace LOFAR
 
       void BetweenExprNode::print(std::ostream& os) const
       {
-        if (itsValue.isNull()) return;
+        if (isNull()) return;
         os << "(";
         itsValue.print(os);
         os << ")" << itsOperation;
@@ -66,6 +66,11 @@ namespace LOFAR
           itsUpper.getConstraint();
       }
 
+      bool BetweenExprNode::isNull() const
+      {
+        return itsValue.isNull() || itsLower.isNull() || itsUpper.isNull();
+      }
+
 
       InExprNode::InExprNode(const std::string oper,
                              const Expr& lhs, const Collection<Expr>& rhs) :
@@ -80,7 +85,7 @@ namespace LOFAR
 
       void InExprNode::print(std::ostream& os) const
       {
-        if (itsLeft.isNull()) return;
+        if (isNull()) return;
         os << "(";
         itsLeft.print(os);
         os << ")";
@@ -88,15 +93,16 @@ namespace LOFAR
           ostringstream oss;
           Collection<Expr>::const_iterator it;
           for (it = itsRight.begin(); it != itsRight.end(); ++it) {
-            it->print(oss);
-            oss << ",";
+            if (!it->isNull()) {
+              it->print(oss);
+              oss << ",";
+            }
           }
           string s(oss.str());    // convert oss to a string
           s.erase(s.size()-1);    // strip trailing comma
           os << itsOperation << "(" << s << ")";
         }
       }
-
 
       Expr InExprNode::getConstraint() const
       {
@@ -106,6 +112,11 @@ namespace LOFAR
           expr = expr && it->getConstraint();
         }
         return expr;
+      }
+
+      bool InExprNode::isNull() const
+      {
+        return itsLeft.isNull() || itsRight.empty();
       }
 
 
@@ -122,7 +133,7 @@ namespace LOFAR
 
       void LikeExprNode::print(std::ostream& os) const
       {
-        if (itsLeft.isNull()) return;
+        if (isNull()) return;
 
         // We must print the pattern expression in itsRight into an
         // ostringstream, because we need its contents as a string.
@@ -170,6 +181,11 @@ namespace LOFAR
       Expr LikeExprNode::getConstraint() const
       {
         return itsLeft.getConstraint() && itsRight.getConstraint();
+      }
+
+      bool LikeExprNode::isNull() const
+      {
+        return itsLeft.isNull();
       }
 
 

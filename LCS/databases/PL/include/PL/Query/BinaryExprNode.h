@@ -54,6 +54,8 @@ namespace LOFAR
 
         virtual Expr getConstraint() const;
 
+        virtual bool isNull() const;
+
       private:
 
         // @name The operation

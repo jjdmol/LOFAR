@@ -62,6 +62,8 @@ namespace LOFAR
 
         virtual void print(std::ostream& os) const;
 
+        virtual bool isNull() const;
+
       private:
 
         // The operation

@@ -63,6 +63,8 @@ namespace LOFAR
 
         virtual Expr getConstraint() const;
 
+        virtual bool isNull() const;
+
       private:
 
         // @name The operation
@@ -96,6 +98,8 @@ namespace LOFAR
         virtual void print(std::ostream& os) const;
  
         virtual Expr getConstraint() const;
+
+        virtual bool isNull() const;
 
      private:
  
@@ -146,6 +150,8 @@ namespace LOFAR
         virtual void print(std::ostream& os) const;
 
         virtual Expr getConstraint() const;
+
+        virtual bool isNull() const;
 
      private:
  

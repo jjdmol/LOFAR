@@ -39,15 +39,21 @@ namespace LOFAR
 
       void LogicalUnaryExprNode::print(std::ostream& os) const
       {
+        if (isNull()) return;
         Expr exp(itsOperand.getConstraint());
-        os << "(";
+//         os << "(";
         if (!exp.isNull()) {
           exp.print(os);
           os << " AND ";
         }
         os << itsOperation;
         itsOperand.print(os);
-        os << ")";
+//         os << ")";
+      }
+
+      bool LogicalUnaryExprNode::isNull() const
+      {
+        return itsOperand.isNull();
       }
 
     } // namespace Query

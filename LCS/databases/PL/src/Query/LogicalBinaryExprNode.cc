@@ -40,6 +40,7 @@ namespace LOFAR
 
       void LogicalBinaryExprNode::print(std::ostream& os) const
       {
+        if (isNull()) return;
         Expr lhs(itsLeft.getConstraint());
         Expr rhs(itsRight.getConstraint());
 //         os << "(";
@@ -57,6 +58,11 @@ namespace LOFAR
           rhs.print(os);
         }
 //         os << ")";
+      }
+
+      bool LogicalBinaryExprNode::isNull() const
+      {
+        return itsLeft.isNull() || itsRight.isNull();
       }
 
     } // namespace Query
