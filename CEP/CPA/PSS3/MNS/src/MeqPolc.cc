@@ -35,9 +35,10 @@ bool   MeqPolc::theirPascalFilled = false;
 
 
 MeqPolc::MeqPolc()
-: itsMaxNrSpid (0),
-  itsPertValue (1e-6),
-  itsIsRelPert (true)
+: itsMaxNrSpid  (0),
+  itsPertValue  (1e-6),
+  itsIsRelPert  (true),
+  itsNormalized (false)
 {}
 
 void MeqPolc::setCoeff (const MeqMatrix& values)
@@ -65,6 +66,12 @@ void MeqPolc::setCoeff (const MeqMatrix& values,
   clearSolvable();
 }
 
+void MeqPolc::setCoeffOnly (const MeqMatrix& values)
+{
+  itsCoeff = values.clone();
+  clearSolvable();
+}
+
 MeqResult MeqPolc::getResult (const MeqRequest& request)
 {
   PERFPROFILE(__PRETTY_FUNCTION__);
@@ -87,25 +94,15 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
   // So set the value to the coefficient and possibly set the perturbed value.
   // Make sure it is turned into a scalar value.
   if (itsCoeff.nelements() == 1) {
-    if (itsCoeff.isDouble()) {
-      result.setValue (MeqMatrix(itsCoeff.getDouble()));
-      if (itsMaxNrSpid) {
-	result.setPerturbedValue (itsSpidInx[0],
-				  MeqMatrix(itsCoeff.getDouble()
-					    + itsPerturbation.getDouble()));
-	result.setPerturbation (itsSpidInx[0], itsPerturbation.getDouble());
-      }
-    } else { 
-      result.setValue (MeqMatrix(itsCoeff.getDComplex()));
-      if (itsMaxNrSpid) {
-	result.setPerturbedValue (itsSpidInx[0],
-				  MeqMatrix(itsCoeff.getDComplex()
-					    + itsPerturbation.getDComplex()));
-	result.setPerturbation (itsSpidInx[0], itsPerturbation.getDComplex());
+    result.setValue (MeqMatrix(itsCoeff.getDouble()));
+    if (itsMaxNrSpid) {
+      result.setPerturbedValue (itsSpidInx[0],
+				MeqMatrix(itsCoeff.getDouble()
+					  + itsPerturbation.getDouble()));
+      result.setPerturbation (itsSpidInx[0], itsPerturbation.getDouble());
 // 	cout << "polc " << itsSpidInx[0] << ' ' << result.getValue()
 // 	     << result.getPerturbedValue(itsSpidInx[0]) << itsPerturbation
 // 	     << ' ' << itsCoeff << endl;
-      }
     }
   } else {
     // The polynomial has multiple coefficients.
@@ -119,191 +116,96 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
     int ndy = request.ny();
     int ncx = itsCoeff.nx();
     int ncy = itsCoeff.ny();
-    // Evaluate the expression as double or dcomplex.
-    if (itsCoeff.isDouble()) {
-      const double* coeffData = itsCoeff.doubleStorage();
-      const double* pertData = 0;
-      double* pertValPtr[100];
-      if (itsMaxNrSpid) {
-	pertData = itsPerturbation.doubleStorage();
-	// Create the matrix for each perturbed value.
-	// Keep a pointer to the internal matrix data.
-	for (unsigned int i=0; i<itsSpidInx.size(); i++) {
-	  if (itsSpidInx[i] >= 0) {
-	    result.setPerturbedValue (itsSpidInx[i],
-				      MeqMatrix(double(0), ndx, ndy));
-	    pertValPtr[i] =
-	      result.getPerturbedValueRW(itsSpidInx[i]).doubleStorage();
-	  }
+    // Evaluate the expression (as double).
+    const double* coeffData = itsCoeff.doubleStorage();
+    const double* pertData = 0;
+    double* pertValPtr[100];
+    if (itsMaxNrSpid) {
+      pertData = itsPerturbation.doubleStorage();
+      // Create the matrix for each perturbed value.
+      // Keep a pointer to the internal matrix data.
+      for (unsigned int i=0; i<itsSpidInx.size(); i++) {
+	if (itsSpidInx[i] >= 0) {
+	  result.setPerturbedValue (itsSpidInx[i],
+				    MeqMatrix(double(0), ndx, ndy));
+	  pertValPtr[i] =
+	    result.getPerturbedValueRW(itsSpidInx[i]).doubleStorage();
 	}
       }
-      // Create matrix for the value itself and keep a pointer to its data.
-      result.setValue (MeqMatrix(double(0), ndx, ndy));
-      double* value = result.getValueRW().doubleStorage();
-      // Iterate over all cells in the domain.
-      double valy = sty;
-      for (int j=0; j<ndy; j++) {
-	double valx = stx;
-	for (int i=0; i<ndx; i++) {
-	  const double* coeff = coeffData;
-	  const double* pert  = pertData;
-	  double total = 0;
-	  if (ncx == 1) {
-	    // Only 1 coefficient in X, it is independent of x.
-	    // So only calculate for the Y values in the most efficient way.
-	    total = coeff[ncy-1];
-	    for (int iy=ncy-2; iy>=0; iy--) {
-	      total *= valy;
-	      total += coeff[iy];
-	    }
-	    if (itsMaxNrSpid) {
-	      double powy = 1;
-	      for (int iy=0; iy<ncy; iy++) {
-		if (pertValPtr[iy]) {
-		  *(pertValPtr[iy]) = total + pert[iy] * powy;
-		  pertValPtr[iy]++;
-		}
-		powy *= valy;
-	      }
-	    }
-	  } else {
+    }
+    // Create matrix for the value itself and keep a pointer to its data.
+    result.setValue (MeqMatrix(double(0), ndx, ndy));
+    double* value = result.getValueRW().doubleStorage();
+    // Iterate over all cells in the domain.
+    double valy = sty;
+    for (int j=0; j<ndy; j++) {
+      double valx = stx;
+      for (int i=0; i<ndx; i++) {
+	const double* coeff = coeffData;
+	const double* pert  = pertData;
+	double total = 0;
+	if (ncx == 1) {
+	  // Only 1 coefficient in X, it is independent of x.
+	  // So only calculate for the Y values in the most efficient way.
+	  total = coeff[ncy-1];
+	  for (int iy=ncy-2; iy>=0; iy--) {
+	    total *= valy;
+	    total += coeff[iy];
+	  }
+	  if (itsMaxNrSpid) {
 	    double powy = 1;
 	    for (int iy=0; iy<ncy; iy++) {
-	      double tmp = coeff[ncx-1];
-	      for (int ix=ncx-2; ix>=0; ix--) {
-		tmp *= valx;
-		tmp += coeff[ix];
+	      if (pertValPtr[iy]) {
+		*(pertValPtr[iy]) = total + pert[iy] * powy;
+		pertValPtr[iy]++;
 	      }
-	      total += tmp * powy;
 	      powy *= valy;
-	      coeff += ncx;
-	    }
-	    if (itsMaxNrSpid) {
-	      double powersx[10];
-	      double powx = 1;
-	      for (int ix=0; ix<ncx; ix++) {
-		powersx[ix] = powx;
-		powx *= valx;
-	      }
-	      double powy = 1;
-	      int ik = 0;
-	      for (int iy=0; iy<ncy; iy++) {
-		for (int ix=0; ix<ncx; ix++) {
-		  if (pertValPtr[ik]) {
-		    *(pertValPtr[ik]) = total + pert[ik] * powersx[ix] * powy;
-		    pertValPtr[ik]++;
-		  }
-		  ik++;
-		}
-		powy *= valy;
-	      }
 	    }
 	  }
-	  *value++ = total;
-	  valx += stepx;
-	}
-	valy += stepy;
-      }
-    } else {
-      const complex<double>* coeffData = itsCoeff.dcomplexStorage();
-      const complex<double>* pertData = 0;
-      complex<double>* pertValPtr[100];
-      if (itsMaxNrSpid) {
-	pertData = itsPerturbation.dcomplexStorage();
-	// Create the matrix for each perturbed value.
-	// Keep a pointer to the internal matrix data.
-	for (unsigned int i=0; i<itsSpidInx.size(); i++) {
-	  if (itsSpidInx[i] >= 0) {
-	    result.setPerturbedValue (itsSpidInx[i],
-				      MeqMatrix(complex<double>(), ndx, ndy));
-	    pertValPtr[i] =
-	      result.getPerturbedValueRW(itsSpidInx[i]).dcomplexStorage();
+	} else {
+	  double powy = 1;
+	  for (int iy=0; iy<ncy; iy++) {
+	    double tmp = coeff[ncx-1];
+	    for (int ix=ncx-2; ix>=0; ix--) {
+	      tmp *= valx;
+	      tmp += coeff[ix];
+	    }
+	    total += tmp * powy;
+	    powy *= valy;
+	    coeff += ncx;
 	  }
-	}
-      }
-      // Create matrix for the value itself and keep a pointer to its data.
-      result.setValue (MeqMatrix(complex<double>(), ndx, ndy));
-      complex<double>* value = result.getValueRW().dcomplexStorage();
-      // Iterate over all cells in the domain.
-      double valy = sty;
-      for (int j=0; j<ndy; j++) {
-	double valx = stx;
-	for (int i=0; i<ndx; i++) {
-	  const complex<double>* coeff = coeffData;
-	  const complex<double>* pert  = pertData;
-	  complex<double> total(0,0);
-	  if (ncx == 1) {
-	    // Only 1 coefficient in X, it is independent of x.
-	    // So only calculate for the Y values in the most efficient way.
-	    total = coeff[ncy-1];
-	    for (int iy=ncy-2; iy>=0; iy--) {
-	      total *= valy;
-	      total += coeff[iy];
+	  if (itsMaxNrSpid) {
+	    double powersx[10];
+	    double powx = 1;
+	    for (int ix=0; ix<ncx; ix++) {
+	      powersx[ix] = powx;
+	      powx *= valx;
 	    }
-	    if (itsMaxNrSpid) {
-	      double powy = 1;
-	      for (int iy=0; iy<ncy; iy++) {
-		if (pertValPtr[iy]) {
-		  *(pertValPtr[iy]) = total + pert[iy] * powy;
-		  pertValPtr[iy]++;
-		}
-		powy *= valy;
-	      }
-	    }
-	  } else {
 	    double powy = 1;
+	    int ik = 0;
 	    for (int iy=0; iy<ncy; iy++) {
-	      complex<double> tmp = coeff[ncx-1];
-	      for (int ix=ncx-2; ix>=0; ix--) {
-		tmp *= valx;
-		tmp += coeff[ix];
-	      }
-	      total += tmp * powy;
-	      powy *= valy;
-	      coeff += ncx;
-	    }
-	    if (itsMaxNrSpid) {
-	      double powersx[10];
-	      double powx = 1;
 	      for (int ix=0; ix<ncx; ix++) {
-		powersx[ix] = powx;
-		powx *= valx;
-	      }
-	      double powy = 1;
-	      int ik = 0;
-	      for (int iy=0; iy<ncy; iy++) {
-		for (int ix=0; ix<ncx; ix++) {
-		  if (pertValPtr[ik]) {
-		    *(pertValPtr[ik]) = total + pert[ik] * powersx[ix] * powy;
-		    pertValPtr[ik]++;
-		  }
-		  ik++;
+		if (pertValPtr[ik]) {
+		  *(pertValPtr[ik]) = total + pert[ik] * powersx[ix] * powy;
+		  pertValPtr[ik]++;
 		}
-		powy *= valy;
+		ik++;
 	      }
+	      powy *= valy;
 	    }
 	  }
-	  *value++ = total;
-	  valx += stepx;
 	}
-	valy += stepy;
+	*value++ = total;
+	valx += stepx;
       }
+      valy += stepy;
     }
     // Set the perturbations.
     if (itsMaxNrSpid) {
-      if (itsCoeff.isDouble()) {
-	const double* pert  = itsPerturbation.doubleStorage();
-	for (unsigned int i=0; i<itsSpidInx.size(); i++) {
-	  if (itsSpidInx[i] >= 0) {
-	    result.setPerturbation (itsSpidInx[i], pert[i]);
-	  }
-	}
-      } else {
-	const complex<double>* pert  = itsPerturbation.dcomplexStorage();
-	for (unsigned int i=0; i<itsSpidInx.size(); i++) {
-	  if (itsSpidInx[i] >= 0) {
-	    result.setPerturbation (itsSpidInx[i], pert[i]);
-	  }
+      const double* pert  = itsPerturbation.doubleStorage();
+      for (unsigned int i=0; i<itsSpidInx.size(); i++) {
+	if (itsSpidInx[i] >= 0) {
+	  result.setPerturbation (itsSpidInx[i], pert[i]);
 	}
       }
     }
@@ -331,32 +233,14 @@ int MeqPolc::makeSolvable (int spidIndex)
   // If the coefficient is too small, take absolute.
   if (nr > 0) {
     itsPerturbation = itsCoeff.clone();
-    if (itsCoeff.isDouble()) {
-      const double* coeff = itsCoeff.doubleStorage();
-      double* pert  = itsPerturbation.doubleStorage();
-      for (int i=0; i<itsCoeff.nelements(); i++) {
-	double perturbation = itsPertValue;
-	if (itsIsRelPert  &&  abs(coeff[i]) > 1e-10) {
-	  perturbation *= coeff[i];
-	}
-	pert[i] = perturbation;
+    const double* coeff = itsCoeff.doubleStorage();
+    double* pert  = itsPerturbation.doubleStorage();
+    for (int i=0; i<itsCoeff.nelements(); i++) {
+      double perturbation = itsPertValue;
+      if (itsIsRelPert  &&  abs(coeff[i]) > 1e-10) {
+	perturbation *= coeff[i];
       }
-    } else {
-      const complex<double>* coeff = itsCoeff.dcomplexStorage();
-      complex<double>* pert  = itsPerturbation.dcomplexStorage();
-      for (int i=0; i<itsCoeff.nelements(); i++) {
-	double realpert = itsPertValue;
-	double imagpert = itsPertValue;
-	if (itsIsRelPert) {
-	  if (abs(coeff[i].real()) > 1e-10) {
-	    realpert *= coeff[i].real();
-	  }
-	  if (abs(coeff[i].imag()) > 1e-10) {
-	    imagpert *= coeff[i].imag();
-	  }
-	}
-	pert[i] = complex<double>(realpert, imagpert);
-      }
+      pert[i] = perturbation;
     }
   }
   return nr;
@@ -371,75 +255,49 @@ void MeqPolc::clearSolvable()
 
 void MeqPolc::getInitial (MeqMatrix& values) const
 {
-  complex<double>* data = values.dcomplexStorage();
-  if (itsCoeff.isDouble()) {
-    const double* coeff = itsCoeff.doubleStorage();
-    for (unsigned int i=0; i<itsSpidInx.size(); i++) {
-      if (itsSpidInx[i] >= 0) {
-	Assert (itsSpidInx[i] < values.nx());
-	data[itsSpidInx[i]] = complex<double>(coeff[i], 0);
-      }
-    }
-  } else {
-    const complex<double>* coeff = itsCoeff.dcomplexStorage();
-    for (unsigned int i=0; i<itsSpidInx.size(); i++) {
-      if (itsSpidInx[i] >= 0) {
-	Assert (itsSpidInx[i] < values.nx());
-	data[itsSpidInx[i]] = coeff[i];
-      }
+  double* data = values.doubleStorage();
+  const double* coeff = itsCoeff.doubleStorage();
+  for (unsigned int i=0; i<itsSpidInx.size(); i++) {
+    if (itsSpidInx[i] >= 0) {
+      Assert (itsSpidInx[i] < values.nx());
+      data[itsSpidInx[i]] = coeff[i];
     }
   }
 }
 
-void MeqPolc::getCurrentValue(MeqMatrix& value) const
+void MeqPolc::getCurrentValue (MeqMatrix& value, bool denorm) const
 {
-  value = itsCoeff;
+  if (denorm && isNormalized()) {
+    value = denormalize(itsCoeff);
+  } else {
+    value = itsCoeff;
+  }
 }
 
 void MeqPolc::update (const MeqMatrix& value)
 {
-  if (itsCoeff.isDouble()) {
-    double* coeff = itsCoeff.doubleStorage();
-    for (unsigned int i=0; i<itsSpidInx.size(); i++) {
-      if (itsSpidInx[i] >= 0) {
-	coeff[i] = value.getDouble (itsSpidInx[i], 0);
-      }
-    }
-  } else {
-    complex<double>* coeff = itsCoeff.dcomplexStorage();
-    for (unsigned int i=0; i<itsSpidInx.size(); i++) {
-      if (itsSpidInx[i] >= 0) {
-	coeff[i] = value.getDComplex (itsSpidInx[i], 0);
-      }
+  double* coeff = itsCoeff.doubleStorage();
+  for (unsigned int i=0; i<itsSpidInx.size(); i++) {
+    if (itsSpidInx[i] >= 0) {
+      coeff[i] = value.getDouble (itsSpidInx[i], 0);
     }
   }
 }
 
 
-MeqMatrix MeqPolc::normalize (const MeqDomain& domain)
+MeqMatrix MeqPolc::normalize (const MeqMatrix& coeff, const MeqDomain& domain)
 {
-  if (itsCoeff.isDouble()) {
-    return normDouble (itsCoeff,
-		       domain.scaleX(), domain.scaleY(),
-		       domain.offsetX(), domain.offsetY());
-  }
-  return normDComplex (itsCoeff,
-		       domain.scaleX(), domain.scaleY(),
-		       domain.offsetX(), domain.offsetY());
+  return normDouble (coeff,
+		     domain.scaleX(), domain.scaleY(),
+		     domain.offsetX(), domain.offsetY());
 }
   
-MeqMatrix MeqPolc::denormalize() const
+MeqMatrix MeqPolc::denormalize (const MeqMatrix& coeff) const
 {
-  if (itsCoeff.isDouble()) {
-    return normDouble (itsCoeff,
-		       1/itsDomain.scaleX(), 1/itsDomain.scaleY(),
-		       -itsDomain.offsetX()/itsDomain.scaleX(),
-		       -itsDomain.offsetY()/itsDomain.scaleY());
-  }
-  return normDComplex (itsCoeff,
-		       1/itsDomain.scaleX(), 1/itsDomain.scaleY(),
-		       -itsDomain.offsetX()/itsDomain.scaleX(),
-		       -itsDomain.offsetY()/itsDomain.scaleY());
+  return normDouble (coeff,
+		     1/itsDomain.scaleX(), 1/itsDomain.scaleY(),
+		     -itsDomain.offsetX()/itsDomain.scaleX(),
+		     -itsDomain.offsetY()/itsDomain.scaleY());
 }
   
 void MeqPolc::fillPascal()
@@ -506,16 +364,5 @@ MeqMatrix MeqPolc::normDouble (const MeqMatrix& coeff, double sx,
       }
     }
   }
-  return newc;
-}
-
-
-MeqMatrix MeqPolc::normDComplex (const MeqMatrix& coeff, double sx,
-				 double sy, double ox, double oy)
-{
-  if (!theirPascalFilled) {
-    fillPascal();
-  }
-  MeqMatrix newc (complex<double>(0,0), coeff.nx(), coeff.ny(), true);
   return newc;
 }

@@ -33,7 +33,7 @@ class MeqRequest;
 class MeqResult;
 
 
-// This class contains an ordinary 2-dim with real or complex coefficients.
+// This class contains an ordinary 2-dim with real coefficients.
 // It is valid for the given domain only.
 // The domain is scaled between -1 and 1 to avoid large values for
 // the high order terms. The coefficients are valid for the scaled
@@ -59,14 +59,14 @@ public:
   const MeqMatrix& getCoeff() const
     { return itsCoeff; }
 
-  // Get the mask.
-  const Matrix<bool>& mask() const;
-
   // Set the coefficients. The mask is set to all true.
   void setCoeff (const MeqMatrix& coeff);
 
   // Set the coefficients and mask.
   void setCoeff (const MeqMatrix& coeff, const Matrix<bool>& mask);
+
+  // Set the coefficients only. The mask is left alone.
+  void setCoeffOnly (const MeqMatrix& coeff);
 
   // Get the domain.
   const MeqDomain& domain() const
@@ -100,7 +100,7 @@ public:
 
   // Get the current value of the solvable parameter and store it
   // in the argument.
-  void getCurrentValue (MeqMatrix& value) const;
+  void getCurrentValue (MeqMatrix& value, bool denormalize) const;
 
   // Update the solvable parameters with the new values.
   void update (const MeqMatrix& value);
@@ -121,18 +121,23 @@ public:
   const MeqMatrix& getPertSimCoeff() const
     { return itsPertSimCoeff; }
 
+  // Tell if the coefficients have to be normalized.
+  void setNormalize (bool normalize)
+    { itsNormalized = normalize; }
+
+  // Tell if the coefficients are normalized.
+  bool isNormalized() const
+    { return itsNormalized; }
+
   // Normalize the coefficients for the given domain.
-  MeqMatrix normalize (const MeqDomain&);
+  MeqMatrix normalize (const MeqMatrix& coeff, const MeqDomain&);
 
   // Denormalize the coefficients.
-  MeqMatrix denormalize() const;
+  MeqMatrix denormalize (const MeqMatrix& coeff) const;
 
   // (De)normalize real coefficients.
   static MeqMatrix normDouble (const MeqMatrix& coeff, double sx,
 			       double sy, double ox, double oy);
-  // (De)normalize complex coefficients.
-  static MeqMatrix normDComplex (const MeqMatrix& coeff, double sx,
-				 double sy, double ox, double oy);
 
 private:
   // Fill Pascal's triangle.
@@ -148,6 +153,7 @@ private:
   int          itsMaxNrSpid;
   double       itsPertValue;
   bool         itsIsRelPert;   //# true = perturbation is relative
+  bool         itsNormalized;  //# true = coefficients normalized to domain
 
   //# Pascal's triangle for the binomial coefficients needed when normalizing.
   static double theirPascal[10][10];

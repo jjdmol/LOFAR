@@ -63,7 +63,11 @@ public:
   // Make parameter solvable, thus perturbed values have to be calculated.
   // spidIndex is the index of the first spid of this parm.
   // It returns the number of spids in this parm.
-  virtual void setSolvable (bool solvable) = 0;
+  void setSolvable (bool solvable)
+    { itsIsSolvable = solvable; }
+
+  bool isSolvable() const
+    { return itsIsSolvable; }
 
   // Get the result of the parameter for the given domain.
   virtual MeqResult getResult (const MeqRequest&) = 0;
@@ -74,7 +78,8 @@ public:
 
   // Get the current values of the solvable parameter and store
   // them in the argument.
-  virtual void getCurrentValue(MeqMatrix& value) const = 0;
+  // If needed, polynomial coefficients are denormalized.
+  virtual void getCurrentValue(MeqMatrix& value, bool denormalize) const = 0;
 
   // Update the parameter with the new values.
   virtual void update (const MeqMatrix& value) = 0;
@@ -92,6 +97,7 @@ private:
 
   string       itsName;
   unsigned int itsParmId;
+  bool         itsIsSolvable;
 
   // A static vector of pointers to parms.
   static unsigned int      theirNparm;

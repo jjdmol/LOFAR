@@ -50,4 +50,21 @@ private:
 };
 
 
+
+class MeqExprToComplex: public MeqExpr
+{
+public:
+  MeqExprToComplex (MeqExpr* real, MeqExpr* imag)
+    : itsReal(real), itsImag(imag) {;}
+
+  virtual ~MeqExprToComplex();
+
+  virtual MeqResult getResult (const MeqRequest&);
+
+private:
+  MeqExpr* itsReal;
+  MeqExpr* itsImag;
+};
+
+
 #endif

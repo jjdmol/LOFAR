@@ -46,7 +46,6 @@ class MeqParmPolc: public MeqParm
 {
 public:
   // Create a 2-dim polynomial with order 0 in x and y.
-  // The coefficients are solvable and initialized to 1.
   MeqParmPolc (const string& name);
 
   virtual ~MeqParmPolc();
@@ -67,15 +66,6 @@ public:
   // It also sets the spids and returns the number of spids found.
   virtual int initDomain (const MeqDomain&, int spidIndex);
 
-  // Make parameter solvable, thus perturbed values have to be calculated.
-  // spidIndex is the index of the first spid of this parm.
-  // It returns the number of spids in this parm.
-  virtual void setSolvable (bool solvable);
-
-  // Is the parameter solvable?
-  bool isSolvable() const
-    { return itsIsSolvable; }
-
   // Get the requested result of the parameter.
   virtual MeqResult getResult (const MeqRequest&);
 
@@ -85,7 +75,7 @@ public:
 
   // Get the current value of the solvable parameter and store
   // it in the argument.
-  virtual void getCurrentValue(MeqMatrix& value) const;
+  virtual void getCurrentValue(MeqMatrix& value, bool denormalize) const;
 
   // Update the solvable parameters with the new values.
   virtual void update (const MeqMatrix& value);
@@ -95,7 +85,6 @@ public:
 
 private:
   vector<MeqPolc> itsPolcs;
-  bool            itsIsSolvable;
 };
 
 

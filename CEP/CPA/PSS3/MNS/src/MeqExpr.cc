@@ -21,7 +21,37 @@
 //# $Id$
 
 #include <MNS/MeqExpr.h>
-
+#include <MNS/MeqResult.h>
+#include <MNS/MeqMatrixTmp.h>
+#include <MNS/MeqRequest.h>
 
 MeqExpr::~MeqExpr()
 {}
+
+
+
+
+MeqExprToComplex::~MeqExprToComplex()
+{}
+
+MeqResult MeqExprToComplex::getResult (const MeqRequest& request)
+{
+  MeqResult real = itsReal->getResult (request);
+  MeqResult imag = itsImag->getResult (request);
+  MeqResult result(request.nspid());
+  for (int spinx=0; spinx<request.nspid(); spinx++) {
+    if (real.isDefined(spinx)) {
+      result.setPerturbedValue (spinx,
+				tocomplex(real.getPerturbedValue(spinx),
+					  imag.getPerturbedValue(spinx)));
+      result.setPerturbation (spinx, real.getPerturbation(spinx));
+    } else if (imag.isDefined(spinx)) {
+      result.setPerturbedValue (spinx,
+				tocomplex(real.getPerturbedValue(spinx),
+					  imag.getPerturbedValue(spinx)));
+      result.setPerturbation (spinx, imag.getPerturbation(spinx));
+    }
+  }
+  result.setValue (tocomplex(real.getValue(), imag.getValue()));
+  return result;
+}
