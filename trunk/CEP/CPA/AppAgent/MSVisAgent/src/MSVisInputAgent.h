@@ -24,9 +24,9 @@
 #define _MSVISAGENT_MSVISINPUTAGENT_H 1
     
 #include <VisAgent/VisFileInputAgent.h>
-#include <UVD/UVD.h>
-#include "MSVisAgent/AID-MSVisAgent.h"
-#include "MSVisAgent/MSVisAgentDebugContext.h"
+#include <VisCube/VisVocabulary.h>
+#include <MSVisAgent/AID-MSVisAgent.h>
+#include <MSVisAgent/MSVisAgentDebugContext.h>
 
 #include <aips/MeasurementSets/MeasurementSet.h>
 #include <aips/Tables/TableIter.h>
@@ -41,7 +41,7 @@
 // this defines constants for field names used in the parameter record
 namespace MSVisAgentVocabulary
 {
-  using namespace UVD;
+  using namespace VisVocabulary;
   
   const
   HIID FDDID              = AidDDID|AidIndex,
@@ -61,8 +61,6 @@ namespace MSVisAgentVocabulary
                           
        __last_declaration;
        
-       
-  static int dummy = aidRegistry_UVD();
 };
     
 
@@ -109,10 +107,6 @@ class MSVisInputAgent : public VisFileInputAgent
       string sdebug ( int detail = 1,const string &prefix = "",
                       const char *name = 0 ) const;
       
-    //##ModelId=3DFDFC0603C3
-      const char * debug ( int detail = 1,const string &prefix = "",
-                           const char *name = 0 ) const
-      { return Debug::staticBuffer(sdebug(detail,prefix,name)); }
    
       
   private:
@@ -137,7 +131,7 @@ class MSVisInputAgent : public VisFileInputAgent
       MeasurementSet selms_;
       
       // VDS id
-    //##ModelId=3DF9FECD019D
+    //##ModelId=3E00AA5101A0
       VDSID vdsid_;
       // observation ID -- this is incremented by 1 for each MS
     //##ModelId=3DF9FECD01A9
@@ -156,7 +150,13 @@ class MSVisInputAgent : public VisFileInputAgent
       int channels_[2];
       // various counts
     //##ModelId=3DF9FECD01D0
-      int num_channels_,num_corrs_,num_antennas_,num_ifrs_;
+      int num_channels_;
+    //##ModelId=3DF9FECD01D7
+      int num_corrs_;
+    //##ModelId=3DF9FECD01DF
+      int num_antennas_;
+    //##ModelId=3DF9FECD01E6
+      int num_ifrs_;
       
       // count of timeslots already returned
     //##ModelId=3DFDFC060354

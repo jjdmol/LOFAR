@@ -23,6 +23,8 @@
 #include "../src/MSVisInputAgent.h"
 #include <DMI/DataArray.h>
 
+#include <AppAgent/AppControlAgent.h>
+
 // this function checks the agent for any events and prints them out
 void checkEvents (AppAgent &agent)
 {

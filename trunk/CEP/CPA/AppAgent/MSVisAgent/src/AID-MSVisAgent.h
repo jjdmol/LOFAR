@@ -25,7 +25,7 @@ const int AidEnd_int = -1131;
 #endif
 #ifndef _defined_id_AidFormat
 #define _defined_id_AidFormat 1
-const AtomicID AidFormat(-1126);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:3
+const AtomicID AidFormat(-1126);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:4
 const int AidFormat_int = -1126;
 #endif
 #ifndef _defined_id_AidInput
@@ -35,52 +35,52 @@ const int AidInput_int = -1075;
 #endif
 #ifndef _defined_id_AidMS
 #define _defined_id_AidMS 1
-const AtomicID AidMS(-1120);                      // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:4
+const AtomicID AidMS(-1120);                      // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/VisCube/src/VisCube.aidlist:40
 const int AidMS_int = -1120;
 #endif
 #ifndef _defined_id_AidMSVisInputAgent
 #define _defined_id_AidMSVisInputAgent 1
-const AtomicID AidMSVisInputAgent(-1119);         // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:5
+const AtomicID AidMSVisInputAgent(-1119);         // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:7
 const int AidMSVisInputAgent_int = -1119;
 #endif
 #ifndef _defined_id_AidMSVisOutputAgent
 #define _defined_id_AidMSVisOutputAgent 1
-const AtomicID AidMSVisOutputAgent(-1118);        // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:6
+const AtomicID AidMSVisOutputAgent(-1118);        // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:8
 const int AidMSVisOutputAgent_int = -1118;
 #endif
 #ifndef _defined_id_AidParams
 #define _defined_id_AidParams 1
-const AtomicID AidParams(-1135);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/MSVisAgent/src/MSVisInputAgent.h:38
+const AtomicID AidParams(-1135);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:9
 const int AidParams_int = -1135;
 #endif
 #ifndef _defined_id_AidSelection
 #define _defined_id_AidSelection 1
-const AtomicID AidSelection(-1124);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:7
+const AtomicID AidSelection(-1124);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:10
 const int AidSelection_int = -1124;
 #endif
 #ifndef _defined_id_AidSize
 #define _defined_id_AidSize 1
-const AtomicID AidSize(-1127);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:8
+const AtomicID AidSize(-1127);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:11
 const int AidSize_int = -1127;
 #endif
 #ifndef _defined_id_AidStart
 #define _defined_id_AidStart 1
-const AtomicID AidStart(-1134);                   // from /home/oms/LOFAR/CEP/CPA/AppAgent/MSVisAgent/src/MSVisInputAgent.h:38
+const AtomicID AidStart(-1134);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:12
 const int AidStart_int = -1134;
 #endif
 #ifndef _defined_id_AidString
 #define _defined_id_AidString 1
-const AtomicID AidString(-1128);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:9
+const AtomicID AidString(-1128);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:13
 const int AidString_int = -1128;
 #endif
 #ifndef _defined_id_AidTile
 #define _defined_id_AidTile 1
-const AtomicID AidTile(-1123);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:10
+const AtomicID AidTile(-1123);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:14
 const int AidTile_int = -1123;
 #endif
 #ifndef _defined_id_AidVDSID
 #define _defined_id_AidVDSID 1
-const AtomicID AidVDSID(-1121);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:11
+const AtomicID AidVDSID(-1121);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:15
 const int AidVDSID_int = -1121;
 #endif
 #ifndef _defined_id_AidVis

@@ -49,7 +49,7 @@ class VisFileInputAgent : public VisInputAgent
       DataRecord::Ref   header_,eventdata_;
       
       // will generate at most one event at a time
-    //##ModelId=3DF9FECE00EB
+    //##ModelId=3E00AA520286
       HIID              event_;
       
   protected:
