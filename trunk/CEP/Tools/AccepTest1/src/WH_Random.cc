@@ -4,19 +4,6 @@
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
-//#  This program is free software; you can redistribute it and/or modify
-//#  it under the terms of the GNU General Public License as published by
-//#  the Free Software Foundation; either version 2 of the License, or
-//#  (at your option) any later version.
-//#
-//#  This program is distributed in the hope that it will be useful,
-//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//#  GNU General Public License for more details.
-//#
-//#  You should have received a copy of the GNU General Public License
-//#  along with this program; if not, write to the Free Software
-//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
 
@@ -84,17 +71,17 @@ namespace LOFAR
   
   void WH_Random::process() {
     
-    complex<float> acc = complex<float> (0,0);
+    DH_CorrCube::BufferType acc = DH_CorrCube::BufferType(0,0);
+    short seed = rand()/(RAND_MAX);
 
     for (int channel = 0; channel < itsNchannels; channel++) {
       for (int station = 0; station < itsNelements; station++) {
 	for (int sample = 0; sample < itsNsamples; sample++) {
 	  
-	  complex<float> rval = complex<float> (-2.5 + 5.0*rand()/(RAND_MAX),
-						-2.5 + 5.0*rand()/(RAND_MAX));
+	  DH_CorrCube::BufferType rval = DH_CorrCube::BufferType (channel+sample+station*seed , station*seed - 1);
 	  
 	  if (channel == 0 && station == 0) {
-	    acc += complex<float> (
+	    acc += DH_CorrCube::BufferType(
 				   rval.real() * rval.real() - 
 				   rval.imag() * rval.imag(), 
 				   
@@ -102,13 +89,12 @@ namespace LOFAR
 				   rval.imag() * rval.real() 
 				   );
 	  }
-	  // 	  complex<float> rval = complex<float> (index++, 0);
+
 	  
-	  ((DH_CorrCube*)getDataManager().getOutHolder(0))
-	    ->setBufferElement(channel, 
-			       station,
-			       sample,
-			       &rval);
+	  ((DH_CorrCube*)getDataManager().getOutHolder(0))->setBufferElement(channel, 
+									     station,
+									     sample,
+									     &rval);
 	}
       }
     }
