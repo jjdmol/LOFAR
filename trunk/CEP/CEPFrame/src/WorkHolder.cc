@@ -25,7 +25,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "CEPFrame/WorkHolder.h"
-#include "Common/Debug.h"
+#include <Common/Debug.h>
 
 
 namespace LOFAR

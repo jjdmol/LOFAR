@@ -13,9 +13,7 @@ DH_Tester.h					\
 DataHolder.h					\
 Transportable.h					\
 PHEX_Antenna.h					\
-ParamBlock.h					\
 ParamHolder.h					\
-ParamValue.h					\
 Profiler.h					\
 Simul.h						\
 SimulBuilder.h					\
@@ -69,9 +67,7 @@ DH_Tester.cc					\
 DataHolder.cc					\
 Transportable.cc				\
 PHEX_Antenna.cc					\
-ParamBlock.cc					\
 ParamHolder.cc					\
-ParamValue.cc					\
 Profiler.cc					\
 Simul.cc					\
 SimulBuilder.cc					\

@@ -45,7 +45,7 @@ WH_TestAutoTrigger::~WH_TestAutoTrigger()
 {}
 
 WorkHolder* WH_TestAutoTrigger::construct (const string& name, int, int,
-				  const ParamBlock&)
+					   const KeyValueMap&)
 {
   return new WH_TestAutoTrigger (name);
 }

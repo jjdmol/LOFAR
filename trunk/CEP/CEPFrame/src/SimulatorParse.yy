@@ -20,42 +20,20 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
-//
-//  $Log$
-//  Revision 1.2  2003/02/21 12:25:24  schaaf
-//  Replaced all BaseSim includes with CEPFRame includes; removed $ fields
-//
-//  Revision 1.1.1.1  2003/02/21 11:14:36  schaaf
-//  copy from BaseSim tag "CEPFRAME"
-//
-//  Revision 1.2  2002/05/08 14:15:57  wierenga
-//  Added correct include paths
-//
-//  Revision 1.1  2001/10/26 10:06:27  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.2  2001/08/16 14:33:07  gvd
-//  Determine TransportHolder at runtime in the connect
-//
-//  Revision 1.1  2001/03/01 13:17:03  gvd
-//  New parser source files
-//
-//
-/////////////////////////////////////////////////////////////////////////////
 */
 
 %{
 #include "CEPFrame/SimulatorParseClass.h"
-#include "CEPFrame/ParamBlock.h"
+#include <Common/KeyValueMap.h>
 using namespace LOFAR;
 %}
 
 %pure_parser                /* make parser re-entrant */
 
 %union {
-LOFAR::ParamValue* val;
-LOFAR::ParamBlock* block;
-vector<LOFAR::ParamValue>* vec;
+LOFAR::KeyValue* val;
+LOFAR::KeyValueMap* block;
+vector<LOFAR::KeyValue>* vec;
 }
 
 %{
@@ -92,7 +70,7 @@ defcom:    DEFCOMMAND parameters ENDCOMM {
 	       delete $2;
            }
        |   DEFCOMMAND ENDCOMM {
-               SimulatorParse::execute (*$1, ParamBlock());
+               SimulatorParse::execute (*$1, KeyValueMap());
 	       delete $1;
            }
        ;
@@ -124,7 +102,7 @@ parameters: parameters COMMA NAME IS value {
 	       delete $5;
 	   }
        |   NAME IS value {
-               $$ = new ParamBlock;
+               $$ = new KeyValueMap;
 	       (*$$)[$1->getString()] = *$3;
 	       delete $1;
 	       delete $3;
@@ -134,16 +112,16 @@ parameters: parameters COMMA NAME IS value {
 value:     LITERAL
 	   {   $$ = $1; }
        |   LBRACKET values RBRACKET {
-	       $$ = new ParamValue (*$2);
+	       $$ = new KeyValue (*$2);
 	       delete $2;
            }
        |   LBRACKET parameters RBRACKET {
-	       $$ = new ParamValue (*$2);
+	       $$ = new KeyValue (*$2);
 	       delete $2;
            }
        |   LBRACKET IS RBRACKET {
 	       /* Like in glish [=] is the syntax for an empty 'record' */
-	       $$ = new ParamValue (ParamBlock());
+	       $$ = new KeyValue (KeyValueMap());
            }
        ;
 
@@ -153,12 +131,12 @@ values:    values COMMA LITERAL {
 	       delete $3;
 	   }
        |   LITERAL {
-               $$ = new vector<ParamValue>();
+               $$ = new vector<KeyValue>();
 	       $$->push_back (*$1);
 	       delete $1;
 	   }
        |
-           {   $$ = new vector<ParamValue>(); }
+           {   $$ = new vector<KeyValue>(); }
        ;
 
 %%

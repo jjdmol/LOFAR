@@ -36,10 +36,10 @@
 #include <xercesc/internal/VecAttributesImpl.hpp>
 
 #include "CEPFrame/Transport.h"
-#include "CEPFrame/ParamBlock.h"
 #include "CEPFrame/WH_Empty.h"
 #include "CEPFrame/SAXSimulParser.h"
-#include "Common/Debug.h"
+#include <Common/KeyValueMap.h>
+#include <Common/Debug.h>
 
 namespace LOFAR
 {
@@ -161,7 +161,7 @@ WorkHolder* SAXHandler::instWorkHolderByName(const string& className,
 					     size_t inputs, size_t outputs,
 					     const string& whName)
 {
-  ParamBlock params;
+  KeyValueMap params;
   WorkHolder::WHConstruct* construct = WorkHolder::getConstruct (className);
   AssertMsg (construct != 0, "Workholder " << className << " is unknown");
   return construct (whName, inputs, outputs, params);

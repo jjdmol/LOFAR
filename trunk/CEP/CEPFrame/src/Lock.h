@@ -1,82 +1,29 @@
-//////////////////////////////////////////////////////////////////////
-//
-//  Lock.h: Pthread implementation of thread locks.
-//
-//  Copyright (C) 2000, 2001
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//
-//  This program is free software; you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation; either version 2 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-//  $Id$
-//
-//  $Log$
-//  Revision 1.1.1.1  2003/02/21 11:14:36  schaaf
-//  copy from BaseSim tag "CEPFRAME"
-//
-//  Revision 1.4  2002/06/07 06:57:14  wierenga
-//  %[BugId:2]%
-//  Add missing include for AssertStr routine.
-//
-//  Revision 1.3  2002/06/04 12:25:13  wierenga
-//  %[BugId:2]%
-//  Fixed bug in CyclicBufferTest. The UNIX signal facility does not
-//  combine well with pthreads :-). The signal handler was only used
-//  to periodically print the status of the circular buffer. After taking
-//  out the SIGALRM signal the code works fine.
-//
-//  Revision 1.2  2002/05/28 14:33:52  wierenga
-//  %[BugId:2]%
-//  Trying to get the CyclicBufferTest to work on multi-CPU machine (lofar8).
-//  It is currently failing in some cases.
-//
-//  Revision 1.1  2002/05/28 07:44:52  wierenga
-//  %[BugId:2]%
-//  Needed global lock around global counter.
-//  Moved Lock.h from BaseSim/Corba to BaseSim.
-//
-//  Revision 1.5  2002/05/24 14:39:57  wierenga
-//  %[BugId: 2]%
-//  First completed version of the CyclicBuffer implementation.
-//  This includes a test program in BaseSim/test which will be run
-//  if you run 'make check'.
-//
-//  Revision 1.4  2002/05/23 11:18:52  wierenga
-//  %[BugId: 2]%
-//  Initial version of CyclicBuffer which compiles correctly.
-//
-//  Revision 1.3  2002/05/23 08:44:42  wierenga
-//  %[BugId: 2]%
-//
-//  Don't add semicolon to macro.
-//
-//  Revision 1.2  2001/10/26 10:06:28  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.1  2001/08/09 15:48:48  wierenga
-//  Implemented first version of TH_Corba and test program
-//
-//
-//////////////////////////////////////////////////////////////////////
+//# Lock.h: Pthread implementation of thread locks.
+//#
+//# Copyright (C) 2000, 2001
+//# ASTRON (Netherlands Foundation for Research in Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//# This program is free software; you can redistribute it and/or modify
+//# it under the terms of the GNU General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or
+//# (at your option) any later version.
+//#
+//# This program is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License
+//# along with this program; if not, write to the Free Software
+//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//# $Id$
 
 #ifndef _LOCK_H_
 #define _LOCK_H_
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #include <Common/Debug.h>
 #include <pthread.h>

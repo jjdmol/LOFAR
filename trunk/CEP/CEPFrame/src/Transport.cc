@@ -28,9 +28,8 @@
 #include <memory.h>
 
 #include "CEPFrame/Transport.h"
-#include "Common/Debug.h"
-#include "CEPFrame/StepRep.h"
 #include "CEPFrame/Step.h"
+#include <Common/Debug.h>
 
 namespace LOFAR
 {

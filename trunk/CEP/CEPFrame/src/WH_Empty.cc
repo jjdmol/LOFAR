@@ -24,7 +24,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "CEPFrame/WH_Empty.h"
-#include "Common/Debug.h"
+#include <Common/Debug.h>
 
 namespace LOFAR
 {
@@ -40,7 +40,7 @@ WH_Empty::~WH_Empty()
 {}
 
 WorkHolder* WH_Empty::construct (const string& name, int, int,
-				 const ParamBlock&)
+				 const KeyValueMap&)
 {
   return new WH_Empty (name);
 }

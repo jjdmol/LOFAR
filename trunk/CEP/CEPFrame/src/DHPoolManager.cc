@@ -25,7 +25,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "CEPFrame/DHPoolManager.h"
-#include "Common/Debug.h"
+#include <Common/Debug.h>
 
 namespace LOFAR
 {

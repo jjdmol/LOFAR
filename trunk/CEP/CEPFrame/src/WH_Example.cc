@@ -27,8 +27,8 @@
 
 #include "CEPFrame/WH_Example.h"
 #include "CEPFrame/Step.h"
-#include "CEPFrame/ParamBlock.h"
-#include "Common/Debug.h"
+#include <Common/KeyValueMap.h>
+#include <Common/Debug.h>
 
 namespace LOFAR
 {
@@ -55,7 +55,7 @@ WH_Example::~WH_Example()
 }
 
 WorkHolder* WH_Example::construct (const string& name, int ninput, int noutput,
-				   const ParamBlock& params)
+				   const KeyValueMap& params)
 {
   return new WH_Example (name, ninput, noutput,
 			 params.getInt ("nbuffer", 10));

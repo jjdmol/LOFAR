@@ -22,27 +22,9 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.3  2002/05/28 07:44:52  wierenga
-//  %[BugId:2]%
-//  Needed global lock around global counter.
-//  Moved Lock.h from BaseSim/Corba to BaseSim.
-//
-//  Revision 1.2  2002/05/23 11:18:47  wierenga
-//  %[BugId: 2]%
-//  Initial version of CyclicBuffer which compiles correctly.
-//
-//  Revision 1.1  2002/05/23 07:23:50  wierenga
-//  %[BugId: 2]%
-//
-//  New files for CyclicBuffer class.
-//
-//
 //////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 //#include "BaseSim/CyclicBuffer.h"
 
