@@ -23,9 +23,7 @@
 #include <MNS/TPOParm.h>
 #ifdef HAVE_DTL
 
-#include <PL/DTLBase.h>
-#include <PL/Collection.h>
-#include <PL/Query.h>
+#include <PL/TPersistentObject.h>
 #include <Common/BlobOBufString.h>
 #include <Common/BlobIBufString.h>
 #include <Common/BlobOStream.h>
@@ -38,18 +36,8 @@ namespace LOFAR {
   namespace PL {
 
 
-void MetaDataRep::metaBindCols (dtl::BoundIOs& cols)
+void DBRep<MeqParmDefHolder>::bindCols (dtl::BoundIOs& cols)
 {
-  cols["ObjID"]      == itsOid;
-  cols["Owner"]      == itsOwnerOid;
-  cols["VersionNr"]  == itsVersionNr;
-}
-
-void DBRep<MeqParmDefHolder>::Rep::bindCols (dtl::BoundIOs& cols)
-{
-  cols["ObjID"]      == itsOid;
-  cols["Owner"]      == itsOwnerOid;
-  cols["VersionNr"]  == itsVersionNr;
   cols["NAME"]       == itsName;
   cols["SRCNR"]      == itsSrcNr;
   cols["STATNR"]     == itsStatNr;
@@ -64,34 +52,16 @@ void DBRep<MeqParmDefHolder>::Rep::bindCols (dtl::BoundIOs& cols)
   cols["DIFF"]       == itsDiff;
   cols["DIFF_REL"]   == itsDiffRel;
 }
-void DBRep<MeqParmHolder>::Rep::bindCols (dtl::BoundIOs& cols)
+void DBRep<MeqParmHolder>::bindCols (dtl::BoundIOs& cols)
 {
-  DBRep<MeqParmDefHolder>::Rep::bindCols (cols);
+  DBRep<MeqParmDefHolder>::bindCols (cols);
   cols["STARTTIME"]  == itsStartTime;
   cols["ENDTIME"]    == itsEndTime;
   cols["STARTFREQ"]  == itsStartFreq;
   cols["ENDFREQ"]    == itsEndFreq;
 }
 
-// toDatabaseRep copies the fields of the persistency layer
-// and of the MeqParmHolder class to the given DBRep<MeqParmHolder>
-// structure
-void MetaDataRep::metaToRep (const PersistentObject& obj)
-{
-  // copy info of the MetaData to the DBRep object.
-  itsOid       = obj.metaData().oid()->get();
-  itsOwnerOid  = obj.metaData().ownerOid()->get();
-  itsVersionNr = obj.metaData().versionNr();  
-}
-void MetaDataRep::metaFromRep (PersistentObject& obj) const
-{
-  // copy info of the DBRep object to the MetaData.
-  obj.metaData().oid()->set      (itsOid);
-  obj.metaData().ownerOid()->set (itsOwnerOid);
-  obj.metaData().versionNr() =    itsVersionNr;
-}
-
-void DBRep<MeqParmDefHolder>::Rep::toRep (const MeqParmDefHolder& obj)
+void DBRep<MeqParmDefHolder>::toDBRep (const MeqParmDefHolder& obj)
 {
   // Copy the info from MeqParmDefHolder
   itsName    = obj.getName();
@@ -132,7 +102,7 @@ void DBRep<MeqParmDefHolder>::Rep::toRep (const MeqParmDefHolder& obj)
 
 // fromDatabaseRep copies the fields of the DBRep<MeqParmHolder> structure
 // to the persistency layer and the MeqParmHolder class.
-void DBRep<MeqParmDefHolder>::Rep::fromRep (MeqParmDefHolder& obj) const
+void DBRep<MeqParmDefHolder>::fromDBRep (MeqParmDefHolder& obj) const
 {
   // Finally copy the info to MeqParmDefHolder
   obj.setName     (itsName);
@@ -167,10 +137,10 @@ void DBRep<MeqParmDefHolder>::Rep::fromRep (MeqParmDefHolder& obj) const
   obj.setPolc (polc);
 }
 
-void DBRep<MeqParmHolder>::Rep::toRep (const MeqParmHolder& obj)
+void DBRep<MeqParmHolder>::toDBRep (const MeqParmHolder& obj)
 {
   // Copy the info from MeqParmDefHolder
-  DBRep<MeqParmDefHolder>::Rep::toRep (obj);
+  DBRep<MeqParmDefHolder>::toDBRep (obj);
   itsStartTime   = obj.getPolc().domain().startX();
   itsEndTime     = obj.getPolc().domain().endX();
   itsStartFreq   = obj.getPolc().domain().startY();
@@ -179,10 +149,10 @@ void DBRep<MeqParmHolder>::Rep::toRep (const MeqParmHolder& obj)
 
 // fromDatabaseRep copies the fields of the DBRep<MeqParmHolder> structure
 // to the persistency layer and the MeqParmHolder class.
-void DBRep<MeqParmHolder>::Rep::fromRep (MeqParmHolder& obj) const
+void DBRep<MeqParmHolder>::fromDBRep (MeqParmHolder& obj) const
 {
   // Copy the info to MeqParmDefHolder.
-  DBRep<MeqParmDefHolder>::Rep::fromRep (obj);
+  DBRep<MeqParmDefHolder>::fromDBRep (obj);
   obj.setDomain (MeqDomain (itsStartTime, itsEndTime,
 			    itsStartFreq, itsEndFreq));
 }

@@ -152,10 +152,10 @@ MParmSet ParmTableDB::find (const string& parmName,
   for (; iter!=set.end(); iter++) {
     // Find all rows overlapping the requested domain.
     const MeqDomain& pdomain = iter->data().getPolc().domain();
-    if (domain.startX() < pdomain.startX() &&
-	domain.endX()   > pdomain.endX()   &&
-	domain.startY() < pdomain.startY() &&
-	domain.endY()   > pdomain.endY()) {
+    if (domain.startX() < pdomain.endX() &&
+	domain.endX()   > pdomain.startX()   &&
+	domain.startY() < pdomain.endY() &&
+	domain.endY()   > pdomain.startY()) {
       set2.add (*iter);
     }
   }
@@ -176,7 +176,6 @@ vector<string> ParmTableDB::getSources()
   tpoparmdef.tableName (itsTableName+"Def");
   MParmDefSet dset = tpoparmdef.retrieve
     (attrib(tpoparmdef,"name").like ("RA.*"));
-  vector<string> nams;
   nams.reserve (set.size() + dset.size());
   MParmSet::iterator iter = set.begin();
   for (; iter!=set.end(); iter++) {
