@@ -36,31 +36,50 @@
 
 using namespace LOFAR;
 
-WH_PSS3::WH_PSS3 (const string& name, const String & msName, 
-		  const String& meqModel, const String& skyModel,
-		  uInt ddid, const Vector<int>& ant1, 
-		  const Vector<int>& ant2, const String& modelType, 
-		  bool calcUVW, const String& dataColName, 
-		  const String& residualColName)
+WH_PSS3::WH_PSS3 (const string& name,  bool outputAllIter, int number)
   : WorkHolder        (1, 1, name, "WH_PSS3"),
     itsCal            (0),
-    itsMSName         (msName),
-    itsMeqModel       (meqModel),
-    itsSkyModel       (skyModel),
-    itsDDID           (ddid),
-    itsAnt1           (ant1),
-    itsAnt2           (ant2),
-    itsModelType      (modelType),
-    itsCalcUVW        (calcUVW),
-    itsDataColName    (dataColName),
-    itsResidualColName(residualColName)
+    itsOutputAllIter  (outputAllIter),
+    itsNumber         (number)
 
 {
   TRACER4("WH_PSS3 construction");
   getDataManager().addInDataHolder(0, new DH_WorkOrder("in_0", "KS")); 
   getDataManager().addOutDataHolder(0, new DH_WorkOrder("out_0", "KS"),
    				    true);
+  // switch output channel trigger off
+  getDataManager().setAutoTriggerOut(0, false);
 }
+
+
+// WH_PSS3::WH_PSS3 (const string& name, const String & msName, 
+// 		  const String& meqModel, const String& skyModel,
+// 		  uInt ddid, const Vector<int>& ant1, 
+// 		  const Vector<int>& ant2, const String& modelType, 
+// 		  bool calcUVW, const String& dataColName, 
+// 		  const String& residualColName, bool outputAllIter)
+//   : WorkHolder        (1, 1, name, "WH_PSS3"),
+//     itsCal            (0),
+//     itsMSName         (msName),
+//     itsMeqModel       (meqModel),
+//     itsSkyModel       (skyModel),
+//     itsDDID           (ddid),
+//     itsAnt1           (ant1),
+//     itsAnt2           (ant2),
+//     itsModelType      (modelType),
+//     itsCalcUVW        (calcUVW),
+//     itsDataColName    (dataColName),
+//     itsResidualColName(residualColName),
+//     itsOutputAllIter  (outputAllIter)
+
+// {
+//   TRACER4("WH_PSS3 construction");
+//   getDataManager().addInDataHolder(0, new DH_WorkOrder("in_0", "KS")); 
+//   getDataManager().addOutDataHolder(0, new DH_WorkOrder("out_0", "KS"),
+//    				    true);
+//   // switch output channel trigger off
+//   getDataManager().setAutoTriggerOut(0, false);
+// }
 
 WH_PSS3::~WH_PSS3()
 {
@@ -73,10 +92,15 @@ WH_PSS3::~WH_PSS3()
 
 WH_PSS3* WH_PSS3::make (const string& name)
 {
-  return new WH_PSS3 (name, itsMSName, itsMeqModel, itsSkyModel, itsDDID,
-		      itsAnt1, itsAnt2, itsModelType, itsCalcUVW, 
-		      itsDataColName, itsResidualColName);
+  return new WH_PSS3 (name, itsOutputAllIter, itsNumber);
 }
+
+// WH_PSS3* WH_PSS3::make (const string& name)
+// {
+//   return new WH_PSS3 (name, itsMSName, itsMeqModel, itsSkyModel, itsDDID,
+// 		      itsAnt1, itsAnt2, itsModelType, itsCalcUVW, 
+// 		      itsDataColName, itsResidualColName, itsOutputAllIter);
+// }
 
 void WH_PSS3::preprocess()
 {
@@ -98,28 +122,50 @@ void WH_PSS3::process()
        << inp->getParam2Name() << ", " 
        << inp->getParam3Name() << endl;
 
-  Vector<String> pNames(3);
+  vector<string> pNames(3);
   pNames[0] = inp->getParam1Name();
   pNames[1] = inp->getParam2Name();
   pNames[2] = inp->getParam3Name();
-  Vector<float> pValues(3);
+  vector<float> pValues(3);
+  int srcNumber = 0;
+
+  DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
 
   // Execute the strategy until finished with all iterations, intervals 
   // and sources.
-  while (strat.execute(pNames, pValues, *inp->getSolution()))
+  int count = 0;
+  while (strat.execute(pNames, pValues, *inp->getSolution(), srcNumber))
   {
     cout << "Executed strategy" << endl;
+    if (itsOutputAllIter)   // Write output on every iteration
+    {
+      DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
+      outp->setID(inp->getID());
+      outp->setStatus(DH_WorkOrder::Executed);
+      outp->setParam1Value(itsNumber*10+count);   // Temporary 
+      outp->setParam2Value(itsNumber*10+1+count);
+      outp->setParam3Value(itsNumber*10+2+count);
+      outp->setSourceNo(srcNumber);
+      outp->getSolution()->itsMu = (itsNumber - 0.01)-(0.01*count);
+      outp->setStatus(DH_WorkOrder::Executed);
+      getDataManager().readyWithOutHolder(0);
+      count++;
+    }
   }
 
-  DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
-  outp->setID(inp->getID());
-  outp->setID(0);
-  outp->setStatus(DH_WorkOrder::Executed);
-  outp->setParam1Value(11);   // Temporary 
-  outp->setParam2Value(22);
-  outp->setParam3Value(33);
-  outp->getSolution()->itsMu = 0.99;
-  outp->setStatus(DH_WorkOrder::Executed);
+  if (!itsOutputAllIter) // Write only the resulting output
+  {  
+    DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
+    outp->setID(inp->getID());
+    outp->setStatus(DH_WorkOrder::Executed);
+    outp->setParam1Value(itsNumber*10);   // Temporary 
+    outp->setParam2Value(itsNumber*10+1);
+    outp->setParam3Value(itsNumber*10+2);
+    outp->setSourceNo(srcNumber);
+    outp->getSolution()->itsMu = (itsNumber - 0.01);
+    outp->setStatus(DH_WorkOrder::Executed);
+    getDataManager().readyWithOutHolder(0);
+  }
 }
 
 void WH_PSS3::dump()

@@ -31,7 +31,6 @@
 #endif
 
 #include "CEPFrame/WorkHolder.h"
-#include <aips/Arrays/Vector.h>
 
 
 class Calibrator;
@@ -48,12 +47,14 @@ public:
   /// Note: antenna numbers arguments must currently be passed as an 
   /// aips++ vector!
 
-  explicit WH_PSS3(const string& name, const String& msName,
-		   const String& meqModel, const String& skyModel,
-		   uInt ddid, const Vector<int>& ant1,
-		   const Vector<int>& ant2, const String& modelType,
-		   bool calcUVW, const String& dataColName,
-		   const String& residualColName);
+  explicit WH_PSS3(const string& name, bool outputAllIter, int number);
+
+/*   explicit WH_PSS3(const string& name, const String& msName, */
+/* 		   const String& meqModel, const String& skyModel, */
+/* 		   uInt ddid, const Vector<int>& ant1, */
+/* 		   const Vector<int>& ant2, const String& modelType, */
+/* 		   bool calcUVW, const String& dataColName, */
+/* 		   const String& residualColName, bool outputAllIter); */
 
   virtual ~WH_PSS3();
 
@@ -77,16 +78,20 @@ private:
   WH_PSS3& operator= (const WH_PSS3&);
   
   Calibrator* itsCal;
-  String itsMSName;
-  String itsMeqModel;
-  String itsSkyModel;
-  unsigned int itsDDID;
-  Vector<int> itsAnt1;        // Aips vector type for antenna numbers
-  Vector<int> itsAnt2;        // Aips vector type for antenna numbers
-  String itsModelType;
-  bool itsCalcUVW;
-  String itsDataColName;
-  String itsResidualColName;
+/*   String itsMSName; */
+/*   String itsMeqModel; */
+/*   String itsSkyModel; */
+/*   unsigned int itsDDID; */
+/*   Vector<int> itsAnt1;        // Aips vector type for antenna numbers */
+/*   Vector<int> itsAnt2;        // Aips vector type for antenna numbers */
+/*   String itsModelType; */
+/*   bool itsCalcUVW; */
+/*   String itsDataColName; */
+/*   String itsResidualColName; */
+
+  bool itsOutputAllIter;     // Send the results of all iterations to the
+                             // database
+  int itsNumber;      // Temporary: used for unique output
 
 };
 

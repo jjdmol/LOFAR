@@ -43,23 +43,34 @@ int atexit(void (*function)(void))
 
 int main (int argc, const char** argv)
 {
-
 #ifdef HAVE_MPI
   MPI_Init(&argc, (char ***)&argv);
 #endif
   try {
     BlackBoardDemo simulator;
     simulator.setarg (argc, argv);
-	  
-    // Set trace level.
-    Debug::initLevels (argc, argv);
-    try {
-      LOFAR::SimulatorParse::parse (simulator);
-    }
-    catch (LOFAR::SimulatorParseError x) {
+
+    simulator.baseDefine();
+    simulator.baseRun(1);
+    simulator.baseQuit();
+
+//     // Set trace level.
+//     Debug::initLevels (argc, argv);
+//     try {
+//       LOFAR::SimulatorParse::parse (simulator);
+//     }
+//     catch (LOFAR::SimulatorParseError x) {
 	    
-      cout << x.what() << endl;        
-    }
+//       cout << x.what() << endl;        
+//     }
+  }
+  catch (LOFAR::Exception& e)
+  {
+    cout << "Lofar exception: " << e.what() << endl;
+  }
+  catch (std::exception& e)
+  {
+    cout << "Standard exception: " << e.what() << endl;
   }
   catch (...) {
     cout << "Unexpected exception in Simulate" << endl;

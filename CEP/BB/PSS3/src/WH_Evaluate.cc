@@ -41,6 +41,8 @@ WH_Evaluate::WH_Evaluate (const string& name)
  				   true); 
   getDataManager().addOutDataHolder(0, new DH_WorkOrder("out_0", "Control"), 
 				    true);
+  // switch output trigger of
+  getDataManager().setAutoTriggerOut(0, false);
 }
 
 WH_Evaluate::~WH_Evaluate()
@@ -60,8 +62,9 @@ void WH_Evaluate::process()
        << inp->getParam1Value() <<", "
        << inp->getParam2Value() <<", "
        << inp->getParam3Value() << "]" << endl;
-  DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
+
   // Define new work order
+  DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
   outp->setStatus(DH_WorkOrder::New);
   outp->setKSType("PSS3");
   outp->setStrategyNo(1);
@@ -70,10 +73,26 @@ void WH_Evaluate::process()
   outp->setArgSize(size);
   SI_Peeling::Peeling_data* data = 
     (SI_Peeling::Peeling_data*)outp->getVarArgsPtr();
-  data->nIter = 1;
-  data->nSources = 1;
+  data->nIter = 2;
+  data->nSources = 2;
   data->timeInterval = 3600.;
-  // Set parameter names
+  // To be added: Set parameter names
+  getDataManager().readyWithOutHolder(0);
+
+  // Define next work order
+  outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
+  outp->setStatus(DH_WorkOrder::New);
+  outp->setKSType("PSS3");
+  outp->setStrategyNo(1);
+  // Set arguments for peeling
+  size = sizeof(SI_Peeling::Peeling_data);
+  outp->setArgSize(size);
+  data = (SI_Peeling::Peeling_data*)outp->getVarArgsPtr();
+  data->nIter = 1;
+  data->nSources = 3;
+  data->timeInterval = 3600.;
+  // To be added: set parameter names
+  getDataManager().readyWithOutHolder(0);
 }
 
 void WH_Evaluate::dump()

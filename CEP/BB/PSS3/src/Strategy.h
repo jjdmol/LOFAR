@@ -28,7 +28,8 @@
 #endif
 
 //# Includes
-#include <aips/Arrays/Vector.h>
+#include <Common/lofar_vector.h>
+#include <Common/lofar_string.h>
 #include <PSS3/Solution.h>
 
 //# Forward Declarations
@@ -48,10 +49,10 @@ public:
   virtual ~Strategy();
 
   /// Execute the strategy
-  bool execute(Vector<String>& paramNames,       // Parameters for which to solve                
-	       Vector<float>& paramValues,       // Parameter values
-	       Solution& solutionQuality);       // Solution quality
-
+  bool execute(vector<string>& parmNames,       // Parameters for which to solve                
+	       vector<float>& parmValues,       // Parameter values
+	       Solution& solutionQuality,       // Solution quality
+	       int& source);                    // Source number
  private:
   StrategyImpl* itsImpl;      // The strategy implementation
 };
