@@ -82,13 +82,12 @@ void AH_3BlockPerf::define(const KeyValueMap& params)
   unsigned int size = params.getInt("dataSize", 1024);
   unsigned int flopsPerByte = params.getInt("flopsPerByte", 1);
   unsigned int packetsPerMeasurement = params.getInt("packetsPerMeasurement", 10);
-
   // Create the Source Steps
   // Create the Source Step
   WorkHolder* srcWH = new WH_Src("SourceWH", size, packetsPerMeasurement, flopsPerByte);
   WorkHolder* heatWH = new WH_Heat("HeatWH", size, flopsPerByte);
   WorkHolder* dstWH = new WH_Dest("DestinationWH", size);
-  itsSrcStep = new Step(srcWH, "srcStep", 1, 0); // do we need to delete these wh's ourselves?
+  itsSrcStep = new Step(srcWH, "srcStep", 1, 0);
   itsHeatStep = new Step(heatWH, "srcStep", 1, 0);
   itsDstStep = new Step(dstWH, "srcStep", 1, 0);
 
@@ -99,16 +98,23 @@ void AH_3BlockPerf::define(const KeyValueMap& params)
   //  srcWH->runOnNode(0,0);
   itsSrcStep->runOnNode(0, 0);
   //  heatWH->runOnNode(1,0);
-  itsHeatStep->runOnNode(2, 0);
+  itsHeatStep->runOnNode(1, 0);
   //  dstWH->runOnNode(2,0);
-  itsDstStep->runOnNode(1, 0);
+  itsDstStep->runOnNode(2, 0);
 
   comp.addStep(itsSrcStep);
   comp.addStep(itsHeatStep);
   comp.addStep(itsDstStep);
 
+  // set synchronisity of steps
+#if 0
+  itsSrcStep->setOutBufferingProperties(0, false, false);
+  itsHeatStep->setOutBufferingProperties(0, false, false);
+  itsHeatStep->setInBufferingProperties(0, false, false);
+  itsDstStep->setInBufferingProperties(0, false, false);
+#endif
+
 #ifdef HAVE_MPI
-#if 1
   itsHeatStep->connect(itsSrcStep,
 		       0, // thisDHIndex
 		       0, // thatDHIndex
@@ -121,14 +127,6 @@ void AH_3BlockPerf::define(const KeyValueMap& params)
 		      1, // no of DH's
 		      TH_MPI(itsHeatStep->getNode(), itsDstStep->getNode()),
 		      true);
-#else
-  itsDstStep->connect(itsSrcStep,
-		       0, // thisDHIndex
-		       0, // thatDHIndex
-		       1, // no of DH's
-		       TH_MPI(itsSrcStep->getNode(), itsDstStep->getNode()),
-		       true);
-#endif
 #else
   itsHeatStep->connect(itsSrcStep,
 		       0, // thisDHIndex

@@ -78,6 +78,10 @@ void WH_Src::process()
     watch->start();
   }
   itsIteration--;
+  // wait until last DH was completely sent
+  //getDataManager().getOutHolder(0)->getTransporter().getTransportHolder()->waitForSent(NULL, 0, 0);
+
+  memset(((DH_FixedSize*)getDataManager().getOutHolder(0))->getPtr2Data(), 0, itsDataSize);
 }
 
 }

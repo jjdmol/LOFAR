@@ -4,6 +4,8 @@
 import os, sys
 from time import sleep
 
+outputFileAll = "3BlockPerfAll.out"
+
 def avg(mylist):
   """
   Calculate average of the values in a list
@@ -21,8 +23,8 @@ def createFile(size, flop):
   file = open ("3BlockPerf.in", 'w')
   file.writelines("dataSize = " + str(size) + ",\n")
   file.writelines("flopsPerByte = " + str(flop) + ",\n")
-  file.writelines("packetsPerMeasurement = 100,\n")
-  file.writelines("numberOfRuns = 1000")
+  file.writelines("packetsPerMeasurement = 50,\n")
+  file.writelines("numberOfRuns = 250")
   file.close()
 
 def run3BP(size, flop):
@@ -53,7 +55,7 @@ def addResult(size, flop):
         flopsPs.append(float(words[2]))
         mysize = int(words[7])
         flopsPB = int(words[14])
-  ofile = open("3BlockPerfAll.out", 'a')
+  ofile = open(outputFileAll, 'a')
   ofile.write(" " + str(size))
   ofile.write(" " + str(flopsPB))
   ofile.write(" " +str(avg(speed)))
@@ -66,7 +68,9 @@ def main(maxSize = 100000000, maxFlop = 100, sizesteps = 10, flopsteps = 10):
 
   # we want the number of flop linear and the packet sizes exponential
   flopsPerByte = [(x * maxFlop/(flopsteps-1)) for x in range(0, flopsteps)]
-  packetSizes = [(x * maxSize/(sizesteps)) for x in range(1, sizesteps + 1)]
+  #factor = maxSize/(sizesteps*sizesteps)
+  #packetSizes = [(x * factor * x) for x in range(1, sizesteps + 1)]
+  packetSizes = [int(1000 * 10**(float(x) / 4)) for x in range(0, 20)]
 
   # clear file
   file = open("3BlockPerfAll.out", 'w')
@@ -77,6 +81,10 @@ def main(maxSize = 100000000, maxFlop = 100, sizesteps = 10, flopsteps = 10):
       createFile(size, flop)
       run3BP(size, flop)
       addResult(size, flop)
+    #write an empty line so that gnuplot will recognize the data as a surface
+    ofile = open(outputFileAll, 'a')
+    ofile.write('\n')
+    ofile.close()
 
 if __name__ == "__main__":
   if len(sys.argv) == 1:

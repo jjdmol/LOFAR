@@ -40,7 +40,8 @@ WH_Heat::WH_Heat (const string& name,
 		 itsSize (size),
 		 itsFlopsPerByte(flopsPB),
 		 itsNoValues(0),
-		 itsFactor(0)
+		 itsFactor(0),
+		 itsBuffer(0)
 
 {
   DH_FixedSize* dhptr = new DH_FixedSize("in_of_WH_Heat", itsSize);
@@ -67,6 +68,7 @@ void WH_Heat::preprocess()
 {
   itsFactor = 1.001; // the factor to multiple with
   itsNoMultiplications = itsFlopsPerByte * sizeof(DH_FixedSize::valueType); // number of flops to perform
+  itsBuffer = new DH_FixedSize::valueType[itsNoValues];
 }
 
 void WH_Heat::process()
@@ -74,14 +76,21 @@ void WH_Heat::process()
   DH_FixedSize* dh_in = (DH_FixedSize*)getDataManager().getInHolder(0);
   DH_FixedSize::valueType* data_in = dh_in->getPtr2Data(); //pointer to the outgoing data
   DH_FixedSize::valueType* data_out = ((DH_FixedSize*)getDataManager().getOutHolder(0))->getPtr2Data(); // pointer to the ingoing data
+  DH_FixedSize::valueType result;
+
   for (int i=0; i<itsNoValues; i++) {
-    DH_FixedSize::valueType result = data_in[i];
+    result = data_in[i];
     // do the specified number of flops
     for (int j=0; j<itsNoMultiplications; j++) {
       result = itsFactor + result;
     }
     data_out[i] = result;
   }
+  //DH_FixedSize::valueType* data_out = ((DH_FixedSize*)getDataManager().getOutHolder(0))->getPtr2Data(); // pointer to the ingoing data
+  // wait until last DH was completely sent
+  //getDataManager().getOutHolder(0)->getTransporter().getTransportHolder()->waitForSent(NULL, 0, 0);
+  //memcpy(data_out, itsBuffer, sizeof(itsBuffer));
+  
 }
 
 }
