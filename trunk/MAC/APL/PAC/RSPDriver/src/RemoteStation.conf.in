@@ -5,7 +5,7 @@
 #
 # Number of RSP boards
 #
-RS.N_RSPBOARDS=1
+RS.N_RSPBOARDS=2
 
 #
 # Number of BLP's per RSP board

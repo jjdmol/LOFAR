@@ -85,10 +85,9 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
   SystemStatus& status = Cache::getInstance().getBack().getSystemStatus();
 
   // copy board status
-  memcpy(&status.board()(getBoardId()), &ack.board,
-	 sizeof(BoardStatus));
+  memcpy(&status.board()(getBoardId()), &ack.board, sizeof(BoardStatus));
 
-  uint8 global_rcu_base = getBoardId() * GET_CONFIG("RS.N_BLPS", i);
+  uint8 global_rcu_base = getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
 
   // copy RCU status
   status.rcu()(global_rcu_base    ).status       = ack.board.ap1_rcu.statusx;
