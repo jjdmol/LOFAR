@@ -46,17 +46,17 @@ int main (int argc, const char* argv[])
     cout << TimeCoord::getUTCDiff() << endl;
     TimeCoord time(10.5);
     ASSERT (time.mjd() == 10.5);
-    TimeCoord timeNow;
-    cout << timeNow.mjd() << endl;
-    cout << timeNow << endl;
-    TimeCoord timeNow2 (timeNow.mjd(), 1./24);
-    cout << timeNow2 << endl;
-    TimeCoord timeNow3 (timeNow.mjd(), 1.);
+    TimeCoord someTime(2004, 11, 19, 15, 22);
+    cout << someTime.mjd() << endl;
+    cout << someTime << endl;
+    TimeCoord someTime2 (someTime.mjd(), 1./24);
+    cout << someTime2 << endl;
+    TimeCoord someTime3 (someTime.mjd(), 1.);
 
     // Only make a connection if an argument is given.
     if (argc < 2) {
       cout << "Run as:  tCoordClient host [port]" << endl;
-      return 0;
+      return 1;
     }
     string port = "31337";
     if (argc > 2) {
@@ -65,9 +65,9 @@ int main (int argc, const char* argv[])
     cout << argv[1] << ' ' << port << endl;
     CoordClient cc(argv[1], port);
     {
-      SkyCoord result = cc.j2000ToAzel (sky, dwl, timeNow);
+      SkyCoord result = cc.j2000ToAzel (sky, dwl, someTime);
       cout << result << endl;
-      result = cc.azelToJ2000 (result, dwl, timeNow);
+      result = cc.azelToJ2000 (result, dwl, someTime);
       cout << result << endl;
     }
     {
@@ -80,9 +80,9 @@ int main (int argc, const char* argv[])
       skies[3] = SkyCoord(1.5,-0.3);
       poss[0] =  EarthCoord (0.1, 0.8, 1000);
       poss[1] = dwl;
-      times[0] = timeNow;
-      times[1] = timeNow2;
-      times[2] = timeNow3;
+      times[0] = someTime;
+      times[1] = someTime2;
+      times[2] = someTime3;
       vector<SkyCoord> result = cc.j2000ToAzel (skies, poss, times);
       ASSERT (result.size() == 4*2*3);
       for (unsigned int i=0; i<4*2*3; i++) {
