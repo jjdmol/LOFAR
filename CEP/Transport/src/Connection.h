@@ -24,13 +24,17 @@
 #define LIBTRANSPORT_CONNECTION_H
 
 #include <lofar_config.h>
-#include <libTransport/Transporter.h>
 
 // I should not have to include this, right? -- CB
 #include <Common/Debug.h>
 
 namespace LOFAR
 {
+  //# Forward declaration.
+  class Transporter;
+  class TransportHolder;
+
+
   class Connection
   {
     

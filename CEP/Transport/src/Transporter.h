@@ -45,11 +45,13 @@ class Transporter
  public:
 
   /// Construct the Transporter object.
+  // It sets the pointer to the BaseDataHolder object.
   Transporter(BaseDataHolder*);
 
-  ~Transporter();
+  /// Copy constructor for another BaseDataHolder.
+  Transporter (const Transporter&, BaseDataHolder*);
 
-  Transporter* clone() const;
+  ~Transporter();
 
   /// Send the data to the connected Transport object.
   void write();
@@ -94,8 +96,6 @@ class Transporter
   /// True when data is valid; i.e. after a Read() or before a Write()
   bool isValid() const;
 
-  /// Set the DataHolder object for this object.
-  void setBaseDataHolder(BaseDataHolder* dh);
   /// Get the DataHolder object for this object.
   BaseDataHolder* getBaseDataHolder ();
 
@@ -118,19 +118,14 @@ class Transporter
   bool isBlocking() const ; 
   void setIsBlocking(bool);
 
-  /** Determine if the current event has to be handled (true) or
-      skipped (false) based on the Rate setting
-  */
-  //  bool doHandle() const;
-
-
-
-protected:
-  /// Copy constructor.
-  Transporter (const Transporter&);
-
+  //# Determine if the current event has to be handled (true) or
+  //# skipped (false) based on the Rate setting
+  //#  bool doHandle() const;
 
 private:
+  /// Forbid copy constructor.
+  Transporter (const Transporter&);
+
   /// Forbid assignment.
   Transporter& operator= (const Transporter&);
 
@@ -165,7 +160,7 @@ private:
       Rate=1 means always issue TransportHolder->read/write.
   */
   int itsRate; 
-  Connection* itsConnection;
+  Connection itsConnection;
   bool itsIsBlocking;
 };
 
@@ -205,17 +200,17 @@ inline Transporter::Status Transporter::getStatus() const
 inline bool Transporter::isValid() const
   { return ((getStatus() != Unknown) && (getStatus() != Dirty)); }
 
+inline TransportHolder* Transporter::getTransportHolder()
+  { return itsTransportHolder; }
+
+inline BaseDataHolder* Transporter::getBaseDataHolder()
+  { return itsBaseDataHolder; }
+
 inline BaseDataHolder* Transporter::getSourceAddr() 
   { return itsSourceAddr; }
 
 inline BaseDataHolder* Transporter::getTargetAddr() 
   { return itsTargetAddr; }
-
-inline BaseDataHolder* Transporter::getBaseDataHolder()
-  { return itsBaseDataHolder; }
-
-inline void Transporter::setBaseDataHolder(BaseDataHolder* dh)
-  {  itsBaseDataHolder = dh; }
 
 inline void Transporter::setRate (int aRate)
   { itsRate = aRate; }
@@ -240,7 +235,6 @@ inline void Transporter::setSourceAddr (BaseDataHolder* addr)
 
 inline void Transporter::setTargetAddr (BaseDataHolder* addr)
   { itsTargetAddr = addr; }
-
 
 
 } // end namespace

@@ -33,8 +33,8 @@
 namespace LOFAR
 {
 
-Transporter::Transporter (BaseDataHolder* dataHolderPtr)
-  : itsBaseDataHolder  (dataHolderPtr),
+Transporter::Transporter (BaseDataHolder* dataHolder)
+  : itsBaseDataHolder  (dataHolder),
     itsTransportHolder (0),
     itsID              (-1),
     itsReadTag         (-1),
@@ -43,16 +43,12 @@ Transporter::Transporter (BaseDataHolder* dataHolderPtr)
     itsSourceAddr      (0),
     itsTargetAddr      (0),
     itsRate            (1),
-    itsConnection      (0),
     itsIsBlocking      (true)
-{
-  itsConnection = new Connection();
-  itsBaseDataHolder->setTransporter( *( const_cast<Transporter*> (this)));
-}
+{}
 
-Transporter::Transporter(const Transporter& that)
-  : itsBaseDataHolder  (that.itsBaseDataHolder),
-    itsTransportHolder (that.itsTransportHolder),
+Transporter::Transporter(const Transporter& that, BaseDataHolder* dataHolder)
+  : itsBaseDataHolder  (dataHolder),
+    itsTransportHolder (0),
     itsID              (that.itsID),
     itsNode            (that.itsNode),
     itsReadTag         (that.itsReadTag),
@@ -61,26 +57,17 @@ Transporter::Transporter(const Transporter& that)
     itsSourceAddr      (that.itsSourceAddr),
     itsTargetAddr      (that.itsTargetAddr),
     itsRate            (that.itsRate),
-    itsConnection      (0),
     itsIsBlocking      (that.itsIsBlocking)
 {
-  itsConnection = new Connection();
-  itsBaseDataHolder->setTransporter( *(const_cast<Transporter*> (&that)));
-
-  if (itsTransportHolder != 0) {
+  if (that.itsTransportHolder != 0) {
     itsTransportHolder = that.itsTransportHolder->make();
+    itsTransportHolder->setTransporter(this);
   }  
 }
 
 Transporter::~Transporter()
 {
   delete itsTransportHolder;
-  delete itsConnection;
-}
-
-Transporter* Transporter::clone() const
-{
-  return new Transporter(*this);
 }
 
 void Transporter::makeTransportHolder (const TransportHolder& prototype)
@@ -103,7 +90,7 @@ bool Transporter::init()
 bool Transporter::connectTo (Transporter* that, 
 			     TransportHolder& prototype)
 {
-  bool result = itsConnection->connectTo(this, that, prototype); 
+  bool result = itsConnection.connectTo(this, that, prototype); 
   // Init should not be done in the connection but seperate.
   //  result |= init();
   return result;
@@ -112,7 +99,7 @@ bool Transporter::connectTo (Transporter* that,
 bool Transporter::connectFrom (Transporter* that, 
 			       TransportHolder& prototype) 
 { 
-  bool result = itsConnection->connectFrom(that, this, prototype);
+  bool result = itsConnection.connectFrom(that, this, prototype);
   // Init should not be done in the connection but seperate.
   //  result  |= init();
   return result;
@@ -127,14 +114,14 @@ bool Transporter::read()
 	    << getDataPacketSize() << ",....)");
     if (isBlocking())
     {
-      result = getTransportHolder()->recvBlocking((void*)getDataPtr(),
+      result = getTransportHolder()->recvBlocking(getDataPtr(),
 						  getDataPacketSize(),
 						  1, // getNode ()
 						  getReadTag());
     }
     else
     {
-      result = getTransportHolder()->recvNonBlocking((void*)getDataPtr(),
+      result = getTransportHolder()->recvNonBlocking(getDataPtr(),
 						     getDataPacketSize(),
 						     1, // getNode ()
 						     getReadTag());
@@ -156,14 +143,14 @@ void Transporter::write()
     TRACER3("Transport::write; call send(" << getDataPtr() << "," << getDataPacketSize() << ",....)");
     if (isBlocking())
     {
-      getTransportHolder()->sendBlocking((void*)getDataPtr(),
+      getTransportHolder()->sendBlocking(getDataPtr(),
 					 getDataPacketSize(),
 					 1, // getNode ()
 					 getWriteTag());
     }
     else
     {
-      getTransportHolder()->sendNonBlocking((void*)getDataPtr(),
+      getTransportHolder()->sendNonBlocking(getDataPtr(),
 					    getDataPacketSize(),
 					    1, // getNode ()
 					    getWriteTag());
@@ -180,11 +167,6 @@ void Transporter::dump() const
   
 }
 
-TransportHolder* Transporter::getTransportHolder()
-{ 
-  return itsTransportHolder; 
-}
-
 void* Transporter::getDataPtr()
 {
   return itsBaseDataHolder->getDataPtr();
@@ -192,7 +174,8 @@ void* Transporter::getDataPtr()
 
 int Transporter::getDataPacketSize() const
 {
-  return itsBaseDataHolder->getDataPacketSize(); //temporarily
+  return itsBaseDataHolder->getDataPacketSize();    //temporarily
 }
+
 
 } // end namespace
