@@ -88,7 +88,7 @@ int Condeq::getResult (Result::Ref &resref,
                    child_res[0]->getPerturbation(inx0);
         }
       } else if (inx0 >= 0) {
-        deriv -= (*values[0] - child_res[0]->getPerturbedValueRW(inx0)) /
+        deriv = (*values[0] - child_res[0]->getPerturbedValueRW(inx0)) /
                  child_res[0]->getPerturbation(inx0);
       } else {
         deriv = Vells(0.);

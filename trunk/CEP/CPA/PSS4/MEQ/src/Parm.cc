@@ -127,7 +127,16 @@ int Parm::initDomain (const Domain& domain)
     for (unsigned int i=0; i<itsPolcs.size(); i++) {
       itsPolcs[i].clearSolvable();
     }
-  }    
+  }
+  // Store the polcs found into the state.
+  if (! wstate()[FPolcs].exists()) {
+    wstate()[FPolcs] <<= new DataRecord();
+  }
+  for (uint i=0; i<itsPolcs.size(); i++) {
+    DataRecord& rec = wstate()[FPolcs][i] <<= new DataRecord();
+    rec[FDomain] <<= static_cast<const DataField*>(&(itsPolcs[i].domain()));
+    rec[FVellSets] = itsPolcs[i].getCoeff().getRealArray();
+  }
   return nr;
 }
 
@@ -255,31 +264,31 @@ int Parm::getResult (Result::Ref &resref,
   return retcode;
 }
 
-void Parm::update (const Vells& value)
-{
-  for (unsigned int i=0; i<itsPolcs.size(); i++) {
-    itsPolcs[i].update (value);
-  }
-}
-
 void Parm::save()
 {
   const vector<Polc>& polcs = getPolcs();
-  for (unsigned int i=0; i<polcs.size(); i++) {
+  for (uint i=0; i<polcs.size(); i++) {
     if (itsTable) {
       itsTable->putCoeff (itsName, polcs[i]);
     }
   }
 }
 
-void Parm::setStateImpl (DataRecord& rec,bool initializing)
+void Parm::setStateImpl (DataRecord& rec, bool initializing)
 {
   Function::setStateImpl(rec,initializing);
   // Get solvable flag
   getStateField(itsIsSolvable,rec,FSolvable);
   // Get parm value
-  if( rec[FValue].exists() )
-  { // TBD
+  if (rec[FValue].exists()) {
+    // Update the polc coefficients with the new values.
+    LoVec_double values = rec[FValue].as<LoVec_double>();
+    ////    vector<double>& values = rec[FValue].as<vector<double> >();
+    uint inx = 0;
+    for (uint i=0; i<itsPolcs.size(); i++) {
+      inx += itsPolcs[i].update (&values(inx), values.size()-inx);
+    }
+    Assert (inx == values.size());
   }
   // Get default value (to be used if no table exists)
   if( rec[FDefault].exists() )

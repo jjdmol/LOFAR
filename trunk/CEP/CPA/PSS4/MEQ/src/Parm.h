@@ -91,9 +91,6 @@ public:
   // Initialize the parameter for the given domain.
   virtual int initDomain (const Domain&);
 
-  // Update the solvable parameters with the new values.
-  virtual void update (const Vells& value);
-
   // Make the new value persistent (for the given domain).
   virtual void save();
 

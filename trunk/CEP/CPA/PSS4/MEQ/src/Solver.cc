@@ -77,12 +77,14 @@ int Solver::pollChildren (std::vector<Result::Ref> &,
 // Get the result for the given request.
 int Solver::getResult (Result::Ref &resref, 
                        const std::vector<Result::Ref> &,
-                       const Request &request,bool newreq)
+                       const Request &request, bool newreq)
 {
   // The result has 1 plane.
-  Result& result = resref <<= new Result(request,1);
+  Result& result = resref <<= new Result(request, 1);
   VellSet& vellset = result.setNewVellSet(0);
   // Allocate variables needed for the solution.
+  vector<int> spids;
+  Vector<double> solution;
   uInt rank;
   double fit;
   double stddev;
@@ -98,12 +100,12 @@ int Solver::getResult (Result::Ref &resref,
       newReq[FNodeState] <<= new DataRecord();
     }
     newReq[FNodeState][FSolvableParm] <<= 
-      state()[FSolvableParm].as_p<DataRecord>();
+      wstate()[FSolvableParm].as_wp<DataRecord>();
   }
   // Iterate as many times as needed.
   for (int step=0; step<itsNumStep; step++) {
     // collect child results, using Node's standard method
-    int retcode = Node::pollChildren(child_results,resref,request);
+    int retcode = Node::pollChildren (child_results, resref, newReq);
     // a fail or a wait is returned immediately
     if( retcode&(RES_FAIL|RES_WAIT) )
       return retcode;
@@ -118,15 +120,17 @@ int Solver::getResult (Result::Ref &resref,
         }
       }
     }
-    vector<int> spids = Function::findSpids (chvellsets);
+    spids = Function::findSpids (chvellsets);
     // Initialize solver.
     uint nspid = spids.size();
+    AssertStr (nspid > 0, "No solvable parameters found in solver " << name());
     itsSolver.set (nspid, 1u, 0u);
     // Now feed the solver with equations from the results.
     // Define the vector with derivatives (for real and imaginary part).
     vector<double> derivReal(nspid);
     vector<double> derivImag(nspid);
     // Loop through all results and fill the deriv vectors.
+    uint nreq = 0;
     for (uint i=0; i<chvellsets.size(); i++) {
       VellSet& chresult = *chvellsets[i];
       bool isReal = chresult.getValue().isReal();
@@ -138,9 +142,10 @@ int Solver::getResult (Result::Ref &resref,
         const double* values = chresult.getValue().realStorage();
         vector<const double*> perts(nspid, 0);
         for (uint j=0; j<nspid; j++) {
-          if (chresult.isDefined (spids[j], index)) {
-            Assert (chresult.getPerturbedValue(index-1).nelements() == nrval);
-            perts[j] = chresult.getPerturbedValue(index-1).realStorage();
+          int inx = chresult.isDefined (spids[j], index);
+	  if (inx >= 0) {
+            Assert (chresult.getPerturbedValue(inx).nelements() == nrval);
+            perts[j] = chresult.getPerturbedValue(inx).realStorage();
           }
         }
         // Generate an equation for each value element.
@@ -154,14 +159,16 @@ int Solver::getResult (Result::Ref &resref,
             }
           }
           itsSolver.makeNorm (&derivReal[0], 1., values+j);
+	  nreq++;
         }
       } else {
         const dcomplex* values = chresult.getValue().complexStorage();
         vector<const dcomplex*> perts(nspid, 0);
         for (uint j=0; j<nspid; j++) {
-          if (chresult.isDefined (spids[j], index)) {
-            Assert (chresult.getPerturbedValue(index-1).nelements() == nrval);
-            perts[j] = chresult.getPerturbedValue(index-1).complexStorage();
+          int inx = chresult.isDefined (spids[j], index);
+	  if (inx >= 0) {
+            Assert (chresult.getPerturbedValue(inx).nelements() == nrval);
+            perts[j] = chresult.getPerturbedValue(inx).complexStorage();
           }
         }
         // Generate an equation for each value element.
@@ -179,14 +186,24 @@ int Solver::getResult (Result::Ref &resref,
           }
           val = values[j].real();
           itsSolver.makeNorm (&derivReal[0], 1., &val);
+	  nreq++;
           val = values[j].imag();
           itsSolver.makeNorm (&derivImag[0], 1., &val);
+	  nreq++;
         }
+      }
+      // Increment the last part of the request id if possible.
+      HIID rid = newReq.id();
+      if (rid.size() > 0) {
+	rid[rid.size()-1] = rid[rid.size()-1].id() + 1;
+	newReq.setId (rid);
       }
     }
     // Solve the equation.
+    AssertStr (nreq >= nspid, "Only " << nreq << " equations for " << nspid
+	       << " solvable parameters in solver " << name());
     double* sol = vellset.setReal(nspid, 1).data();
-    Vector<double> solution (IPosition(1,nspid), sol, SHARE);
+    solution.takeStorage (IPosition(1,nspid), sol, SHARE);
     solution = 0;
     // It looks as if LSQ has a bug so that solveLoop and getCovariance
     // interact badly (maybe both doing an invert).
@@ -197,13 +214,46 @@ int Solver::getResult (Result::Ref &resref,
     bool solFlag = itsSolver.solveLoop (fit, rank, solution,
                                         stddev, mu, itsUseSVD);
     cout << "Solution after:  " << solution << endl;
-    // Remove the rider for the next iterations.
-    if (state()[FSolvableParm].exists()) {
-      newReq[FNodeState][FSolvableParm].remove();
-    }
+    // Put the solution in the FNodeState,FByNodeIndex data record.
+    // That will contain a DataRecord for each parm with the parmid
+    // as the index.
+    DataRecord& dr1 =
+      newReq[FNodeState][FSolvableParm].replace() <<= new DataRecord;
+    DataRecord& dr2 = dr1[FByNodeIndex] <<= new DataRecord;
+    fillSolution (dr2, spids, solution);
   }
+  // Distribute the last solution.
+  // Do that in an empty request.
+  Request lastReq;
+  DataRecord& ldr1 = lastReq[FNodeState] <<= new DataRecord;
+  DataRecord& ldr2 = ldr1[FSolvableParm] <<= new DataRecord;
+  DataRecord& dr2 = ldr2[FByNodeIndex] <<= new DataRecord;
+  fillSolution (dr2, spids, solution);
+  Node::pollChildren (child_results, resref, lastReq);
   // result depends on domain, and has -- most likely -- been updated
   return RES_DEP_DOMAIN|RES_UPDATED;
+}
+
+void Solver::fillSolution (DataRecord& rec, const vector<int> spids,
+			   const Vector<double>& solution)
+{
+  // Split the solution into vectors for each parm.
+  // Reserve enough space in the vector.
+  vector<double> parmSol;
+  uint nspid = spids.size();
+  parmSol.reserve (nspid);
+  int lastParmid = spids[0] / 256;
+  for (uint i=0; i<nspid; i++) {
+    if (spids[i]/256 != lastParmid) {
+      DataRecord& drp = rec[lastParmid] <<= new DataRecord;
+      drp[FValue] = parmSol;
+      lastParmid = spids[i] / 256;
+      parmSol.resize(0);
+    }
+    parmSol.push_back (solution[i]);
+  }
+  DataRecord& drp = rec[lastParmid] <<= new DataRecord;
+  drp[FValue] = parmSol;
 }
 
 void Solver::setStateImpl (DataRecord& newst,bool initializing)

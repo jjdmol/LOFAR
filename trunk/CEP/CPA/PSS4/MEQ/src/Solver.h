@@ -69,6 +69,10 @@ protected:
                          const Request &req,bool newreq);
 
 private:
+  // Fill the solution (per parmid) in the DataRecord.
+  void fillSolution (DataRecord& rec, const vector<int> spids,
+		     const Vector<double>& solution);
+
   vector<Condeq*> itsCondeqs;
   DataRecord::Ref itsSolvableParms;
   FitLSQ          itsSolver;
