@@ -23,26 +23,24 @@
 #ifndef COMMON_DEBUG_H
 #define COMMON_DEBUG_H
 
+#ifdef __DEPRECATED
+#warning Debug.h is deprecated, please use LofarLogger.h instead. \
+To disable this warning use -Wno-deprecated.
+#endif
+
 #include <lofar_config.h>
 
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_string.h>
+#include <Common/lofar_fstream.h>
+#include <Common/lofar_sstream.h>
 #include <Common/lofar_map.h>
 #include <Common/Exception.h>
-#include <sstream>
-#include <stdexcept>
-#include <stdio.h>
 #ifdef ENABLE_LATENCY_STATS
 #include <sys/time.h>
 #endif
 
 
-
-// Define the LOFAR::Exception class
-namespace Debug 
-{
-  EXCEPTION_CLASS(AssertError,LOFAR::Exception)  
-}
 
 //      =====[ Declaring and implementing debugging contexts ]=====
 //      ===========================================================
@@ -187,34 +185,6 @@ namespace Debug
 #define dprintf1(level) cdebug1(level)<<Debug::ssprintf
 #define dprintf(level) cdebug(level)<<Debug::ssprintf
 
-
-
-namespace Debug
-{
-  extern LOFAR::ostream * dbg_stream_p;
-  
-  inline LOFAR::ostream & getDebugStream ()
-  { return *dbg_stream_p; }
-
-#ifdef ENABLE_LATENCY_STATS
-  extern struct timeval tv_init;
-  inline int printf_time ()
-  { 
-    struct timeval tv; gettimeofday(&tv,0);
-    printf("%ld.%06ld ",tv.tv_sec-tv_init.tv_sec,tv.tv_usec);
-    return 1;
-  }
-  inline int stream_time ()
-  {
-    struct timeval tv; gettimeofday(&tv,0);
-    getDebugStream()<<tv.tv_sec-tv_init.tv_sec<<"."<<tv.tv_usec;
-    return 1;
-  }
-#else
-  inline int printf_time () { return 1; };
-  inline int stream_time () { return 1; };
-#endif
-};
 
 // Use this macro to write trace output.
 // Similar as dprintf, but uses iostream instead of printf.
@@ -406,9 +376,17 @@ const char exception_message[] = "\n==================================== EXCEPTI
 
 namespace Debug
 {
+  // Define an exception class for assert errors.
+  EXCEPTION_CLASS(AssertError,LOFAR::Exception);
+
   // Typedef the exception type, so we can change whenever needed.
-//##ModelId=3DB9546401F6
+  //##ModelId=3DB9546401F6
   EXCEPTION_CLASS(Fail,LOFAR::Exception);
+  
+  extern LOFAR::ostream * dbg_stream_p;
+  
+  inline LOFAR::ostream & getDebugStream ()
+  { return *dbg_stream_p; }
 
   // sets level of given context
   bool setLevel (const LOFAR::string &context,int level);
@@ -435,11 +413,11 @@ namespace Debug
   // sprintfs to a string, with append & insertion of spaces
   int appendf( LOFAR::string &str,const char *format,... );
   
-//  // helper functions and declarations
-//  int dbg_printf( const char *format,... );
+  //  // helper functions and declarations
+  //  int dbg_printf( const char *format,... );
 
 
-//##ModelId=3C21B55E02FC
+  //##ModelId=3C21B55E02FC
   class Context 
   {
   public:
@@ -476,7 +454,7 @@ namespace Debug
   };
 
 
-//##ModelId=3C21B9750352
+  //##ModelId=3C21B9750352
   //## Other Operations (inline)
   inline bool Context::check (int level) const
   {
@@ -487,33 +465,33 @@ namespace Debug
     return level <= debug_level;
   }
 
-//##ModelId=3DB954640293
+  //##ModelId=3DB954640293
   inline int Context::level () const
   {
     return debug_level;
   }
 
-//##ModelId=3DB95464029E
+  //##ModelId=3DB95464029E
   inline int Context::setLevel (int value)
   {
     debug_level = value;
     return value;
   }
 
-//##ModelId=3DB9546402B5
+  //##ModelId=3DB9546402B5
   inline const LOFAR::string& Context::name () const
   {
     return context_name;
   }
   
-//##ModelId=3DB9546402C2
+  //##ModelId=3DB9546402C2
   inline void Context::initialize ()
   {
     initialized = true;
   }
 
 #ifdef ENABLE_TRACER
-//##ModelId=3DB954640201
+  //##ModelId=3DB954640201
   class Tracer
   {
   public:
@@ -527,7 +505,7 @@ namespace Debug
 
     //##ModelId=3DB9546402EA
     ~Tracer()
-          { if (itsDo) endMsg(); }
+    { if (itsDo) endMsg(); }
 
   private:
     //##ModelId=3DB9546402EB
@@ -546,13 +524,30 @@ namespace Debug
   };
 #endif
 
-} // namespace Debug
+#ifdef ENABLE_LATENCY_STATS
+  extern struct timeval tv_init;
+  inline int printf_time ()
+  { 
+    struct timeval tv; gettimeofday(&tv,0);
+    printf("%ld.%06ld ",tv.tv_sec-tv_init.tv_sec,tv.tv_usec);
+    return 1;
+  }
+  inline int stream_time ()
+  {
+    struct timeval tv; gettimeofday(&tv,0);
+    getDebugStream() << ssprintf("%ld.%06ld ",tv.tv_sec-tv_init.tv_sec,tv.tv_usec);
+    return 1;
+  }
+#else
+  inline int printf_time () { return 1; };
+  inline int stream_time () { return 1; };
+#endif
 
-
-namespace Debug {
   extern Context DebugContext;
   inline Context & getDebugContext ()  { return DebugContext; }
-}
+
+} // namespace Debug
+
 
 // Default DebugContext is the one in Debug.
 using ::Debug::getDebugContext;
