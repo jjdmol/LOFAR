@@ -104,21 +104,12 @@ class Transporter
   /// Get the size of the data in the DataHolder.
   int getDataSize() const;
 
-  /// Set the rate for this Transport (thus for its DataHolder).
-  void setRate (int aRate);
-  /// Get the rate for this Transport (thus for its DataHolder).
-  int getRate() const;
-
   /// Get/set the (other) DataHolder this Transporter is connected to.
   DataHolder* getSourceDataHolder();
   void setSourceDataHolder(DataHolder* dh);
 
   bool isBlocking() const ; 
   void setIsBlocking(bool);
-
-  //# Determine if the current event has to be handled (true) or
-  //# skipped (false) based on the Rate setting
-  //#  bool doHandle() const;
 
 private:
   /// Forbid copy constructor.
@@ -146,13 +137,8 @@ private:
   // Status of the Transporter object
   Status itsStatus;
 
-  /** The fraction of the Read/Write call to be actually executed;
-      The read/write methods will check the static counter Step::EventCnt
-      (this will only work if the simulation runs single-threaded).
-      Rate=1 means always issue TransportHolder->read/write.
-  */
-  int itsRate; 
-  bool itsIsBlocking;         // Blocking communication on this connection?
+  // Blocking communication on this connection?
+  bool itsIsBlocking;
 };
 
 
@@ -191,12 +177,6 @@ inline TransportHolder* Transporter::getTransportHolder()
 
 inline DataHolder* Transporter::getDataHolder()
   { return itsDataHolder; }
-
-inline void Transporter::setRate (int aRate)
-  { itsRate = aRate; }
-
-inline int Transporter::getRate() const
-  { return itsRate; }
 
 inline bool Transporter::isBlocking() const
   { return itsIsBlocking; }
