@@ -75,7 +75,6 @@ MeqMatrix ParmTableSQLHelper::getMeqMatrix(char** resRow, int column)
   int nrOfChars = unquote(str7, resRow[column], strlen(resRow[column]));
   unsigned char str8[nrOfChars];
   nrOfChars = seven2eightbits(str8, str7, nrOfChars);
-
   LOFAR::BlobIBufChar bb(str8, nrOfChars);
   LOFAR::BlobIStream bs(bb);
   bs >> MM;
@@ -348,27 +347,33 @@ int ParmTableSQLHelper::eight2sevenbits (unsigned char* dest, unsigned char* src
 #if defined USE_BIT_SHIFT
   int bitshift = 0;
   unsigned char* srci = src;
-  unsigned char* dsti = dest;
+  unsigned char* dsti = dest - 1;
   while (srci<(src+length)) {
     bitshift++;
     if (bitshift == 1){
       // take the highest 7 bits of the char
-      *dsti = (*srci>>bitshift);
-    } else if (bitshift == 7) {
-      // take the lowest 6 bits of 1 char and the highest of the second
-      *dsti = ((*(srci-1)<<(8-bitshift)) & 0x7F) | (*srci>>bitshift);
       dsti++;
-      // take the remaining 7 bits of the second
-      *dsti = ((*(srci)) & 0x7F);
+      *dsti = (*srci>>bitshift);
+      // put the lowest bit in the 7th bit of the next char
+      dsti++;
+      *dsti = (*srci<<(7 - bitshift)) & 0x7F;
+    } else if (bitshift == 7) {
+      // take the highest (8-bitshift) and add them to the lowest of the dest
+      *dsti = (*dsti) | (*srci>>bitshift);
+      // take the lowest (bitshift) bits add them to the current bits
+      dsti++;
+      *dsti = ((*srci<<(7 - bitshift)) & 0x7F);
       bitshift = 0;
     } else {
-      // take the lowest (bitshift) bits of 1 char and the highest (7-bitshift) of the second
-      *dsti = ((*(srci-1)<<(8-bitshift)) & 0x7F) | (*srci>>bitshift);
+      // take the highest (8-bitshift) and add them to the lowest of the dest
+      *dsti = (*dsti) | (*srci>>bitshift);
+      // take the lowest (bitshift) bits add them to the current bits
+      dsti++;
+      *dsti = ((*srci<<(7 - bitshift)) & 0x7F);
     }
-    dsti++;
     srci++;
   };
-  return (int)(dsti-dest);
+  return (int)(dsti - dest + 1);
 #else
   for (int i=0; i<length; i++) {
     dest[2*i] = *(src+i)/2;
@@ -384,7 +389,7 @@ int ParmTableSQLHelper::seven2eightbits (unsigned char* dest, unsigned char* src
   int bitshift = 0;
   unsigned char* srci = src;
   unsigned char* dsti = dest;
-  *dsti = 0;
+
   while (srci<(src+length)) {
     bitshift++;
     if (bitshift == 1){
