@@ -25,7 +25,7 @@
 
 namespace LOFAR
 {
-   Station::Station (int ID, float x, float y, float z);
+   Station::Station (int ID, float x, float y, float z)
      {
        itsX = x;
        itsY = y;
@@ -33,12 +33,12 @@ namespace LOFAR
        itsID = ID;
      }
    
-   Station::Station (const Station& s);
+   Station::Station (const Station& s)
      {
-       s.itsX = itsX;
-       s.itsY = itsY;
-       s.itsZ = itsY;  
-       s.itsID = itsID;       
+       itsX = s.itsX;
+       itsY = s.itsY;
+       itsZ = s.itsY;  
+       itsID = s.itsID;       
      }
       
    Station::~Station()

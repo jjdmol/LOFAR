@@ -26,8 +26,8 @@ WH_PreProcess.cc				\
 WH_Transpose.cc					\
 WH_Correlate.cc					\
 WH_Dump.cc					\
-MAC.h						\
-Station.h					
+MAC.cc						\
+Station.cc					
 
 OnLineProto_DEPENDENCIES = $(LOFAR_DEPEND)
 

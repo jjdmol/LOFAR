@@ -22,6 +22,8 @@
 #ifndef ONLINEPROTO_MAC_H
 #define ONLINEPROTO_MAC_H
 
+#define pi 3.1415926535897932384626433832795028841972
+
 #include <lofar_config.h>
 #include <Common/Lorrays.h>
 #include "OnLineProto/Station.h"
@@ -36,81 +38,81 @@ public:
    MAC (const MAC& m); // copy constructor
 
    // Get/Set functions
-   int getWe ();
-   int getC ();
-   int getIntegrationTime ();
-   void setIntegrationTime (int t);
+   float getWe ();
+   float getC ();
+   float getIntegrationTime ();
+   void setIntegrationTime (float t);
    float getDeclination ();
-   void setDeclination (int d);
+   void setDeclination (float d);
    float getStartHourangle (); 
-   void setStartHourangle (int ha); 
-   int getChannelBandwidth ();       
-   void setChannelBandwidth (int cbw);       
+   void setStartHourangle (float ha); 
+   float getChannelBandwidth ();       
+   void setChannelBandwidth (float cbw);       
    LoVec_float getFrequencies ();
    void setFrequencies (LoVec_float freqs);
    int getBeamletSize ();
    void setBeamletSize (int bs);
-   int getTotalBandwidth ();
-   void setTotalBandwidth (int tbw);
-   int getLOfrequency ();
-   void setLOfrequency (int f_lo);
-   Station* getStations ();
-   void setStations (Station* s);
+   float getTotalBandwidth ();
+   void setTotalBandwidth (float tbw);
+   float getLOfrequency ();
+   void setLOfrequency (float f_lo);
+   Station** getStations ();
+   void setStations (Station** s);
    int getNumberOfStations ();
    void setNumberOfStations (int ns);
    int getNumberOfBeamlets ();
    void setNumberOfBeamlets (int nb);
    
  private:
-   int w_e;                       // The rotational speed of the earth
-   int c;                         // The speed of light
-   int itsIntegrationTime;        // the correlator integration time
+   float w_e;                       // The rotational speed of the earth
+   float c;                         // The speed of light
+   float itsIntegrationTime;        // the correlator integration time
    
    // The pointing direction
    float itsDeclination;
    float itsStartHourangle;       // starting hourangle
    
    // Frequency related parameters
-   int itsChannelBandwidth;       
+   float itsChannelBandwidth;       
    LoVec_float itsFrequencies;    // the center frequencies of every channel
    int itsBeamletSize;            // number channels per beamlet
-   int itsTotalBandwidth;         // The total bandwidth after A/D conversion
-   int itsLOfrequency;            // the local oscillator frequency
+   float itsTotalBandwidth;         // The total bandwidth after A/D conversion
+   float itsLOfrequency;            // the local oscillator frequency
    int itsNumberOfBeamlets;
      
    // Station related parameters
-   Station* itsStations;          // the stationpositions 
+   Station** itsStations;          // the stationpositions 
    int itsNumberOfStations;
 };
 
 
-inline int MAC::getWe ()
+inline float MAC::getWe ()
   { return w_e; }
-inline int MAC::getC ()
+inline float MAC::getC ()
   { return c; }
 
-inline int MAC::getIntegrationTime ()
+inline float MAC::getIntegrationTime ()
   { return itsIntegrationTime; }
 
-inline void MAC::setIntegrationTime (int t)
+inline void MAC::setIntegrationTime (float t)
   { itsIntegrationTime = t; }
 
 inline float MAC::getDeclination ()
   { return itsDeclination; }
 
-inline void MAC::setDeclination (int d)
+inline void MAC::setDeclination (float d)
   { itsDeclination = d; }
 
 inline float MAC::getStartHourangle ()
   { return itsStartHourangle; }
 
-inline void MAC::setStartHourangle (int ha)
+inline void MAC::setStartHourangle (float ha)
   { itsStartHourangle = ha; }
 
-inline int MAC::getChannelBandwidth ()
+inline float MAC::getChannelBandwidth ()
   { return itsChannelBandwidth; }
 
-inline void MAC::setChannelBandwidth (int cbw)
+inline void MAC::setChannelBandwidth (float cbw)
   { itsChannelBandwidth = cbw; }
 
 inline LoVec_float MAC::getFrequencies ()
@@ -125,22 +127,22 @@ inline int MAC::getBeamletSize ()
 inline void MAC::setBeamletSize (int bs)
   { itsBeamletSize = bs; }
 
-inline int MAC::getTotalBandwidth ()
+inline float MAC::getTotalBandwidth ()
   { return itsTotalBandwidth; }
 
-inline void MAC::setTotalBandwidth (int tbw)
+inline void MAC::setTotalBandwidth (float tbw)
   { itsTotalBandwidth = tbw; }
 
-inline int MAC::getLOfrequency ()
+inline float MAC::getLOfrequency ()
   { return itsLOfrequency; }
 
-inline void MAC::setLOfrequency (int f_lo)
+inline void MAC::setLOfrequency (float f_lo)
   { itsLOfrequency = f_lo; }
 
-inline Station* MAC::getStations ()
+inline Station** MAC::getStations ()
   { return itsStations; }
 
-inline void MAC::setStations (Station* s)
+inline void MAC::setStations (Station** s)
   { itsStations = s; }
 
 inline int MAC::getNumberOfStations ()
