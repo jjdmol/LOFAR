@@ -40,7 +40,7 @@ namespace LOFAR {
 
 
   ostream& operator<<(ostream& os, const SyncStamp& ss){
-    os<<ss.itsSeqId<<"s:"<<ss.itsBlockId;
+    os<<ss.itsSeqId<<" s: "<<ss.itsBlockId;
     return os;
   }
 }
