@@ -177,7 +177,7 @@ bool TH_ShMem::recv(void* buf, int nbytes, int source, int tag)
 
     // all calls must have the same arguments except for nbytes
     DbgAssertStr(itsRecvContext.matchArgs(buf, source, tag),
-		 "arguments don't match");
+    		 "Arguments don't match");
 
     // check whether allocated with TH_ShMem::allocate
     if (itsRecvBuf->matchMagicCookie())
@@ -268,7 +268,7 @@ bool TH_ShMem::send(void* buf, int nbytes, int destination, int tag)
 
     // all calls must have the same arguments except for nbytes
     DbgAssertStr(itsSendContext.matchArgs(buf, destination, tag),
-		 "arguments don't match");
+    		 "arguments don't match");
 
     if (itsSendBuf->matchMagicCookie())
     {

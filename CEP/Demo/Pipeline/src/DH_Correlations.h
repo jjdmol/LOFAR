@@ -49,6 +49,8 @@ public:
 
   virtual ~DH_Correlations();
 
+  DataHolder* clone() const;
+
   /// Allocate the buffers.
   virtual void preprocess();
 
@@ -79,9 +81,9 @@ protected:
     DataType itsBuffer[];
   };
 
-private:
-  /// Forbid copy constructor.
   DH_Correlations (const DH_Correlations&);
+
+private:
   /// Forbid assignment.
   DH_Correlations& operator= (const DH_Correlations&);
 
@@ -91,6 +93,7 @@ private:
   short itsPols;
   short itsBaselines;
   short itsWindows;
+
   };
 
 

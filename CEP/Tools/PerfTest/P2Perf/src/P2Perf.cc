@@ -203,7 +203,7 @@ void P2Perf::define(const ParamBlock& params)
       TRACER2("Connect using MPI");
       Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_MPI::proto);
 #else
-      Dsteps[step]->connect(Ssteps[ch],ch,step,1);
+      Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_Mem::proto);
 #endif
 #endif
     }

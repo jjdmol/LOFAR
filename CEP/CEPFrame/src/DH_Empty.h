@@ -43,7 +43,9 @@ class DH_Empty: public DataHolder
 {
 public:
   explicit DH_Empty (const string& name = "");
+  DH_Empty(const DH_Empty&);
   virtual ~DH_Empty();
+  virtual DataHolder* clone() const;
 };
 
 

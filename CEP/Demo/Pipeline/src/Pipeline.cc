@@ -73,11 +73,11 @@ void Pipeline::define(const ParamBlock& params)
   
   // free any memory previously allocated
   undefine();
-
+  
   // Create the top-level simul
   Simul simul(new WH_Empty(), params.getString("name","Pipeline").c_str(),true,false);
-  setSimul(simul);
 
+  setSimul(simul);
   
   TRACER2("Handle the input parameters");
   if (TRANSPORTER::getCurrentRank() <= 0) params.show (cout);
@@ -106,19 +106,19 @@ void Pipeline::define(const ParamBlock& params)
   // Create the Source Steps  
   FillSteps    = new (Step*)[itsStations];
   for (int iStep = 0; iStep < itsStations; iStep++) {  
-    FillSteps[iStep] = new Step(WH_FillTFMatrix(string("Filler_" + i2string(iStep)),
+    WH_FillTFMatrix whFill(string("Filler_" + i2string(iStep)),
 						iStep, // source ID
 						0,     // NO inputs
 						itsCorrelators, //nout
 						timeDim,
 						freqDim,
-						Pols),
+					  Pols);
+    FillSteps[iStep] = new Step(whFill,
 				"PipelineSourceStep", 
 				iStep);
     FillSteps[iStep]->runOnNode(iStep ,0); // run in App 0
     if (!InRead) simul.addStep(FillSteps[iStep]);
   }
-  
   
   //////////////////////////////////////////////////////////////////////////////////////
   // Create the transpose steps
@@ -126,12 +126,13 @@ void Pipeline::define(const ParamBlock& params)
   for (int iStep = 0; iStep < itsCorrelators; iStep++) {
     
     // Create the Destination Step
-    TransSteps[iStep] = new Step(WH_Transpose("Transpose_" + i2string(iStep), 
+    WH_Transpose whTransp("Transpose_" + i2string(iStep), 
 					      itsStations, 
 					      timeDim,
 					      timeDim,
 					      freqDim,
-					      Pols), 
+			  Pols);
+    TransSteps[iStep] = new Step(whTransp, 
 				 "PipelineDestStep", 
 				 iStep);
     
@@ -145,12 +146,14 @@ void Pipeline::define(const ParamBlock& params)
   // Create the cross connections between filler and transpose steps
   for (int step = 0; step < itsCorrelators; step++) {
     for (int ch = 0; ch < itsStations; ch++) {
-      TRACER2("Pipeline; try to connect " << step << "   " << ch);
+      TRACER2("Pipeline; try to connect " << step << "   " << ch);    
+
 #ifdef HAVE_MPI
       TransSteps[step]->connect(FillSteps[ch],ch,step,1,TH_MPI::proto);
 #else
-      TransSteps[step]->connect(FillSteps[ch],ch,step,1);
+      TransSteps[step]->connect(FillSteps[ch],ch,step,1,TH_Mem::proto);
 #endif 
+
     }
   }
   
@@ -159,17 +162,19 @@ void Pipeline::define(const ParamBlock& params)
   // Create the PreCorrection step
   PreCSteps    = new (Step*)[itsCorrelators];
   for (int iStep = 0; iStep < itsCorrelators; iStep++) {
-    PreCSteps[iStep] = new Step(WH_PreCorrect("PreCorrection_" + i2string(iStep),
+    WH_PreCorrect whPreCorr("PreCorrection_" + i2string(iStep),
 					      timeDim,        // inputs
 					      itsStations, // stations
 					      freqDim,        // frequency
-					      Pols),
+			    Pols);
+    PreCSteps[iStep] = new Step(whPreCorr,
 				"PreCorrection",
 				iStep);
     int node = 2*iStep+itsStations; // same as for transpose step
     PreCSteps[iStep]->runOnNode(node,0); 
     // connect the PreCorrect to the corresponding transpose step
     // Find out what TransportHolders we need where
+    
     if (InRead) {
       // The PreCorrect step will read from file
       PreCSteps[iStep]->connectInput(TransSteps[iStep], 
@@ -180,9 +185,10 @@ void Pipeline::define(const ParamBlock& params)
       PreCSteps[iStep]->connectInput(TransSteps[iStep],
 				     TH_File("PreC_Input_" + i2string(iStep),TH_File::Write));
     } else {
-      PreCSteps[iStep]->connectInput(TransSteps[iStep]); 
-    }
-    simul.addStep(PreCSteps[iStep]);
+    
+        PreCSteps[iStep]->connectInput(TransSteps[iStep]); 
+      }
+        simul.addStep(PreCSteps[iStep]);
  
   }
   
@@ -192,12 +198,13 @@ void Pipeline::define(const ParamBlock& params)
     // Create the correlator step  
     CorrSteps    = new (Step*)[itsCorrelators];
     for (int iStep = 0; iStep < itsCorrelators; iStep++) {
-      CorrSteps[iStep] = new Step(WH_Correlate("Correlator_" + i2string(iStep),
+      WH_Correlate whCorr("Correlator_" + i2string(iStep),
 					       timeDim,        // inputs
 					       1,              // outputs
 					       itsStations, // stations
 					       freqDim,        // frequency
-					       Pols),
+			  Pols);
+      CorrSteps[iStep] = new Step(whCorr,
 				  "Correlator",
 				  iStep);
       int node = 2*iStep+itsStations; // same as for transpose step
@@ -209,10 +216,11 @@ void Pipeline::define(const ParamBlock& params)
 
     /////////////////////////////////////////////////////////////////////////////////////
     // Create the WH_Dump and allow for TH_File connection
-    Step DumpStep(WH_Dump("DumpWH",
+    WH_Dump whDump("DumpWH",
 			  itsCorrelators, // inputs
 			  itsStations, // stations
-			  Pols),
+		   Pols);
+    Step DumpStep(whDump,
 		  "DumpStep");
     DumpStep.setInRate(50); // integration time of the correlator
     DumpStep.runOnNode(itsStations+2*itsCorrelators);
@@ -232,11 +240,12 @@ void Pipeline::define(const ParamBlock& params)
   if (!(InRead || InWrite || OutWrite)) { // but only when TH_File is not used...
 #ifdef HAVE_MPI
     // replace connections with TH_ShMem where possible
-    simul.optimizeConnectionsWith(TH_ShMem::proto);
+            simul.optimizeConnectionsWith(TH_ShMem::proto);
 #endif
     // replace connections with TH_Mem where possible
-    simul.optimizeConnectionsWith(TH_Mem::proto);
+                simul.optimizeConnectionsWith(TH_Mem::proto);
   }
+
 }
 
 
@@ -256,17 +265,17 @@ void Pipeline::run(int nSteps) {
   starttime=MPI_Wtime();
 #endif
 
+
   // The main loop
   for (int i=1; i<=nSteps; i++) {
     if (i==1 && itsDoLogProfile) Profiler::activate();
     getSimul().process();
     if (i==10 && itsDoLogProfile) Profiler::deActivate();
 #ifdef HAVE_MPI
-    if ((rank==0) && (i%10000 == 0)) cout << i/(MPI_Wtime()-starttime) << endl;
+    if ((rank==0) && (i%1000 == 0)) cout << i/(MPI_Wtime()-starttime) << endl;
     //TH_MPI::synchroniseAllProcesses();
 #endif
   }
-
 
 #ifdef HAVE_MPI
   double endtime=MPI_Wtime();
@@ -305,6 +314,7 @@ void Pipeline::undefine() {
     for (int iStep = 0; iStep < itsCorrelators; iStep++) 
       delete PreCSteps[iStep];
   delete [] PreCSteps;
+
   TRACER2("Leaving Pipeline::undefine");
 }
 

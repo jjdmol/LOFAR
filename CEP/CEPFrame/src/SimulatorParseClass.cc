@@ -28,6 +28,7 @@
 #include "CEPFrame/Simulator.h"
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iostream.h>
+#include <Common/lofar_strstream.h>
 
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
@@ -40,7 +41,6 @@ extern char *SimulatorTokenizetext;
 
 #include <sstream>
 using namespace std;
-
 
 // Initialize statics.
 int SimulatorParse::theirLine = 0;

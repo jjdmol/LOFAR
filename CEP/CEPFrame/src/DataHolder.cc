@@ -29,26 +29,44 @@
 #include "CEPFrame/Transport.h"
 #include "CEPFrame/DataHolder.h"
 #include "CEPFrame/Transport.h"
+#include "CEPFrame/StepRep.h"
 #include "Common/Debug.h"
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
-
 DataHolder::DataHolder(const string& name, const string& type)
-: itsTransportPtr  (0),
-  itsName          (name),
-  itsType          (type),
-  itsReadDelay     (0),
+: itsTransportPtr   (0),
+  itsName           (name),
+  itsType           (type),
+  itsStep           (0),
+  itsReadDelay      (0),
   itsWriteDelay     (0),
-  itsReadDelayCount(0),
+  itsReadDelayCount (0),
   itsWriteDelayCount(0),
-  itsIfsPtr        (0),
-  itsOfsPtr        (0)
+  itsIfsPtr         (0),
+  itsOfsPtr         (0)
 {
   setDefaultDataPacket();
   itsTransportPtr = new Transport (this);
 }
+
+DataHolder::DataHolder(const DataHolder& that)
+  : itsDataPacketSize (that.itsDataPacketSize), 
+    itsName           (that.itsName),
+    itsType           (that.itsType),
+    itsStep           (that.itsStep),
+    itsReadDelay      (that.itsReadDelay),
+    itsWriteDelay     (that.itsWriteDelay),
+    itsReadDelayCount (that.itsReadDelayCount),
+    itsWriteDelayCount(that.itsWriteDelayCount),
+    itsIfsPtr         (0),
+    itsOfsPtr         (0)
+{
+  itsTransportPtr = that.itsTransportPtr->clone();
+  itsTransportPtr->setDataHolder(this);
+}
+  
 
 DataHolder::~DataHolder()
 {
@@ -66,7 +84,7 @@ DataHolder::~DataHolder()
 void* DataHolder::allocate(size_t size)
 {
   void* mem = 0;
-  if (! getTransport().getTransportHolder()) {
+  if (!getTransport().getTransportHolder()) {
     mem = malloc(size);
   } else {
     cdebug(3) << "allocate "
@@ -118,23 +136,25 @@ void DataHolder::postprocess()
 
 void DataHolder::dump() const
 {
-  cout << itsType << ' ' << itsName << endl;
+  TRACER2("DataHolder dump: " << itsType << ' ' << itsName);
 }
 
-void DataHolder::read()
+bool DataHolder::read()
 {
+  bool result = false;
   if (itsReadDelayCount <= 0) {
-    itsTransportPtr->read();
+    result = itsTransportPtr->read();
     if (itsIfsPtr) {
       doFsRead (*itsIfsPtr);
     }
   } else {
     itsReadDelayCount--;
   }
+  return result;
 }
 
 void DataHolder::write()
-{
+{ 
   if (itsWriteDelayCount <= 0) {
     itsTransportPtr->write();
     if (itsOfsPtr) {
@@ -243,6 +263,11 @@ bool DataHolder::isValid() const
 {
   return itsTransportPtr->isValid();
 }
+
+int DataHolder::getNode() const
+{
+  return itsStep==0  ?  -1 : itsStep->getNode();
+} 
 
 void DataHolder::setReadDelay (int delay)
 {

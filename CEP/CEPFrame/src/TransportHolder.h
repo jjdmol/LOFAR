@@ -79,6 +79,9 @@ public:
   void setTransport (Transport * Trn) { 
     itsTransport = Trn; 
   }
+
+  virtual bool isBlocking() const = 0;
+
 private:
   Transport * itsTransport;
 };

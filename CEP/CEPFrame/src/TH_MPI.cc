@@ -150,7 +150,7 @@ bool TH_MPI::recv(void* buf, int nbytes, int source, int tag)
 
     MPI_Status status;
 
-    //TRACER3("MPI::recv(" << buf << "," << nbytes << ",....)");
+    TRACER2("MPI::recv(" << buf << "," << nbytes << ",....)");
     result = MPI_Recv (buf, nbytes, MPI_BYTE, source, tag,
 		       MPI_COMM_WORLD, &status);
     if (MPI_SUCCESS != result) cerr << "result = " << result << endl;
@@ -198,7 +198,7 @@ bool TH_MPI::send(void* buf, int nbytes, int destination, int tag)
     // non-blocking MPI send
     int result;
 
-    //TRACER3("MPI::send(" << buf << "," << nbytes << ",....)");
+    TRACER2("MPI::send(" << buf << "," << nbytes << ",....)");
     lock();
     result = MPI_Send(buf, nbytes, MPI_BYTE, destination, tag,
 		      MPI_COMM_WORLD);

@@ -41,8 +41,6 @@ WH_PreCorrect::WH_PreCorrect (const string& name,
 			    int freqDim,
 			    int pols)  // input side
 : WorkHolder    (channels, channels, name),
-  itsInHolders  (0),
-  itsOutHolders (0),
   itsTime       (0),  
   itsStationDim (stationDim),
   itsFreqDim    (freqDim),
@@ -50,50 +48,44 @@ WH_PreCorrect::WH_PreCorrect (const string& name,
 {
   TRACER4("WH_PreCorrect C'tor");
   
-  itsInHolders  = new DH_2DMatrix* [channels];
-  itsOutHolders = new DH_2DMatrix* [channels];
   char str[8];
-  for (int i=0; i<getInputs(); i++) {
+  for (int i=0; i<getDataManager().getInputs(); i++) {
     sprintf (str, "%d", i);
     TRACER3("Create WH_PreCorrect InhHolder[" << i << "]");
-    itsInHolders[i] = new DH_2DMatrix (std::string("in_") + str,
-				       itsStationDim, std::string("Station"),
-				       itsFreqDim, std::string("Frequency"),
-				       std::string("Time"),
-				       itsPols);
+    getDataManager().addInDataHolder(i, 
+				     new DH_2DMatrix (std::string("in_") + str,
+				     itsStationDim, std::string("Station"),
+				     itsFreqDim, std::string("Frequency"),
+				     std::string("Time"),
+				     itsPols), true);
   }
-  for (int i=0; i<getOutputs(); i++) {
+  for (int i=0; i<getDataManager().getOutputs(); i++) {
     sprintf (str, "%d", i);
     TRACER3("Create WH_PreCorrect OutHolder[" << i << "]");
-    itsOutHolders[i] = new DH_2DMatrix(std::string("out_") + str,
-				       itsStationDim, std::string("Station"),
-				       itsFreqDim, std::string("Frequency"),
-				       std::string("Time"),
-				       itsPols); 
+    getDataManager().addOutDataHolder(i,
+				      new DH_2DMatrix(std::string("out_") + str,
+				      itsStationDim, std::string("Station"),
+				      itsFreqDim, std::string("Frequency"),
+				      std::string("Time"),
+				      itsPols), true);
+
    
 }
   // allocate the correctionvector and initialise to unit
   itsCorrectionVector = new DH_2DMatrix::DataType[stationDim];
   for (int i=0; i<stationDim; i++) {
-    setCorrectionVector(i,DH_2DMatrix::DataType(0.5+1.0*random()/RAND_MAX,0.5+1.0*random()/RAND_MAX));
-    //setCorrectionVector(i,DH_2DMatrix::DataType(1,0));
+    //setCorrectionVector(i,DH_2DMatrix::DataType(0.5+1.0*random()/RAND_MAX,0.5+1.0*random()/RAND_MAX));
+    setCorrectionVector(i,DH_2DMatrix::DataType(1,0));
   }
   if (theirProcessProfilerState == 0) {
     theirProcessProfilerState = Profiler::defineState("WH_PreCorrect","purple");
   }
+
 }
 
 
 WH_PreCorrect::~WH_PreCorrect()
 {
-  for (int i=0; i<getInputs(); i++) {
-    delete itsInHolders[i];
-  }
-  for (int i=0; i<getOutputs(); i++) {
-    delete itsOutHolders[i];
-  }
-  delete [] itsInHolders;
-  delete [] itsOutHolders;
 }
 
 void  WH_PreCorrect::setCorrectionVector(int Field, myComplex8 Value) {
@@ -105,34 +97,33 @@ void  WH_PreCorrect::setCorrectionVector(myComplex8 *Value) {
   for (int i=0; i<itsStationDim; i++) itsCorrectionVector[i] = Value[i];
 }
 
-WorkHolder* WH_PreCorrect::make(const string& name) const
+WorkHolder* WH_PreCorrect::make(const string& name)
 {
-  TRACER4("WH_Correlator::make()");
+  TRACER4("WH_PreCorrect::make()");
   return new WH_PreCorrect(name, 
-			  getInputs(), 
+			  getDataManager().getInputs(), 
 			  itsStationDim,
 			  itsFreqDim,
 			  itsPols);
 }
 
 void WH_PreCorrect::preprocess() {
-  TRACER4("WH_Correlator::preprocess");
+  TRACER4("WH_PreCorrect::preprocess");
   return;
 }
 
 
 void WH_PreCorrect::process()
 {  
-  Profiler::enterState (theirProcessProfilerState);
-  
-  DbgAssertStr(getOutputs() == getInputs(), 
+  Profiler::enterState (theirProcessProfilerState);  
+  DbgAssertStr(getDataManager().getOutputs() == getDataManager().getInputs(), 
 	       "inputs and outputs must be equal");
   
   
-  for (int channel=0; channel<getOutputs(); channel++) {
+  for (int channel=0; channel<getDataManager().getOutputs(); channel++) {
     DH_2DMatrix *OutDHptr, *InDHptr;
-    OutDHptr = getOutHolder(channel);
-    InDHptr  = getInHolder(channel);
+    OutDHptr = (DH_2DMatrix*)getDataManager().getOutHolder(channel);
+    InDHptr  = (DH_2DMatrix*)getDataManager().getInHolder(channel);
     DbgAssertStr(OutDHptr != 0, "GetOutHolder returned NULL");
     DbgAssertStr(InDHptr != 0, "GetInHolder returned NULL");
     int Xsize = OutDHptr->getXSize();
@@ -153,22 +144,34 @@ void WH_PreCorrect::process()
   Profiler::leaveState (theirProcessProfilerState);
 }
 
-void WH_PreCorrect::dump() const
+void WH_PreCorrect::dump()
 {
-}
+  cout << "WH_PreCorrect " << getName() << " ::dump()" << endl;
+  for (int outch=0; outch<std::min(10,getDataManager().getOutputs()); outch++) {
 
+    DbgAssertStr(getDataManager().getOutHolder(outch)->getType() == "DH_2DMatrix",
+	         "DataHolder is not of type DH_2DMatrix");
+    DH_2DMatrix* outDH = (DH_2DMatrix*)getDataManager().getOutHolder(outch);
+    cout << "Output " << outch << "   " << outDH->getZName()  << " "<< outDH->getZ() 
+	 << "   " << outDH->getXName() << "Offset = "  << outDH->getXOffset() 
+	 << "    " << outDH->getYName() << "Offset = " << outDH->getYOffset() ;
 
-DH_2DMatrix* WH_PreCorrect::getInHolder (int channel)
-{
-  DbgAssertStr (channel >= 0,          "input channel too low");
-  DbgAssertStr (channel < getInputs(), "input channel too high");
-  TRACER4("channel = " << channel);
-  return itsInHolders[channel];
-}
-
-DH_2DMatrix* WH_PreCorrect::getOutHolder (int channel)
-{
-  DbgAssertStr (channel >= 0,           "output channel too low");
-  DbgAssertStr (channel < getOutputs(), "output channel too high");
-  return itsOutHolders[channel];
+    for (int pol=0; pol<itsPols; pol++) {
+      cout << endl << "Polarisation: " << pol ;
+      for (int x=0; 
+	   x < std::min(10, outDH->getXSize());
+	   x++) {
+	cout << endl 
+	     << outDH->getXName()
+	     << x << "   ";
+	for (int y=0; 
+	     y < std::min(10, outDH->getYSize());
+	     y++) {
+	  cout << *outDH->getBuffer(x,y,pol) << " ";
+	}
+      }
+    }
+    cout << endl;
+  }
+  cout << "=====================================" <<endl;
 }

@@ -59,9 +59,14 @@ public:
   static int  getNumberOfNodes ();
   static void synchroniseAllProcesses ();
 
+  bool isBlocking() const;
+
 private:
   
 };
+
+inline bool TH_Database::isBlocking() const
+{ return false;}
 
 #endif
 

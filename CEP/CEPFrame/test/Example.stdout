@@ -1,4 +1,4 @@
-BaseSim Processor -1 of 1 operational  (appl=0)
+CEPFrame Processor -1 of 1 operational  (appl=0)
 CheckConn before shortcut:
 Output DataHolder out_0 of Step aSimul not connected to input of next Step
 CheckConn after shortcut:

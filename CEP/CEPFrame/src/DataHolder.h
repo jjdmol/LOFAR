@@ -40,6 +40,7 @@
 
 //# Forward Declarations
 class Transport;
+class StepRep;
 
 /**
   Class DataHolder is the abstract base class for all data holders
@@ -104,6 +105,9 @@ public:
 
   virtual ~DataHolder();
 
+  // Make a copy
+  virtual DataHolder* clone() const = 0;
+
   /** The allocate/deallocate methods are used to manage memory for a
       DataHolder. This memory is used to send from/receive into. To
       optimize communication the malloc and free routines of the
@@ -136,7 +140,7 @@ public:
   virtual void dump() const;
 
   /// Read the packet data.
-  void read();
+  bool read();
 
   /// Write the packet data.
   void write();
@@ -185,9 +189,23 @@ public:
   /// Get the data packet
   const DataPacket& getDataPacket() const;
   void* getDataPtr();
+  
+  /// Set the Step the DataHolder belongs to.
+  void setStep (StepRep&);
+
+  /// Get the Step the DataHolder belongs to.
+  StepRep& getStep() const;
+
+  /** Get the node the DataHolder runs on.
+      -1 is returned if the DataHolder is not used in a Step.
+  */
+  int getNode() const;
 
   /// Get the type of the DataHolder.
   const string& getType() const;
+
+  /// Set the type of the DataHolder.
+  void setType (const string& type);
 
   /// Get the name of the DataHolder.
   const string& getName() const;
@@ -233,13 +251,19 @@ protected:
   /// Set the data packet to the default data packet..
   void setDefaultDataPacket();
 
+  DataHolder(const DataHolder&);
+
 private:
+
   DataPacket  itsDefaultPacket;
   DataPacket* itsDataPacketPtr;
   int         itsDataPacketSize; // (Max) size in bytes
   Transport*  itsTransportPtr;
   string      itsName;
   string      itsType;
+
+  // The step this DataHolder belongs to.
+  StepRep* itsStep;
 
   /// The read delay for a DataHolder.
   int         itsReadDelay;
@@ -267,6 +291,11 @@ private:
    
 };
 
+inline void DataHolder::setStep (StepRep& step)
+  { itsStep = &step; }
+
+inline StepRep& DataHolder::getStep() const
+  { return *itsStep; }
 
 inline int DataHolder::getDataPacketSize()
   { return itsDataPacketSize; }
@@ -338,6 +367,9 @@ inline void DataHolder::setName (const string& name)
 
 inline const string& DataHolder::getType () const
   { return itsType; }
+
+inline void DataHolder::setType(const string& type)
+  { itsType = type; }
 
 
 #endif

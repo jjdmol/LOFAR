@@ -31,9 +31,8 @@
 #endif
 
 //# Includes
+#include "CEPFrame/BaseTransport.h"
 #include "CEPFrame/DataHolder.h"
-#include "CEPFrame/TransportHolder.h"
-#include "CEPFrame/BaseSim.h"
 
 //# Forward Declarations
 class StepRep;
@@ -49,7 +48,7 @@ class StepRep;
    the receiving DataHolder.
 */
 
-class Transport
+class Transport : public BaseTransport
 {
 public:
   /// Make the Transport object with a copy of the given prototype transporter.
@@ -57,14 +56,16 @@ public:
 
   virtual ~Transport();
 
+  Transport* clone() const;
+
   /// Send the data to the connected Transport object.
   void write();
 
   /// Read the data from the connected Transport object.
-  void read();
+  bool read();
 
   /// Write the Transport definition to stdout.
-  void dump() const;
+  virtual void dump() const;
 
   /// Set/get the source or target DataHolder.
   void setSourceAddr (DataHolder* anAddr);
@@ -72,39 +73,16 @@ public:
   DataHolder* getSourceAddr();
   DataHolder* getTargetAddr();
 
-  /// Make a TransportHolder from the given prototype.
-  /// If one already exists, it will first be deleted.
-  void makeTransportHolder (const TransportHolder& prototype);
-
-  /// Get the TransportHolder for this object.
-  TransportHolder* getTransportHolder();
-
   /// Get the DataHolder object for this object.
   DataHolder* getDataHolder();
+  
+  /// Set the DataHolder object for this object.
+  void setDataHolder(DataHolder* dh);
 
   /// Get pointer to the DataPacket from the DataHolder.
   void* getDataPtr();
   /// Get the size of the DataPacket in the DataHolder.
   int getDataPacketSize() const;
-
-  /// Set/get the ID.
-  void setItsID (int aID);
-  int getItsID() const;
-
-  /// Set/get the Step the Transport belongs to.
-  void setStep (StepRep&);
-  StepRep& getStep() const;
-
-  /// Set/get the tag to be used for MPI reads or writes.
-  void setReadTag (int tag);
-  int getReadTag() const;
-  void setWriteTag (int tag);
-  int getWriteTag() const;
-
-  /** Get the node the Transport runs on.
-      -1 is returned if the Transport is not used in a Step yet.
-  */
-  int getNode() const;
 
   /// Set the rate for this Transport (thus for its DataHolder).
   void setRate (int aRate);
@@ -116,15 +94,6 @@ public:
   */
   bool doHandle() const;
 
-  /// Status of the data
-  enum Status {Unknown, Clean, Dirty, Modified};
-
-  void setStatus (Status s);
-  Status getStatus() const;
-
-  /// True when data is valid; i.e. after a Read() or before a Write()
-  bool isValid() const;
-
 private:
   /// Forbid copy constructor.
   Transport (const Transport&);
@@ -134,62 +103,19 @@ private:
 
   /// The DataHolder this Transport belongs to.
   DataHolder* itsDataHolder;
-  /// The actual TransportHolder.
-  TransportHolder* itsTransportHolder;
   /// The source DataHolder (where it gets its data from).
   DataHolder* itsSourceAddr;
   /// The target DataHolder (where it sends its data to).
   DataHolder* itsTargetAddr;
- // The step this Transport (and DataHolder) belongs to.
-  StepRep* itsStep;
-  // ID of this Transport
-  int itsID;
-  // The node where this data is running.
-  int itsNode;
-  // The tag used for MPI send/receive.
-  int itsReadTag;
-  int itsWriteTag;
+
   /** The fraction of the Read/Write call to be actually executed;
       The read/write methods will check the static counter Step::EventCnt
       (this will only work if the simulation runs single-threaded).
       Rate=1 means always issue TransportHolder->read/write.
   */
   int itsRate; 
-  // Status of the Transport object
-  Status itsStatus;
+
 };
-
-
-inline void Transport::setItsID (int aID)
-  { itsID = aID; }
-
-inline void Transport::setStep (StepRep& step)
-  { itsStep = &step; }
-
-#if 0
-inline void Transport::setItsOutNode (int aNode)
-  { itsOutNode = aNode; }
-#endif
-
-inline int Transport::getItsID()  const
-  { return itsID; } 
-
-#if 0
-inline int Transport::getItsInID() const
-  { return itsInID; } 
-
-inline int Transport::getItsOutID() const
-  { return itsOutID; } 
-#endif
-
-inline StepRep& Transport::getStep() const
-  { return *itsStep; }
-
-inline int Transport::getReadTag() const
-  { return itsReadTag; }
-
-inline int Transport::getWriteTag() const
-  { return itsWriteTag; }
 
 inline void Transport::setSourceAddr (DataHolder* addr)
   { itsSourceAddr = addr; }
@@ -206,8 +132,10 @@ inline DataHolder* Transport::getTargetAddr()
 inline DataHolder* Transport::getDataHolder()
   { return itsDataHolder; }
 
-inline TransportHolder* Transport::getTransportHolder()
-  { return itsTransportHolder; }
+inline void Transport::setDataHolder(DataHolder* dh)
+{
+  itsDataHolder = dh;
+}
 
 inline int Transport::getDataPacketSize() const
   { return itsDataHolder->getDataPacketSize(); } 
@@ -220,15 +148,5 @@ inline void Transport::setRate (int aRate)
 
 inline int Transport::getRate() const
   { return itsRate; }
-
-inline void Transport::setStatus (Status s)
-  { itsStatus = s; }
-
-inline Transport::Status Transport::getStatus() const
-  { return itsStatus; }
-
-inline bool Transport::isValid() const
-  { return ((getStatus() != Unknown) && (getStatus() != Dirty)); }
-
 
 #endif 

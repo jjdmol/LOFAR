@@ -86,10 +86,14 @@ int main (int argc, const char *argv[])
     simul1.runOnNode(0);
     // Now start filling the simulation. 
     // First create the Steps.
-    Step step1 (WH_Example("Step1", 0));
-    Step step2 (WH_Example("Step2"));
-    Step step3 (WH_Example("Step3"));
-    Step step4 (WH_Example("Step4"));
+    WH_Example whEx1("Step1", 0);
+    Step step1 (whEx1);
+    WH_Example whEx2("Step2");
+    Step step2 (whEx2);
+    WH_Example whEx3("Step3");
+    Step step3 (whEx3);
+    WH_Example whEx4("Step4");
+    Step step4 (whEx4);
     simul1.addStep (step1);
     simul1.addStep (step2);
     simul1.addStep (step3);
@@ -211,10 +215,14 @@ int main (int argc, const char *argv[])
     simul1.runOnNode(0);
     // Now start filling the simulation. 
     // First create the Steps.
-    Step step1 (WH_Example("Step1", 0));
-    Step step2 (WH_Example("Step2"));
-    Step step3 (WH_Example("Step3"));
-    Step step4 (WH_Example("Step4"));
+    WH_Example whEx1("Step1", 0);
+    Step step1 (whEx1);
+    WH_Example whEx2("Step2");
+    Step step2 (whEx2);
+    WH_Example whEx3("Step3");
+    Step step3 (whEx3);
+    WH_Example whEx4("Step4");
+    Step step4 (whEx4);
     simul1.addStep (step1);
     simul1.addStep (step2);
     simul1.addStep (step3);

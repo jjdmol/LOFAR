@@ -34,9 +34,22 @@ DH_Example::DH_Example (const string& name, unsigned int nbuffer)
   itsBufSize    (nbuffer)
 {}
 
+DH_Example::DH_Example(const DH_Example& that)
+  : DataHolder(that),
+    itsDataPacket(0),
+    itsBuffer(0),
+    itsBufSize(that.itsBufSize)
+{
+}
+
 DH_Example::~DH_Example()
 {
   delete [] (char*)(itsDataPacket);
+}
+
+DataHolder* DH_Example::clone() const
+{
+  return new DH_Example(*this);
 }
 
 void DH_Example::preprocess()

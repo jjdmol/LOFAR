@@ -52,7 +52,8 @@ void Simulator_Example::define (const ParamBlock& params)
        << " operational  (appl=" << appl << ')' << endl;
 
   // define the top-level simul object
-  Simul simul(WH_Example("ExampleSimul"));
+  WH_Example exSimul("ExampleSimul");
+  Simul simul(exSimul);
   setSimul (simul);
 
   // tell the Simul where to run
@@ -60,17 +61,22 @@ void Simulator_Example::define (const ParamBlock& params)
   
   // Now start filling the simulation. 
   // first create the Steps
-  Step step1(WH_Example("Step1"));
-  Step step2(WH_Example("Step2"));
-  Step step3(WH_Example("Step3"));
+  WH_Example whEx1("Step1");
+  Step step1(whEx1);
+  WH_Example whEx2("Step2");
+  Step step2(whEx2);
+  WH_Example whEx3("Step3");
+  Step step3(whEx3);
 
   // Create the first composite and fill it
-  Simul composite1(WH_Example("Composite1"), "simcomp1", false);
+  WH_Example whComp1("Composite1");
+  Simul composite1(whComp1, "simcomp1", false);
   composite1.addStep(step2);
   composite1.addStep(step3);
 
   // Create the second composite and fill it
-  Simul composite2(WH_Example("Composite2"), "simcomp2", false);
+  WH_Example whComp2("Composite2");
+  Simul composite2(whComp2, "simcomp2", false);
   composite2.addStep(step1);
   composite2.addStep(composite1);
 

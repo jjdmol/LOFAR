@@ -27,10 +27,11 @@
 
 
 WH_Tester::WH_Tester (const string& name)
-: WorkHolder       (1, 1, name,"WH_Tester"),
-  itsInDataHolder  ("in"),
-  itsOutDataHolder ("out")
-{}
+: WorkHolder       (1, 1, name,"WH_Tester")
+{
+  getDataManager().addInDataHolder(0, new DH_Tester("in"), true);
+  getDataManager().addOutDataHolder(0, new DH_Tester("out"), true);
+}
 
 
 WH_Tester::~WH_Tester()
@@ -42,7 +43,7 @@ WorkHolder* WH_Tester::construct (const string& name, int, int,
   return new WH_Tester (name);
 }
 
-WH_Tester* WH_Tester::make (const string& name) const
+WH_Tester* WH_Tester::make (const string& name)
 {
   return new WH_Tester (name);
 }
@@ -50,34 +51,26 @@ WH_Tester* WH_Tester::make (const string& name) const
 void WH_Tester::process()
 {
   for (int ch=0; ch<10; ch++){
-    getOutHolder(0)->getBuffer()[ch] = 
-      getInHolder(0)->getBuffer()[ch] + complex<float>(0.01,0);
+    ((DH_Tester*)getDataManager().getOutHolder(0))->getBuffer()[ch] = 
+    ((DH_Tester*)getDataManager().getInHolder(0))->getBuffer()[ch] + complex<float>(0.01,0);
   }
-  getOutHolder(0)->copyTimeStamp (getInHolder(0));
-  getOutHolder(0)->setCounter    (getInHolder(0)->getCounter() + 1);
+  getDataManager().getOutHolder(0)->copyTimeStamp(
+					getDataManager().getInHolder(0));
+  ((DH_Tester*)getDataManager().getOutHolder(0))->setCounter(
+             ((DH_Tester*)getDataManager().getInHolder(0))->getCounter() + 1);
 }
 
-void WH_Tester::dump() const
+void WH_Tester::dump()
 {
   cout << "WH_Tester" << endl;
   cout << "Timestamp " << 0 << " = "
-       << (const_cast<WH_Tester*>(this))->getOutHolder(0)->getTimeStamp() << endl;
+       << getDataManager().getOutHolder(0)->getTimeStamp() << endl;
   cout << "Counter   " << 0 << " = "
-       << (const_cast<WH_Tester*>(this))->getOutHolder(0)->getCounter() << endl;
+       << ((DH_Tester*)getDataManager().getOutHolder(0))->getCounter() << endl;
   cout << "Buffer    ";
   for (int ch=0; ch<10; ch++){
-    cout << (const_cast<WH_Tester*>(this))->getInHolder(0)->getBuffer()[ch] << ' ';
+    cout << ((DH_Tester*)getDataManager().getInHolder(0))->getBuffer()[ch] << ' ';
   }
   cout << endl;
 }
 
-
-DH_Tester* WH_Tester::getInHolder (int)
-{
-  return &itsInDataHolder;
-}
-
-DH_Tester* WH_Tester::getOutHolder (int)
-{
-  return &itsOutDataHolder;
-}

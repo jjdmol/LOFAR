@@ -55,19 +55,19 @@ public:
       will be connected to the VirtualMachine object of the SimulRep.
       The monitor argument is used to create a CorbaMonitor object (in Step class)
   */
-  explicit Simul (const WorkHolder& worker,
+  explicit Simul (WorkHolder& worker,
 		  const string& name = "aSimul",
 		  bool addNameSuffix = true,
 		  bool controllable = false, // flag for CorbaControl object
 		  bool monitor = false); // flag for Corbamonitor object
-  explicit Simul (const WorkHolder* worker,
+  explicit Simul (WorkHolder* worker,
 		  const string& name = "aSimul",
 		  bool addNameSuffix = true,
 		  bool controllable = false, // flag for CorbaControl object
 		  bool monitor = false); // flag for Corbamonitor object
 
   /// Construct the object using a builder object.
-  explicit Simul (const SimulBuilder& builder,
+  explicit Simul (SimulBuilder& builder,
 		  const string& name = "aSimul",
 		  bool addNameSuffix = true,
 		  bool controllable = false,

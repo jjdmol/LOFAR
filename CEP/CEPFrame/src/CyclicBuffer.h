@@ -34,7 +34,8 @@
 #endif
 
 #include "CEPFrame/Lock.h"
-#include <Common/lofar_deque.h>
+//#include <Common/lofar_deque.h>
+#include <Common/lofar_vector.h>
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
@@ -77,9 +78,9 @@ class CyclicBuffer
   void  RemoveBufferElement(int ID);
   void  RemoveElements();
 
-  TYPE  GetWriteLockedDataItem(int* ID);
-  TYPE  GetReadDataItem(int* ID);
-  TYPE  GetDataItem(int ID);
+  TYPE& GetWriteLockedDataItem(int* ID); // Write new item to buffer
+  const TYPE& GetReadDataItem(int* ID);  // Read and remove item from buffer
+  TYPE& GetRWLockedDataItem(int* ID);    // Read and write item in buffer
   void  WriteUnlockElement(int ID);
   void  ReadUnlockElement(int ID);
 
@@ -95,10 +96,10 @@ class CyclicBuffer
   void WriteLockElement(int ID);
   bool CheckIDUniqueness();
   
- protected:
-  deque< BufferElement <TYPE> > itsBuffer;
+  vector< BufferElement <TYPE> > itsBuffer;
 
   int itsHeadIdx;
+  int itsBodyIdx;
   int itsTailIdx;
   int itsCount;
 
@@ -110,6 +111,7 @@ class CyclicBuffer
 template<class TYPE>
 CyclicBuffer<TYPE>::CyclicBuffer() :
     itsHeadIdx(0),
+    itsBodyIdx(0),
     itsTailIdx(0),
     itsCount(0)
 {
@@ -165,7 +167,7 @@ void CyclicBuffer<TYPE>::RemoveElements(void)
 }
 
 template<class TYPE>
-TYPE CyclicBuffer<TYPE>::GetWriteLockedDataItem(int* ID)
+TYPE& CyclicBuffer<TYPE>::GetWriteLockedDataItem(int* ID)
 {
   pthread_mutex_lock(&buffer_mutex);
 
@@ -203,7 +205,36 @@ TYPE CyclicBuffer<TYPE>::GetWriteLockedDataItem(int* ID)
 }
 
 template<class TYPE>
-TYPE CyclicBuffer<TYPE>::GetReadDataItem(int* ID)
+TYPE& CyclicBuffer<TYPE>::GetRWLockedDataItem(int* ID)
+{
+  pthread_mutex_lock(&buffer_mutex);
+
+  // wait until data becomes available
+  while (itsCount <= 0)
+  {
+    AssertStr(0 == itsCount, "itsCount=" << itsCount << " out of range (min=0)");
+    pthread_cond_wait(&data_available, &buffer_mutex);
+  }
+  
+  // CONDITION: itsCount > 0
+  // There is at least one element available
+  
+  *ID = itsBodyIdx++;
+  itsBuffer[*ID].itsRWLock.WriteLock();
+  
+  // adjust the body id
+  if (itsBodyIdx >= (int)itsBuffer.size())
+  {
+    itsBodyIdx = 0;
+  }
+
+  pthread_mutex_unlock(&buffer_mutex);
+  
+  return itsBuffer[*ID].itsItem;
+}
+
+template<class TYPE>
+const TYPE& CyclicBuffer<TYPE>::GetReadDataItem(int* ID)
 {
   pthread_mutex_lock(&buffer_mutex);
 
@@ -234,12 +265,6 @@ TYPE CyclicBuffer<TYPE>::GetReadDataItem(int* ID)
   pthread_mutex_unlock(&buffer_mutex);
   
   return itsBuffer[*ID].itsItem;
-}
-
-template<class TYPE>
-TYPE CyclicBuffer<TYPE>::GetDataItem(int ID)
-{
-  return itsBuffer[ID].itsItem;
 }
 
 template<class TYPE>

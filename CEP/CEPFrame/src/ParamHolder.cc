@@ -25,13 +25,24 @@
 //////////////////////////////////////////////////////////////////////
 
 
-#include "ParamHolder.h"
+#include "CEPFrame/ParamHolder.h"
 #include <Common/lofar_iostream.h>
+#include "CEPFrame/StepRep.h"
+#include "CEPFrame/ParamTransport.h"
+#include "CEPFrame/ParamTransportManager.h"
+#include TRANSPORTERINCLUDE
+#include "Common/Debug.h"
 
 int ParamHolder::theirSerial = 0;
 
 
-ParamHolder::ParamHolder()
+ParamHolder::ParamHolder(const string& name, const string& type)
+  : itsStep(0),
+    itsName(name),
+    itsType(type),
+    itsIsParamOwner(false),
+    itsParamPacketPtr(0),
+    itsPTManager(0)
 {
   itsSerial = theirSerial++;
   //  cout << "itsSerial = " << itsSerial << endl;
@@ -40,10 +51,37 @@ ParamHolder::ParamHolder()
 ParamHolder::~ParamHolder()
 {}
 
+ParamHolder::ParamHolder(const ParamHolder& that)
+  :  itsStep(that.itsStep),
+     itsName(that.itsName),
+     itsType(that.itsType),
+     itsIsParamOwner(that.itsIsParamOwner),
+     itsParamPacketPtr(0),
+     itsPTManager(that.itsPTManager)
+{
+  itsSerial = theirSerial++;
+}
+
+void ParamHolder::basePreprocess()
+{
+
+}
+
+void ParamHolder::preprocess()
+{}
+
+int ParamHolder::getNode() const
+{
+  return itsStep==0  ?  -1 : itsStep->getNode();
+} 
+
 ParamHolder& ParamHolder::operator= (const ParamHolder& that)
 {
   if (this != &that) {
-    itsDataPacket = that.itsDataPacket;
+    itsParamPacket = that.itsParamPacket;
+    itsStep = that.itsStep;
+    itsName = that.itsName;
+    itsType = that.itsType;
   }
   return *this;
 }

@@ -51,19 +51,13 @@ public:
 				const ParamBlock&);
 
    /// Make a fresh copy of the WH object.
-  virtual WH_Tester* make (const string& name) const;
+  virtual WH_Tester* make (const string& name);
 
   /// Do a process step.
   virtual void process();
 
   /// Show the work holder on stdout.
-  virtual void dump() const;
-
-  /// Get a pointer to the i-th input DataHolder.
-  virtual DH_Tester* getInHolder (int channel);
-
-  /// Get a pointer to the i-th output DataHolder.
-  virtual DH_Tester* getOutHolder (int channel);
+  virtual void dump();
 
 private:
   /// Forbid copy constructor.
@@ -72,9 +66,6 @@ private:
   /// Forbid assignment.
   WH_Tester& operator= (const WH_Tester&);
 
-
-  DH_Tester itsInDataHolder;
-  DH_Tester itsOutDataHolder;
 };
 
 

@@ -27,7 +27,7 @@
 #include "CEPFrame/Simul.h"
 
 
-Step::Step (const WorkHolder& worker, 
+Step::Step (WorkHolder& worker, 
 	    const string& aName,
 	    bool addNameSuffix,
 	    bool monitor)
@@ -36,7 +36,7 @@ Step::Step (const WorkHolder& worker,
   itsRep = new StepRep (worker, aName, addNameSuffix, monitor);
 }
 
-Step::Step (const WorkHolder* worker, 
+Step::Step (WorkHolder* worker, 
 	    const string& aName,
 	    bool addNameSuffix,
 	    bool monitor)

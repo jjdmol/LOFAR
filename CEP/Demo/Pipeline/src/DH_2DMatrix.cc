@@ -21,6 +21,15 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2.2.1  2003/07/11 09:50:39  ellen
+//  Changed Pipeline example in order to work with CEPFrame with DataManager functionality.
+//
+//  Revision 1.2  2002/11/20 11:05:42  schaaf
+//
+//  %[BugId: 117]%
+//
+//  working initial version for Scali
+//
 //  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
 //  %[BugId: 117]%
 //
@@ -52,6 +61,7 @@
 DH_2DMatrix::DataPacket::DataPacket() {
 }
 
+
 DH_2DMatrix::DH_2DMatrix (const string& name,
 			  int Xsize, const string& Xname,
 			  int Ysize, const string& Yname,
@@ -63,15 +73,30 @@ DH_2DMatrix::DH_2DMatrix (const string& name,
     itsYSize(Ysize),
     itsPols(pols)
 {
-
-  
   // fill in the names of the variables
   TRACER4("Set names");
   itsXName = std::string(Xname);
   itsYName = std::string(Yname);
   itsZName = std::string(Zname);
   
-  TRACER4("End of C'tor");
+  TRACER4("End of DH_2DMatrix C'tor");
+}
+
+DH_2DMatrix::DH_2DMatrix(const DH_2DMatrix& that)
+  : DataHolder(that),
+    //    itsDataPacket(that.itsDataPacket),
+    itsXSize(that.itsXSize),
+    itsYSize(that.itsYSize),
+    itsPols(that.itsPols),
+    itsXName(that.itsXName),
+    itsYName(that.itsYName),
+    itsZName(that.itsZName)
+{
+}
+
+DataHolder* DH_2DMatrix::clone() const
+{
+  return new DH_2DMatrix(*this);
 }
 
 void DH_2DMatrix::preprocess(){
@@ -112,4 +137,22 @@ const int DH_2DMatrix::getYSize() {
   return itsYSize; 
 }
 
+void DH_2DMatrix::dump() const 
+{
+   for (int pol=0; pol<2; pol++) {
+      cout << endl << "Polarisation: " << pol ;
+      for (int x=0; 
+           x < std::min(10, 1);
+           x++) {
+        cout << endl 
+             << "xname"
+             << x << "   ";
+        for (int y=0; 
+             y < std::min(10, 1);
+             y++) {
+          cout << *getBuffer(x,y,pol) << " ";
+        }
+      }
+    }
 
+}

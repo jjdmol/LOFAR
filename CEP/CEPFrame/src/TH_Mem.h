@@ -78,6 +78,8 @@ public:
 
   virtual bool connectionPossible(int srcRank, int dstRank) const;
 
+  virtual bool isBlocking() const { return false; }
+
   /// Declare a TH_Mem prototype variable
   /// that can be used in functions
   /// requiring a TransportHolder prototype
@@ -92,7 +94,7 @@ public:
   static int getNumberOfNodes();
   static void synchroniseAllProcesses();
 
- private:
+ protected:
 
   /**
      This class keeps track of the messages in the message map.
@@ -114,30 +116,34 @@ public:
       */
       Msg(void* buf, int nbytes, int tag);
 
-      /// return bool indicating whether the Msg is available
-      bool  isAvailable() { return itsIsAvailable; }
-
       /// return number of bytes for the message
       int   getNBytes()   { return itsNBytes; }
 
       /// return pointer to the start address of the buffer
       void* getBuf()      { return itsBuf; }
 
-  private:
+     /// return bool indicating whether the Msg is available
+      bool isAvailable() { return itsIsAvailable; }
+
+  protected:
       void*    itsBuf;
       int      itsNBytes;
       int      itsTag;
 
-      bool itsIsAvailable;
+  private:
+
+      bool    itsIsAvailable;
   };
 
+ private:
   /**
      The map from tag to private Msg class which holds info
      on the transfer.
    */
   static map<int, TH_Mem::Msg> messages;
 
-  bool   itsFirstCall;
+  bool   itsFirstSendCall;
+  bool   itsFirstRecvCall;
   void*  itsDataSource;
 
 };

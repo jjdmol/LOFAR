@@ -15,10 +15,10 @@ CXXFLAGS += \
 	-DUSE_DL_PREFIX
 
 DOCHDRS			= 			\
-TH_ShMem.h
+TH_ShMem.h					
 
 libth_shmem_la_SOURCES  = 			\
 $(DOCHDRS)					\
-TH_ShMem.cc
+TH_ShMem.cc					
 
 include $(lofar_sharedir)/Makefile.common

@@ -70,6 +70,8 @@ public:
   /// Get the type of transport.
   virtual string getType() const;
 
+  virtual bool isBlocking() const { return true; }
+
   static void init (int argc, const char *argv[]);
   static void finalize();
   static void waitForBroadCast();
