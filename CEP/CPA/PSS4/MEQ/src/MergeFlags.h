@@ -23,7 +23,7 @@
 #ifndef MEQ_MERGEFLAGS_H
 #define MEQ_MERGEFLAGS_H
     
-#include <MEQ/Node.h>
+#include <MEQ/Function.h>
 #include <MEQ/AID-Meq.h>
 
 #pragma aidgroup Meq
@@ -44,10 +44,8 @@
 
 namespace Meq {    
 
-const HIID FFlagMask = AidFlag|AidMask;
-
 //##ModelId=400E530400A3
-class MergeFlags : public Node
+class MergeFlags : public Function
 {
 public:
     //##ModelId=400E5355029C
@@ -61,16 +59,11 @@ public:
   { return TpMeqMergeFlags; }
 
 protected:
-  //##ModelId=400E531402D1
-  virtual void setStateImpl (DataRecord &rec,bool initializing);
     
   virtual int getResult (Result::Ref &resref, 
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);
   
-private:
-  vector<int> flagmask_;
-
 };
 
 

@@ -32,25 +32,6 @@ MergeFlags::MergeFlags()
 MergeFlags::~MergeFlags()
 {}
 
-void MergeFlags::setStateImpl (DataRecord &rec,bool initializing)
-{
-  Node::setStateImpl(rec,initializing);
-  // get flag bit
-  DataRecord::Hook hmask(rec,FFlagMask);
-  if( hmask.exists() )
-  {
-    vector<int> fm = hmask.as_vector<int>();
-    if( fm.size() == 1 )
-      flagmask_.assign(numChildren(),fm.front());
-    else
-    {
-      if( fm.size() != uint(numChildren()) )
-        NodeThrow1("size of flag mask vector does not match number of children");
-      flagmask_ = fm;
-    }
-  }
-}
-
 int MergeFlags::getResult (Result::Ref &resref, 
                             const std::vector<Result::Ref> &childres,
                             const Request &request,bool)
