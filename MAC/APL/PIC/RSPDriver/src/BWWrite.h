@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  WGSync.h: Synchronize rcu settings with RSP hardware.
+//#  BWWrite.h: Write beamformer weights to the RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,28 +22,24 @@
 //#
 //#  $Id$
 
-#ifndef WGSYNC_H_
-#define WGSYNC_H_
+#ifndef BWWRITE_H_
+#define BWWRITE_H_
 
 #include "SyncAction.h"
+#include <Common/LofarTypes.h>
 
 namespace RSP
 {
-  class WGSync : public SyncAction
+  class BWWrite : public SyncAction
   {
     public:
       /**
-       * Constructors for a WGSync object.
+       * Constructors for a BWWrite object.
        */
-      WGSync(GCFPortInterface& board_port, int board_id);
+      BWWrite(GCFPortInterface& board_port, int board_id, int regid);
 	  
-      /* Destructor for WGSync. */
-      virtual ~WGSync();
-
-      /**
-       * Initial state handler.
-       */
-      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+      /* Destructor for BWWrite. */
+      virtual ~BWWrite();
 
       /**
        * Send the write message.
@@ -61,7 +57,8 @@ namespace RSP
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
+      int m_regid;
   };
 };
      
-#endif /* WGSYNC_H_ */
+#endif /* BWSYNC_H_ */

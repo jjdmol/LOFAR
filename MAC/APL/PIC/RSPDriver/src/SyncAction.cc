@@ -34,7 +34,7 @@ using namespace EPA_Protocol;
 
 #define N_RETRIES 2
 
-SyncAction::SyncAction(GCFPortInterface& board_port, int board_id, int n_blps) 
+SyncAction::SyncAction(GCFPortInterface& board_port, int board_id, int n_blps)
   : GCFFsm((State)&SyncAction::idle_state),
     m_board_port(board_port),
     m_board_id(board_id),
@@ -92,7 +92,7 @@ GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterfac
     case F_ENTRY:
     {
       // send next set of coefficients
-      sendrequest(m_current_blp);
+      sendrequest();//m_current_blp);
 
       TRAN(SyncAction::waitack_state);
     }
@@ -195,4 +195,9 @@ void SyncAction::setCompleted(bool completed)
 bool SyncAction::hasCompleted() const
 {
   return m_completed;
+}
+
+int SyncAction::getCurrentBLP() const
+{
+  return m_current_blp;
 }

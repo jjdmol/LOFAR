@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  BWSync.h: Synchronize beamformer weights with RSP hardware.
+//#  BWWrite.h: Write beamformer weights to the RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,37 +22,29 @@
 //#
 //#  $Id$
 
-#ifndef BWSYNC_H_
-#define BWSYNC_H_
+#ifndef BWWRITE_H_
+#define BWWRITE_H_
 
 #include "SyncAction.h"
 #include <Common/LofarTypes.h>
 
 namespace RSP
 {
-  class BWSync : public SyncAction
+  class BWWrite : public SyncAction
   {
-      enum SyncMode
-      {
-	SYNC_XRE = 1,
-	SYNC_XIM,
-	SYNC_YRE,
-	SYNC_YIM,
-      };
-
     public:
       /**
-       * Constructors for a BWSync object.
+       * Constructors for a BWWrite object.
        */
-      BWSync(GCFPortInterface& board_port, int board_id, int regid);
+      BWWrite(GCFPortInterface& board_port, int board_id, int regid);
 	  
-      /* Destructor for BWSync. */
-      virtual ~BWSync();
+      /* Destructor for BWWrite. */
+      virtual ~BWWrite();
 
       /**
        * Send the write message.
        */
-      virtual void sendrequest(int iteration);
+      virtual void sendrequest();
 
       /**
        * Send the read request.

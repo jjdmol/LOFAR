@@ -1,4 +1,4 @@
-//#  BWSync.cc: implementation of the BWSync class
+//#  BWRead.cc: implementation of the BWRead class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include "BWSync.h"
+#include "BWRead.h"
 #include "EPA_Protocol.ph"
 #include "RSP_Protocol.ph"
 #include "Cache.h"
@@ -50,73 +50,67 @@ using namespace LOFAR;
 using namespace EPA_Protocol;
 using namespace blitz;
 
-BWSync::BWSync(GCFPortInterface& board_port, int board_id, int regid)
+BWRead::BWRead(GCFPortInterface& board_port, int board_id, int regid)
   : SyncAction(board_port, board_id, N_BLP),
     m_regid(regid)
 {
 }
 
-BWSync::~BWSync()
+BWRead::~BWRead()
 {
 }
 
-void BWSync::sendrequest(int local_blp)
+void BWRead::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * N_BLP) + local_blp;
+  uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP();
 
-  if (m_regid <= MEPHeader::BFXRE || m_regid > MEPHeader::BFYIM)
+  if (m_regid < MEPHeader::BFXRE || m_regid > MEPHeader::BFYIM)
   {
-    m_regid = MEPHeader::BFXRE; // HACK
+    LOG_FATAL("invalid regid");
+    exit(EXIT_FAILURE);
   }
 
-  LOG_DEBUG(formatString(">>>> BWSync(%s) global_blp=%d, regid=%d",
+  LOG_DEBUG(formatString(">>>> BWRead(%s) global_blp=%d, regid=%d",
 			 getBoardPort().getName().c_str(),
 			 global_blp,
 			 m_regid));
   
   // send next BF configure message
-  EPABfcoefsEvent bfcoefs;
+  EPABfcoefsReadEvent bfcoefsread;
       
-  MEP_BF(bfcoefs.hdr, MEPHeader::WRITE, local_blp, m_regid);
+  MEP_BF(bfcoefsread.hdr, MEPHeader::READ, getCurrentBLP(), m_regid);
 
-  // copy weights from the cache to the message
+  getBoardPort().send(bfcoefsread);
+
+}
+
+void BWRead::sendrequest_status()
+{
+  /* intentionally left empty */
+}
+
+GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP();
+
+  EPABfcoefsEvent bfcoefs(event);
+  
+  // copy weights from the message to the cache
   Array<int16, 1> weights((int16*)&bfcoefs.coef,
 			  shape(RSP_Protocol::MAX_N_BEAMLETS),
 			  neverDeleteData);
-  
-  //
-  // TODO
-  // Make sure we're actually sending the correct weights.
-  //
+
   if (0 == (m_regid % 2))
   {
-    weights = real(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all()));
+    real(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all())) =
+      weights;
   }
   else
   {
-    weights = imag(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all()));
+    imag(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all())) =
+      weights;
   }
-
-  getBoardPort().send(bfcoefs);
-}
-
-void BWSync::sendrequest_status()
-{
-  LOG_DEBUG("sendrequest_status");
-
-  // send read status request to check status of the write
-  EPARspstatusReadEvent rspstatus;
-  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
-
-  getBoardPort().send(rspstatus);
-}
-
-GCFEvent::TResult BWSync::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-  EPARspstatusEvent rspstatus(event);
-
-  LOG_DEBUG("handleack");
-
+  
   return GCFEvent::HANDLED;
 }
 

@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  WGSync.h: Synchronize rcu settings with RSP hardware.
+//#  BWRead.h: Read beamformer weights to the RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,31 +22,27 @@
 //#
 //#  $Id$
 
-#ifndef WGSYNC_H_
-#define WGSYNC_H_
+#ifndef BWREAD_H_
+#define BWREAD_H_
 
 #include "SyncAction.h"
+#include <Common/LofarTypes.h>
 
 namespace RSP
 {
-  class WGSync : public SyncAction
+  class BWRead : public SyncAction
   {
     public:
       /**
-       * Constructors for a WGSync object.
+       * Constructors for a BWRead object.
        */
-      WGSync(GCFPortInterface& board_port, int board_id);
+      BWRead(GCFPortInterface& board_port, int board_id, int regid);
 	  
-      /* Destructor for WGSync. */
-      virtual ~WGSync();
+      /* Destructor for BWRead. */
+      virtual ~BWRead();
 
       /**
-       * Initial state handler.
-       */
-      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
-
-      /**
-       * Send the write message.
+       * Send the read message.
        */
       virtual void sendrequest();
 
@@ -61,7 +57,8 @@ namespace RSP
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
+      int m_regid;
   };
 };
      
-#endif /* WGSYNC_H_ */
+#endif /* BWSYNC_H_ */

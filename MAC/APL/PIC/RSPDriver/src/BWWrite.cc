@@ -1,4 +1,4 @@
-//#  SSSync.cc: implementation of the SSSync class
+//#  BWWrite.cc: implementation of the BWWrite class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,18 +20,19 @@
 //#
 //#  $Id$
 
-#include "RSP_Protocol.ph"
+#include "BWWrite.h"
 #include "EPA_Protocol.ph"
-
-#include "SSSync.h"
+#include "RSP_Protocol.ph"
 #include "Cache.h"
-
-#include <blitz/array.h>
 
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+
+#include <unistd.h>
+#include <string.h>
+#include <blitz/array.h>
 
 //
 // Final RSP board will have 4 BLPs (N_BLP == 4)
@@ -46,47 +47,61 @@
 
 using namespace RSP;
 using namespace LOFAR;
+using namespace EPA_Protocol;
 using namespace blitz;
 
-SSSync::SSSync(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, N_BLP)
+BWWrite::BWWrite(GCFPortInterface& board_port, int board_id, int regid)
+  : SyncAction(board_port, board_id, N_BLP),
+    m_regid(regid)
 {
 }
 
-SSSync::~SSSync()
+BWWrite::~BWWrite()
 {
-  /* TODO: delete event? */
 }
 
-void SSSync::sendrequest()
+void BWWrite::sendrequest()
 {
   uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP();
-  LOG_DEBUG(formatString(">>>> SSSync(%s) global_blp=%d",
+
+  if (m_regid < MEPHeader::BFXRE || m_regid > MEPHeader::BFYIM)
+  {
+    LOG_FATAL("invalid regid");
+    exit(EXIT_FAILURE);
+  }
+
+  LOG_DEBUG(formatString(">>>> BWWrite(%s) global_blp=%d, regid=%d",
 			 getBoardPort().getName().c_str(),
-			 global_blp));
+			 global_blp,
+			 m_regid));
   
-  // send subband select message
-  EPASubbandselectEvent ss;
-  MEP_SUBBANDSELECT(ss.hdr, MEPHeader::WRITE, getCurrentBLP());
+  // send next BF configure message
+  EPABfcoefsEvent bfcoefs;
+      
+  MEP_BF(bfcoefs.hdr, MEPHeader::WRITE, getCurrentBLP(), m_regid);
+
+  // copy weights from the cache to the message
+  Array<int16, 1> weights((int16*)&bfcoefs.coef,
+			  shape(RSP_Protocol::MAX_N_BEAMLETS),
+			  neverDeleteData);
   
-  // create array to contain the subband selection
-  uint16 nr_subbands = Cache::getInstance().getBack().getSubbandSelection().nrsubbands()(global_blp);
-  LOG_DEBUG(formatString("nr_subbands=%d", nr_subbands));
-  nr_subbands=256;
-  Array<uint16, 1> subbands(nr_subbands);
-  ss.ch    = subbands.data();
-  ss.chDim = nr_subbands;
+  //
+  // TODO
+  // Make sure we're actually sending the correct weights.
+  //
+  if (0 == (m_regid % 2))
+  {
+    weights = real(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all()));
+  }
+  else
+  {
+    weights = imag(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all()));
+  }
 
-  subbands = 0; // init
-  
-  subbands = Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range(0, nr_subbands - 1));
-
-  getBoardPort().send(ss);
-
-  //subbands.free();
+  getBoardPort().send(bfcoefs);
 }
 
-void SSSync::sendrequest_status()
+void BWWrite::sendrequest_status()
 {
   LOG_DEBUG("sendrequest_status");
 
@@ -97,11 +112,13 @@ void SSSync::sendrequest_status()
   getBoardPort().send(rspstatus);
 }
 
-GCFEvent::TResult SSSync::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  EPARspstatusEvent ack(event);
+  EPARspstatusEvent rspstatus(event);
 
   LOG_DEBUG("handleack");
 
   return GCFEvent::HANDLED;
 }
+
+

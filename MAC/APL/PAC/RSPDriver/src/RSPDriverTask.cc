@@ -31,13 +31,16 @@
 #include "GetWeightsCmd.h"
 #include "SetSubbandsCmd.h"
 #include "GetStatusCmd.h"
-#include "BWSync.h"
+#include "BWWrite.h"
+#include "BWRead.h"
 #include "SSSync.h"
 #include "RCUSync.h"
 #include "StatusSync.h"
 #include "StatsSync.h"
 #include "WGSync.h"
 #include "VersionsSync.h"
+#include "WriteReg.h"
+#include "Cache.h"
 #include "RawDispatch.h"
 #include <blitz/array.h>
 
@@ -104,7 +107,7 @@ bool RSPDriverTask::isEnabled()
 /**
  * Add all synchronization actions per board.
  * Order is:
- * - BWSync       // sync of beamformer weights info
+ * - BWWrite       // sync of beamformer weights info
  * - SSSync       // sync of subband selection parameters
  * - RCUSync      // sync of RCU control info
  * - StatusSync   // sync of system status info
@@ -120,54 +123,80 @@ void RSPDriverTask::addAllSyncActions()
    */
   for (int boardid = 0; boardid < GET_CONFIG("N_RSPBOARDS", i); boardid++)
   {
-    if (1 == GET_CONFIG("SYNC_BF", i))
+    if (1 == GET_CONFIG("WRITE_BF", i))
     {
-      BWSync* bwsync = 0;
+      BWWrite* bwsync = 0;
 
-      bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFXRE);
+      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BFXRE);
       m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFXIM);
+      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BFXIM);
       m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFYRE);
+      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BFYRE);
       m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFYIM);
+      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BFYIM);
       m_scheduler.addSyncAction(bwsync);
     }
-    
-    if (1 == GET_CONFIG("SYNC_SS", i))
+
+    if (1 == GET_CONFIG("WRITE_SS", i))
     {
       SSSync* sssync = new SSSync(m_board[boardid], boardid);
       m_scheduler.addSyncAction(sssync);
     }
     
-    if (1 == GET_CONFIG("SYNC_RCU", i))
+    if (1 == GET_CONFIG("WRITE_RCU", i))
     {
       RCUSync* rcusync = new RCUSync(m_board[boardid], boardid);
       m_scheduler.addSyncAction(rcusync);
     }
     
-    if (1 == GET_CONFIG("SYNC_STATUS", i))
+    if (1 == GET_CONFIG("READ_STATUS", i))
     {
       StatusSync* statussync = new StatusSync(m_board[boardid], boardid);
       m_scheduler.addSyncAction(statussync);
     }
     
-    if (1 == GET_CONFIG("SYNC_ST", i))
+    if (1 == GET_CONFIG("READ_ST", i))
     {
       StatsSync* statssync = new StatsSync(m_board[boardid], boardid);
       m_scheduler.addSyncAction(statssync);
     }
     
-    if (1 == GET_CONFIG("SYNC_WG", i))
+    if (1 == GET_CONFIG("WRITE_WG", i))
+    {
+      WriteReg* writereg = new WriteReg(m_board[boardid], boardid,
+					MEPHeader::DST_BLPS,
+					MEPHeader::WG,
+					MEPHeader::WGSETTINGS,
+					MEPHeader::WGSETTINGS_SIZE);
+      writereg->setSrcAddress(&(Cache::getInstance().getBack().getWGSettings()()(0)));
+      m_scheduler.addSyncAction(writereg);
+    }
+#if 0
+    if (1 == GET_CONFIG("WRITE_WG", i))
     {
       WGSync* wgsync = new WGSync(m_board[boardid], boardid);
       m_scheduler.addSyncAction(wgsync);
     }
-    
-    if (1 == GET_CONFIG("SYNC_VERSION", i))
+#endif
+
+    if (1 == GET_CONFIG("READ_VERSION", i))
     {
       VersionsSync* versionsync = new VersionsSync(m_board[boardid], boardid);
       m_scheduler.addSyncAction(versionsync);
+    }
+
+    if (1 == GET_CONFIG("READ_BF", i))
+    {
+      BWRead* bwsync = 0;
+
+      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BFXRE);
+      m_scheduler.addSyncAction(bwsync);
+      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BFXIM);
+      m_scheduler.addSyncAction(bwsync);
+      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BFYRE);
+      m_scheduler.addSyncAction(bwsync);
+      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BFYIM);
+      m_scheduler.addSyncAction(bwsync);
     }
   }
 }

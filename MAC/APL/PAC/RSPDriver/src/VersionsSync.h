@@ -43,7 +43,7 @@ namespace RSP
       /**
        * Send the write message.
        */
-      virtual void sendrequest(int iteration);
+      virtual void sendrequest();
 
       /**
        * Send the read request.

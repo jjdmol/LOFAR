@@ -55,10 +55,10 @@ StatsSync::~StatsSync()
   /* TODO: delete event? */
 }
 
-void StatsSync::sendrequest(int local_blp)
+void StatsSync::sendrequest()
 {
   EPAStstatsReadEvent statsread;
-  MEP_ST(statsread.hdr, MEPHeader::READ, local_blp, MEPHeader::MEAN);
+  MEP_ST(statsread.hdr, MEPHeader::READ, getCurrentBLP(), MEPHeader::MEAN);
 
   getBoardPort().send(statsread);
 }
