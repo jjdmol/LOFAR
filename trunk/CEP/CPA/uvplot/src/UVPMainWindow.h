@@ -6,17 +6,20 @@
 #define MAINWIN_H
 
 
-#include <qwidget.h>
+//#include <qwidget.h>
+#include <qmainwindow.h>
 #include <qmenubar.h>
 #include <qpopupmenu.h>
-
+#include <qstatusbar.h>
+#include <qprogressbar.h>
+#include <qlabel.h>
 
 #include <UVPUVCoverageArea.h>
 
 
 
 
-class Tmain_window:public QWidget
+class Tmain_window:public QMainWindow
 {
   Q_OBJECT                      // to make the signal/slot mechanism work
 
@@ -34,14 +37,22 @@ class Tmain_window:public QWidget
   QPopupMenu*     m_file_menu;
   QPopupMenu*     m_view_menu;
   QPopupMenu*     m_help_menu;
+  
+  QStatusBar*     itsStatusBar;
+  QProgressBar*   itsProgressBar; /* Resides in Status bar */
+  QLabel*         itsXPosLabel;
+  QLabel*         itsYPosLabel;
 
-  UVPUVCoverageArea* m_canvas;      /* The drawing canvas */
+  UVPUVCoverageArea* itsCanvas;      /* The drawing canvas */
   UVPImageCube*   itsCube;
 
 
   virtual void resizeEvent(QResizeEvent *event);
 
   protected slots:
+
+    // Display the world coordinates of the mouse pointer in the statusbar
+    void slot_mouse_world_pos(double x, double y);
 
     void slot_about_uvplot();
 };

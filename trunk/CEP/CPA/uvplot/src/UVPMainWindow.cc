@@ -4,9 +4,12 @@
 #include <qapplication.h>       // qApp
 #include <qmessagebox.h>
 
+
+#include <sstream>              // std::ostringstream
+
 //====================>>>  Tmain_window::Tmain_window  <<<====================
 
-Tmain_window::Tmain_window()
+Tmain_window::Tmain_window():QMainWindow()
 {
   m_file_menu = new QPopupMenu;
   m_file_menu->insertItem("&Open", mc_open);
@@ -20,7 +23,7 @@ Tmain_window::Tmain_window()
   m_menu_bar->insertSeparator();
   m_menu_bar->insertItem("&Help", m_help_menu);
 
-  
+
   // Small example view
 
   itsCube = new UVPImageCube(500, 800);
@@ -29,17 +32,34 @@ Tmain_window::Tmain_window()
       itsCube->getPixel(x, y)->addPointUniform(sin(double(x)*double(y)/30.0), x*y);
     }
   }
+
+  itsStatusBar   = new QStatusBar(this);
+  itsProgressBar = new QProgressBar(itsStatusBar);
+  itsXPosLabel   = new QLabel(itsStatusBar);
+  itsYPosLabel   = new QLabel(itsStatusBar);
+
+  itsStatusBar->addWidget(itsXPosLabel, 2, true);
+  itsStatusBar->addWidget(itsYPosLabel, 2, true);
+  itsStatusBar->addWidget(itsProgressBar, 5, true);
   
+  itsStatusBar->show();
+
   // End small example view
-  m_canvas = new UVPUVCoverageArea(this, itsCube);
-  m_canvas->setGeometry(0, m_menu_bar->height(), width(), height()-m_menu_bar->height());
-  m_canvas->show();
+  itsCanvas = new UVPUVCoverageArea(this, itsCube);
+  itsCanvas->setGeometry(0, m_menu_bar->height(), width(), height()-m_menu_bar->height() -itsStatusBar->height());
+  itsCanvas->show();
+
+  itsProgressBar->setTotalSteps(100);
+  itsProgressBar->setProgress(40);
+
+  connect(itsCanvas, SIGNAL(signal_mouse_world_pos_changed(double, double)),
+          this, SLOT(slot_mouse_world_pos(double, double)));
 }
 
 
 Tmain_window::~Tmain_window()
 {
-  m_canvas->setData(0);
+  itsCanvas->setData(0);
   delete itsCube;
 }
 
@@ -48,7 +68,7 @@ Tmain_window::~Tmain_window()
 
 void Tmain_window::resizeEvent(QResizeEvent */*event*/)
 {
-  m_canvas->setGeometry(0, m_menu_bar->height(), width(), height()-m_menu_bar->height());
+  itsCanvas->setGeometry(0, m_menu_bar->height(), width(), height()-m_menu_bar->height()-itsStatusBar->height());
 }
 
 
@@ -65,3 +85,17 @@ void Tmain_window::slot_about_uvplot()
 
 
 
+//====================>>>  Tmain_window::slot_mouse_world_pos  <<<====================
+
+void Tmain_window::slot_mouse_world_pos(double x,
+                                        double y)
+{
+  std::ostringstream x_out;
+  std::ostringstream y_out;
+
+  x_out << "X: " << x;
+  y_out << "Y: " << y;
+
+  itsXPosLabel->setText(x_out.str().c_str());
+  itsYPosLabel->setText(y_out.str().c_str());
+}

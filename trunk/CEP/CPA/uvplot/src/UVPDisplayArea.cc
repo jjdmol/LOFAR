@@ -21,6 +21,8 @@ UVPDisplayArea::UVPDisplayArea(QWidget *parent,
   // Uncomment: Don't blank window before repainting
   setBackgroundMode(NoBackground);
   
+  setMouseTracking(true);
+  
   initColormap(1.0, 128.0);
 }
 
@@ -134,6 +136,7 @@ void UVPDisplayArea::mouseMoveEvent(QMouseEvent *event)
     initColormap(slope, center);
     drawView();
   }else{
+    emit signal_mouse_world_pos_changed(event->pos().x(), event->pos().y());
   }
 }
 

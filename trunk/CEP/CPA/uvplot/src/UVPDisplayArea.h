@@ -17,6 +17,8 @@
 
 class UVPDisplayArea : public QWidget
 {
+  Q_OBJECT
+    
  public:                        /* Public part */
 
                UVPDisplayArea(QWidget *parent, int numColors=256);
@@ -30,6 +32,14 @@ class UVPDisplayArea : public QWidget
  
 
  virtual void drawView();
+
+
+ signals:
+
+ // Emitted when mouse position changes
+ void signal_mouse_world_pos_changed(double x,
+                                     double y);
+   
 
  protected:                     /* Protected part */
 
