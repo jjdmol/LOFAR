@@ -40,33 +40,34 @@ namespace LCS
     {
     public:
       // We will be using a 64-bit integer for our unique key
-      typedef unsigned long long ObjectIdType;
+      typedef unsigned long long oid_t;
 
-      // Create a new unique identifier.
-      ObjectId() { 
-	THROW(NotImplemented,"No Object ID generator available yet"); 
-      }
+      // Default constructor. The object-id is lazily initialized,
+      // i.e. it is initialized once get() or set() is being called.
+      ObjectId();
 
-      // Return the stored unique key.
-      ObjectIdType& value() const;
+      // Set the stored object-id equal to aOid.
+      // \post itsIsInitialized is true.
+      void set(const oid_t& aOid);
 
-      // Return the object-id as a string
-      std::string asString() const;
-  
+      // Return the stored object-id.
+      // \note We cannot make this method const, because we use lazy
+      // initialization for itsOid.
+      // \post itsOid will have been initialized if it wasn't already.
+      // \post itsIsInitialized is true.
+      const oid_t& get();
+
     private:
       // Here we keep the unique object-id.
-      ObjectIdType itsOid;
+      oid_t itsOid;
 
-      // Flag that indicates whether the ObjectId key generator was
-      // already initialized.
-      bool isInitialized;
+      // Flag that indicates whether itsOid has been initialized.
+      bool itsIsInitialized;
 
-      // Initialize the ObjectId key generator
+      // Initialize itsOid with a (hopefully) unique object-id.
       void init();
 
     };
-
-
 
   } // namespace PL
 
