@@ -32,12 +32,15 @@ namespace LOFAR
 
     std::string QueryObject::getSql() const 
     {
-//       return itsSqlString;
-      std::ostringstream oss;
-      oss << "WHERE ";
-      itsQueryExpr.print(oss);
-      TRACER1 (__PRETTY_FUNCTION__ << ": return value : " << oss.str());
-      return oss.str();
+      if (itsUseString) {
+        return itsSqlString;
+      }
+      else {
+        std::ostringstream oss;
+        oss << "WHERE " << itsQueryExpr;
+        TRACER2 (__PRETTY_FUNCTION__ << ": return value : " << oss.str());
+        return oss.str();
+      }
     }
 
   } // namespace PL
