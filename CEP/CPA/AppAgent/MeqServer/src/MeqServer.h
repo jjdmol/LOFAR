@@ -1,15 +1,17 @@
 #ifndef MEQSERVER_SRC_MEQSERVER_H_HEADER_INCLUDED_D338579D
 #define MEQSERVER_SRC_MEQSERVER_H_HEADER_INCLUDED_D338579D
 
+#include <MEQ/Forest.h>
 #include <AppUtils/VisPipe.h>
-#include <MeqServer/NodeRepository.h>
-    
+
+#pragma aidgroup MeqServer    
 #pragma aid Node Name NodeIndex MeqServer
-#pragma aid Create Delete Get Set State Request 
+#pragma aid Create Delete Get Set State Request Resolve Child Children
 #pragma aid App Command Args Result Error Message
     
 namespace MEQ
 {
+  
 //##ModelId=3F5F195E013B
 //##Documentation
 //## Returns True if a valid node exists for the given index
@@ -30,6 +32,8 @@ class MeqServer : public VisPipe
     void getNodeState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=3F61920F02A4
     void setNodeState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    
+    void resolveChildren (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
       
     //##ModelId=3F5F195E0156
     virtual string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;
@@ -42,16 +46,16 @@ class MeqServer : public VisPipe
     Node & resolveNode (const DataRecord &rec);
       
     //##ModelId=3F5F218F02BD
-    NodeRepository noderep;
+    Forest forest;
+    
   
     //##ModelId=3F61920F0158
     typedef void (MeqServer::*PtrCommandMethod)(DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
-    
     //##ModelId=3F61920F016E
     typedef std::map<HIID,PtrCommandMethod> CommandMap;
-    
     //##ModelId=3F61920F0193
     CommandMap command_map;
+
 };
 
 }; // namespace MEQ

@@ -50,9 +50,23 @@ const meqserver := function (appid='MeqServer',
 const meqserver_test := function ()
 {
   global mqs;
-  mqs := meqserver(verbose=4); # ,server='./meqserver');
+  mqs := meqserver(verbose=4); # ,server='./meqserver'); #,suspend=T);
+  mqs.setdebug('MeqNode',5);
   mqs.init([=],[=],[=],wait=T);
   print mqs.meq('Create.Node',[class='MEQNode',name='test'],T);
+  print mqs.meq('Create.Node',[class='MEQNode',name='child1'],T);
+  print mqs.meq('Create.Node',[class='MEQNode',name='child2'],T);
+  rec := 
+    [ class='MEQNode',name='parent',   # defines parent node
+      children=[                       # define children
+           a='child1',                 #   by name
+           b='child2',           
+           c=[class='MEQNode',name='child3'], # with initrecord
+           d='child4' ]];              # with unresolved name 
+  print mqs.meq('Create.Node',rec,T);
+  print mqs.meq('Create.Node',[class='MEQNode',name='child4'],T);
+  print mqs.meq('Resolve.Children',[name='parent'],T);
   print mqs.meq('Get.Node.State',[name='test'],T);
+  print mqs.meq('Get.Node.State',[name='parent'],T);
   print mqs.meq('Get.Node.State',[nodeindex=1],T);
 }

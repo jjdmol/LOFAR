@@ -8,6 +8,7 @@
 
 #include <AppUtils/VisRepeater.h>
 #include <MeqServer/MeqServer.h>
+#include <MeqServer/AID-MeqServer.h>
 
 typedef std::vector<string> StrVec;
 typedef StrVec::iterator SVI;
