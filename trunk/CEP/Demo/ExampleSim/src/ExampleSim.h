@@ -29,14 +29,14 @@
 
 #include <lofar_config.h>
 
-#include <CEPFrame/Simulator.h>
+#include <CEPFrame/ApplicationHolder.h>
 #include <Common/KeyValueMap.h>
 
 /**
-   This is an example Simulator class   
+   This is an example ApplicationHolder class   
 */
 
-class ExampleSim: public LOFAR::Simulator
+class ExampleSim: public LOFAR::ApplicationHolder
 {
 public:
   ExampleSim();

@@ -29,16 +29,16 @@
 using namespace LOFAR;
 
 DH_ExampleSim::DH_ExampleSim (const string& name)
-: DataHolder (name, "DH_ExampleSim")
-{
-  setDataPacket (&itsDataPacket, sizeof(itsDataPacket));
-}
+: DataHolder (name, "DH_ExampleSim"),
+  itsCounter (0),
+  itsBuffer  (0)
+{}
 
 DH_ExampleSim::DH_ExampleSim(const DH_ExampleSim& that)
-  : DataHolder(that)
-{
-  setDataPacket (&itsDataPacket, sizeof(itsDataPacket));
-}
+  : DataHolder(that),
+    itsCounter (0),
+    itsBuffer  (0)
+{}
 
 DH_ExampleSim::~DH_ExampleSim()
 {
@@ -47,4 +47,33 @@ DH_ExampleSim::~DH_ExampleSim()
 DataHolder* DH_ExampleSim::clone() const
 {
   return new DH_ExampleSim(*this);
+}
+
+void DH_ExampleSim::preprocess()
+{
+  // Add the fields to the data definition.
+  addField ("Counter", BlobField<int>(1));
+  addField ("Buffer", BlobField<int>(1, //version 
+                                            10)); //no_elements
+  // Create the data blob (which calls fillPointers).
+  createDataBlock();
+  // Initialize the buffer.
+  for (unsigned int i=0; i<10; i++) {
+    itsBuffer[i] = 0;
+  }
+
+}
+
+void DH_ExampleSim::fillDataPointers()
+{
+  // Fill in the counter pointer.
+  itsCounter = getData<int> ("Counter");
+  // Fill in the buffer pointer.
+  itsBuffer  = getData<int> ("Buffer");
+}
+
+void DH_ExampleSim::postprocess()
+{
+  itsCounter = 0;
+  itsBuffer = 0;
 }

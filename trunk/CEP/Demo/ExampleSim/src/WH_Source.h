@@ -26,12 +26,8 @@
 #ifndef EXAMPLESIM_WH_SOURCE_H
 #define EXAMPLESIM_WH_SOURCE_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include "CEPFrame/WorkHolder.h"
-#include "ExampleSim/DH_ExampleSim.h"
+#include <tinyCEP/WorkHolder.h>
+#include <ExampleSim/DH_ExampleSim.h>
 
 
 /**
