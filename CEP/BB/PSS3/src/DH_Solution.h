@@ -28,8 +28,8 @@
 
 #include <lofar_config.h>
 #include <Common/lofar_vector.h>
-#include <Transport/DH_PL.h>
-#include <Transport/PO_DH_PL.h>
+#include <TransportPL/DH_PL.h>
+#include <TransportPL/PO_DH_PL.h>
 #include <PSS3/Quality.h>
 
 namespace LOFAR
