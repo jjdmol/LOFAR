@@ -52,7 +52,7 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
     Throw("Spigot: deliver() called after getResult() for the same request ID. "
           "This is not something we can handle w/o a parent notify mechanism, "
           "which is not yet implemented. Either something is wrong with your tree, "
-          "or you're not genrating unique request IDs.");
+          "or you're not generating unique request IDs.");
   }
   else
   {
@@ -64,7 +64,8 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
     // pointers
     void *coldata = const_cast<void*>(tile.column(icolumn));
     int nplanes = colshape.size() == 3 ? colshape[0] : 1;
-    next_res <<= new Result(nplanes);
+    Result::Ref resref;
+    Result & next_res = resref <<= new Result(nplanes);
     // get array 
     if( coltype == Tpdouble )
     {
@@ -72,13 +73,13 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
       {
         LoCube_double cube(static_cast<double*>(coldata),colshape,blitz::neverDeleteData);
         for( int i=0; i<nplanes; i++ )
-          next_res().setNewVellSet(i).setReal(colshape[1],colshape[2]) = 
+          next_res.setNewVellSet(i).setReal(colshape[1],colshape[2]) = 
             cube(i,LoRange::all(),LoRange::all());
       }
       else if( colshape.size() == 2 )
       {
         LoMat_double mat(static_cast<double*>(coldata),colshape,blitz::neverDeleteData);
-        next_res().setNewVellSet(0).setReal(colshape[0],colshape[1]) = mat;
+        next_res.setNewVellSet(0).setReal(colshape[0],colshape[1]) = mat;
       }
       else
         Throw("bad input column shape");
@@ -89,13 +90,13 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
       {
         LoCube_fcomplex cube(static_cast<fcomplex*>(coldata),colshape,blitz::neverDeleteData);
         for( int i=0; i<nplanes; i++ )
-          next_res().setNewVellSet(i).setComplex(colshape[1],colshape[2]) = 
+          next_res.setNewVellSet(i).setComplex(colshape[1],colshape[2]) = 
               blitz::cast<dcomplex>(cube(i,LoRange::all(),LoRange::all()));
       }
       else if( colshape.size() == 2 )
       {
         LoMat_fcomplex mat(static_cast<fcomplex*>(coldata),colshape,blitz::neverDeleteData);
-        next_res().setNewVellSet(0).setComplex(colshape[0],colshape[1]) = 
+        next_res.setNewVellSet(0).setComplex(colshape[0],colshape[1]) = 
             blitz::cast<dcomplex>(mat);
       }
       else
@@ -105,42 +106,45 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
     {
       Throw("invalid column type: "+coltype.toString());
     }
-    next_res().setCells(req.cells());
-    // store the next req/result in the state record
-    DataRecord &rec = wstate()[FNext].replace() <<= new DataRecord;
-    rec[FRequestId] = next_rqid = rqid;
-    rec[FResult] <<= static_cast<const DataRecord*>(next_res.deref_p());
+    next_res.setCells(req.cells());
+    // cache the rsult for this request. This will be picked up and 
+    // returned by Node::execute() later
+    setCurrentRequest(req);
+    cacheResult(resref,RES_DEP_DOMAIN|RES_UPDATED);
   }
   return 0;
 }
 
 //##ModelId=3F9FF6AA0300
-int Spigot::getResult (Result::Ref &resref, 
+int Spigot::getResult (Result::Ref &, 
                        const std::vector<Result::Ref> &,
-                       const Request &req,bool newreq)
+                       const Request &,bool)
 {
-  // have we got a cached result?
-  if( next_res.valid() )
-  {
-    // return fail if unable to satisfy this request
-    if( req.id() != next_rqid )
-    {
-      resref <<= new Result(1,req);
-      VellSet &vs = resref().setNewVellSet(0);
-      MakeFailVellSet(vs,"spigot: got request id "+
-                        req.id().toString()+", expecting "+next_rqid.toString());
-      return RES_FAIL;
-    }
-    // return result and clear cache
-    resref = next_res;
-    next_rqid.clear();
-    wstate()[FNext].remove();
-    return RES_DEP_DOMAIN|RES_UPDATED;
-  }
-  else // no result at all, return WAIT
-  {
-    return RES_WAIT;
-  }
+// if we get here, this means there was no result placed into the
+// cache by deliver(). In this case, simply return RES_WAIT  
+  return RES_WAIT;
+//   // have we got a cached result?
+//   if( next_res.valid() )
+//   {
+//     // return fail if unable to satisfy this request
+//     if( req.id() != next_rqid )
+//     {
+//       resref <<= new Result(1,req);
+//       VellSet &vs = resref().setNewVellSet(0);
+//       MakeFailVellSet(vs,"spigot: got request id "+
+//                         req.id().toString()+", expecting "+next_rqid.toString());
+//       return RES_FAIL;
+//     }
+//     // return result and clear cache
+//     resref = next_res;
+//     next_rqid.clear();
+//     wstate()[FNext].remove();
+//     return RES_DEP_DOMAIN|RES_UPDATED;
+//   }
+//   else // no result at all, return WAIT
+//   {
+//     return RES_WAIT;
+//   }
 }
 
 }

@@ -5,6 +5,7 @@
 #include <MeqGen/AID-MeqGen.h>
 #include <MEQ/Request.h>
 #include <MEQ/Result.h>
+#include <DMI/BOIO.h>
     
 using Debug::ssprintf;
 using namespace AppControlAgentVocabulary;
@@ -32,9 +33,15 @@ MeqServer::MeqServer()
   command_map["Resolve.Children"] = &MeqServer::resolveChildren;
   command_map["Get.Node.List"] = &MeqServer::getNodeList;
   
-  command_map["Node.Get.State"] = &MeqServer::getNodeState;
-  command_map["Node.Set.State"] = &MeqServer::setNodeState;
-  command_map["Node.Execute"] = &MeqServer::getNodeResult;
+  command_map["Node.Get.State"] = &MeqServer::nodeGetState;
+  command_map["Node.Set.State"] = &MeqServer::nodeSetState;
+  command_map["Node.Execute"] = &MeqServer::nodeExecute;
+  
+  command_map["Node.Clear.Cache"] = &MeqServer::nodeClearCache;
+
+  command_map["Save.Forest"] = &MeqServer::saveForest;
+  command_map["Load.Forest"] = &MeqServer::loadForest;
+  command_map["Clear.Forest"] = &MeqServer::clearForest;
 }
 
 //##ModelId=3F6196800325
@@ -93,10 +100,10 @@ void MeqServer::deleteNode (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   data_mux.removeNode(noderef());
   // remove from forest
   forest.remove(nodeindex);
-  out()[AidMessage] = ssprintf("node %d (%s) deleted",nodeindex,name.c_str());
+  out()[AidMessage] = ssprintf("node %d (%s): deleted",nodeindex,name.c_str());
 }
 
-void MeqServer::getNodeState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
+void MeqServer::nodeGetState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
 {
   Node & node = resolveNode(*in);
   cdebug(3)<<"getState for node "<<node.name()<<" ";
@@ -105,7 +112,7 @@ void MeqServer::getNodeState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   out.attach(node.state(),DMI::READONLY|DMI::ANON);
 }
 
-void MeqServer::setNodeState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
+void MeqServer::nodeSetState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
 {
   DataRecord::Ref rec = in;
   Node & node = resolveNode(*rec);
@@ -144,11 +151,11 @@ void MeqServer::getNodeList (DataRecord::Ref &out,DataRecord::Ref::Xfer &)
 }
 
 //##ModelId=3F98D91B0064
-void MeqServer::getNodeResult (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
+void MeqServer::nodeExecute (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
 {
   DataRecord::Ref rec = in;
   Node & node = resolveNode(*rec);
-  cdebug(2)<<"getNodeResult for node "<<node.name()<<endl;
+  cdebug(2)<<"nodeExecute for node "<<node.name()<<endl;
   // take request object out of record
   rec.privatize(DMI::WRITE|DMI::DEEP);
   Request &req = rec()[AidRequest].as_wr<Request>();
@@ -169,10 +176,77 @@ void MeqServer::getNodeResult (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
       }
     }
   }
-  out <<= new DataRecord;
   out()[AidResult|AidCode] = flags;
   if( resref.valid() )
     out()[AidResult] <<= resref;
+  out()[AidMessage] = ssprintf("node %d (%s): execute() returns %x",
+      node.nodeIndex(),node.name().c_str(),flags);
+}
+
+
+void MeqServer::nodeClearCache (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
+{
+  DataRecord::Ref rec = in;
+  Node & node = resolveNode(*rec);
+  bool recursive = (*rec)[FRecursive].as<bool>(false);
+  cdebug(2)<<"nodeClearCache for node "<<node.name()<<", recursive: "<<recursive<<endl;
+  node.clearCache(recursive);
+  out()[AidMessage] = ssprintf("node %d (%s): cache cleared%s",
+      node.nodeIndex(),node.name().c_str(),recursive?" recursively":"");
+}
+
+void MeqServer::saveForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
+{
+  string filename = (*in)[FFileName].as<string>();
+  cdebug(1)<<"saving forest to file "<<filename<<endl;
+  BOIO boio(filename,BOIO::WRITE);
+  int nsaved = 0;
+  for( int i=1; i<=forest.maxNodeIndex(); i++ )
+    if( forest.valid(i) )
+    {
+      Node &node = forest.get(i);
+      cdebug(3)<<"saving node "<<node.name()<<endl;
+      boio << node.state();
+      nsaved++;
+    }
+  cdebug(1)<<"saved "<<nsaved<<" nodes to file "<<filename<<endl;
+  out()[AidMessage] = ssprintf("saved %d nodes to file %s",
+      nsaved,filename.c_str());
+}
+
+void MeqServer::loadForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
+{
+  string filename = (*in)[FFileName].as<string>();
+  cdebug(1)<<"loading forest from file "<<filename<<endl;
+  BOIO boio(filename,BOIO::READ);
+  forest.clear();
+  int nloaded = 0;
+  DataRecord::Ref ref;
+  while( boio >> ref )
+  {
+    int nodeindex;
+    // create the node, while
+    const Node & node = *forest.create(nodeindex,ref,true);
+    cdebug(3)<<"loaded node "<<node.name()<<endl;
+    nloaded++;
+  }
+  cdebug(2)<<"loaded "<<nloaded<<" nodes, setting child links"<<endl;
+  for( int i=1; i<=forest.maxNodeIndex(); i++ )
+    if( forest.valid(i) )
+    {
+      Node &node = forest.get(i);
+      cdebug(3)<<"setting children for node "<<node.name()<<endl;
+      node.relinkChildren();
+    }
+  out()[AidMessage] = ssprintf("loaded %d nodes from file %s",
+      nloaded,filename.c_str());
+}
+
+void MeqServer::clearForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &)
+{
+  cdebug(1)<<"clearing forest: deleting all nodes"<<endl;
+  forest.clear();
+  out()[AidMessage] = "all nodes deleted";
 }
 
 //##ModelId=3F608106021C
