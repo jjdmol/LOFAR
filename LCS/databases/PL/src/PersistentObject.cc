@@ -120,9 +120,9 @@ namespace LOFAR
       }
     }
 
-    std::string PersistentObject::tableNames() const
+    string PersistentObject::tableNames() const
     {
-      std::string nm(tableName());
+      string nm(tableName());
       POContainer::const_iterator it;
       for(it = itsOwnedPOs.begin(); it != itsOwnedPOs.end(); ++it) {
         nm += "," + (*it)->tableNames();

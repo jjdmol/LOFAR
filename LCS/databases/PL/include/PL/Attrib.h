@@ -32,7 +32,7 @@
 #include <PL/TPersistentObject.h>
 #include <PL/Query/Expr.h>
 #include <PL/Query/ColumnExprNode.h>
-#include <string>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -71,12 +71,12 @@ namespace LOFAR
     //
     // \sa PersistentObject::attribMap(), TPersistentObject<T>::theirAttribMap
     Query::ColumnExprNode* makeAttrib(const PersistentObject& po, 
-                                      const std::string& nm);
+                                      const string& nm);
 
     // Convert the field specifier \a nm into a table name and column name
     // plus zero or more join expressions for the specified PersistentObject
     // \a po.
-    Query::Expr attrib(const PersistentObject& po, const std::string& nm)
+    Query::Expr attrib(const PersistentObject& po, const string& nm)
     {
       return makeAttrib(po, nm);
     }
@@ -85,7 +85,7 @@ namespace LOFAR
     // plus zero or more join expressions for a TPersistentObject of type \a
     // T.
     template<typename T>
-    Query::Expr attrib(const std::string& nm)
+    Query::Expr attrib(const string& nm)
     {
       return makeAttrib(TPersistentObject<T>(), nm);
     }

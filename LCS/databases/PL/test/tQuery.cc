@@ -20,13 +20,16 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+//# Includes
 #include <PL/QueryObject.h>
 #include <PL/Query/Expr.h>
 #include <Common/LofarLogger.h>
-#include <string>
-#include <iostream>
+#include <Common/lofar_string.h>
+#include <Common/lofar_iostream.h>
 
-using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::PL;
 

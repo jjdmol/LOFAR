@@ -20,15 +20,17 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+//# Includes
+#include "PO_tAttrib.h"
 #include <PL/TPersistentObject.h>
 #include <PL/DBRep.h>
 #include <PL/Attrib.h>
-#include "PO_tAttrib.h"
 
 using namespace LOFAR;
 using namespace LOFAR::PL;
-using namespace dtl;
-using namespace std;
 
 //
 //  This test program tests the conversion of a C++-like attribute

@@ -30,9 +30,9 @@
 #include <PL/QueryObject.h>
 #include <PL/Collection.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_sstream.h>
 #include <dtl/DBView.h>
 #include <dtl/select_iterator.h>
-#include <sstream>
 
 namespace LOFAR
 {
@@ -177,7 +177,7 @@ namespace LOFAR
     template<typename T>
     void TPersistentObject<T>::doRetrieve(const ObjectId& oid, bool isOwnerOid)
     {
-      std::ostringstream whereClause;
+      ostringstream whereClause;
       if (isOwnerOid) {
         whereClause << "WHERE Owner=" << oid.get();
       }	else {
@@ -209,7 +209,7 @@ namespace LOFAR
     template<typename T>
     void TPersistentObject<T>::doUpdate() const
     {
-      std::ostringstream whereClause;
+      ostringstream whereClause;
       whereClause << "WHERE ObjId=" << metaData().oid()->get();
 
       typedef dtl::DBView< DBRepHolder<T>, DBRepHolder<ObjectId> > DBViewType;

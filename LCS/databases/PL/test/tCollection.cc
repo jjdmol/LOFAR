@@ -20,13 +20,17 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+//# Includes
 #include <PL/Collection.h>
 #include <PL/ObjectId.h>
 #include <PL/TPersistentObject.h>
+#include <Common/lofar_iostream.h>
 #include <boost/shared_ptr.hpp>
-#include <iostream>
 
-using namespace std;
+using namespace LOFAR;
 using namespace LOFAR::PL;
 
 class X

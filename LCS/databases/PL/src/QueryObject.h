@@ -28,6 +28,7 @@
 
 //# Includes
 #include <PL/Query/Expr.h>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -49,7 +50,7 @@ namespace LOFAR
       // @{
       // Constructor that takes an SQL string. 
       // \todo Do we want to do some sanity checking on \c aString ?
-      QueryObject(const std::string& aString) : 
+      QueryObject(const string& aString) : 
  	itsSqlString(aString), itsUseString(true) 
       {}
 
@@ -72,14 +73,14 @@ namespace LOFAR
       // Return this QueryObject as an SQL WHERE clause. Depending on the
       // value of \c itsUseString, this method will either return \c
       // itsSqlString, or \c itsQueryExpr as a string.
-      std::string getSql() const;
+      string getSql() const;
 
     private:
       // The query stored as a query expression.
       Query::Expr itsQueryExpr;
 
       // The query stored as a string.
-      std::string itsSqlString;
+      string itsSqlString;
 
       // This flag indicates whether we should use \c itsQueryExpr or \c
       // itsSqlString in the getSql() method. It depends on how the

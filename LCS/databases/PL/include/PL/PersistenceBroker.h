@@ -28,7 +28,7 @@
 
 //# Includes
 #include <PL/PLfwd.h>
-#include <string>
+#include <Common/lofar_string.h>
 #include <climits>
 
 namespace LOFAR
@@ -58,8 +58,8 @@ namespace LOFAR
 
       // Connect to the database identified by the Data Source Name aDSN, 
       // using an optional aUid as user-id and an optional aPwd as password.
-      void connect(const std::string& aDsn, const std::string& aUid = "", 
-                   const std::string& aPwd = "");
+      void connect(const string& aDsn, const string& aUid = "", 
+                   const string& aPwd = "");
 
       // Erase the specified persistent object, i.e. delete it from the
       // database.

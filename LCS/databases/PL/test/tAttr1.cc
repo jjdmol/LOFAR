@@ -20,15 +20,19 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+//# Includes
 #include "tAttr1.h"
 #include "PO_tAttr1.h"
 #include <PL/PersistenceBroker.h>
 #include <PL/Attrib.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
 
 using namespace LOFAR;
 using namespace LOFAR::PL;
-using namespace dtl;
-using namespace std;
 
 vector<string> theirAttr;
 
@@ -463,7 +467,7 @@ int main(int argc, const char* argv[])
     PersistenceBroker pb;
     pb.connect("test","postgres","");
     // If indicated, skip filldb (which takes quite some time).
-    if (argc > 1  &&  std::string(argv[1]) == "1") {
+    if (argc > 1  &&  string(argv[1]) == "1") {
       filldb (pb);
     }
     cout << endl << "Testing x=val: " << endl;

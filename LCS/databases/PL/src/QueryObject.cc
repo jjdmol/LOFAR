@@ -22,7 +22,7 @@
 
 #include <PL/QueryObject.h>
 #include <Common/LofarLogger.h>
-#include <sstream>
+#include <Common/lofar_sstream.h>
 
 namespace LOFAR
 {
@@ -35,7 +35,7 @@ namespace LOFAR
       else return itsQueryExpr.isNull();
     }
 
-    std::string QueryObject::getSql() const 
+    string QueryObject::getSql() const 
     {
       LOG_TRACE_VAR_STR(__PRETTY_FUNCTION__ << ": itsUseString = "
                << (itsUseString ? "true" : "false"));
@@ -44,7 +44,7 @@ namespace LOFAR
         return "WHERE " + itsSqlString;
       }
       else {
-        std::ostringstream oss;
+        ostringstream oss;
         oss << "WHERE " << itsQueryExpr;
         LOG_TRACE_VAR_STR(__PRETTY_FUNCTION__ << ": return value : " 
                           << oss.str());
