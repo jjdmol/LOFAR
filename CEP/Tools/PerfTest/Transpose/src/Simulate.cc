@@ -11,13 +11,13 @@ int atexit(void (*function)(void))
 }
 #endif
 
-int main (int argc, char** argv)
+int main (int argc, const char** argv)
 {
 #ifdef HAVE_MPI
   MPI_Init(&argc,&argv);
 #endif
   // Set trace level.
-  Debug::initLevels (argc, (const char* [])argv);
+  Debug::initLevels (argc, argv);
 
   try {
     Transpose simulator;
