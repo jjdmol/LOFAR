@@ -37,7 +37,7 @@
 #ifdef HAVE_LOFAR_PL
 #include <MNS/TPOParm.h>
 #include <PL/PersistenceBroker.h>
-#include <PL/Query.h>
+#include <PL/QueryObject.h>
 #include <PL/Attrib.h>
 #include <PL/Collection.h>
 #include <Common/KeyValueMap.h>
