@@ -484,6 +484,12 @@ void UVPMainWindow::slot_openMS()
 
 
 
+//===============>>>  UVPMainWindow::slot_vdmInput  <<<===============
+
+void UVPMainWindow::slot_vdmInput()
+{
+}
+
 
 //==================>>>  UVPMainWindow::slot_openPVD  <<<==================
 /*
@@ -502,6 +508,7 @@ void UVPMainWindow::slot_openPVD()
   }
 }
 */
+
 
 
 
