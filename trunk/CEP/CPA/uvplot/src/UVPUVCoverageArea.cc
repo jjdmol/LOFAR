@@ -3,7 +3,7 @@
 // $ID$
 
 
-#include <UVPUVCoverageArea.h>
+#include <uvplot/UVPUVCoverageArea.h>
 
 #include <qpainter.h>
 #include <qimage.h>

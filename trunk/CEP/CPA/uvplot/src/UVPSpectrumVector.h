@@ -5,7 +5,7 @@
 
 // $Id$
 
-#include <UVPSpectrum.h>
+#include <uvplot/UVPSpectrum.h>
 #include <vector>
 
 #if(DEBUG_MODE)
