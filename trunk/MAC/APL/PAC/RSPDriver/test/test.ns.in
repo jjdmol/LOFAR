@@ -7,7 +7,7 @@ cmd=../src/RSPDriver
 host=localhost
 client.type=TCP
 client.port=30230
-board.type=TCP
+board0.type=TCP
 
 [EPAStub]
 host=localhost

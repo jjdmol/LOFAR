@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  RSPDriverTask.h: class definition for the Beam Server task.
 //#
 //#  Copyright (C) 2002-2004
@@ -32,46 +34,55 @@
 
 namespace RSP
 {
-    class RSPDriverTask : public GCFTask
-    {
+  class RSPDriverTask : public GCFTask
+  {
     public:
-	/**
-	 * The constructor of the RSPDriver task.
-	 * @param name The name of the task. The name is used for looking
-	 * up connection establishment information using the GTMNameService and
-	 * GTMTopologyService classes.
-	 */
-	RSPDriverTask(string name);
-	virtual ~RSPDriverTask();
+      /**
+       * Constants. Should probably be moved somewhere else at some point.
+       */
+      static const int N_RSPBOARDS = 1; // eventually this should be 24
 
-	// state methods
+    public:
+      /**
+       * The constructor of the RSPDriver task.
+       * @param name The name of the task. The name is used for looking
+       * up connection establishment information using the GTMNameService and
+       * GTMTopologyService classes.
+       */
+      RSPDriverTask(string name);
+      virtual ~RSPDriverTask();
 
-	/**
-	 * @return true if ready to transition to the enabled
-	 * state.
-	 */
-	bool isEnabled();
+      /**
+       * Open all ports to boards.
+       */
+      void openBoards();
 
-	/**
-	 * The initial state. This state is used to connect the client
-	 * and board ports. When they are both connected a transition
-	 * to the enabled state is made.
-	 */
-	GCFEvent::TResult initial(GCFEvent& event, GCFPortInterface &port);
+      /**
+       * @return true if ready to transition to the enabled
+       * state.
+       */
+      bool isEnabled();
 
-	/**
-	 * The enabled state. In this state the task can receive
-	 * commands.
-	 */
-	GCFEvent::TResult enabled(GCFEvent& event, GCFPortInterface &port);
+      /**
+       * The initial state. This state is used to connect the client
+       * and board ports. When they are both connected a transition
+       * to the enabled state is made.
+       */
+      GCFEvent::TResult initial(GCFEvent& event, GCFPortInterface &port);
+
+      /**
+       * The enabled state. In this state the task can receive
+       * commands.
+       */
+      GCFEvent::TResult enabled(GCFEvent& event, GCFPortInterface &port);
 
     private:
-	// ports
-	GCFPort m_client;
-	GCFPort m_board;
+      // ports
+      GCFPort m_client;
+      GCFPort m_board[N_RSPBOARDS];
 
-	Scheduler m_scheduler;
-    };
+      Scheduler m_scheduler;
+  };
 
 };
      

@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  Command.h: RSP Driver command class
 //#
 //#  Copyright (C) 2002-2004

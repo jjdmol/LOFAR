@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  VersionsSync.h: Synchronize system versions with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
@@ -33,7 +35,7 @@ namespace RSP
 	  /**
 	   * Constructors for a VersionsSync object.
 	   */
-	  VersionsSync();
+	  VersionsSync(GCFPortInterface& board_port, int board_id);
 	  
 	  /* Destructor for VersionsSync. */
 	  virtual ~VersionsSync();

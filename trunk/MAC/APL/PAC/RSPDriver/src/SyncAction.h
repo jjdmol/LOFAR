@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  SyncAction.h: RSP Driver syncaction class
 //#
 //#  Copyright (C) 2002-2004
@@ -28,38 +30,45 @@
 namespace RSP
 {
   class SyncAction : public GCFFsm
-      {
-      public:
-	  /**
-	   * Constructors for a SyncAction object.
-	   */
-	  explicit SyncAction(State initial);
+  {
+    public:
+      /**
+       * Constructors for a SyncAction object.
+       */
+      explicit SyncAction(State initial, GCFPortInterface& board_port, int board_id);
 	  
-	  /* Destructor for SyncAction. */
-	  virtual ~SyncAction();
+      /* Destructor for SyncAction. */
+      virtual ~SyncAction();
 
-	  /**
-	   * Set the priority. The priority determines when
-	   * a synaction is carried out relative to other
-	   * sync actions.
-	   */
-	  void setPriority(int priority);
+      /**
+       * Set the priority. The priority determines when
+       * a synaction is carried out relative to other
+       * sync actions.
+       */
+      void setPriority(int priority);
 
-	  /*@{*/
-	  /**
-	   * Has the state machine reached its final state?
-	   */
-	  void setFinal(bool final);
-	  bool isFinal() const;
-	  /*@}*/
+      /**
+       * Get the board id for this sync action.
+       */
+      int getBoardId();
 
-      private:
-	  SyncAction();
+      /*@{*/
+      /**
+       * Has the state machine reached its final state?
+       */
+      void setFinal(bool final);
+      bool isFinal() const;
+      /*@}*/
 
-      private:
-	  int  m_priority;
-	  bool m_final; /** indicates whether the state machine has reached its final state */
-      };
+    private:
+      SyncAction();
+
+    private:
+      int               m_priority;
+      GCFPortInterface& m_board_port;
+      int               m_board_id;
+      bool              m_final; /** indicates whether the state machine has reached its final state */
+  };
 };
      
 #endif /* SYNCACTION_H_ */

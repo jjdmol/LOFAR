@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  WGSync.h: Synchronize rcu settings with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
@@ -28,23 +30,23 @@
 namespace RSP
 {
   class WGSync : public SyncAction
-      {
-      public:
-	  /**
-	   * Constructors for a WGSync object.
-	   */
-	  WGSync();
+  {
+    public:
+      /**
+       * Constructors for a WGSync object.
+       */
+      WGSync(GCFPortInterface& board_port, int board_id);
 	  
-	  /* Destructor for WGSync. */
-	  virtual ~WGSync();
+      /* Destructor for WGSync. */
+      virtual ~WGSync();
 
-	  /**
-	   * Initial state handler.
-	   */
-	  GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+      /**
+       * Initial state handler.
+       */
+      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
 
-      private:
-      };
+    private:
+  };
 };
      
 #endif /* WGSYNC_H_ */

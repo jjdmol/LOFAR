@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  SSSync.h: Synchronize subbands selection settings with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
@@ -33,7 +35,7 @@ namespace RSP
 	  /**
 	   * Constructors for a SSSync object.
 	   */
-	  SSSync();
+	  SSSync(GCFPortInterface& board_port, int board_id);
 	  
 	  /* Destructor for SSSync. */
 	  virtual ~SSSync();

@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  StatsSync.h: Synchronize statistics with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
@@ -33,7 +35,7 @@ namespace RSP
 	  /**
 	   * Constructors for a StatsSync object.
 	   */
-	  StatsSync();
+	  StatsSync(GCFPortInterface& board_port, int board_id);
 	  
 	  /* Destructor for StatsSync. */
 	  virtual ~StatsSync();

@@ -30,7 +30,8 @@
 using namespace RSP;
 using namespace LOFAR;
 
-VersionsSync::VersionsSync() : SyncAction((State)&VersionsSync::initial_state)
+VersionsSync::VersionsSync(GCFPortInterface& board_port, int board_id)
+  : SyncAction((State)&VersionsSync::initial_state, board_port, board_id)
 {
 }
 

@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  RSPTest.h: class definition for the EPA stub task
 //#
 //#  Copyright (C) 2002-2004

@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  Cache.h: RSP Driver data cache
 //#
 //#  Copyright (C) 2002-2004

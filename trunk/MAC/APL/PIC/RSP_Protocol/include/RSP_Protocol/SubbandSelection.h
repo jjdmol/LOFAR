@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  SubbandSelection.h: subband selection class.
 //#
 //#  Copyright (C) 2002-2004

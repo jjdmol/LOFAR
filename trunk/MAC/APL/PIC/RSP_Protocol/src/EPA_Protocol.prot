@@ -25,7 +25,6 @@ namespace EPA_Protocol
    * Number of Antenna processors and Beamlet processors.
    */
   /*@{*/
-  static const int N_RSPBOARDS = 24;
   static const int N_AP        = 4;
   static const int N_BLP       = N_AP*2;
   static const int N_COEF      = 512;
@@ -46,7 +45,7 @@ PRELUDE_END;
 
 event = {
   signal = RSPSTATUS;
-  dir = OUT;
+  dir = INOUT;
   param = {
     name = "hdr";
     type = "EPA_Protocol::MEPHeader";
@@ -72,7 +71,7 @@ event = {
 
 event = {
   signal = SELFTEST;
-  dir = IN;
+  dir = INOUT;
   param = {
     name = "hdr";
     type = "EPA_Protocol::MEPHeader";
@@ -86,7 +85,7 @@ event = {
 
 event = {
   signal = RESET;
-  dir = IN;
+  dir = INOUT;
   param = {
     name = "hdr";
     type = "EPA_Protocol::MEPHeader";
@@ -96,7 +95,7 @@ event = {
 
 event = {
   signal = REPROGRAM;
-  dir = IN;
+  dir = INOUT;
   param = {
     name = "hdr";
     type = "EPA_Protocol::MEPHeader";
@@ -246,6 +245,11 @@ event = {
   };
 };
 
-
-	    
-	    
+event = {
+  signal = READRES;
+  dir = OUT;
+  param = {
+    name = "dummy";
+    type = "int";
+  };
+};
