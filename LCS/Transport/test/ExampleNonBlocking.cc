@@ -45,6 +45,8 @@ void* startWriterThread(void* thread_arg)
   dh->getBufferElement(0) = fcomplex(2,8);
   dh->setCounter(2);
 
+  usleep(3000000); // Wait
+
   pthread_exit(NULL);
 }
 
