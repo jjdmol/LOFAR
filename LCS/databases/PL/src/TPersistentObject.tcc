@@ -110,7 +110,7 @@ namespace LOFAR
 	if (iter != view.end()) {
 	  fromDBRep(*iter);          // Retrieve this record
 	  // Get the data from the nested PO-s.
-	  if (ownedPOs().empty()) {
+	  if (!ownedPOs().empty()) {
 	    retrieve();
 	  }
 	  // Get total nr of records found.
