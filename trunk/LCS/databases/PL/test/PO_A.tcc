@@ -164,9 +164,9 @@ namespace LOFAR {
     //
     template<>
     Collection<TPersistentObject<A> > 
-    TPersistentObject<A>::doRetrieve(const Query&  query, int maxObjects) 
+    TPersistentObject<A>::retrieve(const Query&  query, int maxObjects) 
     {
-      std::cout << "doRetrieve(const Query&, int)" << std::endl;
+      std::cout << "retrieve(const Query&, int)" << std::endl;
       typedef DBView< DBRep<A> >  DBViewType;
 
       // GML: This isnt' quite right yet. Have to figure out how to construct
