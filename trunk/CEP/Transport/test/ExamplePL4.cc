@@ -53,6 +53,10 @@ int main()
       DH1.setCounter(2);
       BlobOStream& bos = DH1.createExtraBlob();
       bos << "test1";
+      BlobIStream& bis = DH1.getExtraBlob();
+      string str;
+      bis >> str;
+      ASSERT (str == "test1");
       DH1.insertDB();
     }
     // write another record.
@@ -75,6 +79,9 @@ int main()
       string str;
       bis >> str;
       bis.getEnd();
+      ASSERT (str == "test1");
+      BlobIStream& bis2 = DH1.getExtraBlob();
+      bis2 >> str;
       ASSERT (str == "test1");
     }
     // update the record, read it back and check it.
