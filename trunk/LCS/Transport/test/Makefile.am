@@ -5,7 +5,7 @@ AM_CPPFLAGS = \
 	-DMORECORE_CANNOT_TRIM=1 \
 	-DSHMEM_ALLOC
 
-check_PROGRAMS			= Example TestBidirectional ExampleMem ExampleBlMem ExampleNonBlocking ExampleShMem ExampleMPI ExampleVarBuf ExampleSocket ExampleSocketPerf tTH_Socket
+check_PROGRAMS			= Example TestBidirectional ExampleMem ExampleBlMem ExampleNonBlocking ExampleShMem ExampleMPI ExampleVarBuf ExampleSocket ExampleSocketPerf tTH_Socket ExampleEthernet
 
 Example_SOURCES 		= Example.cc DH_Example.cc
 
@@ -29,6 +29,8 @@ TestBidirectional_SOURCES 	= TestBidirectional.cc DH_Example.cc
 
 tTH_Socket_SOURCES 		= tTH_Socket.cc DH_Socket.cc
 
+ExampleEthernet_SOURCES         = ExampleEthernet.cc DH_Ethernet.cc
+
 LDADD				= ../src/libtransport.la 
 DEPENDENCIES			= ../src/libtransport.la $(LOFAR_DEPEND)
 
@@ -45,7 +47,8 @@ TESTS	=					\
 	ExampleMPI_test.sh			\
 	ExampleVarBuf_test.sh			\
 	ExampleSocket_test.sh		        \
-	tTH_Socket_test.sh
+	tTH_Socket_test.sh                      \
+        ExampleEthernet_test.sh
 
 
 include $(lofar_sharedir)/Makefile.common
