@@ -50,7 +50,8 @@ public:
   // Note: This method does not affect the MeqCalImpl object. 
   Calibrator (const string & ObservationData, const string & CelestialBodies, 
     const string & DBName = "test", const string & MEPName = "meqmodel", 
-    const string & DBType = "postgres", const string & DBPasswd = "");
+    const string & DBType = "postgres", const string & DBHost = "dop50", 
+    const string & DBPasswd = "");
 
   // Destroys the MeqCalImpl object.
   virtual ~Calibrator ();
@@ -153,6 +154,7 @@ private:
   string itsMEPName;
   string itsDBType;
   string itsDBName;
+  string itsDBHost;
   string itsDBPasswd;
 
   string itsModelType;

@@ -54,7 +54,7 @@ public:
   // Note: This method does not affect the MeqCalImpl object. 
   CalibratorOld (const string & MSName, const string & MEPName, 
     const string & GSMName, const string & DBType, const string & DBName, 
-    const string & DBPasswd);
+    const string & DBHost, const string & DBPasswd);
 
   // Destroys the MeqCalImpl object.
   virtual ~CalibratorOld ();
@@ -159,6 +159,7 @@ private:
   string itsGSMName;
   string itsDBType;
   string itsDBName;
+  string itsDBHost;
   string itsDBPasswd;
   string itsModelType;
   uint   itsDDID;

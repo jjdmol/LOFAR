@@ -40,7 +40,7 @@ namespace LOFAR
 Calibrator::Calibrator (const string & ObservationData, 
   const string & CelestialSources, const string & DBName, 
   const string & MEPName, const string & DBType, 
-  const string & DBPasswd)
+  const string & DBHost, const string & DBPasswd)
 {
   // Initialize default values for the PSS3 Calibrater object.
   // These values are committed to itsMeqCalImpl when the Calibrator
@@ -51,6 +51,7 @@ Calibrator::Calibrator (const string & ObservationData,
 
   itsMEPName             = MEPName;		// MEQ (PL table)
   itsDBType              = DBType;		// Database type
+  itsDBHost              = DBHost;              // Database host
   itsDBName              = DBName;		// Database account
   itsDBPasswd            = DBPasswd;
   itsModelType           = "LOFAR.RI";
@@ -126,7 +127,8 @@ void Calibrator::initialize (void) {
 					     itsMEPName, 
 					     itsCelestialSources, 
 					     itsDBType, 
-					     itsDBName, 
+					     itsDBName,
+					     itsDBHost,
 					     itsDBPasswd,
 					     itsDDID, 
 					     ant1, 
@@ -300,14 +302,14 @@ void Calibrator::showCurrentParms (void) {
   for (i = itsSolvableParms.begin (); i != itsSolvableParms.end (); ++ i) {
     strcpy (str2, i -> c_str ());
     str2[5] = 0;
-    sprintf (str, "%4s ", str2);
+    sprintf (str, "%12s ", str2);
     cout << str;
   }
   cout << endl;
 
   vector<double> :: iterator j;
   for (j = vals.begin (); j != vals.end (); ++ j) {
-    sprintf (str, "%1.3f ", * j);
+    sprintf (str, "%1.9f ", * j);
     cout << str;
   }
   cout << endl;

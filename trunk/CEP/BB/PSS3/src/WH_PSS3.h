@@ -51,6 +51,7 @@ public:
   explicit WH_PSS3(const string& name, const string& msName,
 		   const string& meqModel, const string& skyModel,
 		   const string& dbType, const string& dbName,
+		   const string& dbHost,
 		   const string& dbPwd, unsigned int ddid, 
 		   const string& modelType, bool calcUVW, 
 		   const string& dataColName,
@@ -93,6 +94,7 @@ private:
   string itsSkyModel;
   string itsDbType;
   string itsDbName;
+  string itsDbHost;
   string itsDbPwd;
   unsigned int itsDDID;
   vector<int> itsAnt1;        // Aips vector type for antenna numbers

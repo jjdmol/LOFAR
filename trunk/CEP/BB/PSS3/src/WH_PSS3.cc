@@ -43,6 +43,7 @@ const int MaxNumberOfParms = 30;
 WH_PSS3::WH_PSS3 (const string& name, const string & msName, 
 		  const string& meqModel, const string& skyModel,
 		  const string& dbType, const string& dbName,
+		  const string& dbHost,
 		  const string& dbPwd, unsigned int ddid, 
 		  const string& modelType, bool calcUVW, 
 		  const string& dataColName, 
@@ -55,6 +56,7 @@ WH_PSS3::WH_PSS3 (const string& name, const string & msName,
     itsSkyModel       (skyModel),
     itsDbType         (dbType),
     itsDbName         (dbName),
+    itsDbHost         (dbHost),
     itsDbPwd          (dbPwd),
     itsDDID           (ddid),
     itsModelType      (modelType),
@@ -96,7 +98,7 @@ WH_PSS3::~WH_PSS3()
 WH_PSS3* WH_PSS3::make (const string& name)
 {
   return new WH_PSS3 (name, itsMSName, itsMeqModel, itsSkyModel, itsDbType,
-		      itsDbName, itsDbPwd,  itsDDID, itsModelType, 
+		      itsDbName, itsDbHost, itsDbPwd,  itsDDID, itsModelType, 
 		      itsCalcUVW, itsDataColName, itsResidualColName, 
 		      itsOutputAllIter, itsNumber);
 }
@@ -111,7 +113,7 @@ void WH_PSS3::process()
   // Create a Calibrator object
   TRACER4("WH_PSS3 process()");
   itsCal = new CalibratorOld(itsMSName, itsMeqModel, itsSkyModel, itsDbType, 
-			     itsDbName, itsDbPwd);
+			     itsDbName, itsDbHost, itsDbPwd);
 
   // Query the database for a work order
   DH_WorkOrder* wo =  dynamic_cast<DH_WorkOrder*>(getDataManager().getInHolder(0));

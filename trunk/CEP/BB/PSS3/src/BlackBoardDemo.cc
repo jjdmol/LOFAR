@@ -112,7 +112,7 @@ void BlackBoardDemo::define(const KeyValueMap& params)
     ksID = i2string(ksNo);
 
     WH_PSS3 ksWH("KS"+ksID, "data/10Sources/demo10-"+ksID, meqModel+ksID, skyModel+ksID, 
-		 "postgres",  databaseName, "", ddID, modelType, calcUVW, 
+		 "postgres",  databaseName, "dop50", "", ddID, modelType, calcUVW, 
 		 dataColName, residualColName, true, ksNo*10000);
 
     int index = ksNo - 1;
