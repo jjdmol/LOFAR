@@ -22,8 +22,6 @@ INSTHDRS = \
 	Query/UnaryExprNode.h
 
 NOINSTHDRS = 
-	ObjectCache.h \
-	SQLTimeStamp.h
 
 TCCHDRS = \
 	PersistenceBroker.tcc \
@@ -41,7 +39,6 @@ libpl_la_SOURCES = \
 	Attrib.cc \
 	ConnectionHandler.cc \
 	DBRepMeta.cc \
-	ObjectCache.cc \
 	ObjectId.cc \
 	QueryObject.cc \
 	PersistenceBroker.cc \
