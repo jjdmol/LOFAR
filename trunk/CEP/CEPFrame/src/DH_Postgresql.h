@@ -62,10 +62,10 @@ public:
   // Connect to the database named DBName, residing at host DBHost, using
   // database account UserName. The following arguments will work for
   // testing purposes: DBHost="10.87.2.50", DBName=<YourLogInName>,
-  // UserName="postgres". This method must be called before the first 
-  // send or receive event occurs in the TransportHolder. Calling this
-  // method right after connect (TH_Database::proto) is the best place
-  // to guarantiee this. Note: 10.87.2.50 is dop50 the database server.
+  // UserName="postgres". This method must be called before the DH_Postgresql
+  // constructor. Calling this method before at the beginning of defining your
+  // application is the best place to guarantee this. 
+  // Note: 10.87.2.50 is dop50 the database server.
   // If you use the hostname dop50, you have to make sure that the
   // client host is able to resolve dop50; this may not always be the
   // case. lofar3 is an example of such a case. If this method is not
@@ -83,6 +83,9 @@ protected:
     DataPacket () {}
   };
 
+ protected:
+  static PGconn * theirConnection;
+
 private:
 
   void ConnectDatabase (void);
@@ -94,7 +97,6 @@ private:
   bool isConnected;
 
   static ulong theirInstanceCount;
-  static PGconn * theirConnection;
 
   static string theirDBHost;
   static string theirDBName;
