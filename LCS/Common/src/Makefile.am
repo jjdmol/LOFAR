@@ -2,6 +2,7 @@ SUBDIRS	= shmem .
 
 DOCHDRS	=	\
 Debug.h						\
+Exception.h \
 Net/Socket.h \
 Thread/Thread.h \
 Thread/Key.h \
@@ -30,6 +31,7 @@ lib_LTLIBRARIES 	= libcommon.la
 
 libcommon_la_SOURCES 	= $(DOCHDRS) \
 Debug.cc \
+Exception.cc \
 Stopwatch.cc \
 Net/Socket.cc \
 Thread/Thread.cc \
