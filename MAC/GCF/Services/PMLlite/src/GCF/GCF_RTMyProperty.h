@@ -25,10 +25,10 @@
 
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_Defines.h>
-#include <GCF/GCF_PropertyBase.h>
 
 class GCFRTMyPropertySet;
 class GCFRTAnswer;
+class GCFEvent;
 
 /**
  * 

@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include <GPM_RTController.h>
-#include <GCF_RTMyPropertySet.h>
+#include "GCF_RTMyPropertySet.h"
 #include <stdio.h>
 #include <Utils.h>
 #define DECLARE_SIGNAL_NAMES
@@ -183,7 +183,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
   {
     case F_DISCONNECTED_SIG:
       LOFAR_LOG_WARN(PML_STDOUT_LOGGER, ( 
-          "Connection lost to Property Agent"));
+          "Connection lost to Supervisory Server"));
       TRAN(GPMRTController::initial);
       break;
 

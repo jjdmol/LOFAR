@@ -26,7 +26,7 @@
 #include <GCF/GCF_Defines.h>
 
 #include <Common/lofar_list.h>
-#include "GCF_RTMyProperty.h"
+#include <GCF/GCF_RTMyProperty.h>
 
 class GPMRTController;
 class GCFRTAnswer;
@@ -50,7 +50,10 @@ class GCFRTMyPropertySet
      * @param propSet the complete property set in ROM (incl. scope)
      * @param answerObj the call back object for answers on property set actions
      */
-    GCFRTMyPropertySet (const TPropertySet& propSet, 
+    explicit GCFRTMyPropertySet (const TPropertySet& propSet, 
+                      GCFRTAnswer* pAnswerObj = 0);
+    explicit GCFRTMyPropertySet (const TPropertySet& propSet, 
+                      const char* scope,
                       GCFRTAnswer* pAnswerObj = 0);
     virtual ~GCFRTMyPropertySet ();
 
@@ -146,6 +149,7 @@ class GCFRTMyPropertySet
     void addProperty(const string& propName, GCFRTMyProperty& prop);
     void clearAllProperties();
     bool cutScope(string& propName) const;
+    void init(const char* scope);
     
   private:
     GCFRTMyPropertySet();

@@ -20,25 +20,44 @@
 //#
 //#  $Id$
 
-#include <GCF_RTMyPropertySet.h>
-#include <GCF_RTMyProperty.h>
-#include <GPM_RTController.h>
-#include <GCF_RTAnswer.h>
-#include <GSA_Service.h>
+#include "GCF_RTMyPropertySet.h"
+#include "GCF_RTMyProperty.h"
+#include "GPM_RTController.h"
+#include "GCF_RTAnswer.h"
+#include <Utils.h>
 
 GCFRTMyPropertySet::GCFRTMyPropertySet(const TPropertySet& propSet,
+                                   const char* scope,
                                    GCFRTAnswer* pAnswerObj) : 
-  _scope(propSet.scope), 
   _isLoaded(false),
   _pAnswerObj(pAnswerObj),
   _isBusy(false),
   _propSet(propSet),
   _dummyProperty(*this)
 {
+  init(scope);
+}  
+
+GCFRTMyPropertySet::GCFRTMyPropertySet(const TPropertySet& propSet,
+                                   GCFRTAnswer* pAnswerObj) : 
+  _isLoaded(false),
+  _pAnswerObj(pAnswerObj),
+  _isBusy(false),
+  _propSet(propSet),
+  _dummyProperty(*this)
+{
+  init(0);
+}  
+
+void GCFRTMyPropertySet::init(const char* scope)
+{
   GCFRTMyProperty* pProperty;
   const char* propName;
   
-  if (!GSAService::validatePropName(_scope.c_str()))
+  if (scope)  _scope = scope; 
+  else        _scope = _propSet.scope; 
+  
+  if (!Utils::isValidPropName(_scope.c_str()))
   {
     LOFAR_LOG_WARN(PML_STDOUT_LOGGER, ( 
         "Scope %s meets not the name convention! Set to \"\"",
@@ -48,7 +67,7 @@ GCFRTMyPropertySet::GCFRTMyPropertySet(const TPropertySet& propSet,
   for (unsigned int i = 0; i < _propSet.nrOfProperties; i++)
   { 
     propName = _propSet.properties[i].propName;
-    if (GSAService::validatePropName(propName))
+    if (Utils::isValidPropName(propName))
     {
       pProperty = new GCFRTMyProperty(_propSet.properties[i], *this);
       addProperty(propName, *pProperty);
@@ -60,11 +79,11 @@ GCFRTMyPropertySet::GCFRTMyPropertySet(const TPropertySet& propSet,
           propName));      
     }
   }
-  if (pAnswerObj)
+  if (_pAnswerObj)
   {
-    setAnswer(pAnswerObj);
+    setAnswer(_pAnswerObj);
   }
-}  
+}
 
 GCFRTMyPropertySet::~GCFRTMyPropertySet ()
 {

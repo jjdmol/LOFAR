@@ -29,7 +29,7 @@ pkginclude_HEADERS =	\
 	GCF_PeerAddr.h \
 	GCF_TCPPort.h
 
-DOCHDRS	=	$(include_HEADERS)
+DOCHDRS	=	$(pkginclude_HEADERS)
 
 lib_LTLIBRARIES 	= libgcf.la
 
@@ -38,13 +38,15 @@ libgcf_la_LIBADD= \
 	$(top_builddir)/GCFCommon/src/libgcfcommon.la \
 	$(top_builddir)/CoreComps/TM/src/libtm.la \
 	$(top_builddir)/CoreComps/SAL/src/libsal.la \
-	$(top_builddir)/CoreComps/PML/src/libpml.la
+	$(top_builddir)/CoreComps/PML/src/libpml.la \
+	$(top_builddir)/Services/PMLlite/src/libpmllite.la
 
 libgcf_la_DEPENDENCIES= $(LOFAR_DEPEND) \
 	$(top_builddir)/GCFCommon/src/libgcfcommon.la \
 	$(top_builddir)/CoreComps/TM/src/libtm.la \
 	$(top_builddir)/CoreComps/SAL/src/libsal.la \
-	$(top_builddir)/CoreComps/PML/src/libpml.la
+	$(top_builddir)/CoreComps/PML/src/libpml.la \
+	$(top_builddir)/Services/PMLlite/src/libpmllite.la
 
 include $(lofar_sharedir)/Makefile.common
 

@@ -30,7 +30,7 @@
 #include "PI_Protocol.ph"
 #include <PA_Protocol.ph>
 
-static string sSSTaskName("SS");
+static string sSSTaskName("PI");
 
 GPISupervisoryServer::GPISupervisoryServer(GPIController& controller) : 
   GCFTask((State)&GPISupervisoryServer::initial, sSSTaskName),
@@ -146,11 +146,14 @@ GCFEvent::TResult GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterfac
       {
         pPropertySet = new GPIPropertySet(*this, scope);
         _scopeRegister[scope] = pPropertySet;
+        pPropertySet->registerScope(e);
       }
       else
       {
-        PAScoperegisteredEvent response(0, PA_SCOPE_ALREADY_REGISTERED);
-        replyMsgToPA(response, pData);
+        PIScoperegisteredEvent response(PI_SCOPE_ALREADY_REGISTERED);
+        unsigned int scopeDataLength = Utils::packString(scope, _buffer, MAX_BUF_SIZE);
+        response.length += scopeDataLength;
+        _ssPort.send(response, _buffer, scopeDataLength);
       }      
 
       LOFAR_LOG_INFO(PI_STDOUT_LOGGER, ( 
@@ -357,8 +360,8 @@ GPIPropertySet* GPISupervisoryServer::findPropertySet(char* pScopeData, string& 
   {
     Utils::unpackString(pScopeData, scope);
   }
-  TScopeRegister::iterator iter = _scopeRegister.find(scope);
-  return iter->second;
+  TScopeRegister::iterator iter = _scopeRegister.find(scope);  
+  return (iter != _scopeRegister.end() ? iter->second : 0);
 }
 
 void GPISupervisoryServer::replyMsgToPA(GCFEvent& e, const string& scope)

@@ -70,7 +70,7 @@ void GPIPropertySet::propValueChanged(const string& propName, const GCFPValue& v
 }
 
 
-void GPIPropertySet::registerScope(GCFEvent e)
+void GPIPropertySet::registerScope(GCFEvent& e)
 {
   PARegisterscopeEvent pae(0);
   forwardMsgToPA(pae, e);
@@ -90,7 +90,7 @@ void GPIPropertySet::registerCompleted(TPAResult result)
   }
 }
 
-void GPIPropertySet::unregisterScope(GCFEvent e)
+void GPIPropertySet::unregisterScope(GCFEvent& e)
 {
   PAUnregisterscopeEvent pae(0);
   forwardMsgToPA(pae, e);
