@@ -88,36 +88,58 @@ void AH_BackEnd::undefine() {
   itsWHs.clear();
 }
 
-void AH_BackEnd:init() {
-  struct timeval timestamp;
-  vector<WorkHolder*>::iterator it = itsWHs.begin();
+//
+// init()
+//
+// Start listeners on all WHs and wait for connection on all WHs
+//
+void AH_BackEnd::init() {
+  // Iterate over workholder stack and start the listeners first
   int cn = 0;
+  int good = 0;
+  cout << "init BE WH: starting all listeners..." << endl;
+  vector<WorkHolder*>::iterator it = itsWHs.begin();
   for (; it != itsWHs.end(); it++) {
-    usleep(50);
-    cout << "init BE WH " << (*it)->getName() << " listening on port " << itsPort+cn << endl;
-	// Get pointer to TH_Socket
+//    cout << "init BE WH " << (*it)->getName() << " listening on port " 
+//         << itsPort+cn << endl;
+
+    // Get pointer to TH_Socket
     TH_Socket* THS = static_cast<TH_Socket*>
                      ((*it)->getDataManager().getInHolder(0)->getTransporter().getTransportHolder());
-    std::stringstream	service;
-    service << THS->itsPort;
-    // Sneaky start the listener
-    THS->itsServerSocket = new Socket("TH_Socket", service.str());
-    if (!THS->itsServerSocket->ok()) {
+    std::stringstream	service;	// construct string with portnumber
+    service << itsPort;
+    // Start the listener first
+    if (!THS->setListenSocket(new Socket("TH_Socket", service.str()))) {
       cout << itsPort+cn << ":listener NOT OK" << endl;
     }
+    else {
+      good++;
+    }
 
+    usleep(50);
     cn++;
   }
+  cout << good << " of " << cn << " listeners started OK" << endl;
 
   // Now do the normal loop
-  it = itsWHs.begin();
+  struct timeval timestamp;
   cn = 0;
+  it = itsWHs.begin();
   for (; it != itsWHs.end(); it++) {
-    cout << "init BE WH " << (*it)->getName() << " accepting on port " << itsPort+cn << endl;
+    cout << "init BE WH " << (*it)->getName() << " accepting on port " 
+         << itsPort+cn << endl;
+
+    // be sure right blocking mode is used.
     (*it)->getDataManager().getInHolder(0)->getTransporter().setIsBlocking(itsBlocking);
+    // do the accept
     (*it)->basePreprocess();
+
+    // show the time it took us
     gettimeofday (&timestamp, NULL);
-    cout << " connected on timestamp : "<< 1.0 * (timestamp.tv_sec - starttime.tv_sec) + 1.0 * (timestamp.tv_usec - starttime.tv_usec) / 1000000 << "sec"<<endl;
+    cout << " connected on timestamp : "<< 
+            1.0 * (timestamp.tv_sec - starttime.tv_sec) + 
+            1.0 * (timestamp.tv_usec - starttime.tv_usec) / 1000000 
+            << "sec" << endl;
     cn++;
   }
 }
