@@ -96,6 +96,16 @@ void Solver::solve (bool useSVD,
   resultQuality.itsChi = itsSolver.getChi();
   cout << resultQuality << endl;
 
+  // Store the new values in the ParmData vector.
+  const double* val = &(itsSolvableValues[0]);
+  for (uint i=0; i<itsSolvableParms.size(); ++i) {
+    ParmData& parm = itsSolvableParms[i];
+    double* value = parm.getRWValues().doubleStorage();
+    for (int j=0; j<parm.getNrSpid(); ++j) {
+      value[i] = *val++;
+    }
+  }
+
   timer.stop();
   cout << "BBSTest: solver     " << timer << endl;
   return;
