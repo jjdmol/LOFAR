@@ -21,6 +21,7 @@ Thread/Condition.h \
 Thread/SmartLock.h \
 Stopwatch.h \
 StringUtil.h \
+hexdump.h \
 CheckConfig.h \
 Lorrays.h Lorrays-Blitz.h blitz_array-impl.h BlitzToAips.h \
 Lonumerics.h \
@@ -65,6 +66,7 @@ Debug.cc \
 Exception.cc \
 Stopwatch.cc \
 StringUtil.cc \
+hexdump.cc \
 Net/Socket.cc \
 Thread/Thread.cc \
 Thread/SmartLock.cc \
