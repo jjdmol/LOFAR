@@ -55,7 +55,6 @@ WH_RSP::WH_RSP(const string& name,
   itsNRSPOutputs   = kvm.getInt("NoWH_RSP", 2) - 1;  
   itsPolarisations = kvm.getInt("polarisations",2);           
   itsNbeamlets     = kvm.getInt("NoRSPBeamlets", 92) / itsNCorrOutputs; // number of EPA-packet beamlets per OutDataholder
-  itsNbeamlets     = kvm.getInt("NoRSPBeamlets", 92) / itsNCorrOutputs; // number of EPA-packet beamlets per OutDataholder
   itsNpackets      = kvm.getInt("NoPacketsInFrame", 8);             // number of EPA-packets in RSP-ethernetframe
   itsSzEPAheader   = kvm.getInt("SzEPAheader", 14);                 // headersize in bytes
   itsSzEPApacket   = (itsPolarisations * sizeof(complex<uint16>) * itsNbeamlets) + itsSzEPAheader;           // packetsize in bytes
