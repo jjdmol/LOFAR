@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#
 //#  RSPTestSuite.h: Macros for using the testsuite more effectively.
 //#

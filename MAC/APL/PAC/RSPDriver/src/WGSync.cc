@@ -30,7 +30,8 @@
 using namespace RSP;
 using namespace LOFAR;
 
-WGSync::WGSync() : SyncAction((State)&WGSync::initial_state)
+WGSync::WGSync(GCFPortInterface& board_port, int board_id)
+  : SyncAction((State)&WGSync::initial_state, board_port, board_id)
 {
 }
 

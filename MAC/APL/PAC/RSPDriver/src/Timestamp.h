@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  Timestamp.h: timestamp information for the RSP driver
 //#
 //#  Copyright (C) 2002-2004

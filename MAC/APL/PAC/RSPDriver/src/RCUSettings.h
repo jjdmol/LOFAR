@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  RCUSettings.h: RCU control information
 //#
 //#  Copyright (C) 2002-2004

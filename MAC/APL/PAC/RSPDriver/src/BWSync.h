@@ -26,6 +26,7 @@
 #define BWSYNC_H_
 
 #include "SyncAction.h"
+#include <Common/LofarTypes.h>
 
 namespace RSP
 {
@@ -35,17 +36,29 @@ namespace RSP
       /**
        * Constructors for a BWSync object.
        */
-      BWSync();
+      explicit BWSync(GCFPortInterface& board_port, int board_id);
 	  
       /* Destructor for BWSync. */
       virtual ~BWSync();
 
       /**
-       * Initial state handler.
+       * The main event handler
        */
-      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+      GCFEvent::TResult handler(GCFEvent& event, GCFPortInterface& port);
+
+      /**
+       * Write beamformer coefficients for blp to the RSP board.
+       */
+      void writecoef(GCFPortInterface& port, uint8 blp);
+
+      /**
+       * Read the board status.
+       */
+      void readstatus(GCFPortInterface& port);
 
     private:
+      uint8 m_current_blp;
+      int   m_retries;
   };
 };
      

@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  StatusSync.h: Synchronize system status with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
@@ -28,23 +30,23 @@
 namespace RSP
 {
   class StatusSync : public SyncAction
-      {
-      public:
-	  /**
-	   * Constructors for a StatusSync object.
-	   */
-	  StatusSync();
+  {
+    public:
+      /**
+       * Constructors for a StatusSync object.
+       */
+      StatusSync(GCFPortInterface& board_port, int board_id);
 	  
-	  /* Destructor for StatusSync. */
-	  virtual ~StatusSync();
+      /* Destructor for StatusSync. */
+      virtual ~StatusSync();
 
-	  /**
-	   * Initial state handler.
-	   */
-	  GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+      /**
+       * Initial state handler.
+       */
+      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
 
-      private:
-      };
+    private:
+  };
 };
      
 #endif /* STATUSSYNC_H_ */

@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  Statistics.h: Statistics information from the RSP board.
 //#
 //#  Copyright (C) 2002-2004

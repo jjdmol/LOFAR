@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  Versions.h: FPGA firmware version information from the RSP board.
 //#
 //#  Copyright (C) 2002-2004

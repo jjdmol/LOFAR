@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  WGSettings.h: Waveform Generator control information
 //#
 //#  Copyright (C) 2002-2004

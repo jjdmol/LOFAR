@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  RCUSync.h: Synchronize rcu settings with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
@@ -28,23 +30,23 @@
 namespace RSP
 {
   class RCUSync : public SyncAction
-      {
-      public:
-	  /**
-	   * Constructors for a RCUSync object.
-	   */
-	  RCUSync();
+  {
+    public:
+      /**
+       * Constructors for a RCUSync object.
+       */
+      RCUSync(GCFPortInterface& board_port, int board_id);
 
-	  /* Destructor for RCUSync. */
-	  virtual ~RCUSync();
+      /* Destructor for RCUSync. */
+      virtual ~RCUSync();
 
-	  /**
-	   * Initial state handler.
-	   */
-	  GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+      /**
+       * Initial state handler.
+       */
+      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
 
-      private:
-      };
+    private:
+  };
 };
      
 #endif /* RCUSYNC_H_ */

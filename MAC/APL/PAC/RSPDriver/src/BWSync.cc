@@ -28,11 +28,19 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <unistd.h>
+//#include <stdlib.h>
+
 using namespace RSP;
 using namespace LOFAR;
 using namespace EPA_Protocol;
 
-BWSync::BWSync() : SyncAction((State)&BWSync::initial_state)
+#define N_RETRIES 3
+
+BWSync::BWSync(GCFPortInterface& board_port, int board_id)
+  : SyncAction((State)&BWSync::handler, board_port, board_id),
+    m_current_blp(0),
+    m_retries(0)
 {
 }
 
@@ -40,7 +48,7 @@ BWSync::~BWSync()
 {
 }
 
-GCFEvent::TResult BWSync::initial_state(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult BWSync::handler(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -50,22 +58,39 @@ GCFEvent::TResult BWSync::initial_state(GCFEvent& event, GCFPortInterface& port)
   {
     case F_TIMER:
     {
-      EPABfxreEvent bfxre;
-      EPABfximEvent bfxim;
-      EPABfyreEvent bfyre;
-      EPABfyimEvent bfyim;
+      // reset extended state variables on initialization
+      m_current_blp   = 0;
+      m_retries       = 0;
 
-      MEP_BFXRE(bfxre.hdr, MEPHeader::WRITE, 0);
-      MEP_BFXIM(bfxim.hdr, MEPHeader::WRITE, 0);
-      MEP_BFYRE(bfyre.hdr, MEPHeader::WRITE, 0);
-      MEP_BFYIM(bfyim.hdr, MEPHeader::WRITE, 0);
+      writecoef(port, (getBoardId() * N_BLP) + m_current_blp);
+      readstatus(port);
+    }
+    break;
 
-      /* initial triggering of this synchronization action */
-      for (int i = 0; i < N_RSPBOARDS; i++)
+    case EPA_RSPSTATUS:
+    {
+      EPARspstatusEvent rspstatus(event);
+      
+      // check status of previous write
+      if (rspstatus.rsp == 0)
       {
-	bfxre.hdr.m_fields.addr.dstid = i;
-	port.send(bfxre);
+	// OK, move on to the next BLP
+	m_current_blp++;
+	m_retries = 0;
       }
+      else
+      {
+	if (m_retries++ > N_RETRIES)
+	{
+	  // abort
+	  LOG_FATAL("maximum retries reached!");
+	  exit(EXIT_FAILURE);
+	}
+      }
+
+      // write next and read status
+      writecoef(port, (getBoardId() * N_BLP) + m_current_blp);
+      readstatus(port);
     }
     break;
 
@@ -76,3 +101,32 @@ GCFEvent::TResult BWSync::initial_state(GCFEvent& event, GCFPortInterface& port)
 
   return GCFEvent::HANDLED;
 }
+
+void BWSync::writecoef(GCFPortInterface& port, uint8 blp)
+{
+  // send next BF configure message
+  EPABfxreEvent bfxre;
+  
+  MEP_BFXRE(bfxre.hdr, MEPHeader::WRITE, 0);
+  bfxre.hdr.m_fields.addr.dstid = blp;
+  port.send(bfxre);
+}
+
+void BWSync::readstatus(GCFPortInterface& port)
+{
+  // send read status request to check status of the write
+  EPARspstatusEvent rspstatus;
+  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
+  rspstatus.rsp = 0;
+
+#if 0
+  // on the read request don't send the data
+  rspstatus.length -= RSPSTATUS_SIZE;
+#endif
+
+  port.send(rspstatus);
+}
+
+
+
+

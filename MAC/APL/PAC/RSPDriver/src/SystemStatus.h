@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  SystemStatus.h: System status information
 //#
 //#  Copyright (C) 2002-2004

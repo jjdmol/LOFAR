@@ -100,11 +100,11 @@ GCFEvent::TResult EPAStub::initial(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult EPAStub::connected(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
-  switch (e.signal)
+  switch (event.signal)
   {
   case F_ENTRY:
       {
@@ -113,6 +113,17 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& e, GCFPortInterface& port)
       break;
 
 
+    case EPA_BFXRE:
+    case EPA_BFXIM:
+    case EPA_BFYRE:
+    case EPA_BFYIM:
+      // simply ignore
+      break;
+
+    case EPA_RSPSTATUS:
+      status = rspstatus(event, port);
+      break;
+      
   case F_DISCONNECTED:
       {
 	  port.close();
@@ -135,25 +146,38 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult EPAStub::final(GCFEvent& e, GCFPortInterface& /*port*/)
+GCFEvent::TResult EPAStub::final(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch(e.signal)
+  switch(event.signal)
   {
-      case F_ENTRY:
-	  GCFTask::stop();
-	  break;
-      
-      case F_EXIT:
-	  break;
+    case F_ENTRY:
+      GCFTask::stop();
+      break;
 
-      default:
-	  status = GCFEvent::NOT_HANDLED;
-	  break;
+    case F_EXIT:
+      break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
   }
 
   return status;
+}
+
+GCFEvent::TResult EPAStub::rspstatus(GCFEvent& event, GCFPortInterface& port)
+{
+  EPARspstatusEvent rspstatus(event);
+
+  // set the correct header info
+  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READRES);
+
+  // simply echo the status event
+  port.send(rspstatus);
+
+  return GCFEvent::HANDLED;
 }
 
 void EPAStub::run()

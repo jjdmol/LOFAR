@@ -2,4 +2,4 @@
 server=RSP:client
 
 [RSP]
-board=EPAStub:client
+board0=EPAStub:client

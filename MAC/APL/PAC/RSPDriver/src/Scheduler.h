@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  Scheduler.h: RSP Driver scheduler
 //#
 //#  Copyright (C) 2002-2004
@@ -33,68 +35,68 @@
 namespace RSP
 {
   class Scheduler
-      {
-      public:
-	  /**
-	   * Constructors for a Scheduler object.
-	   * Currently the tv_usec part is always set to 0 irrespective
-	   * of the value passed in.
-	   */
-	  Scheduler();
+  {
+    public:
+      /**
+       * Constructors for a Scheduler object.
+       * Currently the tv_usec part is always set to 0 irrespective
+       * of the value passed in.
+       */
+      Scheduler();
 	  
-	  /* Destructor for Scheduler. */
-	  virtual ~Scheduler();
+      /* Destructor for Scheduler. */
+      virtual ~Scheduler();
 
-	  /**
-	   * Run the scheduler in response to a timer event.
-	   */
-	  GCFEvent::TResult run(GCFEvent& event, GCFPortInterface& port);
-	  /**
-	   * Dispatch an event from the RSP board to the appropriate
-	   * synchronization action.
-	   */
-	  GCFEvent::TResult dispatch(GCFEvent& event, GCFPortInterface& port);
+      /**
+       * Run the scheduler in response to a timer event.
+       */
+      GCFEvent::TResult run(GCFEvent& event, GCFPortInterface& port);
+      /**
+       * Dispatch an event from the RSP board to the appropriate
+       * synchronization action.
+       */
+      GCFEvent::TResult dispatch(GCFEvent& event, GCFPortInterface& port);
 
-	  /**
-	   * Add a synchronization action to be carried out
-	   * periodically with the specified period.
-	   */
-	  void addSyncAction(SyncAction* action);
+      /**
+       * Add a synchronization action to be carried out
+       * periodically on the specified board.
+       */
+      void addSyncAction(SyncAction* action);
 
-	  /**
-	   * Enter a new command into the scheduler in response
-	   * to receiving a command event from on of the RSPDriver
-	   * client processes.
-	   */
-	  RSP_Protocol::Timestamp enter(Command* command);
+      /**
+       * Enter a new command into the scheduler in response
+       * to receiving a command event from on of the RSPDriver
+       * client processes.
+       */
+      RSP_Protocol::Timestamp enter(Command* command);
 
-	  /**
-	   * Set the current time (from the update triggering timeout event).
-	   */
-	  void setCurrentTime(long sec, long usec);
+      /**
+       * Set the current time (from the update triggering timeout event).
+       */
+      void setCurrentTime(long sec, long usec);
 
-      private:
-	  /*@{*/
-	  /**
-	   * Helper methods for the Scheduler::run method.
-	   */
-	  void              scheduleCommands();
-	  void              processCommands();
-	  GCFEvent::TResult syncCache(GCFEvent& event, GCFPortInterface& port);
-	  void              completeCommands();
-	  /*@}*/
+    private:
+      /*@{*/
+      /**
+       * Helper methods for the Scheduler::run method.
+       */
+      void              scheduleCommands();
+      void              processCommands();
+      GCFEvent::TResult syncCache(GCFEvent& event, GCFPortInterface& port);
+      void              completeCommands();
+      /*@}*/
 
-	  std::priority_queue<Command*> m_later_queue;
-	  std::priority_queue<Command*> m_now_queue;
-	  std::priority_queue<Command*> m_periodic_queue;
-	  std::priority_queue<Command*> m_done_queue;
+      std::priority_queue<Command*> m_later_queue;
+      std::priority_queue<Command*> m_now_queue;
+      std::priority_queue<Command*> m_periodic_queue;
+      std::priority_queue<Command*> m_done_queue;
 
-	  std::priority_queue<SyncAction*> m_syncactions;
+      std::priority_queue<SyncAction*> m_syncactions;
 
-	  RSP_Protocol::Timestamp m_current_time;
+      RSP_Protocol::Timestamp m_current_time;
 
-	  Cache m_cache;
-      };
+      Cache m_cache;
+  };
 };
      
 #endif /* SCHEDULER_H_ */

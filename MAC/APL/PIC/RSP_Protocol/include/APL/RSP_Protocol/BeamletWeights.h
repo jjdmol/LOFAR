@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  BeamletWeights.h: beamlet weights class
 //#
 //#  Copyright (C) 2002-2004

@@ -30,7 +30,8 @@
 using namespace RSP;
 using namespace LOFAR;
 
-RCUSync::RCUSync() : SyncAction((State)&RCUSync::initial_state)
+RCUSync::RCUSync(GCFPortInterface& board_port, int board_id)
+  : SyncAction((State)&RCUSync::initial_state, board_port, board_id)
 {
 }
 

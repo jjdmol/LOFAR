@@ -41,24 +41,32 @@ using namespace std;
 using namespace LOFAR;
 
 RSPDriverTask::RSPDriverTask(string name)
-    : GCFTask((State)&RSPDriverTask::initial, name), m_scheduler()
+  : GCFTask((State)&RSPDriverTask::initial, name), m_scheduler()
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
   m_client.init(*this, "client", GCFPortInterface::SPP, RSP_PROTOCOL);
-  m_board.init(*this, "board", GCFPortInterface::SAP, EPA_PROTOCOL /*, true*/);
+
+  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
+  {
+    char name[64] = "board";
+    snprintf(name, 64, "board%d", boardid);
+    m_board[boardid].init(*this, name, GCFPortInterface::SAP, EPA_PROTOCOL /*, true*/);
+    //m_board[boardid].setAddr("eth0", "aa:bb:cc:dd:ee:ff");
+  }
 
   /**
    * Create synchronization action classes.
    */
-  BWSync* bwsync = new BWSync;
-  bwsync->setPriority(1);
+  BWSync* bwsync[N_RSPBOARDS];
+  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
+  {
+    bwsync[boardid] = new BWSync(m_board[boardid], boardid);
+    bwsync[boardid]->setPriority(1);
 
-  /**
-   * Add synchronization actions.
-   */
-  m_scheduler.addSyncAction(bwsync);
+    m_scheduler.addSyncAction(bwsync[boardid]);
+  }
 }
 
 RSPDriverTask::~RSPDriverTask()
@@ -67,7 +75,25 @@ RSPDriverTask::~RSPDriverTask()
 
 bool RSPDriverTask::isEnabled()
 {
-  return m_board.isConnected();
+  bool enabled = true;
+  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
+  {
+    if (!m_board[boardid].isConnected())
+    {
+      enabled = false;
+      break;
+    }
+  }
+  
+  return enabled;
+}
+
+void RSPDriverTask::openBoards()
+{
+  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
+  {
+    if (!m_board[boardid].isConnected()) m_board[boardid].open();
+  }
 }
 
 GCFEvent::TResult RSPDriverTask::initial(GCFEvent& event, GCFPortInterface& port)
@@ -76,56 +102,55 @@ GCFEvent::TResult RSPDriverTask::initial(GCFEvent& event, GCFPortInterface& port
   
   switch(event.signal)
   {
-  case F_INIT:
-      {
-      }
-      break;
+    case F_INIT:
+    {
+    }
+    break;
 
-  case F_ENTRY:
-      {
-	  //m_board.setAddr("eth0", "aa:bb:cc:dd:ee:ff");
-	  if (!m_board.isConnected()) m_board.open();
-      }
-      break;
+    case F_ENTRY:
+    {
+      openBoards();
+    }
+    break;
 
-  case F_CONNECTED:
+    case F_CONNECTED:
+    {
+      LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
+      if (isEnabled())
       {
-	  LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
-	  if (isEnabled())
-	  {
-	      TRAN(RSPDriverTask::enabled);
-	  }
+	TRAN(RSPDriverTask::enabled);
       }
-      break;
+    }
+    break;
 
-  case F_DISCONNECTED:
-      {
-	  port.setTimer((long)3); // try again in 3 seconds
-	  LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
-	  port.close();
-      }
-      break;
+    case F_DISCONNECTED:
+    {
+      port.setTimer((long)3); // try again in 3 seconds
+      LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+      port.close();
+    }
+    break;
 
-  case F_TIMER:
-      {
-	  LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
-	  port.open();
-      }
-      break;
+    case F_TIMER:
+    {
+      LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
+      port.open();
+    }
+    break;
 
-  case F_DATAIN:
-      {
-      }
-      break;
+    case F_DATAIN:
+    {
+    }
+    break;
 
-  case F_EXIT:
-      {
-	  // cancel timers
-	  m_board.cancelAllTimers();
-      }
-      break;
+    case F_EXIT:
+    {
+      // cancel timers
+      m_board[0].cancelAllTimers();
+    }
+    break;
 
-  default:
+    default:
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -139,85 +164,85 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
 
   switch (event.signal)
   {
-  case F_ENTRY:
-      {
-	  // start waiting for clients
-	  if (!m_client.isConnected()) m_client.open();
+    case F_ENTRY:
+    {
+      // start waiting for clients
+      if (!m_client.isConnected()) m_client.open();
 
-	  /* Start the update timer */
-	  m_board.setTimer((long)1,0,1,0); // update every second
-      }
-      break;
+      /* Start the update timer */
+      m_board[0].setTimer((long)1,0,1,0); // update every second
+    }
+    break;
 
 #if 0
-  case F_ACCEPT_REQ:
+    case F_ACCEPT_REQ:
       m_client.getPortProvider().accept();
       break;
 #else
-  case F_CONNECTED:
-      {
-	  LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
-      }
-      break;
+    case F_CONNECTED:
+    {
+      LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
+    }
+    break;
 #endif
 
-  case RSP_SETWEIGHTS:
+    case RSP_SETWEIGHTS:
+    {
+      /* enter the command in the scheduler's queue */
+      BWCommand* command = new BWCommand(event, port, Command::WRITE);
+
+      /* acknowledgement */
+      RSPSetweightsackEvent ack;
+
+      /* enter into the scheduler's queue */
+      ack.timestamp = m_scheduler.enter(command);
+
+      ack.status = SUCCESS;
+
+      m_client.send(ack);
+    }
+    break;
+
+    case F_TIMER:
+    {
+      GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
+      LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
+
+      if (&port == &m_board[0])
       {
-	  /* enter the command in the scheduler's queue */
-	  BWCommand* command = new BWCommand(event, port, Command::WRITE);
-
-	  /* acknowledgement */
-	  RSPSetweightsackEvent ack;
-
-	  /* enter into the scheduler's queue */
-	  ack.timestamp = m_scheduler.enter(command);
-
-	  ack.status = SUCCESS;
-
-	  m_client.send(ack);
+	/* run the scheduler */
+	status = m_scheduler.run(event,port);
       }
-      break;
-
-  case F_TIMER:
+      else
       {
-	  GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
-	  LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
-
-	  if (&port == &m_board)
-	  {
-	      /* run the scheduler */
-	      status = m_scheduler.run(event,port);
-	  }
-	  else
-	  {
-	      m_scheduler.dispatch(event, port);
-	  }
+	m_scheduler.dispatch(event, port);
       }
-      break;
+    }
+    break;
 
-  case F_DISCONNECTED:
+    case F_DISCONNECTED:
+    {
+      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+      port.close();
+
+      if (&port != &m_client)
       {
-	  LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
-	  port.close();
-
-	  if (&port == &m_board)
-	  {
-	      m_client.close();
-	      TRAN(RSPDriverTask::initial);
-	  }
-	  else port.open(); // re-open for next client
+	m_client.close();
+	TRAN(RSPDriverTask::initial);
       }
-      break;
+      else port.open(); // re-open for next client
+    }
+    break;
 
-  case F_EXIT:
-      {
-	  // cancel timers
-	  m_client.cancelAllTimers();
-	  m_board.cancelAllTimers();
-      }
-      break;
+    case F_EXIT:
+    {
+      // cancel timers
+      m_client.cancelAllTimers();
+      m_board[0].cancelAllTimers();
+    }
+    break;
 
-  default:
+    default:
       status = m_scheduler.dispatch(event, port);
       break;
   }

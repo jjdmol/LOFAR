@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  EPAStub.h: class definition for the EPA stub task
 //#
 //#  Copyright (C) 2002-2004
@@ -31,7 +33,7 @@
 namespace RSP_Test
 {
   class EPAStub : public GCFTask, public Test
-    {
+  {
     public:
       /**
        * The constructor of the EPAStub task.
@@ -55,11 +57,16 @@ namespace RSP_Test
       /**
        * The stub states.
        */
-      GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface &p);
+      GCFEvent::TResult connected(GCFEvent& event, GCFPortInterface& port);
 
       /**
-       * Run the tests.
+       * Handle the rsp status event.
        */
+      GCFEvent::TResult rspstatus(GCFEvent& event, GCFPortInterface& port);
+
+      /**
+      * Run the tests.
+      */
       void run();
 
     private:
@@ -68,7 +75,7 @@ namespace RSP_Test
     private:
       // ports
       GCFPort m_server;
-    };
+  };
 
 };
      

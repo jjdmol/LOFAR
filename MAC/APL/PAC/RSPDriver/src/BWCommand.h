@@ -34,42 +34,42 @@
 namespace RSP
 {
   class BWCommand : public Command
-      {
-      public:
-	  /**
-	   * Constructors for a BWCommand object.
-	   * Currently the tv_usec part is always set to 0 irrespective
-	   * of the value passed in.
-	   */
-	  BWCommand(GCFEvent& event, GCFPortInterface& port, Operation oper);
+  {
+    public:
+      /**
+       * Constructors for a BWCommand object.
+       * Currently the tv_usec part is always set to 0 irrespective
+       * of the value passed in.
+       */
+      BWCommand(GCFEvent& event, GCFPortInterface& port, Operation oper);
 	  
-	  /* Destructor for BWCommand. */
-	  virtual ~BWCommand();
+      /* Destructor for BWCommand. */
+      virtual ~BWCommand();
 
-	  /**
-	   * Make necessary changes to the cache for the next synchronization.
-	   * Any changes will be sent to the RSP boards.
-	   */
-	  virtual void apply(CacheBuffer& cache);
+      /**
+       * Make necessary changes to the cache for the next synchronization.
+       * Any changes will be sent to the RSP boards.
+       */
+      virtual void apply(CacheBuffer& cache);
 
-	  /**
-	   * Complete the command by sending the appropriate response on
-	   * the m_answerport;
-	   */
-	  virtual void complete(CacheBuffer& cache);
+      /**
+       * Complete the command by sending the appropriate response on
+       * the m_answerport;
+       */
+      virtual void complete(CacheBuffer& cache);
 
-	  /*@{*/
-	  /**
-	   * get timestamp of the event
-	   */
-	  virtual const Timestamp& getTimestamp();
-	  virtual void setTimestamp(const Timestamp& timestamp);
-	  /*@}*/
+      /*@{*/
+      /**
+       * get timestamp of the event
+       */
+      virtual const Timestamp& getTimestamp();
+      virtual void setTimestamp(const Timestamp& timestamp);
+      /*@}*/
 
-      private:
-	  BWCommand();
-	  RSPSetweightsEvent* m_event;
-      };
+    private:
+      BWCommand();
+      RSPSetweightsEvent* m_event;
+  };
 };
      
 #endif /* BWCOMMAND_H_ */
