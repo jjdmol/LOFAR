@@ -244,7 +244,26 @@
         It must be possible to specify which right knowledge sources
         have on certain parts of the blackboard-data.
         \caption{data access rights\label{req:data-access-rights}}
+        \hypertarget{req:data-access-rights}{}
       \end{requirement}
+
+      \subsubsection{blackboard api}
+
+        Components that access the blackboard will own tables or areas
+        on the blackboard. These are identified, and so are entries in
+        these areas. Also types of components are identified to be
+        able to determine how to interpret the data in an area.
+
+        Regular insert statements will be available. Update will be
+        available for specific knowledge sources on specific fields. A
+        definition method for this will have to be specified in
+        accordance with requirement
+        \hyperlink{req:data-access-rights}{\ref{req:data-access-rights}}.
+
+        Instead of a delete operation, there will be a
+        finalize/abandon set of calls. These collapse a branch of
+        intermediate results leaving only a final result, or a
+        tried-and-failed entry on the start of the branch.
 
     \subsection{deployment}
 
@@ -445,12 +464,6 @@
   \section{distributed hierarchical blackboard}
   \label{sec:distributed-hierarchical-blackboard}\hypertarget{sec:distributed-hierarchical-blackboard}{}%
 
-%%       \begin{figure}
-%%         \includegraphics[]{../figures/start.usecase.eps}
-%%         \hypertarget{fig:start.usecase}{}
-%%         \caption{a simplified use-case for a self-calibration run\label{fig:start.usecase}}
-%%       \end{figure}
-
       \begin{figure}
         \includegraphics[]{../figures/main.usecase.eps}
         \hypertarget{fig:main.usecase}{}
@@ -466,18 +479,17 @@
 
       Logically there is only one Blackboard. It is a distributed
       application however, each instance dividing it's workload to
-      it's own liking. Each blackboard
-%      \begin{em}\large{Note: }
-%        no capital here
-%      \end{em}
-      knows what nodes it has to start KnowledgeSources on.
+      it's own liking. Each blackboard knows what nodes it has to
+      start KnowledgeSources on.
 
       For this to work it has to be possible to distribute
       responsibility in this fashion as well. For instance; If a
       blackboard has responsibility for a certain time-frame, it must
       be able to change any time dependent parameters at will as long
       as they fall completely in this time frame.
-      \begin{em}\large{Note: }Continuity in a function for a parameter over time will pose a problem at the edges of the time frame.\end{em}
+      \begin{em}\large{Note: }Continuity in a function for a parameter
+      over time will pose a problem at the edges of the time
+      frame.\end{em}
 
     \subsection{Workload distribution}
     \label{subsec:workload-distribution}\hypertarget{subsec:workload-distribution}{}%
@@ -806,56 +818,15 @@
 
     \listof{assumption}{}
 
-%    \begin{itemize}
-%      \item [\ref{ass:aips++}]There is a measurement-set package in
-%        AIPS++ that will be used for manipulating measurement data.
-%      \item [\ref{ass:dimensions}]The number of dimensions in a
-%        measurement set is four.
-%      \item [\ref{ass:partitioning}]Data can be partitioned over the
-%        dimensions in the dataset, without disturbing the
-%        self-calibration process.
-%      \item [\ref{ass:devision}]It isn't necessary to divide along a
-%        dimension more then once.
-%      \item [\ref{ass:time-gaps}]There are no time-gaps in a
-%        measurement set.
-%      \item [\ref{ass:one-band}]There is a single continuous band of
-%        frequencies in a measurement set.
-%    \end{itemize}
-
   \dbappendix{prerequisites}
   \label{app:prerequisites}\hypertarget{app:prerequisites}{}
 
     \listof{prerequisite}{}
 
-%    \begin{itemize}
-%      \item [\ref{pre:dbms}]A full fledged database management system
-%        (DBMS), object oriented or relational, must be available.
-%      \item [\ref{pre:transactions}]The DBMS must be able to perform
-%        transaction based processing.
-%      \item [\ref{pre:table-inheritance}]The DBMS should support table
-%        inheritance.
-%      \item [\ref{pre:aips++}]A package for manipulation of
-%        measurement sets.
-%    \end{itemize}
-
   \dbappendix{requirements-list}
   \label{app:requirements-list}\hypertarget{app:requirements-list}{}%
 
    \listof{requirement}{}
-
-%    \begin{itemize}
-%      \item [\ref{req:parameter-distribution}]There must be a
-%        mechanism that can cleverly distribute parameters to any
-%        interested party upon request by the originator.
-%      \item [\ref{req:asynchronous}]The protocol dialogs, for the
-%        communications between BlackBoard components, should be
-%        asynchronous.
-%      \item [\ref{req:no-decision}]A simple watcher has to be able to
-%        make a tristate decision on which of two threads is leading to
-%        desirable results.
-%      \item [\ref{req:merge}]A watcher should be able to see a
-%        possibility to merge the results of two solution threads.
-%    \end{itemize}
 
   \dbappendix{revision log}
   \label{app:revision-log}\hypertarget{app:revision-log}{}%
