@@ -49,6 +49,11 @@ public:
   // Get the parameter name.
   const string& getName() const
     { return itsName; }
+  // Set the parameter name.
+  void setName (const string& name)
+    { itsName = name; }
+
+  // Get the parameter id.
   unsigned int getParmId() const
     { return itsParmId; }
 
