@@ -112,7 +112,9 @@ EPAStub::EPAStub(string name)
     m_reg[MEPHeader::CDO][MEPHeader::CDO_SETTINGS].addr  = new char[MEPHeader::CDO_SETTINGS_SIZE];
     m_reg[MEPHeader::CDO][MEPHeader::CDO_SETTINGS].size  = MEPHeader::CDO_SETTINGS_SIZE;
 
-    // initialize allocated memory to zero
+    //
+    // initialize registers to some test pattern
+    //
     for (int pid = 0; pid <= MEPHeader::MAX_PID; pid++)
       for (int regid = 0; regid <= MEPHeader::MAX_REGID; regid++)
       {
@@ -129,10 +131,16 @@ EPAStub::EPAStub(string name)
 	    size *= GET_CONFIG("RS.N_BLPS", i);
 	    break;
 	}
+
+	for (int i = 0; i < size; i++)
+	{
+	  m_reg[pid][regid].addr[i] = i;
+	}
 	
-	if (m_reg[pid][regid].addr) memset(m_reg[pid][regid].addr, 0, size);
+	//if (m_reg[pid][regid].addr) memset(m_reg[pid][regid].addr, 0, size);
       }
 
+#if 0
     //
     // Initialize read-only registers to some test pattern
     //
@@ -142,6 +150,7 @@ EPAStub::EPAStub(string name)
     for (int i = 0; i < MEPHeader::BST_POWER_SIZE; i++)   m_reg[MEPHeader::BST][MEPHeader::BST_POWER].addr[i]   = i;
     for (int i = 0; i < MEPHeader::SST_MEAN_SIZE; i++)    m_reg[MEPHeader::SST][MEPHeader::SST_MEAN].addr[i]    = i;
     for (int i = 0; i < MEPHeader::SST_POWER_SIZE; i++)   m_reg[MEPHeader::SST][MEPHeader::SST_POWER].addr[i]   = i;
+#endif
   }
 }
 
