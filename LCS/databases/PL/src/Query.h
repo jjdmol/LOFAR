@@ -67,6 +67,12 @@ namespace LOFAR
         itsQueryExpr(aExpr), itsUseString(false)
       {}
 
+      // Return whether this object is empty. A QueryObject is considered
+      // empty when either 
+      // - \c itsSqlString is empty and \c itsUseString is true, or
+      // - \c itsQueryExpr is empty and \c itsUseString is false.
+      bool empty() const;
+
       // Return this QueryObject as an SQL WHERE clause. Depending on the
       // value of \c itsUseString, this method will either return \c
       // itsSqlString, or \c itsQueryExpr as a string.
