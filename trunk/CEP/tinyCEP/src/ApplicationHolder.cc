@@ -42,10 +42,24 @@ namespace LOFAR
     }
   }
 
-  ApplicationHolder::~ApplicationHolder() {
-    delete itsDataManager;
-    delete itsProto;
+  ApplicationHolder::ApplicationHolder() {
   }
+
+  ApplicationHolder::~ApplicationHolder() {
+    // dit segfault op dit moment nog.. FIXME!
+//     delete itsProto;
+//     delete itsDataManager;
+  }
+
+  ApplicationHolder::ApplicationHolder(const ApplicationHolder& that)
+    : itsArgc        (that.itsArgc),
+      itsArgv        (that.itsArgv),
+      itsProto       (that.itsProto),
+      itsDataManager (that.itsDataManager),
+      itsNinputs     (that.itsNinputs),
+      itsNoutputs    (that.itsNoutputs) {
+  }
+      
     
   void ApplicationHolder::define(const KeyValueMap& map) {
   }
@@ -68,7 +82,7 @@ namespace LOFAR
       TR1.setSourceAddr(itsDataManager->getOutHolder(i));
       TR2.setSourceAddr(itsDataManager->getInHolder(i));
 
-      TR2.connectTo(&TR1, *itsProto->getTransporter().getTransportHolder());
+      TR2.connectTo(TR1, *itsProto->getTransporter().getTransportHolder());
 
       TR1.init();
       TR2.init();

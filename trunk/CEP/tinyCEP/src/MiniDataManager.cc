@@ -20,7 +20,6 @@
 //#
 //#  $Id$
 
-#include <tinyCEP/BaseDataManager.h>
 #include <tinyCEP/MiniDataManager.h>
 
 namespace LOFAR
@@ -29,29 +28,66 @@ namespace LOFAR
   MiniDataManager::MiniDataManager(int ninputs, int noutputs):
     itsNinputs(ninputs), itsNoutputs(noutputs) {
     
-    itsInTRs = new DataHolder* [ninputs];
-    itsOutTRs = new DataHolder* [noutputs];
-
+    itsInDHs = new DataHolder* [ninputs];
+    itsOutDHs = new DataHolder* [noutputs];
   }
 
   MiniDataManager::~MiniDataManager() {
-
   }
 
   DataHolder* MiniDataManager::getInHolder(int channel) {
-    return itsInTRs[channel];
+    assertChannel(channel, true);
+    return itsInDHs[channel];
   }
 
   DataHolder* MiniDataManager::getOutHolder(int channel) {
-    return itsOutTRs[channel];
+    assertChannel(channel, false);
+    return itsOutDHs[channel];
   }
 
   void MiniDataManager::addInDataHolder(int channel, DataHolder* dhptr) {
-    itsInTRs[channel] = dhptr;
+    assertChannel(channel, true);
+    itsInDHs[channel] = dhptr;
   }
 
   void MiniDataManager::addOutDataHolder(int channel, DataHolder* dhptr) {
-    itsOutTRs[channel] = dhptr;
+    assertChannel(channel, false);
+    itsOutDHs[channel] = dhptr;
   }
 
+  void MiniDataManager::assertChannel(int channel, bool input) {
+    if (input) {
+      DbgAssertStr (channel >= 0,          "input channel too low");
+      DbgAssertStr (channel < getInputs(), "input channel too high");
+    } else {
+      DbgAssertStr (channel >= 0,           "output channel too low");
+      DbgAssertStr (channel < getOutputs(), "output channel too high");
+    }
+  }
+
+  void MiniDataManager::preprocess() {
+  }
+
+  void MiniDataManager::postprocess() {
+  }
+
+  void MiniDataManager::initializeInputs() {
+  }
+
+  DataHolder* MiniDataManager::getGeneralInHolder(int channel) {
+    assertChannel(channel, true);
+    return itsInDHs[channel];
+  }
+
+  DataHolder* MiniDataManager::getGeneralOutHolder(int channel) {
+    assertChannel(channel, false);
+    return itsOutDHs[channel];
+  }
+  
+  void MiniDataManager::readyWithInHolder(int channel) {
+  }
+  
+  void MiniDataManager::readyWithOutHolder(int channel) {
+  }
+  
 } // namespace LOFAR

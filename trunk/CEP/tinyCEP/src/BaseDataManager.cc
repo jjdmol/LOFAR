@@ -1,4 +1,4 @@
-//#  WH_Example.cc: Example WorkHolder for tinyCEPFrame test programs.
+//#  BaseDataManager.cc:
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,43 +20,19 @@
 //#
 //#  $Id$
 
-#include <stdio.h>
-
-#include <tinyCEP/WH_Example.h>
-#include <Common/KeyValueMap.h>
-#include <Common/Debug.h>
+#include <tinyCEP/BaseDataManager.h>
 
 namespace LOFAR
 {
-  WH_Example::WH_Example (const string& name, 
-			  unsigned int nin, unsigned int nout,
-			  unsigned int nbuffer)
-    : WorkHolder (nin, nout, name, "WH_Example"),
-      itsBufLength (nbuffer) {
-
-  }
-  
-
-  WH_Example::~WH_Example() {
+  BaseDataManager::BaseDataManager() {
   }
 
-  WorkHolder* WH_Example::construct (const string& name, int ninput, int noutput,
-				     const KeyValueMap& params) {
-    return new WH_Example(name, ninput, noutput, 
-			  params.getInt("nbuffer", 10));
+  BaseDataManager::~BaseDataManager(){ 
   }
-  
-  WH_Example* WH_Example::make (const string& name) {
-    return new WH_Example (name, getDataManager().getInputs(),
-			   getDataManager().getOutputs(), itsBufLength) ;
-      }
-  
-  void WH_Example::process() {
-
-  }
-  
-  void WH_Example::dump() {
- 
- }
+   
+  DataHolder* BaseDataManager::getInHolder(int) {}
+  DataHolder* BaseDataManager::getOutHolder(int) {}
+  void BaseDataManager::addInDataHolder(int, DataHolder*) {}
+  void BaseDataManager::addOutDataHolder(int, DataHolder*) {}
 
 } // namespace LOFAR

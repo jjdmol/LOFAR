@@ -26,6 +26,7 @@
 #include <lofar_config.h>
 
 //# Includes
+#include <Common/Debug.h>
 #include <tinyCEP/BaseDataManager.h>
 #include <Transport/DataHolder.h>
 
@@ -50,14 +51,46 @@ namespace LOFAR
     void addInDataHolder(int channel, DataHolder* dhptr);
     void addOutDataHolder(int channel, DataHolder* dhptr);
 
+    void preprocess();
+/*     void process(); */
+    void postprocess();
+
+    void initializeInputs();
+
+    DataHolder* getGeneralInHolder(int channel);
+    DataHolder* getGeneralOutHolder(int channel);
+
+    bool hasInputSelector();
+    bool hasOutputSelector();
+
+    bool doAutoTriggerIn(int channel) const;
+    bool doAutoTriggerOut(int channel) const;
+
+    void readyWithInHolder(int channel);
+    void readyWithOutHolder(int channel);
+  
   private:
     int itsNinputs;
     int itsNoutputs;
     
-    DataHolder** itsInTRs;
-    DataHolder** itsOutTRs;
+    DataHolder** itsInDHs;
+    DataHolder** itsOutDHs;
+    
+    void assertChannel(int channel, bool input);
   };
 
-} // namespace LOFAR
 
+inline bool MiniDataManager::hasInputSelector() 
+{ return false; }
+
+inline bool MiniDataManager::hasOutputSelector()
+{ return false; }
+
+inline bool MiniDataManager::doAutoTriggerIn(int channel) const
+{ return false; }
+
+inline bool MiniDataManager::doAutoTriggerOut(int channel) const
+{ return false; }
+
+} // namespace LOFAR
 #endif

@@ -1,6 +1,6 @@
-//#  WH_Example.cc: Example WorkHolder for tinyCEPFrame test programs.
+//#  BaseDataManager.cc: DataManager base class
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,43 +20,31 @@
 //#
 //#  $Id$
 
-#include <stdio.h>
-
-#include <tinyCEP/WH_Example.h>
-#include <Common/KeyValueMap.h>
-#include <Common/Debug.h>
+#include <tinyCEP/DataManager.h>
 
 namespace LOFAR
 {
-  WH_Example::WH_Example (const string& name, 
-			  unsigned int nin, unsigned int nout,
-			  unsigned int nbuffer)
-    : WorkHolder (nin, nout, name, "WH_Example"),
-      itsBufLength (nbuffer) {
-
-  }
-  
-
-  WH_Example::~WH_Example() {
+  DataManager::DataManager(int inputs, int outputs) {
   }
 
-  WorkHolder* WH_Example::construct (const string& name, int ninput, int noutput,
-				     const KeyValueMap& params) {
-    return new WH_Example(name, ninput, noutput, 
-			  params.getInt("nbuffer", 10));
+  DataManager::~DataManager(){
   }
-  
-  WH_Example* WH_Example::make (const string& name) {
-    return new WH_Example (name, getDataManager().getInputs(),
-			   getDataManager().getOutputs(), itsBufLength) ;
-      }
-  
-  void WH_Example::process() {
 
+
+  DataHolder* DataManager::getInHolder(int channel) {
+    DbgAssertStr (channel >= 0,          "input channel too low");
+    DbgAssertStr (channel < getInputs(), "input channel too high");
+
+    return itsInDHs[channel].currentDH;
   }
-  
-  void WH_Example::dump() {
- 
- }
+
+  DataHolder* DataManager::getOutHolder(int channel) {
+    DbgAssertStr (channel >= 0,          "output channel too low");
+    DbgAssertStr (channel < getOutputs(), "output channel too high");
+
+    return itsOutDHs[channel].currentDH;
+  }
+
+
 
 } // namespace LOFAR
