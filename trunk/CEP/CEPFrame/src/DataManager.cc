@@ -88,6 +88,7 @@ DataManager::DataManager (const DataManager& that)
 
 DataManager::~DataManager()
 {
+  TRACER4("DataManager destructor");
   delete itsSynMan;
   delete itsInDHs;
   delete itsOutDHs;
@@ -277,7 +278,7 @@ void DataManager::initializeInputs()
 {
   for (int ch = 0; ch < itsNinputs; ch++)
   {
-    if (itsInDHs[ch].currentDH == 0)
+    if (doAutoTriggerIn(ch) && (itsInDHs[ch].currentDH == 0))
     {
       if (itsSynMan->isInSynchronous(ch) == true)
       {
