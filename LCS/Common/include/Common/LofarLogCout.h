@@ -88,15 +88,15 @@
 #define ALLOC_TRACER_CONTEXT  \
 public:	\
   static LFDebug::Context DebugContext; \
-  static inline LFDebug::Context & getDebugContext() \
+  static inline LFDebug::Context & getLFDebugContext() \
             { return DebugContext; }
 
 #define INIT_TRACER_CONTEXT(scope, contextname)  \
   LFDebug::Context scope::DebugContext(contextname)
 
 #define ALLOC_TRACER_ALIAS(other)  \
-  static inline LFDebug::Context & getDebugContext() \
-  { return other::getDebugContext(); }
+  static inline LFDebug::Context & getLFDebugContext() \
+  { return other::getLFDebugContext(); }
 
 #define LOG_TRACE_LOOP(message)		cTrace(TRACE_LEVEL_LOOP, message)
 #define LOG_TRACE_VAR(message)		cTrace(TRACE_LEVEL_VAR, message)
@@ -132,7 +132,7 @@ public:	\
 //#
 #define LOG_TRACE_LIFETIME_STR(level, stream) \
 	LFDebug::Tracer objname; \
-    if( DebugCheck(level) ) { \
+    if( LFDebugCheck(level) ) { \
 		constructStream(stream) \
 		objname.startMsg (LOG4CPLUS_LEVEL(level), __FILE__, __LINE__, \
                         __PRETTY_FUNCTION__, oss.str().c_str(), 0); \
@@ -141,8 +141,8 @@ public:	\
 	LOG_TRACE_LIFETIME_STR(level, message)
 
 //# ---------- implementation details tracer part ----------
-#define cTrace(level, message)		cDebug(level, "TRACE" << LOG4CPLUS_LEVEL(level) << " TRC." << getDebugContext().name(), message)
-#define cTracestr(level,stream) 	cDebugstr(level, "TRACE" << LOG4CPLUS_LEVEL(level) << " TRC." << getDebugContext().name(), stream)
+#define cTrace(level, message)		cDebug(level, "TRACE" << LOG4CPLUS_LEVEL(level) << " TRC." << getLFDebugContext().name(), message)
+#define cTracestr(level,stream) 	cDebugstr(level, "TRACE" << LOG4CPLUS_LEVEL(level) << " TRC." << getLFDebugContext().name(), stream)
 
 #else	// ENABLE_TRACER
 //# define dummies if tracing is disabled
@@ -199,10 +199,10 @@ public:	\
 
 //# ---------- implementation details generic part ----------
 
-#define DebugCheck(level)	getDebugContext().check(level)
+#define LFDebugCheck(level)	getLFDebugContext().check(level)
 
 #define DebugTestAndLog(level) \
-	if (DebugCheck(level) && LOFAR::LFDebug::stream_time()) \
+	if (LFDebugCheck(level) && LOFAR::LFDebug::stream_time()) \
 		LOFAR::LFDebug::getDebugStream()
 
 #define	constructStream(stream) \
@@ -350,12 +350,12 @@ namespace LOFAR
 #endif
 
     extern Context DebugContext;
-    inline Context & getDebugContext ()  { return DebugContext; }
+    inline Context & getLFDebugContext ()  { return DebugContext; }
 
-  } // namespace Debug
+  } // namespace LFDebug
 
 
-  // Default DebugContext is the one in Debug.
-  using LFDebug::getDebugContext;
+  // Default DebugContext is the one in LFDebug.
+  using LFDebug::getLFDebugContext;
 
 } // namespace LOFAR
