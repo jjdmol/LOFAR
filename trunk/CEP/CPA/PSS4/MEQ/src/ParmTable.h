@@ -30,6 +30,7 @@
 #include <MEQ/Polc.h>
 //#include <MEQ/MeqSourceList.h>
 #include <Common/lofar_vector.h>
+#include <Common/Thread/Mutex.h>
 #include <map>
 
 
@@ -63,8 +64,15 @@ public:
   int getInitCoeff (Polc::Ref &polc,const string& parmName);
 
   // Put the polynomial coefficient for the given parameter and domain.
+  // Returns the DbId of the polc.
+  // If domain_is_key, checks that domain is unique
     //##ModelId=3F86886F02C8
-  void putCoeff (const string& parmName, const Polc& polc);
+  Polc::DbId putCoeff (const string& parmName, const Polc& polc,bool domain_is_key=true);
+  
+  // Put the polynomial coefficient for the given parameter and domain.
+  // If a new DbId is allocated, stores it in the polc
+  // If domain_is_key, checks that domain is unique
+  void putCoeff1 (const string& parmName,Polc& polc,bool domain_is_key=true);
 
   // Return point sources for the given source numbers.
   // An empty sourceNr vector means all sources.
@@ -104,6 +112,8 @@ public:
   static void unlockTables();
 
 private:
+  Thread::Mutex::Lock constructor_lock;
+    
   // Find the table subset containing the parameter values for the
   // requested domain.
     //##ModelId=3F86886F02CE
@@ -124,6 +134,8 @@ private:
 
     //##ModelId=3F95060D031A
   static std::map<string, ParmTable*> theirTables;
+  
+  static Thread::Mutex   theirMutex;
 };
 
 

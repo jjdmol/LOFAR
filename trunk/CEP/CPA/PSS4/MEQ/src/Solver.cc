@@ -260,6 +260,8 @@ int Solver::getResult (Result::Ref &resref,
   // Do that in an empty request.
   Request & lastReq = reqref <<= new Request;
   lastReq.setId(rqid);
+  DataRecord& rider = lastReq[FRider] <<= new DataRecord;
+  rider[FSavePolc] = true;
   DataRecord& ldr1 = lastReq[FNodeState] <<= new DataRecord;
   DataRecord& ldr2 = ldr1[FSolvableParm] <<= new DataRecord;
   DataRecord& dr2 = ldr2[FByNodeIndex] <<= new DataRecord;
