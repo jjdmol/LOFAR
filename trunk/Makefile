@@ -360,18 +360,22 @@ release:
 	echo ;\
 	rem='empty';\
 	echo "** Release branch tag name:";\
-	while test "x$$rem" != "x"; do\
+	while test "x$$rem" != "x" -o "x$$tagname" = "x"; do\
 		rem='';\
 		read -e -p"=> " tagname rem;\
 		if test "x$$rem" != "x"; then\
 			echo "ERROR: branch tag name should not contain spaces or tabs.";\
+		else if test "x$$tagname" = "x"; then\
+			echo "ERROR: no tag name specified";\
+			rem='error';\
+		fi\
 		fi\
 	done;\
 	echo "Release branch tag name set to: '$$tagname'"; \
 	echo ;\
 	rem='empty';\
 	echo "** Release test directory:";\
-	while test "x$$rem" != "x"; do\
+	while test "x$$rem" != "x" -o "x$$testdir" = "x"; do\
 		rem='';\
 		read -e -p"=> " testdir rem;\
 		if test "x$$rem" != "x"; then\
@@ -379,12 +383,20 @@ release:
 			rem='error';\
 		else if test ! -d $$testdir; then\
 			echo "INFO: creating directory $$testdir";\
-			mkdir $$testdir;\
 			rem='';\
+			mkdir $$testdir;\
+			if test ! -d $$testdir; then\
+				echo "ERROR: failed to create directory $$testdir";\
+				rem='error';\
+			fi;\
 		else if test -e $$testdir/LOFAR; then\
 			echo -n "ERROR: There is already a $$testdir/LOFAR file/directory. ";\
 			echo -e "Please remove it or specify a different directory.";\
 			rem='error';\
+		else if test "x$$testdir" = "x"; then\
+			echo "ERROR: no directory specified";\
+			rem='error';\
+		fi\
 		fi\
 		fi\
 		fi\
@@ -425,7 +437,7 @@ release:
 	rm -f /tmp/inputrc.$$PPID;\
 	echo ;\
 	echo -n "TAGGING (output to tag.log) ...";\
-	cvs tag -bf $$tagname $(DEFAULT_FILES_TO_TAG) $$files > tag.log 2>&1 ;\
+	cvs tag -bF $$tagname $(DEFAULT_FILES_TO_TAG) $$files > tag.log 2>&1 ;\
 	if test ! 0 -eq $$?; then\
 		echo "FAILURE: failed to tag, see tag.log for information.";\
 		exit;\
