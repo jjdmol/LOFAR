@@ -1,9 +1,10 @@
 V 10
 1
 LANG:1 14 19inch_Subrack
-PANEL,258 108 182 113 N "_3DFace" 2
+PANEL,407 248 182 113 N "_3DFace" 3
 "$RackNr"
 "$SubrackNr"
+"$datapoint"
 "main()
 {
   EP_setBackColor();	
@@ -66,8 +67,6 @@ dyn_errClass err;
             \"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_BP.status:_online.._value\",
             \"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_Maintenance.status:_online.._value\",
             \"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Maintenance.status:_online.._value\");
-
-            
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -89,23 +88,12 @@ EP_setBackColorCB(string dpSource1,  unsigned AP1_RCU1_stat, string dpSource2,  
 									string dpSource23, unsigned Subrack_main)
 {
 	//Declaration of temporary variables
-	int AP1_RCU1_health;
-	int AP1_RCU2_health;
-	int AP2_RCU1_health;
-	int AP2_RCU2_health;
-	int AP3_RCU1_health;
-	int AP3_RCU2_health;
-	int AP4_RCU1_health;
-	int AP4_RCU2_health;
-	int AP1_health;
-	int AP2_health;
-	int AP3_health;
-	int AP4_health;
+	int AP1_RCU1_health, AP1_RCU2_health, AP2_RCU1_health, AP2_RCU2_health;
+	int AP3_RCU1_health, AP3_RCU2_health, AP4_RCU1_health, AP4_RCU2_health;
+	int AP1_health, AP2_health, AP3_health, AP4_health;
 	int BP_health;
 	int Subrack_health;
 	int SR_health;	// Subrack_maintenance status
-//	string Color_green = \"{51,204,0}\";	//Color Green
-//	string Color_blue = \"{102,153,255}\";	//Color Blue
 
 	//Calculate the Error/Health value for each variable
 	if ((AP1_RCU1_stat + AP1_RCU1_main)<1) AP1_RCU1_health=1; else AP1_RCU1_health=0;
@@ -136,113 +124,185 @@ EP_setBackColorCB(string dpSource1,  unsigned AP1_RCU1_stat, string dpSource2,  
   if (Subrack_health == 100)
 	{
     setValue(\"LED_1\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_1\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_2\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_2\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_3\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_3\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
   }
   else if ((Subrack_health) > 86 && ((Subrack_health) <= 100))
 	{
     setValue(\"LED_1\", \"backCol\", \"Yellow\");
+    setValue(\"LED_1\", \"foreCol\", \"Yellow\");
     setValue(\"LED_2\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_2\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_3\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_3\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
   }
   else if ((Subrack_health) > 74 && ((Subrack_health) <= 86))
 	{
     setValue(\"LED_1\", \"backCol\", \"Yellow\");
+    setValue(\"LED_1\", \"foreCol\", \"Yellow\");
     setValue(\"LED_2\", \"backCol\", \"Yellow\");
+    setValue(\"LED_2\", \"foreCol\", \"Yellow\");
     setValue(\"LED_3\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_3\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
   }
   else if ((Subrack_health) > 61 && ((Subrack_health) <= 74))
 	{
     setValue(\"LED_1\", \"backCol\", \"Yellow\");
+    setValue(\"LED_1\", \"foreCol\", \"Yellow\");
     setValue(\"LED_2\", \"backCol\", \"Yellow\");
+    setValue(\"LED_2\", \"foreCol\", \"Yellow\");
     setValue(\"LED_3\", \"backCol\", \"Yellow\");
+    setValue(\"LED_3\", \"foreCol\", \"Yellow\");
     setValue(\"LED_4\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_4\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
   }
   else if ((Subrack_health) > 49 && ((Subrack_health) <= 61))
 	{
     setValue(\"LED_1\", \"backCol\", \"Yellow\");
+    setValue(\"LED_1\", \"foreCol\", \"Yellow\");
     setValue(\"LED_2\", \"backCol\", \"Yellow\");
+    setValue(\"LED_2\", \"foreCol\", \"Yellow\");
     setValue(\"LED_3\", \"backCol\", \"Yellow\");
+    setValue(\"LED_3\", \"foreCol\", \"Yellow\");
     setValue(\"LED_4\", \"backCol\", \"Yellow\");
+    setValue(\"LED_4\", \"foreCol\", \"Yellow\");
     setValue(\"LED_5\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_5\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
+
   }
   else if ((Subrack_health) > 36 && ((Subrack_health) <= 49))
 	{
     setValue(\"LED_1\", \"backCol\", \"Red\");
+    setValue(\"LED_1\", \"foreCol\", \"Red\");
     setValue(\"LED_2\", \"backCol\", \"Red\");
+    setValue(\"LED_2\", \"foreCol\", \"Red\");
     setValue(\"LED_3\", \"backCol\", \"Red\");
+    setValue(\"LED_3\", \"foreCol\", \"Red\");
     setValue(\"LED_4\", \"backCol\", \"Red\");
+    setValue(\"LED_4\", \"foreCol\", \"Red\");
     setValue(\"LED_5\", \"backCol\", \"Red\");
+    setValue(\"LED_5\", \"foreCol\", \"Red\");
     setValue(\"LED_6\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_6\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
   }
   else if ((Subrack_health) > 24 && ((Subrack_health) <= 36))
 	{
     setValue(\"LED_1\", \"backCol\", \"Red\");
+    setValue(\"LED_1\", \"foreCol\", \"Red\");
     setValue(\"LED_2\", \"backCol\", \"Red\");
+    setValue(\"LED_2\", \"foreCol\", \"Red\");
     setValue(\"LED_3\", \"backCol\", \"Red\");
+    setValue(\"LED_3\", \"foreCol\", \"Red\");
     setValue(\"LED_4\", \"backCol\", \"Red\");
+    setValue(\"LED_4\", \"foreCol\", \"Red\");
     setValue(\"LED_5\", \"backCol\", \"Red\");
+    setValue(\"LED_5\", \"foreCol\", \"Red\");
     setValue(\"LED_6\", \"backCol\", \"Red\");
+    setValue(\"LED_6\", \"foreCol\", \"Red\");
     setValue(\"LED_7\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_7\", \"foreCol\", \"Lofar_device_active\");
     setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
   }
   else if ((Subrack_health) > 11 && ((Subrack_health) <= 24))
 	{
     setValue(\"LED_1\", \"backCol\", \"Red\");
+    setValue(\"LED_1\", \"foreCol\", \"Red\");
     setValue(\"LED_2\", \"backCol\", \"Red\");
+    setValue(\"LED_2\", \"foreCol\", \"Red\");
     setValue(\"LED_3\", \"backCol\", \"Red\");
+    setValue(\"LED_3\", \"foreCol\", \"Red\");
     setValue(\"LED_4\", \"backCol\", \"Red\");
+    setValue(\"LED_4\", \"foreCol\", \"Red\");
     setValue(\"LED_5\", \"backCol\", \"Red\");
+    setValue(\"LED_5\", \"foreCol\", \"Red\");
     setValue(\"LED_6\", \"backCol\", \"Red\");
+    setValue(\"LED_6\", \"foreCol\", \"Red\");
     setValue(\"LED_7\", \"backCol\", \"Red\");
+    setValue(\"LED_7\", \"foreCol\", \"Red\");
     setValue(\"LED_8\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"LED_8\", \"foreCol\", \"Lofar_device_active\");
   }
   else if ((Subrack_health) >= 0 && ((Subrack_health) <= 11))
 	{
     setValue(\"LED_1\", \"backCol\", \"Red\");
+    setValue(\"LED_1\", \"foreCol\", \"Red\");
     setValue(\"LED_2\", \"backCol\", \"Red\");
+    setValue(\"LED_2\", \"foreCol\", \"Red\");
     setValue(\"LED_3\", \"backCol\", \"Red\");
+    setValue(\"LED_3\", \"foreCol\", \"Red\");
     setValue(\"LED_4\", \"backCol\", \"Red\");
+    setValue(\"LED_4\", \"foreCol\", \"Red\");
     setValue(\"LED_5\", \"backCol\", \"Red\");
+    setValue(\"LED_5\", \"foreCol\", \"Red\");
     setValue(\"LED_6\", \"backCol\", \"Red\");
+    setValue(\"LED_6\", \"foreCol\", \"Red\");
     setValue(\"LED_7\", \"backCol\", \"Red\");
+    setValue(\"LED_7\", \"foreCol\", \"Red\");
     setValue(\"LED_8\", \"backCol\", \"Red\");
+    setValue(\"LED_8\", \"foreCol\", \"Red\");
   }
 
 	//Set visibility for Maintenance Sign if BP in Maintenance
-  setValue(\"Sign1\", \"visible\", (Subrack_main == 1));
-  setValue(\"Sign2\", \"visible\", (Subrack_main == 1));
+  setValue(\"icon_maintenance\", \"visible\", (Subrack_main == 1));
+//  setValue(\"Sign2\", \"visible\", (Subrack_main == 1));
 
   if (Subrack_main == 1)
 	   setValue(\"rect_Subrack\", \"backCol\", \"Lofar_maintenance\");
-//  else if (BP_stat == 1)	// do not use!!! sum alert will otherwise not be visible
-//	   setValue(\"rect_Subrack\", \"backCol\", \"Red\");
   else
-    setValue(\"rect_Subrack\", \"backCol\", \"lightgrey\");
+    setValue(\"rect_Subrack\", \"backCol\", \"white\");
+//    setValue(\"rect_Subrack\", \"backCol\", \"lightgrey\"); Test if white is OK! 
 
 }" 0
 EE E E 1 -1 -1 0  25 85
@@ -263,17 +323,25 @@ LANG:1 6 Layer1
 1 31 85 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
  "main()
 {
+  string txt_maintenance, txt_status;
+  int iAnswer, maintenance;
+  bool bOK;				//Variable with value FALSE
+  	
+	dpGet(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Maintenance.status:_original.._value\", maintenance);
+ 	if (maintenance==1)
+    txt_maintenance = \"PUSH_BUTTON, Turn off maintenance, 10, 1\";
+	else
+	  txt_maintenance = \"PUSH_BUTTON, Turn on maintenance, 11, 1\";
+	  
+  popupMenu(makeDynString(txt_maintenance), iAnswer);
 
+///////////////////////////////////////////////////////////
 		// Local data
-  	dyn_string txt;
+/*  	dyn_string txt;
   	int iAnswer;
 		bool bOK;
   	
 		txt = makeDynString(
-//    	\"PUSH_BUTTON, Set to 0 -> Disconnected, 2, 1\",
-//    	\"PUSH_BUTTON, set to 1 -> Available, 3, 1\", 
-//    	\"PUSH_BUTTON, set to 2 -> Error, 4, 1\",
-//    	\"SEPARATOR\", 
     	\"PUSH_BUTTON, Turn on maintenance, 11, 1\",
     	\"PUSH_BUTTON, Turn off maintenance, 10, 1\",
     	\"SEPARATOR\",
@@ -282,8 +350,9 @@ LANG:1 6 Layer1
     
 //		dynInsertAt(txt, makeDynString(\"PUSH_BUTTON, Trend, 1, 1\", \"SEPARATOR\"), 1);
  
-  	popupMenu(txt, iAnswer);
-
+  	popupMenu(txt, iAnswer);*/
+//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 //########################################################
 //
 //	Compute the chosen option
@@ -299,7 +368,7 @@ LANG:1 6 Layer1
       	break;
    	case 10:
 			  dpSetWait(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Maintenance.status:_original.._value\", 0);
- 		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_BP.status\", bOK);
+/* 		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_BP.status\", bOK);
  		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP1.status\", bOK);
  		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP2.status\", bOK);
  		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3.status\", bOK);
@@ -311,11 +380,11 @@ LANG:1 6 Layer1
 		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3_RCU1.status\", bOK);
 		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3_RCU2.status\", bOK);
 		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4_RCU1.status\", bOK);
-		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4_RCU2.status\", bOK);
+		  	dpActivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4_RCU2.status\", bOK); */
       	break;
    	case 11:
 			  dpSetWait(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Maintenance.status:_original.._value\", 1);
- 		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_BP.status\", bOK);
+/* 		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_BP.status\", bOK);
  		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP1.status\", bOK);
  		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP2.status\", bOK);
  		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3.status\", bOK);
@@ -327,7 +396,7 @@ LANG:1 6 Layer1
 		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3_RCU1.status\", bOK);
 		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP3_RCU2.status\", bOK);
 		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4_RCU1.status\", bOK);
-		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4_RCU2.status\", bOK);
+		  	dpDeactivateAlert(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP4_RCU2.status\", bOK);*/
      	break;
     default:
     	break;
@@ -348,9 +417,13 @@ E "main()
 
 EP_childPanelOn()
 {
-  RootPanelOn(\"navigator/views/Station_Subrack.pnl\",
-      \"Subrack_\" + $SubrackNr,
-      makeDynString(\"$SubrackNr:\"+ $SubrackNr, \"$RackNr:\"+ $RackNr));
+//  RootPanelOn
+//(\"diverse\", \"P1\", ), \"\");
+
+//  ChildPanelOnModal 
+  RootPanelOnModule(\"navigator/views/Station_Subrack.pnl\",
+      \"Subrack_\" + $SubrackNr, myModuleName(),
+      makeDynString(\"$datapoint:\"+ $datapoint));
 }
 
 // SimpleCtrlScript {EP_childPanelOn}
@@ -367,7 +440,7 @@ EP_childPanelOn()
 7 1
 "Ellipse55"
 ""
-1 33.5 34.5 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+1 33.5 34.5 E E E 1 E 0 E N "_WindowText" E N {204,204,204} E E
  E E
 2 0 0 0 0 0
 EE E
@@ -380,7 +453,7 @@ E E 0 1 1 0 1 E 1.25 0 1.25  -8.875 -9.125  1 E 35.5 36.5 2 2
 7 2
 "Ellipse56"
 ""
-1 33.5 74.5 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+1 33.5 74.5 E E E 1 E 0 E N "_WindowText" E N {204,204,204} E E
  E E
 3 0 0 0 0 0
 EE E
@@ -393,7 +466,7 @@ E E 0 1 1 0 1 E 1.25 0 1.25  -8.875 -19.125  1 E 35.5 76.5 2 2
 7 3
 "Ellipse57"
 ""
-1 152.5 34.5 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+1 152.5 34.5 E E E 1 E 0 E N "_WindowText" E N {204,204,204} E E
  E E
 4 0 0 0 0 0
 EE E
@@ -406,7 +479,7 @@ E E 0 1 1 0 1 E 1.25 0 1.25  -38.625 -9.125  1 E 154.5 36.5 2 2
 7 4
 "Ellipse58"
 ""
-1 152.5 74.5 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+1 152.5 74.5 E E E 1 E 0 E N "_WindowText" E N {204,204,204} E E
  E E
 5 0 0 0 0 0
 EE E
@@ -416,43 +489,10 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E 1.25 0 1.25  -38.625 -19.125  1 E 154.5 76.5 2 2
-6 5
-"Border306"
-""
-1 32 66 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
-6 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 32 46 42 66
-2 6
-"text_SubrackNr"
-""
-1 32 46 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
- E E
-7 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 34 48 41 64
-0 2 0 "s" 0 0 0 192 0 0  34 48
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 1 X
 6 44
 "LED_1"
 ""
-1 134 85 E E E 1 E 1 E N "_WindowText" E N {255,0,0} E E
+1 64 83 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
  E E
 43 0 0 0 0 0
 EE E
@@ -461,11 +501,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 134 78 141 85
+E E 0 1 1 0 1 E U  1 E 64 76 71 83
 6 45
 "LED_2"
 ""
-1 134 78 E E E 1 E 1 E N "_WindowText" E N {255,0,0} E E
+1 72 83 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
  E E
 44 0 0 0 0 0
 EE E
@@ -474,11 +514,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 134 71 141 78
+E E 0 1 1 0 1 E U  1 E 72 76 79 83
 6 46
 "LED_3"
 ""
-1 134 71 E E E 1 E 1 E N "_WindowText" E N {255,0,0} E E
+1 80 83 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
  E E
 45 0 0 0 0 0
 EE E
@@ -487,11 +527,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 134 64 141 71
+E E 0 1 1 0 1 E U  1 E 80 76 87 83
 6 47
 "LED_4"
 ""
-1 134 64 E E E 1 E 1 E N "_WindowText" E N {255,0,0} E E
+1 88 83 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
  E E
 46 0 0 0 0 0
 EE E
@@ -500,11 +540,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 134 57 141 64
+E E 0 1 1 0 1 E U  1 E 88 76 95 83
 6 48
 "LED_5"
 ""
-1 134 57 E E E 1 E 1 E N "_WindowText" E N {255,0,0} E E
+1 96 83 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
  E E
 47 0 0 0 0 0
 EE E
@@ -513,11 +553,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 134 50 141 57
+E E 0 1 1 0 1 E U  1 E 96 76 103 83
 6 49
 "LED_6"
 ""
-1 134 50 E E E 1 E 1 E N "_WindowText" E N {255,0,0} E E
+1 104 83 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
  E E
 48 0 0 0 0 0
 EE E
@@ -526,11 +566,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 134 43 141 50
+E E 0 1 1 0 1 E U  1 E 104 76 111 83
 6 50
 "LED_8"
 ""
-1 134 36 E E E 1 E 1 E N "_WindowText" E N {255,0,0} E E
+1 120 83 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
  E E
 49 0 0 0 0 0
 EE E
@@ -539,11 +579,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 134 29 141 36
+E E 0 1 1 0 1 E U  1 E 120 76 127 83
 6 51
 "LED_7"
 ""
-1 134 43 E E E 1 E 1 E N "_WindowText" E N {255,0,0} E E
+1 112 83 E E E 1 E 1 E N {255,0,0} E N {255,0,0} E E
  E E
 50 0 0 0 0 0
 EE E
@@ -552,43 +592,33 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 134 36 141 43
-10 52
-"Sign2"
+E E 0 1 1 0 1 E U  1 E 112 76 119 83
+6 54
+"Border1"
 ""
-1 81 68 E E E 1 E 0 E N "_WindowText" E N {255,255,0} E E
+1 63 83 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
-50 0 0 0 0 0
+52 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E U  1 E 3 81 68
-96 43
-111 68
-1
-2 53
-"Sign1"
+E E 0 1 1 0 1 E U  0 E 63 76 128 83
+6 55
+"icon_maintenance"
 ""
-1 91 46 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 76 72 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
  E E
-51 0 0 0 0 0
+52 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 93 48 99 70
-0 2 0 "s" 0 0 0 192 0 0  93 48
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-160-100-100-*-*-iso8859-1|-19,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 1 !
+E E 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 76 33 116 73
 0
 LAYER, 1 
 1
@@ -618,6 +648,4 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-2 "Group4" 134 29 141 85
-8 51 50 49 48 47 46 45 44
 0

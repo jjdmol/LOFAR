@@ -1,13 +1,11 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 108 328 89 N "_3DFace" 3
-"$RackNr"
-"$SubrackNr"
+PANEL,288 115 328 89 N "_3DFace" 1
 "$datapoint"
 "main()
 {
-  //Function: Set background color of RCU
+  //Function: Set background color of BP
   EP_setBackColor();
   
 }
@@ -38,8 +36,8 @@ EP_setBackColorCB(string dpSource1, unsigned BP_main,
 //	string Color_blue = \"{102,153,255}\";	//Color Blue
 
 	//Set visibility for Maintenance Sign if BP in Maintenance
-  setValue(\"Sign1\", \"visible\", (BP_main == 1));
-  setValue(\"Sign2\", \"visible\", (BP_main == 1));
+  setValue(\"icon_maintenance\", \"visible\", (BP_main == 1));
+//  setValue(\"Sign2\", \"visible\", (BP_main == 1));
 
   if (BP_main == 1)
       setValue(\"rect_BP\", \"backCol\", \"Lofar_maintenance\");
@@ -71,7 +69,7 @@ main(int iType)
   dyn_int      diType = makeDynInt();
   dyn_string   dsDps;
 
-  dsDps[1] = \"PIC_Rack\"+$RackNr+\"_SubRack\"+$SubrackNr+\"_Board1_BP_status.\" + \":_alert_hdl.._ack\";
+  dsDps[1] = $datapoint+\"_Board1_BP_status.\" + \":_alert_hdl.._ack\";
 
   if ( isFunctionDefined(\"isAckable\") )
   {
@@ -90,38 +88,36 @@ main(int iType)
 }
 // SimpleCtrlScript {EP_confirm}
 // dpCount {1}
-// dp1 {\"PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_BP_status.\"}
+// dp1 {$datapoint + \"_Board1_BP_status.\"}
 // SimpleCtrlScriptEnd {EP_confirm}
 " 0
 
  "main()
 {
-
-		// Local data
-  	dyn_string txt;
-  	int iAnswer;
-  	bool bOK;				//Variable with value FALSE
+  string txt_maintenance, txt_status;
+  int iAnswer, maintenance, status;
+  bool bOK;				//Variable with value FALSE
   	
-		txt = makeDynString(
-//    	\"PUSH_BUTTON, Set to 0 -> Disconnected, 2, 1\",
-//    	\"PUSH_BUTTON, set to 1 -> Available, 3, 1\", 
-//    	\"PUSH_BUTTON, set to 2 -> Error, 4, 1\",
-//    	\"SEPARATOR\", 
-    	\"PUSH_BUTTON, Turn on maintenance, 11, 1\",
-    	\"PUSH_BUTTON, Turn off maintenance, 10, 1\",
- 	   	\"SEPARATOR\",
-	   	\"PUSH_BUTTON, Set status to -> OK, 2, 1\",
-  	 	\"PUSH_BUTTON, Set status to -> Error, 3, 1\"  );
-    
-//		dynInsertAt(txt, makeDynString(\"PUSH_BUTTON, Trend, 1, 1\", \"SEPARATOR\"), 1);
- 
-  	popupMenu(txt, iAnswer);
+  dpGet($datapoint + \"_Board1_BP.status:_original.._value\", status);
+	dpGet($datapoint + \"_Board1_Maintenance.status:_original.._value\", maintenance);
+  if (status==1)
+    txt_status = \"PUSH_BUTTON, Set status to -> OK, 2, 1\";
+  else
+    txt_status = \"PUSH_BUTTON, Set status to -> Error, 3, 1\";
 
-//########################################################
+ 	if (maintenance==1)
+    txt_maintenance = \"PUSH_BUTTON, Turn off maintenance, 10, 1\";
+	else
+	  txt_maintenance = \"PUSH_BUTTON, Turn on maintenance, 11, 1\";
+	  
+  popupMenu(makeDynString(txt_maintenance, \"SEPARATOR\", txt_status), iAnswer);
+
+
+//////////////////////////////////////////////////////////
 //
 //	Compute the chosen option
 //
-//########################################################
+//////////////////////////////////////////////////////////
   	switch (iAnswer)
   	{
   	case 2:
@@ -132,7 +128,7 @@ main(int iType)
   			break;
    	case 10:   	
 			  dpSetWait($datapoint + \"_Board1_Maintenance.status:_original.._value\", 0);
- 		  	dpActivateAlert($datapoint + \"_Board1_BP.status\", bOK);
+/* 		  	dpActivateAlert($datapoint + \"_Board1_BP.status\", bOK);
  		  	dpActivateAlert($datapoint + \"_Board1_AP1.status\", bOK);
  		  	dpActivateAlert($datapoint + \"_Board1_AP2.status\", bOK);
  		  	dpActivateAlert($datapoint + \"_Board1_AP3.status\", bOK);
@@ -144,11 +140,11 @@ main(int iType)
 		  	dpActivateAlert($datapoint + \"_Board1_AP3_RCU1.status\", bOK);
 		  	dpActivateAlert($datapoint + \"_Board1_AP3_RCU2.status\", bOK);
 		  	dpActivateAlert($datapoint + \"_Board1_AP4_RCU1.status\", bOK);
-		  	dpActivateAlert($datapoint + \"_Board1_AP4_RCU2.status\", bOK);
+		  	dpActivateAlert($datapoint + \"_Board1_AP4_RCU2.status\", bOK); */
       	break;
    	case 11:
 			  dpSetWait($datapoint + \"_Board1_Maintenance.status:_original.._value\", 1);
- 		  	dpDeactivateAlert($datapoint + \"_Board1_BP.status\", bOK);
+/* 		  	dpDeactivateAlert($datapoint + \"_Board1_BP.status\", bOK);
  		  	dpDeactivateAlert($datapoint + \"_Board1_AP1.status\", bOK);
  		  	dpDeactivateAlert($datapoint + \"_Board1_AP2.status\", bOK);
  		  	dpDeactivateAlert($datapoint + \"_Board1_AP3.status\", bOK);
@@ -160,7 +156,7 @@ main(int iType)
 		  	dpDeactivateAlert($datapoint + \"_Board1_AP3_RCU1.status\", bOK);
 		  	dpDeactivateAlert($datapoint + \"_Board1_AP3_RCU2.status\", bOK);
 		  	dpDeactivateAlert($datapoint + \"_Board1_AP4_RCU1.status\", bOK);
-		  	dpDeactivateAlert($datapoint + \"_Board1_AP4_RCU2.status\", bOK);
+		  	dpDeactivateAlert($datapoint + \"_Board1_AP4_RCU2.status\", bOK); */
      	break;
     default:
     	break;
@@ -175,43 +171,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 20 20 300 60
-10 1
-"Sign2"
-""
-1 146 52 E E E 1 E 0 E N "_WindowText" E N {255,255,0} E E
- E E
-2 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 2 1 0 1 E U  1 E 3 146 52
-161 27
-176 52
-1
-2 2
-"Sign1"
-""
-1 156 30 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-3 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 158 32 164 54
-0 2 0 "s" 0 0 0 192 0 0  158 32
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-160-100-100-*-*-iso8859-1|-19,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 1 !
+E E 0 1 1 0 1 E U  1 E 20 20 300 61
 2 3
 "Text1"
 ""
@@ -232,6 +192,19 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 2 BP
+6 4
+"icon_maintenance"
+""
+1 140 59 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 140 20 180 60
 0
 LAYER, 1 
 1

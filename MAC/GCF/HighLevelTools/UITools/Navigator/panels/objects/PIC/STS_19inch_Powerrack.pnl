@@ -1,8 +1,8 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,450 168 170 82 N "_3DFace" 0
-EEE E E 1 -1 -1 0  -1 -1
+PANEL,574 566 170 82 N "_3DFace" 0
+EEE E E 1 -1 -1 0  20 54
 "" 0 1
 EE 2
 "CBRef""1"
@@ -28,7 +28,7 @@ E E 0 1 1 0 1 E U  1 E 20 20 148 60
 7 1
 "Ellipse49"
 ""
-1 23.5 28.5 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 23.5 28.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 2 0 0 0 0 0
 EE E
@@ -41,7 +41,7 @@ E E 0 1 1 0 1 E 1.25 0 1.25  -6.375 -7.625  0 E 25.5 30.5 2 2
 7 2
 "Ellipse50"
 ""
-1 23.5 48.5 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 23.5 48.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 3 0 0 0 0 0
 EE E
@@ -54,7 +54,7 @@ E E 0 1 1 0 1 E 1.25 0 1.25  -6.375 -12.625  0 E 25.5 50.5 2 2
 7 3
 "Ellipse51"
 ""
-1 140.5 28.5 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 140.5 28.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 4 0 0 0 0 0
 EE E
@@ -67,7 +67,7 @@ E E 0 1 1 0 1 E 1.25 0 1.25  -35.625 -7.625  0 E 142.5 30.5 2 2
 7 4
 "Ellipse52"
 ""
-1 140.5 48.5 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 140.5 48.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 EE E
@@ -80,7 +80,7 @@ E E 0 1 1 0 1 E 1.25 0 1.25  -35.625 -12.625  0 E 142.5 50.5 2 2
 2 5
 "Text24"
 ""
-1 56 26 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 56 26 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 6 0 0 0 0 0
 EE E
@@ -113,7 +113,7 @@ E E 0 1 1 0 1 E  48 42 48 42
 7 7
 "Ellipse80"
 ""
-1 44 30 E E E 1 E 1 E N "_WindowText" E N {51,204,0} E E
+1 44 30 E E E 1 E 0 E N "_WindowText" E N {51,204,0} E E
  E E
 8 0 0 0 0 0
 EE E
@@ -126,7 +126,7 @@ E E 0 1 1 0 1 E U  1 E 48 34 4 4
 7 8
 "Ellipse81"
 ""
-1 44 43 E E E 1 E 1 E N "_WindowText" E N {153,153,153} E E
+1 44 43 E E E 1 E 0 E N "_WindowText" E N {153,153,153} E E
  E E
 9 0 0 0 0 0
 EE E
@@ -139,7 +139,7 @@ E E 0 1 1 0 1 E U  1 E 48 47 4 4
 2 9
 "Text25"
 ""
-1 56 39 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 56 39 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 10 0 0 0 0 0
 EE E
@@ -159,7 +159,7 @@ LANG:1 5 Error
 4 10
 "Line50"
 ""
-1 43 41 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 43 41 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 11 0 0 0 0 0
 EE E
