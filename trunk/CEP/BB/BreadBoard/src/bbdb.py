@@ -6,7 +6,7 @@ import pg
 
 db = pg.DB(dbname="bb");
 
-tables = ["blackboards", "watchers", "controllers", "threads", "engines", "comparisons", "forks", "workloads"];
+tables = ["blackboards", "watchers", "controllers", "threads", "engines", "comparisons", "forks", "workloads", "range", "parameterlist"];
 
 for table in tables:
   try:
@@ -14,30 +14,14 @@ for table in tables:
   except:
    print table + " didn't exsist"
 
-## db.query("CREATE TABLE blackboards ( parent oid, \
-##                                      children oid[] default '{}', \
-##                                      starttime TIMESTAMP DEFAULT now() - interval '6 hours', \
-##                                      endtime TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
-##                                      low FLOAT default '10', \
-##                                      high FLOAT default '100', \
-##                                      north FLOAT, \
-##                                      east FLOAT, \
-##                                      south FLOAT, \
-##                                      west FLOAT, \
-##                                      interferometers BOOL[2][2][2] DEFAULT '{{{t,t,t,t}, {t,t,t,t}},{{t,t,t,t}, {t,t,t,t}}}',\
-##                                      objects INTEGER[2] \
-##                                     ) WITH OIDS")
 
-db.query("CREATE TABLE blackboards ( parent oid, \
-                                     children oid[] default '{}', \
-                                     starttime TIMESTAMP DEFAULT now() - interval '6 hours', \
-                                     endtime TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
-                                     low FLOAT default '10', \
-                                     high FLOAT default '100', \
-                                     north FLOAT, \
-                                     east FLOAT, \
-                                     south FLOAT, \
-                                     west FLOAT, \
+db.query("CREATE TABLE range (\
+                                     start_time TIMESTAMP DEFAULT now() - interval '6 hours', \
+                                     end_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
+                                     low_freq FLOAT default '10', \
+                                     high_freq FLOAT default '100', \
+                                     right_ascension FLOAT, \
+                                     declination FLOAT, \
                                      interferometers BOOL[99][50][4] DEFAULT '\
                                      {\
                                       {\
@@ -5188,48 +5172,38 @@ db.query("CREATE TABLE blackboards ( parent oid, \
                                        {t,t,t,t},\
                                        {t,t,t,t}\
                                       }\
-                                     }', \
-                                     objects INTEGER[2] \
-                                    ) WITH OIDS")
+                                     }' \
+                                    );");
 
-## db.query("CREATE FUNCTION bla (VARCHAR,INTEGER) RETURNS INTEGER AS '\
-##             BEGIN \
-##               RETURN;\
-##             END;\
-##           ' LANGUAGE 'sql';\
-##         ");
+db.query("CREATE TABLE blackboards ( parent oid, \
+                                     children oid[] default '{}' \
+                                    ) INHERITS (range) WITH OIDS;");
 
-## db.query("CREATE FUNCTION no_child (blackboards) RETURNS VOID AS '\
-##             DECLARE var  mybb ALIAS FOR $1;\
-##             BEGIN\
-##               UPDATE blackboards SET children[1] = oid WHERE OID = obj_id ;\
-##               RETURN;\
-##             END;\
-##           ' LANGUAGE 'sql';\
-##         ");
-
-## db.query("CREATE TRIGGER no_child BEFORE INSERT ON blackboards FOR EACH ROW EXECUTE PROCEDURE no_child();");
-
-db.query("CREATE TABLE watchers ( ) WITH OIDS")
-
-db.query("CREATE TABLE controllers ( strategy text ) WITH OIDS")
-
-db.query("CREATE TABLE threads ( ) WITH OIDS")
-
-db.query("CREATE TABLE engines (  ) WITH OIDS")
-
-db.query("CREATE TABLE comparisons ( watcher_id OID , controller_id OID) WITH OIDS")
-
-db.query("CREATE TABLE forks ( controller_id OID, child_id OID ) WITH OIDS")
+db.query("CREATE TABLE parameterlist (jobassignment BOOL[],\
+                                   parameterset FLOAT[]\
+                                   ) ");
 
 db.query("CREATE TABLE workloads ( controller_id OID,\
                                    engine_id OID,\
                                    parent_id OID,\
-                                   start_time TIMESTAMP,\
-                                   end_time TIMESTAMP,\
-                                   start_freq FLOAT,\
-                                   end_freq FLOAT\
-                                  ) WITH OIDS")
+                                   status VARCHAR DEFAULT 'new' \
+                                  ) INHERITS (range,parameterlist) WITH OIDS;")
+
+db.query("CREATE TABLE watchers ( ) WITH OIDS")
+
+
+#looks like we need only one of the following two
+db.query("CREATE TABLE controllers ( children oid[] default '{}', \
+                                     strategy text, thread oid ) WITH OIDS")
+
+db.query("CREATE TABLE threads ( children oid[] default '{}', \
+                                 strategy text ) INHERITS (range,parameterlist) WITH OIDS");
+
+db.query("CREATE TABLE engines (  ) INHERITS (parameterlist) WITH OIDS")
+
+db.query("CREATE TABLE comparisons ( watcher_id OID , controller_id OID) WITH OIDS")
+
+db.query("CREATE TABLE forks ( controller_id OID, child_id OID ) WITH OIDS")
 
 
 # block of test code:

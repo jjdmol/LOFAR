@@ -5,7 +5,7 @@ $Id$
 
 """
 
-__all__ = ["BlackBoard", "Workload", "Thread"];
+__all__ = ["BlackBoard", "Workload", "Thread", "Engine"];
 
 
 Version_info = (0,0,1);

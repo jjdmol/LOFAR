@@ -10,6 +10,8 @@ $Id$
 import datetime;
 import string;
 
+debug = None;
+
 def pgArray2list(s):
   """ not done yet """
   lst = [];
@@ -18,7 +20,8 @@ def pgArray2list(s):
   """
   """next is a bracket, a field terminated with a comma or whitespace """
   s = string.strip(s);
-  print "start string: " + s;
+  if(debug):
+    print "start string: " + s;
 ##  s = s[1:len(s)];
   (nextfield , commapos) = getField(s);
   lst.append(nextfield);
@@ -33,7 +36,8 @@ def pgArray2list(s):
   return lst;
 
 def getField(s):
-  print "getting field from: " + s;
+  if(debug):
+    print "getting field from: " + s;
   s = string.strip(s);
   rc = None;
   if(len(s) == 0):
@@ -52,12 +56,14 @@ def getField(s):
     except:
       """do nothing"""
     rc =  (s, next);
-  print rc;
+  if(debug):
+    print rc;
   return rc;
 
 def find_matching_bracket(s):
   """  """
-  print "matching in: " + s;
+  if(debug):
+    print "matching in: " + s;
   if(s[0] != "{"):
     return -1;
   left = string.find(s,"{",1);
@@ -65,7 +71,8 @@ def find_matching_bracket(s):
   if(-1 < left < right):
     left = left + find_matching_bracket(s[left:]);
     right = string.find(s,"}",left + 1);
-    print "left,right: (" + str(left) + "," + str(right) + ", matched string: " + s[1:right];
+    if(debug):
+      print "left,right: (" + str(left) + "," + str(right) + ", matched string: " + s[1:right];
   return right;
 
 def list2pgArray(l):
