@@ -3,9 +3,9 @@
 
 #define FSIZE 1
 #define NSTATIONS 100
-#define TSIZE 1000
-#define NBEAMLETS 1
-#define BFBW 128
+#define TSIZE 1
+#define NBEAMLETS 128
+#define BFBW 256
 #define NVis (BFBW/FSIZE)
 #define TFACTOR (BFBW/FSIZE)
 #define NCorr (NVis*NBeamlets)
