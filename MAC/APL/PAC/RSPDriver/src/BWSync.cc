@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include "BWSync.h"
+#include "EPA_Protocol.ph"
 
 #undef PACKAGE
 #undef VERSION
@@ -29,6 +30,7 @@
 
 using namespace RSP;
 using namespace LOFAR;
+using namespace EPA_Protocol;
 
 BWSync::BWSync() : SyncAction((State)&BWSync::initial_state)
 {
@@ -40,5 +42,37 @@ BWSync::~BWSync()
 
 GCFEvent::TResult BWSync::initial_state(GCFEvent& event, GCFPortInterface& port)
 {
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  LOG_INFO("BWSync::initial_state");
+
+  switch (event.signal)
+  {
+  case F_TIMER:
+      {
+	  EPABfxreEvent bfxre;
+	  EPABfximEvent bfxim;
+	  EPABfyreEvent bfyre;
+	  EPABfyimEvent bfyim;
+
+	  MEP_BFXRE(bfxre.hdr, MEPHeader::WRITE, 0);
+	  MEP_BFXIM(bfxim.hdr, MEPHeader::WRITE, 0);
+	  MEP_BFYRE(bfyre.hdr, MEPHeader::WRITE, 0);
+	  MEP_BFYIM(bfyim.hdr, MEPHeader::WRITE, 0);
+
+	  /* initial triggering of this synchronization action */
+	  for (int i = 0; i < N_RSPBOARDS; i++)
+	  {
+	      bfxre.hdr.m_fields.addr.dstid = i;
+	      port.send(bfxre);
+	  }
+      }
+      break;
+
+  default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
   return GCFEvent::HANDLED;
 }
