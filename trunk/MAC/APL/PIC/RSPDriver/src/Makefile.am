@@ -93,7 +93,8 @@ lib_aplconfig_la_LIBS =
 
 bin_PROGRAMS = \
 	RSPDriver \
-	ViewStats
+	ViewStats \
+	SetWG
 
 RSPDriver_SOURCES = \
 	RefCount.h \
@@ -174,6 +175,16 @@ ViewStats_SOURCES = \
 	ViewStats.cc
 
 ViewStats_LDADD = \
+	$(top_builddir)/src/librsp.la \
+	-lsuite -lgcflite
+
+SetWG_SOURCES = \
+	gnuplot_i.h \
+	gnuplot_i.cc \
+	SetWG.h \
+	SetWG.cc
+
+SetWG_LDADD = \
 	$(top_builddir)/src/librsp.la \
 	-lsuite -lgcflite
 

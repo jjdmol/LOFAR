@@ -82,6 +82,11 @@ namespace RSP
        */
       int getCurrentBLP() const;
 
+      /**
+       * Reset the statemachine to the initial state.
+       */
+      void reset();
+
     private:
       SyncAction();
 

@@ -1,6 +1,12 @@
 [RSPTest]
 server=RSP:acceptor
 
+[ViewStats]
+server=RSP:acceptor
+
+[SetWG]
+server=RSP:acceptor
+
 [RSP]
 board0=EPAStub0:client
 board1=EPAStub1:client

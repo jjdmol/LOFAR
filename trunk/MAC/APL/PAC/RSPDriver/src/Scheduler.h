@@ -129,6 +129,7 @@ namespace RSP
       void              resetSyncActions();
       void              initiateSync(GCFEvent& event);
       //GCFEvent::TResult syncCache(GCFEvent& event, GCFPortInterface& port);
+      void              resetSync(GCFPortInterface& port);
       void              completeSync();
       void              completeCommands();
       /*@}*/
