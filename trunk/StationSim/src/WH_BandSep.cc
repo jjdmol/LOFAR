@@ -56,7 +56,6 @@ WH_BandSep::WH_BandSep (const string& name, unsigned int nsubband,
       sprintf (str2, "%d", j);
       itsOutHolders[i + j * nsubband] = new DH_SampleC (string ("out") + 
 							str2 + string("_") + str, 1, 1);
-
       if (itsTapStream) {
 	itsOutHolders [i + j * nsubband]->setOutFile (string ("FB1_") + str2 + 
 						      string ("_") + str + string (".dat"));
@@ -138,24 +137,24 @@ void WH_BandSep::process()
   	  int nfft = itsNsubband;	
 	  
   	  LoMat_dcomplex temp (nfft / 2, 1);
-  	  LoMat_dcomplex cdata(itsNsubband, 1);
+	  //  	  LoMat_dcomplex cdata(itsNsubband, 1);
+	  LoMat_dcomplex cdata(subbandSignals.shape());
   	  cdata = subbandSignals;
 
-  	  temp = cdata (Range (nfft / 2, nfft - 1));
-  	  cdata (Range (nfft / 2, nfft - 1)) = cdata (Range (0, nfft / 2 - 1));
-  	  cdata (Range (0, nfft / 2 - 1)) = temp;
+  	  temp = cdata (Range (nfft / 2, toEnd));
+  	  cdata (Range (nfft / 2, toEnd)) = cdata (Range (fromStart, nfft / 2 - 1));
+  	  cdata (Range (fromStart, nfft / 2 - 1)) = temp;
 	  
   	  subbandSignals=cdata;
 	  
 	  if (qm(2) && plot) {
 	    // Plot only the spectrum for the first antenna
 	    buffer(Range::all(), buffer_pos) = subbandSignals(Range::all(), 0);
-	    buffer_pos = (buffer_pos + 1) % buffersize; 
-	    
+	    buffer_pos = (buffer_pos + 1) % buffersize; 	    
 	    if (buffer_pos % 50 == 0) {
 	      plot_freq_spectrum(buffer, buffer_pos);
 	    }
-	  }
+  	  }
 	  
 	  // Copy to other output buffers.
 	  for (int j = 0; j < itsNout; j++) {

@@ -88,8 +88,8 @@ private:
   void spectrumplot (gnuplot_ctrl* handle, const LoVec_dcomplex& look_buf, 
 		     const LoVec_dcomplex& null_buf, const int pos);
 
-  void ml_trans_edge (const LoVec_dcomplex& w, LoMat_double& ref, const int time, 
-		      const int nrcu, const int N);
+  void ml_trans_edge (gnuplot_ctrl* handle, const LoVec_dcomplex& w, LoVec_dcomplex& ref, 
+		      const int time, const int nrcu, const int N, LoMat_double& x_sum);
 
   LoMat_double beam_pattern (const LoVec_dcomplex& w, const int nrcu, const int N);
 
@@ -110,6 +110,7 @@ private:
   LoMat_dcomplex itsTestVector;
   gnuplot_ctrl* handle_bp;
   gnuplot_ctrl* handle_sp;
+  gnuplot_ctrl* handle_ml;
   int iCount;
   int plotCount;
 
@@ -119,6 +120,9 @@ private:
   LoMat_dcomplex itsBuffer;
   LoVec_dcomplex itsBeamBuffer;
   LoVec_dcomplex itsLookBuffer;
+
+  int x_size;
+  LoMat_double x_sum;
 
   int itsPos;
   int itsQms;
