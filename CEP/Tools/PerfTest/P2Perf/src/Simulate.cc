@@ -44,7 +44,7 @@ int main (int argc, char** argv)
 //  	cout << endl;
 //  	cout << "Call Run" << endl;
 
-	simulator.baseRun(4500);
+	simulator.baseRun(5000);
 
 //  	cout << endl;
 //  	cout << "Call Dump " << endl;

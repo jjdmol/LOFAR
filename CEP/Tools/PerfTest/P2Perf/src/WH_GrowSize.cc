@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.8  2001/12/17 16:30:00  schaaf
+//  new logic in process() measurements counting
+//
 //  Revision 1.7  2001/11/28 16:15:40  schaaf
 //  .
 //
@@ -138,14 +141,14 @@ void WH_GrowSize::process()
 	if (itsIteration == 0)
 	{
 	  // first measurement; print packet sizes etc.
-	  // cout << endl;
-	  //cout << itsInHolders[0]->getDataPacketSize() << " "
-	  //    << log10(itsInHolders[0]->getDataPacketSize()) << " ";
+	   cout << endl;
+	  cout << itsInHolders[0]->getDataPacketSize() << " "
+	      << log10(itsInHolders[0]->getDataPacketSize()) << " ";
 	}
-	//cout << (itsInHolders[0]->getDataPacketSize() / (1024. * 1024.) / watch.elapsed()) 
-	//     << "  "
-	//     << watch.elapsed()
-	//     << "  "
+	cout << (itsInHolders[0]->getDataPacketSize() / (1024. * 1024.) / watch.elapsed()) 
+	     << "  "
+	     << watch.elapsed()
+	     << "  "
 ;
       }
     watch.start();
