@@ -17,6 +17,7 @@ InitDebugContext(UVPTimeFrequencyPlot, "DEBUG_CONTEXT");
 UVPTimeFrequencyPlot::UVPTimeFrequencyPlot(QWidget *parent)
   : UVPDisplayArea(parent),
     itsSpectrum(0),
+    itsComplexSpectrum(),
     itsValueAxis()
   
 {
@@ -59,6 +60,26 @@ void UVPTimeFrequencyPlot::slot_addSpectrum(const UVPSpectrum &spectrum)
   if(itsSpectrum.min() != itsSpectrum.max()) {
     itsValueAxis.calcTransferFunction(itsSpectrum.min(),
                                       itsSpectrum.max(),
+                                      0,
+                                      getNumberOfColors()-1);
+  }
+}
+
+
+
+
+
+
+
+//===========>>>  UVPTimeFrequencyPlot::slot_addDataAtom  <<<===========
+
+void UVPTimeFrequencyPlot::slot_addDataAtom(const UVPDataAtom* atom)
+{
+  itsComplexSpectrum.add(atom);
+
+  if(itsComplexSpectrum.min() != itsComplexSpectrum.max()) {
+    itsValueAxis.calcTransferFunction(itsComplexSpectrum.min(),
+                                      itsComplexSpectrum.max(),
                                       0,
                                       getNumberOfColors()-1);
   }
@@ -121,6 +142,7 @@ void UVPTimeFrequencyPlot::drawView()
 
 void UVPTimeFrequencyPlot::setChannels(unsigned int numberOfChannels)
 {
-  itsSpectrum  = UVPSpectrumVector(numberOfChannels);
-  itsValueAxis = UVPAxis();
+  itsSpectrum        = UVPSpectrumVector(numberOfChannels);
+  itsComplexSpectrum = UVPDataAtomVector();
+  itsValueAxis       = UVPAxis();
 }
