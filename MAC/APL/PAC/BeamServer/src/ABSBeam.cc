@@ -110,8 +110,13 @@ int Beam::init(int            ninstances,
   return 0;
 }
 
-Beam* Beam::allocate(SpectralWindow const& spw, set<int> subbands)
+Beam* Beam::allocate(int spw_index, set<int> subbands)
 {
+  const SpectralWindow* spw = SpectralWindowConfig::getInstance().get(spw_index);
+  
+  // check for valid spectral window, increase refcount on spectral window
+  if (!spw || (-1 == SpectralWindowConfig::getInstance().incRef(spw_index))) return 0;
+
   // get a free beam instance
   Beam* beam = Beam::getInstance();
 
@@ -127,7 +132,7 @@ Beam* Beam::allocate(SpectralWindow const& spw, set<int> subbands)
       Beamlet* beamlet = Beamlet::getInstance();
 
       if (!beamlet) goto failure;
-      if (beamlet->allocate(*beam, spw, *sb) < 0) goto failure;
+      if (beamlet->allocate(*beam, *spw, *sb) < 0) goto failure;
 
       beam->m_beamlets.insert(beamlet);
   }
@@ -168,6 +173,9 @@ int Beam::deallocate()
   while (!m_pointing_queue.empty()) m_pointing_queue.pop();
 
   m_allocated = false;
+
+  // decrease spectral window reference count
+  SpectralWindowConfig::getInstance().decRef();
 
   return 0;
 }

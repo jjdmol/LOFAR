@@ -76,7 +76,7 @@ BeamServerTask::BeamServerTask(string name)
       m_pos(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), MEPHeader::N_POL, N_DIM),
       m_weights(COMPUTE_INTERVAL, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
       m_weights16(COMPUTE_INTERVAL, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
-      m_subbands_modified(false)
+      m_beams_modified(false)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
@@ -92,22 +92,12 @@ BeamServerTask::BeamServerTask(string name)
   m_wgsetting.enabled       = false;
 
   m_pos = 0;
-#if 0
-  // initialize antenna positions
-  Range all = Range::all();
-  m_pos(all, 0, all) = 0.0;
-  m_pos(all, 0, 0)   = 0.0;
+  m_spw_refcount = 0;
 
-  m_pos(all, 1, all) = 0.0;
-  m_pos(all, 1, 0)   = 95.9358656;
-
-  LOG_DEBUG_STR(m_pos);
-#else
   istringstream config_positions(GET_CONFIG_STRING("RS.ANTENNA_POSITIONS"));
   config_positions >> m_pos;
 
   LOG_INFO_STR("ANTENNA_POSITIONS = " << m_pos);
-#endif
 
   // initialize weight matrix
   m_weights   = complex<W_TYPE>(0,0);
@@ -131,10 +121,10 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
   {
     case F_INIT:
     {
-      // create a default spectral window from 0MHz to 20MHz
-      // steps of 156.25 kHz
-      SpectralWindow* spw = new SpectralWindow(0.0, 20.0e6/MEPHeader::N_SUBBANDS, MEPHeader::N_SUBBANDS);
-      m_spws[0] = spw;
+      if (!SpectralWindowConfig::getInstance().load())
+      {
+	LOG_ERROR("Failed to load spectral window configurations.");
+      }
     }
     break;
 
@@ -245,7 +235,13 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	send_weights();
       }
 
-      if (m_subbands_modified) send_sbselection();
+      if (m_beams_modified)
+      {
+	send_sbselection();
+	send_rcusettings();
+
+	m_beams_modified = false;
+      }
     }
     break;
 
@@ -274,6 +270,16 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
       if (RSP_Protocol::SUCCESS != ack.status)
       {
 	LOG_ERROR("RSP_SETSUBBANDSACK: FAILURE");
+      }
+    }
+    break;
+
+    case RSP_SETRCUACK:
+    {
+      RSPSetrcuackEvent ack(e);
+      if (RSP_Protocol::SUCCESS != ack.status)
+      {
+	LOG_ERROR("RSP_SETRCUACK: FAILURE");
       }
     }
     break;
@@ -390,26 +396,15 @@ GCFEvent::TResult BeamServerTask::handle_abs_request(GCFEvent& e, GCFPortInterfa
 void BeamServerTask::beamalloc_action(ABSBeamallocEvent& ba,
 				      GCFPortInterface& port)
 {
-  int   spwindex = 0;
   Beam* beam = 0;
   ABSBeamallocAckEvent ack;
   ack.handle = -1;
   ack.status = ABS_Protocol::SUCCESS;
 
-  // check parameters
-  if (((spwindex = ba.spectral_window) < 0)
-      || (spwindex >= MAX_N_SPECTRAL_WINDOWS))
-  {
-      LOG_ERROR("BEAMALLOC: argument range error");
-      ack.status = ERR_RANGE;
-      port.send(ack);
-      return;                         // RETURN
-  }
-
   if (ba.n_subbands< 0 || ba.n_subbands > MEPHeader::N_BEAMLETS)
   {
     LOG_ERROR("BEAMALLOC: n_subbands parameter out of range");
-
+    
     ack.status = ERR_RANGE;
     port.send(ack);
     return;                          // RETURN
@@ -431,22 +426,22 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent& ba,
 
   // allocate the beam
 
-  if (0 == (beam = Beam::allocate(*m_spws[spwindex], subbands)))
+  if (0 == (beam = Beam::allocate(ba.spectral_window, subbands)))
   {
-      LOG_ERROR("BEAMALLOC: failed");
-      ack.status = ERR_BEAMALLOC;
-      port.send(ack);
+    LOG_ERROR("BEAMALLOC: failed");
+    ack.status = ERR_BEAMALLOC;
+    port.send(ack);
   }
   else
   {
-      ack.handle = beam->handle();
-      LOG_DEBUG(formatString("ack.handle=%d", ack.handle));
+    ack.handle = beam->handle();
+    LOG_DEBUG(formatString("ack.handle=%d", ack.handle));
 
-      m_beams.insert(beam);
-      m_client_beams[&port].insert(beam->handle());
+    m_beams.insert(beam);
+    m_client_beams[&port].insert(beam->handle());
 
-      update_sbselection();
-      port.send(ack);
+    update_sbselection();
+    port.send(ack);
   }
 }
 
@@ -675,8 +670,12 @@ void BeamServerTask::update_sbselection()
       (*bi)->getSubbandSelection(m_sbsel);
   }
 
-  m_subbands_modified = true;
+  m_beams_modified = true;
 }
+
+// void BeamServerTask::update_rcusettings()
+// {
+// }
 
 void BeamServerTask::send_sbselection()
 {
@@ -729,39 +728,38 @@ void BeamServerTask::send_sbselection()
   //cout << "ss.subbands() = " << ss.subbands() << endl;
 
   m_rspdriver.send(ss);
-
-  m_subbands_modified = false;
 }
 
-#if 0
-void BeamServerTask::saveq_defer(GCFEvent& e)
+void BeamServerTask::send_rcusettings()
 {
-  char* copy = new char [sizeof(GCFEvent) + e.length];
-  memcpy(copy, &e, sizeof(GCFEvent) + e.length);
-  m_saveq.push_back(copy);
-}
+  RSPSetrcuEvent rcu;
+  
+  rcu.timestamp.setNow(0);
 
-GCFEvent* BeamServerTask::saveq_recall()
-{
-  if (!m_saveq.empty()) return (GCFEvent*)m_saveq.front();
-  else                  return 0;
-}
-
-void BeamServerTask::saveq_pop()
-{
-  if (!m_saveq.empty())
+  // select all BLPS, no subarraying
+  rcu.rcumask.reset();
+  for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; i++)
   {
-    char* e = m_saveq.front();
-    m_saveq.pop_front();
-    delete [] e;
+    rcu.rcumask.set(i);
+  }
+
+  int current_spw = SpectralWindowConfig::getInstance().getCurrent();
+  
+  if (current_spw >= 0)
+  {
+    const SpectralWindow* spw = SpectralWindowConfig::getInstance().get(current_spw);
+    if (!spw)
+    {
+      LOG_WARN_STR("No spectral window definition found for spectral window index " << current_spw);
+      return;
+    }
+
+    rcu.settings().resize(1);
+    rcu.settings()(0).value = spw->rcusettings();
+
+    m_rspdriver.send(rcu);
   }
 }
-
-void BeamServerTask::saveq_clear()
-{
-  while (!m_saveq.empty()) saveq_pop();
-}
-#endif
 
 int main(int argc, char** argv)
 {
@@ -771,6 +769,7 @@ int main(int argc, char** argv)
 
   try 
   {
+    GCF::ParameterSet::instance()->adoptFile("BeamServer.conf");
     GCF::ParameterSet::instance()->adoptFile("BeamServerPorts.conf");
     GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
   }

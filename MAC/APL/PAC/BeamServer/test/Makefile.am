@@ -10,11 +10,13 @@ TESTS = \
 	CheckWeightsTest2 \
 	avtstub.sh
 
+bin_PROGRAMS = \
+	AVTStub
+
 check_PROGRAMS = \
 	BeamServerTest \
 	CheckWeightsTest \
 	CheckWeightsTest2 \
-	AVTStub \
 	EPAStub \
 	EPATest \
 	SweepTest \
@@ -84,15 +86,16 @@ EPAStub_LDADD = \
 BUILT_SOURCES = \
 	log4cplus.properties \
 	abstest.ns \
-	abstest.top
+	abstest.top \
+	AVTStub.conf
+
+sysconf_DATA = \
+	AVTStub.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 
-%.ns: %.ns.in
-	cp $< $@
-
-%.top: %.top.in
+%.conf: %.conf.in
 	cp $< $@
 
 include $(lofar_sharedir)/Makefile.common

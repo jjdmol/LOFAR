@@ -3,6 +3,47 @@
 #
 
 #
-# There are currently no specific BeamServer configuration items
+# Definitions of spectral windows
 #
+# Array with specification of the spectral windows:
+# Dimensions 6 x 6 (6 windows, 6 parameters per window)
+# Parameters:
+#   sample_freq, nyquist_zone, nsubbands, cutoff_low, cutoff_high, rcusetting
+#
+# BeamServer.SpectralWindows= 6 x 6
+#
+# name                 sampled    f_s  nz nsb d_low d_high rcu
+# LBL_10_40_160Mhz    0- 80 MHz  160e6 1  512 10e6  40e6   185 (0xB9)
+# LBH_30_70_160Mhz    0- 80 MHz  160e6 1  512 30e6  10e6   185 (0xB9)
+# HB_110_150_160MHz  80-160 Mhz  160e6 2  512 10e6  10e6   198 (0xC6)
+# HB_170_230_160MHz 160-240 MHz  160e6 3  512 10e6  10e6   206 (0xCE)
+#
+# LBL_10_40_200MHz    0-100 MHz  200e6 1  512 10e6  60e6   185 (0xB9)
+# LBH_30_80_200MHz    0-100 Mhz  200e6 1  512 30e6  20e6   185 (0xB9)
+# HB_110_190_200MHz 100-200 MHz  200e6 2  512 10e6  10e6   198 (0xC6)
+# HB_170_190_200MHz 100-200 MHz  200e6 2  512 70e6  10e6   206 (0xCE)
+# HB_210_240_200MHz 200-300 MHz  200e6 3  512 10e6  60e6   214 (0xD6)
+#
+# BeamServer.SpectralWindows=6 x 6 [
+# 160e6 1  512 10e6  40e6   185
+# 160e6 1  512 30e6  10e6   185
+# 160e6 2  512 10e6  10e6   198
+# 160e6 3  512 10e6  10e6   206
+
+# 200e6 1  512 10e6  60e6   185
+# 200e6 1  512 30e6  20e6   185
+# 200e6 2  512 10e6  10e6   198
+# 200e6 2  512 70e6  10e6   206
+# 200e6 3  512 10e6  60e6   214
+# ]
+BeamServer.SpectralWindows=6 x 6 [ 160e6 1  512 10e6  40e6   185 160e6 1  512 30e6  10e6   185 160e6 2  512 10e6  10e6   198 160e6 3  512 10e6  10e6   206 200e6 1  512 10e6  60e6   185 200e6 1  512 30e6  20e6   185 200e6 2  512 10e6  10e6   198 200e6 2  512 70e6  10e6   206 200e6 3  512 10e6  60e6   214 ]
+BeamServer.SpectralWindow_0=LBL_10_40_160MHz
+BeamServer.SpectralWindow_1=LBH_30_70_160MHz
+BeamServer.SpectralWindow_2=HB_110_150_160MHz
+BeamServer.SpectralWindow_3=HB_170_230_160MHz
+BeamServer.SpectralWindow_4=LBL_10_40_200MHz
+BeamServer.SpectralWindow_5=LBH_30_80_200MHz
+BeamServer.SpectralWindow_6=HB_110_190_200MHz
+BeamServer.SpectralWindow_7=HB_170_190_200MHz
+BeamServer.SpectralWindow_8=HB_210_240_200MHz
 
