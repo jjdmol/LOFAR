@@ -29,6 +29,9 @@
 #include <Common/lofar_string.h>
 #include <Common/Debug.h>
 
+namespace LOFAR
+{
+
 // Parameter prefices used by MeqCalImpl
 #define BB_PARM_STOKES "StokesI.CP"
 #define BB_PARM_RA     "RA.CP"
@@ -173,6 +176,7 @@ private:
   MeqCalibrater  * itsPSS3CalibratorImpl;
 };
 
+} // end namespace LOFAR
 
 #endif
 

@@ -27,9 +27,11 @@
 #define PSS3_WH_EVALUATE_H
 
 #include <lofar_config.h>
+#include <Common/lofar_vector.h>
+#include <tinyCEP/WorkHolder.h>
 
-#include "CEPFrame/WorkHolder.h"
-
+namespace LOFAR
+{
 
 /**
  This class implements the controller of the blackboard
@@ -57,6 +59,9 @@ public:
   /// Do a process step.
   virtual void process();
 
+  /// Postprocess
+  virtual void postprocess();
+
   /// Show the work holder on stdout.
   virtual void dump();
 
@@ -64,13 +69,24 @@ private:
   /// Forbid copy constructor.
   WH_Evaluate (const WH_Evaluate&);
 
+  void readSolutions();
+  string createQuery(vector<int>& ) const;
+
   /// Forbid assignment.
   WH_Evaluate& operator= (const WH_Evaluate&);
 
   int itsNrKS;        // number of KS available
   int itsCurrentRun;
   int itsEventCnt;
+
+  vector<int>  itsStartSols;      // IDs of start solutions
+  unsigned int itsOldestSolIdx;   // Index of the 'oldest' solution
+                                  // in start solution vector.
+
+  static int theirNextWorkOrderID;
+
 };
 
+} // namespace LOFAR
 
 #endif

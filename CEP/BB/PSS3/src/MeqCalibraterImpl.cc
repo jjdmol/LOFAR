@@ -77,6 +77,8 @@
 #include <stdexcept>
 #include <stdio.h>
 
+namespace LOFAR
+{
 
 //----------------------------------------------------------------------
 //
@@ -2447,3 +2449,5 @@ void MeqCalibrater::setParmValues (const vector<string>& names,
     }
   }
 }
+
+} // namespace LOFAR

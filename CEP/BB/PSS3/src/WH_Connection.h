@@ -28,10 +28,12 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/WorkHolder.h"
-#include "PSS3/DH_WorkOrder.h"
-#include "PSS3/DH_Solution.h"
+#include <tinyCEP/WorkHolder.h>
+#include <PSS3/DH_WorkOrder.h>
+#include <PSS3/DH_Solution.h>
 
+namespace LOFAR
+{
 
 /**
    This is an empty WorkHolder class. It either has (1 or 2) inputs or outputs of
@@ -77,5 +79,6 @@ private:
 
 };
 
+} // namespace LOFAR
 
 #endif

@@ -30,6 +30,9 @@
 #include <Common/lofar_string.h>
 #include <PSS3/Quality.h>
 
+namespace LOFAR
+{
+
 //# Forward Declarations
 class CalibratorOld;
 
@@ -62,5 +65,7 @@ public:
 
  private:
 };
+
+} // namespace LOFAR
 
 #endif

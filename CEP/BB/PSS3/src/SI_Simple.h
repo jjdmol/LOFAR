@@ -29,6 +29,9 @@
 #include <PSS3/StrategyImpl.h>
 #include <Common/lofar_string.h>
 
+namespace LOFAR
+{
+
 //# Forward Declarations
 
 // This is a class which implements a simple calibration strategy.
@@ -75,5 +78,6 @@ public:
 inline string SI_Simple::getType() const
 { return "Simple"; }
 
+} // namespace LOFAR
 
 #endif

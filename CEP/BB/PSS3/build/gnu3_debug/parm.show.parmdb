@@ -1,6 +1,0 @@
-connect db='tanaka', dbtype='postgres', tablename='meqmodel'
-show
-connect db='tanaka', dbtype='postgres', tablename='skymodel'
-show
-quit
-

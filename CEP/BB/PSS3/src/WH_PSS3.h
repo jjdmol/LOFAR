@@ -29,8 +29,10 @@
 #include <lofar_config.h>
 
 #include <Common/lofar_vector.h>
-#include "CEPFrame/WorkHolder.h"
+#include <tinyCEP/WorkHolder.h>
 
+namespace LOFAR
+{
 
 class DH_Solution;
 class CalibratorOld;
@@ -76,15 +78,15 @@ private:
   /// Forbid assignment.
   WH_PSS3& operator= (const WH_PSS3&);
 
-  // The following 2 methods translate data from a DH_Solution object to
-  // vectors needed by the Calibrator and vice versa.
-  // This will no longer be necessary when parameters in DH_Solution are
-  // stored as vectors!
-  void putVectorsIntoSolution(DH_Solution* dh, const vector<string>& pNames, 
-			      const vector<double>& pValues);
-  void putSolutionIntoVectors(DH_Solution* dh, vector<string>& pNames, 
-			      vector<double>& pValues, vector<int>& source);
-  
+  // The next methods are internal helper methods and are called in process().
+  // Add parameters to start solution vectors or replace values if necessary
+  void addToStartVectors(const vector<string>& names, 
+			 const vector<double>& values,
+			 vector<string>& allNames,
+			 vector<double>& allValues) const; 
+  // Get the source numbers from the parameter names
+  void getSourceNumbersFromNames(vector<string>& names, vector<int>& srcNumbers) const;
+
   CalibratorOld* itsCal;
   string itsMSName;
   string itsMeqModel;
@@ -106,5 +108,6 @@ private:
 
 };
 
+} // namespace LOFAR
 
 #endif

@@ -29,6 +29,9 @@
 #include <PSS3/StrategyImpl.h>
 #include <Common/lofar_string.h>
 
+namespace LOFAR
+{
+
 //# Forward Declarations
 
 // This is a class which implements the peeling strategy.
@@ -66,7 +69,11 @@ public:
   SI_Peeling(const SI_Peeling&);
   SI_Peeling& operator=(const SI_Peeling&);
 
-  CalibratorOld*    itsCal;             // The calibrator
+ // Split parameter names into source specific and other parameters
+  void splitVector(vector<string>& allParams, vector<string>& params,
+		   vector<string>& srcParams) const;
+
+  CalibratorOld* itsCal;             // The calibrator
   int            itsNIter;           // Number of iterations
   int            itsNSources;        // Number of sources for which to solve
   double         itsTimeInterval;    // Time interval for which to solve
@@ -79,5 +86,6 @@ public:
 inline string SI_Peeling::getType() const
 { return "Peeling"; }
 
+} // namespace LOFAR
 
 #endif

@@ -30,21 +30,18 @@
 
 #include <Common/Debug.h>
 
-
-
-#include <CEPFrame/Transport.h>
 #include <CEPFrame/Step.h>
-#include <CEPFrame/Simul.h>
 #include <CEPFrame/WH_Empty.h>
 #include <CEPFrame/Profiler.h>
-#include <CEPFrame/TH_Database.h>
-#include "PSS3/BlackBoardDemo.h"
-#include "PSS3/WH_Evaluate.h"
-#include "PSS3/WH_PSS3.h"
-#include "PSS3/WH_Connection.h"
+#include <Transport/TH_PL.h>
+#include <PSS3/BlackBoardDemo.h>
+#include <PSS3/WH_Evaluate.h>
+#include <PSS3/WH_PSS3.h>
+#include <PSS3/WH_Connection.h>
 #include TRANSPORTERINCLUDE
 
-using namespace LOFAR;
+namespace LOFAR
+{
 
 string i2string(int i) {
   char str[32];
@@ -77,24 +74,23 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   undefine();
 
   // Create the top-level Simul
-  Simul simul(new WH_Empty(), 
+  Composite topComposite(new WH_Empty(), 
 	      "BlackBoardDemo",
 	      true, 
 	      true,  // controllable	      
 	      true); // monitor
-  setSimul(simul);
+  setComposite(topComposite);
 
   // Set node and application number of Simul
-  simul.runOnNode(0,0);
-  simul.setCurAppl(0);
+  topComposite.runOnNode(0,0);
+  topComposite.setCurAppl(0);
 
   // Optional: Get any extra params from input
-  int controlRead = params.getInt("cRead", 0);  // If 1: Controller reads from 
-                                                // database
-  int itsNumberKS = 3;       // The total number of Knowledge Sources
-  char databaseName[10] = "schaaf";   // !!!! Change to own database !!!!
 
-  DH_Postgresql::UseDatabase("10.87.2.50", databaseName, "postgres"); 
+  int itsNumberKS = 1;       // The total number of Knowledge Sources
+  char databaseName[10] = "meijeren";   // !!!! Change to own database !!!!
+
+  TH_PL::useDatabase(databaseName); 
 
   string meqModel = "meqmodel";
   string skyModel = "skymodel";
@@ -108,16 +104,18 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   WH_Evaluate controlWH("control", itsNumberKS);
   Step controlStep(controlWH, "controlStep");
   controlStep.runOnNode(0,0);
-  simul.addStep(controlStep);
+  topComposite.addStep(controlStep);
   // Empty workholders and steps necessary for data transport to/from database
-  WH_Connection controlInWH("empty", 0, 1, WH_Connection::Solution);
-  WH_Connection controlOutWH("empty", 1, 0, WH_Connection::WorkOrder); 
+  WH_Connection controlInWH("empty", 0, 2, WH_Connection::WorkOrder, 
+			    WH_Connection::Solution);
+  WH_Connection controlOutWH("empty", 2, 0, WH_Connection::WorkOrder, 
+			    WH_Connection::Solution); 
   Step controlInStep(controlInWH, "CsourceStub");
   Step controlOutStep(controlOutWH, "CsinkStub");
   controlInStep.runOnNode(0,0);
   controlOutStep.runOnNode(0,0);
-  simul.addStep(controlInStep);
-  simul.addStep(controlOutStep);
+  topComposite.addStep(controlInStep);
+  topComposite.addStep(controlOutStep);
 
   // Create the Knowledge Sources
   itsKSSteps = new (Step*)[itsNumberKS];
@@ -130,44 +128,55 @@ void BlackBoardDemo::define(const KeyValueMap& params)
     // Create the PSS3 Workholders and Steps
     ksID = i2string(ksNo);
 
-    WH_PSS3 ksWH("KS"+ksID, "demo"+ksID, meqModel+ksID, skyModel+ksID, "postgres", 
-		 databaseName, "", ddID, modelType, calcUVW, dataColName, 
-		 residualColName, true, ksNo*10000);
+//     WH_PSS3 ksWH("KS"+ksID, "data/10Sources/demo"+ksID, meqModel+ksID, skyModel+ksID, 
+// 		 "postgres",  databaseName, "", ddID, modelType, calcUVW, 
+// 		 dataColName, residualColName, true, ksNo*9998);
+
+    WH_PSS3 ksWH("KS"+ksID, "data/10Sources/demo10", meqModel+ksID, skyModel+ksID, 
+		 "postgres",  databaseName, "", ddID, modelType, calcUVW, 
+		 dataColName, residualColName, true, ksNo*10000);
+
     int index = ksNo - 1;
     itsKSSteps[index] = new Step(ksWH, "knowledgeSource"+ksID);
     itsKSSteps[index]->runOnNode(ksNo,0);
-    simul.addStep(itsKSSteps[index]);
+    topComposite.addStep(itsKSSteps[index]);
 
     // Empty workholders and steps necessary for data transport to/from database
     WH_Connection ksInWH("ksIn"+ksID, 0, 2, WH_Connection::WorkOrder, 
 			 WH_Connection::Solution);
     itsKSInSteps[index] = new Step(ksInWH, "KSsource"+ksID);
     itsKSInSteps[index]->runOnNode(ksNo,0);
-    simul.addStep(itsKSInSteps[index]);
+    topComposite.addStep(itsKSInSteps[index]);
 
-    WH_Connection ksOutWH("ksOut"+ksID, 1, 0, WH_Connection::Solution);
+    WH_Connection ksOutWH("ksOut"+ksID, 2, 0, WH_Connection::WorkOrder,
+			 WH_Connection::Solution);
     itsKSOutSteps[index] = new Step(ksOutWH, "KSsink"+ksID);
     itsKSOutSteps[index]->runOnNode(ksNo,0);
-    simul.addStep(itsKSOutSteps[index]);
+    topComposite.addStep(itsKSOutSteps[index]);
 
   }
 
+  // Share input and output DataHolders of Controller
+  controlStep.setInBufferingProperties(0, true, false);
+  controlStep.setInBufferingProperties(1, true, false);
+  
   // Create the cross connections between Steps
   // Connections to the database.
-  if (controlRead)     // Controller reads from database
-  {
-    controlStep.connect(&controlInStep, 0, 0, 1, TH_Database::proto);
-  } 
-  controlOutStep.connect(&controlStep, 0, 0, 1, TH_Database::proto); 
+  controlStep.connect(&controlInStep, 0, 0, 1, TH_PL("BBWorkOrders"));
+  controlStep.connect(&controlInStep, 1, 1, 1, TH_PL("BBSolutions"));
+  controlOutStep.connect(&controlStep, 0, 0, 1, TH_PL("BBWorkOrders")); 
+  controlOutStep.connect(&controlStep, 1, 1, 1, TH_PL("BBSolutions")); 
 
   for (int index = 0; index < itsNumberKS; index++)
   {
-    itsKSSteps[index]->connect(itsKSInSteps[index], 0, 0, 2, TH_Database::proto);
-  }
+    // Share input and output DataHolders of Knowledge Sources
+    itsKSSteps[index]->setInBufferingProperties(0, true, false);
+    itsKSSteps[index]->setInBufferingProperties(1, true, false);
 
-  for (int index = 0; index < itsNumberKS; index++)
-  {
-    itsKSOutSteps[index]->connect(itsKSSteps[index], 0, 0, 1, TH_Database::proto);
+    itsKSSteps[index]->connect(itsKSInSteps[index], 0, 0, 1, TH_PL("BBWorkOrders"));
+    itsKSSteps[index]->connect(itsKSInSteps[index], 1, 1, 1, TH_PL("BBSolutions"));
+    itsKSOutSteps[index]->connect(itsKSSteps[index], 0, 0, 1, TH_PL("BBWorkOrders"));
+    itsKSOutSteps[index]->connect(itsKSSteps[index], 0, 0, 1, TH_PL("BBSolutions"));
   }
 
 }  
@@ -182,7 +191,7 @@ void BlackBoardDemo::run(int nSteps) {
     if (i==2) Profiler::activate();
     TRACER2("Call simul.process() ");
     cout << "Run " << i << "/" << nSteps << endl;
-    getSimul().process();
+    getComposite().process();
     if (i==5) Profiler::deActivate();
   }
 
@@ -196,7 +205,7 @@ void BlackBoardDemo::run(int nSteps) {
 }
 
 void BlackBoardDemo::dump() const {
-  getSimul().dump();
+  getComposite().dump();
 }
 
 void BlackBoardDemo::quit() {  
@@ -220,3 +229,6 @@ void BlackBoardDemo::undefine() {
   TRACER2("Leaving BlackBoardDemo::undefine");
 
 }
+
+
+} // end namespace LOFAR

@@ -22,6 +22,8 @@
 
 #include <PSS3/Quality.h>
 
+namespace LOFAR
+{
 
 Quality::Quality():
   itsSolFlag(false),
@@ -54,3 +56,5 @@ void Quality::show(ostream& os) const {
   os << "itsChi    : " <<  itsChi     << endl;
 */
 }
+
+} // namespace LOFAR

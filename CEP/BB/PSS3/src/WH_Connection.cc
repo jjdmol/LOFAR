@@ -23,10 +23,11 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "PSS3/WH_Connection.h"
-#include <math.h>
+#include <PSS3/WH_Connection.h>
+#include <Common/Debug.h>
 
-using namespace LOFAR;
+namespace LOFAR
+{
 
 WH_Connection::WH_Connection (const string& name, int nInDHs,
 			      int nOutDHs, dhType dh1Type, dhType dh2Type)
@@ -43,10 +44,10 @@ WH_Connection::WH_Connection (const string& name, int nInDHs,
 	      << nInDHs);
     switch (dh1Type) {
     case WorkOrder:
-      getDataManager().addInDataHolder(0, new DH_WorkOrder("in"), true);
+      getDataManager().addInDataHolder(0, new DH_WorkOrder("in"));
       break;
     case Solution:
-      getDataManager().addInDataHolder(0, new DH_Solution("in", "Connection"), true);
+      getDataManager().addInDataHolder(0, new DH_Solution("in"));
       break;
     }
     getDataManager().setAutoTriggerIn(0, false);
@@ -54,10 +55,10 @@ WH_Connection::WH_Connection (const string& name, int nInDHs,
     {
       switch (dh2Type) {
       case WorkOrder:
-        getDataManager().addInDataHolder(1, new DH_WorkOrder("in"), true);
+        getDataManager().addInDataHolder(1, new DH_WorkOrder("in"));
         break;
       case Solution:
-        getDataManager().addInDataHolder(1, new DH_Solution("in", "Connection"), true);
+        getDataManager().addInDataHolder(1, new DH_Solution("in"));
         break;
       }
     getDataManager().setAutoTriggerIn(1, false); 
@@ -69,10 +70,10 @@ WH_Connection::WH_Connection (const string& name, int nInDHs,
 	      << nOutDHs);
     switch (dh1Type) {
     case WorkOrder:
-      getDataManager().addOutDataHolder(0, new DH_WorkOrder("in"), true);
+      getDataManager().addOutDataHolder(0, new DH_WorkOrder("in"));
       break;
     case Solution:
-      getDataManager().addOutDataHolder(0, new DH_Solution("in", "Connection"), true);
+      getDataManager().addOutDataHolder(0, new DH_Solution("in"));
       break;
     }
     getDataManager().setAutoTriggerOut(0, false);
@@ -80,10 +81,10 @@ WH_Connection::WH_Connection (const string& name, int nInDHs,
     {
       switch (dh2Type) {
       case WorkOrder:
-        getDataManager().addOutDataHolder(1, new DH_WorkOrder("in"), true);
+        getDataManager().addOutDataHolder(1, new DH_WorkOrder("in"));
         break;
       case Solution:
-        getDataManager().addOutDataHolder(1, new DH_Solution("in", "Connection"), true);
+        getDataManager().addOutDataHolder(1, new DH_Solution("in"));
         break;
       }
       getDataManager().setAutoTriggerOut(1, false);
@@ -116,3 +117,4 @@ void WH_Connection::dump()
 {
 }
 
+} // namespace LOFAR

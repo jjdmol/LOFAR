@@ -26,27 +26,36 @@
 #ifndef PSS3_DH_SOLUTION_H
 #define PSS3_DH_SOLUTION_H
 
-#include <Common/lofar_complex.h>
-
 #include <lofar_config.h>
-
-#include <CEPFrame/DH_Postgresql.h>
+#include <Common/lofar_vector.h>
+#include <Transport/DH_PL.h>
+#include <Transport/PO_DH_PL.h>
 #include <PSS3/Quality.h>
+
+namespace LOFAR
+{
 
 /**
    This class is a DataHolder which holds the parameters solved by
-   a pSS3 knowledge source.
+   a PSS3 knowledge source.
 */
 
-class DH_Solution: public LOFAR::DH_Postgresql
+class DH_Solution: public LOFAR::DH_PL
 {
 public:
+  typedef PL::TPersistentObject<DH_Solution> PO_DH_SOL;
 
-  explicit DH_Solution (const string& name, const string& type);
+  explicit DH_Solution (const string& name="dh_solution");
 
   virtual ~DH_Solution();
 
   DataHolder* clone() const;
+
+  // Get a reference to the PersistentObject.
+  virtual PL::PersistentObject& getPO() const;
+
+  // Create a TPO object and set the table name in it.
+  virtual void initPO (const string& tableName);
 
   /// Allocate the buffers.
   virtual void preprocess();
@@ -54,105 +63,118 @@ public:
   /// Deallocate the buffers.
   virtual void postprocess();
 
-  /// Database store/retrieve methods
-  bool StoreInDatabase(int appId, int tag, char* buf, int size);
-  bool RetrieveFromDatabase(int appId, int tag, char* buf, int size);
+  /// overload the getcursize method;
+  /// reported data size may be altered with setCurDataSize() method
+  int  getCurDataSize() ;
+  void setCurDataSize(const int nbytes) ;
 
   // Data access methods
-  int getID();
-  void setID(int id);
-  int getWorkOrderID();
-  void setWorkOrderID(int id);
-  double getRAValue(int sourceNo);
-  void setRAValue(int sourceNo, double val);
-  double getDECValue(int sourceNo);
-  void setDECValue(int sourceNo, double val);
-  double getStokesIValue(int sourceNo);
-  void setStokesIValue(int sourceNo, double val);
-  int getIterationNo();
-  void setIterationNo(int no);
-  Quality* getQuality();
+  int getID() const;
+  void setID(const int id);
 
-  void setSolutionID(int id);  // Set id of solution to retrieve from database
-  int getSolutionID();
+  int getWorkOrderID() const;
+  void setWorkOrderID(const int id);
+
+  int getIterationNo() const;
+  void setIterationNo(const int no);
+
+  void setSolutionID(const int id);  // Set id of solution to retrieve from database
+  int getSolutionID() const;
+
+  Quality getQuality() const;
+  void setQuality(const Quality& quality);
+
+  unsigned int getNumberOfParam() const;
+  void setNumberOfParam(const unsigned int no);
+
+  void getParamValues(vector<double>& values) const;
+  void setParamValues(const vector<double>& values);
+
+  void getParamNames(vector<string>& names) const;
+  void setParamNames(const vector<string>& names);
 
   // Resets (clears) the contents of its DataPacket 
   void clearData();
   
-protected:
-  // Definition of the DataPacket type.
-  class DataPacket: public DH_Database::DataPacket
-  {
-  public:
-    DataPacket();
-    int itsID;                         // Unique id
-    int itsWOID;                       // ID of the corresponding WorkOrder
-/*     vector<string> itsParamNames;      // Names of parameters */
-/*     vector<double> itsParamValues;     // Values of parameters */
-    double itsRAValues[10];              // Array containing RA.CPx values
-    double itsDECValues[10];             // Array containing DEC.CPx values
-    double itsStokesIValues[10];         // Array containing StokesI.CPx values
-    int itsIteration;                   // Its iteration
-    Quality itsQuality;                 // Its solution quality
-
-  };
+  void dump();
 
 private:
-
   /// Forbid assignment.
   DH_Solution& operator= (const DH_Solution&);
   DH_Solution(const DH_Solution&);
-  DataPacket itsDataPacket;
 
-  string itsType;  // Its type (Control or KS). This will determine which query
-                   // is executed in RetrieveFromDatabase
-  int itsDBid;     // ID of solution to retrieve from database
+  // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
+  virtual void fillDataPointers();
+
+  int*          itsID;
+  int*          itsWOID;
+  int*          itsIteration;
+  double*       itsFit;
+  double*       itsMu;
+  double*       itsStdDev;
+  double*       itsChi;
+  unsigned int* itsNumberOfParam;
+  double*       itsParamValues;
+  char*         itsParamNames;
+  
+  PO_DH_SOL*    itsPODHSOL; 
+
+  int itsCurDataSize;
 
 };
 
-inline int DH_Solution::getID()
-{ return itsDataPacket.itsID; }
+inline int DH_Solution::getID() const
+{ return *itsID; }
 
-inline void DH_Solution::setID(int id)
-{ itsDataPacket.itsID = id; }
+inline void DH_Solution::setID(const int id)
+{ *itsID = id; }
 
-inline int DH_Solution::getWorkOrderID()
-{ return itsDataPacket.itsWOID; }
+inline int DH_Solution::getWorkOrderID() const
+{ return *itsWOID; }
 
-inline void DH_Solution::setWorkOrderID(int id)
-{ itsDataPacket.itsWOID = id; }
+inline void DH_Solution::setWorkOrderID(const int id)
+{ *itsWOID = id; }
 
-inline double DH_Solution::getRAValue(int sourceNo)
-{ return itsDataPacket.itsRAValues[sourceNo-1]; }
+inline int DH_Solution::getIterationNo() const
+{ return *itsIteration; }
 
-inline void DH_Solution::setRAValue(int sourceNo, double val)
-{ itsDataPacket.itsRAValues[sourceNo-1] = val; }
+inline void DH_Solution::setIterationNo(const int no)
+{ *itsIteration = no; }
 
-inline double DH_Solution::getDECValue(int sourceNo)
-{ return itsDataPacket.itsDECValues[sourceNo-1]; }
+inline unsigned int DH_Solution::getNumberOfParam() const
+{ return *itsNumberOfParam; }
 
-inline void DH_Solution::setDECValue(int sourceNo, double val)
-{ itsDataPacket.itsDECValues[sourceNo-1] = val; }
+inline void DH_Solution::setNumberOfParam(const unsigned int no)
+{ *itsNumberOfParam = no; }
 
-inline double DH_Solution::getStokesIValue(int sourceNo)
-{ return itsDataPacket.itsStokesIValues[sourceNo-1]; }
+inline int DH_Solution::getCurDataSize() 
+{ return itsCurDataSize; }
+   
+inline void DH_Solution::setCurDataSize(const int nbytes)
+{  itsCurDataSize = nbytes;  }
 
-inline void DH_Solution::setStokesIValue(int sourceNo, double val)
-{ itsDataPacket.itsStokesIValues[sourceNo-1] = val; }
+// Define the class needed to tell PL that there should be
+// extra fields stored in the database table.
+namespace PL {                                                  
+  class DBRep<DH_Solution> : public DBRep<DH_PL>               
+  {                                                             
+    public:                                                     
+      void bindCols (dtl::BoundIOs& cols);                      
+      void toDBRep (const DH_Solution&);                        
+    private: 
+      int itsID;                   // Temporarily stored in separate fields
+      int itsWOID;                 // in order to facilitate debugging
+      int itsIteration;
+      double itsFit;
+      double itsMu;
+      double itsStdDev;
+      double itsChi;
+      unsigned int itsNumberOfParam;
+    };   
+                                                      
+} // end namespace PL   
 
-inline int DH_Solution::getIterationNo()
-{ return itsDataPacket.itsIteration; }
 
-inline void DH_Solution::setIterationNo(int no)
-{ itsDataPacket.itsIteration = no; }
-
-inline Quality* DH_Solution::getQuality()
-{ return &itsDataPacket.itsQuality; }
-
-inline void DH_Solution::setSolutionID(int id)
-{ itsDBid = id; }
-
-inline int DH_Solution::getSolutionID()
-{ return itsDBid; }
+} // namespace LOFAR
 
 #endif 

@@ -1,4 +1,4 @@
-//#  SI_Randomized.cc:  The peeling calibration strategy
+//#  SI_Randomized.cc:  A random calibration strategy
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,6 +24,9 @@
 #include <Common/Debug.h>
 #include <PSS3/CalibratorOld.h>
 #include <unistd.h>
+
+namespace LOFAR
+{
 
 SI_Randomized::SI_Randomized(CalibratorOld* cal, int argSize, char* args)
   : StrategyImpl(),
@@ -54,7 +57,7 @@ bool SI_Randomized::execute(vector<string>& parmNames,
 			 int& resultIterNo)
 {
   AssertStr(itsCal != 0, 
-	    "Calibrator pointer not set for this peeling strategy");
+	    "Calibrator pointer not set for this random strategy");
 
   if (itsFirstCall)
   {
@@ -66,7 +69,7 @@ bool SI_Randomized::execute(vector<string>& parmNames,
     }
     for (unsigned int i=0; i < parmNames.size(); i++)      // Add all parms
     { 
-      itsCal->addSolvableParm(parmNames[i], itsSourceNo);
+      itsCal->addSolvableParm(parmNames[i]);
       TRACER1("SI_Randomized::execute  Addding solvable parm " << parmNames[i]
 	      << " for source " << itsSourceNo);
     }
@@ -122,7 +125,7 @@ bool SI_Randomized::useParms (const vector<string>& parmNames,
 			    const vector<int>& srcNumbers)
 {
   AssertStr(itsCal != 0, 
-	    "Calibrator pointer not set for this peeling strategy");
+	    "Calibrator pointer not set for this random strategy");
 
   itsCal->Initialize();
   itsInitialized = true;
@@ -152,3 +155,5 @@ bool SI_Randomized::useParms (const vector<string>& parmNames,
   }
   return true;
 }
+
+} // namespace LOFAR

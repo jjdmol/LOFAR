@@ -30,7 +30,7 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/Simulator.h"
+#include <CEPFrame/ApplicationHolder.h>
 #include <Common/KeyValueMap.h>
 
 
@@ -39,52 +39,15 @@
    architecture in combination with PSS3 calibration software.
 */
 /** 
- 1. The program uses two database tables for control and as a blackboard. These
-    tables have to be created using:
-       psql -h dop50 -U postgres <user>
 
-       CREATE TABLE bbsolutions (
-       id integer,
-       woid integer,
-       RA1 double precision, DEC1 double precision, STOKESI1 double precision,
-       RA2 double precision, DEC2 double precision, STOKESI2 double precision,
-       RA3 double precision, DEC3 double precision, STOKESI3 double precision,
-       RA4 double precision, DEC4 double precision, STOKESI4 double precision,
-       RA5 double precision, DEC5 double precision, STOKESI5 double precision,
-       RA6 double precision, DEC6 double precision, STOKESI6 double precision,
-       RA7 double precision, DEC7 double precision, STOKESI7 double precision,
-       RA8 double precision, DEC8 double precision, STOKESI8 double precision,
-       RA9 double precision, DEC9 double precision, STOKESI9 double precision,
-       RA10 double precision, DEC10 double precision, STOKESI10 double precision,
-       iteration integer,
-       fit double precision,
-       mu double precision,
-       stddev double precision,
-       chi double precision );
+ 1. In BlackBoardDemo.cc change 'databaseName' to your own database name.
 
-       CREATE TABLE bbworkorders (
-       woid integer,
-       status integer,
-       kstype text,
-       strategyno integer,
-       argsize integer,
-       varargblob text,
-       p1name text,
-       p2name text,
-       p3name text,
-       solutionid integer );
-
- 2. For each Knowledge Source there must exist a separate measurement set and 
-    meqmodel/skymodel tables. See /LOFAR/CEP/CPA/PSS3/MNS/src/parmdb.cc on how
-    to create these. The names of these tables must be '<name>1' and 
-    '<name>1def' for Knowledge Source 1, '<name>2' and '<name>2def' for 
-    Knowledge Source 2 etc. Scripts to fill these tables can be found in the
-    BB/PSS3/src directory
-
- 3. In BlackBoardDemo.cc change 'databaseName' to your own database name.
+ 2. Get the correct Measurement Sets.
 */
+namespace LOFAR
+{
 
-class BlackBoardDemo: public LOFAR::Simulator
+class BlackBoardDemo: public LOFAR::ApplicationHolder
 {
 public:
   BlackBoardDemo();
@@ -106,5 +69,6 @@ private:
   int itsNumberKS;       // Total number of Knowledge Sources
 };
 
+} // end namespace LOFAR
 
 #endif

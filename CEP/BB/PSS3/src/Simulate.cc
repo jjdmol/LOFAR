@@ -24,14 +24,17 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/SimulatorParseClass.h"
+#include <tinyCEP/SimulatorParseClass.h>
 #include <Common/lofar_iostream.h>
 #include <Common/Debug.h>
-#include "PSS3/BlackBoardDemo.h"
-#include "TryOut.h"
+#include <PSS3/BlackBoardDemo.h>
+#include <PSS3/TryOut.h>
+
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
+
+using namespace LOFAR;
 
 #ifdef HAVE_CORBA
 int atexit(void (*function)(void))
@@ -48,17 +51,16 @@ int main (int argc, const char** argv)
   try {
     // To try out different (serial) experiments without the CEP
     // framework, use following two statements:
-    // TryOut (); return 0;
-
+    //  TryOut (); return 0;
     BlackBoardDemo simulator;
 
-//     // Set trace level.
+    // Set trace level.
     Debug::initLevels (argc, argv);
 
     simulator.setarg (argc, argv);
 
     simulator.baseDefine();
-    simulator.baseRun(3);
+    simulator.baseRun(2);
     simulator.baseQuit();
 
 
@@ -82,3 +84,4 @@ int main (int argc, const char** argv)
     cout << "Unexpected exception in Simulate" << endl;
   }
 }
+
