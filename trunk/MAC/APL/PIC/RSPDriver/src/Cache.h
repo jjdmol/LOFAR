@@ -95,14 +95,6 @@ namespace RSP
       CacheBuffer& getFront();
       CacheBuffer& getBack();
 
-#ifdef TOGGLE_LEDS
-      /**
-       * ledstatus, used to blink the LED's
-       */
-      bool ledstatus();
-      void ledflip();
-#endif
-
     private:
 
       /**
@@ -122,13 +114,6 @@ namespace RSP
        * Singleton class.
        */
       static Cache* m_instance;
-
-#ifdef TOGGLE_LEDS
-      /**
-       * LedStatus
-       */
-      static bool m_ledstatus;
-#endif
   };
 };
      
