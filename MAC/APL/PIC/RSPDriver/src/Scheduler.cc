@@ -80,11 +80,24 @@ GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& /*port*/)
       {
 	if (!(*it).second)
 	{
-	  LOG_INFO(formatString("port %s has not yet completed sync", (*it).first->getName().c_str()));
+	  LOG_INFO(formatString("port %s has not yet completed sync, trying to continue...",
+				(*it).first->getName().c_str()));
 	}
+
+	//
+	// reset the statemachines of all SyncActions for this port
+	//
+	resetSync(*(*it).first);
       }
 
-      return GCFEvent::NOT_HANDLED;
+      //
+      // This is caused by a problem with the firmware
+      // or a loose cable, simply try to continue.
+      //
+      // In the future some more elaborate fault handling
+      // might be required.
+      //
+      completeSync();
     }
 
     setCurrentTime(timeout->sec, 0);
@@ -410,6 +423,23 @@ void Scheduler::initiateSync(GCFEvent& event)
     {
       (*port).second[0]->dispatch(event, (*port).second[0]->getBoardPort());
     }
+  }
+}
+
+void Scheduler::resetSync(GCFPortInterface& port)
+{
+  /**
+   * Reset the state machines of all Sync Actions
+   * for the port, to attempt another sync in the next
+   * update period.
+   */
+  vector<SyncAction*>::iterator sa;
+  int i = 0;
+  for (sa = m_syncactions[&port].begin();
+       sa != m_syncactions[&port].end();
+       sa++, i++)
+  {
+    (*sa)->reset();
   }
 }
 

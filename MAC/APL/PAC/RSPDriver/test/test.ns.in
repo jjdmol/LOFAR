@@ -2,6 +2,14 @@
 host=localhost
 server.type=TCP
 
+[ViewStats]
+host=localhost
+server.type=TCP
+
+[SetWG]
+host=localhost
+server.type=TCP
+
 [RSP]
 cmd=../src/RSPDriver
 host=localhost

@@ -208,3 +208,14 @@ int SyncAction::getCurrentBLP() const
 {
   return m_current_blp;
 }
+
+/**
+ * Force completion by resetting to idle state
+ * and resetting various state variables.
+ */
+void SyncAction::reset()
+{
+  setCompleted(true);
+  TRAN(SyncAction::idle_state);
+}
+

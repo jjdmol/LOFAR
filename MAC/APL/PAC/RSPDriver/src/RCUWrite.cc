@@ -69,7 +69,7 @@ void RCUWrite::sendrequest()
   }
 
   RCUSettings::RCURegisterType& x1 = Cache::getInstance().getFront().getRCUSettings()()(global_blp);
-  RCUSettings::RCURegisterType& y1 = Cache::getInstance().getFront().getRCUSettings()()(global_blp + 1);
+//  RCUSettings::RCURegisterType& y1 = Cache::getInstance().getFront().getRCUSettings()()(global_blp + 1);
 
   // only set filter_0 and filter_1 bits, leave other bits, most notable the overflw bit alone!
   x1.filter_0 = x.filter_0;
