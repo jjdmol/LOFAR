@@ -42,7 +42,9 @@
 #endif 
 
 
-#define DO_TIMING
+// Timing doesn't work because it uses MPI_Reduce.
+// A new communicator should be made that contains only the correlator nodes
+#define DO_TIMING_NOT_DEFINED
 #define USE_BUILTIN
 
 using namespace LOFAR;
