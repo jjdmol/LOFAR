@@ -40,6 +40,10 @@ configfiles_DATA= \
 	ServiceBroker.conf \
 	log4cplus.properties
 
+install-data-local:
+	echo "mac.gcf.sb.host=`hostname -s`" >> $(bindir)/ServiceBroker.conf
+	echo "mac.gcf.sb.range1.host=`hostname`" >> $(bindir)/ServiceBroker.conf
+	
 %.conf: gcf-sb.conf.in
 	cp $< $@
 	

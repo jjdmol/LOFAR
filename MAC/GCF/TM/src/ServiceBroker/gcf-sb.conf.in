@@ -1,5 +1,3 @@
-mac.gcf.sb.host=sun
 mac.gcf.sb.port=24000
-mac.gcf.sb.range1.host=sun.solarsystem
 mac.gcf.sb.range1.firstPortNumber=24001
 mac.gcf.sb.range1.lastPortNumber=25000
