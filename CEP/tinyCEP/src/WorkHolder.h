@@ -25,11 +25,8 @@
 
 #include <lofar_config.h>
 
-#include <Transport/BaseSim.h>
-#include <Transport/DataHolder.h>
-#include <tinyCEP/MiniDataManager.h>
-//#include <CEPFrame/ParamManager.h>
-#include <Common/lofar_iostream.h>
+#include <tinyCEP/TinyDataManager.h>
+/* #include <Common/lofar_iostream.h> */
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 
@@ -37,7 +34,7 @@ namespace LOFAR
 {
 
 class KeyValueMap;
-
+ 
 /**
   Class WorkHolder is the abstract base class for all work holders
   in the CEPFrame environment. It main purpose is to offer a common interface
@@ -122,12 +119,8 @@ public:
   int getOutChannel (const string& name);
 
   // Get/set its DataManager
-  MiniDataManager& getDataManager();
-  void setDataManager(MiniDataManager* dmptr);
-
-  // Get its ParamManager
-/*   ParamManager& getParamManager(); */
-
+  TinyDataManager& getDataManager();
+  void setDataManager(TinyDataManager* dmptr);
 
   // Register a static constructor functions.
   static void registerConstruct (const string& name, WHConstruct*);
@@ -142,7 +135,7 @@ public:
   bool doHandle();
 
 protected:
-  MiniDataManager* itsDataManager;
+  TinyDataManager* itsDataManager;
 
 private:
   /** Make a map of all DataHolders names. A separate map is made
@@ -161,23 +154,17 @@ private:
   string itsType;
   mutable map<string,int> itsInMap;
   mutable map<string,int> itsOutMap;
-/*   ParamManager itsParamManager; */
   bool itsFirstProcessCall;
   
   int itsProcessStep;
 
   static map<string,WHConstruct*>* itsConstructMap;
+
 };
 
 
-inline MiniDataManager& WorkHolder::getDataManager()
+inline TinyDataManager& WorkHolder::getDataManager()
   { return *itsDataManager; }
-
-inline void WorkHolder::setDataManager(MiniDataManager* dmptr)
-  { itsDataManager = dmptr; }
-
-/* inline ParamManager& WorkHolder::getParamManager() */
-/*   { return itsParamManager; } */
 
 inline const string& WorkHolder::getType() const
   { return itsType; }

@@ -2,13 +2,12 @@ lib_LTLIBRARIES 	= libtinycep.la
 
 DOCHDRS = \
 SimulatorParseClass.h \
-BaseDataManager.h \
-MiniDataManager.h \
-ApplicationHolder.h \
+TinyDataManager.h \
+TinyApplicationHolder.h \
 WorkHolder.h \
-# WH_Example.h \
-# DH_Example.h \
-# MyExample.h
+Selector.h \
+Sel_Linked.h \
+Sel_RoundRobin.h 
 
 #bin_PROGRAMS 		= \
 # 			tinyCFmemcpy \
@@ -32,17 +31,16 @@ WorkHolder.h \
 #			libcepframe.la
 
 libtinycep_la_SOURCES = $(DOCHDRS) \
-SimulatorParse.yy                               \
-SimulatorParse.h                                \
-SimulatorTokenize.ll                            \
-SimulatorParseClass.cc                          \
-MiniDataManager.cc \
-BaseDataManager.cc \
-ApplicationHolder.cc \
-WorkHolder.cc 
-# DH_Example.cc  \
-# WH_Example.cc \
-# MyExample.cc
+SimulatorParse.yy               \
+SimulatorParse.h                \
+SimulatorTokenize.ll            \
+SimulatorParseClass.cc          \
+TinyDataManager.cc 		\
+TinyApplicationHolder.cc 	\
+WorkHolder.cc 			\
+Selector.cc 			\
+Sel_Linked.cc 			\
+Sel_RoundRobin.cc 		
 
 EXTRA_DIST = assay
 

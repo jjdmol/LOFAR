@@ -11,7 +11,7 @@ namespace LOFAR
       itsNinputs(ninput),
       itsNoutputs(noutput) {
    
-//     itsDataManager = new MiniDataManager(ninput, noutput);
+//     itsDataManager = new TinyDataManager(ninput, noutput);
     
 //     for (int i=0; i < itsNinputs; i++) {
 //       itsDataManager->addInDataHolder(i, dhptr);
@@ -34,9 +34,6 @@ namespace LOFAR
 
   void MyExample::init() {
     itsWorkHolder->basePreprocess();
-    
-    ((DH_Example*)itsWorkHolder->getDataManager().getInHolder(0))->getBuffer()[0] = complex<float> (5,3);
-
   }
 
   void MyExample::run(int nsteps) {

@@ -21,21 +21,23 @@
 //  $Id$
 
 
-#include "DH_Example.h"
+#include <DH_Example.h>
 
 namespace LOFAR
 {
 
 DH_Example::DH_Example (const string& name, unsigned int nbuffer)
-: itsCounter (0),
-  itsBuffer  (0),
-  itsBufSize (nbuffer)
+  : DataHolder (name, "DH_Example"),
+    itsCounter (0),
+    itsBuffer  (0),
+    itsBufSize (nbuffer)
 {}
 
 DH_Example::DH_Example(const DH_Example& that)
-: itsCounter (0),
-  itsBuffer  (0),
-  itsBufSize (that.itsBufSize)
+  : DataHolder(that),
+    itsCounter (0),
+    itsBuffer  (0),
+    itsBufSize (that.itsBufSize)
 {}
 
 DH_Example::~DH_Example()

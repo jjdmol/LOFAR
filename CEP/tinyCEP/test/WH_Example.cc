@@ -35,8 +35,6 @@ namespace LOFAR
       itsBufLength (nbuffer) {
     char str[8];
     
-    itsDataManager = new MiniDataManager(nin, nout);
-    
     for (unsigned int i = 0; i < nin; i++) {
       sprintf(str, "%d", i);
       getDataManager().addInDataHolder(i, new DH_Example(string("in_") + str));
@@ -70,6 +68,9 @@ namespace LOFAR
       DH_Example* InDHptr;
       DH_Example* OutDHptr;
 
+//       complex<float> inval = complex<float> (5, 3);
+//       complex<float> outval = complex<float> (0, 0);
+
       for ( int i = 0; i < getDataManager().getInputs() ; i++) {
 	InDHptr = (DH_Example*)getDataManager().getInHolder(i);
 	OutDHptr = (DH_Example*)getDataManager().getOutHolder(i);
@@ -77,6 +78,17 @@ namespace LOFAR
 	InDHptr->getBuffer()[0] = complex<float> (0, 0);
 	OutDHptr->getBuffer()[0] = complex<float> (0, 0);
 	
+// 	memcpy(InDHptr->getBuffer(), 
+// 	       &inval,
+// 	       sizeof(DH_Example::BufferType));
+
+// 	memcpy(OutDHptr->getBuffer(),
+// 	       &outval,
+// 	       sizeof(DH_Example::BufferType));
+
+
+// 	InDHptr->getBuffer() = complex<float> (5,3);
+// 	OutDHptr->getBuffer() = complex<float> (0,0);
       }
     }	
   }
@@ -96,8 +108,7 @@ namespace LOFAR
 	       InDHptr->getBuffer(),
 	       sizeof(DH_Example::BufferType));
 	
-	getDataManager().readyWithInHolder(i);
-	getDataManager().readyWithOutHolder(i);
+
       }
     }
   }
