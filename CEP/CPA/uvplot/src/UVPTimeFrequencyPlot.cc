@@ -56,20 +56,14 @@ void UVPTimeFrequencyPlot::slot_paletteChanged()
 
 void UVPTimeFrequencyPlot::slot_addSpectrum(const UVPSpectrum &spectrum)
 {
-#if(DEBUG_MODE)
-  TRACER2(__PRETTY_FUNCTION__);
-  TRACER2("itsSpectrum.getNumberOfChannels(): " << itsSpectrum.getNumberOfChannels());
-  TRACER2("spectrum.getNumberOfChannels(): " <<  spectrum.getNumberOfChannels()); 
-#endif
-
   itsSpectrum.add(spectrum);
-  itsValueAxis.calcTransferFunction(itsSpectrum.min(),
-                                    itsSpectrum.max(),
-                                    0,
-                                    getNumberOfColors()-1);
-#if(DEBUG_MODE)
-  TRACER2("End: " << __PRETTY_FUNCTION__);
-#endif
+
+  if(itsSpectrum.min() != itsSpectrum.max()) {
+    itsValueAxis.calcTransferFunction(itsSpectrum.min(),
+                                      itsSpectrum.max(),
+                                      0,
+                                      getNumberOfColors()-1);
+  }
 }
 
 
@@ -98,17 +92,19 @@ void UVPTimeFrequencyPlot::drawView()
   TRACER2("Nch = " << Nch);
 #endif
 
-  for(unsigned int i = 0; i < N && itsSpectrum.min()!=itsSpectrum.max(); i++) {
-
-    const double*        spectrum(itsSpectrum[i].getValues());
-    unsigned int         j(0);
-
-    while(j < Nch ) {
-      int col = int(itsValueAxis.worldToAxis(*spectrum++));
-      BufferPainter.setPen(*getColor(col));
-      BufferPainter.drawPoint(j, i);
-      j++;
+  if(itsSpectrum.min() != itsSpectrum.max()) {
+    for(unsigned int i = 0; i < N; i++) {
+      
+      const double*        spectrum(itsSpectrum[i].getValues());
+      unsigned int         j(0);
+      
+      while(j < Nch ) {
+        int col = int(itsValueAxis.worldToAxis(*spectrum++));
+        BufferPainter.setPen(*getColor(col));
+        BufferPainter.drawPoint(j, i);
+        j++;
       }
+    }
   }
   BufferPainter.end();
 
