@@ -118,7 +118,7 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
 
       char propnamex[64];
       char propnamey[64];
-      for (int i = 0; i < m_nbeamlets; i++)
+      for (int i = 0; i < m_nbeamlets / 8; i++)
       {
 	  snprintf(propnamex, 64, "power%03d_x", i);
 	  snprintf(propnamey, 64, "power%03d_y", i);
