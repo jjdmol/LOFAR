@@ -42,7 +42,7 @@ bool SolverControlAgent::init (const DataRecord &data)
   stop_on_end_ = data[initfield()][FStopWhenEnd].as<bool>(False);
   setStatus(StEndData,endOfData_ = False);
   DataRecord::Ref empty(DMI::ANONWR);
-  setStatus(StSolution,DataRecord::Ref(DMI::ANONWR));
+  setStatus(StSolverControl,DataRecord::Ref(DMI::ANONWR));
   domainNum_ = -1;
   return True;
 }
@@ -114,7 +114,7 @@ int SolverControlAgent::startSolution (DataRecord::Ref &params)
   setStatus(StQueueSize,int(solve_queue_.size())); 
   DataRecord::Ref solrec(DMI::ANONWR);
   solrec()[FIterationNumber] = 0;
-  setStatus(StSolution,solrec);
+  setStatus(StSolverControl,solrec);
   initSolution(params);
   dprintf(2)("startSolution: %s\n",params->sdebug(2).c_str());
   // set default solution controls...
@@ -136,8 +136,8 @@ int SolverControlAgent::endIteration (double conv)
   // terminal state -- return immediately
   FailWhen(state()>0 && state()!=RUNNING && state()!=ENDSOLVE,"unexpected state (RUNNING or ENDSOLVE wanted)");
   // update status
-  setStatus(StSolution,FIterationNumber,++iter_count_);
-  setStatus(StSolution,FConvergence,convergence_=conv);
+  setStatus(StSolverControl,FIterationNumber,++iter_count_);
+  setStatus(StSolverControl,FConvergence,convergence_=conv);
   dprintf(3)("end iteration %d, conv=%f\n",iter_count_,convergence_);
   // post end-of-iteration event
   DataRecord::Ref ref(new DataRecord,DMI::ANONWR);
@@ -190,7 +190,7 @@ int SolverControlAgent::endSolution  (DataRecord::Ref &endrec)
   if( endrec.valid() )
     nextDomain_ |= (*endrec)[FNextDomain].as<bool>(False); 
   dprintf(2)("endSolution, nextDomain=%d\n",int(nextDomain_));
-  setStatus(StSolution,DataRecord::Ref(DMI::ANONWR));
+  setStatus(StSolverControl,DataRecord::Ref(DMI::ANONWR));
   setStatus(StSolutionParams,DataRecord::Ref(DMI::ANONWR));
   // post end event
   postEvent(EndSolutionEvent);
@@ -253,7 +253,7 @@ void SolverControlAgent::stopSolution (const string &msg,
 void SolverControlAgent::close ()
 {
   dprintf(1)("closing\n");
-  setStatus(StSolution,DataRecord::Ref(DMI::ANONWR));
+  setStatus(StSolverControl,DataRecord::Ref(DMI::ANONWR));
   Thread::Mutex::Lock lock(mutex());
   postEvent(SolverEndEvent);
   AppControlAgent::close();

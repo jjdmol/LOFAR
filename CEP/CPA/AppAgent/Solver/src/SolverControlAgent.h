@@ -126,12 +126,13 @@ const HIID
     // Field names for status record
     //    Solution parameters subrecord 
     StSolutionParams     = AidSolution|AidParams,
+    StSolution	   	 = AidSolution,
     // solution status sub-record
-    StSolution           = AidSolution,
+    StSolverControl      = AidSolver|AidControl,
       //    Iteration number 
-    StIterationNumber    = StSolution|AidSlash|FIterationNumber,
+    StIterationNumber    = StSolverControl|AidSlash|FIterationNumber,
     //    Convergence parameter
-    StConvergence        = StSolution|AidSlash|FConvergence,
+    StConvergence        = StSolverControl|AidSlash|FConvergence,
     //    Domain number
     StDomainNumber       = AidDomain|AidIndex,
     //    Ending message
