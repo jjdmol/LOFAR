@@ -55,7 +55,7 @@ void BlobString::reserve (size_t newSize)
     if (itsAllocator.useString()) {
       itsString.reserve (newSize);
       itsChars = const_cast<uchar*>(itsString.data());
-      itsCapacity = itsString.capacity();;
+      itsCapacity = itsString.capacity();
     } else {
       void* data = itsAllocator.allocator().allocate (newSize);
       AssertStr (data, "BlobString could not allocate " << newSize
@@ -70,8 +70,10 @@ void BlobString::reserve (size_t newSize)
 
 void BlobString::resize (size_t newSize)
 {
-  DbgAssert (newSize <= itsCapacity);
   if (newSize > itsSize) {
+    if (newSize > itsCapacity) {
+      reserve (newSize);
+    }
     if (itsAllocator.useString()) {
       itsString.resize (newSize);
     }

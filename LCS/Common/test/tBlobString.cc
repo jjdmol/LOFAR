@@ -38,16 +38,10 @@ void doIt (const BlobStringType& type)
   str.reserve (10);
   Assert (str.capacity() == cap);
   Assert (str.size() == 8);
+  str.resize (11);
+  Assert (str.capacity() >= 11);
+  Assert (str.size() == 11);
   bool exc = false;
-  try {
-    str.resize (11);
-  } catch (std::exception&) {
-    exc = true;
-  }
-  Assert (exc);
-  Assert (str.capacity() == cap);
-  Assert (str.size() == 8);
-  exc = false;
   char* ptr = str.data();
   try {
     ptr = (char*)(&(str.getString())[0]);
