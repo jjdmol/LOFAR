@@ -10,22 +10,39 @@ use_valgrind_opts := [ "",
   
 include 'meq/meqserver.g'
 
-const meqsink_test := function ()
+default_debuglevels := [  MeqNode       =3,
+                          MeqForest     =3,
+                          MeqSink       =3,
+                          MeqSpigot     =3,
+                          MeqVisHandler =3,
+                          MeqServer     =3,
+                          meqserver     =3      ];
+
+# inits a meqserver
+const mqsinit := function (verbose=3,debug=[=],gui=F)
 {
   global mqs;
-  mqs := meqserver(verbose=1,options="-d0 -nogw -meq:M:M:MeqServer",gui=T);
-  if( is_fail(mqs) )
+  if( !is_record(mqs) )
+  {
+    mqs := meqserver(verbose=verbose,options="-d0 -nogw -meq:M:O:MeqServer",gui=gui);
+    if( is_fail(mqs) )
+      fail;
+    mqs.init([output_col="PREDICT"],wait=T);
+    for( lev in field_names(default_debuglevels) )
+      mqs.setdebug(lev,default_debuglevels[lev]);
+    for( lev in field_names(debug) )
+      mqs.setdebug(lev,debug[lev]);
+  }
+}
+
+
+const meqsink_test := function ()
+{
+  if( is_fail(mqsinit(verbose=1,gui=T)) )
   {
     print mqs;
     fail;
   }
-  # set verbose debugging messages
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",1);
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot MeqNode",2);
-  mqs.setdebug("MeqServer MeqVisHandler",3);
-  mqs.setdebug("meqserver",1);
-  mqs.setdebug("MeqNode",5);
-  mqs.setdebug("MSVisAgent",10);
   # remove output column from table
   tbl:=table('test.ms',readonly=F);
   tbl.removecols('PREDICTED_DATA');
@@ -71,21 +88,11 @@ const meqsink_test := function ()
 
 const meqsel_test := function ()
 {
-  global mqs;
-  mqs := meqserver(verbose=4,options="-d0 -nogw -meq:M:O:MeqServer",gui=F);
-  if( is_fail(mqs) )
+  if( is_fail(mqsinit(verbose=4,gui=F)) )
   {
     print mqs;
     fail;
   }
-  # set verbose debugging messages
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
-  mqs.setdebug("MeqServ MeqVisHandler",5);
-  mqs.setdebug("meqserver",1);
-  # initialize meqserver
-  mqs.init([output_col="PREDICT"],wait=T);
-  
   # create a small subtree
   defval1 := array(as_double(1),2,2);
   defval2 := array(as_double(2),1,1);
@@ -121,25 +128,12 @@ const meqsel_test := function ()
 
 const state_test_init := function ()
 {
-  global mqs;
-  if( !is_record(mqs) )
+  if( is_fail(mqsinit(verbose=4,gui=F)) )
   {
-    mqs := meqserver(verbose=4,options="-d0 -nogw -meq:M:O:MeqServer",gui=F);
-    if( is_fail(mqs) )
-    {
-      print mqs;
-      fail;
-    }
+    print mqs;
+    fail;
   }
-  # set verbose debugging messages
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",1);
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",1);
-  mqs.setdebug("MeqServ MeqVisHandler",1);
-  mqs.setdebug("Glish",1);
-  mqs.setdebug("meqserver",1);
-  # initialize meqserver
-  mqs.init([output_col="PREDICT"],wait=T);
-  
+  mqs.meq('Clear.Forest');
   # create a small subtree
   defval1 := array(as_double(1),1,1);
   defval2 := array(as_double(2),1,1);
@@ -168,7 +162,6 @@ const state_test_init := function ()
 
 const state_test := function ()
 {
-  global mqs;
   if( !is_record(mqs) )
     state_test_init();
   
@@ -224,26 +217,11 @@ const freq_test := function ()
 
 const solver_test := function ()
 {
-  global mqs;
-  if( !is_record(mqs) )
+  if( is_fail(mqsinit(verbose=4,gui=T)) )
   {
-    mqs := meqserver(verbose=4,options="-d0 -nogw -meq:M:O:MeqServer",gui=F);
-    if( is_fail(mqs) )
-    {
-      print mqs;
-      fail;
-    }
+    print mqs;
+    fail;
   }
-  # set verbose debugging messages
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",2);
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",2);
-  mqs.setdebug("MeqServ MeqVisHandler",2);
-  mqs.setdebug("MeqNode",2);
-  mqs.setdebug("Glish",0);
-  mqs.setdebug("meqserver",1);
-  # initialize meqserver
-  mqs.init([output_col="PREDICT"],wait=T);
-  
   # create parms and condeq
   defval1 := array([3.,0.5,0.5,0.1],2,2);
   defval2 := array([2.,10.,2.,10. ],2,2);
@@ -279,21 +257,43 @@ const save_test := function (clear=F)
 
 const load_test := function ()
 {
-  global mqs;
-  if( !is_record(mqs) )
+  if( is_fail(mqsinit(verbose=4,gui=F)) )
   {
-    mqs := meqserver(verbose=4,options="-d0 -nogw -meq:M:O:MeqServer",gui=F);
-    mqs.init([output_col="PREDICT"],wait=T);
-    mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",3);
-    mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",3);
-    mqs.setdebug("MeqServ MeqVisHandler",3);
-    mqs.setdebug("MeqNode MeqServer",5);
-    mqs.setdebug("meqserver",3);
-#    mqs.setdebug("Dsp",2);
+    print mqs;
+    fail;
   }
   print 'loading forest';
   print mqs.meq('Load.Forest',[file_name='forest.sav'],T);
   print mqs.meq('Get.Node.List',[=],T);
+}
+
+const mep_test := function ()
+{
+  tablename := 'test.mep';
+  print 'Initializing MEP table ',tablename;
+  
+  include 'meq/parmtable.g';
+  pt := parmtable(tablename,create=T);
+  pt.putdef('a');
+  pt.putdef('b');
+  pt.done();
+  
+  if( is_fail(mqsinit(verbose=4,gui=F)) )
+  {
+    print mqs;
+    fail;
+  }
+  
+  defrec := meqparm('a',config_groups='Solvable.Parm');
+  defrec.table_name := tablename;
+  print mqs.meq('Create.Node',defrec);
+  
+  global cells,request,res;
+  cells := meqcells(meqdomain(0,1,0,1),num_freq=4,times=[.1,.2,.3,.4],time_steps=[.1,.1,.1,.1]);
+  request := meqrequest(cells,calc_deriv=0);
+  
+  res := mqs.meq('Node.Publish.Results',[name='a'],T);
+  res := mqs.meq('Node.Execute',[name='a',request=request],T);
 }
 
 
