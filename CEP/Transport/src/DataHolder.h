@@ -282,6 +282,9 @@ protected:
   // Initialize the data field set.
   void initDataFields();
 
+  // Write the extra data block into the main blob
+  void writeExtra();
+
 private:
   // Get the type of BlobString needed from the transport holder.
   virtual BlobStringType blobStringType();
