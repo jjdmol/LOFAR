@@ -57,7 +57,8 @@ InitDebugContext(UVPMainWindow, "DEBUG_CONTEXT");
 //===================>>>  UVPMainWindow::UVPMainWindow  <<<===================
 
 UVPMainWindow::UVPMainWindow()
-  : QMainWindow()
+  : QMainWindow(),
+    itsVisInputAgent(0)
 {
   // Construct a menu
   buildMenuBar();
@@ -129,7 +130,9 @@ UVPMainWindow::UVPMainWindow()
 
 UVPMainWindow::~UVPMainWindow()
 {
-  //  delete itsDataSet;
+  if(itsVisInputAgent != 0) {
+    delete itsVisInputAgent;
+  }
 }
 
 
@@ -145,16 +148,15 @@ void UVPMainWindow::buildMenuBar()
 
   itsDatasourceMenu = new QPopupMenu;
   itsDatasourceMenu->insertItem("&Open MS", this, SLOT(slot_openMS()));
-  itsDatasourceMenu->insertItem("&VDM pipeline", this, SLOT(slot_vdmInput()));
-  //  itsDatasourceMenu->insertItem("Open &PVD", this, SLOT(slot_openPVD()));
+  itsDatasourceMenu->insertItem("&VDM pipeline", this, SLOT(slot_vdmOpenMS()));
 
 
   itsProcessControlMenu = new QPopupMenu;
-  itsMenuPlotImageID = itsProcessControlMenu->insertItem("&Start", this,
+  /*  itsMenuPlotImageID = itsProcessControlMenu->insertItem("&Start", this,
                                                          SLOT(slot_vdmInput()));
   itsMenuPlotStopID  = itsProcessControlMenu->insertItem("&Stop", this,
                                                          SLOT(slot_quitPlotting()));
-
+  */
   itsProcessControlMenu->setItemEnabled(itsMenuPlotImageID, true);
   itsProcessControlMenu->setItemEnabled(itsMenuPlotStopID, false);
 
@@ -165,9 +167,9 @@ void UVPMainWindow::buildMenuBar()
   itsMenuBar = new QMenuBar(this);
   itsMenuBar->insertItem("&Application", itsApplicationMenu);
   itsMenuBar->insertItem("&Data source", itsDatasourceMenu);
-  itsMenuBar->insertItem("&Process control", itsProcessControlMenu);
+  //  itsMenuBar->insertItem("&Process control", itsProcessControlMenu);
   itsMenuBar->insertSeparator();
-  itsMenuBar->insertItem("&Help", itsHelpMenu);
+  itsMenuBar->insertItem("&About", itsHelpMenu);
 }
 
 
@@ -451,14 +453,22 @@ void UVPMainWindow::slot_quitPlotting()
 void UVPMainWindow::slot_loadData()
 {
   switch(itsInputType) {
-  case MS: {
-    slot_readMeasurementSet(itsInputFilename);
-  }
+  case MS:
+    {
+      slot_readMeasurementSet(itsInputFilename);
+    }
+    break;
+    
+  case VDM:
+    {
+      slot_vdmInput();
+    }
     break;
 
 
-  default: {
-  }
+  default:
+    {
+    }
     break;
   }
 }
@@ -488,17 +498,38 @@ void UVPMainWindow::slot_openMS()
 
 
 
-//===============>>>  UVPMainWindow::slot_vdmInput  <<<===============
 
-void UVPMainWindow::slot_vdmInput()
+
+//==================>>>  UVPMainWindow::slot_vdmOpenMS  <<<==================
+
+void UVPMainWindow::slot_vdmOpenMS()
+{
+  QString filename = QFileDialog::getExistingDirectory(".",
+                                                       this, 
+                                                       "", 
+                                                       "Open Measurement Set");
+  if(!filename.isNull()) {
+    itsInputFilename = filename.latin1();
+    itsInputType     = VDM;
+    updateCaption();
+
+    MeasurementSet ms(filename.latin1());
+    MSAntenna      AntennaTable(ms.antenna());
+    itsGraphSettingsWidget->setNumberOfAntennae(AntennaTable.nrow());
+  }
+}
+
+
+
+
+
+//===============>>>  UVPMainWindow::slot_vdmInit  <<<===============
+
+void UVPMainWindow::slot_vdmInit()
+try
 {
   using namespace MSVisAgentVocabulary;
-  using namespace std;
-
-  itsInputType     = VDM;
-  updateCaption();
   
-  itsDataSet.clear();
   itsMSColumnName = itsGraphSettingsWidget->getSettings().getColumnName();
   int ant1        = int(itsGraphSettingsWidget->getSettings().getAntenna1());
 
@@ -538,170 +569,124 @@ void UVPMainWindow::slot_vdmInput()
 
 
   // create agent
-  MSVisInputAgent agent;
+  if(itsVisInputAgent == 0) {
+    itsVisInputAgent = new  MSVisInputAgent;
+  }
   
-  bool res = agent.init(dataref);
+  bool res = itsVisInputAgent->init(dataref);
 
   if( !res ){
     cout<<"init has failed, exiting...\n";
+    delete itsVisInputAgent;
+    itsVisInputAgent = 0;
     return;
   }
-
-  cout<<"=================== getting header ============================\n";
-  DataRecord::Ref header;
-  cout<<"getHeader(): "<<agent.getHeader(header)<<endl;
-  cout << header.deref() <<endl;
-
-  cout<<"=================== getting tiles =============================\n";
-  VisTile::Ref tile;
-
-  UVPDataAtomHeader uvp_header;
-  int draw_list = 0;
-
-  for(int state = agent.getNextTile(tile);
-      state > 0;
-      state = agent.getNextTile(tile)) {
-
-    int ncorr = tile.deref().ncorr();
-    int nfreq = tile.deref().nfreq();
-    int ntime = tile.deref().ntime();
-    int ant1  = tile.deref().antenna1();
-    int ant2  = tile.deref().antenna2();
-
-    if(ncorr > 0 && nfreq > 0 && ntime > 0) {
-      uvp_header.itsTime             = 0;
-      uvp_header.itsAntenna1         = ant1;
-      uvp_header.itsAntenna2         = ant2;
-      uvp_header.itsExposureTime     = 0;
-      uvp_header.itsFieldID          = 1;
-      uvp_header.itsSpectralWindowID = 0;
-
-      UVPDataAtom atom(nfreq, uvp_header);
-      
-      //      std::cout << ": " << ncorr << ":" << nfreq << ":" << ntime << std::endl;
-      //      std::cout << ant1 << "-" << ant2 << endl;
-      
-      for(VisTile::const_iterator iter=tile.deref().begin();
-	  iter != tile.deref().end();
-	  iter.next()) {
-	uvp_header.itsTime           = iter.time();
-	
-	for(int corr = 0; corr < ncorr; corr++) {
-	  uvp_header.itsCorrelationType = UVPDataAtomHeader::Correlation(corr+1);
-	  
-	  LoVec_fcomplex data(iter.f_data(corr));
-	  LoVec_int      flags(iter.f_flags(corr));
+}
+catch(AipsError &err)
+{
+  QMessageBox::critical(0, "Aips++", (const char*)err.getMesg().c_str(), QMessageBox::Ok|QMessageBox::Default,QMessageBox::NoButton);
+}
+catch(...)
+{
+  std::cerr << "slot_vdmInit(): Unhandled exception caught." << std::endl << std::flush;
+}
 
 
-	  atom.setHeader(uvp_header);
-	  atom.setData(data);
-	  atom.setFlags(flags);
 
-	  itsDataSet[uvp_header] = atom;
-	} 
-      }
-      if(draw_list % 30 == 0) {
-	drawDataSet();
-	std::cout << "Draw"<<std::endl;
-      }
-      draw_list++;
-      qApp->processEvents();
-    }
-  }
+
+//===============>>>  UVPMainWindow::slot_vdmInput  <<<===============
+
+void UVPMainWindow::slot_vdmInput()
+try
+{
+  using namespace std;
+  slot_vdmInit();
   
-  agent.close();
-  drawDataSet();
-}
-
-
-//==================>>>  UVPMainWindow::slot_openPVD  <<<==================
-/*
-void UVPMainWindow::slot_openPVD()
-{
-  QString filename = QFileDialog::getOpenFileName(".",
-                                                  "*.pvd *.PVD",
-                                                  this, 
-                                                  "", 
-                                                  "Open Patch Visibility Database");
-  if(!filename.isNull()) {
-    itsInputFilename = filename.latin1();
-    itsInputType     = PVD;
-    updateCaption();
-    slot_readPVD(filename.latin1());
-  }
-}
-*/
-
-
-
-
-//==========>>>  UVPMainWindow::slot_plotTimeFrequencyImage  <<<==========
-
-/*void UVPMainWindow::slot_plotTimeFrequencyImage()
-{
   if(!itsBusyPlotting) {
-    itsInputFilename = "*** VDM ***";
-    itsInputType     = VDM;
-    updateCaption();
-    
-    itsProcessControlMenu->setItemEnabled(itsMenuPlotImageID, false);
-    itsProcessControlMenu->setItemEnabled(itsMenuPlotStopID, true);
-    
-    itsDataSet.clear();
-        
-    Dispatcher    dispatcher;     // Octopussy Message Dispatcher
-
-    // Octopussy
-    unsigned int patch = 0;
-
-    // Anonymous counted reference. No need to delete.
-    UVPDataTransferWP *transfer = new UVPDataTransferWP(patch, &itsDataSet);
-    dispatcher.attach(transfer, DMI::ANON);
-    initGateways(dispatcher);     // Octopussy
-    
-    dispatcher.start();           // Octopussy
-    
     itsBusyPlotting = true;
-
-    unsigned int previousSize = 0;
-
-    itsNumberOfTimeslots = 1200;
-
+    if(itsVisInputAgent != 0) {
+      itsDataSet.clear();
     
-    itsScrollView->removeChild(itsCanvas);
-    itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
-    itsScrollView->addChild(itsCanvas);
-    resizeEvent(0);
+      DataRecord::Ref header;
+      cout<<"getHeader(): "<<itsVisInputAgent->getHeader(header)<<endl;
+      cout << header.deref() <<endl;
+    
+      VisTile::Ref tile;
 
-    // Acquire data.
-    while(itsBusyPlotting) {
-      dispatcher.poll(50);
-      qApp->processEvents();
+      UVPDataAtomHeader uvp_header;
+      int draw_list = 0;
 
-      if(itsDataSet.size() > previousSize) {
-        previousSize = itsDataSet.size();
-        
-        itsNumberOfChannels = itsDataSet.begin()->second.getNumberOfChannels();
-        drawDataSet();
-      }
+      for(int state = itsVisInputAgent->getNextTile(tile);
+	  state > 0 && itsBusyPlotting;
+	  state = itsVisInputAgent->getNextTile(tile)) {
+
+	int ncorr = tile.deref().ncorr();
+	int nfreq = tile.deref().nfreq();
+	int ntime = tile.deref().ntime();
+	int ant1  = tile.deref().antenna1();
+	int ant2  = tile.deref().antenna2();
+
+	if(ncorr > 0 && nfreq > 0 && ntime > 0) {
+	  uvp_header.itsTime             = 0;
+	  uvp_header.itsAntenna1         = ant1;
+	  uvp_header.itsAntenna2         = ant2;
+	  uvp_header.itsExposureTime     = 0;
+	  uvp_header.itsFieldID          = 1;
+	  uvp_header.itsSpectralWindowID = 0;
+
+	  UVPDataAtom atom(nfreq, uvp_header);
       
-    } // while
-    
+	  //      std::cout << ": " << ncorr << ":" << nfreq << ":" << ntime << std::endl;
+	  //      std::cout << ant1 << "-" << ant2 << endl;
+      
+	  for(VisTile::const_iterator iter=tile.deref().begin();
+	      iter != tile.deref().end();
+	      iter.next()) {
+	    uvp_header.itsTime           = iter.time();
+	
+	    for(int corr = 0; corr < ncorr && uvp_header.itsTime != 0;corr++) {
+	      uvp_header.itsCorrelationType = UVPDataAtomHeader::Correlation(corr+1);
+	  
+	      LoVec_fcomplex data(iter.f_data(corr));
+	      LoVec_int      flags(iter.f_flags(corr));
 
-    dispatcher.stop();
-    itsCanvas->drawView();
 
-    itsProcessControlMenu->setItemEnabled(itsMenuPlotImageID, true);
-    itsProcessControlMenu->setItemEnabled(itsMenuPlotStopID, false);
+	      atom.setHeader(uvp_header);
+	      atom.setData(data);
+	      atom.setFlags(flags);
 
-    itsInputFilename = "";
-    itsInputType     = NoInput;
-
-    updateCaption();
-  }
-
+	      itsDataSet[uvp_header] = atom;
+	    } 
+	  }
+	  if(draw_list % 30 == 0) {
+	    drawDataSet();
+	  }
+	  draw_list++;
+	  qApp->processEvents();
+	}
+      }
+  
+      itsVisInputAgent->close();
+      drawDataSet();
+    } else {
+      QMessageBox::information(0, "Uvplot", 
+			       "No VisInputAgent. First initialize agent.",
+			       QMessageBox::Ok|QMessageBox::Default);
+    }
+    itsBusyPlotting = false;
+  }//itsBusyPlotting
 }
-*/
+catch(AipsError &err)
+{
+  QMessageBox::critical(0, "Aips++", (const char*)err.getMesg().c_str(), QMessageBox::Ok|QMessageBox::Default,QMessageBox::NoButton);
+}
+catch(...)
+{
+  std::cerr << "slot_vdmInput(): Unhandled exception caught." << std::endl << std::flush;
+}
+
+
+
 
 
 
@@ -849,50 +834,6 @@ catch(...)
 
 
 
-
-
-
-
-//==================>>>  UVPMainWindow::slot_readPVD  <<<==================
-/*
-void UVPMainWindow::slot_readPVD(const std::string& pvdName)
-{
-  itsDataSet.clear();
-  UVPPVDInput pvd(pvdName);
-
-#if(DEBUG_MODE)
-  TRACER1("Num Ant : " << pvd.numberOfAntennae());
-  TRACER1("Num Chan: " << pvd.numberOfChannels());
-#endif
-
-  itsNumberOfChannels  = pvd.numberOfChannels();
-
-
-  itsScrollView->removeChild(itsCanvas);
-  itsNumberOfTimeslots = 1500;
-  itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
-  itsScrollView->addChild(itsCanvas);
-  resizeEvent(0);
-
-  unsigned int ant1 = itsGraphSettingsWidget->getSettings().getAntenna1();
-  unsigned int ant2 = itsGraphSettingsWidget->getSettings().getAntenna2();
-
-  unsigned int pass(0);
-
-  itsBusyPlotting = true;
-
-  while(pvd.getDataAtoms(&itsDataSet, ant1, ant2) && itsBusyPlotting) {
-    if(pass % 20 == 0) {
-      drawDataSet();
-    }
-    pass++;
-    qApp->processEvents();
-    
-  } // while
-
-  itsBusyPlotting = false;
-}
-*/
 
 
 
