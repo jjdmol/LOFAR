@@ -81,7 +81,7 @@ public:
   virtual int getResultImpl (ResultSet::Ref&, const Request&, bool newReq);
 
   // Initialize the parameter for the given domain.
-  virtual int initDomain (const Domain&, int spidIndex);
+  virtual int initDomain (const Domain&);
 
   // Update the solvable parameters with the new values.
   virtual void update (const Vells& value);
@@ -91,7 +91,7 @@ public:
 
   virtual void init (DataRecord::Ref::Xfer& initrec, Forest* frst);
 
-  virtual void setState (const DataRecord& rec);
+  virtual void setState (DataRecord& rec);
 
   //## Standard debug info method
   virtual string sdebug (int detail = 1, const string& prefix = "",

@@ -54,11 +54,6 @@ Parm::~Parm()
 void Parm::init (DataRecord::Ref::Xfer& initrec, Forest* frst)
 {
   Node::init (initrec, frst);
-  // Get default value.
-  if (state()[FDefault].exists()) {
-    DataArray *parr = wstate()[FDefault].as_wp<DataArray>();
-    itsDefault = Vells(parr);
-  }
   // Get possible ParmTable name and open it.
   string tableName;
   if (state()[FTableName].exists()) {
@@ -68,9 +63,11 @@ void Parm::init (DataRecord::Ref::Xfer& initrec, Forest* frst)
     itsTable = ParmTable::openTable(tableName);
   }
   itsName = name();
+  // Handle other parameters.
+  setState (wstate());
 }
 
-int Parm::initDomain (const Domain& domain, int spidIndex)
+int Parm::initDomain (const Domain& domain)
 {
   // Find the polc(s) for the given domain.
   vector<Polc> polcs;
@@ -127,6 +124,7 @@ int Parm::initDomain (const Domain& domain, int spidIndex)
     AssertStr (itsPolcs.size() == 1,
 	       "Multiple polcs used in the solve domain for parameter "
 	       << itsName);
+    int spidIndex = 256*nodeIndex();
     for (unsigned int i=0; i<itsPolcs.size(); i++) {
       int nrs = itsPolcs[i].makeSolvable (spidIndex);
       nr += nrs;
@@ -142,8 +140,7 @@ int Parm::initDomain (const Domain& domain, int spidIndex)
 
 int Parm::getResultImpl (ResultSet::Ref& resultset, const Request& request, bool)
 {
-  int spidIndex=0;
-  initDomain (request.cells().domain(), spidIndex);
+  initDomain (request.cells().domain());
   // Create result object and attach to the ref that was passed in
   resultset <<= new ResultSet(1); // resulting set is always 1 plane
   const Cells& cells = request.cells();
@@ -270,8 +267,18 @@ void Parm::save()
   }
 }
 
-void Parm::setState (const DataRecord&)
+void Parm::setState (DataRecord& newst)
 {
+  // Get solvable flag.
+  if (newst[FSolvable].exists()) {
+    itsIsSolvable = newst[FSolvable].as<bool>();
+    wstate()[FSolvable] = itsIsSolvable;
+  }
+  // Get default value.
+  if (newst[FDefault].exists()) {
+    DataArray *parr = newst[FDefault].as_wp<DataArray>();
+    itsDefault = Vells(parr);
+  }
 }
 
 string Parm::sdebug (int detail, const string &prefix,const char* nm) const

@@ -37,7 +37,7 @@ public:
   Time();
   virtual ~Time();
   
-  void init (DataRecord::Ref::Xfer &initrec, Forest* frst);
+  virtual void init (DataRecord::Ref::Xfer &initrec, Forest* frst);
   
   virtual TypeId objectType() const
   { return TpMeqTime; }

@@ -38,11 +38,10 @@ public:
 
   virtual ~Freq();
   
-  void init (DataRecord::Ref::Xfer &initrec, Forest* frst);
-  
+  virtual void init (DataRecord::Ref::Xfer &initrec, Forest* frst);
   
   virtual TypeId objectType() const
-  { return TpMeqFreq; }
+    { return TpMeqFreq; }
 
 protected:
   // Evaluate the value for the given request.
