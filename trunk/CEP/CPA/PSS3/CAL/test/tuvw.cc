@@ -2,6 +2,9 @@
 #include <Common/lofar_iostream.h>
 #include <casa/BasicSL/Constants.h>
 
+using namespace casa;
+
+
 int main()
 {
     double pi = C::pi;

@@ -1,6 +1,6 @@
-check_PROGRAMS 		= tCAL filluvw tuvw
+check_PROGRAMS 		= tCAL filluvw
 
-TESTS			= tCAL filluvw tuvw
+TESTS			= tCAL filluvw
 
 tCAL_SOURCES 		= tCAL.cc 
 tCAL_LDADD		= ../src/libcal.la
@@ -9,8 +9,8 @@ tCAL_DEPENDENCIES	= ../src/libcal.la $(LOFAR_DEPEND)
 filluvw_SOURCES 	= filluvw.cc 
 filluvw_DEPENDENCIES	= $(LOFAR_DEPEND)
 
-tuvw_SOURCES	 	= tuvw.cc 
-tuvw_DEPENDENCIES	= $(LOFAR_DEPEND)
+#tuvw_SOURCES	 	= tuvw.cc 
+#tuvw_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common
 

@@ -48,6 +48,8 @@
 #include <stdexcept>
 #include <stdio.h>
 
+using namespace casa;
+
 
   MeasurementSet itsMS;
   MeqPhaseRef           itsPhaseRef;    //# Phase reference position in J2000

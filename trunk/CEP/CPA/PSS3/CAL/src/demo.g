@@ -46,7 +46,7 @@ predict := function(fname='demo', ant=4*[0:20],
     return T;
 }
 
-solve := function(fname='demo', ant=4*[0:1],
+solve := function(fname='demo', ant=4*[0:20],
                   modeltype='LOFAR.RI', calcuvw=F, 
                   niter=1, sleep=F, sleeptime=2, wait=F)
 {
@@ -80,7 +80,7 @@ solve := function(fname='demo', ant=4*[0:1],
     mc := meqcalibrater(spaste(fname,'.MS'), fname, spaste(fname,'_gsm'),
                         ant=ant,
                         modeltype=modeltype, calcuvw=calcuvw);
-
+#    mc.select ('', 0, 0);
     if (wait)
     {
         print "Press RETURN to continue.";
@@ -642,6 +642,27 @@ initparms := function(fname='demo')
 }
 
 
+initparms3p := function(fname='demo3p')
+{
+    pt := parmtable(spaste(fname,'.MEP'), T);
+    if (is_fail(pt)) fail;
+    pt.putinit ('frot', values=0);
+    pt.putinit ('drot', values=0);
+    pt.putinit ('dell', values=0);
+    pt.putinit ('gain.11', values=1);
+    pt.putinit ('gain.22', values=1);
+    pt.putinit ('EJ11.real', values=array([1,0.01],2,1),
+		normalize=F, time0=2.35209e+09-1168);
+    pt.putinit ('EJ12.real', values=0);
+    pt.putinit ('EJ21.real', values=0);
+    pt.putinit ('EJ22.real', values=1);
+    pt.putinit ('EJ11.imag', values=1);
+    pt.putinit ('EJ12.imag', values=0);
+    pt.putinit ('EJ21.imag', values=0);
+    pt.putinit ('EJ22.imag', values=1);
+    pt.done();
+}
+
 initparms10 := function(fname='demo10')
 {
     pt := parmtable(spaste(fname,'.MEP'), T);
@@ -773,12 +794,12 @@ setgsm := function(fname='demo')
 #		     2.73399, 0.4537525, 1, 0, 0, 0);
 #  tg.done();
     pt := parmtable(spaste(fname,'_gsm.MEP'));
-    pt.perturb ('NAME=="RA.CP1"', 0.00003, F);
-    pt.perturb ('NAME=="RA.CP2"', 0.000005, F);
-    pt.perturb ('NAME=="RA.CP3"', 0.00001, F);
-    pt.perturb ('NAME=="DEC.CP1"', -0.000005, F);
-    pt.perturb ('NAME=="DEC.CP2"', -0.0000025, F);
-    pt.perturb ('NAME=="DEC.CP3"', 0.0000025, F);
+    pt.perturb ('NAME=="RA.CP1"', 0.000003, F);
+    pt.perturb ('NAME=="RA.CP2"', 0.0000005, F);
+    pt.perturb ('NAME=="RA.CP3"', 0.000001, F);
+    pt.perturb ('NAME=="DEC.CP1"', -0.0000005, F);
+    pt.perturb ('NAME=="DEC.CP2"', -0.00000025, F);
+    pt.perturb ('NAME=="DEC.CP3"', 0.00000025, F);
     pt.perturb ('NAME=="StokesI.CP1"', 0, F);
     pt.perturb ('NAME=="StokesI.CP2"', 0.5, F);
     pt.perturb ('NAME=="StokesI.CP3"', 0.7, F);
