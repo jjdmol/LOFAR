@@ -31,7 +31,7 @@ fi
 trap 'kill -9 $!; exit $STATUS' 0 1 2 3 15
 
 # Set up the AIPS environment, which is needed by the coordinate server
-source /lofarbuild/aips++/weekly/aipsinit.sh
+source /lofarbuild/aips++/weekly/aipsinit.sh 1>&2
 
 # Move the logger properties to the directory where the executable resides.
 if ([ -r lofarcoordserver.log_prop ])
