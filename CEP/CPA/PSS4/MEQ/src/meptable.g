@@ -30,6 +30,7 @@ if( has_field(lofar_software,'print_versions') &&
 }
 
 include 'table.g'
+include 'meq/meqtypes.g'
 
 const meptable := function (name, create=F)
 {
@@ -236,6 +237,35 @@ const meptable := function (name, create=F)
                   freq0=polc.freq_0,time0=polc.time_0,
                   freqscale=polc.freq_scale,timescale=polc.time_scale,
                   rownr=polc.dbid_index,uniq=uniq);
+    }
+    
+    public.getpolcs := function (parmname)
+    {
+      wider self,public;
+      t1 := self.tab.query(spaste('NAME=="',parmname,'" '));
+      if( !t1.nrows() )
+        return [=];
+      polcs := [=];
+      df0c := t1.getcol('STARTFREQ');
+      df1c := t1.getcol('ENDFREQ');
+      dt0c := t1.getcol('STARTTIME');
+      dt1c := t1.getcol('ENDTIME');
+      fq0c := t1.getcol('FREQ0');
+      tm0c := t1.getcol('TIME0');
+      fqsc := t1.getcol('FREQSCALE');
+      tmsc := t1.getcol('TIMESCALE');
+      pertc := t1.getcol('PERT');
+      weightc := t1.getcol('WEIGHT');
+      rownums := t1.rownumbers(self.tab);
+      for( i in 1:t1.nrows() )
+      {
+        polcs[i] := meqpolc(t1.getcell('VALUES',i),
+                            domain=meqdomain(df0c[i],df1c[i],dt0c[i],dt1c[i]),
+                            freq0=fq0c[i],time0=tm0c[i],
+                            freqsc=fqsc[i],timesc=tmsc[i],pert=pertc[i],
+                            weight=weightc[i],dbid=rownrs[i]);
+      }
+      return polcs;
     }
     
     self.perturb := function (tab, where, perturbation)
