@@ -1,14 +1,13 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,258 108 954 748 N "_3DFace" 2
+PANEL,391 108 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
 {
-  DebugTN(\"Trend-view.pnl initialized\");
 	//Simulation for altering a few selected DP's
-	startThread( \"Simulation\" );	
+//	startThread( \"Simulation\" );	
 
 	//Check for existance trend config data.
 	if (dpExists($configDatapoint + \".Standard\") &&
@@ -324,48 +323,7 @@ void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
 }
 
 
-/////////////////////////////////////////////////////////////////////
-//
-// Function: Function te generate random values for simulation
-// FunctionName: GetRandomValue
-//
-/////////////////////////////////////////////////////////////////////
-float GetRandomValue(int i, float fOffset, float fSwing)
-{
-  float fRandom;
-  float fValue;
-  
-  fRandom = rand();
-  fRandom = fRandom / 32767.0;
-  fRandom *= fSwing;
-  fRandom -= (fSwing / 2.0);
-  fValue = fOffset + fRandom + sin(i/50);
-  return fValue;
-}
-
-
-/////////////////////////////////////////////////////////////////////
-//
-// Function: Simulation function
-// FunctionName: Simulation
-//
-/////////////////////////////////////////////////////////////////////
-void Simulation()
-{
-  float fRandom;
-  srand();
-  int i=0;
-  while(1)
-  {
-    i++;
-    delay(0, 500);
-    dpSet(  $datapoint + \"_Board1_AP1.temperature\", 40 + GetRandomValue(i, 1, 0.2 ));
-    dpSet(  $datapoint + \"_Board1_AP2.temperature\", 41 + GetRandomValue(i, 1, 0.15 ));
-    dpSet(  $datapoint + \"_Board1_AP3.temperature\", 39 + GetRandomValue(i, 1, 0.25 ));
-    dpSet(  $datapoint + \"_Board1_AP4.temperature\", 41 + GetRandomValue(i, 1, 0.33 ));
-    dpSet(  $datapoint + \"_Board1_BP.temperature\",  42 + GetRandomValue(i, 1, 0.11 ));
-  }
-}" 0
+" 0
 EE E E 1 -1 -1 0  20 30
 "" 0 1
 E"//Include of ctl file

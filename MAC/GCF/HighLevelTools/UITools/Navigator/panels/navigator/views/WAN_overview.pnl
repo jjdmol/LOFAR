@@ -1,10 +1,12 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 108 950 740 N "_3DFace" 0
+PANEL,388 286 950 740 N "_3DFace" 1
+"$datapoint"
 EEE E E 1 -1 -1 0  80 350
 "" 0 1
-EE 2
+E"#uses \"gcfnav_view.ctl\"" 0
+ 2
 "CBRef""1"
 "EClose"E
 ""
@@ -15,7 +17,7 @@ LANG:1 6 Layer1
 4 24
 "Line7"
 ""
-1 80 350 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 180 350 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 24 0 0 0 0 0
 EE E
@@ -24,11 +26,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  80 350 710 350
+E E 0 1 1 0 1 E  180 350 810 350
 4 10
 "Line9"
 ""
-1 80 349 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 710 549 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 11 0 0 0 0 0
 EE E
@@ -37,11 +39,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  80 350 180 150
+E E 0 1 1 0 1 E  710 550 810 350
 4 13
 "Line12"
 ""
-1 80 350 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 710 150 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 14 0 0 0 0 0
 EE E
@@ -50,11 +52,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  180 550 80 350
+E E 0 1 1 0 1 E  810 350 710 150
 4 2
 "Line1"
 ""
-1 80 350 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 710 450 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 3 0 0 0 0 0
 EE E
@@ -63,11 +65,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  80 350 180 250
+E E 0 1 1 0 1 E  710 450 810 350
 4 3
 "Line2"
 ""
-1 80 350 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 710 250 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 4 0 0 0 0 0
 EE E
@@ -76,11 +78,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  180 450 80 350
+E E 0 1 1 0 1 E  810 350 710 250
 7 0
 "Ellipse1"
 ""
-1 80 346.023 E E E 1 E 1 E N "_WindowText" E N "Lofar_background_light" E E
+1 810 346.023 E E E 1 E 1 E N "_WindowText" E N "Lofar_background_light" E E
  E E
 1 0 0 0 0 0
 EE E
@@ -89,11 +91,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1 0 1.015625  0 -5.4296875  1 E 80 347.5 30 32
+E E 0 1 1 0 1 E 1 0 1.015625  0 -5.4296875  1 E 810 347.5 30 32
 2 1
 "Text1"
 ""
-1 65 337 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 795 337 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 2 0 0 0 0 0
 EE E
@@ -102,8 +104,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 67 339 93 355
-0 2 0 "s" 0 0 0 192 0 0  67 339
+E E 0 1 1 0 1 E U  0 E 797 339 823 355
+0 2 0 "s" 0 0 0 192 0 0  797 339
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -165,7 +167,7 @@ E E 0 1 1 0 1 E  710 550 180 550
 2 18
 "Text2"
 ""
-1 720 140 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 130 140 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 19 0 0 0 0 0
 EE E
@@ -174,8 +176,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 722 142 768 158
-0 2 0 "s" 0 0 0 64 0 0  722 142
+E E 0 1 1 0 1 E U  0 E 132 142 178 158
+0 2 0 "s" 0 0 0 64 0 0  132 142
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -185,7 +187,7 @@ LANG:1 4 Arm1
 2 19
 "Text3"
 ""
-1 720 240 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 130 240 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 20 0 0 0 0 0
 EE E
@@ -194,8 +196,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 722 242 768 258
-0 2 0 "s" 0 0 0 64 0 0  722 242
+E E 0 1 1 0 1 E U  0 E 132 242 178 258
+0 2 0 "s" 0 0 0 64 0 0  132 242
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -205,7 +207,7 @@ LANG:1 4 Arm2
 2 20
 "Text4"
 ""
-1 720 340 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 130 340 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 21 0 0 0 0 0
 EE E
@@ -214,8 +216,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 722 342 768 358
-0 2 0 "s" 0 0 0 64 0 0  722 342
+E E 0 1 1 0 1 E U  0 E 132 342 178 358
+0 2 0 "s" 0 0 0 64 0 0  132 342
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -225,7 +227,7 @@ LANG:1 4 Arm3
 2 21
 "Text5"
 ""
-1 720 440 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 130 440 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 22 0 0 0 0 0
 EE E
@@ -234,8 +236,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 722 442 768 458
-0 2 0 "s" 0 0 0 64 0 0  722 442
+E E 0 1 1 0 1 E U  0 E 132 442 178 458
+0 2 0 "s" 0 0 0 64 0 0  132 442
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -245,7 +247,7 @@ LANG:1 4 Arm4
 2 27
 "Text6"
 ""
-1 720 540 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 130 540 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 27 0 0 0 0 0
 EE E
@@ -254,8 +256,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 722 542 768 558
-0 2 0 "s" 0 0 0 64 0 0  722 542
+E E 0 1 1 0 1 E U  0 E 132 542 178 558
+0 2 0 "s" 0 0 0 64 0 0  132 542
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -274,489 +276,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 190 140 220 160
-2 31
-"Text8"
-""
-1 198 140 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-31 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 207 142 221 158
-0 2 0 "s" 0 0 0 193 0 0  207 142
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 01
-6 32
-"Border3"
-""
-1 190 260 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-32 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 190 240 220 260
-2 33
-"Text9"
-""
-1 198 240 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-33 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 207 242 221 258
-0 2 0 "s" 0 0 0 193 0 0  207 242
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 04
-6 34
-"Border4"
-""
-1 190 360 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-34 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 190 340 220 360
-2 35
-"Text10"
-""
-1 198 340 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-35 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 207 342 221 358
-0 2 0 "s" 0 0 0 193 0 0  207 342
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 31
-6 36
-"Border5"
-""
-1 190 460 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-36 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 190 440 220 460
-2 37
-"Text11"
-""
-1 198 440 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-37 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 207 442 221 458
-0 2 0 "s" 0 0 0 193 0 0  207 442
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 41
-6 38
-"Border6"
-""
-1 190 560 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-38 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 190 540 220 560
-2 39
-"Text12"
-""
-1 198 540 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-39 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 207 542 221 558
-0 2 0 "s" 0 0 0 193 0 0  207 542
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 51
-6 42
-"Border8"
-""
-1 430 260 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-42 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 430 240 460 260
-2 43
-"Text14"
-""
-1 438 240 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-43 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 447 242 461 258
-0 2 0 "s" 0 0 0 193 0 0  447 242
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 05
-6 44
-"Border9"
-""
-1 430 360 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-44 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 430 340 460 360
-2 45
-"Text15"
-""
-1 438 340 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-45 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 447 342 461 358
-0 2 0 "s" 0 0 0 193 0 0  447 342
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 32
-6 46
-"Border10"
-""
-1 430 460 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-46 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 430 440 460 460
-2 47
-"Text16"
-""
-1 438 440 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-47 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 447 442 461 458
-0 2 0 "s" 0 0 0 193 0 0  447 442
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 42
-6 48
-"Border11"
-""
-1 430 560 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-48 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 430 540 460 560
-2 49
-"Text17"
-""
-1 438 540 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-49 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 447 542 461 558
-0 2 0 "s" 0 0 0 193 0 0  447 542
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 52
-6 50
-"Border12"
-""
-1 640 160 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-50 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 640 140 670 160
-2 51
-"Text18"
-""
-1 648 140 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-51 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 657 142 671 158
-0 2 0 "s" 0 0 0 193 0 0  657 142
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 03
-6 53
-"Border13"
-""
-1 430 160 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-53 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 430 140 460 160
-2 54
-"Text19"
-""
-1 438 140 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-54 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 447 142 461 158
-0 2 0 "s" 0 0 0 193 0 0  447 142
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 02
-6 56
-"Border14"
-""
-1 640 260 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-56 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 640 240 670 260
-2 57
-"Text20"
-""
-1 648 240 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-57 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 657 242 671 258
-0 2 0 "s" 0 0 0 193 0 0  657 242
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 06
-6 58
-"Border15"
-""
-1 640 360 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-58 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 640 340 670 360
-2 59
-"Text21"
-""
-1 648 340 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-59 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 657 342 671 358
-0 2 0 "s" 0 0 0 193 0 0  657 342
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 33
-6 60
-"Border16"
-""
-1 640 460 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-60 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 640 440 670 460
-2 61
-"Text22"
-""
-1 648 440 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-61 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 657 442 671 458
-0 2 0 "s" 0 0 0 193 0 0  657 442
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 43
-6 62
-"Border17"
-""
-1 640 560 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-62 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 640 540 670 560
-2 63
-"Text23"
-""
-1 648 540 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-63 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 657 542 671 558
-0 2 0 "s" 0 0 0 193 0 0  657 542
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 53
+E "main()
+{
+  navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
+}" 0
+ 0 1 1 0 1 E U  1 E 190 140 220 160
 2 109
 "Text7"
 ""
@@ -777,6 +301,269 @@ LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|
 0 ""
 1
 LANG:1 15 Switch overview
+6 112
+"Border1"
+""
+1 190 260 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+111 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
+}" 0
+ 0 1 1 0 1 E U  1 E 190 240 220 260
+6 113
+"Border3"
+""
+1 190 360 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+112 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
+}" 0
+ 0 1 1 0 1 E U  1 E 190 340 220 360
+6 114
+"Border4"
+""
+1 190 460 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+113 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
+}" 0
+ 0 1 1 0 1 E U  1 E 190 440 220 460
+6 115
+"Border5"
+""
+1 190 560 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+114 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
+}" 0
+ 0 1 1 0 1 E U  1 E 190 540 220 560
+6 116
+"Border6"
+""
+1 430 160 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+115 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
+}" 0
+ 0 1 1 0 1 E U  1 E 430 140 460 160
+6 117
+"Border7"
+""
+1 430 260 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+116 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
+}" 0
+ 0 1 1 0 1 E U  1 E 430 240 460 260
+6 118
+"Border8"
+""
+1 430 360 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+117 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
+}" 0
+ 0 1 1 0 1 E U  1 E 430 340 460 360
+6 119
+"Border9"
+""
+1 430 460 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+118 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
+}" 0
+ 0 1 1 0 1 E U  1 E 430 440 460 460
+6 120
+"Border10"
+""
+1 430 560 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+119 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
+}" 0
+ 0 1 1 0 1 E U  1 E 430 540 460 560
+6 121
+"Border11"
+""
+1 640 160 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+120 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
+}" 0
+ 0 1 1 0 1 E U  1 E 640 140 670 160
+6 122
+"Border14"
+""
+1 640 260 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+121 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
+}" 0
+ 0 1 1 0 1 E U  1 E 640 240 670 260
+6 123
+"Border15"
+""
+1 640 360 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+122 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
+}" 0
+ 0 1 1 0 1 E U  1 E 640 340 670 360
+6 124
+"Border16"
+""
+1 640 460 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+123 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
+}" 0
+ 0 1 1 0 1 E U  1 E 640 440 670 460
+6 125
+"Border17"
+""
+1 640 560 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+ E E
+124 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
+}" 0
+ 0 1 1 0 1 E U  1 E 640 540 670 560
+13 111
+"Button2"
+""
+1 40 50 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+110 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+38 48 162 75
+T 
+1
+LANG:1 7 Button2
+"main()
+{
+ChildPanelOnCentralModal(\"navigator/views/pleasewait.pnl\",
+				                         \"Please wait\", makeDynString(\"\"));
+navConfigTriggerNavigatorRefreshWithDP(\"System1:PIC_WAN_Switch01\");
+}" 0
+ E E E
 0
 LAYER, 1 
 1

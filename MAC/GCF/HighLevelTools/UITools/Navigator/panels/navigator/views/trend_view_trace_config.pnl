@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,548 150 502 319 N "_3DFace" 4
+PANEL,258 108 502 319 N "_3DFace" 4
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"
@@ -156,14 +156,14 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 245 126 261
+E E 0 1 1 0 1 E U  0 E 19 245 175 261
 0 2 0 "s" 0 0 0 64 0 0  19 245
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 17 Automatic scaling
+LANG:1 24 Automatic scaling Y-axis
 2 12
 "Text3"
 ""
@@ -176,14 +176,14 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 269 115 285
+E E 0 1 1 0 1 E U  0 E 19 269 164 285
 0 2 0 "s" 0 0 0 64 0 0  19 269
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 13 Scale maximum
+LANG:1 20 Scale Y-axis maximum
 2 13
 "Text4"
 ""
@@ -196,14 +196,14 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 290 115 306
+E E 0 1 1 0 1 E U  0 E 19 290 163 306
 0 2 0 "s" 0 0 0 64 0 0  19 290
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 13 Scale minimum
+LANG:1 20 Scale Y-axis minimum
 6 27
 "Border1"
 ""
@@ -262,7 +262,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 265 140 289
+E E 0 1 1 0 1 E U  0 E 10 265 188 289
 6 31
 "Border4"
 ""
@@ -275,7 +275,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 287 140 311
+E E 0 1 1 0 1 E U  0 E 10 287 184 311
 6 32
 "Border5"
 ""
@@ -288,7 +288,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 242 168 267
+E E 0 1 1 0 1 E U  0 E 10 242 279 267
 6 39
 "bar_border"
 ""
@@ -360,7 +360,7 @@ E
 20 8
 "btn_AutoScale"
 ""
-1 144 243 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 184 243 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 9 0 0 0 0 0
 EE E
@@ -371,7 +371,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-142 241 162 265
+182 241 202 265
 1
 T 
 1
@@ -443,7 +443,7 @@ main()
 14 25
 "txt_max"
 ""
-1 127 265 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 177 265 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 19 0 0 0 0 0
 EE E
@@ -454,7 +454,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-125 263 229 290
+175 263 279 290
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -480,7 +480,7 @@ E
 14 26
 "txt_min"
 ""
-1 127 287 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 177 287 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 20 0 0 0 0 0
 EE E
@@ -491,7 +491,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-125 285 229 312
+175 285 279 312
 3 "s" 0 0 0 0 0 0 
 E
 E

@@ -1,15 +1,15 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,342 333 861 471 N "_3DFace" 3
+PANEL,391 108 950 471 N "_3DFace" 3
 "$AreaNr"
 "$configDatapoint"
 "$datapoint"
 "main()
 {
   int i, k, j, nrOfRows, nrOfColumns;
-  dpGet($configDatapoint + \".1.nrOfRows:_online.._value\", nrOfRows);
-  dpGet($configDatapoint + \".1.nrOfColumns:_online.._value\", nrOfColumns);
+  dpGet($configDatapoint + \".\" + $AreaNr + \".nrOfRows:_online.._value\", nrOfRows);
+  dpGet($configDatapoint + \".\" + $AreaNr + \".nrOfColumns:_online.._value\", nrOfColumns);
 
   for (i=0;i<nrOfRows ; i++)  
   {
@@ -18,7 +18,7 @@ PANEL,342 333 861 471 N "_3DFace" 3
                                             \"Column11Titles\", \"\", \"Column12Titles\", \"\", \"Column13Titles\", \"\", \"Column14Titles\", \"\");
   }
   
-  setColumnConfig(1, nrOfColumns, 15, \"Config\");
+  setColumnConfig($AreaNr, nrOfColumns, 15, \"Config\");
   setValue(\"Table1\", \"scale\", 1.0, nrOfRows/15.0);  
   setValue(\"Table1\", \"visible\", TRUE);  
 }
@@ -34,8 +34,8 @@ ArrangeConfigTableContent(string dp1, dyn_string ColumnTitles,
   int nrOfRows, nrOfColumns, TableNumber;
   
   getTableNumber(dp1, TableNumber);
-  dpGet($configDatapoint + \".1.nrOfRows:_online.._value\", nrOfRows);
-  dpGet($configDatapoint + \".1.nrOfColumns:_online.._value\", nrOfColumns);
+  dpGet($configDatapoint + \".\" + $AreaNr + \".nrOfRows:_online.._value\", nrOfRows);
+  dpGet($configDatapoint + \".\" + $AreaNr + \".nrOfColumns:_online.._value\", nrOfColumns);
   for (i=0; i< nrOfRows ;i++)
   { 
     // Fill the cell with the title if present
@@ -143,22 +143,20 @@ E
   int Row,Column;
   dyn_string txt;
   int iAnswer;
-//	bool bOK;
 	dyn_string ColumndpNames, ColumnTitles;
-	
-  	
-  txt = makeDynString(\"PUSH_BUTTON, Select watch, 2, 1\",
-                      \"PUSH_BUTTON, Disable watch, 1, 1\");
+
+  getValue(\"\", \"currentCell\", Row, Column);	
+  txt = makeDynString(\"PUSH_BUTTON, Configure , 2, 1\",
+                      \"PUSH_BUTTON, Delete, 1, 1\");
+
+
+//  txt = makeDynString(\"PUSH_BUTTON, Select watch, 2, 1\",
+//                      \"PUSH_BUTTON, Disable watch, 1, 1\");
  
   popupMenu(txt, iAnswer);
-  getValue(\"\", \"currentCell\", Row, Column);
-  DebugN(\"Row: \" + Row);
+
+  //DebugN(\"Row: \" + Row);
 		  
-//  getValue(\"\", \"currentCell\", Row, Column);
-//	setValue(\"txt_row\", \"text\", Row);
-//  setValue(\"txt_column\", \"text\", Column);
-//	setValue(\"out_row\", \"text\", Row);
-//  setValue(\"out_column\", \"text\", Column);
 
   //########################################################
   //
@@ -228,11 +226,8 @@ LANG:1 0
 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
-8 38 852 432
-"main()
-{
-}" 0
- E 0 0 1 15 1 "Column0Titles" 0 -1 0 "s" 1
+8 38 932 432
+E E 0 0 1 15 1 "Column0Titles" 0 -1 0 "s" 1
 LANG:1 1 0
 E1
 LANG:1 0 
@@ -302,7 +297,7 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 13 25
 "Button1"
 ""
-1 784 438 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 864 438 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 21 0 0 0 0 0
 EE E
@@ -313,7 +308,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-782 436 852 464
+862 436 932 464
 T 
 1
 LANG:1 5 Close

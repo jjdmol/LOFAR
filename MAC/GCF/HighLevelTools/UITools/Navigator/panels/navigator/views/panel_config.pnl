@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,593 182 941 694 N "_3DFace" 5
+PANEL,258 108 950 740 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -102,65 +102,6 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  0 E 10 130 691 154
-2 4
-"Text4"
-""
-1 10 111 E E E 1 E 1 E N {255,255,255} E N {51,102,255} E E
- E E
-5 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 12 113 71 128
-0 2 0 "s" 0 0 0 65 0 0  12 113
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 5 Panel
-4 5
-"Line13"
-""
-1 10 129 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-6 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  10 130 10 111
-4 6
-"Line14"
-""
-1 72 127 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-7 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  72 130 72 110
-4 7
-"Line15"
-""
-1 10 111 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-8 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  72 111 10 111
 1 14 1 "" 57
 0
 1 18 2 "" 0
@@ -173,6 +114,65 @@ E E 0 1 1 0 1 E  72 111 10 111
 0
 1 21 2 "" 3
 0
+6 22
+"Border20"
+""
+1 10 127 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 117 690 127
+6 23
+"Border21"
+""
+1 10 117 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+12 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 97 60 117
+2 24
+"Text31"
+""
+1 17 97 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 19 99 52 115
+0 2 0 "s" 0 0 0 192 0 0  19 99
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Panel
+4 25
+"Line2"
+""
+1 10 117 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  60 117 10 117
 14 8
 "txt_fileName"
 ""

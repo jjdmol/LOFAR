@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 0 
-PANEL,263 116 950 740 N "_3DFace" 0
+PANEL,417 141 950 740 N "_3DFace" 0
 EEE E E 1 -1 -1 0  470 496
 "" 0 1
 EE 2
@@ -759,6 +759,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
+  DebugTN(\"Jump started\");
   jump2Station();
 }" 0
  0 1 1 0 1 E 1.1 0 1.1  -49.35000000000004 -42.55000000000004  1 E 493.5 425.5 5 5

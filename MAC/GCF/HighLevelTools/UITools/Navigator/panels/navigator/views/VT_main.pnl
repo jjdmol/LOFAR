@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 18 Virtual Telescopes
-PANEL,239 108 994 514 N "_3DFace" 3
+PANEL,391 108 994 514 N "_3DFace" 3
 "$BFNAME"
 "$SRGNAME"
 "$VTNAME"
@@ -16,27 +16,122 @@ PANEL,239 108 994 514 N "_3DFace" 3
   tbl_Schedule.tableMode(TABLE_SELECT_BROWSE);
   tbl_Schedule.selectByClick(TABLE_SELECT_LINE);
   
-  dpConnect(\"DrawOrientation\", \"Orientation.Azimuth\");
-  for(vt=1;vt  <=8;vt++)
+  dpConnect(\"DrawOrientation\", \"System1:Orientation.status\");
+  for(vt=1;vt  <=4;vt++)
   {
-    dpStatus = \"System1:PAC_VT\"+vt+\"_status.:_original.._value\";
+    //dpStatus = \"System1:PAC_VT\"+vt+\"_status.:_original.._value\";
+    dpStatus = \"System1:VT\"+vt+\".status:_original.._value\";
     if(dpExists(dpStatus))
     {
-      dpConnect(\"EP_VT\"+vt+\"StatusChanged\",dpStatus);
+      //dpConnect(\"EP_VT\"+vt+\"StatusChanged\",dpStatus);
     }
-    dpAngle1 = \"PAC_VT\"+vt+\"_BF\"+vt+\"_directionAngle1.:_online.._value\"; 
-    dpAngle2 = \"PAC_VT\"+vt+\"_BF\"+vt+\"_directionAngle2.:_online.._value\";	
-    dpDirType = \"PAC_VT\"+vt+\"_BF\"+vt+\"_directionType.:_online.._value\";
+    dpAngle1 = \"System1:PAC_VirtualInstruments_VirtualInstrument01_VirtualTelescope0\"+vt+\".directionAngle1\";
+    dpAngle2 = \"System1:PAC_VirtualInstruments_VirtualInstrument01_VirtualTelescope0\"+vt+\".directionAngle2\";
+    dpDirType = \"System1:PAC_VirtualInstruments_VirtualInstrument01_VirtualTelescope0\"+vt+\".directionType\";
+    //dpAngle1 = \"PAC_VT\"+vt+\"_BF\"+vt+\"_directionAngle1.:_online.._value\"; 
+    //dpAngle2 = \"PAC_VT\"+vt+\"_BF\"+vt+\"_directionAngle2.:_online.._value\";	
+    //dpDirType = \"PAC_VT\"+vt+\"_BF\"+vt+\"_directionType.:_online.._value\";
     if(dpExists(dpAngle1) && dpExists(dpAngle2) && dpExists(dpDirType))
     {
       dpConnect(\"DrawBeam\", 
                 dpAngle1, 
                 dpAngle2,	
-                \"Orientation.Azimuth\", 
+                \"System1:Orientation.status\", 
                 dpDirType);
     }
   }
-}" 0
+  setBeamVisible(1, \"Active\");
+  setBeamVisible(2, \"Active\");
+  setBeamVisible(3, \"Active\");
+  setBeamVisible(4, \"Active\");
+  startThread( \"SimulationBeam1\" );	
+  startThread( \"SimulationBeam2\" );
+  startThread( \"SimulationBeam3\" );
+  startThread( \"SimulationBeam4\" );
+}
+
+void SimulationBeam1()
+{
+  float angle1,angle2;
+  float angleStep;
+
+  dpSet(\"System1:PAC_VirtualInstruments_VirtualInstrument01_VirtualTelescope01.directionAngle2\", 45.0);
+  for(angle1=110.0;angle1 <= 3600.0; angle1 = angle1 + 1)
+  {
+    dpSet(\"System1:PAC_VirtualInstruments_VirtualInstrument01_VirtualTelescope01.directionAngle1\", angle1);  
+    delay(0,400);
+  }
+}
+
+
+void SimulationBeam2()
+{
+  float angle1,angle2;
+  float angleStep;
+
+  dpSet(\"System1:PAC_VirtualInstruments_VirtualInstrument01_VirtualTelescope02.directionAngle2\", 20.0);
+  for(angle1=0.0;angle1 <= 3600.0; angle1 = angle1 + 1)
+  {
+    dpSet(\"System1:PAC_VirtualInstruments_VirtualInstrument01_VirtualTelescope02.directionAngle1\", angle1);  
+    delay(1,500);
+  }
+}
+
+
+void SimulationBeam3()
+{
+  float angle1,angle2;
+  float angleStep;
+
+  angle2=0.0;
+  dpSet(\"System1:PAC_VirtualInstruments_VirtualInstrument01_VirtualTelescope03.directionAngle2\", angle2);
+  
+  while(1)
+  {
+    for(angle1=-90.0;angle1 <= 3600.0; angle1 = angle1 + 1)
+    {
+      angle2++;
+      dpSet(\"System1:PAC_VirtualInstruments_VirtualInstrument01_VirtualTelescope03.directionAngle1\", angle1);
+      if(angle2<61)
+      {
+        angle2 = angle2+ 0.5;
+        dpSet(\"System1:PAC_VirtualInstruments_VirtualInstrument01_VirtualTelescope03.directionAngle2\",angle2);
+      }
+      delay(0,500);
+    }
+    
+  }
+}
+
+
+
+
+void SimulationBeam4()
+{
+  float angle1,angle2;
+  float angleStep;
+
+  angle1=220.0;
+  dpSet(\"System1:PAC_VirtualInstruments_VirtualInstrument01_VirtualTelescope04.directionAngle1\", angle1);
+  
+  while(1)
+  {
+    for(angle2=0.0;angle2 <= 45.0; angle2 = angle2 + 0.5)
+    {
+      dpSet(\"System1:PAC_VirtualInstruments_VirtualInstrument01_VirtualTelescope04.directionAngle2\", angle2);
+      delay(0,500);
+    }
+    
+    for(angle2=45.0;angle2 >= 0.0; angle2 = angle2 - 0.5)
+    {
+      dpSet(\"System1:PAC_VirtualInstruments_VirtualInstrument01_VirtualTelescope04.directionAngle2\", angle2);
+      delay(0,500);
+    }
+
+  }
+}
+
+" 0
 EE E E 1 -1 -1 0  20 20
 "" 0 1
 E"void scheduleClick(int vt)
@@ -351,8 +446,12 @@ DrawBeam(string dpSource1, float Beam_Angle1,
   
   // float Beam_Angle Beam_Length
   Beam_Azimuth = - (Beam_Azimuth + Orientation_Azimuth);
-  BeamNr = \"Beam\" + substr(BeamNr,strlen(\"System1:PAC_VT1_BF\"),1);
-
+  //BeamNr = \"Beam\" + substr(BeamNr,strlen(\"System1:PAC_VT1_BF\"),1);
+  BeamNr = \"Beam\" + substr(dpSource1,68,1);// + substr(BeamNr,strlen(dpSource1),69);
+	//DebugN(\"## dpSource1: \" + dpSource1);
+	//DebugN(\"##Nr[68,1]: \" +substr(dpSource1,68,1));
+	//\"System1:PAC_VirtualInstruments_VirtualInstrument01_VirtualTelescope01.directionAngle1:_online.._value\"
+	//\"123456789012345678901234567890123456789012345678901234567890123456789
   // set relative position of ellipses
   getValue(BeamNr + \"_B\",\"position\",Ellips_X,Ellips_Y);
 	
@@ -381,7 +480,6 @@ DrawBeam(string dpSource1, float Beam_Angle1,
   //Draw the specific line
   setValue(BeamNr + \"_B\", \"scale\" , (Beam_Bottem_Length/10) , 0); //Length is divided by, line itself has length 10
   setValue(BeamNr + \"_B\", \"rotation\",	Beam_Bottem_Angle );				// left off point (0,0), rotation is 180 degrees
-
   //	Calculate and draw the Beam line itself[BeamNr]
   // Calculate SE_z and SE_x at the current beam
   SE_z = sin(deg2rad(Beam_Elevation)) * circle_radius;
@@ -405,6 +503,8 @@ DrawBeam(string dpSource1, float Beam_Angle1,
   // Draw the Beam itself on screen
   setValue(BeamNr, \"scale\" , (SE_Length/10), 0); //delen door 10 omdat de lengte van de lijn al 10 is
   setValue(BeamNr, \"rotation\",	SE_Angle );
+  //DebugN(\"## SE_Length: \" +SE_Length);
+  //DebugN(\"## SE_Angle:  \" +SE_Angle);
 
   //Calculate the beams verticale line
   dx = ((Ellips_X + Beam_3D_x)-(Ellips_X + SE_x));
@@ -698,7 +798,7 @@ E E 0 1 1 0 1 E U  1 E 440 80 820 440
 4 40
 "Beam1_B"
 ""
-1 620 356 E E E 1 E 0 E N "violett" E N "_Transparent" E E
+1 620 356 E E E 1 E 1 E N "violett" E N "_Transparent" E E
  E E
 210 0 0 0 0 0
 EE E
@@ -724,7 +824,7 @@ E E 0 1 1 0 1 E U  0 E 620 355 150 25
 4 42
 "Beam1_V"
 ""
-1 660 430 E E E 1 E 0 E N "violett" E N "_Transparent" E E
+1 660 430 E E E 1 E 1 E N "violett" E N "_Transparent" E E
  E E
 216 0 0 0 0 0
 EE E
@@ -737,7 +837,7 @@ E E 2 1 1 0 1 E  660 430 660 420
 4 43
 "Beam1"
 ""
-1 620 355 E E E 1 E 0 E N {255,0,255} E N "_Transparent" E E
+1 620 355 E E E 1 E 1 E N {255,0,255} E N "_Transparent" E E
  E E
 218 0 0 0 0 0
 EE E
@@ -867,7 +967,7 @@ E E 2 1 1 0 1 E  680 430 680 420
 4 53
 "Beam4_V"
 ""
-1 690 430 E E E 1 E 0 E N {255,0,0} E N "_Transparent" E E
+1 690 430 E E E 1 E 1 E N {255,0,0} E N "_Transparent" E E
  E E
 238 0 0 0 0 0
 EE E
@@ -1101,7 +1201,7 @@ E E 0 1 1 0 1 E U  0 E 620 203 5 5
 2 72
 "Text11"
 ""
-1 607 172 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 547 172 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 276 0 0 0 0 0
 EE E
@@ -1110,8 +1210,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 681 456 799 472
-0 2 0 "s" 0 0 0 192 0 0  681 456
+E E 0 1 1 0 1 E U  0 E 621 456 739 472
+0 2 0 "s" 0 0 0 192 0 0  621 456
  1
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -1588,7 +1688,7 @@ LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,
 11 88 91 113
 T 
 1
-LANG:1 9 VT1 stats
+LANG:1 9 VI1 stats
 "main()
 {
   showStatisticsPanel(1);
@@ -1793,7 +1893,7 @@ LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,
 11 113 91 137
 T 
 1
-LANG:1 9 VT2 stats
+LANG:1 9 VI2 stats
 "main()
 {
   showStatisticsPanel(2);
@@ -1836,7 +1936,7 @@ LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,
 11 137 91 161
 T 
 1
-LANG:1 9 VT3 stats
+LANG:1 9 VI3 stats
 "main()
 {
   showStatisticsPanel(3);
@@ -1879,7 +1979,7 @@ LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,
 11 161 91 185
 T 
 1
-LANG:1 9 VT4 stats
+LANG:1 9 VI4 stats
 "main()
 {
   showStatisticsPanel(4);
@@ -1922,7 +2022,7 @@ LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,
 11 185 91 209
 T 
 1
-LANG:1 9 VT5 stats
+LANG:1 9 VI5 stats
 "main()
 {
   showStatisticsPanel(5);
@@ -1965,7 +2065,7 @@ LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,
 11 208 91 232
 T 
 1
-LANG:1 9 VT6 stats
+LANG:1 9 VI6 stats
 "main()
 {
   showStatisticsPanel(6);
@@ -2008,7 +2108,7 @@ LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,
 11 233 91 257
 T 
 1
-LANG:1 9 VT7 stats
+LANG:1 9 VI7 stats
 "main()
 {
   showStatisticsPanel(7);
@@ -2051,7 +2151,7 @@ LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,
 11 257 91 281
 T 
 1
-LANG:1 9 VT8 stats
+LANG:1 9 VI8 stats
 "main()
 {
   showStatisticsPanel(8);
@@ -2255,7 +2355,7 @@ LANG:1 11 schedule...
 21 71
 "SpinButton1"
 ""
-1 602 452 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 752 452 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 274 0 0 0 0 0
 EE E
@@ -2266,9 +2366,9 @@ LANG:1 0
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-600 450 674 477
+750 450 824 477
 0
-"// SimpleCtrlScriptStart {valid}
+"// SimpleCtrlScriptStart {invalid}
 main()
 {
   EP_textFieldIn();
@@ -2278,14 +2378,14 @@ EP_textFieldIn()
 {
 dyn_errClass err;
 
-  if( !dpExists( \"System1:Orientation.Azimuth:_online.._value\"))
+  if( !dpExists( \"System1:Orientation.status:_online.._value\"))
   {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
   }
 
   dpConnect(\"EP_textFieldInCB\",
-            \"System1:Orientation.Azimuth:_online.._value\");
+            \"System1:Orientation.status:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -2307,7 +2407,7 @@ EP_textFieldInCB(string dp, float fNewValue)
 // SimpleCtrlScriptEnd {EP_textFieldIn}
 " 0
 
-"// SimpleCtrlScriptStart {valid}
+"// SimpleCtrlScriptStart {invalid}
 main()
 {
   EP_textFieldOut();
@@ -2323,7 +2423,7 @@ string sFormat, sDp;
   getValue(\"\", \"text\", sTmp);
   sscanf(sTmp, \"%f\", fNewValue);
 
-  sDp = dpSubStr(\"System1:Orientation.Azimuth:_original.._value\",  DPSUB_SYS_DP_EL);
+  sDp = dpSubStr(\"System1:Orientation.status:_original.._value\",  DPSUB_SYS_DP_EL);
   if ( strpos(sDp,\".\") < 1 )
     sDp += \".\";
 
@@ -2336,7 +2436,7 @@ string sFormat, sDp;
     return;
   }
 
-  dpSetWait(\"System1:Orientation.Azimuth:_original.._value\", sTmp);
+  dpSetWait(\"System1:Orientation.status:_original.._value\", sTmp);
   err = getLastError();
   if (dynlen(err) > 0)
     errorDialog(err);
@@ -2368,105 +2468,6 @@ N 0 355 5 0 0 1
 0
 1 85 7 "" 0
 0
-13 106
-"btn_SelfTest"
-""
-1 812 452 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
- E E
-346 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-810 450 884 474
-T 
-1
-LANG:1 9 Self Test
-"main()
-{
-  float angle1,angle2;
-  float angleStep;
-
-  angleStep = 2.0/25.0;
-
-  angle2=-1.0;
-  dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
-
-  for(angle1=-1.0;angle1 <= 1.0;angle1 = angle1 + angleStep)
-  {
-    dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
-    delay(0,500);
-  }
-
-  angle2=1.0;
-  dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
-
-  for(angle1=-1.0;angle1 <= 1.0;angle1 = angle1 + angleStep)
-  {
-    dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
-    delay(0,500);
-  }
-
-  angle2=-0.1;
-  dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
-
-  for(angle1=-1.0;angle1 <= 1.0;angle1 = angle1 + angleStep)
-  {
-    dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
-    delay(0,500);
-  }
-
-  angle2=0.1;
-  dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
-
-  for(angle1=-1.0;angle1 <= 1.0;angle1 = angle1 + angleStep)
-  {
-    dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
-    delay(0,500);
-  }
-
-  angle1=-1.0;
-  dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
-
-  for(angle2=-1.0;angle2 <= 1.0;angle2 = angle2 + angleStep)
-  {
-    dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
-    delay(0,500);
-  }
-
-  angle1=1.0;
-  dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
-
-  for(angle2=-1.0;angle2 <= 1.0;angle2 = angle2 + angleStep)
-  {
-    dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
-    delay(0,500);
-  }
-
-  angle1=-0.1;
-  dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
-
-  for(angle2=-1.0;angle2 <= 1.0;angle2 = angle2 + angleStep)
-  {
-    dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
-    delay(0,500);
-  }
-
-  angle1=0.1;
-  dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
-
-  for(angle2=-1.0;angle2 <= 1.0;angle2 = angle2 + angleStep)
-  {
-    dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
-    delay(0,500);
-  }
-
-}" 0
- E E E
 25 108
 "tbl_Schedule"
 "1"
@@ -2728,6 +2729,105 @@ LANG:1 9 All stats
   showStatisticsPanel(9999);
 }
 " 0
+ E E E
+13 128
+"Button1"
+""
+1 830 380 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+381 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+828 378 902 402
+T 
+1
+LANG:1 9 Self Test
+"main()
+{
+  float angle1,angle2;
+  float angleStep;
+
+  angleStep = 2.0/25.0;
+
+  angle2=-1.0;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+
+  for(angle1=-1.0;angle1 <= 1.0;angle1 = angle1 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+    delay(0,500);
+  }
+
+  angle2=1.0;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+
+  for(angle1=-1.0;angle1 <= 1.0;angle1 = angle1 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+    delay(0,500);
+  }
+
+  angle2=-0.1;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+
+  for(angle1=-1.0;angle1 <= 1.0;angle1 = angle1 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+    delay(0,500);
+  }
+
+  angle2=0.1;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+
+  for(angle1=-1.0;angle1 <= 1.0;angle1 = angle1 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+    delay(0,500);
+  }
+
+  angle1=-1.0;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+
+  for(angle2=-1.0;angle2 <= 1.0;angle2 = angle2 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+    delay(0,500);
+  }
+
+  angle1=1.0;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+
+  for(angle2=-1.0;angle2 <= 1.0;angle2 = angle2 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+    delay(0,500);
+  }
+
+  angle1=-0.1;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+
+  for(angle2=-1.0;angle2 <= 1.0;angle2 = angle2 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+    delay(0,500);
+  }
+
+  angle1=0.1;
+  dpSet(\"System1:PAC_VT1_BF1_directionAngle1.\", angle1);
+
+  for(angle2=-1.0;angle2 <= 1.0;angle2 = angle2 + angleStep)
+  {
+    dpSet(\"System1:PAC_VT1_BF1_directionAngle2.\", angle2);
+    delay(0,500);
+  }
+
+}" 0
  E E E
 0
 LAYER, 1 

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 138 950 740 N "_3DFace" 5
+PANEL,258 108 950 740 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -17,6 +17,39 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
+6 30
+"Border1"
+""
+1 10 231 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+22 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 204 581 231
+2 31
+"Text1"
+""
+1 22 207 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 24 209 48 225
+0 2 0 "s" 0 0 0 192 0 0  24 209
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Title
 1 0 0 "" 57
 0
 2 4
@@ -73,7 +106,7 @@ LANG:1 0
 6 6
 "Border3"
 ""
-1 20 259 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 256 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 EE E
@@ -82,11 +115,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 20 232 595 259
+E E 0 1 1 0 1 E U  0 E 10 229 581 256
 6 7
 "Border2"
 ""
-1 20 284 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 281 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 6 0 0 0 0 0
 EE E
@@ -95,11 +128,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 20 257 213 284
+E E 0 1 1 0 1 E U  0 E 10 254 203 281
 2 8
 "Text4"
 ""
-1 41 235 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 21 232 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 7 0 0 0 0 0
 EE E
@@ -108,8 +141,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 43 237 137 253
-0 2 0 "s" 0 0 0 192 0 0  43 237
+E E 0 1 1 0 1 E U  0 E 23 234 117 250
+0 2 0 "s" 0 0 0 192 0 0  23 234
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -119,7 +152,7 @@ LANG:1 16 Selection query:
 2 9
 "Text6"
 ""
-1 31 261 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 21 258 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 8 0 0 0 0 0
 EE E
@@ -128,51 +161,18 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 33 263 138 279
-0 2 0 "s" 0 0 0 192 0 0  33 263
+E E 0 1 1 0 1 E U  0 E 23 260 128 276
+0 2 0 "s" 0 0 0 192 0 0  23 260
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 17 Selection amount:
-6 10
-"Border10"
-""
-1 21 230 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
- E E
-9 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 21 200 593 230
-2 11
-"Text12"
-""
-1 31 204 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
- E E
-10 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 33 206 64 222
-0 2 0 "s" 0 0 0 64 0 0  33 206
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 5 Title
 6 12
 "Border4"
 ""
-1 20 315 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 362 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 11 0 0 0 0 0
 EE E
@@ -181,11 +181,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 20 288 595 315
+E E 0 1 1 0 1 E U  0 E 10 335 581 362
 2 13
 "label_amountRetrieved"
 ""
-1 350 292 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 340 339 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 12 0 0 0 0 0
 EE E
@@ -194,8 +194,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 352 294 496 310
-0 2 0 "s" 0 0 0 192 0 0  352 294
+E E 0 1 1 0 1 E U  0 E 342 341 486 357
+0 2 0 "s" 0 0 0 192 0 0  342 341
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -212,6 +212,150 @@ LANG:1 25 Amount results retrieved:
 0
 1 25 3 "" 3
 0
+6 26
+"Border20"
+""
+1 10 200 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+18 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 190 580 200
+6 27
+"Border21"
+""
+1 10 190 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+19 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 170 110 190
+2 28
+"Text31"
+""
+1 17 170 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+20 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 19 172 94 188
+0 2 0 "s" 0 0 0 192 0 0  19 172
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 Configuration
+4 29
+"Line2"
+""
+1 10 190 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+21 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  110 190 10 190
+6 33
+"Border5"
+""
+1 10 306 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+25 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 279 203 306
+2 34
+"Text2"
+""
+1 21 283 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+26 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 23 285 117 301
+0 2 0 "s" 0 0 0 192 0 0  23 285
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 Range Minimum
+6 36
+"Border6"
+""
+1 10 331 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+28 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 304 203 331
+2 37
+"Text5"
+""
+1 21 308 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+29 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 23 310 121 326
+0 2 0 "s" 0 0 0 192 0 0  23 310
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 Range Maximum
+14 32
+"TextField3"
+""
+1 131 205 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+24 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+129 203 572 230
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
 1 1 0 "" 54
 0
 1 2 0 "" 55
@@ -221,7 +365,7 @@ LANG:1 25 Amount results retrieved:
 14 14
 "txt_amountRetrieved"
 ""
-1 500 289 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 490 336 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 13 0 0 0 0 0
 EE E
@@ -232,7 +376,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-498 287 582 314
+488 334 572 361
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -240,7 +384,7 @@ E
 22 17
 "ComboBox"
 ""
-1 141 259 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 131 256 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 14 0 0 0 0 0
 EE E
@@ -251,7 +395,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-139 257 213 284
+129 254 203 281
 0
 E
 E
@@ -260,7 +404,7 @@ E
 13 18
 "btn_test"
 ""
-1 22 290 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 12 337 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 15 0 0 0 0 0
 EE E
@@ -271,34 +415,15 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-20 288 144 315
+10 335 134 362
 T 
 1
 LANG:1 14 Test selection
 E E E E
-14 19
-"TextField1"
-""
-1 141 203 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-16 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-139 201 582 228
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
 14 20
 "TextField2"
 ""
-1 141 233 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 131 230 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 17 0 0 0 0 0
 EE E
@@ -309,11 +434,51 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-139 231 582 258
+129 228 572 255
 3 "s" 0 0 0 0 0 0 
 E
 E
 E
+22 35
+"ComboBox1"
+""
+1 131 281 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+27 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+129 279 203 306
+0
+E
+E
+E
+ 0 0
+22 38
+"ComboBox2"
+""
+1 131 306 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+30 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+129 304 203 331
+0
+E
+E
+E
+ 0 0
 0
 LAYER, 1 
 1
