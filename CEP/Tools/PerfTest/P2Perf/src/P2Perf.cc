@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.14  2001/12/17 16:28:41  schaaf
+//  removed first step flag
+//
 //  Revision 1.13  2001/11/28 16:15:40  schaaf
 //  .
 //
@@ -79,7 +82,7 @@
 #include "TH_Corba.h"
 #endif
 
-#include "firewalls.h"
+#include "Debug.h"
 #include <iostream.h>
 #include <stdlib.h>
 #include <string>
@@ -109,9 +112,7 @@ void P2Perf::define(const ParamBlock& params)
 {
 #ifdef HAVE_CORBA
   // Start Orb Environment
-  Firewall::Assert(BS_Corba::init(),
-		   __HERE__,
-		   "Could not initialise CORBA environment");
+  AssertStr (BS_Corba::init(), "Could not initialise CORBA environment");
 #endif
 
   int    argc = 0;
@@ -205,14 +206,14 @@ void doIt (Simul& simul, const std::string& name, int nsteps)
 #if 0
   simul.resolveComm();
 #endif
-  TRACER(debug,"Ready with definition of configuration");
+  TRACER1("Ready with definition of configuration");
   Profiler::init();
   Step::clearEventCount();
 
   cout << endl << "Start Processing simul " << name << endl;    
   for (int i=0; i<nsteps; i++) {
     if (i==2) Profiler::activate();
-    // cout << "Call simul.process() " << i << endl;
+    cout << "Call simul.process() " << i << endl;
     simul.process();
     if (i==5) Profiler::deActivate();
   }

@@ -28,4 +28,4 @@ P2Perf_LDADD = $(basesim_top_builddir)/src/Corba/libth_corba.la
 endif
 
 
-include $(top_srcdir)/../autoconf_share/Makefile.common
+include $(lofar_sharedir)/Makefile.common

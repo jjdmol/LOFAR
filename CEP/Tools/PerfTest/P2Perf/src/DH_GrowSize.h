@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2001/10/26 10:06:28  wierenga
+//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
+//
 //  Revision 1.2  2001/09/19 08:00:13  wierenga
 //  Added code to do performance tests.
 //
@@ -110,12 +113,17 @@ inline const DH_GrowSize::BufferType* DH_GrowSize::getBuffer() const
 
 inline bool DH_GrowSize::increaseSize(float factor)
 { 
+  //  cout << "DH_Growsize::increaseSize" << endl;
   bool success = false;
-  
-  if (reportedDataPacketSize * factor < this->DataHolder::getDataPacketSize())
+
+  //  factor = 1.0;
+
+  int newPacketSize = (int)(floatDataPacketSize * factor);
+
+  if (newPacketSize < this->DataHolder::getDataPacketSize())
   {
     floatDataPacketSize *= factor;
-    reportedDataPacketSize = (int)floatDataPacketSize;
+    reportedDataPacketSize = newPacketSize;
     success = true;
   }
 
@@ -123,7 +131,7 @@ inline bool DH_GrowSize::increaseSize(float factor)
 }
 
 inline int DH_GrowSize::getDataPacketSize(void)
-{ return reportedDataPacketSize; }
+{ return reportedDataPacketSize + sizeof(DataPacket); }
 
 inline bool DH_GrowSize::setInitialDataPacketSize(int initialSize)
 {
