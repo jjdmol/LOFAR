@@ -76,6 +76,8 @@ const HIID
     EndDataEvent        = AidEnd|AidData,
     //    Posted when the solver auto-pauses itself
     SolverPausedEvent   = AidSolver|AidPaused,
+    //    Posted when the solver exits with an error
+    SolverErrorEvent    = AidSolver|AidError,
     
     //    Posted when a solution is terminated with an external event
     StopSolutionEvent   = AidStop|AidSolution,

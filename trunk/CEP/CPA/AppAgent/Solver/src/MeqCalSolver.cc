@@ -182,219 +182,244 @@ void MeqCalSolver::endSolution (const DataRecord& endrec,
 void MeqCalSolver::run ()
 {
   using namespace SolverControl;
-  DataRecord::Ref initrec;
-  // repeat the [re]start sequence as long as the control agent gives us
-  // a non-terminal state
-  while( control().start(initrec) > 0)
+  string out = "";
+  try
   {
-    // [re]initialize i/o agents with record returned by control
-    cdebug(1)<<"initializing I/O agents\n";
-    if( !input().init(*initrec) )
+    DataRecord::Ref initrec;
+    // repeat the [re]start sequence as long as the control agent gives us
+    // a non-terminal state
+    while( control().start(initrec) > 0)
     {
-      control().postEvent(InputInitFailed);
-      control().setState(STOPPED);
-      continue;
-    }
-    if( !output().init(*initrec) )
-    {
-      control().postEvent(OutputInitFailed);
-      control().setState(STOPPED);
-      continue;
-    }
-    // set up our parameters from init record
-    // default is 1 hr domains
-    domain_size = (*initrec)[FDomainSize].as<double>(3600);
-    cdebug(1)<< "starting run()\n";
-    // run main loop
-    DataRecord::Ref header;
-    VisTile::Ref tile;
-    while( control().checkState() > 0 )  // while in a running state
-    {
-      int instat;
-      // -------------- receive data set header
-      // check for a cached header (once a new header is received, it stays 
-      // in cache until all solutions on the previous data set have been 
-      // finished) and/or wait for a header to arrive
-      input().resume();
-      while( !header.valid() && control().checkState() > 0 )
+      // [re]initialize i/o agents with record returned by control
+      cdebug(1)<<"initializing I/O agents\n";
+      if( !input().init(*initrec) )
       {
-        HIID id;
-        ObjRef ref;
-        instat = input().getNext(id,ref,0,AppEvent::WAIT);
-        if( instat > 0 )
-        {
-          if( instat == HEADER )
-          {
-            // got header? break out
-            header = ref.ref_cast<DataRecord>();
-            // setup whatever's needed from the header
-            cdebug(1)<<"got header: "<<header->sdebug(2)<<endl;
-            break;
-          }
-          else
-          {
-            cdebug(2)<<"ignoring "<<AtomicID(-instat)<<" while waiting for header\n";
-            ref.detach();
-          }
-        }
-        // checks for end-of-data or error on the input stream and changes
-        // the control state accordingly
-        else
-          checkInputState(instat);
-      }
-      if( control().checkState() <= 0 )
+        control().postEvent(InputInitFailed);
+        control().setState(STOPPED);
         continue;
-      
-      // we have a valid header now, process it
-      processHeader(*initrec, *header);
-      
-      // get tile format from header and add a residuals column 
-      tileformat_.attach((*header)[FTileFormat].as_p<VisTile::Format>(),DMI::READONLY);
-      if( !tileformat_->defined(VisTile::RESIDUALS) ) 
-      {
-        tileformat_.privatize(DMI::WRITE);
-        tileformat_().add(VisTile::RESIDUALS,
-                            tileformat_->type(VisTile::DATA),
-                            tileformat_->shape(VisTile::DATA));
-        // this will be applied to each tile as necessary later on
       }
-      if( !tileformat_->defined(VisTile::PREDICT) ) 
+      if( !output().init(*initrec) )
       {
-        tileformat_.privatize(DMI::WRITE);
-        tileformat_().add(VisTile::PREDICT,
-                            tileformat_->type(VisTile::DATA),
-                            tileformat_->shape(VisTile::DATA));
-        // this will be applied to each tile as necessary later on
+        control().postEvent(OutputInitFailed);
+        control().setState(STOPPED);
+        continue;
       }
-      
-      // --------- read full domain from input ---------------------------
-      in_domain = True;
-      domain_start = 0;
-      while( in_domain && control().checkState() > 0 )
+      // set up our parameters from init record
+      // default is 1 hr domains
+      domain_size = (*initrec)[FDomainSize].as<double>(3600);
+      cdebug(1)<< "starting run()\n";
+      // run main loop
+      DataRecord::Ref header;
+      VisTile::Ref tile;
+      while( control().checkState() > 0 )  // while in a running state
       {
-        // a tile may be left over from the previous iteration
-        if( !tile.valid() )
+        int instat;
+        // -------------- receive data set header
+        // check for a cached header (once a new header is received, it stays 
+        // in cache until all solutions on the previous data set have been 
+        // finished) and/or wait for a header to arrive
+        input().resume();
+        while( !header.valid() && control().checkState() > 0 )
         {
-          // if not, then go look for one from the input agent
-          cdebug(4)<<"looking for tile\n";
           HIID id;
           ObjRef ref;
           instat = input().getNext(id,ref,0,AppEvent::WAIT);
           if( instat > 0 )
-          { 
-            if( instat == DATA )
+          {
+            if( instat == HEADER )
             {
-              tile = ref.ref_cast<VisTile>();
-              // cdebug(3)<<"received tile "<<tile->tileId()<<endl;
-            }
-            else if( instat == FOOTER )
-            {
-              endDomain();
-            }
-            else if( instat == HEADER )
-            {
+              // got header? break out
               header = ref.ref_cast<DataRecord>();
-              endDomain();
+              // setup whatever's needed from the header
+              cdebug(1)<<"got header: "<<header->sdebug(2)<<endl;
+              break;
             }
-            // got a tile? do nothing (addTileToDomain will be called below)
-            // cdebug(3)<<"received tile "<<tile->tileId()<<endl;
+            else
+            {
+              cdebug(2)<<"ignoring "<<AtomicID(-instat)<<" while waiting for header\n";
+              ref.detach();
+            }
           }
           // checks for end-of-data or error on the input stream and changes
           // the control state accordingly
-          checkInputState(instat);
+          else
+            checkInputState(instat);
         }
-        // recheck, have we received a tile? Add it to the domain then.
-        // addTileToDomain will detach the ref if it accepts the tile. If
-        // the tile belongs to the next domain, it will leave the ref in place
-        // and clear the in_domain flag.
-        if( tile.valid() )
+        if( control().checkState() <= 0 )
+          continue;
+
+        // we have a valid header now, process it
+        processHeader(*initrec, *header);
+
+        // get tile format from header and add a residuals column 
+        tileformat_.attach((*header)[FTileFormat].as_p<VisTile::Format>(),DMI::READONLY);
+        if( !tileformat_->defined(VisTile::RESIDUALS) ) 
         {
-          // tiles are held as read-only
-          tile.privatize(DMI::READONLY|DMI::DEEP);
-          addTileToDomain(tile);
+          tileformat_.privatize(DMI::WRITE);
+          tileformat_().add(VisTile::RESIDUALS,
+                              tileformat_->type(VisTile::DATA),
+                              tileformat_->shape(VisTile::DATA));
+          // this will be applied to each tile as necessary later on
         }
+        if( !tileformat_->defined(VisTile::PREDICT) ) 
+        {
+          tileformat_.privatize(DMI::WRITE);
+          tileformat_().add(VisTile::PREDICT,
+                              tileformat_->type(VisTile::DATA),
+                              tileformat_->shape(VisTile::DATA));
+          // this will be applied to each tile as necessary later on
+        }
+
+        // --------- read full domain from input ---------------------------
+        in_domain = True;
+        domain_start = 0;
+        while( in_domain && control().checkState() > 0 )
+        {
+          // a tile may be left over from the previous iteration
+          if( !tile.valid() )
+          {
+            // if not, then go look for one from the input agent
+            cdebug(4)<<"looking for tile\n";
+            HIID id;
+            ObjRef ref;
+            instat = input().getNext(id,ref,0,AppEvent::WAIT);
+            if( instat > 0 )
+            { 
+              if( instat == DATA )
+              {
+                tile = ref.ref_cast<VisTile>();
+                // cdebug(3)<<"received tile "<<tile->tileId()<<endl;
+              }
+              else if( instat == FOOTER )
+              {
+                endDomain();
+              }
+              else if( instat == HEADER )
+              {
+                header = ref.ref_cast<DataRecord>();
+                endDomain();
+              }
+              // got a tile? do nothing (addTileToDomain will be called below)
+              // cdebug(3)<<"received tile "<<tile->tileId()<<endl;
+            }
+            // checks for end-of-data or error on the input stream and changes
+            // the control state accordingly
+            checkInputState(instat);
+          }
+          // recheck, have we received a tile? Add it to the domain then.
+          // addTileToDomain will detach the ref if it accepts the tile. If
+          // the tile belongs to the next domain, it will leave the ref in place
+          // and clear the in_domain flag.
+          if( tile.valid() )
+          {
+            // tiles are held as read-only
+            tile.privatize(DMI::READONLY|DMI::DEEP);
+            addTileToDomain(tile);
+          }
+        }
+        if( control().checkState() <= 0 )
+          continue;
+        // ought to check that we've actually got a domain of data (we could
+        // have received two headers in a row, for example). If no data,
+        // do a continue to top of loop. But we won't bother for now.
+
+        // generate a domain header
+        DataRecord::Ref domainheader = header.copy();
+        // make it writable at the top level, since that's the only place
+        // where we'll change any fields
+        domainheader.privatize(DMI::WRITE,0);
+        // generate new dataset ID
+        HIID &vdsid = domainheader()[FVDSID];
+        vdsid[1] = control().domainNum() + 1;
+        vdsid[2] = dataset_seq_num_ = 0;
+        // put relevant info into domain header
+        domainheader()[FDomainIndex] = control().domainNum();
+        domainheader()[FDomainStartTime] = domain_start;
+        domainheader()[FDomainEndTime] = domain_end;
+        domainheader()[FTileFormat] <<= tileformat_.copy(); 
+
+        // suspend input until we go onto next domain
+        input().suspend();
+
+        // We have a full domain of data now. Start the solution loop
+        // control state ought to be IDLE at start of every solution. (Otherwise,
+        // it's either NEXT_DOMAIN, or a terminal state)
+        while( control().state() == IDLE )
+        {
+          DataRecord::Ref paramrec,endrec;
+          // get solution parameters, break out if none
+          if( control().startSolution(paramrec) != RUNNING ) {
+            break;
+          }
+          cdebug(2)<< "startSolution: "<<paramrec->sdebug(3)<<endl;
+          const DataRecord& params = *paramrec;
+          if (params[SolvableParm].exists()) {
+            setSolvable (params[SolvableParm], params[SolvableFlag]);
+            initParms();
+          }
+          if (params[PeelNrs].exists()) {
+            setPeel (params[PeelNrs],
+                     params[PredNrs].as_vector<int>(vector<int>()));
+          }
+          if (params[Ant1].exists()) {
+            solveSelect (params[Ant1], params[Ant2], params[AntMode][0],
+                         params[CorrSel]);
+          }
+  //        int niter = params[Niter].as<int>(0);
+  //        cdebug(2) << "niter=" << niter << endl;
+          bool useSVD = params[UseSVD].as<bool>(false);
+          double converge = 1;
+          // iterate the solution until stopped
+          do {
+            solve (useSVD, domainheader);
+            converge -= 1;
+          }
+          while( control().endIteration(converge) == AppState::RUNNING );
+
+          // if state is ENDSOLVE, end the solution properly
+          if( control().state() == ENDSOLVE )
+          {
+            cdebug(2)<<"ENDSOLVE, converge="
+                     <<converge<<endl;
+            int res = control().endSolution(endrec);
+            endSolution(*endrec, domainheader);
+          }
+          // else we were probably interrupted
+          else
+          {
+            cdebug(2)<<"stopped with state "<<control().stateString()<<", converge="<<converge<<endl;
+          }
+        }
+        // end of solving in this domain, for whatever reason.
+        // go back to top of loop and check for state
       }
-      if( control().checkState() <= 0 )
-        continue;
-      // ought to check that we've actually got a domain of data (we could
-      // have received two headers in a row, for example). If no data,
-      // do a continue to top of loop. But we won't bother for now.
-      
-      // generate a domain header
-      DataRecord::Ref domainheader = header.copy();
-      // make it writable at the top level, since that's the only place
-      // where we'll change any fields
-      domainheader.privatize(DMI::WRITE,0);
-      // generate new dataset ID
-      HIID &vdsid = domainheader()[FVDSID];
-      vdsid[1] = control().domainNum() + 1;
-      vdsid[2] = dataset_seq_num_ = 0;
-      // put relevant info into domain header
-      domainheader()[FDomainIndex] = control().domainNum();
-      domainheader()[FDomainStartTime] = domain_start;
-      domainheader()[FDomainEndTime] = domain_end;
-      domainheader()[FTileFormat] <<= tileformat_.copy(); 
-      
-      // suspend input until we go onto next domain
-      input().suspend();
-      
-      // We have a full domain of data now. Start the solution loop
-      // control state ought to be IDLE at start of every solution. (Otherwise,
-      // it's either NEXT_DOMAIN, or a terminal state)
-      while( control().state() == IDLE )
-      {
-        DataRecord::Ref paramrec,endrec;
-        // get solution parameters, break out if none
-        if( control().startSolution(paramrec) != RUNNING ) {
-          break;
-        }
-        cdebug(2)<< "startSolution: "<<paramrec->sdebug(3)<<endl;
-        const DataRecord& params = *paramrec;
-        if (params[SolvableParm].exists()) {
-          setSolvable (params[SolvableParm], params[SolvableFlag]);
-          initParms();
-        }
-        if (params[PeelNrs].exists()) {
-          setPeel (params[PeelNrs],
-                   params[PredNrs].as_vector<int>(vector<int>()));
-        }
-        if (params[Ant1].exists()) {
-          solveSelect (params[Ant1], params[Ant2], params[AntMode][0],
-                       params[CorrSel]);
-        }
-//        int niter = params[Niter].as<int>(0);
-//        cdebug(2) << "niter=" << niter << endl;
-        bool useSVD = params[UseSVD].as<bool>(false);
-        double converge = 1;
-        // iterate the solution until stopped
-        do {
-          solve (useSVD, domainheader);
-          converge -= 1;
-        }
-        while( control().endIteration(converge) == AppState::RUNNING );
-        
-        // if state is ENDSOLVE, end the solution properly
-        if( control().state() == ENDSOLVE )
-        {
-          cdebug(2)<<"ENDSOLVE, converge="
-                   <<converge<<endl;
-          int res = control().endSolution(endrec);
-          endSolution(*endrec, domainheader);
-        }
-        // else we were probably interrupted
-        else
-        {
-          cdebug(2)<<"stopped with state "<<control().stateString()<<", converge="<<converge<<endl;
-        }
-      }
-      // end of solving in this domain, for whatever reason.
-      // go back to top of loop and check for state
+      // broke out of main loop -- close i/o agents
+      input().close();
+      output().close();
     }
-    // broke out of main loop -- close i/o agents
-    input().close();
-    output().close();
   }
-  cdebug(1)<<"exiting with control state "<<control().stateString()<<endl;
+  catch( std::exception &exc)
+  {
+    out = "exiting with exception: " + string(exc.what());
+  }
+  catch( AipsError &err )
+  {
+    out = "exiting with AIPS++ exception: " + err.getMesg();
+  }
+  catch( ... )
+  {
+    out = "exiting with unknown exception";
+  }
+  
+  if( out.length() )
+  {
+    control().postEvent(SolverErrorEvent,out);
+    cdebug(0)<<out<<endl;
+  }
+  else
+  {
+    cdebug(1)<<"exiting with control state "<<control().stateString()<<endl;
+  }
   control().close();
 }
 
