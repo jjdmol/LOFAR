@@ -34,20 +34,21 @@
 
 namespace Meq {
 
-const HIID child_labels[] = { AidRA,AidDec,AidStX,AidStY,AidStZ };
+const HIID child_labels[] = { AidRA,AidDec,AidX,AidY,AidZ,AidX|0,AidY|0,AidZ|0  };
 const int num_children = sizeof(child_labels)/sizeof(child_labels[0]);
 
 const HIID FDomain = AidDomain;
 
 //##ModelId=400E535502D1
 UVW::UVW()
+: Function(num_children,child_labels)
 {
   const HIID symdeps[] = { FDomain,FResolution };
   setActiveSymDeps(symdeps,2);
   // ***BUG***
   // Use the Dwingeloo position for the frame.
   // must pass in real position somehow, later
-  Assert (MeasTable::Observatory(itsEarthPos, "DWL"));
+//  Assert (MeasTable::Observatory(itsEarthPos, "DWL"));
   ///  itsRefU = itsU;
 }
 
@@ -74,15 +75,25 @@ int UVW::getResult (Result::Ref &resref,
   if( !fails.empty() )
     NodeThrow1(fails);
   // Get RA and DEC of phase center, and station positions
-  const Vells& vra  = childres[0]().vellSetWr(0).getValue();
-  const Vells& vdec = childres[1]().vellSetWr(0).getValue();
-  const Vells& vstx = childres[2]().vellSetWr(0).getValue();
-  const Vells& vsty = childres[3]().vellSetWr(0).getValue();
-  const Vells& vstz = childres[4]().vellSetWr(0).getValue();
+  const Vells& vra  = childres[0]->vellSet(0).getValue();
+  const Vells& vdec = childres[1]->vellSet(0).getValue();
+  const Vells& vstx = childres[2]->vellSet(0).getValue();
+  const Vells& vsty = childres[3]->vellSet(0).getValue();
+  const Vells& vstz = childres[4]->vellSet(0).getValue();
+  const Vells& vx0  = childres[5]->vellSet(0).getValue();
+  const Vells& vy0  = childres[6]->vellSet(0).getValue();
+  const Vells& vz0  = childres[7]->vellSet(0).getValue();
   // For the time being we only support scalars
-  Assert (vra.nelements()==1 && vdec.nelements()==1
-      	  && vstx.nelements()==1 && vsty.nelements()==1
-	        && vstz.nelements()==1);
+  Assert (vra.isScalar() && vdec.isScalar() &&
+      	  vstx.isScalar() && vsty.isScalar() && vstz.isScalar() && 
+      	  vx0.isScalar() && vy0.isScalar() && vz0.isScalar() );
+
+  // get the 0 position
+  MPosition earthPos(
+      MVPosition(vx0.as<double>(),vy0.as<double>(),vz0.as<double>()),
+      MPosition::ITRF);
+  
+  
   const Cells& cells = request.cells();
   // Allocate a 3-plane result for U, V, and W
   Result &result = resref <<= new Result(3,request);
@@ -102,7 +113,7 @@ int UVW::getResult (Result::Ref &resref,
   Quantum<double> qepoch(0, "s");
   qepoch.setValue(time(0));
   MEpoch mepoch(qepoch, MEpoch::UTC);
-  MeasFrame frame(itsEarthPos);
+  MeasFrame frame(earthPos);
   frame.set (MDirection(phaseRef, MDirection::J2000));
   frame.set (mepoch);
   mbl.getRefPtr()->set(frame);      // attach frame
@@ -122,12 +133,6 @@ int UVW::getResult (Result::Ref &resref,
     }
   }
   return 0;
-}
-
-//##ModelId=400E535502DC
-void UVW::checkChildren()
-{
-  Function::convertChildren (5);
 }
 
 } // namespace Meq

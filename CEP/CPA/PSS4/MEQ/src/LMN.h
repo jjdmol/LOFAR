@@ -46,8 +46,6 @@ public:
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);
 
-  // Check and convert the children.
-  void checkChildren();
 };
 
 } // namespace Meq

@@ -23,7 +23,7 @@
 #ifndef MEQ_EXP_H
 #define MEQ_EXP_H
     
-#include <MEQ/Function1.h>
+#include <MEQ/Function.h>
 
 #pragma aidgroup Meq
 #pragma types #Meq::Exp

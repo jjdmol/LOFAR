@@ -11,8 +11,8 @@
     
 namespace Meq {
   
-const HIID  FStation1      = AidStation|1|AidIndex,
-            FStation2      = AidStation|2|AidIndex,
+const HIID  FStation1Index = AidStation|1|AidIndex,
+            FStation2Index = AidStation|2|AidIndex,
             FNumStations   = AidNum|AidAntenna,
             FTileFormat    = AidTile|AidFormat,
             FDataId        = AidData|AidId,
@@ -21,7 +21,7 @@ const HIID  FStation1      = AidStation|1|AidIndex,
             FInputColumn  = AidInput|AidCol,
 //            FFlagMask     already defined in MeqVocabulary
             FRowFlagMask  = AidRow|AidFlag|AidMask,
-            FCorr         = AidCorr|AidIndex,
+            FCorrIndex    = AidCorr|AidIndex,
             FNext         = AidNext;
     
 

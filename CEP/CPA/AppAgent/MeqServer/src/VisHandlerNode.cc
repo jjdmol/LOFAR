@@ -21,8 +21,8 @@ void VisHandlerNode::setDataId (int id)
 //##ModelId=400E5B6E00CD
 void VisHandlerNode::checkInitState (DataRecord &rec)
 {
-  requiresInitField(rec,FStation1);
-  requiresInitField(rec,FStation2);
+  requiresInitField(rec,FStation1Index);
+  requiresInitField(rec,FStation2Index);
   Node::checkInitState(rec);
 }
 
@@ -31,8 +31,8 @@ void VisHandlerNode::setStateImpl (DataRecord &rec,bool initializing)
 {
   if( !initializing )
   {
-    protectStateField(rec,FStation1);
-    protectStateField(rec,FStation2);
+    protectStateField(rec,FStation1Index);
+    protectStateField(rec,FStation2Index);
   }
   Node::setStateImpl(rec,initializing);
 }

@@ -30,16 +30,15 @@ namespace Meq {
 
 using namespace VellsMath;
 
-const HIID child_labels[] = { AidRA,AidDec,AidRASrc,AidDecSrc };
+const HIID child_labels[] = { AidRA|0,AidDec|0,AidRA,AidDec };
 const int num_children = sizeof(child_labels)/sizeof(child_labels[0]);
 
 const HIID FDomain = AidDomain;
 
 //##ModelId=400E535502D1
 LMN::LMN()
+: Function(num_children,child_labels)
 {
-  const HIID symdeps[] = { FDomain,FResolution };
-  setActiveSymDeps(symdeps,2);
 }
 
 //##ModelId=400E535502D2
@@ -65,10 +64,10 @@ int LMN::getResult (Result::Ref &resref,
   if( !fails.empty() )
     NodeThrow1(fails);
   // Get RA and DEC of phase center and source.
-  const Vells& vra   = childres[0]().vellSetWr(0).getValue();
-  const Vells& vdec  = childres[1]().vellSetWr(0).getValue();
-  const Vells& vras  = childres[2]().vellSetWr(0).getValue();
-  const Vells& vdecs = childres[3]().vellSetWr(0).getValue();
+  const Vells& vra   = childres[0]->vellSet(0).getValue();
+  const Vells& vdec  = childres[1]->vellSet(0).getValue();
+  const Vells& vras  = childres[2]->vellSet(0).getValue();
+  const Vells& vdecs = childres[3]->vellSet(0).getValue();
   // Allocate a 3-plane result for L, M, and N.
   Result &result = resref <<= new Result(3,request);
   // create a vellset for each plane
@@ -81,12 +80,6 @@ int LMN::getResult (Result::Ref &resref,
   nvellset.setValue (sqrt(1 - sqr(lvellset.getValue()) -
 			  sqr(mvellset.getValue())));
   return 0;
-}
-
-//##ModelId=400E535502DC
-void LMN::checkChildren()
-{
-  Function::convertChildren (4);
 }
 
 } // namespace Meq

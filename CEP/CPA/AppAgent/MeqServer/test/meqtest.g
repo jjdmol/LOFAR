@@ -9,42 +9,7 @@ use_valgrind_opts := [ "",
 #  "--gdb-path=/home/oms/bin/valddd", 
   ""];
   
-include 'meq/meqserver.g'
-
-default_debuglevels := [  MeqNode       =3,
-                          MeqForest     =3,
-                          MeqSink       =3,
-                          MeqSpigot     =3,
-                          MeqVisHandler =3,
-                          MeqServer     =3,
-                          meqserver     =1      ];
-
-# inits a meq.server
-const mqsinit := function (verbose=3,debug=[=],gui=use_gui)
-{
-  global mqs;
-  if( !is_record(mqs) )
-  {
-    mqs := meq.server(verbose=verbose,options="-d0 -nogw -meq:M:O:MeqServer",gui=gui);
-    if( is_fail(mqs) )
-      fail;
-#    mqs.setdebug('Glish',5);
-    r:=[=];
-    r.a := function () {};
-    r.b := T;
-    r.a::dmi_ignore := T;
-    r.b::dmi_ignore := T;
-    mqs.meq('a',r);
-    mqs.init([output_col="PREDICT"],wait=T);
-    if( is_record(debug) )
-    {
-      for( lev in field_names(default_debuglevels) )
-        mqs.setdebug(lev,default_debuglevels[lev]);
-      for( lev in field_names(debug) )
-        mqs.setdebug(lev,debug[lev]);
-    }
-  }
-}
+include 'mqsinit_test.g'
 
 
 const meqsink_test := function (gui=use_gui)

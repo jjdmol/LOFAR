@@ -43,6 +43,17 @@ include 'recutil.g'
 #     "--gdb-path=/usr/bin/ddd", 
 #   ""];
 
+# scan command line
+for( arg in argv )
+{
+  if( arg == '-nostart' )
+    use_nostart := T;
+  else if( arg == '-suspend' )
+    use_suspend := T;
+  else if( arg == '-valgrind' )
+    use_valgrind := T;
+}
+
 # find path to server binary
 if( has_field(lofar_software,'meq') && has_field(lofar_software.meq,'servers') )
   for( f in lofar_software.meq.servers )

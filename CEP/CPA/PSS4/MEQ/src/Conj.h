@@ -23,7 +23,7 @@
 #ifndef MEQ_CONJ_H
 #define MEQ_CONJ_H
     
-#include <MEQ/Function1.h>
+#include <MEQ/Function.h>
 
 #pragma aidgroup Meq
 #pragma types #Meq::Conj
