@@ -126,12 +126,15 @@ public:
   void put (const std::string* values, uint nrval);
   // </group>
 
-  // Put a vector of values.
+  // Put a vector of values. First it puts the size of the vector.
   // Specialise for bool because a vector of bools uses bits.
   // <group>
   void put (const std::vector<bool>& values);
   template<typename T> void put (const std::vector<T>& values);
   // </group>
+
+  // Put a vector of bools (without putting the size).
+  void putBoolVec (const std::vector<bool>& values);
 
   // Reserve the given amount of space (the opposite of BlobIStream::getSpace).
   // This is useful when creating a static blob in a dynamic way.
@@ -195,6 +198,11 @@ inline void BlobOStream::put (const std::vector<T>& vec)
 {
   operator<< (uint32(vec.size()));
   put (&vec[0], vec.size());
+}
+inline void BlobOStream::put (const std::vector<bool>& vec)
+{
+  operator<< (uint32(vec.size()));
+  putBoolVec (vec);
 }
 
 inline void BlobOStream::checkPut() const

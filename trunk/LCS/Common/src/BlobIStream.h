@@ -120,12 +120,15 @@ public:
   void get (std::string* values, uint nrval);
   // </group>
 
-  // Get a vector of values.
+  // Get a vector of values. First it gets the size of the vector.
   // Specialise for bool because a vector of bools uses bits.
   // <group>
   void get (std::vector<bool>& values);
   template<typename T> void get (std::vector<T>& values);
   // </group>
+
+  // Get a vector of bools (without getting the size).
+  void getBoolVec (std::vector<bool>& values, uint size);
 
   // Skip the given amount of space (the opposite of BlobOStream::setSpace).
   // This is useful when reading a static blob in a dynamic way.
@@ -201,6 +204,12 @@ inline void BlobIStream::get (std::vector<T>& vec)
   operator>> (sz);
   vec.resize (sz);
   get (&vec[0], sz);
+}
+inline void BlobIStream::get (std::vector<bool>& vec)
+{
+  uint32 sz;
+  operator>> (sz);
+  getBoolVec (vec, sz);
 }
 
 inline void BlobIStream::checkGet() const

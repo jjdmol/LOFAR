@@ -334,10 +334,8 @@ void BlobIStream::get (string* values, uint nrval)
   }
 }
 
-void BlobIStream::get (std::vector<bool>& values)
+void BlobIStream::getBoolVec (std::vector<bool>& values, uint sz)
 {
-  uint32 sz;
-  operator>> (sz);
   values.resize (sz);
   bool buf[256];
   uint inx=0;
