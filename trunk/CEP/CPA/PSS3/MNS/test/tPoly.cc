@@ -37,8 +37,7 @@
 #include <aips/Fitting/LSQ.h>
 #include <aips/OS/Timer.h>
 #include <aips/Exceptions/Error.h>
-#include <aips/iostream.h>
-#include <aips/strstream.h>
+#include <Common/lofar_iostream.h>
 #include <stdexcept>
 
 
