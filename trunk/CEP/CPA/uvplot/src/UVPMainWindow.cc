@@ -75,6 +75,9 @@ UVPMainWindow::UVPMainWindow()
   connect(itsGraphSettingsWidget, SIGNAL(signalCorrelationChanged(UVPDataAtomHeader::Correlation)),
           this, SLOT(slot_redraw()));
 
+  connect(itsGraphSettingsWidget, SIGNAL(signalLoadButtonClicked()),
+          this, SLOT(slot_loadData()));
+
   connect(itsCanvas, SIGNAL(signal_timeChanged(double)),
           this, SLOT(slot_setTime(double)));
 
@@ -387,6 +390,29 @@ void UVPMainWindow::slot_quitPlotting()
 
 
 
+
+
+//===============>>>  UVPMainWindow::slot_loadData  <<<===============
+
+void UVPMainWindow::slot_loadData()
+{
+  switch(itsInputType) {
+  case MS: {
+    slot_readMeasurementSet(itsInputFilename);
+  }
+    break;
+
+
+  default: {
+  }
+    break;
+  }
+}
+
+
+
+
+
 //==================>>>  UVPMainWindow::slot_openMS  <<<==================
 
 void UVPMainWindow::slot_openMS()
@@ -399,7 +425,10 @@ void UVPMainWindow::slot_openMS()
     itsInputFilename = filename.latin1();
     itsInputType     = MS;
     updateCaption();
-    slot_readMeasurementSet(filename.latin1());
+
+    MeasurementSet ms(filename.latin1());
+    MSAntenna      AntennaTable(ms.antenna());
+    itsGraphSettingsWidget->setNumberOfAntennae(AntennaTable.nrow());
   }
 }
 
@@ -504,14 +533,11 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
   itsDataSet.clear();
 
   MeasurementSet ms(msName);
-  MSAntenna      AntennaTable(ms.antenna());
   MSField        FieldTable(ms.field());
 
-  itsGraphSettingsWidget->setNumberOfAntennae(AntennaTable.nrow());
-
   std::cout << "=========>>> Table thing  <<<=========" << std::endl;
-  Int ant1 = Int(itsGraphSettingsWidget->getSettings().getAntenna1());
-  Int ant2 = Int(itsGraphSettingsWidget->getSettings().getAntenna2());
+  Int ant1        = Int(itsGraphSettingsWidget->getSettings().getAntenna1());
+  Int ant2        = Int(itsGraphSettingsWidget->getSettings().getAntenna2());
   itsMSColumnName = itsGraphSettingsWidget->getSettings().getColumnName();
 
 #if(DEBUG_MODE)
@@ -538,9 +564,6 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
   ROArrayColumn<Bool>    FlagColumn    (Selection, "FLAG");
   ROScalarColumn<Double> ExposureColumn(Selection, "EXPOSURE");
 
-  unsigned int NumRows          = ms.nrow();
-  unsigned int NumAntennae      = AntennaTable.nrow();
-  unsigned int NumBaselines     = NumAntennae*(NumAntennae-1)/2;
   unsigned int NumPolarizations = DataColumn(0).shape()[0];
   unsigned int NumChannels      = DataColumn(0).shape()[1];
   unsigned int NumSelected      = Selection.nrow();
@@ -618,14 +641,6 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
   itsBusyPlotting = false;
 
   drawDataSet();  
-
-#if(DEBUG_MODE)
-  TRACER1("Selection.nrow(); " << Selection.nrow());
-  TRACER1("NumRows         : " << NumRows);
-  TRACER1("NumBaselines    : " << NumBaselines);
-  TRACER1("NumPolarizations: " << NumPolarizations);
-#endif
-
 }
 
 

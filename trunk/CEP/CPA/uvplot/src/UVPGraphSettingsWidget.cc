@@ -44,15 +44,15 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
   itsColumnCombo      = new QComboBox(true, this);
 
   itsLoadButton    = new QPushButton("Load ant1/column", this);
+  itsLoadButton->setPalette( QPalette( green ) );
 
-
-  itsCorrelationCombo = new QComboBox(false, this);
-  itsCorrelationLabel = new QLabel("Correlation:", this);
-  
   itsAntenna2Label  = new QLabel("Antenna 2: ", this);
   itsAntenna2Slider = new QSlider(1, numOfAntennae, 1, numOfAntennae,
                                   QSlider::Horizontal, this, "Antenna 2");
 
+  itsCorrelationCombo = new QComboBox(false, this);
+  itsCorrelationLabel = new QLabel("Correlation:", this);
+  
 
 
   itsSettings.setAntenna1(itsAntenna1Slider->value()-1);
@@ -72,14 +72,18 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
   BaselineVLayout->activate();
 
   itsCorrelationCombo->insertItem("Not selected", 0);
-  itsCorrelationCombo->insertItem("XX", 1);
-  itsCorrelationCombo->insertItem("XY", 2);
-  itsCorrelationCombo->insertItem("YX", 3);
-  itsCorrelationCombo->insertItem("YY", 4);
-  itsCorrelationCombo->insertItem("RR", 5);
-  itsCorrelationCombo->insertItem("RL", 6);
-  itsCorrelationCombo->insertItem("LR", 7);
-  itsCorrelationCombo->insertItem("LL", 8);
+  itsCorrelationCombo->insertItem( "I",  1);
+  itsCorrelationCombo->insertItem( "Q",  2);
+  itsCorrelationCombo->insertItem( "U",  3);
+  itsCorrelationCombo->insertItem( "V",  4);
+  itsCorrelationCombo->insertItem("RR",  5);
+  itsCorrelationCombo->insertItem("RL",  6);
+  itsCorrelationCombo->insertItem("LR",  7);
+  itsCorrelationCombo->insertItem("LL",  8);
+  itsCorrelationCombo->insertItem("XX",  9);
+  itsCorrelationCombo->insertItem("XY", 10);
+  itsCorrelationCombo->insertItem("YX", 11);
+  itsCorrelationCombo->insertItem("YY", 12);
 
   itsColumnCombo->insertItem("", 0);
   itsColumnCombo->insertItem("DATA", 1);
