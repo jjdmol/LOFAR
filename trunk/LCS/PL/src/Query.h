@@ -53,14 +53,16 @@ namespace LCS
 
       // Constructor that takes an SQL string. 
       // \todo Do we want to do some sanity checking on \c aString ?
-      Query(const std::string& aString) : itsSqlString(aString) {}
+      explicit Query(const std::string& aString) : 
+	itsSqlString(aString) 
+      {}
 
       // Return the composed query as an SQL string.
       // \todo In a future version, we will probably not store the query
       // as plain SQL; at least not to begin with. So, getSql() will then
       // have to generate (and cache) the SQL string based on the information
       // stored in this object.
-      std::string getSql() const;
+      std::string getSql() const { return itsSqlString; }
 
     private:
       std::string itsSqlString;
