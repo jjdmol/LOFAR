@@ -52,3 +52,7 @@ This file describes the tests in this directory (./LOFAR/CEP/TRANSPORT/test/):
 
 *** ExampleSocket ***
  Tests transport of fixed and variable size data via sockets.
+
+*** tTH_Socket ***
+ Demonstrates how the TH_Socket class should be used. It tests all possible modes of the
+ socket: blocking/nonblocking, listener at client/server side, unidirectional/bidirectional.
