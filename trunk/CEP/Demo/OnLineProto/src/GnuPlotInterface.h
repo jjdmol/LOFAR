@@ -34,7 +34,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdarg.h>
-#include <fstream.h>
+#include <fstream>
 #include <blitz/array.h>
 #ifdef BZ_NAMESPACES
 using namespace blitz;
