@@ -9,7 +9,8 @@ SUFFIXES = .ph
 	chmod a+w $@
 
 avttest_CPPFLAGS= \
-	-I$(top_srcdir)/../GCF/GCFCommon/src 
+	-I$(top_srcdir)/../GCF/GCFCommon/src \
+	-I$(top_srcdir)/PAC/BeamServer/src
 
 avttest_SOURCES 		= \
 	AVTTestAnswer.cc \

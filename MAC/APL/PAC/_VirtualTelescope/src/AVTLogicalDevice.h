@@ -111,6 +111,8 @@ class AVTLogicalDevice : public GCFTask,
      */
     bool _isLogicalDeviceServerPort(GCFPortInterface& port);
     void _disconnectedHandler(GCFPortInterface& port);
+    bool isAPCLoaded() const;
+    void apcLoaded();
     
     /**
      * Initial state additional behaviour must be implemented in the derived classes. 
@@ -164,5 +166,6 @@ class AVTLogicalDevice : public GCFTask,
     // LogicalDevice SPP
     GCFPort               m_logicalDeviceServerPort;
     APLInterTaskPort*     m_clientInterTaskPort;
+    bool                  m_apcLoaded;
 };
 #endif

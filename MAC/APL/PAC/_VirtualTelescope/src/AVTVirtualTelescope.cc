@@ -38,6 +38,7 @@ AVTVirtualTelescope::AVTVirtualTelescope(string& taskName,
 //  m_beamFormerClient(*this, sbf.getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL),
 // use process-internal-inter-task-port 
   m_beamFormerClient(sbf,*this, sbf.getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL),
+  m_beamFormerConnected(false),
   m_startTime(0),
   m_stopTime(0),
   m_frequency(0.0)
@@ -80,6 +81,7 @@ void AVTVirtualTelescope::concreteDisconnected(GCFPortInterface& port)
   // go to initial state only if the connection with the beamformer is lost.
   if(_isBeamFormerClient(port))
   {
+    m_beamFormerConnected=false;
     TRAN(AVTLogicalDevice::initial_state);
   }
 }
@@ -105,7 +107,15 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_initial_state(GCFEvent& event, G
       // go to operational only if there is a connection with the beam former.
       if(_isBeamFormerClient(port))
       {
-        TRAN(AVTLogicalDevice::idle_state);
+        m_beamFormerConnected=true;
+        if(isAPCLoaded())
+        {
+          TRAN(AVTLogicalDevice::idle_state);
+        }
+        else
+        {
+          m_beamFormerClient.setTimer(2.0); // try again
+        }
       }
       break;
     }
@@ -113,14 +123,28 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_initial_state(GCFEvent& event, G
     case F_DISCONNECTED_SIG:
       if(_isBeamFormerClient(port))
       {
-        m_beamFormerClient.setTimer(1.0); // try again after 1 second
+        m_beamFormerClient.setTimer(2.0); // try again
       }
       break;
 
     case F_TIMER_SIG:
       if(_isBeamFormerClient(port))
       {
-        m_beamFormerClient.open(); // try again
+        if(m_beamFormerConnected)
+        {
+          if(isAPCLoaded())
+          {
+            TRAN(AVTLogicalDevice::idle_state);
+          }
+          else
+          {
+            m_beamFormerClient.setTimer(2.0); // try again
+          }
+        }
+        else
+        {
+          m_beamFormerClient.open(); // try again
+        }      
       }
       break;
 
@@ -214,7 +238,7 @@ void AVTVirtualTelescope::handlePropertySetAnswer(GCFEvent& answer)
     case F_MYPLOADED_SIG:
     {
       // property set loaded, now load apc
-      m_APC.load(true);
+      m_APC.load(false);
       break;
     }
     
@@ -241,24 +265,27 @@ void AVTVirtualTelescope::handlePropertySetAnswer(GCFEvent& answer)
             char prepareParameters[700];
             AVTUtilities::encodeParameters(parameters,prepareParameters,700);
             
+            // send message to myself using a dummyport. VT will send it to SBF and SRG
+            GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
             LOGICALDEVICEPrepareEvent prepareEvent(prepareParameters);
-            // send prepare to Virtual Telescope. VT will send prepare to SBF and SRG
-            dispatch(prepareEvent,m_beamFormerClient); // dummyport
+            dispatch(prepareEvent,dummyPort);
           }
         }
         // SUSPEND
         else if(command==string("SUSPEND"))
         {
-          // send prepare to Virtual Telescope. VT will send prepare to SBF and SRG
+          // send message to myself using a dummyport. VT will send it to SBF and SRG
+          GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
           GCFEvent e(LOGICALDEVICE_SUSPEND);
-          dispatch(e,m_beamFormerClient); // dummyport
+          dispatch(e,dummyPort); 
         }
         // RESUME
         else if(command==string("RESUME"))
         {
-          // send prepare to Virtual Telescope. VT will send prepare to SBF and SRG
+          // send message to myself using a dummyport. VT will send it to SBF and SRG
+          GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
           GCFEvent e(LOGICALDEVICE_RESUME);
-          dispatch(e,m_beamFormerClient); // dummyport
+          dispatch(e,dummyPort);
         }
       }
       break;
@@ -275,6 +302,7 @@ void AVTVirtualTelescope::handleAPCAnswer(GCFEvent& answer)
   {
     case F_APCLOADED_SIG:
     {
+      apcLoaded();
       break;
     }
     

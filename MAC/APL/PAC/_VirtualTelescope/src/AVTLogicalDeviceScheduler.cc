@@ -23,6 +23,8 @@
 #include <GCF/GCF_Defines.h>
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVString.h>
+#include <GCF/GCF_PVDouble.h>
+#include <GCF/GCF_PVUnsigned.h>
 
 #include "../../../APLCommon/src/APL_Defines.h"
 #include "../../../APLCommon/src/APLInterTaskPort.h"
@@ -32,10 +34,14 @@
 #include "AVTStationBeamformer.h"
 #include "AVTVirtualTelescope.h"
 #include "AVTUtilities.h"
+#define DECLARE_SIGNAL_NAMES
+#include "ABS_Protocol.ph"
 
 #include "../test/PropertyDefines.h"
 
 string AVTLogicalDeviceScheduler::m_schedulerTaskName(LDSNAME);
+string g_bsName(BSNAME);
+
 
 AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler() :
   GCFTask((State)&AVTLogicalDeviceScheduler::initial_state,m_schedulerTaskName),
@@ -44,6 +50,10 @@ AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler() :
   m_properties(propertySetLDS,&m_propertySetAnswer),
   m_apcLDS("ApcLogicalDeviceScheduler", "LogicalDeviceScheduler", &m_propertySetAnswer),
   m_initialized(false),
+//  m_beamServer(*this, g_bsName, GCFPortInterface::SAP, ABS_PROTOCOL),
+  m_WGfrequency(0.0),
+  m_WGamplitude(0),
+  m_WGsamplePeriod(0),
   m_logicalDeviceMap()
 {
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
@@ -91,10 +101,15 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       break;
 
     case F_ENTRY_SIG:
+//      m_beamServer.open();
       break;
 
     case F_CONNECTED_SIG:
+      break;
+    
+    case LOGICALDEVICE_INITIALIZED:
     {
+      // send a claim right after initialization
       string clientName;
       if(findClientPort(port,clientName))
       {
@@ -135,8 +150,8 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       if(findClientPort(port,clientName))
       {
         // send resume message:
-        GCFEvent claimEvent(LOGICALDEVICE_RESUME);
-        port.send(claimEvent);
+        GCFEvent resumeEvent(LOGICALDEVICE_RESUME);
+        port.send(resumeEvent);
       }
       break;
     }
@@ -150,20 +165,37 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
         
     case F_DISCONNECTED_SIG:
     {
-      string clientName;
-      if(findClientPort(port,clientName))
+/*      if(&port==&m_beamServer)
       {
-        port.setTimer(10.0);
+        m_beamServer.setTimer(2.0);
+      }
+      else
+*/
+      {
+        string clientName;
+        if(findClientPort(port,clientName))
+        {
+          port.setTimer(2.0);
+        }
       }
       break;
     }
     
     case F_TIMER_SIG:
     {
-      string clientName;
-      if(findClientPort(port,clientName))
+/*
+      if(&port==&m_beamServer)
       {
-        port.open();
+        m_beamServer.open(); // try again
+      }
+      else
+*/
+      {
+        string clientName;
+        if(findClientPort(port,clientName))
+        {
+          port.open();
+        }
       }
       break;
     }
@@ -211,7 +243,7 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
         
         // SCHEDULE <vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
         //          <frequency>,<subbands>,<direction>
-        if(command==string("SCHEDULE"))
+        if(command==string(LD_COMMAND_SCHEDULE))
         {
           if(parameters.size()==10)
           {
@@ -285,7 +317,7 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
           }
         }
         // RELEASE <name>
-        else if(command==string("RELEASE"))
+        else if(command==string(LD_COMMAND_RELEASE))
         {
           if(parameters.size()==1)
           {
@@ -299,6 +331,45 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
           } 
         }
       }
+      else if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_DOUBLE) &&
+               (strstr(pPropAnswer->pPropName, PROPERTYNAME_WAVEGENFREQUENCY) != 0))
+      {
+        // wavegen frequency received
+        double frequency(((GCFPVDouble*)pPropAnswer->pValue)->getValue());
+        if(frequency!=m_WGfrequency)
+        {
+          m_WGfrequency = frequency;
+          // send new settings
+          ABSWgsettingsEvent wgSettingsEvent(m_WGfrequency,static_cast<unsigned char>(m_WGamplitude),static_cast<unsigned char>(m_WGsamplePeriod));
+//          m_beamServer.send(wgSettingsEvent);
+        }
+      }      
+      else if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_UNSIGNED) &&
+               (strstr(pPropAnswer->pPropName, PROPERTYNAME_WAVEGENAMPLITUDE) != 0))
+      {
+        // wavegen amplitude received
+        unsigned int amplitude(((GCFPVUnsigned*)pPropAnswer->pValue)->getValue());
+        if(amplitude!=m_WGamplitude)
+        {
+          m_WGamplitude = amplitude;
+          // send new settings
+          ABSWgsettingsEvent wgSettingsEvent(m_WGfrequency,static_cast<unsigned char>(m_WGamplitude),static_cast<unsigned char>(m_WGsamplePeriod));
+//          m_beamServer.send(wgSettingsEvent);
+        }
+      }      
+      else if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_UNSIGNED) &&
+               (strstr(pPropAnswer->pPropName, PROPERTYNAME_WAVEGENSAMPLEPERIOD) != 0))
+      {
+        // wavegen samplePeriod received
+        unsigned int samplePeriod(((GCFPVUnsigned*)pPropAnswer->pValue)->getValue());
+        if(samplePeriod!=m_WGsamplePeriod)
+        {
+          m_WGsamplePeriod = samplePeriod;
+          // send new settings
+          ABSWgsettingsEvent wgSettingsEvent(m_WGfrequency,static_cast<unsigned char>(m_WGamplitude),static_cast<unsigned char>(m_WGsamplePeriod));
+//          m_beamServer.send(wgSettingsEvent);
+        }
+      }      
       break;
     }  
     default:

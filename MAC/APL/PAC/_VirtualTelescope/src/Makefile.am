@@ -6,7 +6,8 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen -L $(top_builddir)/PAC/BeamServer/src $<
 
 AVTLogicalDeviceServer_CPPFLAGS= \
-	-I$(top_srcdir)/APLCommon/src 
+	-I$(top_srcdir)/APLCommon/src \
+	-I$(top_srcdir)/PAC/BeamServer/src
 
 AVTLogicalDeviceServer_SOURCES 		= \
 	AVTUtilities.cc \
