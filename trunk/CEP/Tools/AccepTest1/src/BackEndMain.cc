@@ -17,6 +17,10 @@
 #include <AH_BackEnd.h>
 #include <TestRange.h>
 
+#ifdef HAVE_MPI
+#include <Transport/TH_MPI.h>
+#endif
+
 #define LOCALHOST_IP "127.0.0.1"
 
 using namespace LOFAR;
@@ -24,6 +28,10 @@ using namespace LOFAR;
 int main (int argc, const char** argv) {
 
   // INIT_LOGGER("CorrelatorLogger.prop");
+#ifdef HAVE_MPI
+  TH_MPI::init(argc, argv);
+#endif
+
 
   for (int samples = min_samples; samples <= max_samples; samples++) {
     for (int elements = min_elements; elements <= max_elements; elements++) {
@@ -39,6 +47,8 @@ int main (int argc, const char** argv) {
  	simulator.baseDump();
 	simulator.baseQuit();
 
+// 	sleep(1);
+
       } catch (LOFAR::Exception ex) {
 	cout << "Caught a known exception" << endl;
 	cout << ex.what() << endl;
@@ -49,6 +59,10 @@ int main (int argc, const char** argv) {
 
     }
   }
+
+#ifdef HAVE_MPI
+  TH_MPI::finalize();
+#endif
 
   return 0;
 
