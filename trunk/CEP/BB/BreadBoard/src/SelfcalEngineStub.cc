@@ -23,15 +23,16 @@
 #include "SelfcalEngineStub.h"
 
 #include <unistd.h>
-#include <iostream.h>
+#include <iostream>
+#include <ostream>
 
 
 SelfcalEngineStub::SelfcalEngineStub():itsParamValues(NULL) {
-  cout << "SelfcalEngineStub Constructor " << endl;
+  std::cout << "SelfcalEngineStub Constructor " << std::endl;
 }
 
 SelfcalEngineStub::~SelfcalEngineStub() {
-  cout << "SelfcalEngineStub Destructor " << endl;
+  std::cout << "SelfcalEngineStub Destructor " << std::endl;
   if (itsParamValues != NULL) delete[] itsParamValues;
 }
 
@@ -49,17 +50,17 @@ void SelfcalEngineStub::init(int len,
 float * SelfcalEngineStub::Solve(bool    *workdef, 
                                   float   outparams[]) {
 
-  cout << "start Solving" << flush;
+  std::cout << "start Solving" << std::flush;
   for (int i=0; i<itsLen; i++) {
     //sleep(1);
-    cout << "." << flush;
+    std::cout << "." << std::flush;
 
     if (workdef[i] == true) {
-      outparams[i] = itsParamValues[i] = 0.8*(itsParamValues[i] + i + 1);
-      cout << i << " " << outparams[i] << "  ";
+      outparams[i] = itsParamValues[i] = 0.8*(itsParamValues[i] + i + 1) + 0.01*(itsParamValues[(i+1)%itsLen]);
+      std::cout << i << " " << outparams[i] << "  ";
     }
   }
-  cout << "OK" << endl;;
+  std::cout << "OK" << std::endl;;
   
   return outparams;
   
@@ -68,7 +69,7 @@ float * SelfcalEngineStub::Solve(bool    *workdef,
 
 void SelfcalEngineStub::dump() {
   for (int i=0; i<itsLen; i++) {
-    cout << itsParamValues[i] << " ";
+    std::cout << itsParamValues[i] << " ";
   }
-  cout << endl;
+  std::cout << std::endl;
 }

@@ -4,10 +4,10 @@ $Id$
 This module is for prototyping a blackboard system for use by selfcal
 engines.
 
-The Directory doc contains xml-docbook documents containing some
+./doc/ contains xml-docbook documents containing some
 descriptions of the subject.
 
-The directory src contains the prototype.
+./src/ contains the prototype source-code.
 
 Notes:
 
@@ -16,9 +16,12 @@ Notes:
   relief.
 
 * Knowledge source candidates are SelfcalEngine, CentreShifter,
-  ThreadController, ThreadWatcher, DataColector, DataIntegrator.
+  ThreadController, ThreadWatcher, DataCollector, DataIntegrator.
 
 $Log$
+Revision 1.3  2003/05/27 15:37:55  daan
+some cleanup
+
 Revision 1.2  2003/04/29 16:22:47  daan
 databaas gestart
 

@@ -5,7 +5,7 @@
 import pg
 import os
 
-db = pg.DB(dbname="bb");
+db = pg.DB(dbname="bb", user="bb");
 
 tables = ["blackboards", "watchers", "controllers", "threads", "engines", "comparisons", "forks", "workloads", "range", "parameterlist"];
 
