@@ -26,31 +26,70 @@
 #include <Common/LofarTypedefs.h>
 #include <lofar_config.h>
 
-// Make the type names defined in LofarTypedefs.h available in the
-// global name space.
-// Some types (e.g. uint) are sometimes defined in other header files.
-// If so, they are used from there and are not put in the global namespace.
-
-//# Define some unsigned only if not already done in /usr/include/sys/types.h
-#if (HAVE_QT)
-# include <qglobal.h>
+//# Make sure we include <sys/types.h> or <qglobal.h> if availabe. These files
+//# contain a number of typedefs for commonly used primitive data types. Some
+//# of these will clash with our typedefs -- more specifically ushort, uint,
+//# and ulong -- so we will use the ones in <sys/types.h> or <qglobal.h>
+#if defined(HAVE_QT)
+# include <qglobal.h>    // contains typedef for uchar as well
 #else
-using LOFAR::TYPES::uchar;
 # include <sys/types.h>
 #endif
-using LOFAR::TYPES::longlong;
-using LOFAR::TYPES::ulonglong;
-using LOFAR::TYPES::ldouble;
-using LOFAR::TYPES::fcomplex;
-using LOFAR::TYPES::dcomplex;
 
-using LOFAR::TYPES::int8;
-using LOFAR::TYPES::int16;
-using LOFAR::TYPES::int32;
-using LOFAR::TYPES::int64;
-using LOFAR::TYPES::uint8;
-using LOFAR::TYPES::uint16;
-using LOFAR::TYPES::uint32;
-using LOFAR::TYPES::uint64;
+namespace LOFAR
+{
+  //# Make the type names defined in LofarTypedefs.h available in the
+  //# namespace LOFAR. 
+
+#if defined(HAVE_QT)
+  using ::uchar;
+#else
+  using TYPES::uchar;
+#endif
+  using ::ushort;
+  using ::uint;
+  using ::ulong;
+  using TYPES::longlong;
+  using TYPES::ulonglong;
+  using TYPES::ldouble;
+  using TYPES::fcomplex;
+  using TYPES::dcomplex;
+ 
+  using TYPES::int8;
+  using TYPES::uint8;
+  using TYPES::int16;
+  using TYPES::int32;
+  using TYPES::int64;
+  using TYPES::uint16;
+  using TYPES::uint32;
+  using TYPES::uint64;
+}
+
+#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
+#include <Common/lofar_global_symbol_warning.h>
+
+//# Make the type names defined in LofarTypedefs.h available in the
+//# global name space.
+
+using LOFAR::uchar;
+using LOFAR::ushort;
+using LOFAR::uint;
+using LOFAR::ulong;
+using LOFAR::longlong;
+using LOFAR::ulonglong;
+using LOFAR::ldouble;
+using LOFAR::fcomplex;
+using LOFAR::dcomplex;
+
+using LOFAR::int8;
+using LOFAR::int16;
+using LOFAR::int32;
+using LOFAR::int64;
+using LOFAR::uint8;
+using LOFAR::uint16;
+using LOFAR::uint32;
+using LOFAR::uint64;
+
+#endif // #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
 
 #endif
