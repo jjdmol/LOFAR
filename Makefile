@@ -29,8 +29,10 @@
 
 #
 # Packages with a configure.in will be built (excluding the import stuff).
+# It kan be overridden on the make line.
+# Note that PACKAGE and PACKAGES are synonyms.
 #
-PACKAGES = \
+PACKAGE = \
          Common \
          DMI \
          BaseSim \
@@ -39,15 +41,20 @@ PACKAGES = \
          CEP/Tools/PerfTest/P2Perf \
          CEP/CPA/OCTOPUSSY \
          CEP/CPA/UVD
+PACKAGES = $(PACKAGE)
 #
 
 # Find all variants to be built for this host (without possible domain).
 # There can be multiple lines (one for each compiler).
 # Prepend each variant with the compiler type and append .variant.
+# The VARIANTS variable can be overridden on the make line.
+# Note that VARIANT is a synonym for VARIANTS.
 #
 HOST = $(shell uname -n | sed -e "s%\..*%%")
 VARLINES = $(shell if [ -f ../builds.$(HOST) ]; then egrep "^make\..*\.variants:" ../builds.$(HOST) | sed -e "s%^make\.%%" -e "s%.variants:%/%" -e "s/ \+//g"; else echo "gnu/opt"; fi)
-VARIANTS = $(shell for NM in $(VARLINES); do cmp=`echo $$NM | sed -e "s%/.*%%"`; vars=`echo $$NM | sed -e "s%.*/%%" -e "s%,% %g"`; for VAR in $$vars; do echo $${cmp}_$$VAR.variant; done; done)
+VARIANT = $(shell for NM in $(VARLINES); do cmp=`echo $$NM | sed -e "s%/.*%%"`; vars=`echo $$NM | sed -e "s%.*/%%" -e "s%,% %g"`; for VAR in $$vars; do echo $${cmp}_$$VAR; done; done)
+VARIANTS = $(VARIANT)
+VARIANTNAMES = $(addsuffix .variant, $(VARIANTS))
 #
 # Keep the make directory (which is LOFAR).
 #
@@ -74,19 +81,19 @@ all: build
 #
 # daily,weekly: Target to drive daily and weekly builds
 #
-daily: start_daily bootstrap configure $(VARIANTS) check stop_daily
+daily: start_daily bootstrap configure $(VARIANTNAMES) check stop_daily
 
-weekly: start_weekly bootstrap configure $(VARIANTS) check stop_weekly
+weekly: start_weekly bootstrap configure $(VARIANTNAMES) check stop_weekly
 
 #
 # build: Target to compile in a bootstrapped and configured tree
 #
-build: start_build $(VARIANTS:.variant=.variant_build) stop_build
+build: start_build $(VARIANTNAMES:.variant=.variant_build) stop_build
 
 #
 # rebuild: Target to compile from scratch in a bootstrapped and configured tree
 #
-rebuild: start_rebuild $(VARIANTS:.variant=.variant_rebuild) stop_rebuild
+rebuild: start_rebuild $(VARIANTNAMES:.variant=.variant_rebuild) stop_rebuild
 
 start_build:
 	@echo && echo ":::::: BUILD START" && echo
@@ -114,9 +121,9 @@ stop_weekly:
 
 #
 # check target: check all variants that have been specified in the
-#               VARIANTS variable
+#               VARIANTNAMES variable
 #
-check: $(VARIANTS:.variant=.variant_check)
+check: $(VARIANTNAMES:.variant=.variant_check)
 
 #
 # Bootstrap and configure all packages. Bootstrapping is only needed once,
@@ -141,7 +148,7 @@ bootstrap_rule:
 #
 # Configure all packages. Configuration is needed for each variant.
 #
-configure: $(VARIANTS:.variant=.variant_configure)
+configure: $(VARIANTNAMES:.variant=.variant_configure)
 
 #
 # Rule to configure variants
