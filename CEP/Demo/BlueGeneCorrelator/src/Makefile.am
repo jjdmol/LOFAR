@@ -2,8 +2,6 @@ bin_PROGRAMS	=  BlueGeneCorrelator BlueGeneFrontEnd
 
 #CXXFLAGS += -mpitrace
 
-LDFLAGS += -lmpe
-
 DOCHDRS 	=				\
 DH_CorrCube.h					\
 DH_Vis.h					\
@@ -30,10 +28,13 @@ DH_Empty.cc					\
 DH_CorrCube.cc					\
 DH_Vis.cc					\
 WH_Random.cc					\
-WH_Correlate.cc				\
+WH_Correlate.cc					\
 WH_Dump.cc					\
 BlueGeneFrontEnd.cc				\
 BlueGeneSimulateFE.cc		
+
+BlueGeneCorrelator_LDADD = -lmpe
+BlueGeneFrontEnd_LDADD   = -lmpe
 
 BlueGeneFrontEnd_DEPENDENCIES = $(LOFAR_DEPEND)
 BlueGeneCorrelator_DEPENDENCIES = $(LOFAR_DEPEND)

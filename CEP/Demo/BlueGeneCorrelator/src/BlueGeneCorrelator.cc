@@ -31,7 +31,8 @@
 #include <BlueGeneCorrelator/WH_Dump.h>
 
 // TransportHolders
-#include <Transport/TH_Socket.h>
+// #include <Transport/TH_Socket.h>
+// #include <Transport/TH_Mem.h>
 
 #ifdef __BLRTS__
 #include <mpi.h>
@@ -56,6 +57,7 @@ BlueGeneCorrelator::~BlueGeneCorrelator() {
 void BlueGeneCorrelator::define(const KeyValueMap& /*params*/) {
 
   if (itsRank == 0) {
+
     itsWHs[0] = new WH_Correlate("noname",
 				 1);
   } else {
@@ -79,8 +81,8 @@ void BlueGeneCorrelator::define(const KeyValueMap& /*params*/) {
 
   if (itsRank == 0) {
 
-    proto_input = new TH_Socket(LOCALHOST_IP, LOCALHOST_IP, BASEPORT, true);
-    proto_output = new TH_Socket(LOCALHOST_IP, LOCALHOST_IP, BASEPORT+1, false);
+    proto_input = new TH_Socket(FRONTEND_IP, FRONTEND_IP, BASEPORT, true);
+    proto_output = new TH_Socket(FRONTEND_IP, FRONTEND_IP, BASEPORT+1, false);
 
     myWHRandom.getDataManager().getOutHolder(0)->connectTo
       ( *itsWHs[0]->getDataManager().getInHolder(0), 
@@ -89,6 +91,7 @@ void BlueGeneCorrelator::define(const KeyValueMap& /*params*/) {
     itsWHs[0]->getDataManager().getOutHolder(0)->connectTo
       ( *myWHDump.getDataManager().getInHolder(0),
 	*proto_output );
+
   }    
 }
 

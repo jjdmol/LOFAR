@@ -110,8 +110,8 @@ private:
   void correlator_core_unrolled(complex<float> s[NSTATIONS][NSAMPLES],
 				complex<float> c[NSTATIONS][NSTATIONS]);
 
-		       void master();
-  void slave(const int rank);
+  void master();
+  void slave();
     
   int itsFBW; // frequency bandwidth of the DH_Beamlet 
 

@@ -73,15 +73,10 @@ WH_Dump* WH_Dump::make(const string& name) {
 }
 
 void WH_Dump::process() {
-  complex<float> corr[NSTATIONS][NSTATIONS][NCHANNELS];
-  
-  memcpy (corr, 
-	  ((DH_Vis*)getDataManager().getInHolder(0))->getBuffer(),
-	  NSTATIONS*NSTATIONS*NCHANNELS*sizeof(DH_Vis::BufferType));
 
   // negative indices are invalid. This are results calculated from 
   // uninitialized values.
-  cout << "COR [" << -2+itsIndex++ <<"]: "<< corr[0][0][0] << endl;
+  cout << "COR [" << -1+itsIndex++ <<"]: "<< *((DH_Vis*)getDataManager().getInHolder(0))->getBufferElement(0,0,0) << endl;
 }
 
 void WH_Dump::dump() {
