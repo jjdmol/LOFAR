@@ -1,4 +1,4 @@
-//  WH_PreProcess.cc:
+//  WH_FringeControl.cc:
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -32,56 +32,54 @@
 #include <Common/KeyValueMap.h>
 
 // OnLineProto specific include
-#include "OnLineProto/WH_PreProcess.h"
+#include "OnLineProto/WH_FringeControl.h"
 
 namespace LOFAR
 {
 
-WH_PreProcess::WH_PreProcess (const string& name,
-			      unsigned int channels,
-			      const int FBW)
-  : WorkHolder    (channels, channels, name,"WH_PreProcess"),
-    itsFBW(FBW)
+WH_FringeControl::WH_FringeControl (const string& name,
+				    const int nout,
+				    MAC mac)
+  : WorkHolder    (1, nout, name,"WH_FringeControl"),
+    itsMac        (mac)
 {
   char str[8];
-  // create the input dataholders
-  for (unsigned int i=0; i<channels; i++) {
-    sprintf (str, "%d", i);
-    getDataManager().addInDataHolder(i, 
-				     new DH_Beamlet (string("out_") + str, itsFBW), 
-				     true);
-  }
+
+  // create Dummy input holder
+  sprintf (str, "%d", 0);
+  getDataManager().addInDataHolder(0, new DH_Empty (string("in_") + str), true);
+
   // create the output dataholders
-  for (unsigned int i=0; i<channels; i++) {
+  for (int i = 0; i < nout; i++) {
     sprintf (str, "%d", i);
     getDataManager().addOutDataHolder(i, 
-				      new DH_Beamlet (string("out_") + str, itsFBW), 
+				      new DH_Phase (string("out_") + str, i), 
 				      true);
   }
 }
 
-WH_PreProcess::~WH_PreProcess()
+WH_FringeControl::~WH_FringeControl()
 {
 }
 
-WorkHolder* WH_PreProcess::construct (const string& name, 
-				      unsigned int channels,
-				      const int FBW)
+WorkHolder* WH_FringeControl::construct (const string& name,
+					 const int nout,
+					 MAC mac)
 {
-  return new WH_PreProcess (name, channels, FBW);
+  return new WH_FringeControl (name, nout, mac);
 }
 
-WH_PreProcess* WH_PreProcess::make (const string& name)
+WH_FringeControl* WH_FringeControl::make (const string& name)
 {
-  return new WH_PreProcess (name, getDataManager().getOutputs(), itsFBW);
+  return new WH_FringeControl (name, getDataManager().getOutputs(), itsMac);
 }
 
-void WH_PreProcess::process()
+void WH_FringeControl::process()
 {
-  TRACER4("WH_PreProcess::Process()");
+  TRACER4("WH_FringeControl::Process()");
 }
 
-void WH_PreProcess::dump()
+void WH_FringeControl::dump()
 {
 }
 
