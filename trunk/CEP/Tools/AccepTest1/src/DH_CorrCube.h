@@ -26,7 +26,7 @@ namespace LOFAR
 class DH_CorrCube: public DataHolder
 {
 public:
-  typedef float BufferPrimitive;
+  typedef uint16 BufferPrimitive;
   typedef complex<BufferPrimitive> BufferType;
 
   explicit DH_CorrCube (const string& name, 
@@ -55,7 +55,7 @@ public:
   BufferType* getBufferElement(int channel, int sample, int station, int polarisation);
   void setBufferElement(int channel, int sample, int station, int polarisation, BufferType* value); 
 
-  const int         getFBW() const;
+  const int getFBW() const;
 
 private:
   /// Forbid assignment.
