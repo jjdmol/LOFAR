@@ -79,6 +79,8 @@ int Solver::getResult (Result::Ref &resref,
                        const std::vector<Result::Ref> &,
                        const Request &request, bool newreq)
 {
+  // Check that calc_deriv is set
+  FailWhen(!request.calcDeriv(),"request calcDeriv must be set");
   // The result has 1 plane.
   Result& result = resref <<= new Result(request, 1);
   VellSet& vellset = result.setNewVellSet(0);
