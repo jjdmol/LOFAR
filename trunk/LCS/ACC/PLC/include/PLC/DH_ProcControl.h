@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Note: This source is best read with tabstop 4.
+//#  Note: This source is read best with tabstop 4.
 //#
 //#  $Id$
 
@@ -51,7 +51,8 @@ enum PCCmd {    PCCmdNone = 0,
 				PCCmdSnapshot,    PCCmdRecover, 
 				PCCmdReinit, 
 				PCCmdInfo,        PCCmdAnswer,
-				PCCmdReport,      PCCmdAsync,
+				PCCmdReport,      PCCmdParams,
+				PCCmdAsync,
 				PCCmdResult = 0x1000
 };
 

@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Note: This source is best read with tabstop 4.
+//#  Note: This source is read best with tabstop 4.
 //#
 //#  $Id$
 
@@ -63,8 +63,14 @@ public:
 	// Report to AC that we are ready for shutting down. The argument
 	// passed to this call will be stored in the observation database
 	// as the result from this process. It can contain a parameterset or
-	// a key-value pair for instance.
+	// a (set of) key-value pair for instance.
 	void	unregisterAtAC(const string&	aResult) const;
+
+	// When an AP wants to store some intermediate results in the OTDB
+	// it can pass the key-value list to the AC that will take care of the
+	// storage of the parameters.
+	// Note: The KVpair should contain a timestamp for proper storage.
+	void	sendResultParameters(const string&	kvList);
 
 	// Function to read a message an call the corresponding function.
 	bool	pollForMessage() const;

@@ -30,29 +30,46 @@
 namespace LOFAR {
   namespace ACC {
 
-KVpair::KVpair(const string&	aKey, const string&		aValue) :
+#define	OPTIONAL_TIMESTAMP		\
+	if (genTimestamp) { \
+		second.append(formatString(" {%d}", time(0))); \
+	}
+
+KVpair::KVpair(const string& aKey, const string&  aValue, bool genTimestamp) :
 	pair<string, string> (aKey, aValue)
-{}
+{
+	OPTIONAL_TIMESTAMP
+}
 
-KVpair::KVpair(const string&	aKey, bool				aValue) :
+KVpair::KVpair(const string& aKey, bool			  aValue, bool genTimestamp) :
 	pair<string, string> (aKey, formatString("%s", aValue ? "True" : "False"))
-{}
+{
+	OPTIONAL_TIMESTAMP
+}
 
-KVpair::KVpair(const string&	aKey, int				aValue) :
+KVpair::KVpair(const string& aKey, int			  aValue, bool genTimestamp) :
 	pair<string, string> (aKey, formatString("%d", aValue))
-{}
+{
+	OPTIONAL_TIMESTAMP
+}
 
-KVpair::KVpair(const string&	aKey, double			aValue) :
+KVpair::KVpair(const string& aKey, double		  aValue, bool genTimestamp) :
 	pair<string, string> (aKey, formatString("%lg", aValue))
-{}
+{
+	OPTIONAL_TIMESTAMP
+}
 
-KVpair::KVpair(const string&	aKey, float				aValue) :
+KVpair::KVpair(const string& aKey, float		  aValue, bool genTimestamp) :
 	pair<string, string> (aKey, formatString("%e", aValue))
-{}
+{
+	OPTIONAL_TIMESTAMP
+}
 
-KVpair::KVpair(const string&	aKey, time_t			aValue) :
+KVpair::KVpair(const string& aKey, time_t		  aValue, bool genTimestamp) :
 	pair<string, string> (aKey, formatString("%ld", aValue))
-{}
+{
+	OPTIONAL_TIMESTAMP
+}
 
 
 KVpair::~KVpair()

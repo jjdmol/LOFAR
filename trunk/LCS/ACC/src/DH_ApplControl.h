@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Note: This source is best read with tabstop 4.
+//#  Note: This source is read best with tabstop 4.
 //#
 //#  $Id$
 
@@ -48,7 +48,7 @@ namespace LOFAR {
 // In a result message the command value is OR'ed with the \c ACCmdResult
 // mask.
 enum ACCmd {    ACCmdNone = 0, ACCmdBoot, 
-				ACCmdShutdown, ACCmdQuit, 
+				ACCmdQuit, 
 				ACCmdDefine,   ACCmdInit,
 				ACCmdPause,    ACCmdRun, 
 				ACCmdSnapshot, ACCmdRecover, 

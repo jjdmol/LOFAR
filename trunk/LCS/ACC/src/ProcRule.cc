@@ -30,62 +30,19 @@
 namespace LOFAR {
   namespace ACC {
 
-ProcRule::ProcRule(const string&  aName,
-				   const string&  aStartCmd,
-				   const string&  aStopCmd,
-				   const string&  aNodeName) :
-	itsName     (aName),
-	itsStartCmd (aStartCmd),
-	itsStopCmd  (aStopCmd),
+ProcRule::ProcRule(const string&  aNodeName,
+				   const string&  aProcName,
+				   const string&  aParamfile) :
 	itsNodeName (aNodeName),
+	itsProcName (aProcName),
+	itsParamfile(aParamfile),
 	itsIsStarted(false)
 {}
 
-bool ProcRule::start()
-{
-	if (itsIsStarted) {
-		LOG_TRACE_OBJ_STR("ProcRule:" << itsName << " is already started");
-		return (true);
-	}
-
-	LOG_TRACE_OBJ_STR ("ProcRule:start " << itsName);
-
-	// TODO: do something with itsNodeName when starting the process.
-	// Perhaps this should be implemented in ApplController::createPSubsets
-	int32 result = system (itsStartCmd.c_str());
-
-	if (result == 0) {
-		itsIsStarted = true;
-	}
-
-	return (itsIsStarted);
-}
-
-bool ProcRule::stop()
-{
-	// TODO: do something with itsNodeName
-
-//	if (!itsIsStarted) {
-//		LOG_TRACE_OBJ_STR("ProcRule:" << itsName << " is already stopped");
-//		return (true);
-//	}
-	// Note: always execute the stop command because it may also cleanup
-	// some mess the process left behind.
-	LOG_TRACE_OBJ_STR ("ProcRule:stop " << itsName);
-
-	int32 result = system (itsStopCmd.c_str());
-
-	if (result == 0) {
-		itsIsStarted = false;
-	}
-
-	return (!itsIsStarted);
-}
-
-
 std::ostream& operator<< (std::ostream& os, const ProcRule& aPR)
 {
-	os << "ProcName: " << aPR.itsName << endl;
+	os << "ProcName: " << aPR.itsProcName << endl;
+	os << "Type    : " << aPR.getType()   << endl;
 	os << "StartCmd: " << aPR.itsStartCmd << endl;
 	os << "StopCmd : " << aPR.itsStopCmd  << endl;
 	os << "NodeName: " << aPR.itsNodeName << endl;

@@ -80,6 +80,14 @@ void	ProcControlServer::unregisterAtAC(const string&	aResult) const
 	itsCommChan->sendCmd (PCCmdQuit, aResult);
 }
 
+//
+// sendResultParameters(kvlist)
+//
+void	ProcControlServer::sendResultParameters(const string&	kvList)
+{
+	itsCommChan->sendCmd (PCCmdParams, kvList);
+}
+
 // Returns a string containing the IP address and portnumber of the
 // Application controller the class is connected to.
 string		ProcControlServer::askInfo(const string&	keylist) const

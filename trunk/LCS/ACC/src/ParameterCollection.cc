@@ -511,12 +511,14 @@ time_t ParameterCollection::getTime(const string& theKey) const
 // Writes the Key-Values pair from the current ParameterCollection to the given file
 // thereby overwritting any file contents.
 //
-void ParameterCollection::writeFile(const string&	theFilename) const
+void ParameterCollection::writeFile(const string&	theFilename,
+								    bool			append) const
 {
 	ofstream		paramFile;
 
-	//# Try to pen the file
-	paramFile.open(theFilename.c_str(), ofstream::out | ofstream::trunc);
+	//# Try to open the file
+	paramFile.open(theFilename.c_str(), 
+				   ofstream::out | (append ? ofstream::app : ofstream::trunc));
 	if (!paramFile) {
 		THROW (Exception, formatString("Unable to open file %s", theFilename.c_str()));
 	}

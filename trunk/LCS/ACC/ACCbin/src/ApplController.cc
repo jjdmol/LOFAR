@@ -27,7 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/hexdump.h>			// TODO: remove in final version
 #include <ACC/ApplController.h>
-#include <ACC/ACRequest.h>			// for size of ping message
+#include <ACC/PR_Shell.h>			// TODO: factory!
 #include <ACC/ItemList.h>			// @@
 
 namespace LOFAR {
@@ -47,7 +47,7 @@ ApplController::ApplController(const string&	configID) :
 	itsProcListener  (0),
     itsAPAPool       (0),
 	itsServerStub	 (0),
-	itsDaemonSocket	 (0),
+	itsDaemonComm	 (0),
 	itsCurTime       (0),
 	itsIsRunning     (false),
 	itsStateEngine   (new StateEngine),
@@ -72,10 +72,11 @@ ApplController::~ApplController()
 {
 	LOG_TRACE_OBJ ("ApplController destructor");
 
-	// Save results from the processes to a file.
+	// Save results from the processes to a file (append).
 	if (itsResultParamSet && itsObsParamSet && 
 							 itsObsParamSet->isDefined("AC.resultfile")) {
-	   itsResultParamSet->writeFile(itsObsParamSet->getString("AC.resultfile"));
+	   itsResultParamSet->writeFile(itsObsParamSet->getString("AC.resultfile"),
+								    true);
 	}
 
 	if (itsBootParamSet)   { delete itsBootParamSet;   }
@@ -88,7 +89,7 @@ ApplController::~ApplController()
 	if (itsProcListener)   { delete itsProcListener;   }
     if (itsAPAPool)        { delete itsAPAPool;        }
 	if (itsServerStub)     { delete itsServerStub;     }
-	if (itsDaemonSocket)   { delete itsDaemonSocket;   }
+	if (itsDaemonComm)     { delete itsDaemonComm;     }
 	if (itsCurACMsg)	   { delete itsCurACMsg; 	   }
 	if (itsStateEngine)	   { delete itsStateEngine;    }
 
@@ -116,14 +117,11 @@ void ApplController::startupNetwork()
 	ASSERTSTR(itsProcListener->ok(), 
 						"Can't start listener for application processes");
 
-	// Setup ping socket with ACDaemon (UDP)
-	itsDaemonSocket = new Socket("DaemonPing",
-							 itsBootParamSet->getString("AC.pinghost"),
-							 itsBootParamSet->getString("AC.pingportnr"),
-							 Socket::UDP);
-	ASSERTSTR(itsDaemonSocket->ok(), 
-						"Can't open ping socket with AC daemon");
-
+	// Setup communication channel with ACDaemon
+	itsDaemonComm = new ACDaemonComm(
+							itsBootParamSet->getString("AC.pinghost"),
+							itsBootParamSet->getString("AC.pingportnr"),
+							itsBootParamSet->getString("AC.pingID"));
 	itsIsRunning = true;
 }
 
@@ -169,11 +167,16 @@ void ApplController::handleProcMessage(APAdmin*	anAP)
 	case PCCmdAsync:
 		// TODO: implement this
 		break;
+	case PCCmdParams: {
+		ParameterSet	resultParam;
+		resultParam.adoptBuffer(DHProcPtr->getOptions());
+		resultParam.writeFile(itsObsParamSet->getString("AC.resultfile"), true);
+		break;
+		}
 	case PCCmdQuit:
 		LOG_TRACE_OBJ("PCCmdQuit received");
 		itsAPAPool->markAsOffline(anAP);		// don't send new commands
 		itsAPAPool->registerAck(command, anAP);
-cout << "---" << DHProcPtr->getOptions() << "---" << endl;
 		itsResultParamSet->adoptBuffer(DHProcPtr->getOptions());
 		break;
 
@@ -288,38 +291,19 @@ void ApplController::createParSubsets()
 		procPS.add(procName+".ACport", 
 						 itsBootParamSet->getString("AC.processportnr"));
 
-
 		// Step 2: The start/stop information (ruler info) is not for the
 		// process but for the AC. Remove it from the paramset and store it in
 		// a local ProcRule array.
 		// I. Read the ruler info from the process paramset.
-		string	stopCmd  = procPS.getString(procName+".stop");
 		string	nodeName = procPS.getString(procName+".node");
-		string	startCmd = procPS.getString(procName+".start");
 
-		// II. Substitute <@paramfile@> in start/stop command with filename
-		uint32	pos;
-		string	pfLabel  = "<@parameterfile@>";
-		while ((pos = startCmd.find(pfLabel, 0)) != string::npos) {
-			startCmd.replace(pos, pfLabel.length(), fileName);
-		}
-		while ((pos = stopCmd.find(pfLabel, 0)) != string::npos) {
-			stopCmd.replace(pos, pfLabel.length(), fileName);
-		}
-		// III. Substitute <@procID@> in start and stop command with procName
-		pfLabel  = "<@procID@>";
-		while ((pos = startCmd.find(pfLabel, 0)) != string::npos) {
-			startCmd.replace(pos, pfLabel.length(), procName);
-		}
-		while ((pos = stopCmd.find(pfLabel, 0)) != string::npos) {
-			stopCmd.replace(pos, pfLabel.length(), procName);
-		}
-		// IV. Save proc ruling info in separate map for later
-		itsProcRuler.add(ProcRule(procName, startCmd, stopCmd, nodeName));
+		// II. Save proc ruling info in separate map for later
+		// TODO: make factory!!!!
+		//string procType = procPS.getString(procName+".startstoptype");
+		//itsProcRuler.add(makePR(procType, nodeName, procName, fileName));
+		itsProcRuler.add(PR_Shell(nodeName, procName, fileName));
 
-		// V. Remove meta data from Parameterset for process
-		procPS.remove(procName+".start");
-		procPS.remove(procName+".stop");
+		// Remove execute type from processes paramlist
 		procPS.remove(procName+".startstoptype");
 
 		// Finally write process paramset to a file.
@@ -350,14 +334,6 @@ void ApplController::startCmdState()
 		// StateEngine needs to know the timeout values for the states
 		itsStateEngine->init(itsObsParamSet);
 		itsStateEngine->ready();				// report this state is ready.
-	case StatePowerUpNodes:
-		// TODO: Communicate with Node Manager
-		itsStateEngine->ready();				// report this state is ready.
-		break;
-	case StatePowerDownNodes:
-		// TODO: Communicate with Node Manager
-		itsStateEngine->ready();				// report this state is ready.
-		break;
 	case StateCreatePSubset:
 		createParSubsets();
 		itsStateEngine->ready();				// report this state is ready.
@@ -463,9 +439,6 @@ void ApplController::doEventLoop()
 	// prepare ping information for ACDaemon
 	time_t		nextPing     = 0;
 	int32		pingInterval = itsBootParamSet->getTime("AC.pinginterval");
-	char		pingID[ACREQUESTNAMESIZE];
-	strncpy (pingID, itsBootParamSet->getString("AC.pingID").c_str(), 
-			 ACREQUESTNAMESIZE-1);
 
 	while (itsIsRunning) {
 		checkForACCommands();
@@ -482,8 +455,7 @@ void ApplController::doEventLoop()
 
 		// Should daemon be tickled?
 		if (nextPing < time(0)) {
-			int32 wrRes = itsDaemonSocket->write(pingID, ACREQUESTNAMESIZE);
-			if (wrRes != ACREQUESTNAMESIZE) {
+			if (!itsDaemonComm->sendPing()) {
 				LOG_DEBUG("Ping message to ACD could not be written!");
 			}
 			nextPing = time(0) + pingInterval;
@@ -505,6 +477,8 @@ void ApplController::doEventLoop()
 			sleep (1);
 		}
 	}
+
+	itsDaemonComm->unregister();
 }
 
 //

@@ -44,7 +44,7 @@ void ProcRuler::add   (const	ProcRule&	aProcRule)
 
 	itsProcPool.erase(aProcRule.getName());
 
-	itsProcPool.insert(make_pair(aProcRule.getName(), aProcRule));
+	itsProcPool.insert(make_pair(aProcRule.getName(), aProcRule.clone()));
 }
 
 void ProcRuler::remove(const	string&	    aProcName)
@@ -59,7 +59,7 @@ bool ProcRuler::start(const string& aProcName)
 		return (false);
 	}
 	
-	return (iter->second.start());
+	return (iter->second->start());
 }
 
 bool ProcRuler::stop (const string& aProcName)
@@ -69,7 +69,7 @@ bool ProcRuler::stop (const string& aProcName)
 		return (false);
 	}
 	
-	return (iter->second.stop());
+	return (iter->second->stop());
 }
 
 bool ProcRuler::startAll()
@@ -78,7 +78,7 @@ bool ProcRuler::startAll()
 
 	iterator iter = itsProcPool.begin();
 	while (iter != itsProcPool.end()) {
-		result &= iter->second.start();
+		result &= iter->second->start();
 		++iter;
 	}
 	return (result);
@@ -90,7 +90,7 @@ bool ProcRuler::stopAll()
 
 	iterator iter = itsProcPool.begin();
 	while (iter != itsProcPool.end()) {
-		result &= iter->second.stop();
+		result &= iter->second->stop();
 		++iter;
 	}
 	return (result);
@@ -100,7 +100,7 @@ void ProcRuler::markAsStopped(const string& aProcName)
 {
 	iterator iter = itsProcPool.find(aProcName);
 	if (iter != itsProcPool.end()) {
-		iter->second.markAsStopped();
+		iter->second->markAsStopped();
 	}
 }
 

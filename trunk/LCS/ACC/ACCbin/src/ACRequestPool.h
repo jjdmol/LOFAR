@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Note: This source is best read with tabstop 4.
+//#  Note: This source is read best with tabstop 4.
 //#
 //#  $Id$
 
@@ -31,6 +31,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
+#include <netinet/in.h>				// in_addr
 #include <Common/lofar_list.h>
 #include <ACC/ACRequest.h>
 

@@ -23,7 +23,7 @@
 //#	 Defines a class the should contain fully filled ParamaterCollections
 //#  to be used in runtime to feed the applications with information.
 //#
-//#  Note: This source is best read with tabstop 4.
+//#  Note: This source is read best with tabstop 4.
 //#
 //#  $Id$
 
@@ -65,7 +65,7 @@ public:
 	// Define a conversion function from base class to this class
 	ParameterSet(const ParameterCollection& that);
 
-	// Allow reading a file for backwards compatibility
+	// Allow reading a file for backwards compatibility; OBSOLETE!
 	explicit ParameterSet(const string&	theFilename);
 
 	// Copying is allowed.

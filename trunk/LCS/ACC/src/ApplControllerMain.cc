@@ -57,7 +57,6 @@ int main (int	argc, char*	argv[]) {
 		signal (SIGPIPE, SIG_IGN);		// ignore write errors on sockets
 		// close filedescriptors from our launcher
 		for (int f = dup(2); f > 2; --f) {
-			LOG_INFO_STR("CLOSING FILEDESC: " << f);
 			close(f);
 		}
 

@@ -28,8 +28,6 @@
 
 //# Includes
 #include <ACC/ACSyncClient.h>
-//#include <ACC/DH_ApplControl.h>
-//#include <Transport/TH_Socket.h>
 #include <Common/hexdump.h>
 
 namespace LOFAR {
