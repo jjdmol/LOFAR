@@ -17,6 +17,10 @@ if [ "$1" != "" ]; then
   exit 0;
 fi
 ./ExamplePL
+STATUS=$?
+if [ $STATUS != 0 ]; then
+  exit $STATUS
+fi
 
 # Do the second test (with variable length) as well.
 psql -h dop50 -U postgres test << _EOF_ > ExamplePL_tmp.psql_out 2>&1
