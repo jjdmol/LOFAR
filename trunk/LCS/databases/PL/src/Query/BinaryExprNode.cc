@@ -44,11 +44,11 @@ namespace LOFAR
       void BinaryExprNode::print(std::ostream& os) const
       {
         if (isNull()) return;
-//         os << "(";
+        os << "(";
         itsLeft.print(os);
         os << itsOperation;
         itsRight.print(os);
-//         os << ")";
+        os << ")";
       }
 
       Expr BinaryExprNode::getConstraint() const
