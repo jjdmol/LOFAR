@@ -23,6 +23,7 @@
 #include "GPM_Controller.h"
 #include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/PAL/GCF_MyPropertySet.h>
+#include <GCF/PAL/GCF_SysConnGuard.h>
 #include <GCF/Utils.h>
 #include <GCF/ParameterSet.h>
 #include <Resources.hxx>
@@ -36,7 +37,8 @@ GPMHandler* GPMHandler::_pInstance = 0;
 void logResult(TPAResult result, GCFPropertySet& propSet);
 
 GPMController::GPMController() :
-  GCFTask((State)&GPMController::initial, sPMLTaskName)
+  GCFTask((State)&GPMController::initial, sPMLTaskName),
+  _pSysConnGuard(GCFSysConnGuard::instance())
 {
   // register the protocol for debugging purposes
   registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
@@ -44,16 +46,16 @@ GPMController::GPMController() :
   // initialize the port
   _propertyAgent.init(*this, "client", GCFPortInterface::SAP, PA_PROTOCOL);
 
-  _distPropertyAgent.init(*this, "__gcf_DPA_client", GCFPortInterface::SAP, PA_PROTOCOL);
-  
-  _distPropertyAgent.setConverter(_converter);
+  _distPropertyAgent.init(*this, "DPAclient", GCFPortInterface::SAP, PA_PROTOCOL);
   
   ParameterSet::instance()->adoptFile("gcf-pml.conf");
   ParameterSet::instance()->adoptFile("PropertyAgent.conf");
+  _pSysConnGuard->registerTask(*this);
 }
 
 GPMController::~GPMController()
 {
+  _pSysConnGuard->unregisterTask(*this);
 }
 
 GPMController* GPMController::instance(bool temporary)
@@ -346,9 +348,12 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_DISCONNECTED:
-      LOG_WARN(LOFAR::formatString ( 
-          "Connection lost to Property Agent"));
-      p.close();
+      if (&_propertyAgent == &p)
+      {
+        LOG_WARN(LOFAR::formatString ( 
+            "Connection lost to Property Agent"));
+        p.close();
+      }
       break;
       
     case F_CLOSED:
@@ -504,9 +509,21 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }
+    case F_SYSGONE:   
     case PA_PROP_SET_GONE:
     {
-      PAPropSetGoneEvent indication(e);
+      string scope;
+      if (e.signal == F_SYSGONE)
+      {
+        GCFSysConnGuardEvent* pEvent = (GCFSysConnGuardEvent*) &e;
+        scope = pEvent->pSysName;
+        scope += ':';
+      }
+      else
+      {
+        PAPropSetGoneEvent indication(e);
+        scope = indication.scope;
+      }
       GCFExtPropertySet* pPropertySet;
       string fullScope;
       for (TExtPropertySets::iterator iter = _extPropertySets.begin();
@@ -519,7 +536,7 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& p)
         {
           fullScope = GCFPVSSInfo::getLocalSystemName() + ":" + fullScope;
         }
-        if (fullScope.find(indication.scope) == 0 && 
+        if (fullScope.find(scope) == 0 && 
             pPropertySet->isLoaded())
         {
           pPropertySet->serverIsGone();
@@ -632,7 +649,7 @@ void logResult(TPAResult result, GCFPropertySet& propSet)
 string GPMController::determineDest(const string& scope) const
 {
   string::size_type index = scope.find(':');
-  string destDP("__gcf_DPA_server");
+  string destDP("__gcfportAPI_DPAserver");
   if (index < scope.length())
   {
     destDP.insert(0, scope.c_str(), index + 1);

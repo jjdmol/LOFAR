@@ -52,7 +52,7 @@ GCFMyProperty::~GCFMyProperty()
   _pCurValue = 0;
 }
 
-TGCFResult GCFMyProperty::setValue(const string value)
+TGCFResult GCFMyProperty::setValue(const string value, bool wantAnswer)
 {
   TGCFResult result(GCF_NO_ERROR);
   if (!_pOldValue || !_pCurValue) 
@@ -67,14 +67,14 @@ TGCFResult GCFMyProperty::setValue(const string value)
       result == GCF_NO_ERROR)
   {
     assert(_pCurValue);
-    result = GCFProperty::setValue(*_pCurValue);    
+    result = GCFProperty::setValue(*_pCurValue, wantAnswer);    
     assert(result == GCF_NO_ERROR);
   }
   
   return result;
 }
 
-TGCFResult GCFMyProperty::setValue(const GCFPValue& value)
+TGCFResult GCFMyProperty::setValue(const GCFPValue& value, bool wantAnswer)
 {
   TGCFResult result(GCF_NO_ERROR);
   if (!_pOldValue || !_pCurValue) 
@@ -90,7 +90,7 @@ TGCFResult GCFMyProperty::setValue(const GCFPValue& value)
       result == GCF_NO_ERROR)
   {
     assert(_pCurValue);
-    result = GCFProperty::setValue(*_pCurValue);    
+    result = GCFProperty::setValue(*_pCurValue, wantAnswer);    
     assert(result == GCF_NO_ERROR);
   }
   

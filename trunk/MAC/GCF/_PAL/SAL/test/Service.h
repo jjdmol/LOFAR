@@ -12,7 +12,7 @@ class Service : public GSAService
     virtual TSAResult dpeSubscribe(const string& propName);
     virtual TSAResult dpeUnsubscribe(const string& propName);
     virtual TSAResult dpeGet(const string& propName);
-    virtual TSAResult dpeSet(const string& propName, const GCFPValue& value);
+    virtual TSAResult dpeSet(const string& propName, const GCFPValue& value, bool wantAnswer = false);
     virtual bool dpeExists(const string& propName);
     
   protected:
@@ -23,6 +23,7 @@ class Service : public GSAService
     virtual void dpeUnsubscribed(const string& propName);
     virtual void dpeValueGet(const string& propName, const GCFPValue& value);
     virtual void dpeValueChanged(const string& propName, const GCFPValue& value);
+    virtual void dpeValueSet(const string& propName);
   
   private:
 };

@@ -19,7 +19,7 @@ unsigned gcfInit(string callBackFuncName)
 	
 	DebugTN("GCF: ID " + ID + " is claimed for unique communication with PA of GCF.");
 	dyn_string newItem;
-	string callBackDP = "__gcf_DPA_client_UIM" + myManNum() +"_" + ID;
+	string callBackDP = "__gcfportUIM" + myManNum() +"_" + ID + "_DPAclient";
 	if (!dpExists(callBackDP))
 	{
 		dpCreate(callBackDP, "GCFDistPort");
@@ -28,7 +28,7 @@ unsigned gcfInit(string callBackFuncName)
 	dpConnect("gcfMainCallBack", FALSE, callBackDP + ".");			
 	newItem = makeDynString(callBackFuncName, ID, myManNum());
 	gCallBackList[dynlen(gCallBackList) + 1] = newItem;
- 	dpConnect("gcfWDGoneSys", FALSE, "__gcf_WDGoneSys.");
+ 	dpConnect("gcfWatchDog", FALSE, "__gcf_wd.sys");
 	return ID;
 }
 
@@ -41,8 +41,8 @@ void gcfLeave(unsigned ID)
 		if (gCallBackList[i][2] == ID)
 		{
 			string callBackDP = buildCallBackDP(ID) + ".";
-			string msg = "d|" + ID;
-			sendEvent(callBackDP, msg);
+			DebugTN("GCF: " + callBackDP + " will not be used anymore.");
+			dpDisconnect("gcfMainCallBack", callBackDP);
 			dynRemove(gCallBackList, i);
 			break;
 		}
@@ -178,12 +178,6 @@ void gcfMainCallBack(string callBackDP, blob value)
 			callUserDefinedFunction(callBackFunc, response);
 		}		
 	}
-	else if (msg[1] == "d")
-	{
-		string callBackDP = buildCallBackDP(msg[2]);
-		DebugTN("GCF: " + callBackDP + " will not be used anymore.");
-		dpDisconnect("gcfMainCallBack", callBackDP);
-	}
 }
 
 unsigned registerAction(unsigned ID, string& psScope)
@@ -251,7 +245,7 @@ string buildPortId(unsigned ID)
 
 string buildCallBackDP(unsigned ID)
 {
- return getSystemName() + "__gcf_DPA_client_UIM" + myManNum() +"_" + ID;		
+	return getSystemName() + "__gcfportUIM" + myManNum() +"_" + ID + "_DPAclient";		
 }
 
 void callUserDefinedFunction(string& callBackFunc, dyn_string& response)
@@ -313,40 +307,49 @@ string getDPNameOnly(string& psScope)
 
 bool isPAOnline(string sysName)
 {
-	bool paOnline = dpExists(sysName + "__gcf_DPA_server");
+	bool paOnline = dpExists(sysName + "__gcfportAPI_DPAserver");
 	
 	if (!paOnline) DebugTN("GCF ERROR: PA on system " + sysName + " not reachable!");
 	return paOnline;
 }
 
-void gcfWDGoneSys(string dp, unsigned sysNr)
+void gcfWatchDog(string dp, string wdMsg)
 {
-	string sysNrOfLoadedPS;
-	string callBackFunc;
-	dyn_string indication;
-	DebugTN("GCF: System " + getSystemName(sysNr) + " is gone.");
-	for (int i = 1; i <= dynlen(gPSList); i++)
+	unsigned sysNr = substr(wdMsg, 1, strlen(wdMsg) - 2);
+	if (wdMsg[0] == 'd')
 	{
-		sysNrOfLoadedPS = getSystemId(dpSubStr(gPSList[i][1], DPSUB_SYS)); // 1 == loaded property set scope
-		if (sysNrOfLoadedPS == sysNr)
+		string sysNrOfLoadedPS;
+		string callBackFunc;
+		dyn_string indication;
+		
+		DebugTN("GCF: System " + getSystemName(sysNr) + " is gone.");
+		for (int i = 1; i <= dynlen(gPSList); i++)
 		{
-			dynAppend(response, "gone"); 
-			dynAppend(response, gPSList[i][1]); 			
-			callBackFunc = findCallBackFunc(gPSList[i][2]); // 2 == ID
-			callUserDefinedFunction(callBackFunc, response);
-			dynRemove(gPSList, i);
+			sysNrOfLoadedPS = getSystemId(dpSubStr(gPSList[i][1], DPSUB_SYS)); // 1 == loaded property set scope
+			if (sysNrOfLoadedPS == sysNr)
+			{
+				dynAppend(response, "gone"); 
+				dynAppend(response, gPSList[i][1]); 			
+				callBackFunc = findCallBackFunc(gPSList[i][2]); // 2 == ID
+				callUserDefinedFunction(callBackFunc, response);
+				dynRemove(gPSList, i);
+			}
 		}
+		for (int i = 1; i <= dynlen(gSeqList); i++)
+		{
+			sysNrOfLoadedPS = getSystemId(dpSubStr(gSeqList[i][3], DPSUB_SYS)); // 3 == loaded property set scope
+			if (sysNrOfLoadedPS == sysNr)
+			{
+				dynAppend(response, "gone"); 
+				dynAppend(response, gSeqList[i][3]); 			
+				callBackFunc = findCallBackFunc(gSeqList[i][2]); // 2 == ID
+				callUserDefinedFunction(callBackFunc, response);
+				dynRemove(gSeqList, i);
+			}
+		}	
 	}
-	for (int i = 1; i <= dynlen(gSeqList); i++)
+	else
 	{
-		sysNrOfLoadedPS = getSystemId(dpSubStr(gSeqList[i][3], DPSUB_SYS)); // 3 == loaded property set scope
-		if (sysNrOfLoadedPS == sysNr)
-		{
-			dynAppend(response, "gone"); 
-			dynAppend(response, gSeqList[i][3]); 			
-			callBackFunc = findCallBackFunc(gSeqList[i][2]); // 2 == ID
-			callUserDefinedFunction(callBackFunc, response);
-			dynRemove(gSeqList, i);
-		}
-	}	
+		DebugTN("GCF: System " + getSystemName(sysNr) + " came.");
+	}
 }

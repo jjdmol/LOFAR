@@ -71,13 +71,18 @@ class GCFPropertySet
     // @param propName with or without the scope
     // @param value can be of type GCFPValue or string (will be converted to 
     //              GCFPValue content)
+    // @param wantAnswer setting this parameter to 'true' forces GCF to give an
+    //                   answer on this setValue operation. This is very useful
+    //                   in case the value must be set on a property of a remote system.
     // @returns GCF_PROP_NOT_IN_SET,  GCF_PROP_WRONG_TYPE, GCF_PROP_NOT_VALID
     // <group>
     TGCFResult setValue (const string& propName, 
-                         const GCFPValue& value);
+                         const GCFPValue& value, 
+                         bool wantAnswer = false);
 
     TGCFResult setValue (const string& propName,
-                         const string& value);
+                         const string& value, 
+                         bool wantAnswer = false);
     // </group>
 
     // changes the answerobject pointer for all properties

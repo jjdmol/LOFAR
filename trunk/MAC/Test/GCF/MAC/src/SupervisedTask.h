@@ -30,6 +30,7 @@ class Task : public GCFTask
     void propSubscribed(const string& propName);
     void propUnsubscribed(const string& propName);
     void propValueChanged(const string& propName, const GCFPValue& value);
+    void propValueSet(const string& propName);
     void valueGet(const string& propName, const GCFPValue& value);    
     
   private:

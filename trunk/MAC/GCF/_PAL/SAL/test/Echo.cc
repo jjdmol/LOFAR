@@ -139,7 +139,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
         case 7:
         {
           GCFPVInteger testVal(2000);
-          _pService->dpeSet(propName + "_test", testVal);
+          _pService->dpeSet(propName + "_test", testVal, true);
           break;
         }
         case 8:

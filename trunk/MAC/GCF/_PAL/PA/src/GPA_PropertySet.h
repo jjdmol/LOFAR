@@ -64,13 +64,14 @@ class GPAPropertySet : public GSAService
     bool knowsClient(const GCFPortInterface& p) { return (findClient(p) != 0); }
     			
   protected:
-    void dpCreated(const string& propName);
-    void dpDeleted(const string& propName);
-    void dpeValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {}; 
-    void dpeValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {};
-    void dpeSubscribed(const string& /*propName*/) {};
-    void dpeSubscriptionLost (const string& propName);
-    void dpeUnsubscribed(const string& /*propName*/) {};
+    void dpCreated(const string& dpName);
+    void dpDeleted(const string& dpName);
+    void dpeValueGet(const string& /*dpeName*/, const GCFPValue& /*value*/) {}; 
+    void dpeValueChanged(const string& /*dpeName*/, const GCFPValue& /*value*/) {};
+    void dpeValueSet(const string& /*dpeName*/) {};
+    void dpeSubscribed(const string& /*dpeName*/) {};
+    void dpeSubscriptionLost (const string& dpeName);
+    void dpeUnsubscribed(const string& /*dpeName*/) {};
 
   private: // helper methods
     void link();

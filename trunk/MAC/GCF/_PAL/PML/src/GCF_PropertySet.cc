@@ -112,12 +112,13 @@ GCFProperty& GCFPropertySet::operator[] (const string& propName)
 }
 
 TGCFResult GCFPropertySet::setValue (const string& propName, 
-                                     const GCFPValue& value)
+                                     const GCFPValue& value,
+                                     bool wantAnswer)
 {
   GCFProperty* pProperty = getProperty(propName);
   if (pProperty)
   {
-    return pProperty->setValue(value);    
+    return pProperty->setValue(value, wantAnswer);    
   }
   else 
   {
@@ -126,12 +127,13 @@ TGCFResult GCFPropertySet::setValue (const string& propName,
 }
 
 TGCFResult GCFPropertySet::setValue (const string& propName, 
-                                     const string& value)
+                                     const string& value,
+                                     bool wantAnswer)
 {
   GCFProperty* pProperty = getProperty(propName);
   if (pProperty)
   {
-    return pProperty->setValue(value);    
+    return pProperty->setValue(value, wantAnswer);    
   }
   else 
   {
@@ -188,7 +190,8 @@ void GCFPropertySet::configured(TGCFResult result, const string& apcName)
   if (_pAnswerObj != 0)
   {
     GCFConfAnswerEvent e;
-    e.pScope = getScope().c_str();
+    string fullScope(getFullScope());
+    e.pScope = fullScope.c_str();
     e.pApcName = apcName.c_str();
     e.result = result;
     _pAnswerObj->handleAnswer(e);

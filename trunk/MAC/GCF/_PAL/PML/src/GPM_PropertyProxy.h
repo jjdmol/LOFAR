@@ -30,52 +30,91 @@
 class GPMPropertyProxy : public GSAService
 {
   public:
-    GPMPropertyProxy(GCFPropertyProxy& gcfProxy) : _gcfProxy(gcfProxy) {;}
-    virtual ~GPMPropertyProxy() {;}
+    GPMPropertyProxy(GCFPropertyProxy& gcfProxy);
+    virtual ~GPMPropertyProxy();
 
-    inline TSAResult subscribePM(const string& propName)
-    {
-      return GSAService::dpeSubscribe(propName);
-    }
-    inline TSAResult unsubscribePM(const string& propName)
-    {
-      return GSAService::dpeUnsubscribe(propName);
-    }
-    inline TSAResult getPM(const string& propName)
-    {
-      return GSAService::dpeGet(propName);
-    }
-    inline TSAResult setPM(const string& propName, const GCFPValue& value)
-    {
-      return GSAService::dpeSet(propName, value);
-    }
+    TSAResult subscribePM(const string& propName);
+    TSAResult unsubscribePM(const string& propName);
+    TSAResult getPM(const string& propName);
+    TSAResult setPM(const string& propName, const GCFPValue& value, bool wantAnswer);
 
   protected:
-    void dpCreated(const string& /*propName*/) {};
-    void dpDeleted(const string& /*propName*/) {};
-    void dpeSubscribed(const string& propName)
-    {
-      _gcfProxy.propSubscribed(propName);
-    }
-    void dpeSubscriptionLost (const string& propName)
-    {
-      _gcfProxy.propSubscriptionLost(propName);
-    }     
-    void dpeUnsubscribed(const string& propName)
-    {
-      _gcfProxy.propUnsubscribed(propName);
-    }
-    void dpeValueGet(const string& propName, const GCFPValue& value)
-    {
-      _gcfProxy.propValueGet(propName, value);
-    }
-    void dpeValueChanged(const string& propName, const GCFPValue& value)
-    {
-      _gcfProxy.propValueChanged(propName, value);
-    }
-
+    void dpCreated(const string& /*propName*/);
+    void dpDeleted(const string& /*propName*/);
+    void dpeSubscribed(const string& propName);
+    void dpeSubscriptionLost (const string& propName);
+    void dpeUnsubscribed(const string& propName);
+    void dpeValueGet(const string& propName, const GCFPValue& value);
+    void dpeValueChanged(const string& propName, const GCFPValue& value);
+    void dpeValueSet(const string& propName);
+    
   private:
     GCFPropertyProxy& _gcfProxy;
 };
+
+inline GPMPropertyProxy::GPMPropertyProxy(GCFPropertyProxy& gcfProxy) : 
+    _gcfProxy(gcfProxy) 
+{}
+
+inline GPMPropertyProxy::~GPMPropertyProxy() 
+{}
+
+inline TSAResult GPMPropertyProxy::subscribePM(const string& propName)
+{
+  return GSAService::dpeSubscribe(propName);
+}
+
+inline TSAResult GPMPropertyProxy::unsubscribePM(const string& propName)
+{
+  return GSAService::dpeUnsubscribe(propName);
+}
+
+inline TSAResult GPMPropertyProxy::getPM(const string& propName)
+{
+  return GSAService::dpeGet(propName);
+}
+
+inline TSAResult GPMPropertyProxy::setPM(const string& propName, 
+                                         const GCFPValue& value, 
+                                         bool wantAnswer)
+{
+  return GSAService::dpeSet(propName, value, wantAnswer);
+}
+
+inline void GPMPropertyProxy::dpCreated(const string& /*propName*/) 
+{}
+
+inline void GPMPropertyProxy::dpDeleted(const string& /*propName*/)
+{}
+
+inline void GPMPropertyProxy::dpeSubscribed(const string& propName)
+{
+  _gcfProxy.propSubscribed(propName);
+}
+
+inline void GPMPropertyProxy::dpeSubscriptionLost (const string& propName)
+{
+  _gcfProxy.propSubscriptionLost(propName);
+}     
+
+inline void GPMPropertyProxy::dpeUnsubscribed(const string& propName)
+{
+  _gcfProxy.propUnsubscribed(propName);
+}
+
+inline void GPMPropertyProxy::dpeValueGet(const string& propName, const GCFPValue& value)
+{
+  _gcfProxy.propValueGet(propName, value);
+}
+
+inline void GPMPropertyProxy::dpeValueChanged(const string& propName, const GCFPValue& value)
+{
+  _gcfProxy.propValueChanged(propName, value);
+}
+
+inline void GPMPropertyProxy::dpeValueSet(const string& propName)
+{
+  _gcfProxy.propValueSet(propName);
+}
 #endif
 
