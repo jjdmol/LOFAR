@@ -26,6 +26,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Quanta/MVBaseline.h>
 
+#include <BBS3/ParmData.h>
 #include <BBS3/MNS/MeqDomain.h>
 #include <BBS3/MNS/MeqHist.h>
 #include <BBS3/MNS/MeqJonesExpr.h>
@@ -40,8 +41,9 @@
 #include <BBS3/MNS/MeqStatUVW.h>
 #include <BBS3/MNS/ParmTable.h>
 
-#include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
+#include <Common/lofar_string.h>
+#include <list>
 
 namespace LOFAR
 {
@@ -81,7 +83,11 @@ public:
   // Destructor
   ~Prediffer();
 
-   // Set the time interval for which to read and predict.
+  // Make a selection of the MS to be used in the domain iteration.
+  void select (const vector<int>& ant1, const vector<int>& ant2,
+	       int itsFirstChan, int itsLastChan);
+
+  // Set the time interval for which to read and predict.
   void setTimeInterval (double intervalInSeconds);
 
   // Reset the iterator.
@@ -89,7 +95,16 @@ public:
 
   // Advance the iterator.
   // \returns false if at end of iteration.
+  // Hereafter getSolvableParmData can be called.
   bool nextInterval (bool callReadPolcs = true);
+
+  // Update the solvable parm values (reread from table).
+  void updateSolvableParms();
+
+  // It returns the solvable parms.
+  // The parms are in ascending order of spidnr.
+  const vector<ParmData>& getSolvableParmData() const
+    { return itsParmData; }
 
   // Make all parameters non-solvable.
   void clearSolvableParms();
@@ -99,7 +114,10 @@ public:
   void setSolvableParms (vector<string>& parms, 
 			 vector<string>& excludePatterns,
 			 bool isSolvable);
- 
+
+  // Get the equations for all selected baselines.
+  std::list<MeqResult> getEquations (const MeqRequest& request);
+
   // Save residual data in the itsResColName column.
   // It does a predict for the sources to be peeled off and subtracts
   // the results from the itsSolveColName column.
@@ -108,10 +126,6 @@ public:
   // Set the source numbers to use in this peel step.
   bool peel (const vector<int>& peelSources,
 	     const vector<int>& extraSources);
-
-  // Make a selection of the MS to be used in the domain iteration.
-  void select (const vector<int>& ant1, const vector<int>& ant2,
-	       int itsFirstChan, int itsLastChan);
 
   // Set the names and values of all solvable parms for the current domain.
   // The double version can only be used if all parms are 0th-order
@@ -137,9 +151,8 @@ public:
   int getNrChan() const
     { return itsNrChan; }
 
+  // Show the settings of the Prediffer.
   void showSettings() const;
-
-  void showParmValues();
 
 private:
   // Copy constructor and assignment are not allowed.
@@ -174,6 +187,10 @@ private:
   // Create the LOFAR expressions for each baseline.
   // The EJones can be expressed as real/imag or ampl/phase.
   void makeLOFARExpr (Bool asAP);
+
+  MeqResult getEquation (const MeqRequest& request,
+			 int bl, int ant1, int ant2,
+			 bool showd);
 
 
   string                itsMSName;      // Measurement set name
@@ -215,6 +232,7 @@ private:
   int          itsNrScid;             //# Nr of solvable parameter coeff.
   vector<bool> itsIsParmSolvable;     //# is corresponding parmlist solvable?
   Vector<String> itsSolvableParms;    // Solvable parameters
+  vector<ParmData> itsParmData;       // solvable parm info. 
 
   Vector<int>    itsAnt1Data;         // Antenna 1 data
   Vector<int>    itsAnt2Data;         // Antenna 2 data
