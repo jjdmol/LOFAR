@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.5  2001/09/19 08:10:51  wierenga
+//  Changes to do perform bandwidth tests.
+//
 //  Revision 1.4  2001/09/19 08:00:13  wierenga
 //  Added code to do performance tests.
 //
@@ -119,7 +122,7 @@ void SeqSim::define(const ParamBlock& params)
        << flush << endl;
 
   Simul *simul = new Simul(new WH_Empty(), "SeqSim", 0);
-  setSimul(simul);
+  setSimul(*simul);
   simul->runOnNode(0);
 
   workholders = new (WH_GrowSize*)[NR_OF_STEPS];
@@ -150,7 +153,7 @@ void SeqSim::define(const ParamBlock& params)
     }
   }
   
-  steps[0]->connectInput(NULL);
+  //steps[0]->connectInput(NULL);
 #if 0
   simul->connectOutputToArray(&steps[NR_OF_STEPS-1], 1);
 #endif
@@ -187,23 +190,12 @@ void SeqSim::run(int nSteps)
 {
   nSteps = nSteps;
 
-  if (NULL == getSimul())
-  {
-    cout << "Simulator not defined." << endl;
-    return;
-  }
-
-  doIt(getSimul(), "SeqSimulator", nSteps);
+  doIt(&getSimul(), "SeqSimulator", nSteps);
 }
 
 void SeqSim::dump() const
 {
-  if (NULL == getSimul())
-  {
-    cout << "Simulator not defined." << endl;
-    return;
-  }
-  getSimul()->dump();
+  getSimul().dump();
 }
 
 void SeqSim::quit()
