@@ -20,8 +20,7 @@
 //  $Id$
 
 
-#include "CEPFrame/TH_Socket.h"
-#include "CEPFrame/StepRep.h"
+#include <Transport/TH_Socket.h>
 #include <Common/Debug.h>
 #include <unistd.h>
 
@@ -30,129 +29,168 @@
 // choice is that the interface ACC/Socket class is more intuitive for the
 // TH_Socket class.
 
-// The current (0417-4) version of ACC/Socket makes use of
-// log4cplus. Log4cplus is not yet fully implemented in the LOFAR build
-// tree. Because of this reason, ACC/Socket generates compiler errors. A
-// copy of ACC/Socket has been made, with the log4cplus calls
-// removed. This version of Socket has been checked in as
-// CEPFrame/src/Socket. After log4cplus is implemented correctly, the
-// CEPFrame/Socket class must be removed and ACC/Socket be used.
-
-#include <CEPFrame/Socket.h>
-
 namespace LOFAR
 {
 
-TH_Socket TH_Socket::proto;
-
-TH_Socket::TH_Socket() 
-{
-}
-
-TH_Socket::~TH_Socket()
-{
-}
-
-TH_Socket* TH_Socket::make() const
-{
-    return new TH_Socket();
-}
-
-string TH_Socket::getType() const
-{
-  return "TH_Socket";
-}
-
-bool TH_Socket::connectionPossible(int srcRank, int dstRank) const
-{
-  return srcRank == dstRank;
-}
-
-bool TH_Socket::recv(void* buf, int nbytes, int, int tag)
-{ 
-  cout << "sockServer started." << endl;
-
-  cout << "Creating socket..." << endl;
-  Socket socket;
-
-  // Socket creation and connection must be moved out of the recv method
-  // after initial succesful testing.
-
-  // The port number of the connection must be based the tag after
-  // succesful testing.
-
-  cout << "Listening on port 4567..." << endl;
-  socket.openListener (4567);
-
-  cout << "Waiting to accept..." << endl;
-  Socket dataSocket;
-  dataSocket = socket.accept ();
-
-  char *str;
-  int32 len;
-
-  dataSocket.poll (& str, & len, 100000);
-
-  // For now, memcpy is used. The ACC/Socket class must be modified to
-  // remove this memcpy for performance.
-
-  memcpy (buf, str, nbytes);
-
-  // Must use memcpy
-
-  return true;
-}
-
-
-bool TH_Socket::send(void* buf, int nbytes, int, int tag)
-{
-  cout << "sockClient started..." << endl;
-
-  cout << "Creating a socket..." << endl;
-  Socket socket;
-
-  // The port number of the connection must be based the tag after
-  // succesful testing.
-
-  cout << "Connecting..." << endl;
-  socket.connect ("127.0.0.1", 4567);
-
-  // Socket creation and connection must be moved out of the send method
-  // after initial succesful testing.
-
-  cout << "Sending..." << endl;
-  socket.send ((char *) buf, nbytes);
+  TH_Socket TH_Socket::proto;
   
-  return true;
-}
+  TH_Socket::TH_Socket () : 
+    itsSendingHostName ("localhost"), 
+    itsReceivingHostName ("localhost"), 
+    itsPortNo (4567),
+    isConnected (false)
+  {
+    cerr << "Warning: Using TH_Socket with uninitialized host " 
+	 << "names and port number" << endl; 
+  }
+  
+  TH_Socket::TH_Socket 
+    (std::string sendhost, std::string recvhost, int portno) :
+      itsSendingHostName (sendhost), 
+      itsReceivingHostName (recvhost), 
+      itsPortNo (portno),
+      isConnected (false) {}
 
-void TH_Socket::waitForBroadCast()
-{}
+  TH_Socket::~TH_Socket()
+  {
+  }
+  
+  TH_Socket* TH_Socket::make() const
+  {
+      return new TH_Socket();
+  }
+  
+  string TH_Socket::getType() const
+  {
+    return "TH_Socket";
+  }
+  
+  bool TH_Socket::connectionPossible(int srcRank, int dstRank) const
+  {
+    return srcRank == dstRank;
+  }
+  
+  bool TH_Socket::recvBlocking (void * buf, int nbytes, int, int tag)
+  { 
+    cout << "Creating socket..." << endl;
+    Socket socket;
+  
+    if (! isConnected) {
+      ConnectToClient ();
+    }
 
-void TH_Socket::waitForBroadCast(unsigned long&)
-{}
+    char *str;
+    int32 len;
+  
+    itsDataSocket.poll (& str, & len, 100000);
+  
+    // For now, memcpy is used. The ACC/Socket class must be modified to
+    // remove this memcpy for performance.
+  
+    // (Must use memcpy due to Socket design. Can be improved later.)
+  
+    memcpy (buf, str, nbytes);
+  
+    return true;
+  }
+  
+  
+  bool TH_Socket::recvNonBlocking (void * buf, int nbytes, int, int tag)
+  { 
+    cerr << "Warning (TH_Socket::recvNonBlocking ()): Non-blocking receive "
+         << "not yet implemented. Calling recvBlocking () in stead." << endl;
+  
+    recvNonBlocking (buf, nbytes, 0, tag);
+    return true;
+  }
+  
+  
+  bool TH_Socket::waitForReceived (void * buf, int nbytes, int, int tag)
+  { 
+    cerr << "Warning (TH_Socket::waitForReceived ()): Non-blocking receive "
+         << "not yet implemented. Recption ready, ingoring call." << endl;
+  
+    return true;
+  }
+  
+  
+  bool TH_Socket::sendBlocking (void* buf, int nbytes, int, int tag)
+  {
+    cout << "Creating a socket..." << endl;
+    Socket socket;
+  
+    if (! isConnected) {
+      ConnectToClient ();
+    }
+
+    // Socket creation and connection must be moved out of the send method
+    // after initial succesful testing.
+  
+    cout << "Sending..." << endl;
+    itsSocket.send ((char *) buf, nbytes);
+    
+    return true;
+  }
+  
+  
+  bool TH_Socket::sendNonBlocking (void* buf, int nbytes, int, int tag)
+  {
+    cerr << "Warning (TH_Socket::sendNonBlocking ()): Non-blocking send "
+         << "not yet implemented. Calling recvBlocking () in stead." << endl;
+  
+    sendNonBlocking (buf, nbytes, 0, tag);
+  
+    return true;
+  }
+  
+  
+  bool TH_Socket::waitForSend (void* buf, int nbytes, int, int tag)
+  {
+    cerr << "Warning (TH_Socket::waitForSend ()): Non-blocking send "
+         << "not yet implemented. Sending is ready anyway. ignoring call." 
+         << endl;
+  
+    return true;
+  }
+  
+  
+  bool TH_Socket::waitForReceiveAck (void* buf, int nbytes, int, int tag)
+  {
+    cerr << "Warning (TH_Socket::waitForSend ()): Non-blocking send "
+         << "not yet implemented. Sending is ready anyway. ignoring call." 
+         << endl;
+  
+    return true;
+  }
+  
+
+  bool TH_Socket::init () { 
+    // Code to open the connection
+    return true; 
+  }
 
 
-void TH_Socket::sendBroadCast(unsigned long)
-{}
+  // Called by sender
+  bool TH_Socket::ConnectToServer (void) {
+    // The port number of the connection must be based the tag after
+    // succesful testing.
+  
+    cout << "Connecting..." << endl;
+    itsSocket.connect (itsSendingHostName, itsPortNo);
+  
+    isConnected = true;
+    return true;
+  }
 
-int TH_Socket::getCurrentRank()
-{
-    return -1;
-}
 
-int TH_Socket::getNumberOfNodes()
-{
-    return 1;
-}
-
-void TH_Socket::init(int, const char* [])
-{}
-
-void TH_Socket::finalize()
-{}
-
-void TH_Socket::synchroniseAllProcesses()
-{}
-
+  // Called by receiver
+  bool TH_Socket::ConnectToClient (void) {
+    itsSocket.openListener (itsPortNo);
+  
+    cout << "Waiting to accept..." << endl;
+    itsDataSocket = itsSocket.accept ();
+  
+    isConnected = true;
+    return true;
+  }
 }

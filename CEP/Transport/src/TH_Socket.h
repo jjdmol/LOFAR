@@ -24,45 +24,62 @@
 #define CEPFRAME_TH_MEM_BL_H
 
 #include <lofar_config.h>
+#include <Transport/TransportHolder.h>
 
-#include "CEPFrame/TransportHolder.h"
-#include <Common/lofar_map.h>
-#include <pthread.h>
+// The current (0417-4) version of ACC/Socket makes use of
+// log4cplus. Log4cplus is not yet fully implemented in the LOFAR build
+// tree. Because of this reason, ACC/Socket generates compiler errors. A
+// copy of ACC/Socket has been made, with the log4cplus calls
+// removed. This version of Socket has been checked in as
+// CEPFrame/src/Socket. After log4cplus is implemented correctly, the
+// CEPFrame/Socket class must be removed and ACC/Socket be used.
+
+#include <Transport/Socket.h>
 
 namespace LOFAR
 {
-
-class TH_Socket: public TransportHolder
-{
-public:
-  TH_Socket();
-  virtual ~TH_Socket();
-
-  virtual TH_Socket* make() const;
-
-  virtual bool recv(void* buf, int nbytes, int source, int tag);
-  virtual bool send(void* buf, int nbytes, int destination, int tag);
-
-  virtual string getType() const;
-
-  virtual bool connectionPossible(int srcRank, int dstRank) const;
-  virtual bool isBlocking() const { return true; }
-
-  static TH_Socket proto;
+  class TH_Socket: public TransportHolder
+  {
+  public:
+    TH_Socket ();
+    TH_Socket (std::string sendhost, std::string recvhost, int portno);
   
-  static void init (int argc, const char *argv[]);
-  static void finalize();
-  static void waitForBroadCast();
-  static void waitForBroadCast (unsigned long& aVar);
-  static void sendBroadCast (unsigned long timeStamp);
-  static int  getCurrentRank();
-  static int  getNumberOfNodes();
-  static void synchroniseAllProcesses();
+    virtual ~TH_Socket();
+  
+    virtual TH_Socket* make() const;
 
- private:
-
-};
-
+  
+    virtual bool recvBlocking    (void* buf, int nbytes, int, int tag);
+    virtual bool recvNonBlocking (void* buf, int nbytes, int, int tag);
+    virtual bool waitForReceived (void* buf, int nbytes, int, int tag);
+  
+    virtual bool sendBlocking      (void* buf, int nbytes, int, int tag);
+    virtual bool sendNonBlocking   (void* buf, int nbytes, int, int tag);
+    virtual bool waitForSend       (void* buf, int nbytes, int, int tag);
+    virtual bool waitForReceiveAck (void* buf, int nbytes, int, int tag);
+  
+    virtual string getType() const;
+  
+    virtual bool connectionPossible(int srcRank, int dstRank) const;
+    virtual bool isBlocking() const { return true; }
+  
+    static TH_Socket proto;
+    
+    virtual bool init ();
+  
+   private:
+    std::string itsSendingHostName;
+    std::string itsReceivingHostName;
+    int itsPortNo;
+  
+    bool isConnected;
+  
+    Socket itsSocket, itsDataSocket;
+  
+    bool ConnectToServer (void);
+    bool ConnectToClient (void);
+  };
+  
 }
 
 #endif
