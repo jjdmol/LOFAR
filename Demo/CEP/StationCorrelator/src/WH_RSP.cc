@@ -57,7 +57,7 @@ WH_RSP::WH_RSP(const string& name,
   itsNbeamlets     = kvm.getInt("NoRSPBeamlets", 92) / itsNCorrOutputs; // number of EPA-packet beamlets per OutDataholder
   itsNpackets      = kvm.getInt("NoPacketsInFrame", 8);             // number of EPA-packets in RSP-ethernetframe
   itsSzEPAheader   = kvm.getInt("SzEPAheader", 14);                 // headersize in bytes
-  itsSzEPApacket   = (itsPolarisations * sizeof(complex<uint16>) * itsNbeamlets) + itsSzEPAheader;           // packetsize in bytes
+  itsSzEPApacket   = (itsPolarisations * sizeof(complex<uint16>) * kvm.getInt("NoRSPBeamlets", 92)) + itsSzEPAheader;           // packetsize in bytes
 
   // create buffer for incoming dataholders 
   // implement a cyclic buffer later !!!
@@ -221,7 +221,7 @@ void WH_RSP::process()
 		  char_blocksize );
 #define DUMP_NOT_DEFINED
 #ifdef DUMP
-	  cout<<"packet: "<<i<<"  input: "<<j<<"   ";
+	  cout<<"packet: "<<i<<"  output: "<<j<<"   ";
 	  for (int c=0; c<char_blocksize/sizeof(complex<uint16>); c++) {
 	    cout<<((complex<uint16>*)&inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)])[c]<<" ";
 	  }
@@ -251,7 +251,7 @@ void WH_RSP::dump() {
   for (int i=0;i<itsNpackets;i++) {
     for (int j=0;j<itsNCorrOutputs;j++) {
       outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
-      cout<<"packet: "<<i<<"  input: "<<j<<"   ";
+      cout<<"packet: "<<i<<"  output: "<<j<<"   ";
       for (int c=0; c<char_blocksize/sizeof(complex<uint16>); c++) {
 	cout<<((complex<uint16>*)&inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)])[c]<<" ";
       }
