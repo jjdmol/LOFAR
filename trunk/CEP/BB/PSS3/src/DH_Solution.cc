@@ -171,7 +171,7 @@ bool DH_Solution::getSolution(vector<string>& names, vector<double>& values)
 {
   bool found;
   int version;
-  BlobIStream& bis = openExtraBlob(found, version);
+  BlobIStream& bis = getExtraBlob(found, version);
   if (!found) {
     return false;
   }

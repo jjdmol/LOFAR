@@ -221,7 +221,6 @@ void WH_PSS3::process()
       solPtr->insertDB();
       woPtr->updateDB();
       // Dump to screen
-      //	  cout << "WH_PSS3::process output ##### " << endl;
       sol->dump();
     }
     count++;

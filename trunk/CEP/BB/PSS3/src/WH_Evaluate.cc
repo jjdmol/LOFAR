@@ -415,12 +415,12 @@ int nrOfSources = 6;
 
   wo->setVarData((char*)&data, size, pNames, itsStartSols);
 
+  //  wo->dump();
+
   // Insert WorkOrder into database
   DH_PL* woPtr = dynamic_cast<DH_PL*>(wo);
   AssertStr(woPtr != 0, "OutHolder cannot be cast to a DH_PL");
   woPtr->insertDB();
-
-  //  wo->dump();
 
 }
 
