@@ -20,13 +20,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
-//  %[BugId: 117]%
-//
-//  Initial working version
-//
-//
 //////////////////////////////////////////////////////////////////////
 
 #ifndef BASESIM_DH_CORRELATIONS_H
