@@ -1,0 +1,58 @@
+#!/bin/sh
+
+# Check if server executable can be found.. 
+COORD_SERVER="../src/lofarcoordserver"
+if (! [ -x $COORD_SERVER ] ) 
+then
+  echo "Fatal error: \`$COORD_SERVER' cannot be found" 1>&2
+  exit 1
+fi
+
+# Check if client executable can be found.
+COORD_CLIENT="../../../../Coord/build/$lofar_variant/test/tCoordClient"
+if (! [ -x $COORD_CLIENT ] )
+then
+  echo "Fatal error: \`$COORD_CLIENT' cannot be found" 1>&2
+  exit 1
+fi
+
+# See if we can locate the executable LimitExec. LimitExec can be used to
+# kill a process after a predetermined number of seconds.
+if ([ -x $lofar_root/LCS/Common/build/$lofar_variant/src/LimitExec ])
+then
+  EXEC="$lofar_root/LCS/Common/build/$lofar_variant/src/LimitExec 20"
+elif ([ -x $lofar_top_srcdir/LCS/Common/build/$lofar_variant/src/LimitExec ])
+then
+  EXEC="$lofar_top_srcdir/LCS/Common/build/$lofar_variant/src/LimitExec 20"
+fi
+
+# Exit and interrupt handler. $! is the process id of the last background 
+# process started, i.e. the coordinate server.
+trap 'kill -9 $!; exit $STATUS' 0 1 2 3 15
+
+# Set up the AIPS environment, which is needed by the coordinate server
+source /lofarbuild/aips++/weekly/aipsinit.sh
+
+# Move the logger properties to the directory where the executable resides.
+if ([ -r lofarcoordserver.log_prop ])
+then 
+  \mv lofarcoordserver.log_prop ../src
+fi
+
+# Start the server in the background. We will assume that it has been built.
+../src/lofarcoordserver &
+
+# Sleep 2 seconds to make sure the server has started.
+sleep 2
+
+# Copy the logger properties file, because tCoordClient needs one too.
+if ([ -r $COORD_SERVER.log_prop ])
+then
+  \cp $COORD_SERVER.log_prop $COORD_CLIENT.log_prop
+fi
+
+# Start the client test program
+$EXEC ../../../../Coord/build/$lofar_variant/test/tCoordClient `hostname`
+STATUS=$?
+
+exit $STATUS
