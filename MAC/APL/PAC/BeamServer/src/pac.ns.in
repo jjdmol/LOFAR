@@ -5,6 +5,14 @@ acceptor.type=TCP
 acceptor.port=30229
 rspdriver.type=TCP # SAP
 
+[ViewStats]
+host=localhost
+server.type=TCP
+
+[SetWG]
+host=localhost
+server.type=TCP
+
 [RSP]
 cmd=../src/RSPDriver
 host=localhost

@@ -244,15 +244,16 @@ int Beam::convertPointings(time_period period)
 
 	  //
 	  // convert direction
-	  // INSERT COORDINATE CONVERSION CALL
+	  // ***** INSERT COORDINATE CONVERSION CALL *****
 	  // converts from Direction -> AZEL
 	  //
+
+	  // convert from AZEL -> LOFAR_LMN
 
 	  //
 	  // insert converted LM coordinate at correct 
 	  // position in the m_lmns array
 	  //
-	  //time_duration t = pointing.time() - period.begin();
 	  register int tsec = (pointing.time()-period.begin()).seconds();
 
 	  if ( (tsec < 0) || (tsec >= m_compute_interval) )
@@ -260,7 +261,6 @@ int Beam::convertPointings(time_period period)
 	    LOG_ERROR_STR("\ninvalid pointing time\n" << to_simple_string(pointing.time()));
 	    continue;
 	  }
-
 	  
 	  m_lmns(tsec,0) = pointing.direction().angle1();
 	  m_lmns(tsec,1) = pointing.direction().angle2();
