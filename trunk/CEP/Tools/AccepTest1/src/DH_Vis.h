@@ -46,6 +46,7 @@ public:
   void              addBufferElementVal(int station1, int station2, int channel, int polarisation, BufferType value);
   void              setBufferElement(int station1, int station2, int channel, int polarisation, BufferType* valueptr);
   const int         getFBW() const;
+  const unsigned int getBufSize() const;
 
 private:
   /// Forbid assignment.
@@ -91,6 +92,9 @@ inline void DH_Vis::addBufferElementVal(int station1, int station2, int channel,
 
 inline const int DH_Vis::getFBW() const
   { return itsFBW; }
+
+inline const unsigned int DH_Vis::getBufSize() const 
+  { return itsBufSize; }  
 
 }
 

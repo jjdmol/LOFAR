@@ -66,14 +66,9 @@ void AH_Correlator::define(const KeyValueMap& /*params*/) {
     ( *itsWH->getDataManager().getInHolder(0), 
       TH_Socket(itsIP, itsIP, itsBaseport+itsRank, false, true) );
 
-//   cout << "reading from port number: " << itsBaseport+itsRank << " " << endl;
-
   itsWH->getDataManager().getOutHolder(0)->connectTo
     ( *myWHDump.getDataManager().getInHolder(0), 
       TH_Socket(itsIP, itsIP, itsBaseport+itsNtargets+itsRank, true, true));
-//   cout << "writing to port number: " << itsBaseport+itsNtargets+itsRank << endl;
-
-
 }
 
 void AH_Correlator::undefine() {
@@ -97,8 +92,7 @@ void AH_Correlator::run(int nsteps) {
 
     itsWH->baseProcess();
     
-
-    if (itsRank == 0) {
+    if (itsRank == 0 && i > 0) {
       avg_bandwidth += static_cast<WH_Correlator*>(itsWH)->getAggBandwidth();
       avg_corr_perf += static_cast<WH_Correlator*>(itsWH)->getCorrPerf();
     }
@@ -111,16 +105,15 @@ void AH_Correlator::run(int nsteps) {
   }
 
   if (itsRank == 0) {
-    
     cout << itsNelements << " " ;
     cout << itsNsamples  << " " ;
     cout << itsNchannels << " " ;
     cout << itsNpolarisations << " " ;
     cout << ((itsNchannels*itsNelements*itsNsamples*itsNpolarisations*sizeof(DH_CorrCube::BufferType)) + 
 	     (itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType)))/ (1024.0*1024.0) << " ";
-    cout << avg_bandwidth/(nsteps*1024.0*1024.0) << " Mbps " ;
+    cout << avg_bandwidth/((nsteps-1)*1024.0*1024.0) << " Mbps " ;
     cout << (100.0*avg_bandwidth)/(nsteps*1024.0*1024.0*1024.0)<< "%" << " ";
-    cout <<  avg_corr_perf/nsteps << " Mcprod/sec" << endl;
+    cout <<  avg_corr_perf/(nsteps-1) << " Mcprod/sec" << endl;
   }
 }
 

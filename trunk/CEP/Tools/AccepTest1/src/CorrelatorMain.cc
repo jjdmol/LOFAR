@@ -13,7 +13,7 @@
 using namespace LOFAR;
 int main (int argc, const char** argv) {
 
-  INIT_LOGGER("Correlator.log_prop");
+  //  INIT_LOGGER("Correlator.log_prop");
 #ifdef HAVE_MPI
   TH_MPI::init(argc, argv);
 
@@ -48,7 +48,7 @@ int main (int argc, const char** argv) {
 	  // 	correlator.baseDump();
 	  correlator.baseQuit();
 
-	  sleep(2);
+	  sleep(4);
 
 	} catch (LOFAR::Exception ex) {
 	  // catch known exceptions

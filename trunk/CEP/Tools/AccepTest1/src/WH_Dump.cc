@@ -71,7 +71,7 @@ void WH_Dump::process() {
     // order of 1-2%
     gettimeofday(&stoptime, NULL);
 
-    bandwidth = (itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType))/
+    bandwidth = ((DH_Vis*)getDataManager().getInHolder(0))->getBufSize()*sizeof(DH_Vis::BufferType)/
       (stoptime.tv_sec + 1.0e-6*stoptime.tv_usec -
        starttime.tv_sec + 1.0e-6*starttime.tv_usec);
 
