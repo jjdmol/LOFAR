@@ -25,6 +25,7 @@
 #include <Common/Debug.h>
 #include <Common/lofar_vector.h>
 #include <casa/Utilities/BinarySearch.h>
+#include <cmath>
 
 
 MeqParmSingle::MeqParmSingle (const string& name, double value)
