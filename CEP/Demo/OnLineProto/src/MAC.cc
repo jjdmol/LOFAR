@@ -39,7 +39,7 @@ namespace LOFAR
 	itsBeamletSize = 256;
 	itsTotalBandwidth = 32768000;
 	itsLOfrequency = 20000000;
-	itsNumberOfStations = 2;
+	itsNumberOfStations = nstations;
 	itsNumberOfBeamlets = 128;
 
 	for (int i = 0; i < itsNumberOfStations; i++) {
@@ -65,7 +65,7 @@ namespace LOFAR
 	itsNumberOfBeamlets = m.itsNumberOfBeamlets;
 
 	for (int i = 0; i < itsNumberOfStations; i++) {
-	  m.itsStations[i] = itsStations[i];
+	  itsStations[i] = m.itsStations[i];
 	}
      }
       
