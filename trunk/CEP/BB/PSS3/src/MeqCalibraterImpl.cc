@@ -692,7 +692,7 @@ bool MeqCalibrater::nextInterval(bool callReadPolcs)
     return false;
   }
   cout << "BBSTest: BeginOfInterval" << endl;
-  
+  showParmValues();
   double timeSize = 0;
   double timeStart = 0;
   double timeStep = 0;
