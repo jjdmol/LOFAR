@@ -35,8 +35,8 @@ public slots:
 
   /*! One based antenna indices
    */
-  void slot_antenna1Changed(unsigned int antenna1);
-  void slot_antenna2Changed(unsigned int antenna2);
+  void slot_antenna1Changed(int antenna1);
+  void slot_antenna2Changed(int antenna2);
 
 
 signals:

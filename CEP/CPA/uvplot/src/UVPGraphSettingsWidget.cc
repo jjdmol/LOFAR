@@ -40,10 +40,10 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
   BaselineVLayout->activate();
 
   QObject::connect(itsAntenna1Slider, SIGNAL(valueChanged(int)),
-                   this, SLOT(slot_antenna1Changed(unsigned int)) );
+                   this, SLOT(slot_antenna1Changed(int)) );
 
   QObject::connect(itsAntenna2Slider, SIGNAL(valueChanged(int)),
-                   this, SLOT(slot_antenna2Changed(unsigned int)) );
+                   this, SLOT(slot_antenna2Changed(int)) );
 
   QObject::connect(itsStartButton, SIGNAL(clicked()),
                    this, SIGNAL(signalStartButtonClicked()));
@@ -82,7 +82,7 @@ void UVPGraphSettingsWidget::setNumberOfBaselines(unsigned int numberOfBaselines
 
 //===============>>>  UVPGraphSettingsWidget::slot_antenna1Changed  <<<===============
 
-void UVPGraphSettingsWidget::slot_antenna1Changed(unsigned int antenna1)
+void UVPGraphSettingsWidget::slot_antenna1Changed(int antenna1)
 {
   std::ostringstream out;
   out << "Antenna 1: " << antenna1;
@@ -101,7 +101,7 @@ void UVPGraphSettingsWidget::slot_antenna1Changed(unsigned int antenna1)
 
 //===============>>>  UVPGraphSettingsWidget::slot_antenna2Changed  <<<===============
 
-void UVPGraphSettingsWidget::slot_antenna2Changed(unsigned int antenna2)
+void UVPGraphSettingsWidget::slot_antenna2Changed(int antenna2)
 {
   std::ostringstream out;
   out << "Antenna 2: " << antenna2;
