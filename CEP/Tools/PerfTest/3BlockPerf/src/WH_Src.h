@@ -73,7 +73,7 @@ private:
   unsigned int itsIteration;
   unsigned int itsPacketsPerMeasurement;
   unsigned int itsDataSize;
-  unsigned int itsFlopsPerByte
+  unsigned int itsFlopsPerByte;
 };
 
 
