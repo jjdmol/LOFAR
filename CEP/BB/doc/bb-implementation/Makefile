@@ -2,7 +2,7 @@ DOCS=bb-requirements
 PDFS=bb-requirements.pdf
 
 %.dvi:   %.tex
-	latex $<
+	latex $< && makeindex $*.idx && latex $< && latex $<
 
 %.pdf:   %.dvi
 	dvipdfm $<
@@ -14,7 +14,8 @@ bb-implementation.pdf: \
 	../figures/astronple.eps \
 	../figures/llofar.eps \
 
-
+view:	bb-implementation.pdf
+	acroread bb-implementation.pdf
 
 clean:
 	-@rm *~
