@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 9 ConfigTab
-PANEL,284 171 946 43 N "_3DFace" 4
+PANEL,343 200 946 43 N "_3DFace" 4
 "$configDatapoint"
 "$selectedElementDpType"
 "$selectedView"
@@ -27,13 +27,14 @@ PANEL,284 171 946 43 N "_3DFace" 4
       if(nrOfSubViews[$selectedView] <= 1)
       {
         btnRemove.enabled = false;
+        btnDefault.enabled = false;
       }
     }
   }
 }" 0
- E E E E 1 -1 -1 0  20 40
-""0  1
-E "#uses \"gcfnav-tab-functions.ctl\"
+EE E E 1 -1 -1 0  20 40
+"" 0 1
+E"#uses \"gcfnav-tab-functions.ctl\"
 " 0
  2
 "CBRef""1"
@@ -49,11 +50,10 @@ LANG:1 6 Layer1
 1 1 39 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 67 0 0 0 0 0
-E E E
+EE E
 0
 1
 LANG:1 0 
-
 1
 "dashclr"N "_Transparent"
 E E 0 2 1 0 1 E  1 39 938 39
@@ -63,17 +63,15 @@ E E 0 2 1 0 1 E  1 39 938 39
 1 4 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 62 0 0 0 0 0
-E E E
+EE E
 0
 1
 LANG:1 0 
-
 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
-0
-""  4 4 100 31
-
+0 ""
+4 4 100 31
 T 
 1
 LANG:1 14 New subview...
@@ -85,6 +83,7 @@ LANG:1 14 New subview...
     if(nrOfSubviews > 1)
     {
       btnRemove.enabled = true;
+      btnDefault.enabled = true;
     }
   }
 }" 0
@@ -95,17 +94,15 @@ LANG:1 14 New subview...
 1 104 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 64 0 0 0 0 0
-E E E
+EE E
 0
 1
 LANG:1 0 
-
 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
-0
-""  104 4 200 31
-
+0 ""
+104 4 200 31
 T 
 1
 LANG:1 14 Remove subview
@@ -119,6 +116,93 @@ LANG:1 14 Remove subview
       btnRemove.enabled = false;
     }
   }
+}" 0
+ E E E
+13 58
+"btnDefault"
+""
+1 208 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+68 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
+0 ""
+208 4 304 31
+T 
+1
+LANG:1 14 Set to default
+"main()
+{
+  dyn_int nrOfSubViews;
+  dyn_string subViews,configs;
+  int DefaultSubview;
+  
+  string viewConfigDpName = \"__nav_\" + $selectedElementDpType + \"_viewconfig\";
+
+  dpGet(viewConfigDpName + \".nrOfSubViews\",nrOfSubViews,
+        viewConfigDpName + \".subViews\",subViews,
+        viewConfigDpName + \".configs\",configs);
+
+  string currentSubView = substr($configDatapoint ,strlen(\"System1:__nav_\"+$selectedElementDpType+\"_config_\"+$viewName+\"_\"), strlen($configDatapoint));
+  for(int i=1;i<=mappinglen(g_subViews);i++)
+  {
+     if (currentSubView == cleanText(mappingGetKey(g_subViews,i)))
+     {
+      DefaultSubview = i;
+      DebugN(\"DefaultSubview\"+DefaultSubview);
+     }
+  }
+
+  int insertIndex = 0;
+  for(int i=1;i<=$selectedView;i++)
+  {
+   insertIndex += nrOfSubViews[i];
+  }
+  
+  int PreviousSubViews = (insertIndex - nrOfSubViews[$selectedView]);
+  
+  string rememberSubView = subViews[PreviousSubViews+1]; //Temperary storage
+  string rememberConfig  =  configs[PreviousSubViews+1];
+
+  subViews[PreviousSubViews+1] = subViews[PreviousSubViews+DefaultSubview];
+   configs[PreviousSubViews+1] = configs[PreviousSubViews+DefaultSubview];
+   
+  subViews[PreviousSubViews+DefaultSubview] = rememberSubView;
+   configs[PreviousSubViews+DefaultSubview] = rememberConfig;
+
+  dpSet(viewConfigDpName + \".subViews\", subViews,  //store the changes into the PVSS database
+        viewConfigDpName + \".configs\",configs);
+
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".\" + ELNAME_TRIGGERUPDATE,0); //trigger the navigator to redraw
+}
+
+
+
+
+
+string cleanText(string text)
+{ 
+  string textCleaned;
+  
+  for(int i=0;i<strlen(text);i++)
+  {
+    if(! ( (text[i] >= 'a' && text[i] <= 'z') || 
+           (text[i] >= 'A' && text[i] <= 'Z') || 
+           (text[i] >= '0' && text[i] <= '9') ) )
+    {
+      textCleaned += \"-\";
+    }
+    else
+    {
+      textCleaned += text[i];
+    }
+  }
+  return textCleaned;
 }" 0
  E E E
 0

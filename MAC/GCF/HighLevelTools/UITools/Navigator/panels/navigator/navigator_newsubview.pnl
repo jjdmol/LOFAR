@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 18 Add Remove subview
-PANEL,40 57 544 122 N "_3DFace" 5
+PANEL,343 200 429 103 N "_3DFace" 5
 "$addView"
 "$configDatapoint"
 "$selectedElementDpType"
@@ -9,6 +9,9 @@ PANEL,40 57 544 122 N "_3DFace" 5
 "$viewName"
 "main()
 {
+  //Date: 25-1-2005 By: AdB
+  //several changes, because this version only works with
+  // new and not existing subviews!
   DebugTN(\"New SubView: $addView,$viewName,$selectedView,$configDatapoint,$selectedElementDpType:\",$addView,$viewName,$selectedView,$configDatapoint,$selectedElementDpType);
 
   int selectedSubView;
@@ -46,14 +49,20 @@ PANEL,40 57 544 122 N "_3DFace" 5
         dynAppend(g_subViewPanels,subViewPanel);
       }
     }
-    textFieldCaption.visible = false;
+    //textFieldCaption.visible = false; //25-1-2005 added by adb
+    //comboCaption.selectedPos = 1;
+    //comboCaption.visible = true;
+    //textFieldFileName.text = g_subViewPanels[1];
+    
     textFieldFileName.editable(FALSE);
     textFieldFileName.backCol = \"_3DFace\";
+    textFieldFileName.text = strtolower($viewName) + \"_view.pnl\";
 
-    comboCaption.selectedPos = 1;
-    textFieldFileName.text = g_subViewPanels[1];
+    
+    //
+    //DebugN(g_subViewPanels); //13-1-2005 added by adb
+    //DebugN(\"$viewName: \"+$viewName); //13-1-2005 added by adb
 
-    comboCaption.visible = true;
   }
   else
   {
@@ -81,34 +90,91 @@ PANEL,40 57 544 122 N "_3DFace" 5
     btnOK.text = \"Remove\";
   }
 }" 0
- E E E E 1 -1 -1 0  40 11
-""0  1
-E E 2
+EE E E 1 -1 -1 0  40 11
+"" 0 1
+EE 2
 "CBRef""1"
 "EClose"E
 ""
 DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
+LANG:1 6 Layer1
+2 1
+"PRIMITIVE_TEXT1"
+""
+1 57 -25 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+0 0 0 0 0 0
+EE E
+0
+1
 LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 67 13 115 29
+0 2 2 "s" 0 0 0 194 0 0  67 13
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 8 Caption:
+2 3
+"Text1"
+""
+1 474 -63 E E E 1 E 0 E N "_3DText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 541 22 630 38
+0 2 2 "s" 0 0 0 194 0 0  541 22
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 15 Panel filename:
+14 4
+"textFieldFileName"
+""
+1 138 9 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+138 8 438 35
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
 22 0
 "comboCaption"
 ""
-1 196 8 E E E 1 E 1 E N {0,0,0} E N "_Window" E E
+1 77 8 E E E 1 E 0 E N {0,0,0} E N "_Window" E E
  E E
 15 0 0 0 0 0
-E E E
+EE E
 0
 1
 LANG:1 0 
-
 0
 1
 LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0 ""
+77 8 378 37
 0
-""  196 8 489 37
-0
-
 E
 "main()
 {
@@ -117,97 +183,40 @@ E
 
 E
  0 0
-2 1
-"PRIMITIVE_TEXT1"
-""
-1 142 -15 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
- E E
-0 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 0 0 0 1 E U  0 E 112 18 142 30
-0 2 2 "s" 0 0 0 192 0 0  112 18 1
-1
-LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
-0
-"" 1
-LANG:1 7 Caption
 14 2
 "textFieldCaption"
 ""
-1 192 8 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 77 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 1 0 0 0 0 0
-E E E
+EE E
 0
 1
 LANG:1 0 
-
 0
 1
-LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
-0
-""  192 8 464 37
-3 "s" 0 0 0 0 0 -1  E E E
-2 3
-"PRIMITIVE_TEXT1"
-""
-1 130 -25 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
- E E
-3 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 0 0 0 1 E U  0 E 112 48 142 60
-0 2 2 "s" 0 0 0 192 0 0  112 48 1
-1
-LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
-0
-"" 1
-LANG:1 14 Panel filename
-14 4
-"textFieldFileName"
-""
-1 192 38 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-5 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-0
-1
-LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
-0
-""  192 38 492 67
-3 "s" 0 0 0 0 0 -1  E E E
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+77 8 377 35
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
 13 5
 "btnOK"
 ""
-1 113 82 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 108 53 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 10 0 0 0 0 0
-E E E
+EE E
 0
 1
 LANG:1 0 
-
 0
 1
-LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
-0
-""  113 82 213 109
-
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+107 53 207 80
 T 
 1
 LANG:1 2 OK
@@ -242,17 +251,21 @@ LANG:1 2 OK
   subViewName = $viewName + \"_\" + cleanedText;
 
   string subViewDpName = \"__nav_subview_\" + subViewName;
-  string configDpTypeName = dpTypeName($configDatapoint);
+  string configDpTypeName = \"GCFNavSubViewConfig\" + $viewName;
+  //DebugN(\"$viewName: \"+ $viewName);
+  //DebugN(\"configDpTypeName: \" + configDpTypeName);
   string configDpName = \"__nav_\" + $selectedElementDpType + \"_config_\" + subViewName;
   string viewConfigDpName = \"__nav_\" + $selectedElementDpType + \"_viewconfig\";
   
   if($addView)
   {
+  //########################################################
+  if(!dpExists(subViewDpName)&& !dpExists(configDpName))
+  {
     if(comboCaption.visible == false) // adding new subview
     {
       // create new GCFNavSubView instance
-      dpCreate(subViewDpName,\"GCFNavSubView\");
-
+      dpCreate(subViewDpName,\"GCFNavSubView\"); //__nav_subview_Alert_Red-Alert-125
       err = getLastError();
       if(dynlen(err) > 0)
       {
@@ -276,8 +289,8 @@ LANG:1 2 OK
     else
     {
       // create new config datapoint
-DebugTN(\"creating DP:\",configDpName,configDpTypeName);
-      dpCreate(configDpName,configDpTypeName);
+      LOG_DEBUG(\"creating DP:\",configDpName,configDpTypeName);
+      dpCreate(configDpName,configDpTypeName); //__nav_TLcuPic_config_Alert_Red-Alert-125
       err = getLastError();
       if(dynlen(err) > 0)
       {
@@ -349,6 +362,17 @@ DebugTN(\"creating DP:\",configDpName,configDpTypeName);
   }
   else
   {
+    //If the current subview name already exists, show message on screen
+    string message = \"Entered caption already exists. \\nPlease enter a new one.\";
+    //ChildPanelOnCentralModalReturn
+    //ChildPanelOnModal(\"MessageWarning\", \"Warning\", makeDynString(\"$1:\"+message),0,0);
+    ChildPanelOnCentralModal(\"MessageWarning\", \"Warning\", makeDynString(\"$1:\"+message));
+    return;
+  }
+  //########################################################
+  }
+  else
+  {
     // remove subview config for the selected datapoint type
     // NOTE: the subview itself may be reference by other configs. Therefore
     // only the subview config and the references to that config are removed.
@@ -412,20 +436,18 @@ DebugTN(\"creating DP:\",configDpName,configDpTypeName);
 13 6
 "btnCancel"
 ""
-1 235 83 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 225 53 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 12 0 0 0 0 0
-E E E
+EE E
 0
 1
 LANG:1 0 
-
 0
 1
-LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
-0
-""  235 83 335 110
-
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+225 53 325 80
 T 
 1
 LANG:1 6 Cancel
@@ -444,21 +466,21 @@ LANG:1 6 Cancel
 13 7
 "btnBrowse"
 ""
-1 502 37 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 468 30 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
  E E
 13 0 0 0 0 0
-E E E
+EE E
 0
 1
 LANG:1 0 
-
 0
 1
 LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
-0
-""  502 37 532 64
-
-T 
+0 ""
+468 28 500 55
+P 
+13434828
+"pictures/icon_fileselector.bmp"
 1
 LANG:1 3 ...
 "main()
@@ -478,40 +500,36 @@ LANG:1 3 ...
 19 8
 "radioBoxExisting"
 ""
-1 22 16 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 438 8 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
  E E
 19 0 0 0 0 0
-E E E
+EE E
 0
 1
 LANG:1 0 
-
 0
 1
-LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
-0
-""  22 16 84 64
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+438 8 511 56
 2
 T 
 1
 LANG:1 8 Existing
-
-1 
+ 0
 1
 LANG:1 0 
-E E
-0 0 0 0 0
+ E  E  0 0 0 0 0
 T 
 1
 LANG:1 3 New
-
-0 
+ 1
 1
 LANG:1 0 
-E E
-0 0 0 0 0
-1
-E "main(int button)
+ E  E  0 0 0 0 0
+ 1
+E
+"main(int button)
 {
   if(button == 0)
   {
@@ -526,33 +544,34 @@ E "main(int button)
     comboCaption.visible = false;
   }
 }" 0
+
 0
 LAYER, 1 
 1
-LANG:1 0 
+LANG:1 6 Layer2
 0
 LAYER, 2 
 1
-LANG:1 0 
+LANG:1 6 Layer3
 0
 LAYER, 3 
 1
-LANG:1 0 
+LANG:1 6 Layer4
 0
 LAYER, 4 
 1
-LANG:1 0 
+LANG:1 6 Layer5
 0
 LAYER, 5 
 1
-LANG:1 0 
+LANG:1 6 Layer6
 0
 LAYER, 6 
 1
-LANG:1 0 
+LANG:1 6 Layer7
 0
 LAYER, 7 
 1
-LANG:1 0 
+LANG:1 6 Layer8
 0
 0
