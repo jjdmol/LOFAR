@@ -188,11 +188,12 @@ solvegain := function(fname='michiel.demo', niter=1)
     mc.settimeinterval(3600); # calibrate per 1 hour
     mc.clearsolvableparms();
 
-    mc.setsolvableparms("gain.11.ST_{0,1,2,3,4,5,6,7,8,9,10}");
-    mc.setsolvableparms("gain.22.ST_{0,1,2,3,4,5,6,7,8,9,10}");
+    mc.setsolvableparms("gain.*");
 
-    parms := mc.getparmnames("*");
-    print 'ALL PARMS = ', parms;
+#			"gain.22.ST_{0,1,2,3,4,5,6,7,8,9,10}");
+
+#    parms := mc.getparmnames("*");
+#    print 'ALL PARMS = ', parms;
 
     mc.resetiterator()
     while (mc.nextinterval())
@@ -207,20 +208,25 @@ solvegain := function(fname='michiel.demo', niter=1)
 
 	    parms := mc.getparms("gain.11.*");
 	    print 'GAIN SOLUTION = ';
-	    for (k in [1:11])
+	    for (k in [1:5])
 	    {
 		print parms[k].value[1];
 	    }
 
 	    parms := mc.getparms("gain.22.*");
 	    print 'GAIN SOLUTION = ';
-	    for (k in [1:11])
+	    for (k in [1:5])
 	    {
 		print parms[k].value[1];
 	    }
         }
 	print mc.getstatistics()
     }
+
+    parms := mc.getparms("gain.11.*");
+    print 'SOLUTION 11: ', parms;
+    parms := mc.getparms("gain.22.*");
+    print 'SOLUTION 22: ', parms;
 
     mc.done();
 }
@@ -291,11 +297,11 @@ setchan := function(fname='michiel.demo')
   t.close()
 }
 
-init := function()
+init := function(fname='michiel.demo')
 {
-	initparms();
-	initgsm();
-	predict();
+	initparms(fname=fname);
+	initgsm(fname=fname);
+	predict(fname=fname);
 }
 
 demo := function(solver=0,niter=10,fname='michiel.demo')
@@ -314,11 +320,11 @@ demo := function(solver=0,niter=10,fname='michiel.demo')
 	}
 }
 
-demogain := function(niter=10)
+demogain := function(niter=10,fname='michiel.demo')
 {
-	setparms();
-	setgsm();
+	setparms(fname);
+	initgsm(fname);
 
-	solvegain(niter=niter);
+	solvegain(niter=niter,fname=fname);
 }
 
