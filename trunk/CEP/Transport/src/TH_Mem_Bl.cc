@@ -93,40 +93,43 @@ void TH_Mem_Bl::initConditionVariables(int tag)
 
 bool TH_Mem_Bl::recvBlocking(void* buf, int nbytes, int, int tag)
 { 
-    Msg m;
-    pthread_mutex_lock(&theirTHMemLock);
-    if (itsFirstCall)
-    {
-      initConditionVariables(tag);
-      itsFirstCall = false;
-    }
+  cerr << "Warning: TH_Mem_Bl::recvBlocking() "  
+       << "Using blocking in-memory transport can cause a dead-lock." 
+       << endl;
+  Msg m;
+  pthread_mutex_lock(&theirTHMemLock);
+  if (itsFirstCall)
+  {
+    initConditionVariables(tag);
+    itsFirstCall = false;
+  }
 
-    if (messages.end() == messages.find(tag))
-    {
-       pthread_cond_wait(&dataAvailable[tag], &theirTHMemLock); // Wait for sent message
-    }
+  if (messages.end() == messages.find(tag))
+  {
+    pthread_cond_wait(&dataAvailable[tag], &theirTHMemLock); // Wait for sent message
+  }
     
-    m = messages[tag];
+  m = messages[tag];
 
-    if (nbytes == m.getNBytes())
-    {
-       /// do the memcpy
-      memcpy(buf, m.getBuf(), m.getNBytes());
+  if (nbytes == m.getNBytes())
+  {
+    /// do the memcpy
+    memcpy(buf, m.getBuf(), m.getNBytes());
 	
-      // erase the record
-      messages.erase(tag);
-    }
-    else
-    {
-      // erase the record
-      messages.erase(tag);
+    // erase the record
+    messages.erase(tag);
+  }
+  else
+  {
+    // erase the record
+    messages.erase(tag);
 	
-      Throw("Number of bytes do not match");
-    }
+    Throw("Number of bytes do not match");
+  }
 
-    pthread_cond_signal(&dataReceived[tag]);
-    pthread_mutex_unlock(&theirTHMemLock);
-    return true;
+  pthread_cond_signal(&dataReceived[tag]);
+  pthread_mutex_unlock(&theirTHMemLock);
+  return true;
 }
 
 /**
@@ -134,6 +137,10 @@ bool TH_Mem_Bl::recvBlocking(void* buf, int nbytes, int, int tag)
  */
 bool TH_Mem_Bl::sendBlocking(void* buf, int nbytes, int, int tag)
 {
+  cerr << "Warning: TH_Mem_Bl::sendBlocking() "  
+       << "Using blocking in-memory transport can cause a dead-lock." 
+       << endl;
+
   pthread_mutex_lock(&theirTHMemLock);
   if (itsFirstCall)
   {
@@ -172,7 +179,7 @@ bool TH_Mem_Bl::sendNonBlocking(void* buf, int nbytes, int, int tag)
   return true;
 }
 
-bool TH_Mem_Bl::waitForSendAcknowledged(void*, int, int, int tag)
+bool TH_Mem_Bl::waitForRecvAck(void*, int, int, int tag)
 {
   pthread_mutex_lock(&theirTHMemLock);
   if (messages.find(tag) != messages.end())  // Wait for send to finish

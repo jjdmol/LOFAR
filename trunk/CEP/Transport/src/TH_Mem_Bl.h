@@ -86,7 +86,7 @@ public:
 
   // Wait for a notification that the receiving party has received the data.
   // (i.e. recv has performed the memcpy)
-  virtual bool waitForSendAcknowledged(void* buf, int nbytes, int destination, int tag);
+  virtual bool waitForRecvAck(void* buf, int nbytes, int destination, int tag);
 
   /// Get the type of transport.
   virtual string getType() const;

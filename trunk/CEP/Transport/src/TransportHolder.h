@@ -84,7 +84,7 @@ public:
   virtual bool waitForSent(void* buf, int nbytes, int destination, int tag);
 
   /// Wait until the receiving TransportHolder has received the data.
-  virtual bool waitForSendAcknowledged(void* buf, int nbytes, int destination, int tag);
+  virtual bool waitForRecvAck(void* buf, int nbytes, int destination, int tag);
 
   /// Get the type of transport as a string.
   virtual string getType() const = 0;
