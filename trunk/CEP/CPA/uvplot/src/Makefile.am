@@ -9,14 +9,17 @@ uvplot_SOURCES := main.cc \
                   UVPSpectrumVector.cc \
                   UVPTimeFrequencyPlot.cc UVPTimeFrequencyPlot.moc.cc \
                   UVPUVCoverageArea.cc UVPUVCoverageArea.moc.cc \
-                  UVPDataTransferWP.cc
+                  UVPDataTransferWP.cc \
+                  UVPDataAtom.cc       \
+                  AID-uvplot-Registry.cc
 
 
 # Your package's subdirectory
 UVPLOT_DIR := $(top_srcdir)/src
 
 
-CXXFLAGS += -DDEBUG_MODE -pg
+CXXFLAGS += -DDEBUG_MODE -O3
+
 
 
 include $(lofar_sharedir)/Makefile.common
