@@ -192,13 +192,48 @@ template<>
 void TPersistentObject<MeqParmDefHolder>::init()
 {
   // Set the default table name.
-  tableName ("MeqParmDefX");
+  tableName ("MeqParmXDef");
 }
 template<>
 void TPersistentObject<MeqParmHolder>::init()
 {
   // Set the default table name.
   tableName ("MeqParmx");
+}
+
+template<>
+void TPersistentObject<MeqParmDefHolder>::initAttribMap()
+{
+  // Set the field to column name mapping.
+  theirAttribMap["objID"]     = "ObjId";
+  theirAttribMap["owner"]     = "Owner";
+  theirAttribMap["versionNr"] = "VersionNr";
+  theirAttribMap["name"]      = "NAME";
+  theirAttribMap["coeff00"]   = "VALUES00";
+  theirAttribMap["time0"]     = "TIME0";
+  theirAttribMap["freq0"]     = "FREQ0";
+  theirAttribMap["normalize"] = "NORMALIZE";
+  theirAttribMap["diff"]      = "DIFF";
+  theirAttribMap["diffrel"]   = "DIFF_REL";
+}
+template<>
+void TPersistentObject<MeqParmHolder>::initAttribMap()
+{
+  // Set the field to column name mapping.
+  theirAttribMap["objID"]     = "ObjId";
+  theirAttribMap["owner"]     = "Owner";
+  theirAttribMap["versionNr"] = "VersionNr";
+  theirAttribMap["name"]      = "NAME";
+  theirAttribMap["startTime"] = "STARTTIME";
+  theirAttribMap["endTime"]   = "ENDTIME";
+  theirAttribMap["startFreq"] = "STARTFREQ";
+  theirAttribMap["endFreq"]   = "ENDFREQ";
+  theirAttribMap["coeff00"]   = "VALUES00";
+  theirAttribMap["time0"]     = "TIME0";
+  theirAttribMap["freq0"]     = "FREQ0";
+  theirAttribMap["normalize"] = "NORMALIZE";
+  theirAttribMap["diff"]      = "DIFF";
+  theirAttribMap["diffrel"]   = "DIFF_REL";
 }
 
 
