@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.7  2002/06/10 09:07:13  schaaf
+//  %[BugId: 11]%
+//  Removed ^M characters
+//
 //  Revision 1.6  2002/06/07 11:35:20  schaaf
 //  %[BugId: 11]%
 //  modified process() inner loop; make use of contiguousness of the data
@@ -64,7 +68,6 @@ WH_Transpose::WH_Transpose (const string& name,
 : WorkHolder    (nin, nout, name),
   itsInHolders  (0),
   itsOutHolders (0),
-  itsTime       (0),  
   itsTimeDim    (timeDim),
   itsFreqDim    (freqDim)
 {
@@ -127,8 +130,14 @@ void WH_Transpose::preprocess() {
 void WH_Transpose::process()
 {  
 
+  // check wheteher all timestamps of the inputs are the same
+  for (int input=1; input<getInputs(); input++) {
+    AssertStr(getInHolder(0)->compareTimeStamp (*getInHolder(input)) == 0,
+	      "Input timestamps must be the same!");
+  }
+  unsigned long localtime = getInHolder(0)->getTimeStamp();
+
   Profiler::enterState (theirProcessProfilerState);
-  itsOutHolders[0]->setTimeStamp(itsTime++);
   {
     int Xsize,Ysize;
     int Ysize_bytes;
@@ -144,6 +153,7 @@ void WH_Transpose::process()
 
     for (int time=0; time<getOutputs(); time++) {
       OutDHptr = getOutHolder(time); 
+      OutDHptr->setTimeStamp(localtime);
       Xsize = OutDHptr->getXSize();
       Ysize = OutDHptr->getYSize();
       Ysize_bytes = Ysize*sizeof(int);
@@ -153,9 +163,9 @@ void WH_Transpose::process()
 	memcpy(OutDHptr->getBuffer(station,0),
 	       InDHptr->getBuffer(time,0),
 	       Ysize_bytes   );
-	OutDHptr->setXOffset(getInHolder(0)->getZ());   //set station offset
+	OutDHptr->setXOffset(getInHolder(0)->getZ());  // set station offset
 	OutDHptr->setYOffset(InDHptr->getYOffset());   // set freq offset
-	OutDHptr->setZ(InDHptr->getXOffset()); 	    // set time
+	OutDHptr->setZ(InDHptr->getXOffset()); 	       // set time
       }
     }
   }
