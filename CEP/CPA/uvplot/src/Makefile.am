@@ -1,4 +1,11 @@
 lib_LTLIBRARIES      := libuvplot.la
+
+DOCHDRS = \
+  UVPDataAtomHeader.h    UVPDataSet.h        UVPSpectrum.h \
+  UVPDataAtomVector.h    UVPGraphSettings.h  UVPSpectrumVector.h \
+  UVPAxis.h      UVPDataCacheElement.h  UVPImageCube.h \
+  UVPDataAtom.h  UVPDataHeader.h        UVPPixel.h
+
 libuvplot_la_SOURCES := UVPGraphSettings.cc    \
                         UVPPixel.cc            \
                         UVPAxis.cc             \
@@ -20,6 +27,5 @@ UVPLOT_DIR := $(top_srcdir)/src
 
 CXXFLAGS += -DDEBUG_MODE=1
 
-
-
 include $(lofar_sharedir)/Makefile.common
+include $(lofar_sharedir)/Makefile.aids
