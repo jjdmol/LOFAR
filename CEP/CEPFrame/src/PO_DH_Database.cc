@@ -25,7 +25,7 @@
 #include <PO_DH_Database.h>
 #include <Common/lofar_iostream.h>
 
-#include <pgsql/libpq-fe.h>
+#include <libpq-fe.h>
 
 #include <sstream>
 using namespace std;
