@@ -94,6 +94,11 @@ void navConfigSetNavigatorID(int newID)
   {
     dpCreate(DPNAME_NAVIGATOR + g_navigatorID, DPTYPENAME_NAVIGATOR_INSTANCE);
   }
+  else if(!createConfiguration) // if no free config found, use config #20
+  {
+    g_navigatorID = 20;
+    dpCreate(DPNAME_NAVIGATOR + g_navigatorID, DPTYPENAME_NAVIGATOR_INSTANCE);
+  }
   LOG_DEBUG("Using Navigator ID:",g_navigatorID);
 }
   
