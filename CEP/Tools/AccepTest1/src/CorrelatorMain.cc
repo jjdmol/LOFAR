@@ -48,8 +48,6 @@ int main (int argc, const char** argv) {
 	  // 	correlator.baseDump();
 	  correlator.baseQuit();
 
-	  sleep(2);
-	  
 	} catch (LOFAR::Exception ex) {
 	  // catch known exceptions
 	  cout << "Caught a known exception" << endl;
