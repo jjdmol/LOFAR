@@ -130,19 +130,22 @@ void TestDataRecord ()
   rec["A.B.C.D"][20] = 5;
   cerr<<(int)(rec["A.B.C.D"][20])<<" "<<(int*)&(rec["A.B.C.D"][20])
       <<"  "<<rec["A.B.C.D"].as_int_p();
+  Assert1( rec["A.B.C.D/20"].as_int() == 5 );
   cerr<<"======================= record debug info:\n";
   cerr<<rec.sdebug(3)<<endl;
   cerr<<"======================= old field debug info:\n";
   cerr<<f2->sdebug(3)<<endl;
   
   cerr<<"======================= making compound record\n";
-  rec.add(AidB,new DataField(TpDataRecord,1));
+  rec.add(AidB,new DataField(TpDataRecord,-1));
   rec.add(AidC,f2,DMI::COPYREF);
   rec.add(AidD,f2,DMI::COPYREF);
   cerr<<"===== added subrecord B\n"<<rec.sdebug(3)<<endl;
-  rec["B"]->add(AidC,new DataField(TpDataRecord,1));
+  rec["B"]["C"] <<= new DataRecord;
   cerr<<"===== added subrecord B.C\n"<<rec.sdebug(10)<<endl;
-  ((DataRecord&)(rec["B"]))["C"]->add(AidA,new DataField(Tpint,32));
+  rec["B"]["C"]["A"] <<= new DataField(Tpint,32);
+  rec["B/C/A/10"] = 5;
+  Assert1( rec["B/C/A"][10].as_int() == 5 );
   cerr<<"Record is "<<rec.sdebug(10)<<endl;
   
   cerr<<"======================= converting record to blockset\n";
@@ -157,7 +160,14 @@ void TestDataRecord ()
   cerr<<"Blockset now "<<set.sdebug(2)<<endl;
 
   cerr<<"======================= accessing cached field\n";
-  cerr<<"Value: "<<rec2["B.C.A.10"].as_double()<<endl;
+  cerr<<"Value: "<<rec2["B/C/A/10"].as_double()<<endl;
+  Assert1( rec2["B/C"]["A"]["10"].as_float() == 5 );
+  
+  cerr<<"======================= changing field in original record\n";
+  rec["B/C/A/10"] = 10;
+  cerr<<"Values: "<<rec["B/C/A/10"].as_double()<<", "<<rec2["B/C/A/10"].as_double()<<endl;
+  Assert1( rec["B/C"]["A"]["10"].as_float() == 10 );
+  Assert1( rec2["B/C"]["A"]["10"].as_float() == 5 );
   
   cerr<<"======================= exiting\n";
 }
