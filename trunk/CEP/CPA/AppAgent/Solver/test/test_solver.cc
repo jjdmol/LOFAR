@@ -52,21 +52,21 @@ int main (int argc, const char *argv[])
 
     if (argc < 2) {
       cerr << "Run as:  tCAL msname mepname gsmname scenario loopcnt "
-	   << "stchan endchan selection calcuvw" << endl;
+          << "stchan endchan selection calcuvw" << endl;
       cerr << " msname:    name of MS without .MS extension" << endl;
       cerr << " mepname:   name of MEP table   (default is msname)" << endl;
       cerr << " gsmname:   name of GSM table   (default is msname)" << endl;
       cerr << " modeltype: WSRT or LOFAR       (default is LOFAR)" << endl;
       cerr << " scenario:  scenario to execute (default is predict)" << endl;
       cerr << " solvparms: solvable parms pattern ({RA,DEC,StokesI}.*)"
-	   << endl;
+          << endl;
       cerr << " loopcnt:   number of scenario loops (default is 1)" << endl;
       cerr << " stchan:    first channel       (default is -1 (first channel)"
-	   << endl;
+          << endl;
       cerr << " endchan:   last channel        (default is stchan)" << endl;
       cerr << " selection: TaQL selection string (default is empty)" << endl;
       cerr << " peel:      source nrs to peel as 2,4,1 (default is all)"
-	   << endl;
+          << endl;
       cerr << " calcuvw:   calculate UVW       (default is 0)" << endl;
       return 0;
     }
@@ -148,8 +148,8 @@ int main (int argc, const char *argv[])
       Vector<String> peels = stringToVector (peelstr);
       peelVec.resize (peels.nelements());
       for (unsigned int i=0; i<peels.nelements(); i++) {
-	istringstream iss(peels(i));
-	iss >> peelVec[i];
+       istringstream iss(peels(i));
+       iss >> peelVec[i];
       }
     }
 
@@ -195,13 +195,13 @@ int main (int argc, const char *argv[])
         select[FDDID] = 0;
         select[FFieldIndex] = 0;
         if (stchan >= 0) select[FChannelStartIndex] = stchan;
-	      if (endchan >= 0) select[FChannelEndIndex] = endchan;
+             if (endchan >= 0) select[FChannelEndIndex] = endchan;
         select[FSelectionString] = selstr;
     // setup output agent parameters 
     DataRecord &outpargs = rec[AidOutput] <<= new DataRecord;    
-//      outpargs[FResidualsColumn] = "CORRECTED_DATA";
-      outpargs[AppEvent::FBOIOFile] = "solver.out.boio";
-      outpargs[AppEvent::FBOIOMode] = "W";
+      outpargs[FResidualsColumn] = "CORRECTED_DATA";
+//      outpargs[AppEvent::FBOIOFile] = "solver.out.boio";
+//      outpargs[AppEvent::FBOIOMode] = "W";
         
     // setup batch control agent parameters 
     // use field of several records for several jobs
@@ -223,10 +223,10 @@ int main (int argc, const char *argv[])
     cout<<"=================== creating agents ===========================\n";
     VisAgent::InputAgent::Ref inagent(
         new VisAgent::InputAgent(new MSVisAgent::MSInputSink,DMI::ANONWR),DMI::ANONWR);
-//    VisAgent::OutputAgent::Ref outagent(
-//        new VisAgent::OutputAgent(new MSVisAgent::MSOutputSink,DMI::ANONWR),DMI::ANONWR);
     VisAgent::OutputAgent::Ref outagent(
-        new VisAgent::OutputAgent(new BOIOSink,DMI::ANONWR),DMI::ANONWR);
+        new VisAgent::OutputAgent(new MSVisAgent::MSOutputSink,DMI::ANONWR),DMI::ANONWR);
+//    VisAgent::OutputAgent::Ref outagent(
+//        new VisAgent::OutputAgent(new BOIOSink,DMI::ANONWR),DMI::ANONWR);
     SolverControl::SolverControlAgent::Ref control( 
         new SolverControl::BatchAgent(AidControl),DMI::ANONWR);
     AppEventFlag::Ref evflag(DMI::ANONWR);
