@@ -1,4 +1,4 @@
-//#  GPI_Defines.h: preprocessor definitions of various constants
+//#  GPM_RTDefines.h: preprocessor definitions of various constants
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,29 +20,33 @@
 //#
 //#  $Id$
 
-#ifndef GPI_DEFINES_H
-#define GPI_DEFINES_H
+#ifndef GPM_RTDEFINES_H
+#define GPM_RTDEFINES_H
 
 #include <GCF/GCF_Defines.h>
-#include <GCF/GCF_TMProtocols.h>
-#define CORE_COMPS_PI_LOGGER  (GCF_LOGGER_ROOT + string(".CoreComps.PI"))
 
-#define PI_STDOUT_LOGGER      (CORE_COMPS_PI_LOGGER + string(".Logger"))
+#define CORE_COMPS_PML_LOGGER  (GCF_LOGGER_ROOT + string(".Services.PMLlite"))
 
-enum TPIResult 
-{
-  PI_NO_ERROR, 
-  PI_UNKNOWN_ERROR,
-  PI_PA_NOTCONNECTED,
-  PI_IS_BUSY,
-  PI_SCADA_ERROR,
-  PI_SS_BUSY
-  PI_SCOPE_ALREADY_REGISTERED,
-  PI_PROP_SET_GONE,
-  PI_MISSING_PROPS,
-  PI_PROP_NOT_VALID,
-  PI_EMPTY_SCOPE,
-  PI_MACTYPE_UNKNOWN,  
+#define PML_STDOUT_LOGGER      (CORE_COMPS_PML_LOGGER + string(".Logger"))
+
+enum TPMResult {
+  PM_NO_ERROR, 
+  PM_UNKNOWN_ERROR,
+  PM_PA_NOTCONNECTED,
+  PM_IS_BUSY,
+  PM_SCOPE_ALREADY_EXISTS,
+  PM_SCOPE_NOT_EXISTS, 
+  PM_PROP_NOT_EXISTS,
+  PM_SCADA_ERROR,
+  PM_PROP_NOT_VALID,
+  PM_PROP_WRONG_TYPE,
+  PM_PROP_LINK_NOT_IN_SYNC,
+  PM_PROP_SET_BUSY,
+  PM_PROP_LIST_FAILURE,
+  PM_PROP_ALREADY_LINKED,
+  PM_PROP_NOT_LINKED,
+  PM_PROP_NOT_IN_SET,
+  PM_SCOPE_NOT_FOUND
 };
 
 #endif

@@ -1,4 +1,4 @@
-//#  GPI_Defines.h: preprocessor definitions of various constants
+//#  GCF_RTAnswer.cc: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,29 +20,15 @@
 //#
 //#  $Id$
 
-#ifndef GPI_DEFINES_H
-#define GPI_DEFINES_H
+#include <GCF/GCF_RTAnswer.h>
 
-#include <GCF/GCF_Defines.h>
-#include <GCF/GCF_TMProtocols.h>
-#define CORE_COMPS_PI_LOGGER  (GCF_LOGGER_ROOT + string(".CoreComps.PI"))
-
-#define PI_STDOUT_LOGGER      (CORE_COMPS_PI_LOGGER + string(".Logger"))
-
-enum TPIResult 
+/**
+ * F_PVSS_PROTOCOL signal names
+ */
+const char* F_PML_PROTOCOL_signalnames[] =
 {
-  PI_NO_ERROR, 
-  PI_UNKNOWN_ERROR,
-  PI_PA_NOTCONNECTED,
-  PI_IS_BUSY,
-  PI_SCADA_ERROR,
-  PI_SS_BUSY
-  PI_SCOPE_ALREADY_REGISTERED,
-  PI_PROP_SET_GONE,
-  PI_MISSING_PROPS,
-  PI_PROP_NOT_VALID,
-  PI_EMPTY_SCOPE,
-  PI_MACTYPE_UNKNOWN,  
+  "F_PML_PROTOCOL: invalid signal",
+  "F_VCHANGEMSG_SIG (IN)",
+  "F_MYPLOADED_SIG (IN)",
+  "F_MYPUNLOADED_SIG (IN)",
 };
-
-#endif
