@@ -100,7 +100,7 @@ void MeqParmSingle::getCurrentValue(MeqMatrix& value, bool) const
 void MeqParmSingle::update (const MeqMatrix& value)
 {
   if (isSolvable()) {
-    itsCurValue = value.getDouble (itsSolveIndex, 1);
+    itsCurValue = value.getDouble (itsSolveIndex, 0);
   }
 }
 
