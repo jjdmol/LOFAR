@@ -107,7 +107,8 @@ const meq.meptable := function (name,create=F)
     {
         wider self, public;
         self.tab.close();
-        if (is_record(self.dtab)) self.dtab.close();
+        if( is_record(self.dtab) ) 
+          self.dtab.close();
         val self := F;
         val public := F;
         return T;
@@ -311,35 +312,62 @@ const meq.meptable := function (name,create=F)
     }
 
 #------ summary()
-# Provides a summary of MEP table contents.
+# Returns a string summary of MEP table contents.
 # If called with no arguments, provides an overall summary.
-# If called with parmnames as arguments, summarizes parms.
+# If called with parmnames as arguments, summarizes the parms.
+# By default, returns a multi-line string with embedded newlines
+# (i.e. suitable for printing). If one of the arguments is a bool T, 
+# then returns a vector of strings (one line per string) with no newlines.
     const public.summary := function (...)
     {
       wider self,public;
       names := self.tab.getcol("NAME");
       dnames := self.dtab.getcol("NAME");
-      if( !num_args(...) )
-      {
-        self.tab.summary();
-        if( is_record(self.tab) )
-          self.dtab.summary();
-        print 'MEP names:',unique(sort(names));
-        print 'Defaults available for:',unique(sort(dnames));
-      }
-      else
-      {
-        print 'MEP table:',self.tab.name()
+      out := paste('MEP table:',self.tab.name());
+      parms := "";
+      return_string_vector := F;    # true by default
+      # scan arguments
+      if( num_args(...) )
         for( i in 1:num_args(...) )
-          for( p in nth_arg(i,...) )
-          {
-            polcs := public.getpolcs(p);
-            t1 := self.dtab.query(spaste('NAME=="',p,'"'));
-            print p,':',len(polcs),'polcs,',t1.nrows(),'default(s)';
-            t1.close();
-          }
+        {
+          arg := nth_arg(i,...);
+          if( is_boolean(arg) )    # boolean arg is the return_string flag
+            return_string_vector := arg;
+          else if( is_string(arg) ) # string arg is a parm name
+            parms := [parms,arg];
+          else
+            fail paste('illegal argument',arg);
+        }
+      # if no polc names have been given, produce an overall summary
+      if( !len(parms) )
+      {
+        # self.tab.summary();
+        # if( is_record(self.tab) )
+        #   self.dtab.summary();
+        out[len(out)+1] := paste('Main table:',self.tab.nrows(),'rows');
+        if( is_record(self.dtab) )
+          out[len(out)+1] := paste('Defaults subtable:',self.dtab.nrows(),'rows');
+        else
+          out[len(out)+1] := 'No defaults subtable';
+        if( is_string(names) )
+          out[len(out)+1] := paste('MEP names:',unique(sort(names)));
+        if( is_string(dnames) )
+          out[len(out)+1] := paste('Defaults available for:',unique(sort(dnames)));
       }
-      return T;
+      else # else produce a per-parm summary
+      {
+        for( p in parms )
+        {
+          polcs := public.getpolcs(p);
+          t1 := self.dtab.query(spaste('NAME=="',p,'"'));
+          out[len(out)+1] := paste(spaste('MEP "',p,'":'),len(polcs),'polcs,',t1.nrows(),'default(s)');
+          t1.close();
+        }
+      }
+      if( return_string_vector )
+        return out;
+      else
+        return paste(out,sep='\n');
     }
 
 #------ table()
