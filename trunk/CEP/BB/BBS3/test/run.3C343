@@ -1,0 +1,79 @@
+#!/bin/sh
+# this script must be called with nriter and usernm
+
+if [ "$#" != "2" ]; then
+ echo "run as:   run.3C343 nriter usernm"
+ exit 1
+fi
+
+niter=$1
+usernm=$2
+
+# Define functions to create the parm tables.
+beginParmdbInputFile () {
+  rm -f fill.parmdb
+  add2file "create $*"
+  add2file "connect $*"
+  add2file "clear"
+}
+add2file () {
+  echo $* >> fill.parmdb
+}
+applyfile () {
+  add2file  "quit" 
+  ./parmdb < fill.parmdb
+}
+makeMeq () {
+  diff="1e-6" 
+  if [ "$#" -eq "1" ]; then
+    diff=$1 
+  fi
+  add2file  "adddef frot      values=0, diff=${diff}" 
+  add2file  "adddef drot      values=0, diff=${diff}" 
+  add2file  "adddef dell      values=0, diff=${diff}" 
+  add2file  "adddef gain.11   values=1, diff=${diff}" 
+  add2file  "adddef gain.22   values=1, diff=${diff}" 
+  add2file  "adddef EJ11.ampl values=1, diff=${diff}" 
+  add2file  "adddef EJ12.ampl values=0, diff=${diff}" 
+  add2file  "adddef EJ21.ampl values=0, diff=${diff}" 
+  add2file  "adddef EJ22.ampl values=1, diff=${diff}" 
+  add2file  "adddef EJ11.phase values=0, diff=${diff}" 
+  add2file  "adddef EJ12.phase values=0, diff=${diff}" 
+  add2file  "adddef EJ21.phase values=0, diff=${diff}" 
+  add2file  "adddef EJ22.phase values=0, diff=${diff}" 
+}
+makeGsm () {
+  diff="1e-6" 
+  if [ "$#" -eq "1" ]; then
+    diff=$1 
+  fi
+  add2file  "adddef RA.CP1  values=4.356645791155902, srcnr=0, diff=${diff}, diff_rel=F" 
+  add2file  "adddef DEC.CP1 values=1.092208429052697, srcnr=0, diff=${diff}, diff_rel=F" 
+#  add2file  "adddef RA.CP1  values=4.356645, srcnr=0, diff=${diff}, diff_rel=F" 
+#  add2file  "adddef DEC.CP1 values=1.092208, srcnr=0, diff=${diff}, diff_rel=F" 
+  add2file  "adddef StokesI.CP1 values=1.0,     srcnr=0, diff=${diff} " 
+  add2file  "adddef StokesQ.CP1 values=0,       srcnr=0, diff=${diff} " 
+  add2file  "adddef StokesU.CP1 values=0,       srcnr=0, diff=${diff} " 
+  add2file  "adddef StokesV.CP1 values=0,       srcnr=0, diff=${diff} " 
+  add2file  "adddef RA.CP2  values=4.3396003966265599, srcnr=1, diff=${diff}, diff_rel=F" 
+  add2file  "adddef DEC.CP2 values=1.0953677174056471, srcnr=1, diff=${diff}, diff_rel=F" 
+#  add2file  "adddef RA.CP2  values=4.339600, srcnr=1, diff=${diff}, diff_rel=F" 
+#  add2file  "adddef DEC.CP2 values=1.095367, srcnr=1, diff=${diff}, diff_rel=F" 
+  add2file  "adddef StokesI.CP2 values=1.0,     srcnr=1, diff=${diff} " 
+  add2file  "adddef StokesQ.CP2 values=0,       srcnr=1, diff=${diff} " 
+  add2file  "adddef StokesU.CP2 values=0,       srcnr=1, diff=${diff} " 
+  add2file  "adddef StokesV.CP2 values=0,       srcnr=1, diff=${diff} " 
+}
+
+echo "  Generating parm tables ..."
+# use functions to initialize parmtables
+beginParmdbInputFile "dbtype='aips', user='$usernm', tablename='10008336'"
+makeMeq
+applyfile
+
+beginParmdbInputFile "dbtype='aips', user='$usernm', tablename='10008336_gsm'"
+makeGsm
+applyfile
+
+# Run the test.
+./t3C343 $usernm 10008336_p1.MS 10008336 10008336_gsm $niter
