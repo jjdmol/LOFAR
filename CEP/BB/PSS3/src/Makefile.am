@@ -52,6 +52,8 @@ MNS/MeqUVWPolc.h \
 MNS/MeqWsrtInt.h \
 MNS/MeqWsrtPoint.h \
 MNS/ParmTableAIPS.h \
+MNS/ParmTablePGSQL.h \
+MNS/ParmTableMySQL.h \
 MNS/ParmTable.h
 
 NOINSTHDRS =
@@ -117,14 +119,19 @@ MNS/MeqUVWPolc.cc \
 MNS/MeqWsrtInt.cc \
 MNS/MeqWsrtPoint.cc \
 MNS/ParmTableAIPS.cc \
+MNS/ParmTableMySQL.cc \
+MNS/ParmTablePGSQL.cc \
 MNS/ParmTable.cc
 
 
 
-bin_PROGRAMS = BlackBoardDemo
+bin_PROGRAMS = BlackBoardDemo fillsqldb
+
+fillsqldb_SOURCES = MNS/fillsqldb.cc
+fillsqldb_LDADD = libpss3.la
+fillsqldb_DEPENDENCIES = libpss3.la $(LOFAR_DEPEND)
 
 BlackBoardDemo_SOURCES = BlackBoardDemo.cc
-
 BlackBoardDemo_LDADD = libpss3.la
 BlackBoardDemo_DEPENDENCIES = libpss3.la $(LOFAR_DEPEND)
 
