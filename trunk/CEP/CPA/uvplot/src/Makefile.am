@@ -11,11 +11,6 @@ libuvplot_la_SOURCES := UVPGraphSettings.cc    \
                         UVPDataAtomVector.cc   \
                         UVPDataCacheElement.cc \
                         AID-uvplot-Registry.cc
-#                        UVPDataTransferWP.cc   \
-# 	                     UVPMessagesToFileWP.cc \
-#                        UVPPVDInput.cc         \
-#                       UVPCorrelationDataCache.cc \
-#                       UVPBaselineDataCache.cc 
 
 
 
