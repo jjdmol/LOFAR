@@ -2,7 +2,7 @@
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, swe@astron.nl
 //#
 //# $Id$
 
