@@ -34,7 +34,7 @@ namespace LOFAR
 			  const int StationID, 
 			  float FreqOff,
 			  float channelWidth,
-			  const float Hourangle, 
+			  const float ElapsedTime, 
 			  const int nchan)
 : DataHolder            (name, "DH_Beamlet"),
   itsDataPacket         (0),
@@ -42,7 +42,7 @@ namespace LOFAR
   itsStationID          (StationID),
   itsFrequencyOffset    (FreqOff),
   itsChannelWidth       (channelWidth),
-  itsHourangle          (Hourangle),
+  itsElapsedTime          (ElapsedTime),
   itsNumberOfChannels   (nchan)
 {
 }
@@ -55,7 +55,7 @@ namespace LOFAR
   itsStationID          (-1),
   itsFrequencyOffset    (-1),
   itsChannelWidth       (-1),
-  itsHourangle          (-1),
+  itsElapsedTime          (-1),
   itsNumberOfChannels   (nchan)
 {
 }
@@ -67,7 +67,7 @@ DH_Beamlet::DH_Beamlet(const DH_Beamlet& that)
     itsStationID   (that.getStationID()),
     itsFrequencyOffset    (that.getFrequencyOffset()),
     itsChannelWidth       (that.getChannelWidth()),
-        itsHourangle   (that.getHourangle()),
+        itsElapsedTime   (that.getElapsedTime()),
     itsNumberOfChannels(that.getNumberOfChannels())
 {
 }

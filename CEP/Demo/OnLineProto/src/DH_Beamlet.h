@@ -41,9 +41,10 @@ public:
 
   explicit DH_Beamlet (const string& name, 
 		       const int StationID,
-		       LoVec_float Frequencies,
-		       float Hourangle,
-		       int nchan);
+		       float FrequencyOffset,
+		       float channelWidth,
+		       float ElapsedTime,
+		       int   nchan);
 
   explicit DH_Beamlet (const string& name, 
 		       int nchan);
@@ -67,9 +68,10 @@ public:
   const BufferType* getBuffer() const;
   BufferType* getBufferElement(int freq);
   int getNumberOfChannels () const;
-  float getHourangle () const;
-  void setHourangle (float ha);
-  LoVec_float getFrequencies () const; 
+  float getElapsedTime () const;
+  void setElapsedTime (float time);
+  float getFrequencyOffset () const; 
+  float getChannelWidth() const;
   int getStationID () const;
 
 protected:
@@ -89,9 +91,10 @@ private:
     BufferType* itsBuffer;   // array containing frequency spectrum.
     unsigned int itsBufSize;  
     int itsStationID;        // source station ID
-    LoVec_float itsFrequencies;    // frequency offset for this beamlet
-    float itsHourangle;      // the hourangle
+    float itsFrequencyOffset;    // frequency offset for this beamlet
+    float itsElapsedTime;      // the hourangle
     int itsNumberOfChannels; // number of frequency channels within this beamlet
+    float itsChannelWidth;      // frequency width of each frequency channel
 };
 
 inline DH_Beamlet::BufferType* DH_Beamlet::getBuffer()
@@ -106,17 +109,21 @@ inline DH_Beamlet::BufferType* DH_Beamlet::getBufferElement(int freq)
 inline int DH_Beamlet::getNumberOfChannels () const
   { return itsNumberOfChannels; }
 
-inline float DH_Beamlet::getHourangle () const
-  { DbgAssertStr(itsHourangle >= 0, "itsHourangle not initialised"); 
-    return itsHourangle; 
+inline float DH_Beamlet::getElapsedTime () const
+  { DbgAssertStr(itsElapsedTime >= 0, "itsElapsedTime not initialised"); 
+    return itsElapsedTime; 
   }
 
-inline void DH_Beamlet::setHourangle (float ha)
-  {  itsHourangle = ha; }
+inline void DH_Beamlet::setElapsedTime (float time)
+  {  itsElapsedTime = time; }
 
-inline LoVec_float DH_Beamlet::getFrequencies() const
-  { //DbgAssertStr(itsFrequencies >= 0, "itsFrequencies not initialised"); 
-    return itsFrequencies; }
+inline float DH_Beamlet::getFrequencyOffset() const
+  { DbgAssertStr(itsFrequencyOffset >= 0, "itsFrequencyOffset not initialised"); 
+    return itsFrequencyOffset; }
+
+inline float DH_Beamlet::getChannelWidth() const
+  { DbgAssertStr(itsChannelWidth >= 0, "itsChannelWidth not initialised"); 
+    return itsChannelWidth; }
 
 inline int DH_Beamlet::getStationID() const
   { DbgAssertStr(itsStationID >= 0, "itsStationID not initialised"); 
