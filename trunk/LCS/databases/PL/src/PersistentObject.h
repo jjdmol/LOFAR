@@ -340,10 +340,6 @@ namespace LOFAR
       // PersistentObjects will come and go with this PersistentObject.
       POContainer itsOwnedPOs;
 
-      // This is the name of the database table that is associated with this
-      // PersistentObject.
-      std::string itsTableName;
-
     }; //# class PersistentObject
 
 

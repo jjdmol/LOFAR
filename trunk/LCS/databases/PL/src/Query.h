@@ -23,72 +23,11 @@
 #ifndef LOFAR_PL_QUERY_H
 #define LOFAR_PL_QUERY_H
 
-//# Includes
-#include <PL/Query/Expr.h>
+#ifdef __DEPRECATED
+#warning The file Query.h is deprecated. \
+         You should #include <PL/QueryObject.h> instead.
+#endif
 
-//# Forward Declarations
-
-namespace LOFAR
-{
-  namespace PL
-  {
-    //
-    // The query class provides a user-friendly interface for composing
-    // queries.
-    //
-    class QueryObject
-    {
-    public:
-      // Default constructor. Creates an empty query object.
-      QueryObject() {}
-
-      //@{
-      // Constructor that takes an SQL string. 
-      // \todo Do we want to do some sanity checking on \c aString ?
-      QueryObject(const std::string& aString) : 
- 	itsSqlString(aString), itsUseString(true) 
-      {}
-
-      QueryObject(const char* const aString) : 
-        itsSqlString(aString), itsUseString(true) 
-      {}
-      //@}
-
-      // Constructor that takes a Query Expression.
-      QueryObject(const Query::Expr& aExpr) : 
-        itsQueryExpr(aExpr), itsUseString(false)
-      {}
-
-      // Return whether this object is empty. A QueryObject is considered
-      // empty when either 
-      // - \c itsSqlString is empty and \c itsUseString is true, or
-      // - \c itsQueryExpr is empty and \c itsUseString is false.
-      bool empty() const;
-
-      // Return this QueryObject as an SQL WHERE clause. Depending on the
-      // value of \c itsUseString, this method will either return \c
-      // itsSqlString, or \c itsQueryExpr as a string.
-      std::string getSql() const;
-
-    private:
-      // The query stored as a query expression.
-      Query::Expr itsQueryExpr;
-
-      // The query stored as a string.
-      std::string itsSqlString;
-
-      // This flag indicates whether we should use \c itsQueryExpr or \c
-      // itsSqlString in the getSql() method. It depends on how the
-      // QueryObject was constructed; either using a \c string argument or
-      // using a Query::Expr argument. If itsUseString is \c true, getSql()
-      // will return \c itsSqlString; if itsUseString is \c false, getSql()
-      // will return the \c itsQueryExpr as a string.
-      bool itsUseString;
-
-    };
-
-  } // namespace PL
-
-} // namespace LOFAR
+#include <PL/QueryObject.h>
 
 #endif
