@@ -28,7 +28,7 @@ AH_testWHs.cc
 
 accepTest2_SOURCES		= $(DOCHDRS)	\
 $(NONPROGSRCS)					\
-Simulate.cc					\
+AppMain.cc					\
 AH_AccepTest.h					\
 AH_AccepTest.cc
 
