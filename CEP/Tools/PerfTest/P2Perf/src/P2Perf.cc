@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.16  2002/03/18 11:06:08  schaaf
+//  moved cout into TRACER2()
+//
 //  Revision 1.15  2002/03/08 11:38:42  wierenga
 //  Upgraded from firewalls.h use to Debug.h use. This version was used for performance tests.
 //
@@ -157,7 +160,7 @@ void P2Perf::define(const ParamBlock& params)
        << flush << endl;
 
   WH_Empty empty;
-  Simul simul(empty, "P2Perf");
+  Simul simul(empty, "P2Perf",true,true);
   setSimul(simul);
   simul.runOnNode(0);
 
