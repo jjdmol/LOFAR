@@ -1,3 +1,9 @@
+  * new solver commands/states:
+    clear_matrix, invert_matrix, num_iter, save_polcs, weight
+    (also, default.nnn, for default settings of same)
+  
+Checked in by 17/03/2004:
+
   * aded mqs.track_results() function
 
   * added error logging to app_proxy objects (e.g. meq.server):

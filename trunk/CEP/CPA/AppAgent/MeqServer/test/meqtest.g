@@ -237,6 +237,7 @@ const solver_test := function (gui=use_gui,verbose=4,publish=T)
     print mqs;
     fail;
   }
+  mqs.setdebug('MeqSolver',5);
   # create parms and condeq
 #  defval1 := array([3.,0.5,0.5,0.1],2,2);
 #  defval2 := array([2.,10.,2.,10. ],2,2);
@@ -247,8 +248,8 @@ const solver_test := function (gui=use_gui,verbose=4,publish=T)
   print mqs.meq('Create.Node',meq.node('MeqCondeq','condeq1',children="a b"));
   # create solver
   global rec;
-  rec := meq.node('MeqSolver','solver1',children="condeq1");
-  rec.num_steps := 3;
+  rec := meq.node('MeqSolver','solver1',children="condeq1",groups='Solver');
+  rec.default := [ num_iter = 3 ];
   rec.solvable := meq.solvable_list("a");
   rec.parm_group := hiid('Parm');
   print mqs.meq('Create.Node',rec);
@@ -265,6 +266,10 @@ const solver_test := function (gui=use_gui,verbose=4,publish=T)
   cells  := meq.cells(meq.domain(0,.5,0,.5),num_freq=4,num_time=4);
   cells2 := meq.cells(meq.domain(.5,1,.5,1),num_freq=4,num_time=4);
   request := meq.request(cells,calc_deriv=2);
+  
+  cmdrec := [ clear_matrix=F,invert_matrix=F,num_iter=5,save_polcs=F ];
+  request.add_command('Solver','solver1',cmdrec);
+  
   request2 := meq.request(cells2,calc_deriv=0);
   res := mqs.meq('Node.Publish.Results',[name='condeq1'],T);
   res := mqs.meq('Node.Execute',[name='solver1',request=request],T);

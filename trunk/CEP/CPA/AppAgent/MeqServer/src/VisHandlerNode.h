@@ -7,7 +7,7 @@
 
 #pragma aid VisHandlerNode 
 #pragma aid Station Index Data Id Num Antenna Tile Format Input 
-#pragma aid Output Col Corr Next Read Flags
+#pragma aid Output Col Corr Next Read Flag Flags Mask Row
     
 namespace Meq {
   
@@ -19,7 +19,8 @@ const HIID  FStation1      = AidStation|1|AidIndex,
 
             FOutputColumn = AidOutput|AidCol,
             FInputColumn  = AidInput|AidCol,
-            FReadFlags    = AidRead|AidFlags,
+            FFlagMask     = AidFlag|AidMask,
+            FRowFlagMask  = AidRow|AidFlag|AidMask,
             FCorr         = AidCorr|AidIndex,
             FNext         = AidNext;
     

@@ -63,6 +63,11 @@ BlockableObject * __construct_MeqSpigot (int n) { return n>0 ? new Meq::Spigot [
         AtomicID::registerId(-1334,"col")+
         AtomicID::registerId(-1153,"corr")+
         AtomicID::registerId(-1336,"next")+
+        AtomicID::registerId(-1424,"read")+
+        AtomicID::registerId(-1135,"flag")+
+        AtomicID::registerId(-1298,"flags")+
+        AtomicID::registerId(-1287,"mask")+
+        AtomicID::registerId(-1150,"row")+
         AtomicID::registerId(-1337,"sink")+
         AtomicID::registerId(-1326,"meqsink")+
         TypeInfoReg::addToRegistry(-1326,TypeInfo(TypeInfo::DYNAMIC,0))+

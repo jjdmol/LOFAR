@@ -1,33 +1,21 @@
 MEQ in general:
 
-  * meqsink_test() exits when no such MS; it shouldn't
-  
-  * Update documentation!
-                
-  * check performance: why does privatizing message arguments in MeqServer
-    sometimes lead to cloning? I don't see why anybody else would be holding
-    onto the message.
-    Update 14/01/04: in fact in a multi-threaded scenario the dispatcher
-    is holding onto the message throughout send(). Even if there's only one
-    recepient, there's a chance that the recepient thread wakes up, grabs
-    the message and starts wastefully cloning it (via a privatize call) 
-    because Dispatcher::send() is not yet complete. This ties into the COW
-    issue as well; both need to be considered together. As an alternative, 
-    perhaps there's a way for send() to block all updated recepients from 
-    waking up until the entire send() cycle is complete.
-    
-  * Fix MeqServer/test/solver_test to run in a "clean" environment
-    (i.e. no install, no .glishrc, etc -- mostly related to include paths)
-    10/02/04: symlinks to ../pkginc/*.g do part of the job. What do we do
-    about *.g files installed in subdirectories though?
-   
-  * How to tell all the nodes to shut up? (stop publishing)
-  
+  * Update documentation! (never goes away, does it?)
+
     - Specify child labels in node constructor; check them in init().
       Process named children properly.
       01/01/04: done, need to test w/glish (glish not working on my laptop)
       16/01/04: tested with default tests; now need to make some nodes
                 with child labels
+        
+        + How to tell all the nodes to shut up? (stop publishing)
+          15/03/04: done, added command to MeqServer
+  
+        + update add_command to add to command_all list
+          16/03/04: done
+          
+        + meqsink_test() exits when no such MS; it shouldn't
+          15/03/04: added try/catch to agent init in MeqServer::run()
   
         + Use the same mechanism to check the request rider as we do for state
           updates. E.g., polc values from the solver should be passed in this 
@@ -78,6 +66,12 @@ MEQ in general:
           
 Solver:
 
+  * BUG: JEN has a problem after Clear.Polcs: execute returns a fail saying
+    "no cells in Meq::Request"
+    
+  * Apply a gain factor to incremental value updates (perhaps both on the 
+    solver side, and on the parm side?)
+    
         + Implement request ID hierarchy
           28/01/04: done
   
@@ -86,7 +80,11 @@ Solver:
           (i.e., append iteration index or something?)
           20/01/04: done for now; revisit with hierarchical requests
           
-Spigot:
+Sink/Spigot:
+  
+  * handle flags in Spigot 
+  
+  * handle flags in Sink
 
         + In deliver, just stick the result in the cache and let the caching code
           take care of everything else. 
@@ -140,12 +138,13 @@ Request:
 
 Vells and VellSets and Results:
 
-  * Vells(DataArray*) constructor: if rank<2 but nelements==1, reform the 
-    array (otherwise, won't instantiate from scalars!)
-    09/02/04: perhaps unnecessary, seeing as we have a meqpolc() glish function?
-    
     - double-differencing?
       02/02/04 done for VellSets, needs real testing
+    
+        + Vells(DataArray*) constructor: if rank<2 but nelements==1, reform the 
+          array (otherwise, won't instantiate from scalars!)
+          09/02/04: perhaps unnecessary, seeing as we have a meqpolc() glish function?
+          16/03/04: stick a fork in it: meqpolc() ensures this
     
         + Problem with in-place operators (+= etc.) and type promotion
           15/01/04 fixed
@@ -157,6 +156,9 @@ Function:
           12/12/03 done
           
 DMI & Debug:
+
+  * implement bool Hook::get(T&), for getting stuff by value (or pointer?),
+    and simultaneously returning false if not defined.
 
   * add protect feature to container fields (for use in classes such as 
     Meq::Result etc.)
@@ -187,29 +189,46 @@ DMI & Debug:
 
 OCTOPUSSY:
 
-  * Bug? test_octopussy crashes with the NPTL libraries (rh9 system with 2.6 
-    kernel, using /lib/tls/ instead of /lib/i686/: try e.g. lofar17).
+  * PERF: why does privatizing message arguments in MeqServer
+    sometimes lead to cloning? I don't see why anybody else would be holding
+    onto the message.
+    Update 14/01/04: in fact in a multi-threaded scenario the dispatcher
+    is holding onto the message throughout send(). Even if there's only one
+    recepient, there's a chance that the recepient thread wakes up, grabs
+    the message and starts wastefully cloning it (via a privatize call) 
+    because Dispatcher::send() is not yet complete. This ties into the COW
+    issue as well; both need to be considered together. As an alternative, 
+    perhaps there's a way for send() to block all updated recepients from 
+    waking up until the entire send() cycle is complete.
+
+  * BUG: test_octopussy crashes with the NPTL libraries (rh9 system with 2.6 
+    kernel, using /lib/tls/ instead of /lib/i686/: try e.g. lofar17, or
+    zeppelin at home)
  
-  * Bug: valgrind reports thread deadlock on the Dispatcher::startup_cond
+  * BUG: valgrind reports thread deadlock on the Dispatcher::startup_cond
     and Dispatcher::repoll_cond condition vars. How is this even possible?
     Perhaps related to problem below?
     
-  * Bug: Figure out why the hell it freezes on a single-CPU machine sometimes. A
+  * BUG: Figure out why the hell it freezes on a single-CPU machine sometimes. A
     race condition somewhere? NB: a sure way to do it (on zeppelin) seems to
     enable wait_reply=T in the Resolve.Children calls in meqtest.g.
 
-  * Bug: Check how a zero-length string or hiid array from Glish shows up in
+  * BUG: Check how a zero-length string or hiid array from Glish shows up in
     AppAgent -- because it looked like a 1-element DataField when 
     processing child specs.
     
-  * Bug: Ditto for zero-length arrays ('[]'), i.e., uninitialized domain, etc.
+  * BUG: Ditto for zero-length arrays ('[]'), i.e., uninitialized domain, etc.
 
   * Check for USE_THREADS when playing with mutexes (or improve the definition
     of mutexes when compiling without threads: declare constructors for
     Mutex::Lock and all that crap)
 
-
 General:
+
+  * Fix MeqServer/test/solver_test to run in a "clean" environment
+    (i.e. no install, no .glishrc, etc -- mostly related to include paths)
+    10/02/04: symlinks to ../pkginc/*.g do part of the job. What do we do
+    about *.g files installed in subdirectories though?
 
         + Bug: MSOutputSink: output to new column doesn't work, column stays
           'dummy'. Ask Ger for help, since I'm obviously misusing tables

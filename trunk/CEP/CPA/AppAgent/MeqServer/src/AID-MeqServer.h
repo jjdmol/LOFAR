@@ -103,6 +103,16 @@ const int AidEvent_int = -1070;
 const AtomicID AidExecute(-1372);                 // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:13
 const int AidExecute_int = -1372;
 #endif
+#ifndef _defined_id_AidFlag
+#define _defined_id_AidFlag 1
+const AtomicID AidFlag(-1135);                    // from /home/oms/LOFAR/CEP/CPA/VisCube/src/VisVocabulary.h:27
+const int AidFlag_int = -1135;
+#endif
+#ifndef _defined_id_AidFlags
+#define _defined_id_AidFlags 1
+const AtomicID AidFlags(-1298);                   // from /home/oms/LOFAR/CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgentVocabulary.h:35
+const int AidFlags_int = -1298;
+#endif
 #ifndef _defined_id_AidForest
 #define _defined_id_AidForest 1
 const AtomicID AidForest(-1388);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:13
@@ -142,6 +152,11 @@ const int AidList_int = -1046;
 #define _defined_id_AidLoad 1
 const AtomicID AidLoad(-1390);                    // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:13
 const int AidLoad_int = -1390;
+#endif
+#ifndef _defined_id_AidMask
+#define _defined_id_AidMask 1
+const AtomicID AidMask(-1287);                    // from /home/oms/LOFAR/CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgentVocabulary.h:35
+const int AidMask_int = -1287;
 #endif
 #ifndef _defined_id_AidMeqServer
 #define _defined_id_AidMeqServer 1
@@ -203,6 +218,11 @@ const int AidProcessing_int = -1333;
 const AtomicID AidPublish(-1055);                 // from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/MsgAddress.h:12
 const int AidPublish_int = -1055;
 #endif
+#ifndef _defined_id_AidRead
+#define _defined_id_AidRead 1
+const AtomicID AidRead(-1424);                    // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/VisHandlerNode.h:10
+const int AidRead_int = -1424;
+#endif
 #ifndef _defined_id_AidRecursive
 #define _defined_id_AidRecursive 1
 const AtomicID AidRecursive(-1392);               // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:13
@@ -227,6 +247,11 @@ const int AidResult_int = -1228;
 #define _defined_id_AidResults 1
 const AtomicID AidResults(-1245);                 // from /home/oms/LOFAR/CEP/CPA/PSS4/MEQ/src/ResultSet.h:33
 const int AidResults_int = -1245;
+#endif
+#ifndef _defined_id_AidRow
+#define _defined_id_AidRow 1
+const AtomicID AidRow(-1150);                     // from /home/oms/LOFAR/CEP/CPA/VisCube/src/VisVocabulary.h:26
+const int AidRow_int = -1150;
 #endif
 #ifndef _defined_id_AidSave
 #define _defined_id_AidSave 1

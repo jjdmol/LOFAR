@@ -86,7 +86,7 @@ const meq.fitpolcs_mqs := function (polcs,degx=0,degy=0,domain=F,scale=F,verbose
   print mqs.createnode(meq.node('MeqCondeq','fitpolc_eq',children="fitpolc_p1 fitpolc_p2"));
   
   rec := meq.node('MeqSolver','fitpolc_solver',children="fitpolc_eq");
-  rec.num_steps := 5;
+  rec.default := [ num_iter = 3 ];
   rec.parm_group := hiid('Parm');
   rec.solvable := meq.solvable_list("fitpolc_p2");
   print mqs.createnode(rec);
