@@ -83,8 +83,10 @@ int Solver::getResult (Result::Ref &resref,
   Result& result = resref <<= new Result(request, 1);
   VellSet& vellset = result.setNewVellSet(0);
   // Allocate variables needed for the solution.
+  uint nspid;
   vector<int> spids;
   Vector<double> solution;
+  Vector<double> allSolutions;
   uInt rank;
   double fit;
   double stddev;
@@ -103,7 +105,8 @@ int Solver::getResult (Result::Ref &resref,
       wstate()[FSolvableParm].as_wp<DataRecord>();
   }
   // Iterate as many times as needed.
-  for (int step=0; step<itsNumStep; step++) {
+  int step;
+  for (step=0; step<itsNumStep; step++) {
     // collect child results, using Node's standard method
     int retcode = Node::pollChildren (child_results, resref, newReq);
     // a fail or a wait is returned immediately
@@ -122,7 +125,7 @@ int Solver::getResult (Result::Ref &resref,
     }
     spids = Function::findSpids (chvellsets);
     // Initialize solver.
-    uint nspid = spids.size();
+    nspid = spids.size();
     AssertStr (nspid > 0, "No solvable parameters found in solver " << name());
     itsSolver.set (nspid, 1u, 0u);
     // Now feed the solver with equations from the results.
@@ -202,8 +205,11 @@ int Solver::getResult (Result::Ref &resref,
     // Solve the equation.
     AssertStr (nreq >= nspid, "Only " << nreq << " equations for " << nspid
 	       << " solvable parameters in solver " << name());
-    double* sol = vellset.setReal(nspid, 1).data();
-    solution.takeStorage (IPosition(1,nspid), sol, SHARE);
+    // Keep all solutions in a vector.
+    // The last part is the current solution.
+    allSolutions.resize ((step+1)*nspid, True);
+    Vector<double> vec(allSolutions(Slice(step*nspid, nspid)));
+    solution.reference (vec);
     solution = 0;
     // It looks as if LSQ has a bug so that solveLoop and getCovariance
     // interact badly (maybe both doing an invert).
@@ -213,7 +219,7 @@ int Solver::getResult (Result::Ref &resref,
     tmpSolver.getErrors (errors);
     bool solFlag = itsSolver.solveLoop (fit, rank, solution,
                                         stddev, mu, itsUseSVD);
-    cout << "Solution after:  " << solution << endl;
+    cdebug(4) << "Solution after:  " << solution << endl;
     // Put the solution in the FNodeState,FByNodeIndex data record.
     // That will contain a DataRecord for each parm with the parmid
     // as the index.
@@ -231,6 +237,8 @@ int Solver::getResult (Result::Ref &resref,
   fillSolution (dr2, spids, solution);
   Node::pollChildren (child_results, resref, lastReq);
   // result depends on domain, and has -- most likely -- been updated
+  double* sol = vellset.setReal(nspid, step).data();
+  memcpy (sol, allSolutions.data(), nspid*step*sizeof(double));
   return RES_DEP_DOMAIN|RES_UPDATED;
 }
 
