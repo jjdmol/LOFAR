@@ -8,15 +8,12 @@ define
  awerate=2,
  rcufilename="generated_data.dat",
  selfilename="sel.dat",
- coefffilename="h.dat",
+ coefffilename1="h.dat",
+ nsubband2=0,
+ coefffilename2="h2.dat",
  dipolefilename="dipole.dat",
  targettrackfilename="targettrack.dat",
- rfitrackfilename="rfitrack.dat",
- rcuall_outname="rcu.out",
- bandsep_outname="bandsep.out",
- select_outname="select.out",
- beamformer_outname="beam.out",
- awe_outname="awe.out"
+ rfitrackfilename="rfitrack.dat"
 ;
 dhfile dh="rcuall.out_0",     file="rcu.out";
 dhfile dh="bandsep.out_0",    file="bandsep.out";
