@@ -1,6 +1,6 @@
 AM_CPPFLAGS			= -DLOFARLOGGER_SUBPACKAGE=\"AMCServer\"
 
-INSTHDRS			= 
+INSTHDRS			= ConverterServer.h
 
 NOINSTHDRS			=
 
@@ -14,7 +14,8 @@ DOCHDRS				= $(INSTHDRS) $(NOINSTHDRS)
 
 lib_LTLIBRARIES			= libamcserver.la
 
-libamcserver_la_SOURCES 	= $(DOCHDRS)
+libamcserver_la_SOURCES 	= $(DOCHDRS) \
+				  ConverterServer.cc
 
 libamcserver_la_LIBADD		= ../libamcimpl.la
 
