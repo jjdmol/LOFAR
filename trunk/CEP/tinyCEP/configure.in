@@ -55,6 +55,7 @@ dnl
 lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
+lofar_MPI
 lofar_PACKAGE(LCS/Common)
 lofar_PACKAGE(CEP/Transport)
 
