@@ -1192,6 +1192,9 @@ void MeqCalibrater::saveParms()
     }
     i++;
   }
+  // Unlock the parm tables.
+  itsMEP.unlock();
+  itsGSMMEP.unlock();
 }
 
 //----------------------------------------------------------------------
