@@ -103,12 +103,12 @@ void WH_PreProcess::process()
 void WH_PreProcess::dump()
 {    
   cout << "WH_PreProcess " << getName () << " Buffers:" << endl;
-  //  for (int i = 0; i < itsMac.getNumberOfBeamlets(); i++) {
-    for (int j = 0; j < itsMac.getBeamletSize(); j++) {
-      cout << *((DH_Beamlet*)getDataManager().getOutHolder(0))->getBufferElement(j) << ' '; //beamlet 0
+  for (int i = 0; i < MIN(itsMac.getNumberOfBeamlets(),1); i++) {
+    for (int j = 0; j < MIN(itsMac.getBeamletSize(),10); j++) {
+      cout << *((DH_Beamlet*)getDataManager().getInHolder(i))->getBufferElement(j) << ' ';
     }
     cout << endl;
-    //}
+  }
 }
 
 }// namespace LOFAR
