@@ -110,7 +110,7 @@ namespace ABS
 	/**
 	 * Send weights to the board.
 	 */
-	void send_weights();
+	void send_weights(int period);
 
 	/**
 	 * Determine the new subband selection after a beam
@@ -159,7 +159,8 @@ namespace ABS
 	/**
 	 * Weight array
 	 */
-	blitz::Array<std::complex<W_TYPE>, 3> m_weights;
+	blitz::Array<std::complex<W_TYPE>,  4> m_weights;
+	blitz::Array<std::complex<int16_t>, 4> m_weights16;
 
     private:
 	// ports

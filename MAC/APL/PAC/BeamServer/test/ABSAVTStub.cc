@@ -499,7 +499,7 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
       {
 	LOG_INFO("running test005");
 
-	// send beam allocation
+	// send beam allocation, select all subbands
 	ABSBeamallocEvent alloc;
 	alloc.spectral_window = 0;
 	alloc.n_subbands = N_BEAMLETS;
@@ -521,20 +521,20 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
 	beam_handle = ack->handle;
 	LOG_DEBUG(formatString("got beam_handle=%d", beam_handle));
 
-	// send pointto command
+	// send pointto command (zenith)
 	ABSBeampointtoEvent pointto;
 	pointto.handle = ack->handle;
 	pointto.time = from_time_t(time(0)) + seconds(27);
 	pointto.type=(int)Direction::LOFAR_LMN;
-	pointto.angle1=-1.0;
-	pointto.angle2=-1.0;
+	pointto.angle1=0.0;
+	pointto.angle2=0.0;
 
 	_test(sizeof(pointto) == beam_server.send(pointto));
 
-	// send pointto command
+	// send pointto command (northern horizon)
 	pointto.time = from_time_t(time(0)) + seconds(37);
-	pointto.angle1=0.3;
-	pointto.angle2=0.2;
+	pointto.angle1=0.0;
+	pointto.angle2=1.0;
 
 	_test(sizeof(pointto) == beam_server.send(pointto));
 

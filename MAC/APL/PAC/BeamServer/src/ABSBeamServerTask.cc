@@ -56,12 +56,17 @@ using namespace boost::gregorian;
 #define MAX_N_SPECTRAL_WINDOWS 1
 #define COMPUTE_INTERVAL 10
 #define UPDATE_INTERVAL  1
-#define N_SIGNALS (N_ANTENNAS * N_PHASEPOL)
+#define N_SIGNALS (N_ELEMENTS * N_POLARIZATIONS)
+
+#define SCALE (1<<(16-2))
+
+static Array<std::complex<int16_t>, 4> zero_weights;
 
 BeamServerTask::BeamServerTask(string name)
     : GCFTask((State)&BeamServerTask::initial, name),
       m_pos(N_SIGNALS, 3),
-      m_weights(COMPUTE_INTERVAL, N_SIGNALS, N_SUBBANDS),
+      m_weights(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS),
+      m_weights16(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS),
       board(*this, "board", GCFPortInterface::SAP, true)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
@@ -79,9 +84,14 @@ BeamServerTask::BeamServerTask(string name)
   m_wgsetting.enabled       = false;
 
   // initialize antenna positions
-  m_pos(Range::all(), 0) = 1.0;
-  m_pos(Range::all(), 1) = 2.0;
-  m_pos(Range::all(), 2) = 0.0;
+  Range all = Range::all();
+  m_pos(all, 0) = 1.0;
+  m_pos(all, 1) = 1.0;
+  m_pos(all, 2) = 0.0;
+
+  // initialize weight matrix
+  m_weights   = complex<W_TYPE>(0,0);
+  m_weights16 = complex<int16_t>(0,0);
 }
 
 BeamServerTask::~BeamServerTask()
@@ -97,7 +107,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
       {
 	  // create a default spectral window from 0MHz to 20MHz
 	  // steps of 256kHz
-	  SpectralWindow* spw = new SpectralWindow(0e6, 20e6/ABS_Protocol::N_BEAMLETS,
+	  SpectralWindow* spw = new SpectralWindow(1e6, 20e6/ABS_Protocol::N_BEAMLETS,
 						   ABS_Protocol::N_BEAMLETS);
 	  m_spws[0] = spw;
       }
@@ -157,7 +167,8 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   static unsigned long update_timer = (unsigned long)-1;
-  static unsigned long compute_timer = (unsigned long)-1;
+//  static unsigned long compute_timer = (unsigned long)-1;
+  static int period = 0;
   
   switch (e.signal)
     {
@@ -176,10 +187,12 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 				      (now.total_seconds() % UPDATE_INTERVAL), 0,
 				      UPDATE_INTERVAL, 0);
 
+#if 0
 	// compute timer, once every COMPUTE_INTERVAL exactly on the second
 	compute_timer = board.setTimer((2 * COMPUTE_INTERVAL)
 				       - (now.total_seconds() % COMPUTE_INTERVAL), 0,
 				       COMPUTE_INTERVAL, 0);
+#endif
       }
       break;
 
@@ -188,9 +201,22 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
 
 	LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
+
+	if (0 == (period % COMPUTE_INTERVAL))
+	{
+	    period = 0;
+	    // compute new weights after sending weights
+	    compute_timeout_action(timer->sec);
+	}
+
+	send_weights(period);
+
+	period++;
+#if 0
 	if (timer->id == update_timer)
 	  {
 	    LOG_DEBUG(formatString("update_timer=(%d,%d)", timer->sec, timer->usec));
+	    send_weights();
 	  }
 	else if (timer->id == compute_timer)
 	  {
@@ -201,6 +227,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	  {
 	    LOG_DEBUG(formatString("unknown timer %d", timer->id));
 	  }
+#endif
       }
       break;
 
@@ -465,6 +492,23 @@ void BeamServerTask::wgdisable_action()
   LOG_DEBUG("SENT WGDISABLE");
 }
 
+BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
+
+/**
+ * Convert the weights to 16-bits signed integer. Change byte
+ * ordering to network order (MSB).
+ */
+inline complex<int16_t> convert2complex_int16_t(complex<W_TYPE> cd)
+{
+#ifdef W_TYPE_DOUBLE
+  return complex<int16_t>(htons((int16_t)(round(cd.real()*SCALE))),
+			  htons((int16_t)(round(cd.imag()*SCALE))));
+#else
+  return complex<int16_t>(htons((int16_t)(roundf(cd.real()*SCALE))),
+			  htons((int16_t)(roundf(cd.imag()*SCALE))));
+#endif
+}
+
 /**
  * This method is called once every second
  * to calculate the weights for all beamlets.
@@ -472,8 +516,7 @@ void BeamServerTask::wgdisable_action()
 void BeamServerTask::compute_timeout_action(long current_seconds)
 {
   // convert_pointings for all beams for the next deadline
-  time_period compute_period = time_period(
-					   from_time_t((time_t)current_seconds)
+  time_period compute_period = time_period(from_time_t((time_t)current_seconds)
 					   + time_duration(seconds(COMPUTE_INTERVAL)),
 					   seconds(COMPUTE_INTERVAL));
 
@@ -485,38 +528,52 @@ void BeamServerTask::compute_timeout_action(long current_seconds)
   }
 
   Beamlet::calculate_weights(m_pos, m_weights);
-  send_weights();
+
+  // show weights for timestep 0, element 0, all subbands, both polarizations
+  Range all = Range::all();
+  cout << "m_weights=" << m_weights(0, 0, all, all) << endl;
+
+  // need complex conjugate of the weights
+  m_weights16 = convert2complex_int16_t(conj(m_weights));
+
+  LOG_DEBUG(formatString("m_weights16 contiguous storage? %s", (m_weights16.isStorageContiguous()?"yes":"no")));
+  LOG_DEBUG(formatString("sizeof(m_weights16) = %d", m_weights16.size()*sizeof(int16_t)));
 }
 
-void BeamServerTask::send_weights()
+void BeamServerTask::send_weights(int period)
 {
   EPABfconfigureEvent bc;
-
-#if 0
-  static Array<short, 3> weights16_real(COMPUTE_INTERVAL, N_SIGNALS, N_SUBBANDS);
-  static Array<short, 3> weights16_imag(COMPUTE_INTERVAL, N_SIGNALS, N_SUBBANDS);
-
-  weights16_real = real(m_weights);
-  weights16_imag = imag(m_weights);
-
-  LOG_DEBUG(formatString("weights16_real contiguous storage? %s", (weights16_real.isStorageContiguous()?"yes":"no")));
-#endif
+  Range all = Range::all();
 
   bc.command = 4; // 4 == beamformer configure
-  bc.seqnr = 0;
+  bc.seqnr   = 0;
   bc.pktsize = 1030;
 
-  // set all coefficients to 1
-  memset(bc.coeff, 0, 512*sizeof(short));
-  for (int i = 0; i < 512; i+=2) bc.coeff[i] = 1;
+  Array<complex<int16_t>, 2> weights((complex<int16_t>*)&bc.coeff,
+				     shape(N_SUBBANDS, N_POLARIZATIONS),
+				     neverDeleteData);
 
-  for (int ant = 0; ant < N_ANTENNAS; ant++)
+  LOG_DEBUG(formatString("sizeof(weights) = %d", weights.size()*sizeof(complex<int16_t>)));
+
+  for (int ant = 0; ant < N_ELEMENTS; ant++)
   {
       bc.antenna = ant;
       
-      for (int php = 0; php < N_PHASEPOL; php++)
+      for (int pol = 0; pol < N_POLARIZATIONS * 2; pol++)
       {
-	  bc.phasepol = php;
+	  weights = m_weights16(period, ant, all, all);
+
+	  if (pol == 0) {
+	      weights(all, Range(0,toEnd,2)) = complex<int16_t>(0,0);
+	  } else if (pol == 1) {
+	      weights *= complex<int16_t>(0,1);
+	  } else if (pol == 2) {
+	      weights(all, Range(1,toEnd,2)) = complex<int16_t>(0,0);
+	  } else if (pol == 3) {
+	      weights *= complex<int16_t>(0,1);
+	  }
+
+	  bc.phasepol = pol * ant;
 	  board.send(GCFEvent(F_RAW_SIG), &bc.command, bc.pktsize);
       }
   }

@@ -49,7 +49,9 @@ using namespace std;
 
 #define UPDATE_INTERVAL  1
 #define COMPUTE_INTERVAL 7
-#define N_SIGNALS 4
+#define N_ELEMENTS      2
+#define N_POLARIZATIONS 2
+#define N_SIGNALS (N_ELEMENTS * N_POLARIZATIONS)
 
 class BeamServerTest : public Test
 {
@@ -229,7 +231,7 @@ public:
 	  _test(0 == m_beam[0]->convertPointings(period));
 
 	  Array<W_TYPE, 2>          pos(N_SIGNALS, 3);
-	  Array<complex<W_TYPE>, 3> weights(COMPUTE_INTERVAL, N_SIGNALS, N_BEAMLETS);
+	  Array<complex<W_TYPE>, 4> weights(COMPUTE_INTERVAL, N_ELEMENTS, N_BEAMLETS, N_POLARIZATIONS);
 
 	  pos(0,Range::all()) = 1.0;
 	  pos(1,Range::all()) = 0.5;
@@ -237,8 +239,8 @@ public:
 	  Beamlet::calculate_weights(pos, weights);
 	  gettimeofday(&delay, 0);
 
-	  //cout << "weights(0,0,:) = " << weights(0,0,Range::all()) << endl;
-	  //cout << "weights(0,0,:) = " << weights(0,1,Range::all()) << endl;
+	  //cout << "weights(0,0,:,:) = " << weights(0,0,Range::all(),Range::all()) << endl;
+	  //cout << "weights(0,0,:,:) = " << weights(0,1,Range::all(),Range::all()) << endl;
 
 	  delay.tv_sec -= start.tv_sec;
 	  delay.tv_usec -= start.tv_usec;
@@ -296,7 +298,7 @@ public:
 //	  _test(0 == m_beam[0]->convertPointings(period));
 
 	  Array<W_TYPE, 2>          pos(N_SIGNALS, 3);
-	  Array<complex<W_TYPE>, 3> weights(COMPUTE_INTERVAL, N_SIGNALS, N_BEAMLETS);
+	  Array<complex<W_TYPE>, 4> weights(COMPUTE_INTERVAL, N_ELEMENTS, N_BEAMLETS, N_POLARIZATIONS);
 
 	  pos(0,Range::all()) = 0.0, 0.0, 0.0;
 	  pos(1,Range::all()) = 0.0, 0.0, 1.0;
@@ -310,8 +312,8 @@ public:
 	  Beamlet::calculate_weights(pos, weights);
 	  gettimeofday(&delay, 0);
 
-	  cout << "weights(:,:,0) = " << weights(Range::all(),Range::all(),0) << endl;
-	  cout << "weights(:,:,1) = " << weights(Range::all(),Range::all(),1) << endl;
+	  cout << "weights(:,:,:,0) = " << weights(Range::all(),Range::all(),Range::all(), 0) << endl;
+	  cout << "weights(:,:,:,1) = " << weights(Range::all(),Range::all(),Range::all(), 1) << endl;
 
 	  delay.tv_sec -= start.tv_sec;
 	  delay.tv_usec -= start.tv_usec;
