@@ -20,6 +20,7 @@
 //#
 //#  $Id$
 
+#include <stdio.h>
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDouble.h>
@@ -32,6 +33,8 @@
 #include "AVTUtilities.h"
 #include "ABS_Protocol.ph"
 
+const string bsScope("BeamServer");
+
 AVTStationBeamformer::AVTStationBeamformer(string& taskName, 
                                            const TPropertySet& primaryPropertySet,
                                            const string& APCName,
@@ -40,13 +43,13 @@ AVTStationBeamformer::AVTStationBeamformer(string& taskName,
   AVTLogicalDevice(taskName,primaryPropertySet,APCName,APCScope),
   m_beamServer(*this, beamServerPortName, GCFPortInterface::SAP, ABS_PROTOCOL),
   m_beamServerConnected(false),
-//  m_beamServerAPC(string("ApcBeamServer"),APCScope+string("_Statistics"),&m_APCAnswer),
   m_numAPCsLoaded(0),
   m_maxAPCs(1),
   m_startTime(0),
   m_stopTime(0),
   m_frequency(0.0),
   m_subbands(),
+  m_APCBeamServerStatistics(string("ApcAplBeamServerStatistics"),bsScope,&m_APCAnswer),
   m_directionType(0),
   m_directionAngle1(0.0),
   m_directionAngle2(0.0),
@@ -74,6 +77,14 @@ int AVTStationBeamformer::convertDirection(const string type) const
     direction=3;
   }
   return direction;
+}
+
+// increment 1 only!!!
+// the LogicalDeviceServer needs a beamserver port to send ABS_WGSETTINGS messages to 
+// At the moment, the BeamServer does not allow more than one connection.
+GCFPort& AVTStationBeamformer::getBeamServerPort()
+{
+  return m_beamServer;
 }
 
 bool AVTStationBeamformer::_isBeamServerPort(GCFPortInterface& port)
@@ -204,6 +215,16 @@ GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event
         if(ackEvent.status==0)
         {
           m_beamID=ackEvent.handle;
+          
+          // load APC's for the subbands of the beam;
+          m_APCBeamServerStatistics.load(false); // no defaults
+          SubbandAPCMapT::iterator subbandIterator=m_subbands.begin();
+          while(subbandIterator!=m_subbands.end())
+          {
+            subbandIterator->second->load(false); // no defaults          
+            ++subbandIterator;
+          }
+
           // point the new beam
           time_t time_arg(0);
           ABSBeampointtoEvent beamPointToEvent(m_beamID,time_arg,m_directionType,m_directionAngle1,m_directionAngle2);
@@ -261,7 +282,6 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
     {
       // property set loaded, now load apc
       m_APC.load(false);
-//      m_beamServerAPC.load(true);
       break;
     }
     
@@ -368,6 +388,8 @@ void AVTStationBeamformer::handleAPCAnswer(GCFEvent& answer)
   {
     case F_APCLOADED_SIG:
     {
+      // used during startup to check if all necessary APC's have been loaded.
+      // not used when loading the statistics APC's
       m_numAPCsLoaded++;
       if(m_numAPCsLoaded==m_maxAPCs)
       {
@@ -405,25 +427,46 @@ void AVTStationBeamformer::concretePrepare(GCFPortInterface& /*port*/,string& pa
   m_startTime=atoi(decodedParameters[0].c_str());
   m_stopTime=atoi(decodedParameters[1].c_str());
   m_frequency=atof(decodedParameters[2].c_str());
-  AVTUtilities::decodeSubbandsParameter(decodedParameters[3],m_subbands);
+  vector<int> subbandsVector;
+  AVTUtilities::decodeSubbandsParameter(decodedParameters[3],subbandsVector);
+  
+  // create APC's for the subbands. They will be loaded after the ALLOC_ACK has
+  // been received
+  vector<int>::iterator vectorIterator=subbandsVector.begin();
+  while(vectorIterator!=subbandsVector.end())
+  {
+    char tempScope[100];
+    sprintf(tempScope,"%s_power%03d",bsScope.c_str(),*vectorIterator);
+    boost::shared_ptr<GCFApc> pSubbandAPC(new GCFApc(string("ApcAplBeamServerSubbandStatistics"),string(tempScope),&m_APCAnswer));
+    m_subbands.insert(SubbandAPCMapT::value_type(*vectorIterator,pSubbandAPC));
+    ++vectorIterator;
+  }
+  
   m_directionType=convertDirection(decodedParameters[4]);
   m_directionAngle1=atof(decodedParameters[5].c_str());
   m_directionAngle2=atof(decodedParameters[6].c_str());
   
   m_beamID=0; // TODO
   int spectral_window(0);
-  int n_subbands(m_subbands.size());
+  int n_subbands(subbandsVector.size());
   int subbandsArray[ABS::N_BEAMLETS];
+  char tempLogStr[1000];
+  tempLogStr[0]=0;
   
   memset(subbandsArray,0,sizeof(subbandsArray[0])*ABS::N_BEAMLETS);
-  vector<int>::iterator vectorIterator=m_subbands.begin();
+  vectorIterator=subbandsVector.begin();
   int arrayIndex(0);
-  while(arrayIndex<ABS::N_BEAMLETS && vectorIterator!=m_subbands.end())
+  while(arrayIndex<ABS::N_BEAMLETS && vectorIterator!=subbandsVector.end())
   {
     subbandsArray[arrayIndex++]=*vectorIterator;
+    char tempStr[10];
+    sprintf(tempStr,"%d ",subbandsArray[arrayIndex-1]);
+    strcat(tempLogStr,tempStr);
     ++vectorIterator;
   }
   
+  
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer(%s)::allocate %d subbands: %s",getName().c_str(),n_subbands,tempLogStr));
   ABSBeamallocEvent beamAllocEvent(spectral_window,n_subbands,subbandsArray);
   m_beamServer.send(beamAllocEvent);
 }

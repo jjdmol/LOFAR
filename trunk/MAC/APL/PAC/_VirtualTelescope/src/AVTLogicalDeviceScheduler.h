@@ -86,6 +86,7 @@ class AVTLogicalDeviceScheduler : public GCFTask,
     GCFApc                m_apcLDS;
     bool                  m_initialized;
 //    GCFPort               m_beamServer;
+    GCFPort*              m_pBeamServer;
     double                m_WGfrequency;
     unsigned int          m_WGamplitude;
     unsigned int          m_WGsamplePeriod;
