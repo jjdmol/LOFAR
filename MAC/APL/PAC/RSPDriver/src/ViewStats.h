@@ -38,7 +38,7 @@ class ViewStats : public GCFTask, public Test
      * up connection establishment information using the GTMNameService and
      * GTMTopologyService classes.
      */
-    ViewStats(string name, int type = 0, int rcu = 0);
+    ViewStats(string name, int type = 0, int device = 0, int n_devices = 1);
     virtual ~ViewStats();
 
     // state methods
@@ -73,7 +73,8 @@ class ViewStats : public GCFTask, public Test
     // ports
     GCFPort m_server;
     int m_type;
-    int m_rcu;
+    int m_device;
+    int m_n_devices;
 };
      
 #endif /* VIEWSTATS_H_ */

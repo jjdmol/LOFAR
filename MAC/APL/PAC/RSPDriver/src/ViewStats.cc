@@ -29,6 +29,8 @@
 
 #include "ViewStats.h"
 
+#include "PSAccess.h"
+
 #include <Suite/suite.h>
 #include <iostream>
 #include <sys/time.h>
@@ -46,12 +48,6 @@ using namespace LOFAR;
 using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
-
-//
-// These are the parameters for the MAC-EPA increment 2
-//
-#define N_RSPBOARDS 3
-#define N_BLPS      2
 
 #define START_TEST(_test_, _descr_) \
   setCurSubTest(#_test_, _descr_)
@@ -83,9 +79,9 @@ do { \
   } \
 } while(0)
 
-ViewStats::ViewStats(string name, int type, int rcu)
+ViewStats::ViewStats(string name, int type, int device, int n_devices)
   : GCFTask((State)&ViewStats::initial, name), Test(name),
-    m_type(type), m_rcu(rcu)
+    m_type(type), m_device(device), m_n_devices(n_devices)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
@@ -155,13 +151,13 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
 
       substats.timestamp.setNow();
       substats.rcumask.reset();
-      if (m_rcu >= 0)
+      if (m_device >= 0)
       {
-	substats.rcumask.set(m_rcu);
+	substats.rcumask.set(m_device);
       }
       else
       {
-	for (int i = 0; i < N_RSPBOARDS * N_BLPS; i++)
+	for (int i = 0; i < m_n_devices; i++)
 	  substats.rcumask.set(i);
       }
 	
@@ -277,12 +273,12 @@ void ViewStats::plot_statistics(Array<complex<double>, 3>& stats)
   gnuplot_cmd(handle, "set multiplot");
   gnuplot_cmd(handle, "set size 1,%f", 1.0 / stats.extent(secondDim));
 #endif
-  for (int rcu = stats.lbound(secondDim);
-       rcu <= stats.ubound(secondDim);
-       rcu++)
+  for (int device = stats.lbound(secondDim);
+       device <= stats.ubound(secondDim);
+       device++)
   {
-    gnuplot_cmd(handle, "set origin 0,%f", 1.0 * rcu / stats.extent(secondDim));
-    if (rcu == stats.lbound(secondDim))
+    gnuplot_cmd(handle, "set origin 0,%f", 1.0 * device / stats.extent(secondDim));
+    if (device == stats.lbound(secondDim))
     {
       gnuplot_cmd(handle, "set xtics axis");
     }
@@ -295,8 +291,8 @@ void ViewStats::plot_statistics(Array<complex<double>, 3>& stats)
 	|| Statistics::BEAMLET_POWER == m_type)
     {
       // add real and imaginary part to get power
-      value  = real(stats(0, rcu, Range::all()));
-      value += imag(stats(0, rcu, Range::all()));
+      value  = real(stats(0, device, Range::all()));
+      value += imag(stats(0, device, Range::all()));
 
       // signal + 1e-6 and +10dB calibrated this to the Marconi signal generator
       value = log10((value + 1e-6) / (1.0*(1<<16))) * 10.0 + 10.0;
@@ -311,8 +307,8 @@ void ViewStats::plot_statistics(Array<complex<double>, 3>& stats)
     }
     else // MEAN
     {
-      value =  real(stats(0, rcu, Range::all())) * real(stats(0, rcu, Range::all()));
-      value += imag(stats(0, rcu, Range::all())) * imag(stats(0, rcu, Range::all()));
+      value =  real(stats(0, device, Range::all())) * real(stats(0, device, Range::all()));
+      value += imag(stats(0, device, Range::all())) * imag(stats(0, device, Range::all()));
       value /= (1<<16);
       value /= (1<<16);
       value -= 1.0;
@@ -339,16 +335,16 @@ void ViewStats::plot_statistics(Array<complex<double>, 3>& stats)
     switch (m_type)
     {
       case Statistics::SUBBAND_MEAN:
-	snprintf(title, 128, "Subband Mean Value (RCU=%d)", rcu);
+	snprintf(title, 128, "Subband Mean Value (RCU=%d)", device);
 	break;
       case Statistics::SUBBAND_POWER:
-	snprintf(title, 128, "Subband Power (RCU=%d)", rcu);
+	snprintf(title, 128, "Subband Power (RCU=%d)", device);
 	break;
       case Statistics::BEAMLET_MEAN:
-	snprintf(title, 128, "Beamlet Mean Value (RCU=%d)", rcu);
+	snprintf(title, 128, "Beamlet Mean Value (RSP board=%d)", device);
 	break;
       case Statistics::BEAMLET_POWER:
-	snprintf(title, 128, "Beamlet Power (RCU=%d)", rcu);
+	snprintf(title, 128, "Beamlet Power (RSP board=%d)", device);
 	break;
       default:
 	snprintf(title, 128, "ERROR: Invalid m_type");
@@ -373,27 +369,49 @@ int main(int argc, char** argv)
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
+  try
+  {
+    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
+  }
+  catch (Exception e)
+  {
+    LOG_ERROR_STR("Failed to load configuration files: " << e.text());
+    exit(EXIT_FAILURE);
+  }
+
   char buf[32];
 
   cout << "Type of stat [0==SUBBAND_MEAN, 1==SUBBAND_POWER, 2=BEAMLET_MEAN, 3=BEAMLET_POWER]:";
   int type = atoi(fgets(buf, 32, stdin));
   if (type < 0 || type >= Statistics::N_STAT_TYPES)
   {
-    LOG_FATAL(formatString("Invalid type of stat, should be >= 0 && < %d", Statistics::N_STAT_TYPES));
+    LOG_FATAL(formatString("Invalid type of stat, should be >= 0 && < %d",
+			   Statistics::N_STAT_TYPES));
     exit(EXIT_FAILURE);
   }
 
-  cout << "Which RCU? ";
-  int rcu = atoi(fgets(buf, 32, stdin));
-  if (rcu < -1 || rcu >= N_RSPBOARDS * N_BLPS)
+  int n_devices = ((type <= Statistics::SUBBAND_POWER)?GET_CONFIG("RS.N_BLPS", i):1) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
+
+  cout << "Which devices (RCU's for subband stats, RSP boards for beamlet stats (-1 means all):";
+  int device = atoi(fgets(buf, 32, stdin));
+  if (device < -1 || device >= n_devices)
   {
-    LOG_FATAL(formatString("Invalid RCU index, should be >= -1 && < %d; -1 indicates all RCU's", N_RSPBOARDS * N_BLPS));
+    LOG_FATAL(formatString("Invalid device index, should be >= -1 && < %d; -1 indicates all devices",
+			   n_devices));
     exit(EXIT_FAILURE);
   }
   
   Suite s("ViewStats", &cerr);
-  s.addTest(new ViewStats("ViewStats", type, rcu));
-  s.run();
+  s.addTest(new ViewStats("ViewStats", type, device, n_devices));
+  try
+  {
+    s.run();
+  }
+  catch (Exception e)
+  {
+    LOG_ERROR_STR("Exception: " << e.text());
+    exit(EXIT_FAILURE);
+  }
   long nFail = s.report();
   s.free();
 

@@ -103,8 +103,8 @@ RSPDriver.READ_VERSION=1
 #
 # Optionally read RW-registers.
 #
-RSPDriver.READ_BF=1
-RSPDriver.READ_SS=1
-RSPDriver.READ_RCU=1
-RSPDriver.READ_WG=1
+RSPDriver.READ_BF=0
+RSPDriver.READ_SS=0
+RSPDriver.READ_RCU=0
+RSPDriver.READ_WG=0
 
