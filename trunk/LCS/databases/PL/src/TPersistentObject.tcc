@@ -27,7 +27,7 @@
 #include <PL/Exception.h>
 #include <PL/TPersistentObject.h>
 #include <Common/Debug.h>
-#include <iostream>
+#include <sstream>
 
 namespace LOFAR
 {
@@ -109,20 +109,18 @@ namespace LOFAR
     template<typename T>
     void TPersistentObject<T>::doUpdate() const
     {
+      std::ostringstream whereClause;
+      whereClause << "WHERE ObjId=" << metaData().oid()->get();
+
       typedef dtl::DBView< DBRep<T>, DBRep<ObjectId> > DBViewType;
 
-      DBViewType view(tableName(), BCA<T>(), 
-                      "WHERE ObjId=(?)", BPA<ObjectId>());
+      DBViewType view(tableName(), BCA<T>(), whereClause.str());
       typename DBViewType::update_iterator iter = view;
 
       // copy info of the T to the DBRep<T> class
       DBRep<T>    rec;
       toDBRepMeta ((DBRepMeta&)rec);
       toDBRep (rec);
-
-      // setup the selection parameters
-//       iter.Params().itsOid = rec.getOid(); // GvD
-      iter.Params().itsOid = rec.itsOid; 
 
       // save this record
       *iter = rec;
@@ -136,17 +134,15 @@ namespace LOFAR
     template<typename T>
     void TPersistentObject<T>::doRetrieve(const ObjectId& oid, bool isOwnerOid)
     {
-      std::string whereClause;
+      std::ostringstream whereClause;
       if (isOwnerOid)
-        whereClause = "WHERE Owner=(?)";
+        whereClause << "WHERE Owner=" << oid.get();
       else
-        whereClause = "WHERE ObjId=(?)";
+        whereClause << "WHERE ObjId=" << oid.get();
 
       typedef dtl::DBView< DBRep<T>, DBRep<ObjectId> > DBViewType;
-      DBViewType view(tableName(), BCA<T>(), whereClause, BPA<ObjectId>());
+      DBViewType view(tableName(), BCA<T>(), whereClause.str());
       typename DBViewType::select_iterator iter = view.begin();
-
-      iter.Params().itsOid = oid.get();
 
       // We should find a match! Otherwise there's some kind of logic error.
       AssertStr(iter != view.end(), "oid=" << oid.get()
