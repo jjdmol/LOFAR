@@ -92,6 +92,11 @@ public:
   // Destructor.
   ~BlobFieldSet();
 
+  // Has the set a fixed shape?
+  // It has if all its fields have a fixed shape.
+  bool hasFixedShape() const
+    { return itsHasFixedShape; }
+
   // Add an unnamed field to the definition and return its index.
   int add (const BlobFieldBase& field);
 
@@ -150,6 +155,7 @@ private:
 
   std::string                 itsName;
   uint                        itsVersion;
+  bool                        itsHasFixedShape;
   std::vector<BlobFieldBase*> itsFields;
   NameMap                     itsNameMap;
 };

@@ -32,8 +32,9 @@
 namespace LOFAR {
   
   BlobFieldSet::BlobFieldSet (const std::string& name)
-    : itsName    (name),
-      itsVersion (0)
+    : itsName          (name),
+      itsVersion       (0),
+      itsHasFixedShape (true)
   {}
 
   BlobFieldSet::BlobFieldSet (const BlobFieldSet& that)
@@ -44,8 +45,9 @@ namespace LOFAR {
   BlobFieldSet& BlobFieldSet::operator= (const BlobFieldSet& that)
   {
     if (this != &that) {
-      itsName    = that.itsName;
-      itsVersion = that.itsVersion;
+      itsName          = that.itsName;
+      itsVersion       = that.itsVersion;
+      itsHasFixedShape = that.itsHasFixedShape;
       for (uint i=0; i<itsFields.size(); i++) {
 	delete itsFields[i];
       }
@@ -74,6 +76,7 @@ namespace LOFAR {
     if (field.getVersion() > itsVersion) {
       itsVersion = field.getVersion();
     }
+    itsHasFixedShape &= field.hasFixedShape();
     int inx = itsFields.size();
     itsFields.push_back (field.clone());
     itsNameMap[name] = inx;
@@ -85,6 +88,7 @@ namespace LOFAR {
     if (field.getVersion() > itsVersion) {
       itsVersion = field.getVersion();
     }
+    itsHasFixedShape &= field.hasFixedShape();
     int inx = itsFields.size();
     itsFields.push_back (field.clone());
     return inx;
