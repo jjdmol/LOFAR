@@ -1,6 +1,12 @@
 [ABS]
 rspdriver=RSP:acceptor
 
+[ViewStats]
+server=RSP:acceptor
+
+[SetWG]
+server=RSP:acceptor
+
 [RSP]
 #intentially left empty
 
