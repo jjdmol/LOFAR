@@ -66,7 +66,7 @@ const meqserver_test := function ()
 const meqsink_test := function ()
 {
   global mqs;
-  mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer");
+  mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer",gui=T);
   # set verbose debugging messages
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",1);
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot MeqNode",2);
@@ -111,7 +111,7 @@ const meqsink_test := function ()
 const meqsel_test := function ()
 {
   global mqs;
-  mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer");
+  mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer",gui=T);
   # set verbose debugging messages
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
@@ -140,7 +140,7 @@ const meqsel_test := function ()
   print mqs.meq('Create.Node',rec);
   print mqs.meq('Create.Node',meqnode('MeqComposer','compose3',children="select1 select2"));
   rec := meqnode('MeqSelector','select3',children="compose3");
-  rec.index := [2,4];
+  rec.index := [2,3,4];
   print mqs.meq('Create.Node',rec);
   
   # resolve children

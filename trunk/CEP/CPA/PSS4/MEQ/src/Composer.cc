@@ -20,14 +20,13 @@
 //#
 //# $Id$
 
-#include <MEQ/Composer.h>
-#include <MEQ/Request.h>
-#include <MEQ/Result.h>
-#include <MEQ/Cells.h>
+#include "Composer.h"
+#include "Request.h"
+#include "Result.h"
+#include "Cells.h"
+#include "MeqVocabulary.h"
 
 namespace Meq {    
-
-const HIID FIndex  = AidIndex;
 
 Composer::Composer()
 {}
@@ -35,32 +34,69 @@ Composer::Composer()
 Composer::~Composer()
 {}
 
+
+void Composer::init (DataRecord::Ref::Xfer &initrec, Forest* frst)
+{
+  contagious_fail = (*initrec)[FContagiousFail].as<bool>(false);
+  Node::init(initrec,frst);
+}
+
+void Composer::setState (const DataRecord &rec)
+{
+  if( rec[FContagiousFail].exists() )
+  {
+    wstate()[FContagiousFail] = contagious_fail = 
+          rec[FContagiousFail].as<bool>();
+  }
+}
+
 int Composer::getResultImpl (ResultSet::Ref &resref, const Request& request, bool)
 {
   std::vector<ResultSet::Ref> childref;
-  // get results from children, fail if failed
-  int resflag = getChildResults(childref,resref,request);
-  if( resflag == RES_FAIL )
-    return RES_FAIL;
+  // get results from children
+  int resflag = getChildResults(childref,request);
   // return wait if some child has returned a wait
-  if( resflag&RES_WAIT )
+  if( resflag != RES_FAIL && resflag&RES_WAIT )
     return resflag;
-  // count # of output planes
-  int nres = 0;
+  // count # of output planes, and # of fails among them
+  int nres = 0, nfails = 0;
   for( uint i=0; i<childref.size(); i++ )
-    nres += childref[i]->numResults();
-  // otherwise, compose result
-  ResultSet &result = resref <<= new ResultSet(nres);
-  result.setCells(request.cells()); 
-  int ires=0;
-  for( int i=0; i<numChildren(); i++ )
   {
-    ResultSet &childres = childref[i]();
-    for( int j=0; j<childres.numResults(); j++ )
-      result.setResult(ires++,&(childres.result(j)));
-    childref[i].detach();
+    nres += childref[i]->numResults();
+    nfails += childref[i]->numFails();
   }
-  return resflag;
+  // if fail is contagious, generate a fully failed result
+  if( nfails && ( contagious_fail || nres == nfails ) )
+  {
+    ResultSet &result = resref <<= new ResultSet(nfails,request);
+    int ires = 0;
+    for( uint i=0; i<childref.size(); i++ )
+    {
+      ResultSet &childres = childref[i]();
+      for( int j=0; j<childres.numResults(); j++ )
+      {
+        Result &res = childres.result(j);
+        if( res.isFail() )
+          result.setResult(ires++,&res);
+      }
+    }
+    return RES_FAIL;
+  }
+  // otherwise, compose normal result
+  else
+  {
+    ResultSet &result = resref <<= new ResultSet(nres,request);
+    result.setCells(request.cells()); 
+    int ires=0;
+    for( int i=0; i<numChildren(); i++ )
+    {
+      ResultSet &childres = childref[i]();
+      for( int j=0; j<childres.numResults(); j++ )
+        result.setResult(ires++,&(childres.result(j)));
+      childref[i].detach();
+    }
+    return resflag;
+  }
 }
 
 } // namespace Meq

@@ -20,10 +20,11 @@
 //#
 //# $Id$
 
-#include <MEQ/Parm.h>
-#include <MEQ/Request.h>
-#include <MEQ/Result.h>
-#include <MEQ/Cells.h>
+#include "Parm.h"
+#include "Request.h"
+#include "Result.h"
+#include "Cells.h"
+#include "MeqVocabulary.h"
 #include <Common/Debug.h>
 #include <Common/Lorrays.h>
 #include <aips/Mathematics/Math.h>
@@ -54,14 +55,14 @@ void Parm::init (DataRecord::Ref::Xfer& initrec, Forest* frst)
 {
   Node::init (initrec, frst);
   // Get default value.
-  if (state()[AidDefault].exists()) {
-    DataArray *parr = wstate()[AidDefault].as_wp<DataArray>();
+  if (state()[FDefault].exists()) {
+    DataArray *parr = wstate()[FDefault].as_wp<DataArray>();
     itsDefault = Vells(parr);
   }
   // Get possible ParmTable name and open it.
   string tableName;
-  if (state()[AidTablename].exists()) {
-    tableName = state()[AidTablename].as<string>();
+  if (state()[FTableName].exists()) {
+    tableName = state()[FTableName].as<string>();
   }
   if (! tableName.empty()) {
     itsTable = ParmTable::openTable(tableName);
