@@ -55,3 +55,33 @@ MeqResult MeqExprToComplex::getResult (const MeqRequest& request)
   result.setValue (tocomplex(real.getValue(), imag.getValue()));
   return result;
 }
+
+
+
+
+MeqExprAPToComplex::~MeqExprAPToComplex()
+{}
+
+MeqResult MeqExprAPToComplex::getResult (const MeqRequest& request)
+{
+  MeqResult ampl  = itsAmpl->getResult (request);
+  MeqResult phase = itsPhase->getResult (request);
+  MeqResult result(request.nspid());
+  MeqMatrixTmp res (tocomplex(cos(phase.getValue()), sin(phase.getValue())));
+  for (int spinx=0; spinx<request.nspid(); spinx++) {
+    if (phase.isDefined(spinx)) {
+      const MeqMatrix& ph = phase.getPerturbedValue(spinx);
+      result.setPerturbedValue (spinx,
+				ampl.getPerturbedValue(spinx) *
+				tocomplex(cos(ph), sin(ph)));
+      result.setPerturbation (spinx, phase.getPerturbation(spinx));
+    } else if (ampl.isDefined(spinx)) {
+      result.setPerturbedValue (spinx,
+				ampl.getPerturbedValue(spinx) *
+				res.clone());
+      result.setPerturbation (spinx, ampl.getPerturbation(spinx));
+    }
+  }
+  result.setValue (res * ampl.getValue());
+  return result;
+}

@@ -67,4 +67,21 @@ private:
 };
 
 
+
+class MeqExprAPToComplex: public MeqExpr
+{
+public:
+  MeqExprAPToComplex (MeqExpr* ampl, MeqExpr* phase)
+    : itsAmpl(ampl), itsPhase(phase) {;}
+
+  virtual ~MeqExprAPToComplex();
+
+  virtual MeqResult getResult (const MeqRequest&);
+
+private:
+  MeqExpr* itsAmpl;
+  MeqExpr* itsPhase;
+};
+
+
 #endif
