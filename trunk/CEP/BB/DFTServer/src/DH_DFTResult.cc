@@ -52,6 +52,7 @@ void DH_DFTResult::preprocess()
   // Its axes are nfreq,ntime,nbaseline.
   // Its data is complex<double> represented by 2 doubles.
   addField ("Values", BlobField<double>(1, 0u, 0u, 0u, 2u));
+  createDataBlock();
 }
 
 void DH_DFTResult::set (int nFreq, int nTime, int nBaseline)
