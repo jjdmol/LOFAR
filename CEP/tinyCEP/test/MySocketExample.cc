@@ -33,7 +33,6 @@ namespace LOFAR
       
   MySocketExample::~MySocketExample() {
     delete itsWHs[0];
-    delete itsWHs;
   }
 
   void MySocketExample::define (const KeyValueMap& map) {

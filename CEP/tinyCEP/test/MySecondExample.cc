@@ -17,8 +17,6 @@ namespace LOFAR
   MySecondExample::~MySecondExample() {
     delete itsWHs[0];
     delete itsWHs[1];
-    delete itsWHs;
-
   }
 
   void MySecondExample::define(const KeyValueMap& map) {

@@ -24,7 +24,7 @@
 
 #include <WH_Example.h>
 #include <Common/KeyValueMap.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
