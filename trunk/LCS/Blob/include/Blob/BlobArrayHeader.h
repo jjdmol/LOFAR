@@ -124,7 +124,8 @@ private:
       for (uint i=0; i<NDIM; i++) {
 	sz *= itsSize[i];
       }
-      setLength (sz*sizeof(T) + sizeof(*this));
+      setLength (sz*sizeof(T) + sizeof(*this) +
+		 sizeof(BlobHeaderBase::eobMagicValue()));
     }
 
   char   itsAxisOrder;

@@ -34,7 +34,7 @@
 template<uint NAMELENGTH>
 LOFAR::BlobHeader<NAMELENGTH>::BlobHeader (const char* objectType, int version,
 					   uint level)
-: itsMagicValue     (0xbebebebe),
+: itsMagicValue     (BlobHeaderBase::bobMagicValue()),
   itsLength         (0),
   itsVersion        (version),
   itsDataFormat     (LOFAR::dataFormat()),
@@ -49,4 +49,12 @@ LOFAR::BlobHeader<NAMELENGTH>::BlobHeader (const char* objectType, int version,
   DbgAssert (plainSize() == (char*)(&itsName) - (char*)this);
 }
     
+template<uint NAMELENGTH>
+void LOFAR::BlobHeader<NAMELENGTH>::setLocalDataFormat()
+{
+  itsLength     = LOFAR::dataConvert (getDataFormat(), itsLength);
+  itsVersion    = LOFAR::dataConvert (getDataFormat(), itsVersion);
+  itsDataFormat = LOFAR::dataFormat();
+}
+
 #endif
