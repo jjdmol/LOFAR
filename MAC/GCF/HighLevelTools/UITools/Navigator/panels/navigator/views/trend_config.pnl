@@ -1,13 +1,17 @@
 V 10
 1
 LANG:1 12 trend_config
-PANEL,281 138 879 680 N "_3DFace" 5
+PANEL,317 121 879 700 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
 "$selectedView"
 "$viewName"
-EEE E E 1 -1 -1 0  20 20
+"main()
+{
+
+}" 0
+EE E E 1 -1 -1 0  20 20
 "" 0 1
 E"//Include of ctl file
 #uses \"gcfnav_view.ctl\"
@@ -589,6 +593,14 @@ LANG:1 0
 E E 0 1 1 0 1 E  72 471 10 471
 1 218 36 "" 57
 0
+1 227 37 "" 0
+0
+1 228 37 "" 1
+0
+1 229 37 "" 2
+0
+1 230 37 "" 3
+0
 1 18 4 "" 1
 0
 1 162 24 "" 0
@@ -672,6 +684,11 @@ LANG:1 0
     setValue (\"RadioButton2\", \"number\", SelectedItem);
   }
   else
+  {
+    setValue (\"RadioButton2\", \"enabled\", FALSE);
+  }
+
+  if (dpGetElementName($datapoint)!=\"\")
   {
     setValue (\"RadioButton2\", \"enabled\", FALSE);
   }
@@ -845,11 +862,21 @@ LANG:1 4 Load
   {
     setValue(\"\", \"enabled\", FALSE);
   }
+
+ 	// Is it a datapoint element? then disable control
+	// This includes that this control is only suitable for DP-Types
+	if (dpGetElementName($datapoint)!=\"\")
+  {
+    setValue (\"\", \"enabled\", FALSE);
+  }
+
 }" 0
 
 1 219 36 "" 54
 0
 1 220 36 "" 55
+0
+1 221 36 "" 58
 0
 0
 LAYER, 1 
@@ -1063,6 +1090,10 @@ LANG:1 6 Layer8
 "$selectedElementDpType""$selectedElementDpType"
 "$selectedView""$selectedView"
 "$viewName""$viewName"
+3 37 ""
+"objects\\Nav\\info_config disabled_because_dpe.pnl" 80 550 T 144 1 0 1  10 110  
+1
+"$datapoint""$datapoint"
 3 24 ""
 "objects\\Nav\\trend_title.pnl" 153 89 T 105 1 0 1  -78 78  
 2

@@ -1,11 +1,12 @@
 V 10
 1
 LANG:1 7 Station
-PANEL,309 199 994 514 N "_3DFace" 1
+PANEL,593 182 994 514 N "_3DFace" 1
 "$datapoint"
 EEE E E 1 -1 -1 0  188 128
 "" 0 1
-EE 2
+E"#uses \"gcfnav_view.ctl\"" 0
+ 2
 "CBRef""1"
 "EClose"E
 ""
@@ -155,7 +156,7 @@ E E 1 1 1 0 1 E U  1 E 30 30 960 140
 6 816
 "Border399"
 ""
-1 433 232 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+1 423 232 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
  E E
 596 0 0 0 0 0
 EE E
@@ -164,11 +165,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 433 172 561 236
+E E 0 1 1 0 1 E U  1 E 423 172 551 236
 7 817
 "Ellipse102"
 ""
-1 435.5 180.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 425.5 180.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 597 0 0 0 0 0
 EE E
@@ -177,11 +178,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -109.375 -45.625  0 E 437.5 182.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -106.875 -45.625  0 E 427.5 182.5 2 2
 7 818
 "Ellipse103"
 ""
-1 435.5 220.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 425.5 220.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 598 0 0 0 0 0
 EE E
@@ -190,11 +191,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -109.375 -55.625  0 E 437.5 222.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -106.875 -55.625  0 E 427.5 222.5 2 2
 7 819
 "Ellipse104"
 ""
-1 554.5 180.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 544.5 180.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 599 0 0 0 0 0
 EE E
@@ -203,11 +204,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -139.125 -45.625  0 E 556.5 182.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -136.625 -45.625  0 E 546.5 182.5 2 2
 7 820
 "Ellipse105"
 ""
-1 554.5 220.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 544.5 220.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 600 0 0 0 0 0
 EE E
@@ -216,11 +217,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -139.125 -55.625  0 E 556.5 222.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -136.625 -55.625  0 E 546.5 222.5 2 2
 6 826
 "Border401"
 ""
-1 433 360 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+1 423 360 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
  E E
 606 0 0 0 0 0
 EE E
@@ -229,11 +230,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 433 300 561 364
+E E 0 1 1 0 1 E U  1 E 423 300 551 364
 7 827
 "Ellipse110"
 ""
-1 435.5 309.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 425.5 309.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 607 0 0 0 0 0
 EE E
@@ -242,11 +243,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -109.375 -77.875  0 E 437.5 311.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -106.875 -77.875  0 E 427.5 311.5 2 2
 7 828
 "Ellipse111"
 ""
-1 435.5 349.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 425.5 349.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 608 0 0 0 0 0
 EE E
@@ -255,11 +256,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -109.375 -87.875  0 E 437.5 351.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -106.875 -87.875  0 E 427.5 351.5 2 2
 7 829
 "Ellipse112"
 ""
-1 554.5 309.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 544.5 309.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 609 0 0 0 0 0
 EE E
@@ -268,11 +269,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -139.125 -77.875  0 E 556.5 311.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -136.625 -77.875  0 E 546.5 311.5 2 2
 7 830
 "Ellipse113"
 ""
-1 554.5 349.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 544.5 349.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 610 0 0 0 0 0
 EE E
@@ -281,11 +282,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -139.125 -87.875  0 E 556.5 351.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -136.625 -87.875  0 E 546.5 351.5 2 2
 6 831
 "Border402"
 ""
-1 433 424 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+1 423 424 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
  E E
 611 0 0 0 0 0
 EE E
@@ -294,11 +295,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 433 364 561 428
+E E 0 1 1 0 1 E U  1 E 423 364 551 428
 7 832
 "Ellipse114"
 ""
-1 435.5 373.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 425.5 373.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 612 0 0 0 0 0
 EE E
@@ -307,11 +308,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -109.375 -93.875  0 E 437.5 375.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -106.875 -93.875  0 E 427.5 375.5 2 2
 7 833
 "Ellipse115"
 ""
-1 435.5 413.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 425.5 413.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 613 0 0 0 0 0
 EE E
@@ -320,11 +321,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -109.375 -103.875  0 E 437.5 415.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -106.875 -103.875  0 E 427.5 415.5 2 2
 7 835
 "Ellipse116"
 ""
-1 554.5 373.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 544.5 373.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 615 0 0 0 0 0
 EE E
@@ -333,11 +334,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -139.125 -93.875  0 E 556.5 375.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -136.625 -93.875  0 E 546.5 375.5 2 2
 7 836
 "Ellipse117"
 ""
-1 554.5 413.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 544.5 413.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 616 0 0 0 0 0
 EE E
@@ -346,11 +347,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -139.125 -103.875  0 E 556.5 415.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -136.625 -103.875  0 E 546.5 415.5 2 2
 6 837
 "Border403"
 ""
-1 433 462 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+1 423 462 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
  E E
 617 0 0 0 0 0
 EE E
@@ -359,11 +360,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 433 428 561 468
+E E 0 1 1 0 1 E U  1 E 423 428 551 468
 7 838
 "Ellipse118"
 ""
-1 436.5 436.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 426.5 436.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 618 0 0 0 0 0
 EE E
@@ -372,11 +373,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -109.625 -109.625  0 E 438.5 438.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -107.125 -109.625  0 E 428.5 438.5 2 2
 7 839
 "Ellipse119"
 ""
-1 436.5 456.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 426.5 456.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 619 0 0 0 0 0
 EE E
@@ -385,11 +386,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -109.625 -114.625  0 E 438.5 458.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -107.125 -114.625  0 E 428.5 458.5 2 2
 7 840
 "Ellipse120"
 ""
-1 553.5 436.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 543.5 436.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 620 0 0 0 0 0
 EE E
@@ -398,11 +399,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -138.875 -109.625  0 E 555.5 438.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -136.375 -109.625  0 E 545.5 438.5 2 2
 7 841
 "Ellipse121"
 ""
-1 553.5 456.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 543.5 456.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 621 0 0 0 0 0
 EE E
@@ -411,11 +412,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.25 0 1.25  -138.875 -114.625  0 E 555.5 458.5 2 2
+E E 0 1 1 0 1 E 1.25 0 1.25  -136.375 -114.625  0 E 545.5 458.5 2 2
 2 843
 "Text32"
 ""
-1 444 365 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 434 365 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 623 0 0 0 0 0
 EE E
@@ -424,8 +425,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 446 367 481 381
-0 2 0 "s" 0 0 0 192 0 0  446 367
+E E 0 1 1 0 1 E U  0 E 436 367 471 381
+0 2 0 "s" 0 0 0 192 0 0  436 367
  1
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -435,7 +436,7 @@ LANG:1 5 WAN-1
 2 845
 "Text33"
 ""
-1 443 301 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 433 301 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 625 0 0 0 0 0
 EE E
@@ -444,8 +445,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 445 303 465 317
-0 2 0 "s" 0 0 0 192 0 0  445 303
+E E 0 1 1 0 1 E U  0 E 435 303 455 317
+0 2 0 "s" 0 0 0 192 0 0  435 303
  1
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -455,7 +456,7 @@ LANG:1 3 LCU
 2 849
 "Text35"
 ""
-1 444 172 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 434 172 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 629 0 0 0 0 0
 EE E
@@ -464,8 +465,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 446 174 468 188
-0 2 0 "s" 0 0 0 192 0 0  446 174
+E E 0 1 1 0 1 E U  0 E 436 174 458 188
+0 2 0 "s" 0 0 0 192 0 0  436 174
  1
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -475,7 +476,7 @@ LANG:1 3 SCO
 2 882
 "Text36"
 ""
-1 483 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 473 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 662 0 0 0 0 0
 EE E
@@ -484,8 +485,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 485 153 501 169
-0 2 0 "s" 0 0 0 192 0 0  485 153
+E E 0 1 1 0 1 E U  0 E 475 153 491 169
+0 2 0 "s" 0 0 0 192 0 0  475 153
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -495,7 +496,7 @@ LANG:1 2 R7
 2 883
 "Text37"
 ""
-1 481 439 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 471 439 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 663 0 0 0 0 0
 EE E
@@ -504,8 +505,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 483 441 510 457
-0 2 0 "s" 0 0 0 192 0 0  483 441
+E E 0 1 1 0 1 E U  0 E 473 441 500 457
+0 2 0 "s" 0 0 0 192 0 0  473 441
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -515,7 +516,7 @@ LANG:1 3 UPS
 2 885
 "Text39"
 ""
-1 512 365 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 502 365 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 665 0 0 0 0 0
 EE E
@@ -524,8 +525,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 514 367 549 381
-0 2 0 "s" 0 0 0 192 0 0  514 367
+E E 0 1 1 0 1 E U  0 E 504 367 539 381
+0 2 0 "s" 0 0 0 192 0 0  504 367
  1
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -535,7 +536,7 @@ LANG:1 5 WAN-2
 4 886
 "Line53"
 ""
-1 498 365 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 488 365 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 666 0 0 0 0 0
 EE E
@@ -544,11 +545,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  498 428 498 365
+E E 0 1 1 0 1 E  488 428 488 365
 2 1055
 "Text2"
 ""
-1 82 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 72 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 674 0 0 0 0 0
 EE E
@@ -557,8 +558,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 84 153 100 169
-0 2 0 "s" 0 0 0 192 0 0  84 153
+E E 0 1 1 0 1 E U  0 E 74 153 90 169
+0 2 0 "s" 0 0 0 192 0 0  74 153
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -770,7 +771,7 @@ LANG:1 2 R1
 2 1351
 "Text3"
 ""
-1 212 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 202 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 702 0 0 0 0 0
 EE E
@@ -779,8 +780,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 214 153 230 169
-0 2 0 "s" 0 0 0 192 0 0  214 153
+E E 0 1 1 0 1 E U  0 E 204 153 220 169
+0 2 0 "s" 0 0 0 192 0 0  204 153
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -958,7 +959,7 @@ LANG:1 2 R2
 2 1436
 "Text4"
 ""
-1 352 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 342 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 707 0 0 0 0 0
 EE E
@@ -967,8 +968,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 354 153 370 169
-0 2 0 "s" 0 0 0 192 0 0  354 153
+E E 0 1 1 0 1 E U  0 E 344 153 360 169
+0 2 0 "s" 0 0 0 192 0 0  344 153
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -978,7 +979,7 @@ LANG:1 2 R3
 2 1437
 "Text5"
 ""
-1 618 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 608 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 708 0 0 0 0 0
 EE E
@@ -987,8 +988,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 620 153 636 169
-0 2 0 "s" 0 0 0 192 0 0  620 153
+E E 0 1 1 0 1 E U  0 E 610 153 626 169
+0 2 0 "s" 0 0 0 192 0 0  610 153
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -998,7 +999,7 @@ LANG:1 2 R4
 2 1438
 "Text6"
 ""
-1 752 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 742 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 709 0 0 0 0 0
 EE E
@@ -1007,8 +1008,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 754 153 770 169
-0 2 0 "s" 0 0 0 192 0 0  754 153
+E E 0 1 1 0 1 E U  0 E 744 153 760 169
+0 2 0 "s" 0 0 0 192 0 0  744 153
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -1018,7 +1019,7 @@ LANG:1 2 R5
 2 1439
 "Text7"
 ""
-1 893 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 883 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 710 0 0 0 0 0
 EE E
@@ -1027,8 +1028,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 895 153 911 169
-0 2 0 "s" 0 0 0 192 0 0  895 153
+E E 0 1 1 0 1 E U  0 E 885 153 901 169
+0 2 0 "s" 0 0 0 192 0 0  885 153
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -1650,7 +1651,7 @@ LANG:1 2 R6
 2 1987
 "text_SubrackNr"
 ""
-1 16 193 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 6 193 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 800 0 0 0 0 0
 EE E
@@ -1659,8 +1660,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 18 195 25 211
-0 2 0 "s" 0 0 0 192 0 0  18 195
+E E 0 1 1 0 1 E U  0 E 8 195 15 211
+0 2 0 "s" 0 0 0 192 0 0  8 195
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -1670,7 +1671,7 @@ LANG:1 1 1
 2 1988
 "Text1"
 ""
-1 16 258 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 6 258 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 801 0 0 0 0 0
 EE E
@@ -1679,8 +1680,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 18 260 25 276
-0 2 0 "s" 0 0 0 192 0 0  18 260
+E E 0 1 1 0 1 E U  0 E 8 260 15 276
+0 2 0 "s" 0 0 0 192 0 0  8 260
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -1690,7 +1691,7 @@ LANG:1 1 2
 2 1989
 "Text8"
 ""
-1 16 321 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 6 321 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 802 0 0 0 0 0
 EE E
@@ -1699,8 +1700,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 18 323 25 339
-0 2 0 "s" 0 0 0 192 0 0  18 323
+E E 0 1 1 0 1 E U  0 E 8 323 15 339
+0 2 0 "s" 0 0 0 192 0 0  8 323
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -1710,7 +1711,7 @@ LANG:1 1 3
 2 1990
 "Text9"
 ""
-1 16 386 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 6 386 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 803 0 0 0 0 0
 EE E
@@ -1719,8 +1720,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 18 388 25 404
-0 2 0 "s" 0 0 0 192 0 0  18 388
+E E 0 1 1 0 1 E U  0 E 8 388 15 404
+0 2 0 "s" 0 0 0 192 0 0  8 388
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -1790,7 +1791,7 @@ LANG:1 1 4
 2 1992
 "txt_error_black"
 ""
-1 335 193 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 325 193 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 804 0 0 0 0 0
 EE E
@@ -1799,8 +1800,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 337 195 394 211
-0 2 0 "s" 0 0 0 192 0 0  337 195
+E E 0 1 1 0 1 E U  0 E 327 195 384 211
+0 2 0 "s" 0 0 0 192 0 0  327 195
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -1810,7 +1811,7 @@ LANG:1 9 AP1 Error
 2 1993
 "txt_error_red"
 ""
-1 335 193 E E E 1 E 0 E N {255,0,0} E N "_Transparent" E E
+1 325 193 E E E 1 E 0 E N {255,0,0} E N "_Transparent" E E
  E E
 805 0 0 0 0 0
 EE E
@@ -1819,8 +1820,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 337 195 394 211
-0 2 0 "s" 0 0 0 192 0 0  337 195
+E E 0 1 1 0 1 E U  0 E 327 195 384 211
+0 2 0 "s" 0 0 0 192 0 0  327 195
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -1830,7 +1831,7 @@ LANG:1 9 AP1 Error
 2 1996
 "Text12"
 ""
-1 409 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 409 40 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 808 0 0 0 0 0
 EE E
@@ -1869,172 +1870,10 @@ LANG:1 4 Test
 0
 1 1183 25 "" 10
 0
-13 1905
-"Button1"
-""
-1 52 52 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-780 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-50 50 170 80
-T 
-1
-LANG:1 18 Virtual Telescopes
-"// SimpleCtrlScriptStart {invalid}
-main()
-{
-  EP_childPanelOn();
-}
-
-EP_childPanelOn()
-{
-  RootPanelOn(\"VT_main.pnl\",
-      \"Virtual Telescopes\",
-      makeDynString(\"\"));
-}
-
-// SimpleCtrlScript {EP_childPanelOn}
-// Function {RootPanelOn}
-// File {Beam_positioning_3D.pnl}
-// Panel {Beam positions (3D)}
-// Parent {}
-// Module {}
-// OffsetX {0}
-// OffsetY {0}
-// SimpleCtrlScriptEnd {EP_childPanelOn}
-" 0
- E E E
-13 1907
-"bnt_LFA"
-""
-1 194 53 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-781 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-190 50 310 80
-T 
-1
-LANG:1 12 LFA antennas
-"// SimpleCtrlScriptStart {invalid}
-main()
-{
-  EP_childPanelOn();
-}
-
-EP_childPanelOn()
-{
-  RootPanelOn(\"Antenna_LFA.pnl\",
-      \"Antenna_LFA\",
-      makeDynString(\"\"));
-}
-
-// SimpleCtrlScript {EP_childPanelOn}
-// Function {RootPanelOn}
-// File {Antennas.pnl}
-// Panel {Antennas}
-// Parent {}
-// Module {}
-// OffsetX {0}
-// OffsetY {0}
-// SimpleCtrlScriptEnd {EP_childPanelOn}
-" 0
- E E E
-13 1963
-"Button2"
-""
-1 194 93 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-790 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-190 90 310 120
-T 
-1
-LANG:1 12 HFA antennas
-"// SimpleCtrlScriptStart {invalid}
-main()
-{
-  EP_childPanelOn();
-}
-
-EP_childPanelOn()
-{
-  RootPanelOn(\"Antenna_HFA.pnl\",
-      \"Antenna_HFA\",
-      makeDynString(\"\"));
-}
-
-// SimpleCtrlScript {EP_childPanelOn}
-// Function {RootPanelOn}
-// File {Antennas.pnl}
-// Panel {Antennas}
-// Parent {}
-// Module {}
-// OffsetX {0}
-// OffsetY {0}
-// SimpleCtrlScriptEnd {EP_childPanelOn}
-" 0
- E E E
-13 1985
-"Button4"
-""
-1 52 92 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-798 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-50 90 170 120
-T 
-1
-LANG:1 10 Statistics
-"main()
-{
-  RootPanelOn(\"Station_Statistics.pnl\",
-      \"Station Statistics\",
-      makeDynString(\"$VT:0\",\"$SUBBANDORBEAMLET:Subband\",\"$SUBSTART:0\",\"$SUBEND:127\"));
-}
-
-// SimpleCtrlScript {EP_childPanelOn}
-// Function {RootPanelOn}
-// File {Beam_positioning_3D.pnl}
-// Panel {Beam positions (3D)}
-// Parent {}
-// Module {}
-// OffsetX {0}
-// OffsetY {0}
-// SimpleCtrlScriptEnd {EP_childPanelOn}
-" 0
- E E E
 13 1991
 "Button3"
 ""
-1 400 59 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 400 59 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
  E E
 803 0 0 0 0 0
 EE E
@@ -2059,7 +1898,7 @@ setValue(\"txt_error_black\", \"visible\", FALSE);
 13 1994
 "Button5"
 ""
-1 400 79 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 400 79 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
  E E
 806 0 0 0 0 0
 EE E
@@ -2084,7 +1923,7 @@ setValue(\"txt_error_black\", \"visible\", TRUE);
 13 1995
 "Button6"
 ""
-1 400 99 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 400 99 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
  E E
 807 0 0 0 0 0
 EE E
@@ -2103,6 +1942,61 @@ LANG:1 4 none
 {
 setValue(\"txt_error_red\", \"visible\", FALSE);
 setValue(\"txt_error_black\", \"visible\", FALSE);
+}" 0
+ E E E
+13 1997
+"Button7"
+""
+1 510 50 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+809 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+508 48 552 92
+T 
+1
+LANG:1 7 Button7
+"main()
+{
+
+//LOFAR Navigator
+
+  RootPanelOn(\"navigator/views/Station_Subrack.pnl\",
+              \"Antenna_LFA\",
+              makeDynString(\"$datapoint:\" + $datapoint + \"_Rack1_SubRack1\"));
+}" 0
+ E E E
+13 1998
+"Button8"
+""
+1 580 80 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+809 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+578 78 642 112
+T 
+1
+LANG:1 5 Names
+"main()
+{
+
+ DebugN(\"myModuleName: \" + myModuleName()); 
+ DebugN(\"myPanelName: \" + myPanelName()); 
+ 
+
 }" 0
  E E E
 0
@@ -2135,192 +2029,168 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 11 "Group41"
-"objects\\PIC\\STS_19inch_Cabinet.pnl" 640 164 T 595 1 0 1  -208 326  
+"objects\\PIC\\STS_19inch_Cabinet.pnl" 640 164 T 595 1 0 1  -218 326  
 0
 3 32 "Rack2"
-"objects\\PIC\\STS_19inch_Cabinet.pnl" 30 165 T 697 1 0 1  134 325  
+"objects\\PIC\\STS_19inch_Cabinet.pnl" 30 165 T 697 1 0 1  124 325  
 0
 3 7 "Rack1"
-"objects\\PIC\\STS_19inch_Cabinet.pnl" 30 164 T 296 1 0 1  0 326  
+"objects\\PIC\\STS_19inch_Cabinet.pnl" 30 164 T 296 1 0 1  -10 326  
 0
 3 27 "Rack1_Subrack2"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 179 281 T 693 1 0 1  -154 15  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 179 281 T 693 1 0 1  -164 15  
+2
 "$RackNr""1"
 "$SubrackNr""2"
-"$datapoint""$datapoint"
 3 28 "Rack1_Subrack3"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 218 262 T 694 1 0 1  -193 98  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 218 262 T 694 1 0 1  -203 98  
+2
 "$RackNr""1"
 "$SubrackNr""3"
-"$datapoint""$datapoint"
 3 31 "Rack2_Subrack2"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 234 219 T 696 1 0 1  -75 77  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 234 219 T 696 1 0 1  -85 77  
+2
 "$RackNr""2"
 "$SubrackNr""2"
-"$datapoint""$datapoint"
 3 33 "Rack2_Subrack1"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 203 166 T 698 1 0 1  -44 65  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 203 166 T 698 1 0 1  -54 65  
+2
 "$RackNr""2"
 "$SubrackNr""1"
-"$datapoint""$datapoint"
 3 34 "Rack2_Subrack3"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 211 311 T 699 1 0 1  -52 49  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 211 311 T 699 1 0 1  -62 49  
+2
 "$RackNr""2"
 "$SubrackNr""3"
-"$datapoint""$datapoint"
 3 35 "Rack2_Subrack4"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 190 340 T 700 1 0 1  -31 84  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 190 340 T 700 1 0 1  -41 84  
+2
 "$RackNr""2"
 "$SubrackNr""4"
-"$datapoint""$datapoint"
 3 36 "Rack2_Power"
-"objects\\PIC\\STS_19inch_Powerrack.pnl" 228 405 T 701 1 0 1  -63 58  
+"objects\\PIC\\STS_19inch_Powerrack.pnl" 228 405 T 701 1 0 1  -73 58  
 0
 3 37 "Group27"
-"objects\\PIC\\STS_19inch_Cabinet.pnl" 164 165 T 703 1 0 1  134 325  
+"objects\\PIC\\STS_19inch_Cabinet.pnl" 164 165 T 703 1 0 1  124 325  
 0
 3 38 "Group29"
-"objects\\PIC\\STS_19inch_Cabinet.pnl" 298 165 T 704 1 0 1  536 325  
+"objects\\PIC\\STS_19inch_Cabinet.pnl" 298 165 T 704 1 0 1  526 325  
 0
 3 39 "Group31"
-"objects\\PIC\\STS_19inch_Cabinet.pnl" 830 165 T 705 1 0 1  -130 325  
+"objects\\PIC\\STS_19inch_Cabinet.pnl" 830 165 T 705 1 0 1  -140 325  
 0
 3 40 "Group33"
-"objects\\PIC\\STS_19inch_Cabinet.pnl" 696 165 T 706 1 0 1  -130 325  
+"objects\\PIC\\STS_19inch_Cabinet.pnl" 696 165 T 706 1 0 1  -140 325  
 0
 3 41 "Rack3_Subrack2"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 165 236 T 711 1 0 1  128 60  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 165 236 T 711 1 0 1  118 60  
+2
 "$RackNr""3"
 "$SubrackNr""2"
-"$datapoint""$datapoint"
 3 42 "Rack3_Subrack1"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 165 172 T 712 1 0 1  128 59  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 165 172 T 712 1 0 1  118 59  
+2
 "$RackNr""3"
 "$SubrackNr""1"
-"$datapoint""$datapoint"
 3 43 "Rack3_Subrack3"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 165 300 T 713 1 0 1  128 60  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 165 300 T 713 1 0 1  118 60  
+2
 "$RackNr""3"
 "$SubrackNr""3"
-"$datapoint""$datapoint"
 3 44 "Rack3_Subrack4"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 165 364 T 714 1 0 1  128 60  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 165 364 T 714 1 0 1  118 60  
+2
 "$RackNr""3"
 "$SubrackNr""4"
-"$datapoint""$datapoint"
 3 45 "Rack3_Power"
-"objects\\PIC\\STS_19inch_Powerrack.pnl" 165 429 T 715 1 0 1  134 34  
+"objects\\PIC\\STS_19inch_Powerrack.pnl" 165 429 T 715 1 0 1  124 34  
 0
 3 46 "Rack4_Subrack2"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 299 236 T 716 1 0 1  262 60  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 299 236 T 716 1 0 1  252 60  
+2
 "$RackNr""4"
 "$SubrackNr""2"
-"$datapoint""$datapoint"
 3 47 "Rack4_Subrack1"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 299 172 T 717 1 0 1  262 60  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 299 172 T 717 1 0 1  252 60  
+2
 "$RackNr""4"
 "$SubrackNr""1"
-"$datapoint""$datapoint"
 3 48 "Rack4_Subrack3"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 299 300 T 718 1 0 1  262 60  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 299 300 T 718 1 0 1  252 60  
+2
 "$RackNr""4"
 "$SubrackNr""3"
-"$datapoint""$datapoint"
 3 49 "Rack4_Subrack4"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 299 364 T 719 1 0 1  262 60  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 299 364 T 719 1 0 1  252 60  
+2
 "$RackNr""4"
 "$SubrackNr""4"
-"$datapoint""$datapoint"
 3 50 "Group37"
-"objects\\PIC\\STS_19inch_Powerrack.pnl" 299 429 T 720 1 0 1  268 34  
+"objects\\PIC\\STS_19inch_Powerrack.pnl" 299 429 T 720 1 0 1  258 34  
 0
 3 51 "Rack5_Subrack2"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 567 236 T 721 1 0 1  128 60  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 567 236 T 721 1 0 1  118 60  
+2
 "$RackNr""5"
 "$SubrackNr""2"
-"$datapoint""$datapoint"
 3 52 "Rack5_Subrack1"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 567 172 T 722 1 0 1  128 60  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 567 172 T 722 1 0 1  118 60  
+2
 "$RackNr""5"
 "$SubrackNr""1"
-"$datapoint""$datapoint"
 3 53 "Rack5_Subrack3"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 567 300 T 723 1 0 1  128 60  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 567 300 T 723 1 0 1  118 60  
+2
 "$RackNr""5"
 "$SubrackNr""3"
-"$datapoint""$datapoint"
 3 54 "Rack5_Subrack4"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 567 364 T 724 1 0 1  128 60  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 567 364 T 724 1 0 1  118 60  
+2
 "$RackNr""5"
 "$SubrackNr""4"
-"$datapoint""$datapoint"
 3 55 "Group47"
-"objects\\PIC\\STS_19inch_Powerrack.pnl" 567 429 T 725 1 0 1  134 34  
+"objects\\PIC\\STS_19inch_Powerrack.pnl" 567 429 T 725 1 0 1  124 34  
 0
 3 56 "Rack6_Subrack2"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 701 236 T 726 1 0 1  128 60  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 701 236 T 726 1 0 1  118 60  
+2
 "$RackNr""6"
 "$SubrackNr""2"
-"$datapoint""$datapoint"
 3 57 "Rack6_Subrack1"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 701 172 T 727 1 0 1  128 60  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 701 172 T 727 1 0 1  118 60  
+2
 "$RackNr""6"
 "$SubrackNr""1"
-"$datapoint""$datapoint"
 3 58 "Rack6_Subrack3"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 701 300 T 728 1 0 1  128 60  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 701 300 T 728 1 0 1  118 60  
+2
 "$RackNr""6"
 "$SubrackNr""3"
-"$datapoint""$datapoint"
 3 59 "Rack6_Subrack4"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 701 364 T 729 1 0 1  128 60  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 701 364 T 729 1 0 1  118 60  
+2
 "$RackNr""6"
 "$SubrackNr""4"
-"$datapoint""$datapoint"
 3 60 "Group57"
-"objects\\PIC\\STS_19inch_Powerrack.pnl" 701 429 T 730 1 0 1  134 34  
+"objects\\PIC\\STS_19inch_Powerrack.pnl" 701 429 T 730 1 0 1  124 34  
 0
 3 102 ""
-"objects\\PIC\\STS_19inch_Switch.pnl" 479 241 T 784 1 0 1  -46 57  
+"objects\\PIC\\STS_19inch_Switch.pnl" 479 241 T 784 1 0 1  -56 57  
 0
 3 103 ""
-"objects\\PIC\\STS_19inch_GPS.pnl" 491 214 T 785 1 0 1  -58 52  
+"objects\\PIC\\STS_19inch_GPS.pnl" 491 214 T 785 1 0 1  -68 52  
 0
 3 26 "Rack1_Subrack1"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 198 167 T 692 1 0 1  -173 64  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 198 167 T 692 1 0 1  -183 64  
+2
 "$RackNr""1"
 "$SubrackNr""1"
-"$datapoint""$datapoint"
 3 29 "Rack1_Subrack4"
-"objects\\PIC\\STS_19inch_Subrack.pnl" 177 312 T 695 1 0 1  -152 112  
-3
+"objects\\PIC\\STS_19inch_Subrack.pnl" 177 312 T 695 1 0 1  -162 112  
+2
 "$RackNr""1"
 "$SubrackNr""4"
-"$datapoint""$datapoint"
 3 25 "Rack1_Power"
-"objects\\PIC\\STS_19inch_Powerrack.pnl" 227 313 T 691 1 0 1  -196 150  
+"objects\\PIC\\STS_19inch_Powerrack.pnl" 227 313 T 691 1 0 1  -206 150  
 0
 0

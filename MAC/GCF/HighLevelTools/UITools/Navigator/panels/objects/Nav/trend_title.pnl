@@ -1,9 +1,10 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 168 438 25 N "_3DFace" 2
+PANEL,343 200 438 25 N "_3DFace" 3
 "$TrendNr"
 "$configDatapoint"
+"$datapoint"
 EEE E E 1 -1 -1 0  0 0
 "" 0 1
 EE 2
@@ -45,6 +46,13 @@ E
 		setValue(\"\", \"enabled\", FALSE);
 	  setValue(\"\", \"text\", \"Configuration data not available.\");
 	}
+
+	// Is it a datapoint element? then disable control
+	// This includes that this control is only suitable for DP-Types
+	if (dpGetElementName($datapoint)!=\"\")
+  {
+    setValue (\"\", \"enabled\", FALSE);
+  }
 }" 0
 
 "main()

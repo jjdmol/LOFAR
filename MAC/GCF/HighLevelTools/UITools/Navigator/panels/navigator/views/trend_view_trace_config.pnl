@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,207 470 502 319 N "_3DFace" 4
+PANEL,295 138 502 319 N "_3DFace" 4
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"
@@ -68,9 +68,10 @@ void FillSelectionList()
   TotalDPE = dynlen(tab);
   for (i=2; i<=TotalDPE ; i++)
   {
-    if (\"\" != tab[i][1])   hulp=dpSubStr(tab[i][1]  , DPSUB_DP_EL_CONF_DET_ATT);
+    if (\"\" != tab[i][1])
     {
-	    if ((6==dpElementType(hulp)) || (20==dpElementType(hulp)) ||  (22==dpElementType(hulp)) || (23==dpElementType(hulp)))
+      hulp=dpSubStr(tab[i][1]  , DPSUB_DP_EL_CONF_DET_ATT);
+	    if ((20==dpElementType(hulp)) || (21==dpElementType(hulp)) ||  (22==dpElementType(hulp)) || (23==dpElementType(hulp)))
 	    {	    
         EntryForSelectionList = strltrim(hulp, dpSubStr($datapoint, DPSUB_DP_EL));
         if (0==(strpos (EntryForSelectionList, \"_\")))
