@@ -1,0 +1,21 @@
+    connect db='meijeren', dbtype='postgres', tablename='skymodel'
+    adddef RA.CP1 values=2.73403
+    adddef DEC.CP1 values=0.453785 
+    adddef StokesI.CP1 values=1
+    adddef StokesQ.CP1 values=0 
+    adddef StokesU.CP1 values=0 
+    adddef StokesV.CP1 values=0
+    adddef RA.CP2 values=2.734025
+    adddef DEC.CP2 values=0.453687 
+    adddef StokesI.CP2 values=1.0
+    adddef StokesQ.CP2 values=0 
+    adddef StokesU.CP2 values=0 
+    adddef StokesV.CP2 values=0
+    adddef RA.CP3 values=2.73399
+    adddef DEC.CP3 values=0.4537525
+    adddef StokesI.CP3 values=1.0
+    adddef StokesQ.CP3 values=0 
+    adddef StokesU.CP3 values=0 
+    adddef StokesV.CP3 values=0
+    quit
+
