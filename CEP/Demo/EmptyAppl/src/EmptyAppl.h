@@ -27,12 +27,10 @@
 #ifndef EMPTYAPPL_H
 #define EMPTYAPPL_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
-#include "CEPFrame/Simulator.h"
-#include "CEPFrame/ParamBlock.h"
+#include <CEPFrame/Simulator.h>
+#include <Common/KeyValueMap.h>
 
 /**
    This is an empty Simulator class   
@@ -45,7 +43,7 @@ public:
   virtual ~EmptyAppl();
 
   // overloaded methods from the Simulator base class
-  virtual void define(const LOFAR::ParamBlock& params = LOFAR::ParamBlock());
+  virtual void define(const LOFAR::KeyValueMap& params = LOFAR::KeyValueMap());
   virtual void run(int);
   virtual void dump() const;
   virtual void quit();
