@@ -25,16 +25,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef P2PERF_H
-#define P2PERF_H
+#ifndef P2PERF_P2PERF_H
+#define P2PERF_P2PERF_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
-#include "CEPFrame/Simulator.h"
-#include "CEPFrame/ParamBlock.h"
-#include "P2Perf/WH_GrowSize.h"
+#include <P2Perf/WH_GrowSize.h>
+#include <CEPFrame/Simulator.h>
+#include <Common/KeyValueMap.h>
 
 // define the maximum data block size used in this simulation
 #define MAX_GROW_SIZE (256*1024) // 256 kWords =^ 1 MB
@@ -55,7 +53,7 @@ public:
   virtual ~P2Perf();
 
   // overloaded methods from the Simulator base class
-  virtual void define(const LOFAR::ParamBlock& params = LOFAR::ParamBlock());
+  virtual void define(const LOFAR::KeyValueMap& params = LOFAR::KeyValueMap());
   virtual void run(int);
   virtual void dump() const;
   virtual void quit();

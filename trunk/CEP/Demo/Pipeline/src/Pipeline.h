@@ -26,18 +26,15 @@
 #ifndef PIPELINE_H
 #define PIPELINE_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
-#include "CEPFrame/Simulator.h"
+#include <CEPFrame/Simulator.h>
 
 class WH_FillTFMatrix;
 class WH_Delay;
 class WH_Transpose;
 class WH_PreCorrect;
 class WH_Correlate;
-class ParamBlock ;
 
 /**
    The Pipeline class implements a Simulator consisting of a set of data
@@ -52,7 +49,7 @@ class Pipeline: public LOFAR::Simulator
   virtual ~Pipeline();
   
   // overloaded methods from the Simulator base class
-  virtual void define(const LOFAR::ParamBlock& params = LOFAR::ParamBlock());
+  virtual void define(const LOFAR::KeyValueMap& params = LOFAR::KeyValueMap());
   virtual void run(int);
   virtual void dump() const;
   virtual void quit();
