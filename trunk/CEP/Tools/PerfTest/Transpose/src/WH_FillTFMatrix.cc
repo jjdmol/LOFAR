@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.5  2002/05/16 15:05:40  schaaf
+//  Added profiler state for process() method
+//
 //  Revision 1.3  2002/05/07 14:59:16  schaaf
 //  optimised performance of process()
 //
