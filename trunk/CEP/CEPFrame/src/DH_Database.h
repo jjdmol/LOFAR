@@ -1,4 +1,4 @@
-//# DH_Database.h: Definition Database DataHolder
+//# DH_Database.h: Database based DataHolder definition
 //#
 //# Copyright (C) 2000, 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,30 +26,46 @@
 
 #include <CEPFrame/DataHolder.h>
 
+/// The DH_Database class is a base class for all DataHolders using a
+/// (relational) database as a transport medium. In order to maintain
+/// indepenance of database, the StoreInDatabase and RetrieveFromDatabase
+/// methods are defined. A subclass of DH_Database, specific for a certain
+/// database implementation (like Postgresql or MySQL) must override these
+/// methods.
+
 namespace LOFAR
 {
-
-class DH_Database : public DataHolder
-{
-public:
-  explicit DH_Database (const string& name, const string& type)
-    : DataHolder (name, type) { rdSeqNo = wrSeqNo = 0L; }
-
-  virtual bool StoreInDatabase (int appId, int tag, char * buf, int size);
-  virtual bool RetrieveFromDatabase (int appId, int tag, char * buf, int size);
-
-protected:
-  class DataPacket:
-    public DataHolder::DataPacket
+  class DH_Database : public DataHolder
   {
   public:
-    DataPacket () {}
+    explicit DH_Database (const string& name, const string& type);
+  
+    /// A subclass of DH_Database must override the StoreIndatabase ()
+    /// method and store the content of the arguments in the intended
+    /// database. The StoreInDatabase () of DH_Database prints a warning
+    /// message that this method should be overridden.
+    virtual bool StoreInDatabase (int appId, int tag, char * buf, int size);
+
+    /// A subclass of DH_Database must override the RetrieveIndatabase ()
+    /// method and retrieve the content of the arguments from the
+    /// database. The RetrieveInDatabase () of DH_Database prints a warning
+    /// message that this method should be overridden.
+    virtual bool RetrieveFromDatabase 
+      (int appId, int tag, char * buf, int size);
+  
+  protected:
+    class DataPacket:
+      public DataHolder::DataPacket
+    {
+    public:
+      DataPacket () {}
+    };
   };
 
-private:
-  unsigned long rdSeqNo, wrSeqNo;
+  // In-line implementations:
 
-};
-
+  DH_Database::DH_Database (const string& name, const string& type)
+    : DataHolder (name, type) {}
+  
 }
 #endif
