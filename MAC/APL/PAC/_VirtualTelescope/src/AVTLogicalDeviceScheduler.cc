@@ -51,6 +51,7 @@ AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler() :
   m_apcLDS("ApcLogicalDeviceScheduler", "LogicalDeviceScheduler", &m_propertySetAnswer),
   m_initialized(false),
 //  m_beamServer(*this, g_bsName, GCFPortInterface::SAP, ABS_PROTOCOL),
+  m_pBeamServer(0),
   m_WGfrequency(0.0),
   m_WGamplitude(0),
   m_WGsamplePeriod(0),
@@ -285,6 +286,10 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
               string bsName(BSNAME);
               boost::shared_ptr<AVTStationBeamformer> sbf(new AVTStationBeamformer(parameters[1],primaryPropertySetSBF,sbfApcName,parameters[0]+string("_")+parameters[1],bsName));
               sbfInfo.logicalDevice=sbf;
+              if(m_pBeamServer==0)
+              {
+                m_pBeamServer=&sbf->getBeamServerPort();
+              }
               
               // create VT
               string vtApcName(VTAPCNAME);
@@ -342,6 +347,10 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
           // send new settings
           ABSWgsettingsEvent wgSettingsEvent(m_WGfrequency,static_cast<unsigned char>(m_WGamplitude),static_cast<unsigned char>(m_WGsamplePeriod));
 //          m_beamServer.send(wgSettingsEvent);
+          if(m_pBeamServer!=0)
+          {
+            m_pBeamServer->send(wgSettingsEvent);
+          }
         }
       }      
       else if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_UNSIGNED) &&
@@ -355,6 +364,10 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
           // send new settings
           ABSWgsettingsEvent wgSettingsEvent(m_WGfrequency,static_cast<unsigned char>(m_WGamplitude),static_cast<unsigned char>(m_WGsamplePeriod));
 //          m_beamServer.send(wgSettingsEvent);
+          if(m_pBeamServer!=0)
+          {
+            m_pBeamServer->send(wgSettingsEvent);
+          }
         }
       }      
       else if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_UNSIGNED) &&
@@ -368,6 +381,10 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
           // send new settings
           ABSWgsettingsEvent wgSettingsEvent(m_WGfrequency,static_cast<unsigned char>(m_WGamplitude),static_cast<unsigned char>(m_WGsamplePeriod));
 //          m_beamServer.send(wgSettingsEvent);
+          if(m_pBeamServer!=0)
+          {
+            m_pBeamServer->send(wgSettingsEvent);
+          }
         }
       }      
       break;

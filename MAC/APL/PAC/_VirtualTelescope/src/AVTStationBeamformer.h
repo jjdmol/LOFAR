@@ -27,6 +27,9 @@
 //# Common Includes
 #include <lofar_config.h>
 #include <Common/lofar_string.h>
+#include <Common/lofar_map.h>
+#include <boost/shared_ptr.hpp>
+
 //# GCF Includes
 #include <GCF/GCF_Port.h>
 //# VirtualTelescope Includes
@@ -44,6 +47,8 @@ class AVTStationBeamformer : public AVTLogicalDevice
                                   const string& APCScope,
                                   string& beamServerPortName); 
     virtual ~AVTStationBeamformer();
+    
+    GCFPort& getBeamServerPort(); // increment 1 only!!!
 
   protected:
     // protected default constructor
@@ -87,19 +92,22 @@ class AVTStationBeamformer : public AVTLogicalDevice
     bool _isBeamServerPort(GCFPortInterface& port);
     int convertDirection(const string type) const;
 
+    typedef map<int,boost::shared_ptr<GCFApc> > SubbandAPCMapT;
+    
     // The BeamServer SAP
-    GCFPort       m_beamServer;
-    bool          m_beamServerConnected;
-    GCFApc        m_beamServerAPC;
-    int           m_numAPCsLoaded;
-    const int     m_maxAPCs;
-    time_t        m_startTime;
-    time_t        m_stopTime;
-    double        m_frequency;
-    vector<int>   m_subbands;
-    int           m_directionType;
-    double        m_directionAngle1;
-    double        m_directionAngle2;
-    int           m_beamID;
+    GCFPort         m_beamServer;
+    bool            m_beamServerConnected;
+    int             m_numAPCsLoaded;
+    const int       m_maxAPCs;
+
+    time_t          m_startTime;
+    time_t          m_stopTime;
+    double          m_frequency;
+    SubbandAPCMapT  m_subbands;
+    GCFApc          m_APCBeamServerStatistics;
+    int             m_directionType;
+    double          m_directionAngle1;
+    double          m_directionAngle2;
+    int             m_beamID;
 };
 #endif
