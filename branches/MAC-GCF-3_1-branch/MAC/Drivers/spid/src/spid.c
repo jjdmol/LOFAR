@@ -224,10 +224,11 @@ int spid_open (struct inode *inodeisr , struct file *filp)
 
 void spid_isr(int irq, void* dev_id, struct pt_regs* regs)
 {
-  int value;
-  value = inb(spid_base);
-  outb(value & 0x7F, spid_base);
   printk(KERN_INFO "spid: Interrupt\n");
+  int value;
+  outb_p(0x00, spid_base);
+  // in some case it seams this is needed to force a down edge of the pin 10
+  value = inb(spid_base + 1); 
   if (MOD_IN_USE) spid_interrupt++;
 }
 
