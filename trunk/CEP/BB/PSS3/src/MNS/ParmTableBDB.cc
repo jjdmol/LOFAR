@@ -118,14 +118,31 @@ namespace LOFAR {
 			       const MeqPolc& polc)
   {
     const MeqDomain& domain = polc.domain();
-    vector<MeqParmHolder> set = find (parmName, domain);
-    if (set.empty()) {
-      // couldn't find the polc in the database
-      putNewCoeff (parmName, srcnr, statnr, polc);
-    } else {
-      // For Berkeley DB there is no difference between insert and update
-      putNewCoeff (parmName, srcnr, statnr, polc);
+
+    // right now: search on name only and add MPH with correct domain
+    MPHKey key(parmName, domain);
+    MPHValue value;
+    MeqDomain pdomain;
+    Dbc* cursorp;
+    itsDb.cursor(NULL, &cursorp, 0);
+
+    int flags = DB_SET;
+    while (cursorp->get(&key, &value, flags) == 0) {
+      flags = DB_NEXT;
+      pdomain = value.getMPH().getPolc().domain();
+      if (parmName != value.getMPH().getName()) 
+	break;
+      if (near(domain.startX(), pdomain.startX())  &&
+	  near(domain.endX(),   pdomain.endX())  &&
+	  near(domain.startY(), pdomain.startY())  &&
+	  near(domain.endY(),   pdomain.endY())) 
+	{
+	  // delete every MPH that has the same name and domain and then just add the right value
+	  cursorp->del(0);
+	}
     }
+    cursorp->close();
+    putNewCoeff (parmName, srcnr, statnr, polc);
   }
 
   void ParmTableBDB::putNewCoeff (const string& parmName,
@@ -152,22 +169,26 @@ namespace LOFAR {
     LOG_TRACE_STAT("searching for MParms");
     vector<MeqParmHolder> set;
 
-    // right now: search on name only and return only one MPH
+    // right now: search on name only and add MPH with correct domain
     MPHKey key(parmName, domain);
     MPHValue value;
     MeqDomain pdomain;
-    if (itsDb.get(NULL, &key, &value, 0) != 0) {
-      // key wasn't found or there was an error
-    } else {
+    Dbc* cursorp;
+    itsDb.cursor(NULL, &cursorp, 0);
+
+    int flags = DB_SET;
+    while (cursorp->get(&key, &value, flags) == 0) {
+      flags = DB_NEXT_DUP;
       pdomain = value.getMPH().getPolc().domain();
-      if (near(domain.startX(), pdomain.startX())  &&
-	  near(domain.endX(), pdomain.endX())  &&
-	  near(domain.startY(), pdomain.startY())  &&
-	  near(domain.endY(), pdomain.endY())) 
-      {
-	set.push_back(value.getMPH());
-      }
+      if ((domain.endX() > pdomain.startX())  &&
+	  (pdomain.endX() > domain.startX())  &&
+	  (domain.endY() > pdomain.startY())  &&
+	  (pdomain.endY() > domain.startY())) 
+	{
+	  set.push_back(value.getMPH());
+	}
     }
+    cursorp->close();
     return set;
   }
 
@@ -176,7 +197,7 @@ namespace LOFAR {
     LOG_TRACE_STAT("retreiving sources");
     vector<string> nams;
   
-    MPHKey key;
+    MPHKey key("RA");
     MPHValue value;
   
     // right now: walk complete database
@@ -186,17 +207,18 @@ namespace LOFAR {
     Dbc* cursorp;
     itsDb.cursor(NULL, &cursorp, 0);
     string name;
-    while (cursorp->get(&key, &value, DB_NEXT) == 0) {
+    int flags = DB_SET_RANGE; //go to RA or the first string that is bigger
+    while (cursorp->get(&key, &value, flags) == 0) {
+      flags = DB_NEXT;
       name = value.getMPH().getName();
-      if (name.find("RA") != string::npos)
-	
-	nams.push_back(name);
+      if (name.find("RA") == string::npos) 
+	break;
+      nams.push_back(name);
     }
   
     LOG_TRACE_STAT_STR("finished retreiving "<<nams.size()<<" sources from "<<itsTableName);
-    //cout<<"finished retreiving "<<nams.size()<<" sources from "<<itsTableName<<endl;;
-    return nams;
     cursorp->close();
+    return nams;
   }
 
   void ParmTableBDB::unlock()
@@ -211,8 +233,8 @@ namespace LOFAR {
   }
   ParmTableBDB::MPHKey::MPHKey(string name) 
     : itsName(name),
-    //itsDomain(MeqDomain(0,0,0,0)),
-    itsBuffer(0)
+      //itsDomain(MeqDomain(0,0,0,0)),
+      itsBuffer(0)
   {
     updateThang();
   }
