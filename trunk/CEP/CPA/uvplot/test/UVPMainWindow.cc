@@ -23,6 +23,7 @@
 // macro defined in QT :-)
 #include <OCTOPUSSY/Dispatcher.h> 
 #include <OCTOPUSSY/Gateways.h>
+#include <OCTOPUSSY/Octopussy.h>
 #endif // HAVE_VDM
 
 
@@ -79,6 +80,7 @@ UVPMainWindow::UVPMainWindow(const std::string& hiidPrefix,
 #if(HAVE_VDM)
   itsHIIDPrefix = HIID(hiidPrefix);
   itsEventMultiplexer = new OctoAgent::EventMultiplexer(AidVisualizerWP);
+  Octopussy::dispatcher().attach(itsEventMultiplexer,DMI::WRITE);
 #endif
 
   // Construct a menu
