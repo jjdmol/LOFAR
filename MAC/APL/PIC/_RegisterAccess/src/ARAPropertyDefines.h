@@ -32,7 +32,8 @@ namespace ARA
 const int STATUS_OK = 0;
 const int STATUS_ERROR = 1;
 
-const int N_RACKS               = 3; // 6
+/*
+const int N_RACKS               = 1; // 6
 const int N_SUBRACKS_PER_RACK   = 1; // 4
 const int N_BOARDS_PER_SUBRACK  = 1;
 const int N_APS_PER_BOARD       = 1;
@@ -42,6 +43,7 @@ const int N_RCUS                = N_RCUS_PER_AP*
                                   N_BOARDS_PER_SUBRACK*
                                   N_SUBRACKS_PER_RACK*
                                   N_RACKS;
+*/
 
 const char APC_Station[]        = "ApcStationType";
 const char APC_Rack[]           = "ApcRackType";

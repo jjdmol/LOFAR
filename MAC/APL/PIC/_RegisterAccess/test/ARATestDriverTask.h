@@ -90,6 +90,12 @@ namespace ARA
       uint32          m_updStatsHandleSM;
       uint32          m_updStatsHandleBP;
       uint32          m_updStatsHandleBM;
+      int             n_racks;
+      int             n_subracks_per_rack;
+      int             n_boards_per_subrack;
+      int             n_aps_per_board;
+      int             n_rcus_per_ap;
+      int             n_rcus;
   };  
 };
 

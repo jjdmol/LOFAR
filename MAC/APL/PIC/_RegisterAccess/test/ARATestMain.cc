@@ -28,6 +28,7 @@
 #include "ARATest.h"
 #include "ARATestDriverTask.h"
 #include <boost/shared_ptr.hpp>
+#include <APLConfig.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -55,6 +56,8 @@ int main(int argc, char* argv[])
     {
       noTest = cmdLine.HasSwitch("-notest");
     }
+
+    APLConfig::getInstance().load("REGISTERACCESS", ARA_SYSCONF "/registeraccess.conf");
     
     // create test driver task. 
     if(noTest)

@@ -54,6 +54,7 @@
 
 using namespace LOFAR;
 using namespace AVT;
+using namespace ARA;
 using namespace std;
 using namespace boost;
 

@@ -30,7 +30,8 @@ RegisterAccess_DEPENDENCIES	= \
 BUILT_SOURCES = \
     ara.ns \
     ara.top \
-    log4cplus.properties	
+    log4cplus.properties	\
+    registeraccess.conf
 
 EXTRA_DIST = \
     ara.ns \
@@ -39,11 +40,15 @@ EXTRA_DIST = \
 
 sysconf_DATA = \
 	ara.ns \
-	ara.top
+	ara.top \
+	registeraccess.conf
 	
 %.properties: %.properties.in
 	cp $< $@
 	
+%.conf: %.conf.in
+	cp $< $@
+
 %.ns: %.ns.in
 	cp $< $@
 

@@ -68,7 +68,6 @@ AVTTestTask::AVTTestTask(AVTTest<AVTTestTask>& tester) :
   m_propertyLDSstatus(string(PROPERTY_LDS_STATUS)),
   m_propertyLDSWGFrequency(string(PROPERTY_LDS_WG_FREQUENCY)),
   m_propertyLDSWGAmplitude(string(PROPERTY_LDS_WG_AMPLITUDE)),
-  m_propertyLDSWGSamplePeriod(string(PROPERTY_LDS_WG_SAMPLEPERIOD)),
   m_propertySBFdirectionType(string(PROPERTY_SBF_DIRECTIONTYPE)),
   m_propertySBFdirectionAngle1(string(PROPERTY_SBF_DIRECTIONANGLE1)),
   m_propertySBFdirectionAngle2(string(PROPERTY_SBF_DIRECTIONANGLE2)),
@@ -94,7 +93,6 @@ AVTTestTask::AVTTestTask(AVTTest<AVTTestTask>& tester) :
   m_propertyLDSstatus.setAnswer(&m_answer);
   m_propertyLDSWGFrequency.setAnswer(&m_answer);
   m_propertyLDSWGAmplitude.setAnswer(&m_answer);
-  m_propertyLDSWGSamplePeriod.setAnswer(&m_answer);
   m_propertySBFdirectionType.setAnswer(&m_answer);
   m_propertySBFdirectionAngle1.setAnswer(&m_answer);
   m_propertySBFdirectionAngle2.setAnswer(&m_answer);
@@ -298,10 +296,8 @@ GCFEvent::TResult AVTTestTask::test3(GCFEvent& event, GCFPortInterface& p)
         m_WGSETTINGS_received=false;
         GCFPVDouble frequency(1000000.0);
         GCFPVUnsigned amplitude(128);
-        GCFPVUnsigned samplePeriod(2);
         if (m_propertyLDSWGFrequency.setValue(frequency) != GCF_NO_ERROR ||
-            m_propertyLDSWGAmplitude.setValue(amplitude) != GCF_NO_ERROR ||
-            m_propertyLDSWGSamplePeriod.setValue(samplePeriod) != GCF_NO_ERROR)
+            m_propertyLDSWGAmplitude.setValue(amplitude) != GCF_NO_ERROR)
         {
           m_tester._avttest(false);
           TRAN(AVTTestTask::test4);

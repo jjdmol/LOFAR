@@ -39,7 +39,6 @@
 #define PROPERTY_LDS_STATUS           "PAC_LogicalDeviceScheduler_status"
 #define PROPERTY_LDS_WG_FREQUENCY     "PAC_LogicalDeviceScheduler_WaveFormGenerator_frequency"
 #define PROPERTY_LDS_WG_AMPLITUDE     "PAC_LogicalDeviceScheduler_WaveFormGenerator_amplitude"
-#define PROPERTY_LDS_WG_SAMPLEPERIOD  "PAC_LogicalDeviceScheduler_WaveFormGenerator_samplePeriod"
 #define PROPERTY_VT_COMMAND           "PAC_VT1_command"
 #define PROPERTY_VT_STATUS            "PAC_VT1_status"
 #define PROPERTY_SBF_COMMAND          "PAC_VT1_BF1_command"
@@ -69,46 +68,48 @@ const TProperty primaryPropertiesVT[] =
   {"status", GCFPValue::LPT_STRING, GCF_READABLE_PROP, ""},
   {"startTime", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"},
   {"stopTime", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"},
+  {"srgName", GCFPValue::LPT_STRING, GCF_READABLE_PROP, "SRG1"},
+  {"bfName", GCFPValue::LPT_STRING, GCF_READABLE_PROP, "BF1"},
 };
 
 const TPropertySet primaryPropertySetVT1 = 
 {
-  4, "PAC_VT1", primaryPropertiesVT
+  6, "PAC_VT1", primaryPropertiesVT
 };
 
 const TPropertySet primaryPropertySetVT2 = 
 {
-  4, "PAC_VT2", primaryPropertiesVT
+  6, "PAC_VT2", primaryPropertiesVT
 };
 
 const TPropertySet primaryPropertySetVT3 = 
 {
-  4, "PAC_VT3", primaryPropertiesVT
+  6, "PAC_VT3", primaryPropertiesVT
 };
 
 const TPropertySet primaryPropertySetVT4 = 
 {
-  4, "PAC_VT4", primaryPropertiesVT
+  6, "PAC_VT4", primaryPropertiesVT
 };
 
 const TPropertySet primaryPropertySetVT5 = 
 {
-  4, "PAC_VT5", primaryPropertiesVT
+  6, "PAC_VT5", primaryPropertiesVT
 };
 
 const TPropertySet primaryPropertySetVT6 = 
 {
-  4, "PAC_VT6", primaryPropertiesVT
+  6, "PAC_VT6", primaryPropertiesVT
 };
 
 const TPropertySet primaryPropertySetVT7 = 
 {
-  4, "PAC_VT7", primaryPropertiesVT
+  6, "PAC_VT7", primaryPropertiesVT
 };
 
 const TPropertySet primaryPropertySetVT8 = 
 {
-  4, "PAC_VT8", primaryPropertiesVT
+  6, "PAC_VT8", primaryPropertiesVT
 };
 
 const TProperty propertiesSR[] =
@@ -120,46 +121,47 @@ const TProperty propertiesSR[] =
   {"filter", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"},  // 1,2,3,4
   {"antenna", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"}, // 0=LBA, 1=HBA
   {"power", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"}, // 0=off, 1=on
+  {"frequency", GCFPValue::LPT_DOUBLE, GCF_WRITABLE_PROP, "110.0"},
 };
 
 const TPropertySet propertySetSR1 = 
 {
-  7, "PAC_RCU1", propertiesSR
+  8, "PAC_RCU1", propertiesSR
 };
 
 const TPropertySet propertySetSR2 = 
 {
-  7, "PAC_RCU2", propertiesSR
+  8, "PAC_RCU2", propertiesSR
 };
 
 const TPropertySet propertySetSR3 = 
 {
-  7, "PAC_RCU3", propertiesSR
+  8, "PAC_RCU3", propertiesSR
 };
 
 const TPropertySet propertySetSR4 = 
 {
-  7, "PAC_RCU4", propertiesSR
+  8, "PAC_RCU4", propertiesSR
 };
 
 const TPropertySet propertySetSR5 = 
 {
-  7, "PAC_RCU5", propertiesSR
+  8, "PAC_RCU5", propertiesSR
 };
 
 const TPropertySet propertySetSR6 = 
 {
-  7, "PAC_RCU6", propertiesSR
+  8, "PAC_RCU6", propertiesSR
 };
 
 const TPropertySet propertySetSR7 = 
 {
-  7, "PAC_RCU7", propertiesSR
+  8, "PAC_RCU7", propertiesSR
 };
 
 const TPropertySet propertySetSR8 = 
 {
-  7, "PAC_RCU8", propertiesSR
+  8, "PAC_RCU8", propertiesSR
 };
 
 const TProperty propertiesSRG[] =
@@ -171,26 +173,27 @@ const TProperty propertiesSRG[] =
   {"filter", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"},  // 1,2,3,4
   {"antenna", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"}, // 0=LBA, 1=HBA
   {"power", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"}, // 0=off, 1=on
+  {"frequency", GCFPValue::LPT_DOUBLE, GCF_WRITABLE_PROP, "110.0"},
 };
 
 const TPropertySet propertySetSRG1 = 
 {
-  7, "PAC_SRG1", propertiesSRG
+  8, "PAC_SRG1", propertiesSRG
 };
 
 const TPropertySet propertySetSRG2 = 
 {
-  7, "PAC_SRG2", propertiesSRG
+  8, "PAC_SRG2", propertiesSRG
 };
 
 const TPropertySet propertySetSRG3 = 
 {
-  7, "PAC_SRG3", propertiesSRG
+  8, "PAC_SRG3", propertiesSRG
 };
 
 const TPropertySet propertySetSRG4 = 
 {
-  7, "PAC_SRG4", propertiesSRG
+  8, "PAC_SRG4", propertiesSRG
 };
 
 const TProperty primaryPropertiesSBF[] =
@@ -200,46 +203,48 @@ const TProperty primaryPropertiesSBF[] =
   {"directionType",   GCFPValue::LPT_STRING, GCF_WRITABLE_PROP, "LMN"},
   {"directionAngle1", GCFPValue::LPT_DOUBLE, GCF_WRITABLE_PROP, "0.0"},
   {"directionAngle2", GCFPValue::LPT_DOUBLE, GCF_WRITABLE_PROP, "0.0"},
+  {"subbandStart", GCFPValue::LPT_UNSIGNED, GCF_WRITABLE_PROP, "0"},
+  {"subbandEnd", GCFPValue::LPT_UNSIGNED, GCF_WRITABLE_PROP, "127"},
 };
 
 const TPropertySet primaryPropertySetSBF1 = 
 {
-  5, "PAC_VT1_BF1", primaryPropertiesSBF
+  7, "PAC_VT1_BF1", primaryPropertiesSBF
 };
 
 const TPropertySet primaryPropertySetSBF2 = 
 {
-  5, "PAC_VT2_BF2", primaryPropertiesSBF
+  7, "PAC_VT2_BF2", primaryPropertiesSBF
 };
 
 const TPropertySet primaryPropertySetSBF3 = 
 {
-  5, "PAC_VT3_BF3", primaryPropertiesSBF
+  7, "PAC_VT3_BF3", primaryPropertiesSBF
 };
 
 const TPropertySet primaryPropertySetSBF4 = 
 {
-  5, "PAC_VT4_BF4", primaryPropertiesSBF
+  7, "PAC_VT4_BF4", primaryPropertiesSBF
 };
 
 const TPropertySet primaryPropertySetSBF5 = 
 {
-  5, "PAC_VT5_BF5", primaryPropertiesSBF
+  7, "PAC_VT5_BF5", primaryPropertiesSBF
 };
 
 const TPropertySet primaryPropertySetSBF6 = 
 {
-  5, "PAC_VT6_BF6", primaryPropertiesSBF
+  7, "PAC_VT6_BF6", primaryPropertiesSBF
 };
 
 const TPropertySet primaryPropertySetSBF7 = 
 {
-  5, "PAC_VT7_BF7", primaryPropertiesSBF
+  7, "PAC_VT7_BF7", primaryPropertiesSBF
 };
 
 const TPropertySet primaryPropertySetSBF8 = 
 {
-  5, "PAC_VT8_BF8", primaryPropertiesSBF
+  7, "PAC_VT8_BF8", primaryPropertiesSBF
 };
 
 const TProperty propertiesBeamServer[] =

@@ -24,6 +24,7 @@
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <APLConfig.h>
 
 #include "ARARegisterAccessTask.h"
 
@@ -45,6 +46,8 @@ int main(int argc, char* argv[])
 #endif
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
+
+  APLConfig::getInstance().load("REGISTERACCESS", ARA_SYSCONF "/registeraccess.conf");
 
   GCFTask::init(argc, argv);
 

@@ -43,6 +43,7 @@
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVBool.h>
 #include <GCF/GCF_PVDouble.h>
+#include <APLConfig.h>
 
 using namespace LOFAR;
 using namespace ARA;
@@ -64,29 +65,46 @@ ARATestDriverTask::ARATestDriverTask() :
   m_updStatsHandleSP(0),
   m_updStatsHandleSM(0),
   m_updStatsHandleBP(0),
-  m_updStatsHandleBM(0)
+  m_updStatsHandleBM(0),
+  n_racks(1),
+  n_subracks_per_rack(1),
+  n_boards_per_subrack(1),
+  n_aps_per_board(1),
+  n_rcus_per_ap(1),
+  n_rcus(1)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
 
-  m_systemStatus.board().resize(N_BOARDS_PER_SUBRACK);
-  m_systemStatus.rcu().resize(N_RCUS);
+  n_racks               = GET_CONFIG("N_RACKS",i);
+  n_subracks_per_rack   = GET_CONFIG("N_SUBRACKS_PER_RACK",i);
+  n_boards_per_subrack  = GET_CONFIG("N_BOARDS_PER_SUBRACK",i);
+  n_aps_per_board       = GET_CONFIG("N_APS_PER_BOARD",i);
+  n_rcus_per_ap         = GET_CONFIG("N_RCUS_PER_AP",i);
+  n_rcus                = n_rcus_per_ap*
+                              n_aps_per_board*
+                              n_boards_per_subrack*
+                              n_subracks_per_rack*
+                              n_racks;
   
-  m_stats().resize(RSP_Protocol::Statistics::N_STAT_TYPES,N_RCUS,RSP_Protocol::MAX_N_BLPS);
-  int i,j,k;
-  for(i=0;i<RSP_Protocol::Statistics::N_STAT_TYPES;i++)
+  m_systemStatus.board().resize(n_boards_per_subrack);
+  m_systemStatus.rcu().resize(n_rcus);
+  
+  m_stats().resize(1,n_rcus,RSP_Protocol::MAX_N_BLPS);
+  int i=0;
+  int j;
+  int k;
+  for(j=0;j<n_rcus;j++)
   {
-    for(j=0;j<N_RCUS;j++)
+    for(k=0;k<RSP_Protocol::MAX_N_BLPS;k++)
     {
-      for(k=0;k<RSP_Protocol::MAX_N_BLPS;k++)
-      {
-        if(k==10)
-          m_stats()(i,j,k) = complex<double>(500*k,500*k);
-        else
-          m_stats()(i,j,k) = 0;
-      }
+      if(k==10)
+        m_stats()(i,j,k) = complex<double>(500*k,500*k);
+      else
+        m_stats()(i,j,k) = 0;
     }
   }
+
 //  m_stats() = 0;
 //  m_stats().reference(m_stats().copy()); // make sure array is contiguous
 
@@ -125,14 +143,14 @@ void ARATestDriverTask::addPropertySet(string scope)
   int board;
   int ap;
   int rcu;
-  
+
   if(scope == string(SCOPE_PIC))
   {
     addAllProperties(scope,static_cast<TProperty*>(PROPS_Station),sizeof(PROPS_Station)/sizeof(PROPS_Station[0]));
   }
   else if(scope == string(SCOPE_PIC_RackN))
   {
-    for(rack=1;rack<=N_RACKS;rack++)
+    for(rack=1;rack<=n_racks;rack++)
     {
       sprintf(scopeString,scope.c_str(),rack);
       addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Rack),sizeof(PROPS_Rack)/sizeof(PROPS_Rack[0]));
@@ -140,9 +158,9 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN))
   {
-    for(rack=1;rack<=N_RACKS;rack++)
+    for(rack=1;rack<=n_racks;rack++)
     {
-      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
       {
         sprintf(scopeString,scope.c_str(),rack,subrack);
         addAllProperties(scopeString,static_cast<TProperty*>(PROPS_SubRack),sizeof(PROPS_SubRack)/sizeof(PROPS_SubRack[0]));
@@ -151,11 +169,11 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN))
   {
-    for(rack=1;rack<=N_RACKS;rack++)
+    for(rack=1;rack<=n_racks;rack++)
     {
-      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        for(board=1;board<=n_boards_per_subrack;board++)
         {
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
           addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Board),sizeof(PROPS_Board)/sizeof(PROPS_Board[0]));
@@ -165,11 +183,11 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_ETH))
   {
-    for(rack=1;rack<=N_RACKS;rack++)
+    for(rack=1;rack<=n_racks;rack++)
     {
-      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        for(board=1;board<=n_boards_per_subrack;board++)
         {
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
           addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Ethernet),sizeof(PROPS_Ethernet)/sizeof(PROPS_Ethernet[0]));
@@ -179,11 +197,11 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_BP))
   {
-    for(rack=1;rack<=N_RACKS;rack++)
+    for(rack=1;rack<=n_racks;rack++)
     {
-      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        for(board=1;board<=n_boards_per_subrack;board++)
         {
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
           addAllProperties(scopeString,static_cast<TProperty*>(PROPS_FPGA),sizeof(PROPS_FPGA)/sizeof(PROPS_FPGA[0]));
@@ -193,15 +211,15 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN))
   {
-    for(rack=1;rack<=N_RACKS;rack++)
+    for(rack=1;rack<=n_racks;rack++)
     {
-      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        for(board=1;board<=n_boards_per_subrack;board++)
         {
-          for(ap=1;ap<=N_APS_PER_BOARD;ap++)
+          for(ap=1;ap<=n_aps_per_board;ap++)
           {
-            for(rcu=1;rcu<=N_RCUS_PER_AP;rcu++)
+            for(rcu=1;rcu<=n_rcus_per_ap;rcu++)
             {
               sprintf(scopeString,scope.c_str(),rack,subrack,board,ap,rcu);
               addAllProperties(scopeString,static_cast<TProperty*>(PROPS_RCU),sizeof(PROPS_RCU)/sizeof(PROPS_RCU[0]));
@@ -213,15 +231,15 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics))
   {
-    for(rack=1;rack<=N_RACKS;rack++)
+    for(rack=1;rack<=n_racks;rack++)
     {
-      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        for(board=1;board<=n_boards_per_subrack;board++)
         {
-          for(ap=1;ap<=N_APS_PER_BOARD;ap++)
+          for(ap=1;ap<=n_aps_per_board;ap++)
           {
-            for(rcu=1;rcu<=N_RCUS_PER_AP;rcu++)
+            for(rcu=1;rcu<=n_rcus_per_ap;rcu++)
             {
               sprintf(scopeString,scope.c_str(),rack,subrack,board,ap,rcu);
               addAllProperties(scopeString,static_cast<TProperty*>(PROPS_ADCStatistics),sizeof(PROPS_ADCStatistics)/sizeof(PROPS_ADCStatistics[0]));
@@ -237,7 +255,7 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_Maintenance))
   {
-    for(rack=1;rack<=N_RACKS;rack++)
+    for(rack=1;rack<=n_racks;rack++)
     {
       sprintf(scopeString,scope.c_str(),rack);
       addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Maintenance),sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]));
@@ -245,9 +263,9 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_Maintenance))
   {
-    for(rack=1;rack<=N_RACKS;rack++)
+    for(rack=1;rack<=n_racks;rack++)
     {
-      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
       {
         sprintf(scopeString,scope.c_str(),rack,subrack);
         addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Maintenance),sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]));
@@ -256,11 +274,11 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance))
   {
-    for(rack=1;rack<=N_RACKS;rack++)
+    for(rack=1;rack<=n_racks;rack++)
     {
-      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        for(board=1;board<=n_boards_per_subrack;board++)
         {
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
           addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Maintenance),sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]));
@@ -270,15 +288,15 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance))
   {
-    for(rack=1;rack<=N_RACKS;rack++)
+    for(rack=1;rack<=n_racks;rack++)
     {
-      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        for(board=1;board<=n_boards_per_subrack;board++)
         {
-          for(ap=1;ap<=N_APS_PER_BOARD;ap++)
+          for(ap=1;ap<=n_aps_per_board;ap++)
           {
-            for(rcu=1;rcu<=N_RCUS_PER_AP;rcu++)
+            for(rcu=1;rcu<=n_rcus_per_ap;rcu++)
             {
               sprintf(scopeString,scope.c_str(),rack,subrack,board,ap,rcu);
               addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Maintenance),sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]));
@@ -290,7 +308,7 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_Alert))
   {
-    for(rack=1;rack<=N_RACKS;rack++)
+    for(rack=1;rack<=n_racks;rack++)
     {
       sprintf(scopeString,scope.c_str(),rack);
       addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Alert),sizeof(PROPS_Alert)/sizeof(PROPS_Alert[0]));
@@ -298,9 +316,9 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_Alert))
   {
-    for(rack=1;rack<=N_RACKS;rack++)
+    for(rack=1;rack<=n_racks;rack++)
     {
-      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
       {
         sprintf(scopeString,scope.c_str(),rack,subrack);
         addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Alert),sizeof(PROPS_Alert)/sizeof(PROPS_Alert[0]));
@@ -309,11 +327,11 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_Alert))
   {
-    for(rack=1;rack<=N_RACKS;rack++)
+    for(rack=1;rack<=n_racks;rack++)
     {
-      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
       {
-        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        for(board=1;board<=n_boards_per_subrack;board++)
         {
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
           addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Alert),sizeof(PROPS_Alert)/sizeof(PROPS_Alert[0]));
@@ -513,7 +531,7 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
   int rcu;
 
   sscanf(propName.c_str(),SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,&rack,&subrack,&board,&ap,&rcu);
-  int rcuNumber = rcu + N_RCUS_PER_AP*(ap-1) + N_RCUS_PER_AP*N_APS_PER_BOARD*(board-1);
+  int rcuNumber = rcu + n_rcus_per_ap*(ap-1) + n_rcus_per_ap*n_aps_per_board*(board-1);
   
   uint8 rcuStatus;
   rcuStatus = m_systemStatus.rcu()(rcuNumber).status;
@@ -810,10 +828,10 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       RSPGetversionEvent getversion(event);
       
       RSP_Protocol::Versions versions;
-      versions.rsp().resize(N_RACKS*N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK);
-      versions.bp().resize(N_RACKS*N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK);
-      versions.ap().resize(N_RACKS*N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK*N_APS_PER_BOARD);
-      for(int board=0;board<N_RACKS*N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK;board++)
+      versions.rsp().resize(n_racks*n_subracks_per_rack*n_boards_per_subrack);
+      versions.bp().resize(n_racks*n_subracks_per_rack*n_boards_per_subrack);
+      versions.ap().resize(n_racks*n_subracks_per_rack*n_boards_per_subrack*n_aps_per_board);
+      for(int board=0;board<n_racks*n_subracks_per_rack*n_boards_per_subrack;board++)
       {
         versions.rsp()(board) = (board+1);
         LOG_INFO(formatString("board[%d].version = 0x%x",board,versions.rsp()(board)));
