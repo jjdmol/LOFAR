@@ -42,8 +42,9 @@ namespace LCS
       // This is the type of container we're gonna store our elements in.
       typedef std::list<T> container_t;
 
-      typedef typename container_t::iterator iterator;
       typedef typename container_t::const_iterator const_iterator;
+      typedef typename container_t::iterator       iterator;
+      typedef typename container_t::value_type     value_type;
 
       iterator begin() { return itsContainer.begin(); }
       const_iterator begin() const { return itsContainer.begin(); }
