@@ -2,6 +2,7 @@
 #include "SimulatorParseClass.h"
 #include <iostream>
 
+
 #ifdef HAVE_CORBA
 int atexit(void (*function)(void))
 {
@@ -14,6 +15,7 @@ int main (int argc, char** argv)
   try {
     P2Perf simulator;
     simulator.setarg (argc, argv);
+
 #ifndef HAVE_MPI
         cout << endl;
 	cout << "  * Type 'define;' to define the simulation" << endl;
@@ -41,7 +43,7 @@ int main (int argc, char** argv)
 	cout << endl;
 	cout << "Call Run" << endl;
 
-	simulator.baseRun();
+	simulator.baseRun(5000);
 
 	cout << endl;
 	cout << "Call Dump " << endl;
