@@ -36,6 +36,7 @@
 #include <unistd.h>
 
 using namespace LOFAR;
+using namespace casa;
 using namespace std;
 
 void doIt (const string& in, const string& out, const string& column)
