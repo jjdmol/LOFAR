@@ -30,7 +30,7 @@
 #include <tables/Tables/TableIter.h>
 #include <casa/BasicSL/String.h>
 #include <casa/aips.h>
-#include <tasking/Glish/GlishRecord.h>
+//#include <tasking/Glish/GlishRecord.h>
 
 #include <PSS3/MNS/MeqDomain.h>
 #include <PSS3/MNS/MeqHist.h>
@@ -120,7 +120,7 @@ public:
    * \returns Returns fit value to indicate fitness of the solution and
    * updates the parameters for which to solve.
    */
-  casa::GlishRecord solve (casa::Bool useSVD);
+  ///  casa::GlishRecord solve (casa::Bool useSVD);
 
   /*! Solve which returns solved parameter values in a vector and fit value 
    * in Quality object.
@@ -151,23 +151,23 @@ public:
    *            = 0  only non-solvable parms
    *            > 0  only solvable parms
    */
-  casa::GlishRecord getParms (casa::Vector<casa::String>& parmPatterns,
-			      casa::Vector<casa::String>& excludePatterns,
-			      int isSolvable, bool denormalize);
+  ///  casa::GlishRecord getParms (casa::Vector<casa::String>& parmPatterns,
+  ///			      casa::Vector<casa::String>& excludePatterns,
+  ///			      int isSolvable, bool denormalize);
 
   /*!
    * Get the names of the parameters whose name matches the parmPatterns,
    * but does not match the excludePatterns.
    * E.g. getParmNames("*") returns all parameter names.
    */
-  casa::GlishArray getParmNames(casa::Vector<casa::String>& parmPatterns,
-				casa::Vector<casa::String>& excludePatterns);
+  ///  casa::GlishArray getParmNames(casa::Vector<casa::String>& parmPatterns,
+  ///				casa::Vector<casa::String>& excludePatterns);
 
   /*!
    * Get a description of the current solve domain, which changes
    * after each call to nextTimeIteration.
    */
-  casa::GlishRecord getSolveDomain();
+  ///  casa::GlishRecord getSolveDomain();
 
   /*!
    * Set the source numbers to use in this peel step.
@@ -185,7 +185,7 @@ public:
    * Return some statistics (optionally detailed (i.e. per baseline)).
    * If clear is true, the statistics are cleared thereafter.
    */
-  casa::GlishRecord getStatistics (bool detailed, bool clear);
+  ///  casa::GlishRecord getStatistics (bool detailed, bool clear);
 
   // Set the names and values of all solvable parms for the current domain.
   // The double version can only be used if all parms are 0th-order
@@ -252,8 +252,8 @@ private:
   void makeLOFARExpr (casa::Bool asAP);
 
   //! Append the current value of the parameters (as MeqMatrix) to rec
-  void MeqCalibrater::addParm(const MeqParm& parm, bool denormalize,
-			      casa::GlishRecord& rec);
+  ///  void MeqCalibrater::addParm(const MeqParm& parm, bool denormalize,
+  ///			      casa::GlishRecord& rec);
 
   /**
    * \defgroup PrivVariable Private variables
