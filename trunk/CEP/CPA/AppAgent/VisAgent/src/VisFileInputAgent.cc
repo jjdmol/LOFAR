@@ -47,10 +47,8 @@ int VisFileInputAgent::hasHeader ()
 }
 
 //##ModelId=3DF9FECE03D1
-int VisFileInputAgent::getHeader (DataRecord::Ref &hdr,bool)
+int VisFileInputAgent::getHeader (DataRecord::Ref &hdr,int wait)
 {
-  if( suspended_ ) 
-    return WAIT;
   // is the file state correct for a header?
   int res = hasHeader();
   if( res == SUCCESS )
@@ -60,14 +58,17 @@ int VisFileInputAgent::getHeader (DataRecord::Ref &hdr,bool)
     return SUCCESS;
   }
   else
+  {
+    FailWhen( res == WAIT && wait != AppAgent::NOWAIT,
+        "can't wait here: would block indefinitely" );
     return res;
+  }
 }
-
 
 //##ModelId=3DF9FECF00BF
 int VisFileInputAgent::hasTile   ()
 {
-  if( suspended_ ) 
+  if( suspended_ )
     return WAIT;
   if( fileState() == HEADER )
     return OUTOFSEQ;

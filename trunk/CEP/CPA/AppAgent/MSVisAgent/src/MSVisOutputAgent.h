@@ -34,7 +34,7 @@
 #include <aips/Tables/ScalarColumn.h>
 
 //##ModelId=3E02FF340070
-class MSVisOutputAgent : public VisFileOutputAgent, public MSVisAgentDebugContext
+class MSVisOutputAgent : public VisFileOutputAgent
 {
   public:
     //##ModelId=3E2831C7010D
@@ -60,7 +60,7 @@ class MSVisOutputAgent : public VisFileOutputAgent, public MSVisAgentDebugContex
     //## Returns: SUCCESS   on success
     //##          WAIT      stream has been suspended from other end
     //##          CLOSED    stream closed
-    virtual int putHeader(DataRecord::Ref &hdr, bool wait = True);
+    virtual int putHeader(DataRecord::Ref &hdr);
 
     //##ModelId=3E28316B012D
     //##Documentation
@@ -70,7 +70,7 @@ class MSVisOutputAgent : public VisFileOutputAgent, public MSVisAgentDebugContex
     //## Returns: SUCCESS   on success
     //##          WAIT      stream has been suspended from other end    
     //##          CLOSED    stream closed
-    virtual int putNextTile(VisTile::Ref &tile, bool wait = True);
+    virtual int putNextTile(VisTile::Ref &tile);
     
     //##ModelId=3E2D73EB0084
     //##Documentation
