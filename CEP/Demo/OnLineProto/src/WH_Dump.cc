@@ -45,13 +45,13 @@ namespace LOFAR
 
 WH_Dump::WH_Dump (const string& name,
 		  unsigned int  nin,
-		  bool          active)
+		  int           rank)
   : WorkHolder    (nin, 1, name,"WH_Dump"),
     itsIndex   (0),
     itsCounter (0),
     itsBuffer  (0),
     handle     (0),
-    itsActive  (active)
+    itsRank    (rank)
 {
   char str[8];
   // create the dummy input dataholder
@@ -73,7 +73,10 @@ WH_Dump::WH_Dump (const string& name,
     itsBuffer.resize(NSTATIONS);
     itsBuffer = complex<float> (0,0);
 
-    if (itsActive) handle = gnuplot_init ();
+    if (itsRank == -1) {
+      cout << "opening gnuplot handle" << endl;
+      handle = gnuplot_init ();
+    }
 }
 
 
@@ -83,14 +86,15 @@ WH_Dump::~WH_Dump()
 }
 
 WorkHolder* WH_Dump::construct (const string& name, 
-				      int nin)
+				int nin, 
+				int rank)
 {
-  return new WH_Dump (name, nin);
+  return new WH_Dump (name, nin, rank);
 }
 
 WH_Dump* WH_Dump::make (const string& name)
 {
-  return new WH_Dump (name, getDataManager().getInputs());
+  return new WH_Dump (name, getDataManager().getInputs(), itsRank);
 }
 
 void WH_Dump::process()
@@ -105,8 +109,7 @@ void WH_Dump::process()
   itsCounter++;
   DH_Vis *InDHptr = (DH_Vis*)getDataManager().getInHolder(0);
 
-  if ((itsCounter % INTERVAL == 0) && (itsActive)) {
-    cout << "DUMPING" << endl;
+  if (( itsCounter % INTERVAL == 0 ) && ( 0 == itsRank )) {
 
     memcpy (corr.data(), 
 	    InDHptr->getBuffer(), 
@@ -116,18 +119,12 @@ void WH_Dump::process()
     
     itsBuffer(itsIndex % PLOTSIZE) = corr (0,NSTATIONS-1);
     
-    if (itsIndex >= PLOTSIZE) {
+    if (itsIndex >= PLOTSIZE-1) {
+
       // the buffer is filled, we can plot the resulting graph
-      
-//       gnuplot_plot_x ( handle,
-// 		       sqrt ( sqr ( real ( itsBuffer ) ) +
-// 			      sqr ( imag ( itsBuffer ) ) ).data(),
-// 		       itsBuffer.size(),
-// 		       "Power of correlation between station 0 and 99 over time" );
 
 //       plotBuffer = sqrt ( sqr ( imag ( itsBuffer ) ) +
 // 			  sqr ( real ( itsBuffer ) ) );
-		    
 
 //       gnuplot_plot_x ( handle, 
 // 		       plotBuffer.data(),
@@ -139,7 +136,6 @@ void WH_Dump::process()
 		       itsBuffer.size(), 
 		       "Real part of correlation between station 0 and 99 over time" );
     }
-
     itsIndex++;
   }
 }
