@@ -24,7 +24,9 @@
 #define LCS_PL_TPERSISTENTOBJECT_H
 
 //# Includes
-#include <PL/TPersistentObjectBase.h>
+#include <PL/PersistentObject.h>
+// #include <PL/Exception.h>
+#include <loki/static_check.h>
 
 namespace LCS 
 {
@@ -34,6 +36,7 @@ namespace LCS
     class Query;
     template<typename T> class Collection;
     template<typename T> class TPersistentObject;
+    template<typename T> class DBRep;
 
     //
     // This templated class acts as a surrogate container class for instances
@@ -45,70 +48,118 @@ namespace LCS
     // is what STL-like containers do.
     //
     template<typename T>
-    class TPersistentObject : public TPersistentObjectBase<T>
+    class TPersistentObject : public PersistentObject
     {
     public:
 
       // We need a default constructor, because we want to be able to
       // create e.g. a Collection of TPersistentObject<T>. The default
-      // constructor of TPersistentObjectBase<T> will create a default
-      // constructed object \c T on the free store, which will be deleted
-      // when \c *this is destroyed.
+      // constructor of will create a default constructed object \c T on
+      // the free store, which will be deleted when \c *this is destroyed.
       TPersistentObject() :
-        TPersistentObjectBase<T>()
+        itsObjectPtr(new T()), itsObjectSharedPtr(itsObjectPtr)
       {
+	init();
       }
 
       // \c T is passed by refererence, not const reference, because this
       // documents more explicitly that \c t can be easily changed, using
-      // the value() method, which also returns a reference, instead of a 
+      // the data() method, which also returns a reference, instead of a 
       // const reference. Internally we keep a pointer to the instance of T;
       // we need a pointer because pointer can have a null value, whereas 
       // a reference cannot.
       explicit TPersistentObject(T& t) : 
-        TPersistentObjectBase<T>(t)
+	itsObjectPtr(&t)
       { 
+	init();
       }
 
       virtual ~TPersistentObject() 
       {
       }
       
+      // Return a reference to the contained persistent object.
+      // \note This is a \e non-const reference, because we want to allow
+      // modification of *itsObjectPtr.
+      T& data() { return *itsObjectPtr; }
+
+      // \todo Maybe this should be done completely different. It will depend
+      // on how we can best iterate over the query result. We might e.g.
+      // instantiate our persistent objects using their unique object-ids
+      // which we're returned by the query. Then we could call the
+      // retrieve(ObjectId&) member function using to initialize an already 
+      // existing PersistentObject. We will have at least one existing
+      // TPersistentObject<T> anyway, because we can only add instances of
+      // TPersistentObject<T> to our Collection.
       static Collection<TPersistentObject<T> > 
       retrieve(const Query& query, int maxObjects)
       {
-        return doRetrieve(query, maxObjects);
+	return doRetrieve(query, maxObjects);
+      }
+
+      static TPersistentObject<T>
+      retrieve(const ObjectId& oid)
+      {
+	return doRetrieve(oid);
       }
 
     private:
-      typedef typename PersistentObject::MetaData MetaData;
-
+      
       // @name Methods that must be implemented using template specialization
       // The implementation of the following methods will depend on the
       // class type \c T. Therefore, there is no default implementation 
       // available. 
-      // \todo Maybe we shouldn't used exceptions here, cause that will 
-      // unnecessarily delay detection of the programming error until
-      // runtime. We could use Loki's STATIC_CHECK macro instead.
 
       //@{
  
+      // This method \e must be called by every constructor. It ensures that
+      // the POContainer in the base class PersistentObject is initialized
+      // properly and that the ownership relations between the
+      // PersistentObjects in this container are properly set in their
+      // associated MetaData objects.
+      void init()
+      {
+  	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
+//  	THROW(NotImplemented, 
+// 	      "Method should be implemented using template specialization"); 
+      }
+
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
       // \throw NotImplemented
-      virtual void doErase(MetaData& md) const 
+      virtual void doErase() const 
       {
- 	THROW(NotImplemented, 
-	      "Method should be implemented using template specialization"); 
+	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
+//  	THROW(NotImplemented, 
+// 	      "Method should be implemented using template specialization"); 
       }
 
       // This method is responsible for actually inserting the \e primitive
       // data members of \c T.
       // \throw NotImplemented
-      virtual void doInsert(MetaData& md) const 
+      virtual void doInsert() const 
       {
- 	THROW(NotImplemented, 
-	      "Method should be implemented using template specialization"); 
+	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
+//  	THROW(NotImplemented, 
+// 	      "Method should be implemented using template specialization"); 
+      }
+
+      static TPersistentObject<T>
+      doRetrieve(const ObjectId& oid)
+      {
+  	STATIC_CHECK(0, ERROR__Use_Explicit_Member_Specialization);
+//   	THROW(NotImplemented, 
+//  	      "Method should be implemented using template specialization"); 
+      }
+
+      // This method is responsible for actually erasing the \e primitive
+      // data members of \c T.
+      // \throw NotImplemented
+      virtual void doUpdate() const 
+      {
+	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
+//  	THROW(NotImplemented, 
+// 	      "Method should be implemented using template specialization"); 
       }
 
       // This method is responsible for actually retrieving the \e primitive
@@ -117,28 +168,46 @@ namespace LCS
       static Collection<TPersistentObject<T> > 
       doRetrieve(const Query& query, int maxObjects)
       {
- 	THROW(NotImplemented, 
-	      "Method should be implemented using template specialization"); 
-      }
-
-      // This method is responsible for actually erasing the \e primitive
-      // data members of \c T.
-      // \throw NotImplemented
-      virtual void doUpdate(MetaData& md) const 
-      {
- 	THROW(NotImplemented, 
-	      "Method should be implemented using template specialization"); 
+  	STATIC_CHECK(0, ERROR__Use_Explicit_Member_Specialization);
+//   	THROW(NotImplemented, 
+//  	      "Method should be implemented using template specialization"); 
       }
 
       //@}
 
-    private:
+      // Here we keep a pointer to the instance of T.
+      T* itsObjectPtr;
 
-      struct DBRep {};
+      // The boost::shared_ptr will be used to keep track of instances of T
+      // that we've created ourselves. Because copying a TPersistentObject 
+      // implies copying the pointer to the instance of T, we must somehow
+      // keep track of the number of pointers pointing to this object. When
+      // the count drops to zero, boost::shared_ptr will delete the object.
+      // Obviously, we do not want this behaviour for instances of T that we
+      // did not create ourselves. If we're not the creator, then we're not
+      // the owner, hence we should never ever delete the object! Therefore,
+      // we will only transfer ownership of itsObjectPtr to the
+      // boost::shared_ptr when \e we are the creator/owner of the object
+      // that itsObjectPtr points to.
+      boost::shared_ptr<T> itsObjectSharedPtr;
 
-      void toDatabaseRep(TPersistentObject<T>::DBRep& dest) const;
+      // @name The DBRep classes.
+      //@{
 
-      void fromDatabaseRep(const TPersistentObject<T>::DBRep& org);
+      // The DBRep<T> struct needs to have access to our private data members,
+      // because it will update them when e.g. data is read form the database.
+      friend struct DBRep<T>;
+
+      // Convert the data in our persistent object class to DBRep format,
+      // which stores all data members contiguously in memory.
+      template<typename U>
+      void toDatabaseRep(DBRep<U>& dest) const;
+
+      // Convert the data from DBRep format to our persistent object.
+      template<typename U>
+      void fromDatabaseRep(const DBRep<U>& org);
+
+      //@}
 
     };
 
