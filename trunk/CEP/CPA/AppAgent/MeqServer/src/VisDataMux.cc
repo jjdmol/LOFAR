@@ -7,13 +7,14 @@
     
 namespace MEQ    
 {
-  const HIID FStation1      = AidStation|1|AidIndex,
-             FStation2      = AidStation|2|AidIndex;
+  const HIID  FOutputColumns = AidOutput|AidCol,
+              FStation1      = AidStation|1|AidIndex,
+              FStation2      = AidStation|2|AidIndex,
+              FNumStations   = AidNum|AidAntenna,
+              FTileFormat    = AidTile|AidFormat;
 }
 
 //##ModelId=3F9FF71B006A
-//##ModelId=3F9FF71B00AE
-//##ModelId=3F9FF71B00C7
 MEQ::VisDataMux::VisDataMux (MEQ::Forest &frst)
     : forest_(frst)
 {
@@ -21,31 +22,28 @@ MEQ::VisDataMux::VisDataMux (MEQ::Forest &frst)
   handlers_.resize(VisVocabulary::ifrNumber(30,30)+1);
 }
 
-//##ModelId=3F98DAE6024A
-void MEQ::VisDataMux::init (const DataRecord &header)
+//##ModelId=3FA1016000B0
+void MEQ::VisDataMux::init (const DataRecord &rec)
 {
-  // check header for number of stations, use a reasonable default
-  int nstations = header[AidNum|AidAntenna].as<int>(-1);
-  if( nstations>0 )
+  out_columns_.clear();
+  out_colnames_.clear();
+  // setup output column indices
+  if( rec[FOutputColumns].exists() )
   {
-    cdebug(2)<<"header indicates "<<nstations<<" stations\n";
+    out_colnames_ = rec[FOutputColumns];
+    out_columns_.resize(out_colnames_.size());
+    const VisTile::NameToIndexMap &colmap = VisTile::getNameToIndexMap();
+    for( uint i=0; i<out_colnames_.size(); i++ )
+    {
+      VisTile::NameToIndexMap::const_iterator iter = 
+          colmap.find(out_colnames_[i] = struppercase(out_colnames_[i]));
+      FailWhen(iter==colmap.end(),"unknown output column "+out_colnames_[i]);
+      out_columns_[i] = iter->second;
+      cdebug(2)<<"indicated output colum: "<<out_colnames_[i]<<endl;
+    }
   }
-  else
-  {
-    nstations = 30;
-    cdebug(2)<<"no NumStations parameter in header, assuming 30\n";
-  }
-  handlers_.resize(VisVocabulary::ifrNumber(nstations,nstations)+1);
-  // init default output tile format, if found
-  output_format_.attach(header[AidTile|AidFormat].as_p<VisTile::Format>(),DMI::READONLY);
 }
 
-//##ModelId=3F992F280174
-int MEQ::VisDataMux::formDataId (int sta1,int sta2)
-{
-  return VisVocabulary::ifrNumber(sta1,sta2);
-}
-    
 //##ModelId=3F716E98002E
 void MEQ::VisDataMux::addNode (Node &check_node)
 {
@@ -107,8 +105,48 @@ void MEQ::VisDataMux::removeNode (Node &check_node)
     }
 }
 
+//##ModelId=3F992F280174
+int MEQ::VisDataMux::formDataId (int sta1,int sta2)
+{
+  return VisVocabulary::ifrNumber(sta1,sta2);
+}
+
+//##ModelId=3F98DAE6024A
+void MEQ::VisDataMux::deliverHeader (const DataRecord &header)
+{
+  // check header for number of stations, use a reasonable default
+  cdebug(3)<<"got header: "<<header.sdebug(DebugLevel)<<endl;
+  int nstations = header[FNumStations].as<int>(-1);
+  if( nstations>0 )
+  {
+    cdebug(2)<<"header indicates "<<nstations<<" stations\n";
+  }
+  else
+  {
+    nstations = 30;
+    cdebug(2)<<"no NumStations parameter in header, assuming 30\n";
+  }
+  handlers_.resize(VisVocabulary::ifrNumber(nstations,nstations)+1);
+  // init output tile format
+  out_format_.attach(header[AidTile|AidFormat].as_p<VisTile::Format>(),DMI::READONLY);
+  for( uint i=0; i<out_columns_.size(); i++ )
+  {
+    if( out_format_->defined(out_columns_[i]) )
+    {
+      cdebug(3)<<"output column "<<out_colnames_[i]<<" already present in tile format"<<endl;
+    }
+    else
+    {
+      cdebug(2)<<"adding output column "<<out_colnames_[i]<<" to tile format\n";
+      out_format_.privatize(DMI::WRITE);
+      out_format_().add(out_columns_[i],out_format_->type(VisTile::DATA),
+                        out_format_->shape(VisTile::DATA));
+    }
+  }
+}
+
 //##ModelId=3F950ACA0160
-int MEQ::VisDataMux::deliver (VisTile::Ref::Copy &tileref)
+int MEQ::VisDataMux::deliverTile (VisTile::Ref::Copy &tileref)
 {
   int result_flag = 0;
   int did = formDataId(tileref->antenna1(),tileref->antenna2());
@@ -133,8 +171,10 @@ int MEQ::VisDataMux::deliver (VisTile::Ref::Copy &tileref)
     // deliver to all known handlers
     VisHandlerList::iterator iter = hlist.begin();
     for( ; iter != hlist.end(); iter++ )
-      result_flag |= (*iter)->deliver(req,tileref,output_format_);
+      result_flag |= (*iter)->deliver(req,tileref,out_format_);
   }
   return result_flag;
 }
+
+
 

@@ -146,6 +146,8 @@ void MeqServer::run ()
         continue;
       }
     }
+    // init the data mux
+    data_mux.init(*initrec);
     // get params from control record
     int ntiles = 0;
     DataRecord::Ref header;
@@ -187,7 +189,7 @@ void MeqServer::run ()
             if( !(ntiles%100) )
               control().setStatus(StNumTiles,ntiles);
             // deliver tile to data mux
-            int result = data_mux.deliver(tileref);
+            int result = data_mux.deliverTile(tileref);
             if( result&Node::RES_UPDATED )
             {
               cdebug(3)<<"tile is updated, posting to output"<<endl;
@@ -225,7 +227,7 @@ void MeqServer::run ()
             reading_data = writing_data = False;
             cached_header = ref;
             header = cached_header.ref_cast<DataRecord>().copy();
-            data_mux.init(*header);
+            data_mux.deliverHeader(*header);
             output_event = DataSetHeader;
             output_message = "received header for dataset "+id.toString();
             if( !datatype.empty() )
