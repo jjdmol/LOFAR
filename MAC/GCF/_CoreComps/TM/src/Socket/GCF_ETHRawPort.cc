@@ -110,68 +110,27 @@ int GCFETHRawPort::open()
   return retval;
 }
 
-ssize_t GCFETHRawPort::send(const GCFEvent& e, void* buf, size_t count)
+ssize_t GCFETHRawPort::send(GCFEvent& e)
 {
   size_t written = 0;
+
+  assert(_pSocket);
 
   if (MSPP == getType())  
     return 0; // no messages can be send by this type of port
 
-  iovec* newbufs(0);
-  if (F_RAW_SIG != e.signal)
-  { 
-    iovec buffers[2];
-    buffers[0].iov_base = (void*)&e;
-    buffers[0].iov_len = e.length - count;
-    buffers[1].iov_base  = buf;
-    buffers[1].iov_len = count;
-    newbufs = buffers;
-    sendv(GCFEvent(F_RAW_SIG), buffers, (count > 0 ? 2 : 1));
-  }
-  else
+  unsigned int packsize;
+  void* buf = e.pack(packsize);
+
+  if ((written = _pSocket->send(buf, packsize)) != packsize)
   {
-    if ((written = _pSocket->send(buf, count)) != count)
-    {
-      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
-          "truncated send: %s",
-          strerror(errno)));
-          
-      schedule_disconnected();
-      
-      written = 0;
-    }
-  }
-
-  return written;
-}
-
-ssize_t GCFETHRawPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
-{
-  size_t written = 0;
-  size_t count = 0;
-  if (MSPP == getType())  
-    return 0; // no messages can be send by this type of port
-  
-  if (F_RAW_SIG != e.signal)
-  { 
-    count = e.length;
-    if ((written = _pSocket->send((void*)&e, e.length)) != count)
-    {
-      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
-          "truncated send: %s",
-          strerror(errno)));
-    }
-  }
-
-  for (int i = 0; i < n; i++)
-  {
-    count += buffers[i].iov_len;
-    if ((written += _pSocket->send(buffers[i].iov_base, buffers[i].iov_len)) != count)
-    {
-      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
-          "truncated send: %s",
-          strerror(errno)));
-    }
+    LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
+        "truncated send: %s",
+        strerror(errno)));
+        
+    schedule_disconnected();
+    
+    written = 0;
   }
 
   return written;
@@ -180,13 +139,6 @@ ssize_t GCFETHRawPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
 ssize_t GCFETHRawPort::recv(void* buf, size_t count)
 {
   return _pSocket->recv(buf, count);
-}
-
-ssize_t GCFETHRawPort::recvv(iovec /*buffers*/[], int /*n*/)
-{
-  LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, ( 
-     "recvv: not implemented"));
-  return -1;
 }
 
 void GCFETHRawPort::setAddr(const char* ifname,

@@ -33,7 +33,7 @@
 class GCFPVDouble : public GCFPValue
 {
   public: 
-  	GCFPVDouble (double val = 0.0) : GCFPValue(LPT_DOUBLE), _value(val) {;}
+  	explicit GCFPVDouble (double val = 0.0) : GCFPValue(LPT_DOUBLE), _value(val) {;}
   	virtual ~GCFPVDouble () {;}
     
     /** Changes the value of this object */
@@ -55,10 +55,12 @@ class GCFPVDouble : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy (const GCFPValue& value);
       
-    virtual unsigned int unpack(const char* valBuf, unsigned int bufLength);
+    virtual unsigned int unpack(const char* valBuf);
 
-    virtual unsigned int pack(char* valBuf, unsigned int maxBufSize) const;
+    virtual unsigned int pack(char* valBuf) const;
 
+    virtual unsigned int getSize() const { return sizeof(double) + getBaseSize(); }
+    
   private: // Private attributes
     /**  */
     volatile double _value;

@@ -1,7 +1,7 @@
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/GCFCommon/autogen $< && \
+	$(AUTOGEN) -L $(top_srcdir)/../MACCommon/autogen $< && \
 	chmod a+w $@
 
 DOCHDRS	=	\
@@ -17,7 +17,9 @@ libpi_la_SOURCES= $(DOCHDRS) \
   GPI_Controller.cc \
   GPI_SupervisoryServer.cc \
   GPI_PropertyProxy.cc \
-  GPI_PropertySet.cc
+  GPI_PropertySet.cc \
+  PI_Protocol.cc \
+  $(top_builddir)/CoreComps/PA/src/PA_Protocol.cc
   
 libpi_la_CPPFLAGS= -I$(top_srcdir)/GCFCommon/src \
 	-I$(top_srcdir)/CoreComps/TM/src \

@@ -58,16 +58,15 @@ class GPAController : public GCFTask
     friend class GPAScopeManager;
     void doNextRequest();
     bool mayContinue(GCFEvent& e, GCFPortInterface& p);
-    void loadAPC(char* actionData);
+    void loadAPC(GCFEvent& e);
     void apcLoaded(TPAResult result);
-    void unloadAPC(char* actionData);
+    void unloadAPC(GCFEvent& e);
     void apcUnloaded(TPAResult result);
-    void reloadAPC(char* actionData);
-    void unregisterScope(char* pScopeData);
-    void propertiesLinked(char* pResponseData);
-    void propertiesUnlinked(char* pResponseData);
+    void reloadAPC(GCFEvent& e);
+    void unregisterScope(GCFEvent& e);
+    void propertiesLinked(GCFEvent& e);
+    void propertiesUnlinked(GCFEvent& e);
     void sendAPCActionResponse(GCFEvent& e);
-    void unpackAPCActionData(char* pActionData);
     
 	private: // state methods
 		GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);

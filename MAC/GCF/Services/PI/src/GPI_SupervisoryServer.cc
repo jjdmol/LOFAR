@@ -24,9 +24,8 @@
 #include "GPI_Controller.h"
 #include "GPI_PropertySet.h"
 #include <Utils.h>
-#include <GCF/GCF_PValue.h>
+#include "GPI_PValue.h"
 
-#define DECLARE_SIGNAL_NAMES
 #include "PI_Protocol.ph"
 #include <PA_Protocol.ph>
 
@@ -56,22 +55,22 @@ GCFEvent::TResult GPISupervisoryServer::initial(GCFEvent& e, GCFPortInterface& p
 
   switch (e.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       _controller.getPortProvider().accept(_ssPort);
       // intential fall through
-    case F_TIMER_SIG:
+    case F_TIMER:
       _propertyAgent.open();
       break;
 
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
       if (_ssPort.isConnected())
         TRAN(GPISupervisoryServer::operational);
       break;
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       p.setTimer(1.0); // try again after 1 second
       break;
 
@@ -86,27 +85,25 @@ GCFEvent::TResult GPISupervisoryServer::initial(GCFEvent& e, GCFPortInterface& p
 GCFEvent::TResult GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  static string scope = "";
-  static char* pData = 0;
   static GPIPropertySet* pPropertySet = 0;
   static int timerID = -1;
 
   switch (e.signal)
   {      
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
       if (&p == &_propertyAgent)
       {
-        PARegisterscopeEvent rse(0);
+        PARegisterScopeEvent requestOut;
         for (TScopeRegister::iterator iter = _scopeRegister.begin();
                iter != _scopeRegister.end(); ++iter)
         {
-          rse.length = sizeof(GCFEvent) + Utils::packString(iter->first, _buffer, MAX_BUF_SIZE);
-          _propertyAgent.send(rse, _buffer, rse.length - sizeof(GCFEvent));
+          requestOut.scope = iter->first;
+          _propertyAgent.send(requestOut);
         }
       }  
       break;
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       if (&_propertyAgent == &p)
       {
         p.setTimer(1.0); // try again after 1 second
@@ -118,7 +115,7 @@ GCFEvent::TResult GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterfac
       }
       break;
 
-    case F_TIMER_SIG:
+    case F_TIMER:
       if (&_propertyAgent == &p)
       {          
         p.open(); // try again
@@ -139,128 +136,121 @@ GCFEvent::TResult GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterfac
       }
       break;
      
-    case PI_REGISTERSCOPE:
+    case PI_REGISTER_SCOPE:
     {
-      pData = ((char*)&e) + sizeof(GCFEvent);
-      if (!findPropertySet(pData, scope))
+      PIRegisterScopeEvent requestIn(e);
+      if (!findPropertySet(requestIn.scope))
       {
-        pPropertySet = new GPIPropertySet(*this, scope);
-        _scopeRegister[scope] = pPropertySet;
-        pPropertySet->registerScope(e);
+        pPropertySet = new GPIPropertySet(*this, requestIn.scope);
+        _scopeRegister[requestIn.scope] = pPropertySet;
+        pPropertySet->registerScope(requestIn);
       }
       else
       {
-        PIScoperegisteredEvent response(PI_SCOPE_ALREADY_REGISTERED);
-        unsigned int scopeDataLength = Utils::packString(scope, _buffer, MAX_BUF_SIZE);
-        response.length += scopeDataLength;
-        _ssPort.send(response, _buffer, scopeDataLength);
+        PIScopeRegisteredEvent responseOut;
+        responseOut.result = PI_SCOPE_ALREADY_REGISTERED;
+        responseOut.scope = requestIn.scope;
+        _ssPort.send(responseOut);
       }      
 
       LOFAR_LOG_INFO(PI_STDOUT_LOGGER, ( 
           "SS-REQ: Register scope %s",
-          scope.c_str()));
+          requestIn.scope.c_str()));
       break;
     }  
-    case PA_SCOPEREGISTERED:
+    case PA_SCOPE_REGISTERED:
     {      
-      PAScoperegisteredEvent* pResponse = static_cast<PAScoperegisteredEvent*>(&e);
-      assert(pResponse);
-      pData = ((char*)&e) + sizeof(PAScoperegisteredEvent);
-      pPropertySet = findPropertySet(pData, scope);
+      PAScopeRegisteredEvent responseIn(e);
+
+      pPropertySet = findPropertySet(responseIn.scope);
 
       LOFAR_LOG_INFO(PI_STDOUT_LOGGER, ( 
           "PA-RESP: Scope %s is registered", 
-          scope.c_str()));
+          responseIn.scope.c_str()));
 
       if (pPropertySet)
       {
-        pPropertySet->registerCompleted(pResponse->result);
+        pPropertySet->registerCompleted(responseIn.result);
       }
       else
       {
         // in case a scope is gone due to a crash in a controller application on 
         // the RTC
-        if (pResponse->result == PA_NO_ERROR)
+        if (responseIn.result == PA_NO_ERROR)
         {
-          GCFEvent paUrsE(PA_UNREGISTERSCOPE);
-          unsigned int scopeDataLength = scope.length() + Utils::SLEN_FIELD_SIZE;
-          paUrsE.length += scopeDataLength;
-          _propertyAgent.send(paUrsE, pData, scopeDataLength);
+          PAUnregisterScopeEvent requestOut;
+          requestOut.scope = responseIn.scope;
+          _propertyAgent.send(requestOut);
         }        
         LOFAR_LOG_TRACE(PI_STDOUT_LOGGER, ( 
             "Property set with scope %d was deleted in the meanwhile", 
-            scope.c_str()));
+            responseIn.scope.c_str()));
       }
       break;
     }
 
-    case PI_UNREGISTERSCOPE:
+    case PI_UNREGISTER_SCOPE:
     {
-      pData = ((char*)&e) + sizeof(GCFEvent);
-      pPropertySet = findPropertySet(pData, scope);
+      PIUnregisterScopeEvent requestIn(e);
+      pPropertySet = findPropertySet(requestIn.scope);
 
       LOFAR_LOG_INFO(PI_STDOUT_LOGGER, ( 
           "SS-REQ: Unregister scope %s",
-          scope.c_str()));
+          requestIn.scope.c_str()));
 
       assert(pPropertySet);
-      pPropertySet->unregisterScope(e);
+      pPropertySet->unregisterScope(requestIn);
       break;
     }  
 
-    case PA_SCOPEUNREGISTERED:
+    case PA_SCOPE_UNREGISTERED:
     {
-      PAScopeunregisteredEvent* pResponse = static_cast<PAScopeunregisteredEvent*>(&e);
-      assert(pResponse);
-      pData = ((char*)&e) + sizeof(PAScopeunregisteredEvent);
-      pPropertySet = findPropertySet(pData, scope);
+      PAScopeUnregisteredEvent responseIn(e);
+      pPropertySet = findPropertySet(responseIn.scope);
 
       LOFAR_LOG_INFO(PI_STDOUT_LOGGER, ( 
           "PA-RESP: Scope %s is unregistered", 
-          scope.c_str()));
+          responseIn.scope.c_str()));
           
       if (pPropertySet)
       {
-        pPropertySet->unregisterCompleted(pResponse->result);
+        pPropertySet->unregisterCompleted(responseIn.result);
         delete pPropertySet;
       }
-      _scopeRegister.erase(scope);
+      _scopeRegister.erase(responseIn.scope);
       break;
     }
 
-    case PA_LINKPROPERTIES:
+    case PA_LINK_PROPERTIES:
     {
-      PALinkpropertiesEvent* pRequest = static_cast<PALinkpropertiesEvent*>(&e);
-      assert(pRequest);
-      pData = ((char*)&e) + sizeof(PALinkpropertiesEvent);
-      pPropertySet = findPropertySet(pData, scope);
+      PALinkPropertiesEvent requestIn(e);
+      pPropertySet = findPropertySet(requestIn.scope);
       LOFAR_LOG_INFO(PI_STDOUT_LOGGER, ( 
           "PA-REQ: Link properties on scope %s", 
-          scope.c_str()));
+          requestIn.scope.c_str()));
       if (pPropertySet)
       {
-        pPropertySet->linkProperties(*pRequest);
+        pPropertySet->linkProperties(requestIn);
       }
       else
       {
-        PAPropertieslinkedEvent response(0, PA_PROP_SET_GONE);
-        replyMsgToPA(response, pData);
+        PAPropertiesLinkedEvent responseOut;
+        responseOut.result = PA_PROP_SET_GONE;
+        responseOut.scope = requestIn.scope;
+        replyMsgToPA(responseOut);
         LOFAR_LOG_TRACE(PI_STDOUT_LOGGER, ( 
             "Property set with scope %d was deleted in the meanwhile", 
-            scope.c_str()));
+            responseOut.scope.c_str()));
       }
       break;
     }
-    case PI_PROPERTIESLINKED:
+    case PI_PROPERTIES_LINKED:
     {
-      PIPropertieslinkedEvent* pResponse = static_cast<PIPropertieslinkedEvent*>(&e);
-      assert(pResponse);
-      pData = ((char*)&e) + sizeof(PIPropertieslinkedEvent);
-      pPropertySet = findPropertySet(pData, scope);
-      pData += Utils::getStringDataLength(pData);
+      PIPropertiesLinkedEvent responseIn(e);
+      pPropertySet = findPropertySet(responseIn.scope);
       if (pPropertySet)
       {
-        bool mustRetry = pPropertySet->propertiesLinked(pResponse->result, pData);
+        bool mustRetry = pPropertySet->propertiesLinked(responseIn);
         if (mustRetry && timerID == -1)
         {
           timerID = _ssPort.setTimer(0.0);
@@ -268,55 +258,48 @@ GCFEvent::TResult GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterfac
       }
       break;
     }
-    case PA_UNLINKPROPERTIES:
+    case PA_UNLINK_PROPERTIES:
     {
-      PAUnlinkpropertiesEvent* pRequest = static_cast<PAUnlinkpropertiesEvent*>(&e);
-      assert(pRequest);
-      pData = ((char*)&e) + sizeof(PAUnlinkpropertiesEvent);
-      pPropertySet = findPropertySet(pData, scope);
+      PAUnlinkPropertiesEvent requestIn(e);
+      pPropertySet = findPropertySet(requestIn.scope);
       LOFAR_LOG_INFO(PI_STDOUT_LOGGER, ( 
           "PA-REQ: Unlink properties on scope %s", 
-          scope.c_str()));
+          requestIn.scope.c_str()));
       if (pPropertySet)
       {
-        pPropertySet->unlinkProperties(*pRequest);
+        pPropertySet->unlinkProperties(requestIn);
       }
       else
       {
-        PAPropertiesunlinkedEvent response(0, PA_PROP_SET_GONE);
-        replyMsgToPA(response, pData);
+        PAPropertiesUnlinkedEvent responseOut;
+        responseOut.result = PA_PROP_SET_GONE;
+        responseOut.scope = requestIn.scope;
+        replyMsgToPA(responseOut);
         LOFAR_LOG_TRACE(PI_STDOUT_LOGGER, ( 
             "Property set with scope %d was deleted in the meanwhile", 
-            scope.c_str()));
+            responseOut.scope.c_str()));
       }
       break;
     }
 
-    case PI_PROPERTIESUNLINKED:
+    case PI_PROPERTIES_UNLINKED:
     {
-      PIPropertiesunlinkedEvent* pResponse = static_cast<PIPropertiesunlinkedEvent*>(&e);
-      assert(pResponse);
-      pData = ((char*)&e) + sizeof(PIPropertiesunlinkedEvent);
-      pPropertySet = findPropertySet(pData, scope);
-      pData += Utils::getStringDataLength(pData);
+      PIPropertiesUnlinkedEvent responseIn(e);
+      pPropertySet = findPropertySet(responseIn.scope);
       if (pPropertySet)
       {
-        pPropertySet->propertiesUnlinked(pResponse->result, pData); 
+        pPropertySet->propertiesUnlinked(responseIn); 
       }
       break;
     }
     
-    case PI_VALUESET:
+    case PI_VALUE_SET:
     {
-      string propName;
-      pData = ((char*)&e) + sizeof(GCFEvent);
-      unsigned int propDataLength = Utils::unpackString(pData, propName);
-      unsigned int valueBufLength = e.length - propDataLength - sizeof(GCFEvent);
-      GCFPValue* pValue = GCFPValue::unpackValue(pData + propDataLength, valueBufLength); 
+      PIValueSetEvent requestIn(e);
+      const GCFPValue* pValue = requestIn.value._pValue;
       if (pValue)
       {
-        _controller.getPropertyProxy().setPropValue(propName, *pValue);
-        delete pValue;
+        _controller.getPropertyProxy().setPropValue(requestIn.name, *pValue);
       }
       break;                                          
     }
@@ -335,11 +318,11 @@ GCFEvent::TResult GPISupervisoryServer::closing(GCFEvent& e, GCFPortInterface& p
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       _propertyAgent.close();
       break;
       
-    case F_DISCONNECTED_SIG:      
+    case F_DISCONNECTED:      
       if (&p == &_propertyAgent)
       {
         _controller.close(*this);
@@ -354,22 +337,16 @@ GCFEvent::TResult GPISupervisoryServer::closing(GCFEvent& e, GCFPortInterface& p
   return status;
 }
 
-GPIPropertySet* GPISupervisoryServer::findPropertySet(char* pScopeData, string& scope)
+GPIPropertySet* GPISupervisoryServer::findPropertySet(string& scope)
 {
-  if (pScopeData != 0)
-  {
-    Utils::unpackString(pScopeData, scope);
-  }
   TScopeRegister::iterator iter = _scopeRegister.find(scope);  
   return (iter != _scopeRegister.end() ? iter->second : 0);
 }
 
-void GPISupervisoryServer::replyMsgToPA(GCFEvent& e, const string& scope)
+void GPISupervisoryServer::replyMsgToPA(GCFEvent& e)
 {
   if (_propertyAgent.isConnected())
   {    
-    unsigned int scopeDataLength = Utils::packString(scope, _buffer, MAX_BUF_SIZE);
-    e.length += scopeDataLength;
-    _propertyAgent.send(e, _buffer, scopeDataLength);
+    _propertyAgent.send(e);
   }
 }

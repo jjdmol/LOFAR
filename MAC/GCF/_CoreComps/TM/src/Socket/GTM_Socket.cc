@@ -81,12 +81,12 @@ void GTMSocket::workProc()
   {
     if (bytesRead == 0)
     {
-      GCFEvent e(F_DISCONNECTED_SIG);
+      GCFEvent e(F_DISCONNECTED);
       _port.dispatch(e);    
     }
     else 
     {
-      GCFEvent e(F_DATAIN_SIG);
+      GCFEvent e(F_DATAIN);
       _port.dispatch(e);
     }
   }

@@ -194,9 +194,9 @@ int GCFPort::close()
 /**
  * ::send
  */
-ssize_t GCFPort::send(const GCFEvent& e, void* buf, size_t count)
+ssize_t GCFPort::send(GCFEvent& e)
 {
-  if (F_RAW_SIG != e.signal)
+  if (F_RAW_DATA != e.signal)
   {
     LOFAR_LOG_TRACE(TM_STDOUT_LOGGER, (
       "Sending event '%s' for task %s on port %s",
@@ -236,76 +236,9 @@ ssize_t GCFPort::send(const GCFEvent& e, void* buf, size_t count)
          getTask()->evtstr(e), _name.c_str()));
       return -1; // RETURN
   }
-
-  iovec buffers[2];
-  buffers[0].iov_base = (void*)&e;
-  buffers[0].iov_len = e.length - count;
-  buffers[1].iov_base  = buf;
-  buffers[1].iov_len = count;
   
-  return _pSlave->sendv(GCFEvent(F_RAW_SIG), buffers, (count > 0 ? 2 : 1));
+  return _pSlave->send(e);
 
-}
-
-/**
- * ::sendv
- */
-ssize_t GCFPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
-{
-  if (F_RAW_SIG != e.signal)
-  {
-    LOFAR_LOG_TRACE(TM_STDOUT_LOGGER, (
-      "Sending event '%s' for task %s on port %s",
-      getTask()->evtstr(e),
-      getTask()->getName().c_str(), 
-      getName().c_str()));
-  }
-
-  if (SPP == getType())
-  {
-    if (F_EVT_INOUT(e) & F_IN)
-    {
-      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
-          "Trying to send IN event '%s' on SPP "
-		      "port '%s'; discarding this event.",
-		      getTask()->evtstr(e), _name.c_str()));
-      return -1; // RETURN
-    }
-  }
-  else if (SAP == getType())
-  {
-    if (F_EVT_INOUT(e) & F_OUT)
-    {
-      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
-          "Trying to send OUT event '%s' on SAP "
-		      "port '%s'; discarding this event.",
-		      getTask()->evtstr(e), _name.c_str()));
-      return -1; // RETURN
-    }
-  }
-  else if (MSPP == _type)
-  {
-     LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
-        "Trying to send event '%s' by means of the portprovider: %s (MSPP). "
-        "Not supported yet",
-         getTask()->evtstr(e), _name.c_str()));
-      return -1; // RETURN
-  }
-
-  iovec* newbufs = new iovec[n+1];
-  newbufs[0].iov_base = (void*)&e;
-  newbufs[0].iov_len  = e.length;
-  for (int i = 1; i < n+1; i++)
-  {
-    newbufs[i].iov_base  = buffers[i-1].iov_base;
-    newbufs[i].iov_len = buffers[i-1].iov_len;
-  }
-
-  int status = _pSlave->sendv(GCFEvent(F_RAW_SIG), newbufs, n+1);
-  
-  delete [] newbufs;
-
-  return status;
 }
 
 /**
@@ -315,15 +248,6 @@ ssize_t GCFPort::recv(void* buf, size_t count)
 {
   if (!_pSlave) return -1;
   return _pSlave->recv(buf, count);
-}
-
-/**
- * ::recvv
- */
-ssize_t GCFPort::recvv(iovec buffers[], int n)
-{
-  if (!_pSlave) return -1;
-  return _pSlave->recvv(buffers, n);
 }
 
 /**

@@ -52,7 +52,7 @@ class GCFPValue
      * Sets the type ID for each subclassed property value type class
      * @param type MAC property type ID
      */
-    GCFPValue (TMACValueType type) : _type(type) {};
+    explicit GCFPValue (TMACValueType type) : _type(type) {};
     
     /**
      * The destructor
@@ -100,16 +100,20 @@ class GCFPValue
      */
     static GCFPValue* createMACTypeObject (TMACValueType type);
 
-    static GCFPValue* unpackValue (const char* valBuf, unsigned int maxBufSize);
+    static GCFPValue* unpackValue (const char* valBuf);
 
-    virtual unsigned int unpack(const char* valBuf, unsigned int maxBufSize) = 0;
+    virtual unsigned int unpack(const char* valBuf) = 0;
 
-    virtual unsigned int pack(char* valBuf, unsigned int maxBufSize) const = 0;
+    virtual unsigned int pack(char* valBuf) const = 0;
+    
+    virtual unsigned int getSize() const = 0;
    
   protected:
-    unsigned int unpackBase(const char* valBuf, unsigned int maxBufSize);
+    unsigned int unpackBase(const char* valBuf);
  
-    unsigned int packBase(char* valBuf, unsigned int maxBufSize) const;
+    unsigned int packBase(char* valBuf) const;
+    
+    unsigned int getBaseSize() const { return 1; }
  
   private: // private data members
     /** Holds MAC property value type ID*/

@@ -28,13 +28,13 @@ GCFDummyPort GCFFsm::_gcfPort(0, "GCFFSM", F_FSM_PROTOCOL);
 void GCFFsm::initFsm()
 {
   GCFEvent e;
-  e.signal = F_ENTRY_SIG;
+  e.signal = F_ENTRY;
   (void)(this->*_state)(e, _gcfPort); // entry signal
-  e.signal = F_INIT_SIG;
+  e.signal = F_INIT;
   if (GCFEvent::HANDLED != (this->*_state)(e, _gcfPort)) // initial transition
   {
     LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, (
-        "Fsm::init: initial transition F_SIGNAL(F_FSM_PROTOCOL, F_INIT_SIG) not handled."));
+        "Fsm::init: initial transition F_SIGNAL(F_FSM_PROTOCOL, F_INIT) not handled."));
     exit(1); // EXIT
   }
 }
@@ -42,7 +42,7 @@ void GCFFsm::initFsm()
 void GCFFsm::tran(State target, const char* from, const char* to)
 {
   GCFEvent e;
-  e.signal = F_EXIT_SIG;
+  e.signal = F_EXIT;
   (void)(this->*_state)(e, _gcfPort); // exit signal
 
   LOFAR_LOG_TRACE(TM_STDOUT_LOGGER, (
@@ -52,6 +52,6 @@ void GCFFsm::tran(State target, const char* from, const char* to)
 
   _state = target; // state transition
   
-  e.signal = F_ENTRY_SIG;
+  e.signal = F_ENTRY;
   (void)(this->*_state)(e, _gcfPort); // entry signal
 }

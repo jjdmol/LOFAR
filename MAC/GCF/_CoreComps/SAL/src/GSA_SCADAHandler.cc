@@ -55,30 +55,9 @@ void GSASCADAHandler::stop()
   _running = false;
 }
  
-void GSASCADAHandler::registerTask(GCFTask& task)
-{
-  _registerdTasks.push_back(&task);
-}
- 
-void GSASCADAHandler::unregisterTask(GCFTask& task)
-{
-  _registerdTasks.remove(&task);
-}
-
 void GSASCADAHandler::workProc()
 {
   _pvssApi.workProc();
-  list<GCFTask*> tempRegisteredTasks(_registerdTasks.begin(), _registerdTasks.end());
-  GCFTask* pTask;
-  for (list<GCFTask*>::iterator iter = tempRegisteredTasks.begin();
-       iter != tempRegisteredTasks.end(); ++iter)
-  {
-    GCFEvent e(F_DISPATCHED_SIG);
-    GCFDummyPort p(pTask, "SCADA", 0);
-    pTask = *iter;
-    assert(pTask);
-    pTask->dispatch(e, p);
-  }
 }
 
 TSAResult GSASCADAHandler::isOperational()

@@ -23,11 +23,11 @@
 
 #include <GCF/GCF_PVUnsigned.h>
 
-unsigned int GCFPVUnsigned::unpack(const char* valBuf, unsigned int maxBufSize)
+unsigned int GCFPVUnsigned::unpack(const char* valBuf)
 {
   unsigned int result(0);
-  unsigned int unpackedBytes = unpackBase(valBuf, maxBufSize);
-  if (maxBufSize >= unpackedBytes + sizeof(unsigned int))
+  unsigned int unpackedBytes = unpackBase(valBuf);
+  if (unpackedBytes > 0)
   {
     memcpy((void*) &_value, valBuf + unpackedBytes, sizeof(unsigned int));
     result = sizeof(unsigned int) + unpackedBytes;
@@ -35,11 +35,11 @@ unsigned int GCFPVUnsigned::unpack(const char* valBuf, unsigned int maxBufSize)
   return result;
 }
 
-unsigned int GCFPVUnsigned::pack(char* valBuf, unsigned int maxBufSize) const
+unsigned int GCFPVUnsigned::pack(char* valBuf) const
 {
   unsigned int result(0);
-  unsigned int packedBytes = packBase(valBuf, maxBufSize);
-  if (maxBufSize >= packedBytes + sizeof(unsigned int))
+  unsigned int packedBytes = packBase(valBuf);
+  if (packedBytes > 0)
   {
     memcpy(valBuf + packedBytes, (void*) &_value, sizeof(unsigned int));
     result = sizeof(unsigned int) + packedBytes;

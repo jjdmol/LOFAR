@@ -28,7 +28,7 @@
 const char* F_PML_PROTOCOL_signalnames[] =
 {
   "F_PML_PROTOCOL: invalid signal",
-  "F_VCHANGEMSG_SIG (IN)",
-  "F_MYPLOADED_SIG (IN)",
-  "F_MYPUNLOADED_SIG (IN)",
+  "F_VCHANGEMSG (IN)",
+  "F_MYPLOADED (IN)",
+  "F_MYPUNLOADED (IN)",
 };

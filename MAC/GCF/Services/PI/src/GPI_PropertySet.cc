@@ -51,75 +51,73 @@ void GPIPropertySet::propSubscribed(const string& /*propName*/)
   _counter--;
   if (_counter == 0 && _tmpSubsList.size() == 0)
   {
-    PAPropertieslinkedEvent paPlE(0, PA_NO_ERROR);
-    unsigned int scopeDataLength = Utils::packString(_scope, _buffer, MAX_BUF_SIZE);
-    paPlE.result = convertPIToPAResult(_tmpPIResult);
-    paPlE.length += scopeDataLength;
+    PAPropertiesLinkedEvent responseOut;
+    responseOut.result = convertPIToPAResult(_tmpPIResult);
+    responseOut.scope = _scope;
     _state = REGISTERED;
-    _ss.getPAPort().send(paPlE, _buffer, scopeDataLength);
+    _ss.getPAPort().send(responseOut);
   }
 }
 
 void GPIPropertySet::propValueChanged(const string& propName, const GCFPValue& value)
 {
-  PIValuechangedEvent e(_scope.length());
-  unsigned int dataLength = Utils::packString(propName, _buffer, MAX_BUF_SIZE);
-  dataLength += value.pack(_buffer + dataLength, MAX_BUF_SIZE - dataLength);
-  e.length += dataLength;
-  _ss.getPort().send(e, _buffer, dataLength);
+  PIValueChangedEvent indicationOut;
+  indicationOut.scopeLength = _scope.length();
+  indicationOut.name = propName;
+  indicationOut.value._pValue = &value;
+  _ss.getPort().send(indicationOut);
 }
 
 
-void GPIPropertySet::registerScope(GCFEvent& e)
+void GPIPropertySet::registerScope(PIRegisterScopeEvent& requestIn)
 {
-  PARegisterscopeEvent pae(0);
-  forwardMsgToPA(pae, e);
+  PARegisterScopeEvent requestOut;
+  requestOut.scope = requestIn.scope;
+  forwardMsgToPA(requestOut);
 }
 
 void GPIPropertySet::registerCompleted(TPAResult result)
 {
-  PIScoperegisteredEvent piSrE(PI_NO_ERROR);
+  PIScopeRegisteredEvent responseOut;
+  responseOut.scope = _scope;
+  responseOut.result = convertPAToPIResult(result);
   assert(_ss.getPort().isConnected());
-  unsigned int scopeDataLength = Utils::packString(_scope, _buffer, MAX_BUF_SIZE);
-  piSrE.result = convertPAToPIResult(result);
-  piSrE.length += scopeDataLength;
-  _ss.getPort().send(piSrE, _buffer, scopeDataLength);
+  _ss.getPort().send(responseOut);
   if (result == PA_NO_ERROR)
   {    
     _state = REGISTERED;
   }
 }
 
-void GPIPropertySet::unregisterScope(GCFEvent& e)
+void GPIPropertySet::unregisterScope(PIUnregisterScopeEvent& requestIn)
 {
-  PAUnregisterscopeEvent pae(0);
-  forwardMsgToPA(pae, e);
+  PAUnregisterScopeEvent requestOut;
+  requestOut.scope = requestIn.scope;
   _state = UNREGISTERING;  
+  forwardMsgToPA(requestOut);
 }
 
 void GPIPropertySet::unregisterCompleted(TPAResult result)
 {
-  PIScopeunregisteredEvent piSurE(PI_NO_ERROR);
-  assert(_ss.getPort().isConnected());
   assert(_state == UNREGISTERING);
-  unsigned int scopeDataLength = Utils::packString(_scope, _buffer, MAX_BUF_SIZE);
-  piSurE.result = convertPAToPIResult(result);
-  piSurE.length += scopeDataLength;
-  _ss.getPort().send(piSurE, _buffer, scopeDataLength);  
+  PIScopeUnregisteredEvent responseOut;
+  responseOut.scope = _scope;
+  responseOut.result = convertPAToPIResult(result);
+  assert(_ss.getPort().isConnected());
+  _ss.getPort().send(responseOut);
 }
 
-void GPIPropertySet::linkProperties(PALinkpropertiesEvent& e)
+void GPIPropertySet::linkProperties(PALinkPropertiesEvent& e)
 {
   assert(_state == REGISTERED || _state == UNREGISTERING);
   
   if (_state == REGISTERED)
   {
-    GCFEvent piLpE(PI_LINKPROPERTIES);
-    char* pData = ((char*)&e) + sizeof(PALinkpropertiesEvent);
-    unsigned int dataLength = e.length - sizeof(PALinkpropertiesEvent);
-    piLpE.length += dataLength;
+    PILinkPropertiesEvent requestOut;
+    requestOut.scope = e.scope;
+    requestOut.propList = e.propList;
     _state = LINKING;
-    _ss.getPort().send(piLpE, pData, dataLength);    
+    _ss.getPort().send(requestOut);    
   }
   else
   {
@@ -129,15 +127,15 @@ void GPIPropertySet::linkProperties(PALinkpropertiesEvent& e)
   }
 }
 
-bool GPIPropertySet::propertiesLinked(TPIResult result, char* pData)
+bool GPIPropertySet::propertiesLinked(PIPropertiesLinkedEvent& responseIn)
 {
   if (_state == LINKING)
-  {
-    Utils::unpackPropertyList(pData, _tmpSubsList);
+  {    
+    Utils::getPropertyListFromString(_tmpSubsList, responseIn.propList);
     assert(_counter == 0);
-    if (result != PI_PROP_SET_GONE)
+    if (responseIn.result != PI_PROP_SET_GONE)
     {
-      _tmpPIResult = result;
+      _tmpPIResult = responseIn.result;
       return retrySubscriptions();
     }
   }
@@ -178,12 +176,11 @@ bool GPIPropertySet::retrySubscriptions()
       // no more asyncronous subscription responses will be expected and 
       // no more properties needed to be subscribed
       // so we can return a response to the PA      
-      PAPropertieslinkedEvent paPlE(0, PA_NO_ERROR);
-      unsigned int scopeDataLength = Utils::packString(_scope, _buffer, MAX_BUF_SIZE);
-      paPlE.result = convertPIToPAResult(_tmpPIResult);
-      paPlE.length += scopeDataLength;
+      PAPropertiesLinkedEvent responseOut;
+      responseOut.result = PA_NO_ERROR;
+      responseOut.scope = _scope;
       _state = REGISTERED;
-      _ss.getPAPort().send(paPlE, _buffer, scopeDataLength);
+      _ss.getPAPort().send(responseOut);
       retry = false;
     }
   }
@@ -194,18 +191,17 @@ bool GPIPropertySet::retrySubscriptions()
   return retry;
 }
 
-void GPIPropertySet::unlinkProperties(PAUnlinkpropertiesEvent& e)
+void GPIPropertySet::unlinkProperties(PAUnlinkPropertiesEvent& requestIn)
 {
   assert(_state == REGISTERED || _state == UNREGISTERING);
   
   if (_state == REGISTERED)
   {
-    GCFEvent piUlpE(PI_UNLINKPROPERTIES);
-    char* pData = ((char*)&e) + sizeof(PAUnlinkpropertiesEvent);
-    unsigned int dataLength = e.length - sizeof(PAUnlinkpropertiesEvent);
-    piUlpE.length += dataLength;
+    PIUnlinkPropertiesEvent requestOut;
+    requestOut.scope = requestIn.scope;
+    requestOut.propList = requestIn.propList;
     _state = UNLINKING;
-    _ss.getPort().send(piUlpE, pData, dataLength);    
+    _ss.getPort().send(requestOut);
   }
   else
   {
@@ -215,11 +211,12 @@ void GPIPropertySet::unlinkProperties(PAUnlinkpropertiesEvent& e)
   }
 }
 
-void GPIPropertySet::propertiesUnlinked(TPIResult result, char* pData)
+void GPIPropertySet::propertiesUnlinked(PIPropertiesUnlinkedEvent& responseIn)
 {
   if (_state == UNLINKING)
   {
-    Utils::unpackPropertyList(pData, _tmpSubsList);
+    Utils::getPropertyListFromString(_tmpSubsList, responseIn.propList);
+
     for (list<string>::iterator iter = _tmpSubsList.begin(); 
          iter != _tmpSubsList.end(); ++iter)
     {
@@ -234,34 +231,22 @@ void GPIPropertySet::propertiesUnlinked(TPIResult result, char* pData)
       }
       if (exists(fullName))
       {
-        TGCFResult result = unsubscribeProp(fullName);
-        assert(result == GCF_NO_ERROR);
+        TGCFResult gcfResult = unsubscribeProp(fullName);
+        assert(gcfResult == GCF_NO_ERROR);
       }
     }
-    PAPropertiesunlinkedEvent paPulE(0, PA_NO_ERROR);
-    unsigned int scopeDataLength = Utils::packString(_scope, _buffer, MAX_BUF_SIZE);
-    paPulE.result = convertPIToPAResult(result);
-    paPulE.length += scopeDataLength;
+    PAPropertiesUnlinkedEvent responseOut;    
+    responseOut.result = convertPIToPAResult(responseIn.result);
+    responseOut.scope = responseIn.scope;
     _state = REGISTERED;
-    _ss.getPAPort().send(paPulE, _buffer, scopeDataLength);
+    _ss.getPAPort().send(responseOut);
   }
 }
 
-void GPIPropertySet::forwardMsgToPA(GCFEvent& pae, GCFEvent& pie)
+void GPIPropertySet::forwardMsgToPA(GCFEvent& msg)
 {
   if (_ss.getPAPort().isConnected())
   {
-    unsigned int pieDataLength = pie.length - sizeof(GCFEvent);
-    pae.length += pieDataLength;
-    _ss.getPAPort().send(pae, ((char*)&pie) + sizeof(GCFEvent), pieDataLength);
+    _ss.getPAPort().send(msg);
   }
 }
-
-void GPIPropertySet::replyMsgToSS(GCFEvent& e, char* pScopeData)
-{
-  assert(_ss.getPort().isConnected());
-  unsigned short scopeDataLength = Utils::getStringDataLength(pScopeData);
-  e.length += scopeDataLength;
-  _ss.getPort().send(e, pScopeData, scopeDataLength);
-}
-

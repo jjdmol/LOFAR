@@ -47,19 +47,19 @@ GCFEvent::TResult GPIController::initial(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
-    case F_TIMER_SIG:
+    case F_ENTRY:
+    case F_TIMER:
       _ssPortProvider.open();
       break;
 
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
       TRAN(GPIController::connected);
       break;
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       if (&p == &_ssPortProvider)
         _ssPortProvider.setTimer(1.0); // try again after 1 second
       break;
@@ -78,14 +78,14 @@ GCFEvent::TResult GPIController::connected(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_DISCONNECTED_SIG:      
+    case F_DISCONNECTED:      
       if (&p == &_ssPortProvider)
       {
         // TODO: find out this implies problems for the concrete ports too or not
       }
       break;
 
-    case F_ACCEPT_REQ_SIG:
+    case F_ACCEPT_REQ:
     {
       GPISupervisoryServer* pNewSS = new GPISupervisoryServer(*this);
       pNewSS->start();
@@ -93,7 +93,7 @@ GCFEvent::TResult GPIController::connected(GCFEvent& e, GCFPortInterface& p)
       break;
     }
      
-    case F_TIMER_SIG:
+    case F_TIMER:
     {
       GCFTimerEvent* pTimer = static_cast<GCFTimerEvent*>(&e);
       if (pTimer->arg)

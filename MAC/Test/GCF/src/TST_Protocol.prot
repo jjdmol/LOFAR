@@ -5,17 +5,11 @@ autogen definitions protocol;
 
 description = "Protocol for the TEST server";
 prefix = "TST"; // for the signal names
+id = "0x3f";
 
 // specify extra include files
 // e.g.
 include = '<sys/time.h>';
-
-prelude = << PRELUDE_END
-enum {
-	TST_PROTOCOL = 0x3f
-};
-
-PRELUDE_END;
 
 //
 // An "event" has a "signal" and a "dir" (direction)

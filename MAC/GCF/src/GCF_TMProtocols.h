@@ -70,9 +70,9 @@ enum {
 };
 
 // convenience macros
-#define F_ENTRY_SIG F_SIGNAL(F_FSM_PROTOCOL, F_ENTRY_ID, F_IN)
-#define F_EXIT_SIG  F_SIGNAL(F_FSM_PROTOCOL, F_EXIT_ID,  F_IN)
-#define F_INIT_SIG  F_SIGNAL(F_FSM_PROTOCOL, F_INIT_ID,  F_IN)
+#define F_ENTRY F_SIGNAL(F_FSM_PROTOCOL, F_ENTRY_ID, F_IN)
+#define F_EXIT  F_SIGNAL(F_FSM_PROTOCOL, F_EXIT_ID,  F_IN)
+#define F_INIT  F_SIGNAL(F_FSM_PROTOCOL, F_INIT_ID,  F_IN)
 
 extern const char* F_FSM_PROTOCOL_names[]; // defined in GCF_Protocols.cc
 
@@ -88,35 +88,33 @@ enum {
     F_TIMER_ID,         // timer expired
     F_DATAIN_ID,        // data available for reading
     F_DATAOUT_ID,       // space available to write
-    F_RAW_ID,           // no event!, only the data is sent (used with direct ports)
+    F_RAW_DATA_ID,           // no event!, only the data is sent (used with direct ports)
     F_ACCEPT_REQ_ID,    // indicatation of the port provider to the user about a client connect request (SAP)
-    F_DISPATCHED_ID     // SCADA API has dispachted (read/write on own ports) right now
 };
 
-#define F_CONNECT_SIG       F_SIGNAL(F_PORT_PROTOCOL, F_CONNECT_ID,       F_IN)
-#define F_CONNECTED_SIG     F_SIGNAL(F_PORT_PROTOCOL, F_CONNECTED_ID,     F_IN)
-#define F_DISCONNECTED_SIG  F_SIGNAL(F_PORT_PROTOCOL, F_DISCONNECTED_ID,  F_IN)
-#define F_CLOSED_SIG        F_SIGNAL(F_PORT_PROTOCOL, F_CLOSED_ID,        F_IN)
-#define F_TIMER_SIG         F_SIGNAL(F_PORT_PROTOCOL, F_TIMER_ID,         F_IN)
-#define F_DATAIN_SIG        F_SIGNAL(F_PORT_PROTOCOL, F_DATAIN_ID,        F_IN)
-#define F_DATAOUT_SIG       F_SIGNAL(F_PORT_PROTOCOL, F_DATAOUT_ID,       F_IN)
-#define F_RAW_SIG           F_SIGNAL(F_PORT_PROTOCOL, F_RAW_ID,           F_INOUT)
-#define F_ACCEPT_REQ_SIG    F_SIGNAL(F_PORT_PROTOCOL, F_ACCEPT_REQ_ID,    F_IN)
-#define F_DISPATCHED_SIG    F_SIGNAL(F_PORT_PROTOCOL, F_DISPATCHED_ID,    F_IN)
+#define F_CONNECT       F_SIGNAL(F_PORT_PROTOCOL, F_CONNECT_ID,       F_IN)
+#define F_CONNECTED     F_SIGNAL(F_PORT_PROTOCOL, F_CONNECTED_ID,     F_IN)
+#define F_DISCONNECTED  F_SIGNAL(F_PORT_PROTOCOL, F_DISCONNECTED_ID,  F_IN)
+#define F_CLOSED        F_SIGNAL(F_PORT_PROTOCOL, F_CLOSED_ID,        F_IN)
+#define F_TIMER         F_SIGNAL(F_PORT_PROTOCOL, F_TIMER_ID,         F_IN)
+#define F_DATAIN        F_SIGNAL(F_PORT_PROTOCOL, F_DATAIN_ID,        F_IN)
+#define F_DATAOUT       F_SIGNAL(F_PORT_PROTOCOL, F_DATAOUT_ID,       F_IN)
+#define F_RAW_DATA      F_SIGNAL(F_PORT_PROTOCOL, F_RAW_DATA_ID,      F_INOUT)
+#define F_ACCEPT_REQ    F_SIGNAL(F_PORT_PROTOCOL, F_ACCEPT_REQ_ID,    F_IN)
 
 extern const char* F_PORT_PROTOCOL_names[]; // defined in GCF_TMProtocols.cc
 
 struct GCFTimerEvent : public GCFEvent
 {
-  GCFTimerEvent() : GCFEvent(F_TIMER_SIG)
+  GCFTimerEvent() : GCFEvent(F_TIMER)
   {
     length = sizeof(GCFTimerEvent);
   }
 
-  long          sec;
-  long          usec;
+  long        sec;
+  long        usec;
   unsigned long id;
-  void*         arg;
+  const void* arg;
 };
 
 #endif

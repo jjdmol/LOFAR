@@ -174,7 +174,7 @@ void GCFRTMyProperty::valueChanged (const GCFPValue& value)
     result = _pCurValue->copy(value);
     assert(result == GCF_NO_ERROR);
     
-    GCFPropValueEvent e(F_VCHANGEMSG_SIG);
+    GCFPropValueEvent e(F_VCHANGEMSG);
     e.pValue = &value;
     string fullName(getFullName());
     e.pPropName = fullName.c_str();

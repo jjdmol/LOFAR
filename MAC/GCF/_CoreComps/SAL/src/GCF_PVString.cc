@@ -23,29 +23,26 @@
 
 #include <GCF/GCF_PVString.h>
 
-unsigned int GCFPVString::unpack(const char* valBuf, unsigned int maxBufSize)
+unsigned int GCFPVString::unpack(const char* valBuf)
 {
   unsigned int result(0);
-  unsigned int unpackedBytes = unpackBase(valBuf, maxBufSize);
-  if (maxBufSize >= unpackedBytes + sizeof(unsigned int))
+  unsigned int unpackedBytes = unpackBase(valBuf);
+  if (unpackedBytes > 0)
   {
     unsigned int stringLength(0);
     memcpy((void *) &stringLength, valBuf + unpackedBytes, sizeof(unsigned int));
     unpackedBytes += sizeof(unsigned int);
-    if (maxBufSize >= unpackedBytes + stringLength)
-    {
-      _value.assign(valBuf + unpackedBytes, stringLength); 
-      result = unpackedBytes + stringLength;
-    }
+    _value.assign(valBuf + unpackedBytes, stringLength); 
+    result = unpackedBytes + stringLength;
   }
   return result;
 }
 
-unsigned int GCFPVString::pack(char* valBuf, unsigned int maxBufSize) const
+unsigned int GCFPVString::pack(char* valBuf) const
 {
   unsigned int result(0);
-  unsigned int packedBytes = packBase(valBuf, maxBufSize);
-  if (maxBufSize >= packedBytes + sizeof(unsigned int) + _value.length())
+  unsigned int packedBytes = packBase(valBuf);
+  if (packedBytes > 0)
   {    
     unsigned int stringLength(_value.length());
     memcpy(valBuf + packedBytes, (void *) &stringLength, sizeof(unsigned int));

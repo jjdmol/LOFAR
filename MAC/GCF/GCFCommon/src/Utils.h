@@ -11,19 +11,10 @@ class Utils
     Utils();
     ~Utils();
     
-    static unsigned int packString(const string& value, 
-                                   char* buffer, 
-                                   unsigned int maxBufferSize);
-                                  
-    static unsigned int unpackString(char* pStringData, 
-                             string& value);
-   
-    static unsigned short getStringDataLength(char* pStringData);
-    static const unsigned int SLEN_FIELD_SIZE = sizeof(unsigned int);
-    static unsigned int packPropertyList(list<string>& propertyList, 
-                                         char* buffer, 
-                                         unsigned int maxBufferSize);
-    static void unpackPropertyList(char* pListData, list<string>& propertyList);
+    static void getPropertyListString(string& propListString, 
+                                      const list<string>& propertyList);
+    static void getPropertyListFromString(list<string>& propertyList, 
+                                          const string& propListString);
     
     static bool isValidPropName(const char* propName);    
 };

@@ -64,7 +64,7 @@ class GCFRTMyProperty
     //@{
     /** Access mode can be: GCF_READABLE_PROP and/or GCF_WRITABLE_PROP
      * NOTE: If both modes are set and the property is linked, the setValue 
-     * method call results immediate in a F_VCHANGEMSG_SIG answer event. This 
+     * method call results immediate in a F_VCHANGEMSG answer event. This 
      * on its turn copies the current to the old value and the changed value to
      * current value. This means that the current value from before the setValue 
      * will not be available after the answer event is received (old value is 

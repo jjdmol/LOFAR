@@ -5,10 +5,12 @@ autogen definitions protocol;
 
 description = "Protocol definition for the Supervisory Server(ERTC)/Property Interface(MAC/GCF)";
 prefix = "PI"; // for the signal names
-
+id = "(F_GCF_PROTOCOL + 3)";
 // specify extra include files
 // e.g.
 //include = '<sys/time.h>';
+include = '<GPI_Defines.h>';
+include = '<GPI_PValue.h>';
 
 // An "event" has a "signal" and a "dir" (direction)
 // and zero or more "param"s.
@@ -16,84 +18,139 @@ prefix = "PI"; // for the signal names
 // A "param" has a "name" and a "type".
 //
 
-prelude = << PRELUDE_END
-enum {
-	PI_PROTOCOL = (F_GCF_PROTOCOL + 3)
-};
-#include <GPI_Defines.h>
-PRELUDE_END;
-
 event = {
-	signal = NAME;
+	signal = REGISTER_SCOPE;
 	dir = IN;
+	param = {
+		name = "scope";
+		type = "string";
+	};
 };
 
 event = {
-	signal = REGISTERSCOPE;
+	signal = UNREGISTER_SCOPE;
 	dir = IN;
+	param = {
+		name = "scope";
+		type = "string";
+	};
 };
 
 event = {
-	signal = UNREGISTERSCOPE;
-	dir = IN;
-};
-
-event = {
-	signal = SCOPEREGISTERED;
+	signal = SCOPE_REGISTERED;
 	dir = OUT;
 	param = {
 		name = "result";
 		type = "TPIResult";
 	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	
 };
 
 event = {
-	signal = SCOPEUNREGISTERED;
+	signal = SCOPE_UNREGISTERED;
 	dir = OUT;
 	param = {
 		name = "result";
 		type = "TPIResult";
 	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
 };
 
 event = {
-	signal = LINKPROPERTIES;
+	signal = LINK_PROPERTIES;
 	dir = OUT;
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "propList";
+		type = "string";
+	};
 };
 
 event = {
-	signal = UNLINKPROPERTIES;
+	signal = UNLINK_PROPERTIES;
 	dir = OUT;
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "propList";
+		type = "string";
+	};
 };
 
 event = {
-	signal = PROPERTIESLINKED;
+	signal = PROPERTIES_LINKED;
 	dir = IN;
 	param = {
 		name = "result";
 		type = "TPIResult";
 	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "propList";
+		type = "string";
+	};
 };
 
 event = {
-	signal = PROPERTIESUNLINKED;
+	signal = PROPERTIES_UNLINKED;
 	dir = IN;
 	param = {
 		name = "result";
 		type = "TPIResult";
 	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "propList";
+		type = "string";
+	};
 };
 
 event = {
-	signal = VALUESET;
+	signal = VALUE_SET;
 	dir = IN;
+	param = {
+		name = "name";
+		type = "string";
+	};
+	param = {
+		name = "value";
+		type = "GPIPValue";
+		userdefined;
+	};
 };
 
 event = {
-	signal = VALUECHANGED;
+	signal = VALUE_CHANGED;
 	dir = OUT;
 	param = {
 		name = "scopeLength";
 		type = "unsigned short";
+	};
+	param = {
+		name = "name";
+		type = "string";
+	};
+	param = {
+		name = "value";
+		type = "GPIPValue";
+		userdefined;
 	};
 };

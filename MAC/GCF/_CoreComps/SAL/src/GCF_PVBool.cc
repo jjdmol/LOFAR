@@ -23,11 +23,11 @@
 
 #include <GCF/GCF_PVBool.h>
 
-unsigned int GCFPVBool::unpack(const char* valBuf, unsigned int maxBufSize)
+unsigned int GCFPVBool::unpack(const char* valBuf)
 {
   unsigned int result(0);
-  unsigned int unpackedBytes = unpackBase(valBuf, maxBufSize);
-  if (maxBufSize >= unpackedBytes + 1)
+  unsigned int unpackedBytes = unpackBase(valBuf);
+  if (unpackedBytes > 0)
   {
     _value = (valBuf[unpackedBytes] == 1 ? true : false);
     result = unpackedBytes + 1;
@@ -35,11 +35,11 @@ unsigned int GCFPVBool::unpack(const char* valBuf, unsigned int maxBufSize)
   return result;
 }
 
-unsigned int GCFPVBool::pack(char* valBuf, unsigned int maxBufSize) const
+unsigned int GCFPVBool::pack(char* valBuf) const
 {
   unsigned int result(0);
-  unsigned int packedBytes = packBase(valBuf, maxBufSize);
-  if (maxBufSize >= packedBytes + 1)
+  unsigned int packedBytes = packBase(valBuf);
+  if (packedBytes > 0)
   {
     valBuf[packedBytes] = (_value ? 1 : 0);
     result = packedBytes + 1;

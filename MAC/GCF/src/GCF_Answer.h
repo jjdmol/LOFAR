@@ -82,10 +82,10 @@ class GCFAnswer
       *     ...
       *     switch (e.signal)
       *     {
-      *       case F_ENTRY_SIG:
+      *       case F_ENTRY:
       *         break;
       *   
-      *       case F_MYPLOADED_SIG:
+      *       case F_MYPLOADED:
       *       {
       *         // The event always sould be casted by the static_cast operator
       *         GCFMYPropAnswerEvent* pResponse = static_cast<GCFMYPropAnswerEvent*>(&e);
@@ -119,7 +119,7 @@ class GCFAnswer
 /// implementations like TCP. 
 struct GCFPropValueEvent : public GCFEvent
 {
-  /// @param sig can only be F_VCHANGEMSG_SIG, F_VGETRESP_SIG
+  /// @param sig can only be F_VCHANGEMSG, F_VGETRESP
   GCFPropValueEvent(unsigned short sig) : GCFEvent(sig)
   {
       length = sizeof(GCFPropValueEvent);
@@ -128,12 +128,12 @@ struct GCFPropValueEvent : public GCFEvent
   const char* pPropName;   ///< Pointer to the string of the property name
   bool internal;           ///< Indicates whether the internal/owned/my 
                            ///< (GCFMyProperty) or an other (GCFProperty) 
-                           ///< property has changed (not used with F_VGETRESP_SIG)
+                           ///< property has changed (not used with F_VGETRESP)
 };
 
 struct GCFPropAnswerEvent : public GCFEvent
 {
-  /// @param sig can only be F_SUBSCRIBED_SIG
+  /// @param sig can only be F_SUBSCRIBED
   GCFPropAnswerEvent(unsigned short sig) : GCFEvent(sig)
   {
       length = sizeof(GCFPropAnswerEvent);
@@ -143,7 +143,7 @@ struct GCFPropAnswerEvent : public GCFEvent
 
 struct GCFAPCAnswerEvent : public GCFEvent
 {
-  /// @param sig can only be F_APCLOADED_SIG, F_APCUNLOADED_SIG, F_APCRELOADED_SIG
+  /// @param sig can only be F_APCLOADED, F_APCUNLOADED, F_APCRELOADED
   GCFAPCAnswerEvent(unsigned short sig) : GCFEvent(sig)
   {
       length = sizeof(GCFAPCAnswerEvent);
@@ -156,7 +156,7 @@ struct GCFAPCAnswerEvent : public GCFEvent
 
 struct GCFMYPropAnswerEvent : public GCFEvent
 {
-  /// @param sig can only be F_MYPLOADED_SIG, F_MYPUNLOADED_SIG
+  /// @param sig can only be F_MYPLOADED, F_MYPUNLOADED
   GCFMYPropAnswerEvent(unsigned short sig) : GCFEvent(sig)
   {
       length = sizeof(GCFMYPropAnswerEvent);
@@ -184,15 +184,15 @@ enum {
   F_MYPUNLOADED_ID,
 };
 
-#define F_SUBSCRIBED_SIG    F_SIGNAL(F_PML_PROTOCOL, F_SUBSCRIBED_ID,    F_IN)
-#define F_UNSUBSCRIBED_SIG  F_SIGNAL(F_PML_PROTOCOL, F_UNSUBSCRIBED_ID,  F_IN)
-#define F_VCHANGEMSG_SIG    F_SIGNAL(F_PML_PROTOCOL, F_VCHANGEMSG_ID,    F_IN)
-#define F_VGETRESP_SIG      F_SIGNAL(F_PML_PROTOCOL, F_VGETRESP_ID,      F_IN)
-#define F_APCLOADED_SIG     F_SIGNAL(F_PML_PROTOCOL, F_APCLOADED_ID,     F_IN)
-#define F_APCUNLOADED_SIG   F_SIGNAL(F_PML_PROTOCOL, F_APCUNLOADED_ID,   F_IN)
-#define F_APCRELOADED_SIG   F_SIGNAL(F_PML_PROTOCOL, F_APCRELOADED_ID,   F_IN)
-#define F_MYPLOADED_SIG     F_SIGNAL(F_PML_PROTOCOL, F_MYPLOADED_ID,     F_IN)
-#define F_MYPUNLOADED_SIG   F_SIGNAL(F_PML_PROTOCOL, F_MYPUNLOADED_ID,   F_IN)
+#define F_SUBSCRIBED    F_SIGNAL(F_PML_PROTOCOL, F_SUBSCRIBED_ID,    F_IN)
+#define F_UNSUBSCRIBED  F_SIGNAL(F_PML_PROTOCOL, F_UNSUBSCRIBED_ID,  F_IN)
+#define F_VCHANGEMSG    F_SIGNAL(F_PML_PROTOCOL, F_VCHANGEMSG_ID,    F_IN)
+#define F_VGETRESP      F_SIGNAL(F_PML_PROTOCOL, F_VGETRESP_ID,      F_IN)
+#define F_APCLOADED     F_SIGNAL(F_PML_PROTOCOL, F_APCLOADED_ID,     F_IN)
+#define F_APCUNLOADED   F_SIGNAL(F_PML_PROTOCOL, F_APCUNLOADED_ID,   F_IN)
+#define F_APCRELOADED   F_SIGNAL(F_PML_PROTOCOL, F_APCRELOADED_ID,   F_IN)
+#define F_MYPLOADED     F_SIGNAL(F_PML_PROTOCOL, F_MYPLOADED_ID,     F_IN)
+#define F_MYPUNLOADED   F_SIGNAL(F_PML_PROTOCOL, F_MYPUNLOADED_ID,   F_IN)
 
 extern const char* F_PML_PROTOCOL_signalnames[];
 

@@ -81,10 +81,10 @@ class GCFRTAnswer
       *     ...
       *     switch (e.signal)
       *     {
-      *       case F_ENTRY_SIG:
+      *       case F_ENTRY:
       *         break;
       *   
-      *       case F_MYPLOADED_SIG:
+      *       case F_MYPLOADED:
       *       {
       *         // The event always sould be casted by the static_cast operator
       *         GCFMYPropAnswerEvent* pResponse = static_cast<GCFMYPropAnswerEvent*>(&e);
@@ -118,7 +118,7 @@ class GCFRTAnswer
 /// implementations like TCP. 
 struct GCFPropValueEvent : public GCFEvent
 {
-  /// @param sig can only be F_VCHANGEMSG_SIG
+  /// @param sig can only be F_VCHANGEMSG
   GCFPropValueEvent(unsigned short sig) : GCFEvent(sig)
   {
       length = sizeof(GCFPropValueEvent);
@@ -127,12 +127,12 @@ struct GCFPropValueEvent : public GCFEvent
   const char* pPropName;   ///< Pointer to the string of the property name
   bool internal;           ///< Indicates whether the internal/owned/my 
                            ///< (GCFRTMyProperty)
-                           ///< property has changed (not used with F_VGETRESP_SIG)
+                           ///< property has changed (not used with F_VGETRESP)
 };
 
 struct GCFMYPropAnswerEvent : public GCFEvent
 {
-  /// @param sig can only be F_MYPLOADED_SIG, F_MYPUNLOADED_SIG
+  /// @param sig can only be F_MYPLOADED, F_MYPUNLOADED
   GCFMYPropAnswerEvent(unsigned short sig) : GCFEvent(sig)
   {
       length = sizeof(GCFMYPropAnswerEvent);
@@ -154,9 +154,9 @@ enum {
   F_MYPUNLOADED_ID,
 };
 
-#define F_VCHANGEMSG_SIG    F_SIGNAL(F_PML_PROTOCOL, F_VCHANGEMSG_ID,    F_IN)
-#define F_MYPLOADED_SIG     F_SIGNAL(F_PML_PROTOCOL, F_MYPLOADED_ID,     F_IN)
-#define F_MYPUNLOADED_SIG   F_SIGNAL(F_PML_PROTOCOL, F_MYPUNLOADED_ID,   F_IN)
+#define F_VCHANGEMSG    F_SIGNAL(F_PML_PROTOCOL, F_VCHANGEMSG_ID,    F_IN)
+#define F_MYPLOADED     F_SIGNAL(F_PML_PROTOCOL, F_MYPLOADED_ID,     F_IN)
+#define F_MYPUNLOADED   F_SIGNAL(F_PML_PROTOCOL, F_MYPUNLOADED_ID,   F_IN)
 
 extern const char* F_PML_PROTOCOL_signalnames[];
 

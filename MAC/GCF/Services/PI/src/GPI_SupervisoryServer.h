@@ -47,8 +47,8 @@ class GPISupervisoryServer : public GCFTask
     inline GCFTCPPort& getPAPort()  {return _propertyAgent;}
       
 	private: // helper methods
-    GPIPropertySet* findPropertySet(char* pScopeData, string& scope);
-    void replyMsgToPA(GCFEvent& e, const string& scope);
+    GPIPropertySet* findPropertySet(string& scope);
+    void replyMsgToPA(GCFEvent& e);
         
 	private: // state methods
 		GCFEvent::TResult initial     (GCFEvent& e, GCFPortInterface& p);
@@ -71,8 +71,6 @@ class GPISupervisoryServer : public GCFTask
     TScopeRegister    _scopeRegister;
     
   private: // admin. data members
-    static const unsigned int MAX_BUF_SIZE = 5000;
-    char              _buffer[MAX_BUF_SIZE];
 };
 
 #endif

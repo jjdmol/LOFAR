@@ -19,6 +19,7 @@ libtm_la_SOURCES=  \
   GCF_Fsm.cc \
   GCF_TMProtocols.cc \
   GCF_Task.cc \
+  GCF_Event.cc \
   PortInterface/GCF_Port.cc \
   PortInterface/GCF_RawPort.cc \
   PortInterface/GCF_PeerAddr.cc \

@@ -23,7 +23,17 @@
 #ifndef GCF_EVENT_H
 #define GCF_EVENT_H
 
+#include <assert.h>
 #include <sys/types.h>
+#include <string>
+
+#ifdef SWIG
+%module GCFEvent
+%{
+#include "GCF_Event.h"
+%}
+#endif
+
 /**
  * This struct is the base event data container to exchange messages between two 
  * tasks. 
@@ -43,38 +53,82 @@
  * file and the nested key-value pairs from the specification file. This header 
  * file contains definitions of GCFEvent sub classes, one for each event. 
  */
-struct GCFEvent
+class GCFEvent
 {
+  public:
     GCFEvent() :
-        signal(0), pad0(0), length(sizeof(GCFEvent))
+      signal(0), length(0), _unpackDone(false), _buffer(0),
+      _base(0), _upperbound(0)
     {}
 
     GCFEvent(unsigned short sig) :
-        signal(sig), pad0(0), length(sizeof(GCFEvent))
+      signal(sig), length(0), _unpackDone(false), _buffer(0),
+      _base(0), _upperbound(0)
     {}
-  
+
+    virtual ~GCFEvent();
+
     enum TResult { ERROR = -1, HANDLED = 0, NOT_HANDLED = 1};
 
-	/**
-	* @code
-	* Signal format 
-	*
-	* 2 most significant bits indicate direction of signal:
-	*   F_IN    = 0b01
-	*   F_OUT   = 0b10
-	*   F_INOUT = 0b11 (F_IN_SIGNAL | F_OUT_SIGNAL)
-	*
-	* +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-	* | O | I | P | P | P | P | P | S | S | S | S | S | S | S | S | S |
-	* +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-	*  15  14  13  12  11  10   9   8   7   6   5   4   3   2   1   0
-	* <- I/O-><--- protocol ---------><--------- signal -------------->
-	* @endcode
-	*/
-	unsigned short  signal; // lsb contains signal id (0-255)
-	                      // msb contains protocol id (0-255)
-	unsigned short pad0; // DO NOT USE
-	size_t          length; // length of the event (should be <= SSIZE_MAX)
+    virtual void* pack(unsigned int& packsize);
+
+    static unsigned int unpackString(std::string& value, char* buffer);   
+    static unsigned int packString(char* buffer, const std::string& value);  
+
+  	/**
+  	* @code
+  	* Signal format 
+  	*
+  	* 2 most significant bits indicate direction of signal:
+  	*   F_IN    = 0b01
+  	*   F_OUT   = 0b10
+  	*   F_INOUT = 0b11 (F_IN_SIGNAL | F_OUT_SIGNAL)
+  	*
+  	* +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+  	* | O | I | P | P | P | P | P | S | S | S | S | S | S | S | S | S |
+  	* +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+  	*  15  14  13  12  11  10   9   8   7   6   5   4   3   2   1   0
+  	* <- I/O-><--- protocol ---------><--------- signal -------------->
+  	* @endcode
+  	*/
+#ifdef SWIG
+%immutable;
+#endif
+  	unsigned short  signal; // lsb contains signal id (0-255)
+  	                      // msb contains protocol id (0-255)
+  	size_t          length; // payload length of the event (thus excl. signal and length) should be <= SSIZE_MAX)
+#ifdef SWIG
+%mutable;
+#endif
+
+  protected: // member functions
+    GCFEvent(GCFEvent& e) :
+      signal(e.signal), length(e.length), _unpackDone(true), _buffer(0), 
+      _base(&e), _upperbound(0)      
+    {}
+
+    void resizeBuf(unsigned int requiredSize);
+    void* unpackMember(char* data, unsigned int& offset, unsigned int& memberDim, unsigned int sizeofMemberType);
+    unsigned int packMember(unsigned int offset, const void* member, unsigned int memberDim, unsigned int sizeofMemberType);
+
+  protected: // data members
+    bool _unpackDone;
+    char* _buffer;
+    GCFEvent* _base;
+
+  private:
+    GCFEvent& operator= (GCFEvent& e);
+    unsigned int _upperbound;
+    
+};
+
+class GCFTransportable
+{
+  public:
+    virtual ~GCFTransportable() {}
+    virtual unsigned int pack(char* buffer) = 0;
+    virtual unsigned int unpack(char* buffer) = 0;
+    virtual unsigned int getSize() = 0;
 };
 
 /**
@@ -87,5 +141,6 @@ struct GCFEvent
 #define F_EVT_INOUT(e)    (((e).signal & F_EVT_INOUT_MASK) >> 14)
 #define F_EVT_PROTOCOL(e) (((e).signal & F_EVT_PROTOCOL_MASK) >> 8)
 #define F_EVT_SIGNAL(e)    ((e).signal & F_EVT_SIGNAL_MASK)
+
 
 #endif

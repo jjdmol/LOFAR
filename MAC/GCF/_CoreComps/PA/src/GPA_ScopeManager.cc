@@ -43,7 +43,7 @@ TPAResult GPAScopeManager::linkProperties(list<string>& propList)
 
   resetScopeList();
   result = fillScopeLists(propList);
-  PALinkpropertiesEvent e(0);
+  PALinkPropertiesEvent e;
   sendUnLinkEvents(e);
   return result;
 }
@@ -55,7 +55,7 @@ TPAResult GPAScopeManager::unlinkProperties(list<string>& propList)
   _counter = 0;
   resetScopeList();
   result = fillScopeLists(propList);
-  PAUnlinkpropertiesEvent e(0);
+  PAUnlinkPropertiesEvent e;
   sendUnLinkEvents(e);  
   return result;
 }
@@ -212,22 +212,16 @@ TPAResult GPAScopeManager::fillScopeLists(list<string>& propList)
 void GPAScopeManager::sendUnLinkEvents(GCFEvent& e)
 {
   TScopeData* pScopeData;
-  const string* pScope;
   list<string>* pPropList;
-  unsigned int oldEventLength(e.length);
-  
-  static const unsigned int MAX_BUF_SIZE = 5000;
-  static char buffer[MAX_BUF_SIZE];
   
   for (TScopeListIter iter = _scopeList.begin(); 
        iter != _scopeList.end(); ++iter)
   {
-    pScope = &iter->first;
     pScopeData = &iter->second;
-
     assert(pScopeData);
 
     pPropList = &pScopeData->propList;
+    assert(pPropList);
     if (pPropList->size() > 0)
     {
       pScopeData->respond = false;
@@ -235,27 +229,27 @@ void GPAScopeManager::sendUnLinkEvents(GCFEvent& e)
       if (pPort->isConnected())
       {
         _counter++;
-        unsigned int dataLength = Utils::packString(*pScope, buffer, MAX_BUF_SIZE);
-        char* pPropListStart = buffer + dataLength;
-        dataLength += Utils::packPropertyList(*pPropList, buffer + dataLength, MAX_BUF_SIZE - dataLength);
-        assert(dataLength < MAX_BUF_SIZE);
-        buffer[dataLength] = 0;
-        if (e.signal == PA_LINKPROPERTIES)
+        if (e.signal == PA_LINK_PROPERTIES)
         {
+          PALinkPropertiesEvent* pLP = (PALinkPropertiesEvent*) &e;
+          pLP->scope = *(&iter->first);
+          Utils::getPropertyListString(pLP->propList, *pPropList);
           LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
             "REQ: Link properties %s on scope %s",
-            pPropListStart + Utils::SLEN_FIELD_SIZE,
-            pScope->c_str()));
+            pLP->propList.c_str(),
+            pLP->scope.c_str()));
         }
         else
         {
+          PALinkPropertiesEvent* pULP = (PALinkPropertiesEvent*) &e;
+          pULP->scope = *(&iter->first);
+          Utils::getPropertyListString(pULP->propList, *pPropList);
           LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
             "REQ: Unlink properties %s on scope %s",
-            pPropListStart + Utils::SLEN_FIELD_SIZE,
-            pScope->c_str()));
+            pULP->propList.c_str(),
+            pULP->scope.c_str()));
         }
-        e.length = oldEventLength + dataLength;
-        pPort->send(e, buffer, dataLength);
+        pPort->send(e);
       }
     }
   }

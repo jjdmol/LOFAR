@@ -30,9 +30,9 @@
 #include <GTM_Defines.h>
 #include <Timer/GTM_TimerHandler.h>
 
-static GCFEvent disconnected_event(F_DISCONNECTED_SIG);
-static GCFEvent connected_event   (F_CONNECTED_SIG);
-static GCFEvent closed_event      (F_CLOSED_SIG);
+static GCFEvent disconnected_event(F_DISCONNECTED);
+static GCFEvent connected_event   (F_CONNECTED);
+static GCFEvent closed_event      (F_CLOSED);
 
 GCFRawPort::GCFRawPort(GCFTask& task, 
                        string& name, 
@@ -74,33 +74,35 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 {
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
   assert(_pTask);
-  if ((F_DATAIN_SIG != event.signal) && 
-      (F_DATAOUT_SIG != event.signal) &&
+  if ((F_DATAIN != event.signal) && 
+      (F_DATAOUT != event.signal) &&
       (F_EVT_PROTOCOL(event) != F_FSM_PROTOCOL) &&
       (F_EVT_PROTOCOL(event) != F_PORT_PROTOCOL))
   {
     LOFAR_LOG_INFO(TM_STDOUT_LOGGER, (
         "%s receives '%s' on port '%s'",
-        _pTask->getName().c_str(), _pTask->evtstr(event), _name.c_str()));    
+        _pTask->getName().c_str(), 
+        _pTask->evtstr(event), 
+        (isSlave() ? _pMaster->getName().c_str() : _name.c_str()))); 
   }
 
   switch (event.signal)
   {
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
       LOFAR_LOG_INFO(TM_STDOUT_LOGGER, (
           "port '%s' of task %s is connected!",
           _name.c_str(), _pTask->getName().c_str()));    
       _isConnected = true;
       break;
-    case F_DISCONNECTED_SIG: 
-    case F_CLOSED_SIG:
+    case F_DISCONNECTED: 
+    case F_CLOSED:
       LOFAR_LOG_INFO(TM_STDOUT_LOGGER, (
           "port '%s' of task %s is %s!",
           _name.c_str(), _pTask->getName().c_str(),
-          (event.signal == F_CLOSED_SIG ? "closed" : "disconnected")));    
+          (event.signal == F_CLOSED ? "closed" : "disconnected")));    
       _isConnected = false;
       break;
-    case F_TIMER_SIG:
+    case F_TIMER:
     {
       GCFTimerEvent* pTE = static_cast<GCFTimerEvent*>(&event);
       if (&disconnected_event == pTE->arg || 
@@ -111,7 +113,7 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
       }
       break;
     }
-    case F_DATAIN_SIG:
+    case F_DATAIN:
     {
       if (!isTransportRawData())
       {
@@ -278,31 +280,34 @@ void GCFRawPort::schedule_connected()
 GCFEvent::TResult GCFRawPort::recvEvent()
 {
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-  GCFEvent e;
-  ssize_t bytesRead = recv(&e, sizeof(e));
-  assert(bytesRead == sizeof(e));
   
-  if (e.length - sizeof(e) > 0)
+  GCFEvent e;
+  ssize_t bytesRead = recv(&e.signal, sizeof(e.signal));
+  assert(bytesRead == sizeof(e.signal));
+  bytesRead = recv(&e.length, sizeof(e.length));
+  assert(bytesRead == sizeof(e.length));
+  
+  if (e.length > 0)
   {
     GCFEvent* full_event = 0;
-    char*   event_buf  = 0;
-    event_buf = (char*)malloc(e.length);
+    char* event_buf = new char[sizeof(e) + e.length];
     full_event = (GCFEvent*)event_buf;
     memcpy(event_buf, &e, sizeof(e));
-
-    // recv the rest of the message (payload)
-    ssize_t payloadLength = e.length - sizeof(e);
-        
+    
+    event_buf += sizeof(e);
+    bytesRead = 0;    
+    ssize_t payloadLength = e.length;
     do 
     {
       bytesRead += recv(event_buf + bytesRead, payloadLength);
       payloadLength = e.length - bytesRead;
                           
     } while (payloadLength > 0);
-    
+        
     status = dispatch(*full_event);
     
-    free(event_buf);
+    event_buf -= sizeof(e);
+    delete [] event_buf;
   }
   else
   {

@@ -73,14 +73,7 @@ class GPMController : public GCFTask
     GCFEvent::TResult connected (GCFEvent& e, GCFPortInterface& p);
         
   private: // helper methods
-    void unpackPropertyList (char* pListData, 
-                             list<string>& propertyList);
     unsigned short getFreeSeqnrForApcRequest ()  const;
-    void sendAPCRequest (GCFEvent& e, 
-                         const GCFApc& apc);
-    
-    void sendMyPropSetMsg (GCFEvent& e, 
-                           const string& scope);
 
   private: // data members        
     GCFPort                       _propertyAgent;
@@ -91,7 +84,5 @@ class GPMController : public GCFTask
 
   private: // admin members
     unsigned int                  _counter;
-    static const unsigned int MAX_BUF_SIZE = 5000;
-    char                          _buffer[MAX_BUF_SIZE];    
 };
 #endif

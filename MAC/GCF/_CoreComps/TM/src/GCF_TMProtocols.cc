@@ -28,9 +28,9 @@
 const char* F_FSM_PROTOCOL_names[] =
   {
     "F_FSM_PROTOCOL: invalid signal",
-    "F_ENTRY_SIG (IN)",
-    "F_EXIT_SIG (IN)",
-    "F_INIT_SIG (IN)",
+    "F_ENTRY (IN)",
+    "F_EXIT (IN)",
+    "F_INIT (IN)",
   };
 
 /**
@@ -39,15 +39,15 @@ const char* F_FSM_PROTOCOL_names[] =
 const char* F_PORT_PROTOCOL_names[] =
   {
     "F_PORT_PROTOCOL: invalid signal",
-    "F_CONNECT_SIG (OUT)",
-    "F_CONNECTED_SIG (IN)",
-    "F_DISCONNECTED_SIG (IN)",
-    "F_CLOSED_SIG (IN)",
-    "F_TIMER_SIG (IN)",
-    "F_DATAIN_SIG (IN)",
-    "F_DATAOUT_SIG (IN)",
-    "F_RAW_SIG (IN_OUT)",
-    "F_ACCEPT_REQ_SIG(IN)",
-    "F_DISPACHTED_SIG(IN)",
+    "F_CONNECT (OUT)",
+    "F_CONNECTED (IN)",
+    "F_DISCONNECTED (IN)",
+    "F_CLOSED (IN)",
+    "F_TIMER (IN)",
+    "F_DATAIN (IN)",
+    "F_DATAOUT (IN)",
+    "F_RAW_DATA (IN_OUT)",
+    "F_ACCEPT_REQ (IN)",
+    "F_DISPACHTED (IN)",
   };
 

@@ -49,7 +49,7 @@ GCFEvent::TResult Application::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 
   switch (e.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       _supTask3.getPort().init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
       TRAN(Application::test401);
       break;
@@ -68,16 +68,15 @@ GCFEvent::TResult Application::test101(GCFEvent& e, GCFPortInterface& /*p*/)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       skipped(101);
       TRAN(Application::test102);
       break;
 
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
-      _curRemoteTestNr = pIndication->testnr;
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
       break;
     }
     default:
@@ -94,16 +93,15 @@ GCFEvent::TResult Application::test102(GCFEvent& e, GCFPortInterface& /*p*/)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       skipped(102);
       TRAN(Application::test103);
       break;
 
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
-      _curRemoteTestNr = pIndication->testnr;
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
       break;
     }
     default:
@@ -120,16 +118,15 @@ GCFEvent::TResult Application::test103(GCFEvent& e, GCFPortInterface& /*p*/)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       skipped(103);
       TRAN(Application::test104);
       break;
 
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
-      _curRemoteTestNr = pIndication->testnr;
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
       break;
     }
     default:
@@ -150,14 +147,14 @@ GCFEvent::TResult Application::test104(GCFEvent& e, GCFPortInterface& p)
   {
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
+      TSTTestreadyEvent indicationIn(e);
       if (_curRemoteTestNr == 0)
-        _curRemoteTestNr = pIndication->testnr;
+        _curRemoteTestNr = indicationIn.testnr;
+        //intentional fall through        
       else
         break;
     }
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       if (_curRemoteTestNr == 0) break;
       if (_propertySetC1.load() != GCF_NO_ERROR)
       {
@@ -171,7 +168,7 @@ GCFEvent::TResult Application::test104(GCFEvent& e, GCFPortInterface& p)
       }      
       break;
 
-    case F_MYPLOADED_SIG:
+    case F_MYPLOADED:
     {
       GCFMYPropAnswerEvent* pResponse = static_cast<GCFMYPropAnswerEvent*>(&e);
       assert(pResponse);
@@ -207,7 +204,7 @@ GCFEvent::TResult Application::test104(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }      
-    case F_MYPUNLOADED_SIG:
+    case F_MYPUNLOADED:
     {
       GCFMYPropAnswerEvent* pResponse = static_cast<GCFMYPropAnswerEvent*>(&e);
       assert(pResponse);
@@ -243,7 +240,7 @@ GCFEvent::TResult Application::test104(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }  
-    case F_TIMER_SIG:
+    case F_TIMER:
       if (!ready) {failed(104); ready = true;}
       else TRAN(Application::test105);
       break;
@@ -263,7 +260,7 @@ GCFEvent::TResult Application::test105(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       if (_propertySetC1.load() != GCF_NO_ERROR)
       {
         failed(105);
@@ -275,7 +272,7 @@ GCFEvent::TResult Application::test105(GCFEvent& e, GCFPortInterface& p)
       }      
       break;
 
-    case F_MYPLOADED_SIG:
+    case F_MYPLOADED:
     {
       GCFMYPropAnswerEvent* pResponse = static_cast<GCFMYPropAnswerEvent*>(&e);
       assert(pResponse);
@@ -312,9 +309,8 @@ GCFEvent::TResult Application::test105(GCFEvent& e, GCFPortInterface& p)
 
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
-      _curRemoteTestNr = pIndication->testnr;
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
       break;
     }
     default:
@@ -334,11 +330,11 @@ GCFEvent::TResult Application::test201(GCFEvent& e, GCFPortInterface& p)
   {
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
-      _curRemoteTestNr = pIndication->testnr;
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
+      //intentional fall through
     }
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       if (_curRemoteTestNr != 105) break;
       if (_apcT1.load() != GCF_NO_ERROR)
       {
@@ -352,7 +348,7 @@ GCFEvent::TResult Application::test201(GCFEvent& e, GCFPortInterface& p)
       }      
       break;
 
-    case F_APCLOADED_SIG:
+    case F_APCLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -375,7 +371,7 @@ GCFEvent::TResult Application::test201(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }      
-    case F_APCUNLOADED_SIG:
+    case F_APCUNLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -398,7 +394,7 @@ GCFEvent::TResult Application::test201(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }  
-    case F_TIMER_SIG:
+    case F_TIMER:
       if (!ready) {failed(201); ready = true;}
       else TRAN(Application::test202);
       break;
@@ -418,7 +414,7 @@ GCFEvent::TResult Application::test202(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       if (_apcT1.load(false) != GCF_NO_ERROR)
       {
         failed(202);
@@ -431,7 +427,7 @@ GCFEvent::TResult Application::test202(GCFEvent& e, GCFPortInterface& p)
       }      
       break;
 
-    case F_APCLOADED_SIG:
+    case F_APCLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -455,7 +451,7 @@ GCFEvent::TResult Application::test202(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }      
-    case F_TIMER_SIG:
+    case F_TIMER:
       if (!ready) {failed(202); ready = true;}
       else TRAN(Application::test203);
       break;
@@ -474,7 +470,7 @@ GCFEvent::TResult Application::test203(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:    
+    case F_ENTRY:    
       if (_apcT1.unload() != GCF_NO_ERROR)
       {
         failed(203);
@@ -486,7 +482,7 @@ GCFEvent::TResult Application::test203(GCFEvent& e, GCFPortInterface& p)
       }      
       break;
 
-    case F_APCUNLOADED_SIG:
+    case F_APCUNLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -522,7 +518,7 @@ GCFEvent::TResult Application::test204(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       if (_apcT1.load() != GCF_NO_ERROR)
       {
         failed(204);
@@ -534,7 +530,7 @@ GCFEvent::TResult Application::test204(GCFEvent& e, GCFPortInterface& p)
       }      
       break;
 
-    case F_APCLOADED_SIG:
+    case F_APCLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -557,7 +553,7 @@ GCFEvent::TResult Application::test204(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }      
-    case F_APCRELOADED_SIG:
+    case F_APCRELOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -595,18 +591,18 @@ GCFEvent::TResult Application::test205(GCFEvent& e, GCFPortInterface& p)
   
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
     {
-      TSTTestreadyEvent r(204);
+      TSTTestreadyEvent r;
+      r.testnr = 204;
       assert(_pSTPort1);
       _pSTPort1->send(r);      
       break;
     } 
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
-      _curRemoteTestNr = pIndication->testnr;
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
       if (started)
       {
         if (ready) TRAN(Application::test206)
@@ -627,7 +623,7 @@ GCFEvent::TResult Application::test205(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }
-    case F_APCUNLOADED_SIG:
+    case F_APCUNLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -665,7 +661,7 @@ GCFEvent::TResult Application::test206(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       _counter = 0;
       if (_apcT1.load() != GCF_NO_ERROR)
       {
@@ -680,9 +676,8 @@ GCFEvent::TResult Application::test206(GCFEvent& e, GCFPortInterface& p)
       
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
-      _curRemoteTestNr = pIndication->testnr;
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
       if (_counter == 2)
       {
         if (_apcT1.unload() != GCF_NO_ERROR)
@@ -694,7 +689,7 @@ GCFEvent::TResult Application::test206(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }
-    case F_APCLOADED_SIG:
+    case F_APCLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -715,7 +710,7 @@ GCFEvent::TResult Application::test206(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }      
-    case F_APCRELOADED_SIG:
+    case F_APCRELOADED:
     {
    
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
@@ -727,14 +722,15 @@ GCFEvent::TResult Application::test206(GCFEvent& e, GCFPortInterface& p)
             (pResponse->result == GCF_NO_ERROR) &&
             (&p == &_supTask3.getPort()))
         {
-          TSTTestreadyEvent r(206);
+          TSTTestreadyEvent r;
+          r.testnr = 206;
           assert(_pSTPort1);
           _pSTPort1->send(r);      
         }
       }
       break;
     }
-    case F_APCUNLOADED_SIG:
+    case F_APCUNLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -771,14 +767,14 @@ GCFEvent::TResult Application::test207(GCFEvent& e, GCFPortInterface& p)
   {
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
+      TSTTestreadyEvent indicationIn(e);
       if (_curRemoteTestNr == 0)
-        _curRemoteTestNr = pIndication->testnr;
+        _curRemoteTestNr = indicationIn.testnr;
+        //intentional fall through
       else
         break;
     }    
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       if (_curRemoteTestNr == 0) break;
       if (_apcT1a.load(false) != GCF_NO_ERROR)
       {
@@ -791,7 +787,7 @@ GCFEvent::TResult Application::test207(GCFEvent& e, GCFPortInterface& p)
       }      
       break;
 
-    case F_APCLOADED_SIG:
+    case F_APCLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -814,7 +810,7 @@ GCFEvent::TResult Application::test207(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }      
-    case F_APCUNLOADED_SIG:
+    case F_APCUNLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -850,7 +846,7 @@ GCFEvent::TResult Application::test208(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:      
+    case F_ENTRY:      
       if (_apcT1b.load(false) != GCF_NO_ERROR)
       {
         failed(208);
@@ -862,7 +858,7 @@ GCFEvent::TResult Application::test208(GCFEvent& e, GCFPortInterface& p)
       }      
       break;
 
-    case F_APCLOADED_SIG:
+    case F_APCLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -890,7 +886,7 @@ GCFEvent::TResult Application::test208(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }      
-    case F_APCUNLOADED_SIG:
+    case F_APCUNLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -912,9 +908,10 @@ GCFEvent::TResult Application::test208(GCFEvent& e, GCFPortInterface& p)
       break;
     }  
 
-    case F_EXIT_SIG:
+    case F_EXIT:
     {
-      TSTTestreadyEvent r(208);
+      TSTTestreadyEvent r;
+      r.testnr = 208;
       assert(_pSTPort1);
       _pSTPort1->send(r);      
       break;
@@ -935,14 +932,13 @@ GCFEvent::TResult Application::test209(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       break;
 
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
-      _curRemoteTestNr = pIndication->testnr;
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
       _apcT3.setScope("A_C");
       if (_apcT3.load(false) != GCF_NO_ERROR)
       {
@@ -955,7 +951,7 @@ GCFEvent::TResult Application::test209(GCFEvent& e, GCFPortInterface& p)
       }      
       break;
     }
-    case F_APCLOADED_SIG:
+    case F_APCLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -992,7 +988,7 @@ GCFEvent::TResult Application::test210(GCFEvent& e, GCFPortInterface& /*p*/)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       break;
 
     default:
@@ -1009,16 +1005,15 @@ GCFEvent::TResult Application::test301(GCFEvent& e, GCFPortInterface& /*p*/)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       skipped(301);
       TRAN(Application::test302);
       break;
 
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
-      _curRemoteTestNr = pIndication->testnr;
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
       break;
     }
 
@@ -1036,16 +1031,15 @@ GCFEvent::TResult Application::test302(GCFEvent& e, GCFPortInterface& /*p*/)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       skipped(302);
       TRAN(Application::test303);
       break;
 
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
-      _curRemoteTestNr = pIndication->testnr;
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
       break;
     }
 
@@ -1067,11 +1061,11 @@ GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
   {
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
-      _curRemoteTestNr = pIndication->testnr;
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
+      //intentional fall through
     }
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       if (_curRemoteTestNr != 302) break;      
       if (_apcT1.load(false) != GCF_NO_ERROR)
       {
@@ -1084,7 +1078,7 @@ GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
       }      
       break;
     
-    case F_APCLOADED_SIG:
+    case F_APCLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -1107,14 +1101,15 @@ GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
       break;
     }      
 
-    case F_SUBSCRIBED_SIG:
+    case F_SUBSCRIBED:
     {
       GCFPropAnswerEvent* pResponse = static_cast<GCFPropAnswerEvent*>(&e);
       assert(pResponse);
       if ((strcmp(pResponse->pPropName, "A_C_P1") == 0) &&
           (&p == &_supTask3.getPort()))
       {
-        TSTTestreadyEvent r(303);
+        TSTTestreadyEvent r;
+        r.testnr = 303;
         assert(_pSTPort1);
         _pSTPort1->send(r);        
       }
@@ -1126,7 +1121,7 @@ GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
       break;
     }
     
-    case F_VCHANGEMSG_SIG:
+    case F_VCHANGEMSG:
     {
       GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
       assert(pResponse);
@@ -1145,7 +1140,7 @@ GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }    
-    case F_EXIT_SIG:
+    case F_EXIT:
       propertyACP1.unsubscribe();
       break;
     default:
@@ -1165,11 +1160,11 @@ GCFEvent::TResult Application::test304(GCFEvent& e, GCFPortInterface& p)
   {
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
-      _curRemoteTestNr = pIndication->testnr;
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
+      //intentional fall through
     }
-    case F_ENTRY_SIG:
+    case F_ENTRY:
     {
       _counter = 0;
       if (_curRemoteTestNr != 304) break;
@@ -1197,7 +1192,7 @@ GCFEvent::TResult Application::test304(GCFEvent& e, GCFPortInterface& p)
         _counter = 0;
       break; 
     }
-    case F_VCHANGEMSG_SIG:
+    case F_VCHANGEMSG:
     {
       GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
       assert(pResponse);
@@ -1254,7 +1249,7 @@ GCFEvent::TResult Application::test305(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       _counter = 0;
       if (_apcT3.load(false) != GCF_NO_ERROR)
       {
@@ -1263,7 +1258,7 @@ GCFEvent::TResult Application::test305(GCFEvent& e, GCFPortInterface& p)
       }
       break;
 
-    case F_APCLOADED_SIG:
+    case F_APCLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -1285,14 +1280,15 @@ GCFEvent::TResult Application::test305(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }  
-    case F_SUBSCRIBED_SIG:
+    case F_SUBSCRIBED:
     {
       GCFPropAnswerEvent* pResponse = static_cast<GCFPropAnswerEvent*>(&e);
       assert(pResponse);
       if ((strcmp(pResponse->pPropName, "A_H_J_P00") == 0) &&
           (&p == &_supTask3.getPort()))
       {
-        TSTTestreadyEvent r(305);
+        TSTTestreadyEvent r;
+        r.testnr = 305;
         assert(_pSTPort1);
         _pSTPort1->send(r);        
       }
@@ -1305,9 +1301,8 @@ GCFEvent::TResult Application::test305(GCFEvent& e, GCFPortInterface& p)
     }
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
-      _curRemoteTestNr = pIndication->testnr;
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
       if (_curRemoteTestNr == 305)
       {
         GCFPVDouble dv(3.12);
@@ -1320,7 +1315,7 @@ GCFEvent::TResult Application::test305(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }
-    case F_VCHANGEMSG_SIG:
+    case F_VCHANGEMSG:
     {
       GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
       assert(pResponse);
@@ -1363,7 +1358,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
   
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       if (_propertySetB4.load() != GCF_NO_ERROR)
       {
         failed(306);
@@ -1371,7 +1366,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
       }
       break;
   
-    case F_MYPLOADED_SIG:
+    case F_MYPLOADED:
     {
       GCFMYPropAnswerEvent* pResponse = static_cast<GCFMYPropAnswerEvent*>(&e);
       assert(pResponse);
@@ -1394,7 +1389,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
       }      
       break;
     }
-    case F_APCLOADED_SIG:
+    case F_APCLOADED:
     {
       GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
@@ -1416,14 +1411,15 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
       }   
       break;
     }
-    case F_SUBSCRIBED_SIG:
+    case F_SUBSCRIBED:
     {
       GCFPropAnswerEvent* pResponse = static_cast<GCFPropAnswerEvent*>(&e);
       assert(pResponse);
       if ((strcmp(pResponse->pPropName, "A_K_P1") == 0) &&
           (&p == &_supTask3.getPort()))
       {
-        TSTTestreadyEvent r(306);
+        TSTTestreadyEvent r;
+        r.testnr = 306;
         _counter = 0;
         assert(_pSTPort1);
         _pSTPort1->send(r);        
@@ -1435,7 +1431,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }
-    case F_VCHANGEMSG_SIG:
+    case F_VCHANGEMSG:
     {
       GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
       assert(pResponse);
@@ -1464,9 +1460,8 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
 
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
-      _curRemoteTestNr = pIndication->testnr;
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
       if (_curRemoteTestNr != 306) break;
       if (nrOfSucceded == 1000)
       {
@@ -1495,26 +1490,27 @@ GCFEvent::TResult Application::test401(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       _supTask3.getPort().init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
       _supTask3.getPort().open();
       break;
 
-    case F_TIMER_SIG:
+    case F_TIMER:
       _supTask3.getPort().open();
       break;
 
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
       break;
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       if (&p == &_supTask3.getPort())
         _supTask3.getPort().setTimer(1.0); // try again after 1 second
       break;
 
     case TST_TESTREQ:
     {
-      TSTTestrespEvent r(401);
+      TSTTestrespEvent r;
+      r.testnr = 401;
       _supTask3.getPort().send(r);
       passed(401);
       TRAN(Application::test402);
@@ -1538,20 +1534,20 @@ GCFEvent::TResult Application::test402(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       closing = true;
       _supTask3.getPort().close();
       break;
 
-    case F_TIMER_SIG:
+    case F_TIMER:
       _port.open();
       break;
 
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
       _counter = 0;
       break;
       
-    case F_ACCEPT_REQ_SIG:
+    case F_ACCEPT_REQ:
       if (_pSTPort1 == 0)
       {
         _pSTPort1 = new GCFTCPPort();
@@ -1566,7 +1562,7 @@ GCFEvent::TResult Application::test402(GCFEvent& e, GCFPortInterface& p)
       }
       break;
       
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       if (closing)
       {
         _port.init(_supTask3, "server", GCFPortInterface::MSPP, TST_PROTOCOL);
@@ -1580,7 +1576,7 @@ GCFEvent::TResult Application::test402(GCFEvent& e, GCFPortInterface& p)
       }      
       break;
 
-    case F_CLOSED_SIG:
+    case F_CLOSED:
       _port.init(_supTask3, "server", GCFPortInterface::MSPP, TST_PROTOCOL);
       _port.open();
       closing = false;
@@ -1588,7 +1584,8 @@ GCFEvent::TResult Application::test402(GCFEvent& e, GCFPortInterface& p)
 
     case TST_TESTREQ:
     {
-      TSTTestrespEvent r(402);
+      TSTTestrespEvent r;
+      r.testnr = 402;
       _counter++;
       if (_counter == 1)
       {
@@ -1603,12 +1600,14 @@ GCFEvent::TResult Application::test402(GCFEvent& e, GCFPortInterface& p)
       break;
     }  
     case TST_TESTREADY:
+    {
+      TSTTestreadyEvent r(e);
       assert(_pSTPort1);
-      _pSTPort1->send(e);      
+      _pSTPort1->send(r);      
       passed(402);
       TRAN(Application::test101);
       break;
-      
+    } 
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -1625,12 +1624,11 @@ GCFEvent::TResult Application::finished(GCFEvent& e, GCFPortInterface& /*p*/)
   {
     case TST_TESTREADY:
     {
-      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
-      assert(pIndication);
-      _curRemoteTestNr = pIndication->testnr;
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
       //intentional fall through
     }
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       if (_curRemoteTestNr != 501) break;     
       fprintf(stderr, "Ready with tests: passed %d, failed %d\n", _passed, _failed);    
       GCFTask::stop();    

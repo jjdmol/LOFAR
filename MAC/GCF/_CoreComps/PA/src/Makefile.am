@@ -1,7 +1,7 @@
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/GCFCommon/autogen $< && \
+	$(AUTOGEN) -L $(top_srcdir)/../MACCommon/autogen $< && \
 	chmod a+w $@
 
 DOCHDRS	=	\
@@ -19,7 +19,8 @@ libpa_la_SOURCES= $(DOCHDRS) \
 	GPA_ScopeManager.cc \
 	GPA_UsecountManager.cc \
 	GPA_RequestManager.cc \
-	GPA_APCFileReader.cc
+	GPA_APCFileReader.cc \
+	PA_Protocol.cc
 	
 libpa_la_CPPFLAGS= -I$(top_srcdir)/GCFCommon/src \
 	-I$(top_srcdir)/CoreComps/TM/src \

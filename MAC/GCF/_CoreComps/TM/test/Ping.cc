@@ -23,9 +23,7 @@
 //
 
 #include "Ping.h"
-#define DECLARE_SIGNAL_NAMES
 #include "Echo_Protocol.ph"
-
 
 /**
  * Function to calculate the elapsed time between two tiemval's.
@@ -59,28 +57,28 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*port*/)
 
   switch (e.signal)
     {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       client.open();
       break;
 
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
       
       // start ping_timer
       // - after 1 second
-      // - every 40 seconds
+      // - every 2 seconds
       ping_timer = client.setTimer(1.0, 2.0);
 
       TRAN(Ping::connected);
       break;
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       (void)client.setTimer(1.0); // try connect again after 1 second
       break;
 
-    case F_TIMER_SIG:
+    case F_TIMER:
       client.open();
       break;
 
@@ -99,41 +97,28 @@ GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
   static int seqnr = 0;
 
   switch (e.signal)
+  {
+    case F_TIMER:
     {
-    case F_TIMER_SIG:
-      {
+  
+    	timeval ping_time;
+    
+    	// create PingEvent
+    	gettimeofday(&ping_time, 0);
+    	EchoPingEvent ping;
+      
+      ping.seqnr = seqnr++;
+      ping.ping_time = ping_time;
+    	// send the event
+    	client.send(ping);
+    
+    	cout << "PING sent (seqnr=" << ping.seqnr << ")" << endl;
 
-#ifndef HUMAN_PORT
 
-	timeval ping_time;
-
-	// create PingEvent
-	gettimeofday(&ping_time, 0);
-	EchoPingEvent ping(seqnr++,
-		       ping_time);
-
-	// send the event
-	client.send(ping);
-
-	cout << "PING sent (seqnr=" << ping.seqnr << ")" << endl;
-
-#else
-
-	gettimeofday(&g_ping_time, 0);
-	GCFEvent ping(ECHO_PING);
-
-	// send the event
-	client.send(ping);
-
-	cout << "PING sent" << endl;
-
-#endif
-
-	TRAN(Ping::awaiting_echo); // wait for the echo
-      }
+    	TRAN(Ping::awaiting_echo); // wait for the echo
       break;
-
-    case F_DISCONNECTED_SIG:
+    }    
+    case F_DISCONNECTED:
 
       //(void)client.open(); // try to reopen
       (void)client.cancelTimer(ping_timer);
@@ -155,26 +140,25 @@ GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& /*p*/)
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
-    {
-    case F_TIMER_SIG:
+  {
+    case F_TIMER:
       cout << "Missed echo dead-line." << endl;
       break;
 
     case ECHO_ECHO:
-      {
-	timeval echo_time;
-	gettimeofday(&echo_time, 0);
-
-	EchoEchoEvent* echo = static_cast<EchoEchoEvent*>(&e);
-
-	cout << "ECHO received (seqnr=" << echo->seqnr << "): elapsed = "
-	     << time_elapsed(&(echo->ping_time), &echo_time) << " sec."<< endl;
-
-	TRAN(Ping::connected);
-      }
+    {
+    	timeval echo_time;
+    	gettimeofday(&echo_time, 0);
+    
+    	EchoEchoEvent echo(e);
+    
+    	cout << "ECHO received (seqnr=" << echo.seqnr << "): elapsed = "
+    	     << time_elapsed(&(echo.ping_time), &echo_time) << " sec."<< endl;
+    
+    	TRAN(Ping::connected);
       break;
-
-    case F_DISCONNECTED_SIG:
+    }
+    case F_DISCONNECTED:
       (void)client.cancelTimer(ping_timer);
       TRAN(Ping::initial);
       break;

@@ -23,11 +23,11 @@
 
 #include <GCF/GCF_PVDouble.h>
 
-unsigned int GCFPVDouble::unpack(const char* valBuf, unsigned int maxBufSize)
+unsigned int GCFPVDouble::unpack(const char* valBuf)
 {
   unsigned int result(0);
-  unsigned int unpackedBytes = unpackBase(valBuf, maxBufSize);
-  if (maxBufSize >= unpackedBytes + sizeof(double))
+  unsigned int unpackedBytes = unpackBase(valBuf);
+  if (unpackedBytes > 0)
   {
     memcpy((void *) &_value, valBuf + unpackedBytes, sizeof(double));
     result = sizeof(double) + unpackedBytes;
@@ -35,11 +35,11 @@ unsigned int GCFPVDouble::unpack(const char* valBuf, unsigned int maxBufSize)
   return result;
 }
 
-unsigned int GCFPVDouble::pack(char* valBuf, unsigned int maxBufSize) const
+unsigned int GCFPVDouble::pack(char* valBuf) const
 {
   unsigned int result(0);
-  unsigned int packedBytes = packBase(valBuf, maxBufSize);
-  if (maxBufSize >= packedBytes + sizeof(double))
+  unsigned int packedBytes = packBase(valBuf);
+  if (packedBytes > 0)
   {
     memcpy(valBuf + packedBytes, (void *) &_value, sizeof(double));
     result = sizeof(double) + packedBytes;
