@@ -24,6 +24,7 @@
 #define COMMON_BLOBIBUFCHAR_H
 
 #include <Common/BlobIBuffer.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 

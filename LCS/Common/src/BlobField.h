@@ -305,13 +305,13 @@ public:
 
 
 // Make sure BlobField cannot be used for a field of bools and strings.
-class BlobField<bool> : public BlobFieldBase
+template <> class BlobField<bool> : public BlobFieldBase
 {
 private:
   BlobField() : BlobFieldBase(0) {};
 };
 
-class BlobField<std::string> : public BlobFieldBase
+template <> class BlobField<std::string> : public BlobFieldBase
 {
 private:
   BlobField() : BlobFieldBase(0) {};
