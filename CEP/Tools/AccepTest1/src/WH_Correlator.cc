@@ -177,6 +177,7 @@ void WH_Correlator::process() {
       for (int station2 = 0; station2 <= station1; station2++) {
 	int s2_addr = c_addr+itsNsamples*itsNpolarisations*station2;
 	out_ptr = reinterpret_cast<_Complex double*> (outDH->getBufferElement(station1, station2, fchannel, 0));
+#pragma unroll(10)
 	for (int sample = 0; sample < itsNsamples; sample++) {
 #if 0
 	  *out_ptr   += *(in_buffer+s1_addr) * *(in_buffer+s2_addr);     // XX
