@@ -26,6 +26,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
+bool operator == (const GPAPropertySet::TPSClient& a, const GPAPropertySet::TPSClient& b)
+{
+  return (a.pPSClientPort == b.pPSClientPort);
+}
+
 
 GPAPropertySet::GPAPropertySet(GPAController& controller, GCFPortInterface& serverPort) :
   _controller(controller),
@@ -332,7 +337,7 @@ void GPAPropertySet::unload(PAUnloadPropSetEvent& request, const GCFPortInterfac
         pPSClient->count--;
         if (pPSClient->count == 0)
         {
-          _psClients.erase(*pPSClient);
+          _psClients.remove(*pPSClient);
         }
       }
       break;
@@ -348,6 +353,7 @@ void GPAPropertySet::unload(PAUnloadPropSetEvent& request, const GCFPortInterfac
 
 void GPAPropertySet::configure(PAConfPropSetEvent& request)
 {
+  //TODO: implement configure
 }
 
 void GPAPropertySet::linked(PAPropSetLinkedEvent& response)
@@ -467,7 +473,8 @@ void GPAPropertySet::dpDeleted(const string& /*dpName*/)
 void GPAPropertySet::linkPropSet()
 {
   assert(dpeExists(_name));
-  assert(_serverPort.isConnected());
+  //TODO: what if connection is realy disabled 
+  assert(_serverPort.isConnected()); 
   PALinkPropSetEvent linkRequest;
   linkRequest.scope = _name;
   _serverPort.send(linkRequest);
@@ -476,6 +483,7 @@ void GPAPropertySet::linkPropSet()
 void GPAPropertySet::unlinkPropSet()
 {
   assert(dpeExists(_name));
+  //TODO: what if connection is realy disabled 
   assert(_serverPort.isConnected());
   PAUnlinkPropSetEvent unlinkRequest;
   unlinkRequest.scope = _name;

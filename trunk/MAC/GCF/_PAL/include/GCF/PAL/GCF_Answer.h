@@ -24,9 +24,9 @@
 #ifndef GCF_ANSWER_H
 #define GCF_ANSWER_H
 
-#include <GCF/GCF_TMProtocols.h>
 #include <GCF/GCF_Defines.h>
-#include <GCF/GCF_Event.h>
+#include <GCF/TM/GCF_Protocols.h>
+#include <GCF/TM/GCF_Event.h>
 
 /**
  * This is an abstract class, which provides the possibility to handle 
@@ -141,16 +141,6 @@ struct GCFPropAnswerEvent : public GCFEvent
   const char* pPropName;
 };
 
-struct GCFConfAnswerEvent : public GCFPropSetAnswerEvent
-{
-  /// @param sig can only be F_PS_CONFIGURED
-  GCFConfAnswerEvent(unsigned short sig) : GCFPropSetAnswerEvent(sig)
-  {
-      length = sizeof(GCFConfAnswerEvent);
-  }
-  const char* pApcName; ///< Pointer to the name string of the APC (excl. path and extension)
-};
-
 struct GCFPropSetAnswerEvent : public GCFEvent
 {
   /// @param sig can only be F_MYPS_ENABLED, F_MYPS_DISABLED, F_EXTPS_LOADED, F_EXTPS_UNLOADED
@@ -162,6 +152,16 @@ struct GCFPropSetAnswerEvent : public GCFEvent
   TGCFResult result;    ///< Result of the requested action: 
                         ///<    GCF_MYPS_ENABLE_ERROR, GCF_MYPS_DISABLE_ERROR, 
                         ///<    GCF_EXTPS_LOAD_ERROR, GCF_EXTPS_UNLOAD_ERROR, GCF_PS_CONFIGURE_ERROR
+};
+
+struct GCFConfAnswerEvent : public GCFPropSetAnswerEvent
+{
+  /// @param sig can only be F_PS_CONFIGURED
+  GCFConfAnswerEvent(unsigned short sig) : GCFPropSetAnswerEvent(sig)
+  {
+      length = sizeof(GCFConfAnswerEvent);
+  }
+  const char* pApcName; ///< Pointer to the name string of the APC (excl. path and extension)
 };
 
 enum {

@@ -25,7 +25,7 @@
 
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_Defines.h>
-#include <GCF/GCF_PropertyBase.h>
+#include <GCF/PAL/GCF_Property.h>
 
 class GCFMyPropertySet;
 
@@ -51,7 +51,7 @@ class GCFMyPropertySet;
  * the get(Old)Value methods are simply synchronous actions.
  */
 
-class GCFMyProperty : public GCFPropertyBase
+class GCFMyProperty : public GCFProperty
 {
   public:
     GCFPValue* getValue () const;

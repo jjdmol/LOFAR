@@ -23,8 +23,8 @@
 #ifndef GCF_MYPROPERTYSET_H
 #define GCF_MYPROPERTYSET_H
 
-#include <GCF/GCF_PropertySet.h>
 #include <GCF/GCF_Defines.h>
+#include <GCF/PAL/GCF_PropertySet.h>
 
 #include <Common/lofar_list.h>
 
@@ -89,11 +89,7 @@ class GCFMyPropertySet : public GCFPropertySet
     
     TGCFResult setValue (const string propName, ///< can be specified with or without the scope
                          const string value);
-                         
-    inline TGCFResult setValue (const string propName, ///< can be specified with or without the scope
-                         const GCFPValue& value)                         
-      { return GCFPropertySetBase::setValue(propName, value); }
-      
+                               
     //@{
     /**
      * @param propName can be specified with or without the scope
@@ -118,7 +114,7 @@ class GCFMyPropertySet : public GCFPropertySet
   private: // helper methods
     void retryLinking ();
     void init();
-    GCFProperty* createPropObject(TProperty& propInfo) const;    
+    GCFProperty* createPropObject(TProperty& propInfo);    
     
   private:
     GCFMyPropertySet ();

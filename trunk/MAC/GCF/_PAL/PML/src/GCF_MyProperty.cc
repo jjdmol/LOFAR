@@ -38,7 +38,7 @@ GCFMyProperty::GCFMyProperty(const TProperty& propInfo,
   _pCurValue = GCFPValue::createMACTypeObject((GCFPValue::TMACValueType) propInfo.type);
   assert(_pCurValue);
   _pOldValue = _pCurValue->clone();
-  if (propertyFields.defaultValue)
+  if (propInfo.defaultValue)
   {
     _pCurValue->setValue(propInfo.defaultValue);
   }
@@ -203,7 +203,7 @@ void GCFMyProperty::subscribed ()
   {
     assert(!_isLinked);
     _isLinked = true;
-    _propertySet.linked();
+    _propertySet.linked(*this);
   }
 }
 
