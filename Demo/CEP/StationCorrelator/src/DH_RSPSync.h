@@ -57,6 +57,6 @@ inline const DH_RSPSync::syncStamp_t DH_RSPSync::getSyncStamp() const
   { return *itsSyncStamp;}
 
 inline void DH_RSPSync::incrementStamp(const int value)
-  { itsSyncStamp->increment(value);}
+  { *itsSyncStamp += value;}
 }
 #endif 
