@@ -215,6 +215,20 @@ void Solver::setSolvableParmData (const std::vector<ParmData>& data,
   itsIndices[prediffer] = predInx;
 }
 
+vector<vector<double> > Solver::getSolutions() const
+{
+  vector<vector<double> > solutions(itsIndices.size());
+  for (uint i=0; i<itsIndices.size(); ++i) {
+    const vector<int>& predInx = itsIndices[i];
+    vector<double>& sols = solutions[i];
+    sols.resize (predInx.size());
+    for (uint j=0; j<predInx.size(); ++j) {
+      sols[j] = itsSolvableValues[predInx[j]];
+    }
+  }
+  return solutions;
+}
+
 } // namespace LOFAR
 
 //# Instantiate the makeNorm template.
