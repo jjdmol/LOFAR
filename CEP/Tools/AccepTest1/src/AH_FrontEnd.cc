@@ -92,8 +92,8 @@ void AH_FrontEnd::run(int nsteps) {
             
       aggregate_bandwidth += reinterpret_cast<WH_Random*>(*it)->getBandwidth();
     }
-    cout << "Total bandwidth: "<< 8.0*aggregate_bandwidth/(1024.0*1024.0) << "Mbit/sec   " ;
-    cout << (800.0*aggregate_bandwidth/(1024.0*1024.0))/(1024.0*1024.0*1024.0*8.0) << "% of theoretical peak" << endl;
+    cout << "Total bandwidth: "<< 8.0*aggregate_bandwidth/(1024.0*1024.0) << " Mbit/sec   " ;
+    cout << (800.0*aggregate_bandwidth)/(1024.0*1024.0*1024.0) << "% of theoretical peak (Gbit/sec)" << endl;
   }
 }
 
