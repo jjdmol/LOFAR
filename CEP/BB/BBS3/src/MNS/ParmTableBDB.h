@@ -26,22 +26,23 @@
 //# Includes
 #include <lofar_config.h>
 #include <MNS/ParmTable.h>
-#include <MNS/ParmTableFiller.h>
 #include <MNS/MeqParmHolder.h>
 #include <MNS/MeqPolc.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 #include <db_cxx.h>
 
-
-template<class T> class Vector;
+//# Forward Declarations
+namespace casa {
+  template<class T> class Vector;
+}
+namespace LOFAR {
+  class MeqDomain;
+}
 
 namespace LOFAR {
 
-  //# Forward Declarations
-  class MeqDomain;
-
-  class ParmTableBDB : public ParmTableRep, public ParmTableFiller {
+  class ParmTableBDB : public ParmTableRep{
   public:
     // Create the ParmTable object.
     // The dbType argument gives the database type.
@@ -68,6 +69,11 @@ namespace LOFAR {
 			   int sourceNr, int station,
 			   const MeqPolc& polc);
 
+    // Put the default coefficients
+    virtual void putDefCoeff (const string& parmName,
+			      int srcnr, int statnr,
+			      const MeqPolc& polc);
+
     virtual void putNewCoeff (const string& parmName,
 			      int srcnr, int statnr,
 			      const MeqPolc& polc);
@@ -80,6 +86,13 @@ namespace LOFAR {
 
     // Unlock the underlying table.
     virtual void unlock();
+
+    // Connect to the database
+    virtual void connect();
+    // Create the database or table
+    static void createTable(const string& userName, const string& tableName);
+    // clear database or table
+    virtual void clearTable();
 
   private:
     Db itsDb;

@@ -24,9 +24,8 @@
 #define MNS_PARMTABLEAIPS_H
 
 //# Includes
-#include <BBS3/MNS/ParmTable.h>
-#include <BBS3/MNS/ParmTableFiller.h>
-#include <BBS3/MNS/MeqPolc.h>
+#include <PSS3/MNS/ParmTable.h>
+#include <PSS3/MNS/MeqPolc.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ColumnsIndex.h>
 #include <casa/Containers/RecordField.h>
@@ -34,7 +33,7 @@
 
 namespace LOFAR {
 
-class ParmTableAIPS : public ParmTableRep, public ParmTableFiller
+class ParmTableAIPS : public ParmTableRep
 {
 public:
   // Create the ParmTableAIPS object.
@@ -60,6 +59,11 @@ public:
 			 int sourceNr, int station,
 			 const MeqPolc& polc);
 
+  // Put the default coefficients
+  virtual void putDefCoeff (const string& parmName,
+			    int srcnr, int statnr,
+			    const MeqPolc& polc);
+
   // Insert new coefficients
   void putNewCoeff( const string& parmName, 
 		    int srcnr,
@@ -78,6 +82,13 @@ public:
   // Unlock the underlying table.
   virtual void unlock();
 
+  // Connect to the database
+  virtual void connect();
+  // Create the database or table
+  static void createTable(const string& userName, const string& tableName);
+  // clear database or table
+  virtual void clearTable();
+
 private:
   // Find the table subset containing the parameter values for the
   // requested domain.
@@ -95,6 +106,9 @@ private:
   casa::RecordFieldPtr<casa::Int>    itsInitIndexSrcnr;
   casa::RecordFieldPtr<casa::Int>    itsInitIndexStatnr;
   casa::RecordFieldPtr<casa::String> itsInitIndexName;
+
+  string itsTableName;
+
 };
 
 }

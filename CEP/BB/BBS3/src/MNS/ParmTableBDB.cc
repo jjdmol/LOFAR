@@ -40,23 +40,46 @@ namespace LOFAR {
 
   ParmTableBDB::ParmTableBDB (const string& userName, const string& tableName) : 
     itsDb (NULL, 0),
-    itsTableName (tableName)
+    itsTableName ("/tmp/" + userName + "." + tableName + ".bdb")
   {
-    u_int32_t oFlags = DB_CREATE;
-    string dbfilename = "/tmp/" + userName + "." + tableName + ".bdb";
-    itsDb.set_flags(DB_DUPSORT);
-    //  if (itsDb.open(transid, filename, database, dbtype, flags, mode) !=0) {
-    if (itsDb.open(NULL, dbfilename.c_str(), NULL, DB_BTREE, oFlags, 0) != 0 ) {
-      itsDb.close(0);
-      ASSERTSTR(false, "no connection to database");    
-    }
-    LOG_TRACE_STAT("connected to database");
   }
 
   ParmTableBDB::~ParmTableBDB()
   {
     itsDb.sync(0);
     itsDb.close(0);
+  }
+
+  void ParmTableBDB::connect(){
+    u_int32_t oFlags = 0;
+    itsDb.set_flags(DB_DUPSORT);
+    //  if (itsDb.open(transid, filename, database, dbtype, flags, mode) !=0) {
+    if (itsDb.open(NULL, itsTableName.c_str(), NULL, DB_BTREE, oFlags, 0) != 0 ) {
+      itsDb.close(0);
+      ASSERTSTR(false, "no connection to database");    
+    }
+    LOG_TRACE_STAT("connected to database");
+  }
+
+  void ParmTableBDB::createTable(const string& userName, const string& tableName){
+    string fullTableName = "/tmp/" + userName + "." + tableName + ".bdb";
+    // Do the same as the connect but now with the flag DB_CREATE
+    cout<<"Creating database: " << fullTableName<<endl;
+    u_int32_t oFlags = DB_CREATE;
+    Db tmpDb(NULL, 0);
+    tmpDb.set_flags(DB_DUPSORT);
+    if (tmpDb.open(NULL, fullTableName.c_str(), NULL, DB_BTREE, oFlags, 0) != 0 ) {
+      tmpDb.close(0);
+      ASSERTSTR(false, "could not create database");    
+    }
+    LOG_TRACE_STAT("created database");
+    tmpDb.sync(0);
+    tmpDb.close(0);
+  }
+
+  void ParmTableBDB::clearTable(){
+    u_int32_t count;
+    itsDb.truncate(NULL, &count, 0);
   }
 
   vector<MeqPolc> ParmTableBDB::getPolcs (const string& parmName,
@@ -120,15 +143,40 @@ namespace LOFAR {
 			       const MeqPolc& polc)
   {
     const MeqDomain& domain = polc.domain();
-    vector<MeqParmHolder> set = find (parmName, domain);
-    if (set.empty()) {
-      // couldn't find the polc in the database
-      putNewCoeff (parmName, srcnr, statnr, polc);
-    } else {
-      // For Berkeley DB there is no difference between insert and update
-      putNewCoeff (parmName, srcnr, statnr, polc);
+
+    // right now: search on name only and add MPH with correct domain
+    MPHKey key(parmName);
+    MPHValue value;
+    MeqDomain pdomain;
+    Dbc* cursorp;
+    itsDb.cursor(NULL, &cursorp, 0);
+
+    int flags = DB_SET;
+    while (cursorp->get(&key, &value, flags) == 0) {
+      flags = DB_NEXT_DUP; // this means it will only walk through the MPHs with the same key (=name)
+      pdomain = value.getMPH().getPolc().domain();
+      if (near(domain.startX(), pdomain.startX())  &&
+	  near(domain.endX(),   pdomain.endX())  &&
+	  near(domain.startY(), pdomain.startY())  &&
+	  near(domain.endY(),   pdomain.endY())) 
+	{
+	  // delete the MPH that has the same name and domain (because the combination should be unique) and then just add the right value
+	  cursorp->del(0);
+	  break;
+	}
     }
+    cursorp->close();
+    putNewCoeff (parmName, srcnr, statnr, polc);
   }
+
+  void ParmTableBDB::putDefCoeff (const string& parmName,
+				  int srcnr, int statnr,
+				  const MeqPolc& polc)
+  {
+    // For Berkeley DB there is no difference between a default and a normal parm (yet)
+    putCoeff (parmName, srcnr, statnr, polc);  
+  }
+
 
   void ParmTableBDB::putNewCoeff (const string& parmName,
 				  int srcnr, int statnr,
@@ -154,22 +202,26 @@ namespace LOFAR {
     LOG_TRACE_STAT("searching for MParms");
     vector<MeqParmHolder> set;
 
-    // right now: search on name only and return only one MPH
-    MPHKey key(parmName, domain);
+    // right now: search on name only and add MPH with correct domain
+    MPHKey key(parmName);
     MPHValue value;
     MeqDomain pdomain;
-    if (itsDb.get(NULL, &key, &value, 0) != 0) {
-      // key wasn't found or there was an error
-    } else {
+    Dbc* cursorp;
+    itsDb.cursor(NULL, &cursorp, 0);
+
+    int flags = DB_SET;
+    while (cursorp->get(&key, &value, flags) == 0) {
+      flags = DB_NEXT_DUP;
       pdomain = value.getMPH().getPolc().domain();
-      if (near(domain.startX(), pdomain.startX())  &&
-	  near(domain.endX(), pdomain.endX())  &&
-	  near(domain.startY(), pdomain.startY())  &&
-	  near(domain.endY(), pdomain.endY())) 
-      {
-	set.push_back(value.getMPH());
-      }
+      if ((domain.endX() > pdomain.startX())  &&
+	  (pdomain.endX() > domain.startX())  &&
+	  (domain.endY() > pdomain.startY())  &&
+	  (pdomain.endY() > domain.startY())) 
+	{
+	  set.push_back(value.getMPH());
+	}
     }
+    cursorp->close();
     return set;
   }
 
@@ -178,7 +230,7 @@ namespace LOFAR {
     LOG_TRACE_STAT("retreiving sources");
     vector<string> nams;
   
-    MPHKey key;
+    MPHKey key("RA");
     MPHValue value;
   
     // right now: walk complete database
@@ -188,17 +240,18 @@ namespace LOFAR {
     Dbc* cursorp;
     itsDb.cursor(NULL, &cursorp, 0);
     string name;
-    while (cursorp->get(&key, &value, DB_NEXT) == 0) {
+    int flags = DB_SET_RANGE; //go to RA or the first string that is bigger
+    while (cursorp->get(&key, &value, flags) == 0) {
+      flags = DB_NEXT;
       name = value.getMPH().getName();
-      if (name.find("RA") != string::npos)
-	
-	nams.push_back(name);
+      if (name.find("RA") == string::npos) 
+	break;
+      nams.push_back(name);
     }
   
     LOG_TRACE_STAT_STR("finished retreiving "<<nams.size()<<" sources from "<<itsTableName);
-    //cout<<"finished retreiving "<<nams.size()<<" sources from "<<itsTableName<<endl;;
-    return nams;
     cursorp->close();
+    return nams;
   }
 
   void ParmTableBDB::unlock()
@@ -213,8 +266,8 @@ namespace LOFAR {
   }
   ParmTableBDB::MPHKey::MPHKey(string name) 
     : itsName(name),
-    //itsDomain(MeqDomain(0,0,0,0)),
-    itsBuffer(0)
+      //itsDomain(MeqDomain(0,0,0,0)),
+      itsBuffer(0)
   {
     updateThang();
   }
