@@ -37,6 +37,11 @@ It is provided "as is" without express or implied warranty.
 #endif
 
 #endif
+
+// this necesssary to get <sql.h> working on these architectures
+#if (defined __x86_64__ || defined __ia64__) && !defined SIZEOF_LONG
+#define SIZEOF_LONG 8
+#endif
 #include <sql.h>
 #include <sqlext.h>
 

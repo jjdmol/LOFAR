@@ -39,6 +39,11 @@
 #endif
 
 #endif
+
+// this necesssary to get <sql.h> working on these architectures
+#if (defined __x86_64__ || defined __ia64__) && !defined SIZEOF_LONG
+#define SIZEOF_LONG 8
+#endif
 #include <sql.h>
 #include <sqlext.h>
 
@@ -272,8 +277,12 @@ void ETI_Map::build()
     TypeTranslation(typeid(long).name(), C_LONG, SQL_INTEGER, SQL_C_SLONG, TypeTranslation::TYPE_PRIMITIVE, sizeof(long));
   (*this)[typeid(unsigned long).name()] =
     TypeTranslation(typeid(unsigned long).name(), C_ULONG, SQL_INTEGER, SQL_C_ULONG, TypeTranslation::TYPE_PRIMITIVE, sizeof(unsigned long));
-  (*this)[typeid(ODBCINT64).name()] =
-	  TypeTranslation(typeid(ODBCINT64).name(), C_INT64, SQL_BIGINT, SQL_C_SBIGINT, TypeTranslation::TYPE_PRIMITIVE, sizeof(ODBCINT64));
+  //(*this)[typeid(ODBCINT64).name()] =
+    //TypeTranslation(typeid(ODBCINT64).name(), C_INT64, SQL_BIGINT, SQL_C_SBIGINT, TypeTranslation::TYPE_PRIMITIVE, sizeof(ODBCINT64));
+  (*this)[typeid(long long).name()] =
+    TypeTranslation(typeid(long long).name(), C_INT64, SQL_BIGINT, SQL_C_SBIGINT, TypeTranslation::TYPE_PRIMITIVE, sizeof(long long));
+  (*this)[typeid(unsigned long long).name()] =
+    TypeTranslation(typeid(unsigned long long).name(), C_INT64, SQL_BIGINT, SQL_C_UBIGINT, TypeTranslation::TYPE_PRIMITIVE, sizeof(unsigned long long));
   (*this)[typeid(double).name()] =
     TypeTranslation(typeid(double).name(), C_DOUBLE, SQL_DOUBLE, SQL_C_DOUBLE, TypeTranslation::TYPE_PRIMITIVE, sizeof(double));
   (*this)[typeid(float).name()] = TypeTranslation(typeid(float).name(), C_FLOAT, SQL_REAL, SQL_C_FLOAT, TypeTranslation::TYPE_PRIMITIVE, sizeof(float));
@@ -330,9 +339,7 @@ void ETI_Map::build()
   (*this)[typeid(fake_tcstring).name()] =
     TypeTranslation(typeid(fake_tcstring).name(), C_TCSTRING, SQL_VARCHAR, SQL_C_CHAR, TypeTranslation::TYPE_PRIMITIVE, 0);
 #endif
-
-
-
+  
 }
 
 // ETI_Map SQL_types_to_C = ETI_Map::BuildETI();
