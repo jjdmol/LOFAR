@@ -45,9 +45,10 @@ using namespace blitz;
 
 WriteReg::WriteReg(GCFPortInterface& board_port, int board_id,
 		   uint8 dstid, uint8 pid, uint8 regid, uint16 size,
-		   uint16 offset)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i)),
-    m_dstid(dstid), m_pid(pid), m_regid(regid), m_size(size), m_offset(offset)
+		   uint16 offset, uint8 n_blps)
+  : SyncAction(board_port, board_id, n_blps),
+    m_dstid(dstid), m_pid(pid), m_regid(regid), m_size(size), m_offset(offset),
+    m_source_address(0)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -88,9 +89,7 @@ void WriteReg::sendrequest()
   EPAWriteEvent write;
   
   write.hdr.set(MEPHeader::WRITE,
-		(m_dstid & MEPHeader::DST_RSP
-		 ? MEPHeader::DST_RSP
-		 : getCurrentBLP()),
+		m_dstid + getCurrentBLP(),
 		m_pid,
 		m_regid,
 		m_size,
