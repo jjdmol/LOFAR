@@ -1,0 +1,99 @@
+SUBDIRS	= shmem .
+
+#
+# only compile LofarLogger if log4cplus is configured
+#
+# 15/3/2004 KJW <wierenga@astron.nl>
+# Bummer! older versions of automake/autoconf
+# don't handle the AM_CONDITIONAL statement in
+# autoconf_share/lofar_external.m4 properly causing complaints
+# about the use of HAVE_LOG4CPLUS here.
+#
+#if HAVE_LOG4CPLUS
+#LOG4CPLUS_INSTHDRS = LofarLogger.h
+#LOG4CPLUS_SOURCES  = LofarLogger.cc
+#endif
+LOG4CPLUS_INSTHDRS =
+LOG4CPLUS_SOURCES  =
+
+INSTHDRS = \
+Allocator.h BlobStringType.h BlobString.h BlobStringTraits.h \
+BlobHeader.h BlobArrayHeader.h BlobOStream.h BlobIStream.h BlobArray.h \
+BlobIBuffer.h BlobIBufStream.h BlobOBuffer.h BlobOBufStream.h \
+BlobIBufChar.h BlobIBufVector.h BlobOBufChar.h BlobOBufVector.h \
+BlobOBufString.h BlobIBufString.h BlobOBufNull.h \
+BlobField.h BlobFieldSet.h \
+LofarTypedefs.h LofarTypes.h TypeNames.h DataFormat.h DataConvert.h \
+KeyValue.h KeyValueMap.h \
+KeyParser.h \
+Debug.h \
+Exception.h \
+Net/Socket.h \
+Thread.h \
+Thread/Thread.h \
+Thread/Key.h \
+Thread/Mutex.h \
+Thread/Condition.h \
+Thread/SmartLock.h \
+Stopwatch.h \
+StringUtil.h \
+CheckConfig.h \
+Lorrays.h Lorrays-Blitz.h blitz_array-impl.h BlitzToAips.h \
+Lonumerics.h \
+lofar_iostream.h				\
+lofar_fstream.h					\
+lofar_strstream.h				\
+lofar_algorithm.h				\
+lofar_deque.h					\
+lofar_list.h					\
+lofar_vector.h					\
+lofar_complex.h					\
+lofar_map.h					\
+lofar_stack.h					\
+lofar_iosfwd.h					\
+lofar_string.h					\
+Profiling/PerfProfile.h \
+$(LOG4CPLUS_INSTHDRS)
+
+NOINSTHDRS =
+
+TCCHDRS = \
+BlobHeader.tcc BlobArray.tcc TypeNames.tcc
+
+pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS = $(NOINSTHDRS)
+
+DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
+
+lib_LTLIBRARIES 	= libcommon.la
+
+libcommon_la_SOURCES 	= \
+Allocator.cc BlobStringType.cc BlobString.cc \
+BlobOStream.cc BlobIStream.cc BlobArray.cc \
+BlobIBufStream.cc BlobOBufStream.cc BlobOBufString.cc BlobOBufNull.cc \
+BlobIBufChar.cc BlobOBufChar.cc \
+BlobField.cc BlobFieldSet.cc \
+TypeNames.cc DataConvert.cc \
+KeyValue.cc KeyValueMap.cc \
+KeyParse.yy KeyTokenize.ll KeyParser.cc \
+Debug.cc \
+Exception.cc \
+Stopwatch.cc \
+StringUtil.cc \
+Net/Socket.cc \
+Thread/Thread.cc \
+Thread/SmartLock.cc \
+Profiling/PerfProfile.cc \
+$(LOG4CPLUS_SOURCES)
+
+AM_YFLAGS		= -d -p KeyParse
+AM_LFLAGS		= -PKeyTokenize
+LEX_OUTPUT_ROOT		= lex.KeyTokenize
+
+libcommon_la_LIBADD	= shmem/libshmem.la
+
+bin_PROGRAMS		= LimitExec
+LimitExec_SOURCES	= LimitExec.cc
+
+include $(lofar_sharedir)/Makefile.common
