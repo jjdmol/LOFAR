@@ -29,6 +29,7 @@
 #include <iostream>
 #include <fstream>
 
+using namespace LOFAR;
 
 uint doOut (BlobOBuffer* bb)
 {

@@ -22,6 +22,8 @@
 
 #include <Common/BlobOBufString.h>
 
+namespace LOFAR {
+
 BlobOBufString::~BlobOBufString()
 {}
 
@@ -33,3 +35,5 @@ void BlobOBufString::doExpand (uint newReservedSize, uint newSize)
   }
   itsString->resize (newSize);
 }
+
+} // end namespace

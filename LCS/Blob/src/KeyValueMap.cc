@@ -25,6 +25,8 @@
 #include <Common/BlobIStream.h>
 #include <Common/lofar_iostream.h>
 
+namespace LOFAR {
+
 KeyValueMap::KeyValueMap()
 {}
 
@@ -151,3 +153,5 @@ BlobIStream& operator>> (BlobIStream& bs, KeyValueMap& param)
   bs.getEnd();
   return bs;
 }
+
+} // end namespace

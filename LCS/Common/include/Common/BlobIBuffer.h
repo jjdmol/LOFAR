@@ -25,6 +25,7 @@
 
 #include <Common/LofarTypes.h>
 
+namespace LOFAR {
 
 // BlobIBuffer is the abstract base class for the source of a
 // BlobIStream object. In this way the source of a BlobIStream
@@ -62,5 +63,6 @@ public:
   virtual int64 setPos (int64 pos) = 0;
 };
 
+} // end namespace
 
 #endif

@@ -25,6 +25,7 @@
 
 #include <Common/BlobOBuffer.h>
 
+namespace LOFAR {
 
 // This class is the BlobOBuffer that makes use of a null buffer.
 // It can be used to determine the length of a blob.
@@ -61,5 +62,6 @@ inline uint BlobOBufNull::size() const
   return itsSize;
 }
 
+} // end namespace
 
 #endif

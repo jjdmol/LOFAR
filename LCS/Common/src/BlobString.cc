@@ -23,6 +23,7 @@
 #include <Common/BlobString.h>
 #include <Common/Debug.h>
 
+namespace LOFAR {
 
 BlobString::BlobString (bool useString, size_t capacity)
 : itsAllocator (BlobStringType(useString, LOFAR::HeapAllocator())),
@@ -86,3 +87,5 @@ std::basic_string<uchar>& BlobString::getString()
   AssertStr (itsAllocator.useString(), "BlobString has no string");
   return itsString;
 }
+
+} // end namespace

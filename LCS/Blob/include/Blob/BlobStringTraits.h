@@ -50,13 +50,13 @@ namespace std
 	/// 21.1.4  char_traits specializations
 
   template<>
-    struct char_traits<LOFAR::uchar>
+    struct char_traits<LOFAR::TYPES::uchar>
     {
-      typedef LOFAR::uchar	char_type;
-      typedef int 	        int_type;
-      typedef streampos 	pos_type;
-      typedef streamoff 	off_type;
-      typedef mbstate_t 	state_type;
+      typedef LOFAR::TYPES::uchar char_type;
+      typedef int 	          int_type;
+      typedef streampos 	  pos_type;
+      typedef streamoff 	  off_type;
+      typedef mbstate_t 	  state_type;
 
       static void 
       assign(char_type& __c1, const char_type& __c2)

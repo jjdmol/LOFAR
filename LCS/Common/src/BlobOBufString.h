@@ -27,6 +27,8 @@
 #include <Common/BlobString.h>
 #include <Common/Debug.h>
 
+namespace LOFAR {
+
 // This class is the BlobOBuffer that makes use of a string object.
 // The string can be static or dynamic. A static string has a fixed
 // length and cannot grow. A dynamic string can grow as needed.
@@ -68,5 +70,6 @@ private:
   BlobString* itsString;
 };
 
+} // end namespace
 
 #endif

@@ -25,6 +25,7 @@
 
 #include <Common/Allocator.h>
 
+namespace LOFAR {
 
 class BlobStringType
 {
@@ -53,5 +54,6 @@ private:
   LOFAR::Allocator* itsAllocator;
 };
 
+} // end namespace
 
 #endif

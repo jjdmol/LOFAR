@@ -23,6 +23,7 @@
 #include <Common/BlobOBufStream.h>
 #include <iostream>
 
+namespace LOFAR {
 
 BlobOBufStream::BlobOBufStream (std::ostream& os)
 : itsStream (os.rdbuf())
@@ -45,3 +46,5 @@ int64 BlobOBufStream::setPos (int64 pos)
 {
   return itsStream->pubseekoff (pos, std::ios::beg);
 }
+
+} // end namespace

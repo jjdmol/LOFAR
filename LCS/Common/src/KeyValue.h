@@ -31,6 +31,8 @@
 #include <Common/lofar_iosfwd.h>
 #include <Common/LofarTypes.h>
 
+namespace LOFAR {
+
 //# Forward Declarations
 class KeyValueMap;
 class BlobOStream;
@@ -183,5 +185,6 @@ private:
   void*    itsValuePtr;
 };
 
+} // end namespace
 
 #endif 

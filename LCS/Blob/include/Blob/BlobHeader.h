@@ -27,6 +27,8 @@
 #include <Common/DataConvert.h>
 #include <string.h>
 
+namespace LOFAR {
+
 // Blob stands for binary large object.
 // The LOFAR Common software provides classes to serialize one or more
 // objects into a blob and to de-serialize the blob to objects.
@@ -146,6 +148,7 @@ public:
     {}
 };
 
+} // end namespace
 
 #include <Common/BlobHeader.tcc>
 

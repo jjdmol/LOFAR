@@ -23,24 +23,26 @@
 #include <Common/BlobString.h>
 #include <Common/Debug.h>
 
+using namespace LOFAR;
+
 void doIt (const BlobStringType& type)
 {
   BlobString str(type);
-  Assert (str.capacity() == 0);
-  Assert (str.size() == 0);
+  DbgAssert (str.capacity() == 0);
+  DbgAssert (str.size() == 0);
   str.reserve (10);
   uint cap = str.capacity();
-  Assert (str.capacity() >= 10);
-  Assert (str.size() == 0);
+  DbgAssert (str.capacity() >= 10);
+  DbgAssert (str.size() == 0);
   str.resize (8);
-  Assert (str.capacity() == cap);
-  Assert (str.size() == 8);
+  DbgAssert (str.capacity() == cap);
+  DbgAssert (str.size() == 8);
   str.reserve (10);
-  Assert (str.capacity() == cap);
-  Assert (str.size() == 8);
+  DbgAssert (str.capacity() == cap);
+  DbgAssert (str.size() == 8);
   str.resize (11);
-  Assert (str.capacity() >= 11);
-  Assert (str.size() == 11);
+  DbgAssert (str.capacity() >= 11);
+  DbgAssert (str.size() == 11);
   bool exc = false;
   char* ptr = str.data();
   try {
@@ -48,8 +50,8 @@ void doIt (const BlobStringType& type)
   } catch (std::exception&) {
     exc = true;
   }
-  Assert (exc != type.useString());
-  Assert (ptr == str.data());
+  DbgAssert (exc != type.useString());
+  DbgAssert (ptr == str.data());
 }
 
 int main()

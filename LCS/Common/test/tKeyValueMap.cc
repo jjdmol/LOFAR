@@ -29,6 +29,7 @@
 #include <Common/BlobIStream.h>
 #include <Common/lofar_iostream.h>
 
+using namespace LOFAR;
 
 void showpar3 (KeyValueMap& par3)
 {

@@ -28,6 +28,7 @@
 #include <Common/BlobStringTraits.h>
 #include <string>
 
+namespace LOFAR {
 
 class BlobString
 {
@@ -92,5 +93,6 @@ inline const std::basic_string<uchar>& BlobString::getString() const
   return const_cast<BlobString*>(this)->getString();
 }
 
+} // end namespace
 
 #endif

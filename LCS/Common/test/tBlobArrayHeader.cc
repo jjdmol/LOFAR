@@ -28,6 +28,8 @@
 #include <iostream>
 #include <vector>
 
+using namespace LOFAR;
+
 int main(int argc, const char* argv[])
 {
   Debug::initLevels (argc, argv);

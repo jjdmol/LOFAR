@@ -25,6 +25,7 @@
 
 #include <Common/BlobOBuffer.h>
 
+namespace LOFAR {
 
 // This class is the BlobOBuffer that makes use of a character buffer,
 // i.e. a buffer of signed or unsigned chars.
@@ -138,5 +139,6 @@ inline void BlobOBufChar::setBuffer (void* buffer)
   itsBuffer = static_cast<uchar*>(buffer);
 }
 
+} // end namespace
 
 #endif

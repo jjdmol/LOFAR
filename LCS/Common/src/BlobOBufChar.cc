@@ -24,6 +24,7 @@
 #include <Common/Debug.h>
 #include <string.h>
 
+namespace LOFAR {
 
 BlobOBufChar::BlobOBufChar (uint initialSize, uint expandSize)
 : itsBuffer       (0),
@@ -128,3 +129,5 @@ void BlobOBufChar::doExpand (uint newReservedSize, uint)
     itsIsOwner = true;
   }
 }
+
+} // end namespace
