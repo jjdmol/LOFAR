@@ -30,25 +30,29 @@
 
 using namespace LOFAR;
 
-WH_Transpose::WH_Transpose(const string& name, KeyValueMap kvm) 
+WH_Transpose::WH_Transpose(const string& name, 
+			   const KeyValueMap kvm) 
   : WorkHolder(kvm.getInt("NoWH_RSP",2), 1, name, "WH_Transpose"),
     itsKVM (kvm)
 {
   char str[128];
   
   int itsNstations         = itsKVM.getInt("stations", 2);
+  int itsNcorrelators      = itsKVM.getInt("NoWH_Correlator",7);
   int itsNsamples          = itsKVM.getInt("samples", 256000);
   int itsNchannels         = itsKVM.getInt("channels", 46);
   int itsNpolarisations    = itsKVM.getInt("polarisations", 2);
   int itsNbeamletsinpacket = itsKVM.getInt("NoRSPbeamlets", 92);
   int itsNpacketsinframe   = itsKVM.getInt("NoPacketsInFrame", 8);
 
-  int bufsize = (itsNbeamletsinpacket / itsNstations) * itsNpolarisations * itsNpacketsinframe;
+  int bufsize = (itsNbeamletsinpacket / itsNcorrelators) * itsNpolarisations * itsNpacketsinframe;
 
   itsNinputs = itsKVM.getInt("noWH_RSP", 2);
   itsNoutputs = 1; // there is one connection to the corresponding WH_Correlator
 
+
   for (int i = 0; i < itsNinputs; i++) {
+    snprintf(str, 128, "input_%d_of_%d", i, itsNinputs);
     getDataManager().addInDataHolder(i, new DH_StationData(str, bufsize));
   }
   for (int i = 0; i < itsNoutputs; i++) {
@@ -92,7 +96,6 @@ void WH_Transpose::process() {
     myDH->setFlag( static_cast<DH_StationData*>(getDataManager().getInHolder(0))->getFlag() |
 		   static_cast<DH_StationData*>(getDataManager().getInHolder(1))->getFlag() );
   }
-
 
   DH_StationData::BufferType* val_ptr_0 = static_cast<DH_StationData*>(getDataManager().getInHolder(0))->getBuffer();
   DH_StationData::BufferType* val_ptr_1 = static_cast<DH_StationData*>(getDataManager().getInHolder(1))->getBuffer();
