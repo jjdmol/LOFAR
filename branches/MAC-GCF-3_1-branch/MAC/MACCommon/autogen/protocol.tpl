@@ -171,7 +171,6 @@ void* [+ event_class_name +]::pack(unsigned int& packsize)
 
 void [+ event_class_name +]::unpack()
 {
-  [+ IF (not (exist? "noheader")) +]
   if (length > 0)
   {
   	unsigned int offset = sizeof(GCFEvent);
@@ -196,7 +195,7 @@ void [+ event_class_name +]::unpack()
     offset += sizeof([+ (get "name") +]);
     [+ ENDIF +][+ ENDFOR +]
   }[+ ENDIF +]
-}[+ ENDIF +][+ ENDFOR +]
+}[+ ENDFOR +]
 [+ IF (= (suffix) "ph") +]
 } // namespace [+ (base-name) +]
 
