@@ -148,16 +148,18 @@ void WH_Correlator::process() {
   // Note that there is both a general correlator as well as a BlueGene specific
   // implementation.
   // 
-#ifdef HAVE_BGL
-  // complex<double> pointer to the output buffer
-  _Complex double * out_ptr = reinterpret_cast<_Complex double*> ( outDH->getBuffer() );
-#endif
 
   for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
 #ifdef HAVE_MPE
     MPE_Log_event(1, sample, "correlating"); 
 #endif
     for (int sample = 0; sample < itsNsamples; sample++) {
+
+#ifdef HAVE_BGL
+      // complex<double> pointer to the output buffer
+      _Complex double * out_ptr = reinterpret_cast<_Complex double*> ( outDH->getBufferElement(0,0,fchannel,0) );
+#endif
+
       int sample_addr = itsNpolarisations*itsNelements*itsNsamples*fchannel+
 	itsNpolarisations*itsNelements*sample;
 
