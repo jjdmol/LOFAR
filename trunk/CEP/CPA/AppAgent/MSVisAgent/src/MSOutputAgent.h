@@ -65,7 +65,7 @@ class MSOutputAgent : public VisAgent::FileOutputAgent, public MSVisAgentDebugCo
     //## Returns: SUCCESS   on success
     //##          WAIT      stream has been suspended from other end
     //##          CLOSED    stream closed
-    virtual int putHeader(DataRecord::Ref &hdr);
+    virtual int putHeader(const DataRecord::Ref::Xfer &hdr);
 
     //##ModelId=3E28316B012D
     //##Documentation
@@ -75,7 +75,7 @@ class MSOutputAgent : public VisAgent::FileOutputAgent, public MSVisAgentDebugCo
     //## Returns: SUCCESS   on success
     //##          WAIT      stream has been suspended from other end    
     //##          CLOSED    stream closed
-    virtual int putNextTile(VisTile::Ref &tile);
+    virtual int putNextTile(const VisTile::Ref::Xfer &tile);
     
 
     //##ModelId=3E283172001B

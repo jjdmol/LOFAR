@@ -5,6 +5,7 @@
 #include <AppAgent/AppEventAgentBase.h>
 #include <VisAgent/VisAgentVocabulary.h>
 #include <VisCube/VisTile.h>
+class AppEventSink;
 
 namespace VisAgent
 {
@@ -14,12 +15,15 @@ class OutputAgent : public AppEventAgentBase
 {
   public:
     //##ModelId=3E4143600221
-    explicit OutputAgent (const HIID &initf = VisAgent::FOutputParams)
+    explicit OutputAgent (const HIID &initf = AidOutput)
       : AppEventAgentBase(initf) {}
-
     //##ModelId=3E41436101A6
-    OutputAgent (AppEventSink &sink, const HIID &initf = VisAgent::FOutputParams)
+    OutputAgent (AppEventSink &sink, const HIID &initf = AidOutput)
       : AppEventAgentBase(sink,initf) {}
+    //##ModelId=3E50FAF103A1
+    OutputAgent(AppEventSink *sink, int dmiflags, const HIID &initf = AidOutput)
+      : AppEventAgentBase(sink,dmiflags,initf) {}
+
     
     //##ModelId=3E28276A0257
     //##Documentation
@@ -29,7 +33,7 @@ class OutputAgent : public AppEventAgentBase
     //## Returns: SUCCESS   on success
     //##          WAIT      stream has been suspended from other end
     //##          CLOSED    stream closed
-    virtual int putHeader   (DataRecord::Ref &hdr);
+    virtual int putHeader   (const DataRecord::Ref::Xfer &hdr);
 
     // temporarily
     //##ModelId=3E28276D022A
@@ -41,7 +45,7 @@ class OutputAgent : public AppEventAgentBase
     //##          WAIT      stream has been suspended from other end
     //##          OUTOFSEQ  data is out of sequence (must send header first)
     //##          CLOSED    stream closed
-    virtual int putNextTile (VisTile::Ref &tile);
+    virtual int putNextTile (const VisTile::Ref::Xfer &tile);
 
     //##ModelId=3E41144B0245
     virtual string sdebug (int detail = 1, const string &prefix = "", const char *name = 0) const;

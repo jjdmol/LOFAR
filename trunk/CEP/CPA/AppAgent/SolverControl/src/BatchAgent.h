@@ -24,34 +24,30 @@
     
 #include <SolverControl/SolverControlAgent.h>
 #include <vector>
+class AppEventSink;
 
-#pragma aid Batch Solver Control Job Jobs Max
+#pragma aid Batch Solver Control Job Jobs 
 
 namespace SolverControl {
 
 const HIID
     // Constants for field names
-    //    Subrecord of batch control parameters
-    FBatchControlJobs      = AidBatch|AidSolver|AidControl|AidJobs,
-    //    Max number of iterations
-    FMaxIterations         = AidMax|AidIteration;
-    // Also use:
-    // FSolutionParams
-    // FConvergence
-        
-// default arguments
-const double DefaultConvergence = 1e-3;
-const int DefaultMaxIterations  = 100;    
-
+    //    Subrecord of batch jobs
+    FBatchJobs      = AidBatch|AidJobs;
+    
 //##ModelId=3DFF2C0700D8
 class BatchAgent : public SolverControlAgent
 {
   public:
     //##ModelId=3DFF2CCD01A1
-    BatchAgent(const HIID &initf = SolverControl::FSolverControlParams);
-  
+    BatchAgent(const HIID &initf = AidControl)
+      : SolverControlAgent(initf) {}
     //##ModelId=3E42792B02D8
-    BatchAgent(AppEventSink &sink, const HIID &initf = SolverControl::FSolverControlParams);
+    BatchAgent(AppEventSink &sink, const HIID &initf = AidControl)
+      : SolverControlAgent(sink,initf) {}
+    //##ModelId=3E50FBE500AE
+    BatchAgent(AppEventSink *sink, int dmiflags, const HIID &initf = AidControl)
+      : SolverControlAgent(sink,dmiflags,initf) {}
 
     //##ModelId=3E005A8403E5
     //##Documentation
@@ -64,19 +60,6 @@ class BatchAgent : public SolverControlAgent
     //## Resets to beginning of job queue
     virtual int startDomain (const DataRecord::Ref &data = DataRecord::Ref());
     
-    //##ModelId=3E0098E90136
-    //##Documentation
-    //## Gets next solution from job queue
-    virtual int startSolution (DataRecord::Ref &params);
-    
-    //##ModelId=3E0060C50000
-    //##Documentation
-    //## Keeps track of solution status, and compares it against the
-    //## initialized criteria. Once a criteria is hit, posts an EndSolveEvent
-    //## to advertise this, calls stopSolution(), and returns appropriate
-    //## state (RUNNING, NEXT_SOLUTION, NEXT_DOMAIN, etc.)
-    virtual int endIteration(double conv);
-    
     //##ModelId=3E009B2E01DF
     //##Documentation
     //## Clears flags and solution parameters
@@ -86,9 +69,6 @@ class BatchAgent : public SolverControlAgent
     string sdebug ( int detail = 1,const string &prefix = "",
                     const char *name = 0 ) const;
 
-
-
-
   private:
     //##ModelId=3E42781C03A6
     BatchAgent (const BatchAgent& right);
@@ -96,22 +76,9 @@ class BatchAgent : public SolverControlAgent
     BatchAgent& operator=(const BatchAgent& right);
 
 
-    //##ModelId=3E0060D20249
-    //##Documentation
-    //## Criterion: maximum number of solve iterations
-    int max_iterations_;
-
-    //##ModelId=3E0060D901DE
-    //##Documentation
-    //## Criterion: required convergence
-    double conv_threshold_;
-    
     //##ModelId=3E00990E03DD
     std::vector<DataRecord::Ref> jobs_;
     
-    //##ModelId=3E3E55820037
-    uint current_job_;
-
 };
 
 } // namespace SolverControl
