@@ -4,7 +4,7 @@ rm -rf tBBS2_tmp
 mkdir tBBS2_tmp
 cd tBBS2_tmp
 ln -s ../../../../test/tBBS2.sh .
-ln -s ../../../../test/*.g .
+# ln -s ../../../../test/*.g .
 ln -s ../../../../test/tBBS2.test* .
 # ln -s ../../../../src/prepareBBD2 prepareBBD
 ln -s ../../../../src/clearBB .
