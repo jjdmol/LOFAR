@@ -74,7 +74,7 @@ int main()
 	      &&  DH1.getCounter() == 2);
       bool found;
       int version;
-      BlobIStream& bis = DH1.openExtraBlob (found, version);
+      BlobIStream& bis = DH1.getExtraBlob (found, version);
       ASSERT (found);
       string str;
       bis >> str;
@@ -93,7 +93,7 @@ int main()
 	      &&  DH1.getCounter() == 4);
       bool found;
       int version;
-      BlobIStream& bis = DH1.openExtraBlob (found, version);
+      BlobIStream& bis = DH1.getExtraBlob (found, version);
       ASSERT (found);
       string str;
       bis >> str;
@@ -108,7 +108,7 @@ int main()
 	      &&  DH1.getCounter() == 3);
       bool found;
       int version;
-      BlobIStream& bis = DH1.openExtraBlob (found, version);
+      BlobIStream& bis = DH1.getExtraBlob (found, version);
       ASSERT (found);
       float val;
       string str;
@@ -126,7 +126,7 @@ int main()
 	      &&  DH1.getCounter() == 3);
       bool found;
       int version;
-      DH1.openExtraBlob (found, version);
+      DH1.getExtraBlob (found, version);
       ASSERT (!found);
     }
     return 0;

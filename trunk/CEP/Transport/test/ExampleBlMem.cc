@@ -120,7 +120,7 @@ void* startVarReaderThread(void* thread_arg)
       }
       int version;
       bool found;
-      BlobIStream& bis = dh->openExtraBlob(found,version);
+      BlobIStream& bis = dh->getExtraBlob(found,version);
       if (!found) {
 	cout << "!found 1" << endl;
 	*result = 0;
@@ -143,7 +143,7 @@ void* startVarReaderThread(void* thread_arg)
       }
       int version;
       bool found;
-      BlobIStream& bis = dh->openExtraBlob(found,version);
+      BlobIStream& bis = dh->getExtraBlob(found,version);
       if (!found) {
 	cout << "!found 2" << endl;
 	*result = 0;
@@ -166,7 +166,7 @@ void* startVarReaderThread(void* thread_arg)
       }
       int version;
       bool found;
-      dh->openExtraBlob(found,version);
+      dh->getExtraBlob(found,version);
       if (found) {
 	cout << "found 3" << endl;
 	*result = 0;
@@ -182,7 +182,7 @@ void* startVarReaderThread(void* thread_arg)
       }
       int version;
       bool found;
-      BlobIStream& bis = dh->openExtraBlob(found,version);
+      BlobIStream& bis = dh->getExtraBlob(found,version);
       if (!found) {
 	cout << "!found 4" << endl;
 	*result = 0;
@@ -336,7 +336,7 @@ bool testVar1()
       }
       int version;
       bool found;
-      BlobIStream& bis = DH2.openExtraBlob(found,version);
+      BlobIStream& bis = DH2.getExtraBlob(found,version);
       if (!found) {
 	result = false;
       }
@@ -356,7 +356,7 @@ bool testVar1()
       }
       int version;
       bool found;
-      BlobIStream& bis = DH2.openExtraBlob(found,version);
+      BlobIStream& bis = DH2.getExtraBlob(found,version);
       if (!found) {
 	result = false;
       }
@@ -376,7 +376,7 @@ bool testVar1()
       }
       int version;
       bool found;
-      DH2.openExtraBlob(found,version);
+      DH2.getExtraBlob(found,version);
       if (found) {
 	result = false;
       }
@@ -390,7 +390,7 @@ bool testVar1()
       }
       int version;
       bool found;
-      BlobIStream& bis = DH2.openExtraBlob(found,version);
+      BlobIStream& bis = DH2.getExtraBlob(found,version);
       if (!found) {
 	result = false;
       }
