@@ -126,7 +126,10 @@ void fillStations (const Vector<Int>& ant1,
 //----------------------------------------------------------------------
 int main (int argc, const char* argv[])
 {
-  AssertMsg (argc > 1, "Run as:  filluvw msname");
+  if (argc < 2) {
+    cerr << "Run as:  filluvw msname" << endl;
+    return 0;
+  }
   itsMS = MeasurementSet(argv[1], Table::Update);
   MSColumns itsMSCol(itsMS);
 
@@ -164,7 +167,7 @@ int main (int argc, const char* argv[])
   MeqRequest req(MeqDomain(0,1,0,1), 1, 1, 0);
   double lastTime = -1;
   Vector<double> uvw(3);
-  for (int rownr=0; rownr<itsMS.nrow(); rownr++) {
+  for (int rownr=0; rownr<int(itsMS.nrow()); rownr++) {
     uInt ant1 = itsMSCol.antenna1()(rownr);
     uInt ant2 = itsMSCol.antenna2()(rownr);
     double time = itsMSCol.time()(rownr);

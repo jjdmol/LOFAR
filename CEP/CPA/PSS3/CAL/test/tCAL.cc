@@ -33,6 +33,7 @@
 #include <Common/lofar_strstream.h>
 #include <aips/Exceptions/Error.h>
 #include <aips/Arrays/Vector.h>
+#include <aips/Arrays/ArrayUtil.h>
 #include <Common/Profiling/PerfProfile.h>
 
 void predict (MeqCalibrater& mc)
@@ -92,6 +93,8 @@ int main(int argc, char* argv[])
 	   << endl;
       cerr << " endchan:   last channel        (default is stchan)" << endl;
       cerr << " selection: TaQL selection string (default is empty)" << endl;
+      cerr << " peel:      source nrs to peel as 2,4,1 (default is all)"
+	   << endl;
       cerr << " calcuvw:   calculate UVW       (default is 1)" << endl;
       return 0;
     }
@@ -151,9 +154,23 @@ int main(int argc, char* argv[])
       selstr = argv[9];
     }
 
-    bool calcuvw=true;
+    string peelstr;
     if (argc > 10) {
-      istringstream iss(argv[10]);
+      peelstr = argv[10];
+    }
+    Vector<Int> peelVec;
+    if (!peelstr.empty()) {
+      Vector<String> peels = stringToVector (peelstr);
+      peelVec.resize (peels.nelements());
+      for (unsigned int i=0; i<peels.nelements(); i++) {
+	istringstream iss(peels(i));
+	iss >> peelVec(i);
+      }
+    }
+
+    bool calcuvw=true;
+    if (argc > 11) {
+      istringstream iss(argv[11]);
       iss >> calcuvw;
     }
 
@@ -167,6 +184,7 @@ int main(int argc, char* argv[])
     cout << " stchan:    " << stchan << endl;
     cout << " endchan:   " << endchan << endl;
     cout << " selection: " << selstr << endl;
+    cout << " peel:      " << peelVec << endl;
     cout << " calcuvw  : " << calcuvw << endl;
 
     Vector<Int> ant;
@@ -194,16 +212,18 @@ int main(int argc, char* argv[])
     else
     {
       if ("predict" == scenario) {
+	meqcal.peel (peelVec);
 	for (int i = 0; i < loopcnt; i++)
 	{
 	  PERFPROFILE("predict");
 	  predict (meqcal);
 	}
       } else if ("solve" == scenario) {
-	setsolvable(meqcal);
-	solve(meqcal, loopcnt);
+	meqcal.peel (peelVec);
+	setsolvable (meqcal);
+	solve (meqcal, loopcnt);
       } else {
-      cerr << "Invalid scenario; valid are:  predict" << endl;
+	cerr << "Invalid scenario; valid are:  predict,solve" << endl;
       }
     }
   } catch (AipsError& x) {
