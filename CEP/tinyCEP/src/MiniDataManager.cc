@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include <tinyCEP/DataManager.h>
+#include <tinyCEP/BaseDataManager.h>
 #include <tinyCEP/MiniDataManager.h>
 
 namespace LOFAR
@@ -29,8 +29,8 @@ namespace LOFAR
   MiniDataManager::MiniDataManager(int ninputs, int noutputs):
     itsNinputs(ninputs), itsNoutputs(noutputs) {
     
-    itsInTRs = new Transporter* [ninputs];
-    itsOutTRs = new Transporter* [noutputs];
+    itsInTRs = new DataHolder* [ninputs];
+    itsOutTRs = new DataHolder* [noutputs];
 
   }
 
@@ -38,20 +38,20 @@ namespace LOFAR
 
   }
 
-  Transporter* MiniDataManager::getInTransporter(int channel) {
+  DataHolder* MiniDataManager::getInHolder(int channel) {
     return itsInTRs[channel];
   }
 
-  Transporter* MiniDataManager::getOutTransporter(int channel) {
+  DataHolder* MiniDataManager::getOutHolder(int channel) {
     return itsOutTRs[channel];
   }
 
-  void MiniDataManager::addInTransporter(int channel, Transporter* tptr) {
-    itsInTRs[channel] = tptr;
+  void MiniDataManager::addInDataHolder(int channel, DataHolder* dhptr) {
+    itsInTRs[channel] = dhptr;
   }
 
-  void MiniDataManager::addOutTransporter(int channel, Transporter* tptr) {
-    itsOutTRs[channel] = tptr;
+  void MiniDataManager::addOutDataHolder(int channel, DataHolder* dhptr) {
+    itsOutTRs[channel] = dhptr;
   }
 
 } // namespace LOFAR

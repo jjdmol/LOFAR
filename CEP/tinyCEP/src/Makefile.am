@@ -26,7 +26,7 @@ lib_LTLIBRARIES 	= libtinyframe.la
 libtinyframe_la_SOURCES = \
 WorkHolder.cc \
 AppController.cc \
-MiniDataManager.cc
+MiniDataManager.cc 
 
 EXTRA_DIST = assay
 

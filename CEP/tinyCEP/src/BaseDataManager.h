@@ -1,27 +1,27 @@
-//# DataManager.h: Base class for the data managers
+//#  BaseDataManager.h: DataManager base class
 //#
-//# Copyright (C) 2000-2002
-//# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  Copyright (C) 2002-2003
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
-//# This program is free software; you can redistribute it and/or modify
-//# it under the terms of the GNU General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or
-//# (at your option) any later version.
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
 //#
-//# This program is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
 //#
-//# You should have received a copy of the GNU General Public License
-//# along with this program; if not, write to the Free Software
-//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//# $Id$ 
+//#  $Id$
 
-#ifndef TINYFRAME_DATAMANAGER_H
-#define TINYFRAME_DATAMANAGER_H
+#ifndef TINYFRAME_BASEDATAMANAGER_H
+#define TINYFRAME_BASEDATAMANAGER_H
 
 /*  #include <lofar_config.h> */
 
@@ -38,7 +38,7 @@ typedef struct
 } DH_info;
 
 /**
-  Class DataManager is the base class for all data managers
+  Class BaseDataManager is the base class for all data managers
   in the CEPFrame environment. It main purpose is to offer a common interface
   to a class like WorkHolder. Apart from that it also offers some common
   functionality to the classes derived from it.
@@ -47,18 +47,15 @@ typedef struct
 class SynchronisityManager;
 class Selector;
 
-class DataManager
+class BaseDataManager
 {
 public:
   /** The constructor with the number of input and output
       DataHolders as arguments.
   */
-  DataManager (int inputs=0, int outputs=0);
+  BaseDataManager (int inputs=0, int outputs=0);
 
-  virtual ~DataManager();
-
-  Transporter* getInTransporter(int channel);
-  Transporter* getOutTransporter(int channel);
+  virtual ~BaseDataManager();
 
   DataHolder* getInHolder(int channel);
   DataHolder* getOutHolder(int channel);
@@ -70,8 +67,8 @@ public:
   void addOutDataHolder(int channel, DataHolder* dhptr, bool synchronous=true, 
 			bool shareIO=false);
 
-  void addInTransporter(int channel, Transporter* tptr);
-  void addOutTransporter(int channel, Transporter* tptr);
+  void addInDataHolder(int channel, DataHolder* dhptr);
+  void addOutDataHolder(int channel, DataHolder* dhptr);
 
   void preprocess();
   void postprocess();
@@ -115,19 +112,16 @@ public:
 			bool newflag) const;
   void setAutoTriggerOut(int channel, 
 			bool newflag) const;
-
 private:
   /// Copy constructor (copy semantics).
-  DataManager (const DataManager&);
+  BaseDataManager (const BaseDataManager&);
 
   int itsNinputs;
   int itsNoutputs;
+
   SynchronisityManager* itsSynMan;
   DH_info* itsInDHs;        // Last requested inholders info
   DH_info* itsOutDHs;       // Last requested outholders info
-
-  Transporter* itsInTRs;
-  Transporter* itsOutTRs;
 
   Selector* itsInputSelector;  // Input selection mechanism
   Selector* itsOutputSelector; // Output selection mechanism
@@ -140,32 +134,32 @@ private:
   bool*     itsDoAutoTriggerOut;
 };
 
-inline int DataManager::getInputs() const { 
+inline int BaseDataManager::getInputs() const { 
   return itsNinputs; }
 
-inline int DataManager::getOutputs() const { 
+inline int BaseDataManager::getOutputs() const { 
   return itsNoutputs; }
 
-inline bool DataManager::doAutoTriggerIn(int channel) const {
+inline bool BaseDataManager::doAutoTriggerIn(int channel) const {
   DbgAssertStr(channel >= 0, "input channel too low");
   DbgAssertStr(channel < itsNinputs, "input channel too high");
   return itsDoAutoTriggerIn[channel];
 }
 
-inline bool DataManager::doAutoTriggerOut(int channel) const {
+inline bool BaseDataManager::doAutoTriggerOut(int channel) const {
   DbgAssertStr(channel >= 0, "output channel too low");
   DbgAssertStr(channel < itsNoutputs, "output channel too high");
   return itsDoAutoTriggerOut[channel];
 }
 
-inline void DataManager::setAutoTriggerIn(int channel, 
+inline void BaseDataManager::setAutoTriggerIn(int channel, 
 					  bool newflag) const {
   DbgAssertStr(channel >= 0, "input channel too low");
   DbgAssertStr(channel < itsNinputs, "input channel too high");
   itsDoAutoTriggerIn[channel] = newflag;
 }
 
-inline void DataManager::setAutoTriggerOut(int channel, 
+inline void BaseDataManager::setAutoTriggerOut(int channel, 
 					  bool newflag) const {
   DbgAssertStr(channel >= 0, "output channel too low");
   DbgAssertStr(channel < itsNoutputs, "output channel too high");
