@@ -83,6 +83,9 @@ public:
   void solve (bool useSVD,
 	      Quality& resultQuality);
 
+  // Get the solutions per prediffer.
+  vector<vector<double> > getSolutions() const;
+
 private:
   // Copy constructor and assignment are not allowed.
   // <group>
