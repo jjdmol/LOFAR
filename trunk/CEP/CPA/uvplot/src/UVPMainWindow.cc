@@ -136,6 +136,70 @@ void UVPMainWindow::resizeEvent(QResizeEvent */*event*/)
 
 
 
+
+
+
+//====================>>>  UVPMainWindow::drawDataSet  <<<====================
+
+void UVPMainWindow::drawDataSet()
+{
+  // Make sure that there is any data to plot at all
+ if(itsDataSet.size() == 0) {
+    return;
+  }
+
+  unsigned int ant1 = itsGraphSettingsWidget->getSettings().getAntenna1();
+  unsigned int ant2 = itsGraphSettingsWidget->getSettings().getAntenna2();
+
+  UVPDataAtomHeader FromHeader(ant1, ant2);
+  UVPDataAtomHeader ToHeader(FromHeader);
+  
+  ToHeader.itsAntenna2 = ToHeader.itsAntenna2 + 1;
+
+  itsCanvas->setChannels(itsNumberOfChannels); // Number of channels. Clears buffer.
+  unsigned int spectraAdded = 0;
+
+#if(DEBUG_MODE)
+  TRACER2(__PRETTY_FUNCTION__);
+  TRACER2("Number of atoms: " << itsDataSet.size());
+  TRACER2(ant1 << "-" << ant2);
+  TRACER2(itsDataSet.upper_bound(FromHeader)->first.itsAntenna1 << "-" <<itsDataSet.upper_bound(FromHeader)->first.itsAntenna2 << ": " << itsDataSet.upper_bound(FromHeader)->first.itsTime);
+  TRACER2(itsDataSet.upper_bound(ToHeader)->first.itsAntenna1 << "-" <<itsDataSet.upper_bound(ToHeader)->first.itsAntenna2 << ": " << itsDataSet.upper_bound(ToHeader)->first.itsTime);
+#endif
+
+  UVPDataSet::iterator EndOfRecords = itsDataSet.upper_bound(ToHeader);
+  UVPDataSet::iterator EndOfData = itsDataSet.end();
+
+  for(UVPDataSet::iterator p = itsDataSet.upper_bound(FromHeader);
+      p != EndOfRecords && p != EndOfData; p++) {
+    
+    const   UVPDataAtom *dataAtom = &(p->second);
+    
+    //********** Data are only added if correlation type is right ********
+    if(dataAtom->getHeader().itsCorrelationType == UVPDataAtomHeader::RR) {
+
+      unsigned int NumChan = dataAtom->getNumberOfChannels();
+      double*      Values  = new double[NumChan];
+      const UVPDataAtom::ComplexType* data = dataAtom->getData(0);
+
+      for(unsigned int j = 0; j < NumChan; j++) {
+        Values[j] = std::abs(*data++);
+      }
+      
+      UVPSpectrum Spectrum(NumChan, spectraAdded, Values);
+      
+      itsCanvas->slot_addSpectrum(Spectrum);
+      spectraAdded++;
+      delete[] Values;
+    }
+  }
+  itsCanvas->drawView();
+}
+
+
+
+
+
 //=================>>>  UVPMainWindow::slot_about_uvplot  <<<=================
 
 void UVPMainWindow::slot_about_uvplot()
@@ -144,6 +208,9 @@ void UVPMainWindow::slot_about_uvplot()
                            "UV data visualizer for the LOFAR project\n"
                            "by Michiel Brentjens (brentjens@astron.nl)");
 }
+
+
+
 
 
 
@@ -192,109 +259,7 @@ void UVPMainWindow::slot_setProgress(int steps)
 
 
 
-//==========>>>  UVPMainWindow::slot_plotTimeFrequencyImage  <<<==========
-
-void UVPMainWindow::slot_plotTimeFrequencyImage()
-{
-  if(!itsBusyPlotting) {
-    
-    itsPlotMenu->setItemEnabled(itsMenuPlotImageID, false);
-    itsPlotMenu->setItemEnabled(itsMenuPlotStopID, true);
-    
-    Dispatcher    dispatcher;     // Octopussy Message Dispatcher
-
-    // Octopussy
-    unsigned int patch = 0;
-
-    // Anonymous counted reference. No need to delete.
-    UVPDataTransferWP *transfer = new UVPDataTransferWP(patch, &itsDataSet);
-    dispatcher.attach(transfer, DMI::ANON);
-    initGateways(dispatcher);     // Octopussy
-    
-    dispatcher.start();           // Octopussy
-    
-    slot_setProgressTotalSteps(600);
-    
-    itsBusyPlotting = true;
-
-    unsigned int spectraAdded(0);
-    unsigned int previousSize = 0;
-
-    UVPDataAtomHeader FromHeader;
-    UVPDataAtomHeader ToHeader;
-
-    FromHeader.itsAntenna1 = itsGraphSettingsWidget->getSettings().getAntenna1();
-    FromHeader.itsAntenna2 = itsGraphSettingsWidget->getSettings().getAntenna2();;
-    
-    ToHeader.itsAntenna1 = FromHeader.itsAntenna1;
-    ToHeader.itsAntenna2 = FromHeader.itsAntenna2 + 1;
-      
-    while(itsBusyPlotting) {
-      dispatcher.poll(50);
-      qApp->processEvents();
-
-      bool doDraw(false);
-      
-      // First experiment to see how fast I can paint...
-
-      if(itsDataSet.size() > previousSize) {
-#if(DEBUG_MODE)
-        TRACER1("ItsDataSet.size()" << itsDataSet.size());
-#endif
-        doDraw = true;
-        previousSize = itsDataSet.size();
-      }
-
-      if(doDraw) {
-        itsNumberOfChannels = itsDataSet.begin()->second.getNumberOfChannels();
-        itsCanvas->setChannels(itsDataSet.begin()->second.getNumberOfChannels()); // Number of channels. Clears buffer.
-        spectraAdded = 0;
-        for(UVPDataSet::iterator p = itsDataSet.upper_bound(FromHeader);
-            p != itsDataSet.upper_bound(ToHeader) && p != itsDataSet.end();
-            p++) {
-          const   UVPDataAtom *dataAtom = &(p->second);
-#if(DEBUG_MODE)
-          TRACER2( "Ant1: " <<  dataAtom->getHeader().itsAntenna1);
-          TRACER2( "Ant2: " <<  dataAtom->getHeader().itsAntenna2);
-          cout.precision(10);
-          TRACER2( "Time: " <<  dataAtom->getHeader().itsTime); 
-          cout.precision(6);
-          TRACER2( "Corr: " <<  dataAtom->getHeader().itsCorrelationType);
-#endif
-          double *Values = new double[dataAtom->getNumberOfChannels()];
-          for(unsigned int j = 0; j < dataAtom->getNumberOfChannels(); j++) {
-            Values[j] = std::abs(*dataAtom->getData(j));
-          }
-          UVPSpectrum   Spectrum(dataAtom->getNumberOfChannels(), spectraAdded, Values);
-          if(dataAtom->getHeader().itsCorrelationType == UVPDataAtomHeader::RR) {
-            itsCanvas->slot_addSpectrum(Spectrum);
-            spectraAdded++;
-          }
-          delete[] Values;
-        }
-        itsNumberOfTimeslots = spectraAdded;
-        itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
-        itsCanvas->drawView();
-      }
-      
-    } // while
-    
-
-    dispatcher.stop();
-    itsCanvas->drawView();
-    slot_setProgress(0);
-
-    itsPlotMenu->setItemEnabled(itsMenuPlotImageID, true);
-    itsPlotMenu->setItemEnabled(itsMenuPlotStopID, false);
-  }
-
-}
-
-
-
-
-
-//=================>>>  UVPMainWindow::slo_quitPlotting  <<<=================
+//=================>>>  UVPMainWindow::slot_quitPlotting  <<<=================
 
 void UVPMainWindow::slot_quitPlotting()
 {
@@ -339,10 +304,74 @@ void UVPMainWindow::slot_openPVD()
 
 
 
+//==========>>>  UVPMainWindow::slot_plotTimeFrequencyImage  <<<==========
+
+void UVPMainWindow::slot_plotTimeFrequencyImage()
+{
+  if(!itsBusyPlotting) {
+    itsPlotMenu->setItemEnabled(itsMenuPlotImageID, false);
+    itsPlotMenu->setItemEnabled(itsMenuPlotStopID, true);
+    
+    itsDataSet.clear();
+        
+    Dispatcher    dispatcher;     // Octopussy Message Dispatcher
+
+    // Octopussy
+    unsigned int patch = 0;
+
+    // Anonymous counted reference. No need to delete.
+    UVPDataTransferWP *transfer = new UVPDataTransferWP(patch, &itsDataSet);
+    dispatcher.attach(transfer, DMI::ANON);
+    initGateways(dispatcher);     // Octopussy
+    
+    dispatcher.start();           // Octopussy
+    
+    itsBusyPlotting = true;
+
+    unsigned int previousSize = 0;
+
+    itsNumberOfTimeslots = 1200;
+
+    
+    itsScrollView->removeChild(itsCanvas);
+    itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
+    itsScrollView->addChild(itsCanvas);
+    resizeEvent(0);
+
+    // Acquire data.
+    while(itsBusyPlotting) {
+      dispatcher.poll(50);
+      qApp->processEvents();
+
+      if(itsDataSet.size() > previousSize) {
+        previousSize = itsDataSet.size();
+        
+        itsNumberOfChannels = itsDataSet.begin()->second.getNumberOfChannels();
+        drawDataSet();
+      }
+      
+    } // while
+    
+
+    dispatcher.stop();
+    itsCanvas->drawView();
+
+    itsPlotMenu->setItemEnabled(itsMenuPlotImageID, true);
+    itsPlotMenu->setItemEnabled(itsMenuPlotStopID, false);
+  }
+
+}
+
+
+
+
+
 //==============>>>  UVPMainWindow::slot_readMeasurementSet  <<<==============
 
 void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
 {
+  itsDataSet.clear();
+
   MeasurementSet ms(msName);
   MSAntenna      AntennaTable(ms.antenna());
   MSField        FieldTable(ms.field());
@@ -358,11 +387,8 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
 
 
   Table        msTable(msName);
-  Table        Selection(msTable((msTable.col("ANTENNA1") == ant1 &&
-                                  msTable.col("ANTENNA2") == ant2) ||
-                                 (msTable.col("ANTENNA1") == ant2 &&
-                                  msTable.col("ANTENNA2") == ant1) )
-                         );
+  Table        Selection(msTable(msTable.col("ANTENNA1") == ant1 ||
+                                 msTable.col("ANTENNA2") == ant1) );
 
   if(Selection.nrow() == 0) {
     QMessageBox::information(0, "Information", "Selection contains no data",
@@ -371,6 +397,10 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
   }
 
   ROArrayColumn<Complex> DataColumn(Selection, "DATA");
+  ROScalarColumn<Double> TimeColumn(Selection, "TIME");
+  ROScalarColumn<Int>    Antenna1Column(Selection, "ANTENNA1");
+  ROScalarColumn<Int>    Antenna2Column(Selection, "ANTENNA2");
+
   //  ROScalarColumn<Float>  TimeColumn(Selection, "TIME");
 
   unsigned int NumRows          = ms.nrow();
@@ -378,39 +408,58 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
   unsigned int NumBaselines     = NumAntennae*(NumAntennae-1)/2;
   unsigned int NumPolarizations = DataColumn(0).shape()[0];
   unsigned int NumChannels      = DataColumn(0).shape()[1];
-  unsigned int NumTimeslots     = Selection.nrow();
+  unsigned int NumSelected     = Selection.nrow();
 
   itsNumberOfChannels  = NumChannels;
-  itsNumberOfTimeslots = NumTimeslots;
+  itsNumberOfTimeslots = 1500;
   
-  itsCanvas->setChannels(NumChannels);
   itsScrollView->removeChild(itsCanvas);
+  itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
   itsScrollView->addChild(itsCanvas);
   resizeEvent(0);
 
-  slot_setProgressTotalSteps(NumTimeslots);
-  for(unsigned int i = 0; i < NumTimeslots; i++) {
-    double*     Values = new double[NumChannels];
+  slot_setProgressTotalSteps(NumSelected);
+  
+  UVPDataAtomHeader Header(ant1, ant2);
+  UVPDataAtom       Atom(NumChannels, Header);
+  
+  itsBusyPlotting = true;
+  
+  for(unsigned int i = 0; i < NumSelected && itsBusyPlotting; i++) {
     IPosition   Pos(2, 0);
+    Header.itsTime     = TimeColumn(i);
+    Header.itsAntenna1 = Antenna1Column(i);
+    Header.itsAntenna2 = Antenna2Column(i);
+    Header.sortAntennae();
+    Header.itsCorrelationType = UVPDataAtomHeader::RR;
     for(unsigned int j = 0; j < NumChannels; j++) {
       Pos[0] = 0;
       Pos[1] = j;
-      Complex     Visibility0 = DataColumn(i)(Pos);
-      Pos[0] = 1;
-      Complex     Visibility1 = DataColumn(i)(Pos);
-      Values[j] = fabs(Visibility0-Visibility1);
+      Atom.setData(j, DataColumn(i)(Pos));
     }
-    UVPSpectrum   Spectrum(NumChannels, i, Values);
-    itsCanvas->slot_addSpectrum(Spectrum);
-    delete[] Values;
-    slot_setProgress(i+1);
-    if(i % 3 == 0) {
-      itsCanvas->drawView();
+    Atom.setHeader(Header);
+    itsDataSet[Header] = Atom;
+
+
+    Header.itsCorrelationType = UVPDataAtomHeader::LL;
+    for(unsigned int j = 0; j < NumChannels; j++) {
+      Pos[0] = 1;
+      Pos[1] = j;
+      Atom.setData(j, DataColumn(i)(Pos));
+    }
+    Atom.setHeader(Header);
+    itsDataSet[Header] = Atom;
+
+    if(i % 100 == 0) {
+      slot_setProgress(i+1);
+      drawDataSet();
+    }
+    if(i % 20 == 0) {
       qApp->processEvents();
     }
   }
-  itsCanvas->drawView();
-  
+
+  drawDataSet();  
 
   std::cout << DataColumn(0).shape() << std::endl;
   std::cout << "=========>>> Table thing  <<<=========" << std::endl << std::flush;
@@ -421,7 +470,6 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
   TRACER1("NumRows         : " << NumRows);
   TRACER1("NumBaselines    : " << NumBaselines);
   TRACER1("NumPolarizations: " << NumPolarizations);
-  TRACER1("NumTimeslots    : " << NumTimeslots << std::flush);
 #endif
 
 }
@@ -436,6 +484,7 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
 
 void UVPMainWindow::slot_readPVD(const std::string& pvdName)
 {
+  itsDataSet.clear();
   UVPPVDInput pvd(pvdName);
 
 #if(DEBUG_MODE)
@@ -445,82 +494,23 @@ void UVPMainWindow::slot_readPVD(const std::string& pvdName)
 
   itsNumberOfChannels  = pvd.numberOfChannels();
 
-  itsCanvas->setChannels(itsNumberOfChannels);
-  itsCanvas->setGeometry(0, 0, itsNumberOfChannels, 1500);
+
   itsScrollView->removeChild(itsCanvas);
+  itsNumberOfTimeslots = 1500;
+  itsCanvas->setGeometry(0, 0, itsNumberOfChannels, 1500);
   itsScrollView->addChild(itsCanvas);
   resizeEvent(0);
-
-
-  std::vector<UVPDataAtom> DataSlice;
 
   unsigned int ant1 = itsGraphSettingsWidget->getSettings().getAntenna1();
   unsigned int ant2 = itsGraphSettingsWidget->getSettings().getAntenna2();
 
-  UVPDataAtomHeader FromHeader;
-  UVPDataAtomHeader ToHeader;
-  
-  FromHeader.itsAntenna1 = std::min(ant1, ant2);
-  FromHeader.itsAntenna2 = std::max(ant1, ant2);
-
-  ant1 = FromHeader.itsAntenna1;
-  ant2 = FromHeader.itsAntenna2;
-  
-  ToHeader.itsAntenna1 = FromHeader.itsAntenna1;
-  ToHeader.itsAntenna2 = FromHeader.itsAntenna2 + 1;
-  
   unsigned int pass(0);
 
-  while(pvd.getDataAtoms(&itsDataSet, ant1, ant2)) {
-    if(pass % 5 == 0) {
-#if(DEBUG_MODE)
-      TRACER1( "itsDataSet.size(): " << itsDataSet.size());
-      TRACER1( "itsDataSet.begin(): " << itsDataSet.begin()->first.itsAntenna1 << "-" <<
-               itsDataSet.begin()->first.itsAntenna2);
-      TRACER1( "itsDataSet.end(): " << (itsDataSet.end()-- )->first.itsAntenna1 << "-" <<
-               (itsDataSet.end()--)->first.itsAntenna2);
-      TRACER1( "ant1-ant2: " << ant1 << "-" << ant2);
-      TRACER1("Start of sequence: " << itsDataSet.upper_bound(FromHeader)->first.itsAntenna1 << "-" <<
-              itsDataSet.upper_bound(FromHeader)->first.itsAntenna2);
-      TRACER1("End of sequence: " << itsDataSet.upper_bound(ToHeader)->first.itsAntenna1 << "-" <<
-              itsDataSet.upper_bound(ToHeader)->first.itsAntenna2);
-      
-      TRACER1("------------------------------------------------------");
-      for(UVPDataSet::iterator p = itsDataSet.begin();
-          p != itsDataSet.end();
-          p++) {
-        TRACER1(p->first.itsAntenna1 << "-" << p->first.itsAntenna2);
-      }
-      TRACER1("------------------------------------------------------");
-#endif
-      
-      itsCanvas->setChannels(itsNumberOfChannels); // Number of channels. Clears buffer.
-      unsigned int spectraAdded = 0;
-      for(UVPDataSet::iterator p = itsDataSet.upper_bound(FromHeader);
-          p != itsDataSet.upper_bound(ToHeader) && p != itsDataSet.end();
-          p++) {
-        const   UVPDataAtom *dataAtom = &(p->second);
-#if(DEBUG_MODE)
-        TRACER1( "Ant1: " <<  dataAtom->getHeader().itsAntenna1);
-        TRACER1( "Ant2: " <<  dataAtom->getHeader().itsAntenna2);
-        cout.precision(10);
-        TRACER1( "Time: " <<  dataAtom->getHeader().itsTime); 
-        cout.precision(6);
-        TRACER1( "Corr: " <<  dataAtom->getHeader().itsCorrelationType);
-#endif
-        double *Values = new double[dataAtom->getNumberOfChannels()];
-        for(unsigned int j = 0; j < dataAtom->getNumberOfChannels(); j++) {
-          Values[j] = std::abs(*dataAtom->getData(j));
-        }
-        UVPSpectrum   Spectrum(dataAtom->getNumberOfChannels(), spectraAdded, Values);
-        if(dataAtom->getHeader().itsCorrelationType == UVPDataAtomHeader::RR) {
-          itsCanvas->slot_addSpectrum(Spectrum);
-          spectraAdded++;
-        }
-        delete[] Values;
-      }
-      itsNumberOfTimeslots = spectraAdded;
-      itsCanvas->drawView();
+  itsBusyPlotting = true;
+
+  while(pvd.getDataAtoms(&itsDataSet, ant1, ant2) && itsBusyPlotting) {
+    if(pass % 20 == 0) {
+      drawDataSet();
     }
     pass++;
     qApp->processEvents();
