@@ -11,15 +11,14 @@ Transporter.cc			\
 BaseDataHolder.cc		\
 ParamHolder.cc			\
 DataHolder.cc			\
-DH_PL.cc			\
 TransportHolder.cc		\
 TH_File.cc			\
 TH_Mem.cc			\
-TH_PL.cc			\
-TH_Database.cc			\
 TH_MPI.cc			\
 TH_Mem_Bl.cc			\
-CyclicBuffer.cc			
+CyclicBuffer.cc			\
+TH_PL.cc			\
+DH_PL.cc			
 
 EXTRA_DIST = assay
 
