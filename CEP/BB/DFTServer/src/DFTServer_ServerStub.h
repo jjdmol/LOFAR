@@ -10,7 +10,7 @@ class DFTServer_ServerStub
 {
 public:
   DFTServer_ServerStub() {
-    const ParameterSet myPS("params.ps");
+    const ParameterSet myPS("DFTServer.param");
     itsTHProtoRequest = new TH_Socket(myPS.getString("DFTConnection.ClientHost"),   // sendhost
 				      myPS.getString("DFTConnection.ServerHost"),   // recvhost
 				      myPS.getInt("DFTConnection.RequestPort")    // port
