@@ -45,11 +45,15 @@ const define_app_proxy := function (ref self,ref public,
   self.rqid := 1;
   self.waiting_init := F;
   self.last_cmd_arg := [=];
-
+  # define default init record (specifically, its control part)
+  self.initrec_prev := [ 
+    control = [ event_map_in  = [ default_prefix = hiid(self.appid,"In") ],
+                event_map_out = [ default_prefix = hiid(self.appid,"Out") ],
+                stop_when_end = F ] ]; 
   # setup fail/exit handlers
   whenever self.agentref->["fail done exit"] do 
   {
-    public.dprint(1,"exit event: ",$name,$value);
+    public.dprint(1,'exit event: ',$name,$value);
     if( $name == 'fail' )
       msg := paste('client process has died unexpectedly: ',$name,$value);
     else
@@ -58,7 +62,6 @@ const define_app_proxy := function (ref self,ref public,
     self.octo := F;
     self.agentref := F;
   }
-    
   # define standard debug methods
   define_debug_methods(self,public,verbose);
   
@@ -143,36 +146,58 @@ const define_app_proxy := function (ref self,ref public,
                   rec=payload);
     }
   }
-  # Reinitializes the app with a (possibly) partial init record
-  const public.reinit := function (initrec,wait=F)
+  # Initializes the app. All four of the records may be supplied,
+  # or any may be omitted to reuse the old record
+  # If wait=T, waits for the app to complete init
+  const public.init := function (initrec=F,input=F,output=F,control=F,wait=F)
   {
     wider public;
     wider self;
+    # if initrec is not specified, reuse previous one, if available
+    if( !is_record(initrec) )
+    {
+      if( !is_record(self.initrec_prev) )
+        fail 'no previous init record specified';
+      initrec := self.initrec_prev;
+      self.dprint(2,'init: reusing previous initrec');
+    }
+    # if some subrecords are missing, reuse previous ones 
+    print initrec;
+    subrecs := [ input=ref input,output=ref output,control=ref control ];
+    for( f in field_names(subrecs) )
+    {
+      if( is_record(subrecs[f]) )
+      {
+        initrec[f] := subrecs[f];
+        self.dprintf(2,'init: using %s subrec from parameters',f);
+      }
+      else
+      {
+        if( has_field(initrec,f) )
+          self.dprintf(2,'init: initrec contains %s rec',f);
+        else
+        {
+          if( !has_field(self.initrec_prev,f) )
+            fail paste('no previous',f,'subrecord specified');
+          initrec[f] := self.initrec_prev[f];
+          self.dprintf(2,'init: using previous %s rec',f);
+        }
+      }
+    }
+    self.initrec_prev := initrec;
+    self.dprint(3,'init: initrec is ',initrec);
     self.waiting_init := T;
     public.command("Init",initrec);
     if( wait )
     {
       while( self.waiting_init )
       {
-        self.dprint(2,'  (awaiting app_notify_init event)');
-        await self.relay->app_notify_init;
+        self.dprint(2,'init: awaiting app_notify_init event)');
+        await self.relay->*;
+        self.dprint(2,'init: got event ',$name);
       }
-      self.dprint(2,'  (event received, initialization complete)');
+      self.dprint(2,'init: wait complete');
     }
-  }
-  # Initializes the app.
-  # If wait=T, waits for the app to complete init
-  const public.init := function ( initrec=[=],input=[=],output=[=],wait=F )
-  {
-    wider public;
-    wider self;
-    initrec.input := input;
-    initrec.output := output;
-    initrec.control := [=];
-    initrec.control.event_map_in  := [ default_prefix = hiid(self.appid,"In") ];
-    initrec.control.event_map_out := [ default_prefix = hiid(self.appid,"Out") ];
-    initrec.control.stop_when_end := F; 
-    public.reinit(initrec,wait);
   }
   # Shortcuts for sending various commands to the app
   const public.stop := function (from_gui=F)

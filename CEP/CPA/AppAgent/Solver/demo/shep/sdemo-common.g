@@ -24,8 +24,8 @@ inputrec := [ ms_name = msname,
               tile_size = 1, selection = selection ];
   
 outputrec := 
-  [ write_flags=F,
-    residuals_column=rescol,predict_column=predcol ];
+  [ residuals_column = rescol,write_flags = F ];
+#    predict_column = predcol,
 
 solver_initrec := 
   [ domain_size = 3600,               # 1-hr domains
@@ -138,8 +138,10 @@ make_image := function (number=0,data=F,predict=F,residual=F,redo=F)
       return ref img;
     }
   }
+  sel := mssel ~ s/ANTENNA1/(ANTENNA1-1)/g;
+  sel =~ s/ANTENNA2/(ANTENNA2-1)/g;
   
-  img := mkimg(msname,imgname,msselect=mssel,type=type,
+  img := mkimg(msname,imgname,msselect=sel,type=type,
                cellx='0.25arcsec',
                celly='0.25arcsec',
                npix=1000)
