@@ -23,6 +23,7 @@
 #include <aips/MeasurementSets/MSSpWindowColumns.h>
 #include <aips/Mathematics/Complex.h>
 #include <aips/Measures/Stokes.h>
+#include <aips/Exceptions/Error.h>
 #include <trial/MeasurementEquations/VisibilityIterator.h>
 #include <trial/MeasurementEquations/VisBuffer.h>
 
@@ -57,12 +58,13 @@ MSIntegratorWP::MSIntegratorWP()
   //## end MSIntegratorWP::MSIntegratorWP%3CD133700076_const.body
 }
 
-MSIntegratorWP::MSIntegratorWP (string msname, int nchan, int ntime, int npatch)
+MSIntegratorWP::MSIntegratorWP (string msname, const HIID &act_msg, int nchan, int ntime, int npatch)
   //## begin MSIntegratorWP::MSIntegratorWP%3CD781CA01B8.hasinit preserve=no
   //## end MSIntegratorWP::MSIntegratorWP%3CD781CA01B8.hasinit
   //## begin MSIntegratorWP::MSIntegratorWP%3CD781CA01B8.initialization preserve=yes
     : WorkProcess(AidMSIntegratorWP),
-      auto_ms(msname),auto_nchan(nchan),auto_ntime(ntime),auto_npatch(npatch)
+      auto_ms(msname),auto_nchan(nchan),auto_ntime(ntime),auto_npatch(npatch),
+      auto_activate(act_msg)
   //## end MSIntegratorWP::MSIntegratorWP%3CD781CA01B8.initialization
 {
   //## begin MSIntegratorWP::MSIntegratorWP%3CD781CA01B8.body preserve=yes
@@ -96,8 +98,11 @@ void MSIntegratorWP::init ()
   // if running in demo mode (i.e. fixed ms), watch for a UVSorter to appear
   if( auto_ms.length() )
   {
-    dprintf(1)("predefined MS: %s, waiting for a UVSorter\n",auto_ms.c_str());
-    subscribe(MsgHello|AidUVSorterWP|AidWildcard);
+    FailWhen( !auto_activate.size(),"auto-activation message must be specified" );
+    dprintf(1)("predefined MS: %s, waiting for a %s\n",auto_ms.c_str(),
+        auto_activate.toString().c_str());
+    subscribe(auto_activate);
+//    subscribe(MsgHello|AidUVSorterWP|AidWildcard);
   }
   //## end MSIntegratorWP::init%3CD133A303B9.body
 }
@@ -112,7 +117,7 @@ bool MSIntegratorWP::start ()
 int MSIntegratorWP::receive (MessageRef &mref)
 {
   //## begin MSIntegratorWP::receive%3CD133AB011C.body preserve=yes
-  if( mref->id().matches(MsgHello|AidUVSorterWP|AidWildcard) )
+  if( auto_ms.length() && mref->id().matches(auto_activate) )
   {
     MessageRef mref( new Message(MSIntegrate),DMI::ANONWR );
     mref()["MS"] = auto_ms;
@@ -120,11 +125,13 @@ int MSIntegratorWP::receive (MessageRef &mref)
     mref()["Num.Time"] = auto_ntime;
     mref()["Num.Patch"] = auto_npatch;
     send(mref,address());
+    auto_ms = "";
   }
   else if( mref->id() == MSIntegrate )
   {
     MeasurementSet ms;
-    initMS(mref.deref(),ms);
+    if( !initMS(mref.deref(),ms) )
+      return Message::ACCEPT;
     
     // create iterator, visbuffer & chunk manager
     Block<Int> sortCol(1);
@@ -148,14 +155,22 @@ int MSIntegratorWP::receive (MessageRef &mref)
 // Additional Declarations
   //## begin MSIntegratorWP%3CD133700076.declarations preserve=yes
 // opens and initializes ms based on init message    
-void MSIntegratorWP::initMS (const Message &msg,MeasurementSet &ms)
+bool MSIntegratorWP::initMS (const Message &msg,MeasurementSet &ms)
 {
   msname = msg["MS"].as_string();
   window_chan = msg["Num.Channel"];
   window_time = msg["Num.Time"];
   num_patches = msg["Num.Patch"];
   // open the measurement set
-  ms = MeasurementSet(msname.c_str());
+  try 
+  {
+    ms = MeasurementSet(msname.c_str());
+  } 
+  catch( const AipsError &err )
+  {
+    lprintf(0,LogError,"error opening %s: %s",msname.c_str(),err.getMesg().c_str());
+    return False;
+  }
   // obtain number of antennas and interferometers
   const MSAntenna msant( ms.antenna() );
   num_antennas = msant.nrow();
@@ -195,6 +210,8 @@ void MSIntegratorWP::initMS (const Message &msg,MeasurementSet &ms)
       pant[ifr*2] = a1;
       pant[ifr*2+1] = a2;
     }
+
+  return True;
 }
 
 // inits segment (a segment is defined by its unique DDI)

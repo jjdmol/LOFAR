@@ -96,6 +96,9 @@ class UVSorterWP : public WorkProcess  //## Inherits: <unnamed>%3CD79D5303AF
   private: //## implementation
     // Additional Implementation Declarations
       //## begin UVSorterWP%3CD79D3D0227.implementation preserve=yes
+      Timestamp ts_header;
+      int vis_count;
+  
       HIID header_hiid,chunk_hiid,footer_hiid;
       int mypatch,mycorr;
       

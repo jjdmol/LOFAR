@@ -70,7 +70,8 @@ void UVSorterWP::init ()
   subscribe(header_hiid);
   subscribe(chunk_hiid);
   subscribe(footer_hiid);
-  
+
+  setState(IDLE);  
   uvset_id = segment_id = -1;
   //## end UVSorterWP::init%3CD79D680391.body
 }
@@ -79,7 +80,6 @@ int UVSorterWP::receive (MessageRef &mref)
 {
   //## begin UVSorterWP::receive%3CD79D7301B7.body preserve=yes
   const Message &msg = mref.deref();
-  
   if( msg.id().matches(header_hiid) )
   {
     // check that header is intended for us
@@ -87,10 +87,14 @@ int UVSorterWP::receive (MessageRef &mref)
     const int *pcorr = &msg[FCorr].size(ncorr);
     if( !find(pcorr,pcorr+ncorr,mycorr) || msg[FPatchIndex].as_int() != mypatch )
     {
-      lprintf(1,"ignoring %s: patch # or correlation type mismatch",msg.id().toString().c_str());
+      lprintf(1,LogWarning,"ignoring %s: patch # or correlation type mismatch",msg.id().toString().c_str());
       return Message::ACCEPT;
     }
-    header_ref = msg.payload();
+    // are we already receiving?
+    if( uvset_id >= 0 )
+      lprintf(1,LogWarning,"discarding unfinished segment %d:%d",uvset_id,segment_id);
+    setState(SORTING);
+    header_ref.copy(msg.payload()).privatize(DMI::WRITE);
     const DataRecord &hdr = 
         dynamic_cast<const DataRecord&>(header_ref.deref());
     uvset_id = hdr[FUVSetIndex];
@@ -127,6 +131,9 @@ int UVSorterWP::receive (MessageRef &mref)
     pnumpoints.resize(num_ifrs);
     for( int i=0; i<num_ifrs; i++ )
       prec_ref[i].detach();
+    
+    ts_header = Timestamp::now();
+    vis_count = 0;
   }
   else if( msg.id().matches(chunk_hiid) )
   {
@@ -145,7 +152,7 @@ int UVSorterWP::receive (MessageRef &mref)
     const DataRecord &rec = dynamic_cast<const DataRecord &>(msg.payload().deref());
     if( rec[FPatchIndex].as_int() != mypatch || rec[FCorr].as_int() != mycorr )
     {
-      lprintf(1,"ignoring %s: patch # or correlation type mismatch",msg.id().toString().c_str());
+      lprintf(1,LogWarning,"ignoring %s: patch # or correlation type mismatch",msg.id().toString().c_str());
       return Message::ACCEPT;
     }
     IPosition visshape = rec[FData].as_Array_dcomplex().shape();
@@ -192,18 +199,26 @@ int UVSorterWP::receive (MessageRef &mref)
         int *pnp = &acc[FNumIntPixels];
         memcpy(pvd+itime*num_channels,pvd0,sizeof(*pvd)*num_channels);
         memcpy(pnp+itime*num_channels,pnp0,sizeof(*pnp)*num_channels);
+        vis_count += num_channels;
       }
     } // end of loop over baselines in chunk
   } // end if received chunk
   else if( msg.id().matches(footer_hiid) )
   {
     if( uvset_id<0 )
+    {
       dprintf(1)("no header yet, ignoring footer\n");
+    }
     else if( msg[FUVSetIndex].as_int() != uvset_id || msg[FSegmentIndex].as_int() != segment_id )
+    {
       dprintf(1)("mismatch in uvset or segment id, ignoring footer\n");
+    }
     else
     {
       dprintf(1)("got footer for %d:%d\n",uvset_id,segment_id);
+      double diff = Timestamp::now() - ts_header;
+      lprintf(1,"%.2f seconds elapsed for patch %d:%d:%d\n",diff,uvset_id,segment_id,mypatch);
+      lprintf(1,"%d visibilities (%g/s)\n",vis_count,vis_count/diff);
       // publish header
       MessageRef mref;
       mref <<= new Message(
@@ -216,16 +231,14 @@ int UVSorterWP::receive (MessageRef &mref)
       {
         if( prec_ref[ifr].valid() )
         {
-          lprintf(1,"publishing data for patch %d, corr %d, baseline %d",
-              mypatch,mycorr,ifr);
           mref <<= new Message(
-            AidUVData|uvset_id|segment_id|AidPatch|mypatch|AidData|AidCorr|AidIFR|mycorr|ifr);
-          mref.dewr() <<= prec_ref[ifr];
+            AidUVData|uvset_id|segment_id|AidPatch|mypatch|AidData|AidCorr|AidIFR|mycorr|ifr,
+            prec_ref[ifr]);
           publish(mref);
           num_pub++;
         }
       }
-      lprintf(1,"published data for %d of %d baselines",num_pub,num_ifrs);
+      lprintf(1,"publishing re-sorted data for %d of %d baselines",num_pub,num_ifrs);
       // publish footer
       mref <<= new Message(
         AidUVData|uvset_id|segment_id|AidPatch|mypatch|AidFooter|AidCorr|AidIFR,
@@ -233,8 +246,11 @@ int UVSorterWP::receive (MessageRef &mref)
       publish(mref);
       // clear status
       uvset_id = segment_id = -1;
+      setState(IDLE);
     }
   }
+  else 
+    dprintf(1)("ignoring unrecognized message: %s\n",msg.sdebug(1).c_str());
   return Message::ACCEPT;
   //## end UVSorterWP::receive%3CD79D7301B7.body
 }
