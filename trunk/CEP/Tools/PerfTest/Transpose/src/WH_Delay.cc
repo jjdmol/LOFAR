@@ -19,12 +19,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
-//
-//  $Log$
-//
-//
-//
-//////////////////////////////////////////////////////////////////////
+
 
 #include <stdio.h>             // for sprintf
 #include <unistd.h>
@@ -140,7 +135,7 @@ void WH_Delay::process()
 void WH_Delay::dump() const
 {
   cout << "WH_Delay " << getName() << " ::dump()" << endl;
-  for (int outch=0; outch<min(10,getOutputs()); outch++) {
+  for (int outch=0; outch<std::min(10,getOutputs()); outch++) {
     cout << "Output " << outch << "   "
 	 << (const_cast<WH_Delay*>(this))->getOutHolder(outch)->getZName() << " "
 	 << (const_cast<WH_Delay*>(this))->getOutHolder(outch)->getZ() << "   "
@@ -149,13 +144,13 @@ void WH_Delay::dump() const
 	 << (const_cast<WH_Delay*>(this))->getOutHolder(outch)->getYName() << "Offset = "  
 	 << (const_cast<WH_Delay*>(this))->getOutHolder(outch)->getYOffset() ;
     for (int x=0; 
-	 x < min(10,(const_cast<WH_Delay*>(this))->getOutHolder(outch)->getXSize());
+	 x < std::min(10,(const_cast<WH_Delay*>(this))->getOutHolder(outch)->getXSize());
 		 x++) {
 	   cout << endl 
 		<< (const_cast<WH_Delay*>(this))->getOutHolder(outch)->getXName()
 		<< x << "   ";
       for (int y=0; 
-	   y < min(10,(const_cast<WH_Delay*>(this))->getOutHolder(outch)->getYSize());
+	   y < std::min(10,(const_cast<WH_Delay*>(this))->getOutHolder(outch)->getYSize());
 	   y++) {
 	cout << *(const_cast<WH_Delay*>(this))->getOutHolder(outch)->getBuffer(x,y) << " ";
       }

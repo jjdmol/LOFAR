@@ -19,33 +19,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
-//
-//  $Log$
-//  Revision 1.2  2002/06/07 11:42:43  schaaf
-//  %[BugId: 11]%
-//  Removed Asserts in C'tor
-//
-//  Revision 1.1  2002/05/23 15:40:44  schaaf
-//
-//  %[BugId: 11]%
-//  Added WH_Correlate
-//
-//  Revision 1.5  2002/05/16 15:00:34  schaaf
-//
-//  overall update, added profiler states, removed command line processing, setZ/XOffset and Yoffset
-//
-//  Revision 1.3  2002/05/07 14:59:16  schaaf
-//  optimised performance of process()
-//
-//  Revision 1.2  2002/05/07 11:15:12  schaaf
-//  minor
-//
-//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
-//  initial version
-//
-//
-//
-//////////////////////////////////////////////////////////////////////
+
 
 #include <stdio.h>             // for sprintf
 #include <unistd.h>
@@ -150,7 +124,7 @@ void WH_Correlate::process()
 void WH_Correlate::dump() const
 {
   cout << "WH_Correlate " << getName() << " ::dump()" << endl;
-  for (int outch=0; outch<min(10,getInputs()); outch++) {
+  for (int outch=0; outch<std::min(10,getInputs()); outch++) {
     cout << "Input " << outch << "   "
 	 << (const_cast<WH_Correlate*>(this))->getInHolder(outch)->getZName() << " "
 	 << (const_cast<WH_Correlate*>(this))->getInHolder(outch)->getZ() << "   "
@@ -159,13 +133,13 @@ void WH_Correlate::dump() const
 	 << (const_cast<WH_Correlate*>(this))->getInHolder(outch)->getYName() << "Offset = "  
 	 << (const_cast<WH_Correlate*>(this))->getInHolder(outch)->getYOffset() ;
     for (int x=0; 
-	 x < min(10,(const_cast<WH_Correlate*>(this))->getInHolder(outch)->getXSize());
+	 x < std::min(10,(const_cast<WH_Correlate*>(this))->getInHolder(outch)->getXSize());
 		 x++) {
 	   cout << endl 
 		<< (const_cast<WH_Correlate*>(this))->getInHolder(outch)->getXName()
 		<< x << "   ";
       for (int y=0; 
-	   y < min(10,(const_cast<WH_Correlate*>(this))->getInHolder(outch)->getYSize());
+	   y < std::min(10,(const_cast<WH_Correlate*>(this))->getInHolder(outch)->getYSize());
 	   y++) {
 	cout << *(const_cast<WH_Correlate*>(this))->getInHolder(outch)->getBuffer(x,y) << " ";
       }
