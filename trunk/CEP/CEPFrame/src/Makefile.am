@@ -107,7 +107,8 @@ ParamManager.cc					\
 PH_Int.cc					\
 Selector.cc					\
 Sel_RoundRobin.cc				\
-Sel_Linked.cc					
+Sel_Linked.cc					\
+Socket.cc
 
 
 EXTRA_DIST = assay
