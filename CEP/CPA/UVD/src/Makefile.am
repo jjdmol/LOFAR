@@ -2,9 +2,9 @@ dmi_dir = $(lofar_sharedir)/../DMI
 
 CXXFLAGS += -Wno-unknown-pragmas -pg
 
-lib_LTLIBRARIES = libfillers.la
+lib_LTLIBRARIES = libuvd.la
 
-libfillers_la_SOURCES = \
+libuvd_la_SOURCES = \
   AID-UVD-Registry.cc \
   MSIntegratorWP.cc \
   UVSorterWP.cc

@@ -95,7 +95,10 @@ void MSIntegratorWP::init ()
   subscribe(MSIntegrate);
   // if running in demo mode (i.e. fixed ms), watch for a UVSorter to appear
   if( auto_ms.length() )
+  {
+    dprintf(1)("predefined MS: %s, waiting for a UVSorter\n",auto_ms.c_str());
     subscribe(MsgHello|AidUVSorterWP|AidWildcard);
+  }
   //## end MSIntegratorWP::init%3CD133A303B9.body
 }
 
