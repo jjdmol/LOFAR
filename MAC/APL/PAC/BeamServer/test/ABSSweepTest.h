@@ -38,9 +38,10 @@ namespace ABS
 	 * The constructor of the SweepTest task.
 	 * @param name The name of the task. The name is used for looking
 	 * up connection establishment information using the GTMNameService and
+	 * @param Subband for which to plot the spectrum.
 	 * GTMTopologyService classes.
 	 */
-	SweepTest(string name);
+	SweepTest(string name, int subband);
 	virtual ~SweepTest();
 
 	// state methods
@@ -66,6 +67,7 @@ namespace ABS
 
     private:
 	// member variables
+	int m_subband;
 
     private:
 	// ports

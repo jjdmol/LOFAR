@@ -148,7 +148,7 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
       //
       // only count the first of m_nintegrations updates
       //
-      if (m_count + 1 == m_nintegrgations)
+      if (m_count + 1 == m_nintegrations)
       {
 	// first m_nbeamlets/2 beamlets
 	for (int i = 0; i < m_nbeamlets / 2; i++)
@@ -184,7 +184,8 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
   if ( m_count && ((m_count % m_nintegrations) == 0) )
   {
       // divide by number of samples = m_count * EPA_SCALING_FACTOR
-      m_beamlet_power /= m_nintegrations * EPA_SCALING_FACTOR;
+      
+      //m_beamlet_power /= m_nintegrations * EPA_SCALING_FACTOR;
 
       LOG_DEBUG(formatString("Updating statistics properties: totalpower = %f",
 			     sum(m_beamlet_power)));
@@ -228,6 +229,7 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
 			  "Power per beamlet y-polarization");
       }
 
+#if 0
       power_t(snapshot_time) = m_beamlet_power(PLOT_BIN_NR, 0);
       snapshot_time = (snapshot_time + 1) % N_TIME;
 
@@ -240,6 +242,7 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
 			  N_TIME, 
 			  "Power per beamlet y-polarization");
       }
+#endif
 
 #else
       char propnamex[64];
