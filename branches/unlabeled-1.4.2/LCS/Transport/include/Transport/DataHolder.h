@@ -138,6 +138,9 @@ public:
   // Get the version of this DataHolder.
   int getVersion();
 
+  // Check if this DataHolder had been initialized.
+  bool isInitialized();
+
   // Get access to the data blob.
   // <group>
   BlobString& getDataBlock();                    // Used by PO_DH_PL
@@ -241,6 +244,7 @@ private:
   int             itsReadConvert;   //# data conversion needed after a read?
                                     //# 0=no, 1=yes, else=not known yet
   DataBlobExtra*  itsExtraPtr;
+  bool            itsInitialized;
 };
 
 
@@ -315,6 +319,11 @@ inline uint DataHolder::getHeaderSize() const
 inline uint DataHolder::getDataLength (const void* buffer)
 {
   return static_cast<const BlobHeader*>(buffer)->getLength();
+}
+
+inline bool DataHolder::isInitialized()
+{
+  return itsInitialized;
 }
 
 
