@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.25  2002/05/14 11:48:36  gvd
+//  Use lofar_string and lofar_iostream
+//
 //  Revision 1.24  2002/05/08 14:39:50  schaaf
 //  modified command line argument handling and MPI node distribution
 //
@@ -166,14 +169,6 @@ void P2Perf::define(const ParamBlock& params)
   int    argc = 0;
   char** argv = NULL;
   
-#ifdef HAVE_CORBA
-  TH_Corba corbaProto;
-#endif
-#ifdef HAVE_MPI
-  TH_MPI mpiProto;
-#endif
-
-
   int rank = TRANSPORTER::getCurrentRank();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
 
@@ -346,11 +341,11 @@ void P2Perf::define(const ParamBlock& params)
       // Set up the connections
       // Correlator Style
 #ifdef HAVE_CORBA
-      Dsteps[step]->connect(Ssteps[ch],ch,step,1,corbaProto);
+      Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_Corba::proto);
 #else
 #ifdef HAVE_MPI
       TRACER2("Connect using MPI");
-      Dsteps[step]->connect(Ssteps[ch],ch,step,1,mpiProto);
+      Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_MPI::proto);
 #else
       Dsteps[step]->connect(Ssteps[ch],ch,step,1);
 #endif
