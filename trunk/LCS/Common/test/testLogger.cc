@@ -53,7 +53,9 @@ private:
 
 };
 // create a logger 'my_test_class' and attach it to myTestclass.
-INIT_TRACER_CONTEXT(myTestClass, "my_test_class");
+#ifdef ENABLE_TRACER
+INIT_TRACER_CONTEXT(myTestClass, 'my_test_class');
+#endif
 
 class foo {
 public:
@@ -65,7 +67,9 @@ public:
 private:
 	ALLOC_TRACER_CONTEXT;
 };
+#ifdef ENABLE_TRACER
 INIT_TRACER_CONTEXT(foo, "foo");
+#endif
 
 //#
 //# In functions you can also use the lifetime tracer although it is ment for
