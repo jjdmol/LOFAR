@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+ "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" 
+ >
+
+<!-- $Id$ -->
+<!-- look at bottom for revision Log. -->
+<article lang="nl">
+ <artheader>
+  <title>a use-case to demonstrate the use of the Blackboard
+  architecture in the selfcal imaging application in LOFAR</title>
+  <author>
+   <firstname>Daan</firstname>
+   <surname>Hoogland</surname>
+  </author>
+  <author>
+   <firstname>Kjeld</firstname>
+   <surname>Schaaf</surname>
+   <othername role='conjectives'>van der</othername>
+  </author>
+  <releaseinfo>
+   <para>
+    $Id$
+   </para>
+  </releaseinfo>
+
+  <!-- makes a summary from the content -->
+  <abstract>
+   <para>
+
+    For the LOFAR project a self-calibration program shall be
+    written. The idea is that this program will have the architectural
+    structure of a "BlackBoard". The applicability of this design
+    pattern will be demonstrated in the fashion described herein.
+
+   </para>
+  </abstract>
+ </artheader>
+
+ <mediaobject>
+  <imageobject>
+   <imagedata fileref="demo.usecase.png" format="PNG" />
+   </imageobject>
+  <caption>a simple use-case for the blackboard based self-calibration</caption>
+ </mediaobject>
+
+ <para>
+
+  This use-case is intended to demonstrate the use of the blackboard
+  based architecture of the selfcal controller.
+
+ </para>
+
+ <para>
+
+  The demo starts with the selection of a strategy, which currently is
+  hand-/hard-coded in a python script. The strategy defines how the
+  total processing job is split in subtasks that are controlled
+  through their own BlackBoards. Also the strategy defines the subset
+  of parameters that each Thread will solve for.
+
+ </para>
+
+ <para>
+
+  The strategy chosen for this demo is as follows; The data set
+  responsibility is split in two over time. After that the second part
+  is split in three over frequency. As there is no real dataset
+  involved we only let one BlackBoard control 'real' actions. the
+  first child at top level is the lucky one. It starts three
+  Thread/Controller instantiations with a quite similar set of
+  parameters to solve. Each Thread gets the same parameters to work
+  on. They all get responsibility over a distinct parameter. Also two
+  of the Threads get a shared responsibility over a parameter. An
+  extended demo could involve a Watcher that merges parameters at
+  certain points in time. That is, the Watcher would feed back the
+  (half-)solved parameters of the one Thread to the other.
+
+ </para>
+
+ <para>
+
+  Now that the strategy is selected, the calibration can be performed.
+  As defined in our strategy, the calibration is controlled by a
+  hierarchy of six BlackBoard instantiations. The dataset is split
+  over these BlackBoards, and now the responsibility over parameters
+  is split as well.
+
+ </para>
+
+ <para>
+
+  termination strategies can be "perform a fixed number of steps", or
+  "terminate when &delta; smaller then &number;". For now the results
+  are classified as good enough by the user terminating the program.
+
+ </para>
+
+ <para>
+
+  After solving we can decide that our results are good enough. Or
+  otherwise we continue solving with a modified selection of
+  parameters per thread. This we will have to hard-code in the top
+  level strategy. In this way we can demonstrate that we can solve for
+  dependent parameters.
+
+ </para>
+
+</article>
