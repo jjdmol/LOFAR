@@ -40,7 +40,8 @@ PACKAGE = \
          StationSim \
          CEP/Tools/PerfTest/P2Perf \
          CEP/CPA/OCTOPUSSY \
-         CEP/CPA/UVD
+         CEP/CPA/UVD \
+         CEP/CPA/uvplot
 PACKAGES = $(PACKAGE)
 #
 
