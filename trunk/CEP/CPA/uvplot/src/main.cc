@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 {
   QApplication app(argc, argv);
   
-  Tmain_window *mainwin = new Tmain_window;
+  UVPMainWindow *mainwin = new UVPMainWindow;
   mainwin->resize(800, 800);
 
   app.setMainWidget(mainwin);

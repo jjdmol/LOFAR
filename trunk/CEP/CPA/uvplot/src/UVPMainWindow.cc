@@ -7,9 +7,9 @@
 
 #include <sstream>              // std::ostringstream
 
-//====================>>>  Tmain_window::Tmain_window  <<<====================
+//====================>>>  UVPMainWindow::UVPMainWindow  <<<====================
 
-Tmain_window::Tmain_window():QMainWindow()
+UVPMainWindow::UVPMainWindow():QMainWindow()
 {
   m_file_menu = new QPopupMenu;
   m_file_menu->insertItem("&Open", mc_open);
@@ -57,16 +57,16 @@ Tmain_window::Tmain_window():QMainWindow()
 }
 
 
-Tmain_window::~Tmain_window()
+UVPMainWindow::~UVPMainWindow()
 {
   itsCanvas->setData(0);
   delete itsCube;
 }
 
 
-//==================>>>  Tmain_window::resizeEvent  <<<==================
+//==================>>>  UVPMainWindow::resizeEvent  <<<==================
 
-void Tmain_window::resizeEvent(QResizeEvent */*event*/)
+void UVPMainWindow::resizeEvent(QResizeEvent */*event*/)
 {
   itsCanvas->setGeometry(0, m_menu_bar->height(), width(), height()-m_menu_bar->height()-itsStatusBar->height());
 }
@@ -74,9 +74,9 @@ void Tmain_window::resizeEvent(QResizeEvent */*event*/)
 
 
 
-//==================>>>  Tmain_window::slot_about_uvplot  <<<==================
+//==================>>>  UVPMainWindow::slot_about_uvplot  <<<==================
 
-void Tmain_window::slot_about_uvplot()
+void UVPMainWindow::slot_about_uvplot()
 {
   QMessageBox::information(this, "About uvplot",
                            "UV data visualiser for the LOFAR project\n"
@@ -85,9 +85,9 @@ void Tmain_window::slot_about_uvplot()
 
 
 
-//====================>>>  Tmain_window::slot_mouse_world_pos  <<<====================
+//====================>>>  UVPMainWindow::slot_mouse_world_pos  <<<====================
 
-void Tmain_window::slot_mouse_world_pos(double x,
+void UVPMainWindow::slot_mouse_world_pos(double x,
                                         double y)
 {
   std::ostringstream x_out;
@@ -98,4 +98,26 @@ void Tmain_window::slot_mouse_world_pos(double x,
 
   itsXPosLabel->setText(x_out.str().c_str());
   itsYPosLabel->setText(y_out.str().c_str());
+}
+
+
+
+
+//====================>>>UVPMainWindow::slot_setProgressTotalSteps <<<====================
+
+void UVPMainWindow::slot_setProgressTotalSteps(int steps)
+{
+  itsProgressBar->setTotalSteps(steps);
+}
+
+
+
+
+
+
+//====================>>>UVPMainWindow::slot_setProgress <<<====================
+
+void UVPMainWindow::slot_setProgress(int steps)
+{
+  itsProgressBar->setProgress(steps);
 }
