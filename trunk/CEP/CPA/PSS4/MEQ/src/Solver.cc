@@ -62,24 +62,6 @@ TypeId Solver::objectType() const
   return TpMeqSolver;
 }
 
-void Solver::init (DataRecord::Ref::Xfer &initrec, Forest* frst)
-{
-  Node::init(initrec,frst);
-  if(! wstate()[FDefault].exists() ) {
-    wstate()[FDefault] <<= new DataRecord;
-  }
-  DataRecord& defRec = wstate()[FDefault].as_wr<DataRecord>();
-  defRec[FNumIter]      = itsDefNumIter;
-  defRec[FClearMatrix]  = itsDefClearMatrix;
-  defRec[FInvertMatrix] = itsDefInvertMatrix;
-  defRec[FSavePolcs]    = itsDefSavePolcs;
-  defRec[FEpsilon]      = itsDefEpsilon;
-  defRec[FUseSVD]       = itsDefUseSVD;
-  // use default parm group if not set
-  if( itsParmGroup.empty() )
-    wstate()[FParmGroup] = itsParmGroup = AidParm;
-}
-
 //##ModelId=400E53550265
 void Solver::checkChildren()
 {
@@ -111,8 +93,8 @@ void Solver::processCommands (const DataRecord &rec,const Request &request)
   itsCurEpsilon   = rec[FEpsilon].as<double>(itsDefEpsilon);
   itsCurUseSVD    = rec[FUseSVD].as<bool>(itsDefUseSVD);
   itsCurSavePolcs = rec[FSavePolcs].as<bool>(itsDefSavePolcs);
-  bool clearGiven  = getStateField (itsCurClearMatrix, rec, FClearMatrix);
-  bool invertGiven = getStateField (itsCurInvertMatrix, rec, FInvertMatrix);
+  bool clearGiven  = rec[FClearMatrix].get(itsCurClearMatrix);
+  bool invertGiven = rec[FInvertMatrix].get(itsCurInvertMatrix);
   // Take care that these current values are used in getResult (if called).
   itsResetCur = false;
   cdebug(1)<<"Solver rider: "
@@ -427,17 +409,22 @@ void Solver::fillSolution (DataRecord& rec, const vector<int>& spids,
 void Solver::setStateImpl (DataRecord& newst,bool initializing)
 {
   Node::setStateImpl(newst,initializing);
-  getStateField(itsParmGroup,newst,FParmGroup);
-  if( newst[FDefault].exists() )
+  newst[FParmGroup].get(itsParmGroup,initializing);
+  DataRecord *pdef = newst[FDefault].as_wpo<DataRecord>();
+  // if no default record at init time, create a new one
+  if( !pdef && initializing )
+    newst[FDefault] <<= pdef = new DataRecord; 
+  if( pdef )
   {
-    const DataRecord &def = newst[FDefault];
-    getStateField(itsDefNumIter,def,FNumIter);
-    if (itsDefNumIter < 1) itsDefNumIter = 1;
-    getStateField(itsDefClearMatrix,def,FClearMatrix);
-    getStateField(itsDefInvertMatrix,def,FInvertMatrix);
-    getStateField(itsDefSavePolcs,def,FSavePolcs);
-    getStateField(itsDefEpsilon,def,FEpsilon);
-    getStateField(itsDefUseSVD,def,FUseSVD);
+    DataRecord &def = *pdef;
+    if( def[FNumIter].get(itsDefNumIter,initializing) &&
+        itsDefNumIter < 1 )
+      def[FNumIter] = itsDefNumIter = 1;
+    def[FClearMatrix].get(itsDefClearMatrix,initializing);
+    def[FInvertMatrix].get(itsDefInvertMatrix,initializing);
+    def[FSavePolcs].get(itsDefSavePolcs,initializing);
+    def[FEpsilon].get(itsDefEpsilon,initializing);
+    def[FUseSVD].get(itsDefUseSVD,initializing);
   }
 }
 

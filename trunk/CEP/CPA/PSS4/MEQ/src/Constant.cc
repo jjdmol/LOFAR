@@ -33,26 +33,19 @@ namespace Meq {
 
 //##ModelId=400E5305008F
 Constant::Constant (double value)
-: Function (),
+: Node (0), // must have 0 children
   itsValue (new Vells(value, false),DMI::ANONWR)
 {}
 
 //##ModelId=400E53050094
 Constant::Constant (const dcomplex& value)
-: Function(),
+: Node (0),
   itsValue(new Vells(value, false),DMI::ANONWR)
 {}
 
 //##ModelId=400E53050098
 Constant::~Constant()
 {}
-
-//##ModelId=400E530500A6
-void Constant::init (DataRecord::Ref::Xfer& initrec, Forest* frst)
-{
-  // do parent init (this will call our setStateImpl())
-  Node::init (initrec, frst);
-}
 
 //##ModelId=400E5305009C
 int Constant::getResult (Result::Ref& resref,
@@ -70,15 +63,21 @@ int Constant::getResult (Result::Ref& resref,
 //##ModelId=400E530500B5
 void Constant::setStateImpl (DataRecord& rec, bool initializing)
 {
-  Function::setStateImpl (rec,initializing);
-  // Get value.
-  if (rec[FValue].exists()) {
-    if (rec[FValue].type() == Tpdouble) {
-      itsValue <<= new Vells(rec[FValue].as<double>());
-    } else {
-      itsValue <<= new Vells(rec[FValue].as<dcomplex>());
-    }
-    Assert (itsValue->isScalar());
+  Node::setStateImpl(rec,initializing);
+  // Get value
+  DataRecord::Hook hook(rec,FValue);
+  if( hook.exists() ) 
+  {
+    TypeId type = hook.type();
+    // complex values forced to dcomplex; all other to double
+    if( type == Tpdcomplex || type == Tpfcomplex ) 
+      itsValue <<= new Vells(hook.as<dcomplex>());
+    else 
+      itsValue <<= new Vells(hook.as<double>());
+  }
+  else if( initializing ) // init state record with default value
+  {
+    rec[FValue] <<= itsValue->getDataArray();
   }
 }
 

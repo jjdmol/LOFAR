@@ -525,3 +525,40 @@ const rs_test := function (flags=[],flag_mask=-1,flag_bit=0,flag_density=.5)
   print res3.result.vellsets[1];
   print res4.result.vellsets[1];
 }
+
+# test ReqMux node
+const mux_test := function ()
+{
+  if( is_fail(mqsinit(verbose=verbose,gui=gui)) )
+  {
+    print mqs;
+    fail;
+  }
+  # mqs.setdebug('MeqParm',5);
+  global domain,cells,req,cells,res;
+  
+  domain := meq.domain(0,1,0,1);
+  
+  # create polcs
+  polc := meq.polc(array([0,.5,.5,0],2,2),domain=domain);
+  mqs.meq('Create.Node',meq.parm('a',polc,groups='Parm'),T);
+  mqs.meq('Create.Node',meq.parm('b',polc,groups='Parm'),T);
+  mqs.meq('Create.Node',meq.parm('c',polc,groups='Parm'),T);
+  mqs.meq('Create.Node',meq.parm('d',polc,groups='Parm'),T);
+  
+  defrec := meq.node('MeqReqMux','mux',children="a b c d");
+  defrec.oper := meq.reclist(
+      [=],
+      [integrate_time=2,integrate_freq=3,pass=T],
+      [upsample_time=2],
+      [upsample_time=2,integrate_freq=2] );
+  mqs.meq('Create.Node',defrec,T);
+  
+  rqid := meq.requestid(0,0,0);
+  cells := meq.cells(domain,6,6);
+  req := meq.request(cells,request_id=rqid,calc_deriv=0);
+  res := mqs.execute('mux',req);
+  
+  print res;
+}
+

@@ -10,30 +10,23 @@ namespace Meq {
 using namespace blitz;
 
 InitDebugContext(Spigot,"MeqSpigot");
+
+Spigot::Spigot ()
+    : VisHandlerNode(0),        // no children allowed
+      icolumn(VisTile::DATA),
+      colname("DATA"),
+      flag_mask(-1),
+      row_flag_mask(-1)
+{}
   
-//##ModelId=3F98DAE6022D
-void Spigot::init (DataRecord::Ref::Xfer &initrec,Forest * frst)
-{
-  // default uses DATA column
-  flag_mask = row_flag_mask = -1;
-  icolumn = VisTile::DATA;
-  VisHandlerNode::init(initrec,frst);
-}
-
-//##ModelId=400E5B6D00BF
-void Spigot::checkInitState (DataRecord &rec)
-{
-  VisHandlerNode::checkInitState(rec);
-  defaultInitField(rec,FInputColumn,"DATA");
-}
-
 //##ModelId=3F9FF6AA03D2
 void Spigot::setStateImpl (DataRecord &rec,bool initializing)
 {
   VisHandlerNode::setStateImpl(rec,initializing);
-  if( rec[FInputColumn].exists() )
+  // ensure column name is processed first time through
+  if( rec[FInputColumn].get(colname,initializing) )
   {
-    colname = struppercase( rec[FInputColumn].as<string>() );
+    colname = struppercase(colname);
     const VisTile::NameToIndexMap &colmap = VisTile::getNameToIndexMap();
     VisTile::NameToIndexMap::const_iterator iter = colmap.find(colname);
     if( iter == colmap.end() ) {
@@ -41,8 +34,8 @@ void Spigot::setStateImpl (DataRecord &rec,bool initializing)
     }
     icolumn = iter->second;
   }
-  getStateField(flag_mask,rec,FFlagMask);
-  getStateField(row_flag_mask,rec,FRowFlagMask);
+  rec[FFlagMask].get(flag_mask,initializing);
+  rec[FRowFlagMask].get(row_flag_mask,initializing);
 }
 
 //##ModelId=3F98DAE6023B

@@ -37,8 +37,7 @@ namespace Meq {
 class Sink : public VisHandlerNode
 {
   public:
-    //##ModelId=3F98DAE60213
-    virtual void init (DataRecord::Ref::Xfer &initrec, Forest* frst);
+    Sink ();  
 
     //##ModelId=3F98DAE6021E
     virtual int deliver (const Request &req,VisTile::Ref::Copy &tileref,
@@ -54,9 +53,6 @@ class Sink : public VisHandlerNode
                            const std::vector<Result::Ref> &childres,
                            const Request &req,bool newreq);
   
-    //##ModelId=400E5B6C03D8
-    virtual void checkInitState (DataRecord &rec);
-    
     //##ModelId=3F9918390169
     virtual void setStateImpl (DataRecord &rec,bool initializing);
 
@@ -73,6 +69,7 @@ class Sink : public VisHandlerNode
                          const blitz::Array<U,2> &arr,int icorr);
       
     //##ModelId=3F98DAE60211
+    string output_colname;
     int output_col;
     //##ModelId=3F9918390123
     vector<int> output_icorrs;

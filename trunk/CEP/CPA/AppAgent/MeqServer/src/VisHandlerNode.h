@@ -32,7 +32,7 @@ class VisHandlerNode : public Node
 {
   public:
     //##ModelId=3F98DAE60319
-    VisHandlerNode ();
+    VisHandlerNode (int nchildren=-1,const HIID *labels = 0,int nmandatory=0);
       
     //##ModelId=3F98DAE60327
     int dataId () const;

@@ -84,8 +84,6 @@ public:
   // called to process request rider commands, if any.
   virtual void processCommands (const DataRecord &rec,const Request &req);
 
-  virtual void init (DataRecord::Ref::Xfer& initrec, Forest* frst);
-  
   LocalDebugContext;
 
 protected:

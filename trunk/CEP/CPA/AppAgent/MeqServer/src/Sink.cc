@@ -7,19 +7,14 @@
 
 namespace Meq {
 
-//##ModelId=3F98DAE60213
-void Sink::init (DataRecord::Ref::Xfer &initrec,Forest* frst)
+Sink::Sink()
+  : VisHandlerNode(1),        // 1 child node expected
+    output_col(-1),
+    flag_mask(-1),
+    row_flag_mask(-1)
 {
-  flag_mask = row_flag_mask = -1;
-  // assign output column -- default is -1
-  output_col = -1;
-  // output correlations -- if clear, then plane i = corr i
-  output_icorrs.clear();
-  // let the base class initialize itself
-  VisHandlerNode::init(initrec,frst);
-  FailWhen(numChildren()!=1,"sink must have exactly one child node");
 }
-
+   
 //##ModelId=400E5B6D0048
 int Sink::mapOutputCorr (int iplane)
 {
@@ -30,28 +25,20 @@ int Sink::mapOutputCorr (int iplane)
   return output_icorrs[iplane]; 
 }
 
-//##ModelId=400E5B6C03D8
-void Sink::checkInitState (DataRecord &rec)
-{
-  VisHandlerNode::checkInitState(rec);
-  defaultInitField(rec,FOutputColumn,"");
-  // FCorr is left empty if missing
-}
-
 //##ModelId=3F9918390169
 void Sink::setStateImpl (DataRecord &rec,bool initializing)
 {
   VisHandlerNode::setStateImpl(rec,initializing);
   // check if output column is specified
-  if( rec[FOutputColumn].exists() )
+  if( rec[FOutputColumn].get(output_colname,initializing) )
   {
-    string colname = struppercase(rec[FOutputColumn].as<string>());
-    if( colname.length() )
+    if( output_colname.length() )
     {
+      output_colname = struppercase(output_colname);
       const VisTile::NameToIndexMap &colmap = VisTile::getNameToIndexMap();
-      VisTile::NameToIndexMap::const_iterator iter = colmap.find(colname);
+      VisTile::NameToIndexMap::const_iterator iter = colmap.find(output_colname);
       if( iter == colmap.end() ) {
-        NodeThrow(FailWithoutCleanup,"unknown output column "+colname);
+        NodeThrow(FailWithoutCleanup,"unknown output column "+output_colname);
       }
       output_col = iter->second;
     }
@@ -59,11 +46,10 @@ void Sink::setStateImpl (DataRecord &rec,bool initializing)
       output_col = -1;
   }
   // check if output correlation map is specified
-  if( rec[FCorr].exists() )
-    output_icorrs = rec[FCorr].as_vector<int>();
+  rec[FCorr].get_vector(output_icorrs,initializing);
   // get flag masks
-  getStateField(flag_mask,rec,FFlagMask);
-  getStateField(row_flag_mask,rec,FRowFlagMask);
+  rec[FFlagMask].get(flag_mask,initializing);
+  rec[FRowFlagMask].get(row_flag_mask,initializing);
 }
 
 //##ModelId=3F9509770277

@@ -24,7 +24,7 @@
 #define MEQ_PARM_H
 
 //# Includes
-#include <MEQ/Function.h>
+#include <MEQ/Node.h>
 #include <MEQ/ParmTable.h>
 #include <MEQ/Polc.h>
 #include <MEQ/Vells.h>
@@ -72,7 +72,7 @@ namespace Meq {
 // varying axis.
 
 //##ModelId=3F86886E01BD
-class Parm: public Function
+class Parm: public Node
 {
 public:
   // The default constructor.
