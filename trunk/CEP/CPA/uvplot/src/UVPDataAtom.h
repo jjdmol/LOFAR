@@ -27,6 +27,8 @@
 #include <vector>
 #include <complex>
 
+#include <Common/Lorrays.h>
+
 #include <uvplot/UVPDataAtomHeader.h>
 
 //! Manages a vector of visibilities recorded for one correlation, on
@@ -104,11 +106,18 @@ class UVPDataAtom
    */
   void            setData(const ComplexType* data);
 
+
+  //! Assigns a complete array of visibilities to itsData using Lorrays.
+  void            setData(const LoVec_fcomplex &data);
+
   //! Sets the flags.
   /*! \param flags must have length equal to the number of channels in
   the data.
   */
   void            setFlags(const std::vector<bool>& flags);
+
+  //! Sets the flags using Lorrays.
+  void            setFlags(const LoVec_int& flags);
 
   //! Sets one flag to "flag"
   void            setFlag(unsigned int channel,
