@@ -222,10 +222,8 @@ namespace LOFAR {
   }
 
   template<typename T>
-  void* BlobField<T>::getOData (const std::string& typeName,
-				BlobOBufChar& buf) const
+  void* BlobField<T>::getOData (BlobOBufChar& buf) const
   {
-    DbgAssert (typeName == LOFAR::typeName((T*)0));
     if (getOffset() < 0) {
       return 0;
     }
@@ -235,16 +233,30 @@ namespace LOFAR {
   }
 
   template<typename T>
-  const void* BlobField<T>::getIData (const std::string& typeName,
-				      BlobIBufChar& buf) const
+  const void* BlobField<T>::getIData (BlobIBufChar& buf) const
   {
-    DbgAssert (typeName == LOFAR::typeName((T*)0));
     if (getOffset() < 0) {
       return 0;
     }
     DbgAssert (getOffset() + getNelem()*sizeof(T) <= buf.size());
     T* data = (T*)(buf.getBuffer() + getOffset());
     return data;
+  }
+
+  template<typename T>
+  void* BlobField<T>::getOData (const std::type_info& info,
+				BlobOBufChar& buf) const
+  {
+    DbgAssert(info == typeid(T));
+    return getOData(buf);
+  }
+  
+  template<typename T>
+  const void* BlobField<T>::getIData (const std::type_info& info,
+				      BlobIBufChar& buf) const
+  {
+    DbgAssert(info == typeid(T));
+    return getIData(buf);
   }
 
   template<typename T>
