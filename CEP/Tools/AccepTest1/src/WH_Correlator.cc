@@ -99,6 +99,8 @@ void WH_Correlator::process() {
       cout << itsNchannels << " " ;
       cout << itsNelements << " " ;
       cout << itsNpolarisations << " " ;
+      cout << ((itsNchannels*itsNelements*itsNsamples*itsNpolarisations*sizeof(DH_CorrCube::BufferType)) + 
+	(itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType)))/ (1024.0*1024.0) << " ";
       cout << agg_bandwidth/(1024.0*1024.0) << " Mbit/sec  " ;
       cout << (100.0*agg_bandwidth)/(1024.0*1024.0*1024.0)<< "% of theoretical peak (Gbit/sec)" << endl;
     }
@@ -130,10 +132,10 @@ void WH_Correlator::process() {
   // calculate the correlations and add to output DataHolder.
   DH_Vis::BufferType s1_val, s2_val;
 
+  for (int sample = 0; sample < itsNsamples; sample++) {
 #ifdef HAVE_MPE
     MPE_Log_event(1, sample, "correlating"); 
 #endif
-  for (int sample = 0; sample < itsNsamples; sample++) {
     for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
       for (int   station1 = 0; station1 < itsNelements; station1++) {
 	for (int station2 = 0; station2 <= station1;    station2++) {
@@ -157,12 +159,11 @@ void WH_Correlator::process() {
 	}
       }
     }
-  }
 #ifdef HAVE_MPE
     MPE_Log_event(2, sample, "correlated");
 #endif 
-  
-  
+  }
+
 #ifdef DO_TIMING
   stoptime = timer();
 #endif
