@@ -12,5 +12,5 @@ _gsmfiles = $(addprefix $(_gsmtablesrc)/,$(_tablefiles))
 #	  glish -l $(srcdir)/4c2gsm.g
 
   
-gsmdir = $(datadir)/gsm.tab
+gsmdir = $(datadir)/GSM/gsm.tab
 gsm_DATA = $(_gsmfiles)
