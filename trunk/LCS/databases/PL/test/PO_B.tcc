@@ -173,10 +173,11 @@ namespace LOFAR {
       Collection<TPersistentObject<B> >   selResult;
 
       for (int nrRecs = 0; selIter != selView.end() && nrRecs < maxObjects; ++selIter, ++nrRecs) {
-	TPersistentObject<B>    TPOA;
-	TPOA.fromDatabaseRep(*selIter);
+	TPersistentObject<B>    TPOB;
+	TPOB.fromDatabaseRep(*selIter);
+        TPOB.retrieve();
 	// No subclasses
-	selResult.add(TPOA);
+	selResult.add(TPOB);
       }
       // @@@ TO BE DEFINED @@@
 

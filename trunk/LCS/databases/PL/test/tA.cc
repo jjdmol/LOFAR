@@ -74,8 +74,16 @@ int main()
     cout << "Press <Enter> to continue" << endl;
     cin.get();
 
-//     Collection< TPersistentObject<A> > ctpoa;
-//     ctpoa = broker.retrieve<A>(Query("SELECT * FROM A WHERE ITSINT=42;"));
+    cout << "Retrieve collection of tpoa using query" << endl;
+    Collection< TPersistentObject<A> > ctpoa;
+    Collection< TPersistentObject<A> >::const_iterator iter;
+    ctpoa = broker.retrieve<A>(Query("WHERE ITSINT=42;"));
+    cout << "Found " << ctpoa.size() << " matches ..." << endl;
+    for(iter = ctpoa.begin(); iter != ctpoa.end(); ++iter) {
+      cout << "Press <Enter> to continue" << endl;
+      cin.get();
+      cout << iter->data() << endl;
+    }
 
   }
   catch (PLException& e) {
