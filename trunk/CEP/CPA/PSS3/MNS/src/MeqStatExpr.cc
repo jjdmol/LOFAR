@@ -85,8 +85,8 @@ void MeqStatExpr::calcResult (const MeqRequest& request)
   MeqMatrix df22 = d12 * sinfrot + d22 * cosfrot;
   // Calculate the final result.
   result11.setValue (g1.getValue() * df11);
-  result12.setValue (g1.getValue() * df21);
-  result21.setValue (g2.getValue() * df12);
+  result12.setValue (g1.getValue() * df12);
+  result21.setValue (g2.getValue() * df21);
   result22.setValue (g2.getValue() * df22);
   if (request.nspid() > 0) {
     for (int spinx=0; spinx<request.nspid(); spinx++) {
