@@ -38,7 +38,8 @@ class CaptureStats : public GCFTask, public Test
      * up connection establishment information using the GTMNameService and
      * GTMTopologyService classes.
      */
-    CaptureStats(string name, int type = 0, int device = 0, int n_devices = 1, int duration = 1, int integration = 1);
+    CaptureStats(string name, int type, std::bitset<MAX_N_RCUS> device_set, int n_devices = 1,
+		 int duration = 1, int integration = 1, uint8 rcucontrol = 0xB9);
     virtual ~CaptureStats();
 
     // state methods
@@ -78,10 +79,11 @@ class CaptureStats : public GCFTask, public Test
     // ports
     GCFPort m_server;
     int m_type;
-    int m_device;
+    std::bitset<MAX_N_RCUS> m_device_set;
     int m_n_devices;
     int m_duration;
     int m_integration;
+    uint8 m_rcucontrol;
 
     blitz::Array<double, 2> m_values;
     int m_nseconds;

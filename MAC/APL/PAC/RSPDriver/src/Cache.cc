@@ -91,9 +91,7 @@ CacheBuffer::CacheBuffer()
   {
     for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; i++)
     {
-      m_rcusettings()(i).lba_enable = 1;
-      m_rcusettings()(i).vl_enable  = 1;
-      m_rcusettings()(i).vddvcc_en  = 1;
+      m_rcusettings()(i).value = 0xB9; // low band, no filter
     }
   }
   

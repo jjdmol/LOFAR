@@ -80,7 +80,7 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+      if (result_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
       {
 	ack.sysstatus.rcu()(result_rcu)
 	  = cache.getSystemStatus().rcu()(cache_rcu);
@@ -88,7 +88,7 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
+			      result_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
       }
       
       result_rcu++;
