@@ -65,11 +65,6 @@ WH_STA::WH_STA (const string& name,  int nin,  int nout,
     // RFI sources. This should be implemented more elegantly.
     itsOutHolders[i] = new DH_SampleC (string("out_") + str, itsNrcu, itsMaxRFI);    
   }
-  //DEBUG
-  itsTestVector.resize(itsNrcu, 300);
-  itsFileInput.open ("/home/alex/gerdes/test_vectorSTA_sin.txt");
-  itsFileInput >> itsTestVector;
-  itsCount = 0;
 }
 
 WH_STA::~WH_STA()
@@ -83,7 +78,6 @@ WH_STA::~WH_STA()
   delete itsOutHolders[i];
  }
  delete [] itsOutHolders;
- itsFileInput.close ();
 }
 
 WH_STA* WH_STA::make (const string& name) const
@@ -104,15 +98,9 @@ void WH_STA::process()
   // Place the next incoming sample vector in the snapshot buffer 
   // Keep a cylic buffer for the input snapshots
   for (int i = 0; i < itsNrcu; i++) {
-// 	itsBuffer(i, itsPos) = itsInHolders[i]->getBuffer()[0];
-	itsBuffer(i, itsPos) = itsTestVector(i, itsCount);
+ 	itsBuffer(i, itsPos) = itsInHolders[i]->getBuffer()[0];
   }
   itsPos = (itsPos + 1) % itsBuffer.cols();
-  itsCount = (itsCount + 1) % itsTestVector.cols();
-
-  // Select the appropriate algorithm
-  // See if the PASTd algorithm need updating
-  // Use either EVD or SVD for updating
 
   if (getOutHolder(0)->doHandle ()) {
 	// Create contigeous buffer
@@ -122,38 +110,17 @@ void WH_STA::process()
 	switch (itsAlg) {
 	case 0 : // ACM and EVD
 	  {
-		itsAcm = LCSMath::acm (itsBuffer);		// calculate the ACM
-		LCSMath::eig (itsAcm, itsEvectors, itsEvalues);  // using the ACM, calc eigen vect/ values
-// 		itsEvectors.reverseSelf (firstDim);
-// 		itsEvalues.reverseSelf (firstDim);
-		// !!! make contigeous in mem
+		itsAcm = LCSMath::acm (itsBuffer);		              // calculate the ACM
+		LCSMath::eig (itsAcm, itsEvectors, itsEvalues);       // using the ACM, calc eigen vect/ values
 		itsEvectors = ReverseMatrix (itsEvectors, firstDim);
 		itsEvalues = ReverseVector (itsEvalues);
 		break;
 	  }
 	case 1 : // SVD
 	  {
-// 		// DEBUG
-// 		itsEvalues.resize (4);
-// 		itsEvectors.resize (4, 4);
-// 		itsBuffer.resize (4, 8);
-
-// 		for (int i = 0; i < 4; i++) {
-// 		  for (int j = 0; j < 8; j++) {
-// 			itsBuffer (i, j) = dcomplex (i + 1, j + 1);
-// 		  }
-// 		}
-		itsBuffer = itsTestVector (Range::all (), 
-								   Range(itsTestVector.lbound (blitz::secondDim), itsBufLength - 1));
-//  		cout << itsBuffer << endl;
-	
 		LoMat_dcomplex dummy (itsBuffer.extent(blitz::secondDim), itsBuffer.extent(blitz::secondDim));
  		LCSMath::svd (itsBuffer, itsEvectors, dummy, itsEvalues);
 		//itsEvalues = sqr(itsEvalues) - 1;
-
-//  		// DEBUG
-// 		cout << itsEvalues << endl;
-// 		cout << itsEvectors << endl;
 		break;
 	  }
 	case 2 : // PASTd
@@ -168,21 +135,11 @@ void WH_STA::process()
 	// Determine the number of sources in the signal
 	double RFI = (double) mdl (itsEvalues, itsNrcu, itsBufLength);
 	if (RFI > itsMaxRFI) RFI = itsMaxRFI;
-
-
-// 	// DEBUG
-// 	for (int i = 0; i < itsNrcu; i++) {
-// 	  cout << itsEvalues (i) << endl;
-// 	  cout << itsEvectors (Range::all (), i) << endl;
-// 	}
-
 	
 	// Find the appropriate Eigen vectors
-// 	LoMat_dcomplex B = itsEvectors(Range(itsEvectors.lbound(firstDim), RFI - 1), Range::all());
-	LoMat_dcomplex B = itsEvectors(Range::all (), Range(itsEvectors.lbound(firstDim), RFI - 1));
+	LoMat_dcomplex B (itsNrcu, RFI);
+	B = itsEvectors (Range::all (), Range(itsEvectors.lbound(firstDim), RFI - 1));
 
-// 	cout << B << endl;
-	
 	// Now assign the Eigen vectors to the output
 	for (int i = 0; i < getOutputs() - 1; i++) {
 	  memcpy(itsOutHolders[i]->getBuffer(), B.data(), 

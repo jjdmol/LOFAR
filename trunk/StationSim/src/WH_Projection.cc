@@ -97,10 +97,11 @@ void WH_Projection::process()
 	  
 	  // Read in the eigenvectors from the STA component. They are the detected rfi sources and
 	  // should be nulled. The deterministic nulls should be put in this matrix.
-	  LoMat_dcomplex V (itsRFISources.getBuffer(), shape(itsNrcu, NumberOfEigenVectors), duplicateData);
+	  LoMat_dcomplex V (itsRFISources.getBuffer(), shape (itsNrcu, NumberOfEigenVectors), duplicateData);
 	  itsV.resize(V.shape());
 	  itsV = V;
 	  //	  itsV.transposeSelf(secondDim, firstDim);
+	  // 	  cout << itsV << endl;
 
 	  // Merge the deterministic nulls in the eigenvectors matrix
 	  itsV.resizeAndPreserve(itsNrcu, itsDetectedRFIs); // Add number of deterministic nulls
