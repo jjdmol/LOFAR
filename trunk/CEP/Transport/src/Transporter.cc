@@ -79,24 +79,22 @@ void Transporter::makeTransportHolder (const TransportHolder& prototype)
 bool Transporter::init()
 {
   itsTransportHolder->init();
-  itsBaseDataHolder->init();
   return true;
 }
 
-
-bool Transporter::connectTo (Transporter& that, 
-			     const TransportHolder& prototype)
+bool Transporter::connectTo (Transporter& thatTP, 
+			     TransportHolder& prototype)
 {
-  bool result = itsConnection.connectTo (*this, that, prototype); 
+  bool result = itsConnection.connect(*this, thatTP, prototype); 
   // Init should not be done in the connection but seperate.
   //  result |= init();
   return result;
 }
 
-bool Transporter::connectFrom (Transporter& that, 
-			       const TransportHolder& prototype) 
+bool Transporter::connectFrom (Transporter& thatTP, 
+			       TransportHolder& prototype) 
 { 
-  bool result = itsConnection.connectFrom (that, *this, prototype);
+  bool result = itsConnection.connect(thatTP, *this, prototype);
   // Init should not be done in the connection but seperate.
   //  result  |= init();
   return result;

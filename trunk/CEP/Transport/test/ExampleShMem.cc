@@ -22,7 +22,6 @@
 
 #include <iostream>
 
-#include <Transport/Transporter.h>
 #include <Transport/TH_ShMem.h>
 #include <DH_Example.h>
 
@@ -43,24 +42,22 @@ int main(int argc, const char* argv[])
     DH1.runOnNode (0);
     DH_Example DH2("dh2", 1);
     DH2.runOnNode (1);
-    Transporter& TR1 = DH1.getTransporter();
-    Transporter& TR2 = DH2.getTransporter();
     
     // Assign an ID for each transporter by hand for now
     // This will be done by the framework later on
-    TR1.setItsID(1);
-    TR2.setItsID(2);
+    DH1.setID(1);
+    DH2.setID(2);
 
-    // TH_Mem doesn't implement a blocking send
-    TR1.setIsBlocking(false);
-    TR2.setIsBlocking(false);
+    DH1.setBlocking(false);
+    DH2.setBlocking(false);
 
     // connect DH1 to DH2
-    TR1.connectTo(TR2, TH_ShMem());
+    TH_ShMem th;
+    DH1.connectTo(DH2, th);
     
     // initialize the DataHolders
-    TR1.init();
-    TR2.init();
+    DH1.init();
+    DH2.init();
     
     // fill the DataHolders with some initial data
     DH1.getBuffer()[0] = fcomplex(17,-3.5);

@@ -21,7 +21,6 @@
 //#  $Id$
 
 #include <iostream>
-#include <Transport/Transporter.h>
 #include <Transport/TH_Socket.h>
 #include <DH_Example.h>
 
@@ -34,21 +33,18 @@ int main (int argv, char** argc) {
   DH_Example DH1("dh1", 1);
   DH_Example DH2("dh2", 1);
 
-  Transporter& TR1 = DH1.getTransporter();
-  Transporter& TR2 = DH2.getTransporter();
+  DH1.setID(1);
+  DH2.setID(2);
 
-  TR1.setItsID(1);
-  TR2.setItsID(2);
-
-  TR1.setIsBlocking(true);
-  TR2.setIsBlocking(true);
+  DH1.setBlocking(true);
+  DH2.setBlocking(true);
 
   TH_Socket proto("localhost", "localhost", 8923);
 
-  TR1.connectTo(TR2, proto);
+  DH1.connectTo(DH2, proto);
 
-  TR1.init();
-  TR2.init();
+  DH1.init();
+  DH2.init();
 
  // fill the DataHolders with some initial data
   DH1.getBuffer()[0] = fcomplex(17,-3.5);
