@@ -28,6 +28,7 @@
 
 
 #define DO_TIMING
+#define USE_BUILTIN
 
 using namespace LOFAR;
 
@@ -86,13 +87,16 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 void WH_Correlator::process() {
   double starttime, stoptime, cmults;
 
+  DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
+  DH_Vis      *outDH = (DH_Vis*)(getDataManager().getOutHolder(0));
+
 #ifdef DO_TIMING
   if (t_start.tv_sec != 0 && t_start.tv_usec != 0) {
     gettimeofday(&t_stop, NULL);
     
     bandwidth = 8.0 *
-      ((itsNchannels*itsNelements*itsNsamples*itsNpolarisations*sizeof(DH_CorrCube::BufferType)) +
-       (itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType))) /
+      ((inDH->getBufSize()*sizeof(DH_CorrCube::BufferType)) +
+       (outDH->getBufSize()*sizeof(DH_Vis::BufferType))) /
       (t_stop.tv_sec + 1.0e-6*t_stop.tv_usec - 
        t_start.tv_sec + 1.0e-6*t_start.tv_usec);
 
@@ -106,10 +110,6 @@ void WH_Correlator::process() {
   }
 #endif 
 
-
-  DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
-  DH_Vis      *outDH = (DH_Vis*)(getDataManager().getOutHolder(0));
-
   // reset integrator.
   memset(outDH->getBuffer(), 
 	 0,
@@ -121,6 +121,8 @@ void WH_Correlator::process() {
   // this block of code does the cast from complex<uint16> to complex<float>
   // 
 #if 1
+  // using builtin complex type
+  // this will work for both GNU and IBM compilers. The Intel compiler only recognizes the older __complex__ type
   DH_CorrCube::BufferPrimitive* in_ptr = (DH_CorrCube::BufferPrimitive*) inDH->getBuffer();
   _Complex float* in_buffer = new _Complex float[inDH->getBufSize()];
   for ( unsigned int i = 0; i < inDH->getBufSize(); i++ ) {
@@ -128,6 +130,7 @@ void WH_Correlator::process() {
     __imag__ *(in_buffer+i) =  *(in_ptr+2*i+1);
   }
 #else
+  // using stl templated complex type
   DH_CorrCube::BufferType* in_ptr = (DH_CorrCube::BufferType*) inDH->getBuffer();
   // The float pointer is explicit, since DH_Vis is now complex<double>
   complex<float>*  in_buffer = new complex<float>[inDH->getBufSize()];
@@ -158,13 +161,11 @@ void WH_Correlator::process() {
   __alignx(16, out_ptr);
   __alignx(8 , in_buffer);
 
-  int c = 0;
-
   for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
     int c_addr = itsNpolarisations*itsNelements*itsNsamples*fchannel;
     for (int station1 = 0; station1 < itsNelements; station1++) {
-      int s1_addr = c_addr+itsNsamples*itsNpolarisations*station1;
       for (int station2 = 0; station2 <= station1; station2++) {
+	int s1_addr = c_addr+itsNsamples*itsNpolarisations*station1;
 	int s2_addr = c_addr+itsNsamples*itsNpolarisations*station2;
 	out_ptr = reinterpret_cast<_Complex double*> (outDH->getBufferElement(station1, station2, fchannel, 0));
 #pragma unroll(10)
@@ -176,18 +177,20 @@ void WH_Correlator::process() {
 	  *(out_ptr+3) += *(in_buffer+s1_addr+sample+1) * *(in_buffer+s2_addr+sample+1); // YY
 #else
 	  // XX
-	  *out_ptr = __fxcpmadd( *out_ptr, *(in_buffer+s1_addr+sample), __real__ *(in_buffer+s2_addr+sample) );
-	  *out_ptr = __fxcxnpma( *out_ptr, *(in_buffer+s1_addr+sample), __imag__ *(in_buffer+s2_addr+sample) );
+	  *out_ptr = __fxcpmadd( *out_ptr, *(in_buffer+s1_addr), __real__ *(in_buffer+s2_addr) );
+	  *out_ptr = __fxcxnpma( *out_ptr, *(in_buffer+s1_addr), __imag__ *(in_buffer+s2_addr) );
 	  // XY
-	  *(out_ptr+1) = __fxcpmadd( *(out_ptr+1), *(in_buffer+s1_addr+sample), __real__ *(in_buffer+s2_addr+sample+1) );
-	  *(out_ptr+1) = __fxcxnpma( *(out_ptr+1), *(in_buffer+s1_addr+sample), __imag__ *(in_buffer+s2_addr+sample+1) );
+	  *(out_ptr+1) = __fxcpmadd( *(out_ptr+1), *(in_buffer+s1_addr), __real__ *(in_buffer+s2_addr+1) );
+	  *(out_ptr+1) = __fxcxnpma( *(out_ptr+1), *(in_buffer+s1_addr), __imag__ *(in_buffer+s2_addr+1) );
 	  // YX
-	  *(out_ptr+2) = __fxcpmadd( *(out_ptr+2), *(in_buffer+s1_addr+sample+1), __real__ *(in_buffer+s2_addr+sample) );
-	  *(out_ptr+2) = __fxcxnpma( *(out_ptr+2), *(in_buffer+s1_addr+sample+1), __imag__ *(in_buffer+s2_addr+sample) );
+	  *(out_ptr+2) = __fxcpmadd( *(out_ptr+2), *(in_buffer+s1_addr+1), __real__ *(in_buffer+s2_addr) );
+	  *(out_ptr+2) = __fxcxnpma( *(out_ptr+2), *(in_buffer+s1_addr+1), __imag__ *(in_buffer+s2_addr) );
 	  // YY
-	  *(out_ptr+3) = __fxcpmadd( *(out_ptr+3), *(in_buffer+s1_addr+sample+1), __real__ *(in_buffer+s2_addr+sample+1) );
-	  *(out_ptr+3) = __fxcxnpma( *(out_ptr+3), *(in_buffer+s1_addr+sample+1), __imag__ *(in_buffer+s2_addr+sample+1) );
+	  *(out_ptr+3) = __fxcpmadd( *(out_ptr+3), *(in_buffer+s1_addr+1), __real__ *(in_buffer+s2_addr+1) );
+	  *(out_ptr+3) = __fxcxnpma( *(out_ptr+3), *(in_buffer+s1_addr+1), __imag__ *(in_buffer+s2_addr+1) );
 #endif 
+	  s1_addr++;
+	  s2_addr++;
 
 	} // sample
       } // station2
@@ -196,20 +199,26 @@ void WH_Correlator::process() {
 
 #else
 
+//   complex<double> * out_ptr;
   _Complex double * out_ptr;
 
   for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
     int c_addr = itsNpolarisations*itsNelements*itsNsamples*fchannel;
     for (int station1 = 0; station1 < itsNelements; station1++) {
-      int s1_addr = c_addr+itsNsamples*itsNpolarisations*station1;
       for (int station2 = 0; station2 <= station1; station2++) {
+	int s1_addr = c_addr+itsNsamples*itsNpolarisations*station1;
 	int s2_addr = c_addr+itsNsamples*itsNpolarisations*station2;
-	out_ptr = reinterpret_cast<_Complex double*> (outDH->getBufferElement(station1, station2, fchannel, 0));
+
+ 	out_ptr = reinterpret_cast<_Complex double*> (outDH->getBufferElement(station1, station2, fchannel, 0));
+//	out_ptr = outDH->getBufferElement(station1, station2, fchannel, 0);
+
 	for (int sample = 0; sample < itsNsamples; sample++) {
-	  *out_ptr     += *(in_buffer+s1_addr+sample) * *(in_buffer+s2_addr+sample);     // XX
-	  *(out_ptr+1) += *(in_buffer+s1_addr+sample) * *(in_buffer+s2_addr+sample+1);   // XY
-	  *(out_ptr+2) += *(in_buffer+s1_addr+sample+1) * *(in_buffer+s2_addr+sample);   // YX
-	  *(out_ptr+3) += *(in_buffer+s1_addr+sample+1) * *(in_buffer+s2_addr+sample+1); // YY
+	  *out_ptr     += *(in_buffer+s1_addr) * *(in_buffer+s2_addr);     // XX
+	  *(out_ptr+1) += *(in_buffer+s1_addr) * *(in_buffer+s2_addr+1);   // XY
+	  *(out_ptr+2) += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr);   // YX
+	  *(out_ptr+3) += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr+1); // YY
+	  s1_addr++; 
+	  s2_addr++;
 	} // sample
       } // station2
     } // station1
