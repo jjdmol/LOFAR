@@ -33,6 +33,7 @@
 #include <aips/Tables/Table.h>
 #include <aips/Tables/ScalarColumn.h>
 #include <aips/Tables/ArrayColumn.h>
+#include <aips/Arrays/Vector.h>
 #include <aips/Arrays/Matrix.h>
 
 using namespace GSM;
@@ -243,8 +244,8 @@ MDirection AbstractSource::getPosition(double time,
 
 //===============>>>  AbstractSource::getPositionExpressions  <<<===============
 
-void AbstractSource::getPositionExpressions(MeqExpr* ra,
-                                            MeqExpr* dec)
+void AbstractSource::getPositionExpressions(MeqExpr* &ra,
+                                            MeqExpr* &dec)
 {
   ra  = itsRa;
   dec = itsDec;
@@ -282,15 +283,15 @@ MeqDomain AbstractSource::store(Table&      table,
 
   MeqDomain Domain = Polcs[0].getDomain();
 
-  Matrix<double> TMatrix(2, 1);
-  TMatrix(0,0) = Domain.startX();
-  TMatrix(1,0) = Domain.endX();
-  TDomain.put(row, TMatrix);
+  Vector<double> TVector(2);
+  TVector(0) = Domain.startX();
+  TVector(1) = Domain.endX();
+  TDomain.put(row, TVector);
   
-  Matrix<double> FMatrix(2, 1);
-  FMatrix(0,0) = Domain.startY();
-  FMatrix(1,0) = Domain.endY();
-  FDomain.put(row, FMatrix);
+  Vector<double> FVector(2);
+  FVector(0) = Domain.startY();
+  FVector(1) = Domain.endY();
+  FDomain.put(row, FVector);
 
   return Domain;
 }
@@ -312,14 +313,14 @@ MeqDomain AbstractSource::load(const Table& table,
   ROArrayColumn<double>  FDomain (table, "FDOMAIN");
 
 
-  Matrix<double> TMatrix;
-  Matrix<double> FMatrix;
+  Vector<double> TVector;
+  Vector<double> FVector;
 
-  TDomain.get(row, TMatrix);
-  FDomain.get(row, FMatrix);
+  TDomain.get(row, TVector);
+  FDomain.get(row, FVector);
 
-  MeqDomain Domain(TMatrix(0,0), TMatrix(1,0),
-                   FMatrix(0,0), FMatrix(1,0));
+  MeqDomain Domain(TVector(0), TVector(1),
+                   FVector(0), FVector(1));
 
   std::vector<MeqPolc> RaPolcs(1);
   std::vector<MeqPolc> DecPolcs(1);
