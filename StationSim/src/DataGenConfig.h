@@ -44,7 +44,6 @@ public:
 
   ArrayConfig *itsArray;
   int itsNumberOfSources;
-  double itsLength;
   Source *itsSources[MAX_SOURCES];
 };
 

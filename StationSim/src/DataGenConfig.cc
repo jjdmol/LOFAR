@@ -31,12 +31,7 @@ DataGenerator::DataGenerator (string config_file)
   while (!configfile.eof () && configfile.is_open ()) {
     s = "";
     configfile >> s;
-    if (s == "length") {
-      configfile >> s;
-      if (s == ":") {
-		configfile >> itsLength;
-	  }
-    } else if (s == "nsources") {
+	if (s == "nsources") {
       configfile >> s;
       if (s == ":") {
 		configfile >> itsNumberOfSources;

@@ -52,6 +52,7 @@ private:
   string       itsType;
   LoVec_double itsTheta;
   LoVec_double itsPhi;
+  LoVec_double itsTime;
 
   // DEBUG
   ofstream itsFileOut;
