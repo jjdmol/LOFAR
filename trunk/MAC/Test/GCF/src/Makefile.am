@@ -61,13 +61,17 @@ configfiles_DATA= \
 	RTPing.conf \
 	Application1.conf \
 	Application2.conf \
-	log4cplus.properties
+	log4cplus.properties \
+	customPrepPVSSDB.ctl
 	
 MAC_CONFIG = $(top_srcdir)/../../Config
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 	
 %.conf: gcf-test.conf.in
+	cp $< $@
+
+%.ctl: *.ctl
 	cp $< $@
 
 include $(lofar_sharedir)/Makefile.common

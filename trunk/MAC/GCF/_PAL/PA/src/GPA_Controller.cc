@@ -58,6 +58,10 @@ GPAController::GPAController() :
   // the connection with the PVSS system on construction. Because it will managed
   // by a singleton the property set only needs to be temporary.
   GPAPropertySet dummy(*this, _pmlPortProvider);  
+  LOG_INFO("Prepare PVSS DB for proper use by PA");
+  system("chmod 777 preparePVSS-DB");
+  string sysCmd = "preparePVSS-DB " + GCFPVSSInfo::getProjectName();
+  system(sysCmd.c_str());
 }
 
 GPAController::~GPAController()
@@ -96,14 +100,9 @@ GCFEvent::TResult GPAController::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_EXIT:
-    {
-      LOG_INFO("Initialise PVSS DB");
-      system("chmod 777 initPVSSDB");
-      string sysCmd = "initPVSSDB " + GCFPVSSInfo::getProjectName();
-      system(sysCmd.c_str());
+      LOG_INFO("Property Agent is ready!!!");
       _garbageTimerId = _distPmlPortProvider.setTimer(2.0, 2.0);
       break;
-    }  
     default:
       status = GCFEvent::NOT_HANDLED;
       break;

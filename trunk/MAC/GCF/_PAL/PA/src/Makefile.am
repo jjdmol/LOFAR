@@ -46,14 +46,13 @@ EXTRA_DIST = \
 configfilesdir=$(bindir)
 configfiles_DATA= \
 	loadAPC \
-	initPVSSDB \
-	PropertyAgent.conf \
-	LofarPropertyTypes.pvss
+	preparePVSS-DB \
+	configurePVSSProj \
+	PropertyAgent.conf
 
-MAC_CONFIG = $(top_srcdir)/../../Config
-
-%.pvss: $(MAC_CONFIG)/%.pvss
-	cp $< $@
+install-data-local:
+	cp -Rf $(top_srcdir)/PA/pvss $(bindir)
+	chmod 777 $(bindir)/configurePVSSProj
 	
 %.conf: gcf-pa.conf.in
 	cp $< $@

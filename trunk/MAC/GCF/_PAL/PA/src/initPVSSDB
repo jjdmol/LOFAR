@@ -1,4 +1,0 @@
-#!/bin/sh
-
-PVSS00ctrl -script libs/gcfpa-cl.ctl -proj $1
-PVSS00ascii -in LofarPropertyTypes.pvss -proj $1
