@@ -25,7 +25,7 @@
 #include "SSWrite.h"
 #include "Cache.h"
 
-#include <APLConfig.h>
+#include <PSAccess.h>
 #include <blitz/array.h>
 
 // needed if htons is used
@@ -43,7 +43,7 @@ using namespace LOFAR;
 using namespace blitz;
 
 SSWrite::SSWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("N_BLPS", i) * 2 /* for NOF_SUBBANDS and SUBBANDS*/)
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * 2 /* for NOF_SUBBANDS and SUBBANDS*/)
 {
 }
 
@@ -66,7 +66,7 @@ void SSWrite::sendrequest()
   }
   else
   {
-    uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + (getCurrentBLP() / 2);
+    uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / 2);
     LOG_DEBUG(formatString(">>>> SSWrite(%s) global_blp=%d",
 			   getBoardPort().getName().c_str(),
 			   global_blp));

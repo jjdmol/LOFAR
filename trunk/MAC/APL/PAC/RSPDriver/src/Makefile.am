@@ -54,7 +54,7 @@ sysconf_DATA = \
 %.top: %.top.in
 	cp $< $@
 
-lib_LTLIBRARIES    = libaplconfig.la librsp.la libepa.la
+lib_LTLIBRARIES = librsp.la libepa.la
 
 include_HEADERS = \
 	RSP_Protocol.ph \
@@ -72,8 +72,7 @@ include_HEADERS = \
 	MEPHeader.h \
 	MEPData.h \
 	\
-	Config.h \
-	APLConfig.h
+	PSAccess.h
 
 librsp_la_SOURCES = \
 	Timestamp.cc \
@@ -92,12 +91,6 @@ libepa_la_SOURCES = \
 	EPA_Protocol.cc \
 	RawEvent.h \
 	RawEvent.cc
-
-libaplconfig_la_SOURCES = \
-	Config.cc \
-	APLConfig.cc
-
-lib_aplconfig_la_LIBS =
 
 bin_PROGRAMS = \
 	RSPDriver \
@@ -172,7 +165,6 @@ RSPDriver_SOURCES = \
 RSPDriver_LDADD = \
 	$(top_builddir)/src/librsp.la \
 	$(top_builddir)/src/libepa.la \
-	$(top_builddir)/src/libaplconfig.la \
 	$(PVSS_LDADD)
 
 ViewStats_SOURCES = \

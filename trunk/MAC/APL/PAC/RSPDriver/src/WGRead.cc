@@ -25,7 +25,7 @@
 #include "RSP_Protocol.ph"
 #include "Cache.h"
 
-#include <APLConfig.h>
+#include <PSAccess.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -38,7 +38,7 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
 WGRead::WGRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("N_BLPS", i))
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
 {
 }
 
@@ -64,7 +64,7 @@ GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   if (event.signal != EPA_WGSETTINGS) return GCFEvent::HANDLED;
   
-  uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
   EPAWgsettingsEvent wgsettings(event);
 

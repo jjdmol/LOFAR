@@ -20,10 +20,10 @@
 //#
 //#  $Id$
 
-#include <APLConfig.h>
 #include "RSP_Protocol.ph"
 #include "SetWGCmd.h"
 
+#include <PSAccess.h>
 #include <blitz/array.h>
 
 #undef PACKAGE
@@ -63,19 +63,19 @@ void SetWGCmd::ack(CacheBuffer& /*cache*/)
 void SetWGCmd::apply(CacheBuffer& cache)
 {
   for (int cache_blp = 0;
-       cache_blp < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i);
+       cache_blp < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i);
        cache_blp++)
   {
     if (m_event->blpmask[cache_blp])
     {
-      if (cache_blp < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i))
+      if (cache_blp < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
       {
 	cache.getWGSettings()()(cache_blp) = m_event->settings()(0);
       }
       else
       {
 	LOG_WARN(formatString("invalid BLP index %d, there are only %d BLP's",
-			      cache_blp, GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i)));
+			      cache_blp, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i)));
       }
     }
   }
@@ -98,7 +98,7 @@ void SetWGCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetWGCmd::validate() const
 {
-  return ((m_event->blpmask.count() <= (unsigned int)GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i))
+  return ((m_event->blpmask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
 	  && (1 == m_event->settings().dimensions())
 	  && (1 == m_event->settings().extent(firstDim)));
 }

@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#include <APLConfig.h>
 #include "Cache.h"
+#include <PSAccess.h>
 
 #undef PACKAGE
 #undef VERSION

@@ -21,7 +21,7 @@
 //#
 //#  $Id$
 
-#include <APLConfig.h>
+#include <PSAccess.h>
 #include <GCF/ParameterSet.h>
 
 #include "RSP_Protocol.ph"
@@ -87,18 +87,18 @@ RSPDriver::RSPDriver(string name)
 
   m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, RSP_PROTOCOL);
 
-  m_board = new GCFETHRawPort[GET_CONFIG("N_RSPBOARDS", i)];
+  m_board = new GCFETHRawPort[GET_CONFIG("RS.N_RSPBOARDS", i)];
 
-  for (int boardid = 0; boardid < GET_CONFIG("N_RSPBOARDS", i); boardid++)
+  for (int boardid = 0; boardid < GET_CONFIG("RS.N_RSPBOARDS", i); boardid++)
   {
     char name[64] = "board";
     char macaddrstr[64] = "";
       
     snprintf(name, 64, "board%d", boardid);
-    snprintf(macaddrstr, 64, "00:00:00:00:00:%02x", boardid + GET_CONFIG("MAC_BASE", i));
+    snprintf(macaddrstr, 64, "00:00:00:00:00:%02x", boardid + GET_CONFIG("RSPDriver.MAC_BASE", i));
 
     m_board[boardid].init(*this, name, GCFPortInterface::SAP, EPA_PROTOCOL,true /*raw*/);
-    m_board[boardid].setAddr(GET_CONFIG_STRING("IF_NAME"), macaddrstr);
+    m_board[boardid].setAddr(GET_CONFIG_STRING("RSPDriver.IF_NAME"), macaddrstr);
 
     // set ethertype to 0x10FA so Ethereal can decode EPA messages
     m_board[boardid].setEtherType(ETHERTYPE_EPA);
@@ -116,7 +116,7 @@ RSPDriver::~RSPDriver()
 bool RSPDriver::isEnabled()
 {
   bool enabled = true;
-  for (int boardid = 0; boardid < GET_CONFIG("N_RSPBOARDS", i); boardid++)
+  for (int boardid = 0; boardid < GET_CONFIG("RS.N_RSPBOARDS", i); boardid++)
   {
     if (!m_board[boardid].isConnected())
     {
@@ -153,15 +153,15 @@ void RSPDriver::addAllSyncActions()
    * For each board a separate BWSync instance is created which handles
    * the synchronization of data between the board and the cache for that board.
    */
-  for (int boardid = 0; boardid < GET_CONFIG("N_RSPBOARDS", i); boardid++)
+  for (int boardid = 0; boardid < GET_CONFIG("RS.N_RSPBOARDS", i); boardid++)
   {
-    if (1 == GET_CONFIG("READ_STATUS", i))
+    if (1 == GET_CONFIG("RSPDriver.READ_STATUS", i))
     {
       StatusRead* statusread = new StatusRead(m_board[boardid], boardid);
       m_scheduler.addSyncAction(statusread);
     }
     
-    if (1 == GET_CONFIG("WRITE_BF", i))
+    if (1 == GET_CONFIG("RSPDriver.WRITE_BF", i))
     {
       BWWrite* bwsync = 0;
 
@@ -175,19 +175,19 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(bwsync);
     }
 
-    if (1 == GET_CONFIG("WRITE_SS", i))
+    if (1 == GET_CONFIG("RSPDriver.WRITE_SS", i))
     {
       SSWrite* sswrite = new SSWrite(m_board[boardid], boardid);
       m_scheduler.addSyncAction(sswrite);
     }
     
-    if (1 == GET_CONFIG("WRITE_RCU", i))
+    if (1 == GET_CONFIG("RSPDriver.WRITE_RCU", i))
     {
       RCUWrite* rcuwrite = new RCUWrite(m_board[boardid], boardid);
       m_scheduler.addSyncAction(rcuwrite);
     }
     
-    if (1 == GET_CONFIG("READ_ST", i))
+    if (1 == GET_CONFIG("RSPDriver.READ_ST", i))
     {
       StatsRead* statsread = 0;
       statsread = new StatsRead(m_board[boardid], boardid, Statistics::SUBBAND_MEAN);
@@ -200,19 +200,19 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(statsread);
     }
 
-    if (1 == GET_CONFIG("WRITE_WG", i))
+    if (1 == GET_CONFIG("RSPDriver.WRITE_WG", i))
     {
       WGWrite* wgwrite = new WGWrite(m_board[boardid], boardid);
       m_scheduler.addSyncAction(wgwrite);
     }
 
-    if (1 == GET_CONFIG("READ_VERSION", i))
+    if (1 == GET_CONFIG("RSPDriver.READ_VERSION", i))
     {
       VersionsRead* versionread = new VersionsRead(m_board[boardid], boardid);
       m_scheduler.addSyncAction(versionread);
     }
 
-    if (1 == GET_CONFIG("READ_BF", i))
+    if (1 == GET_CONFIG("RSPDriver.READ_BF", i))
     {
       BWRead* bwsync = 0;
 
@@ -226,18 +226,18 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(bwsync);
     }
 
-    if (1 == GET_CONFIG("READ_SS", i))
+    if (1 == GET_CONFIG("RSPDriver.READ_SS", i))
     {
       SSRead* ssread = new SSRead(m_board[boardid], boardid);
       m_scheduler.addSyncAction(ssread);
     }
 
-    if (1 == GET_CONFIG("READ_RCU", i))
+    if (1 == GET_CONFIG("RSPDriver.READ_RCU", i))
     {
       RCURead* rcuread = new RCURead(m_board[boardid], boardid);
       m_scheduler.addSyncAction(rcuread);
     }
-    if (1 == GET_CONFIG("READ_WG", i))
+    if (1 == GET_CONFIG("RSPDriver.READ_WG", i))
     {
       WGRead* wgread = new WGRead(m_board[boardid], boardid);
       m_scheduler.addSyncAction(wgread);
@@ -247,7 +247,7 @@ void RSPDriver::addAllSyncActions()
 //
 // Example of the use of WriteReg to write waveform generator settings.
 //
-//     if (1 == GET_CONFIG("WRITE_WG", i))
+//     if (1 == GET_CONFIG("RSPDriver.WRITE_WG", i))
 //     {
 //       WriteReg* writereg = new WriteReg(m_board[boardid], boardid,
 // 					MEPHeader::DST_BLPS,
@@ -261,7 +261,7 @@ void RSPDriver::addAllSyncActions()
 
 void RSPDriver::openBoards()
 {
-  for (int boardid = 0; boardid < GET_CONFIG("N_RSPBOARDS", i); boardid++)
+  for (int boardid = 0; boardid < GET_CONFIG("RS.N_RSPBOARDS", i); boardid++)
   {
     if (!m_board[boardid].isConnected()) m_board[boardid].open();
   }
@@ -369,11 +369,11 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       // start waiting for clients
       if (!m_acceptor.isConnected()) m_acceptor.open();
 
-      if (1 == GET_CONFIG("SW_SYNC", i))
+      if (1 == GET_CONFIG("RSPDriver.SW_SYNC", i))
       {
 	/* Start the update timer after 1 second */
 	m_board[0].setTimer(1.0,
-			    GET_CONFIG("SYNC_INTERVAL", f)); // update SYNC_INTERVAL seconds
+			    GET_CONFIG("RSPDriver.SYNC_INTERVAL", f)); // update SYNC_INTERVAL seconds
       }
     }
     break;
@@ -472,7 +472,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
     {
       if (&port == &m_board[0])
       {
-	if (1 == GET_CONFIG("SW_SYNC", i))
+	if (1 == GET_CONFIG("RSPDriver.SW_SYNC", i))
 	{
 	  /**
 	   * Trigger a clock signal by sending
@@ -535,7 +535,7 @@ bool RSPDriver::isBoardPort(GCFPortInterface& port)
    * to a board.
    */
   if (   &port >= &m_board[0]
-      && &port <= &m_board[GET_CONFIG("N_RSPBOARDS", i)])
+      && &port <= &m_board[GET_CONFIG("RS.N_RSPBOARDS", i)])
     return true;
   
   return false;
@@ -547,13 +547,13 @@ GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
 
   uint8 count = 0;
 
-  if (1 == GET_CONFIG("SOFTPPS", i))
+  if (1 == GET_CONFIG("RSPDriver.SOFTPPS", i))
   {
     // Send SoftPPS signal to all boards
     EPAWgsoftppsEvent softpps;
     MEP_WGSOFTPPS(softpps.hdr);
 
-    for (int i = 0; i < GET_CONFIG("N_RSPBOARDS", i); i++)
+    for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i); i++)
     {
       m_board[i].send(softpps);
     }
@@ -607,7 +607,7 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
   /* range check on parameters */
   if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
       || (sw_event->weights().extent(firstDim) < 1)
-      || (sw_event->weights().extent(secondDim) > GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i))
+      || (sw_event->weights().extent(secondDim) > GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
       || (sw_event->weights().extent(thirdDim) != N_BEAMLETS)
       || (sw_event->weights().extent(fourthDim) != EPA_Protocol::N_POL))
   {
@@ -1001,8 +1001,6 @@ int main(int argc, char** argv)
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
   GCFTask::init(argc, argv);
-
-  APLConfig::getInstance().load("RSPDRIVER", RSP_SYSCONF "/rspdriver.conf");
 
   try
   {

@@ -24,7 +24,7 @@
 #include "EPA_Protocol.ph"
 #include "Cache.h"
 
-#include <APLConfig.h>
+#include <PSAccess.h>
 #include <string.h>
 
 #undef PACKAGE
@@ -37,7 +37,7 @@ using namespace LOFAR;
 using namespace EPA_Protocol;
 
 RCURead::RCURead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("N_BLPS", i))
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
 {
 }
 
@@ -62,7 +62,7 @@ GCFEvent::TResult RCURead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 {
   if (event.signal != EPA_RCUSETTINGS) return GCFEvent::HANDLED;
   
-  uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + getCurrentBLP() * 2;
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP() * 2;
 
   EPARcusettingsEvent rcusettings(event);
 

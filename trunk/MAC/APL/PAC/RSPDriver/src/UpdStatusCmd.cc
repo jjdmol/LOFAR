@@ -20,10 +20,10 @@
 //#
 //#  $Id$
 
-#include <APLConfig.h>
 #include "RSP_Protocol.ph"
 #include "UpdStatusCmd.h"
 
+#include <PSAccess.h>
 #include <blitz/array.h>
 
 #undef PACKAGE
@@ -68,19 +68,19 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
   ack.status = SUCCESS;
   ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
 
-  ack.sysstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
+  ack.sysstatus.board().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
   ack.sysstatus.board() = cache.getSystemStatus().board();
 
   ack.sysstatus.rcu().resize(m_event->rcumask.count());
 
   int result_rcu = 0;
   for (int cache_rcu = 0;
-       cache_rcu < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL;
+       cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * N_POL;
        cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      if (cache_rcu < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL)
+      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * N_POL)
       {
 	ack.sysstatus.rcu()(result_rcu)
 	  = cache.getSystemStatus().rcu()(cache_rcu);
@@ -88,7 +88,7 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL));
+			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * N_POL));
       }
       
       result_rcu++;
@@ -112,5 +112,5 @@ void UpdStatusCmd::setTimestamp(const Timestamp& timestamp)
 
 bool UpdStatusCmd::validate() const
 {
-  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL);
+  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * N_POL);
 }
