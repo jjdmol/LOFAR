@@ -22,11 +22,8 @@ UVPDataTransferWP::UVPDataTransferWP(int correlation,
     itsCorrelation(correlation),
     itsBaseline(baseline),
     itsPatchID(patchID),
-    itsNumberOfBaselines(0),
-    itsNumberOfTimeslots(0),
-    itsNumberOfChannels(0),
-    itsFieldID(0),
-    itsFieldName("")
+    itsHeaderIsReceived(false),
+    itsHeader()
 {
 #if(DEBUG_MODE)
   TRACER1(__PRETTY_FUNCTION__);
@@ -53,7 +50,7 @@ void UVPDataTransferWP::init()
 
   WorkProcess::init();
 
-  HIID id(HIID("UVData.?.?.Patch")|itsFieldID);
+  HIID id(HIID("UVData.?.?.Patch")|itsPatchID);
   
   itsHeaderHIID =  id | AidHeader | AidCorr | AidTimeslot;
   itsDataHIID   = (id | AidData   | AidCorr | AidTimeslot | itsCorrelation |
@@ -65,6 +62,8 @@ void UVPDataTransferWP::init()
   subscribe(itsHeaderHIID);
   subscribe(itsDataHIID);
   subscribe(itsFooterHIID);
+
+  itsHeaderIsReceived = false;
 
 #if(DEBUG_MODE)
   TRACER1("End of " << __PRETTY_FUNCTION__);
@@ -83,6 +82,7 @@ bool UVPDataTransferWP::start()
   TRACER1(__PRETTY_FUNCTION__);
 #endif
   bool parentReturn = WorkProcess::start();
+
 
 
 #if(DEBUG_MODE)
@@ -119,23 +119,54 @@ int  UVPDataTransferWP::receive(MessageRef &messageRef)
     TRACER1("*** Header");
 #endif
     
-    itsNumberOfBaselines = message[FNumBaselines];
-    itsNumberOfTimeslots = message[FNumTimeslots];
-    itsNumberOfChannels  = message[FNumChannels];
-    itsFieldID           = message[FFieldIndex].as_int();
-    itsFieldName         = message[FFieldName].as_string();
+    itsHeader.itsNumberOfBaselines = message[FNumBaselines];
+    itsHeader.itsNumberOfTimeslots = message[FNumTimeslots];
+    itsHeader.itsNumberOfChannels  = message[FNumChannels];
+    itsHeader.itsFieldID           = message[FFieldIndex].as_int();
+    itsHeader.itsFieldName         = message[FFieldName].as_string();
     
+    itsHeaderIsReceived = true;
+
 #if(DEBUG_MODE)
-    TRACER1(itsFieldName << ": " << itsFieldID << ", Channels = " << itsNumberOfChannels << ", Timeslots = " << itsNumberOfTimeslots << ", Baselines = " << itsNumberOfBaselines);
+    TRACER1(itsHeader);
 #endif    
   } else if(message.id().matches(itsDataHIID)) {
 #if(DEBUG_MODE)
     TRACER1("*** Data");
 #endif
     
+    if(itsHeaderIsReceived) {
+      const DataRecord &record = dynamic_cast<const DataRecord&>(message.payload().deref());
+      
+#if(DEBUG_MODE)
+      TRACER1("record[FIFRIndex].as_int()" << record[FIFRIndex].as_int());
+      TRACER1("itsBaseline" << itsBaseline);
+#endif
+      
+      if(record[FCorr].as_int() == itsCorrelation /*&& 
+                                                    record[FIFRIndex].as_int() ==  itsBaseline*/) {
+        
+        
+        double       time = record[FTime];
+        
+        UVPDataAtom atom(itsHeader.itsNumberOfChannels, time);
+        
+        for(unsigned int i = 0; i < (unsigned int)itsHeader.itsNumberOfChannels; i++) {
+#if(DEBUG_MODE)
+          TRACER1("i: " << i);
+          TRACER1("itsBaseline: " << itsBaseline);
+          TRACER1("record[FData](i, itsBaseline): " << record[FData](i, itsBaseline).as_dcomplex());
+#endif
+          atom.setData(i, (record[FData](i, itsBaseline)).as_dcomplex() );
+        }
+        
+        itsCachedData.push_back(atom);
+
+      }
+    } // End itsHeaderIsReceived
   } else if(message.id().matches(itsFooterHIID)) {
 #if(DEBUG_MODE)
-    TRACER1("*** Footer");
+    TRACER2("*** Footer");
 #endif
   } else {
 #if(DEBUG_MODE)
@@ -145,11 +176,12 @@ int  UVPDataTransferWP::receive(MessageRef &messageRef)
   }
     
     
-  return Message::ACCEPT;
-
 #if(DEBUG_MODE)
   TRACER1("End of " << __PRETTY_FUNCTION__);
 #endif
+
+  return Message::ACCEPT;
+
 }
 
 
@@ -169,7 +201,6 @@ unsigned int UVPDataTransferWP::size() const
 //===================>>>  UVPDataTransferWP::getRow  <<<====================
 
 const UVPDataAtom *UVPDataTransferWP::getRow(unsigned int rowIndex) const
-{
-  
+{  
   return &(itsCachedData[rowIndex]);
 }
