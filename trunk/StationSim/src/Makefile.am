@@ -17,7 +17,11 @@ DH_RFITrack.h					\
 WH_RFITrack.h					\
 WH_BeamFormer.h					\
 WH_AWE.h					\
-WH_Analysis.h					
+WH_Analysis.h					\
+WH_Detection.h					\
+WH_Calibration.h				\
+WH_Cancel.h					\
+WH_VerifyRFI.h
 
 lib_LTLIBRARIES 	= libstationsim.la
 
@@ -41,7 +45,11 @@ WH_RFITrack.cc					\
 WH_BeamFormer.cc				\
 WH_AWE.cc					\
 WH_Analysis.cc					\
-StationSim.cc
+StationSim.cc					\
+WH_Detection.cc					\
+WH_Calibration.cc				\
+WH_Cancel.cc					\
+WH_VerifyRFI.cc
 
 bin_PROGRAMS		= Simulate
 Simulate_SOURCES 	= Simulate.cc Simulate.in
