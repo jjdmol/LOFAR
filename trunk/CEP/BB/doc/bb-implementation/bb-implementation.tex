@@ -6,6 +6,7 @@
 %\usepackage{amsmath,amsthm, amsfonts, amssymb, amsxtra,amsopn}
 %\usepackage{graphicx}
 \usepackage{float}
+\usepackage{makeidx}
 %\usepackage{times}
 \usepackage{fancybox}
 %\usepackage{algorithmic}
@@ -17,6 +18,7 @@
 \newfloat{prerequisite}{ht}{pre}[subsection]
 \newfloat{requirement}{H}{req}[subsection]
 
+\makeindex
 % ------------------------  End of your preamble.
 \begin{document}
 
@@ -24,14 +26,14 @@
 
   \begin{abstract}
 
-    \em{The implementation details of a blackboard application
+    \em{The implementation details of a blackboard\index{blackboard} application
       framework for self calibration in the LOFAR Central Processor}
 
     For the LOFAR project a self-calibration program shall be
     written. The idea is that this program will have the architectural
-    structure of a ``BlackBoard''. The design and implementation details
+    structure of a ``BlackBoard'' \index{blackboard!BlackBoard}. The design and implementation details
     of this application, are described here.
-   
+
   \end{abstract}
 
   \tableofcontents
@@ -46,14 +48,25 @@
     \subsection{Purpose of this document}
     \label{subsec:purpose}\hypertarget{subsec:purpose}{}
 
-      This document describes how the Blackboard architectural pattern
+      This document describes how the Blackboard
+      \index{blackboard!Blackboard architectural pattern} architectural pattern
       is implemented to fit the needs and requirements for the LOFAR
-      self-calibration-application. An demo application has been made,
+      self-calibration application. An demo application has been made,
       and test-runs have been performed in order to get a feeling of
       what is really needed. The results of those tests are described
-      in \hyperlink{bib:LOFAR-ASTRON-MEM-096}{[HOO03]} and are used in
+      in \cite{bib:LOFAR-ASTRON-MEM-096} and are used in
       for the description of the framework that is presented in this
       document.
+
+      \subsubsection{What can not be found in this document}
+
+        There is no explanation of self-calibration in this document.
+
+        There is no detailed design of the self-calibration engine in
+        this document.
+
+        There is no description or design of the self-calibration
+        algorithm in this document.
 
     \subsection{context}
     \label{subsec:context}\hypertarget{subsec:context}{}
@@ -199,9 +212,9 @@
       This section will contain some UML diagrams and accompanying
       descriptions of the intended system internals.
 
-      \subsection{control hierarchy}
+      \subsubsection{control hierarchy}
 
-      \subsection{collaboration}
+      \subsubsection{collaboration}
 
       \subsubsection{dynamic model}
 
@@ -227,7 +240,7 @@
       there are no solution threads laying around unfinished and
       unevaluated.
 
-      External knowledge sources, that are being embedded in a
+      External knowledge source\index{blackboard!knowledge source}s, that are being embedded in a
       BlackBoard-instance are going to have to adhere to some rules on
       the communications.
 
@@ -249,30 +262,84 @@
 
       \subsubsection{the BlackBoard API}
 
-        Components that access the blackboard will own tables or areas
-        on the blackboard. These are identified, and so are entries in
-        these areas. Also types of components are identified to be
-        able to determine how to interpret the data in an area.
+        Components that access the blackboard will own tables or
+        ``area''\index{blackboard!area}s on the blackboard. These are identified, and so are
+        entries in these tables, or ``item''\index{blackboard!item}s on these areas. Also
+        types of components are identified to be able to determine how
+        to interpret the data in an item.
 
-        This results in three implicit fields. that are created on
-        definition of a knowledge source. If no explicit definition of
+        This results in three implicit fields, that are created on
+        definition of a knowledge source\index{blackboard!knowledge source}. If no explicit definition of
         a quality field is given, a boolean field (good/no good) will
         be created for this knowledge source. Also there will be field
         pointing to a previous workload, and a status field telling
-        whether this entry is ``new'', ``work in progress'' or ``done''.
+        whether this entry is ``new'', ``work in progress'', ``done''
+        or ``error''.
 
-        Regular insert statements will be available. Update will be
-        available for specific knowledge sources on specific fields. A
-        definition method for this will have to be specified in
-        accordance with requirement
+        An add statement will be available. This compares to regular
+        insert in an SQL-database. It will require
+        an predecessor, and it will return an id. A default list of
+        arguments that will fill the entry with reasonable values is
+        supplied. This will have to be a hash-map with known- and
+        defined keys and their values.
+
+        Update will be available for specific knowledge sources on
+        specific fields. A definition method for this will have to be
+        specified in accordance with requirement
         \hyperlink{req:data-access-rights}{\ref{req:data-access-rights}}.
 
         Instead of a delete operation, there will be a
         finalize/abandon set of calls. These collapse a branch of
         intermediate results leaving only a final result, or a
-        tried-and-failed entry on the start of the branch.
+        ``this-has-been-tried-and-proved-to-fail'' entry on the start
+        of the branch.
+
+        \paragraph{Selfcal's entry area's} will have to supply some
+          specific functionality. The different components in the
+          system will be telling each other what a good intermediate
+          solution is and how to proceed.
+
+          A ``ThreadController'' \index{BlackBoard!ThreadController} will have to know whether it needs to issue new
+          workloads to it's controlled workers. It will need to be
+          able to add an item in the worker-area. It will also need to
+          understand ``advice's'' that come from
+          ``ThreadWatcher''s. These advices might be ``split'' to
+          start a new strategy on the present parameter-set, ``merge
+          ...'' to merge in the intermediate results of an other
+          thread or ``abandon'' to let go completely of the present
+          solution strategy and die. The decision finalize will come
+          from the ``ThreadController'' itself.
+
+          A ``ThreadWatcher'' \index{BlackBoard!ThreadWatcher} is
+          specific to the multiple solution threads paradigm, that we
+          seek to implement in this design. Based on different
+          strategies or assumptions of parameter values, different
+          solution thread\index{solution thread}s can run
+          simultaneously. These threads are watched for conversion
+          speed, solution quality or possibly other things.
+
+          The ``ThreadWatcher'' \index{BlackBoard!ThreadWatcher} gets
+          the assignment to watch a certain solution
+          thread\index{solution thread}. It will then start
+          watching all workloads pertaining to this thread, that have
+          a status of ``done''. It will then check the quality of the
+          results to that of the other threads it is watching. It will
+          also check it against a line of ancestors to see if the
+          thread is (still) convergent.
 
     \subsection{deployment}
+
+      \begin{figure}
+        \includegraphics[]{../figures/deployment-hierarchy.eps}
+        \hypertarget{fig:deployment-hierarchy}{}
+        \caption{a schema for a possible deployment hierarchy. the
+        placement of nodes has no significance to the actual placing on
+        the LOFAR cluster.\label{fig:deployment-hierarchy}}
+      \end{figure}
+
+      figure
+      \hyperlink{fig:deployment-hierarchy}{\ref{fig:deployment-hierarchy}}
+      a simple possibility of an distribution of components is shown.
 
     \subsection{code organisation}
 
@@ -612,7 +679,7 @@
 
       The data, resulting from an observation will be several TB in
       volume
-      \hyperlink{bib:LOFAR-ASTRON-MEM-035}{[SCH02]}. To
+      \cite{bib:LOFAR-ASTRON-MEM-035}. To
       conveniently handle this it will have to be partitioned. To
       handle part of the data a specialised sub-cluster will be
       defined. (see \hyperlink{fig:bb.subcluster}{Figure \ref{fig:bb.subcluster}}).
@@ -833,7 +900,9 @@
   \dbappendix{requirements-list}
   \label{app:requirements-list}\hypertarget{app:requirements-list}{}%
 
-   \listof{requirement}{}
+    \listof{requirement}{}
+
+  \printindex
 
   \dbappendix{revision log}
   \label{app:revision-log}\hypertarget{app:revision-log}{}%
@@ -860,17 +929,19 @@
   \bibliography{}
   \begin{thebibliography}{WIDELABEL}
 
-    \bibitem[SCH02]{LOFAR-ASTRON-MEM-035}
+    \bibitem[SCH02]{bib:LOFAR-ASTRON-MEM-035}
       \emph{CEP Requirements Analysis, Architectural Design and
       Description} , Kjeld van der Schaaf, Copyright \copyright{} 2002
-      ASTRON. \label{bib:LOFAR-ASTRON-MEM-035}
+      ASTRON.
 
-    \bibitem[HOO03]{LOFAR-ASTRON-MEM-096}
+    \bibitem[HOO03]{bib:LOFAR-ASTRON-MEM-096}
       \emph{The use of the Blackboard architectural pattern, in the LOFAR Central Processor, for the selfcal control system},
-      D.\ Hoogland,
+      Daan\ Hoogland,
       Copyright \copyright{} 2003 ASTRON.
-      \label{bib:LOFAR-ASTRON-MEM-096}
 
   \end{thebibliography}
 
 \end{document}
+
+% LocalWords:  blackboard Blackboard BlackBoard LOFAR API ThreadController Hoogland SQL ASTRON Schaaf
+% LocalWords:  ThreadWatcher der Kjeld Daan
