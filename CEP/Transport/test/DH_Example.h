@@ -40,7 +40,8 @@ public:
   typedef complex<float> BufferType;
 
   explicit DH_Example (const string& name="dh_example",
-		       unsigned int nbuffer = 10);
+		       unsigned int nbuffer = 10,
+		       bool useExtra = false);
 
   DH_Example(const DH_Example&);
 
@@ -67,8 +68,7 @@ public:
   /// overload the getcursize method;
   /// reported data size may be altered with setDataPacketSize() method
   int  getCurDataSize() ;
-  void setCurDataSize(const int nbytes) ;
-     
+  void setCurDataSize(const int nbytes);
 
  private:
   /// Forbid assignment.
