@@ -60,6 +60,10 @@ void AH_Correlator::define(const KeyValueMap& /*params*/) {
 		   itsNchannels,
 		   itsNpolarisations);
   
+  // Synchronise all correlators here and connect sequentially in blocks of 10
+  TH_MPI::synchronnizeAllProcesses();
+  usleep(100 * (TH_MPI::getCurrentRank()%10));
+
   // now connect to the dummy workholders. 
 
   myWHRandom.getDataManager().getOutHolder(0)->connectTo 
