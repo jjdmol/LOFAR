@@ -104,7 +104,7 @@ void doIt (const string& in, const string& out)
     Table tabb = tab.sort(colsb, Sort::Ascending,
 			  Sort::QuickSort+Sort::NoDuplicates);
     ROScalarColumn<Int> ant1(tabb,"ANTENNA1");
-    ROScalarColumn<Int> ant2(tabb,"ANTENNA1");
+    ROScalarColumn<Int> ant2(tabb,"ANTENNA2");
     a1 = ant1.getColumn();
     a2 = ant2.getColumn();
   }
