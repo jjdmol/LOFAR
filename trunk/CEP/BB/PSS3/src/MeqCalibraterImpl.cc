@@ -2424,9 +2424,11 @@ void MeqCalibrater::showParmValues()
   vector<string> :: iterator i;
   char str [20];
   vector<MeqMatrix> :: iterator j = vals.begin();
+  streamsize oldPrecision = cout.precision(10);
   for (i = parms.begin (); i != parms.end (); ++i, ++j) {
     cout << "BBSTest: parm " << *i << " = " << *j << endl;
   }
+  cout.precision(oldPrecision);
 }
 
 } // namespace LOFAR

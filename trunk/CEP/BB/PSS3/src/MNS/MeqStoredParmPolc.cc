@@ -88,7 +88,9 @@ int MeqStoredParmPolc::initDomain (const MeqDomain& domain, int spidIndex)
 		 << domain.startY() << ':' << domain.endY() << endl
 		 << "(" << polDom.startX() << ":" << polDom.endX()
 		 << ", " << polDom.startY() << ":" << polDom.endY()) ;
+    streamsize oldPrecision = cout.precision(10);
     cout << "BBSTest: simparm " << getName() << " = " << polcs[0].getSimCoeff() << endl;
+    cout.precision(oldPrecision);
   }
   return MeqParmPolc::initDomain (domain, spidIndex);
 }
