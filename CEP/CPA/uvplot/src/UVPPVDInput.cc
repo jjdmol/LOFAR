@@ -83,7 +83,6 @@ bool  UVPPVDInput::getDataAtoms(UVPDataSet* atoms,
       DataHeader.itsExposureTime    = record[FExposure].as_double();
       DataHeader.itsCorrelationType = (UVPDataAtomHeader::Correlation)record[FCorr].as_int();
       DataHeader.itsFieldID         = record[FFieldIndex].as_int();
-      //      std::cout << __FILE__ << ":" << __LINE__ <<": " << timeslot << std::endl;
       
       for(unsigned int ifr = 0; ifr < itsNumberOfBaselines; ifr++) {
         DataHeader.itsAntenna1        = *AntennaIndexPointer++;
@@ -97,7 +96,6 @@ bool  UVPPVDInput::getDataAtoms(UVPDataSet* atoms,
         DataInRecord += itsNumberOfChannels;
         
         if(DataHeader.itsAntenna1 == ant1 || DataHeader.itsAntenna2 == ant1) {
-          //          std::cout << __FILE__ << ":" << __LINE__ << ":" << DataHeader.itsAntenna1 << "-" << DataHeader.itsAntenna2 << std::endl;
           (*atoms)[DataHeader] = itsDataAtom;
         }
       }

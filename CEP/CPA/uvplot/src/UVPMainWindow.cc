@@ -22,8 +22,6 @@
 #include <aips/Arrays/Vector.h>
 #include <aips/Tables/ExprNode.h>
 #include <aips/Tables/TableColumn.h>
-#include <trial/MeasurementEquations/VisibilityIterator.h>
-#include <trial/MeasurementEquations/VisBuffer.h>
 
 
 #if(DEBUG_MODE)
@@ -404,6 +402,7 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
   MeasurementSet ms(msName);
   MSAntenna      AntennaTable(ms.antenna());
   MSField        FieldTable(ms.field());
+
   
   std::cout << "=========>>> Table thing  <<<=========" << std::endl;
   Int ant1 = Int(itsGraphSettingsWidget->getSettings().getAntenna1());
@@ -425,12 +424,13 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
     return;
   }
 
-  ROArrayColumn<Complex> DataColumn(Selection, "DATA");
-  ROScalarColumn<Double> TimeColumn(Selection, "TIME");
+  ROArrayColumn<Complex> DataColumn    (Selection, "DATA");
+  ROScalarColumn<Double> TimeColumn    (Selection, "TIME");
   ROScalarColumn<Int>    Antenna1Column(Selection, "ANTENNA1");
   ROScalarColumn<Int>    Antenna2Column(Selection, "ANTENNA2");
-
-  //  ROScalarColumn<Float>  TimeColumn(Selection, "TIME");
+  ROScalarColumn<Int>    FieldColumn   (Selection, "FIELD_ID");
+  ROArrayColumn<Bool>    FlagColumn    (Selection, "FLAG");
+  ROScalarColumn<Double> ExposureColumn(Selection, "EXPOSURE");
 
   unsigned int NumRows          = ms.nrow();
   unsigned int NumAntennae      = AntennaTable.nrow();
@@ -438,6 +438,24 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
   unsigned int NumPolarizations = DataColumn(0).shape()[0];
   unsigned int NumChannels      = DataColumn(0).shape()[1];
   unsigned int NumSelected      = Selection.nrow();
+
+  MSPolarization           PolarizationTable(ms.polarization());
+  ROArrayColumn<Int>       PolTypeColumn(PolarizationTable, "CORR_TYPE");
+
+  std::vector<int>         PolType(NumPolarizations);
+  std::vector<UVPDataAtom>       Atoms(NumPolarizations);
+  std::vector<UVPDataAtomHeader> Headers(NumPolarizations);
+  
+  for(unsigned int i = 0; i < NumPolarizations; i++) {
+    IPosition Pos(1,0);
+    Pos[0] = i;
+    PolType[i] = PolTypeColumn(0)(Pos);
+    Headers[i] = UVPDataAtomHeader(ant1, ant2);
+    Headers[i].itsCorrelationType = UVPDataAtomHeader::Correlation(PolType[i]);
+    Atoms[i]   = UVPDataAtom(NumChannels, Headers[i]);
+    Atoms[i].setHeader(Headers[i]);
+  }
+
 
   itsNumberOfChannels  = NumChannels;
   itsNumberOfTimeslots = 1500;
@@ -449,37 +467,41 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
 
   slot_setProgressTotalSteps(NumSelected);
   
-  UVPDataAtomHeader Header(ant1, ant2);
-  UVPDataAtom       Atom(NumChannels, Header);
-  
   itsBusyPlotting = true;
   
   for(unsigned int i = 0; i < NumSelected && itsBusyPlotting; i++) {
-    IPosition   Pos(2, 0);
-    Header.itsTime     = TimeColumn(i);
-    Header.itsAntenna1 = Antenna1Column(i);
-    Header.itsAntenna2 = Antenna2Column(i);
-    Header.sortAntennae();
-    Header.itsCorrelationType = UVPDataAtomHeader::RR;
+    
+    bool           DeleteData;
+    Array<Complex> DataArray(DataColumn(i));
+    const Complex* Data = DataArray.getStorage(DeleteData);
+
+    bool           DeleteFlag;
+    Array<Bool>    FlagArray(FlagColumn(i));
+    const bool*    Flag = FlagArray.getStorage(DeleteFlag);
+    
+    // ******* LOOK AT THIS LOOP VERY CAREFULLY, STILL INCORRECT!!!!
     for(unsigned int j = 0; j < NumChannels; j++) {
-      Pos[0] = 0;
-      Pos[1] = j;
-      Atom.setData(j, DataColumn(i)(Pos));
+      for(unsigned int k = 0; k < NumPolarizations; k++) {      
+        Atoms[k].setData(j, *Data++);
+        Atoms[k].setFlag(j, *Flag++);
+      }
     }
-    Atom.setHeader(Header);
-    itsDataSet[Header] = Atom;
 
+    for(unsigned int k = 0; k < NumPolarizations; k++) {
+      Headers[k].itsTime         = TimeColumn(i);
+      Headers[k].itsAntenna1     = Antenna1Column(i);
+      Headers[k].itsAntenna2     = Antenna2Column(i);
+      Headers[k].itsExposureTime = ExposureColumn(i);
+      Headers[k].itsFieldID      = FieldColumn(i);
+      Headers[k].sortAntennae();
+      Atoms[k].setHeader(Headers[k]);
+      itsDataSet[Headers[k]]= Atoms[k];
+    }      
 
-    Header.itsCorrelationType = UVPDataAtomHeader::LL;
-    for(unsigned int j = 0; j < NumChannels; j++) {
-      Pos[0] = 1;
-      Pos[1] = j;
-      Atom.setData(j, DataColumn(i)(Pos));
-    }
-    Atom.setHeader(Header);
-    itsDataSet[Header] = Atom;
+    DataArray.freeStorage(Data, DeleteData); 
+    FlagArray.freeStorage(Flag, DeleteFlag);
 
-    if(i % 100 == 0) {
+    if(i % 200 == 0) {
       slot_setProgress(i+1);
       drawDataSet();
     }
@@ -491,12 +513,8 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
 
   drawDataSet();  
 
-  std::cout << DataColumn(0).shape() << std::endl;
-  std::cout << "=========>>> Table thing  <<<=========" << std::endl << std::flush;
-
-  
 #if(DEBUG_MODE)
-  TRACER1("Selection.nrow(); " <<   Selection.nrow());
+  TRACER1("Selection.nrow(); " << Selection.nrow());
   TRACER1("NumRows         : " << NumRows);
   TRACER1("NumBaselines    : " << NumBaselines);
   TRACER1("NumPolarizations: " << NumPolarizations);
@@ -539,7 +557,7 @@ void UVPMainWindow::slot_readPVD(const std::string& pvdName)
   itsBusyPlotting = true;
 
   while(pvd.getDataAtoms(&itsDataSet, ant1, ant2) && itsBusyPlotting) {
-    if(pass % 10 == 0) {
+    if(pass % 20 == 0) {
       drawDataSet();
     }
     pass++;
