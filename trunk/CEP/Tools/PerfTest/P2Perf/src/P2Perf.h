@@ -1,4 +1,4 @@
-//  SeqSim.h: Concrete Simulator class for a sequence of steps
+//  P2Perf.h: Concrete Simulator class for a sequence of steps
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.4  2001/10/26 10:06:28  wierenga
+//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
+//
 //  Revision 1.3  2001/09/19 08:00:13  wierenga
 //  Added code to do performance tests.
 //
@@ -50,11 +53,11 @@
    This class is an example of a concrete Simulator.
 */
 
-class SeqSim: public Simulator
+class P2Perf: public Simulator
 {
 public:
-  SeqSim();
-  virtual ~SeqSim();
+  P2Perf();
+  virtual ~P2Perf();
 
   virtual void define(const ParamBlock& params = ParamBlock());
   virtual void run(int);
