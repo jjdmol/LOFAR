@@ -1,4 +1,4 @@
-//#  MiniDataManager.h: a DataManager implementation for tinyCEP
+//#  MiniDataManager.h: a BaseDataManager implementation for tinyCEP
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,8 +26,8 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <tinyCEP/DataManager.h>
-#include <libTransport/Transporter.h>
+#include <tinyCEP/BaseDataManager.h>
+#include <libTransport/DataHolder.h>
 
 namespace LOFAR
 {
@@ -37,25 +37,25 @@ namespace LOFAR
 
 
   // Description of class.
-  class MiniDataManager : public DataManager
+  class MiniDataManager : public BaseDataManager
   {
   public:
     MiniDataManager(int inputs, int outputs);
 
     virtual ~MiniDataManager();
 
-    Transporter* getInTransporter(int dholder);
-    Transporter* getOutTransporter(int dholder);
+    DataHolder* getInHolder(int dholder);
+    DataHolder* getOutHolder(int dholder);
 
-    void addInTransporter(int channel, Transporter* tptr);
-    void addOutTransporter(int channel, Transporter* tptr);
+    void addInDataHolder(int channel, DataHolder* dhptr);
+    void addOutDataHolder(int channel, DataHolder* dhptr);
 
   private:
     int itsNinputs;
     int itsNoutputs;
     
-    Transporter** itsInTRs;
-    Transporter** itsOutTRs;
+    DataHolder** itsInTRs;
+    DataHolder** itsOutTRs;
   };
 
 } // namespace LOFAR
