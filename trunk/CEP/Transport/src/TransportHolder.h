@@ -73,10 +73,24 @@ public:
   virtual int recvLengthBlocking (int tag);
 
   /// Get the header (of the blob) in case of a variable length send.
-  virtual bool recvHeaderBlocking (void* buf, int nbytes, int tag);
+  // It returns the number of bytes skipped in the input stream.
+  // For example, TH_Mem returns 0, while TH_Socket returns nbytes.
+  virtual int recvHeaderBlocking (void* buf, int nbytes, int tag);
 
   /// Start receiving the data sent by the connected TransportHolder.
   virtual bool recvNonBlocking (void* buf, int nbytes, int tag);
+
+  /// Get the length in case of a variable length send.
+  // If -1 is returned, the length cannot be obtained directly
+  // and recvHeaderNonBlocking will be used by Transporter::read.
+  // 0 is returned if there is no data available yet.
+  virtual int recvLengthNonBlocking (int tag);
+
+  /// Get the header (of the blob) in case of a variable length send.
+  // It returns the number of bytes skipped in the input stream.
+  // For example, TH_Mem returns 0, while TH_Socket returns nbytes.
+  // -1 is returned if there is no data available yet.
+  virtual int recvHeaderNonBlocking (void* buf, int nbytes, int tag);
 
   /// Wait until data has been received into buf.
   virtual bool waitForReceived(void* buf, int nbytes, int tag);
