@@ -20,6 +20,9 @@
 //#
 //#  $Id$
 
+#ifndef LOFAR_PL_PERSISTENCEBROKER_TCC
+#define LOFAR_PL_PERSISTENCEBROKER_TCC
+
 #include <PL/Exception.h>
 #include <PL/TPersistentObject.h>
 #include <PL/Collection.h>
@@ -48,3 +51,5 @@ namespace LOFAR
   } // namespace PL
 
 } // namespace LOFAR
+
+#endif
