@@ -978,7 +978,8 @@ string Socket::errstr () const
     	return ("");
 	}
 
-	return (formatString(socketErrStr[-itsErrno], errno, strerror(errno)));
+ 	return (formatString(socketErrStr[-itsErrno], 
+                             itsSysErrno, strerror(itsSysErrno)));
 }
 
 
