@@ -7,7 +7,12 @@ use_valgrind_opts := [ "",
 #  "--gdb-path=/home/oms/bin/valddd", 
   ""];
   
-include 'meq/meqserver.g'
+if( any(argv == '-runtest' ) )
+  meqserver_path := './meqserver.g'
+else
+  meqserver_path := 'meq/meqserver.g'
+  
+include meqserver_path
 
 const solver_test := function (gui=T,debug_level=2,verbose=1)
 {
