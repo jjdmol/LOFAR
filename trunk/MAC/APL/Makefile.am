@@ -1,5 +1,5 @@
 SUBDIRS= \
   APLCommon \
-  PAC \
+  PAC
 
 include $(lofar_sharedir)/Makefile.common

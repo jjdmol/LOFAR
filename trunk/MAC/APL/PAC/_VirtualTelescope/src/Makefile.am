@@ -20,6 +20,8 @@ libvirtualtelescope_la_SOURCES= $(DOCHDRS) \
 	AVTStationBeamformer.cc \
 	AVTVirtualTelescope.cc
 	
+BUILT_SOURCES = LogicalDevice_Protocol.ph
+
 libvirtualtelescope_la_CPPFLAGS= \
 	-I$(top_srcdir)/APLCommon/src 
 

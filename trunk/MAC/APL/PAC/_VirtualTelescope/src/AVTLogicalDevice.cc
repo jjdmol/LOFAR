@@ -24,8 +24,8 @@
 #define DECLARE_SIGNAL_NAMES
 #include "LogicalDevice_Protocol.ph"
 
-AVTLogicalDevice::AVTLogicalDevice(const string& taskName, 
-                                   const TPropertySet& primaryPropertySet
+AVTLogicalDevice::AVTLogicalDevice(string& taskName, 
+                                   const TPropertySet& primaryPropertySet,
                                    const string& APCName,
                                    const string& APCScope) :
   GCFTask((State)&AVTLogicalDevice::initial_state,taskName),
@@ -50,7 +50,7 @@ const string& AVTLogicalDevice::getServerPortName()
 
 bool AVTLogicalDevice::_isLogicalDeviceServerPort(GCFPortInterface& port)
 {
-  return (&port == &m_logicalDeviceServerPort) // comparing two pointers. yuck?
+  return (&port == &m_logicalDeviceServerPort); // comparing two pointers. yuck?
 }
    
 void AVTLogicalDevice::_disconnectedHandler(GCFPortInterface& port)
@@ -70,7 +70,7 @@ GCFEvent::TResult AVTLogicalDevice::initial_state(GCFEvent& event, GCFPortInterf
   
   if(_isLogicalDeviceServerPort(port))
   {
-    switch (e.signal)
+    switch (event.signal)
     {
       case F_INIT_SIG:
         break;
@@ -102,7 +102,7 @@ GCFEvent::TResult AVTLogicalDevice::initial_state(GCFEvent& event, GCFPortInterf
     // transition to the idle state is done in the derived class
     status = concrete_initial_state(event,port);
   }
-  return status
+  return status;
 }
 
 GCFEvent::TResult AVTLogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& port)
