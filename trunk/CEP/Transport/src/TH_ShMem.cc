@@ -58,14 +58,11 @@ namespace LOFAR
 #define TH_SHMEM_MAX_HOSTNAME_SIZE 256
 char* TH_ShMem::hostNames = 0;
 
-/**
- * Prototype variable declaration. Can be
- * used in functions requiring a prototype
- * argument (for the prototype design patterns).
- */
-TH_ShMem TH_ShMem::proto;
 
-TH_ShMem::TH_ShMem() : itsFirstCall(true), itsSendBuf(0), itsRecvBuf(0)
+TH_ShMem::TH_ShMem()
+  : itsFirstCall (true),
+    itsSendBuf   (0),
+    itsRecvBuf   (0)
 {}
 
 TH_ShMem::~TH_ShMem()
@@ -80,7 +77,7 @@ TH_ShMem::~TH_ShMem()
 
 TH_ShMem* TH_ShMem::make() const
 {
-    return new TH_ShMem();
+  return new TH_ShMem();
 }
 
 string TH_ShMem::getType() const
@@ -88,7 +85,7 @@ string TH_ShMem::getType() const
     return "TH_ShMem";
 }
 
-BlobStringType TH_ShMem::blobStringType()
+BlobStringType TH_ShMem::blobStringType() const
 {
   return BlobStringType (false, ShMemAllocator());
 }
@@ -108,16 +105,24 @@ void* TH_ShMem::ShMemAllocator::allocate(size_t size)
     // allocate buffer header plus data space
     buf = (TH_ShMem::ShMemBuf*)shmem_malloc(sizeof(TH_ShMem::ShMemBuf) + size);
 
+    cout << TH_ShMem::getCurrentRank() << " alloc" << (void*)buf << ' ' << size<<endl;
     // initialize header
     buf->init();
 
     // return address of first buffer element
+    void* ptr = buf->getDataAddress();
+    cout << TH_ShMem::getCurrentRank() << " alloc ptr " << ptr << endl;
     return buf->getDataAddress();
 }
 
 void TH_ShMem::ShMemAllocator::deallocate(void* ptr)
 {
-    shmem_free((void*)TH_ShMem::ShMemBuf::toBuf(ptr));
+  if (ptr) {
+    void* buf = TH_ShMem::ShMemBuf::toBuf(ptr);
+    cout << TH_ShMem::getCurrentRank() << " shmem dealloc " << ptr << ' ' << buf << endl;
+    shmem_free(buf);
+    cout << TH_ShMem::getCurrentRank() << "shmem dealloc done" << endl;
+  }
 }
 
 
@@ -154,9 +159,15 @@ void TH_ShMem::initRecv(void* buf, int source, int tag)
 	MPI_Status status;
     
 	// recv info about message
+	cout << "recvinit mpi from " << itsRecvContext.remote << ' ' << itsRecvContext.tag << endl;
 	result = MPI_Recv(&(itsRecvContext.handle), sizeof(ShMemHandle), MPI_BYTE,
 			  itsRecvContext.remote, itsRecvContext.tag,
 			  MPI_COMM_WORLD, &status);
+	cout << "recvinit mpi done " << result << endl;
+	int cnt;
+	MPI_Get_count(&status, MPI_BYTE, &cnt);
+	cout << "count " << cnt << ' '<<itsRecvContext.handle.getShmid()
+	     <<' ' <<itsRecvContext.handle.getOffset()<< endl;
 	
 	DbgAssertStr(status.MPI_SOURCE == source
 		     && status.MPI_TAG == tag,
@@ -170,6 +181,7 @@ void TH_ShMem::initRecv(void* buf, int source, int tag)
 	{
 	    Throw("shmem_connect failed");
 	}
+	cout << "recvinit mpi fully done" << endl;
     }
 }
 
@@ -180,6 +192,7 @@ bool TH_ShMem::recvBlocking(void* buf, int nbytes, int source, int tag)
 
     if (itsFirstCall)
     {
+      cout << TH_ShMem::getCurrentRank() << "recv firstCall" << endl;
 	itsFirstCall = false;
 	initRecv(buf, source, tag);
 	/* initRecv sets itsSendBuf (remote, connected) and itsRecvBuf (local) */
@@ -192,6 +205,7 @@ bool TH_ShMem::recvBlocking(void* buf, int nbytes, int source, int tag)
     // check whether allocated with TH_ShMem::allocate
     if (itsRecvBuf->matchMagicCookie())
     {
+      cout << "recv cookiematch" << endl;
 #ifdef SEM_SYNC
 
 	// wait until sender is in send routine
@@ -223,7 +237,8 @@ bool TH_ShMem::recvBlocking(void* buf, int nbytes, int source, int tag)
     }
     else
     {
-	// buffer not allocate with TH_ShMem::allocate
+      cout << "recv no cookiematch" << endl;
+	// buffer not allocated with TH_ShMem::allocate
 	mpi_result = MPI_Recv(itsRecvContext.buf, nbytes, MPI_BYTE,
 			      itsRecvContext.remote, itsRecvContext.tag,
 			      MPI_COMM_WORLD, &mpi_status);
@@ -252,10 +267,14 @@ void TH_ShMem::initSend(void* buf, int destination, int tag)
 				  shmem_offset(itsSendBufPtr));
 
 	// send info about buffer
+	cout << "sendinit mpi to " << destination << ' ' << tag << endl;
 	result = MPI_Send(&(itsSendContext.handle),
 			  sizeof(ShMemHandle), MPI_BYTE, destination, tag,
 			  MPI_COMM_WORLD);
 	DbgAssertStr(MPI_SUCCESS == result, "MPI_Send failed");
+	cout << "sendinit mpi done" << endl;
+	cout << "hand " <<itsSendContext.handle.getShmid()
+	     <<' '<<itsSendContext.handle.getOffset()<< endl;
     }
 }
 
@@ -268,6 +287,7 @@ bool TH_ShMem::sendBlocking(void* buf, int nbytes, int destination, int tag)
 
     if (itsFirstCall)
     {
+      cout << TH_ShMem::getCurrentRank() << "send firstcall " << endl;
 	itsFirstCall = false;
 
 	initSend(buf, destination, tag);
@@ -283,6 +303,7 @@ bool TH_ShMem::sendBlocking(void* buf, int nbytes, int destination, int tag)
     if (itsSendBuf->matchMagicCookie())
     {
 #ifdef SEM_SYNC
+cout << TH_ShMem::getCurrentRank() << "send matchcookie sem" << endl;
 
 	// signal that the send is ready
 	shmem_cond_signal(itsSendBuf->getSendReadyCondition());
@@ -291,6 +312,7 @@ bool TH_ShMem::sendBlocking(void* buf, int nbytes, int destination, int tag)
 	shmem_cond_wait(itsSendBuf->getRecvCompleteCondition());
 
 #else
+cout << TH_ShMem::getCurrentRank() << "send matchcookie mpi" << endl;
 	
 	int         sendReady = TH_SHMEM_SENDREADY_MAGIC;
 	int         ack;
@@ -318,6 +340,7 @@ bool TH_ShMem::sendBlocking(void* buf, int nbytes, int destination, int tag)
     }
     else
     {
+cout << TH_ShMem::getCurrentRank() << "send no matchcookie mpi" << endl;
         mpi_result = MPI_Send(itsSendContext.buf,
 			  nbytes, MPI_BYTE, itsSendContext.remote, itsSendContext.tag,
 			  MPI_COMM_WORLD);
