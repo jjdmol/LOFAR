@@ -108,6 +108,7 @@ class UVPMainWindow:public QMainWindow
   QLabel*         itsXPosLabel;
   QLabel*         itsYPosLabel;
   QLabel*         itsTimeLabel;
+  QLabel*         itsVisibilityLabel;
   QScrollView*    itsScrollView;
 
   unsigned int    itsNumberOfChannels;
@@ -135,6 +136,8 @@ class UVPMainWindow:public QMainWindow
   void slot_about_uvplot();
 
   void slot_setTime(double time);
+
+  void slot_setVisibility(UVPDataAtom::ComplexType vis);
 
 
 private:

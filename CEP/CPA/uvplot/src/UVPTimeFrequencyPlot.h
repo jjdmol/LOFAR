@@ -87,6 +87,7 @@ class UVPTimeFrequencyPlot: public UVPDisplayArea
   signals:
  
   void signal_timeChanged(double time);
+  void signal_visibilityChanged(UVPDataAtom::ComplexType vis);
   
  protected:
 

@@ -43,6 +43,8 @@ UVPTimeFrequencyPlot::UVPTimeFrequencyPlot(QWidget *parent)
   TRACERF1("");
 #endif
 
+  setCursor(CrossCursor);
+
   connect(this, SIGNAL(signal_paletteChanged()),
           this, SLOT(slot_paletteChanged()));
 }
@@ -175,10 +177,10 @@ void UVPTimeFrequencyPlot::drawView()
           BufferPainter.setPen(Blue);
         } else {
           // SOMETIMES colre > Ncol ?!?!?!
-          int colre = int(itsValueAxis.worldToAxis(spectrum->real()));
-          int colim = int(itsValueAxis.worldToAxis(spectrum->imag()));
+          unsigned int colre = int(itsValueAxis.worldToAxis(spectrum->real()));
+          unsigned int colim = int(itsValueAxis.worldToAxis(spectrum->imag()));
           
-          if(colre < Ncol && colim < Ncol && colre >= 0 && colim >= 0) {
+          if(colre < Ncol && colim < Ncol) {
             BufferPainter.setPen(itsComplexColormap[itsRealIndex[colre]+itsImagIndex[colim]]); 
           } else {
             std::cout << "*************************************" << std::endl;
@@ -234,8 +236,13 @@ void UVPTimeFrequencyPlot::mouseMoveEvent(QMouseEvent *event)
 {
   UVPDisplayArea::mouseMoveEvent(event);
 
-  if(event->pos().y() >= 0 && (unsigned int)event->pos().y() < itsComplexSpectrum.size()) {
-    emit signal_timeChanged(itsComplexSpectrum[event->pos().y()]->getHeader().itsTime);
+  int x = event->pos().x(); 
+  int y = event->pos().y(); 
+
+  if(y >= 0 && (unsigned int)y < itsComplexSpectrum.size() &&
+     x >= 0 && (unsigned int)x < itsComplexSpectrum[y]->getNumberOfChannels()) {
+    emit signal_timeChanged(itsComplexSpectrum[y]->getHeader().itsTime);
+    emit signal_visibilityChanged(*(itsComplexSpectrum[y]->getData(x) ));
   } else {
     emit signal_timeChanged(0);
   }

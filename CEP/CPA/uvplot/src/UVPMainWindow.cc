@@ -102,7 +102,13 @@ UVPMainWindow::UVPMainWindow()
   connect(itsCanvas, SIGNAL(signal_timeChanged(double)),
           this, SLOT(slot_setTime(double)));
 
+  connect(itsCanvas, SIGNAL(signal_visibilityChanged(UVPDataAtom::ComplexType)),
+          this, SLOT(slot_setVisibility(UVPDataAtom::ComplexType)));
+
   resizeEvent(0);
+
+  itsCanvas->setXAxis(UVPAxis(1,1,"Channel", ""));
+  itsCanvas->setYAxis(UVPAxis(1,1,"Timeslot", ""));
   itsCanvas->drawView();
 
   setFocusPolicy(QWidget::StrongFocus);
@@ -165,16 +171,18 @@ void UVPMainWindow::buildMenuBar()
 
 void UVPMainWindow::buildStatusBar()
 {
-  itsStatusBar   = new QStatusBar(this);
-  itsProgressBar = new QProgressBar(itsStatusBar);
-  itsXPosLabel   = new QLabel(itsStatusBar);
-  itsYPosLabel   = new QLabel(itsStatusBar);
-  itsTimeLabel   = new QLabel(itsStatusBar);
+  itsStatusBar       = new QStatusBar(this);
+  itsProgressBar     = new QProgressBar(itsStatusBar);
+  itsXPosLabel       = new QLabel(itsStatusBar);
+  itsYPosLabel       = new QLabel(itsStatusBar);
+  itsTimeLabel       = new QLabel(itsStatusBar);
+  itsVisibilityLabel = new QLabel(itsStatusBar);
 
-  itsStatusBar->addWidget(itsXPosLabel, 2, true);
-  itsStatusBar->addWidget(itsYPosLabel, 2, true);
-  itsStatusBar->addWidget(itsTimeLabel, 2, true);
-  itsStatusBar->addWidget(itsProgressBar, 5, true);
+  itsStatusBar->addWidget(itsXPosLabel      , 2, true);
+  itsStatusBar->addWidget(itsYPosLabel      , 2, true);
+  itsStatusBar->addWidget(itsTimeLabel      , 2, true);
+  itsStatusBar->addWidget(itsVisibilityLabel, 2, true);
+  itsStatusBar->addWidget(itsProgressBar    , 7, true);
   
   itsStatusBar->show();
 }
@@ -759,4 +767,16 @@ void UVPMainWindow::slot_setTime(double time /* in MJD seconds*/)
     Time.print(out, MVTime::YMD);
   }
   itsTimeLabel->setText(out.str().c_str());
+}
+
+
+
+
+//=================>>>  UVPMainWindow::slot_setVisibility  <<<=================
+
+void UVPMainWindow::slot_setVisibility(UVPDataAtom::ComplexType vis)
+{
+  std::ostringstream out;
+  out << vis;
+  itsVisibilityLabel->setText(out.str().c_str());
 }
