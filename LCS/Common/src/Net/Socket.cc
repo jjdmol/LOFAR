@@ -730,8 +730,12 @@ int32 Socket::read (void	*buf, int32	maxBytes)
 	    errno = 0;
 		socklen_t alen = sizeof(itsTCPAddr);
 		if (((bytesRead = recvfrom(itsSocketID, (char*)buf, maxBytes, 0,
-						(struct sockaddr*)&itsTCPAddr, &alen)) <= 0) ||
-																errno) {
+						(struct sockaddr*)&itsTCPAddr, &alen)) <= 0) 
+						|| errno) {
+			LOG_TRACE_CALC(formatString("Socket(%d):read(%d)=%d%s, errno=%d(%s)", 
+						itsSocketID, bytesLeft, bytesRead, 
+						sigpipe ? " SIGPIPE" : "", 
+						errno, strerror(errno)));
 			return (setErrno(READERR));
 		}
 
