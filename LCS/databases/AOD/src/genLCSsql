@@ -116,7 +116,7 @@ AddCreateTableCommand()
 	echo "drop table ${Table};"
 	echo "create table ${Table} ("
 	echo    "	ObjId		BIGINT		NOT NULL UNIQUE PRIMARY KEY,"
-	echo    "	Parent		BIGINT		NOT	NULL,"
+	echo    "	Owner		BIGINT		NOT	NULL,"
 	echo -n "	ModTime		TIMESTAMP	NOT NULL"
 	
 	cleanlist ${TMPFILE} | grep ":${Table}:" | while read line
@@ -134,9 +134,22 @@ AddCreateTableCommand()
 		fi
 	done
 
-	echo "\n);\n"
+	echo "\n);"
+	echo ""
 
 }
+#
+# AddCreateTriggerCommand tablename
+#
+AddCreateTriggerCommand()
+{
+	Table=$1
+
+	echo "CREATE TRIGGER ${Table}_update_modtime BEFORE INSERT OR UPDATE ON ${Table}"
+	echo "FOR EACH ROW EXECUTE PROCEDURE update_modtime();"
+	echo ""
+}
+
 #
 # cleanlist filename
 #
@@ -188,9 +201,10 @@ do
 	TableName=`echo $line | cut -d':' -f2`
 	if [ "${TableName}" != "${PrevTable}" ]; then	# new table?
 		SQLFILE=${ClassName}.sql
-		InitSQLfile c ${ClassName}			 >${SQLFILE}
-		AddCreateTableCommand ${TableName}  >>${SQLFILE}
-		echo "\i ${SQLFILE}"				>>${MODFILE}
+		InitSQLfile c ${ClassName}				  >${SQLFILE}
+		AddCreateTableCommand ${TableName} 		 >>${SQLFILE}
+		AddCreateTriggerCommand ${TableName}	 >>${SQLFILE}
+		echo "\i ${SQLFILE}"					 >>${MODFILE}
 		PrevTable=${TableName}
 	fi
 done
