@@ -176,7 +176,6 @@ namespace LOFAR {
     LOG_TRACE_STAT("retreiving sources");
     vector<string> nams;
   
-    // right now: search on name only and return only one MPH
     MPHKey key;
     MPHValue value;
   
@@ -190,11 +189,12 @@ namespace LOFAR {
     while (cursorp->get(&key, &value, DB_NEXT) == 0) {
       name = value.getMPH().getName();
       if (name.find("RA") != string::npos)
+	
 	nams.push_back(name);
     }
   
     LOG_TRACE_STAT_STR("finished retreiving "<<nams.size()<<" sources from "<<itsTableName);
-    cout<<"finished retreiving "<<nams.size()<<" sources from "<<itsTableName<<endl;;
+    //cout<<"finished retreiving "<<nams.size()<<" sources from "<<itsTableName<<endl;;
     return nams;
     cursorp->close();
   }
