@@ -62,6 +62,9 @@ public:
 
   virtual TH_MPI* make() const;
 
+  // This method does nothing. Use initMPI(..) once at the start of your application!
+  bool init();
+
   void lock();
   void unlock();
 
@@ -88,7 +91,7 @@ public:
   /// Get the type of transport.
   virtual string getType() const;
 
-  static void init (int argc, const char *argv[]);
+  static void initMPI (int argc, const char *argv[]);
   static void finalize();
   static void waitForBroadCast();
   static void waitForBroadCast (unsigned long& aVar);
@@ -133,6 +136,9 @@ private:
  public:
 
 };
+
+inline bool TH_MPI::init()
+  { return true;}
 
 }
 

@@ -61,6 +61,10 @@ public:
 
   virtual ~TH_ShMem();
 
+  // This init does nothing. Initialization occurs in the first
+  // send and receive call.
+  bool init();
+
   /**
      Receive the data. This call does the actual data transport
      by memcpy'ing the data from the sender.
@@ -199,6 +203,9 @@ public:
 
   static char* hostNames;
 };
+
+inline bool TH_ShMem::init()
+  { return true; }
 
 }
 
