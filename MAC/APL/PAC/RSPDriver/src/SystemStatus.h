@@ -25,6 +25,8 @@
 #ifndef SYSTEMSTATUS_H_
 #define SYSTEMSTATUS_H_
 
+#include "EPA_Protocol.ph"
+
 #include <complex>
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
@@ -32,42 +34,49 @@
 namespace RSP_Protocol
 {
   class SystemStatus
-      {
-      public:
-	  /**
-	   * Constructors for a SystemStatus object.
-	   * Currently the tv_usec part is always set to 0 irrespective
-	   * of the value passed in.
-	   */
-	  SystemStatus() { }
+  {
+    public:
+      /**
+       * Constructors for a SystemStatus object.
+       * Currently the tv_usec part is always set to 0 irrespective
+       * of the value passed in.
+       */
+      SystemStatus() { }
 	  
-	  /* Destructor for SystemStatus. */
-	  virtual ~SystemStatus() {}
+      /* Destructor for SystemStatus. */
+      virtual ~SystemStatus() {}
 
-      public:
-	  /*@{*/
-	  /**
-	   * marshalling methods
-	   */
-	  unsigned int getSize();
-	  unsigned int pack  (void* buffer);
-	  unsigned int unpack(void *buffer);
-	  /*@}*/
+    public:
+      /*@{*/
+      /**
+       * marshalling methods
+       */
+      unsigned int getSize();
+      unsigned int pack  (void* buffer);
+      unsigned int unpack(void *buffer);
+      /*@}*/
 
-      private:
-	  /**
-	   * System status fields
-	   * Dimension of each array is eaqual to the
-	   * number of configured hardware resources.
-	   * The dimension of the m_rcu_status array
-	   * is dependent on the number of bits set
-	   * in the rcumask parameter.
-	   */
-	  blitz::Array<uint16, 1> m_ap_status;
-	  blitz::Array<uint16, 1> m_bp_status;
-	  blitz::Array<uint32, 1> m_eth_status;
-	  blitz::Array<uint16, 1> m_rcu_status;
-      };
+    private:
+      /*@{*/
+      /**
+       * System status fields.
+       *
+       * Dimensions of the arrays are:
+       *  - m_rsp_status  [N_RSPBOARDS]
+       *  - m_read_status [N_RSPBOARDS]
+       *  - m_write_status[N_RSPBOARDS]
+       *  - m_bp_status   [N_RSPBOARDS]
+       *  - m_ap_status   [N_RSPBOARDS * N_AP]
+       *  - m_rcu_status  [N_RSPBOARDS * N_BLP]
+       */
+      blitz::Array<EPA_Protocol::RSPStatus,  1> m_rsp_status;
+      blitz::Array<EPA_Protocol::MEPStatus,  1> m_read_status;
+      blitz::Array<EPA_Protocol::MEPStatus,  1> m_write_status;
+      blitz::Array<EPA_Protocol::FPGAStatus, 1> m_bp_status;
+      blitz::Array<EPA_Protocol::FPGAStatus, 1> m_ap_status;
+      blitz::Array<EPA_Protocol::RCUStatus,  1> m_rcu_status;
+      /*@}*/
+  };
 };
      
 #endif /* SYSTEMSTATUS_H_ */

@@ -52,7 +52,7 @@ namespace RSP_Protocol
       static const int NDIM = 3;
 
       /* get reference to the weights array */
-      blitz::Array<std::complex<int16>, NDIM>& weights();
+      blitz::Array<std::complex<int16>, NDIM>& operator()();
 
     public:
       /*@{*/
@@ -74,7 +74,7 @@ namespace RSP_Protocol
       blitz::Array<std::complex<int16>, NDIM> m_weights;
   };
 
-  inline blitz::Array<std::complex<int16>, RSP_Protocol::BeamletWeights::NDIM>& BeamletWeights::weights() { return m_weights; }
+  inline blitz::Array<std::complex<int16>, RSP_Protocol::BeamletWeights::NDIM>& BeamletWeights::operator()() { return m_weights; }
 };
      
 #endif /* BEAMLETWEIGHTS_H_ */

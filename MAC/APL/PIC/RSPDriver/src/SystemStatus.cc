@@ -21,6 +21,8 @@
 //#  $Id$
 
 #include "SystemStatus.h"
+#include "MEPHeader.h"
+#include <blitz/array.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -29,21 +31,69 @@
 using namespace LOFAR;
 
 using namespace RSP_Protocol;
+using namespace EPA_Protocol;
 using namespace std;
+using namespace blitz;
+
+#define PACK_ARRAY(bufptr, offset, array, datatype)					  \
+do {										  \
+  for (int dim = firstDim; dim < firstDim + array.dimensions(); dim++)		  \
+  {										  \
+    int32 extent = array.extent(dim);						  \
+    memcpy((bufptr) + offset, &extent, sizeof(int32));				  \
+    offset += sizeof(int32);							  \
+  }										  \
+										  \
+  if (array.isStorageContiguous())						  \
+  {										  \
+    memcpy((bufptr) + offset, array.data(), array.size() * sizeof(complex<int16>)); \
+    offset += array.size() * sizeof(datatype);					  \
+  }										  \
+  else										  \
+  {										  \
+    LOG_FATAL("array must be contiguous");					  \
+    exit(EXIT_FAILURE);								  \
+  }										  \
+} while (0)
+
+#define UNPACK_ARRAY(bufptr, offset, array, datatype)			      \
+do {									      \
+  TinyVector<int, array.dimensions()> extent;				      \
+									      \
+  for (int dim = firstDim; dim < firstDim + array.dimensions(); dim++)	      \
+  {									      \
+    int32 extenttmp = array.extent(dim);				      \
+    memcpy(&extenttmp, (bufptr) + offset, sizeof(int32));			      \
+    offset += sizeof(int32);						      \
+    extent(dim - firstDim) = extenttmp;					      \
+  }									      \
+									      \
+  /* resize the array to the correct size */				      \
+  array.resize(extent);							      \
+									      \
+  memcpy(array.data(), (bufptr) + offset, array.size() * sizeof(complex<int16>)); \
+  offset += array.size() * sizeof(datatype);				      \
+} while (0)
 
 unsigned int SystemStatus::getSize()
 {
-  return sizeof(struct timeval);
+  return MEPHeader::RSPSTATUS_SIZE;
 }
 
 unsigned int SystemStatus::pack  (void* buffer)
 {
-  buffer = buffer;
-  return 0;
+  unsigned int offset = 0;
+  
+  PACK_ARRAY((char*)buffer, offset, m_rsp_status, EPA_Protocol::RSPStatus);
+
+  return offset;
 }
 
 unsigned int SystemStatus::unpack(void *buffer)
 {
-  buffer = buffer;
-  return 0;
+  unsigned int offset = 0;
+  
+  UNPACK_ARRAY(buffer, offset, m_rsp_status, EPA_Protocol::RSPStatus);
+
+  return offset;
 }

@@ -61,7 +61,8 @@ unsigned int BeamletWeights::pack  (void* buffer)
   }
   else
   {
-    cerr << "NON-CONTIGUOUS ARRAY STORAGE!" << endl;
+    LOG_FATAL("beamlet weights array must be contiguous");
+    exit(EXIT_FAILURE);
   }
     
   return offset;
@@ -84,16 +85,8 @@ unsigned int BeamletWeights::unpack(void *buffer)
   // resize the array to the correct size
   m_weights.resize(extent);
 
-  if (m_weights.isStorageContiguous())
-  {
-    memcpy(m_weights.data(), bufptr+offset, m_weights.size() * sizeof(complex<int16>));
-    offset += m_weights.size() * sizeof(complex<int16>);
-  }
-  else
-  {
-    LOG_FATAL("NON-CONTIGUOUS ARRAY STORAGE!");
-    exit(EXIT_FAILURE);
-  }
+  memcpy(m_weights.data(), bufptr+offset, m_weights.size() * sizeof(complex<int16>));
+  offset += m_weights.size() * sizeof(complex<int16>);
     
   return offset;
 }

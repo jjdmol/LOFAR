@@ -120,10 +120,8 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
       
       // set the correct header info
       MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READRES);
-      rspstatus.rsp = 0;
-      memset(&rspstatus.ap[0], 0, N_AP*sizeof(uint16));
-      memset(&rspstatus.blp[0], 0, N_BLP*sizeof(uint16));
-      rspstatus.eth = 0;
+      memset(&rspstatus.rsp_status, 0, MEPHeader::RSPSTATUS_SIZE);
+      rspstatus.write_status.error = 0;
 
 #ifdef EARLY_REPLY
       // early reply of status

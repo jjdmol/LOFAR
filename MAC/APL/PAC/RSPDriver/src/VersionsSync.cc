@@ -40,7 +40,7 @@ VersionsSync::~VersionsSync()
   /* TODO: delete event? */
 }
 
-GCFEvent::TResult VersionsSync::initial_state(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult VersionsSync::initial_state(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
 {
   return GCFEvent::HANDLED;
 }

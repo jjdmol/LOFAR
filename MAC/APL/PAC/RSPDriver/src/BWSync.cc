@@ -143,7 +143,7 @@ GCFEvent::TResult BWSync::readstatus_state(GCFEvent& event, GCFPortInterface& /*
       EPARspstatusEvent rspstatus(event);
       
       // check status of previous write
-      if (rspstatus.rsp == 0)
+      if (rspstatus.write_status.error == 0)
       {
 	// OK, move on to the next BLP
 	m_current_blp++;
@@ -210,13 +210,11 @@ void BWSync::writedata(uint8 blp)
   //
   if (0 == (m_regid % 2))
   {
-    weights = real(Cache::getInstance().getBack().getBeamletWeights().\
-		   weights()(0, blp, Range::all()));
+    weights = real(Cache::getInstance().getBack().getBeamletWeights()()(0, blp, Range::all()));
   }
   else
   {
-    weights = imag(Cache::getInstance().getBack().getBeamletWeights().\
-		   weights()(0, blp, Range::all()));
+    weights = imag(Cache::getInstance().getBack().getBeamletWeights()()(0, blp, Range::all()));
   }
 
   getBoardPort().send(bfcoefs);
@@ -228,7 +226,8 @@ void BWSync::readstatus()
   EPARspstatusEvent rspstatus;
   MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
 
-  memset(&rspstatus.rsp, 0, MEPHeader::RSPSTATUS_SIZE);
+  // clear from first field onwards
+  memset(&rspstatus.rsp_status, 0, MEPHeader::RSPSTATUS_SIZE);
 
 #if 0
   // on the read request don't send the data

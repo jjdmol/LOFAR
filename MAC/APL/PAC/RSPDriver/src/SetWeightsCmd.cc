@@ -59,9 +59,9 @@ void SetWeightsCmd::setWeights(Array<complex<int16>, BeamletWeights::NDIM> weigh
 {
   RSPSetweightsEvent* event = static_cast<RSPSetweightsEvent*>(m_event);
   
-  event->weights.weights().resize(BeamletWeights::SINGLE_TIMESTEP,
-				  event->rcumask.count(), N_BEAMLETS);
-  event->weights.weights() = weights;
+  event->weights().resize(BeamletWeights::SINGLE_TIMESTEP,
+			  event->rcumask.count(), N_BEAMLETS);
+  event->weights() = weights;
 }
 
 void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
@@ -83,8 +83,8 @@ void SetWeightsCmd::apply(CacheBuffer& cache)
     {
       if (cache_rcu < RSPDriverTask::N_RCU)
       {
-	cache.getBeamletWeights().weights()(0, cache_rcu, Range::all())
-	  = m_event->weights.weights()(0, input_rcu, Range::all());
+	cache.getBeamletWeights()()(0, cache_rcu, Range::all())
+	  = m_event->weights()(0, input_rcu, Range::all());
       }
       else
       {

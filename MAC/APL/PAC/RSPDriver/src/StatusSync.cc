@@ -40,7 +40,7 @@ StatusSync::~StatusSync()
   /* TODO: delete event? */
 }
 
-GCFEvent::TResult StatusSync::initial_state(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult StatusSync::initial_state(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
 {
   return GCFEvent::HANDLED;
 }

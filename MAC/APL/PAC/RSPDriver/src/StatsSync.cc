@@ -40,7 +40,7 @@ StatsSync::~StatsSync()
   /* TODO: delete event? */
 }
 
-GCFEvent::TResult StatsSync::initial_state(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult StatsSync::initial_state(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
 {
   return GCFEvent::HANDLED;
 }

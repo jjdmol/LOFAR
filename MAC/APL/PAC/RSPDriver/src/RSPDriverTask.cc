@@ -372,9 +372,9 @@ void RSPDriverTask::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
   RSPSetweightsEvent* sw_event = new RSPSetweightsEvent(event);
 
   /* range check on parameters */
-  if ((sw_event->weights.weights().dimensions() != BeamletWeights::NDIM)
-      || (sw_event->weights.weights().extent(thirdDim) != N_BEAMLETS)
-      || (sw_event->weights.weights().extent(secondDim) > N_RCU))
+  if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
+      || (sw_event->weights().extent(thirdDim) != N_BEAMLETS)
+      || (sw_event->weights().extent(secondDim) > N_RCU))
   {
     delete sw_event;
     
@@ -385,7 +385,7 @@ void RSPDriverTask::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
     return;
   }
 
-  for (int timestep = 0; timestep < sw_event->weights.weights().extent(firstDim); timestep++)
+  for (int timestep = 0; timestep < sw_event->weights().extent(firstDim); timestep++)
   {
     SetWeightsCmd* command = new SetWeightsCmd(*sw_event, port, Command::WRITE, timestep);
 
@@ -394,9 +394,9 @@ void RSPDriverTask::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
       command->ack(Cache::getInstance().getFront());
     }
 	
-    command->setWeights(sw_event->weights.weights()(Range(timestep, timestep),
-						    Range::all(),
-						    Range::all()));
+    command->setWeights(sw_event->weights()(Range(timestep, timestep),
+					    Range::all(),
+					    Range::all()));
 	
     (void)m_scheduler.enter(command);
   }

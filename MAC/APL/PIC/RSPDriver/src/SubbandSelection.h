@@ -31,42 +31,69 @@
 
 namespace RSP_Protocol
 {
+  /**
+   * This class is used to contain the subband selection for each RCU.
+   *
+   * When used in a SETSUBBANDS event the dimensions of the arrays
+   * should be:
+   *  - subbands[1][nr_selected_subbands].
+   *  - nrsubbands[1]
+   *
+   * When used in the Cache the dimensions should be:
+   *  - subbands[N_RCU][MAX_N_BEAMLETS]
+   *  - nrsubbands[N_RCU]
+   *
+   * The values in the subbands array should be 0 <= value < MAX_N_SUBBANDS
+   */
   class SubbandSelection
-      {
-      public:
-	  /**
-	   * Constructors for a SubbandSelection object.
-	   * Currently the tv_usec part is always set to 0 irrespective
-	   * of the value passed in.
-	   */
-	  SubbandSelection() { }
+  {
+    public:
+      /**
+       * Constructors for a SubbandSelection object.
+       * Currently the tv_usec part is always set to 0 irrespective
+       * of the value passed in.
+       */
+      SubbandSelection() {}
+      
 	  
-	  /* Destructor for SubbandSelection. */
-	  virtual ~SubbandSelection() {}
+      /* Destructor for SubbandSelection. */
+      virtual ~SubbandSelection() {}
 
-	  /**
-	   * Return the array.
-	   */
-	  blitz::Array<uint16, 2>& operator()();
+      /**
+       * Return the subbands array.
+       */
+      blitz::Array<uint16, 2>& operator()();
 
-      public:
-	  /*@{*/
-	  /**
-	   * marshalling methods
-	   */
-	  unsigned int getSize();
-	  unsigned int pack  (void* buffer);
-	  unsigned int unpack(void *buffer);
-	  /*@}*/
+      /**
+       * Return the nrsubbands array.
+       * The nrsubbands array indicates for each rcu how many
+       * subbands have been selected.
+       */
+      blitz::Array<uint16, 1>& nrsubbands();
 
-      private:
-	  /**
-	   * Subband selection array.
-	   * dim 1 = n_settings (== 1 on SETSUBBANDS, == count(rcumask) on GETSUBBANDS_ACK)
-	   * dim 2 = n_beamlets
-	   */
-	  blitz::Array<uint16, 2> m_subbands;
-      };
+    public:
+      /*@{*/
+      /**
+       * marshalling methods
+       */
+      unsigned int getSize();
+      unsigned int pack  (void* buffer);
+      unsigned int unpack(void *buffer);
+      /*@}*/
+
+    private:
+      /**
+       * Subband selection array.
+       * dim 1 = n_rcus (== 1 on SETSUBBANDS, == count(rcumask) on GETSUBBANDS_ACK)
+       * dim 2 = n_beamlets.
+       */
+      blitz::Array<uint16, 2> m_subbands;
+
+      /**
+       * Number of selected subbands for each RCU.
+       */
+      blitz::Array<uint16, 1> m_nrsubbands;
+  };
 };
      
 #endif /* SUBBANDSELECTION_H_ */
