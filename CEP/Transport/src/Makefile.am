@@ -1,7 +1,7 @@
 if HAVE_CORBA
-SUBDIRS                 = ShMem Corba .
+SUBDIRS                 = Corba .
 else
-SUBDIRS                 = ShMem .
+SUBDIRS                 = .
 endif
 
 
@@ -19,6 +19,7 @@ TH_Mem_Bl.h \
 TH_Mem.h \
 TH_MPI.h \
 TH_PL.h \
+TH_ShMem.h \
 Transporter.h \
 TransportHolder.h 
 
@@ -48,6 +49,7 @@ TH_Mem_Bl.cc \
 TH_Mem.cc \
 TH_MPI.cc \
 TH_PL.cc \
+TH_ShMem.cc \
 Transporter.cc \
 TransportHolder.cc 
 
@@ -57,9 +59,9 @@ AM_LFLAGS               = -PAppControllerTokenize
 LEX_OUTPUT_ROOT         = lex.AppControllerTokenize
 
 if HAVE_CORBA
-libtransport_la_LIBADD = ShMem/libth_shmem.la Corba/libth_corba.la -lpthread
+libtransport_la_LIBADD = Corba/libth_corba.la -lpthread
 else
-libtransport_la_LIBADD = ShMem/libth_shmem.la -lpthread
+libtransport_la_LIBADD = -lpthread
 endif
 
 include $(lofar_sharedir)/Makefile.common
