@@ -571,3 +571,11 @@ tag:
 	echo " DONE.";\
 	find $$testdir/LOFAR -name CVS | xargs rm -rf;\
 
+_force_data_sync_:
+	@echo "Synchronizing files:"; \
+	echo -e "\tfrom '$(USER)@lofar9:/home/lofar/data'"; \
+	echo -e "\t  to '$(PWD)'"; \
+	rsync --rsh=ssh -rv $(USER)@lofar9:/home/lofar/data $(PWD)
+
+data: _force_data_sync_
+

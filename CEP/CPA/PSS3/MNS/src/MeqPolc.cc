@@ -104,8 +104,8 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
     // Get the step and start values in the normalized domain.
     double stepx = request.stepX() / itsDomain.scaleX();
     double stepy = request.stepY() / itsDomain.scaleY();
-    double stx = itsDomain.normalizeX (domain.startX()) + stepx/2;
-    double sty = itsDomain.normalizeY (domain.startY()) + stepy/2;
+    double stx = itsDomain.normalizeX (domain.startX()) + stepx * .5;
+    double sty = itsDomain.normalizeY (domain.startY()) + stepy * .5;
     // Get number of steps and coefficients in x and y.
     int ndx = request.nx();
     int ndy = request.ny();

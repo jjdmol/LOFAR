@@ -37,8 +37,8 @@ MeqDomain::MeqDomain (double startX, double endX,
 	     " must be < endX " << endX);
   AssertMsg (startY < endY, "MeqDomain: startY " << startY <<
 	     " must be < endY " << endY);
-  itsOffsetX = (endX + startX) / 2;
-  itsScaleX  = (endX - startX) / 2;
-  itsOffsetY = (endY + startY) / 2;
-  itsScaleY  = (endY - startY) / 2;
+  itsOffsetX = (endX + startX) * .5;
+  itsScaleX  = (endX - startX) * .5;
+  itsOffsetY = (endY + startY) * .5;
+  itsScaleY  = (endY - startY) * .5;
 }

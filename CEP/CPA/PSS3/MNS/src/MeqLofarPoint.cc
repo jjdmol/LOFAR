@@ -127,10 +127,10 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
     double qval = ik.getValue().getDouble();
     double uval = ik.getValue().getDouble();
     double vval = ik.getValue().getDouble();
-    double s1 = (ival + qval) / 2;
-    complex<double> s2(uval/2, vval/2);
+    double s1 = (ival + qval) * .5;
+    complex<double> s2(uval*.5, vval*.5);
     complex<double> s3(conj(s2));
-    double s4 = (ival - qval) / 2;
+    double s4 = (ival - qval) * .5;
     // Get pointers to storage of the left and right station Jones elements.
     const complex<double>* l11 = resl11.getValue().dcomplexStorage();
     const complex<double>* l12 = resl12.getValue().dcomplexStorage();
@@ -184,8 +184,8 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
 	eval = true;
 	double ival = ik.getPerturbedValue(spinx).getDouble();
 	double qval = ik.getPerturbedValue(spinx).getDouble();
-	ps1 = (ival + qval) / 2;
-	ps4 = (ival - qval) / 2;
+	ps1 = (ival + qval) * .5;
+	ps4 = (ival - qval) * .5;
       }
       if (evaluv ) {
 	eval = true;
