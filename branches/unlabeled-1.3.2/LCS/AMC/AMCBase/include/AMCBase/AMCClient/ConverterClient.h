@@ -27,7 +27,10 @@
 
 //# Includes
 #include <AMCBase/Converter.h>
-#include <AMCBase/AMCClient/DH_Converter.h>
+#include <AMCBase/AMCClient/DH_Request.h>
+#include <AMCBase/AMCClient/DH_Result.h>
+#include <Transport/Connection.h>
+#include <Transport/TH_Socket.h>
 #include <Common/lofar_string.h>
 
 namespace LOFAR
@@ -40,7 +43,7 @@ namespace LOFAR
     {
     public:
       ConverterClient(const string& server = "localhost", 
-                      uint16 port = 31137);
+                      uint16 port = 31337);
 
       virtual ~ConverterClient() {}
 
@@ -75,6 +78,17 @@ namespace LOFAR
       virtual vector<SkyCoord> azelToJ2000 (const vector<SkyCoord>& azel,
                                             const vector<EarthCoord>& pos,
                                             const vector<TimeCoord>& time);
+
+      // Send a conversion command to the server. The input data are stored in
+      // three vectors.
+      void sendRequest(const ConverterCommand&,
+                       const vector<SkyCoord>&,
+                       const vector<EarthCoord>&,
+                       const vector<TimeCoord>&);
+      
+      // Receive the converted data from the server.
+      void recvResult(vector<SkyCoord>&);
+        
     private:
       //@{
       // Make this class non-copyable.
@@ -82,17 +96,20 @@ namespace LOFAR
       ConverterClient operator=(const ConverterClient&);
       //@}
 
-      void sendRequest(const vector<SkyCoord>&,
-                       const vector<EarthCoord>&,
-                       const vector<TimeCoord>&);
-
-      void recvResult(vector<SkyCoord>&);
-
       // Data holder holding the request data to be sent to the server.
-      DH_Converter itsRequest;
+      DH_Request itsRequest;
 
       // Data holder holding the result data to be received from the server.
-      DH_Converter itsResult;
+      DH_Result itsResult;
+
+      // The transport holder (which is, of course, a TH_Socket)
+      TH_Socket itsTH;
+
+      // Connection for sending data to the server.
+      Connection itsSendConn;
+
+      // Connection for receiving data from the server.
+      Connection itsRecvConn;
 
     };
 
