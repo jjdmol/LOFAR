@@ -57,8 +57,9 @@ lofar_BLITZ
 lofar_MPI
 lofar_QATOOLS
 lofar_DOCXX
+lofar_BLITZ
 lofar_PACKAGE(BaseSim)
-lofar_PACKAGE(LCS)
+lofar_PACKAGE(LCS/Math)
 
 dnl
 dnl Output Makefiles

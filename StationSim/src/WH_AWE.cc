@@ -27,67 +27,53 @@
 #include <blitz/blitz.h>
 
 #include <StationSim/WH_AWE.h>
+#include <StationSim/MDL.h>
 #include <BaseSim/ParamBlock.h>
 #include <Common/Debug.h>
-#include <Common/lofar_mdl.h>
-#include <Common/lofar_pastd.h>
 #include <Common/Lorrays.h>
 #include <Math/LCSMath.h>
+#include <blitz/blitz.h>
 
 WH_AWE::WH_AWE (const string& name, unsigned int nin, unsigned int nout,
-		unsigned int nant, unsigned int buflength)
+		unsigned int nant, unsigned int buflength, DataGenerator* dg_config)
 : WorkHolder    (nin, nout, name, "WH_AWE"),
-  itsInHolder   ("in", nant, buflength),
-  itsOutHolder  ("out"),
+  itsInHolders  (0),
+  itsOutHolder  (0),
   itsNrcu       (nant),
-  itsBufLength  (buflength)
+  itsBufLength  (buflength),
+  itsConfig     (dg_config)
 {
+  if (nin > 0) {
+    itsInHolders = new DH_SampleC* [nin];
+  }
+  char str[8];
+  for (unsigned int i=0; i<nin; i++) {
+    sprintf (str, "%d",i);
+    itsInHolders[i] = new DH_SampleC (string("in_") + str, 1, 1);
+  }
+  
+  if (nout > 0) {
+    itsOutHolder = new DH_SampleC("out", itsNrcu, 1);
+  }
+  
+  px.resize(itsNrcu);
+  py.resize(itsNrcu);
 
-  // Read the dipole positions from file
-  cerr << "Reading array configuration\n";
-  std::ifstream arrfile(itsDipoleName.c_str());
-  FailWhen1( !arrfile,"can't open dipole file" );
-  int n;
-  arrfile >> n;
-  dprintf1(1)("Expecting %d antennas\n",n);
-  px.resize(n);
-  py.resize(n);
-  arrfile >> px;
-  arrfile >> py;
-  dprintf1(1)("Read %d antenna coordinates\n",px.size());
-  arrfile.close();
-  cout << px << endl;
-  cout << py << endl;
+  px = itsConfig->itsArray->getPointX ();
+  py = itsConfig->itsArray->getPointY ();
 }
 
 WH_AWE::~WH_AWE()
 {
 }
 
-WorkHolder* WH_AWE::construct (const string& name,
-			       int ninput, int noutput,
-			       const ParamBlock& params)
-{
-  Assert (ninput == 1);
-  return new WH_AWE (name, ninput, noutput, 
-		     params.getInt ("nant", 10), params.getInt ("buffer_length", 100));
-}
-
 WH_AWE* WH_AWE::make (const string& name) const
 {
-  return new WH_AWE (name, getInputs(), getOutputs(), itsNrcu, itsBufLength);
+  return new WH_AWE (name, getInputs(), getOutputs(), itsNrcu, itsBufLength, itsConfig);
 }
 
 void WH_AWE::preprocess()
 {
-  // Find the snapshot array for the current AWE snapshot
-  itsBuffer.resize(itsNrcu, itsBufLength);
-  itsBuffer = -1;
-
-  DH_SampleC::BufferType* bufin = itsInHolder.getBuffer();
-
-  itsBuffer = *bufin;
-
 }
 
 
@@ -97,45 +83,56 @@ void WH_AWE::process()
   double phi = 0.33;
   double theta = -0.67;
 
-  // Select the appropriate algorithm
-  // See if the PASTd algorithm need updating
-  // Use either EVD or SVD for updating
+  // Find the snapshot array for the current AWE snapshot
+  itsBuffer.resize(itsNrcu, itsBufLength);
+  itsBuffer = -1;
 
-  // EVD - first calculate the ACM
-  LoMat_dcomplex itsAcm (itsNrcu, itsNrcu) ;
-  itsAcm = LCSMath::acm(itsBuffer);
+
+  // This is only a single snapshot.. Make a buffer to really to something 
+  // useful
+//   DH_SampleC::BufferType* bufin = itsInHolders->getBuffer();
+
+//   itsBuffer = *bufin;
+
+//   // Select the appropriate algorithm
+//   // See if the PASTd algorithm need updating
+//   // Use either EVD or SVD for updating
+
+//   // EVD - first calculate the ACM
+//   LoMat_dcomplex itsAcm (itsNrcu, itsNrcu) ;
+//   itsAcm = LCSMath::acm(itsBuffer);
   
-  // EVD - using the ACM, calculate eigen vectors and values.
-  LoMat_dcomplex itsEvectors;
-  LoVec_double   itsEvalues;
-  LCSMath::eig(itsAcm, itsEvectors, itsEvalues);
+//   // EVD - using the ACM, calculate eigen vectors and values.
+//   LoMat_dcomplex itsEvectors;
+//   LoVec_double   itsEvalues;
+//   LCSMath::eig(itsAcm, itsEvectors, itsEvalues);
 
-  // EVD - Determine the number of sources in the signal
-  // TODO: fit MDL into Common library.
-  unsigned int RFI = mdl(itsEvalues, itsNrcu, itsBufLength);
+//   // EVD - Determine the number of sources in the signal
+//   // TODO: fit MDL into Common library.
+//   unsigned int RFI = mdl(itsEvalues, itsNrcu, itsBufLength);
   
-  // EVD - Find the appropriate Eigen vectors
-  // Assume the most powerfull sources are in front. This may not be true!!
-  // TODO check if this is a good assumption -- possible overflow
-  LoMat_dcomplex B(itsNrcu, RFI);
-  B = itsEvectors(Range::all(), Range(itsEvectors.lbound(firstDim), 
-				     itsEvectors.lbound(firstDim) + RFI - 1));
+//   // EVD - Find the appropriate Eigen vectors
+//   // Assume the most powerfull sources are in front. This may not be true!!
+//   // TODO check if this is a good assumption -- possible overflow
+//   LoMat_dcomplex B(itsNrcu, RFI);
+// //   B = itsEvectors(Range::all(), Range(itsEvectors.lbound(firstDim), 
+// // 				     itsEvectors.lbound(firstDim) + RFI - 1));
 
-  LoVec_dcomplex w (itsNrcu) ; // the weight vector
-  dcomplex *w_ptr = w.data() ;
+//   LoVec_dcomplex w (itsNrcu) ; // the weight vector
+//   dcomplex *w_ptr = w.data() ;
 
   LoVec_dcomplex d(itsNrcu);
   d = steerv(phi, theta, px, py); 
-  w = getWeights(B, d);
+  //  w = getWeights(B, d);
   
   // Now assign the calculated weight vector to the output
-  memcpy(itsOutHolder.getBuffer(), w_ptr, itsNrcu * sizeof(LoVec_dcomplex));
   
-  
-  cout << itsBuffer << endl;
-  cout << itsAcm << endl;
 
+  memcpy(itsOutHolder->getBuffer(), d.data(), itsNrcu * sizeof(LoVec_dcomplex));
   
+  
+//   cout << itsBuffer << endl;
+//   cout << itsAcm << endl;
 
   // SVD 
 
@@ -151,14 +148,15 @@ void WH_AWE::dump() const
 
 DH_SampleC* WH_AWE::getInHolder (int channel)
 {
-  return &itsInHolder;
+  return itsInHolders[channel];
 }
 
-DH_Weight* WH_AWE::getOutHolder (int channel)
+DH_SampleC* WH_AWE::getOutHolder (int channel)
 {
   AssertStr (channel < getOutputs(),
-	     "output channel too high");
-  return &itsOutHolder;
+ 	     "output channel too high");
+  
+  return itsOutHolder;
 }
 
 LoVec_dcomplex WH_AWE::steerv (double phi, double theta, LoVec_double px, LoVec_double py) {
@@ -194,10 +192,10 @@ LoVec_dcomplex WH_AWE::getWeights (LoMat_dcomplex B, LoVec_dcomplex d) {
   } else {
     LoMat_dcomplex temp(B.cols(),B.rows());
 
-    temp = LCSMath::matMult(pow(LCSMath::matMult(B.transpose(firstDim, secondDim), B), -1), 
-				    B.transpose(firstDim,secondDim)) ;
+//     temp = LCSMath::matMult(pow(LCSMath::matMult(B.transpose(firstDim, secondDim), B), -1), 
+// 				    B.transpose(firstDim,secondDim)) ;
 
-    w = d - LCSMath::matMult( LCSMath::matMult( B, temp ), d );
+    //    w = d - LCSMath::matMult( LCSMath::matMult( B, temp ), d );
   }
   return w;
 }

@@ -47,26 +47,29 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
 			      unsigned int maxNtarget, unsigned int maxNrfi)
 : WorkHolder    (nin, nout, name,"WH_BeamFormer"),  // Check number of inputs and outputs
   itsInHolders  (0),
-//   itsWeight     (0),
+  itsWeight     (0),
   itsOutHolders (0),
   itsNrcu       (nrcu),
   itsNbeam      (nbeam),
   itsMaxNtarget (maxNtarget),
   itsMaxNrfi    (maxNrfi)
 {
-  // The first time the weights should not be read.
-//   itsWeight = new DH_SampleC("weights", nrcu, 1);
-//   itsWeight->setReadDelay (1);
 
   // the number of inputs is equal to the number of reveiving elements
   if (nin > 0) {
-    itsInHolders = new DH_SampleC* [nin];
+    itsInHolders = new DH_SampleC* [nrcu];
   }
   char str[8];
-  for (unsigned int i=0; i<nin; i++) {
+  for (unsigned int i=0; i<nrcu; i++) {
     sprintf (str, "%d",i);
     itsInHolders[i] = new DH_SampleC (string("in_") + str, 1, 1);
   }
+
+  // The first time the weights should not be read.
+  itsWeight = new DH_SampleC("weights", itsNrcu, 1);
+  itsWeight->setReadDelay (1);
+
+
   // idem for the number of outputs
   if (nout > 0) {
     itsOutHolders = new DH_SampleC* [nout];
@@ -81,9 +84,11 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
 
 WH_BeamFormer::~WH_BeamFormer()
 {
-  for (int i=0; i<getInputs(); i++) {
+  for (int i=0; i< itsNrcu; i++) {
     delete itsInHolders[i];
   }
+  delete itsWeight;
+
   delete [] itsInHolders;
   for (int i=0; i<getOutputs(); i++) {
     delete itsOutHolders[i];
@@ -106,7 +111,7 @@ WorkHolder* WH_BeamFormer::construct (const string& name,
 WH_BeamFormer* WH_BeamFormer::make (const string& name) const
 {
   return new WH_BeamFormer (name, getInputs(), getOutputs(),
-							itsNrcu, itsNbeam, itsMaxNtarget, itsMaxNrfi);
+			    itsNrcu, itsNbeam, itsMaxNtarget, itsMaxNrfi);
 }
 
 
@@ -118,10 +123,8 @@ void WH_BeamFormer::process()
 
   // the weights are calculated in WH_AWE
   if (getOutputs() > 0) {
-
-//     LoVec_dcomplex weight(itsWeight->getBuffer(), itsNrcu, duplicateData);
-// 	sample *= weight;
-
+    LoVec_dcomplex weight(itsWeight->getBuffer(), itsNrcu, duplicateData);
+    sample *= weight;
   }
 }
 
@@ -147,10 +150,10 @@ DataHolder* WH_BeamFormer::getInHolder (int channel)
 {
   AssertStr (channel < getInputs(),
 	     "input channel too high");
-  if (channel >= 0) {
+  if (channel < itsNrcu) {
     return itsInHolders[channel];
   } else {
-//     return itsWeight;
+    return itsWeight;
   }
 }
 

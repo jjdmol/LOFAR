@@ -32,7 +32,8 @@
 
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleC.h>
-#include <StationSim/DH_Weight.h>
+#include <StationSim/DataGenConfig.h>
+#include <Common/Lorrays.h>
 
 /**
    This workholder contains the main AWE procedure.
@@ -54,7 +55,8 @@ public:
 	  unsigned int nin, 
 	  unsigned int nout,
 	  unsigned int nant,
-	  unsigned int buflength);
+	  unsigned int buflength,
+          DataGenerator * dg_config) ;
 
   virtual ~WH_AWE();
 
@@ -80,7 +82,7 @@ public:
   virtual DH_SampleC* getInHolder (int channel);
 
   /// Get a pointer to the i-th output DataHolder.
-  virtual DH_Weight* getOutHolder (int channel);
+  virtual DH_SampleC* getOutHolder (int channel);
 
 private:
   /// Forbid copy constructor.
@@ -92,16 +94,16 @@ private:
   /// Calculate a steer vector
 
   /// In- and OutHolders
-  DH_SampleC itsInHolder;
-  DH_Weight  itsOutHolder;
-  
-
+  DH_SampleC** itsInHolders;
+  DH_SampleC* itsOutHolder; 
 
   /// Length of buffers.
   unsigned int itsNrcu;
   unsigned int itsBufLength;
+  DataGenerator* itsConfig;
 
-  LoVec_double   px, py; // Array configuration vectors
+  LoVec_double px;
+  LoVec_double py; // Array configuration vectors
   LoMat_dcomplex itsBuffer;
 
   string   itsDipoleName;

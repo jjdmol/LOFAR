@@ -39,8 +39,8 @@
 #endif
 #include <BaseSim/Simul2XML.h>
 #include <StationSim/StationSim.h>
-// #include <StationSim/WH_AWE.h>
-// #include <StationSim/WH_BeamFormer.h>
+#include <StationSim/WH_AWE.h>
+#include <StationSim/WH_BeamFormer.h>
 #include <StationSim/DataGenConfig.h>
 #include <StationSim/WH_AddSignals.h>
 #include <StationSim/WH_CreateSource.h>
@@ -48,7 +48,6 @@
 #include <StationSim/WH_PhaseShift.h>
 #include <StationSim/WH_ReadSignal.h>
 #include <StationSim/WH_BandSep.h>
-#include <StationSim/WH_BeamFormer.h>
 #include <StationSim/WH_DataReader.h>
 
 
@@ -201,43 +200,42 @@ void StationSim::define (const ParamBlock& params)
   for (int i = 0; i < nrcu; ++i) {
 	sprintf (suffix, "%d", i);
 	  
-	Step subband_filter (WH_BandSep(suffix,
-									nsubband,
-									coeffFileNameSub),
-						 string ("subband_filter_") + suffix,
-						 false);
+	Step subband_filter (WH_BandSep(suffix,	nsubband, coeffFileNameSub, 2),
+			     string ("subband_filter_") + suffix,
+			     false);
 	subband_filter.getInData (0).setReadDelay (delayMod + delayPhase);
-	for (int j = 0; j < nsubband; ++j) {
+	for (int j = 0; j < nsubband*2; ++j) {
 	  subband_filter.getOutData (j).setWriteDelay (delayMod + delayPhase + delaySubFilt);
 	}
 	simul.addStep (subband_filter);	
   }
 
+  // Create the individual steps. Set the rate of the steps 
+  // The AWE object
+  for (int i = 0; i < nsubband; ++i) {
+    sprintf(suffix, "%d", i);
 
-//   // Create the individual steps. Set the rate of the steps 
-//   // The beamformer object
-//   for (int i = 0; i < nsubband; ++i) {
-// 	sprintf (suffix, "%d", i);
+    Step awe (WH_AWE("", nrcu, 1, nrcu, buflength, DG_Config), string ("awe_") + suffix, false);
 
-// 	Step beam (WH_BeamFormer("", nrcu, nrcu, nrcu, nbeam, maxNtarget, maxNrfi), 
-// 			   string("beam_former_") + suffix, 
-// 			   false);
+    for (int j = 0; j < nrcu; ++j) {
+      awe.getInData (j).setReadDelay (delayMod + delayPhase + delaySubFilt);
+    }
+    awe.getOutData (0).setWriteDelay (1);
+    simul.addStep (awe);
+  }
 
-// 	for (int j = 0; j < nrcu; ++j) {
-// 	  beam.getInData (j).setReadDelay (delayMod + delayPhase + delaySubFilt);
-// 	  beam.getOutData (j).setWriteDelay (delayMod + delayPhase + delaySubFilt);
-// 	}
-
-// 	simul.addStep (beam);
-//   } 
+  // The beamformer object
+  for (int i = 0; i < nsubband; ++i) {
+	sprintf (suffix, "%d", i);
+	Step beam (WH_BeamFormer("", nrcu + 1, nrcu, nrcu, nbeam, maxNtarget, maxNrfi), 
+			   string("beam_former_") + suffix, false);
+	for (int j = 0; j < nrcu; ++j) {
+	  beam.getInData (j).setReadDelay (delayMod + delayPhase + delaySubFilt);
+	  beam.getOutData (j).setWriteDelay (delayMod + delayPhase + delaySubFilt);
+	}
+	simul.addStep (beam);
+  } 
   
-//   // The AWE object
-//   Step awe (WH_AWE("", 1, 1, nrcu, buflength),"awe", false);
-//   awe.getInData (0).setReadDelay (delayMod + delayPhase);
-//   awe.getOutData (0).setWriteDelay (delayMod + delayPhase);
-//   simul.addStep (awe);
-  // workholders are created
-
 
   // Connect the steps.
   for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
@@ -280,6 +278,19 @@ void StationSim::define (const ParamBlock& params)
 				   suffix, string ("subband_filter_") + suffix + string (".in"));
   }
 
+  // Connect the subband filterbank to the AWE
+  for (int s = 0; s < nsubband; ++s) {
+    for (int r = 0; r < nrcu; ++r) {
+      sprintf(suffix, "%d", r);
+      sprintf(suffix2, "%d", s);
+      
+      simul.connect (string ("subband_filter_") + suffix + string (".out1_") + suffix2,
+		     string ("awe_") + suffix2 + string (".in_") + suffix);
+    }
+    simul.connect (string ("awe_") + suffix2 + string (".out"),
+ 		   string ("beam_former_") + suffix2 + string (".weights")); 
+  }
+
 //   // Connect the data_reader to the subband filterbank  
 //   for (int i = 0; i < nrcu; ++i) { 
 // 	sprintf (suffix, "%d", i);
@@ -288,15 +299,15 @@ void StationSim::define (const ParamBlock& params)
 //   }
 
   // Connect the subband filterbank with the beam former
-//   for (int s = 0; s < nsubband; ++s) {
-// 	for (int r = 0; r < nrcu; ++r) { 
-// 	  sprintf (suffix, "%d", r);
-// 	  sprintf (suffix2, "%d", s);
+  for (int s = 0; s < nsubband; ++s) {
+    for (int r = 0; r < nrcu; ++r) { 
+      sprintf (suffix, "%d", r);
+      sprintf (suffix2, "%d", s);
 
-// 	  simul.connect (string ("subband_filter_") + suffix + string (".out_") + suffix2,
-// 					 string ("beam_former_") + suffix2 + string (".in_") + suffix);
-// 	}
-//   }
+      simul.connect (string ("subband_filter_") + suffix + string (".out0_") + suffix2,
+		     string ("beam_former_") + suffix2 + string (".in_") + suffix);
+    }
+  }
 
   // end of dataprocessor definition
   simul.checkConnections();
