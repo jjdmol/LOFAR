@@ -32,7 +32,7 @@
 
 using namespace LOFAR;
 
-uint doOut (BlobOBuffer* bb)
+uint doOut (BlobOBuffer& bb)
 {
   // Write a vector into the blob.
   BlobOStream bs(bb);
@@ -50,7 +50,7 @@ uint doOut (BlobOBuffer* bb)
   return setSpaceBlobArray1<fcomplex> (bs, 2);
 }
 
-void doIn (BlobIBuffer* bb, bool read2=false)
+void doIn (BlobIBuffer& bb, bool read2=false)
 {
   // Read the vector from the blob and check if it is correct.
   BlobIStream bs(bb);
@@ -83,20 +83,20 @@ int main()
 	// Create the blob in a file.
 	std::ofstream os ("tBlobArray_tmp.dat");
 	BlobOBufStream bob(os);
-        doOut (&bob);
+        doOut (bob);
       }
       {
 	// Read it back from the file.
 	std::ifstream is ("tBlobArray_tmp.dat");
 	BlobIBufStream bib(is);
-	doIn (&bib);
+	doIn (bib);
       }
     }
     {
       // Create the blob in memory.
       BlobString str(BlobStringType(false));
       BlobOBufString bob(str);
-      uint cpos = doOut (&bob);
+      uint cpos = doOut (bob);
       // Print the offset of the complex vector.
       std::cout << "stringpos=" << cpos << std::endl;
       // Get a pointer to the complex vector in the buffer and fill the vector.
@@ -105,11 +105,11 @@ int main()
       ptr[1] = fcomplex(-1,1e10);
       // Read the blob back from the string and check it.
       BlobIBufString bib(str);
-      doIn (&bib, true);
+      doIn (bib, true);
       {
 	// Read back the blob another time, so create a new BlobIBuf object.
 	BlobIBufString bob2(str);
-	BlobIStream bs(&bob2);
+	BlobIStream bs(bob2);
 	std::vector<double> vec;
 	bs >> vec;
 	int pos = bs.tellPos();
@@ -131,19 +131,19 @@ int main()
     {
       // Create the blob in a null buffer to determine its length.
       BlobOBufNull bobn;
-      uint cposn = doOut (&bobn);
+      uint cposn = doOut (bobn);
       std::cout << "stringpos=" << cposn << ' ' << bobn.size() << std::endl;
       // Create a non-expandable buffer of that size.
       // Create and interpret the blob again.
       BlobString str(BlobStringType(false), bobn.size(), false);
       BlobOBufString bob(str);
-      uint cpos = doOut (&bob);
+      uint cpos = doOut (bob);
       std::cout << "stringpos=" << cpos << std::endl;
       fcomplex* ptr = bob.getPointer<fcomplex> (cpos);
       ptr[0] = fcomplex(2,3);
       ptr[1] = fcomplex(-1,1e10);
       BlobIBufString bib(str);
-      doIn (&bib, true);
+      doIn (bib, true);
     }
   } catch (std::exception& x) {
     std::cout << "Unexpected exception: " << x.what() << std::endl;

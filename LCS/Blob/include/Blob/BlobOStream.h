@@ -49,9 +49,9 @@ class BlobOStream
 {
 public:
   // Construct it with the underlying buffer object.
-  // It keeps the pointer, so be sure that the BlobOBuffer is not deleted
-  // before this object.
-  explicit BlobOStream (BlobOBuffer*);
+  // It keeps a pointer to the buffer, so be sure that the BlobOBuffer
+  // is not deleted before this object.
+  explicit BlobOStream (BlobOBuffer&);
 
   // Destructor.
   ~BlobOStream();

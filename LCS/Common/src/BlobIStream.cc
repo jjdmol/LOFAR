@@ -26,15 +26,15 @@
 
 namespace LOFAR {
 
-BlobIStream::BlobIStream (BlobIBuffer* bb)
+BlobIStream::BlobIStream (BlobIBuffer& bb)
 : itsMustConvert   (false),
   itsHasCachedType (false),
   itsCurLength     (0),
   itsLevel         (0),
   itsVersion       (0),
-  itsStream        (bb)
+  itsStream        (&bb)
 {
-  itsSeekable = (bb->tellPos() != -1);
+  itsSeekable = (bb.tellPos() != -1);
 }
 
 BlobIStream::~BlobIStream()

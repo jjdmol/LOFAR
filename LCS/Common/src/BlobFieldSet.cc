@@ -103,18 +103,18 @@ namespace LOFAR {
   {
     // First do it on a null buffer to determine the length.
     BlobOBufNull nbuf;
-    BlobOStream nbs(&nbuf);
+    BlobOStream nbs(nbuf);
     fill (nbs);
     // Now reserve enough space in the buffer.
     // In this way we avoid possibly costly resizes.
     buf.reserve (nbuf.size());
-    BlobOStream bs(&buf);
+    BlobOStream bs(buf);
     fill (bs);
   }
 
   void BlobFieldSet::openBlob (BlobIBufChar& buf)
   {
-    BlobIStream bs(&buf);
+    BlobIStream bs(buf);
     uint version = bs.getStart (itsName);
     if (version > itsVersion) {
       throw (LOFAR::Exception("BlobFieldSet: blob has an unknown version"));

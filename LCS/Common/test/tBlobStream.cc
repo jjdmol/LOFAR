@@ -53,7 +53,7 @@ void doAlign (BlobIStream& bis, uint& ln)
 // If header8 is true, all data is aligned on 8 bytes.
 // Put all possible types in the blob (but scalars and vectors).
 // Always check if the length (including end-of-blob) is as expected.
-int doOut (BlobOBuffer* bb, bool header8=false)
+int doOut (BlobOBuffer& bb, bool header8=false)
 {
   uint len = 0;
   BlobOStream bos(bb);
@@ -191,7 +191,7 @@ int doOut (BlobOBuffer* bb, bool header8=false)
 // Read back the blob from the buffer and check if all data in it matches
 // the value given in doOut.
 // Again, align if needed.
-void doIn (BlobIBuffer* bb, bool header8=false)
+void doIn (BlobIBuffer& bb, bool header8=false)
 {
   uint dumlen;
   bool  valb;
@@ -371,28 +371,28 @@ int main()
 	// Use a file output stream.
 	std::ofstream os ("tBlobStream_tmp.dat");
 	BlobOBufStream bob(os);
-        len = doOut (&bob);
+        len = doOut (bob);
 	Assert (int(os.tellp()) == len);
       }
       {
 	// Use the file as input.
 	std::ifstream is ("tBlobStream_tmp.dat");
 	BlobIBufStream bib(is);
-	doIn (&bib);
+	doIn (bib);
 	Assert (int(is.tellg()) == len);
       }
       {
 	// Use a standard little-endian file as input.
 	std::ifstream is ("tBlobStream.in_le");
 	BlobIBufStream bib(is);
-	doIn (&bib);
+	doIn (bib);
 	Assert (int(is.tellg()) == len);
       }
       {
 	// Use a standard big-endian file as input.
 	std::ifstream is ("tBlobStream.in_be");
 	BlobIBufStream bib(is);
-	doIn (&bib);
+	doIn (bib);
 	Assert (int(is.tellg()) == len);
       }
     }
@@ -400,111 +400,111 @@ int main()
       // Use a string output stream.
       std::ostringstream os;
       BlobOBufStream bob(os);
-      doOut (&bob);
+      doOut (bob);
       // Reuse as input.
       std::istringstream is(os.str());
       BlobIBufStream bib(is);
-      doIn (&bib);
+      doIn (bib);
       // Reuse as a char input.
       std::string str(os.str());
       BlobIBufChar bibc(str.data(), str.size());
-      doIn (&bibc);
+      doIn (bibc);
       // Copy to vector and use that.
       std::vector<uchar> vec(os.str().size());
       BlobIBufVector<uchar> bibv(vec);
       memcpy (&vec[0], os.str().data(), os.str().size());
-      doIn (&bibv);
+      doIn (bibv);
     }
     {
       // Use a null buffer.
       BlobOBufNull bob;
-      doOut (&bob);
+      doOut (bob);
     }
     {
       // Use an expandable char buffer.
       BlobOBufChar bob(10,5);
-      doOut (&bob);
+      doOut (bob);
       BlobIBufChar bib(bob.getBuffer(), bob.size());
-      doIn (&bib);
+      doIn (bib);
     }
     {
       // Use an expandable char buffer; make header multiple of 8.
       BlobOBufChar bob(10,5);
-      doOut (&bob, true);
+      doOut (bob, true);
       BlobIBufChar bib(bob.getBuffer(), bob.size());
-      doIn (&bib, true);
+      doIn (bib, true);
     }
     {
       // Use an expandable unallocated char buffer.
       BlobOBufChar bob(0,0,10);
-      doOut (&bob);
+      doOut (bob);
       BlobIBufChar bib(bob.getBuffer(), bob.size());
-      doIn (&bib);
+      doIn (bib);
     }
     {
       // Use an unexpandable preallocated char buffer.
       uchar buf[3500];
       BlobOBufChar bob(buf,3500);
-      doOut (&bob);
+      doOut (bob);
       Assert (bob.getBuffer() == buf);
       BlobIBufChar bib(bob.getBuffer(), bob.size());
-      doIn (&bib);
+      doIn (bib);
     }
     {
       // Use an expandable preallocated char buffer.
       uchar buf[20];
       BlobOBufChar bob(buf,20,20);
-      doOut (&bob);
+      doOut (bob);
       Assert (bob.getBuffer() != buf);
       BlobIBufChar bib(bob.getBuffer(), bob.size());
-      doIn (&bib);
+      doIn (bib);
     }
     {
       // Use an expandable vector.
       std::vector<uchar> vec(10);
       BlobOBufVector<uchar> bob(vec,5);
-      doOut (&bob);
+      doOut (bob);
       std::cout << "BobOBufVector bobSize=" << bob.size()
 		<< " vecSize=" << vec.size()
 		<< " vecCap=" << vec.capacity() << std::endl;
       BlobIBufVector<uchar> bib(vec);
-      doIn (&bib);
+      doIn (bib);
     }
     {
       std::vector<uchar> vec;
       BlobOBufVector<uchar> bob(vec,100);
-      doOut (&bob);
+      doOut (bob);
       std::cout << "BobOBufVector bobSize=" << bob.size()
 		<< " vecSize=" << vec.size()
 		<< " vecCap=" << vec.capacity() << std::endl;
       BlobIBufVector<uchar> bib(vec);
-      doIn (&bib);
+      doIn (bib);
     }
    {
      // Use an expandable string.
      BlobString str(BlobStringType(true), 10);
      BlobOBufString bob(str,5);
-     doOut (&bob);
+     doOut (bob);
      std::cout << "BobOBufString bobSize=" << bob.size()
 	       << " strSize=" << str.size() << std::endl;
      BlobIBufString bib(str);
-     doIn (&bib);
+     doIn (bib);
    }
    {
      BlobString str(BlobStringType(true));
      BlobOBufString bob(str, 100);
-     doOut (&bob);
+     doOut (bob);
      std::cout << "BobOBufString bobSize=" << bob.size()
 	       << " strSize=" << str.size() << std::endl;
      BlobIBufString bib(str);
-     doIn (&bib);
+     doIn (bib);
    }
     {
       try {
 	// Use a fixed char buffer which is too small, thus an exception.
 	char buf[50];
 	BlobOBufChar bob(buf,50);
-	doOut (&bob);
+	doOut (bob);
       } catch (std::exception& x) {
 	std::cout << x.what() << std::endl;
       }
@@ -514,7 +514,7 @@ int main()
 	// Use a fixed vector buffer which is too small, thus an exception.
 	std::vector<char> buf(50);
 	BlobOBufVector<char> bob(buf);
-	doOut (&bob);
+	doOut (bob);
       } catch (std::exception& x) {
 	std::cout << x.what() << std::endl;
       }

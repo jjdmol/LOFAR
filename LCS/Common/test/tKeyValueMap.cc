@@ -161,11 +161,11 @@ void doIt()
   showpar2 (par2);
   {
     BlobOBufChar bufo;
-    BlobOStream bso(&bufo);
+    BlobOStream bso(bufo);
     bso << par2;
     bso << par3;
     BlobIBufChar bufi(bufo.getBuffer(), bufo.size());
-    BlobIStream bsi(&bufi);
+    BlobIStream bsi(bufi);
     KeyValueMap par2a, par3a;
     par3a["abcd"] = 1;
     bsi >> par2a >> par3a;
