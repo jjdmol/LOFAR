@@ -213,6 +213,11 @@ const int AidTile_int = -1280;
 const AtomicID AidVisHandlerNode(-1329);          // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/VisHandlerNode.h:7
 const int AidVisHandlerNode_int = -1329;
 #endif
+#ifndef _defined_id_Aidaddstate
+#define _defined_id_Aidaddstate 1
+const AtomicID Aidaddstate(-1386);                // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:14
+const int Aidaddstate_int = -1386;
+#endif
 
 
 #endif

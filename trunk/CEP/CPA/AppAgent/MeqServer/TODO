@@ -1,20 +1,21 @@
 MEQ in general:
 
+    - Specify child labels in node constructor; check them in init().
+      Process named children properly.
+      01/01/04: done, need to test w/glish (glish not working on my laptop)
+  
+    - Persistent nodes: Save.Forest, Load.Forest, Clear.Cache commands
+      01/01/04: done, need to test w/glish (glish not working on my laptop)
+      
+    - Clear.Forest command 
+      04/01/04: done, need to test w/glish (glish not working on my laptop)
+  
   * reconsider order or events in execute(): should cache be checked
     only after node_state and rider have been processed? Note that for
     repeated requests, this step is skipped, regardless. 
-    
-  * Specify child labels in node constructor; check them in init().
-    Process named children properly.
-  
-  * Delete.All.Nodes command
-  
-  * Persistent nodes
   
   * Implement request ID hierarchy
       
-  * Keep thinking about COWs. 
-  
         + Document the two types of node_state lookups
         + Document pollChildren()
         12/12/03
@@ -39,17 +40,13 @@ MEQ in general:
           implement simple copy-on-write as the default policy in DMI?
           27/11/03: good to go for now. Still thinking about COW.
 
-Result:
-
-  * Check for USE_THREADS when playing with mutexes (or improve the definition
-    of mutexes for when not using threads)
-
 Spigot:
 
-  * Allow string specification for correlations
-  
   * In deliver, just stick the result in the cache and let the caching code
     take care of everything else. 
+    
+        + Allow string specification for correlations
+          09/01/04: no need, now that Spigots output all correlations at once.
 
 Parm:
 
@@ -57,14 +54,12 @@ Parm:
 
 Request: 
 
-
-  * Figure out why state_test() (meqtest.g) causes Requests to be fail to
+  * BUG: Figure out why state_test() (meqtest.g) causes Requests to be fail to
     unpack upon the first invocation. Possibly related to problem below.
     See details in report 1 below.
     
-  * when Jan supplied an illegal request (wrong fields, unmatched IDs), the 
+  * Buglet: when Jan supplied an illegal request (wrong fields, unmatched IDs), the 
     error message was not exactly descriptive
-
 
 Vells:
 
@@ -75,19 +70,27 @@ Function:
   
         + Allow cases where a Result has 1 plane and another has N planes: treat
           the single-plane result as a scalar
-          12/12/03
+          12/12/03 done
 
 General:
 
-  * MSOutputSink: output to new column doesn't work, column stays 'dummy'
+  * Keep thinking about COWs. Perhaps make hooks implicitl-COW? This would 
+    mean declaring an operator [] on CountedRefs? 
   
-  * Check how a zero-length string or hiid array from Glish shows up in
+  * Bug: MSOutputSink: output to new column doesn't work, column stays 'dummy'.
+    Ask Ger for help, since I'm obviously misusing tables somehow.
+  
+  * Bug: Check how a zero-length string or hiid array from Glish shows up in
     AppAgent -- because it looked like a 1-element DataField when 
     processing child specs.
     
-  * Ditto for zero-length arrays ('[]'), i.e., uninitialized domain, etc.
+  * Bug: Ditto for zero-length arrays ('[]'), i.e., uninitialized domain, etc.
+
+  * Check for USE_THREADS when playing with mutexes (or improve the definition
+    of mutexes when compiling without threads: declare constructors for
+    Mutex::Lock and all that crap)
     
-  * Figure out why the hell it freezes on a single-CPU machine sometimes. A
+  * Bug: Figure out why the hell it freezes on a single-CPU machine sometimes. A
     race condition somewhere? NB: a sure way to do it (on zeppelin) seems to
     enable wait_reply=T in the Resolve.Children calls in meqtest.g.
 
