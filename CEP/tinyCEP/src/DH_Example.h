@@ -63,11 +63,12 @@ public:
   BufferType* getBuffer();
   /// Get read access to the Buffer in the DataPacket.
   const BufferType* getBuffer() const;
+  
+  void dump();
 
 private:
   /// Forbid assignment.
   DH_Example& operator= (const DH_Example&);
-
 
   // Data pointers filled by preprocess.
   int*         itsCounter;

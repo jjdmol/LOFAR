@@ -67,4 +67,10 @@ void DH_Example::postprocess()
   itsBuffer = 0;
 }
 
+void DH_Example::dump()
+{
+  cout << "DH_Example: " << itsBuffer << endl;
+}
+
+
 } // end namespace

@@ -12,12 +12,13 @@
 #include <tinyCEP/MiniDataManager.h>
 #include <tinyCEP/DH_Example.h>
 #include <tinyCEP/WH_Example.h>
+
 namespace LOFAR
 {
   class MyExample: public ApplicationHolder
   {
   public:
-    MyExample(int ninput, int noutput, DataHolder* dhptr);
+    MyExample(int ninput, int noutput);
     ~MyExample();
 
     void define(const KeyValueMap& map);

@@ -68,10 +68,14 @@ namespace LOFAR
 
     void readyWithInHolder(int channel);
     void readyWithOutHolder(int channel);
-  
+
+    /// Get the number of inputs or outputs.
+    int getInputs() const;
+    int getOutputs() const;
+
   private:
     int itsNinputs;
-    int itsNoutputs;
+    int itsNoutputs; 
     
     DataHolder** itsInDHs;
     DataHolder** itsOutDHs;
@@ -79,6 +83,11 @@ namespace LOFAR
     void assertChannel(int channel, bool input);
   };
 
+inline int MiniDataManager::getInputs() const
+{ return itsNinputs; }
+
+inline int MiniDataManager::getOutputs() const 
+{ return itsNoutputs; }
 
 inline bool MiniDataManager::hasInputSelector() 
 { return false; }

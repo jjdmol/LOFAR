@@ -49,7 +49,7 @@ namespace LOFAR
     int getInputs() const;
     int getOutputs() const;
 
-  private:
+  protected:
 
     int itsNinputs;
     int itsNoutputs;
