@@ -9,6 +9,9 @@ tohms := function (rad)
     ss := 60 * (mm - as_integer(mm));
     print spaste(rad,' rad = ',as_integer(hh),'h',as_integer(mm),'m',ss);
 }
+
+
+
 todms := function (rad)
 {
     dd := rad*180/pi;
@@ -16,6 +19,9 @@ todms := function (rad)
     ss := 60 * (mm - as_integer(mm));
     print spaste(rad,' rad = ',as_integer(dd),':',as_integer(mm),':',ss);
 }
+
+
+
 
 mkimg := function (msname, imgname, type='model', npix=500, nchan=0,
 		   start=1, step=1, msselect='', mode='mfs',

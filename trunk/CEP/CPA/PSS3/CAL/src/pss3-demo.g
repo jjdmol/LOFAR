@@ -1,20 +1,27 @@
-include 'table.g'
-include 'meqcalibrater.g'
-include 'parmtable.g'
-include 'gsm.g'
-include 'imgannotator.g'
-include 'mkimg.g'
+include 'table.g';
+include 'meqcalibrater.g';
+include 'parmtable.g';
+include 'gsm.g';
+include 'imgannotator.g';
+include 'mkimg.g';
+
+
+# This file is meant to contain utility functions used in the
+# experiments. The experiments are to be placed in pss3-experiments.g
+
+
+
 
 #
 # Demo function showing the predict functionality and creating an image of it.
 #
 predict := function(fname='demo', ant=4*[0:20],
-		    modeltype='LOFAR', calcuvw=F, trace=T)
+                    modeltype='LOFAR', calcuvw=F, trace=T)
 {
 
     local mc := meqcalibrater(spaste(fname,'.MS'), 
                               fname, spaste(fname,'_gsm'),
-			      ant=ant, modeltype=modeltype, calcuvw=calcuvw);
+                              ant=ant, modeltype=modeltype, calcuvw=calcuvw);
     if (is_fail(mc)) {
         print "meqcalibratertest(): could not instantiate meqcalibrater";
         fail;
@@ -24,31 +31,43 @@ predict := function(fname='demo', ant=4*[0:20],
     mc.clearsolvableparms();
     
     mc.resetiterator()
-    while (mc.nextinterval())
-    {
-        d := mc.getsolvedomain();
-        print 'solvedomain = ', d;
-        
-        mc.predict('MODEL_DATA');
+        while (mc.nextinterval())
+        {
+            d := mc.getsolvedomain();
+            print 'solvedomain = ', d;
+            
+            mc.predict('MODEL_DATA');
 #	mc.saveresidualdata();
-    }
+        }
 
     mc.done();
 
     mssel := '';
     if (len(ant) > 0) {
-      ant +:=1;               # msselect adds 1 to ANTENNA1,2
-      mssel := spaste('all([ANTENNA1,ANTENNA2] in ',substitutevar(ant), ')');
+        ant +:=1;               # msselect adds 1 to ANTENNA1,2
+        mssel := spaste('all([ANTENNA1,ANTENNA2] in ',substitutevar(ant), ')');
     }
     print mssel
-    mkimg(spaste(fname, '.MS'), spaste(fname, '.img'), msselect=mssel);
+        mkimg(spaste(fname, '.MS'), spaste(fname, '.img'), msselect=mssel);
 
     return T;
 }
 
+
+
+
+
+
+
+
+#
+#  Solve for source positions and fluxes
+#
+
+
 solve := function(fname='demo', ant=4*[0:20],
-		  modeltype='LOFAR', calcuvw=F, 
-		  niter=1, sleep=F, sleeptime=2, wait=F)
+                  modeltype='LOFAR', calcuvw=F, 
+                  niter=1, sleep=F, sleeptime=2, wait=F)
 {
     annotator := imgannotator(spaste(fname, '.img'), 'raster');
     
@@ -56,20 +75,20 @@ solve := function(fname='demo', ant=4*[0:20],
     # First get the values used in the simulation.
     t := table(spaste(fname,'_gsm.MEP/DEFAULTVALUES'));
     t1 := t.query('NAME==pattern("{RA,DEC,StokesI}.*")',
-	          sortlist='SRCNR,NAME');
+                  sortlist='SRCNR,NAME');
     t.close();
     if (t1.nrows() == 0) fail "No sources in MEP table";
     if (t1.nrows()%3 != 0) fail "_gsm.MEP inconsistent for RA,DEC,StokesI";
     # MEP is sorted, thus order is DEC,RA,StokesI
     annotator.hold();
     for (i in [1:(t1.nrows()/3)]) {
-	dec := t1.getcell("SIM_RVALUES", 3*i-2)[1,1];
-	ra  := t1.getcell("SIM_RVALUES", 3*i-1)[1,1];
-	stk := t1.getcell("SIM_RVALUES", 3*i)[1,1];
-	print stk;
-	src_mrk[i] := annotator.add_marker(1, ra, dec, F, F, 1,
-					   as_integer(100*stk), 3);
-	annotator.add_marker(2, ra, dec, F, F, 1, as_integer(100*stk), 12);
+        dec := t1.getcell("SIM_RVALUES", 3*i-2)[1,1];
+        ra  := t1.getcell("SIM_RVALUES", 3*i-1)[1,1];
+        stk := t1.getcell("SIM_RVALUES", 3*i)[1,1];
+        print stk;
+        src_mrk[i] := annotator.add_marker(1, ra, dec, F, F, 1,
+                                           as_integer(100*stk), 3);
+        annotator.add_marker(2, ra, dec, F, F, 1, as_integer(100*stk), 12);
     }
     annotator.release();
     t1.close();
@@ -78,13 +97,13 @@ solve := function(fname='demo', ant=4*[0:20],
     # Create calibrater object
     #
     mc := meqcalibrater(spaste(fname,'.MS'), fname, spaste(fname,'_gsm'),
-			ant=ant,
-			modeltype=modeltype, calcuvw=calcuvw);
+                        ant=ant,
+                        modeltype=modeltype, calcuvw=calcuvw);
 
     if (wait)
     {
-	print "Press RETURN to continue.";
-	shell("read");
+        print "Press RETURN to continue.";
+        shell("read");
     }
 
     if (is_fail(mc)) {
@@ -111,91 +130,103 @@ solve := function(fname='demo', ant=4*[0:20],
     if (sleep) shell(sleep_cmd);
 
     mc.resetiterator()
-    while (mc.nextinterval())
-    {
-        d := mc.getsolvedomain();
-        print 'solvedomain = ', d;
+        while (mc.nextinterval())
+        {
+            d := mc.getsolvedomain();
+            print 'solvedomain = ', d;
 
-        parms := mc.getparms("RA.* DEC.* StokesI.*");
-        print parms
-        print len(parms)
-        nrpos := len(parms) / 3;
-        if (nrpos > 0) {
-	    annotator.hold();
-            for (i in [1:nrpos]) {
-                ra      := parms[spaste('RA.CP',i)].value[1];
-                dec     := parms[spaste('DEC.CP',i)].value[1];
-                stokesI := parms[spaste('StokesI.CP',i)].value[1];
-                print 'src = ', i, ' ra = ', ra, ' dec = ', dec,
-		      ' I = ', stokesI;
-
-	        annotator.change_marker_size(src_mrk[i], stokesI*100);
-	        if (is_fail(annotator)) fail;
-                annotator.add_marker(i, real(ra), real(dec), i==nrpos);
-            }
-	    annotator.release();
-        }
-        
-        for (i in [1:niter]) {
-            print "iteration", i;
-
-            srec := mc.solve();
-	    solverec[spaste("iter",i)] := srec;
-            
             parms := mc.getparms("RA.* DEC.* StokesI.*");
-            nrpos := len(parms) / 3;
+            print parms
+                print len(parms)
+                    nrpos := len(parms) / 3;
             if (nrpos > 0) {
-		annotator.hold();
-                for (j in [1:nrpos]) {
-                    ra  := parms[spaste('RA.CP',j)].value[1];
-                    dec := parms[spaste('DEC.CP',j)].value[1];
-                    stokesI := parms[spaste('StokesI.CP',j)].value[1];
-                    print 'src = ', j, ' ra = ', ra, ' dec = ', dec,
-			' I = ', stokesI;
-                    
-		    annotator.change_marker_size(src_mrk[j], stokesI*100);
+                annotator.hold();
+                for (i in [1:nrpos]) {
+                    ra      := parms[spaste('RA.CP',i)].value[1];
+                    dec     := parms[spaste('DEC.CP',i)].value[1];
+                    stokesI := parms[spaste('StokesI.CP',i)].value[1];
+                    print 'src = ', i, ' ra = ', ra, ' dec = ', dec,
+                        ' I = ', stokesI;
+
+                    annotator.change_marker_size(src_mrk[i], stokesI*100);
                     if (is_fail(annotator)) fail;
-                    annotator.add_marker(j, real(ra), real(dec), j==nrpos);
+                    annotator.add_marker(i, real(ra), real(dec), i==nrpos);
                 }
-		annotator.release();
+                annotator.release();
             }
-	    sleep_cmd := spaste('sleep ', sleeptime);
-	    if (sleep) shell(sleep_cmd);
+            
+            for (i in [1:niter]) {
+                print "iteration", i;
+
+                srec := mc.solve();
+                solverec[spaste("iter",i)] := srec;
+                
+                parms := mc.getparms("RA.* DEC.* StokesI.*");
+                nrpos := len(parms) / 3;
+                if (nrpos > 0) {
+                    annotator.hold();
+                    for (j in [1:nrpos]) {
+                        ra  := parms[spaste('RA.CP',j)].value[1];
+                        dec := parms[spaste('DEC.CP',j)].value[1];
+                        stokesI := parms[spaste('StokesI.CP',j)].value[1];
+                        print 'src = ', j, ' ra = ', ra, ' dec = ', dec,
+                            ' I = ', stokesI;
+                        
+                        annotator.change_marker_size(src_mrk[j], stokesI*100);
+                        if (is_fail(annotator)) fail;
+                        annotator.add_marker(j, real(ra), real(dec), j==nrpos);
+                    }
+                    annotator.release();
+                }
+                sleep_cmd := spaste('sleep ', sleeptime);
+                if (sleep) shell(sleep_cmd);
+            }
+            print mc.getstatistics()
+                mc.saveresidualdata();
+            mc.saveparms();
         }
-        print mc.getstatistics()
-	mc.saveresidualdata();
-	mc.saveparms();
-    }
     
     mc.done();
 
     mssel := '';
     if (len(ant) > 0) {
-      ant +:=1;               # msselect adds 1 to ANTENNA1,2
-      mssel := spaste('all([ANTENNA1,ANTENNA2] in ',substitutevar(ant), ')');
+        ant +:=1;               # msselect adds 1 to ANTENNA1,2
+        mssel := spaste('all([ANTENNA1,ANTENNA2] in ',substitutevar(ant), ')');
     }
     mkimg(spaste(fname, '.MS'), spaste(fname, '.imgs', src[1]),
-	  msselect=mssel, type='corrected');
+          msselect=mssel, type='corrected');
 
     return solverec;    
 #    return ref annotator;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 solveej := function(fname='demo', ant=4*[0:20],
-		    modeltype='LOFAR', calcuvw=F, 
-		    niter=1, sleep=F, sleeptime=2, wait=F)
+                    modeltype='LOFAR', calcuvw=F, 
+                    niter=1, sleep=F, sleeptime=2, wait=F)
 {
     #
     # Create calibrater object
     #
     mc := meqcalibrater(spaste(fname,'.MS'), fname, spaste(fname,'_gsm'),
-			ant=ant,
-			modeltype=modeltype, calcuvw=calcuvw);
+                        ant=ant,
+                        modeltype=modeltype, calcuvw=calcuvw);
 
     if (wait)
     {
-	print "Press RETURN to continue.";
-	shell("read");
+        print "Press RETURN to continue.";
+        shell("read");
     }
 
     if (is_fail(mc)) {
@@ -215,59 +246,71 @@ solveej := function(fname='demo', ant=4*[0:20],
     if (sleep) shell(sleep_cmd);
 
     mc.resetiterator()
-    while (mc.nextinterval())
-    {
-        d := mc.getsolvedomain();
-        print 'solvedomain = ', d;
+        while (mc.nextinterval())
+        {
+            d := mc.getsolvedomain();
+            print 'solvedomain = ', d;
 
-        parms := mc.getparms("EJ11.SR{5,9}.*");
-	nrp := len(parms);
-	if (nrp > 0) {
-	    for (nm in field_names(parms)) {
-		print nm, '=', parms[nm].value;
-	    }
-	}
-        
-        for (i in [1:niter]) {
-            print "iteration", i;
-
-            srec := mc.solve();
-	    solverec[spaste("iter",i)] := srec;
+            parms := mc.getparms("EJ11.SR{5,9}.*");
+            nrp := len(parms);
+            if (nrp > 0) {
+                for (nm in field_names(parms)) {
+                    print nm, '=', parms[nm].value;
+                }
+            }
             
-	    parms := mc.getparms("EJ11.SR{5,9}.*");
-	    nrp := len(parms);
-	    if (nrp > 0) {
-		for (nm in field_names(parms)) {
-		    print nm, '=', parms[nm].value;
-		}
-	    }
-        
-	    sleep_cmd := spaste('sleep ', sleeptime);
-	    if (sleep) shell(sleep_cmd);
+            for (i in [1:niter]) {
+                print "iteration", i;
+
+                srec := mc.solve();
+                solverec[spaste("iter",i)] := srec;
+                
+                parms := mc.getparms("EJ11.SR{5,9}.*");
+                nrp := len(parms);
+                if (nrp > 0) {
+                    for (nm in field_names(parms)) {
+                        print nm, '=', parms[nm].value;
+                    }
+                }
+                
+                sleep_cmd := spaste('sleep ', sleeptime);
+                if (sleep) shell(sleep_cmd);
+            }
+            print mc.getstatistics()
+                mc.saveresidualdata();
+            mc.saveparms();
         }
-        print mc.getstatistics()
-	mc.saveresidualdata();
-	mc.saveparms();
-    }
     
     mc.done();
 
     mssel := '';
     if (len(ant) > 0) {
-      ant +:=1;               # msselect adds 1 to ANTENNA1,2
-      mssel := spaste('all([ANTENNA1,ANTENNA2] in ',substitutevar(ant), ')');
+        ant +:=1;               # msselect adds 1 to ANTENNA1,2
+        mssel := spaste('all([ANTENNA1,ANTENNA2] in ',substitutevar(ant), ')');
     }
     mkimg(spaste(fname, '.MS'), spaste(fname, '.imgs', src[1]),
-	  msselect=mssel, type='corrected');
+          msselect=mssel, type='corrected');
 
     return solverec;    
 #    return ref annotator;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 peel := function(fname='demo', src=1, predsrc=[], ant=4*[0:20],
-		 datacol='MODEL_DATA', mapnr='',
-		 modeltype='LOFAR', calcuvw=F, 
-		 niter=1, sleep=F, sleeptime=2, wait=F)
+                 datacol='MODEL_DATA', mapnr='',
+                 modeltype='LOFAR', calcuvw=F, 
+                 niter=1, sleep=F, sleeptime=2, wait=F)
 {
     annotator := imgannotator(spaste(fname, '.img', mapnr), 'raster');
     
@@ -275,20 +318,20 @@ peel := function(fname='demo', src=1, predsrc=[], ant=4*[0:20],
     # First get the values used in the simulation.
     t := table(spaste(fname,'_gsm.MEP/DEFAULTVALUES'));
     t1 := t.query('NAME==pattern("{RA,DEC,StokesI}.*")',
-	          sortlist='SRCNR,NAME');
+                  sortlist='SRCNR,NAME');
     t.close();
     if (t1.nrows() == 0) fail "No sources in MEP table";
     if (t1.nrows()%3 != 0) fail "_gsm.MEP inconsistent for RA,DEC,StokesI";
     # MEP is sorted, thus order is DEC,RA,StokesI
     annotator.hold();
     for (i in [1:(t1.nrows()/3)]) {
-	dec := t1.getcell("SIM_RVALUES", 3*i-2)[1,1];
-	ra  := t1.getcell("SIM_RVALUES", 3*i-1)[1,1];
-	stk := t1.getcell("SIM_RVALUES", 3*i)[1,1];
-	print stk;
-	src_mrk[i] := annotator.add_marker(1, ra, dec, F, F, 1,
-					   as_integer(100*stk), 3);
-	annotator.add_marker(2, ra, dec, F, F, 1, as_integer(100*stk), 12);
+        dec := t1.getcell("SIM_RVALUES", 3*i-2)[1,1];
+        ra  := t1.getcell("SIM_RVALUES", 3*i-1)[1,1];
+        stk := t1.getcell("SIM_RVALUES", 3*i)[1,1];
+        print stk;
+        src_mrk[i] := annotator.add_marker(1, ra, dec, F, F, 1,
+                                           as_integer(100*stk), 3);
+        annotator.add_marker(2, ra, dec, F, F, 1, as_integer(100*stk), 12);
     }
     annotator.release();
     t1.close();
@@ -297,13 +340,13 @@ peel := function(fname='demo', src=1, predsrc=[], ant=4*[0:20],
     # Create calibrater object
     #
     mc := meqcalibrater(spaste(fname,'.MS'), fname, spaste(fname,'_gsm'),
-			ant=ant, datacolname=datacol,
-			modeltype=modeltype, calcuvw=calcuvw);
+                        ant=ant, datacolname=datacol,
+                        modeltype=modeltype, calcuvw=calcuvw);
 
     if (wait)
     {
-	print "Press RETURN to continue.";
-	shell("read");
+        print "Press RETURN to continue.";
+        shell("read");
     }
 
     if (is_fail(mc)) {
@@ -316,9 +359,9 @@ peel := function(fname='demo', src=1, predsrc=[], ant=4*[0:20],
     mc.settimeinterval(3600); # calibrate per 3600 seconds
     mc.clearsolvableparms();
     for (i in src) {
-	mc.setsolvableparms(spaste('StokesI.CP', i));
-	mc.setsolvableparms(spaste('RA.CP', i));
-	mc.setsolvableparms(spaste('DEC.CP', i));
+        mc.setsolvableparms(spaste('StokesI.CP', i));
+        mc.setsolvableparms(spaste('RA.CP', i));
+        mc.setsolvableparms(spaste('DEC.CP', i));
     }
 
     solverec := [=];
@@ -327,92 +370,101 @@ peel := function(fname='demo', src=1, predsrc=[], ant=4*[0:20],
     if (sleep) shell(sleep_cmd);
 
     mc.resetiterator()
-    while (mc.nextinterval())
-    {
-	mc.peel (src-1, predsrc-1);
+        while (mc.nextinterval())
+        {
+            mc.peel (src-1, predsrc-1);
 
-        d := mc.getsolvedomain();
-        print 'solvedomain = ', d;
+            d := mc.getsolvedomain();
+            print 'solvedomain = ', d;
 
-        parms := mc.getparms("RA.* DEC.* StokesI.*");
-        print parms
-        print len(parms)
-        nrpos := len(parms) / 3;
-        if (nrpos > 0) {
-	    annotator.hold();
-            for (i in [1:nrpos]) {
-                ra      := parms[spaste('RA.CP',i)].value[1];
-                dec     := parms[spaste('DEC.CP',i)].value[1];
-                stokesI := parms[spaste('StokesI.CP',i)].value[1];
-                print 'src = ', i, ' ra = ', ra, ' dec = ', dec,
-		      ' I = ', stokesI;
-
-	        annotator.change_marker_size(src_mrk[i], stokesI*100);
-	        if (is_fail(annotator)) fail;
-                annotator.add_marker(i, real(ra), real(dec), i==nrpos);
-            }
-	    annotator.release();
-        }
-        
-        for (i in [1:niter]) {
-            print "iteration", i;
-
-            srec := mc.solve();
-	    solverec[spaste("iter",i)] := srec;
-            
             parms := mc.getparms("RA.* DEC.* StokesI.*");
-            nrpos := len(parms) / 3;
+            print parms
+                print len(parms)
+                    nrpos := len(parms) / 3;
             if (nrpos > 0) {
-		annotator.hold();
-                for (j in [1:nrpos]) {
-                    ra  := parms[spaste('RA.CP',j)].value[1];
-                    dec := parms[spaste('DEC.CP',j)].value[1];
-                    stokesI := parms[spaste('StokesI.CP',j)].value[1];
-                    print 'src = ', j, ' ra = ', ra, ' dec = ', dec,
-			' I = ', stokesI;
-                    
-		    annotator.change_marker_size(src_mrk[j], stokesI*100);
+                annotator.hold();
+                for (i in [1:nrpos]) {
+                    ra      := parms[spaste('RA.CP',i)].value[1];
+                    dec     := parms[spaste('DEC.CP',i)].value[1];
+                    stokesI := parms[spaste('StokesI.CP',i)].value[1];
+                    print 'src = ', i, ' ra = ', ra, ' dec = ', dec,
+                        ' I = ', stokesI;
+
+                    annotator.change_marker_size(src_mrk[i], stokesI*100);
                     if (is_fail(annotator)) fail;
-                    annotator.add_marker(j, real(ra), real(dec), j==nrpos);
+                    annotator.add_marker(i, real(ra), real(dec), i==nrpos);
                 }
-		annotator.release();
+                annotator.release();
             }
-	    sleep_cmd := spaste('sleep ', sleeptime);
-	    if (sleep) shell(sleep_cmd);
+            
+            for (i in [1:niter]) {
+                print "iteration", i;
+
+                srec := mc.solve();
+                solverec[spaste("iter",i)] := srec;
+                
+                parms := mc.getparms("RA.* DEC.* StokesI.*");
+                nrpos := len(parms) / 3;
+                if (nrpos > 0) {
+                    annotator.hold();
+                    for (j in [1:nrpos]) {
+                        ra  := parms[spaste('RA.CP',j)].value[1];
+                        dec := parms[spaste('DEC.CP',j)].value[1];
+                        stokesI := parms[spaste('StokesI.CP',j)].value[1];
+                        print 'src = ', j, ' ra = ', ra, ' dec = ', dec,
+                            ' I = ', stokesI;
+                        
+                        annotator.change_marker_size(src_mrk[j], stokesI*100);
+                        if (is_fail(annotator)) fail;
+                        annotator.add_marker(j, real(ra), real(dec), j==nrpos);
+                    }
+                    annotator.release();
+                }
+                sleep_cmd := spaste('sleep ', sleeptime);
+                if (sleep) shell(sleep_cmd);
+            }
+            print mc.getstatistics();
+            mc.saveresidualdata();
+            mc.saveparms();
         }
-	print mc.getstatistics();
-	mc.saveresidualdata();
-	mc.saveparms();
-    }
     
     mc.done();
     mssel := '';
     if (len(ant) > 0) {
-      ant +:=1;               # msselect adds 1 to ANTENNA1,2
-      mssel := spaste('all([ANTENNA1,ANTENNA2] in ',substitutevar(ant), ')');
+        ant +:=1;               # msselect adds 1 to ANTENNA1,2
+        mssel := spaste('all([ANTENNA1,ANTENNA2] in ',substitutevar(ant), ')');
     }
     mkimg(spaste(fname, '.MS'), spaste(fname, '.img', src[1]),
-	  msselect=mssel, type='corrected');
+          msselect=mssel, type='corrected');
     return T;
 #    return ref annotator;
 }
 
+
+
+
+
+
+
+
+
+
 peelej := function(fname='demo', src=1, predsrc=[], ant=4*[0:20],
-		   datacol='MODEL_DATA', mapnr='',
-		   modeltype='LOFAR', calcuvw=F, 
-		   niter=1, sleep=F, sleeptime=2, wait=F)
+                   datacol='MODEL_DATA', mapnr='',
+                   modeltype='LOFAR', calcuvw=F, 
+                   niter=1, sleep=F, sleeptime=2, wait=F)
 {
     #
     # Create calibrater object
     #
     mc := meqcalibrater(spaste(fname,'.MS'), fname, spaste(fname,'_gsm'),
-			ant=ant, datacolname=datacol,
-			modeltype=modeltype, calcuvw=calcuvw);
+                        ant=ant, datacolname=datacol,
+                        modeltype=modeltype, calcuvw=calcuvw);
 
     if (wait)
     {
-	print "Press RETURN to continue.";
-	shell("read");
+        print "Press RETURN to continue.";
+        shell("read");
     }
 
     if (is_fail(mc)) {
@@ -425,7 +477,7 @@ peelej := function(fname='demo', src=1, predsrc=[], ant=4*[0:20],
     mc.settimeinterval(3600); # calibrate per 3600 seconds
     mc.clearsolvableparms();
     for (i in src) {
-	mc.setsolvableparms(spaste('EJ11.*.CP', src, '*'));
+        mc.setsolvableparms(spaste('EJ11.*.CP', src, '*'));
 #	mc.setsolvableparms(spaste('EJ11.SR{5,9,13,17,21,25,29,33,37}.CP', src));
     }
     solverec := [=];
@@ -434,59 +486,68 @@ peelej := function(fname='demo', src=1, predsrc=[], ant=4*[0:20],
     if (sleep) shell(sleep_cmd);
 
     mc.resetiterator()
-    while (mc.nextinterval())
-    {
-	mc.peel (src-1, predsrc-1);
+        while (mc.nextinterval())
+        {
+            mc.peel (src-1, predsrc-1);
 
-        d := mc.getsolvedomain();
-        print 'solvedomain = ', d;
+            d := mc.getsolvedomain();
+            print 'solvedomain = ', d;
 
-        parms := mc.getparms("EJ11.SR{5,9}.*");
+            parms := mc.getparms("EJ11.SR{5,9}.*");
 #        parms := mc.getparms("EJ*");
-        print parms
-        
-        for (i in [1:niter]) {
-            print "iteration", i;
+            print parms
+                
+                for (i in [1:niter]) {
+                    print "iteration", i;
 
-            srec := mc.solve(realsol=T);
-	    solverec[spaste("iter",i)] := srec;
-            
-	    for (j in src) {
-		parms := mc.getparms("EJ11.SR{5,9}.*");
+                    srec := mc.solve(realsol=T);
+                    solverec[spaste("iter",i)] := srec;
+                    
+                    for (j in src) {
+                        parms := mc.getparms("EJ11.SR{5,9}.*");
 #		parms := mc.getparms(spaste('EJ*.CP', src, '*'));
-		nrp := len(parms);
-		if (nrp > 0) {
-		    for (nm in field_names(parms)) {
-			print nm, '=', parms[nm].value;
-		    }
+                        nrp := len(parms);
+                        if (nrp > 0) {
+                            for (nm in field_names(parms)) {
+                                print nm, '=', parms[nm].value;
+                            }
+                        }
+                    }
+                    sleep_cmd := spaste('sleep ', sleeptime);
+                    if (sleep) shell(sleep_cmd);
                 }
-            }
-	    sleep_cmd := spaste('sleep ', sleeptime);
-	    if (sleep) shell(sleep_cmd);
+            print mc.getstatistics();
+            mc.saveresidualdata();
+            mc.saveparms();
         }
-	print mc.getstatistics();
-	mc.saveresidualdata();
-	mc.saveparms();
-    }
     
     mc.done();
     mssel := '';
     if (len(ant) > 0) {
-      ant +:=1;               # msselect adds 1 to ANTENNA1,2
-      mssel := spaste('all([ANTENNA1,ANTENNA2] in ',substitutevar(ant), ')');
+        ant +:=1;               # msselect adds 1 to ANTENNA1,2
+        mssel := spaste('all([ANTENNA1,ANTENNA2] in ',substitutevar(ant), ')');
     }
     mkimg(spaste(fname, '.MS'), spaste(fname, '.img', src[1]),
-	  msselect=mssel, type='corrected');
+          msselect=mssel, type='corrected');
     return T;
 #    return ref annotator;
 }
 
+
+
+
+
+
+#
+# Solve for source positions
+#
+
 solvepos := function(fname='demo', ant=4*[0:20], niter=1)
 {
     annotator := imgannotator(spaste(fname, '.img'), 'raster');
-	
+    
     mc := meqcalibrater(spaste(fname,'.MS'), fname, spaste(fname,'_gsm'),
-			ant=ant);
+                        ant=ant);
     if (is_fail(mc)) {
         print "meqcalibratertest(): could not instantiate meqcalibrater";
         fail;
@@ -501,7 +562,7 @@ solvepos := function(fname='demo', ant=4*[0:20], niter=1)
             dec := parms[spaste('GSM.',i,'.DEC')].value[1];
             print 'src = ', i, ' ra = ', ra, ' dec = ', dec;
 
-	    if (is_fail(annotator)) fail;
+            if (is_fail(annotator)) fail;
             annotator.add_marker(i, real(ra), real(dec), i==nrpos);
         }
     }
@@ -509,7 +570,7 @@ solvepos := function(fname='demo', ant=4*[0:20], niter=1)
     mc.settimeinterval(3600); # calibrate per 3600 seconds (1 timeslot = 2 sec)
     for (i in [1:niter]) {
         print "iteration", i
-        mc.clearsolvableparms();
+            mc.clearsolvableparms();
         print 'Solving for RA ...';
         mc.setsolvableparms("GSM.*.RA");
         
@@ -548,14 +609,21 @@ solvepos := function(fname='demo', ant=4*[0:20], niter=1)
     return ref annotator;
 }
 
+
+
+
+
+
+
+
 solvegain := function(fname='demo', ant=4*[0:20], niter=1)
 {
     mc := meqcalibrater(spaste(fname,'.MS'), fname, spaste(fname,'_gsm'),
-			ant=ant);
+                        ant=ant);
     if (is_fail(mc)) {
-	print "meqcalibratertest(): could not instantiate meqcalibrater"
-	fail
-    }
+        print "meqcalibratertest(): could not instantiate meqcalibrater"
+            fail
+            }
 
 #    mc.select('', 0, 0);
 
@@ -570,32 +638,32 @@ solvegain := function(fname='demo', ant=4*[0:20], niter=1)
 #    print 'ALL PARMS = ', parms;
 
     mc.resetiterator()
-    while (mc.nextinterval())
-    {
-	d := mc.getsolvedomain();
-	print 'solvedomain = ', d;
+        while (mc.nextinterval())
+        {
+            d := mc.getsolvedomain();
+            print 'solvedomain = ', d;
 
-	for (i in [1:niter])
-	{
-	    print "iteration", i
-	    mc.solve();
+            for (i in [1:niter])
+            {
+                print "iteration", i
+                    mc.solve();
 
-	    parms := mc.getparms("gain.11.*");
-	    print 'GAIN SOLUTION = ';
-	    for (k in [1:5])
-	    {
-		print parms[k].value[1];
-	    }
+                parms := mc.getparms("gain.11.*");
+                print 'GAIN SOLUTION = ';
+                for (k in [1:5])
+                {
+                    print parms[k].value[1];
+                }
 
-	    parms := mc.getparms("gain.22.*");
-	    print 'GAIN SOLUTION = ';
-	    for (k in [1:5])
-	    {
-		print parms[k].value[1];
-	    }
-        }
-	print mc.getstatistics()
-    }
+                parms := mc.getparms("gain.22.*");
+                print 'GAIN SOLUTION = ';
+                for (k in [1:5])
+                {
+                    print parms[k].value[1];
+                }
+            }
+            print mc.getstatistics()
+            }
 
     parms := mc.getparms("gain.11.*");
     print 'SOLUTION 11: ', parms;
@@ -605,244 +673,190 @@ solvegain := function(fname='demo', ant=4*[0:20], niter=1)
     mc.done();
 }
 
+
+
+
+
 initparms := function(fname='demo')
 {
-  pt := parmtable(spaste(fname,'.MEP'), T);
-  if (is_fail(pt)) fail;
-  pt.putinit ('frot', values=0);
-  pt.putinit ('drot', values=0);
-  pt.putinit ('dell', values=0);
-  pt.putinit ('gain.11', values=1+0i);
-  pt.putinit ('gain.22', values=1+0i);
-  pt.putinit ('EJ11.SR1.CP1', values=1+0i);
-  pt.putinit ('EJ11.SR1.CP2', values=1+0i);
-  pt.putinit ('EJ11.SR1.CP3', values=1+0i);
-  pt.putinit ('EJ11.SR2.CP1', values=1+0i);
-  pt.putinit ('EJ11.SR2.CP2', values=1+0i);
-  pt.putinit ('EJ11.SR2.CP3', values=1+0i);
-  pt.putinit ('EJ11.SR5.CP1', values=1+0i);
-  pt.putinit ('EJ11.SR5.CP2', values=1+0i);
-  pt.putinit ('EJ11.SR5.CP3', values=1+0i);
-  pt.putinit ('EJ11.SR9.CP1', values=1+0i);
-  pt.putinit ('EJ11.SR9.CP2', values=1+0i);
-  pt.putinit ('EJ11.SR9.CP3', values=1+0i);
-  pt.putinit ('EJ11', values=1+0i);
-  pt.putinit ('EJ12', values=0+0i);
-  pt.putinit ('EJ21', values=0+0i);
-  pt.putinit ('EJ22', values=1+0i);
-  pt.done();
+    pt := parmtable(spaste(fname,'.MEP'), T);
+    if (is_fail(pt)) fail;
+    pt.putinit ('frot', values=0);
+    pt.putinit ('drot', values=0);
+    pt.putinit ('dell', values=0);
+    pt.putinit ('gain.11', values=1+0i);
+    pt.putinit ('gain.22', values=1+0i);
+    pt.putinit ('EJ11.SR1.CP1', values=1+0i);
+    pt.putinit ('EJ11.SR1.CP2', values=1+0i);
+    pt.putinit ('EJ11.SR1.CP3', values=1+0i);
+    pt.putinit ('EJ11.SR2.CP1', values=1+0i);
+    pt.putinit ('EJ11.SR2.CP2', values=1+0i);
+    pt.putinit ('EJ11.SR2.CP3', values=1+0i);
+    pt.putinit ('EJ11.SR5.CP1', values=1+0i);
+    pt.putinit ('EJ11.SR5.CP2', values=1+0i);
+    pt.putinit ('EJ11.SR5.CP3', values=1+0i);
+    pt.putinit ('EJ11.SR9.CP1', values=1+0i);
+    pt.putinit ('EJ11.SR9.CP2', values=1+0i);
+    pt.putinit ('EJ11.SR9.CP3', values=1+0i);
+    pt.putinit ('EJ11', values=1+0i);
+    pt.putinit ('EJ12', values=0+0i);
+    pt.putinit ('EJ21', values=0+0i);
+    pt.putinit ('EJ22', values=1+0i);
+    pt.done();
 }
+
+
+
+
+
+
 
 setparms := function(fname='demo')
 {
-  pt := parmtable(spaste(fname,'.MEP'), T);
-  if (is_fail(pt)) fail;
-  pt.putinit ('frot', values=0);
-  pt.putinit ('drot', values=0);
-  pt.putinit ('dell', values=0);
-  pt.putinit ('gain.11', values=1+0i);
-  pt.putinit ('gain.22', values=0+0i);
-  pt.putinit ('EJ11', values=1+0i);
-  pt.putinit ('EJ12', values=0+0i);
-  pt.putinit ('EJ21', values=0+0i);
-  pt.putinit ('EJ22', values=1+0i);
-  pt.done();
+    pt := parmtable(spaste(fname,'.MEP'), T);
+    if (is_fail(pt)) fail;
+    pt.putinit ('frot', values=0);
+    pt.putinit ('drot', values=0);
+    pt.putinit ('dell', values=0);
+    pt.putinit ('gain.11', values=1+0i);
+    pt.putinit ('gain.22', values=0+0i);
+    pt.putinit ('EJ11', values=1+0i);
+    pt.putinit ('EJ12', values=0+0i);
+    pt.putinit ('EJ21', values=0+0i);
+    pt.putinit ('EJ22', values=1+0i);
+    pt.done();
 }
 
+
+# l, m, alpha0, delta0 in radians...
+lm_to_alpha_delta := function(l, m, alpha0, delta0)
+{
+    alphadelta := [0.0, 0.0];
+    alphadelta[1] := alpha0 + atan(l/(cos(delta0)*sqrt(1.0 - l*l - m*m) - m*sin(delta0) ));
+    alphadelta[2] := asin(m*cos(delta0)+sin(delta0)*sqrt(1.0-l*l - m*m));
+    
+    if(alphadelta[1] < 0.0) {
+        alphadelta[1] +:= 2*pi;
+    }
+    if(alphadelta[1] >= 2*pi) {
+        alphadelta[1] -:= 2*pi;
+    }
+    return alphadelta;
+}
+
+
+# The positions of the sources are (in arcsec):
+#
+# Delta X             Delta Y
+# -------             -------
+# -117.42             28.38
+# 34.74               -30.33
+# 65.56               66.54
+# 93.44               65.07
+# -8.81               -56.26
+#
+#   Field centre = 10h26m36.300 +26:00:00.000
+#   J2000.0
+#
 initgsm := function(fname='demo')
 {
-  tg := gsm(spaste(fname,'.GSM'), T);
-  if (is_fail(tg)) fail;
-  tg.addpointsource ('CP1', [0,1e20], [0,1e20],
-		     2.734, 0.45379, 1, 0, 0, 0);
-  tg.addpointsource ('CP2', [0,1e20], [0,1e20],
-		     2.73402, 0.45369, 0.5, 0, 0, 0);
-  tg.addpointsource ('CP3', [0,1e20], [0,1e20],
-		     2.73398, 0.45375, 0.3, 0, 0, 0);
-  tg.done()
-  pt := parmtable(spaste(fname,'_gsm.MEP'), T);
-  pt.loadgsm (spaste(fname,'.GSM'));
-  pt.done();
+    tg := gsm(spaste(fname,'.GSM'), T);
+    if (is_fail(tg)) fail;
+    
+    arcsec_per_radian := 180.0*3600.0/pi;
+    alpha0 := (10.0+26.0/60 + 36.3/3600)*15.0*pi/180;
+    delta0 := 26.0*pi/180.0;
+
+    l   := -117.42/arcsec_per_radian;
+    m   := 28.38/arcsec_per_radian;
+    pos := lm_from_alpha_delta(l,m, apha0, delta0);    
+    tg.addpointsource ('CP1', [0,1e20], [0,1e20],
+                       pos[1], pos[2], 1, 0, 0, 0);
+
+    l   := 34.74/arcsec_per_radian;
+    m   := -30.33/arcsec_per_radian;
+    pos := lm_from_alpha_delta(l,m, apha0, delta0);    
+    tg.addpointsource ('CP2', [0,1e20], [0,1e20],
+                       pos[1], pos[2], 1, 0, 0, 0);
+
+    l   := 65.56/arcsec_per_radian;
+    m   := 66.54/arcsec_per_radian;
+    pos := lm_from_alpha_delta(l,m, apha0, delta0);    
+    tg.addpointsource ('CP3', [0,1e20], [0,1e20],
+                       pos[1], pos[2], 1, 0, 0, 0);
+
+    l   := 93.44/arcsec_per_radian;
+    m   := 65.07/arcsec_per_radian;
+    pos := lm_from_alpha_delta(l,m, apha0, delta0);    
+    tg.addpointsource ('CP4', [0,1e20], [0,1e20],
+                       pos[1], pos[2], 1, 0, 0, 0);
+
+    l   := -8.81/arcsec_per_radian;
+    m   := -56.26/arcsec_per_radian;
+    pos := lm_from_alpha_delta(l,m, apha0, delta0);    
+    tg.addpointsource ('CP5', [0,1e20], [0,1e20],
+                       pos[1], pos[2], 1, 0, 0, 0);
+
+
+
+    tg.done();
+    pt := parmtable(spaste(fname,'_gsm.MEP'), T);
+    pt.loadgsm (spaste(fname,'.GSM'));
+    pt.done();
 }
 
 setej := function(fname='demo', mode=1, fact=1)
 {
-  pt := parmtable(spaste(fname,'.MEP'));
-  pt.perturb ('NAME==pattern("EJ11*")', 0.5, F);
+    pt := parmtable(spaste(fname,'.MEP'));
+    pt.perturb ('NAME==pattern("EJ11*")', 0.5, F);
 #  pt.perturb ('NAME==pattern("EJ11.SR{1,5,9}.CP{1}")', 0.5*fact, F);
-  if (mode==2) {
+    if (mode==2) {
 #      pt.perturb ('NAME==pattern("EJ11.SR2.CP1")', 0.5000015+1e-06i, F);
 #      pt.perturb ('NAME==pattern("EJ11.SR2.CP2")', 0.5000015+1e-06i, F);
-      pt.perturb ('NAME==pattern("EJ11.SR2.CP3")', 0.5000015+1e-06i, F);
-  }
-  pt.done();
+        pt.perturb ('NAME==pattern("EJ11.SR2.CP3")', 0.5000015+1e-06i, F);
+    }
+    pt.done();
 }
+
+
 
 setgsm := function(fname='demo')
 {
-  initgsm();
-  
-#  tg := gsm(spaste(fname,'.GSM'), T);
-#  if (is_fail(tg)) fail;
-#  tg.addpointsource ('CP1', [0,1e20], [0,1e20],
-#		     2.734030, 0.453785, 1, 0, 0, 0);
-#  tg.addpointsource ('CP2', [0,1e20], [0,1e20],
-#		     2.734025, 0.4536875, 1, 0, 0, 0);
-#  tg.addpointsource ('CP3', [0,1e20], [0,1e20],
-#		     2.73399, 0.4537525, 1, 0, 0, 0);
-#  tg.done();
-  pt := parmtable(spaste(fname,'_gsm.MEP'));
-  pt.perturb ('NAME=="RA.CP1"', 0.00003, F);
-  pt.perturb ('NAME=="RA.CP2"', 0.000005, F);
-  pt.perturb ('NAME=="RA.CP3"', 0.00001, F);
-  pt.perturb ('NAME=="DEC.CP1"', -0.000005, F);
-  pt.perturb ('NAME=="DEC.CP2"', -0.0000025, F);
-  pt.perturb ('NAME=="DEC.CP3"', 0.0000025, F);
-  pt.perturb ('NAME=="StokesI.CP1"', 0, F);
-  pt.perturb ('NAME=="StokesI.CP2"', 0.5, F);
-  pt.perturb ('NAME=="StokesI.CP3"', 0.7, F);
-  pt.done();
+    initgsm();
+    
+#    pt := parmtable(spaste(fname,'_gsm.MEP'));
+#    pt.perturb ('NAME=="RA.CP1"', 0.00003, F);
+#    pt.perturb ('NAME=="RA.CP2"', 0.000005, F);
+#    pt.perturb ('NAME=="RA.CP3"', 0.00001, F);
+#    pt.perturb ('NAME=="DEC.CP1"', -0.000005, F);
+#    pt.perturb ('NAME=="DEC.CP2"', -0.0000025, F);
+#    pt.perturb ('NAME=="DEC.CP3"', 0.0000025, F);
+#    pt.perturb ('NAME=="StokesI.CP1"', 0, F);
+#    pt.perturb ('NAME=="StokesI.CP2"', 0.5, F);
+#    pt.perturb ('NAME=="StokesI.CP3"', 0.7, F);
+#    pt.done();
 }
 
 initchan := function(fname='demo')
 {
-  t := table(spaste(fname, '.MS/SPECTRAL_WINDOW'),readonly=F)
-  if (is_fail(t)) fail;
-  t.putcell ('CHAN_WIDTH', 1, array(1e7,1));
-  t.close()
-}
+    t := table(spaste(fname, '.MS/SPECTRAL_WINDOW'),readonly=F)
+        if (is_fail(t)) fail;
+    t.putcell ('CHAN_WIDTH', 1, array(1e7,1));
+    t.close()
+    }
 
 setchan := function(fname='demo')
 {
-  t := table(spaste(fname, '.MS/SPECTRAL_WINDOW'),readonly=F)
-  if (is_fail(t)) fail;
-  t.putcell ('CHAN_WIDTH', 1, array(1e6,1));
-  t.close()
-}
+    t := table(spaste(fname, '.MS/SPECTRAL_WINDOW'),readonly=F)
+        if (is_fail(t)) fail;
+    t.putcell ('CHAN_WIDTH', 1, array(1e6,1));
+    t.close()
+    }
 
 init := function(fname='demo')
 {
-	initparms(fname=fname);
-	initgsm(fname=fname);
-	predict(fname=fname);
+    initparms(fname=fname);
+    initgsm(fname=fname);
+    predict(fname=fname);
 }
 
-demo := function(solver=0,niter=10,fname='demo',sleep=F,sleeptime=2,wait=F)
-{
-	global annotator;
-
-	setparms(fname);
-	setgsm(fname);
-	if (0 == solver)
-	{
-		annotator:=solve(fname=fname, niter=niter,
-				 sleep=sleep, sleeptime=sleeptime, wait=wait);
-	}
-	else
-	{
-		annotator:=solvepos(fname=fname, niter=niter);
-	}
-}
-
-demogain := function(niter=10,fname='demo')
-{
-	setparms(fname);
-	initgsm(fname);
-
-	solvegain(niter=niter,fname=fname);
-}
-
-
-testsolve := function()
-{
-    initparms();
-    initgsm();
-    setgsm();
-    return solve(niter=10);
-}
-testpeel := function()
-{
-    initparms();
-    initgsm();
-    setgsm();
-    peel(src=1, niter=5);
-    peel(src=2, niter=5, datacol='CORRECTED_DATA', mapnr='1');
-    peel(src=3, niter=5, datacol='CORRECTED_DATA', mapnr='2');
-    return solve(niter=5);
-}
-testnsolve := function()
-{
-    initparms('demos');
-    initgsm('demos');
-    setgsm('demos');
-    return solve('demos',niter=10);
-}
-testnpeel := function()
-{
-    initparms('demos');
-    initgsm('demos');
-    setgsm('demos');
-    peel('demos', src=1, niter=5);
-    peel('demos', src=2, niter=5, datacol='CORRECTED_DATA', mapnr='1');
-    peel('demos', src=3, niter=5, datacol='CORRECTED_DATA', mapnr='2');
-    return solve('demos', niter=5);
-}
-testpeel2 := function()
-{
-    initparms();
-    initgsm();
-    setgsm();
-    peel(src=1, predsrc=2, niter=5);
-    peel(src=2, predsrc=3, niter=5, datacol='CORRECTED_DATA', mapnr='1');
-    peel(src=3, niter=5, datacol='CORRECTED_DATA', mapnr='2');
-    return solve(niter=5);
-}
-testsolveej := function()
-{
-    initparms();
-    initgsm();
-    setej();
-    return solveej(niter=20);
-}
-testpeelej := function()
-{
-    initparms();
-    initgsm();
-    setej();
-    peelej(src=1, niter=5);
-    peelej(src=2, niter=5, datacol='CORRECTED_DATA', mapnr='1');
-    peelej(src=3, niter=5, datacol='CORRECTED_DATA', mapnr='2');
-    return T;
-#    return solveej(niter=20);
-}
-testpeeleja := function()
-{
-    initparms();
-    initgsm();
-    setej();
-    peelej(ant=[], src=1, niter=5);
-    peelej(ant=[], src=2, niter=5, datacol='CORRECTED_DATA', mapnr='1');
-    peelej(ant=[], src=3, niter=5, datacol='CORRECTED_DATA', mapnr='2');
-#    return T;
-    return solveej(ant=[], niter=20);
-}
-testpeelej2 := function()
-{
-    initparms();
-    initgsm();
-    setej();
-    peelej(src=1, predsrc=2, niter=5);
-    peelej(src=2, predsrc=3, niter=5, datacol='CORRECTED_DATA', mapnr='1');
-    peelej(src=3, niter=5, datacol='CORRECTED_DATA', mapnr='2');
-    return solveej(niter=20);
-}
-testpeelej2a := function()
-{
-    initparms();
-    initgsm();
-    setej();
-    peelej(ant=[], src=1, predsrc=2, niter=5);
-    peelej(ant=[], src=2, predsrc=3, niter=5, datacol='CORRECTED_DATA', mapnr='1');
-    peelej(ant=[], src=3, niter=5, datacol='CORRECTED_DATA', mapnr='2');
-    return solveej(ant=[], niter=20);
-}
