@@ -26,7 +26,6 @@
 #include "ABSSpectralWindow.h"
 #include "ABS_Protocol.ph"
 #include "ABSBeamlet.h"
-#include "ABSAnswer.h"
 #include "ABSSubbandStats.h"
 
 #include <GCF/GCF_Control.h>
