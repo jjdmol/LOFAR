@@ -105,7 +105,7 @@ BlobIStream& operator>> (BlobIStream& bs, std::vector<bool>& vec)
   bool fortranOrder;
   uint16 ndim;
   getBlobArrayStart (bs, fortranOrder, ndim);
-  Assert (ndim == 1);
+  ASSERT(ndim == 1);
   uint32 size;
   getBlobArrayShape (bs, &size, 1, false);
   bs.getBoolVec (vec, size);

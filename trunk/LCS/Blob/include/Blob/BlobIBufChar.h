@@ -79,7 +79,7 @@ inline uint BlobIBufChar::size() const
 template<typename U>
 inline const U* BlobIBufChar::getPointer (uint position) const
 {
-  DbgAssert(position < itsSize);
+  DBGASSERT(position < itsSize);
   return (const U*)(itsBuffer + position);
 }
 

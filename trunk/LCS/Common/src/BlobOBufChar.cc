@@ -21,7 +21,8 @@
 //# $Id$
 
 #include <Common/BlobOBufChar.h>
-#include <Common/Debug.h>
+#include <Common/BlobException.h>
+#include <Common/LofarLogger.h>
 #include <string.h>
 
 namespace LOFAR {
@@ -48,8 +49,8 @@ BlobOBufChar::BlobOBufChar (void* buffer, uint size, uint expandSize,
   itsExpandSize   (expandSize),
   itsIsOwner      (takeOver)
 {
-  Assert (start <= size);
-  Assert (size == 0  ||  (size > 0  &&  buffer != 0));
+  ASSERT (start <= size);
+  ASSERT (size == 0  ||  (size > 0  &&  buffer != 0));
 }
 
 BlobOBufChar::~BlobOBufChar()
@@ -86,8 +87,10 @@ int64 BlobOBufChar::setPos (int64 pos)
   // Expand the buffer if needed.
   // Initialize the new buffer positions with zeroes.
   if (pos > itsSize) {
-    AssertMsg (resizeIfNeeded (pos),
-	       "BlobOBufChar::setPos - buffer cannot be expanded");
+    if (! resizeIfNeeded (pos)) {
+      THROW(BlobException,
+	    "BlobOBufChar::setPos - buffer cannot be expanded");
+    }
     for (; itsSize<pos; itsSize++) {
       itsBuffer[itsSize] = 0;
     }

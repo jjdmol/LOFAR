@@ -23,6 +23,7 @@
 #include <Common/BlobIStream.h>
 #include <Common/BlobHeader.h>
 #include <Common/DataConvert.h>
+#include <Common/BlobException.h>
 
 namespace LOFAR {
 
@@ -44,7 +45,7 @@ BlobIStream::~BlobIStream()
   // So it should only be done if it is known that the destructor is called
   // in the normal way, but I don't know how to test that.
   // Maybe uncaught_exception is the way to go.
-  /////  Assert (itsLevel == 0);
+  /////  ASSERT (itsLevel == 0);
 }
 
 // getNextType gets the object type of the next piece of
@@ -61,14 +62,14 @@ const std::string& BlobIStream::getNextType()
   // Read header and check the magic value and the level.
   BlobHeaderBase hdr;
   itsStream->get ((char*)(&hdr), hdr.plainSize());
-  Assert (hdr.checkMagicValue());
-  Assert (itsLevel == hdr.itsLevel);
+  ASSERT (hdr.checkMagicValue());
+  ASSERT (itsLevel == hdr.itsLevel);
   // Determine if data has to be converted (in case data format mismatches).
   if (itsLevel == 0) {
     itsMustConvert = hdr.mustConvert();
     itsDataFormat  = LOFAR::DataFormat(hdr.itsDataFormat);
   } else {
-    Assert (hdr.itsDataFormat == itsDataFormat);
+    ASSERT (hdr.itsDataFormat == itsDataFormat);
   }
   // Keep the current length read.
   itsLevel++;
@@ -90,28 +91,34 @@ const std::string& BlobIStream::getNextType()
 int BlobIStream::getStart (const std::string& type)
 {
   // Read the header and check if the type matches.
-  AssertMsg (type == getNextType(),
-	     "BlobIStream::getStart: found object type " <<
-	     getNextType() << ", expected " << type);
+  if (type != getNextType()) {
+    THROW(BlobException,
+	  "BlobIStream::getStart: found object type " <<
+	  getNextType() << ", expected " << type);
+  }
   itsHasCachedType = false;               // type is not cached anymore
   return itsVersion;
 }
 
 uint BlobIStream::getEnd()
 {
-  Assert (itsLevel > 0);
+  ASSERT (itsLevel > 0);
   uint32 eob;
   *this >> eob;
-  AssertMsg (eob == BlobHeaderBase::eobMagicValue(),
-	     "BlobIStream::getEnd - no end-of-blob value found");
+  if (eob != BlobHeaderBase::eobMagicValue()) {
+    THROW(BlobException,
+	  "BlobIStream::getEnd - no end-of-blob value found");
+  }
   uint32 toRead = itsObjTLN.top();
   uint32 len    = itsCurLength;
   itsCurLength  = itsObjLen.top();
   itsObjTLN.pop();
   itsObjLen.pop();
   if (itsLevel > 0) {
-    AssertMsg (len == toRead  ||  toRead == 0,
-	       "BlobIStream::getEnd: part of object not read");
+    if (!(len == toRead  ||  toRead == 0)) {
+      THROW(BlobException,
+	    "BlobIStream::getEnd: part of object not read");
+    }
   }
   if (--itsLevel > 0) {
     itsCurLength += len;
@@ -123,9 +130,11 @@ void BlobIStream::getBuf (void* buf, uint sz)
 {
   checkGet();
   uint sz1 = itsStream->get (static_cast<char*>(buf), sz);
-  AssertMsg (sz1 == sz,
-	     "BlobIStream::getBuf - " << sz << " bytes asked, but only "
-	     << sz1 << " could be read (pos=" << tellPos() << ")");
+  if (sz1 != sz) {
+      THROW(BlobException,
+	    "BlobIStream::getBuf - " << sz << " bytes asked, but only "
+	    << sz1 << " could be read (pos=" << tellPos() << ")");
+  }
   itsCurLength += sz1;
 }
 
@@ -354,8 +363,11 @@ int64 BlobIStream::getSpace (uint nbytes)
 {
   checkGet();
   int64 pos = tellPos();
-  AssertMsg (pos != -1, "BlobIStream::getSpace cannot be done; "
-	     "its BlobIBuffer is not seekable");
+  if (pos == -1) {
+    THROW(BlobException,
+	  "BlobIStream::getSpace cannot be done; "
+	  "its BlobIBuffer is not seekable");
+  }
   itsStream->setPos (pos+nbytes);
   itsCurLength += nbytes;
   return pos;
@@ -375,9 +387,11 @@ uint BlobIStream::align (uint n)
     nfill = n-nfill;
     for (uint i=0; i<nfill; i++) {
       uint sz1 = itsStream->get (&fill, 1);
-      AssertMsg (sz1 == 1,
-		 "BlobIStream::align - could not read fill (pos="
-		 << tellPos() << ")");
+      if (sz1 != 1) {
+	THROW(BlobException,
+	      "BlobIStream::align - could not read fill (pos="
+	      << tellPos() << ")");
+      }
       itsCurLength++;
     }
   }

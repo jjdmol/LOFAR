@@ -26,7 +26,7 @@
 #include <Common/BlobIStream.h>
 #include <stdexcept>
 #include <sstream>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
@@ -361,9 +361,9 @@ fcomplex KeyValue::getFComplex() const
 {
   switch (itsDataType) {
   case DTInt:
-    return float(*(int32*)itsValuePtr);
+    return fcomplex (float(*(int32*)itsValuePtr), 0.0f);
   case DTFloat:
-    return *(float*)itsValuePtr;
+    return fcomplex (*(float*)itsValuePtr, 0.0f);
   case DTFComplex:
     return *(fcomplex*)itsValuePtr;
   default:
@@ -376,11 +376,11 @@ dcomplex KeyValue::getDComplex() const
 {
   switch (itsDataType) {
   case DTInt:
-    return double(*(int32*)itsValuePtr);
+    return dcomplex (double(*(int32*)itsValuePtr), 0.0);
   case DTFloat:
-    return double(*(float*)itsValuePtr);
+    return dcomplex (double(*(float*)itsValuePtr), 0.0);
   case DTDouble:
-    return *(double*)itsValuePtr;
+    return dcomplex (*(double*)itsValuePtr, 0.0);
   case DTFComplex:
     return dcomplex (((fcomplex*)itsValuePtr)->real(),
 		     ((fcomplex*)itsValuePtr)->imag());

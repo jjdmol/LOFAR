@@ -144,7 +144,7 @@ inline void BlobOBufChar::setBuffer (void* buffer)
 template<typename U>
 inline U* BlobOBufChar::getPointer (uint position)
 {
-  DbgAssert(position < itsSize);
+  DBGASSERT(position < itsSize);
   return (U*)(itsBuffer + position);
 }
 

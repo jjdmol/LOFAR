@@ -80,7 +80,7 @@ int	myFunc (int param1) {
 }
 
 
-int main (int argc, char *argv[]) {
+int main (int, char *argv[]) {
 
 	// Read in the log-environment configuration
 	// We should always start with this.
@@ -165,7 +165,7 @@ int main (int argc, char *argv[]) {
 
 	int loops = 1;
 	try {
-		ASSERT(loops == 0, "Trying an assertion");
+		ASSERTSTR(loops == 0, "Trying an assertion");
 	}
 	catch(LOFAR::Exception&	ex) {
 		LOG_WARN_STR("Caught exception: " << ex << endl);
@@ -173,7 +173,7 @@ int main (int argc, char *argv[]) {
 	}
 
 	try {
-		FAILWHEN(loops != 0, "Trying a fail test");
+		FAILWHEN(loops != 0);
 	}
 	catch(LOFAR::Exception&	ex) {
 		LOG_WARN_STR("Caught exception: " << ex << endl);

@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <Common/StringUtil.h>
+#include <Common/LofarLogger.h>
 #include <iostream>
 
 using namespace LOFAR;
@@ -28,6 +29,7 @@ using namespace std;
 
 int main()
 {
+  INIT_LOGGER("tStringUtil.log_prop");
   string s(",aa,bb,,dd,");
   vector<string> vs = StringUtil::split(s,',');
   cout << "Splitting string \"" << s << "\" using \',\' as seperator ..." 

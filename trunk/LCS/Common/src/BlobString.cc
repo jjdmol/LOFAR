@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <Common/BlobString.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
@@ -59,14 +59,14 @@ BlobString::~BlobString()
 void BlobString::reserve (size_t newSize)
 {
   if (newSize > itsCapacity) {
-    AssertStr (itsCanIncr, "This BlobString cannot increase its capacity");
+    ASSERTSTR (itsCanIncr, "This BlobString cannot increase its capacity");
     if (itsAllocator.useString()) {
       itsString.reserve (newSize);
       itsChars = const_cast<uchar*>(itsString.data());
       itsCapacity = itsString.capacity();
     } else {
       void* data = itsAllocator.allocator().allocate (newSize);
-      AssertStr (data, "BlobString could not allocate " << newSize
+      ASSERTSTR (data, "BlobString could not allocate " << newSize
 		       << " bytes");
       memcpy (data, itsChars, itsSize);
       itsAllocator.allocator().deallocate (itsChars);
@@ -91,7 +91,7 @@ void BlobString::resize (size_t newSize)
 
 std::basic_string<uchar>& BlobString::getString()
 {
-  AssertStr (itsAllocator.useString(), "BlobString has no string");
+  ASSERTSTR (itsAllocator.useString(), "BlobString has no string");
   return itsString;
 }
 

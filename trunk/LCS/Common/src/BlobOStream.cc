@@ -23,6 +23,8 @@
 #include <Common/BlobOStream.h>
 #include <Common/BlobHeader.h>
 #include <Common/DataConvert.h>
+#include <Common/BlobException.h>
+#include <iostream>
 
 namespace LOFAR {
 
@@ -41,7 +43,7 @@ BlobOStream::~BlobOStream()
   // So it should only be done if it is known that the destructor is called
   // in the normal way, but I don't know how to test that.
   // Maybe uncaught_exception is the way to go.
-  /////  Assert (itsLevel == 0);
+  /////  ASSERT (itsLevel == 0);
 }
 
 // putStart starts writing an object.
@@ -54,7 +56,7 @@ uint BlobOStream::doPutStart (const char* type, uint nrc, int version,
 			      uint align)
 {
   BlobHeaderBase hdr(version, itsLevel);
-  Assert (nrc < 256);
+  ASSERT (nrc < 256);
   uint nalign = 0;
   if (align > 1) {
     int64 pos = tellPos();
@@ -91,7 +93,7 @@ uint BlobOStream::doPutStart (const char* type, uint nrc, int version,
 // the object length if the file is seekable.
 uint BlobOStream::putEnd()
 {
-  Assert (itsLevel > 0);
+  ASSERT (itsLevel > 0);
   uint32 eob = BlobHeaderBase::eobMagicValue();
   *this << eob;                        // write end-of-blob
   uint32 len = itsCurLength;           // length of this object
@@ -116,9 +118,11 @@ void BlobOStream::putBuf (const void* buf, uint sz)
 {
   checkPut();
   uint sz1 = itsStream->put (static_cast<const char*>(buf), sz);
-  AssertMsg (sz1 == sz,
-	     "BlobOStream::putBuf - " << sz << " bytes asked, but only "
-	     << sz1 << " could be written (pos=" << tellPos() << ")");
+  if (sz1 != sz) {
+    THROW(BlobException,
+	  "BlobOStream::putBuf - " << sz << " bytes asked, but only "
+	  << sz1 << " could be written (pos=" << tellPos() << ")");
+  }
   itsCurLength += sz1;
 }
 
@@ -289,8 +293,11 @@ int64 BlobOStream::setSpace (uint nbytes)
 {
   checkPut();
   int64 pos = tellPos();
-  AssertMsg (pos != -1, "BlobOStream::setSpace cannot be done; "
-	     "its BlobOBuffer is not seekable");
+  if (pos == -1) {
+    THROW(BlobException,
+	  "BlobOStream::setSpace cannot be done; "
+	  "its BlobOBuffer is not seekable");
+  }
   itsStream->setPos (pos+nbytes);
   itsCurLength += nbytes;
   return pos;
@@ -310,9 +317,11 @@ uint BlobOStream::align (uint n)
     nfill = n-nfill;
     for (uint i=0; i<nfill; i++) {
       uint sz1 = itsStream->put (&fill, 1);
-      AssertMsg (sz1 == 1,
-		 "BlobOStream::align - could not write fill (pos="
-		 << tellPos() << ")");
+      if (sz1 != 1) {
+	THROW(BlobException,
+	      "BlobOStream::align - could not write fill (pos="
+	      << tellPos() << ")");
+      }
       itsCurLength++;
     }
   }

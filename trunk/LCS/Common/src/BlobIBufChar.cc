@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <Common/BlobIBufChar.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <string.h>
 
 namespace LOFAR {
@@ -55,7 +55,7 @@ int64 BlobIBufChar::tellPos() const
 
 int64 BlobIBufChar::setPos (int64 pos)
 {
-  Assert (pos >= 0);
+  ASSERT (pos >= 0);
   if (pos < itsSize) {
     itsPos = pos;
   } else {

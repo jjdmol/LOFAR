@@ -24,6 +24,7 @@
 #define COMMON_BLOBFIELDSET_H
 
 #include <Common/BlobField.h>
+#include <Common/LofarLogger.h>
 #include <vector>
 #include <string>
 #include <map>
@@ -162,6 +163,7 @@ private:
   bool                        itsHasFixedShape;
   std::vector<BlobFieldBase*> itsFields;
   NameMap                     itsNameMap;
+  ALLOC_TRACER_CONTEXT;
 };
 
 } // end namespace
