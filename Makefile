@@ -121,12 +121,12 @@ bootstrap:
 		&& $(RM) -rf $$d/build/$$variant \
 		&& mkdir -p $$d/build/$$variant \
 		&& cd $$d/build/$$variant \
-		&& ../../configure $$variant_conf_options \
-		&& (make -k $(MAKE_OPTIONS) $$variant_make_options \
-			|| echo ":::::: ERROR" )) \
+		&& ( ../../configure $$variant_conf_options \
+			&& make -k $(MAKE_OPTIONS) $$variant_make_options \
+			|| echo ":::::: ERROR" ) \
 		&& echo \
 		&& echo ":::::: FINISHED BUILDING VARIANT $$variant FOR PACKAGE $$d" \
-		&& echo ; \
+		&& echo ; ) \
 	done; \
 	date
 
