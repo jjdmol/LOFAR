@@ -14,7 +14,10 @@
 %\usepackage{theorem}
 \DeclareGraphicsExtensions{.eps}
 
+\floatstyle{boxed}
 \newfloat{assumption}{ht}{ass}[section]
+\floatname{lessonlearned}{Lesson learned}
+\newfloat{lessonlearned}{H}{les}
 %\newfloat{prerequisite}{ht}{pre}[section]
 \newfloat{requirement}{ht}{req}[section]
 
@@ -89,7 +92,7 @@
     \end{assumption}
 
   \section{LOFAR requirements on the selfcal control system}
-  \label{sec:LOFAR-requirements}\hypertarget{sec:LOFAR-requirements}{}%
+  \label{sec:LOFAR-requirements}\hypertarget{sec:LOFAR-requirements}{}
 
     LOFAR is a one-of system. There has never been anything build like
     it. The self-calibration solutions that instrumentalists and
@@ -191,7 +194,7 @@
         \caption{the crude structure of a selfcal-BlackBoard\label{fig:overview}}
       \end{figure}
 
-      In \hyperlink{fig:overview}{Figure \ref{fig:overview}} a high
+      In \hyperlink{fig:overview}{figure \ref{fig:overview}} a high
       level design of a blackboard framework is shown. The
       communication from the TreadController or the ThreadWatcher to
       the WorkerProxy in \hyperlink{fig:overview}{Figure
@@ -242,7 +245,10 @@
 
       The actual program structure as used in the breadboard
       implementation of the blackboard is shown in
-      \hyperlink{fig:democlasses}{Figure \ref{fig:democlasses}}.
+      \hyperlink{fig:democlasses}{Figure \ref{fig:democlasses}}. This
+      structure seems rather complete and though the actual
+      implementation is useless in the real-life version, there is no
+      reason to change this structure as of yet.
 
     \subsection{a demo use-case}
     \label{sec:demo-usecase}
@@ -341,7 +347,7 @@
 
       \begin{verse}{Note}
 
-        the responsibility over last three parameters is shared
+        The responsibility over last three parameters is shared
         between two solution-threads and rotating over the three
         available threads. This is done to get an idea on how
         solution-threads can influence each other.
@@ -404,7 +410,7 @@
          0.005*(4*((i-1)%itsLen + 1) - (itsParamValues[(i-1)%itsLen]));
 \end{Verbatim}
 
-        As can see neighbouring parameters are taken into account to
+        As one can see neighbouring parameters are taken into account to
         emulate interdependencies. The effect that we hope to see is
         that some parameters will converge to wrong values due to
         dependencies on wrongly - or not calibrated parameters. A
@@ -437,58 +443,117 @@
       solution is found sound they get transferred to these engines
       and used henceforth.
 
-      \begin{figure}
-        \includegraphics[]{../figures/param1.eps}
-        \hypertarget{fig:param1}{}
-        \caption{the results on parameter number one for the three engines evolving through time\label{fig:param1}}
-      \end{figure}
+      \paragraph{diverting}
 
-      In \hyperlink{fig:param1}{figure \ref{fig:param1}} the relevant
-      evolutions of parameters having to do with parameter \#1 can be
-      seen.
+        \begin{figure}
+          \includegraphics[]{../figures/param1.eps}
+          \hypertarget{fig:param1}{}
+          \caption{the results on parameter \#1 for the three engines evolving through time\label{fig:param1}}
+        \end{figure}
 
-      \begin{figure}
-        \includegraphics[]{../figures/1st.eps}
-        \hypertarget{fig:1st}{}
-        \caption{the results of the first engine evolving through time\label{fig:1st}}
-      \end{figure}
+        In \hyperlink{fig:param1}{figure \ref{fig:param1}} the
+        relevant evolutions of parameters having to do with parameter
+        \#1 can be seen. The parameters that are stable between 4 and
+        5, are being transfered from one engine to another. In this
+        case the value is one that has diverted from the right
+        solution. Because this is not intended, it shows an important
+        pitfall to the approach of distributing responsibility over
+        parameters. Even though in this case the end result turns out
+        OK. There need to be a tight watch on the quality of results
+        to prevent such erroneous behaviour.
 
-      In \hyperlink{fig:1st}{figure \ref{fig:1st}} the solution threads of the
-      first engine can be seen. As parameter \#1 somewhat depends on
-      parameter \#2, and engine 1 uses 78 instead of 8 to begin with,
-      it's solution is going totally the wrong way. As the semi-good
-      solution of about 13 is handed by engine \#2, the value of
-      parameter one converges back to the expected/right solution of 4.
+        \begin{lessonlearned}
+          There need to be a tight watch on the quality of results to
+          prevent such erroneous behaviour.
+          \caption{watch out for diversions.\label{les:diversion}}
+        \end{lessonlearned}
 
-      \begin{figure}
-        \includegraphics[]{../figures/2nd.eps}
-        \hypertarget{fig:2nd}{}
-        \caption{the results of the second engine evolving through time\label{fig:2nd}}
-      \end{figure}
+      \paragraph{distribution of responsibilities}
 
-      in \hyperlink{fig:2nd}{figure \ref{fig:2nd}} the same thing happens but
-      in this case the value of parameter \#2 drags the value of
-      parameter \#3 beyond the value that was expected.
+        \begin{figure}
+          \includegraphics[]{../figures/1st.eps}
+          \hypertarget{fig:1st}{}
+          \caption{the results of the first engine evolving through time\label{fig:1st}}
+        \end{figure}
 
-      \begin{figure}
-        \includegraphics[]{../figures/3rd.eps}
-        \hypertarget{fig:3rd}{}%
-        \caption{the results of the third engine evolving through time\label{fig:3rd}}
-      \end{figure}
+        In \hyperlink{fig:1st}{figure \ref{fig:1st}} the solution
+        threads of the first engine can be seen. As parameter \#1
+        somewhat depends on parameter \#2, and engine 1 uses 78
+        instead of 8 to begin with, it's solution is going totally the
+        wrong way. As the semi-good solution of about 13 is handed by
+        engine \#2, the value of parameter one converges back to the
+        expected/right solution of 4. Parameter \#3, however is not of
+        in an extreme fashion. Also the dependency of parameter \#4
+        and indirectly of parameters \#5 and \#6 are less dramatic.
+        This shown that a given a close watch on the quality of
+        solutions, the distribution of responsibilities can lead to
+        desirable results.
 
-      \begin{figure}
-        \includegraphics[]{../figures/param3.eps}
-        \hypertarget{fig:param3}{}%
-        \caption{the results on parameter number one for the three engines evolving through time\label{fig:param3}}
-      \end{figure}
+      \paragraph{over-compensation}
+
+        \begin{figure}
+          \includegraphics[]{../figures/2nd.eps}
+          \hypertarget{fig:2nd}{}
+          \caption{the results of the second engine evolving through time\label{fig:2nd}}
+        \end{figure}
+
+        \begin{figure}
+          \includegraphics[]{../figures/param3.eps}
+          \hypertarget{fig:param3}{}%
+          \caption{the results on parameter \#3 for the three engines evolving through time\label{fig:param3}}
+        \end{figure}
+
+        in \hyperlink{fig:2nd}{figure \ref{fig:2nd}} the same thing
+        happens but in this case the value of parameter \#2 drags the
+        value of parameter \#3 beyond the value that was
+        expected. However as can be seen in
+        \hyperlink{fig:param3}{figure \ref{fig:param3}}, things turn
+        out all right as soon as a better intermediate result is being
+        used.
+
+%%       \paragraph{engine \#3}
+
+%%         \begin{figure}
+%%           \includegraphics[]{../figures/3rd.eps}
+%%           \hypertarget{fig:3rd}{}%
+%%           \caption{the results of the third engine evolving through time\label{fig:3rd}}
+%%         \end{figure}
+
+%%      \paragraph{parameter \#3}
+
 
     \subsection{evaluation}
     \label{subsec:evaluation}\hypertarget{subsec:evaluation}{}
 
-      Conversion of parameters can be monitorred.
+      Much effort has to put into defining protocols for the
+      inter-component communication within the system. Especially
+      since part of the components will be pluggable, and their data
+      formats unknown to the Blackboard framework. In the breadboard
+      implementation these where all known, this might not be in a
+      real life version.
+
+      \begin{lessonlearned}
+        Protocols will have to be specified very rigidly as they will
+        be validated and handled by components that have no knowledge
+        of the possible content.
+        \caption{protocol definitions\label{les:protocols}}
+      \end{lessonlearned}
+
+      The demo application shows us what we wanted to see. It shows
+      that distribution of parameters can be monitored. It is a very
+      limited example of what might happen of course. Sometimes
+      parameters might be described as polynomials over a dimension
+      that has been partitioned over. It will have to be a continuous
+      function. This might not be possible if the partitions are
+      solved for independently.
+
+      A solid way to describe solution strategies is not available
+      yet. One will have to be developed.
 
   \section{lessons learned}
   \label{sec:lessons-learned}
+
+    \subsection{general}
 
     It seems hard to find an example of an implementation of a
     Blackboard system that compares to this one. The facts, that there
@@ -501,6 +566,10 @@
     The metaphor blackboard seems not to the point as the main task of
     the system is to distribute simple and similar tasks as opposed to
     highly specialised ones.
+
+    \subsection{specific}
+
+      \listof{lessonlearned}{}
 
     \subsection{to do}
 
