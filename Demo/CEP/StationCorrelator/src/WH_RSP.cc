@@ -114,8 +114,7 @@ void WH_RSP::process()
       //this is the first loop
       // so take get current time stamp and wait 1 sec to 
       DH_RSP* inDHp = (DH_RSP*)getDataManager().getInHolder(0);
-      // THIS CAN BE UNCOMMENTED WHEN DH_RSP HAS THIS METHOD
-      // itsNextStamp.setStamp(inDHp->getSeqId(), 0);
+      itsNextStamp.setStamp(inDHp->getSeqID(), 0);
       itsNextStamp.increment(itsNpackets * 10000); // at 1 Gb/s I think this is .5 sec
     } else {
       itsNextStamp.increment(itsNpackets);
@@ -126,12 +125,13 @@ void WH_RSP::process()
   }    
 
   DH_RSP* inDHp;
+  DH_StationData* outDHp;
   bool inSync = false;
   SyncStamp* thisStamp;
+  
   while (!inSync) {
     inDHp = (DH_RSP*)getDataManager().getInHolder(0);
-    // THIS CAN BE UNCOMMENTED WHEN DH_RSP HAS THIS METHOD
-    //thisStamp.setStamp(inDHp->getSeqId(), inDHp->getBlockId());
+    thisStamp->setStamp(inDHp->getSeqID(), inDHp->getBlockID());
     
     if (*thisStamp == itsNextStamp) {
 
@@ -139,27 +139,23 @@ void WH_RSP::process()
       // this is the right packet, so send it
       inSync = true;
 
-      // get the RSP data frame from the Input dataholder
-      const char* rspdata = static_cast<char*>(inDHp->getBuffer());
-
       // determine blocksizes of char-based InHolder and complex<uint16-based> OutHolder
-      int charblocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<uint16>); 
-      int uint16blocksize = itsNbeamlets * itsPolarisations;
+      int char_blocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<uint16>); 
+      int complex_uint16_blocksize = itsNbeamlets * itsPolarisations;
       
       // copy stationID and blockID of first EPA-packet in OutDataholder
-      DH_StationData* myDH = static_cast<DH_StationData*>(getDataManager().getOutHolder(0));
-      myDH->setStationID( ((int*)&rspdata[2])[0] );
-      myDH->setBlockID( ((int*)&rspdata[10])[0] );
-      myDH->setFlag( 0 );
-      
+      outDHp = (DH_StationData*)getDataManager().getOutHolder(0);
+      outDHp->setStationID( inDHp->getStationID() );
+      outDHp->setBlockID( inDHp->getBlockID() );
+      outDHp->setFlag( 0 );
+     
       // copy the beamlets from all EPA-packets in OutDataholder
-      // implement code for if frames are missing later !!!
       for (int i=0;i<itsNpackets;i++) {
 	for (int j=0;j<itsNCorrOutputs;j++) {
-	  // todo: cache the outholder adresses for the Npackets loop
-	  memcpy( &((DH_StationData*)getDataManager().getOutHolder(j))->getBuffer()[i * uint16blocksize], 
-		  &rspdata[(i * itsSzEPApacket)+ itsSzEPAheader + (j * charblocksize)], 
-		  charblocksize );
+          outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
+          memcpy( &outDHp->getBuffer()[i * complex_uint16_blocksize], 
+		  &inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)],
+		  char_blocksize );
 	}
       }      
 
@@ -176,23 +172,24 @@ void WH_RSP::process()
       // todo: insert the correct number of packets in one go
 
       // determine blocksizes of char-based InHolder and complex<uint16-based> OutHolder
-      int charblocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<uint16>); 
-      int uint16blocksize = itsNbeamlets * itsPolarisations;
+      int char_blocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<uint16>); 
+      int complex_uint16_blocksize = itsNbeamlets * itsPolarisations;
       
       //todo: create an appropriate dummy packet only once and re-use.
 
       // copy stationID and blockID of first EPA-packet in OutDataholder
-      DH_StationData* myDH = static_cast<DH_StationData*>(getDataManager().getOutHolder(0));
-      myDH->setStationID( 0 );
-      myDH->setBlockID( 0 );
-      myDH->setFlag( 1 );
+      outDHp = (DH_StationData*)getDataManager().getOutHolder(0);
+      outDHp->setStationID( 0 );
+      outDHp->setBlockID( 0 );
+      outDHp->setFlag( 1 );
       
       // copy the beamlets from all EPA-packets in OutDataholder
       for (int i=0;i<itsNpackets;i++) {
 	for (int j=0;j<itsNCorrOutputs;j++) {
-	  memset( &((DH_StationData*)getDataManager().getOutHolder(j))->getBuffer()[i * uint16blocksize], 
+	  outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
+          memset( &outDHp->getBuffer()[i * complex_uint16_blocksize], 
 		  0,
-		  charblocksize );
+		  char_blocksize );
 	}
       }      
       // step out of the while loop and do not call readyWithInHolder

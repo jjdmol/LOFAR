@@ -78,10 +78,10 @@ void DH_RSP::postprocess()
   itsBuffer = 0;
 }
 
-DH_RSP::BufferType& DH_RSP::getBufferElement(unsigned int element)
-{
-  ASSERT(element < itsBufSize); 
-  return itsBuffer[element];
-}
+//DH_RSP::BufferType& DH_RSP::getBufferElement(unsigned int element)
+//{
+// ASSERT(element < itsBufSize); 
+//return itsBuffer[element];
+//}
 
 } // end namespace

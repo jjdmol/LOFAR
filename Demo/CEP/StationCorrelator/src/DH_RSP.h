@@ -59,10 +59,16 @@ public:
   
   /// Get read access to the Buffer.
   const BufferType* getBuffer() const;
-  
-  /// Get Buffer element.
-  BufferType& getBufferElement(unsigned int element);
 
+  /// Get StationID from first EPA-packet in RSP-frame
+  const int getStationID() const;
+
+  /// Get SequenceID from first EPA-packet in RSP-frame
+  const int getSeqID() const;
+
+  /// Get BlockID from first EPA-packet in RSP-frame
+  const int getBlockID() const;
+  
  private:
   /// Forbid assignment.
   DH_RSP& operator= (const DH_RSP&);
@@ -80,6 +86,14 @@ inline DH_RSP::BufferType* DH_RSP::getBuffer()
 inline const DH_RSP::BufferType* DH_RSP::getBuffer() const
   { return itsBuffer; }
 
+inline const int DH_RSP::getStationID() const
+  { return ((int*)&itsBuffer[2])[0]; }
+
+inline const int DH_RSP::getSeqID() const
+  { return ((int*)&itsBuffer[6])[0]; }
+
+inline const int DH_RSP::getBlockID() const
+  { return ((int*)&itsBuffer[10])[0]; }
 
 }
 
