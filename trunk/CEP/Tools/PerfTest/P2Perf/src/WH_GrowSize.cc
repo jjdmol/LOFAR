@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2001/09/19 08:00:13  wierenga
+//  Added code to do performance tests.
+//
 //  Revision 1.1  2001/08/16 15:14:23  wierenga
 //  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
 //
@@ -84,8 +87,6 @@ WH_GrowSize::~WH_GrowSize()
 
 void WH_GrowSize::process()
 {
-  static bool firstCall = true;
-
   if (!strncmp("GrowSize[1]", getName().c_str(), 11))
   {
     if (iteration > 0)
@@ -98,9 +99,10 @@ void WH_GrowSize::process()
     watch.start();
   }
 
-  if (false == firstCall)
+  if (!strncmp("GrowSize[1]", getName().c_str(), 11)
+      || (iteration > 0))
   {
-    if ((iteration % 5) == 0)
+    if (iteration % 5 == 0)
     {
       for (int i=0; i<getInputs(); i++)
       {
@@ -108,10 +110,6 @@ void WH_GrowSize::process()
 	(void)itsOutHolders[i]->increaseSize(exp(log(20*1024*1024)/1000));
       }
     }
-  }
-  else
-  {
-    firstCall = false;
   }
 
   iteration++;
