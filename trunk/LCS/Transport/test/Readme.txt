@@ -33,7 +33,8 @@ This file describes the tests in this directory (./LOFAR/LCS/Transport/test/):
   
 
 *** ExampleSocket ***
- Tests transport of fixed and variable size data via sockets.
+ Tests transport of fixed and variable size data via sockets. Also tests bidirectional
+ transport with sockets.
 
 *** tTH_Socket ***
  Demonstrates how the TH_Socket class should be used. It tests all possible modes of the

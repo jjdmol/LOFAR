@@ -152,6 +152,48 @@ void test2 (bool isReceiver)
   }
 }
 
+void testBidirectional (bool isReceiver)
+{
+  DH_Example DH_Sender("dh1", 1);
+  DH_Example DH_Receiver("dh2", 1);
+  DH_Sender.setID(1);
+  DH_Receiver.setID(2);
+  TH_Socket proto("localhost", "", 8923, false);
+  TH_Socket proto2("", "localhost", 8923, true);
+  DH_Sender.connectBidirectional (DH_Receiver, proto, proto2, true);
+  // DH_Sender.connectTo (DH_Receiver, proto, true);
+  if (isReceiver)
+    DH_Receiver.init();
+  else
+    DH_Sender.init();
+
+  DH_Example dh1("dh1mem", 1);
+  DH_Example dh2("dh2mem", 1);
+  dh1.setID(3);
+  dh2.setID(4);
+  dh1.connectBidirectional (dh2, TH_Mem(), TH_Mem(), false);
+  dh1.init();
+  dh2.init();
+
+  // Use a TH_Mem to check if the socket receiver gets the correct data.
+  // It should match the data sent via TH_Mem.
+  if (isReceiver) {
+    sendData1 (dh1);
+    receiveData (DH_Receiver, dh2);
+    // And send different data back
+    cout << "Receiver sending data4 back" << endl;
+    sendData4(DH_Receiver);
+
+  } else {
+    cout << "Send data1" << endl;
+    sendData1 (DH_Sender);
+    // And receive data back
+    sendData4(dh2);
+    receiveData (DH_Sender, dh1);
+
+  }
+}
+
 
 void displayUsage (void)
 {
@@ -189,6 +231,7 @@ int main (int argc, const char** argv)
 
     test1(isReceiver);
     test2(isReceiver);
+    testBidirectional(isReceiver);
   } catch (std::exception& x) {
     cout << "Unexpected exception in " << which << ": " << x.what() << endl;
     return 1;
