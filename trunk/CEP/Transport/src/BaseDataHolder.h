@@ -185,10 +185,11 @@ protected:
 
   BaseDataHolder(const BaseDataHolder&);
 
-private:
-
   DataPacket   itsDefaultPacket;
   DataPacket*  itsDataPacketPtr;
+
+private:
+
   int          itsDataPacketSize; // (Max) size in bytes
   Transporter* itsTransporter;
   string       itsName;
