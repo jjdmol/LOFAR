@@ -57,7 +57,7 @@ lofar_AIPSPP
 lofar_MPI
 lofar_QATOOLS
 lofar_DOCXX
-lofar_BASESIM
+lofar_PACKAGE(BaseSim)
 
 dnl
 dnl Output Makefiles

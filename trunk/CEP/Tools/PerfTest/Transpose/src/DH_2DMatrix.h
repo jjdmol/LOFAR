@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2002/05/07 11:16:20  schaaf
+//  changed indexing mistake in getBuffer()
+//
 //  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
 //  initial version
 //
@@ -34,8 +37,8 @@
 #include <config.h>
 #endif
 
-#include "DataHolder.h"
-#include "Debug.h"
+#include "BaseSim/DataHolder.h"
+#include "Common/Debug.h"
 
 /**
    This class is a DataHolder with a (time,frequency) matrix in the

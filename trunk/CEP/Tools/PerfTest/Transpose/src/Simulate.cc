@@ -1,7 +1,7 @@
-#include "Transpose.h"
-#include "SimulatorParseClass.h"
-#include <iostream>
-#include "Debug.h"
+#include "Transpose/Transpose.h"
+#include "BaseSim/SimulatorParseClass.h"
+#include "Common/lofar_iostream.h"
+#include "Common/Debug.h"
 
 
 #ifdef HAVE_CORBA

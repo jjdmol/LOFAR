@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
+//  initial version
+//
 //
 //
 //////////////////////////////////////////////////////////////////////////
@@ -33,7 +36,7 @@
 #include <config.h>
 #endif
 
-#include "Simulator.h"
+#include "BaseSim/Simulator.h"
 class WH_FillTFMatrix;
 class WH_Transpose;
 class ParamBlock ;
