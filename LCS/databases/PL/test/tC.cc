@@ -3,6 +3,7 @@
 #include <PL/TPersistentObject.h>
 #include <PL/PersistenceBroker.h>
 #include <PL/Query.h>
+#include <PL/Attrib.h>
 #include <iostream>
 #include <pwd.h>
 
@@ -93,15 +94,39 @@ int main()
     cout << "Press <Enter> to continue" << endl;
     cin.get();
 
-    string qry("WHERE ItsString='C4Y2';");
-    cout << "Retrieve collection of tpoc using query: " << qry << endl;
+    Query::Expr expr;
+
+    // This makes for an interesting case, because it doesn't work :-p.
+    // The problem lies with the fact that class C inherits from class A,
+    // which in turn has a field itsB. There is, however, no way to tell the
+    // TPO<C> that it should also inquire its "parent" TPO<A> to look for a
+    // field itsB. Hence, the lookup in the attribute map fails.
+    try {
+      expr = attrib<C>("itsB.itsShort") == 327;
+    } catch (QueryError& e){
+      cerr << e << endl;
+    }
+
+    // The workaround, to use attrib<A>(), does not produce the right query
+    // result, because the constraint (C.OBJID=A.OWNER) will not be generated!
+    expr = attrib<A>("itsB.itsShort") == 327;
+
+    // Ah, this can be done. The attrib() method is not completely useles :-p.
+    // We have to make sure, though, that the template parameter in the call
+    // to attrib() is the same as that in the call to
+    // broker.retrieve(). Hence, we're currently limited to composing the
+    // query for fields of class C only.
+    expr = attrib<C>("itsString") == "C4Y2";
+    cout << "Retrieve collection of tpoc using query: " << expr << endl;
+
     Collection< TPersistentObject<C> > ctpoc;
     Collection< TPersistentObject<C> >::const_iterator iter;
-    ctpoc = broker.retrieve<C>(Query(qry));
+    ctpoc = broker.retrieve<C>(QueryObject(expr));
     cout << "Found " << ctpoc.size() << " matches ..." << endl;
     for(iter = ctpoc.begin(); iter != ctpoc.end(); ++iter) {
       cout << "Press <Enter> to continue" << endl;
       cin.get();
+      cout << iter->metaData() << endl;
       cout << iter->data() << endl;
     }
 

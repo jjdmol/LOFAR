@@ -17,28 +17,19 @@ namespace LOFAR {
     // The BCA<B> structure 'binds' the database columns
     // to the members of the DBRep<B> class.
     template<>
-    void BCA<B>::operator()(BoundIOs& cols, DataObj& rowbuf) {
-	  cols["ObjID"]     == rowbuf.itsOid;
-	  cols["Owner"]     == rowbuf.itsOwnerOid;
-	  cols["VersionNr"] == rowbuf.itsVersionNr;
-	  cols["ItsBool"]   == rowbuf.itsBool;
-	  cols["ItsShort"]  == rowbuf.itsShort;
-	  cols["ItsFloat"]  == rowbuf.itsFloat;
-	  cols["ItsString"] == rowbuf.itsString;
-	}
-
-    // toDatabaseRep copies the fields of the persistency layer
-    // and of the B class to the given DBRep<B> structure
-    template<>
-    void TPersistentObject<B>::toDatabaseRep(DBRep<B>& dest) const
+    void BCA<B>::operator()(BoundIOs& cols, DataObj& rowbuf)
     {
-      // copy info of the B to the DBRep<B> class
-      // First copy the meta data
-      dest.itsOid   = metaData().oid()->get();
-      dest.itsOwnerOid = metaData().ownerOid()->get();
-      dest.itsVersionNr  = metaData().versionNr();
+      BCA<PersistentObject::MetaData>()(cols,rowbuf);
+      cols["ItsBool"]   == rowbuf.itsBool;
+      cols["ItsShort"]  == rowbuf.itsShort;
+      cols["ItsFloat"]  == rowbuf.itsFloat;
+      cols["ItsString"] == rowbuf.itsString;
+    }
 
-      // Finally copy the info from B
+    // toDBRep copies the fields of the B class to the DBRep<B> structure.
+    template<>
+    void TPersistentObject<B>::toDBRep(DBRep<B>& dest) const
+    {
       dest.itsBool = itsObjectPtr->itsBool;
       dest.itsShort  = itsObjectPtr->itsShort;
       dest.itsFloat  = itsObjectPtr->itsFloat;
@@ -46,32 +37,32 @@ namespace LOFAR {
     }
 
 
-    // fromDatabaseRep copies the fields of the DBRep<B> structure
-    // to the persistency layer and the B class.
+    // fromDBRep copies the fields of the DBRep<B> structure to the B class.
     template<>
-    void TPersistentObject<B>::fromDatabaseRep(const DBRep<B>& org)
+    void TPersistentObject<B>::fromDBRep(const DBRep<B>& org)
     {
-      // copy info of the B to the DBRep<B> class
-      // First copy the PO part
-      metaData().oid()->set(org.itsOid);
-      metaData().ownerOid()->set(org.itsOwnerOid);
-      metaData().versionNr() = org.itsVersionNr;
-
-      // Finally copy the info from B
       itsObjectPtr->itsBool  = org.itsBool;
       itsObjectPtr->itsShort  = org.itsShort;
       itsObjectPtr->itsFloat  = org.itsFloat;
       itsObjectPtr->itsString  = org.itsString;
     }
 
-    //
     // Initialize the internals of TPersistentObject<B>
-    //
     template<>
     void TPersistentObject<B>::init()
     {
       // Set the correct database table name
       tableName("B");
+    }
+
+    // Initialize the attribute map for TPersistentObject<B>
+    template<>
+    void TPersistentObject<B>::initAttribMap()
+    {
+      theirAttribMap["itsBool"]   = "ITSBOOL";
+      theirAttribMap["itsShort"]  = "ITSSHORT";
+      theirAttribMap["itsFloat"]  = "ITSFLOAT";
+      theirAttribMap["itsString"] = "ITSSTRING";
     }
 
   } // close namespace PL
