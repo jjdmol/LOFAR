@@ -49,15 +49,31 @@ public:
     { return itsNrSpid; }
   int getFirstSpid() const
     { return itsFirstSpid; }
+  int getLastSpid() const
+    { return itsFirstSpid + itsNrSpid - 1; }
   const MeqMatrix& getValues() const
     { return itsValues; }
   // </group>
+
+  // Set the first spid.
+  void setFirstSpid (int firstSpid)
+    { itsFirstSpid = firstSpid; }
+
+  // Update the values.
+  void addValues (const double* values);
+
+  // Check if two objects are equal.
+  // They are if name, #spids and values are equal.
+  bool operator== (const ParmData& other);
 
   // Write the object into a blob.
   friend BlobOStream& operator<< (BlobOStream&, const ParmData&);
 
   // Read the object from a blob.
   friend BlobIStream& operator>> (BlobIStream&, ParmData&);
+
+  // Write the object.
+  friend ostream& operator<< (ostream&, const ParmData&);
 
 private:
   int itsNrSpid;

@@ -40,6 +40,30 @@ namespace LOFAR {
       itsValues    (values)
   {}
 
+  void ParmData::addValues (const double* values)
+  {
+    double* val = itsValues.doubleStorage();
+    for (int i=0; i<itsValues.nelements(); i++) {
+      val[i] += values[i];
+    }
+  }
+
+  bool ParmData::operator== (const ParmData& other)
+  {
+    if (itsName   != other.itsName)   return false;
+    if (itsNrSpid != other.itsNrSpid) return false;
+    if (itsValues.nx() != other.itsValues.nx()
+    ||  itsValues.ny() != other.itsValues.ny()) {
+      return false;
+    }
+    const double* v1 = itsValues.doubleStorage();
+    const double* v2 = other.itsValues.doubleStorage();
+    for (int i=0; i<itsValues.nelements(); ++i) {
+      if (v1[i] != v2[i]) return false;
+    }
+    return true;
+  }
+
   BlobOStream& operator<< (BlobOStream& bos, const ParmData& parm)
   {
     bos << parm.itsName << parm.itsNrSpid << parm.itsFirstSpid
@@ -53,6 +77,12 @@ namespace LOFAR {
     bis >> parm.itsName >> parm.itsNrSpid >> parm.itsFirstSpid
 	>> parm.itsValues;
     return bis;
+  }
+
+  ostream& operator<< (ostream& os, const ParmData& parm)
+  {
+    os << parm.itsName << '(' << parm.itsNrSpid << ')';
+    return os;
   }
 
 }

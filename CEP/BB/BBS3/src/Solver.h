@@ -26,9 +26,12 @@
 #include <scimath/Fitting/LSQaips.h>
 #include <BBS3/MNS/MeqDomain.h>
 #include <BBS3/MNS/ParmTable.h>
+#include <BBS3/ParmData.h>
 #include <BBS3/Quality.h>
 #include <Common/LofarTypes.h>
-
+#include <Common/lofar_vector.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_map.h>
 
 namespace LOFAR
 {
@@ -47,8 +50,19 @@ public:
   // Destructor
   ~Solver();
 
+  // Initialize the solvable parm data.
+  void initSolvableParmData (int nrPrediffers);
+
   // Set the solvable parm data for a given prediffer.
-  void setSolvableParmData (const ParmData&, int prediffer);
+  void setSolvableParmData (const vector<ParmData>&, int prediffer);
+
+  // Get the solvable parameter name info.
+  const vector<ParmData>& getSolvableParmData() const
+    { return itsSolvableParms; }
+
+  // Get the solvable parameter values.
+  const vector<double>& getSolvableValues() const
+    { return itsSolvableValues; }
 
   // Set the equations for a given prediffer.
   // The data array has to be 4-dimensional with C-style shape
@@ -66,9 +80,7 @@ public:
 
   // Solve which returns solved parameter values in a vector and fit value 
   // in Quality object.
-  void solve (casa::Bool useSVD,
-	      vector<string>& resultParmNames, 
-	      vector<double>& resultParmValues,
+  void solve (bool useSVD,
 	      Quality& resultQuality);
 
 private:
@@ -80,12 +92,14 @@ private:
 
 
   casa::LSQaips  itsSolver;
-  int            itsNrScid;               //# Nr of solvable parameter coeff.
-  MeqMatrix      itsSolution;             //# Solution as complex numbers
+  MeqMatrix      itsSolution;            //# Solution as complex numbers
   vector<double> itsFitME;
-  vector<complex<double> > itsDeriv;    //# derivatives of predict
-  Quality itsSol;                       //# Solution quality
-  casa::Vector<casa::String> itsSolvableParms;     // Solvable parameters
+  Quality itsSol;                        //# Solution quality
+  map<string,int>      itsSolvableMap;   //# Map solv.parameter name to index
+  vector<ParmData>     itsSolvableParms; //# All solvable parameters
+  vector<vector<int> > itsIndices;       //# Index of coefficient in prediffer
+                                         //# to coefficient in solver
+  vector<double>       itsSolvableValues;
 };
 
 } // namespace LOFAR
