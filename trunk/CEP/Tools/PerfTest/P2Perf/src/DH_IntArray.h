@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2002/05/08 08:20:04  schaaf
+//  Modified includes for new build env
+//
 //  Revision 1.2  2001/10/26 10:06:28  wierenga
 //  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
 //
@@ -38,7 +41,7 @@
 #endif
 
 #include "BaseSim/DataHolder.h"
-#include <complex>
+#include <Common/lofar_complex.h>
 
 /**
    This class is an integer array DataHolder.

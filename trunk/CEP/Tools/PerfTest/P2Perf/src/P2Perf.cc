@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.22  2002/05/08 08:20:04  schaaf
+//  Modified includes for new build env
+//
 //  Revision 1.21  2002/05/02 12:21:07  schaaf
 //  Use monitor object in first step
 //
@@ -93,15 +96,22 @@
 #include <stdlib.h>
 #include <string>
 
-#include "Common/Debug.h"
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <Common/Debug.h>
 #include "BaseSim/Transport.h"
 #include "BaseSim/Step.h"
-#include "P2Perf/P2Perf.h"
 #include "BaseSim/Simul.h"
 #include "BaseSim/Profiler.h"
 #include "BaseSim/WH_Empty.h"
-#include "P2Perf/WH_GrowSize.h"
 #include "BaseSim/ParamBlock.h"
+#include "BaseSim/ShMem/TH_ShMem.h"
+#include "BaseSim/ShMem/shmem_alloc.h"
+#include "P2Perf/P2Perf.h"
+#include "P2Perf/WH_GrowSize.h"
+
 #include TRANSPORTERINCLUDE
 
 #ifdef HAVE_CORBA
@@ -131,13 +141,20 @@ P2Perf::~P2Perf()
  */
 void P2Perf::define(const ParamBlock& params)
 {
+  // keep compiler happy
+  ParamBlock paramsdummy = params;
 
 #ifdef HAVE_CORBA
   // Start Orb Environment
   AssertStr (BS_Corba::init(), "Could not initialise CORBA environment");
 #endif
-  
 
+#ifdef HAVE_MPI
+  // TH_ShMem only works in combination with MPI
+  // initialize TH_ShMem
+  TH_ShMem::init(0, NULL);
+#endif
+  
   char name[20];  // name used during Step/WH creation
   int    argc = 0;
   char** argv = NULL;
@@ -204,7 +221,7 @@ void P2Perf::define(const ParamBlock& params)
     TRACER4("Split in MPI applications");
 #ifdef HAVE_MPI    
     UseMPIRanks = true;
-    simul.setCurAppl(rank);
+    simul.setCurAppl(0);
 #else
     AssertStr (false,"Need MPI for -mpi flag"); 
 #endif
@@ -285,7 +302,7 @@ void P2Perf::define(const ParamBlock& params)
       Dsteps[iStep]->runOnNode(iStep+1,0); // run in App 0
     } else if (UseMPIRanks) {
       TRACER2("Dest MPI runonnode (" << iStep << ")");
-      Dsteps[iStep]->runOnNode(iStep,0); // run in App 0
+      Dsteps[iStep]->runOnNode(iStep+itsSourceSteps,0); // run in App 0
     }    
   }
   
@@ -319,6 +336,11 @@ void P2Perf::define(const ParamBlock& params)
 #endif
     }
   }
+  
+#ifdef HAVE_MPI
+  // TH_ShMem only works in combination with MPI
+  simul.optimizeConnectionsWith(TH_ShMem::proto);
+#endif
 }
 
 void doIt (Simul& simul, const std::string& name, int nsteps) {
@@ -339,8 +361,10 @@ void doIt (Simul& simul, const std::string& name, int nsteps) {
 
   TRACER4("END OF SIMUL on node " << TRANSPORTER::getCurrentRank () );
  
+#if 0
   //     close environment
   TRANSPORTER::finalize();
+#endif
 }
 
 void P2Perf::run(int nSteps) {

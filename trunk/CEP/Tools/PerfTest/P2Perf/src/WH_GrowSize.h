@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.8  2002/05/08 08:20:04  schaaf
+//  Modified includes for new build env
+//
 //  Revision 1.7  2002/05/02 12:21:56  schaaf
 //  Produce simple monitoring data in getMonitorValue() method
 //
@@ -83,7 +86,7 @@ public:
 
   virtual WorkHolder* make(const string& name) const;
 
-  virtual void preprocess();
+  //virtual void preprocess();
 
   /// Do a process step.
   virtual void process();

@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.8  2002/05/08 08:20:04  schaaf
+//  Modified includes for new build env
+//
 //  Revision 1.7  2002/04/18 07:55:03  schaaf
 //  Documentation and code update
 //
@@ -54,8 +57,8 @@
 #endif
 
 #include "BaseSim/DataHolder.h"
-#include "Common/Debug.h"
-#include <complex>
+#include <Common/Debug.h>
+#include <Common/lofar_complex.h>
 
 /**
    This class is an data holder that increases its size
@@ -69,6 +72,9 @@ public:
   DH_GrowSize (const string& name, unsigned int nbuffer);
 
   virtual ~DH_GrowSize();
+
+  virtual void preprocess();
+  virtual void postprocess();
 
   /// Set the Counter attribute in the DataPacket.
   void setCounter (int counter);
@@ -105,6 +111,10 @@ private:
   DH_GrowSize (const DH_GrowSize&);
   /// Forbid assignment.
   DH_GrowSize& operator= (const DH_GrowSize&);
+
+  // value of nbuffer argument to constructor
+  // used preprocess to allocate correct amount of memory
+  int itsBufSize;
 
   // pointer to a dataPacket object
   DataPacket* itsDataPacket;
