@@ -25,10 +25,10 @@
 
 //# Includes
 #include <vector>
+#include <boost/shared_ptr.hpp>
 
 //# Common Includes
 #include <time.h>
-#include <lofar_config.h>
 #include <Common/lofar_string.h>
 //# GCF Includes
 #include <GCF/GCF_Port.h>
@@ -51,7 +51,7 @@ namespace AVT
                                        const TPropertySet& primaryPropertySet,
                                        const string& APCName,
                                        const string& APCScope,
-                                       std::vector<AVTStationBeamformer&> rcus); 
+                                       std::vector<boost::shared_ptr<AVTStationReceptor> > rcus); 
       virtual ~AVTStationReceptorGroup();
 
       void setStartTime(const time_t startTime);
@@ -96,35 +96,34 @@ namespace AVT
     private:
       typedef struct TStationReceptorConnection
       {
-        TStationReceptorConnection( AVTStationReceptor& _rcu,
-                                    GCFTask&            _containerTask, 
-                                    string&             _name, 
-                                    TPortType           _type, 
-                                    int                 _protocol,
-                                    bool                _connected) :
-          rcu(_rcu),
-          clientPort(_rcu,_containerTask,_name,_type,_protocol),
-          connected(_connected)
-        {
-          rcu.setClientInterTaskPort(&clientPort);
-        };
+        // constructor
+        TStationReceptorConnection( boost::shared_ptr<AVTStationReceptor> _rcu,
+                                    GCFTask&                              _containerTask, 
+                                    string&                               _name, 
+                                    GCFPort::TPortType                    _type, 
+                                    int                                   _protocol,
+                                    bool                                  _connected,
+                                    TLogicalDeviceState                   _ldState);
         
-        AVTStationReceptor& rcu;
-        APLInterTaskPort    clientPort;
-        bool                connected;
+        boost::shared_ptr<AVTStationReceptor>   rcu;
+        boost::shared_ptr<APLInterTaskPort>     clientPort;
+        bool                                    connected;
+        TLogicalDeviceState                     ldState;
       };
       typedef std::vector<TStationReceptorConnection> TStationReceptorVector;
       
       bool isStationReceptorClient(GCFPortInterface& port);
       bool setReceptorConnected(GCFPortInterface& port, bool connected);
-      
+      bool allReceptorsConnected();
+      bool setReceptorState(GCFPortInterface& port, TLogicalDeviceState state);
+      bool allReceptorsInState(TLogicalDeviceState state);
+      void sendToAllReceptors(GCFEvent& event);
 
       // The StationReceptor tasks    
       TStationReceptorVector  m_stationReceptors;
       time_t                  m_startTime;
       time_t                  m_stopTime;
       double                  m_frequency;
-
   };
 };
 

@@ -26,7 +26,6 @@
 //# Includes
 //# Common Includes
 #include <time.h>
-#include <lofar_config.h>
 #include <Common/lofar_string.h>
 //# GCF Includes
 #include <GCF/GCF_Port.h>
@@ -36,74 +35,92 @@
 //# VirtualTelescope Includes
 #include "AVTLogicalDevice.h"
 
-// forward declaration
-class AVTStationBeamformer;
-
-class AVTVirtualTelescope : public AVTLogicalDevice
+namespace AVT
 {
-  public:
+  // forward declaration
+  class AVTStationBeamformer;
+  class AVTStationReceptorGroup;
 
-    explicit AVTVirtualTelescope(string& name, 
-                                 const TPropertySet& primaryPropertySet,
-                                 const string& APCName,
-                                 const string& APCScope,
-                                 AVTStationBeamformer& sbf); 
-    virtual ~AVTVirtualTelescope();
-    
-    void setStartTime(const time_t startTime);
-    void setStopTime(const time_t stopTime);
-    void setFrequency(const double frequency);
+  class AVTVirtualTelescope : public AVTLogicalDevice
+  {
+    public:
 
-  protected:
-    // protected default constructor
-    AVTVirtualTelescope();
-    // protected copy constructor
-    AVTVirtualTelescope(const AVTVirtualTelescope&);
-    // protected assignment operator
-    AVTVirtualTelescope& operator=(const AVTVirtualTelescope&);
+      explicit AVTVirtualTelescope(string& name, 
+                                  const TPropertySet& primaryPropertySet,
+                                  const string& APCName,
+                                  const string& APCScope,
+                                  AVTStationBeamformer& sbf, 
+                                  AVTStationReceptorGroup& srg); 
+      virtual ~AVTVirtualTelescope();
 
-    /**
-     * initializes the SAP and SPP ports
-     */
-    virtual GCFEvent::TResult concrete_initial_state(GCFEvent& e, GCFPortInterface& p);
-    /**
-     * returns true if claiming has finished
-     */
-    virtual GCFEvent::TResult concrete_claiming_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
-    /**
-     * returns true if the preparing state has finished
-     */
-    virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error);
-    /**
-     * returns true if the releasing state has finished
-     */
-    virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
-    
-    virtual void handlePropertySetAnswer(GCFEvent& answer);
-    virtual void handleAPCAnswer(GCFEvent& answer);
+      void setStartTime(const time_t startTime);
+      void setStopTime(const time_t stopTime);
+      void setFrequency(const double frequency);
 
-    virtual void concreteClaim(GCFPortInterface& port);
-    virtual void concretePrepare(GCFPortInterface& port,string& parameters);
-    virtual void concreteResume(GCFPortInterface& port);
-    virtual void concreteSuspend(GCFPortInterface& port);
-    virtual void concreteRelease(GCFPortInterface& port);
-    virtual void concreteDisconnected(GCFPortInterface& port);
-    
-  private:
-    /**
-     * returns true if the specified port is the BeamFormer logical device SAP
-     */
-    bool _isBeamFormerClient(GCFPortInterface& port);
+    protected:
+      // protected default constructor
+      AVTVirtualTelescope();
+      // protected copy constructor
+      AVTVirtualTelescope(const AVTVirtualTelescope&);
+      // protected assignment operator
+      AVTVirtualTelescope& operator=(const AVTVirtualTelescope&);
 
-    // The BeamFormer task    
-    AVTStationBeamformer& m_stationBeamformer;
-    // The BeamFormer SAP
-//    GCFPort m_beamFormerClient;
-    APLInterTaskPort  m_beamFormerClient;
-    bool              m_beamFormerConnected;
-    time_t            m_startTime;
-    time_t            m_stopTime;
-    double            m_frequency;
-    
+      /**
+      * initializes the SAP and SPP ports
+      */
+      virtual GCFEvent::TResult concrete_initial_state(GCFEvent& e, GCFPortInterface& p);
+      /**
+      * returns true if claiming has finished
+      */
+      virtual GCFEvent::TResult concrete_claiming_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
+      /**
+      * returns true if the preparing state has finished
+      */
+      virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error);
+      /**
+      * returns true if the releasing state has finished
+      */
+      virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
+
+      virtual void handlePropertySetAnswer(GCFEvent& answer);
+      virtual void handleAPCAnswer(GCFEvent& answer);
+
+      virtual void concreteClaim(GCFPortInterface& port);
+      virtual void concretePrepare(GCFPortInterface& port,string& parameters);
+      virtual void concreteResume(GCFPortInterface& port);
+      virtual void concreteSuspend(GCFPortInterface& port);
+      virtual void concreteRelease(GCFPortInterface& port);
+      virtual void concreteDisconnected(GCFPortInterface& port);
+
+    private:
+      /**
+      * returns true if the specified port is the BeamFormer logical device SAP
+      */
+      bool _isBeamFormerClient(GCFPortInterface& port);
+      bool _isStationReceptorGroupClient(GCFPortInterface& port);
+      
+      bool allInState(TLogicalDeviceState state);
+
+
+      // The BeamFormer task    
+      AVTStationBeamformer&     m_stationBeamformer;
+      // The StationReceptorGroup task
+      AVTStationReceptorGroup&  m_stationReceptorGroup;
+      
+      // The BeamFormer SAP
+  //    GCFPort m_beamFormerClient;
+      APLInterTaskPort    m_beamFormerClient;
+      bool                m_beamFormerConnected;
+      TLogicalDeviceState m_beamFormerState;
+      APLInterTaskPort    m_stationReceptorGroupClient;
+      bool                m_stationReceptorGroupConnected;
+      TLogicalDeviceState m_stationReceptorGroupState;
+      
+      time_t              m_startTime;
+      time_t              m_stopTime;
+      double              m_frequency;
+
+  };
+  
 };
 #endif

@@ -26,7 +26,6 @@
 //# Includes
 //# Common Includes
 #include <time.h>
-#include <lofar_config.h>
 #include <Common/lofar_string.h>
 //# GCF Includes
 #include <GCF/GCF_Port.h>
@@ -38,9 +37,6 @@
 
 namespace AVT
 {
-  // forward declaration
-  class AVTStationBeamformer;
-
   class AVTStationReceptor : public AVTLogicalDevice
   {
     public:
@@ -48,8 +44,7 @@ namespace AVT
       explicit AVTStationReceptor(string& name, 
                                   const TPropertySet& primaryPropertySet,
                                   const string& APCName,
-                                  const string& APCScope,
-                                  AVTStationBeamformer& sbf); 
+                                  const string& APCScope); 
       virtual ~AVTStationReceptor();
 
       void setStartTime(const time_t startTime);
@@ -92,17 +87,7 @@ namespace AVT
       virtual void concreteDisconnected(GCFPortInterface& port);
 
     private:
-      /**
-      * returns true if the specified port is the BeamFormer logical device SAP
-      */
-      bool _isBeamFormerClient(GCFPortInterface& port);
 
-      // The BeamFormer task    
-      AVTStationBeamformer& m_stationBeamformer;
-      // The BeamFormer SAP
-  //    GCFPort m_beamFormerClient;
-      APLInterTaskPort  m_beamFormerClient;
-      bool              m_beamFormerConnected;
       time_t            m_startTime;
       time_t            m_stopTime;
       double            m_frequency;

@@ -25,7 +25,6 @@
 
 //# Includes
 //# Common Includes
-#include <lofar_config.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 #include <boost/shared_ptr.hpp>
@@ -44,75 +43,120 @@
 
 // forward declaration
 
-class AVTLogicalDeviceScheduler : public GCFTask,
-                                         AVTPropertySetAnswerHandlerInterface
+namespace AVT
 {
-  public:
+  class AVTLogicalDeviceScheduler : public GCFTask,
+                                          AVTPropertySetAnswerHandlerInterface
+  {
+    public:
 
-    AVTLogicalDeviceScheduler(); 
-    virtual ~AVTLogicalDeviceScheduler();
+      AVTLogicalDeviceScheduler(); 
+      virtual ~AVTLogicalDeviceScheduler();
 
-    bool isInitialized();
-    bool findClientPort(GCFPortInterface& port,string& key);
-    
-    /**
-     * The initial state handler. This handler is passed to the GCFTask constructor
-     * to indicate that the F_INIT event which starts the state machine is handled
-     * by this handler.
-     * @param e The event that was received and needs to be handled by the state
-     * handler.
-     * @param p The port interface (see @a GCFPortInterface) on which the event
-     * was received.
-     */
-    GCFEvent::TResult initial_state(GCFEvent& e, GCFPortInterface& p);
-  
-    /**
-     * PropertySet answer handling
-     */
-    virtual void handlePropertySetAnswer(GCFEvent& answer);
-    
-  protected:
-    // protected copy constructor
-    AVTLogicalDeviceScheduler(const AVTLogicalDeviceScheduler&);
-    // protected assignment operator
-    AVTLogicalDeviceScheduler& operator=(const AVTLogicalDeviceScheduler&);
+      bool isInitialized();
 
-  private:
-    void sendWGsettings();
+      /**
+      * The initial state handler. This handler is passed to the GCFTask constructor
+      * to indicate that the F_INIT event which starts the state machine is handled
+      * by this handler.
+      * @param e The event that was received and needs to be handled by the state
+      * handler.
+      * @param p The port interface (see @a GCFPortInterface) on which the event
+      * was received.
+      */
+      GCFEvent::TResult initial_state(GCFEvent& e, GCFPortInterface& p);
 
-    static string m_schedulerTaskName;
-    
+      /**
+      * PropertySet answer handling
+      */
+      virtual void handlePropertySetAnswer(GCFEvent& answer);
 
-    AVTPropertySetAnswer  m_propertySetAnswer;
-    GCFMyPropertySet      m_properties;
-    GCFApc                m_apcLDS;
-    bool                  m_initialized;
-//    GCFPort               m_beamServer;
-    GCFPort*              m_pBeamServer;
-    double                m_WGfrequency;
-    unsigned int          m_WGamplitude;
-    unsigned int          m_WGsamplePeriod;
-    
-    typedef struct LogicalDeviceInfoT
-    {
-      boost::shared_ptr<AVTLogicalDevice> logicalDevice;
-      vector<string>                      parameters;
-      map<string,LogicalDeviceInfoT>      children; // recursive
-    };
-    typedef map<string,LogicalDeviceInfoT> LogicalDeviceMapT;
-    
-    typedef struct SchedulableLogicalDeviceInfoT
-    {
-      boost::shared_ptr<AVTLogicalDevice> logicalDevice;
-      boost::shared_ptr<APLInterTaskPort> clientPort;
-      bool                                toBeReleased;
-      int                                 startTime;
-      int                                 stopTime;
-      vector<string>                      parameters;
-      LogicalDeviceMapT                   children; // recursive
-    };
-    typedef map<string,SchedulableLogicalDeviceInfoT> SchedulableLogicalDeviceMapT;
-    
-    SchedulableLogicalDeviceMapT  m_logicalDeviceMap;
+    protected:
+      // protected copy constructor
+      AVTLogicalDeviceScheduler(const AVTLogicalDeviceScheduler&);
+      // protected assignment operator
+      AVTLogicalDeviceScheduler& operator=(const AVTLogicalDeviceScheduler&);
+
+    private:
+      struct LogicalDeviceInfoT
+      {
+        // constructor:
+        LogicalDeviceInfoT() :                  logicalDevice(),
+                                                currentSchedule(0),
+                                                clientPort(),
+                                                children() {};
+                                                
+        boost::shared_ptr<AVTLogicalDevice>     logicalDevice;
+        unsigned long                           currentSchedule;
+        boost::shared_ptr<APLInterTaskPort>     clientPort;
+        map<string,LogicalDeviceInfoT>          children; // recursive
+      };
+
+      struct LogicalDeviceScheduleInfoT
+      {
+        // constructor: 
+        LogicalDeviceScheduleInfoT() :      deviceName(),
+                                            parameters(),
+                                            startTime(0),
+                                            stopTime(0),
+                                            prepareTimerId(0),
+                                            startTimerId(0),
+                                            stopTimerId(0) {};
+        
+        string                              deviceName;
+        vector<string>                      parameters;
+        int                                 startTime;
+        int                                 stopTime;
+        unsigned long                       prepareTimerId;
+        unsigned long                       startTimerId;
+        unsigned long                       stopTimerId;
+      };
+      
+      typedef map<string,LogicalDeviceInfoT>                  LogicalDeviceMapT;
+      typedef LogicalDeviceMapT::iterator                     LogicalDeviceMapIterT;
+      typedef map<unsigned long,LogicalDeviceScheduleInfoT>   LogicalDeviceScheduleT;
+      typedef LogicalDeviceScheduleT::iterator                LogicalDeviceScheduleIterT;
+
+      void addReceptor(string srName,const TPropertySet& propertySet);
+      void addReceptorGroup(string srName,const TPropertySet& propertySet, vector<string> receptors);
+      LogicalDeviceMapIterT findLogicalDevice(const unsigned long scheduleId);
+      LogicalDeviceMapIterT findClientPort(GCFPortInterface& port);
+      LogicalDeviceScheduleIterT findSchedule(const string& deviceName,LogicalDeviceScheduleIterT beginIt);
+      bool submitSchedule(const unsigned long scheduleId,const string& deviceName, const vector<string> scheduleParameters, boost::shared_ptr<APLInterTaskPort> clientPort);
+      /*
+       * returns true if the timerId is a prepareTimer for the given logical device
+       * Also sets the current schedule id for the logical device.
+       */
+      bool checkPrepareTimer(const string& deviceName, unsigned long timerId);
+      /*
+       * returns true if the timerId is a startTimer for the given logical device
+       * Also sets the current schedule id for the logical device.
+       */
+      bool checkStartTimer(const string& deviceName, unsigned long timerId);
+      /*
+       * returns true if the timerId is a stopTimer for the given logical device
+       * Also resets the current schedule id for the logical device.
+       */
+      bool checkStopTimer(const string& deviceName, unsigned long timerId);
+      
+      
+      void sendWGsettings();
+
+      static string m_schedulerTaskName;
+
+
+      AVTPropertySetAnswer  m_propertySetAnswer;
+      GCFMyPropertySet      m_properties;
+      GCFApc                m_apcLDS;
+      bool                  m_initialized;
+  //    GCFPort               m_beamServer;
+      GCFPort*              m_pBeamServer;
+      double                m_WGfrequency;
+      unsigned int          m_WGamplitude;
+      unsigned int          m_WGsamplePeriod;
+
+      LogicalDeviceMapT       m_logicalDeviceMap;
+      LogicalDeviceScheduleT  m_logicalDeviceSchedule;
+  };
 };
 #endif

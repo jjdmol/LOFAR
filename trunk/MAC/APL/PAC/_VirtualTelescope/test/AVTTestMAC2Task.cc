@@ -196,9 +196,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_1(GCFEvent& event, GCFPortInterfac
           // the board is in maintenance, now start the VT
           m_propertyLDSstatus.subscribe();
           
-          // SCHEDULE <scheduleid>,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
-          //          <frequency>,<subbands>,<direction>
-          string cmd("SCHEDULE 1,");
+          // SCHEDULE <scheduleid>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
+          //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
+          string cmd("SCHEDULE 1,VT,");
           string devices(string("VT1")+string(",")+string("SBF1")+string(",")+string("SRG1")+string(","));
           string times("0,0,");
           string freq("110.0,");
@@ -287,9 +287,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_2(GCFEvent& event, GCFPortInterfac
           // the board is in maintenance, now start the VT
           m_propertyLDSstatus.subscribe();
           
-          // SCHEDULE <scheduleid>,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
-          //          <frequency>,<subbands>,<direction>
-          string cmd("SCHEDULE 2,");
+          // SCHEDULE <scheduleid>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
+          //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
+          string cmd("SCHEDULE 2,VT,");
           string devices(string("VT1")+string(",")+string("SBF1")+string(",")+string("SRG1")+string(","));
           string times("0,0,");
           string freq("110.0,");
@@ -360,9 +360,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_3(GCFEvent& event, GCFPortInterfac
         m_propertyLDSstatus.subscribe();
         m_propVT1Status.subscribe();
 
-        // SCHEDULE <scheduleid>,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
-        //          <frequency>,<subbands>,<direction>
-        string cmd("SCHEDULE 3,");
+        // SCHEDULE <scheduleid>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
+        //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
+        string cmd("SCHEDULE 3,VT,");
         string devices(string("VT1")+string(",")+string("SBF1")+string(",")+string("SRG1")+string(","));
         string times("0,0,");
         string freq("110.0,");
@@ -448,9 +448,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_4(GCFEvent& event, GCFPortInterfac
       m_propertyLDSstatus.subscribe();
       m_propVT2Status.subscribe();
 
-      // SCHEDULE <scheduleid>,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
-      //          <frequency>,<subbands>,<direction>
-      string cmd("SCHEDULE 5,");
+      // SCHEDULE <scheduleid>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
+      //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
+      string cmd("SCHEDULE 5,VT,");
       string devices(string("VT2")+string(",")+string("SBF2")+string(",")+string("SRG1")+string(","));
       string times("0,0,");
       string freq("110.0,");
@@ -822,9 +822,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_1(GCFEvent& event, GCFPortInterfac
       LOG_INFO("Test case 3_2_5_1: Schedule VT");
       m_propertyLDSstatus.subscribe();
 
-      // SCHEDULE <scheduleid>,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
-      //          <frequency>,<subbands>,<direction>
-      string cmd("SCHEDULE 6,");
+      // SCHEDULE <scheduleid>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
+      //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
+      string cmd("SCHEDULE 6,VT,");
       string devices(string("VT1")+string(",")+string("SBF1")+string(",")+string("SRG1")+string(","));
       
       // create time 10 seconds from now
@@ -902,9 +902,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_2(GCFEvent& event, GCFPortInterfac
       LOG_INFO("Test case 3_2_5_2: Schedule the same VT at non-overlapping timespans");
       m_propertyLDSstatus.subscribe();
 
-      // SCHEDULE <scheduleid>,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
-      //          <frequency>,<subbands>,<direction>
-      string cmd("SCHEDULE 7,");
+      // SCHEDULE <scheduleid>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
+      //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
+      string cmd("SCHEDULE 7,VT,");
       string devices(string("VT1")+string(",")+string("SBF1")+string(",")+string("SRG1")+string(","));
       
       // create time 10 seconds from now
@@ -983,8 +983,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_3(GCFEvent& event, GCFPortInterfac
       m_propertyLDSstatus.subscribe();
 
       // SCHEDULE <scheduleid>,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
-      //          <frequency>,<subbands>,<direction>
-      string cmd("SCHEDULE 8,");
+      //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
+      string cmd("SCHEDULE 8,VT,");
       string devices(string("VT1")+string(",")+string("SBF1")+string(",")+string("SRG1")+string(","));
       
       // create time 10 seconds from now
@@ -1125,10 +1125,10 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_5(GCFEvent& event, GCFPortInterfac
       LOG_INFO("Test case 3_2_5_5: Schedule two VT's at the same time");
       m_propertyLDSstatus.subscribe();
 
-      // SCHEDULE <scheduleid>,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
-      //          <frequency>,<subbands>,<direction>
-      string cmd1("SCHEDULE 9,");
-      string cmd2("SCHEDULE 10,");
+      // SCHEDULE <scheduleid>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
+      //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
+      string cmd1("SCHEDULE 9,VT,");
+      string cmd2("SCHEDULE 10,VT,");
       string devices1(string("VT1")+string(",")+string("SBF1")+string(",")+string("SRG1")+string(","));
       string devices2(string("VT2")+string(",")+string("SBF2")+string(",")+string("SRG2")+string(","));
       
@@ -1238,11 +1238,11 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterfac
       m_propertyLDSstatus.subscribe();
       m_propVT1Status.subscribe();
 
-      // SCHEDULE <scheduleid>,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
-      //          <frequency>,<subbands>,<direction>
+      // SCHEDULE <scheduleid>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
+      //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
       
       // NOTE: SRG3 has to be configured to use RCU2..8, NOT RCU1
-      string cmd("SCHEDULE 11,");
+      string cmd("SCHEDULE 11,VT,");
       string devices(string("VT1")+string(",")+string("SBF1")+string(",")+string("SRG3")+string(","));
       
       boost::posix_time::ptime startTime(boost::posix_time::second_clock::universal_time());

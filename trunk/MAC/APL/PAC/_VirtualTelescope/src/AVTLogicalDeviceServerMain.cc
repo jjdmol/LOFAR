@@ -22,6 +22,8 @@
 
 #include "AVTLogicalDeviceScheduler.h"
 
+using namespace AVT;
+
 int main(int argc, char* argv[])
 {
   GCFTask::init(argc, argv);

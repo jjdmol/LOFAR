@@ -20,6 +20,12 @@
 //#
 //#  $Id$
 
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 #include <GCF/GCF_Defines.h>
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVString.h>
@@ -33,11 +39,20 @@
 #include "AVTDefines.h"
 #include "AVTStationBeamformer.h"
 #include "AVTVirtualTelescope.h"
+#include "AVTStationReceptor.h"
+#include "AVTStationReceptorGroup.h"
 #include "AVTUtilities.h"
+
+#undef PACKAGE
+#undef VERSION
 #define DECLARE_SIGNAL_NAMES
 #include "ABS_Protocol.ph"
 
 #include "../test/PropertyDefines.h"
+
+using namespace LOFAR;
+using namespace AVT;
+using namespace std;
 
 string AVTLogicalDeviceScheduler::m_schedulerTaskName(LDSNAME);
 string g_bsName(BSNAME);
@@ -50,16 +65,63 @@ AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler() :
   m_properties(propertySetLDS,&m_propertySetAnswer),
   m_apcLDS("ApcLogicalDeviceScheduler", "LogicalDeviceScheduler", &m_propertySetAnswer),
   m_initialized(false),
-//  m_beamServer(*this, g_bsName, GCFPortInterface::SAP, ABS_PROTOCOL),
   m_pBeamServer(0),
   m_WGfrequency(0.0),
   m_WGamplitude(0),
   m_WGsamplePeriod(0),
-  m_logicalDeviceMap()
+  m_logicalDeviceMap(),
+  m_logicalDeviceSchedule()
 {
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler(%s)",getName().c_str()));
   m_properties.load();
+  
+  /*
+   *  Receptor and ReceptorGroup configuration
+   *  GCF4.0 allows permanent database items, so the RCU's and SRG's can be configured
+   *  in the database at that time.
+   */
+   
+  // create receptors
+  addReceptor(string("RCU1"),propertySetSR1);
+  addReceptor(string("RCU2"),propertySetSR2);
+  addReceptor(string("RCU3"),propertySetSR3);
+  addReceptor(string("RCU4"),propertySetSR4);
+  addReceptor(string("RCU5"),propertySetSR5);
+  addReceptor(string("RCU6"),propertySetSR6);
+  addReceptor(string("RCU7"),propertySetSR7);
+  addReceptor(string("RCU8"),propertySetSR8);
+  
+  // create receptor groups
+  vector<string> receptors;
+  receptors.push_back(string("RCU1"));
+  receptors.push_back(string("RCU2"));
+  receptors.push_back(string("RCU3"));
+  receptors.push_back(string("RCU4"));
+  receptors.push_back(string("RCU5"));
+  receptors.push_back(string("RCU6"));
+  receptors.push_back(string("RCU7"));
+  receptors.push_back(string("RCU8"));
+  addReceptorGroup(string("SRG1"),propertySetSRG1,receptors);
+  receptors.clear();
+  receptors.push_back(string("RCU1"));
+  receptors.push_back(string("RCU2"));
+  receptors.push_back(string("RCU3"));
+  receptors.push_back(string("RCU4"));
+  addReceptorGroup(string("SRG2"),propertySetSRG2,receptors);
+  receptors.clear();
+  receptors.push_back(string("RCU2"));
+  receptors.push_back(string("RCU4"));
+  receptors.push_back(string("RCU6"));
+  receptors.push_back(string("RCU8"));
+  addReceptorGroup(string("SRG3"),propertySetSRG3,receptors);
+  receptors.clear();
+  receptors.push_back(string("RCU5"));
+  receptors.push_back(string("RCU6"));
+  receptors.push_back(string("RCU7"));
+  receptors.push_back(string("RCU8"));
+  addReceptorGroup(string("SRG4"),propertySetSRG4,receptors);
+  
 }
 
 
@@ -69,30 +131,254 @@ AVTLogicalDeviceScheduler::~AVTLogicalDeviceScheduler()
   m_apcLDS.unload();
 }
 
+void AVTLogicalDeviceScheduler::addReceptor(string srName,const TPropertySet& propertySet)
+{
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s)(%s)",getName().c_str(),srName.c_str()));
+  // create receptor logical device
+  LogicalDeviceInfoT      srInfo;
+  string srApcName(SRAPCNAME);
+  boost::shared_ptr<AVTStationReceptor> sr(new AVTStationReceptor(srName,propertySet,srApcName,string("PAC_")+srName));
+  srInfo.logicalDevice = sr;
+  srInfo.clientPort.reset(new APLInterTaskPort(*sr.get(),*this, sr->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
+  sr->setClientInterTaskPort(srInfo.clientPort.get());
+  
+  m_logicalDeviceMap[srName]=srInfo;
+  sr->start();
+  srInfo.clientPort->open();
+}
+
+void AVTLogicalDeviceScheduler::addReceptorGroup(string srgName,const TPropertySet& propertySet, vector<string> receptors)
+{
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s)(%s)",getName().c_str(),srgName.c_str()));
+  LogicalDeviceInfoT srgInfo;
+  string srgApcName(SRGAPCNAME);
+  vector<boost::shared_ptr<AVTStationReceptor> > rcus;
+  
+  // search receptor logical devices
+  vector<string>::iterator rIt;
+  for(rIt=receptors.begin();rIt!=receptors.end();++rIt)
+  {
+    LogicalDeviceMapIterT ldIt=m_logicalDeviceMap.find(*rIt);
+    if(ldIt!=m_logicalDeviceMap.end())
+    {
+      rcus.push_back(boost::dynamic_pointer_cast<AVTStationReceptor>(ldIt->second.logicalDevice));
+      srgInfo.children[*rIt]=ldIt->second;
+    }
+  }
+  
+  // create receptor group logical device
+  boost::shared_ptr<AVTStationReceptorGroup> srg(new AVTStationReceptorGroup(srgName,propertySet,srgApcName,string("PAC_")+srgName,rcus));
+  srgInfo.logicalDevice=srg;
+  srgInfo.clientPort.reset(new APLInterTaskPort(*srg.get(),*this, srg->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
+  srg->setClientInterTaskPort(srgInfo.clientPort.get());
+
+  m_logicalDeviceMap[srgName]=srgInfo;
+  srg->start();
+  srgInfo.clientPort->open();
+}
+
 bool AVTLogicalDeviceScheduler::isInitialized()
 {
   return m_initialized;
 }
 
-bool AVTLogicalDeviceScheduler::findClientPort(GCFPortInterface& port,string& key)
+AVTLogicalDeviceScheduler::LogicalDeviceMapIterT AVTLogicalDeviceScheduler::findLogicalDevice(const unsigned long scheduleId)
 {
-  SchedulableLogicalDeviceMapT::iterator it=m_logicalDeviceMap.begin();
-  bool portFound(false);
-  while(it!=m_logicalDeviceMap.end()&&!portFound)
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s)(scheduleId=%d)",getName().c_str(),scheduleId));
+  LogicalDeviceMapIterT ldIt = m_logicalDeviceMap.end();
+  
+  // find the schedule
+  LogicalDeviceScheduleIterT scheduleIt = m_logicalDeviceSchedule.find(scheduleId);
+  if(scheduleIt != m_logicalDeviceSchedule.end())
   {
-    portFound=(&port==it->second.clientPort.get());
-    if(portFound)
-    {
-      key=it->first;
-    }
-    ++it;
+    // find the logical device of the schedule
+    ldIt=m_logicalDeviceMap.find(scheduleIt->second.deviceName);
   }
-  return portFound;
+  return ldIt;
+}
+
+AVTLogicalDeviceScheduler::LogicalDeviceMapIterT AVTLogicalDeviceScheduler::findClientPort(GCFPortInterface& port)
+{
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s)",getName().c_str()));
+  LogicalDeviceMapIterT it;
+  for(it=m_logicalDeviceMap.end();it!=m_logicalDeviceMap.end()&&(&port!=it->second.clientPort.get());++it);
+  return it;
+}
+
+AVTLogicalDeviceScheduler::LogicalDeviceScheduleIterT AVTLogicalDeviceScheduler::findSchedule(const string& deviceName,LogicalDeviceScheduleIterT beginIt)
+{
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s)(ld=%s)",getName().c_str(),deviceName.c_str()));
+  LogicalDeviceScheduleIterT scheduleIt;
+  for(scheduleIt=beginIt;scheduleIt!=m_logicalDeviceSchedule.end()&&(deviceName!=scheduleIt->second.deviceName);++scheduleIt);
+  return scheduleIt;
+}
+
+bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,const string& deviceName, const vector<string> scheduleParameters, boost::shared_ptr<APLInterTaskPort> clientPort)
+{
+  bool result=false;
+
+  int rawStartTime = atoi(scheduleParameters[0].c_str()); // starttime
+  int rawStopTime  = atoi(scheduleParameters[1].c_str()); // stoptime
+  
+  boost::posix_time::ptime currentTime  = boost::posix_time::second_clock::universal_time();
+  boost::posix_time::ptime startTime    = boost::posix_time::from_time_t(rawStartTime);
+  boost::posix_time::ptime stopTime     = boost::posix_time::from_time_t(rawStopTime);
+  boost::posix_time::ptime prepareTime  = startTime - boost::posix_time::seconds(PREPARE_TIME); //  - 10 seconds
+
+  // check if the schedule already exists
+  LogicalDeviceScheduleIterT schIt = m_logicalDeviceSchedule.find(scheduleId);
+  if(schIt != m_logicalDeviceSchedule.end())
+  {
+    // it exists.
+    if(prepareTime < currentTime)
+    {
+      // can't change prepare time because it has passed
+    }
+    else
+    {
+      // update the preparation parameters
+      schIt->second.parameters = scheduleParameters;
+      // cancel current prepare timer and create a new one
+      clientPort->cancelTimer(schIt->second.prepareTimerId);
+      
+      boost::posix_time::time_duration delay;
+      delay = prepareTime - currentTime; 
+      schIt->second.prepareTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the prepareTimer
+    }
+    if(startTime < currentTime)
+    {
+      // can't change start time because it has passed
+    }
+    else
+    {
+      schIt->second.startTime = rawStartTime;
+      // cancel current start timer and create a new one
+      clientPort->cancelTimer(schIt->second.startTimerId);
+      
+      boost::posix_time::time_duration delay;
+      delay = startTime - currentTime; 
+      schIt->second.startTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the startTimer
+    }
+    if(stopTime < currentTime)
+    {
+      // can't change stop time because it has passed
+    }
+    else
+    {
+      schIt->second.stopTime = rawStopTime;
+      // cancel current stop timer and create a new one
+      clientPort->cancelTimer(schIt->second.stopTimerId);
+      
+      boost::posix_time::time_duration delay;
+      delay = stopTime - currentTime; 
+      schIt->second.stopTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the stopTimer
+    }
+  }
+  else
+  {
+    // create the schedule entry
+    LogicalDeviceScheduleInfoT vtSchedule;
+    
+    vtSchedule.deviceName = deviceName;
+    vtSchedule.parameters = scheduleParameters;
+    vtSchedule.startTime = rawStartTime;
+    vtSchedule.stopTime = rawStopTime;
+  
+    // create the timers
+    boost::posix_time::time_duration delay;
+    delay = prepareTime - currentTime; 
+    vtSchedule.prepareTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the prepareTimer
+
+    delay = startTime - currentTime; 
+    vtSchedule.startTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the startTimer
+
+    delay = stopTime - currentTime; 
+    vtSchedule.stopTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the stopTimer
+  
+    m_logicalDeviceSchedule[scheduleId] = vtSchedule;
+  }  
+  
+  return result;
+}
+
+bool AVTLogicalDeviceScheduler::checkPrepareTimer(const string& deviceName, unsigned long timerId)
+{
+  bool isPrepareTimer=false;
+  LogicalDeviceScheduleIterT it = findSchedule(deviceName,m_logicalDeviceSchedule.begin());
+  while(!isPrepareTimer && it != m_logicalDeviceSchedule.end())
+  {
+    // schedule for logical device found. check prepareTimerId
+    isPrepareTimer = (it->second.prepareTimerId == timerId);
+    if(!isPrepareTimer)
+    {
+      ++it;
+      it = findSchedule(deviceName,it);
+    }
+    else
+    {
+      LogicalDeviceMapIterT ldIt = m_logicalDeviceMap.find(deviceName);
+      if(ldIt != m_logicalDeviceMap.end())
+      {
+        ldIt->second.currentSchedule = it->first;
+      }
+    }
+  }
+  return isPrepareTimer;
+}
+
+bool AVTLogicalDeviceScheduler::checkStartTimer(const string& deviceName, unsigned long timerId)
+{
+  bool isStartTimer=false;
+  LogicalDeviceScheduleIterT it = findSchedule(deviceName,m_logicalDeviceSchedule.begin());
+  while(!isStartTimer && it != m_logicalDeviceSchedule.end())
+  {
+    // schedule for logical device found. check startTimerId
+    isStartTimer = (it->second.startTimerId == timerId);
+    if(!isStartTimer)
+    {
+      ++it;
+      it = findSchedule(deviceName,it);
+    }
+    else
+    {
+      LogicalDeviceMapIterT ldIt = m_logicalDeviceMap.find(deviceName);
+      if(ldIt != m_logicalDeviceMap.end())
+      {
+        ldIt->second.currentSchedule = it->first;
+      }
+    }
+  }
+  return isStartTimer;
+}
+
+bool AVTLogicalDeviceScheduler::checkStopTimer(const string& deviceName, unsigned long timerId)
+{
+  bool isStopTimer=false;
+  LogicalDeviceScheduleIterT it = findSchedule(deviceName,m_logicalDeviceSchedule.begin());
+  while(!isStopTimer && it != m_logicalDeviceSchedule.end())
+  {
+    // schedule for logical device found. check StopTimerId
+    isStopTimer = (it->second.stopTimerId == timerId);
+    if(!isStopTimer)
+    {
+      ++it;
+      it = findSchedule(deviceName,it);
+    }
+    else
+    {
+      LogicalDeviceMapIterT ldIt = m_logicalDeviceMap.find(deviceName);
+      if(ldIt != m_logicalDeviceMap.end())
+      {
+        ldIt->second.currentSchedule = 0;
+      }
+    }
+  }
+  return isStopTimer;
 }
 
 GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDeviceScheduler(%s)::initial_state (%s)",getName().c_str(),evtstr(event)));
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s) (%s)",getName().c_str(),evtstr(event)));
 
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -102,7 +388,6 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       break;
 
     case F_ENTRY:
-//      m_beamServer.open();
       break;
 
     case F_CONNECTED:
@@ -110,74 +395,52 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
     
     case LOGICALDEVICE_INITIALIZED:
     {
-      // send a claim right after initialization
-      string clientName;
-      if(findClientPort(port,clientName))
-      {
-        // send claim message:
-        GCFEvent claimEvent(LOGICALDEVICE_CLAIM);
-        port.send(claimEvent);
-      }
       break;
     }
 
     case LOGICALDEVICE_CLAIMED:
     {
-      GCFPVString status("Claimed");
-      m_properties.setValue(PROPERTY_LDS_STATUS,status);
-
-      string clientName;
-      if(findClientPort(port,clientName))
+      LogicalDeviceMapIterT it = findClientPort(port);
+      if(it!=m_logicalDeviceMap.end())
       {
-        // send prepare message:
-        string prepareParameters;
-        AVTUtilities::encodeParameters(m_logicalDeviceMap[clientName].parameters,prepareParameters);
-        
-        LOGICALDEVICEPrepareEvent prepareEvent;
-        prepareEvent.parameters=prepareParameters;
-        // send prepare to Virtual Telescope. VT will send prepare to SBF and SRG
-        port.send(prepareEvent);
+        // get the corresponding schedule:
+        LogicalDeviceScheduleIterT schIt = m_logicalDeviceSchedule.find(it->second.currentSchedule);
+        if(schIt != m_logicalDeviceSchedule.end())
+        {
+          // send prepare message:
+          string prepareParameters;
+          AVTUtilities::encodeParameters(schIt->second.parameters,prepareParameters);
 
-        // the logical device resumes itself after preparation using the starttime
+          LOGICALDEVICEPrepareEvent prepareEvent;
+          prepareEvent.parameters=prepareParameters;
+          // send prepare to Virtual Telescope. VT will send prepare to SBF and SRG
+          port.send(prepareEvent);
+        }
       }
       break;
     }
     case LOGICALDEVICE_PREPARED:
     {
-      GCFPVString status("Prepared");
-      m_properties.setValue(PROPERTY_LDS_STATUS,status);
-      
-      // mac 1 increment only: resume immediately
-      string clientName;
-      if(findClientPort(port,clientName))
-      {
-        // send resume message:
-        GCFEvent resumeEvent(LOGICALDEVICE_RESUME);
-        port.send(resumeEvent);
-      }
       break;
     }
         
     case LOGICALDEVICE_RESUMED:
     {
-      GCFPVString status("Resumed");
-      m_properties.setValue(PROPERTY_LDS_STATUS,status);
       break;
     }
 
     case LOGICALDEVICE_SUSPENDED:
     {
-      GCFPVString status("Suspended");
-      m_properties.setValue(PROPERTY_LDS_STATUS,status);
       
-      string clientName;
-      if(findClientPort(port,clientName))
+      LogicalDeviceMapIterT it = findClientPort(port);
+      if(it!=m_logicalDeviceMap.end())
       {
-        if(m_logicalDeviceMap[clientName].toBeReleased)
+        LogicalDeviceScheduleIterT scheduleIt = findSchedule(it->first,m_logicalDeviceSchedule.begin());
+        if(scheduleIt != m_logicalDeviceSchedule.end())
         {
-          // send reslease message:
+          // send release message because no more schedules exist for this logical device
           GCFEvent releaseEvent(LOGICALDEVICE_RELEASE);
-          m_logicalDeviceMap[clientName].clientPort->send(releaseEvent);
+          port.send(releaseEvent);
         }
       }
       break;
@@ -185,54 +448,57 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
 
     case LOGICALDEVICE_RELEASED:
     {
-      GCFPVString status("Released");
-      m_properties.setValue(PROPERTY_LDS_STATUS,status);
-
-      string clientName;
-      if(findClientPort(port,clientName))
+      
+      LogicalDeviceMapIterT it = findClientPort(port);
+      if(it!=m_logicalDeviceMap.end())
       {
-        SchedulableLogicalDeviceMapT::iterator ldIt=m_logicalDeviceMap.find(clientName);
-        if(ldIt!=m_logicalDeviceMap.end())
-        {
-          // remove the object from the map. The Port instance and children Logical Device instances
-          // are destroyed too because they are smart pointers.
-          m_logicalDeviceMap.erase(ldIt);
-        }
+        // remove the object from the map. The Port instance and children Logical Device instances
+        // are destroyed too because they are smart pointers.
+        m_logicalDeviceMap.erase(it);
       }
       break;
     }
         
     case F_DISCONNECTED:
     {
-/*      if(&port==&m_beamServer)
+      LogicalDeviceMapIterT it = findClientPort(port);
+      if(it!=m_logicalDeviceMap.end())
       {
-        m_beamServer.setTimer(2.0);
-      }
-      else
-*/
-      {
-        string clientName;
-        if(findClientPort(port,clientName))
-        {
-          port.setTimer(2.0);
-        }
+        port.setTimer(2.0);
       }
       break;
     }
     
     case F_TIMER:
     {
-/*
-      if(&port==&m_beamServer)
+      GCFTimerEvent& timerEvent=dynamic_cast<GCFTimerEvent&>(event);
+      
+      LogicalDeviceMapIterT it = findClientPort(port);
+      if(it!=m_logicalDeviceMap.end())
       {
-        m_beamServer.open(); // try again
-      }
-      else
-*/
-      {
-        string clientName;
-        if(findClientPort(port,clientName))
+        if(checkPrepareTimer(it->first,timerEvent.id))
         {
+          // this is a prepare timer for the schedule of a logical device. claim the device
+          GCFEvent claimEvent(LOGICALDEVICE_CLAIM);
+          port.send(claimEvent);
+          // when the device (and all it's children) is claimed, the prepare message is sent
+          // automatically
+        }
+        else if(checkStartTimer(it->first,timerEvent.id))
+        {
+          // this is a start timer for the schedule of a logical device. resume the device
+          GCFEvent resumeEvent(LOGICALDEVICE_RESUME);
+          port.send(resumeEvent);
+        }
+        else if(checkStopTimer(it->first,timerEvent.id))
+        {
+          // this is a stop timer for the schedule of a logical device. suspend the device
+          GCFEvent suspendEvent(LOGICALDEVICE_SUSPEND);
+          port.send(suspendEvent);
+        }
+        else if(!port.isConnected())
+        {
+          // not a start or stop timer
           port.open();
         }
       }
@@ -240,7 +506,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDeviceScheduler(%s)::initial_state, default",getName().c_str()));
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s), default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -249,7 +515,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
 
 void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
 {
-//  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDeviceScheduler(%s)::handlePropertySetAnswer (%s)",getName().c_str(),evtstr(answer)));
+//  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s) (%s)",getName().c_str(),evtstr(answer)));
 
   switch(answer.signal)
   {
@@ -276,107 +542,168 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
       {
         // command received
         string commandString(((GCFPVString*)pPropAnswer->pValue)->getValue());
+        
+        GCFPVString status("OK");
+
+        LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("Command received: (%s)",commandString.c_str()));
+        
         vector<string> parameters;
         string command;
         AVTUtilities::decodeCommand(commandString,command,parameters);
         
-        // SCHEDULE <vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
-        //          <frequency>,<subbands>,<direction>
+        // SCHEDULE <sch.nr>,VT|SR|SRG,....
         if(command==string(LD_COMMAND_SCHEDULE))
         {
-          if(parameters.size()==10)
+          if(parameters.size()<5)
           {
-            LogicalDeviceInfoT            srgInfo;
-            LogicalDeviceInfoT            sbfInfo;
-            SchedulableLogicalDeviceInfoT vtInfo;
-            
-            SchedulableLogicalDeviceMapT::iterator ldIt=m_logicalDeviceMap.find(parameters[0]);
-            if(ldIt!=m_logicalDeviceMap.end())
+            // return error in status property
+            string statusString("Error SCHEDULE");            
+            if(parameters.size()>0)
             {
-              // virtual telescope already exists, send the prepare event
-              ldIt->second.startTime=atoi(parameters[3].c_str());
-              ldIt->second.stopTime=atoi(parameters[4].c_str());
-              ldIt->second.parameters.clear();
-              ldIt->second.parameters.push_back(parameters[3]); // send start time also to VT to trigger activation
-              ldIt->second.parameters.push_back(parameters[4]); // send stop time also to VT to trigger deactivation
-              ldIt->second.parameters.push_back(parameters[5]); // frequency
-              ldIt->second.parameters.push_back(parameters[6]); // subbands
-              ldIt->second.parameters.push_back(parameters[7]); // direction type
-              ldIt->second.parameters.push_back(parameters[8]); // angle1
-              ldIt->second.parameters.push_back(parameters[9]); // angle2
+              statusString += string(",")+parameters[0];
+            }
+            statusString += string(",incorrect number of parameters");
+            status.setValue(statusString);
+          }
+          else
+          {
+            // which logical device?
+            if(parameters[1] == string("VT"))
+            {
+              // SCHEDULE <sch.nr>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
+              //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
+              // it's a virtual telescope, check the number of parameters
+              if(parameters.size()!=12)
+              {
+                status.setValue(string("Error SCHEDULE,")+parameters[0]+string(",incorrect number of parameters"));
+              }
+              else
+              {
+                LogicalDeviceInfoT srgInfo;
+                LogicalDeviceInfoT sbfInfo;
+                LogicalDeviceInfoT vtInfo;
 
-              // send prepare message:
-              string prepareParameters;
-              AVTUtilities::encodeParameters(ldIt->second.parameters,prepareParameters);
-              
-              LOGICALDEVICEPrepareEvent prepareEvent;
-              prepareEvent.parameters=prepareParameters;
-              // send prepare to Virtual Telescope. VT will send prepare to SBF and SRG
-              ldIt->second.clientPort->send(prepareEvent);
+                // Check if the thing has already been created
+                bool ldExists=false;
+                LogicalDeviceMapIterT ldIt=m_logicalDeviceMap.find(parameters[2]);
+                if(ldIt!=m_logicalDeviceMap.end())
+                {
+                  ldExists=true;
+                  vtInfo = ldIt->second;
+                }
+                if(!ldExists)
+                {
+                  // find SRG
+                  boost::shared_ptr<AVTStationReceptorGroup> srg;
+                  LogicalDeviceMapIterT ldIt=m_logicalDeviceMap.find(parameters[4]);
+                  if(ldIt!=m_logicalDeviceMap.end())
+                  {
+                    srgInfo.logicalDevice = ldIt->second.logicalDevice;
+                    srg=boost::dynamic_pointer_cast<AVTStationReceptorGroup>(srgInfo.logicalDevice);
+
+                    // create SBF
+                    string sbfApcName(SBFAPCNAME);
+                    string bsName(BSNAME);
+                    boost::shared_ptr<AVTStationBeamformer> sbf(new AVTStationBeamformer(parameters[3],primaryPropertySetSBF,sbfApcName,string("PAC_")+parameters[2]+string("_")+parameters[3],bsName));
+                    sbfInfo.logicalDevice=sbf;
+                    if(m_pBeamServer==0)
+                    {
+                      m_pBeamServer=&sbf->getBeamServerPort();
+                    }
+
+                    // create VT
+                    string vtApcName(VTAPCNAME);
+                    boost::shared_ptr<AVTVirtualTelescope> vt(new AVTVirtualTelescope(parameters[2],primaryPropertySetVT,vtApcName,string("PAC_")+parameters[2],*(sbf.get()),*(srg.get())));
+                    vtInfo.logicalDevice=vt;
+                    vtInfo.clientPort.reset(new APLInterTaskPort(*vt.get(),*this, vt->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
+                    vt->setClientInterTaskPort(vtInfo.clientPort.get());
+                    vtInfo.children[parameters[3]]=sbfInfo;
+                    vtInfo.children[parameters[4]]=srgInfo;
+
+                    // put the new logical device in the map
+                    m_logicalDeviceMap[parameters[2]]=vtInfo;
+                  }
+                  else
+                  {
+                    status.setValue(string("Error SCHEDULE,")+parameters[0]+string(",SRG not found"));
+                  }
+                }
+
+                // copy parameters[5] to parameters[end] into a new vector
+                vector<string> scheduleParameters(parameters.begin()+5,parameters.end());
+                char *endptr;
+                unsigned long scheduleId = strtoul(parameters[0].c_str(),&endptr,10);
+                submitSchedule(scheduleId,parameters[2],scheduleParameters,vtInfo.clientPort);
+
+                if(!ldExists)
+                {
+                  vtInfo.logicalDevice->start();
+
+                  // increment1: ignore starting and stopping time, start the damn thing right now!
+                  // in the future, the scheduler will claim, prepare and resume the scheduled Logical Devices.
+                  // connect and send the claim and prepare messages            
+                  vtInfo.clientPort->open();
+                  // after receiving connected event, messages are sent            
+                }
+              }
+            }
+            else if(parameters[1] == string("SR"))
+            {
+            }
+            else if(parameters[1] == string("SRG"))
+            {
+              // SCHEDULE <sch.nr>,SRG,<srg_name>,<starttime>,<stoptime>,
+              //          <filter>,<antenna>,<power>
+              // it's a virtual telescope, check the number of parameters
+              if(parameters.size()!=8)
+              {
+                status.setValue(string("Error SCHEDULE,")+parameters[0]+string(",incorrect number of parameters"));
+              }
+              else
+              {
+                // Check if the thing has already been created
+                LogicalDeviceMapIterT ldIt=m_logicalDeviceMap.find(parameters[2]);
+                if(ldIt!=m_logicalDeviceMap.end())
+                {
+                  // copy parameters[3] to parameters[end] into a new vector
+                  vector<string> scheduleParameters(parameters.begin()+3,parameters.end());
+                  char *endptr;
+                  unsigned long scheduleId = strtoul(parameters[0].c_str(),&endptr,10);
+                  submitSchedule(scheduleId,parameters[2],scheduleParameters,ldIt->second.clientPort);
+                }
+                else
+                {
+                  status.setValue(string("Error SCHEDULE,")+parameters[0]+string(",SRG not found"));
+                }
+              }
             }
             else
-            {              
-              // create SRG
-  //            boost::shared_ptr<> srg(new AVTStationReceptorGroup());        
-  //            srgInfo.logicalDevice=srg;
-              
-              // create SBF
-              string sbfApcName(SBFAPCNAME);
-              string bsName(BSNAME);
-              boost::shared_ptr<AVTStationBeamformer> sbf(new AVTStationBeamformer(parameters[1],primaryPropertySetSBF,sbfApcName,parameters[0]+string("_")+parameters[1],bsName));
-              sbfInfo.logicalDevice=sbf;
-              if(m_pBeamServer==0)
-              {
-                m_pBeamServer=&sbf->getBeamServerPort();
-              }
-              
-              // create VT
-              string vtApcName(VTAPCNAME);
-              boost::shared_ptr<AVTVirtualTelescope> vt(new AVTVirtualTelescope(parameters[0],primaryPropertySetVT,vtApcName,parameters[0],*sbf.get()));
-              vtInfo.logicalDevice=vt;
-              vtInfo.toBeReleased=false;
-              
-  //            vtInfo.clientPort.reset(new GCFPort(*this, vt->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
-              vtInfo.clientPort.reset(new APLInterTaskPort(*vt.get(),*this, vt->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
-              vt->setClientInterTaskPort(vtInfo.clientPort.get());
-              vtInfo.children[parameters[1]]=sbfInfo;
-              vtInfo.children[parameters[2]]=srgInfo;
-              vtInfo.startTime=atoi(parameters[3].c_str());
-              vtInfo.stopTime=atoi(parameters[4].c_str());
-              vtInfo.parameters.push_back(parameters[3]); // send start time also to VT to trigger activation
-              vtInfo.parameters.push_back(parameters[4]); // send stop time also to VT to trigger deactivation
-              vtInfo.parameters.push_back(parameters[5]); // frequency
-              vtInfo.parameters.push_back(parameters[6]); // subbands
-              vtInfo.parameters.push_back(parameters[7]); // direction type
-              vtInfo.parameters.push_back(parameters[8]); // angle1
-              vtInfo.parameters.push_back(parameters[9]); // angle2
-              
-              m_logicalDeviceMap[parameters[0]]=vtInfo;
-              vt->start();
-              
-              // increment1: ignore starting and stopping time, start the damn thing right now!
-              // in the future, the scheduler will claim, prepare and resume the scheduled Logical Devices.
-              // connect and send the claim and prepare messages            
-              vtInfo.clientPort->open();
-              // after receiving connected event, messages are sent            
+            {
+              status.setValue(string("Error SCHEDULE,")+parameters[0]+string(",unknown device type"));
             }
           }
         }
-        // RELEASE <name>
-        else if(command==string(LD_COMMAND_RELEASE))
+        // CANCEL <scheduleId>
+        else if(command==string(LD_COMMAND_CANCEL))
         {
           if(parameters.size()==1)
           {
-            SchedulableLogicalDeviceMapT::iterator it=m_logicalDeviceMap.find(parameters[0]);
+            char *endptr;
+            unsigned long scheduleId = strtoul(parameters[0].c_str(),&endptr,10);
+            LogicalDeviceMapIterT it=findLogicalDevice(scheduleId);
             if(it!=m_logicalDeviceMap.end())
             {
-              it->second.toBeReleased=true;
-              GCFEvent suspendEvent(LOGICALDEVICE_SUSPEND);
-              // send suspend to Virtual Telescope. VT will send suspend to SBF and SRG
-              it->second.clientPort->send(suspendEvent);
+              // doe ietsjepietsjeflap
             }
           } 
         }
+        else
+        {
+          status.setValue(string("Error ")+command+string(",unknown command"));
+        }
+        
+        m_properties.setValue(PROPERTY_LDS_STATUS,status);
+        
       }
       else if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_DOUBLE) &&
                (strstr(pPropAnswer->pPropName, PROPERTYNAME_WAVEGENFREQUENCY) != 0))
