@@ -16,6 +16,7 @@ MeqMatrixTmp.h					\
 MeqParm.h					\
 MeqParmPolc.h					\
 MeqParmSingle.h					\
+MeqPhaseRef.h					\
 MeqPointDFT.h					\
 MeqPointSource.h				\
 MeqPolc.h					\
@@ -24,8 +25,10 @@ MeqRequestId.h					\
 MeqResult.h					\
 MeqStatExpr.h					\
 MeqStation.h					\
+MeqStatSources.h				\
+MeqStatUVW.h					\
+MeqStation.h					\
 MeqStoredParmPolc.h				\
-MeqUVWPolc.h					\
 MeqWsrtInt.h					\
 MeqWsrtPoint.h					\
 ParmTable.h					
@@ -48,6 +51,7 @@ MeqMatrixTmp.cc					\
 MeqParm.cc					\
 MeqParmPolc.cc					\
 MeqParmSingle.cc				\
+MeqPhaseRef.cc					\
 MeqPointDFT.cc					\
 MeqPointSource.cc				\
 MeqPolc.cc					\
@@ -55,8 +59,9 @@ MeqRequest.cc					\
 MeqResult.cc					\
 MeqStatExpr.cc					\
 MeqStation.cc					\
+MeqStatSources.cc				\
+MeqStatUVW.cc					\
 MeqStoredParmPolc.cc				\
-MeqUVWPolc.cc					\
 MeqWsrtInt.cc					\
 MeqWsrtPoint.cc					\
 ParmTable.cc					

@@ -45,18 +45,14 @@ MeqWsrtPoint::~MeqWsrtPoint()
 
 void MeqWsrtPoint::calcResult (const MeqRequest& request)
 {
-  // We can only calculate for a single bin.
+  // We can only calculate for a single time bin.
   const MeqDomain& domain = request.domain();
-  Assert (request.nx() == 1  &&  request.ny() == 1);
-  // Let the DFT calculate the UVW only once.
-  itsDFT->calcUVW (request);
+  Assert (request.nx() == 1);
   // Find the maximum nr of cells needed.
   int ncellt = 0;
   int ncellf = 0;
-  for (vector<MeqPointSource>::iterator iter = itsSources.begin();
-       iter != itsSources.end();
-       iter++) {
-    vector<int> ncell = itsDFT->ncells (*iter, domain);
+  for (unsigned int i=0; i<itsSources.size(); i++) {
+    vector<int> ncell = itsDFT->ncells (i, request);
     if (ncell[0] > ncellt) {
       ncellt = ncell[0];
     }
@@ -72,7 +68,8 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
     ///  }
   
   itsCelltHist->update (ncellt);
-  itsCellfHist->update (ncellt);
+  itsCellfHist->update (ncellf);
+  ncellf *= request.ny();
   // The domain is divided into the required number of cells.
   MeqRequest dftReq (domain, ncellt, ncellf, request.nspid());
   itsXX = MeqResult(request.nspid());

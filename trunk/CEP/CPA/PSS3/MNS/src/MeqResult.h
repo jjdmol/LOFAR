@@ -92,6 +92,7 @@ private:
   int       itsCount;
   MeqMatrix itsValue;
   MeqMatrix itsDefPert;
+  ///  int       itsFirstPert;     // spid of first perturbed value
   vector<MeqMatrix*> itsPerturbedValues;
   vector<MeqMatrix*> itsPerturbation;
 };

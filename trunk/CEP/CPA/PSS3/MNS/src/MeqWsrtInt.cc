@@ -44,7 +44,9 @@ MeqWsrtInt::~MeqWsrtInt()
 
 void MeqWsrtInt::calcResult (const MeqRequest& request)
 {
-  const MeqDomain& domain = request.domain();
+  // We can handle only 1 time at a time (for PSS-1 at least).
+  // It makes life much easier.
+  Assert (request.nx() == 1);
   // Create the result objects.
   setResult11 (MeqResult(request.nspid()));
   setResult12 (MeqResult(request.nspid()));
@@ -56,257 +58,330 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
   result12().setValue (mat);
   result21().setValue (mat);
   result22().setValue (mat);
-  vector<bool> eval(request.nspid(), false);
-  vector<bool> evalxx(request.nspid(), false);
-  vector<bool> evalxy(request.nspid(), false);
-  vector<bool> evalyx(request.nspid(), false);
-  vector<bool> evalyy(request.nspid(), false);
-  // Loop through all the bins in the domain and get the source
-  // contribution for a single bin. That bin will be split up in
-  // smaller cells, so we get back a Matrix of values.
-  // Integrate all those cells to the single bin.
-  double sty = domain.startY();
-  bool first = true;
-  int inx = 0;
-  for (int iy=0; iy<request.ny(); iy++) {
-    double stx = domain.startX();
-    for (int ix=0; ix<request.nx(); ix++) {
-      MeqDomain dom(stx, stx+request.stepX(), sty, sty+request.stepY());
-      MeqRequest req(dom, 1, 1, request.nspid());
-      itsExpr->calcResult (req);
-      itsStat1->calcResult (req);
-      itsStat2->calcResult (req);
-      const MeqResult& xx = itsExpr->getResultXX();
-      const MeqResult& xy = itsExpr->getResultXY();
-      const MeqResult& yx = itsExpr->getResultYX();
-      const MeqResult& yy = itsExpr->getResultYY();
+  // Calculate the contribution of all sources.
+  // A cell may be split up in smaller subcells (both in time and
+  // frequency direction), so the matrix returned might be bigger
+  // and integration is required.
+  itsExpr->calcResult (request);
+  itsStat1->calcResult (request);
+  itsStat2->calcResult (request);
+  const MeqResult& xx = itsExpr->getResultXX();
+  const MeqResult& xy = itsExpr->getResultXY();
+  const MeqResult& yx = itsExpr->getResultYX();
+  const MeqResult& yy = itsExpr->getResultYY();
+  if (MeqPointDFT::doshow) {
+    cout << "MeqWsrtInt " << request.nx() <<  ' ' << request.ny() << endl;
+    cout << "MeqWsrtInt xx: " << xx.getValue() << endl;
+  }
+  // Integrate and normalize the results by adding the values and
+  // dividing by the number of subcells used to predict a single cell.
+  // The nr of subcells is the same for each cell.
+  double nsubc = xx.getValue().nelements() / request.ny();
+  // The values also have to be divided by 2. That is not
+  // done in MeqWsrtPoint because it is cheaper to do it here.
+  // If no subcells were used, we can simply divide by 2.
+  if (MeqPointDFT::doshow) {
+    cout << "Int: " << xx.getValue() << ' ' << xy.getValue() << ' '
+	 << yx.getValue() << ' ' << yy.getValue() << endl;
+  }
+  MeqMatrix xxres;
+  MeqMatrix xyres;
+  MeqMatrix yxres;
+  MeqMatrix yyres;
+  if (nsubc == request.ny()) {
+    xxres = xx.getValue() / 2.;
+    xyres = xy.getValue() / 2.;
+    yxres = yx.getValue() / 2.;
+    yyres = yy.getValue() / 2.;
+  } else {
+    double fact = 2*nsubc;
+    const complex<double>* xxc = xx.getValue().dcomplexStorage();
+    const complex<double>* xyc = xy.getValue().dcomplexStorage();
+    const complex<double>* yxc = yx.getValue().dcomplexStorage();
+    const complex<double>* yyc = yy.getValue().dcomplexStorage();
+    xxres = MeqMatrix(complex<double>(), 1, request.ny(), false);
+    xyres = MeqMatrix(complex<double>(), 1, request.ny(), false);
+    yxres = MeqMatrix(complex<double>(), 1, request.ny(), false);
+    yyres = MeqMatrix(complex<double>(), 1, request.ny(), false);
+    complex<double>* xxr = xxres.dcomplexStorage();
+    complex<double>* xyr = xyres.dcomplexStorage();
+    complex<double>* yxr = yxres.dcomplexStorage();
+    complex<double>* yyr = yyres.dcomplexStorage();
+    for (int i=0; i<request.ny(); i++) {
+      complex<double> sumxx;
+      complex<double> sumxy;
+      complex<double> sumyx;
+      complex<double> sumyy;
+      for (int j=0; j<nsubc; j++) {
+	sumxx += *xxc++;
+	sumxy += *xyc++;
+	sumyx += *yxc++;
+	sumyy += *yyc++;
+      }
+      xxr[i] = sumxx / fact;
+      xyr[i] = sumxy / fact;
+      yxr[i] = sumyx / fact;
+      yyr[i] = sumyy / fact;
       if (MeqPointDFT::doshow) {
-	cout << stx << ' ' << request.stepX() << ' ' << sty << ' ' << request.stepY() << ' ' << request.nx() <<  ' ' << request.ny() << endl;
-      cout << "MeqWsrtInt xx: " << xx.getValue() << endl;
+	cout << "MeqWsrtInt abs(sum): " << abs(sumxx) << ' ' << abs(sumxy) << ' ' << abs(sumyx) << ' ' << abs(sumyy) << endl;
       }
-      // Integrate and normalize the results by adding the values
-      // and dividing by the number of cells.
-      //// with the surface of the x,y cells and adding them thereafter.
-      ///double wx = request.stepX() / xx.getValue().nx();
-	///double wy = request.stepY() / xx.getValue().ny();
-	///double surface = wx*wy;
-      double nc = xx.getValue().nelements();
-      // The values also have to be divided by 2 as that is not
-      // done in MeqWsrtPoint because it is cheaper to do it here.
-      nc *= 2;
-      ///      if (MeqPointDFT::doshow) {
-	///      cout << "Int: " << xx.getValue() << ' ' << xy.getValue() << ' '
-	///      	   << yx.getValue() << ' ' << yy.getValue() << endl;
-	///      }
-      complex<double> sumxx = sum(xx.getValue()).getDComplex() / nc;
-      complex<double> sumxy = sum(xy.getValue()).getDComplex() / nc;
-      complex<double> sumyx = sum(yx.getValue()).getDComplex() / nc;
-      complex<double> sumyy = sum(yy.getValue()).getDComplex() / nc;
-      if (MeqPointDFT::doshow) {
-      cout << "MeqWsrtInt abs(sum): " << abs(sumxx) << ' ' << abs(sumxy) << ' ' << abs(sumyx) << ' ' << abs(sumyy) << endl;
-      }
-      // Now combine with the stations jones.
-      complex<double> s11 = itsStat1->getResult11().getValue().getDComplex();
-      complex<double> s12 = itsStat1->getResult12().getValue().getDComplex();
-      complex<double> s21 = itsStat1->getResult21().getValue().getDComplex();
-      complex<double> s22 = itsStat1->getResult22().getValue().getDComplex();
-      complex<double> conj11 = conj(itsStat2->getResult11().getValue().getDComplex());
-      complex<double> conj12 = conj(itsStat2->getResult12().getValue().getDComplex());
-      complex<double> conj21 = conj(itsStat2->getResult21().getValue().getDComplex());
-      complex<double> conj22 = conj(itsStat2->getResult22().getValue().getDComplex());
-      result11().getValueRW().dcomplexStorage()[inx] =
-	s11 * conj11 * sumxx +
-	s11 * conj12 * sumxy +
-	s12 * conj11 * sumyx +
-	s12 * conj12 * sumyy;
-      result12().getValueRW().dcomplexStorage()[inx] =
-	s11 * conj21 * sumxx +
-	s11 * conj22 * sumxy +
-	s12 * conj21 * sumyx +
-	s12 * conj22 * sumyy;
-      result21().getValueRW().dcomplexStorage()[inx] =
-	s21 * conj11 * sumxx +
-	s21 * conj12 * sumxy +
-	s22 * conj11 * sumyx +
-	s22 * conj12 * sumyy;
-      result22().getValueRW().dcomplexStorage()[inx] =
-	s21 * conj21 * sumxx +
-	s21 * conj22 * sumxy +
-	s22 * conj21 * sumyx +
-	s22 * conj22 * sumyy;
-
-      // If first bin, determine which values are perturbed and
-      // determine the perturbation.
-      if (first) {
-	MeqMatrix perturbation;
-	for (int spinx=0; spinx<request.nspid(); spinx++) {
-	  if (xx.isDefined(spinx)) {
-	    perturbation = xx.getPerturbation(spinx);
-	    eval[spinx] = true;
-	  }
-	  if (xy.isDefined(spinx)) {
-	    perturbation = xy.getPerturbation(spinx);
-	    eval[spinx] = true;
-	  }
-	  if (yx.isDefined(spinx)) {
-	    perturbation = yx.getPerturbation(spinx);
-	    eval[spinx] = true;
-	  }
-	  if (yy.isDefined(spinx)) {
-	    perturbation = yy.getPerturbation(spinx);
-	    eval[spinx] = true;
-	  }
-	  if (itsStat1->getResult11().isDefined(spinx)) {
-	    perturbation = itsStat1->getResult11().getPerturbation(spinx);
-	    evalxx[spinx] = true;
-	    evalxy[spinx] = true;
-	  }
-	  if (itsStat1->getResult12().isDefined(spinx)) {
-	    perturbation = itsStat1->getResult12().getPerturbation(spinx);
-	    evalxx[spinx] = true;
-	    evalxy[spinx] = true;
-	  }
-	  if (itsStat1->getResult21().isDefined(spinx)) {
-	    perturbation = itsStat1->getResult21().getPerturbation(spinx);
-	    evalyx[spinx] = true;
-	    evalyy[spinx] = true;
-	  }
-	  if (itsStat1->getResult22().isDefined(spinx)) {
-	    perturbation = itsStat1->getResult22().getPerturbation(spinx);
-	    evalyx[spinx] = true;
-	    evalyy[spinx] = true;
-	  }
-	  if (itsStat2->getResult11().isDefined(spinx)) {
-	    perturbation = itsStat2->getResult11().getPerturbation(spinx);
-	    evalxx[spinx] = true;
-	    evalyx[spinx] = true;
-	  }
-	  if (itsStat2->getResult12().isDefined(spinx)) {
-	    perturbation = itsStat2->getResult12().getPerturbation(spinx);
-	    evalxx[spinx] = true;
-	    evalyx[spinx] = true;
-	  }
-	  if (itsStat2->getResult21().isDefined(spinx)) {
-	    perturbation = itsStat2->getResult21().getPerturbation(spinx);
-	    evalxy[spinx] = true;
-	    evalyy[spinx] = true;
-	  }
-	  if (itsStat2->getResult22().isDefined(spinx)) {
-	    perturbation = itsStat2->getResult22().getPerturbation(spinx);
-	    evalxy[spinx] = true;
-	    evalyy[spinx] = true;
-	  }
-	  if (eval[spinx]) {
-	    evalxx[spinx] = true;
-	    evalxy[spinx] = true;
-	    evalyx[spinx] = true;
-	    evalyy[spinx] = true;
-	  } else {
-	    eval[spinx] = evalxx[spinx] || evalxy[spinx] ||
-	                  evalyx[spinx] || evalyy[spinx];
-	  }
-	  if (evalxx[spinx]) {
-	    result11().setPerturbation (spinx, perturbation);
-	    result11().setPerturbedValue (spinx, mat);
-	  }
-	  if (evalxy[spinx]) {
-	    result12().setPerturbation (spinx, perturbation);
-	    result12().setPerturbedValue (spinx, mat);
-	  }
-	  if (evalyx[spinx]) {
-	    result21().setPerturbation (spinx, perturbation);
-	    result21().setPerturbedValue (spinx, mat);
-	  }
-	  if (evalyy[spinx]) {
-	    result22().setPerturbation (spinx, perturbation);
-	    result22().setPerturbedValue (spinx, mat);
-	  }
-	}
-	first = false;
-      }
-      for (int spinx=0; spinx<request.nspid(); spinx++) {
-	if (eval[spinx]) {
-	  complex<double> psumxx = sumxx;
-	  complex<double> psumxy = sumxy;
-	  complex<double> psumyx = sumyx;
-	  complex<double> psumyy = sumyy;
-	  complex<double> ps11 = s11;
-	  complex<double> ps12 = s12;
-	  complex<double> ps21 = s21;
-	  complex<double> ps22 = s22;
-	  complex<double> pconj11 = conj11;
-	  complex<double> pconj12 = conj12;
-	  complex<double> pconj21 = conj21;
-	  complex<double> pconj22 = conj22;
-	  if (xx.isDefined(spinx)) {
-	    psumxx = sum(xx.getPerturbedValue(spinx)).getDComplex() / nc;
-	  }
-	  if (xy.isDefined(spinx)) {
-	    psumxy = sum(xy.getPerturbedValue(spinx)).getDComplex() / nc;
-	  }
-	  if (yx.isDefined(spinx)) {
-	    psumyx = sum(yx.getPerturbedValue(spinx)).getDComplex() / nc;
-	  }
-	  if (yy.isDefined(spinx)) {
-	    psumyy = sum(yy.getPerturbedValue(spinx)).getDComplex() / nc;
-	  }
-	  if (itsStat1->getResult11().isDefined(spinx)) {
-	    ps11 = itsStat1->getResult11().getPerturbedValue(spinx).getDComplex();
-	  }
-	  if (itsStat1->getResult12().isDefined(spinx)) {
-	    ps12 = itsStat1->getResult12().getPerturbedValue(spinx).getDComplex();
-	  }
-	  if (itsStat1->getResult21().isDefined(spinx)) {
-	    ps21 = itsStat1->getResult21().getPerturbedValue(spinx).getDComplex();
-	  }
-	  if (itsStat1->getResult22().isDefined(spinx)) {
-	    ps22 = itsStat1->getResult22().getPerturbedValue(spinx).getDComplex();
-	  }
-	  if (itsStat2->getResult11().isDefined(spinx)) {
-	    pconj11 = conj(itsStat2->getResult11().getPerturbedValue(spinx).getDComplex());
-	  }
-	  if (itsStat2->getResult12().isDefined(spinx)) {
-	    pconj12 = conj(itsStat2->getResult12().getPerturbedValue(spinx).getDComplex());
-	  }
-	  if (itsStat2->getResult21().isDefined(spinx)) {
-	    pconj21 = conj(itsStat2->getResult21().getPerturbedValue(spinx).getDComplex());
-	  }
-	  if (itsStat2->getResult22().isDefined(spinx)) {
-	    pconj22 = conj(itsStat2->getResult22().getPerturbedValue(spinx).getDComplex());
-	  }
-	  if (evalxx[spinx]) {
-	    result11().getPerturbedValueRW(spinx).dcomplexStorage()[inx] =
-	      ps11 * pconj11 * psumxx +
-	      ps11 * pconj12 * psumxy +
-	      ps12 * pconj11 * psumyx +
-	      ps12 * pconj12 * psumyy;
-	  }
-	  if (evalxy[spinx]) {
-	    result12().getPerturbedValueRW(spinx).dcomplexStorage()[inx] =
-	      ps11 * pconj21 * psumxx +
-	      ps11 * pconj22 * psumxy +
-	      ps12 * pconj21 * psumyx +
-	      ps12 * pconj22 * psumyy;
-	  }
-	  if (evalyx[spinx]) {
-	    result21().getPerturbedValueRW(spinx).dcomplexStorage()[inx] =
-	      ps21 * pconj11 * psumxx +
-	      ps21 * pconj12 * psumxy +
-	      ps22 * pconj11 * psumyx +
-	      ps22 * pconj12 * psumyy;
-	  }
-	  if (evalyy[spinx]) {
-	    result22().getPerturbedValueRW(spinx).dcomplexStorage()[inx] =
-	      ps21 * pconj21 * psumxx +
-	      ps21 * pconj22 * psumxy +
-	      ps22 * pconj21 * psumyx +
-	      ps22 * pconj22 * psumyy;
-	  }
-	}
-      }
-      stx += request.stepX();
-      inx++;
     }
-    sty += request.stepY();
+  }
+  // Now combine with the stations jones.
+  MeqMatrix s11 = itsStat1->getResult11().getValue();
+  MeqMatrix s12 = itsStat1->getResult12().getValue();
+  MeqMatrix s21 = itsStat1->getResult21().getValue();
+  MeqMatrix s22 = itsStat1->getResult22().getValue();
+  MeqMatrix conj11 = conj(itsStat2->getResult11().getValue());
+  MeqMatrix conj12 = conj(itsStat2->getResult12().getValue());
+  MeqMatrix conj21 = conj(itsStat2->getResult21().getValue());
+  MeqMatrix conj22 = conj(itsStat2->getResult22().getValue());
+  result11().getValueRW() =
+	s11 * conj11 * xxres +
+	s11 * conj12 * xyres +
+	s12 * conj11 * yxres +
+	s12 * conj12 * yyres;
+  result12().getValueRW() =
+	s11 * conj21 * xxres +
+	s11 * conj22 * xyres +
+	s12 * conj21 * yxres +
+	s12 * conj22 * yyres;
+  result21().getValueRW() =
+	s21 * conj11 * xxres +
+	s21 * conj12 * xyres +
+	s22 * conj11 * yxres +
+	s22 * conj12 * yyres;
+  result22().getValueRW() =
+	s21 * conj21 * xxres +
+	s21 * conj22 * xyres +
+	s22 * conj21 * yxres +
+	s22 * conj22 * yyres;
+
+  // Determine which values are perturbed and determine the perturbation.
+  MeqMatrix perturbation;
+  for (int spinx=0; spinx<request.nspid(); spinx++) {
+    bool eval = false;
+    bool evalxx = false;
+    bool evalxy = false;
+    bool evalyx = false;
+    bool evalyy = false;
+    if (xx.isDefined(spinx)) {
+      perturbation = xx.getPerturbation(spinx);
+      eval = true;
+    }
+    if (xy.isDefined(spinx)) {
+      perturbation = xy.getPerturbation(spinx);
+      eval = true;
+    }
+    if (yx.isDefined(spinx)) {
+      perturbation = yx.getPerturbation(spinx);
+      eval = true;
+    }
+    if (yy.isDefined(spinx)) {
+      perturbation = yy.getPerturbation(spinx);
+      eval = true;
+    }
+    if (itsStat1->getResult11().isDefined(spinx)) {
+      perturbation = itsStat1->getResult11().getPerturbation(spinx);
+      evalxx = true;
+      evalxy = true;
+    }
+    if (itsStat1->getResult12().isDefined(spinx)) {
+      perturbation = itsStat1->getResult12().getPerturbation(spinx);
+      evalxx = true;
+      evalxy = true;
+    }
+    if (itsStat1->getResult21().isDefined(spinx)) {
+      perturbation = itsStat1->getResult21().getPerturbation(spinx);
+      evalyx = true;
+      evalyy = true;
+    }
+    if (itsStat1->getResult22().isDefined(spinx)) {
+      perturbation = itsStat1->getResult22().getPerturbation(spinx);
+      evalyx = true;
+      evalyy = true;
+    }
+    if (itsStat2->getResult11().isDefined(spinx)) {
+      perturbation = itsStat2->getResult11().getPerturbation(spinx);
+      evalxx = true;
+      evalyx = true;
+    }
+    if (itsStat2->getResult12().isDefined(spinx)) {
+      perturbation = itsStat2->getResult12().getPerturbation(spinx);
+      evalxx = true;
+      evalyx = true;
+    }
+    if (itsStat2->getResult21().isDefined(spinx)) {
+      perturbation = itsStat2->getResult21().getPerturbation(spinx);
+      evalxy = true;
+      evalyy = true;
+    }
+    if (itsStat2->getResult22().isDefined(spinx)) {
+      perturbation = itsStat2->getResult22().getPerturbation(spinx);
+      evalxy = true;
+      evalyy = true;
+    }
+    if (eval) {
+      evalxx = true;
+      evalxy = true;
+      evalyx = true;
+      evalyy = true;
+    } else {
+      eval = evalxx || evalxy || evalyx || evalyy;
+    }
+    if (evalxx) {
+      result11().setPerturbation (spinx, perturbation);
+      result11().setPerturbedValue (spinx, mat);
+    }
+    if (evalxy) {
+      result12().setPerturbation (spinx, perturbation);
+      result12().setPerturbedValue (spinx, mat);
+    }
+    if (evalyx) {
+      result21().setPerturbation (spinx, perturbation);
+      result21().setPerturbedValue (spinx, mat);
+    }
+    if (evalyy) {
+      result22().setPerturbation (spinx, perturbation);
+      result22().setPerturbedValue (spinx, mat);
+    }
+    if (eval) {
+      MeqMatrix pxxres = xxres;
+      MeqMatrix pxyres = xyres;
+      MeqMatrix pyxres = yxres;
+      MeqMatrix pyyres = yyres;
+      MeqMatrix ps11 = s11;
+      MeqMatrix ps12 = s12;
+      MeqMatrix ps21 = s21;
+      MeqMatrix ps22 = s22;
+      MeqMatrix pconj11 = conj11;
+      MeqMatrix pconj12 = conj12;
+      MeqMatrix pconj21 = conj21;
+      MeqMatrix pconj22 = conj22;
+      if (xx.isDefined(spinx)) {
+	if (nsubc == request.ny()) {
+	  pxxres = xx.getPerturbedValue(spinx) / 2.;
+	} else {
+	  double fact = 2*nsubc;
+	  const complex<double>* dc =
+	    xx.getPerturbedValue(spinx).dcomplexStorage();
+	  pxxres = MeqMatrix(complex<double>(), 1, request.ny(), false);
+	  complex<double>* dr = pxxres.dcomplexStorage();
+	  for (int i=0; i<request.ny(); i++) {
+	    complex<double> dsum;
+	    for (int j=0; j<nsubc; j++) {
+	      dsum += *dc++;
+	    }
+	    dr[i] = dsum / fact;
+	  }
+	}
+      }
+      if (xy.isDefined(spinx)) {
+	if (nsubc == request.ny()) {
+	  pxxres = xy.getPerturbedValue(spinx) / 2.;
+	} else {
+	  double fact = 2*nsubc;
+	  const complex<double>* dc =
+	    xy.getPerturbedValue(spinx).dcomplexStorage();
+	  pxyres = MeqMatrix(complex<double>(), 1, request.ny(), false);
+	  complex<double>* dr = pxyres.dcomplexStorage();
+	  for (int i=0; i<request.ny(); i++) {
+	    complex<double> dsum;
+	    for (int j=0; j<nsubc; j++) {
+	      dsum += *dc++;
+	    }
+	    dr[i] = dsum / fact;
+	  }
+	}
+      }
+      if (yx.isDefined(spinx)) {
+	if (nsubc == request.ny()) {
+	  pxxres = yx.getPerturbedValue(spinx) / 2.;
+	} else {
+	  double fact = 2*nsubc;
+	  const complex<double>* dc =
+	    yx.getPerturbedValue(spinx).dcomplexStorage();
+	  pyxres = MeqMatrix(complex<double>(), 1, request.ny(), false);
+	  complex<double>* dr = pyxres.dcomplexStorage();
+	  for (int i=0; i<request.ny(); i++) {
+	    complex<double> dsum;
+	    for (int j=0; j<nsubc; j++) {
+	      dsum += *dc++;
+	    }
+	    dr[i] = dsum / fact;
+	  }
+	}
+      }
+      if (yy.isDefined(spinx)) {
+	if (nsubc == request.ny()) {
+	  pxxres = yy.getPerturbedValue(spinx) / 2.;
+	} else {
+	  double fact = 2*nsubc;
+	  const complex<double>* dc =
+	    yy.getPerturbedValue(spinx).dcomplexStorage();
+	  pyyres = MeqMatrix(complex<double>(), 1, request.ny(), false);
+	  complex<double>* dr = pyyres.dcomplexStorage();
+	  for (int i=0; i<request.ny(); i++) {
+	    complex<double> dsum;
+	    for (int j=0; j<nsubc; j++) {
+	      dsum += *dc++;
+	    }
+	    dr[i] = dsum / fact;
+	  }
+	}
+      }
+      if (itsStat1->getResult11().isDefined(spinx)) {
+	ps11 = itsStat1->getResult11().getPerturbedValue(spinx);
+      }
+      if (itsStat1->getResult12().isDefined(spinx)) {
+	ps12 = itsStat1->getResult12().getPerturbedValue(spinx);
+      }
+      if (itsStat1->getResult21().isDefined(spinx)) {
+	ps21 = itsStat1->getResult21().getPerturbedValue(spinx);
+      }
+      if (itsStat1->getResult22().isDefined(spinx)) {
+	ps22 = itsStat1->getResult22().getPerturbedValue(spinx);
+      }
+      if (itsStat2->getResult11().isDefined(spinx)) {
+	pconj11 = conj(itsStat2->getResult11().getPerturbedValue(spinx));
+      }
+      if (itsStat2->getResult12().isDefined(spinx)) {
+	pconj12 = conj(itsStat2->getResult12().getPerturbedValue(spinx));
+      }
+      if (itsStat2->getResult21().isDefined(spinx)) {
+	pconj21 = conj(itsStat2->getResult21().getPerturbedValue(spinx));
+      }
+      if (itsStat2->getResult22().isDefined(spinx)) {
+	pconj22 = conj(itsStat2->getResult22().getPerturbedValue(spinx));
+      }
+      if (evalxx) {
+	result11().getPerturbedValueRW(spinx) =
+	  ps11 * pconj11 * pxxres +
+	  ps11 * pconj12 * pxyres +
+	  ps12 * pconj11 * pyxres +
+	  ps12 * pconj12 * pyyres;
+      }
+      if (evalxy) {
+	result12().getPerturbedValueRW(spinx) =
+	  ps11 * pconj21 * pxxres +
+	  ps11 * pconj22 * pxyres +
+	  ps12 * pconj21 * pyxres +
+	  ps12 * pconj22 * pyyres;
+      }
+      if (evalyx) {
+	result21().getPerturbedValueRW(spinx) =
+	  ps21 * pconj11 * pxxres +
+	  ps21 * pconj12 * pxyres +
+	  ps22 * pconj11 * pyxres +
+	  ps22 * pconj12 * pyyres;
+      }
+      if (evalyy) {
+	result22().getPerturbedValueRW(spinx) =
+	  ps21 * pconj21 * pxxres +
+	  ps21 * pconj22 * pxyres +
+	  ps22 * pconj21 * pyxres +
+	  ps22 * pconj22 * pyyres;
+      }
+    }
   }
 }
