@@ -140,20 +140,20 @@ unsigned int SkyModel::getPointSources(std::vector<GSM::PointSource*> &result)
 
 //===============>>>  SkyModel::getPointSources  <<<===============
 
-unsigned int SkyModel::getPointSources(std::vector<MesPointSource> &result)
+unsigned int SkyModel::getPointSources(std::vector<MeqPointSource> &result)
 {
   unsigned int count(0);
 
   for(unsigned int i = 0; i < itsSources.size(); i++) {
     if(itsSources[i]->getType() == GSM::POINT) {
-      std::vector<MesExpr*>  fluxes(NUMBER_OF_POLARIZATIONS);
-      MesExpr*               ra;
-      MesExpr*               dec;
+      std::vector<MeqExpr*>  fluxes(NUMBER_OF_POLARIZATIONS);
+      MeqExpr*               ra;
+      MeqExpr*               dec;
       
       itsSources[i]->getFluxExpressions(fluxes);
       itsSources[i]->getPositionExpressions(ra, dec);
 
-      MesPointSource source(fluxes[I],
+      MeqPointSource source(fluxes[I],
                             fluxes[Q],
                             fluxes[U],
                             fluxes[V],

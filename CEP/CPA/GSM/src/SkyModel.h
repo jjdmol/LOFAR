@@ -25,7 +25,7 @@
 
 #include <vector>
 
-#include <MNS/MesPointSource.h>
+#include <MNS/MeqPointSource.h>
 
 #include <GSM/AbstractSource.h>
 #include <GSM/PointSource.h>
@@ -62,12 +62,12 @@ public:
    */
   unsigned int getPointSources(std::vector<GSM::PointSource*> &result);
 
-  //! Returns array of MesPointSources.
+  //! Returns array of MeqPointSources.
   /*!
-      MesPointSources contain pointers to the IQUV, Ra and Dec
+      MeqPointSources contain pointers to the IQUV, Ra and Dec
       expressions of the PointSources.
    */
-  unsigned int getPointSources(std::vector<MesPointSource> &result);
+  unsigned int getPointSources(std::vector<MeqPointSource> &result);
 
   //! Returns pointers to all non-point sources in the model.
   /*! \param result should be an empty vector.

@@ -21,7 +21,7 @@
 
 #include <GSM/AbstractSource.h>
 
-#include <MNS/MesParmPolc.h>
+#include <MNS/MeqParmPolc.h>
 #include <MNS/MnsMatrix.h>
 
 #include <aips/aips.h>
@@ -69,8 +69,8 @@ AbstractSource::AbstractSource(SourceType          type,
   MnsMatrix RaMatrix(ra);
   MnsMatrix DecMatrix(dec);
 
-  itsRA  = new MesParmPolc("Ra", RaMatrix);
-  itsDec = new MesParmPolc("Dec", DecMatrix);
+  itsRA  = new MeqParmPolc("Ra", RaMatrix);
+  itsDec = new MeqParmPolc("Dec", DecMatrix);
 }
 
 
@@ -129,7 +129,7 @@ unsigned int AbstractSource::getNumberOfParameters() const
 
 //===============>>>  AbstractSource::getParameters  <<<===============
 
-unsigned int AbstractSource::getParameters(std::vector<MesParm* > &parameters)
+unsigned int AbstractSource::getParameters(std::vector<MeqParm* > &parameters)
 {
   unsigned int added=0;
   
@@ -147,7 +147,7 @@ unsigned int AbstractSource::getParameters(std::vector<MesParm* > &parameters)
 
 //===============>>>  AbstractSource::setParameters  <<<===============
 
-unsigned int AbstractSource::setParameters(const std::vector<MesParm* > &parameters)
+unsigned int AbstractSource::setParameters(const std::vector<MeqParm* > &parameters)
 {
   unsigned int read=0;
   
@@ -185,8 +185,8 @@ MDirection AbstractSource::getPosition(double time,
 
 //===============>>>  AbstractSource::getPositionExpressions  <<<===============
 
-void AbstractSource::getPositionExpressions(MesExpr* ra,
-                                            MesExpr* dec)
+void AbstractSource::getPositionExpressions(MeqExpr* ra,
+                                            MeqExpr* dec)
 {
   ra  = itsRA;
   dec = itsDec;

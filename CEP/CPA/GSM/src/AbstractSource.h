@@ -28,8 +28,8 @@
 #include <iostream>
 
 
-#include <MNS/MesExpr.h>
-#include <MNS/MesParm.h>
+#include <MNS/MeqExpr.h>
+#include <MNS/MeqParm.h>
 
 
 class Table;
@@ -109,13 +109,13 @@ public:
                                   double frequency,
                                   Stokes stokes) const;
 
-  //! Get MesExpr objects for ra and dec
+  //! Get MeqExpr objects for ra and dec
   /*!
      \param ra  Right Ascension in J2000 coordinates.
      \param dec Declination in J2000 coordinates.
    */
-  virtual void        getPositionExpressions(MesExpr* ra,
-                                             MesExpr* dec);
+  virtual void        getPositionExpressions(MeqExpr* ra,
+                                             MeqExpr* dec);
 
   //! Returns expressions that give total flux.
   /*! \returns pointers to expressions as a function of time and
@@ -123,7 +123,7 @@ public:
 
     \param expressions is assumed to be of size() NUMBER_OF_POLARIZATIONS.
    */
-  virtual void  getFluxExpressions(std::vector<MesExpr *> &expressions) = 0;
+  virtual void  getFluxExpressions(std::vector<MeqExpr *> &expressions) = 0;
   
 
 
@@ -159,16 +159,16 @@ public:
   //! \returns the total number of parameters.
   virtual unsigned int getNumberOfParameters() const;
 
-  //! Get pointers to all MesParm objects. Including the position.
+  //! Get pointers to all MeqParm objects. Including the position.
   /*! first param always is RA, second is dec. Then the rest of the
     parameters follows.
   */
-  virtual unsigned int  getParameters(std::vector<MesParm* > &parameters);
+  virtual unsigned int  getParameters(std::vector<MeqParm* > &parameters);
   
   //! Makes deep copy of parameters.
   /*! First is RA, second is Dec, then the other ones.
    */
-  virtual unsigned int setParameters(const std::vector<MesParm* > &parameters);
+  virtual unsigned int setParameters(const std::vector<MeqParm* > &parameters);
 
   
 
@@ -188,8 +188,8 @@ private:
   std::string  itsName;
   SourceType   itsSourceType;
 
-  MesParm*     itsRA;
-  MesParm*     itsDec;
+  MeqParm*     itsRA;
+  MeqParm*     itsDec;
 
 };
 

@@ -21,7 +21,7 @@
 
 #include <GSM/PointSource.h>
 
-#include <MNS/MesParmPolc.h>
+#include <MNS/MeqParmPolc.h>
 #include <MNS/MnsMatrix.h>
 
 #include <aips/aips.h>
@@ -44,7 +44,7 @@ PointSource::PointSource(double                     ra,
 {
   for(unsigned int i = 0; i < NUMBER_OF_POLARIZATIONS;i++) {
     MnsMatrix   matrix(flux[i]);
-    itsFlux[i] =  new MesParmPolc(STOKES_NAMES[i],matrix);
+    itsFlux[i] =  new MeqParmPolc(STOKES_NAMES[i],matrix);
   }
 }
 
@@ -118,7 +118,7 @@ void PointSource::store(Table&       table,
 
 //====================>>>  PointSource::getParameters  <<<====================
 
-unsigned int PointSource::getParameters(std::vector<MesParm *> &parameters)
+unsigned int PointSource::getParameters(std::vector<MeqParm *> &parameters)
 {
 
   unsigned int i = AbstractSource::getParameters(parameters);
@@ -137,7 +137,7 @@ unsigned int PointSource::getParameters(std::vector<MesParm *> &parameters)
 
 //====================>>>  PointSource::setParameters  <<<====================
 
-unsigned int PointSource::setParameters(const std::vector<MesParm*> &parameters)
+unsigned int PointSource::setParameters(const std::vector<MeqParm*> &parameters)
 {
   unsigned int i = AbstractSource::setParameters(parameters);
   
@@ -165,7 +165,7 @@ unsigned int PointSource::getNumberOfParameters() const
 
 //===============>>>  PointSource::getFluxExpressions  <<<===============
 
-void PointSource::getFluxExpressions(std::vector<MesExpr*> &flux)
+void PointSource::getFluxExpressions(std::vector<MeqExpr*> &flux)
 {
   for(unsigned int i = 0; i < NUMBER_OF_POLARIZATIONS; i++) {
     flux[i] = itsFlux[i];
