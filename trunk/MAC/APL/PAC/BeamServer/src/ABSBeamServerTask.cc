@@ -47,6 +47,8 @@ using namespace ABS;
 using namespace std;
 
 #define MAX_N_SPECTRAL_WINDOWS 1
+#define COMPUTE_INTERVAL 10
+#define UPDATE_INTERVAL  1
 
 BeamServerTask::BeamServerTask(string name)
     : GCFTask((State)&BeamServerTask::initial, name),
@@ -57,8 +59,10 @@ BeamServerTask::BeamServerTask(string name)
   client.init(*this, "client", GCFPortInterface::SPP, ABS_PROTOCOL);
   //board.init(*this, "board", GCFPortInterface::SAP, EPA_PROTOCOL, true);
 
-  (void)Beam::setNInstances(ABS_Protocol::N_BEAMLETS);
-  (void)Beamlet::setNInstances(ABS_Protocol::N_SUBBANDS);
+  // COMPUTE_INTERVAL seconds compute_interval
+  (void)Beam::init(ABS_Protocol::N_BEAMLETS,
+		   UPDATE_INTERVAL, COMPUTE_INTERVAL);
+  (void)Beamlet::init(ABS_Protocol::N_SUBBANDS);
 
   m_wgsetting.frequency     = 1e6; // 1MHz
   m_wgsetting.amplitude     = 128;
@@ -140,8 +144,8 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  static unsigned long ppstimer = (unsigned long)-1;
-  static unsigned long calctimer = (unsigned long)-1;
+  static unsigned long update_timer = (unsigned long)-1;
+  static unsigned long compute_timer = (unsigned long)-1;
   
   switch (e.signal)
   {
@@ -157,11 +161,17 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	  // start second timer, exactly on the next second
 	  gettimeofday(&now, 0);
 
-	  // pulse per second timer
-	  ppstimer = board.setTimer(1, (long)1e6-now.tv_usec, 1, 0);
+	  // update timer, once every UPDATE_INTERVAL exactly on the second
+	  update_timer = board.setTimer((2 * UPDATE_INTERVAL) -
+					(now.tv_sec % UPDATE_INTERVAL),
+					(long)1e6-now.tv_usec,
+					UPDATE_INTERVAL, 0);
 
-	  // calculate weights timer (once every 10 seconds)
-	  calctimer = board.setTimer(1, (long)1e6-now.tv_usec, 10, 0);
+	  // compute timer, once every COMPUTE_INTERVAL exactly on the second
+	  compute_timer = board.setTimer((2 * COMPUTE_INTERVAL)
+					 - (now.tv_sec % COMPUTE_INTERVAL),
+					 (long)1e6-now.tv_usec,
+					 COMPUTE_INTERVAL, 0);
       }
       break;
 
@@ -172,14 +182,14 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	  gettimeofday(&now, 0);
 
 	  LOG_INFO(formatString("timer=(%d,%d)", timer->sec, timer->usec));
-	  if (timer->id == ppstimer)
+	  if (timer->id == update_timer)
 	  {
-	      LOG_INFO(formatString("ppstimer=(%d,%d)", now.tv_sec, now.tv_usec));
+	      LOG_INFO(formatString("update_timer=(%d,%d)", now.tv_sec, now.tv_usec));
 	      compute_timeout_action();
 	  }
-	  else if (timer->id == calctimer)
+	  else if (timer->id == compute_timer)
 	  {
-	      LOG_INFO(formatString("calctimer=(%d,%d)", now.tv_sec, now.tv_usec));
+	      LOG_INFO(formatString("compute_timer=(%d,%d)", now.tv_sec, now.tv_usec));
 	  }
 	  else
 	  {
@@ -455,13 +465,13 @@ void BeamServerTask::compute_timeout_action()
   static struct timeval lasttime = { 0, 0 };
   struct timeval fromtime = lasttime;
   gettimeofday(&lasttime, 0);
-  lasttime.tv_sec += 20;
+  lasttime.tv_sec += COMPUTE_INTERVAL;
   
   // iterate over all beams
   for (set<Beam*>::iterator bi = m_beams.begin();
        bi != m_beams.end(); ++bi)
   {
-      (*bi)->convertPointings(fromtime, 20);
+      (*bi)->convertPointings(fromtime);
   }
 
   calculate_weights();

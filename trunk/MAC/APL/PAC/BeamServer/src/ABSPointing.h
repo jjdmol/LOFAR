@@ -40,7 +40,7 @@ namespace ABS
 	   * Constructors and destructors for a pointing.
 	   */
 	  Pointing();
-	  Pointing(Direction direction, struct timeval time);
+	  Pointing(const Direction direction, struct timeval time);
 	  virtual ~Pointing();
 	  //@}
 
@@ -49,7 +49,7 @@ namespace ABS
 	   * 'set' methods to set the time and
 	   * direction of a pointing.
 	   */
-	  void setDirection(Direction direction);
+	  void setDirection(const Direction direction);
 	  void setTime(struct timeval time);
           //@}
 
@@ -58,8 +58,9 @@ namespace ABS
 	   * Accessor methods. Get the time and
 	   * direction of a pointing.
 	   */
-	  Direction direction() const;
-	  struct timeval time() const;
+	  Direction direction()  const;
+	  struct timeval time()  const;
+	  bool isTimeSet() const;
           //@}
 
 	  /**
@@ -73,8 +74,9 @@ namespace ABS
       };
 
   inline void           Pointing::setTime(struct timeval time)      { m_time      = time; }
-  inline void           Pointing::setDirection(Direction direction) { m_direction = direction; }
+  inline void           Pointing::setDirection(const Direction direction) { m_direction = direction; }
   inline struct timeval Pointing::time() const                      { return m_time;  }
+  inline bool           Pointing::isTimeSet() const                 { return timerisset(&m_time); }
   inline Direction      Pointing::direction() const                 { return m_direction;  }
   inline bool Pointing::operator<(Pointing const & right) const
       {

@@ -38,14 +38,16 @@ using namespace LOFAR;
 using namespace ABS;
 using namespace std;
 
-int   Beam::m_ninstances = 0;
-Beam* Beam::m_beams = 0;
+int            Beam::m_ninstances       = 0;
+Beam*          Beam::m_beams            = 0;
+unsigned short Beam::m_update_interval  = 0;
+unsigned short Beam::m_compute_interval = 0;
+
 //static const int timestep = Beam::TIMESTEP;
 //static const int _n_timesteps_var = Beam::N_TIMESTEPS;
 
 Beam::Beam() :
-    m_allocated(false), m_pointing(),
-    m_index(-1), m_track(2, N_TIMESTEPS)
+    m_allocated(false), m_pointing(), m_index(-1)
 {}
 
 Beam::~Beam()
@@ -80,7 +82,9 @@ Beam* Beam::getFromHandle(int handle)
   return &m_beams[handle];
 }
 
-int Beam::setNInstances(int ninstances)
+int Beam::init(int            ninstances,
+	       unsigned short update_interval,
+	       unsigned short compute_interval)
 {
   // if already initialised just return
   // only one initialisation is allowed
@@ -92,8 +96,14 @@ int Beam::setNInstances(int ninstances)
 
   for (int i = 0; i < m_ninstances; i++)
   {
+      // inplace constructor
       m_beams[i].m_index = i; // assign index
+      m_beams[i].m_azels.resize(2,compute_interval);
+      m_beams[i].m_lms.resize(2,compute_interval);
   }
+
+  m_update_interval = update_interval;
+  m_compute_interval = compute_interval;
 
   return 0;
 }
@@ -162,96 +172,108 @@ int Beam::deallocate()
 
 int Beam::addPointing(const Pointing& pointing)
 {
+  struct ptime;
+
   if (!m_allocated) return -1;
 
   m_pointing_queue.push(pointing);
+
   return 0;
 }
 
-int Beam::convertPointings(struct timeval fromtime,
-			   unsigned long duration)
-//			   int timestep, // in seconds
-//			   int ntimesteps)
+int Beam::convertPointings(struct timeval fromtime)
 {
   // only works on allocated beams
   if (!allocated()) return -1;
 
   Pointing from(Direction(0.0,0.0,Direction::LOFAR_LMN), fromtime);
   struct timeval totime = fromtime;
-  totime.tv_sec += duration;
+  totime.tv_sec += m_compute_interval;
   Pointing deadline(Direction(0.0,0.0,Direction::LOFAR_LMN), totime);
 
-  // clear previous coordinate track, assumed to be empty
-  if (!m_coord_track.empty())
-  {
-      LOG_WARN(formatString("Coordinate track not empty; %d items left!",
-			    m_coord_track.size()));
-      while (!m_coord_track.empty()) m_coord_track.pop();
-  }
+  // Always push the current pointing on the head
+  // of the queue. To make sure we continue
+  // with the current pointing
+  m_pointing.setTime(fromtime);
+  m_pointing_queue.push(m_pointing);
 
-  if (m_pointing_queue.empty())
-  {
-      // make sure there is always at least one pointing
-      // on the m_coord_track queue to drive the weights calculation.
+  // update track starttime
+  m_track_time = fromtime;
 
-      //
-      // convert direction
-      // INSERT COORDINATE CONVERSION CALL
-      //
-      m_coord_track.push(m_pointing);
-  }
-  else
+  // reset azel, lm arrays
+  m_azels = 0.0;
+  m_lms = 0.0;
+
+  do
   {
-      do
+      Pointing pointing = m_pointing_queue.top();
+
+      if (pointing < from)
       {
-	  Pointing pointing = m_pointing_queue.top();
-	  if (pointing < from)
-	  {
-	      // discard
-	      m_pointing_queue.pop();
+	  // discard
+	  m_pointing_queue.pop();
 
-	      LOG_WARN(formatString("Deadline missed for pointing (%f,%f)",
-				    pointing.direction().angle1(),
-				    pointing.direction().angle2()));
-	  }
-	  else if (pointing < deadline)
+	  LOG_WARN(formatString("Deadline missed for pointing (%f,%f)",
+				pointing.direction().angle1(),
+				pointing.direction().angle2()));
+      }
+      else if ((pointing < deadline)
+	       || !pointing.isTimeSet())
+      {
+	  // remove pointing, next pointing can be accessed as top().
+	  m_pointing_queue.pop();
+	  if (pointing.direction().type() != Direction::LOFAR_LMN)
 	  {
-	      if (pointing.direction().type() != Direction::LOFAR_LMN)
-	      {
-		  LOG_ERROR("Direction type not supported yet, pointing discarded.");
-	      }
-	      else
-	      {
-		  //
-		  // convert direction
-		  // INSERT COORDINATE CONVERSION CALL
-		  //
-		  Pointing p = pointing;
-		  for (unsigned long sec = 0; sec < duration; sec++)
-		  {
-		      p.time().tv_sec += sec;
-		      m_coord_track.push(p);
-		  }
-	      }
-
-	      m_pointing_queue.pop();
+	      LOG_ERROR("Direction type not supported yet, pointing discarded.");
 	  }
 	  else
 	  {
-	      // the current pointing should be updated
-	      m_pointing = pointing;
+	      Pointing p = pointing;
+	      Pointing nextp = m_pointing_queue.top();
 
-	      break; // done
+	      //
+	      // convert direction
+	      // INSERT COORDINATE CONVERSION CALL
+	      // converts from Direction -> AZEL
+	      //
+
+	      for (long sec = p.time().tv_sec;
+		   sec < nextp.time().tv_sec; sec++)
+	      {
+		  if ((sec < fromtime.tv_sec)
+		      || (sec >= fromtime.tv_sec + m_compute_interval))
+		  {
+		      LOG_ERROR("invalid time index");
+		  }
+		  else
+		  {
+		      //
+		      // TODO
+		      // convert poiting to AZEL,
+		      // store result in pointing
+		      //
+		      int t = (int)(sec - fromtime.tv_sec);
+		      m_lms[0][t] = p.direction().angle1();
+		      m_lms[1][t] = p.direction().angle2();
+		  }
+	      }
 	  }
-      } while (!m_pointing_queue.empty());
-  }
+      }
+      else
+      {
+	  // the current pointing should be updated
+	  m_pointing = pointing;
+
+	  break; // done
+      }
+  } while (!m_pointing_queue.empty());
   
   return 0;
 }
 
 const Array<double,2>& Beam::getCoordinates() const
 {
-  return m_track;
+  return m_lms;
 }
 
 void Beam::getSubbandSelection(map<int,int>& selection) const
