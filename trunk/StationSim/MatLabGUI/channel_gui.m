@@ -1,31 +1,31 @@
-function varargout = channel_gui(varargin)
-% CHANNEL_GUI Application M-file for channel_gui.fig
-%    FIG = CHANNEL_GUI launch channel_gui GUI.
-%    CHANNEL_GUI('callback_name', ...) invoke the named callback.
+function varargout = subband_gui(varargin)
+% SUBBAND_GUI Application M-file for subband_gui.fig
+%    FIG = SUBBAND_GUI launch subband_gui GUI.
+%    SUBBAND_GUI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.0 06-Aug-2002 13:40:35
-
+% Last Modified by GUIDE v2.0 17-Mar-2003 16:30:46
+  global SelectedSubBands;
+         global nchannels;
+         
 if nargin == 0  % LAUNCH GUI
 
 	fig = openfig(mfilename,'reuse');
-    
-	% Use system color scheme for figure:
-	set(fig,'Color',get(0,'defaultUicontrolBackgroundColor'));
-
 	% Generate a structure of handles to pass to callbacks, and store it. 
 	handles = guihandles(fig);
 	guidata(fig, handles);
-    
+      
 	if nargout > 0
 		varargout{1} = fig;
 	end
     
     % set default value for selected sub band array
-    NumberChannels = str2num(get(findobj(fig, 'Tag', 'NrChEdit'), 'String'));
-    SelectedChannels = [1:NumberChannels];
+    nchannels=128;
+    SelectedSubBands=[nchannels/2+1]
+    g = findobj(fig, 'Tag','NrSbEdit');
+    set(g, 'String',nchannels);
+    g = findobj(fig, 'Tag','SelSubBandEdit');
+    set(g, 'String', mat2str(SelectedSubBands));
     
-    g = findobj(fig, 'Tag','SelChannelEdit');
-    set(g, 'String', mat2str(SelectedChannels));
     
     
     % Wait for callbacks to run and window to be dismissed:
@@ -37,26 +37,34 @@ if nargin == 0  % LAUNCH GUI
     if ~ishandle(fig)
 	    answer = 'cancel';
     else
-        dirpath = 'data';
-        load([dirpath '\signal_options.mat']);
-        load([dirpath '\antenna_signals.mat']);
     
-        NumberChannels = str2num(get(findobj(fig,'Tag','NrChEdit'),'String'));
-        SelectedChannels = str2num(get(findobj(fig,'Tag','SelChannelEdit'),'String'));
-        ChannelFilterLength = str2num(get(findobj(fig, 'Tag','SbFilterLengthEdit'),'String'));
-        ch_quant_signal            = str2num(get(findobj(fig,'Tag', 'QuantSignalEdit'), 'String'));
-        ch_quant_inputfft          = str2num(get(findobj(fig,'Tag', 'QuantInputEdit'), 'String'));
-        ch_quant_outputfft         = str2num(get(findobj(fig,'Tag', 'QuantOutputEdit'), 'String'));
-
-        TFAavg                  = str2num(get(findobj(fig,'Tag', 'TFAavgEdit'),'String'));
-        TFAfreq                 = str2num(get(findobj(fig,'Tag', 'TFAfreqEdit'),'String'));
+        NumberSubBands = str2num(get(findobj(fig, 'Tag','NrSbEdit'),'String'));
+        SelectedSubBands = str2num(get(findobj(fig, 'Tag','SelSubBandEdit'),'String'));
+        SubbandFilterLength = str2num(get(findobj(fig, 'Tag','SbFilterLengthEdit'),'String'));
         
-        CH_RFIblanking = get(findobj(fig, 'Tag','RFIblankingCheck'),'Value');
+        sb_quant_signal            = str2num(get(findobj(fig,'Tag', 'QuantSignalEdit'), 'String'));
+        sb_quant_inputfft          = str2num(get(findobj(fig,'Tag', 'QuantInputEdit'), 'String'));
+        sb_quant_outputfft         = str2num(get(findobj(fig,'Tag', 'QuantOutputEdit'), 'String'));
         
+        TFAavg                  = str2num(get(findobj(fig,'Tag', 'TFAavgEdit'), 'String'));
+        TFAfreq                 = str2num(get(findobj(fig,'Tag', 'TFAfreqEdit'), 'String'));
+        
+        RFIblanking = get(findobj(fig, 'Tag','RFIblankingCheck'),'Value');
+        
+        if get(findobj(fig,'Tag','Center_button'),'Value');
+            option_polyphase='center';
+        elseif get(findobj(fig,'Tag','Shift_button'),'Value')
+            option_polyphase='shift';
+        else option_polyphase='normal';
+        end 
+        Method_polyphase=get(findobj(fig,'Tag','Polyphase_button'),'Value');
         % save the parameters to file
-        save([dirpath '\channel_options.mat'], 'NumberChannels','SelectedChannels','ChannelFilterLength', ...
-            'ch_quant_signal','ch_quant_inputfft','ch_quant_outputfft','CH_RFIblanking','TFAavg','TFAfreq');
-        
+        dirpath ='data';
+          save([dirpath '/channel_options.mat'], 'NumberSubBands','SelectedSubBands','SubbandFilterLength', ...
+            'sb_quant_signal','sb_quant_inputfft','sb_quant_outputfft','RFIblanking','TFAavg','TFAfreq','Method_polyphase','option_polyphase'); 
+        %option=
+        h=get(findobj('Tag','StationSimGUI'));
+        set(findobj(h.Children,'tag','ChannelButton'),'BackgroundColor',[0.11 0.36 0.59]);
         % so, we need to delete the window.
         handles = guidata(fig);
         delete(fig);
@@ -122,8 +130,8 @@ function varargout = edit1_Callback(h, eventdata, handles, varargin)
 % --------------------------------------------------------------------
 function varargout = edit2_Callback(h, eventdata, handles, varargin)
 % array of selected sub bands
-    g = findobj('Tag','NrChEdit');
-    set(g, 'String', num2str(size(str2num(get(h,'String')),2)));
+%     g = findobj('Tag','SubBandEdit');
+%     set(g, 'String', num2str(size(str2num(get(h,'String')),2)));
     
 
 
@@ -182,43 +190,92 @@ function varargout = TFAfreqEdit_Callback(h, eventdata, handles, varargin)
 
 
 % --------------------------------------------------------------------
+function varargout = FillButton_Callback(h, eventdata, handles, varargin)
+    global SelectedSubBands;
+    global nchannels;
+    
+if get(findobj('Tag','AllRadio'),'Value');
+    nchannels=str2num(get(findobj('Tag','NrSbEdit'),'String'));
+    SelectedSubBands = [1: nchannels];
+    g = findobj('Tag','SelSubBandEdit');
+    set(g, 'String', mat2str(SelectedSubBands));
+else SelectedSubBands=[  nsubbands/2+1];
+     g = findobj('Tag','SelSubBandEdit');
+    set(g, 'String', mat2str(SelectedSubBands));
+end
+   
+   
+
+% --------------------------------------------------------------------
 function varargout = EvenlyRadio_Callback(h, eventdata, handles, varargin)
     if (get(h, 'Value'))
-        set(findobj('Tag','RandomRadio'),'Value',0);
+        set(findobj('Tag','AllRadio'),'Value',0);
     else
         set(findobj('Tag','EvenlyRadio'),'Value',1);
+        
     end
 
 % --------------------------------------------------------------------
-function varargout = RandomRadio_Callback(h, eventdata, handles, varargin)
+function varargout = AllRadio_Callback(h, eventdata, handles, varargin)
     if (get(h, 'Value'))
         set(findobj('Tag','EvenlyRadio'),'Value',0);
     else
-        set(findobj('Tag','RandomRadio'),'Value',1);
+        set(findobj('Tag','AllRadio'),'Value',1);
     end
 
 
 
 % --------------------------------------------------------------------
-function varargout = FillButton_Callback(h, eventdata, handles, varargin)
+function varargout = NrSbEdit_Callback(h, eventdata, handles, varargin)
+ 
 
-    NumberChannels=str2num(get(findobj('Tag','NrChEdit'),'String'));
-    SelectedChannels = zeros(1,NumberChannels);
-    
-    if (get(findobj('Tag','RandomRadio'),'Value'))
-        SelectedChannels=rand(NumberChannels,1);
-        SelectedChannels=round(SelectedChannels*32000);
+
+% --------------------------------------------------------------------
+function varargout = Polyphase_button_Callback(h, eventdata, handles, varargin) 
+if (get(h, 'Value'))
+        set(findobj('Tag','FFT_button'),'Value',0);
     else
-        step=floor(32000/NumberChannels);
-        for i=1:NumberChannels
-            SelectedChannels(1,i)=i*step;
-        end
+        set(findobj('Tag','Polyphase_button'),'Value',1);
     end
-    
-    g = findobj('Tag','SelChannelEdit');
-    set(g, 'String', mat2str(SelectedChannels));
+
+% --------------------------------------------------------------------
+function varargout = FFT_button_Callback(h, eventdata, handles, varargin)
+ if (get(h, 'Value'))
+        set(findobj('Tag','Polyphase_button'),'Value',0);
+    else
+        set(findobj('Tag','FFT_button'),'Value',1);
+    end
+
 
 
 % --------------------------------------------------------------------
-function varargout = NrChEdit_Callback(h, eventdata, handles, varargin)
+function varargout = Center_button_Callback(h, eventdata, handles, varargin)
+ if (get(h, 'Value'))
+        set(findobj('Tag','Shift_button'),'Value',0); 
+        set(findobj('Tag','Normal_button'),'Value',0);
+    else     
+        set(findobj('Tag','Center_button'),'Value',1);
+    end
+
+
+% --------------------------------------------------------------------
+function varargout = Shift_button_Callback(h, eventdata, handles, varargin)
+if (get(h, 'Value'))
+        set(findobj('Tag','Center_button'),'Value',0); 
+        set(findobj('Tag','Normal_button'),'Value',0);
+    else     
+        set(findobj('Tag','Shift_button'),'Value',1);
+    end
+
+% --------------------------------------------------------------------
+function varargout = Normal_button_Callback(h, eventdata, handles, varargin)
+if (get(h, 'Value'))
+        set(findobj('Tag','Shift_button'),'Value',0); 
+        set(findobj('Tag','Center_button'),'Value',0);
+    else     
+        set(findobj('Tag','Normal_button'),'Value',1);
+    end
+
+
+
 

@@ -21,8 +21,10 @@ end
 
 % Select a number of subbands 
 for s = 1 : length(SubbandSelector)
-     % Klopt dit?
-    SelectedSubbandSignals(:, :, s) = SubbandAntennaSignals(:, :, SubbandSelector(s));
-    %SelectedSubbandSignals(:, :, s) = SubbandAntennaSignals(:, :, s);
+    % This could fail. SubbandSelector(s) is not guaranteed to fit within the range of 
+    % SubbandAntennaSignals().. Is this correct? If so, we should implement a range check
+    % before entering the loop. If not, we need to correct the algorithm.
+    %
+    SelectedSubbandSignals(:, :, s) = SubbandAntennaSignals(:, :, s); 
 end
 

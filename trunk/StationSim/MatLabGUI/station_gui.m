@@ -3,19 +3,20 @@ function varargout = station_gui(varargin)
 %    FIG = STATION_GUI launch station_gui GUI.
 %    STATION_GUI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.0 25-Jul-2002 14:49:41
+% Last Modified by GUIDE v2.0 08-Apr-2003 14:26:07
+
 
 if nargin == 0  % LAUNCH GUI
 
 	fig = openfig(mfilename,'reuse');
 
-	% Use system color scheme for figure:
-	set(fig,'Color',get(0,'defaultUicontrolBackgroundColor'));
 
 	% Generate a structure of handles to pass to callbacks, and store it. 
 	handles = guihandles(fig);
 	guidata(fig, handles);
-
+    
+    
+    
 	if nargout > 0
 		varargout{1} = fig;
 	end
@@ -93,7 +94,8 @@ function varargout = SignalButton_Callback(h, eventdata, handles, varargin)
   % open new window containing options for the input signal
   % including which antennae to use, signal source and noise level
   % signal_fig = openfig('signal_gui.fig','reuse');
-  AntennaSignals = signal_gui;
+  %AntennaSignals = signal_gui;
+  gui_sources
 
 
 % --------------------------------------------------------------------
@@ -128,120 +130,261 @@ function varargout = Close_Callback(h, eventdata, handles, varargin)
 % --------------------------------------------------------------------
 function varargout = RunButton_Callback(h, eventdata, handles, varargin)
     % generate pattern
-    dirpath='data';
-    load([dirpath '\signal_options.mat']);
-    load([dirpath '\output_options.mat']);
+    dirpath=[get(findobj('tag','Path_Edit'),'string') '\'];
+    if exist([dirpath 'data\configuration.mat'])==0
+         message='You must load or configure some data';
+        title='Warning';
+        msgbox(message,title,'Warn')
+    end
+    if exist([dirpath 'data\subband_options.mat'])==0
+        message='You must configure the subband splitter';
+        title='Warning';
+        msgbox(message,title,'Warn')
+    end
+    if exist([dirpath 'data\bf_options.mat'])==0
+        message='You must configure the beamforming block';
+        title='Warning';
+        msgbox(message,title,'Warn') 
+    end
+    if exist([dirpath 'data\output_options.mat'])==0
+        message='You must configure the ouput visualisation';
+        title='Warning';
+        msgbox(message,title,'Warn')
+    end
+    if exist([dirpath 'data\channel_options.mat'])==0
+        message='You must configure the channel splitter';
+        title='Warning';
+        msgbox(message,title,'Warn')
+    end
+         
+    load([dirpath 'data\configuration.mat']);
+    load([dirpath 'data\bf_options.mat']);
+    load([dirpath 'data\output_options.mat']);
+    load([dirpath 'data\subband_options.mat']);
+    file=[dirpath 'Matlab_Dat_Files\' Filename_genconfig '.dat'];
+    Filename_array=[dirpath 'Matlab_Dat_Files\' Filename_array];
+    Filename_beam=[dirpath 'Matlab_Dat_Files\' Filename_beam];
+    [AntennaSignals] = reader_data(file);
+    [px,py]=reader_array(Filename_array,NAntennas);
+    [Beam_Phi_theta]=reader_BeamTrajectory(Filename_beam);
+    [Phi_theta]=reader_sourcesTrajectory(record_traj,dirpath);
+    resolution=str2num(get(findobj('Tag','Resolution_Edit'),'String'));
+     assignin('base','AntennaSignals',AntennaSignals);
+     assignin('base','Phi_theta',Phi_theta);
+     assignin('base','Beam_Phi_theta',Beam_Phi_theta);
+     assignin('base','py',py);
+     assignin('base','px',px);
     
+    
+    % not functiun of the subband taht we look at ??? 
+    if (beam_side|beam_3d|beam_contour|beam_top)
     fprintf('Generating pattern\n');
     tic;
-    if (beam_side | beam_top | beam_contour | beam_3d)
-        genepattern;
-        fprintf('Plotting pattern\n');
-        % plot pattern
-        plotpattern;
-    end;
+    %Generating pattern
+    genepattern(px,py,Beam_Phi_theta,dirpath,resolution);
+    fprintf('Plotting pattern\n');
     
-    if (get(findobj('Tag', 'SubbandEnableCheck'),'Value'))
-        fprintf('Subband splitter\n');
-        SubbandSplitter;
-        load([dirpath '\subband_options.mat'])
-        if (RFIblanking & rfi_mit_power)
-            fprintf('\tPlotting RFI blanking results\n');
-            load([dirpath '\antenna_signals']);
-            RFImitResults(AntennaSignals,SelectedSubBands,DFTSystemResponse,NumberSubBands,SubbandFilterLength, ...
-                SelectedSubBandSignals, NumberOfAntennas, size(SelectedSubBandSignals),FlaggingCube,sb_quant_signal,...
-                sb_quant_inputfft,sb_quant_outputfft); 
-        end
+    %plot pattern
+    plotpattern(px,py,dirpath);
     end
+    
+    if NumberSubBands~=1
+    if (Method_polyphase==0)
+    fprintf('FFT Subband splitter...\n');
+    fft_subband(NumberSubBands,[1:NumberSubBands],AntennaSignals);
+    else
+    fprintf('Polyphase Subband splitter...\n');
+    polyphase_Antenna(AntennaSignals,NumberSubBands,SubbandFilterLength,NumberSubBands,option_polyphase,SelectedSubBands);
+    end
+    end
+       
+%          if (RFIblanking & rfi_mit_power)
+%              fprintf('\tPlotting RFI blanking results\n');
+%              load([dirpath '/antenna_signals']);
+%              RFImitResults(AntennaSignals,SelectedSubBands,DFTSystemResponse,NumberSubBands,SubbandFilterLength, ...
+%                  SelectedSubBandSignals, NumberOfAntennas, size(SelectedSubBandSignals),FlaggingCube,sb_quant_signal,...
+%                  sb_quant_inputfft,sb_quant_outputfft); 
+%          end 
 
-    % Calculating the eigen system on a large (nulled) grid may fill the memory to overflow
-    if (get(findobj('Tag','BFenableCheck'),'Value'));
-        fprintf('Generating Eigen system\n');
-        eigensystem;    
-        fprintf('Plotting spectrum\n');
-        plotspectrum;
+     % Calculating the eigen system on a large (nulled) grid may fill the memory to overflow
+     
+     
+     
+     %TO DO add the same for every subbands : PLay with the name of the diffrent files to make the distinction
+     
+     %Loop for EVD refresh
+     load([dirpath 'data/bf_options.mat']);
+     load([dirpath 'data/antenna_signals.mat']);
+     EVD_Bool=useEVD;
+     SVD_Bool=useSVD;
+     PASTd_Bool=usePASTd;
+     %number of refresh for EVD : floor((number of snapshot)/ UpdateTimePastd*MovingWindow)
 
-
-        % Check if we need to use the sub-band splitter
-        % Keeping the used files up to date is up to the user.
-
-        fprintf('Applying weight vector to subbands\n');
-        
-        load([dirpath '\antenna_signals.mat']);
-        load([dirpath '\rfi_eigen.mat']);
-        load([dirpath '\bf_options.mat']);
-        clear('Evector','Evalue');
- 
-        % initialize the Beamformed signals according to selected beamformer and whether or not the 
-        % sub band splitter is enabled. 
-        if (BFstrat==1) 
-            if (get(findobj('Tag', 'SubbandEnableCheck'),'Value'))
-                BFSignals=zeros(size(SelectedSubBandSignals,1),size(SelectedSubBandSignals,2));
-            else
-                BFSignals=zeros(size(AntennaSignals,1),size(AntennaSignals,2));
-            end
-        elseif (BFstrat==2)
-            if (get(findobj('Tag', 'SubbandEnableCheck'),'Value'))
-                % FFT beamformer and sub band splitter doesn't work very well
-                BFSignals=zeros(size(arrayadaptation(SelectedSubBandSignals(1,1,1))));
-            else
-                BFSignals=zeros(size(arrayadaptation(AntennaSignals(1,1,1)),1));
-            end
-        end
-        
-        if (get(findobj('Tag', 'SubbandEnableCheck'),'Value'))
-            % TODO : Use a real algorithm for selecting a subband.
-            Subband=size(SelectedSubBandSignals,3)/2;   
-                % now we apply the weightvector to each subband.
-            if (BFstrat == 1)
-                for i=1:size(SelectedSubBandSignals,2)
-                    BFSignals(:,i)=SelectedSubBandSignals(:,i,Subband) .* WeightVector;
-                end
-            elseif (BFstrat == 2)
-                BFSignals = arrayadaptation(SelectedSubBandSignals);
-            end
-            fprintf('Done\n');
-            save([dirpath '\antenna_signals.mat'],'AntennaSignals','SelectedSubBandSignals','BFSignals');
-            %clear('AntennaSignals','SelectedSubBandSignals','BeamPattern','BFSignals');
-        else
-            if (BFstrat == 1)
-                for i=1:size(AntennaSignals,2)
-                    BFSignals(:,i)=AntennaSignals(:,i) .* WeightVector;
-                end
-            elseif (BFstrat == 2)
-                BFSignals=arrayadaptation(AntennaSignals);
-            end
-            save([dirpath '\antenna_signals.mat'],'AntennaSignals','BFSignals');
-            %clear('AntennaSignals','BeamPattern','BFSignals');
-        end
-        
-        if (bf_power | bf_3dplot | bf_side)
-            fprintf('Plotting beamformer results\n');
-            plotBFfigures;
-        end 
-        
-        if (ad_beam_top | ad_beam_side | ad_beam_contour | ad_beam_3d)
-            % plot pattern without RFI, one beam (no subband splitter).
+     
+     StepUser=str2num(get(findobj('tag','edit5'),'String'));
+     RefreshEVD_SVD=floor(size(SelectedSubBandSignals,2)/(UpDateTimeTrack*WindowStepTrack));
+     if RefreshEVD_SVD<=StepUser
+     RefreshEVD_SVD=floor(size(SelectedSubBandSignals,2)/(UpDateTimeTrack*WindowStepTrack))-1;%-1 to prevent exceed dimension in applying Pastd
+     else
+     RefreshEVD_SVD=StepUser;
+     end
+     
+     offset=1;
+     RefreshPASTd=WindowStepTrack;
+     %RefreshPASTd_end=floor((size(SelectedSubBandSignals,2)-(UpDateTimeTrack*WindowStepTrack)*RefreshEVD_SVD)/WindowStepTrack);
+     WeightVectorMatrix=[]; %matrix to store the WeightVector
+     WeightTechnic=[];;
+     indicator=0 %used to reload either the previous Pastd Weights or the initialised one 
+     track_frames=0;
+     
+     
+     for index_plot=1:RefreshEVD_SVD-1 %RefreshEVD_SVD
+            
+            %STA function indicator
+            EVD_Bool=useEVD;
+            SVD_Bool=useSVD;
+            PASTd_Bool=0;
+            
+            track_frames=track_frames+1; %Frame counter 
+            
+            %Position to read the data out
+            position_startEVD_SVD=offset
+            position_stopEVD_SVD=offset+Snapshot_Buffer-1
+            
+            %Data Selection
+            xq=SelectedSubBandSignals(:,position_startEVD_SVD:position_stopEVD_SVD,SelectedSubBands);
+            
+            %Apply STA Algorithm
+            eigensystem(xq,dirpath,px,py,Beam_Phi_theta,Phi_theta,EVD_Bool,SVD_Bool,PASTd_Bool,position_stopEVD_SVD,indicator);  
+            
+            %Plot output time series 
+            fprintf('Plotting spectrum\n');
+            plotspectrum(xq,px,py,Beam_Phi_theta(1,position_stopEVD_SVD),Beam_Phi_theta(2,position_stopEVD_SVD),position_stopEVD_SVD);
+            
+            %Save the WeightVector in a matrix
+            load([dirpath 'data/rfi_eigen.mat']);
+            WeightVectorMatrix(track_frames,:)=WeightVector.';
+            WeightTechnic(track_frames,:)=[EVD_Bool, SVD_Bool, PASTd_Bool];
+            % plot pattern without RFI, one beam (no subband splitter).  
+            if (ad_beam_top|ad_beam_contour|ad_beam_side|ad_beam_3d)==1
             fprintf('Generating pattern with rfi nulls\n');
-            genebeamnulls;
+            genebeamnulls(dirpath,px,py,resolution);
             fprintf('Plotting new pattern\n');    
-            plotpatternrfi;
-        end; 
-    end;
-    if (get(findobj('Tag', 'ChannelEnableCheck'),'Value'))
-        fprintf('Channel splitter\n');
-        ChannelSplitter(get(findobj('Tag','BFenableCheck'),'Value'));
-        load([dirpath '\channel_options.mat'])
-        if (CH_RFIblanking & rfi_mit_power)
-            fprintf('\tPlotting RFI blanking results\n');
-            load([dirpath '\antenna_signals']);
-            RFImitResults(BFSignals,SelectedChannels,DFTSystemResponse,NumberChannels,ChannelFilterLength, ...
-                SelectedChannelSignals, NumberOfAntennas, size(SelectedChannelSignals),FlaggingCube,ch_quant_signal,ch_quant_inputfft,...
-                ch_quant_outputfft); 
-        end
+            plotpatternrfi(dirpath,px,py,Phi_theta,position_startEVD_SVD,position_stopEVD_SVD);
+            
+            %Frame acquisition
+            figure(5)
+            mov1(track_frames) = getframe(gcf);
+            figure(6)
+            mov2(track_frames) = getframe(gcf);
+            figure(7)
+            mov3(track_frames) = getframe(gcf);
+            figure(8)
+            mov4(track_frames) = getframe(gcf);
+            figure(9)
+            mov5(track_frames) = getframe(gcf);   
+            end
+        
+         if usePASTd==1
+         for Pastd_Apply=1:WindowStepTrack
+             
+            EVD_Bool=0;
+            SVD_Bool=0;
+            PASTd_Bool=1;
+            
+            track_frames=track_frames+1; %Frame counter 
+            
+            if Pastd_Apply==1
+                indicator=1;
+            else indicator=0;
+            end
+            
+            %Position to read the data out
+            position_startPastd=position_stopEVD_SVD-BufferTrack+Pastd_Apply*WindowStepTrack
+            position_stopPastd=position_stopEVD_SVD+Pastd_Apply*WindowStepTrack
+            
+            %Data Selection
+            xq=SelectedSubBandSignals(:,position_startPastd:position_stopPastd,SelectedSubBands);
+            
+            %Apply STA Algorithm
+            eigensystem(xq,dirpath,px,py,Beam_Phi_theta,Phi_theta,EVD_Bool,SVD_Bool,PASTd_Bool,position_stopPastd,indicator);  
+            
+            %Plot output time series 
+            fprintf('Plotting spectrum\n');
+            plotspectrum(xq,px,py,Beam_Phi_theta(1,position_stopPastd),Beam_Phi_theta(2,position_stopPastd),position_stopPastd);
+            
+            %Save the WeightVector in a matrix
+            load([dirpath 'data/rfi_eigen.mat']);      
+            WeightVectorMatrix(track_frames,:)=WeightVector.';
+            WeightTechnic(track_frames,:)=[EVD_Bool, SVD_Bool, PASTd_Bool];
+            
+              if (ad_beam_top|ad_beam_contour|ad_beam_side|ad_beam_3d)==1
+               % plot pattern without RFI, one beam (no subband splitter).
+               fprintf('Generating pattern with rfi nulls\n');
+               genebeamnulls(dirpath,px,py,resolution);
+               fprintf('Plotting new pattern\n');    
+               plotpatternrfi(dirpath,px,py,Phi_theta,position_startPastd,position_stopPastd);
+            
+         
+               %Frame acquisition
+               figure(5)
+               mov1(track_frames) = getframe(gcf);
+               figure(6)
+               mov2(track_frames) = getframe(gcf);
+               figure(7)
+               mov3(track_frames) = getframe(gcf);
+               figure(8)
+               mov4(track_frames) = getframe(gcf);
+               figure(9)
+               mov5(track_frames) = getframe(gcf);   
+              end
+            end%End for
+         end%End if Pastd
+        offset=Snapshot_Buffer+offset;
+    end %End for
+    
+  
+    %AVI Conversion
+    if size(mov1)~=0
+        movie2avi(mov1,'C:\Documents and Settings\dromer\Desktop\Pattern_Phi_theta')
     end
+    if size(mov2)~=0
+        movie2avi(mov2,'C:\Documents and Settings\dromer\Desktop\Pattern_cartesien')
+    end
+    if size(mov3)~=0
+        movie2avi(mov3,'C:\Documents and Settings\dromer\Desktop\Side_View')
+    end
+    if size(mov4)~=0
+        movie2avi(mov4,'C:\Documents and Settings\dromer\Desktop\Pattern_3D')
+    end
+    if size(mov5)~=0
+        movie2avi(mov5,'C:\Documents and Settings\dromer\Desktop\Time_series_subband')
+    end;
+   
+    save([dirpath 'data/WeightVector.mat'],'WeightVectorMatrix','WeightTechnic')
+    %Save in blietz format
+    dirpath_subband=[dirpath 'Config_Files\'];
+    filename0='WeightVector.blitz';
+    filename1='WeightTechnic.blitz';
+    record_blietz(WeightVectorMatrix,dirpath_subband,filename0)
+    record_blietz(WeightTechnic,dirpath_subband,filename1)
+    
+    %     if (get(findobj('Tag', 'ChannelEnableCheck'),'Value'))
+%         fprintf('Channel splitter\n');
+%         ChannelSplitter(get(findobj('Tag','BFenableCheck'),'Value'));
+%         load([dirpath '/channel_options.mat'])
+%         if (CH_RFIblanking & rfi_mit_power)
+%             fprintf('\tPlotting RFI blanking results\n');
+%             load([dirpath '/antenna_signals']);
+%             RFImitResults(BFSignals,SelectedChannels,DFTSystemResponse,NumberChannels,ChannelFilterLength, ...
+%                 SelectedChannelSignals, NumberOfAntennas, size(SelectedChannelSignals),FlaggingCube,ch_quant_signal,ch_quant_inputfft,...
+%                 ch_quant_outputfft); 
+%         end
+%     end
     toc;
-end
+
+
+
     
 % --------------------------------------------------------------------
 function varargout = SubbandEnableCheck_Callback(h, eventdata, handles, varargin)
@@ -264,3 +407,88 @@ function varargout = BFenableCheck_Callback(h, eventdata, handles, varargin)
 % --------------------------------------------------------------------
 function varargout = DFTtestButton_Callback(h, eventdata, handles, varargin)
     DFTFilterBankTest;
+
+
+
+% --------------------------------------------------------------------
+function varargout = pushbutton13_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit2_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = edit5_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = checkbox4_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = checkbox5_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = checkbox6_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = checkbox7_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = checkbox8_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = Clear_button_Callback(h, eventdata, handles, varargin)
+
+
+set(findobj('tag','SignalButton'),'BackgroundColor',[0.92 0.91 0.84]);
+set(findobj('tag','BeamFormerButton'),'BackgroundColor',[0.92 0.91 0.84]);
+set(findobj('tag','SubBandButton'),'BackgroundColor',[0.92 0.91 0.84]);
+set(findobj('tag','ChannelButton'),'BackgroundColor',[0.92 0.91 0.84]);
+set(findobj('tag','OutputButton'),'BackgroundColor',[0.92 0.91 0.84]);
+set(findobj('tag','text26'),'String','off');
+set(findobj('tag','text25'),'String','off');
+set(findobj('tag','text25'),'BackgroundColor',[0.92 0.91 0.84]);
+set(findobj('tag','text26'),'BackgroundColor',[0.92 0.91 0.84]);
+set(findobj('tag','Nfft_data_resu'),'String',0);
+set(findobj('tag','nsubbands_text'),'String',0);
+set(findobj('tag','Npoints_text'),'String',0);
+path=get(findobj('Tag','Path_Edit'),'String');
+delete([path 'data\configuration.mat']);
+delete([path 'data\subband_options.mat']);
+delete([path 'data\channel_options.mat']);
+delete([path 'data\bf_options.mat']);
+delete([path 'data\output_options.mat']);
+delete([path 'data\Path_info.mat']);
+
+
+% --------------------------------------------------------------------
+function varargout = edit6_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = Resolution_Edit_Callback(h, eventdata, handles, varargin)
+

@@ -3,29 +3,28 @@ function varargout = subband_gui(varargin)
 %    FIG = SUBBAND_GUI launch subband_gui GUI.
 %    SUBBAND_GUI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.0 06-Aug-2002 13:08:26
+% Last Modified by GUIDE v2.0 17-Mar-2003 16:30:46
 
 if nargin == 0  % LAUNCH GUI
 
 	fig = openfig(mfilename,'reuse');
-    
-	% Use system color scheme for figure:
-	set(fig,'Color',get(0,'defaultUicontrolBackgroundColor'));
-
 	% Generate a structure of handles to pass to callbacks, and store it. 
 	handles = guihandles(fig);
 	guidata(fig, handles);
-    
+        global SelectedSubBands;
+         global nsubbands;
 	if nargout > 0
 		varargout{1} = fig;
 	end
     
     % set default value for selected sub band array
-    NumberSubBands = str2num(get(findobj(fig, 'Tag', 'NrSbEdit'), 'String'));
-    SelectedSubBands = [1:NumberSubBands];
-    
+    load('data/configuration.mat','nsubbands');
+    SelectedSubBands=[nsubbands/2+1];
+    g = findobj(fig, 'Tag','NrSbEdit');
+    set(g, 'String', nsubbands);
     g = findobj(fig, 'Tag','SelSubBandEdit');
     set(g, 'String', mat2str(SelectedSubBands));
+    
     
     
     % Wait for callbacks to run and window to be dismissed:
@@ -37,9 +36,6 @@ if nargin == 0  % LAUNCH GUI
     if ~ishandle(fig)
 	    answer = 'cancel';
     else
-        dirpath = 'data';
-        load([dirpath '\signal_options.mat']);
-        load([dirpath '\antenna_signals.mat']);
     
         NumberSubBands = str2num(get(findobj(fig, 'Tag','NrSbEdit'),'String'));
         SelectedSubBands = str2num(get(findobj(fig, 'Tag','SelSubBandEdit'),'String'));
@@ -53,12 +49,22 @@ if nargin == 0  % LAUNCH GUI
         TFAfreq                 = str2num(get(findobj(fig,'Tag', 'TFAfreqEdit'), 'String'));
         
         RFIblanking = get(findobj(fig, 'Tag','RFIblankingCheck'),'Value');
-       
-        % save the parameters to file
-        save([dirpath '\subband_options.mat'], 'NumberSubBands','SelectedSubBands','SubbandFilterLength', ...
-            'sb_quant_signal','sb_quant_inputfft','sb_quant_outputfft','RFIblanking','TFAavg','TFAfreq'); 
         
+        if get(findobj(fig,'Tag','Center_button'),'Value');
+            option_polyphase='center';
+        elseif get(findobj(fig,'Tag','Shift_button'),'Value')
+            option_polyphase='shift';
+        else option_polyphase='normal';
+        end 
+        Method_polyphase=get(findobj(fig,'Tag','Polyphase_button'),'Value');
+        % save the parameters to file
+        dirpath ='data';
+        save([dirpath '/subband_options.mat'], 'NumberSubBands','SelectedSubBands','SubbandFilterLength', ...
+            'sb_quant_signal','sb_quant_inputfft','sb_quant_outputfft','RFIblanking','TFAavg','TFAfreq','Method_polyphase','option_polyphase'); 
+        %option=
         % so, we need to delete the window.
+        h=get(findobj('Tag','StationSimGUI'));
+        set(findobj(h.Children,'tag','SubBandButton'),'BackgroundColor',[0.11 0.36 0.59]);
         handles = guidata(fig);
         delete(fig);
     end;
@@ -184,38 +190,36 @@ function varargout = TFAfreqEdit_Callback(h, eventdata, handles, varargin)
 
 % --------------------------------------------------------------------
 function varargout = FillButton_Callback(h, eventdata, handles, varargin)
-    NumberSubBands=str2num(get(findobj('Tag','NrSbEdit'),'String'));
-    SelectedSubBands = zeros(1,NumberSubBands);
+    global SelectedSubBands;
+    global nsubbands;
     
-    if (get(findobj('Tag','RandomRadio'),'Value'))
-        SelectedSubBands=rand(NumberSubBands,1);
-        SelectedSubBands=round(SelectedSubBands*32000);
-    else
-        step=floor(32000/NumberSubBands);
-        for i=1:NumberSubBands
-            SelectedSubBands(1,i)=i*step;
-        end
-    end
-    
+if get(findobj('Tag','AllRadio'),'Value');
+    nsubbands=str2num(get(findobj('Tag','NrSbEdit'),'String'));
+    SelectedSubBands = [1: nsubbands];
     g = findobj('Tag','SelSubBandEdit');
     set(g, 'String', mat2str(SelectedSubBands));
-    save('data\temp','SelectedSubBands');
+else SelectedSubBands=[  nsubbands/2+1];
+     g = findobj('Tag','SelSubBandEdit');
+    set(g, 'String', mat2str(SelectedSubBands));
+end
+   
    
 
 % --------------------------------------------------------------------
 function varargout = EvenlyRadio_Callback(h, eventdata, handles, varargin)
     if (get(h, 'Value'))
-        set(findobj('Tag','RandomRadio'),'Value',0);
+        set(findobj('Tag','AllRadio'),'Value',0);
     else
         set(findobj('Tag','EvenlyRadio'),'Value',1);
+        
     end
 
 % --------------------------------------------------------------------
-function varargout = RandomRadio_Callback(h, eventdata, handles, varargin)
+function varargout = AllRadio_Callback(h, eventdata, handles, varargin)
     if (get(h, 'Value'))
         set(findobj('Tag','EvenlyRadio'),'Value',0);
     else
-        set(findobj('Tag','RandomRadio'),'Value',1);
+        set(findobj('Tag','AllRadio'),'Value',1);
     end
 
 
@@ -223,3 +227,54 @@ function varargout = RandomRadio_Callback(h, eventdata, handles, varargin)
 % --------------------------------------------------------------------
 function varargout = NrSbEdit_Callback(h, eventdata, handles, varargin)
  
+
+
+% --------------------------------------------------------------------
+function varargout = Polyphase_button_Callback(h, eventdata, handles, varargin) 
+if (get(h, 'Value'))
+        set(findobj('Tag','FFT_button'),'Value',0);
+    else
+        set(findobj('Tag','Polyphase_button'),'Value',1);
+    end
+
+% --------------------------------------------------------------------
+function varargout = FFT_button_Callback(h, eventdata, handles, varargin)
+ if (get(h, 'Value'))
+        set(findobj('Tag','Polyphase_button'),'Value',0);
+    else
+        set(findobj('Tag','FFT_button'),'Value',1);
+    end
+
+
+
+% --------------------------------------------------------------------
+function varargout = Center_button_Callback(h, eventdata, handles, varargin)
+ if (get(h, 'Value'))
+        set(findobj('Tag','Shift_button'),'Value',0); 
+        set(findobj('Tag','Normal_button'),'Value',0);
+    else     
+        set(findobj('Tag','Center_button'),'Value',1);
+    end
+
+
+% --------------------------------------------------------------------
+function varargout = Shift_button_Callback(h, eventdata, handles, varargin)
+if (get(h, 'Value'))
+        set(findobj('Tag','Center_button'),'Value',0); 
+        set(findobj('Tag','Normal_button'),'Value',0);
+    else     
+        set(findobj('Tag','Shift_button'),'Value',1);
+    end
+
+% --------------------------------------------------------------------
+function varargout = Normal_button_Callback(h, eventdata, handles, varargin)
+if (get(h, 'Value'))
+        set(findobj('Tag','Shift_button'),'Value',0); 
+        set(findobj('Tag','Center_button'),'Value',0);
+    else     
+        set(findobj('Tag','Normal_button'),'Value',1);
+    end
+
+
+
+

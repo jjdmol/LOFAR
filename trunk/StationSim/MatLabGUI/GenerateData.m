@@ -19,7 +19,6 @@ sh=zeros(nantl,nsnsh);
 for k=1:nsnsh
    for l=1:nrfi  
       sv = steerv(px,py,phiRFI(l),thetaRFI(l))/nantl;
-      
       if (freq(l)>0)&(freq(l)<1)  % C(w) signal
           
         sh(:,k) = sh(:,k) + sqrt(inr(l)) * sv .* exp(2*pi*(freq(l)/2)*i*k);

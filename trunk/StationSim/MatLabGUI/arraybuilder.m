@@ -226,17 +226,17 @@ switch arraytype
 %   x = [x ringsize*sin(([0:360/ne:360-360/ne]+angoff)*pi/180)];       % outer ring
 %   y = [y ringsize*cos(([0:360/ne:360-360/ne]+angoff)*pi/180)];
 
-   x = [0  0   -3    3  -5 5]
-   y = [.5 5 -4.5 -4.5  1  1]
+   x = [0  0   -3    3  -5 5];
+   y = [.5 5 -4.5 -4.5  1  1];
 
-   x = [0  0   -3    3  -5 5]
-   y = [.5 5 -4.5 -4.0  1.5  1]
+   x = [0  0   -3    3  -5 5];
+   y = [.5 5 -4.5 -4.0  1.5  1];
 
-   x = [0  0   -3    3  -5 5]
-   y = [.5 5 -4.0 -3.5  1.5  1]
+   x = [0  0   -3    3  -5 5];
+   y = [.5 5 -4.0 -3.5  1.5  1];
 
-   x = [0  0   -3    3  -4.5 4.5]
-   y = [.5 5 -4.0 -3.5  1.5  1]
+   x = [0  0   -3    3  -4.5 4.5];
+   y = [.5 5 -4.0 -3.5  1.5  1];
 
 
    case 11
@@ -401,7 +401,7 @@ switch arraytype
 
    xx = [ 0:1:2];  
    x = [ xx xx xx ]*sc;
-   yy = ones(1,3)
+   yy = ones(1,3);
    y = [ 0*yy 1*yy 2*yy ]*sc;
    x = x - .5;
    y = y - .5;
@@ -523,7 +523,7 @@ switch arraytype
    y = [yy-11.25 yr];
 
    case 22
-
+   % Thea + 5 circle
    ne = 7;
    angoff = params(2,4);
    ringsize = params(1,4);
@@ -545,9 +545,65 @@ switch arraytype
    x = [x ringsize*sin(([0:360/ne:360-360/ne]+angoff)*pi/180)];       % outer ring
    y = [y ringsize*cos(([0:360/ne:360-360/ne]+angoff)*pi/180)];
 
-   case 23
+   case 23 % single antenna, slightly offset from center
        x = [0.1];
        y = [0.1];
+       angoff = params(2,1);
+       ringsize = params(1,1);       
+   case 24 % regular array with two antennas, spaced one lambda apart
+       x = [0 1];
+       y = [0 0];
+       angoff = params(2,1);
+       ringsize = params(1,1);
+   case 25 % regular array with six antennas, spaces two lambda apart
+       x = [0 2 4 6 8 10]   ;
+       y = [0 0 0 0 0 0];
+       angoff = params(2,1);
+       ringsize = params(1,1);
+   case 26 % regular array with nine antennas, spaces four lambda apart
+       x = [0 4 8 12 16 20 24 28 32];
+       y = [0 0 0 0 0 0 0 0 0];
+       angoff = params(2,1);
+       ringsize = params(1,1);
+   case 27 % regular array with six antennas, spaced six lambda apart
+       x = [0 6 12 18 24 30];
+       y = [0 0 0 0 0 0];
+       angoff = params(2,1);
+       ringsize= params(1,1);
+   case 28 % square array, four elements, spaced four lambda apart
+       x = [0 1 2 3 0 1 2 3 0 1 2 3 0 1 2 3]*4;       
+       y = [0 0 0 0 1 1 1 1 2 2 2 2 3 3 3 3]*4;
+       angoff = 0;
+       ringsize = 0;
+   case 29 % rectangular array 4x8 elements, spaced 2 lambda apart
+       x = [0 2 4 6 0 2 4 6 0 2 4 6 0 2 4 6 0 2 4 6 0 2 4 6 0 2 4 6 0 2 4 6];
+       y = [0 0 0 0 2 2 2 2 4 4 4 4 6 6 6 6 8 8 8 8 10 10 10 10 12 12 12 12 14 14 14 14];
+       angoff = 0;
+       ringsize=0;
+   case 30 % rectangular array 4x8 elements, spaced 8 lambda apart
+       x = [0 8 16 24 32 0 8 16 24 32 0 8 16 24 32];
+       y = [0 8 16 0 8 16 0 8 16 0 8 16 0 8 16];
+       angoff = 0;
+       ringsize=0;
+   case 31
+      %
+      % 16 element array with two rings of 11 and 5
+      %
+      ne = params(1,5);
+      angoff = params(2,1);
+      ringsize = params(1,1);
+      x = ringsize*sin(([0:360/ne:360-360/ne]+angoff)*pi/180);
+      y = ringsize*cos(([0:360/ne:360-360/ne]+angoff)*pi/180);
+  case 32
+      %
+      % 1x2
+      %
+      x = [0 0.5];
+      y = [0 0];
+      angoff = 0;
+      ringsize=0;
+  case 33
+      
 end
 
 

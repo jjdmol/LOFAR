@@ -1,14 +1,14 @@
 function ChannelSplitter(beamformer_enable)
 
   dirpath='data';
-  load([dirpath '\antenna_signals.mat']);
-  load([dirpath '\antenna_config.mat']);
-  load([dirpath '\channel_options.mat']);
-  load([dirpath '\signal_options.mat']);
-  load([dirpath '\output_options.mat']);
+  load([dirpath '/antenna_signals.mat']);
+  load([dirpath '/antenna_config.mat']);
+  load([dirpath '/channel_options.mat']);
+  load([dirpath '/signal_options.mat']);
+  load([dirpath '/output_options.mat']);
   
   if (~beamformer_enable)
-     load([dirpath '\subband_options.mat']);
+     load([dirpath '/subband_options.mat']);
      BFSignals(:,:)=SelectedSubBandSignals(:,:,round(NumberSubBands/2));
   end
   FlaggingCube=1;
@@ -25,5 +25,5 @@ function ChannelSplitter(beamformer_enable)
     SelectedChannelSignals = CleanSelectedChannelSignals;
   end
   
-  save([dirpath '\antenna_signals.mat'], 'AntennaSignals','SelectedSubBandSignals','SelectedChannelSignals','BFSignals',...
+  save([dirpath '/antenna_signals.mat'], 'AntennaSignals','SelectedSubBandSignals','SelectedChannelSignals','BFSignals',...
       'DFTSystemResponse');

@@ -3,7 +3,7 @@
 %
 % The pattern to be draws is raw, straight from the array without post-processing.
 %
-function plotpattern
+function plotpattern(px,py,dirpath)
 %
 % Author       : Sylvain Alliot
 % Organisation : ASTRON (Netherlands Foundation for research in Astronomy)
@@ -11,82 +11,74 @@ function plotpattern
 %
 % Adapted for LOFAR StationSim
 % P.C. Broekema july 2002
-  
-      
 
-      dirpath = 'data';
-      load([dirpath '\beam_pattern.mat']);
-      load([dirpath '\antenna_signals.mat']);
-      load([dirpath '\antenna_config.mat']);
-      load([dirpath '\output_options.mat']);
-      patend=90;
-      patstep=1;
+      load([dirpath 'data\beam_pattern.mat']);
+      load([dirpath 'data\output_options.mat']);
+      u=[0:N];
       
-      a=[-1*patend:patstep:patend]*pi/180;
-      b=[-1*patend:patstep:patend]*pi/180;
-  %
-  % contour using angles coordinates. Beam top view
-  %
-  
-if beam_top
-      figure(2);
-      imagesc(a*180/pi,b*180/pi,20*log10(BeamPattern+1e-4));
-      hold on;
-      xlabel('Azimuth (degrees)')
-      ylabel('Elevation (degrees)')
-      title('Top View of Beam Pattern')
+     
+      if beam_contour
+    % Beamshape using angles coordinates. Beam top view
+      figure(5)
+      subplot(1,3,1)
+      imagesc(a,b,20*log10(Rect_pattern))
+      xlabel('Theta')
+      ylabel('Phi')
+      title('Top View of steered Beam Pattern in angle coordinate')
+      end
+      
+      if beam_top
+      % Beamshape : Top view using cartesian coordinate
+      figure(6);
+%       cur_scr = get(s,'Position');
+%       root_scr = get(0,'Screensize');
+%       set(s,'Position',[root_scr(1)+10, cur_scr(2)*9/10, root_scr(3)*9/10, cur_scr(4)*9/10]);
+      subplot(1,3,1)
+      imagesc((-1 + 2*u/N),(-1 + 2*u/N),20*log10(BeamPattern));
+      caxis([-70 0]);
+      title('Top View of Beam Pattern in cartesian coordinates')
       %set(gca,'ButtonDownFcn','arraygene(''separateimage'')');
       %set(gca,'Tag','image')  % restore the value
-
+      Xlabel('U normalised')
+      Ylabel('V normalised')
       %blah = findobj(fighndl,'Tag','contour');
       %axes(blah) 
-  %
-  % contour using angles coordinates. 3 DB contour top view
-  %
-end
-if beam_contour  
-      cont = [-3 -3];
-      figure;
-      if isempty(cont)
-         cs=contour(a*180/pi,b*180/pi,20*log10(BeamPattern+1e-4),[0 -3 -6 -12 -24 -48]);
-      else
-         cs=contour(a*180/pi,b*180/pi,20*log10(BeamPattern+1e-4),cont);
-         clabel(cs), grid
+   
       end
-      xlabel('Azimuth (degrees)')
-      ylabel('Elevation (degrees)')
-      title('Contours of Beam Pattern')
-      %set(gca,'ButtonDownFcn','arraygene(''separate'')');
-      %set(gca,'Tag','contour')  % restore the value
-end;
-  %
-  % Side view using angles coordinates. 
-  %    
-if beam_side
-  figure;
-      plot(a*180/pi,20*log10(abs(BeamPattern)))
-      ylim([-20 0]), 
-      xlim([-1*patend patend]), grid
+  
+      if beam_side
+      % contour using angles coordinates. 
+      figure(7);
+      %set(s2,'Position',[root_scr(1)+10, cur_scr(2)*9/10, root_scr(3)*9/10, cur_scr(4)*9/10]);
+      subplot(1,3,1)
+      plot(b*180/pi,20*log10(abs(Rect_pattern.')))
+      ylim([-70 0]),
+      %xlim([0 patend]), grid
       xlabel('Angle (degrees)')
       ylabel('Power (dB)')
       title('Side View of Beam Pattern')
+      hold off
       %set(gca,'ButtonDownFcn','arraygene(''separate'')');
       %set(gca,'Tag','1dproj')  % restore the value
-  end;
-  %
-  % 3D beam representation in angles coordinates. 
-  %   
-  if beam_3d
-      figure;
-      %blah = findobj(fighndl,'Tag','3dplot');
-      %axes(blah), cla
+      end
+
+      if beam_3d
+      % 3D beam representation in angles coordinates.     
+      figure(8)
+      subplot(1,3,1)
       aa = ones(length(a),1)*a;
       bb = ones(length(b),1)*b;
       aa = aa.';
-      r = 1 + BeamPattern;
-      u = r .* cos(bb) .* sin(aa);
-      v = r .* sin(bb);
-      w = r .* cos(aa) .* cos(bb);
+      r = 1 + Rect_pattern;
+      u = r .* sin(bb).* cos(aa);
+      v = r .* sin(bb).* sin(aa) ;
+      w = r .* cos(bb);
+      
+      %Alliot et Hampson Coordinate
+      %u = r .* cos(bb) .* sin(aa);
+      %v = r .* sin(bb);
+      %w = r .* cos(aa) .* cos(bb);
+
       surface(u,v,w,sqrt(u.^2+v.^2+w.^2))
       xlim([-2 2]);
       ylim([-2 2]);
@@ -96,7 +88,7 @@ if beam_side
       set(gca,'xcolor',[.8 .8 .8]);
       set(gca,'ycolor',[.8 .8 .8]);
       set(gca,'zcolor',[.8 .8 .8]);
-      title('3d view of beam pattern');     
+      title('3d view of Beam Pattern');     
       %set(gca,'ButtonDownFcn','arraygene(''separate3d'')');
       %set(gca,'Tag','3dplot')  % restore the value
-  end;
+      end

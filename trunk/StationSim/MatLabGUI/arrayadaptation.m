@@ -4,20 +4,21 @@
 % 3. Correlation with the incoming data
 % 4. Subtraction of the correlated signal 
 %
-function B=arrayadaptation (signal)
+function B=arrayadaptation(signal,px,py,snapshot_number)%(signal)
 %
 % Author       : Sylvain Alliot
 % Organisation : ASTRON (Netherlands Foundation for research in Astronomy)
 % Date         : 25 November 2001
 %
     dirpath = 'data';
-
-    load([dirpath '\antenna_config']);     
-    load([dirpath '\signal_options']);
-   
-
+    signal=squeeze(signal(:,:,15)).';
+    %load([dirpath '/antenna_config']);     
+    %oad([dirpath '/signal_options']);
+    xg=mean(px);
+    yg=mean(py);
+    GridSize=64;
     N_fft=GridSize*4;   % FFT grid interpolation of 4
-    ndim=GridSize;
+    ndim=8;
 % reshape data for FFT grip
     mat = zeros(ndim^2,ndim^2);
     px= px + abs(min(px));
