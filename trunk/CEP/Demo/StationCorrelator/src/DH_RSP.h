@@ -34,7 +34,7 @@ namespace LOFAR
 class DH_RSP: public DataHolder
 {
 public:
-  typedef complex<uint16> BufferType;
+  typedef char BufferType;
 
   explicit DH_RSP (const string& name,
 		   const unsigned int bufsize);

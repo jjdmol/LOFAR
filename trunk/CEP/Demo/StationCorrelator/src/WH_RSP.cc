@@ -39,22 +39,24 @@ WH_RSP::WH_RSP(const string& name,
   : WorkHolder (1, kvm.getInt("NoWH_Correlator", 7), name, "WH_RSP"),
     itsKVM (kvm)
 {
-  char str[5];
+  char str[15];
   
-  int beamletsinpacket   = kvm.getInt("NoRSPbeamlets", 92);
-  int packetsinframe     = kvm.getInt("NoPacketsInFrame", 8);
-  int stationdataholders = kvm.getInt("NoWH_Correlator", 7);
-  int polarisations      = kvm.getInt("polarisations",2);
+  // get parameters
+  itsNoutputs    = kvm.getInt("NoWH_Correlator", 7);              
+  itsNbeamlets   = kvm.getInt("NoRSPbeamlets", 92) / itsNoutputs; // number of EPA-packet beamlets per OutDataholder
+  itsNpackets    = kvm.getInt("NoPacketsInFrame", 8);             // number of EPA-packets in RSP-ethernetframe
+  itsSzEPAheader = kvm.getInt("SzEPAheader", 14);                 // headersize in bytes
+  itsSzEPApacket = (8 * itsNbeamlets) + itsSzEPAheader;           // packetsize in bytes
+
+  // create buffer for incoming dataholders 
+  // implement a cyclic buffer later !!!
+  getDataManager().addInDataHolder(0, new DH_RSP("DH_in", kvm.getInt("SzDH_RSP",6000))); // buffer of char
   
-  // Create buffer for incoming dataholders 
-  // Use a cyclic buffer?
-  getDataManager().addInDataHolder(0, new DH_RSP("DH_in", kvm.getInt("SzDH_RSP",6000))); 
-  
-  // Create outgoing dataholders
-  int bufsize = (beamletsinpacket / stationdataholders) * polarisations * packetsinframe;
-  for (int i=0; i < stationdataholders; i++) {
+  // create outgoing dataholders
+  int bufsize =  kvm.getInt("polarisations",2) * itsNbeamlets * itsNpackets;
+  for (int i=0; i < itsNoutputs; i++) {
     sprintf(str, "DH_out_%d", i);
-    getDataManager().addOutDataHolder(i, new DH_StationData(str, bufsize));
+    getDataManager().addOutDataHolder(i, new DH_StationData(str, bufsize)); // buffer of complex<uint16>
   }
 }
 
@@ -72,32 +74,24 @@ WH_RSP* WH_RSP::make(const string& name)
   return new WH_RSP(name, itsKVM);
 }
 
-void WH_RSP::process() {
+void WH_RSP::process() 
+{ 
+  // get the RSP data frame from the Input dataholder
+  const char* rspdata = static_cast<char*>(((DH_RSP*)getDataManager().getInHolder(0))->getBuffer());
 
-  // DH_RSP contains 8 EPA packets
-  //   Format 1 EPA-packet:
-  //   uint16 versionID | uint32 stationID | uint32 intervalID | uint32 blockID | EPA-data...
-  //      EPA-data contains 92 beamlets
-  //        Format 1 beamlet:
-  //        uint16 Xr | uint16 Xi | uint16 Yr | uint16 Yi
+  // copy stationID and blockID of first EPA-packet in OutDataholder
+  ((DH_StationData*)getDataManager().getOutHolder(0))->setStationID( ((int*)&rspdata[2])[0] );
+  ((DH_StationData*)getDataManager().getOutHolder(0))->setBlockID( ((int*)&rspdata[10])[0] );
+  ((DH_StationData*)getDataManager().getOutHolder(0))->setFlag( 0 );
 
-  // Pseudocode to define what to do here:
- 
-  // if (!MissingFrames) {
-  //   Get StationID
-  //   Get BlockID of EPA-PACKET(0)
-  //   Set InValid flag = FALSE 
-  //   Copy EPA-data, StationID, BlockID and flag from DH_RSP to DH_StationData
-  // }
-  // else {
-  //   do (for all missing frames) {
-  //     Set InValid flag = TRUE
-  //     Copy blank data in DH_StationData
-  //   }
-  // }
-
-  //Example code:
+  // copy the beamlets from all EPA-packets in OutDataholder
+  // implement code for if frames are missing later !!!
+  for (int i=0;i<itsNpackets;i++) {
+     for (int j=0;j<itsNoutputs;j++) {
+       memcpy( &((DH_StationData*)getDataManager().getOutHolder(j))->getBuffer()[i*itsNbeamlets], 
+               &rspdata[(i*itsSzEPApacket)+ itsSzEPAheader + (j*itsNbeamlets*8)], 
+               itsNbeamlets*8 );
+     }
+  }
   
-  // itsStationID = ((DH_RSP*)getDataManager().getInHolder(0))->getBuffer()[1]
-  // itsBlockID   = ((DH_RSP*)getDataManager().getInHolder(0))->getBuffer()[5]
 }

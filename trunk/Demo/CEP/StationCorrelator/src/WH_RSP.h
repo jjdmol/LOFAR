@@ -49,6 +49,12 @@ namespace LOFAR
     /// forbid assignment
     WH_RSP& operator= (const WH_RSP&);
 
+    int itsNpackets;
+    int itsNbeamlets;
+    int itsNoutputs;
+    int itsSzEPAheader;
+    int itsSzEPApacket;
+
     KeyValueMap itsKVM;
   };
 
