@@ -33,10 +33,11 @@ ParmTable::ParmTable (const string& dbType, const string& tableName,
 		      const string& userName, const string& passwd)
 : itsRep (0)
 {
+  Assert (dbType == "aips");
   if (dbType == "aips") {
     itsRep = new ParmTableAIPS (tableName);
   } else {
-    itsRep = new ParmTableDB (dbType, tableName, userName, passwd);
+    ///    itsRep = new ParmTableDB (dbType, tableName, userName, passwd);
   }
 }
 

@@ -58,6 +58,10 @@ vector<MeqPolc> ParmTableDB::getPolcs (const string& parmName,
   TPOMParm tpoparm;
   tpoparm.tableName (itsTableName);
   MParmSet set = tpoparm.retrieve (attrib(tpoparm,"name") == parmName);
+  //    Table sel3 = sel(domain.startX() < sel.col("ENDTIME")   &&
+  //	     domain.endX()   > sel.col("STARTTIME") &&
+  //	     domain.startY() < sel.col("ENDFREQ")   &&
+  //		     domain.endY()   > sel.col("STARTFREQ"));
   MParmSet::const_iterator iter = set.begin();
   for (; iter!=set.end(); iter++) {
     result.push_back (iter->data().getPolc());

@@ -125,19 +125,19 @@ MeqMatrixRep* MeqMatrixComplexSca::negate()
 
 MeqMatrixRep* MeqMatrixComplexSca::sin()
 {
-  itsValue = ::sin(itsValue);
+  itsValue = std::sin(itsValue);
   return this;
 }
 
 MeqMatrixRep* MeqMatrixComplexSca::cos()
 {
-  itsValue = ::cos(itsValue);
+  itsValue = std::cos(itsValue);
   return this;
 }
 
 MeqMatrixRep* MeqMatrixComplexSca::exp()
 {
-  itsValue = ::exp(itsValue);
+  itsValue = std::exp(itsValue);
   return this;
 }
 
@@ -149,13 +149,13 @@ MeqMatrixRep* MeqMatrixComplexSca::sqr()
 
 MeqMatrixRep* MeqMatrixComplexSca::sqrt()
 {
-  itsValue = ::sqrt(itsValue);
+  itsValue = std::sqrt(itsValue);
   return this;
 }
 
 MeqMatrixRep* MeqMatrixComplexSca::conj()
 {
-  itsValue = ::conj(itsValue);
+  itsValue = std::conj(itsValue);
   return this;
 }
 
