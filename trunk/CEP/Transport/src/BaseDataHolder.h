@@ -246,11 +246,18 @@ private:
   // Initialize the data field set.
   void initDataFields();
 
+  // Let the derived class fill its pointers to the data in the blob.
+  // This function is called when the blob is created and when its layout
+  // has changed.
+  // The default implementation does nothing.
+  virtual void fillDataPointers();
+
+
   BlobFieldSet    itsDataFields;
   BlobString*     itsData;
   BlobOBufString* itsDataBlob;
   DataPacket*  itsDataPacketPtr;
-   Transporter  itsTransporter;
+  Transporter  itsTransporter;
   string       itsName;
   string       itsType;
   int          itsReadConvert;  //# conversion needed after a read?

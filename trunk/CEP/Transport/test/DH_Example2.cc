@@ -71,14 +71,20 @@ void DH_Example2::preprocess()
   // Add the fields to the data definition.
   addField ("Counter", BlobField<int>(1));
   addField ("Buffer", BlobField<BufferType>(1, itsBufSize));
+  // Create the data blob (which calls fillPointers).
   createDataBlock();
-  // Fill in the counter pointer.
-  itsCounter = getData<int> ("Counter");
-  // Fill in the buffer pointer and initialize the buffer.
-  itsBuffer  = getData<BufferType> ("Buffer");
+  // Initialize the buffer.
   for (unsigned int i=0; i<itsBufSize; i++) {
     itsBuffer[i] = 0;
   }
+}
+
+void DH_Example2::fillDataPointers()
+{
+  // Fill in the counter pointer.
+  itsCounter = getData<int> ("Counter");
+  // Fill in the buffer pointer.
+  itsBuffer  = getData<BufferType> ("Buffer");
 }
 
 void DH_Example2::postprocess()

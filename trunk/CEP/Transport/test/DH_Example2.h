@@ -81,8 +81,10 @@ private:
   /// Forbid assignment.
   DH_Example2& operator= (const DH_Example2&);
 
+  // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
+  virtual void fillDataPointers();
 
-  // Data pointers filled by preprocess.
+
   int*         itsCounter;
   BufferType*  itsBuffer;
   unsigned int itsBufSize;
