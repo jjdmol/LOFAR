@@ -51,6 +51,35 @@
 
  </section>
 
+ <section>
+
+  <title>selfcal requirements</title>
+
+  <para>
+
+   LOFAR is a one-of system. There has never been anything build like
+   it. The self-calibration solutions that instrumentalists and
+   astronomers are thinking of are not yet developed. Several methods
+   to perform a predict-solve step may be created for
+   experimentation. Also several high level algorithms may be
+   tried. The flexible architecture of the BlackBoard pattern is very
+   well suited to insert both new low-level operations (the knowledge
+   sources) as well as high level strategies (by configuring the
+   controller(s)).
+
+  </para>
+
+  <para>
+
+   It is expected that even in operational state the self-calibration
+   will be under development. It might also put different demands on
+   different observations. For this a library of control-strategies
+   will be convenient.
+
+  </para>
+
+ </section>
+
  <appendix>
 
   <title>revision log</title>
@@ -149,6 +178,9 @@
 
 <!--
 $Log$
+Revision 1.2  2003/06/18 17:26:47  daan
+start makeing conclusions, man\!
+
 Revision 1.1  2003/06/18 12:06:25  daan
 frame and appendix for revision entries
 

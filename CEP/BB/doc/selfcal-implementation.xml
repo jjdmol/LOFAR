@@ -41,13 +41,19 @@
 
   <title>introduction</title>
 
-  <para>
+  <section>
 
-   This document describes how the Blackboard architectural pattern is
-   implemented to fit the need and requirement for the LOFAR
-   self-calibration-application.
+   <title>Purpose of this document</title>
 
-  </para>
+   <para>
+
+    This document describes how the Blackboard architectural pattern
+    is implemented to fit the need and requirement for the LOFAR
+    self-calibration-application.
+
+   </para>
+
+  </section>
 
  </section>
 
@@ -57,7 +63,7 @@
 
   <para>
 
-   The two major classes of storage requirements are
+   The major classes of storage requirements are
 
    <itemizedlist>
 
@@ -74,6 +80,16 @@
      <para>
 
       datasets
+
+     </para>
+
+    </listitem>
+
+    <listitem>
+     <title>user-scripts</title>
+     <para>
+
+      the strategy
 
      </para>
 
@@ -238,6 +254,49 @@
 
   </section>
 
+  <section>
+
+   <title>The strategy</title>
+   <subtitle>A high level script</subtitle>
+
+   <para>
+
+    The implementation of the strategy is a python script using the
+    components defined in the selfcal framework. In the final
+    (c++-)implementation of selfcal, the high level control object is
+    a process with an embedded python interpreter. It reads the script
+    when started and executes it, creating the processes needed on the
+    nodes available to the program.
+
+   </para>
+
+   <para>
+
+    In an advanced enterprise-pro-gold version the control object
+    might supply a GUI to interrupt and/or change the strategy on the
+    fly. The database used supplies the possibility to watch progress
+    on-line and intervene if needed.
+
+   </para>
+
+   <para>
+
+    The in core storage of the script byte be python byte code, but it
+    might be a database as well. It must be taken into account that
+    user representation of both database and in-core code, will be
+    hard to implement.
+
+   </para>
+
+    <mediaobject>
+     <imageobject>
+      <imagedata fileref="strategy_interpreter.png" format="PNG" />
+      </imageobject>
+     <caption>sample sequence of a nested transaction</caption>
+    </mediaobject>
+
+  </section>
+
  </section>
 
 
@@ -280,6 +339,9 @@
 </article>
 <!--
 $Log$
+Revision 1.1  2003/06/18 17:26:47  daan
+start makeing conclusions, man\!
+
 
  -->
 <!-- eof $Id$ -->

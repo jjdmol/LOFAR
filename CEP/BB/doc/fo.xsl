@@ -8,7 +8,7 @@
 
   <xsl:param name="body.font.family">Times</xsl:param>
   <xsl:param name="title.font.family">Courier</xsl:param>
-  <xsl:param name="monospace.font.family">LucidaTypewriter</xsl:param>
+  <xsl:param name="monospace.font.family">Helvetica</xsl:param>
 
   <xsl:param name="body.font.size">10pt</xsl:param>
 
