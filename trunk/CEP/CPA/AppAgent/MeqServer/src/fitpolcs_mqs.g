@@ -49,6 +49,7 @@ include 'meq/meqserver.g'
 # If no domain is specified, then the envelope of the polcs' domains is 
 # used. A scale may be specified as [f0,fscale,t0,tscale]. If it is not 
 # specified, then a scale corresponding to [0:1] over the domain is used.
+
 const meq.fitpolcs_mqs := function (polcs,degx=0,degy=0,domain=F,scale=F,verbose=1,gui=F)
 {
   # polcs must be a vector of polcs; if it's a single polc, then make the vector
@@ -87,10 +88,7 @@ const meq.fitpolcs_mqs := function (polcs,degx=0,degy=0,domain=F,scale=F,verbose
   rec := meq.node('MeqSolver','fitpolc_solver',children="fitpolc_eq");
   rec.num_steps := 5;
   rec.parm_group := hiid('Parm');
-    solv := meq.initcmdlist();
-    solv[1] := [ name="fitpolc_p2",state=[solvable=T] ];
-    solv[2] := [ state=[solvable=F] ];
-  rec.solvable := [ command_by_list=solv ];
+  rec.solvable := meq.solvable_list("fitpolc_p2");
   print mqs.createnode(rec);
   
   # resolve children

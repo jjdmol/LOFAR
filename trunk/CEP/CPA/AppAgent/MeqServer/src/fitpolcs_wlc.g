@@ -37,6 +37,7 @@ include 'fitting.g'
 
 #------ functional_poly2()
 # Creates a functional representing a 2D polynomial of the specified x,y order
+
 const meq.functional_poly2 := function (degx,degy)
 {
   # create a functional for the target polc
@@ -59,8 +60,10 @@ const meq.functional_poly2 := function (degx,degy)
   return dfs.compiled(funcdesc);
 }
 
+
 #------ polc2functional()
 # Creates a functional from a polc object
+
 const meq.polc2functional := function (polc)
 {
   sh := shape(polc.coeff);
@@ -74,6 +77,7 @@ const meq.polc2functional := function (polc)
   }
 }
 
+
 #------ fitpolc()
 # Fits a set of predicted values with a 2D polc of order degx,degy.
 # This is a helper function meant to be used by various fitpolcs_xxx schemes.
@@ -82,6 +86,7 @@ const meq.polc2functional := function (polc)
 #   weights   : is a vector of weights (length N), or 1 for no weighting
 #   degx,degy : required order of polc in X and Y
 #   scale     : scale of polc, as a [x0,xscale,y0,yscale] vector
+
 const meq.fitpolc := function (x,y,values,weights,degx,degy,scale=[0,1,0,1])
 {
   if( degx>0 || degy>0 )
@@ -118,6 +123,7 @@ const meq.fitpolc := function (x,y,values,weights,degx,degy,scale=[0,1,0,1])
 # If no domain is specified, then the envelope of the polcs' domains is 
 # used. A scale may be specified as [f0,fscale,t0,tscale]. If it is not 
 # specified, then a scale corresponding to [0:1] over the domain is used.
+
 const meq.fitpolcs_wlc := function (polcs,degx=0,degy=0,domain=F,scale=F,verbose=0)
 {
   # define a sink for debug output
@@ -209,6 +215,8 @@ const meq.fitpolcs_wlc := function (polcs,degx=0,degy=0,domain=F,scale=F,verbose
   return polc;
 }
 
+
+# test function for fitpolcs_wlc
 
 meq_test.fitpolcs_wlc := function (degx=F,degy=F,tests=[],verbose=3)
 {

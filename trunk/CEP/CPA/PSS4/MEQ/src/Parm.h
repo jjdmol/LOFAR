@@ -44,6 +44,10 @@
 //  active polcs. One or more meqpolc() objects may be provided. These
 //  will be reused for subsequent requests if the domains match, or
 //  if the inf_domain or grow_domain attributes are specified.
+//field: solve_polcs [=]
+//  active solvable polcs. A single meqpolc() object may be provided. This
+//  will be reused for subsequent solvable requests if the domains match, or
+//  if the grow_domain attribute is specified.
 //field: default [=]
 //  default polc. A meqpolc() object. This is used when an applicable
 //  polc is not found in the table, or a table is not provided.
@@ -90,11 +94,6 @@ public:
     virtual TypeId objectType() const
     { return TpMeqParm; }
 
-  // Get the parameter id.
-    //##ModelId=3F86886F0224
-  unsigned int getParmId() const
-    { return parmid_; }
-
     //##ModelId=3F86886F022C
   bool isSolvable() const
     { return solvable_; }
@@ -108,7 +107,8 @@ public:
   // process parm-specific rider commands
   virtual void processCommands (const DataRecord &rec,const Request &req);
 
-  // Initialize the parameter for the given domain.
+  // Initialize the parameter for the given predict domain. This loads
+  // the polcs_ vector with polcs relevant to the specified domain. 
     //##ModelId=3F86886F0226
   virtual int initDomain (const Domain&);
 
@@ -130,14 +130,20 @@ protected:
     //##ModelId=400E5353019E
   // finds polcs in table or uses the default
   void findRelevantPolcs (vector<Polc::Ref> &polcs,const Domain &domain);
-  // initializes polcs based on value of solvable flag
+  
+  // Initialize the parameter for the given solve domain. First
+  // it will call initDomain() to load up the polcs_ vector. 
+  // Then, it sets up the solve_polcs_ vector with a set of solvable 
+  // polcs  based on the contents of polcs_.
+  // (NB: the current implementation only does a single polc, see 
+  // code for details),.
   int  initSolvable  (const Domain &domain);
-  // assigns spids to solvable polcs. Called from initSolvable()
+
+  // assigns spids to solvable polcs. Used by initSolvable()
   int  initSpids     ();
-    
 
   // Set the polynomials.
-    //##ModelId=400E535301F7
+  //##ModelId=400E535301F7
   void setPolc (Polc *polc,int flags=DMI::ANONWR)
   { 
     polcs_.resize(1);
@@ -158,8 +164,6 @@ protected:
   
 private:
     
-    //##ModelId=3F86886F0215
-  uint parmid_;
     //##ModelId=3F86886F0216
   bool solvable_;
   bool auto_save_;
@@ -179,10 +183,15 @@ private:
   //## ID of current domain
   HIID         domain_id_;
   
+  HIID         solve_domain_id_;
+  
   //##Documentation
-  //## active polcs for current domain. If Parm solvable, this is always a 
-  //## single polc. 
+  //## active polcs for current domain 
   vector<Polc::Ref> polcs_;
+  
+  //## active polcs for current solvable domain (at the moment, this is 
+  //## always a single polc.)
+  vector<Polc::Ref> solve_polcs_;
   
 //   //##ModelId=400E535000C1
 //   //##Documentation

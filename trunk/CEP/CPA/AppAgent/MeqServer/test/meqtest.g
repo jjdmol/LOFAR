@@ -241,10 +241,7 @@ const solver_test := function ()
   global rec;
   rec := meq.node('MeqSolver','solver1',children="condeq1");
   rec.num_steps := 3;
-      solv := meq.initcmdlist();
-      solv[1] := [ name="parm2",state=[solvable=T] ];
-      solv[2] := [ state=[solvable=F] ];
-  rec.solvable := [ command_by_list=solv ];
+  rec.solvable := meq.solvable_list("parm2");
   rec.parm_group := hiid('Parm');
   print mqs.meq('Create.Node',rec);
   
