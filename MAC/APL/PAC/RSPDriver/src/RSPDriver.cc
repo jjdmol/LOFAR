@@ -84,7 +84,8 @@ using namespace blitz;
 static const uint8 g_SOFTPPS_COMMAND = 0x1; // for [CRR|CRB]_SOFTPPS
 
 RSPDriver::RSPDriver(string name)
-  : GCFTask((State)&RSPDriver::initial, name), m_board(0), m_scheduler()
+  : GCFTask((State)&RSPDriver::initial, name), m_board(0), m_scheduler(),
+    m_update_counter(0)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
@@ -465,6 +466,20 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	m_board[0].setTimer(1.0,
 			    GET_CONFIG("RSPDriver.SYNC_INTERVAL", f)); // update SYNC_INTERVAL seconds
       }
+      else if (2 == GET_CONFIG("RSPDriver.SW_SYNC", i))
+      {
+	//
+	// single timeout after 1 second to set
+	// off as-fast-as-possible update mode
+	//
+	m_board[0].setTimer(1.0);
+
+	//
+	// periodic timeout on m_clock port
+	// to print average nr of updates per second
+	//
+	m_clock.setTimer(1.0, 1.0); // every second after 1.0 second
+      }
     }
     break;
 
@@ -562,7 +577,8 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
     {
       if (&port == &m_board[0])
       {
-	if (1 == GET_CONFIG("RSPDriver.SW_SYNC", i))
+	if (1 == GET_CONFIG("RSPDriver.SW_SYNC", i) ||
+	    2 == GET_CONFIG("RSPDriver.SW_SYNC", i))
 	{
 	  /**
 	   * Trigger a clock signal by sending
@@ -572,6 +588,12 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 	  trigger.value = 's';
 	  m_clock.send(trigger);
 	}
+      }
+      else if (&port == &m_clock)
+      {
+	// print average number of updates
+	cerr << "Updates per second = " << m_update_counter << endl;
+	m_update_counter = 0;
       }
     }
     break;
@@ -609,6 +631,17 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       if (isBoardPort(port))
       {
 	status = m_scheduler.dispatch(event, port);
+
+	//
+	// if SW_SYNC mode 2 and sync has completed
+	// send new clock_tick
+	//
+	if (2 == GET_CONFIG("RSPDriver.SW_SYNC", i) &&
+	    m_scheduler.syncHasCompleted())
+	{
+	  m_board[0].setTimer(0.0); // immediate
+	  m_update_counter++;
+	}
       }
       break;
   }

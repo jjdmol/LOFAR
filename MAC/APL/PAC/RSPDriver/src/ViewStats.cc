@@ -366,7 +366,7 @@ int main(int argc, char** argv)
 
   int n_devices = ((type <= Statistics::SUBBAND_POWER) ? GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) : 1) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
 
-  cout << "Which devices (RCU's for subband stats, RSP boards for beamlet stats (-1 means all):";
+  cout << "Which device (RCU's for subband stats, RSP boards for beamlet stats (-1 means all):";
   int device = atoi(fgets(buf, 32, stdin));
   if (device < -1 || device >= n_devices)
   {
