@@ -6,7 +6,6 @@
 // $Id$
 
 
-//#include <qwidget.h>
 #include <qmainwindow.h>
 #include <qmenubar.h>
 #include <qpopupmenu.h>
@@ -15,7 +14,6 @@
 #include <qlabel.h>
 #include <qscrollview.h>
 
-//#include <UVPUVCoverageArea.h>
 #include <UVPTimeFrequencyPlot.h>
 #include <UVPGraphSettingsWidget.h>
 #include <UVPDataSet.h>
@@ -26,6 +24,10 @@
 #endif
 
 
+
+//! The main window class
+/*!
+ */
 class UVPMainWindow:public QMainWindow
 {
   Q_OBJECT                      // to make the signal/slot mechanism work
@@ -36,17 +38,13 @@ class UVPMainWindow:public QMainWindow
 
  public:                        /* Public part */
 
-  enum e_menu_command{mc_file_open,
-                      mc_file_quit,
-                      mc_plot_image,
-                      mc_plot_stop,
-                      mc_help_about};
-
   enum e_plotDataType{plotAmplitude, plotPhase, plotReal, plotImaginary};
 
   
    UVPMainWindow();
   ~UVPMainWindow();
+
+  void drawDataSet();
 
   public slots:
 
@@ -77,20 +75,16 @@ class UVPMainWindow:public QMainWindow
   QProgressBar*   itsProgressBar; /* Resides in Status bar */
   QLabel*         itsXPosLabel;
   QLabel*         itsYPosLabel;
-
   QScrollView*    itsScrollView;
+
   unsigned int    itsNumberOfChannels;
   unsigned int    itsNumberOfTimeslots;
 
-  UVPTimeFrequencyPlot*  itsCanvas;
+  UVPTimeFrequencyPlot*   itsCanvas;
   UVPGraphSettingsWidget* itsGraphSettingsWidget;
-  bool                   itsBusyPlotting;
+  bool                    itsBusyPlotting;
 
   UVPDataSet      itsDataSet;
-  //  UVPUVCoverageArea* itsCanvas;      /* The drawing canvas */
-  //  UVPImageCube*      itsCube;
-
-  std::vector< std::vector<UVPDataAtom> > itsTestMS;
 
   virtual void resizeEvent(QResizeEvent *event);
 
