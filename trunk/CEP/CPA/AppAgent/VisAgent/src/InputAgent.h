@@ -26,12 +26,13 @@
 #include <AppAgent/AppAgent.h>
 #include <AppAgent/AppEventAgentBase.h>
 #include <VisAgent/VisAgentVocabulary.h>
+#include <VisAgent/DataStreamMap.h>
 #include <VisCube/VisTile.h>
 class AppEventSink;
 
 namespace VisAgent 
 {
-
+    
 //##ModelId=3DF9FECD0169
 //##Documentation
 //## VisInputAgent is an specialized agent representing an input stream of
@@ -48,23 +49,58 @@ class InputAgent : public AppEventAgentBase
 {
   public:
     //##ModelId=3E41433F01DD
-    explicit InputAgent (const HIID &initf = AidInput)
-      : AppEventAgentBase(initf) {}
+    explicit InputAgent (const HIID &initf = AidInput);
     //##ModelId=3E41433F037E
-    InputAgent (AppEventSink &sink, const HIID &initf = AidInput)
-      : AppEventAgentBase(sink,initf) {}
+    InputAgent (AppEventSink &sink, const HIID &initf = AidInput);
     //##ModelId=3E50FAB702CB
-    InputAgent(AppEventSink *sink, int dmiflags, const HIID &initf = AidInput)
-      : AppEventAgentBase(sink,dmiflags,initf) {}
-
+    InputAgent(AppEventSink *sink, int dmiflags, const HIID &initf = AidInput);
     
     //##ModelId=3E42350F01EB
     //##Documentation
     //## Agent initialization method. Called by the application to initialize
     //## or reinitialize an agent. Agent parameters are supplied via a
     //## DataRecord.
-    virtual bool init (const DataRecord &data);
+      virtual bool init (const DataRecord &data);
+      
+    //##ModelId=3EB242F5014F
+    //##Documentation
+    //## Gets next object from input stream. 
+    //## All other get...() methods below are implemented in terms of this.
+    //## Returns: HEADER/TILE/FOOTER if an object has been retrieved
+    //##          WAIT      object has not yet arrived (for wait==NOWAIT)
+    //##          CLOSED    stream closed
+    //##          OUTOFSEQ  next object in stream is not of requested type
+      virtual int getNext ( HIID &id,       // returns ID of object
+                            ObjRef &ref,    // object will be attached to this ref
+                            int expect_type = 0,  // if specified, only returns a specific type of object
+                            int wait = AppEvent::WAIT );
+                            
+    //##ModelId=3EB242F5031B
+    //##Documentation
+    //## Checks if an object is waiting in the stream. Return value: same as
+    //## would have been returned by getNext(id,ref,0,NOWAIT).
+      virtual int hasNext () const;
+      
+    //##ModelId=3EB242F6001C
+    //##Documentation
+    //## Alias for getNext() when you don't need an ID
+      int getNext (ObjRef &ref,int expect_type = 0,int wait = AppEvent::WAIT)
+      { 
+        HIID dum; 
+        return getNext(dum,ref,expect_type,wait); 
+      }
   
+    //##ModelId=3EB242F50368
+    //## Checks if an object of a specific type is waiting in the stream. 
+    //## Return value: same as would have been returned by 
+    //## getNext(id,ref,expect_type,NOWAIT).
+      int hasNext (int expect_type) const
+      {
+        int res = hasNext();
+        return res == expect_type ? AppEvent::SUCCESS :
+               ( res <= 0 ? res : AppEvent::OUTOFSEQ );
+      }
+      
     //##ModelId=3DF9FECF0310
     //##Documentation
     //## Gets visibilities header from input stream. If wait=True, blocks until
@@ -73,31 +109,47 @@ class InputAgent : public AppEventAgentBase
     //##          WAIT      header has not yet arrived (only for wait=False)
     //##          CLOSED    stream closed
     //##          OUTOFSEQ  next object in stream is not a header (i.e. a tile)
-      virtual int getHeader   (DataRecord::Ref &hdr,int wait = AppEvent::WAIT);
-  
-    //##ModelId=3DF9FECF03A9
-    //##Documentation
-    //## Gets next available tile from input stream. If wait=True, blocks until
-    //## one has arrived.
-    //## Returns: SUCCESS   on success
-    //##          WAIT      a tile has not yet arrived (only for wait=False)
-    //##          CLOSED    stream closed
-    //##          OUTOFSEQ  next object in stream is not a tile (i.e. a header)
-      virtual int getNextTile (VisTile::Ref &tile,int wait = AppEvent::WAIT);
+      template<class RefType>
+      int getSpecificType (RefType &obj,int typecode,int wait = AppEvent::WAIT)
+      { 
+        ObjRef ref;
+        int res = getNext(ref,typecode,wait);
+        if( res != typecode ) 
+          return res;
+        obj = ref; 
+        return AppEvent::SUCCESS;
+      }
+        
+    //##ModelId=3DF9FECF0310
+      int getHeader   (DataRecord::Ref &hdr,int wait = AppEvent::WAIT)
+      { return getSpecificType(hdr,HEADER,wait); }
       
+    //##ModelId=3DF9FECF03A9
+      int getNextTile (VisTile::Ref &tile,int wait = AppEvent::WAIT)
+      { return getSpecificType(tile,DATA,wait); }
+      
+    //##ModelId=3EB242F601A6
+      int getFooter   (DataRecord::Ref &ftr,int wait = AppEvent::WAIT)
+      { return getSpecificType(ftr,FOOTER,wait); }
+  
     //##ModelId=3DF9FED0005A
     //##Documentation
-    //## Checks if a header is waiting in the stream. Return value: same as
-    //## would have been returned by getHeader(wait=False).
-      virtual int hasHeader   () const;
+    //## Checks if a header is waiting in the stream. 
+      int hasHeader   () const
+      { return hasNext(HEADER); }
       
     //##ModelId=3DF9FED00076
     //##Documentation
-    //## Checks if a tile is waiting in the stream. Return value: same as would
-    //## have been returned by getNextTile(wait=False).
-      virtual int hasTile     () const;
+    //## Checks if a tile is waiting in the stream. 
+      int hasTile     () const
+      { return hasNext(DATA); }
       
-    //##ModelId=3DF9FED00090
+    //##ModelId=3EB2434D0000
+    //## Checks if a footer is waiting in the stream. 
+      int hasFooter   () const
+      { return hasNext(FOOTER); }
+      
+    //##ModelId=3EB2434D0054
     //##Documentation
     //## Tells the agent to suspend the input stream. Agents are not obliged to
     //## implement this. An application can use suspend() to "advise" the input
@@ -105,15 +157,15 @@ class InputAgent : public AppEventAgentBase
     //## can use this to determine it queuing or load balancing strategy.
       virtual void suspend     ();
       
-    //##ModelId=3DF9FED000AA
+    //##ModelId=3EB2434D008D
     //##Documentation
     //## Resumes a stream after a suspend(). 
       virtual void resume      ();
       
-    //##ModelId=3E4273B30013
+    //##ModelId=3EB2434D00CB
       bool suspended() const;
       
-    //##ModelId=3DF9FED000C6
+    //##ModelId=3EB2434D0107
     //##Documentation
     //## Returns the number of tiles queued up in a stream. Agents are not
     //## obliged to implement this. Control agents are meant to use this method
@@ -121,28 +173,30 @@ class InputAgent : public AppEventAgentBase
       virtual int  numPendingTiles ()
       { return hasTile() == AppEvent::SUCCESS ? 1 : 0; }
       
-    //##ModelId=3E41141D029F
+    //##ModelId=3EB2434D014F
       virtual string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;
       
-    //##ModelId=3E9BD6400048
+    //##ModelId=3EB2434D0301
       DefineRefTypes(InputAgent,Ref);
 
   private:
-    //##ModelId=3E4165150313
+    //##ModelId=3EB2434E0015
     InputAgent();
 
-    //##ModelId=3E41651601E4
+    //##ModelId=3EB2434E0066
     InputAgent(const InputAgent& right);
 
-    //##ModelId=3E416516038F
+    //##ModelId=3EB2434E012C
     InputAgent& operator=(const InputAgent& right);
     
-    //##ModelId=3E42350E030A
+    //##ModelId=3EB2434C031D
     bool suspended_;
-
+    
+    //##ModelId=3EB2434C03A0
+    static DataStreamMap & datamap;
 };
 
-//##ModelId=3E4273B30013
+//##ModelId=3EB2434D00CB
 inline bool InputAgent::suspended() const
 {
     return suspended_;

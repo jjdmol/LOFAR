@@ -3,8 +3,8 @@ dmi_dir = $(lofar_sharedir)/../DMI
 lib_LTLIBRARIES = libmsvisagent.la
 
 libmsvisagent_la_SOURCES = \
-  MSInputAgent.cc \
-  MSOutputAgent.cc \
+  MSInputSink.cc \
+  MSOutputSink.cc \
   MSVisAgentDebugContext.cc \
   AID-MSVisAgent-Registry.cc
 
