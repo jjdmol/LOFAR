@@ -8,7 +8,7 @@ lib_LTLIBRARIES = libpscf.la
 
 libpscf_la_SOURCES = Dispatcher.cc  Message.cc  MsgAddress.cc  \
 	WPInterface.cc WorkProcess.cc Timestamp.cc PSCFDebugContext.cc \
-  GWClientWP.cc GWServerWP.cc GatewayWP.cc \
+  GWClientWP.cc GWServerWP.cc GatewayWP.cc LoggerWP.cc \
   Socket.cc Subscriptions.cc \
   AID-PSCF-Registry.cc
   

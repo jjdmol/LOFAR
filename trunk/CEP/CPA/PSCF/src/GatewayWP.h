@@ -29,10 +29,13 @@
 #include "Socket.h"
 // WorkProcess
 #include "WorkProcess.h"
+// Subscriptions
+#include "Subscriptions.h"
 //## begin module%3C90BFDD0236.declarations preserve=no
 //## end module%3C90BFDD0236.declarations
 
 //## begin module%3C90BFDD0236.additionalDeclarations preserve=yes
+#pragma aid Remote Up Down Subscriptions Init Heartbeat
 //## end module%3C90BFDD0236.additionalDeclarations
 
 
@@ -104,9 +107,25 @@ class GatewayWP : public WorkProcess  //## Inherits: <unnamed>%3C90BF100390
       typedef enum { MT_PING=0,MT_DATA=1,MT_ACK=2,MT_RETRY=3,
                      MT_ABORT=4,MT_MAXTYPE=4 } PacketTypes;
       
-      typedef enum { IDLE,HEADER,BLOCK,TRAILER } DataState;
+      typedef enum { IDLE=0,HEADER=1,BLOCK=2,TRAILER=3 } DataState;
+      typedef enum { INITIALIZING = 0, 
+                     CONNECTED    = 1, 
+                     CONN_ERROR   = 2, 
+                     CLOSING      = 3  } PeerState;
       
-
+      // closes down the gateway
+      void shutdown ();
+      
+      // Helper functions to get/set the state
+      // The read/write/peer states are maintained in the first, second and
+      // third byte of the overall WP state.
+      int readState () const     { return state()&0xFF; };
+      int writeState () const    { return (state()&0xFF00)>>8; };
+      int peerState () const     { return (state()&0xFF0000)>>16; };
+      
+      void setReadState  (int st)  { setState((state()&~0xFF)|st); };
+      void setWriteState (int st)  { setState((state()&~0xFF00)|(st<<8)); };
+      void setPeerState  (int st)  { setState((state()&~0xFF0000)|(st<<16)); };
       
       // Helper functions for reading from socket
       int requestResync   ();   // ask remote to abort & resync
@@ -116,11 +135,17 @@ class GatewayWP : public WorkProcess  //## Inherits: <unnamed>%3C90BF100390
       int readyForData    (const PacketHeader &hdr); // prepare to receive data block
       void processIncoming();   // unblocks and sends off incoming message
       
+      // parses the initialization message
+      void processInitMessage( const void *block,size_t blocksize );
+    
       // Helper functions for writing to socket
       void prepareMessage (MessageRef &mref);
       void prepareHeader  ();
       void prepareData    ();
       void prepareTrailer ();
+      
+      // remote info
+      AtomicID rhost,rprocess;
       
       // incoming/outgoing packet header
       PacketHeader header,wr_header;
@@ -128,7 +153,7 @@ class GatewayWP : public WorkProcess  //## Inherits: <unnamed>%3C90BF100390
       DataTrailer  trailer,wr_trailer;
       // max size of xmitted block. Anything bigger than that will cause
       // an error (should be in shared memory!)
-      static const int MaxBlockSize = 1024*1024;
+      static const int MaxBlockSize = 512*1024*1024;
       
       // reading state
       DataState readstate;
@@ -138,7 +163,6 @@ class GatewayWP : public WorkProcess  //## Inherits: <unnamed>%3C90BF100390
             read_junk;
       long  read_checksum,
             incoming_checksum;
-      SmartBlock *read_block;
       BlockSet read_bset;
       
       // writing state
@@ -152,7 +176,14 @@ class GatewayWP : public WorkProcess  //## Inherits: <unnamed>%3C90BF100390
       MessageRef pending_msg;          // one pending write-slot
       
       // timestamps for pings
-      Timestamp last_read,last_write;      
+      Timestamp last_read,last_write,last_write_to;      
+      // this is is the status monitor
+      typedef struct {
+        int  counter;
+        unsigned long long read,written;
+        double ts;
+      } StatMon;
+      StatMon statmon;
       
       //## end GatewayWP%3C90BEF001E5.protected
   private:
@@ -177,8 +208,16 @@ class GatewayWP : public WorkProcess  //## Inherits: <unnamed>%3C90BF100390
       Socket *sock;
       //## end GatewayWP::sock%3C9225740345.role
 
+      //## Association: PSCF::<unnamed>%3C9B06A30088
+      //## Role: GatewayWP::remote_subs%3C9B06A303D1
+      //## begin GatewayWP::remote_subs%3C9B06A303D1.role preserve=no  private: Subscriptions { -> 0..*VHgN}
+      map<MsgAddress,Subscriptions> remote_subs;
+      //## end GatewayWP::remote_subs%3C9B06A303D1.role
+
     // Additional Implementation Declarations
       //## begin GatewayWP%3C90BEF001E5.implementation preserve=yes
+      typedef map<MsgAddress,Subscriptions>::iterator RSI;
+      typedef map<MsgAddress,Subscriptions>::const_iterator CRSI;
       //## end GatewayWP%3C90BEF001E5.implementation
 
 };

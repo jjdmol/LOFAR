@@ -70,6 +70,7 @@ void GWServerWP::start ()
 void GWServerWP::stop ()
 {
   //## begin GWServerWP::stop%3C90BE880037.body preserve=yes
+  WorkProcess::stop();
   if( sock )
     delete sock;
   sock = 0;
@@ -96,13 +97,13 @@ int GWServerWP::input (int , int )
   Socket *newsock = sock->accept();
   if( newsock ) // success? Launch a Gateway WP to manage it
   {
-    dprintf(1)("accepted new connection, launching gateway\n");
+    lprintf(1,"accepted new connection, launching gateway\n");
     attachWP(new GatewayWP(newsock),DMI::ANON);
     return Message::ACCEPT;
   }
   else
   { 
-    dprintf(1)("accept error: %s. Closing and retrying\n",sock->errstr().c_str());
+    lprintf(1,"error: accept(): %s.\nClosing and retrying\n",sock->errstr().c_str());
     // just to be anal, close the socket and retry binding it
     open_retries = 0;
     tryOpen();
@@ -119,29 +120,30 @@ void GWServerWP::tryOpen ()
   if( sock )
     delete sock;
   sock = new Socket("sock/"+wpname(),port,Socket::TCP,10);
-  dprintf(1)("opening server socket: result %d\n",sock->errcode());
+  lprintf(1,"opening server socket: result %d\n",sock->errcode());
   if( !sock->ok() )
   {
     if( sock->errcode() == Socket::BIND )
     {
       // if bind error, assume another process already has it open,
       // so launch a GWClientWP to attach to it, and commit harakiri
-      dprintf(1)("socket bind error, launching client mode\n");
-      attachWP(new GWClientWP("localhost",port),DMI::ANON);
+      lprintf(1,"socket bind error, launching client mode\n");
+      vector<string> connlist(1,"localhost:"+port); 
+      attachWP(new GWClientWP(connlist),DMI::ANON);
       detachMyself();
     }
     else // some other error
     {
-      dprintf(1)("fatal error: %s\n",sock->errstr().c_str());
+      lprintf(1,"error: %s\n",sock->errstr().c_str());
       delete sock; sock=0;
       if( open_retries++ > MaxOpenRetries )
       {
-        dprintf(1)("too many retries, giving up\n");
+        lprintf(1,"too many retries, giving up\n");
         detachMyself();
       }
       else // retry later - schedule a timeout
       {
-        dprintf(1)("will retry later\n");
+        lprintf(1,"will retry later\n");
         addTimeout(Timeout_Retry,0,EV_ONESHOT);
       }
     }

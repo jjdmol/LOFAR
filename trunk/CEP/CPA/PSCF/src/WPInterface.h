@@ -12,7 +12,7 @@
 
 //## Module: WPInterface%3C8F268F00DE; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\WPInterface.h
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\WPInterface.h
 
 #ifndef WPInterface_h
 #define WPInterface_h 1
@@ -25,16 +25,17 @@
 //## begin module%3C8F268F00DE.includes preserve=yes
 #include <list>
 #include <set>
+#include <queue>
 //## end module%3C8F268F00DE.includes
 
-// CountedRefTarget
-#include "CountedRefTarget.h"
+// Subscriptions
+#include "Subscriptions.h"
 // PSCFDebugContext
 #include "PSCFDebugContext.h"
 // Message
 #include "Message.h"
-// Subscriptions
-#include "Subscriptions.h"
+// CountedRefTarget
+#include "CountedRefTarget.h"
 
 class Dispatcher;
 
@@ -44,27 +45,12 @@ class Dispatcher;
 //## begin module%3C8F268F00DE.additionalDeclarations preserve=yes
 #pragma aidgroup PSCF
 // standard event messages
-#pragma aid MsgEvent MsgTimeout MsgInput MsgSignal MsgSubscribe
+#pragma aid Event Timeout Input Signal Subscribe
 // hello/bye messages for WPs
-#pragma aid MsgHello MsgBye
+#pragma aid Hello Bye
 
 //## end module%3C8F268F00DE.additionalDeclarations
 
-
-//## begin MessageQueue%3C8F15860044.preface preserve=yes
-//## end MessageQueue%3C8F15860044.preface
-
-//## Class: MessageQueue%3C8F15860044
-//## Category: PSCF%3BCEC935032A
-//## Subsystem: PSCF%3C5A73670223
-//## Persistence: Transient
-//## Cardinality/Multiplicity: n
-
-
-
-typedef list<MessageRef> MessageQueue;
-//## begin MessageQueue%3C8F15860044.postscript preserve=yes
-//## end MessageQueue%3C8F15860044.postscript
 
 //## begin WPInterface%3C7B6A3702E5.preface preserve=yes
 //## end WPInterface%3C7B6A3702E5.preface
@@ -83,6 +69,12 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
                     	public SingularRefTarget  //## Inherits: <unnamed>%3C8CDD980366
 {
   //## begin WPInterface%3C7B6A3702E5.initialDeclarations preserve=yes
+  public:
+      typedef struct {  MessageRef mref; 
+                        int priority; 
+                        ulong tick; 
+                      } QueueEntry;
+      typedef list<QueueEntry> MessageQueue;
   //## end WPInterface%3C7B6A3702E5.initialDeclarations
 
   public:
@@ -129,12 +121,12 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
       virtual void stop ();
 
       //## Operation: poll%3C8F13B903E4
-      bool poll ();
+      bool poll (ulong tick);
 
       //## Operation: enqueue%3C8F204A01EF
       //	Places ref into the receive queue. Note that the ref is transferred.
       //	Returns True if WP needs to be repolled.
-      bool enqueue (const MessageRef &msg);
+      bool enqueue (const MessageRef &msg, ulong tick);
 
       //## Operation: dequeue%3C8F204D0370
       //	Removes from queue messages matching the id. Returns True if WP
@@ -154,8 +146,8 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
       //	is specified, then attaches it to the message.
       int searchQueue (const HIID &id, int pos = 0, MessageRef *ref = 0);
 
-      //## Operation: peekAtQueue%3C8F206C0071
-      const Message * peekAtQueue () const;
+      //## Operation: topOfQueue%3C8F206C0071
+      const WPInterface::QueueEntry * topOfQueue () const;
 
       //## Operation: queueLocked%3C8F207902AB
       bool queueLocked () const;
@@ -198,6 +190,9 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
       //	address, as determined by scope).
       int publish (MessageRef msg, int scope = Message::GLOBAL);
 
+      //## Operation: log%3CA0457F01BD
+      void log (string str, int level = 0, AtomicID type = LogNormal);
+
     //## Get and Set Operations for Class Attributes (generated)
 
       //## Attribute: address%3C7CBA880058
@@ -210,6 +205,10 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
       //## Attribute: state%3C8F256E024B
       int state () const;
       void setState (int value);
+
+      //## Attribute: logLevel%3CA07E5F00D8
+      static int logLevel ();
+      static void setLogLevel (int value);
 
     //## Get and Set Operations for Associations (generated)
 
@@ -230,13 +229,19 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
   protected:
     //## Get and Set Operations for Associations (generated)
 
-      //## Association: PSCF::<unnamed>%3C8F240002EF
-      //## Role: WPInterface::queue%3C8F24010174
-      const MessageQueue& queue () const;
+      //## Association: PSCF::<unnamed>%3CA1A1AB0346
+      //## Role: WPInterface::queue%3CA1A1AC01AD
+      const WPInterface::MessageQueue& queue () const;
 
     // Additional Protected Declarations
       //## begin WPInterface%3C7B6A3702E5.protected preserve=yes
-      MessageQueue& queue ();
+      Subscriptions& getSubscriptions ();
+      
+      WPInterface::MessageQueue & queue ();
+      
+      
+      // publishes a message containing all current subscriptions
+      void publishSubscriptions ();
       
       bool full_lock,receive_lock;
       
@@ -269,6 +274,10 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
       int state_;
       //## end WPInterface::state%3C8F256E024B.attr
 
+      //## begin WPInterface::logLevel%3CA07E5F00D8.attr preserve=no  public: static int {U} 2
+      static int logLevel_;
+      //## end WPInterface::logLevel%3CA07E5F00D8.attr
+
     // Data Members for Associations
 
       //## Association: PSCF::<unnamed>%3C7E14150352
@@ -276,21 +285,19 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
       Dispatcher *dsp_;
       //## end WPInterface::dsp%3C7E1416017C.role
 
-      //## Association: PSCF::<unnamed>%3C8F240002EF
-      //## begin WPInterface::queue%3C8F24010174.role preserve=no  protected: MessageQueue { -> 1VHgN}
-      MessageQueue queue_;
-      //## end WPInterface::queue%3C8F24010174.role
-
       //## Association: PSCF::<unnamed>%3C999CBF01D6
       //## begin WPInterface::subscriptions%3C999CC00015.role preserve=no  public: Subscriptions { -> 1VHgN}
       Subscriptions subscriptions;
       //## end WPInterface::subscriptions%3C999CC00015.role
 
+      //## Association: PSCF::<unnamed>%3CA1A1AB0346
+      //## begin WPInterface::queue%3CA1A1AC01AD.role preserve=no  protected: MessageRef { -> 0..*VHgN}
+      WPInterface::MessageQueue queue_;
+      //## end WPInterface::queue%3CA1A1AC01AD.role
+
     // Additional Implementation Declarations
       //## begin WPInterface%3C7B6A3702E5.implementation preserve=yes
       bool started;
-      // publishes a message containing all current subscriptions
-      void publishSubs ();
       
       WPID wpid_;
       
@@ -393,6 +400,20 @@ inline void WPInterface::setState (int value)
   //## end WPInterface::setState%3C8F256E024B.set
 }
 
+inline int WPInterface::logLevel ()
+{
+  //## begin WPInterface::logLevel%3CA07E5F00D8.get preserve=no
+  return logLevel_;
+  //## end WPInterface::logLevel%3CA07E5F00D8.get
+}
+
+inline void WPInterface::setLogLevel (int value)
+{
+  //## begin WPInterface::setLogLevel%3CA07E5F00D8.set preserve=no
+  logLevel_ = value;
+  //## end WPInterface::setLogLevel%3CA07E5F00D8.set
+}
+
 //## Get and Set Operations for Associations (inline)
 
 inline Dispatcher * WPInterface::dsp () const
@@ -402,13 +423,6 @@ inline Dispatcher * WPInterface::dsp () const
   //## end WPInterface::dsp%3C7E1416017C.get
 }
 
-inline const MessageQueue& WPInterface::queue () const
-{
-  //## begin WPInterface::queue%3C8F24010174.get preserve=no
-  return queue_;
-  //## end WPInterface::queue%3C8F24010174.get
-}
-
 inline const Subscriptions& WPInterface::getSubscriptions () const
 {
   //## begin WPInterface::getSubscriptions%3C999CC00015.get preserve=no
@@ -416,8 +430,18 @@ inline const Subscriptions& WPInterface::getSubscriptions () const
   //## end WPInterface::getSubscriptions%3C999CC00015.get
 }
 
+inline const WPInterface::MessageQueue& WPInterface::queue () const
+{
+  //## begin WPInterface::queue%3CA1A1AC01AD.get preserve=no
+  return queue_;
+  //## end WPInterface::queue%3CA1A1AC01AD.get
+}
+
 //## begin module%3C8F268F00DE.epilog preserve=yes
-inline MessageQueue& WPInterface::queue () 
+inline Subscriptions& WPInterface::getSubscriptions () 
+{ return subscriptions; };
+
+inline WPInterface::MessageQueue & WPInterface::queue () 
 { return queue_; }
 //## end module%3C8F268F00DE.epilog
 

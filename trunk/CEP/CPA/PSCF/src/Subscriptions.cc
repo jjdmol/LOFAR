@@ -159,7 +159,7 @@ void Subscriptions::unpack (const void* block, size_t sz)
   while( n-->0 )
   {
     size_t sz1 = *(hdr++), sz2 = *(hdr++);
-    chksize += sz2+sz2;
+    chksize += sz1 + sz2;
     FailWhen(sz<chksize,"corrupt block");
     SubElement newelem;
     newelem.mask.unpack(data,sz1); data += sz1;

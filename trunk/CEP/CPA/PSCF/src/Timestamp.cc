@@ -12,7 +12,7 @@
 
 //## Module: Timestamp%3C7F3B77034D; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\Timestamp.cc
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Timestamp.cc
 
 //## begin module%3C7F3B77034D.additionalIncludes preserve=no
 //## end module%3C7F3B77034D.additionalIncludes
@@ -60,6 +60,16 @@ const Timestamp & Timestamp::now (Timestamp *pts)
   pts->usec_ = tm.tv_usec;
   return *pts;
   //## end Timestamp::now%3C8F67DD00BD.body
+}
+
+string Timestamp::toString (const char *format) const
+{
+  //## begin Timestamp::toString%3CA06AE50335.body preserve=yes
+  time_t tm = sec_;
+  char tmp[256];
+  strftime(tmp,sizeof(tmp),format,localtime(&tm));
+  return tmp;
+  //## end Timestamp::toString%3CA06AE50335.body
 }
 
 Timestamp & Timestamp::operator += (const Timestamp &other)

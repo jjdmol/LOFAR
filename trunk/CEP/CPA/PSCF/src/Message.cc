@@ -12,7 +12,7 @@
 
 //## Module: Message%3C7B7F2F024A; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\Message.cc
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Message.cc
 
 //## begin module%3C7B7F2F024A.additionalIncludes preserve=no
 //## end module%3C7B7F2F024A.additionalIncludes
@@ -212,13 +212,13 @@ int Message::fromBlock (BlockSet& set)
   // get and unpack header
   BlockRef href;
   set.pop(href);
-  const HeaderBlock & hdr = *reinterpret_cast<const HeaderBlock*>(href->data());
+  const HeaderBlock & hdr = *static_cast<const HeaderBlock*>(href->data());
   FailWhen(href->size() < sizeof(HeaderBlock) ||
            href->size() != sizeof(HeaderBlock) + 
            hdr.idsize + hdr.fromsize + hdr.tosize,"corrupt header block");
   priority_ = hdr.priority;
   state_    = hdr.state;
-  const char *buf = href->data() + sizeof(HeaderBlock);
+  const char *buf = static_cast<const char*>(href->data()) + sizeof(HeaderBlock);
   id_.unpack(buf,hdr.idsize);     buf += hdr.idsize;
   from_.unpack(buf,hdr.fromsize); buf += hdr.fromsize;
   to_.unpack(buf,hdr.tosize);
@@ -252,7 +252,8 @@ int Message::toBlock (BlockSet &set) const
       tosize = to_.packSize(),
       fromsize = from_.packSize();
   SmartBlock *hdrblock = new SmartBlock(sizeof(HeaderBlock)+idsize+tosize+fromsize);
-  HeaderBlock & hdr = *reinterpret_cast<HeaderBlock*>(hdrblock->data());
+  BlockRef bref(hdrblock,DMI::ANON|DMI::WRITE); 
+  HeaderBlock & hdr = *static_cast<HeaderBlock*>(hdrblock->data());
   hdr.priority  = priority_;
   hdr.state     = state_;
   hdr.idsize    = idsize;
@@ -260,13 +261,13 @@ int Message::toBlock (BlockSet &set) const
   hdr.tosize    = tosize;
   hdr.has_block = block_.valid(); 
   hdr.payload_type = payload_.valid() ? payload_->objectType() : NullType;
-  char *buf = hdrblock->data() + sizeof(HeaderBlock);
+  char *buf = static_cast<char*>(hdrblock->data()) + sizeof(HeaderBlock);
   buf += id_.pack(buf);      
   buf += from_.pack(buf);    
   to_.pack(buf);      
   
   // attach to set
-  set.pushNew().attach(hdrblock,DMI::WRITE|DMI::ANON);
+  set.push(bref);
   int blockcount = 1;
   if( block_.valid() )
   {
