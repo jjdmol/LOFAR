@@ -57,7 +57,6 @@ WH_Solve::WH_Solve(const string& name, int nPrediffInputs)
   for (int i=0; i<itsNPrediffers; i++)
   {
     getDataManager().addInDataHolder(i+2, new DH_Prediff(name+"_in"));
-    getDataManager().setAutoTriggerIn(i+2, false);
   }
 
 }
