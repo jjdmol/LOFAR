@@ -54,8 +54,8 @@
     each and every one of those is that they work on (parts of) a
     problem by letting pieces of software (knowledge sources) take
     data from a central place (the blackboard), do with it whatever
-    they can to get nearer to the solution, and put the results back
-    to that central place.
+    they can in order to approach an optimal quality of a solution,
+    and put the results back to that central place.
 
     As described in \hyperlink{bib:Design-Alternatives}{[COR89]}, there are
     several levels at which to implement parallel Blackboard
@@ -146,18 +146,20 @@
     The blackboard architectural pattern facilitates this tweaking of
     different algorithms by its loose coupling. The different
     protocols between components in the system need to be very well
-    specified for this.
+    specified for this in order to make extending and tweaking
+    somewhat error proof.
 
-    A knowledge source it's result definition must include an
+    A knowledge source's result definition must include an
     interpreter object that can return a quality of the result. For a
-    controller it must be clear in what kind of new workload the
-    result results.
+    controller it must be clear to what kind of new workload the
+    result leads.
 
     As a controller object one would want to assign a workload to an
     knowledge source as soon as the decision that such work is needed
     is made. Overhead caused by waiting for the resource to become
     available or for the process to start and initialize should be
-    avoided.
+    avoided. Hence the knowledge source should be started and ready,
+    or the assignment should be queued.
 
     For fast invocation of calibration engines it might be a good
     idea to have them implemented as servers. This can for instance be
@@ -171,9 +173,10 @@
 
     For unattended invocation of calibration engines a message queue
     can be created that will contain workloads in order of precedence
-    or priority. This can help if the current workload is not
-    necissarily the only cause for a new workload for a certain
-    engine.
+    or priority. As mentioned above this gives a controller the
+    freedom to act as and when it deems fit. This is also useful if
+    the current workload is not the only possible cause for a new
+    workload for a certain engine.
 
   \section{selfcal use of the blackboard pattern}
   \label{sec:selfcal-use-blackboard}
@@ -279,7 +282,7 @@
       The strategy chosen for this demo is as follows; The data set
       responsibility is split in two over time. After that the second
       part is split in three over frequency. As there is no real
-      dataset involved we only let one BlackBoard control 'real'
+      dataset involved we only let one BlackBoard control `real'
       actions. the first child at top level is the lucky one. It
       starts three Thread/Controller instantiations with a quite
       similar set of parameters to solve. Each Thread gets the same
@@ -559,7 +562,7 @@
     is only one fundamental knowledge-source, that the amount of data
     is so huge, that several strategies might be explored
     simultaneously, that priority might be added to a strategy, that
-    watchers hang around to evaluate intermediate results, have no or
+    watchers hang around to compare and evaluate intermediate results, have no or
     hardly any prior implementations.
 
     The metaphor blackboard seems not to the point as the main task of
@@ -868,3 +871,5 @@ void SelfcalEngineStub::dump() {
 % End of document
 % --------------------------------------------
 \end{document}
+
+% LocalWords:  ASTRON selfcal BlackBoard
