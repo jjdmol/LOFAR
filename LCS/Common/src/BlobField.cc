@@ -85,7 +85,7 @@ namespace LOFAR {
   void BlobField<T>::setOSpace (BlobOStream& bs)
   {
     if (isScalar()) {
-      bs.align (std::min(sizeof(T),8u));
+      bs.align (std::min(sizeof(T),(size_t) 8));
       setOffset (bs.setSpace (sizeof(T)), 0);
     } else {
       int64 off = bs.tellPos();                        // array offset
@@ -100,7 +100,7 @@ namespace LOFAR {
   void BlobField<T>::getISpace (BlobIStream& bs)
   {
     if (isScalar()) {
-      bs.align (std::min(sizeof(T),8u));
+      bs.align (std::min(sizeof(T),(size_t) 8));
       setOffset (bs.getSpace (sizeof(T)), 0);
     } else {
       int64 off = bs.tellPos();     // array offset
