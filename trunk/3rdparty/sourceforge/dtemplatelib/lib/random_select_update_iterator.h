@@ -76,7 +76,7 @@ public:
 	DB_random_select_update_iterator(const SelectIterator &sel_it, const CountedPtr<this_buffer> &buffer) : 
 	  pselect_buffer(buffer),
 	  row(1),
-	  preplacer()
+	  preplacer(NULL)
 	{
 	  // if the select iterator points to end(), 
 	  // then point the random access iterator to the end of the resultset
@@ -90,7 +90,7 @@ public:
 	 DB_random_select_update_iterator(const DBView<DataObj, ParamObj> &view, const CountedPtr<this_buffer> &buffer) : 
 	  pselect_buffer(buffer),
 	  row(1),
-	  preplacer()
+	  preplacer(NULL)
 	{
 		  //default is for iterator to point to beginning of recordset
 	}
@@ -173,13 +173,13 @@ private:
    const DataObj &get_reference() const
    {
 	   if (row < 1)
-		   throw DBException(_TEXT("DB_random_select_update_iterator::get_reference()"),
+		   DTL_THROW DBException(_TEXT("DB_random_select_update_iterator::get_reference()"),
 				_TEXT("Attempt to access element past end of iterator range!"), NULL, NULL);
 
 	   bool at_end;
 	   const DataObj *pd = pselect_buffer->get_row(row, at_end);
 	   if (at_end)
-		   throw DBException(_TEXT("DB_random_select_update_iterator::get_reference()"),
+		   DTL_THROW DBException(_TEXT("DB_random_select_update_iterator::get_reference()"),
 				_TEXT("Attempt to access element past end of iterator range!"), NULL, NULL);
 
 	   return *pd;

@@ -179,7 +179,7 @@ protected:
 			return;
 
 		if (pDBview == NULL)
-			throw DBException(_TEXT("DB_iterator::FixQuery()"),
+			DTL_THROW DBException(_TEXT("DB_iterator::FixQuery()"),
 				_TEXT("Unable to fix query through NULL view ptr."), NULL, NULL);
 
 		DBView<DataObj, ParamObj> tmp_view(*pDBview);
@@ -205,6 +205,8 @@ protected:
 	  try
 	  {
 	    ClearBindings();
+
+		// apply BPA in BuildAndBindEarly
 		
 		// *** For DynamicRowBCA case only for BCA ***
 	    // for inserts and updates must remove appended fields as reported by GetFieldInfo()
@@ -222,9 +224,6 @@ protected:
 		if (sqlQryType != SQL)
 			boundIOs.GetColumnNames();
 
-		// apply BPA
-		// boundIOs.BindAsBase(*pParambuf);
-		// bpa(boundIOs, *pParambuf);
 
 		ValidateParams();
 
@@ -370,7 +369,7 @@ public:
 	    dtl_ios_base(),
 		pDBview(db_it.pDBview), //boundIOs(BoundIO::BIND_ADDRESSES), 
 		boundIOs(), pRowbuf(db_it.pRowbuf), pParambuf(new ParamObj(*(db_it.pParambuf))),
-		stmt(db_it.GetQuery(), (db_it.pDBview)->GetConnection(), db_it.stmt.GetPrepare()),
+		stmt(db_it.stmt),
 		sqlQryType(db_it.sqlQryType), bca(db_it.bca), bpa(db_it.bpa), io_handler(db_it.io_handler), count(db_it.count),
 		lastCount(db_it.lastCount)
 		{ 
@@ -425,6 +424,9 @@ public:
 	// needed so users can set parameter values
 	ParamObj &Params()
 	{
+		if (!pParambuf)
+			BuildAndBindEarly();
+
 		return *pParambuf;
     }
 
@@ -432,7 +434,16 @@ public:
 	// if ParamObj::operator=() is atomic and consistent
 	void Params(const ParamObj &params)
 	{
+		if (!pParambuf)
+			BuildAndBindEarly();
+
 		*pParambuf = params;
+	}
+
+
+	unsigned int GetBoundParamCount()
+	{
+		return (unsigned int) (boundIOs.NumParams());
 	}
 
 	// returns a *copy* of the DataObj currently held by the iterator
@@ -442,7 +453,7 @@ public:
 		DB_iterator<DataObj, ParamObj> *this_ptr =
 			const_cast<DB_iterator<DataObj, ParamObj> *>(this);
 		if (!pRowbuf)
-			this_ptr->ReBindRowbuf(); // allocate rowbuf if we don't already have one
+			this_ptr->BuildAndBindEarly(); // allocate rowbuf if we don't already have one
 		return *(this_ptr->pRowbuf);
 	}
 
@@ -543,7 +554,7 @@ public:
 		{
 			size_t param = *set_it;
 			if ((param != checker) || (param >= count))
-				throw DBException(_TEXT("DB_iterator::ValidateParams()"),
+				DTL_THROW DBException(_TEXT("DB_iterator::ValidateParams()"),
 					_TEXT("Invalid parameter numbering in BPA!"), NULL, NULL);
 
 		}
@@ -552,6 +563,15 @@ public:
 
 	// set flag to use SQLPrepare when executing iterator
 	void SetPrepare(bool flag) {stmt.SetPrepare(flag);}
+
+	void Reset()
+	{
+	    stmt.Reset();
+	    count = 0;
+	    lastCount = 0;
+		dtl_ios_base * base = static_cast<dtl_ios_base *>(this);
+		*base = dtl_ios_base(); // reset any error flags		
+	}
 
 	friend class DB_select_update_iterator<DataObj, ParamObj>;
 };
@@ -598,7 +618,7 @@ template<class DataObj, class ParamObj = DefaultParamObj<DataObj> >
 	  try
 	  {
 	   if (need_to_clear)
-		   ClearColBindings();
+		   this->ClearColBindings();
 
 	   // note that columns will appear in the map in the same order that they are
 	   // in the view's colNames set as both conainers are ordered
@@ -608,7 +628,11 @@ template<class DataObj, class ParamObj = DefaultParamObj<DataObj> >
 
 			if (column.IsColumn())
 			{
+#ifdef DTL_NO_SQL_GETDATA
+			  if (true) // Use SQLBindCol instead of SQLGetData
+#else
 			  if (!column.IsVariString()) // standard binding
+#endif
 			  {
 				// get target buffer we need to bind to
 				void *addr_to_bind = column.GetRawPtr();
@@ -638,9 +662,13 @@ template<class DataObj, class ParamObj = DefaultParamObj<DataObj> >
 						buffer_len, column.GetBytesFetchedPtr());
 					  break;
 				   case USER_DEFINED:
-				   	throw RootException(_TEXT("MakeColBindings"),_TEXT("USER_DEFINED not supported"));
+				   	DTL_THROW RootException(_TEXT("MakeColBindings"),_TEXT("USER_DEFINED not supported"));
 				}
 			  }
+			  // Do not bind columns we intend to retrieve with SQLGetData
+			  // In the case of INSERT, UPDATE or DELETE we still need to convert columns
+			  // to parameters here.
+			  //
 			  else if (column.IsVariString() && this->sqlQryType != SELECT &&
 							this->sqlQryType != SQL)
 			  {
@@ -657,21 +685,12 @@ template<class DataObj, class ParamObj = DefaultParamObj<DataObj> >
 				 SDWORD *bytes_fetched_ptr =
 							column.GetLenAtExecPtr();
 
-				 switch (this->sqlQryType)
-				 {
-				 case SQL: // not sure how to handle output parameters
-					 this->stmt.BindParam(column.GetColNo(), column.GetParamType(),
+				 // INSERT, UPDATE, DEL
+				 this->stmt.BindParam(column.GetColNo(), SQL_PARAM_INPUT,
 							column.GetCType(), column.GetSQLType(),
 							column.GetColumnSize(this->pDBview->GetConnection()), column.GetPrecision(),
 							magic_ptr, 0, bytes_fetched_ptr);
-						break;
-			     default: // INSERT, UPDATE, DEL
-					 this->stmt.BindParam(column.GetColNo(), SQL_PARAM_INPUT,
-							column.GetCType(), column.GetSQLType(),
-							column.GetColumnSize(this->pDBview->GetConnection()), column.GetPrecision(),
-							magic_ptr, 0, bytes_fetched_ptr);
-						break;
-				 }
+				
 				 
 			  }
 			}

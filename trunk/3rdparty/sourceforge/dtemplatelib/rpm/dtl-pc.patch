@@ -1,0 +1,16 @@
+--- dtl.pc	1970-01-01 10:00:00.000000000 +1000
++++ dtl.pc.me	2004-03-23 18:09:31.000000000 +1000
+@@ -0,0 +1,13 @@
++prefix=/usr
++exec_prefix=/usr
++libdir=${exec_prefix}/lib
++includedir=${prefix}/include
++
++Name: dtl
++Description: STL like ODBC wrapper
++Version: 3.6.1
++Requires: 
++Libs: -L${libdir} ${libdir}/libDTL36.a -lodbc
++Cflags: -I${includedir} -I${includedir}/dtl36
++
++

@@ -316,6 +316,9 @@ public:
 // set parameters function for Example ... used by IndexedDBView<Example>
 void SetParamsExample(DefaultParamObj<Example> &params);
 
+void SetParamsDynamicExample(variant_row &params);
+
+
 // read some Example objects from the database and return a vector of
 // the results
 vector<Example> SimpleRead();
@@ -478,10 +481,9 @@ inline void VariantSetParamsExample(variant_row &params)
 	params[0] = 2;
 	params[1] = 8;
 	params[2] = tstring(_TEXT("Example"));
-	
-	TIMESTAMP_STRUCT paramDate = {2000, 1, 1, 0, 0, 0, 0};
-	params[3] = paramDate;
+	params[3] = tstring(_TEXT("01-Jan-2000"));
 }
+
 
 // Dynamic IndexedDBView example using a variant_row ParamObj
 void DynamicIndexedViewExampleVariantParamObj();

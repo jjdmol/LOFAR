@@ -259,13 +259,11 @@ void InsLong() {
 	if (DBConnection::GetDefaultConnection().GetDBMSEnum() !=
 		DBConnection::DB_ACCESS)
 	{
-		view = DBView<Test>("LONG_EXAMPLE", BCA(rowbuf, COLS["STRING_VALUE"] == rowbuf.str),
-			"ORDER BY STRING_VALUE");
+		view = DBView<Test>("LONG_EXAMPLE", BCA(rowbuf, COLS["STRING_VALUE"] == rowbuf.str));
 	}
 	else
 	{
-		view = DBView<Test>("LONG_EXAMPLE", BCAAccess(),
-			"ORDER BY STRING_VALUE");
+		view = DBView<Test>("LONG_EXAMPLE", BCAAccess());
 	}
 
 	DBView<Test>::insert_iterator it = view;
@@ -310,13 +308,9 @@ bool BulkSelVal::operator()(BoundIOs &boundIOs, ExampleCharred &rowbuf)
 }
 
 
-
-// DTL_TABLE3 generates: db_example_row, DefaultBCA<db_example_row>,
-// db_example_view, and instantiates a db_example_view named db_example 
-// Note: macro must be invoked at namespace scope because
-// DTL uses templates to implement the macro and
-// template parameters cannot have local linkage (local structs not allowed)
-
+// Generate a simple structure to read data from a table called 'db_example' 
+// with three fields called 'int_value', 'string_value', and 'double_value'.
+// See the docs on DTL_TABLE for details.
 DTL_TABLE3(db_example,
    int, int_value,
    string, string_value,
@@ -324,20 +318,15 @@ DTL_TABLE3(db_example,
 );
 
 
-// note that the field names in the table are the field names in the
-// generated object
+// Read rows from the structures defined by DTL_TABLE above
 void TableStructExample()
 {
    PrintHeader(cout, "TableStructExample()");
 
-   // only using an IndexedDBView here to gain consistent ordering for regression tests
-   DEFAULT_INDEX_VIEW(db_example_view) idx_view(db_example,
-	   "PrimaryKey; int_value, string_value, double_value");
-
    cout << "Objects read from DB:" << endl;
 
-   for (DEFAULT_INDEX_VIEW(db_example_view)::iterator it = idx_view.begin();
-          it != idx_view.end(); ++it)
+   for (db_example_view::select_iterator it = db_example.begin();
+          it != db_example.end(); ++it)
    {
        cout << it->int_value << " " << it->string_value
                  << " " << it->double_value << endl;
@@ -364,78 +353,116 @@ void RandomDynamicDBView()
 {
 	PrintHeader(cout, "RandomDynamicDBView()");
 	DynamicDBView<> dynamic_view("DB_EXAMPLE", "*");
-	RandomDBView<variant_row> random_view(dynamic_view);
+	RandomDBView<variant_row, variant_row> random_view(dynamic_view);
 
-	cout << "Items from DB:" << endl;
-	copy(random_view.begin(), random_view.end(), ostream_iterator<variant_row>(cout, "\n"));
-	cout << "\n\n";
+	try 
+	{
+		cout << "Items from DB:" << endl;
+		copy(random_view.begin(), random_view.end(), ostream_iterator<variant_row>(cout, "\n"));
+		cout << "\n\n";
+	}
+	catch (std::exception &ex)
+	{
+		cout << "Some ODBC drivers like Microsoft Access MDAC 2.7 sp 1, do not tell us how many rows we "
+			"have in the DynamicDBView.  Return LONG_MAX as the count for the number of rows "\
+			"and simply throw an exception when we try to read past the end of the recordset "
+			"(since we won't know how many rows we can read until we try)." << endl;
+		cout << ex.what() << endl;
+		return;
+	}
+	try
+	{
+		cout << "Items from DB in reverse order:" << endl;
+		copy(random_view.rbegin(), random_view.rend(), ostream_iterator<variant_row>(cout, "\n"));
 
-	cout << "Items from DB in reverse order:" << endl;
-	copy(random_view.rbegin(), random_view.rend(), ostream_iterator<variant_row>(cout, "\n"));
+		// insert and delete rows
+		variant_row row_insert(random_view[2]);
+		row_insert["INT_VALUE"] = 666;
+		random_view.insert(row_insert);
+		random_view.erase(random_view.begin()+(ptrdiff_t)2);
+		cout << "Show result set with inserted/deleted row:" << endl;
+		random_view.ReQuery();
+		copy(random_view.begin(), random_view.end(), ostream_iterator<variant_row>(cout, "\n"));
 
-	// insert and delete rows
-	variant_row row_insert(random_view[2]);
-	row_insert["INT_VALUE"] = 666;
-	random_view.insert(row_insert);
-	random_view.erase(random_view.begin()+(ptrdiff_t)2);
-	cout << "Show result set with inserted/deleted row:" << endl;
-	random_view.ReQuery();
-    copy(random_view.begin(), random_view.end(), ostream_iterator<variant_row>(cout, "\n"));
+		PrintSeparator(cout);
+	}
+	catch (std::exception &ex)
+	{
+		cout << ex.what() << endl;
+	}
 
-	PrintSeparator(cout);
 }
 
 // Random Access container example
 void RandomDBViewExample()
 {
-   PrintHeader(cout, "RandomDBViewExample()");
+	PrintHeader(cout, "RandomDBViewExample()");
+	RandomDBView<db_example_row> view(db_example);
 
-   RandomDBView<db_example_row> view(db_example);
-
-   cout << "Objects read from DB:" << endl;
-   copy(view.begin(), view.end(), ostream_iterator<db_example_row>(cout, "\n"));
-
-   // modify the third row in the table
-   RandomDBView<db_example_row>::iterator it = view.begin();
-   it += 2;
-   db_example_row row(*it);
-   row.int_value++;
-   *it = row;
+	try 
+	{	   
+	   cout << "Objects read from DB:" << endl;
+	   copy(view.begin(), view.end(), ostream_iterator<db_example_row>(cout, "\n"));
+	}
+	catch (std::exception &ex)
+	{
+		cout << "Some ODBC drivers like Microsoft Access MDAC 2.7 sp 1, do not tell us how many rows we "
+			"have in the DynamicDBView.  Return LONG_MAX as the count for the number of rows "\
+			"and simply throw an exception when we try to read past the end of the recordset "
+			"(since we won't know how many rows we can read until we try)." << endl;
+		cout << ex.what() << endl;
+		return;
+	}
+	try
+	{
+	   // modify the third row in the table
+	   RandomDBView<db_example_row>::iterator it = view.begin();
+	   it += 2;
+	   db_example_row row(*it);
+	   row.int_value++;
+	   *it = row;
    
-   cout << "\nElements in reverse order:" << std::endl;
-   cout << "NOTE THAT MODIFIED ROW WILL NOT SHOW UP BECAUSE WE HAVE NOT CALLED ReQuery()" << std::endl;
+	   cout << "\nElements in reverse order:" << std::endl;
+	   cout << "NOTE THAT MODIFIED ROW WILL NOT SHOW UP BECAUSE WE HAVE NOT CALLED ReQuery()" << std::endl;
    
-   copy(view.rbegin(), view.rend(), ostream_iterator<db_example_row>(cout, "\n"));
+	   copy(view.rbegin(), view.rend(), ostream_iterator<db_example_row>(cout, "\n"));
 
-   // Note that there is no guarantee that the third row will show the updated record,
-   // since other users may have modified the database or the DB may return records in a different
-   // order.  See the documentation on the ReQuery() function for details.
-   std::cout << "Show updated result row:" << std::endl;
-   view.ReQuery();
-   it = view.begin();
-   std::cout << it[2] << std::endl;
+	   // Note that there is no guarantee that the third row will show the updated record,
+	   // since other users may have modified the database or the DB may return records in a different
+	   // order.  See the documentation on the ReQuery() function for details.
+	   std::cout << "Show updated result row:" << std::endl;
+	   view.ReQuery();
+	   it = view.begin();
+	   std::cout << it[2] << std::endl;
  
-   cout << "Distance from first to last: " << view.end() - view.begin() << std::endl;
-   cout << "Container size: " << view.size() << std::endl;
+	   cout << "Distance from first to last: " << view.end() - view.begin() << std::endl;
+	   cout << "Container size: " << view.size() << std::endl;
 
-   // insert and delete rows
-   db_example_row row_insert(it[2]);
-   view.erase(it+(ptrdiff_t)2);
-   row_insert.int_value = 666;
-   view.insert(row_insert);
-   std::cout << "Show result set with inserted/deleted row:" << std::endl;
-   view.ReQuery();
-   std::copy(view.begin(), view.end(), ostream_iterator<db_example_row>(std::cout, "\n"));
+	   // insert and delete rows
+	   db_example_row row_insert(it[2]);
+	   view.erase(it+(ptrdiff_t)2);
+	   row_insert.int_value = 666;
+	   view.insert(row_insert);
+	   DBConnection::GetDefaultConnection().CommitAll();
+	   std::cout << "Show result set with inserted/deleted row:" << std::endl;
+	   view.ReQuery();
+	   std::copy(view.begin(), view.end(), ostream_iterator<db_example_row>(std::cout, "\n"));
 
-   // show container comparison operators
-   RandomDBView<db_example_row> view2(view);
-#ifndef __GNUC__  // gcc 2.96 does not support boolalpha format flag
-   cout << boolalpha;
-#endif
-   cout << "view == view2 : " << (view == view2) << std::endl;
-   cout << "view < view2 : " << (view < view2) << std::endl;
+	   // show container comparison operators
+	   RandomDBView<db_example_row> view2(view);
+	#ifndef __GNUC__  // gcc 2.96 does not support boolalpha format flag
+	   cout << boolalpha;
+	#endif
+	   cout << "view == view2 : " << (view == view2) << std::endl;
+	   cout << "view < view2 : " << (view < view2) << std::endl;
 
-   PrintSeparator(cout);
+	   PrintSeparator(cout);
+	}
+	catch (std::exception &ex)
+	{
+		cout << ex.what() << endl;
+	}
+
 }
 
 

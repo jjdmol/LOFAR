@@ -18,15 +18,17 @@ It is provided "as is" without express or implied warranty.
 
 #include "dtl_config.h"
 #include "DBConnection.h"
+#include "clib_fwd.h"
 
 #include "std_warn_off.h"
-#include "clib_fwd.h"
+
 #include <string>
 #include <vector>
 #include <functional>
-
 #include <set>
+
 #include "std_warn_on.h"
+
 BEGIN_DTL_NAMESPACE
 
 // case insensitive comparison for tstring's

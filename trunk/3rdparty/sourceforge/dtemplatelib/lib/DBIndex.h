@@ -27,7 +27,9 @@ It is provided "as is" without express or implied warranty.
 #include "vec_multiset.h"
 
 #if defined(__SGI_STL_PORT) 
+#include "std_warn_off.h"
 #include <hash_set>
+#include "std_warn_on.h"
 #endif
 
 BEGIN_DTL_NAMESPACE
@@ -321,7 +323,7 @@ class DBIndex
 				 BoundIOs::const_iterator b_it = IndexFields.find(*order_it);
 
 				 if (b_it == IndexFields.end())
-						throw DBException(_TEXT("DBIndex::lt()"),
+						DTL_THROW DBException(_TEXT("DBIndex::lt()"),
 							_TEXT("Unable to find index field ") + *order_it + _TEXT("!"), NULL, NULL);
 	
 				 const BoundIO &b = (*b_it).second;
@@ -350,7 +352,7 @@ class DBIndex
 				 BoundIOs::const_iterator b_it = IndexFields.find(*order_it);
 
 				 if (b_it == IndexFields.end())
-						throw DBException(_TEXT("DBIndex::eq()"),
+						DTL_THROW DBException(_TEXT("DBIndex::eq()"),
 							_TEXT("Unable to find index field ") + *order_it + _TEXT("!"), NULL, NULL);
 	
 				 const BoundIO &b = (*b_it).second;
@@ -490,7 +492,7 @@ class DBIndex
 		    bca(IndexFields, rowbuf);   // generate relative addresses and RTTI for this index
 
 			if (orderOfFields.empty())
-				throw DBException(_TEXT("DBIndex::DBIndex()"), 
+				DTL_THROW DBException(_TEXT("DBIndex::DBIndex()"), 
 				_TEXT("Invalid FieldList \"") +
 					fieldNames + _TEXT("\"!  FieldList is empty!"), NULL, NULL);
 
@@ -515,7 +517,7 @@ class DBIndex
 				delete[] cleanup_field_cstr;
 
 				if (fieldName.length() == 0)
-					throw DBException(_TEXT("DBIndex::DBIndex()"), 
+					DTL_THROW DBException(_TEXT("DBIndex::DBIndex()"), 
 					_TEXT("Invalid FieldList \"") +
 					  fieldNames + _TEXT("\"!  Field \"") + fieldName + _TEXT("\" is an empty name!"),
 					  NULL, NULL);
@@ -524,7 +526,7 @@ class DBIndex
 				// if it's not found, throw an exception
 				if (STD_::find_if(colNames.begin(), colNames.end(), 
 					STD_::bind1st(NonCaseSensitiveEq(), fieldName)) == colNames.end())
-					throw DBException(_TEXT("DBIndex::DBIndex()"), 
+					DTL_THROW DBException(_TEXT("DBIndex::DBIndex()"), 
 					_TEXT("Invalid FieldList \"") +
 					   fieldNames + _TEXT("\"!  Field \"") + fieldName + 
 					   _TEXT("\" does not exist in view for tables \"") + 
@@ -537,7 +539,7 @@ class DBIndex
 				STD_::pair<STD_::set<tstring>::iterator, bool> pr = processedFieldNames.insert(fieldName);
 
 				if (!(pr.second))
-					throw DBException(_TEXT("DBIndex::DBIndex()"), 
+					DTL_THROW DBException(_TEXT("DBIndex::DBIndex()"), 
 					_TEXT("Invalid FieldList \"") +
 					   fieldNames + _TEXT("\"!  Field \"") + fieldName + 
 					   _TEXT("\" redefined"), NULL, NULL);
@@ -576,7 +578,7 @@ class DBIndex
 
 			   if (b_it == IndexFields.end())
 			   {
-					throw DBException(_TEXT("DBIndex::ExtractKey()"),
+					DTL_THROW DBException(_TEXT("DBIndex::ExtractKey()"),
 						_TEXT("Unable to find index field's BoundIO \"") + *field_it 
 						+ _TEXT("\" in IndexFields!"), NULL, NULL);
 			   }
@@ -856,7 +858,7 @@ class DBIndex
 
 				// errstr.freeze(false);
 
-			  	throw DBException(_TEXT("DBIndex::equal_range(const DataField &df)"),
+			  	DTL_THROW DBException(_TEXT("DBIndex::equal_range(const DataField &df)"),
 				  	errstring, NULL, NULL);
 		 	 	}
 
@@ -892,7 +894,7 @@ class DBIndex
 			  errstr << _TEXT("Expected one key field in index!  Instead found ") <<
 					orderOfFields.size() << _TEXT("!") << STD_::ends;
 			  tstring errstring = errstr.str();
-			  throw DBException(_TEXT("DBIndex::find(const DataField &df)"),
+			  DTL_THROW DBException(_TEXT("DBIndex::find(const DataField &df)"),
 				  errstring, NULL, NULL);
 		  }
 
@@ -928,7 +930,7 @@ class DBIndex
 					orderOfFields.size() << _TEXT("!") << STD_::ends;
 
 			  tstring errstring = errstr.str();
-			  throw DBException(_TEXT("DBIndex::equal_range(const DataField &df)"),
+			  DTL_THROW DBException(_TEXT("DBIndex::equal_range(const DataField &df)"),
 				  errstring, NULL, NULL);
 		  }
 
@@ -958,7 +960,7 @@ class DBIndex
 					orderOfFields.size() << _TEXT("!") << STD_::ends;
 
 			  tstring errstring = errstr.str();
-			  throw DBException(_TEXT("DBIndex::equal_range(const DataField &df)"),
+			  DTL_THROW DBException(_TEXT("DBIndex::equal_range(const DataField &df)"),
 				  errstring, NULL, NULL);
 		  }
 
@@ -991,7 +993,7 @@ class DBIndex
 					orderOfFields.size() << _TEXT("!") << STD_::ends;
 
 			  tstring errstring = errstr.str();
-			  throw DBException(_TEXT("DBIndex::equal_range(const DataField &df)"),
+			  DTL_THROW DBException(_TEXT("DBIndex::equal_range(const DataField &df)"),
 				  errstring, NULL, NULL);
 		  }
 
@@ -1027,7 +1029,7 @@ class DBIndex
 
 			  tstring errstring = errstr.str();
 
-			  throw DBException(_TEXT("DBIndex::find(const DataField &df)"),
+			  DTL_THROW DBException(_TEXT("DBIndex::find(const DataField &df)"),
 				  errstring, NULL, NULL);
 		  }
 
@@ -1060,7 +1062,7 @@ class DBIndex
 
 			  tstring errstring = errstr.str();
 
-			  throw DBException(_TEXT("DBIndex::find(const DataField &df)"),
+			  DTL_THROW DBException(_TEXT("DBIndex::find(const DataField &df)"),
 				  errstring, NULL, NULL);
 		  }
 
@@ -1097,7 +1099,7 @@ class DBIndex
 
 			  tstring errstring = errstr.str();
 
-			  throw DBException(_TEXT("DBIndex::find(const DataField &df)"),
+			  DTL_THROW DBException(_TEXT("DBIndex::find(const DataField &df)"),
 				  errstring, NULL, NULL);
 		  }
 

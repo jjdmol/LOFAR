@@ -125,7 +125,8 @@ DynamicIndexedDBView<view_type, \
 // depend on template parameters already defined
 // but MS Visual C++ 6.0, the use of the "typename" keyword in this manner is 
 // forbidden
-#if (defined  (_MSC_VER) || defined (__SUNPRO_CC) || (defined (__BORLANDC__) && __BORLANDC__ <= 0x551))
+//#if (defined  (_MSC_VER) || defined (__SUNPRO_CC) || (defined (__BORLANDC__) && __BORLANDC__ <= 0x551))
+#if (defined  (_MSC_VER) || defined (__SUNPRO_CC) || defined (__BORLANDC__) )
 #define TYPENAME_IN_TEMPLATE_PARAMS
 #else // assume all other compilers conform to the standard in this instance
 #define TYPENAME_IN_TEMPLATE_PARAMS typename
@@ -176,6 +177,7 @@ inline wchar_t btowc(int c) {return c*256;};
 
 #include <string>
 #include <iostream>
+#include <ostream>
 #include <sstream>
 #include <iterator>
 
@@ -218,9 +220,6 @@ BEGIN_DTL_NAMESPACE
 END_DTL_NAMESPACE
 #endif
 
-BEGIN_DTL_NAMESPACE
-typedef STD_::basic_string<BYTE> blob;
-END_DTL_NAMESPACE
 
 #ifdef _UNICODE
 BEGIN_DTL_NAMESPACE 
@@ -324,61 +323,47 @@ namespace std
       typedef streamoff 	off_type;
       typedef mbstate_t 	state_type;
 
-      static void 
-      assign(char_type& __c1, const char_type& __c2)
+      static void assign(char_type& __c1, const char_type& __c2)
       { __c1 = __c2; }
 
-      static bool 
-      eq(const char_type& __c1, const char_type& __c2)
+      static bool eq(const char_type& __c1, const char_type& __c2)
       { return __c1 == __c2; }
 
-      static bool 
-      lt(const char_type& __c1, const char_type& __c2)
+      static bool lt(const char_type& __c1, const char_type& __c2)
       { return __c1 < __c2; }
 
-      static int 
-      compare(const char_type* __s1, const char_type* __s2, size_t __n)
+      static int compare(const char_type* __s1, const char_type* __s2, size_t __n)
       { return memcmp(__s1, __s2, __n); }
 
-      static size_t
-      length(const char_type* __s)
+      static size_t length(const char_type* __s)
       { return strlen((const char *)__s); }
 
-      static const char_type* 
-      find(const char_type* __s, size_t __n, const char_type& __a)
+      static const char_type* find(const char_type* __s, size_t __n, const char_type& __a)
       { return static_cast<const char_type*>(memchr(__s, __a, __n)); }
 
-      static char_type* 
-      move(char_type* __s1, const char_type* __s2, size_t __n)
+      static char_type* move(char_type* __s1, const char_type* __s2, size_t __n)
       { return static_cast<char_type*>(memmove(__s1, __s2, __n)); }
 
-      static char_type* 
-      copy(char_type* __s1, const char_type* __s2, size_t __n)
+      static char_type* copy(char_type* __s1, const char_type* __s2, size_t __n)
       {  return static_cast<char_type*>(memcpy(__s1, __s2, __n)); }
 
-      static char_type* 
-      assign(char_type* __s, size_t __n, char_type __a)
+      static char_type* assign(char_type* __s, size_t __n, char_type __a)
       { return static_cast<char_type*>(memset(__s, __a, __n)); }
 
-      static char_type 
-      to_char_type(const int_type& __c)
+      static char_type to_char_type(const int_type& __c)
       { return static_cast<char_type>(__c); }
 
       // To keep both the byte 0xff and the eof symbol 0xffffffff
       // from ending up as 0xffffffff.
-      static int_type 
-      to_int_type(const char_type& __c)
+      static int_type to_int_type(const char_type& __c)
       { return static_cast<int_type>(static_cast<unsigned char>(__c)); }
 
-      static bool 
-      eq_int_type(const int_type& __c1, const int_type& __c2)
+      static bool eq_int_type(const int_type& __c1, const int_type& __c2)
       { return __c1 == __c2; }
 
-      static int_type 
-      eof() { return static_cast<int_type>(EOF); }
+      static int_type eof() { return static_cast<int_type>(EOF); }
 
-      static int_type 
-      not_eof(const int_type& __c)
+      static int_type not_eof(const int_type& __c)
       { return (__c == eof()) ? 0 : __c; }
   };
 }

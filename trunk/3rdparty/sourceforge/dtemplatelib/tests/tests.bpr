@@ -37,13 +37,13 @@
     <OTHERFILES value=""/>
   </MACROS>
   <OPTIONS>
-    <IDLCFLAGS value="-src_suffix cpp -D_DEBUG -DWIN32 -I. -I$(BCB)\include -I$(BCB)\include\vcl 
-      -I$(BCB)\include\stlport -I..\lib -boa"/>
+    <IDLCFLAGS value="-I. -I$(BCB)\include -I$(BCB)\include\vcl -I$(BCB)\include\stlport 
+      -I..\lib -src_suffix cpp -D_DEBUG -DWIN32 -boa"/>
     <CFLAG1 value="-Od -P -Vx -Ve -X- -r- -a8 -b- -k -y -v -vi- -tWC -tWM- -c"/>
     <PFLAGS value="-$YD -$W -$O- -$A8 -v -JPHNE -M"/>
     <RFLAGS value=""/>
-    <AFLAGS value="/mx /w2 /zd"/>
-    <LFLAGS value="-D&quot;&quot; -ap -Tpe -x -Gn -v"/>
+    <AFLAGS value="/mx /w2 /zi"/>
+    <LFLAGS value="-D&quot;&quot; -ap -Tpe -GD -x -Gn -v"/>
     <OTHERFILES value=""/>
   </OPTIONS>
   <LINKER>
@@ -136,7 +136,7 @@ RemoteDebug=0
 
 [Compiler]
 ShowInfoMsgs=0
-LinkDebugVcl=0
+LinkDebugVcl=1
 LinkCGLIB=0
 
 [CORBA]

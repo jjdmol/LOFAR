@@ -37,7 +37,7 @@ STD_::vector<tstring> ParseCommaDelimitedList(tstring commaList)
 	  TCHAR *c_str = new TCHAR[commaListCopy.length() + 1];
 
 	  if (c_str == NULL)
-		  throw RootException(_TEXT("ParseCommaDelimetedList()"), _TEXT("out of memory"));
+		  DTL_THROW RootException(_TEXT("ParseCommaDelimetedList()"), _TEXT("out of memory"));
 
 	  std_tstrncpy(c_str, commaListCopy.c_str(), commaListCopy.length() + 1);
 

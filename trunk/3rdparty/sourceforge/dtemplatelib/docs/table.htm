@@ -79,7 +79,6 @@ vlink="#551A8B" alink="#FF0000">
 
 
 
-
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
     <tr>
         <td><img src="utilities.gif" width="194" height="38"></td>
@@ -130,7 +129,7 @@ vlink="#551A8B" alink="#FF0000">
 														
       <span class="codeComment">//Declare a BCA to associate members in the structure with fields in the database of the same name</span>	
       BEGIN_DTL_NAMESPACE 										
-      template<> class DefaultBCA<struct_name> 							
+      template&lt;&gt; class DefaultBCA&lt;struct_name&gt; 							
       { 												
       public:												
             void operator()(BoundIOs &cols, STRUCT_NAME &row) 				
@@ -143,13 +142,13 @@ vlink="#551A8B" alink="#FF0000">
             };													
       END_DTL_NAMESPACE 										
 														
-      dtl::tostream &operator<<(dtl::tostream &o, const STRUCT_NAME &s) 		
+      dtl::tostream &operator&lt;&lt;(dtl::tostream &o, const STRUCT_NAME &s) 		
       { 													
         <span class="codeComment">//Basic ostream operator for the class</span>	
       }; 													
 														
-      bool operator<(const STRUCT_NAME &lhs, const STRUCT_NAME &rhs) { 			
-        <span class="codeComment">//Basic operator < for the class, compare fields in the order they are declared</span>					
+      bool operator&lt;(const STRUCT_NAME &lhs, const STRUCT_NAME &rhs) { 			
+        <span class="codeComment">//Basic operator &lt; for the class, compare fields in the order they are declared</span>					
       } 													
 
 
@@ -181,7 +180,7 @@ vlink="#551A8B" alink="#FF0000">
 <h3>Example:</h3>
 
 <pre><code><span class="codeComment">// Generate a simple structure to read data from a table called 'db_example' 
-// with three fields called 'int_value', 'double_value' and 'string_value'.
+// with five fields called 'int_value', 'string_value', 'double_value', 'example_long' and 'example_date'.
 // Note: the macro must be invoked at namespace scope because templates are 
 // not allowed  to take locally declared classes as template parameters.  
 // See [temp.arg.type] 14.3.1  in the C++ standard for details.</span>

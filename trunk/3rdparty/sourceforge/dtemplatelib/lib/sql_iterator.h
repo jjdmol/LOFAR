@@ -35,6 +35,23 @@ class DB_sql_iterator :
 	public STD_::input_iterator<DataObj, ptrdiff_t>
 #endif
 {
+#ifdef __GNUC__ // need to declare members used from base template
+    using DB_iterator<DataObj, ParamObj>::bca;
+    using DB_iterator<DataObj, ParamObj>::boundIOs;
+    using DB_iterator<DataObj, ParamObj>::bpa;
+    using DB_iterator<DataObj, ParamObj>::count;
+    using DB_iterator<DataObj, ParamObj>::io_handler;
+    using DB_iterator<DataObj, ParamObj>::lastCount;
+    using DB_iterator<DataObj, ParamObj>::pDBview;
+    using DB_iterator<DataObj, ParamObj>::pParambuf;
+    using DB_iterator<DataObj, ParamObj>::pRowbuf;
+    using DB_iterator<DataObj, ParamObj>::sqlQryType;
+    using DB_iterator<DataObj, ParamObj>::stmt;
+    using DB_iterator<DataObj, ParamObj>::ReBindRowbuf;
+
+    using DB_iterator_with_cols<DataObj, ParamObj>::MakeColBindings;
+#endif
+
 public:
 	// is this a dummy iterator representing view.begin() or view.end()???
     enum DummyFlag { NOT_DUMMY = 0, DUMMY = 1 };
@@ -103,7 +120,12 @@ private:
     void FetchFirstRowUntilHandled()
 	{
 	    if (this->boundIOs.NumColumns() < 1)  // No bound columns, do not fetch
+		{
+			// No columns to return, trivially at end of recordset
+			end = true;
+			empty = true;
 			return;
+		}
 			
 		// try to fetch first row ... if fail, apply the handler and
 		// keep trying rows until succeed (if applicable)
@@ -113,7 +135,7 @@ private:
 		try
 		{
 			if (this->bad())
-				throw DBException(_TEXT("DBView::sql_iterator::FetchFirstRowUntilHandled()"),
+				DTL_THROW DBException(_TEXT("DBView::sql_iterator::FetchFirstRowUntilHandled()"),
 					_TEXT("iterator tested bad!"), NULL, NULL);
 
 			FetchFirstRow();
@@ -135,46 +157,67 @@ private:
 	{
 		if (this->boundIOs.NumColumns() < 1)  // No bound columns, do not fetch
 			return;
-	
+
 		if (this->bad())
 		{
 			end = true; // set iterator to end of view
 			
 		    // error handler call in caller will determine how to handle the exception
-			throw DBException(_TEXT("DBView::sql_iterator::FetchFirstRow()"),
+			DTL_THROW DBException(_TEXT("DBView::sql_iterator::FetchFirstRow()"),
 				_TEXT("iterator tested bad!"), NULL, NULL);
 		}
 
-		// propagate postfix parameters to their strbufs
-		// before we execute!
+		// do not fetch next if at end
+		if (end == true)
+			return;
 
-		try
-		{
-			this->boundIOs.PropagateToSQL(this->sqlQryType, this->stmt);
-		}
-		catch (...)
-		{
-			if (this->stmt.valid())
-				setstate(this->failbit);
-			else
+		if (!this->IsReady()) 
+		{ 
+			// do not execute if this is a call after MoreResults()
+
+			// propagate postfix parameters to their strbufs
+			// before we execute!
+			try
 			{
-				end = true;
-				setstate(this->badbit);
+				this->boundIOs.PropagateToSQL(this->sqlQryType, this->stmt);
+			}
+			catch (...)
+			{
+				if (this->stmt.valid())
+					setstate(this->failbit);
+				else
+				{
+					end = true;
+					setstate(this->badbit);
+				}
+
+				throw;
 			}
 
-			throw;
-		}
+			try
+			{
+				this->stmt.Execute();
+				this->boundIOs.PropagateToSQLAfterExec(this->sqlQryType, this->stmt);
 
-		try
-		{
-			this->stmt.Execute();
-			this->boundIOs.PropagateToSQLAfterExec(this->sqlQryType, this->stmt);
-		}
-		catch (...)
-		{
-			setstate(this->badbit);
-			end = true;
-			throw;
+				// SQL server bug workaround.
+				// See knowledge base article 124899  http://support.microsoft.com/default.aspx?scid=kb;en-us;124899
+				// SQLNumResultCols, SQLDescribeCol may not work right unless SQLExecute is called first.
+				// This bug seems to only apply for batch statements.
+				// In general we don't want to do this since it is inefficient.
+				// Rebuild the row binding if this is a batch
+				if(stmt.GetConnection().GetDBMSEnum() == DBConnection::DB_SQL_SERVER)
+				{
+					if (stmt.GetQuery().find(_TEXT(";")) != tstring::npos) // test for ; to identify a batch
+						RebuildBCA();
+				}
+			
+			}
+			catch (...)
+			{
+				setstate(this->badbit);
+				end = true;
+				throw;
+			}
 		}
 
 		begin = true;
@@ -231,7 +274,7 @@ private:
 					setstate(this->badbit);
 				}
 		 
-			 throw DBException(_TEXT("DBView::sql_iterator::FetchFirstRow()"),
+			 DTL_THROW DBException(_TEXT("DBView::sql_iterator::FetchFirstRow()"),
 						  _TEXT("SelValidate() failed on statement \"") +
 						  this->stmt.GetQuery() + _TEXT("\"!"), NULL, NULL);
 			}
@@ -247,7 +290,7 @@ private:
 				setstate(this->badbit);
 
 
-			throw DBException(_TEXT("DBView::sql_iterator::FetchFirstRow()"),
+			DTL_THROW DBException(_TEXT("DBView::sql_iterator::FetchFirstRow()"),
 					_TEXT("Fetch failed on statement \"") + this->stmt.GetQuery() + 
 					_TEXT("\"!"), 
 					&(this->stmt.GetConnection()), &(this->stmt));
@@ -267,7 +310,7 @@ private:
 
 			if (this->bad())
 			{
-			throw DBException(_TEXT("DBView::sql_iterator::WriteCurrentRow()"),
+			DTL_THROW DBException(_TEXT("DBView::sql_iterator::WriteCurrentRow()"),
 				_TEXT("iterator tested bad!"), NULL, NULL);
 			}
 
@@ -281,7 +324,7 @@ private:
 			else
 					setstate(this->badbit);
 
-			throw DBException(_TEXT("DBView::sql_iterator::operator=(const DataObj &)"),
+			DTL_THROW DBException(_TEXT("DBView::sql_iterator::operator=(const DataObj &)"),
 							  _TEXT("InsValidate() failed on statement \"") +
 							  this->stmt.GetQuery() + _TEXT("\"!"), NULL, NULL);
 			}
@@ -311,7 +354,7 @@ private:
 				else
 						setstate(this->badbit);
 
-				throw DBException(_TEXT("DBView::sql_iterator::operator=(const DataObj &)"),
+				DTL_THROW DBException(_TEXT("DBView::sql_iterator::operator=(const DataObj &)"),
 								  _TEXT("SelValidate() failed on statement \"") +
 								  this->stmt.GetQuery() + _TEXT("\"!"), NULL, NULL);
 			 }
@@ -387,7 +430,7 @@ private:
 		if (this->bad())
 		{
 			end = true; // set iterator to end of view
-			throw DBException(_TEXT("DBView::sql_iterator::FetchFirstRow()"),
+			DTL_THROW DBException(_TEXT("DBView::sql_iterator::FetchFirstRow()"),
 				_TEXT("iterator tested bad!"), NULL, NULL);
 		}
 
@@ -448,7 +491,7 @@ private:
 					setstate(this->badbit);
 				}
 		 
-			    throw DBException(_TEXT("DBView::sql_iterator::FetchNextRow()"),
+			    DTL_THROW DBException(_TEXT("DBView::sql_iterator::FetchNextRow()"),
 						  _TEXT("SelValidate() failed on statement \"") +
 						  this->stmt.GetQuery() + _TEXT("\"!"), NULL, NULL);
 			  }
@@ -457,7 +500,7 @@ private:
 				// as exception should be thrown in DBStmt::Fetch()
 		   {
 			 end = true; // set to view.end() to break infinite loops
-			 throw DBException(_TEXT("DBView::sql_iterator::FetchNextRow()"),
+			 DTL_THROW DBException(_TEXT("DBView::sql_iterator::FetchNextRow()"),
 							  _TEXT("Fetch failed on statement \"") + this->stmt.GetQuery() 
 							  +_TEXT("\"!"), &(this->stmt.GetConnection()), &(this->stmt));
 		   }
@@ -488,6 +531,7 @@ private:
 		// must catch exceptions here or comparisons will crash
 		try
 		{
+		  // N.B. must use i1.empty() here to handle MoreResults()
 		  if (i1.GetCount() < 1 && !(i1.isDummy == DUMMY && i1.at_end()))
 		     j1.open();
 		}
@@ -549,7 +593,7 @@ private:
 			if (this->bad())
 			{	
 			  this_ptr->end = true;
-			  throw DBException(_TEXT("DBView::sql_iterator::OperatorArrow()"),
+			  DTL_THROW DBException(_TEXT("DBView::sql_iterator::OperatorArrow()"),
 				_TEXT("iterator tested bad!"), NULL, NULL);
 			}
 			this_ptr->GetRowbufPtr(); // create rowbuf & fetch if not already done
@@ -571,6 +615,7 @@ private:
 						// here we are guaranteed a default constructed DataObj
 	}
 
+
 public:
 	DB_sql_iterator() : DB_select_insert_iterator<DataObj, ParamObj>(),
 		begin(false), end(false), 
@@ -584,7 +629,16 @@ public:
 		   SelValidate(view.GetSelVal()),
 		   InsValidate(view.GetInsVal()), 
 		   validRowbuf(false)
-    { }
+    { 
+	   // For SQL Server, default is to use server side cursors s.t. more than
+	   // one iterator can be open at a time.  Unfortunately, for sql_iterators
+	   // we need to use client side cursors since many stored procedures will not
+	   // run otherwise
+	   if (stmt.GetConnection().GetDBMSEnum() == DBConnection::DB_SQL_SERVER) {
+			stmt.ClearStmtAttr(SQL_ATTR_CONCURRENCY);
+	   }
+	   
+	}
 
 	// copy constructor and assignment operator required for Assignable property
 	DB_sql_iterator(const DB_sql_iterator &read_it) : 
@@ -600,8 +654,15 @@ public:
 	   begin(read_it.begin), end(read_it.end), empty(read_it.empty), SelValidate(read_it.SelValidate), InsValidate(read_it.GetView().GetInsVal())
 	   
        { 
-		   int e = read_it.isDummy;
-		   isDummy = (DummyFlag) e;
+			int e = read_it.isDummy;
+			isDummy = (DummyFlag) e;
+			// For SQL Server, default is to use server side cursors s.t. more than
+			// one iterator can be open at a time.  Unfortunately, for sql_iterators
+			// we need to use client side cursors since many stored procedures will not
+			// run otherwise
+			if (stmt.GetConnection().GetDBMSEnum() == DBConnection::DB_SQL_SERVER) {
+				stmt.ClearStmtAttr(SQL_ATTR_CONCURRENCY);
+			}
 	   }
 
 	   
@@ -712,7 +773,7 @@ public:
 		{
 			if (this->bad())
 			{
-			   throw DBException(_TEXT("DBView::sql_iterator::operator=(const DataObj &)"),
+			   DTL_THROW DBException(_TEXT("DBView::sql_iterator::operator=(const DataObj &)"),
 				  _TEXT("iterator tested bad!"), NULL, NULL);
 			}
 
@@ -883,23 +944,43 @@ public:
 		}
 	}
 
+
 	// Get the next result set, if any
 	bool MoreResults() {
 		bool bMore;
 		this->count = 0;
 		this->lastCount = 0;
 		begin = true;
+		if (!this->stmt.IsExecuted()) {
+			this->stmt.Execute();
+		}
 		bMore = this->stmt.MoreResults();
 		if (bMore) {
 			end = false;
 			empty = false;
+
+			// After call to MoreResults() columns may have changed
+			RebuildBCA();
 		}
 		else {
 			end = true;
 			empty = true;
 		}
 
+		
+
 		return bMore;
+	}
+
+
+	void RebuildBCA()
+	{
+			// Rebuild BCA and bindings
+			HSTMT hstmt = GetHSTMT(stmt);
+			bca = pDBview->RefreshBCA(&hstmt);
+			pRowbuf = NULL;
+			pParambuf = NULL;
+			ReBindRowbuf();
 	}
 };
 

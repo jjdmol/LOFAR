@@ -25,6 +25,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <string>
+
 #ifdef __SGI_STL_PORT
 #include <hash_set>
 #include <hash_map>
@@ -32,6 +34,7 @@
 
 using namespace dtl;
 using namespace std;
+
 
 const TIMESTAMP_STRUCT then = {2000, 12, 15, 0, 0, 0, 0};
 const TIMESTAMP_STRUCT past = {1999, 1, 1, 0, 0, 0, 0};
@@ -1368,7 +1371,7 @@ void TestDynamicView()
 		tstring str = (tstring)vf;
 		#endif
 
-		variant_t v(vf);
+		dtl_variant_t v(vf);
 
     #ifdef __GNUC__     // gcc bug
 		tstring s = v.get_tstring();
@@ -1425,16 +1428,16 @@ void test_variant(void) {
 	vector<tstring> names;
 	int i;
 	tstring s;
-	variant_t v;
+	dtl_variant_t v;
 	//TCHAR test[] = _TEXT("hello");
-	//variant_t c(test);
+	//dtl_variant_t c(test);
 	tostringstream test2stream;
 	test2stream << _TEXT("bye");
 	tstring test2 = test2stream.str();
 
-	variant_t e(test2);
-	variant_t f(test_date);
-	variant_t a(1L), b(2), d(4.5);
+	dtl_variant_t e(test2);
+	dtl_variant_t f(test_date);
+	dtl_variant_t a(1L), b(2), d(4.5);
 	TypeTranslation vt0=TypeTranslation(typeid(int).name(), C_INT, SQL_INTEGER, SQL_C_SLONG, TypeTranslation::TYPE_PRIMITIVE, sizeof(int)),
 #ifdef _UNICODE // needed for proper type translation object
 	    vt1=TypeTranslation(typeid(wstring).name(), C_WSTRING, SQL_WVARCHAR, SQL_C_WCHAR, TypeTranslation::TYPE_COMPLEX, sizeof(wstring)),
@@ -1507,10 +1510,7 @@ void test_variant(void) {
 	tstring str_bool2 = (tstring) r[_TEXT("bool")];
   #endif
 
-	#ifndef __GNUC__  // gcc 2.96 does not support boolalpha format flag
-
     tcout << boolalpha;
-	#endif
 	tcout <<  bool1 << _TEXT(" ") << bool2 << endl;
 	tcout << str_bool1 << _TEXT(" ") << str_bool2 << endl;
 };
@@ -1610,14 +1610,24 @@ void TestConstRefs()
 // Dynamic IndexedDBView example using a variant_row ParamObj
 void DynamicIndexedViewExampleVariantParamObj()
 {
+
   typedef DynamicDBView<variant_row>    DynaDBV;
   typedef DEFAULT_DYNA_VIEW(DynaDBV)    DynaIdxDBV;
 
- DynaDBV dynamic_view(_TEXT("DB_EXAMPLE"),
+  DynaDBV dynamic_view(_TEXT("DB_EXAMPLE"),
 	 _TEXT("INT_VALUE, STRING_VALUE, DOUBLE_VALUE, EXAMPLE_LONG,  EXAMPLE_DATE"),
 	 _TEXT("WHERE INT_VALUE BETWEEN (?) AND (?) OR ")
-	 _TEXT("STRING_VALUE = (?) OR EXAMPLE_DATE <= (?)") + exampleOrderBy,
-	 cb_ptr_fun(VariantBPAExample));
+	 _TEXT("STRING_VALUE = (?) OR EXAMPLE_DATE <= (?)") + exampleOrderBy);
+
+
+  DynaDBV::select_iterator sel_it = dynamic_view.begin();
+  variant_row params(dynamic_view.GetParamObj());
+  params[_TEXT("0")] = 1;
+  params[_TEXT("1")] = 10;
+  params[_TEXT("2")] = tstring(_TEXT("Example"));
+  params[_TEXT("3")] = tstring(_TEXT("01-MAR-2000"));
+  sel_it.Params() = params;
+  cout << *sel_it << endl;
 
 
  // make the functor needed for SetParams out of SetParamsExample() by calling
@@ -1730,8 +1740,7 @@ void IndexedViewExampleVariantParamObj()
 
 	DBV view(_TEXT("DB_EXAMPLE"), DefaultBCA<Example>(),
 	  _TEXT("WHERE INT_VALUE BETWEEN (?) AND (?) OR ")
-	  _TEXT("STRING_VALUE = (?) OR EXAMPLE_DATE <= (?)") + exampleOrderBy,
-	  cb_ptr_fun(VariantBPAExample));
+	  _TEXT("STRING_VALUE = (?) OR EXAMPLE_DATE <= (?)") + exampleOrderBy, cb_ptr_fun(VariantBPAExample));
 
 	view.set_io_handler(LoggingHandler<Example, variant_row>());
 
@@ -1753,7 +1762,7 @@ void IndexedViewExampleVariantParamObj()
 		replacement = *idxview_it;
 		replacement.exampleStr = _TEXT("Fizzle");
 		TIMESTAMP_STRUCT date = {2003, 3, 3, 0, 0, 0, 0};
-		replacement.exampleDate = date;
+		replacement.exampleDate = jtime_c(date);
 		indexed_view.replace(idxview_it, replacement);
 	}
 
@@ -1840,7 +1849,6 @@ void IndexedViewExampleVariantParamObj()
 
 	catch (...)
 	{
-
 	typedef LoggingHandler<Example, variant_row>::LoggedTriple LoggedTriple;
 
 	// retrieve the LoggingHandler object from the IndexedDBView
@@ -2205,7 +2213,7 @@ vector<variant_row> DynamicReadAndUpdateData()
  vector<variant_row> results;
 
  DynamicDBView<> view(
- 	 DynamicDBView<>::Args().tables(_TEXT("DB_EXAMPLE")).fields(_TEXT("*")).postfix(exampleOrderBy).handler(AlwaysThrowsHandler<variant_row>())
+ 	 DynamicDBView<>::Args().tables(_TEXT("DB_EXAMPLE")).fields(_TEXT("*")).postfix(exampleOrderBy).handler(AlwaysThrowsHandler<variant_row, variant_row>())
  );
 
  DynamicDBView<>::select_update_iterator read_it = view.begin();
@@ -2470,12 +2478,12 @@ void TestAVeryLongString()
 
 	if (DBConnection::GetDefaultConnection().GetDBMSEnum() == DBConnection::DB_ACCESS)
 	{
-		view = DBView<Example>(_TEXT("DB_LONGSTR"), BCAExampleAccess(), exampleOrderBy);
+		view = DBView<Example>(_TEXT("DB_LONGSTR"), BCAExampleAccess());
 		gen_string = GenLongString(500);
 	}
 	else
 	{
-		view = DBView<Example>(_TEXT("DB_LONGSTR"), DefaultBCA<Example>(), exampleOrderBy);
+		view = DBView<Example>(_TEXT("DB_LONGSTR"), DefaultBCA<Example>());
 		gen_string = GenLongString(500);
 	}
 

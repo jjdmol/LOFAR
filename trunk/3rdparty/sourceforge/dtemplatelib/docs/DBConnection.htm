@@ -165,12 +165,28 @@ face="Courier New">ValidatedObject</font></a></p>
   <tr> 
     <td valign="top">Connect with DSN string</td>
     <td valign="top"> 
-      <pre>void Connect(const string &amp;s)</pre>
+      <pre>void Connect(const string &amp;s, 
+  bool bPrompt = false, 
+  bool auto_commit_setting = false)</pre>
     </td>
     <td valign="top">&nbsp; </td>
     <td valign="top">Creates a database connection using the ODBC connect string 
       contained in <font size="2"
-        face="Courier New">s</font></td>
+        face="Courier New">s</font>.
+	<br>
+	<br>
+	If <font size="2" face="Courier New, Courier, mono">bPrompt</font>
+        is true it will use ODBC dialogs to prompt for a connection (DTL_NO_POOLING must be defined since
+	ODBC does not allow connection pooling to be enabled when browsing for a connection).  
+	<br>
+	<br>
+	If <font size="2" face="Courier New, Courier, mono">auto_commit_setting</font> is true then DTL will not
+	attempt to turn of auto-commit and will just leave the default driver commit setting instead of
+	trying to turn auto-commit off.  This is useful for connection
+	types such as Excel which don't allow auto-commit to be turned off.  (Of course, instead of using this flag you can just enclose 
+	<font size="2" face="Courier New, Courier, mono">Connect()</font> in 
+	a <font size="2" face="Courier New, Courier, mono">try...catch</font> block. DTL will still make the connection if auto-commit can't be turned off and flag the connection 
+	as <font size="2" face="Courier New, Courier, mono">IsConnected()</font> to allow you to know that the connection succeded with errors).</td>
     <td valign="top">valid database connection - throw if error encountered</td>
   </tr>
   <tr> 
@@ -320,6 +336,22 @@ face="Courier New">ValidatedObject</font></a></p>
       the beginning and end of SQL identifiers) for this connection. </td>
     <td valign="top">&nbsp;</td>
   </tr>
+<tr> 
+    <td valign="top">Get a list of ODBC data sources.</td>
+    <td valign="top"> 
+      <pre>vector&lt; pair&lt;tstring, tstring&gt; &gt; GetDataSources(SQLUSMALLINT SourceType = SQL_FETCH_FIRST)</pre>
+    </td>
+    <td valign="top">&nbsp; </td>
+    <td valign="top">Returns a list of ODBC data source names on this machine by calling SQLDataSources.<br>
+<pre>
+SourceType 
+  = SQL_FETCH_FIRST = get all sources
+  = SQL_FETCH_FIRST_USER = get only user data sources
+  = SQL_FETCH_FIRST_SYSTEM = get only system data sources
+</td>
+    <td valign="top">&nbsp;</td>
+  </tr>
+
 </table>
 
 <h3>Notes</h3>

@@ -68,7 +68,7 @@ template<class DataObj> class DefaultBCA : public STD_::binary_function<BoundIOs
   public:
 	  void operator()(BoundIOs &boundIOs, DataObj &rowbuf)
 	  {
-			throw DBException(_TEXT("DefaultBCA::operator()()"), _TEXT("Must define a BCA!"), NULL, NULL);
+			DTL_THROW DBException(_TEXT("DefaultBCA::operator()()"), _TEXT("Must define a BCA!"), NULL, NULL);
 
 	  }
 
@@ -188,7 +188,7 @@ private:
 	  errmsg += typeid(T).name();
 	  errmsg += " is not a valid type";
 	  
-	  throw VariantException(_TEXT("IOHandler::CastFromBase()"),
+	  DTL_THROW VariantException(_TEXT("IOHandler::CastFromBase()"),
 							 tstring_cast((tstring *)NULL, errmsg));
 	}
 	return p ;
@@ -281,7 +281,7 @@ public:
 			errmsg += typeid(T).name();
 			errmsg += " is not a valid type";
 
-			throw VariantException(_TEXT("IOHandler::CastFromBase()"),
+			DTL_THROW VariantException(_TEXT("IOHandler::CastFromBase()"),
 				tstring_cast((tstring *)NULL, errmsg));
         } 
 		return p->data ;
@@ -387,6 +387,7 @@ public:
 // this one directs the handling code to always throw
 
 template<class DataObj, class ParamObj = DefaultParamObj<DataObj> > class AlwaysThrowsHandler :
+// template<class DataObj, class ParamObj> class AlwaysThrowsHandler :
 	public FailureRecorderEmpty
 {
 public:
@@ -560,7 +561,7 @@ private:
 			errmsg += typeid(T).name();
 			errmsg += " is not a valid type";
 
-			throw VariantException(_TEXT("BCAWrap::CastFromBase()"),
+			DTL_THROW VariantException(_TEXT("BCAWrap::CastFromBase()"),
 				tstring_cast((tstring *)NULL, errmsg));
 		}
 		return p ;
@@ -625,7 +626,7 @@ public:
 			errmsg += typeid(T).name();
 			errmsg += " is not a valid type";
 
-			throw VariantException(_TEXT("BCAWrap::CastFromBase()"),
+			DTL_THROW VariantException(_TEXT("BCAWrap::CastFromBase()"),
 				tstring_cast((tstring *)NULL, errmsg));
 		}
 
@@ -665,7 +666,7 @@ private:
 		  errmsg += typeid(T).name();
 		  errmsg += " is not a valid type";
 
-		  throw VariantException(_TEXT("BPAWrap::CastFromBase()"),
+		  DTL_THROW VariantException(_TEXT("BPAWrap::CastFromBase()"),
 			tstring_cast((tstring *)NULL, errmsg));
 	  }
       return p ;
@@ -725,7 +726,7 @@ public:
 			errmsg += typeid(T).name();
 			errmsg += " is not a valid type";
 
-			throw VariantException(_TEXT("BPAWrap::CastFromBase()"),
+			DTL_THROW VariantException(_TEXT("BPAWrap::CastFromBase()"),
 				tstring_cast((tstring *)NULL, errmsg));
         }
 		return p->data ;
@@ -813,7 +814,7 @@ private:
 		  errmsg += typeid(T).name();
 		  errmsg += " is not a valid type";
 
-		  throw VariantException(_TEXT("SelValWrap::CastFromBase()"),
+		  DTL_THROW VariantException(_TEXT("SelValWrap::CastFromBase()"),
 				tstring_cast((tstring *)NULL, errmsg));
 	  }
       return p ;
@@ -873,7 +874,7 @@ public:
 			errmsg += typeid(T).name();
 			errmsg += " is not a valid type";
 
-			throw VariantException(_TEXT("SelValWrap::CastFromBase()"),
+			DTL_THROW VariantException(_TEXT("SelValWrap::CastFromBase()"),
 				tstring_cast((tstring *)NULL, errmsg));
         }
 
@@ -913,7 +914,7 @@ template<class DataObj> class InsValWrap
 		  errmsg += typeid(T).name();
 		  errmsg += " is not a valid type";
 
-		  throw VariantException(_TEXT("InsValWrap::CastFromBase()"),
+		  DTL_THROW VariantException(_TEXT("InsValWrap::CastFromBase()"),
 				tstring_cast((tstring *)NULL, errmsg));
 	  }
 
@@ -975,7 +976,7 @@ public:
 			errmsg += typeid(T).name();
 			errmsg += " is not a valid type";
 
-			throw VariantException(_TEXT("InsValWrap::CastFromBase()"),
+			DTL_THROW VariantException(_TEXT("InsValWrap::CastFromBase()"),
 				tstring_cast((tstring *)NULL, errmsg));
         }
 
@@ -1134,7 +1135,7 @@ public:
 
 		colNames = dummy_bc.GetColumnNames();
 	
-        numParams = ParsePostfixForParams();
+        numParams = dummy_bp.NumParams() + dummy_bc.NumParams();
         numColumns = colNames.size();
     }
 public:
@@ -1284,7 +1285,7 @@ public:
 
 		colNames = dummy_bc.GetColumnNames();
 	
-        numParams = ParsePostfixForParams();
+        numParams = dummy_bc.NumParams() + dummy_bp.NumParams();
         numColumns = colNames.size();
     }	
 
@@ -1341,7 +1342,7 @@ public:
 
 		colNames = dummy_bc.GetColumnNames();
 	
-        numParams = ParsePostfixForParams();
+        numParams = dummy_bc.NumParams() + dummy_bp.NumParams();
         numColumns = colNames.size();
     }
 
@@ -1390,6 +1391,7 @@ public:
 		STD_::swap(keyMode, other.keyMode);
 		io_handler.swap(other.io_handler);
 		STD_::swap(pEnd, other.pEnd);
+		STD_::swap(pConn, other.pConn);
 	}
 
     // delete any cached iterators
@@ -1534,9 +1536,22 @@ public:
 
 	tstring GetRawSQL() const		   { return rawSQL;			  }
 
-    BCA GetBCA() const				   { return bca;			  }
+    const BCA & GetBCA() const				   { return bca;			  }
+	const BCA & RefreshBCA(HSTMT *p_stmt) { return bca;			  }
 
-    BPA GetBPA() const				   { return bpa;			  }
+    const BPA & GetBPA() const				   { return bpa;			  }
+
+	void SetBPA(const BPA &new_bpa)
+	{
+		bpa = new_bpa;
+
+		// fix the count for the number of parameters since we have only now set the bpa
+		ParamObj param_obj;
+		BoundIOs dummy_bp;	
+		dummy_bp.BindAsBase(param_obj);
+		bpa(dummy_bp, param_obj);
+		numParams =  dummy_bp.NumParams();
+	}
 
     InsVal GetInsVal() const		   { return InsValidate;   }
 
@@ -1552,7 +1567,7 @@ public:
 	}
 
 	// set and get fields of primary key
-	STD_::vector<tstring> GetKey() const
+	const STD_::vector<tstring> &GetKey() const
 	{
 		return keyNames;
 	}

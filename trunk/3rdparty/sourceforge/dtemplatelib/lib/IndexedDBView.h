@@ -106,7 +106,7 @@ template<class DataObj, class BCA = DefaultBCA<DataObj> > class DynamicBCA
 				 BoundIOs::iterator it2 = dynbios.find(colName);
 
 				 if (it2 == dynbios.end())
-				    throw DBException(_TEXT("DynamicBCA::DynamicBCA"), 
+				    DTL_THROW DBException(_TEXT("DynamicBCA::DynamicBCA"), 
 					_TEXT("Column \"") + colName +
 						_TEXT("\" not found in BoundIOs!"), NULL, NULL);
 
@@ -271,7 +271,7 @@ template<class ParamObj> class SetParamsWrap : public STD_::unary_function<Param
 		  errmsg += typeid(T).name();
 		  errmsg += " is not a valid type";
 
-		  throw VariantException(_TEXT("SetParamsWrap::CastFromBase()"),
+		  DTL_THROW VariantException(_TEXT("SetParamsWrap::CastFromBase()"),
 			tstring_cast((tstring *)NULL, errmsg));
 	  }
       return p ;
@@ -793,7 +793,7 @@ class IndexedDBView
 				if (std_tstrlen(semiColonToken) == 0)
 				{
 					delete[] c_str;
-					throw DBException(_TEXT("IndexedDBView::IndexedDBView()"),
+					DTL_THROW DBException(_TEXT("IndexedDBView::IndexedDBView()"),
 						_TEXT("Invalid IndexNamesAndFields tstring \"") + 
 						IndexNamesAndFields + _TEXT("\"!  Empty IndexName or FieldList detected!"),
 						NULL, NULL);
@@ -824,7 +824,7 @@ class IndexedDBView
 				// commas mean we have an invalid name as user
 				// erroneously entered a field list
 				if (numOfOccurrences(',', IndexName) != 0)
-					throw DBException(_TEXT("IndexedDBView::IndexedDBView()"),
+					DTL_THROW DBException(_TEXT("IndexedDBView::IndexedDBView()"),
 						_TEXT("Invalid IndexNamesAndFields tstring \"") +
 						IndexNamesAndFields + _TEXT("\"!  Expected IndexName, instead found ")
 						_TEXT("FieldList!"), NULL, NULL);
@@ -854,7 +854,7 @@ class IndexedDBView
 						errmsg += _TEXT("\"!  Can't use keyword \"Unique\" as ");
 						errmsg += _TEXT("an index name!");
 
-						throw DBException(_TEXT("IndexedDBView::IndexedDBView()"),
+						DTL_THROW DBException(_TEXT("IndexedDBView::IndexedDBView()"),
 						   errmsg, NULL, NULL);
 					}
 					// must specify name of unique index
@@ -865,7 +865,7 @@ class IndexedDBView
 						errmsg += _TEXT("Invalid IndexNamesAndFields tstring \"");
 						errmsg += IndexNamesAndFields;
 						errmsg += _TEXT("\"!  Expected name of unique index!");
-						throw DBException(_TEXT("IndexedDBView::IndexedDBView()"),
+						DTL_THROW DBException(_TEXT("IndexedDBView::IndexedDBView()"),
 							errmsg, NULL, NULL);
 					}
 
@@ -894,7 +894,7 @@ class IndexedDBView
 					errmsg += _TEXT("\"!  Expected FieldList, instead found ");
 					errmsg += _TEXT(" premature end of list!");
 
-					throw DBException(_TEXT("IndexedDBView::IndexedDBView()"),
+					DTL_THROW DBException(_TEXT("IndexedDBView::IndexedDBView()"),
 						errmsg, NULL, NULL);
 				}
 
@@ -916,7 +916,7 @@ class IndexedDBView
 				   // in the IndexNamesAndFields string on an autokeyed view
 				   if ((useWhichFields != USE_AUTO_KEY) || AutoKeyFound)
 				   {
-					throw DBException(_TEXT("IndexedDBView::IndexedDBView()"),
+					DTL_THROW DBException(_TEXT("IndexedDBView::IndexedDBView()"),
 						_TEXT("Can't use 'AutoKey' as a key name (reserved by system)!"),
 						NULL, NULL);
 				   }
@@ -941,7 +941,7 @@ class IndexedDBView
 					errmsg += _TEXT("\"!  Attempted to redefine IndexName \"");
 					errmsg += IndexName;
 					errmsg += _TEXT("\"!");
-					throw DBException(_TEXT("IndexedDBView::IndexedDBView()"),
+					DTL_THROW DBException(_TEXT("IndexedDBView::IndexedDBView()"),
 						errmsg, NULL, NULL);
 				}
 
@@ -1473,7 +1473,7 @@ class IndexedDBView
 
 			   if (map_it == indexes.end())
 			   {
-					throw DBException(_TEXT("IndexedDBView::insert()"),
+					DTL_THROW DBException(_TEXT("IndexedDBView::insert()"),
 						_TEXT("Couldn't find AutoKey for the view!"),
 						NULL, NULL);
 			   }
@@ -1491,7 +1491,7 @@ class IndexedDBView
 										  // the object we insert in the view
 		   
 		   if (!InsValidate(finaldataObj))
-				throw DBException(_TEXT("IndexedDBView::insert(const DataObj &dataObj)"),
+				DTL_THROW DBException(_TEXT("IndexedDBView::insert(const DataObj &dataObj)"),
 					_TEXT("InsValidate() failed!"), NULL, NULL);
 		   
 		   // STD_::pair<iterator, bool> find_pr = CheckUniqueness(dataObj);
@@ -1533,7 +1533,7 @@ class IndexedDBView
 
 				  // if iterator encountered a problem, that means insertion failed, so throw
 				  if (ins_it.bad() || ins_it.fail())
-					  throw DBException(_TEXT("IndexedDBView::insert()"), _TEXT("Insertion into DB failed!"),
+					  DTL_THROW DBException(_TEXT("IndexedDBView::insert()"), _TEXT("Insertion into DB failed!"),
 							NULL, NULL);
 			   }
 		   }
@@ -1612,7 +1612,7 @@ class IndexedDBView
 
 			   // if iterator encountered a problem, that means deletion failed, so throw
 			   if (del_it.bad() || del_it.fail() || del_it.GetLastCount() == 0)
-					  throw DBException(_TEXT("IndexedDBView::erase()"), 
+					  DTL_THROW DBException(_TEXT("IndexedDBView::erase()"), 
 					  _TEXT("Delete from DB failed! Record may have been changed by another user."),
 							NULL, NULL);
 		   }
@@ -1673,7 +1673,7 @@ class IndexedDBView
 										  // the object we insert in the view
 
 		  if (!InsValidate(finaldataObj))
-			   throw DBException(_TEXT("IndexedDBView::replace()"),
+			   DTL_THROW DBException(_TEXT("IndexedDBView::replace()"),
 					_TEXT("InsValidate() failed!"), NULL, NULL);
 		  
 		  if (boundToDB == BOUND)
@@ -1770,7 +1770,7 @@ class IndexedDBView
 					useWhichFields);
 
 			// bPrepare = false as stmt. only executed once
-			up_it = DBView<DataObj, DataObj>::update_iterator(*pView, false);
+			up_it = TYPENAME_IN_TEMPLATE_PARAMS DBView<DataObj, DataObj>::update_iterator(*pView, false);
 
 		    up_it.Params(*it);  // search parameters are the object to replace
 
@@ -1782,7 +1782,7 @@ class IndexedDBView
 		  // shouldn't happen
 		  if (map_it == indexes.end())
 		  {
-			  throw DBException(_TEXT("IndexedDBView::erase()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::erase()"),
 					  _TEXT("View must have a PK declared!"), NULL, NULL);
 		  }
 
@@ -1809,7 +1809,7 @@ class IndexedDBView
 			 // is in a corrupted state ... still atomic here as no changes made to
 			 // container or the objects it owns
 			 if (idx_it == index.end())
-				 throw DBException(_TEXT("IndexedDBView::replace()"),
+				 DTL_THROW DBException(_TEXT("IndexedDBView::replace()"),
 				     _TEXT("Indexed view is corrupted due to bad index list!"), NULL, NULL);
 
 			 // record the iterator in the list of the damned
@@ -1870,7 +1870,7 @@ class IndexedDBView
 
 			   // if iterator encountered a problem, that means insertion failed, so throw
 			   if (up_it.bad() || up_it.fail() || up_it.GetLastCount() == 0)
-					  throw DBException(_TEXT("IndexedDBView::replace()"), 
+					  DTL_THROW DBException(_TEXT("IndexedDBView::replace()"), 
 					  _TEXT("Update in DB failed! Row may have been changed by another user."),
 							NULL, NULL);
 			}
@@ -1980,7 +1980,7 @@ class IndexedDBView
 		  }
 		  else // if index not found, throw 
 		  {
-			  throw DBException(_TEXT("IndexedDBView::begin_AK()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::begin_AK()"),
 				  _TEXT("Index ") + IndexNm + _TEXT(" doesn't exist!"), NULL, NULL);
 		  }
 
@@ -2006,7 +2006,7 @@ class IndexedDBView
 		  }
 		  else // if index not found, throw 
 		  {
-			  throw DBException(_TEXT("IndexedDBView::begin_AK()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::begin_AK()"),
 				  _TEXT("Index ") + IndexNm + _TEXT(" doesn't exist!"), NULL, NULL);
 		  }
 
@@ -2030,7 +2030,7 @@ class IndexedDBView
 		  }
 		  else // if index not found, throw 
 		  {
-			  throw DBException(_TEXT("IndexedDBView::end_AK()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::end_AK()"),
 				  _TEXT("Index ") + IndexNm + _TEXT(" doesn't exist!"), NULL, NULL);
 		  }
 
@@ -2056,7 +2056,7 @@ class IndexedDBView
 		  }
 		  else // if index not found, throw 
 		  {
-			  throw DBException(_TEXT("IndexedDBView::end_AK()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::end_AK()"),
 				  _TEXT("Index ") + IndexNm + _TEXT(" doesn't exist!"), NULL, NULL);
 		  }
 
@@ -2118,7 +2118,7 @@ class IndexedDBView
 			}
 			else // PK should exist, so throw if it doesn't
 			{
-			  throw DBException(_TEXT("IndexedDBView::empty()"), _TEXT("PK doesn't exist for this view!"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::empty()"), _TEXT("PK doesn't exist for this view!"),
 				  NULL, NULL);
 			}
 	   }
@@ -2137,8 +2137,10 @@ class IndexedDBView
 			}
 			else // PK should exist, so throw if it doesn't
 			{
-			  throw DBException(_TEXT("IndexedDBView::size()"), _TEXT("PK doesn't exist for this view!"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::size()"), _TEXT("PK doesn't exist for this view!"),
 				  NULL, NULL);
+
+			  return 0;
 			}
 	   }
 
@@ -2156,7 +2158,7 @@ class IndexedDBView
 			}
 			else // PK should exist, so throw if it doesn't
 			{
-			  throw DBException(_TEXT("IndexedDBView::max_size()"), _TEXT("PK doesn't exist for this view!"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::max_size()"), _TEXT("PK doesn't exist for this view!"),
 				  NULL, NULL);
 			}
 	   }
@@ -2220,11 +2222,11 @@ class IndexedDBView
 		    // make sure PK's exist for both views
 		    if (map_it1 == idxview1.indexes.end())
 			{
-			  throw DBException(_TEXT("IndexedDBView::operator==()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::operator==()"),
 				  _TEXT("PK doesn't exist for first view!"), NULL, NULL);
 			}
 			else if (map_it2 == idxview2.indexes.end())			{
-			  throw DBException(_TEXT("IndexedDBView::operator==()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::operator==()"),
 				  _TEXT("PK doesn't exist for second view!"),
 				  NULL, NULL);
 			}
@@ -2259,11 +2261,11 @@ class IndexedDBView
 		   // make sure PK's exist for both views
 		   if (map_it1 == idxview1.indexes.end())
 		   {
-			  throw DBException(_TEXT("IndexedDBView::operator<()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::operator<()"),
 				  _TEXT("PK doesn't exist for first view!"), NULL, NULL);
 		   }
 		   else if (map_it2 == idxview2.indexes.end())			{
-			  throw DBException(_TEXT("IndexedDBView::operator<()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::operator<()"),
 				  _TEXT("PK doesn't exist for second view!"),
 				  NULL, NULL);
 		   }
@@ -2289,11 +2291,11 @@ class IndexedDBView
      	   // make sure PK's exist for both views
 		   if (map_it1 == idxview1.indexes.end())
 		   {
-			  throw DBException(_TEXT("IndexedDBView::operator>()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::operator>()"),
 				  _TEXT("PK doesn't exist for first view!"), NULL, NULL);
 		   }
 		   else if (map_it2 == idxview2.indexes.end())			{
-			  throw DBException(_TEXT("IndexedDBView::operator>()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::operator>()"),
 				  _TEXT("PK doesn't exist for second view!"),
 				  NULL, NULL);
 		   }
@@ -2319,11 +2321,11 @@ class IndexedDBView
 		   // make sure PK's exist for both views
 		   if (map_it1 == idxview1.indexes.end())
 		   {
-			  throw DBException(_TEXT("IndexedDBView::operator<=()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::operator<=()"),
 				  _TEXT("PK doesn't exist for first view!"), NULL, NULL);
 		   }
 		   else if (map_it2 == idxview2.indexes.end())			{
-			  throw DBException(_TEXT("IndexedDBView::operator<=()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::operator<=()"),
 				  _TEXT("PK doesn't exist for second view!"),
 				  NULL, NULL);
 		   }
@@ -2350,12 +2352,12 @@ class IndexedDBView
 		   // make sure PK's exist for both views
 		   if (map_it1 == idxview1.indexes.end())
 		   {
-			  throw DBException(_TEXT("IndexedDBView::operator>=()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::operator>=()"),
 				  _TEXT("PK doesn't exist for first view!"), NULL, NULL);
 
 		   }
 		   else if (map_it2 == idxview2.indexes.end())			{
-			  throw DBException(_TEXT("IndexedDBView::operator>=()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::operator>=()"),
 				  _TEXT("PK doesn't exist for second view!"),
 				  NULL, NULL);
 		   }
@@ -2450,10 +2452,10 @@ class IndexedDBView
 		return !(cit == const_iterator(ncit));
 	}
 #endif
-   private:
+   protected:
 	   // as its name implies, fetch the data associated with this view from the database
 	   // if we haven't done so already
-	   void fetch()
+	   virtual void fetch()
 	   {
 		  // because of database connection issues, fetch() cannot be part of constructor
 		  // all functions that return an iterator must call fetch() first to initialize
@@ -2463,7 +2465,7 @@ class IndexedDBView
 			  return;
 
 		  if (pDBview == NULL)
-			  throw DBException(_TEXT("IndexedDBView::fetch()"),
+			  DTL_THROW DBException(_TEXT("IndexedDBView::fetch()"),
 				_TEXT("Must assign to a default constructed IndexedDBView before first use!"),
 				NULL, NULL);
 
@@ -2546,12 +2548,13 @@ class IndexedDBView
 				bFetched = false;
 
 				tstring errstring = errstr.str();
-				throw DBException(_TEXT("IndexedDBView::fetch()"), errstring, NULL, NULL);
+				DTL_THROW DBException(_TEXT("IndexedDBView::fetch()"), errstring, NULL, NULL);
 		  }
 
 		  bFetched = true;
 	   }
 
+   private:
 	   // insert object locally ... (uniqueness checks?)
 	   STD_::pair<iterator, bool> local_insert(const DataObj &dataObj, 
 		   bool bCheckUniqueness = true)
@@ -2620,8 +2623,9 @@ class IndexedDBView
 			 catch (STD_::exception &ex)
 			 {
 				tcout << ex.what() << STD_::endl;
-				typename index_map::reverse_iterator rev_it =	
-					index_map::reverse_iterator(idx_it);
+
+				typename index_map::reverse_iterator rev_it =
+					TYPENAME_IN_TEMPLATE_PARAMS index_map::reverse_iterator(idx_it);
 
 				// rollback local state on an exception, then rethrow
 				for ( ; rev_it != indexes.rend(); rev_it++)
@@ -2707,7 +2711,7 @@ class IndexedDBView
 			 {
 				tcout << ex.what() << STD_::endl;
 				typename index_map::reverse_iterator rev_it =
-					index_map::reverse_iterator(idx_it);
+					TYPENAME_IN_TEMPLATE_PARAMS index_map::reverse_iterator(idx_it);
 
 				// rollback local state on an exception, then rethrow
 				for ( ; rev_it != indexes.rend(); rev_it++)
@@ -2765,7 +2769,7 @@ class IndexedDBView
 
 		   if (map_it == this_ptr->indexes.end())
 		   {
-				throw DBException(_TEXT("IndexedDBView::ExtractPK()"), _TEXT("PK does not exist for this view"),
+				DTL_THROW DBException(_TEXT("IndexedDBView::ExtractPK()"), _TEXT("PK does not exist for this view"),
 					NULL, NULL);
 		   }
 
@@ -2784,7 +2788,7 @@ class IndexedDBView
 
 		   if (map_it == this_ptr->indexes.end())
 		   {
-				throw DBException(_TEXT("IndexedDBView::ExtractAutoKey()"), _TEXT("PK does not exist for this view"),
+				DTL_THROW DBException(_TEXT("IndexedDBView::ExtractAutoKey()"), _TEXT("PK does not exist for this view"),
 					NULL, NULL);
 		   }
 

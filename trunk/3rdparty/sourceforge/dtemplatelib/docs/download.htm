@@ -67,7 +67,7 @@ vlink="#551A8B" alink="#FF0000">
 <hr>
 <p><a href="https://sourceforge.net/projects/dtemplatelib/"><b>Download from sourceforge.net</b></a><br>
 </p>
-<p><a href="http://groups.yahoo.com/group/DatabaseTemplateLibrary/files/DTL35/dtl.tar.gz"><b>Alternate download from Yahoo!</b></a><br>
+<p><a href="http://groups.yahoo.com/group/DatabaseTemplateLibrary/files/DTL36/dtl.tar.gz"><b>Alternate download from Yahoo!</b></a><br>
 </p>
 
 
@@ -106,6 +106,157 @@ subscribe to the DTL discussion group! </p>
 <font size="2"><strong>Release Notes</strong></font><em><strong><font size="2"> 
 </font></strong></em> 
 <ol>
+<li><font size="2"><em><strong>Version 3.6.5; Released August 23, 2004</strong></em></font><br>
+    <font size="2"><b>***Bugfixes*** </b></font>
+  <ol> 
+      <li><font face="Times New Roman, Times, serif" size="2">Fixed bug introduced in 3.6.4 that caused DynamicDBView with
+parameters to potentially trash memory.</font></li>      
+  </ol>
+  <br>
+    <font size="2"><b>***New Features/Improvements/Removed features *** </b></font> 
+    <ol>
+      <li><font face="Times New Roman, Times, serif" size="2">Upgraded global error handler callback to be able to take a functor
+as well as a function pointer. </font></li>
+    </ol>
+<br>
+
+<li><font size="2"><em><strong>Version 3.6.4; Released July 27, 2004</strong></em></font><br>
+    <font size="2"><b>***Bugfixes*** </b></font>
+  <ol> 
+      <li><font face="Times New Roman, Times, serif" size="2">Upgraded sql logging functionality so that sql logs are associated
+with a DBConnection.  This should make logging thread safe for applications that use a separate connection per thread.</font></li>      
+      <li><font face="Times New Roman, Times, serif" size="2">Fixed ETIMap initialization to be called from the
+DBEnvironment constructor.  This should avoid a potential multi-threaded bug.</font> </li>
+      <li><font face="Times New Roman, Times, serif" size="2">Cleaned up DataObj and ParamObj in dynamic DBView so that fields
+which are not used in these objects do not get added.  (Previously the DataObj and ParamObj would both contain placholders
+for all parameters and columns).</font> </li>
+  </ol>
+  <br>
+    <font size="2"><b>***New Features/Improvements/Removed features *** </b></font> 
+    <ol>
+      <li><font face="Times New Roman, Times, serif" size="2">Added ability to register global error handler callback. </font></li>
+      <li><font face="Times New Roman, Times, serif" size="2">Upgraded to support gcc 3.4. </font></li>
+      <li><font face="Times New Roman, Times, serif" size="2">Cleaned up installation docs for Redhat Linux.  Enabled bulk fetch
+          flag since the MyODBC 3.5.1 driver now supports this. </font></li>
+      </ol>
+<br>
+
+
+
+<li><font size="2"><em><strong>Version 3.6.3; Released July 12, 2004</strong></em></font><br>
+    <font size="2"><b>***Bugfixes*** </b></font>
+  <ol> 
+      <li><font face="Times New Roman, Times, serif" size="2">Renamed MIN to DTL_MIN to avoid possible macro conflicts.</font> </li>
+      <li><font face="Times New Roman, Times, serif" size="2">Fixed sql_iterator to point to end() if the executed statement does not return any rows.</font> </li>
+      <li><font face="Times New Roman, Times, serif" size="2">Fixed bug with BoundIO::ClearNull() that caused it to not work correctly with insert statements.</font> </li>
+  </ol>
+  <br>
+    <font size="2"><b>***New Features/Improvements/Removed features *** </b></font> 
+    <ol>
+      <li><font face="Times New Roman, Times, serif" size="2">Added ODBCINT64 support to support long integers. </font></li>
+
+      <li><font face="Times New Roman, Times, serif" size="2">Upgraded writing of strings and blobs to use SQLPutData more efficiently 
+- this should make blobs write slightly faster. </font></li>
+
+      <li><font face="Times New Roman, Times, serif" size="2">Upgraded sql logging functionality.<br>
+PrintLog(ostream &amp;o) = SQL statements in execution order<br> 
+PrintSortedLog(ostream &amp;o) = list of SQL statements in alphabetical order with no duplicates (what PrintLog() used to be).</font></li>
+      
+      <li><font face="Times New Roman, Times, serif" size="2">Minor adjustments to run with Visual C++ 2005 Express. </font></li>
+      <li><font face="Times New Roman, Times, serif" size="2">Added variant_row::tchar_star type to allow the binding of fixed length strings with a variant_row.
+	</font></li>
+      </ol>
+<br>
+
+<li><font size="2"><em><strong>Version 3.6.2; Released May 17, 2004</strong></em></font><br>
+    <font size="2"><b>***Bugfixes*** </b></font>
+  <ol> 
+      <li><font face="Times New Roman, Times, serif" size="2">Added compiler flag to fix iterator definitions under .NET with STLPort</font> </li>
+      <li><font face="Times New Roman, Times, serif" size="2">Added enhancements to support SQL batches under SQL server and to better handle generic
+sql_iterator queries with dummy column names or repeated column names.</font> </li>
+      <li><font face="Times New Roman, Times, serif" size="2">Added workaround for Microsoft Access 2000 bug that was causing memo fields
+longer than 2000 bytes to be fetched incorrectly.</font> </li>
+      
+  </ol>
+  <br>
+    <font size="2"><b>***New Features/Improvements/Removed features *** </b></font> 
+    <ol>
+      <li><font face="Times New Roman, Times, serif" size="2">Added DBConnection::GetDataSources() to retrieve a list of ODBC data sources. </font></li>
+
+      <li><font face="Times New Roman, Times, serif" size="2">Added support for calling ODBC catalog functions as SQL statements.  
+Currently supported functions are _SQLTables, _SQLColumns. </font></li>
+
+      <li><font face="Times New Roman, Times, serif" size="2">Added the ability to log the SQL executed by DTL.
+See DBStmt for details.</font></li>
+      
+      <li><font face="Times New Roman, Times, serif" size="2">Added the ability to convert from tcstring's of one length to tcstring's of a different 
+length by adding templated conversion constructors and assignment operators to the tcstring class. </font></li>
+      <li><font face="Times New Roman, Times, serif" size="2">Added change by A. Motzkau
+to improve variant_row performance.</font></li>
+      <li><font face="Times New Roman, Times, serif" size="2">Added draft RPM spec by Ben Martin.</font></li>
+   </ol>
+<br>
+
+<li><font size="2"><em><strong>Version 3.6.1; Released February 3, 2004</strong></em></font><br>
+    <font size="2"><b>***Bugfixes*** </b></font>
+  <ol> 
+      <li><font face="Times New Roman, Times, serif" size="2">Removed keyword "explicit" in dtl_variant_t constructor when using Visual C++
+compiler since this causes Visual C++ 7.0 to choke.  Other compilers will continue to use the explicit qualification here.</font></li>
+  </ol>
+<br>
+
+<li><font size="2"><em><strong>Version 3.6; Released February 1, 2004</strong></em></font><br>
+    <font size="2"><b>***Bugfixes*** </b></font>
+  <ol> 
+      <li><font face="Times New Roman, Times, serif" size="2">Renamed variant_t to dtl_variant_t to avoid a clash with
+the MFC component BCGControlBar which defines variant_t as a macro.</font> </li>
+      <li><font face="Times New Roman, Times, serif" size="2">Added keyword "explicit" to dtl_variant_t constructor to avoid compiler
+ambiguity that erroneously caused the dtl_variant_t constructor to be called when cout << foo is called for a class with no ostream operator.</font></li>
+  </ol>
+  <br>
+    <font size="2"><b>***New Features/Improvements/Removed features *** </b></font> 
+    <ol>
+      <li><font face="Times New Roman, Times, serif" size="2">Changed dtl::blob from std::basic_string&lt;unsigned char&gt; to a class
+which holds a counted pointer to this basic_string.  The reason for doing this is that blobs are often quite large so for performance
+we want to avoid copying these objects whenever possible.  Now this class will merely copy the counted pointer on copy construction and assingment which
+is much faster when working with blobs.  One limitation is that we have only forwarded the most common basic_string functions so you may find one is missing 
+that you need.  If this happens, the trivial class definition can be found in array_string.h.</font></li>
+      <li><font face="Times New Roman, Times, serif" size="2">Upgraded DynamicDBView so that it will now automatically detect any parameters
+in a query and bind them to a ParamObj for the view. This extends DynamicDBView so that it can now have both columns and parameters that
+are not defined until runtime. It also makes the syntax for parameters more intuitive for this case since any parameters can just be
+assigned to a variant_row parameter object. See SimpleDynamicWhere() or <a href="fmtDynamicQueryExample.htm">ExecQuery()</a> in example/SimpleDynamicRead.cpp for an example.  The downside is that now DynamicDBView
+no longer allows you to pass in a custom BPA since it automatically detects parameters. Instead, if you want to use a custom BPA with a DynamicDBView
+you should use a DBView&lt;variant_row&gt; and just pass it a DynamicRowBCA() as is done in DynaDBView.h in the definition of a DynamicDBView. </li>
+      <li><font face="Times New Roman, Times, serif" size="2">Upgraded the DBConnection::Connect method so that now it allows users to browse for a connection
+via ODBC dialogs when DTL_NO_POOLING is set.  Also, you can pass a flag to the Connect method telling it not to turn off auto-commit for those drivers that
+don't support this. </font></li>
+      <li><font face="Times New Roman, Times, serif" size="2">Added new #define called DTL_VARIANT_USE_FIXED_LEN_STRING which causes DynamicDBView to bind
+strings to a fixed length string buffer instead of using std::string.  This can improve performance if you know your strings will be of limited length. </font></li>
+   </ol>
+
+   </li>
+    <p>&nbsp;</p>
+
+  <li><font size="2"><em><strong>Version 3.5.3; Released November 21, 2003</strong></em></font><br>
+    <font size="2"><b>***Bugfixes*** </b></font>
+      <ol> 
+      <li><font face="Times New Roman, Times, serif" size="2">Fixed bug that caused InsValidate to be called twice
+the first time an insert or update iterator is assigned.</font></li>
+      <li><font face="Times New Roman, Times, serif" size="2">Added static_cast labels as needed to remove warnings
+and clarify code for MSVC 7.1. (Contributed by <a href="http://www.paulgrenyer.co.uk">Paul Greyner</a>. ). </font></li>
+    <li><font face="Times New Roman, Times, serif" size="2">Changed defintions of MAX_JTIME to be less than ULONG_MAX.
+This was to resolve potential overflow error reported by gcc 3.3.</font></li>
+  </ol>
+  <br>
+    <font size="2"><b>***New Features/Improvements/Removed features *** </b></font> 
+    <ol>
+      <li><font face="Times New Roman, Times, serif" size="2">Changed default binding for SQL_BLOB so that DynamicDBView
+now binds this to a C++ data type of dtl::blob rather than std::string.</font></li>
+   </ol>
+
+   </li>
+    <p>&nbsp;</p>
+
   <li><font size="2"><em><strong>Version 3.5.2; Released September 10, 2003</strong></em></font><br>
     <font size="2"><b>***Bugfixes*** </b></font>
       <ol> 

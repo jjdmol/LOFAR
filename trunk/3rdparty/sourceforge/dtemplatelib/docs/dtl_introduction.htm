@@ -278,7 +278,7 @@ vector&lt;Example&gt; ReadData() {
 map it to a specified database table.  We have macros to do this.  The above ReadData() example can be done in a more abbreviated
 fashion as follows: (here we also print the records to cout)</p>
 <p><strong><pre><code><span class="codeComment">// Generate a simple structure to read data from a table called 'db_example' 
-// with three fields called 'int_value', 'double_value' and 'string_value'.
+// with five fields called 'int_value', 'string_value', 'double_value', 'example_long' and 'example_date'.
 // Note: the macro must be invoked at namespace scope because templates are 
 // not allowed  to take locally declared classes as template parameters.  
 // See [temp.arg.type] 14.3.1  in the C++ standard for details.</span>
@@ -486,7 +486,7 @@ public:
 class BPAJoinParamObj
 {
 public:
-	void operator()(BoundIOs &amp;boundIOs, JoinParamObj &amp;paramObj)
+	void operator()(BoundIOs &amp;params, JoinParamObj &amp;paramObj)
 	{
 		params[0] == paramObj.intValue;
 		params[1] == paramObj.strValue;

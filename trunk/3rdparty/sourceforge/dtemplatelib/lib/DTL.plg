@@ -6,30 +6,29 @@
 --------------------Configuration: DTL - Win32 Debug--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "C:\DOCUME~1\corwinj\LOCALS~1\Temp\RSP1EEE.tmp" with contents
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP5CE.tmp" with contents
 [
-/nologo /MLd /W3 /Gm /GR /GX /ZI /Od /I "." /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /D "DTL_UC" /FR"Debug/" /Fp"Debug/DTL.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
-"G:\dtl345\lib\bind_basics.cpp"
-"G:\dtl345\lib\BoundIO.cpp"
-"G:\dtl345\lib\clib_fwd.cpp"
-"G:\dtl345\lib\CountedPtr.cpp"
-"G:\dtl345\lib\date_util.cpp"
-"G:\dtl345\lib\DB_Base.cpp"
-"G:\dtl345\lib\DBConnection.cpp"
-"G:\dtl345\lib\DBException.cpp"
-"G:\dtl345\lib\DBStmt.cpp"
-"G:\dtl345\lib\DBView.cpp"
-"G:\dtl345\lib\dtl_base_types.cpp"
-"G:\dtl345\lib\LocalBCA.cpp"
-"G:\dtl345\lib\RootException.cpp"
-"G:\dtl345\lib\string_util.cpp"
-"G:\dtl345\lib\validate.cpp"
-"G:\dtl345\lib\variant_cc.cpp"
-"G:\dtl345\lib\variant_row.cpp"
-"G:\dtl345\lib\VariantException.cpp"
+/nologo /MDd /W3 /Gm /GR /GX /ZI /Od /I "." /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /D "DTL_UC" /FR"Debug/" /Fp"Debug/DTL.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"C:\dtl_36\dtl_36\lib\bind_basics.cpp"
+"C:\dtl_36\dtl_36\lib\BoundIO.cpp"
+"C:\dtl_36\dtl_36\lib\clib_fwd.cpp"
+"C:\dtl_36\dtl_36\lib\CountedPtr.cpp"
+"C:\dtl_36\dtl_36\lib\date_util.cpp"
+"C:\dtl_36\dtl_36\lib\DB_Base.cpp"
+"C:\dtl_36\dtl_36\lib\DBConnection.cpp"
+"C:\dtl_36\dtl_36\lib\DBException.cpp"
+"C:\dtl_36\dtl_36\lib\DBStmt.cpp"
+"C:\dtl_36\dtl_36\lib\DBView.cpp"
+"C:\dtl_36\dtl_36\lib\dtl_base_types.cpp"
+"C:\dtl_36\dtl_36\lib\LocalBCA.cpp"
+"C:\dtl_36\dtl_36\lib\RootException.cpp"
+"C:\dtl_36\dtl_36\lib\string_util.cpp"
+"C:\dtl_36\dtl_36\lib\validate.cpp"
+"C:\dtl_36\dtl_36\lib\variant_row.cpp"
+"C:\dtl_36\dtl_36\lib\VariantException.cpp"
 ]
-Creating command line "cl.exe @C:\DOCUME~1\corwinj\LOCALS~1\Temp\RSP1EEE.tmp" 
-Creating temporary file "C:\DOCUME~1\corwinj\LOCALS~1\Temp\RSP1EEF.tmp" with contents
+Creating command line "cl.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP5CE.tmp" 
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP5CF.tmp" with contents
 [
 /nologo /out:"Debug\DTL.lib" 
 .\Debug\bind_basics.obj
@@ -47,11 +46,10 @@ Creating temporary file "C:\DOCUME~1\corwinj\LOCALS~1\Temp\RSP1EEF.tmp" with con
 .\Debug\RootException.obj
 .\Debug\string_util.obj
 .\Debug\validate.obj
-.\Debug\variant_cc.obj
 .\Debug\variant_row.obj
 .\Debug\VariantException.obj
 ]
-Creating command line "link.exe -lib @C:\DOCUME~1\corwinj\LOCALS~1\Temp\RSP1EEF.tmp"
+Creating command line "link.exe -lib @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP5CF.tmp"
 <h3>Output Window</h3>
 Compiling...
 bind_basics.cpp
@@ -69,7 +67,6 @@ LocalBCA.cpp
 RootException.cpp
 string_util.cpp
 validate.cpp
-variant_cc.cpp
 variant_row.cpp
 VariantException.cpp
 Creating library...

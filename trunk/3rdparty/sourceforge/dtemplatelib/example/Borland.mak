@@ -7,7 +7,7 @@ CPPFLAGS = $(DEFS) -w-8027 -w-8026 -w-8057 -w-8022 -tWC -v
 OBJECTS =  SpecialQryExample.obj ShareConn.obj StoredProc.obj \
 range.obj ReadDataNoMatches.obj example_core.obj WriteData.obj \
 SimpleDynamicRead.obj ReadJoinedData.obj ReadData.obj  \
-DynamicIndexedViewExample.obj example.obj main.obj IndexedViewExample.obj CStringExample.obj
+DynamicIndexedViewExample.obj example.obj main.obj IndexedViewExample.obj CStringExample.obj GlobalHandler.obj
 
 DEPENDENCIES = ../lib/dtl.lib
 

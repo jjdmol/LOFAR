@@ -52,7 +52,7 @@ private:
 
 			   if (b_it == IndexFields.end())
 			   {
-					throw DBException(_TEXT("DBView::select_update_iterator::ExtractKey()"),
+					DTL_THROW DBException(_TEXT("DBView::select_update_iterator::ExtractKey()"),
 						_TEXT("Unable to find index field's BoundIO \"") + *field_it 
 						+ _TEXT("\" in IndexFields!"), NULL, NULL);
 			   }
@@ -80,7 +80,7 @@ private:
 
 			   if (b_it == IndexFields.end())
 			   {
-					throw DBException(_TEXT("DBView::select_update_iterator::ExtractKey()"),
+					DTL_THROW DBException(_TEXT("DBView::select_update_iterator::ExtractKey()"),
 						_TEXT("Unable to find index field's BoundIO \"") + *field_it 
 						+ _TEXT("\" in IndexFields!"), NULL, NULL);
 			   }
@@ -257,7 +257,7 @@ public:
 				useWhichFields);
 
 		  // bPrepare = false as stmt. only executed once
-		  up_it = DBView<DataObj, DataObj>::update_iterator(*pNewView, false);
+		  up_it = TYPENAME_IN_TEMPLATE_PARAMS DBView<DataObj, DataObj>::update_iterator(*pNewView, false);
 
 		  up_it.Params(old_dataObj);  // old version of object gives params for replace
 
@@ -268,7 +268,7 @@ public:
 		  
 		  // if iterator encountered a problem, that means deletion failed, so throw
 	      if (up_it.bad() || up_it.fail()  || up_it.GetLastCount() == 0)
-			  throw DBException(_TEXT("DBReplacer::replace(const DataObj &old_dataObj, const DataObj &dataObj)"), 
+			  DTL_THROW DBException(_TEXT("DBReplacer::replace(const DataObj &old_dataObj, const DataObj &dataObj)"), 
 			  _TEXT("Update of row failed! Record may have been changed by another user."),
 					NULL, NULL);
 	}

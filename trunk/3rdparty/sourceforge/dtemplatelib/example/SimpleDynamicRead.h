@@ -9,5 +9,8 @@
 // Read the contents of a table and print the resulting rows
 void SimpleDynamicRead();
 
+// Read the contents of a table with a dynamic where clause
+void SimpleDynamicWhere();
+
 vector<variant_row> ReadDynamicData();
 #endif

@@ -15,6 +15,7 @@ It is provided "as is" without express or implied warranty.
 // Revised: 10/6/2000 - MG - added support for relative offsets
 // Revised: 11/12/2000 - CJ - wrote faster GenericCmp function
 // Edited: 12/19/2000 - MG - added namespaces
+// Edited: 03/24/2004 - Alexander Motzkau, BoundIO remembers variant_row index
 
 #ifndef DTL_BOUNDIO_H
 #define DTL_BOUNDIO_H
@@ -23,11 +24,11 @@ It is provided "as is" without express or implied warranty.
 #include "bind_basics.h"
 #include "variant_row.h"
 #include "DBException.h"
+#include "string_util.h"
+
 #include "std_warn_off.h"
 #include <string>
 #include <set>
-#include "std_warn_on.h"
-#include "string_util.h"
 
 #ifdef  WIN32
 #ifdef WIN32
@@ -40,6 +41,8 @@ It is provided "as is" without express or implied warranty.
 
 #endif
 #include <sqltypes.h>
+
+#include "std_warn_on.h"
 
 // using namespace std;
 
@@ -260,7 +263,8 @@ class BoundIO
 
 	static const SDWORD lenAtExec; // needed for PutData()
 
-	bool IsVariantRow;		// is this a BoundIO built off a variant?
+	int VariantRowIdx;		// -1: It isn't a variant row
+					// Otherwise: Index into the variant row
 	BoundIOs_base *pBoundIOs;	// refers to BoundIOs that this object belongs to
 	
 	BoundType bindingType;  // column or param???
@@ -277,11 +281,11 @@ class BoundIO
 	// being able to specialize BoundIO::CopyMember(), we cheat
 	// we wrote a specialization for variant_row and do nothing otherwise
 	// the function below should never get called!
-	template <class T> void CopyVariantRowMember(T &key, const variant_t & df) {
+	template <class T> void CopyVariantRowMember(T &key, const dtl_variant_t & df) {
 	}
 
 	// form of CopyMember() for variant
-	void CopyVariantRowMember(variant_row &vr, const variant_t &m);
+	void CopyVariantRowMember(variant_row &vr, const dtl_variant_t &m);
 
 	// only used by GenerateBoundIOs in LocalBCA.h
 	BoundIO(const tstring &nm, BoundType bt);
@@ -521,7 +525,7 @@ private:
 		InitFromField(tt, &memberToBind, base_addr, base_size);
 	}
 
-	template<typename T> void GenericBindString(STD_::basic_string<T> &memberToBind)
+	template<typename T> void GenericBindString(T &memberToBind)
 	{
 //	  std::cerr << "Bind " << typeid (memberToBind).name ( ) << std::endl;
 		// common tasks for BIND_ADDRESSES and BIND_AS_INDICES
@@ -685,14 +689,14 @@ public:
 #if 0
 		  if (!pBoundIOs)
 		  {
-			throw RootException(_TEXT("BoundIO::CopyMember()"),
+			DTL_THROW RootException(_TEXT("BoundIO::CopyMember()"),
 				_TEXT("This BoundIO is not bound to its parent!"));
 		  }
 #endif
 
-		  if (IsVariantRow)
+		  if (VariantRowIdx>=0)
 		  {
-			  CopyVariantRowMember(key, variant_t(df));
+			  CopyVariantRowMember(key, dtl_variant_t(df));
 			  return;
 		  }
 
@@ -711,7 +715,7 @@ public:
 			  errmsg += tstring_cast((tstring *)NULL, dataObjType);
 			  errmsg += _TEXT("!");
 
-			  throw DBException(tstring(_TEXT("BoundIO::CopyMember()")),
+			  DTL_THROW DBException(tstring(_TEXT("BoundIO::CopyMember()")),
 					errmsg, NULL, NULL);
 		  }
 
@@ -730,7 +734,7 @@ public:
 
 
 		  if (tt.typeId != typeId && (typeId == C_TCSTRING && !is_tcstring(df)))
-			  throw DBException(_TEXT("BoundIO::CopyMember()"),
+			  DTL_THROW DBException(_TEXT("BoundIO::CopyMember()"),
 				_TEXT("Type mismatch in member!  Type of target value: ") + 
 				tstring_cast((tstring *)NULL, dfTypeNm) + 
 				_TEXT(" does not match bound column type!"),
@@ -757,9 +761,11 @@ public:
 	// needed so char literals can be coerced to pointers implicitly
 	// void CopyMember(DataObj &key, const DataField &df);
 
-	void SetAsVariantRow();
+	void SetAsVariantRow(int idx);
 
 	bool GetIsVariantRow() const;
+	
+	int GetVariantRowIdx() const;
 
 	SDWORD GetActualBufferLength() const;
 
@@ -875,6 +881,9 @@ class BoundIOs : public STD_::map<tstring, BoundIO, NonCaseSensitiveLt>,
 	// invalidate all existing columns
 	void EraseColumns() ;
 
+	// erase a particular column
+	void EraseColumn(tstring &col);
+
 	// return true if any of the parameters are output or input_output parameters
 	bool HasOutput() const;
 
@@ -926,6 +935,9 @@ class BoundIOs : public STD_::map<tstring, BoundIO, NonCaseSensitiveLt>,
 
 	// set the field for all primitive columns to NULL
 	void InitNullFields();
+
+	// returns true if field name passed in null or doesn't exist
+	bool IsNullOrNotExists(const tstring &name);
 
 	// facilities used by LocalBCA
 	// operator that generates a BoundIOs structure from an

@@ -19,6 +19,7 @@ It is provided "as is" without express or implied warranty.
 #define DTL_SELECT_ITERATOR_H
 
 #include "select_insert_iterator.h"
+#include "RootException.h"
 
 BEGIN_DTL_NAMESPACE
 
@@ -54,6 +55,20 @@ class DB_select_iterator :
 	 public STD_::input_iterator<DataObj, ptrdiff_t>
 #endif
 {
+#ifdef __GNUC__ // need to declare members used from base template
+    using DB_iterator<DataObj, ParamObj>::boundIOs;
+    using DB_iterator<DataObj, ParamObj>::bpa;
+    using DB_iterator<DataObj, ParamObj>::count;
+    using DB_iterator<DataObj, ParamObj>::io_handler;
+    using DB_iterator<DataObj, ParamObj>::lastCount;
+    using DB_iterator<DataObj, ParamObj>::pDBview;
+    using DB_iterator<DataObj, ParamObj>::pParambuf;
+    using DB_iterator<DataObj, ParamObj>::pRowbuf;
+    using DB_iterator<DataObj, ParamObj>::sqlQryType;
+    using DB_iterator<DataObj, ParamObj>::stmt;
+
+    using DB_iterator_with_cols<DataObj, ParamObj>::MakeColBindings;
+#endif
 public:
 	// is this a dummy iterator representing view.begin() or view.end()???
     enum DummyFlag { NOT_DUMMY = 0, DUMMY = 1 };
@@ -133,7 +148,7 @@ private:
 		try
 		{
 			if (this->bad())
-				throw DBException(_TEXT("DBView::select_iterator::FetchFirstRowUntilHandled()"),
+				DTL_THROW DBException(_TEXT("DBView::select_iterator::FetchFirstRowUntilHandled()"),
 					_TEXT("iterator tested bad!"), NULL, NULL);
 
 			FetchFirstRow();
@@ -141,7 +156,7 @@ private:
 		catch (RootException &ex)
 		{
 		  // fetch next rows until the exception (and any others triggered are cleared)
-		  dtl_ios_base::MeansOfRecovery handled = FetchNextRowUntilHandled(ex);
+ 		  dtl_ios_base::MeansOfRecovery handled = FetchNextRowUntilHandled(ex);
 		  
 		  // rethrow original exception if it wasn't handled above
 		  if (handled == dtl_ios_base::THROW_EXCEPTION)
@@ -158,7 +173,7 @@ private:
 			end = true; // set iterator to end of view
 			
 		    // error handler call in caller will determine how to handle the exception
-			throw DBException(_TEXT("DBView::select_iterator::FetchFirstRow()"),
+			DTL_THROW DBException(_TEXT("DBView::select_iterator::FetchFirstRow()"),
 				_TEXT("iterator tested bad!"), NULL, NULL);
 		}
 
@@ -247,7 +262,7 @@ private:
 					setstate(this->badbit);
 				}
 		 
-			 throw DBException(_TEXT("DBView::select_iterator::FetchFirstRow()"),
+			 DTL_THROW DBException(_TEXT("DBView::select_iterator::FetchFirstRow()"),
 						  _TEXT("SelValidate() failed on statement \"") +
 						  this->stmt.GetQuery() + _TEXT("\"!"), NULL, NULL);
 			}
@@ -263,7 +278,7 @@ private:
 				setstate(this->badbit);
 
 
-			throw DBException(_TEXT("DBView::select_iterator::FetchFirstRow()"),
+			DTL_THROW DBException(_TEXT("DBView::select_iterator::FetchFirstRow()"),
 					_TEXT("Fetch failed on statement \"") + this->stmt.GetQuery() + 
 					_TEXT("\"!"), 
 					&(this->stmt.GetConnection()), &(this->stmt));
@@ -307,7 +322,7 @@ private:
 		if (this->bad())
 		{
 			end = true; // set iterator to end of view
-			throw DBException(_TEXT("DBView::select_iterator::FetchNextRow()"),
+			DTL_THROW DBException(_TEXT("DBView::select_iterator::FetchNextRow()"),
 				_TEXT("iterator tested bad!"), NULL, NULL);
 		}
 
@@ -371,7 +386,7 @@ private:
 					setstate(this->badbit);
 				}
 			 
-			    throw DBException(_TEXT("DBView::select_iterator::operator++()"),
+			    DTL_THROW DBException(_TEXT("DBView::select_iterator::operator++()"),
 							  _TEXT("SelValidate() failed on statement \"") +
 							  this->stmt.GetQuery() + _TEXT("\"!"), NULL, NULL);
 			  }
@@ -380,7 +395,7 @@ private:
 				// as exception should be thrown in DBStmt::Fetch()
 		   {
 			 end = true; // set to view.end() to break infinite loops
-			 throw DBException(_TEXT("DBView::select_iterator::FetchNextRow()"),
+			 DTL_THROW DBException(_TEXT("DBView::select_iterator::FetchNextRow()"),
 							  _TEXT("Fetch failed on statement \"") + this->stmt.GetQuery() +
 							  _TEXT("\"!"), &(this->stmt.GetConnection()), &(this->stmt));
 		   }
@@ -467,7 +482,7 @@ private:
 			{	
 			  end = true;
 
-			  throw DBException(_TEXT("DBView::select_iterator::OperatorArrow()"),
+			  DTL_THROW DBException(_TEXT("DBView::select_iterator::OperatorArrow()"),
 				_TEXT("iterator tested bad!"), NULL, NULL);
 			}
 			this->GetRowbufPtr(); // create rowbuf & fetch if not already done
@@ -535,12 +550,28 @@ public:
 		operator=(const DB_select_iterator<DataObj, ParamObj> &other)
 	{
 		if (this != &other)
-		{
-			DB_select_iterator<DataObj, ParamObj> temp(other);	
-			swap(temp);
-		}
+		{			
+			// Special performance case here for assignment of begin() to open iterator 
+			if (this->pDBview == other.pDBview && this->IsReady() && other.at_beginning()) {
+				Reset();				
+			}
+			else {
+				DB_select_iterator<DataObj, ParamObj> temp(other);
+				swap(temp);
+			}
 
+		}
 		return *this;
+	}
+
+
+	// Reset iterator to point to beginning of recordset.
+	void Reset()
+	{
+		DB_select_insert_iterator<DataObj, ParamObj>::Reset(); // no-throw
+		begin = true;
+		end = false;
+		empty = false;
 	}
 
 	// forms of constructor that only should be used for begin and end iterators
@@ -777,14 +808,14 @@ public:
 						<< _TEXT(") > ") << sizeof(SQLINTEGER) * boundIOs.NumColumns() <<
 						_TEXT(" (this is sizeof(SQLINTEGER) * # of bound columns).  To use bulk_copy you will ")
 						_TEXT("need to pad your row object with extra bytes at the end to bring it up to this minimum size.");
-					throw DBException(_TEXT("DBView::select_iterator::bulk_copy()"), errStream.str(), NULL, NULL);				
+					DTL_THROW DBException(_TEXT("DBView::select_iterator::bulk_copy()"), errStream.str(), NULL, NULL);				
 				}
 				
 
 				bufferRows = (pdata_end - pdata_begin) / row_size;
 
 				if (bufferRows < 1)
-					throw DBException(_TEXT("DBView::select_iterator::bulk_copy()"),
+					DTL_THROW DBException(_TEXT("DBView::select_iterator::bulk_copy()"),
 						_TEXT("Error. Bulk fetch must be supplied with a buffer that can hold at least 1 row of data."), 
 						NULL, NULL);
 			
@@ -803,7 +834,7 @@ public:
 						<< _TEXT(") > ") << sizeof(TIMESTAMP_STRUCT) * NumDates <<
 						_TEXT("  (this is sizeof(TIMESTAMP_STRUCT) * # of bound columns).  To use bulk_copy you will ")
 						_TEXT("need to pad your row object with extra bytes at the end to bring it up to this minimum size.");
-						throw DBException(_TEXT("DBView::select_iterator::bulk_copy()"), errStream.str(), NULL, NULL);				
+						DTL_THROW DBException(_TEXT("DBView::select_iterator::bulk_copy()"), errStream.str(), NULL, NULL);				
 					}
 					boundIOs.pDatesFetchedArray.reset(bufferRows * row_size);
 					pDatesFetchedArray = (TIMESTAMP_STRUCT *)boundIOs.pDatesFetchedArray.get() ;		
@@ -899,7 +930,7 @@ public:
 				// We require this since the buffer row size is set at statement execute time
 				if (static_cast<size_t>(bufferRows) != ((pdata_end - pdata_begin) / row_size)) {
 					setstate(this->badbit);
-					throw DBException(_TEXT("DBView::select_iterator::bulk_copy()"), _TEXT("Error. After the ")
+					DTL_THROW DBException(_TEXT("DBView::select_iterator::bulk_copy()"), _TEXT("Error. After the ")
 						_TEXT("first call to bulk_copy, all subsequent calls must allocate the same number of ")
 						_TEXT("available rows for the bulk fetch."), NULL, NULL);	
 
@@ -943,7 +974,28 @@ public:
 			// When we add pNumRowsFetched to this we should get total number of rows in recordset
 		    SQLUINTEGER endrow=0;
 			SQLINTEGER end_bytes;
-			stmt.GetStmtAttr(SQL_ATTR_ROW_NUMBER, &endrow, SQL_IS_UINTEGER, &end_bytes);
+			try {
+				stmt.GetStmtAttr(SQL_ATTR_ROW_NUMBER, &endrow, SQL_IS_UINTEGER, &end_bytes);
+			}
+			catch (STD_::exception) {
+				endrow = 0;
+			}
+
+			if (endrow == 0) // function could not get base row count
+			{
+				// if driver does not tell us how many rows, assume this
+				// is of LONG_MAX size and simply throw an exception later
+				// if we try to read past the end of the rows (since we
+				// won't know how many rows we can read until we try).
+				endrow = LONG_MAX - *(boundIOs.pNumRowsFetched);
+#if 0
+					setstate(this->badbit);
+					tostringstream errStream;
+					errStream << _TEXT("Error.  SQLGetStmtAttr(SQL_ATTR_ROW_NUMBER) returned failure. ") << 
+						 _TEXT("This means that the driver cannot tell us how many rows are in this snapshot so we can't represent it as a RandomDBView.");
+					DTL_THROW DBException(_TEXT("DBView::select_iterator::bulk_copy()"), errStream.str(), NULL, NULL);				
+#endif
+			}
 			this->count = endrow;
 		}
 		else
@@ -998,7 +1050,7 @@ public:
 					catch (RootException &)
 					{		
 						setstate(this->badbit);
-						throw DBException(_TEXT("DBView::select_iterator::bulk_copy()"),
+						DTL_THROW DBException(_TEXT("DBView::select_iterator::bulk_copy()"),
 								_TEXT("SQLSetPos failed. Driver may not support binding of type std::string with bulk fetches. ")
 								_TEXT("Try using character arrays for the required fields instead."), NULL, NULL);
 					}
@@ -1092,7 +1144,7 @@ public:
 					else
 						setstate(this->badbit);
 
-					throw DBException(_TEXT("DBView::select_iterator::bulk_copy()"), errStream.str(), NULL, NULL);
+					DTL_THROW DBException(_TEXT("DBView::select_iterator::bulk_copy()"), errStream.str(), NULL, NULL);
 				}
 
 				// populate values of BytesFetched pointers in BoundIOs with result codes from row status and pBytesFetchedArray
@@ -1118,7 +1170,7 @@ public:
 
 					tostringstream errStream;
 					errStream << _TEXT("SelValidate failed for row #") << i;
-					throw DBException(_TEXT("DBView::select_iterator::bulk_copy()"), errStream.str(), NULL, NULL);
+					DTL_THROW DBException(_TEXT("DBView::select_iterator::bulk_copy()"), errStream.str(), NULL, NULL);
 			
 				}
 			
@@ -1132,7 +1184,7 @@ public:
 			
 				// if we wish to reperform the operation, keep trying to fetch rows
 				// until successful or otherwise directed by the handler
-				if (error_action == dtl_ios_base::SUPPRESS_ERROR && !bad())
+				if (error_action == dtl_ios_base::SUPPRESS_ERROR && !dtl_ios_base::bad())
 				{
 
 					io_handler.RecordFailure(i); // record index of failed row

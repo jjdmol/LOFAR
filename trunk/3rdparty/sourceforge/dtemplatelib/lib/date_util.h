@@ -19,6 +19,10 @@ It is provided "as is" without express or implied warranty.
 #define DTL_DATE_UTIL_H
 
 #include "dtl_base_types.h"
+#include "minimax.h"
+#include "RootException.h"
+
+#include "std_warn_off.h"
 
 #ifdef  WIN32
 #ifdef WIN32
@@ -34,9 +38,7 @@ It is provided "as is" without express or implied warranty.
 #include <sql.h>
 #include <sqlext.h>
 
-#include "minimax.h"
-#include "RootException.h"
-
+#include "std_warn_on.h"
 
 BEGIN_DTL_NAMESPACE
 
@@ -125,14 +127,20 @@ void date_unit_test(void) ;
    not be used in any calculations since they are only approximate.
 */
 #define MIN_YEAR 1970
-#define MAX_YEAR 4000
+
+// Do not define MAX_YEAR larger than 2100.  Otherwise this may overflow 
+// MAX_JTIME since unsigned long is not guaranteed to be larger than 4294967295
+#define MAX_YEAR 2090 
 
 /* MAX_JTIME and MIN_JTIME may be used by outside routines
    in order to define endpoints for acceptable dates.  These
    constants are often useful for searching algorithms etc.
 */
-#define MAX_JTIME 64061928000UL
-//#define MAX_JTIME (jtime_t) (((MAX_YEAR - MIN_YEAR) * 365.25 * SECONDS_PER_DAY))
+
+// ULONG_MAX      4294967295
+#define MAX_JTIME 3786912000UL
+//#define MAX_JTIME static_cast<jtime_t>(((MAX_YEAR - MIN_YEAR) * 365.25 *SECONDS_PER_DAY))
+
 #define MIN_JTIME 0
 
 /*------------------------------------------------------------------------*/

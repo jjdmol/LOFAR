@@ -39,7 +39,9 @@
 #define _TCHAR_H_
 
 /* All the headers include this file. */
+//#include "std_warn_off.h"
 //#include <_mingw.h>
+//#include "std_warn_on.h"
 
 /*
  * NOTE: This tests _UNICODE, which is different from the UNICODE define

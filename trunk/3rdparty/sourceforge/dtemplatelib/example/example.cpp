@@ -8,7 +8,13 @@ void CallAllExamples(const string &DSN_str)
 {
    try
    {
+   
    DBConnection::GetDefaultConnection().Connect(DSN_str);
+   // DBConnection::GetDefaultEnvironment().init();
+   // DBConnection::GetDefaultConnection().Connect("", true);
+
+
+   DBConnection::GetDefaultConnection().CommitAll();
 
    // to auto commit, just uncomment the following line
    // DBConnection::GetDefaultConnection().SetAutoCommit(true);
@@ -21,6 +27,7 @@ void CallAllExamples(const string &DSN_str)
 
    DBConnection::GetDefaultConnection().CommitAll();
 
+   // complex example of reading strings into multiple container types
    CStringExample();
 
    ResetTables();
@@ -32,13 +39,16 @@ void CallAllExamples(const string &DSN_str)
    // when the columns are not known until runtime
    // (or, if we don't want to create a special struct to hold the rows)
    PrintHeader(std::cout, "SimpleDynamicRead()");
-
    cout << "Reading objects from a dynamic view:" << endl;
-
    SimpleDynamicRead();
+   PrintSeparator(cout);
 
-   DBConnection::GetDefaultConnection().CommitAll();
-
+   // simple example of how to read a set of rows from a table
+   // when the columns are not known until runtime and the where clause is 
+   // also not known until runtime
+   PrintHeader(std::cout, "SimpleDynamicWhere()");
+   cout << "Reading objects from a dynamic view:" << endl;
+   SimpleDynamicWhere();
    PrintSeparator(cout);
 
    // simple example of how to read/write a set of rows in a table
@@ -327,6 +337,11 @@ void CallAllExamples(const string &DSN_str)
    PrintSeparator(cout);
 
    DBConnection::GetDefaultConnection().Connect();
+
+   // example of using global error handler to better control how warnings or
+   // errors can be gracefully handled
+   UseGlobalHandlerExample();
+
 
    // use a view that builds a custom query ... simply a SELECT distinct in this case
 

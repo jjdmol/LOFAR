@@ -1,5 +1,7 @@
 # Written for GNU -*- makefile -*-.
 
+# GCC_EXEC_PREFIX="C:\cygwin\usr\local\libexec\gcc\i686-pc-cygwin\3.4.0"
+
 CC = c++ # get the right linker
 CFLAGS += -Wall
 LDFLAGS += $(CFLAGS)

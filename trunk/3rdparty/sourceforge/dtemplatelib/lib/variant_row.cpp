@@ -30,10 +30,17 @@ It is provided "as is" without express or implied warranty.
 // Because Michael Gradman & Corwin Joy have modified this extensively from
 // the original version, please contact us if you have any questions
 
+// Edited: 10/26/2003 - Paul Grenyer http://www.paulgrenyer.co.uk, added static_cast as required by MSVC 7.1
+
 #include "variant_row.h"
+
+#include "std_warn_off.h"
+
 #include <sstream>
 #include <iostream>
 #include <wchar.h>
+
+#include "std_warn_on.h"
 
 BEGIN_DTL_NAMESPACE
 
@@ -52,25 +59,25 @@ bool NullField::operator!=(const NullField &null) const
 	  return !(*this == null);
 }
 
-// ********* variant_t implementation code ***********
-void variant_t::private_construct(const variant_t &other) {
+// ********* dtl_variant_t implementation code ***********
+void dtl_variant_t::private_construct(const dtl_variant_t &other) {
 	if (other.data != NULL )
 			other.data->AddRef();
 	data = other.data;
 	typeId = other.typeId;
 }
 
-variant_t::variant_t() : data ( NULL ) , typeId(0) {}
+dtl_variant_t::dtl_variant_t() : data ( NULL ) , typeId(0) {}
 
-variant_t::variant_t(const variant_t & v) : data(NULL), typeId(0)
+dtl_variant_t::dtl_variant_t(const dtl_variant_t & v) : data(NULL), typeId(0)
 {private_construct(v);}
 
-variant_t::variant_t(const variant_field &vf) : data(NULL), typeId(0)
+dtl_variant_t::dtl_variant_t(const variant_field &vf) : data(NULL), typeId(0)
 {
 	private_construct(variant_val(vf));
 }
 
-variant_t::variant_t(void *p, const TypeTranslation &f) {
+dtl_variant_t::dtl_variant_t(void *p, const TypeTranslation &f) {
 		typeId = f.typeId;
 		switch (typeId) {
 		case C_SHORT:  data = new Impl_t<short>(*((short *)p));break;
@@ -80,9 +87,14 @@ variant_t::variant_t(void *p, const TypeTranslation &f) {
 		case C_UINT: data = new Impl_t<unsigned int>(*((unsigned int *)p));break;
 		case C_LONG: data = new Impl_t<long>(*((long *)p));break;
 		case C_ULONG: data = new Impl_t<unsigned long>(*((unsigned long *)p));break;
+		case C_INT64: data = new Impl_t<ODBCINT64>(*((ODBCINT64 *)p));break;
 		case C_DOUBLE: data = new Impl_t<double>(*((double *)p));break;
 		case C_FLOAT: data = new Impl_t<float>(*((float *)p));break;
-		case C_CHAR_STAR: data = new Impl_t<char *>(*((char **)p));break;
+			
+		// N.B.!! for CHAR *, don't try to copy the data!  Just point to the address of the original!
+		// I.E. Copy the pointer just like the class definition says.
+		case C_CHAR_STAR: data = new Impl_t<char *>((char *)p);break;
+
 		case C_STRING: data = new Impl_t<STD_::string>(*((STD_::string *)p));break;
 		case C_BLOB: data = new Impl_t<blob>(*((blob *)p));break;
 #ifndef DTL_NO_UNICODE
@@ -91,32 +103,32 @@ variant_t::variant_t(void *p, const TypeTranslation &f) {
 		case C_TIMESTAMP: data = new Impl_t<struct tagTIMESTAMP_STRUCT>(*((struct tagTIMESTAMP_STRUCT  *)p));break;
 		
 		default:
-			throw VariantException(_TEXT("variant_t::variant_t()"),
-			  tstring(_TEXT("Invalid field type passed to variant_t(void *p, TypeTranslation &f)")));
+			DTL_THROW VariantException(_TEXT("dtl_variant_t::dtl_variant_t()"),
+			  tstring(_TEXT("Invalid field type passed to dtl_variant_t(void *p, TypeTranslation &f)")));
 			data = NULL;
 			//throw TYPE_NOT_SUPPORTED;
 		}
 		data->AddRef();
 	}
 
-variant_t::~variant_t()
+dtl_variant_t::~dtl_variant_t()
 { if ( data != NULL )
      data->Release() ;
 }
 
 // exception-safe swap()
-void variant_t::swap(variant_t &other)
+void dtl_variant_t::swap(dtl_variant_t &other)
 {
   STD_::swap(data, other.data);
   STD_::swap(typeId, other.typeId);
 }
 
 // exception-safe assignment
-variant_t &variant_t::operator=(const variant_t &other)
+dtl_variant_t &dtl_variant_t::operator=(const dtl_variant_t &other)
 {
 	  if (this != &other)
 	  {
-		variant_t temp(other);
+		dtl_variant_t temp(other);
 		swap(temp);
 	  }
 
@@ -140,19 +152,19 @@ variant_t &variant_t::operator=(const variant_t &other)
 // couldn't get template of the form template<T> operator T() to work w/o ambiguity.
 
 #ifndef  _GCC_CAST_BUG
-	variant_t::operator short int() const {
+	dtl_variant_t::operator short int() const {
 		return numeric_cast(short int());
 	}
-	variant_t::operator unsigned short int() const {
+	dtl_variant_t::operator unsigned short int() const {
 		return numeric_cast(unsigned short int());
 	}
-	variant_t::operator long int() const {
+	dtl_variant_t::operator long int() const {
 		return numeric_cast(long int());
 	}
-	variant_t::operator unsigned long int() const {
+	dtl_variant_t::operator unsigned long int() const {
 		return numeric_cast(unsigned long int());
 	}
-	variant_t::operator unsigned int () const {
+	dtl_variant_t::operator unsigned int () const {
 		return numeric_cast(unsigned int());
 	}
 
@@ -161,31 +173,31 @@ variant_t &variant_t::operator=(const variant_t &other)
     // for some reason does not recognize e.g. short int as a
     // single typename.  Hacky workaround to fix
 
-	variant_t::operator short int() const {
+	dtl_variant_t::operator short int() const {
 		integral_type<short int> s, out;
 		out =   numeric_cast(s);
 		return out.si;
 	}
 
-	variant_t::operator unsigned short int() const {
+	dtl_variant_t::operator unsigned short int() const {
 		integral_type<unsigned short int> s, out;
 		out =   numeric_cast(s);
 		return out.si;
 	}
 
-	variant_t::operator long int() const {
+	dtl_variant_t::operator long int() const {
 		integral_type<long int> s, out;
 		out =   numeric_cast(s);
 		return out.si;
 	}
 
-	variant_t::operator unsigned long int() const {
+	dtl_variant_t::operator unsigned long int() const {
 		integral_type<unsigned long int> s, out;
 		out =   numeric_cast(s);
 		return out.si;
 	}
 
-	variant_t::operator unsigned int() const {
+	dtl_variant_t::operator unsigned int() const {
 		integral_type<unsigned int> s, out;
 		out =   numeric_cast(s);
 		return out.si;
@@ -193,18 +205,23 @@ variant_t &variant_t::operator=(const variant_t &other)
 	
 #endif
 
-	variant_t::operator bool() const {
+	dtl_variant_t::operator bool() const {
 		return numeric_cast(bool());
 	}
 
-	variant_t::operator int () const {
+	dtl_variant_t::operator int () const {
 		return numeric_cast(int());
 	}
 	
-	variant_t::operator float () const {
+	dtl_variant_t::operator ODBCINT64 () const {
+		ODBCINT64 tmp(0); // gcc 3.2 workaround "long long int()" fails below
+		return numeric_cast(tmp);
+	}
+	
+	dtl_variant_t::operator float () const {
 		return numeric_cast(float());
 	}
-	variant_t::operator double () const {
+	dtl_variant_t::operator double () const {
 		return numeric_cast(double());
 
 
@@ -213,7 +230,7 @@ variant_t &variant_t::operator=(const variant_t &other)
 	// operator for strings ... cast of thousands changed to use DTL_TEMPLATE_FUNC as
 	// Sun compiler needs template type specified to help it along
 
-	STD_::string variant_t::get_string() const
+	STD_::string dtl_variant_t::get_string() const
     {
 	  STD_::ostringstream tostr;
 	  
@@ -222,22 +239,19 @@ variant_t &variant_t::operator=(const variant_t &other)
 	  case C_SHORT: 
 		{
 		  short *dmy=NULL; 
-		  // tostr << CastFromBase<short>(data, dmy)->data; 
 		  tostr << DTL_TEMPLATE_FUNC(CastFromBase, short)(data, dmy)->data;
 		  break;
 		}
 	  case C_USHORT: 
 		{
 		  unsigned short *dmy=NULL; 
-		  // tostr << CastFromBase<unsigned short>(data, dmy)->data;
-  		  tostr << DTL_TEMPLATE_FUNC(CastFromBase, unsigned short)(data, dmy)->data;
+		  tostr << DTL_TEMPLATE_FUNC(CastFromBase, unsigned short)(data, dmy)->data;
 
 		  break;
 		}
 	  case C_BOOL: 
 		{
 		  bool *dmy=NULL; 
-		  // bool b = CastFromBase<bool>(data, dmy)->data;
 		  bool b = DTL_TEMPLATE_FUNC(CastFromBase, bool)(data, dmy)->data;
 		  tostr << (b ? "true" : "false");
 		  break;
@@ -245,42 +259,53 @@ variant_t &variant_t::operator=(const variant_t &other)
 	  case C_INT: 
 		{
 		  int *dmy=NULL;
-		  // tostr << CastFromBase<int>(data, dmy)->data;
 		  tostr << DTL_TEMPLATE_FUNC(CastFromBase, int)(data, dmy)->data;
+		  break;
+		}
+
+	  case C_INT64: 
+		{
+		  ODBCINT64 *dmy=NULL;
+		  ODBCINT64 tmp = DTL_TEMPLATE_FUNC(CastFromBase, ODBCINT64)(data, dmy)->data;
+
+// convert ODBCINT64 to a string
+// on MSVC call specialized function.  for other compilers assume stream operator will do it.
+#ifdef _MSC_VER 
+			char buffer[100];
+			_i64toa(tmp,buffer,10);
+			tostr << buffer; 
+#else 
+		  tostr << tmp;
+#endif
 		  break;
 		}
 	  case C_UINT: 
 		{
 		  unsigned int *dmy=NULL; 
-		  // tostr << CastFromBase<unsigned int>(data, dmy)->data;
 		  tostr << DTL_TEMPLATE_FUNC(CastFromBase, unsigned int)(data, dmy)->data;
 		  break;
 		}
 	  case C_LONG: 
 		{
 		  long *dmy=NULL; 
-		  // tostr << CastFromBase<long>(data, dmy)->data;
 		  tostr << DTL_TEMPLATE_FUNC(CastFromBase, long)(data, dmy)->data;
 		  break;
 		}
 	  case C_ULONG: 
 		{
 		  unsigned long *dmy=NULL;
-		  // tostr << CastFromBase<unsigned long>(data, dmy)->data;
 		  tostr << DTL_TEMPLATE_FUNC(CastFromBase, unsigned long)(data, dmy)->data;
 		  break;
 		}
 	  case C_DOUBLE: 
 		{
 		  double *dmy=NULL;
-		  // tostr << CastFromBase<double>(data, dmy)->data; 
 		  tostr << DTL_TEMPLATE_FUNC(CastFromBase, double)(data, dmy)->data;
 		  break;
 		}
 	  case C_FLOAT: 
 		{
 		  float *dmy=NULL;
-		  // tostr << CastFromBase<float>(data, dmy)->data; 
 		  tostr << DTL_TEMPLATE_FUNC(CastFromBase, float)(data, dmy)->data;
 		  break;
 		}
@@ -288,7 +313,6 @@ variant_t &variant_t::operator=(const variant_t &other)
 	  case C_CHAR_STAR: 
 		{
 		  char * *dmy=NULL;
-		  // tostr << CastFromBase<char*>(data, dmy)->data; 
 		  tostr << DTL_TEMPLATE_FUNC(CastFromBase, char *)(data, dmy)->data;
 		  break;
 		}
@@ -296,7 +320,6 @@ variant_t &variant_t::operator=(const variant_t &other)
 	  case C_STRING: 
 		{
 		  STD_::string *dmy=NULL;
-		  // tostr << CastFromBase<STD_::string>(data, dmy)->data;
 		  tostr << DTL_TEMPLATE_FUNC(CastFromBase, STD_::string)(data, dmy)->data;
 		  break;
 		}
@@ -306,23 +329,33 @@ variant_t &variant_t::operator=(const variant_t &other)
 		{
 		  STD_::wstring *dmy=NULL; 
 		  tostr << tstring_cast((STD_::string *)NULL, 
-								// CastFromBase<STD_::wstring>(data, dmy)->data); 
 								DTL_TEMPLATE_FUNC(CastFromBase, STD_::wstring)(data, dmy)->data);
 		  break;
 		}
 #endif
-		
+	
+	   case C_BLOB: 
+		{
+		  blob *dmy=NULL, *pblob;
+		  pblob = &(DTL_TEMPLATE_FUNC(CastFromBase, blob)(data, dmy)->data);
+		  STD_::string tostring;
+		  tostring.reserve(pblob->size());
+		  for (blob::const_iterator it = pblob->begin(); it != pblob->end(); ++it)
+			  tostring += static_cast<char>(*it);
+		  return tostring;
+		  break;
+		}
+
 		// eventually add date library capabilities to convert tstring to time
 	  case C_TIMESTAMP: 
 		{
 		  TIMESTAMP_STRUCT *dmy = NULL; 
-		  // tostr << CastFromBase<TIMESTAMP_STRUCT>(data, dmy)->data; break; 
 		  tostr << DTL_TEMPLATE_FUNC(CastFromBase, TIMESTAMP_STRUCT)(data, dmy)->data; break;
 		}
 		
 	  default:
-		throw VariantException
-		  (_TEXT("variant_t::operator tstring()"),
+		DTL_THROW VariantException
+		  (_TEXT("dtl_variant_t::operator tstring()"),
 		   tstring(_TEXT("this variant type cannot be cast to a tstring type")));
 		
 	  }
@@ -333,15 +366,36 @@ variant_t &variant_t::operator=(const variant_t &other)
 	}
 
 
-    blob variant_t::get_blob() const 
+    blob dtl_variant_t::get_blob() const 
     {
-	  // return CastFromBase<blob>(data, (blob *)NULL)->data;
-	  return DTL_TEMPLATE_FUNC(CastFromBase, blob)(data, (blob *) NULL)->data;
+	  switch (typeId) 
+	  {
+		case C_BLOB: return DTL_TEMPLATE_FUNC(CastFromBase, blob)(data, (blob *) NULL)->data; break;
+		case C_STRING:
+		{
+			STD_::string *dmy=NULL, *pstring;
+			pstring = &(DTL_TEMPLATE_FUNC(CastFromBase, STD_::string)(data, dmy)->data);
+			blob toblob;
+			toblob.reserve(pstring->size());
+			for (STD_::string::const_iterator it = pstring->begin(); it != pstring->end(); ++it)
+				toblob += static_cast<BYTE>(*it);
+			return toblob;
+			break;
+		}
+		default:
+		DTL_THROW VariantException
+		  (_TEXT("dtl_variant_t::get_blob()"),
+		   tstring(_TEXT("this variant type cannot be cast to a blob type")));
+	  }
+
+	  blob toblob;
+	  return toblob;
+
 	}
 
 #ifndef DTL_NO_UNICODE
 
-	STD_::wstring variant_t::get_wstring() const {
+	STD_::wstring dtl_variant_t::get_wstring() const {
 		STD_::wostringstream tostr;
 
 		switch (typeId) {
@@ -387,6 +441,19 @@ variant_t &variant_t::operator=(const variant_t &other)
 			tostr << DTL_TEMPLATE_FUNC(CastFromBase, long)(data, dmy)->data; break;}
 		case C_ULONG: {unsigned long *dmy=NULL; 
 			tostr << DTL_TEMPLATE_FUNC(CastFromBase, unsigned long)(data, dmy)->data; break;}
+		case C_INT64: {ODBCINT64 *dmy=NULL; 
+			ODBCINT64 tmp = DTL_TEMPLATE_FUNC(CastFromBase, ODBCINT64)(data, dmy)->data;
+// convert ODBCINT64 to a string
+// on MSVC call specialized function.  for other compilers assume stream operator will do it.
+#ifdef _MSC_VER 
+			char buffer[100];
+			_i64toa(tmp,buffer,10);
+			tostr << buffer; 
+#else 
+			tostr <<  tmp;			
+#endif
+			
+			break;}
 		case C_DOUBLE: {double *dmy=NULL; 
 			tostr << DTL_TEMPLATE_FUNC(CastFromBase, double)(data, dmy)->data; break;}
 		case C_FLOAT: {float *dmy=NULL; 
@@ -408,7 +475,7 @@ variant_t &variant_t::operator=(const variant_t &other)
 
 
 		default:
-			throw VariantException(_TEXT("variant_t::operator tstring()"),
+			DTL_THROW VariantException(_TEXT("dtl_variant_t::operator tstring()"),
 			  tstring(_TEXT("this variant type cannot be cast to a tstring type")));
 			
 		}
@@ -420,18 +487,18 @@ variant_t &variant_t::operator=(const variant_t &other)
 
 #endif
 
-	variant_t::operator STD_::string () const {
+	dtl_variant_t::operator STD_::string () const {
 	 	  return get_string();
 	};
 
 #ifndef DTL_NO_UNICODE
-	variant_t::operator STD_::wstring () const {
+	dtl_variant_t::operator STD_::wstring () const {
 	 	  return get_wstring();
 	};
 #endif
 
 
-	variant_t::operator char * () const {
+	dtl_variant_t::operator char * () const {
 		STD_::string s;
 		s = get_string();
 		char *c = new char[s.size()+1];
@@ -442,7 +509,7 @@ variant_t &variant_t::operator=(const variant_t &other)
 
 	// cast of thousands changed to use DTL_TEMPLATE_FUNC as
 	// Sun compiler needs template type specified to help it along
-	variant_t::operator char() const 
+	dtl_variant_t::operator char() const 
     {
 	  switch (typeId) 
       {
@@ -529,19 +596,13 @@ variant_t &variant_t::operator=(const variant_t &other)
 		  // return wctob(*(CastFromBase(data, dmy)->data.c_str()));
 		  return wctob(*(DTL_TEMPLATE_FUNC(CastFromBase, STD_::wstring)(data, dmy)->data.c_str()));
 		}
-	  case C_WCHAR_STAR: 
-		{
-		  STD_::wstring *dmy=NULL; 
-		  // return wctob(*(CastFromBase(data, dmy)->data.c_str()));
-		  return wctob(*(DTL_TEMPLATE_FUNC(CastFromBase, STD_::wstring)(data, dmy)->data.c_str()));
-		}
 #endif
 		// eventually may add class capabilities to timestamp to pull out 
 		// jdate here
 		// case C_TIMESTAMP: 		
 	  default:
-		throw VariantException
-		  (_TEXT("variant_t::operator char()"),
+		DTL_THROW VariantException
+		  (_TEXT("dtl_variant_t::operator char()"),
 		   tstring(_TEXT("this variant type cannot be cast to a char type")));
 		
 		return char();
@@ -549,20 +610,59 @@ variant_t &variant_t::operator=(const variant_t &other)
 	  
 	}
 
-	variant_t::operator struct tagTIMESTAMP_STRUCT () const 
+	dtl_variant_t::operator struct tagTIMESTAMP_STRUCT () const 
     {
-	  struct tagTIMESTAMP_STRUCT *dmy=NULL; 
-	  // return CastFromBase<tagTIMESTAMP_STRUCT>(data, dmy)->data;
-	  return DTL_TEMPLATE_FUNC(CastFromBase, tagTIMESTAMP_STRUCT)(data, dmy)->data;
+	  
+	  switch (typeId) 
+      {
+	  
+	  case C_TIMESTAMP: 
+		  {
+			  struct tagTIMESTAMP_STRUCT *dmy=NULL;
+			  return DTL_TEMPLATE_FUNC(CastFromBase, tagTIMESTAMP_STRUCT)(data, dmy)->data;
+		  }
+	  case C_CHAR_STAR: 
+		{
+		  char * *dmy=NULL; 
+		  return (timestamp_t)jtime_c(tstring_cast((tstring *)NULL,
+			   STD_::string(DTL_TEMPLATE_FUNC(CastFromBase, char *)(data, dmy)->data)));
+		}
+	  case C_STRING: 
+		{
+		  STD_::string *dmy=NULL; 
+		  return (timestamp_t)jtime_c(tstring_cast((tstring *)NULL,
+			  (DTL_TEMPLATE_FUNC(CastFromBase, STD_::string)(data, dmy)->data)));
+		}
+	  
+#ifndef DTL_NO_UNICODE
+
+	  case C_WSTRING: 
+		{
+		  STD_::wstring *dmy=NULL, temp; 
+		  temp = DTL_TEMPLATE_FUNC(CastFromBase, STD_::wstring)(data, dmy)->data;
+		  return (timestamp_t)jtime_c(tstring_cast((tstring *)NULL, temp));
+		}
+#endif
+		// eventually may add class capabilities to timestamp to pull out 
+		// jdate here
+		// case C_TIMESTAMP: 		
+	  default:
+		DTL_THROW VariantException
+		  (_TEXT("dtl_variant_t::operator tagTIMESTAMP_STRUCT()"),
+		   tstring(_TEXT("this variant type cannot be cast to a timestamp struct type")));
+		
+		return tagTIMESTAMP_STRUCT();
+	  }
+
 	}
 
     // This method returns type enumeration value
-    char variant_t::type() const {
+    char dtl_variant_t::type() const {
 	  return typeId;
 	}
 
 	// Map the class to our typeid enumeration
-	TypeTranslation variant_t::type_translation() {
+	TypeTranslation dtl_variant_t::type_translation() {
 		ETI_Map &SQL_types_to_C = GetSQL_types_to_C();
 		ETI_Map::iterator i = SQL_types_to_C.begin();
 		for(; i != SQL_types_to_C.end(); i++)
@@ -570,15 +670,15 @@ variant_t &variant_t::operator=(const variant_t &other)
 				break;
 		if (i != SQL_types_to_C.end())
 		{
-		  throw VariantException(_TEXT("variant_t::type()"),
+		  DTL_THROW VariantException(_TEXT("dtl_variant_t::type()"),
 			 tstring(_TEXT("Internal error.  Invalid type encountered in typeId member.")));
 		}
 
 		return i->second;
 	}
 
-	// powerful stream operator for variant_t's!!!!
-	STD_::ostream &operator<<(STD_::ostream &o, const variant_t &v)
+	// powerful stream operator for dtl_variant_t's!!!!
+	STD_::ostream &operator<<(STD_::ostream &o, const dtl_variant_t &v)
 	{
 		o << v.get_string();
 		return o;
@@ -586,7 +686,7 @@ variant_t &variant_t::operator=(const variant_t &other)
 
 #ifndef DTL_NO_UNICODE
 
-	STD_::wostream &operator<<(STD_::wostream &o, const variant_t &v)
+	STD_::wostream &operator<<(STD_::wostream &o, const dtl_variant_t &v)
 	{
 		o << tstring_cast((STD_::wstring *)NULL,v.get_string());
 		return o;
@@ -663,7 +763,7 @@ variant_t &variant_t::operator=(const variant_t &other)
 	variant_field::variant_field(const variant_field &other) : m_val(other.m_val), p_row(other.p_row), 
 		m_col(other.m_col), m_IsNull(other.m_IsNull) {}
 	
-variant_field::variant_field(const variant_t &v, variant_row *row, int field, const bool b) : m_val(v),
+variant_field::variant_field(const dtl_variant_t &v, variant_row *row, int field, const bool b) : m_val(v),
 		p_row(row), m_col(field), m_IsNull(b) {	}
 
 	// exception-safe swap()
@@ -766,7 +866,7 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 		return (struct tagTIMESTAMP_STRUCT) m_val;
 	}
 
-	variant_field::operator variant_t() const
+	variant_field::operator dtl_variant_t() const
 	{
 		return m_val;
 	}
@@ -801,7 +901,7 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 
 	void variant_field::ClearNull() {m_IsNull = false; variant_row_ClearNull(p_row,m_col);}
 
-	variant_t variant_val(const variant_field &vf)
+	dtl_variant_t variant_val(const variant_field &vf)
 	{
 		return vf.m_val;
 	}
@@ -841,7 +941,7 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 	{
 		if (!vf.IsNull())
 		{
-		  variant_t  temp(vf);
+		  dtl_variant_t  temp(vf);
 		  o << temp;
 		}
 		else
@@ -858,7 +958,7 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 	{
 		if (!vf.IsNull())
 		{
-		  variant_t  temp(vf);
+		  dtl_variant_t  temp(vf);
 		  o << temp;
 		}
 		else
@@ -1008,7 +1108,7 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 	// replace field value
 	void variant_row::replace(const variant_field &field) {
 		void *p = p_data + p_row_fields->offsets[field.m_col];
-    char typeId = p_row_fields->types[field.m_col].typeId;
+		char typeId = p_row_fields->types[field.m_col].typeId;
 		switch (typeId) {
 	  // again g++ does not like these casts
 		case C_SHORT: *((short *)p) = (short)field.m_val; break;
@@ -1018,10 +1118,11 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 		case C_ULONG: *((unsigned long *)p) = (unsigned long)field.m_val; break;
 		case C_LONG: *((long *)p) = (long)field.m_val; break;
 		case C_INT: *((int *)p) = (int)field.m_val; break;
+		case C_INT64: *((ODBCINT64 *)p) = (ODBCINT64)field.m_val; break;
 		case C_DOUBLE: *((double *)p) = (double)field.m_val; break;
 		case C_FLOAT: *((float *)p) = (float)field.m_val; break;
 		case C_TIMESTAMP: *((struct tagTIMESTAMP_STRUCT *)p) = (struct tagTIMESTAMP_STRUCT)field.m_val; break;
-		case C_CHAR_STAR: *((char * *)p) = (char *)field.m_val; break;
+		case C_CHAR_STAR: std_strncpy((char * )p, (char *)field.m_val, p_row_fields->types[field.m_col].size); break;
 
 	  // need to use char* for the case below to work around g++ error
 		case C_STRING: *((STD_::string *)p) = field.m_val.get_string(); break;
@@ -1030,7 +1131,7 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 		case C_WSTRING: *((STD_::wstring *)p) = field.m_val.get_wstring(); break;
 #endif
 		default:
-			 throw VariantException(_TEXT("variant_row::replace()"),
+			 DTL_THROW VariantException(_TEXT("variant_row::replace()"),
 			   tstring(_TEXT("Invalid variant data assigned to row.")));
 		}
 	}
@@ -1130,7 +1231,7 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 				BYTE *new_data = new BYTE[other.p_row_fields->row_size];
 
 				if (new_data == NULL) 
-					throw VariantException(_TEXT("variant_row::operator ="), tstring(_TEXT("Out of memory for assigning row.")));
+					DTL_THROW VariantException(_TEXT("variant_row::operator ="), tstring(_TEXT("Out of memory for assigning row.")));
 				BYTE *p_data_backup = p_data;
 				p_data = new_data;
 				try {
@@ -1194,7 +1295,7 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 		   {
 			   const variant_field &from = other[(*p_row_fields).names[i]];
 			   // (*this)[i] = other[(*p_row_fields).names[i]];
-			   (*this)[i] = from;
+			   (*this)[ static_cast<int>(i) ] = from;
 		   }
 	   }		 
 	}
@@ -1204,7 +1305,7 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 	variant_field variant_row::operator[](const tstring &f) {
 		STD_::vector<TypeTranslation>::const_iterator i = find_field(f);
 		if (p_data == NULL) {
-			throw VariantException(_TEXT("variant_row::operator[]()"),
+			DTL_THROW VariantException(_TEXT("variant_row::operator[]()"),
 			tstring(_TEXT("Invalid field name requested from NULL variant_field class.")));
 		}
    
@@ -1222,14 +1323,14 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 
 			pt = &(*i);
 			bool IsNull = b_IsNull[diff];
-			variant_t v(p, *pt);
-			return variant_field(v, this, diff, IsNull);
+			dtl_variant_t v(p, *pt);
+			return variant_field(v, this, static_cast< int >( diff ), IsNull);
 			
 		}
 		// throw UNKNOWN field name!
-		throw VariantException(_TEXT("variant_row::operator[]()"),
+		DTL_THROW VariantException(_TEXT("variant_row::operator[]()"),
 			tstring(_TEXT("Invalid field name requested from row class.")));
-		return variant_field(variant_t(0), NULL, 0, false);
+		return variant_field(dtl_variant_t(0), NULL, 0, false);
 
 	}
 
@@ -1237,12 +1338,12 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 	variant_field variant_row::operator[](int i) {
 		// STL should throw here if field # out of bounds
 		if (p_data == NULL) {
-			throw VariantException(_TEXT("variant_row::operator[]()"),
+			DTL_THROW VariantException(_TEXT("variant_row::operator[]()"),
 			tstring(_TEXT("Invalid field name requested from NULL variant_field class.")));
 		}
 		void *p = p_data + p_row_fields->offsets[i];
 		bool IsNull = b_IsNull[i];
-		return variant_field(variant_t(p, p_row_fields->types[i]), this, i, IsNull);
+		return variant_field(dtl_variant_t(p, p_row_fields->types[i]), this, i, IsNull);
 	}
 
 	// const versions of subscript operators
@@ -1251,7 +1352,7 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 		STD_::vector<TypeTranslation>::const_iterator i = find_field(f);
 
 		if (p_data == NULL) {
-			throw VariantException(_TEXT("variant_row::operator[]()"),
+			DTL_THROW VariantException(_TEXT("variant_row::operator[]()"),
 			tstring(_TEXT("Invalid field name requested from NULL variant_field class.")));
 		}
    
@@ -1270,14 +1371,17 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 
 			pt = &(*i);
 			bool IsNull = b_IsNull.test(diff);
-			variant_t v(p, *pt);
-			return variant_field(v, const_cast<variant_row *>(this), diff, IsNull);
+			dtl_variant_t v(p, *pt);
+			return variant_field(	v, 
+									const_cast<variant_row *>(this), 
+									static_cast<int>( diff ), 
+									IsNull );
 			
 		}
 		// throw UNKNOWN field name!
-		throw VariantException(_TEXT("variant_row::operator[]()"),
+		DTL_THROW VariantException(_TEXT("variant_row::operator[]()"),
 			tstring(_TEXT("Invalid field name requested from row class.")));
-		return variant_field(variant_t(0), NULL, 0, false);
+		return variant_field(dtl_variant_t(0), NULL, 0, false);
 
 	}
 
@@ -1285,12 +1389,12 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 	const variant_field variant_row::operator[](int i) const {
 		// STL should throw here if field # out of bounds
 		if (p_data == NULL) {
-			throw VariantException(_TEXT("variant_row::operator[]()"),
+			DTL_THROW VariantException(_TEXT("variant_row::operator[]()"),
 			tstring(_TEXT("Invalid field name requested from NULL variant_field class.")));
 		}
 		void *p = p_data + p_row_fields->offsets[i];
 		bool IsNull = b_IsNull.test(i);
-		return variant_field(variant_t(p, p_row_fields->types[i]), const_cast<variant_row *>(this), i, IsNull);
+		return variant_field(dtl_variant_t(p, p_row_fields->types[i]), const_cast<variant_row *>(this), i, IsNull);
 	}
 
 	// return # of columns in row
@@ -1318,6 +1422,11 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 		return p_row_fields->GetTypes();
 	}
 
+	const variant_row_fields &variant_row::GetVariantRowFields() const
+	{
+		return *p_row_fields;
+	}
+
 	// used for debugging to print out contents of variant row as a tstring
 	STD_::string variant_row::Stringify() const 
 	{
@@ -1332,7 +1441,7 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 			  break;
 		  }
 #endif
-		  result << (*this)[i] << ' ';
+		  result <<  (*this)[static_cast<int>(i)] << ' ';
 	   }
 	   result << STD_::ends;
 
@@ -1358,7 +1467,7 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 			  break;
 		  }
 #endif
-		  result << (*this)[i] << _TEXT(" ");
+		  result << (*this)[static_cast<int>(i)] << _TEXT(" ");
 	   }
 	   result << STD_::ends;
 
@@ -1377,11 +1486,11 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 
 		// make sure variant_row_fields are the same between the two variant_row's
 		if (pRowFields1.get() == NULL || pRowFields2.get() == NULL)
-			throw VariantException(_TEXT("variant_row::operator==()"),
+			DTL_THROW VariantException(_TEXT("variant_row::operator==()"),
 				_TEXT("NULL variant row fields ptr.!"));
 
 		if (*pRowFields1 != *pRowFields2)
-			throw VariantException(_TEXT("variant_row::operator==()"),
+			DTL_THROW VariantException(_TEXT("variant_row::operator==()"),
 				_TEXT("Types do not match for two variant_row's being compared!"));
 
 		// need offsets so we can get the raw pointer into the variant_row
@@ -1392,8 +1501,8 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 		// now compare the two variant_rows, field by field
 		for (size_t i = 0; i < vr1.size(); i++)
 		{
-			const variant_field &vf1 = vr1[i];
-			const variant_field &vf2 = vr2[i];
+			const variant_field &vf1 =  vr1[ static_cast<int>(i) ] ;
+			const variant_field &vf2 = vr2[ static_cast<int>(i) ];
 
 			size_t offset = offsets[i]; 
 
@@ -1427,11 +1536,11 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 
 		// make sure variant_row_fields are the same between the two variant_row's
 		if (pRowFields1.get() == NULL || pRowFields2.get() == NULL)
-			throw VariantException(_TEXT("variant_row::operator<()"),
+			DTL_THROW VariantException(_TEXT("variant_row::operator<()"),
 				_TEXT("NULL variant row fields ptr.!"));
 
 		if (*pRowFields1 != *pRowFields2)
-			throw VariantException(_TEXT("variant_row::operator<()"),
+			DTL_THROW VariantException(_TEXT("variant_row::operator<()"),
 				_TEXT("Types do not match for two variant_row's being compared!"));
 
 	
@@ -1443,8 +1552,8 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 		// now compare the two variant_rows, field by field
 		for (size_t i = 0; i < vr1.size(); i++)
 		{
-			const variant_field &vf1 = vr1[i];
-			const variant_field &vf2 = vr2[i];
+			const variant_field &vf1 = vr1[static_cast<int>(i)];
+			const variant_field &vf2 = vr2[static_cast<int>(i)];
 
 			size_t offset = offsets[i]; 
 
@@ -1608,6 +1717,10 @@ variant_field::variant_field(const variant_t &v, variant_row *row, int field, co
 
 	TypeTranslationField variant_row::_tstring() {
 		return add_field((tstring *)NULL);
+	}
+
+	TypeTranslationField variant_row::_tchar_star() {
+		return add_field((TCHAR **)NULL);
 	}
 
 	TypeTranslationField variant_row::_jtime_c() {

@@ -1,4 +1,5 @@
 #include "CStringExample.h"
+#include <exception>
 
 void CStringExample()
 {
@@ -10,7 +11,7 @@ void CStringExample()
 
 	variant_row vr(add_null_view.GetDataObj());
 
-	vr["INT_VALUE"] = 4443;
+    vr["INT_VALUE"] = 4443;
 	vr["STRING_VALUE"] = string("Null Me");
 	vr["DOUBLE_VALUE"] = 33.3;
 	vr["EXAMPLE_LONG"] = 444;

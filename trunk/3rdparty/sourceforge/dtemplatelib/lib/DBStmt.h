@@ -22,10 +22,12 @@ It is provided "as is" without express or implied warranty.
 #include "DB_Base.h"
 #include "DBConnection.h"
 #include "DBException.h"
+#include "string_util.h"
 
 #include "std_warn_off.h"
 #include <vector>
 #include <set>
+#include <list>
 #include "std_warn_on.h"
 
 
@@ -106,16 +108,22 @@ class DBStmt : public ValidatedObject
 
 	HSTMT GetHSTMT() const;
 
-	// prohibit copy construction and assignment
-	DBStmt &operator=(const DBStmt &stmt);
-	DBStmt(const DBStmt &stmt);
-
 	static STD_::vector<tstring> BuildFatalErrorsList();
 
 	// sets the attributes in ODBC that the user set in the DBStmt object
 	void LoadAttributes();
 
+	void CallCatalogFunction();
+    
   public:
+
+	DBStmt &operator=(const DBStmt &other){
+		DBStmt tmp(other);
+		tmp.swap(*this);
+		return *this;
+	}
+
+	DBStmt(const DBStmt &stmt);
 
 	// constructs a DBStmt associated with the connection
 	// allocate (and prepare stmt) if alloc_stmt set to true
@@ -215,7 +223,7 @@ class DBStmt : public ValidatedObject
 					SDWORD *StrLen_or_IndPtr);
 
 	// put data for a field
-	void PutData(void *DataPtr, SDWORD StrLen_or_Ind);
+	void PutData(const void *DataPtr, SDWORD StrLen_or_Ind);
 
 	// see which parameter that system is requesting next for PutData()
 	NeedDataStatus ParamData(void **DataPtrPtr);	
@@ -224,7 +232,7 @@ class DBStmt : public ValidatedObject
 	long RowCount() const;
 
 	// get the query tstring for this statement
-	tstring GetQuery() const;
+	const tstring &GetQuery() const;
 
 	// Reset Query
 	void SetQuery(const tstring &s); 
@@ -245,13 +253,16 @@ class DBStmt : public ValidatedObject
 	// set statement attributes ... will override the default behavior in DTL
 	void SetStmtAttr(SQLINTEGER Attribute, SDWORD Value, SQLINTEGER StringLength);
 
+	// Clear the attribute with the given attribute number
+	void ClearStmtAttr(SQLINTEGER Attribute);
+
 	// set stmt. attribute immediately ... lost upon reinitialization of stmt.
 	void OverrideStmtAttr(SQLINTEGER Attribute, SDWORD Value, SQLINTEGER StringLength)
 	{
-	   RETCODE rc = SQLSetStmtAttr(hstmt, Attribute, (SQLPOINTER) Value, StringLength);
+	   RETCODE rc = SQLSetStmtAttr(hstmt, Attribute, (SQLPOINTER) (Value), StringLength);
 
 	   if (!RC_SUCCESS(rc))
-		   throw DBException(_TEXT("DBStmt::SetStmtAttr()"),
+		   DTL_THROW DBException(_TEXT("DBStmt::SetStmtAttr()"),
 							 _TEXT("Unable to set statement attribute for statement \"") + sqlQuery +
 							 _TEXT("\"!"), pConn, this);
 

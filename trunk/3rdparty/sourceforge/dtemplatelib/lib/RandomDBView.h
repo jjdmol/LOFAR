@@ -208,7 +208,7 @@ public:
 
 	    // if iterator encountered a problem, that means deletion failed, so throw
 	   if (del_it.bad() || del_it.fail()  || del_it.GetLastCount() == 0)
-			  throw DBException(_TEXT("RandomDBView::erase(iterator first, iterator last)"), 
+			  DTL_THROW DBException(_TEXT("RandomDBView::erase(iterator first, iterator last)"), 
 			  _TEXT("Delete from DB failed! Record may have been changed by another user."),
 					NULL, NULL);
 
@@ -224,7 +224,7 @@ public:
 	   
 	   // if iterator encountered a problem, that means deletion failed, so throw
 	   if (del_it.bad() || del_it.fail()  || del_it.GetLastCount() == 0)
-			  throw DBException(_TEXT("RandomDBView::erase(iterator first, iterator last)"), 
+			  DTL_THROW DBException(_TEXT("RandomDBView::erase(iterator first, iterator last)"), 
 			  _TEXT("Delete from DB failed! Record may have been changed by another user."),
 					NULL, NULL);
 	}
