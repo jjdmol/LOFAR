@@ -37,6 +37,9 @@ namespace LCSMath
   // Get conjugate of a complex matrix.
   LoMat_dcomplex conj (const LoMat_dcomplex& aMatrix);
 
+  // Get conjugate of a complex vector.
+  LoVec_dcomplex conj (const LoVec_dcomplex& aVector);
+
   // Get hermitian transpose of a complex matrix.
   LoMat_dcomplex hermitianTranspose (const LoMat_dcomplex& aMatrix);
 

@@ -106,6 +106,11 @@ namespace LCSMath
     return LoMat_dcomplex (2. * real(aMatrix) - aMatrix);
   }
 
+  LoVec_dcomplex conj (const LoVec_dcomplex& aVector)
+  {
+    return LoVec_dcomplex (2. * real(aVector) - aVector);
+  }
+
 
   LoMat_dcomplex hermitianTranspose (const LoMat_dcomplex& aMatrix)
   {
@@ -336,8 +341,10 @@ namespace LCSMath
     int nr = m.rows();
     int nc = m.cols();
     bool t = false;
+      
     if (nr > 0 && nr == nc) {
       t = true;
+
       LoMat_dcomplex m_trans = hermitianTranspose(m) ; 
       for (int i=0;i<nc;i++){
 	for (int j=0;j<nr;j++) {
@@ -351,9 +358,9 @@ namespace LCSMath
 
   int eig (const LoMat_dcomplex& m, LoMat_dcomplex& V, LoVec_double& D)
   {
-    AssertStr (is_hermitian(m),
-	       "only Hermitian matrices are currently supported");
-    return hermitian_init(m, V, D);
+  AssertStr (is_hermitian(m),
+	     "only Hermitian matrices are currently supported");
+  return hermitian_init(m, V, D);
   }
 
 
