@@ -19,11 +19,24 @@ class StopWatch
 
   void start();
   void stop();
-  double elapsed();
+  void pause();
+  void resume();
+  double elapsed() const;
+
+  // also provide a global stopwatch
+  // this can be used as a singleton
+  static StopWatch* getGlobalStopWatch();
 
  private:
   struct timeval startTime;
   struct timeval stopTime;
+
+  struct timeval pauseStartTime;
+  long pausedSecs;
+  long pauseduSecs;
+  bool isPausing;
+
+  static StopWatch* theirGlobalStopWatch;
 };
 
 #endif /* __STOPWATCH_H__ */
