@@ -27,13 +27,13 @@
 #include "ABSSpectralWindow.h"
 #include "SpectralWindowConfig.h"
 #include "ABSBeamlet.h"
+#include <time.h>
 
 #include <queue>
 #include <set>
 #include <map>
 
 #include <blitz/array.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace ABS
 {
@@ -102,25 +102,25 @@ namespace ABS
 
 	  /**
 	   * Convert coordinates from the m_pointing_queue
-	   * to the local coordinate system, for times >= time
-	   * and time < time + duration.
+	   * to the local coordinate system, for times >= begintime
+	   * and begintime < begintime + m_compute_interval.
 	   * Converted coordinates are put on the m_coordinate_track
 	   * queue.
-	   * @param fromtime First time of pointing to convert, this is typically
+	   * @param begintime First time of pointing to convert, this is typically
 	   * the last time the method was called. E.g.
 	   * @code
-	   * fromtime=lasttime;
+	   * begintime=lasttime;
 	   * gettimeofday(&lasttime, 0);
-	   * lasttime.tv_sec += 20; // 20 seconds ahead in time
+	   * lasttime.tv_sec += compute_interval; // compute_interval seconds ahead in time
 	   * for (beam in beams)
 	   * {
-	   *   // convert coordinate for next 20 seconds
-	   *   beam->convertPointings(fromtime, 20);
+	   *   // convert coordinate for next compute_interval seconds
+	   *   beam->convertPointings(begintime);
 	   * }
 	   * @endcode
 	   * starting at time.
 	   */
-	  int convertPointings(boost::posix_time::time_period period);
+	  int convertPointings(time_t begintime);
 
 	  /**
 	   * Get converted time-stamped coordinates from the queue.

@@ -38,8 +38,6 @@
 
 #include <netinet/in.h>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 #include <PSAccess.h>
 
 #ifndef ABS_SYSCONF
@@ -57,8 +55,6 @@ using namespace LOFAR;
 using namespace blitz;
 using namespace ABS;
 using namespace std;
-using namespace boost::posix_time;
-using namespace boost::gregorian;
 
 using namespace RSP_Protocol;
 
@@ -488,8 +484,8 @@ void BeamServerTask::beampointto_action(ABSBeampointtoEvent& pt,
   {
       time_t pointto_time = pt.time;
 
-      LOG_INFO(formatString("received new coordinates: %f, %f, time=%s",
-			    pt.angle[0], pt.angle[1], to_simple_string(from_time_t(pt.time)).c_str()));
+      LOG_INFO(formatString("received new coordinates: %f, %f, time=%d",
+			    pt.angle[0], pt.angle[1], pt.time));
 
       //
       // If the time is not set, then activate the command
@@ -500,7 +496,7 @@ void BeamServerTask::beampointto_action(ABSBeampointtoEvent& pt,
       if (beam->addPointing(Pointing(Direction(pt.angle[0],
 					       pt.angle[1],
 					       (Direction::Types)pt.type),
-				     from_time_t(pointto_time))) < 0)
+				     pointto_time)) < 0)
       {
 	  LOG_ERROR("BEAMPOINTTO: failed");
       }
@@ -598,10 +594,6 @@ inline complex<int16_t> convert2complex_int16_t(complex<W_TYPE> cd)
 void BeamServerTask::compute_weights(long current_seconds)
 {
   // convert_pointings for all beams for the next deadline
-  time_period compute_period = time_period(from_time_t((time_t)current_seconds)
-					   + time_duration(seconds(COMPUTE_INTERVAL)),
-					   seconds(COMPUTE_INTERVAL));
-
   Array<W_TYPE,2> lmns(COMPUTE_INTERVAL, N_DIM);  // l,m,n coordinates
   lmns = 0;
 
@@ -609,7 +601,7 @@ void BeamServerTask::compute_weights(long current_seconds)
   for (set<Beam*>::iterator bi = m_beams.begin();
        bi != m_beams.end(); ++bi)
   {
-    (*bi)->convertPointings(compute_period);
+    (*bi)->convertPointings(current_seconds + COMPUTE_INTERVAL);
 
     lmns = (*bi)->getLMNCoordinates();
     LOG_INFO(formatString("current_pointing=(%f,%f)",
