@@ -54,6 +54,8 @@ namespace EPA_Protocol
       static const uint8 READ    = 0x01;
       static const uint8 WRITE   = 0x02;
       static const uint8 READRES = 0x03;
+
+      static const int MAX_TYPE = READRES; /* counting from 0 */
       /*@}*/
 
       /*@{*/
@@ -77,6 +79,8 @@ namespace EPA_Protocol
       static const uint8 BF      = 0x05; /* Beam former */
       static const uint8 ST      = 0x06; /* Statistics */
       static const uint8 RCU     = 0x07; /* RCU control */
+
+      static const int MAX_PID = RCU; /* counting from 0 */
       /*@}*/
 
       /*@{*/
@@ -106,6 +110,9 @@ namespace EPA_Protocol
       static const uint8 POWER         = 0x01;
 
       static const uint8 RCUSETTINGS   = 0x00;
+
+      static const int MAX_REGID = 0x03;
+      
       /*@}*/
 
       /*@{*/

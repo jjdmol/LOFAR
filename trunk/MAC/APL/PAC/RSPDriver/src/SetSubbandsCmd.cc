@@ -63,7 +63,7 @@ void SetSubbandsCmd::ack(CacheBuffer& /*cache*/)
 void SetSubbandsCmd::apply(CacheBuffer& cache)
 {
   uint16 nr_subbands = m_event->subbands.nrsubbands()(0);
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG(N_RCU); cache_rcu++)
+  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
@@ -95,7 +95,7 @@ void SetSubbandsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetSubbandsCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG(N_RCU))
+  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i))
 	  && (2 == m_event->subbands().dimensions())
 	  && (1 == m_event->subbands.nrsubbands().dimensions())
 	  && (1 == m_event->subbands().extent(firstDim))

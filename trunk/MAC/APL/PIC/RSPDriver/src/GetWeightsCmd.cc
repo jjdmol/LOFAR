@@ -62,11 +62,11 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
 		       cache.getBeamletWeights()().extent(thirdDim));
 
   int result_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG(N_RCU); cache_rcu++)
+  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
   {
     if (m_event->rcumask[result_rcu])
     {
-      if (result_rcu < GET_CONFIG(N_RCU))
+      if (result_rcu < GET_CONFIG("N_RCU", i))
       {
 	ack.weights()(0, result_rcu, Range::all())
 	  = cache.getBeamletWeights()()(0, cache_rcu, Range::all());
@@ -74,7 +74,7 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      result_rcu, GET_CONFIG(N_RCU)));
+			      result_rcu, GET_CONFIG("N_RCU", i)));
       }
       
       result_rcu++;
@@ -106,7 +106,7 @@ void GetWeightsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool GetWeightsCmd::validate() const
 {
-  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG(N_RCU));
+  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i));
 }
 
 bool GetWeightsCmd::readFromCache() const

@@ -77,11 +77,11 @@ void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
 void SetWeightsCmd::apply(CacheBuffer& cache)
 {
   int input_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG(N_RCU); cache_rcu++)
+  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      if (cache_rcu < GET_CONFIG(N_RCU))
+      if (cache_rcu < GET_CONFIG("N_RCU", i))
       {
 	cache.getBeamletWeights()()(0, cache_rcu, Range::all())
 	  = m_event->weights()(0, input_rcu, Range::all());
@@ -89,7 +89,7 @@ void SetWeightsCmd::apply(CacheBuffer& cache)
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG(N_RCU)));
+			      cache_rcu, GET_CONFIG("N_RCU", i)));
       }
 
       input_rcu++;

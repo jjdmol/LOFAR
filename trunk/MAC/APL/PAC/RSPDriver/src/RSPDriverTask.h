@@ -83,6 +83,11 @@ namespace RSP
        */
       GCFEvent::TResult enabled(GCFEvent& event, GCFPortInterface &port);
 
+      /**
+       * Dispatch a raw EPA event.
+       */
+      GCFEvent::TResult dispatch_rawevent(GCFPortInterface& port);
+
       /*@{*/
       /**
        * Handlers for the different events.
@@ -112,8 +117,8 @@ namespace RSP
 
     private:
       // ports
-      GCFTCPPort m_acceptor; // listen for clients on this port
-      GCFPort*   m_board;
+      GCFTCPPort  m_acceptor; // listen for clients on this port
+      GCFTCPPort* m_board;
       std::list<GCFPortInterface*> m_client_list;  // list of clients
       std::list<GCFPortInterface*> m_garbage_list; // list of clients to cleanup
 

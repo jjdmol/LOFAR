@@ -57,17 +57,17 @@ void GetStatusCmd::ack(CacheBuffer& cache)
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.sysstatus.board().resize(GET_CONFIG(N_RSPBOARDS));
+  ack.sysstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
   ack.sysstatus.board()   = cache.getSystemStatus().board();
 
   ack.sysstatus.rcu().resize(m_event->rcumask.count());
 
   int result_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG(N_RCU); cache_rcu++)
+  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
   {
     if (m_event->rcumask[result_rcu])
     {
-      if (result_rcu < GET_CONFIG(N_RCU))
+      if (result_rcu < GET_CONFIG("N_RCU", i))
       {
 	ack.sysstatus.rcu()(result_rcu)
 	  = cache.getSystemStatus().rcu()(cache_rcu);
@@ -75,7 +75,7 @@ void GetStatusCmd::ack(CacheBuffer& cache)
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      result_rcu, GET_CONFIG(N_RCU)));
+			      result_rcu, GET_CONFIG("N_RCU", i)));
       }
       
       result_rcu++;
@@ -107,7 +107,7 @@ void GetStatusCmd::setTimestamp(const Timestamp& timestamp)
 
 bool GetStatusCmd::validate() const
 {
-  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG(N_RCU));
+  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i));
 }
 
 void GetStatusCmd::ack_fail()
@@ -117,8 +117,8 @@ void GetStatusCmd::ack_fail()
   ack.timestamp = Timestamp(0,0);
   ack.status = FAILURE;
 
-  ack.sysstatus.board().resize(GET_CONFIG(N_RSPBOARDS));
-  ack.sysstatus.rcu().resize(GET_CONFIG(N_RCU));
+  ack.sysstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
+  ack.sysstatus.rcu().resize(GET_CONFIG("N_RCU", i));
 
   BoardStatus boardinit;
   RCUStatus rcuinit;

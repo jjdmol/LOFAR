@@ -38,64 +38,17 @@ using namespace blitz;
 unsigned int SubbandSelection::getSize()
 {
   return 
-    MSH_ARRAY_SIZE(m_subbands, uint16)
-    + MSH_ARRAY_SIZE(m_nrsubbands, uint16);
+    MSH_ARRAY_SIZE(m_nrsubbands, uint16)
+    + MSH_ARRAY_SIZE(m_subbands, uint16);
 }
 
 unsigned int SubbandSelection::pack(void* buffer)
 {
   unsigned int offset = 0;
 
-  MSH_PACK_ARRAY(buffer, offset, m_subbands,   uint16);
   MSH_PACK_ARRAY(buffer, offset, m_nrsubbands, uint16);
+  MSH_PACK_ARRAY(buffer, offset, m_subbands,   uint16);
   
-#if 0
-  /**
-   * Pack shape of subbands array.
-   */
-  for (int dim = firstDim; dim < firstDim + m_subbands.dimensions(); dim++)
-  {
-    int32 extent = m_subbands.extent(dim);
-    memcpy(bufptr + offset, &extent, sizeof(int32));
-    offset += sizeof(int32);
-  }
-
-  /**
-   * Pack subbands array itself.
-   */
-  if (m_subbands.isStorageContiguous())
-  {
-    memcpy(bufptr + offset, m_subbands.data(), m_subbands.size() * sizeof(uint16));
-    offset += m_subbands.size() * sizeof(uint16);
-  }
-  else
-  {
-    LOG_FATAL("subbands array must contiguous");
-    exit(EXIT_FAILURE);
-  }
-
-  /**
-   * Pack shape of nrsubbands array.
-   */
-  int32 extent = m_nrsubbands.extent(firstDim);
-  memcpy(bufptr + offset, &extent, sizeof(int32));
-  offset += sizeof(int32);
-
-  /**
-   * Pack nrsubbands array itself.
-   */
-  if (m_nrsubbands.isStorageContiguous())
-  {
-    memcpy(bufptr + offset, m_nrsubbands.data(), m_nrsubbands.size() * sizeof(uint16));
-    offset += m_nrsubbands.size() * sizeof(uint16);
-  }
-  else
-  {
-    LOG_FATAL("nrsubbands array must contiguous");
-    exit(EXIT_FAILURE);
-  }
-#endif
-
   return offset;
 }
 
@@ -103,45 +56,9 @@ unsigned int SubbandSelection::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_subbands,   uint16, 2);
   MSH_UNPACK_ARRAY(buffer, offset, m_nrsubbands, uint16, 1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_subbands,   uint16, 2);
 
-#if 0
-  TinyVector<int, 2> extent;
-
-  /**
-   * Unpack shape of subbands array.
-   */
-  for (int dim = firstDim; dim < firstDim + m_subbands.dimensions(); dim++)
-  {
-    int32 extenttmp = m_subbands.extent(dim);
-    memcpy(&extenttmp, bufptr + offset, sizeof(int32));
-    offset += sizeof(int32);
-    extent(dim - firstDim) = extenttmp;
-  }
-
-  /**
-   * Unpack subbands array itself.
-   */
-  m_subbands.resize(extent);
-  memcpy(m_subbands.data(), bufptr+offset, m_subbands.size() * sizeof(uint16));
-  offset += m_subbands.size() * sizeof(uint16);
-    
-  /**
-   * Unpack shape of nrsubbands array.
-   */
-  int32 nrsubbands_size = 0;
-  memcpy(&nrsubbands_size, bufptr + offset, sizeof(int32));
-  offset += sizeof(int32);
-
-  /**
-   * Unpack nrsubbands array itself.
-   */
-  m_nrsubbands.resize(nrsubbands_size);
-  memcpy(m_nrsubbands.data(), bufptr + offset, m_nrsubbands.size() * sizeof(uint16));
-  offset += m_nrsubbands.size() * sizeof(uint16);
-#endif
-    
   return offset;
 }
 

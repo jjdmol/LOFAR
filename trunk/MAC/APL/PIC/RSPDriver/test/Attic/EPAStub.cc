@@ -24,6 +24,7 @@
 //#define EARLY_REPLY
 
 #include "EPA_Protocol.ph"
+#include "RawDispatch.h"
 
 #include "EPAStub.h"
 #include "RSPTestSuite.h"
@@ -48,7 +49,7 @@ EPAStub::EPAStub(string name)
 {
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
-  m_server.init(*this, "client", GCFPortInterface::SPP, EPA_PROTOCOL);
+  m_server.init(*this, "client", GCFPortInterface::SPP, EPA_PROTOCOL, true /*raw*/);
 }
 
 EPAStub::~EPAStub()
@@ -105,11 +106,17 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
   
   switch (event.signal)
   {
-  case F_ENTRY:
-      {
-	  START_TEST("connected", "The connected state of the EPAStub");
-      }
-      break;
+    case F_ENTRY:
+    {
+      START_TEST("connected", "The connected state of the EPAStub");
+    }
+    break;
+
+    case F_DATAIN:
+    {
+      status = RawEvent::dispatch(*this, port);
+    }
+    break;
 
     case EPA_WGSETTINGS:
     case EPA_WGUSER:
@@ -131,21 +138,21 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
       status = rspstatus(event, port);
       break;
       
-  case F_DISCONNECTED:
-      {
-	  port.close();
+    case F_DISCONNECTED:
+    {
+      port.close();
 
-	  TRAN(EPAStub::initial);
-      }
-      break;
+      TRAN(EPAStub::initial);
+    }
+    break;
 
-  case F_EXIT:
-      {
-	  STOP_TEST();
-      }
-      break;
+    case F_EXIT:
+    {
+      STOP_TEST();
+    }
+    break;
 
-  default:
+    default:
       status = GCFEvent::NOT_HANDLED;
       break;
   }

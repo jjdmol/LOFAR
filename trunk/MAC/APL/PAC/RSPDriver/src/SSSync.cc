@@ -63,6 +63,8 @@ void SSSync::sendrequest(int iteration)
   
   // create array to contain the subband selection
   uint16 nr_subbands = Cache::getInstance().getBack().getSubbandSelection().nrsubbands()(blp);
+  LOG_DEBUG(formatString("nr_subbands=%d", nr_subbands));
+  nr_subbands=256;
   Array<uint16, 1> subbands(nr_subbands);
   ss.ch    = subbands.data();
   ss.chDim = nr_subbands;
@@ -73,11 +75,13 @@ void SSSync::sendrequest(int iteration)
 
   getBoardPort().send(ss);
 
-  subbands.free();
+  //subbands.free();
 }
 
 void SSSync::sendrequest_status()
 {
+  LOG_DEBUG("sendrequest_status");
+
   // send read status request to check status of the write
   EPARspstatusReadEvent rspstatus;
   MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
@@ -88,6 +92,8 @@ void SSSync::sendrequest_status()
 GCFEvent::TResult SSSync::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   EPARspstatusEvent ack(event);
+
+  LOG_DEBUG("handleack");
 
   return GCFEvent::HANDLED;
 }

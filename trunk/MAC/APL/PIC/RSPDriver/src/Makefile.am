@@ -65,7 +65,9 @@ librsp_la_SOURCES = \
 libepa_la_SOURCES = \
 	MEPHeader.h \
 	MEPHeader.cc \
-	EPA_Protocol.cc
+	EPA_Protocol.cc \
+	RawDispatch.h \
+	RawDispatch.cc
 
 bin_PROGRAMS = RSPDriver
 

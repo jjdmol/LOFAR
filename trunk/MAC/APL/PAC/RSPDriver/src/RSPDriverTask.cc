@@ -38,6 +38,7 @@
 #include "StatsSync.h"
 #include "WGSync.h"
 #include "VersionsSync.h"
+#include "RawDispatch.h"
 #include <blitz/array.h>
 
 #undef PACKAGE
@@ -51,20 +52,20 @@ using namespace LOFAR;
 using namespace blitz;
 
 RSPDriverTask::RSPDriverTask(string name)
-  : GCFTask((State)&RSPDriverTask::initial, name), m_scheduler()
+  : GCFTask((State)&RSPDriverTask::initial, name), m_board(0), m_scheduler()
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
   m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, RSP_PROTOCOL);
 
-  m_board = new GCFPort[GET_CONFIG(N_RSPBOARDS)];
+  m_board = new GCFTCPPort[GET_CONFIG("N_RSPBOARDS", i)];
 
-  for (int boardid = 0; boardid < GET_CONFIG(N_RSPBOARDS); boardid++)
+  for (int boardid = 0; boardid < GET_CONFIG("N_RSPBOARDS", i); boardid++)
   {
     char name[64] = "board";
     snprintf(name, 64, "board%d", boardid);
-    m_board[boardid].init(*this, name, GCFPortInterface::SAP, EPA_PROTOCOL /*, true*/);
+    m_board[boardid].init(*this, name, GCFPortInterface::SAP, EPA_PROTOCOL,true /*raw*/);
     //m_board[boardid].setAddr("eth0", "aa:bb:cc:dd:ee:ff");
   }
 
@@ -80,7 +81,7 @@ RSPDriverTask::~RSPDriverTask()
 bool RSPDriverTask::isEnabled()
 {
   bool enabled = true;
-  for (int boardid = 0; boardid < GET_CONFIG(N_RSPBOARDS); boardid++)
+  for (int boardid = 0; boardid < GET_CONFIG("N_RSPBOARDS", i); boardid++)
   {
     if (!m_board[boardid].isConnected())
     {
@@ -109,42 +110,63 @@ void RSPDriverTask::addAllSyncActions()
    * For each board a separate BWSync instance is created which handles
    * the synchronization of data between the board and the cache for that board.
    */
-  for (int boardid = 0; boardid < GET_CONFIG(N_RSPBOARDS); boardid++)
+  for (int boardid = 0; boardid < GET_CONFIG("N_RSPBOARDS", i); boardid++)
   {
-    BWSync* bwsync = 0;
+    if (1 == GET_CONFIG("SYNC_BF", i))
+    {
+      BWSync* bwsync = 0;
 
-    bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFXRE);
-    m_scheduler.addSyncAction(bwsync);
-    bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFXIM);
-    m_scheduler.addSyncAction(bwsync);
-    bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFYRE);
-    m_scheduler.addSyncAction(bwsync);
-    bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFYIM);
-    m_scheduler.addSyncAction(bwsync);
-
-    SSSync* sssync = new SSSync(m_board[boardid], boardid);
-    m_scheduler.addSyncAction(sssync);
-
-    RCUSync* rcusync = new RCUSync(m_board[boardid], boardid);
-    m_scheduler.addSyncAction(rcusync);
-
-    StatusSync* statussync = new StatusSync(m_board[boardid], boardid);
-    m_scheduler.addSyncAction(statussync);
-
-    StatsSync* statssync = new StatsSync(m_board[boardid], boardid);
-    m_scheduler.addSyncAction(statssync);
-
-    WGSync* wgsync = new WGSync(m_board[boardid], boardid);
-    m_scheduler.addSyncAction(wgsync);
-
-    VersionsSync* versionsync = new VersionsSync(m_board[boardid], boardid);
-    m_scheduler.addSyncAction(versionsync);
+      bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFXRE);
+      m_scheduler.addSyncAction(bwsync);
+      bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFXIM);
+      m_scheduler.addSyncAction(bwsync);
+      bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFYRE);
+      m_scheduler.addSyncAction(bwsync);
+      bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFYIM);
+      m_scheduler.addSyncAction(bwsync);
+    }
+    
+    if (1 == GET_CONFIG("SYNC_SS", i))
+    {
+      SSSync* sssync = new SSSync(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(sssync);
+    }
+    
+    if (1 == GET_CONFIG("SYNC_RCU", i))
+    {
+      RCUSync* rcusync = new RCUSync(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(rcusync);
+    }
+    
+    if (1 == GET_CONFIG("SYNC_STATUS", i))
+    {
+      StatusSync* statussync = new StatusSync(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(statussync);
+    }
+    
+    if (1 == GET_CONFIG("SYNC_ST", i))
+    {
+      StatsSync* statssync = new StatsSync(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(statssync);
+    }
+    
+    if (1 == GET_CONFIG("SYNC_WG", i))
+    {
+      WGSync* wgsync = new WGSync(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(wgsync);
+    }
+    
+    if (1 == GET_CONFIG("SYNC_VERSION", i))
+    {
+      VersionsSync* versionsync = new VersionsSync(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(versionsync);
+    }
   }
 }
 
 void RSPDriverTask::openBoards()
 {
-  for (int boardid = 0; boardid < GET_CONFIG(N_RSPBOARDS); boardid++)
+  for (int boardid = 0; boardid < GET_CONFIG("N_RSPBOARDS", i); boardid++)
   {
     if (!m_board[boardid].isConnected()) m_board[boardid].open();
   }
@@ -194,6 +216,15 @@ GCFEvent::TResult RSPDriverTask::initial(GCFEvent& event, GCFPortInterface& port
 
     case F_DATAIN:
     {
+      MEPHeader hdr;
+      port.recv(&hdr.m_fields, sizeof(hdr.m_fields));
+
+      LOG_DEBUG(formatString("F_DATAIN: type=0x%02x, addr=(0x%02x 0x%02x 0x%02x 0x%02x)",
+			     hdr.m_fields.type,
+			     hdr.m_fields.addr.dstid,
+			     hdr.m_fields.addr.pid,
+			     hdr.m_fields.addr.regid,
+			     hdr.m_fields.addr.pageid));
     }
     break;
 
@@ -238,7 +269,7 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
 
       /* Start the update timer after 1 second */
       m_board[0].setTimer(1.0,
-			  GET_CONFIG(SYNC_INTERVAL)); // update SYNC_INTERVAL seconds
+			  GET_CONFIG("SYNC_INTERVAL", f)); // update SYNC_INTERVAL seconds
     }
     break;
 
@@ -257,6 +288,12 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
     }
     break;
 
+    case F_DATAIN:
+    {
+      status = RawEvent::dispatch(*this, port);
+    }
+    break;
+    
     case RSP_SETWEIGHTS:
       rsp_setweights(event, port);
       break;
@@ -366,7 +403,6 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
   return status;
 }
 
-
 void RSPDriverTask::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 {
   /**
@@ -380,7 +416,7 @@ void RSPDriverTask::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
   /* range check on parameters */
   if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
       || (sw_event->weights().extent(thirdDim) != MAX_N_BEAMLETS)
-      || (sw_event->weights().extent(secondDim) > GET_CONFIG(N_RCU)))
+      || (sw_event->weights().extent(secondDim) > GET_CONFIG("N_RCU", i)))
   {
     delete sw_event;
     
