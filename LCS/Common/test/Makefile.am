@@ -1,13 +1,16 @@
 check_PROGRAMS			= tDebug \
                                   tBlobString tBlobHeader tBlobArrayHeader \
                                   tBlobStream tBlobArray tDataConvert \
-				  tKeyValueMap
+				  tKeyValueMap \
+				  tStringUtil
 # tLorrays
 
 TESTS	= tDebug_test.sh \
           tBlobString tBlobHeader tBlobArrayHeader \
           tBlobStream_test.sh tBlobArray tDataConvert \
-	  tKeyValueMap_test.sh
+	  tKeyValueMap_test.sh \
+	  tStringUtil_test.sh
+
 # tLorrays_test.sh				
 
 tDebug_SOURCES			= tDebug.cc
@@ -41,6 +44,10 @@ tDataConvert_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
 tKeyValueMap_SOURCES		= tKeyValueMap.cc
 tKeyValueMap_LDADD		= ../src/libcommon.la
 tKeyValueMap_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
+
+tStringUtil_SOURCES		= tStringUtil.cc
+tStringUtil_LDADD		= ../src/libcommon.la	
+tStringUtil_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
 
 # tLorrays_SOURCES		= tLorrays.cc
 # tLorrays_LDADD		= ../src/libcommon.la	
