@@ -1,0 +1,458 @@
+V 10
+1
+LANG:1 15 LOFAR Navigator
+PANEL,280 57 1120 697 N "_3DFace" 0
+"main()
+{
+	Navigator_HandleEventInitialize();
+}" 0
+ "main()
+{
+	Navigator_HandleEventTerminate();
+}" 0
+ E E E 1 -1 -1 0  10 570
+""0  1
+E "// global functions. All event handlers are implemented here
+
+#uses \"gcfnav-functions.ctl\"
+
+" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+NC
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+1 47 2 "" 72
+0
+1 48 2 "" 75
+0
+1 49 2 "" 76
+0
+1 50 2 "" 77
+0
+1 51 2 "" 78
+0
+1 52 2 "" 79
+0
+1 53 2 "17" 25
+0
+1 54 2 "17" 26
+0
+1 55 2 "17" 27
+0
+1 56 2 "17" 28
+0
+1 57 2 "17" 18
+0
+1 58 2 "17" 22
+0
+1 59 2 "17" 23
+0
+1 60 2 "17" 24
+0
+1 61 2 "" 96
+0
+1 62 2 "" 97
+0
+1 63 2 "" 98
+0
+1 64 2 "20" 0
+0
+10 76
+"Polyline1"
+""
+1 -107 130 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 4 -106 130
+-106 160
+-120 140
+-106 120
+ 0
+1 80 3 "" 2
+0
+1 65 2 "16" 0
+0
+1 66 2 "16" 1
+0
+1 67 2 "" 80
+0
+1 68 2 "" 81
+0
+1 69 2 "" 82
+0
+28 72
+"TabViews"
+""
+1 0 30 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"selchangedcb" "main()
+{
+	TabViews_HandleEventSelectionChanged();
+}"
+1
+LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0
+""  288 38 1112 602
+E10 "tab1" 1
+LANG:1 4 tab1
+0
+"tab2" 1
+LANG:1 4 tab2
+0
+"tab3" 1
+LANG:1 4 tab3
+0
+"tab4" 1
+LANG:1 4 tab4
+0
+"tab5" 1
+LANG:1 4 tab5
+0
+"tab6" 1
+LANG:1 4 tab6
+0
+"tab7" 1
+LANG:1 4 tab7
+0
+"tab8" 1
+LANG:1 4 tab8
+0
+"tab9" 1
+LANG:1 4 tab9
+0
+"tab10" 1
+LANG:1 5 tab10
+0
+
+13 77
+"ButtonMaximize"
+""
+1 1090 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 9 Undock...
+
+0
+1
+LANG:1 102 -adobe-courier-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,49,Courier New
+0
+""  1088 8 1112 32
+
+P 
+13434828
+"pictures/maximize.bmp"
+1
+LANG:1 0 
+"main()
+{
+	ButtonMaximize_HandleEventClick();
+}" 0
+ E E E
+29 79
+"FlyTreeXCtrl1"
+""
+1 -10 -10 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+17 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+ 10 40 270 600
+21 FlyTreeXCtrl.FlyTreeX
+57
+1
+"OnMouseEnter"
+"()"
+""
+2
+"OnMouseLeave"
+"()"
+""
+3
+"OnStateChanging"
+"(long NodeId, bool AllowChange)"
+""
+4
+"OnStateChange"
+"(long NodeId, long Oldindex)"
+""
+5
+"OnRefreshState"
+"(long NodeId, long Mode, bool AllowRefresh)"
+""
+6
+"OnGetNodeData"
+"(long NodeId, long Column, string aData, bool PwdChar, long MaxLength)"
+""
+7
+"OnColumnClick"
+"(long Col, long Row, bool Down)"
+""
+8
+"OnValidateNodeData"
+"(long NodeId, long Column, string aData, anytype Cancel)"
+""
+9
+"OnEditButtonClick"
+"(long NodeId, long Column)"
+""
+10
+"OnIsReadOnlyNode"
+"(long NodeId, long Column, anytype aReadOnly)"
+""
+11
+"OnGetPicklist"
+"(long NodeId, long Column, anytype aPickList)"
+""
+12
+"OnGetEditStyle"
+"(long NodeId, long Column, anytype aEditStyle)"
+""
+37
+"OnGetNodeAttributes"
+"(long NodeId, long Col, idispatch Font, anytype ForeColor, anytype BkColor, anytype Alignment)"
+""
+18
+"OnBeforeCustomize"
+"()"
+""
+19
+"OnAfterCustomize"
+"()"
+""
+20
+"OnBeforeApply"
+"()"
+""
+21
+"OnAfterApply"
+"()"
+""
+-600
+"Click"
+"()"
+""
+-603
+"KeyPress"
+"(int Key)"
+""
+48
+"OnColumnMoved"
+"(long FromIndex, long ToIndex)"
+""
+50
+"OnGetEditMask"
+"(long aCol, long aRow, string Value)"
+""
+51
+"OnGetEditText"
+"(long aCol, long aRow, string Value)"
+""
+52
+"OnRowMoved"
+"(long FromIndex, long ToIndex)"
+""
+53
+"OnSelectCell"
+"(long aCol, long aRow, anytype CanSelect)"
+""
+54
+"OnSetEditText"
+"(long aCol, long aRow, string Value)"
+""
+55
+"OnTopLeftChanged"
+"()"
+""
+-605
+"MouseDown"
+"(int Button, int Shift, float X, float Y)"
+""
+-607
+"MouseUp"
+"(int Button, int Shift, float X, float Y)"
+""
+-602
+"KeyDown"
+"(int KeyCode, int Shift)"
+""
+-604
+"KeyUp"
+"(int KeyCode, int Shift)"
+""
+-606
+"MouseMove"
+"(int Button, int Shift, float X, float Y)"
+""
+-601
+"DblClick"
+"()"
+""
+14
+"OnCompare"
+"(long NodeId1, long NodeId2, anytype Compare)"
+""
+15
+"OnDrawCell"
+"(long Col, long Row, float Left, float Top, float Right, float Bottom)"
+"	TreeCtrl_HandleEventOnDrawCell(Col, Row, Left, Top, Right, Bottom);"
+16
+"OnStartDrag"
+"()"
+""
+17
+"OnDragOver"
+"(long SourceId, float X, float Y, long DragState, bool Accept)"
+""
+22
+"OnDragDrop"
+"(long SourceId, float X, float Y)"
+""
+23
+"OnEndDrag"
+"(long TargetId, float X, float Y)"
+""
+24
+"OnColumnWidthChanging"
+"(long Col, anytype NewWidth)"
+""
+25
+"OnColumnWidthChange"
+"(long Col, long NewWidth)"
+""
+26
+"OnRowHeightChanging"
+"(long Row, anytype NewHeight)"
+""
+27
+"OnRowHeightChange"
+"(long Row, long NewHeight)"
+""
+28
+"OnSelChange"
+"(long Node)"
+"	TreeCtrl_HandleEventOnSelChange(Node);"
+30
+"OnSelChanging"
+"(long NewNode, anytype AllowChange)"
+""
+31
+"OnEditing"
+"(long NodeId, anytype AllowEdit)"
+""
+32
+"OnEdited"
+"(long NodeId, string S)"
+""
+33
+"OnExpanding"
+"(long NodeId, anytype AllowExpansion)"
+""
+34
+"OnExpanded"
+"(long NodeId)"
+""
+35
+"OnCollapsing"
+"(long NodeId, anytype AllowCollapse)"
+""
+36
+"OnCollapsed"
+"(long NodeId)"
+""
+13
+"OnDeletion"
+"(long NodeId)"
+""
+29
+"OLEDragOver"
+"(idispatch Data, long Effect, int Button, int Shift, float X, float Y, int State)"
+""
+38
+"OLEDragDrop"
+"(idispatch Data, long Effect, int Button, int Shift, float X, float Y)"
+""
+39
+"OLEGiveFeedback"
+"(long Effect, bool DefaultCursors)"
+""
+40
+"OLEStartDrag"
+"(idispatch Data, long AllowedEffects)"
+""
+41
+"OLESetData"
+"(idispatch Data, int DataFormat)"
+""
+42
+"OLECompleteDrag"
+"(long Effect)"
+""
+E1 81 3 "" 0
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 2 ""
+"navigator_infoPanel_3_1.pnl" 20 580 T 2 1 0 1 340 80
+0
+3 3 "TreeView1"
+"fwTreeView\\fwTreeView.pnl" 30 30 T 17 1 0 1 -17 13
+5
+"$sOnCollapse"""
+"$sOnExpand"""
+"$sOnInit""TreeView_OnInit"
+"$sOnRightClick"""
+"$sOnSelect""TreeView_OnSelect"
+0
