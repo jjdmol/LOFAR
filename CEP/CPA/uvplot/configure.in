@@ -64,6 +64,7 @@ lofar_PACKAGE(Common)
 lofar_PACKAGE(CEP/CPA/OCTOPUSSY)
 lofar_PACKAGE(DMI)
 lofar_PACKAGE(CEP/CPA/UVD)
+lofar_PACKAGE(CEP/CPA/uvplot)
 
 dnl
 dnl Output Makefiles
