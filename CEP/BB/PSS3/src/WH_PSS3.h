@@ -47,11 +47,12 @@ public:
   /// Construct the work holder and give it a name.
   /// Note: antenna numbers arguments must currently be passed as an 
   /// aips++ vector!
-  explicit WH_PSS3(const string& name, const String& msName, 
+
+  explicit WH_PSS3(const string& name, const String& msName,
 		   const String& meqModel, const String& skyModel,
-		   uInt ddid, const Vector<int>& ant1, 
-		   const Vector<int>& ant2, const String& modelType, 
-		   bool calcUVW, const String& dataColName, 
+		   uInt ddid, const Vector<int>& ant1,
+		   const Vector<int>& ant2, const String& modelType,
+		   bool calcUVW, const String& dataColName,
 		   const String& residualColName);
 
   virtual ~WH_PSS3();

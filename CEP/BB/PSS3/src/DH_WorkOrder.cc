@@ -86,11 +86,8 @@ void DH_WorkOrder::setArgSize(int size)
   itsDataPacket.itsArgSize = size;
 }
 
-bool DH_WorkOrder::StoreInDatabase(int, int, char* buf, int)
+bool DH_WorkOrder::StoreInDatabase(int, int, char*, int)
 {
-  DataPacket* data = (DataPacket*) buf; // Necessary at the moment, must be changed
-                                        // in TH_Database.
-
   if (itsType == "Control")
   {
     // First create blob:
@@ -100,9 +97,9 @@ bool DH_WorkOrder::StoreInDatabase(int, int, char* buf, int)
     // To do: add blob header
 
     // Put varArgs in blob
-    char hexrep [data->itsArgSize];
-    for (i = 0; i < data->itsArgSize; i ++) {  
-      sprintf (hexrep, "%02X ", (unsigned char) (data->itsVarArgs[i]));
+    char hexrep [getArgSize()];
+    for (i = 0; i < getArgSize(); i ++) {  
+      sprintf (hexrep, "%02X ", (unsigned char) (itsDataPacket.itsVarArgs[i]));
       ostr << hexrep;
     }
 
@@ -112,19 +109,19 @@ bool DH_WorkOrder::StoreInDatabase(int, int, char* buf, int)
 
     q1 << "INSERT INTO BBWorkOrders VALUES ("
        << theirWriteCount << ", "
-       << data->itsStatus << ", "
-       << "'" << data->itsKSType << "', "
-       << data->itsStrategyNo << ", "
-       << data->itsArgSize    << ", "  
+       << getStatus() << ", "
+       << "'" << getKSType() << "', "
+       << getStrategyNo() << ", "
+       << getArgSize()    << ", "  
        << "'" << ostr.str() << "');";
 
     cout << "DH_WorkOrder::StoreInDatabase <<< Insert WorkOrder QUERY: " << q1.str () << endl;
 
     q2 << "INSERT INTO BBSolutions (id, p1name, p2name, p3name) VALUES ("
        << theirWriteCount << ", "
-       << "'" << data->itsParam1Name << "', "
-       << "'" << data->itsParam2Name << "', "
-       << "'" << data->itsParam3Name << "'); ";
+       << "'" << getParam1Name() << "', "
+       << "'" << getParam2Name() << "', "
+       << "'" << getParam3Name() << "'); ";
 
     cout << "DH_WorkOrder::StoreInDatabase <<< Insert Solution QUERY: " << q2.str () << endl;
 
@@ -133,29 +130,43 @@ bool DH_WorkOrder::StoreInDatabase(int, int, char* buf, int)
 
     theirWriteCount ++;
 
+    cout << "------ End of Controller write to database --------" << endl;
+    cout << endl;
+
     return true; 
   }
   else if (itsType == "KS")
   {
-    ostringstream q;
-    q << "UPDATE BBSolutions SET "
-      << "P1ParamValue = " << "'" << data->itsParam1Value << "', "
-      << "P2ParamValue = " << "'" << data->itsParam2Value << "', "
-      << "P3ParamValue = " << "'" << data->itsParam3Value << "', "
-      << "SrcNo = " << data->itsSolution.itsMu << " "
-      << "WHERE ID = " << data->itsID << "); ";
+    ostringstream q1;
+    q1 << "UPDATE BBSolutions SET "
+       << "P1Value = " << "'" << getParam1Value() << "', "
+       << "P2Value = " << "'" << getParam2Value() << "', "
+       << "P3Value = " << "'" << getParam3Value() << "', "
+       << "SrcNo = " << getSourceNo() << " , " 
+       << "SolQual = " << getSolution()->itsMu << " "
+       << "WHERE ID = " << getID() << " ;";
 
-    cout << "DH_WorkOrder::StoreInDatabase <<< Update Solution QUERY: " << q.str () << endl;
+    cout << "DH_WorkOrder::StoreInDatabase <<< Update Solution QUERY: " << q1.str () << endl;
 
+    ostringstream q2;
+    q2 << "UPDATE BBWorkOrders SET "
+       << "Status = " << getStatus() << " "
+       << "WHERE ID = " << getID() << " ;";
 
-    ExecuteSQLCommand(q);
+    cout << "DH_WorkOrder::StoreInDatabase <<< Update WorkOrder status QUERY: " << q2.str () << endl;
+    
+ 
+    ExecuteSQLCommand(q1);
+    ExecuteSQLCommand(q2);
+
+    cout << "------ End of Knowledge Source write to database --------" << endl;    cout << endl;
 
     return true;
   }
   return false;
 }
 
-bool DH_WorkOrder::RetrieveFromDatabase(int, int, char* buf, int size)
+bool DH_WorkOrder::RetrieveFromDatabase(int, int, char*, int)
 {
   if (itsType == "KS")
   {
@@ -172,30 +183,35 @@ bool DH_WorkOrder::RetrieveFromDatabase(int, int, char* buf, int size)
     PGresult * res1;
 
     // Block until a packet appears in the table
-    do {
+    do
+    {
       cerr << '.';
       res1 = PQexec (DH_Postgresql::theirConnection, (q1.str ()).c_str ());
   
       AssertStr (PQresultStatus (res1) == PGRES_TUPLES_OK,
 		 "DH_Postgressql::Retrieve (); Select query failed.")
-	// TODO: Do a PQclear here?
-	} while (PQntuples (res1) == 0);
+    } while (PQntuples (res1) == 0);
 
     int nRows;
     nRows = PQntuples (res1);
     AssertStr (nRows == 1, "DH_Postgresql::Retrieve ();"
 	       << "ERROR: Found less or more than 1 message in database.")
-  
-       DataPacket* data = (DataPacket*) buf; // Necessary at the moment, must be changed
-    // in TH_Database.
-
-    char token[40];
  
+    // Put results in DataPacket
+    setStatus((DH_WorkOrder::woStatus) atoi(PQgetvalue(res1, 0, 1)));
+    setKSType(PQgetvalue(res1, 0, 2));
+    setStrategyNo(atoi(PQgetvalue(res1, 0, 3)));
+    setArgSize(atoi(PQgetvalue(res1, 0, 4)));
+
+    char token[getArgSize()];
+     
     istringstream istr (PQgetvalue (res1, 0, 5));
-    for (int k = 0; k < size; k ++) {
+    for (int k = 0; k < getArgSize(); k ++) {
       istr >> token;
-      data->itsVarArgs[k] = (char) strtoul (token, NULL, 16);
+      itsDataPacket.itsVarArgs[k] = (char) strtoul (token, NULL, 16);
     }
+
+    PQclear(res1);
 
     // Construct query for parameter names in table BBSolutions
     ostringstream q2;
@@ -208,14 +224,14 @@ bool DH_WorkOrder::RetrieveFromDatabase(int, int, char* buf, int size)
     PGresult * res2;
 
     // Block until a packet appears in the table
-    do {
+    do 
+    {
       cerr << '.';
       res2 = PQexec (DH_Postgresql::theirConnection, (q2.str ()).c_str ());
   
       AssertStr (PQresultStatus (res2) == PGRES_TUPLES_OK,
 		 "DH_Postgressql::Retrieve (); Select query failed.")
-	// TODO: Do a PQclear here?
-	} while (PQntuples (res2) == 0);
+     } while (PQntuples (res2) == 0);
 
     nRows = PQntuples (res2);
     AssertStr (nRows == 1, "DH_Postgresql::Retrieve ();"
@@ -236,26 +252,87 @@ bool DH_WorkOrder::RetrieveFromDatabase(int, int, char* buf, int size)
 
 
     // Put results in DataPacket
-    data->itsStatus = (DH_WorkOrder::woStatus) atoi(PQgetvalue(res1, 0, 1));
-    data->itsKSType = PQgetvalue(res1, 0, 2);
-    data->itsStrategyNo = atoi(PQgetvalue(res1, 0, 3));
-    data->itsArgSize = atoi(PQgetvalue(res1, 0, 4));
 
-    data->itsID = atoi(PQgetvalue(res2, 0, 0));
-    data->itsParam1Name = PQgetvalue(res2, 0, 1);
-    data->itsParam2Name = PQgetvalue(res2, 0, 2);
-    data->itsParam3Name = PQgetvalue(res2, 0, 3);
+    setID(atoi(PQgetvalue(res2, 0, 0)));
+    setParam1Name(PQgetvalue(res2, 0, 1));
+    setParam2Name(PQgetvalue(res2, 0, 2));
+    setParam3Name(PQgetvalue(res2, 0, 3));
 
-    PQclear(res1);
     PQclear(res2);
 
     theirReadCount++;
+
+    cout << "------ End of Knowledge Source read from database --------" << endl;
+    cout << endl;
+
     return true;
   }
+
   else if (itsType == "Control")
   {
-    // Code to be added.
+    ostringstream q1;
+
+    q1 << "SELECT * FROM BBWorkOrders WHERE "
+       << "Status = " << 2 << ";";
+
+    cout << "DH_WorkOrder::RetrieveFromDatabase <<< Controller WorkOrder QUERY: " << q1.str () << endl;
+
+    PGresult * res1;
+
+    // Block until a packet appears in the table
+    do 
+    {
+      cerr << '.';
+      res1 = PQexec (DH_Postgresql::theirConnection, (q1.str ()).c_str ());
+  
+      AssertStr (PQresultStatus (res1) == PGRES_TUPLES_OK,
+		 "DH_Postgressql::Retrieve (); Select query failed.");
+     } while (PQntuples (res1) == 0);
+
+    int nRows;
+    nRows = PQntuples (res1);
+    AssertStr (nRows == 1, "DH_Postgresql::Retrieve ();"
+	       << "ERROR: Message table may not have been cleaned up before starting program.");
+
+    setID(atoi(PQgetvalue(res1, 0, 0)));
+ 
+    PQclear (res1);
+
+
+    ostringstream q2;
+
+    q2 << "SELECT * FROM BBSolutions WHERE "
+       << "ID = " << getID() << ";";
+
+    cout << "DH_WorkOrder::RetrieveFromDatabase <<< Controller Solution QUERY: " << q2.str () << endl;
+
+    PGresult * res2;
+
+    // Block until a packet appears in the table
+    do 
+    {
+      cerr << '.';
+      res2 = PQexec (DH_Postgresql::theirConnection, (q2.str ()).c_str ());
+  
+      AssertStr (PQresultStatus (res2) == PGRES_TUPLES_OK,
+		 "DH_Postgressql::Retrieve (); Select query failed.");
+     } while (PQntuples (res2) == 0);
+
+    nRows = PQntuples (res2);
+    AssertStr (nRows == 1, "DH_Postgresql::Retrieve ();"
+	       << "ERROR: Message table may not have been cleaned up before starting program.");
+
+    setParam1Value(atoi(PQgetvalue(res1, 0, 4)));
+    setParam2Value(atoi(PQgetvalue(res1, 0, 5)));
+    setParam3Value(atoi(PQgetvalue(res1, 0, 6)));
+
+    PQclear (res2);
+
+    cout << "------ End of Controller read from database --------" << endl;
+    cout << endl;
+
     return true;
+
   }
 
   return false;
