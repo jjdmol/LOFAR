@@ -29,6 +29,7 @@
 #include <Common/LofarLogger.h>
 #include <GCF/GCF_Property.h>
 #include <GCF/GCF_PVUnsigned.h>
+#include <APLConfig.h>
 
 using namespace LOFAR;
 using namespace ARA;
@@ -40,17 +41,24 @@ ARAPhysicalModel::ARAPhysicalModel() :
   m_maintenanceFlags()
 {
   int rack,subrack,board,ap,rcu;
+
+  int n_racks               = GET_CONFIG("N_RACKS",i);
+  int n_subracks_per_rack   = GET_CONFIG("N_SUBRACKS_PER_RACK",i);
+  int n_boards_per_subrack  = GET_CONFIG("N_BOARDS_PER_SUBRACK",i);
+  int n_aps_per_board       = GET_CONFIG("N_APS_PER_BOARD",i);
+  int n_rcus_per_ap         = GET_CONFIG("N_RCUS_PER_AP",i);
+
   char tempString[200];
   vector<string> childrenPIC,childrenRack,childrenSubRack,childrenBoard;
-  for(rack=1;rack<=N_RACKS;rack++)
+  for(rack=1;rack<=n_racks;rack++)
   {
-    for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+    for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
     {
-      for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+      for(board=1;board<=n_boards_per_subrack;board++)
       {
-        for(ap=1;ap<=N_APS_PER_BOARD;ap++)
+        for(ap=1;ap<=n_aps_per_board;ap++)
         {
-          for(rcu=1;rcu<=N_APS_PER_BOARD;rcu++)
+          for(rcu=1;rcu<=n_rcus_per_ap;rcu++)
           {
             sprintf(tempString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance,rack,subrack,board,ap,rcu);
             childrenBoard.push_back(string(tempString));

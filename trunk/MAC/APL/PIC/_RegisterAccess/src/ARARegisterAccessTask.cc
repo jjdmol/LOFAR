@@ -46,6 +46,7 @@
 #include <GCF/GCF_PVDouble.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDynArr.h>
+#include <APLConfig.h>
 #include "ARAPropertyDefines.h"
 #include "ARAPhysicalModel.h"
 
@@ -72,7 +73,15 @@ RegisterAccessTask::RegisterAccessTask(string name)
       m_subStatsHandleSubbandPower(0),
       m_subStatsHandleSubbandMean(0),
       m_subStatsHandleBeamletPower(0),
-      m_subStatsHandleBeamletMean(0)
+      m_subStatsHandleBeamletMean(0),
+      m_n_racks(1),
+      m_n_subracks_per_rack(1),
+      m_n_boards_per_subrack(1),
+      m_n_aps_per_board(1),
+      m_n_rcus_per_ap(2),
+      m_n_rcus(2),
+      m_status_update_interval(1),
+      m_stats_update_interval(1)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
@@ -84,10 +93,23 @@ RegisterAccessTask::RegisterAccessTask(string name)
   int ap;
   int rcu;
   
+  m_n_racks               = GET_CONFIG("N_RACKS",i);
+  m_n_subracks_per_rack   = GET_CONFIG("N_SUBRACKS_PER_RACK",i);
+  m_n_boards_per_subrack  = GET_CONFIG("N_BOARDS_PER_SUBRACK",i);
+  m_n_aps_per_board       = GET_CONFIG("N_APS_PER_BOARD",i);
+  m_n_rcus_per_ap         = GET_CONFIG("N_RCUS_PER_AP",i);
+  m_n_rcus                = m_n_rcus_per_ap*
+                              m_n_aps_per_board*
+                              m_n_boards_per_subrack*
+                              m_n_subracks_per_rack*
+                              m_n_racks;
+  m_status_update_interval= GET_CONFIG("STATUS_UPDATE_INTERVAL",i);
+  m_stats_update_interval = GET_CONFIG("STATISTICS_UPDATE_INTERVAL",i);
+  
   // fill MyPropertySets map
   addMyPropertySet(PROPSET_PIC, SCOPE_PIC);
   addMyPropertySet(PROPSET_Maintenance, SCOPE_PIC_Maintenance);
-  for(rack=1;rack<=N_RACKS;rack++)
+  for(rack=1;rack<=m_n_racks;rack++)
   {
     sprintf(scopeString,SCOPE_PIC_RackN,rack);
     addMyPropertySet(PROPSET_Racks[rack-1], scopeString);
@@ -96,7 +118,7 @@ RegisterAccessTask::RegisterAccessTask(string name)
     sprintf(scopeString,SCOPE_PIC_RackN_Alert,rack);
     addMyPropertySet(PROPSET_Alert, scopeString);
 
-    for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+    for(subrack=1;subrack<=m_n_subracks_per_rack;subrack++)
     {
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
       addMyPropertySet(PROPSET_SubRacks[subrack-1], scopeString);
@@ -105,7 +127,7 @@ RegisterAccessTask::RegisterAccessTask(string name)
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Alert,rack,subrack);
       addMyPropertySet(PROPSET_Alert, scopeString);
       
-      for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+      for(board=1;board<=m_n_boards_per_subrack;board++)
       {
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
         addMyPropertySet(PROPSET_Boards[board-1], scopeString);
@@ -118,11 +140,11 @@ RegisterAccessTask::RegisterAccessTask(string name)
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
         addMyPropertySet(PROPSET_BP, scopeString);
     
-        for(ap=1;ap<=N_APS_PER_BOARD;ap++)
+        for(ap=1;ap<=m_n_aps_per_board;ap++)
         {
           sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
           addMyPropertySet(PROPSET_APs[ap-1], scopeString);
-          for(rcu=1;rcu<=N_RCUS_PER_AP;rcu++)
+          for(rcu=1;rcu<=m_n_rcus_per_ap;rcu++)
           {
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
             addMyPropertySet(PROPSET_RCUs[rcu-1], scopeString);
@@ -147,7 +169,7 @@ RegisterAccessTask::RegisterAccessTask(string name)
   // fill APCs map
   addAPC(APC_Station, SCOPE_PIC);
   addAPC(APC_Maintenance, SCOPE_PIC_Maintenance);
-  for(rack=1;rack<=N_RACKS;rack++)
+  for(rack=1;rack<=m_n_racks;rack++)
   {
     sprintf(scopeString,SCOPE_PIC_RackN,rack);
     addAPC(APC_Rack, scopeString);
@@ -156,7 +178,7 @@ RegisterAccessTask::RegisterAccessTask(string name)
     sprintf(scopeString,SCOPE_PIC_RackN_Alert,rack);
     addAPC(APC_Alert, scopeString);
 
-    for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+    for(subrack=1;subrack<=m_n_subracks_per_rack;subrack++)
     {
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
       addAPC(APC_SubRack, scopeString);
@@ -165,7 +187,7 @@ RegisterAccessTask::RegisterAccessTask(string name)
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Alert,rack,subrack);
       addAPC(APC_Alert, scopeString);
 
-      for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+      for(board=1;board<=m_n_boards_per_subrack;board++)
       {
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
         addAPC(APC_Board, scopeString);
@@ -177,11 +199,11 @@ RegisterAccessTask::RegisterAccessTask(string name)
         addAPC(APC_Ethernet, scopeString);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
         addAPC(APC_FPGA, scopeString);
-        for(ap=1;ap<=N_APS_PER_BOARD;ap++)
+        for(ap=1;ap<=m_n_aps_per_board;ap++)
         {
           sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
           addAPC(APC_FPGA, scopeString);
-          for(rcu=1;rcu<=N_RCUS_PER_AP;rcu++)
+          for(rcu=1;rcu<=m_n_rcus_per_ap;rcu++)
           {
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
             addAPC(APC_RCU, scopeString);
@@ -440,9 +462,9 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
         char version[20];
         for (int board = 0; board < ack.versions.rsp().extent(blitz::firstDim); board++)
         {
-          int rackNr          = board / (N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK) + 1;
-          int subRackNr       = board % (N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK) + 1;
-          int relativeBoardNr = board % N_BOARDS_PER_SUBRACK + 1;
+          int rackNr          = board / (m_n_subracks_per_rack*m_n_boards_per_subrack) + 1;
+          int subRackNr       = board % (m_n_subracks_per_rack*m_n_boards_per_subrack) + 1;
+          int relativeBoardNr = board % m_n_boards_per_subrack + 1;
           sprintf(version,"%d.%d",ack.versions.rsp()(board) >> 4,ack.versions.rsp()(board) & 0xF);
           LOG_INFO(formatString("board[%d].version = 0x%x",board,ack.versions.rsp()(board)));
           sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
@@ -467,8 +489,8 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
       // subscribe to status updates
       RSPSubstatusEvent substatus;
       substatus.timestamp.setNow();
-      substatus.rcumask = std::bitset<MAX_N_RCUS>((1<<N_RCUS)-1);
-      substatus.period = STATUS_UPDATE_INTERVAL;
+      substatus.rcumask = std::bitset<MAX_N_RCUS>((1<<m_n_rcus)-1);
+      substatus.period = m_status_update_interval;
       m_RSPclient.send(substatus);
       
       break;
@@ -530,8 +552,8 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower(GCFEvent& e, 
       // subscribe to status updates
       RSPSubstatsEvent substats;
       substats.timestamp.setNow();
-      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<N_RCUS)-1);
-      substats.period = STATISTICS_UPDATE_INTERVAL;
+      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<m_n_rcus)-1);
+      substats.period = m_stats_update_interval;
       substats.type = RSP_Protocol::Statistics::SUBBAND_POWER;
       substats.reduction = RSP_Protocol::REPLACE;
       m_RSPclient.send(substats);
@@ -594,8 +616,8 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandMean(GCFEvent& e, G
       // subscribe to status updates
       RSPSubstatsEvent substats;
       substats.timestamp.setNow();
-      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<N_RCUS)-1);
-      substats.period = STATISTICS_UPDATE_INTERVAL;
+      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<m_n_rcus)-1);
+      substats.period = m_stats_update_interval;
       substats.type = RSP_Protocol::Statistics::SUBBAND_MEAN;
       substats.reduction = RSP_Protocol::REPLACE;
       m_RSPclient.send(substats);
@@ -658,8 +680,8 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower(GCFEvent& e, 
       // subscribe to status updates
       RSPSubstatsEvent substats;
       substats.timestamp.setNow();
-      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<N_RCUS)-1);
-      substats.period = STATISTICS_UPDATE_INTERVAL;
+      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<m_n_rcus)-1);
+      substats.period = m_stats_update_interval;
       substats.type = RSP_Protocol::Statistics::BEAMLET_POWER;
       substats.reduction = RSP_Protocol::REPLACE;
       m_RSPclient.send(substats);
@@ -722,8 +744,8 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletMean(GCFEvent& e, G
       // subscribe to status updates
       RSPSubstatsEvent substats;
       substats.timestamp.setNow();
-      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<N_RCUS)-1);
-      substats.period = STATISTICS_UPDATE_INTERVAL;
+      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<m_n_rcus)-1);
+      substats.period = m_stats_update_interval;
       substats.type = RSP_Protocol::Statistics::BEAMLET_MEAN;
       substats.reduction = RSP_Protocol::REPLACE;
       m_RSPclient.send(substats);
@@ -874,9 +896,9 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
     int boardNr;
     for(boardNr=boardStatus.lbound(blitz::firstDim); boardNr <= boardStatus.ubound(blitz::firstDim); ++boardNr)
     {
-      rackNr          = boardNr / (N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK) + 1;
-      subRackNr       = boardNr % (N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK) + 1;
-      relativeBoardNr = boardNr % N_BOARDS_PER_SUBRACK + 1;
+      rackNr          = boardNr / (m_n_subracks_per_rack*m_n_boards_per_subrack) + 1;
+      subRackNr       = boardNr % (m_n_subracks_per_rack*m_n_boards_per_subrack) + 1;
+      relativeBoardNr = boardNr % m_n_boards_per_subrack + 1;
       LOG_INFO(formatString("UpdStatus:\n\tRack:\t%d\n\tSubRack:\t%d\n\tBoard:\t%d\n",rackNr,subRackNr,relativeBoardNr));
       
       uint8   rspVoltage_15 = boardStatus(boardNr).rsp.voltage_15;
@@ -928,12 +950,14 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       uint8   rcuStatusBits = rcuStatus(rcuNr).status;
       LOG_INFO(formatString("UpdStatus:\n\tRCU[%d] status:\t0x%x",rcuNr,rcuStatusBits));
       
-      int rackRelativeNr    = rcuNr / (N_RCUS_PER_AP*N_APS_PER_BOARD*N_BOARDS_PER_SUBRACK*N_SUBRACKS_PER_RACK) + 1;
-      int subRackRelativeNr = rcuNr / (N_RCUS_PER_AP*N_APS_PER_BOARD*N_BOARDS_PER_SUBRACK) + 1;
-      int boardRelativeNr   = rcuNr / (N_RCUS_PER_AP*N_APS_PER_BOARD) + 1;
-      int apRelativeNr      = ( ( rcuNr % (N_RCUS_PER_AP*N_APS_PER_BOARD) ) / N_RCUS_PER_AP) + 1;
-      int rcuRelativeNr     = ( rcuNr % N_RCUS_PER_AP) + 1;
+      int rackRelativeNr    = rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board*m_n_boards_per_subrack*m_n_subracks_per_rack) + 1;
+      int subRackRelativeNr = ( rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board*m_n_boards_per_subrack) ) % m_n_subracks_per_rack + 1;
+      int boardRelativeNr   = ( rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board) ) % m_n_boards_per_subrack + 1;
+      int apRelativeNr      = ( rcuNr / (m_n_rcus_per_ap) ) % m_n_aps_per_board + 1;
+      int rcuRelativeNr     = ( rcuNr % m_n_rcus_per_ap) + 1;
+
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
+      LOG_DEBUG(formatString("RCU[%d]= %s",rcuNr,scopeString));
       updateRCUproperties(scopeString,rcuStatusBits);
     }
   }
@@ -988,12 +1012,16 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
           {
             // mean = abs( z ) ^2 /1000000
             newStat = real(stat) * real(stat) + imag(stat) * imag(stat);
-            newStat = newStat / 1000000.0;
+            newStat /= (1<<16);
+            newStat /= (1<<16);
+            newStat -= 1.0;
           }
           else
           {
             newStat = real(stat) * real(stat) + imag(stat) * imag(stat);
-            newStat = newStat / 1000000.0;
+            newStat /= (1<<16);
+            newStat /= (1<<16);
+            newStat -= 1.0;
           }
           
           valuePointerVector.push_back(new GCFPVDouble(newStat));
@@ -1135,10 +1163,10 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
     GCFPVUnsigned pvFilter(tempStatus);
     it->second->setValue(string(PROPNAME_FILTER),pvFilter);
     
-    if(pvBoolOverflow.getStatus() ||
-       pvBoolRcuPwr.getStatus() ||
-       pvBoolHbaPwr.getStatus() ||
-       pvBoolLbaPwr.getStatus())
+    if(pvBoolOverflow.getValue() ||
+       pvBoolRcuPwr.getValue() ||
+       pvBoolHbaPwr.getValue() ||
+       pvBoolLbaPwr.getValue())
     {
       GCFPVUnsigned pvUnsignedStatus(STATUS_ERROR);
       it->second->setValue(string(PROPNAME_STATUS),pvUnsignedStatus);

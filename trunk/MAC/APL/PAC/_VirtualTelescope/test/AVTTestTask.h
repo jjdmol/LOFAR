@@ -85,7 +85,6 @@ namespace AVT
       GCFProperty     m_propertyLDSstatus;
       GCFProperty     m_propertyLDSWGFrequency;
       GCFProperty     m_propertyLDSWGAmplitude;
-      GCFProperty     m_propertyLDSWGSamplePeriod;
       GCFProperty     m_propertySBFdirectionType;
       GCFProperty     m_propertySBFdirectionAngle1;
       GCFProperty     m_propertySBFdirectionAngle2;

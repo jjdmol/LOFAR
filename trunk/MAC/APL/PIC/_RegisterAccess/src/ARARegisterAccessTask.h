@@ -177,6 +177,15 @@ namespace ARA
       uint32            m_subStatsHandleBeamletPower;
       uint32            m_subStatsHandleBeamletMean;
 
+      int               m_n_racks;
+      int               m_n_subracks_per_rack;
+      int               m_n_boards_per_subrack;
+      int               m_n_aps_per_board;
+      int               m_n_rcus_per_ap;
+      int               m_n_rcus;
+      int               m_status_update_interval;
+      int               m_stats_update_interval;
+
   };
 
 };
