@@ -1,4 +1,4 @@
-//# TFResult.cc: The result of an expression for a domain.
+//# MeqResult.cc: The result of an expression for a domain.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -71,6 +71,7 @@ void MeqResultRep::show (ostream& os) const
   for (unsigned int i=0; i<itsPerturbedValues.size(); i++) {
     if (isDefined(i)) {
       os << "deriv parm " << i << " with " << *(itsPerturbation[i]) << endl;
+      os << "   " << (*(itsPerturbedValues[i]) - itsValue) << endl;
       os << "   " << (*(itsPerturbedValues[i]) - itsValue) /
 	 *(itsPerturbation[i]) << endl;
     }
