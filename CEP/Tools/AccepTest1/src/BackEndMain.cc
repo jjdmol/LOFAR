@@ -30,7 +30,7 @@ int main (int argc, const char** argv) {
       
       try {
 		
-	AH_BackEnd simulator(port, elements, samples,channels, runs, targets);
+	AH_BackEnd simulator(port, elements, samples, channels, polarisations, runs, targets);
 	
 	simulator.setarg(argc, argv);
 	simulator.baseDefine();

@@ -23,11 +23,12 @@
 using namespace LOFAR;
 
 AH_BackEnd::AH_BackEnd (int port, int elements, 
-		  int samples, int channels, int runs, int targets):
+		  int samples, int channels, int polarisations, int runs, int targets):
   itsPort     (port),
   itsNelements(elements),
   itsNsamples (samples),
   itsNchannels(channels),
+  itsNpolarisations(polarisations),
   itsNruns    (runs),
   itsNtargets (targets)
 {
@@ -46,14 +47,16 @@ void AH_BackEnd::define(const KeyValueMap& /*params*/) {
 			       itsNelements, 
 			       itsNsamples,
 			       itsNchannels, 
-			       itsNtargets
+			       itsNtargets,
+			       itsNpolarisations
 			       );
 
   for (int cn = 0; cn < itsNtargets; cn++) {
     itsWHs.push_back((WorkHolder*)
 		     new WH_Dump("noname",
 				 itsNelements, 
-				 itsNchannels));
+				 itsNchannels,
+				 itsNpolarisations));
     
     myWHCorrelator.getDataManager().getOutHolder(0)->connectTo
       ( *itsWHs.back()->getDataManager().getInHolder(0),

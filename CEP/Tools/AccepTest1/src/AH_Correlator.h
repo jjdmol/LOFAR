@@ -42,7 +42,7 @@ namespace LOFAR
   class AH_Correlator: public LOFAR::TinyApplicationHolder {
 
   public:
-    AH_Correlator(int elements, int samples, int channels, char* frontend_ip, int baseport, int targets);
+    AH_Correlator(int elements, int samples, int channels, int polarisations, char* frontend_ip, int baseport, int targets);
     virtual ~AH_Correlator();
     
     // overload methods form the ApplicationHolder base class
@@ -59,6 +59,7 @@ namespace LOFAR
     int   itsNelements;
     int   itsNsamples;
     int   itsNchannels;
+    int   itsNpolarisations;
     char* itsIP;
     int   itsBaseport;
     int   itsNtargets;

@@ -22,14 +22,16 @@ namespace LOFAR
     explicit WH_Random (const string& name,
 			const int nelemenents,
 			const int nsamples,
-			const int nchannels);
+			const int nchannels,
+			const int npolarisations);
 
     virtual ~WH_Random();
 
     static WorkHolder* construct (const string& name,
 				  const int nelements, 
 				  const int nsamples, 
-				  const int nchannels);
+				  const int nchannels,
+				  const int npolarisations);
     
     virtual WH_Random* make (const string& name);
     
@@ -47,7 +49,7 @@ namespace LOFAR
     const int itsNelements;
     const int itsNsamples;
     const int itsNchannels;
-      
+    const int itsNpolarisations;
   };
 
 } // namespace LOFAR

@@ -13,9 +13,10 @@ const int max_samples   = 200;
 
 const int port          = 1100;
 const int channels      = 10;    // frequency channels per correlator
+const int polarisations = 2;     // number of polarisations (usually two)
 const int runs          = 10;    // length of the test run
 
-const int targets       = 8;       /* The number of compute nodes per front end */
+const int targets       = 5;     // The number of compute nodes per front end
 
 char* frontend_ip       = "192.168.1.117";
 

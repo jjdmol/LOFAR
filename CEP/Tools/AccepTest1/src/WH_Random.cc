@@ -15,6 +15,7 @@
 
 #include <WH_Random.h>
 #include <DH_CorrCube.h>
+#include <DH_Vis.h>
 
 namespace LOFAR
 {
@@ -22,18 +23,21 @@ namespace LOFAR
   WH_Random::WH_Random (const string& name,
 			const int nelements, 
 			const int nsamples,
-			const int nchannels)
+			const int nchannels,
+			const int npolarisations)
     : WorkHolder (0, 1, name, "WH_Random"),
       itsIntegrationTime (0),
       itsIndex           (0),
       itsNelements       (nelements),
       itsNsamples        (nsamples),
-      itsNchannels       (nchannels) 
+      itsNchannels       (nchannels),
+      itsNpolarisations  (npolarisations)
   {
     getDataManager().addOutDataHolder(0, new DH_CorrCube ("out",
 							  itsNelements, 
 							  itsNsamples, 
-							  itsNchannels));
+							  itsNchannels,
+							  itsNpolarisations));
 
     // seed the random generator with a "random" int
     timeval tv;
@@ -47,13 +51,13 @@ namespace LOFAR
   }
 
 
-
   WorkHolder* WH_Random::construct(const string& name,
 				   const int nelements, 
 				   const int nsamples, 
-				   const int nchannels) {
+				   const int nchannels,
+				   const int npolarisations) {
 
-    return new WH_Random(name, nelements, nsamples, nchannels);
+    return new WH_Random(name, nelements, nsamples, nchannels, npolarisations);
 
   }
   
@@ -63,38 +67,43 @@ namespace LOFAR
     return new WH_Random (name, 
 			  itsNelements, 
 			  itsNsamples, 
-			  itsNchannels);
+			  itsNchannels, 
+			  itsNpolarisations);
   }
 
 
   
   void WH_Random::process() {
     
-    DH_CorrCube::BufferType acc = DH_CorrCube::BufferType(0,0);
+    DH_Vis::BufferType acc = DH_Vis::BufferType(0,0);
     float seed = rand();
     seed = seed/(RAND_MAX);
 
-    long it = 0;
     for (int channel = 0; channel < itsNchannels; channel++) {
       for (int station = 0; station < itsNelements; station++) {
 	for (int sample = 0; sample < itsNsamples; sample++) {
+	  for (int polarisation = 0; polarisation < itsNpolarisations; polarisation++) {
+	    DH_CorrCube::BufferType rval = DH_CorrCube::BufferType ((DH_CorrCube::BufferPrimitive) round(10*seed) , (DH_CorrCube::BufferPrimitive) round(2*seed));
+	    if (channel == 0 && station == 0 && polarisation == 0) {
+// 	      acc += DH_CorrCube::BufferType(
+// 					     rval.real() * rval.real() - 
+// 					     rval.imag() * rval.imag(), 
+					     
+// 					     rval.real() * rval.imag() +
+// 					     rval.imag() * rval.real() 
+// 					     );
+
+	      acc += rval * rval;
+	    }
 	  
-	  DH_CorrCube::BufferType rval = DH_CorrCube::BufferType (10*seed , 2*seed);
-	  if (channel == 0 && station == 0) {
-	    acc += DH_CorrCube::BufferType(
-				   rval.real() * rval.real() - 
-				   rval.imag() * rval.imag(), 
-				   
-				   rval.real() * rval.imag() +
-				   rval.imag() * rval.real() 
-				   );
-	  }
 
 	  
-	  ((DH_CorrCube*)getDataManager().getOutHolder(0))->setBufferElement(channel, 
-									     station,
-									     sample,
-									     &rval);
+	    ((DH_CorrCube*)getDataManager().getOutHolder(0))->setBufferElement(sample, 
+									       channel,
+									       station,
+									       polarisation,
+									       &rval);
+	  }
 	}
       }
     }

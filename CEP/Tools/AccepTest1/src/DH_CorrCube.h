@@ -26,12 +26,14 @@ namespace LOFAR
 class DH_CorrCube: public DataHolder
 {
 public:
-  typedef complex<short> BufferType;
+  typedef short BufferPrimitive;
+  typedef complex<BufferPrimitive> BufferType;
 
   explicit DH_CorrCube (const string& name, 
 			const int stations,
 			const int samples, 
-			const int channels); 
+			const int channels,
+			const int polarisations); 
 
   DH_CorrCube(const DH_CorrCube&);
 
@@ -49,8 +51,9 @@ public:
   BufferType* getBuffer();
   /// Get access to the Buffer in the DataPacket.
   const BufferType* getBuffer() const;
-  BufferType* getBufferElement(int station, int channel, int sample);
-  void setBufferElement(int station, int channel, int sample, BufferType* value); 
+
+  BufferType* getBufferElement(int sample, int channel, int station, int polarisation);
+  void setBufferElement(int sample, int channel, int station, int polarisation, BufferType* value); 
 
   const int         getFBW() const;
 
@@ -66,6 +69,7 @@ private:
   int nstations;
   int nchannels;
   int nsamples ;
+  int npolarisations;
 
   void fillDataPointers();
 };
@@ -78,17 +82,27 @@ inline const DH_CorrCube::BufferType* DH_CorrCube::getBuffer() const
 
 inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int sample, 
 							      int channel,
-							      int station 
+							      int station,
+							      int polarisation							     
 							      ) 
   {
-    return itsBuffer + nstations*nchannels*sample + nstations*channel + station;
+    return itsBuffer + 
+      npolarisations*nstations*nchannels*sample + 
+      npolarisations*nstations*channel + 
+      npolarisations*station + 
+      polarisation;
   }
  
  inline void DH_CorrCube::setBufferElement(int sample, 
 					   int channel, 
 					   int station, 
+					   int polarisation,
 					   DH_CorrCube::BufferType* valueptr) {
-   *(itsBuffer + nstations*nchannels*sample + nstations*channel + station) = *valueptr;
+   *(itsBuffer + 
+     npolarisations*nstations*nchannels*sample + 
+     npolarisations*nstations*channel + 
+     npolarisations*station + 
+     polarisation) = *valueptr;
  }
  
  inline const int DH_CorrCube::getFBW() const

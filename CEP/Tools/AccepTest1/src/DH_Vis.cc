@@ -17,11 +17,12 @@
 namespace LOFAR
 {
 
-DH_Vis::DH_Vis (const string& name, const int stations, const int channels)
+DH_Vis::DH_Vis (const string& name, const int stations, const int channels, const int polarisations)
 : DataHolder    (name, "DH_Vis"),
   itsBuffer     (0),
   nstations     (stations),
-  nchannels     (channels)
+  nchannels     (channels),
+  npolarisations(polarisations)
 {
 
 }
@@ -47,7 +48,7 @@ void DH_Vis::preprocess()
   postprocess();
 
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = nstations * nstations * nchannels; 
+  itsBufSize = nstations * nstations * nchannels * npolarisations; 
 
   addField("Buffer", BlobField<BufferType>(1, itsBufSize));
   createDataBlock();
@@ -69,4 +70,3 @@ void DH_Vis::fillDataPointers() {
 
 
 }
-

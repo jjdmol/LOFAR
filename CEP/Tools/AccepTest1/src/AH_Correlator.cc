@@ -14,11 +14,12 @@ extern "C" void traceback (void);
 
 using namespace LOFAR;
 
-AH_Correlator::AH_Correlator(int elements, int samples, int channels, 
+AH_Correlator::AH_Correlator(int elements, int samples, int channels, int polarisations, 
 		       char* ip, int baseport, int targets):
   itsNelements(elements),
   itsNsamples (samples),
   itsNchannels(channels), 
+  itsNpolarisations(polarisations),
   itsIP       (ip),
   itsBaseport (baseport),
   itsNtargets (targets)
@@ -41,6 +42,7 @@ void AH_Correlator::define(const KeyValueMap& /*params*/) {
 					  itsNelements, 
 					  itsNsamples,
 					  itsNchannels, 
+					  itsNpolarisations,
 					  itsNtargets);
 #ifdef HAVE_MPI
   itsWH->runOnNode(TH_MPI::getCurrentRank());
@@ -51,11 +53,13 @@ void AH_Correlator::define(const KeyValueMap& /*params*/) {
   WH_Random myWHRandom("noname",
 		       itsNelements, 
 		       itsNsamples,
-		       itsNchannels);
+		       itsNchannels,
+		       itsNpolarisations);
   
   WH_Dump myWHDump("noname",
 		   itsNelements,
-		   itsNchannels);
+		   itsNchannels,
+		   itsNpolarisations);
   
   // now connect to the dummy workholders. 
 #ifdef HAVE_MPI
