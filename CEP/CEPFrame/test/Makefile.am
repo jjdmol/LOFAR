@@ -37,20 +37,20 @@ shmem_alloc2_SOURCES		= shmem_alloc2.cc
 CyclicBufferTest_SOURCES	= CyclicBufferTest.cc
 
 
-LDADD				= ../src/libbasesim.la
-DEPENDENCIES			= ../src/libbasesim.la $(LOFAR_DEPEND)
+LDADD				= ../src/libcepframe.la
+DEPENDENCIES			= ../src/libcepframe.la $(LOFAR_DEPEND)
 
-CyclicBufferTest_LDADD		= ../src/libbasesim.la -lpthread
-CyclicBufferTest_DEPENDENCIES	= ../src/libbasesim.la $(LOFAR_DEPEND) -lpthread
+CyclicBufferTest_LDADD		= ../src/libcepframe.la -lpthread
+CyclicBufferTest_DEPENDENCIES	= ../src/libcepframe.la $(LOFAR_DEPEND) -lpthread
 
-#Example_LDADD 			= ../src/libbasesim.la
-#Example_DEPENDENCIES		= ../src/libbasesim.la $(LOFAR_DEPEND)
-#Simulator_Example_LDADD	= ../src/libbasesim.la
-#Simulator_Example_DEPENDENCIES	= ../src/libbasesim.la $(LOFAR_DEPEND)
-#Tester_LDADD			= ../src/libbasesim.la
-#Tester_DEPENDENCIES		= ../src/libbasesim.la $(LOFAR_DEPEND)
-#tParamBlock_LDADD		= ../src/libbasesim.la
-#tParamBlock_DEPENDENCIES	= ../src/libbasesim.la $(LOFAR_DEPEND)
+#Example_LDADD 			= ../src/libcepframe.la
+#Example_DEPENDENCIES		= ../src/libcepframe.la $(LOFAR_DEPEND)
+#Simulator_Example_LDADD	= ../src/libcepframe.la
+#Simulator_Example_DEPENDENCIES	= ../src/libcepframe.la $(LOFAR_DEPEND)
+#Tester_LDADD			= ../src/libcepframe.la
+#Tester_DEPENDENCIES		= ../src/libcepframe.la $(LOFAR_DEPEND)
+#tParamBlock_LDADD		= ../src/libcepframe.la
+#tParamBlock_DEPENDENCIES	= ../src/libcepframe.la $(LOFAR_DEPEND)
 
 TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  lofar_sharedir=$(lofar_sharedir) \
