@@ -3,10 +3,18 @@ SUBDIRS	= shmem .
 #
 # only compile LofarLogger if log4cplus is configured
 #
-if HAVE_LOG4CPLUS
-LOG4CPLUS_INSTHDRS = LofarLogger.h
-LOG4CPLUS_SOURCES  = LofarLogger.cc
-endif
+# 15/3/2004 KJW <wierenga@astron.nl>
+# Bummer! older versions of automake/autoconf
+# don't handle the AM_CONDITIONAL statement in
+# autoconf_share/lofar_external.m4 properly causing complaints
+# about the use of HAVE_LOG4CPLUS here.
+#
+#if HAVE_LOG4CPLUS
+#LOG4CPLUS_INSTHDRS = LofarLogger.h
+#LOG4CPLUS_SOURCES  = LofarLogger.cc
+#endif
+LOG4CPLUS_INSTHDRS =
+LOG4CPLUS_SOURCES  =
 
 INSTHDRS = \
 Allocator.h BlobStringType.h BlobString.h BlobStringTraits.h \
