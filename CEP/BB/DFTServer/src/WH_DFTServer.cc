@@ -40,7 +40,7 @@ WH_DFTServer::~WH_DFTServer()
 {}
 
 WorkHolder* WH_DFTServer::construct (const string& name, int, int,
-				  const KeyValueMap&)
+				     const KeyValueMap&)
 {
   return new WH_DFTServer (name);
 }
@@ -54,12 +54,17 @@ void WH_DFTServer::process()
 {
   LOG_TRACE_FLOW_STR("WH_DFTServer::process " << getName());
 
-  DH_DFTRequest *myRequest = (DH_DFTRequest*)getDataManager().getInHolder(1);
-  DH_DFTResult  *myResult  = (DH_DFTResult*)getDataManager().getOutHolder(1);
-  
+  DH_DFTRequest *myRequest = (DH_DFTRequest*)getDataManager().getInHolder(0);
+  DH_DFTResult  *myResult  = (DH_DFTResult*)getDataManager().getOutHolder(0);
+  int nFreq = myRequest->getNFreq();
+  int nTime = myRequest->getNTime();
+  int nBaseline = myRequest->getNBaseline();
+  myResult->set (nFreq, nTime, nBaseline);
+  double* val = myResult->accessValues();
+  for (int i=0; i<2*nFreq*nTime*nBaseline; i++) {
+    val[i] = i;
+  }
   cout << "Request for L = " << myRequest->getL() << endl;
-
-  
 }
 
 void WH_DFTServer::dump()

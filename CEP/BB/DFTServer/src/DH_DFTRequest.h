@@ -50,6 +50,9 @@ public:
 
   /// Get read access to the various data fields.
   // <group>
+  double getL() const;
+  double getM() const;
+  double getN() const;
   const double* getUVW() const;
   double getStartFreq() const;
   double getStepFreq() const;
@@ -57,15 +60,15 @@ public:
   double getStartTime() const;
   double getStepTime() const;
   int    getNTime() const;
-  double getL() const;
-  double getM() const;
-  double getN() const;
   const int32* getAnt() const;
   int    getNAnt() const;
   const int32* getAnt1() const;
   const int32* getAnt2() const;
   int    getNBaseline() const;
   // </group>
+
+  // Set the values of LM.
+  void setLM (double L, double M);
 
   // Set the values of various fields.
   // It will create the data block.
@@ -92,13 +95,12 @@ private:
   double* itsUVW;
   double* itsStartFreq;
   double* itsStepFreq;
-  int32* itsNFreq;
+  uint32* itsNFreq;
   double* itsStartTime;
   double* itsStepTime;
-  int32* itsNTime;
+  uint32* itsNTime;
   double* itsL;
   double* itsM;
-  double* itsN;
   int32*  itsAnt;
   uint32  itsNAnt;
   int32*  itsAnt1;
@@ -129,7 +131,7 @@ inline double DH_DFTRequest::getL() const
 inline double DH_DFTRequest::getM() const
   { return *itsM; }
 inline double DH_DFTRequest::getN() const
-  { return *itsN; }
+  { return std::sqrt(*itsL * *itsL + *itsM * *itsM); }
 
 inline const int32* DH_DFTRequest::getAnt() const
   { return itsAnt; }
@@ -156,4 +158,3 @@ inline int32* DH_DFTRequest::accessAnt2()
 }
 
 #endif 
-   
