@@ -74,9 +74,9 @@ inline const DH_Vis::BufferType* DH_Vis::getBuffer() const
   { return itsBuffer; }
 
 #define VISADDRESS(station1, station2, channel, polarisation)          \
-                         (station1)*nstations*nchannels*npolarisations \
-                       + (station2)*nchannels*npolarisations           \
-                       + (channel)*npolarisations                      \
+                         (channel)*nstations*nstations*npolarisations*npolarisations \
+                       + (station1)*nstations*npolarisations*npolarisations           \
+                       + (station2)*npolarisations*npolarisations                      \
                        + (polarisation) 
 
 inline DH_Vis::BufferType* DH_Vis::getBufferElement(int station1, int station2, int channel, int polarisation)
