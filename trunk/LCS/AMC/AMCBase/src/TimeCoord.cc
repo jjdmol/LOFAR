@@ -35,15 +35,18 @@ namespace LOFAR
 {
   namespace AMC
   {
+    
+    const static double usecPerSec = double(1000000);
+    const static double secPerDay  = double(24*3600);
 
     TimeCoord::TimeCoord()
     {
       struct timeval tp;
       gettimeofday (&tp, 0);
       double sec = tp.tv_sec;
-      sec /= 24*3600.;
+      sec /= secPerDay;
       itsDay = floor(sec);
-      itsFrac = sec - itsDay + tp.tv_usec / 1000000. / (24*3600);
+      itsFrac = sec - itsDay + tp.tv_usec / usecPerSec / secPerDay;
       if (itsFrac > 1) {
         itsDay++;
         itsFrac--;
@@ -81,21 +84,31 @@ namespace LOFAR
       itsFrac += fraction - rest;
     }
 
-    double TimeCoord::utc() const
+    void TimeCoord::utc(double s)
     {
-      return (mjd() - 40587) * 24 * 3600;
+      double days = s / secPerDay;
+      itsDay = floor(days);
+      itsFrac = days - itsDay;
+      itsDay += 40587;
     }
 
-    double TimeCoord::local() const
+    void TimeCoord::local(double s)
     {
-      return utc() + getUTCDiff();
+      s -= getUTCDiff();
+      utc(s);
     }
 
+    void TimeCoord::mjd(double mjd)
+    {
+      itsDay = floor(mjd);
+      itsFrac = mjd - itsDay;
+    }
+    
     void TimeCoord::ymd (int& yyyy, int& mm, int& dd, bool local) const
     {
       double val = itsDay+itsFrac;
       if (local) {
-        val += getUTCDiff();
+        val += getUTCDiff() / secPerDay;
       }
       int z = int(val + 2400001.0);
       dd = z;
@@ -124,7 +137,7 @@ namespace LOFAR
     {
       double val = itsDay+itsFrac;
       if (local) {
-        val += getUTCDiff();
+        val += getUTCDiff() / secPerDay;
       }
       val -= int(val);    // get fraction of day
       val *= 24;
@@ -141,9 +154,12 @@ namespace LOFAR
       double s;
       time.ymd (yy, mm, dd);
       time.hms (h, m, s);
+      int is = int(s);
+      int us = int((s-is)*usecPerSec);
       char c(os.fill('0'));
-      os << yy << '-' << mm << '-' << dd << ' '
-         << setw(2) << h << ':' << setw(2) << m << ':' << setw(2) << s;
+      os << yy << '-' << mm << '-' << dd << ' ' 
+         << setw(2) << h << ':' << setw(2) << m << ':' 
+         << setw(2) << is << "." << setw(6) << us;
       os.fill(c);
       return os;
     }
