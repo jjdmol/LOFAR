@@ -25,6 +25,9 @@
 namespace LOFAR
 {
 
+  Connection::Connection() {
+  }
+
   Connection::~Connection() {
   }
 
@@ -59,6 +62,11 @@ namespace LOFAR
 	      sourceTP->getRate() << " and outRate " <<
 	      targetTP->getRate() << " not equal!");
 
+    // Make a new TransportHolder for both the target and 
+    // the source Transporter.
+    sourceTP->makeTransportHolder (prototype);
+    targetTP->makeTransportHolder (prototype);
+
     AssertStr(sourceTP->getTransportHolder()->getType() == 
 	      targetTP->getTransportHolder()->getType(),
  	      "Connection::connectData; inType " <<
@@ -67,11 +75,6 @@ namespace LOFAR
  	      targetTP->getTransportHolder()->getType() << 
 	      " not equal!");
     
-    // Make a new TransportHolder for both the target and 
-    // the source Transporter.
-    sourceTP->makeTransportHolder (prototype);
-    targetTP->makeTransportHolder (prototype);
-
     DbgAssert (sourceTP->getItsID() >= 0);
 
     // Use the source ID as the tag for MPI send/receive.
