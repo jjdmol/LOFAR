@@ -24,15 +24,16 @@ int main (int argc, char *argv[]) {
 
 	ParameterSet	myPS(argv[1]);
 	string			procID = myPS.getString("process.name");
+	uint16			ACport = myPS.getInt(procID+".ACport");
 
 	DH_ProcControl		DH_Client;
 	DH_ProcControl		DH_Server;
 	DH_Client.setID(500);
 	DH_Server.setID(501);
-	TH_Socket	TCPto   ("localhost", "", 3802, false);
-	TH_Socket	TCPfrom ("", "localhost", 3802, true);
+	TH_Socket	TCPto   ("localhost", "", ACport, false);
+	TH_Socket	TCPfrom ("", "localhost", ACport, true);
 
-	LOG_DEBUG("Trying to connect to AC at localhost, 3802");
+	LOG_DEBUG_STR("Trying to connect to AC at localhost, " << ACport);
 	DH_Client.connectBidirectional(DH_Server, TCPto, TCPfrom, true);
 	DH_Client.init();
 
