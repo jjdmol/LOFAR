@@ -226,7 +226,7 @@ void WH_PSS3::process()
     
   }
   exTimer.stop();
-  cout << "BBSTest: loop-execute " << exTimer << endl;
+  cout << "BBSTest: total-loop-execute " << exTimer << endl;
 
   if (!outputAllIter) // Write only the resulting output
   {  
