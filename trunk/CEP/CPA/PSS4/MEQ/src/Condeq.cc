@@ -60,17 +60,17 @@ int Condeq::getResult (Result::Ref &resref,
            "mismatch in sizes of child results");
   // Create result object and attach to the ref that was passed in
   Result & result = resref <<= new Result(nplanes,request);
-  vector<VellSet*> child_res(nrch);
+  vector<const VellSet*> child_res(nrch);
   for( int iplane=0; iplane<nplanes; iplane++ )
   {
     // collect vector of pointers to children, and vector
     // of pointers to main value
-    vector<Vells*> values(nrch);
+    vector<const Vells*> values(nrch);
     int npertsets = 0;
     for( int i=0; i<nrch; i++ )
     {
-      child_res[i] = &(child_result[i]().vellSet(iplane));
-      values[i] = &(child_res[i]->getValueRW());
+      child_res[i] = &(child_result[i]->vellSet(iplane));
+      values[i] = &(child_res[i]->getValue());
       npertsets = std::max(npertsets,child_res[i]->numPertSets());
     }
     FailWhen(values[0]->shape() != values[1]->shape(),

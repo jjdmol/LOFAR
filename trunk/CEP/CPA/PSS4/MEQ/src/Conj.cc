@@ -37,7 +37,7 @@ Conj::~Conj()
 
 //##ModelId=400E53050077
 Vells Conj::evaluate (const Request&,const LoShape &,
-		      const vector<Vells*>& values)
+		      const vector<const Vells*>& values)
 {
   return conj(*(values[0]));
 }

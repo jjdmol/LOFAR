@@ -1,3 +1,9 @@
+  * C++: changed Result and VellSet interfaces for consistency:
+    Result::vellSet(), vellSetWr(); VellSet::getValue(), getValueWr()
+
+  * C++: changed signature of Function::evaluate() to take a vector of
+    const Vells *. Must change JEN's code generator.
+    
   * added ZeroFlagger node. Init with:
     initrec.oper     := hiid(op)    # op=EQ/NE/GT/LT/GE/LE, EQ by default
     initrec.flag_bit :=             # Flag mask to raise, 1 by default      

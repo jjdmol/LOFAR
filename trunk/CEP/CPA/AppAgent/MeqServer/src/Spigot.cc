@@ -125,7 +125,7 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
         const LoVec_int  & rowflag = tile.rowflag();
         for( int i=0; i<nplanes; i++ )
         {
-          VellSet::FlagArrayType & fl = next_res.vellSet(i).
+          VellSet::FlagArrayType & fl = next_res.vellSetWr(i).
                   initOptCol<VellSet::FLAGS>();
           // apply flags with mask
           if( flag_mask )

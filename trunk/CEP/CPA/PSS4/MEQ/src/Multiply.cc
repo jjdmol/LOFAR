@@ -35,7 +35,7 @@ Multiply::~Multiply()
 
 //##ModelId=400E530A010A
 Vells Multiply::evaluate (const Request&, const LoShape&,
-			  const vector<Vells*>& values)
+			  const vector<const Vells*>& values)
 {
   if( values.empty() )
     return Vells(1.);  // or should this be 0?

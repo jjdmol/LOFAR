@@ -81,18 +81,18 @@ int MergeFlags::getResult (Result::Ref &resref,
   // loop over vellsets
   for( int iplane = 0; iplane < nvs; iplane++ )
   {
-    VellSet &vs = result.vellSet(iplane);
+    VellSet &vs = result.vellSetWr(iplane);
     bool had_flags = vs.hasOptCol(VellSet::FLAGS);
     // get main values 
-    VellSet::FlagArrayType & flags = vs.getOptColRW<VellSet::FLAGS>();
+    VellSet::FlagArrayType & flags = vs.getOptColWr<VellSet::FLAGS>();
     // apply first mask, unless we didn't have any flags to begin with
     if( had_flags )
       flags &= flagmask_[0];
     // loop over children to add their flags
     for( int ich=1; ich<nch; ich++ )
     {
-      const Result &chres = childres[ich]();
-      const VellSet &vs = chres.vellSetConst(std::max(chres.numVellSets()-1,iplane));
+      const Result &chres = *(childres[ich]);
+      const VellSet &vs = chres.vellSet(std::max(chres.numVellSets()-1,iplane));
       // if child vellset has flags and mask !=0, merge with result
       if( flagmask_[ich] && vs.hasOptCol(VellSet::FLAGS) )
         flags |= vs.getOptCol<VellSet::FLAGS>() & flagmask_[ich];

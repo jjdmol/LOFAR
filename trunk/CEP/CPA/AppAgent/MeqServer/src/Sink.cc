@@ -179,7 +179,7 @@ int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref,
         colshape.push_back(ptile->nrow()); // add third dimension to column shape
       }
       // get the values out, and copy them to tile column
-      const Vells &vells = resref->vellSetConst(ivs).getValue();
+      const Vells &vells = resref->vellSet(ivs).getValue();
       if( vells.isReal() ) // real values
       {
         FailWhen(coltype!=Tpdouble,"type mismatch: double Vells, "+coltype.toString()+" column");

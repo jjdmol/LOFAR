@@ -421,6 +421,11 @@ const flagger_test := function (verbose=4,gui=use_gui)
   
   global result;
   result := mqs.meq('Node.Execute',[name='flag',request=request],T);
+#   result := mqs.meq('Node.Execute',[name='flag2',request=request],T);
+#   result := mqs.meq('Node.Execute',[name='flag3',request=request],T);
+#   result := mqs.meq('Node.Execute',[name='flag4',request=request],T);
+#   result := mqs.meq('Node.Execute',[name='flag5',request=request],T);
+#   result := mqs.meq('Node.Execute',[name='flag6',request=request],T);
 
   return result;
 }

@@ -70,7 +70,7 @@ int ZeroFlagger::getResult (Result::Ref &resref,
   // loop over vellsets
   for( int iplane = 0; iplane < nvs; iplane++ )
   {
-    VellSet &vs = result.vellSet(iplane);
+    VellSet &vs = result.vellSetWr(iplane);
     // get main values 
     const Vells &value = vs.getValue();
     if( value.isComplex() )
@@ -78,7 +78,7 @@ int ZeroFlagger::getResult (Result::Ref &resref,
       NodeThrow1("complex values not allowed in comparison");
     }
     // get pointer to flags -- init flags if needed
-    VellSet::FlagArrayType & flags = vs.getOptColRW<VellSet::FLAGS>();
+    VellSet::FlagArrayType & flags = vs.getOptColWr<VellSet::FLAGS>();
     // apply operation
     if( value.isArray() )
     {

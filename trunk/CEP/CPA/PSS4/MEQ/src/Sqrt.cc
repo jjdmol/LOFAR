@@ -38,7 +38,7 @@ Sqrt::~Sqrt()
 
 //##ModelId=400E53550291
 Vells Sqrt::evaluate (const Request&,const LoShape &,
-		      const vector<Vells*>& values)
+		      const vector<const Vells*>& values)
 {
   return sqrt(*(values[0]));
 }
