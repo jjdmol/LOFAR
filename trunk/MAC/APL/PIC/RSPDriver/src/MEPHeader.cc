@@ -22,13 +22,15 @@
 
 #include "MEPHeader.h"
 
+#include <string.h>
+
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-using namespace LOFAR;
 
-using namespace RSP_Protocol;
+using namespace LOFAR;
+using namespace EPA_Protocol;
 using namespace std;
 
 unsigned int MEPHeader::getSize()
@@ -38,12 +40,26 @@ unsigned int MEPHeader::getSize()
 
 unsigned int MEPHeader::pack  (void* buffer)
 {
-  buffer = buffer;
-  return 0;
+  memcpy(buffer, &(this->m_fields), MEPHeader::SIZE);
+  return MEPHeader::SIZE;
 }
 
 unsigned int MEPHeader::unpack(void *buffer)
 {
-  buffer = buffer;
-  return 0;
+  memcpy(&(this->m_fields), buffer, MEPHeader::SIZE);
+  return MEPHeader::SIZE;
+}
+
+void MEPHeader::set(uint8 type,
+		    uint8 dstid,
+		    uint8 pid,
+		    uint8 regid,
+		    uint16 size)
+{
+  memset(&m_fields, 0, sizeof(m_fields));
+  m_fields.type = type;
+  m_fields.addr.dstid = dstid;
+  m_fields.addr.pid = pid;
+  m_fields.addr.regid = regid;
+  m_fields.size = size;
 }

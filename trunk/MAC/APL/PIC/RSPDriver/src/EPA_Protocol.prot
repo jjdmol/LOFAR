@@ -25,8 +25,13 @@ namespace EPA_Protocol
    * Number of Antenna processors and Beamlet processors.
    */
   /*@{*/
-  static const int N_AP  = 4;
-  static const int N_BLP = N_AP*2;
+  static const int N_RSPBOARDS = 24;
+  static const int N_AP        = 4;
+  static const int N_BLP       = N_AP*2;
+  static const int N_COEF      = 512;
+  static const int N_UWG       = 512;
+  static const int N_SUBBANDS  = 128;
+  static const int N_STATS     = 512;
   /*@}*/
 };
 
@@ -43,8 +48,8 @@ event = {
   signal = RSPSTATUS;
   dir = OUT;
   param = {
-    name = "mep";
-    type = "RSP_Protocol::MEPHeader";
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
     userdefined;
   };
   param = {
@@ -66,11 +71,11 @@ event = {
 };
 
 event = {
-  signal = TEST;
+  signal = SELFTEST;
   dir = IN;
   param = {
-    name = "mep";
-    type = "RSP_Protocol::MEPHeader";
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
     userdefined;
   };
   param = {
@@ -83,8 +88,8 @@ event = {
   signal = RESET;
   dir = IN;
   param = {
-    name = "mep";
-    type = "RSP_Protocol::MEPHeader";
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
     userdefined;
   };
 };
@@ -93,8 +98,8 @@ event = {
   signal = REPROGRAM;
   dir = IN;
   param = {
-    name = "mep";
-    type = "RSP_Protocol::MEPHeader";
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
     userdefined;
   };
 };
@@ -103,8 +108,8 @@ event = {
   signal = WGSETTINGS;
   dir = INOUT;
   param = {
-    name = "mep";
-    type = "RSP_Protocol::MEPHeader";
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
     userdefined;
   };
 };
@@ -113,8 +118,8 @@ event = {
   signal = WGUSER;
   dir = INOUT;
   param = {
-    name = "mep";
-    type = "RSP_Protocol::MEPHeader";
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
     userdefined;
   };
 };
@@ -123,8 +128,8 @@ event = {
   signal = NRSUBBANDS;
   dir = INOUT;
   param = {
-    name = "mep";
-    type = "RSP_Protocol::MEPHeader";
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
     userdefined;
   };
 };
@@ -133,8 +138,8 @@ event = {
   signal = SUBBANDSELECT;
   dir = INOUT;
   param = {
-    name = "mep";
-    type = "RSP_Protocol::MEPHeader";
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
     userdefined;
   };
 };
@@ -143,9 +148,13 @@ event = {
   signal = BFXRE;
   dir = INOUT;
   param = {
-    name = "mep";
-    type = "RSP_Protocol::MEPHeader";
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
     userdefined;
+  };
+  param = {
+    name = "coef";
+    type = "uint16[N_COEF]";
   };
 };
 
@@ -153,9 +162,13 @@ event = {
   signal = BFXIM;
   dir = INOUT;
   param = {
-    name = "mep";
-    type = "RSP_Protocol::MEPHeader";
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
     userdefined;
+  };
+  param = {
+    name = "coef";
+    type = "uint16[N_COEF]";
   };
 };
 
@@ -163,9 +176,13 @@ event = {
   signal = BFYRE;
   dir = INOUT;
   param = {
-    name = "mep";
-    type = "RSP_Protocol::MEPHeader";
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
     userdefined;
+  };
+  param = {
+    name = "coef";
+    type = "uint16[N_COEF]";
   };
 };
 
@@ -173,9 +190,13 @@ event = {
   signal = BFYIM;
   dir = INOUT;
   param = {
-    name = "mep";
-    type = "RSP_Protocol::MEPHeader";
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
     userdefined;
+  };
+  param = {
+    name = "coef";
+    type = "uint16[N_COEF]";
   };
 };
 
@@ -183,9 +204,13 @@ event = {
   signal = MEAN;
   dir = INOUT;
   param = {
-    name = "mep";
-    type = "RSP_Protocol::MEPHeader";
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
     userdefined;
+  };
+  param = {
+    name = "mean";
+    type = "uint16[N_STATS]";
   };
 };
 
@@ -193,9 +218,13 @@ event = {
   signal = POWER;
   dir = INOUT;
   param = {
-    name = "mep";
-    type = "RSP_Protocol::MEPHeader";
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
     userdefined;
+  };
+  param = {
+    name = "power";
+    type = "uint16[N_STATS]";
   };
 };
 
@@ -203,8 +232,8 @@ event = {
   signal = RCUSETTINGS;
   dir = INOUT;
   param = {
-    name = "mep";
-    type = "RSP_Protocol::MEPHeader";
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
     userdefined;
   };
   param = {

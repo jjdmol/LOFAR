@@ -36,8 +36,6 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#define SYNC_INTERVAL 10
-
 using namespace RSP;
 using namespace std;
 using namespace LOFAR;
@@ -78,29 +76,29 @@ GCFEvent::TResult RSPDriverTask::initial(GCFEvent& event, GCFPortInterface& port
   
   switch(event.signal)
   {
-      case F_INIT:
+  case F_INIT:
       {
       }
       break;
 
-      case F_ENTRY:
+  case F_ENTRY:
       {
 	  //m_board.setAddr("eth0", "aa:bb:cc:dd:ee:ff");
 	  if (!m_board.isConnected()) m_board.open();
       }
       break;
 
-      case F_CONNECTED:
+  case F_CONNECTED:
       {
-	LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
-	if (isEnabled())
-	{
-	  TRAN(RSPDriverTask::enabled);
-	}
+	  LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
+	  if (isEnabled())
+	  {
+	      TRAN(RSPDriverTask::enabled);
+	  }
       }
       break;
 
-      case F_DISCONNECTED:
+  case F_DISCONNECTED:
       {
 	  port.setTimer((long)3); // try again in 3 seconds
 	  LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
@@ -108,29 +106,28 @@ GCFEvent::TResult RSPDriverTask::initial(GCFEvent& event, GCFPortInterface& port
       }
       break;
 
-      case F_TIMER:
+  case F_TIMER:
       {
 	  LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
 	  port.open();
       }
       break;
 
-      case F_DATAIN:
+  case F_DATAIN:
       {
       }
       break;
 
-    case F_EXIT:
+  case F_EXIT:
       {
-	// cancel timers
-	m_client.cancelAllTimers();
-	m_board.cancelAllTimers();
+	  // cancel timers
+	  m_board.cancelAllTimers();
       }
       break;
 
-      default:
-	  status = GCFEvent::NOT_HANDLED;
-	  break;
+  default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
   }
 
   return status;
@@ -140,13 +137,12 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  static int period = 0;
-
   switch (event.signal)
   {
-      case F_ENTRY:
+  case F_ENTRY:
       {
-	  if (!m_client.isConnected()) m_client.open(); // need this otherwise GTM_Sockethandler is not called
+	  // start waiting for clients
+	  if (!m_client.isConnected()) m_client.open();
 
 	  /* Start the update timer */
 	  m_board.setTimer((long)1,0,1,0); // update every second
@@ -154,18 +150,18 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
       break;
 
 #if 0
-      case F_ACCEPT_REQ:
-	  m_client.getPortProvider().accept();
-	  break;
+  case F_ACCEPT_REQ:
+      m_client.getPortProvider().accept();
+      break;
 #else
-      case F_CONNECTED:
+  case F_CONNECTED:
       {
-	LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
+	  LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
       }
       break;
 #endif
 
-      case RSP_SETWEIGHTS:
+  case RSP_SETWEIGHTS:
       {
 	  /* enter the command in the scheduler's queue */
 	  BWCommand* command = new BWCommand(event, port, Command::WRITE);
@@ -182,48 +178,38 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
       }
       break;
 
-      case F_TIMER:
+  case F_TIMER:
       {
-	  /* run the scheduler */
-	  m_scheduler.run(event,port);
-
 	  GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
-
 	  LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
 
-	  if (0 == (period % SYNC_INTERVAL))
+	  if (&port == &m_board)
 	  {
-	      period = 0;
-
-	      // perform sync
+	      /* run the scheduler */
+	      status = m_scheduler.run(event,port);
 	  }
-
-	  period++;
+	  else
+	  {
+	      m_scheduler.dispatch(event, port);
+	  }
       }
       break;
 
-      case F_DATAIN:
-	  LOG_DEBUG("F_DATAIN");
-	  break;
-
-      case F_DATAOUT:
-	  LOG_DEBUG("F_DATAOUT");
-	  break;
-
-      case F_DISCONNECTED:
+  case F_DISCONNECTED:
       {
 	  LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
 	  port.close();
 
 	  if (&port == &m_board)
 	  {
+	      m_client.close();
 	      TRAN(RSPDriverTask::initial);
 	  }
 	  else port.open(); // re-open for next client
       }
       break;
 
-      case F_EXIT:
+  case F_EXIT:
       {
 	  // cancel timers
 	  m_client.cancelAllTimers();
@@ -231,9 +217,9 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
       }
       break;
 
-      default:
-	  status = GCFEvent::NOT_HANDLED;
-	  break;
+  default:
+      status = m_scheduler.dispatch(event, port);
+      break;
   }
 
   return status;

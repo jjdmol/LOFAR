@@ -48,12 +48,12 @@ namespace RSP
 	  /**
 	   * Run the scheduler in response to a timer event.
 	   */
-	  void run(GCFEvent& event, GCFPortInterface& port);
+	  GCFEvent::TResult run(GCFEvent& event, GCFPortInterface& port);
 	  /**
 	   * Dispatch an event from the RSP board to the appropriate
 	   * synchronization action.
 	   */
-	  void dispatch(GCFEvent& event, GCFPortInterface& port);
+	  GCFEvent::TResult dispatch(GCFEvent& event, GCFPortInterface& port);
 
 	  /**
 	   * Add a synchronization action to be carried out
@@ -78,10 +78,11 @@ namespace RSP
 	  /**
 	   * Helper methods for the Scheduler::run method.
 	   */
-	  void scheduleCommands();
-	  void processCommands();
-	  void syncCache(GCFEvent& event, GCFPortInterface& port);
-	  void completeCommands();
+	  void              scheduleCommands();
+	  void              processCommands();
+	  GCFEvent::TResult syncCache(GCFEvent& event, GCFPortInterface& port);
+	  void              completeCommands();
+	  /*@}*/
 
 	  std::priority_queue<Command*> m_later_queue;
 	  std::priority_queue<Command*> m_now_queue;

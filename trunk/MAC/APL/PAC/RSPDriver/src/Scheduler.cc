@@ -71,8 +71,9 @@ Scheduler::~Scheduler()
   }
 }
 
-void Scheduler::run(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& port)
 {
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
   const GCFTimerEvent* timeout = static_cast<const GCFTimerEvent*>(&event);
   
   if (F_TIMER == event.signal)
@@ -83,7 +84,7 @@ void Scheduler::run(GCFEvent& event, GCFPortInterface& port)
 
       scheduleCommands();
       processCommands();
-      syncCache(event, port);
+      status = syncCache(event, port);
       m_cache.swapBuffers();
       completeCommands();
   }
@@ -91,11 +92,13 @@ void Scheduler::run(GCFEvent& event, GCFPortInterface& port)
   {
       LOG_ERROR("received invalid event != F_TIMER");
   }
+
+  return status;
 }
 
-void Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
 {
-  syncCache(event, port);
+  return syncCache(event, port);
 }
 
 void Scheduler::addSyncAction(SyncAction* action)
@@ -187,20 +190,23 @@ void Scheduler::processCommands()
   }
 }
 
-void Scheduler::syncCache(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult Scheduler::syncCache(GCFEvent& event, GCFPortInterface& port)
 {
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
   /* copy the m_syncactions queue */
   std::priority_queue<SyncAction*> runqueue = m_syncactions;
 
-  while (!runqueue.empty())
+  if (!runqueue.empty())
   {
       SyncAction* action = runqueue.top();
 
-      action->dispatch(event, port);
+      status = action->dispatch(event, port);
 
       if (action->isFinal()) runqueue.pop();
-      else break;
   }
+
+  return status;
 }
 
 void Scheduler::completeCommands()
