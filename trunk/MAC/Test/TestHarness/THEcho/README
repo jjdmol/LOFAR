@@ -7,3 +7,28 @@ and it replies by sending the echo using the client connection.
 
 The THEchoTest application can be used to test the THEcho application.
 
+  _____________                                    _____________
+ | TestHarness |                                  |  THEcho     |
+ | THEchoTest  |                                  |             |
+ |             |                                  |             |
+ |      _______|_    THEcho_Protocol             _|______       |
+ |     | client_1|----------------------------->|server_1|      |
+ |     |_________|<-----------------------------|________|      |
+ |             |                                  |             |
+ |             |                                  |             |
+ |             |                                  |             |
+ |             |                                  |             |
+ |             |                                  |             |
+ |             |                                  |             |
+ |             |                                  |             |
+ |      _______|_    THEchoRouting_Protocol      _|______       |
+ |     | client_2|----------------------------->|server_2|      |
+ |     |_________|                              |________|      |
+ |             |                                  |   ||        |
+ |             |                                  |   \/        |
+ |      _______|_    THEchoRouting_Protocol      _|______       |
+ |     | server_2|<-----------------------------|client_2|      |
+ |     |_________|                              |________|      |
+ |             |                                  |             |
+ |_____________|                                  |_____________|
+
