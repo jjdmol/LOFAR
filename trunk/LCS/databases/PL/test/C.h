@@ -2,7 +2,7 @@
 #define LOFAR_PL_TEST_C
 
 #include "A.h"
-#include <Common/fwd/PL.h>
+#include <PL/PLfwd.h>
 #include <dtl/dtl_config.h>
 #include <string>
 #include <complex>
