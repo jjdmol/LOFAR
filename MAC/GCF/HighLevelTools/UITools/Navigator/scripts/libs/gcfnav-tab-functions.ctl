@@ -72,8 +72,8 @@ void NavTabInitialize(string datapoint)
   
   // clear mappings and combobox
   viewsComboBoxCtrl.deleteAllItems();
-  mappingClear(g_subViews);
-  mappingClear(g_subViewConfigs);
+//  mappingClear(g_subViews);
+//  mappingClear(g_subViewConfigs);
   g_selectedView = 1;
   g_selectedViewName = "";
   
