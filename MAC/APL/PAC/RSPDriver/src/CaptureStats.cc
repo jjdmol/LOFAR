@@ -81,9 +81,11 @@ do { \
   } \
 } while(0)
 
-CaptureStats::CaptureStats(string name, int type, int device, int n_devices, int duration)
+CaptureStats::CaptureStats(string name, int type, int device, int n_devices, int duration, int integration)
   : GCFTask((State)&CaptureStats::initial, name), Test(name),
-    m_type(type), m_device(device), m_n_devices(n_devices), m_duration(duration)
+    m_type(type), m_device(device), m_n_devices(n_devices),
+    m_duration(duration), m_integration(integration),
+    m_nseconds(0)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
@@ -251,26 +253,46 @@ GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
 
 void CaptureStats::capture_statistics(Array<double, 2>& stats)
 {
-  static int nseconds = 0;
-  
-  // send data to stdout
-  int n_freqbands = stats.extent(secondDim);
+  if (0 == m_nseconds)
+  {
+    // initialize values array
+    m_values.resize(stats.extent(firstDim), stats.extent(secondDim));
+    m_values = 0.0;
+  }
+  else
+  {
+    if ( (stats.extent(firstDim) != m_values.extent(firstDim))
+	 || (stats.extent(secondDim) != m_values.extent(secondDim)) )
+    {
+      cerr << "Error: shape mismatch" << endl;
+      exit(EXIT_FAILURE);
+    }
+  }
 
-  Array<double, 1> freq(n_freqbands);
-  Array<double, 1> value(n_freqbands);
+  m_values += stats; // integrate
 
-  // initialize the freq array
-  firstIndex i;
-  
+  m_nseconds++; // advance to next second
+
+  if (0 == m_nseconds % m_integration)
+  {
+    m_values /= m_integration;
+    write_statistics(m_values);
+    m_values = 0.0;
+  }
+
+  // check if duration has been reached
+  if (m_nseconds >= m_duration)
+  {
+    exit(EXIT_SUCCESS);
+  }
+}
+
+void CaptureStats::write_statistics(Array<double, 2>& stats)
+{
   for (int device = stats.lbound(firstDim);
        device <= stats.ubound(firstDim);
        device++)
   {
-    // compute logarithm of values
-    value  = stats(device, Range::all());
-
-    freq = i * (SAMPLE_FREQUENCY / (n_freqbands * 2.0)); // calculate frequency in MHz
-
     time_t now = time(0);
     struct tm* t = localtime(&now);
 
@@ -309,17 +331,14 @@ void CaptureStats::capture_statistics(Array<double, 2>& stats)
       exit(EXIT_FAILURE);
     }
     
-    if (n_freqbands != (int)fwrite(stats.data(), sizeof(double), n_freqbands, ofile))
+    if (stats.extent(secondDim)
+	!= (int)fwrite(stats(device, Range::all()).data(), sizeof(double),
+		       stats.extent(secondDim), ofile))
     {
       perror("fwrite");
       exit(EXIT_FAILURE);
     }
     (void)fclose(ofile);
-  }
-
-  if (++nseconds >= m_duration)
-  {
-    exit(EXIT_SUCCESS);
   }
 }
 
@@ -335,15 +354,25 @@ void usage()
   cout << "arguments (all optional):" << endl;
   cout << "    --rcu=0..N_AVAIABLE_RCUS # or -r; default 0, -1 means ALL RCUs" << endl;
   cout << "    --duration=N             # or -d; default 1, number of seconds to capture" << endl;
-  cout << "    --statstype=0|1          # or -s; default 0, 0 = subband statistics, 1 = beamlets statistics" << endl;
+  cout << "    --integration[=N]        # or -i; default equal to duration" << endl;
+  cout << "        Note: integration must be a divisor of duration" << endl;
+  cout << "    --statstype=0|1          # or -s; default 0, 0 = subbands, 1 = beamlets" << endl;
   cout << "    --help                   # or -h; this help" << endl;
+  cout << endl;
+  cout << "Example:" << endl;
+  cout << "  CaptureStats -r=5 -d=20 -i=5" << endl;
+  cout << "   # capture from RCU 5 for 20 seconds integrating every 5 seconds; results in four output files." << endl;
+  cout << endl;
+  cout << "  CaptureStats -r=-1 -d=10 -i" << endl;
+  cout << "   # capture from all RCUs for 10 seconds integrating 10 seconds; results in one output file for each RCU." << endl;
 }
 
 int main(int argc, char** argv)
 {
-  int type     = 0;
-  int device   = 0;
-  int duration = 1;
+  int type        = 0;
+  int device      = 0;
+  int duration    = 1;
+  int integration = -1;
 
   GCFTask::init(argc, argv);
 
@@ -364,16 +393,17 @@ int main(int argc, char** argv)
   {
     static struct option long_options[] = 
       {
-        { "rcu",       required_argument, 0, 'r' },
-	{ "duration",  required_argument, 0, 'd' },
-	{ "statstype", required_argument, 0, 't' },
-	{ "help",      no_argument,       0, 'h' },
+        { "rcu",          required_argument, 0, 'r' },
+	{ "duration",     required_argument, 0, 'd' },
+	{ "integration",  optional_argument, 0, 'i' },
+	{ "statstype",    required_argument, 0, 't' },
+	{ "help",         no_argument,       0, 'h' },
 	{ 0, 0, 0, 0 },
       };
 
     int option_index = 0;
     int c = getopt_long_only(argc, argv,
-			     "ci:p:h", long_options, &option_index);
+			     "r:d:i::t:h", long_options, &option_index);
     
     if (c == -1) break;
     
@@ -383,18 +413,17 @@ int main(int argc, char** argv)
 	device = atoi(optarg);
 	if (device < -1 || device >= n_devices)
 	{
-	  cerr << formatString("Invalid device index, should be >= -1 && < %d; -1 indicates all devices", n_devices) << endl;
+	  cerr << formatString("Error: invalid device index, should be >= -1 && < %d; -1 indicates all devices", n_devices) << endl;
 	  exit(EXIT_FAILURE);
 	}
 	break;
 
       case 'd':
 	duration = atoi(optarg);
-	if (duration <= 0)
-	{
-	  cerr << "Error: duration must be > 0" << endl;
-	  exit(EXIT_FAILURE);
-	}
+	break;
+
+      case 'i':
+	if (optarg) integration = atoi(optarg);
 	break;
 	
       case 't':
@@ -402,7 +431,7 @@ int main(int argc, char** argv)
 
 	if (type < 0 || type >= Statistics::N_STAT_TYPES)
 	{
-	  cerr << formatString("Invalid type of stat, should be >= 0 && < %d", Statistics::N_STAT_TYPES) << endl;
+	  cerr << formatString("Error: invalid type of stat, should be >= 0 && < %d", Statistics::N_STAT_TYPES) << endl;
 	  exit(EXIT_FAILURE);
 	}
 	break;
@@ -412,14 +441,35 @@ int main(int argc, char** argv)
 	exit(EXIT_SUCCESS);
 	break;
 
+      case '?':
+	cerr << "Error: error in option '" << char(optopt) << "'." << endl;
+	exit(EXIT_FAILURE);
+	break;
+
       default:
 	printf ("?? getopt returned character code 0%o ??\n", c);
 	break;
     }
   }
 
+  // check for valid duration
+  if (duration <= 0)
+  {
+    cerr << "Error: duration must be > 0." << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  if (integration <= 0) integration = duration;
+
+  // check for valid integration
+  if ( (integration > duration) || (0 != duration % integration) )
+  {
+    cerr << "Error: integration must be > 0 and <= duration and a divisor of duration" << endl;
+    exit(EXIT_FAILURE);
+  }
+
   Suite s("CaptureStats", &cerr);
-  s.addTest(new CaptureStats("CaptureStats", type, device, n_devices, duration));
+  s.addTest(new CaptureStats("CaptureStats", type, device, n_devices, duration, integration));
   try
   {
     s.run();
