@@ -3716,13 +3716,13 @@
 				(object Attribute
 				    tool       	"Cplusplus"
 				    name       	"ImplementationType"
-				    value      	
+				    value      	(value Text 
 |enum 
 |        {
 |              JOINABLE  = PTHREAD_CREATE_JOINABLE,
 |              DETACHED  = PTHREAD_CREATE_DETACHED
 |        }
-				    ))
+				    )))
 			    quid       	"400E4E110181"
 			    stereotype 	"typedef"
 			    module     	"Component View::Common"
@@ -3891,23 +3891,6 @@
 			    line_color 	3342489
 			    fill_color 	13434879
 			    quidu      	"3E43C77403C5"
-			    compartment 	(object Compartment
-				Parent_View 	@3
-				location   	(332, 1396)
-				font       	(object Font
-				    size       	10
-				    face       	"arial"
-				    bold       	FALSE
-				    italics    	FALSE
-				    underline  	FALSE
-				    strike     	FALSE
-				    color      	0
-				    default_color 	TRUE)
-				icon_style 	"Icon"
-				fill_color 	13434879
-				anchor     	2
-				nlines     	16
-				max_width  	1015)
 			    width      	1243
 			    height     	941
 			    annotation 	8)))
@@ -3977,6 +3960,23 @@
 			    line_color 	3342489
 			    fill_color 	13434879
 			    quidu      	"3D1049B40396"
+			    compartment 	(object Compartment
+				Parent_View 	@5
+				location   	(267, 1852)
+				font       	(object Font
+				    size       	10
+				    face       	"arial"
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				icon_style 	"Icon"
+				fill_color 	16777215
+				anchor     	2
+				nlines     	18
+				max_width  	0)
 			    width      	1916
 			    height     	1131
 			    annotation 	8)

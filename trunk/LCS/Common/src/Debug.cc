@@ -21,6 +21,12 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2003/09/30 11:31:10  smirnov
+//  %[ER: 16]%
+//  Tied the debug stream to cerr rather than cout. This necessitated a change
+//  to the dprintf() macro.
+//  Throw() now dumps the exception message to the debug stream at level 1.
+//
 //  Revision 1.1  2003/08/21 11:20:32  diepen
 //  Moved Common to LCS
 //
@@ -70,6 +76,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <sys/time.h>
+#include <fstream>
 
 #ifdef USE_THREADS
 #include "Common/Thread.h"
@@ -80,16 +87,25 @@
 
 namespace Debug 
 {
-// initialize variables
-bool Context::initialized = false;
+// -----------------------------------------------------------------------
+// various globals
+// -----------------------------------------------------------------------
 // default debug context
 Context DebugContext("Global");
-// debug output stream -- tie to cerr
-ostream & dbg_stream(cerr);
+
+bool Context::initialized = false;
+
+// debug output stream -- same as cerr on startup
+ostream * dbg_stream_p = &cerr;
+std::ofstream dbg_file;
+
 // timestamp
 struct timeval tv_init;
 int dum_tv_init = gettimeofday(&tv_init,0);
 
+// -----------------------------------------------------------------------
+// debug contexts and levels
+// -----------------------------------------------------------------------
 // map of currently set debug levels  
 //##ModelId=3DB954640131
 typedef map<string,int> DebugLevelMap;
@@ -108,7 +124,6 @@ typedef ContextMap::iterator CMI;
 typedef ContextMap::const_iterator CCMI;
 ContextMap *contexts = 0;
 
-// various mutexes
 #ifdef USE_THREADS
   pthread_mutex_t levels_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
   #define lockMutex(t) Thread::Mutex::Lock _##t##_lock(t##_mutex)
@@ -118,10 +133,15 @@ ContextMap *contexts = 0;
 
 // executable name
 string progname;
+
 // special debug level sets everything
 const string Everything("Everything");
 
-// copies string into static buffer.
+// -----------------------------------------------------------------------
+// staticBuffer(str)
+// copies an std::string into a static buffer, return char *.
+// This is thread-safe
+// -----------------------------------------------------------------------
 #ifdef USE_THREADS
 void _delete_char_array (void *array)
 { delete [] static_cast<char*>(array); }
@@ -144,7 +164,10 @@ const char * staticBuffer( const string &str )
   return buffer;
 }
 
+// -----------------------------------------------------------------------
+// setLevel("context",level)
 // sets level of specific context (or Everything, if context is zero-length)
+// -----------------------------------------------------------------------
 bool setLevel ( const string &contxt,int level )
 {
   lockMutex(levels);
@@ -178,8 +201,11 @@ bool setLevel ( const string &contxt,int level )
   return true;
 }
 
+// -----------------------------------------------------------------------
+// setLevel(str)
 // parses level specification of the form "context=level", and calls
 // setLevel on it. If just "level" is specified, sets everything
+// -----------------------------------------------------------------------
 bool setLevel ( const string &str )
 {
   lockMutex(levels);
@@ -192,15 +218,17 @@ bool setLevel ( const string &str )
     contxt = str.substr(0,j);
     level = str.substr(j+1);
   }
-  if( !level.length() ) {
+  if( !level.length() ) 
+  {
     cerr<<"Illegal debug level specification\nValid specifications are: ";
     string ctxt0;
     for( ContextMap::const_iterator iter = contexts->begin();
-	 iter != contexts->end();
-	 iter++ ) {
-if( iter->first != ctxt0 ) {
-	cerr<<"  -d"<<(ctxt0 = iter->first)<<"=<level>\n";
-}
+         iter != contexts->end(); iter++ ) 
+    {
+      if( iter->first != ctxt0 ) 
+      {
+        cerr<<"  -d"<<(ctxt0 = iter->first)<<"=<level>\n";
+      }
     }
     cerr<<"  -d<level>";
     exit(1);
@@ -209,8 +237,38 @@ if( iter->first != ctxt0 ) {
   return true;
 }
 
+// -----------------------------------------------------------------------
+// redirectOutput
+// redirects the debug output to a file. If fname is empty, uses cerr.
+// -----------------------------------------------------------------------
+int redirectOutput (const string &fname)
+{
+  if( fname.empty() )
+  {
+    cerr<<"Debug: output directed to standard error stream\n";
+    dbg_stream_p = &cerr;
+  }
+  else
+  {
+    dbg_file.open(fname.c_str());
+    if( !dbg_file )
+    {
+      cerr<<"Debug: error opening output file: "<<fname<<endl;
+      return 0;
+    }
+    else
+    {
+      dbg_stream_p = &dbg_file;
+      cerr<<"Debug: output directed into file "<<fname<<endl;
+    }
+  }
+  return 1;
+}
 
-// initializes debug levels from command line
+// -----------------------------------------------------------------------
+// initLevels(argc,argv,save)
+// parses command-line arguments and initializes debug levels, etc.
+// -----------------------------------------------------------------------
 void initLevels ( int argc,const char *argv[],bool save )
 {
   lockMutex(levels);
@@ -239,6 +297,11 @@ void initLevels ( int argc,const char *argv[],bool save )
       changed = false;
       loadLevels();
     }
+    // "-d:filename": redirect debug output to file
+    else if( str.substr(0,3) == string("-d:") )
+    {
+      redirectOutput(str.substr(3));
+    }
     // "-dxxx": debug level specification
     else if( str.substr(0,2) == string("-d") )
     {
@@ -250,7 +313,11 @@ void initLevels ( int argc,const char *argv[],bool save )
     saveLevels();
 }
 
-// saves debug levels to file "progname.debug"
+// -----------------------------------------------------------------------
+// saveLevels(fname)
+// saves debug levels to file "fname.debug"
+// if fname is empty, uses the erxecutable's names
+// -----------------------------------------------------------------------
 bool saveLevels ( string fname )
 {
   lockMutex(levels);
@@ -286,7 +353,10 @@ bool saveLevels ( string fname )
   return true;
 }
 
+// -----------------------------------------------------------------------
+// loadLevels(fname)
 // loads debug levels from file, or "progname.debug" by default
+// -----------------------------------------------------------------------
 void loadLevels ( string fname )
 {
   lockMutex(levels);
@@ -324,7 +394,10 @@ void loadLevels ( string fname )
   fclose(f);
 }
 
-
+// -----------------------------------------------------------------------
+// Context
+// Context class implementation
+// -----------------------------------------------------------------------
 Context::Context (const string &name, Context *parent_)
   : debug_level(0),context_name(name),parent(parent_)
 {
@@ -380,16 +453,20 @@ Context::~Context()
   }
 }
 
+// int dbg_printf( const char *format, ...) 
+// {
+//   va_list ap;
+//   va_start(ap,format);
+//   int ret = vfprintf(stderr,format,ap);
+//   va_end(ap);
+//   return ret;
+// }
+// 
 
-int dbg_printf( const char *format, ...) 
-{
-  va_list ap;
-  va_start(ap,format);
-  int ret = vfprintf(stderr,format,ap);
-  va_end(ap);
-  return ret;
-}
-
+// -----------------------------------------------------------------------
+// ssprintf
+// Like sprintf, but returns an std::string with the output
+// -----------------------------------------------------------------------
 const string ssprintf( const char *format,... )
 {
   char tmp_cstring[1024]="";
@@ -400,7 +477,10 @@ const string ssprintf( const char *format,... )
   return string(tmp_cstring);
 }
 
+// -----------------------------------------------------------------------
+// append
 // appends strings and inserts a separator, if needed
+// -----------------------------------------------------------------------
 string& append( string &str,const string &str2,const string &sep )
 {
   int len = str.length(),len2 = str2.length(),lensep = sep.length();
@@ -414,7 +494,10 @@ string& append( string &str,const string &str2,const string &sep )
   return str += str2;
 }
 
+// -----------------------------------------------------------------------
+// appendf
 // sprintfs to a string, with append, and include a space if needed
+// -----------------------------------------------------------------------
 int appendf( string &str,const char *format,... )
 {
   char tmp_cstring[1024]="";
@@ -428,9 +511,15 @@ int appendf( string &str,const char *format,... )
 
 
 #ifdef ENABLE_TRACER
+// -----------------------------------------------------------------------
+// Tracer
+// Tracer class implementation
+// -----------------------------------------------------------------------
+
+
 void Tracer::startMsg (int level, const char* file, int line,
-		 const char* func, const char* msg,
-		 const void* objPtr)
+                 const char* func, const char* msg,
+                 const void* objPtr)
 {
   itsDo    = true;
   itsLevel = level;
@@ -449,12 +538,12 @@ void Tracer::startMsg (int level, const char* file, int line,
   }
   oss << ends;
   itsMsg = oss.str();
-  dbg_stream << "trace" << itsLevel << " start " << itsMsg << endl;
+  getDebugStream() << "trace" << itsLevel << " start " << itsMsg << endl;
 }
 
 void Tracer::endMsg()
 {
-  dbg_stream << "trace" << itsLevel << " end " << itsMsg << endl;
+  getDebugStream() << "trace" << itsLevel << " end " << itsMsg << endl;
 //    delete [] itsMsg;
 //     itsMsg = 0;
 }
