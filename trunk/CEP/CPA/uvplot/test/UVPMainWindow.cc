@@ -801,7 +801,9 @@ try
                     } else if(ColumnName == "MODEL_DATA") {
                       data = iter.f_predict(corr);
                     } else if(ColumnName == "RESIDUAL_DATA"){
-                      //data = iter.residuals(corr);
+                      //data = iter.f_residuals(corr);
+                    } else if(ColumnName == ""){
+                      data = iter.f_data(corr);                      
                     }
               
                     atom.setHeader(uvp_header);
