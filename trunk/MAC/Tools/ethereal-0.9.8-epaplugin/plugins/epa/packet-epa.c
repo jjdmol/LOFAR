@@ -466,6 +466,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
     proto_tree_add_item(epa_tree, hf_epa_offset,      tvb,  8,  2, TRUE);
     proto_tree_add_item(epa_tree, hf_epa_size,        tvb, 10,  2, TRUE);
 
+    // handle status READACK
     if (0x03 == type && 0x00 == pid && 0x00 == reg)
     {
       newitem = proto_tree_add_text(epa_tree, tvb, 12, 96, "RSP Status register");
@@ -707,6 +708,30 @@ proto_register_epa(void)
 	"write_error", "epa.data.mepstatus.write_error",
 	FT_UINT8, BASE_DEC, VALS(mep_error_vals), 0x0,
 	"Error status of last received write message frame", HFILL 
+      }
+    },
+    {
+      &df_syncstatus_sample_count,
+      {
+	"sample_count", "epa.data.syncstatus.sample_count",
+	FT_UINT32, BASE_DEC, NULL, 0x0,
+	"Sample count at last sync event", HFILL
+      }
+    },
+    {
+      &df_syncstatus_sync_count,
+      {
+	"sync_count", "epa.data.syncstatus.sync_count",
+	FT_UINT32, BASE_DEC, NULL, 0x0,
+	"Counter for the number of sync events", HFILL
+      }
+    },
+    {
+      &df_syncstatus_error_count,
+      {
+	"error_count", "epa.data.syncstatus.error_count",
+	FT_UINT32, BASE_DEC, NULL, 0x0,
+	"Counter for the number of sync errors", HFILL
       }
     },
     {
