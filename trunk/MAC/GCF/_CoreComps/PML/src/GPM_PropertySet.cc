@@ -58,7 +58,7 @@ void GPMPropertySet::propSubscribed(string& propName)
   _counter--;
   if (_counter == 0)
   {
-    _controller.propertiesLinked(_tempSeqnr, _tempLinkList);
+    _controller.propertiesLinked(_scope, _tempLinkList);
   }
 }
 
@@ -71,7 +71,7 @@ void GPMPropertySet::propUnsubscribed(string& propName)
   _counter--;
   if (_counter == 0)
   {
-    _controller.propertiesUnlinked(_tempSeqnr, _tempLinkList);
+    _controller.propertiesUnlinked(_scope, _tempLinkList);
   }
 }
 
