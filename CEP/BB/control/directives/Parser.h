@@ -8,15 +8,18 @@
 //##ModelId=3F4DE33A0399
 class Parser
 {
-  public:
-    //##ModelId=3F4DE363005D
-    void setText(std::string text);
+ public:
+  //##ModelId=3F4DE363005D
+  void setText(std::string text);
 
-    //##ModelId=3F4DE3900109
-    std::string getText();
+  //##ModelId=3F4DE3900109
+  std::string getText();
 
-    //##ModelId=3F4DE3CF031C
-    std::vector<Directive> *getNested();
+  //##ModelId=3F4DE3CF031C
+  std::vector<Directive> *getNested();
+
+ protected:
+  std::string txt;
 
 };
 
