@@ -42,6 +42,9 @@ class StationCorrelator: public LOFAR::ApplicationHolder
   virtual void dump    () const;
   virtual void quit    ();
  private:
+  // connect two steps
+  void connect(Step* srcStep, Step* dstStep, int srcDH, int dstDH);
+
   vector<WorkHolder*> itsWHs;
 
   unsigned int itsNrsp;
