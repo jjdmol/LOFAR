@@ -28,7 +28,7 @@
 #include <Common/Debug.h>			// for AssertStr
 
 
-#include <sstream>				// for ostrstream
+#include <sstream>				// for ostringstream
 #include <sys/time.h>				// for ctime (), time ()
 #include <unistd.h>				// for gethostname ()
 #include <stdlib.h>				// for strtoul
@@ -39,7 +39,9 @@ namespace LOFAR{
 
 
 ulong    DH_Postgresql::theirInstanceCount = 0L;
+#ifdef HAVE_PSQL
 PGconn * DH_Postgresql::theirConnection = NULL;
+#endif
 
 string DH_Postgresql::theirDBHost = "10.87.2.49";
 string DH_Postgresql::theirDBName = "TransportHolder";
@@ -82,6 +84,7 @@ void DH_Postgresql::UseDatabase
 
 
 void DH_Postgresql::ConnectDatabase (void) {
+#ifdef HAVE_PSQL
   ostringstream ConnInfo;
 
   if (DH_Postgresql::theirDBHost == "10.87.2.49") {
@@ -104,12 +107,19 @@ void DH_Postgresql::ConnectDatabase (void) {
 
   cerr << "DH_Postgresql::ConnectDatabase (): Succesfully connected "
        << "to database" << endl;
+#else
+  AssertStr (false, "PSQL is not configured in");
+#endif
 }
 
 
 void DH_Postgresql::DisconnectDatabase (void) {
+#ifdef HAVE_PSQL
   PQfinish (theirConnection);
   cerr << "DH_Postgresql::Disconnect(); Disconnected from database." << endl;
+#else
+  AssertStr (false, "PSQL is not configured in");
+#endif
 }
 
 #define MAX_BYTEA_SIZE (5*4096)
@@ -165,6 +175,7 @@ bool DH_Postgresql::StoreInDatabase (int, int tag, char * buf, int size) {
 
 bool DH_Postgresql::RetrieveFromDatabase (int,int tag, char * buf, int size) { 
 
+#ifdef HAVE_PSQL
   int i;
   i = 0;
 
@@ -224,6 +235,9 @@ bool DH_Postgresql::RetrieveFromDatabase (int,int tag, char * buf, int size) {
   PQclear (res);
 
   itsReadSeqNo ++;
+#else
+  AssertStr (false, "PSQL is not configured in");
+#endif
   return true;
 }
 
@@ -235,6 +249,7 @@ bool DH_Postgresql::ExecuteSQLCommand (char * str) {
 
 
 bool DH_Postgresql::ExecuteSQLCommand (ostringstream & q) {
+#ifdef HAVE_PSQL
   PGresult * res;
 
   res = PQexec (DH_Postgresql::theirConnection, ((q.str ()).c_str ()));
@@ -246,9 +261,11 @@ bool DH_Postgresql::ExecuteSQLCommand (ostringstream & q) {
 
   PQclear (res);
 
+#else
+  AssertStr (false, "PSQL is not configured in");
+#endif
+
   return true;
 }
 
 }
-
-
