@@ -32,9 +32,11 @@ namespace LOFAR
   {
   public:
 
-    explicit WH_RSP(const string& name);
+    explicit WH_RSP(const string& name, 
+                    const int elements);
     virtual ~WH_RSP();
-    static WorkHolder* construct(const string& name);
+    static WorkHolder* construct(const string& name, 
+                                 const int elements);
     virtual WH_RSP* make(const string& name);
 
     virtual void process();
@@ -43,6 +45,8 @@ namespace LOFAR
     WH_RSP (const WH_RSP&);
     /// forbid assignment
     WH_RSP& operator= (const WH_RSP&);
+
+    int itsInElements;
    
   };
 

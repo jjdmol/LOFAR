@@ -33,8 +33,7 @@ namespace LOFAR
 class DH_StationData: public DataHolder
 {
  public:
-  typedef uint16 BufferPrimitive;
-  typedef complex<BufferPrimitive> BufferType;
+  typedef complex<uint16> BufferType;
 
   explicit DH_StationData (const string& name);
   virtual ~DH_StationData();
@@ -48,31 +47,53 @@ class DH_StationData: public DataHolder
   /// Deallocate the buffers
   virtual void postprocess();
 
-  /// get write access to the Buffer in the DataPacket
-  BufferType* getBuffer();
-  /// get read-only access to the Buffer in the DataPacket
-  const BufferType* getBuffer() const;
+  
+  /// accessor functions to the blob data
+  int getStationID() const;
+  void setStationID(int);
+  int getBlockID() const;
+  void setBlockID(int);
+  int getFlag() const;
+  void setFlag(int);
+  BufferType* getBuffer(); 
 
-  const unsigned int getBufSize() const;
- 
+  
  private:
   /// forbid assignment
   DH_StationData& operator= (const DH_StationData&);
 
+  /// pointers to data in the blob
+  int* itsStationIDptr;
+  int* itsBlockIDptr;
+  int* itsFlagptr;
   BufferType* itsBuffer;
-  unsigned int itsBufSize;
   
+  unsigned int itsBufSize;
   void fillDataPointers();
+
 };
+
+inline int DH_StationData::getStationID() const 
+  { return *itsStationIDptr; }
+
+inline void DH_StationData::setStationID(int stationid)  
+  { *itsStationIDptr = stationid; }
+
+inline int DH_StationData::getBlockID() const 
+  { return *itsBlockIDptr; }
+
+inline void DH_StationData::setBlockID(int blockid)  
+  { *itsBlockIDptr = blockid; }
+
+inline int DH_StationData::getFlag() const 
+  { return *itsStationIDptr; }
+
+inline void DH_StationData::setFlag(int flag)  
+  { *itsFlagptr = flag; }
 
 inline DH_StationData::BufferType* DH_StationData::getBuffer() 
   { return itsBuffer; }
 
-inline const DH_StationData::BufferType* DH_StationData::getBuffer() const 
-  { return itsBuffer; }
-
-inline const unsigned int DH_StationData::getBufSize() const
-  { return itsBufSize; }
 
 } // namespace LOFAR
 

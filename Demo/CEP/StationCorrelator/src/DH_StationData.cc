@@ -20,12 +20,19 @@
 //#
 //#  $Id$
 
-//# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
 #include <DH_StationData.h>
 
 using namespace LOFAR;
+
+
+// these parameters should be set in a parameter file
+// for now defines will be used
+#define EPA_PACKETS_IN_RSP_FRAME  8
+#define BEAMLETS_PER_EPA_PACKET  92
+#define NO_DH_STATIONDATA         7
+#define POLARISATIONS             2
 
 DH_StationData::DH_StationData (const string& name)
   : DataHolder     (name, "DH_StationData"),
@@ -46,23 +53,38 @@ DataHolder* DH_StationData:: clone() const {
 }
 
 void DH_StationData::preprocess() {
+  
   // first delete possible preexisting buffers
   postprocess();
   
-  // Determine the buffersize needed for DataPacket and buffer
-  itsBufSize = 0; // TBW
-  
-  addField("Buffer", BlobField<BufferType>(1, itsBufSize));
+  // Determine the buffersize
+  int transposefactor  = BEAMLETS_PER_EPA_PACKET / NO_DH_STATIONDATA;
+  itsBufSize = transposefactor *
+               POLARISATIONS *
+               EPA_PACKETS_IN_RSP_FRAME;
+                        
+  // Add the fields to the data definition
+  addField("StationID", BlobField<int>(1, 1));
+  addField("BlockID", BlobField<int>(1, 1));
+  addField("Flag", BlobField<int>(1, 1));
+  addField("Buffer", BlobField<BufferType>(1, 1));
+
+  // Create the data blob
   createDataBlock();
 
   // use memset to null the buffer instead of a for loop
   memset(itsBuffer, 0, itsBufSize*sizeof(BufferType));
 }
 
-void DH_StationData::postprocess() {
+void DH_StationData::postprocess() 
+{
   itsBuffer = 0;
 }
 
-void DH_StationData::fillDataPointers() {
-  itsBuffer = getData<BufferType> ("Buffer");
+void DH_StationData::fillDataPointers() 
+{  
+  itsStationIDptr = getData<int> ("StationID");
+  itsBlockIDptr   = getData<int> ("BlockID");
+  itsFlagptr      = getData<int> ("Flag"); 
+  itsBuffer       = getData<BufferType> ("Buffer");
 }
