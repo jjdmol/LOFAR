@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.9  2001/10/26 08:55:01  schaaf
+//  minor changes
+//
 //  Revision 1.8  2001/09/19 09:19:34  wierenga
 //  Allocate WH_Empty on heap.
 //
@@ -59,7 +62,7 @@
 #include "ParamBlock.h"
 #include TRANSPORTERINCLUDE
 
-#ifdef CORBA_
+#ifdef HAVE_CORBA
 #include "BS_Corba.h"
 #include "TH_Corba.h"
 #endif
@@ -92,7 +95,7 @@ SeqSim::~SeqSim()
  */
 void SeqSim::define(const ParamBlock& params)
 {
-#ifdef CORBA_
+#ifdef HAVE_CORBA
   // Start Orb Environment
   Firewall::Assert(BS_Corba::init(),
 		   __HERE__,
@@ -103,11 +106,11 @@ void SeqSim::define(const ParamBlock& params)
   char** argv = NULL;
   int    divisor = -1;
 
-#ifdef CORBA_
+#ifdef HAVE_CORBA
   TH_Corba corbaProto;
 #endif
 
-  unsigned int rank = TRANSPORTER::getCurrentRank();
+  int rank = TRANSPORTER::getCurrentRank();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
 
   // free any memory previously allocated
@@ -130,7 +133,8 @@ void SeqSim::define(const ParamBlock& params)
   cout << "SeqSim Processor " << rank << " of " << size << " operational."
        << flush << endl;
 
-  Simul simul(new WH_Empty(), "SeqSim", 0);
+  WH_Empty empty;
+  Simul simul(empty, "SeqSim");
   setSimul(simul);
   simul.runOnNode(0);
 
@@ -146,7 +150,7 @@ void SeqSim::define(const ParamBlock& params)
 					 (iStep==0?true:false), 
 					 1, 
 					 1, 
-					 1024*1024*10);
+					 MAX_GROW_SIZE);
 
     steps[iStep] = new Step(workholders[iStep], "GrowSizeStep", iStep);
 
@@ -159,7 +163,7 @@ void SeqSim::define(const ParamBlock& params)
 
     if (iStep > 0)
     {
-#ifdef CORBA_
+#ifdef HAVE_CORBA
       steps[iStep]->connectInput(steps[iStep-1], corbaProto);
 #else
       steps[iStep]->runOnNode(iStep);

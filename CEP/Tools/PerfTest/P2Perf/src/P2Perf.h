@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2001/09/19 08:00:13  wierenga
+//  Added code to do performance tests.
+//
 //  Revision 1.2  2001/08/16 15:14:22  wierenga
 //  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
 //
@@ -33,9 +36,15 @@
 #ifndef RINGSIM_H
 #define RINGSIM_H
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "Simulator.h"
 #include "WH_GrowSize.h"
 #include "ParamBlock.h"
+
+#define MAX_GROW_SIZE (4*1024*1024)
 
 /**
    This class is an example of a concrete Simulator.

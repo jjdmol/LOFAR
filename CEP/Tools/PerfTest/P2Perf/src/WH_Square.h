@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2001/08/16 15:14:23  wierenga
+//  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
+//
 //  Revision 1.1  2001/08/09 15:48:48  wierenga
 //  Implemented first version of TH_Corba and test program
 //
@@ -29,6 +32,10 @@
 
 #ifndef WH_SQUARE_H
 #define WH_SQUARE_H
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include "WorkHolder.h"
 #include "DH_IntArray.h"
