@@ -41,9 +41,14 @@ MeqServer::MeqServer()
 Node & MeqServer::resolveNode (const DataRecord &rec)
 {
   int nodeindex = rec[AidNodeIndex].as<int>(-1);
-  if( nodeindex>0 )
-    return forest.get(nodeindex);
   string name = rec[AidName].as<string>("");
+  if( nodeindex>0 )
+  {
+    Node &node = forest.get(nodeindex);
+    FailWhen( name.length() && node.name() != name,"node specified by index is "+ 
+        node.name()+", which does not match specified name "+name); 
+    return node;
+  }
   FailWhen( !name.length(),"either nodeindex or name must be specified");
   cdebug(3)<<"looking up node name "<<name<<endl;
   return forest.findNode(name);
@@ -102,9 +107,11 @@ void MeqServer::getNodeState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
 
 void MeqServer::setNodeState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
 {
-  Node & node = resolveNode(*in);
+  DataRecord::Ref rec = in;
+  Node & node = resolveNode(*rec);
   cdebug(3)<<"setState for node "<<node.name()<<endl;
-  node.setState(in());
+  rec.privatize(DMI::WRITE|DMI::DEEP);
+  node.setState(rec()[AidState].as_wr<DataRecord>());
   out.attach(node.state(),DMI::READONLY|DMI::ANON);
 }
 
