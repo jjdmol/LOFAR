@@ -36,7 +36,7 @@ namespace LOFAR {
     // The DBRep<MeqParmHolder> structure is a compilation of the fields
     // of the MeqParmHolder class and the persistency layer. It contains
     // all fields that should be stored to the database
-    class DBRep<MeqParmDefHolder> : public DBRepMeta
+    class DBRep<MeqParmDefHolder>
     {
     public:
       void bindCols (dtl::BoundIOs& cols);
@@ -76,6 +76,18 @@ namespace LOFAR {
 
 
 
+    // Copy the fields from the A object to the DBRep<A> structure.
+    template<>
+    inline void TPersistentObject<MeqParmDefHolder>::toDBRep
+                                  (DBRep<MeqParmDefHolder>& dest) const
+      { dest.toDBRep (data()); }
+
+    // Copy the fields from the DBRep<A> structure to the A object.
+    template<>
+    inline void TPersistentObject<MeqParmDefHolder>::fromDBRep
+                                  (const DBRep<MeqParmDefHolder>& src)
+      { src.fromDBRep (data()); }
+
     // Initialize the internals of TPersistentObject<MeqParmDefHolder>
     template<>
     void TPersistentObject<MeqParmDefHolder>::init();
@@ -84,6 +96,18 @@ namespace LOFAR {
     template<>
     void TPersistentObject<MeqParmDefHolder>::initAttribMap();
 
+
+    // Copy the fields from the A object to the DBRep<A> structure.
+    template<>
+    inline void TPersistentObject<MeqParmHolder>::toDBRep
+                                  (DBRep<MeqParmHolder>& dest) const
+      { dest.toDBRep (data()); }
+
+    // Copy the fields from the DBRep<A> structure to the A object.
+    template<>
+    inline void TPersistentObject<MeqParmHolder>::fromDBRep
+                                  (const DBRep<MeqParmHolder>& src)
+      { src.fromDBRep (data()); }
 
     // Initialize the internals of TPersistentObject<MeqParmHolder>
     template<>
