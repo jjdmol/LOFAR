@@ -829,7 +829,7 @@ TPOaddSearchRoutine()
 echo "	cout << \"doRetrieve ${Class}\" << endl;"
 	echo "	DBView<${Class}_DBRep>	selView(\"${Table}\", ${Class}_DTL_BCA(),"
 	echo "													query.getSql());"
-	echo "	DBView<${Class}_DBRep>::select_iterator	selIter = selView;"
+	echo "	DBView<${Class}_DBRep>::select_iterator	selIter = selView.begin();"
 	echo "	Collection<TPersistentObject<${Class}> > 	selResult;"
 	echo ""
 
