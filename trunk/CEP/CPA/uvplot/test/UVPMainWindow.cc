@@ -55,9 +55,9 @@
 #include <MSVisAgent/MSInputAgent.h>
 #include <AID-uvplot.h>
 using namespace VisAgent;
+#include <UVPOpenVDMDialog.h>
 #endif // HAVE_VDM
 
-#include <UVPOpenVDMDialog.h>
 
 
 #if(DEBUG_MODE)
@@ -649,7 +649,9 @@ try
 
   DataRecord::Ref dataref;
   DataRecord& rec = dataref <<= new DataRecord;
-  
+ 
+  rec[FThrowError] = True;
+ 
   DataRecord& args = rec[AidInput] <<= new DataRecord;
 
    
@@ -658,11 +660,10 @@ try
   args[FTileSize]       = 10;
 
     // setup selection
-  DataRecord &select = *new DataRecord;
-  args[FSelection] <<= select;
+  DataRecord &select = args[FSelection] <<= new DataRecord;
 
   select[FDDID]              = 0;
-  select[FFieldIndex]        = 1;
+  select[FFieldIndex]        = 0;
   select[FChannelStartIndex] = 0;
   select[FChannelEndIndex]   = 127;
   select[FSelectionString]   = select_sstream.str();
@@ -681,10 +682,14 @@ try
   if(itsInputAgent == 0) {
     itsInputAgent   = new MSInputAgent(AidInput);
   }
-  
+
+#if(DEBUG_MODE)
+  std::cout << args.sdebug(2) << std::endl;
+#endif  
   bool res = itsInputAgent->init(rec);
 
   if( !res ){
+    cout<<"agent state: "<<itsInputAgent->stateString()<<endl;
     cout<<"init has failed, exiting...\n";
     delete itsInputAgent;
     itsInputAgent = 0;
