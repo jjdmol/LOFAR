@@ -27,7 +27,14 @@
 
 #include <GCF/GCF_Defines.h>
 
-enum TPMResult {
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
+enum TPMResult 
+{
   PM_NO_ERROR, 
   PM_UNKNOWN_ERROR,
   PM_PA_NOTCONNECTED,
@@ -47,5 +54,8 @@ enum TPMResult {
   PM_SCOPE_NOT_FOUND,
   PM_PA_NOT_REACHABLE,
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

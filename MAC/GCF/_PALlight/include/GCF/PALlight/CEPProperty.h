@@ -26,9 +26,12 @@
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_Defines.h>
 
-namespace LOFAR {
- namespace GCF {
-  namespace CEPPMLlight {
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace CEPPMLlight 
+  {
     
 class CEPPropertySet;
 
@@ -51,14 +54,14 @@ class CEPProperty
 
     // @return a clone of the managed value object. This is done to avoid 
     //         changing the value without using the setValue method. 
-    GCFPValue* getValue () const;
+    Common::GCFPValue* getValue () const;
    
     // changes the current hold value of the property
     // The new value always can be set by means of a string formated text.
     // The set method converts the data to the right value type.
     // <group>
     bool setValue (const string& value);
-    bool setValue (const GCFPValue& value);        
+    bool setValue (const Common::GCFPValue& value);        
     // </group>
 
     // @return true if an external process has decided to monitor 
@@ -70,7 +73,7 @@ class CEPProperty
     
     // contructor: is private because only the property set has knowledge about 
     // a property. A property can not exists on its own. 
-    CEPProperty (const TPropertyInfo& propertyFields, 
+    CEPProperty (const Common::TPropertyInfo& propertyFields, 
                        CEPPropertySet& propertySet);
 
     // constructor for a dummy property @see CEPPropertySet
@@ -93,7 +96,7 @@ class CEPProperty
     // reference to the containing property set
     CEPPropertySet&   _propertySet;
     // the value of the property
-    GCFPValue*        _pValue;
+    Common::GCFPValue*        _pValue;
 };
 
 inline const string& CEPProperty::getName () const 

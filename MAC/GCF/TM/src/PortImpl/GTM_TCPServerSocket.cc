@@ -29,6 +29,13 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+    
 GTMTCPServerSocket::GTMTCPServerSocket(GCFTCPPort& port, bool isProvider) : 
   GTMTCPSocket(port),
   _isProvider(isProvider),
@@ -210,3 +217,6 @@ ssize_t GTMTCPServerSocket::recv(void* buf, size_t count)
   else
     return 0;
 }
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

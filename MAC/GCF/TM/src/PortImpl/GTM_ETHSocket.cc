@@ -47,6 +47,12 @@
 #include <linux/filter.h>
 #endif
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
 
 GTMETHSocket::GTMETHSocket(GCFETHRawPort& port) :
   GTMFile(port)
@@ -294,3 +300,6 @@ void GTMETHSocket::convertCcp2sllAddr(const char* destMacStr,
       destMac[i] = (char)hx[i];
   }
 }
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

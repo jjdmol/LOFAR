@@ -27,6 +27,15 @@
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/ParameterSet.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace TM;
+using namespace Common;
+  namespace PAL 
+  {
+   
 #define QUEUE_REQUEST(p, e)  \
   if (!mayContinue(e, p)) break;
 
@@ -709,3 +718,7 @@ void GPAController::emptyGarbage()
   }
   _propertySetGarbage.clear();
 }
+
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

@@ -27,8 +27,14 @@
 #include <sys/time.h>
 #include <signal.h>
 
-using namespace LOFAR;
-using namespace LOFAR::GCF::CEPPMLlight;
+namespace LOFAR
+{
+ namespace GCF
+ {
+using namespace Common;
+using namespace CEPPMLlight;
+  namespace Test
+  {
 
 /**
  * Function to calculate the elapsed time between two tiemval's.
@@ -93,6 +99,11 @@ void ping ()
         time_elapsed(&pingTime, &echoTime));  
   }
 }
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR
+
+using namespace LOFAR::GCF;
 
 int main (int , const char** )
 {
@@ -100,9 +111,11 @@ int main (int , const char** )
   signal(SIGPIPE, SIG_IGN);
   try 
   {
-    ping();
-  } catch (std::exception& x) {
-    cerr << "Unexpected exception in 'ping': " << x.what() << endl;
+    Test::ping();
+  } 
+  catch (std::exception& x) 
+  {
+    fprintf(stderr, "Unexpected exception in 'ping': %s\n", x.what());
     return 1;
   }
   return 0;

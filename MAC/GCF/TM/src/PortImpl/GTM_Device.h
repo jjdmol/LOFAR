@@ -28,6 +28,13 @@
 #include "GTM_File.h"
 #include <Common/lofar_string.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 // forward declaration
 class GCFDevicePort;
 
@@ -60,5 +67,8 @@ class GTMDevice : public GTMFile
     GTMDevice (const GTMDevice&);
     GTMDevice& operator= (const GTMDevice&);
 };
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

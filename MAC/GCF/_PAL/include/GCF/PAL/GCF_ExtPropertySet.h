@@ -26,6 +26,12 @@
 #include <GCF/GCF_Defines.h>
 #include <GCF/PAL/GCF_PropertySet.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 class GPMController;
 
 // This class represents a property set of properties specified in an APC. It 
@@ -58,7 +64,7 @@ class GCFExtPropertySet : public GCFPropertySet
     //         Note that in case of no GCF_NO_ERROR this action ends synchronous.
     //         Otherwise an anwer of type @link GCFPropSetAnswerEvent @endlink 
     //         will be given.
-    TGCFResult load ();
+    Common::TGCFResult load ();
 
     // Asynchronous method
     // In fact it unregisters the scope from the Property Agent.
@@ -70,22 +76,22 @@ class GCFExtPropertySet : public GCFPropertySet
     //         Note that in case of no GCF_NO_ERROR this action ends synchronous.
     //         Otherwise an anwer of type @link GCFPropSetAnswerEvent @endlink 
     //         will be given.
-    TGCFResult unload ();
+    Common::TGCFResult unload ();
 
     // Asynchronous request (results in a response via the GCFAnswer object)
     // @return GCF_NO_ERROR, GCF_PROP_NOT_IN_SET, GCF_PML_ERROR (see for more 
     //         info in the logging of the SAL of GCF
-    TGCFResult requestValue (const string propName) const;
+    Common::TGCFResult requestValue (const string propName) const;
 
     // Asynchronous request (results in a response via the GCFAnswer object)
     // @return GCF_NO_ERROR, GCF_PROP_NOT_IN_SET, GCF_BUSY, GCF_ALREADY_SUBSCRIBED,
     //         GCF_PML_ERROR (see for more info in the logging of the SAL of GCF)
-    TGCFResult subscribeProp (const string propName) const;
+    Common::TGCFResult subscribeProp (const string propName) const;
 
     // Asynchronous request (results in a response via the GCFAnswer object)
     // @return GCF_NO_ERROR, GCF_PROP_NOT_IN_SET, GCF_BUSY, GCF_NOT_SUBSCRIBED, 
     //         GCF_PML_ERROR (see for more info in the logging of the SAL of GCF)
-    TGCFResult unsubscribeProp (const string propName) const;
+    Common::TGCFResult unsubscribeProp (const string propName) const;
     
     bool isPropSubscribed (const string propName) const;
 
@@ -93,9 +99,9 @@ class GCFExtPropertySet : public GCFPropertySet
     
   private:
     friend class GPMController;
-    void loaded(TGCFResult result);
+    void loaded(Common::TGCFResult result);
     
-    void unloaded(TGCFResult result);
+    void unloaded(Common::TGCFResult result);
     void serverIsGone();
     
   private:
@@ -107,10 +113,13 @@ class GCFExtPropertySet : public GCFPropertySet
     // </group>
     
   private: // helper methods
-    GCFProperty* createPropObject(const TPropertyInfo& propInfo);
+    GCFProperty* createPropObject(const Common::TPropertyInfo& propInfo);
       
   private: // data members
     bool _isLoaded;
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif
 

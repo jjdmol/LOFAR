@@ -43,13 +43,15 @@
 // the DH_PIProtocol class (from the PI package) and the TH_Socket class of 
 // the LCS/Transport package.
 
-class GCFPValue;
-
-namespace LOFAR {
-
+namespace LOFAR 
+{
 class TH_Socket;
-
- namespace GCF {
+ namespace GCF 
+ {
+  namespace Common
+  {
+class GCFPValue;
+  }
   namespace CEPPMLlight {
     
 class CEPPropertySet;
@@ -76,7 +78,7 @@ class PIClient
                             TPIResult result);
     void valueSet(CEPPropertySet& propSet, 
                   const string& propName, 
-                  const GCFPValue& value);
+                  const Common::GCFPValue& value);
     void deletePropSet(const CEPPropertySet& propSet);
     // </group>
     

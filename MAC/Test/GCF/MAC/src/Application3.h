@@ -3,14 +3,22 @@
 
 #include <GCF/TM/GCF_Task.h>
 #include "SupervisedTask.h"
-#include <GCF/PAL/GCF_MyPropertySet.h>
 #include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <Suite/test.h>
 
+namespace LOFAR
+{
+ namespace GCF
+ {
+  namespace TM
+  {
 class GCFEvent;
 class GCFPortInterface;
+  }
+  namespace Test
+  {
 
-class Application : public GCFTask, public Test
+class Application : public TM::GCFTask, public ::Test
 {
   public:
     Application();
@@ -18,18 +26,21 @@ class Application : public GCFTask, public Test
     void run();    
     
   private: 
-    GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test7_3(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test7_4(GCFEvent& e, GCFPortInterface& p);
+    TM::GCFEvent::TResult initial(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test7_3(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test7_4(TM::GCFEvent& e, TM::GCFPortInterface& p);
 
-    GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
+    TM::GCFEvent::TResult finished(TM::GCFEvent& e, TM::GCFPortInterface& p);
     
   private:
     Task _supTask;
     unsigned int _seqNr;
     unsigned int _counter;
     // Task
-    GCFExtPropertySet _ePropertySetC;
+    PAL::GCFExtPropertySet _ePropertySetC;
     
 };
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR
 #endif

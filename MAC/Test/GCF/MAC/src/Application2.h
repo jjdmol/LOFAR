@@ -7,10 +7,19 @@
 #include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <Suite/test.h>
 
+namespace LOFAR
+{
+ namespace GCF
+ {
+  namespace TM
+  {
 class GCFEvent;
 class GCFPortInterface;
+  }
+  namespace Test
+  {
 
-class Application : public GCFTask , public Test
+class Application : public TM::GCFTask, public ::Test
 {
   public:
     Application();
@@ -19,42 +28,45 @@ class Application : public GCFTask , public Test
     void run();
     
   private: 
-    GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test1_1(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test1_2(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test2_5(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test3_1(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test3_2(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test3_3(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test4_1(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test4_2(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test4_3(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test4_4(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test5_3(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test6_3(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test6_4(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test6_5(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test6_6(GCFEvent& e, GCFPortInterface& p);
+    TM::GCFEvent::TResult initial(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test1_1(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test1_2(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test2_5(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test3_1(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test3_2(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test3_3(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test4_1(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test4_2(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test4_3(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test4_4(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test5_3(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test6_3(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test6_4(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test6_5(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult test6_6(TM::GCFEvent& e, TM::GCFPortInterface& p);
 
-    GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
+    TM::GCFEvent::TResult finished(TM::GCFEvent& e, TM::GCFPortInterface& p);
     
   private:
     Task _supTask3;
     unsigned int _counter;
 
-    GCFTCPPort _port;
+    TM::GCFTCPPort _port;
     unsigned int _curRemoteTestNr;
 
-    GCFTCPPort* _pSTPort1;
-    GCFTCPPort* _pSTPort2;
+    TM::GCFTCPPort* _pSTPort1;
+    TM::GCFTCPPort* _pSTPort2;
 
-    GCFMyPropertySet _propertySetC1;
-    GCFMyPropertySet _propertySetD1;
-    GCFMyPropertySet _propertySetB4;
+    PAL::GCFMyPropertySet _propertySetC1;
+    PAL::GCFMyPropertySet _propertySetD1;
+    PAL::GCFMyPropertySet _propertySetB4;
     
-    GCFExtPropertySet _ePropertySetAC;
-    GCFExtPropertySet _ePropertySetAE;
-    GCFExtPropertySet _ePropertySetAH;
-    GCFExtPropertySet _ePropertySetAK;
+    PAL::GCFExtPropertySet _ePropertySetAC;
+    PAL::GCFExtPropertySet _ePropertySetAE;
+    PAL::GCFExtPropertySet _ePropertySetAH;
+    PAL::GCFExtPropertySet _ePropertySetAK;
 };
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR
 #endif

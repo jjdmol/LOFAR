@@ -29,6 +29,13 @@
 #include <Timer/GTM_TimerHandler.h>
 #include <GCF/ParameterSet.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 // static framework events
 static GCFEvent disconnectedEvent(F_DISCONNECTED);
 static GCFEvent connectedEvent   (F_CONNECTED);
@@ -318,3 +325,6 @@ const string& GCFRawPort::getRealName() const
 {
   return (isSlave() ? _pMaster->getName() : _name);
 }
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

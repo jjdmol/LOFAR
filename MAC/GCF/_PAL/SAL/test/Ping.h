@@ -27,6 +27,12 @@
 #include <GCF/TM/GCF_Control.h>
 #include <sys/time.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 /**
  * The Ping task sends ECHO_PING events to the Echo task and expects 
  * ECHO_ECHO events in return.
@@ -82,5 +88,8 @@ class Ping : public GCFTask
    */
   long ping_timer; // remember ping timer id to be able to cancel it
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

@@ -30,6 +30,13 @@
 #include <iostream>
 #include <cstdlib>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 #define TRAN(_target_) \
   { \
     tran(static_cast<State>(&_target_), __func__, #_target_); \
@@ -157,5 +164,8 @@ class GCFFsm
   private:
     static GCFDummyPort _gcfPort;
 };
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

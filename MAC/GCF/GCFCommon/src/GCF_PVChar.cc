@@ -23,6 +23,13 @@
 
 #include <GCF/GCF_PVChar.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
+
 unsigned int GCFPVChar::unpackConcrete(const char* valBuf)
 {
   _value = valBuf[0];
@@ -79,3 +86,6 @@ TGCFResult GCFPVChar::copy(const GCFPValue& newVal)
   
   return result;
 }
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR

@@ -25,20 +25,25 @@
 #define GPI_TH_PORT_H
 
 #include <lofar_config.h>
-#include <Common/lofar_string.h>
 #include <Transport/TransportHolder.h>
 #include <GCF/TM/GCF_Event.h>
 #include <Common/LofarTypes.h>
 
-class GCFPortInterface;
-
-namespace LOFAR
+namespace LOFAR 
 {
+ namespace GCF 
+ {
+  namespace TM
+  {
+class GCFPortInterface;
+  }  
+  namespace PAL
+  {
 
 class GPITH_Port: public TransportHolder
 {
   public:
-    GPITH_Port (GCFPortInterface& port) : _port(port) {}
+    GPITH_Port (TM::GCFPortInterface& port) : _port(port) {}
     
     virtual ~GPITH_Port();
     
@@ -64,12 +69,12 @@ class GPITH_Port: public TransportHolder
       { return (false); }
     
   private:
-    GCFPortInterface& _port;
+    TM::GCFPortInterface& _port;
     
-    class GPIBlobEvent : public GCFEvent
+    class GPIBlobEvent : public TM::GCFEvent
     {
       public:
-        GPIBlobEvent() : GCFEvent(0) {};
+        GPIBlobEvent() : TM::GCFEvent(0) {};
         virtual ~GPIBlobEvent() {};
   
         void* blobData;
@@ -82,6 +87,7 @@ class GPITH_Port: public TransportHolder
         GPIBlobEvent& operator= (const GPIBlobEvent&);
     }; 
 };
-  
-}
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif

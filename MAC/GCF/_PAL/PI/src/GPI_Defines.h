@@ -27,9 +27,18 @@
 
 #include <GCF/GCF_Defines.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 
 const string PI_TASK_NAME("GCF-PI");
 const string PI_CEPPLS_TASK_NAME("GCF-PI-CEP");
 const string PI_RTCPLS_TASK_NAME("GCF-PI-RTC");
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

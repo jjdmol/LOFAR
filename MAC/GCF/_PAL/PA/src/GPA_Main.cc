@@ -23,15 +23,16 @@
 #include <GPA_Controller.h>
 #include <GCF/TM/GCF_Control.h>
 
+using namespace LOFAR::GCF;
 int main(int argC, char *argV[])
 {
-  GCFTask::init(argC, argV);
+  TM::GCFTask::init(argC, argV);
   
-  GPAController propertyAgent; 
+  PAL::GPAController propertyAgent; 
   
   propertyAgent.start(); // make initial transition
   
-  GCFTask::run();
+  TM::GCFTask::run();
 
   return 0;
 }

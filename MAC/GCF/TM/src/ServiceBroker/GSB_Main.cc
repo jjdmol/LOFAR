@@ -27,11 +27,11 @@ int main(int argC, char *argV[])
 {
   GCFTask::init(argC, argV);
   
-  GSBController serviceBroker; 
+  LOFAR::GCF::SB::GSBController serviceBroker; 
   
   serviceBroker.start(); // make initial transition
   
-  GCFTask::run();
+  LOFAR::GCF::TM::GCFTask::run();
 
   return 0;
 }

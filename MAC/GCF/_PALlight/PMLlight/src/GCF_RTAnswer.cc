@@ -22,8 +22,14 @@
 
 #include <GCF/PALlight/GCF_RTAnswer.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace RTCPMLlight 
+  {
 /**
- * F_PML_PROTOCOL signal names (lite)
+ * F_PML_PROTOCOL signal names (light)
  */
 const char* F_PML_PROTOCOL_signalnames[] =
 {
@@ -32,3 +38,6 @@ const char* F_PML_PROTOCOL_signalnames[] =
   "F_MYPS_ENABLED (IN)",
   "F_MYPS_DISABLED (IN)",
 };
+  } // namespace RTCPMLlight
+ } // namespace GCF
+} // namespace LOFAR

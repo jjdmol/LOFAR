@@ -23,6 +23,13 @@
 #include <GCF/PAL/GCF_PropertyProxy.h>
 #include <GPM_PropertyProxy.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+  namespace PAL
+  {
 GCFPropertyProxy::GCFPropertyProxy() :
   _pPMProxy(0)
 {
@@ -54,3 +61,6 @@ TGCFResult GCFPropertyProxy::setPropValue(const string& propName, const GCFPValu
 {
   return (_pPMProxy->setPM(propName, value, wantAnswer) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

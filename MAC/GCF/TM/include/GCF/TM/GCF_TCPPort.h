@@ -24,13 +24,24 @@
 #define GCF_TCPPORT_H
 
 #include <GCF/TM/GCF_RawPort.h>
-#include <Common/lofar_string.h>
+
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+
+  namespace SB
+  {
+class GTMServiceBroker;
+  }
+  
+  namespace TM 
+  {
 
 // forward declaration
 class GCFTask;
 class GCFEvent;
 class GTMTCPSocket;
-class GTMServiceBroker;
 
 /**
  * This is the class, which implements the special port with the TCP message 
@@ -86,7 +97,7 @@ class GCFTCPPort : public GCFRawPort
     void setAddr (const TPeerAddr& addr);
 
   private: // helper methods
-    friend class GTMServiceBroker;
+    friend class SB::GTMServiceBroker;
     void serviceRegistered(unsigned int result, unsigned int portNumber);
     void serviceUnregistered();
     void serviceInfo(unsigned int result, unsigned int portNumber, const string& host);
@@ -100,7 +111,10 @@ class GCFTCPPort : public GCFRawPort
     TPeerAddr         _addr;
     string            _host;
     unsigned int      _portNumber;
-    GTMServiceBroker* _broker;
+    SB::GTMServiceBroker* _broker;
 };
 
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 #endif

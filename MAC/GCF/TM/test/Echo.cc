@@ -25,6 +25,12 @@
 #include "Echo_Protocol.ph"
 #include <Common/lofar_iostream.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
 
 Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 {
@@ -137,6 +143,12 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
 
   return status;
 }
+
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
+
+using namespace LOFAR::GCF::TM;
 
 int main(int argc, char* argv[])
 {

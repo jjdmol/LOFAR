@@ -27,6 +27,12 @@
 #include <GSA_Service.h>
 #include <GCF/PAL/GCF_PropertyProxy.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 class GPMPropertyProxy : public GSAService
 {
   public:
@@ -36,7 +42,7 @@ class GPMPropertyProxy : public GSAService
     TSAResult subscribePM(const string& propName);
     TSAResult unsubscribePM(const string& propName);
     TSAResult getPM(const string& propName);
-    TSAResult setPM(const string& propName, const GCFPValue& value, bool wantAnswer);
+    TSAResult setPM(const string& propName, const Common::GCFPValue& value, bool wantAnswer);
 
   protected:
     void dpCreated(const string& /*propName*/);
@@ -44,8 +50,8 @@ class GPMPropertyProxy : public GSAService
     void dpeSubscribed(const string& propName);
     void dpeSubscriptionLost (const string& propName);
     void dpeUnsubscribed(const string& propName);
-    void dpeValueGet(const string& propName, const GCFPValue& value);
-    void dpeValueChanged(const string& propName, const GCFPValue& value);
+    void dpeValueGet(const string& propName, const Common::GCFPValue& value);
+    void dpeValueChanged(const string& propName, const Common::GCFPValue& value);
     void dpeValueSet(const string& propName);
     
   private:
@@ -75,7 +81,7 @@ inline TSAResult GPMPropertyProxy::getPM(const string& propName)
 }
 
 inline TSAResult GPMPropertyProxy::setPM(const string& propName, 
-                                         const GCFPValue& value, 
+                                         const Common::GCFPValue& value, 
                                          bool wantAnswer)
 {
   return GSAService::dpeSet(propName, value, wantAnswer);
@@ -102,12 +108,12 @@ inline void GPMPropertyProxy::dpeUnsubscribed(const string& propName)
   _gcfProxy.propUnsubscribed(propName);
 }
 
-inline void GPMPropertyProxy::dpeValueGet(const string& propName, const GCFPValue& value)
+inline void GPMPropertyProxy::dpeValueGet(const string& propName, const Common::GCFPValue& value)
 {
   _gcfProxy.propValueGet(propName, value);
 }
 
-inline void GPMPropertyProxy::dpeValueChanged(const string& propName, const GCFPValue& value)
+inline void GPMPropertyProxy::dpeValueChanged(const string& propName, const Common::GCFPValue& value)
 {
   _gcfProxy.propValueChanged(propName, value);
 }
@@ -116,5 +122,8 @@ inline void GPMPropertyProxy::dpeValueSet(const string& propName)
 {
   _gcfProxy.propValueSet(propName);
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif
 

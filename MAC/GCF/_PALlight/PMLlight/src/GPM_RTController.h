@@ -29,8 +29,6 @@
 #include <GCF/TM/GCF_Handler.h>
 #include "GPM_RTDefines.h"
 #include <GCF/Protocols/PI_Protocol.ph>
-#include <Common/lofar_map.h>
-#include <Common/lofar_list.h>
 
 /**
    This singleton class forms the bridge between the PMLlite API classes and the SS. 
@@ -40,9 +38,21 @@
    property set or set property).
 */
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common
+  {
 class GCFPValue;
+  }
+  namespace TM
+  {
 class GCFEvent;
 class GCFPortInterface;
+  }
+  namespace RTCPMLlight 
+  {
 class GCFRTMyPropertySet;
 class GPMRTHandler;
 
@@ -62,7 +72,7 @@ class GPMRTController : public GCFTask
                            TPIResult result);
     void propertiesUnlinked (const string& scope, 
                             TPIResult result);
-    void valueSet(const string& propName, const GCFPValue& value);
+    void valueSet(const string& propName, const Common::GCFPValue& value);
     void deletePropSet(const GCFRTMyPropertySet& propSet);
     
   private:
@@ -104,4 +114,7 @@ class GPMRTHandler : public GCFHandler
     static GPMRTHandler* _pInstance;
     GPMRTController _controller;
 };
+  } // namespace RTCPMLlight
+ } // namespace GCF
+} // namespace LOFAR
 #endif

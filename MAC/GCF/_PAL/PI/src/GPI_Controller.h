@@ -26,10 +26,18 @@
 #include <GPI_Defines.h>
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_Task.h>
-#include <Common/lofar_list.h>
 #include <GPI_PropertyProxy.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM
+  {
 class GCFEvent;
+  }
+  namespace PAL
+  {
 class GPIPMLlightServer;
 
 // This is the main class of the Property Interface class. It has the 
@@ -38,7 +46,7 @@ class GPIPMLlightServer;
 // specialized GPIPMLlightServer classes will be created, which handles the 
 // protocol messages from the PIA or the Property Agent.
 
-class GPIController : public GCFTask
+class GPIController : public TM::GCFTask
 {
 	public:
 		GPIController ();
@@ -56,18 +64,21 @@ class GPIController : public GCFTask
     // </group>
     
 	private: // state methods
-		GCFEvent::TResult initial   (GCFEvent& e, GCFPortInterface& p);
-		GCFEvent::TResult operational (GCFEvent& e, GCFPortInterface& p);
+		TM::GCFEvent::TResult initial   (TM::GCFEvent& e, TM::GCFPortInterface& p);
+		TM::GCFEvent::TResult operational (TM::GCFEvent& e, TM::GCFPortInterface& p);
 
 	private: // data members
     typedef list<GPIPMLlightServer*> TPMLlightServers;
     TPMLlightServers      _pmlLightServers;
 
-		GCFTCPPort            _rtcClientPortProvider;
-    GCFTCPPort            _cepClientPortProvider;
+		TM::GCFTCPPort        _rtcClientPortProvider;
+    TM::GCFTCPPort        _cepClientPortProvider;
     GPIPropertyProxy      _propertyProxy;
     
   private: // admin. data members
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

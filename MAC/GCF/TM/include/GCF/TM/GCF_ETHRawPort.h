@@ -31,6 +31,13 @@
 
 #include <string>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 //#forward declaration
 class GCFTask;
 class GTMETHSocket;
@@ -108,5 +115,8 @@ class GCFETHRawPort : public GCFRawPort
     GTMETHSocket* _pSocket;
     unsigned short _ethertype;
 };
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif /* GCF_ETHRAWPORT_H */

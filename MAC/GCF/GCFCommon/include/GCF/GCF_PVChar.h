@@ -25,6 +25,12 @@
 
 #include <GCF/GCF_PValue.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
 /**
    By means of this property type a character (0...255) value can be used.
 */
@@ -70,5 +76,7 @@ class GCFPVChar : public GCFPValue
     /** The value */
     char _value;
 };
-
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR
 #endif

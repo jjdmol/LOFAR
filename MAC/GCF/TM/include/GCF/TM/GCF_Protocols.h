@@ -25,6 +25,13 @@
 
 #include <GCF/TM/GCF_Event.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 /**
  * Macro to encode an event's signal from the signal id, protocal an in/out direction
  */
@@ -116,5 +123,8 @@ struct GCFTimerEvent : public GCFEvent
   unsigned long id;
   void* arg;
 };
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

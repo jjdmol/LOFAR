@@ -37,32 +37,37 @@
    more than one connect request from different clients (PML).
 */
 
-class GCFEvent;
-class GCFPortInterface; 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL 
+  {
+
 class GPAPropertySet;
 
-class GPAController : public GCFTask
+class GPAController : public TM::GCFTask
 {
 	public:
 		GPAController();
 		virtual ~GPAController();
   
 	private: // state methods
-		GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-		GCFEvent::TResult operational(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult linking(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult unlinking(GCFEvent& e, GCFPortInterface& p);
+		TM::GCFEvent::TResult initial(TM::GCFEvent& e, TM::GCFPortInterface& p);
+		TM::GCFEvent::TResult operational(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult linking(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult unlinking(TM::GCFEvent& e, TM::GCFPortInterface& p);
 
   private: // helper methods
     friend class GPAPropertySet;
-    bool mayContinue(GCFEvent& e, GCFPortInterface& p);
-    void sendAndNext(GCFEvent& e);
+    bool mayContinue(TM::GCFEvent& e, TM::GCFPortInterface& p);
+    void sendAndNext(TM::GCFEvent& e);
     void doNextRequest();    
     GPAPropertySet* findPropSet(const string& scope) const;
-    void acceptConnectRequest(GCFPortInterface& p);
-    void clientPortGone(GCFPortInterface& p);
-    void propSetClientGone(GCFPortInterface& p);
-    void deletePort(GCFPortInterface& p);
+    void acceptConnectRequest(TM::GCFPortInterface& p);
+    void clientPortGone(TM::GCFPortInterface& p);
+    void propSetClientGone(TM::GCFPortInterface& p);
+    void deletePort(TM::GCFPortInterface& p);
     void emptyGarbage();
     //GCFPVSSPort& getDistPmlPort() { return _distPmlPortProvider;}
     
@@ -73,10 +78,10 @@ class GPAController : public GCFTask
     
 		GPARequestManager       _requestManager;
 
-    list<GCFPortInterface*> _pmlPorts;		
-    list<GCFPortInterface*> _pmlPortGarbage;
-		GCFTCPPort              _pmlPortProvider;
-    GCFPVSSPort             _distPmlPortProvider;
+    list<TM::GCFPortInterface*> _pmlPorts;		
+    list<TM::GCFPortInterface*> _pmlPortGarbage;
+		TM::GCFTCPPort              _pmlPortProvider;
+    PAL::GCFPVSSPort            _distPmlPortProvider;
     
   private: // admin. data members
     bool              _isBusy;
@@ -87,5 +92,8 @@ class GPAController : public GCFTask
     GPAConverter      _converter;   
     bool              _synchronous;
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

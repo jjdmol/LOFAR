@@ -14,6 +14,15 @@
 using std::cerr;
 using std::endl;
 
+namespace LOFAR
+{
+ namespace GCF
+ {
+using namespace Common;   
+using namespace TM;
+using namespace PAL;
+  namespace Test
+  {
 static string sTaskName = "TA2";
 
 Application::Application() :
@@ -1073,13 +1082,18 @@ void Application::run()
   start(); // make initial transition
   GCFTask::run();
 }
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR
+
+using namespace LOFAR::GCF;
 
 int main(int argc, char* argv[])
 {
-  GCFTask::init(argc, argv);
+  TM::GCFTask::init(argc, argv);
   
   Suite s("GCF Test", &cerr);
-  s.addTest(new Application);
+  s.addTest(new LOFAR::GCF::Test::Application);
   s.run();
   s.report();
   s.free();

@@ -34,8 +34,10 @@
 #include <Common/lofar_map.h>
 #include <Common/LofarLogger.h>
 
-namespace LOFAR {
- namespace GCF {
+namespace LOFAR 
+{
+ namespace GCF 
+ {
 
 //# Description of class.
 // The ParameterSet class is an implementation of a map <string, string>. This

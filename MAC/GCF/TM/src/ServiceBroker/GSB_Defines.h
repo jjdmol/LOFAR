@@ -27,6 +27,13 @@
 
 #include <GCF/GCF_Defines.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace SB 
+  {
+
 class GCFPValue;
 
 enum TSBResult 
@@ -40,4 +47,7 @@ enum TSBResult
 
 #define PARAM_SB_SERVER_PORT "mac.gcf.sb.port"
 #define PARAM_SB_SERVER_HOST "mac.gcf.sb.host"
+  } // namespace SB
+ } // namespace GCF
+} // namespace LOFAR
 #endif

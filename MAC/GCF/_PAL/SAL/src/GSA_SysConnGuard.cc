@@ -31,8 +31,14 @@
 #include <stdio.h>
 #include <unistd.h>
 
-namespace LOFAR {
-  namespace GCF {
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+using namespace TM;
+  namespace PAL
+  {
 
 GSASysConnGuard::~GSASysConnGuard()
 {
@@ -84,5 +90,6 @@ void GSASysConnGuard::dpeValueChanged(const string& /*dpName*/, const GCFPValue&
       break;
   }
 }
-  } // namespace GCF
+  } // namespace PAL
+ } // namespace GCF
 } // namespace LOFAR

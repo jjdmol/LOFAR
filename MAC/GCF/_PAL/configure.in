@@ -57,13 +57,13 @@ lofar_LOG4CPLUS
 lofar_DOCXX
 lofar_MPI(0)
 lofar_PVSS(1)
-lofar_INTERNAL(LCS/Common, common, LCS-Common-2_0, 1, Common/LofarTypes.h,,)
-lofar_INTERNAL(LCS/Transport, transport, LCS-Transport-1_0, 1, Transport/DataHolder.h,,)
-lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, MAC-GCF-4_2alpha3, 1, GCF/GCF_Defines.h,,)
-lofar_INTERNAL(MAC/GCF/TM, gcftm, MAC-GCF-4_2alpha3, 1, GCF/TM/GCF_Task.h,,)
-lofar_INTERNAL(MAC/GCF/Protocols, gcfpirtcprot, MAC-GCF-4_2alpha3, 1, GCF/Protocols/PI_Protocol.ph,,)
-lofar_INTERNAL(MAC/GCF/Protocols, gcfpicepprot, MAC-GCF-4_2alpha3, 1, GCF/Protocols/DH_PIProtocol.h,,)
-lofar_INTERNAL(MAC/GCF/Protocols, gcfpaprot, MAC-GCF-4_2alpha3, 1, GCF/Protocols/PA_Protocol.ph,,)
+lofar_INTERNAL(LCS/Common, common, LCS-Common-2_1, 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/Transport, transport, LCS-Transport-1_1, 1, Transport/DataHolder.h,,)
+lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, MAC-GCF-5_0, 1, GCF/GCF_Defines.h,,)
+lofar_INTERNAL(MAC/GCF/TM, gcftm, MAC-GCF-5_0, 1, GCF/TM/GCF_Task.h,,)
+lofar_INTERNAL(MAC/GCF/Protocols, gcfpirtcprot, MAC-GCF-5_0, 1, GCF/Protocols/PI_Protocol.ph,,)
+lofar_INTERNAL(MAC/GCF/Protocols, gcfpicepprot, MAC-GCF-5_0, 1, GCF/Protocols/DH_PIProtocol.h,,)
+lofar_INTERNAL(MAC/GCF/Protocols, gcfpaprot, MAC-GCF-5_0, 1, GCF/Protocols/PA_Protocol.ph,,)
 
 dnl
 dnl Output Makefiles

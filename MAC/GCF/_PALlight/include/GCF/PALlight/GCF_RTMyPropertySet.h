@@ -24,14 +24,20 @@
 #define GCF_RTMYPROPERTYSET_H
 
 #include <GCF/GCF_Defines.h>
-
-#include <Common/lofar_list.h>
-#include <Common/lofar_map.h>
 #include <GCF/PALlight/GCF_RTMyProperty.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM
+  {
+class GCFEvent;
+  }
+  namespace RTCPMLlight 
+  {
 class GPMRTController;
 class GCFRTAnswer;
-class GCFPValue;
 
 /** 
  * This class represents a property set of owned (local) properties. It gives 
@@ -53,7 +59,7 @@ class GCFRTMyPropertySet
      */
     explicit GCFRTMyPropertySet (const char* name,
                                  const char* type, 
-                                 TPSCategory category,
+                                 Common::TPSCategory category,
                                  GCFRTAnswer* pAnswerObj = 0);
     virtual ~GCFRTMyPropertySet ();
 
@@ -64,9 +70,9 @@ class GCFRTMyPropertySet
       { return _type; }
       
     bool isTemporary () const 
-      { return (_category == PS_CAT_TEMPORARY); }
+      { return (_category == Common::PS_CAT_TEMPORARY); }
      
-    TPSCategory getCategory () const 
+    Common::TPSCategory getCategory () const 
       { return _category; }
     
     virtual void setAnswer (GCFRTAnswer* pAnswerObj);          
@@ -74,21 +80,21 @@ class GCFRTMyPropertySet
     GCFRTAnswer* getAnswerObj() const 
       { return _pAnswerObj; }
 
-    virtual bool exists (const string propName) const;
+    virtual bool exists (const string& propName) const;
 
     /**
      * Searches the property specified by the propName param
      * @param propName with or without the scope
      * @returns 0 if not in this property set
      */
-    GCFRTMyProperty* getProperty (const string propName) const;
+    GCFRTMyProperty* getProperty (const string& propName) const;
 
     /**
      * Searches the property specified by the propName param
      * @param propName with or without the scope
      * @returns a dummy port if property could not be found
      */
-    GCFRTMyProperty& operator[] (const string propName);
+    GCFRTMyProperty& operator[] (const string& propName);
 
     /**
      * Asynchronous method
@@ -102,7 +108,7 @@ class GCFRTMyPropertySet
      *         Otherwise an anwer of type @link GCFMYPropAnswerEvent @endlink 
      *         will be given.
      */
-    TGCFResult enable ();
+    Common::TGCFResult enable ();
 
     /**
      * Asynchronous method
@@ -116,48 +122,48 @@ class GCFRTMyPropertySet
      *         Otherwise an anwer of type @link GCFMYPropAnswerEvent @endlink 
      *         will be given.
      */
-    TGCFResult disable ();
+    Common::TGCFResult disable ();
 
     bool isEnabled () 
       { return (_state == S_ENABLED || _state == S_LINKED); }    
     
-    virtual TGCFResult setValue (const string propName, ///< can be specified with or without the scope
-                                 const string value);
+    virtual Common::TGCFResult setValue (const string& propName, ///< can be specified with or without the scope
+                                 const string& value);
                               
     /**
      * Searches the property specified by the propName param
      * @param propName with or without the scope
      * @returns 0 if not in this property set
      */
-    virtual TGCFResult setValue (const string propName, 
-                                 const GCFPValue& value);
+    virtual Common::TGCFResult setValue (const string& propName, 
+                                 const Common::GCFPValue& value);
     //@{
     /**
      * @param propName can be specified with or without the scope
      * @return a clone of the internal (old) value. Must be deleted by the
      *         application
      */
-    GCFPValue* getValue (const string propName); 
-    GCFPValue* getOldValue (const string propName);
+    Common::GCFPValue* getValue (const string& propName); 
+    Common::GCFPValue* getOldValue (const string& propName);
     //@}
               
-    void setAllAccessModes(TAccessMode mode, bool on);
-    void initProperties(const TPropertyConfig config[]);
+    void setAllAccessModes(Common::TAccessMode mode, bool on);
+    void initProperties(const Common::TPropertyConfig config[]);
              
   private: // interface methods
     friend class GCFRTMyProperty;
-    void valueSet(const string& propName, const GCFPValue& value) const;
+    void valueSet(const string& propName, const Common::GCFPValue& value) const;
     
   private: // interface methods
     friend class GPMRTController;
-    void scopeRegistered (TGCFResult result);
-    void scopeUnregistered (TGCFResult result);
+    void scopeRegistered (Common::TGCFResult result);
+    void scopeUnregistered (Common::TGCFResult result);
     void linkProperties ();
     void unlinkProperties ();
-    void valueChanged(string propName, const GCFPValue& value);
+    void valueChanged(string propName, const Common::GCFPValue& value);
 
   private: // helper methods
-    void dispatchAnswer (unsigned short sig, TGCFResult result);
+    void dispatchAnswer (unsigned short sig, Common::TGCFResult result);
     void addProperty(const string& propName, GCFRTMyProperty& prop);
     void clearAllProperties();
     bool cutScope(string& propName) const;
@@ -175,7 +181,7 @@ class GCFRTMyPropertySet
   private: // attribute members
     string  _scope;     
     string  _type;   
-    TPSCategory _category;
+    Common::TPSCategory _category;
     typedef map<string /*propName*/, GCFRTMyProperty*> TPropertyList;
     TPropertyList       _properties;
     GCFRTAnswer*        _pAnswerObj;
@@ -184,11 +190,14 @@ class GCFRTMyPropertySet
     typedef enum TState {S_DISABLED, S_DISABLING, S_ENABLING, S_ENABLED, 
                          S_LINKED};
     TState _state;
-    typedef list<TPropertyInfo> TPropInfoList;
+    typedef list<Common::TPropertyInfo> TPropInfoList;
     TPropInfoList       _propSetInfo;
     GCFRTMyProperty     _dummyProperty;
     unsigned int        _counter;
     unsigned int        _missing;
     GPMRTController*    _pController;
 };
+  } // namespace RTCPMLlight
+ } // namespace GCF
+} // namespace LOFAR
 #endif

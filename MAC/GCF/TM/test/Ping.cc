@@ -26,6 +26,13 @@
 #include "Echo_Protocol.ph"
 #include <Common/lofar_iostream.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 /**
  * Function to calculate the elapsed time between two tiemval's.
  */
@@ -189,6 +196,11 @@ GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& p)
   
   return status;
 }
+
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
+using namespace LOFAR::GCF::TM;
 
 int main(int argc, char* argv[])
 {

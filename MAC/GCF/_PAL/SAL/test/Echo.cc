@@ -31,6 +31,14 @@
 using std::cout;
 using std::endl;
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+using namespace TM;
+  namespace PAL
+  {
 Echo::Echo(string name) : GCFTask((State)&Echo::initial, name) , _pService(0)
 {
   // register the protocol for debugging purposes
@@ -194,15 +202,20 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
 
   return status;
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
+
+using namespace LOFAR::GCF;
 
 int main(int argc, char* argv[])
 {
-  GCFTask::init(argc, argv);
+  TM::GCFTask::init(argc, argv);
 
-  Echo echo_task("ECHO");  
+  PAL::Echo echo_task("ECHO");  
   echo_task.start(); // make initial transition
   
-  GCFTask::run();
+  TM::GCFTask::run();
 
   return 0;
 }

@@ -25,9 +25,6 @@
 
 #include <GSA_Defines.h>
 #include <GCF/GCF_PValue.h>
-#include <Common/lofar_string.h>
-
-class GSAWaitForAnswer;
 
 // PVSS forwards
 class DpMsgAnswer;
@@ -35,7 +32,16 @@ class DpHLGroup;
 class Variable;
 class CharString;
 class DpIdentifier;
+
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 class GSASCADAHandler;
+class GSAWaitForAnswer;
+
 
 /**
  * This is the abstract class, which provides the possibility to invoke all 
@@ -60,7 +66,7 @@ class GSAService
     virtual TSAResult dpeUnsubscribe (const string& dpeName);
     virtual TSAResult dpeGet (const string& dpeName);
     virtual TSAResult dpeSet (const string& dpeName, 
-                              const GCFPValue& value, 
+                              const Common::GCFPValue& value, 
                               bool wantAnswer = false);
     
     virtual void dpCreated (const string& /*dpName*/) = 0;
@@ -69,9 +75,9 @@ class GSAService
     virtual void dpeSubscriptionLost (const string& /*dpeName*/) = 0;
     virtual void dpeUnsubscribed (const string& /*dpeName*/) = 0;
     virtual void dpeValueGet (const string& /*dpeName*/, 
-                              const GCFPValue& /*value*/) = 0;
+                              const Common::GCFPValue& /*value*/) = 0;
     virtual void dpeValueChanged (const string& /*dpeName*/, 
-                                  const GCFPValue& /*value*/) = 0;        
+                                  const Common::GCFPValue& /*value*/) = 0;        
     virtual void dpeValueSet (const string& /*dpeName*/) = 0;
 
   private: // methods
@@ -85,12 +91,12 @@ class GSAService
   private:  
     // helper methods to convert PVSS dpTypes to MAC types and visa versa
     TSAResult convertPVSSToMAC (const Variable& variable, 
-                                GCFPValue** pMacValue) const;
+                                Common::GCFPValue** pMacValue) const;
                           
-    TSAResult convertMACToPVSS (const GCFPValue& macValue, 
+    TSAResult convertMACToPVSS (const Common::GCFPValue& macValue, 
                                 Variable** pVar,
                                 const DpIdentifier& dpId) const;
-    bool getPVSSType (TMACValueType macType, 
+    bool getPVSSType (Common::TMACValueType macType, 
                       CharString& pvssTypeName) const;
 
     // helper methods
@@ -106,5 +112,8 @@ class GSAService
     GSAWaitForAnswer* _pWFA;
     GSASCADAHandler*  _pSCADAHandler;
 };                                 
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

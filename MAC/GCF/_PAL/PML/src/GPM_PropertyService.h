@@ -27,16 +27,23 @@
 #include <GSA_Service.h>
 #include <GCF/PAL/GCF_Property.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
+   
 class GPMPropertyService : public GSAService
 {
   public:
     GPMPropertyService(GCFProperty& gcfProperty);
     virtual ~GPMPropertyService();
 
-    TGCFResult subscribeProp(const string& propName);
-    TGCFResult unsubscribeProp(const string& propName);
-    TGCFResult requestPropValue(const string& propName);
-    TGCFResult setPropValue(const string& propName, const GCFPValue& value, bool wantAnswer);
+    Common::TGCFResult subscribeProp(const string& propName);
+    Common::TGCFResult unsubscribeProp(const string& propName);
+    Common::TGCFResult requestPropValue(const string& propName);
+    Common::TGCFResult setPropValue(const string& propName, const Common::GCFPValue& value, bool wantAnswer);
         
   protected:
     void dpCreated(const string& /*propName*/);
@@ -44,8 +51,8 @@ class GPMPropertyService : public GSAService
     void dpeSubscribed(const string& propName);
     void dpeSubscriptionLost (const string& propName);
     void dpeUnsubscribed(const string& propName);
-    void dpeValueGet(const string& propName, const GCFPValue& value);
-    void dpeValueChanged(const string& propName, const GCFPValue& value);
+    void dpeValueGet(const string& propName, const Common::GCFPValue& value);
+    void dpeValueChanged(const string& propName, const Common::GCFPValue& value);
     void dpeValueSet(const string& propName);
     
   private:
@@ -60,26 +67,26 @@ inline GPMPropertyService::GPMPropertyService(GCFProperty& gcfProperty) :
 inline GPMPropertyService::~GPMPropertyService() 
 {}
     
-inline TGCFResult GPMPropertyService::subscribeProp(const string& propName)
+inline Common::TGCFResult GPMPropertyService::subscribeProp(const string& propName)
 {
-  return (dpeSubscribe(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+  return (dpeSubscribe(propName) == SA_NO_ERROR ? Common::GCF_NO_ERROR : Common::GCF_PML_ERROR);
 }
 
-inline TGCFResult GPMPropertyService::unsubscribeProp(const string& propName)
+inline Common::TGCFResult GPMPropertyService::unsubscribeProp(const string& propName)
 {
-  return (dpeUnsubscribe(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+  return (dpeUnsubscribe(propName) == SA_NO_ERROR ? Common::GCF_NO_ERROR : Common::GCF_PML_ERROR);
 }
 
-inline TGCFResult GPMPropertyService::requestPropValue(const string& propName)
+inline Common::TGCFResult GPMPropertyService::requestPropValue(const string& propName)
 {
-  return (dpeGet(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+  return (dpeGet(propName) == SA_NO_ERROR ? Common::GCF_NO_ERROR : Common::GCF_PML_ERROR);
 }
 
-inline TGCFResult GPMPropertyService::setPropValue(const string& propName, 
-                                                   const GCFPValue& value, 
+inline Common::TGCFResult GPMPropertyService::setPropValue(const string& propName, 
+                                                   const Common::GCFPValue& value, 
                                                    bool wantAnswer)
 {
-  return (dpeSet(propName, value, wantAnswer) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+  return (dpeSet(propName, value, wantAnswer) == SA_NO_ERROR ? Common::GCF_NO_ERROR : Common::GCF_PML_ERROR);
 }
 
 inline void GPMPropertyService::dpCreated(const string& /*propName*/) 
@@ -103,12 +110,12 @@ inline void GPMPropertyService::dpeUnsubscribed(const string& propName)
   _gcfProperty.propUnsubscribed(propName);
 }
 
-inline void GPMPropertyService::dpeValueGet(const string& propName, const GCFPValue& value)
+inline void GPMPropertyService::dpeValueGet(const string& propName, const Common::GCFPValue& value)
 {
   _gcfProperty.propValueGet(propName, value);
 }
 
-inline void GPMPropertyService::dpeValueChanged(const string& propName, const GCFPValue& value)
+inline void GPMPropertyService::dpeValueChanged(const string& propName, const Common::GCFPValue& value)
 {
   _gcfProperty.propValueChanged(propName, value);
 }
@@ -117,5 +124,8 @@ inline void GPMPropertyService::dpeValueSet(const string& propName)
 {
   _gcfProperty.propValueSet(propName);
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

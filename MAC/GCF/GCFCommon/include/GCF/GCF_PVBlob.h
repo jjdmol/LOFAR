@@ -26,7 +26,14 @@
 #include <GCF/GCF_PValue.h>
 #include <Common/LofarTypes.h>
 
-using LOFAR::TYPES::uint16;
+
+namespace LOFAR 
+{
+using TYPES::uint16;
+ namespace GCF 
+ {
+  namespace Common 
+  {
 
 /**
  * By means of this property type bulk of data with a specified size can be used.
@@ -88,4 +95,7 @@ class GCFPVBlob : public GCFPValue
      */ 
     bool  _isDataHolder;
 };
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR
 #endif

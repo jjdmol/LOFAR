@@ -26,6 +26,13 @@
 #include <sys/time.h>
 #include <time.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 class GCFRawPort;
 class GTMTimerHandler;
 
@@ -74,4 +81,7 @@ class GTMTimer
 
     timeval     _savedTime;
 };
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 #endif

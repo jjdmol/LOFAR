@@ -28,6 +28,12 @@
 
 #include <Common/lofar_list.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {  
+  namespace PAL
+  {
 class GCFMyProperty;
 class GPMController;
 class GCFAnswer;
@@ -64,13 +70,13 @@ class GCFMyPropertySet : public GCFPropertySet
     // <group>
     explicit GCFMyPropertySet (const char* name,
                                const char* type, 
-                               TPSCategory category,
+                               Common::TPSCategory category,
                                GCFAnswer* pAnswerObj,
                                TDefaultUse defaultUse = USE_MY_DEFAULTS);
                       
     explicit GCFMyPropertySet (const char* name,
                                const char* type, 
-                               TPSCategory category,
+                               Common::TPSCategory category,
                                TDefaultUse defaultUse = USE_MY_DEFAULTS);
     // </group>
 
@@ -86,7 +92,7 @@ class GCFMyPropertySet : public GCFPropertySet
     //         Note that in case of no GCF_NO_ERROR this action ends synchronous.
     //         Otherwise an anwer of type @link GCFPropSetAnswerEvent @endlink 
     //         will be given.
-    TGCFResult enable ();
+    Common::TGCFResult enable ();
 
     // Asynchronous method
     // In fact it unregisters the scope from the Property Agent.
@@ -98,7 +104,7 @@ class GCFMyPropertySet : public GCFPropertySet
     //         Note that in case of no GCF_NO_ERROR this action ends synchronous.
     //         Otherwise an anwer of type @link GCFPropSetAnswerEvent @endlink 
     //         will be given.
-    TGCFResult disable ();
+    Common::TGCFResult disable ();
 
     bool isEnabled () 
       { return (_state == S_ENABLED || _state == S_LINKING || _state == S_LINKED); }
@@ -111,20 +117,20 @@ class GCFMyPropertySet : public GCFPropertySet
     // @return a clone of the internal (old) value. Must be deleted by the
     //         application
     // <group>
-    GCFPValue* getValue (const string propName); 
-    GCFPValue* getOldValue (const string propName);
+    Common::GCFPValue* getValue (const string propName); 
+    Common::GCFPValue* getOldValue (const string propName);
     // </group>
 
     bool isTemporary () const 
-      { return (_category == PS_CAT_TEMPORARY); }
+      { return (_category == Common::PS_CAT_TEMPORARY); }
      
-    TPSCategory getCategory () const 
+    Common::TPSCategory getCategory () const 
       { return _category; }
 
     // changes the accessrights of all properties
-    void setAllAccessModes(TAccessMode mode, bool on);
+    void setAllAccessModes(Common::TAccessMode mode, bool on);
     // sets defaults and accessrights to each property
-    void initProperties(const TPropertyConfig config[]);
+    void initProperties(const Common::TPropertyConfig config[]);
              
   private: // interface methods
     friend class GCFMyProperty;
@@ -132,14 +138,14 @@ class GCFMyPropertySet : public GCFPropertySet
     
   private: // interface methods
     friend class GPMController;
-    void scopeRegistered (TGCFResult result);
-    void scopeUnregistered (TGCFResult result);
+    void scopeRegistered (Common::TGCFResult result);
+    void scopeUnregistered (Common::TGCFResult result);
     bool linkProperties ();
     void unlinkProperties ();
     bool tryLinking ();
 
   private: // helper methods
-    GCFProperty* createPropObject(const TPropertyInfo& propInfo);    
+    GCFProperty* createPropObject(const Common::TPropertyInfo& propInfo);    
     void wrongState(const char* request);
     
   private:
@@ -155,10 +161,13 @@ class GCFMyPropertySet : public GCFPropertySet
                          S_LINKING, S_LINKED, S_DELAYED_DISABLING};
     TState        _state;
     TDefaultUse   _defaultUse;
-    TPSCategory   _category;
+    Common::TPSCategory   _category;
     
   private: // administrative members
     unsigned short _counter;
     unsigned short _missing;    
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif

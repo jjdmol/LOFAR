@@ -27,6 +27,13 @@
 #include <GCF/Utils.h>
 #include <GCF/GCF_Defines.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;  
+  namespace PAL
+  {
 GCFMyPropertySet::GCFMyPropertySet(const char* name,
                                    const char* type, 
                                    TPSCategory category,
@@ -439,3 +446,6 @@ void GCFMyPropertySet::wrongState(const char* request)
         getScope().c_str(),
         stateString[_state]));  
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

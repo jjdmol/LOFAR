@@ -27,6 +27,12 @@
 #include <GCF/GCF_Defines.h>
 #include <GCF/PAL/GCF_Property.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 class GCFMyPropertySet;
 
 // This is the owned property itself. It manages an old value and the current 
@@ -54,8 +60,8 @@ class GCFMyProperty : public GCFProperty
   public:
     // returns pointer to a clone of the (old) value
     // <group>    
-    GCFPValue* getValue () const;
-    GCFPValue* getOldValue () const;
+    Common::GCFPValue* getValue () const;
+    Common::GCFPValue* getOldValue () const;
     // </group>    
    
     // They both first copys the current local (owned) value
@@ -65,8 +71,8 @@ class GCFMyProperty : public GCFProperty
     // updated too.
     // @return can be GCF_PROP_WRONG_TYPE, GCF_PROP_NOT_VALID
     // <group>
-    TGCFResult setValue (const string value, bool wantAnswer = false);
-    TGCFResult setValue (const GCFPValue& value, bool wantAnswer = false);
+    Common::TGCFResult setValue (const string value, bool wantAnswer = false);
+    Common::TGCFResult setValue (const Common::GCFPValue& value, bool wantAnswer = false);
     // </group>
     
     bool isMonitoringOn () const {return _isLinked && !_isBusy;}
@@ -80,20 +86,20 @@ class GCFMyProperty : public GCFProperty
     // then the same as the new value). On the other hand this construction can 
     // been seen as a asynchronous 'set' action.
     // <group>
-    void setAccessMode (TAccessMode mode, bool on);
-    bool testAccessMode (TAccessMode mode) const;   
+    void setAccessMode (Common::TAccessMode mode, bool on);
+    bool testAccessMode (Common::TAccessMode mode) const;   
     // </group>
     
   private:
     friend class GCFMyPropertySet;
     
-    GCFMyProperty (const TPropertyInfo& propertyFields, 
+    GCFMyProperty (const Common::TPropertyInfo& propertyFields, 
                    GCFMyPropertySet& propertySet);
     virtual ~GCFMyProperty ();
     
     // @param setDefault true => use my defaults (set value), false => use DB defaults (get value)
     // @return true if is an asynchronous action, false if not
-    bool link (bool setDefault, TGCFResult& result); 
+    bool link (bool setDefault, Common::TGCFResult& result); 
     
     void unlink ();    
     
@@ -104,9 +110,9 @@ class GCFMyProperty : public GCFProperty
     // normally this method should never appear
     // but if so (in case of calling the method requestValue method of the base 
     // class GCFPropertyBase) it acts as the valueChanged method
-    void valueGet (const GCFPValue& value);
+    void valueGet (const Common::GCFPValue& value);
 
-    void valueChanged (const GCFPValue& value);
+    void valueChanged (const Common::GCFPValue& value);
            
   private: 
     // Don't allow copying this object.
@@ -116,13 +122,16 @@ class GCFMyProperty : public GCFProperty
     // </group>
 
   private: // data members
-    TAccessMode       _accessMode;
-    GCFPValue*        _pCurValue;
-    GCFPValue*        _pOldValue;
+    Common::TAccessMode       _accessMode;
+    Common::GCFPValue*        _pCurValue;
+    Common::GCFPValue*        _pOldValue;
     bool              _isLinked;
     GCFMyPropertySet& _propertySet;
     
   private: // adminstrative members
     bool              _changingAccessMode;
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif

@@ -26,6 +26,13 @@
 #include <unistd.h>
 #include <GCF/TM/GCF_Event.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 // forward declaration
 class GTMFileHandler;
 class GCFRawPort;
@@ -73,7 +80,13 @@ class GTMFile
     GCFRawPort&       _port;    
 };
 
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
+
 #include <GCF/TM/GCF_RawPort.h>
+
+using namespace LOFAR::GCF::TM;
 
 inline GCFEvent::TResult GTMFile::dispatch (GCFEvent& event) 
 {

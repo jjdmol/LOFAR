@@ -24,6 +24,13 @@
 #include <GCF/GCF_PVUnsigned.h>
 #include <Common/DataConvert.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
+
 unsigned int GCFPVUnsigned::unpackConcrete(const char* valBuf)
 {
   memcpy((void*) &_value, valBuf, sizeof(uint32));
@@ -75,3 +82,6 @@ TGCFResult GCFPVUnsigned::copy(const GCFPValue& newVal)
   
   return result;
 }
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR

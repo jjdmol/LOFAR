@@ -26,6 +26,12 @@
 // PVSS includes
 #include <Manager.hxx>        
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 class GSASCADAHandler;
 
 class GSAPvssApi : public Manager
@@ -39,4 +45,7 @@ class GSAPvssApi : public Manager
     void stop();
     void init();
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif

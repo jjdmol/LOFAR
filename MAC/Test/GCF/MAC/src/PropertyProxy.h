@@ -25,9 +25,15 @@
 
 #include <GCF/PAL/GCF_PropertyProxy.h>
 
+namespace LOFAR
+{
+ namespace GCF
+ {
+  namespace Test
+  {
 class Task;
 
-class PropertyProxy : public GCFPropertyProxy
+class PropertyProxy : public PAL::GCFPropertyProxy
 {
   public:
     PropertyProxy(Task& task) : _task(task) {};
@@ -38,11 +44,14 @@ class PropertyProxy : public GCFPropertyProxy
     void propSubscribed(const string& propName);
     void propSubscriptionLost(const string& /*propName*/) {};
     void propUnsubscribed(const string& propName);
-    void propValueGet(const string& propName, const GCFPValue& value);
-    void propValueChanged(const string& propName, const GCFPValue& value);
+    void propValueGet(const string& propName, const Common::GCFPValue& value);
+    void propValueChanged(const string& propName, const Common::GCFPValue& value);
     void propValueSet(const string& propName);
   
   private:
     Task& _task;
 };
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR
 #endif

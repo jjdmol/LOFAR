@@ -113,6 +113,13 @@ using std::string;
 using std::vector;
 using std::map;
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
+
 // handy little container for our argument vector
 struct CCmdParam
 {
@@ -214,5 +221,8 @@ protected:
    ------------------------------------------------------*/
    bool        IsSwitch(const char *pParam);
 };
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

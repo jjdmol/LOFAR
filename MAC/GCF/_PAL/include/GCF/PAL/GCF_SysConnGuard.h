@@ -31,12 +31,19 @@
 using std::set;
 using std::string;
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM
+  {
 // forward declaration
 class GCFTask;
 class GCFEvent;
+  }
+  namespace PAL
+  {
 
-namespace LOFAR {
-  namespace GCF {
 
 class GSASysConnGuard;
 
@@ -52,8 +59,8 @@ class GCFSysConnGuard
   public:
     bool isRunning() const;
     bool isSysConnected(const string& sysName) const;
-    bool registerTask(GCFTask& task);
-    bool unregisterTask(GCFTask& task);
+    bool registerTask(TM::GCFTask& task);
+    bool unregisterTask(TM::GCFTask& task);
     
   private:
     // Don't allow copying this object.
@@ -70,9 +77,9 @@ class GCFSysConnGuard
     static GCFSysConnGuard* _instance;
     
     GSASysConnGuard* _pSysConnGuardService;
-    GCFDummyPort     _dummyPort;
+    TM::GCFDummyPort     _dummyPort;
     
-    typedef set<GCFTask*> TRegisteredTasks;
+    typedef set<TM::GCFTask*> TRegisteredTasks;
     TRegisteredTasks _registeredTasks;
 };
 
@@ -81,8 +88,9 @@ inline bool GCFSysConnGuard::isSysConnected(const string& sysName) const
   return (GCFPVSSInfo::getSysId(sysName) > 0); 
 }
 
-enum {
-  F_SCF_PROTOCOL = F_GCF_PROTOCOL + 4,
+enum 
+{
+  F_SCF_PROTOCOL = TM::F_GCF_PROTOCOL + 4,
 };
 
 
@@ -98,10 +106,10 @@ enum
 
 // NOTE: These structs cannot be used to send messages by real port 
 // implementations like TCP. 
-struct GCFSysConnGuardEvent : public GCFEvent
+struct GCFSysConnGuardEvent : public TM::GCFEvent
 {
   // @param sig can only be F_SYSGONE, F_SYSCONN
-  GCFSysConnGuardEvent(unsigned short sig) : GCFEvent(sig)
+  GCFSysConnGuardEvent(unsigned short sig) : TM::GCFEvent(sig)
   {
       length = sizeof(GCFSysConnGuardEvent);
   }
@@ -112,6 +120,7 @@ struct GCFSysConnGuardEvent : public GCFEvent
 // defined in GCF_SysConnGuard.cc
 extern const char* F_SCG_PROTOCOL_signalnames[];
 
-  } // namespace GCF
+  } // namespace PAL
+ } // namespace GCF
 } // namespace LOFAR
 #endif

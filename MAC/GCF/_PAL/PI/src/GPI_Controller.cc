@@ -26,6 +26,13 @@
 #include <GCF/Protocols/PI_Protocol.ph>
 #include <GCF/ParameterSet.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace TM;
+  namespace PAL
+  {
 GPIController::GPIController() : 
   GCFTask((State)&GPIController::initial, PI_TASK_NAME)
 {
@@ -159,3 +166,6 @@ void GPIController::close(GPIPMLlightServer& pls)
   // starts a null timer to force a context switch
   _rtcClientPortProvider.setTimer(0, 0, 0, 0, (void*)&pls);
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

@@ -25,11 +25,23 @@
 
 #include <GCF/GCF_Defines.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common
+  {
+class GCFPValue;
+  }
+  namespace TM
+  {
+class GCFEvent;
+  }
+  namespace PAL
+  {
 class GPMPropertyService;
 class GCFPropertySet;
 class GCFAnswer;
-class GCFEvent;
-class GCFPValue;
 
 // This is the base class for 2 types of properties. The owned (GCFMyProperty) 
 // and the external (GCFExtProperty) property. This class manages the: 
@@ -54,17 +66,17 @@ class GCFProperty
     // Asynchronous action
     // Performs a get operation on the SCADA DB
     // @return can be GCF_NO_ERROR or GCF_PML_ERROR
-    virtual TGCFResult requestValue ();
+    virtual Common::TGCFResult requestValue ();
       
     // Synchronous (!) action
     // Performs a set operation on the SCADA DB
     // @return can be GCF_NO_ERROR or GCF_PML_ERROR
-    virtual TGCFResult setValue(const GCFPValue& value, bool wantAnswer = false);
+    virtual Common::TGCFResult setValue(const Common::GCFPValue& value, bool wantAnswer = false);
       
     // Synchronous (!) action
     // Performs a set operation on the SCADA DB
     // @return can be GCF_NO_ERROR or GCF_PML_ERROR
-    virtual TGCFResult setValue(const string& value, bool wantAnswer = false);
+    virtual Common::TGCFResult setValue(const string& value, bool wantAnswer = false);
 
     // Synchronous (!) action
     // Checks whether the property exists in the SCADA DB or not
@@ -74,21 +86,21 @@ class GCFProperty
       {_pAnswerObj = pAnswerObj;}
       
   protected:
-    GCFProperty (const TPropertyInfo& propInfo, GCFPropertySet* pPropertySet);
+    GCFProperty (const Common::TPropertyInfo& propInfo, GCFPropertySet* pPropertySet);
     virtual ~GCFProperty ();
 
-    virtual TGCFResult subscribe ();
-    virtual TGCFResult unsubscribe ();
+    virtual Common::TGCFResult subscribe ();
+    virtual Common::TGCFResult unsubscribe ();
       
-    virtual void dispatchAnswer(GCFEvent& answer);  
+    virtual void dispatchAnswer(TM::GCFEvent& answer);  
     
     virtual void subscribed ();
     
     virtual void subscriptionLost () {};
 
-    virtual void valueChanged (const GCFPValue& value); 
+    virtual void valueChanged (const Common::GCFPValue& value); 
     
-    virtual void valueGet (const GCFPValue& value); 
+    virtual void valueGet (const Common::GCFPValue& value); 
   
     virtual void valueSet (); 
 
@@ -109,11 +121,11 @@ class GCFProperty
       { assert(propName == getFullName()); }
       
     void propValueGet (const string& propName, 
-                              const GCFPValue& value)
+                              const Common::GCFPValue& value)
       { assert(propName == getFullName()); valueGet(value); }
       
     void propValueChanged (const string& propName, 
-                                  const GCFPValue& value)
+                                  const Common::GCFPValue& value)
       { assert(propName == getFullName()); valueChanged(value); }
   
     void propValueSet (const string& propName)
@@ -148,8 +160,11 @@ class GCFProperty
     GCFPropertySet*       _pPropertySet;
     GCFAnswer*            _pAnswerObj;
     GPMPropertyService*   _pPropService;
-    TPropertyInfo  _propInfo;
+    Common::TPropertyInfo  _propInfo;
 
   private: // admin. data members
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif

@@ -26,7 +26,14 @@
 #include <GCF/GCF_PValue.h>
 #include <Common/LofarTypes.h>
 
-using LOFAR::TYPES::uint32;
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
+
+using TYPES::uint32;
 
 /**
  * By means of this property type a unsigned integer (0 to 4,294,967,295) value 
@@ -73,4 +80,7 @@ class GCFPVUnsigned : public GCFPValue
     /** The value */
     uint32 _value;
 };
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR
 #endif

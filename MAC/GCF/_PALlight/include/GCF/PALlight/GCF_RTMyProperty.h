@@ -26,10 +26,19 @@
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_Defines.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM
+  {
+class GCFEvent;
+  }
+  namespace RTCPMLlight 
+  {
+
 class GCFRTMyPropertySet;
 class GCFRTAnswer;
-class GCFEvent;
-
 /**
  * 
  */
@@ -46,8 +55,8 @@ class GCFRTMyProperty
     inline virtual void setAnswer (GCFRTAnswer* pAnswerObj) 
       {_pAnswerObj = pAnswerObj;}
 
-    GCFPValue* getValue () const;
-    GCFPValue* getOldValue () const;
+    Common::GCFPValue* getValue () const;
+    Common::GCFPValue* getOldValue () const;
    
     //@{
     /** They both first copies the current local (owned) value
@@ -57,8 +66,8 @@ class GCFRTMyProperty
      * updated too.
      * @return can be GCF_PROP_WRONG_TYPE, GCF_PROP_NOT_VALID
      */
-    TGCFResult setValue (const string value);
-    TGCFResult setValue (const GCFPValue& value);        
+    Common::TGCFResult setValue (const string& value);
+    Common::TGCFResult setValue (const Common::GCFPValue& value);        
     //@}
     inline bool isLinked () const {return _isLinked && !_isBusy;}
     //@{
@@ -71,14 +80,14 @@ class GCFRTMyProperty
      * then the same as the new value). On the other hand this construction can 
      * been seen as a asynchronous 'set' action.
      */ 
-    void setAccessMode (TAccessMode mode, bool on);
-    bool testAccessMode (TAccessMode mode) const;   
+    void setAccessMode (Common::TAccessMode mode, bool on);
+    bool testAccessMode (Common::TAccessMode mode) const;   
     //@}
     
   private:
     friend class GCFRTMyPropertySet;
     
-    GCFRTMyProperty (const TPropertyInfo& propertyFields, 
+    GCFRTMyProperty (const Common::TPropertyInfo& propertyFields, 
                      GCFRTMyPropertySet& propertySet);
     GCFRTMyProperty(GCFRTMyPropertySet& propertySet);
     virtual ~GCFRTMyProperty ();
@@ -86,10 +95,10 @@ class GCFRTMyProperty
     void link ();
     void unlink ();    
     
-    void valueChanged (const GCFPValue& value);           
+    void valueChanged (const Common::GCFPValue& value);           
 
   private: // helper methods
-    virtual void dispatchAnswer(GCFEvent& answer);  
+    virtual void dispatchAnswer(TM::GCFEvent& answer);  
     
   private: 
     //@{ 
@@ -101,11 +110,14 @@ class GCFRTMyProperty
   private:
     string            _name;
     GCFRTMyPropertySet& _propertySet;
-    TAccessMode       _accessMode;
-    GCFPValue*        _pCurValue;
-    GCFPValue*        _pOldValue;
+    Common::TAccessMode       _accessMode;
+    Common::GCFPValue*        _pCurValue;
+    Common::GCFPValue*        _pOldValue;
     bool              _isLinked;
     bool              _isBusy;
     GCFRTAnswer*      _pAnswerObj;
 };
+  } // namespace RTCPMLlight
+ } // namespace GCF
+} // namespace LOFAR
 #endif

@@ -27,6 +27,13 @@
 #include <GCF/TM/GCF_Protocols.h>
 #include <GTM_Defines.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 GTMTimer::GTMTimer(GCFRawPort& port, 
             		   unsigned long id,
                    unsigned long timeVal, 
@@ -104,3 +111,6 @@ unsigned long GTMTimer::getElapsedTime()
 
   return uSecDiff;                 
 }
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

@@ -27,17 +27,20 @@
 #include <GCF/TM/GCF_Task.h>
 #include "GTM_SBTCPPort.h"
 #include <GCF/TM/GCF_Handler.h>
-#include <Common/lofar_map.h>
-#include <Common/lofar_list.h>
+
+namespace LOFAR 
+{
+ namespace GCF 
+ {  
+  namespace SB 
+  {
 
 /**
 */
 
-class GCFEvent;
-class GCFPortInterface;
 class GTMSBHandler;
 
-class GTMServiceBroker : public GCFTask
+class GTMServiceBroker : public TM::GCFTask
 {
   public:
     ~GTMServiceBroker ();
@@ -45,24 +48,24 @@ class GTMServiceBroker : public GCFTask
     static void release();
 
   public: // member functions
-    void registerService(GCFTCPPort& servicePort);
-    void unregisterService(GCFTCPPort& servicePort);
-    void getServiceinfo (GCFTCPPort& clientPort, const string& remoteServiceName);
-    void deletePort(GCFTCPPort& port);
+    void registerService(TM::GCFTCPPort& servicePort);
+    void unregisterService(TM::GCFTCPPort& servicePort);
+    void getServiceinfo (TM::GCFTCPPort& clientPort, const string& remoteServiceName);
+    void deletePort(TM::GCFTCPPort& port);
   
   private:
     friend class GTMSBHandler;
     GTMServiceBroker ();
 
   private: // state methods
-    GCFEvent::TResult initial   (GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult operational (GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult initial   (TM::GCFEvent& e, TM::GCFPortInterface& p);
+    GCFEvent::TResult operational (TM::GCFEvent& e, TM::GCFPortInterface& p);
         
   private: // helper methods
     typedef struct Action
     {
       unsigned short action;
-      GCFTCPPort* pPort;
+      TM::GCFTCPPort* pPort;
       string servicename;
       Action& operator= (const Action& other)
       {        
@@ -83,11 +86,11 @@ class GTMServiceBroker : public GCFTask
   private: // admin members  
     typedef map<unsigned short /*seqnr*/, TAction>  TActionSeqList;
     TActionSeqList _actionSeqList;    
-    typedef map<string /*remoteservicename*/, list<GCFTCPPort*> >  TServiceClients;
+    typedef map<string /*remoteservicename*/, list<TM::GCFTCPPort*> >  TServiceClients;
     TServiceClients _serviceClients;    
 };
 
-class GTMSBHandler : public GCFHandler
+class GTMSBHandler : public TM::GCFHandler
 {
   public:
     
@@ -102,4 +105,7 @@ class GTMSBHandler : public GCFHandler
     static GTMSBHandler* _pInstance;
     GTMServiceBroker _controller;
 };
+  } // namespace SB
+ } // namespace GCF
+} // namespace LOFAR
 #endif

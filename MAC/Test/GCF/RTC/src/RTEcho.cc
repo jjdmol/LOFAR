@@ -22,13 +22,15 @@
 //  $Id$
 
 #include "RTEcho.h"
-#include <stdio.h>
 #include "Echo_Protocol.ph"
 #include <GCF/CmdLine.h>
 
-using std::cout;
-using std::endl;
-
+namespace LOFAR
+{
+ namespace GCF
+ {
+  namespace Test
+  {
 Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 {
   // register the protocol for debugging purposes
@@ -110,14 +112,20 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR
+
+using namespace LOFAR::GCF;
+
 int main(int argc, char** argv)
 {
-  GCFTask::init(argc, argv);
+  TM::GCFTask::init(argc, argv);
 
   string brdnr("1");
   if (argv != 0)
   {
-    CCmdLine cmdLine;
+    Common::CCmdLine cmdLine;
 
     // parse argc,argv 
     if (cmdLine.SplitLine(argc, argv) > 0)
@@ -126,11 +134,11 @@ int main(int argc, char** argv)
     }            
   }
 
-  Echo echoTask(string("RTECHO") + brdnr);
+  Test::Echo echoTask(string("RTECHO") + brdnr);
   
   echoTask.start();
 
-  GCFTask::run();
+  TM::GCFTask::run();
   
   return 0;  
 }

@@ -29,11 +29,17 @@
 #include "RTAnswer.h"
 #include <sys/time.h>
 
+namespace LOFAR
+{
+ namespace GCF
+ {
+  namespace Test
+  {
 /**
  * The Ping task sends ECHO_PING events to the Echo task and expects 
  * ECHO_ECHO events in return.
  */
-class Ping : public GCFTask
+class Ping : public TM::GCFTask
 {
   public:
 
@@ -43,7 +49,7 @@ class Ping : public GCFTask
      * connection establishment information from the FNameService and FAppTopology
      * configuration files.
      */
-    Ping (string name, string scope, string type, TPSCategory category);
+    Ping (string name, string scope, string type, Common::TPSCategory category);
   
     /**
      * Handler for the initial state. This handler is passed to the constructor
@@ -52,13 +58,13 @@ class Ping : public GCFTask
      * @return FEvent::HANDLED or FEvent::NOT_HANDLED to indicate whether the
      * event has been handled or not.
      */
-    GCFEvent::TResult initial      (GCFEvent& e, GCFPortInterface& p);
+    TM::GCFEvent::TResult initial      (TM::GCFEvent& e, TM::GCFPortInterface& p);
   
     /**
      * The "connected" state is reached when the Ping client has made a 
      * connection with the Echo server.
      */
-    GCFEvent::TResult connected    (GCFEvent& e, GCFPortInterface& p);
+    TM::GCFEvent::TResult connected    (TM::GCFEvent& e, TM::GCFPortInterface& p);
   
     /**
      * The "awaiting_echo" state is reached when an ECHO_PING event has
@@ -66,7 +72,7 @@ class Ping : public GCFTask
      * When the ECHO_ECHO event has been received a transition to the
      * "connected" state is made.
      */
-    GCFEvent::TResult awaiting_echo(GCFEvent& e, GCFPortInterface& p);
+    TM::GCFEvent::TResult awaiting_echo(TM::GCFEvent& e, TM::GCFPortInterface& p);
 
   private:
 
@@ -74,7 +80,7 @@ class Ping : public GCFTask
      * The Ping task is a client to the Echo task. The "client" port can be used
      * to send events to and receive events from the Echo task.
      */
-    GCFPort _client;
+    TM::GCFPort _client;
     
     /**
      * Ping messages are sent every 1 second. This variables holds the
@@ -84,8 +90,11 @@ class Ping : public GCFTask
     long _pingTimer; // remember ping timer id to be able to cancel it
     
     Answer _answerHandler;
-    GCFRTMyPropertySet _echoPingPSET;    
+    RTCPMLlight::GCFRTMyPropertySet _echoPingPSET;    
     unsigned int _maxSeqNr;
 };
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

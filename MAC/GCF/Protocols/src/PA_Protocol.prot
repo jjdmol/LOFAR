@@ -5,7 +5,7 @@ autogen definitions protocol;
 
 description = "Protocol for the PA server";
 prefix = "PA"; // for the signal names
-id = "(F_GCF_PROTOCOL + 2)";
+id = "(LOFAR::GCF::TM::F_GCF_PROTOCOL + 2)";
 
 include = '<GCF/GCF_Defines.h>';
 
@@ -137,7 +137,7 @@ event = {
 	};
 	param = {
 		name = "category";
-		type = "TPSCategory";
+		type = "LOFAR::GCF::Common::TPSCategory";
 	};
 };
 

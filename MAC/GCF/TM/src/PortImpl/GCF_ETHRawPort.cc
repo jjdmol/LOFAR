@@ -30,6 +30,13 @@
 #include <errno.h>
 #include <GCF/ParameterSet.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 GCFETHRawPort::GCFETHRawPort(GCFTask& task,
                           	 string name,
                           	 TPortType type, 
@@ -222,4 +229,7 @@ void GCFETHRawPort::setEtherType(unsigned short type)
 {
   _ethertype = type;
 }
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 

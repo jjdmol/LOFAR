@@ -4,8 +4,7 @@ INSTALL=/usr/bin/install -C
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: ServiceBroker/%.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../MACCommon/autogen $< && \
-	chmod a+w $@
+	$(AUTOGEN) --writable -L $(top_srcdir)/../../MACCommon/autogen $<
 
 pkgincludedir = $(includedir)/GCF/TM
 pkginclude_HEADERS = \

@@ -53,6 +53,13 @@
 #include <DynVar.hxx>
 #include <BlobVar.hxx>
 
+namespace LOFAR 
+{
+ namespace GCF  
+ {
+  using namespace Common;
+  namespace PAL
+  {
 GSAService::GSAService() : _pWFA(0)
 {
   _pWFA  = new GSAWaitForAnswer(*this);
@@ -1068,3 +1075,6 @@ void GSAService::convDpConfigToProp(const string& pvssDPEConfigName, string& pro
   
   propName.assign(pvssDPEConfigName, 0, nrOfCharsToCopy); 
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

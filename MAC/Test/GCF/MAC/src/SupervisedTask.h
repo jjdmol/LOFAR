@@ -9,34 +9,44 @@
 #include "Answer.h"
 #include <Common/lofar_iostream.h>
 
-class Task : public GCFTask
+namespace LOFAR
+{
+ namespace GCF
+ {
+  namespace Test
+  {
+    
+class Task : public TM::GCFTask
 {
   public:
-    Task(GCFTask& a, string taskName);
+    Task(TM::GCFTask& a, string taskName);
     ~Task();
     
-    inline GCFTCPPort& getPort() {return _port;}
-    inline PropertyProxy& getProxy() {return _proxy;}
-    inline Answer& getAnswerObj() {return _answer;}
+    TM::GCFTCPPort& getPort() {return _port;}
+    PropertyProxy& getProxy() {return _proxy;}
+    Answer& getAnswerObj() {return _answer;}
     
-    inline void handleAnswer(GCFEvent& answer) 
+    void handleAnswer(TM::GCFEvent& answer) 
       { _application.dispatch(answer, _port); }
   
   private: // state methods
-    int initial(GCFEvent& e, GCFPortInterface& p);
+    int initial(TM::GCFEvent& e, TM::GCFPortInterface& p);
 
   private: // methods called by the PropertyProxy
     friend class PropertyProxy;
     void propSubscribed(const string& propName);
     void propUnsubscribed(const string& propName);
-    void propValueChanged(const string& propName, const GCFPValue& value);
+    void propValueChanged(const string& propName, const Common::GCFPValue& value);
     void propValueSet(const string& propName);
-    void valueGet(const string& propName, const GCFPValue& value);    
+    void valueGet(const string& propName, const Common::GCFPValue& value);    
     
   private:
-    GCFTCPPort _port;
-    GCFTask& _application; 
+    TM::GCFTCPPort _port;
+    TM::GCFTask& _application; 
     PropertyProxy _proxy;   
     Answer _answer;
 };
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR
 #endif

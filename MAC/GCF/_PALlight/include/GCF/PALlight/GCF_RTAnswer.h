@@ -27,6 +27,16 @@
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/TM/GCF_Event.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common
+  {
+class GCFPValue;
+  }
+  namespace RTCPMLlight 
+  {
 /**
  * This is an abstract class, which provides the possibility to handle 
  * asynchronous PMLlite actions (like load property set) and value changed 
@@ -37,12 +47,10 @@
  * GCFRTMyPropertySet, GCFRTMyProperty
  * 
  * All responses or indications (events) will be given in the handleAnswer 
- * method based on the GCFEvent structure. This provides the flexibility to 
+ * method based on the TM::GCFEvent structure. This provides the flexibility to 
  * handle events in a state machine of a task, to skip or to handle in a 
  * different way.
 */
-
-class GCFPValue;
 
 class GCFRTAnswer
 {
@@ -64,7 +72,7 @@ class GCFRTAnswer
       *       Answer(GCFTask& t) : _t(t) {;}
       *       ~Answer() {;}
       * 
-      *       void handleAnswer(GCFEvent& answer);
+      *       void handleAnswer(TM::GCFEvent& answer);
       *       {
       *         // The port can be a dummy port @see GCFFsm
       *         // or a port of the task _t
@@ -76,7 +84,7 @@ class GCFRTAnswer
       *   };
       *   // If aState is the current state this method will be called indirect
       *   // by the dispatch method call.  
-      *   GCFEvent::TResult Application::aState(GCFEvent& e, GCFPortInterface& p)
+      *   TM::GCFEvent::TResult Application::aState(TM::GCFEvent& e, GCFPortInterface& p)
       *   {
       *     ...
       *     switch (e.signal)
@@ -104,7 +112,7 @@ class GCFRTAnswer
       *               all parameters of these events are pointers to data, which 
       *               is created in and managed by PMLlite
       */
-    virtual void handleAnswer (GCFEvent& answer) = 0;
+    virtual void handleAnswer (TM::GCFEvent& answer) = 0;
     
   private:
     //@{ 
@@ -114,50 +122,55 @@ class GCFRTAnswer
     //@}
 };
 
-enum {
-  F_PML_PROTOCOL = F_GCF_PROTOCOL,
+enum 
+{
+  F_PML_PROTOCOL = TM::F_GCF_PROTOCOL,
 };
 /**
  * F_PML_PROTOCOL signals
  */
-enum {
+enum 
+{
   F_VCHANGEMSG_ID = 1,
   F_MYPS_ENABLED_ID,
   F_MYPS_DISABLED_ID,
 };
 
 #define F_VCHANGEMSG    F_SIGNAL(F_PML_PROTOCOL, F_VCHANGEMSG_ID,    F_IN)
-#define F_MYPS_ENABLED  F_SIGNAL(F_PML_PROTOCOL, F_MYPS_ENABLED_ID,     F_IN)
-#define F_MYPS_DISABLED F_SIGNAL(F_PML_PROTOCOL, F_MYPS_DISABLED_ID,   F_IN)
+#define F_MYPS_ENABLED  F_SIGNAL(F_PML_PROTOCOL, F_MYPS_ENABLED_ID,  F_IN)
+#define F_MYPS_DISABLED F_SIGNAL(F_PML_PROTOCOL, F_MYPS_DISABLED_ID, F_IN)
 
 /// NOTE: These structs cannot be used to send messages by real port 
 /// implementations like TCP. 
-struct GCFPropValueEvent : public GCFEvent
+struct GCFPropValueEvent : public TM::GCFEvent
 {
   /// @param sig can only be F_VCHANGEMSG
-  GCFPropValueEvent(unsigned short sig) : GCFEvent(sig)
+  GCFPropValueEvent(unsigned short sig) : TM::GCFEvent(sig)
   {
       length = sizeof(GCFPropValueEvent);
   }
-  const GCFPValue* pValue; ///< Pointer to the changed value object
+  const Common::GCFPValue* pValue; ///< Pointer to the changed value object
   const char* pPropName;   ///< Pointer to the string of the property name
   bool internal;           ///< Indicates whether the internal/owned/my 
                            ///< (GCFRTMyProperty)
                            ///< property has changed (not used with F_VGETRESP)
 };
 
-struct GCFPropSetAnswerEvent : public GCFEvent
+struct GCFPropSetAnswerEvent : public TM::GCFEvent
 {
   /// @param sig can only be F_MYPS_ENABLED, F_MYPS_DISABLED
-  GCFPropSetAnswerEvent(unsigned short sig) : GCFEvent(sig)
+  GCFPropSetAnswerEvent(unsigned short sig) : TM::GCFEvent(sig)
   {
       length = sizeof(GCFPropSetAnswerEvent);
   }
   const char* pScope;   ///< Scope of the propertyset
-  TGCFResult result;    ///< Result of the requested action: 
+  Common::TGCFResult result;    ///< Result of the requested action: 
                         ///<    GCF_MYPS_ENABLE_ERROR, GCF_MYPS_DISABLE_ERROR, 
 };
 
 extern const char* F_PML_PROTOCOL_signalnames[];
+  } // namespace RTCPMLlight
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

@@ -29,6 +29,12 @@
 using std::cout;
 using std::endl;
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 /**
  * Function to calculate the elapsed time between two tiemval's.
  */
@@ -187,16 +193,21 @@ GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& p)
   
   return status;
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
+
+using namespace LOFAR::GCF;
 
 int main(int argc, char** argv)
 {
-  GCFTask::init(argc, argv);
+  TM::GCFTask::init(argc, argv);
 
-  Ping ping_task("PING");
+  PAL::Ping ping_task("PING");
 
   ping_task.start(); // make initial transition
 
-  GCFTask::run();
+  TM::GCFTask::run();
 
   return 0;
 }

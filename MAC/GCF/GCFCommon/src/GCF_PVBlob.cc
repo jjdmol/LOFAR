@@ -24,6 +24,13 @@
 #include <GCF/GCF_PVBlob.h>
 #include <Common/DataConvert.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
+
 GCFPVBlob::GCFPVBlob(unsigned char* val, uint16 length, bool clone) 
   : GCFPValue(LPT_BLOB), _value(val), _length(length), _isDataHolder(clone)
 {
@@ -133,3 +140,6 @@ TGCFResult GCFPVBlob::copy(const GCFPValue& newVal)
   
   return result;
 }
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR

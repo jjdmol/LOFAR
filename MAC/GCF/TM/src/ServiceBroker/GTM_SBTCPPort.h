@@ -24,7 +24,13 @@
 #define GTM_SBTCPPORT_H
 
 #include <GCF/TM/GCF_TCPPort.h>
-#include <Common/lofar_string.h>
+
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace SB 
+  {
 
 // forward declaration
 
@@ -33,15 +39,15 @@
  * transport protocol. It uses socket pattern to do this. Is can act as MSPP 
  * (port provider), SPP (server) and SAP (client).
  */
-class GTMSBTCPPort : public GCFTCPPort
+class GTMSBTCPPort : public TM::GCFTCPPort
 {
  public:
 
     /// Construction methods
     /** @param protocol NOT USED */    
-    explicit GTMSBTCPPort (GCFTask& task,
+    explicit GTMSBTCPPort (TM::GCFTask& task,
           	    string name,
-          	    TPortType type,
+          	    TM::GCFPortInterface::TPortType type,
                 int protocol, 
                 bool transportRawData = false);
     explicit GTMSBTCPPort ();
@@ -63,5 +69,8 @@ class GTMSBTCPPort : public GCFTCPPort
     GTMSBTCPPort (const GTMSBTCPPort&);
     GTMSBTCPPort& operator= (const GTMSBTCPPort&);
 };
+  } // namespace SB
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

@@ -30,6 +30,13 @@
 #include <Common/lofar_string.h>
 #include <GCF/GCF_Defines.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 // forward declacations
 class GCFTask;
 class GCFEvent;
@@ -167,5 +174,8 @@ class GCFPortInterface
     int       _protocol; /**< NOT USED */
     bool      _transportRawData;
 };
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

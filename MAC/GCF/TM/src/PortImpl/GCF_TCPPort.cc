@@ -31,6 +31,17 @@
 #include <GTM_Defines.h>
 #include <errno.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+
+  using namespace SB;
+
+  namespace TM 
+  {
+
+
 GCFTCPPort::GCFTCPPort(GCFTask& task, 
                        string name, 
                        TPortType type, 
@@ -351,3 +362,6 @@ bool GCFTCPPort::accept(GCFTCPPort& port)
   }
   return result;
 }
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

@@ -30,6 +30,12 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
 
 GTMFile::GTMFile(GCFRawPort& port) :
   _fd(-1),
@@ -112,3 +118,6 @@ void GTMFile::workProc()
         strerror(errno)));        
   }
 }
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

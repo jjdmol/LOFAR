@@ -27,8 +27,13 @@
 
 #include <GCF/TM/GCF_Control.h>
 #include "Service.h"
-#include <Common/lofar_string.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 /**
  * The Echo task receives ECHO_PING events from the Ping task and
  * returns an ECHO_ECHO event for each ECHO_PING event received.
@@ -72,5 +77,8 @@ class Echo : public GCFTask
   GCFPort server;
   Service* _pService;
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

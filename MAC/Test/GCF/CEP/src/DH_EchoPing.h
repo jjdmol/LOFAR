@@ -28,6 +28,10 @@
 
 namespace LOFAR
 {
+ namespace GCF
+ {
+  namespace Test
+  {
 
 // This class is an example DataHolder which is only used in the
 // Example programs.
@@ -92,6 +96,8 @@ inline timeval DH_EchoPing::getPingTime() const
     t.tv_usec = *itsPingTime - ((uint64) t.tv_sec * 1000000l);
     return t;
   }
-}
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif 

@@ -5,7 +5,7 @@ autogen definitions protocol;
 
 description = "Protocol for the Echo server";
 prefix = "Echo"; // for the signal names
-id = F_APL_PROTOCOL;
+id = 'GCF::TM::F_APL_PROTOCOL';
 
 // specify extra include files
 // e.g.

@@ -26,6 +26,13 @@
 #include <Timer/GTM_Timer.h>
 #include <GCF/TM/GCF_Task.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 GTMTimerHandler* GTMTimerHandler::_pInstance = 0;
 
 GTMTimerHandler* GTMTimerHandler::instance()
@@ -161,3 +168,6 @@ int GTMTimerHandler::cancelAllTimers(GCFRawPort& port)
   }
   return result;
 }
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

@@ -30,6 +30,13 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 GTMDevice::GTMDevice(GCFDevicePort& port) :
   GTMFile(port)
 {
@@ -73,3 +80,6 @@ bool GTMDevice::open(const string& deviceName)
   }
   return (_fd > -1);
 }
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

@@ -23,6 +23,14 @@
 #include "GPA_RequestManager.h"
 #include <GCF/TM/GCF_Event.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace TM;
+  namespace PAL 
+  {
+
 GPARequestManager::GPARequestManager()
 {
 }
@@ -106,3 +114,6 @@ void GPARequestManager::deleteAllRequests()
   }
   _requests.clear();
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

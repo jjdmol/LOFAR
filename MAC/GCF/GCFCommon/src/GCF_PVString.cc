@@ -25,8 +25,14 @@
 #include <Common/DataConvert.h>
 #include <Common/LofarTypes.h>
 
-using LOFAR::TYPES::uint16;
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
 
+using LOFAR::TYPES::uint16;
 
 unsigned int GCFPVString::unpackConcrete(const char* valBuf)
 {
@@ -75,3 +81,6 @@ TGCFResult GCFPVString::copy(const GCFPValue& newVal)
   
   return result;
 }
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR

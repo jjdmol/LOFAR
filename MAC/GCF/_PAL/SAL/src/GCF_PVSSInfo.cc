@@ -28,6 +28,13 @@
 #include "GSA_Defines.h"
 #include <Manager.hxx>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+  namespace PAL
+  {
 string GCFPVSSInfo::_sysName = "";
 string GCFPVSSInfo::_projName = "";
 unsigned int GCFPVSSInfo::_lastSysNr = 0;
@@ -276,4 +283,6 @@ void buildTypeStructTree(const string path,
     }
   }
 }
-
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

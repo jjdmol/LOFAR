@@ -2,9 +2,12 @@
 #include <stdio.h>
 #include <GCF/GCF_Defines.h>
 
-namespace LOFAR {
- namespace GCF {
-  namespace Common {
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
 
 Utils::Utils()
 {}

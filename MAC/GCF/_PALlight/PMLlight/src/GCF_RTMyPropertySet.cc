@@ -35,6 +35,14 @@ using std::ifstream;
 #include <sys/types.h>
 #include <unistd.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+using namespace TM;
+  namespace RTCPMLlight 
+  {
 TMACValueType macValueTypes[] = 
 {
   NO_LPT,           // <not specified by pvss>      0
@@ -316,7 +324,7 @@ void GCFRTMyPropertySet::unlinkProperties()
   }
 }
 
-GCFRTMyProperty* GCFRTMyPropertySet::getProperty (const string propName) const
+GCFRTMyProperty* GCFRTMyPropertySet::getProperty (const string& propName) const
 {
   string shortPropName(propName);
   cutScope(shortPropName);
@@ -333,7 +341,7 @@ GCFRTMyProperty* GCFRTMyPropertySet::getProperty (const string propName) const
   }
 }
 
-GCFRTMyProperty& GCFRTMyPropertySet::operator[] (const string propName)
+GCFRTMyProperty& GCFRTMyPropertySet::operator[] (const string& propName)
 { 
   GCFRTMyProperty* pProperty = getProperty(propName);
   if (!pProperty)
@@ -343,7 +351,7 @@ GCFRTMyProperty& GCFRTMyPropertySet::operator[] (const string propName)
   return *pProperty;
 }
 
-TGCFResult GCFRTMyPropertySet::setValue (const string propName, 
+TGCFResult GCFRTMyPropertySet::setValue (const string& propName, 
                                          const GCFPValue& value)
 {
   GCFRTMyProperty* pProperty = getProperty(propName);
@@ -357,8 +365,8 @@ TGCFResult GCFRTMyPropertySet::setValue (const string propName,
   }
 }
                              
-TGCFResult GCFRTMyPropertySet::setValue (const string propName, 
-                                       const string value)
+TGCFResult GCFRTMyPropertySet::setValue (const string& propName, 
+                                       const string& value)
 {
   GCFRTMyProperty* pProperty = getProperty(propName);
   if (pProperty)
@@ -371,7 +379,7 @@ TGCFResult GCFRTMyPropertySet::setValue (const string propName,
   }
 }
 
-GCFPValue* GCFRTMyPropertySet::getValue (const string propName)
+GCFPValue* GCFRTMyPropertySet::getValue (const string& propName)
 {
   GCFRTMyProperty* pProperty = getProperty(propName);
   if (pProperty)
@@ -384,7 +392,7 @@ GCFPValue* GCFRTMyPropertySet::getValue (const string propName)
   }
 }
                                      
-GCFPValue* GCFRTMyPropertySet::getOldValue (const string propName)
+GCFPValue* GCFRTMyPropertySet::getOldValue (const string& propName)
 {
   GCFRTMyProperty* pProperty = getProperty(propName);
   if (pProperty)
@@ -410,7 +418,7 @@ void GCFRTMyPropertySet::setAnswer (GCFRTAnswer* pAnswerObj)
   _pAnswerObj = pAnswerObj;
 }
 
-bool GCFRTMyPropertySet::exists (const string propName) const
+bool GCFRTMyPropertySet::exists (const string& propName) const
 {
   GCFRTMyProperty* pProperty = getProperty(propName);
   return (pProperty != 0);
@@ -657,3 +665,6 @@ void buildTypeStructTree(const string path,
     }
   }
 }
+  } // namespace RTCPMLlight
+ } // namespace GCF
+} // namespace LOFAR

@@ -29,8 +29,6 @@
 #include <GCF/TM/GCF_Handler.h>
 #include <GCF/PAL/GCF_PVSSPort.h>
 #include "GPM_Defines.h"
-#include <Common/lofar_map.h>
-#include <Common/lofar_list.h>
 #include <GCF/Protocols/PA_Protocol.ph>
 
 /**
@@ -41,22 +39,28 @@
    property set or load APC).
 */
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common
+  {
 class GCFPValue;
-class GCFEvent;
-class GCFPortInterface;
+  }
+  namespace TM
+  {
+class TM::GCFEvent;
+class TM::GCFPortInterface;
+  }
+  namespace PAL
+  {
 class GCFPropertySet;
 class GCFMyPropertySet;
 class GCFExtPropertySet;
 class GPMHandler;
-namespace LOFAR {
-  namespace GCF {
 class GCFSysConnGuard;
-  }
-}
 
-using LOFAR::GCF::GCFSysConnGuard;
-
-class GPMController : public GCFTask
+class GPMController : public TM::GCFTask
 {
   public:
     ~GPMController ();
@@ -80,8 +84,8 @@ class GPMController : public GCFTask
     GPMController ();
 
   private: // state methods
-    GCFEvent::TResult initial   (GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult connected (GCFEvent& e, GCFPortInterface& p);
+    TM::GCFEvent::TResult initial   (TM::GCFEvent& e, TM::GCFPortInterface& p);
+    TM::GCFEvent::TResult connected (TM::GCFEvent& e, TM::GCFPortInterface& p);
         
   private: // helper methods
     typedef struct Action
@@ -120,7 +124,7 @@ class GPMController : public GCFTask
 
 };
 
-class GPMHandler : public GCFHandler
+class GPMHandler : public TM::GCFHandler
 {
   public:
     
@@ -135,4 +139,7 @@ class GPMHandler : public GCFHandler
     static GPMHandler* _pInstance;
     GPMController _controller;
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif

@@ -7,6 +7,13 @@
 using std::string;
 using std::list;
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
+
 class Utils
 {
   public:
@@ -22,4 +29,7 @@ class Utils
     static bool isValidScope(const char* scopeName);
 };
 
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR
 #endif // UTILS_H

@@ -27,7 +27,13 @@
 
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_DevicePort.h>
-#include <Common/lofar_string.h>
+
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
 
 /**
  * The Echo task receives ECHO_PING events from the Ping task and
@@ -71,4 +77,7 @@ class Echo : public GCFTask
   GCFDevicePort spidDriver;
 };
 
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 #endif

@@ -31,6 +31,14 @@
 
 #include <GSA_PortService.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;   
+using namespace TM;
+  namespace PAL
+  {
 static GCFEvent disconnectedEvent(F_DISCONNECTED);
 static GCFEvent connectedEvent   (F_CONNECTED);
 static GCFEvent closedEvent      (F_CLOSED);
@@ -252,3 +260,6 @@ void GCFPVSSPort::setConverter(GCFPVSSUIMConverter& converter)
   _pConverter = &converter; 
   if (_pPortService) _pPortService->setConverter(converter);
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

@@ -26,11 +26,17 @@
 #include <GCF/GCF_Defines.h>
 #include <GCF/PAL/GCF_Property.h>
 
-#include <Common/lofar_map.h>
-#include <Common/lofar_list.h>
-
-class GCFAnswer;
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common
+  {
 class GCFPValue;
+  }
+  namespace PAL
+  {
+class GCFAnswer;
 class GPMController;
 
 // This class is the base class for the 2 types of property set containers. It 
@@ -76,11 +82,11 @@ class GCFPropertySet
     //                   in case the value must be set on a property of a remote system.
     // @returns GCF_PROP_NOT_IN_SET,  GCF_PROP_WRONG_TYPE, GCF_PROP_NOT_VALID
     // <group>
-    TGCFResult setValue (const string& propName, 
-                         const GCFPValue& value, 
+    Common::TGCFResult setValue (const string& propName, 
+                         const Common::GCFPValue& value, 
                          bool wantAnswer = false);
 
-    TGCFResult setValue (const string& propName,
+    Common::TGCFResult setValue (const string& propName,
                          const string& value, 
                          bool wantAnswer = false);
     // </group>
@@ -96,8 +102,8 @@ class GCFPropertySet
     void configure(const string& apcName);
 
   protected: // helper methods
-    virtual GCFProperty* createPropObject(const TPropertyInfo& propInfo) = 0;
-    void dispatchAnswer (unsigned short sig, TGCFResult result);
+    virtual GCFProperty* createPropObject(const Common::TPropertyInfo& propInfo) = 0;
+    void dispatchAnswer (unsigned short sig, Common::TGCFResult result);
     void loadPropSetIntoRam();
 
   private: // helper methods
@@ -107,7 +113,7 @@ class GCFPropertySet
     
   private: // methods called by GPMController
     friend class GPMController;
-    void configured(TGCFResult result, const string& apcName);
+    void configured(Common::TGCFResult result, const string& apcName);
     
   private:
     GCFPropertySet();
@@ -127,11 +133,14 @@ class GCFPropertySet
     GCFAnswer*          _pAnswerObj;
     string              _scope;
     string              _type;
-    typedef list<TPropertyInfo> TPropInfoList;
+    typedef list<Common::TPropertyInfo> TPropInfoList;
     TPropInfoList       _propSetInfo;
 
   protected: // helper attributes
     GCFProperty _dummyProperty;
     bool        _isBusy;
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif
