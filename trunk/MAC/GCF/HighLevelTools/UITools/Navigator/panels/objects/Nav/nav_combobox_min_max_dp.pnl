@@ -1,0 +1,107 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,443 138 95 31 N "_3DFace" 3
+"$Maximum"
+"$Minimum"
+"$dp"
+EEE E E 1 -1 -1 0  0 0
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+22 0
+"ComboBox"
+""
+1 0 0 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+-2 -2 72 25
+0
+"main()
+{
+  fill_combobox();
+}
+
+///////////////////////////////////////////////////////////////////
+//	Function: fills the ComboBox with the 
+//						desired amount of numerals
+//	Name: fill__combobox
+///////////////////////////////////////////////////////////////////
+int fill_combobox()
+{
+  int i, Minimum, Maximum, ElementValue;
+  Minimum = $Minimum;
+  Maximum = $Maximum;
+
+  if (dpExists($dp))
+  {
+	  if (Minimum<Maximum)
+	  {
+		  dpGet($dp + \":_online.._value\", ElementValue);
+	    for (i=Minimum; i<=Maximum ;i++)
+	    {
+	      ComboBox.appendItem(i);
+ 	  		if (ElementValue==i)
+ 	  		{
+	  			ComboBox.selectedPos = ComboBox.itemCount;
+	  	  }
+	    }
+	  }
+	}
+	else
+	{
+    ComboBox.backCol = \"DpDoesNotExist\";
+	}
+}" 0
+
+"main()
+{
+  dpSet($dp, ComboBox.text);
+}" 0
+
+E
+ 0 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
