@@ -45,6 +45,8 @@ AH_FrontEnd::AH_FrontEnd (int port, int elements,
   stoptime.tv_usec = 0;
 
   bandwidth = 0.0;
+
+  gettimeofday (&starttime, NULL);
 }
 
 
@@ -91,12 +93,17 @@ void AH_FrontEnd::undefine() {
 }
 
 void AH_FrontEnd::init() {
+  struct timeval timestamp;
   vector<WorkHolder*>::iterator it = itsWHs.begin();
   int cn = 0;
   for (; it != itsWHs.end(); it++) {
-    cout << "init FE WH " << (*it)->getName() << " listening on port " << itsPort+cn << endl;
+    cout << "init FE WH " << (*it)->getName() << " listening on port " << itsPort+cn;
     if (!itsBlocking) (*it)->getDataManager().getOutHolder(0)->getTransporter().setIsBlocking(itsBlocking);
     (*it)->basePreprocess();
+    timestamp.tv_sec = 0;
+    timestamp.tv_usec = 0;
+    gettimeofday (&timestamp, NULL);
+    cout << " connected on timestamp : "<< 1.0 * (timestamp.tv_sec - starttime.tv_sec) + 1.0 * (timestamp.tv_usec - starttime.tv_usec) / 1000000 << "sec"<<endl;
     cn++;
   }
 }
