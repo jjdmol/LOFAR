@@ -30,6 +30,7 @@
 #include <aips/Functionals/Polynomial.h>
 #include <aips/Mathematics/AutoDiff.h>
 #include <trial/Fitting/LinearFit.h>
+#include <Common/lofar_string.h>
 
 //# Forward Declarations
 class MeqRequest;
@@ -63,6 +64,8 @@ public:
     { return itsVCoeff; }
   const MeqParmPolc& getWCoeff() const
     { return itsWCoeff; }
+
+  void setName(const string& name);
 
 private:
   Polynomial<AutoDiff<double> > itsPoly;

@@ -79,3 +79,10 @@ void MeqUVWPolc::calcUVW (const MeqRequest& request)
   itsV = itsVCoeff.getResult (request);
   itsW = itsWCoeff.getResult (request);
 }
+
+void MeqUVWPolc::setName(const string& name)
+{
+  itsUCoeff.setName("u" + name);
+  itsVCoeff.setName("v" + name);
+  itsWCoeff.setName("w" + name);
+}
