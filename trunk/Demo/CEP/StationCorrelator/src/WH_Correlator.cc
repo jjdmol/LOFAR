@@ -92,7 +92,7 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 }
 
 void WH_Correlator::process() {
-  double starttime, stoptime;
+  double starttime, stoptime, cmults;
 
   DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
   DH_Vis      *outDH = (DH_Vis*)(getDataManager().getOutHolder(0));
