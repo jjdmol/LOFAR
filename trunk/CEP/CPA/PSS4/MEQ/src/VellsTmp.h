@@ -122,6 +122,10 @@ public:
   friend VellsTmp posdiff (const VellsTmp&, const VellsTmp&);
   friend VellsTmp tocomplex (const VellsTmp&, const Vells&);
   friend VellsTmp tocomplex (const VellsTmp&, const VellsTmp&);
+  friend VellsTmp pow (const VellsTmp& value, const Vells& exponent)
+    { return value.itsRep->pow (*exponent.rep(), true); }
+  friend VellsTmp pow (const VellsTmp& value, const VellsTmp& exponent)
+    { return value.itsRep->pow (*exponent.itsRep, false); }
   friend VellsTmp sin (const VellsTmp&);
   friend VellsTmp cos (const VellsTmp&);
   friend VellsTmp exp (const VellsTmp&);

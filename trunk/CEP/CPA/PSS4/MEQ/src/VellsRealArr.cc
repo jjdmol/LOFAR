@@ -100,6 +100,10 @@ VellsRep* VellsRealArr::tocomplex (VellsRep& right)
 {
   return right.tocomplexRep (*this);
 }
+VellsRep* VellsRealArr::pow (VellsRep& right, bool rightTmp)
+{
+  return right.powRep (*this, rightTmp);
+}
 
 bool VellsRealArr::isReal() const
 {
@@ -231,6 +235,57 @@ VellsRep* VellsRealArr::tocomplexRep (VellsRealArr& left)
     value[i] = complex<double> (lvalue[i], rvalue[i]);
   }
   return v;
+}
+
+VellsRep* VellsRealArr::powRep (VellsRealSca& left, bool rightTmp)
+{
+  VellsRealArr* v = this;
+  if (!rightTmp) {
+    v = (VellsRealArr*)clone();
+  }
+  double* value = v->itsValuePtr;
+  double lvalue = *left.itsValuePtr;
+  double* end = value + nelements();
+  while (value < end) {
+    *value = std::pow(lvalue, *value);
+    value++;
+  }
+  return v;
+}
+VellsRep* VellsRealArr::powRep (VellsComplexSca& left, bool)
+{
+  VellsComplexArr* v = new VellsComplexArr (nx(), ny());
+  complex<double>* value = v->itsValuePtr;
+  double* value2 = itsValuePtr;
+  complex<double> lvalue = *left.itsValuePtr;
+  int n = nelements();
+  for (int i=0; i<n; i++) {
+    *value++ = std::pow(lvalue, *value2++);
+  }
+  return v;
+}
+VellsRep* VellsRealArr::powRep (VellsRealArr& left, bool)
+{
+  Assert (nelements() == left.nelements());
+  double* value = left.itsValuePtr;
+  double* value2 = itsValuePtr;
+  double* end = value + nelements();
+  while (value < end) {
+    *value = std::pow(*value, *value2++);
+    value++;
+  }
+  return &left;
+}
+VellsRep* VellsRealArr::powRep (VellsComplexArr& left, bool)
+{
+  Assert (nelements() == left.nelements());
+  complex<double>* value = left.itsValuePtr;
+  double* value2 = itsValuePtr;
+  int n = left.nelements();
+  for (int i=0; i<n; i++) {
+    *value = std::pow(*value, *value2++);
+  }
+  return &left;
 }
 
 

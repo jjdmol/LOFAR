@@ -67,6 +67,10 @@ VellsRep* VellsRealSca::tocomplex (VellsRep& right)
 {
   return right.tocomplexRep (*this);
 }
+VellsRep* VellsRealSca::pow (VellsRep& right, bool rightTmp)
+{
+  return right.powRep (*this, rightTmp);
+}
 
 bool VellsRealSca::isReal() const
 {
@@ -161,6 +165,37 @@ VellsRep* VellsRealSca::tocomplexRep (VellsRealArr& left)
     value[i] = complex<double> (lvalue[i], rvalue);
   }
   return v;
+}
+
+VellsRep* VellsRealSca::powRep (VellsRealSca& left, bool)
+{
+  *left.itsValuePtr = std::pow (*left.itsValuePtr, *itsValuePtr);
+  return &left;
+}
+VellsRep* VellsRealSca::powRep (VellsComplexSca& left, bool)
+{
+  *left.itsValuePtr = std::pow(*left.itsValuePtr, *itsValuePtr);
+  return &left;
+}
+VellsRep* VellsRealSca::powRep (VellsRealArr& left, bool)
+{
+  double* value = left.itsValuePtr;
+  double* end = value + left.nelements();
+  while (value < end) {
+    *value = std::pow(*value, *itsValuePtr);
+    value++;
+  }
+  return &left;
+}
+VellsRep* VellsRealSca::powRep (VellsComplexArr& left, bool)
+{
+  complex<double>* value = left.itsValuePtr;
+  int n = left.nelements();
+  for (int i=0; i<n; i++) {
+    *value = std::pow(*value, *itsValuePtr);
+    value++;
+  }
+  return &left;
 }
 
 

@@ -59,6 +59,7 @@ public:
   virtual VellsRep* subtract (VellsRep& right, bool rightTmp);
   virtual VellsRep* multiply (VellsRep& right, bool rightTmp);
   virtual VellsRep* divide   (VellsRep& right, bool rightTmp);
+  virtual VellsRep* pow      (VellsRep& right, bool rightTmp);
 
   virtual complex<double>* complexStorage();
 
@@ -82,6 +83,11 @@ private:
   virtual VellsRep* divRep (VellsRealArr& left, bool rightTmp);
   virtual VellsRep* divRep (VellsComplexSca& left, bool rightTmp);
   virtual VellsRep* divRep (VellsComplexArr& left, bool rightTmp);
+
+  virtual VellsRep* powRep (VellsRealSca& left, bool rightTmp);
+  virtual VellsRep* powRep (VellsRealArr& left, bool rightTmp);
+  virtual VellsRep* powRep (VellsComplexSca& left, bool rightTmp);
+  virtual VellsRep* powRep (VellsComplexArr& left, bool rightTmp);
 
   virtual VellsRep* negate();
 

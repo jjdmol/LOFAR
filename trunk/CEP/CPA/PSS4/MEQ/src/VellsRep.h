@@ -83,6 +83,7 @@ public:
   virtual VellsRep* divide   (VellsRep& right, bool rightTmp) = 0;
   virtual VellsRep* posdiff  (VellsRep& right);
   virtual VellsRep* tocomplex(VellsRep& right);
+  virtual VellsRep* pow      (VellsRep& right, bool rightTmp) = 0;
 
   virtual VellsRep* addRep (VellsRealSca& left, bool rightTmp) = 0;
   virtual VellsRep* addRep (VellsRealArr& left, bool rightTmp) = 0;
@@ -109,6 +110,11 @@ public:
 
   virtual VellsRep* tocomplexRep (VellsRealSca& left);
   virtual VellsRep* tocomplexRep (VellsRealArr& left);
+
+  virtual VellsRep* powRep (VellsRealSca& left, bool rightTmp) = 0;
+  virtual VellsRep* powRep (VellsRealArr& left, bool rightTmp) = 0;
+  virtual VellsRep* powRep (VellsComplexSca& left, bool rightTmp) = 0;
+  virtual VellsRep* powRep (VellsComplexArr& left, bool rightTmp) = 0;
 
   virtual VellsRep* negate() = 0;
 
