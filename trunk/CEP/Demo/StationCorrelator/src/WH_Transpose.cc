@@ -30,7 +30,7 @@
 using namespace LOFAR;
 
 WH_Transpose::WH_Transpose(const string& name,
-			   const KeyValueMap kvm) 
+			   KeyValueMap kvm) 
   : WorkHolder(kvm.getInt("NoWH_Correlator",7), 1, name, "WH_Transpose"),
     itsKVM (kvm)
 {
@@ -40,6 +40,11 @@ WH_Transpose::WH_Transpose(const string& name,
   int samples       = itsKVM.getInt("samples", 256000);
   int channels      = itsKVM.getInt("channels", 46);
   int polarisations = itsKVM.getInt("polarisations", 2);
+
+  itsKVM.show(cout);
+
+  itsNinputs = itsKVM.getInt("noWH_Correlator", 7);
+  itsNoutputs = 1; // there is one connection to the corresponding WH_Correlator
 
   for (int i = 0; i < itsNinputs; i++) {
 //     getDataManager().addInDataHolder(i, new DH_StationData());
@@ -57,7 +62,7 @@ WH_Transpose::WH_Transpose(const string& name,
 WH_Transpose::~WH_Transpose() {
 }
 
-WorkHolder* WH_Transpose::construct(const string& name,KeyValueMap kvm) {
+WorkHolder* WH_Transpose::construct(const string& name, KeyValueMap kvm) {
   return new WH_Transpose(name, kvm);
 }
 
