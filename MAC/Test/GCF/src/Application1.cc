@@ -213,7 +213,7 @@ GCFEvent::TResult Application::test2_1(GCFEvent& e, GCFPortInterface& p)
       }
       TESTC(&p == &_supTask1.getPort());
       TESTC(_propertySetA1.isEnabled());
-      TESTC_DESCR(GCFPVSSInfo::propExists("A_B_temp"), "may fail");
+      TESTC_DESCR(GCFPVSSInfo::propExists("A_B__enabled"), "may fail");
       NEXT_TEST(2_2, "Disable property set");
       break;
     }  
@@ -252,7 +252,7 @@ GCFEvent::TResult Application::test2_2(GCFEvent& e, GCFPortInterface& p)
       }
       TESTC(&p == &_supTask1.getPort());
       TESTC(!_propertySetA1.isEnabled());
-      TESTC_DESCR(!GCFPVSSInfo::propExists("A_B_temp"), "may fail");
+      TESTC_DESCR(!GCFPVSSInfo::propExists("A_B__enabled"), "may fail");
       NEXT_TEST(2_3, "Recognize that a property set is alrady in use");
       break;
     }  
@@ -289,7 +289,7 @@ GCFEvent::TResult Application::test2_3(GCFEvent& e, GCFPortInterface& p)
       }
       TESTC(&p == &_supTask1.getPort());
       TESTC(_propertySetB1.isEnabled());
-      TESTC_DESCR(GCFPVSSInfo::propExists("A_C_temp"), "may fail");
+      TESTC_DESCR(GCFPVSSInfo::propExists("A_C__enabled"), "may fail");
       if (TESTC(_propertySetB1.enable() != GCF_NO_ERROR))
       {
         TSTTestreadyEvent r;
@@ -339,21 +339,21 @@ GCFEvent::TResult Application::test2_5(GCFEvent& e, GCFPortInterface& p)
           TESTC(strcmp(pResponse->pScope, _propertySetA1.getScope().c_str()) == 0);
           TESTC(&p == &_supTask1.getPort());
           TESTC(_propertySetA1.isEnabled());
-          TESTC_DESCR(GCFPVSSInfo::propExists("A_B_temp"), "may fail");
+          TESTC_DESCR(GCFPVSSInfo::propExists("A_B__enabled"), "may fail");
         }
         else if (strcmp(pResponse->pScope, "A_D") == 0)
         {
           TESTC(strcmp(pResponse->pScope, _propertySetB2.getScope().c_str()) == 0);
           TESTC(&p == &_supTask2.getPort());
           TESTC(_propertySetB2.isEnabled());
-          TESTC_DESCR(GCFPVSSInfo::propExists("A_D_temp"), "may fail");
+          TESTC_DESCR(GCFPVSSInfo::propExists("A_D__enabled"), "may fail");
         }
         else if (strcmp(pResponse->pScope, "A_E") == 0)
         {
           TESTC(strcmp(pResponse->pScope, _propertySetB3.getScope().c_str()) == 0);
           TESTC(&p == &_supTask2.getPort());
           TESTC(_propertySetB3.isEnabled());
-          TESTC_DESCR(GCFPVSSInfo::propExists("A_E_temp"), "may fail");
+          TESTC_DESCR(GCFPVSSInfo::propExists("A_E__enabled"), "may fail");
         }
       }
       
@@ -381,28 +381,28 @@ GCFEvent::TResult Application::test2_5(GCFEvent& e, GCFPortInterface& p)
           TESTC(strcmp(pResponse->pScope, _propertySetA1.getScope().c_str()) == 0);
           TESTC(&p == &_supTask1.getPort());
           TESTC(!_propertySetA1.isEnabled());
-          TESTC_DESCR(!GCFPVSSInfo::propExists("A_B_temp"), "may fail");
+          TESTC_DESCR(!GCFPVSSInfo::propExists("A_B__enabled"), "may fail");
         }
         else if (strcmp(pResponse->pScope, "A_C") == 0)
         {
           TESTC(strcmp(pResponse->pScope, _propertySetB1.getScope().c_str()) == 0);
           TESTC(&p == &_supTask1.getPort());
           TESTC(!_propertySetB1.isEnabled());
-          TESTC_DESCR(!GCFPVSSInfo::propExists("A_C_temp"), "may fail");
+          TESTC_DESCR(!GCFPVSSInfo::propExists("A_C__enabled"), "may fail");
         }
         else if (strcmp(pResponse->pScope, "A_D") == 0)
         {
           TESTC(strcmp(pResponse->pScope, _propertySetB2.getScope().c_str()) == 0);
           TESTC(&p == &_supTask2.getPort());
           TESTC(!_propertySetB2.isEnabled());
-          TESTC_DESCR(!GCFPVSSInfo::propExists("A_D_temp"), "may fail");
+          TESTC_DESCR(!GCFPVSSInfo::propExists("A_D__enabled"), "may fail");
         }
         else if (strcmp(pResponse->pScope, "A_E") == 0)
         {
           TESTC(strcmp(pResponse->pScope, _propertySetB3.getScope().c_str()) == 0);
           TESTC(&p == &_supTask2.getPort());
           TESTC(!_propertySetB3.isEnabled());
-          TESTC_DESCR(!GCFPVSSInfo::propExists("A_E_temp"), "may fail");
+          TESTC_DESCR(!GCFPVSSInfo::propExists("A_E__enabled"), "may fail");
         }
       }      
       if (_counter == 0)
@@ -487,7 +487,7 @@ GCFEvent::TResult Application::test4_1(GCFEvent& e, GCFPortInterface& p)
       }
       TESTC(&p == &_supTask1.getPort());
       TESTC(_propertySetB1.isEnabled());
-      TESTC_DESCR(GCFPVSSInfo::propExists("A_C_temp"), "may fail");
+      TESTC_DESCR(GCFPVSSInfo::propExists("A_C__enabled"), "may fail");
       TSTTestreadyEvent r;
       r.testnr = 401;
       _supTask1.getPort().send(r);
