@@ -30,11 +30,12 @@ if( has_field(lofar_software,'print_versions') &&
 
 # These can be uncommented (or set elsewhre prior to include) for debugging.
 # app_defaults.g will parse the command line and recognize the following
-# options: -suspend, -nostart, -valgrind, -gui
+# options: -suspend, -nostart, -valgrind, -gui, -opt
 #
 #   use_suspend  := T;
 #   use_nostart  := T;
 #   use_valgrind := T;
+#   use_opt      := T
 #   use_valgrind_opts := [ "",
 #     "--gdb-attach=yes",          # use either this...
 #     "--logfile=meqserver",       # ...or this, not both
@@ -79,7 +80,7 @@ if( !is_defined('_meqserver_binary') )
 const _meqserver := 
     define_octoserver(default_octoserver_fifo,_meqserver_binary,
                       valgrind=use_valgrind,valgrind_opts=use_valgrind_opts,
-                      nostart=use_nostart);
+                      nostart=use_nostart,opt=use_opt);
   
 const meq.server := function (appid='MeqServer',
     server=_meqserver,options="-nogw -d0 -meq:M:M:MeqServer",
