@@ -128,11 +128,11 @@ MNS/ParmTable.cc
 
 
 #bin_PROGRAMS = BlackBoardDemo fillsqldb
-bin_PROGRAMS = fillsqldb
+bin_PROGRAMS = parmdb
 
-fillsqldb_SOURCES = MNS/fillsqldb.cc
-fillsqldb_LDADD = libbbs3.la
-fillsqldb_DEPENDENCIES = libbbs3.la $(LOFAR_DEPEND)
+parmdb_SOURCES = MNS/parmdb.cc
+parmdb_LDADD = libbbs3.la
+parmdb_DEPENDENCIES = libbbs3.la $(LOFAR_DEPEND)
 
 # BlackBoardDemo_SOURCES = BlackBoardDemo.cc
 # BlackBoardDemo_LDADD = libbbs3.la
