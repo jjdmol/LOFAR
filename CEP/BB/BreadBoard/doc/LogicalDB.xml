@@ -5,7 +5,7 @@
 
 <!-- $Id$ -->
 <!-- look at bottom for revision Log. -->
-<article lang="nl">
+<article lang="en">
  <artheader>
   <title></title>
   <author>
@@ -25,6 +25,12 @@
     Herein the logical database model is described, as it is to be
     used by the blackboard pattern for the SelfCal application of
     LOFAR.
+
+   </para>
+   <para>
+
+    This document is no longer maintained. See
+    &quot;LOFAR/CEP/BB/doc/selfcal-implementation.xml&quot;.
 
    </para>
   </abstract>
