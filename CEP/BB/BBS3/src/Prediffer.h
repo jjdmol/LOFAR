@@ -52,6 +52,7 @@ namespace LOFAR
 
 //# Forward Declarations
 class MMap;
+class FlagsMap;
 
 // Prediffer calculates the equations for the solver.
 // It reads the measured data and predicts the data from the model.
@@ -94,9 +95,13 @@ public:
   // (as nrchan-nrspid-nreq).
   // The 4th element of the vector is the total number of equations.
   // The vector is empty if the domain is outside the observation domain.
-  // Length is trimmed if beyond end of observation.
+  // If needed the given domain is adjusted to the observation domain.
   vector<uint32> setDomain (double startFreq, double lengthFreq,
 			    double startTime, double lengthTime);
+
+  // Get the actual domain.
+  const MeqDomain& getDomain() const
+    { return itsDomain; }
 
   // Return the solvable parms.
   // The parms are in ascending order of spidnr.
@@ -252,6 +257,7 @@ private:
   unsigned int   itsBlNext;        //# Next baseline to do in time domain
 
   MMap*          itsDataMap;       //# Data file to map
+  //  FlagsMap*      itsFlagsMap;      //# Flags file to map
   bool           itsLockMappedMem; //# Lock memory immediately after mapping?
 
   NSTimer itsPredTimer;
