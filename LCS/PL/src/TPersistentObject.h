@@ -1,4 +1,4 @@
-//#  TPersistentObject.h: one line description
+//#  TPersistentObject.h: container class for making objects persistent.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,10 +24,7 @@
 #define LCS_PL_TPERSISTENTOBJECT_H
 
 //# Includes
-#include <PL/PersistentObject.h>
-#include <PL/Exception.h>
-#include <loki/static_check.h>
-#include <loki/SmartPtr.h>
+#include <PL/TPersistentObjectBase.h>
 #include <iostream>
 
 namespace LCS 
@@ -45,34 +42,36 @@ namespace LCS
     // is what STL-like containers do.
     //
     template<typename T>
-    class TPersistentObject : public PersistentObject
+    class TPersistentObject : public TPersistentObjectBase<T>
     {
     public:
   
       // \c T is passed by refererence, not const reference, because this
       // documents more explicitly that \c t can be easily changed, using
-      // the valu() method, which also returns a reference, instead of a 
+      // the value() method, which also returns a reference, instead of a 
       // const reference. Internally we keep a pointer to the instance of T;
       // we need a pointer because pointer can have a null value, whereas 
       // a reference cannot.
       explicit TPersistentObject(T& t) : 
-	itsObjectPtr(&t)
-      { }
-
-      ~TPersistentObject() 
+        TPersistentObjectBase<T>(t)
       { 
+      }
+
+      virtual ~TPersistentObject() 
+      {
       }
       
       // Dynamically create a new TPersistentObject. It will contain an 
       // instance of a default constructed object T.
       static TPersistentObject<T>& create()
       { 
-	T* anObject(new T());
-	TPersistentObject<T>* aTPO(new TPersistentObject<T>(*anObject));
-	aTPO->itsObjectSharedPtr(anObject);
- 	return *aTPO;
+        T* anObject(new T());
+        TPersistentObject<T>* aTPO(new TPersistentObject<T>(*anObject));
+        aTPO->itsObjectSharedPtr(anObject);
+        return *aTPO;
       }
 
+    private:
       // @name Methods that must be implemented using template specialization
       // The implementation of the following methods will depend on the
       // class type \c T. Therefore, there is no default implementation 
@@ -80,68 +79,13 @@ namespace LCS
       // \todo Maybe we shouldn't used exceptions here, cause that will 
       // unnecessarily delay detection of the programming error until
       // runtime. We could use Loki's STATIC_CHECK macro instead.
-      //@{
-
-      // Implements PersistentObject::erase(PersistenceBroker*)
-      // \throw NotImplemented
-      virtual void erase(const PersistenceBroker* const b)  {
- 	THROW(NotImplemented, 
-	      "Method should be implemented using template specialization"); 
-//   	STATIC_CHECK(0,
-//  		     Method_Must_Be_Implemented_Using_Template_Specialization);
-      }
-
-      // Implements PersistentObject::insert(PersistenceBroker*)
-      virtual void insert(const PersistenceBroker* const b);
-
-      // Implements PersistentObject::retrieve(PersistenceBroker*)
-      // \throw NotImplemented
-      virtual void retrieve(const PersistenceBroker* const b) {
-  	THROW(NotImplemented, 
-	      "Method should be implemented using template specialization"); 
-//  	STATIC_CHECK(0,
-//  		     Method_Must_Be_Implemented_Using_Template_Specialization);
-      }
-
-      // Implements PersistentObject::save(PersistenceBroker*)
-      virtual void save(const PersistenceBroker* const b);
-
-      // Implements PersistentObject::update(PersistenceBroker*)
-      virtual void update(const PersistenceBroker* const b);
-
-      //@}
-
-      // Return a reference to the contained PersistentObject.
-      // \note This is a \e non-const reference, because we want to allow
-      // modification of *itsObject.
-      T& value() { return *itsObject; }
-
-    private:
-      // @name Public methods that should have been private
-      // In cases where the persistent object \c T contains non-primitive
-      // members, or is a derived class, the save() method needs to
-      // recursively save all objects that are "contained" in \c T. These
-      // contained objects must have a (table) reference to their "parent".
-      //
-      // \note "Parent" should not be interpreted as "being derived from".
-      // From the data point-of-view containment of one class instance by
-      // another is also considered a parent-child relation. 
-      //
-      // \warning Programmers should not call any of these methods. In an
-      // ideal world we could have declared them private.
-      //
-      // \todo Do we also want to pass the TimeStamp as an argument when
-      // saving the "child" classes? We might do this, because we may decide
-      // that a cascading save really saves one and only one object. The fact
-      // that this object is constructed from multiple "subobjects" is not 
-      // really relevant.
 
       //@{
  
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
       // \throw NotImplemented
-      virtual void erase(const ObjectId& poid) {
+      virtual void doErase(const ObjectId& poid) {
  	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
       }
@@ -149,7 +93,7 @@ namespace LCS
       // This method is responsible for actually inserting the \e primitive
       // data members of \c T.
       // \throw NotImplemented
-      virtual void insert(const ObjectId& poid) {
+      virtual void doInsert(const ObjectId& poid) {
  	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
       }
@@ -157,7 +101,7 @@ namespace LCS
       // This method is responsible for actually retrieving the \e primitive
       // data members of \c T.
       // \throw NotImplemented
-      virtual void retrieve(const ObjectId& poid) {
+      virtual void doRetrieve(const ObjectId& poid) {
  	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
       }
@@ -165,7 +109,7 @@ namespace LCS
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
       // \throw NotImplemented
-      virtual void update(const ObjectId& poid) {
+      virtual void doUpdate(const ObjectId& poid) {
  	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
       }
@@ -174,28 +118,16 @@ namespace LCS
 
     private:
 
-      // Here we keep a pointer to the instance of T.
-      T* itsObjectPtr;
+      struct DBRep {};
 
-      // The Loki::SmartPtr will be used to keep track of instances of T
-      // that we've created ourselves. Because copying a TPersistentObject 
-      // implies copying the pointer to the instance of T, we must somehow
-      // keep track of the number of pointers pointing to this object. When
-      // the count drops to zero, Loki::SmartPtr will delete the object.
-      // Obviously, we do not want this behaviour for instances of T that we
-      // did not create ourselves. If we're not the creator, then we're not
-      // the owner, hence we should never ever delete the object! Therefore,
-      // we will only transfer ownership of itsObjectPtr to the Loki::SmartPtr
-      // when \e we are the creator/owner of the object that itsObjectPtr
-      // points to.
-      Loki::SmartPtr<T> itsObjectSharedPtr;
+      void toDatabaseRep(TPersistentObject<T>::DBRep& dest) const;
+
+      void fromDatabaseRep(const TPersistentObject<T>::DBRep& org);
 
     };
 
   }
 
 }
-
-#include <PL/TPersistentObject.tcc>
 
 #endif
