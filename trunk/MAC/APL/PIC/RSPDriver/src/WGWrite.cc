@@ -55,11 +55,11 @@ void WGWrite::sendrequest()
 
   if (0 == global_rcu % MEPHeader::N_POL)
   {
-    wgsettings.hdr.set(MEPHeader::WG_XSETTINGS_HDR, getCurrentBLP());
+    wgsettings.hdr.set(MEPHeader::WG_XSETTINGS_HDR, getCurrentBLP() / 2);
   }
   else
   {
-    wgsettings.hdr.set(MEPHeader::WG_YSETTINGS_HDR, getCurrentBLP());
+    wgsettings.hdr.set(MEPHeader::WG_YSETTINGS_HDR, getCurrentBLP() / 2);
   }
 
   WGSettings& w = Cache::getInstance().getBack().getWGSettings();

@@ -31,7 +31,8 @@ RSPDriver.SOFTPPS=0
 # In this case you must leave RSPDriver.MAC_BASE unspecified
 #
 RSPDriver.MAC_ADDR_LCU=00:60:97:09:C5:B0 # lofar26 MAC address
-RSPDriver.MAC_ADDR_0=00:0A:5E:46:5D:ED   # lofar27 MAC address
+#RSPDriver.MAC_ADDR_0=00:0A:5E:46:5D:ED   # lofar27 MAC address
+RSPDriver.MAC_ADDR_0=00:60:97:09:C5:B0 # lofar26 MAC address
 RSPDriver.MAC_ADDR_1=00:00:00:00:00:AF
 RSPDriver.MAC_ADDR_2=00:00:00:00:00:BB
 RSPDriver.MAC_ADDR_3=00:00:00:00:00:04

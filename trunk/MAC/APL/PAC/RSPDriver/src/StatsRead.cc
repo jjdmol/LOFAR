@@ -38,8 +38,8 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 using namespace blitz;
 
-StatsRead::StatsRead(GCFPortInterface& board_port, int board_id, uint8 type)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i)), m_type(type)
+StatsRead::StatsRead(GCFPortInterface& board_port, int board_id, uint8 type, uint8 nfragments)
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * nfragments), m_type(type), m_nfragments(nfragments)
 {
 }
 
@@ -52,26 +52,28 @@ void StatsRead::sendrequest()
 {
   EPAReadEvent statsread;
 
+  uint16 byteoffset = (getCurrentBLP() % m_nfragments) * MEPHeader::FRAGMENT_SIZE;
+
   switch (m_type)
   {
     case Statistics::SUBBAND_MEAN:
-      statsread.hdr.set(MEPHeader::SST_MEAN_HDR, getCurrentBLP(),
-			MEPHeader::READ, 0, N_STATS);
+      statsread.hdr.set(MEPHeader::SST_MEAN_HDR, getCurrentBLP() / m_nfragments,
+			MEPHeader::READ, N_STATS * sizeof(int32), byteoffset);
       break;
     
     case Statistics::SUBBAND_POWER:
-      statsread.hdr.set(MEPHeader::SST_POWER_HDR, getCurrentBLP(),
-			MEPHeader::READ, 0, N_STATS);
+      statsread.hdr.set(MEPHeader::SST_POWER_HDR, getCurrentBLP() / m_nfragments,
+			MEPHeader::READ, N_STATS * sizeof(uint32), byteoffset);
       break;
 
     case Statistics::BEAMLET_MEAN:
-      statsread.hdr.set(MEPHeader::BST_MEAN_HDR, getCurrentBLP(),
-			MEPHeader::READ, 0, N_STATS);
+      statsread.hdr.set(MEPHeader::BST_MEAN_HDR, getCurrentBLP()/ m_nfragments,
+			MEPHeader::READ, N_STATS * sizeof(int32), byteoffset);
       break;
     
     case Statistics::BEAMLET_POWER:
-      statsread.hdr.set(MEPHeader::BST_POWER_HDR, getCurrentBLP(),
-			MEPHeader::READ, 0, N_STATS);
+      statsread.hdr.set(MEPHeader::BST_POWER_HDR, getCurrentBLP() / m_nfragments,
+			MEPHeader::READ, N_STATS * sizeof(uint32), byteoffset);
       break;
 
     default:
@@ -88,8 +90,15 @@ void StatsRead::sendrequest_status()
 }
 
 /**
- * Function to cast a complex<uint16> to a complex<double>
+ * Functions to cast a complex<int32> and complex<uint32> to a complex<double>
  */
+BZ_DECLARE_FUNCTION_RET(convert_int32_to_double, complex<double>)
+inline complex<double> convert_int32_to_double(complex<int32> val)
+{
+  return complex<double>((double)val.real(),
+			 (double)val.imag());
+}
+
 BZ_DECLARE_FUNCTION_RET(convert_uint32_to_double, complex<double>)
 inline complex<double> convert_uint32_to_double(complex<uint32> val)
 {
@@ -101,18 +110,47 @@ GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port
 {
   EPAStatsEvent ack(event);
 
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) 
+    + (getCurrentBLP() / m_nfragments);
 
-  Array<complex<uint32>, 2> stats((complex<uint32>*)&ack.stat,
-				  shape(MEPHeader::N_SUBBANDS, MEPHeader::N_POL),
-				  neverDeleteData);
-
+  uint16 itemoffset = (getCurrentBLP() % m_nfragments) * (MEPHeader::FRAGMENT_SIZE / sizeof(uint32));
+  
+  LOG_INFO(formatString("StatsRead::handleack: global_blp=%d, itemoffset=%d",
+			global_blp, itemoffset));
+  
   switch (m_type)
   {
     case Statistics::SUBBAND_MEAN:
+    {
+      Array<complex<int32>, 2> stats((complex<int32>*)&ack.stat,
+				      shape(MEPHeader::N_SUBBANDS, MEPHeader::N_POL),
+				      neverDeleteData);
+
+      if (m_type != ack.hdr.m_fields.addr.regid)
+      {
+	LOG_ERROR("invalid stats ack");
+	return GCFEvent::HANDLED;
+      }
+
+      Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getSubbandStats()());
+
+      // x-pol subband statistics: copy and convert to double
+      cache(m_type, global_blp * 2,     Range::all()) =
+	convert_int32_to_double(stats(Range::all(), 0));
+
+      // y-pol subband statistics: copy and convert to double
+      cache(m_type, global_blp * 2 + 1, Range::all()) =
+	convert_int32_to_double(stats(Range::all(), 1));
+    }
+    break;
+      
     case Statistics::SUBBAND_POWER:
     {
-      if (m_type != ack.hdr.m_fields.type)
+      Array<complex<uint32>, 2> stats((complex<uint32>*)&ack.stat,
+				      shape(MEPHeader::N_SUBBANDS, MEPHeader::N_POL),
+				      neverDeleteData);
+
+      if (m_type != ack.hdr.m_fields.addr.regid)
       {
 	LOG_ERROR("invalid stats ack");
 	return GCFEvent::HANDLED;
@@ -131,9 +169,36 @@ GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port
     break;
 
     case Statistics::BEAMLET_MEAN:
+    {
+      Array<complex<int32>, 2> stats((complex<int32>*)&ack.stat,
+				      shape(MEPHeader::N_SUBBANDS, MEPHeader::N_POL),
+				      neverDeleteData);
+
+      if ((m_type - Statistics::BEAMLET_MEAN) != ack.hdr.m_fields.addr.regid)
+      {
+	LOG_ERROR("invalid stats ack");
+	return GCFEvent::HANDLED;
+      }
+
+      Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getBeamletStats()());
+
+      // x-pol beamlet statistics: copy and convert to double
+      cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2,     Range::all()) =
+	convert_int32_to_double(stats(Range::all(), 0));
+
+      // y-pol beamlet statistics: copy and convert to double
+      cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2 + 1, Range::all()) =
+	convert_int32_to_double(stats(Range::all(), 1));
+    }
+    break;
+
     case Statistics::BEAMLET_POWER:
     {
-      if ((m_type - Statistics::BEAMLET_MEAN) != ack.hdr.m_fields.type)
+      Array<complex<uint32>, 2> stats((complex<uint32>*)&ack.stat,
+				      shape(MEPHeader::N_SUBBANDS, MEPHeader::N_POL),
+				      neverDeleteData);
+
+      if ((m_type - Statistics::BEAMLET_MEAN) != ack.hdr.m_fields.addr.regid)
       {
 	LOG_ERROR("invalid stats ack");
 	return GCFEvent::HANDLED;

@@ -102,33 +102,19 @@ void WriteReg::sendrequest()
 
 void WriteReg::sendrequest_status()
 {
-  LOG_DEBUG("sendrequest_status");
-
-#if WRITE_ACK_VERREAD
-  // send version read request
-  EPARsrVersionEvent versionread;
-  versionread.hdr.m_fields = MEPHeader::RSR_VERSION_HDR;
-
-  getBoardPort().send(versionread);
-#else
-  // send read status request to check status of the write
-  EPARsrStatusEvent rspstatus;
-  rspstatus.hdr.set(MEPHeader::RSR_STATUS_HDR, 0x00);
-
-  getBoardPort().send(rspstatus);
-#endif
+  // intentionally left empty
 }
 
 GCFEvent::TResult WriteReg::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-#if WRITE_ACK_VERREAD
-  EPARsrVersionEvent ack(event);
-#else
-  EPARsrStatusEvent rspstatus(event);
+  LOG_DEBUG("handleack");
 
-  LOG_DEBUG(formatString("**  readerror:%d", rspstatus.board.read.error));
-  LOG_DEBUG(formatString("** writeerror:%d", rspstatus.board.write.error));  
-#endif
+  EPAWriteackEvent ack(event);
+
+  if (ack.hdr.m_fields.error)
+  {
+    LOG_ERROR_STR("WriteReg::handleack: error " << ack.hdr.m_fields.error);
+  }
  
   return GCFEvent::HANDLED;
 }
