@@ -62,10 +62,8 @@ int ParmPolc::getResultImpl (Result::Ref& result, const Request& request, bool)
 {
   int spidIndex=0;
   initDomain (request.cells().domain(), spidIndex);
-  // Create result object and attach to datarecord in the Node object.
-  Result* resp = new Result();
-  result <<= resp;
-  wstate()[AidResult] <<= static_cast<DataRecord*>(resp);
+  // Create result object and attach to the ref that was passed in
+  Result & res = result <<= new Result();
   // A single polc can be evaluated immediately.
   if (itsPolcs.size() == 1) {
     itsPolcs[0].getResult (result, request);
@@ -83,7 +81,6 @@ int ParmPolc::getResultImpl (Result::Ref& result, const Request& request, bool)
   double lastMidFreq  = firstMidFreq + (ndFreq-1) * stepFreq;
   double firstMidTime = cells.time(0);
   double lastMidTime  = cells.time(ndTime-1);
-  Result& res = result.dewr();
   res.setReal (ndFreq, ndTime);
   // Iterate over all polynomials.
   // Evaluate one if its domain overlaps the request domain.
