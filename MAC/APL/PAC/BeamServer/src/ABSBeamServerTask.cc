@@ -62,8 +62,6 @@ using namespace boost::gregorian;
 
 #define BEAMLETSTATS_INTEGRATION_COUNT 1000
 
-static Array<std::complex<int16_t>, 4> zero_weights;
-
 BeamServerTask::BeamServerTask(string name)
     : GCFTask((State)&BeamServerTask::initial, name),
       m_pos(N_ELEMENTS, N_POLARIZATIONS, 3),
@@ -619,19 +617,16 @@ void BeamServerTask::send_weights(int period)
 	  weights = m_weights16(period, ant, all, all);
 
 	  if (pol == 0) {
-	    // only send x-polarization weights
+	    // weights for x-real part
 	    weights(all, Range(1,toEnd,2)) = complex<int16_t>(0,0);
 	  } else if (pol == 1) {
-	    // only send x-polarization weights (*i)
+	    // weights for x-imaginary part
 	    weights *= complex<int16_t>(0,1);
-	    weights(all, Range(1,toEnd,2)) = complex<int16_t>(0,0);
 	  } else if (pol == 2) {
-	    // only send y-polarization weights
-	    weights(all, Range(0,toEnd,2)) = complex<int16_t>(0,0);
+	    // weights for y-real part
 	  } else if (pol == 3) {
-	    // only send y-polarization weights (*i)	    
+	    // weights for y-imaginary part
 	    weights *= complex<int16_t>(0,1);
-	    weights(all, Range(0,toEnd,2)) = complex<int16_t>(0,0);
 	  }
 
 	  bc.phasepol = pol;
