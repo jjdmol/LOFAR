@@ -30,6 +30,7 @@
 #include "OnLineProto/MAC.h"
 #include <Common/Lorrays.h>
 #include <Common/lofar_complex.h>
+#include <fstream>
 
 namespace LOFAR
 {
@@ -71,10 +72,11 @@ public:
    /// Forbid assignment.
    WH_SimStation& operator= (const WH_SimStation&);
 
-   void ReadData (const string filename);
+   void ReadData ();
      
    string itsFileName;
-   LoMat_dcomplex itsData;
+   ifstream itsInputFile;
+   complex<float>* itsData;
    MAC itsMac;
    int itsID;
 };

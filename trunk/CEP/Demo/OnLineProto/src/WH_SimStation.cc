@@ -41,10 +41,11 @@ namespace LOFAR
 				const string fileName,
 				MAC mac,
 				const int ID)
-    : WorkHolder  (1, nout, name,"WH_SimStation"),
-      itsFileName (fileName),
-      itsMac      (mac),
-      itsID       (ID)
+    : WorkHolder   (1, nout, name,"WH_SimStation"),
+      itsFileName  (fileName),
+      itsInputFile (fileName.c_str(),  ifstream::binary|ifstream::in),
+      itsMac       (mac),
+      itsID        (ID)
   {
     char str[8];
     LoVec_float freqs = mac.getFrequencies ();
@@ -63,16 +64,18 @@ namespace LOFAR
 							 freqs (i),
 							 mac.getChannelBandwidth (),
 							 mac.getStartHourangle (),
-							 mac.getBeamletSize ()
-							 )
-					 );
-    }    
+							 mac.getBeamletSize ()));
+    }
 
-    ReadData (fileName);
+    // Allocate buffer data, the add one is for the elapsed time
+    // so the structure is t0 c1 ... cn  
+    //                     t1 c1 ... cn  where n is the total number of channels
+    itsData = (complex<float>*)malloc((mac.getNumberOfBeamlets()*mac.getBeamletSize()+1) * sizeof (complex<float>));
   }
   
   WH_SimStation::~WH_SimStation()
   {
+    itsInputFile.close();
   }
   
   WorkHolder* WH_SimStation::construct (const string& name, 
@@ -93,14 +96,14 @@ namespace LOFAR
   void WH_SimStation::process()
   {
     TRACER4("WH_SimStation::Process()");  
-    float ha;
-  
-    for (int i = 0; i < itsMac.getNumberOfBeamlets (); ++i) {
-      ha = (float)(itsData(i,0).real());
-      ((DH_Beamlet*)getDataManager().getOutHolder(i))->setElapsedTime(ha);
-      for (int j = 1; j < itsMac.getBeamletSize (); j++) { 
+
+    ReadData ();
+
+    for (int i = 0; i < itsMac.getNumberOfBeamlets(); ++i) {
+      ((DH_Beamlet*)getDataManager().getOutHolder(i))->setElapsedTime((float)(itsData[i*itsMac.getBeamletSize()].real()));
+      for (int j = 0; j < itsMac.getBeamletSize(); j++) { 
 	*((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) 
-	  = itsData(i,j);
+	  = itsData[i * itsMac.getBeamletSize() + j + 1];
       }
     }
   }
@@ -112,12 +115,17 @@ namespace LOFAR
 // 	 << itsOutHolders[getOutputs () - 1]->getBuffer ()[0] << endl;
   }
 
-  void WH_SimStation::ReadData (const string fileName)
-  {
-    // Open a stream to the specified file
-    ifstream inputFile(fileName.c_str(), ifstream::in);
-    
+  void WH_SimStation::ReadData ()
+  {    
     // Read the data into the blitz array / matrix
-    inputFile >> itsData;
+    if (!itsInputFile.eof()) {
+      itsInputFile.read((char*)itsData, 
+		  (itsMac.getNumberOfBeamlets()*itsMac.getBeamletSize()+1)*sizeof(complex<float>));
+    } else {
+      // Wrap around
+      itsInputFile.seekg(0);
+      itsInputFile.read((char*)itsData,
+		  (itsMac.getNumberOfBeamlets()*itsMac.getBeamletSize()+1)*sizeof(complex<float>));
+    }
   }
 }// namespace LOFAR
