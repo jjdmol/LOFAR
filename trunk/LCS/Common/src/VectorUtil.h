@@ -18,13 +18,13 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $I$
+//#  $Id$
 
 #ifndef LOFAR_COMMON_VECTORUTIL_H
 #define LOFAR_COMMON_VECTORUTIL_H
 
 // \file VectorUtil.h
-// Utility functions on the std::vector class.
+//  Utility functions on the std::vector class
 
 #include <vector>
 #include <ostream>
@@ -32,9 +32,6 @@
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
-
   // Write a vector to an ostream enclosed in square brackets and
   // using a comma as separator.
   template<class T>
@@ -54,7 +51,6 @@ namespace LOFAR
     }
     os << postfix;
   }
-  // @}
   
 } // namespace LOFAR
 

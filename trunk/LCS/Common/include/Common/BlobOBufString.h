@@ -24,7 +24,7 @@
 #define LOFAR_COMMON_BLOBOBUFSTRING_H
 
 // \file BlobOBufString.h
-// Input buffer for a blob using a string.
+// Input buffer for a blob using a string
 
 #include <Common/BlobOBufChar.h>
 #include <Common/BlobString.h>
@@ -32,7 +32,8 @@
 
 namespace LOFAR {
 
-  // \addtogroup Common
+// \ingroup Common
+// \addtogroup Blob
   // @{
 
   // This class is the BlobOBuffer that makes use of a BlobString object.
@@ -60,7 +61,9 @@ namespace LOFAR {
       
       BlobString* itsString;
     };
+
   // @}
+
 } // end namespace
 
 #endif

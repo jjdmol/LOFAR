@@ -24,17 +24,13 @@
 #define LOFAR_COMMON_STACK_H
 
 // \file lofar_stack.h
-//
 
 #include <Common/lofar_deque.h>
 #include <stack>
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
   using std::stack;
-  // @}
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL

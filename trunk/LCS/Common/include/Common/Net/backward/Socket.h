@@ -20,14 +20,19 @@
 //#
 //# $Id$
 
-#if !defined(COMMON_SOCKET_H)
-#define COMMON_SOCKET_H
+#ifndef LOFAR_COMMON_SOCKET_H
+#define LOFAR_COMMON_SOCKET_H
+
+// \file Net/backward/Socket.h
+// Class for socket conections
 
 #include <Common/Debug.h>
 
 #include <resolv.h>
 #include <errno.h>
 #include <sys/un.h>
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 namespace LOFAR
 {
@@ -357,6 +362,8 @@ namespace LOFAR
   }
 
 } // namespace LOFAR
+
+#endif // DOXYGEN_SHOULD_SKIP_THIS
 
 #endif
 

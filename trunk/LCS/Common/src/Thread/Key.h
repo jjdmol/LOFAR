@@ -23,6 +23,9 @@
 #ifndef LOFAR_COMMON_THREAD_KEY_H
 #define LOFAR_COMMON_THREAD_KEY_H
 
+// \file Thread/Key.h
+// Thread key class.
+
 //# Includes
 #include <Common/Thread/Thread.h>
 
@@ -30,6 +33,10 @@ namespace LOFAR
 {
   namespace Thread 
   {
+    // \ingroup Common
+    // \addtogroup Thread
+    // @{
+
 #ifdef USE_THREADS
 
     //##ModelId=3D1049B402A5
@@ -125,6 +132,8 @@ namespace LOFAR
     };
 
 #endif
+
+    // @}
 
   } // namespace Thread
 

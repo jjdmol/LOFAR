@@ -24,7 +24,7 @@
 #define LOFAR_COMMON_BLOBIBUFSTRING_H
 
 // \file BlobIBufString.h
-// Input buffer for a blob using a string.
+// Input buffer for a blob using a string
 
 #include <Common/BlobIBufChar.h>
 #include <Common/BlobString.h>
@@ -32,7 +32,8 @@
 
 namespace LOFAR {
 
-  // \addtogroup Common
+// \ingroup Common
+// \addtogroup Blob
   // @{
 
   // The buffer can be static or dynamic. A static buffer has a fixed
@@ -53,7 +54,9 @@ namespace LOFAR {
       virtual ~BlobIBufString()
 	{}
     };
+
   // @}
+
 } // end namespace
 
 #endif

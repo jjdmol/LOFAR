@@ -20,21 +20,17 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_COMMON_LOFAR_ALGORITHM_H
-#define LOFAR_COMMON_LOFAR_ALGORITHM_H
+#ifndef LOFAR_COMMON_ALGORITHM_H
+#define LOFAR_COMMON_ALGORITHM_H
 
 // \file lofar_algorithm.h
-//
 
 #include <algorithm>
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
   using std::max;
   using std::min;
-  // @}
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL

@@ -24,7 +24,7 @@
 #define LOFAR_COMMON_BLOBISTREAM_H
 
 // \file BlobIStream.h
-// Input stream for a blob.
+// Input stream for a blob
 
 #include <Common/LofarTypes.h>
 #include <Common/DataFormat.h>
@@ -34,8 +34,10 @@
 #include <string>
 
 namespace LOFAR {
-  // \addtogroup Common
-  // @{
+
+// \ingroup Common
+// \addtogroup Blob
+// <group>
   
   // This class makes it possible to interpret a blob and create the objects
   // stored in it.
@@ -48,7 +50,7 @@ namespace LOFAR {
   // buffer or an istream object. The BlobOStream class can be used to
   // store objects into a blob.
   //
-  // See LOFAR document
+// See %LOFAR document
   // <a href="http://www.lofar.org/forum/document.php?action=match&docname=LOFAR-ASTRON-MAN-006">
   // LOFAR-ASTRON-MAN-006</a> for more information.
   
@@ -197,6 +199,8 @@ namespace LOFAR {
       BlobIBuffer*       itsStream;
     };
   
+// </group>
+
   
   inline void BlobIStream::clear()
     {
@@ -237,7 +241,6 @@ namespace LOFAR {
       if (itsLevel == 0) throwGet();
     }
   
-  // @}
 } // end namespace
 
 #endif

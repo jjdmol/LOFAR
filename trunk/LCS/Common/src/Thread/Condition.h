@@ -23,6 +23,9 @@
 #ifndef LOFAR_COMMON_THREAD_CONDITION_H
 #define LOFAR_COMMON_THREAD_CONDITION_H
 
+// \file Thread/Condition.h
+// Thread condition class.
+
 //# Includes
 #include <Common/Thread/Mutex.h>
 
@@ -30,6 +33,10 @@ namespace LOFAR
 {
   namespace Thread 
   {
+    // \ingroup Common
+    // \addtogroup Thread
+    // @{
+
 #ifdef USE_THREADS
 
     //##ModelId=3D1049B50012
@@ -162,6 +169,8 @@ namespace LOFAR
       { return debug(); }
     };
 #endif
+
+    // @}
 
   } // namespace Thread
 

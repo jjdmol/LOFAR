@@ -45,7 +45,9 @@
 
 namespace LOFAR
 {
-  // \ addtogroup Common
+
+// \ingroup Common
+  // \addtogroup BlitzToAips Blitz++ to AIPS++ conversion functions
   // @{
 
   template<int N>
@@ -231,7 +233,9 @@ namespace LOFAR
       // reset storage
       from.freeStorage(data,del);
     }
+
   // @}
+
 } // namespace LOFAR
 
 #endif

@@ -24,11 +24,11 @@
 #define LOFAR_COMMON_LORRAYS_H
 
 // \file Lorrays.h
-// Define Array type to use (Blitz or AIPS++
+// Define %Array type to use (Blitz or AIPS++)
 
 #include <lofar_config.h>
     
-#ifndef COMMON_LONUMERICS_H
+#ifndef LOFAR_COMMON_LONUMERICS_H
   #include <Common/Lonumerics.h>
 #endif
     
@@ -38,7 +38,4 @@
 
 #include <Common/Lorrays-Blitz.h>
 
-// \addtogroup Common
-// @{
-// @}   
 #endif

@@ -24,13 +24,16 @@
 #define LOFAR_COMMON_BLOBSTRINGTYPE_H
 
 // \file BlobStringType.h
-//Define type for a blob string.
+// Define type for a blob string
 
 #include <Common/Allocator.h>
 
 namespace LOFAR {
-  // \addtogroup Common
+
+// \ingroup Common
+// \addtogroup Blob
   // @{
+
   // A BlobStringType object defines how a blob is represented in a BlobString.
   // See that class for more details.
   
@@ -62,7 +65,8 @@ namespace LOFAR {
   LOFAR::Allocator* itsAllocator;
     };
   
-  // @{
+// @}
+
 } // end namespace
 
 #endif

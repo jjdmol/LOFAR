@@ -24,8 +24,8 @@
 #define LOFAR_COMMON_BLOBSTRINGTRAITS_H
 
 // \file BlobStringTraits.h
+//
 // char_traits<uchar> implementation for GCC.
-
 // This file implements the char_traits<unsigned char> specialisation.
 // It is only needed for the GCC version 3 and higher.
 // It is taken from the DTL implementation.
@@ -45,14 +45,11 @@
 
 namespace std 
 {
-  // \addtogroup Common
-  // @{
 
   // GCC needs char_traits inplementation for
   // char_traits<unsigned char>
-  
-  
-  /// 21.1.4  char_traits specializations
+  //
+  // 21.1.4  char_traits specializations
 
   template<>
     struct char_traits<LOFAR::TYPES::uchar>
@@ -120,7 +117,6 @@ namespace std
       not_eof(const int_type& __c)
       { return (__c == eof()) ? 0 : __c; }
   };
-  // @}
 }
 
 

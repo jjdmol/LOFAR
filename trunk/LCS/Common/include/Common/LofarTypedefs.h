@@ -38,10 +38,6 @@ namespace LOFAR {
 
   namespace TYPES {
 
-    // \addtogroup Common
-    // @{
-
-
     // Convenience shortcuts.
     typedef unsigned char        uchar;
     typedef unsigned short       ushort;
@@ -62,9 +58,6 @@ namespace LOFAR {
     typedef unsigned short     uint16;
     typedef unsigned int       uint32;
     typedef unsigned long long uint64;
-
-    // @}
-
   }
 }
 

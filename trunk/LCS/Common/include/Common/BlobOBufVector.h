@@ -23,8 +23,8 @@
 #ifndef LOFAR_COMMON_BLOBOBUFVECTOR_H
 #define LOFAR_COMMON_BLOBOBUFVECTOR_H
 
-// \file BlobOBufVector .h
-// Input buffer for a blob using a vector.
+// \file BlobOBufVector.h
+// Input buffer for a blob using a vector
 
 #include <Common/BlobOBufChar.h>
 #include <Common/LofarLogger.h>
@@ -32,7 +32,8 @@
 
 namespace LOFAR {
 
-  // \addtogroup Common
+// \ingroup Common
+// \addtogroup Blob
   // @{
 
   // This class is the BlobOBuffer that makes use of a vector object.
@@ -78,7 +79,9 @@ namespace LOFAR {
       
       std::vector<T>* itsVector;
     };
+
   // @}
+
 } // end namespace
 
 #endif

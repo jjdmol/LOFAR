@@ -24,7 +24,7 @@
 #define LOFAR_COMMON_BLOBOSTREAM_H
 
 // \file BlobOStream.h
-// Output stream for a blob.
+// Output stream for a blob
 
 #include <Common/LofarTypes.h>
 #include <Common/BlobOBuffer.h>
@@ -33,8 +33,10 @@
 #include <string>
 
 namespace LOFAR {
-  // \addtogroup Common
-  // @{
+
+// \ingroup Common
+// \addtogroup Blob
+// <group>
   
   // This class makes it possible to create a blob.
   // It creates a header (in the putStart function) using the
@@ -46,7 +48,7 @@ namespace LOFAR {
   // buffer or an ostream object. The BlobIStream class can be used to
   // retrieve objects from a blob.
   //
-  // See LOFAR document
+// See %LOFAR document
   // <a href="http://www.lofar.org/forum/document.php?action=match&docname=LOFAR-ASTRON-MAN-006">
   // LOFAR-ASTRON-MAN-006</a> for more information.
   
@@ -185,6 +187,7 @@ namespace LOFAR {
       BlobOBuffer*       itsStream;
     };
   
+// </group>
   
   inline void BlobOStream::clear()
     {
@@ -223,7 +226,7 @@ namespace LOFAR {
   if (itsLevel == 0) throwPut();
     }
   
-  // @}  
+
 } // end namespace
 
 #endif

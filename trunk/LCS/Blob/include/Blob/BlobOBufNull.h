@@ -24,13 +24,14 @@
 #define LOFAR_COMMON_BLOBOBUFNULL_H
 
 // \file  BlobOBufNull.h
-// Output buffer for a blob using a plain pointer.
+// Output buffer for a blob using a plain pointer
 
 #include <Common/BlobOBuffer.h>
 
 namespace LOFAR {
 
-  // \addtogroup Common
+// \ingroup Common
+// \addtogroup Blob
   // @{
   
   // This class is the BlobOBuffer that makes use of a null buffer.
@@ -62,11 +63,12 @@ namespace LOFAR {
       uint itsPos;
     };
 
+// @}
+
   inline uint BlobOBufNull::size() const
     {
       return itsSize;
     }
-  // @}
 
 } // end namespace
 

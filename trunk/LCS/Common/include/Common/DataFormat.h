@@ -25,13 +25,6 @@
 
 // \file DataFormat.h
 // Get the data format (endian type).
-
-#include <lofar_config.h>
-
-namespace LOFAR
-{
-  // \addtogroup Common
-  // @{
   // This file defines an enum for the possible machine data formats.
   // Currently only little and big endian is possible with floating point
   // numbers as IEEE and characters in the ASCII representation.
@@ -39,7 +32,11 @@ namespace LOFAR
   //
   // Furthermore it contains a function giving the data format in use on
   // the machine in use.
-  // <group>
+
+#include <lofar_config.h>
+
+namespace LOFAR
+{
   
   enum DataFormat {LittleEndian=0, BigEndian=1};
   
@@ -51,8 +48,6 @@ namespace LOFAR
   {return LittleEndian; }
 #endif
   
-  // </group>
-  // @}
 }
 
 

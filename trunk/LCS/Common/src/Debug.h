@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_DEBUG_H
 #define LOFAR_COMMON_DEBUG_H
 
-// \file Debug.h.h
+// \file Debug.h
 //
 
 #ifdef __DEPRECATED
@@ -379,8 +379,6 @@ const char exception_message[] = "\n==================================== EXCEPTI
 
 namespace Debug
 {
-  // \addtogroup Common
-  // @{
   // Define an exception class for assert errors.
   EXCEPTION_CLASS(AssertError,LOFAR::Exception);
 
@@ -551,7 +549,6 @@ namespace Debug
   extern Context DebugContext;
   inline Context & getDebugContext ()  { return DebugContext; }
 
-  // @}
 } // namespace Debug
 
 

@@ -21,7 +21,7 @@
 //#  $Id$
 
 #ifndef LOFAR_COMMON_LONUMERICS_H
-#define LOFARCOMMON_LONUMERICS_H 1
+#define LOFAR_COMMON_LONUMERICS_H
 
 // \file Lonumerics.h
 // Define numeric types
@@ -90,8 +90,5 @@
         
 #endif
 
-// \addtogroup Common
-// @{
-// @}
 
 #endif

@@ -24,7 +24,7 @@
 #define LOFAR_COMMON_BLOBARRAY_H
 
 // \file BlobArray.h
-//Blob handling for arrays.
+// Blob handling for arrays
 
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
@@ -39,8 +39,11 @@
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{  
+
+// \ingroup Common
+// \addtogroup Blob
+// <group>
+
   // Define functions to write N-dimensional arrays into a blob and to
   // read them back from a blob.
   // The arrays can be:
@@ -57,15 +60,16 @@ namespace LOFAR
   // The write functions follow the same standard as the static array header
   // defined in BlobArrayHeader.h, so it is possible to read a static array
   // back in a dynamic way.
-  // \defgroup BlobArray global BlobArray functions
+//
+// \ingroup Blob
+// \addtogroup BlobArray Global BlobArray functions
   // <group>
   
-  // The general function to write a data array.
+// \name General function to write a data array
   // Usually it is used by the other functions, but it can be used on
   // its own to write, say, a C-style array.
   // A 1-dim C-style array can be written with putBlobVector.
   // <group>
-
   template<typename T>
 BlobOStream& putBlobArray (BlobOStream& bs, const T* data,
 			   const uint32* shape, uint16 ndim,
@@ -74,7 +78,7 @@ template<typename T>
 BlobOStream& putBlobVector (BlobOStream& bs, const T* data, uint32 size);
 // </group>
 
-// Reserve space for an array with the given shape.
+// \name Reserve space for an array with the given shape
 // The axes ordering (Fortran or C-style) has to be given.
 // It returns the offset of the array in the blob.
 // It is useful for allocating a static blob in a dynamic way.
@@ -135,14 +139,14 @@ template<typename T>
 BlobIStream& operator>> (BlobIStream&, casa::Array<T>&);
 #endif
 
-// Write a vector of objects.
+// \name Write a vector of objects
 // <group>
 BlobOStream& operator<< (BlobOStream&, const std::vector<bool>&);
 template<typename T>
 BlobOStream& operator<< (BlobOStream&, const std::vector<T>&);
 // </group>
 
-// Read back a vector of objects.
+// \name Read back a vector of objects
 // The dimensionality found in the stream has to be 1.
 // The vector is resized as needed.
 // <group>
@@ -270,7 +274,8 @@ BLOBARRAY_PUTGET_SPEC(fcomplex)
 BLOBARRAY_PUTGET_SPEC(dcomplex)
 BLOBARRAY_PUTGET_SPEC(std::string)
 
-     // @}
+// </group>
+
 } // end namespace LOFAR
 
 

@@ -23,12 +23,20 @@
 #ifndef LOFAR_COMMON_THREAD_MUTEX_H
 #define LOFAR_COMMON_THREAD_MUTEX_H
 
+// \file Thread/Mutex.h
+// Thread mutex class.
+
 //# Includes
 #include <Common/Thread/Thread.h>
 
 namespace LOFAR
 {
-  namespace Thread {
+  namespace Thread
+  {
+    // \ingroup Common
+    // \addtogroup Thread
+    // @{
+
     // declare a functional Mutex only when USE_THREADS is defined.
     // Otherwise, declare just a skeleton class (to keep, e.g., declarations
     // consistent)
@@ -368,6 +376,8 @@ namespace LOFAR
       };
     };
 #endif
+
+    // @}
 
   } // namespace Thread
 

@@ -20,20 +20,16 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_COMMON_LOFAR_DEQUE_H
-#define LOFAR_COMMON_LOFAR_DEQUE_H
+#ifndef LOFAR_COMMON_DEQUE_H
+#define LOFAR_COMMON_DEQUE_H
 
-// \ lofar_deque
-//
+// \file lofar_deque.h
 
 #include <deque>
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
   using std::deque;
-  // @}
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL

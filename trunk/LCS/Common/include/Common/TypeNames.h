@@ -24,7 +24,7 @@
 #define LOFAR_COMMON_TYPENAMES_H
 
 // \file TypeNames.h
-// Return a string giving the type name to be stored in blobs.
+// Return a string giving the type name to be stored in blobs
 
 //# Includes
 #include <Common/LofarTypes.h>
@@ -32,19 +32,14 @@
 
 namespace LOFAR
 {
-  
-  // \addtogroup Common
-  // @{
-
-
+// \ingroup Common
+// \addtogroup TypeNames Type name functions
+//
   // These global functions return the name of the basic types.
   // They are meant to get the full id of a templated class when such an
   // object is stored in a blob.
-  // \defgroup TypeNames global type name functions
   // <group>
 
-  // Give the name of the basic types.
-  // <group>
   const std::string& typeName (const void*);
   const std::string& typeName (const bool*);
   const std::string& typeName (const char*);
@@ -61,13 +56,13 @@ namespace LOFAR
   const std::string& typeName (const dcomplex*);
   template<typename T> const std::string& typeName (const std::complex<T>*);
   template<typename T> const std::string& typeName (T**);
-  // </group>
 
 // </group>
+
 }
 
 // Include templated implementations.
 #include <Common/TypeNames.tcc>
 
-// @}
+
 #endif

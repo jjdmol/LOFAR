@@ -20,18 +20,15 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_COMMON_LOFAR_IOMANIP_H
-#define LOFAR_COMMON_LOFAR_IOMANIP_H
+#ifndef LOFAR_COMMON_IOMANIP_H
+#define LOFAR_COMMON_IOMANIP_H
 
 // \file lofar_iomanip.h
-//
 
 #include <iomanip>
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
   using std::boolalpha;
   using std::noboolalpha;
   using std::showbase;
@@ -58,7 +55,6 @@ namespace LOFAR
   using std::setfill;
   using std::setprecision;
   using std::setw;
-  // @}
 }
 
 #endif

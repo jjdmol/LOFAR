@@ -20,8 +20,11 @@
 //#
 //# $Id$
 
-#ifndef COMMON_PERFPROFILE_H
-#define COMMON_PERFPROFILE_H
+#ifndef LOFAR_COMMON_PERFPROFILE_H
+#define LOFAR_COMMON_PERFPROFILE_H
+
+// \file Profiling/PerfProfile.h
+// Profile class based on MPICH MPE library
 
 #include <lofar_config.h>
 
@@ -36,36 +39,9 @@
 namespace LOFAR
 {
 
-  /**
-   *
-   * The interface of the PerfProfile class is defined by the following functions and macros.
-   *
-   * -- Initialize the profiling functionality, this involves calling MPI_Init() if it had
-   * -- not been called already
-   * static void PerfProfile::init(int argc, char** argv);
-   *
-   * -- Finalize profiling functionality. This involves calling MPI_Finalize if it had not
-   * -- been called already.
-   * static void PerfProfile::finalize();
-   *
-   * -- Profile a region of code from the occurence of the macro call until the current
-   * -- scope is exited. E.g.:
-   * -- int test()
-   * -- {
-   * --     PERFPROFILE(__PRETTY_FUNCTION__);
-   * --     // operations
-   * -- }
-   * -- Will time the duration of this function from beginning to when it exits its scope.
-   *
-   * #define PERFPROFILE(tag)
-   *
-   * The other methods are not to be used directly.
-   *
-   * When HAVE_MPICH and HAVE_MPI_PROFILER are not defined together the methods 'init'
-   * and 'finalize' are no-ops and the macro PERFPROFILE(tag) evaluates to an empty string
-   * thus disabling the profiling.
-   *
-   **/
+  // \ingroup Common
+  // \addtogroup Profiling
+  // @{
 
 #define PP_LEVEL_0 (1 << 0)
 #define PP_LEVEL_1 (1 << 1)
@@ -75,6 +51,35 @@ namespace LOFAR
 #define PP_LEVEL_5 (1 << 5)
 #define PP_LEVEL_6 (1 << 6)
 #define PP_LEVEL_7 (1 << 7)
+
+  // The interface of the PerfProfile class is defined by the following functions and macros.
+  //
+  // - Initialize the profiling functionality, this involves calling MPI_Init() if it had
+  //   not been called already. <br>
+  //   static void init(int* argc, char*** argv, unsigned char debugMask);
+  //
+  // - Finalize profiling functionality. This involves calling MPI_Finalize if it had not
+  //   been called already. <br>
+  //   static void PerfProfile::finalize();
+  //
+  // - Profile a region of code from the occurence of the macro call until the current
+  //   scope is exited. E.g.:
+  //   \code
+  //   int test()
+  //    {
+  //        PERFPROFILE(__PRETTY_FUNCTION__);
+  //        // operations
+  //    }
+  //   \endcode
+  //   Will time the duration of this function from beginning to when it exits its scope.
+  //
+  // #define PERFPROFILE(tag)
+  //
+  // The other methods are not to be used directly.
+  //
+  // When HAVE_MPICH and HAVE_MPI_PROFILER are not defined together the methods 'init'
+  // and 'finalize' are no-ops and the macro PERFPROFILE(tag) evaluates to an empty string
+  // thus disabling the profiling.
 
   class PerfProfile
   {
@@ -155,6 +160,8 @@ namespace LOFAR
 #define PERFPROFILE(tag)
 #define PERFPROFILE_L(tag, level)
 #endif
+
+  // @}
 
 } // namespace LOFAR
 

@@ -34,12 +34,11 @@ namespace LOFAR {
 
   // \addtogroup Common
   // @{
+
   // <summary> Class to hold a collection of key name/value pairs </summary>
   
-  /**
-     The KeyValueMap class holds a collection of key name/value pairs.
-     It uses the STL map class to hold the pairs.
-  */
+  // The KeyValueMap class holds a collection of key name/value pairs.
+  // It uses the STL map class to hold the pairs.
 
   class KeyValueMap: public map<string, KeyValue>
     {
@@ -49,19 +48,20 @@ namespace LOFAR {
 
       KeyValueMap();
       
-      /// Copy constructor (copy semantics)
+      // Copy constructor (copy semantics)
       KeyValueMap (const KeyValueMap& that);
       
       ~KeyValueMap();
       
-      /// Assignment (copy semantics)
+      // Assignment (copy semantics)
       KeyValueMap& operator= (const KeyValueMap& that);
       
-      /// Is a key defined?
+      // Is a key defined?
       bool isDefined (const string& name) const
 	{ return find(name) != end(); }
       
-      // Get the value of a key. Use the default if not existing.
+  // \name Get the value of a key
+  // Use the default if not existing.
       // <group>
       bool getBool (const string& name, bool defVal) const;
       int getInt (const string& name, int defVal) const;
@@ -72,7 +72,7 @@ namespace LOFAR {
       const string& getString (const string& name, const string& defVal) const;
       // </group>
       
-      // Show the contents of the object.
+  // \name Show the contents of the object
       // <group>
       void show (ostream&) const;
       friend ostream& operator<< (ostream&, const KeyValueMap&);
@@ -83,7 +83,9 @@ namespace LOFAR {
       // Fill the object from a blob. It destroys the current contents.
       friend BlobIStream& operator>> (BlobIStream&, KeyValueMap&);
     };
+
   // @}  
+
 } //end namespace
 
 #endif 

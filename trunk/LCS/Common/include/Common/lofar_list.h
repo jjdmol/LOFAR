@@ -20,20 +20,16 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_COMMON_LOFAR_LIST_H
-#define LOFAR_COMMON_LOFAR_LIST_H
+#ifndef LOFAR_COMMON_LIST_H
+#define LOFAR_COMMON_LIST_H
 
 // \file lofar_list.h
-//
 
 #include <list>
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
   using std::list;
-  // @}
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL

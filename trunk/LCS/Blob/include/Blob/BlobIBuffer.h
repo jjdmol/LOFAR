@@ -24,12 +24,14 @@
 #define LOFAR_COMMON_BLOBIBUFFER_H
 
 // \file BlobIBuffer.h
-// Abstract base class for input buffer for a blob.
+// Abstract base class for input buffer for a blob
 
 #include <Common/LofarTypes.h>
 
 namespace LOFAR {
-  // \addtogroup Common
+
+// \ingroup Common
+// \addtogroup Blob
   // @{
   
   // BlobIBuffer is the abstract base class for the source of a
@@ -71,7 +73,9 @@ namespace LOFAR {
       // It returns the new position which is -1 if the stream is not seekable.
       virtual int64 setPos (int64 pos) = 0;
     };
+
   // @}
+
 } // end namespace
 
 #endif

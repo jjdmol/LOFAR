@@ -1,6 +1,6 @@
-/*
+/**
+  \file dlmalloc.h
   This is an adaptation of Doug Lea's malloc to be used for shared memory.
-
 
   Default header file for malloc-2.7.0, written by Doug Lea
   and released to the public domain.  Use, modify, and redistribute
@@ -13,11 +13,11 @@
   This header is for ANSI C/C++ only.  You can set either of
   the following #defines before including:
 
-  * If USE_DL_PREFIX is defined, it is assumed that malloc.c 
+  - If USE_DL_PREFIX is defined, it is assumed that malloc.c 
     was also compiled with this option, so all routines
     have names starting with "dl".
 
-  * If HAVE_USR_INCLUDE_MALLOC_H is defined, it is assumed that this
+  - If HAVE_USR_INCLUDE_MALLOC_H is defined, it is assumed that this
     file will be #included AFTER <malloc.h>. This is needed only if
     your system defines a struct mallinfo that is incompatible with the
     standard one declared here.  Otherwise, you can include this file
@@ -34,7 +34,13 @@ extern "C" {
 
 #include <stddef.h>   /* for size_t */
 
-/*
+/**
+  \ingroup Common
+  \addtogroup shmem
+  @{
+*/
+
+/**
   malloc(size_t n)
   Returns a pointer to a newly allocated chunk of at least n bytes, or
   null if no space is available. Additionally, on failure, errno is
@@ -59,7 +65,7 @@ void*  malloc(size_t);
 void*  dlmalloc(size_t);
 #endif
 
-/*
+/**
   free(void* p)
   Releases the chunk of memory pointed to by p, that had been previously
   allocated using malloc or a related routine such as realloc.
@@ -76,7 +82,7 @@ void     free(void*);
 void     dlfree(void*);
 #endif
 
-/*
+/**
   calloc(size_t n_elements, size_t element_size);
   Returns a pointer to n_elements * element_size bytes, with all locations
   set to zero.
@@ -87,7 +93,7 @@ void*  calloc(size_t, size_t);
 void*  dlcalloc(size_t, size_t);
 #endif
 
-/*
+/**
   realloc(void* p, size_t n)
   Returns a pointer to a chunk of size n that contains the same data
   as does chunk p up to the minimum of (n, p's size) bytes.
@@ -120,7 +126,7 @@ void*  realloc(void*, size_t);
 void*  dlrealloc(void*, size_t);
 #endif
 
-/*
+/**
   memalign(size_t alignment, size_t n);
   Returns a pointer to a newly allocated chunk of n bytes, aligned
   in accord with the alignment argument.
@@ -140,7 +146,7 @@ void*  dlmemalign(size_t, size_t);
 #endif
 
 
-/*
+/**
   valloc(size_t n);
   Allocates a page-aligned chunk of at least n bytes.
   Equivalent to memalign(pagesize, n), where pagesize is the page
@@ -154,7 +160,7 @@ void*  dlvalloc(size_t);
 #endif
 
 
-/*
+/**
   independent_calloc(size_t n_elements, size_t element_size, void* chunks[]);
 
   independent_calloc is similar to calloc, but instead of returning a
@@ -190,6 +196,7 @@ void*  dlvalloc(size_t);
   but the number is not known at compile time, and some of the nodes
   may later need to be freed. For example:
 
+  \code
   struct Node { int item; struct Node* next; };
   
   struct Node* build_list() {
@@ -205,6 +212,7 @@ void*  dlvalloc(size_t);
     free(pool);     // Can now free the array (or not, if it is needed later)
     return first;
   }
+  \endcode
 */
 
 #ifndef USE_DL_PREFIX
@@ -213,7 +221,7 @@ void** independent_calloc(size_t, size_t, void**);
 void** dlindependent_calloc(size_t, size_t, void**);
 #endif
 
-/*
+/**
   independent_comalloc(size_t n_elements, size_t sizes[], void* chunks[]);
 
   independent_comalloc allocates, all at once, a set of n_elements
@@ -249,6 +257,7 @@ void** dlindependent_calloc(size_t, size_t, void**);
   where several structs or objects must always be allocated at the
   same time.  For example:
 
+  \code
   struct Head { ... }
   struct Foot { ... }
 
@@ -263,6 +272,7 @@ void** dlindependent_calloc(size_t, size_t, void**);
     struct Foot* foot = (struct Foot*)(chunks[2]);
     // ...
   }
+  \endcode
 
   In general though, independent_comalloc is worth using only for
   larger values of n_elements. For small values, you probably won't
@@ -280,7 +290,7 @@ void** dlindependent_comalloc(size_t, size_t*, void**);
 #endif
 
 
-/*
+/**
   pvalloc(size_t n);
   Equivalent to valloc(minimum-page-that-holds(n)), that is,
   round up n to nearest pagesize.
@@ -292,7 +302,7 @@ void*  pvalloc(size_t);
 void*  dlpvalloc(size_t);
 #endif
 
-/*
+/**
   cfree(void* p);
   Equivalent to free(p).
 
@@ -308,7 +318,7 @@ void     dlcfree(void*);
 #endif
 
 
-/*
+/**
   malloc_trim(size_t pad);
 
   If possible, gives memory back to the system (via negative
@@ -340,7 +350,7 @@ int      dlmalloc_trim(size_t);
 #endif
 
 
-/*
+/**
   malloc_usable_size(void* p);
 
   Returns the number of bytes you can actually use in an allocated
@@ -351,8 +361,10 @@ int      dlmalloc_trim(size_t);
   malloc_usable_size can be more useful in debugging and assertions,
   for example:
 
+  \code
   p = malloc(n);
   assert(malloc_usable_size(p) >= 256);
+  \endcode
 */
 
 #ifndef USE_DL_PREFIX
@@ -362,7 +374,7 @@ size_t   dlmalloc_usable_size(void*);
 #endif
 
 
-/*
+/**
   malloc_stats();
   Prints on stderr the amount of space obtained from the system (both
   via sbrk and mmap), the maximum amount (which may be more than
@@ -388,10 +400,11 @@ void     malloc_stats();
 void     dlmalloc_stats();
 #endif
 
-/*
+/**
   mallinfo()
   Returns (by copy) a struct containing various summary statistics:
 
+  \verbatim
   arena:     current total non-mmapped bytes allocated from system 
   ordblks:   the number of free chunks 
   smblks:    the number of fastbin blocks (i.e., small chunks that
@@ -399,13 +412,14 @@ void     dlmalloc_stats();
   hblks:     current number of mmapped regions 
   hblkhd:    total bytes held in mmapped regions 
   usmblks:   the maximum total allocated space. This will be greater
-                than current total if trimming has occurred.
+               than current total if trimming has occurred.
   fsmblks:   total bytes held in fastbin blocks 
   uordblks:  current total allocated space (normal or mmapped)
   fordblks:  total free space 
   keepcost:  the maximum number of bytes that could ideally be released
                back to system via malloc_trim. ("ideally" means that
                it ignores page restrictions etc.)
+  \endverbatim
 
   The names of some of these fields don't bear much relation with
   their contents because this struct was defined as standard in
@@ -449,7 +463,7 @@ struct mallinfo mallinfo(void);
 struct mallinfo mallinfo(void);
 #endif
 
-/*
+/**
   mallopt(int parameter_number, int parameter_value)
   Sets tunable parameters The format is to provide a
   (parameter-number, parameter-value) pair.  mallopt then sets the
@@ -463,12 +477,15 @@ struct mallinfo mallinfo(void);
   parameters are as follows (listed defaults are for "typical"
   configurations).
 
+  \verbatim
   Symbol            param #   default    allowed param values
   M_MXFAST          1         64         0-80  (0 disables fastbins)
   M_TRIM_THRESHOLD -1         128*1024   any   (-1U disables trimming)
   M_TOP_PAD        -2         0          any  
   M_MMAP_THRESHOLD -3         128*1024   any   (or 0 if no MMAP support)
   M_MMAP_MAX       -4         65536      any   (0 disables use of mmap)
+  \endverbatim
+
 */
 
 #ifndef USE_DL_PREFIX
@@ -477,9 +494,10 @@ int  mallopt(int, int);
 int  dlmallopt(int, int);
 #endif
 
-/* Descriptions of tuning options */
+/** \name Descriptions of tuning options */
+/** @{ */
 
-/*
+/**
   M_MXFAST is the maximum request size used for "fastbins", special bins
   that hold returned chunks without consolidating their spaces. This
   enables future requests for chunks of the same size to be handled
@@ -506,7 +524,7 @@ int  dlmallopt(int, int);
 #define M_MXFAST  1
 #endif
 
-/*
+/**
   M_TRIM_THRESHOLD is the maximum amount of unused top-most memory
   to keep before releasing via malloc_trim in free().
 
@@ -569,15 +587,15 @@ int  dlmallopt(int, int);
 
 #define M_TRIM_THRESHOLD    -1
 
-/*
+/**
   M_TOP_PAD is the amount of extra `padding' space to allocate or
   retain whenever sbrk is called. It is used in two ways internally:
 
-  * When sbrk is called to extend the top of the arena to satisfy
+  - When sbrk is called to extend the top of the arena to satisfy
   a new malloc request, this much padding is added to the sbrk
   request.
 
-  * When malloc_trim is called automatically from free(),
+  - When malloc_trim is called automatically from free(),
   it is used as the `pad' argument.
 
   In both cases, the actual amount of padding is rounded
@@ -599,7 +617,7 @@ int  dlmallopt(int, int);
 #define M_TOP_PAD           -2
 
 
-/*
+/**
   M_MMAP_THRESHOLD is the request size threshold for using mmap()
   to service a request. Requests of at least this size that cannot
   be allocated using already-existing space will be serviced via mmap.
@@ -613,22 +631,22 @@ int  dlmallopt(int, int);
 
   Segregating space in this way has the benefits that:
 
-   1. Mmapped space can ALWAYS be individually released back 
+   -# Mmapped space can ALWAYS be individually released back 
       to the system, which helps keep the system level memory 
       demands of a long-lived program low. 
-   2. Mapped memory can never become `locked' between
+   -# Mapped memory can never become `locked' between
       other chunks, as can happen with normally allocated chunks, which
       means that even trimming via malloc_trim would not release them.
-   3. On some systems with "holes" in address spaces, mmap can obtain
+   -# On some systems with "holes" in address spaces, mmap can obtain
       memory that sbrk cannot.
 
   However, it has the disadvantages that:
 
-   1. The space cannot be reclaimed, consolidated, and then
+   -# The space cannot be reclaimed, consolidated, and then
       used to service later requests, as happens with normal chunks.
-   2. It can lead to more wastage because of mmap page alignment
+   -# It can lead to more wastage because of mmap page alignment
       requirements
-   3. It causes malloc performance to be more dependent on host
+   -# It causes malloc performance to be more dependent on host
       system memory management support routines.
 
   The advantages of mmap nearly always outweigh disadvantages for
@@ -639,7 +657,7 @@ int  dlmallopt(int, int);
 
 #define M_MMAP_THRESHOLD    -3
 
-/*
+/**
   M_MMAP_MAX is the maximum number of requests to simultaneously
   service using mmap. This parameter exists because
   some systems have a limited number of internal tables for
@@ -654,8 +672,10 @@ int  dlmallopt(int, int);
 
 #define M_MMAP_MAX          -4
 
+/** @} */
 
-/* Unused SVID2/XPG mallopt options, listed for completeness */
+/** \name Unused SVID2/XPG mallopt options, listed for completeness */
+/** @{ */
 
 #ifndef M_NBLKS
 #define M_NLBLKS  2    /* UNUSED in this malloc */
@@ -667,6 +687,8 @@ int  dlmallopt(int, int);
 #define M_KEEP    4    /* UNUSED in this malloc */
 #endif
 
+/** @} */
+
 #ifndef __cplusplus
 /* 
   Some malloc.h's declare alloca, even though it is not part of malloc.
@@ -676,6 +698,8 @@ int  dlmallopt(int, int);
 extern void* alloca(size_t);
 #endif
 #endif
+
+/** @} */ /* end of doxygen group shmem */
 
 #ifdef __cplusplus
 };  /* end of extern "C" */
