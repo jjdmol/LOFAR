@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include <GCF_Event.h>
+#include <GCF/GCF_Event.h>
 
 using namespace std;
 
