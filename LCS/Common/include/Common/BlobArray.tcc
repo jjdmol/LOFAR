@@ -117,7 +117,7 @@ BlobOStream& operator<< (BlobOStream& bs, const blitz::Array<T,NDIM>& arr)
     putBlobArray (bs, arr.dataFirst(), arr.shape().data(), NDIM,
                   arr.isMinorRank(0));
   } else {
-    blitz::Array<T,N> arrc(arr.copy());
+    blitz::Array<T,NDIM> arrc(arr.copy());
     putBlobArray (bs, arrc.dataFirst(), arrc.shape().data(), NDIM,
                   arrc.isMinorRank(0));
   }
