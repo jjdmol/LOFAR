@@ -81,6 +81,14 @@ void DH_Prediff::preprocess()
   addField ("NFreq", BlobField<int>(1));
   addField ("Nspids", BlobField<int>(1));
   addField ("DataBuf", BlobField<dcomplex>(1, 0));
+
+  // Create the data blob (which calls fillPointers).
+  createDataBlock();
+
+  *itsNResults = 0;
+  *itsNspids = 0;
+  *itsNTimes = 0;
+  *itsNFreq = 0;
 }
 
 void DH_Prediff::fillDataPointers()
@@ -139,7 +147,6 @@ void DH_Prediff::setParmData(const vector<ParmData>& pdata)
   {
     bos << *iter;
   }
-  bos.putEnd();
 }
 
 void DH_Prediff::setData(dcomplex* dataPtr, int size)

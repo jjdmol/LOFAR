@@ -165,7 +165,7 @@ void WH_Prediff::process()
   }
 
   // send result to solver
-  // >> getDataManager().readyWithOutHolder(0);
+  getDataManager().readyWithOutHolder(1);
 
   // Update workorder status
   wo->setStatus(DH_WOPrediff::Executed);
