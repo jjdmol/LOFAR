@@ -91,6 +91,7 @@ class UVPAxis
  private:
   
   double      itsScale;
+  double      itsInverseScale;
   double      itsOffset;
 
   std::string itsType;
@@ -105,11 +106,7 @@ class UVPAxis
 
 inline double UVPAxis::worldToAxis(double world) const
 {
-#if(DEBUG_MODE)
-  assert(itsScale != 0);
-#endif
-
-  return (world - itsOffset)/itsScale;
+  return (world - itsOffset)*itsInverseScale;
 }
 
 
