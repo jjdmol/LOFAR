@@ -43,7 +43,7 @@ using namespace std;
 using namespace blitz;
 
 #define N_PHASE 2 // complex number has two components (re, im)
-#define EPA_INTEGRATION_COUNT 512 // number of samples in power_sum
+#define EPA_SCALING_FACTOR 512 // number of samples in power_sum
 
 BeamletStats::BeamletStats(int n_beamlets, int n_integrations) :
     m_nbeamlets(n_beamlets),
@@ -74,8 +74,16 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
   //
   if (seqnr % 2) // odd packet
   {
-      if (seqnr != m_seqnr + 1) return; // skip loose packet
+      if (seqnr != m_seqnr + 1)
+      {
+	  m_seqnr = seqnr;
+	  return; // skip loose packet
+      }
       beamlet_offset = m_nbeamlets / 2;
+  }
+  else // even packet
+  {
+      m_count++;
   }
 
   for (int i = 0; i < m_nbeamlets / 2; i++)
@@ -87,13 +95,12 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
       m_beamlet_power(i + beamlet_offset, 1) += power_sum(i, 1, 0) + power_sum(i, 1, 1);
   }
 
-  m_count++;
   m_seqnr = seqnr;
 
   if ( (m_count % m_nintegrations) == 0)
   {
-      // divide by number of samples = m_count * EPA_INTEGRATION_COUNT
-      m_beamlet_power /= m_count * EPA_INTEGRATION_COUNT;
+      // divide by number of samples = m_count * EPA_SCALING_FACTOR
+      m_beamlet_power /= m_nintegrations * EPA_SCALING_FACTOR;
 
       LOG_DEBUG(formatString("Updating statistics properties: totalpower = %f",
 			     sum(m_beamlet_power)));
