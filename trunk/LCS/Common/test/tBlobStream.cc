@@ -24,12 +24,13 @@
 #include <Common/BlobIStream.h>
 #include <Common/BlobOBufStream.h>
 #include <Common/BlobIBufStream.h>
-#include <Common/BlobIBufChar.h>
 #include <Common/BlobOBufChar.h>
+#include <Common/BlobIBufChar.h>
 #include <Common/BlobIBufVector.h>
 #include <Common/BlobOBufVector.h>
 #include <Common/BlobIBufString.h>
 #include <Common/BlobOBufString.h>
+#include <Common/BlobOBufNull.h>
 #include <Common/Debug.h>
 #include <iostream>
 #include <fstream>
@@ -126,14 +127,14 @@ int main()
       int len;
       {
 	// Use a file output stream.
-	std::ofstream os ("tBlobOStream_tmp.dat");
+	std::ofstream os ("tBlobStream_tmp.dat");
 	BlobOBufStream bob(os);
         len = doOut (&bob);
 	Assert (os.tellp() == std::ios::pos_type(len));
       }
       {
 	// Use the file as input.
-	std::ifstream is ("tBlobOStream_tmp.dat");
+	std::ifstream is ("tBlobStream_tmp.dat");
 	BlobIBufStream bib(is);
 	doIn (&bib);
 	Assert (is.tellg() == std::ios::pos_type(len));
@@ -157,6 +158,11 @@ int main()
       BlobIBufVector<uchar> bibv(vec);
       memcpy (&vec[0], os.str().data(), os.str().size());
       doIn (&bibv);
+    }
+    {
+      // Use a null buffer.
+      BlobOBufNull bob;
+      doOut (&bob);
     }
     {
       // Use an expandable char buffer.
