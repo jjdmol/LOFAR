@@ -48,7 +48,7 @@ void DH_Vis::preprocess()
   postprocess();
 
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = nstations * nstations * nchannels * npolarisations; 
+  itsBufSize = nstations * nstations * nchannels * npolarisations*npolarisations; 
 
   addField("Buffer", BlobField<BufferType>(1, itsBufSize));
   createDataBlock();
