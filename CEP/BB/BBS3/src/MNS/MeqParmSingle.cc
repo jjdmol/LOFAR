@@ -24,7 +24,7 @@
 #include <BBS3/MNS/MeqRequest.h>
 #include <Common/lofar_vector.h>
 #include <casa/Utilities/BinarySearch.h>
-
+#include <cmath>
 
 namespace LOFAR {
 
