@@ -15,6 +15,7 @@
 
 #include "GPA_ExternHdl.h"
 #include <PA_Protocol.ph>
+#include <GCF/GCF_PVString.h>
 
 #include <stdio.h>
 #include <CharString.hxx>
@@ -197,18 +198,22 @@ const Variable* GPAExternHdl::execute(ExecuteParamRec &param)
 // Utilitiy functions
 bool GPAExternHdl::gpaConvertMsgToGCFEvent(const DynVar& msg, BlobVar& gcfEvent)
 {
-  CharString qualifier = (CharString&) *((TextVar*) msg[0]);
+  bool retVal(true);
+  if (msg.getArrayLength() < 2) return false;
+  CharString qualifier = (CharString&) *((TextVar*) msg[1]);
   if (qualifier == "m") // message
   {   
-    CharString signal = (CharString &) *((TextVar*) msg[1]);
-    UIntegerVar pvssSeqnr(atoi((const char*) *((TextVar*) msg[4])));
+    if (msg.getArrayLength() < 6) return false;
+          
+    CharString signal = (CharString &) *((TextVar*) msg[4]);
+    UIntegerVar pvssSeqnr(atoi((const char*) *((TextVar*) msg[5])));
     GCFEvent* pEvent(0);
     if (signal == "l")
     {
       PALoadPropSetEvent request;
          
       request.seqnr = pvssSeqnr;
-      request.scope = (const char*) *((TextVar*) msg[5]);
+      request.scope = (const char*) *((TextVar*) msg[6]);
       pEvent = &request;
     }
     else if (signal == "ul")
@@ -216,7 +221,7 @@ bool GPAExternHdl::gpaConvertMsgToGCFEvent(const DynVar& msg, BlobVar& gcfEvent)
       PAUnloadPropSetEvent request;
          
       request.seqnr = pvssSeqnr;
-      request.scope = (const char*) *((TextVar*) msg[5]);
+      request.scope = (const char*) *((TextVar*) msg[6]);
       pEvent = &request;
     }
     else if (signal == "conf")
@@ -224,45 +229,201 @@ bool GPAExternHdl::gpaConvertMsgToGCFEvent(const DynVar& msg, BlobVar& gcfEvent)
       PAConfPropSetEvent request;
          
       request.seqnr = pvssSeqnr;
-      request.scope = (const char*) *((TextVar*) msg[5]);
-      request.apcName = (const char*) *((TextVar*) msg[6]);
+      request.scope = (const char*) *((TextVar*) msg[6]);
+      if (msg.getArrayLength() < 7) return false;
+      request.apcName = (const char*) *((TextVar*) msg[7]);
       pEvent = &request;
     }
+    else 
+    {
+      retVal = false;
+    }
 
-    CharString portId((CharString&)*((TextVar*) msg[2]));
-    CharString portAddr((CharString&)*((TextVar*) msg[3]));
-    unsigned int packsize;
-    void* buf = pEvent->pack(packsize);
-  
-    unsigned int newBufSize = 1 + 4 + portId.len() + 4 + portAddr.len() + packsize;
-    char* newBuf = new char[newBufSize];
-    newBuf[0] = 'm'; // just a message
-    unsigned int bytesPacked = 1;
-    memcpy(newBuf + bytesPacked, portId.len(), 4);
-    bytesPacked += 4;
-    memcpy(newBuf + bytesPacked, (const char*) portId, portId.len());
-    bytesPacked += portId.len();
+    if (retVal)
+    {
+      GCFPVString portId((const char*)*((TextVar*) msg[2]));
+      GCFPVString portAddr((const char*)*((TextVar*) msg[3]));
+      unsigned int packsize;
+      void* buf = pEvent->pack(packsize);
     
-    memcpy(newBuf + bytesPacked, portAddr.len(), 4);
-    bytesPacked += 4;
-    memcpy(newBuf + bytesPacked, (const char*) portAddr, portAddr.len());
-    bytesPacked += portAddr.len();
-    memcpy(newBuf + bytesPacked, buf, packsize);
-
-    BlobVar newBlob(newBuf, newBufSize, PVSS_TRUE);
-    gcfEvent = newBlob;
-    delete [] newBuf;
+      unsigned int newBufSize = 1 + portId.getSize() + portAddr.getSize() + packsize;
+      unsigned char* newBuf = new unsigned char[newBufSize];
+      newBuf[0] = 'm'; // just a message
+      unsigned int bytesPacked = 1;
+      bytesPacked += portId.pack((char*) newBuf + bytesPacked);
+      bytesPacked += portAddr.pack((char*) newBuf + bytesPacked);
+      memcpy(newBuf + bytesPacked, buf, packsize);
+  
+      BlobVar newBlob(newBuf, newBufSize, PVSS_TRUE);
+      gcfEvent = newBlob;
+      delete [] newBuf;
+    }
   }
   else if (qualifier == "d") // disconnected
   {
-    
+    GCFPVString portId((const char*)*((TextVar*) msg[2]));
+    unsigned int newBufSize = 1 + portId.getSize();
+    unsigned char* newBuf = new unsigned char[newBufSize];
+    newBuf[0] = 'd'; // just a message
+    unsigned int bytesPacked = 1;
+    bytesPacked += portId.pack((char*) newBuf + bytesPacked);
+
+    BlobVar newBlob(newBuf, newBufSize, PVSS_TRUE);
+    gcfEvent = newBlob;
+    delete [] newBuf;    
   }
+  else
+  {
+    retVal = false;
+  }
+  return retVal;
 }
 
 bool GPAExternHdl::gpaConvertGCFEventToMsg(const BlobVar& gcfEvent, DynVar& msg)
 {
+  bool retVal(true);
+  msg.clear();
+  _msgBuffer = gcfEvent.getValue().getData();
+  _bytesLeft = gcfEvent.getValue().getLen();
+  unsigned int bytesRead = 1;
+  GCFPVString portId;
+  bytesRead += portId.unpack((char*) _msgBuffer + bytesRead);
+  switch (_msgBuffer[0])
+  {
+    case 'd': // disconnect event
+    {
+      TextVar qualifier("d");
+      msg.append(qualifier);
+
+      TextVar pvssPortId(portId.getValue().c_str());
+      msg.append(pvssPortId);
+      break;
+    } 
+    case 'm': // message
+    {
+      TextVar qualifier("m");
+      msg.append(qualifier);
+
+      TextVar pvssPortId(portId.getValue().c_str());
+      msg.append(pvssPortId);
+
+      GCFPVString portAddr;
+      bytesRead += portAddr.unpack((char *)_msgBuffer + bytesRead);
+      TextVar pvssPortAddr(portAddr.getValue().c_str());
+      msg.append(pvssPortAddr);
+      
+      GCFEvent e;
+      // expects and reads signal
+      if (recv(&e.signal, sizeof(e.signal)) != sizeof(e.signal)) 
+      {
+        // don't continue with receiving
+      }
+      // expects and reads length
+      else if (recv(&e.length, sizeof(e.length)) != sizeof(e.length))
+      {
+        // don't continue with receiving
+      }  
+      // reads payload if specified
+      else if (e.length > 0)
+      {
+        GCFEvent* full_event = 0;
+        char* event_buf = new char[sizeof(e) + e.length];
+        full_event = (GCFEvent*)event_buf;
+        memcpy(event_buf, &e, sizeof(e));
+    
+        // read the payload right behind the just memcopied basic event structure
+        if (recv(event_buf + sizeof(e), e.length) > 0)
+        {          
+          // dispatchs an event with just received params
+          encodeEvent(*full_event, msg);
+        }    
+        delete [] event_buf;
+      }
+      // dispatchs an event without params
+      else
+      {
+        encodeEvent(e, msg);
+      }
+            
+      break;
+    }
+    default:
+      retVal = false;
+      break;
+  }
+  
+  return retVal;
 }
 
+ssize_t GPAExternHdl::recv (void* buf, size_t count)
+{
+  if (_bytesLeft > 0)
+  {
+    if (count > _bytesLeft) count = _bytesLeft;
+    memcpy(buf, _msgBuffer, count);
+    _msgBuffer += count;
+    _bytesLeft -= count;
+    return count;
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+void GPAExternHdl::encodeEvent(GCFEvent& e, DynVar& msg)
+{
+  switch (e.signal)
+  {
+    case PA_PROP_SET_LOADED:
+    {
+      PAPropSetLoadedEvent response(e);
+      TextVar newMsgItem("loaded");
+      msg.append(newMsgItem);
+      string seqNrString = formatString("%d", response.seqnr);
+      newMsgItem = seqNrString.c_str();
+      msg.append(newMsgItem);
+      newMsgItem = (response.result == PA_NO_ERROR ? "OK" : "failed");
+      msg.append(newMsgItem);
+      break;
+    }
+    case PA_PROP_SET_UNLOADED:
+    {
+      PAPropSetUnloadedEvent response(e);
+      TextVar newMsgItem("unloaded");
+      msg.append(newMsgItem);
+      string seqNrString = formatString("%d", response.seqnr);
+      newMsgItem = seqNrString.c_str();
+      msg.append(newMsgItem);
+      newMsgItem = (response.result == PA_NO_ERROR ? "OK" : "failed");
+      msg.append(newMsgItem);
+      break;
+    }
+    case PA_PROP_SET_CONF:
+    {
+      PAPropSetConfEvent response(e);
+      TextVar newMsgItem("configured");
+      msg.append(newMsgItem);
+      string seqNrString = formatString("%d", response.seqnr);
+      newMsgItem = seqNrString.c_str();
+      msg.append(newMsgItem);
+      newMsgItem = (response.result == PA_NO_ERROR ? "OK" : "failed");
+      msg.append(newMsgItem);
+      newMsgItem = response.apcName.c_str();
+      msg.append(newMsgItem);
+      break;
+    }
+    case PA_PROP_SET_GONE:
+    {
+      PAPropSetGoneEvent indication(e);
+      TextVar newMsgItem("gone");
+      msg.append(newMsgItem);
+      newMsgItem = indication.scope.c_str();
+      msg.append(newMsgItem);
+      break;
+    }    
+  }
+}
 
 
 // DLLInit Funktion fuer Win NT

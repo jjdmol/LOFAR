@@ -395,10 +395,11 @@ void GCFMyPropertySet::setAllAccessModes(TAccessMode mode, bool on)
   }
 }
 
-void GCFMyPropertySet::initProperties(const TPropertyConfig config[], unsigned int nrOfConfigs)
+void GCFMyPropertySet::initProperties(const TPropertyConfig config[])
 {
   GCFMyProperty* pProperty;
-  for (unsigned int i = 0; i < nrOfConfigs; i++)
+  unsigned int i = 0;
+  while (config[i].propName != 0)
   {
     pProperty = (GCFMyProperty*) getProperty(config[i].propName);
     if (pProperty)
@@ -412,6 +413,7 @@ void GCFMyPropertySet::initProperties(const TPropertyConfig config[], unsigned i
       if (~config[i].accessMode & GCF_WRITABLE_PROP)
         pProperty->setAccessMode(GCF_WRITABLE_PROP, false);    
     }
+    i++;
   }
 }
 
