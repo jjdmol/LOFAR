@@ -30,7 +30,7 @@ CCC     = g++
 #OPT     = -O3
 OPT     = -pg -g
 
-CFLAGS     = -D_REENTRANT -I./ -I$(DTLINCLUDE) $(MPI_INCLUDES) $(MPI_CXX_INCLUDES) $(OPT) $(CC_MACH_FLAGS) 
+CFLAGS     = -Wall -D_REENTRANT -I./ -I$(DTLINCLUDE) $(MPI_INCLUDES) $(MPI_CXX_INCLUDES) $(OPT) $(CC_MACH_FLAGS) 
 
 %.o : %.cpp Makefile
 	$(CCC) -c $(CFLAGS) $< -o $@
