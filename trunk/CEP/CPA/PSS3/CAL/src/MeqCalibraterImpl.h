@@ -35,6 +35,7 @@
 #include <trial/Tasking/ApplicationObject.h>
 
 #include <MNS/MeqDomain.h>
+#include <MNS/MeqHist.h>
 #include <MNS/MeqJonesExpr.h>
 #include <MNS/MeqMatrix.h>
 #include <MNS/MeqParm.h>
@@ -132,6 +133,11 @@ public:
    */
   Bool select(const String& where);
 
+  /*!
+   * Return some statistics (optionally detailed (i.e. per baseline)).
+   */
+  GlishRecord getStatistics (bool detailed);
+
   /**
    * \defgroup DOStandard Standard Distributed Object methods.
    */
@@ -203,6 +209,8 @@ private:
   vector<MeqJonesExpr*> itsStatExpr;    //# Expression per station
   vector<MVBaseline>    itsBaselines;
   vector<MeqUVWPolc*>   itsUVWPolc;     //# UVW polynomial per baseline
+  vector<MeqHist>       itsCelltHist;   //# Histogram of #cells in time
+  vector<MeqHist>       itsCellfHist;   //# Histogram of #cells in freq
   vector<MeqJonesExpr*> itsExpr;        //# expression tree per baseline
 
   double itsTimeInterval;
