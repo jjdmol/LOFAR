@@ -1,0 +1,18 @@
+set xlabel "log10(Data packet size)"
+set ylabel "bandwidth [MByte/s]"
+
+set terminal gif medium
+set output "$0.gif"
+set title "$0"
+set multiplot
+plot [][$1:$2] "$0.out" using "%*lf%lf %lf %*lf %*lf%*lf %*lf%*lf" notitle w p pt 1 
+plot [][$1:$2] "$0.out" using "%*lf%lf %*lf%*lf %lf %*lf %*lf%*lf" notitle w p pt 2 
+plot [][$1:$2] "$0.out" using "%*lf%lf %*lf%*lf %*lf%*lf %lf %*lf" notitle w p pt 3 
+set nomultiplot
+set terminal windows
+set output
+set multiplot
+plot [][$1:$2] "$0.out" using "%*lf%lf %lf %*lf %*lf%*lf %*lf%*lf" notitle w p pt 1 
+plot [][$1:$2] "$0.out" using "%*lf%lf %*lf%*lf %lf %*lf %*lf%*lf" notitle w p pt 2 
+plot [][$1:$2] "$0.out" using "%*lf%lf %*lf%*lf %*lf%*lf %lf %*lf" notitle w p pt 3 
+set nomultiplot
