@@ -37,37 +37,37 @@ const _define_meqcalibrater := function(ref agent, id) {
     public     := defaultservers.init_object(self)
     
     
-    self.settimeintervalsizeRec := [_method="settimeintervalsize",
-				    _sequence=self.id._sequence]
-    public.settimeintervalsize := function(secondsinterval) {
+    self.settimeintervalRec := [_method="settimeinterval",
+			        _sequence=self.id._sequence]
+    public.settimeinterval := function(secondsinterval) {
     
         wider self;
         
         # argument assignment
-        self.settimeintervalsizeRec.secondsinterval := secondsinterval
+        self.settimeintervalRec.secondsinterval := secondsinterval
         
         # return
-        return defaultservers.run(self.agent, self.settimeintervalsizeRec);
+        return defaultservers.run(self.agent, self.settimeintervalRec);
     }
     
-    self.resettimeiteratorRec := [_method="resettimeiterator",
-				  _sequence=self.id._sequence]
-    public.resettimeiterator := function() {
+    self.resetiteratorRec := [_method="resetiterator",
+			      _sequence=self.id._sequence]
+    public.resetiterator := function() {
     
         wider self;
         
         # return
-        return defaultservers.run(self.agent, self.resettimeiteratorRec);
+        return defaultservers.run(self.agent, self.resetiteratorRec);
     }
     
-    self.nexttimeintervalRec := [_method="nexttimeinterval",
-				 _sequence=self.id._sequence]
-    public.nexttimeinterval := function() {
+    self.nextintervalRec := [_method="nextinterval",
+			     _sequence=self.id._sequence]
+    public.nextinterval := function() {
     
         wider self;
         
         # return
-	return defaultservers.run(self.agent, self.nexttimeintervalRec);
+	return defaultservers.run(self.agent, self.nextintervalRec);
     }
     
     self.clearsolvableparmsRec := [_method="clearsolvableparms",
@@ -172,15 +172,6 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.getsolvedomainRec);
     }
 
-    self.timeiteratorpastendRec := [_method="timeiteratorpastend", _sequence=self.id._sequence]
-    public.timeiteratorpastend := function() {
-
-	wider self;
-
-	# return
-	return defaultservers.run(self.agent, self.timeiteratorpastendRec);
-    }
-
     public.id := function() {
 	wider self;
 	return self.id.objectid;
@@ -203,12 +194,12 @@ const _define_meqcalibrater := function(ref agent, id) {
 #
 # meqcalibrater constructor
 #
-const meqcalibrater := function(msname, meqmodel = 'LOFAR', skymodel = 'GSM', spw = 0,
+const meqcalibrater := function(msname, meqmodel = 'LOFAR', skymodel = 'GSM', ddid = 0,
 				host='',forcenewserver=F) {
     agent := defaultservers.activate('meqcalibrater', host, forcenewserver)
     id := defaultservers.create(agent, 'meqcalibrater', 'meqcalibrater',
                                 [msname=msname, meqmodel=meqmodel,
-				 skymodel=skymodel, spw=spw]);
+				 skymodel=skymodel, ddid=ddid]);
     return ref _define_meqcalibrater(agent, id);
 }
 
@@ -224,25 +215,26 @@ const meqcalibratertest := function()
 	fail
     }
 
-    mc.settimeintervalsize(3600); # calibrate per 1 hour
+    mc.settimeinterval(3600); # calibrate per 1 hour
     mc.clearsolvableparms();
     mc.setsolvableparms("a.b.* f.g.*[34]", T);
+#    mc.setsolvableparms("Leakage.*", T);
     
-    mc.resettimeiterator()
+    mc.resetiterator()
     i := 0
-    while (! mc.timeiteratorpastend())
+    while (mc.nextinterval())
     {
 	d := mc.getsolvedomain();
 	print 'solvedomain = ', d;
 
  	fit := 1.0;
-	while (fit > 0.0001 || fit < -0.0001)
-	{
-	  mc.predict('MODEL_DATA');
-	  fit := mc.solve();
-
-	  print 'iteration = ', i, ' fit = ', fit
-	}
+#	while (fit > 0.0001 || fit < -0.0001)
+#	{
+#	  mc.predict('MODEL_DATA');
+#	  fit := mc.solve();
+#
+#	  print 'iteration = ', i, ' fit = ', fit
+#	}
 
 	mc.savepredicteddata('MODEL_DATA');
 	# mc.saveresidualdata('DATA', 'MODEL_DATA', 'RESIDUAL_DATA');
@@ -252,8 +244,6 @@ const meqcalibratertest := function()
 	print 'getparms = ', parms
 
 	i+:=1;
-
-	mc.nexttimeinterval();
     }
 
     mc.done();

@@ -23,20 +23,12 @@
 #include <CAL/MeqCalibraterImpl.h>
 
 #include <MNS/MeqJonesNode.h>
-#include <MNS/MeqMatrix.h>
 #include <MNS/MeqMatrixTmp.h>
-#include <MNS/MeqParm.h>
 #include <MNS/MeqParmSingle.h>
 #include <MNS/MeqPointDFT.h>
 #include <MNS/MeqPointSource.h>
-#include <MNS/MeqRequest.h>
-#include <MNS/MeqStation.h>
-#include <MNS/MeqStoredParmPolc.h>
-#include <MNS/MeqUVWPolc.h>
 #include <MNS/MeqWsrtInt.h>
 #include <MNS/MeqWsrtPoint.h>
-#include <MNS/ParmTable.h>
-#include <GSM/SkyModel.h>
 
 #include <Common/Debug.h>
 
@@ -44,6 +36,7 @@
 #include <aips/Arrays/ArrayMath.h>
 #include <aips/Arrays/ArrayLogical.h>
 #include <aips/Arrays/Matrix.h>
+#include <aips/Arrays/Slice.h>
 #include <aips/Arrays/Vector.h>
 #include <aips/Exceptions/Error.h>
 #include <aips/Functionals/Polynomial.h>
@@ -52,7 +45,6 @@
 #include <aips/Glish/GlishValue.h>
 #include <aips/Mathematics/AutoDiff.h>
 #include <aips/Mathematics/Constants.h>
-#include <aips/MeasurementSets/MeasurementSet.h>
 #include <aips/MeasurementSets/MSAntenna.h>
 #include <aips/MeasurementSets/MSAntennaColumns.h>
 #include <aips/MeasurementSets/MSDataDescription.h>
@@ -71,8 +63,6 @@
 #include <aips/Tables/ColumnDesc.h>
 #include <aips/Tables/ExprNode.h>
 #include <aips/Tables/SetupNewTab.h>
-#include <aips/Tables/Table.h>
-#include <aips/Tables/TableIter.h>
 #include <aips/Utilities/Regex.h>
 #include <trial/Fitting/LinearFit.h>
 #include <trial/Tasking/MethodResult.h>
@@ -81,22 +71,6 @@
 #include <stdexcept>
 #include <stdio.h>
 
-//----------------------------------------------------------------------
-//
-// Local function prototypes
-//
-//----------------------------------------------------------------------
-static MDirection         getPhaseRef  (const MeasurementSet& ms);
-static void               getFreq      (const MeasurementSet& ms,
-				        double& start, double& end, int& nf);
-static vector<MeqStation> fillStations (const MeasurementSet& ms);
-static vector<MVBaseline> fillBaselines(Matrix<int>& index,
-					const Vector<int>& ant1,
-					const Vector<int>& ant2,
-					const vector<MeqStation>& stations);
-static MeqJonesExpr*      makeWSRTExpr (const MDirection& phaseRef, MeqUVWPolc* uvw,
-					ParmTable&, GSM::SkyModel& gsm);
-static void               addParm      (MeqParm* parm, GlishRecord* rec);
 
 //----------------------------------------------------------------------
 //
@@ -105,194 +79,210 @@ static void               addParm      (MeqParm* parm, GlishRecord* rec);
 // Get the phase reference of the first field.
 //
 //----------------------------------------------------------------------
-static MDirection getPhaseRef (const MeasurementSet& ms)
+void MeqCalibrater::getPhaseRef()
 {
-  MSField mssub(ms.field());
+  MSField mssub(itsMS.field());
   ROMSFieldColumns mssubc(mssub);
+  // Get the phase reference of the first field.
   MDirection dir = mssubc.phaseDirMeasCol()(0)(IPosition(1,0));
-
-  return MDirection::Convert (dir, MDirection::J2000)();
+  itsPhaseRef = MDirection::Convert (dir, MDirection::J2000)();
 }
 
 //----------------------------------------------------------------------
 //
 // ~getFreq
 //
-// Get the frequency domain of the first spectral window.
-// So far, only equal frequency spacings are possible.
+// Get the frequency window for the given data description id
+// (giving the spectral window id).
 //
 //----------------------------------------------------------------------
-static void getFreq (const MeasurementSet& ms, double& start, double& end, int& nf)
+void MeqCalibrater::getFreq (int ddid)
 {
-  MSDataDescription mssub1(ms.dataDescription());
+  // Get the frequency domain of the given data descriptor id
+  // which gives as the spwid.
+  MSDataDescription mssub1(itsMS.dataDescription());
   ROMSDataDescColumns mssub1c(mssub1);
-  int spw = mssub1c.spectralWindowId()(0);
-  MSSpectralWindow mssub(ms.spectralWindow());
+  int spw = mssub1c.spectralWindowId()(ddid);
+  MSSpectralWindow mssub(itsMS.spectralWindow());
   ROMSSpWindowColumns mssubc(mssub);
   Vector<double> chanFreq = mssubc.chanFreq()(spw);
   Vector<double> chanWidth = mssubc.chanWidth()(spw);
+  // So far, only equal frequency spacings are possible.
   AssertMsg (allEQ (chanWidth, chanWidth(0)),
 	     "Channels must have equal spacings");
-  nf = chanWidth.nelements();
-  start = chanFreq(0) - chanWidth(0)/2;
-  end = start + nf*chanWidth(0);
+  itsNrChan    = chanWidth.nelements();
+  itsStartFreq = chanFreq(0) - chanWidth(0)/2;
+  itsEndFreq   = itsStartFreq + itsNrChan*chanWidth(0);
 }
 
 //----------------------------------------------------------------------
 //
 // ~fillStations
 //
-// Get all stations.
-// Fill their positions as parameters.
+// Fill the station positions and names.
 //
 //----------------------------------------------------------------------
-static vector<MeqStation> fillStations (const MeasurementSet& ms)
+void MeqCalibrater::fillStations()
 {
-  vector<MeqStation> stations;
-  MSAntenna          mssub(ms.antenna());
+  MSAntenna          mssub(itsMS.antenna());
   ROMSAntennaColumns mssubc(mssub);
-  char               str[8];
-
+  itsStations.reserve (mssub.nrow());
+  // Get all stations from the antenna subtable.
   for (uInt i=0; i<mssub.nrow(); i++) {
+    // Store each position as a constant parameter.
+    // Use the antenna name as the parameter name.
     Vector<Double> antpos = mssubc.position()(i);
-
-    snprintf (str, 8, "%d", i);
-    MeqParmSingle* px = new MeqParmSingle ("AntPosX_"+String(str), antpos(0));
-    MeqParmSingle* py = new MeqParmSingle ("AntPosY_"+String(str), antpos(1));
-    MeqParmSingle* pz = new MeqParmSingle ("AntPosZ_"+String(str), antpos(2));
-
-    stations.push_back (MeqStation(px, py, pz));
+    String name = mssubc.name()(i);
+    MeqParmSingle* px = new MeqParmSingle ("AntPosX." + name,
+					   antpos(0));
+    MeqParmSingle* py = new MeqParmSingle ("AntPosY." + name,
+					   antpos(1));
+    MeqParmSingle* pz = new MeqParmSingle ("AntPosZ." + name,
+					   antpos(2));
+    itsStations.push_back (MeqStation(px, py, pz, name));
   }
-
-  return stations;
 }
 
 //----------------------------------------------------------------------
 //
 // ~fillBaselines
 //
-// Get all baselines from the MS.
-// Create an MVBaseline object for each of them.
+// Create objects representing the baseline directions.
+// Create an index giving the baseline index of an ordered antenna pair.
 //
 //----------------------------------------------------------------------
-static vector<MVBaseline> fillBaselines (Matrix<int>& index,
-				  const Vector<int>& ant1,
-				  const Vector<int>& ant2,
-				  const vector<MeqStation>& stations)
+void MeqCalibrater::fillBaselines (const Vector<int>& ant1,
+				   const Vector<int>& ant2)
 {
-  vector<MVBaseline> baselines;
-  MeqDomain          domain;
-  MeqRequest         req(domain, 1, 1);
+  MeqDomain  domain;
+  MeqRequest req(domain, 1, 1);
 
-  baselines.reserve (ant1.nelements());
-  index.resize (stations.size(), stations.size());
-  index = -1;
+  itsBaselines.reserve (ant1.nelements());
+  itsBLIndex.resize (itsStations.size(), itsStations.size());
+  itsBLIndex = -1;
 
   for (unsigned int i=0; i<ant1.nelements(); i++)
   {
     uInt a1 = ant1(i);
     uInt a2 = ant2(i);
-
-    Assert (a1 < stations.size()  &&  a2 < stations.size());
-    index(a1,a2) = baselines.size();
+    // Create an MVBaseline object for each antenna pair.
+    Assert (a1 < itsStations.size()  &&  a2 < itsStations.size());
+    itsBLIndex(a1,a2) = itsBaselines.size();
     MVPosition pos1
-      (stations[a1].getPosX()->getResult(req).getValue().getDouble(),
-       stations[a1].getPosY()->getResult(req).getValue().getDouble(),
-       stations[a1].getPosZ()->getResult(req).getValue().getDouble());
+      (itsStations[a1].getPosX()->getResult(req).getValue().getDouble(),
+       itsStations[a1].getPosY()->getResult(req).getValue().getDouble(),
+       itsStations[a1].getPosZ()->getResult(req).getValue().getDouble());
     MVPosition pos2
-      (stations[a2].getPosX()->getResult(req).getValue().getDouble(),
-       stations[a2].getPosY()->getResult(req).getValue().getDouble(),
-       stations[a2].getPosZ()->getResult(req).getValue().getDouble());
+      (itsStations[a2].getPosX()->getResult(req).getValue().getDouble(),
+       itsStations[a2].getPosY()->getResult(req).getValue().getDouble(),
+       itsStations[a2].getPosZ()->getResult(req).getValue().getDouble());
 
-    baselines.push_back (MVBaseline (pos1, pos2));
+    itsBaselines.push_back (MVBaseline (pos1, pos2));
   }
-
-  return baselines;
 }
 
 //----------------------------------------------------------------------
 //
 // ~makeWSRTExpr
 //
-// Make the expression tree for a single baseline of the WSRT.
+// Make the expression tree per baseline for the WSRT.
 //
 //----------------------------------------------------------------------
-static MeqJonesExpr* makeWSRTExpr (const MDirection& phaseRef, MeqUVWPolc* uvw,
-				   ParmTable&, GSM::SkyModel& gsm)
+void MeqCalibrater::makeWSRTExpr()
 {
-  // Represent the stations by constant parms.
-  MeqExpr* stat1_11 = new MeqParmSingle ("Station.RT_0.11",
+  // Make an expression for each station.
+  itsStatExpr.reserve (itsStations.size());
+  for (unsigned int i=0; i<itsStations.size(); i++) {
+    // Represent the leakage per station by constant parms.
+    MeqExpr* stat11 = new MeqParmSingle ("Leakage." + 
+					 itsStations[i].getName() + ".11",
 					 double(1));
-  MeqExpr* stat1_12 = new MeqParmSingle ("Station.RT_0.12",
+    MeqExpr* stat12 = new MeqParmSingle ("Leakage." + 
+					 itsStations[i].getName() + ".12",
 					 double(0));
-  MeqExpr* stat1_21 = new MeqParmSingle ("Station.RT_0.21",
+    MeqExpr* stat21 = new MeqParmSingle ("Leakage." + 
+					 itsStations[i].getName() + ".21",
 					 double(0));
-  MeqExpr* stat1_22 = new MeqParmSingle ("Station.RT_0.22",
+    MeqExpr* stat22 = new MeqParmSingle ("Leakage." + 
+					 itsStations[i].getName() + ".22",
 					 double(1));
-  MeqJonesNode* stat1 = new MeqJonesNode (stat1_11, stat1_12,
-					  stat1_21, stat1_22);
-  MeqExpr* stat2_11 = new MeqParmSingle ("Station.RT_1.11",
-					 double(1));
-  MeqExpr* stat2_12 = new MeqParmSingle ("Station.RT_1.12",
-					 double(0));
-  MeqExpr* stat2_21 = new MeqParmSingle ("Station.RT_1.21",
-					 double(0));
-  MeqExpr* stat2_22 = new MeqParmSingle ("Station.RT_1.22",
-					 double(1));
-  MeqJonesNode* stat2 = new MeqJonesNode (stat2_11, stat2_12,
-					  stat2_21, stat2_22);
+    itsStatExpr.push_back (new MeqJonesNode (stat11, stat12, stat21, stat22));
+  }    
 
   // Get the point sources from the GSM.
-  vector<MeqPointSource> src;
-  gsm.getPointSources (src);
+  vector<MeqPointSource> sources;
+  itsGSM.getPointSources (sources);
 
-  // Create the DFT kernel.
-  MeqPointDFT* dft = new MeqPointDFT (src, phaseRef, uvw);
-  MeqWsrtPoint* pnt = new MeqWsrtPoint (src, dft);
-
-  return new MeqWsrtInt (pnt, stat1, stat2);
+  // Make an expression for each baseline.
+  itsExpr.reserve (itsUVWPolc.size());
+  int nrant = itsBLIndex.nrow();
+  for (int ant2=0; ant2<nrant; ant2++) {
+    for (int ant1=0; ant1<nrant; ant1++) {
+      if (itsBLIndex(ant1,ant2) >= 0) {
+	// Create the DFT kernel.
+	MeqPointDFT* dft = new MeqPointDFT(sources, itsPhaseRef,
+					   itsUVWPolc[itsBLIndex(ant1,ant2)]);
+	MeqWsrtPoint* pnt = new MeqWsrtPoint (sources, dft);
+	itsExpr.push_back (new MeqWsrtInt (pnt, itsStatExpr[ant1],
+					   itsStatExpr[ant2]));
+      }
+    }
+  }
 }
 
 //----------------------------------------------------------------------
 //
 // ~calcUVWPolc
 //
-// Calculate the polynomial for the UVW coordinates for the current
-// MS.
+// Calculate per baseline the polynomial coefficients for the UVW coordinates
+// for the given MS which should be in order of baseline.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::calcUVWPolc()
+void MeqCalibrater::calcUVWPolc (const Table& ms)
 {
-  // We only handle field 0 and spectral window 0 (for the time being).
-  Table selMS = itsMS(itsMS.col("FIELD_ID")==0 && itsMS.col("DATA_DESC_ID")==0);
+  // Create all MeqUVWPolc objects.
+  itsUVWPolc.resize (itsBaselines.size());
+  for (vector<MeqUVWPolc*>::iterator iter = itsUVWPolc.begin();
+       iter != itsUVWPolc.end();
+       iter++) {
+    *iter = new MeqUVWPolc();
+  }
+  // The MS is already sorted in order of baseline.
   Block<String> keys(2);
   keys[0] = "ANTENNA1";
   keys[1] = "ANTENNA2";
-  selMS = selMS.sort (keys);
-  cout << itsMS.nrow() << ' ' << selMS.nrow() << endl;
-
   // Iterate through the MS per baseline.
-  TableIterator iter (selMS, keys, TableIterator::Ascending,
+  TableIterator iter (ms, keys, TableIterator::Ascending,
 		      TableIterator::NoSort);
-
-  // calculate the uvwpolc for the whole domain of the measurementset
+  // Calculate the uvwpolc for the whole domain of the measurementset
   while (!iter.pastEnd())
   {
     Table tab = iter.table();
+    ROScalarColumn<int> ant1col(tab, "ANTENNA1");
+    ROScalarColumn<int> ant2col(tab, "ANTENNA2");
     ROArrayColumn<double> uvwcol(tab, "UVW");
     ROScalarColumn<double> timcol(tab, "TIME");
-
     Vector<double> dt = timcol.getColumn();
     Matrix<double> uvws = uvwcol.getColumn();
-
-    // should be a loop over one hour periods of data
-    // for (..)
-    // {
-
-    itsUVWPolc.calcCoeff (dt, uvws);
-
-    // }
-
+    int nrtim = dt.nelements();
+    uInt ant1 = ant1col(0);
+    uInt ant2 = ant2col(0);
+    Assert (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow()
+	    &&  itsBLIndex(ant1,ant2) >= 0);
+    int blindex = itsBLIndex(ant1,ant2);
+    // Divide the data into chunks of 1 hour (assuming it is equally spaced).
+    // Make all chunks about equally long.
+    int nrChunk = max(1, int((dt(nrtim-1) - dt(0)) / 3600 + 0.5));
+    int chunkLength = nrtim / nrChunk;
+    if (nrChunk > 1) {
+      Assert (chunkLength > 4);
+    }
+    // Loop through the data in periods of one hour.
+    for (int nrdone=0; nrdone<nrtim; nrdone+=chunkLength) {
+      int todo = min(nrdone+chunkLength, nrtim);
+      itsUVWPolc[blindex]->calcCoeff (dt(Slice(nrdone,todo)),
+				      uvws(Slice(0,3), Slice(nrdone, todo)));
+    }
     iter++;
   }
 }
@@ -303,7 +293,6 @@ void MeqCalibrater::calcUVWPolc()
 //
 // Constructor. Initialize a MeqCalibrater object.
 //
-// Add MODEL_DATA column to MS if not yet present.
 // Calculate UVW polc.
 // Create list of stations and list of baselines from MS.
 // Create the MeqExpr tree for the WSRT.
@@ -312,95 +301,68 @@ void MeqCalibrater::calcUVWPolc()
 MeqCalibrater::MeqCalibrater(const String& msName,
 			     const String& meqModel,
 			     const String& skyModel,
-			     const uInt    spw)
+			     const uInt    ddid)
   :
-  itsMS(msName, Table::Update),
-  itsMEP(meqModel + ".MEP"),
-  itsGSMTable(skyModel + ".GSM"),
-  itsGSM(itsGSMTable),
-  itsRequest(MeqDomain(),0,0),
-  itsFitValue(10.0)
+  itsMS       (msName, Table::Update),
+  itsMSCol    (itsMS),
+  itsMEP      (meqModel + ".MEP"),
+  itsGSMTable (skyModel + ".GSM"),
+  itsGSM      (itsGSMTable),
+  itsFitValue (10.0)
 {
   cout << "MeqCalibrater constructor (";
   cout << "'" << msName   << "', ";
   cout << "'" << meqModel << "', ";
   cout << "'" << skyModel << "', ";
-  cout << spw << ")" << endl;
+  cout << ddid << ")" << endl;
 
-  calcUVWPolc();
+  // Get phase reference (for field 0).
+  getPhaseRef();
 
-  // We only handle field 0 and spectral window 0 (for the time being).
-  // Get all baselines by doing a unique sort.
-  Table selMS = itsMS(itsMS.col("FIELD_ID")==0 && itsMS.col("DATA_DESC_ID")==0);
+  // We only handle field 0 and the given data desc id (for the time being).
+  // Sort the MS in order of baseline.
+  Table selMS = itsMS(itsMS.col("FIELD_ID")==0 &&
+		      itsMS.col("DATA_DESC_ID")==int(ddid));
   Block<String> keys(2);
   keys[0] = "ANTENNA1";
   keys[1] = "ANTENNA2";
-  selMS = selMS.sort (keys);
-  Table sselMS = selMS.sort (keys, Sort::Ascending,
-			     Sort::NoDuplicates + Sort::InsSort);
-  cout << itsMS.nrow() << ' ' << selMS.nrow() << ' ' << sselMS.nrow() << endl;
+  Table sortMS = selMS.sort (keys);
+  // Sort uniquely to get all baselines.
+  Table blMS = sortMS.sort (keys, Sort::Ascending,
+			    Sort::NoDuplicates + Sort::InsSort);
 
-  // Now generate the baseline objects for them.
+  // Find all stations (from the ANTENNA subtable of the MS).
+  fillStations();
+  // Now generate the baseline objects for the baselines.
   // If we ever want to solve for station positions, we cannot use the
   // fixed MVBaseline objects, but instead they should be recalculated
   // after each solve iteration.
-  ROScalarColumn<int> ant1(sselMS, "ANTENNA1");
-  ROScalarColumn<int> ant2(sselMS, "ANTENNA2");
+  // It also forms an index giving for each (ordered) antenna pair the
+  // index in the vector of baselines. -1 means that no baseline exists
+  // for that antenna pair.
+  ROScalarColumn<int> ant1(blMS, "ANTENNA1");
+  ROScalarColumn<int> ant2(blMS, "ANTENNA2");
   Matrix<int> index;
-  itsStations  = fillStations(itsMS);
-  itsBaselines = fillBaselines (index, ant1.getColumn(), ant2.getColumn(), itsStations);
+  fillBaselines (ant1.getColumn(), ant2.getColumn());
 
-#if 0
-  Block<String> timeKeys(1);
-  timeKeys[0] = "TIME";
-#endif
+  // Calculate the UVW polynomial coefficients for each baseline.
+  calcUVWPolc (sortMS);
 
-  // Iterate through the MS per baseline.
-  itsIter = TableIterator(selMS, keys, TableIterator::Ascending,
-			  TableIterator::InsSort);
-
-  // Get phase reference (for field 0), frequencies (for spw 0)
-  // and all station positions from it.
-  MDirection phaseRef = getPhaseRef(itsMS);
+  // Setup the iterator to step through the MS in TIME order.
+  itsIter = TableIterator(selMS, "TIME");
 
   // Set up the expression tree for a single baseline.
-  itsExprTree = makeWSRTExpr (phaseRef, &itsUVWPolc, itsMEP, itsGSM);
+  makeWSRTExpr();
 
   cout << "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
        << ' ' << MeqMatrixRep::nctor + MeqMatrixRep::ndtor << endl;
   cout << "MeqRes " << MeqResultRep::nctor << ' ' << MeqResultRep::ndtor
        << ' ' << MeqResultRep::nctor + MeqResultRep::ndtor << endl;
 
-  //
-  // Initialize the domain for iteration
-  //
-
-  //
-  // calculate frequency domain
-  //
-  getFreq (itsMS, itsStartFreq, itsEndFreq, itsNrChan);
+  // Calculate frequency domain.
+  getFreq (ddid);
   cout << "Freq: " << itsStartFreq << ' ' << itsEndFreq << " (" <<
     itsEndFreq - itsStartFreq << " Hz) " << itsNrChan << endl;
-
-  //
-  // calculate first time domain
-  //
-  ROScalarColumn<double> timcol(itsIter.table(), "TIME");
-  Vector<double>         dt = timcol.getColumn();
-  ROScalarColumn<double> intcol(itsIter.table(), "INTERVAL");
-
-  double step      = intcol(0);
-  int    nrTime    = dt.nelements();
-  double startTime = dt(0) - (step / 2);
-  double endTime   = dt(nrTime - 1) + (step / 2);
-
-  itsStartTime = startTime;
-
-  Assert (near(endTime - startTime, nrTime * step));
-
-  //itsDomain.setDomain(startTime, endTime, itsStartFreq, itsEndFreq);
-  itsRequest.setDomain(MeqDomain(startTime, endTime, itsStartFreq, itsEndFreq),
-		       nrTime, itsNrChan);
 }
 
 //----------------------------------------------------------------------
@@ -425,106 +387,91 @@ MeqCalibrater::~MeqCalibrater()
 // its initDomain method.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::initParms(MeqDomain& theDomain)
+void MeqCalibrater::initParms (const MeqDomain& domain)
 {
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
-  int spidIndex = 0;
+  itsNrScid = 0;
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
        iter++)
   {
-    if (*iter)
-    {
-      spidIndex += (*iter)->initDomain (theDomain, spidIndex);
+    if (*iter) {
+      itsNrScid += (*iter)->initDomain (domain, itsNrScid);
     }
   }
 }
 
 //----------------------------------------------------------------------
 //
-// ~setTimeIntervalSize
+// ~setTimeInterval
 //
 // Set the time domain (interval) for which the solver will solve.
 // The predict could be on a smaller domain (but not larger) than
 // this domain.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::setTimeIntervalSize(uInt secondsInterval)
+void MeqCalibrater::setTimeInterval (double secInterval)
 {
-  cout << "setTimeIntervalSize = " << secondsInterval << endl;
+  cout << "setTimeInterval = " << secInterval << endl;
+  itsTimeInterval = secInterval;
 }
 
 //----------------------------------------------------------------------
 //
-// ~resetTimeIterator
+// ~resetIterator
 //
 // Start iteration over time domains from the beginning.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::resetTimeIterator()
+void MeqCalibrater::resetIterator()
 {
   cout << "resetTimeIterator" << endl;
-  Block<Int> columns(0);
-
   itsIter.reset();
-
-  //
-  // set the domain to the beginning
-  //
-  initParms(itsDomain);
-
-#if 1
-  // Dummy implementation
-  itsFitValue = 10.0;
-#endif
 }
 
 //----------------------------------------------------------------------
 //
-// ~nextTimeInterval
+// ~nextInterval
 //
-// Move to the next time interval (domain).
+// Move to the next interval (domain).
+// Set the request belonging to that.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::nextTimeInterval()
+bool MeqCalibrater::nextInterval()
 {
-#if 0
-
-  for (int i=0; i < itsRequest.nx(); i++)
-  {
-    itsIter++;
-    if (itsIter.pastEnd()) break;
-
-    // fill itsRowNumbers vector of RowNumbers
+  itsCurRows.resize(0);
+  // Exit when no more chunks.
+  if (itsIter.pastEnd()) {
+    return false;
   }
-  itsDataRead = false;
-
-#else
-
-  itsIter++;
-
-  if (itsIter.pastEnd()) return;
-
-#endif
-
-
-  //
-  // calculate first time domain
-  //
-  ROScalarColumn<double> timcol(itsIter.table(), "TIME");
-  Vector<double>         dt = timcol.getColumn();
-  ROScalarColumn<double> intcol(itsIter.table(), "INTERVAL");
-
-  double step      = intcol(0);
-  int    nrTime    = dt.nelements();
-  double startTime = dt(0) - (step / 2);
-  double endTime   = dt(nrTime - 1) + (step / 2);
-
-  Assert (near(endTime - startTime, nrTime * step));
-  //itsDomain.setDomain(startTime, endTime, itsStartFreq, itsEndFreq);
-  itsRequest.setDomain(MeqDomain(startTime, endTime, itsStartFreq, itsEndFreq),
-		       nrTime, itsNrChan);
+  double timeSize = 0;
+  double timeStart = 0;
+  double timeStep;
+  int nrtim = 0;
+  // Get the next chunk until the time interval size is exceeded.
+  while (timeSize < itsTimeInterval  &&  !itsIter.pastEnd()) {
+    ROScalarColumn<double> timcol(itsIter.table(), "TIME");
+    ROScalarColumn<double> intcol(itsIter.table(), "INTERVAL");
+    // If first time, calculate interval and start time.
+    if (timeStart == 0) {
+      timeStep  = intcol(0);
+      timeStart = timcol(0) - timeStep/2;
+    }
+    // Check all intervals are equal.
+    ////    Assert (allNear (intcol.getColumn(), timeStep, 1.0e-5));
+    timeSize += timeStep;
+    int nrr = itsCurRows.nelements();
+    int nrn = itsIter.table().nrow();
+    itsCurRows.resize (nrr+nrn, True);
+    itsCurRows(Slice(nrr,nrn)) = itsIter.table().rowNumbers();
+    nrtim++;
+    itsIter++;
+  }
+  itsSolveDomain = MeqDomain(timeStart, timeStart + nrtim*timeStep,
+			     itsStartFreq, itsEndFreq);
+  initParms (itsSolveDomain);
+  return true;
 }
 
 //----------------------------------------------------------------------
@@ -596,26 +543,26 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
 // Predict visibilities for the current time domain.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::predict(const String& modelDataColName)
+void MeqCalibrater::predict()
 {
-  cout << "predict('" << modelDataColName << "')" << endl;
+  cout << "predict'" << endl;
 
-  cout << "timer:  ";
+  // Loop through all rows in the current solve domain.
   Timer timer;
-  itsExprTree->calcResult (itsRequest);
+  for (unsigned int i=0; i<itsCurRows.nelements(); i++) {
+    int rownr = itsCurRows(i);
+    uInt ant1 = itsMSCol.antenna1()(rownr);
+    uInt ant2 = itsMSCol.antenna2()(rownr);
+    Assert (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow()
+	    &&  itsBLIndex(ant1,ant2) >= 0);
+    int blindex = itsBLIndex(ant1,ant2);
+    double time = itsMSCol.time()(rownr);
+    double step = itsMSCol.interval()(rownr);
+    MeqDomain domain(time-step/2, time+step/2, itsStartFreq, itsEndFreq);
+    MeqRequest request(domain, 1, itsNrChan, itsNrScid);
+    itsExpr[blindex]->calcResult (request);
+  }
   timer.show();
-
-  //      cout << expr->getResult11().getValue() << endl;
-  //      cout << expr->getResult12().getValue() << endl;
-  //      cout << expr->getResult21().getValue() << endl;
-  //      cout << expr->getResult22().getValue() << endl;
-  
-  // Write the predicted data into the MODEL_DATA column.
-  // They have to be converted from double to float complex.
-  its_xx=itsExprTree->getResult11().getValue().getDComplexMatrix();
-  its_xy=itsExprTree->getResult12().getValue().getDComplexMatrix();
-  its_yx=itsExprTree->getResult21().getValue().getDComplexMatrix();
-  its_yy=itsExprTree->getResult22().getValue().getDComplexMatrix();
 }
 
 //----------------------------------------------------------------------
@@ -688,11 +635,8 @@ void MeqCalibrater::saveParms()
   SetupNewTable newtab(name, td, Table::New);
   Table tab(newtab);
   itsGSM.store(tab);
-
-#if 0
   // Make the new table the current one.
   itsGSMTable = tab;
-#endif
 }
 
 //----------------------------------------------------------------------
@@ -703,44 +647,58 @@ void MeqCalibrater::saveParms()
 // with name modelDataColName.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::savePredictedData(const String& modelDataColName)
+void MeqCalibrater::savePredictedData (const String& modelDataColName)
 {
   cout << "savePredictedData('" << modelDataColName << "')" << endl;
 
+  ////  itsMS.reopenRW();
   // Add the dataColName column if not existing yet.
   if (! itsMS.tableDesc().isColumn(modelDataColName)) {
     ArrayColumnDesc<Complex> mdcol(modelDataColName);
     itsMS.addColumn (mdcol);
-    cout << "Added column " << modelDataColName << " to MS" << endl;
+    cout << "Added column " << modelDataColName << " to the MS" << endl;
   }
 
-  ArrayColumn<Complex> mdcol(itsIter.table(), modelDataColName);
-  ROArrayColumn<Complex> dcol(itsIter.table(), "DATA");
-  int npol = dcol(0).shape()(0);
-
-  Matrix<complex<float> > data(npol, itsRequest.ny());
-  for (int j=0; j < itsRequest.nx(); j++)
-  {
-    for (int i=0; i<itsRequest.ny(); i++)
-    {
-      const DComplex& its_xxji = its_xx(j,i);
-      data(0,i) = complex<float> (its_xxji.real(), its_xxji.imag());
-      //	  if (abs(data(0,i)) < 0.4) {
-      //	    cout << cnt << ' ' << j << ' ' << i << ' ' << abs(data(0,i)) << endl;
-      //	  }
-      if (npol > 2)
-      {
-	const DComplex& its_xyji = its_xy(j,i);
-	data(1,i) = complex<float> (its_xyji.real(), its_xyji.imag());
-	const DComplex& its_yxji = its_yx(j,i);
-	data(2,i) = complex<float> (its_yxji.real(), its_yxji.imag());
-      }
-
-      const DComplex& its_yyji = its_yy(j,i);
-      data(npol-1,i) = complex<float> (its_yyji.real(), its_yyji.imag());
+  ArrayColumn<Complex> mdcol(itsMS, modelDataColName);
+  // Loop through all rows in the current solve domain.
+  for (unsigned int i=0; i<itsCurRows.nelements(); i++) {
+    int rownr = itsCurRows(i);
+    uInt ant1 = itsMSCol.antenna1()(rownr);
+    uInt ant2 = itsMSCol.antenna2()(rownr);
+    Assert (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow()
+	    &&  itsBLIndex(ant1,ant2) >= 0);
+    int blindex = itsBLIndex(ant1,ant2);
+    double time = itsMSCol.time()(rownr);
+    double step = itsMSCol.interval()(rownr);
+    MeqDomain domain(time-step/2, time+step/2, itsStartFreq, itsEndFreq);
+    MeqRequest request(domain, 1, itsNrChan, itsNrScid);
+    itsExpr[blindex]->calcResult (request);
+    // Write the requested data into the MS.
+    // Use the same polarizations as for the original data.
+    IPosition shp = itsMSCol.data().shape(rownr);
+    Assert (shp(1) == itsNrChan);
+    Matrix<Complex> data(shp);
+    Slice sliceFreq(0, itsNrChan);
+    // Store the DComplex results into the Complex data array.
+    Array<Complex> tmp0 (data(Slice(0,1), sliceFreq));
+    convertArray (tmp0,
+      itsExpr[blindex]->getResult11().getValue().getDComplexMatrix());
+    if (shp(0) > 2) {
+      Array<Complex> tmp1 (data(Slice(1,1), sliceFreq));
+      convertArray (tmp1,
+	itsExpr[blindex]->getResult12().getValue().getDComplexMatrix());
+      Array<Complex> tmp2 (data(Slice(2,1), sliceFreq));
+      convertArray (tmp2,
+	itsExpr[blindex]->getResult21().getValue().getDComplexMatrix());
+      Array<Complex> tmp3 (data(Slice(3,1), sliceFreq));
+      convertArray (tmp3,
+	itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+    } else {
+      Array<Complex> tmp1 (data(Slice(1,1), sliceFreq));
+      convertArray (tmp1,
+	itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
     }
-    
-    mdcol.put (j, data);
+    mdcol.put (rownr, data);
   }
 }
 
@@ -909,27 +867,12 @@ GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns,
 //----------------------------------------------------------------------
 GlishRecord MeqCalibrater::getSolveDomain()
 {
-  GlishRecord      rec;
-  const MeqDomain& domain = itsRequest.domain();
-
-  rec.add("offsetx", domain.offsetX() - itsStartTime);
-  rec.add("scalex",  domain.scaleX());
-  rec.add("offsety", domain.offsetY());
-  rec.add("scaley",  domain.scaleY());
-
+  GlishRecord rec;
+  rec.add("startx", itsSolveDomain.startX());
+  rec.add("endx",   itsSolveDomain.endX());
+  rec.add("starty", itsSolveDomain.startY());
+  rec.add("endy",   itsSolveDomain.endY());
   return rec;
-}
-
-//----------------------------------------------------------------------
-//
-// ~timeIteratorPastEnd
-//
-// Indicate whether we've reached the end of time for the current MS.
-//
-//----------------------------------------------------------------------
-Bool MeqCalibrater::timeIteratorPastEnd()
-{
-  return itsIter.pastEnd();
 }
 
 //----------------------------------------------------------------------
@@ -953,11 +896,11 @@ String MeqCalibrater::className() const
 //----------------------------------------------------------------------
 Vector<String> MeqCalibrater::methods() const
 {
-  Vector<String> method(13);
+  Vector<String> method(12);
 
-  method(0)  = "settimeintervalsize";
-  method(1)  = "resettimeiterator";
-  method(2)  = "nexttimeinterval";
+  method(0)  = "settimeinterval";
+  method(1)  = "resetiterator";
+  method(2)  = "nextinterval";
   method(3)  = "clearsolvableparms";
   method(4)  = "setsolvableparms";
   method(5)  = "predict";
@@ -967,7 +910,6 @@ Vector<String> MeqCalibrater::methods() const
   method(9)  = "saveresidualdata";
   method(10) = "getparms";
   method(11) = "getsolvedomain";
-  method(12) = "timeiteratorpastend";
 
   return method;
 }
@@ -997,24 +939,26 @@ MethodResult MeqCalibrater::runMethod(uInt which,
 {
   switch (which) 
   {
-  case 0: // settimeintervalsize
+  case 0: // settimeinterval
     {
       Parameter<Int> secondsInterval(inputRecord, "secondsinterval",
 				     ParameterSet::In);
 
-      if (runMethod) setTimeIntervalSize(secondsInterval());
+      if (runMethod) setTimeInterval(secondsInterval());
     }
     break;
 
-  case 1: // resettimeiterator
+  case 1: // resetiterator
     {
-      if (runMethod) resetTimeIterator();
+      if (runMethod) resetIterator();
     }
     break;
 
-  case 2: // nexttimeinterval
+  case 2: // nextinterval
     {
-      if (runMethod) nextTimeInterval();
+      Parameter<Bool> returnval(inputRecord, "returnval",
+				ParameterSet::Out);
+      if (runMethod) returnval() = nextInterval();
     }
     break;
 
@@ -1037,10 +981,7 @@ MethodResult MeqCalibrater::runMethod(uInt which,
 
   case 5: // predict
     {
-      Parameter<String> modelDataColName(inputRecord, "modeldatacolname",
-					 ParameterSet::In);
-
-      if (runMethod) predict(modelDataColName());
+      if (runMethod) predict();
     }
     break;
 
@@ -1105,15 +1046,6 @@ MethodResult MeqCalibrater::runMethod(uInt which,
     }
     break;
 
-  case 12: // timeiteratorpastend
-    {
-      Parameter<Bool> returnval(inputRecord, "returnval",
-				ParameterSet::Out);
-
-      if (runMethod) returnval() = timeIteratorPastEnd();
-    }
-    break;
-
   default:
     return error("No such method");
   }
@@ -1141,12 +1073,12 @@ MethodResult MeqCalibraterFactory::make(ApplicationObject*& newObject,
       Parameter<String>   msName(inputRecord, "msname",   ParameterSet::In);
       Parameter<String> meqModel(inputRecord, "meqmodel", ParameterSet::In);
       Parameter<String> skyModel(inputRecord, "skymodel", ParameterSet::In);
-      Parameter<Int>         spw(inputRecord, "spw",      ParameterSet::In);
+      Parameter<Int>        ddid(inputRecord, "ddid",     ParameterSet::In);
 
       if (runConstructor)
 	{
 	  newObject = new MeqCalibrater(msName(), meqModel(),
-					skyModel(), spw());
+					skyModel(), ddid());
 	}
     }
   else
