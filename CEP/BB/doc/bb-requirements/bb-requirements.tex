@@ -11,8 +11,13 @@
 \usepackage{fancybox}
 %\usepackage{algorithmic}
 \usepackage[dvips]{hyperref}
+\usepackage{theorem}
 \DeclareGraphicsExtensions{.eps}
 % ------------------------  End of Preamble.
+\newcounter{reqnum}
+\newcounter{assnum}
+\newtheorem{requirement}[reqnum]{Requirement}
+\newtheorem{assumption}[assnum]{Assumption}
 
 \begin{document}
 
@@ -20,11 +25,9 @@
 
   \begin{abstract}
 
-    \em{The use of the Blackboard architectural pattern,
-      in the LOFAR Central Processor,
-      for the selfcal control system}
-
-    For the LOFAR project a self-calibration program shall be written
+    The use of the Blackboard architectural pattern, in the LOFAR
+    Central Processor, for the selfcal control system.  For the LOFAR
+    project a self-calibration program shall be written
     \hyperlink{LOFAR-ASTRON-ADD-006}{[LOFAR-ASTRON-ADD-006]}. The idea
     is that this program will have the architectural structure of a
     "BlackBoard". Such a pattern caught in a framework will have
@@ -33,6 +36,12 @@
     rapport hereof will be included in this document.
 
   \end{abstract}
+
+  \tableofcontents
+
+  \listoffigures
+
+  \listoftables
 
   \section{the blackboard architectural pattern}
   \label{sec:blackboard-architectural-pattern}
@@ -59,12 +68,11 @@
     data-center in the UV data. And then there are some algorithms to
     decide if the present strategy is leading somewhere.
 
-    \begin{em}
-
+    \begin{assumption}
       It is assumed that the quality of a preliminary result can be
       measured.
-
-    \end{em}
+      \label{ass:quality}
+    \end{assumption}
 
     When paralleling the algorithm, it becomes very important that
     predict-solve steps or series thereof can be performed
@@ -72,13 +80,13 @@
     solution is a distinct quality of the blackboard architectural
     pattern.
 
-    \begin{em}
-
-      It is required for the Blackboard to be useful in the
-      self-calibration context that the self-calibration algorithm can
-      be partitioned over the dimensions of the dataset.
-
-    \end{em}
+    \begin{assumption}
+      For the Blackboard to be useful in the self-calibration context
+      it is assumed that the self-calibration algorithm can be
+      partitioned over the dimensions of the dataset, or at least that
+      parameters can be solved for independently.
+      \label{ass:partitionable}
+    \end{assumption}
 
   \section{LOFAR requirements on the selfcal control system}
   \label{sec:LOFAR-requirements}\hypertarget{sec:LOFAR-requirements}{}%
@@ -93,14 +101,21 @@
     sources) as well as high level strategies (by configuring the
     controller(s)).
 
-    \begin{em}\large{Note: }
-
+    \begin{requirement}
       It must be possible to add new knowledge sources to the system.
+      \label{req:knowledge-sources}
+    \end{requirement}
 
-      It must be possible to configure controllers to react in a
-      certain way to a certain state of the system.
+    \begin{requirement}
+      It must be possible to configure controllers for the way they
+      react to certain states of the system.
+      \label{req:configure-controllers}
+    \end{requirement}
 
-    \end{em}
+    \begin{requirement}
+      It should be possible to reconfigure controllers on runtime.
+      \label{req:reconfigure-controllers}
+    \end{requirement}
 
     The Blackboard system to be build is going to allow the programmer
     to define a workload structure and a knowledge source that will
@@ -119,12 +134,12 @@
     will be convenient. On top of that it will necessary to change or
     add control-strategies and low-level algorithms as we go.
 
-    \begin{em}\large{Note: }
-
-      It would be nice to have a library of strategies that would
-      include "conditions" and "actions to take".
-
-    \end{em}
+    \begin{requirement}
+      It would be nice to have a library of strategies that
+      would include "conditions" and "actions to
+      take".
+      \label{req:strategies}
+    \end{requirement}
 
     The blackboard architectural pattern facilitates this tweaking of
     different algorithms by its loose coupling. The different
@@ -176,9 +191,12 @@
         \caption{the crude structure of a selfcal-BlackBoard\label{fig:overview}}
       \end{figure}
 
-      In \hyperlink{fig:overview}{[Figure \ref{fig:overview}]}, the
+      In \hyperlink{fig:overview}{Figure \ref{fig:overview}} a high
+      level design of a blackboard framework is shown. The
       communication from the TreadController or the ThreadWatcher to
-      the WorkerProxy and back is all done by means of the BlackBoard.
+      the WorkerProxy in \hyperlink{fig:overview}{Figure
+      \ref{fig:overview}} and back is all done by means of the
+      BlackBoard.
 
       The items in the diagram are \begin{itemize}
 
@@ -213,18 +231,33 @@
 
       \end{itemize}
 
+    \subsection{demo design}
+    \label{subsec:demo-design}
+
+      \begin{figure}
+        \includegraphics[]{../figures/democlasses.eps}
+        \hypertarget{fig:democlasses}{}
+        \caption{\label{fig:democlasses}}
+      \end{figure}
+
+      The actual program structure as used in the breadboard
+      implementation of the blackboard is shown in
+      \hyperlink{fig:democlasses}{Figure \ref{fig:democlasses}}.
+
     \subsection{a demo use-case}
     \label{sec:demo-usecase}
       \subsubsection{logical structure}
       \label{subsec:logical-structure}
       \begin{figure}
-        \epsfig{file=../figures/demo.usecase.eps}
-        \hypertarget{demo-usecase}{}
-        \caption{the basic use-case for the self-calibration application\label{fig:demo-usecase}}
+        \includegraphics[]{../figures/demo.usecase.eps}
+        \hypertarget{fig:demo-usecase}{}
+        \caption{the basic use-case for the self-calibration
+        application\label{fig:demo-usecase}}
       \end{figure}
 
-      This use-case is intended to demonstrate the use of the
-      blackboard based architecture for the implementation of the
+      The use-case, shown in \hyperlink{fig:demo-usecase}{Figure
+      \ref{fig:demo-usecase}} is intended to demonstrate the use of
+      the blackboard based architecture for the implementation of the
       selfcal controller.
 
       It will show that concurrent solution threads as shown in
@@ -259,7 +292,7 @@
       responsibility over parameters is split as well.
 
       Termination strategies can be of the form \[for ( 0 < i < n ) :
-      action\], or \[while (\Delta > x): action\]. This second
+      action\] or \[while (\Delta > x): action\] This second
       approach can be dangerous, if the calibration process is not
       strictly convergent. For now the results are classified as good
       enough by the user terminating the program.
@@ -306,16 +339,16 @@
         \end{center}
       \end{table}
 
-      \begin{em}\large{Note: }
+      \begin{verse}{Note}
 
         the responsibility over last three parameters is shared
         between two solution-threads and rotating over the three
         available threads. This is done to get an idea on how
         solution-threads can influence each other.
      
-      \end{em}
+      \end{verse}
 
-      In \hyperlink{tab:parametertable}{[Table \ref{tab:parametertable}]} the
+      In \hyperlink{tab:parametertable}{Table \ref{tab:parametertable}} the
       column ``model value'' stands for ``value according to global
       sky- or instrument model''
 
@@ -328,36 +361,61 @@
       \subsubsection{demo prerequisites}
       \label{subsubsec:demo-prerequisites}
 
-        For the breadboard implementation python 2.3b1 was used.  As
-        well as postgresql 7.3.3.  At compile-time swig-1.3.19 is used.
+        For the breadboard implementation the following software
+        packages where used:
+
+        \begin{itemize}
+
+          \item python 2.3b1
+
+          \item postgresql 7.3.3
+
+          \item swig-1.3.19\footnote{used at compile-time\label{compile-time}}
+
+          \item gcc-3.3\footnotemark[\value{footnote}]
+
+        \end{itemize}
 
       \subsubsection{The strategy}
       \label{subsubsec:stategy}
         A high level script
 
         The implementation of the strategy is a python script using
-        the components defined in the selfcal framework. In the final
-        (c++-)implementation of selfcal. The high level control object
-        is a process with an embedded python interpreter. It reads the
-        script when started and in an advanced enterprise-pro-gold
-        version it might supply a GUI to interrupt and/or change the
-        strategy on the fly. The database used supplies the
-        possibility to watch progress on-line and intervene if needed.
+        the components defined in the selfcal implementation of the
+        blackboard framework. In the final (c++-)implementation of
+        selfcal this might become a database or hard-coded commands. The high level control object is a process with an
+        embedded python interpreter. It reads the script when started
+        and in an advanced enterprise-pro-gold version it might supply
+        a GUI to interrupt and/or change the strategy on the fly. The
+        database used supplies the possibility to watch progress
+        on-line and intervene if needed.
 
       \subsubsection{the solver}
       \label{subsubsec:solver}
-        A c++ stub
+        The solver is implemented as a c++ stub with a generated
+        python wrapper.
 
         The code that makes parameters converge is:
 
 \begin{Verbatim}[]
-outparams[i] = itsParamValues[i] = 0.8*(itsParamValues[i] + i + 1) +
-                                   0.01*(itsParamValues[(i+1)%itsLen]);
+      outparams[i] = itsParamValues[i] =
+         0.8*(itsParamValues[i] + i + 1) +
+         0.01*(4*((i+1)%itsLen + 1) - itsParamValues[(i+1)%itsLen]) -
+         0.005*(4*((i-1)%itsLen + 1) - (itsParamValues[(i-1)%itsLen]));
 \end{Verbatim}
 
         As can see neighbouring parameters are taken into account to
-        emulate interdependencies. The full code can be found in
-        \hyperlink{stub-code}{Appendix {\ref*{app:stub-code}}}
+        emulate interdependencies. The effect that we hope to see is
+        that some parameters will converge to wrong values due to
+        dependencies on wrongly - or not calibrated parameters. A
+        cleaver strategy or a observing operator should then change
+        some parameters in order to get the calibration back on
+        track. This happens in the second half of our calibration
+        script, where solved parameters get distributed from the
+        responsible solution-thread to other solution-threads.
+
+        The full code can be found in \hyperlink{stub-code}{Appendix
+        {\ref*{app:stub-code}}}
 
     \subsection{results}
     \label{subsec:results}
@@ -427,12 +485,12 @@ outparams[i] = itsParamValues[i] = 0.8*(itsParamValues[i] + i + 1) +
     \subsection{evaluation}
     \label{subsec:evaluation}\hypertarget{subsec:evaluation}{}
 
-      Figure out a priority mechanism.
+      Conversion of parameters can be monitorred.
 
   \section{lessons learned}
   \label{sec:lessons-learned}
 
-    It seems hard to find an example of a implementation of a
+    It seems hard to find an example of an implementation of a
     Blackboard system that compares to this one. The facts, that there
     is only one fundamental knowledge-source, that the amount of data
     is so huge, that several strategies might be explored
@@ -444,34 +502,40 @@ outparams[i] = itsParamValues[i] = 0.8*(itsParamValues[i] + i + 1) +
     the system is to distribute simple and similar tasks as opposed to
     highly specialised ones.
 
-\newcommand{\dbappendix}[1]{\section{#1}}%
+    \subsection{to do}
 
+      Figure out a priority mechanism.
+
+\newcommand{\dbappendix}[1]{\section{#1}}
 \appendix
+  \dbappendix{assumptions}
+  \label{app:assumptions}\hypertarget{app:assumptions}{}
+    \begin{itemize}
+      \item [\ref{ass:quality}]It must be possible to measure the
+        quality of intermediate results.
+      \item [\ref{ass:partitionable}]It is required for the Blackboard
+        to be useful in the self-calibration context that the
+        self-calibration algorithm can be partitioned over the
+        dimensions of the dataset.
+    \end{itemize}
 
   \dbappendix{requirements list}
-  \label{app:requirements-list}\hypertarget{app:requirements-list}{}%
-
-    \begin{enumerate}
-
-      \item
-
-        It must be possible to add new knowledge sources to the system.
-
-      \item
-
-        It must be possible to configure controllers to react in a
-        certain way to a certain state of the system.
-
-      \item
-
-        It would be nice to have a library of strategies that would
-        include "conditions" and "actions to take".
-
-    \end{enumerate}
+  \label{app:requirements-list}\hypertarget{app:requirements-list}{}
+    \begin{itemize}
+      \item [\ref{req:knowledge-sources}]It must be possible to add
+        new knowledge sources to the system.
+      \item [\ref{req:configure-controllers}]It must be possible to
+        configure controllers for the way they react to certain states
+        of the system.
+      \item [\ref{req:reconfigure-controllers}]It should be possible
+        to reconfigure controllers on runtime.
+      \item [\ref{req:strategies}]It would be nice to have a library
+        of strategies that would include "conditions" and "actions to
+        take".
+    \end{itemize}
 
   \dbappendix{strategy}
   \label{app:start-script}\hypertarget{app:start-script}{}
-
 \begin{Verbatim}[]
 #!/usr/bin/env python
 
@@ -628,11 +692,12 @@ print "this is the end"
 #include "SelfcalEngineStub.h"
 
 #include <unistd.h>
+    //#include <iostream.h>
 #include <iostream>
 #include <ostream>
 
 
-SelfcalEngineStub::SelfcalEngineStub():itsParamValues(NULL) {
+SelfcalEngineStub::SelfcalEngineStub():itsParamValues(NULL),debug(false) {
   std::cout << "SelfcalEngineStub Constructor " << std::endl;
 }
 
@@ -654,18 +719,24 @@ void SelfcalEngineStub::init(int len,
 
 float * SelfcalEngineStub::Solve(bool    *workdef, 
                                   float   outparams[]) {
-
-  std::cout << "start Solving" << std::flush;
+  if(debug)
+    std::cout << "start Solving" << std::flush;
   for (int i=0; i<itsLen; i++) {
     //sleep(1);
-    std::cout << "." << std::flush;
+    if(debug)
+      std::cout << "." << std::flush;
 
     if (workdef[i] == true) {
-      outparams[i] = itsParamValues[i] = 0.8*(itsParamValues[i] + i + 1) + 0.01*(itsParamValues[(i+1)%itsLen]);
-      std::cout << i << " " << outparams[i] << "  ";
+      outparams[i] = itsParamValues[i] =
+         0.8*(itsParamValues[i] + i + 1) +
+         0.01*(4*((i+1)%itsLen + 1) - itsParamValues[(i+1)%itsLen]) -
+         0.005*(4*((i-1)%itsLen + 1) - (itsParamValues[(i-1)%itsLen]));
     }
+    if(debug)
+      std::cout << i << " " << outparams[i] << " " << workdef[i] << "  ";
   }
-  std::cout << "OK" << std::endl;;
+  if(debug)
+    std::cout << "OK" << std::endl;;
   
   return outparams;
   
@@ -677,6 +748,7 @@ void SelfcalEngineStub::dump() {
     std::cout << itsParamValues[i] << " ";
   }
   std::cout << std::endl;
+}
 \end{Verbatim}
 
   \dbappendix{revision log}
