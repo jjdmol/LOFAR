@@ -100,13 +100,14 @@ WH_PSS3* WH_PSS3::make (const string& name)
 void WH_PSS3::preprocess()
 {
   TRACER4("WH_PSS3 preprocess()");
-  itsCal = new CalibratorOld(itsMSName, itsMeqModel, itsSkyModel, itsDbType, 
-			     itsDbName, itsDbPwd);
 }
 
 void WH_PSS3::process()
 {
   TRACER4("WH_PSS3 process()");
+  itsCal = new CalibratorOld(itsMSName, itsMeqModel, itsSkyModel, itsDbType, 
+			     itsDbName, itsDbPwd);
+
   DH_WorkOrder* inp = (DH_WorkOrder*)getDataManager().getInHolder(0);
   DH_Solution* startSol;
   TRACER1("Strategy number: " << inp->getStrategyNo());
@@ -123,6 +124,7 @@ void WH_PSS3::process()
 
   DH_Solution* outp;
   outp = (DH_Solution*)getDataManager().getOutHolder(0);
+  outp->clearData();
 
   if (inp->getSolutionNumber() != -1)
   {
@@ -176,6 +178,8 @@ void WH_PSS3::process()
     outp->setID(itsNumber++);
     getDataManager().readyWithOutHolder(0);
   }
+
+  delete itsCal;
 }
 
 void WH_PSS3::dump()
