@@ -131,6 +131,20 @@ void UVPDataAtom::setFlags(const std::vector<bool>& flags)
 
 
 
+//====================>>>  UVPDataAtom::setFlag  <<<====================
+
+void UVPDataAtom::setFlag(unsigned int channel,
+                          bool         flag)
+{
+  itsFlags[channel] = flag;
+}
+
+
+
+
+
+
+
 //=================>>>  UVPDataAtom::getNumberOfChannels  <<<=================
 
 unsigned int  UVPDataAtom::getNumberOfChannels() const
@@ -168,9 +182,76 @@ const bool UVPDataAtom::getFlag(unsigned int channel) const
 
 
 
+
+//==================>>>  UVPDataAtom::getFlagBegin  <<<===================
+
+UVPDataAtom::FlagIterator UVPDataAtom::getFlagBegin() const
+{
+  return itsFlags.begin();
+}
+
+
+
+
+//==================>>>  UVPDataAtom::getFlagEnd  <<<===================
+
+UVPDataAtom::FlagIterator UVPDataAtom::getFlagEnd() const
+{
+  return itsFlags.end();
+}
+
+
+
+
 //====================>>>  UVPDataAtom::getHeader <<<====================
 
 const UVPDataAtomHeader& UVPDataAtom::getHeader() const
 {
   return itsHeader;
+}
+
+
+
+
+
+//====================>>>  UVPDataAtom::store  <<<====================
+
+void UVPDataAtom::store(std::ostream& out) const
+{
+  unsigned int N = itsData.size();
+  itsHeader.store(out);
+  out.write((const void*)&N, sizeof(unsigned int));
+  out.write((const void*)&(itsData.front()), N*sizeof(ComplexType));
+  FlagIterator end = itsFlags.end();
+  for(FlagIterator i = itsFlags.begin(); i != end; i++) {
+    unsigned char ch(*i);
+    out.write(&ch, 1);
+  }
+}
+
+
+
+
+
+
+
+//====================>>>  UVPDataAtom::load  <<<====================
+
+void UVPDataAtom::load(std::istream& in)
+{
+  unsigned int N(0);
+
+  itsHeader.load(in);
+  in.read((void*)&N, sizeof(unsigned int));
+  
+  itsData  = std::vector<ComplexType>(N);
+  itsFlags = std::vector<bool>(N);
+  
+  in.read((void*)&(itsData.front()), N*sizeof(ComplexType));
+  std::vector<bool>::iterator end = itsFlags.end();
+  for(std::vector<bool>::iterator i = itsFlags.begin(); i != end; i++) {
+    unsigned char ch(0);
+    in.read(&ch, 1);
+    *i=bool(ch);
+  }
 }
