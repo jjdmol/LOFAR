@@ -22,6 +22,7 @@
 
 #include "GPA_ScopeManager.h"
 #include "GPA_Controller.h"
+#include <Utils.h>
 #include <stdio.h>
 #include "PA_Protocol.ph"
 
@@ -214,7 +215,10 @@ void GPAScopeManager::sendUnLinkEvents(GCFEvent& e)
   const string* pScope;
   list<string>* pPropList;
   unsigned int oldEventLength(e.length);
-
+  
+  static const unsigned int MAX_BUF_SIZE = 1000;
+  static char buffer[MAX_BUF_SIZE];
+  
   for (TScopeListIter iter = _scopeList.begin(); 
        iter != _scopeList.end(); ++iter)
   {
@@ -231,34 +235,27 @@ void GPAScopeManager::sendUnLinkEvents(GCFEvent& e)
       if (pPort->isConnected())
       {
         _counter++;
-        string allPropNames;
-        for (list<string>::iterator pPropName = pPropList->begin(); 
-             pPropName != pPropList->end(); ++pPropName)
-        {
-          allPropNames += *pPropName;
-          allPropNames += '|';
-        }
+        unsigned int dataLength = Utils::packString(*pScope, buffer, MAX_BUF_SIZE);
+        char* pPropListStart = buffer + dataLength;
+        dataLength += Utils::packPropertyList(*pPropList, buffer + dataLength, MAX_BUF_SIZE - dataLength);
+        assert(dataLength < MAX_BUF_SIZE);
+        buffer[dataLength] = 0;
         if (e.signal == PA_LINKPROPERTIES)
         {
           LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
             "REQ: Link properties %s on scope %s",
-            allPropNames.c_str(),
+            pPropListStart,
             pScope->c_str()));
         }
         else
         {
           LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
             "REQ: Unlink properties %s on scope %s",
-            allPropNames.c_str(),
+            pPropListStart,
             pScope->c_str()));
         }
-        unsigned short bufLength(pScope->size() + allPropNames.size() + 6);
-        char* buffer = new char[bufLength + 1];
-        sprintf(buffer, "%03x%s%03x%s", pScope->size(), pScope->c_str(), 
-                                        allPropNames.size(), allPropNames.c_str());
-        e.length = oldEventLength + bufLength;
-        pPort->send(e, buffer, bufLength);
-        delete [] buffer;
+        e.length = oldEventLength + dataLength;
+        pPort->send(e, buffer, dataLength);
       }
     }
   }

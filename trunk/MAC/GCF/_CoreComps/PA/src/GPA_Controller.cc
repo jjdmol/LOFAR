@@ -22,6 +22,7 @@
 
 #include <GPA_Controller.h>
 #include <stdio.h>
+#include <Utils.h>
 #define DECLARE_SIGNAL_NAMES
 #include <PA_Protocol.ph>
 
@@ -131,22 +132,19 @@ GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
     case PA_LOADAPC:
     {
       CHECK_REQUEST(p, e)
-      PALoadapcEvent* request = static_cast<PALoadapcEvent*>(&e);
-      loadAPC((char*)request + sizeof(PALoadapcEvent));
+      loadAPC((char*)(&e) + sizeof(PALoadapcEvent));
       break;
     }
     case PA_UNLOADAPC:
     {
       CHECK_REQUEST(p, e)
-      PAUnloadapcEvent* request = static_cast<PAUnloadapcEvent*>(&e);
-      unloadAPC((char*)request + sizeof(PAUnloadapcEvent));
+      unloadAPC((char*)(&e) + sizeof(PAUnloadapcEvent));
       break;
     }
     case PA_RELOADAPC:
     {
       CHECK_REQUEST(p, e)
-      PAReloadapcEvent* request = static_cast<PAReloadapcEvent*>(&e);
-      reloadAPC((char*)request + sizeof(PAReloadapcEvent));
+      reloadAPC((char*)(&e) + sizeof(PAReloadapcEvent));
       break;
     }
     case PA_REGISTERSCOPE:
@@ -154,23 +152,20 @@ GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
       PARegisterscopeEvent* pRequest = static_cast<PARegisterscopeEvent*>(&e);
       assert(pRequest);
       string scope;
-      unpackScope((char*)pRequest + sizeof(PARegisterscopeEvent), scope);
+      unsigned int scopeDataLength = Utils::unpackString((char*)(&e) + sizeof(PARegisterscopeEvent), scope);
       LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
           "PML-REQ: Register scope %s",
           scope.c_str()));
       PAScoperegisteredEvent response(pRequest->seqnr, PA_NO_ERROR);
       response.result = _scopeManager.registerScope(scope, p);
-      unsigned int scopeDataLength(pRequest->length - sizeof(PARegisterscopeEvent));
       response.length += scopeDataLength;
-      p.send(response, (char*)pRequest + sizeof(PARegisterscopeEvent), scopeDataLength);
+      p.send(response, (char*)(&e) + sizeof(PARegisterscopeEvent), scopeDataLength);
       break;
     }
     case PA_UNREGISTERSCOPE:
     {
       CHECK_REQUEST(p, e)
-      PAUnregisterscopeEvent* pRequest = static_cast<PAUnregisterscopeEvent*>(&e);
-      assert(pRequest);
-      unregisterScope((char*)pRequest + sizeof(PAUnregisterscopeEvent));
+      unregisterScope((char*)(&e) + sizeof(PAUnregisterscopeEvent));
       break;
     }
     case PA_PROPERTIESLINKED:
@@ -179,7 +174,7 @@ GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
       assert(pResponse);
       if (pResponse->result != PA_NO_ERROR && _curResult == PA_NO_ERROR) 
         _curResult = pResponse->result;
-      propertiesLinked((char*)pResponse + sizeof(PAPropertieslinkedEvent));      
+      propertiesLinked((char*)(&e) + sizeof(PAPropertieslinkedEvent));      
       break;
     }
     case PA_PROPERTIESUNLINKED:
@@ -188,7 +183,7 @@ GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
       assert(pResponse);
       if (pResponse->result != PA_NO_ERROR && _curResult == PA_NO_ERROR) 
         _curResult = pResponse->result;
-      propertiesUnlinked((char*)pResponse + sizeof(PAPropertiesunlinkedEvent));      
+      propertiesUnlinked((char*)(&e) + sizeof(PAPropertiesunlinkedEvent));      
       break;
     }
     case F_ACCEPT_REQ_SIG:
@@ -397,7 +392,7 @@ void GPAController::reloadAPC(char* actionData)
 void GPAController::unregisterScope(char* pScopeData)
 {
   string scope;
-  unpackScope(pScopeData, scope);
+  Utils::unpackString(pScopeData, scope);
 
   LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
       "PML-REQ: Unregister scope %s",
@@ -413,7 +408,7 @@ void GPAController::unregisterScope(char* pScopeData)
 void GPAController::propertiesLinked(char* pResponseData)
 {
   string scope;
-  unpackScope(pResponseData, scope);
+  Utils::unpackString(pResponseData, scope);
   
   LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
       "PML-RESP: Properties linked on scope %s",
@@ -424,7 +419,7 @@ void GPAController::propertiesLinked(char* pResponseData)
 void GPAController::propertiesUnlinked(char* pResponseData)
 {
   string scope;
-  unpackScope(pResponseData, scope);
+  Utils::unpackString(pResponseData, scope);
   
   LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
       "PML-RESP: Properties unlinked on scope %s",
@@ -446,15 +441,6 @@ void GPAController::sendAPCActionResponse(GCFEvent& e)
 
 void GPAController::unpackAPCActionData(char* pActionData)
 {
-  unsigned int apcNameLength(0);
-  sscanf(pActionData, "%03x", &apcNameLength);
-  _curApcName.assign(pActionData + 3, apcNameLength);
-  unpackScope(pActionData + 3 + apcNameLength, _curScope);
-}
-
-void GPAController::unpackScope(char* pScopeData, string& scope)
-{
-  unsigned int scopeNameLength(0);
-  sscanf(pScopeData, "%03x", &scopeNameLength);
-  scope.assign(pScopeData + 3, scopeNameLength);
+  unsigned int dataLength = Utils::unpackString(pActionData, _curApcName);
+  Utils::unpackString(pActionData + dataLength, _curScope);
 }

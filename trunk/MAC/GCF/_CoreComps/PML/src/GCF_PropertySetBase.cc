@@ -29,7 +29,8 @@
 GCFPropertySetBase::GCFPropertySetBase (string scope, 
                                         GCFAnswer* pAnswerObj) : 
   _pAnswerObj(pAnswerObj),
-  _scope(scope)
+  _scope(scope),
+  _dummyProperty("", this)
 {
   if (!GSAService::validatePropName(scope.c_str()))
   {
@@ -61,6 +62,16 @@ GCFPropertyBase* GCFPropertySetBase::getProperty (const string propName) const
   {
     return 0;
   }
+}
+
+GCFPropertyBase& GCFPropertySetBase::operator[] (const string propName)
+{ 
+  GCFPropertyBase* pProperty = getProperty(propName);
+  if (!pProperty)
+  {
+    pProperty = &_dummyProperty;
+  }
+  return *pProperty;
 }
 
 TGCFResult GCFPropertySetBase::setValue (const string propName, 

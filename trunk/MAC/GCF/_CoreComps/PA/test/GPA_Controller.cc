@@ -308,6 +308,7 @@ void GPAController::apcLoaded(TPAResult result)
 #ifdef PML
   GCFEvent* pEvent = _requestManager.getOldestRequest();
   PALoadapcEvent* pLoadapcE = static_cast<PALoadapcEvent*> (pEvent);
+  assert(pLoadapcE);
   PAApcloadedEvent e(pLoadapcE->seqnr, result);
   sendAPCActionResponse(e);
 #endif
@@ -327,7 +328,9 @@ void GPAController::unloadAPC(char* actionData)
 void GPAController::apcUnloaded(TPAResult result)
 {  
   GCFEvent* pEvent = _requestManager.getOldestRequest();
+  assert(pEvent);
   PAUnloadapcEvent* pUnloadapcE = static_cast<PAUnloadapcEvent*> (pEvent);
+  assert(pUnloadapcE);
   PAApcunloadedEvent e(pUnloadapcE->seqnr, result);
   sendAPCActionResponse(e);
 }  
@@ -342,7 +345,9 @@ void GPAController::reloadAPC(char* actionData)
   TPAResult result = _usecountManager.setDefaults(*propsFromAPC);
 
   GCFEvent* pEvent = _requestManager.getOldestRequest();
+  assert(pEvent);
   PAReloadapcEvent* pReloadapcE = static_cast<PAReloadapcEvent*> (pEvent);
+  assert(pReloadapcE);
   PAApcreloadedEvent e(pReloadapcE->seqnr, result);
   sendAPCActionResponse(e);
 }  
@@ -361,9 +366,8 @@ void GPAController::unregisterScope(char* pScopeData)
 void GPAController::propertiesLinked(char* pResponseData)
 {
   TPAResult result;
-  unsigned int scopeNameLength(0);
-  sscanf(pResponseData, "%03x", &scopeNameLength);
-  string scope(pResponseData + 3, scopeNameLength);
+  string scope;
+  Utils::unpackString(pResponseData, scope);
   //TODO: remove props from SCADA DB if returned as not linked
   if ((result = _scopeManager.propertiesLinked(scope)) != PA_NO_ERROR)
   {
@@ -374,9 +378,8 @@ void GPAController::propertiesLinked(char* pResponseData)
 void GPAController::propertiesUnlinked(char* pResponseData)
 {
   TPAResult result;
-  unsigned int scopeNameLength(0);
-  sscanf(pResponseData, "%03x", &scopeNameLength);
-  string scope(pResponseData + 3, scopeNameLength);
+  string scope;
+  Utils::unpackString(pResponseData, scope);
   if ((result = _scopeManager.propertiesUnlinked(scope)) != PA_NO_ERROR)
   {
     apcUnloaded(result);

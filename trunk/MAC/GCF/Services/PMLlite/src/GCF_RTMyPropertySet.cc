@@ -282,14 +282,14 @@ GCFRTMyProperty* GCFRTMyPropertySet::getProperty (const string propName) const
   }
 }
 
-GCFRTMyProperty* GCFRTMyPropertySet::operator[] (const string propName)
+GCFRTMyProperty& GCFRTMyPropertySet::operator[] (const string propName)
 { 
   GCFRTMyProperty* pProperty = getProperty(propName);
   if (!pProperty)
   {
     pProperty = &_dummyProperty;
   }
-  return pProperty;
+  return *pProperty;
 }
 
 TGCFResult GCFRTMyPropertySet::setValue (const string propName, 

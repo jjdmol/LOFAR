@@ -68,7 +68,6 @@ class GPAController : public GCFTask
     void propertiesUnlinked(char* pResponseData);
     void sendAPCActionResponse(GCFEvent& e);
     void unpackAPCActionData(char* pActionData);
-    void unpackScope(char* pScopeData, string& scope);
     
 	private: // state methods
 		GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
@@ -81,6 +80,7 @@ class GPAController : public GCFTask
 
     list<GCFPortInterface*> _pmlPorts;		
 		GCFTCPPort					_pmlPortProvider;
+    GPAAPCFileReader    _apcFileReader;   
     
   private: // admin. data members
     string              _curApcName;
@@ -89,8 +89,7 @@ class GPAController : public GCFTask
     TPAResult           _curResult;
     bool                _isBusy;
     bool                _isRegistered;
-    unsigned int        _counter;
-    GPAAPCFileReader    _apcFileReader;
+    unsigned int        _counter;  
 };
 
 #endif
