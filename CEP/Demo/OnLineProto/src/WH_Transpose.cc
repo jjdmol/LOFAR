@@ -121,8 +121,6 @@ void WH_Transpose::process()
 	->getBufferElement(InFreqBin) ;
     } 
   }
-
-  
 }
 
 void WH_Transpose::dump()

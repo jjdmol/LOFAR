@@ -24,6 +24,7 @@
 #define ONLINEPROTO_WH_SIMSTATION_H
 
 #define NINPUT_BEAMLETS 128
+#define DATA_ITERATION 1000
 
 #include <lofar_config.h>
 
@@ -81,6 +82,7 @@ public:
    complex<float>* itsData;
    MAC itsMac;
    int itsID;
+   int itsCounter;
 };
 
 }
