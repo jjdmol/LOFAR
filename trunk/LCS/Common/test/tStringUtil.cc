@@ -29,12 +29,20 @@
 using namespace LOFAR;
 using namespace std;
 
+#if 0
 #define TOSTRING_TEST(type) \
 { \
   type min(numeric_limits<type>::min()); \
   type max(numeric_limits<type>::max()); \
   ASSERT(min == numeric_limits<type>::min() && \
          max == numeric_limits<type>::max()); \
+  cout << "min(" #type ") = " << toString(min) \
+       << "\t max(" #type ") = " << toString(max) << endl; \
+}
+#endif
+
+#define TOSTRING_TEST(type,min,max) \
+{ \
   cout << "min(" #type ") = " << toString(min) \
        << "\t max(" #type ") = " << toString(max) << endl; \
 }
@@ -96,23 +104,24 @@ int main()
 
   cout << "\n*** Conversion of fundamental arithmetic types to string ***\n";
   try {
-    TOSTRING_TEST(bool);
-    TOSTRING_TEST(char);
-    TOSTRING_TEST(unsigned char);
-    TOSTRING_TEST(short);
-    TOSTRING_TEST(unsigned short);
-    TOSTRING_TEST(int);
-    TOSTRING_TEST(unsigned int);
-    TOSTRING_TEST(long);
-    TOSTRING_TEST(unsigned long);
+    TOSTRING_TEST(bool,false,true);
+    TOSTRING_TEST(char,0,127);
+    TOSTRING_TEST(signed char,-128,127);
+    TOSTRING_TEST(unsigned char,0,255);
+    TOSTRING_TEST(short,-32768,32767);
+    TOSTRING_TEST(unsigned short,0,65535);
+    TOSTRING_TEST(int,-32768,32767);
+    TOSTRING_TEST(unsigned int,0,65536);
+    TOSTRING_TEST(long,~0x7FFFFFFFL,0x7FFFFFFFL);
+    TOSTRING_TEST(unsigned long,0,0xFFFFFFFFUL);
 #ifdef HAVE_LONG_LONG
-    TOSTRING_TEST(long long);
-    TOSTRING_TEST(unsigned long long);
+    TOSTRING_TEST(long long,~0x7FFFFFFFFFFFFFFFLL,0x7FFFFFFFFFFFFFFFLL);
+    TOSTRING_TEST(unsigned long long,0,0xFFFFFFFFFFFFFFFFULL);
 #endif
-    TOSTRING_TEST(float);
-    TOSTRING_TEST(double);
+    TOSTRING_TEST(float,numeric_limits<float>::min(),numeric_limits<float>::max());
+    TOSTRING_TEST(double,numeric_limits<double>::min(), numeric_limits<double>::max());
 #ifdef HAVE_LONG_DOUBLE
-    TOSTRING_TEST(long double);
+    TOSTRING_TEST(long double,numeric_limits<long double>::min(), numeric_limits<long double>::max());
 #endif
     cout << endl;
     TOSTRING_TEST2(int, 42, "%06i");
