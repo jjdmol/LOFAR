@@ -24,7 +24,7 @@
 #include <Coord/SkyCoord.h>
 #include <Coord/EarthCoord.h>
 #include <Coord/TimeCoord.h>
-#include <Common/Debug.h>
+#include <stdexcept>
 
 int main (int argc, const char* argv[])
 {
@@ -100,7 +100,7 @@ int main (int argc, const char* argv[])
       }
     }
 
-  } catch (Debug::Error& x) {
+  } catch (std::exception& x) {
     cout << "Exception: " << x.what() << endl;
     return 1;
   }
