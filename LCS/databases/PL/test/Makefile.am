@@ -8,6 +8,16 @@ check_PROGRAMS		= \
 			  tAttr1 \
 			  tQuery
 
+# programs to run through a checktool
+CHECKTOOLPROGS           = \
+			  tExpr \
+			  tAttrib \
+			  tCollection \
+			  tObjectId \
+			  tAttr1 \
+			  tQuery
+#ENDCHECKTOOLPROGS
+
 tA_SOURCES              = tA.cc
 tA_LDADD		= ../src/libpl.la
 tA_DEPENDENCIES		= ../src/libpl.la $(LOFAR_DEPEND)
@@ -50,6 +60,8 @@ TESTS			= \
 			  tAttr1.sh \
 			  tQuery.sh
 
-TESTS_ENVIRONMENT	= lofar_sharedir=$(lofar_sharedir)
+TESTS_ENVIRONMENT	= lofar_sharedir=$(lofar_sharedir) \
+			  CHECKTOOL="$(CHECKTOOL)"
+
 
 include $(lofar_sharedir)/Makefile.common
