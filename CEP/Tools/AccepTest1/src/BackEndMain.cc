@@ -28,6 +28,20 @@ using namespace LOFAR;
 
 int main (int argc, const char** argv) {
 
+  int be_rank = -1;
+
+  if (argc != 2) {
+    cout << "Usage " << argv[0] << " <BackEnd rank>" << endl;
+    cout << "For each targetgroup the user needs to start a BackEnd" << endl;
+    cout << "with the corresponding rank. Errors herein will cause " << endl;
+    cout << "connections to fail due to mismatches in portnumbering" << endl;
+      
+    return -1;
+  } else {
+    be_rank = atoi(argv[1]);
+    cout << "be_rank = " << be_rank << endl;
+  }
+
   KeyValueMap kvm;
   try {
     kvm = KeyParser::parseFile("TestRange");
@@ -48,6 +62,7 @@ int main (int argc, const char** argv) {
   const int polarisations = kvm.getInt("polarisations", 2);
   const int runs = kvm.getInt("runs", 10);
   const int targets = kvm.getInt("targets", 8);
+  const int targetgroups = kvm.getInt("targetgroups", 1);
 
 //   const std::string frontend_ip = kvm.getString("frontend_ip");
 //   const std::string backend_ip = kvm.getString("backend_ip");
@@ -55,6 +70,11 @@ int main (int argc, const char** argv) {
   const std::string loggerfile = kvm.getString("loggerfile", "CorrelatorLogger.prop");
 
   kvm.show(cout);
+
+  if (be_rank >= targetgroups) {
+    cout << "FrontEnd not used with this rank/targetgroups combination. " << endl;
+    return 0;
+  }
 
   INIT_LOGGER(loggerfile.c_str());
 
@@ -69,9 +89,23 @@ int main (int argc, const char** argv) {
 	AH_BackEnd* simulator;
 
 	if ((samples+elements) % 2 == 0) {
-	  simulator = new AH_BackEnd(port, elements, samples, channels, polarisations, runs, targets);
+	  simulator = new AH_BackEnd(port + targets + (targets/targetgroups)*be_rank, 
+				     elements, 
+				     samples, 
+				     channels, 
+				     polarisations, 
+				     runs, 
+				     targets,
+				     targetgroups);
 	} else {
-	  simulator = new AH_BackEnd(port+2*targets, elements, samples, channels, polarisations, runs, targets);
+	  simulator = new AH_BackEnd((port+2*targets) + targets + (targets/targetgroups)*be_rank, 
+				     elements, 
+				     samples, 
+				     channels, 
+				     polarisations, 
+				     runs, 
+				     targets,
+				     targetgroups);
 	}
 	
 	simulator->setarg(argc, argv);

@@ -35,8 +35,7 @@ int main (int argc, const char** argv) {
   const int runs = kvm.getInt("runs", 10);
   const int targets = kvm.getInt("targets", 8);
 
-#define NRFE 4 
-  const int targetgroups = kvm.getInt("targetgroups", NRFE);
+  const int targetgroups = kvm.getInt("targetgroups", 1);
 
   std::string frontend_ip = kvm.getString("frontend_ip", "192.168.100.31");
   std::string backend_ip = kvm.getString("backend_ip", "192.168.100.32");
@@ -46,11 +45,11 @@ int main (int argc, const char** argv) {
   INIT_LOGGER(loggerfile);
 
   //ASSERTSTR(targetgroups == NRFE,"Code not unrolled for other than 4 target groups yet..." );
-  std::string FE_ip[NRFE];
-  std::string BE_ip[NRFE];
+  std::string FE_ip[targetgroups];
+  std::string BE_ip[targetgroups];
   char f_ip[32];
   char b_ip[32];
-  for (int n=0; n<NRFE; n++) { 
+  for (int n=0; n<targetgroups; n++) { 
     sprintf(f_ip,"frontend_ip_%i",n);
     sprintf(b_ip,"backend_ip_%i",n);
     FE_ip[n] = kvm.getString(f_ip,frontend_ip.c_str());
@@ -58,7 +57,6 @@ int main (int argc, const char** argv) {
     cout << f_ip << " = " << FE_ip[n] << endl;
     cout << b_ip << " = " << BE_ip[n] << endl;
   }
-  sleep(4);
 
   
 #ifdef HAVE_MPI
@@ -91,25 +89,32 @@ int main (int argc, const char** argv) {
 #else 
 	  int rank = 0;
 #endif
-
-	  // logic for NRFE == 4
-	  strcpy(my_fe_ip, FE_ip[0].c_str());
-	  strcpy(my_be_ip, BE_ip[0].c_str());
-	  if (rank < 3*targets/4) 
-	    {
-	      strcpy(my_fe_ip, FE_ip[3].c_str());
-	      strcpy(my_be_ip, BE_ip[3].c_str());
-	    } 
-	  if (rank < 2*targets/4) 
-	    {
-	      strcpy(my_fe_ip, FE_ip[2].c_str());
-	      strcpy(my_be_ip, BE_ip[2].c_str());
-	    }
-	  if (rank < 1*targets/4) 
-	    {
-	      strcpy(my_fe_ip, FE_ip[1].c_str());
-	      strcpy(my_be_ip, BE_ip[1].c_str());
-	    }
+	  if (targetgroups == 4) {
+	    // logic for NRFE == 4
+	    strcpy(my_fe_ip, FE_ip[3].c_str());
+	    strcpy(my_be_ip, BE_ip[3].c_str());
+	    if (rank < 3*targets/4) 
+	      {
+		strcpy(my_fe_ip, FE_ip[2].c_str());
+		strcpy(my_be_ip, BE_ip[2].c_str());
+	      } 
+	    if (rank < 2*targets/4) 
+	      {
+		strcpy(my_fe_ip, FE_ip[1].c_str());
+		strcpy(my_be_ip, BE_ip[1].c_str());
+	      }
+	    if (rank < 1*targets/4) 
+	      {
+		strcpy(my_fe_ip, FE_ip[0].c_str());
+		strcpy(my_be_ip, BE_ip[0].c_str());
+	      }
+	  } else if (targetgroups == 1) {
+	    strcpy(my_fe_ip,FE_ip[targetgroups-1].c_str());
+	    strcpy(my_be_ip,BE_ip[targetgroups-1].c_str());
+	  } else {
+	    cout << "targetgroups should either be 1 or 4. You are using targetgroup = " << targetgroups << endl;
+	    return -1;
+	  }
 	
 	  cout << "rank " << rank << "   my fe_ip " << my_fe_ip << "  my be_ip " << my_be_ip << endl;
 	  int my_port = (((samples+elements) % 2 == 0) ? port : port+2*targets); 
@@ -160,7 +165,8 @@ int main (int argc, const char** argv) {
   } else {
 #ifdef HAVE_BGL
     if (TH_MPI::getCurrentRank() == 0) cout << "ERROR: MPI size does not match the number of targets. Restart with BLGMPI_SIZE=" << targets << endl;
-#else
+#endif 
+#ifdef HAVE_MPI
     if (TH_MPI::getCurrentRank() == 0) cout << "ERROR: MPI size does not match the number of targets. Restart with -np " << targets << endl;
 #endif
   }
