@@ -1,3 +1,3 @@
 include 'fillparms.g'
-setgsm('demo3-1');
+setgsm('demo3');
 exit
