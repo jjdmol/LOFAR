@@ -46,20 +46,6 @@ using namespace UVD;
 
 // Class MSIntegratorWP 
 
-MSIntegratorWP::MSIntegratorWP()
-  //## begin MSIntegratorWP::MSIntegratorWP%3CD133700076_const.hasinit preserve=no
-  //## end MSIntegratorWP::MSIntegratorWP%3CD133700076_const.hasinit
-  //## begin MSIntegratorWP::MSIntegratorWP%3CD133700076_const.initialization preserve=yes
-    : WorkProcess(AidMSIntegratorWP)
-  //## end MSIntegratorWP::MSIntegratorWP%3CD133700076_const.initialization
-{
-  //## begin MSIntegratorWP::MSIntegratorWP%3CD133700076_const.body preserve=yes
-  auto_nchan = 8;
-  auto_ntime = 10;
-  auto_npatch = 2;
-  //## end MSIntegratorWP::MSIntegratorWP%3CD133700076_const.body
-}
-
 MSIntegratorWP::MSIntegratorWP (string msname, const HIID &act_msg, int nchan, int ntime, int npatch)
   //## begin MSIntegratorWP::MSIntegratorWP%3CD781CA01B8.hasinit preserve=no
   //## end MSIntegratorWP::MSIntegratorWP%3CD781CA01B8.hasinit
