@@ -84,16 +84,16 @@ int UVW::getResult (Result::Ref &resref,
   const Vells& vy0  = childres[6]->vellSet(0).getValue();
   const Vells& vz0  = childres[7]->vellSet(0).getValue();
   // For the time being we only support scalars
-  Assert (vra.isScalar() && vdec.isScalar() &&
+  Assert( vra.isScalar() && vdec.isScalar() &&
       	  vstx.isScalar() && vsty.isScalar() && vstz.isScalar() && 
       	  vx0.isScalar() && vy0.isScalar() && vz0.isScalar() );
 
-  // get the 0 position
-  MPosition earthPos(
-      MVPosition(vx0.as<double>(),vy0.as<double>(),vz0.as<double>()),
-      MPosition::ITRF);
-  
-  
+  // get the 0 position (array center, presumably)
+  double x0 = vx0.as<double>();
+  double y0 = vy0.as<double>();
+  double z0 = vz0.as<double>();
+  MPosition zeropos(MVPosition(x0,y0,z0),MPosition::ITRF);
+      
   const Cells& cells = request.cells();
   // Allocate a 3-plane result for U, V, and W
   Result &result = resref <<= new Result(3,request);
@@ -107,13 +107,13 @@ int UVW::getResult (Result::Ref &resref,
   LoMat_double& matV = result.setNewVellSet(1).setReal(nfreq,ntime);
   LoMat_double& matW = result.setNewVellSet(2).setReal(nfreq,ntime);
   // Calculate the UVW coordinates using the AIPS++ code.
-  MVPosition mvpos(vstx.as<double>(),vsty.as<double>(),vstz.as<double>());
+  MVPosition mvpos(vstx.as<double>()-x0,vsty.as<double>()-y0,vstz.as<double>()-z0);
   MVBaseline mvbl(mvpos);
   MBaseline mbl(mvbl, MBaseline::ITRF);
   Quantum<double> qepoch(0, "s");
   qepoch.setValue(time(0));
   MEpoch mepoch(qepoch, MEpoch::UTC);
-  MeasFrame frame(earthPos);
+  MeasFrame frame(zeropos);
   frame.set (MDirection(phaseRef, MDirection::J2000));
   frame.set (mepoch);
   mbl.getRefPtr()->set(frame);      // attach frame
