@@ -55,6 +55,8 @@ void showMenu ()
 		cout << "c	Change record(s)" << endl;
 		cout << "r	Remove record(s)" << endl;
 		cout << "f	Find record(s)" << endl << endl;
+		cout << "C	Commit change(s)" << endl;
+		cout << "R	Rollback change(s)" << endl << endl;
 	}
 	cout << "q	Quit program" << endl;
 	cout << endl << "Type the letter of the command: ";
@@ -79,6 +81,8 @@ char getMenuChoice ()
 			case 'c':
 			case 'r':
 			case 'f':
+			case 'C':
+			case 'R':
 				if (hasTable && hasDatabase) {
 					return (choice);
 				}
@@ -208,9 +212,39 @@ void getDatabasename (char	*newDatabase)
 
 }
 
+void	doChangeCmd (LofarDatabase	*ldb, 
+					 char			*theModification, 
+					 char		  	*theCondition)
+{
+	char	modification [4096];
+	char	condition	 [4096];
+
+	if (theModification && *theModification) {
+		strcpy (modification, theModification);
+	} else {
+		cout << "Enter modification like: name='klaas' and 'id=id+1'" << endl;
+		cout << "Modification: ";
+		cin >> modification;
+	}
+
+	if (theCondition && *theCondition) {
+		strcpy (condition, theCondition);
+	} else {
+		cout << "Enter condition like: name='piet' and lastname='hein'" << endl;
+		cout << " or type '*' to get all records." << endl;
+		cout << "Condition: ";
+		cin >> condition;
+	}
+
+	if (condition[0] == '*')
+		condition[0] = '\0';
+
+	cout << ldb->update (condition, modification) << " records updated" << endl;
+
+}
 void	doRemoveCmd (LofarDatabase *ldb)
 {
-	char	condition [512];
+	char	condition [4096];
 
 	cout << "Enter condition like: name='piet' and lastname='hein'" << endl;
 	cout << " or type '*' to remove all records." << endl;
@@ -226,8 +260,8 @@ void	doRemoveCmd (LofarDatabase *ldb)
 void	doFindCmd (LofarDatabase *ldb, char	*theFields, char *theCondition)
 {
 	char	*qryResult;
-	char	fields 	  [512];
-	char	condition [512];
+	char	fields 	  [4096];
+	char	condition [4096];
 
 	if (theFields && *theFields) {
 		strcpy (fields, theFields);
@@ -250,7 +284,6 @@ void	doFindCmd (LofarDatabase *ldb, char	*theFields, char *theCondition)
 		condition[0] = '\0';
 
 	cout << ldb->find (fields, condition, &qryResult) << " records found" << endl;
-
 }
 
 char parse_args(int	argc, char	*argv[])
@@ -258,7 +291,7 @@ char parse_args(int	argc, char	*argv[])
 	char	c;
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "e:u:d:t:f:q")) > 0) {
+	while ((c = getopt(argc, argv, "e:u:d:t:c:f:CRq")) > 0) {
 		switch (c) {
 		case 'd':						// use Database
 			getDatabasename(optarg);
@@ -276,6 +309,15 @@ char parse_args(int	argc, char	*argv[])
 			getDatabaseEngine(optarg);
 			break;
 
+		case 'c':
+			{
+				char	*modification, *condition;
+				modification = strtok (optarg, "|");
+				condition    = strtok (0L, "|");
+				doChangeCmd (ldb, modification, condition);
+			}
+			break;
+
 		case 'f':
 			{
 				char	*fields, *condition;
@@ -283,6 +325,14 @@ char parse_args(int	argc, char	*argv[])
 				condition = strtok (0L, "|");
 				doFindCmd (ldb, fields, condition);
 			}
+			break;
+
+		case 'C':
+			ldb->commit();
+			break;
+
+		case 'R':
+			ldb->rollback();
 			break;
 
 		case 'q':
@@ -295,7 +345,10 @@ char parse_args(int	argc, char	*argv[])
 			cout << "  -u username" << endl;
 			cout << "  -d database" << endl;
 			cout << "  -t table" << endl;
+			cout << "  -c 'modification|condition'" << endl;
 			cout << "  -f 'fieldlist|condition' or '*|*'" << endl;
+			cout << "  -C (commit)" << endl;
+			cout << "  -R (rollback)" << endl;
 			cout << "  -q " << endl;
 			cout << "All options except -q are repeatable." << endl;
 			exit (1);
@@ -333,6 +386,7 @@ int main (int argc, char *argv[])
 			break;
 
 		case 'c':						// Change record(s)
+			doChangeCmd (ldb, 0L, 0L);
 			break;
 
 		case 'r':						// Remove record(s)
@@ -341,6 +395,14 @@ int main (int argc, char *argv[])
 
 		case 'f':						// Find record(s)
 			doFindCmd (ldb, 0L, 0L);
+			break;
+
+		case 'C':
+			ldb->commit();
+			break;
+
+		case 'R':
+			ldb->rollback();
 			break;
 
 		case 'q':						// Quit
