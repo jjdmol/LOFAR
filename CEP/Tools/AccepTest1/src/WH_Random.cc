@@ -98,8 +98,8 @@ namespace LOFAR
 	  
 
 	  
-	    ((DH_CorrCube*)getDataManager().getOutHolder(0))->setBufferElement(sample, 
-									       channel,
+	    ((DH_CorrCube*)getDataManager().getOutHolder(0))->setBufferElement(channel, 
+									       sample,
 									       station,
 									       polarisation,
 									       &rval);
