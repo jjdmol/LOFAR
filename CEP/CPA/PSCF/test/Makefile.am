@@ -3,11 +3,10 @@ check_PROGRAMS			= test_crefs
 
 test_crefs_SOURCES 		= test_crefs.cc
 
-test_crefs_LDADD 			= $(top_builddir)/src/libpscf.a
+test_crefs_LDADD		= $(top_builddir)/src/libpscf.la
 
-TESTS	=					test_crefs
+TESTS				= test_crefs
 
-EXTRA_DIST = 					
+EXTRA_DIST			=
 
-
-include $(top_srcdir)/../../../autoconf_share/Makefile.common
+include $(lofar_sharedir)/Makefile.common
