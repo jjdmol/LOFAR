@@ -22,6 +22,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.6  2002/05/24 10:47:52  schaaf
+//  %[BugId: 11]%
+//  Removed ^M characters
+//
 //  Revision 1.5  2002/05/16 15:05:40  schaaf
 //  Added profiler state for process() method
 //
@@ -40,6 +44,7 @@
 
 #include <stdio.h>             // for sprintf
 #include <math.h>
+#include <unistd.h>
 
 #include "BaseSim/Step.h"
 #include "BaseSim/Profiler.h"
@@ -65,9 +70,7 @@ WH_FillTFMatrix::WH_FillTFMatrix (const string& name,
   itsSourceID   (sourceID)
 {
   TRACER4("Enter WH_FillTFMatrix C'tor " << name);
-  AssertStr (nin > 0,     "0 input DH_IntArray is not possible");
-  AssertStr (nout > 0,    "0 output DH_IntArray is not possible");
-  //   AssertStr (nout == nin, "number of inputs and outputs must match");
+  DbgAssertStr (nout > 0,    "0 output DH_IntArray is not possible");
   
   itsInHolders  = new DH_Empty* [nin];
   itsOutHolders = new DH_2DMatrix* [nout];
@@ -125,6 +128,7 @@ void WH_FillTFMatrix::process()
   {
     int timestep;
     int cnt=0;
+    int *Rowstartptr;
     DH_2DMatrix *DHptr;
     int Xsize,Ysize; 
     itsTime += (timestep = getOutHolder(0)->getXSize()); // increase the local clock
@@ -140,10 +144,11 @@ void WH_FillTFMatrix::process()
       Xsize = DHptr->getXSize();
       for (int x=0; x < Xsize; x++) {
 	Ysize = DHptr->getYSize();
+	Rowstartptr = DHptr->getBuffer(x,0);
 	for (int y=0; y < Ysize; y++) {
-	  // fill output buffer with random integer 0-99
-	  *(DHptr->getBuffer(x,y)) = 
+	  *(Rowstartptr+y) = 
 	    cnt++;
+	  // fill output buffer with random integer 0-99
 	  //(int)(100.0*rand()/RAND_MAX+1.0);
 	}
       }
