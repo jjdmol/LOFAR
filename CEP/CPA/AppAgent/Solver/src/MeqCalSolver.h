@@ -48,13 +48,13 @@
 #include <Solver/AID-Solver.h>
 
 #pragma aidgroup Solver
-#pragma aid SolvableParm SolvableFlag PeelNrs PredNrs
+#pragma aid SolvableParm SolvableFlag Peel Pred Index Apply
 #pragma aid Ant1 Ant2 AntMode CorrSel Niter UseSVD
 #pragma aid CalcUVW ModelType MEP GSM
 #pragma aid Save Parms Residuals
 #pragma aid SolvParams Rank Fit Errors CoVar Flag Mu StdDev Chi
 
-#pragma aid Domain Peel Solve Iter Num Intermediate Final 
+#pragma aid Domain Solve Iter Num Intermediate Final 
 #pragma aid Current Start End Time Tile Count
 
 namespace SolverControl
@@ -71,8 +71,8 @@ namespace SolverControl
 
   const HIID  SolvableParm        = AidSolvableParm;
   const HIID  SolvableFlag        = AidSolvableFlag;
-  const HIID  PeelNrs             = AidPeelNrs;
-  const HIID  PredNrs             = AidPredNrs;
+  const HIID  PeelNrs             = AidPeel|AidIndex;
+  const HIID  PredNrs             = AidPred|AidIndex;
   const HIID  Ant1                = AidAnt1;
   const HIID  Ant2                = AidAnt2;
   const HIID  AntMode             = AidAntMode;
@@ -81,6 +81,7 @@ namespace SolverControl
 
   const HIID  SaveParms           = AidSave|AidParms;
   const HIID  SaveResiduals       = AidSave|AidResiduals;
+  const HIID  ApplyPeel           = AidApply|AidPeel;
   
   // additional dataset header fields
   const HIID  FDomainStartTime    = AidDomain|AidStart|AidTime,
@@ -163,7 +164,7 @@ private:
   void saveParms();
 
     //##ModelId=3EC9F6EC0262
-  void saveResiduals (DataRecord::Ref& header);
+  void saveResiduals (DataRecord::Ref& header,bool apply_peel );
 
 
     //##ModelId=3EC9F6EC0265

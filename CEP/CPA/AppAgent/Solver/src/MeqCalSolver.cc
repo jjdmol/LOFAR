@@ -252,31 +252,38 @@ void MeqCalSolver::run ()
           if( control().startSolution(paramrec) != RUNNING ) {
             break;
           }
-          cdebug(2)<< "startSolution: "<<paramrec->sdebug(3)<<endl;
-          const DataRecord& params = *paramrec;
-          if (params[SolvableParm].exists()) {
-            setSolvable (params[SolvableParm], params[SolvableFlag]);
-            initParms();
-          }
-          if (params[PeelNrs].exists()) {
-            setPeel (params[PeelNrs],
-                     params[PredNrs].as_vector<int>(vector<int>()));
-          }
-          if (params[Ant1].exists()) {
-            solveSelect (params[Ant1], params[Ant2], params[AntMode][0],
-                         params[CorrSel]);
-          }
-  //        int niter = params[Niter].as<int>(0);
-  //        cdebug(2) << "niter=" << niter << endl;
-          bool useSVD = params[UseSVD].as<bool>(false);
           double converge = 1;
-          // iterate the solution until stopped
-          do {
-            solve (useSVD, domainheader);
-            converge -= 1;
+          try
+          {
+            cdebug(2)<< "startSolution: "<<paramrec->sdebug(3)<<endl;
+            const DataRecord& params = *paramrec;
+            if (params[SolvableParm].exists()) {
+              setSolvable (params[SolvableParm], params[SolvableFlag]);
+              initParms();
+            }
+            if (params[PeelNrs].exists()) {
+              setPeel (params[PeelNrs],
+                       params[PredNrs].as_vector<int>(vector<int>()));
+            }
+            if (params[Ant1].exists()) {
+              solveSelect (params[Ant1], params[Ant2], params[AntMode][0],
+                           params[CorrSel]);
+            }
+    //        int niter = params[Niter].as<int>(0);
+    //        cdebug(2) << "niter=" << niter << endl;
+            bool useSVD = params[UseSVD].as<bool>(false);
+            // iterate the solution until stopped
+            do 
+            {
+              solve (useSVD, domainheader);
+              converge -= 1;
+            }
+            while( control().endIteration(converge) == AppState::RUNNING );
           }
-          while( control().endIteration(converge) == AppState::RUNNING );
-
+          catch( std::exception &exc )
+          {
+            control().failSolution(string("solution failed: ")+exc.what());
+          }
           // if state is ENDSOLVE, end the solution properly
           if( control().state() == ENDSOLVE )
           {
@@ -431,17 +438,16 @@ void MeqCalSolver::endSolution (const DataRecord& endrec,
                                 DataRecord::Ref& header)
 {
   cdebug(2)<< "end solution: "<<endrec.sdebug(3)<<endl;
-  if (endrec[SaveParms].exists()) {
-    Bool flag = endrec[SaveParms];
-    if (flag) {
+  try
+  {
+    if( endrec[SaveParms].as<bool>(False) )
       saveParms();
-    }
+    if( endrec[SaveResiduals].as<bool>(False) ) 
+      saveResiduals(header,endrec[ApplyPeel].as<bool>(False));
   }
-  if (endrec[SaveResiduals].exists()) {
-    Bool flag = endrec[SaveResiduals];
-    if (flag) {
-      saveResiduals (header);
-    }
+  catch( std::exception &exc )
+  {
+    control().postEvent(FailSolutionEvent,string("error ending solution")+exc.what());
   }
 }
 
@@ -1523,7 +1529,7 @@ void MeqCalSolver::saveParms()
 }
 
 //##ModelId=3EC9F6EC0262
-void MeqCalSolver::saveResiduals (DataRecord::Ref& header)
+void MeqCalSolver::saveResiduals (DataRecord::Ref& header,bool apply_peel)
 {
   cdebug(1) << "saveResidualData" << endl;
 
@@ -1565,7 +1571,7 @@ void MeqCalSolver::saveResiduals (DataRecord::Ref& header)
     Assert (blnr < int(itsBLIndex.size()));
     int blindex = itsBLIndex[blnr];
     Assert (blnr >= 0);
-    for (VisTile::const_iterator iter = visTile.begin();
+    for (VisTile::iterator iter = visTile.begin();
          iter != visTile.end();
          iter++) 
     {
@@ -1578,7 +1584,7 @@ void MeqCalSolver::saveResiduals (DataRecord::Ref& header)
       MeqJonesExpr& expr = *(itsExpr[blindex]);
       expr.calcResult (request);
       // Get the data and resdata of this row for the given channels.
-      const LoMat_fcomplex data (iter.data());
+      LoMat_fcomplex data (iter.data());
       LoMat_fcomplex resdata (iter.residuals());
       int npol = data.shape()[0];
       int nchan = data.shape()[1];
@@ -1614,6 +1620,8 @@ void MeqCalSolver::saveResiduals (DataRecord::Ref& header)
       } else {
         AssertMsg(false, "Number of polarizations should be 1, 2, or 4");
       }
+      if( apply_peel )
+        data = resdata;
     }
     // change the tile back to read-only
     itsVisTiles[i].privatize(DMI::READONLY|DMI::DEEP);
