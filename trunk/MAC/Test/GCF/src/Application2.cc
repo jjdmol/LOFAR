@@ -1623,7 +1623,15 @@ GCFEvent::TResult Application::finished(GCFEvent& e, GCFPortInterface& /*p*/)
 
   switch (e.signal)
   {
+    case TST_TESTREADY:
+    {
+      TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
+      assert(pIndication);
+      _curRemoteTestNr = pIndication->testnr;
+      //intentional fall through
+    }
     case F_ENTRY_SIG:
+      if (_curRemoteTestNr != 501) break;     
       fprintf(stderr, "Ready with tests: passed %d, failed %d\n", _passed, _failed);    
       GCFTask::stop();    
       break;

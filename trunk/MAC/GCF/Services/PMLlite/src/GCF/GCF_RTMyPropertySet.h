@@ -149,7 +149,7 @@ class GCFRTMyPropertySet
     void addProperty(const string& propName, GCFRTMyProperty& prop);
     void clearAllProperties();
     bool cutScope(string& propName) const;
-    void init(const char* scope);
+    void init();
     
   private:
     GCFRTMyPropertySet();

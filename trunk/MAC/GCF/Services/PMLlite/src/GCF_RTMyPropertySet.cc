@@ -29,33 +29,32 @@
 GCFRTMyPropertySet::GCFRTMyPropertySet(const TPropertySet& propSet,
                                    const char* scope,
                                    GCFRTAnswer* pAnswerObj) : 
+  _scope((scope ? scope : (propSet.scope ? propSet.scope : ""))),
   _isLoaded(false),
   _pAnswerObj(pAnswerObj),
   _isBusy(false),
   _propSet(propSet),
   _dummyProperty(*this)
 {
-  init(scope);
+  init();
 }  
 
 GCFRTMyPropertySet::GCFRTMyPropertySet(const TPropertySet& propSet,
                                    GCFRTAnswer* pAnswerObj) : 
+  _scope((propSet.scope ? propSet.scope : "")),
   _isLoaded(false),
   _pAnswerObj(pAnswerObj),
   _isBusy(false),
   _propSet(propSet),
   _dummyProperty(*this)
 {
-  init(0);
+  init();
 }  
 
-void GCFRTMyPropertySet::init(const char* scope)
+void GCFRTMyPropertySet::init()
 {
   GCFRTMyProperty* pProperty;
   const char* propName;
-  
-  if (scope)  _scope = scope; 
-  else        _scope = _propSet.scope; 
   
   if (!Utils::isValidPropName(_scope.c_str()))
   {
