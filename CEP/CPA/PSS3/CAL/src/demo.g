@@ -167,21 +167,27 @@ solvepos := function(fname='michiel.demo', niter=1)
     return ref annotator;
 }
 
-initleakage := function(fname='michiel.demo')
+initparms := function(fname='michiel.demo')
 {
   pt := parmtable(spaste(fname,'.MEP'), T);
   if (is_fail(pt)) fail;
-  pt.putinit ('Leakage', 0);
-  pt.putinit ('Leakage.11', 1);
+  pt.putinit ('frot', 0);
+  pt.putinit ('drot', 0);
+  pt.putinit ('dell', 0);
+  pt.putinit ('gain.11', 1);
+  pt.putinit ('gain.22', 0);
   pt.done();
 }
 
-setleakage := function(fname='michiel.demo')
+setparms := function(fname='michiel.demo')
 {
   pt := parmtable(spaste(fname,'.MEP'), T);
   if (is_fail(pt)) fail;
-  pt.putinit ('Leakage', 0);
-  pt.putinit ('Leakage.11', 1.1);
+  pt.putinit ('frot', 0);
+  pt.putinit ('drot', 0);
+  pt.putinit ('dell', 0);
+  pt.putinit ('gain.11', 1);
+  pt.putinit ('gain.22', 0);
   pt.done()
 }
 

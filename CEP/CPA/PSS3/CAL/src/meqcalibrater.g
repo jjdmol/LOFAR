@@ -177,12 +177,13 @@ const _define_meqcalibrater := function(ref agent, id) {
     }
 
     self.getstatisticsRec := [_method="getstatistics", _sequence=self.id._sequence]
-    public.getstatistics := function (detailed=F) {
+    public.getstatistics := function (detailed=F, clear=T) {
     
         wider self;
         
         # argument assignment
         self.getstatisticsRec.detailed := detailed
+        self.getstatisticsRec.clear := clear
 
         # return
         return defaultservers.run(self.agent, self.getstatisticsRec);

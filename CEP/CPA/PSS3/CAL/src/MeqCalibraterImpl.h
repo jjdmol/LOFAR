@@ -135,8 +135,9 @@ public:
 
   /*!
    * Return some statistics (optionally detailed (i.e. per baseline)).
+   * If cleat is true, the statistics are cleared thereafter.
    */
-  GlishRecord getStatistics (bool detailed);
+  GlishRecord getStatistics (bool detailed, bool clear);
 
   /**
    * \defgroup DOStandard Standard Distributed Object methods.
