@@ -380,7 +380,7 @@ using LOFAR::getLogger;
 //#
 
 namespace LOFAR {
-	EXCEPTION_CLASS(AssertError,Exception)
+	EXCEPTION_CLASS(ASSERTError,Exception)
 }
 
 // The macro THROW first sends a logrequest to logger <module>.EXCEPTION
@@ -397,14 +397,14 @@ namespace LOFAR {
 // If the condition of assert is NOT met a logrequest is sent to the logger
 // <module>.EXCEPTION and an AsserError exception is thrown.
 #define ASSERT(cond) \
-	if (!(cond))  THROW(LOFAR::AssertError, "Assertion: " #cond)
+	if (!(cond))  THROW(LOFAR::ASSERTError, "Assertion: " #cond)
 #define ASSERTSTR(cond,stream) \
-	if (!(cond))  THROW(LOFAR::AssertError, "Assertion: " #cond "; " << stream)
+	if (!(cond))  THROW(LOFAR::ASSERTError, "Assertion: " #cond "; " << stream)
 
 // If the condition of failwhen is met a logrequest is sent to the logger
 // <module>.EXCEPTION and an AsserError exception is thrown.
 #define FAILWHEN(cond) \
-	if (cond)  THROW(LOFAR::AssertError, "Failtest: " #cond)
+	if (cond)  THROW(LOFAR::ASSERTError, "Failtest: " #cond)
 
 // The DBG... version of ASSERT and FAILWHEN will only be in your compiled
 // code when the (pre)compiler flag ENABLE_DBGASSERT is defined.
