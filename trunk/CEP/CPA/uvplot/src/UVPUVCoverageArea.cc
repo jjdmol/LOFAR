@@ -24,12 +24,6 @@ UVPUVCoverageArea::UVPUVCoverageArea(QWidget*            parent,
   : UVPDisplayArea(parent),
     itsCurrentImage(data)
 {
-  if(data != 0) {
-    itsCurrentQImage = new QImage(data->getN(UVPImageCube::X),
-                                  data->getN(UVPImageCube::Y), 32);
-  } else {
-    itsCurrentQImage = 0;
-  }
 }
 
 
@@ -39,9 +33,6 @@ UVPUVCoverageArea::UVPUVCoverageArea(QWidget*            parent,
 
 UVPUVCoverageArea::~UVPUVCoverageArea()
 {
-  if(itsCurrentQImage != 0) {
-    delete itsCurrentQImage;
-  }
 }
 
 
@@ -51,19 +42,7 @@ UVPUVCoverageArea::~UVPUVCoverageArea()
 
 void UVPUVCoverageArea::setData(const UVPImageCube* data=0)
 {
-  if(itsCurrentQImage != 0) {
-    delete itsCurrentQImage;
-  }
-
   itsCurrentImage = data;
-
-  if(data != 0) {
-    itsCurrentQImage = new QImage(data->getN(UVPImageCube::X),
-                                  data->getN(UVPImageCube::Y), 32);
-  } else {
-    itsCurrentQImage = 0;
-  }
-
 }
 
 
@@ -111,14 +90,10 @@ void UVPUVCoverageArea::drawView()
     
     buffer_painter.begin(&itsBuffer);
     
-    //    buffer_painter.drawImage(0, 0, *itsCurrentQImage);
 
     for(int x = 0; x < nx; x++) {
       for(int y = 0; y < ny; y++) {
         int val = 128.0 + 127.0* *(itsCurrentImage->getPixel(x, y)->getAverageValue());
-        //        itsCurrentQImage->setPixel(x,
-        //                         y,
-        //                         getColor(val)->rgb());
         buffer_painter.setPen(*getColor(val));
         buffer_painter.drawPoint(x, y);
       }
