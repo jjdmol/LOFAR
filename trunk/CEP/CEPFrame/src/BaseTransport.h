@@ -42,6 +42,8 @@
 
 */
 
+class Transportable;
+
 class BaseTransport
 {
 
@@ -90,6 +92,13 @@ public:
   /// True when data is valid; i.e. after a Read() or before a Write()
   bool isValid() const;
 
+  void setSourceTransportable (Transportable *);
+  Transportable * getSourceTransportable ();
+
+  void setTargetTransportable (Transportable *);
+  Transportable * getTargetTransportable ();
+
+
 private:
   /// Forbid assignment.
   BaseTransport& operator= (const BaseTransport&);
@@ -107,6 +116,9 @@ private:
 
   // Status of the BaseTransport object
   Status itsStatus;
+
+  Transportable * itsSourceTransportable;
+  Transportable * itsTargetTransportable;  
 };
 
 
@@ -147,5 +159,16 @@ inline BaseTransport::Status BaseTransport::getStatus() const
 inline bool BaseTransport::isValid() const
   { return ((getStatus() != Unknown) && (getStatus() != Dirty)); }
 
+inline void BaseTransport::setSourceTransportable (Transportable * t)
+  { itsSourceTransportable = t; }
+
+inline Transportable * BaseTransport::getSourceTransportable ()
+  { return itsSourceTransportable; }
+
+inline void BaseTransport::setTargetTransportable (Transportable * t)
+  { itsTargetTransportable = t; }
+
+inline Transportable * BaseTransport::getTargetTransportable () 
+  { return itsTargetTransportable; }
 
 #endif 
