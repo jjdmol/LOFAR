@@ -52,6 +52,16 @@ class GCFMyPropertySet : public GCFPropertySetBase
      */
     GCFMyPropertySet (const TPropertySet& propSet, 
                       GCFAnswer* pAnswerObj = 0);
+    /**
+     * Constructor
+     * Creates an property set with owned properties
+     * @param propSet the complete property set in ROM (incl. scope)
+     * @param scope explicite specified scope
+     * @param answerObj the call back object for answers on property set actions
+     */
+    GCFMyPropertySet (const TPropertySet& propSet, 
+                      const char* scope,
+                      GCFAnswer* pAnswerObj = 0);
     virtual ~GCFMyPropertySet ();
 
     /**
@@ -115,6 +125,7 @@ class GCFMyPropertySet : public GCFPropertySetBase
 
   private: // helper methods
     void retryLinking ();
+    void init();
     void dispatchAnswer (unsigned short sig, TGCFResult result);
     
   private:

@@ -1711,10 +1711,20 @@ GCFEvent::TResult Application::test501(GCFEvent& e, GCFPortInterface& /*p*/)
       if ((strcmp(pResponse->pScope, "B_RT1") == 0) &&
           (pResponse->result == GCF_NO_ERROR))
       {          
-        apc2.unload();
+        if (apc2.unload() != GCF_NO_ERROR)
+        {
+          TSTTestreadyEvent r(501);
+          if (_supTask1.getPort().isConnected())
+            _supTask1.getPort().send(r);
+          passed(501);
+          TRAN(Application::finished);        
+        }
       }
       else
       {
+        TSTTestreadyEvent r(501);
+        if (_supTask1.getPort().isConnected())
+          _supTask1.getPort().send(r);
         passed(501);
         TRAN(Application::finished);        
       }

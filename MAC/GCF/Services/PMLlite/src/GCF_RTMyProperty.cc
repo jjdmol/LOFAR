@@ -77,7 +77,7 @@ TGCFResult GCFRTMyProperty::setValue(const string value)
     result = GCF_PROP_WRONG_TYPE;
   else result = _pCurValue->setValue(value);
 
-  if ((_accessMode & GCF_READABLE_PROP) && _isLinked)
+  if ((_accessMode & GCF_READABLE_PROP) && _isLinked && result == GCF_NO_ERROR)
   {
     assert(_pCurValue);
     _propertySet.valueSet(getFullName(), *_pCurValue);
@@ -96,7 +96,7 @@ TGCFResult GCFRTMyProperty::setValue(const GCFPValue& value)
   else if (_pCurValue->copy(value) != GCF_NO_ERROR)
     result = GCF_PROP_WRONG_TYPE;
 
-  if ((_accessMode & GCF_READABLE_PROP) && _isLinked)
+  if ((_accessMode & GCF_READABLE_PROP) && _isLinked && result == GCF_NO_ERROR)
   {
     assert(_pCurValue);
     _propertySet.valueSet(getFullName(), *_pCurValue);

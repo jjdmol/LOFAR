@@ -35,6 +35,24 @@ GCFMyPropertySet::GCFMyPropertySet(const TPropertySet& propSet,
   _missing(0),
   _propSet(propSet)  
 {
+  init();
+}  
+
+GCFMyPropertySet::GCFMyPropertySet(const TPropertySet& propSet,
+                                   const char* scope,
+                                   GCFAnswer* pAnswerObj) : 
+  GCFPropertySetBase((scope ? scope : propSet.scope), pAnswerObj),
+  _isLoaded(false),
+  _isBusy(false),
+  _counter(0),
+  _missing(0),
+  _propSet(propSet)  
+{
+  init();
+}
+
+void GCFMyPropertySet::init()
+{
   GCFMyProperty* pProperty;
   const char* propName;
   for (unsigned int i = 0; i < _propSet.nrOfProperties; i++)
@@ -52,11 +70,11 @@ GCFMyPropertySet::GCFMyPropertySet(const TPropertySet& propSet,
           propName));      
     }
   }
-  if (pAnswerObj)
+  if (getAnswerObj())
   {
-    setAnswer(pAnswerObj);
+    setAnswer(getAnswerObj());
   }
-}  
+}
 
 GCFMyPropertySet::~GCFMyPropertySet ()
 {

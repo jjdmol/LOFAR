@@ -100,7 +100,6 @@ unsigned long GTMTimerHandler::setTimer(GCFRawPort& port,
 					void*  arg)
 {
   unsigned long timerid(0);
-  unsigned long foundTimerID(1);
 
   if (_timers.empty()) saveDateTime(); // start timer
 
@@ -110,9 +109,8 @@ unsigned long GTMTimerHandler::setTimer(GCFRawPort& port,
   {
     timerid++;
     iter = _timers.find(timerid);
-    foundTimerID = iter->first;
   }
-  while (foundTimerID == timerid);
+  while (iter != _timers.end());  
 
   GTMTimer* pNewTimer = new GTMTimer(port, 
 				     timerid,
@@ -129,7 +127,7 @@ int GTMTimerHandler::cancelTimer(unsigned long timerid, void** arg)
   int result(0);
   GTMTimer* pCurTimer(0);
   TTimerIter iter = _timers.find(timerid);
-  if (iter->first != timerid)
+  if (iter == _timers.end())
     return result;
   pCurTimer = iter->second; //second is of type GTMTimer*
   if (pCurTimer)

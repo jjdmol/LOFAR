@@ -66,7 +66,7 @@ TGCFResult GCFMyProperty::setValue(const string value)
     result = GCF_PROP_WRONG_TYPE;
   else result = _pCurValue->setValue(value);
 
-  if ((_accessMode & GCF_READABLE_PROP) && exists())
+  if ((_accessMode & GCF_READABLE_PROP) && exists() && result == GCF_NO_ERROR)
   {
     assert(_pCurValue);
     result = GCFPropertyBase::setValue(*_pCurValue);    
@@ -86,7 +86,7 @@ TGCFResult GCFMyProperty::setValue(const GCFPValue& value)
   else if (_pCurValue->copy(value) != GCF_NO_ERROR)
     result = GCF_PROP_WRONG_TYPE;
 
-  if ((_accessMode & GCF_READABLE_PROP) && exists())
+  if ((_accessMode & GCF_READABLE_PROP) && exists() && result == GCF_NO_ERROR)
   {
     assert(_pCurValue);
     result = GCFPropertyBase::setValue(*_pCurValue);    
