@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.8  2002/05/13 12:50:57  schaaf
+//  removed screen debug output
+//
 //  Revision 1.7  2002/05/08 14:28:37  wierenga
 //  DataHolder allocation moved from constructor to preprocess to be able to
 //  use TransportHolder::allocate.
@@ -87,7 +90,7 @@ void DH_GrowSize::preprocess()
   // the buffer starts after the DataPacket object
   itsDataPacket->itsBuffer = (BufferType*)(ptr + sizeof(DataPacket)); 
   // fill with zeroes
-  for (unsigned int i=0; i<itsBufSize; i++) {
+  for (int i=0; i<itsBufSize; i++) {
     itsDataPacket->itsBuffer[i] = 0;
   }
   
