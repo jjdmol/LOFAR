@@ -11,7 +11,7 @@ class NoSuchBlackBoardComponentException //:public std::runtime_error
     //##ModelId=3F4232F502CE
       NoSuchBlackBoardComponentException(const std::string &txt):messg(txt)//std::runtime_error(txt.c_str())
       {
-         DEBUG("creating my own " << typeid(NoSuchBlackBoardComponentException).name() << " what? " << what());
+         DEBUG(std::string("creating my own ") + typeid(NoSuchBlackBoardComponentException).name() + " what? " + what());
       }
 
     //##ModelId=3F4CB72C0148

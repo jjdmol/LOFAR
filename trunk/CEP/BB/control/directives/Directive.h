@@ -2,17 +2,28 @@
 #define DIRECTIVE_H_HEADER_INCLUDED_C0C4E44C
 
 #include <vector>
+#include <string>
+
+#include "DirectiveData.h"
 
 //##ModelId=3F3B37F70213
 class Directive
 {
-  public:
+ public:
     //##ModelId=3F3B9602002E
-    virtual void deploy() = 0;
+  //  virtual void deploy() = 0;
     //##ModelId=3F433C9E0159
-    std::vector<Directive> *getParts();
+  std::vector<Directive> &getParts();
 
-
+  Directive(const std::string &id = std::string("start"),
+	    const std::string &text = std::string(""));
+ private:
+  std::string getScript();
+  void setScript(const std::string& text);
+ private:
+  static const std::string tableName;
+  std::string id;
+  std::string text;
 };
 
 

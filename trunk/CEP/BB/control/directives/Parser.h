@@ -18,7 +18,7 @@ class Parser
   const std::string &getText() const;
 
   //##ModelId=3F4DE3CF031C
-  const std::vector<Directive> &getNested() const;
+  std::vector<Directive> &getNested();
 
     //##ModelId=3F534BAA00CC
   Parser():txt(""),nested(){};
@@ -31,8 +31,7 @@ class Parser
   //##ModelId=3F53423103C8
   std::vector<Directive> nested;
 
-  std::vector<std::string> &parse(std::string txt);
-      
+  void parse(std::string txt);
 };
 
 #endif /* PARSER_H_HEADER_INCLUDED_C0B1CBD5 */

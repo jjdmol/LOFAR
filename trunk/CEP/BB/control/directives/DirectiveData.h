@@ -6,8 +6,9 @@
 //##ModelId=3F4DC5270157
 class DirectiveData
 {
-    //##ModelId=3F4DCB93005D
-    std::string id;
+ public:
+  //##ModelId=3F4DCB93005D
+  std::string id;
 
     //##ModelId=3F4DCC880271
     //##Documentation
@@ -36,10 +37,15 @@ class DirectiveData
     //## do montecarlo{
     //##  ...
     //## }
-    std::string text;
+  std::string text;
 
+  DirectiveData(const std::string& initId,
+		const std::string& initText):
+    id(initId),
+    text(initText)
+  {}
+
+  DirectiveData():id(""),text(""){}
 };
-
-
 
 #endif /* DIRECTIVEDATA_H_HEADER_INCLUDED_C0B1CAD2 */

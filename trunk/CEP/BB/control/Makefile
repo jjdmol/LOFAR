@@ -32,30 +32,47 @@ DTLINCLUDE = ${HOME}/include/dtl
 DTLLIBDIR  = ${HOME}/lib
 DTLLIB     = -lDTL
 
-SOURCES = \
+CPP_SOURCES = \
 		blackboard/MPIProgramEntry.cpp \
 		blackboard/BlackBoard.cpp \
 		blackboard/main.cpp \
 		control/Control.cpp \
+		control/ControllerFactory.cpp \
 		control/TopLevelStrategy.cpp \
 		knowledge/WorkerWrapper.cpp \
 		directives/Directive.cpp\
+		directives/TopLevelDirective.cpp\
 		directives/DirectiveData.cpp\
 		directives/Parser.cpp\
 
 #		directives/SelectScriptID.cpp\
 
 
-OBJS       = $(SOURCES:.cpp=.o)
+CPP_OBJS	= $(CPP_SOURCES:.cpp=.o)
 
-FLEX	= ${HOME}/bin/flex
-BISON	= ${HOME}/bin/bison
+CC_SOURCES	= parser/parse_util.o
+
+CC_OBJS	= $(CC_SOURCES:.cc=.o)
+
+PARSER_SOURCES	= selfparse.tab.c lex.selfparse.c
+
+PARSER_OBJS	= $(PARSER_SOURCES:.c=.o)
+
+OBJS	= $(CPP_OBJS) \
+	$(CC_OBJS) \
+	$(PARSER_OBJS)
+
+#FLEX	= ${HOME}/bin/flex
+FLEX	= /usr/bin/flex
+#BISON	= ${HOME}/bin/bison
+BISON	= /usr/local/bison-1.875/bin/bison
+BISON_LDLIBS	= -L/usr/local/bison-1.875/lib -ly
 CXX     = g++
 CC      = gcc
 #OPT     = -O3
 COPT     = -pg -g
 
-BISONFLAGS = --defines --debug --locations --graph --token-table --report=all
+BISONFLAGS = --defines --debug --token-table
 #BISONFLAGS = --defines --debug --locations --graph --token-table --report=all
 FLEXFLAGS  = # --bison-bridge --bison-locations --trace --yylineno --nodefault #--debug --verbose
 CFLAGS     = -Wall -D_REENTRANT -I./ -I$(DTLINCLUDE) $(MPI_INCLUDES) $(MPI_CXX_INCLUDES) $(COPT) $(CC_MACH_FLAGS) 
@@ -97,14 +114,14 @@ new:
 lex.%.c:	parser/%.l Makefile
 	$(FLEX) -P$* $(FLEXFLAGS) $<
 
-lex.%.cc:	%.l Makefile
+lex.%.cc:	parser/%.l Makefile
 	$(FLEX) -+ -P$* $(FLEXFLAGS) $<
 
 %.tab.c:	parser/%.y Makefile
 	$(BISON) -p$* $(BISONFLAGS) parser/$*.y
 
 read_script:	parser/parse_util.o parser/main.o selfparse.tab.o lex.selfparse.o
-	$(CXX) $+ -o $@ -lfl -ly
+	$(CXX) $+ -o $@ -lfl $(BISON_LDLIBS)
 
 lex.selfparse.o:	lex.selfparse.c
 

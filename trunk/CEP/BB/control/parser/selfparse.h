@@ -44,7 +44,7 @@ extern "C" {
 }
 #endif
 
-extern char * filename;
+//extern char * scriptname; // needs to be defined elsewhere
 extern char * branch;
 
 #ifdef __cplusplus // don't include this in the real-c code

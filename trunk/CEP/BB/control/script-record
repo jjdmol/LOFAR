@@ -1,6 +1,7 @@
-calibrate_observation {
+insert into scripts values ('start',
+'calibrate_observation {
   competition {
-    part peeling [ source 2 + /* syntax error '+' instead of '-' */ 5 , 6 , 1 ] {
+    part peeling [ source 2 + 5 , 3:6 , 1 ] {
       collaboration {
 /*
  some traditional comment
@@ -27,6 +28,5 @@ calibrate_observation {
         part start.1.2  // some controversial comment
       }
     }
-    part start.0 // this is going to lead to unexpected results
   }
-}
+}');

@@ -8,10 +8,10 @@ class DirectiveFactory
 {
   public:
     //##ModelId=3F6EC39F02EE
-    static Directive makeDirective(
+    static Directive & makeDirective(
         //##Documentation
         //## The data from the database (or file).
-        DirectiveData data);
+        const DirectiveData & data);
 
 };
 

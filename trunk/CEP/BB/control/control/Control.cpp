@@ -4,5 +4,6 @@
 //##ModelId=3F3B90830399
 void Control::addDirective(Directive *directive)// throw(NullPointerException)
 {
+  itsDirective = directive;
 }
 
