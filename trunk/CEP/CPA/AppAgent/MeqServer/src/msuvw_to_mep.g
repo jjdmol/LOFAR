@@ -3,7 +3,7 @@ include 'meq/meqtypes.g'
 include 'meq/meptable.g'
 
 
-const fill_uwv := function (msname,mepname,ddid=0,name="%s.%d",create=T)
+const fill_uvw := function (msname,mepname,ddid=0,name="%s.%d",create=T)
 {
   ms := table(msname);
   mep := meq.meptable(mepname,create=create);
