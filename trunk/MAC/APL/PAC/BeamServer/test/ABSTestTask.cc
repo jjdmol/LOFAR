@@ -1,5 +1,5 @@
 //#
-//#  ABSTest.cc: class definition for the Beam Server task.
+//#  ABSTestDriver.cc: class definition for the Beam Server task.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)

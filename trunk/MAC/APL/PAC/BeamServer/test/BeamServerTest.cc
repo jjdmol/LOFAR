@@ -24,8 +24,8 @@
 #include "ABSSpectralWindow.h"
 #include "ABSBeam.h"
 
-#include "../../../APLCommon/src/test.cpp"
-#include "../../../APLCommon/src/suite.cpp"
+#include "test.h"
+#include "suite.h"
 
 #include <iostream>
 

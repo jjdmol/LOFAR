@@ -1,0 +1,16 @@
+[AVTStub]
+host=localhost
+beam_server.type=TCP
+# empty
+
+[ABS]
+cmd=../src/BeamServer
+host=localhost
+client.type=TCP
+client.port=30230
+
+[EPAStub]
+host=localhost
+client.type=TCP
+client.port=30231
+
