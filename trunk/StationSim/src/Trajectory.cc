@@ -28,12 +28,6 @@ Trajectory::Trajectory (string config_file, int fs, double length)
 {
   ifstream configfile (config_file.c_str (), ifstream::in);
   string s;
-  LoVec_double pointPhi;
-  LoVec_double pointTheta;
-  LoVec_double pointTime;
-
-  // DEBUG
-  itsFileOut.open ("/home/alex/interpolation.txt");
 
   while (!configfile.eof () && configfile.is_open ()) {
     s = "";
@@ -49,50 +43,20 @@ Trajectory::Trajectory (string config_file, int fs, double length)
     } else if (s == "points") {
       configfile >> s;    
 	  if (s == ":") {
-		pointPhi.resize (itsNpoints);
-		pointTheta.resize (itsNpoints);
-		pointTime.resize (itsNpoints);
+		itsPhi.resize (itsNpoints);
+		itsTheta.resize (itsNpoints);
+		itsTime.resize (itsNpoints);
 		for (int i = 0; i < itsNpoints; ++i) {
-		  configfile >> pointPhi (i);
-		  configfile >> pointTheta (i);
-		  configfile >> pointTime (i);
+		  configfile >> itsPhi (i);
+		  configfile >> itsTheta (i);
+		  configfile >> itsTime (i);
 		}
       }
     }
   }
 
-  // DEBUG
-  itsFileOut << "Length : " << itsFs * itsLength << endl;
-  itsFileOut << "Type   : " << itsType << endl << endl;
-  itsFileOut << "Time\t" << "Phi\t" << "Theta\t" << endl;
-
-  // File read in now create the phi and theta vectors
-  
-  if (itsType == "steady") {
-	itsPhi.resize (1);
-	itsTheta.resize (1);
-	itsPhi (0) = pointPhi (0);
-	itsTheta (0) = pointTheta (0);
-  } else if (itsType == "variable") {
-	  itsPhi.resize ((int)(itsFs * itsLength));
-	  itsTheta.resize ((int)(itsFs * itsLength));
-	   
-	  for (int i = 1; i < itsNpoints; ++i) {
-		int b = (int) (pointTime(i-1) * itsFs * itsLength);
-		int e = (int) ((pointTime(i) - pointTime(i-1)) * itsFs * itsLength);
-		for (int j = 0; j < e; ++j) {
-		  itsPhi (b+j) = (pointPhi(i) - pointPhi(i-1)) / e * j + pointPhi(i-1);
-		  itsTheta (b+j) = (pointTheta(i) - pointTheta(i-1)) / e * j + pointTheta(i-1);
-		  
-		  // DEBUG
-		  itsFileOut << b+j << "\t" << itsPhi(b+j) << "\t" << itsTheta(b+j) << "\t" << endl;
-		}
-	  }
-  } else if (itsType == "cyclic") {
-	// do cyclic stuff
-  } else {
-	// ERROR
-  }
+  //DEBUG
+  itsFileOut.open("/home/alex/trajectory.txt");
 }
 
 Trajectory::~Trajectory ()
@@ -103,23 +67,59 @@ Trajectory::~Trajectory ()
 double Trajectory::getPhi (int index)
 {
   Assert (index < itsFs * itsLength);
-  if (itsType == "steady") {
-	return itsPhi (0);
-  } else if (itsType == "variable") {
-	return itsPhi (index);
-  } else if (itsType == "cyclic") {
-	return itsPhi (index); //DEBUG
-  }
+  if (itsType == "steady") 
+	{
+	  return itsPhi (0);
+	} 
+  else if (itsType == "variable") 
+	{ 
+	  int i;
+	  // Get the good time points
+	  for (i = 0; itsTime(i) * itsFs * itsLength <= index; ++i)
+		;
+
+	  int dY = (int) ((itsTime(i) - itsTime(i-1)) * itsFs * itsLength);
+	  double dX =  itsPhi(i) - itsPhi(i-1);
+	  
+	  // DEBUG
+	  itsFileOut << itsPhi(i-1) + (dX / dY) * (index - (itsTime(i-1) * itsFs * itsLength)) 
+				 << "\t";
+
+	  return itsPhi(i-1) + (dX / dY) * (index - (itsTime(i-1) * itsFs * itsLength));
+	} 
+  else if (itsType == "cyclic") 
+	{
+	  return itsPhi (index); //DEBUG
+	}
+  else return 0;
 }
 
 double Trajectory::getTheta (int index)
 {
   Assert (index < itsFs * itsLength);
-  if (itsType == "steady") {
-	return itsTheta (0);
-  } else if (itsType == "variable") {
-	return itsTheta (index);
-  } else if (itsType == "cyclic") {
-	return itsPhi (index); //DEBUG
-  }
+  if (itsType == "steady") 
+	{
+	  return itsTheta (0);
+	} 
+  else if (itsType == "variable") 
+	{
+	  int i;
+	  // Get the good time points
+	  for (i = 0; itsTime(i) * itsFs * itsLength <= index; ++i)
+		;
+
+	  int dY = (int) ((itsTime(i) - itsTime(i-1)) * itsFs * itsLength);
+	  double dX = itsTheta(i) - itsTheta(i-1);
+	  
+	  // DEBUG
+	  itsFileOut << itsTheta(i-1) + (dX / dY) * (index - (itsTime(i-1) * itsFs * itsLength)) 
+				 << "\t" << index << endl;
+
+	  return itsTheta(i-1) + (dX / dY) * (index - (itsTime(i-1) * itsFs * itsLength));
+	} 
+  else if (itsType == "cyclic") 
+	{
+	  return itsTheta (index); //DEBUG
+	}
+  else return 0;
 }
