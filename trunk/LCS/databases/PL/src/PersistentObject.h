@@ -153,10 +153,10 @@ namespace LOFAR
       // stored object if it did not already exist in the database.
       void insert() const;
 
-//       // This method will typically be used to refresh an instance of 
-//       // PersistentObject that already resides in memory. We will need it if
-//       // another process or thread changed the data in the database.
-//       void retrieve();
+      // This method will typically be used to refresh an instance of 
+      // PersistentObject that already resides in memory. We will need it if
+      // another process or thread changed the data in the database.
+      void retrieve();
       
       // Set the data in this PersistentObject equal to the data in the
       // database belonging to the object with the specified ObjectId.
