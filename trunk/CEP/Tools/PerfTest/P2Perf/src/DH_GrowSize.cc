@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1  2001/08/16 15:14:22  wierenga
+//  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
+//
 //
 //
 //////////////////////////////////////////////////////////////////////
@@ -36,8 +39,8 @@ DH_GrowSize::DH_GrowSize (const string& name, unsigned int nbuffer)
   unsigned int size = sizeof(DataPacket) + (nbuffer * sizeof(BufferType));
   char* ptr = new char[size];
 
-  cout << "size = " << size << endl;
-  cout << "sizeof(BufferType) = " << sizeof(BufferType) << endl;
+  //cout << "size = " << size << endl;
+  //cout << "sizeof(BufferType) = " << sizeof(BufferType) << endl;
 
   // Fill in the data packet pointer and initialize the memory.
   itsDataPacket = (DataPacket*)(ptr);
@@ -52,7 +55,8 @@ DH_GrowSize::DH_GrowSize (const string& name, unsigned int nbuffer)
   // Initialize base class.
   setDataPacket (itsDataPacket, size);
 
-  reportedDataPacketSize = 2; /* initial packet size */
+  reportedDataPacketSize = sizeof(DataPacket); /* initial packet size */
+  floatDataPacketSize = (float)reportedDataPacketSize;
 }
 
 DH_GrowSize::~DH_GrowSize()

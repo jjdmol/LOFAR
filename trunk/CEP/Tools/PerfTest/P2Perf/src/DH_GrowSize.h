@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1  2001/08/16 15:14:22  wierenga
+//  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
+//
 //  Revision 1.1  2001/08/09 15:48:48  wierenga
 //  Implemented first version of TH_Corba and test program
 //
@@ -83,6 +86,7 @@ private:
   BufferType* itsBuffer;
 
   int reportedDataPacketSize;
+  float floatDataPacketSize;
 };
 
 inline void DH_GrowSize::setCounter (int counter)
@@ -103,7 +107,8 @@ inline bool DH_GrowSize::increaseSize(float factor)
   
   if (reportedDataPacketSize * factor < this->DataHolder::getDataPacketSize())
   {
-    reportedDataPacketSize = (int)(reportedDataPacketSize * factor);
+    floatDataPacketSize *= factor;
+    reportedDataPacketSize = (int)floatDataPacketSize;
     success = true;
   }
 
@@ -119,6 +124,7 @@ inline bool DH_GrowSize::setInitialDataPacketSize(int initialSize)
 
   if (initialSize < this->DataHolder::getDataPacketSize())
   {
+    floatDataPacketSize = initialSize;
     reportedDataPacketSize = initialSize;
     success = true;
   }

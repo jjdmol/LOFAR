@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2001/08/16 15:14:22  wierenga
+//  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
+//
 //  Revision 1.2  2001/08/13 12:22:56  schaaf
 //  Use BS_Corba class
 //
@@ -30,6 +33,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <stdio.h>
 #include "Transport.h"
 #include "Step.h"
 #include "SeqSim.h"
@@ -37,10 +41,12 @@
 #include "Profiler.h"
 #include "WH_Empty.h"
 #include "WH_GrowSize.h"
+#include "ParamBlock.h"
 #include TRANSPORTERINCLUDE
 
 #ifdef CORBA_
 #include "BS_Corba.h"
+#include "TH_Corba.h"
 #endif
 
 #include "firewalls.h"
@@ -54,22 +60,22 @@
    This class is an example of a concrete Simulator.
 */
 
-RingSim::RingSim()
+SeqSim::SeqSim()
 {
   workholders = NULL;
   steps       = NULL;
 }
 
-RingSim::~RingSim()
+SeqSim::~SeqSim()
 {
   undefine();
 }
 
 /**
-   define function for the RingSim simulation. It defines a list
+   define function for the SeqSim simulation. It defines a list
    of steps that each process a part of the data.
  */
-void RingSim::define()
+void SeqSim::define(const ParamBlock& params)
 {
 #ifdef CORBA_
   // Start Orb Environment
@@ -81,6 +87,7 @@ void RingSim::define()
   int    argc = 0;
   char** argv = NULL;
   int    divisor = -1;
+  TH_Corba corbaProto;
 
   unsigned int rank = TRANSPORTER::getCurrentRank();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
@@ -102,10 +109,10 @@ void RingSim::define()
     }
   }
 
-  cout << "RingSim Processor " << rank << " of " << size << " operational."
+  cout << "SeqSim Processor " << rank << " of " << size << " operational."
        << flush << endl;
 
-  Simul *simul = new Simul(new WH_Empty(), "RingSim", 0);
+  Simul *simul = new Simul(new WH_Empty(), "SeqSim", 0);
   setSimul(simul);
   simul->runOnNode(0);
 
@@ -114,7 +121,9 @@ void RingSim::define()
 
   for (int iStep = 0; iStep < NR_OF_STEPS; iStep++)
   {
-    workholders[iStep] = new WH_GrowSize("GrowSize", (iStep==0?true:false), 1, 1, 1024*1024*10);
+    char name[20];
+    sprintf(name, "GrowSize[%d]", iStep);
+    workholders[iStep] = new WH_GrowSize(name, (iStep==0?true:false), 1, 1, 1024*1024*10);
     steps[iStep] = new Step(workholders[iStep], "GrowSizeStep", iStep);
 
     steps[iStep]->runOnNode(iStep);
@@ -126,7 +135,7 @@ void RingSim::define()
 
     if (iStep > 0)
     {
-      steps[iStep]->connectInput(steps[iStep-1]);
+      steps[iStep]->connectInput(steps[iStep-1], corbaProto);
     }
   }
   
@@ -148,7 +157,7 @@ void doIt (Simul *simul, const std::string& name, int nsteps)
   cout << endl << "Start Processing simul " << name << endl;    
   for (int i=0; i<nsteps; i++) {
     if (i==2) Profiler::activate();
-    cout << "Call simul->process() " << i << endl;
+    // cout << "Call simul->process() " << i << endl;
     simul->process();
     if (i==5) Profiler::deActivate();
   }
@@ -163,18 +172,20 @@ void doIt (Simul *simul, const std::string& name, int nsteps)
   TRANSPORTER::finalize();
 }
 
-void RingSim::run()
+void SeqSim::run(int nSteps)
 {
+  nSteps = nSteps;
+
   if (NULL == getSimul())
   {
     cout << "Simulator not defined." << endl;
     return;
   }
 
-  doIt(getSimul(), "RingSimulator", 23);
+  doIt(getSimul(), "SeqSimulator", nSteps);
 }
 
-void RingSim::dump() const
+void SeqSim::dump() const
 {
   if (NULL == getSimul())
   {
@@ -184,12 +195,12 @@ void RingSim::dump() const
   getSimul()->dump();
 }
 
-void RingSim::quit()
+void SeqSim::quit()
 {
   
 }
 
-void RingSim::undefine()
+void SeqSim::undefine()
 {
   if (workholders)
   {

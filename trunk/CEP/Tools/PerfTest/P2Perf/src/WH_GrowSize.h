@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1  2001/08/16 15:14:23  wierenga
+//  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
+//
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -29,6 +32,7 @@
 
 #include "WorkHolder.h"
 #include "DH_GrowSize.h"
+#include "StopWatch.h"
 
 
 /**
@@ -82,6 +86,10 @@ private:
   int itsBufLength;
   /// Is this the first WorkHolder in the simulation chain?
   bool itsFirst;
+
+  /// Used to do timing on communication
+  StopWatch watch;
+  int       iteration;
 };
 
 

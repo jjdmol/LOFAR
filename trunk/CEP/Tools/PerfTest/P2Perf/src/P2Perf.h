@@ -1,4 +1,4 @@
-//  RingSim.h: Concrete Simulator class for ring structure
+//  SeqSim.h: Concrete Simulator class for a sequence of steps
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2001/08/16 15:14:22  wierenga
+//  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
+//
 //  Revision 1.1  2001/08/09 15:48:48  wierenga
 //  Implemented first version of TH_Corba and test program
 //
@@ -32,19 +35,20 @@
 
 #include "Simulator.h"
 #include "WH_GrowSize.h"
+#include "ParamBlock.h"
 
 /**
    This class is an example of a concrete Simulator.
 */
 
-class RingSim: public Simulator
+class SeqSim: public Simulator
 {
 public:
-  RingSim();
-  virtual ~RingSim();
+  SeqSim();
+  virtual ~SeqSim();
 
-  virtual void define();
-  virtual void run();
+  virtual void define(const ParamBlock& params = ParamBlock());
+  virtual void run(int);
   virtual void dump() const;
   virtual void quit();
 
