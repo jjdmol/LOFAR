@@ -133,7 +133,8 @@ Socket::~Socket()
 	LOG_TRACE_OBJ (formatString("~Socket(%d)", itsSocketID));
 
 	if (itsSocketID >=0) {
-		shutdown ();
+		LOG_TRACE_FLOW(formatString("close(%d)", itsSocketID));
+		close (itsSocketID);
 	}
 
 	if (itsIsServer && (itsType == Socket::UNIX) && itsUnixAddr.sun_path[0]) {
