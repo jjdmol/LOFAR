@@ -67,9 +67,9 @@ namespace LOFAR
         itsQueryExpr(aExpr), itsUseString(false)
       {}
 
-      // Return the QueryObject as an SQL string. Depending on the value of
-      // \c itsUseString, this method will either return \c itsSqlString, or
-      // \c itsQueryExpr as a string.
+      // Return this QueryObject as an SQL WHERE clause. Depending on the
+      // value of \c itsUseString, this method will either return \c
+      // itsSqlString, or \c itsQueryExpr as a string.
       std::string getSql() const;
 
     private:

@@ -23,7 +23,6 @@
 #include <PL/Query.h>
 #include <Common/Debug.h>
 #include <sstream>
-#include <iostream>
 
 namespace LOFAR
 {
@@ -33,7 +32,7 @@ namespace LOFAR
     std::string QueryObject::getSql() const 
     {
       if (itsUseString) {
-        return itsSqlString;
+        return "WHERE " + itsSqlString;
       }
       else {
         std::ostringstream oss;
