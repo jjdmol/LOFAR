@@ -51,7 +51,9 @@
 class DH_VarSize: public LOFAR::DataHolder
 {
 public:
-  DH_VarSize (const string& name, unsigned int initialSize, unsigned int maxSize = 135000000); //maximum size in bytes
+  DH_VarSize (const string& name, 
+	      unsigned int initialSize, 
+	      unsigned int maxSize = 135000000); //maximum size in bytes
 
   virtual ~DH_VarSize();
 
@@ -66,13 +68,6 @@ public:
   virtual int getDataSize();
 
 protected:
-  // Definition of the DataPacket type.
-  class DataPacket: public DataHolder::DataPacket
-  {
-  public:
-    DataPacket(){};
-  };
-
   DH_VarSize (const DH_VarSize&);
 
 private:
@@ -81,7 +76,6 @@ private:
   DH_VarSize& operator= (const DH_VarSize&);
 
   // pointer to a dataPacket object
-  DataPacket* itsDataPacket;
   
   int itsMaxSpoofedDataSize;
   int itsSpoofedDataSize;
