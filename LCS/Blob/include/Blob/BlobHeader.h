@@ -79,9 +79,6 @@
 template<uint NAMELENGTH>
 class BlobHeader
 {
-friend class BlobOStream;
-friend class BlobIStream;
-
 public:
   // Construct for the given name and version.
   BlobHeader (const char* objectType, int version, uint level=0);
@@ -125,7 +122,7 @@ public:
   uint lengthOffset() const
     { return sizeof(uint32); }
 
-private:
+protected:
   uint32 itsMagicValue;
   uint32 itsLength;
   int16  itsVersion;
@@ -134,6 +131,19 @@ private:
   uchar  itsReservedLength;
   uchar  itsNameLength;
   char   itsName[(1+(NAMELENGTH+6-1)/8)*8-6];
+};
+
+
+class BlobHeaderBase : BlobHeader<0>
+{
+friend class BlobOStream;
+friend class BlobIStream;
+
+public:
+  // Construct for the given version.
+  explicit BlobHeaderBase (int version=0, uint level=0)
+    : BlobHeader<0> ("", version, level)
+    {}
 };
 
 

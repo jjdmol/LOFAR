@@ -58,7 +58,7 @@ const std::string& BlobIStream::getNextType()
     return itsObjectType;
   }
   // Read header and check the magic value and the level.
-  BlobHeader<0> hdr("", 0);
+  BlobHeaderBase hdr;
   itsStream->get ((char*)(&hdr), hdr.plainSize());
   Assert (hdr.checkMagicValue());
   Assert (itsLevel == hdr.itsLevel);
