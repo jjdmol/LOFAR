@@ -1,14 +1,18 @@
 include "../../../src/Glish/octopussy.g"
 
-test_hello := function (server="./test_glish",options="")
+test_hello := function (server="./octoglish",options="")
 {
   oct := octopussy(server=server,options=options);
   if( is_fail(oct) || !oct.connected() )
     fail 'unable to connect to server';
 
+  # setup initial subscriptions
 #  oct.subscribe("GW.Remote.Up.*");
   oct.subscribe("IMTestWP.HelloWorld.*");
   oct.subscribe("WP.Hello.IMTestWP.*");
+  
+  # start the system
+  oct.start();
  
   # create a ping message
   run := T;
@@ -43,7 +47,8 @@ test_hello := function (server="./test_glish",options="")
 
       if (msg::from !~ m/^GlishClientWP/)
       {
-	msg["Content"] := "from glish";
+      # remember to use single quotes -- double quotes imply a string array
+	msg["Content"] := 'from glish';
         res := oct.publish("IMTestWP.HelloWorld",msg);
         if( is_fail(res) ) print "publish failed",res;
       }
