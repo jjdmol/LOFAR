@@ -32,6 +32,13 @@
 #include <Common/lofar_list.h>
 #include <mpi.h>
 
+#ifndef USE_THREADS    // is we done not have threads available
+#ifndef THREAD_SAFE
+#define THREAD_SAFE    // we don't have threads; so thread_safety does not have to be added
+                       // we proceed as if we have a thread safe implementation already.
+#endif // THREAD_SAFE
+#endif // USE_THREADS
+
 #ifndef THREAD_SAFE
 #include <pthread.h>
 #endif

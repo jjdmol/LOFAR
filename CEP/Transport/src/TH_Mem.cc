@@ -36,10 +36,12 @@ namespace LOFAR
  * the Transport.
  */
 map<int, DataHolder*> TH_Mem::theSources;
+#ifdef USE_THREADS
 map<int, pthread_cond_t> TH_Mem::dataAvailable;
 map<int, pthread_cond_t> TH_Mem::dataReceived;
 
 pthread_mutex_t TH_Mem::theirMapLock = PTHREAD_MUTEX_INITIALIZER;  
+#endif
 
 TH_Mem::TH_Mem()
   : itsFirstSendCall (true),
@@ -75,6 +77,7 @@ bool TH_Mem::connectionPossible(int srcRank, int dstRank) const
 
 void TH_Mem::initConditionVariables(int tag)
 {
+#ifdef USE_THREADS
   if (dataAvailable.find(tag) == dataAvailable.end())
   {
     pthread_cond_t condAv;
@@ -87,6 +90,9 @@ void TH_Mem::initConditionVariables(int tag)
     pthread_cond_init(&condRecv, NULL);
     dataReceived[tag] = condRecv;
   }
+#else
+  LOG_WARN("initConditionVAriables not executed since compiled without USE_THREADS");
+#endif
 }
 
 bool TH_Mem::recvNonBlocking(void* buf, int nbytes, int tag)
@@ -140,6 +146,10 @@ bool TH_Mem::recvVarNonBlocking(int tag)
 
 bool TH_Mem::recvBlocking(void* buf, int nbytes, int tag)
 { 
+#ifndef USE_THREADS
+  LOG_ERROR("recvBlocking not available without USE_THREADS");
+  return false;
+#else
   LOG_WARN("TH_Mem::recvBlocking().Using blocking in-memory transport can cause a dead-lock.")
 
   pthread_mutex_lock(&theirMapLock);
@@ -175,6 +185,7 @@ bool TH_Mem::recvBlocking(void* buf, int nbytes, int tag)
   pthread_cond_signal(&dataReceived[tag]);
   pthread_mutex_unlock(&theirMapLock);
   return true;
+#endif // USE_THREADS
 }
 
 /**
@@ -182,6 +193,10 @@ bool TH_Mem::recvBlocking(void* buf, int nbytes, int tag)
  */
 bool TH_Mem::sendBlocking(void* buf, int nbytes, int tag)
 {
+#ifndef USE_THREADS
+  LOG_ERROR("sendBlocking not available without USE_THREADS");
+  return false;
+#else
   LOG_WARN("TH_Mem::sendBlocking(). Using blocking in-memory transport can cause a dead-lock."); 
 
   pthread_mutex_lock(&theirMapLock);
@@ -197,10 +212,16 @@ bool TH_Mem::sendBlocking(void* buf, int nbytes, int tag)
   pthread_mutex_unlock(&theirMapLock);
   
   return true;
+#endif //USE_THREADS
 }
 
 bool TH_Mem::recvVarBlocking(int tag)
 { 
+#ifndef USE_THREADS
+  LOG_ERROR("recvVarBlocking not available without USE_THREADS");
+  return false;
+#else
+
   LOG_WARN("TH_Mem::recvVarBlocking(). Using blocking in-memory transport can cause a dead-lock.");
 
   pthread_mutex_lock(&theirMapLock);
@@ -228,6 +249,7 @@ bool TH_Mem::recvVarBlocking(int tag)
   pthread_cond_signal(&dataReceived[tag]);
   pthread_mutex_unlock(&theirMapLock);
   return true;
+#endif //USE_THREADS
 }
 
 void TH_Mem::waitForBroadCast()
