@@ -1,4 +1,4 @@
-//#  PersistenceBroker.cc: handle save/retrieve of persistent objects.
+//#  PersistenceBroker.tcc: inline implementation of persistence broker class.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,7 +20,9 @@
 //#
 //#  $Id$
 
-#include <PL/PersistenceBroker.h>
+#include <PL/Exception.h>
+#include <PL/TPersistentObject.h>
+#include <PL/Collection.h>
 
 namespace LCS
 {
@@ -28,30 +30,10 @@ namespace LCS
   {
 
     template<typename T>
-    void PersistenceBroker::save(TPersistentObject<T>& tpo,
-				 enum SaveMode sm) const
-    {
-      switch(sm) {
-      case AUTOMATIC:
-	tpo.save(this);
-	break;
-      case INSERT:
-	tpo.insert(this);
-	break;
-      case UPDATE:
-	tpo.update(this);
-	break;
-      default:
-	THROW(BrokerException,"Invalid SaveMode");
-      }
-    }
-
-    template<typename T>
     Collection<TPersistentObject<T> >
-    PersistenceBroker::retrieveCollection(const Query& q) const
+    PersistenceBroker::retrieve(const Query& query, int maxObjects)
     {
-//       TPersistentObject<T>::retrieve(
-      return Collection<TPersistentObject<T> >();
+      return TPersistentObject<T>::retrieve(query, maxObjects);
     }
 
   } // namespace PL

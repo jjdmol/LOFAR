@@ -24,7 +24,8 @@
 #define LCS_PL_PERSISTENCEBROKER_H
 
 //# Includes
-#include <PL/Collection.h>
+#include <string>
+#include <climits>
 
 namespace LCS
 {
@@ -35,6 +36,7 @@ namespace LCS
     class ObjectId;
     class PersistentObject;
     template<typename T> class TPersistentObject;
+    template<typename T> class Collection;
 
     // 
     // PersistenceBroker is responsible for handling (bulk) save and retrieve 
@@ -56,33 +58,33 @@ namespace LCS
       // behaviour of the save method by specifying \c INSERT for the SaveMode.
       enum SaveMode { AUTOMATIC, INSERT, UPDATE };
 
+      // Connect to the database identified by the Data Source Name aDSN, 
+      // using aUid as user-id and aPwd as password.
+      void connect(const std::string& aDsn, const std::string& aUid, 
+                   const std::string& aPwd);
+
       // Erase the specified persistent object, i.e. delete it from the
-      // database and erase it from volatile memory.
+      // database.
+      // \throw LCS::PL::DeleteError
+      void erase(const PersistentObject& po) const;
+
+      // Erase all the objects in the collection. All objects will be deleted
+      // from the database.
       // \throw LCS::PL::DeleteError
       template<typename T>
-      void erase(const TPersistentObject<T>& tpo) const;
+      void erase(const Collection<TPersistentObject<T> >& ctpo) const;
 
       // Erase all persistent objects that match the specified query.
       // \throw LCS::PL::DeleteError
       void erase(const Query& q) const;
 
-      // Erase all the objects in the collection. All objects will be deleted
-      // from the database and erased from volatile memory.
-      // \throw LCS::PL::DeleteError
-      template<typename T>
-      void eraseCollection(const Collection<TPersistentObject<T> >& ctpo) const;
-
-      // Get one object matching the specified query. If more than one object
-      // matches the query, only the first match is returned.
-      template<typename T>
-      TPersistentObject<T> retrieve(const Query& q) const;
-
       // Retrieve a collection of persistent objects, that match a specific
-      // query.
+      // query. At most \c maxObjects are returned.
+      // \todo maxObjects should become part of the Query.
       // \throw LCS::PL::QueryError
       template<typename T> 
-      Collection<TPersistentObject<T> > 
-      retrieveCollection(const Query& q) const;
+      static Collection<TPersistentObject<T> > 
+      retrieve(const Query& q, int maxObjects = INT_MAX);
 
       // Save the specified persistent object. A new object will be inserted
       // into the database, an existing (already persistent) object will be 
@@ -91,8 +93,7 @@ namespace LCS
       // \note TPersistententObject<T> is passed non-const, because the
       // timestamp field will be modified to match the new timestamp in 
       // the database.
-      template<typename T>
-      void save(TPersistentObject<T>& tpo, enum SaveMode sm=AUTOMATIC) const;
+      void save(const PersistentObject& po, enum SaveMode sm=AUTOMATIC) const;
 
       // Save a collection of persistent objects. New objects will be inserted
       // into the database, existing objects will be updated. By specifying
