@@ -85,6 +85,23 @@ const char SCOPE_PIC_RackN_Alert[] =                                  "PIC_Rack%
 const char SCOPE_PIC_RackN_SubRackN_Alert[] =                         "PIC_Rack%d_SubRack%d_Alert";
 const char SCOPE_PIC_RackN_SubRackN_BoardN_Alert[] =                  "PIC_Rack%d_SubRack%d_Board%d_Alert";
 
+const char TYPE_PIC[]           = "TLOFAR_PIC";
+const char TYPE_Maintenance[]   = "TLOFAR_Maintenance";
+const char TYPE_Rack[]          = "TLOFAR_Rack";
+const char TYPE_Alert[]         = "TLOFAR_Alert";
+const char TYPE_SubRack[]       = "TLOFAR_SubRack";
+const char TYPE_Board[]         = "TLOFAR_Board";
+const char TYPE_MEPStatus[]     = "TLOFAR_MEPStatus";
+const char TYPE_SYNCStatus[]    = "TLOFAR_SYNCStatus";
+const char TYPE_ETH[]           = "TLOFAR_ETH";
+const char TYPE_BP[]            = "TLOFAR_BP";
+const char TYPE_AP[]            = "TLOFAR_AP";
+const char TYPE_RCU[]           = "TLOFAR_RCU";
+const char TYPE_ADCStatistics[] = "TLOFAR_ADCStatistics";
+const char TYPE_LFA[]           = "TLOFAR_LFA";
+const char TYPE_HFA[]           = "TLOFAR_HFA";
+
+
 // the following constants cannot be defined as const char because they are used
 // as char* elsewhere
 #define PROPNAME_STATUS          "status"
@@ -119,194 +136,102 @@ const char SCOPE_PIC_RackN_SubRackN_BoardN_Alert[] =                  "PIC_Rack%
 
 #define GCF_READWRITE_PROP (GCF_READABLE_PROP | GCF_WRITABLE_PROP)
 
-const TProperty PROPS_Station[] =
+const TPropertyConfig PROPS_Station[] =
 {
-  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-  {PROPNAME_STATISTICSSUBBANDMEAN, GCFPValue::LPT_DYNDOUBLE, GCF_READABLE_PROP, ""},
-  {PROPNAME_STATISTICSSUBBANDPOWER, GCFPValue::LPT_DYNDOUBLE, GCF_READABLE_PROP, ""},
-  {PROPNAME_STATISTICSBEAMLETMEAN, GCFPValue::LPT_DYNDOUBLE, GCF_READABLE_PROP, ""},
-  {PROPNAME_STATISTICSBEAMLETPOWER, GCFPValue::LPT_DYNDOUBLE, GCF_READABLE_PROP, ""},
+  {PROPNAME_STATUS, GCF_READABLE_PROP, "0"},
+  {PROPNAME_STATISTICSSUBBANDMEAN, GCF_READABLE_PROP, ""},
+  {PROPNAME_STATISTICSSUBBANDPOWER, GCF_READABLE_PROP, ""},
+  {PROPNAME_STATISTICSBEAMLETMEAN, GCF_READABLE_PROP, ""},
+  {PROPNAME_STATISTICSBEAMLETPOWER, GCF_READABLE_PROP, ""},
 };
 
-const TPropertySet PROPSET_PIC = 
+const TPropertyConfig PROPS_Rack[] =
 {
-  5, "PIC", PROPS_Station
+  {PROPNAME_STATUS, GCF_READWRITE_PROP, "0"},
 };
 
-const TProperty PROPS_Rack[] =
+const TPropertyConfig PROPS_SubRack[] =
 {
-  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READWRITE_PROP, "0"},
+  {PROPNAME_STATUS, GCF_READABLE_PROP, "0"},
 };
 
-const TPropertySet PROPSET_Racks[] = 
+const TPropertyConfig PROPS_Board[] =
 {
-  {1, "Rack1", PROPS_Rack},
-  {1, "Rack2", PROPS_Rack},
-  {1, "Rack3", PROPS_Rack},
-  {1, "Rack4", PROPS_Rack},
-  {1, "Rack5", PROPS_Rack},
-  {1, "Rack6", PROPS_Rack},
+  {PROPNAME_STATUS, GCF_READABLE_PROP, "0"},
+  {PROPNAME_VOLTAGE15, GCF_READABLE_PROP, "0"},
+  {PROPNAME_VOLTAGE22, GCF_READABLE_PROP, "0"},
+  {PROPNAME_FFI, GCF_READABLE_PROP, "0"},
+  {PROPNAME_VERSION, GCF_READABLE_PROP, ""},
 };
 
-const TProperty PROPS_SubRack[] =
+const TPropertyConfig PROPS_Ethernet[] =
 {
-  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
+  {PROPNAME_STATUS, GCF_READABLE_PROP, "0"},
+  {PROPNAME_PACKETSRECEIVED, GCF_READABLE_PROP, "0"},
+  {PROPNAME_PACKETSERROR, GCF_READABLE_PROP, "0"},
+  {PROPNAME_LASTERROR, GCF_READABLE_PROP, "0"},
+  {PROPNAME_FFI0, GCF_READABLE_PROP, "0"},
+  {PROPNAME_FFI1, GCF_READABLE_PROP, "0"},
+  {PROPNAME_FFI2, GCF_READABLE_PROP, "0"},
 };
 
-const TPropertySet PROPSET_SubRacks[] = 
+const TPropertyConfig PROPS_FPGA[] =
 {
-  {1, "SubRack1", PROPS_SubRack},
-  {1, "SubRack2", PROPS_SubRack},
-  {1, "SubRack3", PROPS_SubRack},
-  {1, "SubRack4", PROPS_SubRack},
+  {PROPNAME_STATUS, GCF_READABLE_PROP, "0"},
+  {PROPNAME_ALIVE, GCF_READABLE_PROP, "false"},
+  {PROPNAME_TEMPERATURE, GCF_READABLE_PROP, "0.0"},
+  {PROPNAME_VERSION, GCF_READABLE_PROP, ""},
 };
 
-const TProperty PROPS_Board[] =
+const TPropertyConfig PROPS_RCU[] =
 {
-  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-  {PROPNAME_VOLTAGE15, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-  {PROPNAME_VOLTAGE22, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-  {PROPNAME_FFI, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-  {PROPNAME_VERSION, GCFPValue::LPT_STRING, GCF_READABLE_PROP, ""},
+  {PROPNAME_STATUS, GCF_READABLE_PROP, "0"},
+  {PROPNAME_OVERFLOW, GCF_READABLE_PROP, "false"},
+  {PROPNAME_RCUPWR, GCF_READABLE_PROP, "false"},
+  {PROPNAME_HBAPWR, GCF_READABLE_PROP, "false"},
+  {PROPNAME_LBAPWR, GCF_READABLE_PROP, "false"},
+  {PROPNAME_FILTER, GCF_READABLE_PROP, "0"},
 };
 
-const TPropertySet PROPSET_Boards[] = 
+const TPropertyConfig PROPS_LFA[] =
 {
-  {5, "Board1", PROPS_Board},
+  {PROPNAME_STATUS, GCF_READABLE_PROP, "0"},
 };
 
-const TProperty PROPS_Ethernet[] =
+const TPropertyConfig PROPS_HFA[] =
 {
-  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-  {PROPNAME_PACKETSRECEIVED, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-  {PROPNAME_PACKETSERROR, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-  {PROPNAME_LASTERROR, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-  {PROPNAME_FFI0, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-  {PROPNAME_FFI1, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-  {PROPNAME_FFI2, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
+  {PROPNAME_STATUS, GCF_READABLE_PROP, "0"},
 };
 
-const TPropertySet PROPSET_ETH = 
+const TPropertyConfig PROPS_ADCStatistics[] =
 {
-  7, "ETH", PROPS_Ethernet
+  {PROPNAME_OVERFLOW, GCF_READABLE_PROP, "false"},
 };
 
-const TProperty PROPS_FPGA[] =
+const TPropertyConfig PROPS_MEPStatus[] =
 {
-  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-  {PROPNAME_ALIVE, GCFPValue::LPT_BOOL, GCF_READABLE_PROP, "false"},
-  {PROPNAME_TEMPERATURE, GCFPValue::LPT_DOUBLE, GCF_READABLE_PROP, "0.0"},
-  {PROPNAME_VERSION, GCFPValue::LPT_STRING, GCF_READABLE_PROP, ""},
+  {PROPNAME_SEQNR, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_ERROR, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_FFI,   GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
 };
 
-const TPropertySet PROPSET_BP = 
+const TPropertyConfig PROPS_SYNCStatus[] =
 {
-  4, "BP", PROPS_FPGA
+  {PROPNAME_CLOCKCOUNT, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_COUNT,      GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_ERRORS,     GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
 };
 
-const TPropertySet PROPSET_APs[] = 
+const TPropertyConfig PROPS_Maintenance[] =
 {
-  {4, "AP1", PROPS_FPGA},
-  {4, "AP2", PROPS_FPGA},
-  {4, "AP3", PROPS_FPGA},
-  {4, "AP4", PROPS_FPGA},
+  {PROPNAME_STATUS, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_FROMTIME, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_TOTIME, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
 };
 
-const TProperty PROPS_RCU[] =
+const TPropertyConfig PROPS_Alert[] =
 {
-  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-  {PROPNAME_OVERFLOW, GCFPValue::LPT_BOOL, GCF_READABLE_PROP, "false"},
-  {PROPNAME_RCUPWR, GCFPValue::LPT_BOOL, GCF_READABLE_PROP, "false"},
-  {PROPNAME_HBAPWR, GCFPValue::LPT_BOOL, GCF_READABLE_PROP, "false"},
-  {PROPNAME_LBAPWR, GCFPValue::LPT_BOOL, GCF_READABLE_PROP, "false"},
-  {PROPNAME_FILTER, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-};
-
-const TPropertySet PROPSET_RCUs[] = 
-{
-  {6, "RCU1", PROPS_RCU},
-  {6, "RCU2", PROPS_RCU},
-};
-
-const TProperty PROPS_LFA[] =
-{
-  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-};
-
-const TPropertySet PROPSET_LFA = 
-{
-  1, "LFA", PROPS_LFA,
-};
-
-const TProperty PROPS_HFA[] =
-{
-  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
-};
-
-const TPropertySet PROPSET_HFA = 
-{
-  1, "HFA", PROPS_HFA,
-};
-
-const TProperty PROPS_ADCStatistics[] =
-{
-  {PROPNAME_OVERFLOW, GCFPValue::LPT_BOOL, GCF_READABLE_PROP, "false"},
-};
-
-const TPropertySet PROPSET_ADCStatistics = 
-{
-  1, "ADCStatistics", PROPS_ADCStatistics
-};
-
-const TProperty PROPS_MEPStatus[] =
-{
-  {PROPNAME_SEQNR, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
-  {PROPNAME_ERROR, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
-  {PROPNAME_FFI,   GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
-};
-
-const TPropertySet PROPSET_MEPReadStatus = 
-{
-  3, "MEPReadStatus", PROPS_MEPStatus
-};
-
-const TPropertySet PROPSET_MEPWriteStatus = 
-{
-  3, "MEPWriteStatus", PROPS_MEPStatus
-};
-
-const TProperty PROPS_SYNCStatus[] =
-{
-  {PROPNAME_CLOCKCOUNT, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
-  {PROPNAME_COUNT,      GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
-  {PROPNAME_ERRORS,     GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
-};
-
-const TPropertySet PROPSET_SYNCStatus = 
-{
-  3, "SYNCStatus", PROPS_SYNCStatus
-};
-
-const TProperty PROPS_Maintenance[] =
-{
-  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
-  {PROPNAME_FROMTIME, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
-  {PROPNAME_TOTIME, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
-};
-
-const TPropertySet PROPSET_Maintenance = 
-{
-  3, "Maintenance", PROPS_Maintenance
-};
-
-const TProperty PROPS_Alert[] =
-{
-  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
-};
-
-const TPropertySet PROPSET_Alert = 
-{
-  1, "Alert", PROPS_Alert
+  {PROPNAME_STATUS, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
 };
 
 };

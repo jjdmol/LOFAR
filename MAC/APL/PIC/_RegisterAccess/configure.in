@@ -78,15 +78,7 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
-APLCommon/src/Makefile
-APLCommon/Makefile
-PAC/VirtualTelescope/src/Makefile
-PAC/VirtualTelescope/test/Makefile
-PAC/VirtualTelescope/Makefile
-PAC/Makefile
-PIC/RegisterAccess/src/Makefile
-PIC/RegisterAccess/test/Makefile
-PIC/RegisterAccess/Makefile
-PIC/Makefile
+src/Makefile
+test/Makefile
 Makefile
 )

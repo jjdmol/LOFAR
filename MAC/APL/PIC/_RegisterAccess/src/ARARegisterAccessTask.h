@@ -24,7 +24,7 @@
 #define ARAREGISTERACCESSTASK_H_
 
 #include <GCF/GCF_Control.h>
-#include <GCF/GCF_MyPropertySet.h>
+#include <GCF/PAL/GCF_MyPropertySet.h>
 #include <GCF/GCF_Apc.h>
 #include <Common/LofarTypes.h>
 #include <boost/shared_ptr.hpp>
@@ -114,13 +114,12 @@ namespace ARA
       // in gcf4.0, only the top level apc has to be loaded, and links to other
       // apc's are in the apc's themselves
       typedef map<string,boost::shared_ptr<GCFMyPropertySet> > TMyPropertySetMap;
-      typedef map<string,boost::shared_ptr<GCFApc> > TAPCMap;
+      typedef map<string,string> TAPCMap;
       
       /**
        * create propertyset object, add it to the map
        */
-      void addMyPropertySet(const TPropertySet& propset,const char* scope);
-
+      void addMyPropertySet(const char* scope,const char* type, const TPropertyConfig& propconfig);
       /**
        * create apc object, add it to the map
        */
