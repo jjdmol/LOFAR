@@ -2,6 +2,8 @@ dmi_dir = $(lofar_sharedir)/../DMI
 
 lib_LTLIBRARIES = libmeqserver.la
 
+DOCHDRS = MeqServer.h VisDataMux.h VisHandlerNode.h Sink.h Spigot.h
+
 libmeqserver_la_SOURCES = \
   AID-MeqServer-Registry.cc \
   MeqServer.cc \
@@ -19,19 +21,6 @@ meqserver_DEPENDENCIES	= libmeqserver.la $(LOFAR_DEPEND)
 glishdir = $(libexecdir)/glish/meq
 dist_glish_SCRIPTS = meqserver.g
 
-# script used to generate AID maps
-MAPBUILDER = $(dmi_dir)/src/build_aid_maps.pl 
-
-# All .aidlist files below this dir will be scanned
-BASELISTDIR = $(lofar_sharedir)/..
-
-# Your package's subdirectory
-AID_DIR = $(top_srcdir)/src
-
-
-aids:
-	$(MAPBUILDER) `find $(BASELISTDIR) -name \*.aidlist` $(AID_DIR)/*.h 
- 
-
 include $(lofar_sharedir)/Makefile.common
+include $(lofar_sharedir)/Makefile.aids
 

@@ -112,10 +112,6 @@ void MSOutputSink::postEvent (const HIID &id, const ObjRef::Xfer &data, const HI
   {
     cdebug(1)<<"error handling event ["<<id<<"]: "<<exc.what()<<endl;
   }
-  catch( AipsError &err )
-  {
-    cdebug(1)<<"AIPS++ error handling event ["<<id<<"]: "<<err.getMesg()<<endl;
-  }
   catch( ... )
   {
     cdebug(1)<<"unknown exception handling event ["<<id<<"]\n";
