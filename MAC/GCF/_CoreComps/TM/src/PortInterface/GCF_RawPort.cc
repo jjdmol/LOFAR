@@ -288,7 +288,7 @@ GCFEvent::TResult GCFRawPort::recvEvent()
         
     do 
     {
-      bytesRead += recv(event_buf + sizeof(e), payloadLength);
+      bytesRead += recv(event_buf + bytesRead, payloadLength);
       payloadLength = e.length - bytesRead;
                           
     } while (payloadLength > 0);
