@@ -24,7 +24,6 @@ class UVPDisplayArea : public QWidget
  void         initColormap(double slope,
                            double center);
 
-
   void         drawView();
 
  protected:                     /* Protected part */

@@ -1,4 +1,4 @@
-#include "mainwin.h"
+#include <UVPMainWindow.h>
 
 
 #include <qapplication.h>       // qApp
