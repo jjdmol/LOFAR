@@ -39,7 +39,7 @@ using namespace LOFAR;
 WH_Correlate::WH_Correlate(const string& name,
 			   unsigned int nin)
   : WorkHolder(nin, nin, name, "WH_Correlate"),
-    myrank(0),
+    myrank(-1),
     mysize(0),
     task_id(0),
     active_nodes(0),    
@@ -59,13 +59,6 @@ WH_Correlate::WH_Correlate(const string& name,
 				      new DH_Vis(string("out_")+str)); 
   }
 
-  if (myrank == 0) {
-
-    (void*)sig_buf  = malloc(NSTATIONS*NSAMPLES*NCHANNELS*sizeof(DH_CorrCube::BufferType));
-    (void*)corr_buf = malloc(NSTATIONS*NSTATIONS*NCHANNELS*sizeof(DH_Vis::BufferType));
-
-    (void*)temp_buffer = malloc(NSTATIONS*NSTATIONS*NCHANNELS*sizeof(DH_Vis::BufferType));
-  }
 }
 
 WH_Correlate::~WH_Correlate() {
@@ -80,16 +73,23 @@ WH_Correlate* WH_Correlate::make(const string& name) {
 }
 
 void WH_Correlate::preprocess() {
-#ifdef __BLRTS__
 
-  
+#ifdef __BLRTS__
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   MPI_Comm_size(MPI_COMM_WORLD, &mysize);
-
+  
   // Define global MPI complex float datatype
   MPI_Type_contiguous(2, MPI_FLOAT, &my_complex);
   MPI_Type_commit(&my_complex);
 #endif
+
+  if (myrank == 0) {
+
+    (void*)sig_buf  = malloc(NSTATIONS*NSAMPLES*NCHANNELS*sizeof(DH_CorrCube::BufferType));
+    (void*)corr_buf = malloc(NSTATIONS*NSTATIONS*NCHANNELS*sizeof(DH_Vis::BufferType));
+
+    (void*)temp_buffer = malloc(NSTATIONS*NSTATIONS*NCHANNELS*sizeof(DH_Vis::BufferType));
+  }
 
 #ifdef __MPE_LOGGING__
   if (myrank == 0) {
@@ -120,12 +120,12 @@ void WH_Correlate::process() {
 #endif
 
     memcpy(((DH_Vis*)getDataManager().getOutHolder(0))->getBuffer(),
-	   corr_buf,
-	   NSTATIONS*NSTATIONS*NCHANNELS*sizeof(DH_Vis::BufferType));
+           corr_buf,
+           NSTATIONS*NSTATIONS*NCHANNELS*sizeof(DH_Vis::BufferType));
 
   } else {
 
-    WH_Correlate::slave(myrank);
+    WH_Correlate::slave();
 
   }
 }
@@ -134,18 +134,42 @@ void WH_Correlate::postprocess() {
 
   if (myrank == 0) {
 
-    int dummy;
-
+    int task_id = 0;
+    MPI_Status status;
+    
     for (int slave = 1; slave < mysize; slave++) {
 
-      MPI_Send(&dummy,
+      MPI_Recv(&task_id, 
+	       1, 
+	       MPI_INT,
+	       slave,
+	       SEND_RESULT_ID,
+	       MPI_COMM_WORLD,
+	       &status);
+
+      MPI_Recv(corr_buf+task_id*NSTATIONS*NSTATIONS,//*sizeof(DH_Vis::BufferType),
+	       NSTATIONS*NSTATIONS,
+	       my_complex,
+	       slave,
+	       SEND_RESULT_DATA,
+	       MPI_COMM_WORLD,
+	       &status);
+//       MPI_Recv((DH_Vis*)getDataManager().getOutHolder(0)->getDataPtr()+task_id*NSTATIONS*NSTATIONS*sizeof(DH_Vis::BufferType),
+// 	       NSTATIONS*NSTATIONS,
+// 	       my_complex,
+// 	       slave,
+// 	       SEND_RESULT_DATA,
+// 	       MPI_COMM_WORLD,
+// 	       &status);
+
+      MPI_Send(&task_id,
 	       1, 
 	       MPI_INT,
 	       slave,
 	       STOP_TAG,
 	       MPI_COMM_WORLD);
     }
-  }
+ } 
 }
 
 
@@ -422,29 +446,38 @@ void WH_Correlate::master() {
     
     /* Send all nodes with (rank > 0) a TASK id and the corresponding data */ 
     for (int i = 1; i < mysize; i++) {           
+
 #ifdef __MPE_LOGGING__
       MPE_Log_event(1, i, "send");
 #endif
+
       MPI_Send(&task_id, 
 	       1, 
 	       MPI_INT, 
 	       i, 
 	       SEND_TASK_ID, 
 	       MPI_COMM_WORLD);
-      
+
       MPI_Send(sig_buf+task_id*NSTATIONS*NSAMPLES,
 	       NSTATIONS*NSAMPLES,
 	       my_complex,
 	       i, 
 	       SEND_TASK_DATA,
 	       MPI_COMM_WORLD);
+
+//       MPI_Send((DH_CorrCube*)getDataManager().getInHolder(0)->getDataPtr()+task_id*NSTATIONS*NSAMPLES,
+// 	       NSTATIONS*NSAMPLES,
+// 	       my_complex,
+// 	       i, 
+// 	       SEND_TASK_DATA,
+// 	       MPI_COMM_WORLD);
+
 #ifdef __MPE_LOGGING__
       MPE_Log_event(2, i, "send");
 #endif
 
       task_id++;
       active_nodes++;
-      cout << "NODES ACTIVE: " << active_nodes << endl;
       pre_received_blocks = 0;
     }
   } else {
@@ -455,9 +488,12 @@ void WH_Correlate::master() {
       MPE_Log_event(9, 0, "correct");
 #endif
       for (int i = 0; i < pre_received_blocks; i++) {
-	memcpy(corr_buf+buffer_indeces[i]*NSTATIONS*NSTATIONS,
+	memcpy(corr_buf+buffer_indeces[i]*NSTATIONS*NSTATIONS,//*sizeof(DH_Vis::BufferType),
 	       temp_buffer,
 	       NSTATIONS*NSTATIONS*sizeof(DH_Vis::BufferType));
+// 	memcpy((DH_Vis*)getDataManager().getOutHolder(0)->getDataPtr()+buffer_indeces[i]*NSTATIONS*NSTATIONS*sizeof(DH_Vis::BufferType),
+// 	       temp_buffer,
+// 	       NSTATIONS*NSTATIONS);
 	
       }
 #ifdef __MPE_LOGGING__
@@ -485,13 +521,22 @@ void WH_Correlate::master() {
       
     sending_node = status.MPI_SOURCE;
     
-    MPI_Recv(corr_buf+result_id*NSTATIONS*NSTATIONS, 
+    MPI_Recv(corr_buf+result_id*NSTATIONS*NSTATIONS,//*sizeof(DH_Vis::BufferType), 
 	     NSTATIONS*NSTATIONS,
 	     my_complex,
 	     sending_node,
 	     SEND_RESULT_DATA,
 	     MPI_COMM_WORLD,
 	     &status);
+
+//     MPI_Recv((DH_Vis*)getDataManager().getOutHolder(0)->getDataPtr()+result_id*NSTATIONS*NSTATIONS*sizeof(DH_Vis::BufferType),
+// 	     NSTATIONS*NSTATIONS,
+// 	     my_complex,
+// 	     sending_node,
+// 	     SEND_RESULT_DATA,
+// 	     MPI_COMM_WORLD,
+// 	     &status);
+
     received_blocks++;
 #ifdef __MPE_LOGGING__
     MPE_Log_event(4, sending_node, "recv");
@@ -506,12 +551,20 @@ void WH_Correlate::master() {
 	     SEND_TASK_ID,
 	     MPI_COMM_WORLD);
     
-    MPI_Send(sig_buf+task_id*NSTATIONS*NSAMPLES,
+    MPI_Send(sig_buf+task_id*NSTATIONS*NSAMPLES,//*sizeof(DH_CorrCube::BufferType),
 	     NSTATIONS*NSAMPLES, 
 	     my_complex,
 	     sending_node,
 	     SEND_TASK_DATA,
 	     MPI_COMM_WORLD);
+
+//     MPI_Send((DH_CorrCube*)getDataManager().getInHolder(0)->getDataPtr()+task_id*NSTATIONS*NSAMPLES,
+// 	     NSTATIONS*NSAMPLES, 
+// 	     my_complex,
+// 	     sending_node,
+// 	     SEND_TASK_DATA,
+// 	     MPI_COMM_WORLD);
+
 #ifdef __MPE_LOGGING__
     MPE_Log_event(2, 0, "send");
 #endif
@@ -552,6 +605,14 @@ void WH_Correlate::master() {
 	       SEND_RESULT_DATA,
 	       MPI_COMM_WORLD,
 	       &status);
+
+//       MPI_Recv((DH_Vis*)getDataManager().getOutHolder(0)->getDataPtr()+result_id*NSTATIONS*NSTATIONS,
+// 	       NSTATIONS*NSTATIONS,
+// 	       my_complex,
+// 	       sending_node,
+// 	       SEND_RESULT_DATA,
+// 	       MPI_COMM_WORLD,
+// 	       &status);
 #ifdef __MPE_LOGGING__
       MPE_Log_event(4, sending_node, "recv");
 #endif
@@ -583,25 +644,30 @@ void WH_Correlate::master() {
 	     SEND_TASK_ID,
 	     MPI_COMM_WORLD);
     
-    MPI_Send(sig_buf+task_id*NSTATIONS*NSAMPLES,
+    MPI_Send(sig_buf+task_id*NSTATIONS*NSAMPLES,//*sizeof(DH_CorrCube::BufferType),
 	     NSTATIONS*NSAMPLES, 
 	     my_complex,
 	     sending_node,
 	     SEND_TASK_DATA,
 	     MPI_COMM_WORLD);
+
+//     MPI_Send((DH_CorrCube*)getDataManager().getInHolder(0)->getDataPtr()+task_id*NSTATIONS*NSAMPLES,
+// 	     NSTATIONS*NSAMPLES, 
+// 	     my_complex,
+// 	     sending_node,
+// 	     SEND_TASK_DATA,
+// 	     MPI_COMM_WORLD);
 #ifdef __MPE_LOGGING__
     MPE_Log_event(2, sending_node, "send");
 #endif
     task_id++;
   }
-
 #endif
 }
 
-void WH_Correlate::slave(const int rank) {
+void WH_Correlate::slave() {
 
   complex<float> signal_buffer[NSTATIONS][NSAMPLES];
-//   complex<float> corr_buffer  [NSTATIONS][NSTATIONS];
   
   int id;
 
@@ -639,6 +705,7 @@ void WH_Correlate::slave(const int rank) {
       MPE_Log_event(12, id, "recv");
       MPE_Log_event(15, id, "compute");
 #endif
+
       /* Since the slave only does one process step, we create a fresh corr */
       /* buffer here to prevent old values to pollute our data              */
       complex<float> corr_buffer  [NSTATIONS][NSTATIONS];
@@ -671,11 +738,14 @@ void WH_Correlate::slave(const int rank) {
       MPE_Log_event(14, id, "send");
 #endif
     } else {
+
       /* status.MPI_TAG == STOP_TAG */
       /* all data has been processed, stop the slave */ 
+
 #ifdef __MPE_LOGGING__
       MPE_Log_event(12, 0, "quit");
 #endif
+
       break;
     }
   }

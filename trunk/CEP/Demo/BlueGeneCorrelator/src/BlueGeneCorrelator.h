@@ -59,6 +59,7 @@ namespace LOFAR
     
     TH_Socket* proto_input;
     TH_Socket* proto_output;
+
   };
 
 } // namespace LOFAR

@@ -26,6 +26,7 @@
 #include <lofar_config.h>
 #include <tinyCEP/WorkHolder.h>
 
+using namespace std;
 namespace LOFAR
 {
 
@@ -65,7 +66,7 @@ private:
   
   int itsFBW; // frequency bandwidth of the DH_Beamlet 
 
-  ofstream itsOutputFile;
+  //  ofstream itsOutputFile;
   int itsIndex;
   int itsCounter;
 };

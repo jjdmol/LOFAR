@@ -2,6 +2,7 @@
 #include <tinyCEP/SimulatorParseClass.h>
 #include <Common/lofar_iostream.h>
 #include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 #ifdef HAVE_CORBA
 int atexit(void (*function)(void))
@@ -23,6 +24,13 @@ int main (int argc, const char** argv)
     if (argc >= 2 && !strcmp(argv[1], "-b")) {
       cout << "argument -b recognized"<< endl;
       isFrontEnd = false;
+      
+      INIT_LOGGER("BGlogger.prop");
+      
+    } else {
+
+      INIT_LOGGER("BGlogger.prop");
+
     }
 
     BlueGeneFrontEnd simulator(isFrontEnd);

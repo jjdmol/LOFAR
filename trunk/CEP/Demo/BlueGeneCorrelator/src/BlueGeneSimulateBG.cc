@@ -2,6 +2,7 @@
 #include <tinyCEP/SimulatorParseClass.h>
 #include <Common/lofar_iostream.h>
 #include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 #include <BlueGeneCorrelator/definitions.h>
 
@@ -26,7 +27,9 @@ using namespace LOFAR;
 int main (int argc, const char** argv)
 {
 
-  int myrank = 0;
+  int myrank = -1;
+
+  INIT_LOGGER("BGlogger.prop");
 
 #ifdef __BLRTS__
   MPI_Init(&argc,(char***)&argv);
@@ -58,8 +61,11 @@ int main (int argc, const char** argv)
     simulator.basePrerun();
 
     // the slaves only do one process step
-    if (myrank != 0) simulator.baseRun(1); 
-    else simulator.baseRun(RUNS);
+    if (myrank != 0) { 
+      simulator.baseRun(1); 
+    } else  {
+      simulator.baseRun(RUNS);
+    }
 
     simulator.basePostrun();
     simulator.baseDump();

@@ -10,11 +10,11 @@
 #define LOCALHOST_IP "127.0.0.1"
 #define BASEPORT     8900
 
-#define NSTATIONS 10
-#define NCHANNELS 50
-#define NSAMPLES  100
+#define NSTATIONS 100
+#define NCHANNELS 35
+#define NSAMPLES  10
 
-#define RUNS      500
+#define RUNS      100
 
 #ifdef __BLRTS__
 #include <mpi.h>
