@@ -10,8 +10,8 @@
 #include <tinyCEP/ApplicationHolder.h>
 #include <tinyCEP/BaseDataManager.h>
 #include <tinyCEP/MiniDataManager.h>
-#include <tinyCEP/DH_Example.h>
-#include <tinyCEP/WH_Example.h>
+#include <DH_Example.h>
+#include <WH_Example.h>
 
 namespace LOFAR
 {
