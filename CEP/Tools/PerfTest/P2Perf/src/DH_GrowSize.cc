@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2002/03/08 11:38:42  wierenga
+//  Upgraded from firewalls.h use to Debug.h use. This version was used for performance tests.
+//
 //  Revision 1.2  2001/09/19 08:00:13  wierenga
 //  Added code to do performance tests.
 //
@@ -42,8 +45,7 @@ DH_GrowSize::DH_GrowSize (const string& name, unsigned int nbuffer)
   unsigned int size = sizeof(DataPacket) + (nbuffer * sizeof(BufferType));
   char* ptr = new char[size];
 
-  cout << "nbuffer = " << nbuffer;
-  cout << "DH_GrowSize buffersize = " << size << endl;
+  
   //cout << "sizeof(BufferType) = " << sizeof(BufferType) << endl;
   //cout << "sizeof(DataPacket) = " << sizeof(DataPacket) << endl;
 
@@ -55,13 +57,13 @@ DH_GrowSize::DH_GrowSize (const string& name, unsigned int nbuffer)
   itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
 
   for (unsigned int i=0; i<nbuffer; i++) {
-    itsBuffer[i] = reportedDataPacketSize + sizeof(DataPacket);
+    itsBuffer[i] = 0;
   }
   // Initialize base class.
   setDataPacket (itsDataPacket, size);
 
-  reportedDataPacketSize = 8; // initial size
-  floatDataPacketSize = (int)reportedDataPacketSize;
+  reportedDataPacketSize = sizeof(DataPacket); /* initial packet size */
+  floatDataPacketSize = (float)reportedDataPacketSize;
 }
 
 DH_GrowSize::~DH_GrowSize()
