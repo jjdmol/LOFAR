@@ -31,16 +31,10 @@
 #include "ABSBeam.h"
 #include "ABSBeamlet.h"
 
-#if 0
+#undef PACKAGE
+#undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#else
-#define LOG_DEBUG(a)
-#define LOG_FATAL(a)
-#define LOG_ERR(a)
-#define LOG_INFO(a)
-#define INIT_LOGGER(a)
-#endif
 
 #include <iostream>
 #include <sys/time.h>
@@ -50,6 +44,7 @@
 
 using namespace ABS;
 using namespace std;
+using namespace LOFAR;
 
 BeamServerTask::BeamServerTask(string name)
     : GCFTask((State)&BeamServerTask::initial, name),
@@ -71,17 +66,19 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  LOG_DEBUG(formatString("initial state received event on port %s", port.getName().c_str()));
+  //LOG_DEBUG(formatString("initial state received event on port %s", port.getName().c_str()));
 
   switch(e.signal)
   {
       case F_INIT_SIG:
       {
-	  // create a spectral window from 0MHz to 20MHz
+	  // create a default spectral window from 0MHz to 20MHz
 	  // steps of 256kHz
-	  SpectralWindow* spw = new SpectralWindow(0e6, 20e6/128, 128);
+	  SpectralWindow* spw = new SpectralWindow(0e6, 20e6/ABS_Protocol::N_BEAMLETS,
+						   ABS_Protocol::N_BEAMLETS);
 	  m_spws[0] = spw;
 
+#if 0
 	  // create subband set
 	  std::set<int> subbands;
 
@@ -97,7 +94,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 	  
 	  if (beam->allocate(*m_spws[0], subbands) < 0)
 	  {
-	      LOG_ERR("failed to allocate beam 0");
+	      LOG_ERROR("failed to allocate beam 0");
 	  }
 	  else
 	  {
@@ -120,7 +117,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 
 	  if (beam->allocate(*m_spws[0], subbands) < 0)
 	  {
-	      LOG_ERR("failed to allocate beam 1");
+	      LOG_ERROR("failed to allocate beam 1");
 	  }
 	  else
 	  {
@@ -131,7 +128,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 	  m_beams.insert(2);
 	  if (beam->allocate(*m_spws[0], subbands) < 0)
 	  {
-	      LOG_ERR("failed to allocate beam 2");
+	      LOG_ERROR("failed to allocate beam 2");
 	  }
 	  else
 	  {
@@ -148,21 +145,25 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 	  }
 
 	  beam->deallocate();
+#endif
       }
       break;
 
       case F_ENTRY_SIG:
       {
-	  client.open(); // need this otherwise GTM_Sockethandler is not called
+	  if (!client.isConnected()) client.open(); // need this otherwise GTM_Sockethandler is not called
 	  board.setAddr("eth0", "aa:bb:cc:dd:ee:ff");
-	  board.open();
+	  if (!board.isConnected()) board.open();
       }
       break;
 
       case F_CONNECTED_SIG:
       {
+	if (client.isConnected() && board.isConnected())
+	{
 	  LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
 	  TRAN(BeamServerTask::enabled);
+	}
       }
       break;
 
@@ -273,6 +274,8 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	  ssize_t length = board.recv(data, ETH_DATA_LEN);
 	  //cout << "received " << length << endl;
 
+	  length=length; // keep compiler happy
+
 #if 0
 	  EPADataEvent de;
 	  
@@ -291,6 +294,21 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	  LOG_DEBUG("dataout");
 	  break;
 
+      case F_DISCONNECTED_SIG:
+	{
+	  LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+
+	  // deallocate all beams
+	  for (set<int>::iterator bi = m_beams.begin();
+	       bi != m_beams.end(); ++bi)
+	  {
+	    Beam::getInstance(*bi)->deallocate();
+	  }
+
+	  TRAN(BeamServerTask::initial);
+	}
+	break;
+
       default:
 	  status = GCFEvent::NOT_HANDLED;
 	  break;
@@ -304,13 +322,13 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,
 {
   int   spwindex = 0;
   Beam* beam = 0;
-  ABSBeamalloc_AckEvent ack(ba->beam_index, STATUS_SUCCESS);
+  ABSBeamalloc_AckEvent ack(ba->beam_index, SUCCESS);
 
   if (!(beam = Beam::getInstance(ba->beam_index))
       || ((spwindex = ba->spectral_window) != 0)
       || !(ba->n_subbands > 0 && ba->n_subbands < N_BEAMLETS))
   {
-      ack.status = STATUS_ERR_RANGE;
+      ack.status = ERR_RANGE;
       port.send(ack);
       return;                         // RETURN
   }
@@ -323,7 +341,7 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,
       // allocate the beam
       if (beam->allocate(*m_spws[spwindex], subbands) < 0)
       {
-	  ack.status = STATUS_ERR_BEAMALLOC;
+	  ack.status = ERR_BEAMALLOC;
 	  port.send(ack);
       }
 
@@ -337,19 +355,19 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,
 void BeamServerTask::beamfree_action(ABSBeamfreeEvent* bf,
 				     GCFPortInterface& port)
 {
-  ABSBeamfree_AckEvent ack(bf->beam_index, STATUS_SUCCESS);
+  ABSBeamfree_AckEvent ack(bf->beam_index, SUCCESS);
 
   Beam* beam = 0;
   if (!(beam = Beam::getInstance(bf->beam_index)))
   {
-      ack.status = STATUS_ERR_RANGE;
+      ack.status = ERR_RANGE;
       port.send(ack);
       return;                      // RETURN
   }
 
   if (beam->deallocate() < 0)
   {
-      ack.status = STATUS_ERR_BEAMFREE;
+      ack.status = ERR_BEAMFREE;
       port.send(ack);
       return;                     // RETURN
   }
@@ -369,10 +387,10 @@ void BeamServerTask::beampointto_action(ABSBeampointtoEvent* pt,
 					       (Direction::Types)pt->type),
 				     pt->time)) < 0)
       {
-	  LOG_ERR("beam not allocated");
+	  LOG_ERROR("beam not allocated");
       }
   }
-  else LOG_ERR("invalid beam_index in BEAMPOINTTO");
+  else LOG_ERROR("invalid beam_index in BEAMPOINTTO");
 }
 
 void BeamServerTask::wgenable_action(ABSWgenableEvent* we)
@@ -510,12 +528,12 @@ void BeamServerTask::send_sbselection()
 
 	  if (i != sel->first)
 	  {
-	      LOG_ERR(formatString("invalid src index %d", sel->first));
+	      LOG_ERROR(formatString("invalid src index %d", sel->first));
 	      continue;
 	  }
 	  if (sel->second > 254)
 	  {
-	      LOG_ERR(formatString("invalid tgt index", sel->first));
+	      LOG_ERROR(formatString("invalid tgt index", sel->first));
 	      continue;
 	  }
 
@@ -541,7 +559,15 @@ void BeamServerTask::sbselect()
 
 int main(int argc, char** argv)
 {
-  INIT_LOGGER("log4cplus.properties");
+#if 0
+  char prop_path[PATH_MAX];
+  const char* mac_config = getenv("MAC_CONFIG");
+
+  snprintf(prop_path, PATH_MAX-1,
+	   "%s/%s", (mac_config?mac_config:"."),
+	   "log4cplus.properties");
+  INIT_LOGGER(prop_path);
+#endif
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
