@@ -1,4 +1,4 @@
-//#  ACRequest.h: small structure used for comm. with ACDaemon
+//#  ACRequestPool.h: small structure used for comm. with ACDaemon
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,57 +18,49 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_ACREQUEST_H
-#define ACC_ACREQUEST_H
+#ifndef ACC_ACREQUESTPOOL_H
+#define ACC_ACREQUESTPOOL_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-//#include <otherpackage/file.h>
+#include <Common/lofar_list.h>
+#include <ACC/ACRequest.h>
 
 namespace LOFAR {
   namespace ACC {
 
-#define	ACREQUESTNAMESIZE 80
-
-// The ACRequest structure is exchanged with the ACDaemon to request an
-// Application Controller.
-struct ACRequest
+// The ACRequestPool is internally used by the ACDeamon to manage the
+// resources he owns.
+class ACRequestPool
 {
-	// \name Request
-	// The following fields are send by the requester.
-	// @{
+public:
+	typedef list<ACRequest*>::iterator			iterator;
+	typedef list<ACRequest*>::const_iterator	const_iterator;
 
-	// Uniq request information sent by the client
-	char	itsRequester [ACREQUESTNAMESIZE];
+	ACRequestPool();
+	~ACRequestPool();
 
-	// Number of processes the user will start
-	uint16	itsNrProcs;
+	// Element maintenance
+	void	add    (const ACRequest&		anACR);
+	void	remove (const ACRequest&		anACR);
 
-	// Expected lifetime of application in minutes
-	uint32	itsLifetime;
+	ACRequest*	find (const string&		anACRName);
 
-	// Activity of AC (1/2/3: low/medium/high)
-	uint16	itsActivityLevel;
-
-	// Architecture code (0 = Intel, 1 = Blue Gene)
-	uint16	itsArchitecture;
-	// @}
-
-	// \name Answer
-	// Based on the information provided by the requester the ACDaemon
-	// (re)assigns an AC to the requester.
-	// @{
-
-	// Address of the machine the AP is started on (htonl format)
-	uint32	itsAddr;			// in_addr_t
-
-	// portnr the AP will be listening on (htons format)
-	uint16	itsPort;			// in_port_t
-	// @}
-
+	// Store and retrieve whole pool to/from a file.
+	bool	save (const string&		filename);
+	bool	load (const string&		filename);
+	
+private:
+	// Copying is not allowed
+	ACRequestPool(const ACRequestPool&	that);
+	ACRequestPool& operator=(const ACRequestPool& that);
+	
+	list<ACRequest*>		itsPool;
 };
 
   } // namespace ACC

@@ -74,7 +74,11 @@ public:
 	// it. The \c ACClientFuncts argument is a reference to a helper class
 	// to be implemented by the ACuser that wants the asynchroon connection.
 	ACAsyncClient(ACClientFunctions*	ACClntFuncts,
-				  const string&			hostIDFrontEnd);
+				  const string&			aUniqUserName,
+				  uint16				aNrProcs,
+				  uint32				aExpectedLifeTime,
+				  uint16				anActivityLevel = 2,
+				  uint16				anArchitecture = 0);
 
 	// Destructor;
 	virtual ~ACAsyncClient();

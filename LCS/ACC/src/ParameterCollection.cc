@@ -323,6 +323,14 @@ void ParameterCollection::add(const string& aKey, const string& aValue)
 }
 
 //
+// add (pair)
+//
+void ParameterCollection::add(const KVpair&	aPair)
+{
+	add(aPair.first, aPair.second);
+}
+
+//
 // replace (key, value)
 //
 void ParameterCollection::replace(const string& aKey, const string& aValue)
@@ -331,6 +339,14 @@ void ParameterCollection::replace(const string& aKey, const string& aValue)
 	erase(aKey);
 
 	add (aKey, aValue);
+}
+
+//
+// replace (pair)
+//
+void ParameterCollection::replace(const KVpair&	aPair)
+{
+	replace(aPair.first, aPair.second);
 }
 
 //

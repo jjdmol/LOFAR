@@ -64,16 +64,27 @@ ProcControlServer::~ProcControlServer()
 	}
 }
 
+//
+// registerAtAC(name)
+//
 void	ProcControlServer::registerAtAC(const string&	aName) const
 {
-	itsCommChan->sendCmd (PCCmdStart, 0, aName);
+	itsCommChan->sendCmd (PCCmdStart, aName);
+}
+
+//
+// unregisterAtAC(result)
+//
+void	ProcControlServer::unregisterAtAC(const string&	aResult) const
+{
+	itsCommChan->sendCmd (PCCmdQuit, aResult);
 }
 
 // Returns a string containing the IP address and portnumber of the
 // Application controller the class is connected to.
 string		ProcControlServer::askInfo(const string&	keylist) const
 {
-	if (!itsCommChan->doRemoteCmd (PCCmdInfo, 0, keylist))
+	if (!itsCommChan->doRemoteCmd (PCCmdInfo, keylist))
 		return (keylist);
 
 	return (itsCommChan->getDataHolder()->getOptions());
@@ -89,11 +100,8 @@ bool	ProcControlServer::pollForMessage() const
 bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg) 
 {
 	int16	cmdType 	 = theMsg->getCommand();
-	time_t	waitTime     = theMsg->getWaitTime();
 	string	options		 = theMsg->getOptions();
-	time_t	scheduleTime = 0;	// TODO: do we need a schedule time????
 	LOG_DEBUG_STR("cmd=" << cmdType <<
-				  ", waittime=" << waitTime <<
 				  ", options=[" << options << "]" << endl);
 
 	bool	sendAnswer = true;
@@ -109,29 +117,29 @@ bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg)
 		//TODO ???
 		break;
 	case PCCmdDefine:		
-		result = itsPCImpl->define(scheduleTime);			
+		result = itsPCImpl->define();			
 		break;
 	case PCCmdInit:		
-		result = itsPCImpl->init(scheduleTime);			
+		result = itsPCImpl->init();			
 		break;
 	case PCCmdRun:		
-		result = itsPCImpl->run(scheduleTime);			
+		result = itsPCImpl->run();			
 		break;
 	case PCCmdPause:		
-		result = itsPCImpl->pause(scheduleTime, options);	
+		result = itsPCImpl->pause(options);	
 		break;
 	case PCCmdQuit:		
-		itsPCImpl->quit(scheduleTime);
-		result = true;
+		itsPCImpl->quit();
+		sendAnswer = false;			// user should used unregister.
 		break;
 	case PCCmdSnapshot:	
-		result = itsPCImpl->snapshot(scheduleTime, options);	
+		result = itsPCImpl->snapshot(options);	
 		break;
 	case PCCmdRecover:	
-		result = itsPCImpl->recover (scheduleTime, options);	
+		result = itsPCImpl->recover (options);	
 		break;
 	case PCCmdReinit:		
-		result = itsPCImpl->reinit (scheduleTime, options);	
+		result = itsPCImpl->reinit (options);	
 		break;
 	default:
 		//TODO
@@ -151,7 +159,8 @@ void ProcControlServer::sendResult(uint16	aResult, const string&	someOptions)
 {
 	itsCommChan->getDataHolder()->setResult(aResult);
 	PCCmd command = itsCommChan->getDataHolder()->getCommand();
-	itsCommChan->sendCmd (static_cast<PCCmd>(command | PCCmdResult), 0, someOptions);
+	itsCommChan->sendCmd (static_cast<PCCmd>(command | PCCmdResult), 
+						  someOptions);
 }
 
 } // namespace ACC

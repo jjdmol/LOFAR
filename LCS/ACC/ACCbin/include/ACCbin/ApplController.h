@@ -69,8 +69,9 @@ private:
 	void checkStateEngine();
 
 	// Datamembers
-	ParameterSet*		itsParamSet;		// own PS, passed during birth
-	ParameterSet*		itsApplParamSet;	// PS of application, given by AM
+	ParameterSet*		itsBootParamSet;	// own PS, passed during birth
+	ParameterSet*		itsObsParamSet;	    // PS of observation, given by AM
+	ParameterSet*		itsResultParamSet;	// PS for collecting proc. results.
 	ItemList*			itsProcList;		// All AP's according to ApplParSet
 	ItemList*			itsNodeList;		// All Nodes acc. to ApplParSet
 	ACCmdImpl*			itsACCmdImpl;		// The command implementation

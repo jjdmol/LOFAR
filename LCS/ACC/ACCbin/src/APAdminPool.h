@@ -127,7 +127,6 @@ public:
 	// After sending it to all elements \c startAckCollection is called to
 	// remember from with processes a respons is expected.
 	void 		writeToAll(PCCmd			command,
-						   time_t			waitTime,
 						   const string&	options);
 	// @}
 

@@ -58,6 +58,12 @@ public:
 	// Report to AC that we are ready for message receiption.
 	void	registerAtAC(const string&	aName) const;
 
+	// Report to AC that we are ready for shutting down. The argument
+	// passed to this call will be stored in the observation database
+	// as the result from this process. It can contain a parameterset or
+	// a key-value pair for instance.
+	void	unregisterAtAC(const string&	aResult) const;
+
 	// Function to read a message an call the corresponding function.
 	bool	pollForMessage() const;
 	bool 	handleMessage(DH_ProcControl*	theMsg);

@@ -43,7 +43,8 @@ enum ACState {  StateNone = 0, StateInitController,
 		NR_OF_STATES
 };
 
-// Description of class.
+// The execution of an AC command is cut into several states that must be
+// performed consecutive. The StateEngine manages these sequences of states.
 class StateEngine
 {
 public:
@@ -69,7 +70,7 @@ public:
 	// Report the current state is ready.
 	void	ready();
 
-	// Ask is the next state is waiting.
+	// Ask if the next state is waiting.
 	bool	isStateFinished();
 
 	// Command for handling the state expire timer

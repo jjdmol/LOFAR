@@ -53,21 +53,21 @@ bool	ACCmdImpl::boot  (const time_t	/* scheduleTime */,
 bool	ACCmdImpl::define(const time_t		scheduleTime) const
 {
 	LOG_DEBUG(formatString("define(%s)", timeString(scheduleTime).c_str()));
-	APAdminPool::getInstance().writeToAll(PCCmdDefine, scheduleTime, "");
+	APAdminPool::getInstance().writeToAll(PCCmdDefine, "");
 	return (true);
 }
 
 bool	ACCmdImpl::init  (const time_t		scheduleTime) const
 {
 	LOG_DEBUG(formatString("init(%s)", timeString(scheduleTime).c_str()));
-	APAdminPool::getInstance().writeToAll(PCCmdInit, scheduleTime, "");
+	APAdminPool::getInstance().writeToAll(PCCmdInit, "");
 	return (true);
 }
 
 bool	ACCmdImpl::run 	 (const time_t		scheduleTime) const
 {
 	LOG_DEBUG(formatString("run(%s)", timeString(scheduleTime).c_str()));
-	APAdminPool::getInstance().writeToAll(PCCmdRun, scheduleTime, "");
+	APAdminPool::getInstance().writeToAll(PCCmdRun, "");
 	return (true);
 }
 
@@ -77,14 +77,14 @@ bool	ACCmdImpl::pause (const time_t		scheduleTime,
 {
 	LOG_DEBUG(formatString("pause(%s,%d,%s)", timeString(scheduleTime).c_str(),
 												waitTime, condition.c_str()));
-	APAdminPool::getInstance().writeToAll(PCCmdPause, scheduleTime, "");
+	APAdminPool::getInstance().writeToAll(PCCmdPause, "");
 	return (true);
 }
 
 bool	ACCmdImpl::quit  (const time_t		scheduleTime) const
 {
 	LOG_DEBUG(formatString("quit(%s)", timeString(scheduleTime).c_str()));
-	APAdminPool::getInstance().writeToAll(PCCmdQuit, scheduleTime, "");
+	APAdminPool::getInstance().writeToAll(PCCmdQuit, "");
 	return (true);
 }
 
@@ -99,7 +99,7 @@ bool	ACCmdImpl::snapshot (const time_t		scheduleTime,
 {
 	LOG_DEBUG(formatString("snapshot(%s,%s)", timeString(scheduleTime).c_str(),
 														destination.c_str()));
-	APAdminPool::getInstance().writeToAll(PCCmdSnapshot, scheduleTime, destination);
+	APAdminPool::getInstance().writeToAll(PCCmdSnapshot, destination);
 	return (true);
 }
 
@@ -108,7 +108,7 @@ bool	ACCmdImpl::recover  (const time_t		scheduleTime,
 {
 	LOG_DEBUG(formatString("recover(%s,%s)", timeString(scheduleTime).c_str(),
 														source.c_str()));
-	APAdminPool::getInstance().writeToAll(PCCmdRecover, scheduleTime, source);
+	APAdminPool::getInstance().writeToAll(PCCmdRecover, source);
 	return (true);
 }
 
@@ -118,14 +118,14 @@ bool	ACCmdImpl::reinit (const time_t		scheduleTime,
 {
 	LOG_DEBUG(formatString("reinit(%s,%s)", timeString(scheduleTime).c_str(),
 													configID.c_str()));
-	APAdminPool::getInstance().writeToAll(PCCmdReinit, scheduleTime, configID);
+	APAdminPool::getInstance().writeToAll(PCCmdReinit, configID);
 	return (true);
 }
 
 bool	ACCmdImpl::replace	 (const time_t		scheduleTime,
-						  const string&		processList,
-						  const string&		nodeList,
-						  const string&		configID) const
+						      const string&		processList,
+						      const string&		nodeList,
+						      const string&		configID) const
 {
 	// TODO
 	return (true);

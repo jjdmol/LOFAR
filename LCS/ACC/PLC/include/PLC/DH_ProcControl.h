@@ -87,12 +87,10 @@ public:
 	// @{
 
 	void	setCommand		(const PCCmd		theCmd);
-	void	setWaitTime	    (const time_t		theWaitTime);
 	void	setOptions		(const string&		theOptions);
 	void	setResult		(const uint16		theResult);
 
 	PCCmd	getCommand		() const;
-	time_t	getWaitTime     () const;
 	string	getOptions		() ;
 	uint16	getResult		() const;
 	// @}
@@ -110,17 +108,8 @@ private:
 	//# --- DataMembers ---
 	uint16		*itsVersionNumber;
 	int16		*itsCommand;
-	time_t		*itsWaitTime;
 	uint16		*itsResult;
 };
-
-//#
-//# setWaitTime(waitTime)
-//#
-inline void	DH_ProcControl::setWaitTime (const time_t theWaitTime)
-{
-	*itsWaitTime = theWaitTime;
-}
 
 //#
 //# setCommand(command)
@@ -145,16 +134,6 @@ inline void	DH_ProcControl::setOptions (const string& theOptions)
 inline void	DH_ProcControl::setResult (const uint16 theResult)
 {
 	*itsResult = theResult;
-}
-
-
-//#
-//# getWaitTime()
-//#
-inline time_t	DH_ProcControl::getWaitTime () const
-{
-	//# no version support necc. yet.
-	return (*itsWaitTime);
 }
 
 //#

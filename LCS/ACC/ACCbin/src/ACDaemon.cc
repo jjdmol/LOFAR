@@ -33,22 +33,35 @@ namespace LOFAR {
   namespace ACC {
 
 ACDaemon::ACDaemon(string	aParamFile) :
-	itsListener (0),
-	itsParamSet (new ParameterSet)
+	itsListener   (0),
+	itsPingSocket (0),
+	itsParamSet   (new ParameterSet),
+	itsACPool     (new ACRequestPool)
 {
 	// Read in the parameterfile with network parameters.
 	itsParamSet->adoptFile(aParamFile);		// May throw
 
+	// Open listener for AC requests.
 	itsListener = new Socket("ACdaemon",
-							 itsParamSet->getString("ACDaemon.portnr"),
+							 itsParamSet->getString("ACDaemon.requestportnr"),
 							 Socket::TCP);
+
+	// Open listener for ping from AC's.
+	itsPingSocket = new Socket("ACdaemon",
+							 itsParamSet->getString("ACDaemon.pingportnr"),
+							 Socket::UDP);
+
+	// Try to read in an old administration if it is available.
+	itsACPool->load(itsParamSet->getString("ACDaemon.adminfile"));
 
 }
 
 ACDaemon::~ACDaemon()
 {
-	if (itsListener) { delete itsListener; }
-	if (itsParamSet) { delete itsParamSet; }
+	if (itsListener)   { delete itsListener; }
+	if (itsPingSocket) { delete itsPingSocket; }
+	if (itsParamSet)   { delete itsParamSet; }
+	if (itsACPool)     { delete itsACPool; }
 }
 
 void ACDaemon::doWork() throw (Exception)
@@ -105,12 +118,33 @@ void ACDaemon::doWork() throw (Exception)
 		LOG_DEBUG_STR (aRequest.itsRequester << "gets " << 
 				     inet_ntoa(IPaddr) << ", " << aRequest.itsPort);
 
+		constructACFile(&aRequest, "AC.param");
+
 		int32 result = system(sysCommand.c_str());
 		LOG_DEBUG_STR ("result=" << result << ", errno=" << errno <<
 															strerror(errno));
 	}
 }
 
+//
+// constructACFile(filename)
+//
+void ACDaemon::constructACFile(const ACRequest*		anACR,
+							   const string&		aFilename) {
+	ParameterSet		ACPS;
+
+	uint16	backlog = anACR->itsNrProcs / 10;
+	backlog = MAX (5, MIN (backlog, 100));
+	
+	// TODO: Calculate userportnr and processportnr
+
+	ACPS.add(KVpair("AC.backlog",       backlog));
+	ACPS.add(KVpair("AC.userportnr",    3820));
+	ACPS.add(KVpair("AC.processportnr", 3900));
+	ACPS.add("AC.pingportnr", itsParamSet->getString("ACDaemon.pingportnr"));
+	
+	ACPS.writeFile (aFilename);
+}
 
   } // namespace ACC
 } // namespace LOFAR

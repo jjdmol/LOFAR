@@ -37,6 +37,7 @@
 #include <Common/lofar_map.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_sstream.h>
+#include <ACC/KVpair.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -133,10 +134,12 @@ public:
 	// Add the given pair to the collection. When the \c aKey does not exist 
 	// in the collection an exception is thrown.
 	void	add    (const string& aKey, const string& aValue);
+	void	add    (const KVpair& aPair);
 
 	// Replaces the given pair in the collection. If \c aKey does not exist in
 	// the collection the pair is just added to the collection.
 	void	replace(const string& aKey, const string& aValue);
+	void	replace(const KVpair& aPair);
 
 	// Removes the pair with the given key. Removing a non-existing key is ok.
 	void	remove (const string& aKey);

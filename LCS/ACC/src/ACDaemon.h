@@ -29,6 +29,7 @@
 #include <Common/Exception.h>
 #include <Common/Net/Socket.h>
 #include <ACC/ParameterSet.h>
+#include <ACC/ACRequestPool.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -52,6 +53,11 @@ public:
 	void doWork() throw (Exception);
 
 private:
+	// Construct a parameterfile for the AC controller.
+	void constructACFile(const ACRequest*	anACR,
+						 const string&	    aFilename);
+
+
 	// Copying is not allowed
 	ACDaemon(const ACDaemon&	that);
 
@@ -59,12 +65,17 @@ private:
 	ACDaemon& operator=(const ACDaemon& that);
 
 	//# --- Datamembers --- 
-
 	// The listener socket to receive the requests on.
 	Socket*			itsListener;
 
+	// The ping socket to receive the still-alive packages on.
+	Socket*			itsPingSocket;
+
 	// The parameterSet that was received during start up.
 	ParameterSet*	itsParamSet;
+
+	// The list with current active Application Controllers
+	ACRequestPool*	itsACPool;
 };
 
   } // namespace ACC

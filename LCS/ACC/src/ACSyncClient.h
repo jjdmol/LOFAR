@@ -52,7 +52,11 @@ public:
 	// for this ApplControlClient object. <br>
 	// The returned AC object knows who its AC is and is already connected to 
 	// it. 
-	explicit ACSyncClient(const string&	hostIDFrontEnd);
+	ACSyncClient (const string&			aUniqUserName,
+				  uint16				aNrProcs,
+				  uint32				aExpectedLifeTime,
+				  uint16				anActivityLevel = 2,
+				  uint16				anArchitecture = 0);
 
 	// Destructor;
 	virtual ~ACSyncClient();

@@ -39,7 +39,6 @@ DH_ProcControl::DH_ProcControl() :
 	DataHolder      ("", "DH_ProcControl"),
 	itsVersionNumber(0),
 	itsCommand      (0),
-	itsWaitTime     (0),
 	itsResult       (0)
 {
 	setExtraBlob ("Extra", 1);
@@ -55,7 +54,6 @@ DH_ProcControl::DH_ProcControl(const DH_ProcControl& that) :
 	DataHolder      (that),
 	itsVersionNumber(that.itsVersionNumber),
 	itsCommand      (that.itsCommand),
-	itsWaitTime     (that.itsWaitTime),
 	itsResult       (that.itsResult)
 { }
 
@@ -72,7 +70,6 @@ void 	DH_ProcControl::preprocess()
 
 	addField ("VersionNumber", BlobField<uint16>(1));
 	addField ("Command", 	   BlobField<int16>(1));	// PCCmd
-	addField ("WaitTime",      BlobField<int32>(1));	// time_t
 	addField ("Result", 	   BlobField<uint16>(1));
 
 	createDataBlock();
@@ -88,8 +85,6 @@ void	DH_ProcControl::fillDataPointers() {
 
 	itsVersionNumber = getData<uint16>("VersionNumber");
 	itsCommand 		 = getData<int16> ("Command");
-	// Need old plain C typecast to get the time_t value back.
-	itsWaitTime      = (time_t*)(getData<int32>("WaitTime"));
 	itsResult 		 = getData<uint16>("Result");
 
 	*itsVersionNumber = 0x0100;		// TODO define a constant WriteVersion
