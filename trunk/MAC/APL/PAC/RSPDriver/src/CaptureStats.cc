@@ -81,10 +81,11 @@ do { \
   } \
 } while(0)
 
-CaptureStats::CaptureStats(string name, int type, int device, int n_devices, int duration, int integration)
+CaptureStats::CaptureStats(string name, int type, bitset<MAX_N_RCUS> device_set, int n_devices,
+			   int duration, int integration, uint8 rcucontrol)
   : GCFTask((State)&CaptureStats::initial, name), Test(name),
-    m_type(type), m_device(device), m_n_devices(n_devices),
-    m_duration(duration), m_integration(integration),
+    m_type(type), m_device_set(device_set), m_n_devices(n_devices),
+    m_duration(duration), m_integration(integration), m_rcucontrol(rcucontrol),
     m_nseconds(0)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
@@ -150,20 +151,101 @@ GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
     {
       START_TEST("enabled", "test UPDSTATS");
 
+      // set rcu control register
+      RSPSetrcuEvent setrcu;
+      setrcu.timestamp.setNow();
+      setrcu.rcumask = m_device_set;
+      
+//      setrcu.rcumask.reset();
+//       if (m_device >= 0)
+//       {
+// 	setrcu.rcumask.set(m_device);
+//       }
+//       else
+//       {
+// 	for (int i = 0; i < m_n_devices; i++)
+// 	  setrcu.rcumask.set(i);
+//       }
+
+      setrcu.settings().resize(1);
+      setrcu.settings()(0).value = m_rcucontrol;
+
+      if (!m_server.send(setrcu))
+      {
+	cerr << "Error: failed to send RCU control" << endl;
+	exit(EXIT_FAILURE);
+      }
+    }
+    break;
+    
+    case RSP_SETRCUACK:
+    {
+      RSPSetrcuackEvent ack(e);
+
+      if (SUCCESS != ack.status)
+      {
+	cerr << "Error: failed to set RCU control register" << endl;
+	exit(EXIT_FAILURE);
+      }
+
+      sleep(2);
+
       // subscribe to status updates
+      RSPSubstatusEvent substatus;
+
+      substatus.timestamp.setNow();
+
+      substatus.rcumask = m_device_set;
+      
+//       substatus.rcumask.reset();
+//       if (m_device >= 0)
+//       {
+// 	substatus.rcumask.set(m_device);
+//       }
+//       else
+//       {
+// 	for (int i = 0; i < m_n_devices; i++)
+// 	  substatus.rcumask.set(i);
+//       }
+	
+      substatus.period = 1;
+      
+      if (!m_server.send(substatus))
+      {
+	cerr << "Error: failed to send subscription for status updates" << endl;
+	exit(EXIT_FAILURE);
+      }
+
+    }
+    break;
+
+    case RSP_SUBSTATUSACK:
+    {
+      RSPSubstatusackEvent ack(e);
+
+      if (SUCCESS != ack.status)
+      {
+	cerr << "Error: failed to subscribe to status updates" << endl;
+	exit(EXIT_FAILURE);
+      }
+
+      // subscribe to statistics updates
       RSPSubstatsEvent substats;
 
       substats.timestamp.setNow();
-      substats.rcumask.reset();
-      if (m_device >= 0)
-      {
-	substats.rcumask.set(m_device);
-      }
-      else
-      {
-	for (int i = 0; i < m_n_devices; i++)
-	  substats.rcumask.set(i);
-      }
+
+      substats.rcumask = m_device_set;
+      
+//       substats.rcumask.reset();
+//       if (m_device >= 0)
+//       {
+// 	substats.rcumask.set(m_device);
+//       }
+//       else
+//       {
+// 	for (int i = 0; i < m_n_devices; i++)
+// 	  substats.rcumask.set(i);
+//       }
 	
       substats.period = 1;
       substats.type = m_type;
@@ -171,7 +253,7 @@ GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
       
       if (!m_server.send(substats))
       {
-	cerr << "Error: failed to subscribe" << endl;
+	cerr << "Error: failed to send subscription for statistics updates" << endl;
 	exit(EXIT_FAILURE);
       }
     }
@@ -183,8 +265,33 @@ GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
 
       if (SUCCESS != ack.status)
       {
-	cerr << "Error: failed to subscribe" << endl;
+	cerr << "Error: failed to subscribe to statistics updates" << endl;
 	exit(EXIT_FAILURE);
+      }
+    }
+    break;
+
+    case RSP_UPDSTATUS:
+    {
+      RSPUpdstatusEvent upd(e);
+      
+      if (SUCCESS != upd.status)
+      {
+	cerr << "Error: invalid update" << endl;
+	exit(EXIT_FAILURE);
+      }
+
+      cout << "time=" << upd.timestamp;
+      int result = 0;
+      for (int device = 0; device < m_n_devices; device++)
+      {
+	if (!m_device_set[device]) continue;
+	
+	printf("RCU[%02d]:  status=0x%02x  noverflow=%d\n",
+	       device,
+	       upd.sysstatus.rcu()(result).status,
+	       upd.sysstatus.rcu()(result).nof_overflow);
+	result++;
       }
     }
     break;
@@ -220,11 +327,6 @@ GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
 	exit(EXIT_FAILURE);
       }
 
-#if 0
-      LOG_INFO_STR("ack.time=" << ack.timestamp);
-      LOG_INFO_STR("ack.handle=" << ack.handle);
-#endif
-
       port.close();
       TRAN(CaptureStats::initial);
     }
@@ -253,8 +355,6 @@ GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
 
 void CaptureStats::capture_statistics(Array<double, 2>& stats)
 {
-  cerr << ".";
-  
   if (0 == m_nseconds)
   {
     // initialize values array
@@ -285,17 +385,17 @@ void CaptureStats::capture_statistics(Array<double, 2>& stats)
   // check if duration has been reached
   if (m_nseconds >= m_duration)
   {
-    cerr << endl;
     exit(EXIT_SUCCESS);
   }
 }
 
 void CaptureStats::write_statistics(Array<double, 2>& stats)
 {
-  for (int device = stats.lbound(firstDim);
-       device <= stats.ubound(firstDim);
-       device++)
+  int result_device = 0;
+  for (int device = 0; device < m_n_devices; device++)
   {
+    if (!m_device_set[device]) continue;
+    
     time_t now = time(0);
     struct tm* t = localtime(&now);
 
@@ -311,14 +411,12 @@ void CaptureStats::write_statistics(Array<double, 2>& stats)
       case Statistics::SUBBAND_POWER:
 	snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_sst_rcu%02d.dat",
 		 t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-		 t->tm_hour, t->tm_min, t->tm_sec,
-		 (m_device < 0 ? device : m_device));
+		 t->tm_hour, t->tm_min, t->tm_sec, device);
 	break;
       case Statistics::BEAMLET_POWER:
 	snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_bst_pol%02d.dat",
 		 t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-		 t->tm_hour, t->tm_min, t->tm_sec,
-		 (m_device < 0 ? device : m_device));
+		 t->tm_hour, t->tm_min, t->tm_sec, device);
 	break;
       default:
 	cerr << "Error: invalid m_type" << endl;
@@ -335,13 +433,15 @@ void CaptureStats::write_statistics(Array<double, 2>& stats)
     }
     
     if (stats.extent(secondDim)
-	!= (int)fwrite(stats(device, Range::all()).data(), sizeof(double),
+	!= (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double),
 		       stats.extent(secondDim), ofile))
     {
       perror("fwrite");
       exit(EXIT_FAILURE);
     }
     (void)fclose(ofile);
+
+    result_device++; // next
   }
 }
 
@@ -355,11 +455,27 @@ void usage()
 {
   cout << "Usage: CaptureStats [arguments]" << endl;
   cout << "arguments (all optional):" << endl;
-  cout << "    --rcu=0..N_AVAIABLE_RCUS # or -r; default 0, -1 means ALL RCUs" << endl;
+  cout << "    --rcu=<rcuset>           # or -r; default 1, : means all RCU's" << endl;
+  cout << "        Example: -r=1,2,4:7 or --rcu=1:3,5:7" << endl;
+  cout << endl;
+  cout << "    --control=0xHH           # or -c; default 0xB9 (low band)" << endl;
+  cout << "        bit[7] = VDDVCC_ENABLE" << endl;
+  cout << "        bit[6] = VH_ENABLE" << endl;
+  cout << "        bit[5] = VL_ENABLE" << endl;
+  cout << "        bit[4] = FILSEL_1" << endl;
+  cout << "        bit[3] = FILSEL_0" << endl;
+  cout << "        bit[2] = BANDSEL" << endl;
+  cout << "        bit[1] = HBA_ENABLE" << endl;
+  cout << "        bit[0] = LBA_ENABLE" << endl;
+  cout << "        Exmples LB=0xB9, HB_110_190=0xC6, HB_170_230=0xCE, HB_210_250=0xD6" << endl;
+  cout << endl;
   cout << "    --duration=N             # or -d; default 1, number of seconds to capture" << endl;
+  cout << endl;
   cout << "    --integration[=N]        # or -i; default equal to duration" << endl;
   cout << "        Note: integration must be a divisor of duration" << endl;
+  cout << endl;
   cout << "    --statstype=0|1          # or -s; default 0, 0 = subbands, 1 = beamlets" << endl;
+  cout << endl;
   cout << "    --help                   # or -h; this help" << endl;
   cout << endl;
   cout << "Example:" << endl;
@@ -370,13 +486,79 @@ void usage()
   cout << "   # capture from all RCUs for 10 seconds integrating 10 seconds; results in one output file for each RCU." << endl;
 }
 
+std::bitset<MAX_N_RCUS> strtoset(char* str, unsigned int max)
+{
+  char* start = str;
+  char* end   = 0;
+  bool  range = false;
+  unsigned long prevrcu = 0;
+  bitset<MAX_N_RCUS> rcuset;
+
+  rcuset.reset();
+
+  while (start)
+  {
+    unsigned long rcu = strtoul(start, &end, 10); // read decimal numbers
+    start = (end ? (*end ? end + 1 : 0) : 0); // advance
+    if (rcu >= max)
+    {
+      cerr << "Value " << rcu << " out of range in RCU set specification" << endl;
+      exit(EXIT_FAILURE);
+    }
+
+    if (end)
+    {
+      switch (*end)
+      {
+	case ',':
+	case 0:
+	{
+	  if (range)
+	  {
+	    if (0 == prevrcu && 0 == rcu) rcu = max - 1;
+	    if (rcu < prevrcu)
+	    {
+	      cerr << "Error: invalid rcu range specified" << endl;
+	      exit(EXIT_FAILURE);
+	    }
+	    for (unsigned long i = prevrcu; i <= rcu; i++) rcuset.set(i);
+	  }
+	    
+	  else
+	  {
+	    rcuset.set(rcu);
+	  }
+	  range=false;
+	}
+	break;
+
+	case ':':
+	  range=true;
+	  break;
+
+	default:
+	  printf("invalid character %c", *end);
+	  break;
+      }
+    }
+    prevrcu = rcu;
+  }
+
+  return rcuset;
+}
+
 int main(int argc, char** argv)
 {
   int type        = 0;
-  int device      = 0;
+  bitset<MAX_N_RCUS> device_set = 0;
   int duration    = 1;
   int integration = -1;
-
+  unsigned long controlopt = 0xB9;
+  uint8 rcucontrol = 0xB9;
+  
+  // default is rcu 0
+  device_set.set(0);
+  
   GCFTask::init(argc, argv);
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
@@ -394,15 +576,18 @@ int main(int argc, char** argv)
   int n_devices = ((type <= Statistics::SUBBAND_POWER) ?
 		   GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL :
 		   GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL);
+
   while (1)
   {
     static struct option long_options[] = 
       {
         { "rcu",          required_argument, 0, 'r' },
+        { "control",      required_argument, 0, 'c' },
 	{ "duration",     required_argument, 0, 'd' },
 	{ "integration",  optional_argument, 0, 'i' },
 	{ "statstype",    required_argument, 0, 's' },
 	{ "help",         no_argument,       0, 'h' },
+	  
 	{ 0, 0, 0, 0 },
       };
 
@@ -415,12 +600,20 @@ int main(int argc, char** argv)
     switch (c)
     {
       case 'r':
-	device = atoi(optarg);
-	if (device < -1 || device >= n_devices)
+	device_set = strtoset(optarg, n_devices);
+	break;
+	
+      case 'c':
+	controlopt = strtoul(optarg, 0, 0);
+	if ( controlopt > 0xFF )
 	{
-	  cerr << formatString("Error: invalid device index, should be >= -1 && < %d; -1 indicates all devices", n_devices) << endl;
+	  cerr << "Error: invalid control parameter, must be < 0xFF" << endl;
 	  exit(EXIT_FAILURE);
 	}
+	rcucontrol = controlopt;
+#if 0
+	cout << formatString("control=0x%02x", rcucontrol) << endl;
+#endif
 	break;
 
       case 'd':
@@ -457,6 +650,13 @@ int main(int argc, char** argv)
     }
   }
 
+  // check for valid
+  if (device_set.count() == 0 || device_set.count() > (unsigned int)n_devices)
+  {
+    cerr << formatString("Error: invalid device set or device set not specified") << endl;
+    exit(EXIT_FAILURE);
+  }
+
   // check for valid duration
   if (duration <= 0)
   {
@@ -474,7 +674,7 @@ int main(int argc, char** argv)
   }
 
   Suite s("CaptureStats", &cerr);
-  s.addTest(new CaptureStats("CaptureStats", type, device, n_devices, duration, integration));
+  s.addTest(new CaptureStats("CaptureStats", type, device_set, n_devices, duration, integration, rcucontrol));
   try
   {
     s.run();

@@ -32,6 +32,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <netinet/in.h>
+
 using namespace RSP;
 using namespace LOFAR;
 using namespace EPA_Protocol;
