@@ -22,6 +22,7 @@
 
 #include <Common/BlobIStream.h>
 #include <Common/BlobHeader.h>
+#include <Common/DataConvert.h>
 
 
 BlobIStream::BlobIStream (BlobIBuffer* bb)
@@ -75,12 +76,12 @@ const std::string& BlobIStream::getNextType()
   itsVersion = hdr.getVersion();
   itsObjectType.resize (hdr.itsNameLength); // resize string adding trailing 0
   char* ptr = &(itsObjectType[0]);
-  itsStream->get (ptr, hdr.itsNameLength);
+  itsCurLength = hdr.plainSize();    // length read
+  getBuf (ptr, hdr.itsNameLength);
   if (hdr.itsReservedLength > hdr.itsNameLength) {
     char buf[256];
-    itsStream->get (buf, hdr.itsReservedLength - hdr.itsNameLength);
+    getBuf (buf, hdr.itsReservedLength - hdr.itsNameLength);
   }
-  itsCurLength = hdr.plainSize() + hdr.itsReservedLength;    // length read
   itsHasCachedType = true;
   return itsObjectType;
 }
@@ -113,114 +114,110 @@ uint BlobIStream::getEnd()
   return len;
 }
 
+void BlobIStream::getBuf (void* buf, uint sz)
+{
+  uint sz1 = itsStream->get (static_cast<char*>(buf), sz);
+  AssertMsg (sz1 == sz,
+	     "BlobIStream::getBuf - " << sz << " bytes asked, but only "
+	     << sz1 << " could be read (pos=" << tellPos() << ")");
+  itsCurLength += sz1;
+}
+
 BlobIStream& BlobIStream::operator>> (bool& var)
 {
   char v;
-  itsStream->get (&v, 1);
+  getBuf (&v, 1);
   var = v;
-  itsCurLength++;
   return *this;
 }
 BlobIStream& BlobIStream::operator>> (char& var)
 {
-  itsStream->get (&var, 1);
-  itsCurLength++;
+  getBuf (&var, 1);
   return *this;
 }
 BlobIStream& BlobIStream::operator>> (uchar& var)
 {
-  itsStream->get ((char*)(&var), 1);
-  itsCurLength++;
+  getBuf ((char*)(&var), 1);
   return *this;
 }
 BlobIStream& BlobIStream::operator>> (int16& var)
 {
-  itsStream->get ((char*)(&var), sizeof(var));
+  getBuf ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvert (itsDataFormat, var);
   }
-  itsCurLength += sizeof(var);
   return *this;
 }
 BlobIStream& BlobIStream::operator>> (uint16& var)
 {
-  itsStream->get ((char*)(&var), sizeof(var));
+  getBuf ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvert (itsDataFormat, var);
   }
-  itsCurLength += sizeof(var);
   return *this;
 }
 BlobIStream& BlobIStream::operator>> (int32& var)
 {
-  itsStream->get ((char*)(&var), sizeof(var));
+  getBuf ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvert (itsDataFormat, var);
   }
-  itsCurLength += sizeof(var);
   return *this;
 }
 BlobIStream& BlobIStream::operator>> (uint32& var)
 {
-  itsStream->get ((char*)(&var), sizeof(var));
+  getBuf ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvert (itsDataFormat, var);
   }
-  itsCurLength += sizeof(var);
   return *this;
 }
 BlobIStream& BlobIStream::operator>> (int64& var)
 {
-  itsStream->get ((char*)(&var), sizeof(var));
+  getBuf ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvert (itsDataFormat, var);
   }
-  itsCurLength += sizeof(var);
   return *this;
 }
 BlobIStream& BlobIStream::operator>> (uint64& var)
 {
-  itsStream->get ((char*)(&var), sizeof(var));
+  getBuf ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvert (itsDataFormat, var);
   }
-  itsCurLength += sizeof(var);
   return *this;
 }
 BlobIStream& BlobIStream::operator>> (float& var)
 {
-  itsStream->get ((char*)(&var), sizeof(var));
+  getBuf ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvertFloat (itsDataFormat, &var);
   }
-  itsCurLength += sizeof(var);
   return *this;
 }
 BlobIStream& BlobIStream::operator>> (double& var)
 {
-  itsStream->get ((char*)(&var), sizeof(var));
+  getBuf ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvertDouble (itsDataFormat, &var);
   }
-  itsCurLength += sizeof(var);
   return *this;
 }
 BlobIStream& BlobIStream::operator>> (fcomplex& var)
 {
-  itsStream->get ((char*)(&var), sizeof(var));
+  getBuf ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvertFloat (itsDataFormat, &var, 2);
   }
-  itsCurLength += sizeof(var);
   return *this;
 }
 BlobIStream& BlobIStream::operator>> (dcomplex& var)
 {
-  itsStream->get ((char*)(&var), sizeof(var));
+  getBuf ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvertDouble (itsDataFormat, &var, 2);
   }
-  itsCurLength += sizeof(var);
   return *this;
 }
 BlobIStream& BlobIStream::operator>> (std::string& var)
@@ -229,109 +226,100 @@ BlobIStream& BlobIStream::operator>> (std::string& var)
   operator>> (len);
   var.resize (len);              // resize storage
   char* ptr = &(var[0]);         // get actual string
-  itsStream->get (ptr, len);
-  itsCurLength += len;
+  getBuf (ptr, len);
   return *this;
 }
 
 void BlobIStream::get (bool* values, uint nrval)
 {
-  // Get as chars and convert to bools.
-  std::vector<char> val(nrval);
-  get (&val[0], nrval);
-  for (uint i=0; i<nrval; i++) {
-    values[i] = val[i];
+  uchar buf[256];
+  while (nrval > 0) {
+    uint nr = std::min(nrval, 8*256u);
+    // Get and convert bits to bools.
+    int nrb = (nr+7)/8;
+    getBuf (buf, nrb);
+    LOFAR::bitToBool (values, buf, nr);
+    nrval -= nr;
+    values += nr;
   }
 }
 void BlobIStream::get (char* values, uint nrval)
 {
-  itsStream->get (values, nrval);
-  itsCurLength += nrval;
+  getBuf (values, nrval);
 }
 void BlobIStream::get (uchar* values, uint nrval)
 {
-  itsStream->get ((char*)values, nrval);
-  itsCurLength += nrval;
+  getBuf ((char*)values, nrval);
 }
 void BlobIStream::get (int16* values, uint nrval)
 {
-  itsStream->get ((char*)values, nrval*sizeof(int16));
+  getBuf ((char*)values, nrval*sizeof(int16));
   if (itsMustConvert) {
     LOFAR::dataConvert16 (itsDataFormat, values, nrval);
   }
-  itsCurLength += nrval*sizeof(int16);
 }
 void BlobIStream::get (uint16* values, uint nrval)
 {
-  itsStream->get ((char*)values, nrval*sizeof(uint16));
+  getBuf ((char*)values, nrval*sizeof(uint16));
   if (itsMustConvert) {
     LOFAR::dataConvert16 (itsDataFormat, values, nrval);
   }
-  itsCurLength += nrval*sizeof(uint16);
 }
 void BlobIStream::get (int32* values, uint nrval)
 {
-  itsStream->get ((char*)values, nrval*sizeof(int32));
+  getBuf ((char*)values, nrval*sizeof(int32));
   if (itsMustConvert) {
     LOFAR::dataConvert32 (itsDataFormat, values, nrval);
   }
-  itsCurLength += nrval*sizeof(int32);
 }
 void BlobIStream::get (uint32* values, uint nrval)
 {
-  itsStream->get ((char*)values, nrval*sizeof(uint32));
+  getBuf ((char*)values, nrval*sizeof(uint32));
   if (itsMustConvert) {
     LOFAR::dataConvert32 (itsDataFormat, values, nrval);
   }
-  itsCurLength += nrval*sizeof(uint32);
 }
 void BlobIStream::get (int64* values, uint nrval)
 {
-  itsStream->get ((char*)values, nrval*sizeof(int64));
+  getBuf ((char*)values, nrval*sizeof(int64));
   if (itsMustConvert) {
     LOFAR::dataConvert64 (itsDataFormat, values, nrval);
   }
-  itsCurLength += nrval*sizeof(int64);
 }
 void BlobIStream::get (uint64* values, uint nrval)
 {
-  itsStream->get ((char*)values, nrval*sizeof(uint64));
+  getBuf ((char*)values, nrval*sizeof(uint64));
   if (itsMustConvert) {
     LOFAR::dataConvert64 (itsDataFormat, values, nrval);
   }
-  itsCurLength += nrval*sizeof(uint64);
 }
 void BlobIStream::get (float* values, uint nrval)
 {
-  itsStream->get ((char*)values, nrval*sizeof(float));
+  getBuf ((char*)values, nrval*sizeof(float));
   if (itsMustConvert) {
     LOFAR::dataConvertFloat (itsDataFormat, values, nrval);
   }
-  itsCurLength += nrval*sizeof(float);
 }
 void BlobIStream::get (double* values, uint nrval)
 {
-  itsStream->get ((char*)values, nrval*sizeof(double));
+  getBuf ((char*)values, nrval*sizeof(double));
   if (itsMustConvert) {
     LOFAR::dataConvertDouble (itsDataFormat, values, nrval);
   }
-  itsCurLength += nrval*sizeof(double);
 }
 void BlobIStream::get (fcomplex* values, uint nrval)
 {
-  itsStream->get ((char*)values, nrval*sizeof(fcomplex));
+  getBuf ((char*)values, nrval*sizeof(fcomplex));
   if (itsMustConvert) {
     LOFAR::dataConvertFloat (itsDataFormat, values, 2*nrval);
   }
-  itsCurLength += nrval*sizeof(fcomplex);
 }
 void BlobIStream::get (dcomplex* values, uint nrval)
 {
-  itsStream->get ((char*)values, nrval*sizeof(dcomplex));
+  getBuf ((char*)values, nrval*sizeof(dcomplex));
   if (itsMustConvert) {
     LOFAR::dataConvertDouble (itsDataFormat, values, 2*nrval);
   }
-  itsCurLength += nrval*sizeof(dcomplex);
 }
 void BlobIStream::get (string* values, uint nrval)
 {
@@ -342,12 +330,19 @@ void BlobIStream::get (string* values, uint nrval)
 
 void BlobIStream::get (std::vector<bool>& values)
 {
-  // Get as chars and convert to bools.
-  std::vector<char> val;
-  get (val);
-  values.resize (val.size());
-  for (uint i=0; i<values.size(); i++) {
-    values[i] = val[i];
+  uint32 sz;
+  operator>> (sz);
+  values.resize (sz);
+  bool buf[256];
+  uint inx=0;
+  while (sz > 0) {
+    uint nr = std::min(sz, 256u);
+    // Get and convert bools to vector.
+    get (buf, nr);
+    for (uint i=0; i<nr; i++) {
+      values[inx++] = buf[i];
+    }
+    sz -= nr;
   }
 }
 

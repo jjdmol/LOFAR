@@ -112,6 +112,14 @@ namespace LOFAR
   void byteSwap64 (void* inout, uint nrval);
   // </group>
 
+  // Convert bools to bits.
+  // It returns the number of bytes used.
+  uint boolToBit (void* to, const void* from, uint nvalues);
+
+  // Convert bits to bools.
+  // It returns the number of bytes used.
+  uint bitToBool (void* to, const void* from, uint nvalues);
+
 } // end namespace LOFAR
 
 
