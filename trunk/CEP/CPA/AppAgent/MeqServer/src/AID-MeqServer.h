@@ -15,13 +15,18 @@ const int AidApp_int = -1137;
 #endif
 #ifndef _defined_id_AidArgs
 #define _defined_id_AidArgs 1
-const AtomicID AidArgs(-1430);                    // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:9
-const int AidArgs_int = -1430;
+const AtomicID AidArgs(-1436);                    // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:10
+const int AidArgs_int = -1436;
 #endif
-#ifndef _defined_id_AidClass
-#define _defined_id_AidClass 1
-const AtomicID AidClass(-1428);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MeqServer/src/MeqServer.aidlist:2
-const int AidClass_int = -1428;
+#ifndef _defined_id_AidChild
+#define _defined_id_AidChild 1
+const AtomicID AidChild(-1422);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/MEQ/src/MEQ.aidlist:2
+const int AidChild_int = -1422;
+#endif
+#ifndef _defined_id_AidChildren
+#define _defined_id_AidChildren 1
+const AtomicID AidChildren(-1434);                // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/MEQ/src/MEQ.aidlist:3
+const int AidChildren_int = -1434;
 #endif
 #ifndef _defined_id_AidCommand
 #define _defined_id_AidCommand 1
@@ -30,13 +35,13 @@ const int AidCommand_int = -1338;
 #endif
 #ifndef _defined_id_AidCreate
 #define _defined_id_AidCreate 1
-const AtomicID AidCreate(-1426);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MeqServer/src/MeqServer.aidlist:4
-const int AidCreate_int = -1426;
+const AtomicID AidCreate(-1440);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:9
+const int AidCreate_int = -1440;
 #endif
 #ifndef _defined_id_AidDelete
 #define _defined_id_AidDelete 1
-const AtomicID AidDelete(-1427);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MeqServer/src/MeqServer.aidlist:5
-const int AidDelete_int = -1427;
+const AtomicID AidDelete(-1441);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:9
+const int AidDelete_int = -1441;
 #endif
 #ifndef _defined_id_AidError
 #define _defined_id_AidError 1
@@ -45,18 +50,13 @@ const int AidError_int = -1071;
 #endif
 #ifndef _defined_id_AidGet
 #define _defined_id_AidGet 1
-const AtomicID AidGet(-1429);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MeqServer/src/MeqServer.aidlist:7
-const int AidGet_int = -1429;
-#endif
-#ifndef _defined_id_AidMEQNode
-#define _defined_id_AidMEQNode 1
-const AtomicID AidMEQNode(-1425);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MeqServer/src/MeqServer.aidlist:8
-const int AidMEQNode_int = -1425;
+const AtomicID AidGet(-1442);                     // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:9
+const int AidGet_int = -1442;
 #endif
 #ifndef _defined_id_AidMeqServer
 #define _defined_id_AidMeqServer 1
-const AtomicID AidMeqServer(-1423);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MeqServer/src/MeqServer.aidlist:9
-const int AidMeqServer_int = -1423;
+const AtomicID AidMeqServer(-1439);               // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:8
+const int AidMeqServer_int = -1439;
 #endif
 #ifndef _defined_id_AidMessage
 #define _defined_id_AidMessage 1
@@ -65,23 +65,28 @@ const int AidMessage_int = -1067;
 #endif
 #ifndef _defined_id_AidName
 #define _defined_id_AidName 1
-const AtomicID AidName(-1163);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/VisCube/src/VisCube.aidlist:44
+const AtomicID AidName(-1163);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/MEQ/src/MEQ.aidlist:9
 const int AidName_int = -1163;
 #endif
 #ifndef _defined_id_AidNode
 #define _defined_id_AidNode 1
-const AtomicID AidNode(-1424);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MeqServer/src/MeqServer.aidlist:12
-const int AidNode_int = -1424;
+const AtomicID AidNode(-1423);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/MEQ/src/MEQ.aidlist:11
+const int AidNode_int = -1423;
 #endif
 #ifndef _defined_id_AidNodeIndex
 #define _defined_id_AidNodeIndex 1
-const AtomicID AidNodeIndex(-1422);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MeqServer/src/MeqServer.aidlist:13
-const int AidNodeIndex_int = -1422;
+const AtomicID AidNodeIndex(-1438);               // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:8
+const int AidNodeIndex_int = -1438;
 #endif
 #ifndef _defined_id_AidRequest
 #define _defined_id_AidRequest 1
 const AtomicID AidRequest(-1351);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/AppAgent/src/AppAgent.aidlist:26
 const int AidRequest_int = -1351;
+#endif
+#ifndef _defined_id_AidResolve
+#define _defined_id_AidResolve 1
+const AtomicID AidResolve(-1437);                 // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:9
+const int AidResolve_int = -1437;
 #endif
 #ifndef _defined_id_AidResult
 #define _defined_id_AidResult 1
@@ -90,7 +95,7 @@ const int AidResult_int = -1421;
 #endif
 #ifndef _defined_id_AidSet
 #define _defined_id_AidSet 1
-const AtomicID AidSet(-1381);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MeqServer/src/MeqServer.aidlist:16
+const AtomicID AidSet(-1381);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/AppUtils/src/AppUtils.aidlist:15
 const int AidSet_int = -1381;
 #endif
 #ifndef _defined_id_AidState

@@ -5,33 +5,30 @@
     #include <DMI/DynamicTypeManager.h>
     #include <DMI/Packer.h>
     
-#include "Node.h"
-BlockableObject * __construct_MEQNode (int n) { return n>0 ? new MEQ::Node [n] : new MEQ::Node; }
   
     int aidRegistry_MeqServer ()
     {
       static int res = 
 
-        AtomicID::registerId(-1424,"Node")+
+        AtomicID::registerId(-1423,"Node")+
         AtomicID::registerId(-1163,"Name")+
-        AtomicID::registerId(-1422,"NodeIndex")+
-        AtomicID::registerId(-1423,"MeqServer")+
-        AtomicID::registerId(-1426,"Create")+
-        AtomicID::registerId(-1427,"Delete")+
-        AtomicID::registerId(-1429,"Get")+
+        AtomicID::registerId(-1438,"NodeIndex")+
+        AtomicID::registerId(-1439,"MeqServer")+
+        AtomicID::registerId(-1440,"Create")+
+        AtomicID::registerId(-1441,"Delete")+
+        AtomicID::registerId(-1442,"Get")+
         AtomicID::registerId(-1381,"Set")+
         AtomicID::registerId(-1052,"State")+
         AtomicID::registerId(-1351,"Request")+
+        AtomicID::registerId(-1437,"Resolve")+
+        AtomicID::registerId(-1422,"Child")+
+        AtomicID::registerId(-1434,"Children")+
         AtomicID::registerId(-1137,"App")+
         AtomicID::registerId(-1338,"Command")+
-        AtomicID::registerId(-1430,"Args")+
+        AtomicID::registerId(-1436,"Args")+
         AtomicID::registerId(-1421,"Result")+
         AtomicID::registerId(-1071,"Error")+
         AtomicID::registerId(-1067,"Message")+
-        AtomicID::registerId(-1428,"Class")+
-        AtomicID::registerId(-1425,"MEQNode")+
-        TypeInfoReg::addToRegistry(-1425,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1425,__construct_MEQNode)+
     0;
     return res;
   }

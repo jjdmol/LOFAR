@@ -9,7 +9,7 @@
         
 
 #define DoForAllDynamicTypes_MeqServer(Do,arg,separator) \
-        Do(MEQNode,arg)
+        
 
 #define DoForAllNumericTypes_MeqServer(Do,arg,separator) \
         

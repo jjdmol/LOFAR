@@ -4,9 +4,7 @@ lib_LTLIBRARIES = libmeqserver.la
 
 libmeqserver_la_SOURCES = \
   AID-MeqServer-Registry.cc \
-  MeqServer.cc \
-  NodeRepository.cc \
-  Node.cc 
+  MeqServer.cc 
   
 bin_PROGRAMS   		= meqserver
   

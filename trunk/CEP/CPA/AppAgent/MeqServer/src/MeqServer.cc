@@ -8,6 +8,8 @@ using namespace AppControlAgentVocabulary;
 namespace MEQ 
 {
   
+static int dum = aidRegistry_MeqServer();
+  
 InitDebugContext(MeqServer,"MeqServer");
   
 //##ModelId=3F5F195E0140
@@ -17,6 +19,7 @@ MeqServer::MeqServer()
   command_map["Delete.Node"] = &MeqServer::deleteNode;
   command_map["Get.Node.State"] = &MeqServer::getNodeState;
   command_map["Set.Node.State"] = &MeqServer::setNodeState;
+  command_map["Resolve.Children"] = &MeqServer::resolveChildren;
 }
 
 
@@ -25,11 +28,11 @@ Node & MeqServer::resolveNode (const DataRecord &rec)
 {
   int nodeindex = rec[AidNodeIndex].as<int>(-1);
   if( nodeindex>0 )
-    return noderep.get(nodeindex);
+    return forest.get(nodeindex);
   string name = rec[AidName].as<string>("");
   FailWhen( !name.length(),"either nodeindex or name must be specified");
   cdebug(3)<<"looking up node name "<<name<<endl;
-  return noderep.findNode(name);
+  return forest.findNode(name);
 }
 
 
@@ -38,7 +41,11 @@ void MeqServer::createNode (DataRecord::Ref &out,DataRecord::Ref::Xfer &initrec)
   cdebug(2)<<"creating node ";
   cdebug(3)<<initrec->sdebug(3);
   cdebug(2)<<endl;
-  int nodeindex = noderep.create(initrec);
+  int nodeindex;
+  const Node::Ref &ref = forest.create(nodeindex,initrec);
+  // add to spigot mux if necessary
+//  spigot_mux.add(ref);
+  // form a response message
   out()[AidNodeIndex] = nodeindex;
   out()[AidMessage] = ssprintf("node %d created",nodeindex);
 }
@@ -51,12 +58,16 @@ void MeqServer::deleteNode (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
     string name = (*in)[AidName].as<string>("");
     cdebug(3)<<"looking up node name "<<name<<endl;
     FailWhen( !name.length(),"either nodeindex or name must be specified");
-    nodeindex = noderep.findIndex(name);
+    nodeindex = forest.findIndex(name);
     FailWhen( nodeindex<0,"node '"+name+"' not found");
   }
-  cdebug(2)<<"deleting node "<<nodeindex<<endl;
-  string name = noderep.get(nodeindex).name();
-  noderep.remove(nodeindex);
+  const Node::Ref &noderef = forest.getRef(nodeindex);
+  string name = noderef->name();
+  cdebug(2)<<"deleting node "<<name<<"("<<nodeindex<<")\n";
+  // remove from the spigot mux if necessary
+//  spigot_mux.remove(noderef);
+  // remove from forest
+  forest.remove(nodeindex);
   out()[AidMessage] = ssprintf("node %d (%s) deleted",nodeindex,name.c_str());
 }
 
@@ -75,6 +86,13 @@ void MeqServer::setNodeState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   cdebug(3)<<"setState for node "<<node.name()<<endl;
   node.setState(*in);
   out.attach(node.state(),DMI::READONLY|DMI::ANON);
+}
+
+void MeqServer::resolveChildren (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
+{
+  Node & node = resolveNode(*in);
+  cdebug(3)<<"resolveChildren for node "<<node.name()<<endl;
+  node.resolveChildren();
 }
 
 //##ModelId=3F608106021C
