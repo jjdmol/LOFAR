@@ -1,5 +1,5 @@
 
-#include <tinyCEP/MyExample.h>
+#include <MyExample.h>
 
 namespace LOFAR
 {

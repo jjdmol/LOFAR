@@ -27,7 +27,7 @@
 
 //# Includes
 #include <tinyCEP/WorkHolder.h>
-#include <tinyCEP/DH_Example.h>
+#include <DH_Example.h>
 
 
 namespace LOFAR

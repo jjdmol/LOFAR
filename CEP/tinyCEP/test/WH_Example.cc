@@ -22,7 +22,7 @@
 
 #include <stdio.h>
 
-#include <tinyCEP/WH_Example.h>
+#include <WH_Example.h>
 #include <Common/KeyValueMap.h>
 #include <Common/Debug.h>
 

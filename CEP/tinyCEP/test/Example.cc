@@ -22,9 +22,11 @@
 
 #include <iostream>
 #include <Transport/DataHolder.h>
-#include <tinyCEP/DH_Example.h>
-#include <tinyCEP/MyExample.h>
 #include <tinyCEP/SimulatorParseClass.h>
+
+#include <DH_Example.h>
+#include <MyExample.h>
+
 
 #include <Common/KeyValueMap.h>
 
