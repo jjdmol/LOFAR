@@ -524,17 +524,17 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
 	// send pointto command (zenith)
 	ABSBeampointtoEvent pointto;
 	pointto.handle = ack->handle;
-	pointto.time = from_time_t(time(0)) + seconds(27);
+	pointto.time = from_time_t(time(0)) + seconds(20);
 	pointto.type=(int)Direction::LOFAR_LMN;
 	pointto.angle1=0.0;
-	pointto.angle2=0.0;
+	pointto.angle2=1.0;
 
 	_test(sizeof(pointto) == beam_server.send(pointto));
 
 	// send pointto command (northern horizon)
-	pointto.time = from_time_t(time(0)) + seconds(37);
-	pointto.angle1=0.0;
-	pointto.angle2=1.0;
+	pointto.time = from_time_t(time(0)) + seconds(25);
+	pointto.angle1=1.0;
+	pointto.angle2=0.0;
 
 	_test(sizeof(pointto) == beam_server.send(pointto));
 
