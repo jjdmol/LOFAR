@@ -47,26 +47,70 @@ const meqserver := function (appid='MeqServer',
   return ref public;
 }
 
+const meqnode := function (class,name,children=F,default=[=] )
+{
+  defrec := [ class=class,name=name ];
+  if( is_record(children) )
+    defrec.children := children;
+  if( !is_record(default) || len(default) )
+    defrec.default := default;
+  return defrec;
+}
+
+const meqdomain := function (startfreq,endfreq,starttime,endtime)
+{
+  domain := as_double([startfreq,endfreq,starttime,endtime]);
+  domain::is_datafield := T;
+  return domain;
+}
+
+const meqcells := function(domain,nfreq,times,timesteps )
+{
+  return [ domain=domain,nfreq=as_integer(nfreq),
+           times=as_double(times),
+           timesteps=as_double(timesteps) ];
+}
+
+const meqrequest := function(cells,reqid=F,calcderiv=F)
+{
+  global _meqrequest_id;
+  if( is_boolean(reqid) )
+    reqid := _meqrequest_id +:= 1;
+  else
+    _meqrequest_id := reqid;
+  return [ cells=cells,reqid=as_integer(reqid),calcderiv=calcderiv ];
+}
+
 const meqserver_test := function ()
 {
   global mqs;
-  mqs := meqserver(verbose=4); # ,server='./meqserver'); #,suspend=T);
+  mqs := meqserver(verbose=4,server='./meqserver'); #,suspend=T);
   mqs.setdebug('MeqNode',5);
   mqs.init([=],[=],[=],wait=T);
   print mqs.meq('Create.Node',[class='MEQNode',name='test'],T);
   print mqs.meq('Create.Node',[class='MEQNode',name='child1'],T);
   print mqs.meq('Create.Node',[class='MEQNode',name='child2'],T);
-  rec := 
-    [ class='MEQNode',name='parent',   # defines parent node
-      children=[                       # define children
-           a='child1',                 #   by name
-           b='child2',           
-           c=[class='MEQNode',name='child3'], # with initrecord
-           d='child4' ]];              # with unresolved name 
-  print mqs.meq('Create.Node',rec,T);
   print mqs.meq('Create.Node',[class='MEQNode',name='child4'],T);
-  print mqs.meq('Resolve.Children',[name='parent'],T);
+  
+  defval1 := array(as_double(1),2,2);
+  defval2 := array(as_double(2),1,1);
+  
+  cosrec := [ class='MEQCos',name='cosp1',children=[ 
+      x=[ class='MEQParmPolcStored',name='p1',default=defval1 ] ] ];
+      
+  addrec := [ class='MEQAdd',name='add1_2',children=[
+      x=cosrec,
+      y=[ class='MEQParmPolcStored',name='p2',default=defval2 ] ] ];
+      
+  print mqs.meq('Create.Node',addrec,T);
+  print mqs.meq('Resolve.Children',[name='add1_2'],T);
   print mqs.meq('Get.Node.State',[name='test'],T);
-  print mqs.meq('Get.Node.State',[name='parent'],T);
+  print mqs.meq('Get.Node.State',[name='add1_2'],T);
   print mqs.meq('Get.Node.State',[nodeindex=1],T);
+  
+  cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
+  request := meqrequest(cells);
+  
+  print mqs.meq('Get.Result',[name='add1_2',request=request],T);
+  print mqs.meq('Get.Node.State',[name='add1_2'],T);
 }

@@ -57,7 +57,7 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_PACKAGE(CEP/CPA/OCTOGlish)
 lofar_PACKAGE(CEP/CPA/VisCube)
-lofar_PACKAGE(CEP/CPA/MEQ)
+lofar_PACKAGE(CEP/CPA/PSS4/MEQ)
 lofar_PACKAGE(CEP/CPA/AppAgent/OctoAgent)
 lofar_PACKAGE(CEP/CPA/AppAgent/MSVisAgent)
 lofar_PACKAGE(CEP/CPA/AppAgent/AppUtils)

@@ -7,7 +7,7 @@
 #pragma aidgroup MeqServer    
 #pragma aid Node Name NodeIndex MeqServer
 #pragma aid Create Delete Get Set State Request Resolve Child Children
-#pragma aid App Command Args Result Error Message
+#pragma aid App Command Args Result Error Message Code
     
 namespace MEQ
 {
@@ -34,6 +34,7 @@ class MeqServer : public VisPipe
     void setNodeState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     
     void resolveChildren (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    void getNodeResult (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
       
     //##ModelId=3F5F195E0156
     virtual string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;
