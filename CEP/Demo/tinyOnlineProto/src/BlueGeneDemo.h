@@ -27,7 +27,7 @@
 
 //# Includes
 #include <tinyCEP/WorkHolder.h>
-#include <tinyCEP/ApplicationHolder.h>
+#include <tinyCEP/TinyApplicationHolder.h>
 
 //# Include definitions.h to check simulation size
 #include <tinyOnlineProto/definitions.h>
@@ -35,7 +35,7 @@
 namespace LOFAR
 {
 
-  class BlueGeneDemo: public LOFAR::ApplicationHolder {
+  class BlueGeneDemo: public LOFAR::TinyApplicationHolder {
     
   public:
     BlueGeneDemo(bool BGl, int bgNodes=64);
