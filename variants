@@ -15,4 +15,5 @@ lam-corba.variant.conf:   --with-lam --with-vbroker
 insure.variant.conf:	  --with-insure
 insure.variant.make:	  QA=insure
 scampi.variant.conf:	  --with-scampi
+scampi-opt.variant.conf:  --with-scampi --with-optimize
 mpich-prof.variant.conf:  --with-mpich --enable-mpi-profiler
