@@ -435,10 +435,10 @@ void Parm::processCommands (const DataRecord &rec,const Request &req)
   Function::processCommands(rec,req);
   bool saved  = False;
   // Is the parm value specified? use it to update polcs
-  DataRecord::Hook hset(rec,FSetValue);
+  DataRecord::Hook hset(rec,FUpdateValues);
   if( hset.exists() )
   {
-    cdebug(4)<<"got "<<FSetValue<<" command"<<endl;
+    cdebug(4)<<"got "<<FUpdateValues<<" command"<<endl;
     // Update the polc coefficients with the new values.
     LoVec_double values = hset.as<LoVec_double>();
     uint inx = 0;
