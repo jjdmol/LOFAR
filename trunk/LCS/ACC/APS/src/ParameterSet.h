@@ -1,4 +1,4 @@
-//#  ParameterSet.h: Implements a map of Key-Value pairs.
+//#  ParameterSet.h: ParameterCollectin filled with runtime values.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,9 +18,10 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#	 This class implements a container of key-value pairs. The KV pairs can
-//#  be read from a file or be merged with the values in another file.
-//#  The class also support the creation of subsets.
+//#  Abstract:
+//#
+//#	 Defines a class the should contain fully filled ParamaterCollections
+//#  to be used in runtime to feed the applications with information.
 //#
 //#  $Id$
 
@@ -30,69 +31,42 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <Common/lofar_string.h>
-#include <Common/lofar_map.h>
-#include <Common/lofar_iostream.h>
-#include <Common/lofar_sstream.h>
+#include <ACC/ParameterCollection.h>
 
 namespace LOFAR {
   namespace ACC {
 
-//# Forward Declarations
-class forward;
 
-
-//# Description of class.
-// The ParameterSet class is an implementation of a map <string, string>. This
-// means that the Value is stored as a string which allows easy merging and
-// splitting of ParameterSets because no conversions have to be done.
-// A couple of getXxx routines convert the strings to the desired type.
+//# Description of the class.
+// The ParameterSet class is a ParameterCollection that is used during runtime
+// to feed an application with its runtime values.
+// The restrictions of this collections are:
+// 1. The firstline must be a versionnr key with a valid versionnumber.
+// 2. All values must be filled in.
 //
-class ParameterSet : public map <string, string>
+class ParameterSet : public ParameterCollection
 {
 public:
-	typedef map<string, string>::iterator			iterator;
-	typedef map<string, string>::const_iterator		const_iterator;
-
 	// Default constructable;
 	ParameterSet();
 	~ParameterSet();
 
-	// The ParameterSet may be construction by reading a parameter file.
+	// Define a conversion function from base class to this class
+	ParameterSet(const ParameterCollection& that);
+
+	// Allow reading a file for backwards compatibility
 	explicit ParameterSet(const string&	theFilename);
-	
+
 	// Copying is allowed.
 	ParameterSet(const ParameterSet& that);
 	ParameterSet& 	operator=(const ParameterSet& that);
 
-	// Adds the Key-Values pair in the given file to the current ParameterSet.
-	void			adoptFile  (const string& theFilename);
-	void			adoptBuffer(const string& theBuffer);
+	// Check if the contents is a valid ParameterSet.
+	bool check(string&	errorReport) const;
 
-	// Writes the Key-Values pair from the current ParameterSet to the file.
-	void			writeFile   (const string& theFilename) const;
-	void			writeBuffer (const string& theBuffer) const;
-
-	// Creates a subset from the current ParameterSet containing all the 
-	// parameters that start with the given baseKey. The baseKey is cut off 
-	// from the Keynames in the created subset.
-	ParameterSet	makeSubset(const string& baseKey) const;
-
-	// Checks if the given Key is defined in the ParameterSet.
-	bool	isDefined (const string& searchKey) const
-				{ return (find(searchKey) != end()); };
-
-	int		getInt   (const string& theKey) const;
-	double	getDouble(const string& theKey) const;
-	float	getFloat(const string& theKey) const;
-	string	getString(const string& theKey) const;
-
-	friend std::ostream& operator<<(std::ostream& os, const ParameterSet &thePS);
+	friend std::ostream& operator<<(std::ostream& os, const ParameterCollection &thePS);
 
 private:
-	void	readFile   (const string& theFile, const	bool merge);
-	void	readBuffer (const string& theFile, const	bool merge);
-	void	addStream  (istream&	inputStream, const	bool merge);
 };
 
 } // namespace ACC

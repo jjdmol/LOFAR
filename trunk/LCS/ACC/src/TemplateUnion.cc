@@ -1,4 +1,4 @@
-//#  ParameterSet.cc: Implements a map of Key-Value pairs.
+//#  TemplateUnion.cc: Implements a map of Key-Value pairs.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,9 @@
 //#
 //#  $Id$
 
-#include <ACC/ParameterSet.h>
+#include <ACC/TemplateUnion.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
-
-using namespace std;
 
 namespace LOFAR {
   namespace ACC {
@@ -33,34 +31,34 @@ namespace LOFAR {
 //#
 //# Default constructor
 //#
-ParameterSet::ParameterSet()
+TemplateUnion::TemplateUnion()
 {}
 
 //#
-//# ParameterSet(filename)
+//# TemplateUnion(filename)
 //#
-ParameterSet::ParameterSet(const string&	filename) :
+TemplateUnion::TemplateUnion(const string&	filename) :
 	ParameterCollection(filename)
 {}
 
 //#
-//# ParameterSet (ParameterCollection)
+//# TemplateUnion (ParameterCollection)
 //#
-ParameterSet::ParameterSet(const ParameterCollection& that) :
+TemplateUnion::TemplateUnion(const ParameterCollection& that) :
 	ParameterCollection(that)
 {}
 
 //#
 //# Copying is allowed.
 //#
-ParameterSet::ParameterSet(const ParameterSet& that)
+TemplateUnion::TemplateUnion(const TemplateUnion& that)
   : ParameterCollection (that)
 {}
 
 //#
 //# operator= copying
 //#
-ParameterSet& ParameterSet::operator=(const ParameterSet& that)
+TemplateUnion& TemplateUnion::operator=(const TemplateUnion& that)
 {
 	if (this != &that) {
 		ParameterCollection::operator= (that);
@@ -71,13 +69,13 @@ ParameterSet& ParameterSet::operator=(const ParameterSet& that)
 //#
 //#	Destructor
 //#
-ParameterSet::~ParameterSet()
+TemplateUnion::~TemplateUnion()
 {}
 
 //#
 //# operator<<
 //#
-std::ostream&	operator<< (std::ostream& os, const ParameterSet &thePS)
+std::ostream&	operator<< (std::ostream& os, const TemplateUnion &thePS)
 {
 	return os << static_cast<ParameterCollection> (thePS);
 }
@@ -86,22 +84,25 @@ std::ostream&	operator<< (std::ostream& os, const ParameterSet &thePS)
 //# check()
 //#
 //# 1) Versionnumber must be present
-//# 2) All keys must be filled.
+//# 2) All versionnumber references should be valid versionnumbers
 //#
-bool	ParameterSet::check(string&	errorReport) const
+bool	TemplateUnion::check(string&	errorReport) const
 {
 	bool	isOk = true;
 	errorReport  = "";
 
-	if (getVersionNr() == "") {
-		errorReport += "No versionnumber found\n";
+	//# [1] must have valid versionnumber
+	if (!isValidVersionNr(getVersionNr())) {	
+		errorReport += "Versionnumber not found or not valid.\n";
 		isOk = false;
 	}
 
-	const_iterator		iter = begin();
+	//# [2] all versionnr keys must be valid
+	const_iterator iter = begin();
 	while (iter != end()) {
-		if (iter->second == "") {
-			errorReport += "Key " + iter->first + " has no value\n";
+		if ((keyName(iter->first) == PC_KEY_VERSIONNR)  &&
+									(!isValidVersionNr(iter->second))) {
+			errorReport += iter->first + " has not a valid versionnumber.\n";
 			isOk = false;
 		}
 		iter++;

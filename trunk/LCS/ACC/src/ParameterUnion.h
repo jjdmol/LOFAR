@@ -1,4 +1,4 @@
-//#  ParameterSet.h: ParameterCollectin filled with runtime values.
+//#  ParameterUnion.h: All parameters of a module with with dflt values and ranges
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -37,36 +37,33 @@ namespace LOFAR {
   namespace ACC {
 
 
-//# Description of the class.
-// The ParameterSet class is a ParameterCollection that is used during runtime
-// to feed an application with its runtime values.
+//# Description of class.
+// The ParameterUnion class is a ParameterCollection that is used by SAS
+// to fill in the runtimes values for an application.
 // The restrictions of this collections are:
 // 1. The firstline must be a versionnr key with a valid versionnumber.
-// 2. All values must be filled in.
+// 2. No other versionumberkey should be present
 //
-class ParameterSet : public ParameterCollection
+class ParameterUnion : public ParameterCollection
 {
 public:
 	// Default constructable;
-	ParameterSet();
-	~ParameterSet();
+	ParameterUnion();
+	~ParameterUnion();
 
 	// Define a conversion function from base class to this class
-	ParameterSet(const ParameterCollection& that);
+	ParameterUnion(const ParameterCollection& that);
 
 	// Allow reading a file for backwards compatibility
-	explicit ParameterSet(const string&	theFilename);
+	explicit ParameterUnion(const string&	theFilename);
 
 	// Copying is allowed.
-	ParameterSet(const ParameterSet& that);
-	ParameterSet& 	operator=(const ParameterSet& that);
+	ParameterUnion(const ParameterUnion& that);
+	ParameterUnion& 	operator=(const ParameterUnion& that);
 
-	// Check if the contents is a valid ParameterSet.
 	bool check(string&	errorReport) const;
 
 	friend std::ostream& operator<<(std::ostream& os, const ParameterCollection &thePS);
-
-private:
 };
 
 } // namespace ACC

@@ -1,4 +1,4 @@
-//#  ParameterSet.h: ParameterCollectin filled with runtime values.
+//#  ParameterTemplate.h: Collection of parametersdefinitions.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  Abstract:
 //#
-//#	 Defines a class the should contain fully filled ParamaterCollections
-//#  to be used in runtime to feed the applications with information.
+//#	 Defines a class the should contain all parameters that the 'outside' world
+//#  can set in the module the template belongs to.
 //#
 //#  $Id$
 
@@ -38,35 +38,40 @@ namespace LOFAR {
 
 
 //# Description of the class.
-// The ParameterSet class is a ParameterCollection that is used during runtime
-// to feed an application with its runtime values.
-// The restrictions of this collections are:
-// 1. The firstline must be a versionnr key with a valid versionnumber.
-// 2. All values must be filled in.
+// The ParameterTemplate class is a ParameterCollection that contains the
+// definition of all parameters of a module that can be set by the 'outside'
+// world. In a ParameterTemplate the value-field can be used the define a 
+// default value, a value range or both.
 //
-class ParameterSet : public ParameterCollection
+// The restrictions of a ParameterTemplate are:
+// 1. The firstline must be a versionnr key with a valid versionnumber.
+// 2. The secondline should be the qualification key. When it is missing the
+//    value 'development' is assumed.
+// 3. The first part of the keyname must be the same for all keys because they
+//    all belong to the same module.
+//
+class ParameterTemplate : public ParameterCollection
 {
 public:
 	// Default constructable;
-	ParameterSet();
-	~ParameterSet();
+	ParameterTemplate();
+	~ParameterTemplate();
 
 	// Define a conversion function from base class to this class
-	ParameterSet(const ParameterCollection& that);
+	ParameterTemplate(const ParameterCollection& that);
 
 	// Allow reading a file for backwards compatibility
-	explicit ParameterSet(const string&	theFilename);
+	explicit ParameterTemplate(const string&	theFilename);
 
 	// Copying is allowed.
-	ParameterSet(const ParameterSet& that);
-	ParameterSet& 	operator=(const ParameterSet& that);
+	ParameterTemplate(const ParameterTemplate& that);
+	ParameterTemplate& 	operator=(const ParameterTemplate& that);
 
-	// Check if the contents is a valid ParameterSet.
+	// Check if the contents is a valid ParameterTemplate.
 	bool check(string&	errorReport) const;
+	string	getQualification() const;
 
 	friend std::ostream& operator<<(std::ostream& os, const ParameterCollection &thePS);
-
-private:
 };
 
 } // namespace ACC

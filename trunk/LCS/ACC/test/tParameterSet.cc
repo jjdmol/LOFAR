@@ -32,6 +32,8 @@ int main(int argc, char * argv[]) {
 	cout << "\nReading in parameterfile 'tParameterSet.ps'\n";
 	ParameterSet		myPS("tParameterSet.ps");
 
+	ParameterCollection	myPC(myPS);
+
 	cout << "\nShowing some values\n";
 	cout << "a.b.c=" 			<< myPS.getInt("a.b.c") << endl;
 	cout << "a.b=" 				<< myPS.getInt("a.b") << endl;
@@ -51,6 +53,32 @@ int main(int argc, char * argv[]) {
 
 	cout << "\nThe main ParameterSet contains:\n";
 	cout << myPS;
+
+	cout << "The name of the ParameterSet = " << myPS.getName() << endl;
+	cout << "The vers of the ParameterSet = " << myPS.getVersionNr() << endl;
+	if (isValidVersionNr(myPS.getVersionNr())) {
+		cout << "this is a valid version number" << endl;
+	} else {
+		cout << "this is NOT a valid version number" << endl;
+	}
+
+	string	psErrors;
+	if (!myPS.check(psErrors)) {
+		cout << "Parameter check says: " << psErrors << endl;
+	} else {
+		cout << "ParameterSet is OK." << endl;
+	}
+
+	cout << "isValidVersionNr(1.2.3.4)   = " << isValidVersionNr("1.2.3.4") << endl;
+	cout << "isValidVersionNr(1.2.3)     = " << isValidVersionNr("1.2.3") << endl;
+	cout << "isValidVersionNr(1.2)       = " << isValidVersionNr("1.2") << endl;
+	cout << "isValidVersionNr(stable)    = " << isValidVersionNr("stable") << endl;
+	cout << "isValidVersionNrRef(1.2.3)  = " << isValidVersionNrRef("1.2.3") << endl;
+	cout << "isValidVersionNrRef(1.2)    = " << isValidVersionNrRef("1.2") << endl;
+	cout << "isValidVersionNrRef(stable) = " << isValidVersionNrRef("stable") << endl;
+	cout << "isValidVersionNrRef(error)  = " << isValidVersionNrRef("error") << endl;
+	cout << "isValidVersionNrRef(1.2.3.AndALotOfGarbageBehindTheLastNumberPart)  = " 
+		  << isValidVersionNrRef("1.2.3.AndALotOfGarbageBehindTheLastNumberPart");
 
 	ParameterSet		mySubset = myPS.makeSubset("a.b.");
 	cout << "\nCreating a subset 'a.b.'\n";
