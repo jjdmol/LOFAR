@@ -111,10 +111,19 @@ void doIt (const string& in, const string& out)
   // Get all unique times.
   ROScalarColumn<double> time(tab, "TIME");
   Vector<double> tim1 = time.getColumn();
-  Vector<double> tim2(tim1.copy());
-  uInt nt = GenSort<double>::sort (tim2, Sort::Ascending,
-				   Sort::InsSort+Sort::NoDuplicates);
-  tim2.resize (nt, True);
+  Vector<uInt> index;
+  uInt nt = GenSortIndirect<double>::sort (index, tim1, Sort::Ascending,
+					   Sort::InsSort+Sort::NoDuplicates);
+  Vector<double> tim2(nt);
+  Vector<double> interval2(nt);
+  {
+    ROScalarColumn<double> intvCol(tab, "INTERVAL");
+    Vector<double> interval1 = intvCol.getColumn();
+    for (uInt i=0; i<nt; i++) {
+      tim2[i] = tim1[index[i]];
+      interval2[i] = interval1[index[i]];
+    }
+  }
   // Check if they span the entire table.
   if (nt * a1.nelements() != tab.nrow()) {
     throw AipsError("#rows in MS " + in + " mismatches #times * #baselines");
@@ -156,7 +165,7 @@ void doIt (const string& in, const string& out)
     bos << ra << dec << npol << nfreq << startFreq << endFreq << stepFreq;
     bos << a1 << a2;
     bos << tim2;
-    bos << ROScalarColumn<double>(tab, "INTERVAL").getColumn();
+    bos << interval2;
     bos.putEnd();
   }
   cout << "Wrote " << npol << " polarizations" << endl;
