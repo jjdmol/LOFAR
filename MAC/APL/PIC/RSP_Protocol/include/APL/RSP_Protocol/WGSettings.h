@@ -40,8 +40,9 @@ namespace RSP_Protocol
       typedef struct WGRegisterType
       {
 	  uint16 freq;
-	  uint16 ampl;
-	  uint16 nof_usersamples;
+	  uint8  phase;
+	  uint8  ampl;
+	  uint16 nof_samples;
 	  uint8  mode;
 	  uint8 _pad;
       };

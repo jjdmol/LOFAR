@@ -40,7 +40,7 @@ using namespace LOFAR;
 using namespace blitz;
 
 SSRead::SSRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * 2 /* for nr_subbands and subbands */)
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
 {
 }
 
@@ -50,20 +50,10 @@ SSRead::~SSRead()
 
 void SSRead::sendrequest()
 {
-  if (0 == (getCurrentBLP() % 2))
-  {
-    EPANrsubbandsReadEvent nrsubbandsread;
-    MEP_NRSUBBANDS(nrsubbandsread.hdr, MEPHeader::READ, getCurrentBLP() / 2);
+  EPASsSelectEvent ssread;
+  ssread.hdr.set(MEPHeader::SS_SELECT_HDR, getCurrentBLP());
 
-    getBoardPort().send(nrsubbandsread);
-  }
-  else
-  {
-    EPASubbandselectReadEvent ssread;
-    MEP_SUBBANDSELECT(ssread.hdr, MEPHeader::READ, getCurrentBLP() / 2);
-
-    getBoardPort().send(ssread);
-  }
+  getBoardPort().send(ssread);
 }
 
 void SSRead::sendrequest_status()
@@ -75,39 +65,30 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   LOG_DEBUG("handleack");
 
-  if (0 == (getCurrentBLP() % 2))
+  if (event.signal != EPA_SS_SELECT)
   {
-    if (event.signal != EPA_NRSUBBANDS) return GCFEvent::HANDLED;
-
-    // unpack nrsubbands message
-    EPANrsubbandsEvent nrsubbands(event);
-
-    // copy into the cache
-    LOG_DEBUG(formatString("nr_subbands=%d", nrsubbands.nof_subbands));
+    LOG_WARN_STR("unrecognised event: " << event.signal);
+    return GCFEvent::HANDLED;
   }
-  else
-  {
-    if (event.signal != EPA_SUBBANDSELECT) return GCFEvent::HANDLED;
 
-    uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / 2);
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
-    LOG_DEBUG("handleack");
+  LOG_DEBUG("handleack");
 
-    LOG_DEBUG(formatString(">>>> SSRead(%s) global_blp=%d",
-			   getBoardPort().getName().c_str(), global_blp));
+  LOG_DEBUG(formatString(">>>> SSRead(%s) global_blp=%d",
+			 getBoardPort().getName().c_str(), global_blp));
   
-    // unpack ss message
-    EPASubbandselectEvent ss(event);
+  // unpack ss message
+  EPASsSelectEvent ss(event);
   
-    // create array point to data in the response event
-    Array<uint16, 1> subbands((uint16*)&ss.ch,
-			      shape(N_BEAMLETS * N_POL),
-			      neverDeleteData);
+  // create array point to data in the response event
+  Array<uint16, 1> subbands((uint16*)&ss.ch,
+			    shape(MEPHeader::N_BEAMLETS * MEPHeader::N_POL),
+			    neverDeleteData);
   
-    // copy into the cache
-    Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range::all())
-      = subbands;
-  }
+  // copy into the cache
+  Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range::all())
+    = subbands;
 
   return GCFEvent::HANDLED;
 }

@@ -38,7 +38,7 @@ class SetWG : public GCFTask, public Test
      * up connection establishment information using the GTMNameService and
      * GTMTopologyService classes.
      */
-    SetWG(string name, int blp = 0, uint16 ampl = 0x4000, double freq = 1.5625e6);
+    SetWG(string name, int blp = 0, uint8 phase = 0, uint8 ampl = 0x40, double freq = 1.5625e6);
     virtual ~SetWG();
 
     // state methods
@@ -79,7 +79,8 @@ class SetWG : public GCFTask, public Test
     GCFPort m_server;
 
     int    m_blp;
-    uint16 m_ampl;
+    uint8  m_phase;
+    uint8  m_ampl;
     double m_freq;
 };
      

@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  MEPHeader.h: Waveform Generator control information
+//#  MEPHeader.h: Definition of the EPA MEP header.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -51,68 +51,91 @@ namespace EPA_Protocol
       /**
        * Message types.
        */
-      static const uint8 READ    = 0x01;
-      static const uint8 WRITE   = 0x02;
-      static const uint8 READRES = 0x03;
-      static const uint8 READERR = 0x04;
+      static const uint8 TYPE_UNSET = 0x00;
+      static const uint8 READ       = 0x01;
+      static const uint8 WRITE      = 0x02;
+      static const uint8 READACK    = 0x03;
+      static const uint8 WRITEACK   = 0x04;
 
-      static const int MAX_TYPE = READERR; /* counting from 0 */
+      static const int MAX_TYPE = WRITEACK; /* counting from 0 */
       /*@}*/
 
       /*@{*/
       /**
        * Address constants
+       *
        * Destination ID
+       * RSP Board: bit7 set, all other bits 0 (= 0x80)
+       * BLP:       bit7 unset, other bits indicate which BLP is addressed.
+       * Two broadcasts are supported:
+       * To all BLP's: 0x7F
+       * To all BLP's and the RSP board: 0xFF
        */
-      static const uint8 DST_BLPS = 0x00; /* BLP's are addressed starting from 0x00 */
-      static const uint8 DST_RSP  = 0x00; /* will change to 0x80; Destination id of the RSP board */
+      static const uint8 DST_BLP            = 0x00; /* BLP's are addressed starting from 0x00 */
+      static const uint8 DST_RSP            = 0x80; /* Destination id of the RSP board */
+      static const uint8 DST_BROADCAST_BLPS = 0x7F; /* Broadcast to all BLP's but not the RSP */
+      static const uint8 DST_BROADCAST      = 0xFF; /* Broadcast to RSP and all BLP's */
       /*@}*/
 
       /*@{*/
       /**
        * Process IDs
        */
-      static const uint8 STATUS  = 0x00; /* FPGA status overview */
+      static const uint8 RSR     = 0x00; /* Status overview */
       static const uint8 TST     = 0x01; /* Selftest functionality */
       static const uint8 CFG     = 0x02; /* FPGA configuration and reset */
       static const uint8 WG      = 0x03; /* Waveform generator */
       static const uint8 SS      = 0x04; /* Subband select */
-      static const uint8 BF      = 0x05; /* Beam former */
-      static const uint8 ST      = 0x06; /* Beamlet Statistics */
-      static const uint8 STSUB   = 0x07; /* Subbands Statistics */
+      static const uint8 BF      = 0x05; /* Beamformer */
+      static const uint8 BST     = 0x06; /* Beamformer statistics */
+      static const uint8 SST     = 0x07; /* Subband statistics */
       static const uint8 RCU     = 0x08; /* RCU control */
+      static const uint8 CRR     = 0x09; /* RSP clock and reset */
+      static const uint8 CRB     = 0x0A; /* BLP clock and reset */
+      static const uint8 CDO     = 0x0B; /* CEP Data Output */
 
-      static const int MAX_PID = RCU; /* counting from 0 */
+      static const int MAX_PID = CDO; /* counting from 0 */
       /*@}*/
 
       /*@{*/
       /**
        * Register IDs
        */
-      static const uint8 RSPSTATUS     = 0x00;
-      static const uint8 FWVERSION     = 0x01;
+      static const uint8 RSR_STATUS    = 0x00;
+      static const uint8 RSR_VERSION   = 0x01;
 
-      static const uint8 SELFTEST      = 0x00;
+      static const uint8 TST_SELFTEST  = 0x00;
 
-      static const uint8 RESET         = 0x00;
-      static const uint8 REPROGRAM     = 0x01;
+      static const uint8 CFG_RESET     = 0x00;
+      static const uint8 CFG_REPROGRAM = 0x01;
 
-      static const uint8 WGSETTINGS    = 0x00;
-      static const uint8 WGUSER        = 0x01;
-      static const uint8 WGSOFTPPS     = 0x02;
+      static const uint8 WG_XSETTINGS  = 0x00;
+      static const uint8 WG_YSETTINGS  = 0x01;
+      static const uint8 WG_XWAVE      = 0x02;
+      static const uint8 WG_YWAVE      = 0x03;
+      
+      static const uint8 SS_SELECT     = 0x00;
 
-      static const uint8 NRSUBBANDS    = 0x00;
-      static const uint8 SUBBANDSELECT = 0x01;
+      static const uint8 BF_XROUT      = 0x00;
+      static const uint8 BF_XIOUT      = 0x01;
+      static const uint8 BF_YROUT      = 0x02;
+      static const uint8 BF_YIOUT      = 0x03;
 
-      static const uint8 BFXRE         = 0x00;
-      static const uint8 BFXIM         = 0x01;
-      static const uint8 BFYRE         = 0x02;
-      static const uint8 BFYIM         = 0x03;
+      static const uint8 BST_MEAN      = 0x00; // used as index in statistics array
+      static const uint8 BST_POWER     = 0x01; // used as index in statistics array
 
-      static const uint8 MEAN          = 0x00; // used as index in statistics array
-      static const uint8 POWER         = 0x01; // used as index in statistics array
+      static const uint8 SST_MEAN      = 0x00; // used as index in statistics array
+      static const uint8 SST_POWER     = 0x01; // used as index in statistics array
 
-      static const uint8 RCUSETTINGS   = 0x00;
+      static const uint8 RCU_SETTINGS  = 0x00;
+
+      static const uint8 CRR_SOFTRESET = 0x00;
+      static const uint8 CRR_SOFTPPS   = 0x01;
+
+      static const uint8 CRB_SOFTRESET = 0x00;
+      static const uint8 CRB_SOFTPPS   = 0x01;
+
+      static const uint8 CDO_SETTINGS  = 0x00;
 
       static const int MAX_REGID = 0x03;
       
@@ -120,38 +143,70 @@ namespace EPA_Protocol
 
       /*@{*/
       /**
-       * Page IDs
+       * Define the number of beamlets N_BEAMLETS
+       * supported by the EPA firmware. For FTS-1
+       * the number of beamlets supported is 128.
+       * For the final LOFAR remote station
+       * 256 beamlets will be supported.
+       *
+       * Many register sizes are derived from
+       * the number of beamlets.
+       *
+       * The N_SUBBANDS(512) defines the number of
+       * subbands produced by the EPA digital filter.
+       * The N_BEAMLETS are a selection from this
+       * number of beamlets.
        */
-      static const uint8 PAGE_INACTIVE = 0x00; /* Write page for LCU */
-      static const uint8 PAGE_ACTIVE   = 0x01; /* Read page for FPGA */
-      /*@}*/
-
-      /*@{*/
+      static const uint16 N_SUBBANDS = 512;
+      static const uint16 N_BEAMLETS = 128; // FTS-1 spec, final remote station will be 256
+      static const uint16 N_POL      = 2;                // number of polarizations
+      static const uint16 N_PHASE    = 2;                // number of phases in a complex number
+      static const uint16 N_PHASEPOL = N_PHASE * N_POL;  // number of phase polarizations
+ 
+      //
+      // Registers too large to send in a single ethernet frame
+      // (> 1500 bytes) will be sent in a number of fragments of this size.
+      //
+      static const uint16 FRAGMENT_SIZE = 1024;
+      
       /**
        * Read/write sizes in octets (= bytes)
        */
-      static const uint16 RSPSTATUS_SIZE     = 56;
-      static const uint16 FWVERSION_SIZE     = 6; // used to be 2
+      static const uint16 RSR_STATUS_SIZE    = 96;
+      static const uint16 RSR_VERSION_SIZE   = 3;
+      
+      static const uint16 TST_SELFTEST_SIZE  = 1;
+      
+      static const uint16 CFG_RESET_SIZE     = 1;
+      static const uint16 CFG_REPROGRAM_SIZE = 1;
+      
+      static const uint16 WG_XSETTINGS_SIZE  = 7;
+      static const uint16 WG_YSETTINGS_SIZE  = 7;
+      static const uint16 WG_XWAVE_SIZE      = 1024;
+      static const uint16 WG_YWAVE_SIZE      = 1024;
+      
+      static const uint16 SS_SELECT_SIZE     = N_BEAMLETS * N_POL * sizeof(uint16);
 
-      static const uint16 SELFTEST_SIZE      = 1;
+      static const uint16 BF_XROUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(uint16);
+      static const uint16 BF_XIOUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(uint16);
+      static const uint16 BF_YROUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(uint16);
+      static const uint16 BF_YIOUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(uint16);
+      
+      static const uint16 BST_MEAN_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(uint32);
+      static const uint16 BST_POWER_SIZE     = N_BEAMLETS * N_PHASEPOL * sizeof(uint32);
 
-      static const uint16 RESET_SIZE         = 1;
-      static const uint16 REPROGRAM_SIZE     = 1;
-
-      static const uint16 WGSETTINGS_SIZE    = 7;
-      static const uint16 WGUSER_SIZE        = 1024;
-      static const uint16 WGSOFTPPS_SIZE     = 0;
-
-      static const uint16 NRSUBBANDS_SIZE    = 2;
-      static const uint16 SUBBANDSELECT_SIZE = 512;
-
-      // for 128 beamlets (2 bytes per weight * 4 for xre, xim, yre, yim)
-      static const uint16 BFCOEFS_SIZE       = 1024;
-
-      static const uint16 STSTATS_SIZE       = 1024;
-      static const uint16 STSUBSTATS_SIZE    = 1024;
-
-      static const uint16 RCUSETTINGS_SIZE   = 2;
+      static const uint16 SST_MEAN_SIZE      = N_SUBBANDS * N_POL * N_PHASE * sizeof(uint32);
+      static const uint16 SST_POWER_SIZE     = N_SUBBANDS * N_POL * N_PHASE * sizeof(uint32);
+      
+      static const uint16 RCU_SETTINGS_SIZE  = 2;
+      
+      static const uint16 CRR_SOFTRESET_SIZE = 1;
+      static const uint16 CRR_SOFTPPS_SIZE   = 1;
+      
+      static const uint16 CRB_SOFTRESET_SIZE = 1;
+      static const uint16 CRB_SOFTPPS_SIZE   = 1;
+      
+      static const uint16 CDO_SETTINGS_SIZE  = 10;
       /*@}*/
 
     public:
@@ -165,42 +220,20 @@ namespace EPA_Protocol
       /*@}*/
 
     public:
-      /*@{*/
-      /**
-       * Methods to set appropriate fields.
-       */
-      void set(uint8  type,
-	       uint8  dstid,
-	       uint8  pid,
-	       uint8  regid,
-	       uint16 size,
-	       uint8  pageid = PAGE_INACTIVE);
-
-      void set(uint8  type,
-	       uint16 seqnr,
-	       uint8  dstid,
-	       uint8  pid,
-	       uint8  regid,
-	       uint8  pageid,
-	       uint16 offset,
-	       uint16 size);
-      /*@}*/
-
-	public:
       /**
        * MEP header fields
        */
       typedef struct
       {
 	  uint8  type;      /* Message type */
-	  uint8  ffi;       /* for future implementation */
+	  uint8  error;     /* Error indicator */
 	  uint16 seqnr;     /* Sequence number */
 	  typedef struct 
 	  {
 	      uint8 dstid;  /* Destination ID */
 	      uint8 pid;    /* Process ID */
 	      uint8 regid;  /* Register ID */
-	      uint8 pageid; /* Page ID */
+	      uint8 ffi;    /* for future implementation */
 	  } AddrType;
 	  AddrType addr;    /* addr */
 	  uint16 offset;    /* Register offset */
@@ -208,40 +241,72 @@ namespace EPA_Protocol
       } FieldsType;
 
       FieldsType m_fields;
+
+    public:
+
+      /*@{*/
+      /**
+       * Methods to set header fields.
+       */
+      void set(uint8  type,
+	       uint8  dstid,
+	       uint8  pid,
+	       uint8  regid,
+	       uint16 size,
+	       uint16 offset = 0);
+
+      void set(MEPHeader::FieldsType hdrtemplate,
+	       uint8  dstid  = DST_RSP,
+	       uint8  type   = MEPHeader::TYPE_UNSET,
+	       uint16 size   = 0,
+	       uint16 offset = 0);
+      
+      /*@}*/
+
+      /*@{*/
+      //
+      // The following static constants are templates
+      // to produce EPA message headers. This is done by 
+      // copying the template and then make modifications
+      // to the appropriate parts of the header.
+      //
+      static const FieldsType RSR_STATUS_HDR;
+      static const FieldsType RSR_VERSION_HDR;
+
+      static const FieldsType TST_SELFTEST_HDR;
+
+      static const FieldsType CFG_RESET_HDR;
+      static const FieldsType CFG_REPROGRAM_HDR;
+
+      static const FieldsType WG_XSETTINGS_HDR;
+      static const FieldsType WG_YSETTINGS_HDR;
+      static const FieldsType WG_XWAVE_HDR;
+      static const FieldsType WG_YWAVE_HDR;
+      
+      static const FieldsType SS_SELECT_HDR;
+
+      static const FieldsType BF_XROUT_HDR;
+      static const FieldsType BF_XIOUT_HDR;
+      static const FieldsType BF_YROUT_HDR;
+      static const FieldsType BF_YIOUT_HDR;
+
+      static const FieldsType BST_MEAN_HDR;
+      static const FieldsType BST_POWER_HDR;
+
+      static const FieldsType SST_MEAN_HDR;
+      static const FieldsType SST_POWER_HDR;
+
+      static const FieldsType RCU_SETTINGS_HDR;
+
+      static const FieldsType CRR_SOFTRESET_HDR;
+      static const FieldsType CRR_SOFTPPS_HDR;
+
+      static const FieldsType CRB_SOFTRESET_HDR;
+      static const FieldsType CRB_SOFTPPS_HDR;
+
+      static const FieldsType CDO_SETTINGS_HDR;
+      /*@}*/
   };
 };
-
-// macro to shorten writing the context of the constants
-#define CTX(a) EPA_Protocol::MEPHeader::a
-
-#define MEP_RSPSTATUS(hdr, oper) \
-  (hdr).set(oper,         CTX(DST_RSP),              CTX(STATUS), CTX(RSPSTATUS),     CTX(RSPSTATUS_SIZE))
-#define MEP_FWVERSION(hdr, oper) \
-  (hdr).set(oper,         CTX(DST_RSP),              CTX(STATUS), CTX(FWVERSION),     CTX(FWVERSION_SIZE))
-#define MEP_SELFTEST(hdr) \
-  (hdr).set(CTX(WRITE),   CTX(DST_RSP),              CTX(TST),    CTX(SELFTEST),      CTX(SELFTEST_SIZE))
-#define MEP_RESET(hdr) \
-  (hdr).set(CTX(WRITE),   CTX(DST_RSP),              CTX(CFG),    CTX(RESET),         CTX(RESET_SIZE))
-#define MEP_REPROGRAM(hdr) \
-  (hdr).set(CTX(WRITE),   CTX(DST_RSP),              CTX(CFG),    CTX(REPROGRAM),     CTX(REPROGRAM_SIZE))
-
-#define MEP_WGSETTINGS(hdr, oper, dstid) \
-  (hdr).set(oper,         dstid, CTX(WG),     CTX(WGSETTINGS),    CTX(WGSETTINGS_SIZE))
-#define MEP_WGUSER(hdr, oper, dstid) \
-  (hdr).set(oper,         dstid, CTX(WG),     CTX(WGUSER),        CTX(WGUSER_SIZE))
-#define MEP_WGSOFTPPS(hdr) \
-  (hdr).set(CTX(WRITE),CTX(DST_RSP), CTX(WG), CTX(WGSOFTPPS),     CTX(WGSOFTPPS_SIZE))
-#define MEP_NRSUBBANDS(hdr, oper, dstid) \
-  (hdr).set(oper,         dstid, CTX(SS),     CTX(NRSUBBANDS),    CTX(NRSUBBANDS_SIZE))
-#define MEP_SUBBANDSELECT(hdr, oper, dstid) \
-  (hdr).set(oper,         dstid, CTX(SS),     CTX(SUBBANDSELECT), CTX(SUBBANDSELECT_SIZE))
-#define MEP_BF(hdr, oper, dstid, regid) \
-  (hdr).set(oper,         dstid, CTX(BF),     (regid),            CTX(BFCOEFS_SIZE))
-#define MEP_ST(hdr, oper, dstid, regid) \
-  (hdr).set(oper,         dstid, CTX(ST),     (regid),            CTX(STSTATS_SIZE))
-#define MEP_STSUB(hdr, oper, dstid, regid) \
-  (hdr).set(oper,         dstid, CTX(STSUB),  (regid),            CTX(STSUBSTATS_SIZE))
-#define MEP_RCUSETTINGS(hdr, oper, dstid) \
-  (hdr).set(oper,         dstid, CTX(RCU),    CTX(RCUSETTINGS),   CTX(RCUSETTINGS_SIZE))
 
 #endif /* MEPHEADER_H_ */

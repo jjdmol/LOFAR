@@ -33,6 +33,45 @@ using namespace LOFAR;
 using namespace EPA_Protocol;
 using namespace std;
 
+//
+// header templates
+//
+const MEPHeader::FieldsType MEPHeader::RSR_STATUS_HDR    = { READ,  0, 0, { DST_RSP, RSR, RSR_STATUS,    0 }, 0, RSR_STATUS_SIZE    };
+const MEPHeader::FieldsType MEPHeader::RSR_VERSION_HDR   = { READ,  0, 0, { DST_RSP, RSR, RSR_VERSION,   0 }, 0, RSR_VERSION_SIZE   };
+
+const MEPHeader::FieldsType MEPHeader::TST_SELFTEST_HDR  = { WRITE, 0, 0, { DST_RSP, TST, TST_SELFTEST,  0 }, 0, TST_SELFTEST_SIZE  };
+
+const MEPHeader::FieldsType MEPHeader::CFG_RESET_HDR     = { WRITE, 0, 0, { DST_RSP, CFG, CFG_RESET,     0 }, 0, CFG_RESET_SIZE     };
+const MEPHeader::FieldsType MEPHeader::CFG_REPROGRAM_HDR = { WRITE, 0, 0, { DST_RSP, CFG, CFG_REPROGRAM, 0 }, 0, CFG_REPROGRAM_SIZE };
+
+const MEPHeader::FieldsType MEPHeader::WG_XSETTINGS_HDR  = { WRITE, 0, 0, { DST_BLP, WG,  WG_XSETTINGS,  0 }, 0, WG_XSETTINGS_SIZE  };
+const MEPHeader::FieldsType MEPHeader::WG_YSETTINGS_HDR  = { WRITE, 0, 0, { DST_BLP, WG,  WG_YSETTINGS,  0 }, 0, WG_YSETTINGS_SIZE  };
+const MEPHeader::FieldsType MEPHeader::WG_XWAVE_HDR      = { WRITE, 0, 0, { DST_BLP, WG,  WG_XWAVE,      0 }, 0, WG_XWAVE_SIZE      };
+const MEPHeader::FieldsType MEPHeader::WG_YWAVE_HDR      = { WRITE, 0, 0, { DST_BLP, WG,  WG_YWAVE,      0 }, 0, WG_YWAVE_SIZE      };
+      
+const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR     = { WRITE, 0, 0, { DST_BLP, SS,  SS_SELECT,     0 }, 0, SS_SELECT_SIZE     };
+
+const MEPHeader::FieldsType MEPHeader::BF_XROUT_HDR      = { WRITE, 0, 0, { DST_BLP, BF,  BF_XROUT,      0 }, 0, BF_XROUT_SIZE      };
+const MEPHeader::FieldsType MEPHeader::BF_XIOUT_HDR      = { WRITE, 0, 0, { DST_BLP, BF,  BF_XIOUT,      0 }, 0, BF_XIOUT_SIZE      };
+const MEPHeader::FieldsType MEPHeader::BF_YROUT_HDR      = { WRITE, 0, 0, { DST_BLP, BF,  BF_YROUT,      0 }, 0, BF_YROUT_SIZE      };
+const MEPHeader::FieldsType MEPHeader::BF_YIOUT_HDR      = { WRITE, 0, 0, { DST_BLP, BF,  BF_YIOUT,      0 }, 0, BF_YIOUT_SIZE      };
+
+const MEPHeader::FieldsType MEPHeader::BST_MEAN_HDR      = { READ,  0, 0, { DST_RSP, BST, BST_MEAN,      0 }, 0, BST_MEAN_SIZE      };
+const MEPHeader::FieldsType MEPHeader::BST_POWER_HDR     = { READ,  0, 0, { DST_RSP, BST, BST_POWER,     0 }, 0, BST_POWER_SIZE     };
+
+const MEPHeader::FieldsType MEPHeader::SST_MEAN_HDR      = { READ,  0, 0, { DST_BLP, SST, SST_MEAN,      0 }, 0, SST_MEAN_SIZE      };
+const MEPHeader::FieldsType MEPHeader::SST_POWER_HDR     = { READ,  0, 0, { DST_BLP, SST, SST_POWER,     0 }, 0, SST_POWER_SIZE     };
+
+const MEPHeader::FieldsType MEPHeader::RCU_SETTINGS_HDR  = { WRITE, 0, 0, { DST_BLP, RCU, RCU_SETTINGS,  0 }, 0, RCU_SETTINGS_SIZE  };
+
+const MEPHeader::FieldsType MEPHeader::CRR_SOFTRESET_HDR = { WRITE, 0, 0, { DST_RSP, CRR, CRR_SOFTRESET, 0 }, 0, CRR_SOFTRESET_SIZE };
+const MEPHeader::FieldsType MEPHeader::CRR_SOFTPPS_HDR   = { WRITE, 0, 0, { DST_RSP, CRR, CRR_SOFTPPS,   0 }, 0, CRR_SOFTPPS_SIZE   };
+
+const MEPHeader::FieldsType MEPHeader::CRB_SOFTRESET_HDR = { WRITE, 0, 0, { DST_BLP, CRB, CRB_SOFTRESET, 0 }, 0, CRB_SOFTRESET_SIZE };
+const MEPHeader::FieldsType MEPHeader::CRB_SOFTPPS_HDR   = { WRITE, 0, 0, { DST_BLP, CRB, CRB_SOFTPPS,   0 }, 0, CRB_SOFTPPS_SIZE   };
+
+const MEPHeader::FieldsType MEPHeader::CDO_SETTINGS_HDR  = { WRITE, 0, 0, { DST_RSP, CDO, CDO_SETTINGS,  0 }, 0, CDO_SETTINGS_SIZE  };
+
 unsigned int MEPHeader::getSize()
 {
   return MEPHeader::SIZE;
@@ -50,38 +89,33 @@ unsigned int MEPHeader::unpack(void *buffer)
   return MEPHeader::SIZE;
 }
 
-void MEPHeader::set(uint8 type,
-		    uint8 dstid,
-		    uint8 pid,
-		    uint8 regid,
+void MEPHeader::set(uint8  type,
+		    uint8  dstid,
+		    uint8  pid,
+		    uint8  regid,
 		    uint16 size,
-		    uint8 pageid)
+		    uint16 offset)
 {
   memset(&m_fields, 0, sizeof(m_fields));
   m_fields.type = type;
   m_fields.addr.dstid = dstid;
   m_fields.addr.pid = pid;
   m_fields.addr.regid = regid;
-  m_fields.addr.pageid = pageid;
+  m_fields.offset = offset;
   m_fields.size = size;
 }
 
-void MEPHeader::set(uint8  type,
-		    uint16 seqnr,
+void MEPHeader::set(MEPHeader::FieldsType hdrtemplate,
 		    uint8  dstid,
-		    uint8  pid,
-		    uint8  regid,
-		    uint8  pageid,
+		    uint8  type,
 		    uint16 offset,
 		    uint16 size)
 {
-  m_fields.type        = type;
-  m_fields.ffi         = 0;
-  m_fields.seqnr       = seqnr;
-  m_fields.addr.dstid  = dstid;
-  m_fields.addr.pid    = pid;
-  m_fields.addr.regid  = regid;
-  m_fields.addr.pageid = pageid;
-  m_fields.offset      = offset;
-  m_fields.size        = size;
+  m_fields = hdrtemplate;
+
+  if (MEPHeader::TYPE_UNSET != type) m_fields.type = type;
+  m_fields.addr.dstid = dstid;
+  m_fields.offset = offset;
+  if (m_fields.size) m_fields.size = size;
 }
+

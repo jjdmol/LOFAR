@@ -83,9 +83,9 @@ do { \
   } \
 } while(0)
 
-SetWG::SetWG(string name, int blp, uint16 ampl, double freq)
+SetWG::SetWG(string name, int blp, uint8 phase, uint8 ampl, double freq)
   : GCFTask((State)&SetWG::initial, name), Test(name),
-    m_blp(blp), m_ampl(ampl), m_freq(freq)
+    m_blp(blp), m_phase(phase), m_ampl(ampl), m_freq(freq)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
@@ -170,16 +170,18 @@ GCFEvent::TResult SetWG::enabled(GCFEvent& e, GCFPortInterface& port)
       if (m_freq > 10e-6)
       {
 	wg.settings()(0).freq = (uint16)(((m_freq * (1 << 16)) / 80.0e6) + 0.5);
+	wg.settings()(0).phase = m_phase;
 	wg.settings()(0).ampl = m_ampl;
-	wg.settings()(0).nof_usersamples = 0;
+	wg.settings()(0).nof_samples = 0;
 	wg.settings()(0).mode = WGSettings::MODE_SINE;
 	wg.settings()(0)._pad = 0; // keep valgrind happy
       }
       else
       {
 	wg.settings()(0).freq = 0;
+	wg.settings()(0).phase = 0;
 	wg.settings()(0).ampl = 0;
-	wg.settings()(0).nof_usersamples = 0;
+	wg.settings()(0).nof_samples = 0;
 	wg.settings()(0).mode = WGSettings::MODE_OFF;
 	wg.settings()(0)._pad = 0; // keep valgrind happy
       }
@@ -309,7 +311,7 @@ int main(int argc, char** argv)
   }
   
   Suite s("SetWG", &cerr);
-  s.addTest(new SetWG("SetWG", blp, (uint16)ampl, freq));
+  s.addTest(new SetWG("SetWG", blp, (uint8)0, (uint8)ampl, freq));
   s.run();
   long nFail = s.report();
   s.free();

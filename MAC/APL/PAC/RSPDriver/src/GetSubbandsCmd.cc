@@ -57,7 +57,7 @@ void GetSubbandsCmd::ack(CacheBuffer& cache)
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.subbands().resize(m_event->blpmask.count(), N_BEAMLETS * N_POL);
+  ack.subbands().resize(m_event->blpmask.count(), MEPHeader::N_BEAMLETS * MEPHeader::N_POL);
   
   int result_blp = 0;
   for (int cache_blp = 0;

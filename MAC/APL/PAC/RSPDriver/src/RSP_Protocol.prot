@@ -1,4 +1,4 @@
-//
+// -*- mode: c++ -*-//
 // Protocol definition for the RSP driver interface
 //
 autogen definitions protocol;
@@ -30,7 +30,7 @@ prelude = << PRELUDE_END
 namespace RSP_Protocol
 {
   static const int MAX_N_BLPS     = 128;
-  static const int MAX_N_RCUS     = MAX_N_BLPS * N_POL;
+  static const int MAX_N_RCUS     = MAX_N_BLPS * MEPHeader::N_POL;
   static const int SUCCESS = 1;
   static const int FAILURE = 0;
 };

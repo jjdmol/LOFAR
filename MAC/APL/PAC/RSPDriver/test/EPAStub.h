@@ -40,7 +40,7 @@ namespace RSP_Test
        * up connection establishment information using the GTMNameService and
        * GTMTopologyService classes.
        */
-      EPAStub(string name);
+      EPAStub(string name, int boardnr);
       virtual ~EPAStub();
 
       // state methods
@@ -76,7 +76,7 @@ namespace RSP_Test
 
     private:
       // ports
-      GCFTCPPort m_server;
+      GCFETHRawPort m_client;
   };
 
 };

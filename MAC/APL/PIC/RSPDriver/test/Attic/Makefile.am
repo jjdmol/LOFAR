@@ -7,9 +7,11 @@ AM_CPPFLAGS = \
 # 	RSPTest \
 # 	EPAStub
 
-check_PROGRAMS = \
-	RSPTest \
+bin_PROGRAMS = \
 	EPAStub
+
+check_PROGRAMS = \
+	RSPTest
 
 RSPTest_SOURCES = \
 	RSPTestSuite.h \
@@ -18,7 +20,7 @@ RSPTest_SOURCES = \
 
 RSPTest_LDADD = \
 	$(top_builddir)/src/librsp.la \
-	-lsuite -lgcflite
+	-lsuite
 
 EPAStub_SOURCES = \
 	RSPTestSuite.h \
@@ -27,7 +29,7 @@ EPAStub_SOURCES = \
 
 EPAStub_LDADD = \
 	$(top_builddir)/src/libepa.la \
-	-lsuite -lgcflite
+	-lsuite
 
 BUILT_SOURCES = \
 	log4cplus.properties \

@@ -38,7 +38,7 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
 WGWrite::WGWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
 {
 }
 
@@ -49,17 +49,26 @@ WGWrite::~WGWrite()
 
 void WGWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
+  uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
-  EPAWgsettingsEvent wgsettings;
-  MEP_WGSETTINGS(wgsettings.hdr, MEPHeader::WRITE, getCurrentBLP());
+  EPAWgSettingsEvent wgsettings;
+
+  if (0 == global_rcu % MEPHeader::N_POL)
+  {
+    wgsettings.hdr.set(MEPHeader::WG_XSETTINGS_HDR, getCurrentBLP());
+  }
+  else
+  {
+    wgsettings.hdr.set(MEPHeader::WG_YSETTINGS_HDR, getCurrentBLP());
+  }
 
   WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 
-  wgsettings.freq            = w()(global_blp).freq;
-  wgsettings.ampl            = w()(global_blp).ampl;
-  wgsettings.nof_usersamples = w()(global_blp).nof_usersamples;
-  wgsettings.mode            = w()(global_blp).mode;
+  wgsettings.freq        = w()(global_rcu).freq;
+  wgsettings.phase       = w()(global_rcu).phase;
+  wgsettings.ampl        = w()(global_rcu).ampl;
+  wgsettings.nof_samples = w()(global_rcu).nof_samples;
+  wgsettings.mode        = w()(global_rcu).mode;
   
 //  memcpy(&wgsettings.freq, w()(blitz::Range(global_blp,global_blp)).data(), sizeof(WGSettings::WGRegisterType));
 
@@ -68,28 +77,19 @@ void WGWrite::sendrequest()
 
 void WGWrite::sendrequest_status()
 {
-#if WRITE_ACK_VERREAD
-  // send version read request
-  EPAFwversionReadEvent versionread;
-  MEP_FWVERSION(versionread.hdr, MEPHeader::READ);
-
-  getBoardPort().send(versionread);
-#else
-  // send read status request to check status of the write
-  EPARspstatusReadEvent rspstatus;
-  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
-  
-  getBoardPort().send(rspstatus);
-#endif
+  // intentionally left empty
 }
 
 GCFEvent::TResult WGWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-#if WRITE_ACK_VERREAD
-  EPAFwversionEvent ack(event);
-#else
- EPARspstatusEvent ack(event);
-#endif
+  LOG_DEBUG("handleack");
 
+  EPAWriteackEvent ack(event);
+
+  if (ack.hdr.m_fields.error)
+  {
+    LOG_ERROR_STR("WGWrite::handleack: error " << ack.hdr.m_fields.error);
+  }
+  
   return GCFEvent::HANDLED;
 }

@@ -43,7 +43,7 @@ using namespace LOFAR;
 using namespace blitz;
 
 SSWrite::SSWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * 2 /* for NOF_SUBBANDS and SUBBANDS*/)
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
 {
 }
 
@@ -54,76 +54,41 @@ SSWrite::~SSWrite()
 
 void SSWrite::sendrequest()
 {
-  if (0 == getCurrentBLP() % 2)
-  {
-    // send 'number of selected subbands'
-    EPANrsubbandsEvent nrsubbands;
-    MEP_NRSUBBANDS(nrsubbands.hdr, MEPHeader::WRITE, getCurrentBLP() / 2);
-
-    nrsubbands.nof_subbands = N_BEAMLETS * 2;
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / 2);
+  LOG_DEBUG(formatString(">>>> SSWrite(%s) global_blp=%d",
+			 getBoardPort().getName().c_str(),
+			 global_blp));
     
-    getBoardPort().send(nrsubbands);
-  }
-  else
-  {
-    uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / 2);
-    LOG_DEBUG(formatString(">>>> SSWrite(%s) global_blp=%d",
-			   getBoardPort().getName().c_str(),
-			   global_blp));
+  // send subband select message
+  EPASsSelectEvent ss;
+  ss.hdr.set(MEPHeader::SS_SELECT_HDR, getCurrentBLP());
     
-    // send subband select message
-    EPASubbandselectEvent ss;
-    MEP_SUBBANDSELECT(ss.hdr, MEPHeader::WRITE, getCurrentBLP() / 2);
+  // create array to contain the subband selection
+  Array<uint16, 1> subbands((uint16*)&ss.ch,
+			    MEPHeader::N_BEAMLETS * MEPHeader::N_POL,
+			    neverDeleteData);
     
-    // create array to contain the subband selection
-    Array<uint16, 1> subbands((uint16*)&ss.ch,
-			      EPA_Protocol::N_BEAMLETS * N_POL,
-			      neverDeleteData);
+  // copy the actual values from the cache
+  subbands = Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range::all()); // (0, N_BEAMLETS - 1));
     
-    // copy the actual values from the cache
-    subbands = Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range::all()); // (0, N_BEAMLETS - 1));
-    
-    getBoardPort().send(ss);
-  }
+  getBoardPort().send(ss);
 }
 
 void SSWrite::sendrequest_status()
 {
-  LOG_DEBUG("sendrequest_status");
-
-#if WRITE_ACK_VERREAD
-  // send version read request
-  EPAFwversionReadEvent versionread;
-  MEP_FWVERSION(versionread.hdr, MEPHeader::READ);
-
-  getBoardPort().send(versionread);
-#else
-  // send read status request to check status of the write
-  EPARspstatusReadEvent rspstatus;
-  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
-
-  getBoardPort().send(rspstatus);
-#endif
+  // intentionally left empty
 }
 
 GCFEvent::TResult SSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   LOG_DEBUG("handleack");
 
-#if WRITE_ACK_VERREAD
-  EPAFwversionEvent ack(event);
-#else
-  EPARspstatusEvent ack(event);
+  EPAWriteackEvent ack(event);
 
-  if (ack.board.write.error ||
-      ack.board.read.error)
+  if (ack.hdr.m_fields.error)
   {
-    LOG_ERROR_STR("\nSSWrite " 
-		  << (ack.board.write.error
-		      ? "write error"
-		      : "read error\n"));
+    LOG_ERROR_STR("SSWrite::handleack: error " << ack.hdr.m_fields.error);
   }
-#endif
-
+  
   return GCFEvent::HANDLED;
 }

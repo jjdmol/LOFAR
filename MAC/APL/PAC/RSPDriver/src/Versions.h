@@ -69,11 +69,11 @@ namespace RSP_Protocol
        * Dimensions of the arrays are:
        *  - m_rsp_versions  [N_RSPBOARDS]
        *  - m_bp_versions   [N_RSPBOARDS]
-       *  - m_ap_versions   [N_RSPBOARDS * N_AP]
+       *  - m_ap_versions   [N_RSPBOARDS]
        */
       blitz::Array<uint8, 1> m_rsp_versions;
       blitz::Array<uint8, 1> m_bp_versions;
-      blitz::Array<uint8, 1> m_ap_versions;      
+      blitz::Array<uint8, 1> m_ap_versions;
   };
 
   inline blitz::Array<uint8, 1>& Versions::rsp() { return m_rsp_versions; }

@@ -50,8 +50,8 @@ void RCUWrite::sendrequest()
 {
   uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
-  EPARcusettingsEvent rcusettings;
-  MEP_RCUSETTINGS(rcusettings.hdr, MEPHeader::WRITE, getCurrentBLP());
+  EPARcuSettingsEvent rcusettings;
+  rcusettings.hdr.set(MEPHeader::RCU_SETTINGS_HDR, getCurrentBLP());
 
   RCUSettings::RCURegisterType& x = Cache::getInstance().getBack().getRCUSettings()()(global_blp);
   RCUSettings::RCURegisterType& y = Cache::getInstance().getBack().getRCUSettings()()(global_blp + 1);
@@ -69,28 +69,17 @@ void RCUWrite::sendrequest()
 
 void RCUWrite::sendrequest_status()
 {
-#if WRITE_ACK_VERREAD
-  // send version read request
-  EPAFwversionReadEvent versionread;
-  MEP_FWVERSION(versionread.hdr, MEPHeader::READ);
-
-  getBoardPort().send(versionread);
-#else
-  // send read status request to check status of the write
-  EPARspstatusReadEvent rspstatus;
-  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
-  
-  getBoardPort().send(rspstatus);
-#endif
+  // intentionally left empty
 }
 
 GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-#if WRITE_ACK_VERREAD
-  EPAFwversionEvent ack(event);
-#else
-  EPARspstatusEvent ack(event);
-#endif
+  EPAWriteackEvent ack(event);
+  
+  if (ack.hdr.m_fields.error)
+  {
+    LOG_ERROR_STR("RCUWrite::handleack: error " << ack.hdr.m_fields.error);
+  }
 
   return GCFEvent::HANDLED;
 }

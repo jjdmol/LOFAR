@@ -57,7 +57,7 @@ void BWWrite::sendrequest()
 {
   uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
-  if (m_regid < MEPHeader::BFXRE || m_regid > MEPHeader::BFYIM)
+  if (m_regid < MEPHeader::BF_XROUT || m_regid > MEPHeader::BF_YIOUT)
   {
     LOG_FATAL("invalid regid");
     exit(EXIT_FAILURE);
@@ -69,50 +69,60 @@ void BWWrite::sendrequest()
 			 m_regid));
   
   // send next BF configure message
-  EPABfcoefsEvent bfcoefs;
-      
-  MEP_BF(bfcoefs.hdr, MEPHeader::WRITE, getCurrentBLP(), m_regid);
+  EPABfCoefsEvent bfcoefs;
 
+  switch (m_regid)
+  {
+    case MEPHeader::BF_XROUT:
+      bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, getCurrentBLP());
+      break;
+    case MEPHeader::BF_XIOUT:
+      bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, getCurrentBLP());
+      break;
+    case MEPHeader::BF_YROUT:
+      bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, getCurrentBLP());
+      break;
+    case MEPHeader::BF_YIOUT:
+      bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, getCurrentBLP());
+      break;
+  }
+  
   // copy weights from the cache to the message
   Array<complex<int16>, 2> weights((complex<int16>*)&bfcoefs.coef,
-				   shape(N_BEAMLETS, N_POL),
+				   shape(MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
 				   neverDeleteData);
 
   weights = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all(), Range::all());
 
   switch (m_regid)
   {
-    case MEPHeader::BFXRE:
+    case MEPHeader::BF_XROUT:
     {
       // weights for x-real part
       // no added conversions needed
     }
     break;
 
-    case MEPHeader::BFXIM:
+    case MEPHeader::BF_XIOUT:
     {
       // weights for x-imaginary part
       weights *= complex<int16>(0,1);
     }
     break;
     
-    case MEPHeader::BFYRE:
+    case MEPHeader::BF_YROUT:
     {
       // weights for y-real part
       // no added conversions needed
     }
     break;
     
-    case MEPHeader::BFYIM:
+    case MEPHeader::BF_YIOUT:
     {
       // weights for y-imaginary part
       weights *= complex<int16>(0,1);
     }
     break;
-
-    default:
-      LOG_ERROR("Invalid m_refid.");
-      break;
   }
   
   getBoardPort().send(bfcoefs);
@@ -124,14 +134,14 @@ void BWWrite::sendrequest_status()
 
 #if WRITE_ACK_VERREAD
   // send version read request
-  EPAFwversionReadEvent versionread;
-  MEP_FWVERSION(versionread.hdr, MEPHeader::READ);
+  EPARsrVersionEvent versionread;
+  versionread.hdr.m_fields = MEPHeader::RSR_VERSION_HDR;
 
   getBoardPort().send(versionread);
 #else
   // send read status request to check status of the write
-  EPARspstatusReadEvent rspstatus;
-  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
+  EPARsrStatusEvent rspstatus;
+  rspstatus.hdr.m_fields = MEPHeader::RSR_VERSION_HDR;
 
   getBoardPort().send(rspstatus);
 #endif
@@ -140,9 +150,9 @@ void BWWrite::sendrequest_status()
 GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 #if WRITE_ACK_VERREAD
-  EPAFwversionEvent ack(event);
+  EPARsrVersionEvent ack(event);
 #else
-  EPARspstatusEvent rspstatus(event);
+  EPARsrStatusEvent rspstatus(event);
 #endif
 
   LOG_DEBUG("handleack");

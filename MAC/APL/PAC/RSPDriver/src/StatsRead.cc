@@ -50,22 +50,36 @@ StatsRead::~StatsRead()
 
 void StatsRead::sendrequest()
 {
-  if (m_type <= Statistics::SUBBAND_POWER)
+  EPAReadEvent statsread;
+
+  switch (m_type)
   {
-    EPAStsubstatsReadEvent statsread;
+    case Statistics::SUBBAND_MEAN:
+      statsread.hdr.set(MEPHeader::SST_MEAN_HDR, getCurrentBLP(),
+			MEPHeader::READ, 0, N_STATS);
+      break;
+    
+    case Statistics::SUBBAND_POWER:
+      statsread.hdr.set(MEPHeader::SST_POWER_HDR, getCurrentBLP(),
+			MEPHeader::READ, 0, N_STATS);
+      break;
 
-    MEP_STSUB(statsread.hdr, MEPHeader::READ, getCurrentBLP(), m_type);
+    case Statistics::BEAMLET_MEAN:
+      statsread.hdr.set(MEPHeader::BST_MEAN_HDR, getCurrentBLP(),
+			MEPHeader::READ, 0, N_STATS);
+      break;
+    
+    case Statistics::BEAMLET_POWER:
+      statsread.hdr.set(MEPHeader::BST_POWER_HDR, getCurrentBLP(),
+			MEPHeader::READ, 0, N_STATS);
+      break;
 
-    getBoardPort().send(statsread);
+    default:
+      LOG_ERROR("invalid statistics type");
+      break;
   }
-  else
-  {
-    EPAStstatsReadEvent statsread;
 
-    MEP_ST(statsread.hdr, MEPHeader::READ, getCurrentBLP(), m_type - Statistics::BEAMLET_MEAN);
-
-    getBoardPort().send(statsread);
-  }
+  getBoardPort().send(statsread);
 }
 
 void StatsRead::sendrequest_status()
@@ -76,8 +90,8 @@ void StatsRead::sendrequest_status()
 /**
  * Function to cast a complex<uint16> to a complex<double>
  */
-BZ_DECLARE_FUNCTION_RET(convert_uint16_to_double, complex<double>)
-inline complex<double> convert_uint16_to_double(complex<uint16> val)
+BZ_DECLARE_FUNCTION_RET(convert_uint32_to_double, complex<double>)
+inline complex<double> convert_uint32_to_double(complex<uint32> val)
 {
   return complex<double>((double)val.real(),
 			 (double)val.imag());
@@ -85,49 +99,62 @@ inline complex<double> convert_uint16_to_double(complex<uint16> val)
 
 GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
+  EPAStatsEvent ack(event);
+
   uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
-  if (m_type <= Statistics::SUBBAND_POWER)
+  Array<complex<uint32>, 2> stats((complex<uint32>*)&ack.stat,
+				  shape(MEPHeader::N_SUBBANDS, MEPHeader::N_POL),
+				  neverDeleteData);
+
+  switch (m_type)
   {
-    if (event.signal != EPA_STSUBSTATS) return GCFEvent::HANDLED;
+    case Statistics::SUBBAND_MEAN:
+    case Statistics::SUBBAND_POWER:
+    {
+      if (m_type != ack.hdr.m_fields.type)
+      {
+	LOG_ERROR("invalid stats ack");
+	return GCFEvent::HANDLED;
+      }
 
-    EPAStsubstatsEvent ack(event);
+      Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getSubbandStats()());
 
-    Array<complex<uint16>, 2> stats((complex<uint16>*)&ack.stat,
- 				    shape(N_SUBBANDS, N_POL),
- 				    neverDeleteData);
+      // x-pol subband statistics: copy and convert to double
+      cache(m_type, global_blp * 2,     Range::all()) =
+	convert_uint32_to_double(stats(Range::all(), 0));
 
-    Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getSubbandStats()());
+      // y-pol subband statistics: copy and convert to double
+      cache(m_type, global_blp * 2 + 1, Range::all()) =
+	convert_uint32_to_double(stats(Range::all(), 1));
+    }
+    break;
 
-    // x-pol subband statistics: copy and convert to double
-    cache(m_type, global_blp * 2,     Range::all()) =
-      convert_uint16_to_double(stats(Range::all(), 0));
+    case Statistics::BEAMLET_MEAN:
+    case Statistics::BEAMLET_POWER:
+    {
+      if ((m_type - Statistics::BEAMLET_MEAN) != ack.hdr.m_fields.type)
+      {
+	LOG_ERROR("invalid stats ack");
+	return GCFEvent::HANDLED;
+      }
 
-    // y-pol subband statistics: copy and convert to double
-    cache(m_type, global_blp * 2 + 1, Range::all()) =
-      convert_uint16_to_double(stats(Range::all(), 1));
+      Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getBeamletStats()());
+
+      // x-pol beamlet statistics: copy and convert to double
+      cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2,     Range::all()) =
+	convert_uint32_to_double(stats(Range::all(), 0));
+
+      // y-pol beamlet statistics: copy and convert to double
+      cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2 + 1, Range::all()) =
+	convert_uint32_to_double(stats(Range::all(), 1));
+    }
+    break;
+      
+    default:
+      LOG_ERROR("invalid statistics type");
+      break;
   }
-  else
-  {
-    if (event.signal != EPA_STSTATS) return GCFEvent::HANDLED;
-
-    EPAStstatsEvent ack(event);
-
-    Array<complex<uint16>, 2> stats((complex<uint16>*)&ack.stat,
-				    shape(N_BEAMLETS, N_POL),
-				    neverDeleteData);
-
-    Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getBeamletStats()());
-
-    // x-pol beamlet statistics: copy and convert to double
-    cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2,     Range::all()) =
-      convert_uint16_to_double(stats(Range::all(), 0));
-
-    // y-pol beamlet statistics: copy and convert to double
-    cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2 + 1, Range::all()) =
-      convert_uint16_to_double(stats(Range::all(), 1));
-
-  }
-
+  
   return GCFEvent::HANDLED;
 }

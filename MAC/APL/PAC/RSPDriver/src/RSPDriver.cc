@@ -21,9 +21,6 @@
 //#
 //#  $Id$
 
-#include <PSAccess.h>
-#include <GCF/ParameterSet.h>
-
 #include "RSP_Protocol.ph"
 #include "EPA_Protocol.ph"
 
@@ -59,6 +56,10 @@
 #include "Cache.h"
 #include "RawEvent.h"
 #include "MEPHeader.h"
+
+#include <PSAccess.h>
+#include <GCF/ParameterSet.h>
+
 #include <blitz/array.h>
 
 #undef PACKAGE
@@ -89,15 +90,32 @@ RSPDriver::RSPDriver(string name)
 
   m_board = new GCFETHRawPort[GET_CONFIG("RS.N_RSPBOARDS", i)];
 
+  //
+  // Attempt access of RSPDriver.MAC_BASE, if it fails use the RSPDriver.ADDR0
+  // parameters.
+  //
+  bool bUseMAC_BASE = true;
+  try         { (void)GET_CONFIG("RSPDriver.MAC_BASE",i); }
+  catch (...) { bUseMAC_BASE = false;                     }
+
+  char boardname[64];
+  char paramname[64];
+  char macaddrstr[64];
   for (int boardid = 0; boardid < GET_CONFIG("RS.N_RSPBOARDS", i); boardid++)
   {
-    char name[64] = "board";
-    char macaddrstr[64] = "";
-      
-    snprintf(name, 64, "board%d", boardid);
-    snprintf(macaddrstr, 64, "00:00:00:00:00:%02x", boardid + GET_CONFIG("RSPDriver.MAC_BASE", i));
+    snprintf(boardname, 64, "board%d", boardid);
 
-    m_board[boardid].init(*this, name, GCFPortInterface::SAP, EPA_PROTOCOL,true /*raw*/);
+    if (bUseMAC_BASE)
+    {
+      snprintf(macaddrstr, 64, "00:00:00:00:00:%02x", boardid + GET_CONFIG("RSPDriver.MAC_BASE", i));
+    }
+    else
+    {
+      snprintf(paramname, 64, "RSPDriver.MAC_ADDR_%d", boardid);
+      strncpy(macaddrstr, GET_CONFIG_STRING(paramname), 64);
+    }
+
+    m_board[boardid].init(*this, boardname, GCFPortInterface::SAP, EPA_PROTOCOL,true /*raw*/);
     m_board[boardid].setAddr(GET_CONFIG_STRING("RSPDriver.IF_NAME"), macaddrstr);
 
     // set ethertype to 0x10FA so Ethereal can decode EPA messages
@@ -165,13 +183,13 @@ void RSPDriver::addAllSyncActions()
     {
       BWWrite* bwsync = 0;
 
-      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BFXRE);
+      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_XROUT);
       m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BFXIM);
+      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_XIOUT);
       m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BFYRE);
+      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_YROUT);
       m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BFYIM);
+      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_YIOUT);
       m_scheduler.addSyncAction(bwsync);
     }
 
@@ -216,13 +234,13 @@ void RSPDriver::addAllSyncActions()
     {
       BWRead* bwsync = 0;
 
-      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BFXRE);
+      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_XROUT);
       m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BFXIM);
+      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_XIOUT);
       m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BFYRE);
+      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_YROUT);
       m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BFYIM);
+      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_YIOUT);
       m_scheduler.addSyncAction(bwsync);
     }
 
@@ -550,8 +568,8 @@ GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
   if (1 == GET_CONFIG("RSPDriver.SOFTPPS", i))
   {
     // Send SoftPPS signal to all boards
-    EPAWgsoftppsEvent softpps;
-    MEP_WGSOFTPPS(softpps.hdr);
+    EPACrrSoftppsEvent softpps;
+    softpps.hdr.m_fields = MEPHeader::CRR_SOFTRESET_HDR;
 
     for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i); i++)
     {
@@ -608,8 +626,8 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
   if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
       || (sw_event->weights().extent(firstDim) < 1)
       || (sw_event->weights().extent(secondDim) > GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
-      || (sw_event->weights().extent(thirdDim) != N_BEAMLETS)
-      || (sw_event->weights().extent(fourthDim) != EPA_Protocol::N_POL))
+      || (sw_event->weights().extent(thirdDim) != MEPHeader::N_BEAMLETS)
+      || (sw_event->weights().extent(fourthDim) != MEPHeader::N_POL))
   {
     LOG_ERROR("SETWEIGHTS: invalid parameter");
     

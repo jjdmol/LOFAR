@@ -39,7 +39,7 @@ using namespace RSP_Protocol;
 using namespace blitz;
 
 StatusRead::StatusRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
+  : SyncAction(board_port, board_id, 1)
 {
 }
 
@@ -51,8 +51,8 @@ StatusRead::~StatusRead()
 void StatusRead::sendrequest()
 {
   // send read status request to check status of the write
-  EPARspstatusReadEvent rspstatus;
-  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
+  EPAReadEvent rspstatus;
+  rspstatus.hdr.set(MEPHeader::RSR_STATUS_HDR);
 
   getBoardPort().send(rspstatus);
 }
@@ -65,9 +65,9 @@ void StatusRead::sendrequest_status()
 GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   // if this is not the signal we expect, simply discard it
-  if (event.signal != EPA_RSPSTATUS) return GCFEvent::HANDLED;
+  if (event.signal != EPA_RSR_STATUS) return GCFEvent::HANDLED;
 
-  EPARspstatusEvent ack(event);
+  EPARsrStatusEvent ack(event);
 
   SystemStatus& status = Cache::getInstance().getBack().getSystemStatus();
 
@@ -75,11 +75,25 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
   memcpy(&status.board()(getBoardId()), &ack.board,
 	 sizeof(BoardStatus));
 
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
+  uint8 global_rcu_base = getBoardId() * GET_CONFIG("RS.N_BLPS", i);
 
-  // copy x and y-polarization
-  status.rcu()(global_blp * N_POL)     = ack.rcu[0];
-  status.rcu()(global_blp * N_POL + 1) = ack.rcu[1];
+  // copy RCU status
+  status.rcu()(global_rcu_base    ).status       = ack.board.ap1_rcu.statusx;
+  status.rcu()(global_rcu_base    ).nof_overflow = ack.board.ap1_rcu.nof_overflowx;
+  status.rcu()(global_rcu_base + 1).status       = ack.board.ap1_rcu.statusy;
+  status.rcu()(global_rcu_base + 1).nof_overflow = ack.board.ap1_rcu.nof_overflowy;
+  status.rcu()(global_rcu_base + 2).status       = ack.board.ap2_rcu.statusx;
+  status.rcu()(global_rcu_base + 2).nof_overflow = ack.board.ap2_rcu.nof_overflowx;
+  status.rcu()(global_rcu_base + 3).status       = ack.board.ap2_rcu.statusy;
+  status.rcu()(global_rcu_base + 3).nof_overflow = ack.board.ap2_rcu.nof_overflowy;
+  status.rcu()(global_rcu_base + 4).status       = ack.board.ap3_rcu.statusx;
+  status.rcu()(global_rcu_base + 4).nof_overflow = ack.board.ap3_rcu.nof_overflowx;
+  status.rcu()(global_rcu_base + 5).status       = ack.board.ap3_rcu.statusy;
+  status.rcu()(global_rcu_base + 5).nof_overflow = ack.board.ap3_rcu.nof_overflowy;
+  status.rcu()(global_rcu_base + 6).status       = ack.board.ap4_rcu.statusx;
+  status.rcu()(global_rcu_base + 6).nof_overflow = ack.board.ap4_rcu.nof_overflowx;
+  status.rcu()(global_rcu_base + 7).status       = ack.board.ap4_rcu.statusy;
+  status.rcu()(global_rcu_base + 7).nof_overflow = ack.board.ap4_rcu.nof_overflowy;
 
   return GCFEvent::HANDLED;
 }

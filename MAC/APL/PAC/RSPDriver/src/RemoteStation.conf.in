@@ -10,7 +10,7 @@ RS.N_RSPBOARDS=3
 #
 # Number of BLP's per RSP board
 #
-RS.N_BLPS=1
+RS.N_BLPS=4
 
 #
 # Antenna positions

@@ -60,7 +60,7 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
   ack.weights().resize(BeamletWeights::SINGLE_TIMESTEP,
 		       m_event->blpmask.count(),
 		       cache.getBeamletWeights()().extent(thirdDim),
-		       N_POL);
+		       MEPHeader::N_POL);
 
   int result_blp = 0;
   for (int cache_blp = 0;
