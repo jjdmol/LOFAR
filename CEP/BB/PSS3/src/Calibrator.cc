@@ -290,6 +290,16 @@ void Calibrator::CommitOptimizedParameters (void) {
 }
 
 
+void Calibrator::getParmValues (vector<string>& names, 
+				vector<double>& values) {
+  itsPSS3CalibratorImpl -> getParmValues (names, values);
+}
+
+
+void Calibrator::setParmValues (const vector<string>& names, 
+				const vector<double>& values) {
+  itsPSS3CalibratorImpl -> setParmValues (names, values);
+}
 
 
 
