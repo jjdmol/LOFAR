@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.4  2002/05/24 08:08:32  schaaf
+//  %[BugId: 11]%
+//  remove ^M characters
+//
 //  Revision 1.3  2002/05/16 15:14:02  schaaf
 //  Removed explicit setting of itsBuffer
 //
@@ -47,23 +51,6 @@ DH_2DMatrix::DH_2DMatrix (const string& name,
     itsXSize(Xsize),
     itsYSize(Ysize)
 {
-  // Create the DataPacket AND its buffer in contiguous memory
-  
-  // Determine the number of bytes needed for DataPacket and buffer.
-  // the size is that of the DataPacket object, plus the size of the Buffer
-  unsigned int size = sizeof(DataPacket) + ((Xsize*Ysize) * sizeof(int));
-  // allocate the memmory
-  void* ptr = new char[size+4]; // extra 4 bytes to avoid problems with word allignment
-  
-  // Fill in the data packet pointer and initialize the memory.
-  itsDataPacket = (DataPacket*)(ptr);
-  *itsDataPacket = DataPacket();
-  
-  for (int x=0; x<Xsize; x++) {
-    for (int y=0; y<Ysize; y++) {
-      *getBuffer(x,y) = 0;
-    }
-  }
 
   
   // fill in the names of the variables
@@ -72,10 +59,31 @@ DH_2DMatrix::DH_2DMatrix (const string& name,
   itsYName = std::string(Yname);
   itsZName = std::string(Zname);
   
+  TRACER4("End of C'tor");
+}
+
+void DH_2DMatrix::preprocess(){
+  // Create the DataPacket AND its buffer in contiguous memory
+  
+  // Determine the number of bytes needed for DataPacket and buffer.
+  // the size is that of the DataPacket object, plus the size of the Buffer
+  unsigned int size = sizeof(DataPacket) + ((itsXSize*itsYSize) * sizeof(int));
+  // allocate the memmory
+  void* ptr = allocate(size+4); // extra 4 bytes to avoid problems with word allignment
+  
+  // Fill in the data packet pointer and initialize the memory.
+  itsDataPacket = (DataPacket*)(ptr);
+  *itsDataPacket = DataPacket();
+  
+  for (int x=0; x<itsXSize; x++) {
+    for (int y=0; y<itsYSize; y++) {
+      *getBuffer(x,y) = 0;
+    }
+  }
   // Initialize base class.
   setDataPacket (itsDataPacket, size);
   TRACER2("Created 2D matrix : " << itsDataPacket << "   size="  << size);
-  TRACER4("End of C'tor");
+
 }
 
 DH_2DMatrix::~DH_2DMatrix()
