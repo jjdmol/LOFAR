@@ -84,8 +84,6 @@ EPAStub_LDADD = \
 	-lsuite
 
 BUILT_SOURCES = \
-	abstest.ns \
-	abstest.top \
 	AVTStub.conf \
 	EPATest.conf
 
