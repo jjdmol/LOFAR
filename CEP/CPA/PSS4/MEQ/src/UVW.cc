@@ -77,7 +77,7 @@ int UVW::getResult (Result::Ref &resref,
   const Cells& cells = request.cells();
   // Allocate a 3-plane result for U, V, and W
   Result &result = resref <<= new Result(3,request);
-  // Get RA and DEC of phase center.
+  // Get RA and DEC of phase center (as J2000).
   MVDirection phaseRef(vra.as<double>(),vdec.as<double>());
   // Set correct size of values.
   int nfreq = cells.nfreq();
@@ -93,6 +93,7 @@ int UVW::getResult (Result::Ref &resref,
   qepoch.setValue (cells.time(0));
   MEpoch mepoch(qepoch, MEpoch::UTC);
   MeasFrame frame(itsEarthPos);
+  frame.set (MDirection(phaseRef, MDirection::J2000));
   frame.set (mepoch);
   mbl.getRefPtr()->set(frame);      // attach frame
   MBaseline::Convert mcvt(mbl, MBaseline::J2000);
