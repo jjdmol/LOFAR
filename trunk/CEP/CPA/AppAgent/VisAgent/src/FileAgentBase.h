@@ -4,8 +4,18 @@
 #include <string>
     
 using std::string;
+
+namespace AppState
+{
+  typedef enum 
+  {
+    CLOSED    =     -100
+  } FileAgentStates;
+  
+};
     
-namespace VisAgent {
+namespace VisAgent 
+{
 
 //##ModelId=3E282C030062
 class FileAgentBase

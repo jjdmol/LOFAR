@@ -63,6 +63,8 @@ int FileInputAgent::getHeader (DataRecord::Ref &hdr,int wait)
     setFileState(DATA);
     return SUCCESS;
   }
+  else if( res == CLOSED )
+    return CLOSED;
   else
   {
     return sink().waitOtherEvents(wait);
@@ -85,9 +87,14 @@ int FileInputAgent::hasTile   ()
 //##ModelId=3E2C299201D6
 int FileInputAgent::state() const
 {
-  return fileState() != FILEERROR 
-          ? SUCCESS 
-          : ERROR;
+  switch( fileState() )
+  {
+    case HEADER:
+    case DATA:        return AppState::RUNNING;
+    case FILECLOSED:  return AppState::INIT;
+    case ENDFILE:     return AppState::CLOSED;
+    default:          return AppState::ERROR;
+  }
 }
 
 //##ModelId=3E2C2999029A

@@ -22,13 +22,15 @@
 
 #include <MSVisAgent/MSInputAgent.h>
 #include <MSVisAgent/MSOutputAgent.h>
-#include <SolverControl/BatchAgent.h>
+#include "../src/BatchAgent.h"
 #include "../src/DummySolver.h"
 
 int main (int argc,const char *argv[])
 {
   using namespace MSVisAgent;
   using namespace SolverControl;
+  MeasurementSet ms("test.ms");
+  MeasurementSet ms1("test.ms",Table::Update);
   
   try 
   {
@@ -38,12 +40,15 @@ int main (int argc,const char *argv[])
     Debug::initLevels(argc,argv);
 
     // initialize parameter record
-    DataRecord rec;
+    DataRecord::Ref recref;
+    DataRecord &rec = recref <<= new DataRecord;
     // init errors will be thrown as exceptions
     rec[FThrowError] = True;
     
+    rec[SolverVocabulary::FDomainSize] = 600; // 10-minute domains
+        
     // setup input agent parameters 
-    DataRecord &inpargs = rec[FMSInputParams] <<= new DataRecord;
+    DataRecord &inpargs = rec[AidInput] <<= new DataRecord;
     
       inpargs[FMSName] = "test.ms";
       inpargs[FDataColumnName] = "DATA";
@@ -60,34 +65,37 @@ int main (int argc,const char *argv[])
         
     // setup batch control agent parameters 
     // use field of several records for several jobs
-    DataRecord &solveargs = rec[FSolverControlParams] <<= new DataRecord;
-        
-      solveargs[FBatchControlJobs] <<= new DataField(TpDataRecord,3);
-        solveargs[FBatchControlJobs][0][FConvergence] = 0;
-        solveargs[FBatchControlJobs][0][FMaxIterations] = 10;
+    DataRecord &solveargs = rec[AidControl] <<= new DataRecord;
+    
+      solveargs[FAutoExit] = True;
+      solveargs[FStopWhenEnd] = True;
+      solveargs[FBatchJobs] <<= new DataField(TpDataRecord,3);
+        solveargs[FBatchJobs][0][FConvergence] = 0;
+        solveargs[FBatchJobs][0][FMaxIterations] = 10;
 
-        solveargs[FBatchControlJobs][1][FConvergence] = 0.1;
-        solveargs[FBatchControlJobs][1][FMaxIterations] = 100;
+        solveargs[FBatchJobs][1][FConvergence] = 0.1;
+        solveargs[FBatchJobs][1][FMaxIterations] = 100;
 
-        solveargs[FBatchControlJobs][2][FConvergence] = 0.005;
-        solveargs[FBatchControlJobs][2][FMaxIterations] = 10;
+        solveargs[FBatchJobs][2][FConvergence] = 0.005;
+        solveargs[FBatchJobs][2][FMaxIterations] = 10;
 
     cout<<"=================== creating agents ===========================\n";
-    MSVisAgent::MSInputAgent in;
-    MSVisAgent::MSOutputAgent out;
-    SolverControl::BatchAgent control;
+    MSVisAgent::MSInputAgent in(AidInput);
+    MSVisAgent::MSOutputAgent out(AidOutput);
+    SolverControl::BatchAgent control(AidControl);
+    AppEventFlag evflag;
+    in.attach(evflag);
+    out.attach(evflag);
+    control.attach(evflag);
     cout<<"=================== creating solver ===========================\n";
-    DummySolver solver(in,out,control);
+    DummySolver solver;
+    solver<<in<<out<<control;
     cout<<"=================== initializing solver =======================\n";
-    if( solver.init(rec) )
-    {
-      cout<<"=================== running solver ============================\n";
-      solver.run();
-    }
-    else
-      cout<<"init failed\n";
+    control.preinit(recref);
+    cout<<"=================== running solver ============================\n";
+    solver.run();
     cout<<"=================== exiting ===================================\n";
-  } 
+  }
   catch ( std::exception &exc ) 
   {
     cout<<"Exiting with exception: "<<exc.what()<<endl;  

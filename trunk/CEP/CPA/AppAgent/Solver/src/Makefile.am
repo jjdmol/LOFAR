@@ -5,7 +5,9 @@ lib_LTLIBRARIES = libsolver.la
 libsolver_la_SOURCES = \
   AID-Solver-Registry.cc \
   BaseSolver.cc \
-  DummySolver.cc 
+  DummySolver.cc \
+  SolverControlAgent.cc \
+  BatchAgent.cc
 
 # script used to generate AID maps
 MAPBUILDER = $(dmi_dir)/src/build_aid_maps.pl 

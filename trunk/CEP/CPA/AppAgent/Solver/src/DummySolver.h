@@ -9,8 +9,6 @@ namespace SolverVocabulary
   
   const HIID  FDomainSize         = AidDomain|AidSize;
   
-  const HIID  InputInitFailed     = AidInput|AidInit|AidFail,
-              OutputInitFailed    = AidOutput|AidInit|AidFail;
 };
     
 //##ModelId=3E00ACBD03DD

@@ -30,4 +30,9 @@ static AtomicID::Register aid_reg_Low(-1315,"Low");
 static AtomicID::Register aid_reg_Normal(-1323,"Normal");
 static AtomicID::Register aid_reg_High(-1324,"High");
 static AtomicID::Register aid_reg_Higher(-1318,"Higher");
+static AtomicID::Register aid_reg_Vis(-1116,"Vis");
+static AtomicID::Register aid_reg_Header(-1133,"Header");
+static AtomicID::Register aid_reg_Tile(-1123,"Tile");
+static AtomicID::Register aid_reg_Suspend(-1252,"Suspend");
+static AtomicID::Register aid_reg_Resume(-1251,"Resume");
 
