@@ -27,7 +27,10 @@
 
 #include <Common/Debug.h>
 
+#if(HAVE_VDM)
 #include <OCTOPUSSY/OctopussyConfig.h>
+#endif
+
 
 int main(int argc, char *argv[])
 try
@@ -35,8 +38,10 @@ try
   std::cout << "Uvplot main" << std::endl << std::flush;
   QApplication app(argc, argv);
   Debug::initLevels(argc, (const char **)argv);       // Initialize debugging
-  OctopussyConfig::initGlobal(argc,(const char **)argv);
 
+#if(HAVE_VDM)
+  OctopussyConfig::initGlobal(argc,(const char **)argv);
+#endif
 
   std::cout << "Create mainwindow" << std::endl;
   UVPMainWindow *mainwin = new UVPMainWindow;

@@ -18,10 +18,14 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 
+#if(HAVE_VDM)
 // Must be included first. Has a member "signals", which is also a
 // macro defined in QT :-)
 #include <OCTOPUSSY/Dispatcher.h> 
 #include <OCTOPUSSY/Gateways.h>
+#endif // HAVE_VDM
+
+
 
 #include <UVPMainWindow.h>
 
@@ -45,12 +49,13 @@
 #include <aips/Quanta/MVTime.h>
 
 
+#if(HAVE_VDM)
 // For VDM stuff
 #include <MSVisAgent/MSVisInputAgent.h>
 #include <OctoAgent/OctoVisInputAgent.h>
 #include <OctoAgent/OctoMultiplexer.h>
 #include <AID-uvplot.h>
-
+#endif // HAVE_VDM
 
 #include <UVPOpenVDMDialog.h>
 
@@ -62,9 +67,13 @@ InitDebugContext(UVPMainWindow, "DEBUG_CONTEXT");
 //===================>>>  UVPMainWindow::UVPMainWindow  <<<===================
 
 UVPMainWindow::UVPMainWindow()
+#if(HAVE_VDM)
   : QMainWindow(),
     itsVisInputAgent(0),
     itsOctoMultiplexer(0)
+#else
+  : QMainWindow()
+#endif
 {
   // Construct a menu
   buildMenuBar();
@@ -139,12 +148,14 @@ UVPMainWindow::UVPMainWindow()
 
 UVPMainWindow::~UVPMainWindow()
 {
+#if(HAVE_VDM)
   if(itsVisInputAgent != 0) {
     delete itsVisInputAgent;
   }
   if(itsOctoMultiplexer != 0) {
     delete itsOctoMultiplexer;
   }
+#endif
 }
 
 
@@ -160,17 +171,9 @@ void UVPMainWindow::buildMenuBar()
 
   itsDatasourceMenu = new QPopupMenu;
   itsDatasourceMenu->insertItem("&Open MS", this, SLOT(slot_openMS()));
+#if(HAVE_VDM)
   itsDatasourceMenu->insertItem("&VDM pipeline", this, SLOT(slot_vdmOpenPipe()));
-
-
-  //  itsProcessControlMenu = new QPopupMenu;
-  /*  itsMenuPlotImageID = itsProcessControlMenu->insertItem("&Start", this,
-                                                         SLOT(slot_vdmInput()));
-  itsMenuPlotStopID  = itsProcessControlMenu->insertItem("&Stop", this,
-                                                         SLOT(slot_quitPlotting()));
-  */
-  //  itsProcessControlMenu->setItemEnabled(itsMenuPlotImageID, true);
-  //  itsProcessControlMenu->setItemEnabled(itsMenuPlotStopID, false);
+#endif
 
   itsSettingsMenu = new QPopupMenu;
   itsSettingsMenu->insertItem("Number of antennae", this, SLOT(slot_changeNumberOfAntennae()));
@@ -233,12 +236,14 @@ void UVPMainWindow::updateCaption()
     }
     break;
 
+#if(HAVE_VDM)
   case VDM:
     {
       out << "VDM: ";
     }
     break;
-    
+#endif    
+
   case MS:
     {
       out << "MS: ";
@@ -493,11 +498,13 @@ void UVPMainWindow::slot_loadData()
     }
     break;
     
+#if(HAVE_VDM)
   case VDM:
     {
       slot_vdmInput();
     }
     break;
+#endif
 
 
   default:
@@ -530,7 +537,7 @@ void UVPMainWindow::slot_openMS()
     itsGraphSettingsWidget->setNumberOfAntennae(AntennaTable.nrow());
     //itsGraphSettingsWidget->setNumberOfFields(FieldTable.nrow());
 #if(DEBUG_MODE)
-    std::cout << FieldTable.nrow() << std::endl;
+    std::cout << __FUNCTION__ << "Fields: " << FieldTable.nrow() << std::endl;
 #endif
   }
 }
@@ -539,6 +546,7 @@ void UVPMainWindow::slot_openMS()
 
 
 
+#if(HAVE_VDM)
 //==================>>>  UVPMainWindow::slot_vdmOpenMS  <<<==================
 
 void UVPMainWindow::slot_vdmOpenMS()
@@ -758,7 +766,7 @@ catch(...)
 {
   std::cerr << "slot_vdmInput(): Unhandled exception caught." << std::endl << std::flush;
 }
-
+#endif // HAVE_VDM
 
 
 
@@ -805,12 +813,16 @@ try
   ROScalarColumn<Double> ExposureColumn(Selection, "EXPOSURE");
   ROArrayColumn<Double>  UVWColumn     (Selection, "UVW");
 
+  MSPolarization           PolarizationTable(ms.polarization());
+  ROArrayColumn<Int>       PolTypeColumn(PolarizationTable, "CORR_TYPE");
+
+#if(DEBUG_MODE)
+  std::cout << __FUNCTION__<< ": " << Selection.nrow() << " rows selected." << std::endl;
+#endif
+
   unsigned int NumPolarizations = DataColumn(0).shape()[0];
   unsigned int NumChannels      = DataColumn(0).shape()[1];
   unsigned int NumSelected      = Selection.nrow();
-
-  MSPolarization           PolarizationTable(ms.polarization());
-  ROArrayColumn<Int>       PolTypeColumn(PolarizationTable, "CORR_TYPE");
 
   std::vector<int>         PolType(NumPolarizations);
   std::vector<UVPDataAtom>       Atoms(NumPolarizations);
@@ -880,7 +892,6 @@ try
       Atoms[k].setHeader(Headers[k]);
       itsDataSet[Headers[k]]= Atoms[k];
     }      
-    //std::cout << "read: " << Antenna1Column(i) <<"-"<< Antenna2Column(i) <<std::endl;  
 
     DataArray.freeStorage(Data, DeleteData); 
     FlagArray.freeStorage(Flag, DeleteFlag);
