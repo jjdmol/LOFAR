@@ -20,12 +20,10 @@
 //
 //  $Id$
 
-#ifdef HAVE_CONFIG
-# include <config.h>
-#endif
+#include <lofar_config.h>
 
 #include <Math/LCSMath.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <Common/lofar_vector.h>
 
 #ifdef HAVE_FFTW
@@ -205,7 +203,7 @@ namespace LCSMath
 
   LoVec_double sort (LoVec_double& aVector)
   {
-    Assert (aVector.isStorageContiguous());
+    ASSERT (aVector.isStorageContiguous());
     quicksort(aVector.size(), aVector.data() - 1);
     return aVector;
   }
@@ -291,7 +289,7 @@ namespace LCSMath
         data[j] = a;
         buffer_pointer += 2;
 
-        Assert (buffer_pointer < BUFFERLENGTH);
+        ASSERT (buffer_pointer < BUFFERLENGTH);
 	if (ir - i + 1 >= j - l)
         {
 	  buffer[buffer_pointer] = ir;
@@ -331,7 +329,7 @@ namespace LCSMath
 
     return output;
 #else
-    AssertStr (0, "Lorray::hilbert: FFTW is needed but not configured");
+    ASSERTSTR (0, "Lorray::hilbert: FFTW is needed but not configured");
 #endif
   }
 
@@ -358,7 +356,7 @@ namespace LCSMath
 
   int eig (const LoMat_dcomplex& m, LoMat_dcomplex& V, LoVec_double& D)
   {
-  AssertStr (is_hermitian(m),
+  ASSERTSTR (is_hermitian(m),
 	     "only Hermitian matrices are currently supported");
   return hermitian_init(m, V, D);
   }
@@ -373,7 +371,7 @@ namespace LCSMath
     int nr = a.rows();
     int nc = a.cols();
     
-    AssertStr (nr == nc, "EIG requires square matrix");
+    ASSERTSTR (nr == nc, "EIG requires square matrix");
 
     // Define workspace variables for LAPACK routine
     int info = 0;
@@ -397,13 +395,13 @@ namespace LCSMath
     zheev ("V", "U", nr, tmp_data, nr, pw, pwork,
 	   lwork, prwork, info);
     // Once the Fortran routine returns, check the output.
-    AssertStr (info == 0, "LoarrayFunc::eig: "
+    ASSERTSTR (info == 0, "LoarrayFunc::eig: "
 	       << (info<0 ? "invalid ZHEEV argument" : "ZHEEV no converge"));
     D = w;
     V = atmp;
     return info;
 #else
-    AssertStr (0, "Lorray::eig: LAPACK is needed but not configured");
+    ASSERTSTR (0, "Lorray::eig: LAPACK is needed but not configured");
 #endif
   }
   
@@ -481,7 +479,7 @@ namespace LCSMath
 	V = Vtret.copy ();
 	D = Sret.copy ();
 
-    AssertStr (info == 0, "LoarrayFunc::eig: "
+    ASSERTSTR (info == 0, "LoarrayFunc::eig: "
 			   << (info < 0 ? "invalid ZGESVD argument" : "ZGESVD no converge"));
 
     if (! (jobv == 'N' || jobv == 'O')) {
@@ -489,7 +487,7 @@ namespace LCSMath
     }
     return info;
 #else
-    AssertStr (0, "Lorray::svd: LAPACK is needed but not configured");
+    ASSERTSTR (0, "Lorray::svd: LAPACK is needed but not configured");
 #endif
   }
 
@@ -527,7 +525,7 @@ namespace LCSMath
     LoMat_dcomplex out(nr, nc);
     out = 0;
     
-    Assert (A.cols() == B.rows());
+    ASSERT (A.cols() == B.rows());
     for (int k = A.lbound(blitz::firstDim); k <= A.ubound(blitz::firstDim); k++) {
       for (int l = B.lbound(blitz::secondDim); l <= B.ubound(blitz::secondDim); l++) {
 	for (int m = A.lbound(blitz::secondDim); m <= A.ubound(blitz::secondDim); m++) {
@@ -564,7 +562,7 @@ namespace LCSMath
     LoMat_double out(nr, nc);
     out = 0;
     
-    Assert (A.cols() == B.rows());
+    ASSERT (A.cols() == B.rows());
     for (int k = A.lbound(blitz::firstDim); k <= A.ubound(blitz::firstDim); k++) {
       for (int l = B.lbound(blitz::secondDim); l <= B.ubound(blitz::secondDim); l++) {
 	for (int m = A.lbound(blitz::secondDim); m <= A.ubound(blitz::secondDim); m++) {
@@ -595,7 +593,7 @@ namespace LCSMath
   LoMat_dcomplex invert (const LoMat_dcomplex& in)
   {
 #ifdef HAVE_LAPACK
-      AssertStr(in.rows() == in.cols(), "The input must be a square matrix!");
+      ASSERTSTR(in.rows() == in.cols(), "The input must be a square matrix!");
       
       int m = in.rows();
       int lda = m; int n = m;               // m, n, lda
@@ -617,13 +615,13 @@ namespace LCSMath
 	  out = 0;
 	  cout <<  "A signular matrix can not be inversed!" << endl;
       } else {
-	  AssertStr(info > 0, "Illegal argument to getrf!");
+	  ASSERTSTR(info > 0, "Illegal argument to getrf!");
       }
-      AssertStr(info >= 0, "Illegal argument to getri!");
+      ASSERTSTR(info >= 0, "Illegal argument to getri!");
 
       return out;
 #else
-    AssertStr (0, "LCSMath::invert: LAPACK is needed but not configured");
+    ASSERTSTR (0, "LCSMath::invert: LAPACK is needed but not configured");
 #endif
   }   
 
