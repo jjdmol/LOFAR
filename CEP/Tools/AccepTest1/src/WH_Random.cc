@@ -34,37 +34,21 @@ namespace LOFAR
 {
 
   WH_Random::WH_Random (const string& name,
-			unsigned int nin,
-			unsigned int nout,
 			const int nelements, 
 			const int nsamples,
 			const int nchannels)
-    : WorkHolder (nin, nout, name, "WH_Random"),
+    : WorkHolder (0, 1, name, "WH_Random"),
       itsIntegrationTime (0),
       itsIndex           (0),
       itsNelements       (nelements),
       itsNsamples        (nsamples),
-      itsNchannels       (nchannels) {
+      itsNchannels       (nchannels) 
+  {
+    getDataManager().addOutDataHolder(0, new DH_CorrCube ("out",
+							  itsNelements, 
+							  itsNsamples, 
+							  itsNchannels));
 
-    char str[8];
-
-    for (unsigned int i = 0; i < nin; i++) {
-
-      sprintf(str, "%d", i);
-      getDataManager().addInDataHolder(i, new DH_Empty (string("in_") + str));
-
-    }
-
-    for (unsigned int i = 0; i < nout; i++) {
-      
-      sprintf(str, "%d", i);
-      getDataManager().addOutDataHolder(i, new DH_CorrCube (string("out_") + str,
-							    itsNelements, 
-							    itsNsamples, 
-							    itsNchannels));
-
-    }
-			
     // seed the random generator with a "random" int
     timeval tv;
     gettimeofday(&tv, NULL);
@@ -79,13 +63,11 @@ namespace LOFAR
 
 
   WorkHolder* WH_Random::construct(const string& name,
-				   unsigned int nin,
-				   unsigned int nout,
 				   const int nelements, 
 				   const int nsamples, 
 				   const int nchannels) {
 
-    return new WH_Random(name, nin, nout, nelements, nsamples, nchannels);
+    return new WH_Random(name, nelements, nsamples, nchannels);
 
   }
   
@@ -93,8 +75,6 @@ namespace LOFAR
 
   WH_Random* WH_Random::make(const string& name) {
     return new WH_Random (name, 
-			  getDataManager().getInputs(),
-			  getDataManager().getOutputs(),
 			  itsNelements, 
 			  itsNsamples, 
 			  itsNchannels);

@@ -59,8 +59,6 @@ int nsamples;
 int nruns;
 int baseport;
 
-int parse_config();
-
 namespace LOFAR 
 {
   class Correlator: public LOFAR::TinyApplicationHolder {

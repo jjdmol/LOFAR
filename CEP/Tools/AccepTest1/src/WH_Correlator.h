@@ -36,8 +36,6 @@ class WH_Correlator: public WorkHolder
  public:
 
   explicit WH_Correlator (const string& name,
-			  unsigned int nin,
-			  unsigned int nout,
 			  const int    elements, 
 			  const int    samples,
 			  const int    channels, 
@@ -46,8 +44,6 @@ class WH_Correlator: public WorkHolder
   virtual ~WH_Correlator();
 
   static WorkHolder* construct (const string& name, 
-				unsigned int nin, 
-				unsigned int nout, 
 				const int    elements, 
 				const int    samples, 
 				const int    channels, 

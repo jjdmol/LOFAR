@@ -35,10 +35,6 @@
 #include <WH_Dump.h>
 
 #include <TestRange.h>
-#include <Config.h>
-
-ifstream config_file;
-char config_buffer[1024*10]; // 10 kb
 
 int   nchannels;
 int   nelements;

@@ -33,33 +33,24 @@
 using namespace LOFAR;
 
 WH_Correlator::WH_Correlator(const string& name, 
-			     unsigned int nin, 
-			     unsigned int nout, 
 			     const int    elements,
 			     const int    samples,
 			     const int    channels, 
 			     const int    targets) 
-  : WorkHolder( nin, nout, name, "WH_Correlator"),
+  : WorkHolder( 1, 1, name, "WH_Correlator"),
     itsNelements(elements),
     itsNsamples (samples),
     itsNchannels(channels),
     itsNtargets (targets)
 {
 
-  char str[8];
-  for (unsigned int i = 0; i < nin; i++) {
-    sprintf(str, "%d", i);
-    getDataManager().addInDataHolder(i, new DH_CorrCube(string("in_") + str, 
-							elements, 
-							samples, 
-							channels));
-  }
+  getDataManager().addInDataHolder(0, new DH_CorrCube("in", 
+						      elements, 
+						      samples, 
+						      channels));
 
-  for (unsigned int i = 0; i < nout; i++) {
-    sprintf(str, "%d", i);
-    getDataManager().addOutDataHolder(i, new DH_Vis(string("out_") + str, 
-						    elements, channels));
-  }
+  getDataManager().addOutDataHolder(0, new DH_Vis("out", 
+						  elements, channels));
 
 }
 
@@ -67,20 +58,16 @@ WH_Correlator::~WH_Correlator() {
 }
 
 WorkHolder* WH_Correlator::construct (const string& name, 
-				     unsigned int nin, 
-				     unsigned int nout, 
 				     const int    nelements, 
 				     const int    nsamples,
 				     const int    nchannels, 
 				     const int    ntargets)
 {
-  return new WH_Correlator(name, nin, nout, nelements, nsamples, nchannels, ntargets);
+  return new WH_Correlator(name, nelements, nsamples, nchannels, ntargets);
 }
 
 WH_Correlator* WH_Correlator::make (const string& name) {
   return new WH_Correlator(name,
-			   getDataManager().getInputs(),
-			   getDataManager().getOutputs(),
 			   itsNelements,
 			   itsNsamples,
 			   itsNchannels, 
@@ -97,8 +84,8 @@ void WH_Correlator::process() {
 
   // try to access the DataHolder buffer directly to prevent extra memcpy's
   signal = ((DH_CorrCube*)getDataManager().getInHolder(0))->getBuffer();
-  corr   = (DH_Vis::BufferType*) malloc(itsNelements * itsNelements * sizeof(DH_Vis::BufferType));
-  
+  corr   = ((DH_Vis*)getDataManager().getOutHolder(0))->getBuffer();
+
   for (int i = 0; i<itsNelements; i++) {
     for (int j = 0; j<itsNelements; j++) {
 
@@ -124,10 +111,6 @@ void WH_Correlator::process() {
   cmults = itsNsamples * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
   //  cout << "Performance: " << 10e-6*cmults/(stoptime-starttime) << " Mcprod/sec" << endl;
   //  cout << itsNsamples << " " << itsNelements << " " << 10e-6*cmults/(stoptime-starttime) << endl;
-
-  cout << *corr << endl;
-  memcpy(((DH_Vis*)getDataManager().getOutHolder(0))->getBuffer(), corr, itsNelements * itsNelements * sizeof(DH_Vis::BufferType));
-  free(corr);
 }				     
 
 void WH_Correlator::dump() {
