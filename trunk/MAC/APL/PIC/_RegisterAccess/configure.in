@@ -11,7 +11,7 @@ dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
 AC_DEFINE_UNQUOTED([ARA_SYSCONF],["${prefix}/etc"],[Path to ARA install prefix directory.])
-RSP_SYSCONF="${prefix}/etc"
+ARA_SYSCONF="${prefix}/etc"
 AC_SUBST([ARA_SYSCONF])
 
 dnl Checks for programs.
@@ -62,8 +62,7 @@ lofar_COMPILETOOLS
 #lofar_MPI(0)
 lofar_PVSS(1)
 lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
-lofar_EXTERNAL(xercesc,1,xercesc/sax2/SAX2XMLReader.hpp,xerces-c,)
-lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
+lofar_LOG4CPLUS
 lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,"")
 lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
 lofar_EXTERNAL(rsp,1,RSP_Protocol.ph,,)
@@ -71,7 +70,6 @@ lofar_EXTERNAL(suite,1,Suite/test.h,,)
 lofar_EXTERNAL(GCFTM,1,GCF/TM/GCF_Control.h,,)
 lofar_EXTERNAL(GCFCommon,1,GCF/GCF_Defines.h,,)
 lofar_EXTERNAL(GCFPAL,1,GCF/PAL/GCF_Property.h,,)
-dnl lofar_EXTERNAL(GCFPALlight,1,GCF/PALlight/GCF_RTMyProperty.h,,)
 lofar_EXTERNAL(APLCommon,1,APLCommon/APL_Defines.h,,)
 
 dnl
