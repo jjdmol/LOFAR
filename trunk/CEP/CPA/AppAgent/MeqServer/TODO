@@ -1,0 +1,41 @@
+
+ResultSet:
+
+  * In resultConst() and result(), handle uninitalized results in a more 
+  clever way. Perhaps not allow them at all, or return a dummy result?
+
+  * FAILs do not propagate properly? (This may be related to the problem above)
+  
+  * Add an descriptive error string to the ResultSet when a result is a fail.
+    When multiple children fail, concatenate?
+  
+  * catch exceptions during getResult, return a FAIL
+  
+  * cdebug() the result differently when WAIT or FAIL is returned
+
+Spigot:
+
+  * Check the situation with test.ms. Be a little less fussy, even with
+    technically invalid MSs (in this case, POLARIZATION not filled)
+    
+  * Verify proper output from test.ms.
+
+
+Request: 
+
+  * when Jan supplied an illegal request, the error message was not
+    exactly descriptive
+
+Vells(DataArray*) constructor: 
+
+  * if rank<2 but nelements==1, reform the array.
+
+
+General:
+
+  * Check how a zero-length string or hiid array from Glish shows up in
+    AppAgent -- because it looked like non-zero when processing child specs.
+    
+  * Figure out why the hell it freezes on a single-CPU machine sometimes. A
+    race condition somewhere?
+
