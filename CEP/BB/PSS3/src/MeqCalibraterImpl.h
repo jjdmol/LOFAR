@@ -99,7 +99,7 @@ public:
    * Advance the iterator.
    * \returns false if at end of iteration.
    */
-  bool nextInterval (bool callInitParms = true);
+  bool nextInterval (bool callReadPolcs = true);
 
   //! Make all parameters non-solvable
   void clearSolvableParms();
@@ -237,7 +237,7 @@ private:
   /*@}*/
 
   //! initialize all parameters in the MeqExpr tree for the current domain
-  void initParms    (const MeqDomain& domain);
+  void initParms    (const MeqDomain& domain, bool callReadPocs);
 
   //! Get the phase reference position of the first field.
   void getPhaseRef  ();
