@@ -19,6 +19,14 @@ MEQ in general:
   * check performance: why does privatizing message arguments in MeqServer
     sometimes lead to cloning? I don't see why anybody else would be holding
     onto the message.
+    Update 14/01/04: in fact in a multi-threaded scenario the dispatcher
+    is holding onto the message throughout send(). Even if there's only one
+    recepient, there's a chance that the recepient thread wakes up, grabs
+    the message and starts wastefully cloning it (via a privatize call) 
+    because Dispatcher::send() is not yet complete. This ties into the COW
+    issue as well; both need to be considered together. As an alternative, 
+    perhaps there's a way for send() to block all updated recepients from 
+    waking up until the entire send() cycle is complete.
       
         + Document the two types of node_state lookups
         + Document pollChildren()
