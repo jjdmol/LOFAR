@@ -73,7 +73,7 @@ class WH_Solve : public LOFAR::WorkHolder
   void readInputs(Solver* solver);
   
   // Read all Prediffer inputs and set solvable parameter data.
-  void readInputsAndSetParmData(Solver* solver);
+  void setParmData(Solver* solver);
 
   int         itsNPrediffers;// Number of Prediffer inputs
   SolverMap   itsSolvers;    // Map of Solver objects, each associated

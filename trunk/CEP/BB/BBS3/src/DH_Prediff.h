@@ -63,23 +63,13 @@ public:
   /// Deallocate the buffers.
   virtual void postprocess();
 
+  void setDataSize(const vector<uint32>& shape);
+  const vector<uint32>& getDataSize();
+
   dcomplex* getDataPtr();
-  void setData(dcomplex* dataPtr, int size);  // Size in number of dcomplex's
 
   bool getParmData(vector<ParmData>& pdata); 
   void setParmData(const vector<ParmData>& pdata);
-
-  int getNResults() const;
-  void setNResults(int nr);
-
-  int getNspids() const;
-  void setNspids(int nr);
-
-  int getNTimes() const;
-  void setNTimes(int nr);
-
-  int getNFreq() const;
-  void setNFreq(int nr);
 
   void dump();
 
@@ -92,39 +82,9 @@ private:
   // Fill the pointers to the data in the blob.
   virtual void fillDataPointers();
 
-  int* itsNResults;         // The number of baseline-polarization combinations
-  int* itsNspids;           // The number of solvable parameter identifiers
-  int* itsNTimes;           // The number of times
-  int* itsNFreq;            // The number of frequencies
-
   dcomplex* itsDataPtr;
 
 };
-
-
-inline int DH_Prediff::getNResults() const
-{ return *itsNResults;}
-
-inline void DH_Prediff::setNResults(int nr)
-{ *itsNResults = nr; }
-
-inline int DH_Prediff::getNspids() const
-{ return *itsNspids;}
-
-inline void DH_Prediff::setNspids(int nr)
-{ *itsNspids = nr; }
-
-inline int DH_Prediff::getNTimes() const
-{ return *itsNTimes; }
-
-inline void DH_Prediff::setNTimes(int nr)
-{ *itsNTimes = nr; }
-
-inline int DH_Prediff::getNFreq() const
-{ return *itsNFreq; }
-
-inline void DH_Prediff::setNFreq(int nr)
-{ *itsNFreq = nr; }
 
 inline dcomplex* DH_Prediff::getDataPtr()
 { return itsDataPtr; }

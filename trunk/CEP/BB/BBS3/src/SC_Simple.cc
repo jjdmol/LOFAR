@@ -89,7 +89,6 @@ bool SC_Simple::execute()
   itsWOPD->setStartTime (itsCurStartTime);
   float timeLength = itsArgs.getFloat ("timeLength", 10);
   itsWOPD->setTimeLength (timeLength);
-  itsWOPD->setDDID (itsArgs.getInt ("ddid", 0));
   itsWOPD->setModelType (itsArgs.getString ("modelType", "notfound"));
   itsWOPD->setCalcUVW (itsArgs.getBool ("calcUVW", false));
   itsWOPD->setLockMappedMemory (itsArgs.getBool ("lockMappedMem", false));

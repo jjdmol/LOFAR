@@ -116,15 +116,18 @@ void WH_Prediff::process()
   if (wo->getNewBaselines())
   {
     pred->select(ant, ant);
-    pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
-		    wo->getStartTime(), wo->getTimeLength());
+    vector<uint32> dataShape;
+    dataShape = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
+				wo->getStartTime(), wo->getTimeLength());
+    dhRes->setDataSize(dataShape);              // Set data field of output DH_Prediff to correct size
     vector<int> emptyS(0);
     pred->setPeelSources(peelSrcs, emptyS);
     pred->clearSolvableParms();
     vector<string> emptyP(0);
     pred->setSolvableParms(pNames, emptyP, true);
     pred->updateSolvableParms();
-    //>>    pred->getEquations();        // returns a std::list<MeqResult>
+    // Calculate and put in output dataholder buffer
+    pred->getEquations(dhRes->getDataPtr(), dataShape);
     if (wo->getSubtractSources())
     {
       pred->subtractPeelSources(true);   // >>>For now: always write in new file 
@@ -133,15 +136,18 @@ void WH_Prediff::process()
   }
   else if (wo->getNewDomain())
   {
-    pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
-		    wo->getStartTime(), wo->getTimeLength());
+    vector<uint32> dataShape;
+    dataShape = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
+				wo->getStartTime(), wo->getTimeLength());
+    dhRes->setDataSize(dataShape);              // Set data field of output DH_Prediff to correct size
     vector<int> emptyS(0);
     pred->setPeelSources(peelSrcs, emptyS);
     pred->clearSolvableParms();
     vector<string> emptyP(0);
     pred->setSolvableParms(pNames, emptyP, true);
     pred->updateSolvableParms();
-    //>>    pred->getEquations();        // returns a std::list<MeqResult>
+    // Calculate and put in output dataholder buffer
+    pred->getEquations(dhRes->getDataPtr(), dataShape);
     dhRes->setParmData(pred->getSolvableParmData());
   }
   else if (wo->getNewPeelSources())
@@ -152,12 +158,14 @@ void WH_Prediff::process()
     vector<string> emptyP(0);
     pred->setSolvableParms(pNames, emptyP, true);
     pred->updateSolvableParms();
-    //>>    pred->getEquations();        // returns a std::list<MeqResult>
+    // Calculate and put in output dataholder buffer
+    pred->getEquations(dhRes->getDataPtr(), dhRes->getDataSize());
  }
   else
   {
     pred->updateSolvableParms();
-    //>>    pred->getEquations();        // returns a std::list<MeqResult>
+    // Calculate and put in output dataholder buffer
+    pred->getEquations(dhRes->getDataPtr(), dhRes->getDataSize());
   }
   if (wo->getSubtractSources())
   {
@@ -204,15 +212,13 @@ Prediffer* WH_Prediff::getPrediffer(int id, const KeyValueMap& args,
     string dbHost = args.getString("DBHost", "dop50");
     string dbPwd = args.getString("DBPwd", "");
 
-    int ddid = args.getInt("ddid", 0);
     string modelType = args.getString("modelType", "LOFAR.RI");
     bool calcUVW = args.getBool("calcUVW", false);
     bool lockMappedMem = args.getBool("lockMappedMem", false);
     
     Prediffer* pred = new Prediffer(msName, meqModel, skyModel, dbType, 
-				    dbName, dbHost, dbPwd, ddid,
-				    antNrs, modelType, calcUVW,
-				    lockMappedMem);
+				    dbName, dbHost, dbPwd, antNrs, 
+				    modelType, calcUVW,lockMappedMem);
     // add to map
     itsPrediffs.insert(PrediffMap::value_type(id, pred));
     return pred;

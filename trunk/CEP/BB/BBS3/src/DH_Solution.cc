@@ -52,7 +52,6 @@ DH_Solution::DH_Solution (const string& name)
     itsMu           (0),
     itsStdDev       (0),
     itsChi          (0),
-    itsNumberOfParam(0),
     itsPODHSOL      (0)
 {
   setExtraBlob("Extra", 1);
@@ -65,7 +64,6 @@ DH_Solution::DH_Solution(const DH_Solution& that)
     itsMu           (0),
     itsStdDev       (0),
     itsChi          (0),
-    itsNumberOfParam(0),
     itsPODHSOL      (0)
 {
   setExtraBlob("Extra", 1);
@@ -100,7 +98,6 @@ void DH_Solution::preprocess()
   addField ("Mu", BlobField<double>(1));
   addField ("StdDev", BlobField<double>(1));
   addField ("Chi", BlobField<double>(1));
-  addField ("NumberOfParam", BlobField<unsigned int>(1));
 
   // Create the data blob (which calls fillPointers).
   createDataBlock();
@@ -110,7 +107,6 @@ void DH_Solution::preprocess()
   *itsMu = 0;
   *itsStdDev =0;
   *itsChi = 0;
-  *itsNumberOfParam = 0;
 }
 
 void DH_Solution::fillDataPointers()
@@ -121,7 +117,6 @@ void DH_Solution::fillDataPointers()
   itsMu = getData<double> ("Mu");
   itsStdDev = getData<double> ("StdDev");
   itsChi = getData<double> ("Chi");
-  itsNumberOfParam = getData<unsigned int> ("NumberOfParam");
 }
 
 void DH_Solution::postprocess()
@@ -131,7 +126,6 @@ void DH_Solution::postprocess()
   itsMu = 0;
   itsStdDev = 0;
   itsChi = 0;
-  itsNumberOfParam = 0;
 }
 
 Quality DH_Solution::getQuality() const
@@ -152,7 +146,7 @@ void DH_Solution::setQuality(const Quality& quality)
   *itsChi = quality.itsChi;
 }
 
-bool DH_Solution::getSolution(vector<string>& names, vector<double>& values)
+bool DH_Solution::getSolution(vector<ParmData>& pData)
 {
   bool found;
   int version;
@@ -160,23 +154,16 @@ bool DH_Solution::getSolution(vector<string>& names, vector<double>& values)
   if (!found) {
     return false;
   }
- else
+  else
   {
-    // Get parameter names
-    names.clear();
-    int size = getNumberOfParam();
-    names.resize(size);
+    // Get parameter data
+    pData.clear();
+    int size;
+    bis >> size;
+    pData.resize(size);
     for (int i=0; i<size; i++)
     { 
-      bis >> names[i];
-    }
-    // Get parameter values.
-    bis.getStart("values");
-    values.clear();
-    values.resize(size);
-    for (int j=0; j < size; j++)
-    {
-      bis >> values[j];
+      bis >> pData[i];
     }
     bis.getEnd();
     return true;
@@ -184,26 +171,17 @@ bool DH_Solution::getSolution(vector<string>& names, vector<double>& values)
 
 }
 
-void DH_Solution::setSolution(vector<string>& names, vector<double>& values)
+void DH_Solution::setSolution(const vector<ParmData>& pData)
 {
-  ASSERTSTR(names.size() == values.size(), 
-	    "The number of parameter names and values are not equal.");
   BlobOStream& bos = createExtraBlob();
-  // Put parameter names into extra blob
-  vector<string>::const_iterator iter;
-  for (iter = names.begin(); iter != names.end(); iter++)
+  // Put vector length into extra blob
+  vector<ParmData>::const_iterator iter;
+  int nParms = pData.size();
+  bos << nParms;
+  for (iter = pData.begin(); iter != pData.end(); iter++)
   {
     bos << *iter;
   }
-  setNumberOfParam(names.size());
-  // Put parameter values into extra blob
-  bos.putStart("values", 1);
-  vector<double>::const_iterator valIter;
-  for (valIter = values.begin(); valIter != values.end(); valIter++)
-  {
-    bos << *valIter;
-  }
-  bos.putEnd();
 }
 
 void DH_Solution::clearData()
@@ -211,37 +189,20 @@ void DH_Solution::clearData()
   setWorkOrderID(-1);
   Quality q;
   setQuality(q);
-  setNumberOfParam(0);
   clearExtraBlob();
 }
 
 void DH_Solution::dump()
 {
-  vector<string> pNames;
-  vector<double> pValues;
-  getSolution(pNames, pValues);
-  DBGASSERTSTR(pNames.size() == pValues.size(), 
-	            "The number of parameters and their values do not match ");
-
-  char strVal [20];
-  for (unsigned int i = 0; i < pNames.size(); i++)
+  vector<ParmData> pData;
+  getSolution(pData);
+  
+  cout << "Parm data : " << endl;
+  for (unsigned int i = 0; i < pData.size(); i++)
   {
-    string::size_type pos;
-    pos = pNames[i].find(".CP");
-    if (pos!=string::npos)
-    {
-      string subStr;
-      subStr = pNames[i].substr(pos+3, 4);
-      cout << subStr << " ";
-      break;
-    } 
+    cout << pData[i] << endl;
   }
-  for (unsigned int i = 0; i < pNames.size(); i++)
-  {
-    sprintf(strVal, "%1.10f ", pValues[i]);
-    cout << strVal << " ";
-  }
-  cout << endl;
+  cout << "Quality = " << getQuality() << endl;
 
 }
 
@@ -255,7 +216,6 @@ void DBRep<DH_Solution>::bindCols (dtl::BoundIOs& cols)
   cols["MU"] == itsMu;
   cols["STDDEV"] == itsStdDev;
   cols["CHI"] == itsChi;
-  cols["NUMBEROFPARAM"] == itsNumberOfParam;
 }
 
 void DBRep<DH_Solution>::toDBRep (const DH_Solution& obj)
@@ -266,7 +226,6 @@ void DBRep<DH_Solution>::toDBRep (const DH_Solution& obj)
   itsMu = obj.getQuality().itsMu;
   itsStdDev = obj.getQuality().itsStddev;
   itsChi = obj.getQuality().itsChi;
-  itsNumberOfParam = obj.getNumberOfParam();
 }
 
 //# Force the instantiation of the templates.

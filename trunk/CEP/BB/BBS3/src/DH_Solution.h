@@ -30,6 +30,7 @@
 #include <TransportPL/DH_PL.h>
 #include <TransportPL/PO_DH_PL.h>
 #include <BBS3/Quality.h>
+#include <BBS3/ParmData.h>
 
 namespace LOFAR
 {
@@ -72,17 +73,8 @@ public:
   Quality getQuality() const;
   void setQuality(const Quality& quality);
 
-  unsigned int getNumberOfParam() const;
-  void setNumberOfParam(const unsigned int no);
-
-  bool getSolution(vector<string>& names, vector<double>& values);
-  void setSolution(vector<string>& names, vector<double>& values);
-
-/*   void getParamValues(vector<double>& values) const; */
-/*   void setParamValues(const vector<double>& values); */
-
-/*   void getParamNames(vector<string>& names) const; */
-/*   void setParamNames(const vector<string>& names); */
+  bool getSolution(vector<ParmData>& pData);
+  void setSolution(const vector<ParmData>& pData);
 
   // Resets (clears) the contents of its DataPacket 
   void clearData();
@@ -102,7 +94,6 @@ private:
   double*       itsMu;
   double*       itsStdDev;
   double*       itsChi;
-  unsigned int* itsNumberOfParam;
    
   PO_DH_SOL*    itsPODHSOL; 
 
@@ -116,11 +107,6 @@ inline int DH_Solution::getWorkOrderID() const
 inline void DH_Solution::setWorkOrderID(const int id)
 { *itsWOID = id; }
 
-inline unsigned int DH_Solution::getNumberOfParam() const
-{ return *itsNumberOfParam; }
-
-inline void DH_Solution::setNumberOfParam(const unsigned int no)
-{ *itsNumberOfParam = no; }
 
 // Define the class needed to tell PL that there should be
 // extra fields stored in the database table.
@@ -138,7 +124,6 @@ namespace PL {
       double itsMu;
       double itsStdDev;
       double itsChi;
-      unsigned int itsNumberOfParam;
     };   
                                                       
 } // end namespace PL   
