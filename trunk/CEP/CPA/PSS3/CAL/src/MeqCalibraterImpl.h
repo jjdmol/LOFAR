@@ -20,21 +20,25 @@
 //#
 //# $Id$
 
-#ifndef MEQ_CALIBRATER_H
-#define MEQ_CALIBRATER_H
+#ifndef CAL_MEQCALIBRATER_H
+#define CAL_MEQCALIBRATER_H
 
 #include <aips/aips.h>
 #include <trial/Tasking/ApplicationObject.h>
 #include <aips/Utilities/String.h>
-
 #include <aips/MeasurementSets/MeasurementSet.h>
+#include <trial/MeasurementEquations/VisibilityIterator.h>
+#include <trial/MeasurementEquations/VisBuffer.h>
+
 #include <MNS/ParmTable.h>
 #include <MNS/MeqDomain.h>
 #include <MNS/MeqParm.h>
 #include <MNS/MeqStoredParmPolc.h>
 #include <MNS/MeqMatrix.h>
 #include <MNS/MeqRequest.h>
-#include <MNS/MeqExpr.h>
+#include <MNS/MeqJonesExpr.h>
+#include <MNS/MeqUVWPolc.h>
+#include <GSM/SkyModel.h>
 
 //
 // Class to perform self-calibration on a MeasurementSet using the
@@ -52,13 +56,13 @@ class MeqCalibrater : public ApplicationObject
   MeqCalibrater(const String& msName,
 		const String& meqModel,
 		const String& skyModel,
-		Int spw);
+		uInt spw);
 
   // destructor
   ~MeqCalibrater();
 
   // set the time interval for which to solve
-  void setTimeIntervalSize(Int secInterval);
+  void setTimeIntervalSize(uInt secInterval);
 
   // reset the time interval iterator
   void resetTimeIterator();
@@ -73,13 +77,11 @@ class MeqCalibrater : public ApplicationObject
   void setSolvableParms(Vector<String>& parmPatterns, Bool isSolvable);
 
   // predict visibilities for the current domain
-  void   predict(const String& modelColName);
+  void predict(const String& modelColName);
   
-  //
   // Solve for the current domain.
   // Return fit value to indicate fitness of the solution and updates the
   // parameters for which to solve.
-  // 
   Double solve();
 
   // Save modified parameters to the MEP database.
@@ -95,7 +97,7 @@ class MeqCalibrater : public ApplicationObject
 			const String& residualColName);
 
   // Get info about the parameters whose name matches one of the parameter
-  // patterns in a GlishRecord, exlude parameters which match one of the
+  // patterns in a GlishRecord, exclude parameters matching one of the
   // exclude pattterns.
   GlishRecord getParms(Vector<String>& parmPatterns,
 		       Vector<String>& excludePatterns);
@@ -124,15 +126,20 @@ class MeqCalibrater : public ApplicationObject
   //
   // variables
   //
-  MeasurementSet itsMs;
+  MeasurementSet itsMS;
+  VisibilityIterator itsIter;
+  VisBuffer      itsVisBuf;
   ParmTable      itsMEP;
+  Table          itsGSMTable;
+  GSM::SkyModel  itsGSM;
   MeqDomain      itsDomain;
-  MeqExpr*       itsTree;
-
+  MeqJonesExpr*  itsTree;
+  MeqUVWPolc     itsUVW;
+  Bool           itsIterInit;
   //
   // variables used in the dummy implementation
   //
-  Int itsTimeIteration;
+  Double itsTimeIteration;
   Double itsFitValue;
 };
 

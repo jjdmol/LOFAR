@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#include <MeqCalibraterImpl.h>
+#include <CAL/MeqCalibraterImpl.h>
 
 #include <trial/Tasking/Parameter.h>
 #include <trial/Tasking/MethodResult.h>
@@ -28,8 +28,12 @@
 #include <aips/Glish/GlishArray.h>
 #include <aips/Glish/GlishValue.h>
 #include <aips/Arrays/Vector.h>
+#include <aips/Arrays/ArrayMath.h>
+#include <aips/Tables/SetupNewTab.h>
+#include <aips/Tables/ArrColDesc.h>
+#include <aips/Tables/ColumnDesc.h>
+#include <aips/Tables/ArrayColumn.h>
 
-#include <aips/MeasurementSets/MeasurementSet.h>
 #include <aips/Utilities/Regex.h>
 #include <aips/Exceptions/Error.h>
 
@@ -42,10 +46,11 @@
 MeqCalibrater::MeqCalibrater(const String& msName,
 			     const String& meqModel,
 			     const String& skyModel,
-			     const Int     spw)
+			     const uInt    spw)
   :
-  itsMs(msName),
+  itsMS(msName),
   itsMEP(meqModel + ".MEP"),
+  itsGSM(Table(skyModel + ".GSM")),
   itsTimeIteration(10),
   itsFitValue(10.0)
 {
@@ -54,7 +59,9 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   cout << "'" << meqModel << "', ";
   cout << "'" << skyModel << "', ";
   cout << spw << ")" << endl;
-
+  Block<Int> columns(2);
+  itsIter = VisibilityIterator(itsMS, columns, itsTimeIteration);
+  itsVisBuf.attachToVisIter (itsIter);
   //
   // create the MeqTree corresponding to the meqModel name
   // 
@@ -96,19 +103,18 @@ MeqCalibrater::MeqCalibrater(const String& msName,
 #endif
 }
 
-void MeqCalibrater::initParms(MeqDomain& /* theDomain */)
+void MeqCalibrater::initParms(MeqDomain& theDomain)
 {
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
+  int spidIndex = 0;
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
        iter++)
   {
     if (*iter)
     {
-#if 0
-      (*iter)->initDomain(theDomain, 0); // what should the spidIndex be?
-#endif
+      spidIndex += (*iter)->initDomain (theDomain, spidIndex);
     }
   }
 }
@@ -118,7 +124,7 @@ MeqCalibrater::~MeqCalibrater()
   cout << "MeqCalibrater destructor" << endl;
 }
 
-void MeqCalibrater::setTimeIntervalSize(Int secondsInterval)
+void MeqCalibrater::setTimeIntervalSize(uInt secondsInterval)
 {
   cout << "setTimeIntervalSize = " << secondsInterval << endl;
 }
@@ -126,6 +132,11 @@ void MeqCalibrater::setTimeIntervalSize(Int secondsInterval)
 void MeqCalibrater::resetTimeIterator()
 {
   cout << "resetTimeIterator" << endl;
+  Block<Int> columns(2);
+  itsIter = VisibilityIterator(itsMS, columns, itsTimeIteration);
+  itsVisBuf.attachToVisIter (itsIter);
+  itsIter.originChunks();
+  itsIter.origin();
 
   //
   // set the domain to the beginning
@@ -141,15 +152,27 @@ void MeqCalibrater::resetTimeIterator()
 
 Bool MeqCalibrater::nextTimeInterval()
 {
-  Bool returnval;
-
-  //
+  itsIter++;
+  if (! itsIter.more()) {
+    itsIter.nextChunk();
+    if (! itsIter.moreChunks()) {
+      return False;
+    }
+    itsIter.origin();
+  }
+  double sttim = 0;
+  double endtim = 0;
+  double stfreq = 0;
+  double endfreq = 0;
+  itsDomain = MeqDomain(sttim, endtim, stfreq, endfreq);
+  return True;
+}
   // Go to next time domain, update domain
   //
 
   // domain = ...
 
-#if 1
+#if 0
   // Dummy implementation
   cout << "nextTimeInterval" << endl;
 
@@ -158,9 +181,6 @@ Bool MeqCalibrater::nextTimeInterval()
 
   itsFitValue = 10.0;
 #endif
-
-  return returnval;
-}
 
 void MeqCalibrater::clearSolvableParms()
 {
@@ -180,7 +200,8 @@ void MeqCalibrater::clearSolvableParms()
   }
 }
 
-void MeqCalibrater::setSolvableParms(Vector<String>& parmPatterns, Bool isSolvable)
+void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
+				      Bool isSolvable)
 {
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
@@ -247,6 +268,22 @@ void MeqCalibrater::saveParms()
       (*iter)->save();
     }
   }
+
+  // Save the source parameters.
+  // SkyModel writes all sources into the table. So when using the
+  // existing table, all sources would be duplicated.
+  // Therefore the table is recreated.
+  // First get the table description and name.
+  TableDesc td = itsGSMTable.tableDesc();
+  String name  = itsGSMTable.tableName();
+  // Close the table by assigining an empty object to it.
+  itsGSMTable = Table();
+  // Rrecreate the table and save the parameters.
+  SetupNewTable newtab(name, td, Table::New);
+  Table tab(newtab);
+  itsGSM.store(tab);
+  // Make the new table the current one.
+  itsGSMTable = tab;
 }
 
 void MeqCalibrater::saveData(const String& dataColName)
@@ -266,6 +303,29 @@ void MeqCalibrater::saveResidualData(const String& colAName,
   {
     throw(AipsError("residualcolname can not be the same as colbname"));
   }
+  if (residualColName == "DATA")
+  {
+    throw(AipsError("residualcolname can not be the DATA column"));
+  }
+
+  // Make sure the MS is writable.
+  itsMS.reopenRW();
+  // Create the column if it does not exist yet.
+  // Make it an indirect variable shaped column.
+  if (! itsMS.tableDesc().isColumn (residualColName)) {
+    ArrayColumnDesc<Complex> cdesc(residualColName);
+    itsMS.addColumn (cdesc);
+    itsMS.flush();
+  }
+
+  // Loop through all rows in the MS and store the result.
+  ROArrayColumn<Complex> colA(itsMS, colAName);
+  ROArrayColumn<Complex> colB(itsMS, colBName);
+  ArrayColumn<Complex> colR(itsMS, residualColName);
+  for (uInt i=0; i<itsMS.nrow(); i++) {
+    colR.put (i, colA(i) - colB(i));
+  }
+  itsMS.flush();
 
   cout << "saveResidualData('" << colAName << "', '" << colBName << "', ";
   cout << "'" << residualColName << "')" << endl;
