@@ -52,63 +52,62 @@
 static const value_string type_info_vals[] =
 {
   { 0x00, "Invalid message type"  },
-  { 0x01, "READ   " },
-  { 0x02, "WRITE  " },
-  { 0x03, "READRES" },
-  { 0x04, "READERR" },
+  { 0x01, "READ   "  },
+  { 0x02, "WRITE  "  },
+  { 0x03, "READACK"  },
+  { 0x04, "WRITEACK" },
   { 0,     NULL                   },
 };
 
 static const value_string type_vals[] =
 {
-  { 0x00, "Invalid message type"  },
-  { 0x01, "Read request (READ)"   },
-  { 0x02, "Write command (WRITE)" },
-  { 0x03, "Read result (READRES)" },
-  { 0x04, "Read error (READERR)"  },
+  { 0x00, "Invalid message type"          },
+  { 0x01, "Read  request     (READ)"      },
+  { 0x02, "Write command     (WRITE)"     },
+  { 0x03, "Read  acknowledge (READACK)"   },
+  { 0x04, "Write acknowledge (WRITEACK)"  },
   { 0,     NULL                   },
 };
 
 static const value_string dst_vals[] =
 {
   { 0x00, "Beamlet processor" },
-  { 0x80, "RSP Main FPGA"     },
+  { 0x80, "RSP main FPGA"     },
   { 0,     NULL               },  
 };
 
 static const value_string pid_info_vals[] =
 {
-  { 0x00, "STATUS" },
+  { 0x00, "RSR   " },
   { 0x01, "TST   " },
   { 0x02, "CFG   " },
   { 0x03, "WG    " },
   { 0x04, "SS    " },
   { 0x05, "BF    " },
-  { 0x06, "ST    " },
-  { 0x07, "STSUB " },
+  { 0x06, "BST   " },
+  { 0x07, "SST   " },
   { 0x08, "RCU   " },
-  { 0,     NULL                                },
+  { 0x09, "CRR   " },
+  { 0x0A, "CRB   " },
+  { 0x0B, "CDO   " },
+  { 0,     NULL    },
 };
 
 static const value_string pid_vals[] =
 {
-  { 0x00, "Status overview (STATUS)"           },
+  { 0x00, "Status overview (RSR)"              },
   { 0x01, "Selftest functionality (TST)"       },
   { 0x02, "FPGA configuration and reset (CFG)" },
   { 0x03, "Waveform generator (WG)"            },
   { 0x04, "Subband select (SS)"                },
   { 0x05, "Beamformer (BF)"                    },
-  { 0x06, "Beamlet statistics (ST)"            },
-  { 0x07, "Subband statistics (STSUB)"         },
+  { 0x06, "Beamlet statistics (BST)"           },
+  { 0x07, "Subband statistics (SST)"           },
   { 0x08, "RCU Control (RCU)"                  },
+  { 0x09, "RSP Clock and Reset",               },
+  { 0x0A, "BLP Clock and Reset",               },
+  { 0x0B, "CEP Data Output",                   },
   { 0,     NULL                                },
-};
-
-static const value_string page_vals[] =
-{
-  { 0x00, "Write page for LCU (INACTIVE)" },
-  { 0x01, "Read page for FPGA (ACTIVE)"   },
-  { 0,     NULL                           },
 };
 
 static const value_string status_vals[] =
@@ -133,45 +132,65 @@ static const value_string cfg_vals[] =
 
 static const value_string wg_vals[] =
 {
-  { 0x00, "Waveform generator settings" },
-  { 0x01, "User waveform"               },
-  { 0x02, "Soft PPS"                    },
+  { 0x00, "Waveform generator settings X polarization" },
+  { 0x02, "Waveform generator settings Y polarization" },
+  { 0x03, "User waveform X polarization"               },
+  { 0x04, "User waveform Y polarization"               },
   { 0,     NULL                         },
 };
 
 static const value_string ss_vals[] =
 {
-  { 0x00, "Number of selected subbands" },
-  { 0x01, "Subband Select parameters"   },
+  { 0x00, "Subband Select parameters"   },
   { 0,     NULL                         },
 };
 
 static const value_string bf_vals[] =
 {
-  { 0x00, "Coefs Xre" },
-  { 0x01, "Coefs Xim" },
-  { 0x02, "Coefs Yre" },
-  { 0x03, "Coefs Yim" },
+  { 0x00, "XR,XI,YR,YI coefficients for XR output" },
+  { 0x01, "XR,XI,YR,YI coefficients for XI output" },
+  { 0x02, "XR,XI,YR,YI coefficients for YR output" },
+  { 0x03, "XR,XI,YR,YI coefficients for YR output" },
   { 0,     NULL       },
 };
 
-static const value_string st_vals[] =
+static const value_string bst_vals[] =
 {
-  { 0x00, "Mean"  },
-  { 0x01, "Power" },
+  { 0x00, "Beamlet Statistics - XR,XI,YR,YI Mean"   },
+  { 0x01, "Beamlet Statistics - XR,XI,YR,YI Power"  },
   { 0,     NULL   },
 };
 
-static const value_string stsub_vals[] =
+static const value_string sst_vals[] =
 {
-  { 0x00, "Mean"  },
-  { 0x01, "Power" },
+  { 0x00, "Subband Statistics - XR,XI,YR,YI Mean"   },
+  { 0x01, "Subband Statistics - XR,XI,YR,YI Power"  },
   { 0,     NULL   },
 };
 
 static const value_string rcu_vals[] =
 {
   { 0x00, "RCU Settings"  },
+  { 0,     NULL   },
+};
+
+static const value_string crr_vals[] =
+{
+  { 0x00, "Soft Reset"  },
+  { 0x01, "Soft PPS"  },
+  { 0,     NULL   },
+};
+
+static const value_string crb_vals[] =
+{
+  { 0x00, "Soft Reset"  },
+  { 0x01, "Soft PPS"  },
+  { 0,     NULL   },
+};
+
+static const value_string cdo_vals[] =
+{
+  { 0x00, "CEP Data Output Settings"  },
   { 0,     NULL   },
 };
 
@@ -184,7 +203,18 @@ static const value_string eth_error_vals[] =
   { 4, "Frame ended during frame header."                    },
   { 5, "Caculated CRC does not match received CRC"           },
   { 6, "An odd number of nibbles was received from ethernet" },
-  { 7, "Ethertype value had other value than 0x10FA"         },
+  { 7, "Length specified in the frame size field does not match the real number of received bytes" },
+  { 0,     NULL   },
+};
+
+static const value_string mep_error_vals[] =
+{
+  { 0, "The MEP message was processed successfully"          },
+  { 1, "Unknown message type"                                },
+  { 2, "DSTID is too large"                                  },
+  { 3, "Invalid PID"                                         },
+  { 4, "Register does not exist"                             },
+  { 5, "Message is too large"                                },
   { 0,     NULL   },
 };
 
@@ -216,12 +246,13 @@ G_MODULE_EXPORT void plugin_reg_handoff(void);
 /* Initialize the protocol and registered fields */
 static int proto_epa          = -1;
 static int hf_epa_type        = -1;
+static int hf_epa_error       = -1;
 static int hf_epa_seqnr       = -1;
 static int hf_epa_addr        = -1;
 static int hf_epa_addr_dstid  = -1;
 static int hf_epa_addr_pid    = -1;
 static int hf_epa_addr_regid  = -1;
-static int hf_epa_addr_pageid = -1;
+static int hf_epa_addr_ffi    = -1;
 static int hf_epa_offset      = -1;
 static int hf_epa_size        = -1;
 static int hf_epa_data        = -1;
@@ -252,15 +283,15 @@ static int df_mepstatus_read_seqnr  = -1;
 static int df_mepstatus_read_error  = -1;
 static int df_mepstatus_write_seqnr = -1;
 static int df_mepstatus_write_error = -1;
+/*static int df_syncstatus = -1; */
+static int df_syncstatus_sample_count = -1;
+static int df_syncstatus_sync_count   = -1;
+static int df_syncstatus_error_count  = -1;
 /*static int df_rcustatus             = -1;*/
-static int df_rcustatus_ap1_rcu_x   = -1;
-static int df_rcustatus_ap1_rcu_y   = -1;
-static int df_rcustatus_ap2_rcu_x   = -1;
-static int df_rcustatus_ap2_rcu_y   = -1;
-static int df_rcustatus_ap3_rcu_x   = -1;
-static int df_rcustatus_ap3_rcu_y   = -1;
-static int df_rcustatus_ap4_rcu_x   = -1;
-static int df_rcustatus_ap4_rcu_y   = -1;
+static int df_rcustatus_ap1_rcu   = -1;
+static int df_rcustatus_ap2_rcu   = -1;
+static int df_rcustatus_ap3_rcu   = -1;
+static int df_rcustatus_ap4_rcu   = -1;
 
 /* Initialize the subtree pointers */
 static gint ett_epa       = -1;
@@ -360,15 +391,27 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
       break;
 
     case 0x06:
-      regstr = st_vals[reg].strptr;
+      regstr = bst_vals[reg].strptr;
       break;
 
     case 0x07:
-      regstr = stsub_vals[reg].strptr;
+      regstr = sst_vals[reg].strptr;
       break;
 
     case 0x08:
       regstr = rcu_vals[reg].strptr;
+      break;
+
+    case 0x09:
+      regstr = crr_vals[reg].strptr;
+      break;
+
+    case 0x0A:
+      regstr = crb_vals[reg].strptr;
+      break;
+
+    case 0x0B:
+      regstr = cdo_vals[reg].strptr;
       break;
   }
 
@@ -404,6 +447,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
     
     /* Continue adding tree items to process the packet here */
     proto_tree_add_item(epa_tree, hf_epa_type,        tvb,  0,  1, FALSE);
+    proto_tree_add_item(epa_tree, hf_epa_error,       tvb,  1,  1, FALSE);
     proto_tree_add_item(epa_tree, hf_epa_seqnr,       tvb,  2,  2, TRUE);
 
     newitem = proto_tree_add_item(epa_tree, hf_epa_addr, tvb,  4,  4, FALSE);
@@ -417,17 +461,17 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
     else
       proto_tree_add_item(newtree, hf_epa_addr_regid,  tvb,  6,  1, FALSE);
 
-    proto_tree_add_item(newtree, hf_epa_addr_pageid, tvb,  7,  1, FALSE);
+    proto_tree_add_item(newtree, hf_epa_addr_ffi, tvb,  7,  1, FALSE);
 
     proto_tree_add_item(epa_tree, hf_epa_offset,      tvb,  8,  2, TRUE);
     proto_tree_add_item(epa_tree, hf_epa_size,        tvb, 10,  2, TRUE);
 
     if (0x03 == type && 0x00 == pid && 0x00 == reg)
     {
-      newitem = proto_tree_add_text(epa_tree, tvb, 12, 44, "RSP Status register");
+      newitem = proto_tree_add_text(epa_tree, tvb, 12, 96, "RSP Status register");
       newtree = proto_item_add_subtree(newitem, ett_rspstatus);
 
-      proto_tree_add_text(newtree, tvb, 12, 44,  "RSP Status");
+      proto_tree_add_text(newtree, tvb, 12, 4,  "RSP Status");
       proto_tree_add_item(newtree, df_rspstatus_voltage_15  ,tvb, 12, 1,  FALSE);
       proto_tree_add_item(newtree, df_rspstatus_voltage_33  ,tvb, 13, 1,  FALSE);
 
@@ -444,8 +488,8 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
       proto_tree_add_item(newtree, df_fpgastatus_ap4_temp   ,tvb, 25, 1,  FALSE);   
 
       proto_tree_add_text(newtree, tvb, 28, 12, "ETH Status");
-      proto_tree_add_item(newtree, df_ethstatus_nof_frames  ,tvb, 28, 4,  FALSE); /* will become TRUE once firmware is fixed */
-      proto_tree_add_item(newtree, df_ethstatus_nof_errors  ,tvb, 32, 4,  FALSE); /* will become TRUE once firmware is fixed */
+      proto_tree_add_item(newtree, df_ethstatus_nof_frames  ,tvb, 28, 4,  TRUE);
+      proto_tree_add_item(newtree, df_ethstatus_nof_errors  ,tvb, 32, 4,  TRUE);
       proto_tree_add_item(newtree, df_ethstatus_last_error  ,tvb, 36, 1,  FALSE);
 
       proto_tree_add_text(newtree, tvb, 40, 8, "MEP Status");
@@ -454,15 +498,16 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
       proto_tree_add_item(newtree, df_mepstatus_write_seqnr ,tvb, 44, 2,  TRUE);
       proto_tree_add_item(newtree, df_mepstatus_write_error ,tvb, 46, 1,  FALSE);
 
-      proto_tree_add_text(newtree, tvb, 48, 8, "RCU Status");
-      proto_tree_add_item(newtree, df_rcustatus_ap1_rcu_x   ,tvb, 48, 1,  FALSE);
-      proto_tree_add_item(newtree, df_rcustatus_ap1_rcu_y   ,tvb, 49, 1,  FALSE);
-      proto_tree_add_item(newtree, df_rcustatus_ap2_rcu_x   ,tvb, 50, 1,  FALSE);
-      proto_tree_add_item(newtree, df_rcustatus_ap2_rcu_y   ,tvb, 51, 1,  FALSE);
-      proto_tree_add_item(newtree, df_rcustatus_ap3_rcu_x   ,tvb, 52, 1,  FALSE);
-      proto_tree_add_item(newtree, df_rcustatus_ap3_rcu_y   ,tvb, 53, 1,  FALSE);
-      proto_tree_add_item(newtree, df_rcustatus_ap4_rcu_x   ,tvb, 54, 1,  FALSE);
-      proto_tree_add_item(newtree, df_rcustatus_ap4_rcu_y   ,tvb, 55, 1,  FALSE);
+      proto_tree_add_text(newtree, tvb, 48, 12, "SYNC Status");
+      proto_tree_add_item(newtree, df_syncstatus_sample_count ,tvb, 48, 4, TRUE);
+      proto_tree_add_item(newtree, df_syncstatus_sync_count   ,tvb, 52, 4, TRUE);
+      proto_tree_add_item(newtree, df_syncstatus_error_count  ,tvb, 56, 4, TRUE);
+
+      proto_tree_add_text(newtree, tvb, 60, 48, "RCU Status");
+      proto_tree_add_item(newtree, df_rcustatus_ap1_rcu   ,tvb, 60, 12,  FALSE);
+      proto_tree_add_item(newtree, df_rcustatus_ap2_rcu   ,tvb, 72, 12,  FALSE);
+      proto_tree_add_item(newtree, df_rcustatus_ap3_rcu   ,tvb, 84, 12,  FALSE);
+      proto_tree_add_item(newtree, df_rcustatus_ap4_rcu   ,tvb, 96, 12,  FALSE);
     }
     else
     {
@@ -490,6 +535,12 @@ proto_register_epa(void)
       { "type",           "epa.type",
 	FT_UINT8, BASE_HEX, VALS(type_vals), 0x0,          
 	"Message type", HFILL }
+    },
+    {
+      &hf_epa_error,
+      { "error", "epa.error",
+	FT_UINT8, BASE_DEC, VALS(mep_error_vals), 0x0,
+	"Error indicator", HFILL }
     },
     { &hf_epa_seqnr,
       { "seqnr",           "epa.seqnr",
@@ -534,10 +585,10 @@ proto_register_epa(void)
 	FT_STRING, BASE_HEX, NULL, 0x0,          
 	"Register ID", HFILL }
     },
-    { &hf_epa_addr_pageid,
-      { "pageid",           "epa.addr.pageid",
-	FT_UINT8, BASE_HEX, VALS(page_vals), 0x0,          
-	"Page ID", HFILL }
+    { &hf_epa_addr_ffi,
+      { "ffi",           "epa.addr.ffi",
+	FT_UINT8, BASE_HEX, NULL, 0x0,          
+	"FFI", HFILL }
     },
   };
 
@@ -638,7 +689,7 @@ proto_register_epa(void)
       &df_mepstatus_read_error,
       {
 	"read_error", "epa.data.mepstatus.read_error",
-	FT_UINT8, BASE_DEC, VALS(eth_error_vals), 0x0,
+	FT_UINT8, BASE_DEC, VALS(mep_error_vals), 0x0,
 	"Error status of last received read message", HFILL 
       }
     },
@@ -654,72 +705,40 @@ proto_register_epa(void)
       &df_mepstatus_write_error,
       {
 	"write_error", "epa.data.mepstatus.write_error",
-	FT_UINT8, BASE_DEC, VALS(eth_error_vals), 0x0,
+	FT_UINT8, BASE_DEC, VALS(mep_error_vals), 0x0,
 	"Error status of last received write message frame", HFILL 
       }
     },
     {
-      &df_rcustatus_ap1_rcu_x,
+      &df_rcustatus_ap1_rcu,
       {
-	"ap1_rcu_x", "epa.data.rcustatus.ap1_rcu_x",
-	FT_UINT8, BASE_HEX, NULL, 0x0,
-	"AP1 X RCU status, incl overflow indicator", HFILL 
+	"ap1_rcu", "epa.data.rcustatus.ap1_rcu",
+	FT_BYTES, BASE_HEX, NULL, 0x0,
+	"AP1 RCU status", HFILL 
       }
     },
     {
-      &df_rcustatus_ap1_rcu_y,
+      &df_rcustatus_ap2_rcu,
       {
-	"ap1_rcu_y", "epa.data.rcustatus.ap1_rcu_y",
-	FT_UINT8, BASE_HEX, NULL, 0x0,
-	"AP1 Y RCU status, incl overflow indicator", HFILL 
+	"ap2_rcu", "epa.data.rcustatus.ap2_rcu",
+	FT_BYTES, BASE_HEX, NULL, 0x0,
+	"AP2 RCU status", HFILL 
       }
     },
     {
-      &df_rcustatus_ap2_rcu_x,
+      &df_rcustatus_ap3_rcu,
       {
-	"ap2_rcu_x", "epa.data.rcustatus.ap2_rcu_x",
-	FT_UINT8, BASE_HEX, NULL, 0x0,
-	"AP2 X RCU status, incl overflow indicator", HFILL 
+	"ap3_rcu", "epa.data.rcustatus.ap3_rcu",
+	FT_BYTES, BASE_HEX, NULL, 0x0,
+	"AP3 RCU status", HFILL 
       }
     },
     {
-      &df_rcustatus_ap2_rcu_y,
+      &df_rcustatus_ap4_rcu,
       {
-	"ap2_rcu_y", "epa.data.rcustatus.ap2_rcu_y",
-	FT_UINT8, BASE_HEX, NULL, 0x0,
-	"AP2 Y RCU status, incl overflow indicator", HFILL 
-      }
-    },
-    {
-      &df_rcustatus_ap3_rcu_x,
-      {
-	"ap3_rcu_x", "epa.data.rcustatus.ap3_rcu_x",
-	FT_UINT8, BASE_HEX, NULL, 0x0,
-	"AP3 X RCU status, incl overflow indicator", HFILL 
-      }
-    },
-    {
-      &df_rcustatus_ap3_rcu_y,
-      {
-	"ap3_rcu_y", "epa.data.rcustatus.ap3_rcu_y",
-	FT_UINT8, BASE_HEX, NULL, 0x0,
-	"AP3 Y RCU status, incl overflow indicator", HFILL 
-      }
-    },
-    {
-      &df_rcustatus_ap4_rcu_x,
-      {
-	"ap4_rcu_x", "epa.data.rcustatus.ap4_rcu_x",
-	FT_UINT8, BASE_HEX, NULL, 0x0,
-	"AP4 X RCU status, incl overflow indicator", HFILL 
-      }
-    },
-    {
-      &df_rcustatus_ap4_rcu_y,
-      {
-	"ap4_rcu_y", "epa.data.rcustatus.ap4_rcu_y",
-	FT_UINT8, BASE_HEX, NULL, 0x0,
-	"AP4 Y RCU status, incl overflow indicator", HFILL 
+	"ap4_rcu", "epa.data.rcustatus.ap4_rcu",
+	FT_BYTES, BASE_HEX, NULL, 0x0,
+	"AP4 RCU status", HFILL 
       }
     },
   };
