@@ -79,7 +79,7 @@ public:
   // otherwise a database of the given type.
   // For an AIPS++ table, the extension .MEP is added to the table name.
   ParmTable (const string& dbType, const string& tableName,
-	     const string& dbName, const string& pwd, const string& hostName = "dop50");
+	     const string& dbName, const string& pwd, const string& hostName = "localhost");
 
   ~ParmTable()
     { delete itsRep; }
