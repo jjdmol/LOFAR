@@ -1,0 +1,21 @@
+#Gnuplot script file for displaying the P2Perf output
+#
+
+set xlabel "Data packet size (Bytes)"
+set ylabel "Flops per Byte"
+set zlabel "bandwidth (Byte/s)"
+
+# Set the terminal type for file output
+set terminal x11
+set title ""
+set logscale x
+set logscale z
+set autoscale
+set view 80,170,1,1
+set surface
+set contour surface
+set data style linespoints
+
+splot "3BlockPerfAll.out" using 1:2:3
+pause -1
+
