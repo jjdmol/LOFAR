@@ -46,15 +46,15 @@ bool test1()
   DH2.init();
     
   // fill the DataHolders with some initial data
-  DH1.getBuffer()[0] = fcomplex(17,-3.5);
-  DH2.getBuffer()[0] = 0;
+  DH1.getBufferElement(0) = fcomplex(17,-3.5);
+  DH2.getBufferElement(0) = 0;
   DH1.setCounter(2);
   DH2.setCounter(0);
     
   cout << "Before transport : " 
-       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
+       << DH1.getBufferElement(0) << ' ' << DH1.getCounter()
        << " -- " 
-       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
+       << DH2.getBufferElement(0) << ' ' << DH2.getCounter()
        << endl;
     
   // do the data transport
@@ -62,12 +62,12 @@ bool test1()
   DH2.read();
   
   cout << "After transport  : " 
-       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
+       << DH1.getBufferElement(0) << ' ' << DH1.getCounter()
        << " -- " 
-       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
+       << DH2.getBufferElement(0) << ' ' << DH2.getCounter()
        << endl;
 
-  if (DH1.getBuffer()[0] == DH2.getBuffer()[0]
+  if (DH1.getBufferElement(0) == DH2.getBufferElement(0)
   &&  DH1.getCounter() == DH2.getCounter()) {
     return true;
   }
@@ -93,8 +93,8 @@ bool test2()
   DH2.init();
   {    
     // fill the DataHolders.
-    DH1.getBuffer()[0] = fcomplex(17,-3.5);
-    DH2.getBuffer()[0] = 0;
+    DH1.getBufferElement(0) = fcomplex(17,-3.5);
+    DH2.getBufferElement(0) = 0;
     DH1.setCounter(2);
     DH2.setCounter(0);
     // fill extra blob
@@ -103,7 +103,7 @@ bool test2()
     // do the data transport
     DH1.write();
     DH2.read();
-    if (! (DH1.getBuffer()[0] == DH2.getBuffer()[0]
+    if (! (DH1.getBufferElement(0) == DH2.getBufferElement(0)
 	   &&  DH1.getCounter() == DH2.getCounter())) {
       return false;
     }
@@ -121,14 +121,14 @@ bool test2()
     }
   }
   {
-    DH1.getBuffer()[0] = fcomplex(15,-4.5);
-    DH2.getBuffer()[0] = 0;
+    DH1.getBufferElement(0) = fcomplex(15,-4.5);
+    DH2.getBufferElement(0) = 0;
     DH1.setCounter(2);
     DH2.setCounter(0);
     // do the data transport (without data in the extra blob)
     DH1.write();
     DH2.read();
-    if (! (DH1.getBuffer()[0] == DH2.getBuffer()[0]
+    if (! (DH1.getBufferElement(0) == DH2.getBufferElement(0)
 	   &&  DH1.getCounter() == DH2.getCounter())) {
       return false;
     }
@@ -147,8 +147,8 @@ bool test2()
     }
   }
   {
-    DH1.getBuffer()[0] = fcomplex(151,-4.5);
-    DH2.getBuffer()[0] = 0;
+    DH1.getBufferElement(0) = fcomplex(151,-4.5);
+    DH2.getBufferElement(0) = 0;
     DH1.setCounter(2);
     DH2.setCounter(0);
     // make empty extra blob
@@ -156,7 +156,7 @@ bool test2()
     // do the data transport (without data in the extra blob)
     DH1.write();
     DH2.read();
-    if (! (DH1.getBuffer()[0] == DH2.getBuffer()[0]
+    if (! (DH1.getBufferElement(0) == DH2.getBufferElement(0)
 	   &&  DH1.getCounter() == DH2.getCounter())) {
       return false;
     }
@@ -168,14 +168,14 @@ bool test2()
     }
   }
   {
-    DH1.getBuffer()[0] = fcomplex(151,-41.5);
-    DH2.getBuffer()[0] = 0;
+    DH1.getBufferElement(0) = fcomplex(151,-41.5);
+    DH2.getBufferElement(0) = 0;
     DH1.setCounter(2);
     DH2.setCounter(0);
     // do the data transport (without data in the extra blob)
     DH1.write();
     DH2.read();
-    if (! (DH1.getBuffer()[0] == DH2.getBuffer()[0]
+    if (! (DH1.getBufferElement(0) == DH2.getBufferElement(0)
 	   &&  DH1.getCounter() == DH2.getCounter())) {
       return false;
     }
@@ -187,8 +187,8 @@ bool test2()
     }
   }
   {
-    DH1.getBuffer()[0] = fcomplex(1.7,3.52);
-    DH2.getBuffer()[0] = 0;
+    DH1.getBufferElement(0) = fcomplex(1.7,3.52);
+    DH2.getBufferElement(0) = 0;
     DH1.setCounter(5);
     DH2.setCounter(0);
     BlobOStream& bos = DH1.createExtraBlob();
@@ -198,7 +198,7 @@ bool test2()
     // do the data transport
     DH1.write();
     DH2.read();
-    if (! (DH1.getBuffer()[0] == DH2.getBuffer()[0]
+    if (! (DH1.getBufferElement(0) == DH2.getBufferElement(0)
 	   &&  DH1.getCounter() == DH2.getCounter())) {
       return false;
     }

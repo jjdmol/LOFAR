@@ -49,15 +49,15 @@ int main()
   DH2.init();
     
   // fill the DataHolders with some initial data
-  DH1.getBuffer()[0] = fcomplex(17,-3.5);
-  DH2.getBuffer()[0] = 0;
+  DH1.getBufferElement(0) = fcomplex(17,-3.5);
+  DH2.getBufferElement(0) = 0;
   DH1.setCounter(2);
   DH2.setCounter(0);
     
   cout << "Before transport : " 
-       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
+       << DH1.getBufferElement(0) << ' ' << DH1.getCounter()
        << " -- " 
-       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
+       << DH2.getBufferElement(0) << ' ' << DH2.getCounter()
        << endl;
     
   // do the data transport
@@ -65,12 +65,12 @@ int main()
   DH2.read();
   
   cout << "After transport  : " 
-       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
+       << DH1.getBufferElement(0) << ' ' << DH1.getCounter()
        << " -- " 
-       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
+       << DH2.getBufferElement(0) << ' ' << DH2.getCounter()
        << endl;
 
-  if (DH1.getBuffer()[0] == DH2.getBuffer()[0]
+  if (DH1.getBufferElement(0) == DH2.getBufferElement(0)
   &&  DH1.getCounter() == DH2.getCounter()) {
     return 0;
   }
