@@ -52,11 +52,10 @@ DataHolder* DH_PL::clone() const
 }
 
 
-void DH_PL::initPO (int tag, int id)
+void DH_PL::initPO (const string& tableName)
 {
   itsPODHPL = new PO_DH_PL();
-  itsTag    = tag;
-  itsAppId  = id;
+  itsPODHPL->tableName (tableName);
 } 
 
 PL::PersistentObject& DH_PL::getPO() const
@@ -64,11 +63,6 @@ PL::PersistentObject& DH_PL::getPO() const
   return *itsPODHPL;
 }
 
-PL::PersistentObject& DH_PL::preparePO (int seqnr)
-{
-  itsSeqNr = seqnr;
-  return *itsPODHPL;
-}
 
-}
+} // end namespace
 

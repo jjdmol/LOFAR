@@ -26,13 +26,15 @@
 #include <TransportHolder.h>
 #include <DH_PL.h>
 #include <PL/PersistenceBroker.h>		// for PersistenceBroker
+
+
 namespace LOFAR
 {
 
 class TH_PL: public TransportHolder
 {
 public:
-  TH_PL ();
+  TH_PL (const string& tableName = "defaultTable");
   virtual ~TH_PL ();
 
   virtual TH_PL* make () const;
@@ -41,6 +43,9 @@ public:
   virtual bool sendBlocking (void* buf, int nbytes, int destination, int tag);
 
   virtual string getType () const;
+
+  // Get the type of BlobString needed for the DataHolder (which is a string).
+  virtual BlobStringType blobStringType() const;
 
   virtual bool connectionPossible (int srcRank, int dstRank) const;
 
@@ -60,24 +65,22 @@ protected:
    static int theirInstanceCount;
 private:
   // methods to manage the connection to the dbms
-  void ConnectDatabase (void);
-  void DisconnectDatabase (void);
+  void connectDatabase();
+  void disconnectDatabase();
   // Specify the data source name and account for PL. Usually dbDSN =
   // <YourName> and userName="postgres".
-  static void UseDatabase (char * dbDSN, char * userName);
+  static void useDatabase (const string& dbDSN, const string& userName);
   
   /// Strings containing the name specs describing the ODBC connection.
-    static string theirDSN;
-    static string theirUserName;
-    string        itsTableName;
+  static string theirDSN;
+  static string theirUserName;
+  string        itsTableName;
     
-    long itsWriteSeqNo;
-    long itsReadSeqNo;
+  long itsWriteSeqNo;
+  long itsReadSeqNo;
+  DH_PL* itsDHPL;
 };
  
-}
+} // end namespace
 
 #endif
-
-
-

@@ -59,7 +59,7 @@ public:
   virtual TransportHolder* make() const = 0;
 
 
-  /// Initialise the Transport; this mauy for instance open a file,
+  /// Initialise the Transport; this may for instance open a file,
   /// port or dbms connection
   virtual bool init();
 

@@ -33,7 +33,7 @@ namespace LOFAR
 
 // Default data source and account names for PL. You should override them
 // with a call to UseDatabase () in main ().
-string TH_PL::theirDSN = "tanaka";
+string TH_PL::theirDSN = "test";
 string TH_PL::theirUserName = "postgres";
 
 int TH_PL::theirInstanceCount=0;   
@@ -45,109 +45,105 @@ PL::PersistenceBroker TH_PL::theirPersistenceBroker;
 
 TH_PL TH_PL::proto;
 
-TH_PL::TH_PL() :
-   itsTableName("defaultTable"),
-   itsWriteSeqNo(0),
-   itsReadSeqNo(0)
-   
+TH_PL::TH_PL (const string& tableName)
+  : itsTableName  (tableName),
+    itsWriteSeqNo (0),
+    itsReadSeqNo  (0)
 {
-
-  // ToDo: test dynamic cast
-  // ToDo: getPO->setTableName();
+  // Do a dynamic cast of the BaseDataHolder to a DH_PL.
+  // and check if it is correct.
+  itsDHPL = dynamic_cast<DH_PL*>(getTransporter()->getBaseDataHolder());
+  if (itsDHPL == 0) {
+    throw LOFAR::Exception("TH_PL: DataHolder used is not derived from DH_PL");
+  }
+  // Initialize the TPO object in the DH_PL.
+  itsDHPL->initPO (itsTableName);
 
   // If this is the first instance of TH_PL in the (current) process,
   // connect to the database.
   if (TH_PL::theirInstanceCount == 0L) {
-    ConnectDatabase ();
+    connectDatabase ();
   }
-  TH_PL::theirInstanceCount ++;
+  TH_PL::theirInstanceCount++;
 }
 
-TH_PL::~TH_PL() {
-   TH_PL::theirInstanceCount --;
-
+TH_PL::~TH_PL()
+{
   // If this was the last instance of DH_PL, disconnect from the database. 
-
-  if (TH_PL::theirInstanceCount == 0L) {
-    DisconnectDatabase ();
+  if (--TH_PL::theirInstanceCount == 0L) {
+    disconnectDatabase ();
   }
 }
 
 TH_PL* TH_PL::make() const
-  { return new TH_PL(); }
+{
+  return new TH_PL(itsTableName);
+}
 
-void TH_PL::UseDatabase (char * dbDSN, char * userName) {
-  TH_PL::theirDSN   = dbDSN;
+void TH_PL::useDatabase (const string& dbDSN, const string& userName)
+{
+  TH_PL::theirDSN      = dbDSN;
   TH_PL::theirUserName = userName;
 }
 
-void TH_PL::ConnectDatabase (void) {
-  if (TH_PL::theirDSN == "tanaka") {
+void TH_PL::connectDatabase()
+{
+  if (TH_PL::theirDSN == "test") {
     cerr << "***WARNING***: TH_PL::ConnectDatabase (); TH_PL "
 	 << "is trying to connect to a test database residing on "
 	 << "dop50. You probably have forgotten to call the TH_PL "
 	 << "method UseDatabase (). See the comments in TH_PL.h " 
 	 << "for more detaills. Continuing execution... " << endl;
   }
-
   theirPersistenceBroker.connect (TH_PL::theirDSN, TH_PL::theirUserName);
 }
 
 
-void TH_PL::DisconnectDatabase (void) {
-}
+void TH_PL::disconnectDatabase()
+{}
 
 string TH_PL::getType() const
-  { return "TH_PL"; }
+{
+  return "TH_PL";
+}
 
-bool TH_PL::connectionPossible(int srcRank, int dstRank) const
-  { return srcRank == dstRank; }
+bool TH_PL::connectionPossible (int srcRank, int dstRank) const
+{
+  return srcRank == dstRank;
+}
 
 bool TH_PL::sendBlocking(void* buf, int nbytes, int destination, int tag)
-
 {
   DbgAssertStr(getTransporter() -> getBaseDataHolder() != 0, 
 	       "TH_PL::send():Transportable not found.");
-  DH_PL* DHPLptr = (DH_PL*)getTransporter () -> getBaseDataHolder ();
-  // ToDo:   DHPLptr->setTag(tag);
-  // ToDo:   DHPLptr->setDestination(destination);
-  // ToDo: DbgAssertStr(DHPLptr->getType = "", "Wrong DH type;")
-  
-  PL::PersistentObject& aPO = DHPLptr -> preparePO(itsWriteSeqNo++);
+  PL::PersistentObject& aPO = itsDHPL->preparePO (destination, tag,
+						  itsWriteSeqNo++);
   theirPersistenceBroker.save(aPO);
   return true;
 }
 
 bool TH_PL::recvBlocking(void* buf, int nbytes, int source , int tag)
-
 { 
-  DbgAssertStr( (getTransporter() -> getBaseDataHolder () != 0),
-		"TH_PL::recv():Transportable not found.");
- 
-  // get a refernece to the DHPL object
-  DH_PL* DHPLptr = (DH_PL*)getTransporter() -> getBaseDataHolder();  
-  PL::PersistentObject& aPO = DHPLptr -> getPO();
+  // Get a reference to the DHPL's TPO object.
+  PL::PersistentObject& aPO = itsDHPL->getPO();
 
   // PL is based on query objects to identify records in database
   // tables. A query object is now prepared to retrieve the record with
   // the correct tag and sequence number.
-  char q [200]; 
-  sprintf (q, "WHERE tag='%d' AND SeqNo='%ld' AND source='%ld'",
-	   tag, 
-	   itsReadSeqNo++,
-	   source);
-   PL::QueryObject qGetRecord(q);
+  char q[200]; 
+  sprintf (q, "tag='%d' AND seqnr='%ld' AND source='%d'",
+	   tag, itsReadSeqNo++, source);
     
-  // Perform the actual query and obtain the data collection.
-
-   int result;
-   // ToDo: result = aPO.retrieve(qGetRecord);
-   DbgAssert (result == 1);
-
+  // Perform the actual query and obtain the record.
+  // Check that only 1 is found.
+  int result;
+  // ToDo: result = aPO.retrieve(theirPersistenceBroker, PL::QueryObject(q));
+  Assert (result == 1);
   // ToDo: DbgAssertStr(itsReadSeqnNo == ... ,"");
-
-   // ToDo: DbgAssertStr((resSize == size),"TH_PL Warning: Not matching size, continuing anyway.");
   
+  DbgAssertStr(int(itsDHPL->getDataBlock().size()) == nbytes,
+	       "TH_PL::recv - non matching size; found "
+	       << itsDHPL->getDataBlock().size() << ", expected " << nbytes);
   return true;
 }
 
@@ -160,5 +156,12 @@ void TH_PL::init (int, const char * []) {}
 void TH_PL::finalize () {}
 void TH_PL::synchroniseAllProcesses () {}
 
+
+BlobStringType TransportHolder::blobStringType() const
+{
+  // Use a string buffer (for the blob in PL).
+  return BlobStringType(true);
 }
 
+
+} // end namespace

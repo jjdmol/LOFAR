@@ -37,11 +37,13 @@ TransportHolder::~TransportHolder()
 {}
 
 bool TransportHolder::init()
-{ return true; }
+{
+  return true;
+}
 
 bool TransportHolder::recvBlocking (void*, int, int, int)
 {
-  Throw("No blocking receive mehtod implemented in this TransportHolder");
+  Throw("No blocking receive method implemented in this TransportHolder");
 }
 
 bool TransportHolder::recvNonBlocking (void*, int, int, int)
