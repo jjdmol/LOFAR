@@ -4,19 +4,19 @@
   <status>
     <MACType>MACUnsigned</MACType>
   </status>
-  <RCUHerr>
+  <overflow>
     <MACType>MACBool</MACType>
-  </RCUHerr>
-  <RCUVerr>
+  </overflow>
+  <rcuPwr>
     <MACType>MACBool</MACType>
-  </RCUVerr>
-  <ringErr>
+  </rcuPwr>
+  <hbaPwr>
     <MACType>MACBool</MACType>
-  </ringErr>
-  <overFlow>
+  </hbaPwr>
+  <lbaPwr>
     <MACType>MACBool</MACType>
-  </overFlow>
-  <statsReady>
-    <MACType>MACBool</MACType>
-  </statsReady>
+  </lbaPwr>
+  <filter>
+    <MACType>MACUnsigned</MACType>
+  </filter>
 </RCUType>

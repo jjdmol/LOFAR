@@ -203,7 +203,7 @@ RegisterAccessTask::RegisterAccessTask(string name)
     }
   }
   
-  // subscribe to maintenanace properties
+  // subscribe to maintenanace properties and alert properties
   
 }
 
@@ -1110,26 +1110,30 @@ void RegisterAccessTask::updateFPGAproperties(string scope,uint8 status, uint8 t
 void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
 {
   // layout rcu status: 
-  // 7 6       5       4       3 2 1 0
-  // - ringerr rcuHerr rcuVerr - - - statsReady
+  // 7        6       5       4       3 2 1 0
+  // overflow rcu_pwr hba_pwr lba_pwr filter
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it != m_myPropertySetMap.end())
   {
-    unsigned int tempStatus = (status >> 6 ) & 0x01;
+    unsigned int tempStatus = (status >> 7 ) & 0x01;
     GCFPVBool pvBool(tempStatus);
-    it->second->setValue(string(PROPNAME_RINGERR),pvBool);
+    it->second->setValue(string(PROPNAME_OVERFLOW),pvBool);
     
+    tempStatus = (status >> 6) & 0x01;
+    pvBool.setValue(tempStatus);
+    it->second->setValue(string(PROPNAME_RCUPWR),pvBool);
+
     tempStatus = (status >> 5) & 0x01;
     pvBool.setValue(tempStatus);
-    it->second->setValue(string(PROPNAME_RCUHERR),pvBool);
+    it->second->setValue(string(PROPNAME_HBAPWR),pvBool);
 
     tempStatus = (status >> 4) & 0x01;
     pvBool.setValue(tempStatus);
-    it->second->setValue(string(PROPNAME_RCUVERR),pvBool);
+    it->second->setValue(string(PROPNAME_LBAPWR),pvBool);
 
-    tempStatus = (status >> 0) & 0x01;
-    pvBool.setValue(tempStatus);
-    it->second->setValue(string(PROPNAME_STATSREADY),pvBool);
+    tempStatus = (status >> 0) & 0x0F;
+    GCFPVUnsigned pvFilter(tempStatus);
+    it->second->setValue(string(PROPNAME_FILTER),pvFilter);
   }
 }
 

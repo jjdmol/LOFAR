@@ -12,15 +12,11 @@
  	<WaveFormGenerator>
  		<frequency>
 	  	<MACType>MACDouble</MACType> 
-	  	<MACDefault>1000000.0</MACDefault> 
+	  	<MACDefault>1500000.0</MACDefault> 
  		</frequency>
  		<amplitude>
 	  	<MACType>MACUnsigned</MACType> 
 	  	<MACDefault>128</MACDefault> 
  		</amplitude>
- 		<samplePeriod>
-	  	<MACType>MACUnsigned</MACType> 
-	  	<MACDefault>2</MACDefault> 
- 		</samplePeriod>
  	</WaveFormGenerator>
 </LogicalDeviceScheduler>

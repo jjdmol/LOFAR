@@ -26,7 +26,7 @@
 //# Includes
 //# Common Includes
 #include <Common/lofar_string.h>
-#include <Common/lofar_map.h>
+#include <set>
 #include <boost/shared_ptr.hpp>
 
 //# GCF Includes
@@ -109,8 +109,12 @@ namespace AVT
       time_t          m_startTime;
       time_t          m_stopTime;
       double          m_frequency;
+#ifdef USE_BEAMSERVER_STATISTICS
       SubbandAPCMapT  m_subbands;
       GCFApc          m_APCBeamServerStatistics;
+#else
+      std::set<int>   m_subbands;
+#endif
       int             m_directionType;
       double          m_directionAngle1;
       double          m_directionAngle2;

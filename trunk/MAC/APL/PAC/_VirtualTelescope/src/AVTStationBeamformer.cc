@@ -59,7 +59,9 @@ AVTStationBeamformer::AVTStationBeamformer(string& taskName,
   m_stopTime(0),
   m_frequency(0.0),
   m_subbands(),
+#ifdef USE_BEAMSERVER_STATISTICS
   m_APCBeamServerStatistics(string("ApcAplBeamServerStatistics"),bsScope,&m_APCAnswer),
+#endif
   m_directionType(0),
   m_directionAngle1(0.0),
   m_directionAngle2(0.0),
@@ -139,11 +141,11 @@ bool AVTStationBeamformer::checkQualityRequirements()
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer(%s)::%s",getName().c_str(),__func__));
   bool requirementsMet=false;
   
-  // quality requirements for this BeamServer:
-  // - none
-  // (by the time the quality check is done, the BeamFormer is completely up and running
+  // quality requirements for this BeamFormer:
+  // there must be a connection with the BeamServer
   
-  requirementsMet=true;
+  
+  requirementsMet=m_beamServerConnected;
   
   return requirementsMet;
 }
@@ -277,6 +279,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event
         {
           m_beamID=ackEvent.handle;
           
+#ifdef USE_BEAMSERVER_STATISTICS
           // load APC's for the subbands of the beam;
           m_APCBeamServerStatistics.load(false); // no defaults
           SubbandAPCMapT::iterator subbandIterator=m_subbands.begin();
@@ -285,6 +288,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event
             subbandIterator->second->load(false); // no defaults          
             ++subbandIterator;
           }
+#endif
 
           // point the new beam
           time_t time_arg(0);
@@ -525,10 +529,14 @@ void AVTStationBeamformer::concretePrepare(GCFPortInterface& /*port*/,string& pa
   vector<int>::iterator vectorIterator=subbandsVector.begin();
   while(vectorIterator!=subbandsVector.end())
   {
+#ifdef USE_BEAMSERVER_STATISTICS
     char tempScope[100];
     sprintf(tempScope,"%s_power%03d",bsScope.c_str(),*vectorIterator);
     boost::shared_ptr<GCFApc> pSubbandAPC(new GCFApc(string("ApcAplBeamServerSubbandStatistics"),string(tempScope),&m_APCAnswer));
     m_subbands.insert(SubbandAPCMapT::value_type(*vectorIterator,pSubbandAPC));
+#else
+    m_subbands.insert(*vectorIterator);
+#endif
     ++vectorIterator;
   }
   
@@ -559,6 +567,7 @@ void AVTStationBeamformer::concretePrepare(GCFPortInterface& /*port*/,string& pa
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer(%s)::allocate %d subbands: %s",getName().c_str(),n_subbands,tempLogStr));
   ABSBeamallocEvent beamAllocEvent;
   beamAllocEvent.spectral_window = spectral_window;
+  beamAllocEvent.n_subbands = n_subbands;
   memcpy(beamAllocEvent.subbands,subbandsArray,sizeof(int)*AVT_N_BEAMLETS);
   m_beamServer.send(beamAllocEvent);
 }
@@ -569,8 +578,8 @@ void AVTStationBeamformer::concreteResume(GCFPortInterface& /*port*/)
   // resume my own resources
   
   // send resume message to BeamFormer
-  ABSWgenableEvent wgEnableEvent;
-  m_beamServer.send(wgEnableEvent);
+//  ABSWgenableEvent wgEnableEvent;
+//  m_beamServer.send(wgEnableEvent);
   
 }
 
@@ -580,8 +589,8 @@ void AVTStationBeamformer::concreteSuspend(GCFPortInterface& /*port*/)
   // suspend my own resources
   
   // send suspend message to BeamFormer
-  ABSWgdisableEvent wgDisableEvent;
-  m_beamServer.send(wgDisableEvent);
+//  ABSWgdisableEvent wgDisableEvent;
+//  m_beamServer.send(wgDisableEvent);
 }
 
 void AVTStationBeamformer::concreteRelease(GCFPortInterface& /*port*/)
