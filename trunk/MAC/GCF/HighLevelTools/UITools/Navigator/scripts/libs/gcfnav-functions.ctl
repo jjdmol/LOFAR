@@ -1,16 +1,17 @@
 // global functions. All event handlers are implemented here
+#uses "gcfnav-pmlinterface.ctl"
 
-global string  ACTIVEX_TREE_CTRL      = "FlyTreeXCtrl.FlyTreeX";
-global string  ACTIVEX_TREE_CTRL_NAME = "FlyTreeXCtrl1";
-global string  LIST_TREE_CTRL_NAME    = "list";
-global string  TAB_VIEWS_CTRL_NAME    = "TabViews";
-global string  NAVIGATOR_TAB_FILENAME = "navigator/navigator_tab.pnl";
-global bool    ACTIVEX_SUPPORTED      = false;
-global int     NR_OF_VIEWS            = 10;
-global mapping g_itemID2datapoint;
-global mapping g_datapoint2itemID;
-global bool    g_initializing         = true;
-global bool    g_treeCtrlInitializing = true;
+global string   ACTIVEX_TREE_CTRL      = "NOT FlyTreeXCtrl.FlyTreeX";
+global string   ACTIVEX_TREE_CTRL_NAME = "FlyTreeXCtrl1";
+global string   LIST_TREE_CTRL_NAME    = "list";
+global string   TAB_VIEWS_CTRL_NAME    = "TabViews";
+global string   NAVIGATOR_TAB_FILENAME = "navigator/navigator_tab.pnl";
+global bool     ACTIVEX_SUPPORTED      = false;
+global int      NR_OF_VIEWS            = 10;
+global mapping  g_itemID2datapoint;
+global mapping  g_datapoint2itemID;
+global bool     g_initializing         = true;
+global int      g_curSelNode = 0;
 
 ///////////////////////////////////////////////////////////////////////////
 //Function ActiveXSupported
@@ -507,6 +508,7 @@ string stripColorTags(string text)
 ///////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
 
+
 ///////////////////////////////////////////////////////////////////////////
 //Function Navigator_HandleEventInitialize()
 //
@@ -515,6 +517,8 @@ string stripColorTags(string text)
 void Navigator_HandleEventInitialize()
 {
   DebugTN("Navigator_HandleEventInitialize()");
+  
+  navPMLinitialize();
   
   mapping empty;
   g_itemID2datapoint = empty;
@@ -542,36 +546,36 @@ void Navigator_HandleEventInitialize()
   
   
   // manually control the initialization of the tree and tabviews
-  TabViews_HandleEventInitialize();
-  
-  // wait until tree control has initialized
-  while(g_treeCtrlInitializing) delay(0,200);
-  
-  // select the last selected datapoint
-  string dpSelectedElement="";
-  string dpSelectedElementContainer = "__navigator.selectedElement";
-  if(dpExists(dpSelectedElementContainer))
-  {
-    dpGet(dpSelectedElementContainer,dpSelectedElement);
-  }
-  DebugTN("Navigator_HandleEventInitialize: selectedDP=",dpSelectedElement);
+  InitializeTabViews();
+  InitializeTree();
   
   g_initializing = false;
-  
-  if(strlen(dpSelectedElement)>0)
-  {
-    shape treeCtrl = getTreeCtrl();
-    unsigned selectedPos = getNodeFromDatapoint(dpSelectedElement);
-    if(ActiveXSupported())
-    {
-      treeCtrl.Selected = selectedPos;
-    }
-    else
-    {
-      treeCtrl.selectedPos(selectedPos); 
-      TreeCtrl_HandleEventOnSelChange(selectedPos);
-    }
-  }
+
+/*
+*  // select the last selected datapoint
+*  string dpSelectedElement="";
+*  string dpSelectedElementContainer = "__navigator.selectedElement";
+*  if(dpExists(dpSelectedElementContainer))
+*  {
+*    dpGet(dpSelectedElementContainer,dpSelectedElement);
+*  }
+*  DebugTN("Navigator_HandleEventInitialize: selectedDP=",dpSelectedElement);
+*  
+*  if(strlen(dpSelectedElement)>0)
+*  {
+*    shape treeCtrl = getTreeCtrl();
+*    unsigned selectedPos = getNodeFromDatapoint(dpSelectedElement);
+*    if(ActiveXSupported())
+*    {
+*      treeCtrl.Selected = selectedPos;
+*    }
+*    else
+*    {
+*      treeCtrl.selectedPos(selectedPos); 
+*      TreeCtrl_HandleEventOnSelChange(selectedPos);
+*    }
+*  }
+*/
 
   DebugTN("~Navigator_HandleEventInitialize()");
 }
@@ -584,6 +588,8 @@ void Navigator_HandleEventInitialize()
 void Navigator_HandleEventTerminate()
 {
   DebugTN("Navigator_HandleEventTerminate()");
+
+  navPMLterminate();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -593,7 +599,18 @@ void Navigator_HandleEventTerminate()
 ///////////////////////////////////////////////////////////////////////////
 void TabViews_HandleEventInitialize()
 {
-  DebugTN("TabViews_HandleEventInitialize()");
+  // the initialization of the main panel initializes the tabviews
+  // nothing should be done here
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function InitializeTabViews()
+//
+// initializes the tabview
+///////////////////////////////////////////////////////////////////////////
+void InitializeTabViews()
+{
+  DebugTN("InitializeTabViews()");
   shape tabCtrl = getTabCtrl();
   tabCtrl.visible=FALSE;
   // hide all tabs
@@ -607,7 +624,7 @@ void TabViews_HandleEventInitialize()
     DebugTN("registerVisible",i,setValueResult,err);
     i++;
   } while(dynlen(err)==0 && i<NR_OF_VIEWS && setValueResult==0);
-  DebugTN("~TabViews_HandleEventInitialize()");
+  DebugTN("~InitializeTabViews()");
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -642,7 +659,18 @@ void TabViews_HandleEventSelectionChanged()
 ///////////////////////////////////////////////////////////////////////////
 void TreeCtrl_HandleEventInitialize()
 {
-  DebugTN("TreeCtrl_HandleEventInitialize()");
+  // the initialization of the main panel initializes the tree
+  // nothing should be done here
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function InitializeTree()
+//
+// initializes the Resources treeview
+///////////////////////////////////////////////////////////////////////////
+void InitializeTree()
+{
+  DebugTN("InitializeTree()");
   
   shape treeCtrl = getTreeCtrl();
   idispatch items;
@@ -674,7 +702,7 @@ void TreeCtrl_HandleEventInitialize()
   }
   
   TabViews.visible=TRUE;
-  DebugTN("~TreeCtrl_HandleEventInitialize()");
+  DebugTN("~InitializeTree()");
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -685,18 +713,41 @@ void TreeCtrl_HandleEventInitialize()
 ///////////////////////////////////////////////////////////////////////////
 void TreeCtrl_HandleEventOnSelChange(long Node)
 {
-  if(!g_initializing)
+  if(g_curSelNode != Node)
   {
-    DebugTN("TreeCtrl_HandleEventOnSelChange  ",Node);
-    if(Node != 0)
-    {
-      string datapointPath;
-      buildPathFromNode(Node, datapointPath);
-      string dpViewConfig = getViewConfig(datapointPath);
+	  g_curSelNode = Node;
+	  
+	  if(!g_initializing)
+	  {
+	    DebugTN("TreeCtrl_HandleEventOnSelChange  ",Node);
+	    if(Node != 0)
+	    {
+	      string datapointPath;
+	      buildPathFromNode(Node, datapointPath);
+	      string dpViewConfig = getViewConfig(datapointPath);
+	
+	      showView(dpViewConfig,datapointPath);
+	    }
+	  }
+	}
+}
 
-      showView(dpViewConfig,datapointPath);
-    }
-  }
+///////////////////////////////////////////////////////////////////////////
+//Function TreeCtrl_EventOnCollapsed(long Node)
+// 
+// called when a node is collapsed
+///////////////////////////////////////////////////////////////////////////
+void TreeCtrl_EventOnCollapsed(long Node)
+{
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function TreeCtrl_EventOnExpanded(long Node)
+// 
+// called when a node is expanded
+///////////////////////////////////////////////////////////////////////////
+void TreeCtrl_HandleEventOnExpanded(long Node)
+{
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -782,6 +833,7 @@ void ButtonMaximize_HandleEventClick()
 TreeView_OnCollapse(unsigned pos)
 {
   DebugTN("TreeView_OnCollapse",pos);
+	TreeCtrl_EventOnCollapsed(pos);
 
   // the last line of code of each fwTreeView event handler MUST be the following:
   id = -1; 
@@ -795,6 +847,7 @@ TreeView_OnCollapse(unsigned pos)
 TreeView_OnExpand(unsigned pos)
 {
   DebugTN("TreeView_OnExpand",pos);
+	TreeCtrl_EventOnExpanded(pos);
 
   // the last line of code of each fwTreeView event handler MUST be the following:
   id = -1; 
@@ -810,7 +863,6 @@ TreeView_OnInit()
   DebugTN("TreeView_OnInit");
 
   TreeCtrl_HandleEventInitialize();  
-  g_treeCtrlInitializing = false;
 
   // the last line of code of each fwTreeView event handler MUST be the following:
   id = -1; 
