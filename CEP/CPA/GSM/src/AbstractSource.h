@@ -124,8 +124,8 @@ public:
      \param ra  Right Ascension in J2000 coordinates.
      \param dec Declination in J2000 coordinates.
    */
-  virtual void        getPositionExpressions(MeqExpr* ra,
-                                             MeqExpr* dec);
+  virtual void        getPositionExpressions(MeqExpr* &ra,
+                                             MeqExpr* &dec);
 
   //! Returns expressions that give total flux.
   /*! \returns pointers to expressions as a function of time and
