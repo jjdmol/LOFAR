@@ -24,7 +24,7 @@
 #define ONLINEPROTO_WH_DUMP_H
 
 #include <lofar_config.h>
-
+#include <Common/lofar_fstream.h>
 #include <tinyCEP/WorkHolder.h>
 
 //#include <Common/Lorrays.h>
