@@ -20,7 +20,6 @@
 //
 //
 
-#include <Common/ArrayOperations.h>
 #include <StationSim/Modulate.h>
 #include <fftw.h>
 #include <rfftw.h>

@@ -25,6 +25,7 @@
 
 #include <Common/Debug.h>
 #include <Common/Lorrays.h>
+#include <Math/LCSMath.h>
 
 // implements the cumsum() function for blitz vectors:
 // (if y = cumsum(x), then y[i] = sum(x[0:i]))

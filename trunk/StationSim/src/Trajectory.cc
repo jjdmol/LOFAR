@@ -32,6 +32,9 @@ Trajectory::Trajectory (string config_file, int fs, double length)
   LoVec_double pointTheta;
   LoVec_double pointTime;
 
+  // DEBUG
+  itsFileOut.open ("/home/alex/interpolation.txt");
+
   while (!configfile.eof () && configfile.is_open ()) {
     s = "";
     configfile >> s;
@@ -58,27 +61,65 @@ Trajectory::Trajectory (string config_file, int fs, double length)
     }
   }
 
+  // DEBUG
+  itsFileOut << "Length : " << itsFs * itsLength << endl;
+  itsFileOut << "Type   : " << itsType << endl << endl;
+  itsFileOut << "Time\t" << "Phi\t" << "Theta\t" << endl;
+
   // File read in now create the phi and theta vectors
-  itsPhi.resize ((int)(itsFs / itsLength));
-  itsTheta.resize ((int)(itsFs / itsLength));
-  itsTime.resize ((int)(itsFs / itsLength));
   
-  for (int i = 1; i < itsNpoints; ++i) {
-	for (int j = 0; j < (itsTime(i-1) - itsTime(i)) * itsFs * itsLength; ++j) {
-	  itsPhi(i) = (pointPhi(i-1) - pointPhi(i)) / (pointTheta(i-1) - pointTheta(i)) * j + pointPhi(i-1);
-	  itsTheta(i) = (pointPhi(i-1) - pointPhi(i)) / (pointTheta(i-1) - pointTheta(i)) * j + pointTheta(i-1);
-	}
+  if (itsType == "steady") {
+	itsPhi.resize (1);
+	itsTheta.resize (1);
+	itsPhi (0) = pointPhi (0);
+	itsTheta (0) = pointTheta (0);
+  } else if (itsType == "variable") {
+	  itsPhi.resize ((int)(itsFs * itsLength));
+	  itsTheta.resize ((int)(itsFs * itsLength));
+	   
+	  for (int i = 1; i < itsNpoints; ++i) {
+		int b = (int) (pointTime(i-1) * itsFs * itsLength);
+		int e = (int) ((pointTime(i) - pointTime(i-1)) * itsFs * itsLength);
+		for (int j = 0; j < e; ++j) {
+		  itsPhi (b+j) = (pointPhi(i) - pointPhi(i-1)) / e * j + pointPhi(i-1);
+		  itsTheta (b+j) = (pointTheta(i) - pointTheta(i-1)) / e * j + pointTheta(i-1);
+		  
+		  // DEBUG
+		  // itsFileOut << b+j << "\t" << itsPhi(b+j) << "\t" << itsTheta(b+j) << "\t" << endl;
+		}
+	  }
+  } else if (itsType == "cyclic") {
+	// do cyclic stuff
+  } else {
+	// ERROR
   }
+}
+
+Trajectory::~Trajectory ()
+{
+  itsFileOut.close ();
 }
 
 double Trajectory::getPhi (int index)
 {
   Assert (index < itsFs * itsLength);
-  return itsPhi(index);
+  if (itsType == "steady") {
+	return itsPhi (0);
+  } else if (itsType == "variable") {
+	return itsPhi (index);
+  } else if (itsType == "cyclic") {
+	return itsPhi (index); //DEBUG
+  }
 }
 
 double Trajectory::getTheta (int index)
 {
   Assert (index < itsFs * itsLength);
-  return itsTheta(index);
+  if (itsType == "steady") {
+	return itsTheta (0);
+  } else if (itsType == "variable") {
+	return itsTheta (index);
+  } else if (itsType == "cyclic") {
+	return itsPhi (index); //DEBUG
+  }
 }

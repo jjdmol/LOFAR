@@ -1,4 +1,4 @@
-//  .h:
+//  FilterBank.h:
 //
 //  Copyright (C) 2002
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
