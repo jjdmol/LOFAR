@@ -5,7 +5,7 @@
 # script to run LofarRadioSample demo
 #
 # place where the samples and programs can be found.
-setenv LOFARWORKDIR $HOME/ICT_KENNIS_DEMO/RadioCapture
+setenv LOFARWORKDIR $HOME/RadioDemo
 setenv WAVEDIR $LOFARWORKDIR/WAVE
 
 if (! -d $LOFARWORKDIR) then
@@ -23,4 +23,4 @@ endif
 # start java script
 setenv DISPLAY lofar2:0.0
 java -DWORKDIR=$LOFARWORKDIR lofarRadioSampler >& lofar.out &
-#java -DWORKDIR=$LOFARWORKDIR makePlot >& plot.out &
+
