@@ -27,6 +27,7 @@
 #include <BBS3/MNS/MeqMatrixComplexArr.h>
 #include <Common/LofarLogger.h>
 #include <casa/BasicSL/Constants.h>
+#include <cmath>
 
 using namespace casa;
 
