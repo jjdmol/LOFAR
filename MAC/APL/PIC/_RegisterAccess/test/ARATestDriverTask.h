@@ -27,8 +27,8 @@
 //# Common Includes
 
 //# GCF Includes
-#include <GCF/GCF_Task.h>
-#include <GCF/GCF_Property.h>
+#include <GCF/TM/GCF_Task.h>
+#include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <RSP_Protocol.ph>
 #include <boost/shared_ptr.hpp>
 #include <map>
@@ -56,11 +56,9 @@ namespace ARA
       ARATestDriverTask& operator=(const ARATestDriverTask&);
       
     private: 
-      typedef map<string,boost::shared_ptr<GCFProperty> > TPropertyMap;
+      typedef map<string,boost::shared_ptr<GCFExtPropertySet> > TPropertyMap;
     
       void addPropertySet(string scope);
-      void addAllProperties(string scope, TProperty* ptp, int numProperties);
-      void subscribeAllProperties();
       void updateETHstatus(string& propName,const GCFPValue* pvalue);
       void updateAPstatus(string& propName,const GCFPValue* pvalue);
       void updateBPstatus(string& propName,const GCFPValue* pvalue);

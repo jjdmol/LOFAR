@@ -23,9 +23,8 @@
 #ifndef ARAREGISTERACCESSTASK_H_
 #define ARAREGISTERACCESSTASK_H_
 
-#include <GCF/GCF_Control.h>
+#include <GCF/TM/GCF_Control.h>
 #include <GCF/PAL/GCF_MyPropertySet.h>
-#include <GCF/GCF_Apc.h>
 #include <Common/LofarTypes.h>
 #include <boost/shared_ptr.hpp>
 #include <map>
@@ -119,7 +118,7 @@ namespace ARA
       /**
        * create propertyset object, add it to the map
        */
-      void addMyPropertySet(const char* scope,const char* type, const TPropertyConfig& propconfig);
+      void addMyPropertySet(const char* scope,const char* type, const TPropertyConfig propconfig[]);
       /**
        * create apc object, add it to the map
        */

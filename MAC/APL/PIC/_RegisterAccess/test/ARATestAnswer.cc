@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include "ARATestAnswer.h"
-#include <GCF/GCF_Task.h>
+#include <GCF/TM/GCF_Task.h>
 
 #undef PACKAGE
 #undef VERSION

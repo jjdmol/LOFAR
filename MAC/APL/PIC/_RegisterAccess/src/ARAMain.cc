@@ -47,8 +47,6 @@ int main(int argc, char* argv[])
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
-  APLConfig::getInstance().load("REGISTERACCESS", ARA_SYSCONF "/registeraccess.conf");
-
   GCFTask::init(argc, argv);
 
   RegisterAccessTask ara("ARA");

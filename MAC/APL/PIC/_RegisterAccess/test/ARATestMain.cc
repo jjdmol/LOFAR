@@ -22,13 +22,13 @@
 
 #undef PACKAGE
 #undef VERSION
-#include <CmdLine.h>
-#include <GCF/GCF_Task.h>
-#include "../../../APLCommon/src/suite.h"
-#include "ARATest.h"
+#include <GCF/CmdLine.h>
+#include <GCF/TM/GCF_Task.h>
+#include "APLCommon/suite.h"
+#include "ARATestTask.h"
 #include "ARATestDriverTask.h"
 #include <boost/shared_ptr.hpp>
-#include <APLConfig.h>
+#include <Suite/suite.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -56,8 +56,6 @@ int main(int argc, char* argv[])
     {
       noTest = cmdLine.HasSwitch("-notest");
     }
-
-    APLConfig::getInstance().load("REGISTERACCESS", ARA_SYSCONF "/registeraccess.conf");
     
     // create test driver task. 
     if(noTest)
@@ -70,10 +68,11 @@ int main(int argc, char* argv[])
     {
       Suite s("MAC.APL.PIC RegisterAccess Test",&std::cout);
     
-      boost::shared_ptr<ARATest> araTest(new ARATest);
+      boost::shared_ptr<ARATestTask> araTest(new ARATestTask);
       s.addTest(araTest.get());
       s.run();
       retval=s.report();
+      s.free();
     }
   }
   return retval;

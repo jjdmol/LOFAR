@@ -25,13 +25,50 @@ const char SCOPE_PIC_Rack1_SubRack1_Board1_AP1[] = "PIC_Rack1_SubRack1_Board1_AP
 const char SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance[] = "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance";
 const char SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert[] = "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert";
 
+#define NEXT_TEST(_test_, _descr_) \
+  { \
+    setCurSubTest(#_test_, _descr_); \
+    TRAN(ARATestTask::test##_test_); \
+  }
+
+#define FINISH \
+  { \
+    reportSubTest(); \
+    TRAN(ARATestTask::finished); \
+  }
+
+#define ABORT_TESTS \
+  { \
+    cout << "TESTS ABORTED due to an ERROR or terminated" << endl; \
+    FINISH; \
+  }
+
+#define FAIL_AND_ABORT(_txt_) \
+  { \
+    FAIL(_txt_);  \
+    ABORT_TESTS; \
+  }
+
+#define TESTC_ABORT_ON_FAIL(cond) \
+  if (!TESTC(cond)) \
+  { \
+    ABORT_TESTS; \
+    break; \
+  }
+
+#define TESTC_DESCR_ABORT_ON_FAIL(cond, _descr_) \
+  if (!TESTC_DESCR(cond, _descr_)) \
+  { \
+    ABORT_TESTS; \
+    break; \
+  }
+
 #include <math.h>
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVUnsigned.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDouble.h>
-#include "../../../APLCommon/src/APL_Defines.h"
-#include "ARATest.h"
+#include "APLCommon/APL_Defines.h"
 #include "ARATestTask.h"
 #include "../src/ARAPropertyDefines.h"
 
@@ -56,9 +93,9 @@ using namespace std;
 
 string ARATestTask::m_taskName("ARATest");
 
-ARATestTask::ARATestTask(ARATest& tester) :
+ARATestTask::ARATestTask() :
   GCFTask((State)&ARATestTask::initial, m_taskName),
-  m_tester(tester),
+  Test("RegisterAccessTest"),
   m_answer(),
   m_RSPserver(),
   m_test_passCounter(0),
@@ -67,7 +104,7 @@ ARATestTask::ARATestTask(ARATest& tester) :
   m_extPropSetAP1RCUmaintenance(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance,TYPE_Maintenance,&m_answer),
   m_extPropSetAP1RCUalert(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert,TYPE_Alert,&m_answer),
   m_extPropSetStationMaintenance(SCOPE_PIC_Maintenance,TYPE_Maintenance,&m_answer),
-  m_extPropSetLDS(SCOPE_PAC_LDS,"TLOFAR_LDS",&m_answer),
+  m_extPropSetLDS(SCOPE_PAC_LDS,"TLOFAR_LDS",&m_answer)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
@@ -79,6 +116,12 @@ ARATestTask::~ARATestTask()
 {
 }
 
+void ARATestTask::run()
+{
+  start(); // make initial transition
+  GCFTask::run();
+}
+
 bool ARATestTask::isEnabled()
 {
   return (m_RSPserver.isConnected());
@@ -86,7 +129,7 @@ bool ARATestTask::isEnabled()
 
 GCFEvent::TResult ARATestTask::initial(GCFEvent& event, GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::initial (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("ARATestTask(%s)::initial (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -118,7 +161,7 @@ GCFEvent::TResult ARATestTask::initial(GCFEvent& event, GCFPortInterface& port)
       LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
       if (isEnabled())
       {
-        TRAN(ARATestTask::test1);
+        NEXT_TEST(1,"Monitor FPGA registers. Goal: load secondary properties");
       }
       break;
     }
@@ -146,7 +189,7 @@ GCFEvent::TResult ARATestTask::initial(GCFEvent& event, GCFPortInterface& port)
     }
       
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::initial, default",getName().c_str()));
+      LOG_DEBUG(formatString("ARATestTask(%s)::initial, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -159,7 +202,7 @@ GCFEvent::TResult ARATestTask::initial(GCFEvent& event, GCFPortInterface& port)
  */
 GCFEvent::TResult ARATestTask::test1(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test1 (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("ARATestTask(%s)::test1 (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -170,11 +213,9 @@ GCFEvent::TResult ARATestTask::test1(GCFEvent& event, GCFPortInterface& /*p*/)
     case F_ENTRY:
     {
       LOG_INFO("3.2.1.1: Monitor FPGA registers. Goal: load secondary properties");
-      bool testOk = (GCF_NO_ERROR==m_extPropSetAP1.requestValue(PROPNAME_STATUS));
-      m_tester._avttest(testOk);
-      if(!testOk)
+      if(!TESTC(GCF_NO_ERROR==m_extPropSetAP1.requestValue(PROPNAME_STATUS)));
       {
-        TRAN(ARATestTask::test2);
+        NEXT_TEST(2,"put 1 antenna in maintenance");
       }
       break;
     }
@@ -184,20 +225,19 @@ GCFEvent::TResult ARATestTask::test1(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      bool testOk = (strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1)!=0 &&
-                     strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0);
+      TESTC(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1)!=0 &&
+            strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0);
       // display the value:
       GCFPVUnsigned status;
       status.copy(*pPropAnswer->pValue);
       LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,status.getValue()));
 
-      m_tester._avttest(testOk);
-      TRAN(ARATestTask::test2);
+      NEXT_TEST(2,"put 1 antenna in maintenance");
       break;
     }
      
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test1, default",getName().c_str()));
+      LOG_DEBUG(formatString("ARATestTask(%s)::test1, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -210,7 +250,7 @@ GCFEvent::TResult ARATestTask::test1(GCFEvent& event, GCFPortInterface& /*p*/)
  */
 GCFEvent::TResult ARATestTask::test2(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test2 (%d)",getName().c_str(),event.signal));
+  LOG_DEBUG(formatString("ARATestTask(%s)::test2 (%d)",getName().c_str(),event.signal));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -223,11 +263,9 @@ GCFEvent::TResult ARATestTask::test2(GCFEvent& event, GCFPortInterface& /*p*/)
       LOG_INFO("3.2.2.1: put 1 antenna in maintenance");
       m_extPropSetAP1RCUmaintenance.subscribeProp(PROPNAME_STATUS);
       GCFPVUnsigned inMaintenance(1);
-      bool testOk = (GCF_NO_ERROR==m_extPropSetAP1RCUmaintenance.setValue(PROPNAME_STATUS,inMaintenance));
-      m_tester._avttest(testOk);
-      if(!testOk)
+      if(!TESTC(GCF_NO_ERROR==m_extPropSetAP1RCUmaintenance.setValue(PROPNAME_STATUS,inMaintenance)))
       {
-        TRAN(ARATestTask::test3);
+        NEXT_TEST(3,"put station in maintenance");
       }
       break;
     }
@@ -240,13 +278,12 @@ GCFEvent::TResult ARATestTask::test2(GCFEvent& event, GCFPortInterface& /*p*/)
       GCFPVUnsigned inMaintenance;
       inMaintenance.copy(*pPropAnswer->pValue);
       LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
-      bool testOk = (
+      TESTC(
         strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance)!=0 &&
         strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0 &&
         inMaintenance.getValue()!=0 );
       // display the value:
-      m_tester._avttest(testOk);
-      TRAN(ARATestTask::test3);
+      NEXT_TEST(3,"put station in maintenance");
       break;
     }
      
@@ -257,7 +294,7 @@ GCFEvent::TResult ARATestTask::test2(GCFEvent& event, GCFPortInterface& /*p*/)
     }
       
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test2, default",getName().c_str()));
+      LOG_DEBUG(formatString("ARATestTask(%s)::test2, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -270,7 +307,7 @@ GCFEvent::TResult ARATestTask::test2(GCFEvent& event, GCFPortInterface& /*p*/)
  */
 GCFEvent::TResult ARATestTask::test3(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test3 (%d)",getName().c_str(),event.signal));
+  LOG_DEBUG(formatString("ARATestTask(%s)::test3 (%d)",getName().c_str(),event.signal));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -283,11 +320,9 @@ GCFEvent::TResult ARATestTask::test3(GCFEvent& event, GCFPortInterface& /*p*/)
       LOG_INFO("3.2.2.2: put station in maintenance");
       m_extPropSetStationMaintenance.subscribeProp(PROPNAME_STATUS);
       GCFPVUnsigned inMaintenance(1);
-      bool testOk = (GCF_NO_ERROR==m_extPropSetStationMaintenance.setValue(PROPNAME_STATUS,inMaintenance));
-      m_tester._avttest(testOk);
-      if(!testOk)
+      if(!TESTC(GCF_NO_ERROR==m_extPropSetStationMaintenance.setValue(PROPNAME_STATUS,inMaintenance)))
       {
-        TRAN(ARATestTask::test4);
+        NEXT_TEST(4,"put station out of maintenance");
       }
       break;
     }
@@ -300,14 +335,13 @@ GCFEvent::TResult ARATestTask::test3(GCFEvent& event, GCFPortInterface& /*p*/)
       GCFPVUnsigned inMaintenance;
       inMaintenance.copy(*pPropAnswer->pValue);
       LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
-      bool testOk = (
+      TESTC(
         strstr(pPropAnswer->pPropName,SCOPE_PIC_Maintenance)!=0 &&
         strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0 &&
         inMaintenance.getValue()!=0 );
       // display the value:
 
-      m_tester._avttest(testOk);
-      TRAN(ARATestTask::test4);
+      NEXT_TEST(4,"put station out of maintenance");
       break;
     }
      
@@ -318,7 +352,7 @@ GCFEvent::TResult ARATestTask::test3(GCFEvent& event, GCFPortInterface& /*p*/)
     }
       
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test3, default",getName().c_str()));
+      LOG_DEBUG(formatString("ARATestTask(%s)::test3, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -331,7 +365,7 @@ GCFEvent::TResult ARATestTask::test3(GCFEvent& event, GCFPortInterface& /*p*/)
  */
 GCFEvent::TResult ARATestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test4 (%d)",getName().c_str(),event.signal));
+  LOG_DEBUG(formatString("ARATestTask(%s)::test4 (%d)",getName().c_str(),event.signal));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -344,11 +378,9 @@ GCFEvent::TResult ARATestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
       LOG_INFO("3.2.2.3: put station out of maintenance");
       m_extPropSetStationMaintenance.subscribeProp(PROPNAME_STATUS);
       GCFPVUnsigned inMaintenance(0);
-      bool testOk = (GCF_NO_ERROR==m_extPropSetStationMaintenance.setValue(PROPNAME_STATUS,inMaintenance));
-      m_tester._avttest(testOk);
-      if(!testOk)
+      if(!TESTC(GCF_NO_ERROR==m_extPropSetStationMaintenance.setValue(PROPNAME_STATUS,inMaintenance)))
       {
-        TRAN(ARATestTask::test5);
+        NEXT_TEST(5,"put antenna out of maintenance");
       }
       break;
     }
@@ -361,18 +393,15 @@ GCFEvent::TResult ARATestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
       GCFPVUnsigned inMaintenance;
       inMaintenance.copy(*pPropAnswer->pValue);
       LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
-      bool testOk = (
+      TESTC(
         strstr(pPropAnswer->pPropName,SCOPE_PIC_Maintenance)!=0 &&
         strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0 &&
         inMaintenance.getValue()==0 );
-      m_tester._avttest(testOk);
       
       // check maintenance status of antenna
-      testOk = (GCF_NO_ERROR==m_extPropSetAP1RCUmaintenance.requestValue(PROPNAME_STATUS));
-      m_tester._avttest(testOk);
-      if(!testOk)
+      if(!TESTC(GCF_NO_ERROR==m_extPropSetAP1RCUmaintenance.requestValue(PROPNAME_STATUS)))
       {
-        TRAN(ARATestTask::test5);
+        NEXT_TEST(5,"put antenna out of maintenance");
       }
       break;
     }
@@ -385,12 +414,11 @@ GCFEvent::TResult ARATestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
       GCFPVUnsigned inMaintenance;
       inMaintenance.copy(*pPropAnswer->pValue);
       LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
-      bool testOk = (
+      TESTC(
         strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance)!=0 &&
         strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0 &&
         inMaintenance.getValue()!=0 );
-      m_tester._avttest(testOk);
-      TRAN(ARATestTask::test5);
+      NEXT_TEST(5,"put antenna out of maintenance");
       break;
     }
 
@@ -401,7 +429,7 @@ GCFEvent::TResult ARATestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
     }
       
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test4, default",getName().c_str()));
+      LOG_DEBUG(formatString("ARATestTask(%s)::test4, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -414,7 +442,7 @@ GCFEvent::TResult ARATestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
  */
 GCFEvent::TResult ARATestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test5 (%d)",getName().c_str(),event.signal));
+  LOG_DEBUG(formatString("ARATestTask(%s)::test5 (%d)",getName().c_str(),event.signal));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -427,11 +455,9 @@ GCFEvent::TResult ARATestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
       LOG_INFO("3.2.2.4: put antenna out of maintenance");
       m_extPropSetAP1RCUmaintenance.subscribeProp(PROPNAME_STATUS);
       GCFPVUnsigned inMaintenance(0);
-      bool testOk = (GCF_NO_ERROR==m_extPropSetAP1RCUmaintenance.setValue(PROPNAME_STATUS,inMaintenance));
-      m_tester._avttest(testOk);
-      if(!testOk)
+      if(!TESTC(GCF_NO_ERROR==m_extPropSetAP1RCUmaintenance.setValue(PROPNAME_STATUS,inMaintenance)))
       {
-        TRAN(ARATestTask::test6);
+        NEXT_TEST(6,"schedule maintenance of 1 antenna");
       }
       break;
     }
@@ -444,12 +470,11 @@ GCFEvent::TResult ARATestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
       GCFPVUnsigned inMaintenance;
       inMaintenance.copy(*pPropAnswer->pValue);
       LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
-      bool testOk = (
+      TESTC(
         strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance)!=0 &&
         strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0 &&
         inMaintenance.getValue()==0 );
-      m_tester._avttest(testOk);
-      TRAN(ARATestTask::test6);
+      NEXT_TEST(6,"schedule maintenance of 1 antenna");
       break;
     }
      
@@ -460,7 +485,7 @@ GCFEvent::TResult ARATestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
     }
       
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test5, default",getName().c_str()));
+      LOG_DEBUG(formatString("ARATestTask(%s)::test5, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -473,7 +498,7 @@ GCFEvent::TResult ARATestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
  */
 GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test6 (%d)",getName().c_str(),event.signal));
+  LOG_DEBUG(formatString("ARATestTask(%s)::test6 (%d)",getName().c_str(),event.signal));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -489,7 +514,7 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
       m_test_passCounter=0;
       // MAINTENANCE <scheduleid>,<resource>,<starttime>,<stoptime>
       string cmd("MAINTENANCE 1,");
-      string resource(string(PROPERTY_AP1_RCU1)+string(","));
+      string resource(string("PIC_Rack1_SubRack1_Board1_AP1_RCU1")+string(","));
       
       // create time 10 seconds from now
       time_t timeNow = time(0);
@@ -503,11 +528,9 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
       string times(timesString);
       GCFPVString command(cmd+resource+times);
 
-      bool testOk = (GCF_NO_ERROR==m_extPropSetLDS.setValue(PROPNAME_COMMAND,command));
-      m_tester._avttest(testOk);
-      if(!testOk)
+      if(!TESTC(GCF_NO_ERROR==m_extPropSetLDS.setValue("command",command)))
       {
-        TRAN(ARATestTask::test7);
+        NEXT_TEST(7,"schedule maintenance of entire station");
       }
       printf("the resource will be put in maintenance in 10 seconds... Please wait\n");
       
@@ -528,11 +551,9 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
         if(m_test_passCounter==0) // first pass: in maintenance
         {
           {
-            bool testOk = (inMaintenance.getValue()!=0 );
-            m_tester._avttest(testOk);
-            if(!testOk)
+            if(!TESTC(inMaintenance.getValue()!=0))
             {
-              TRAN(ARATestTask::test7);
+              NEXT_TEST(7,"schedule maintenance of entire station");
             }
             else
             {
@@ -543,9 +564,8 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
         }
         else if(m_test_passCounter==1) // second pass: out of maintenance
         {
-          bool testOk = (inMaintenance.getValue()==0 );
-          m_tester._avttest(testOk);
-          TRAN(ARATestTask::test7);
+          TESTC(inMaintenance.getValue()==0);
+          NEXT_TEST(7,"schedule maintenance of entire station");
         }
       }
       break;
@@ -558,7 +578,7 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
     }
       
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test6, default",getName().c_str()));
+      LOG_DEBUG(formatString("ARATestTask(%s)::test6, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -570,7 +590,7 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
  */
 GCFEvent::TResult ARATestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test7 (%d)",getName().c_str(),event.signal));
+  LOG_DEBUG(formatString("ARATestTask(%s)::test7 (%d)",getName().c_str(),event.signal));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -586,7 +606,7 @@ GCFEvent::TResult ARATestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
       m_test_passCounter=0;
       // MAINTENANCE <scheduleid>,<resource>,<starttime>,<stoptime>
       string cmd("MAINTENANCE 2,");
-      string resource(string(PROPERTY_STATION_PIC)+string(","));
+      string resource(string("PIC")+string(","));
       // create time 10 seconds from now
       time_t timeNow = time(0);
       struct tm* utcTimeStruct = gmtime(&timeNow);
@@ -599,11 +619,9 @@ GCFEvent::TResult ARATestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
       string times(timesString);
       GCFPVString command(cmd+resource+times);
 
-      bool testOk = (GCF_NO_ERROR==m_extPropSetLDS.setValue(PROPNAME_COMMAND,command));
-      m_tester._avttest(testOk);
-      if(!testOk)
+      if(!TESTC(GCF_NO_ERROR==m_extPropSetLDS.setValue("command",command)))
       {
-        TRAN(ARATestTask::test8);
+        NEXT_TEST(8,"simulate board defect");
       }
       printf("the resource will be put in maintenance in 10 seconds... Please wait\n");
       
@@ -624,11 +642,9 @@ GCFEvent::TResult ARATestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
         if(m_test_passCounter==0) // first pass: in maintenance
         {
           {
-            bool testOk = (inMaintenance.getValue()!=0 );
-            m_tester._avttest(testOk);
-            if(!testOk)
+            if(!TESTC(inMaintenance.getValue()!=0))
             {
-              TRAN(ARATestTask::test8);
+              NEXT_TEST(8,"simulate board defect");
             }
             else
             {
@@ -639,9 +655,8 @@ GCFEvent::TResult ARATestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
         }
         else if(m_test_passCounter==1) // second pass: out of maintenance
         {
-          bool testOk = (inMaintenance.getValue()==0 );
-          m_tester._avttest(testOk);
-          TRAN(ARATestTask::test8);
+          TESTC(inMaintenance.getValue()==0);
+          NEXT_TEST(8,"simulate board defect");
         }
       }
       break;
@@ -654,7 +669,7 @@ GCFEvent::TResult ARATestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
     }
       
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test7, default",getName().c_str()));
+      LOG_DEBUG(formatString("ARATestTask(%s)::test7, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -666,7 +681,7 @@ GCFEvent::TResult ARATestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
  */
 GCFEvent::TResult ARATestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test8 (%d)",getName().c_str(),event.signal));
+  LOG_DEBUG(formatString("ARATestTask(%s)::test8 (%d)",getName().c_str(),event.signal));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -716,21 +731,20 @@ GCFEvent::TResult ARATestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
       if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert)!=0 &&
-         strstr(pPropAnswer->pPropName,PROPNAME_STATUS!=0)
+         strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0)
       {
         // check alert status
         GCFPVUnsigned status;
         status.copy(*pPropAnswer->pValue);
         LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,status.getValue()));
-        bool testOk = ( status.getValue()!=0 );
-        m_tester._avttest(testOk);
-        TRAN(ARATestTask::test9);
+        TESTC(status.getValue()!=0);
+        NEXT_TEST(9,"simulate board defect fixed");
       }
       break;
     }
      
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test8, default",getName().c_str()));
+      LOG_DEBUG(formatString("ARATestTask(%s)::test8, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -743,7 +757,7 @@ GCFEvent::TResult ARATestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
  */
 GCFEvent::TResult ARATestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test9 (%d)",getName().c_str(),event.signal));
+  LOG_DEBUG(formatString("ARATestTask(%s)::test9 (%d)",getName().c_str(),event.signal));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -793,15 +807,14 @@ GCFEvent::TResult ARATestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
       if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert)!=0 &&
-         strstr(pPropAnswer->pPropName,PROPNAME_STATUS!=0)
+         strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0)
       {
         // check alert status
         GCFPVUnsigned status;
         status.copy(*pPropAnswer->pValue);
         LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,status.getValue()));
-        bool testOk = ( status.getValue()==0 );
-        m_tester._avttest(testOk);
-        TRAN(ARATestTask::test10);
+        TESTC(status.getValue()==0);
+        NEXT_TEST(10,"put all rcu's in overflow");
       }
       break;
     }
@@ -813,7 +826,7 @@ GCFEvent::TResult ARATestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
     }
      
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test9, default",getName().c_str()));
+      LOG_DEBUG(formatString("ARATestTask(%s)::test9, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -827,7 +840,7 @@ GCFEvent::TResult ARATestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
  */
 GCFEvent::TResult ARATestTask::test10(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test10 (%d)",getName().c_str(),event.signal));
+  LOG_DEBUG(formatString("ARATestTask(%s)::test10 (%d)",getName().c_str(),event.signal));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -881,15 +894,14 @@ GCFEvent::TResult ARATestTask::test10(GCFEvent& event, GCFPortInterface& /*p*/)
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
       if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert)!=0 &&
-         strstr(pPropAnswer->pPropName,PROPNAME_STATUS!=0)
+         strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0)
       {
         // check alert status
         GCFPVUnsigned status;
         status.copy(*pPropAnswer->pValue);
         LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,status.getValue()));
-        bool testOk = ( status.getValue()==0 );
-        m_tester._avttest(testOk);
-        TRAN(ARATestTask::finished);
+        TESTC(status.getValue()==0);
+        FINISH
       }
       break;
     }
@@ -901,7 +913,7 @@ GCFEvent::TResult ARATestTask::test10(GCFEvent& event, GCFPortInterface& /*p*/)
     }
      
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test10, default",getName().c_str()));
+      LOG_DEBUG(formatString("ARATestTask(%s)::test10, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -916,7 +928,7 @@ GCFEvent::TResult ARATestTask::test10(GCFEvent& event, GCFPortInterface& /*p*/)
  */
 GCFEvent::TResult ARATestTask::finished(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::finished (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("ARATestTask(%s)::finished (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -929,7 +941,7 @@ GCFEvent::TResult ARATestTask::finished(GCFEvent& event, GCFPortInterface& /*p*/
       break;
 
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::finished, default",getName().c_str()));
+      LOG_DEBUG(formatString("ARATestTask(%s)::finished, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }

@@ -12,3 +12,5 @@ mac.apl.ara.N_APS_PER_BOARD=1
 mac.apl.ara.N_RCUS_PER_AP=2
 mac.apl.ara.STATUS_UPDATE_INTERVAL=1
 mac.apl.ara.STATISTICS_UPDATE_INTERVAL=1
+
+mac.RegisterAccess.pvss.cmdline=-proj MAC

@@ -8,7 +8,6 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen $<
 
 RegisterAccess_CPPFLAGS= \
-	-I$(top_srcdir)/APLCommon/src \
   -Wno-deprecated \
 	-fmessage-length=0 \
 	-fdiagnostics-show-location=once
@@ -19,27 +18,12 @@ RegisterAccess_SOURCES 		= \
 	ARAPhysicalModel.cc \
 	ARARegisterAccessTask.cc
 	
-RegisterAccess_LDADD		= \
-	$(top_builddir)/APLCommon/src/libaplcommon.la \
-	-lrsp \
-	-lgcfcommon
-	
-RegisterAccess_DEPENDENCIES	= \
-	$(top_builddir)/APLCommon/src/libaplcommon.la
-
-BUILT_SOURCES = \
-    log4cplus.properties
-
-EXTRA_DIST = \
-    log4cplus.properties
-
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
 configfiles_DATA= \
-	LogicalDeviceScheduler.conf \
+	RegisterAccess.conf \
 	log4cplus.properties
 	
-MAC_CONFIG = $(top_srcdir)/../../Config
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 	
