@@ -1,10 +1,22 @@
 <?xml version="1.0"?>
 
 <BeamServer>
+
+  <!-- "BeamServer_subband" property is used to select the
+       subband for which statistics are sent.
+       Allowable values are [0,256>. Any value outside
+       this range will be as if subband 0 was selected.
+       WRITEONLY -->
+
   <subband> 
   	<MACType>MACUnsigned</MACType> 
   	<MACDefault>0</MACDefault> 
  	</subband>
+
+  <!-- "BeamServer_power" is the complex value of the
+       power statistic.
+       READONLY -->
+
   <power>
      <re>
   	<MACType>MACDouble</MACType> 
@@ -13,7 +25,14 @@
         <MACType>MACDouble</MACType>
          </im>
      </power>
+
+  <!-- "BeamServer_seqnr" is the sequence number of the last
+       block from the FPGA whose statistics are included
+       in the power statistic property.
+       READONLY -->
+  
   <seqnr>
       <MACType>MACUnsigned</MACType>
       </seqnr>
+
 </BeamServer>
