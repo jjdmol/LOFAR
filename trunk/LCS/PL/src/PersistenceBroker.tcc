@@ -40,7 +40,9 @@ namespace LCS
     TPersistentObject<T> 
     PersistenceBroker::retrieve(const ObjectId& oid) const
     {
-      return TPersistentObject<T>::retrieve(oid);
+      TPersistentObject<T> tpo;
+      tpo.retrieve(oid);
+      return tpo;
     }
 
   } // namespace PL
