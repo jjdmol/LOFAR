@@ -81,6 +81,8 @@ using namespace std;
 using namespace LOFAR;
 using namespace blitz;
 
+static const uint8 g_SOFTPPS_COMMAND = 0x1; // for [CRR|CRB]_SOFTPPS
+
 RSPDriver::RSPDriver(string name)
   : GCFTask((State)&RSPDriver::initial, name), m_board(0), m_scheduler()
 {
@@ -319,21 +321,32 @@ void RSPDriver::addAllSyncActions()
       VersionsRead* versionread = new VersionsRead(m_board[boardid], boardid);
       m_scheduler.addSyncAction(versionread);
     }
-  }
 
-//
-// Example of the use of WriteReg to write waveform generator settings.
-//
-//     if (1 == GET_CONFIG("RSPDriver.WRITE_WG", i))
-//     {
-//       WriteReg* writereg = new WriteReg(m_board[boardid], boardid,
-// 					MEPHeader::DST_BLPS,
-// 					MEPHeader::WG,
-// 					MEPHeader::WGSETTINGS,
-// 					MEPHeader::WGSETTINGS_SIZE);
-//       writereg->setSrcAddress(&(Cache::getInstance().getBack().getWGSettings()()(0)));
-//       m_scheduler.addSyncAction(writereg);
-//     }
+    if (1 == GET_CONFIG("RSPDriver.SOFTPPS", i))
+    {
+      // add softpps for AP FPGA's
+      for (int i = GET_CONFIG("RS.N_BLPS", i) - 1; i >= 0; i--)
+      {
+	WriteReg* writereg = new WriteReg(m_board[boardid], boardid,
+					  MEPHeader::DST_BLP + i,
+					  MEPHeader::CRB,
+					  MEPHeader::CRB_SOFTPPS,
+					  MEPHeader::CRB_SOFTPPS_SIZE);
+	writereg->setSrcAddress((void*)&g_SOFTPPS_COMMAND);      
+	m_scheduler.addSyncAction(writereg);
+      }
+
+      // add softpps for BP FPGA
+      WriteReg* writereg = new WriteReg(m_board[boardid], boardid,
+					MEPHeader::DST_RSP,
+					MEPHeader::CRR,
+					MEPHeader::CRR_SOFTPPS,
+					MEPHeader::CRR_SOFTPPS_SIZE);
+      writereg->setSrcAddress((void*)&g_SOFTPPS_COMMAND);
+      m_scheduler.addSyncAction(writereg);
+    }
+  
+  } // for (boardid...)
 }
 
 void RSPDriver::openBoards()
@@ -623,27 +636,6 @@ GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
   uint8 count = 0;
-
-  if (1 == GET_CONFIG("RSPDriver.SOFTPPS", i))
-  {
-    // Send SoftPPS signal to all boards
-    EPACrrSoftppsEvent bp_pps;
-    bp_pps.hdr.m_fields = MEPHeader::CRR_SOFTPPS_HDR;
-
-    EPACrbSoftppsEvent ap_pps;
-    ap_pps.hdr.m_fields = MEPHeader::CRB_SOFTPPS_HDR;
-
-    for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i); i++)
-    {
-      for (int j = 0; j < GET_CONFIG("RS.N_BLPS", i); j++)
-      {
-	ap_pps.hdr.m_fields.addr.dstid = j;
-	m_board[i].send(ap_pps);
-      }
-      
-      m_board[i].send(bp_pps);
-    }
-  }
 	
   if (port.recv(&count, sizeof(uint8)) != 1)
   {

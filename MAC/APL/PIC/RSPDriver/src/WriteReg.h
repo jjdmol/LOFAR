@@ -39,7 +39,7 @@ namespace RSP
        */
       WriteReg(GCFPortInterface& board_port, int board_id,
 	       uint8 dstid, uint8 pid, uint8 regid, uint16 size,
-	       uint16 offset = 0);
+	       uint16 offset = 0, uint8 n_blps = 1);
 	  
       /* Destructor for WriteReg. */
       virtual ~WriteReg();

@@ -169,8 +169,8 @@ GCFEvent::TResult SetWG::enabled(GCFEvent& e, GCFPortInterface& port)
 	wg.settings()(0).freq = (uint16)(((m_freq * (1 << 16)) / 80.0e6) + 0.5);
 	wg.settings()(0).phase = m_phase;
 	wg.settings()(0).ampl = m_ampl;
-	wg.settings()(0).nof_samples = 0;
-	wg.settings()(0).mode = WGSettings::MODE_SINE;
+	wg.settings()(0).nof_samples = 512;
+	wg.settings()(0).mode = WGSettings::MODE_REPEAT;
 	wg.settings()(0)._pad = 0; // keep valgrind happy
       }
       else
@@ -178,7 +178,7 @@ GCFEvent::TResult SetWG::enabled(GCFEvent& e, GCFPortInterface& port)
 	wg.settings()(0).freq = 0;
 	wg.settings()(0).phase = 0;
 	wg.settings()(0).ampl = 0;
-	wg.settings()(0).nof_samples = 0;
+	wg.settings()(0).nof_samples = 512;
 	wg.settings()(0).mode = WGSettings::MODE_OFF;
 	wg.settings()(0)._pad = 0; // keep valgrind happy
       }
