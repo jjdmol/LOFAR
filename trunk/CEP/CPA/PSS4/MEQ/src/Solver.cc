@@ -37,11 +37,20 @@ InitDebugContext(Solver,"MeqSolver");
 
 //##ModelId=400E53550260
 Solver::Solver()
-: itsSolver  (1, LSQBase::REAL),
-  itsNumStep (1),
-  itsEpsilon (0),
-  itsParmGroup(AidParm)
-{}
+: itsSolver          (1, LSQBase::REAL),
+  itsNrEquations     (0),
+  itsDefNumIter      (1),
+  itsDefEpsilon      (1e-8),
+  itsDefUseSVD       (true),
+  itsDefClearMatrix  (true),
+  itsDefInvertMatrix (true),
+  itsDefSavePolcs    (true),
+  itsParmGroup       (AidParm)
+{
+  resetCur();
+  // Set this flag, so setCurState will be called in first getResult.
+  itsResetCur = true;
+}
 
 //##ModelId=400E53550261
 Solver::~Solver()
@@ -53,12 +62,21 @@ TypeId Solver::objectType() const
   return TpMeqSolver;
 }
 
-// no need for now
-// void Solver::init (DataRecord::Ref::Xfer &initrec, Forest* frst)
-// {
-//   Node::init(initrec,frst);
-// }
-// 
+void Solver::init (DataRecord::Ref::Xfer &initrec, Forest* frst)
+{
+  Node::init(initrec,frst);
+  if(! wstate()[FDefault].exists() ) {
+    wstate()[FDefault] <<= new DataRecord;
+  }
+  DataRecord& defRec = wstate()[FDefault].as_wr<DataRecord>();
+  defRec[FNumIter]      = itsDefNumIter;
+  defRec[FClearMatrix]  = itsDefClearMatrix;
+  defRec[FInvertMatrix] = itsDefInvertMatrix;
+  defRec[FSavePolcs]    = itsDefSavePolcs;
+  defRec[FEpsilon]      = itsDefEpsilon;
+  defRec[FUseSVD]       = itsDefUseSVD;
+  defRec[FParmGroup]    = itsParmGroup;
+}
 
 //##ModelId=400E53550265
 void Solver::checkChildren()
@@ -85,15 +103,44 @@ int Solver::pollChildren (std::vector<Result::Ref> &,
 void Solver::processCommands (const DataRecord &rec,const Request &request)
 {
   Node::processCommands(rec,request); // required
-  // this is just a stub for Ger. These field ought to be assigned to 
-  // data members, or something
-  bool clear  = rec[FClearMatrix].as<bool>(true); // default value is argument to as()
-  bool invert = rec[FInvertMatrix].as<bool>(true);
-  int  niter  = rec[FNumIter].as<int>(1);
-  bool save   = rec[FSavePolcs].as<bool>(false);
-  cdebug(1)<<"Solver rider: "<<clear<<","<<invert<<","<<niter<<","<<save<<endl;
-  // just something to think about: should Epsilon and useSVD be
-  // processed here as well? --OMS
+  // Get new current values (use default if not given).
+  itsCurNumIter   = rec[FNumIter].as<int>(itsDefNumIter);
+  if (itsCurNumIter < 1) itsCurNumIter = 1;
+  itsCurEpsilon   = rec[FEpsilon].as<double>(itsDefEpsilon);
+  itsCurUseSVD    = rec[FUseSVD].as<bool>(itsDefUseSVD);
+  itsCurSavePolcs = rec[FSavePolcs].as<bool>(itsDefSavePolcs);
+  bool clearGiven  = getStateField (itsCurClearMatrix, rec, FClearMatrix);
+  bool invertGiven = getStateField (itsCurInvertMatrix, rec, FInvertMatrix);
+  // Take care that these current values are used in getResult (if called).
+  itsResetCur = false;
+  cdebug(1)<<"Solver rider: "
+	   <<itsCurNumIter<<','
+	   <<itsCurEpsilon<<','
+	   <<itsCurUseSVD<<','
+	   <<clearGiven<<':'<<itsCurClearMatrix<<','
+	   <<invertGiven<<':'<<itsCurInvertMatrix<<','
+	   <<itsCurSavePolcs<<endl;
+  // Update wstate.
+  setCurState();
+  // getResult won't be called if the request has no cells.
+  // So process here if clear or invert has to be done.
+  if (! request.hasCells()) {
+    // Remove all spids if the matrix has to be cleared.
+    if (clearGiven && itsCurClearMatrix) {
+      itsSpids.clear();
+    } else if (invertGiven && itsCurInvertMatrix) {
+      Vector<double> solution(itsSpids.size());
+      DataRecord::Ref solRef;
+      DataRecord& solRec = solRef <<= new DataRecord;
+      std::vector<Result::Ref> child_results;
+      Result::Ref resref;
+      solve (solution, request, solRec, resref, child_results,
+	     false, true);
+    }
+    // Take care that current gets reset to default if no
+    // processCommands is called for the next getResult.
+    itsResetCur = true;
+  }
 }
 
 // Get the result for the given request.
@@ -102,27 +149,24 @@ int Solver::getResult (Result::Ref &resref,
                        const std::vector<Result::Ref> &,
                        const Request &request, bool newreq)
 {
+  // Reset current values if needed.
+  // That is possible if a getResult is done without a processCommands
+  // (thus without a rider in the request).
+  if (itsResetCur) {
+    resetCur();
+    setCurState();
+  }
   // Use 1 derivative by default, or 2 if specified in request
   int calcDeriv = std::max(request.calcDeriv(),1);
   // The result has 1 plane.
   Result& result = resref <<= new Result(request, 1);
   VellSet& vellset = result.setNewVellSet(0);
   DataRecord& metricsRec = result[FMetrics] <<= new DataRecord;
-  // Check if we have to restart the solver.
-  if (request.clearSolver()) {
-    itsSpids.clear();
-  }
   // Allocate variables needed for the solution.
   uint nspid;
   vector<int> spids;
   Vector<double> solution;
   Vector<double> allSolutions;
-  uint rank;
-  double fit;
-  double stddev;
-  double mu;
-  Matrix<double> covar;
-  Vector<double> errors;
   std::vector<Result::Ref> child_results(numChildren());
   // normalize the request ID to make sure iteration counters, etc,
   // are part of it
@@ -131,27 +175,19 @@ int Solver::getResult (Result::Ref &resref,
   Request::Ref reqref;
   Request & newReq = reqref <<= new Request(request.cells(),calcDeriv,rqid);
   newReq[FRider] <<= new DataRecord;
-  if( itsSpids.empty()  &&  state()[FSolvable].exists() )
-  {
+  if( state()[FSolvable].exists() ) {
     newReq[FRider][itsParmGroup] <<= wstate()[FSolvable].as_wp<DataRecord>();
     newReq.validateRider();
   } else {
     newReq[FRider][itsParmGroup] <<= new DataRecord;
   }
-  // Determine number of steps; default is as given to the solver.
-  int numStep = request.numSteps();
-  if (numStep < 0) {
-    numStep = itsNumStep;
-  }
-  // if numstep=0, accumulate equations, but do no solve.
-  bool doSolve = true;
-  if (numStep <= 0) {
-    numStep = 1;
-    doSolve = false;
+  // Take care that the matrix is cleared if needed.
+  if (itsCurClearMatrix) {
+      itsSpids.clear();
   }
   // Iterate as many times as needed.
   int step;
-  for (step=0; step<numStep; step++) 
+  for (step=0; step<itsCurNumIter; step++) 
   {
     // collect child results, using Node's standard method
     int retcode = Node::pollChildren (child_results, resref, newReq);
@@ -176,17 +212,20 @@ int Solver::getResult (Result::Ref &resref,
     spids = Function::findSpids (chvellsets);
     nspid = spids.size();
     // It first time, initialize the solver.
-    // Otherwise check if spids are still the same.
+    // Otherwise check if spids are still the same and initialize
+    // solver for the 2nd step and so.
     if (itsSpids.empty()) {
       AssertStr (nspid > 0,
 		 "No solvable parameters found in solver " << name());
       itsSolver.set (nspid, 1u, 0u);
+      itsNrEquations = 0;
       itsSpids = spids;
     } else {
       AssertStr (itsSpids == spids,
 		 "Different spids while solver is not restarted");
       if (step > 0) {
 	itsSolver.set (nspid, 1u, 0u);
+	itsNrEquations = 0;
       }
     }
     // Now feed the solver with equations from the results.
@@ -194,7 +233,6 @@ int Solver::getResult (Result::Ref &resref,
     vector<double> derivReal(nspid);
     vector<double> derivImag(nspid);
     // Loop through all results and fill the deriv vectors.
-    uint nreq = 0;
     for (uint i=0; i<chvellsets.size(); i++) {
       VellSet& chresult = *chvellsets[i];
       bool isReal = chresult.getValue().isReal();
@@ -223,7 +261,7 @@ int Solver::getResult (Result::Ref &resref,
             }
           }
           itsSolver.makeNorm (&derivReal[0], 1., values+j);
-          nreq++;
+	  itsNrEquations++;
         }
       } else {
         const dcomplex* values = chresult.getValue().complexStorage();
@@ -250,89 +288,110 @@ int Solver::getResult (Result::Ref &resref,
           }
           val = values[j].real();
           itsSolver.makeNorm (&derivReal[0], 1., &val);
-          nreq++;
+	  itsNrEquations++;
           val = values[j].imag();
           itsSolver.makeNorm (&derivImag[0], 1., &val);
-          nreq++;
+	  itsNrEquations++;
         }
       }
     }
     // Size the solutions vector.
-    allSolutions.resize ((step+1)*nspid, True);
-    if (!doSolve) {
-      allSolutions = 0.;
+    // Fill it with zeroes and stop if no invert will be done.
+    if (step == itsCurNumIter-1  &&  !itsCurInvertMatrix) {
+      if (step == 0) {
+	allSolutions.resize (nspid);
+	allSolutions = 0.;
+      }
       break;
     }
-    // Solve the equation.
-    AssertStr (nreq >= nspid, "Only " << nreq << " equations for " << nspid
-               << " solvable parameters in solver " << name());
-    // Keep all solutions in a vector.
+    // Keep all solutions in a singlevector.
+    allSolutions.resize ((step+1)*nspid, True);
     // The last part is the current solution.
     Vector<double> vec(allSolutions(Slice(step*nspid, nspid)));
     solution.reference (vec);
-    solution = 0;
-    // It looks as if LSQ has a bug so that solveLoop and getCovariance
-    // interact badly (maybe both doing an invert).
-    // So make a copy to separate them.
-    {
-      FitLSQ tmpSolver = itsSolver;
-      tmpSolver.getCovariance (covar);
-      tmpSolver.getErrors (errors);
-    }
-    // Make a copy of the solver for the actual solve.
-    // This is needed because the solver does in-place transformations.
-    FitLSQ solver = itsSolver;
-    bool solFlag = solver.solveLoop (fit, rank, solution,
-				     stddev, mu, itsUseSVD);
-    cdebug(4) << "Solution after:  " << solution << endl;
-    // Put the statistics in a record the result.
-    DataRecord& solrec = metricsRec[step] <<= new DataRecord;
-    solrec[FRank] = int(rank);
-    solrec[FFit] = fit;
-    //  solrec[FErrors] = errors;
-    //  solrec[FCoVar ] = covar; 
-    solrec[FFlag] = solFlag; 
-    solrec[FMu] = mu;
-    solrec[FStdDev] = stddev;
-    //  solrec[FChi   ] = itsSolver.getChi());
-    
-    // Put the solution in the rider:
-    //    [FRider][<parm_group>][CommandByNodeIndex][<parmid>]
-    // will contain a DataRecord for each parm 
-    DataRecord& dr1 = newReq[FRider][itsParmGroup].replace() <<= new DataRecord;
-    fillSolution(dr1[FCommandByNodeIndex] <<= new DataRecord, 
-                 spids,solution,false);
-    newReq.validateRider();
-//    // Lock all parm tables used.
-//    ParmTable::lockTables();
-    // update request ID
+    // Solve the equation.
+    DataRecord& solRec = metricsRec[step] <<= new DataRecord;
+    solve (solution, newReq, solRec, resref, child_results,
+	   false, step==itsCurNumIter-1);
     newReq.setId(nextIterationId(rqid));
     // Unlock all parm tables used.
     ParmTable::unlockTables();
   }
   // Put the spids in the result.
   vellset.setSpids(spids);
-  // Distribute the last solution.
-  if (doSolve) {
-    // Do that in an empty request.
-    Request & lastReq = reqref <<= new Request;
-    lastReq.setId(rqid);
-    lastReq[FRider] <<= new DataRecord;
-    DataRecord &dr1 = lastReq[FRider][itsParmGroup] <<= new DataRecord;
-    fillSolution(dr1[FCommandByNodeIndex] <<= new DataRecord, 
-		 spids,solution,true);
-    // Lock all parm tables used.
-    ParmTable::lockTables();
-    // Update the parms.
-    lastReq.validateRider();
-    Node::pollChildren (child_results, resref, lastReq);
-    // Unlock all parm tables used.
-    ParmTable::unlockTables();
-  }
+  // Distribute the last solution (if there is one).
   // result depends on domain, and has -- most likely -- been updated
   double* sol = vellset.setReal(nspid, step).data();
   memcpy (sol, allSolutions.data(), nspid*step*sizeof(double));
   return RES_DEP_DOMAIN|RES_UPDATED;
+}
+
+void Solver::solve (Vector<double>& solution, const Request& request,
+		    DataRecord& solRec, Result::Ref& resref,
+		    std::vector<Result::Ref>& child_results,
+		    bool savePolcs, bool lastIter)
+{
+  // Do some checks and initialize.
+  int nspid = itsSpids.size();
+  Assert (int(solution.nelements()) == nspid);
+  AssertStr (itsNrEquations >= nspid, "Only " << itsNrEquations
+	     << " equations for "
+	     << nspid << " solvable parameters in solver " << name());
+  solution = 0;
+  Request::Ref reqref;
+  Request* req = const_cast<Request*>(&request);
+  if (lastIter) {
+    // Do the last solve via an empty request.
+    Request & lastReq = reqref <<= new Request;
+    req = &lastReq;
+    lastReq.setId(request.id());
+    lastReq[FRider] <<= new DataRecord;
+  }
+  // It looks as if in LSQ solveLoop and getCovariance
+  // interact badly (maybe both doing an invert).
+  // So make a copy to separate them.
+  uint rank;
+  double fit;
+  double stddev;
+  double mu;
+  Matrix<double> covar;
+  Vector<double> errors;
+  {
+    FitLSQ tmpSolver = itsSolver;
+    tmpSolver.getCovariance (covar);
+    tmpSolver.getErrors (errors);
+  }
+  // Make a copy of the solver for the actual solve.
+  // This is needed because the solver does in-place transformations.
+  FitLSQ solver = itsSolver;
+  bool solFlag = solver.solveLoop (fit, rank, solution,
+				   stddev, mu, itsCurUseSVD);
+  cdebug(4) << "Solution after:  " << solution << endl;
+  // Put the statistics in a record the result.
+  solRec[FRank] = int(rank);
+  solRec[FFit] = fit;
+  //  solRec[FErrors] = errors;
+  //  solRec[FCoVar ] = covar; 
+  solRec[FFlag] = solFlag; 
+  solRec[FMu] = mu;
+  solRec[FStdDev] = stddev;
+  //  solRec[FChi   ] = itsSolver.getChi());
+  
+  // Put the solution in the rider:
+  //    [FRider][<parm_group>][CommandByNodeIndex][<parmid>]
+  // will contain a DataRecord for each parm 
+  DataRecord& dr1 = (*req)[FRider][itsParmGroup].replace() <<= new DataRecord;
+  fillSolution (dr1[FCommandByNodeIndex] <<= new DataRecord, 
+		itsSpids, solution, savePolcs);
+  // Lock all parm tables used.
+  ParmTable::lockTables();
+  // Update the parms.
+  req->validateRider();
+  if (lastIter) {
+    Node::pollChildren (child_results, resref, *req);
+  }
+  // Unlock all parm tables used.
+  ParmTable::unlockTables();
 }
 
 //##ModelId=400E53550276
@@ -366,10 +425,39 @@ void Solver::fillSolution (DataRecord& rec, const vector<int>& spids,
 void Solver::setStateImpl (DataRecord& newst,bool initializing)
 {
   Node::setStateImpl(newst,initializing);
-  getStateField(itsNumStep,newst,FNumSteps);
-  getStateField(itsEpsilon,newst,FEpsilon);
-  getStateField(itsUseSVD,newst,FUseSVD);
-  getStateField(itsParmGroup,newst,FParmGroup);
+  if( newst[FDefault].exists() )
+  {
+    const DataRecord &def = newst[FDefault];
+    getStateField(itsDefNumIter,def,FNumIter);
+    if (itsDefNumIter < 1) itsDefNumIter = 1;
+    getStateField(itsDefClearMatrix,def,FClearMatrix);
+    getStateField(itsDefInvertMatrix,def,FInvertMatrix);
+    getStateField(itsDefSavePolcs,def,FSavePolcs);
+    getStateField(itsDefEpsilon,def,FEpsilon);
+    getStateField(itsDefUseSVD,def,FUseSVD);
+    getStateField(itsParmGroup,def,FParmGroup);
+  }
+}
+
+void Solver::resetCur()
+{
+  itsCurNumIter      = itsDefNumIter;
+  itsCurInvertMatrix = itsDefInvertMatrix;
+  itsCurClearMatrix  = itsDefClearMatrix;
+  itsCurSavePolcs    = itsDefSavePolcs;
+  itsCurEpsilon      = itsDefEpsilon;
+  itsCurUseSVD       = itsDefUseSVD;
+  itsResetCur = false;
+}
+
+void Solver::setCurState()
+{
+  wstate()[FNumIter]      = itsCurNumIter;
+  wstate()[FClearMatrix]  = itsCurClearMatrix;
+  wstate()[FInvertMatrix] = itsCurInvertMatrix;
+  wstate()[FSavePolcs]    = itsCurSavePolcs;
+  wstate()[FEpsilon]      = itsCurEpsilon;
+  wstate()[FUseSVD]       = itsCurUseSVD;
 }
 
 

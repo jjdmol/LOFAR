@@ -86,8 +86,7 @@ public:
   // called to process request rider commands, if any.
   virtual void processCommands (const DataRecord &rec,const Request &req);
 
-// no need for now
-//  virtual void init (DataRecord::Ref::Xfer& initrec, Forest* frst);
+  virtual void init (DataRecord::Ref::Xfer& initrec, Forest* frst);
   
   LocalDebugContext;
 
@@ -109,6 +108,22 @@ protected:
                          const Request &req,bool newreq);
 
 private:
+  // Do a solution.
+  // If it is the last iteration, the solution is put in a new request
+  // and 'sent' to the children to update the parms. Optionally the parm
+  // tables are updated too.
+  // <br> If it is not the last iteration, the solution is put in the
+  // given request, so a next iteration can first update the parms.
+  void solve (Vector<double>& solution, const Request& request,
+	      DataRecord& solRec, Result::Ref& resref,
+	      std::vector<Result::Ref>& child_results,
+	      bool savePolcs, bool lastIter);
+
+  // Result current values to default values.
+  void resetCur();
+  // Put current values in wstate.
+  void setCurState();
+
   // Fill the solution (per parmid) in the DataRecord.
     //##ModelId=400E53550276
   void fillSolution (DataRecord& rec, const vector<int>& spids,
@@ -120,12 +135,23 @@ private:
   
     //##ModelId=400E5355025A
   FitLSQ          itsSolver;
+  int             itsNrEquations;
     //##ModelId=400E5355025C
-  int             itsNumStep;
+  int             itsDefNumIter;
     //##ModelId=400E5355025D
-  double          itsEpsilon;
+  double          itsDefEpsilon;
     //##ModelId=400E5355025F
-  bool            itsUseSVD;
+  bool            itsDefUseSVD;
+  bool            itsDefClearMatrix;
+  bool            itsDefInvertMatrix;
+  bool            itsDefSavePolcs;
+  int             itsCurNumIter;
+  double          itsCurEpsilon;
+  bool            itsCurUseSVD;
+  bool            itsCurClearMatrix;
+  bool            itsCurInvertMatrix;
+  bool            itsCurSavePolcs;
+  bool            itsResetCur;
   vector<int>     itsSpids;
   
   // solvable parm group for this solver ("Parm" by default)
