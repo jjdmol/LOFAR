@@ -36,10 +36,10 @@ class UVPAxis
                                    double axisMax);
 
   // axis = (world - itsOffset)/itsScale
-  double      worldToAxis(double world) const;
+  inline double      worldToAxis(double world) const;
 
   // world = itsOffset + itsScale*axis;
-  double      axisToWorld(double axis) const;
+  inline double      axisToWorld(double axis) const;
 
   
   double      getScale() const;
@@ -58,5 +58,31 @@ class UVPAxis
   std::string itsUnit;
 };
 
+
+
+
+
+//====================>>>  UVPAxis::worldToAxis  <<<====================
+
+inline double UVPAxis::worldToAxis(double world) const
+{
+#if(DEBUG_MODE)
+  assert(itsScale != 0);
+#endif
+
+  return (world - itsOffset)/itsScale;
+}
+
+
+
+
+
+
+//====================>>>  UVPAxis::axisToWorld  <<<====================
+
+inline double UVPAxis::axisToWorld(double axis) const
+{
+  return itsOffset + axis*itsScale;
+}
 
 #endif // UVPAXIS_H

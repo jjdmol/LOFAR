@@ -67,32 +67,6 @@ void UVPAxis::calcTransferFunction(double worldMin,
 
 
 
-//====================>>>  UVPAxis::worldToAxis  <<<====================
-
-double UVPAxis::worldToAxis(double world) const
-{
-#if(DEBUG_MODE)
-  assert(itsScale != 0);
-#endif
-
-  return (world - itsOffset)/itsScale;
-}
-
-
-
-
-
-
-//====================>>>  UVPAxis::axisToWorld  <<<====================
-
-double UVPAxis::axisToWorld(double axis) const
-{
-  return itsOffset + axis*itsScale;
-}
-
-
-
-
 
 //====================>>>  UVPAxis::getScale  <<<====================
 
