@@ -84,7 +84,6 @@ EPAStub_LDADD = \
 	-lsuite
 
 BUILT_SOURCES = \
-	log4cplus.properties \
 	abstest.ns \
 	abstest.top \
 	AVTStub.conf \
