@@ -120,6 +120,19 @@ TPOcloseNamespace()
 }
 
 #
+# TPOcloseSrcFile class
+#
+TPOcloseSrcFile()
+{
+	Class=$1
+
+	echo "template class TPersistentObject<${Class}>;"
+	echo ""
+
+	TPOcloseNamespace
+}
+
+#
 # TPOaddGenericStructures
 #
 # All TPO types have one thing in common: the ObjectId field. Many database
@@ -159,7 +172,7 @@ TPOaddGenericStructures()
 	echo ""
 	echo "struct Generic_DTL_PO_info {"
 	echo "	ObjectId::oid_t		Oid;"
-	echo "	ObjectId::oid_t		Parent;"
+	echo "	ObjectId::oid_t		Owner;"
 	echo "	SQLTimeStamp		TimeStamp;"
 	echo "};"
 	echo ""
@@ -167,7 +180,7 @@ TPOaddGenericStructures()
 	echo "public:"
 	echo "	void operator()(BoundIOs& cols, Generic_DTL_PO_info& rowbuf) {"
 	echo "		cols[\"ObjId\"]		== rowbuf.Oid;"
-	echo "		cols[\"Parent\"]	== rowbuf.Parent;"
+	echo "		cols[\"Owner\"]	== rowbuf.Owner;"
 	echo "		cols[\"ModTime\"]	== rowbuf.TimeStamp;"
 	echo "	}"
 	echo "};"
@@ -192,17 +205,17 @@ TPOaddRoutineRedefinitions()
 	do
 		typeset -u theAction=${theAction}
 		case $theAction in
-		I)	FunctionName="insert"		;;
-		U)	FunctionName="update"		;;
-		D)	FunctionName="erase"		;;
-		S)	FunctionName="search"		;;
+		I)	FunctionName="doInsert"		;;
+		U)	FunctionName="doUpdate"		;;
+		D)	FunctionName="doErase"		;;
+		S)	FunctionName="doRetrieve"	;;
 		esac
 
 		if [ ${ROLLBACKCODE} = true ]; then
 			echo "void TPersistentObject<${Class}>::${FunctionName}(const long			theState,"
-			echo "								const ObjectId&	theParent);"
+			echo "								const ObjectId&	theOwner);"
 		else
-			echo "void TPersistentObject<${Class}>::${FunctionName}(const ObjectId&	theParent);"
+			echo "void TPersistentObject<${Class}>::${FunctionName}(const ObjectId&	theOwner);"
 		fi
 	done
 
@@ -223,11 +236,11 @@ TPOaddClassRedefinition()
 	echo ""
 	echo "// Redefine the TPersistentObject class for ${Class}."
 	echo "template<>"
-	echo "class TPersistentObject<${Class}> : public PersistentObject"
+	echo "class TPersistentObject<${Class}> : public TPersistentObjectBase<${Class}>"
 	echo "{"
 	echo "public:"
 
-	echo "	explicit TPersistentObject(${Class}&	t) : itsObjectPtr(&t)"
+	echo "	explicit TPersistentObject(${Class}&	t) : TPersistentObjectBase<${Class}>(t)"
 	# This is where it all about:
 	grep ^$Class ${TMPFILE} | grep -v "::" | while read line
 	do
@@ -237,18 +250,12 @@ TPOaddClassRedefinition()
 	echo "{}"
 
 	echo "	~TPersistentObject() {};"
-	echo "	virtual void insert  (const PersistenceBroker* b);"
-	echo "	virtual void update  (const PersistenceBroker* b);"
-	echo "	virtual void erase   (const PersistenceBroker* b);"
-	echo "	virtual void retrieve(const PersistenceBroker* b);"
-	echo "	virtual void insert  (const ObjectId& poid);"
-	echo "	virtual void update  (const ObjectId& poid);"
-	echo "	virtual void erase   (const ObjectId& poid);"
-	echo "	virtual void retrieve(const ObjectId& poid);"
-	echo "	${Class}&	value() { return *itsObjectPtr; };"
+	echo "protected:"
+	echo "	virtual void doInsert  (const ObjectId& poid);"
+	echo "	virtual void doUpdate  (const ObjectId& poid);"
+	echo "	virtual void doErase   (const ObjectId& poid);"
+	echo "	virtual void doRetrieve(const ObjectId& poid);"
 	echo "private:"
-	echo "	${Class}*	itsObjectPtr;"
-	echo "	SmartPtr	itsObjectSharedPtr;"
 
 	# This is where it all about:
 	grep ^$Class ${TMPFILE} | grep -v "::" | while read line
@@ -258,7 +265,6 @@ TPOaddClassRedefinition()
 		echo "	TPersistentObject<${MemberType}>	its${MemberName}TPO;"
 	done
 
-#	echo "	struct DBRep {};"
 	echo "	void toDatabaseRep(${Class}_DBRep& dest) const;"
 	echo "	void fromDatabaseRep(const ${Class}_DBRep &org);"
 	echo "};"
@@ -289,7 +295,7 @@ TPOaddDTLstruct()
 
 	# First add the PO fields, this is always the same
 	echo "	ObjectId::oid_t		Oid;"
-	echo "	ObjectId::oid_t		Parent;"
+	echo "	ObjectId::oid_t		Owner;"
 	echo "	SQLTimeStamp		TimeStamp;"
 
 	# add all 'basic' members of the DataObj
@@ -325,7 +331,7 @@ TPOaddBCA()
 	echo "	void operator()(BoundIOs& cols, ${Class}_DBRep& rowbuf) {"
 	# First add the PO fields, this is always the same
 	echo "		cols[\"ObjID\"]		== rowbuf.Oid;"
-	echo "		cols[\"Parent\"]	== rowbuf.Parent;"
+	echo "		cols[\"Owner\"]	== rowbuf.Owner;"
 	echo "		cols[\"ModTime\"]	== rowbuf.TimeStamp;"
 
 	# add all 'basic' members of the class
@@ -362,8 +368,8 @@ TPOaddToDatabaseRep()
 	echo "{"
 	echo "	// copy info of the ${Class} to the ${Class}_DBRep class"
 	echo "	// First copy the PO part"
-	echo "	dest.Oid		= ObjectId(itsOid).get();		// 'this' is const"
-	echo "	dest.Parent		= ObjectId(itsParent).get();	// 'this' is const"
+	echo "	dest.Oid		= itsOid.get();"
+	echo "	dest.Owner		= itsOwnerOid.get();"
 	echo "	dest.TimeStamp	= itsTimeStamp;"
 	echo ""
 	echo "	// Finally copy the info from ${Class}"
@@ -400,7 +406,7 @@ TPOaddFromDatabaseRep()
 	echo "	// copy info of the ${Class} to the ${Class}_DBRep class"
 	echo "	// First copy the PO part"
 	echo "	itsOid.set   (org.Oid);"
-	echo "	itsParent.set(org.Parent);"
+	echo "	itsOwnerOid.set(org.Owner);"
 	echo "	itsTimeStamp	= SQLTimeStamp(org.TimeStamp);"
 	echo ""
 	echo "	// Finally copy the info from ${Class}"
@@ -429,10 +435,13 @@ TPOcodeCopyToLocal()
 	echo "	${Class}_DBRep		rec;"
 	echo "	toDatabaseRep (rec);"
 
+	echo "	rec.Owner		= theOwner.get();	// theOwner is const"
 	if [ "${Action}" == "insert" ]; then
 		echo "	rec.Oid			= itsOid.get();		// get current or new ID"
+		echo "	// Note: TimeStamp must contain a legal value for ODBC"
+		echo "	const TIMESTAMP_STRUCT someDate = { 2001, 1, 1, 1, 1, 1, 0 };"
+		echo "	rec.TimeStamp = someDate;"
 	fi
-	echo "	rec.Parent		= ObjectId(theParent).get();	// theParent is const"
 }
 
 #
@@ -446,12 +455,10 @@ TPOcodeHandleAllSubclasses()
 {
 	Class=$1
 	Action=$2
-	if [ "${Action}" == "erase" ]; then
+	if [ "${Action}" == "Erase" ]; then
 		ErrName="Delete"
 	else
-		typeset -u CapAction=${Action}
-		ErrName=`echo -n ${CapAction} | cut -c1`
-		ErrName=${ErrName}`echo -n ${Action} | cut -c2-`
+		ErrName=${Action}
 	fi
 
 	# Grep all subclasses of this class.
@@ -460,7 +467,7 @@ TPOcodeHandleAllSubclasses()
 	GrepOk=`echo $?`
 	
 	if [ ${GrepOk} != "0" ]; then			# nothing found?
-		echo "	// No subclasses to ${Action}"
+		echo "	// No subclasses"
 		echo ""
 		echo "	// Update the PO members to reflect the database"
 		return
@@ -474,13 +481,13 @@ TPOcodeHandleAllSubclasses()
 	grep ^$Class ${TMPFILE} | grep -v "::" | while read line
 	do
 		Member=`echo $line | cut -d':' -f4`
-		echo "		its${Member}TPO.${Action}(itsOid);"
+		echo "		its${Member}TPO.do${Action}(itsOid);"
 	done
 
 	# Close the try and build the catch
 	echo "	}"
 	echo "	catch (${ErrName}Error&	errObj) {"
-	if [ "${Action}" == "erase" ]; then
+	if [ "${Action}" == "Erase" ]; then
 		echo "		DBConnection::GetDefaultConnection().RollbackAll();"
 	fi
 	grep ^$Class ${TMPFILE} | grep -v "::" | while read line
@@ -532,12 +539,12 @@ TPOcodeUpdateCurrentState()
 
 	if [ "${Action}" == "erase" ]; then
 		echo "	itsOid.set   (0);"
-		echo "	itsParent.set(0);"
+		echo "	itsOwnerOid.set(0);"
 		echo "//REO	itsTimeStamp  = 0;"
 		echo "	itsIsPersistent = false;"
 	else
 		echo "	itsOid.set   (rec.Oid);"
-		echo "	itsParent.set(rec.Parent);"
+		echo "	itsOwnerOid.set(rec.Owner);"
 		echo "	itsTimeStamp  = SQLTimeStamp(rec.TimeStamp);"
 		echo "	itsIsPersistent = true;"
 	fi
@@ -562,11 +569,11 @@ TPOaddInsertRoutine()
 	if [ ${RedefineTPOclass} == false ]; then
 		echo "template<>"
 	fi
-	echo -n "void TPersistentObject<${Class}>::insert("
+	echo -n "void TPersistentObject<${Class}>::doInsert("
 	if [ ${ROLLBACKCODE} == true ]; then
 		echo "const long			theState,\n							"
 	fi
-	echo "const ObjectId&	theParent) {"
+	echo "const ObjectId&	theOwner) {"
 	echo "	DBView<${Class}_DBRep>	insView(\"${Table}\", ${Class}_DTL_BCA());"
 	echo "	DBView<${Class}_DBRep>::insert_iterator	insIter = insView;"
 	echo ""
@@ -583,7 +590,7 @@ TPOaddInsertRoutine()
 	echo "	*insIter = rec;"
 	echo ""
 
-	TPOcodeHandleAllSubclasses ${Class} insert
+	TPOcodeHandleAllSubclasses ${Class} Insert
 
 	TPOcodeGetDBTimestamp 
 
@@ -613,11 +620,11 @@ TPOaddUpdateRoutine()
 	if [ ${RedefineTPOclass} == false ]; then
 		echo "template<>"
 	fi
-	echo -n "void TPersistentObject<${Class}>::update("
+	echo -n "void TPersistentObject<${Class}>::doUpdate("
 	if [ ${ROLLBACKCODE} == true ]; then
 		echo "const long			theState,\n							"
 	fi
-	echo "const ObjectId&	theParent) {"
+	echo "const ObjectId&	theOwner) {"
 	echo "	DBView<${Class}_DBRep, Generic_DTL_OID>"
 	echo "			updView(\"${Table}\", ${Class}_DTL_BCA(),"
 	echo "			\"WHERE ObjId=(?)\", Generic_OID_BPA());"
@@ -640,7 +647,7 @@ TPOaddUpdateRoutine()
 	echo "	*updIter = rec;"
 	echo ""
 
-	TPOcodeHandleAllSubclasses ${Class} update
+	TPOcodeHandleAllSubclasses ${Class} Update
 
 	if [ ${ROLLBACKCODE} == true ]; then
 		TPOcodeUpdateCurrentState update
@@ -668,11 +675,11 @@ TPOaddDeleteRoutine()
 	if [ ${RedefineTPOclass} == false ]; then
 		echo "template<>"
 	fi
-	echo -n "void TPersistentObject<${Class}>::erase("
+	echo -n "void TPersistentObject<${Class}>::doErase("
 	if [ ${ROLLBACKCODE} == true ]; then
 		echo "const long			theState,\n							"
 	fi
-	echo "const ObjectId&	theParent) {"
+	echo "const ObjectId&	theOwner) {"
 	echo "	DBView<Generic_DTL_OID>"
 	echo "			delView(\"${Table}\", Generic_OID_BCA());"
 	echo "	DBView<Generic_DTL_OID>::delete_iterator"
@@ -692,10 +699,52 @@ TPOaddDeleteRoutine()
 	echo "	*delIter = rec;"
 	echo ""
 
-	TPOcodeHandleAllSubclasses ${Class} erase
+	TPOcodeHandleAllSubclasses ${Class} Erase
 
 	if [ ${ROLLBACKCODE} == true ]; then
 		TPOcodeUpdateCurrentState erase
+	fi
+
+	echo "}\n"
+}
+
+#
+# TPOaddSearchRoutine class 
+#
+# Adds code to retrieve an instance of the data-object to the database,
+# including its subclasses
+#
+TPOaddSearchRoutine()
+{
+	Class=$1
+	Table=`grep ^$Class ${TMPFILE} | head -1 | cut -d":" -f2`
+
+	# generate a DBview with table and standard BCA
+	echo "//"
+	echo "// Routine to retrieve this ${Class} object from the database."
+	echo "//"
+	if [ ${RedefineTPOclass} == false ]; then
+		echo "template<>"
+	fi
+	echo -n "void TPersistentObject<${Class}>::doRetrieve("
+	if [ ${ROLLBACKCODE} == true ]; then
+		echo "const long			theState,\n							"
+	fi
+	echo "const ObjectId&	theOwner) {"
+	echo "	DBView<${Class}_DBRep>	selView(\"${Table}\", ${Class}_DTL_BCA());"
+	echo "	DBView<${Class}_DBRep>::select_iterator	selIter = selView;"
+	echo ""
+
+	if [ ${ROLLBACKCODE} == true ]; then
+		echo "	saveState(theState);		// remember values for rollback"
+		echo ""
+	fi
+
+	echo "	// @@@ TO BE DEFINED @@@"
+	echo ""
+
+	if [ ${ROLLBACKCODE} == true ]; then
+		TPOcodeUpdateCurrentState insert
 	fi
 
 	echo "}\n"
@@ -739,6 +788,12 @@ initSrcfile()
 		echo "#include \"LCS_base.h\""
 		echo "#include \"${Class}.h\""
 		echo "#include \"${FILEPREFIX}${Class}.h\""
+		# Grep all subclasses of this class and include those headerfiles also.
+		grep ^${Class} ${TMPFILE} | grep -v "::" | while read line
+		do
+			subClass=`echo $line | cut -d':' -f6`
+			echo "#include \"${FILEPREFIX}${subClass}.h\""
+		done
 		echo ""
 		echo "using namespace dtl;"
 		echo ""
@@ -767,12 +822,16 @@ initSrcfile()
 }
 
 #
-# closeHeaderfile
+# closeHeaderfile class
 #
 # write the last '#endif' to the headerfile
 #
 closeHeaderfile()
 {
+	Class=$1
+
+	echo "#include \"${FILEPREFIX}${Class}.tcc\"	// Include template code"
+	echo ""
 	echo "#endif"
 }
 
@@ -909,6 +968,7 @@ esac
 ROLLBACKCODE=false				# whether or not generate rollback code
 LCSBASEFILE="LCS_base.h"
 TMPFILE=map.genDTL.$$
+ALLCLASSESTMPFILE=tcc.genDTL.$$
 
 # convert the human readable format of the mapfile into something
 # more convenient for shell-programming
@@ -945,14 +1005,10 @@ do
 			initSrcfile "cc" ${class}  > ${SOURCEFILE}
 			RECaddBCA 	     ${class}  >>${SOURCEFILE}
 			;;
-		P) 	# if this is not the first class, close the headerfile
-			# of the last class
-			if [ "${PrevClass}" != "Unknown" ]; then
-				TPOcloseNamespace	>>${SOURCEFILE}
-			fi
-			# start a new headerfile and sourcefile
-			SOURCEFILE=${FILEPREFIX}${class}.cc
+		P) 	# start a new headerfile and sourcefile
+			SOURCEFILE=${FILEPREFIX}${class}.tcc
 			HEADERFILE=${FILEPREFIX}${class}.h
+			echo ${class}	 							>>${ALLCLASSESTMPFILE}
 			initSrcfile "cc"				${class} 	> ${SOURCEFILE}
 			TPOopenNamespace							>>${SOURCEFILE}
 			TPOaddBCA 						${class} 	>>${SOURCEFILE}
@@ -967,7 +1023,7 @@ do
 			#	TPOaddRoutineRedefinitions	${class} 	>>${HEADERFILE}
 			fi
 			TPOcloseNamespace							>>${HEADERFILE}
-			closeHeaderfile								>>${HEADERFILE}
+			closeHeaderfile					${class}	>>${HEADERFILE}
 			;;
 		esac
 		PrevClass=${class}
@@ -999,5 +1055,11 @@ do
 	esac
 done
 
+if [ "${LAYER}" == "P" ]; then
+	cat ${ALLCLASSESTMPFILE} | while read Class
+	do
+		TPOcloseSrcFile	${Class} >>${FILEPREFIX}${Class}.tcc
+	done
+fi
 
-rm -f ${TMPFILE}
+rm -f ${TMPFILE} ${ALLCCFILESTMPFILE}
