@@ -763,13 +763,14 @@ static void addParm(MeqParm* parm, GlishRecord* rec)
 
 #if 0
 
+  // WHAT SHOULD THE VALUE OF THE nrx PARAMETER FOR MeqRequest BE?
+
   //
   // In order to fill in the result for the current domain
   // we need some specification of the current domain.
   // The domain should be set in the nextTimeInterval method.
   //
-
-  MeqRequest mr(MeqDomain(0,1,0,1), 1, 1);
+  MeqRequest mr(itsSolveDomain, ????, itsNrChan, itsNrScid);
   MeqMatrix mm = parm->getResult(mr).getValue();	    
   if (mm.isDouble()) rec->add("result", mm.getDoubleMatrix());
   else               rec->add("result", mm.getDComplexMatrix());

@@ -43,74 +43,94 @@
 #include <MNS/ParmTable.h>
 #include <GSM/SkyModel.h>
 
-//
-// Class to perform self-calibration on a MeasurementSet using the
-// MeqTree approach.
-//
+/*!
+ * Class to perform self-calibration on a MeasurementSet using the
+ * MeqTree approach.
+ */
 class MeqCalibrater : public ApplicationObject
 {
 
 public:
-  //
-  // Create MeqCalibrater object for a specific
-  // MeaurementSet, MEQ model (with associated MEP database) and skymodel
-  // for the specified spectral window.
-  // 
+  //! Constructor
+  /*!
+   * Create MeqCalibrater object for a specific
+   * MeaurementSet, MEQ model (with associated MEP database) and skymodel
+   * for the specified spectral window.
+   */ 
   MeqCalibrater(const String& msName,
 		const String& meqModel,
 		const String& skyModel,
 		uInt spw);
 
-  // destructor
+  //! Destructor
   ~MeqCalibrater();
 
-  // Set the time interval for which to solve.
+  /*!
+   * Set the time interval for which to solve.
+   * \param secInterval The time interval in seconds.
+   */
   void setTimeInterval (double secInterval);
 
-  // Reset the iterator.
+  //! Reset the iterator.
   void resetIterator();
 
-  // Advance the iterator.
+  /*!
+   * Advance the iterator.
+   * \returns false if at end of iteration.
+   */
   bool nextInterval();
 
-  // Make all parameters non-solvable
+  //! Make all parameters non-solvable
   void clearSolvableParms();
 
-  // Make specific parameters solvable (isSolvable = True) or
-  // non-solvable (False)
+  /*!
+   * Make specific parameters solvable (isSolvable = True) or
+   * non-solvable (False).
+   */
   void setSolvableParms (Vector<String>& parmPatterns, Bool isSolvable);
 
-  // predict visibilities for the current domain
+  //! Predict visibilities for the current domain
   void predict();
   
-  // Solve for the current domain.
-  // Return fit value to indicate fitness of the solution and updates the
-  // parameters for which to solve.
+  /*!
+   * Solve for the current domain.
+   * \returns Returns fit value to indicate fitness of the solution and updates the
+   * parameters for which to solve.
+   */
   Double solve();
 
-  // Save solved parameters to the MEP database.
+  //! Save solved parameters to the MEP database.
   void saveParms();
 
-  // Save the predicted data to the named column of the MeasurementSet.
+  //! Save the predicted data to the named column of the MeasurementSet.
   void savePredictedData (const String& dataColName);
 
-  // Save residual data in the named column (residualColName) by substracting
-  // data in the first named column (colAName) from data in the second named
-  // column (colBName).
+  /*!
+   * Save residual data in the named column (residualColName) by substracting
+   * data in the first named column (colAName) from data in the second named
+   * column (colBName).
+   */
   void saveResidualData (const String& colAName, const String& colBName,
 			 const String& residualColName);
 
-  // Get info about the parameters whose name matches one of the parameter
-  // patterns in a GlishRecord, exclude parameters matching one of the
-  // exclude pattterns.
+  /*!
+   * Get info about the parameters whose name matches one of the parameter
+   * patterns in a GlishRecord, exclude parameters matching one of the
+   * exclude pattterns.
+   */
   GlishRecord getParms (Vector<String>& parmPatterns,
 			Vector<String>& excludePatterns);
 
-  // Get a description of the current solve domain, which changes
-  // after each call to nextTimeIteration.
+  /*!
+   * Get a description of the current solve domain, which changes
+   * after each call to nextTimeIteration.
+   */
   GlishRecord getSolveDomain();
 
-  // standard DO methods
+  /**
+   * \defgroup DOStandard Standard Distributed Object methods.
+   */
+  //@{
   virtual String         className() const;
   virtual Vector<String> methods() const;
   virtual Vector<String> noTraceMethods() const;
@@ -118,38 +138,46 @@ public:
   virtual MethodResult runMethod(uInt which,
 				 ParameterSet& inputRecord,
 				 Bool runMethod);
+  //@}
 
 private:
 
-  // calculate the UVW polcs for all frequency domains per hour wide time domain
+  //! calculate the UVW polcs for all frequency domains per hour wide time domain
   void calcUVWPolc();
-  MeqCalibrater(const MeqCalibrater& other);            // no copy constructor
-  MeqCalibrater& operator=(const MeqCalibrater& other); // no assignment operator
 
-  // initialize all parameters in the MeqExpr tree for the current domain
+  /**
+   * \defgroup DisallowedContructors Dissallowed constructors.
+   */
+  /*@{*/
+  MeqCalibrater(const MeqCalibrater& other);
+  MeqCalibrater& operator=(const MeqCalibrater& other);
+  /*@}*/
+
+  //! initialize all parameters in the MeqExpr tree for the current domain
   void initParms    (const MeqDomain& domain);
 
-  // Get the phase reference position of the first field.
+  //! Get the phase reference position of the first field.
   void getPhaseRef  ();
 
-  // Get the frequncy info of the given data desc (spectral window).
+  //! Get the frequncy info of the given data desc (spectral window).
   void getFreq      (int ddid);
 
-  // Get the station info (position and name).
+  //! Get the station info (position and name).
   void fillStations ();
 
-  // Get all baseline info.
+  //! Get all baseline info.
   void fillBaselines(const Vector<int>& ant1, const Vector<int>& ant2);
 
-  // Create the expressions for each baseline.
+  //! Create the expressions for each baseline.
   void makeWSRTExpr ();
 
-  // Calculate the UVW polynomial coefficients.
+  //! Calculate the UVW polynomial coefficients.
   void calcUVWPolc  (const Table& ms);
 
-  //
-  // variables
-  //
+  /**
+   * \defgroup PrivVariable Private variables
+   */
+  /*@{*/
   MeasurementSet        itsMS;
   ROMSMainColumns       itsMSCol;
   ParmTable             itsMEP;
@@ -179,18 +207,19 @@ private:
   Bool itsDataRead;
 
   Matrix<DComplex> its_xx, its_xy, its_yx, its_yy;
+  
+  /*@}*/
 
-  //
-  // variables used in the dummy implementation
-  //
+  //! variable used in the dummy implementation
   Double itsFitValue;
 };
 
-//
-// Factory class to instantiate the MeqCalibrater object
-//
+/*!
+ * Factory class to instantiate the MeqCalibrater object
+ */
 class MeqCalibraterFactory : public ApplicationObjectFactory
 {
+  //! instantiate MqCalibrater object (subclassed from ApplicationObject)
   virtual MethodResult make(ApplicationObject*& newObject,
 			    const String& whichConstructor,
 			    ParameterSet& inputRecord,
