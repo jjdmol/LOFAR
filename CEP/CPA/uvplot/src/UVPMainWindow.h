@@ -88,6 +88,8 @@ class UVPMainWindow:public QMainWindow
   void slot_openMS();
   void slot_openPVD();
 
+  void slot_loadData();
+
   void slot_readMeasurementSet(const std::string& msName);
   void slot_readPVD(const std::string& pvdName);
 
