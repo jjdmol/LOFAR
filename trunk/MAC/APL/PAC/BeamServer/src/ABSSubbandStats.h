@@ -27,7 +27,6 @@
 #include <GCF/GCF_Fsm.h>
 #include <GCF/GCF_Control.h>
 #include <GCF/GCF_RTMyPropertySet.h>
-#include <ABSAnswer.h>
 #include <blitz/array.h>
 #include <complex>
 
