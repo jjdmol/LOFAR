@@ -33,13 +33,13 @@
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/PAL/GCF_MyPropertySet.h>
-#include <GCF/PAL/GCF_Property.h>
+#include <GCF/PAL/GCF_ExtProperty.h>
 
 //# local includes
 #include "AVTPropertySetAnswerHandlerInterface.h"
 #include "AVTPropertySetAnswer.h"
 #include "AVTLogicalDevice.h"
-#include "APLInterTaskPort.h"
+#include <APLCommon/APLInterTaskPort.h>
 #include "AVTResourceManager.h"
 
 // forward declaration
@@ -127,7 +127,7 @@ namespace AVT
                                             stopTimerId(0) {};
         
         string                              resource;
-        boost::shared_ptr<GCFProperty>      pMaintenanceProperty;
+        boost::shared_ptr<GCFExtProperty>   pMaintenanceProperty;
         int                                 startTime;
         int                                 stopTime;
         unsigned long                       startTimerId;

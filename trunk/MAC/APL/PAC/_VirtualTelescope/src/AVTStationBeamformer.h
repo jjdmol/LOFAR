@@ -96,8 +96,6 @@ namespace AVT
       bool _isBeamServerPort(GCFPortInterface& port);
       int convertDirection(const string type) const;
 
-      typedef map<int,boost::shared_ptr<GCFApc> > SubbandAPCMapT;
-
       // The BeamServer SAP
       GCFPort         m_beamServer;
       bool            m_beamServerConnected;

@@ -111,65 +111,65 @@ RegisterAccessTask::RegisterAccessTask(string name)
   m_stats_update_interval  = ParameterSet::instance()->getInt(PARAM_STATISTICS_UPDATE_INTERVAL);
   
   // fill MyPropertySets map
-  addMyPropertySet(SCOPE_PIC,TYPE_PIC,PROPS_Station);
-  addMyPropertySet(SCOPE_PIC_Maintenance, TYPE_Maintenance, PROPS_Maintenance);
+  addMyPropertySet(SCOPE_PIC,TYPE_LCU_PIC,PROPS_Station);
+  addMyPropertySet(SCOPE_PIC_Maintenance, TYPE_LCU_PIC_Maintenance, PROPS_Maintenance);
   for(rack=1;rack<=m_n_racks;rack++)
   {
     sprintf(scopeString,SCOPE_PIC_RackN,rack);
-    addMyPropertySet(scopeString,TYPE_Rack, PROPS_Rack);
+    addMyPropertySet(scopeString,TYPE_LCU_PIC_Rack, PROPS_Rack);
     sprintf(scopeString,SCOPE_PIC_RackN_Maintenance,rack);
-    addMyPropertySet(scopeString,TYPE_Maintenance, PROPS_Maintenance);
+    addMyPropertySet(scopeString,TYPE_LCU_PIC_Maintenance, PROPS_Maintenance);
     sprintf(scopeString,SCOPE_PIC_RackN_Alert,rack);
-    addMyPropertySet(scopeString,TYPE_Alert, PROPS_Alert);
+    addMyPropertySet(scopeString,TYPE_LCU_PIC_Alert, PROPS_Alert);
 
     for(subrack=1;subrack<=m_n_subracks_per_rack;subrack++)
     {
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
-      addMyPropertySet(scopeString, TYPE_SubRack, PROPS_SubRack);
+      addMyPropertySet(scopeString, TYPE_LCU_PIC_SubRack, PROPS_SubRack);
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Maintenance,rack,subrack);
-      addMyPropertySet(scopeString, TYPE_Maintenance, PROPS_Maintenance);
+      addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PROPS_Maintenance);
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Alert,rack,subrack);
-      addMyPropertySet(scopeString, TYPE_Alert, PROPS_Alert);
+      addMyPropertySet(scopeString, TYPE_LCU_PIC_Alert, PROPS_Alert);
       
       for(board=1;board<=m_n_boards_per_subrack;board++)
       {
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_Board, PROPS_Board);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_Board, PROPS_Board);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPReadStatus,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_MEPStatus, PROPS_MEPStatus);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_MEPStatus, PROPS_MEPStatus);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPWriteStatus,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_MEPStatus, PROPS_MEPStatus);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_MEPStatus, PROPS_MEPStatus);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_SYNCStatus,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_SYNCStatus, PROPS_SYNCStatus);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_SYNCStatus, PROPS_SYNCStatus);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_Maintenance, PROPS_Maintenance);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PROPS_Maintenance);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Alert,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_Alert, PROPS_Alert);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_Alert, PROPS_Alert);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_ETH, PROPS_Ethernet);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_Ethernet, PROPS_Ethernet);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_BP, PROPS_FPGA);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_FPGA, PROPS_FPGA);
     
         for(ap=1;ap<=m_n_aps_per_board;ap++)
         {
           sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
-          addMyPropertySet(scopeString, TYPE_AP, PROPS_FPGA);
+          addMyPropertySet(scopeString, TYPE_LCU_PIC_FPGA, PROPS_FPGA);
           for(rcu=1;rcu<=m_n_rcus_per_ap;rcu++)
           {
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_RCU, PROPS_RCU);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_RCU, PROPS_RCU);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_ADCStatistics, PROPS_ADCStatistics);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_ADCStatistics, PROPS_ADCStatistics);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_Maintenance, PROPS_Maintenance);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PROPS_Maintenance);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LFA, PROPS_LFA);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_LFA, PROPS_LFA);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_HFA, PROPS_HFA);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_HFA, PROPS_HFA);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA_Maintenance,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_Maintenance, PROPS_Maintenance);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PROPS_Maintenance);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Maintenance,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_Maintenance, PROPS_Maintenance);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PROPS_Maintenance);
           }
         }
       }

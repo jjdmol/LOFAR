@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include <CmdLine.h>
+#include <GCF/CmdLine.h>
 #include <GCF/TM/GCF_Task.h>
 #include <Suite/suite.h>
 #include "AVTTestTask.h"
@@ -61,12 +61,12 @@ int main(int argc, char* argv[])
       boost::shared_ptr<AVTTestMAC2Task>  avtTestMac2;
       if(mac1Test)
       {
-        avtTestMac1 = boost::shared_ptr<AVTTestTask>(new AVTTestTask(string("AVTTestMAC1")));
+        avtTestMac1 = boost::shared_ptr<AVTTestTask>(new AVTTestTask);
         s.addTest(avtTestMac1.get());
       }
       if(mac2Test)
       {
-        avtTestMac2 = boost::shared_ptr<AVTTestMAC2Task>(new AVTTestMAC2Task(string("AVTTestMAC2")));
+        avtTestMac2 = boost::shared_ptr<AVTTestMAC2Task>(new AVTTestMAC2Task);
         s.addTest(avtTestMac2.get());
       }
       s.run();

@@ -27,8 +27,11 @@
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVUnsigned.h>
+#include <GCF/ParameterSet.h>
 
 #include <APLCommon/APL_Defines.h>
+#include "AVTDefines.h"
+#include "AVTPropertyDefines.h"
 #include "AVTStationReceptor.h"
 #include "AVTStationBeamformer.h"
 #include "LogicalDevice_Protocol.ph"
@@ -36,6 +39,7 @@
 #include "AVTResourceManager.h"
 
 using namespace LOFAR;
+using namespace GCF;
 using namespace AVT;
 using namespace std;
 using namespace boost;
@@ -44,22 +48,22 @@ AVTStationReceptor::AVTStationReceptor(string& taskName,
                                          const string& scope,
                                          const string& APCName,
                                          const list<TPropertyInfo>& requiredResources) :
-  AVTLogicalDevice(taskName,scope,TYPE_SR,APCName),
+  AVTLogicalDevice(taskName,scope,TYPE_LCU_PAC_SR,APCName),
   m_startTime(0),
   m_stopTime(0),
   m_frequency(0.0),
   m_requiredResources(),
   m_requiredResourcesStatus()
 {
-  LOG_TRACE(formatString("AVTStationReceptor(%s)::AVTStationReceptor",getName().c_str()));
+  LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::AVTStationReceptor",getName().c_str()));
   
   list<TPropertyInfo>::const_iterator it=requiredResources.begin();
   while(it!=requiredResources.end())
   {
     shared_ptr<GCFExtProperty> pProp(new GCFExtProperty(*it));
     pProp->setAnswer(&m_propertySetAnswer);
-    m_requiredResources[*it] = pProp;
-    m_requiredResourcesStatus[*it] = false;
+    m_requiredResources[it->propName] = pProp;
+    m_requiredResourcesStatus[it->propName] = false;
     ++it;
   }
 }
@@ -67,25 +71,26 @@ AVTStationReceptor::AVTStationReceptor(string& taskName,
 
 AVTStationReceptor::~AVTStationReceptor()
 {
-  LOG_TRACE(formatString("AVTStationReceptor(%s)::~AVTStationReceptor",getName().c_str()));
+  LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::~AVTStationReceptor",getName().c_str()));
 }
 
 bool AVTStationReceptor::checkQualityRequirements()
 {
-  LOG_TRACE(formatString("AVTStationReceptor(%s)::%s",getName().c_str(),__func__));
+  LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::%s",getName().c_str(),__func__));
   bool requirementsMet=true;
   int  unavailableCounter = 0;
-  int maxUnavailable = 1;
+  int maxUnavailable = ParameterSet::instance()->getInt(PARAM_MAX_SR_RESOURCES_UNAVAILABLE);
   // quality requirements for this station receptor:
   // - no resources unavailable
   // - no resources in alarm
   map<string,bool>::iterator it=m_requiredResourcesStatus.begin();
   while(requirementsMet && it!=m_requiredResourcesStatus.end())
   {
-    requirementsMet = it->second;
-    if(!requirementsMet)
+    if(!it->second)
     {
-      LOG_TRACE(formatString("AVTStationReceptor(%s)::%s requirement %s not met",getName().c_str(),__func__,it->first.c_str()));
+      LOG_WARN(formatString("AVTStationReceptor(%s)::%s %s unavailable",getName().c_str(),__func__,it->first.c_str()));
+      unavailableCounter++;
+      requirementsMet = (unavailableCounter <= maxUnavailable);
     }
     ++it;
   }
@@ -112,12 +117,12 @@ void AVTStationReceptor::setFrequency(const double frequency)
 
 void AVTStationReceptor::concreteDisconnected(GCFPortInterface& /*port*/)
 {
-  LOG_TRACE(formatString("AVTStationReceptor(%s)::concreteDisconnected",getName().c_str()));
+  LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::concreteDisconnected",getName().c_str()));
 }
 
 GCFEvent::TResult AVTStationReceptor::concrete_initial_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOG_TRACE(formatString("AVTStationReceptor(%s)::concrete_initial_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::concrete_initial_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -127,7 +132,7 @@ GCFEvent::TResult AVTStationReceptor::concrete_initial_state(GCFEvent& event, GC
 
     case F_ENTRY:
     {
-      map<string,shared_ptr<GCFProperty> >::iterator it=m_requiredResources.begin();
+      TExtPropertyMap::iterator it=m_requiredResources.begin();
       while(it!=m_requiredResources.end())
       {
         it->second->subscribe();
@@ -151,7 +156,7 @@ GCFEvent::TResult AVTStationReceptor::concrete_initial_state(GCFEvent& event, GC
       break;
 
     default:
-      LOG_TRACE(formatString("AVTStationReceptor(%s)::concrete_initial_state, default (%s)",getName().c_str(),evtstr(event)));
+      LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::concrete_initial_state, default (%s)",getName().c_str(),evtstr(event)));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -161,7 +166,7 @@ GCFEvent::TResult AVTStationReceptor::concrete_initial_state(GCFEvent& event, GC
 
 GCFEvent::TResult AVTStationReceptor::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)
 {
-  LOG_TRACE(formatString("AVTStationReceptor(%s)::concrete_claiming_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::concrete_claiming_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
@@ -171,7 +176,7 @@ GCFEvent::TResult AVTStationReceptor::concrete_claiming_state(GCFEvent& event, G
       break;
     
     default:
-      LOG_TRACE(formatString("AVTStationReceptor(%s)::concrete_claiming_state, default",getName().c_str()));
+      LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::concrete_claiming_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -181,7 +186,7 @@ GCFEvent::TResult AVTStationReceptor::concrete_claiming_state(GCFEvent& event, G
 
 GCFEvent::TResult AVTStationReceptor::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished, bool& error)
 {
-  LOG_TRACE(formatString("AVTStationReceptor(%s)::concrete_preparing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::concrete_preparing_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
   stateFinished=false;
   error=false;
@@ -193,7 +198,7 @@ GCFEvent::TResult AVTStationReceptor::concrete_preparing_state(GCFEvent& event, 
       break;
     
     default:
-      LOG_TRACE(formatString("AVTStationReceptor(%s)::concrete_preparing_state, default",getName().c_str()));
+      LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::concrete_preparing_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -203,13 +208,13 @@ GCFEvent::TResult AVTStationReceptor::concrete_preparing_state(GCFEvent& event, 
 
 GCFEvent::TResult AVTStationReceptor::concrete_active_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOG_TRACE(formatString("AVTStationReceptor(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   return GCFEvent::NOT_HANDLED;
 }
 
 GCFEvent::TResult AVTStationReceptor::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)
 {
-  LOG_TRACE(formatString("AVTStationReceptor(%s)::concrete_releasing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::concrete_releasing_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
@@ -219,7 +224,7 @@ GCFEvent::TResult AVTStationReceptor::concrete_releasing_state(GCFEvent& event, 
       break;
     
     default:
-      LOG_TRACE(formatString("AVTStationReceptor(%s)::concrete_releasing_state, default",getName().c_str()));
+      LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::concrete_releasing_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -233,30 +238,30 @@ void AVTStationReceptor::handlePropertySetAnswer(GCFEvent& answer)
   {
     case F_MYPS_ENABLED:
     {
-      GCFPropSetAnswerEvent propAnswer(answer);
-      if(propAnswer.result == GCF_NO_ERROR)
+      GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
+      if(pPropAnswer->result == GCF_NO_ERROR)
       {
         // property set loaded, now load apc
         m_properties.configure(m_APC);
       }
       else
       {
-        LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",getName().c_str(),propAnswer.pScope));
+        LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",getName().c_str(),pPropAnswer->pScope));
       }
       break;
     }
     
     case F_PS_CONFIGURED:
     {
-      GCFConfAnswerEvent propAnswer(answer);
-      if(propAnswer.result == GCF_NO_ERROR)
+      GCFConfAnswerEvent* pConfAnswer=static_cast<GCFConfAnswerEvent*>(&answer);
+      if(pConfAnswer->result == GCF_NO_ERROR)
       {
-        LOG_TRACE(formatString("%s : apc %s Loaded",getName().c_str(),propAnswer.pApcName));
+        LOG_TRACE_FLOW(formatString("%s : apc %s Loaded",getName().c_str(),pConfAnswer->pApcName));
         apcLoaded();
       }
       else
       {
-        LOG_ERROR(formatString("%s : apc %s NOT LOADED",getName().c_str(),propAnswer.pApcName));
+        LOG_ERROR(formatString("%s : apc %s NOT LOADED",getName().c_str(),pConfAnswer->pApcName));
       }
       break;
     }
@@ -265,14 +270,14 @@ void AVTStationReceptor::handlePropertySetAnswer(GCFEvent& answer)
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent propAnswer(answer);
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
       
       // is it a required resource status?
-      map<string,bool>::iterator it=m_requiredResourcesStatus.find(string(propAnswer.pPropName));
+      map<string,bool>::iterator it=m_requiredResourcesStatus.find(string(pPropAnswer->pPropName));
       if(it != m_requiredResourcesStatus.end())
       {
         GCFPVUnsigned unsignedValue;
-        unsignedValue.copy(*propAnswer.pValue);
+        unsignedValue.copy(*pPropAnswer->pValue);
         it->second = (unsignedValue.getValue() == 0); // true if status is OK
       }
       break;
@@ -285,11 +290,11 @@ void AVTStationReceptor::handlePropertySetAnswer(GCFEvent& answer)
 
 void AVTStationReceptor::concreteClaim(GCFPortInterface& port)
 {
-  LOG_TRACE(formatString("AVTStationReceptor(%s)::concreteClaim",getName().c_str()));
+  LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::concreteClaim",getName().c_str()));
   // claim my own resources
   AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
   
-  map<string,shared_ptr<GCFProperty> >::iterator it;
+  TExtPropertyMap::iterator it;
   for(it=m_requiredResources.begin();it!=m_requiredResources.end();++it)
   {
     resourceManager->requestResource(getName(),it->first);
@@ -301,7 +306,7 @@ void AVTStationReceptor::concreteClaim(GCFPortInterface& port)
 
 void AVTStationReceptor::concretePrepare(GCFPortInterface& port, string& parameters)
 {
-  LOG_TRACE(formatString("AVTStationReceptor(%s)::concretePrepare",getName().c_str()));
+  LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::concretePrepare",getName().c_str()));
   // prepare my own resources
   vector<string> decodedParameters;
   AVTUtilities::decodeParameters(parameters,decodedParameters);
@@ -316,25 +321,25 @@ void AVTStationReceptor::concretePrepare(GCFPortInterface& port, string& paramet
 
 void AVTStationReceptor::concreteResume(GCFPortInterface& /*port*/)
 {
-  LOG_TRACE(formatString("AVTStationReceptor(%s)::concreteResume",getName().c_str()));
+  LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::concreteResume",getName().c_str()));
   // resume my own resources
   
 }
 
 void AVTStationReceptor::concreteSuspend(GCFPortInterface& /*port*/)
 {
-  LOG_TRACE(formatString("AVTStationReceptor(%s)::concreteSuspend",getName().c_str()));
+  LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::concreteSuspend",getName().c_str()));
   // suspend my own resources
   
 }
 
 void AVTStationReceptor::concreteRelease(GCFPortInterface& port)
 {
-  LOG_TRACE(formatString("AVTStationReceptor(%s)::concreteRelease",getName().c_str()));
+  LOG_TRACE_FLOW(formatString("AVTStationReceptor(%s)::concreteRelease",getName().c_str()));
   // release my own resources
   AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
   
-  map<string,shared_ptr<GCFProperty> >::iterator it;
+  TExtPropertyMap::iterator it;
   for(it=m_requiredResources.begin();it!=m_requiredResources.end();++it)
   {
     resourceManager->releaseResource(getName(),it->first);

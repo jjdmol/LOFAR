@@ -48,17 +48,17 @@ void AVTResourceManager::checked_deleter::operator() (AVTResourceManager* _p)
 AVTResourceManager::AVTResourceManager() : boost::noncopyable(),
   m_resourceRequests()
 {
-  LOG_TRACE(formatString("%s",__func__));
+  LOG_TRACE_FLOW(formatString("%s",__func__));
 }
 
 AVTResourceManager::~AVTResourceManager()
 {
-  LOG_TRACE(formatString("%s",__func__));
+  LOG_TRACE_FLOW(formatString("%s",__func__));
 }
 
 AVTResourceManagerPtr AVTResourceManager::instance()
 {
-  LOG_TRACE(formatString("%s",__func__));
+  LOG_TRACE_FLOW(formatString("%s",__func__));
   
   AVTResourceManagerPtr tmp;
   if(s_avtResourceManagerInstance.expired())

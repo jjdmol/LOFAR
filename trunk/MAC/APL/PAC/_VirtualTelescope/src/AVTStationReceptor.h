@@ -32,8 +32,8 @@
 #include <boost/shared_ptr.hpp>
 
 //# GCF Includes
-#include <GCF/PAL/GCF_Port.h>
-#include <GCF/PAL/GCF_Property.h>
+#include <GCF/TM/GCF_Port.h>
+#include <GCF/PAL/GCF_ExtProperty.h>
 
 #include <APLCommon/APLInterTaskPort.h>
 
@@ -96,12 +96,13 @@ namespace AVT
       virtual void concreteDisconnected(GCFPortInterface& port);
 
     private:
+      typedef std::map<std::string,boost::shared_ptr<GCFExtProperty> > TExtPropertyMap;
 
       time_t            m_startTime;
       time_t            m_stopTime;
       double            m_frequency;
-      std::map<std::string,boost::shared_ptr<GCFProperty> >   m_requiredResources;
-      std::map<std::string,bool>                              m_requiredResourcesStatus;
+      TExtPropertyMap             m_requiredResources;
+      std::map<std::string,bool>  m_requiredResourcesStatus;
   };
 };
 
