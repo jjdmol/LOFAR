@@ -1,15 +1,15 @@
 %module selfcal
 %{
 #include "selfcal.h"
+#include "../SelfcalEngineStub.h"
 #include <string>
 %}
-class parameter
-{
-      char * name;
-      double value;
-      double delta;
-public:
-      void setName(char * newname);
-      char *getName(void)const;
-};
 
+%include selfcal.h
+%include carrays.i
+%include cpointer.i
+%include typemaps.i
+%array_class(float,pars);
+%array_class(bool,bools);
+
+%include "../SelfcalEngineStub.h"

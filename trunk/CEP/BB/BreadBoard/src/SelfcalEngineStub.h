@@ -45,7 +45,7 @@ class SelfcalEngineStub
      parameters argument 
    **/
   void init(int   len,
-	    float *parameters);
+	    float parameters[]);
 
   /**
      The Solve() method is used to let the SelfcalEngine perform work. 
@@ -54,10 +54,10 @@ class SelfcalEngineStub
      The outparams array should be writable (and is allocated by the calling 
      party)
    **/
-  void Solve(bool    *workdef,   // binary pattern of the parameters to 
-	                            // be solved for
-	     float  **outparams); // the result of the Solve; 
-                                    // All parameter values are returned
+  float * Solve(bool    *workdef,   // binary pattern of the parameters to 
+	                             // be solved for
+                 float  *outparams); // the result of the Solve; 
+                                     // All parameter values are returned
 
   /**
      write current parameter values (itsParamValues) to stdout.
