@@ -72,8 +72,9 @@ namespace LCSMath
   int eig (const LoMat_dcomplex& m, LoMat_dcomplex& V, LoVec_double& D);
   int hermitian_init (const LoMat_dcomplex& a, LoMat_dcomplex& V,
 		      LoVec_double& D);
-  int svd (const LoMat_dcomplex& m, LoMat_dcomplex& U,
-	   LoMat_dcomplex& V, LoVec_double& D);
+  int svd (const LoMat_dcomplex& a, LoMat_dcomplex& U,
+		   LoMat_dcomplex& V, LoVec_double& D);
+
 
   // Array Correlation Matrix.
   LoMat_dcomplex acm (const LoMat_dcomplex& a);
@@ -86,6 +87,11 @@ namespace LCSMath
 
   // Invert a matrix
   LoMat_dcomplex  invert (const LoMat_dcomplex& in);
+
+  // Return the complex modulus (magnitude) of the elements of the Vector
+  // or Matrix
+  LoVec_double absVec (const LoVec_dcomplex& aVec);
+  LoMat_double absMat (const LoMat_dcomplex& aMat);
 };
 
 

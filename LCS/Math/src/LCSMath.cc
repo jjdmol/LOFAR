@@ -75,6 +75,32 @@ extern "C"
 
 namespace LCSMath
 {
+    LoVec_double absVec (const LoVec_dcomplex& aVec)
+    {
+	LoVec_double out (aVec.size ());
+	for (int i = aVec.lbound (blitz::firstDim); 
+	     i < aVec.ubound (blitz::firstDim); i++) 
+	{
+	    out(i) = abs(aVec(i));
+	}
+	return out;
+    }  
+
+    LoMat_double absMat (const LoMat_dcomplex& aMat)
+    {
+	LoMat_double out (aMat.shape ());
+	for (int i = aMat.lbound (blitz::firstDim); 
+	     i < aMat.ubound (blitz::firstDim); i++) 
+	{
+	    for (int j = aMat.lbound (blitz::secondDim);
+		 i < aMat.ubound (blitz::secondDim); j++)
+	    {				      
+		out(i, j) = abs(aMat(i, j));
+	    }	     
+	}  
+        return out;	    
+    }
+    
   LoMat_dcomplex conj (const LoMat_dcomplex& aMatrix)
   {
     return LoMat_dcomplex (2. * real(aMatrix) - aMatrix);
@@ -376,7 +402,7 @@ namespace LCSMath
   
 
   int svd (const LoMat_dcomplex& a, LoMat_dcomplex& U,
-	   LoMat_dcomplex& V, LoVec_double& D)
+		   LoMat_dcomplex& V, LoVec_double& D)
     // A       (input/output) COMPLEX*16 array, dimension (LDA,N)
     // On entry, the M-by-N matrix A.
     // On exit, the contents of A are destroyed.
@@ -400,49 +426,57 @@ namespace LCSMath
   {
 #ifdef HAVE_LAPACK
     int info;
-    int m = a.rows ();
-    int n = a.cols ();
-    
-    LoMat_dcomplex atmp = a;
-    dcomplex *tmp_data = atmp.data ();
-    
-    // A should be square in LOFAR, so this is pretty useless
-    int min_mn = m < n ? m : n;
-    int max_mn = m > n ? m : n;
-    
-    char jobu = 'A';
-    char jobv = 'A';
-
-    int ncol_u = m;
+	int m       = a.rows ();
+    int n       = a.cols ();
+    char jobu   = 'A';
+    char jobv   = 'A';
+    int ncol_u  = m;
     int nrow_vt = n;
-    int nrow_s = m;
-    int ncol_s = n;
-    
-    // left singular values
-    dcomplex *u = U.data ();
+    int nrow_s  = m;
+    int ncol_s  = n;
+    int min_mn  = m < n ? m : n;
+    int max_mn  = m > n ? m : n;
+    int lwork   = 2 * min_mn + max_mn;
+    int lrwork  = 5 * max_mn;
 
-    // singular values
-    double *s_vec = D.data () ;
+	// Make a memory contiguous and column-major arrays for input to lapack svd
+	dcomplex* a_cont;
+	dcomplex* u;               // left singular values
+    double*   s;               // singular values
+	dcomplex* vt;              // right singular values
+	dcomplex* pwork;
+	double*   prwork;
 
-    // right singular values
-    dcomplex *vt = V.data();
+	a_cont = (dcomplex*) malloc (m * n * sizeof (dcomplex));
+	u      = (dcomplex*) malloc (m * m * sizeof (dcomplex));
+	s      = (double*)   malloc (min_mn * sizeof (double));
+	vt     = (dcomplex*) malloc (n * n * sizeof (dcomplex));
+	pwork  = (dcomplex*) malloc (lwork * sizeof (dcomplex));
+	prwork = (double*)   malloc (lrwork * sizeof (double));
 
-    int lwork = 2*min_mn + max_mn;
-
-    LoVec_dcomplex work (lwork);
-    dcomplex *pwork = work.data ();
-    
-    int lrwork = 5*max_mn;
-
-    LoVec_double rwork (lrwork);
-    double *prwork = rwork.data ();
-
-
+	for (int i = 0; i < m; i++) {
+	  for (int j = 0; j < n; j++) {
+// 		a_cont [j + n * i] = a (i, j);
+		a_cont [i + m * j] = a (i, j);
+	  }
+	}
+  
     // Apply the corresponding lapack routine
-    zgesvd (&jobu, &jobv, m, n, tmp_data, m, s_vec, u,
-	    m, vt, nrow_vt, pwork, lwork, prwork, info);
-    AssertStr (info==0, "LoarrayFunc::eig: "
-	       << (info<0 ? "invalid ZGESVD argument" : "ZGESVD no converge"));
+    zgesvd (&jobu, &jobv, m, n, a_cont, m, s, u,
+			m, vt, nrow_vt, pwork, lwork, prwork, info);
+
+	// Convert from fortran to general array storage in blitz
+	LoMat_dcomplex Uret (u, blitz::shape (m, m), blitz::neverDeleteData, blitz::fortranArray);
+	LoMat_dcomplex Vtret (vt, blitz::shape (n, n), blitz::neverDeleteData, blitz::fortranArray);	
+	LoVec_double   Sret (s, blitz::shape (min_mn), blitz::neverDeleteData, blitz::fortranArray);
+
+	U = Uret.copy ();
+	V = Vtret.copy ();
+	D = Sret.copy ();
+
+    AssertStr (info == 0, "LoarrayFunc::eig: "
+			   << (info < 0 ? "invalid ZGESVD argument" : "ZGESVD no converge"));
+
     if (! (jobv == 'N' || jobv == 'O')) {
       V = hermitianTranspose (V);
     }
@@ -455,16 +489,10 @@ namespace LCSMath
 
   LoMat_dcomplex acm (const LoMat_dcomplex& a)
   {
-    // This assumes the input matrix is row-major. 
-    blitz::firstIndex i;
-    blitz::secondIndex j;
-
-    int nant = a.rows (); 
-    int nsh  = a.cols ();
-    int lb   = a.lbound(blitz::secondDim);
-    int ub   = a.ubound(blitz::secondDim);
-
-    double alpha = 0; // forgetting factor
+    int nant     = a.rows (); 
+    int lb       = a.lbound(blitz::secondDim);
+    int ub       = a.ubound(blitz::secondDim);
+    double alpha = 1.0 / (double)a.cols(); // forgetting factor
 
     LoVec_dcomplex ones(nant);
     ones = 1;
@@ -474,18 +502,11 @@ namespace LCSMath
     ACM = (dcomplex) 0;
 
     // CB: merk op dat ik geen transpose doe aangezien dat (volgens mij) niet nodig is.
-    for (int k=lb; k<=ub; k++) {
-      ACM = (1-alpha) * ACM + 
-	alpha * (matMult(a(blitz::Range::all(), k), 
-			 a(blitz::Range::all(), k))) ;
-
-//       ACM = ACM + matMult(a(blitz::Range::all(), k), 
-// 			  a(blitz::Range::all(), k).
-// 			      transpose(blitz::firstDim, blitz::secondDim)) ;
+    for (int k = lb; k <= ub; k++) {
+      ACM = (1 - alpha) * ACM + matMult(a(blitz::Range::all(), k), a(blitz::Range::all(), k));
     }
-    ACM = ACM / (double)nsh;
-    ACM = ACM - eye;
-    return ACM;
+
+    return ACM - eye;
   }
 
 
@@ -520,7 +541,7 @@ namespace LCSMath
     out = 0;
     for (int k = A.lbound(blitz::firstDim); k <= A.ubound(blitz::firstDim); k++) {
       for (int l = B.lbound(blitz::firstDim); l <= B.ubound(blitz::firstDim); l++) {
-	out(k,l) = out(k,l) + A(k) * B(l);
+	out(k,l) = conj(A(k)) * B(l);
       }
     }
     return out;
@@ -557,7 +578,7 @@ namespace LCSMath
     out = 0;
     for (int k = A.lbound(blitz::firstDim); k <= A.ubound(blitz::firstDim); k++) {
       for (int l = B.lbound(blitz::firstDim); l <= B.ubound(blitz::firstDim); l++) {
-	out(k,l) = out(k,l) + A(k) * B(l);
+	out(k,l) = A(k) * B(l);
       }
     }
     return out;
