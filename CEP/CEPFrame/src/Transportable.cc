@@ -26,14 +26,14 @@
 
 #include <Common/lofar_iostream.h>
 
-bool Transportable::StoreInDatabase (int, int) {
+bool Transportable::StoreInDatabase (int, int, char *, int) {
   cout << "Transportable::StoreInDatabase () called (default implementation)."
        << endl;
   return true;
 }
 
 
-bool Transportable::RetrieveFromDatabase (int, int) {
+bool Transportable::RetrieveFromDatabase (int, int, char *, int) {
   cout << "Transportable::RetrieveFromDatabase () called (default implementation)."
        << endl;
   return true;
