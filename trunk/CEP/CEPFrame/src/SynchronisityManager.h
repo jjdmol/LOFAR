@@ -25,7 +25,7 @@
 
 /*  #include <lofar_config.h> */
 
-#include "CEPFrame/DataHolder.h"
+#include "Transport/DataHolder.h"
 #include "CEPFrame/DHPoolManager.h"
 #include <pthread.h>
 
@@ -62,8 +62,8 @@ public:
   DHPoolManager* getInPoolManagerPtr(int channel);
   DHPoolManager* getOutPoolManagerPtr(int channel);
 
-  void setInPoolManagerPtr(int channel, DHPoolManager* dhpmPtr);
-  void setOutPoolManagerPtr(int channel, DHPoolManager* dhpmPtr);
+  // Use the same DHPoolManager for input and output
+  void sharePoolManager(int channel);
 
   int getInputs() const;
   int getOutputs() const;
@@ -110,15 +110,6 @@ inline DHPoolManager* SynchronisityManager::getInPoolManagerPtr(int channel)
 
 inline DHPoolManager* SynchronisityManager::getOutPoolManagerPtr(int channel)
   { return itsOutManagers[channel]; }
-
-inline void SynchronisityManager::setInPoolManagerPtr(int channel, 
-						      DHPoolManager* dhpmPtr)
-  { itsInManagers[channel] = dhpmPtr; }
-
-
-inline void SynchronisityManager::setOutPoolManagerPtr(int channel, 
-						       DHPoolManager* dhpmPtr)
-  { itsOutManagers[channel] = dhpmPtr; }
 
 inline bool SynchronisityManager::isOutSynchronous(int channel)
 {

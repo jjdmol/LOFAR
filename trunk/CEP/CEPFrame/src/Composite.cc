@@ -1,4 +1,4 @@
-//  Simul.cc:
+//  Composite.cc:
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,95 +23,96 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/Simul.h"
-#include "CEPFrame/SimulBuilder.h"
+#include "CEPFrame/Composite.h"
+#include "CEPFrame/NetworkBuilder.h"
 
 namespace LOFAR
 {
 
-Simul::Simul()
+Composite::Composite()
 : Step(),
-  itsSimul(0)
+  itsComposite(0)
 {}
 
-Simul::Simul (WorkHolder& worker, 
+Composite::Composite (WorkHolder& worker, 
 	      const string& name,
 	      bool addNameSuffix,
 	      bool controllable,
 	      bool monitor)
 : Step()
 {
-  itsSimul = new SimulRep (worker, name, addNameSuffix, controllable, monitor);
-  itsRep = itsSimul;
+  itsComposite = new CompositeRep (worker, name, addNameSuffix, controllable, monitor);
+  itsRep = itsComposite;
 }
 
-Simul::Simul (WorkHolder* worker, 
+Composite::Composite (WorkHolder* worker, 
 	      const string& name,
 	      bool addNameSuffix,
 	      bool controllable,
 	      bool monitor)
 : Step()
 {
-  itsSimul = new SimulRep (*worker, name, addNameSuffix, controllable, monitor);
-  itsRep = itsSimul;
+  itsComposite = new CompositeRep (*worker, name, addNameSuffix, controllable, monitor);
+  itsRep = itsComposite;
 }
 
-Simul::Simul (SimulBuilder& aBuilder, 
+Composite::Composite (NetworkBuilder& aBuilder, 
 	      const string& name,
 	      bool addNameSuffix,
 	      bool controllable,
 	      bool monitor)
 : Step()
 {
-  itsSimul = new SimulRep (aBuilder.getWorker(), name, addNameSuffix,
+  itsComposite = new CompositeRep (aBuilder.getWorker(), name, addNameSuffix,
 			   controllable, monitor);
-  itsRep = itsSimul;
-  aBuilder.buildSimul (*this);
+  itsRep = itsComposite;
+  aBuilder.buildNetwork (*this);
 }
 
-Simul::Simul (const Simul& that)
+Composite::Composite (const Composite& that)
 : Step (that)
 {
-  itsSimul = that.itsSimul;
+  itsComposite = that.itsComposite;
 }
 
-Simul::Simul (SimulRep* rep)
+Composite::Composite (CompositeRep* rep)
 : Step (rep)
 {
-  itsSimul = rep;
+  itsComposite = rep;
 }
 
-Simul& Simul::operator= (const Simul& that)
+Composite& Composite::operator= (const Composite& that)
 {
   if (this != &that) {
     Step::operator= (that);
-    itsSimul = that.itsSimul;
+    itsComposite = that.itsComposite;
   }
   return *this;
 }
 
-Simul::~Simul() 
+Composite::~Composite() 
 {}
 
 
-Simul* Simul::clone() const
+Composite* Composite::clone() const
 {
-  return new Simul (*this);
+  return new Composite (*this);
 }
 
 
-bool Simul::connectInputArray (Simul* aSimul[],
-			       int    nrItems,
-			       const TransportHolder& prototype)
+bool Composite::connectInputArray (Composite* aComposite[],
+				   int    nrItems,
+				   const TransportHolder& prototype,
+				   bool blockingComm)
 {
   if (nrItems < 0) {  // set nr_items automatically
     nrItems = getWorker()->getDataManager().getInputs();
   }
   Step** stepPtrs = new Step* [nrItems];
   for (int i=0; i<nrItems; i++) {
-    stepPtrs[i] = aSimul[i];
+    stepPtrs[i] = aComposite[i];
   }
-  bool result = itsRep->connectInputArray (stepPtrs, nrItems, prototype);
+  bool result = itsRep->connectInputArray (stepPtrs, nrItems, prototype, blockingComm);
   delete [] stepPtrs;
   return result;
 }

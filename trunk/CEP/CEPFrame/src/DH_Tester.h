@@ -26,8 +26,8 @@
 #include <lofar_config.h>
 
 #include <Common/lofar_complex.h>
-#include "CEPFrame/DataHolder.h"
-#include "CEPFrame/BaseSim.h"
+#include "Transport/DataHolder.h"
+#include "Transport/BaseSim.h"
 
 namespace LOFAR
 {
@@ -50,38 +50,39 @@ public:
   void setCounter (int counter);
   int getCounter() const;
 
-  DataBufferType* getBuffer();
-  const DataBufferType* getBuffer() const;
+  /// Allocate the buffers.
+  virtual void preprocess();
+  /// Deallocate the buffers.
+  virtual void postprocess();
 
-protected:
-  class DataPacket: public DataHolder::DataPacket
-  {
-  public:
-    DataPacket() : itsCounter(0) {};
-    DataBufferType itsBuffer[10];
-    int itsCounter;
-  };
+  /// Get write access to the buffer
+  DataBufferType* getBuffer();
+  /// Get read access to the buffer
+  const DataBufferType* getBuffer() const;
 
 private:
   /// Forbid assignment.
   DH_Tester& operator= (const DH_Tester&);
 
+  // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
+  virtual void fillDataPointers();
 
-  DataPacket itsDataPacket;
+  int*             itsCounter;
+  DataBufferType*  itsBuffer;
+
 };
 
-
 inline void DH_Tester::setCounter (int counter)
-  { itsDataPacket.itsCounter = counter; }
+  { *itsCounter = counter; }
 
 inline int DH_Tester::getCounter() const
-  { return itsDataPacket.itsCounter; }
+  { return *itsCounter; }
 
 inline DH_Tester::DataBufferType* DH_Tester::getBuffer()
-  { return itsDataPacket.itsBuffer; }
+  { return itsBuffer; }
 
 inline const DH_Tester::DataBufferType* DH_Tester::getBuffer() const
-  { return itsDataPacket.itsBuffer; }
+  { return itsBuffer; }
 
 }
 

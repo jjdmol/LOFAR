@@ -30,24 +30,53 @@ namespace LOFAR
 {
 
 DH_Tester::DH_Tester (const string& name)
-: DataHolder (name, "DH_Tester")
-{
-  setDataPacket (&itsDataPacket, sizeof(itsDataPacket));
-}
+  : DataHolder (name, "DH_Tester"),
+    itsCounter (0),
+    itsBuffer  (0)
+{}
 
 DH_Tester::DH_Tester(const DH_Tester& that)
-  : DataHolder(that)
-{
-  setDataPacket (&itsDataPacket, sizeof(itsDataPacket));
-}
+  : DataHolder(that),
+    itsCounter(0),
+    itsBuffer(0)
+{}
 
 DH_Tester::~DH_Tester()
-{
-}
+{}
 
 DataHolder* DH_Tester::clone() const
 {
   return new DH_Tester(*this);
 }
+
+void DH_Tester::preprocess()
+{
+  unsigned int bufSize = 10;
+  // Add the fields to the data definition.
+  addField("Counter", BlobField<int>(1));
+  addField("Buffer", BlobField<DataBufferType>(1, //version
+                                           bufSize)); //no_elements
+  // Create the data blob (which calls fillPointers).
+  createDataBlock();
+  // Initialize the buffer.
+  for (unsigned int i=0; i<bufSize; i++) {
+    itsBuffer[i] = 0;
+  }
+}
+
+void DH_Tester::fillDataPointers()
+{
+  // Fill in the counter pointer.
+  itsCounter = getData<int> ("Counter");
+  // Fill in the buffer pointer.
+  itsBuffer = getData<DataBufferType> ("Buffer");
+}
+
+void DH_Tester::postprocess()
+{
+  itsCounter = 0;
+  itsBuffer  = 0;
+}
+
 
 }

@@ -1,4 +1,4 @@
-//# DataManager.h: Base class for the data managers
+//# DataManager.h: Data manager which incorporates asynchronous behaviour
 //#
 //# Copyright (C) 2000-2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,7 +25,8 @@
 
 /*  #include <lofar_config.h> */
 
-#include "CEPFrame/DataHolder.h"
+#include <tinyCEP/TinyDataManager.h>
+#include <Transport/DataHolder.h>
 #include <Common/Debug.h>
 
 namespace LOFAR
@@ -45,16 +46,15 @@ typedef struct
 */
 
 class SynchronisityManager;
-class Selector;
 
-class DataManager
+class DataManager : public TinyDataManager
 {
 public:
   /** The constructor with the number of input and output
       DataHolders as arguments.
   */
   DataManager (int inputs=0, int outputs=0);
-
+  DataManager (const TinyDataManager&);
   virtual ~DataManager();
   
   DataHolder* getInHolder(int channel);
@@ -62,106 +62,43 @@ public:
   void readyWithInHolder(int channel);
   void readyWithOutHolder(int channel);
   
-  void addInDataHolder(int channel, DataHolder* dhptr, bool synchronous=true, 
-		       bool shareIO=false);
-  void addOutDataHolder(int channel, DataHolder* dhptr, bool synchronous=true, 
-			bool shareIO=false);
-
   void preprocess();
   void postprocess();
 
   const string& getInHolderName(int channel) const;
   const string& getOutHolderName(int channel) const; 
 
-  DataHolder* getGeneralInHolder(int channel); // Use these functions only for
-                                               // acquiring of general properties
-  DataHolder* getGeneralOutHolder(int channel); 
-
-  /// Get the number of inputs or outputs.
-  int getInputs() const;
-  int getOutputs() const;
+  DataHolder* getGeneralInHolder(int channel) const;//Use these functions only 
+                                                    // for acquiring of general
+                                                    // properties
+  DataHolder* getGeneralOutHolder(int channel) const; 
 
   void initializeInputs();  ///Reads all inputs
 
+  // N.B.The following methods should only be used when defining an application,
+  // not during processing.
+
+  // Set properties of a communication channel: synchronisity and sharing of DataHolders
+  // by input and output
+  void setInBufferingProperties(int channel, bool synchronous, 
+				bool shareDHs=false) const;
+  void setOutBufferingProperties(int channel, bool synchronous, 
+				 bool shareDHs=false) const;
+
   // Is data transport of input channel synchronous?
   bool isInSynchronous(int channel);
-
   // Is data transport of output channel synchronous?
   bool isOutSynchronous(int channel);
-
-  // The following methods are used for selecting one of the inputs/outputs
-  void setInputSelector(Selector* selector);  // Set an input selector
-  void setOutputSelector(Selector* selector);  // Set an output selector
-  DataHolder* selectInHolder();   // Select an input
-  DataHolder* selectOutHolder();  // Select an output
-
-  // Check if the datamanager has a selector
-  bool hasInputSelector();
-  bool hasOutputSelector();
-
-  /**  accessor functions to the auto trigger flags.
-       This flag determines if automated triggering of read/write
-       sequences is wanted. 
-   **/
-  bool doAutoTriggerIn(int channel) const;
-  bool doAutoTriggerOut(int channel) const;
-  void setAutoTriggerIn(int channel, 
-			bool newflag) const;
-  void setAutoTriggerOut(int channel, 
-			bool newflag) const;
 
 private:
   /// Copy constructor (copy semantics).
   DataManager (const DataManager&);
 
-  int itsNinputs;
-  int itsNoutputs;
   SynchronisityManager* itsSynMan;
-  DH_info* itsInDHs;        // Last requested inholders info
-  DH_info* itsOutDHs;       // Last requested outholders info
+  DH_info* itsInDHsinfo;        // Last requested inholders information
+  DH_info* itsOutDHsinfo;       // Last requested outholders information
 
-  Selector* itsInputSelector;  // Input selection mechanism
-  Selector* itsOutputSelector; // Output selection mechanism
-
-  /**  The auto trigger flags.
-       This flag determines if automated triggering of read/write
-       sequences is wanted. 
-   **/
-  bool*     itsDoAutoTriggerIn;
-  bool*     itsDoAutoTriggerOut;
 };
-
-inline int DataManager::getInputs() const { 
-  return itsNinputs; }
-
-inline int DataManager::getOutputs() const { 
-  return itsNoutputs; }
-
-inline bool DataManager::doAutoTriggerIn(int channel) const {
-  DbgAssertStr(channel >= 0, "input channel too low");
-  DbgAssertStr(channel < itsNinputs, "input channel too high");
-  return itsDoAutoTriggerIn[channel];
-}
-
-inline bool DataManager::doAutoTriggerOut(int channel) const {
-  DbgAssertStr(channel >= 0, "output channel too low");
-  DbgAssertStr(channel < itsNoutputs, "output channel too high");
-  return itsDoAutoTriggerOut[channel];
-}
-
-inline void DataManager::setAutoTriggerIn(int channel, 
-					  bool newflag) const {
-  DbgAssertStr(channel >= 0, "input channel too low");
-  DbgAssertStr(channel < itsNinputs, "input channel too high");
-  itsDoAutoTriggerIn[channel] = newflag;
-}
-
-inline void DataManager::setAutoTriggerOut(int channel, 
-					  bool newflag) const {
-  DbgAssertStr(channel >= 0, "output channel too low");
-  DbgAssertStr(channel < itsNoutputs, "output channel too high");
-  itsDoAutoTriggerOut[channel] = newflag;
-}
 
 } // namespace
 #endif

@@ -31,23 +31,21 @@ namespace LOFAR
 
 DH_Example::DH_Example (const string& name, unsigned int nbuffer)
 : DataHolder    (name, "DH_Example"),
-  itsDataPacket (0),
+  itsCounter    (0),
   itsBuffer     (0),
   itsBufSize    (nbuffer)
 {}
 
 DH_Example::DH_Example(const DH_Example& that)
   : DataHolder(that),
-    itsDataPacket(0),
-    itsBuffer(0),
+    itsCounter(0),
+    itsBuffer (0),
     itsBufSize(that.itsBufSize)
 {
 }
 
 DH_Example::~DH_Example()
-{
-  delete [] (char*)(itsDataPacket);
-}
+{}
 
 DataHolder* DH_Example::clone() const
 {
@@ -56,29 +54,36 @@ DataHolder* DH_Example::clone() const
 
 void DH_Example::preprocess()
 {
-  // First delete possible buffers.
-  postprocess();
-  // Determine the number of bytes needed for DataPacket and buffer.
-  unsigned int size = sizeof(DataPacket) + itsBufSize * sizeof(BufferType);
-  char* ptr = new char[size];
-  // Fill in the data packet pointer and initialize the memory.
-  itsDataPacket = (DataPacket*)(ptr);
-  *itsDataPacket = DataPacket();
-  // Fill in the buffer pointer and initialize the buffer.
-  itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
+  // Add the fields to the data definition.
+  addField("Counter", BlobField<int>(1));
+  addField("Buffer", BlobField<BufferType>(1, //version
+					   itsBufSize)); //no_elements
+  // Create the data blob (which calls fillPointers).
+  createDataBlock();
+  // Initialize the buffer.
   for (unsigned int i=0; i<itsBufSize; i++) {
     itsBuffer[i] = 0;
   }
-  // Initialize base class.
-  setDataPacket (itsDataPacket, size);
+   // By default use the normal data size as current;
+   // only if the user explicitly set another CurDataSize
+   // we will send that length
+   setCurDataSize(getDataSize());
 }
+
+void DH_Example::fillDataPointers()
+{
+  // Fill in the counter pointer.
+  itsCounter = getData<int> ("Counter");
+  // Fill in the buffer pointer.
+  itsBuffer = getData<BufferType> ("Buffer");
+}
+
+
 
 void DH_Example::postprocess()
 {
-  delete [] (char*)(itsDataPacket);
-  itsDataPacket = 0;
-  itsBuffer     = 0;
-  setDefaultDataPacket();
+  itsCounter = 0;
+  itsBuffer  = 0;
 }
 
-}
+} // end namespace

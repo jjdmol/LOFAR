@@ -26,14 +26,13 @@
 // LOFARSim simulation environment.
 // 
 
-#include "CEPFrame/BaseSim.h"
-#include "CEPFrame/Transport.h"
-#include "CEPFrame/Step.h"
-#include "CEPFrame/Simul.h"
-#include "CEPFrame/DH_Tester.h"
-#include "CEPFrame/WH_Tester.h"
-#include "CEPFrame/Profiler.h"
-#include "Common/Debug.h"
+#include <Transport/BaseSim.h>
+#include <CEPFrame/Step.h>
+#include <CEPFrame/Composite.h>
+#include <CEPFrame/DH_Tester.h>
+#include <CEPFrame/WH_Tester.h>
+#include <CEPFrame/Profiler.h>
+#include <Common/Debug.h>
 
 using namespace LOFAR;
 
@@ -51,7 +50,7 @@ int main (int argc, const char *argv[])
 
   // create the main Simul; Steps and Simuls will be added to this one
   WH_Tester tester;
-  Simul testerSim(&tester, "TesterSim"); //Uses an empty workholder.
+  Composite testerSim(&tester, "TesterSim"); //Uses an empty workholder.
   testerSim.runOnNode(0);
   
   // Now start defining the simulation. 
@@ -73,11 +72,8 @@ int main (int argc, const char *argv[])
   testerSim.addStep (&step2);
   testerSim.addStep (&step3);
 
-  testerSim.connect ("step1", "step2");
-  testerSim.connect ("step2", "step3");
-
-  testerSim.checkConnections();
-  testerSim.simplifyConnections();
+  testerSim.connect ("step1", "step2", TRANSPORTER(), false);
+  testerSim.connect ("step2", "step3", TRANSPORTER(), false);
 
   //  testerSim.connectOutputToArray(fft,ELEMENTS);
   //////////////////////////////////////////////////////////////////////

@@ -27,7 +27,6 @@
 #include "CEPFrame/DataManager.h"
 #include "CEPFrame/SynchronisityManager.h"
 #include "CEPFrame/DHPoolManager.h"
-#include "CEPFrame/Selector.h"
 
 namespace LOFAR
 {
@@ -37,52 +36,64 @@ namespace LOFAR
 //////////////////////////////////////////////////////////////////////
 
 DataManager::DataManager (int inputs, int outputs)
-  : itsNinputs (inputs),
-    itsNoutputs(outputs),
-    itsInputSelector(0),
-    itsOutputSelector(0)
+  : TinyDataManager(inputs, outputs)
 {
   TRACER2("DataManager constructor");
   itsSynMan = new SynchronisityManager(inputs, outputs);
-  itsInDHs = new DH_info[inputs];
-  itsOutDHs = new DH_info[outputs];
-  itsDoAutoTriggerIn = new bool[inputs];
-  itsDoAutoTriggerOut = new bool[outputs];
+  itsInDHsinfo = new DH_info[inputs];
+  itsOutDHsinfo = new DH_info[outputs];
 
   for (int i = 0; i < inputs; i++)
   {
-    itsInDHs[i].currentDH = 0;
-    itsInDHs[i].id = -1;
-    itsDoAutoTriggerIn[i]=true;
+    itsInDHsinfo[i].currentDH = 0;
+    itsInDHsinfo[i].id = -1;
   }
   for (int j = 0; j < outputs; j++)
   {
-    itsOutDHs[j].currentDH = 0;
-    itsOutDHs[j].id = -1;
-    itsDoAutoTriggerOut[j]=true;
+    itsOutDHsinfo[j].currentDH = 0;
+    itsOutDHsinfo[j].id = -1;
   }
 }
 
 DataManager::DataManager (const DataManager& that)
-  : itsNinputs (that.itsNinputs),
-    itsNoutputs(that.itsNoutputs)
+  : TinyDataManager(that.itsNinputs, that.itsNoutputs)
 {
   itsSynMan = new SynchronisityManager(itsNinputs, itsNoutputs);
-  itsInDHs = new DH_info[itsNinputs];
-  itsOutDHs = new DH_info[itsNoutputs];
+  itsInDHsinfo = new DH_info[itsNinputs];
+  itsOutDHsinfo = new DH_info[itsNoutputs];
   for (int i = 0; i < itsNinputs; i++)
   {
-    itsInDHs[i].currentDH = 0;
-    itsInDHs[i].id = -1;
-    itsDoAutoTriggerIn[i] = that.doAutoTriggerIn(i);
-;
-
+    itsInDHsinfo[i].currentDH = 0;
+    itsInDHsinfo[i].id = -1;
   }
   for (int j = 0; j < itsNoutputs; j++)
   {
-    itsOutDHs[j].currentDH = 0;
-    itsOutDHs[j].id = -1;
-    itsDoAutoTriggerOut[j]=that.doAutoTriggerOut(j);
+    itsOutDHsinfo[j].currentDH = 0;
+    itsOutDHsinfo[j].id = -1;
+  }
+}
+
+DataManager::DataManager (const TinyDataManager& that)
+  : TinyDataManager(that)                       // Copy all data from TinyDM
+{
+  TRACER2("Copy TinyDataManager to DataManager");
+  itsSynMan = new SynchronisityManager(itsNinputs, itsNoutputs);
+  itsInDHsinfo = new DH_info[itsNinputs];
+  itsOutDHsinfo = new DH_info[itsNoutputs];
+
+  for (int i = 0; i < itsNinputs; i++)
+  {
+    itsSynMan->getInPoolManagerPtr(i)->setDataHolder(itsInDHs[i]);
+
+    itsInDHsinfo[i].currentDH = 0;
+    itsInDHsinfo[i].id = -1;
+  }
+  for (int j = 0; j < itsNoutputs; j++)
+  {
+    itsSynMan->getOutPoolManagerPtr(j)->setDataHolder(itsOutDHs[j]);
+
+    itsOutDHsinfo[j].currentDH = 0;
+    itsOutDHsinfo[j].id = -1;
   }
 }
 
@@ -90,18 +101,8 @@ DataManager::~DataManager()
 {
   TRACER4("DataManager destructor");
   delete itsSynMan;
-  delete itsInDHs;
-  delete itsOutDHs;
-  delete itsDoAutoTriggerIn;
-  delete itsDoAutoTriggerOut;
-  if (itsInputSelector != 0)
-  {
-    delete itsInputSelector;
-  }
-  if (itsOutputSelector != 0)
-  {
-    delete itsOutputSelector;
-  }
+  delete [] itsInDHsinfo;
+  delete [] itsOutDHsinfo;
 }
 
 DataHolder* DataManager::getInHolder(int channel)
@@ -110,19 +111,19 @@ DataHolder* DataManager::getInHolder(int channel)
   DbgAssertStr (channel < getInputs(), "input channel too high");
   DHPoolManager* dhpPtr = itsSynMan->getInPoolManagerPtr(channel);
 
-  if (itsInDHs[channel].currentDH == 0)
+  if (itsInDHsinfo[channel].currentDH == 0)
   {
     // If dataholder is shared between input and output, get read/write permission 
     if (dhpPtr->getSharing() == true)
     {
-      itsInDHs[channel].currentDH =  dhpPtr->getRWLockedDH(&itsInDHs[channel].id);
+      itsInDHsinfo[channel].currentDH =  dhpPtr->getRWLockedDH(&itsInDHsinfo[channel].id);
     }
     else
     {
-      itsInDHs[channel].currentDH =  dhpPtr->getReadLockedDH(&itsInDHs[channel].id); 
+      itsInDHsinfo[channel].currentDH =  dhpPtr->getReadLockedDH(&itsInDHsinfo[channel].id); 
     }
   }
-  return itsInDHs[channel].currentDH;
+  return itsInDHsinfo[channel].currentDH;
 }
 
 DataHolder* DataManager::getOutHolder(int channel)
@@ -131,20 +132,20 @@ DataHolder* DataManager::getOutHolder(int channel)
   DbgAssertStr(channel < getOutputs(), "output channel too high");
   DHPoolManager* dhpPtr = itsSynMan->getOutPoolManagerPtr(channel);
 
-  if (itsOutDHs[channel].currentDH == 0)
+  if (itsOutDHsinfo[channel].currentDH == 0)
   {
     // If dataholder is shared between input and output, get read/write permission
     if (dhpPtr->getSharing() == true)
     {
-      itsOutDHs[channel].currentDH = dhpPtr->getRWLockedDH(&itsOutDHs[channel].id);
+      itsOutDHsinfo[channel].currentDH = dhpPtr->getRWLockedDH(&itsOutDHsinfo[channel].id);
     }
     else
     {
-      itsOutDHs[channel].currentDH = dhpPtr->getWriteLockedDH(&itsOutDHs[channel].id);
+      itsOutDHsinfo[channel].currentDH = dhpPtr->getWriteLockedDH(&itsOutDHsinfo[channel].id);
     }
   }
 
-  return itsOutDHs[channel].currentDH;
+  return itsOutDHsinfo[channel].currentDH;
 }
 
 void DataManager::readyWithInHolder(int channel)
@@ -152,14 +153,14 @@ void DataManager::readyWithInHolder(int channel)
   DbgAssertStr (channel >= 0,          "input channel too low");
   DbgAssertStr (channel < getInputs(), "input channel too high");
 
-  if (itsInDHs[channel].id >= 0)
+  if (itsInDHsinfo[channel].id >= 0)
   {
 
     DHPoolManager* dhpPtr = itsSynMan->getInPoolManagerPtr(channel);
 
     if (itsSynMan->isInSynchronous(channel) == true)
     {
-      itsInDHs[channel].currentDH->read();
+      itsInDHsinfo[channel].currentDH->read();
     }
     else
     {
@@ -168,15 +169,15 @@ void DataManager::readyWithInHolder(int channel)
 
     if (dhpPtr->getSharing() == true)                // Shared in- and output
     {
-      dhpPtr->writeUnlock(itsInDHs[channel].id);
+      dhpPtr->writeUnlock(itsInDHsinfo[channel].id);
     }
     else
     {
-      dhpPtr->readUnlock(itsInDHs[channel].id);
+      dhpPtr->readUnlock(itsInDHsinfo[channel].id);
     } 
 
-    itsInDHs[channel].id = -1;
-    itsInDHs[channel].currentDH = 0;
+    itsInDHsinfo[channel].id = -1;
+    itsInDHsinfo[channel].currentDH = 0;
   }
   else
   {
@@ -189,12 +190,12 @@ void DataManager::readyWithOutHolder(int channel)
   DbgAssertStr(channel >= 0, "output channel too low");
   DbgAssertStr(channel < getOutputs(), "output channel too high");
 
-  if (itsOutDHs[channel].id >= 0)
+  if (itsOutDHsinfo[channel].id >= 0)
   {
     if (itsSynMan->isOutSynchronous(channel) == true)
     {
       TRACER4("DataManager::readyWithOutHolder synchronous write");
-      itsOutDHs[channel].currentDH->write();
+      itsOutDHsinfo[channel].currentDH->write();
     }
     else
     {
@@ -202,10 +203,10 @@ void DataManager::readyWithOutHolder(int channel)
       itsSynMan->writeAsynchronous(channel);
     }
 
-    itsSynMan->getOutPoolManagerPtr(channel)->writeUnlock(itsOutDHs[channel].id);
+    itsSynMan->getOutPoolManagerPtr(channel)->writeUnlock(itsOutDHsinfo[channel].id);
 
-    itsOutDHs[channel].id = -1;
-    itsOutDHs[channel].currentDH = 0;
+    itsOutDHsinfo[channel].id = -1;
+    itsOutDHsinfo[channel].currentDH = 0;
   }
   else
   {
@@ -213,50 +214,14 @@ void DataManager::readyWithOutHolder(int channel)
   }
 }
 
-void DataManager::addInDataHolder(int channel, DataHolder* dhptr, 
-				  bool synchronous, bool shareIO)
-{
-  DbgAssertStr (channel >= 0, "input channel too low");
-  DbgAssertStr (channel < getInputs(), "input channel too high");
-  itsSynMan->setInSynchronous(channel, synchronous);
-  itsSynMan->getInPoolManagerPtr(channel)->setDataHolder(dhptr);
-  itsSynMan->getInPoolManagerPtr(channel)->setSharing(shareIO);
-
-  if (shareIO == true)
-  {
-    DbgAssertStr(channel < getOutputs(), 
-		 "corresponding output channel does not exist");
-    itsSynMan->setOutPoolManagerPtr(channel, itsSynMan->getInPoolManagerPtr(channel));
-    itsSynMan->setOutSynchronous(channel, synchronous);
-  }
-} 
-
-void DataManager::addOutDataHolder(int channel, DataHolder* dhptr, 
-				   bool synchronous, bool shareIO)
-{
-  DbgAssertStr (channel >= 0,"output channel too low");
-  DbgAssertStr (channel < getOutputs(), "output channel too high");
-  itsSynMan->setOutSynchronous(channel, synchronous);
-  itsSynMan->getOutPoolManagerPtr(channel)->setDataHolder(dhptr);
-  itsSynMan->getOutPoolManagerPtr(channel)->setSharing(shareIO);
-
-  if (shareIO == true)
-  {
-    DbgAssertStr(channel < getInputs(), 
-		 "corresponding input channel does not exist");
-    itsSynMan->setInPoolManagerPtr(channel, itsSynMan->getOutPoolManagerPtr(channel));
-    itsSynMan->setInSynchronous(channel, synchronous);
-  }
-}
-
-DataHolder* DataManager::getGeneralInHolder(int channel)
+DataHolder* DataManager::getGeneralInHolder(int channel) const
 {  
   DbgAssertStr(channel >= 0, "input channel too low");
   DbgAssertStr(channel < getInputs(), "input channel too high");
   return itsSynMan->getInPoolManagerPtr(channel)->getGeneralDataHolder();
 }
 
-DataHolder* DataManager::getGeneralOutHolder(int channel)
+DataHolder* DataManager::getGeneralOutHolder(int channel) const
 {
   DbgAssertStr(channel >= 0, "output channel too low");
   DbgAssertStr(channel < getOutputs(), "output channel too high");
@@ -278,16 +243,16 @@ void DataManager::initializeInputs()
 {
   for (int ch = 0; ch < itsNinputs; ch++)
   {
-    if (doAutoTriggerIn(ch) && (itsInDHs[ch].currentDH == 0))
+    if (doAutoTriggerIn(ch) && (itsInDHsinfo[ch].currentDH == 0))
     {
       if (itsSynMan->isInSynchronous(ch) == true)
       {
-	itsInDHs[ch].currentDH = itsSynMan->getInPoolManagerPtr(ch)->
-	                         getWriteLockedDH(&itsInDHs[ch].id);
-	itsInDHs[ch].currentDH->read();
-	itsSynMan->getInPoolManagerPtr(ch)->writeUnlock(itsInDHs[ch].id);
-	itsInDHs[ch].id = -1;
-	itsInDHs[ch].currentDH = 0;
+	itsInDHsinfo[ch].currentDH = itsSynMan->getInPoolManagerPtr(ch)->
+	                         getWriteLockedDH(&itsInDHsinfo[ch].id);
+	itsInDHsinfo[ch].currentDH->read();
+	itsSynMan->getInPoolManagerPtr(ch)->writeUnlock(itsInDHsinfo[ch].id);
+	itsInDHsinfo[ch].id = -1;
+	itsInDHsinfo[ch].currentDH = 0;
       }
       else
       {
@@ -296,6 +261,46 @@ void DataManager::initializeInputs()
     }
   }
 
+}
+
+void DataManager::setInBufferingProperties(int channel, bool synchronous,
+					   bool shareDHs) const
+{
+  AssertStr(itsInDHs[channel]->getTransporter().getTransportHolder()==0, 
+	    "Input " << channel << 
+	    " is already connected. Buffering properties must be set before connecting."); 
+  DataHolder* dhPtr = getGeneralInHolder(channel);
+  itsSynMan->setInSynchronous(channel, synchronous);
+  itsSynMan->getInPoolManagerPtr(channel)->setDataHolder(dhPtr);
+
+  if (shareDHs == true)
+  {
+    DbgAssertStr(channel < getOutputs(), 
+ 		 "corresponding output channel does not exist");
+    itsSynMan->sharePoolManager(channel);   
+  }
+
+}
+
+void DataManager::setOutBufferingProperties(int channel, bool synchronous,
+					    bool shareDHs) const
+{
+  AssertStr(itsOutDHs[channel]->getTransporter().getTransportHolder()==0, 
+	    "Output " << channel << 
+	    " is already connected. Buffering properties must be set before connecting."); 
+  DataHolder* dhPtr = getGeneralOutHolder(channel);
+  itsSynMan->setOutSynchronous(channel, synchronous);
+  itsSynMan->getOutPoolManagerPtr(channel)->setDataHolder(dhPtr);
+
+  if (shareDHs == true)
+  {
+    DbgAssertStr(channel < getInputs(), 
+ 		 "corresponding input channel does not exist");
+    DbgAssertStr(((itsSynMan->isInSynchronous(channel)) == synchronous), 
+		 "Synchronisity of output is not equal to synchronisity of input. Changing output synchronisity to match input.");
+
+    itsSynMan->sharePoolManager(channel);
+  }
 }
 
 bool DataManager::isInSynchronous(int channel)
@@ -311,64 +316,5 @@ bool DataManager::isOutSynchronous(int channel)
   DbgAssertStr(channel < getOutputs(), "output channel too high");
   return itsSynMan->isOutSynchronous(channel);
 }
-
-void DataManager::setInputSelector(Selector* selector)
-{ 
-  for (int ch = 0; ch < itsNinputs; ch++)
-  {
-    AssertStr(!isInSynchronous(ch), 
-	      "Input " << ch << " is not asynchronous."); 
-  }
-  itsInputSelector = selector;
-}
-
-void DataManager::setOutputSelector(Selector* selector)
-{ 
-  for (int ch = 0; ch < itsNoutputs; ch++)
-  {
-    AssertStr(!isOutSynchronous(ch), 
-	      "Output " << ch << " is not asynchronous."); 
-  }
-  itsOutputSelector = selector;
-}
-
-DataHolder* DataManager::selectInHolder()
-{
-  AssertStr(itsInputSelector != 0, "No input selector set");
-  unsigned int ch =  itsInputSelector->getNext();
-  return getInHolder(ch);
-}
- 
-DataHolder* DataManager::selectOutHolder()
-{
-  AssertStr(itsOutputSelector != 0, "No output selector set");
-  unsigned int ch =  itsOutputSelector->getNext();
-  return getOutHolder(ch);
-}
-
-bool DataManager::hasInputSelector()
-{
-  if (itsInputSelector == 0)
-  {
-    return false;
-  }
-  else
-  {
-    return true;
-  }
-}
-
-bool DataManager::hasOutputSelector()
-{
-  if (itsOutputSelector == 0)
-  {
-    return false;
-  }
-  else
-  {
-    return true;
-  }
-}
-
 
 }

@@ -42,11 +42,11 @@ WH_Example::WH_Example (const string& name,
   char str[8];
   for (unsigned int i=0; i<nin; i++) {
     sprintf (str, "%d", i);
-    getDataManager().addInDataHolder(i, new DH_Example (string("in_") + str, nbuffer), true);
+    getDataManager().addInDataHolder(i, new DH_Example (string("in_") + str, nbuffer));
   }
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
-    getDataManager().addOutDataHolder(i, new DH_Example (string("out_") + str, nbuffer), true);
+    getDataManager().addOutDataHolder(i, new DH_Example (string("out_") + str, nbuffer));
   }
 }
 

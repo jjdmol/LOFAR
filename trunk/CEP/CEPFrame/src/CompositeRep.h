@@ -1,4 +1,4 @@
-//# SimulRep.h: Class to hold a collection of Step objects
+//# CompositeRep.h: Class to hold a collection of Step objects
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef CEPFRAME_SIMULREP_H
-#define CEPFRAME_SIMULREP_H
+#ifndef CEPFRAME_COMPOSITEREP_H
+#define CEPFRAME_COMPOSITEREP_H
 
 #include <lofar_config.h>
 
@@ -31,24 +31,23 @@
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 #include "CEPFrame/StepRep.h"
-#include "CEPFrame/Transport.h"
 #include "CEPFrame/VirtualMachine.h"
 
 namespace LOFAR
 {
 
 class CorbaController;
-class Simul;
+class Composite;
 
 
-/** The Simul class is related to the Step class following a Composit pattern.
-    Therefore, a Simul is a collection of Steps and/or Simuls
+/** The Composite class is related to the Step class following a Composite pattern.
+    Therefore, a Composite is a collection of Steps and/or Composites
     In the constructor the actual workholder is defined. 
     The actual simulation work is performed in the process() method
     (which calls the Workholder::process() method)
 */
 
-class SimulRep: public StepRep
+class CompositeRep: public StepRep
 {
 public:
   // Maptype for names
@@ -57,18 +56,18 @@ public:
   /** Normally used basic constructor.
       A pointer to a workholder (containing the dataholders) is passed.
   */
-  SimulRep (WorkHolder& worker,
+  CompositeRep (WorkHolder& worker,
 	    const string& name,
 	    bool addnameSuffix,
 	    bool controllable,
 	    bool monitor);
 
-  virtual ~SimulRep();
+  virtual ~CompositeRep();
   
   
   /** Set Node numbers for both In and OutData
       Set application number as well.
-      Do it recursively for all Steps in this Simul.
+      Do it recursively for all Steps in this Composite.
   */
   virtual void runOnNode (int aNode, int applNr);
 
@@ -93,40 +92,29 @@ public:
   /// Dump information to the user
   virtual void dump() const;
 
-  /// Add a Step to this Simul
+  /// Add a Step to this Composite
   void addStep (const Step& aStep);
 
-  /// Get all Steps in the Simul.
+  /// Get all Steps in the Composite.
   const list<Step*>& getSteps() const;
 
   /// Distinguish between step and simul
-  bool isSimul() const;
+  bool isComposite() const;
 
-  /// Mark if this Simul is not part of another Simul
+  /// Mark if this Composite is not part of another Composite
   bool isHighestLevel() const;
   /// lower the highest level flag
   void setNotHighestLevel();
 
-  /** Check the connections.
-      It checks if all DataHolders are connected properly.
-  */
-  virtual bool checkConnections (ostream&, const StepRep* parent);
-
-  /** Shortcut the connections by removing all possible Simul
-      connections. In this way the steps in different simuls communicate
-      directly.
-  */
-  virtual void shortcutConnections();
-
   /** Simplify the connections by using TH_Mem for all connections between
       Steps running on the same node.
   */
-  virtual void simplifyConnections();
-  virtual void optimizeConnectionsWith(const TransportHolder& newTH);
+  virtual void replaceConnectionsWith(const TransportHolder& newTH,
+				      bool blockingComm=true);
 
   /// Connect source and target DataHolders by name.
   bool connect (const string& sourceName, const string& targetName,
-		const TransportHolder& prototype);
+		const TransportHolder& prototype, bool blockingComm=true);
 
   /** Helper for ConnectInputToArray 
    */
@@ -134,7 +122,8 @@ public:
 			  int    thisChannelOffset,
 			  int    thatChannelOffset,
 			  int    skip,
-			  const TransportHolder& prototype);
+			  const TransportHolder& prototype,
+			  bool blockingComm=true);
 
   /** Helper for ConnectOutputToArray 
    */
@@ -142,29 +131,31 @@ public:
 			    int    thisChannelOffset,
 			    int    thatChannelOffset,
 			    int    skip,
-			    const TransportHolder& prototype);
+			    const TransportHolder& prototype,
+			    bool blockingComm=true);
 
   /**
      Connect all input DataHolders in the aStep[] array to the input
      DataHolders of the current simul.
      This connection is needed in order to let the framework transport
-     the data read by the Simul to the DataHolders of the first Steps
-     in the Simul.
+     the data read by the Composite to the DataHolders of the first Steps
+     in the Composite.
   */
   bool connectInputToArray (Step* aStep[],  // pointer to  array of ptrs to Steps
 			    int    nrItems, // nr of Steps in aStep[] array
 			    int    skip,     // skip in inputs in aStep 
 			    int    offset,  // start with this input nr in aStep
-			    const TransportHolder& prototype);
+			    const TransportHolder& prototype,
+			    bool blockingComm=true);
 
 //   /**
-//      Connect all input DataHolders in the Simul[] array to the input
+//      Connect all input DataHolders in the Composite[] array to the input
 //      DataHolders of the current simul.
 //      This connection is needed in order to let the framework transport
-//      the data read by the Simul to the DataHolders of the first Simuls
-//      in the Simul.
+//      the data read by the Composite to the DataHolders of the first Composites
+//      in the Composite.
 //    */
-//   bool connectInputToArray (Simul* aStep[],     // pointer to  array of ptrs to Steps
+//   bool connectInputToArray (Composite* aStep[],     // pointer to  array of ptrs to Steps
 // 			    int    nrItems,  // n of Steps in aStep[] array
 // 			    int    skip,     // skip in inputs in aStep 
 // 			    int    offset,  // start with this input nr in aStep
@@ -174,44 +165,37 @@ public:
      Connect all output DataHolders in the aStep[] array to the output
      DataHolders of the current simul.
      This connection is needed in order to let the framework transport
-     the data read by the Simul to the DataHolders of the first Steps
-     in the Simul.
+     the data read by the Composite to the DataHolders of the first Steps
+     in the Composite.
    */
   bool connectOutputToArray (Step* aStep[],  // pointer to  array of ptrs to Steps
 			     int    nrItems, // nr of Steps in aStep[] array
 			     int    skip,     // skip in inputs in aStep 
 			     int    offset,  // start with this input nr in aStep
-			     const TransportHolder& prototype);
+			     const TransportHolder& prototype,
+			     bool blockingComm=true);
 
   /**
-     Get a pointer to the Virtual Machine controlling this SimulRep. The Virtual 
+     Get a pointer to the Virtual Machine controlling this CompositeRep. The Virtual 
      Machine is created in the contructor.
    */
   VirtualMachine& getVM();
 
-  // Set the output file for the given data holder.
-  // As in connect, the dhName has to be given as "step.dhname".
-  // If the file name is empty, the output file is closed.
-  bool setDHFile (const string& dhName, const string& fileName);
-
 private:
-  /// Do the possible shortcut of Simul connections.
-  void doShortcut (Transport& tp);
-
   /** Split the given name into step and dataholder part (separated by a .).
       Each part can be empty.
       The isSource argument tells if the name is the source or target.
       The step name is looked up and the corresponding StepRep* is filled in.
-      An empty step means this Simul.
+      An empty step means this Composite.
       Similarly the DataHolder is looked up and its index is filled in.
       (-1 means that no DataHolder part is given).
   */
   bool splitName (bool isSource, const string& name,
 		  StepRep*& step, int& dhIndex);
 
-  /// true = this Simul is the top Simul
+  /// true = this Composite is the top Composite
   bool itsIsHighestLevel;
-  /// List of Steps contained in the Simul
+  /// List of Steps contained in the Composite
   list<Step*> itsSteps;
   /// Map of Step names of Step objects.
   nameMapType itsNameMap;
@@ -230,13 +214,13 @@ private:
 };
 
   
-inline bool SimulRep::isHighestLevel() const
+inline bool CompositeRep::isHighestLevel() const
   { return itsIsHighestLevel; }
-inline void SimulRep::setNotHighestLevel()
+inline void CompositeRep::setNotHighestLevel()
   { itsIsHighestLevel = false; }
-inline const list<Step*>& SimulRep::getSteps() const
+inline const list<Step*>& CompositeRep::getSteps() const
  { return itsSteps; }
-inline VirtualMachine& SimulRep::getVM()
+inline VirtualMachine& CompositeRep::getVM()
  { return itsVM; }
 
 }

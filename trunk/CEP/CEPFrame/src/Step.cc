@@ -24,7 +24,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "CEPFrame/Step.h"
-#include "CEPFrame/Simul.h"
+#include "CEPFrame/Composite.h"
 
 namespace LOFAR
 {
@@ -89,9 +89,9 @@ Step* Step::clone() const
   return new Step (*this);
 }
 
-Simul Step::getParent() const
+Composite Step::getParent() const
 {
-  return Simul(itsRep->getParent());
+  return Composite(itsRep->getParent());
 }
 
 }

@@ -24,14 +24,13 @@
 
 #include <lofar_config.h>
 
-#include "Simulator_Example.h"
-#include "CEPFrame/SimulatorParseClass.h"
-#include "CEPFrame/Transport.h"
-#include "CEPFrame/Step.h"
-#include "CEPFrame/BaseSim.h"
-#include "CEPFrame/Simul.h"
-#include "CEPFrame/WH_Example.h"
-#include "CEPFrame/Profiler.h"
+#include <Simulator_Example.h>
+#include <tinyCEP/SimulatorParseClass.h>
+#include <CEPFrame/Step.h>
+#include <Transport/BaseSim.h>
+#include <CEPFrame/Composite.h>
+#include <CEPFrame/WH_Example.h>
+#include <CEPFrame/Profiler.h>
 #include <Common/KeyValueMap.h>
 #include <Common/Debug.h>
 #include <Common/lofar_iostream.h>
@@ -50,13 +49,13 @@ void Simulator_Example::define (const KeyValueMap& params)
   cout << "CEPFrame Processor " << rank << " of " << size
        << " operational  (appl=" << appl << ')' << endl;
 
-  // define the top-level simul object
+  // define the top-level composite object
   WH_Example exSimul("ExampleSimul");
-  Simul simul(exSimul);
-  setSimul (simul);
+  Composite comp(exSimul);
+  setComposite (comp);
 
-  // tell the Simul where to run
-  simul.runOnNode(0);
+  // tell the Composite where to run
+  comp.runOnNode(0);
   
   // Now start filling the simulation. 
   // first create the Steps
@@ -69,23 +68,23 @@ void Simulator_Example::define (const KeyValueMap& params)
 
   // Create the first composite and fill it
   WH_Example whComp1("Composite1");
-  Simul composite1(whComp1, "simcomp1", false);
+  Composite composite1(whComp1, "simcomp1", false);
   composite1.addStep(step2);
   composite1.addStep(step3);
 
   // Create the second composite and fill it
   WH_Example whComp2("Composite2");
-  Simul composite2(whComp2, "simcomp2", false);
+  Composite composite2(whComp2, "simcomp2", false);
   composite2.addStep(step1);
   composite2.addStep(composite1);
 
-  // Add the Composite2 to the top-level Simul
-  simul.addStep(composite2);
+  // Add the Composite2 to the top-level Composite
+  comp.addStep(composite2);
 
-  // Now define the connections between the Steps and Simuls objects:
-  step3.connectInput(&step2);
+  // Now define the connections between the Steps and Composite objects:
+  step3.connectInput(&step2,TRANSPORTER(), false);
   Step* addr2 = &composite2;
-  simul.connectInputToArray(&addr2,1);
+  comp.connectInputToArray(&addr2,1,0,0,TRANSPORTER(),false);
 
   //////////////////////////////////////////////////////////////////////
   //
@@ -105,7 +104,7 @@ void Simulator_Example::run (int nsteps)
   cout << endl <<  "Start Process" << endl;    
   for (int i=0; i<nsteps; i++) {
     if (i==2) Profiler::activate();
-    getSimul().process();
+    getComposite().process();
     if (i==5) Profiler::deActivate();
   }
 }
@@ -114,7 +113,7 @@ void Simulator_Example::dump() const
 {
 
   cout << endl << "DUMP Data from last Processing step: " << endl;
-  getSimul().dump();
+  getComposite().dump();
 }
 
 void Simulator_Example::quit()

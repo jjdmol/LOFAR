@@ -26,15 +26,14 @@
 #include <config.h>
 #endif
 
-#include "TestAutoTrigger.h"
-#include "CEPFrame/SimulatorParseClass.h"
-#include "CEPFrame/Transport.h"
-#include "CEPFrame/Step.h"
-#include "CEPFrame/BaseSim.h"
-#include "CEPFrame/Simul.h"
-#include "CEPFrame/WH_Empty.h"
-#include "CEPFrame/WH_TestAutoTrigger.h"
-#include "CEPFrame/Profiler.h"
+#include <TestAutoTrigger.h>
+#include <tinyCEP/SimulatorParseClass.h>
+#include <CEPFrame/Step.h>
+#include <Transport/BaseSim.h>
+#include <CEPFrame/Composite.h>
+#include <CEPFrame/WH_Empty.h>
+#include <CEPFrame/WH_TestAutoTrigger.h>
+#include <CEPFrame/Profiler.h>
 #include <Common/KeyValueMap.h>
 #include <Common/Debug.h>
 #include <Common/lofar_iostream.h>
@@ -55,11 +54,11 @@ void TestAutoTrigger::define (const KeyValueMap& params)
 
   // define the top-level simul object
   WH_Empty topSimulWH("TestAutoTrigger");
-  Simul simul(topSimulWH);
-  setSimul (simul);
+  Composite comp(topSimulWH);
+  setComposite (comp);
 
   // tell the Simul where to run
-  simul.runOnNode(0);
+  comp.runOnNode(0);
   
   // Now start filling the simulation. 
   // first create the Steps
@@ -68,9 +67,9 @@ void TestAutoTrigger::define (const KeyValueMap& params)
   WH_TestAutoTrigger wh2("Step2");
   Step step2(wh2);
 
-  simul.addStep(step1);
-  simul.addStep(step2);
-  step2.connectInput(&step1);
+  comp.addStep(step1);
+  comp.addStep(step2);
+  step2.connectInput(&step1, TRANSPORTER(), false);
 
 
   //////////////////////////////////////////////////////////////////////
@@ -90,14 +89,14 @@ void TestAutoTrigger::run (int nsteps)
 
   cout << endl <<  "Start Process" << endl;    
   for (int i=0; i<nsteps; i++) {
-    getSimul().process();
+    getComposite().process();
     dump();
   }
 }
 
 void TestAutoTrigger::dump() const
 {
-  getSimul().dump();
+  getComposite().dump();
   cout << endl;
 }
 
