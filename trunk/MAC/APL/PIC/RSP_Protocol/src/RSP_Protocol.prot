@@ -276,8 +276,8 @@ event = {
     userdefined;
   };
   param = {
-    name = "blpmask";
-    type = "std::bitset<MAX_N_BLPS>";
+    name = "rcumask";
+    type = "std::bitset<MAX_N_RCUS>";
   };
   param = {
     name = "settings";
@@ -309,8 +309,8 @@ event = {
     userdefined;
   };
   param = {
-    name = "blpmask";
-    type = "std::bitset<MAX_N_BLPS>";
+    name = "rcumask";
+    type = "std::bitset<MAX_N_RCUS>";
   };
   param = {
     name = "cache";

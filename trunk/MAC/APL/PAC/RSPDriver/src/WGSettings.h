@@ -56,16 +56,21 @@ namespace RSP_Protocol
 
       /**
        * Constructors for a WGSettings object.
-       * Currently the tv_usec part is always set to 0 irrespective
-       * of the value passed in.
        */
-      WGSettings() { }
+      WGSettings() : m_modified(false) { }
 	  
       /* Destructor for WGSettings. */
       virtual ~WGSettings() {}
 
       /* get reference to wg settings array */
       blitz::Array<WGRegisterType, 1>& operator()();
+
+      /**
+       * Access methods.
+       */
+      void setModified()   { m_modified = true; }
+      void clearModified() { m_modified = false; }
+      bool getModified()   { return m_modified; }
 
     public:
       /*@{*/
@@ -79,6 +84,7 @@ namespace RSP_Protocol
 
     private:
       blitz::Array<WGRegisterType, 1> m_registers;
+      bool                            m_modified; // has the value been modified?
   };
 
   inline blitz::Array<WGSettings::WGRegisterType, 1>& WGSettings::operator()() { return m_registers; }
