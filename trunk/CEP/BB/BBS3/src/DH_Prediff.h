@@ -63,8 +63,11 @@ public:
   /// Deallocate the buffers.
   virtual void postprocess();
 
-  void setDataSize(const vector<uint32>& shape);
-  const vector<uint32>& getDataSize();
+  void setBufferSize(const vector<uint32>& shape);
+  const vector<uint32>& getBufferSize();
+
+  void setDataSize(unsigned int size);
+  unsigned int getDataSize() const;
 
   double* getDataBuffer();
 
@@ -85,9 +88,16 @@ private:
   // Fill the pointers to the data in the blob.
   virtual void fillDataPointers();
 
+  unsigned int* itsDataSize;    // Number of equations in data buffer
   double* itsDataBuffer;
   unsigned int* itsMoreData;   // More result to come?
 };
+
+inline void DH_Prediff::setDataSize(unsigned int size)
+{ *itsDataSize = size; }
+
+inline unsigned int DH_Prediff::getDataSize() const
+{ return *itsDataSize; }
 
 inline double* DH_Prediff::getDataBuffer()
 { return itsDataBuffer; }
