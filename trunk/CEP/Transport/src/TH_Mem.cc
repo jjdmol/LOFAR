@@ -36,12 +36,16 @@ namespace LOFAR
  * the Transport.
  */
 map<int, DataHolder*> TH_Mem::theSources;
+map<int, pthread_cond_t> TH_Mem::dataAvailable;
+map<int, pthread_cond_t> TH_Mem::dataReceived;
 
+pthread_mutex_t TH_Mem::theirMapLock = PTHREAD_MUTEX_INITIALIZER;  
 
 TH_Mem::TH_Mem()
   : itsFirstSendCall (true),
     itsFirstRecvCall (true),
-    itsDataSource    (0)
+    itsDataSource    (0),
+    itsFirstCall     (true)
 {}
 
 TH_Mem::~TH_Mem()
@@ -63,6 +67,22 @@ bool TH_Mem::connectionPossible(int srcRank, int dstRank) const
             << srcRank << " and "
             << dstRank << "?" << endl;
   return srcRank == dstRank;
+}
+
+void TH_Mem::initConditionVariables(int tag)
+{
+  if (dataAvailable.find(tag) == dataAvailable.end())
+  {
+    pthread_cond_t condAv;
+    pthread_cond_init(&condAv, NULL);
+    dataAvailable[tag] = condAv;
+  }
+  if (dataReceived.find(tag) == dataReceived.end())
+  {
+    pthread_cond_t condRecv;
+    pthread_cond_init(&condRecv, NULL);
+    dataReceived[tag] = condRecv;
+  }
 }
 
 bool TH_Mem::recvNonBlocking(void* buf, int nbytes, int tag)
@@ -108,6 +128,104 @@ bool TH_Mem::recvVarNonBlocking(int tag)
   DataHolder* target = getTransporter()->getDataHolder();
   target->resizeBuffer (nb);
   memcpy (target->getDataPtr(), itsDataSource->getDataPtr(), nb);
+  return true;
+}
+
+bool TH_Mem::recvBlocking(void* buf, int nbytes, int tag)
+{ 
+  cerr << "Warning: TH_Mem::recvBlocking() "  
+       << "Using blocking in-memory transport can cause a dead-lock." 
+       << endl;
+
+  pthread_mutex_lock(&theirMapLock);
+  if (itsFirstCall)
+  {
+    initConditionVariables(tag);
+    itsFirstCall = false;
+  }
+
+  if (theSources.end() == theSources.find(tag))
+  {
+    pthread_cond_wait(&dataAvailable[tag], &theirMapLock); // Wait for sent message
+  }
+  
+  itsDataSource = theSources[tag];
+
+  if (nbytes == itsDataSource->getDataSize())
+  {
+    /// do the memcpy
+    memcpy(buf, itsDataSource->getDataPtr(), nbytes);
+        
+    // erase the record
+    theSources.erase(tag);
+  }
+  else
+  {
+    // erase the record
+    theSources.erase(tag);
+        
+    Throw("Number of bytes do not match");
+  }
+
+  pthread_cond_signal(&dataReceived[tag]);
+  pthread_mutex_unlock(&theirMapLock);
+  return true;
+}
+
+/**
+   The send function must now add its DataHolder to the map containing theSources.
+ */
+bool TH_Mem::sendBlocking(void* buf, int nbytes, int tag)
+{
+  cerr << "Warning: TH_Mem::sendBlocking() "  
+       << "Using blocking in-memory transport can cause a dead-lock." 
+       << endl;
+
+  pthread_mutex_lock(&theirMapLock);
+  if (itsFirstCall)
+  {
+    initConditionVariables(tag);
+    itsFirstCall = false;
+  }
+
+  theSources[tag] = getTransporter()->getDataHolder();
+  pthread_cond_signal(&dataAvailable[tag]); // Signal data available
+  pthread_cond_wait(&dataReceived[tag], &theirMapLock);  // Wait for data received
+  pthread_mutex_unlock(&theirMapLock);
+  
+  return true;
+}
+
+bool TH_Mem::recvVarBlocking(int tag)
+{
+  cerr << "Warning: TH_Mem::recvVarBlocking() "  
+       << "Using blocking in-memory transport can cause a dead-lock." 
+       << endl;
+
+  pthread_mutex_lock(&theirMapLock);
+  if (itsFirstCall)
+  {
+    initConditionVariables(tag);
+    itsFirstCall = false;
+  }
+
+  if (theSources.end() == theSources.find(tag))
+  {
+    pthread_cond_wait(&dataAvailable[tag], &theirMapLock); // Wait for sent message
+  }
+  
+  itsDataSource = theSources[tag];
+  int nb = itsDataSource->getDataSize();
+  DataHolder* target = getTransporter()->getDataHolder();
+  target->resizeBuffer(nb);
+  /// do the memcpy
+  memcpy(target->getDataPtr(), itsDataSource->getDataPtr(), nb);
+  
+  // erase the record
+  theSources.erase(tag);
+
+  pthread_cond_signal(&dataReceived[tag]);
+  pthread_mutex_unlock(&theirMapLock);
   return true;
 }
 

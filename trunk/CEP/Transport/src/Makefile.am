@@ -13,7 +13,6 @@ DataBlobExtra.h \
 DH_PL.h \
 PO_DH_PL.h \
 TH_File.h \
-TH_Mem_Bl.h \
 TH_Mem.h \
 TH_MPI.h \
 TH_PL.h \
@@ -42,7 +41,6 @@ DataBlobExtra.cc \
 DH_PL.cc \
 PO_DH_PL.cc \
 TH_File.cc \
-TH_Mem_Bl.cc \
 TH_Mem.cc \
 TH_MPI.cc \
 TH_PL.cc \

@@ -27,6 +27,7 @@
 
 #include <Transport/TransportHolder.h>
 #include <Common/lofar_map.h>
+#include <pthread.h>
 
 namespace LOFAR
 {
@@ -78,6 +79,30 @@ public:
   */
   virtual bool recvVarNonBlocking(int tag);
 
+  /**
+     Receive fixed size data. This call does the actual data transport
+     by memcpy'ing the data from the sender and sending out a
+     received notification.
+  */
+  virtual bool recvBlocking(void* buf, int nbytes, int tag);
+
+ /**
+     Send fixed size data.
+     It does not really send, because the recv is doing the memcpy.
+     This call only records the buf, nbytes, destination and tag
+     which can be matched by the recv call.
+     The only things it does are setting the status and waiting for
+     a notification of the receiver.
+  */
+  virtual bool sendBlocking(void* buf, int nbytes, int tag);
+
+  /**
+     Receive variable size data. This call does the actual data transport
+     by memcpy'ing the data from the sender and sending out a
+     received notification.
+  */
+  virtual bool recvVarBlocking(int tag);
+
   /// Get the type of transport.
   virtual string getType() const;
 
@@ -97,15 +122,27 @@ public:
   // </group>
 
  private:
+
+  // Initializes condition variables needed for blocking communication
+  void initConditionVariables(int tag);
+
   /**
      The map from tag to source DataHolder object.
    */
   static map<int, DataHolder*> theSources;
 
+  // Maps which hold condition variables.
+  static map<int, pthread_cond_t> dataAvailable;
+  static map<int, pthread_cond_t> dataReceived;  
+
+  // Mutex for access to messages map
+  static pthread_mutex_t theirMapLock;
+
   bool        itsFirstSendCall;
   bool        itsFirstRecvCall;
   DataHolder* itsDataSource;
 
+  bool        itsFirstCall;
 };
 
 }
