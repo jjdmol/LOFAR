@@ -233,7 +233,7 @@ class BlobField : public BlobFieldBase
 {
 public:
   // Define a scalar.
-  BlobField (uint version);
+  explicit BlobField (uint version);
 
   // Define a vector.
   BlobField (uint version, uint32 size0);

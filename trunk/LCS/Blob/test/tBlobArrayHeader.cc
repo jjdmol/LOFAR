@@ -81,7 +81,7 @@ int main (int argc, const char* argv[])
     std::string xastr((const char*)&xa, sizeof(xa));
     std::istringstream ss(xastr);
     BlobIBufStream bib(ss);
-    BlobIStream bs(&bib);
+    BlobIStream bs(bib);
     float* data;
     std::vector<uint> shape;
     // Get the array from the blob (shape and data) and check it.

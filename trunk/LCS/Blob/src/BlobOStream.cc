@@ -26,12 +26,12 @@
 
 namespace LOFAR {
 
-BlobOStream::BlobOStream (BlobOBuffer* bb)
+BlobOStream::BlobOStream (BlobOBuffer& bb)
 : itsCurLength (0),
   itsLevel     (0),
-  itsStream    (bb)
+  itsStream    (&bb)
 {
-  itsSeekable = (bb->tellPos() != -1);
+  itsSeekable = (bb.tellPos() != -1);
 }
 
 BlobOStream::~BlobOStream()

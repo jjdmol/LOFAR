@@ -62,7 +62,7 @@ public:
   // The buffer is a char* or a string<uchar> depending on the allocator
   // object.
   // By default the initial capacity can be extended.
-  explicit BlobString (const BlobStringType&, size_t size=0,
+  explicit BlobString (const BlobStringType&, size_t capacity=0,
 		       bool canIncreaseCapacity=true);
 
   ~BlobString();
