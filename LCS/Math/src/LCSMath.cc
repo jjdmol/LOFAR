@@ -473,6 +473,7 @@ namespace LCSMath
 
     ACM = (dcomplex) 0;
 
+    // CB: merk op dat ik geen transpose doe aangezien dat (volgens mij) niet nodig is.
     for (int k=lb; k<=ub; k++) {
       ACM = (1-alpha) * ACM + 
 	alpha * (matMult(a(blitz::Range::all(), k), 
@@ -562,7 +563,7 @@ namespace LCSMath
     return out;
   }
 
-  LoMat_dcomplex invert (dcomplex det, const LoMat_dcomplex& in)
+  LoMat_dcomplex invert (const LoMat_dcomplex& in)
   {
 #ifdef HAVE_LAPACK
       AssertStr(in.rows() == in.cols(), "The input must be a square matrix!");
@@ -578,19 +579,18 @@ namespace LCSMath
       
       zgetrf(&m, &n, out.data(), &lda, ipiv.data(), &info);
       
-      if (info == 0) { // LU decomposition worked! 
-	  // Calculate the determinate
-	  // It is just the product of the diagonal elements
-	  det = out(0,0);
-	  for (int i = 0; i < n; i++)
-	      det *= out(i,i);
-	  
+      if (info == 0) { // LU decomposition worked!   
 	  // Calculate the inverse using back substitution
-	  int lwork = 32 * n; // Lazy - we should really get this from ilaenv
+	  int lwork = 32 * n;
 	  LoVec_dcomplex work(lwork);
 	  zgetri(&m, out.data(), &lda, ipiv.data(), work.data(), &lwork, &info);
+      } else if (info > 0) {
+	  out = 0;
+	  cout <<  "A signular matrix can not be inversed!" << endl;
+      } else {
+	  AssertStr(info > 0, "Illegal argument to getrf!");
       }
-      AssertStr(info >= 0, "Illegal argument to getri or getrf");
+      AssertStr(info >= 0, "Illegal argument to getri!");
 
       return out;
 #else
