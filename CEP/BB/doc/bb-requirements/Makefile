@@ -2,7 +2,9 @@ DOCS=bb-requirements
 PDFS=bb-requirements.pdf
 
 %.dvi:   %.tex
-	latex $<
+	latex $< && latex $< && latex $<
+
+#	latex $< && makeindex $*.idx && latex $< && latex $<
 
 %.pdf:   %.dvi
 	dvipdfm $<
@@ -16,6 +18,9 @@ bb-requirements.pdf: \
 	../figures/blackboard-use_concept.eps \
 	../figures/demo.usecase.eps \
 
+
+view:	bb-requirements.pdf
+	acroread bb-requirements.pdf
 
 clean:
 	-@rm *~
