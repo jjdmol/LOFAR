@@ -30,7 +30,7 @@
 #include <config.h>
 #endif
 
-#include "BaseSim/Simulator.h"
+#include "CEPFrame/Simulator.h"
 class WH_FillTFMatrix;
 class WH_Delay;
 class WH_Transpose;

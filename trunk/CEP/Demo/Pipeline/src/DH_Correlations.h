@@ -22,15 +22,15 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_DH_CORRELATIONS_H
-#define BASESIM_DH_CORRELATIONS_H
+#ifndef PIPELINE_DH_CORRELATIONS_H
+#define PIPELINE_DH_CORRELATIONS_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 #include "myComplex.h"
 
-#include "BaseSim/DataHolder.h"
+#include "CEPFrame/DataHolder.h"
 #include "Common/Debug.h"
 
 /**

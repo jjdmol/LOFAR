@@ -1,5 +1,5 @@
 #include "Pipeline/Pipeline.h"
-#include "BaseSim/SimulatorParseClass.h"
+#include "CEPFrame/SimulatorParseClass.h"
 #include "Common/lofar_iostream.h"
 #include "Common/Debug.h"
 
@@ -11,10 +11,10 @@ int atexit(void (*function)(void))
 }
 #endif
 
-int main (int argc, char** argv)
+int main (int argc, const char** argv)
 {
 #ifdef HAVE_MPI
-  MPI_Init(&argc,&argv);
+  MPI_Init(&argc,(char***)&argv);
 #endif
   // Set trace level.
   Debug::initLevels (argc, (const char* [])argv);

@@ -30,8 +30,8 @@
 #include <config.h>
 #endif
 
-#include "BaseSim/WorkHolder.h"
-#include "BaseSim/DH_Empty.h"
+#include "CEPFrame/WorkHolder.h"
+#include "CEPFrame/DH_Empty.h"
 #include "Pipeline/DH_Correlations.h"
 
 /**
