@@ -42,21 +42,10 @@ class Solver
 
 public:
   // Create Solver object.
-  Solver (const string& meqModel,
-	  const string& skyModel,
-	  const string& dbType,
-	  const string& dbName,
-	  const string& dbHost,
-	  const string& dbPwd);
+  Solver();
 
   // Destructor
   ~Solver();
-
-  // Start another time interval.
-  // Hereafter getSolvableParmData can be called.
-  // It returns false if the start value is outside the observation domain.
-  // Length is trimmed if beyond end of observation.
-  bool nextInterval (double start, double length, bool callReadPolcs = true);
 
   // Set the solvable parm data for a given prediffer.
   void setSolvableParmData (const ParmData&, int prediffer);
@@ -82,12 +71,6 @@ public:
 	      vector<double>& resultParmValues,
 	      Quality& resultQuality);
 
-  // Save solved parameters to the MEP database.
-  void saveParms();
-
-  // Save all solvable parameters to the MEP database.
-  void saveAllSolvableParms();
-
 private:
   // Copy constructor and assignment are not allowed.
   // <group>
@@ -96,25 +79,13 @@ private:
   // </group>
 
 
-  string                itsMEPName;     // Common parmtable name
-  ParmTable             itsMEP;         //# Common parmtable
-  string                itsGSMMEPName;  // GSM parameters parmtable name
-  ParmTable             itsGSMMEP;      //# parmtable for GSM parameters
-  MeqDomain             itsSolveDomain;
-  casa::LSQaips      itsSolver;
-  int          itsNrScid;               //# Nr of solvable parameter coeff.
-  MeqMatrix    itsSolution;             //# Solution as complex numbers
+  casa::LSQaips  itsSolver;
+  int            itsNrScid;               //# Nr of solvable parameter coeff.
+  MeqMatrix      itsSolution;             //# Solution as complex numbers
   vector<double> itsFitME;
   vector<complex<double> > itsDeriv;    //# derivatives of predict
   Quality itsSol;                       //# Solution quality
   casa::Vector<casa::String> itsSolvableParms;     // Solvable parameters
-
-  std::vector<double> itsTimes;     // All times in MS
-  std::vector<double> itsIntervals; // All intervals in MS
-  unsigned int   itsTimeIndex;      // The index of the current time
-  unsigned int   itsNrTimes;        // The number of times in the time interval
-  double itsStartFreq;
-  double itsEndFreq;
 };
 
 } // namespace LOFAR

@@ -150,7 +150,7 @@ Prediffer::Prediffer(const string& msName,
 	    << itsStepFreq << " Hz" );
 
   // Do the initial antenna selection.
-  select (ant, ant, 0, -1); 
+  select (ant, ant); 
                                                              
   if (!itsCalcUVW) {
     // Fill the UVW coordinates from the MS instead of calculating them.
@@ -626,7 +626,8 @@ void Prediffer::initParms (const MeqDomain& domain, bool readPolcs)
 // Set the request belonging to that.
 //
 //----------------------------------------------------------------------
-bool Prediffer::nextInterval(double start, double length, bool callReadPolcs)
+bool Prediffer::setDomain (double fstart, double flength,
+			   double tstart, double tlength)
 {
   NSTimer mapTimer;
   mapTimer.start();
@@ -636,12 +637,12 @@ bool Prediffer::nextInterval(double start, double length, bool callReadPolcs)
 
   // Normally the times are in sequential order, so we can continue searching.
   // Otherwise start the search at the start.
-  if (start < itsTimes[itsTimeIndex]) {
+  if (tstart < itsTimes[itsTimeIndex]) {
     itsTimeIndex = 0;
   }
   // Find the time matching the start time.
   while (itsTimeIndex < itsTimes.nelements()
-	 && start < itsTimes[itsTimeIndex] - itsIntervals[itsTimeIndex]/2) {
+	 && tstart < itsTimes[itsTimeIndex] - itsIntervals[itsTimeIndex]/2) {
     ++itsTimeIndex;
   }
   // Exit when no more chunks.
@@ -654,7 +655,7 @@ bool Prediffer::nextInterval(double start, double length, bool callReadPolcs)
   // Find the end of the interval.
   int startIndex = itsTimeIndex;
   double startTime = itsTimes[itsTimeIndex] - itsIntervals[itsTimeIndex]/2;
-  double endTime = start + length;
+  double endTime = tstart + tlength;
   itsNrTimes = 0;
   while (itsTimeIndex < itsTimes.nelements()
 	 && endTime <= itsTimes[itsTimeIndex] + itsIntervals[itsTimeIndex]/2) {
@@ -681,7 +682,7 @@ bool Prediffer::nextInterval(double start, double length, bool callReadPolcs)
   itsSolveDomain = MeqDomain(startTime, endTime,
 			     itsStartFreq + itsFirstChan*itsStepFreq,
 			     itsStartFreq + (itsLastChan+1)*itsStepFreq);
-  initParms (itsSolveDomain, callReadPolcs);
+  initParms (itsSolveDomain, true);
   parmTimer.stop();
   cout << "BBSTest: initparms    " << parmTimer << endl;
 
@@ -1092,12 +1093,12 @@ vector<MeqResult> getCondeq (const MeqRequest& request,
 
 //----------------------------------------------------------------------
 //
-// ~saveResidualData
+// ~subtractPeelSources
 //
 // Save the colA - colB in residualCol.
 //
 //----------------------------------------------------------------------
-void Prediffer::saveResidualData()
+void Prediffer::subtractPeelSources (bool write)
 {
   if (itsDataMap->getFileName() != itsMSName+".res")
   {
@@ -1236,20 +1237,19 @@ void Prediffer::saveResidualData()
 //
 //----------------------------------------------------------------------
 void Prediffer::select (const vector<int>& ant1, 
-			const vector<int>& ant2, 
-			int firstChan, int lastChan)
+			const vector<int>& ant2)
 {
-  if (firstChan < 0  ||  firstChan >= itsNrChan) {
-    itsFirstChan = 0;
-  } else {
-    itsFirstChan = firstChan;
-  }
-  if (lastChan < 0  ||  lastChan >= itsNrChan) {
-    itsLastChan = itsNrChan-1;
-  } else {
-    itsLastChan = lastChan;
-  }
-  ASSERT (itsFirstChan <= itsLastChan);
+//   if (firstChan < 0  ||  firstChan >= itsNrChan) {
+//     itsFirstChan = 0;
+//   } else {
+//     itsFirstChan = firstChan;
+//   }
+//   if (lastChan < 0  ||  lastChan >= itsNrChan) {
+//     itsLastChan = itsNrChan-1;
+//   } else {
+//     itsLastChan = lastChan;
+//   }
+//   ASSERT (itsFirstChan <= itsLastChan);
 
   ASSERT ( ant1.size() == ant2.size());
   itsBLSelection = false;
@@ -1403,8 +1403,8 @@ void Prediffer::fillUVW()
 // Define the source numbers to use in a peel step.
 //
 //----------------------------------------------------------------------
-Bool Prediffer::peel(const vector<int>& peelSources,
-			 const vector<int>& extraSources)
+Bool Prediffer::setPeelSources (const vector<int>& peelSources,
+				const vector<int>& extraSources)
 {
   Vector<Int> peelSourceNrs(peelSources.size());
   for (unsigned int i=0; i<peelSources.size(); i++)
