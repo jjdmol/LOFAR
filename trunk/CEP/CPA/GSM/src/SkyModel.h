@@ -25,6 +25,12 @@
 
 #include <vector>
 
+#include <MNS/MesPointSource.h>
+
+#include <GSM/AbstractSource.h>
+#include <GSM/PointSource.h>
+
+
 class Table;
 
 
@@ -51,15 +57,28 @@ public:
   void store(Table& table)const;
   
   //! Returns pointers to all point sources in the model.
-  /*! \param result should be an empty vector.
+  /*! \param result Source pointers are appended to "result".
+    \returns the number of sources that were added to "result".
    */
   unsigned int getPointSources(std::vector<GSM::PointSource*> &result);
+
+  //! Returns array of MesPointSources.
+  /*!
+      MesPointSources contain pointers to the IQUV, Ra and Dec
+      expressions of the PointSources.
+   */
+  unsigned int getPointSources(std::vector<MesPointSource> &result);
 
   //! Returns pointers to all non-point sources in the model.
   /*! \param result should be an empty vector.
   unsigned int getExtendedSources(std::vector<GSM::AbstractSource*> &result);
   */
 
+  //! Adds a source to the sky model.
+  /*!  \param source is a pointer to the instance that is to be added
+    to the model. The sky model assumes full responsibility for
+    destructing that object. DO NOT DELETE IT YOURSELF!
+   */
   void         add(AbstractSource* source);
 
 protected:
