@@ -1,10 +1,10 @@
  use_suspend  := T;
 # use_nostart  := T;
 # use_valgrind := T;
-# "--skin=helgrind --logfile=hg.meqserver";
 use_valgrind_opts := [ "",
 #  "--gdb-attach=yes",          # use either this...
   "--logfile=vg.meqserver",       # ...or this, not both
+# "--skin=helgrind --logfile=hg.meqserver";
 #  "--gdb-path=/home/oms/bin/valddd", 
   ""];
   
@@ -28,12 +28,12 @@ const meqsink_test := function ()
   mqs.setdebug("MSVisAgent",10);
   # remove output column from table
   tbl:=table('test.ms',readonly=F);
-  tbl.removecols('CORRECTED_DATA');
+  tbl.removecols('PREDICTED_DATA');
   tbl.done()
 
   # initialize meqserver
   mqs.init([output_col="PREDICT"],
-      output=[write_flags=F,predict_column='MODEL_DATA'],
+      output=[write_flags=F,predict_column='PREDICTED_DATA'],
       wait=T);
   
   # create a small subtree
@@ -284,6 +284,7 @@ const load_test := function ()
     mqs.setdebug("MeqServ MeqVisHandler",3);
     mqs.setdebug("MeqNode MeqServer",5);
     mqs.setdebug("meqserver",3);
+#    mqs.setdebug("Dsp",2);
   }
   print 'loading forest';
   print mqs.meq('Load.Forest',[file_name='forest.sav'],T);
