@@ -78,6 +78,7 @@ void WH_Projection::preprocess()
 void WH_Projection::process()
 {
   LoVec_dcomplex steerv (itsInHolders[1]->getBuffer(), itsNrcu, duplicateData);
+
   itsWeight.resize(itsNrcu);
 
   itsWeight = steerv;

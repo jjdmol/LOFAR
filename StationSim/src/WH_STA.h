@@ -91,6 +91,7 @@ private:
   unsigned int itsBufLength;
 
   LoMat_dcomplex itsBuffer;
+  LoMat_dcomplex itsSigBuffer;
   LoVec_dcomplex itsSnapshot;
   unsigned int itsCurPos;
 };
