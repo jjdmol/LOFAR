@@ -89,7 +89,8 @@ void DBRep<MeqParmDefHolder>::toDBRep (const MeqParmDefHolder& obj)
   }
   {
     bstr.resize(0);
-    bs << true;
+    //    bs << std::vector<bool>(1,true);
+    bs << std::vector<int>(1,1);
     itsMask = bstr.getString();
   }
   itsTime0       = obj.getPolc().getX0();
