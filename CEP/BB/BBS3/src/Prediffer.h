@@ -98,9 +98,6 @@ public:
   vector<uint32> setDomain (double startFreq, double lengthFreq,
 			    double startTime, double lengthTime);
 
-  // Update the solvable parm values (reread from table).
-  void updateSolvableParms();
-
   // Return the solvable parms.
   // The parms are in ascending order of spidnr.
   const vector<ParmData>& getSolvableParmData() const
@@ -133,24 +130,20 @@ public:
   // If write=true, the data are written into a new file.
   void subtractPeelSources (bool write=false);
 
-  // Set the names and values of all solvable parms for the current domain.
-  // The double version can only be used if all parms are 0th-order
-  // polynomials.
+  // There are three ways to update the solvable parms after the solver
+  // found a new solution.
   // <group>
-  void getParmValues (vector<string>& names,
-		      vector<double>& values);
-  void getParmValues (vector<string>& names,
-		      vector<MeqMatrix>& values);
-  // </group>
+  // Update the values of solvable parms.
+  // Using its spid index each parm takes its values from the vector.
+  void updateSolvableParms (const vector<double>& values);
 
-  // Set the given values (for the current domain) of parms matching
-  // the corresponding name.
-  // Values with a name matching no parm, are ignored.
-  // <group>
-  void setParmValues (const vector<string>& names,
-		      const vector<double>& values);
-  void setParmValues (const vector<string>& names,
-		      const vector<MeqMatrix>& values);
+  // Update the given values (for the current domain) of solvable parms
+  // matching the corresponding parm name in the vector.
+  // Vector values with a name matching no solvable parm are ignored.
+  void updateSolvableParms (const vector<ParmData>& parmData);
+
+  // Update the solvable parm values (reread from table).
+  void updateSolvableParms();
   // </group>
 
   // Show the settings of the Prediffer.
@@ -166,8 +159,8 @@ private:
   // Get measurement set description from file
   void readDescriptiveData (const string& fileName);
 
-  // initialize all parameters in the MeqExpr tree for the current domain
-  void initParms (const MeqDomain& domain, bool callReadPocs);
+  // Initialize all parameters in the MeqExpr tree for the current domain
+  void initParms (const MeqDomain& domain);
 
   // Get the phase reference position of the first field.
   void getPhaseRef (double ra, double dec, double startTime);
@@ -195,6 +188,9 @@ private:
   void getEquation (double* result, const fcomplex* data,
 		    const MeqRequest& request,
 		    int blindex, int ant1, int ant2);
+
+  // Reset the loop variables for the getEquations loop.
+  void resetEqLoop();
 
 
   string                itsMSName;      //# Measurement set name
@@ -231,8 +227,8 @@ private:
 
   string itsSolveFileName;            //# Data file used (.dat or .res)
 
+  MeqDomain    itsDomain;             //# Current domain
   int          itsNrScid;             //# Nr of solvable parameter coeff.
-  vector<bool> itsIsParmSolvable;     //# is corresponding parmlist solvable?
   vector<ParmData> itsParmData;       //# solvable parm info. 
 
   vector<int>          itsAnt1;        //# Antenna1 antenna numbers

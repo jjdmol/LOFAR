@@ -78,8 +78,13 @@ public:
   // it in the argument.
   virtual void getCurrentValue (MeqMatrix& value) const;
 
-  // Update the solvable parameters with the new values.
+  // Update the parameter coefficients with the new values.
   virtual void update (const MeqMatrix& value);
+
+  // Update the solvable parameter coefficients with the new values.
+  // The vector contains all solvable values; it picks out the values
+  // at the spid index of this parameter.
+  virtual void update (const vector<double>& value);
 
   // Make the new values persistent.
   virtual void save();

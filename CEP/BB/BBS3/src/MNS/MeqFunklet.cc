@@ -118,9 +118,20 @@ void MeqFunklet::clearSolvable()
 void MeqFunklet::update (const MeqMatrix& value)
 {
   double* coeff = itsCoeff.doubleStorage();
+  const double* vals = value.doubleStorage();
+  ASSERT (value.nelements() == itsCoeff.nelements());
+  for (int i=0; i<value.nelements(); ++i) {
+    coeff[i] = vals[i];
+  }
+}
+
+void MeqFunklet::update (const vector<double>& values)
+{
+  double* coeff = itsCoeff.doubleStorage();
   for (unsigned int i=0; i<itsSpidInx.size(); i++) {
     if (itsSpidInx[i] >= 0) {
-      coeff[i] = value.getDouble (itsSpidInx[i], 0);
+      DBGASSERT (itsSpidInx[i] < int(values.size()));
+      coeff[i] = values[itsSpidInx[i]];
     }
   }
 }
