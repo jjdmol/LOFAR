@@ -1026,7 +1026,7 @@ int main(int /*argc*/, char** argv)
   {
     GCF::ParameterSet::instance()->adoptFile("RSPDriverPorts.conf");
     GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
-//    GCF::ParameterSet::instance()->adoptFile("RSPDriver.conf");
+    GCF::ParameterSet::instance()->adoptFile("RSPDriver.conf");
   }
   catch (Exception e)
   {

@@ -1,0 +1,16 @@
+
+#
+# Configuration for EPAStub
+#
+
+#
+# if LOOPBACK==1
+# - allocate register memory
+# - copy incoming WRITE requests to register memory
+# - return register upon READ request
+#
+# if LOOPBACK==0
+# - don't allocate register memory
+# - simply consume WRITE request without doing anything
+#
+EPAStub.LOOPBACK=1

@@ -32,7 +32,8 @@ EPAStub_LDADD = \
 	-lsuite
 
 BUILT_SOURCES = \
-	RSPTest.conf
+	RSPTest.conf \
+	EPAStub.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
