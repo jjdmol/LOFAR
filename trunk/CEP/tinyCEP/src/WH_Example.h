@@ -27,7 +27,7 @@
 
 //# Includes
 #include <tinyCEP/WorkHolder.h>
-#include <tinyCEP/test/DH_Example.h>
+#include <tinyCEP/DH_Example.h>
 
 
 namespace LOFAR
@@ -44,7 +44,7 @@ namespace LOFAR
     
     virtual ~WH_Example();
     
-    static WorkHolder* construc (const string& name, int ninput, int noutput,
+    static WorkHolder* construct (const string& name, int ninput, int noutput,
 				 const KeyValueMap&);
 
     virtual WH_Example* make(const string& name);
@@ -54,8 +54,8 @@ namespace LOFAR
     virtual void dump();
 
   private:
-    WH_Example (const WH_Example);
-    WH_Example& operator= (const WH_Exaple&);
+    WH_Example (const WH_Example&);
+    WH_Example& operator= (const WH_Example&);
 
     int itsBufLength;
   };
