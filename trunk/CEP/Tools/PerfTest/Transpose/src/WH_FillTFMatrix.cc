@@ -1,3 +1,4 @@
+
 //  WH_FillTFMatrix: WorkHolder class filling DH_TFMatrix
 //
 //  Copyright (C) 2000, 2001
@@ -38,9 +39,13 @@
 #include <math.h>
 
 #include "BaseSim/Step.h"
+#include "BaseSim/Profiler.h"
 #include "Common/Debug.h"
 
 #include "Transpose/WH_FillTFMatrix.h"
+
+// Set static variables
+int WH_FillTFMatrix::theirProcessProfilerState=0; 
 
 WH_FillTFMatrix::WH_FillTFMatrix (const string& name, 
 				  int sourceID,
@@ -52,9 +57,9 @@ WH_FillTFMatrix::WH_FillTFMatrix (const string& name,
   itsInHolders  (0),
   itsOutHolders (0),
   itsTime       (0),
-  itsSourceID   (sourceID),
   itsTimeDim    (timeDim),
-  itsFreqDim    (freqDim)
+  itsFreqDim    (freqDim),
+  itsSourceID   (sourceID)
 {
   TRACER4("Enter WH_FillTFMatrix C'tor " << name);
   AssertStr (nin > 0,     "0 input DH_IntArray is not possible");
@@ -74,6 +79,11 @@ WH_FillTFMatrix::WH_FillTFMatrix (const string& name,
 					timeDim, std::string("Time"),
 					freqDim, std::string("Frequency"),
 					std::string("Station"));
+  }
+  if (theirProcessProfilerState == 0) {
+    theirProcessProfilerState = Profiler::defineState("WH_FillTFMatrix",
+						      "gray");
+
   }
   TRACER4("End of WH_FillMatrix C'tor " << getName());
 }
@@ -108,6 +118,7 @@ void WH_FillTFMatrix::preprocess() {
 
 void WH_FillTFMatrix::process()
 {  
+  Profiler::enterState (theirProcessProfilerState);
   {
     int timestep;
     int cnt=0;
@@ -127,7 +138,7 @@ void WH_FillTFMatrix::process()
       for (int x=0; x < Xsize; x++) {
 	Ysize = DHptr->getYSize();
 	for (int y=0; y < Ysize; y++) {
-	  // fill autput buffer with random integer 0-99
+	  // fill output buffer with random integer 0-99
 	  *(DHptr->getBuffer(x,y)) = 
 	    cnt++;
 	  //(int)(100.0*rand()/RAND_MAX+1.0);
@@ -135,6 +146,7 @@ void WH_FillTFMatrix::process()
       }
     }
   }
+  Profiler::leaveState (theirProcessProfilerState);
   //dump();
 }
 
