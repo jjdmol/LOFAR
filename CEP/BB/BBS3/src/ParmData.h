@@ -53,6 +53,8 @@ public:
     { return itsFirstSpid + itsNrSpid - 1; }
   const MeqMatrix& getValues() const
     { return itsValues; }
+  MeqMatrix& getRWValues()
+    { return itsValues; }
   // </group>
 
   // Set the first spid.
