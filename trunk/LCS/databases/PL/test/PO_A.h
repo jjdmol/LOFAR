@@ -27,6 +27,9 @@ namespace LOFAR {
       int              itsInt;
       double           itsDouble;
       std::string      itsString;
+
+      ObjectId::oid_t getOid() const
+        { return itsOid; }
     };
 
   } // close namespace PL

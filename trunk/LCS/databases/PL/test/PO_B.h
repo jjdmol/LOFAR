@@ -28,6 +28,9 @@ namespace LOFAR {
       short            itsShort;
       float            itsFloat;
       string           itsString;
+
+      ObjectId::oid_t getOid() const
+        { return itsOid; }
     };
 
   } // close namespace PL

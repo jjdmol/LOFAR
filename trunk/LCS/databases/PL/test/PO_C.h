@@ -26,6 +26,9 @@ namespace LOFAR {
       unsigned int     itsVersionNr;
       blob             itsBlob;
       string           itsString;
+
+      ObjectId::oid_t getOid() const
+        { return itsOid; }
     };
 
   } // close namespace PL
