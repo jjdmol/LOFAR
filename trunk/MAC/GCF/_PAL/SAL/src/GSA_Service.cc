@@ -129,8 +129,7 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
             varPtr = pAnItem->getValuePtr();
             if (varPtr)      // could be NULL !!
             {
-              if (convertPVSSToMAC(*varPtr, pAnItem->getDpIdentifier(), 
-                                        &pPropertyValue) != SA_NO_ERROR)
+              if (convertPVSSToMAC(*varPtr, &pPropertyValue) != SA_NO_ERROR)
               {
                 LOG_ERROR(LOFAR::formatString (
                     "Could not convert PVSS DP (type %s) to MAC property (%s)", 
@@ -205,7 +204,7 @@ void GSAService::handleHotLink(const DpHLGroup& group)
             "PVSS: Could not convert dpIdentifier '%d'", 
             item->getDpIdentifier().getDp()));   
       }
-      else if (convertPVSSToMAC(*varPtr, item->getDpIdentifier(), &pPropertyValue) != SA_NO_ERROR)
+      else if (convertPVSSToMAC(*varPtr, &pPropertyValue) != SA_NO_ERROR)
       {
         DPEConfigName = pvssDPEConfigName;
         convDpConfigToProp(DPEConfigName, dpName);        
@@ -630,7 +629,6 @@ bool GSAService::typeExists (const string& dpTypeName)
 }
 
 TSAResult GSAService::convertPVSSToMAC(const Variable& variable, 
-                                  const DpIdentifier& dpId, 
                                   GCFPValue** pMacValue) const
 {
   TSAResult result(SA_NO_ERROR);

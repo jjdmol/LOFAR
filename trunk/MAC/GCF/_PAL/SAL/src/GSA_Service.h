@@ -83,7 +83,6 @@ class GSAService
   private:  
     // helper methods to convert PVSS dpTypes to MAC types and visa versa
     TSAResult convertPVSSToMAC (const Variable& variable, 
-                                const DpIdentifier& dpId, 
                                 GCFPValue** pMacValue) const;
                           
     TSAResult convertMACToPVSS (const GCFPValue& macValue, 
