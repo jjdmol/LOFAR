@@ -27,6 +27,8 @@
 
 #include <tinyCEP/TinyDataManager.h>
 /* #include <Common/lofar_iostream.h> */
+
+#include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 

@@ -25,7 +25,7 @@
 
 #include <lofar_config.h>
 
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include "tinyCEP/Selector.h"
 
 namespace LOFAR

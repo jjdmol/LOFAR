@@ -22,7 +22,6 @@
 
 #include <tinyCEP/TinyDataManager.h>
 #include <tinyCEP/Selector.h>
-#include <Common/Debug.h>
 
 namespace LOFAR
 {
@@ -142,11 +141,11 @@ namespace LOFAR
 
   void TinyDataManager::assertChannel(int channel, bool input) {
     if (input) {
-      DbgAssertStr (channel >= 0,          "input channel too low");
-      DbgAssertStr (channel < getInputs(), "input channel too high");
+      ASSERTSTR (channel >= 0,          "input channel too low");
+      ASSERTSTR (channel < getInputs(), "input channel too high");
     } else {
-      DbgAssertStr (channel >= 0,           "output channel too low");
-      DbgAssertStr (channel < getOutputs(), "output channel too high");
+      ASSERTSTR (channel >= 0,           "output channel too low");
+      ASSERTSTR (channel < getOutputs(), "output channel too high");
     }
   }
 
@@ -206,14 +205,14 @@ void TinyDataManager::setOutputSelector(Selector* selector)
 
 DataHolder* TinyDataManager::selectInHolder()
 {
-  AssertStr(itsInputSelector != 0, "No input selector set");
+  ASSERTSTR(itsInputSelector != 0, "No input selector set");
   unsigned int ch =  itsInputSelector->getNext();
   return getInHolder(ch);
 }
  
 DataHolder* TinyDataManager::selectOutHolder()
 {
-  AssertStr(itsOutputSelector != 0, "No output selector set");
+  ASSERTSTR(itsOutputSelector != 0, "No output selector set");
   unsigned int ch =  itsOutputSelector->getNext();
   return getOutHolder(ch);
 }
@@ -243,36 +242,36 @@ bool TinyDataManager::hasOutputSelector()
 }
 
 bool TinyDataManager::doAutoTriggerIn(int channel) const {
-  DbgAssertStr(channel >= 0, "input channel too low");
-  DbgAssertStr(channel < getInputs(), "input channel too high");
+  ASSERTSTR(channel >= 0, "input channel too low");
+  ASSERTSTR(channel < getInputs(), "input channel too high");
   return itsDoAutoTriggerIn[channel];
 }
 
 bool TinyDataManager::doAutoTriggerOut(int channel) const {
-  DbgAssertStr(channel >= 0, "output channel too low");
-  DbgAssertStr(channel < getOutputs(), "output channel too high");
+  ASSERTSTR(channel >= 0, "output channel too low");
+  ASSERTSTR(channel < getOutputs(), "output channel too high");
   return itsDoAutoTriggerOut[channel];
 }
 
 void TinyDataManager::setAutoTriggerIn(int channel, 
 				   bool newflag) const {
-  DbgAssertStr(channel >= 0, "input channel too low");
-  DbgAssertStr(channel < getInputs(), "input channel too high");
+  ASSERTSTR(channel >= 0, "input channel too low");
+  ASSERTSTR(channel < getInputs(), "input channel too high");
   itsDoAutoTriggerIn[channel] = newflag;
 }
 
 void TinyDataManager::setAutoTriggerOut(int channel, 
 				    bool newflag) const {
-  DbgAssertStr(channel >= 0, "output channel too low");
-  DbgAssertStr(channel < getOutputs(), "output channel too high");
+  ASSERTSTR(channel >= 0, "output channel too low");
+  ASSERTSTR(channel < getOutputs(), "output channel too high");
   itsDoAutoTriggerOut[channel] = newflag;
 }
 
 void TinyDataManager::setInputRate(int rate, int dhIndex)
 { 
-  DbgAssertStr (rate>0, "Rate must be greater than 0");
-  DbgAssertStr(dhIndex >= -1, "DataHolder index is smaller than -1");
-  DbgAssertStr(dhIndex < getInputs(), "DataHolder index is greater than number of inputs");
+  ASSERTSTR (rate>0, "Rate must be greater than 0");
+  ASSERTSTR(dhIndex >= -1, "DataHolder index is smaller than -1");
+  ASSERTSTR(dhIndex < getInputs(), "DataHolder index is greater than number of inputs");
   if (dhIndex == -1)
   {
     // no dhIndex specified, so set for all indexes
@@ -289,9 +288,9 @@ void TinyDataManager::setInputRate(int rate, int dhIndex)
 
 void TinyDataManager::setOutputRate(int rate, int dhIndex)
 { 
-  DbgAssertStr (rate>0, "Rate must be greater than 0");
-  DbgAssertStr(dhIndex >= -1, "DataHolder index is smaller than -1");
-  DbgAssertStr(dhIndex < getOutputs(), "DataHolder index is greater than number of outputs");
+  ASSERTSTR (rate>0, "Rate must be greater than 0");
+  ASSERTSTR(dhIndex >= -1, "DataHolder index is smaller than -1");
+  ASSERTSTR(dhIndex < getOutputs(), "DataHolder index is greater than number of outputs");
   if (dhIndex == -1)
   {
     for (int i=0; i<getOutputs(); i++)
@@ -308,8 +307,8 @@ void TinyDataManager::setOutputRate(int rate, int dhIndex)
 
 int TinyDataManager::getInputRate(int dhIndex)
 { 
-  DbgAssertStr(dhIndex >= -1, "DataHolder index is smaller than -1");
-  DbgAssertStr(dhIndex < getInputs(), "DataHolder index is greater than number of inputs");
+  ASSERTSTR(dhIndex >= -1, "DataHolder index is smaller than -1");
+  ASSERTSTR(dhIndex < getInputs(), "DataHolder index is greater than number of inputs");
   if (dhIndex == -1)
   {
     return itsInputRates[0]; 
@@ -322,8 +321,8 @@ int TinyDataManager::getInputRate(int dhIndex)
 
 int TinyDataManager::getOutputRate(int dhIndex)
 { 
-  DbgAssertStr(dhIndex >= -1, "DataHolder index is smaller than -1");
-  DbgAssertStr(dhIndex < getOutputs(), "DataHolder index is greater than number of outputs");
+  ASSERTSTR(dhIndex >= -1, "DataHolder index is smaller than -1");
+  ASSERTSTR(dhIndex < getOutputs(), "DataHolder index is greater than number of outputs");
   if (dhIndex == -1)
   {
     return itsOutputRates[0]; 

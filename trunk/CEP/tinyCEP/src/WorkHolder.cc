@@ -25,7 +25,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include <tinyCEP/WorkHolder.h>
-#include <Common/Debug.h>
+
 #include TRANSPORTERINCLUDE
 
 namespace LOFAR
@@ -96,8 +96,8 @@ WorkHolder& WorkHolder::operator= (const WorkHolder& that)
 WorkHolder* WorkHolder::baseMake()
 {
   WorkHolder* whp = const_cast<WorkHolder*>(this)->make (getName());
-  Assert (whp->getDataManager().getInputs() == getDataManager().getInputs());
-  Assert (whp->getDataManager().getOutputs() == getDataManager().getOutputs());
+  ASSERT (whp->getDataManager().getInputs() == getDataManager().getInputs());
+  ASSERT (whp->getDataManager().getOutputs() == getDataManager().getOutputs());
 
   return whp;
 }
@@ -119,8 +119,8 @@ void WorkHolder::basePreprocess()
 {
   if (shouldProcess()) 
   {
-    TRACER4("basePreprocess Step " << getName() << " on node/appl (" 
-	    << getNode() << '/' << getAppl() << ')');
+//     TRACER4("basePreprocess Step " << getName() << " on node/appl (" 
+// 	    << getNode() << '/' << getAppl() << ')');
     getDataManager().preprocess();
     preprocess();
   }
@@ -134,7 +134,7 @@ void WorkHolder::baseProcess ()
 {
  if (shouldProcess()) 
  {
-   TRACER4("WorkHolder::baseprocess()");
+//    TRACER4("WorkHolder::baseprocess()");
    if (itsFirstProcessCall) {
      getDataManager().initializeInputs();
      itsFirstProcessCall = false;
@@ -199,8 +199,8 @@ void WorkHolder::baseProcess ()
  }
 
  else {
-   TRACER4("WorkHolder " << getName() << " Not on right node/appl(" 
-           << getNode() << '/' << getAppl() << "); will skip Process"); 
+//    TRACER4("WorkHolder " << getName() << " Not on right node/appl(" 
+//            << getNode() << '/' << getAppl() << "); will skip Process"); 
  }  
 
 }
@@ -208,8 +208,8 @@ void WorkHolder::baseProcess ()
 void WorkHolder::basePostprocess()
 {
   if (shouldProcess()) {
-    TRACER4("WorkHolder::basePostprocess " << getName() << " on node/appl (" 
-	   << getNode() << '/' << getAppl() << ')');
+//     TRACER4("WorkHolder::basePostprocess " << getName() << " on node/appl (" 
+// 	   << getNode() << '/' << getAppl() << ')');
     postprocess();
     for (int input=0; input<itsNinputs; input++)	{
       getDataManager().getInHolder(input)->basePostprocess();
@@ -253,7 +253,7 @@ void WorkHolder::fillMaps()
     for (int i=0; i<itsNinputs; i++) {
       // Error if DataHolder name is already used.
       const string& name = getDataManager().getGeneralInHolder(i)->getName();
-      AssertStr (itsInMap.find(name) == itsInMap.end(),
+      ASSERTSTR (itsInMap.find(name) == itsInMap.end(),
 		 "DataHolder name " << name <<
 		 " already used in WorkHolder " << itsName);
       itsInMap[name] = i;
@@ -263,7 +263,7 @@ void WorkHolder::fillMaps()
     for (int i=0; i<itsNoutputs; i++) {
       // Error if DataHolder name is already used.
       const string& name = getDataManager().getGeneralOutHolder(i)->getName();
-      AssertStr (itsOutMap.find(name) == itsOutMap.end(),
+      ASSERTSTR (itsOutMap.find(name) == itsOutMap.end(),
 		 "DataHolder name " << name <<
 		 " already used in WorkHolder " << itsName);
       itsOutMap[name] = i;
