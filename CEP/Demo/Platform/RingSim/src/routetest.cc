@@ -29,10 +29,32 @@ main (int argc, char *argv[])
 
   // create the main Simul; Steps and Simuls will be added to this one
   Simul RingSim(new WH_Empty(),"RingSim",0); //Uses an empty workholder.
-  Simul theRing(new RingBuilder<DH_Test>(10));
-  RingSim.addStep(&theRing);
 
-  //RingSim.connectOutputToArra((Step**)(&&step3),1)
+  Step *ToRingStep[10];
+
+  // First define the pre-ring steps
+  for (int stepnr=0; stepnr<10; stepnr++) {
+    ToRingStep[stepnr] = new Step(new WH_ToRing());
+    ToRingStep[stepnr]->runOnNode(0);
+    ToRingStep[stepnr]->setOutRate(11);
+    RingSim.addStep (ToRingStep[stepnr]);
+  }
+
+  Simul* theRing = new Simul(new RingBuilder<DH_Test>(10));
+
+  theRing->Step::connectInputArray(ToRingStep,10);
+  RingSim.addStep(theRing);
+
+  Step *FromRingStep[10];
+  for (int stepnr=0; stepnr<10; stepnr++) {
+    FromRingStep[stepnr] = new Step(new WH_FromRing());
+    FromRingStep[stepnr]->runOnNode(0);
+    FromRingStep[stepnr]->setInRate(11);
+    RingSim.addStep (FromRingStep[stepnr]);
+  }
+
+  theRing->connectOutputArray(FromRingStep,10);
+  //RingSim.connectOutputToArray((Step**)(&&step3),1)
    
   //RingSim.resolveComm();
 

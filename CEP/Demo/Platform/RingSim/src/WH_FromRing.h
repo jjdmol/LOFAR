@@ -35,16 +35,10 @@ class WH_FromRing:public WorkHolder
   */
   vector<DH_Ring<DH_Test>*> itsOutDataHolders; 
 
-  static short   itsInstanceCnt;
-  short          myInstanceCnt;
-
-  DH_Ring<DH_Test>  itsDHBuffer[10];
+  static short itsInstanceCnt;
+  short        myInstanceCnt;
 
 };
-
-inline short  WH_FromRing::getInstanceCnt()         { 
-  return myInstanceCnt; 
-}
 
 inline DH_Ring<DH_Test>* WH_FromRing::getInHolder (int channel)  { 
   return itsInDataHolders[channel]; 
@@ -54,5 +48,11 @@ inline DH_Ring<DH_Test>* WH_FromRing::getOutHolder (int channel) {
   return itsOutDataHolders[channel];
 }
 
+inline short  WH_FromRing::getInstanceCnt()         { 
+  return myInstanceCnt; 
+}
 #endif 
+
+
+
 
