@@ -41,7 +41,7 @@ const char* [+ protocol_name +]_signalnames[] =
 
 #ifdef SWIG
 %module [+ (base-name) +]
-%include GCF/TM/GCF_Event.h
+%include GCF/GCF_Event.h
 %include carrays.i
 %include std_string.i
 %include typemaps.i
@@ -54,12 +54,12 @@ const char* [+ protocol_name +]_signalnames[] =
 %{
 #include "[+ (base-name) +].ph"[+ FOR include "" +]
 #include [+ (get "include") +][+ ENDFOR +]
-#include <GCF/TM/GCF_Protocols.h>
+#include <GCF/GCF_TMProtocols.h>
 %}
 #else
 [+ FOR include "" +]
 #include [+ (get "include") +][+ ENDFOR +]
-#include <GCF/TM/GCF_Protocols.h>
+#include <GCF/GCF_TMProtocols.h>
 #include <string>
 #endif
 
