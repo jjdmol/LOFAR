@@ -128,6 +128,11 @@ const int AidFormat_int = -1293;
 const AtomicID AidGet(-1338);                     // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:11
 const int AidGet_int = -1338;
 #endif
+#ifndef _defined_id_AidGrid
+#define _defined_id_AidGrid 1
+const AtomicID AidGrid(-1417);                    // from /home/oms/LOFAR/CEP/CPA/PSS4/MEQ/src/MeqVocabulary.h:33
+const int AidGrid_int = -1417;
+#endif
 #ifndef _defined_id_AidId
 #define _defined_id_AidId 1
 const AtomicID AidId(-1087);                      // from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/AppManagerWP.h:10
@@ -152,6 +157,11 @@ const int AidList_int = -1046;
 #define _defined_id_AidLoad 1
 const AtomicID AidLoad(-1390);                    // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:13
 const int AidLoad_int = -1390;
+#endif
+#ifndef _defined_id_AidMandate
+#define _defined_id_AidMandate 1
+const AtomicID AidMandate(-1481);                 // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/VisHandlerNode.h:10
+const int AidMandate_int = -1481;
 #endif
 #ifndef _defined_id_AidMask
 #define _defined_id_AidMask 1
@@ -227,6 +237,11 @@ const int AidRead_int = -1424;
 #define _defined_id_AidRecursive 1
 const AtomicID AidRecursive(-1392);               // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:13
 const int AidRecursive_int = -1392;
+#endif
+#ifndef _defined_id_AidRegular
+#define _defined_id_AidRegular 1
+const AtomicID AidRegular(-1482);                 // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/VisHandlerNode.h:10
+const int AidRegular_int = -1482;
 #endif
 #ifndef _defined_id_AidRequest
 #define _defined_id_AidRequest 1

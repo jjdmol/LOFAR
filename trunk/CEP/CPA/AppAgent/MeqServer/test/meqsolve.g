@@ -171,26 +171,45 @@ const get_ms_info := function (msname='test.ms')
   pos := msant.getcol('POSITION');
   msant.done();
   
+  time0 := ms.getcell('TIME',1);
+  
   # convert position to x y z
   ms_antpos := [=];
   for(i in 1:len(pos[1,]))
-  {
-    height := dq.quantity(pos[1,i],'m');
-    lon := dq.quantity(pos[2,i],'rad');
-    lat := dq.quantity(pos[3,i],'rad');
-    xyz := dm.addxvalue(dm.position('itrf',lon,lat,height));
-    ms_antpos[i] := [ x=xyz[1].value, y=xyz[2].value, z=xyz[3].value ];
-  }
-  
+    ms_antpos[i] := [ x=pos[1,i],y=pos[2,i],z=pos[3,i] ];
+    
   msfld := table(ms.getkeyword('FIELD'));
   ms_phasedir := msfld.getcol('PHASE_DIR');
   msfld.done();
+  
+  # get some UVWs, just for shits and giggles
+  a0 := ms_antpos[1];
+  pos0 := dm.position('itrf',dq.unit(a0.x,'m'),dq.unit(a0.y,'m'),dq.unit(a0.z,'m'));
+  a1 := ms_antpos[1];
+  a2 := ms_antpos[2];
+  ba1 := dm.baseline('itrf',dq.unit(a2.x-a1.x,'m'),dq.unit(a2.y-a1.y,'m'),dq.unit(a2.z-a1.z,'m'));
+  ba2 := dm.baseline('itrf',dq.unit(a1.x,'m'),dq.unit(a1.y,'m'),dq.unit(a1.z,'m'));
+  dm.doframe(pos0);
+  dm.doframe(dm.direction('j2000',dq.unit(ms_phasedir[1],"rad"),dq.unit(ms_phasedir[2],"rad")));
+  dm.doframe(dm.epoch('utc',dq.unit(time0,'s')));
+  local uvw1a;
+  local dot;
+  uvw1b := dm.touvw(ba1,dot,uvw1a);
+  uvw1c := dm.addxvalue(uvw1b);
+  uvw2b := dm.touvw(ba2,dot,uvw2a);
+  uvw2c := dm.addxvalue(uvw2b);
   
   ms.done();  
   
   print 'Antenna position 1: ',ms_antpos[1];
   print 'Antenna position 2: ',ms_antpos[2];
   print 'Phase dir: ',ms_phasedir[1],' ',ms_phasedir[2];
+  print 'UVW1a:',uvw1a;
+  print 'UVW1b:',uvw1b;
+  print 'UVW1c:',uvw1c;
+  print 'UVW2a:',uvw2a;
+  print 'UVW2b:',uvw2b;
+  print 'UVW2c:',uvw2c;
   print 'Does this look sane?';
   
   return T;
@@ -303,7 +322,7 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
   {
     # activate input and watch the fur fly  
     global inputrec,outputrec;
-    inputrec := [ ms_name = msname,data_column_name = 'DATA',tile_size=5,
+    inputrec := [ ms_name = msname,data_column_name = 'DATA',tile_size=1,
                   selection = [=]  ];
     outputrec := [ write_flags=F,predict_column=outcol ]; 
     mqs.init(input=inputrec,output=outputrec); 
@@ -311,7 +330,8 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
 }
 
 
-do_test(solve=T,run=T,st1set=1:10,st2set=1:10,publish=2);
+do_test(predict=T,run=T,st1set=1,st2set=2,publish=2);
+# do_test(solve=T,run=T,st1set=1,st2set=1,publish=2);
 # do_test(solve=T,run=T,st1set=1:10,st2set=1:10,publish=1,save='solve.forest');
 # do_test(solve=T,run=T,publish=1,load='solve.forest');
 

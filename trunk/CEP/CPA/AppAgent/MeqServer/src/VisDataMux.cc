@@ -67,6 +67,7 @@ void Meq::VisDataMux::init (const DataRecord &rec,
       cdebug(2)<<"indicated output column: "<<out_colnames_[i]<<endl;
     }
   }
+  force_regular_grid = rec[FMandateRegularGrid].as<bool>(false);
 }
 
 //##ModelId=3F716E98002E
@@ -136,6 +137,36 @@ int Meq::VisDataMux::formDataId (int sta1,int sta2)
   return VisVocabulary::ifrNumber(sta1,sta2);
 }
 
+void Meq::VisDataMux::fillCells (Cells &cells,const VisTile &tile)
+{
+  // form domain & cells based on stuff in the tile
+  LoVec_bool valid( tile.rowflag() != int(VisTile::MissingData) );
+  cdebug1(5)<<"valid rows: "<<valid<<endl;
+  int nr = count(valid);
+  const LoVec_double &time0 = tile.time();
+  const LoVec_double &interval0 = tile.interval();
+  LoVec_double time(nr),interval(nr);
+  int j=0;
+  for( int i=0 ; i<tile.nrow(); i++ )
+    if( valid(i) )
+    {
+      time(j) = time0(i);
+      interval(j) = interval0(i);
+      j++;
+    }
+  cdebug1(5)<<"time:     "<<time<<endl;
+  cdebug1(5)<<"interval: "<<interval<<endl;
+  cells.setCells(FREQ,channel_freqs,channel_widths);
+  cells.setCells(TIME,time,interval);
+  cells.recomputeDomain();
+  cdebug1(5)<<"cells: "<<cells;
+  if( force_regular_grid )
+  {
+    FailWhen(cells.numSegments(TIME)>1 || cells.numSegments(FREQ)>1,
+        "tile has irregular grid, we're configured for regular grids only" );
+  }
+}
+
 //##ModelId=3F98DAE6024A
 int Meq::VisDataMux::deliverHeader (const DataRecord &header)
 {
@@ -153,9 +184,14 @@ int Meq::VisDataMux::deliverHeader (const DataRecord &header)
   }
   handlers_.resize(VisVocabulary::ifrNumber(nstations,nstations)+1);
   // get frequencies 
-  LoVec_double freq = header[VisVocabulary::FChannelFreq];
-  minfreq = min(freq);
-  maxfreq = max(freq);
+  if( !header[VisVocabulary::FChannelFreq].get(channel_freqs) ||
+      !header[VisVocabulary::FChannelWidth].get(channel_widths) )
+  {
+    Throw("dataset header is missing frequency information");
+  }
+//  // BUG BUG BUG! This assumes a regualr frequency spacing
+//  minfreq = min(channel_freqs) - channels_widths(0)/2;
+//  maxfreq = max(channel_freqs) + channels_widths(0)/2;
   // init output tile format
   out_format_.attach(header[FTileFormat].as_p<VisTile::Format>(),DMI::READONLY);
   for( uint i=0; i<out_columns_.size(); i++ )
@@ -208,7 +244,7 @@ int Meq::VisDataMux::deliverTile (VisTile::Ref::Copy &tileref)
     cdebug(3)<<"have handlers for did "<<did<<", got tile "<<tileref->sdebug(DebugLevel-1)<<endl;
     // For now, generate the request right here.
     Cells::Ref cellref(DMI::ANONWR);
-    VisHandlerNode::fillCells(cellref(),*tileref,minfreq,maxfreq);
+    fillCells(cellref(),*tileref);
     Request::Ref reqref;
     Request &req = reqref <<= new Request(cellref.deref_p(),0);
     forest_.assignRequestId(req);

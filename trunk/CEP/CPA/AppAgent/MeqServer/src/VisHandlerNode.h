@@ -7,7 +7,7 @@
 
 #pragma aid VisHandlerNode 
 #pragma aid Station Index Data Id Num Antenna Tile Format Input 
-#pragma aid Output Col Corr Next Read Flag Flags Mask Row
+#pragma aid Output Col Corr Next Read Flag Flags Mask Row Mandate Regular Grid
     
 namespace Meq {
   
@@ -22,7 +22,10 @@ const HIID  FStation1Index = AidStation|1|AidIndex,
 //            FFlagMask     already defined in MeqVocabulary
             FRowFlagMask  = AidRow|AidFlag|AidMask,
             FCorrIndex    = AidCorr|AidIndex,
-            FNext         = AidNext;
+            FNext         = AidNext,
+            
+// this is a MeqServer config flag, default True
+            FMandateRegularGrid = AidMandate|AidRegular|AidGrid;
     
 
 class Cells;
@@ -67,10 +70,6 @@ class VisHandlerNode : public Node
     //##    RES_WAIT    must wait (please call again)
     //##    RES_UPDATED last tile was updated, output tile is attached to tileref
     virtual int deliverFooter (VisTile::Ref &) { return 0; };
-    
-    // returns Meq::Cells object corresponding to a VisTile
-    //##ModelId=3F9FF6970269
-    static void fillCells (Cells &cells,const VisTile &tile,double minfreq,double maxfreq);
     
     //##ModelId=3F98DAE602DA
     LocalDebugContext;
