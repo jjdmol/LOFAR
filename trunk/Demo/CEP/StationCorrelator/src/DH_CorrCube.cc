@@ -56,6 +56,7 @@ void DH_CorrCube::preprocess()
   // Determine the number of bytes needed for DataPacket and buffer.
   itsBufSize = nstations * nchannels * nsamples * npolarisations ;
   
+  addField ("BlockID", BlobField<int>(1, 1));
   addField ("Flag", BlobField<int>(1, 1));
   addField ("Buffer", BlobField<BufferType>(1, itsBufSize));
   
@@ -72,6 +73,8 @@ void DH_CorrCube::postprocess()
 }
 
 void DH_CorrCube::fillDataPointers() {
+  itsBlockIDptr = getData<int> ("BlockID");
+  itsFlagptr = getData<int> ("Flag");
   itsBuffer = getData<BufferType> ("Buffer");
 }
 }

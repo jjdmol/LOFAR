@@ -47,6 +47,14 @@ public:
   /// Deallocate the buffers.
   virtual void postprocess();
 
+  /// accessor functions to the blob 
+  int getStationID() const;
+  void setStationID(int);
+  int getBlockID() const;
+  void setBlockID(int);
+  int getFlag() const;
+  void setFlag(int);
+
   /// Get write access to the Buffer in the DataPacket.
   BufferType* getBuffer();
   /// Get access to the Buffer in the DataPacket.
@@ -61,6 +69,9 @@ private:
   /// Forbid assignment.
   DH_CorrCube& operator= (const DH_CorrCube&);
 
+  /// pointers to data in the blob
+  int* itsBlockIDptr;
+  int* itsFlagptr;
   BufferType*  itsBuffer;    // array containing frequency spectrum.
   unsigned int itsBufSize;
   
@@ -71,6 +82,19 @@ private:
 
   void fillDataPointers();
 };
+
+
+inline int DH_CorrCube::getBlockID() const
+  { return *itsBlockIDptr; }
+
+inline void DH_CorrCube::setBlockID(int blockid) 
+  { *itsBlockIDptr = blockid; }
+
+inline int DH_CorrCube::getFlag() const
+  { return *itsFlagptr; }
+
+inline void DH_CorrCube::setFlag(int flag)
+  { *itsFlagptr = flag; }
 
 inline DH_CorrCube::BufferType* DH_CorrCube::getBuffer()
   { return itsBuffer; }
