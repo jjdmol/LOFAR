@@ -1,14 +1,14 @@
-lib_LTLIBRARIES 	= libmeqcalibrater.la
+lib_LTLIBRARIES 	= libcal.la
 
-libmeqcalibrater_la_SOURCES = MeqCalibraterImpl.cc MeqCalibraterImpl.h
+libcal_la_SOURCES       = MeqCalibraterImpl.cc MeqCalibraterImpl.h
 
 bin_PROGRAMS 		= event meqcalibrater
 
 event_SOURCES		= GlishEvent.cc
 
 meqcalibrater_SOURCES	= meqcalibrater.cc
-meqcalibrater_LDADD	= ./libmeqcalibrater.la
-meqcalibrater_DEPENDENCIES = ./libmeqcalibrater.la $(LOFAR_DEPEND)
+meqcalibrater_LDADD	= ./libcal.la
+meqcalibrater_DEPENDENCIES = ./libcal.la $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common
 

@@ -153,7 +153,7 @@ public:
 
   /*!
    * Return some statistics (optionally detailed (i.e. per baseline)).
-   * If cleat is true, the statistics are cleared thereafter.
+   * If clear is true, the statistics are cleared thereafter.
    */
   GlishRecord getStatistics (bool detailed, bool clear);
 
@@ -169,6 +169,12 @@ public:
 				 ParameterSet& inputRecord,
 				 Bool runMethod);
   //@}
+
+  /*!
+   * Get nr of channels.
+   */
+  int getNrChan() const
+    { return itsNrChan; }
 
 private:
   /**
