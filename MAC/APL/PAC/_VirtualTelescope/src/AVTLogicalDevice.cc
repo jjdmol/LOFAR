@@ -139,6 +139,7 @@ GCFEvent::TResult AVTLogicalDevice::initial_state(GCFEvent& event, GCFPortInterf
       break;
 
     case F_DISCONNECTED:
+      port.close();
       break;
 
     case F_TIMER:
