@@ -5,8 +5,9 @@ check_PROGRAMS		= \
 			  tA \
 			  tC \
 			  tTPO \
-			  tCollection	\
-			  tObjectId
+			  tCollection \
+			  tObjectId \
+			  tQuery
 #			  tSQLTimeStamp
 
 tFooBar_SOURCES		= tFooBar.cc
@@ -40,6 +41,10 @@ tCollection_DEPENDENCIES= ../src/libpl.la $(LOFAR_DEPEND)
 tObjectId_SOURCES	= tObjectId.cc
 tObjectId_LDADD		= ../src/libpl.la
 tObjectId_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
+
+tQuery_SOURCES              = tQuery.cc
+tQuery_LDADD		= ../src/libpl.la
+tQuery_DEPENDENCIES		= ../src/libpl.la $(LOFAR_DEPEND)
 
 #tSQLTimeStamp_SOURCES	= SQLTimeStampTest.cc	\
 #			  SQLTimeStampTest.h	\
