@@ -27,21 +27,21 @@
 #include <Common/lofar_iostream.h>
 #include <stdlib.h>
 #include <Common/lofar_string.h>
-#include "Common/Debug.h"
-#include "CEPFrame/Transport.h"
-#include "CEPFrame/Step.h"
-#include "Pipeline/Pipeline.h"
-#include "CEPFrame/Simul.h"
-#include "CEPFrame/Profiler.h"
-#include "Pipeline/WH_FillTFMatrix.h"
-#include "Pipeline/WH_Transpose.h"
-#include "Pipeline/WH_PreCorrect.h"
-#include "Pipeline/WH_Correlate.h"
-#include "Pipeline/WH_Dump.h"
-#include "CEPFrame/WH_Empty.h"
-#include "CEPFrame/ShMem/TH_ShMem.h"
-#include "CEPFrame/TH_Mem.h"
-#include "CEPFrame/TH_File.h"
+#include <Common/Debug.h>
+#include <CEPFrame/Transport.h>
+#include <CEPFrame/Step.h>
+#include <Pipeline/Pipeline.h>
+#include <CEPFrame/Simul.h>
+#include <CEPFrame/Profiler.h>
+#include <Pipeline/WH_FillTFMatrix.h>
+#include <Pipeline/WH_Transpose.h>
+#include <Pipeline/WH_PreCorrect.h>
+#include <Pipeline/WH_Correlate.h>
+#include <Pipeline/WH_Dump.h>
+#include <CEPFrame/WH_Empty.h>
+#include <CEPFrame/ShMem/TH_ShMem.h>
+#include <CEPFrame/TH_Mem.h>
+#include <CEPFrame/TH_File.h>
 #include TRANSPORTERINCLUDE
 
 using namespace LOFAR;
@@ -67,7 +67,7 @@ Pipeline::~Pipeline()
   undefine();
 }
 
-void Pipeline::define(const LOFAR::ParamBlock& params)
+void Pipeline::define(const LOFAR::KeyValueMap& params)
 {
 #ifdef HAVE_MPI
   TH_ShMem::init(0, NULL);
@@ -77,7 +77,8 @@ void Pipeline::define(const LOFAR::ParamBlock& params)
   undefine();
   
   // Create the top-level simul
-  Simul simul(new WH_Empty(), params.getString("name","Pipeline").c_str(),true,false);
+  Simul simul(new WH_Empty(),
+	      params.getString("name","Pipeline").c_str(),true,false);
 
   setSimul(simul);
   

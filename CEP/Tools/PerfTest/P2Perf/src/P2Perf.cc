@@ -29,26 +29,21 @@
 #include <stdlib.h>
 #include <Common/lofar_string.h>
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
+#include <P2Perf/P2Perf.h>
+#include <P2Perf/WH_GrowSize.h>
+#include <CEPFrame/Transport.h>
+#include <CEPFrame/Step.h>
+#include <CEPFrame/Simul.h>
+#include <CEPFrame/Profiler.h>
+#include <CEPFrame/WH_Empty.h>
+#include <CEPFrame/ShMem/TH_ShMem.h>
 #include <Common/Debug.h>
-#include "CEPFrame/Transport.h"
-#include "CEPFrame/Step.h"
-#include "CEPFrame/Simul.h"
-#include "CEPFrame/Profiler.h"
-#include "CEPFrame/WH_Empty.h"
-#include "CEPFrame/ParamBlock.h"
-#include "CEPFrame/ShMem/TH_ShMem.h"
-#include "P2Perf/P2Perf.h"
-#include "P2Perf/WH_GrowSize.h"
 
 #include TRANSPORTERINCLUDE
 
 #ifdef HAVE_CORBA
-#include "CEPFrame/Corba/BS_Corba.h"
-#include "CEPFrame/Corba/TH_Corba.h"
+#include <CEPFrame/Corba/BS_Corba.h>
+#include <CEPFrame/Corba/TH_Corba.h>
 #endif
 
 using namespace LOFAR;
@@ -72,7 +67,7 @@ P2Perf::~P2Perf()
    define function for the P2Perf simulation. It defines a list
    of steps that each process a part of the data.
  */
-void P2Perf::define(const ParamBlock& params)
+void P2Perf::define(const KeyValueMap& params)
 {
 #ifdef HAVE_CORBA
   // Start Orb Environment
