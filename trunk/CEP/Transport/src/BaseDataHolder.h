@@ -116,10 +116,13 @@ public:
 
   bool isValid() const;
 
-  /// Connect to another BaseDataHolder (data flows from this object to thatDH)
-  bool connectTo(BaseDataHolder& thatDH, TransportHolder& prototype);
-  /// Connect another BaseDataHolder to this object. (data flows from thatDH to this object)
-  bool connectFrom(BaseDataHolder& thatDH, TransportHolder& prototype);
+  /// Connect to another BaseDataHolder.
+  // (data flows from this object to thatDH).
+  bool connectTo(BaseDataHolder& thatDH, const TransportHolder& prototype);
+  /// Connect another BaseDataHolder to this object.
+  // (data flows from thatDH to this object).
+  bool connectFrom(BaseDataHolder& thatDH, const TransportHolder& prototype);
+
   /// Initialization must be called after connect.
   void init();   
 

@@ -180,12 +180,14 @@ void BaseDataHolder::write()
   }
 }
 
-bool BaseDataHolder::connectTo(BaseDataHolder& thatDH, TransportHolder& prototype)
+bool BaseDataHolder::connectTo(BaseDataHolder& thatDH,
+			       const TransportHolder& prototype)
 {
   return itsTransporter.connectTo(thatDH.getTransporter(), prototype);
 }
 
-bool BaseDataHolder::connectFrom(BaseDataHolder& thatDH, TransportHolder& prototype)
+bool BaseDataHolder::connectFrom(BaseDataHolder& thatDH,
+				 const TransportHolder& prototype)
 {
   return itsTransporter.connectFrom(thatDH.getTransporter(), prototype);
 }
