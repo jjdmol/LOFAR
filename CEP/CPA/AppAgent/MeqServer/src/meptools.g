@@ -119,8 +119,10 @@ const meq.envelope_2domains := function (d1,d2)
 {
   if( !is_dmi_type(d1,'MeqDomain') )
     return d2;
-  for( a in d1.axes() )
-    d1[a] := range(d1[a],d2[a]);
+  for( a in field_names(d1) )
+    if( has_field(d2,'a') && is_numeric(d1[a]) && is_numeric(d2[a])
+        && len(d1[a]) == 2 && len(d2[a]) == 2 )
+      d1[a] := range(d1[a],d2[a]);
   return d1;
 }
 

@@ -268,7 +268,7 @@ const solver_test := function (gui=use_gui,verbose=4,publish=T)
   request := meq.request(cells,calc_deriv=2);
   
   cmdrec := [ clear_matrix=F,invert_matrix=F,num_iter=5,save_polcs=F ];
-  request.add_command('Solver','solver1',cmdrec);
+  meq.add_command(request,'Solver','solver1',cmdrec);
   
   request2 := meq.request(cells2,calc_deriv=0);
   res := mqs.meq('Node.Publish.Results',[name='condeq1'],T);
