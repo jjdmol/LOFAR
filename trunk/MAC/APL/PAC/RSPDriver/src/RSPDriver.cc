@@ -281,8 +281,6 @@ void RSPDriver::addAllSyncActions()
     {
       SstRead* sstread = 0;
 
-      sstread = new SstRead(m_board[boardid], boardid, Statistics::SUBBAND_MEAN);
-      m_scheduler.addSyncAction(sstread);
       sstread = new SstRead(m_board[boardid], boardid, Statistics::SUBBAND_POWER);
       m_scheduler.addSyncAction(sstread);
 
@@ -292,8 +290,6 @@ void RSPDriver::addAllSyncActions()
     {
       BstRead* bstread = 0;
 
-      bstread = new BstRead(m_board[boardid], boardid, Statistics::BEAMLET_MEAN);
-      m_scheduler.addSyncAction(bstread);
       bstread = new BstRead(m_board[boardid], boardid, Statistics::BEAMLET_POWER);
       m_scheduler.addSyncAction(bstread);
     }

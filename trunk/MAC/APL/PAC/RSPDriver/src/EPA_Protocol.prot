@@ -34,8 +34,8 @@ namespace EPA_Protocol
   static const int BF_N_FRAGMENTS  = MEPHeader::BF_XROUT_SIZE / MEPHeader::FRAGMENT_SIZE;
   static const int N_SAMPLES       = MEPHeader::WG_XWAVE_SIZE / sizeof(uint16);
   static const int N_STATS         = MEPHeader::FRAGMENT_SIZE / sizeof(uint32);
-  static const int BST_N_FRAGMENTS = MEPHeader::BST_MEAN_SIZE / MEPHeader::FRAGMENT_SIZE;
-  static const int SST_N_FRAGMENTS = MEPHeader::SST_MEAN_SIZE / MEPHeader::FRAGMENT_SIZE;
+  static const int BST_N_FRAGMENTS = MEPHeader::BST_POWER_SIZE / MEPHeader::FRAGMENT_SIZE;
+  static const int SST_N_FRAGMENTS = MEPHeader::SST_POWER_SIZE / MEPHeader::FRAGMENT_SIZE;
   /*@}*/
 
   typedef struct RSPStatus
@@ -491,7 +491,7 @@ event = {
 
 event = {
   noheader;
-  signal = STATS; // hdr should specify SST_MEAN, SST_POWER, BST_MEAN or BST_POWER
+  signal = STATS; // hdr should specify SST_POWER or BST_POWER
   dir = OUT;
   param = {
     name = "hdr";

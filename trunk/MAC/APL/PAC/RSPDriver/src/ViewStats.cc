@@ -245,7 +245,7 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-void ViewStats::plot_statistics(Array<complex<double>, 3>& stats)
+void ViewStats::plot_statistics(Array<double, 3>& stats)
 {
   static gnuplot_ctrl* handle = 0;
   int n_freqbands = stats.extent(thirdDim);
@@ -287,61 +287,27 @@ void ViewStats::plot_statistics(Array<complex<double>, 3>& stats)
       gnuplot_cmd(handle, "set noxtics");
     }
     
-    if (Statistics::SUBBAND_POWER == m_type
-	|| Statistics::BEAMLET_POWER == m_type)
-    {
-      // add real and imaginary part to get power
-      value  = real(stats(0, device, Range::all()));
-      value += imag(stats(0, device, Range::all()));
+    // compute logarithm of values
+    value  = stats(0, device, Range::all());
 
-      // signal + 1e-6 and +10dB calibrated this to the Marconi signal generator
-      value = log10((value + 1e-6) / (1.0*(1<<16))) * 10.0 + 10.0;
+    // signal + 1e-6 and +10dB calibrated this to the Marconi signal generator
+    value = log10((value + 1e-6) / (1.0*(1<<16))) * 10.0 + 10.0;
 
-      // set yrange for power
-      gnuplot_cmd(handle, "set ytics -100,20");
-      gnuplot_cmd(handle, "set yrange [-100:20]");
-      gnuplot_cmd(handle, "set xrange [0:%f]", 20.0);
+    // set yrange for power
+    gnuplot_cmd(handle, "set ytics -100,20");
+    gnuplot_cmd(handle, "set yrange [-100:20]");
+    gnuplot_cmd(handle, "set xrange [0:%f]", 20.0);
 
-      freq = i * (20.0 / n_freqbands); // calculate frequency in MHz
-      gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\" 0, 1.5");
-    }
-    else // MEAN
-    {
-      value =  real(stats(0, device, Range::all())) * real(stats(0, device, Range::all()));
-      value += imag(stats(0, device, Range::all())) * imag(stats(0, device, Range::all()));
-      value /= (1<<16);
-      value /= (1<<16);
-      value -= 1.0;
-
-      // set yrange for mean
-      gnuplot_cmd(handle, "set ytics -1.25,.25");
-      gnuplot_cmd(handle, "set yrange [-1.25:1.25]");
-      gnuplot_cmd(handle, "set xrange [0:%f]", 1.0*n_freqbands);
-
-      freq = i; // selected beamlet index
-      gnuplot_cmd(handle, "set xlabel \"Beamlet Index\" 0, 1.5");
-    }
-
-    if (m_type < Statistics::BEAMLET_MEAN)
-    {
-    }
-    else
-    {
-    }
+    freq = i * (20.0 / n_freqbands); // calculate frequency in MHz
+    gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\" 0, 1.5");
 
     gnuplot_resetplot(handle);
 
     char title[128];
     switch (m_type)
     {
-      case Statistics::SUBBAND_MEAN:
-	snprintf(title, 128, "Subband Mean Value (RCU=%d)", device);
-	break;
       case Statistics::SUBBAND_POWER:
 	snprintf(title, 128, "Subband Power (RCU=%d)", device);
-	break;
-      case Statistics::BEAMLET_MEAN:
-	snprintf(title, 128, "Beamlet Mean Value (RSP board=%d)", device);
 	break;
       case Statistics::BEAMLET_POWER:
 	snprintf(title, 128, "Beamlet Power (RSP board=%d)", device);
@@ -381,7 +347,7 @@ int main(int argc, char** argv)
 
   char buf[32];
 
-  cout << "Type of stat [0==SUBBAND_MEAN, 1==SUBBAND_POWER, 2=BEAMLET_MEAN, 3=BEAMLET_POWER]:";
+  cout << "Type of stat [0==SUBBAND_POWER, 1=BEAMLET_POWER]:";
   int type = atoi(fgets(buf, 32, stdin));
   if (type < 0 || type >= Statistics::N_STAT_TYPES)
   {
