@@ -1,4 +1,4 @@
-//# TransportHolder.h:
+//# TransportHolder.h: Abstract base class for all TransportHolders
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LIBTRANSPORT_TRANSPORTHOLDER_H
-#define LIBTRANSPORT_TRANSPORTHOLDER_H
+#ifndef TRANSPORT_TRANSPORTHOLDER_H
+#define TRANSPORT_TRANSPORTHOLDER_H
 
 #include <lofar_config.h>
 
