@@ -36,9 +36,8 @@ class DH_RSP: public DataHolder
 public:
   typedef complex<uint16> BufferType;
 
-  explicit DH_RSP (const string& name="dh_rsp",
-		       unsigned int initialNelements = 750,
-		       bool useExtra = false);
+  explicit DH_RSP (const string& name,
+		   const unsigned int bufsize);
 
   DH_RSP(const DH_RSP&);
 
@@ -53,7 +52,7 @@ public:
   virtual void postprocess();
 
   /// Reset the buffer size.
-  void setBufferSize (unsigned int nelements);
+  void setBufferSize (const unsigned int bufsize);
 
   /// Get write access to the Buffer.
   BufferType* getBuffer();

@@ -21,20 +21,18 @@
 //  $Id$
 
 
-#include "DH_RSP.h"
+#include <DH_RSP.h>
 
 namespace LOFAR
 {
 
-DH_RSP::DH_RSP (const string& name, unsigned int initialNelements,
-			bool useExtra)
-: DataHolder (name, "DH_RSP", 1),
+DH_RSP::DH_RSP (const string& name, 
+                const unsigned int bufsize)
+: DataHolder (name, "DH_RSP"),
   itsBuffer  (0),
-  itsBufSize (initialNelements)
+  itsBufSize (bufsize)
 {
-  if (useExtra) {
-  setExtraBlob ("Extra", 1);
-  }
+
 }
 
 DH_RSP::DH_RSP(const DH_RSP& that)
@@ -58,17 +56,16 @@ void DH_RSP::preprocess()
   // Add the fields to the data definition.
   addField ("Buffer", BlobField<BufferType>(1,itsBufSize));
 
-  // Create the data blob (which calls fillPointers).
   createDataBlock();
-  // Initialize the buffer.
+  itsBuffer = getData<BufferType> ("Buffer");
   for (unsigned int i=0; i<itsBufSize; i++) {
     itsBuffer[i] = 0;
   }
 }
 
-void DH_RSP::setBufferSize (unsigned int nelements)
+void DH_RSP::setBufferSize (unsigned int bufsize)
 {
-  itsBufSize = nelements;
+  itsBufSize = bufsize;
   preprocess();
 }
 
