@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.6  2002/06/07 11:35:20  schaaf
+//  %[BugId: 11]%
+//  modified process() inner loop; make use of contiguousness of the data
+//
 //  Revision 1.5  2002/05/16 15:00:34  schaaf
 //
 //  overall update, added profiler states, removed command line processing, setZ/XOffset and Yoffset
