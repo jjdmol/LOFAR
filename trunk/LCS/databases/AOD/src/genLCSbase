@@ -94,7 +94,7 @@ StripNameSpaces()
 
 		# When a begin of a namespace is found add the current BraceLevel
 		# to the namespace stack.
-		while (index($0,"namespace")) {
+		while (index($0,"namespace") && (!index($0,"using"))) {
 			NameSpaceStack[NSStackSize++]=BraceLevel
 			while (index ($0, "{") == 0) {
 				getline
