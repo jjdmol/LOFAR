@@ -1,0 +1,33 @@
+Using: ServiceBroker
+
+Using: PropertyAgent 
+	- change the paramline 'mac.controller.pvss.cmdline' in PropertyAgent.conf to:
+		-proj <projname> 
+		(projname must be filled in with the project, which is configured for LOFAR)
+Using: PropertyInterface
+	- change the paramline 'mac.controller.pvss.cmdline' in PropertyInterface.conf to:
+		-proj <projname> 
+		(projname must be filled in with the project, which is configured for LOFAR)
+
+Precondition:
+- After installation of GCF go to install dir:
+	> configurePVSSProj <projname>
+- a PVSS project is running which is configured for GCF (see DEPENDENCIES)
+
+Applications, which uses GCF/PAL, can place a file named customPrepPVSSDB.ctl in 
+install dir of PropertyAgent, which executes the containing CTRL-script at startup.
+(see example in MAC/TEST/GCF package).
+
+These are continuous applications, which not end by itself. This can be done by CTRL-C.
+
+If the containing packages must be build for the first time they must be build separate in the following order:
+GCFCommon
+TM
+PAL
+PALlight
+
+Each package should be build with the following commands:
+> bootstrap
+> cd build/gnu_debug
+> ../../lofarconf
+> make install check

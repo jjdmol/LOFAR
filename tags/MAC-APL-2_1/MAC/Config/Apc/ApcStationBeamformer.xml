@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+
+<StationBeamformer>
+  <command> 
+  	<MACType>MACString</MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</command>
+  <status> 
+  	<MACType>MACString</MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</status>
+  <directionType> 
+  	<MACType>MACString</MACType> 
+  	<MACDefault>AZEL</MACDefault> 
+ 	</directionType>
+  <directionAngle1> 
+  	<MACType>MACDouble</MACType> 
+  	<MACDefault>0.0</MACDefault> 
+ 	</directionAngle1>
+  <directionAngle2> 
+  	<MACType>MACDouble</MACType> 
+  	<MACDefault>0.0</MACDefault> 
+ 	</directionAngle2>
+  <subbandStart>      <!-- used by PVSS panels -->
+  	<MACType>MACUnsigned</MACType> 
+  	<MACDefault>0</MACDefault> 
+ 	</subbandStart>
+  <subbandEnd>      <!-- used by PVSS panels -->
+  	<MACType>MACUnsigned</MACType> 
+  	<MACDefault>127</MACDefault> 
+ 	</subbandEnd>
+</StationBeamformer>

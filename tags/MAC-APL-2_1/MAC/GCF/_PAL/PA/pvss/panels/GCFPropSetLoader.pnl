@@ -1,0 +1,319 @@
+V 10
+1
+LANG:1 18 GCF PropSet loader
+PANEL,40 57 321 243 N "_3DFace" 1
+"$loadernr"
+"#uses \"gcfpa-pml.ctl\"
+
+main()
+{	
+	pID = gcfInit(\"gcfTestCallBack\");
+}" 0
+ "main()
+{
+	gcfLeave(pID);
+}" 0
+ E E E 1 -1 -1 0  20 19
+""0  1
+E "unsigned pID = 0;
+
+void gcfTestCallBack(dyn_string response)
+{
+	DebugN(response);
+	if (response[1] == \"loaded\")
+	{
+		if (response[3] == \"OK\")
+		{
+			lbLoadedPropsets.appendItem(response[2]);
+			if (lbLoadedPropsets.itemCount > 0)
+			{
+				bConfigure.enabled = TRUE;
+				tApcname.enabled = TRUE;
+				bUnload.enabled = TRUE;
+			}
+		}
+		else
+		{
+			tStatus.text = \"Error on load PS: \" + response[2];
+		}
+	} 
+	else if (response[1] == \"unloaded\")
+	{
+		deletePS(response[2], false);
+	}
+	else if (response[1] == \"gone\")
+	{
+		deletePS(response[2], true);
+	}
+	else if (response[1] == \"configured\")
+	{
+		if (response[4] == \"OK\")
+		{
+			tStatus.text = \"PS '\" + response[2] + \"' is configured with '\" + response[3] + \"'\";
+		}
+		else
+		{
+			tStatus.text = \"Error on configuring PS '\" + response[2] + \"' with '\" + response[3] + \"'\";
+		}
+	}
+}
+
+bool deletePS(string& scope, bool deleteAll)
+{
+	dyn_string scopes = lbLoadedPropsets.items;
+	int scopePos;
+	do 
+	{
+		scopePos = dynContains(scopes, scope);
+		if (scopePos > 0)
+		{
+			lbLoadedPropsets.deletePos(scopePos);	
+		}
+	}
+	while (scopePos > 0 && deleteAll);
+	if (lbLoadedPropsets.itemCount == 0)
+	{
+		bConfigure.enabled = FALSE;
+		tApcname.enabled = FALSE;
+		bUnload.enabled = FALSE;
+	}
+}" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+13 0
+"bLoad"
+""
+1 20 19 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 61 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1
+0
+""  20 19 110 43
+
+T 
+1
+LANG:1 4 Load
+"main()
+{
+	if (tScope.text != \"\")
+	{
+		gcfLoadPS(pID, tScope.text);
+	}
+	tStatus.text = \"\";
+}" 0
+ E E E
+13 1
+"bConfigure"
+""
+1 220 90 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 61 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1
+0
+""  220 90 310 114
+
+T 
+1
+LANG:1 9 Configure
+"main()
+{
+	string scope = lbLoadedPropsets.selectedText;
+	if (scope != \"\" && tApcname.text != \"\")
+	{
+		gcfConfigurePS(pID, scope, tApcname.text);
+	}	
+	tStatus.text = \"\";
+}" 0
+ E E E
+14 4
+"tApcname"
+""
+1 220 120 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 61 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1
+0
+""  220 120 310 146
+3 "s" 0 0 0 0 0 -1  E E E
+14 5
+"tScope"
+""
+1 120 20 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 61 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1
+0
+""  120 20 280 46
+3 "s" 0 0 0 0 0 -1  E E E
+14 7
+"tStatus"
+""
+1 20 160 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 61 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1
+0
+""  20 160 300 186
+3 "s" 0 0 0 0 0 -1  E E E
+13 8
+"bClose"
+""
+1 20 210 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 61 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1
+0
+""  20 210 100 234
+
+T 
+1
+LANG:1 5 Close
+"// SimpleCtrlScriptStart {valid}
+main()
+{
+  EP_panelOff();
+}
+
+EP_panelOff()
+{
+  PanelOffPanel(\"Loader\"+$loadernr);
+}
+
+// SimpleCtrlScript {EP_panelOff}
+// Function {PanelOffPanel}
+// Panel {Loader+$loadernr}
+// Module {}
+// SimpleCtrlScriptEnd {EP_panelOff}
+" 0
+ E E E
+17 10
+"lbLoadedPropsets"
+""
+1 20 49.99999999999999 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 61 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1
+0
+""  20 49.99999999999999 210 140
+0
+
+E
+E
+E
+
+3 1
+13 11
+"bUnload"
+""
+1 220 50 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 61 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1
+0
+""  220 50 310 74
+
+T 
+1
+LANG:1 6 Unload
+"main()
+{
+	string scope = lbLoadedPropsets.selectedText;
+	if (scope != \"\")
+	{
+		gcfUnloadPS(pID, scope);
+	}
+	tStatus.text = \"\";
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0
