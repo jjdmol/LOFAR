@@ -96,7 +96,7 @@ class UVPDataAtom
 
 
   //! \returns const ref to itsHeader.
-  const UVPDataAtomHeader &getHeader() const;
+  const UVPDataAtomHeader& getHeader() const;
 
  protected:
  private:
