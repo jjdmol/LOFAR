@@ -36,12 +36,13 @@
 #include <measures/Measures/MeasConvert.h>
 #include <casa/Exceptions/Error.h>
 
+using namespace casa;
+
 namespace LOFAR
 {
   namespace AMC
   {
 
-    
     ConverterImpl::ConverterImpl()
     {
     }
