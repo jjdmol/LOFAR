@@ -72,6 +72,7 @@ void MeqStatUVW::calculate (const MeqRequest& request)
       uptr[0] = pos->second.itsU;
       vptr[0] = pos->second.itsV;
       wptr[0] = pos->second.itsW;
+      itsLastReqId = request.getId();
       return;
     }
   }
