@@ -27,7 +27,7 @@
 
 #include <Transport/BaseSim.h>
 #include <Transport/DataHolder.h>
-#include <tinyCEP/BaseDataManager.h>
+#include <tinyCEP/MiniDataManager.h>
 //#include <CEPFrame/ParamManager.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_string.h>
@@ -122,8 +122,8 @@ public:
   int getOutChannel (const string& name);
 
   // Get/set its DataManager
-  BaseDataManager& getDataManager();
-  void setDataManager(BaseDataManager* dmptr);
+  MiniDataManager& getDataManager();
+  void setDataManager(MiniDataManager* dmptr);
 
   // Get its ParamManager
 /*   ParamManager& getParamManager(); */
@@ -155,7 +155,7 @@ private:
   string itsType;
   mutable map<string,int> itsInMap;
   mutable map<string,int> itsOutMap;
-  BaseDataManager* itsDataManager;
+  MiniDataManager* itsDataManager;
 /*   ParamManager itsParamManager; */
   bool itsFirstProcessCall;
 
@@ -163,10 +163,10 @@ private:
 };
 
 
-inline BaseDataManager& WorkHolder::getDataManager()
+inline MiniDataManager& WorkHolder::getDataManager()
   { return *itsDataManager; }
 
-inline void WorkHolder::setDataManager(BaseDataManager* dmptr)
+inline void WorkHolder::setDataManager(MiniDataManager* dmptr)
   { itsDataManager = dmptr; }
 
 /* inline ParamManager& WorkHolder::getParamManager() */

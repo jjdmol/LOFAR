@@ -39,10 +39,11 @@ namespace LOFAR
   class ApplicationHolder
   {
   public:
-    ApplicationHolder(int nintput, int noutput, DataHolder* dhptr);
+    ApplicationHolder(int ninput, int noutput, DataHolder* dhptr);
+    ApplicationHolder();
     virtual ~ApplicationHolder();
-   
     
+/*     virtual ApplicationHolder* clone() const = 0; */
  
   protected:
     /**@name Virtual functions
@@ -58,13 +59,12 @@ namespace LOFAR
     virtual void run_once();
     virtual void quit();
 
-  private:
     // Forbid copy constructor
     ApplicationHolder (const ApplicationHolder&);
     // Forbid assignment
     ApplicationHolder& operator= (const ApplicationHolder&);
 
-
+  private:
     int    itsArgc;
     const char** itsArgv;
 

@@ -38,6 +38,11 @@ map<string,WorkHolder::WHConstruct*>* WorkHolder::itsConstructMap = 0;
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
+
+//WorkHolder::WorkHolder[not-in-charge](int, int, 
+//std::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, 
+//std::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)'
+
 WorkHolder::WorkHolder (int inputs, int outputs,
 			const string& name,
 			const string& type)
@@ -48,7 +53,7 @@ WorkHolder::WorkHolder (int inputs, int outputs,
   itsFirstProcessCall (true)
 {
   TRACER2("WorkHolder constructor");
-  itsDataManager = new BaseDataManager(inputs, outputs);
+  itsDataManager = new MiniDataManager(inputs, outputs);
 }
 
 WorkHolder::WorkHolder (const WorkHolder& that)

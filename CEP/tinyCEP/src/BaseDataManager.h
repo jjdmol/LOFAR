@@ -1,4 +1,4 @@
-//#  BaseDataManager.h: DataManager base class
+//#  BaseDataManager.h: A DataManager baseclass
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,119 +20,42 @@
 //#
 //#  $Id$
 
-#ifndef TINYFRAME_BASEDATAMANAGER_H
-#define TINYFRAME_BASEDATAMANAGER_H
+#ifndef TINYCEP_BASEDATAMANAGER_H
+#define TINYCEP_BASEDATAMANAGER_H
 
-/*  #include <lofar_config.h> */
+#include <lofar_config.h>
 
+//# Includes
 #include <Transport/DataHolder.h>
-#include <Common/Debug.h>
 
 namespace LOFAR
 {
 
-typedef struct 
-{
-  DataHolder* currentDH;
-  int         id;             // id of dataholder in DHPoolManager
-} DH_info;
+// Description of class.
+  class BaseDataManager
+  {
+  public:
+    BaseDataManager(int inputs, int outputs);
+    BaseDataManager();
+    virtual ~BaseDataManager();
+    
+    virtual DataHolder* getInHolder(int dholder);
+    virtual DataHolder* getOutHolder(int dholder);
 
-/**
-  Class BaseDataManager is the base class for all data managers
-  in the CEPFrame environment. It main purpose is to offer a common interface
-  to a class like WorkHolder. Apart from that it also offers some common
-  functionality to the classes derived from it.
-*/
+    virtual void addInDataHolder(int channel, DataHolder* dhptr);
+    virtual void addOutDataHolder(int channel, DataHolder* dhptr);
+    
+    /// Get the number of inputs or outputs.
+    int getInputs() const;
+    int getOutputs() const;
 
-class SynchronisityManager;
-class Selector;
+  private:
 
-class BaseDataManager
-{
-public:
-  /** The constructor with the number of input and output
-      DataHolders as arguments.
-  */
-  BaseDataManager (int inputs=0, int outputs=0);
+    int itsNinputs;
+    int itsNoutputs;
 
-  virtual ~BaseDataManager();
-
-  DataHolder* getInHolder(int channel);
-  DataHolder* getOutHolder(int channel);
-  void readyWithInHolder(int channel);
-  void readyWithOutHolder(int channel);
-  
-  void addInDataHolder(int channel, DataHolder* dhptr, bool synchronous=true, 
-		       bool shareIO=false);
-  void addOutDataHolder(int channel, DataHolder* dhptr, bool synchronous=true, 
-			bool shareIO=false);
-
-  void addInDataHolder(int channel, DataHolder* dhptr);
-  void addOutDataHolder(int channel, DataHolder* dhptr);
-
-  void preprocess();
-  void postprocess();
-
-  const string& getInHolderName(int channel) const;
-  const string& getOutHolderName(int channel) const; 
-
-  DataHolder* getGeneralInHolder(int channel); // Use these functions only for
-                                               // acquiring of general properties
-  DataHolder* getGeneralOutHolder(int channel); 
-
-  /// Get the number of inputs or outputs.
-  int getInputs() const;
-  int getOutputs() const;
-
-  void initializeInputs();  ///Reads all inputs
-
-  // Is data transport of input channel synchronous?
-  bool isInSynchronous(int channel);
-
-  // Is data transport of output channel synchronous?
-  bool isOutSynchronous(int channel);
-
-  // The following methods are used for selecting one of the inputs/outputs
-  void setInputSelector(Selector* selector);  // Set an input selector
-  void setOutputSelector(Selector* selector);  // Set an output selector
-  DataHolder* selectInHolder();   // Select an input
-  DataHolder* selectOutHolder();  // Select an output
-
-  // Check if the datamanager has a selector
-  bool hasInputSelector();
-  bool hasOutputSelector();
-
-  /**  accessor functions to the auto trigger flags.
-       This flag determines if automated triggering of read/write
-       sequences is wanted. 
-   **/
-  bool doAutoTriggerIn(int channel) const;
-  bool doAutoTriggerOut(int channel) const;
-  void setAutoTriggerIn(int channel, 
-			bool newflag) const;
-  void setAutoTriggerOut(int channel, 
-			bool newflag) const;
-private:
-  /// Copy constructor (copy semantics).
-  BaseDataManager (const BaseDataManager&);
-
-  int itsNinputs;
-  int itsNoutputs;
-
-  SynchronisityManager* itsSynMan;
-  DH_info* itsInDHs;        // Last requested inholders info
-  DH_info* itsOutDHs;       // Last requested outholders info
-
-  Selector* itsInputSelector;  // Input selection mechanism
-  Selector* itsOutputSelector; // Output selection mechanism
-
-  /**  The auto trigger flags.
-       This flag determines if automated triggering of read/write
-       sequences is wanted. 
-   **/
-  bool*     itsDoAutoTriggerIn;
-  bool*     itsDoAutoTriggerOut;
-};
+    
+  };
 
 inline int BaseDataManager::getInputs() const { 
   return itsNinputs; }
@@ -140,31 +63,7 @@ inline int BaseDataManager::getInputs() const {
 inline int BaseDataManager::getOutputs() const { 
   return itsNoutputs; }
 
-inline bool BaseDataManager::doAutoTriggerIn(int channel) const {
-  DbgAssertStr(channel >= 0, "input channel too low");
-  DbgAssertStr(channel < itsNinputs, "input channel too high");
-  return itsDoAutoTriggerIn[channel];
-}
 
-inline bool BaseDataManager::doAutoTriggerOut(int channel) const {
-  DbgAssertStr(channel >= 0, "output channel too low");
-  DbgAssertStr(channel < itsNoutputs, "output channel too high");
-  return itsDoAutoTriggerOut[channel];
-}
+} // namespace LOFAR
 
-inline void BaseDataManager::setAutoTriggerIn(int channel, 
-					  bool newflag) const {
-  DbgAssertStr(channel >= 0, "input channel too low");
-  DbgAssertStr(channel < itsNinputs, "input channel too high");
-  itsDoAutoTriggerIn[channel] = newflag;
-}
-
-inline void BaseDataManager::setAutoTriggerOut(int channel, 
-					  bool newflag) const {
-  DbgAssertStr(channel >= 0, "output channel too low");
-  DbgAssertStr(channel < itsNoutputs, "output channel too high");
-  itsDoAutoTriggerOut[channel] = newflag;
-}
-
-} // namespace
 #endif

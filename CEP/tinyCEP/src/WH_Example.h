@@ -45,7 +45,7 @@ namespace LOFAR
     virtual ~WH_Example();
     
     static WorkHolder* construct (const string& name, int ninput, int noutput,
-				 const KeyValueMap&);
+				  const KeyValueMap&);
 
     virtual WH_Example* make(const string& name);
     

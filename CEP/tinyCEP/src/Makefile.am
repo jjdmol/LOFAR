@@ -1,6 +1,13 @@
-DOCHDRS		 	= 			
-
 lib_LTLIBRARIES 	= libtinyframe.la
+
+DOCHDRS = \
+BaseDataManager.h \
+MiniDataManager.h \
+ApplicationHolder.h \
+WorkHolder.h \
+WH_Example.h \
+DH_Example.h \
+MyExample.h
 
 #bin_PROGRAMS 		= \
 # 			tinyCFmemcpy \
@@ -23,12 +30,14 @@ lib_LTLIBRARIES 	= libtinyframe.la
 # CFinput_LDADD		= \
 #			libcepframe.la
 
-libtinyframe_la_SOURCES = \
-WorkHolder.cc \
+libtinyframe_la_SOURCES = $(DOCHDRS) \
 MiniDataManager.cc \
+BaseDataManager.cc \
 ApplicationHolder.cc \
-DH_Example.cc \
-WH_Example.cc
+WorkHolder.cc \
+DH_Example.cc  \
+WH_Example.cc \
+MyExample.cc
 
 EXTRA_DIST = assay
 
