@@ -343,26 +343,4 @@ void WH_Correlate::correlator_core_unrolled(blitz::Array<complex<float>, 2>& s,
     
   }
 }
-
-} // namespace LOFAR
-
-
-void WH_Correlate::correlator_core(blitz::Array<complex<float>, 2>& signal, 
-				   blitz::Array<complex<float>, 2>& corr) {
-
-  int x, y;
-
-  for (x = 0; x < itsNelements; x++) {
-    for (y = 0; y < x; y++) {
-      corr(x,y) += (
-		    signal(x, 0).real() * signal(y, 0).real() -  // real 
-		    signal(x, 0).imag() * signal(y, 0).imag(), 
-		    
-		    signal(x, 0).real() * signal(y, 0).imag() +  // imag
-		    signal(x, 0).imag() * signal(y, 0).real()
-		    );
-    }
-  }
-}
-
 }// namespace LOFAR
