@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <GCF/GCF_Task.h>
+#include "../../../APLCommon/src/suite.h"
 #include "AVTTest.h"
 
 int main(int argc, char* argv[])

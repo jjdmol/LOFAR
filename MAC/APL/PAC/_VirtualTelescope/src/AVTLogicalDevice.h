@@ -49,7 +49,8 @@ class AVTLogicalDevice : public GCFTask
                               const string& APCScope); 
     virtual ~AVTLogicalDevice();
 
-    const string& getServerPortName();
+    string& getServerPortName();
+    
     /**
      * The initial state handler. This handler is passed to the GCFTask constructor
      * to indicate that the F_INIT event which starts the state machine is handled
@@ -74,7 +75,7 @@ class AVTLogicalDevice : public GCFTask
      */
     GCFEvent::TResult claimed_state(GCFEvent& e, GCFPortInterface& p);
     /**
-     * The prepairing state handler. 
+     * The preparing state handler. 
      */
     GCFEvent::TResult preparing_state(GCFEvent& e, GCFPortInterface& p);
     /**
@@ -121,7 +122,7 @@ class AVTLogicalDevice : public GCFTask
      */
     virtual GCFEvent::TResult concrete_claiming_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished)=0;
     /**
-     * Prepairing state additional behaviour must be implemented in the derived classes. 
+     * Preparing state additional behaviour must be implemented in the derived classes. 
      */
     virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished)=0;
     /**

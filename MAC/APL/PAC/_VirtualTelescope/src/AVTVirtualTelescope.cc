@@ -24,7 +24,7 @@
 #include "AVTStationBeamformer.h"
 #include "LogicalDevice_Protocol.ph"
 
-AVTVirtualTelescope::AVTVirtualTelescope(const string& taskName, 
+AVTVirtualTelescope::AVTVirtualTelescope(string& taskName, 
                                          const TPropertySet& primaryPropertySet,
                                          const string& APCName,
                                          const string& APCScope,
@@ -42,7 +42,7 @@ AVTVirtualTelescope::~AVTVirtualTelescope()
 
 bool AVTVirtualTelescope::_isBeamFormerClient(GCFPortInterface& port)
 {
-  return (&port == &m_beamFormerClient) // comparing two pointers. yuck?
+  return (&port == &m_beamFormerClient); // comparing two pointers. yuck?
 }
 
 void AVTVirtualTelescope::concreteDisconnected(GCFPortInterface& port)
@@ -108,7 +108,7 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_claiming_state(GCFEvent& event, 
   {
     case LOGICALDEVICE_CLAIMED:
       // claimed event is received from the beam former
-      if(_isBeamFormerClient(port)
+      if(_isBeamFormerClient(port))
       {
         stateFinished=true;
       }
@@ -129,8 +129,8 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_preparing_state(GCFEvent& event,
   switch (event.signal)
   {
     case LOGICALDEVICE_PREPARED:
-      // prepaired event is received from the beam former
-      if(_isBeamFormerClient(port)
+      // prepared event is received from the beam former
+      if(_isBeamFormerClient(port))
       {
         stateFinished=true;
       }
@@ -152,7 +152,7 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_releasing_state(GCFEvent& event,
   {
     case LOGICALDEVICE_RELEASED:
       // released event is received from the beam former
-      if(_isBeamFormerClient(port)
+      if(_isBeamFormerClient(port))
       {
         stateFinished=true;
       }
@@ -166,47 +166,58 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_releasing_state(GCFEvent& event,
   return status;
 }
 
-void AVTVirtualTelescope::concreteClaim(GCFPortInterface& port)
+void AVTVirtualTelescope::handlePropertySetAnswer(GCFEvent& /*answer*/)
+{
+  //todo
+}
+
+void AVTVirtualTelescope::handleAPCAnswer(GCFEvent& /*answer*/)
+{
+  //todo
+}
+
+void AVTVirtualTelescope::concreteClaim(GCFPortInterface& /*port*/)
 {
   // claim my own resources
   
   // send claim message to BeamFormer
-  
+  GCFEvent event(LOGICALDEVICE_CLAIM);
+  m_beamFormerClient.send(event);
 }
 
-void AVTVirtualTelescope::concretePrepare(GCFPortInterface& port)
+void AVTVirtualTelescope::concretePrepare(GCFPortInterface& /*port*/)
 {
   // prepare my own resources
   
   // send prepare message to BeamFormer
-  
+  GCFEvent event(LOGICALDEVICE_PREPARE);
+  m_beamFormerClient.send(event);
 }
 
-void AVTVirtualTelescope::concreteResume(GCFPortInterface& port)
+void AVTVirtualTelescope::concreteResume(GCFPortInterface& /*port*/)
 {
   // resume my own resources
   
   // send resume message to BeamFormer
-  
+  GCFEvent event(LOGICALDEVICE_RESUME);
+  m_beamFormerClient.send(event);
 }
 
-void AVTVirtualTelescope::concreteSuspend(GCFPortInterface& port)
+void AVTVirtualTelescope::concreteSuspend(GCFPortInterface& /*port*/)
 {
   // suspend my own resources
   
   // send suspend message to BeamFormer
-  
+  GCFEvent event(LOGICALDEVICE_SUSPEND);
+  m_beamFormerClient.send(event);
 }
 
-void AVTVirtualTelescope::concreteRelease(GCFPortInterface& port)
+void AVTVirtualTelescope::concreteRelease(GCFPortInterface& /*port*/)
 {
   // release my own resources
   
   // send release message to BeamFormer
-  
-}
-
-void AVTVirtualTelescope::concreteDisconnected(GCFPortInterface& port)
-{
+  GCFEvent event(LOGICALDEVICE_RELEASE);
+  m_beamFormerClient.send(event);
 }
 

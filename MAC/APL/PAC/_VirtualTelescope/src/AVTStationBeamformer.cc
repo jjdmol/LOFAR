@@ -22,13 +22,13 @@
 
 #include "AVTStationBeamformer.h"
 #include "LogicalDevice_Protocol.ph"
-#include "BeamServer_Protocol.ph"
+#include "APLCommon/src/BeamServer_Protocol.ph"
 
-AVTStationBeamformer::AVTStationBeamformer(const string& taskName, 
+AVTStationBeamformer::AVTStationBeamformer(string& taskName, 
                                            const TPropertySet& primaryPropertySet,
                                            const string& APCName,
                                            const string& APCScope,
-                                           const string& beamServerPortName) :
+                                           string& beamServerPortName) :
   AVTLogicalDevice(taskName,primaryPropertySet,APCName,APCScope),
   m_beamServer(*this, beamServerPortName, GCFPortInterface::SAP, BEAMSERVER_PROTOCOL)
 {
@@ -41,7 +41,7 @@ AVTStationBeamformer::~AVTStationBeamformer()
 
 bool AVTStationBeamformer::_isBeamServerPort(GCFPortInterface& port)
 {
-  return (&port == &m_beamServer) // comparing two pointers. yuck?
+  return (&port == &m_beamServer); // comparing two pointers. yuck?
 }
 
 void AVTStationBeamformer::concreteDisconnected(GCFPortInterface& port)
@@ -111,7 +111,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_claiming_state(GCFEvent& event,
       
     case BEAMSERVER_ACK: // or something
       // beam has been created
-      if(_isBeamServerPort(port)
+      if(_isBeamServerPort(port))
       {
         stateFinished=true;
       }
@@ -136,8 +136,8 @@ GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event
       break;
       
     case BEAMSERVER_ACK: // or something like that
-      // prepaired event is received from the beam server
-      if(_isBeamServerPort(port)
+      // prepared event is received from the beam server
+      if(_isBeamServerPort(port))
       {
         stateFinished=true;
       }
@@ -163,7 +163,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_releasing_state(GCFEvent& event
     
     case BEAMSERVER_ACK: // or something like that
       // released event is received from the beam server
-      if(_isBeamServerPort(port)
+      if(_isBeamServerPort(port))
       {
         stateFinished=true;
       }
@@ -177,6 +177,16 @@ GCFEvent::TResult AVTStationBeamformer::concrete_releasing_state(GCFEvent& event
   return status;
 }
 
+void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& /*answer*/)
+{
+  //todo
+}
+
+void AVTStationBeamformer::handleAPCAnswer(GCFEvent& /*answer*/)
+{
+  //todo
+}
+
 void AVTStationBeamformer::concreteClaim(GCFPortInterface& port)
 {
   // claim my own resources
@@ -185,9 +195,9 @@ void AVTStationBeamformer::concreteClaim(GCFPortInterface& port)
   
   // if claiming is an async process, then the end of the claiming state
   // is determined in the concrete_claiming_state() method
-  // Otherwise, it is done here by calling dispatch(port,LOGICALDEVICE_CLAIMED);
-
-  dispatch(port,LOGICALDEVICE_CLAIMED);
+  // Otherwise, it is done here by calling dispatch
+  GCFEvent event(LOGICALDEVICE_CLAIMED);
+  dispatch(event,port);
 }
 
 void AVTStationBeamformer::concretePrepare(GCFPortInterface& port)
@@ -197,13 +207,13 @@ void AVTStationBeamformer::concretePrepare(GCFPortInterface& port)
   // send prepare message to BeamFormer
   
   // if preparing is an async process, then the end of the preparing state
-  // is determined in the concrete_prepairing_state() method
-  // Otherwise, it is done here by calling dispatch(port,LOGICALDEVICE_PREPARED);
-
-  dispatch(port,LOGICALDEVICE_PREPARED);
+  // is determined in the concrete_preparing_state() method
+  // Otherwise, it is done here by calling dispatch
+  GCFEvent event(LOGICALDEVICE_PREPARED);
+  dispatch(event,port);
 }
 
-void AVTStationBeamformer::concreteResume(GCFPortInterface& port)
+void AVTStationBeamformer::concreteResume(GCFPortInterface& /*port*/)
 {
   // resume my own resources
   
@@ -211,7 +221,7 @@ void AVTStationBeamformer::concreteResume(GCFPortInterface& port)
   
 }
 
-void AVTStationBeamformer::concreteSuspend(GCFPortInterface& port)
+void AVTStationBeamformer::concreteSuspend(GCFPortInterface& /*port*/)
 {
   // suspend my own resources
   
@@ -227,12 +237,7 @@ void AVTStationBeamformer::concreteRelease(GCFPortInterface& port)
   
   // if releasing is an async process, then the end of the releasing state
   // is determined in the concrete_releasing_state() method
-  // Otherwise, it is done here by calling dispatch(port,LOGICALDEVICE_RELEASED);
-
-  dispatch(port,LOGICALDEVICE_RELEASED);
+  // Otherwise, it is done here by calling dispatch
+  GCFEvent event(LOGICALDEVICE_RELEASED);
+  dispatch(event,port);
 }
-
-void AVTStationBeamformer::concreteDisconnected(GCFPortInterface& port)
-{
-}
-

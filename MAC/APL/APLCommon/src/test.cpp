@@ -37,8 +37,6 @@
 #pragma warning(disable: 4541)
 #endif
 
-using namespace std;
-
 void Test::do_test(bool cond, const std::string& lbl,
                    const char* fname, long lineno)
 {

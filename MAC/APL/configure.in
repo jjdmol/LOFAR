@@ -69,6 +69,7 @@ AC_OUTPUT(
 APLCommon/src/Makefile
 APLCommon/Makefile
 PAC/VirtualTelescope/src/Makefile
+PAC/VirtualTelescope/test/Makefile
 PAC/VirtualTelescope/Makefile
 PAC/Makefile
 Makefile

@@ -28,12 +28,13 @@
 
 //# GCF Includes
 #include <GCF/GCF_Task.h>
+#include <GCF/GCF_Port.h>
 #include <GCF/GCF_MyPropertySet.h>
 #include <GCF/GCF_Apc.h>
 
 //# VirtualTelescope Includes
-#include "AVTVirtualTelescope.h"
-#include "AVTStationBeamformer.h"
+#include "../src/AVTVirtualTelescope.h"
+#include "../src/AVTStationBeamformer.h"
 
 // forward declaration
 class GCFEvent;
@@ -43,7 +44,7 @@ class AVTTest;
 class AVTTestTask : public GCFTask
 {
   public:
-    AVTTestTask(AVTTestTask& tester);
+    AVTTestTask(AVTTest& tester);
     virtual ~AVTTestTask();
 
   protected:
@@ -67,6 +68,8 @@ class AVTTestTask : public GCFTask
     
     AVTStationBeamformer m_beamformer;
     AVTVirtualTelescope  m_virtualTelescope;
+    GCFPort              m_BFPort;
+    GCFPort              m_VTPort;
     
     AVTTest& m_tester;
 };

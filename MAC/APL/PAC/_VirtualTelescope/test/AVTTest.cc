@@ -24,9 +24,12 @@
 
 AVTTest::AVTTest() :
   Test(string("AVTTest")),
-  m_testTask()
+  m_testTask(*this)
 {
-  m_testTask.setTester(*this);
+}
+
+AVTTest::~AVTTest()
+{
 }
 
 void AVTTest::run()
@@ -39,12 +42,11 @@ void AVTTest::run()
 void AVTTest::avt_do_test(bool cond, const string& lbl,
                           const char* fname, long lineno)
 {
-  _do_test(cond,lbl,fname,lineno);
+  do_test(cond,lbl,fname,lineno);
 }
 
 void AVTTest::avt_do_fail(const string& lbl,
                           const char* fname, long lineno)
 {
-  _do_fail(lbl,fname,lineno);
+  do_fail(lbl,fname,lineno);
 }
-                          

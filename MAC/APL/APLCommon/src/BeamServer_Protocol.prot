@@ -52,3 +52,16 @@ event = {
 //		type = "timeval";
 //	};
 };
+
+event = {
+	signal = ACK;
+	dir = OUT;
+//	param = {
+//		name = "seqnr";
+//		type = "unsigned int";
+//	};
+//	param = {
+//		name = "ping_time";
+//		type = "timeval";
+//	};
+};
