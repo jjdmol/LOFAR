@@ -48,7 +48,7 @@ int main (int argc, const char** argv) {
 	  // 	correlator.baseDump();
 	  correlator.baseQuit();
 
-	  sleep(1);
+	  sleep(2);
 	  
 	} catch (LOFAR::Exception ex) {
 	  // catch known exceptions
