@@ -29,6 +29,9 @@
 namespace LOFAR
 {
 
+DH_Database::DH_Database (const string& name, const string& type)
+  : DataHolder (name, type) {}
+  
 bool DH_Database::StoreInDatabase (int, int, char *, int) {
   cout << "DH_Database::StoreInDatabase () has been called." << endl;
   cout << "  This probably means that you have forgotten to" << endl;
