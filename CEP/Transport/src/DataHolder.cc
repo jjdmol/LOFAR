@@ -302,16 +302,16 @@ void DataHolder::clearExtraBlob()
   return itsExtraPtr->clearBlock();
 }
 
-BlobIStream& DataHolder::getCreatedExtraBlob()
+BlobIStream& DataHolder::getExtraBlob()
 {
   Assert (itsExtraPtr != 0);
-  return itsExtraPtr->getCreatedBlock();
+  return itsExtraPtr->getBlock();
 }
 
-BlobIStream& DataHolder::getCreatedExtraBlob (bool& found, int& version)
+BlobIStream& DataHolder::getExtraBlob (bool& found, int& version)
 {
   Assert (itsExtraPtr != 0);
-  return itsExtraPtr->getCreatedBlock (found, version);
+  return itsExtraPtr->getBlock (found, version);
 }
 
 BlobIStream& DataHolder::openExtraBlob (bool& found, int& version)
