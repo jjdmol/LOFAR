@@ -30,19 +30,25 @@
 class GCFMyPropertySet;
 
 /**
- * This class represents a property set of owned (local) properties. It gives 
- * the Application the possibility to control (un)loading property sets with 
- * properties, which then are freely accessible for other Applications to 
- * monitor and/or control them. 
- * 
- * All responses of the possible actions can be handled by using a 
- * specialisation of the GCFAnswer class. 
- * 
- * This container class keeps properties belonging to a 'scope' (root) together. 
- * A scope means the path in the SCADA DB, where the properties should be 
- * created by GCF. This scope will be used to "(un)register" itself in the PA.  
- * The property set is also responsible to (un)link properties on request of the 
- * PA via the GPMController.
+ * This is the owned property itself. It manages an old value and the current 
+ * value. The current value is (if linked) synchronised with the value in the 
+ * SCADA DB. The old value becomes the current value if the value is the SCADA 
+ * DB was changed. The old value is introduced because the owner of the property 
+ * will only be notified about the changed (current) value and is not able to 
+ * decide about whether or not changing the (current) value. At this way it is 
+ * possible to compare the changed value with the original value of a property 
+ * (Note that changed values can be equal to the original current value). The 
+ * name of the property only consists of alphanumeric characters and the '_'. 
+ * This last character will be used as separator between different levels in a 
+ * virtual tree. The name should always be relative to the scope, which is 
+ * managed by its property set container (GCFMyPropertySet). 
+ * Furthermore this class handles the access rights based on the accessMode 
+ * (see Terms). Note that only the GCFMyPropertySet class is able to create 
+ * instances of this class. 
+ * All value-changed indications can be handled by using a specialisation of the 
+ * GCFAnswer class. No actions of this class results in responses. Because the 
+ * current value is always synchronised with the SCADA property (if linked) 
+ * the get(Old)Value methods are simply synchronous actions.
  */
 
 class GCFMyProperty : public GCFPropertyBase
@@ -107,6 +113,7 @@ class GCFMyProperty : public GCFPropertyBase
 
   private:
     TAccessMode       _accessMode;
+    bool              _changingAccessMode;
     GCFPValue*        _pCurValue;
     GCFPValue*        _pOldValue;
     bool              _isLinked;

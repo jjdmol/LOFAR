@@ -73,6 +73,8 @@ class GCFPropertySetBase
     bool cutScope(string& propName) const;
   
   private:
+    GCFPropertySetBase();
+    
     /// Don't allow copying this object.
     GCFPropertySetBase (const GCFPropertySetBase&);
     GCFPropertySetBase& operator= (const GCFPropertySetBase&);  

@@ -75,6 +75,7 @@ class GCFProperty : public GCFPropertyBase
 
   private:
     friend class GCFPropertySet;
+    GCFProperty();
     /**
      * Creates an instance of the property class, which only can exists in 
      * combination with a GCFPropertySet object.

@@ -140,6 +140,7 @@ class GCFPropertyBase : public GCFPropertyProxy
       { _pPropertySet = 0; }
     
   private:
+    GCFPropertyBase();
     //@{ 
     /// Copy contructors. Don't allow copying this object.
     GCFPropertyBase (const GCFPropertyBase&);

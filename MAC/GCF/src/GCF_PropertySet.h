@@ -70,6 +70,7 @@ class GCFPropertySet : public GCFPropertySetBase
     TGCFResult unsubscribe (const string propName) const;
 
   private:
+    GCFPropertySet();
     //@{ 
     /// Copy contructors. Don't allow copying this object.
     GCFPropertySet (const GCFPropertySet&);
