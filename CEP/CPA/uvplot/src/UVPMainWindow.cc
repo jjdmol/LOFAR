@@ -23,28 +23,28 @@ InitDebugContext(UVPMainWindow, "DEBUG_CONTEXT");
 UVPMainWindow::UVPMainWindow()
   : QMainWindow()
 {
-  m_file_menu = new QPopupMenu;
-  m_file_menu->insertItem("&Open", mc_file_open);
-  m_file_menu->insertItem("&Quit", qApp, SLOT(quit()));
+  itsFileMenu = new QPopupMenu;
+  itsFileMenu->insertItem("&Open", mc_file_open);
+  itsFileMenu->insertItem("&Quit", qApp, SLOT(quit()));
 
-  m_plot_menu = new QPopupMenu;
-  itsMenuPlotImageID = m_plot_menu->insertItem("&Image", this,
+  itsPlotMenu = new QPopupMenu;
+  itsMenuPlotImageID = itsPlotMenu->insertItem("&Image", this,
                                                SLOT(slot_plotTimeFrequencyImage()));
-  itsMenuPlotStopID  = m_plot_menu->insertItem("&Stop", this,
+  itsMenuPlotStopID  = itsPlotMenu->insertItem("&Stop", this,
                                                SLOT(slot_quitPlotting()));
 
-  m_plot_menu->setItemEnabled(itsMenuPlotImageID, true);
-  m_plot_menu->setItemEnabled(itsMenuPlotStopID, false);
+  itsPlotMenu->setItemEnabled(itsMenuPlotImageID, true);
+  itsPlotMenu->setItemEnabled(itsMenuPlotStopID, false);
 
 
-  m_help_menu = new QPopupMenu;
-  m_help_menu->insertItem("&About uvplot", this, SLOT(slot_about_uvplot()), 0, mc_help_about);
+  itsHelpMenu = new QPopupMenu;
+  itsHelpMenu->insertItem("&About uvplot", this, SLOT(slot_about_uvplot()), 0, mc_help_about);
 
-  m_menu_bar = new QMenuBar(this);
-  m_menu_bar->insertItem("&File", m_file_menu);
-  m_menu_bar->insertItem("&Plot", m_plot_menu);
-  m_menu_bar->insertSeparator();
-  m_menu_bar->insertItem("&Help", m_help_menu);
+  itsMenuBar = new QMenuBar(this);
+  itsMenuBar->insertItem("&File", itsFileMenu);
+  itsMenuBar->insertItem("&Plot", itsPlotMenu);
+  itsMenuBar->insertSeparator();
+  itsMenuBar->insertItem("&Help", itsHelpMenu);
 
 
 
@@ -92,7 +92,7 @@ UVPMainWindow::~UVPMainWindow()
 
 void UVPMainWindow::resizeEvent(QResizeEvent */*event*/)
 {
-  itsCanvas->setGeometry(0, m_menu_bar->height(), width(), height()-m_menu_bar->height()-itsStatusBar->height());
+  itsCanvas->setGeometry(0, itsMenuBar->height(), width(), height()-itsMenuBar->height()-itsStatusBar->height());
 }
 
 
@@ -160,8 +160,8 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
 {
   if(!itsBusyPlotting) {
     
-    m_plot_menu->setItemEnabled(itsMenuPlotImageID, false);
-    m_plot_menu->setItemEnabled(itsMenuPlotStopID, true);
+    itsPlotMenu->setItemEnabled(itsMenuPlotImageID, false);
+    itsPlotMenu->setItemEnabled(itsMenuPlotStopID, true);
     
     Dispatcher    dispatcher;     // Octopussy Message Dispatcher
 
@@ -227,8 +227,8 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
     itsCanvas->drawView();
     slot_setProgress(0);
 
-    m_plot_menu->setItemEnabled(itsMenuPlotImageID, true);
-    m_plot_menu->setItemEnabled(itsMenuPlotStopID, false);
+    itsPlotMenu->setItemEnabled(itsMenuPlotImageID, true);
+    itsPlotMenu->setItemEnabled(itsMenuPlotStopID, false);
   }
 
 }
