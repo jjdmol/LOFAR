@@ -38,6 +38,9 @@ public:
 
   virtual ~Sqrt();
 
+    virtual TypeId objectType() const
+    { return TpMeqSqrt; }
+
   // Evaluate the value for the given request.
   virtual Vells evaluate (const Request&,const LoShape &,
 			  const vector<Vells*>& values);

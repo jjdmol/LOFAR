@@ -8,6 +8,11 @@
       // should be called somewhere in order to link in the registry
       int aidRegistry_MeqServer ();
 
+#ifndef _defined_id_AidAntenna
+#define _defined_id_AidAntenna 1
+const AtomicID AidAntenna(-1147);                 // from /home/oms/LOFAR/CEP/CPA/VisCube/src/VisVocabulary.h:27
+const int AidAntenna_int = -1147;
+#endif
 #ifndef _defined_id_AidApp
 #define _defined_id_AidApp 1
 const AtomicID AidApp(-1089);                     // from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/AppManagerWP.h:9
@@ -142,6 +147,11 @@ const int AidNode_int = -1233;
 #define _defined_id_AidNodeIndex 1
 const AtomicID AidNodeIndex(-1324);               // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:10
 const int AidNodeIndex_int = -1324;
+#endif
+#ifndef _defined_id_AidNum
+#define _defined_id_AidNum 1
+const AtomicID AidNum(-1177);                     // from /home/oms/LOFAR/CEP/CPA/VisCube/src/VisVocabulary.h:26
+const int AidNum_int = -1177;
 #endif
 #ifndef _defined_id_AidOutput
 #define _defined_id_AidOutput 1

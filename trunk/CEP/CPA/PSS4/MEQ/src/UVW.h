@@ -38,6 +38,9 @@ public:
 
   virtual ~UVW();
 
+    virtual TypeId objectType() const
+    { return TpMeqUVW; }
+
   // Get the result for the given request.
   virtual int getResult (Result::Ref &resref, const Request&, bool newReq);
 

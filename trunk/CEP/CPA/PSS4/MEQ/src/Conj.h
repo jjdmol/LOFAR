@@ -38,6 +38,9 @@ public:
 
   virtual ~Conj();
 
+    virtual TypeId objectType() const
+    { return TpMeqConj; }
+
   // Evaluate the value for the given request.
   virtual Vells evaluate (const Request&,const LoShape &,
 			  const vector<Vells*>& values);

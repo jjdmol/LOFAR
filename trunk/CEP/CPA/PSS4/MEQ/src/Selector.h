@@ -35,7 +35,7 @@
 //  A MeqSelector selects one or more results from the result set of its child.
 //  Must have exactly one child.
 //field: index []
-//  Indices (1-based) of results to select. At least one must be specified.
+//  Indices (1-based) of results to be selected.
 //defrec end
 
 namespace Meq {    
@@ -47,15 +47,12 @@ class Selector : public Node
     Selector ();
     virtual ~Selector ();
     
-    virtual void init (DataRecord::Ref::Xfer &initrec, Forest* frst);
-    
-    virtual void setState (const DataRecord &rec);
-    
     virtual TypeId objectType() const
     { return TpMeqSelector; }
     
   protected:
-    int getResult (Result::Ref &resref, const Request& request, bool newReq);
+    virtual int getResult (Result::Ref &resref, const Request& request, bool newReq);
+    virtual void setStateImpl (DataRecord &rec,bool initializing);
   
   private:
     vector<int> selection;

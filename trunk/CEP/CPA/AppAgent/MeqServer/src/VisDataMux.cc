@@ -27,15 +27,6 @@
 #include <MEQ/Cells.h>
 #include <MEQ/Request.h>
     
-namespace Meq    
-{
-  const HIID  FOutputColumns = AidOutput|AidCol,
-              FStation1      = AidStation|1|AidIndex,
-              FStation2      = AidStation|2|AidIndex,
-              FNumStations   = AidNum|AidAntenna,
-              FTileFormat    = AidTile|AidFormat;
-}
-
 //##ModelId=3F9FF71B006A
 Meq::VisDataMux::VisDataMux (Meq::Forest &frst)
     : forest_(frst)
@@ -50,9 +41,9 @@ void Meq::VisDataMux::init (const DataRecord &rec)
   out_columns_.clear();
   out_colnames_.clear();
   // setup output column indices
-  if( rec[FOutputColumns].exists() )
+  if( rec[FOutputColumn].exists() )
   {
-    out_colnames_ = rec[FOutputColumns];
+    out_colnames_ = rec[FOutputColumn];
     out_columns_.resize(out_colnames_.size());
     const VisTile::NameToIndexMap &colmap = VisTile::getNameToIndexMap();
     for( uint i=0; i<out_colnames_.size(); i++ )
@@ -61,7 +52,7 @@ void Meq::VisDataMux::init (const DataRecord &rec)
           colmap.find(out_colnames_[i] = struppercase(out_colnames_[i]));
       FailWhen(iter==colmap.end(),"unknown output column "+out_colnames_[i]);
       out_columns_[i] = iter->second;
-      cdebug(2)<<"indicated output colum: "<<out_colnames_[i]<<endl;
+      cdebug(2)<<"indicated output column: "<<out_colnames_[i]<<endl;
     }
   }
 }

@@ -104,7 +104,7 @@ void MeqServer::setNodeState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
 {
   Node & node = resolveNode(*in);
   cdebug(3)<<"setState for node "<<node.name()<<endl;
-  node.setState(*in);
+  node.setState(in());
   out.attach(node.state(),DMI::READONLY|DMI::ANON);
 }
 

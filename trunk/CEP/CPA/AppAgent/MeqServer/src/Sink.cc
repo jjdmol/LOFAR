@@ -1,5 +1,4 @@
 #include "Sink.h"
-#include "AID-MeqServer.h"
 #include <DMI/DataField.h>
 #include <VisCube/VisVocabulary.h>
 #include <MEQ/Request.h>
@@ -7,25 +6,16 @@
 
 namespace Meq {
 
-const HIID FOutputColumn = AidOutput|AidCol,
-           FCorr         = AidCorr|AidIndex;
-
 //##ModelId=3F98DAE60213
 void Sink::init (DataRecord::Ref::Xfer &initrec,Forest* frst)
 {
-  // let the base class initialize itself
-  VisHandlerNode::init(initrec,frst);
-  FailWhen(numChildren()!=1,"sink must have exactly one child node");
   // assign output column -- default is -1
   output_col = -1;
   // output correlations -- if clear, then plane i = corr i
   output_icorrs.clear();
-  // set stuff from record
-  setStateImpl(state());
-  // setup default if not already specified
-  if( !wstate()[FCorr].exists() )
-    wstate()[FCorr] = output_icorrs;
-  // setup default if not already specified
+  // let the base class initialize itself
+  VisHandlerNode::init(initrec,frst);
+  FailWhen(numChildren()!=1,"sink must have exactly one child node");
 }
 
 int Sink::mapOutputCorr (int iplane)
@@ -37,9 +27,17 @@ int Sink::mapOutputCorr (int iplane)
   return output_icorrs[iplane]; 
 }
 
-//##ModelId=3F9918390169
-void Sink::setStateImpl (const DataRecord &rec)
+void Sink::checkInitState (DataRecord &rec)
 {
+  VisHandlerNode::checkInitState(rec);
+  defaultInitField(rec,FOutputColumn,"");
+  // FCorr is left empty if missing
+}
+
+//##ModelId=3F9918390169
+void Sink::setStateImpl (DataRecord &rec,bool initializing)
+{
+  VisHandlerNode::setStateImpl(rec,initializing);
   // check if output column is specified
   if( rec[FOutputColumn].exists() )
   {
@@ -48,26 +46,17 @@ void Sink::setStateImpl (const DataRecord &rec)
     {
       const VisTile::NameToIndexMap &colmap = VisTile::getNameToIndexMap();
       VisTile::NameToIndexMap::const_iterator iter = colmap.find(colname);
-      FailWhen(iter==colmap.end(),"unknown output column "+colname);
+      if( iter == colmap.end() ) {
+        NodeThrow(FailWithoutCleanup,"unknown output column "+colname);
+      }
       output_col = iter->second;
     }
     else
       output_col = -1;
-    wstate()[FOutputColumn] = colname;
   }
   // check if output correlation map is specified
   if( rec[FCorr].exists() )
-  {
     output_icorrs = rec[FCorr].as_vector<int>();
-    wstate()[FCorr].replace() = output_icorrs;
-  }
-}
-
-//##ModelId=3F98DAE6021B
-void Sink::setState (const DataRecord &rec)
-{
-  VisHandlerNode::setState(rec);
-  setStateImpl(rec);
 }
 
 //##ModelId=3F9509770277

@@ -43,8 +43,11 @@
 //field: default 0.0  
 //  default parameter value - expected double/complex double, scalar or
 //  2D array
-//field: tablename '' 
+//field: table_name '' 
 //  MEP table name. If empty, then the default parameter value is used
+//field: parm_name '' 
+//  MEP parm name used to look inside the table. If empty, then the node 
+//  name is used.
 //defrec end
 
 namespace Meq {
@@ -70,6 +73,9 @@ public:
 
   virtual ~Parm();
 
+    virtual TypeId objectType() const
+    { return TpMeqParm; }
+
   // Get the parameter id.
   unsigned int getParmId() const
     { return itsParmId; }
@@ -91,8 +97,6 @@ public:
 
   virtual void init (DataRecord::Ref::Xfer& initrec, Forest* frst);
 
-  virtual void setState (DataRecord& rec);
-
   //## Standard debug info method
   virtual string sdebug (int detail = 1, const string& prefix = "",
 			 const char* name = 0) const;
@@ -105,6 +109,9 @@ protected:
   // Get the polynomials.
   const vector<Polc>& getPolcs() const
     { return itsPolcs; }
+  
+//  virtual void checkInitState (DataRecord &rec);
+  virtual void setStateImpl (DataRecord &rec,bool initializing);
 
 private:
   unsigned int itsParmId;

@@ -53,18 +53,11 @@ Parm::~Parm()
 
 void Parm::init (DataRecord::Ref::Xfer& initrec, Forest* frst)
 {
+  // do parent init (this will call our setStateImpl())
   Node::init (initrec, frst);
-  // Get possible ParmTable name and open it.
-  string tableName;
-  if (state()[FTableName].exists()) {
-    tableName = state()[FTableName].as<string>();
-  }
-  if (! tableName.empty()) {
-    itsTable = ParmTable::openTable(tableName);
-  }
-  itsName = name();
-  // Handle other parameters.
-  setState (wstate());
+  // use default parm name ( = node name) if not set 
+  if( itsName.empty() )
+    wstate()[FParmName] = itsName = name(); 
 }
 
 int Parm::initDomain (const Domain& domain)
@@ -140,7 +133,12 @@ int Parm::initDomain (const Domain& domain)
 
 int Parm::getResult (Result::Ref& resultset, const Request& request, bool)
 {
-  initDomain (request.cells().domain());
+  const Domain & reqdomain = request.cells().domain();
+//  if( reqdomain != current_domain )
+//  {
+//    initDomain(request.cells().domain());
+//    // set current_domain, too
+//  }
   // Create result object and attach to the ref that was passed in
   resultset <<= new Result(1); // resulting set is always 1 plane
   const Cells& cells = request.cells();
@@ -267,18 +265,31 @@ void Parm::save()
   }
 }
 
-void Parm::setState (DataRecord& newst)
+void Parm::setStateImpl (DataRecord& rec,bool initializing)
 {
-  // Get solvable flag.
-  if (newst[FSolvable].exists()) {
-    itsIsSolvable = newst[FSolvable].as<bool>();
-    wstate()[FSolvable] = itsIsSolvable;
+  Function::setStateImpl(rec,initializing);
+  // Get solvable flag
+  if( rec[FSolvable].exists() )
+    itsIsSolvable = rec[FSolvable].as<bool>();
+  // Get parm value
+  if( rec[FValue].exists() )
+  { // TBD
   }
-  // Get default value.
-  if (newst[FDefault].exists()) {
-    DataArray *parr = newst[FDefault].as_wp<DataArray>();
-    itsDefault = Vells(parr);
+  // Get default value (to be used if no table exists)
+  if( rec[FDefault].exists() )
+    itsDefault = Vells(rec[FDefault].as_wp<DataArray>());
+  // Get ParmTable name 
+  if( rec[FTableName].exists() )
+  {
+    string tableName = state()[FTableName].as<string>();
+    if( tableName.empty() )  // no table
+      itsTable = 0;
+    else    // else open a table
+      itsTable = ParmTable::openTable(tableName);
   }
+  // Override ParmName if supplied
+  if( rec[FParmName].exists() )
+    itsName = rec[FParmName].as<string>();
 }
 
 string Parm::sdebug (int detail, const string &prefix,const char* nm) const

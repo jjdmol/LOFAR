@@ -43,10 +43,6 @@ public:
 
   virtual ~Solver();
 
-  // Get the result for the given request.
-  virtual int getResult (Result::Ref &resref, const Request&,
-			     bool newReq);
-
   // Returns the class TypeId
   virtual TypeId objectType() const;
 
@@ -55,9 +51,14 @@ public:
   // was created.
   virtual void checkChildren();
 
-  virtual void init (DataRecord::Ref::Xfer& initrec, Forest* frst);
+// no need for now
+//  virtual void init (DataRecord::Ref::Xfer& initrec, Forest* frst);
 
-  virtual void setState (const DataRecord& rec);
+protected:
+  // Get the result for the given request.
+  virtual int getResult (Result::Ref &resref, const Request&,bool newReq);
+//  virtual void checkInitState (DataRecord &rec);
+  virtual void setStateImpl (DataRecord& rec,bool initializing);
 
 private:
   vector<Condeq*> itsCondeqs;

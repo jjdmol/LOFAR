@@ -44,16 +44,18 @@ BlockableObject * __construct_MeqSpigot (int n) { return n>0 ? new Meq::Spigot [
         AtomicID::registerId(-1293,"format")+
         AtomicID::registerId(-1329,"vishandlernode")+
         AtomicID::registerId(-1087,"id")+
-        AtomicID::registerId(-1337,"sink")+
+        AtomicID::registerId(-1177,"num")+
+        AtomicID::registerId(-1147,"antenna")+
+        AtomicID::registerId(-1092,"input")+
         AtomicID::registerId(-1282,"output")+
         AtomicID::registerId(-1334,"col")+
         AtomicID::registerId(-1153,"corr")+
+        AtomicID::registerId(-1336,"next")+
+        AtomicID::registerId(-1337,"sink")+
         AtomicID::registerId(-1326,"meqsink")+
         TypeInfoReg::addToRegistry(-1326,TypeInfo(TypeInfo::DYNAMIC,0))+
         DynamicTypeManager::addToRegistry(-1326,__construct_MeqSink)+
         AtomicID::registerId(-1325,"spigot")+
-        AtomicID::registerId(-1092,"input")+
-        AtomicID::registerId(-1336,"next")+
         AtomicID::registerId(-1330,"meqspigot")+
         TypeInfoReg::addToRegistry(-1330,TypeInfo(TypeInfo::DYNAMIC,0))+
         DynamicTypeManager::addToRegistry(-1330,__construct_MeqSpigot)+

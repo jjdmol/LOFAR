@@ -79,7 +79,7 @@ const meqsink_test := function ()
   # create a small subtree
   defval1 := array(as_double(1),2,2);
   defval2 := array(as_double(2),1,1);
-  addrec := meqnode('meqCompare','compare',children="spigot1 spigot2");
+  addrec := meqnode('MeqSubtract','compare',children="spigot1 spigot2");
   print mqs.meq('Create.Node',addrec);
   # create spigot (note! for now, a spigot MUST be created first)
   spigrec1 := meqnode('MeqSpigot','spigot1');

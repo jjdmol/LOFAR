@@ -32,13 +32,13 @@
 // init-record for the class 
 
 //defrec begin MeqComposer
-//  A MeqComposer concatenates the result sets of all its children into
-//  a single result set.
+//  A MeqComposer concatenates the results of all its children 
+//  into a single result.
 //field: contagious_fail F
-//  If true, then any fail result on any child causes the composer to generate
-//  a complete fail -- i.e., a resultset composed entirely of fails.
-//  If false (default), then fail results from children are collected and 
-//  passed along as if they were normal results.
+//  If true, then a fail in any child result causes the composer to generate
+//  a complete fail -- i.e., a result composed entirely of fails.
+//  If false (default), then fail vellsets from children are collected and 
+//  passed along with valid vellsets.
 //defrec end
 
 namespace Meq {    
@@ -49,16 +49,14 @@ class Composer : public Node
   public:
     Composer ();
     virtual ~Composer ();
-    
-    virtual void init (DataRecord::Ref::Xfer &initrec, Forest* frst);
-    
-    virtual void setState (const DataRecord &rec);
-    
+
     virtual TypeId objectType() const
     { return TpMeqComposer; }
     
   protected:
-    int getResult (Result::Ref &resref, const Request& request, bool newReq);
+    virtual int getResult (Result::Ref &resref, const Request& request, bool newReq);
+    virtual void checkInitState (DataRecord &rec);
+    virtual void setStateImpl (DataRecord &rec,bool initializing);
   
   private:
     bool contagious_fail;
