@@ -24,6 +24,13 @@
 #include <GCF/PAL/GCF_MyPropertySet.h>
 #include <GCF/PAL/GCF_Answer.h>
 
+namespace LOFAR 
+{
+ namespace GCF  
+ {
+using namespace Common;  
+  namespace PAL
+  {
 GCFMyProperty::GCFMyProperty(const TPropertyInfo& propInfo,
                              GCFMyPropertySet& propertySet) :
   GCFProperty(propInfo, &propertySet),
@@ -34,7 +41,13 @@ GCFMyProperty::GCFMyProperty(const TPropertyInfo& propInfo,
   _propertySet(propertySet),
   _changingAccessMode(false)
 {
-  if (propertySet.isTemporary()) assert(!exists());
+  if (propertySet.isTemporary()) 
+  {
+    if(exists()) LOG_FATAL(formatString(
+                      "%s is temporary but it already exists!", 
+                      getFullName().c_str()));
+    assert(!exists());
+  }
   _pCurValue = GCFPValue::createMACTypeObject(propInfo.type);
   assert(_pCurValue);
   _pOldValue = _pCurValue->clone();
@@ -247,3 +260,6 @@ void GCFMyProperty::valueChanged (const GCFPValue& value)
     dispatchAnswer(e);
   }
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
