@@ -2,6 +2,11 @@
     
 #define paddr(x) printf(#x ": %08x\n",(int)&x)
     
+int TestFunc( const LockedBlockRef &ref )
+{
+  ref.copy();
+}
+    
 int main ()
 {
   DMI::Debug::setLevel(2);
@@ -26,6 +31,8 @@ int main ()
   paddr(ref1c);
   
   ref3.privatize();
+  
+  TestFunc(ref3);
   
   }
   catch( Debug::Error err ) 
