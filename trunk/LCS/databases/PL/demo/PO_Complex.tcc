@@ -23,8 +23,8 @@ void DBRep< Complex >::bindCols(dtl::BoundIOs& cols) {
 // DBRep< Complex > structure
 void TPersistentObject< Complex >::toDBRep(DBRep< Complex >& dest) const
 {
-	dest.value_re	= data().itsValue.re;
-	dest.value_im	= data().itsValue.im;
+	dest.value_re	= data().itsValue.real();
+	dest.value_im	= data().itsValue.imag();
 }
 
 
@@ -32,8 +32,7 @@ void TPersistentObject< Complex >::toDBRep(DBRep< Complex >& dest) const
 // to the Complex class.
 void TPersistentObject< Complex >::fromDBRep(const DBRep< Complex >& src)
 {
-	data().itsValue.re	= src.value_re;
-	data().itsValue.im	= src.value_im;
+	data().itsValue = std::complex<double>(src.value_re, src.value_im);
 }
 
 
