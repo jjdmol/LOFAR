@@ -52,7 +52,7 @@
 #pragma aid Ant1 Ant2 AntMode CorrSel Niter UseSVD
 #pragma aid CalcUVW ModelType MEP GSM
 #pragma aid Save Parms Residuals
-#pragma aid Rank Fit Errors CoVar Flag Mu StdDev Chi
+#pragma aid SolvParams Rank Fit Errors CoVar Flag Mu StdDev Chi
 
 namespace SolverControl
 {
@@ -79,6 +79,7 @@ namespace SolverControl
   const HIID  SaveParms           = AidSave|AidParms;
   const HIID  SaveResiduals       = AidSave|AidResiduals;
 
+  const HIID  StSolutionSolvParams= AidSolution|AidSolvParams;
   const HIID  StSolutionRank      = AidSolution|AidRank;
   const HIID  StSolutionFit       = AidSolution|AidFit;
   const HIID  StSolutionErrors    = AidSolution|AidErrors;
