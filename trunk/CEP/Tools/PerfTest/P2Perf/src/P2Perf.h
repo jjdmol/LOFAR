@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.7  2002/03/19 16:19:08  schaaf
+//  increased max growsize
+//
 //  Revision 1.6  2002/03/08 11:38:42  wierenga
 //  Upgraded from firewalls.h use to Debug.h use. This version was used for performance tests.
 //
@@ -53,7 +56,7 @@
 #include "WH_GrowSize.h"
 #include "ParamBlock.h"
 
-#define MAX_GROW_SIZE (4*1024*1024)
+#define MAX_GROW_SIZE (256*1024) // 256 kWords =^ 1 MB
 
 /**
    This class is an example of a concrete Simulator.

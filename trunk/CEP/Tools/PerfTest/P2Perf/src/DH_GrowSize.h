@@ -72,8 +72,11 @@ public:
   // increaseSize: increase the size returned by getDataPacketSize
   bool increaseSize(float factor);
 
-  // override getDataPacketSize
+  // override getDataPacketSize accessor methods
   int getDataPacketSize();
+  int getCurDataPacketSize();
+  int getMaxDataPacketSize();
+
   bool setInitialDataPacketSize(int initialSize);
 
 protected:
@@ -113,25 +116,28 @@ inline const DH_GrowSize::BufferType* DH_GrowSize::getBuffer() const
 
 inline bool DH_GrowSize::increaseSize(float factor)
 { 
-  //  cout << "DH_Growsize::increaseSize" << endl;
   bool success = false;
-
-  //  factor = 1.0;
-
-  int newPacketSize = (int)(floatDataPacketSize * factor);
-
-  if (newPacketSize < this->DataHolder::getDataPacketSize())
+  
+  if (reportedDataPacketSize * factor < this->DataHolder::getDataPacketSize())
   {
     floatDataPacketSize *= factor;
-    reportedDataPacketSize = newPacketSize;
+    reportedDataPacketSize = (int)floatDataPacketSize;
     success = true;
   }
 
   return success;
 }
 
-inline int DH_GrowSize::getDataPacketSize(void)
-{ return reportedDataPacketSize + sizeof(DataPacket); }
+inline int DH_GrowSize::getDataPacketSize(void) {
+  TRACER1("getDataPacketSize returns getCurDataPacketSize for flexible DataPackages");
+  return getCurDataPacketSize(); 
+}
+
+inline int DH_GrowSize::getCurDataPacketSize(void)
+{ return reportedDataPacketSize; }
+
+inline int DH_GrowSize::getMaxDataPacketSize(void)
+{ return itsDataPacketSize; }
 
 inline bool DH_GrowSize::setInitialDataPacketSize(int initialSize)
 {

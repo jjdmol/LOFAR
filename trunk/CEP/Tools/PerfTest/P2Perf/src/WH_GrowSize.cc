@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.11  2002/03/18 12:18:56  schaaf
+//  Uncommented performance output....
+//
 //  Revision 1.10  2002/03/08 11:38:42  wierenga
 //  Upgraded from firewalls.h use to Debug.h use. This version was used for performance tests.
 //
@@ -67,9 +70,11 @@
 int  WH_GrowSize::itsMeasurements = 3;
 bool WH_GrowSize::itsFirstcall = true;
 
-WH_GrowSize::WH_GrowSize (const string& name, bool first,
-			unsigned int nin, unsigned int nout,
-			unsigned int nbuffer)
+WH_GrowSize::WH_GrowSize (const string& name, 
+			  bool first,
+			  unsigned int nin, 
+			  unsigned int nout,
+			  unsigned int nbuffer)
 : WorkHolder    (nin, nout, name),
   itsInHolders  (0),
   itsOutHolders (0),
@@ -127,44 +132,37 @@ void WH_GrowSize::process()
 {
 
   itsOutHolders[0]->setTimeStamp(itsTime++);
-#if 0
-  cout << "WH_Growsize::process: Timestamp in= " 
-       << itsInHolders[0]->getTimeStamp()
-       << "   out = " 
-       << itsOutHolders[0]->getTimeStamp()
-       << endl;
-#endif
   if (!strncmp("GrowSize[1]", getName().c_str(), 11))
-  {
-    if (!itsFirstcall)
-      {
-	watch.stop();
-	if (itsIteration == 0)
+    {
+      if (!itsFirstcall)
 	{
-	  // first measurement; print packet sizes etc.
-	   cout << endl;
-	  cout << itsInHolders[0]->getDataPacketSize() << " "
-	      << log10(itsInHolders[0]->getDataPacketSize()) << " ";
+	  watch.stop();
+	  if (itsIteration == 0)
+	    {
+	      // first measurement; print packet sizes etc.
+	      cout << endl;
+	      cout << itsInHolders[0]->getDataPacketSize() << " "
+		   << log10(itsInHolders[0]->getDataPacketSize()) << " ";
+	    }
+	  cout << (itsInHolders[0]->getDataPacketSize() / (1024. * 1024. *watch.elapsed())) 
+	       << "  "
+	       << watch.elapsed()
+	       << "  ";
 	}
-	cout << (itsInHolders[0]->getDataPacketSize() / (1024. * 1024.) / watch.elapsed()) 
-	     << "  "
-	     << watch.elapsed()
-	     << "  ";
-      }
-    watch.start();
-  }
+      watch.start();
+    }
   itsFirstcall = false;
   {
     // perform every measurement Measurements times
     if (itsIteration-- == 0 )
-    {
-      itsIteration = itsMeasurements;
-      for (int i=0; i<getInputs(); i++)
       {
-	(void)itsInHolders[i]->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
-	(void)itsOutHolders[i]->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
+	itsIteration = itsMeasurements;
+      for (int i=0; i<getInputs(); i++)
+	{
+	  (void)itsInHolders[i]->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
+	  (void)itsOutHolders[i]->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
+	}
       }
-    }
   }
 }
 
