@@ -18,7 +18,10 @@ UVPDisplayArea::UVPDisplayArea(QWidget *parent,
   : QWidget(parent),
     itsColormap(numColors),
     itsXAxis(1, 0, "X", "arbitrary"),
-    itsYAxis(1, 0, "Y", "arbitrary")
+    itsYAxis(1, 0, "Y", "arbitrary"),
+    itsComplexColormap(numColors*numColors),
+    itsRealIndex(numColors),
+    itsImagIndex(numColors)
 {
   // Uncomment: Don't blank window before repainting
   setBackgroundMode(NoBackground);
@@ -27,11 +30,18 @@ UVPDisplayArea::UVPDisplayArea(QWidget *parent,
 
   itsBuffer.resize(10, 10);
 
-  for(unsigned int i = 0; i < itsColormap.size(); i++)
-    {
-      itsColormap[i] = QColor(qRgb(i, i, i), i);
-    }
-  initColormap(1.0, 128.0);
+  for(unsigned int i = 0; i < itsColormap.size(); i++) {
+    itsColormap[i] = QColor(qRgb(i, i, i), i);
+    itsRealIndex[i] = i;
+    itsImagIndex[i] = numColors*i;
+  }
+
+  for(unsigned int j = 0; j < numColors*numColors; j++) {
+    itsComplexColormap[j] = QColor(qRgb(j%numColors, j/numColors, 0), j+numColors);
+  }
+
+
+  initColormap(1.0, numColors/2.0);
   
 }
 
@@ -54,10 +64,11 @@ UVPDisplayArea::~UVPDisplayArea()
 void UVPDisplayArea::initColormap(double slope,
                                   double center)
 {
-  const int min_color = 0;
-  const int max_color = 255;
+  const int          min_color = 0;
+  const int          max_color = 255;
+  const unsigned int numColors = itsColormap.size();
 
-  for(unsigned int i = 0; i < itsColormap.size(); i++) {
+  for(unsigned int i = 0; i < numColors; i++) {
     double col  = (max_color-min_color)/2 + slope*(double(i)-center);
     if(col < min_color) {
       col = min_color;
@@ -66,10 +77,35 @@ void UVPDisplayArea::initColormap(double slope,
       col = max_color;
     }
     
-    col = int(col +0.5);
+    col = int(col + 0.5);
 
     itsColormap[i].setRgb(col, col, col); 
 
+  }
+
+
+  // The complex color table;
+  for(unsigned int i = 0; i < numColors; i++) {
+    double green  = (max_color-min_color)/2 + slope*(double(i)-center);
+    if(green < min_color) {
+      green = min_color;
+    }
+    if(green > max_color) {
+      green = max_color;
+    }
+    green = int(green + 0.5);
+
+    for(unsigned int r = 0; r < numColors; r++) {
+      double red  = (max_color-min_color)/2 + slope*(double(r)-center);
+      if(red < min_color) {
+        red = min_color;
+      }
+      if(red > max_color) {
+        red = max_color;
+      }
+      red = int(red + 0.5);
+      itsComplexColormap[itsRealIndex[r]+itsImagIndex[i]].setRgb(red, green, 0);
+    }
   }
 
   emit signal_paletteChanged();

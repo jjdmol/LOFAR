@@ -63,6 +63,10 @@ class UVPDisplayArea : public QWidget
   std::vector<QColor> itsColormap;
   UVPAxis             itsXAxis;
   UVPAxis             itsYAxis;
+
+  std::vector<QColor> itsComplexColormap;
+  std::vector<int>    itsRealIndex;
+  std::vector<int>    itsImagIndex;
 };
 
 
