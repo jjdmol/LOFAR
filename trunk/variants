@@ -6,7 +6,7 @@ icc.compiler.conf:
 debug.variant.conf:		
 opt.variant.conf:	  --with-optimize
 mpich.variant.conf:	  --with-mpich
-mpich-opt.variant.conf	  --with-mpich --with-optimize
+mpich-opt.variant.conf:	  --with-mpich --with-optimize
 lam.variant.conf:	  --with-lam 
 lam-opt.variant.conf:	  --with-lam --with-optimize
 corba.variant.conf:	  --with-vbroker
