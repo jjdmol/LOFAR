@@ -15,6 +15,7 @@
 #include <Common/Debug.h>
 #endif
 
+#include <UVPDataHeader.h>
 #include <UVPDataAtom.h>
 
 //*********** AID mechanism declarations
@@ -24,8 +25,6 @@
 #pragma aid UVPDataTransferWP
 static int AID_DUMMY_INITIALISATION = aidRegistry_uvplot();
 //*********** End of AID mechanism declarations
-
-
 
 
 
@@ -70,12 +69,9 @@ class UVPDataTransferWP: public WorkProcess
   int                     itsBaseline;
   int                     itsPatchID; /* Zero based */
   
-
-  int                     itsNumberOfBaselines;
-  int                     itsNumberOfTimeslots;
-  int                     itsNumberOfChannels;
-  int                     itsFieldID; /* Zero-based */
-  std::string              itsFieldName;
+  bool                     itsHeaderIsReceived;
+  UVPDataHeader            itsHeader;
+  
 
   // Octopussy stuff
   HIID                     itsHeaderHIID;
