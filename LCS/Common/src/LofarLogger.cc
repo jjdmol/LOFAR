@@ -21,6 +21,8 @@
 //#  $Id$
 
 //# Includes
+#include <stdio.h>					// snprintf
+#include <unistd.h>					// readlink
 #include <Common/LofarLogger.h>
 
 namespace LOFAR {
@@ -44,6 +46,35 @@ const std::string formatString(const	char* format, ...) {
 
 
 //#------------------------- Internal implementation -----------------------------
+//
+// lofarLoggerInitNode()
+//
+// Creates a NDC with the text "application@node" and pushes it
+// on the NDC stack
+void lofarLoggerInitNode(void) {
+	int		MAXLEN = 128;
+	int		applNameLen = 0;
+	char	hostName [MAXLEN];
+	char	applName [MAXLEN];
+	char	loggerId [MAXLEN];
+
+	// try to resolve the hostname
+	if (gethostname (hostName, MAXLEN-1) < 0) {
+		hostName[0]='\0';
+	}
+
+	// try to resolve the applicationname
+	applNameLen = readlink("/proc/self/exe", applName, MAXLEN-1);
+	applName[applNameLen] = '\0';
+//	else {	// hopefully the user used argc and argv in its main.
+//		strcpy (applName, argv[0]);
+//	}	
+
+	// construct loggerId and register it.
+	snprintf(loggerId, MAXLEN-1, "%s@%s", basename(applName), hostName);
+	log4cplus::getNDC().push(loggerId);
+}
+
 using namespace log4cplus;
 
 //# ------------------------ implement the five trace levels ------------------------
@@ -52,12 +83,18 @@ const LogLevel	TRACE2_LOG_LEVEL	= 2;
 const LogLevel	TRACE3_LOG_LEVEL	= 3;
 const LogLevel	TRACE4_LOG_LEVEL	= 4;
 const LogLevel	TRACE5_LOG_LEVEL	= 5;
+const LogLevel	TRACE6_LOG_LEVEL	= 6;
+const LogLevel	TRACE7_LOG_LEVEL	= 7;
+const LogLevel	TRACE8_LOG_LEVEL	= 8;
 
 #define _TRACE1_STRING	LOG4CPLUS_TEXT("TRACE1")
 #define _TRACE2_STRING	LOG4CPLUS_TEXT("TRACE2")
 #define _TRACE3_STRING	LOG4CPLUS_TEXT("TRACE3")
 #define _TRACE4_STRING	LOG4CPLUS_TEXT("TRACE4")
 #define _TRACE5_STRING	LOG4CPLUS_TEXT("TRACE5")
+#define _TRACE6_STRING	LOG4CPLUS_TEXT("TRACE6")
+#define _TRACE7_STRING	LOG4CPLUS_TEXT("TRACE7")
+#define _TRACE8_STRING	LOG4CPLUS_TEXT("TRACE8")
 
 tstring traceLevel2String(LogLevel ll) {
 	switch (ll) {
@@ -66,6 +103,9 @@ tstring traceLevel2String(LogLevel ll) {
 	case TRACE3_LOG_LEVEL:	return _TRACE3_STRING;
 	case TRACE4_LOG_LEVEL:	return _TRACE4_STRING;
 	case TRACE5_LOG_LEVEL:	return _TRACE5_STRING;
+	case TRACE6_LOG_LEVEL:	return _TRACE6_STRING;
+	case TRACE7_LOG_LEVEL:	return _TRACE7_STRING;
+	case TRACE8_LOG_LEVEL:	return _TRACE8_STRING;
 	}
 
 	return tstring();		// not found
@@ -77,6 +117,9 @@ LogLevel string2TraceLevel (const tstring& lname) {
 	if (lname == _TRACE3_STRING)	return TRACE3_LOG_LEVEL;
 	if (lname == _TRACE4_STRING)	return TRACE4_LOG_LEVEL;
 	if (lname == _TRACE5_STRING)	return TRACE5_LOG_LEVEL;
+	if (lname == _TRACE6_STRING)	return TRACE6_LOG_LEVEL;
+	if (lname == _TRACE7_STRING)	return TRACE7_LOG_LEVEL;
+	if (lname == _TRACE8_STRING)	return TRACE8_LOG_LEVEL;
 
 	return NOT_SET_LOG_LEVEL;			// not found
 }
@@ -95,17 +138,18 @@ void initTraceModule (void) {
 	
 	//# Setup a property object to initialise the TRACE Logger
 	helpers::Properties		traceProp;		
-	traceProp.setProperty("log4cplus.logger.TRACE", "TRACE, TRACE");
-	traceProp.setProperty("log4cplus.additivity.TRACE", "false");
-	traceProp.setProperty("log4cplus.appender.TRACE", "log4cplus::ConsoleAppender");
-//	traceProp.setProperty("log4cplus.appender.TRACE.layout","log4cplus::PatternLayout");
-//	traceProp.setProperty("log4cplus.appender.TRACE.layout.ConversionPattern","%c %m%n");
-	traceProp.setProperty("log4cplus.appender.TRACE.layout", "log4cplus::TTCCLayout");
-	traceProp.setProperty("log4cplus.appender.TRACE.layout.Use_gmtime", "true");
+	traceProp.setProperty("log4cplus.logger.TRC", "TRACE1, STDERR");
+	traceProp.setProperty("log4cplus.additivity.TRC", "false");
+	traceProp.setProperty("log4cplus.appender.STDERR", "log4cplus::ConsoleAppender");
+	traceProp.setProperty("log4cplus.appender.STDERR.logToStdErr", "true");
+	traceProp.setProperty("log4cplus.appender.STDERR.layout","log4cplus::PatternLayout");
+	traceProp.setProperty("log4cplus.appender.STDERR.layout.ConversionPattern",
+							"%D{%y%m%d %H%M%S,%q} [%t] %-6p %c{3} - %m%n");
 
 	PropertyConfigurator(traceProp).configure();
+	Logger::getInstance("TRC").forcedLog(0, "TRACE module activated");
 
 }
-LOFAR::LoggerReference	TraceLoggerRef("TRACE");			// create the tracelogger
+LOFAR::LoggerReference	theirTraceLoggerRef("TRC");		// create the tracelogger
 
 }	// namespace LOFAR
