@@ -1,7 +1,7 @@
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../MACCommon/autogen $< && \
+	$(AUTOGEN) -L $(top_srcdir)/../../../MACCommon/autogen $< && \
 	chmod a+w $@
 
 libgcftest_la_DOCHDRS	=	\
@@ -10,11 +10,7 @@ libgcftest_la_DOCHDRS	=	\
   Answer.h \
   Defines.h
 
-libgcfrttest_la_DOCHDRS	=	\
-  RTAnswer.h \
-  RTDefines.h
-
-noinst_LTLIBRARIES 	= libgcftest.la libgcfrttest.la
+noinst_LTLIBRARIES 	= libgcftest.la
 
 libgcftest_la_SOURCES= $(libgcftest_la_DOCHDRS) \
 	SupervisedTask.cc \
@@ -22,11 +18,7 @@ libgcftest_la_SOURCES= $(libgcftest_la_DOCHDRS) \
  	Answer.cc \
  	TST_Protocol.cc
 
-libgcfrttest_la_SOURCES= $(libgcfrttest_la_DOCHDRS) \
- 	RTAnswer.cc \
-	Echo_Protocol.cc
-
-bin_PROGRAMS   		= Application1 Application2 RTEcho RTPing
+bin_PROGRAMS   		= Application1 Application2
   
 Application1_SOURCES		    = Application1.cc
 Application1_LDADD		      = libgcftest.la 
@@ -36,35 +28,25 @@ Application2_SOURCES		    = Application2.cc
 Application2_LDADD		      = libgcftest.la 
 Application2_DEPENDENCIES		= libgcftest.la $(LOFAR_DEPEND)
 
-RTEcho_SOURCES							= RTEcho.cc
-RTEcho_LDADD								= libgcfrttest.la
-RTEcho_DEPENDENCIES					= libgcfrttest.la $(LOFAR_DEPEND)
-
-RTPing_SOURCES							= RTPing.cc
-RTPing_LDADD								= libgcfrttest.la
-RTPing_DEPENDENCIES					= libgcfrttest.la $(LOFAR_DEPEND)
-
 BUILT_SOURCES = \
 	TST_Protocol.ph \
-	Echo_Protocol.ph \
 	mac.log_prop
 
 EXTRA_DIST = \
 	TST_Protocol.ph \
-	Echo_Protocol.ph \
 	mac.log_prop
+	
+AM_CXXFLAGS=-fmessage-length=0
 	
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
 configfiles_DATA= \
-	RTEcho.conf \
-	RTPing.conf \
 	Application1.conf \
 	Application2.conf \
 	mac.log_prop \
 	customPrepPVSSDB.ctl
-	
-MAC_CONFIG = $(top_srcdir)/../../Config
+
+MAC_CONFIG = $(top_srcdir)/../../../Config
 %.log_prop: $(MAC_CONFIG)/%.log_prop
 	cp $< $@
 	
