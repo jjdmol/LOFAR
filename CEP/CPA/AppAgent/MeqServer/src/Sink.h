@@ -41,7 +41,7 @@ class Sink : public VisHandlerNode
 
     virtual int deliverHeader (const VisTile::Format &outformat);
     //##ModelId=3F98DAE6021E
-    virtual int deliverTile   (const Request &req,VisTile::Ref &tileref);
+    virtual int deliverTile   (const Request &req,VisTile::Ref &tileref,const LoRange &);
     
     virtual int deliverFooter (VisTile::Ref &tileref);
     
@@ -61,8 +61,9 @@ class Sink : public VisHandlerNode
   private:
     // pending tile stored here
     struct {
-      Request::Ref         request;
-      VisTile::Ref         tile;
+      Request::Ref  request;
+      VisTile::Ref  tile;
+      LoRange       range;
     } pending;
     
     VisTile::Format::Ref output_format;
@@ -76,6 +77,7 @@ class Sink : public VisHandlerNode
     
     template<class T,class U>
     void fillTileColumn (T *coldata,const LoShape &colshape,
+                         const LoRange &rowrange,
                          const blitz::Array<U,2> &arr,int icorr);
       
     //##ModelId=3F98DAE60211
