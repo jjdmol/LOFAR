@@ -34,9 +34,8 @@ namespace EPA_Protocol
   static const int N_STATS       = MEPHeader::STSTATS_SIZE / sizeof(uint16);      /* should be 512 */
   /*@}*/
 
-  typedef class RSPStatus
+  typedef struct RSPStatus
   {
-    public:
       uint8 voltage_15;
       uint8 voltage_22;
       uint16 ffi;
@@ -50,7 +49,7 @@ namespace EPA_Protocol
 
   typedef struct ETHStatus
   {
-      uint32 nof_frame;
+      uint32 nof_frames;
       uint32 nof_errors;
       uint8  last_error;
       uint8  ffi0;
@@ -67,26 +66,46 @@ namespace EPA_Protocol
 
   typedef struct RCUStatus
   {
-      uint16 status;
+      uint8 status;
+  };
+
+  typedef struct BoardStatus
+  {
+      RSPStatus  rsp;
+      FPGAStatus bp;
+      FPGAStatus ap[N_AP];
+      ETHStatus  eth;
+      MEPStatus  read;
+      MEPStatus  write;
   };
 
   /*@{*/
   /**
    * Output operators for the system status types.
    */ 
-  inline std::ostream& operator<<(std::ostream& s, const EPA_Protocol::RSPStatus&  stat)
+  inline std::ostream& operator<<(std::ostream& s, const EPA_Protocol::BoardStatus&  stat)
   {
-    return s << "[" << int(stat.voltage_15) << ", " << int(stat.voltage_22) << "]";
-  }
-  
-  inline std::ostream& operator<<(std::ostream& s, const EPA_Protocol::MEPStatus&  stat)
-  {
-    return s << "[" << stat.seqnr << ", " << int(stat.error) << "]";  
-  }
-  
-  inline std::ostream& operator<<(std::ostream& s, const EPA_Protocol::FPGAStatus& stat)
-  {
-    return s << "[" << int(stat.status) << ", " << int(stat.temp) << "]";
+    return s << "[" << std::endl
+	     << "voltage_15 =" << int(stat.rsp.voltage_15) << ", " << std::endl
+	     << "voltage_22 =" << int(stat.rsp.voltage_22) << ", " << std::endl
+	     << "bp_status  =" << int(stat.bp.status)      << ", " << std::endl
+	     << "bp_temp    =" << int(stat.bp.temp)        << ", " << std::endl
+	     << "ap1_status =" << int(stat.ap[0].status)   << ", " << std::endl
+	     << "ap1_temp   =" << int(stat.ap[0].temp)     << ", " << std::endl
+	     << "ap2_status =" << int(stat.ap[1].status)   << ", " << std::endl
+	     << "ap2_temp   =" << int(stat.ap[1].temp)     << ", " << std::endl
+	     << "ap3_status =" << int(stat.ap[2].status)   << ", " << std::endl
+	     << "ap3_temp   =" << int(stat.ap[2].temp)     << ", " << std::endl
+	     << "ap4_status =" << int(stat.ap[3].status)   << ", " << std::endl
+	     << "ap4_temp   =" << int(stat.ap[3].temp)     << ", " << std::endl
+	     << "nof_frames =" << stat.eth.nof_frames      << ", " << std::endl
+	     << "nof_error  =" << stat.eth.nof_errors      << ", " << std::endl
+	     << "last_error =" << int(stat.eth.last_error) << ", " << std::endl
+	     << "read_seqnr =" << stat.read.seqnr          << ", " << std::endl
+	     << "read_error =" << int(stat.read.error)     << ", " << std::endl
+	     << "write_seqnr=" << stat.write.seqnr         << ", " << std::endl
+	     << "write_error=" << int(stat.write.error)    << ", " << std::endl
+	     << "]" << std::endl;
   }
   
   inline std::ostream& operator<<(std::ostream& s, const EPA_Protocol::RCUStatus&  stat)
@@ -119,28 +138,12 @@ event = {
    * RSP status fields.
    */
   param = {
-    name = "rsp_status";
-    type = "RSPStatus";
+    name = "board";
+    type = "BoardStatus";
   };
   param = {
-    name = "bp_status";
-    type = "FPGAStatus";
-  };
-  param = {
-    name = "ap_status";
-    type = "FPGAStatus[4]";
-  };
-  param = {
-    name = "read_status";
-    type = "MEPStatus";
-  };
-  param = {
-    name = "write_status";
-    type = "MEPStatus";
-  };
-  param = {
-    name = "rcu_status";
-    type = "RCUStatus[4]";
+    name = "rcu";
+    type = "RCUStatus[N_BLP]";
   };
 };
 

@@ -41,28 +41,20 @@ namespace RSP
       /* Destructor for SSSync. */
       virtual ~SSSync();
 
-      /*@{*/
-      /**
-       * The states of the statemachine.
-       */
-      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
-      GCFEvent::TResult writedata_state(GCFEvent& event, GCFPortInterface& port);
-      GCFEvent::TResult readstatus_state(GCFEvent& event, GCFPortInterface& port);
-      /*@}*/
-
       /**
        * Write subband selection info.
        */
-      void writedata(uint8 blp);
+      virtual void sendrequest(uint8 blp);
 
       /**
        * Read the board status.
        */
-      void readstatus();
+      virtual void sendrequest_status();
 
-    private:
-      int m_current_blp;
-      int m_retries;
+      /**
+       * Handle the READRES message.
+       */
+      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
   };
 };
      

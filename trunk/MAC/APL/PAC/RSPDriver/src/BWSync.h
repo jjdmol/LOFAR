@@ -44,33 +44,27 @@ namespace RSP
       /**
        * Constructors for a BWSync object.
        */
-      explicit BWSync(GCFPortInterface& board_port, int board_id, int regid);
+      BWSync(GCFPortInterface& board_port, int board_id, int regid);
 	  
       /* Destructor for BWSync. */
       virtual ~BWSync();
 
-      /*@{*/
       /**
-       * The states of the statemachine.
+       * Send the write message.
        */
-      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
-      GCFEvent::TResult writedata_state(GCFEvent& event, GCFPortInterface& port);
-      GCFEvent::TResult readstatus_state(GCFEvent& event, GCFPortInterface& port);
-      /*@}*/
+      virtual void sendrequest(uint8 blp);
 
       /**
-       * Write beamformer coefficients for blp to the RSP board.
+       * Send the read request.
        */
-      void writedata(uint8 blp);
+      virtual void sendrequest_status();
 
       /**
-       * Read the board status.
+       * Handle the read result.
        */
-      void readstatus();
+      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
-      int m_current_blp;
-      int m_retries;
       int m_regid;
   };
 };

@@ -30,23 +30,33 @@
 namespace RSP
 {
   class VersionsSync : public SyncAction
-      {
-      public:
-	  /**
-	   * Constructors for a VersionsSync object.
-	   */
-	  VersionsSync(GCFPortInterface& board_port, int board_id);
+  {
+    public:
+      /**
+       * Constructors for a VersionsSync object.
+       */
+      VersionsSync(GCFPortInterface& board_port, int board_id);
 	  
-	  /* Destructor for VersionsSync. */
-	  virtual ~VersionsSync();
+      /* Destructor for VersionsSync. */
+      virtual ~VersionsSync();
 
-	  /**
-	   * Initial state handler.
-	   */
-	  GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+      /**
+       * Send the write message.
+       */
+      virtual void sendrequest(uint8 blp);
 
-      private:
-      };
+      /**
+       * Send the read request.
+       */
+      virtual void sendrequest_status();
+
+      /**
+       * Handle the read result.
+       */
+      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
+
+    private:
+  };
 };
      
 #endif /* VERSIONSSYNC_H_ */

@@ -52,11 +52,7 @@ namespace RSP_Protocol
       /**
        * Member accessor functions.
        */
-      blitz::Array<EPA_Protocol::RSPStatus,  1>& rsp();
-      blitz::Array<EPA_Protocol::MEPStatus,  1>& read();
-      blitz::Array<EPA_Protocol::MEPStatus,  1>& write();
-      blitz::Array<EPA_Protocol::FPGAStatus, 1>& bp();
-      blitz::Array<EPA_Protocol::FPGAStatus, 1>& ap();
+      blitz::Array<EPA_Protocol::BoardStatus,  1>& board();
       blitz::Array<EPA_Protocol::RCUStatus,  1>& rcu();
       /*@}*/
 
@@ -76,47 +72,19 @@ namespace RSP_Protocol
        * System status fields.
        *
        * Dimensions of the arrays are:
-       *  - m_rsp_status  [N_RSPBOARDS]
-       *  - m_read_status [N_RSPBOARDS]
-       *  - m_write_status[N_RSPBOARDS]
-       *  - m_bp_status   [N_RSPBOARDS]
-       *  - m_ap_status   [N_RSPBOARDS * N_AP]
-       *  - m_rcu_status  [N_RSPBOARDS * N_BLP]
+       *  - m_board_status  [N_RSPBOARDS]
+       *  - m_rcu_status    [N_RCU]
        */
-      blitz::Array<EPA_Protocol::RSPStatus,  1> m_rsp_status;
-      blitz::Array<EPA_Protocol::MEPStatus,  1> m_read_status;
-      blitz::Array<EPA_Protocol::MEPStatus,  1> m_write_status;
-      blitz::Array<EPA_Protocol::FPGAStatus, 1> m_bp_status;
-      blitz::Array<EPA_Protocol::FPGAStatus, 1> m_ap_status;
-      blitz::Array<EPA_Protocol::RCUStatus,  1> m_rcu_status;
+      blitz::Array<EPA_Protocol::BoardStatus,  1> m_board_status;
+      blitz::Array<EPA_Protocol::RCUStatus,  1>   m_rcu_status;
       /*@}*/
   };
 
-  inline blitz::Array<EPA_Protocol::RSPStatus,  1>& SystemStatus::rsp() 
+  inline blitz::Array<EPA_Protocol::BoardStatus, 1>& SystemStatus::board() 
   {
-    return m_rsp_status;
+    return m_board_status;
   }
-  
-  inline blitz::Array<EPA_Protocol::MEPStatus,  1>& SystemStatus::read()
-  {
-    return m_read_status;
-  }
-  
-  inline blitz::Array<EPA_Protocol::MEPStatus,  1>& SystemStatus::write()
-  {
-    return m_write_status;
-  }
-  
-  inline blitz::Array<EPA_Protocol::FPGAStatus, 1>& SystemStatus::bp()
-  {
-    return m_bp_status;
-  }
-  
-  inline blitz::Array<EPA_Protocol::FPGAStatus, 1>& SystemStatus::ap()
-  {
-    return m_ap_status;
-  }
-  
+
   inline blitz::Array<EPA_Protocol::RCUStatus,  1>& SystemStatus::rcu()
   {
     return m_rcu_status;

@@ -41,9 +41,19 @@ namespace RSP
       virtual ~StatusSync();
 
       /**
-       * Initial state handler.
+       * Send the read message.
        */
-      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+      virtual void sendrequest(uint8 blp);
+
+      /**
+       * This will be an empty implementation.
+       */
+      virtual void sendrequest_status();
+
+      /**
+       * Handle the read result.
+       */
+      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
   };

@@ -25,6 +25,7 @@
 #ifndef SYNCACTION_H_
 #define SYNCACTION_H_
 
+#include <Common/LofarTypes.h>
 #include <GCF/GCF_Control.h>
 
 namespace RSP
@@ -35,10 +36,28 @@ namespace RSP
       /**
        * Constructors for a SyncAction object.
        */
-      explicit SyncAction(State initial, GCFPortInterface& board_port, int board_id);
+      SyncAction(GCFPortInterface& board_port, int board_id);
 	  
       /* Destructor for SyncAction. */
       virtual ~SyncAction();
+
+      /*@{*/
+      /**
+       * The states of the statemachine.
+       */
+      GCFEvent::TResult idle_state(GCFEvent& event, GCFPortInterface& port);
+      GCFEvent::TResult sendrequest_state(GCFEvent& event, GCFPortInterface& port);
+      GCFEvent::TResult waitack_state(GCFEvent& event, GCFPortInterface& port);
+      /*@}*/
+
+      /*@{*/
+      /**
+       * Hooks to perform specific actions.
+       */
+      virtual void sendrequest(uint8 blp) = 0;
+      virtual void sendrequest_status()   = 0;
+      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port) = 0;
+      /*@}*/
 
       /**
        * Get the board id for this sync action.
@@ -65,6 +84,8 @@ namespace RSP
       GCFPortInterface& m_board_port;
       int               m_board_id;
       bool              m_completed; /** indicates whether the state machine has reached its final state */
+      int               m_current_blp;
+      int               m_retries;
   };
 };
      

@@ -81,7 +81,7 @@ GCFEvent::TResult RSPTest::initial(GCFEvent& e, GCFPortInterface& port)
 
       case F_CONNECTED:
       {
-	  TRAN(RSPTest::test006);
+	  TRAN(RSPTest::test001);
       }
       break;
 
@@ -443,11 +443,7 @@ GCFEvent::TResult RSPTest::test006(GCFEvent& e, GCFPortInterface& port)
       TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
       cout << "ack.time=" << ack.timestamp << endl;
 
-      LOG_INFO_STR("rsp="   << ack.sysstatus.rsp());
-      LOG_INFO_STR("read="  << ack.sysstatus.read());
-      LOG_INFO_STR("write=" << ack.sysstatus.write());
-      LOG_INFO_STR("bp="    << ack.sysstatus.bp());
-      LOG_INFO_STR("ap="    << ack.sysstatus.bp());
+      LOG_INFO_STR("board=" << ack.sysstatus.board());
       LOG_INFO_STR("rcu="   << ack.sysstatus.rcu());
       
       TRAN(RSPTest::final);
