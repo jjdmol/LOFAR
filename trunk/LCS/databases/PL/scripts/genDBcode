@@ -1,6 +1,24 @@
 #!/usr/bin/ksh
 #
-# genDBcode
+# genDBcode: Generate the glue layer between your appl. and the PL layer
+#
+# Copyright (C) 2003-2004
+# ASTRON (Netherlands Foundation for Research in Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 # Generates DTL code for storing/saving an object to a database
 # Uses a .map file to lookup the references and a .fun file
@@ -10,7 +28,8 @@
 #
 # $Id$
 #
-VERSION="v2.3"
+VERSION="v2.4"
+DEBUGMODE=false
 
 #
 # RECaddBCA class
@@ -353,7 +372,7 @@ initSrcfile()
 		echo ""
 	else	# its a headerfile
 		TimeStamp=`date +%y%m%d%H%M%S`
-		typeset -u FileLabel=${TimeStamp}_${FILEPREFIX}${Class}_H
+		typeset -u FileLabel=${FILEPREFIX}${TimeStamp}_${Class}_H
 		echo "//# only include this file once"
 		echo "#if !defined(${FileLabel})"
 		echo "#define ${FileLabel}"
@@ -386,7 +405,11 @@ closeHeaderfile()
 #
 cleanupWorkFiles()
 {
-	rm -f ${MAPWRKFILE} ${ALLCLASSESWRKFILE}
+	if [ "${DEBUGMODE}" != "true" ]; then
+		rm -f ${MAPWRKFILE} ${ALLCLASSESWRKFILE}
+	else
+		echo "DEBUGMODE, NOT REMOVING TEMPFILES IN /tmp"
+	fi
 }
 
 #
@@ -552,7 +575,7 @@ ALLCLASSESWRKFILE=/tmp/created.LCS.$$
 cleanupWorkFiles
 
 # Set trap handler before we create anything
-#trap "cleanupWorkFiles ; exit" 1 2 3 13 15
+trap "cleanupWorkFiles ; exit" 1 2 3 13 15
 
 # convert the human readable format of the mapfile into something
 # more convenient for shell-programming
@@ -627,4 +650,4 @@ if [ "${LAYER}" == "P" ]; then
 fi
 
 # Finally cleanup our mess
-#cleanupWorkFiles
+cleanupWorkFiles
