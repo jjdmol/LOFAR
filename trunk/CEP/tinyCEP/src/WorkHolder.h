@@ -25,8 +25,8 @@
 
 #include <lofar_config.h>
 
-#include <libTransport/BaseSim.h>
-#include <libTransport/DataHolder.h>
+#include <Transport/BaseSim.h>
+#include <Transport/DataHolder.h>
 #include <tinyCEP/BaseDataManager.h>
 //#include <CEPFrame/ParamManager.h>
 #include <Common/lofar_iostream.h>
