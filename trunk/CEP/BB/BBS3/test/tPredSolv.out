@@ -1,0 +1,60 @@
+>>>
+log4cplus:ERROR No appenders could be found for logger (CEP.BB.BBS3).
+log4cplus:ERROR Please initialize the log4cplus system properly.
+/tmp/test.demo/demo
+Mon Jan 31 10:46:49 2005      WARN MeasIERS::fillMeas(MeasIERS::Files, Double) (file /lofarbuild/aips++/stable/code/measures/implement/Measures/MeasIERS.cc, line 94):
+Requested JD27223.3 is outside the IERS table data range
+Calculations will proceed with less precision
+
+Mon Jan 31 10:46:49 2005      WARN MeasTable::dUT1(Double) (file /lofarbuild/aips++/stable/code/measures/implement/Measures/MeasTable.cc, line 6437):
+No requested dUT1 data available from IERS tables. 
+Proceeding with probably less precision.
+
+Mon Jan 31 10:46:49 2005      WARN MeasTable::PolarMotion(Double) (file /lofarbuild/aips++/stable/code/measures/implement/Measures/MeasTable.cc, line 6265):
+No requested polar motion data available from IERS tables. 
+Proceeding with probably less precision.
+
+BBSTest: BeginOfInterval
+BBSTest: file-mapping timer: avg = 71.6 us, total = 71.6 us, count =         1
+
+BBSTest: initparms    timer: avg = 32.9 ms, total = 32.9 ms, count =         1
+
+bufShape [100,10,12,200]
+BBSTest: predict timer: avg = 1.81 ms, total = 90.3 ms, count =        50
+
+BBSTest: formeqs timer: avg = 72.6 us, total = 3.63 ms, count =        50
+
+Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 0.01097264283
+itsStddev : 0.01097264283
+itsChi    : 2.406894223
+
+BBSTest: solver     timer: avg =  280 us, total =  280 us, count =         1
+
+After:  [2.734004034,0.453799903,0.60459961,2.734020143,0.4536931581,0.5967461872,2.733981712,0.4537585098,0.6003633806]
+/tmp/test.demo/demo
+BBSTest: BeginOfInterval
+BBSTest: file-mapping timer: avg =  106 us, total =  106 us, count =         1
+
+BBSTest: initparms    timer: avg =  296 ms, total =  296 ms, count =         1
+
+bufShape [100,10,12,99000]
+BBSTest: predict timer: avg = 1.84 ms, total = 45.5  s, count =     24750
+
+BBSTest: formeqs timer: avg = 58.7 us, total = 1.45  s, count =     24750
+
+Before: [2.734003,0.4537895,1,2.7340205,0.45368975,1,2.733981,0.45375025,1]
+itsSolFlag: 1
+itsRank   : 9
+itsFit    : 1
+itsMu     : 0.1513780999
+itsStddev : 0.1513780999
+itsChi    : 226861.5521
+
+BBSTest: solver     timer: avg =  270 us, total =  270 us, count =         1
+
+After:  [2.734000947,0.4537899633,0.8540249608,2.734020251,0.4536898586,0.5032648719,2.733980648,0.4537503535,0.3403978668]
+<<<
