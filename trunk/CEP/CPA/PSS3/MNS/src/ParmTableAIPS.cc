@@ -23,16 +23,16 @@
 #include <MNS/ParmTableAIPS.h>
 #include <MNS/MeqDomain.h>
 #include <Common/Debug.h>
-#include <aips/Tables/ExprNode.h>
-#include <aips/Tables/ExprNodeSet.h>
-#include <aips/Tables/ScalarColumn.h>
-#include <aips/Tables/ArrayColumn.h>
-#include <aips/Tables/TableRecord.h>
-#include <aips/Arrays/Matrix.h>
-#include <aips/Arrays/Vector.h>
-#include <aips/Arrays/ArrayUtil.h>
-#include <aips/Utilities/Regex.h>
-#include <aips/Mathematics/Math.h>
+#include <tables/Tables/ExprNode.h>
+#include <tables/Tables/ExprNodeSet.h>
+#include <tables/Tables/ScalarColumn.h>
+#include <tables/Tables/ArrayColumn.h>
+#include <tables/Tables/TableRecord.h>
+#include <casa/Arrays/Matrix.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/Arrays/ArrayUtil.h>
+#include <casa/Utilities/Regex.h>
+#include <casa/BasicMath/Math.h>
 
 
 ParmTableAIPS::ParmTableAIPS (const string& tableName)

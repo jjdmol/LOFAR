@@ -23,7 +23,7 @@
 #include <MNS/MeqParmPolc.h>
 #include <MNS/MeqRequest.h>
 #include <Common/Debug.h>
-#include <aips/Arrays/Matrix.h>
+#include <casa/Arrays/Matrix.h>
 
 MeqParmPolc::MeqParmPolc (const string& name)
 : MeqParm (name)

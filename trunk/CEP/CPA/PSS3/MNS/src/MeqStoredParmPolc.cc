@@ -22,8 +22,8 @@
 
 #include <MNS/MeqStoredParmPolc.h>
 #include <Common/Debug.h>
-#include <aips/Arrays/Matrix.h>
-#include <aips/Mathematics/Math.h>
+#include <casa/Arrays/Matrix.h>
+#include <casa/BasicMath/Math.h>
 
 MeqStoredParmPolc::MeqStoredParmPolc (const string& name, int srcnr,
 				      int statnr, ParmTable* table)

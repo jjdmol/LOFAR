@@ -30,20 +30,20 @@
 #include <Common/Debug.h>
 #include <Common/lofar_vector.h>
 
-#include <aips/Arrays/Matrix.h>
-#include <aips/Arrays/Vector.h>
-#include <aips/Exceptions/Error.h>
-#include <aips/MeasurementSets/MeasurementSet.h>
-#include <aips/MeasurementSets/MSColumns.h>
-#include <aips/MeasurementSets/MSAntenna.h>
-#include <aips/MeasurementSets/MSAntennaColumns.h>
-#include <aips/MeasurementSets/MSField.h>
-#include <aips/MeasurementSets/MSFieldColumns.h>
-#include <aips/Measures/MDirection.h>
-#include <aips/Measures/MeasConvert.h>
-#include <aips/OS/Timer.h>
-#include <aips/Tables/ArrayColumn.h>
-#include <aips/Tables/ExprNode.h>
+#include <casa/Arrays/Matrix.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/Exceptions/Error.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
+#include <ms/MeasurementSets/MSColumns.h>
+#include <ms/MeasurementSets/MSAntenna.h>
+#include <ms/MeasurementSets/MSAntennaColumns.h>
+#include <ms/MeasurementSets/MSField.h>
+#include <ms/MeasurementSets/MSFieldColumns.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MeasConvert.h>
+#include <casa/OS/Timer.h>
+#include <tables/Tables/ArrayColumn.h>
+#include <tables/Tables/ExprNode.h>
 
 #include <stdexcept>
 #include <stdio.h>

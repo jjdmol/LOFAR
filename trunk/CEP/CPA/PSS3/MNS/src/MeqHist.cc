@@ -21,8 +21,8 @@
 //# $Id$
 
 #include <MNS/MeqHist.h>
-#include <aips/Arrays/Slice.h>
-#include <aips/Arrays/ArrayMath.h>
+#include <casa/Arrays/Slice.h>
+#include <casa/Arrays/ArrayMath.h>
 
 void MeqHist::update (unsigned int bucket)
 {

@@ -22,8 +22,8 @@
 
 #include <MNS/MeqUVW.h>
 #include <MNS/MeqRequest.h>
-#include <aips/Quanta/MVBaseline.h>
-#include <aips/Arrays/Matrix.h>
+#include <casa/Quanta/MVBaseline.h>
+#include <casa/Arrays/Matrix.h>
 
 // Calculate the uvw coordinates.
 //   u = x*sin(HA) + y*cos(HA)

@@ -33,7 +33,7 @@ class MeqMatrixComplexSca;
 class MeqMatrixRealArr;
 class MeqMatrixComplexArr;
 #include <Common/lofar_iostream.h>
-#include <aips/iosfwd.h>
+#include <casa/iosfwd.h>
 
 
 class MeqMatrixRep

@@ -25,7 +25,7 @@
 
 //# Includes
 #include <Common/lofar_vector.h>
-#include <aips/Arrays/Vector.h>
+#include <casa/Arrays/Vector.h>
 
 
 // This class holds a histogram in a vector.

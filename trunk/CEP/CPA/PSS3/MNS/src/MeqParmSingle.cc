@@ -24,7 +24,7 @@
 #include <MNS/MeqRequest.h>
 #include <Common/Debug.h>
 #include <Common/lofar_vector.h>
-#include <aips/Utilities/BinarySearch.h>
+#include <casa/Utilities/BinarySearch.h>
 
 
 MeqParmSingle::MeqParmSingle (const string& name, double value)

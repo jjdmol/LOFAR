@@ -29,7 +29,7 @@
 #include <MNS/MeqDomain.h>
 #include <MNS/MeqMatrixTmp.h>
 #include <Common/Debug.h>
-#include <aips/Mathematics/Constants.h>
+#include <casa/BasicSL/Constants.h>
 
 
 MeqStatSources::MeqStatSources (MeqStatUVW* statUVW,

@@ -1,5 +1,5 @@
-#include <aips/Glish.h>
-#include <aips/Glish/GlishEvent.h>
+#include <tasking/Glish.h>
+#include <tasking/Glish/GlishEvent.h>
 
 #include <sys/time.h>
 #include <signal.h>

@@ -23,7 +23,7 @@
 #include <MNS/ParmTableDB.h>
 #include <MNS/MeqDomain.h>
 #include <Common/Debug.h>
-#include <aips/Mathematics/Math.h>
+#include <casa/BasicMath/Math.h>
 
 #ifdef HAVE_LOFAR_PL
 # include <PL/QueryObject.h>

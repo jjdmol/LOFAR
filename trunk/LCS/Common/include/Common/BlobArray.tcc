@@ -29,7 +29,7 @@
 #include <Common/LofarLogger.h>
 
 #if defined(HAVE_AIPSPP) 
-# include <aips/Arrays/Array.h>
+# include <casa/Arrays/Array.h>
 #endif
 
 

@@ -29,11 +29,11 @@
 #include <MNS/MeqExpr.h>
 #include <MNS/MeqMatrixTmp.h>
 #include <Common/Debug.h>
-#include <aips/Measures/MBaseline.h>
-#include <aips/Measures/MPosition.h>
-#include <aips/Measures/MEpoch.h>
-#include <aips/Measures/MeasConvert.h>
-#include <aips/Quanta/MVuvw.h>
+#include <measures/Measures/MBaseline.h>
+#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MeasConvert.h>
+#include <casa/Quanta/MVuvw.h>
 
 
 MeqStatUVW::MeqStatUVW (MeqStation* station,

@@ -33,10 +33,10 @@
 #include <MNS/MeqMatrix.h>
 #include <MNS/MeqMatrixTmp.h>
 #include <Common/Debug.h>
-#include <aips/Arrays/Matrix.h>
-#include <aips/Fitting/LSQ.h>
-#include <aips/OS/Timer.h>
-#include <aips/Exceptions/Error.h>
+#include <casa/Arrays/Matrix.h>
+#include <scimath/Fitting/LSQ.h>
+#include <casa/OS/Timer.h>
+#include <casa/Exceptions/Error.h>
 #include <Common/lofar_iostream.h>
 #include <stdexcept>
 

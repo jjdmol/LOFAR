@@ -25,8 +25,8 @@
 #include <MNS/ParmTableDB.h>
 #include <MNS/MeqStoredParmPolc.h>
 #include <Common/Debug.h>
-#include <aips/Arrays/Vector.h>
-#include <aips/Utilities/GenSort.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/Utilities/GenSort.h>
 
 
 ParmTable::ParmTable (const string& dbType, const string& tableName,

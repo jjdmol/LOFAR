@@ -1,6 +1,6 @@
 #include <Common/lofar_complex.h>
 #include <Common/lofar_iostream.h>
-#include <aips/Mathematics/Constants.h>
+#include <casa/BasicSL/Constants.h>
 
 int main()
 {

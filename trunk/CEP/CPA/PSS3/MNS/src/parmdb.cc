@@ -42,7 +42,7 @@
 #include <PL/Collection.h>
 #include <Common/KeyValueMap.h>
 #include <Common/KeyParser.h>
-#include <aips/Quanta/MVTime.h>
+#include <casa/Quanta/MVTime.h>
 #include <string>
 #include <pwd.h>
 

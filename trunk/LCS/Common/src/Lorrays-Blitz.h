@@ -32,7 +32,7 @@
 #include <blitz/array.h>
 
 #ifdef HAVE_AIPSPP      
-# include <aips/Arrays/IPosition.h>
+# include <casa/Arrays/IPosition.h>
 #endif
 
 #include <Common/Lonumerics.h>

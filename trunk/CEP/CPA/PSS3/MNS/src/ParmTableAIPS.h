@@ -26,9 +26,9 @@
 //# Includes
 #include <MNS/ParmTable.h>
 #include <MNS/MeqPolc.h>
-#include <aips/Tables/Table.h>
-#include <aips/Tables/ColumnsIndex.h>
-#include <aips/Containers/RecordField.h>
+#include <tables/Tables/Table.h>
+#include <tables/Tables/ColumnsIndex.h>
+#include <casa/Containers/RecordField.h>
 
 
 class ParmTableAIPS : public ParmTableRep
