@@ -1,7 +1,7 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(src/OctoAgent.h)
+AC_INIT(src/EventSink.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
@@ -57,7 +57,6 @@ lofar_DOCXX
 lofar_PACKAGE(DMI)
 lofar_PACKAGE(CEP/CPA/OCTOPUSSY)
 lofar_PACKAGE(CEP/CPA/AppAgent/AppAgent)
-lofar_PACKAGE(CEP/CPA/AppAgent/VisAgent)
 
 dnl
 dnl Output Makefiles
