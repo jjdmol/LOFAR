@@ -1,9 +1,6 @@
 // Copyright notice
 
-// $ID
-
 #include <UVPDataAtom.h>
-
 
 #if(DEBUG_MODE)
 #include <cassert>
@@ -68,6 +65,22 @@ void UVPDataAtom::setData(const std::vector<ComplexType>& data)
 #endif
 
   itsData = data;
+}
+
+
+
+
+
+
+
+//====================>>>  UVPDataAtom::setData  <<<====================
+
+void UVPDataAtom::setData(const ComplexType* data)
+{
+  ComplexType*       i   = itsData.begin();
+  const ComplexType* end = itsData.end();
+
+  memcpy(i, data, itsData.size()*sizeof(ComplexType));
 }
 
 
