@@ -15,10 +15,10 @@ include ../../BaseSim/Makedefs
 ifdef SCACORBA
 LIBS += -L/usr/local/inprise/vbroker/lib
 else
-LIBS += -L/opt/inprise/vbroker/lib
+LIBS += -L/usr/local/inprise/vbroker/lib
 endif
 
 ifdef CORBA
-LIBS += -lcosev_r -lcosnm_r -lvport_r -lorb_r -lpthread
+LIBS += -lorb_r -lpthread
 LIBS += ../../BaseSim/$(ALIBDIR)/libth_corba.a 
 endif
