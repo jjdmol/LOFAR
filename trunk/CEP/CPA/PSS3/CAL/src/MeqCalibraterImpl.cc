@@ -342,18 +342,34 @@ void MeqCalibrater::makeLOFARExpr()
       vector<MeqJonesExpr*> vec;
       for (int j=0; j<itsSources.size(); j++) {
 	string nm = itsStations[i]->getName() + '.' +  itsSources[j].getName();
-	MeqExpr* ej11 = new MeqStoredParmPolc ("EJ11." + nm,
-					       j+1, i+1,
-					       &itsMEP);
-	MeqExpr* ej12 = new MeqStoredParmPolc ("EJ12." + nm,
-					       j+1, i+1,
-					       &itsMEP);
-	MeqExpr* ej21 = new MeqStoredParmPolc ("EJ21." + nm,
-					       j+1, i+1,
-					       &itsMEP);
-	MeqExpr* ej22 = new MeqStoredParmPolc ("EJ22." + nm,
-					       j+1, i+1,
-					       &itsMEP);
+	MeqExpr* ej11r = new MeqStoredParmPolc ("EJ11.real." + nm,
+						j+1, i+1,
+						&itsMEP);
+	MeqExpr* ej11i = new MeqStoredParmPolc ("EJ11.imag." + nm,
+						j+1, i+1,
+						&itsMEP);
+	MeqExpr* ej12r = new MeqStoredParmPolc ("EJ12.real." + nm,
+						j+1, i+1,
+						&itsMEP);
+	MeqExpr* ej12i = new MeqStoredParmPolc ("EJ12.imag." + nm,
+						j+1, i+1,
+						&itsMEP);
+	MeqExpr* ej21r = new MeqStoredParmPolc ("EJ21.real." + nm,
+						j+1, i+1,
+						&itsMEP);
+	MeqExpr* ej21i = new MeqStoredParmPolc ("EJ21.imag." + nm,
+						j+1, i+1,
+						&itsMEP);
+	MeqExpr* ej22r = new MeqStoredParmPolc ("EJ22.real." + nm,
+						j+1, i+1,
+						&itsMEP);
+	MeqExpr* ej22i = new MeqStoredParmPolc ("EJ22.imag." + nm,
+						j+1, i+1,
+						&itsMEP);
+	MeqExpr* ej11 = new MeqExprToComplex (ej11r, ej11i);
+	MeqExpr* ej12 = new MeqExprToComplex (ej12r, ej12i);
+	MeqExpr* ej21 = new MeqExprToComplex (ej21r, ej21i);
+	MeqExpr* ej22 = new MeqExprToComplex (ej22r, ej22i);
 	vec.push_back (new MeqJonesNode (ej11, ej12, ej21, ej22));
       }
       itsLSSExpr[i] = new MeqLofarStatSources (vec, itsStatSrc[i]);
@@ -579,7 +595,7 @@ void MeqCalibrater::initParms (const MeqDomain& domain)
     // Get the initial values of all solvable parms.
     // Resize the solution vector if needed.
     if (itsSolution.isNull()  ||  itsSolution.nx() != itsNrScid) {
-      itsSolution = MeqMatrix (complex<double>(), itsNrScid, 1);
+      itsSolution = MeqMatrix (double(), itsNrScid, 1);
     }
     int i = 0;
     for (vector<MeqParm*>::const_iterator iter = parmList.begin();
@@ -712,8 +728,8 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
 
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
-  cdebug(1) << "setSolvableParms" << endl;
-  cdebug(1) << "isSolvable = " << isSolvable << endl;
+  cdebug(1) << "setSolvableParms: "
+	    << "isSolvable = " << isSolvable << endl;
 
   // Convert patterns to regexes.
   vector<Regex> parmRegex;
@@ -772,11 +788,10 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
 // Solve for the solvable parameters on the current time domain.
 //
 //----------------------------------------------------------------------
-GlishRecord MeqCalibrater::solve(Bool realsol)
+GlishRecord MeqCalibrater::solve(bool useSVD)
 {
   cdebug(1) << "solve using column " << itsSolveColName << endl;
-  cout << "solve using column " << itsSolveColName << " (realsol="
-       << realsol << ')' << endl;
+  cout << "solve using column " << itsSolveColName << endl;
 
   if (itsSolveRows.nelements() == 0) {
     throw AipsError("nextInterval needs to be done before solve");
@@ -785,11 +800,6 @@ GlishRecord MeqCalibrater::solve(Bool realsol)
     throw AipsError ("No parameters are set to solvable");
   }
   int nrpoint = 0;
-//   if (realsol) {
-//     itsSolver.set (LSQBase::REAL);
-//   } else {
-//     itsSolver.set (LSQBase::COMPLEX);
-//   }
   Timer timer;
 
   double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
@@ -927,240 +937,155 @@ GlishRecord MeqCalibrater::solve(Bool realsol)
       vector<double> derivVec(2*itsNrScid);
       double* derivReal = &(derivVec[0]);
       double* derivImag = &(derivVec[itsNrScid]);
-      complex<double>* derivCmpl = (complex<double>*)derivReal;
       // Fill in all equations.
       if (npol == 1) {
 	{
 	  const MeqMatrix& xx = expr.getResult11().getValue();
-	  if (realsol) {
-	    for (int i=0; i<nrchan; i++) {
-	      for (int j=0; j<itsNrScid; j++) {
-		derivReal[j] = derivs[j][i].real();
-		derivImag[j] = derivs[j][i].imag();
-	      }
-	      DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
-	      diff -= xx.getDComplex(0,i);
-	      double val = diff.real();
-	      itsSolver.makeNorm (derivReal, 1., &val);
-	      val = diff.imag();
-	      itsSolver.makeNorm (derivImag, 1., &val);
-	      nrpoint++;
+	  for (int i=0; i<nrchan; i++) {
+	    for (int j=0; j<itsNrScid; j++) {
+	      derivReal[j] = derivs[j][i].real();
+	      derivImag[j] = derivs[j][i].imag();
 	    }
-	  } else {
-	    for (int i=0; i<nrchan; i++) {
-	      for (int j=0; j<itsNrScid; j++) {
-		derivCmpl[j] = derivs[j][i];
-	      }
-	      DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
-	      diff -= xx.getDComplex(0,i);
-	      itsSolver.makeNorm (derivCmpl, 1., diff);
-	      nrpoint++;
-	    }
+	    DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
+	    diff -= xx.getDComplex(0,i);
+	    double val = diff.real();
+	    itsSolver.makeNorm (derivReal, 1., &val);
+	    val = diff.imag();
+	    itsSolver.makeNorm (derivImag, 1., &val);
+	    nrpoint++;
 	  }
 	}
       } else if (npol == 2) {
 	{
 	  const MeqMatrix& xx = expr.getResult11().getValue();
-	  if (realsol) {
-	    for (int i=0; i<nrchan; i++) {
-	      for (int j=0; j<itsNrScid; j++) {
-		derivReal[j] = derivs[j][i].real();
-		derivImag[j] = derivs[j][i].imag();
-	      }
-	      DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
-	      diff -= xx.getDComplex(0,i);
-	      double val = diff.real();
-	      itsSolver.makeNorm (derivReal, 1., &val);
-	      val = diff.imag();
-	      itsSolver.makeNorm (derivImag, 1., &val);
-	      nrpoint++;
+	  for (int i=0; i<nrchan; i++) {
+	    for (int j=0; j<itsNrScid; j++) {
+	      derivReal[j] = derivs[j][i].real();
+	      derivImag[j] = derivs[j][i].imag();
 	    }
-	  } else {
-	    for (int i=0; i<nrchan; i++) {
-	      for (int j=0; j<itsNrScid; j++) {
-		derivCmpl[j] = derivs[j][i];
-	      }
-	      DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
-	      diff -= xx.getDComplex(0,i);
-	      itsSolver.makeNorm (derivCmpl, 1., &diff);
-	      nrpoint++;
-	    }
+	    DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
+	    diff -= xx.getDComplex(0,i);
+	    double val = diff.real();
+	    itsSolver.makeNorm (derivReal, 1., &val);
+	    val = diff.imag();
+	    itsSolver.makeNorm (derivImag, 1., &val);
+	    nrpoint++;
 	  }
 	}
 	{
 	  const MeqMatrix& yy = expr.getResult22().getValue();
-	  if (realsol) {
-	    for (int i=0; i<nrchan; i++) {
-	      for (int j=0; j<itsNrScid; j++) {
-		derivReal[j] = derivs[j+itsNrScid][i].real();
-		derivImag[j] = derivs[j+itsNrScid][i].imag();
-	      }
-	      DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
-	      diff -= yy.getDComplex(0,i);
-	      double val = diff.real();
-	      itsSolver.makeNorm (derivReal, 1., &val);
-	      val = diff.imag();
-	      itsSolver.makeNorm (derivImag, 1., &val);
-	      nrpoint++;
+	  for (int i=0; i<nrchan; i++) {
+	    for (int j=0; j<itsNrScid; j++) {
+	      derivReal[j] = derivs[j+itsNrScid][i].real();
+	      derivImag[j] = derivs[j+itsNrScid][i].imag();
 	    }
-	  } else {
-	    for (int i=0; i<nrchan; i++) {
-	      for (int j=0; j<itsNrScid; j++) {
-		derivCmpl[j] = derivs[j+itsNrScid][i];
-	      }
-	      DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
-	      diff -= yy.getDComplex(0,i);
-	      itsSolver.makeNorm (derivCmpl, 1., &diff);
-	      nrpoint++;
-	    }
+	    DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
+	    diff -= yy.getDComplex(0,i);
+	    double val = diff.real();
+	    itsSolver.makeNorm (derivReal, 1., &val);
+	    val = diff.imag();
+	    itsSolver.makeNorm (derivImag, 1., &val);
+	    nrpoint++;
 	  }
 	}
       } else if (npol == 4) {
 	{
 	  const MeqMatrix& xx = expr.getResult11().getValue();
-	  if (realsol) {
-	    for (int i=0; i<nrchan; i++) {
-	      for (int j=0; j<itsNrScid; j++) {
-		derivReal[j] = derivs[j][i].real();
-		derivImag[j] = derivs[j][i].imag();
-		///cout << derivReal[j] << ' ' << derivImag[j] << ", ";
-// 	      if (showd) {
-// 		cout << "derxx: " << i << ' '
-// 		     << derivReal[j] << ' ' << derivImag[j] << endl;
-// 	      }
-	      }
+	  for (int i=0; i<nrchan; i++) {
+	    for (int j=0; j<itsNrScid; j++) {
+	      derivReal[j] = derivs[j][i].real();
+	      derivImag[j] = derivs[j][i].imag();
+	      ///cout << derivReal[j] << ' ' << derivImag[j] << ", ";
+	      if (showd) {
+ 		cout << "derxx: " << j << ' '
+ 		     << derivReal[j] << ' ' << derivImag[j] << endl;
+ 	      }
+	    }
 	    ///cout << endl;
-	      DComplex diff (dataPtr[i*4].real(), dataPtr[i*4].imag());
+	    DComplex diff (dataPtr[i*4].real(), dataPtr[i*4].imag());
 	    ///cout << "Value " << diff << ' ' << xx.getDComplex(0,i) << endl;
-	      diff -= xx.getDComplex(0,i);
-// 	    if (showd) {
-// 	      cout << "diffxx: " << i << ' '
-// 		   << diff.real() << ' ' << diff.imag() << endl;
-// 	    }
-	      double val = diff.real();
-	      itsSolver.makeNorm (derivReal, 1., &val);
-	      val = diff.imag();
-	      itsSolver.makeNorm (derivImag, 1., &val);
-	      nrpoint++;
-	    }
-	  } else {
-	    for (int i=0; i<nrchan; i++) {
-	      for (int j=0; j<itsNrScid; j++) {
-		derivCmpl[j] = derivs[j][i];
-	      }
-	      DComplex diff (dataPtr[i*4].real(), dataPtr[i*4].imag());
-	      diff -= xx.getDComplex(0,i);
-	      itsSolver.makeNorm (derivCmpl, 1., &diff);
-	      nrpoint++;
-	    }
+	    diff -= xx.getDComplex(0,i);
+ 	    if (showd) {
+ 	      cout << "diffxx: " << i << ' '
+ 		   << diff.real() << ' ' << diff.imag() << endl;
+ 	    }
+	    double val = diff.real();
+	    itsSolver.makeNorm (derivReal, 1., &val);
+	    val = diff.imag();
+	    itsSolver.makeNorm (derivImag, 1., &val);
+	    nrpoint++;
 	  }
 	}
 	{
 	  const MeqMatrix& xy = expr.getResult12().getValue();
-	  if (realsol) {
-	    for (int i=0; i<nrchan; i++) {
-	      for (int j=0; j<itsNrScid; j++) {
-		derivReal[j] = derivs[j+itsNrScid][i].real();
-		derivImag[j] = derivs[j+itsNrScid][i].imag();
-// 	      if (showd) {
-// 		cout << "derxy: " << i << ' '
-// 		     << derivReal[j] << ' ' << derivImag[j] << endl;
-// 	      }
-	      }
-	      DComplex diff (dataPtr[i*4+1].real(), dataPtr[i*4+1].imag());
-	      diff -= xy.getDComplex(0,i);
-// 	    if (showd) {
-// 	      cout << "diffxy: " << i << ' '
-// 		   << diff.real() << ' ' << diff.imag() << endl;
-// 	    }
-	      double val = diff.real();
-	      itsSolver.makeNorm (derivReal, 1., &val);
-	      val = diff.imag();
-	      itsSolver.makeNorm (derivImag, 1., &val);
-	      nrpoint++;
+	  for (int i=0; i<nrchan; i++) {
+	    for (int j=0; j<itsNrScid; j++) {
+	      derivReal[j] = derivs[j+itsNrScid][i].real();
+	      derivImag[j] = derivs[j+itsNrScid][i].imag();
+ 	      if (showd) {
+ 		cout << "derxy: " << i << ' '
+ 		     << derivReal[j] << ' ' << derivImag[j] << endl;
+ 	      }
 	    }
-	  } else {
-	    for (int i=0; i<nrchan; i++) {
-	      for (int j=0; j<itsNrScid; j++) {
-		derivCmpl[j] = derivs[j+itsNrScid][i];
-	      }
-	      DComplex diff (dataPtr[i*4+1].real(), dataPtr[i*4+1].imag());
-	      diff -= xy.getDComplex(0,i);
-	      itsSolver.makeNorm (derivCmpl, 1., &diff);
-	      nrpoint++;
-	    }
+	    DComplex diff (dataPtr[i*4+1].real(), dataPtr[i*4+1].imag());
+	    diff -= xy.getDComplex(0,i);
+ 	    if (showd) {
+ 	      cout << "diffxy: " << i << ' '
+ 		   << diff.real() << ' ' << diff.imag() << endl;
+ 	    }
+	    double val = diff.real();
+	    itsSolver.makeNorm (derivReal, 1., &val);
+	    val = diff.imag();
+	    itsSolver.makeNorm (derivImag, 1., &val);
+	    nrpoint++;
 	  }
 	}
 	{
 	  const MeqMatrix& yx = expr.getResult21().getValue();
-	  if (realsol) {
-	    for (int i=0; i<nrchan; i++) {
-	      for (int j=0; j<itsNrScid; j++) {
-		derivReal[j] = derivs[j+2*itsNrScid][i].real();
-		derivImag[j] = derivs[j+2*itsNrScid][i].imag();
-// 	      if (showd) {
-// 		cout << "deryx: " << i << ' '
-// 		     << derivReal[j] << ' ' << derivImag[j] << endl;
-// 	      }
-	      }
-	      DComplex diff (dataPtr[i*4+2].real(), dataPtr[i*4+2].imag());
-	      diff -= yx.getDComplex(0,i);
-// 	    if (showd) {
-// 	      cout << "diffyx: " << i << ' '
-// 		   << diff.real() << ' ' << diff.imag() << endl;
-// 	    }
-	      double val = diff.real();
-	      itsSolver.makeNorm (derivReal, 1., &val);
-	      val = diff.imag();
-	      itsSolver.makeNorm (derivImag, 1., &val);
-	      nrpoint++;
+	  for (int i=0; i<nrchan; i++) {
+	    for (int j=0; j<itsNrScid; j++) {
+	      derivReal[j] = derivs[j+2*itsNrScid][i].real();
+	      derivImag[j] = derivs[j+2*itsNrScid][i].imag();
+      	      if (showd) {
+ 		cout << "deryx: " << i << ' '
+ 		     << derivReal[j] << ' ' << derivImag[j] << endl;
+ 	      }
 	    }
-	  } else {
-	    for (int i=0; i<nrchan; i++) {
-	      for (int j=0; j<itsNrScid; j++) {
-		derivCmpl[j] = derivs[j+2*itsNrScid][i];
-	      }
-	      DComplex diff (dataPtr[i*4+2].real(), dataPtr[i*4+2].imag());
-	      diff -= yx.getDComplex(0,i);
-	      itsSolver.makeNorm (derivCmpl, 1., &diff);
-	      nrpoint++;
-	    }
+	    DComplex diff (dataPtr[i*4+2].real(), dataPtr[i*4+2].imag());
+	    diff -= yx.getDComplex(0,i);
+ 	    if (showd) {
+ 	      cout << "diffyx: " << i << ' '
+ 		   << diff.real() << ' ' << diff.imag() << endl;
+ 	    }
+	    double val = diff.real();
+	    itsSolver.makeNorm (derivReal, 1., &val);
+	    val = diff.imag();
+	    itsSolver.makeNorm (derivImag, 1., &val);
+	    nrpoint++;
 	  }
 	}
 	{
 	  const MeqMatrix& yy = expr.getResult22().getValue();
-	  if (realsol) {
-	    for (int i=0; i<nrchan; i++) {
-	      for (int j=0; j<itsNrScid; j++) {
-		derivReal[j] = derivs[j+3*itsNrScid][i].real();
-		derivImag[j] = derivs[j+3*itsNrScid][i].imag();
-// 	      if (showd) {
-// 		cout << "deryy: " << i << ' '
-// 		     << derivReal[j] << ' ' << derivImag[j] << endl;
-// 	      }
-	      }
-	      DComplex diff (dataPtr[i*4+3].real(), dataPtr[i*4+3].imag());
-	      diff -= yy.getDComplex(0,i);
-// 	    if (showd) {
-// 	      cout << "diffyy: " << i << ' '
-// 		   << diff.real() << ' ' << diff.imag() << endl;
-// 	    }
-	      double val = diff.real();
-	      itsSolver.makeNorm (derivReal, 1., &val);
-	      val = diff.imag();
-	      itsSolver.makeNorm (derivImag, 1., &val);
-	      nrpoint++;
+	  for (int i=0; i<nrchan; i++) {
+	    for (int j=0; j<itsNrScid; j++) {
+	      derivReal[j] = derivs[j+3*itsNrScid][i].real();
+	      derivImag[j] = derivs[j+3*itsNrScid][i].imag();
+	      if (showd) {
+		cout << "deryy: " << i << ' '
+ 		     << derivReal[j] << ' ' << derivImag[j] << endl;
+ 	      }
 	    }
-	  } else {
-	    for (int i=0; i<nrchan; i++) {
-	      for (int j=0; j<itsNrScid; j++) {
-		derivCmpl[j] = derivs[j+3*itsNrScid][i];
-	      }
-	      DComplex diff (dataPtr[i*4+3].real(), dataPtr[i*4+3].imag());
-	      diff -= yy.getDComplex(0,i);
-	      itsSolver.makeNorm (derivCmpl, 1., &diff);
-	      nrpoint++;
-	    }
+	    DComplex diff (dataPtr[i*4+3].real(), dataPtr[i*4+3].imag());
+	    diff -= yy.getDComplex(0,i);
+ 	    if (showd) {
+ 	      cout << "diffyy: " << i << ' '
+ 		   << diff.real() << ' ' << diff.imag() << endl;
+ 	    }
+	    double val = diff.real();
+	    itsSolver.makeNorm (derivReal, 1., &val);
+	    val = diff.imag();
+	    itsSolver.makeNorm (derivImag, 1., &val);
+	    nrpoint++;
 	  }
 	}
       } else {
@@ -1177,6 +1102,7 @@ GlishRecord MeqCalibrater::solve(Bool realsol)
   double stddev;
   double mu;
   cdebug(1) << "Solution before: " << itsSolution << endl;
+  cout << "Solution before: " << itsSolution << endl;
   // It looks as if LSQ has a bug so that solveLoop and getCovariance
   // interact badly (maybe both doing an invert).
   // So make a copy to separate them.
@@ -1185,29 +1111,19 @@ GlishRecord MeqCalibrater::solve(Bool realsol)
   FitLSQ tmpSolver = itsSolver;
   tmpSolver.getCovariance (covar);
   tmpSolver.getErrors (errors);
-  Vector<double> solut;
-  if (realsol) {
-    int nrs = itsSolution.nelements();
-    Vector<double> sol(nrs);
-    complex<double>* solData = itsSolution.dcomplexStorage();
-    for (int i=0; i<itsSolution.nelements(); i++) {
-      sol[i] = solData[i].real();
-    }
-    Assert (itsSolver.solveLoop (fit, rank, sol, stddev, mu));
-    for (int i=0; i<itsSolution.nelements(); i++) {
-      solData[i] = complex<double>(sol[i], 0);
-    }
-    solut.reference (sol);
-  } else {
-    int nrs = itsSolution.nelements();
-    complex<double>* solData = itsSolution.dcomplexStorage();
-    Vector<complex<double> > sol(IPosition(1,nrs), solData, SHARE);
-    Assert (itsSolver.solveLoop (fit, rank, sol, stddev, mu));
-    Vector<double> tmp(IPosition(1,2*nrs), (double*)solData, SHARE);
-    solut.reference(tmp);
+  int nrs = itsSolution.nelements();
+  Vector<double> sol(nrs);
+  double* solData = itsSolution.doubleStorage();
+  for (int i=0; i<itsSolution.nelements(); i++) {
+    sol[i] = solData[i];
+  }
+  bool solFlag = itsSolver.solveLoop (fit, rank, sol, stddev, mu, useSVD);
+  for (int i=0; i<itsSolution.nelements(); i++) {
+    solData[i] = sol[i];
   }
   if (Debug(1)) timer.show("solve");
   cdebug(1) << "Solution after:  " << itsSolution << endl;
+  cout << "Solution after:  " << itsSolution << endl;
   
   // Update all parameters.
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
@@ -1223,7 +1139,8 @@ GlishRecord MeqCalibrater::solve(Bool realsol)
   }
 
   GlishRecord rec;
-  rec.add ("sol", GlishArray(solut));
+  rec.add ("solflag", solFlag);
+  rec.add ("sol", GlishArray(sol));
   rec.add ("rank", Int(rank));
   rec.add ("fit", fit);
   rec.add ("diag", GlishArray(errors));
@@ -1456,33 +1373,21 @@ void MeqCalibrater::saveResidualData()
 // for the purpose of passing the information back to a glish script.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::addParm(const MeqParm& parm, GlishRecord& rec)
+void MeqCalibrater::addParm(const MeqParm& parm, bool denormalize,
+			    GlishRecord& rec)
 {
   GlishRecord parmRec;
 
   MeqMatrix m;
-  m = MeqMatrix (complex<double>(), itsNrScid, 1);
+  m = MeqMatrix (double(), itsNrScid, 1);
   
   parmRec.add("parmid", Int(parm.getParmId()));
 
-  try
-  {
-    parm.getCurrentValue(m);
-    Matrix<DComplex> coefs(m.nx(), m.ny());
-    
-    for (int i=0; i < m.nx(); i++)
-    {
-      for (int j=0; j < m.ny(); j++)
-      {
-	coefs(i,j) = m.getDComplex(i,j);
-      }
-    }
-
-    GlishArray ga(coefs);
+  try {
+    parm.getCurrentValue(m, denormalize);
+    GlishArray ga(m.getDoubleMatrix());
     parmRec.add("value",  ga);
-  }
-  catch (...)
-  {
+  } catch (...) {
     parmRec.add("value", "<?>");
   }
   
@@ -1499,7 +1404,8 @@ void MeqCalibrater::addParm(const MeqParm& parm, GlishRecord& rec)
 //
 //----------------------------------------------------------------------
 GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns,
-				    Vector<String>& excludePatterns)
+				    Vector<String>& excludePatterns,
+				    int isSolvable, bool denormalize)
 {
   cdebug(1) << "getParms: " << endl;
   if (itsCurRows.nelements() == 0) {
@@ -1527,12 +1433,18 @@ GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns,
        iter != parmList.end();
        iter++)
   {
-    String parmName ((*iter)->getName());
+    bool ok = true;
+    if (isSolvable == 0) {
+      ok = !((*iter)->isSolvable());
+    } else if (isSolvable > 0) {
+      ok = ((*iter)->isSolvable());
+    }
+    if (ok) {
+      String parmName ((*iter)->getName());
 
-    for (vector<Regex>::const_iterator incIter = parmRegex.begin();
-	 incIter != parmRegex.end();
-	 incIter++)
-    {
+      for (vector<Regex>::const_iterator incIter = parmRegex.begin();
+	   incIter != parmRegex.end();
+	   incIter++)
       {
 	if (parmName.matches(*incIter))
 	{
@@ -1548,7 +1460,7 @@ GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns,
 	    }
 	  }
 	  if (!parmExc) {
-	    addParm (**iter, rec);
+	    addParm (**iter, denormalize, rec);
 	  }
 	  break;
 	}
@@ -2144,10 +2056,15 @@ MethodResult MeqCalibrater::runMethod(uInt which,
 					      ParameterSet::In);
       Parameter<Vector<String> > excludePatterns(inputRecord, "excludepatterns",
 						 ParameterSet::In);
+      Parameter<int> isSolvable(inputRecord, "issolvable",
+				ParameterSet::In);
+      Parameter<bool> denormalize(inputRecord, "denormalize",
+				  ParameterSet::In);
       Parameter<GlishRecord> returnval(inputRecord, "returnval",
 				       ParameterSet::Out);
 
-      if (runMethod) returnval() = getParms(parmPatterns(), excludePatterns());
+      if (runMethod) returnval() = getParms(parmPatterns(), excludePatterns(),
+					    isSolvable(), denormalize());
     }
     break;
 

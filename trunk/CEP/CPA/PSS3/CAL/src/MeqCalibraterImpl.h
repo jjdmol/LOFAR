@@ -115,7 +115,7 @@ public:
    * \returns Returns fit value to indicate fitness of the solution and
    * updates the parameters for which to solve.
    */
-  GlishRecord solve (Bool realsol);
+  GlishRecord solve (Bool useSVD);
 
   //! Save solved parameters to the MEP database.
   void saveParms();
@@ -138,9 +138,13 @@ public:
    * Get info about the parameters whose name matches one of the parameter
    * patterns in a GlishRecord, exclude parameters matching one of the
    * exclude pattterns.
+   * isSolvable < 0  all matching parms
+   *            = 0  only non-solvable parms
+   *            > 0  only solvable parms
    */
   GlishRecord getParms (Vector<String>& parmPatterns,
-			Vector<String>& excludePatterns);
+			Vector<String>& excludePatterns,
+			int isSolvable, bool denormalize);
 
   /*!
    * Get the names of the parameters whose name matches the parmPatterns,
@@ -234,7 +238,8 @@ private:
   void makeLOFARExpr ();
 
   //! Append the current value of the parameters (as MeqMatrix) to rec
-  void MeqCalibrater::addParm(const MeqParm& parm, GlishRecord& rec);
+  void MeqCalibrater::addParm(const MeqParm& parm, bool denormalize,
+			      GlishRecord& rec);
 
   /**
    * \defgroup PrivVariable Private variables
