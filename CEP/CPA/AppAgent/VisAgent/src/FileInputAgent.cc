@@ -31,7 +31,7 @@ using namespace AppEvent;
 static int dum = aidRegistry_VisAgent();
 
 
-//##ModelId=3DF9FECE03AB
+//##ModelId=3F5F43650356
 DataRecord & FileInputAgent::initHeader ()
 {
   DataRecord *hdr;
@@ -39,7 +39,7 @@ DataRecord & FileInputAgent::initHeader ()
   return *hdr;
 }
 
-//##ModelId=3DF9FECF009D
+//##ModelId=3F5F436503B9
 int FileInputAgent::hasHeader ()
 {
   if( suspended() ) 
@@ -52,7 +52,7 @@ int FileInputAgent::hasHeader ()
     return CLOSED;
 }
 
-//##ModelId=3DF9FECE03D1
+//##ModelId=3F5F4365036A
 int FileInputAgent::getHeader (DataRecord::Ref &hdr,int wait)
 {
   // is the file state correct for a header?
@@ -71,7 +71,7 @@ int FileInputAgent::getHeader (DataRecord::Ref &hdr,int wait)
   }
 }
 
-//##ModelId=3DF9FECF00BF
+//##ModelId=3F5F436503CF
 int FileInputAgent::hasTile   ()
 {
   if( suspended() )

@@ -36,7 +36,7 @@ namespace VisAgent {
 class FileInputAgent : public InputAgent, public FileAgentBase
 {
   private:
-    //##ModelId=3DF9FECE0055
+    //##ModelId=3F5F43650320
       DataRecord::Ref  header_;
 
       
@@ -46,23 +46,23 @@ class FileInputAgent : public InputAgent, public FileAgentBase
         : InputAgent(initf) {}
  
     // returns header by reference
-    //##ModelId=3DF9FECE0384
+    //##ModelId=3F5F43650340
       DataRecord &  header     ()
       { return header_.dewr(); }
 
     // initializes an empty header
-    //##ModelId=3DF9FECE03AB
+    //##ModelId=3F5F43650356
       DataRecord &  initHeader ();
  
   public:
       
-    //##ModelId=3DF9FECE03D1
+    //##ModelId=3F5F4365036A
       virtual int getHeader (DataRecord::Ref &hdr,int wait = AppEvent::WAIT);
   
-    //##ModelId=3DF9FECF009D
+    //##ModelId=3F5F436503B9
       virtual int hasHeader ();
       
-    //##ModelId=3DF9FECF00BF
+    //##ModelId=3F5F436503CF
       virtual int hasTile   ();
       
       //##ModelId=3E2C299201D6

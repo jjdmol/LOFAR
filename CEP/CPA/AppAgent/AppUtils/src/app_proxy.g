@@ -77,8 +77,11 @@ const app_proxy := function (appid,
   # allocates a new request-id
   const self.new_requestid := function ()
   {
+    wider self;
     ret := self.rqid;
     self.rqid +:= 1;
+    if( self.rqid <= 0 )
+      self.rqid := 1;
     return ret;
   }
   # Returns the application name
