@@ -1,0 +1,37 @@
+Instructions for running BlackBoardDemo
+=======================================
+
+1 Choose the right database type and username in BlackBoardDemo.cc
+from the build/variant directory run:
+2 make
+3 make a link to a measurement set: ln -s /data/<...> data
+4 ../../src/prepareBBDonce -host <host> -user <name> -dbtype <dbtype>
+
+
+before every run:
+4 ../../src/prepareBBD -host <host> -user <name> -dbtype <dbtype>
+If you're tired of typing the arguments, I suggest you change the defaults in prepareBBD and prepareBBDonce.
+
+5 Run blackboarddemo (something like):
+  rsh lofar6 "cd `pwd`; src/BlackBoardDemo"
+
+
+
+
+
+
+the script prepareBBDonce calls the following scripts:
+- createParamTables -host <host> -user <name> -dbtype <dbtype>
+  creates the tables containing the parameters
+- fillDefaultTables -host <host> -user <name> -dbtype <dbtype>
+  fills the tables containing the default paramaters
+- prepareBBD
+
+the script prepareBBD calls the following scripts
+- clearBB -user <name> -host <host for BB, propably dop50>
+  creates and/or clears the BB tables (containing the workorders and solutions)
+- clearParamTables -host <host> -user <name> -dbtype <dbtype>
+  clears the parameters calculated in previous runs
+
+These scripts were meant to be run from the PSS3/build/<variant> directory, but some of them will also work from other directories. AIPS tables are created in the current directory. BlackBoardDemo will also look for them in the current directory (that's why you need to change to `pwd` when using rsh).
+
