@@ -1,0 +1,83 @@
+#
+# Configuration of the RSPDriver communication ports.
+#
+
+#
+# RSPDriver configuration
+#
+mac.ns.RSPDriver.cmd=./RSPDriver
+mac.ns.RSPDriver.host=localhost
+mac.ns.RSPDriver.server.type=TCP
+#mac.ns.RSPDriver.spid.port=0
+mac.ns.RSPDriver.spid.deviceName=/dev/spid0
+mac.ns.RSPDriver.acceptor.type=TCP
+
+# mac.ns.RSPDriver.board0.type=TCP
+# mac.ns.RSPDriver.board1.type=TCP
+# mac.ns.RSPDriver.board2.type=TCP
+# mac.ns.RSPDriver.board3.type=TCP
+# mac.ns.RSPDriver.board4.type=TCP
+# mac.ns.RSPDriver.board5.type=TCP
+# mac.ns.RSPDriver.board6.type=TCP
+# mac.ns.RSPDriver.board7.type=TCP
+# mac.ns.RSPDriver.board8.type=TCP
+# mac.ns.RSPDriver.board9.type=TCP
+# mac.ns.RSPDriver.board10.type=TCP
+# mac.ns.RSPDriver.board11.type=TCP
+# mac.ns.RSPDriver.board12.type=TCP
+# mac.ns.RSPDriver.board13.type=TCP
+# mac.ns.RSPDriver.board14.type=TCP
+# mac.ns.RSPDriver.board16.type=TCP
+# mac.ns.RSPDriver.board16.type=TCP
+# mac.ns.RSPDriver.board17.type=TCP
+# mac.ns.RSPDriver.board18.type=TCP
+# mac.ns.RSPDriver.board19.type=TCP
+# mac.ns.RSPDriver.board20.type=TCP
+# mac.ns.RSPDriver.board21.type=TCP
+# mac.ns.RSPDriver.board22.type=TCP
+# mac.ns.RSPDriver.board23.type=TCP
+# mac.top.RSPDriver.board0=EPAStub0:client
+# mac.top.RSPDriver.board1=EPAStub1:client
+# mac.top.RSPDriver.board2=EPAStub2:client
+# mac.top.RSPDriver.board3=EPAStub3:client
+# mac.top.RSPDriver.board4=EPAStub4:client
+# mac.top.RSPDriver.board5=EPAStub5:client
+# mac.top.RSPDriver.board6=EPAStub6:client
+# mac.top.RSPDriver.board7=EPAStub7:client
+# mac.top.RSPDriver.board8=EPAStub8:client
+# mac.top.RSPDriver.board9=EPAStub9:client
+# mac.top.RSPDriver.board10=EPAStub10:client
+# mac.top.RSPDriver.board11=EPAStub11:client
+# mac.top.RSPDriver.board12=EPAStub12:client
+# mac.top.RSPDriver.board13=EPAStub13:client
+# mac.top.RSPDriver.board14=EPAStub14:client
+# mac.top.RSPDriver.board15=EPAStub15:client
+# mac.top.RSPDriver.board16=EPAStub16:client
+# mac.top.RSPDriver.board17=EPAStub17:client
+# mac.top.RSPDriver.board18=EPAStub18:client
+# mac.top.RSPDriver.board19=EPAStub19:client
+# mac.top.RSPDriver.board20=EPAStub20:client
+# mac.top.RSPDriver.board21=EPAStub21:client
+# mac.top.RSPDriver.board22=EPAStub22:client
+# mac.top.RSPDriver.board23=EPAStub23:client
+
+#
+# RSPTest configuration
+#
+mac.ns.RSPTest.host=localhost
+mac.ns.RSPTest.server.type=TCP
+mac.top.RSPTest.server=RSPDriver:acceptor
+
+#
+# ViewStats configuration
+#
+mac.ns.ViewStats.host=localhost
+mac.ns.ViewStats.server.type=TCP
+mac.top.ViewStats.server=RSPDriver:acceptor
+
+#
+# SetWG configuration
+#
+mac.ns.SetWG.host=localhost
+mac.ns.SetWG.server.type=TCP
+mac.top.SetWG.server=RSPDriver:acceptor

@@ -44,7 +44,7 @@ using namespace EPA_Protocol;
 using namespace blitz;
 
 BWRead::BWRead(GCFPortInterface& board_port, int board_id, int regid)
-  : SyncAction(board_port, board_id, GET_CONFIG("N_BLPS", i)),
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i)),
     m_regid(regid)
 {
 }
@@ -55,7 +55,7 @@ BWRead::~BWRead()
 
 void BWRead::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
   if (m_regid < MEPHeader::BFXRE || m_regid > MEPHeader::BFYIM)
   {
@@ -86,7 +86,7 @@ GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   if (event.signal != EPA_BFCOEFS) return GCFEvent::HANDLED;
 
-  uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
   EPABfcoefsEvent bfcoefs(event);
   
