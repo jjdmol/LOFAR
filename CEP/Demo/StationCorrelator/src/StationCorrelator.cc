@@ -31,6 +31,8 @@
 #include <Transport/TH_Mem.h>
 #include <Transport/TH_MPI.h>
 
+#include <tinyCEP/WorkHolder.h>
+
 #include <CEPFrame/Step.h>
 #include <CEPFrame/WH_Empty.h>
 #include <CEPFrame/Composite.h>
@@ -70,7 +72,7 @@ void StationCorrelator::undefine() {
   itsWHs.clear();
 }  
 
-void StationCorrelator::define(const KeyValueMap& kvm) {
+void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
   char H_name[128];
 
@@ -98,10 +100,9 @@ void StationCorrelator::define(const KeyValueMap& kvm) {
     // to rearrange the data coming from the RSP boards.
     sprintf(H_name, "TransposeNode_%d_of_%d", i, itsNcorrelator);
 
-    itsKVM.show(cout);
-    WH_Transpose whTranspose(H_name, itsKVM);
-    Step step1(whTranspose);
-    comp.addStep(step1);
+//     WH_Transpose whTranspose(H_name, itsKVM);
+//     Step step1(whTranspose);
+//     comp.addStep(step1);
 
     sprintf(H_name, "CorrelatorNode_%d_of_%d", i, itsNcorrelator);
 
@@ -109,7 +110,7 @@ void StationCorrelator::define(const KeyValueMap& kvm) {
     Step step2(whCorrelator);
     comp.addStep(step2);
 
-    step2.connectInput(&step1, TH_Mem());
+//     step2.connectInput(&step1, TH_Mem());
   }
 
   for (unsigned int i = 0; i < itsNdump; i++) {
@@ -119,10 +120,9 @@ void StationCorrelator::define(const KeyValueMap& kvm) {
     Step step(whDump);
     comp.addStep(step);
   }
-
 }
 
-void StationCorrelator::init() {
+void StationCorrelator::prerun() {
   getComposite().preprocess();
 }
     
@@ -157,11 +157,8 @@ int main (int argc, const char** argv) {
     StationCorrelator correlator(kvm);
     correlator.setarg(argc, argv);
     correlator.baseDefine(kvm);
-    cout << "defined"<< endl;
     correlator.basePrerun();
-    cout << "initialized" << endl;
     correlator.baseRun();
-    cout << "finished" << endl;
     correlator.baseDump();
     correlator.baseQuit();
 
