@@ -73,13 +73,31 @@ string TH_Database::getType() const
 bool TH_Database::connectionPossible(int srcRank, int dstRank) const
   { return srcRank == dstRank; }
 
+bool TH_Database::send(void* buf, int nbytes, int, int tag)
+{
+  if (getTransporter() -> getBaseDataHolder() != 0) {
+        
+    DH_PL* DHPLptr = getBaseTransport () -> getTransportable ();
+    // ToDo: DbgAssertStr(DHPLptr->getType = "", "Wrong DH type;")
+
+    DHPLptr->setSeqNo(itsWriteSeqNo ++);
+    theirPersistenceBroker.save(DHPLptr -> getPO());
+
+  } else {
+    cerr << "TH_Database::send():Transportable not found." << endl;
+    return false;
+  }
+
+  return true;
+}
+
 bool TH_Database::recv(void* buf, int nbytes, int, int tag)
 { 
-  DbgAssertStr( (getBaseTransport () -> getTransportable () != 0),
+  DbgAssertStr( (getTransporter() -> getBaseDataHolder () != 0),
 		"TH_Database::recv():Transportable not found.");
   
   // get a refernece to the DHPL object
-  DH_PL* DHPLptr = getBaseTransport () -> getTransportable ();
+  DH_PL* DHPLptr = getTransporter() -> getBaseDataHolder();
   
   // get the massage record form the DH_PL
   DH_PL_MessageRecord *mr = DHPLptr->itsMR;
@@ -115,26 +133,6 @@ bool TH_Database::recv(void* buf, int nbytes, int, int tag)
   }
   return true;
 }
- 
-
-bool TH_Database::send(void* buf, int nbytes, int, int tag)
-{
-  if (getBaseTransport () -> getTransportable () != 0) {
-        
-    DH_PL* DHPLptr = getBaseTransport () -> getTransportable ();
-    // ToDo: DbgAssertStr(DHPLptr->getType = "", "Wrong DH type;")
-
-    DHPLptr->setSeqNo(itsWriteSeqNo ++);
-    theirPersistenceBroker.save(DHPLptr -> getPO());
-
-  } else {
-    cerr << "TH_Database::send():Transportable not found." << endl;
-    return false;
-  }
-
-  return true;
-}
-
 
 void TH_Database::waitForBroadCast () {}
 void TH_Database::waitForBroadCast (unsigned long&) {}
