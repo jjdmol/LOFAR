@@ -37,6 +37,7 @@ extern "C" {
    int  selfparseGetChars(char * buf, int max_size);
        /* <todo> is this report still needed, or just a relic from development ? </todo> */
    int report(char * s);
+  void newSiblings(void);
    char * calculateBrancheNumber();
 
 

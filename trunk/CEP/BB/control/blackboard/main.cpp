@@ -16,7 +16,6 @@
 //#include <mpi2c++/mpi++.h>
 #include <mpi.h>
 
-//#define DEBUG(x) if(debug) std::cout << " rank(" << ::rank << "): " << x << std::endl;
 unsigned long long TRACE::level = 0;
     //util vars
 int rank(-1);
@@ -219,9 +218,12 @@ const std::string & getRole(const int rank)
 
    std::ostringstream os;
    os << "looking for rank: " << rank;
+
    DEBUG(os.str());
 
+   os.seekp(0);
    os<<"Reading element #"<<iter.GetLastCount();
+
    DEBUG(os.str());
 
    //   DeploymentData dat;

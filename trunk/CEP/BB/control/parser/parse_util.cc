@@ -1,10 +1,10 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include "parser/selfparse.h"
 
-#define DEBUG(x) if(debug_flag_on) std::cout << x << std::endl;
-static bool debug_flag_on(false);
+#include "blackboard/debug.h"
 
 std::istream *selfparseStream;
 
@@ -17,7 +17,9 @@ int selfparseGetChars(char * buf, int max_size)
    int result = 0;
    char c;
 
-   DEBUG("trying to get " << max_size << " chars." );
+   std::ostringstream os;
+   os << "trying to get " << max_size << " chars.";
+   DEBUG(os.str());
 
    memset(buf,0,max_size);
 
@@ -36,7 +38,8 @@ int selfparseGetChars(char * buf, int max_size)
             !selfparseStream->eof()
            );
 
-   DEBUG("resulting buf of length " << result << ": " << buf);
+   os << "resulting buf of length " << result;
+   DEBUG(os.str());
 
    return result;
 }
@@ -50,29 +53,34 @@ extern "C"
 {
 #endif
 
-   char * branch = ("start");
-   unsigned int subBranch = (0);
+  char * branch = ("start");
+  unsigned int subBranch = (0);
 
-   char * calculateBrancheNumber()
-   {
-      static char * branchNumber = 0;
-      char subBstr[6];
-      int rc = snprintf(subBstr, 5, "%u", subBranch++);
-      if( rc > 5 )
-      {
-         report ("branch number truncated");
-      }
-      if(branchNumber)
-      {
-         free(branchNumber);
-      }
+  static char * branchNumber = 0;
+  void newSiblings(void)
+  {
+    TRACE t("newSiblings(void)");
+    subBranch = 0;
+  }
+  char * calculateBrancheNumber()
+  {
+    char subBstr[6];
+    int rc = snprintf(subBstr, 5, "%u", subBranch++);
+    if( rc > 5 )
+    {
+      report ("branch number truncated");
+    }
+    if(branchNumber)
+    {
+      free(branchNumber);
+    }
           //   branchNumber = new char [ strlen(branch) + strlen(subBstr) + 2];
-      branchNumber = (char *)(malloc( strlen(branch) + strlen(subBstr) + 2));
+    branchNumber = (char *)(malloc( strlen(branch) + strlen(subBstr) + 2));
       
-      sprintf(branchNumber,"%s.%s",branch,subBstr);
+    sprintf(branchNumber,"%s.%s",branch,subBstr);
       
-      return branchNumber;
-   }
+    return branchNumber;
+  }
 
 #ifdef __cplusplus
 }

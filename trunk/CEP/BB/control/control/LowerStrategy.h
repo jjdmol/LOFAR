@@ -6,10 +6,21 @@ class IntermediateLevelStrategy;
 //##ModelId=3F3A57460290
 class LowerStrategy : public Strategy
 {
-  public:
-    //##ModelId=3F3A4CA60232
-    IntermediateLevelStrategy *parent;
+ public:
+  void setParent(Strategy* p)
+  {
+    parent = p;
+  }
+  void init();
+  virtual ~LowerStrategy(){}
 
+ private:
+  //##ModelId=3F3A4C820203
+  Strategy *parent;
+
+  std::vector<LowerStrategy> makeChildren(std::vector<Directive> &dirs);
+
+  std::vector<LowerStrategy> children;
 };
 
 
