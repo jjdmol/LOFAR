@@ -80,7 +80,10 @@ ARATestDriverTask::ARATestDriverTask() :
     {
       for(k=0;k<RSP_Protocol::MAX_N_BLPS;k++)
       {
-        m_stats()(i,j,k) = 0;
+        if(k==10)
+          m_stats()(i,j,k) = complex<double>(500*k,500*k);
+        else
+          m_stats()(i,j,k) = 0;
       }
     }
   }
@@ -499,7 +502,9 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
   LOG_INFO(formatString("updateRCUstatus %s", propName.c_str()));
   
   GCFPVBool pvBool;
+  GCFPVUnsigned pvUnsigned;
   pvBool.copy(*pvalue);
+  pvUnsigned.copy(*pvalue);
   
   int rack;
   int subrack;
@@ -515,39 +520,48 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
   rcuStatus = m_systemStatus.rcu()(rcuNumber-1).status;
   
   // layout rcu status: 
-  // 7 6       5       4       3 2 1 0
-  // - ringerr rcuHerr rcuVerr - - - statsReady
-  if(propName.find(string(PROPNAME_RINGERR),0) != string::npos)
+  // 7        6       5       4       3 2 1 0
+  // overflow rcu_pwr hba_pwr lba_pwr filter
+  if(propName.find(string(PROPNAME_OVERFLOW),0) != string::npos)
   {
-    uint8 tempStatus = rcuStatus & 0x00000031; // reset bits
+    uint8 tempStatus = rcuStatus & 0x7f; // reset bits
+    tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<7);
+    if(rcuStatus != tempStatus)
+    {
+      m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
+    }
+  }
+  else if(propName.find(string(PROPNAME_RCUPWR),0) != string::npos)
+  {
+    uint8 tempStatus = rcuStatus & 0xbf; // reset bits
     tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<6);
     if(rcuStatus != tempStatus)
     {
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
     }
   }
-  else if(propName.find(string(PROPNAME_RCUHERR),0) != string::npos)
+  else if(propName.find(string(PROPNAME_HBAPWR),0) != string::npos)
   {
-    uint8 tempStatus = rcuStatus & 0x00000051; // reset bits
+    uint8 tempStatus = rcuStatus & 0xdf; // reset bits
     tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<5);
     if(rcuStatus != tempStatus)
     {
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
     }
   }
-  else if(propName.find(string(PROPNAME_RCUVERR),0) != string::npos)
+  else if(propName.find(string(PROPNAME_LBAPWR),0) != string::npos)
   {
-    uint8 tempStatus = rcuStatus & 0x00000061; // reset bits
+    uint8 tempStatus = rcuStatus & 0xef; // reset bits
     tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<4);
     if(rcuStatus != tempStatus)
     {
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
     }
   }
-  if(propName.find(string(PROPNAME_STATSREADY),0) != string::npos)
+  else if(propName.find(string(PROPNAME_FILTER),0) != string::npos)
   {
-    uint8 tempStatus = rcuStatus & 0x00000070; // reset bits
-    tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<0);
+    uint8 tempStatus = rcuStatus & 0xf0; // reset bits
+    tempStatus = tempStatus | ((uint8 )(pvUnsigned.getValue()) & 0x0f);
     if(rcuStatus != tempStatus)
     {
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
@@ -570,24 +584,6 @@ void ARATestDriverTask::updateSystemStatus()
 
 void ARATestDriverTask::updateStats()
 {
-  // create new stats based on current time:
-  time_t timeNow = time(0);
-  int period = timeNow%60;
-  float statVal = sin(period*2*3.1415926/60);
-  int i,j,k;
-  for(i=0;i<RSP_Protocol::Statistics::N_STAT_TYPES;i++)
-  {
-    for(j=0;j<N_RCUS;j++)
-    {
-      for(k=0;k<RSP_Protocol::MAX_N_BLPS;k++)
-      {
-//        m_stats()(i,j,k) = statVal*(j+1)*sin(k*2*3.1415926/60) * 1000;
-        m_stats()(i,j,k) = 100;//k+j*k+i*j*k;
-      }
-    }
-  }
-  
-  
   // send new stats to RA application
   RSPUpdstatsEvent updStatsEvent;
   updStatsEvent.timestamp.setNow();

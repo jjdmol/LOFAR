@@ -960,8 +960,22 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
         double frequency(((GCFPVDouble*)pPropAnswer->pValue)->getValue());
         if(frequency!=m_WGfrequency)
         {
+          if(m_WGfrequency == 0.0)
+          {
+            // frequency was 0, send enable
+            sendWGenable();
+          }
           m_WGfrequency = frequency;
-          sendWGsettings();
+          
+          if(m_WGfrequency == 0.0)
+          {
+            // frequency is 0, send disable
+            sendWGdisable();
+          }
+          else
+          {
+            sendWGsettings();
+          }
         }
       }      
       else if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_UNSIGNED) &&
@@ -1003,6 +1017,26 @@ void AVTLogicalDeviceScheduler::sendWGsettings()
   if(m_pBeamServer!=0)
   {
     m_pBeamServer->send(wgSettingsEvent);
+  }
+}
+
+void AVTLogicalDeviceScheduler::sendWGenable()
+{
+  ABSWgenableEvent wgEnableEvent;
+  
+  if(m_pBeamServer!=0)
+  {
+    m_pBeamServer->send(wgEnableEvent);
+  }
+}
+
+void AVTLogicalDeviceScheduler::sendWGdisable()
+{
+  ABSWgdisableEvent wgDisableEvent;
+  
+  if(m_pBeamServer!=0)
+  {
+    m_pBeamServer->send(wgDisableEvent);
   }
 }
 

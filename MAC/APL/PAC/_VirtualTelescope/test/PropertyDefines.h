@@ -52,24 +52,23 @@
 
 const TProperty propertiesLDS[] =
 {
-  {"command", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
-  {"status", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
-  {"WaveFormGenerator_frequency", GCFPValue::LPT_DOUBLE, GCF_READWRITE_PROP, "1500000.0"},
-  {"WaveFormGenerator_amplitude", GCFPValue::LPT_UNSIGNED, GCF_READWRITE_PROP, "128"},
-  {"WaveFormGenerator_samplePeriod", GCFPValue::LPT_UNSIGNED, GCF_READWRITE_PROP, "2"},
+  {"command", GCFPValue::LPT_STRING, GCF_WRITABLE_PROP, ""},
+  {"status", GCFPValue::LPT_STRING, GCF_READABLE_PROP, ""},
+  {"WaveFormGenerator_frequency", GCFPValue::LPT_DOUBLE, GCF_WRITABLE_PROP, "1500000.0"},
+  {"WaveFormGenerator_amplitude", GCFPValue::LPT_UNSIGNED, GCF_WRITABLE_PROP, "128"},
 };
 
 const TPropertySet propertySetLDS = 
 {
-  5, "PAC_LogicalDeviceScheduler", propertiesLDS
+  4, "PAC_LogicalDeviceScheduler", propertiesLDS
 };
 
 const TProperty primaryPropertiesVT[] =
 {
-  {"command", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
-  {"status", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
-  {"startTime", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},
-  {"stopTime", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},
+  {"command", GCFPValue::LPT_STRING, GCF_WRITABLE_PROP, ""},
+  {"status", GCFPValue::LPT_STRING, GCF_READABLE_PROP, ""},
+  {"startTime", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"},
+  {"stopTime", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"},
 };
 
 const TPropertySet primaryPropertySetVT1 = 
@@ -114,13 +113,13 @@ const TPropertySet primaryPropertySetVT8 =
 
 const TProperty propertiesSR[] =
 {
-  {"command", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
-  {"status", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
-  {"startTime", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},
-  {"stopTime", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},
-  {"filter", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},  // 1,2,3,4
-  {"antenna", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"}, // 0=LBA, 1=HBA
-  {"power", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"}, // 0=off, 1=on
+  {"command", GCFPValue::LPT_STRING, GCF_WRITABLE_PROP, ""},
+  {"status", GCFPValue::LPT_STRING, GCF_READABLE_PROP, ""},
+  {"startTime", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"},
+  {"stopTime", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"},
+  {"filter", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"},  // 1,2,3,4
+  {"antenna", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"}, // 0=LBA, 1=HBA
+  {"power", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"}, // 0=off, 1=on
 };
 
 const TPropertySet propertySetSR1 = 
@@ -165,13 +164,13 @@ const TPropertySet propertySetSR8 =
 
 const TProperty propertiesSRG[] =
 {
-  {"command", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
-  {"status", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
-  {"startTime", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},
-  {"stopTime", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},
-  {"filter", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},  // 1,2,3,4
-  {"antenna", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"}, // 0=LBA, 1=HBA
-  {"power", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"}, // 0=off, 1=on
+  {"command", GCFPValue::LPT_STRING, GCF_WRITABLE_PROP, ""},
+  {"status", GCFPValue::LPT_STRING, GCF_READABLE_PROP, ""},
+  {"startTime", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"},
+  {"stopTime", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"},
+  {"filter", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"},  // 1,2,3,4
+  {"antenna", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"}, // 0=LBA, 1=HBA
+  {"power", GCFPValue::LPT_INTEGER, GCF_WRITABLE_PROP, "0"}, // 0=off, 1=on
 };
 
 const TPropertySet propertySetSRG1 = 
@@ -196,11 +195,11 @@ const TPropertySet propertySetSRG4 =
 
 const TProperty primaryPropertiesSBF[] =
 {
-  {"command", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
-  {"status", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
-  {"directionType",   GCFPValue::LPT_STRING, GCF_READWRITE_PROP, "LMN"},
-  {"directionAngle1", GCFPValue::LPT_DOUBLE, GCF_READWRITE_PROP, "0.0"},
-  {"directionAngle2", GCFPValue::LPT_DOUBLE, GCF_READWRITE_PROP, "0.0"},
+  {"command", GCFPValue::LPT_STRING, GCF_WRITABLE_PROP, ""},
+  {"status", GCFPValue::LPT_STRING, GCF_READABLE_PROP, ""},
+  {"directionType",   GCFPValue::LPT_STRING, GCF_WRITABLE_PROP, "LMN"},
+  {"directionAngle1", GCFPValue::LPT_DOUBLE, GCF_WRITABLE_PROP, "0.0"},
+  {"directionAngle2", GCFPValue::LPT_DOUBLE, GCF_WRITABLE_PROP, "0.0"},
 };
 
 const TPropertySet primaryPropertySetSBF1 = 

@@ -360,5 +360,5 @@ RCU8_server.port=21078	# MSPP
 [ABS]
 host=localhost
 client.type=TCP
-client.port=30230 				# MSPP
+client.port=30229 				# MSPP
 

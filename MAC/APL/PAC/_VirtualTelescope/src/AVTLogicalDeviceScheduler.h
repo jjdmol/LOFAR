@@ -177,6 +177,8 @@ namespace AVT
       
       
       void sendWGsettings();
+      void sendWGenable();
+      void sendWGdisable();
       void getRequiredResources(list<string>& requiredResources, int rack, int subrack, int board, int ap, int rcu);
 
       static string m_schedulerTaskName;
