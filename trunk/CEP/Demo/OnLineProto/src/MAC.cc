@@ -49,8 +49,8 @@ namespace LOFAR
    
    MAC::MAC (const MAC& m)
      {
-	c = c;
-	w_e = w_e;
+	c = m.c;
+	w_e = m.w_e;
 
 	itsDeclination = m.itsDeclination;
 	itsStartHourangle = m.itsStartHourangle;
