@@ -223,9 +223,9 @@ void Calibrator::selectFirstTimeSlot (void) {
 }
 
 
-bool Calibrator::advanceTimeIntervalIterator (void) {
+bool Calibrator::advanceTimeIntervalIterator (bool callInitParms) {
   TRACERF2 ("MeqCalImpl -> nextInterval ()");
-  return itsPSS3CalibratorImpl -> nextInterval ();
+  return itsPSS3CalibratorImpl -> nextInterval (callInitParms);
 }
 
 
@@ -287,6 +287,9 @@ void Calibrator::run (vector<string>& resultParmNames,
                       Quality& resultQuality) {
   itsPSS3CalibratorImpl -> solve (false, resultParmNames, resultParmValues, 
                                   resultQuality);
+}
+
+void Calibrator::showCurrentParms (void) {
 }
 
 void Calibrator::subtractOptimizedSources (void) {
