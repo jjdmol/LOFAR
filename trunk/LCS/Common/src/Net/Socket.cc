@@ -824,9 +824,9 @@ int32 Socket::write (const void*	buf, int32	nrBytes)
 	if (itsType == UDP) {
 		errno = 0;							// reset system errno
 
-		if (!itsIsConnected) {
-			return (itsErrno = WRITERR);
-		}
+//		if (!itsIsConnected) {
+//			return (itsErrno = WRITERR);
+//		}
 
 		if ((bytesWritten = sendto (itsSocketID, (char*) buf, nrBytes, 0,
 									(struct sockaddr*)&itsTCPAddr,
@@ -973,6 +973,7 @@ string Socket::errstr () const
 //
 Socket::Socket (int32	aSocketID, struct sockaddr_in &inetAddr) : 
 	itsSocketname	("data"),
+	itsErrno		(Socket::NOINIT),
 	itsSocketID		(aSocketID),
 	itsType			(TCP),
 	itsIsServer		(false),
@@ -995,6 +996,7 @@ Socket::Socket (int32	aSocketID, struct sockaddr_in &inetAddr) :
 
 	// successfully created connected socket
 	itsIsConnected = true;
+	itsErrno       = SK_OK;
 }
 
 //
@@ -1004,6 +1006,7 @@ Socket::Socket (int32	aSocketID, struct sockaddr_in &inetAddr) :
 //
 Socket::Socket (int32	aSocketID, struct sockaddr_un &unixAddr) : 
 	itsSocketname	("client"),
+	itsErrno		(Socket::NOINIT),
 	itsSocketID		(aSocketID),
 	itsType			(UNIX),
 	itsIsServer		(false),
@@ -1026,6 +1029,7 @@ Socket::Socket (int32	aSocketID, struct sockaddr_un &unixAddr) :
 
 	// successfully created connected socket
 	itsIsConnected = true;
+	itsErrno       = SK_OK;
 }
 
 //
