@@ -49,16 +49,24 @@ namespace LOFAR
 
       void BetweenExprNode::print(std::ostream& os) const
       {
+        if (itsValue.isNull()) return;
         os << "(";
         itsValue.print(os);
-        os << itsOperation;
+        os << ")" << itsOperation;
         itsLower.print(os);
         os << " AND ";
         itsUpper.print(os);
-        os << ")";
       }
 
-      
+      Expr BetweenExprNode::getConstraint() const
+      {
+        return 
+          itsValue.getConstraint() && 
+          itsLower.getConstraint() && 
+          itsUpper.getConstraint();
+      }
+
+
       InExprNode::InExprNode(const std::string oper,
                              const Expr& lhs, const Collection<Expr>& rhs) :
         itsOperation(oper),
@@ -72,8 +80,10 @@ namespace LOFAR
 
       void InExprNode::print(std::ostream& os) const
       {
+        if (itsLeft.isNull()) return;
         os << "(";
         itsLeft.print(os);
+        os << ")";
         if (!itsRight.empty()) {
           ostringstream oss;
           Collection<Expr>::const_iterator it;
@@ -85,7 +95,17 @@ namespace LOFAR
           s.erase(s.size()-1);    // strip trailing comma
           os << itsOperation << "(" << s << ")";
         }
-        os << ")";
+      }
+
+
+      Expr InExprNode::getConstraint() const
+      {
+        Expr expr(itsLeft.getConstraint());
+        Collection<Expr>::const_iterator it;
+        for(it = itsRight.begin(); it != itsRight.end(); ++it) {
+          expr = expr && it->getConstraint();
+        }
+        return expr;
       }
 
 
@@ -102,13 +122,20 @@ namespace LOFAR
 
       void LikeExprNode::print(std::ostream& os) const
       {
+        if (itsLeft.isNull()) return;
+
+        // We must print the pattern expression in itsRight into an
+        // ostringstream, because we need its contents as a string.
         ostringstream oss;
         itsRight.print(oss);
         string rhs(oss.str());
+
+        // This string will contain the output pattern in SQL format.
         string pattern;
 
-        // Scan the pattern expression in itsRight for occurrences of wildcard
-        // characters and make the proper substitutions.
+        // Scan the pattern expression in itsRight (represented as a string by
+        // rhs) for occurrences of wildcard characters and make the proper
+        // substitutions.
         for(string::const_iterator it = rhs.begin(); it != rhs.end(); ++it) {
           switch (*it) {
           case '*':
@@ -136,7 +163,13 @@ namespace LOFAR
 
         os << "(";
         itsLeft.print(os);
-        os << itsOperation << pattern << " ESCAPE '\\\\')";
+        os << ")" << itsOperation << pattern << " ESCAPE '\\\\'";
+      }
+
+
+      Expr LikeExprNode::getConstraint() const
+      {
+        return itsLeft.getConstraint() && itsRight.getConstraint();
       }
 
 

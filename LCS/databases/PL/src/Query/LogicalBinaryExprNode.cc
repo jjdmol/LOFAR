@@ -42,19 +42,21 @@ namespace LOFAR
       {
         Expr lhs(itsLeft.getConstraint());
         Expr rhs(itsRight.getConstraint());
-        os << "(";
+//         os << "(";
         if (!lhs.isNull()) {
           lhs.print(os);
           os << " AND ";
         }
+        os << "(";
         itsLeft.print(os);
         os << itsOperation;
         itsRight.print(os); 
+        os << ")";
         if (!rhs.isNull()) {
           os << " AND ";
           rhs.print(os);
         }
-        os << ")";
+//         os << ")";
       }
 
     } // namespace Query

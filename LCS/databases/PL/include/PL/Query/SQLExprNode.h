@@ -61,6 +61,8 @@ namespace LOFAR
 
         virtual void print(std::ostream& os) const;
 
+        virtual Expr getConstraint() const;
+
       private:
 
         // @name The operation
@@ -93,6 +95,8 @@ namespace LOFAR
 
         virtual void print(std::ostream& os) const;
  
+        virtual Expr getConstraint() const;
+
      private:
  
         // @name The operation
@@ -140,6 +144,8 @@ namespace LOFAR
         virtual ~LikeExprNode();
         
         virtual void print(std::ostream& os) const;
+
+        virtual Expr getConstraint() const;
 
      private:
  
