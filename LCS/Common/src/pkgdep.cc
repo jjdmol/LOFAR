@@ -147,7 +147,8 @@ void writeJS (ostream& os, const string& pkg, UsedMap& dep,
   }
 }
 
-void writeXHTMLHeader (ostream& os, const string& hdrtxt, const string& pkg)
+void writeXHTMLHeader (ostream& os, const string& hdrtxt, const string& pkg,
+		       const string& hreftxt)
 {
   os << "<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>" << endl;
   os << " <head>" << endl;
@@ -261,7 +262,14 @@ void writeXHTMLHeader (ostream& os, const string& hdrtxt, const string& pkg)
   os << "  <div class='directory'>" << endl;
   os << "   <h2>" << hdrtxt << "</h2>" << endl;
   if (! pkg.empty()) {
-    os << "   <h3>" << pkg << "</h3>" << endl;
+    os << "   <h3>";
+    if (hreftxt.empty()) {
+      os << pkg;
+    } else {
+      os << hreftxt;
+      os << pkg << "</a>";
+    }
+    os << "</h3>" << endl;
   }
   os << "   <div style='display: block;'>" << endl;
 }
@@ -286,6 +294,7 @@ void writeXHTML (ostream& os, const string& pkg, UsedMap& dep,
   oss << parent << '_' << seqnr+1;
   // Get children.
   set<string> uses = dep[pkg].itsUses;
+  bool doChildren = !uses.empty() && (maxdepth < 0  ||  depth < maxdepth);
   os << indent << "<p>";
   for (int i=0; i<depth; ++i) {
     if (parentIsLast[i]) {
@@ -294,7 +303,7 @@ void writeXHTML (ostream& os, const string& pkg, UsedMap& dep,
       os << "<img src='ftv2vertline.png' alt='|' width=16 height=22 />";
     }
   }
-  if (uses.empty()) {
+  if (!doChildren) {
     if (isLast) {
       os << "<img src='ftv2lastnode.png' alt='/' width=16 height=22 />";
     } else {
@@ -327,34 +336,36 @@ void writeXHTML (ostream& os, const string& pkg, UsedMap& dep,
     os << baseName(pkg,strip) << "</a>";
   }
   os << "</p>" << endl;
-  if (! uses.empty()) {
+  // Write used packages if any and if maxdepth not reached.
+  if (doChildren) {
     os << "<div id='node" << oss.str() << "'>" << endl;
-    // Write used packages if any and if maxdepth not reached.
-    if (maxdepth < 0  ||  depth < maxdepth) {
-      string newIndent = indent + ' ';
-      std::vector<bool> newParentIsLast(parentIsLast);
-      newParentIsLast.push_back (isLast);
-      uint newSeqnr = 1;
-      for (set<string>::const_iterator iter = uses.begin();
-	   iter != uses.end();
-	   ++iter, ++newSeqnr) {
-	writeXHTML (os, *iter, dep, oss.str(), newIndent,
-		    depth+1, maxdepth, newSeqnr, strip, hreftxt,
-		    newSeqnr == uses.size(), newParentIsLast);
-      }
+    string newIndent = indent + ' ';
+    std::vector<bool> newParentIsLast(parentIsLast);
+    newParentIsLast.push_back (isLast);
+    uint newSeqnr = 1;
+    for (set<string>::const_iterator iter = uses.begin();
+	 iter != uses.end();
+	 ++iter, ++newSeqnr) {
+      writeXHTML (os, *iter, dep, oss.str(), newIndent,
+		  depth+1, maxdepth, newSeqnr, strip, hreftxt,
+		  newSeqnr == uses.size(), newParentIsLast);
     }
     os << "</div>" << endl;
   }
 }
 
 void writeHeader (ostream& os, OutType outtype, const string& hdrtxt,
-		  const string& pkg)
+		  const string& pkg, const string& hreftxt)
 {
-  // Replace %pkg% in hdrtxt by pkg.
-  string newhdrtxt = hdrtxt;
+  // Replace %pkg% in hdrtxt and hreftxt by pkg.
   string::size_type idx;
+  string newhdrtxt = hdrtxt;
   while ((idx = newhdrtxt.find("%pkg%")) != string::npos) {
     newhdrtxt = newhdrtxt.substr(0,idx) + pkg + newhdrtxt.substr(idx+5);
+  }
+  string newhreftxt = hreftxt;
+  while ((idx = newhreftxt.find("%pkg%")) != string::npos) {
+    newhreftxt = newhreftxt.substr(0,idx) + pkg + newhreftxt.substr(idx+5);
   }
   switch (outtype) {
   case ASCII:
@@ -363,27 +374,39 @@ void writeHeader (ostream& os, OutType outtype, const string& hdrtxt,
     writeJSHeader (os, newhdrtxt);
     break;
   case XHTML:
-    writeXHTMLHeader (os, newhdrtxt, pkg);
+    writeXHTMLHeader (os, newhdrtxt, pkg, newhreftxt);
     break;
   }
 }
 
 void writeBody (ostream& os, OutType outtype, const string& pkg, UsedMap& dep,
 		int maxdepth, int seqnr, bool strip,
-		const string& hreftxt, bool isLast)
+		const string& hreftxt, bool isLast, bool skipSingle)
 {
-  switch (outtype) {
-  case ASCII:
-    writeASCII (os, pkg, dep, "", 0, maxdepth, strip);
-    break;
-  case JS:
-    writeJS (os, pkg, dep, "", 0, maxdepth, seqnr, strip, hreftxt);
-    break;
-  case XHTML:
-    std::vector<bool> parentIsLast;
-    writeXHTML (os, pkg, dep, "", "    ", 0, maxdepth, seqnr, strip,
-		hreftxt, isLast, parentIsLast);
-    break;
+  // If it's a single package, only print its children if told so.
+  if (isLast && skipSingle) {
+    uint newSeqnr = 1;
+    set<string> uses = dep[pkg].itsUses;
+    for (set<string>::const_iterator iter = uses.begin();
+	 iter != uses.end();
+	 ++iter, ++newSeqnr) {
+      writeBody (os, outtype, *iter, dep, maxdepth, newSeqnr, strip, hreftxt,
+		 newSeqnr==uses.size(), false);
+    }
+  } else {
+    switch (outtype) {
+    case ASCII:
+      writeASCII (os, pkg, dep, "", 0, maxdepth, strip);
+      break;
+    case JS:
+      writeJS (os, pkg, dep, "", 0, maxdepth, seqnr, strip, hreftxt);
+      break;
+    case XHTML:
+      std::vector<bool> parentIsLast;
+      writeXHTML (os, pkg, dep, "", "    ", 0, maxdepth, seqnr, strip,
+		  hreftxt, isLast, parentIsLast);
+      break;
+    }
   }
 }
 
@@ -498,7 +521,7 @@ int main(int argc, const char* argv[])
     hdrtxt = "LOFAR Dependency Tree: " + inname.substr(inname.find('.') + 1);
   }
   if (!split) {
-    writeHeader (cout, outtype, hdrtxt, "LOFAR");
+    writeHeader (cout, outtype, hdrtxt, "LOFAR", hreftxt);
   }
   // Write the dependencies starting at all root packages
   // (i.e. packages not used by others).
@@ -519,13 +542,13 @@ int main(int argc, const char* argv[])
       if (split) {
 	string name = replaceSlash(iter->first) + ext;
 	ofstream ofs(name.c_str());
-	writeHeader (ofs, outtype, hdrtxt, iter->first);
+	writeHeader (ofs, outtype, hdrtxt, iter->first, hreftxt);
 	writeBody (ofs, outtype, iter->first, *depPtr,
-		   maxdepth, seqnr, strip, hreftxt, true);
+		   maxdepth, seqnr, strip, hreftxt, true, true);
 	writeFooter (ofs, outtype);
       } else {
 	writeBody (cout, outtype, iter->first, *depPtr,
-		   maxdepth, seqnr, strip, hreftxt, seqnr==nrout);
+		   maxdepth, seqnr, strip, hreftxt, seqnr==nrout, true);
       }
       seqnr++;
     }
