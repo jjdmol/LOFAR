@@ -25,6 +25,7 @@
 #include "EPA_Protocol.ph"
 
 #include "RSPDriverTask.h"
+#include "RSPConfig.h"
 #include "Command.h"
 #include "SetWeightsCmd.h"
 #include "GetWeightsCmd.h"
@@ -51,7 +52,9 @@ RSPDriverTask::RSPDriverTask(string name)
 
   m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, RSP_PROTOCOL);
 
-  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
+  m_board = new GCFPort[GET_CONFIG(N_RSPBOARDS)];
+
+  for (int boardid = 0; boardid < GET_CONFIG(N_RSPBOARDS); boardid++)
   {
     char name[64] = "board";
     snprintf(name, 64, "board%d", boardid);
@@ -65,12 +68,13 @@ RSPDriverTask::RSPDriverTask(string name)
 
 RSPDriverTask::~RSPDriverTask()
 {
+  delete [] m_board;
 }
 
 bool RSPDriverTask::isEnabled()
 {
   bool enabled = true;
-  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
+  for (int boardid = 0; boardid < GET_CONFIG(N_RSPBOARDS); boardid++)
   {
     if (!m_board[boardid].isConnected())
     {
@@ -99,7 +103,7 @@ void RSPDriverTask::addAllSyncActions()
    * For each board a separate BWSync instance is created which handles
    * the synchronization of data between the board and the cache for that board.
    */
-  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
+  for (int boardid = 0; boardid < GET_CONFIG(N_RSPBOARDS); boardid++)
   {
     BWSync* bwsync = 0;
 
@@ -136,7 +140,7 @@ void RSPDriverTask::addAllSyncActions()
 
 void RSPDriverTask::openBoards()
 {
-  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
+  for (int boardid = 0; boardid < GET_CONFIG(N_RSPBOARDS); boardid++)
   {
     if (!m_board[boardid].isConnected()) m_board[boardid].open();
   }
@@ -229,7 +233,8 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
       if (!m_acceptor.isConnected()) m_acceptor.open();
 
       /* Start the update timer */
-      m_board[0].setTimer((long)1,0,1,0); // update every second
+      m_board[0].setTimer(GET_CONFIG(SYNC_INTERVAL),
+			  GET_CONFIG(SYNC_INTERVAL)); // update SYNC_INTERVAL seconds
     }
     break;
 
@@ -373,8 +378,8 @@ void RSPDriverTask::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 
   /* range check on parameters */
   if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
-      || (sw_event->weights().extent(thirdDim) != N_BEAMLETS)
-      || (sw_event->weights().extent(secondDim) > N_RCU))
+      || (sw_event->weights().extent(thirdDim) != MAX_N_BEAMLETS)
+      || (sw_event->weights().extent(secondDim) > GET_CONFIG(N_RCU)))
   {
     delete sw_event;
     
@@ -522,10 +527,12 @@ int main(int argc, char** argv)
 	   "log4cplus.properties");
   INIT_LOGGER(prop_path);
 #endif
-
+  
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
   GCFTask::init(argc, argv);
+
+  RSPConfig::getInstance().load("./rsp.cfg");
 
   RSPDriverTask rsp("RSP");
 

@@ -70,6 +70,10 @@ libepa_la_SOURCES = \
 bin_PROGRAMS = RSPDriver
 
 RSPDriver_SOURCES = \
+	Config.h \
+	Config.cc \
+	RSPConfig.h \
+	RSPConfig.cc \
 	RSPDriverTask.h \
 	RSPDriverTask.cc \
 	Scheduler.h \

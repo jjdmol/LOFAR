@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include "RSP_Protocol.ph"
-#include "RSPDriverTask.h"
+#include "RSPConfig.h"
 #include "SetWeightsCmd.h"
 
 #include <blitz/array.h>
@@ -60,7 +60,7 @@ void SetWeightsCmd::setWeights(Array<complex<int16>, BeamletWeights::NDIM> weigh
   RSPSetweightsEvent* event = static_cast<RSPSetweightsEvent*>(m_event);
   
   event->weights().resize(BeamletWeights::SINGLE_TIMESTEP,
-			  event->rcumask.count(), N_BEAMLETS);
+			  event->rcumask.count(), weights.extent(thirdDim));
   event->weights() = weights;
 }
 
@@ -77,11 +77,11 @@ void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
 void SetWeightsCmd::apply(CacheBuffer& cache)
 {
   int input_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < RSPDriverTask::N_RCU; cache_rcu++)
+  for (int cache_rcu = 0; cache_rcu < GET_CONFIG(N_RCU); cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      if (cache_rcu < RSPDriverTask::N_RCU)
+      if (cache_rcu < GET_CONFIG(N_RCU))
       {
 	cache.getBeamletWeights()()(0, cache_rcu, Range::all())
 	  = m_event->weights()(0, input_rcu, Range::all());
@@ -89,7 +89,7 @@ void SetWeightsCmd::apply(CacheBuffer& cache)
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, RSPDriverTask::N_RCU));
+			      cache_rcu, GET_CONFIG(N_RCU)));
       }
 
       input_rcu++;

@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include "RSP_Protocol.ph"
-#include "RSPDriverTask.h"
+#include "RSPConfig.h"
 #include "SetSubbandsCmd.h"
 
 #include <blitz/array.h>
@@ -63,7 +63,7 @@ void SetSubbandsCmd::ack(CacheBuffer& /*cache*/)
 void SetSubbandsCmd::apply(CacheBuffer& cache)
 {
   uint16 nr_subbands = m_event->subbands.nrsubbands()(0);
-  for (int cache_rcu = 0; cache_rcu < RSPDriverTask::N_RCU; cache_rcu++)
+  for (int cache_rcu = 0; cache_rcu < GET_CONFIG(N_RCU); cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
@@ -95,7 +95,7 @@ void SetSubbandsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetSubbandsCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)RSPDriverTask::N_RCU)
+  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG(N_RCU))
 	  && (2 == m_event->subbands().dimensions())
 	  && (1 == m_event->subbands.nrsubbands().dimensions())
 	  && (1 == m_event->subbands().extent(firstDim))

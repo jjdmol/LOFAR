@@ -132,7 +132,7 @@ namespace EPA_Protocol
       static const uint16 NRSUBBANDS_SIZE    = 2;
       static const uint16 SUBBANDSELECT_SIZE = 512;
 
-      static const uint16 BFCOEFS_SIZE       = 1024;
+      static const uint16 BFCOEFS_SIZE       = 512; // doc says 1024, but that is wrong I think
 
       static const uint16 STSTATS_SIZE       = 1024;
 

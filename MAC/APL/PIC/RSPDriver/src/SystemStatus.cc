@@ -22,6 +22,7 @@
 
 #include "SystemStatus.h"
 #include "MEPHeader.h"
+#include "Marshalling.h"
 #include <blitz/array.h>
 
 #undef PACKAGE
@@ -35,46 +36,6 @@ using namespace EPA_Protocol;
 using namespace std;
 using namespace blitz;
 
-#define PACK_ARRAY(bufptr, offset, array, datatype)					  \
-do {										  \
-  for (int dim = firstDim; dim < firstDim + array.dimensions(); dim++)		  \
-  {										  \
-    int32 extent = array.extent(dim);						  \
-    memcpy((bufptr) + offset, &extent, sizeof(int32));				  \
-    offset += sizeof(int32);							  \
-  }										  \
-										  \
-  if (array.isStorageContiguous())						  \
-  {										  \
-    memcpy((bufptr) + offset, array.data(), array.size() * sizeof(complex<int16>)); \
-    offset += array.size() * sizeof(datatype);					  \
-  }										  \
-  else										  \
-  {										  \
-    LOG_FATAL("array must be contiguous");					  \
-    exit(EXIT_FAILURE);								  \
-  }										  \
-} while (0)
-
-#define UNPACK_ARRAY(bufptr, offset, array, datatype)			      \
-do {									      \
-  TinyVector<int, array.dimensions()> extent;				      \
-									      \
-  for (int dim = firstDim; dim < firstDim + array.dimensions(); dim++)	      \
-  {									      \
-    int32 extenttmp = array.extent(dim);				      \
-    memcpy(&extenttmp, (bufptr) + offset, sizeof(int32));			      \
-    offset += sizeof(int32);						      \
-    extent(dim - firstDim) = extenttmp;					      \
-  }									      \
-									      \
-  /* resize the array to the correct size */				      \
-  array.resize(extent);							      \
-									      \
-  memcpy(array.data(), (bufptr) + offset, array.size() * sizeof(complex<int16>)); \
-  offset += array.size() * sizeof(datatype);				      \
-} while (0)
-
 unsigned int SystemStatus::getSize()
 {
   return MEPHeader::RSPSTATUS_SIZE;
@@ -84,7 +45,12 @@ unsigned int SystemStatus::pack  (void* buffer)
 {
   unsigned int offset = 0;
   
-  PACK_ARRAY((char*)buffer, offset, m_rsp_status, EPA_Protocol::RSPStatus);
+  MSH_PACK_ARRAY(buffer, offset, m_rsp_status,   EPA_Protocol::RSPStatus);
+  MSH_PACK_ARRAY(buffer, offset, m_read_status,  EPA_Protocol::MEPStatus);
+  MSH_PACK_ARRAY(buffer, offset, m_write_status, EPA_Protocol::MEPStatus);
+  MSH_PACK_ARRAY(buffer, offset, m_bp_status,    EPA_Protocol::FPGAStatus);
+  MSH_PACK_ARRAY(buffer, offset, m_ap_status,    EPA_Protocol::FPGAStatus);
+  MSH_PACK_ARRAY(buffer, offset, m_rcu_status,   EPA_Protocol::RCUStatus);
 
   return offset;
 }
@@ -93,7 +59,12 @@ unsigned int SystemStatus::unpack(void *buffer)
 {
   unsigned int offset = 0;
   
-  UNPACK_ARRAY(buffer, offset, m_rsp_status, EPA_Protocol::RSPStatus);
+  MSH_UNPACK_ARRAY(buffer, offset, m_rsp_status,   EPA_Protocol::RSPStatus,  1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_read_status,  EPA_Protocol::MEPStatus,  1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_write_status, EPA_Protocol::MEPStatus,  1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_bp_status,    EPA_Protocol::FPGAStatus, 1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_ap_status,    EPA_Protocol::FPGAStatus, 1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_rcu_status,   EPA_Protocol::RCUStatus,  1);
 
   return offset;
 }

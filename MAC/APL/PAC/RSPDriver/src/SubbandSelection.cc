@@ -21,6 +21,8 @@
 //#  $Id$
 
 #include "SubbandSelection.h"
+#include "Marshalling.h"
+
 #include <blitz/array.h>
 
 #undef PACKAGE
@@ -35,16 +37,19 @@ using namespace blitz;
 
 unsigned int SubbandSelection::getSize()
 {
-  return
-    ((2 * sizeof(int32)) + (m_subbands.size() * sizeof(uint16))
-     + (sizeof(int32) + (m_nrsubbands.size() * sizeof(uint16))));
+  return 
+    MSH_ARRAY_SIZE(m_subbands, uint16)
+    + MSH_ARRAY_SIZE(m_nrsubbands, uint16);
 }
 
-unsigned int SubbandSelection::pack  (void* buffer)
+unsigned int SubbandSelection::pack(void* buffer)
 {
-  char* bufptr = (char*)buffer;
   unsigned int offset = 0;
 
+  MSH_PACK_ARRAY(buffer, offset, m_subbands,   uint16);
+  MSH_PACK_ARRAY(buffer, offset, m_nrsubbands, uint16);
+  
+#if 0
   /**
    * Pack shape of subbands array.
    */
@@ -89,14 +94,19 @@ unsigned int SubbandSelection::pack  (void* buffer)
     LOG_FATAL("nrsubbands array must contiguous");
     exit(EXIT_FAILURE);
   }
+#endif
 
   return offset;
 }
 
 unsigned int SubbandSelection::unpack(void *buffer)
 {
-  char* bufptr = (char*)buffer;
   unsigned int offset = 0;
+
+  MSH_UNPACK_ARRAY(buffer, offset, m_subbands,   uint16, 2);
+  MSH_UNPACK_ARRAY(buffer, offset, m_nrsubbands, uint16, 1);
+
+#if 0
   TinyVector<int, 2> extent;
 
   /**
@@ -130,6 +140,7 @@ unsigned int SubbandSelection::unpack(void *buffer)
   m_nrsubbands.resize(nrsubbands_size);
   memcpy(m_nrsubbands.data(), bufptr + offset, m_nrsubbands.size() * sizeof(uint16));
   offset += m_nrsubbands.size() * sizeof(uint16);
+#endif
     
   return offset;
 }

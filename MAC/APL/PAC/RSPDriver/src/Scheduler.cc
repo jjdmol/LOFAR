@@ -22,6 +22,7 @@
 
 #include "Scheduler.h"
 #include "SyncAction.h"
+#include "RSPConfig.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -34,8 +35,11 @@ using namespace RSP_Protocol;
 
 #define SCHEDULING_DELAY 2
 
+int Scheduler::SYNC_INTERVAL_INT = 1; // default
+
 Scheduler::Scheduler()
 {
+  SYNC_INTERVAL_INT = (int)trunc(GET_CONFIG(SYNC_INTERVAL)+0.5);
 }
 
 Scheduler::~Scheduler()
@@ -192,10 +196,10 @@ Timestamp Scheduler::enter(Command* command)
   {
     /**
      * A read command for time t should be
-     * scheduled for time t + 1, to get the values
+     * scheduled for time t + SYNC_INTERVAL_INT, to get the values
      * on time t.
      */
-    scheduled_time = scheduled_time + 1;
+    scheduled_time = scheduled_time + SYNC_INTERVAL_INT;
   }
 
   // set the actual time at which the command is sent to the boards
@@ -238,7 +242,7 @@ void Scheduler::scheduleCommands()
       m_later_queue.pop();
       delete command;
     }
-    else if (command->getTimestamp() <= m_current_time + 1)
+    else if (command->getTimestamp() <= m_current_time + SYNC_INTERVAL_INT)
     {
       LOG_INFO_STR("scheduling command with time=" << command->getTimestamp());
 
@@ -256,7 +260,7 @@ void Scheduler::scheduleCommands()
 
     struct timeval now;
     m_current_time.get(&now);
-    if (0 == (now.tv_sec + 1 % command->getPeriod()))
+    if (0 == (now.tv_sec + SYNC_INTERVAL_INT % command->getPeriod()))
     {
       /* copy the command and push on the now queue */
     }
@@ -321,10 +325,7 @@ void Scheduler::completeCommands()
   {
     Command* command = m_done_queue.top();
     
-    /**
-     * The actual activation time is on the next second
-     * therefor we add 1 second to the current time.
-     */
+    /* set the timestamp */
     command->setTimestamp(getCurrentTime());
     command->complete(Cache::getInstance().getFront());
 

@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include "BeamletWeights.h"
+#include "Marshalling.h"
 
 #include <Common/LofarTypes.h>
 
@@ -44,9 +45,11 @@ unsigned int BeamletWeights::getSize()
 
 unsigned int BeamletWeights::pack  (void* buffer)
 {
-  char* bufptr = (char*)buffer;
   unsigned int offset = 0;
 
+  MSH_PACK_ARRAY(buffer, offset, m_weights, complex<int16>);
+
+#if 0
   for (int dim = firstDim; dim < firstDim + m_weights.dimensions(); dim++)
   {
     int32 extent = m_weights.extent(dim);
@@ -64,14 +67,18 @@ unsigned int BeamletWeights::pack  (void* buffer)
     LOG_FATAL("beamlet weights array must be contiguous");
     exit(EXIT_FAILURE);
   }
+#endif
     
   return offset;
 }
 
 unsigned int BeamletWeights::unpack(void *buffer)
 {
-  char* bufptr = (char*)buffer;
   unsigned int offset = 0;
+
+  MSH_UNPACK_ARRAY(buffer, offset, m_weights, complex<int16>, NDIM);
+
+#if 0
   TinyVector<int, NDIM> extent;
 
   for (int dim = firstDim; dim < firstDim + m_weights.dimensions(); dim++)
@@ -87,6 +94,7 @@ unsigned int BeamletWeights::unpack(void *buffer)
 
   memcpy(m_weights.data(), bufptr+offset, m_weights.size() * sizeof(complex<int16>));
   offset += m_weights.size() * sizeof(complex<int16>);
+#endif
     
   return offset;
 }
