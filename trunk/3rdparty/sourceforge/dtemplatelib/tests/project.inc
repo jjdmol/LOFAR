@@ -2,7 +2,7 @@
 
 mydirs = ../lib
 #mylibs = -lDTL
-mylibs = -lDTL	# ASTRON
+mylibs = -ldtl	# ASTRON
 
 # Where to find -lDTL build
 libDTLdir = ../lib
