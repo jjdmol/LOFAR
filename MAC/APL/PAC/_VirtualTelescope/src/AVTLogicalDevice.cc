@@ -20,12 +20,21 @@
 //#
 //#  $Id$
 
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include <GCF/GCF_PVString.h>
 
 #include "../../../APLCommon/src/APL_Defines.h"
 #include "AVTLogicalDevice.h"
 #define DECLARE_SIGNAL_NAMES
 #include "LogicalDevice_Protocol.ph"
+
+using namespace LOFAR;
+using namespace AVT;
+using namespace std;
 
 AVTLogicalDevice::AVTLogicalDevice(string& taskName, 
                                    const TPropertySet& primaryPropertySet,

@@ -21,6 +21,12 @@
 //#  $Id$
 
 #include <stdio.h>
+
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDouble.h>
@@ -32,6 +38,10 @@
 #include "LogicalDevice_Protocol.ph"
 #include "AVTUtilities.h"
 #include "ABS_Protocol.ph"
+
+using namespace LOFAR;
+using namespace AVT;
+using namespace std;
 
 const string bsScope("BeamServer");
 
@@ -231,8 +241,8 @@ GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event
           beamPointToEvent.handle = m_beamID;
           beamPointToEvent.time   = time_arg;
           beamPointToEvent.type   = m_directionType;
-          beamPointToEvent.angle1 = m_directionAngle1;
-          beamPointToEvent.angle2 = m_directionAngle2;
+          beamPointToEvent.angle[0] = m_directionAngle1;
+          beamPointToEvent.angle[1] = m_directionAngle2;
           m_beamServer.send(beamPointToEvent);
         }
         else
@@ -352,8 +362,8 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
           beamPointToEvent.handle = m_beamID;
           beamPointToEvent.time   = time_arg;
           beamPointToEvent.type   = m_directionType;
-          beamPointToEvent.angle1 = m_directionAngle1;
-          beamPointToEvent.angle2 = m_directionAngle2;
+          beamPointToEvent.angle[0] = m_directionAngle1;
+          beamPointToEvent.angle[1] = m_directionAngle2;
           m_beamServer.send(beamPointToEvent);
         }
       }      
@@ -371,8 +381,8 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
           beamPointToEvent.handle = m_beamID;
           beamPointToEvent.time   = time_arg;
           beamPointToEvent.type   = m_directionType;
-          beamPointToEvent.angle1 = m_directionAngle1;
-          beamPointToEvent.angle2 = m_directionAngle2;
+          beamPointToEvent.angle[0] = m_directionAngle1;
+          beamPointToEvent.angle[1] = m_directionAngle2;
           m_beamServer.send(beamPointToEvent);
         }
       }      
@@ -390,8 +400,8 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
           beamPointToEvent.handle = m_beamID;
           beamPointToEvent.time   = time_arg;
           beamPointToEvent.type   = m_directionType;
-          beamPointToEvent.angle1 = m_directionAngle1;
-          beamPointToEvent.angle2 = m_directionAngle2;
+          beamPointToEvent.angle[0] = m_directionAngle1;
+          beamPointToEvent.angle[1] = m_directionAngle2;
           m_beamServer.send(beamPointToEvent);
         }
       }      
@@ -490,8 +500,7 @@ void AVTStationBeamformer::concretePrepare(GCFPortInterface& /*port*/,string& pa
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer(%s)::allocate %d subbands: %s",getName().c_str(),n_subbands,tempLogStr));
   ABSBeamallocEvent beamAllocEvent;
   beamAllocEvent.spectral_window = spectral_window;
-  beamAllocEvent.n_subbands      = n_subbands;
-//  beamAllocEvent.subbands        = subbandsArray;
+  memcpy(beamAllocEvent.subbands,subbandsArray,sizeof(int)*ABS::N_BEAMLETS);
   m_beamServer.send(beamAllocEvent);
 }
 

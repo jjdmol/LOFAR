@@ -19,22 +19,47 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVString.h>
 
 #include "../../../APLCommon/src/APL_Defines.h"
+#include "AVTDefines.h"
 #include "AVTStationReceptorGroup.h"
-#include "AVTStationBeamformer.h"
+#include "AVTStationReceptor.h"
 #include "LogicalDevice_Protocol.ph"
 #include "AVTUtilities.h"
 
+using namespace LOFAR;
 using namespace AVT;
+using namespace std;
+using namespace boost;
+
+AVTStationReceptorGroup::TStationReceptorConnection::TStationReceptorConnection( 
+      shared_ptr<AVTStationReceptor> _rcu,
+      GCFTask&                       _containerTask, 
+      string&                        _name, 
+      GCFPort::TPortType             _type, 
+      int                            _protocol,
+      bool                           _connected,
+      TLogicalDeviceState            _ldState) :
+  rcu(_rcu),
+  clientPort(new APLInterTaskPort((GCFTask&)(*_rcu),_containerTask,_name,_type,_protocol)),
+  connected(_connected),
+  ldState(_ldState)
+{
+  rcu->setClientInterTaskPort(clientPort.get());
+}
 
 AVTStationReceptorGroup::AVTStationReceptorGroup(string& taskName, 
                                                  const TPropertySet& primaryPropertySet,
                                                  const string& APCName,
                                                  const string& APCScope,
-                                                 vector<AVTStationReceptor&> rcus) :
+                                                 vector<shared_ptr<AVTStationReceptor> > rcus) :
   AVTLogicalDevice(taskName,primaryPropertySet,APCName,APCScope),
   m_stationReceptors(),
   m_startTime(0),
@@ -43,15 +68,16 @@ AVTStationReceptorGroup::AVTStationReceptorGroup(string& taskName,
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::AVTStationReceptorGroup",getName().c_str()));
 
-  vector<AVTStationReceptor&>::iterator it;
+  vector<shared_ptr<AVTStationReceptor> >::iterator it;
   for(it=rcus.begin();it!=rcus.end();++it);
   {
     TStationReceptorConnection src( *it,
                                     *this,
-                                    it->getServerPortName(), 
-                                    GCFPortInterface::SAP, 
+                                    (*it)->getServerPortName(), 
+                                    GCFPortInterface::SAP,
                                     LOGICALDEVICE_PROTOCOL,
-                                    false);
+                                    false,
+                                    LOGICALDEVICE_STATE_IDLE);
     m_stationReceptors.push_back(src);
   }
 }
@@ -85,7 +111,7 @@ bool AVTStationReceptorGroup::isStationReceptorClient(GCFPortInterface& port)
   bool found=false;
   while(!found && it!=m_stationReceptors.end())
   {
-    found = (&(it->clientPort) == &m_beamFormerClient); // comparing two pointers. yuck?
+    found = (it->clientPort.get() == &port); // comparing two pointers. yuck?
     it++;
   }
   return found;
@@ -97,7 +123,7 @@ bool AVTStationReceptorGroup::setReceptorConnected(GCFPortInterface& port, bool 
   bool found=false;
   while(!found && it!=m_stationReceptors.end())
   {
-    found = (&(it->clientPort) == &m_beamFormerClient); // comparing two pointers. yuck?
+    found = (it->clientPort.get() == &port); // comparing two pointers. yuck?
     it++;
   }
   if(found)
@@ -119,6 +145,42 @@ bool AVTStationReceptorGroup::allReceptorsConnected()
   return allConnected;
 }
 
+bool AVTStationReceptorGroup::setReceptorState(GCFPortInterface& port, TLogicalDeviceState state)
+{
+  TStationReceptorVector::iterator it = m_stationReceptors.begin();
+  bool found=false;
+  while(!found && it!=m_stationReceptors.end())
+  {
+    found = (it->clientPort.get() == &port); // comparing two pointers. yuck?
+    it++;
+  }
+  if(found)
+  {
+    it->ldState = state;
+  }
+  return found;
+}
+
+bool AVTStationReceptorGroup::allReceptorsInState(TLogicalDeviceState state)
+{
+  bool allInState = true;
+  TStationReceptorVector::iterator it = m_stationReceptors.begin();
+  while(allInState && it!=m_stationReceptors.end())
+  {
+    allInState = (it->ldState==state);
+    it++;
+  }
+  return allInState;
+}
+
+void AVTStationReceptorGroup::sendToAllReceptors(GCFEvent& event)
+{
+  TStationReceptorVector::iterator it;
+  for(it=m_stationReceptors.begin();it!=m_stationReceptors.end();++it);
+  {
+    it->clientPort->send(event);
+  }
+}
 
 void AVTStationReceptorGroup::concreteDisconnected(GCFPortInterface& port)
 {
@@ -138,17 +200,21 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_initial_state(GCFEvent& even
   switch (event.signal)
   {
     case F_INIT:
-      m_stationBeamformer.start();
       break;
 
     case F_ENTRY:
+    {
       // open all ports
       TStationReceptorVector::iterator it;
       for(it = m_stationReceptors.begin();it!=m_stationReceptors.end();++it)
       {
-        it->clientPort.open();
+        if(!it->connected)
+        {
+          it->clientPort->open();
+        }
       }
       break;
+    }
 
     case F_CONNECTED:
     {
@@ -171,13 +237,16 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_initial_state(GCFEvent& even
     }
 
     case F_DISCONNECTED:
+    {
       if(setReceptorConnected(port,false))
       {
         port.setTimer(2.0); // try again
       }
       break;
-
+    }
+    
     case F_TIMER:
+    {
       if(setReceptorConnected(port,true))
       {
         if(allReceptorsConnected())
@@ -193,6 +262,7 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_initial_state(GCFEvent& even
         }
       }
       break;
+    }
 
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::concrete_initial_state, default (%s)",getName().c_str(),evtstr(event)));
@@ -211,12 +281,17 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_claiming_state(GCFEvent& eve
   switch (event.signal)
   {
     case LOGICALDEVICE_CLAIMED:
-      // claimed event is received from the beam former
-      if(_isBeamFormerClient(port))
+    {
+      // claimed event is received from the station receptor
+      if(setReceptorState(port,LOGICALDEVICE_STATE_CLAIMED))
       {
-        stateFinished=true;
+        if(allReceptorsInState(LOGICALDEVICE_STATE_CLAIMED))
+        {
+          stateFinished=true;
+        }
       }
       break;
+    }
     
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::concrete_claiming_state, default",getName().c_str()));
@@ -237,12 +312,17 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_preparing_state(GCFEvent& ev
   switch (event.signal)
   {
     case LOGICALDEVICE_PREPARED:
-      // prepared event is received from the beam former
-      if(_isBeamFormerClient(port))
+    {
+      // prepared event is received from the station receptor
+      if(setReceptorState(port,LOGICALDEVICE_STATE_SUSPENDED))
       {
-        stateFinished=true;
+        if(allReceptorsInState(LOGICALDEVICE_STATE_SUSPENDED))
+        {
+          stateFinished=true;
+        }
       }
       break;
+    }
     
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::concrete_preparing_state, default",getName().c_str()));
@@ -261,12 +341,17 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_releasing_state(GCFEvent& ev
   switch (event.signal)
   {
     case LOGICALDEVICE_RELEASED:
-      // released event is received from the beam former
-      if(_isBeamFormerClient(port))
+    {
+      // released event is received from the station receptor
+      if(setReceptorState(port,LOGICALDEVICE_STATE_RELEASED))
       {
-        stateFinished=true;
+        if(allReceptorsInState(LOGICALDEVICE_STATE_RELEASED))
+        {
+          stateFinished=true;
+        }
       }
       break;
+    }
     
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::concrete_releasing_state, default",getName().c_str()));
@@ -293,6 +378,7 @@ void AVTStationReceptorGroup::handlePropertySetAnswer(GCFEvent& answer)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&answer);
       assert(pPropAnswer);
+/*
       if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_STRING) &&
           (strstr(pPropAnswer->pPropName, "_command") != 0))
       {
@@ -318,23 +404,8 @@ void AVTStationReceptorGroup::handlePropertySetAnswer(GCFEvent& answer)
             dispatch(prepareEvent,dummyPort);
           }
         }
-        // SUSPEND
-        else if(command==string("SUSPEND"))
-        {
-          // send message to myself using a dummyport. VT will send it to SBF and SRG
-          GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
-          GCFEvent e(LOGICALDEVICE_SUSPEND);
-          dispatch(e,dummyPort); 
-        }
-        // RESUME
-        else if(command==string("RESUME"))
-        {
-          // send message to myself using a dummyport. VT will send it to SBF and SRG
-          GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
-          GCFEvent e(LOGICALDEVICE_RESUME);
-          dispatch(e,dummyPort);
-        }
       }
+*/
       break;
     }  
 
@@ -363,9 +434,9 @@ void AVTStationReceptorGroup::concreteClaim(GCFPortInterface& /*port*/)
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::concreteClaim",getName().c_str()));
   // claim my own resources
   
-  // send claim message to BeamFormer
+  // send claim message to all receptors
   GCFEvent event(LOGICALDEVICE_CLAIM);
-  m_beamFormerClient.send(event);
+  sendToAllReceptors(event);
 }
 
 void AVTStationReceptorGroup::concretePrepare(GCFPortInterface& /*port*/,string& parameters)
@@ -383,7 +454,7 @@ void AVTStationReceptorGroup::concretePrepare(GCFPortInterface& /*port*/,string&
   // all parameters are forwarded to the beamformer
   LOGICALDEVICEPrepareEvent prepareEvent;
   prepareEvent.parameters = parameters;
-  m_beamFormerClient.send(prepareEvent);
+  sendToAllReceptors(prepareEvent);
 }
 
 void AVTStationReceptorGroup::concreteResume(GCFPortInterface& /*port*/)
@@ -393,7 +464,7 @@ void AVTStationReceptorGroup::concreteResume(GCFPortInterface& /*port*/)
   
   // send resume message to BeamFormer
   GCFEvent event(LOGICALDEVICE_RESUME);
-  m_beamFormerClient.send(event);
+  sendToAllReceptors(event);
 }
 
 void AVTStationReceptorGroup::concreteSuspend(GCFPortInterface& /*port*/)
@@ -403,7 +474,7 @@ void AVTStationReceptorGroup::concreteSuspend(GCFPortInterface& /*port*/)
   
   // send suspend message to BeamFormer
   GCFEvent event(LOGICALDEVICE_SUSPEND);
-  m_beamFormerClient.send(event);
+  sendToAllReceptors(event);
 }
 
 void AVTStationReceptorGroup::concreteRelease(GCFPortInterface& /*port*/)
@@ -413,6 +484,6 @@ void AVTStationReceptorGroup::concreteRelease(GCFPortInterface& /*port*/)
   
   // send release message to BeamFormer
   GCFEvent event(LOGICALDEVICE_RELEASE);
-  m_beamFormerClient.send(event);
+  sendToAllReceptors(event);
 }
 

@@ -25,6 +25,8 @@
 
 #define SBFAPCNAME        "ApcStationBeamformer"
 #define VTAPCNAME         "ApcVirtualTelescope"
+#define SRAPCNAME         "ApcStationReceptor"
+#define SRGAPCNAME        "ApcStationReceptorGroup"
 
 #define VTNAME            "VT1"
 #define SBFNAME           "BF1"
@@ -67,11 +69,94 @@ const TProperty primaryPropertiesVT[] =
   {"command", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
   {"status", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
   {"startTime", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},
+  {"stopTime", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},
 };
 
 const TPropertySet primaryPropertySetVT = 
 {
-  3, "VT1", primaryPropertiesVT
+  4, "VT1", primaryPropertiesVT
+};
+
+const TProperty propertiesSR[] =
+{
+  {"command", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
+  {"status", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
+  {"startTime", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},
+  {"stopTime", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},
+  {"filter", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},  // 1,2,3,4
+  {"antenna", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"}, // 0=LBA, 1=HBA
+  {"power", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"}, // 0=off, 1=on
+};
+
+const TPropertySet propertySetSR1 = 
+{
+  7, "RCU1", propertiesSR
+};
+
+const TPropertySet propertySetSR2 = 
+{
+  7, "RCU2", propertiesSR
+};
+
+const TPropertySet propertySetSR3 = 
+{
+  7, "RCU3", propertiesSR
+};
+
+const TPropertySet propertySetSR4 = 
+{
+  7, "RCU4", propertiesSR
+};
+
+const TPropertySet propertySetSR5 = 
+{
+  7, "RCU5", propertiesSR
+};
+
+const TPropertySet propertySetSR6 = 
+{
+  7, "RCU6", propertiesSR
+};
+
+const TPropertySet propertySetSR7 = 
+{
+  7, "RCU7", propertiesSR
+};
+
+const TPropertySet propertySetSR8 = 
+{
+  7, "RCU8", propertiesSR
+};
+
+const TProperty propertiesSRG[] =
+{
+  {"command", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
+  {"status", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
+  {"startTime", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},
+  {"stopTime", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},
+  {"filter", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},  // 1,2,3,4
+  {"antenna", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"}, // 0=LBA, 1=HBA
+  {"power", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"}, // 0=off, 1=on
+};
+
+const TPropertySet propertySetSRG1 = 
+{
+  7, "SRG1", propertiesSRG
+};
+
+const TPropertySet propertySetSRG2 = 
+{
+  7, "SRG2", propertiesSRG
+};
+
+const TPropertySet propertySetSRG3 = 
+{
+  7, "SRG3", propertiesSRG
+};
+
+const TPropertySet propertySetSRG4 = 
+{
+  7, "SRG4", propertiesSRG
 };
 
 const TProperty primaryPropertiesSBF[] =

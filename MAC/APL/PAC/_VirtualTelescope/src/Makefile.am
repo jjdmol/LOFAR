@@ -19,6 +19,8 @@ AVTLogicalDeviceServer_SOURCES 		= \
 	AVTPropertySetAnswer.cc \
 	AVTStationBeamformer.cc \
 	AVTVirtualTelescope.cc \
+	AVTStationReceptor.cc \
+	AVTStationReceptorGroup.cc \
 	AVTLogicalDeviceServerMain.cc \
 	LogicalDevice_Protocol.cc \
 	ABS_Protocol.cc
