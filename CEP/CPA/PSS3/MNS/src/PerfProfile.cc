@@ -22,6 +22,8 @@
 
 #include <MNS/PerfProfile.h>
 
+#if defined(MPICH_SKIP_MPICXX)
+
 const char* const PerfProfile::m_colors[] = {
   "blue",
   "red",
@@ -36,3 +38,4 @@ const char* const PerfProfile::m_colors[] = {
 
 int PerfProfile::m_nr_colors = sizeof(PerfProfile::m_colors);
 
+#endif
