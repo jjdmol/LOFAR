@@ -1,0 +1,6 @@
+define
+;
+run 100;
+dump;
+quit
+
