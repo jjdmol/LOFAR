@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.20  2002/04/18 07:55:03  schaaf
+//  Documentation and code update
+//
 //  Revision 1.19  2002/04/12 15:50:46  schaaf
 //  Updated for multiple source steps and cross connects
 //
@@ -149,11 +152,11 @@ void P2Perf::define(const ParamBlock& params)
 
   WH_Empty empty;
 
-#ifdef HAVE_CORBA
-  Simul simul(empty, "P2Perf",true,true);
-#else
-  Simul simul(empty, "P2Perf",true,false);
-#endif
+  Simul simul(empty, 
+	      "P2Perf",
+	      true, 
+	      true,  // controllable
+	      true); // monitor
   setSimul(simul);
   simul.runOnNode(0);
 
@@ -218,6 +221,7 @@ void P2Perf::define(const ParamBlock& params)
   // should be made later...
 
   // Create the Source Steps
+  bool monitor;
   for (int iStep = 0; iStep < itsSourceSteps; iStep++) {
     
     // Create the Source Step
@@ -229,8 +233,14 @@ void P2Perf::define(const ParamBlock& params)
 					  MAX_GROW_SIZE ,
 					  false); // flag for source side
     
-    Ssteps[iStep] = new Step(Sworkholders[iStep], "GrowSizeSourceStep", iStep);
+      monitor = (iStep==0) ? true:false;
+      Ssteps[iStep] = new Step(Sworkholders[iStep], 
+			       "GrowSizeSourceStep", 
+			       iStep,
+			       monitor);
+
     //Ssteps[iStep]->connectInput(NULL);
+
 
     // Determine the node and process to run in
     // ... sory, this should go in a private method later
@@ -245,7 +255,7 @@ void P2Perf::define(const ParamBlock& params)
   }
   // Report performance of the first source Step
   ((WH_GrowSize*)Ssteps[0]->getWorker())->setReportPerformance(true);
-  
+    
   // Create the destination steps
   for (int iStep = 0; iStep < itsDestSteps; iStep++) {
 
@@ -284,7 +294,6 @@ void P2Perf::define(const ParamBlock& params)
     simul.addStep(Dsteps[iStep]);
   }
   
-
   // Create the cross connections
   for (int step = 0; step < itsDestSteps; step++) {
     for (int ch = 0; ch < itsSourceSteps; ch++) {
