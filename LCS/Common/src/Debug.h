@@ -21,6 +21,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2003/09/19 13:23:45  loose
+//  %[ER: 19]%
+//  Changed check for HAVE___FUNCTION__ into check for both HAVE_PRETTY_FUNCTION
+//  and HAVE_FUNCTION which are defined by configure.
+//
 //  Revision 1.1  2003/08/21 11:20:32  diepen
 //  Moved Common to LCS
 //
@@ -109,13 +114,13 @@
 //  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
 //
 
-
 #ifndef COMMON_DEBUG_H
 #define COMMON_DEBUG_H
 
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
+#include <Common/Exception.h>
 #include <sstream>
 #include <stdexcept>
 #include <stdio.h>
@@ -126,6 +131,14 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+
+
+
+// Define the LCS::Exception class
+namespace LCS 
+{
+  EXCEPTION_CLASS(AssertError,Exception)  
+}
 
 // The system supports multiple debugging contexts, implemented as
 // namespaces. A context has independent debug message levels.
@@ -305,13 +318,19 @@ namespace Debug
 // If your class defines a "sdebug()" method returning the current object
 // status (as string or char *), then use CodeStatus instead, to include 
 // sdebug() info in your message.
-#ifdef HAVE___FUNCTION__
+#if defined(HAVE_PRETTY_FUNCTION)
+# define SourceFileLine ::Debug::ssprintf("%s:%d(%s)",__FILE__,__LINE__,__PRETTY_FUNCTION__)
+#elif defined(HAVE_FUNCTION)
 # define SourceFileLine ::Debug::ssprintf("%s:%d(%s)",__FILE__,__LINE__,__FUNCTION__)
-#else 
+#else
 # define SourceFileLine ::Debug::ssprintf("%s:%d",__FILE__,__LINE__)
 #endif
+
+#define CodeStatus_nf1(msg) ((msg)+string(" (context: ")+DebugName+")")
+#define CodeStatus_nf(msg) ("["+string(sdebug())+"] "+CodeStatus_nf1(msg))
+
 #define CodeStatus1(msg) ((msg)+string(" (context: ")+DebugName+", at "+ SourceFileLine + ")")
-#define CodeStatus(msg) ("["+(string)sdebug()+("] ")+CodeStatus1(msg))
+#define CodeStatus(msg) ("["+string(sdebug())+"] "+CodeStatus1(msg))
 
 // This inserts declarations of the sdebug() and debug() methods into your class.
 // Use DeclareDebugInfo(virtual) to declare a virtual sdebug().
@@ -327,7 +346,7 @@ namespace Debug
 #define Declare_debug(qualifiers) qualifiers const char * debug ( int detail = 1,const string &prefix = "",const char *name = 0 ) const { return Debug::staticBuffer(sdebug(detail,prefix,name)); }
 
 // this global definition of sdebug allows the use of "non-1" macros everywhere
-inline string sdebug(int=0) { return ""; };
+inline string sdebug (int=0) { return ""; };
 
 // The Throw macro throws an exception, using
 // CodeStatus to add on filename, line, current debugging 
@@ -336,17 +355,20 @@ inline string sdebug(int=0) { return ""; };
 // typdef-ed as std::logic_error.
 
 const char exception_message[] = "\n==================================== EXCEPTION ================================\n\n";
-#define Throw(msg)  { ::Debug::dbg_stream<<exception_message<<CodeStatus(msg)<<"\n"; throw(Debug::Error(CodeStatus(msg))); }
-#define Throw1(msg)  { ::Debug::dbg_stream<<exception_message<<CodeStatus1(msg)<<"\n"; throw(Debug::Error(CodeStatus1(msg))); }
+#define ThrowExc(exc,msg)  { ::Debug::dbg_stream<<exception_message<<CodeStatus(msg)<<"\n"; throw(exc(CodeStatus_nf(msg),__HERE__)); }
+#define ThrowExc1(exc,msg)  { ::Debug::dbg_stream<<exception_message<<CodeStatus1(msg)<<"\n"; throw(exc(CodeStatus_nf1(msg),__HERE__)); }
+
+#define Throw(msg)  ThrowExc(LCS::Exception,msg)
+#define Throw1(msg) ThrowExc1(LCS::Exception,msg)
 
 // The Assert macro will do a Throw if condition is FALSE.
-#define Assert(cond)  { if( !(cond) ) Throw("Assert failed: " #cond); }
-#define Assert1(cond)  { if( !(cond) ) Throw1("Assert failed: " #cond); }
+#define Assert(cond)  { if( !(cond) ) ThrowExc(LCS::AssertError,"Assert failed: " #cond); }
+#define Assert1(cond)  { if( !(cond) ) ThrowExc1(LCS::AssertError,"Assert failed: " #cond); }
 
 // The FailWhen macro will Throw a message if condition is TRUE
 // Always defined (even with debugging off)
-#define FailWhen(cond,msg)  { if( cond ) Throw(msg); }
-#define FailWhen1(cond,msg)  { if( cond ) Throw1(msg); }
+#define FailWhen(cond,msg)  { if( cond ) ThrowExc(Debug::Fail,msg); }
+#define FailWhen1(cond,msg)  { if( cond ) ThrowExc1(Debug::Fail,msg); }
 
 // The DbgFailWhen macro is like FailWhen, but
 // defined to do nothing if debugging is off.
@@ -361,8 +383,8 @@ const char exception_message[] = "\n==================================== EXCEPTI
 // The DbgAssert macro is like Assert, but
 // defined to do nothing if debugging is off.
 #ifdef ENABLE_DBGASSERT
-# define DbgAssert(cond) { if( !(cond) ) Throw("DbgAssert failed: " #cond); }
-# define DbgAssert1(cond) { if( !(cond) ) Throw1("DbgAssert failed: " #cond); }
+# define DbgAssert(cond) { if( !(cond) ) ThrowExc(LCS::AssertError,"DbgAssert failed: " #cond); }
+# define DbgAssert1(cond) { if( !(cond) ) ThrowExc1(LCS::AssertError,"DbgAssert failed: " #cond); }
 #else
 # define DbgAssert(cond)
 # define DbgAssert1(cond)
@@ -376,7 +398,7 @@ const char exception_message[] = "\n==================================== EXCEPTI
  { if( !(cond) ) { \
      std::ostringstream oss; \
      oss << stream; \
-     Throw("Assertion `" #cond "' failed: " + oss.str()); \
+     ThrowExc(LCS::AssertError,"Assertion `" #cond "' failed: " + oss.str()); \
  }}
 
 // The DbgAssertStr macro is like AssertStr, but
@@ -386,7 +408,7 @@ const char exception_message[] = "\n==================================== EXCEPTI
  { if( !(cond) ) { \
      std::ostringstream oss; \
      oss << stream; \
-     Throw("DbgAssert `" #cond "' failed: " + oss.str()); \
+     ThrowExc(LCS::AssertError,"DbgAssert `" #cond "' failed: " + oss.str()); \
  }}
 #else
 # define DbgAssertStr(cond,stream)
@@ -400,7 +422,7 @@ const char exception_message[] = "\n==================================== EXCEPTI
      std::ostringstream oss; \
      oss << stream; \
      ::Debug::dbg_stream << oss.str() << std::endl; \
-     throw Debug::Error(oss.str()); \
+     throw LCS::AssertError(oss.str()); \
  }}
 
 
@@ -409,7 +431,7 @@ namespace Debug
 {
   // Typedef the exception type, so we can change whenever needed.
 //##ModelId=3DB9546401F6
-  typedef std::logic_error Error;
+  EXCEPTION_CLASS(Fail,LCS::Exception);
 
   // sets level of given context
   bool setLevel (const string &context,int level);
