@@ -29,6 +29,7 @@
 #include <tinyCEP/SimulatorParseClass.h>
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
+#include <Common/KeyParser.h>
 #include "P2Perf/P2Perf.h"
 #ifdef HAVE_MPI
 #include <mpi.h>
@@ -55,66 +56,61 @@ int main (int argc, const char** argv)
 //  	cout <<	"  * Type 'quit'    to quit" << endl;
 //  	cout << endl;
 #endif
-	P2Perf simulator;
-	try {
-	  simulator.setarg (argc, argv);
-	  try {
+
+
+  LOFAR::KeyValueMap kvm;
+  try {
+    kvm = KeyParser::parseFile("TestRange");
+  } catch (std::exception x) {
+    cerr << x.what() << endl;
+  }
+
+  P2Perf simulator;
+  try {
+    simulator.setarg (argc, argv);
+    try {
 #ifdef HAVE_MPI 
-	    // with MPI it is impossible to read from stdin
-
-            cerr << "cannot read from std in, using compiled in values"<<endl;
-	    LOFAR::KeyValueMap kvm;
-
-	    // these are the possible options to give this program, either on the command line or in this kvm
-            //
-            // shmem = 0|1                        use TH_ShMem (only works when compiled with MPI)
-            // use_sockets = 0|1                  use TH_Socket (do not compile with MPI or CORBA)
-            // destside = 0|1                     use this to tell the program if it is started on the destination side or the sending side (usefull for Sockets, MPI doesn't need this)
-            // sockets_sending_host = <host>      the hostname of the sending host
-            // sockets_receiving_host = <host>    the hostname of the receiving host
-	    //                                    sockets can only be used from one host to one other host; on the receiving host, the program needs to be started with destside = 1
-            // sockets_portnumber = <number>      the portnumber to use for the socket
-
-            // destinations = n                   the number of destinations steps (default = 1)
-            // sources = n                        the number of source steps (default = 1)
-            // packets_per_meas = n               number of packets in one measurement
-            // meas_per_step = n                  number of measurements at the same packet size
-            // grow_strategy = exp | fixed | lin  the growth strategy: fixed (no growth), exponential or lineair
-            // grow_factor = n                    the grow factor per step (for exp growth), can be smaller than 1
-            // grow_increment = n                 the grow increment per step (for lineair growth), can be negative
-            // initial_size = n                   the initial (or fixed) size
-            
-            // the number given at the run statement determines what the eventual size is:
-            // eventual size = initial_size * grow_factor ^ ( runs / (packets_per_meas * meas_per_step))            or
-            // eventual size = initial_size + grow_increment * runs / (packets_per_meas * meas_per_step)
-
-
-	    kvm["shmem"] = 0;
-	    kvm["initial_size"] = 108; // in bytes
-	    kvm["sources"] = 1;
-	    kvm["destinations"] = 1;
-	    kvm["grow_strategy"] = "exp";
-            kvm["grow_increment"] = 12;
-	    kvm["grow_factor"] = 1.4142;
-	    kvm["packets_per_meas"] = 10; // number of packets sent in one measurement
-            kvm["meas_per_step"] = 10; // number of measurements at the same packet size
-
-	    simulator.baseDefine(kvm);
-	    simulator.baseRun(4050);
-	    //simulator.baseDump();
-	    simulator.baseQuit();
+      // with MPI it is impossible to read from stdin
+      
+      // these are the possible options to give this program, either on the command line or in this kvm
+      //
+      // shmem = 0|1                        use TH_ShMem (only works when compiled with MPI)
+      // use_sockets = 0|1                  use TH_Socket (do not compile with MPI or CORBA)
+      // destside = 0|1                     use this to tell the program if it is started on the destination side or the sending side (usefull for Sockets, MPI doesn't need this)
+      // sockets_sending_host = <host>      the hostname of the sending host
+      // sockets_receiving_host = <host>    the hostname of the receiving host
+      //                                    sockets can only be used from one host to one other host; on the receiving host, the program needs to be started with destside = 1
+      // sockets_portnumber = <number>      the portnumber to use for the socket
+      
+      // destinations = n                   the number of destinations steps (default = 1)
+      // sources = n                        the number of source steps (default = 1)
+      // packets_per_meas = n               number of packets in one measurement
+      // meas_per_step = n                  number of measurements at the same packet size
+      // grow_strategy = exp | fixed | lin  the growth strategy: fixed (no growth), exponential or lineair
+      // grow_factor = n                    the grow factor per step (for exp growth), can be smaller than 1
+      // grow_increment = n                 the grow increment per step (for lineair growth), can be negative
+      // initial_size = n                   the initial (or fixed) size
+      
+      // the number given at the run statement determines what the eventual size is:
+      // eventual size = initial_size * grow_factor ^ ( runs / (packets_per_meas * meas_per_step))            or
+      // eventual size = initial_size + grow_increment * runs / (packets_per_meas * meas_per_step)
+     
+      simulator.baseDefine(kvm);
+      simulator.baseRun(4050);
+      //simulator.baseDump();
+      simulator.baseQuit();
 #else
-	    	    LOFAR::SimulatorParse::parse (simulator);
+      LOFAR::SimulatorParse::parse (simulator);
 #endif
-	  } catch (LOFAR::SimulatorParseError x) {
-	    
-	    cout << x.what() << endl;
-
-	  }
-	} catch (std::exception e) {
-	  
-	  cout << "Unexpected exception in Simulate: " << e.what() << endl;
-	
-	}
-	
+    } catch (LOFAR::SimulatorParseError x) {
+      
+      cout << x.what() << endl;
+      
+    }
+  } catch (std::exception e) {
+    
+    cout << "Unexpected exception in Simulate: " << e.what() << endl;
+    
+  }
+  
 }
