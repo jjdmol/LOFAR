@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
+//  initial version
+//
 //
 //
 //////////////////////////////////////////////////////////////////////
@@ -32,7 +35,6 @@
 #include "Debug.h"
 
 #include "WH_Transpose.h"
-#include "StopWatch.h"
 
 WH_Transpose::WH_Transpose (const string& name, 
 			    unsigned int nin, 
@@ -101,6 +103,7 @@ void WH_Transpose::process()
   itsOutHolders[0]->setTimeStamp(itsTime++);
 
   {
+    int cnt=0;
     AssertStr(getOutHolder(0)->getXSize() == getInputs(),
 		 "nr of stations not correct");
     AssertStr(getOutHolder(0)->getYSize() == getInHolder(0)->getYSize(),
@@ -110,10 +113,8 @@ void WH_Transpose::process()
     for (int time=0; time<getOutputs(); time++) {
       for (int station=0; station < getOutHolder(time)->getXSize(); station++) {
 	for (int freq=0; freq < getOutHolder(time)->getYSize(); freq++) {
-	  TRACER4("Copy time " << time << "  station = " << station << "    freq = " << freq );
 	    *getOutHolder(time)   ->getBuffer(station,freq) = 
-	    *getInHolder (station)->getBuffer(time,   freq);
-
+	      *getInHolder (station)->getBuffer(time,   freq);
 	  // set time
 	  // set freq
 	  // set station
@@ -121,7 +122,7 @@ void WH_Transpose::process()
       }
     }
   }
-  dump();
+  //  dump();
 }
 
 void WH_Transpose::dump() const

@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
+//  initial version
+//
 //
 //
 //////////////////////////////////////////////////////////////////////
@@ -32,7 +35,6 @@
 #include "Debug.h"
 
 #include "WH_FillTFMatrix.h"
-#include "StopWatch.h"
 
 WH_FillTFMatrix::WH_FillTFMatrix (const string& name, 
 				  int sourceID,
@@ -121,7 +123,7 @@ void WH_FillTFMatrix::process()
       }
     }
   }
-  dump();
+  //  dump();
 }
 
 
