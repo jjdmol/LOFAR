@@ -1,69 +1,59 @@
 V 10
 1
 LANG:1 10 Subrack_AP
-PANEL,288 282 184 83 N "_3DFace" 2
+PANEL,251 107 184 193 N "_3DFace" 2
 "$APNr"
 "$datapoint"
 "main()
 {
-  EP_textFieldIn();
   setValue(\"text_APNr\", \"text\", \"AP\" + $APNr);
-  //Function: Set background color of RCU
-  EP_setBackColor();
+
+  if( !dpExists( $datapoint + \"_Board1_AP\"+ $APNr +\".temperature:_online.._value\") ||
+      !dpExists( $datapoint + \"_Board1_AP\"+ $APNr +\".status:_online.._value\") ||
+      !dpExists( $datapoint + \"_Board1_AP\"+ $APNr +\".version:_online.._value\"))
+  {
+    setValue(\"rect_AP\", \"color\", \"_dpdoesnotexist\");
+    setValue(\"btn_details\", \"backCol\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"ControlGUIAP\", $datapoint + \"_Board1_AP\"+ $APNr +\".temperature:_online.._value\",
+                            $datapoint + \"_Board1_AP\"+ $APNr +\".status:_online.._value\",
+                            $datapoint + \"_Board1_AP\"+ $APNr +\".version:_online.._value\");
+}
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////
+// Function: Controls the GUI object of the AP
+//
+// FunctionName: getSubviewName
+/////////////////////////////////////////////////////////////////////
+ControlGUIAP(string dp1, float temperature,
+             string dp2, int status,
+             string dp3, string version)
+{
+  setValue(\"text_Temp\", \"text\", temperature );  // Display the temperature with with format xx.x
   
-}
-
-EP_textFieldIn()
-{
-dyn_errClass err;
-
-  if( !dpExists( $datapoint + \"_Board1_AP\"+ $APNr +\".temperature:_online.._value\"))
-  {
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
-    return;
+	//Calculate the Backcolor of the AP
+  if (status == 1)
+	{
+    setValue(\"rect_AP\", \"backCol\", \"Red\");
+    setValue(\"btn_details\", \"backCol\", \"Red\");
   }
-
-  dpConnect(\"EP_textFieldInCB\", $datapoint + \"_Board1_AP\"+ $APNr +\".temperature:_online.._value\");
-  err = getLastError();
-  if (dynlen(err) > 0)
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
-
-}
-
-
-EP_textFieldInCB(string dp, float fNewValue)
-{
-  setValue(\"text_Temp\", \"text\", dpValToString(dp, fNewValue, TRUE) );
-}
-
-
-EP_setBackColor()
-{
-dyn_errClass err;
-
-  if( !dpExists( $datapoint + \"_Board1_AP\"+ $APNr +\".status:_online.._value\"))
-  {
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
-    return;
-  }
-
-  dpConnect(\"EP_setBackColorCB\", $datapoint + \"_Board1_AP\"+ $APNr +\".status:_online.._value\");
-  err = getLastError();
-  if (dynlen(err) > 0)
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
-}
-
-
-EP_setBackColorCB(string dpSource, unsigned AP_stat)
-{
-//	string Color_green = \"{51,204,0}\";	//Color Green
-
-	//Calculate the color
-	if (AP_stat == 1)
-      setValue(\"rect_AP\", \"backCol\", \"Red\");
   else
- 	    setValue(\"rect_AP\", \"backCol\", \"Lofar_device_active\");
-}" 0
+  {
+    setValue(\"rect_AP\", \"backCol\", \"Lofar_device_active\");
+    setValue(\"btn_details\", \"backCol\", \"Lofar_device_active\");
+  }
+  if (version !=0)
+    setValue(\"txt_version\", \"text\", \"ver: \" +version);
+  else
+    setValue(\"txt_version\", \"text\", \"ver: x:x\");
+}
+" 0
 EE E E 1 -1 -1 0  20 60
 "" 0 1
 EE 2
@@ -77,7 +67,7 @@ LANG:1 6 Layer1
 6 0
 "rect_AP"
 ""
-1 20 60 E E E 1 E 1 E N "_WindowText" E N {51,204,0} E "// SimpleCtrlScriptStart {valid}
+1 20 180 E E E 1 E 1 E N "_WindowText" E N {51,204,0} E "// SimpleCtrlScriptStart {valid}
 main(int iType)
 {
   dyn_errClass err;
@@ -122,7 +112,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 20 20 160 60
+E E 0 1 1 0 1 E U  1 E 20 20 160 180
 2 3
 "text_APNr"
 ""
@@ -163,12 +153,92 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 2 °C
-14 1
-"text_Temp"
+2 6
+"txt_version"
 ""
-1 85 30 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+1 116 164 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
-2 0 0 0 0 0
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 158 166 198 180
+0 2 0 "s" 0 0 0 194 0 0  158 166
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 11 ver:       
+2 8
+"txt_21"
+""
+1 20 117 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 119 72 138
+0 2 0 "s" 0 0 0 66 0 0  22 119
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 Sample:
+2 9
+"txt_31"
+""
+1 37 141 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 39 143 72 159
+0 2 0 "s" 0 0 0 66 0 0  39 143
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Sync:
+2 7
+"txt_11"
+""
+1 37 93 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 39 95 72 111
+0 2 0 "s" 0 0 0 66 0 0  39 95
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Error:
+14 12
+"txt_12"
+""
+1 80 91 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+12 0 0 0 0 0
 EE E
 0
 1
@@ -177,8 +247,133 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-83 28 137 53
-2 "2.1f" 4 0 0 2 0 0 
+78 89 152 114
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 13
+"txt_22"
+""
+1 80 115 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+78 113 152 138
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 14
+"txt_32"
+""
+1 80 139 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+78 137 152 162
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+20 10
+"btn_details"
+""
+1 87 55 E E E 1 E 1 E N "_3DText" E N "Lofar_device_active" E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+85 53 149 77
+1
+T 
+1
+LANG:1 7 Details
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+1
+E E 
+E"main(int button, bool state)
+{
+
+
+  if (button == 0)
+  {
+    setValue(\"txt_11\", \"visible\", state);
+    setValue(\"txt_12\", \"visible\", state);
+    setValue(\"txt_21\", \"visible\", state);
+    setValue(\"txt_22\", \"visible\", state);
+    setValue(\"txt_31\", \"visible\", state);
+    setValue(\"txt_32\", \"visible\", state);
+    setValue(\"txt_32\", \"text\", \"01:12:23\");
+    setValue(\"txt_12\", \"text\", \"9631\");
+    setValue(\"txt_22\", \"text\", \"357367\");
+//    setValue(\"txt_temp\", \"text\", \"235.4 °C\");
+//    setValue(\"txt_temp2\", \"text\", \"235.4\");
+/*    
+    if (state == TRUE)        // if checkbox is checked, show details and connect textbox to the datapoints
+    {
+      dpConnect(\"FPGASyncDetails\", $datapoint + \"_Board1_AP\"+ $APNr +\".sampleCount:_online.._value\",
+                                   $datapoint + \"_Board1_AP\"+ $APNr +\".syncCount:_online.._value\",
+                                   $datapoint + \"_Board1_AP\"+ $APNr +\".errorCount:_online.._value\");
+                                   
+    }
+    else if (state == FALSE)  // if checkbox is NOT checked, show details and connect textbox to the datapoints
+    {
+      dpDisconnect(\"FPGASyncDetails\", $datapoint + \"_Board1_AP\"+ $APNr +\".sampleCount:_online.._value\",
+                                      $datapoint + \"_Board1_AP\"+ $APNr +\".syncCount:_online.._value\",
+                                      $datapoint + \"_Board1_AP\"+ $APNr +\".errorCount:_online.._value\");
+    }
+      */
+      
+   }
+}
+
+
+FPGASyncDetails(string dp1, int sampleCount,
+                string dp2, int syncCount,
+                string dp3, int errorCount)
+{
+// Test 12345
+}" 0
+14 15
+"text_Temp"
+""
+1 90 30 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+88 28 138 55
+3 "3.1f" 5 0 0 2 0 0 
 E
 E
 E

@@ -1,36 +1,36 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,258 138 954 748 N "_3DFace" 2
+PANEL,328 259 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
 {
-
 	//Simulation for altering a few selected DP's
-	startThread( \"Simulation\" );
-	
+	startThread( \"Simulation\" );	
+
+  DebugN(\"Hé dude, this panel initilized.\");
+
 	//Check for existance trend config data.
 	if (dpExists($configDatapoint + \".Standard\") &&
 	    dpExists($configDatapoint + \".Trend2Active\") &&
 	    dpExists($configDatapoint + \".Dedicated\"))
 	{
+	// Check if the timeinterval is greater the zero seconds!	
+  CheckTimeInterval($configDatapoint + \".1.Days\", 
+                    $configDatapoint + \".1.Hours\",
+                    $configDatapoint + \".1.Minutes\",
+                    $configDatapoint + \".1.Seconds\",
+                    1);
+  CheckTimeInterval($configDatapoint + \".2.Days\", 
+                    $configDatapoint + \".2.Hours\",
+                    $configDatapoint + \".2.Minutes\",
+                    $configDatapoint + \".2.Seconds\",
+                    2);
 
-    CheckTimeInterval($configDatapoint + \".1.Days\", 
-                     $configDatapoint + \".1.Hours\",
-                     $configDatapoint + \".1.Minutes\",
-                     $configDatapoint + \".1.Seconds\",
-                     1);
-    CheckTimeInterval($configDatapoint + \".1.Days\", 
-                     $configDatapoint + \".1.Hours\",
-                     $configDatapoint + \".1.Minutes\",
-                     $configDatapoint + \".1.Seconds\",
-                     2);
-
-    dpConnect(\"ArrangeTrendPlots\", $configDatapoint + \".Standard\",
-	                                 $configDatapoint + \".Trend2Active\",
-	                                 $configDatapoint + \".Dedicated\");
-	                                 
+  dpConnect(\"ArrangeTrendPlots\", $configDatapoint + \".Standard\",
+	                               $configDatapoint + \".Trend2Active\",
+	                               $configDatapoint + \".Dedicated\");
 	}
 	else
 	{
@@ -77,9 +77,8 @@ ArrangeTrendPlots(string dp1, bool StandardTrend, string dp2, bool Trend2Active,
   //Standard Trend-plot on dpType
   else if ((dpGetElementName($datapoint)==\"\") && StandardTrend)
   {
-    if (Trend2Active)
+    if (Trend2Active)  // trend-view with trend-plot 1 and 2
     {
-//	    DebugN(\"Trend2-Active\");
 	    dpGet($configDatapoint + \".1.Title\", Trend1Title);
  	    dpGet($configDatapoint + \".2.Title\", Trend2Title);
 	    setValue(\"Trend1_txt_Title\", \"text\", Trend1Title);
@@ -101,6 +100,8 @@ ArrangeTrendPlots(string dp1, bool StandardTrend, string dp2, bool Trend2Active,
 			dpConnectTrend(2,6);
 			dpConnectTrend(2,7);
 			dpConnectTrend(2,8);
+			dpConnect(\"DisplayTitle\", $configDatapoint + \".1.Title\");	
+		  dpConnect(\"DisplayTitle\", $configDatapoint + \".2.Title\");	
 			setTrendVisible(1, TRUE);
 			setTrendVisible(2, TRUE);
       dpConnect(\"CalculateTimeInterval\", $configDatapoint + \".1.Days\",
@@ -114,7 +115,7 @@ ArrangeTrendPlots(string dp1, bool StandardTrend, string dp2, bool Trend2Active,
                                          $configDatapoint + \".2.Seconds\");
     }
     else
-    {	
+    {	// trend-view with trend-plot 1
  	    dpGet($configDatapoint + \".1.Title\", Trend1Title);
 	    setValue(\"Trend1_txt_Title\", \"text\", Trend1Title);
 			dpConnectTrend(1,1);			//Trend1, Trace1
@@ -126,6 +127,7 @@ ArrangeTrendPlots(string dp1, bool StandardTrend, string dp2, bool Trend2Active,
 			dpConnectTrend(1,7);
 			dpConnectTrend(1,8);
 			setTrendVisible(1, TRUE);
+			dpConnect(\"DisplayTitle\", $configDatapoint + \".1.Title\");	
 			setTrend1Properties();     //retrieve sizes and scale to fit
 		  setTrendVisible(2, FALSE);
       dpConnect(\"CalculateTimeInterval\", $configDatapoint + \".1.Days\",
@@ -134,14 +136,14 @@ ArrangeTrendPlots(string dp1, bool StandardTrend, string dp2, bool Trend2Active,
                                          $configDatapoint + \".1.Seconds\");
     }
   }
-  //Dedicated Trend-plot panel
-  else if ((!StandardTrend) && (DedicatedTrend))
+  else if ((!StandardTrend) && (DedicatedTrend))     //Dedicated Trend-plot panel
   {
     string DedicatedPanelName;
     dpGet($configDatapoint + \".DedicatedPanelName\", DedicatedPanelName);
     DebugN(\"Load dedicated_trend.panel: \" + DedicatedPanelName);    
   }
 } 
+
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -158,9 +160,24 @@ CalculateTimeInterval(string dp1, int Days, string dp2, int Hours,
   getTrendNumber(dp1, TrendNumber);
   getValue(\"Trend\"+TrendNumber, \"visibleTimeRange\", 0, starttime, end);
   interval=makeTime(year(starttime), month(starttime), day(starttime), hour(starttime)+Hours, minute(starttime)+Minutes, second(starttime)+Seconds);
-  setValue(\"Trend1\", \"trendStop\");
-  setValue(\"Trend1\", \"timeInterval\", interval-starttime);
-  setValue(\"Trend1\", \"trendRun\");
+  setValue(\"Trend\" + TrendNumber, \"trendStop\");
+  setValue(\"Trend\" + TrendNumber, \"timeInterval\", interval-starttime);
+  setValue(\"Trend\" + TrendNumber, \"trendRun\");
+}
+
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: Display the Title of a trend, with and without given
+//           TrendNumber in the dpName. 
+// FunctionName: DisplayTitle
+//
+/////////////////////////////////////////////////////////////////////
+void DisplayTitle (string dp1, string Title)
+{
+  int TrendNumber;
+  getTrendNumber(dp1, TrendNumber);
+  setValue(\"Trend\" + TrendNumber + \"_txt_Title\", \"text\", Title);
 }
 
 
@@ -189,34 +206,20 @@ void dpConnectTrend(int TrendNumber, int TraceNumber)
 void dpConnectElement2Trend()
 {
 	ConnectTrace(1);
-
   setValue(\"Trend1\", \"curveVisible\", \"curve2\", FALSE);
   setValue(\"Trend1\", \"curveScaleVisibility\", \"curve2\", FALSE);	
-  
   setValue(\"Trend1\", \"curveVisible\", \"curve3\", FALSE);
   setValue(\"Trend1\", \"curveScaleVisibility\", \"curve3\", FALSE);	
-  
   setValue(\"Trend1\", \"curveVisible\", \"curve4\", FALSE);
   setValue(\"Trend1\", \"curveScaleVisibility\", \"curve4\", FALSE);	
-  
   setValue(\"Trend1\", \"curveVisible\", \"curve5\", FALSE);
   setValue(\"Trend1\", \"curveScaleVisibility\", \"curve5\", FALSE);	
-  
   setValue(\"Trend1\", \"curveVisible\", \"curve6\", FALSE);
   setValue(\"Trend1\", \"curveScaleVisibility\", \"curve6\", FALSE);	
-  
   setValue(\"Trend1\", \"curveVisible\", \"curve7\", FALSE);
   setValue(\"Trend1\", \"curveScaleVisibility\", \"curve7\", FALSE);	
-  
   setValue(\"Trend1\", \"curveVisible\", \"curve8\", FALSE);
   setValue(\"Trend1\", \"curveScaleVisibility\", \"curve8\", FALSE);	
-/*	ConnectTrace(2);	
-	ConnectTrace(3);	
-	ConnectTrace(4);
-	ConnectTrace(5);
-	ConnectTrace(6);
-	ConnectTrace(7);
-	ConnectTrace(8);*/
 }
 
 
@@ -236,7 +239,6 @@ void setTrend1Properties()
   Trend1Height = 351;
   getValue(\"Trend1\", \"position\", Trend1_x, Trend1_y);
   setValue(\"Trend1\", \"scale\", (PanelWidth-8 - Trend1_x)/(Trend1Width), (PanelHeight-5 - Trend1_y)/(Trend1Height));
-  // PanelWidth was voorheen: (PanelWidth-5)
 }
 
 
@@ -268,34 +270,41 @@ void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
 								string dp3, int ScaleMin,  string dp4, int ScaleMax,
 								string dp5, string LegendName)
 {
+  //load dpName, without element
 	int TraceNumber, TrendNumber;
-  //Check for a filled in dpName, if present start configuring trace-plot
   getTrendNumber(dp1, TrendNumber);
   getTraceNumber(dp1, TraceNumber);
-  
+  //Check for a filled in dpName, if present start configuring trace-plot  
   if ((dpName ==\"\") || ($datapoint==\"\"))        //No datapoint configured for this Trace, or no selected item in tree
   {
     setValue(\"Trend\"+TrendNumber, \"curveVisible\", \"curve\"+TraceNumber, FALSE);
     setValue(\"Trend\"+TrendNumber, \"curveScaleVisibility\", \"curve\"+TraceNumber, FALSE);
+    setValue(\"Trend\"+TrendNumber, \"curveLegendName\", \"curve\"+TraceNumber, \"No datapoint configured\");
   }
   else
 	{
-	  if (dpGetElementName($datapoint)!=\"\")   //SelectedItem is a datapoint elemeent
+	  if (dpGetElementName($datapoint)!=\"\")   //SelectedItem is a datapoint element
 	  {
       setValue(\"Trend\"+TrendNumber,\"connectDirectly\", \"curve\"+TraceNumber, $datapoint + \":_online.._value\");
+      navPMLloadPropertySet(dpSubStr($datapoint, DPSUB_SYS_DP));
 	  }
-	  else
+	  else //SelectedItem is a datapoint (not element)
 	  {
-		  setValue(\"Trend\"+TrendNumber,\"connectDirectly\", \"curve\"+TraceNumber, $datapoint + \"_\" + dpName + \":_online.._value\");
-//		  DebugN(\"dpName: \"+ dpName + \" |$datapoint: \"+ $datapoint);
-      setValue(\"Trend\"+TrendNumber,\"curveLegendName\", \"curve\"+TraceNumber, LegendName);
-      setValue(\"Trend\"+TrendNumber,\"curveVisible\", \"curve\"+TraceNumber, TRUE);
-      setValue(\"Trend\"+TrendNumber,\"curveScaleVisibility\", \"curve\"+TraceNumber, TRUE);
-      setValue(\"Trend\"+TrendNumber, \"curveAutoscale\", \"curve\"+TraceNumber, AutoScale);
+	    if (dpExists($datapoint + \"_\" + dpName))
+	    {
+        navPMLloadPropertySet(dpSubStr($datapoint + \"_\" + dpName, DPSUB_SYS_DP));
+		    setValue(\"Trend\"+TrendNumber, \"connectDirectly\", \"curve\"+TraceNumber, $datapoint + \"_\" + dpName + \":_online.._value\");
+        setValue(\"Trend\"+TrendNumber, \"curveLegendName\", \"curve\"+TraceNumber, LegendName);
+        setValue(\"Trend\"+TrendNumber, \"curveVisible\", \"curve\"+TraceNumber, TRUE);
+        setValue(\"Trend\"+TrendNumber, \"curveScaleVisibility\", \"curve\"+TraceNumber, TRUE);
+        setValue(\"Trend\"+TrendNumber, \"curveAutoscale\", \"curve\"+TraceNumber, AutoScale);
+      }
     }
     if (AutoScale==FALSE)
 	  {
       setValue(\"Trend\"+TrendNumber, \"curveMin\", \"curve\"+TraceNumber, ScaleMin);
+      if (ScaleMin==ScaleMax)
+        ScaleMax = ScaleMin + 10;
       setValue(\"Trend\"+TrendNumber, \"curveMax\", \"curve\"+TraceNumber, ScaleMax);
 	  }
   }
@@ -336,21 +345,8 @@ void Simulation()
   {
     delay( 3, 0 );
     dpSet(  \"System1:PIC_Rack1_SubRack1.status\", GetRandomValue( 10, 10 ));
- //   dpSet(  \"System1:PIC_Rack1_SubRack2.status\", GetRandomValue( 20, 20 ));
-//    dpSet(  \"System1:PIC_Rack1_SubRack3.status\", GetRandomValue( 30, 30 ));
-//    dpSet(  \"System1:PIC_Rack1_SubRack4.status\", GetRandomValue( 40, 40 ));
     dpSet(  \"System1:PIC_Rack2_SubRack1.status\", GetRandomValue( 50, 10 ));
-//    dpSet(  \"System1:PIC_Rack2_SubRack2.status\", GetRandomValue( 70, 10 ));
-//    dpSet(  \"System1:PIC_Rack2_SubRack3.status\", GetRandomValue( 60, 10 ));
-//    dpSet(  \"System1:PIC_Rack2_SubRack4.status\", GetRandomValue( 90, 8 ));
     dpSet(  \"System1:PIC_Rack3_SubRack1.status\", GetRandomValue( 60, 10 ));
-//    dpSet(  \"System1:PIC_Rack3_SubRack2.status\", GetRandomValue( 2, -4 ));
-//    dpSet(  \"System1:PIC_Rack3_SubRack3.status\", GetRandomValue( 30, 8 ));
-//    dpSet(  \"System1:PIC_Rack3_SubRack4.status\", GetRandomValue( 30, -15 ));
-//    dpSet(  \"System1:PIC_Rack4_SubRack1.status\", GetRandomValue( 60, 10 ));
-//    dpSet(  \"System1:PIC_Rack4_SubRack2.status\", GetRandomValue( 15, 10 ));
-//    dpSet(  \"System1:PIC_Rack4_SubRack3.status\", GetRandomValue( 25, 10 ));
-//    dpSet(  \"System1:PIC_Rack4_SubRack4.status\", GetRandomValue( 20, 8 ));
   }
 }" 0
 EE E E 1 -1 -1 0  20 30

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 138 941 694 N "_3DFace" 8
+PANEL,268 166 941 694 N "_3DFace" 8
 "$configDatapoint"
 "$controlAttributes"
 "$controlNames"
@@ -175,13 +175,19 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 198 248 692 275
 3 "s" 0 0 0 0 0 0 
 E
-"// SimpleCtrlScriptStart {invalid}
+"// Valid
 main()
 {
   string subViewName;
-  getSubviewName(subViewName);
-
-  dpConnect(\"EP_textFieldInCB\", \"System1:__nav_subview_Panel_\" + subViewName + \".filename:_online.._value\");
+//	if (dpExists(\"System1:__nav_subview_Panel_\" + subViewName + \".filename\"))
+//	{
+    getSubviewName(subViewName);
+    dpConnect(\"EP_textFieldInCB\", \"System1:__nav_subview_Panel_\" + subViewName + \".filename:_online.._value\");
+/*  }
+  else
+  {
+    setValue(\"\", \"enabled\", FALSE);
+  }*/
 }
 
 

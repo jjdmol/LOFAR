@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 138 227 63 N "_3DFace" 5
+PANEL,255 623 227 62 N "_3DFace" 5
 "$ElementName"
 "$Maximum"
 "$Minimum"
@@ -72,7 +72,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0
 "main()
 {
-fill_combobox();
+  fill_combobox();
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -85,14 +85,17 @@ int fill_combobox()
   int i, Minimum, Maximum, ElementValue;
   Minimum = $Minimum;
   Maximum = $Maximum;
-	if (Minimum<Maximum)
-	{
-		dpGet($configDatapoint + \".\"+$TrendNr+\".\"+$ElementName+\":_online.._value\", ElementValue);
-	  for (i=Minimum; i<=Maximum ;i++)
+  if (dpExists($configDatapoint + \".\"+$TrendNr+\".\"+$ElementName))
+  {
+	  if (Minimum<Maximum)
 	  {
-	    ComboBox.appendItem(i);
- 			if (ElementValue==i)
-				ComboBox.selectedPos = ComboBox.itemCount;
+		  dpGet($configDatapoint + \".\"+$TrendNr+\".\"+$ElementName+\":_online.._value\", ElementValue);
+	    for (i=Minimum; i<=Maximum ;i++)
+	    {
+	      ComboBox.appendItem(i);
+ 	  		if (ElementValue==i)
+	  			ComboBox.selectedPos = ComboBox.itemCount;
+	    }
 	  }
 	}
 }" 0

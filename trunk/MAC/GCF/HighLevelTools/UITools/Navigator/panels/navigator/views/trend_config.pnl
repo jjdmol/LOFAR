@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 12 trend_config
-PANEL,434 240 879 680 N "_3DFace" 8
+PANEL,399 195 879 680 N "_3DFace" 8
 "$configDatapoint"
 "$controlAttributes"
 "$controlNames"
@@ -344,13 +344,16 @@ LANG:1 0
 "dashclr"N "_Transparent"
 "main()
 {
-	DebugN(\"txt_dpTypeName: \" + $datapoint);
-	if ($datapoint==\"\")
-    setValue(\"\", \"text\", \"Datapoint type not found\");
-  else
-    setValue(\"\", \"text\", dpTypeName($datapoint));
+	if (dpExists($datapoint))
+	{
+	  setValue(\"\", \"text\", dpTypeName($datapoint));
+	}
+	else
+	{
+    setValue(\"\", \"text\", \"datapoint type not found\");
+  }
 }" 0
- E 0 1 1 0 1 E U  0 E 262 62 392 78
+ E 0 1 1 0 1 E U  0 E 262 62 528 78
 0 2 0 "s" 0 0 0 64 0 0  262 62
  1
 1
@@ -674,20 +677,26 @@ LANG:1 0
 "main()
 {
   int Standard, Trend2Active, Dedicated, SelectedItem;
-  dpGet($configDatapoint + \".Standard\", Standard);
-  dpGet($configDatapoint + \".Trend2Active\", Trend2Active);
-  dpGet($configDatapoint + \".Dedicated\", Dedicated);
 
-  if (Standard && !Trend2Active && !Dedicated)
-    SelectedItem = 0;
-  else if (Standard && Trend2Active && !Dedicated)
-    SelectedItem = 1;
-  else if (!Standard && Dedicated)
-    SelectedItem = 2;
-  else if (!Standard && !Trend2Active && !Dedicated)
-  {
-    SelectedItem = 0;
-    dpSet($configDatapoint + \".Standard\", 1);
+	if (dpExists($configDatapoint + \".Standard\") &&
+	    dpExists($configDatapoint + \".Trend2Active\") &&
+	    dpExists($configDatapoint + \".Dedicated\"))
+	{
+    dpGet($configDatapoint + \".Standard\", Standard);
+    dpGet($configDatapoint + \".Trend2Active\", Trend2Active);
+    dpGet($configDatapoint + \".Dedicated\", Dedicated);
+
+    if (Standard && !Trend2Active && !Dedicated)
+      SelectedItem = 0;
+    else if (Standard && Trend2Active && !Dedicated)
+      SelectedItem = 1;
+    else if (!Standard && Dedicated)
+      SelectedItem = 2;
+    else if (!Standard && !Trend2Active && !Dedicated)
+    {
+      SelectedItem = 0;
+      dpSet($configDatapoint + \".Standard\", 1);
+    }
   }
     
   setValue (\"RadioButton2\", \"number\", SelectedItem);
@@ -785,15 +794,24 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 198 488 692 515
 3 "s" 0 0 0 0 0 0 
 E
-"// SimpleCtrlScriptStart {invalid}
+"// {valid}
 main()
 {
-  dpConnect(\"EP_textFieldInCB\", $configDatapoint + \".DedicatedPanelName:_online.._value\");
+	if (dpExists($configDatapoint + \".DedicatedPanelName\"))
+	{
+    dpConnect(\"EP_textFieldInCB\", $configDatapoint + \".DedicatedPanelName:_online.._value\");
+  }
+  else
+  {
+    setValue(\"\", \"enabled\", FALSE);
+    setValue(\"\", \"text\", \"No cofiguration data available.\");  
+  }
 }
 
 
 EP_textFieldInCB(string dp, string fileName)
 {
+  setValue(\"\", \"enabled\", TRUE);
   setValue(\"\", \"text\", fileName);
 }
 " 0
