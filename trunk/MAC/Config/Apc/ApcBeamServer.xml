@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<BeamServer>
+  <subband> 
+  	<MACType>MACUnsigned</MACType> 
+  	<MACDefault>0</MACDefault> 
+ 	</subband>
+  <power>
+     <re>
+  	<MACType>MACDouble</MACType> 
+         </re>
+     <im>
+        <MACType>MACDouble</MACType>
+         </im>
+     </power>
+  <seqnr>
+      <MACType>MACUnsigned</MACType>
+      </seqnr>
+</BeamServer>
