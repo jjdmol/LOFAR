@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.5  2002/04/18 07:55:03  schaaf
+//  Documentation and code update
+//
 //  Revision 1.4  2002/03/19 16:34:57  schaaf
 //  reverted to version 1.2
 //
@@ -39,8 +42,8 @@
 //////////////////////////////////////////////////////////////////////
 
 
-#include "DH_GrowSize.h"
-#include "Debug.h"
+#include "P2Perf/DH_GrowSize.h"
+#include "Common/Debug.h"
 
 /** 
     In the DH_Growsize constructor memory is allocated for the maximum 

@@ -1,9 +1,3 @@
-if HAVE_CORBA
-INCLUDES 	= \
-	-I$(basesim_top_srcdir)/Corba \
-	-I$(basesim_top_builddir)/src/Corba
-endif
-
 bin_PROGRAMS	= P2Perf
 
 DOCHDRS 	=				\
@@ -24,7 +18,7 @@ WH_GrowSize.cc					\
 WH_Square.cc					
 
 if HAVE_CORBA
-P2Perf_LDADD = $(basesim_top_builddir)/src/Corba/libth_corba.la
+#P2Perf_LDADD = $(basesim_top_builddir)/src/Corba/libth_corba.la
 endif
 
 

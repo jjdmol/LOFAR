@@ -1,7 +1,7 @@
-#include "P2Perf.h"
-#include "SimulatorParseClass.h"
+#include "P2Perf/P2Perf.h"
+#include "BaseSim/SimulatorParseClass.h"
 #include <iostream>
-#include "Debug.h"
+#include "Common/Debug.h"
 
 
 #ifdef HAVE_CORBA

@@ -1,7 +1,7 @@
 #include <iostream.h>
 #include <string.h>
 
-#include "StopWatch.h"
+#include "P2Perf/StopWatch.h"
 
 StopWatch::StopWatch()
 {

@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.15  2002/05/02 12:21:56  schaaf
+//  Produce simple monitoring data in getMonitorValue() method
+//
 //  Revision 1.14  2002/04/18 07:55:03  schaaf
 //  Documentation and code update
 //
@@ -70,12 +73,12 @@
 #include <stdio.h>             // for sprintf
 #include <math.h>
 
-#include "Step.h"
-#include "Debug.h"
+#include "BaseSim/Step.h"
+#include "Common/Debug.h"
 
-#include "WH_GrowSize.h"
-#include "StopWatch.h"
-#include "P2Perf.h"
+#include "P2Perf/WH_GrowSize.h"
+#include "P2Perf/StopWatch.h"
+#include "P2Perf/P2Perf.h"
 
 int  WH_GrowSize::itsMeasurements = 3;
 bool WH_GrowSize::itsFirstcall = true;
