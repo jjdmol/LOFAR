@@ -70,6 +70,7 @@ namespace LOFAR
     bool itsIsSyncMaster; // Am I the one that sends the sync packets?
     DH_RSPSync::syncStamp_t itsNextStamp;
     DH_RSPSync::syncStamp_t itsDelay;    
+    bool itsReadNext; // Do we need to read at the beginning of the next process()?
   };
 
   inline void WH_RSP::setDelay(const DH_RSPSync::syncStamp_t newDelay)

@@ -45,7 +45,8 @@ WH_RSP::WH_RSP(const string& name,
     itsKVM (kvm),
     itsIsSyncMaster(isSyncMaster),
     itsNextStamp(0),
-    itsDelay(0)
+    itsDelay(0),
+    itsReadNext(true)
 {
   char str[32];
   
@@ -60,19 +61,19 @@ WH_RSP::WH_RSP(const string& name,
 
   // create buffer for incoming dataholders 
   // implement a cyclic buffer later !!!
-  getDataManager().addInDataHolder(0, new DH_RSP("DH_in", kvm.getInt("SzDH_RSP",6000))); // buffer of char
+  getDataManager().addInDataHolder(0, new DH_RSP("DH_RSP_in", kvm.getInt("SzDH_RSP",6000))); // buffer of char
   
   // create outgoing dataholders
   int bufsize =  itsPolarisations * itsNbeamlets * itsNpackets;
   for (int i=0; i < itsNCorrOutputs; i++) {
-    sprintf(str, "DH_out_%d", i);
+    snprintf(str, 32, "DH_out_%d", i);
     getDataManager().addOutDataHolder(i, new DH_StationData(str, bufsize)); // buffer of complex<uint16>
   }
 
   if (itsIsSyncMaster) {
     // if we are the sync master we need extra outputs (NoWH_RSP -1)
     for (int i = itsNCorrOutputs; i < itsNCorrOutputs + itsNRSPOutputs; i++) {
-      sprintf(str, "DH_Sync_out_%d", i);
+      snprintf(str, 32, "DH_Sync_out_%d", i);
       getDataManager().addOutDataHolder(i, new DH_RSPSync(str));
     }
   } else {
@@ -81,7 +82,7 @@ WH_RSP::WH_RSP(const string& name,
   }
   // We need to be able to read more than one packet at the time in case we are lagging
   // and we want to skip one or more packets.
-  getDataManager().setAutoTriggerIn(0, false);
+  getDataManager().setAutoTriggerIn(0, false); 
 }
 
 WH_RSP::~WH_RSP() {
@@ -101,6 +102,11 @@ WH_RSP* WH_RSP::make(const string& name)
 
 void WH_RSP::process() 
 { 
+  if (itsReadNext) {
+    getDataManager().getInHolder(0);
+    getDataManager().readyWithInHolder(0);
+  }   
+
   if (!itsIsSyncMaster) {
     // we are a slave so read the syncstamp
     DH_RSPSync* dhp = (DH_RSPSync*)getDataManager().getInHolder(1);
@@ -112,10 +118,17 @@ void WH_RSP::process()
     // we are a master, so increase the nextValue and send it to the slaves
     if (itsNextStamp.getSeqId() == 0) {
       //this is the first loop
-      // so take get current time stamp and wait 1 sec to 
+      // so take get current time stamp and determine the time stamp at which we all will start sending
       DH_RSP* inDHp = (DH_RSP*)getDataManager().getInHolder(0);
       itsNextStamp.setStamp(inDHp->getSeqID(), 0);
-      itsNextStamp += itsNpackets * 10000; // at 1 Gb/s I think this is .5 sec later
+      if (!itsKVM.getBool("useRealRSPBoard", false)) {
+	// we are not using the real rspboards, so no delay
+	;
+      } else {
+	// we are using the real rsp boards, put in a delay to
+	// let the other WH_RSPs catch up
+	itsNextStamp += itsNpackets * 10000; // at 1 Gb/s I think this is .5 sec later
+      }
     } else {
       itsNextStamp += itsNpackets;
     }
@@ -127,20 +140,23 @@ void WH_RSP::process()
   DH_RSP* inDHp;
   DH_StationData* outDHp;
   bool inSync = false;
-  SyncStamp* thisStamp;
+  SyncStamp thisStamp;
   
   while (!inSync) {
     inDHp = (DH_RSP*)getDataManager().getInHolder(0);
-    thisStamp->setStamp(inDHp->getSeqID(), inDHp->getBlockID());
+    thisStamp.setStamp(inDHp->getSeqID(), inDHp->getBlockID());
     
-    if (*thisStamp < itsNextStamp) {
+    cout<<"next timestamp: "<<itsNextStamp<<"    received: "<<thisStamp<<endl;
+    cout<<"next timestamp + n: "<<(itsNextStamp+(itsNpackets-1))<<endl;
+
+    if (thisStamp < itsNextStamp) {
 
       // this packets time stamp is too old, it should have been sent already
       // so do nothing and read again
       LOG_TRACE_COND_STR("Package too old; skip");
-      getDataManager().readyWithInHolder(0);  
-
-    } else if (itsNextStamp + (itsNpackets - 1) < *thisStamp) {
+      getDataManager().readyWithInHolder(0);
+      inSync = false;
+    } else if (itsNextStamp + (itsNpackets - 1) < thisStamp) {
 
       LOG_TRACE_COND_STR("Package has been missed, insert dummy package");
       // we missed some packets, 
@@ -165,19 +181,19 @@ void WH_RSP::process()
       for (int i=0;i<itsNpackets;i++) {
 	for (int j=0;j<itsNCorrOutputs;j++) {
 	  outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
-          memset( &outDHp->getBuffer()[i * complex_uint16_blocksize], 
+          /*memset( &outDHp->getBuffer()[i * complex_uint16_blocksize], 
 		  0,
-		  char_blocksize );
+		  char_blocksize );*/
 	}
       }      
       // step out of the while loop and do not call readyWithInHolder
       inSync = true;
+      itsReadNext = false; // read this packet again next process
       
     } else { /* (*thisStamp == itsNextStamp) { */
 
       LOG_TRACE_COND_STR("Package has correct timestamp");
       // this is the right packet, so send it
-      inSync = true;
       
       // determine blocksizes of char-based InHolder and complex<uint16-based> OutHolder
       int char_blocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<uint16>); 
@@ -193,15 +209,16 @@ void WH_RSP::process()
       for (int i=0;i<itsNpackets;i++) {
 	for (int j=0;j<itsNCorrOutputs;j++) {
           outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
-          memcpy( &outDHp->getBuffer()[i * complex_uint16_blocksize], 
+          /*memcpy( &outDHp->getBuffer()[i * complex_uint16_blocksize], 
 		  &inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)],
-		  char_blocksize );
+		  char_blocksize );*/
 	}
       }      
       
       // Tell dataManager we are ready with InHolder, this will trigger a new read.
       // (this InHolder is not auto triggered)
-      getDataManager().readyWithInHolder(0);        
+      itsReadNext = true;
+      inSync = true;
     } 
   }
 }
