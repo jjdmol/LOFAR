@@ -101,6 +101,10 @@ public:
   void getCurrentValue (MeqMatrix& value) const
     { value = itsCoeff; }
 
+  // Update the solvable coefficients with the new values taken at
+  // the spid index from the vector.
+  void update (const vector<double>& values);
+
   // Update the solvable coefficients with the new values.
   void update (const MeqMatrix& value);
 

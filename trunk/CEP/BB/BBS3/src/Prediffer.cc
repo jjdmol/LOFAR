@@ -577,11 +577,10 @@ void Prediffer::makeLOFARExpr(Bool asAP)
 // its initDomain method.
 //
 //----------------------------------------------------------------------
-void Prediffer::initParms (const MeqDomain& domain, bool readPolcs)
+void Prediffer::initParms (const MeqDomain& domain)
 {
   const vector<MeqParm*>& parmList = itsParmGroup.getParms();
 
-  itsIsParmSolvable.resize (parmList.size());
   itsParmData.clear();
   itsNrScid = 0;
   int i = 0;
@@ -589,12 +588,8 @@ void Prediffer::initParms (const MeqDomain& domain, bool readPolcs)
        iter != parmList.end();
        ++iter, ++i)
   {
-    itsIsParmSolvable[i] = false;
     if (*iter) {
-      if (readPolcs) {
-        (*iter)->readPolcs (domain);
-      }
-
+      (*iter)->readPolcs (domain);
       int nr = (*iter)->initDomain (domain, itsNrScid);
       if (nr > 0) {
 	itsParmData.push_back (ParmData((*iter)->getName(),
@@ -602,7 +597,6 @@ void Prediffer::initParms (const MeqDomain& domain, bool readPolcs)
 					(*iter)->getTableType(),
 					nr, itsNrScid,
 					(*iter)->getCoeffValues()));
-	itsIsParmSolvable[i] = true;
 	itsNrScid += nr;
       }
     }
@@ -693,10 +687,10 @@ vector<uint32> Prediffer::setDomain (double fstart, double flength,
 
   NSTimer parmTimer;
   parmTimer.start();
-  MeqDomain solveDomain(startTime, endTime,
+  itsDomain = MeqDomain(startTime, endTime,
 			itsStartFreq + itsFirstChan*itsStepFreq,
 			itsStartFreq + (itsLastChan+1)*itsStepFreq);
-  initParms (solveDomain, true);
+  initParms (itsDomain);
   parmTimer.stop();
   cout << "BBSTest: initparms    " << parmTimer << endl;
 
@@ -1296,88 +1290,73 @@ Bool Prediffer::setPeelSources (const vector<int>& peelSources,
   return True;
 }
 
-
-void Prediffer::getParmValues (vector<string>& names,
-			       vector<double>& values)
+void Prediffer::updateSolvableParms (const vector<double>& values)
 {
-  vector<MeqMatrix> vals;
-  getParmValues (names, vals);
-  values.resize (0);
-  values.reserve (vals.size());
-  for (vector<MeqMatrix>::const_iterator iter = vals.begin();
-       iter != vals.end();
-       iter++) {
-    ASSERT (iter->nelements() == 1);
-    values.push_back (iter->getDouble());
-  }
-}
-
-void Prediffer::getParmValues (vector<string>& names,
-			       vector<MeqMatrix>& values)
-{
-  MeqMatrix val;
-  names.resize (0);
-  values.resize (0);
-  // Iterate through all parms and get solvable ones.
+  // Iterate through all parms.
   const vector<MeqParm*>& parmList = itsParmGroup.getParms();
-  int i=0;
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
        iter++)
   {
     if ((*iter)->isSolvable()) {
-      names.push_back ((*iter)->getName());
-      (*iter)->getCurrentValue (val);
-      values.push_back (val);
+      MeqParmPolc* ppc = dynamic_cast<MeqParmPolc*>(*iter);
+      ASSERT (ppc);
+      ppc->update (values);
+      break;
     }
-    i++;
   }
+  resetEqLoop();
 }
 
-void Prediffer::setParmValues (const vector<string>& names,
-			       const vector<double>& values)
+void Prediffer::updateSolvableParms (const vector<ParmData>& parmData)
 {
-  vector<MeqMatrix> vals;
-  vals.reserve (values.size());
-  for (vector<double>::const_iterator iter = values.begin();
-       iter != values.end();
-       iter++) {
-    vals.push_back (MeqMatrix (*iter));
-  }
-  setParmValues (names, vals);
-}
-
-void Prediffer::setParmValues (const vector<string>& names,
-			       const vector<MeqMatrix>& values)
-{
-  ASSERT (names.size() == values.size());
-  // Iterate through all parms and get solvable ones.
+  // Iterate through all parms.
   const vector<MeqParm*>& parmList = itsParmGroup.getParms();
-  int i;
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
        iter++)
   {
-    const string& pname = (*iter)->getName();
-    i = 0;
-    for (vector<string>::const_iterator itern = names.begin();
-	 itern != names.end();
-	 itern++) {
-      if (*itern == pname) {
-	const MeqParmPolc* ppc = dynamic_cast<const MeqParmPolc*>(*iter);
-	ASSERT (ppc);
-	MeqParmPolc* pp = const_cast<MeqParmPolc*>(ppc);
-	const vector<MeqPolc>& polcs = pp->getPolcs();
-	ASSERT (polcs.size() == 1);
-	MeqPolc polc = polcs[0];
-	polc.setCoeffOnly (values[i]);
-	pp->setPolcs (vector<MeqPolc>(1,polc));
-	break;
+    if ((*iter)->isSolvable()) {
+      const string& pname = (*iter)->getName();
+      // Update the parameter matching the name.
+      for (vector<ParmData>::const_iterator iterpd = parmData.begin();
+	   iterpd != parmData.end();
+	   iterpd++) {
+	if (iterpd->getName() == pname) {
+	  MeqParmPolc* ppc = dynamic_cast<MeqParmPolc*>(*iter);
+	  ASSERT (ppc);
+	  ppc->update (iterpd->getValues());
+	  break;
+	}
+	// A non-matching name is ignored.
       }
-      i++;
-      // A non-matching name is ignored; no warning is given.
     }
   }
+  resetEqLoop();
+}
+
+void Prediffer::updateSolvableParms()
+{
+  // Iterate through all parms.
+  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
+  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+       iter != parmList.end();
+       iter++)
+  {
+    if ((*iter)->isSolvable()) {
+      MeqParmPolc* ppc = dynamic_cast<MeqParmPolc*>(*iter);
+      ASSERT (ppc);
+      ppc->readPolcs (itsDomain);
+      break;
+    }
+  }
+  resetEqLoop();
+}
+
+void Prediffer::resetEqLoop()
+{
+  itsNrTimesDone = 0;
+  itsBlNext      = 0;
 }
 
 void Prediffer::showSettings() const
@@ -1391,12 +1370,6 @@ void Prediffer::showSettings() const
   cout << "  endchan:   " << itsLastChan << endl;
   cout << "  calcuvw  : " << itsCalcUVW << endl;
   cout << endl;
-}
-
-void Prediffer::updateSolvableParms()
-{
-  itsNrTimesDone = 0;
-  itsBlNext      = 0;
 }
 
 } // namespace LOFAR

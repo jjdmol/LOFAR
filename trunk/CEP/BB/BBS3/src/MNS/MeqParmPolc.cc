@@ -166,9 +166,14 @@ void MeqParmPolc::getCurrentValue (MeqMatrix& value) const
 
 void MeqParmPolc::update (const MeqMatrix& value)
 {
-  for (unsigned int i=0; i<itsPolcs.size(); i++) {
-    itsPolcs[i].update (value);
-  }
+  ASSERT(1 == itsPolcs.size());
+  itsPolcs[0].update (value);
+}
+
+void MeqParmPolc::update (const vector<double>& values)
+{
+  ASSERT(1 == itsPolcs.size());
+  itsPolcs[0].update (values);
 }
 
 void MeqParmPolc::save()

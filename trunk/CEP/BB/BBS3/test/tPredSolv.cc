@@ -34,6 +34,8 @@
 #include <iomanip>
 #include <malloc.h>
 
+#include <Common/hexdump.h>
+
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 #include <Common/BlobOBufChar.h>
@@ -48,7 +50,8 @@ using namespace std;
 // center frequencies of 137750000-162250000 Hz.
 // There are 5 time stamps of 2 sec in it (centers 2.35208883e9 + 2-10).
 
-void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob)
+void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
+	      int niter)
 {
   // Set the solvable parameters.
   pre1.clearSolvableParms();
@@ -88,40 +91,39 @@ void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob)
     solver.setSolvableParmData (pre1.getSolvableParmData(), 0);
   }
   vector<ParmData> pData = pre1.getSolvableParmData();
-  cout << "***Parm data: [ ";
-  for (uint j=0; j<pData.size(); j++)
-    {
-      cout << pData[j].getValues() << " ";
-    }
-  cout << "]" << endl;
   pre1.showSettings();
-
-  // Get the equations from the prediffer and give them to the solver.
-  for (uint i=0; i<nrloop; i++) {
-    int nres;
-    bool more = pre1.getEquations (buffer, shape, nres);
-    int nreq = bufnreq;
-    if (i == nrloop-1) {
-      nreq = totnreq  - (nrloop-1)*bufnreq;
-      ASSERT (!more);
-    } else {
-      ASSERT (more);
-    }
-    ASSERT (nres == nreq);
-    solver.setEquations (buffer, nreq, shape[1]-1, shape[0], 0);
-    // Define equations for a 2nd time to see if solution changes.
-    if (toblob) {
-      solver.setEquations (buffer, nreq, shape[1]-1, shape[0], 0);
-    }
-  }
-
-  // Do the solve.
   streamsize prec = cout.precision();
   cout << "Before: " << setprecision(10) << solver.getSolvableValues() << endl;
-  Quality quality;
-  solver.solve (false, quality);
-  cout << "After:  " << setprecision(10) << solver.getSolvableValues() << endl;
-  cout.precision (prec);
+
+  for (int it=0; it<niter; ++it) {
+    // Get the equations from the prediffer and give them to the solver.
+    for (uint i=0; i<nrloop; i++) {
+      int nres;
+      bool more = pre1.getEquations (buffer, shape, nres);
+      int nreq = bufnreq;
+      if (i == nrloop-1) {
+	nreq = totnreq  - (nrloop-1)*bufnreq;
+	ASSERT (!more);
+      } else {
+	ASSERT (more);
+      }
+      ASSERT (nres == nreq);
+      ///cout << "*** buffer " << i << " ***" << endl;
+      ///    hexdump(buffer, nrval);
+      solver.setEquations (buffer, nreq, shape[1]-1, shape[0], 0);
+      // Define equations for a 2nd time to see if solution changes.
+      if (toblob) {
+	solver.setEquations (buffer, nreq, shape[1]-1, shape[0], 0);
+      }
+    }
+    // Do the solve.
+    Quality quality;
+    solver.solve (false, quality);
+    cout << "iter" << it << ":  " << setprecision(10)
+	 << solver.getSolvableValues() << endl;
+    cout.precision (prec);
+    pre1.updateSolvableParms (solver.getSolvableParmData());
+  }
   delete [] buffer;
 }
 
@@ -232,13 +234,13 @@ int main (int argc, const char* argv[])
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
       solv[2] = "StokesI.*";
-      doSolve (pre1, solv, false);
+      doSolve (pre1, solv, false, 9);
       cout << "End of first test" << endl;
     }
     // Do the same with using the blob in doSolve and using the equations
     // twice.
     {
-      cout << "Starting first test" << endl;
+      cout << "Starting double setEquations test" << endl;
       vector<int> antVec(10);
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = 2*i;
@@ -255,11 +257,12 @@ int main (int argc, const char* argv[])
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
       solv[2] = "StokesI.*";
-      doSolve (pre1, solv, true);
-      cout << "End of first test" << endl;
+      doSolve (pre1, solv, true, 1);
+      cout << "End of double setEquations test" << endl;
     }
     // Do a solve using 2 prediffers.
     {
+      cout << "Starting test with two prediffers" << endl;
       vector<int> antVec(10);
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = 2*i;
@@ -280,21 +283,24 @@ int main (int argc, const char* argv[])
       solv[1] = "DEC.*";
       solv[2] = "StokesI.*";
       doSolve2 (pre1, pre2, solv);
+      cout << "End of test with two prediffers" << endl;
     }
-    return 0;
-    // Do a solve using all stations.
+    // Take more baselines.
     {
-      vector<int> antVec(100);
+      cout << "Starting test with 21 antennas" << endl;
+      vector<int> antVec(21);
       for (uint i=0; i<antVec.size(); ++i) {
-	antVec[i] = i;
+	antVec[i] = 4*i;
       }
       Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
 		     antVec, "LOFAR.RI", false, true);
+      pre1.select (antVec, antVec, false);    // no autocorrelations
       vector<string> solv(3);
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
       solv[2] = "StokesI.*";
-      doSolve (pre1, solv, false);
+      doSolve (pre1, solv, false, 5);
+      cout << "End of test with 21 antennas" << endl;
     }
   } catch (std::exception& x) {
     cerr << "Unexpected exception: " << x.what() << endl;
