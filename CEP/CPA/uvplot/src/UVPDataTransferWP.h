@@ -1,10 +1,10 @@
 // Copyright Notice
 
-// $ID
-
-
 #if !defined(UVPDATATRANSFERWP_H)
 #define UVPDATATRANSFERWP_H
+
+// $Id$
+
 
 
 #include <OCTOPUSSY/WorkProcess.h>

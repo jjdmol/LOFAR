@@ -3,7 +3,8 @@
 #if !defined(UVPPIXEL_H)
 #define UVPPIXEL_H
 
-// $ID$
+// $Id$
+
 
 // Includes
 //#include <NFRA.h>

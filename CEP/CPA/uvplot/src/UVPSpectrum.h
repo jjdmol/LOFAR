@@ -1,10 +1,10 @@
 
 // Copyright notice should go here
 
-// $ID$
-
 #if !defined(UVPSPECTRUM_H)
 #define UVPSPECTRUM_H
+
+// $Id$
 
 
 #if(DEBUG_MODE)
