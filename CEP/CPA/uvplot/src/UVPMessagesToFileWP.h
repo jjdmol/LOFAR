@@ -30,7 +30,8 @@ class UVPMessagesToFileWP: public WorkProcess
 public:
   
   UVPMessagesToFileWP(const std::string& inputFilename,
-                      const std::string& outputFilename);
+                      const std::string& outputFilename,
+                      bool               useSorter = true);
 
   virtual void init();
   virtual bool start();
@@ -46,8 +47,13 @@ private:
   bool        itsSorterIsPresent;
   bool        itsIntegratorIsStarted;
 
-  HIID        itsHeaderHIID;
-  HIID        itsMessageHIID;
+  HIID        itsSorterHeaderHIID;
+  HIID        itsSorterMessageHIID;
+
+  HIID        itsIntegraterHeaderHIID;
+  HIID        itsIntegraterMessageHIID;
+
+  bool        itsUseSorter;
 };
 
 
