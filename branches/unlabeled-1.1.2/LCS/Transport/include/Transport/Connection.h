@@ -44,7 +44,7 @@ class Connection
 {
  public:
 
-  typedef enum state{Error, Busy, Finished}; 
+  typedef enum State{Error, Busy, Finished}; 
 
   /// Construct the Connection object.
   // It connects a source DataHolder to a destination DataHolder with a 
@@ -54,14 +54,11 @@ class Connection
 
   ~Connection();
 
-  /// Initialize the TransportHolder.
-  bool init();
-
   /// Read the data.
-  state read ();
+  State read ();
 
   /// Send the data.
-  state write ();
+  State write ();
 
   /// Wait until the previous read has finished (use with non-blocking communication)
   void waitForRead();
@@ -73,7 +70,7 @@ class Connection
   void dump() const;
 
   /// Get name of this connection
-  const string& getName();
+  const string& getName() const;
 
   /// Get its TransportHolder
   TransportHolder* getTransportHolder();
@@ -88,13 +85,8 @@ class Connection
   bool isConnected() const;
 
 private:
-  /// Forbid copy constructor.
-  Connection (const Connection&);
 
-  /// Forbid assignment.
-  Connection& operator= (const Connection&);
-
-  typedef enum readState{Idle, TotalLength, Header, Message};
+  typedef enum ReadState{Idle, TotalLength, Header, Message};
 
   /// Private helper methods;
   bool readBlocking();
@@ -112,13 +104,13 @@ private:
   int         itsTag;            // The tag used to uniquely identify the connection in read/write.
   bool        itsIsBlocking;     // Blocking communication on this connection?
 
-  readState   itsReadState;      // State of the non-blocking read.
+  ReadState   itsReadState;      // State of the non-blocking read.
   void*       itsLastReadPtr;    // Pointer to data of last non-blocking read.
   int         itsLastReadSize;   // Size of data of last non-blocking read.
 
 };
 
-inline const string& Connection::getName()
+inline const string& Connection::getName() const
   { return itsName; }
 
 inline int Connection::getTag() const

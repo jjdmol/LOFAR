@@ -68,23 +68,27 @@ public:
   void unlock();
 
   /// Read the data.
-  virtual bool recvBlocking(void* buf, int nbytes, int tag);
-  virtual bool recvVarBlocking(int tag);
-  virtual bool recvNonBlocking(void* buf, int nbytes, int tag);
-  virtual bool recvVarNonBlocking(int tag);
+  virtual bool recvBlocking(void* buf, int nbytes, int tag, int nrBytesRead=0, 
+			    DataHolder* dh=0);
+  virtual bool recvNonBlocking(void* buf, int nbytes, int tag, int nrBytesRead=0, 
+			       DataHolder* dh=0);
   /// Wait for the data to be received
-  virtual bool waitForReceived(void* buf, int nbytes, int tag);
+  virtual void waitForReceived(void* buf, int nbytes, int tag);
 
   /// Write the data.
-  virtual bool sendBlocking(void* buf, int nbytes, int tag);
-  virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
+  virtual bool sendBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
+  virtual bool sendNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
   /// Wait for the data to be sent
-  virtual bool waitForSent(void* buf, int nbytes, int tag);
+  virtual void waitForSent(void* buf, int nbytes, int tag);
+
+  // Read the total message length of the next message.
+  virtual void readTotalMsgLengthBlocking(int tag, int& nrBytes);
+
+  // Read the total message length of the next message.
+  virtual bool readTotalMsgLengthNonBlocking(int tag, int& nrBytes);
 
   /// Get the type of transport.
   virtual string getType() const;
-
-  virtual bool isBidirectional() const;
 
   static void init (int argc, const char *argv[]);
   static void finalize();
@@ -131,9 +135,6 @@ private:
  public:
 
 };
-
-inline bool TH_MPI::isBidirectional() const
-  { return true; }
 
 }
 

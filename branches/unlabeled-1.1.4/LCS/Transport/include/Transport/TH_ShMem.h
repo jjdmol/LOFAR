@@ -68,8 +68,10 @@ public:
      by memcpy'ing the data from the sender.
   */
   void initRecv(void* buf, int tag);
-  virtual bool recvBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
-  virtual bool recvNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
+  virtual bool recvBlocking(void* buf, int nbytes, int tag, 
+			    int nrBytesRead=0, DataHolder* dh=0);
+  virtual bool recvNonBlocking(void* buf, int nbytes, int tag, 
+			       int nrBytesRead=0, DataHolder* dh=0);
 
   // Wait for the data to be received
   virtual void waitForReceived(void* bug, int nbytes, int tag);
@@ -86,6 +88,12 @@ public:
   virtual bool sendNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
 
   virtual void waitForSent(void* buf, int nbytes, int tag);
+
+  // Read the total message length of the next message.
+  virtual void readTotalMsgLengthBlocking(int tag, int& nrBytes);
+
+  // Read the total message length of the next message.
+  virtual bool readTotalMsgLengthNonBlocking(int tag, int& nrBytes);
 
   /// Get the type of transport.
   virtual string getType() const;
@@ -164,7 +172,7 @@ public:
   /**
      The class Buf keeps track of the shared memory buffer
      that is used in shared memory communication.
-  */
+  */                                                                                                                                                                                                                                    
   class ShMemBuf
   {
   public:

@@ -252,9 +252,6 @@ inline void* DataHolder::getDataPtr() const
 inline Connection* DataHolder::getConnection() const
   { return itsConnection; }
 
-inline void DataHolder::setConnection(Connection* conn)
-  { itsConnection = conn; }
-
 inline bool DataHolder::hasFixedSize()
   { return (itsDataFields.hasFixedShape()  && itsDataFields.version() == 1
 	    && itsExtraPtr == 0);  }

@@ -57,7 +57,7 @@ public:
 
   virtual ~TransportHolder();
 
-  // Initialise the Transport; this may for instance open a file,
+  // Initialize the Transport; this may for instance open a file,
   // port or dbms connection
   virtual bool init();
 
@@ -66,17 +66,18 @@ public:
   virtual bool recvBlocking (void* buf, int nbytes, int tag, int nBytesRead=0, DataHolder* dh=0);
 
   // Send the fixed sized data to the connected TransportHolder
-  // and wait until the data have been sent.
+  // and wait until the data has been sent.
   virtual bool sendBlocking (void* buf, int nbytes, int tag, DataHolder* dh=0);
 
   // Start receiving the fixed sized data sent by the connected
-  // TransportHolder.
+  // TransportHolder. Returns true if data has been received completely.
   virtual bool recvNonBlocking (void* buf, int nbytes, int tag, int nBytesRead=0, DataHolder* dh=0);
 
   /// Wait until data has been received into buf.
   virtual void waitForReceived(void* buf, int nbytes, int tag);
 
   // Start sending the fixed sized data to the connected TransportHolder.
+  // Returns true if data has been sent completely.
   virtual bool sendNonBlocking (void* buf, int nbytes, int tag, DataHolder* dh=0);
 
   /// Wait until the data has been sent.
@@ -87,7 +88,9 @@ public:
   virtual void readTotalMsgLengthBlocking(int tag, int& nrBytes);
 
   // Read the total message length of the next message.
-  // Default return value is -1, to indicate this is not possible.
+  // Default return value of nrBytes is -1, to indicate this is not possible.
+  // True is returned if the total message length could be immediately read 
+  // (or can never be read).
   virtual bool readTotalMsgLengthNonBlocking(int tag, int& nrBytes);
 
   // Check the state of this TransportHolder. Default is true.
