@@ -72,7 +72,6 @@ enum {
   [+ protocol_name +] = [+ protocol_id +]
 };
 
-[+ (get "prelude") +]
 //
 // Define protocol message types
 //
