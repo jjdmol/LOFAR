@@ -5,7 +5,7 @@
 
 
 #include <UVPDataTransferWP.h>
-
+#include <UVD/MSIntegratorWP.h>
 
 #if(DEBUG_MODE)
 InitDebugContext(UVPDataTransferWP, "DEBUG_CONTEXT");
@@ -14,13 +14,10 @@ InitDebugContext(UVPDataTransferWP, "DEBUG_CONTEXT");
 
 //===============>>>  UVPDataTransferWP::UVPDataTransferWP  <<<===============
 
-UVPDataTransferWP::UVPDataTransferWP(int correlation,
-                                     int baseline,
-                                     int patchID)
+UVPDataTransferWP::UVPDataTransferWP(int         patchID,
+                                     UVPDataSet *dataSet)
   : WorkProcess(AidUVPDataTransferWP),
-    itsCachedData(0),
-    itsCorrelation(correlation),
-    itsBaseline(baseline),
+    itsCachedData(dataSet),
     itsPatchID(patchID),
     itsHeaderIsReceived(false),
     itsHeader()
@@ -53,7 +50,7 @@ void UVPDataTransferWP::init()
   HIID id(HIID("UVData.?.?.Patch")|itsPatchID);
   
   itsHeaderHIID =  id | AidHeader | AidCorr | AidTimeslot;
-  itsDataHIID   = (id | AidData   | AidCorr | AidTimeslot | itsCorrelation |
+  itsDataHIID   = (id | AidData   | AidCorr | AidTimeslot | AidAny |
                    AidAny);
   itsFooterHIID =  id | AidFooter | AidCorr | AidTimeslot;
   
@@ -62,9 +59,11 @@ void UVPDataTransferWP::init()
   subscribe(itsHeaderHIID);
   subscribe(itsDataHIID);
   subscribe(itsFooterHIID);
+  
+  subscribe(MsgHello|"MSIntegratorWP.*");
 
   itsHeaderIsReceived = false;
-
+  
 #if(DEBUG_MODE)
   TRACER1("End of " << __PRETTY_FUNCTION__);
 #endif
@@ -82,8 +81,6 @@ bool UVPDataTransferWP::start()
   TRACER1(__PRETTY_FUNCTION__);
 #endif
   bool parentReturn = WorkProcess::start();
-
-
 
 #if(DEBUG_MODE)
   TRACER1("End of " << __PRETTY_FUNCTION__);
@@ -137,38 +134,70 @@ int  UVPDataTransferWP::receive(MessageRef &messageRef)
     
     if(itsHeaderIsReceived) {
       const DataRecord &record = dynamic_cast<const DataRecord&>(message.payload().deref());
-      
-#if(DEBUG_MODE)
-      TRACER1("record[FIFRIndex].as_int()" << record[FIFRIndex].as_int());
-      TRACER1("itsBaseline" << itsBaseline);
-#endif
-      
-      if(record[FCorr].as_int() == itsCorrelation /*&& 
-                                                    record[FIFRIndex].as_int() ==  itsBaseline*/) {
-        
-        
-        double       time = record[FTime];
-        
-        UVPDataAtom atom(itsHeader.itsNumberOfChannels, time, std::vector<double>(3,0));
-        
-        for(unsigned int i = 0; i < (unsigned int)itsHeader.itsNumberOfChannels; i++) {
-#if(DEBUG_MODE)
-          TRACER1("i: " << i);
-          TRACER1("itsBaseline: " << itsBaseline);
-          TRACER1("record[FData](i, itsBaseline): " << record[FData](i, itsBaseline).as_dcomplex());
-#endif
-          atom.setData(i, (record[FData](i, itsBaseline)).as_dcomplex() );
-        }
-        
-        itsCachedData.push_back(atom);
+      UVPDataAtomHeader DataHeader;
 
+      const double_complex * DataInRecord = record[FData].as_dcomplex_p();
+      const double *         UVWPointer   = record[FUVW].as_double_p();
+      const int *            AntennaIndexPointer = record[FAntennaIndex].as_int_p();
+      unsigned int           timeslot     = record[FTimeSlotIndex].as_int();
+      
+        
+      DataHeader.itsTime            = record[FTime].as_double();
+      DataHeader.itsExposureTime    = record[FExposure].as_double();
+      DataHeader.itsCorrelationType = (UVPDataAtomHeader::Correlation)record[FCorr].as_int();
+      DataHeader.itsFieldID         = itsHeader.itsFieldID;// record[FFieldIndex].as_int();
+        
+
+      for(unsigned int ifr = 0; ifr < itsHeader.itsNumberOfBaselines; ifr++) {
+        DataHeader.itsAntenna1        = *AntennaIndexPointer++;
+        DataHeader.itsAntenna2        = *AntennaIndexPointer++;
+        DataHeader.itsUVW[0]          = *UVWPointer++;
+        DataHeader.itsUVW[1]          = *UVWPointer++;
+        DataHeader.itsUVW[2]          = *UVWPointer++;
+        
+#if(DEBUG_MODE)
+        TRACER2("IFR                   : " << ifr);
+        TRACER2("timeslot              : " << timeslot);
+        TRACER2("correlationIndex      : " << DataHeader.itsCorrelationType);
+        TRACER2("itsHeader.itsFieldID  : " << itsHeader.itsFieldID);
+        TRACER2("DataHeader.itsAntenna1: " << DataHeader.itsAntenna1);
+        TRACER2("DataHeader.itsAntenna2: " << DataHeader.itsAntenna2);
+        unsigned int old_prec = cout.precision(10);
+        TRACER2("DataHeader.itsTime    : " << DataHeader.itsTime);
+        cout.precision(old_prec);
+#endif
+        
+        
+        UVPDataAtom atom(itsHeader.itsNumberOfChannels, DataHeader);
+
+        atom.setData(DataInRecord);
+        DataInRecord += itsHeader.itsNumberOfChannels;
+        
+        (*itsCachedData)[DataHeader] = atom;
       }
+
     } // End itsHeaderIsReceived
   } else if(message.id().matches(itsFooterHIID)) {
 #if(DEBUG_MODE)
     TRACER2("*** Footer");
 #endif
-  } else {
+  } else if (message.id().matches(MsgHello|"MSIntegratorWP.*")){ 
+#if(DEBUG_MODE)
+    TRACER1("Received hello from integrator. Starting integrator...");
+#endif
+    
+    DataRecord *IntMsg(new DataRecord);
+    
+    (*IntMsg)["MS"]          = "test.ms";
+    (*IntMsg)["Num.Channel"] = 1;
+    (*IntMsg)["Num.Time"]    = 10;
+    (*IntMsg)["Num.Patch"]   = 1;
+    
+    MessageRef MsgRef;
+    MsgRef <<= new Message(MSIntegrate, IntMsg);
+    
+    publish(MsgRef); // Activate integrater
+  }else {
 #if(DEBUG_MODE)
     TRACER1("Unknown message");
     assert(false);
@@ -182,25 +211,4 @@ int  UVPDataTransferWP::receive(MessageRef &messageRef)
 
   return Message::ACCEPT;
 
-}
-
-
-
-
-
-//====================>>>  UVPDataTransferWP::size  <<<====================
-
-unsigned int UVPDataTransferWP::size() const
-{
-  return itsCachedData.size();
-}
-
-
-
-
-//===================>>>  UVPDataTransferWP::getRow  <<<====================
-
-const UVPDataAtom *UVPDataTransferWP::getRow(unsigned int rowIndex) const
-{  
-  return &(itsCachedData[rowIndex]);
 }
