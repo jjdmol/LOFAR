@@ -30,7 +30,7 @@
 #
 # $Id$
 #
-VERSION="v2.7"
+VERSION="v2.8"
 DEBUGMODE=false
 
 #
@@ -69,8 +69,8 @@ RECaddInsertRoutine()
 	echo "// Routine for insert this ${Class} object in the database."
 	echo "//"
 	echo "void ${FunctName}(${Class}&	insRec) {"
-	echo "	DBView<${Class}>	insView(\"${Table}\", ${Class}_BCA());"
-	echo "	DBView<${Class}>::insert_iterator	insIter = insView;\n"
+	echo "	DBView< ${Class} >	insView(\"${Table}\", ${Class}_BCA());"
+	echo "	DBView< ${Class} >::insert_iterator	insIter = insView;\n"
 
 	echo "	*insIter = *insRec;"
 	echo "}\n"
@@ -90,8 +90,8 @@ RECaddDeleteRoutine()
 	echo "// Routine for deleting this ${Class} object from the database."
 	echo "//"
 	echo "void ${FunctName}(${Class}&	delRec) {"
-	echo "	DBView<${Class}>	delView(\"${Table}\", ${Class}_BCA());"
-	echo "	DBView<${Class}>::delete_iterator	delIter = delView;\n"
+	echo "	DBView< ${Class} >	delView(\"${Table}\", ${Class}_BCA());"
+	echo "	DBView< ${Class} >::delete_iterator	delIter = delView;\n"
 	echo "	${Class}		delCondition;"
 	echo ""
 	echo "	delCondition = @@@;"
@@ -111,17 +111,17 @@ RECaddSearchRoutine()
 	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d"!" -f2`
 
 	if [ ${#Clause} == 0 ]; then
-		echo "vector<${Class}> ${FunctName}(string whereClause) {"
-		echo "	vector<${Class}> 		results;"
-		echo "	DBView<${Class}>			view(\"${Table}\", ${Class}_BCA(),"
+		echo "vector< ${Class} > ${FunctName}(string whereClause) {"
+		echo "	vector< ${Class} > 		results;"
+		echo "	DBView< ${Class} >			view(\"${Table}\", ${Class}_BCA(),"
 		echo "								whereClause);"
 	else
-		echo "vector<${Class}> ${FunctName}() {"
-		echo "	vector<${Class}> 		results;"
-		echo "	DBView<${Class}>			view(\"${Table}\", ${Class}_BCA(),"
+		echo "vector< ${Class} > ${FunctName}() {"
+		echo "	vector< ${Class} > 		results;"
+		echo "	DBView< ${Class} >			view(\"${Table}\", ${Class}_BCA(),"
 		echo "								\"${Clause}\");"
 	fi
-	echo "	DBView<${Class}>::select_iterator	readIter = view.begin();\n"
+	echo "	DBView< ${Class} >::select_iterator	readIter = view.begin();\n"
 	echo "	for ( ; readIter != view.end(); ++readIter) {"
 	echo "		results.push_back(*readIter);"
 	echo "	}"
@@ -144,14 +144,14 @@ RECaddUpdateRoutine()
 	echo "//"
 	if [ ${#Clause} == 0 ]; then
 		echo "void ${FunctName}(${Class}&	theRecord, string whereClause) {"
-		echo "	DBView<${Class}>			view(\"${Table}\", ${Class}_BCA(),"
+		echo "	DBView< ${Class} >			view(\"${Table}\", ${Class}_BCA(),"
 		echo "								whereClause);"
 	else
 		echo "void ${FunctName}(${Class}&	theRecord) {"
-		echo "	DBView<${Class}>			view(\"${Table}\", ${Class}_BCA(),"
+		echo "	DBView< ${Class} >			view(\"${Table}\", ${Class}_BCA(),"
 		echo "								\"${Clause}\");"
 	fi
-	echo "	DBView<${Class}>::update_iterator	updIter = view;"
+	echo "	DBView< ${Class} >::update_iterator	updIter = view;"
 	echo ""
 	echo "	// update the database"
 	echo "	*updIter=*theRecord;"
@@ -188,12 +188,12 @@ TPOaddDTLstruct()
 	Class=$1
 	
 	echo ""
-	echo "// The DBRep<${Class}> structure is a contigious representation of"
+	echo "// The DBRep< ${Class} > structure is a contigious representation of"
 	echo "// all fields that should be stored to the database"
 
 	# define a struct with the PO fields and the DataObj fields
 	echo "template <>"
-	echo "struct DBRep<${Class}> {"
+	echo "struct DBRep< ${Class} > {"
 	
 	# every structs needs a bindCols functor.
 	echo "	void bindCols(dtl::BoundIOs& cols);"
@@ -218,8 +218,8 @@ TPOaddBCA()
 	Class=$1
 	
 	echo "// bindCols() 'binds' the database columns represented by a cols"
-	echo "// to the members of the DBRep<${Class}> class."
-	echo "void DBRep<${Class}>::bindCols(dtl::BoundIOs& cols) {"
+	echo "// to the members of the DBRep< ${Class} > class."
+	echo "void DBRep< ${Class} >::bindCols(dtl::BoundIOs& cols) {"
 
 	# add all 'basic' members of the class
 	grep ^$Class ${MAPWRKFILE} | grep "!!" | while read line
@@ -245,8 +245,8 @@ TPOaddToDatabaseRep()
 
 	echo ""
 	echo "// toDBRep copies the fields of the ${Class} class to the"
-	echo "// DBRep<${Class}> structure"
-	echo "void TPersistentObject<${Class}>::toDBRep(DBRep<${Class}>& dest) const"
+	echo "// DBRep< ${Class} > structure"
+	echo "void TPersistentObject< ${Class} >::toDBRep(DBRep< ${Class} >& dest) const"
 	echo "{"
 
 	# add all 'basic' members of the Dataobj
@@ -271,9 +271,9 @@ TPOaddFromDatabaseRep()
 	Action=$2
 
 	echo ""
-	echo "// fromDBRep copies the fields of the DBRep<${Class}> structure"
+	echo "// fromDBRep copies the fields of the DBRep< ${Class} > structure"
 	echo "// to the ${Class} class."
-	echo "void TPersistentObject<${Class}>::fromDBRep(const DBRep<${Class}>& src)"
+	echo "void TPersistentObject< ${Class} >::fromDBRep(const DBRep< ${Class} >& src)"
 	echo "{"
 
 	# add all 'basic' members of the Dataobj
@@ -297,8 +297,8 @@ TPOaddInitRoutine()
 	Action=$2
 
 	echo ""
-	echo "// Initialize the internals of TPersistentObject<${Class}>"
-	echo "void TPersistentObject<${Class}>::init()"
+	echo "// Initialize the internals of TPersistentObject< ${Class} >"
+	echo "void TPersistentObject< ${Class} >::init()"
 	echo "{"
 
 	# generate initialization code for all classes and base classes.
@@ -311,9 +311,9 @@ TPOaddInitRoutine()
 		echo "	{"
 		echo "	// create new TPersistentObject for ${Relation} ${RelClass}"
 		if [ "${Relation}" == "BaseClass" ]; then
-			echo "	Pointer p(new TPersistentObject<${RelClass}>(data()));"
+			echo "	Pointer p(new TPersistentObject< ${RelClass} >(data()));"
 		else
-			echo "	Pointer p(new TPersistentObject<${RelClass}>(data().${Member}));"
+			echo "	Pointer p(new TPersistentObject< ${RelClass} >(data().${Member}));"
 		fi
 		echo "	// associate ${RelClass}'s owner object-id with ${Class}'s objectid"
 		echo "	p->metaData().ownerOid() = metaData().oid();"
@@ -340,9 +340,9 @@ TPOaddAttributemap()
 	Class=$1
 
 	echo ""
-	echo "// Initialize the attribute map for TPersistenObject<${Class}>"
+	echo "// Initialize the attribute map for TPersistenObject< ${Class} >"
 	echo "template<>"
-	echo "void TPersistentObject<${Class}>::initAttribMap()"
+	echo "void TPersistentObject< ${Class} >::initAttribMap()"
 	echo "{"
 
 	# add all 'basic' members of the Dataobj
@@ -365,10 +365,10 @@ TPOaddAttributemap()
 		fi
 		if [ "${RelType}" == "BaseClass" ]; then
 			echo "	theirAttribMap[\"${SubClass}::\"]	="
-			echo "		\"@\" + string(typeid(TPersistentObject<${SubClass}>).name());"
+			echo "		\"@\" + string(typeid(TPersistentObject< ${SubClass} >).name());"
 		else
 			echo "	theirAttribMap[\"${Member}\"]	="
-			echo "		\"@\" + string(typeid(TPersistentObject<${SubClass}>).name());"
+			echo "		\"@\" + string(typeid(TPersistentObject< ${SubClass} >).name());"
 		fi
 	done
 	echo "}\n"
@@ -433,10 +433,15 @@ initSrcfile()
 			do
 				SubClass=`echo $m_line | cut -d'!' -f3`
 				# where is this sub class located? 
-				sl_line=`grep "${SubClass}!" ${CLASSLOCATIONWRKFILE}`
+				sl_line=`grep "^${SubClass}!" ${CLASSLOCATIONWRKFILE}`
 				SubClassLocation=`echo $sl_line | cut -d"!" -f2`
-				if [ "${SubClassLocation}" != "${File}.h" ]; then
-					echo "#include \"${FILEPREFIX}${SubClassLocation}\"" >>${INCLUDEWRKFILE}
+				# user may have been messing around in the mapfile, check it
+				if [ -z "${SubClassLocation}" ]; then
+					Warning "//#WARNING:Definition of class ${SubClass} in unknown headerfile"
+				else
+					if [ "${SubClassLocation}" != "${File}.h" ]; then
+						echo "#include \"${FILEPREFIX}${SubClassLocation}\"" >>${INCLUDEWRKFILE}
+					fi
 				fi
 			done
 		done
@@ -484,7 +489,7 @@ cleanupWorkFiles()
 {
 	if [ "${DEBUGMODE}" != "true" ]; then
 		rm -f ${MAPWRKFILE} ${ALLFILESWRKFILE} ${CLASSLOCATIONWRKFILE} \
-			  ${INCLUDEWRKFILE}
+			  ${INCLUDEWRKFILE} ${WARNINGFILE}
 	else
 		echo "DEBUGMODE, NOT REMOVING TEMPFILES IN /tmp"
 	fi
@@ -561,6 +566,18 @@ convertMapfile()
 			;;
 		esac
 	done
+}
+
+# Warning msg
+#
+# Stores the warning in the WARNINGSFILE and shows it in stdout
+#
+Warning()
+{
+	Msg=$1
+
+	echo ${Msg} >>${WARNINGFILE}
+	echo ${Msg}
 }
 
 # SyntaxError msg
@@ -670,6 +687,7 @@ MAPWRKFILE=/tmp/mapinfo.LCS.$$
 ALLFILESWRKFILE=/tmp/created.LCS.$$
 CLASSLOCATIONWRKFILE=/tmp/classloc.LCS.$$
 INCLUDEWRKFILE=/tmp/include.LCS.$$
+WARNINGFILE=/tmp/warning.LCS.$$
 
 # Make sure there are no old workfiles left
 cleanupWorkFiles
@@ -753,6 +771,8 @@ do
 	fi
 	TPOcloseNamespace 			>>${SOURCEFILE}
 done
+
+[ -s "${WARNINGFILE}" ] && cat ${WARNINGFILE}
 
 # Finally cleanup our mess
 cleanupWorkFiles
