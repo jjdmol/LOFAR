@@ -84,8 +84,10 @@ void test1 (bool isReceiver)
   DH_Receiver.setID(2);
   TH_Socket proto("localhost", "localhost", 8923);
   DH_Sender.connectTo (DH_Receiver, proto, true);
-  DH_Sender.init();
-  DH_Receiver.init();
+  if (isReceiver)
+    DH_Receiver.init();
+  else
+    DH_Sender.init();
 
   DH_Example dh1("dh1mem", 1);
   DH_Example dh2("dh2mem", 1);
@@ -114,8 +116,10 @@ void test2 (bool isReceiver)
   DH_Receiver.setID(2);
   TH_Socket proto("localhost", "localhost", 8923);
   DH_Sender.connectTo (DH_Receiver, proto, true);
-  DH_Sender.init();
-  DH_Receiver.init();
+  if (isReceiver)
+    DH_Receiver.init();
+  else
+    DH_Sender.init();
 
   DH_Example dh1("dh1mem", 1, true);
   DH_Example dh2("dh2mem", 1, true);
@@ -172,12 +176,12 @@ int main (int argc, const char** argv)
 
     if (! strcmp (argv [1], "-s")) {
       cout << "(Server side)" << endl;
-      isReceiver = false;
-      which = "sender";
-    } else if (! strcmp (argv [1], "-c")) {
-      cout << "(Client side)" << endl;
       isReceiver = true;
       which = "receiver";
+    } else if (! strcmp (argv [1], "-c")) {
+      cout << "(Client side)" << endl;
+      isReceiver = false;
+      which = "sender";
     } else {
       displayUsage ();
       return 0;

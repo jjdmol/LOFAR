@@ -63,6 +63,7 @@ int main (int argc, char** argv) {
     return 0;
   }
 
+  INIT_LOGGER(argv[0]);
 
   const int maxlen = 1024*1024*1;
   DH_Example DH_Sender("dh1", maxlen);
@@ -74,27 +75,30 @@ int main (int argc, char** argv) {
   TH_Socket TH_proto("localhost", 
 		     "localhost",
 		     8923,
-		     ServerAtSender); //  set the server side
+		     !ServerAtSender); //  set the server side
 
   DH_Sender.connectTo (DH_Receiver, TH_proto, true);
-  DH_Sender.init();
-  DH_Receiver.init();
+  if (isReceiver) {
+    DH_Receiver.init();
+  }
+  else {
+    DH_Sender.init();
+  }
  
-   
-   
-  if (! isReceiver) {
+  if (isReceiver) {
+    DH_Receiver.getBuffer()[0] = 0;
+    DH_Receiver.getBuffer()[1] = 0;
+    DH_Receiver.setCounter(0);
+    cout << "Before transport : " ;
+	cout << DH_Receiver.getBuffer()[1] << ' ' << DH_Receiver.getCounter() << endl;
+  }
+  else {
     // fill the DataHolders with some initial data
     DH_Sender.getBuffer()[0] = fcomplex(17,-3.5);
     DH_Sender.getBuffer()[1] = fcomplex(18,-2.5);
-    DH_Receiver.getBuffer()[0] = 0;
-    DH_Receiver.getBuffer()[1] = 0;
     DH_Sender.setCounter(2);
-    DH_Receiver.setCounter(0);
-    cout << "Before transport : " 
-	 << DH_Sender.getBuffer()[1] << ' ' << DH_Sender.getCounter()
-	 << " -- " 
-	 << DH_Receiver.getBuffer()[1] << ' ' << DH_Receiver.getCounter()
-	 << endl;
+    cout << "Before transport : " ;
+	cout << DH_Sender.getBuffer()[1] << ' ' << DH_Sender.getCounter() << endl;
   }
 
 
