@@ -81,6 +81,8 @@ UVPMainWindow::UVPMainWindow()
   itsCanvas->drawView();
 
   setFocusPolicy(QWidget::StrongFocus);
+
+  updateCaption();
 }
 
 
@@ -156,7 +158,52 @@ void UVPMainWindow::buildStatusBar()
 
 
 
-//==================>>>  UVPMainWindow::resizeEvent  <<<==================
+//===============>>>  UVPMainWindow::updateCaption  <<<===============
+
+void UVPMainWindow::updateCaption()
+{
+  std::ostringstream out;
+  
+  out << "Uvplot - ";
+
+  switch(itsInputType) {
+  case NoInput:
+    {
+      out << "No input";
+    }
+    break;
+
+  case DMI:
+    {
+      out << "DMI: ";
+    }
+    break;
+    
+  case MS:
+    {
+      out << "MS: ";
+    }
+    break;
+    
+  case PVD:
+    {
+      out << "PVD: ";
+    }
+    break;
+  }
+
+  out << itsInputFilename;
+  
+  QString Caption(out.str().c_str());
+  setCaption(Caption);
+}
+
+
+
+
+
+
+//==================>>>  Uvpmainwindow::resizeEvent  <<<==================
 
 void UVPMainWindow::resizeEvent(QResizeEvent */*event*/)
 {
@@ -350,6 +397,7 @@ void UVPMainWindow::slot_openMS()
   if(!filename.isNull()) {
     itsInputFilename = filename.latin1();
     itsInputType     = MS;
+    updateCaption();
     slot_readMeasurementSet(filename.latin1());
   }
 }
@@ -369,6 +417,7 @@ void UVPMainWindow::slot_openPVD()
   if(!filename.isNull()) {
     itsInputFilename = filename.latin1();
     itsInputType     = PVD;
+    updateCaption();
     slot_readPVD(filename.latin1());
   }
 }
@@ -383,7 +432,8 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
   if(!itsBusyPlotting) {
     itsInputFilename = "*** DMI ***";
     itsInputType     = DMI;
-
+    updateCaption();
+    
     itsPlotMenu->setItemEnabled(itsMenuPlotImageID, false);
     itsPlotMenu->setItemEnabled(itsMenuPlotStopID, true);
     
@@ -436,6 +486,8 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
 
     itsInputFilename = "";
     itsInputType     = NoInput;
+
+    updateCaption();
   }
 
 }
