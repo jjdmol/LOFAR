@@ -26,6 +26,7 @@
 #include <MNS/MeqMatrixComplexSca.h>
 #include <MNS/MeqMatrixComplexArr.h>
 #include <aips/Mathematics/Math.h>
+#include <aips/Mathematics/Constants.h>
 #include <Common/lofar_iostream.h>
 
 
@@ -58,9 +59,13 @@ MeqMatrixRep* MeqMatrixRealSca::divide (MeqMatrixRep& right, bool rightTmp)
 {
   return right.divRep (*this, rightTmp);
 }
+MeqMatrixRep* MeqMatrixRealSca::posdiff (MeqMatrixRep& right)
+{
+  return right.posdiffRep (*this);
+}
 MeqMatrixRep* MeqMatrixRealSca::tocomplex (MeqMatrixRep& right)
 {
-  return right.complexRep (*this);
+  return right.tocomplexRep (*this);
 }
 
 bool MeqMatrixRealSca::isDouble() const
@@ -121,11 +126,42 @@ MNSMATRIXREALSCA_OP(subRep,-=,'-');
 MNSMATRIXREALSCA_OP(mulRep,*=,'*');
 MNSMATRIXREALSCA_OP(divRep,/=,'/');
 
-MeqMatrixRep* MeqMatrixRealSca::complexRep (MeqMatrixRealSca& left)
+MeqMatrixRep* MeqMatrixRealSca::posdiffRep (MeqMatrixRealSca& left)
+{
+  double diff = left.itsValue - itsValue;
+  if (diff < -1 * C::pi) {
+    diff += C::_2pi;
+  }
+  if (diff > C::pi) {
+    diff -= C::_2pi;
+  }
+  return new MeqMatrixRealSca (diff);
+}
+MeqMatrixRep* MeqMatrixRealSca::posdiffRep (MeqMatrixRealArr& left)
+{
+  MeqMatrixRealArr* v = new MeqMatrixRealArr (left.nx(), left.ny());
+  double* value = v->itsValue;
+  double  rvalue = itsValue;
+  double* lvalue = left.itsValue;
+  int n = left.nelements();
+  for (int i=0; i<n; i++) {
+    double diff = lvalue[i] - rvalue;
+    if (diff < -1 * C::pi) {
+      diff += C::_2pi;
+    }
+    if (diff > C::pi) {
+      diff -= C::_2pi;
+    }
+    value[i] = diff;
+  }
+  return v;
+}
+
+MeqMatrixRep* MeqMatrixRealSca::tocomplexRep (MeqMatrixRealSca& left)
 {
   return new MeqMatrixComplexSca (complex<double> (left.itsValue, itsValue));
 }
-MeqMatrixRep* MeqMatrixRealSca::complexRep (MeqMatrixRealArr& left)
+MeqMatrixRep* MeqMatrixRealSca::tocomplexRep (MeqMatrixRealArr& left)
 {
   MeqMatrixComplexArr* v = new MeqMatrixComplexArr (left.nx(), left.ny());
   complex<double>* value = v->itsValue;

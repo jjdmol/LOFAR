@@ -1,4 +1,4 @@
-//# tExprPoly.cc: Test program for ExprPoly class
+//# tPoly.cc: Test program for ExprPoly class
 //# Copyright (C) 2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#

@@ -40,10 +40,18 @@ public:
   MeqMatrix()
     : itsRep(0) {}
 
-  // Create a scalar MeqMatrix.
+  // Create a scalar MeqMatrixTmp.
   // <group>
-  explicit MeqMatrix (double);
-  explicit MeqMatrix (complex<double>);
+  explicit MeqMatrix (double value);
+  explicit MeqMatrix (complex<double> value);
+  // <group>
+
+  // Create a MeqMatrix of given size.
+  // If the init flag is true, the matrix is initialized to the given value.
+  // Otherwise the value only indicates the type of matrix to be created.
+  // <group>
+  MeqMatrix (double, int nx, int ny, bool init=true);
+  MeqMatrix (complex<double>, int nx, int ny, bool init=true);
   // <group>
 
   // Create a MeqMatrix from a value array.
@@ -56,7 +64,7 @@ public:
 
   // Create a MeqMatrix from a MeqMatrixRep.
   // It takes over the pointer and deletes it in the destructor.
-  MeqMatrix (MeqMatrixRep* rep)
+  explicit MeqMatrix (MeqMatrixRep* rep)
     : itsRep (rep->link()) {}
 
   // Create a MeqMatrix from a temporary one (reference semantics).
@@ -153,6 +161,8 @@ public:
 
   MeqMatrixTmp operator-() const;
 
+  friend MeqMatrixTmp posdiff (const MeqMatrix&, const MeqMatrix&);
+  friend MeqMatrixTmp posdiff (const MeqMatrix&, const MeqMatrixTmp&);
   friend MeqMatrixTmp tocomplex (const MeqMatrix&, const MeqMatrix&);
   friend MeqMatrixTmp tocomplex (const MeqMatrix&, const MeqMatrixTmp&);
   friend MeqMatrixTmp sin (const MeqMatrix&);

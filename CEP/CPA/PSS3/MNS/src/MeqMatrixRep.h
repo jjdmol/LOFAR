@@ -75,6 +75,7 @@ public:
   virtual MeqMatrixRep* subtract (MeqMatrixRep& right, Bool rightTmp) = 0;
   virtual MeqMatrixRep* multiply (MeqMatrixRep& right, Bool rightTmp) = 0;
   virtual MeqMatrixRep* divide   (MeqMatrixRep& right, Bool rightTmp) = 0;
+  virtual MeqMatrixRep* posdiff  (MeqMatrixRep& right);
   virtual MeqMatrixRep* tocomplex(MeqMatrixRep& right);
 
   virtual MeqMatrixRep* addRep (MeqMatrixRealSca& left, Bool rightTmp) = 0;
@@ -105,8 +106,11 @@ public:
   virtual MeqMatrixRep* divRep (MeqMatrixComplexArr& left,
 				Bool rightTmp) = 0;
 
-  virtual MeqMatrixRep* complexRep (MeqMatrixRealSca& left);
-  virtual MeqMatrixRep* complexRep (MeqMatrixRealArr& left);
+  virtual MeqMatrixRep* posdiffRep (MeqMatrixRealSca& left);
+  virtual MeqMatrixRep* posdiffRep (MeqMatrixRealArr& left);
+
+  virtual MeqMatrixRep* tocomplexRep (MeqMatrixRealSca& left);
+  virtual MeqMatrixRep* tocomplexRep (MeqMatrixRealArr& left);
 
   virtual MeqMatrixRep* negate() = 0;
 

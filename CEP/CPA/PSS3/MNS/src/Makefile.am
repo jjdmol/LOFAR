@@ -1,6 +1,10 @@
 SUBDIRS	= .
 
 DOCHDRS		 	= 			\
+MeqDomain.h					\
+MeqExpr.h					\
+MeqJonesExpr.h					\
+MeqJonesNode.h					\
 MeqMatrix.h					\
 MeqMatrixComplexArr.h				\
 MeqMatrixComplexSca.h				\
@@ -8,21 +12,21 @@ MeqMatrixRealArr.h				\
 MeqMatrixRealSca.h				\
 MeqMatrixRep.h					\
 MeqMatrixTmp.h					\
-ParmTable.h					\
 MeqParm.h					\
-MeqParmSingle.h					\
 MeqParmPolc.h					\
-MeqStoredParmPolc.h				\
-MeqDomain.h					\
-MeqRequest.h					\
-MeqResult.h					\
-MeqPolc.h					\
-MeqExpr.h					\
-MeqUVWPolc.h					\
-MeqPointSource.h				\
-MeqWsrtPoint.h					\
+MeqParmSingle.h					\
 MeqPointDFT.h					\
-MeqStation.h					
+MeqPointSource.h				\
+MeqPolc.h					\
+MeqRequest.h					\
+MeqRequestId.h					\
+MeqResult.h					\
+MeqStation.h					\
+MeqStoredParmPolc.h				\
+MeqUVWPolc.h					\
+MeqWsrtInt.h					\
+MeqWsrtPoint.h					\
+ParmTable.h					
 
 lib_LTLIBRARIES 	= libmns.la
 
@@ -44,9 +48,12 @@ MeqRequest.cc					\
 MeqResult.cc					\
 MeqPolc.cc					\
 MeqExpr.cc					\
+MeqJonesExpr.cc					\
+MeqJonesNode.cc					\
 MeqUVWPolc.cc					\
 MeqPointSource.cc				\
 MeqWsrtPoint.cc					\
+MeqWsrtInt.cc					\
 MeqPointDFT.cc					\
 MeqStation.xcc					
 

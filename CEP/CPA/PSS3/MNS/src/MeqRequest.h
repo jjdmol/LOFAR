@@ -63,12 +63,8 @@ public:
 
   double stepX() const
     { return itsStepX; }
-  double scaledStepX() const
-    { return double(2)/itsNx; }
   double stepY() const
     { return itsStepY; }
-  double scaledStepY() const
-    { return double(2)/itsNy; }
 
   // Set or get source nr.
   void setSourceNr (int sourceNr)
