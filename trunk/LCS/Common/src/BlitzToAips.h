@@ -5,8 +5,8 @@
 #error Blitz support required
 #endif
 
-#ifndef HAVE_BLITZ
-#error AIPS++ suport required
+#ifndef HAVE_AIPSPP
+#error AIPS++ support required
 #endif
     
 #include "Common/Lorrays.h"
