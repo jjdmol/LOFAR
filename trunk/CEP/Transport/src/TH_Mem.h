@@ -61,7 +61,7 @@ public:
      Receive the data. This call does the actual data transport
      by memcpy'ing the data from the sender.
   */
-  virtual bool recvBlocking(void* buf, int nbytes, int source, int tag);
+  virtual bool recvNonBlocking(void* buf, int nbytes, int source, int tag);
 
   /**
      Send the data.
