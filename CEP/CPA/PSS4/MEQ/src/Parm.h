@@ -58,71 +58,94 @@ namespace Meq {
 // The coefficients are numbered 0..N with the time as the most rapidly
 // varying axis.
 
+//##ModelId=3F86886E01BD
 class Parm: public Function
 {
 public:
   // The default constructor.
   // The object should be filled by the init method.
+    //##ModelId=3F86886F021B
   Parm();
 
   // Create a parameter with the given name and default value.
   // The default value is used if no suitable value can be found.
   // The ParmTable can be null meaning that the parameter is temporary.
+    //##ModelId=3F86886F0242
   Parm (const string& name, ParmTable* table,
 	const Vells& defaultValue = Vells(0.));
 
+    //##ModelId=3F86886F021E
   virtual ~Parm();
 
+    //##ModelId=400E53510330
     virtual TypeId objectType() const
     { return TpMeqParm; }
 
   // Get the parameter id.
+    //##ModelId=3F86886F0224
   unsigned int getParmId() const
     { return itsParmId; }
 
+    //##ModelId=3F86886F022C
   bool isSolvable() const
     { return itsIsSolvable; }
 
   // Get the requested result of the parameter.
+    //##ModelId=3F86886F022E
   virtual int getResult (Result::Ref &resref, 
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);
 
   // Initialize the parameter for the given domain.
+    //##ModelId=3F86886F0226
   virtual int initDomain (const Domain&);
 
   // Make the new value persistent (for the given domain).
+    //##ModelId=3F86886F023C
   virtual void save();
 
+    //##ModelId=400E5352023D
   virtual void init (DataRecord::Ref::Xfer& initrec, Forest* frst);
 
+    //##ModelId=400E53520391
   //## Standard debug info method
   virtual string sdebug (int detail = 1, const string& prefix = "",
 			 const char* name = 0) const;
 
 protected:
   // initializes polcs based on value of solvable flag
+    //##ModelId=400E5353019E
   int initSolvable ();
 
   // Set the polynomials.
+    //##ModelId=400E535301F7
   void setPolcs (const vector<Polc>& polcs)
     { itsPolcs = polcs; }
 
   // Get the polynomials.
+    //##ModelId=400E535302DB
   const vector<Polc>& getPolcs() const
     { return itsPolcs; }
   
 //  virtual void checkInitState (DataRecord &rec);
+    //##ModelId=400E5353033A
   virtual void setStateImpl (DataRecord &rec,bool initializing);
 
 private:
+    //##ModelId=3F86886F0215
   unsigned int itsParmId;
+    //##ModelId=3F86886F0216
   bool         itsIsSolvable;
+    //##ModelId=3F86886F0213
   string       itsName;
+    //##ModelId=400E535000A3
   ParmTable*   itsTable;
+    //##ModelId=400E535000B2
   Vells        itsDefault;
+    //##ModelId=400E535000C1
   vector<Polc> itsPolcs;
   
+    //##ModelId=400E535100D0
   Domain       itsCurrentDomain;
 };
 

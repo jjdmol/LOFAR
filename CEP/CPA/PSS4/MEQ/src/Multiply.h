@@ -31,17 +31,22 @@
 namespace Meq {    
 
 
+//##ModelId=400E530302E4
 class Multiply : public Function
 {
 public:
+    //##ModelId=400E530A0105
   Multiply();
 
+    //##ModelId=400E530A0106
   virtual ~Multiply();
 
+    //##ModelId=400E530A0108
   virtual TypeId objectType() const
     { return TpMeqMultiply; }
 
   // Evaluate the value for the given request.
+    //##ModelId=400E530A010A
   virtual Vells evaluate (const Request&, const LoShape&,
 			  const vector<Vells*>& values);
 };

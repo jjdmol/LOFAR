@@ -28,12 +28,15 @@ using namespace Meq::VellsMath;
 
 namespace Meq {    
 
+//##ModelId=400E530500C3
 Cos::Cos()
 {}
 
+//##ModelId=400E530500C4
 Cos::~Cos()
 {}
 
+//##ModelId=400E530500C9
 Vells Cos::evaluate (const Request&,const LoShape &,
 		     const vector<Vells*>& values)
 {

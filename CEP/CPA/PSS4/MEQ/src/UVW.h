@@ -33,25 +33,32 @@
 namespace Meq {    
 
 
+//##ModelId=400E530400BD
 class UVW : public Function
 {
 public:
+    //##ModelId=400E535502D1
   UVW();
 
+    //##ModelId=400E535502D2
   virtual ~UVW();
 
+    //##ModelId=400E535502D4
     virtual TypeId objectType() const
     { return TpMeqUVW; }
 
   // Get the result for the given request.
+    //##ModelId=400E535502D6
   virtual int getResult (Result::Ref &resref, 
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);
 
   // Check and convert the children.
+    //##ModelId=400E535502DC
   void checkChildren();
 
 private:
+    //##ModelId=400E535502D0
   MPosition itsEarthPos;
 };
 

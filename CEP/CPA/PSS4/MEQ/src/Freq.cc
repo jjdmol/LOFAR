@@ -28,18 +28,22 @@
 namespace Meq {    
 
 
+//##ModelId=400E53050214
 Freq::Freq()
 {}
 
+//##ModelId=400E53050215
 Freq::~Freq()
 {}
 
+//##ModelId=400E53050217
 void Freq::init (DataRecord::Ref::Xfer &initrec, Forest* frst)
 {
   Node::init(initrec,frst);
   FailWhen(numChildren(),"Freq node cannot have children");
 }
 
+//##ModelId=400E5305021D
 int Freq::getResult (Result::Ref &resref, 
                      const std::vector<Result::Ref> &,
                      const Request &request,bool newreq)

@@ -44,24 +44,32 @@
 namespace Meq {    
 
 
+//##ModelId=400E53030268
 class Composer : public Node
 {
   public:
+    //##ModelId=400E53050042
     Composer ();
+    //##ModelId=400E53050043
     virtual ~Composer ();
 
+    //##ModelId=400E53050045
     virtual TypeId objectType() const
     { return TpMeqComposer; }
     
   protected:
+    //##ModelId=400E53050047
     virtual void checkInitState (DataRecord &rec);
+    //##ModelId=400E5305004A
     virtual void setStateImpl (DataRecord &rec,bool initializing);
     // Get the result for the given request.
+    //##ModelId=400E5305004F
     virtual int getResult (Result::Ref &resref, 
                            const std::vector<Result::Ref> &childres,
                            const Request &req,bool newreq);
   
   private:
+    //##ModelId=400E53050040
     bool contagious_fail;
 };
 

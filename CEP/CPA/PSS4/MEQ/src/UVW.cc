@@ -37,6 +37,7 @@ namespace Meq {
 const int num_children = 5;
 const HIID child_labels[] = { AidRA,AidDec,AidStX,AidStY,AidStZ };
 
+//##ModelId=400E535502D1
 UVW::UVW()
 {
   // Use the Dwingeloo position for the frame.
@@ -44,9 +45,11 @@ UVW::UVW()
   ///  itsRefU = itsU;
 }
 
+//##ModelId=400E535502D2
 UVW::~UVW()
 {}
 
+//##ModelId=400E535502D6
 int UVW::getResult (Result::Ref &resref, 
                     const std::vector<Result::Ref> &childres,
                     const Request &request,bool newreq)
@@ -115,6 +118,7 @@ int UVW::getResult (Result::Ref &resref,
   return RES_DEP_DOMAIN|(newreq?RES_UPDATED:0);
 }
 
+//##ModelId=400E535502DC
 void UVW::checkChildren()
 {
   Function::convertChildren (5);

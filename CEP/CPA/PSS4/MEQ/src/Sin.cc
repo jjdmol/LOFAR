@@ -28,12 +28,15 @@ using namespace Meq::VellsMath;
 
 namespace Meq {    
 
+//##ModelId=400E53550241
 Sin::Sin()
 {}
 
+//##ModelId=400E53550242
 Sin::~Sin()
 {}
 
+//##ModelId=400E53550246
 Vells Sin::evaluate (const Request&,const LoShape &,
 		     const vector<Vells*>& values)
 {

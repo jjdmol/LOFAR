@@ -17,12 +17,14 @@ void Spigot::init (DataRecord::Ref::Xfer &initrec,Forest * frst)
   VisHandlerNode::init(initrec,frst);
 }
 
+//##ModelId=400E5B6D00BF
 void Spigot::checkInitState (DataRecord &rec)
 {
   VisHandlerNode::checkInitState(rec);
   defaultInitField(rec,FInputColumn,"DATA");
 }
 
+//##ModelId=3F9FF6AA03D2
 void Spigot::setStateImpl (DataRecord &rec,bool initializing)
 {
   VisHandlerNode::setStateImpl(rec,initializing);

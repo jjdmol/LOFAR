@@ -71,6 +71,7 @@ class MSInputSink : public FileSink
       string sdebug ( int detail = 1,const string &prefix = "",
                       const char *name = 0 ) const;
       
+    //##ModelId=400E5B6C0098
       ImportDebugContext(MSVisAgentDebugContext);
       
   protected:

@@ -41,22 +41,29 @@
 namespace Meq {    
 
 
+//##ModelId=400E53040077
 class Selector : public Node
 {
   public:
+    //##ModelId=400E5355022C
     Selector ();
+    //##ModelId=400E5355022D
     virtual ~Selector ();
     
+    //##ModelId=400E5355022F
     virtual TypeId objectType() const
     { return TpMeqSelector; }
     
   protected:
+    //##ModelId=400E53550233
     virtual void setStateImpl (DataRecord &rec,bool initializing);
+    //##ModelId=400E53550237
     virtual int getResult (Result::Ref &resref, 
                            const std::vector<Result::Ref> &childres,
                            const Request &req,bool newreq);
   
   private:
+    //##ModelId=400E5355022A
     vector<int> selection;
 };
 

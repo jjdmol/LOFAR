@@ -31,19 +31,25 @@
 namespace Meq {    
 
 
+//##ModelId=400E530400AB
 class Time : public Node
 {
 public:
+    //##ModelId=400E535502AC
   Time();
+    //##ModelId=400E535502AD
   virtual ~Time();
   
+    //##ModelId=400E535502AF
   virtual void init (DataRecord::Ref::Xfer &initrec, Forest* frst);
   
+    //##ModelId=400E535502B3
   virtual TypeId objectType() const
   { return TpMeqTime; }
 
 protected:
   // Evaluate the value for the given request.
+    //##ModelId=400E535502B5
   virtual int getResult (Result::Ref &resref, 
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);

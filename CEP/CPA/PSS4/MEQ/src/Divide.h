@@ -31,17 +31,22 @@
 namespace Meq {    
 
 
+//##ModelId=400E53030294
 class Divide : public Function2
 {
 public:
+    //##ModelId=400E530500D3
   Divide();
 
+    //##ModelId=400E530500D4
   virtual ~Divide();
 
+    //##ModelId=400E530500D6
     virtual TypeId objectType() const
     { return TpMeqDivide; }
 
   // Evaluate the value for the given request.
+    //##ModelId=400E530500D8
   virtual Vells evaluate (const Request&,const LoShape &,
 			  const vector<Vells*>& values);
 };

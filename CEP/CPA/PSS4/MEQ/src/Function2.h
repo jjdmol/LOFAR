@@ -29,14 +29,18 @@
 namespace Meq {    
 
 
+//##ModelId=400E530302DC
 class Function2 : public Function
 {
 public:
+    //##ModelId=400E530A008D
   Function2();
 
+    //##ModelId=400E530A00B2
   virtual ~Function2();
 
   // Check if 2 children have been given.
+    //##ModelId=400E530A00D6
   virtual void checkChildren();
 };
 

@@ -31,20 +31,26 @@
 namespace Meq {    
 
 
+//##ModelId=400E530302C0
 class Freq : public Node
 {
 public:
+    //##ModelId=400E53050214
   Freq();
 
+    //##ModelId=400E53050215
   virtual ~Freq();
   
+    //##ModelId=400E53050217
   virtual void init (DataRecord::Ref::Xfer &initrec, Forest* frst);
   
+    //##ModelId=400E5305021B
   virtual TypeId objectType() const
     { return TpMeqFreq; }
 
 protected:
   // Evaluate the value for the given request.
+    //##ModelId=400E5305021D
   virtual int getResult (Result::Ref &resref, 
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);

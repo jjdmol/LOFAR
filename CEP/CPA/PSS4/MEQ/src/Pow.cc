@@ -29,12 +29,15 @@ using namespace Meq::VellsMath;
 namespace Meq {    
 
 
+//##ModelId=400E53540382
 Pow::Pow()
 {}
 
+//##ModelId=400E53540383
 Pow::~Pow()
 {}
 
+//##ModelId=400E53540389
 Vells Pow::evaluate (const Request&,const LoShape &,
 		     const vector<Vells*>& values)
 {

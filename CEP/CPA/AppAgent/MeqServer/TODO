@@ -10,8 +10,6 @@ MEQ in general:
     only after node_state and rider have been processed? Note that for
     repeated requests, this step is skipped, regardless. 
   
-  * Implement request ID hierarchy
-  
   * check performance: why does privatizing message arguments in MeqServer
     sometimes lead to cloning? I don't see why anybody else would be holding
     onto the message.
@@ -57,10 +55,13 @@ MEQ in general:
           27/11/03: good to go for now. Still thinking about COW.
           
 Solver:
+
+  * Implement request ID hierarchy
   
-  * Generate a valid RequestId even if the input request is NULL.
-    This ties in to hierarchical requests, so maybe something simple for now
-    (i.e., append iteration index or something?)
+        + Generate a valid RequestId even if the input request is NULL.
+          This ties in to hierarchical requests, so maybe something simple for now
+          (i.e., append iteration index or something?)
+          20/01/04: done for now; revisit with hierarchical requests
           
 Spigot:
 
@@ -114,7 +115,6 @@ DMI & Debug:
   * DataField: getting a non-existing element as an ObjRef makes the
     element MODIFIED. This can cause confusion later on. Perhaps it
     should only be returned as MODIFIED if write-access is requested?
-  
 
 OCTOPUSSY:
 
@@ -125,7 +125,6 @@ OCTOPUSSY:
   * Bug: Figure out why the hell it freezes on a single-CPU machine sometimes. A
     race condition somewhere? NB: a sure way to do it (on zeppelin) seems to
     enable wait_reply=T in the Resolve.Children calls in meqtest.g.
-    
 
   * Bug: Check how a zero-length string or hiid array from Glish shows up in
     AppAgent -- because it looked like a 1-element DataField when 
@@ -140,10 +139,10 @@ OCTOPUSSY:
 
 General:
 
-        + Bug: MSOutputSink: output to new column doesn't work, column stays 'dummy'.
-          Ask Ger for help, since I'm obviously misusing tables somehow.
-          20/01/04: not a bug -- it actually works perfectly. It's the bloody table
-          browser that's broken!
+        + Bug: MSOutputSink: output to new column doesn't work, column stays
+          'dummy'. Ask Ger for help, since I'm obviously misusing tables
+          somehow. 20/01/04: not a bug -- it actually works perfectly. It's the
+          bloody table browser that's broken!
 
         + How to use different (gcc-version-specific) libstdc++ versions?
           This can be addressed via LD_LIBRARY_PATH; ideally, we'd like to list

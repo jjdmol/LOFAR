@@ -43,35 +43,45 @@
 
 namespace Meq {
 
+//##ModelId=400E53030283
 class Constant: public Function
 {
 public:
   // Create a constant with the given value.
+    //##ModelId=400E5305008F
   explicit Constant (double value=0.);
+    //##ModelId=400E53050094
   explicit Constant (const dcomplex& value);
 
+    //##ModelId=400E53050098
   virtual ~Constant();
 
+    //##ModelId=400E5305009A
   virtual TypeId objectType() const
     { return TpMeqConstant; }
 
   // Get the requested result of the constant.
+    //##ModelId=400E5305009C
   virtual int getResult (Result::Ref& resref, 
                          const std::vector<Result::Ref>& childres,
                          const Request& req, bool newreq);
 
   // Initialize the object from the record.
+    //##ModelId=400E530500A6
   virtual void init (DataRecord::Ref::Xfer& initrec, Forest* frst);
 
+    //##ModelId=400E530500AD
   //## Standard debug info method
   virtual string sdebug (int detail = 1, const string& prefix = "",
 			 const char* name = 0) const;
 
 protected:
   // Set the state from the record.
+    //##ModelId=400E530500B5
   virtual void setStateImpl (DataRecord& rec, bool initializing);
 
 private:
+    //##ModelId=400E53050085
   Vells itsValue;
 };
 

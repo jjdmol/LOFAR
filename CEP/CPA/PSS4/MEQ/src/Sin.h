@@ -31,17 +31,22 @@
 namespace Meq {    
 
 
+//##ModelId=400E5304007E
 class Sin : public Function1
 {
 public:
+    //##ModelId=400E53550241
   Sin();
 
+    //##ModelId=400E53550242
   virtual ~Sin();
 
+    //##ModelId=400E53550244
     virtual TypeId objectType() const
     { return TpMeqSin; }
 
   // Evaluate the value for the given request.
+    //##ModelId=400E53550246
   virtual Vells evaluate (const Request&,const LoShape &,
 			  const vector<Vells*>& values);
 };

@@ -18,6 +18,7 @@ void Sink::init (DataRecord::Ref::Xfer &initrec,Forest* frst)
   FailWhen(numChildren()!=1,"sink must have exactly one child node");
 }
 
+//##ModelId=400E5B6D0048
 int Sink::mapOutputCorr (int iplane)
 {
   if( output_icorrs.empty() )
@@ -27,6 +28,7 @@ int Sink::mapOutputCorr (int iplane)
   return output_icorrs[iplane]; 
 }
 
+//##ModelId=400E5B6C03D8
 void Sink::checkInitState (DataRecord &rec)
 {
   VisHandlerNode::checkInitState(rec);
