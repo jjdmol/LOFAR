@@ -74,7 +74,6 @@ extern "C"
       return 0;
    }
 
-
    int report(char * s)
    {
           // if (debug_or_verbose)
