@@ -8,6 +8,7 @@ BlobIBufChar.h BlobIBufVector.h BlobOBufChar.h BlobOBufVector.h \
 BlobOBufString.h BlobIBufString.h BlobOBufNull.h \
 LofarTypedefs.h LofarTypes.h TypeNames.h DataFormat.h DataConvert.h \
 KeyValue.h KeyValueMap.h \
+KeyParser.h \
 Debug.h \
 Exception.h \
 Net/Socket.h \
@@ -56,6 +57,7 @@ BlobIBufStream.cc BlobOBufStream.cc BlobOBufString.cc BlobOBufNull.cc \
 BlobIBufChar.cc BlobOBufChar.cc \
 TypeNames.cc DataConvert.cc \
 KeyValue.cc KeyValueMap.cc \
+KeyParse.yy KeyTokenize.ll KeyParser.cc \
 Debug.cc \
 Exception.cc \
 Stopwatch.cc \
@@ -64,6 +66,10 @@ Net/Socket.cc \
 Thread/Thread.cc \
 Thread/SmartLock.cc \
 Profiling/PerfProfile.cc
+
+AM_YFLAGS		= -d -p KeyParse
+AM_LFLAGS		= -PKeyTokenize
+LEX_OUTPUT_ROOT		= lex.KeyTokenize
 
 libcommon_la_LIBADD	= shmem/libshmem.la
 
