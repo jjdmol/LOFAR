@@ -18,18 +18,22 @@ template <class T>
 class WH_Ring:public WorkHolder
 {
  public:
-  WH_Ring ();
+  WH_Ring (int seqNr);
   virtual ~ WH_Ring ();
-  void process ();
-  void dump () const;
+
+  /// Make a fresh copy of the WH object.
+  virtual WH_Ring<T>* make (const string& name) const;
+
+  virtual void process ();
+  virtual void dump () const;
 
   short getInstanceCnt();
 
   /// Retrieve a pointer to the input data holder for the given channel
-  DH_Ring<T>* getInHolder (int channel); 
+  virtual DH_Ring<T>* getInHolder (int channel); 
 
   /// Retrieve a pointer to the output data holder for the given channel
-  DH_Ring<T>* getOutHolder (int channel); 
+  virtual DH_Ring<T>* getOutHolder (int channel); 
 
  private:
 
@@ -74,8 +78,7 @@ class WH_Ring:public WorkHolder
   */
   vector<DH_Ring<T>*> itsOutDataHolders; 
 
-  static short itsInstanceCnt;
-  short        myInstanceCnt;
+  int          itsSeqNr;
   bool         itsLastBufferSent;
   
   queue<DH_Ring<T>*> itsOutQ;
@@ -95,7 +98,7 @@ inline DH_Ring<T>* WH_Ring<T>::getOutHolder (int channel) {
 
 template <class T>
 inline short    WH_Ring<T>::getInstanceCnt()           { 
-  return myInstanceCnt; 
+  return itsSeqNr; 
 }
 
 template <class T>
@@ -170,8 +173,9 @@ inline void WH_Ring<T>::copySlot2Slot(int srcslotnr, int destslotnr) {
 
 
 template <class T>
-inline WH_Ring<T>::WH_Ring ():
+inline WH_Ring<T>::WH_Ring (int seqNr):
 WorkHolder (3,3),
+itsSeqNr   (seqNr),
 itsLastBufferSent(true)
 {
   itsInDataHolders.reserve(3);
@@ -189,17 +193,16 @@ itsLastBufferSent(true)
   itsOutDataHolders.push_back(aDH1); // Slot1
   itsOutDataHolders.push_back(aDH2); // Slot2
   
-  myInstanceCnt = itsInstanceCnt++;
-  Firewall::Assert(myInstanceCnt != NOTADDRESSED
+  Firewall::Assert(itsSeqNr != NOTADDRESSED
 		   ,__HERE__,
-		   "InstanceCnt == NOTADDRESSED flag %i",NOTADDRESSED);
+		   "itsSeqNr == NOTADDRESSED flag %i",NOTADDRESSED);
   
   for (int destination = 0; destination<10; destination++) {
-    if (myInstanceCnt <= 4) { // first ring
+    if (itsSeqNr <= 4) { // first ring
       if (destination <= 4) itsRoutingTable[destination] = 1; // this ring
       if (destination  > 4) itsRoutingTable[destination] = 2; // other ring
     }
-    if (myInstanceCnt >  4) { // second ring
+    if (itsSeqNr >  4) { // second ring
       if (destination >  4) itsRoutingTable[destination] = 1; //this ring
       if (destination <= 4) itsRoutingTable[destination] = 2; // other ring
     }
@@ -215,6 +218,16 @@ itsLastBufferSent(true)
 template <class T>
 inline WH_Ring<T>::~WH_Ring ()
 { 
+  for (int ch=0; ch<getInputs(); ch++) {
+    delete itsInDataHolders[ch];
+  }
+  delete itsOutDataHolders[0];
+}
+
+template <class T>
+inline WH_Ring<T>* WH_Ring<T>::make (const string&) const
+{
+  return new WH_Ring<T> (itsSeqNr);
 }
 
 template <class T>
@@ -229,7 +242,7 @@ inline void WH_Ring<T>::process ()
     for (int channel=1; channel<getInputs(); channel++)
       getInHolder(channel)->setRead(true); 
 
-/*   cout << "RingNode " << getInstanceCnt()  << endl */
+/*   cout << "RingNode " << itsSeqNr  << endl */
 /*        << "\t Ring INDATA1:  destination "  */
 /*        << itsInDataHolders[1]->getPacket()->destination << "  " */
 /*        << itsInDataHolders[1]->getBuffer()[0] << endl */
@@ -270,8 +283,8 @@ inline bool WH_Ring<T>::receiveFromRing() {
   //  then, check for data in queue and copy it into the Output
   //  (therefore, this may be data received in a earlier call
   for (int slotnr=1; slotnr<getInputs(); slotnr++) {
-    if (getInstanceCnt() == itsInDataHolders[slotnr]->getPacket()->destination) {
-      cout << "Packet arrived at WorkHolder" << getInstanceCnt()
+    if (itsSeqNr == itsInDataHolders[slotnr]->getPacket()->destination) {
+      cout << "Packet arrived at WorkHolder" << itsSeqNr
 	   << " Destination = " << itsInDataHolders[slotnr]->getPacket()->destination 
 	   << " Data = " << itsInDataHolders[slotnr]->getBuffer()[0] << endl;
       //copy the data to the queue
@@ -316,7 +329,7 @@ inline void WH_Ring<T>::reRoute() {
       if ( destslot != slotnr) {
 	if (slotIsEmpty(destslot)) { // only rerout if slot is empty; this only work for closed loops!!!!!
 	  cout << "reRoute destination slot element " 
-	       << getInstanceCnt() 
+	       << itsSeqNr 
 	       << " destination " << itsInDataHolders[slotnr]->getPacket()->destination 
 	       << " : " << slotnr << " --> " << destslot << endl;
 	  copySlot2Slot(slotnr,destslot);
@@ -331,15 +344,12 @@ inline void WH_Ring<T>::reRoute() {
 template <class T>
 inline void WH_Ring<T>::dump () const
 {
-//   cout << "WH_Ring Buffer " << getInstanceCnt() << " Timestamp  = " 
+//   cout << "WH_Ring Buffer " << itsSeqNr << " Timestamp  = " 
 //        << itsOutDataHolders[1]->getPacket()->timeStamp 
 //        << "\t Buffer[0] = " <<  itsOutDataHolders[1]->getBuffer()[0] 
 //        << "\t Destination : " << itsOutDataHolders[1]->getPacket()->destination  
 //        << endl;
 }
-
-template <class T>
-short WH_Ring<T>::itsInstanceCnt = 0;
 
 
 #endif 

@@ -28,13 +28,14 @@ int main (int argc, char *argv[])
   cout << "Ring Test " << rank << " of " << size << "  operational." << flush << endl;
 
   // create the main Simul; Steps and Simuls will be added to this one
-  Simul RingSim(new WH_Empty(),"RingSim",0); //Uses an empty workholder.
+  WH_Empty wh;
+  Simul RingSim(wh,"RingSim",0); //Uses an empty workholder.
 
   Step *ToRingStep[10];
 
   // First define the pre-ring steps
   for (int stepnr=0; stepnr<10; stepnr++) {
-    ToRingStep[stepnr] = new Step(new WH_ToRing());
+    ToRingStep[stepnr] = new Step(WH_ToRing(stepnr));
     ToRingStep[stepnr]->runOnNode(0);
     ToRingStep[stepnr]->setOutRate(11);
     RingSim.addStep (ToRingStep[stepnr]);
@@ -47,7 +48,7 @@ int main (int argc, char *argv[])
 
   Step *FromRingStep[10];
   for (int stepnr=0; stepnr<10; stepnr++) {
-    FromRingStep[stepnr] = new Step(new WH_FromRing());
+    FromRingStep[stepnr] = new Step(WH_FromRing(stepnr));
     FromRingStep[stepnr]->runOnNode(0);
     FromRingStep[stepnr]->setInRate(11);
     RingSim.addStep (FromRingStep[stepnr]);
@@ -56,6 +57,13 @@ int main (int argc, char *argv[])
   theRing.connectOutputArray(FromRingStep,10);
   //RingSim.connectOutputToArray((Step**)(&&step3),1)
    
+  for (int stepnr=0; stepnr<10; stepnr++) {
+    delete ToRingStep[stepnr];
+  }
+  for (int stepnr=0; stepnr<10; stepnr++) {
+    delete FromRingStep[stepnr];
+  }
+
   //RingSim.resolveComm();
 
   //  RingSim.ConnectOutputToArray(fft,ELEMENTS);
@@ -93,15 +101,3 @@ int main (int argc, char *argv[])
   TRANSPORTER::finalize(); // will do nothing since NOMPI_ is defined in the Makefile
   return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-

@@ -18,14 +18,18 @@ class WH_RingSimul:public WorkHolder
  public:
   WH_RingSimul (int channels);
   virtual ~WH_RingSimul ();
-  void     process ();
-  void     dump () const;
+
+  /// Make a fresh copy of the WH object.
+  virtual WH_RingSimul<T>* make (const string& name) const;
+
+  virtual void process ();
+  virtual void dump () const;
 
   /// Retrieve a pointer to the input data holder for the given channel
-  DH_Ring<T>* getInHolder (int channel); 
+  virtual DH_Ring<T>* getInHolder (int channel); 
 
   /// Retrieve a pointer to the output data holder for the given channel
-  DH_Ring<T>* getOutHolder (int channel); 
+  virtual DH_Ring<T>* getOutHolder (int channel); 
 
   void addOutDataHolder(DataHolder* aDH) {itsOutDataHolders.push_back((DH_Ring<DH_Test>*)aDH);
                                           itsNoutputs++;}
@@ -68,8 +72,8 @@ WorkHolder (channels,channels)
   }
   
   for (int ch = 0; ch < getOutputs(); ch++)    {
-            DH_Ring<DH_Test>* aDH = new DH_Ring<DH_Test>();
-            itsOutDataHolders.push_back(aDH);
+    DH_Ring<DH_Test>* aDH = new DH_Ring<DH_Test>();
+    itsOutDataHolders.push_back(aDH);
   }
 }
 
@@ -77,6 +81,18 @@ WorkHolder (channels,channels)
 template <class T>
 inline WH_RingSimul<T>::~WH_RingSimul ()
 { 
+  for (int ch=0; ch<getInputs(); ch++) {
+    delete itsInDataHolders[ch];
+  }
+  for (int ch=0; ch<getOutputs(); ch++) {
+    delete itsOutDataHolders[ch];
+  }
+}
+
+template <class T>
+inline WH_RingSimul<T>* WH_RingSimul<T>::make (const string&) const
+{
+  return new WH_RingSimul<T> (getInputs());
 }
 
 template <class T>
@@ -95,8 +111,3 @@ inline void WH_RingSimul<T>::dump () const
 }
 
 #endif 
-
-
-
-
-
