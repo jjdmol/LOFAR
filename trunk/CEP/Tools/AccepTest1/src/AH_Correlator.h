@@ -45,7 +45,7 @@ namespace LOFAR
   class AH_Correlator: public LOFAR::TinyApplicationHolder {
 
   public:
-    AH_Correlator(int elements, int samples, int channels, int polarisations, char* frontend_ip, int baseport, int targets);
+    AH_Correlator(int elements, int samples, int channels, int polarisations, char* frontend_ip, char* backend_ip, int baseport, int targets);
     virtual ~AH_Correlator();
     
     // overload methods form the ApplicationHolder base class
@@ -63,7 +63,8 @@ namespace LOFAR
     int   itsNsamples;
     int   itsNchannels;
     int   itsNpolarisations;
-    char* itsIP;
+    char* itsFEIP;
+    char* itsBEIP;
     int   itsBaseport;
     int   itsNtargets;
     int   itsRank;             // MPI-like process number
