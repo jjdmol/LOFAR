@@ -45,6 +45,10 @@ WH_Dump::WH_Dump(const string& name, const KeyValueMap& kvm)
 
   itsLastTime.tv_sec = 0;
   itsLastTime.tv_usec = 0;
+  // From now on the number of polarisations is squared because we
+  // are behind the correlator. The DataHolder that is added above
+  // does the multiplication in its own constructor
+  itsNpolarisations *= itsNpolarisations;
 }
 
 WH_Dump::~WH_Dump() {
