@@ -47,7 +47,7 @@ uint doOut (BlobOBuffer& bb)
   Assert (bs.align(1) == 0);
   Assert (bs.align(128) == uint(128-pos));
   // Reserve space for a complex array and the offset of the array.
-  return setSpaceBlobArray1<fcomplex> (bs, 2);
+  return setSpaceBlobArray1<fcomplex> (bs, true, 2);
 }
 
 void doIn (BlobIBuffer& bb, bool read2=false)
@@ -120,7 +120,7 @@ int main()
 	// Interpret the complex vector directly as an array.
 	// Check if the shape and values are correct.
 	std::vector<uint32> shape;
-	uint cpos = getSpaceBlobArray<fcomplex> (bs, shape, false);
+	uint cpos = getSpaceBlobArray<fcomplex> (bs, true, shape, false);
 	Assert (shape.size() == 1);
 	Assert (shape[0] == 2);
 	const fcomplex* ptr = bob2.getPointer<fcomplex> (cpos);
