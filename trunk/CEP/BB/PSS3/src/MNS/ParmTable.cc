@@ -22,6 +22,8 @@
 
 #include <PSS3/MNS/ParmTable.h>
 #include <PSS3/MNS/ParmTableAIPS.h>
+#include <PSS3/MNS/ParmTablePGSQL.h>
+#include <PSS3/MNS/ParmTableMySQL.h>
 #include <PSS3/MNS/MeqStoredParmPolc.h>
 #include <Common/Debug.h>
 #include <casa/Arrays/Vector.h>
@@ -29,11 +31,15 @@
 
 
 ParmTable::ParmTable (const string& dbType, const string& tableName,
-		      const string& userName, const string& passwd)
+		      const string& userName, const string& passwd, const string& hostName)
 : itsRep (0)
 {
   if (dbType == "aips") {
     itsRep = new ParmTableAIPS (tableName);
+  } else if (dbType == "postgres") {
+    itsRep = new ParmTablePGSQL (hostName, userName, tableName);
+  } else if (dbType == "mysql") {
+    itsRep = new ParmTableMySQL (hostName, userName, tableName);
   } else {
     Assert (dbType=="aips");
   }
