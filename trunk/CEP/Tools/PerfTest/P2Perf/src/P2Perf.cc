@@ -135,10 +135,10 @@ void P2Perf::define(const KeyValueMap& params)
 #endif
 
   // Create the Workholders and Steps
-  Sworkholders = new (LOFAR::WorkHolder*)[itsSourceSteps];
-  Ssteps       = new (Step*)[itsSourceSteps];
-  Dworkholders = new (LOFAR::WorkHolder*)[itsDestSteps];
-  Dsteps       = new (Step*)[itsDestSteps];
+  Sworkholders = new WorkHolder*[itsSourceSteps];
+  Ssteps       = new Step*[itsSourceSteps];
+  Dworkholders = new WorkHolder*[itsDestSteps];
+  Dsteps       = new Step*[itsDestSteps];
   
   
   // now go and create the source and destination steps
