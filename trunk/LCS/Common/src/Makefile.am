@@ -6,6 +6,7 @@ BlobHeader.h BlobArrayHeader.h BlobOStream.h BlobIStream.h BlobArray.h \
 BlobIBuffer.h BlobIBufStream.h BlobOBuffer.h BlobOBufStream.h \
 BlobIBufChar.h BlobIBufVector.h BlobOBufChar.h BlobOBufVector.h \
 BlobOBufString.h BlobIBufString.h BlobOBufNull.h \
+BlobField.h BlobFieldSet.h \
 LofarTypedefs.h LofarTypes.h TypeNames.h DataFormat.h DataConvert.h \
 KeyValue.h KeyValueMap.h \
 KeyParser.h \
@@ -55,6 +56,7 @@ Allocator.cc BlobStringType.cc BlobString.cc \
 BlobOStream.cc BlobIStream.cc BlobArray.cc \
 BlobIBufStream.cc BlobOBufStream.cc BlobOBufString.cc BlobOBufNull.cc \
 BlobIBufChar.cc BlobOBufChar.cc \
+BlobField.cc BlobFieldSet.cc \
 TypeNames.cc DataConvert.cc \
 KeyValue.cc KeyValueMap.cc \
 KeyParse.yy KeyTokenize.ll KeyParser.cc \
