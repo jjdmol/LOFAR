@@ -29,6 +29,7 @@
 //# Includes
 #include <Common/LofarTypes.h>
 #include <Common/lofar_complex.h>
+#include <complex>
 #include <string>
 
 namespace LOFAR
@@ -39,6 +40,8 @@ namespace LOFAR
   // These global functions return the name of the basic types.
   // They are meant to get the full id of a templated class when such an
   // object is stored in a blob.
+  // As much as possible std::complex and builtin complex types get the same
+  // name, so they can be read back from a blob in both ways.
   // <group>
 
   const std::string& typeName (const void*);
@@ -57,6 +60,14 @@ namespace LOFAR
   const std::string& typeName (const u16complex*);
   const std::string& typeName (const fcomplex*);
   const std::string& typeName (const dcomplex*);
+#ifdef LOFAR_BUILTIN_COMPLEXINT
+  const std::string& typeName (const std::complex<int16>*);
+  const std::string& typeName (const std::complex<uint16>*);
+#endif
+#ifdef LOFAR_BUILTIN_COMPLEXFP
+  const std::string& typeName (const std::complex<float>*);
+  const std::string& typeName (const std::complex<double>*);
+#endif
   template<typename T> const std::string& typeName (T**);
 
 // </group>
