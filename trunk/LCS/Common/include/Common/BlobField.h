@@ -53,7 +53,12 @@ public:
   // Construct for a scalar.
   explicit BlobFieldBase (uint version);
 
-  // Construct for an array.
+  // Construct for an array with a possible predefined shape.
+  // The shape can be left undefined or partly undefined, after which the
+  // actual shape has to be set at a later time using setShape.
+  // Shape length > 0 means that the dimensionality is fixed.
+  // A size>0 means that the given dimension has a fixed size.
+  // <br>setShape will check if the fixed sizes match.
   // <group>
   BlobFieldBase (uint version, uint32 size0);
   BlobFieldBase (uint version, uint32 size0, uint32 size1,
@@ -74,22 +79,27 @@ public:
   // Make a copy of the derived object.
   virtual BlobFieldBase* clone() const = 0;
 
-  // Is the field a scalar? Otherwise it is an array/
+  // Is the field a scalar? Otherwise it is an array.
   bool isScalar() const
     { return itsIsScalar; }
 
-  // Get the number of elements (1 for a scalar).
+  // Has the field definition a fixed shape?
+  // It has if all axes have a fixed size.
+  bool hasFixedShape() const
+    { return itsHasFixedShape; }
+
+  // Get the actual number of elements (1 for a scalar).
   uint getNelem() const
     { return itsNelem; }
 
-  // Get the shape of the field. An empty vector is returned for a scalar.
-  // Note that an array with an undefined dimensionality also returns
-  // an empty vector.
+  // Get the actual shape of the field.
+  // An empty vector is returned for a scalar.
   const std::vector<uint32>& getShape() const
     { return itsShape; }
 
-  // Set the shape for an array.
-  // It is used when an input blob is interpreted.
+  // Set the actual shape of an array.
+  // It checks if the shape matches possible fixed shape parts in the field
+  // definition and throws an exception if not.
   void setShape (const std::vector<uint32>&);
 
   // Is an array in Fortran order or in C order?
@@ -99,6 +109,15 @@ public:
   // Get the version of the field.
   uint getVersion() const
     { return itsVersion; }
+
+  // Use a blob header when storing the array in a blob?
+  // The constructor sets it by default to no header.
+  // <group>
+  bool useBlobHeader() const
+    { return itsUseHeader; }
+  void setUseBlobHeader (bool useBlobHeader)
+    { itsUseHeader = useBlobHeader; }
+  // </group>
 
   // Get a pointer to the data in the output blob.
   // This function should be called after BlobFieldSet::createBlob.
@@ -155,6 +174,7 @@ protected:
 private:
   // Helper functions for this class.
   // <group>
+  void init();
   void fillNelem();
   virtual void setOSpace (BlobOStream&) = 0;
   virtual void getISpace (BlobIStream&) = 0;
@@ -170,9 +190,12 @@ private:
   int64               itsArrayOffset;     // offset of array header
   uint                itsVersion;
   uint                itsNelem;
+  std::vector<uint32> itsShapeDef;
   std::vector<uint32> itsShape;
   bool                itsFortranOrder;
   bool                itsIsScalar;
+  bool                itsUseHeader;
+  bool                itsHasFixedShape;
 };
 
 

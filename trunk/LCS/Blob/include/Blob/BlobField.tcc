@@ -32,101 +32,109 @@
 namespace LOFAR {
 
   BlobFieldBase::BlobFieldBase (uint version)
-    : itsOffset       (-1),
-      itsArrayOffset  (0),
-      itsVersion      (version),
-      itsNelem        (1),
-      itsFortranOrder (true),
-      itsIsScalar     (true)
+    : itsOffset        (-1),
+      itsArrayOffset   (0),
+      itsVersion       (version),
+      itsNelem         (1),
+      itsFortranOrder  (true),
+      itsIsScalar      (true),
+      itsUseHeader     (false),
+      itsHasFixedShape (true)
   {}
 
   BlobFieldBase::BlobFieldBase (uint version, uint32 size0)
-    : itsOffset       (-1),
-      itsArrayOffset  (0),
-      itsVersion      (version),
+    : itsVersion      (version),
       itsNelem        (size0),
-      itsFortranOrder (true),
-      itsIsScalar     (false)
+      itsFortranOrder (true)
   {
-    itsShape.resize (1);
-    itsShape[0] = size0;
+    itsShapeDef.resize (1);
+    itsShapeDef[0] = size0;
+    init();
   }
 
   BlobFieldBase::BlobFieldBase (uint version, uint32 size0, uint32 size1,
 				bool fortranOrder)
-    : itsOffset       (-1),
-      itsArrayOffset  (0),
-      itsVersion      (version),
-      itsFortranOrder (fortranOrder),
-      itsIsScalar     (false)
+    : itsVersion      (version),
+      itsFortranOrder (fortranOrder)
   {
-    itsShape.resize (2);
-    itsShape[0] = size0;
-    itsShape[1] = size1;
-    fillNelem();
+    itsShapeDef.resize (2);
+    itsShapeDef[0] = size0;
+    itsShapeDef[1] = size1;
+    init();
   }
   BlobFieldBase::BlobFieldBase (uint version, uint32 size0, uint32 size1,
 				uint32 size2, bool fortranOrder)
-    : itsOffset       (-1),
-      itsArrayOffset  (0),
-      itsVersion      (version),
-      itsFortranOrder (fortranOrder),
-      itsIsScalar     (false)
+    : itsVersion      (version),
+      itsFortranOrder (fortranOrder)
   {
-    itsShape.resize (3);
-    itsShape[0] = size0;
-    itsShape[1] = size1;
-    itsShape[2] = size2;
-    fillNelem();
+    itsShapeDef.resize (3);
+    itsShapeDef[0] = size0;
+    itsShapeDef[1] = size1;
+    itsShapeDef[2] = size2;
+    init();
   }
   BlobFieldBase::BlobFieldBase (uint version, uint32 size0, uint32 size1,
 				uint32 size2, uint32 size3, bool fortranOrder)
-    : itsOffset       (-1),
-      itsArrayOffset  (0),
-      itsVersion      (version),
-      itsFortranOrder (fortranOrder),
-      itsIsScalar     (false)
+    : itsVersion      (version),
+      itsFortranOrder (fortranOrder)
   {
-    itsShape.resize (4);
-    itsShape[0] = size0;
-    itsShape[1] = size1;
-    itsShape[2] = size2;
-    itsShape[3] = size3;
-    fillNelem();
+    itsShapeDef.resize (4);
+    itsShapeDef[0] = size0;
+    itsShapeDef[1] = size1;
+    itsShapeDef[2] = size2;
+    itsShapeDef[3] = size3;
+    init();
   }
   BlobFieldBase::BlobFieldBase (uint version, const std::vector<uint32>& shape,
 				bool fortranOrder)
-    : itsOffset       (-1),
-      itsArrayOffset  (0),
-      itsVersion      (version),
-      itsShape        (shape),
-      itsFortranOrder (fortranOrder),
-      itsIsScalar     (false)
+    : itsVersion      (version),
+      itsShapeDef     (shape),
+      itsFortranOrder (fortranOrder)
   {
-    fillNelem();
+    init();
   }
   BlobFieldBase::BlobFieldBase (uint version, const uint32* shape, uint16 ndim,
 				bool fortranOrder)
-    : itsOffset       (-1),
-      itsArrayOffset  (0),
-      itsVersion      (version),
-      itsFortranOrder (fortranOrder),
-      itsIsScalar     (false)
+    : itsVersion      (version),
+      itsFortranOrder (fortranOrder)
   {
-    itsShape.resize (ndim);
+    itsShapeDef.resize (ndim);
     for (uint i=0; i<ndim; i++) {
-      itsShape[i] = shape[i];
+      itsShapeDef[i] = shape[i];
     }
-    fillNelem();
+    init();
   }
 
   BlobFieldBase::~BlobFieldBase()
   {}
 
+  void BlobFieldBase::init()
+  {
+    itsOffset      = -1;
+    itsArrayOffset = 0;
+    itsIsScalar    = false;
+    itsUseHeader   = false;
+    itsShape       = itsShapeDef;
+    fillNelem();
+    itsHasFixedShape = (itsShapeDef.size() > 0  &&  itsNelem != 0);
+  }
+
   void BlobFieldBase::setShape (const std::vector<uint32>& shape)
   {
     if (itsIsScalar) {
       throw Exception("BlobField: cannot set shape of a scalar field");
+    }
+    if (itsShapeDef.size() > 0) {
+      if (itsShapeDef.size() != shape.size()) {
+	throw Exception("BlobField: cannot change dimensionality of "
+			"this array field");
+      }
+      for (uint i=0; i<shape.size(); i++) {
+	if (itsShapeDef[i] != 0  &&  shape[i] != itsShapeDef[i]) {
+	  throw Exception("BlobField: cannot change fixed axis size of "
+			  "this array field");
+	}
+      }
     }
     itsShape = shape;
     fillNelem();
@@ -211,7 +219,8 @@ namespace LOFAR {
       setOffset (bs.setSpace (sizeof(T)), 0);
     } else {
       int64 off = bs.tellPos();     // array offset
-      setOffset (setSpaceBlobArray<T> (bs, getShape(), isFortranOrder()), off);
+      setOffset (setSpaceBlobArray<T> (bs, useBlobHeader(),
+				       getShape(), isFortranOrder()), off);
     }
   }
 
@@ -225,7 +234,8 @@ namespace LOFAR {
     } else {
       int64 off = bs.tellPos();     // array offset
       std::vector<uint32> shp;
-      setOffset (getSpaceBlobArray<T> (bs, shp, fortranOrder()), off);
+      setOffset (getSpaceBlobArray<T> (bs, useBlobHeader(),
+				       shp, fortranOrder()), off);
       setShape (shp);
     }
   }
@@ -278,7 +288,8 @@ namespace LOFAR {
       LOFAR::dataConvert (fmt, data, getNelem());
       if (! isScalar()) {
 	LOFAR::convertArrayHeader (fmt, (char*)(buf.getBuffer() +
-						getArrayOffset()));
+						getArrayOffset()),
+				   useBlobHeader());
       }
     }
   }
