@@ -40,6 +40,8 @@
 //  Represents a parameter, either created on-the-fly (a default
 //  value must then be supplied), or read from a MEP database.
 //  A MeqParm cannot have any children.
+//field: polcs [=]
+//  one or more meqpolc() objects may be provided
 //field: default 0.0  
 //  default parameter value - expected double/complex double, scalar or
 //  2D array
@@ -84,11 +86,11 @@ public:
   // Get the parameter id.
     //##ModelId=3F86886F0224
   unsigned int getParmId() const
-    { return itsParmId; }
+    { return parmid_; }
 
     //##ModelId=3F86886F022C
   bool isSolvable() const
-    { return itsIsSolvable; }
+    { return solvable_; }
 
   // Get the requested result of the parameter.
     //##ModelId=3F86886F022E
@@ -123,8 +125,8 @@ protected:
     //##ModelId=400E535301F7
   void setPolc (Polc *polc,int flags=DMI::ANONWR)
   { 
-    itsPolcs.resize(1);
-    itsPolcs[0].attach(polc,flags); 
+    polcs_.resize(1);
+    polcs_[0].attach(polc,flags); 
   }
   
   void setPolc (Polc &polc)
@@ -133,7 +135,7 @@ protected:
    // Get the polynomials.
     //##ModelId=400E535302DB
   const Polc & getPolc(int i=0) const
-  { return *(itsPolcs[i]); }
+  { return *(polcs_[i]); }
   
 //  virtual void checkInitState (DataRecord &rec);
     //##ModelId=400E5353033A
@@ -141,19 +143,34 @@ protected:
 
 private:
     //##ModelId=3F86886F0215
-  unsigned int itsParmId;
+  unsigned int parmid_;
     //##ModelId=3F86886F0216
-  bool         itsIsSolvable;
+  bool         solvable_;
     //##ModelId=3F86886F0213
-  string       itsName;
+  string       name_;
     //##ModelId=400E535000A3
-  ParmTable*   itsTable;
-    //##ModelId=400E535000B2
-  Polc::Ref    itsDefault;
-    //##ModelId=400E535000C1
-  vector<Polc::Ref> itsPolcs;
+  ParmTable*   parmtable_;
   
-  HIID         itsCurrentDomainId;
+  //##ModelId=400E535000B2
+  //##Documentation
+  //## default polc (used if no table or no matching polcs in the table)
+  Polc::Ref    default_polc_;
+  
+  //##Documentation
+  //## ID of current domain
+  HIID         domain_id_;
+  
+  //##Documentation
+  //## active polcs for current domain. If Parm solvable, this is always a 
+  //## single polc. 
+  vector<Polc::Ref> polcs_;
+  
+//   //##ModelId=400E535000C1
+//   //##Documentation
+//   //## vector of all polcs relevant to current domain. This may be a superset
+//   //## of polcs_.
+//   vector<Polc::Ref> all_polcs_;
+  
 };
 
 
