@@ -52,3 +52,31 @@ server.type=TCP
 [PMLlite]
 host=localhost
 client.type=TCP # SAP
+
+[AVTTest]
+host=localhost
+BeamServer.type=TCP
+BeamServer.port=21040 				# MSPP
+
+[LogicalDeviceScheduler]
+host=localhost
+VT1_server.type=TCP 		# SAP
+BeamServer.type=TCP						# SAP
+
+[VT1]
+host=localhost
+VT1_server.type=TCP
+VT1_server.port=21041 	# MSPP
+BF1_server.type=TCP 	# SAP
+
+[BF1]
+host=localhost
+BF1_server.type=TCP
+BF1_server.port=21042 # MSPP
+BeamServer.type=TCP						# SAP
+
+[ABS]
+host=localhost
+client.type=TCP
+client.port=30230 				# MSPP
+

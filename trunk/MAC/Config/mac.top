@@ -34,3 +34,16 @@ client=SS:server
 
 [PA]
 # has no SAP's
+
+[LogicalDeviceScheduler]
+VT1_server=VT1:VT1_server
+BeamServer=ABS:client
+
+[VT1]
+BF1_server=BF1:BF1_server
+
+[BF1]
+# use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
+
