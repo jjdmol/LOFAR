@@ -366,8 +366,11 @@ fcomplex KeyValue::getFComplex() const
     return fcomplex (*(float*)itsValuePtr, 0.0f);
   case DTFComplex:
     return *(fcomplex*)itsValuePtr;
+  // avoid icc (EM64T) bug
+#if !(defined __x86_64 && __INTEL_COMPILER_BUILD_DATE == 20041123)
   default:
     throw std::runtime_error("KeyValue::getFComplex - invalid data type");
+#endif
   }
   return getFComplex();               // to satisfy compiler
 }
@@ -386,8 +389,10 @@ dcomplex KeyValue::getDComplex() const
 		     ((fcomplex*)itsValuePtr)->imag());
   case DTDComplex:
     return *(dcomplex*)itsValuePtr;
+#if !(defined __x86_64 && __INTEL_COMPILER_BUILD_DATE == 20041123)
   default:
     throw std::runtime_error("KeyValue::getDComplex - invalid data type");
+#endif
   }
   return getDComplex();               // to satisfy compiler
 }
