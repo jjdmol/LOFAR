@@ -1467,17 +1467,17 @@
 				    default_color 	TRUE)
 				label      	(object ItemLabel
 				    Parent_View 	@45
-				    location   	(905, 1197)
+				    location   	(904, 1197)
 				    fill_color 	13434879
 				    nlines     	1
-				    max_width  	494
+				    max_width  	496
 				    justify    	0
 				    label      	"IntermediateLevelStrategy")
 				icon_style 	"Icon"
 				line_color 	3342489
 				fill_color 	13434879
 				quidu      	"3F3A4C6C01E4"
-				width      	512
+				width      	514
 				height     	126
 				annotation 	8
 				autoResize 	TRUE)
@@ -1561,7 +1561,7 @@
 					    default_color 	TRUE)
 					label      	(object SegLabel @51
 					    Parent_View 	@50
-					    location   	(704, 1132)
+					    location   	(706, 1133)
 					    font       	(object Font
 						size       	10
 						face       	"Arial"
@@ -1645,14 +1645,14 @@
 				supplier   	@42
 				line_style 	0)
 			    (object AssociationViewNew "$UNNAMED$16" @55
-				location   	(1150, 875)
+				location   	(1150, 874)
 				stereotype 	TRUE
 				line_color 	3342489
 				quidu      	"3F3A4CA5034B"
 				roleview_list 	(list RoleViews
 				    (object RoleView "parent" @56
 					Parent_View 	@55
-					location   	(686, 347)
+					location   	(686, 346)
 					font       	(object Font
 					    size       	10
 					    face       	"Arial"
@@ -1691,7 +1691,7 @@
 					line_style 	0
 					label      	(object SegLabel @58
 					    Parent_View 	@56
-					    location   	(1183, 1118)
+					    location   	(1183, 1119)
 					    font       	(object Font
 						size       	10
 						face       	"Arial"
@@ -1712,7 +1712,7 @@
 					    orientation 	0))
 				    (object RoleView "children" @59
 					Parent_View 	@55
-					location   	(686, 347)
+					location   	(686, 346)
 					font       	(object Font
 					    size       	10
 					    face       	"Arial"
@@ -1749,7 +1749,7 @@
 					client     	@55
 					supplier   	@53
 					vertices   	(list Points
-					    (1150, 875)
+					    (1150, 874)
 					    (1150, 750)
 					    (1335, 751))
 					line_style 	0
@@ -1790,17 +1790,17 @@
 				    default_color 	TRUE)
 				label      	(object ItemLabel
 				    Parent_View 	@62
-				    location   	(1566, 1197)
+				    location   	(1571, 1197)
 				    fill_color 	13434879
 				    nlines     	1
-				    max_width  	356
+				    max_width  	346
 				    justify    	0
 				    label      	"LowLevelStrategy")
 				icon_style 	"Icon"
 				line_color 	3342489
 				fill_color 	13434879
 				quidu      	"3F3A4C8600AB"
-				width      	374
+				width      	364
 				height     	126
 				annotation 	8
 				autoResize 	TRUE)
@@ -1841,14 +1841,14 @@
 				annotation 	8
 				autoResize 	TRUE)
 			    (object AssociationViewNew "$UNNAMED$17" @65
-				location   	(2160, 1248)
+				location   	(2157, 1248)
 				stereotype 	TRUE
 				line_color 	3342489
 				quidu      	"3F3A4CBF01E4"
 				roleview_list 	(list RoleViews
 				    (object RoleView "controller " @66
 					Parent_View 	@65
-					location   	(448, 752)
+					location   	(445, 752)
 					font       	(object Font
 					    size       	10
 					    face       	"Arial"
@@ -1860,7 +1860,7 @@
 					    default_color 	TRUE)
 					label      	(object SegLabel @67
 					    Parent_View 	@66
-					    location   	(2062, 1224)
+					    location   	(2058, 1224)
 					    font       	(object Font
 						size       	10
 						face       	"Arial"
@@ -1887,7 +1887,7 @@
 					line_style 	0
 					label      	(object SegLabel @68
 					    Parent_View 	@66
-					    location   	(1955, 1302)
+					    location   	(1950, 1302)
 					    font       	(object Font
 						size       	10
 						face       	"Arial"
@@ -1908,7 +1908,7 @@
 					    orientation 	0))
 				    (object RoleView "drivers" @69
 					Parent_View 	@65
-					location   	(448, 752)
+					location   	(445, 752)
 					font       	(object Font
 					    size       	10
 					    face       	"Arial"
@@ -1947,7 +1947,7 @@
 					line_style 	0
 					label      	(object SegLabel @71
 					    Parent_View 	@69
-					    location   	(2323, 1285)
+					    location   	(2322, 1285)
 					    font       	(object Font
 						size       	10
 						face       	"Arial"
@@ -2066,6 +2066,15 @@
 				type       	"Strategy"
 				quidu      	"3F3A4BDA00DA")))
 		    (object Class "MonteCarlo"
+			attributes 	(list Attribute_Set
+			    (object Attribute
+				tool       	"Cplusplus"
+				name       	"HeaderSourceFile"
+				value      	"MonteCarlo.h")
+			    (object Attribute
+				tool       	"Cplusplus"
+				name       	"BodySourceFile"
+				value      	"MonteCarlo.cpp"))
 			quid       	"3F3A5FB7035B"
 			stereotype 	"Domain"
 			superclasses 	(list inheritance_relationship_list
@@ -2088,6 +2097,15 @@
 			quidu      	"3F3B5E73004E"
 			language   	"ANSI C++")
 		    (object Class "Peeling"
+			attributes 	(list Attribute_Set
+			    (object Attribute
+				tool       	"Cplusplus"
+				name       	"HeaderSourceFile"
+				value      	"Peeling.h")
+			    (object Attribute
+				tool       	"Cplusplus"
+				name       	"BodySourceFile"
+				value      	"Peeling.cpp"))
 			quid       	"3F3A5FC402CE"
 			stereotype 	"Domain"
 			superclasses 	(list inheritance_relationship_list
@@ -2145,6 +2163,12 @@
 				quid       	"3F3B9602002E"
 				stereotype 	"abstract"
 				result     	"void"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "getParts"
+				quid       	"3F433C9E0159"
+				result     	"vector<Directive>"
 				concurrency 	"Sequential"
 				opExportControl 	"Public"
 				uid        	0))
@@ -2412,19 +2436,34 @@
 			language   	"ANSI C++"
 			abstract   	TRUE)
 		    (object Class "Partitioning"
+			attributes 	(list Attribute_Set
+			    (object Attribute
+				tool       	"Cplusplus"
+				name       	"HeaderSourceFile"
+				value      	"Partitioning.h")
+			    (object Attribute
+				tool       	"Cplusplus"
+				name       	"BodySourceFile"
+				value      	"Partitioning.cpp"))
 			quid       	"3F432B7F02D0"
 			superclasses 	(list inheritance_relationship_list
 			    (object Inheritance_Relationship
 				quid       	"3F432BC1003F"
 				supplier   	"Logical View::strategy::TacticalDirective"
 				quidu      	"3F3A60DB004E"))
-			operations 	(list Operations
-			    (object Operation "getParts"
-				quid       	"3F433C9E0159"
-				concurrency 	"Sequential"
-				opExportControl 	"Public"
-				uid        	0)))
+			module     	"Component View::Directives (module body)"
+			quidu      	"3F3B5B970290"
+			language   	"ANSI C++")
 		    (object Class "DirectiveData"
+			attributes 	(list Attribute_Set
+			    (object Attribute
+				tool       	"Cplusplus"
+				name       	"HeaderSourceFile"
+				value      	"DirectiveData.h")
+			    (object Attribute
+				tool       	"Cplusplus"
+				name       	"BodySourceFile"
+				value      	"DirectiveData.cpp"))
 			quid       	"3F4DC5270157"
 			class_attributes 	(list class_attribute_list
 			    (object ClassAttribute "id"
@@ -2456,8 +2495,20 @@
 | ...
 |}
 				
-				type       	"String")))
+				type       	"String"))
+			module     	"Component View::Directives (module body)"
+			quidu      	"3F3B5B970290"
+			language   	"ANSI C++")
 		    (object Class "scriptSelectClause"
+			attributes 	(list Attribute_Set
+			    (object Attribute
+				tool       	"Cplusplus"
+				name       	"HeaderSourceFile"
+				value      	"scriptSelectClause.h")
+			    (object Attribute
+				tool       	"Cplusplus"
+				name       	"BodySourceFile"
+				value      	"scriptSelectClause.cpp"))
 			quid       	"3F4DC5C401D4"
 			class_attributes 	(list class_attribute_list
 			    (object ClassAttribute "id"
@@ -2465,10 +2516,34 @@
 				type       	"string"
 				initv      	
 |"0"
-				)))
+				))
+			module     	"Component View::Directives (module body)"
+			quidu      	"3F3B5B970290"
+			language   	"ANSI C++")
 		    (object Class "SelectScriptID"
-			quid       	"3F4DC73102EE")
+			attributes 	(list Attribute_Set
+			    (object Attribute
+				tool       	"Cplusplus"
+				name       	"HeaderSourceFile"
+				value      	"SelectScriptID.h")
+			    (object Attribute
+				tool       	"Cplusplus"
+				name       	"BodySourceFile"
+				value      	"SelectScriptID.cpp"))
+			quid       	"3F4DC73102EE"
+			module     	"Component View::Directives (module body)"
+			quidu      	"3F3B5B970290"
+			language   	"ANSI C++")
 		    (object Class "Parser"
+			attributes 	(list Attribute_Set
+			    (object Attribute
+				tool       	"Cplusplus"
+				name       	"HeaderSourceFile"
+				value      	"Parser.h")
+			    (object Attribute
+				tool       	"Cplusplus"
+				name       	"BodySourceFile"
+				value      	"Parser.cpp"))
 			quid       	"3F4DE33A0399"
 			operations 	(list Operations
 			    (object Operation "setText"
@@ -2492,7 +2567,10 @@
 				result     	"vector<Directive> *"
 				concurrency 	"Sequential"
 				opExportControl 	"Public"
-				uid        	0)))
+				uid        	0))
+			module     	"Component View::Directives (module body)"
+			quidu      	"3F3B5B970290"
+			language   	"ANSI C++")
 		    (object Association "$UNNAMED$28"
 			quid       	"3F44F0D40168"
 			roles      	(list role_list
@@ -2718,7 +2796,7 @@
 				ShowCompartmentStereotypes 	TRUE
 				IncludeAttribute 	TRUE
 				IncludeOperation 	TRUE
-				location   	(880, 144)
+				location   	(880, 160)
 				font       	(object Font
 				    size       	10
 				    face       	"Arial"
@@ -2730,7 +2808,7 @@
 				    default_color 	TRUE)
 				label      	(object ItemLabel
 				    Parent_View 	@77
-				    location   	(617, 101)
+				    location   	(617, 92)
 				    fill_color 	13434879
 				    nlines     	1
 				    max_width  	526
@@ -2743,7 +2821,7 @@
 				quidu      	"3F3B37F70213"
 				compartment 	(object Compartment
 				    Parent_View 	@77
-				    location   	(617, 162)
+				    location   	(617, 153)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -2756,10 +2834,10 @@
 				    icon_style 	"Icon"
 				    fill_color 	16777215
 				    anchor     	2
-				    nlines     	2
-				    max_width  	462)
+				    nlines     	3
+				    max_width  	453)
 				width      	544
-				height     	276
+				height     	326
 				annotation 	8
 				autoResize 	TRUE)
 			    (object ClassView "Class" "Logical View::strategy::TopLevelDirective" @78
@@ -2804,7 +2882,7 @@
 				    fill_color 	16777215
 				    anchor     	2
 				    nlines     	2
-				    max_width  	437)
+				    max_width  	428)
 				width      	448
 				height     	186
 				annotation 	8
@@ -2991,7 +3069,7 @@
 				supplier   	@79
 				line_style 	0)
 			    (object AssociationViewNew "$UNNAMED$30" @88
-				location   	(399, 985)
+				location   	(398, 986)
 				font       	(object Font
 				    size       	10
 				    face       	"Arial"
@@ -3007,7 +3085,7 @@
 				roleview_list 	(list RoleViews
 				    (object RoleView "activity" @89
 					Parent_View 	@88
-					location   	(-481, -55)
+					location   	(-482, -54)
 					font       	(object Font
 					    size       	10
 					    face       	"Arial"
@@ -3067,7 +3145,7 @@
 					    orientation 	1))
 				    (object RoleView "$UNNAMED$31" @92
 					Parent_View 	@88
-					location   	(-481, -55)
+					location   	(-482, -54)
 					font       	(object Font
 					    size       	10
 					    face       	"Arial"
@@ -3083,7 +3161,7 @@
 					client     	@88
 					supplier   	@86
 					vertices   	(list Points
-					    (399, 985)
+					    (398, 986)
 					    (322, 1041)
 					    (708, 1040))
 					line_style 	0
@@ -3124,18 +3202,17 @@
 				    default_color 	TRUE)
 				label      	(object ItemLabel
 				    Parent_View 	@94
-				    location   	(1600, 978)
+				    location   	(1647, 980)
 				    fill_color 	13434879
 				    nlines     	2
-				    max_width  	257
+				    max_width  	162
 				    justify    	0
 				    label      	"WorkDirective")
 				icon_style 	"Decoration"
 				line_color 	3342489
 				fill_color 	13434879
 				quidu      	"3F3B510003A9"
-				width      	275
-				height     	181
+				height     	176
 				annotation 	8
 				autoResize 	TRUE)
 			    (object ClassView "Class" "Logical View::strategy::TechnicalDirective" @95
@@ -3176,7 +3253,7 @@
 				supplier   	@79
 				line_style 	0)
 			    (object AssociationViewNew "$UNNAMED$32" @97
-				location   	(1463, 1056)
+				location   	(1487, 1056)
 				font       	(object Font
 				    size       	10
 				    face       	"Arial"
@@ -3192,7 +3269,7 @@
 				roleview_list 	(list RoleViews
 				    (object RoleView "task" @98
 					Parent_View 	@97
-					location   	(231, 0)
+					location   	(255, 0)
 					font       	(object Font
 					    size       	10
 					    face       	"Arial"
@@ -3204,7 +3281,7 @@
 					    default_color 	TRUE)
 					label      	(object SegLabel @99
 					    Parent_View 	@98
-					    location   	(1513, 1017)
+					    location   	(1547, 1017)
 					    font       	(object Font
 						size       	10
 						face       	"Arial"
@@ -3231,7 +3308,7 @@
 					line_style 	0
 					label      	(object SegLabel @100
 					    Parent_View 	@98
-					    location   	(1576, 1110)
+					    location   	(1621, 1110)
 					    font       	(object Font
 						size       	10
 						face       	"Arial"
@@ -3252,7 +3329,7 @@
 					    orientation 	1))
 				    (object RoleView "$UNNAMED$33" @101
 					Parent_View 	@97
-					location   	(231, 0)
+					location   	(255, 0)
 					font       	(object Font
 					    size       	10
 					    face       	"Arial"
@@ -3270,7 +3347,7 @@
 					line_style 	0
 					label      	(object SegLabel @102
 					    Parent_View 	@101
-					    location   	(1351, 1110)
+					    location   	(1353, 1110)
 					    font       	(object Font
 						size       	10
 						face       	"Arial"
@@ -3566,23 +3643,6 @@
 				line_color 	3342489
 				fill_color 	13434879
 				quidu      	"3F432B7F02D0"
-				compartment 	(object Compartment
-				    Parent_View 	@111
-				    location   	(1270, 684)
-				    font       	(object Font
-					size       	10
-					face       	"Arial"
-					bold       	FALSE
-					italics    	FALSE
-					underline  	FALSE
-					strike     	FALSE
-					color      	0
-					default_color 	TRUE)
-				    icon_style 	"Icon"
-				    fill_color 	16777215
-				    anchor     	2
-				    nlines     	2
-				    max_width  	237)
 				width      	262
 				height     	186
 				annotation 	8
@@ -4274,7 +4334,7 @@
 				icon_y_offset 	0
 				annotation 	1
 				Focus_Of_Control 	(object Focus_Of_Control "" @147
-				    location   	(2960, 880)
+				    location   	(2960, 832)
 				    line_color 	3342489
 				    InterObjView 	@146
 				    height     	60
@@ -4375,7 +4435,7 @@
 				terminus   	(1184, 624)
 				ordinal    	2)
 			    (object InterMessView "" @154
-				location   	(1616, 880)
+				location   	(1632, 832)
 				font       	(object Font
 				    size       	10
 				    face       	"Arial"
@@ -4387,7 +4447,7 @@
 				    default_color 	TRUE)
 				label      	(object SegLabel @155
 				    Parent_View 	@154
-				    location   	(1615, 836)
+				    location   	(1615, 788)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -4411,8 +4471,8 @@
 				supplier   	@146
 				Focus_Src  	@136
 				Focus_Entry 	@147
-				origin     	(287, 880)
-				terminus   	(2944, 880)
+				origin     	(287, 832)
+				terminus   	(2944, 832)
 				ordinal    	4)
 			    (object InterMessView "" @156
 				location   	(1616, 976)
@@ -5180,7 +5240,7 @@
 				height     	60
 				MessView   	@190)
 			    (object MessView "" @194
-				location   	(1479, 367)
+				location   	(1575, 376)
 				font       	(object Font
 				    size       	10
 				    face       	"Arial"
@@ -5193,7 +5253,7 @@
 				line_color 	3342489
 				label      	(object SegLabel @195
 				    Parent_View 	@194
-				    location   	(1662, 327)
+				    location   	(1758, 336)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -5214,12 +5274,12 @@
 				    orientation 	1)
 				DataFlowView 	@196
 				object_arc 	@189
-				pctDist    	0.418560
-				height     	38
+				pctDist    	0.571917
+				height     	74
 				orientation 	1
 				dir        	1
-				origin     	(1421, 382)
-				terminus   	(1537, 352))
+				origin     	(1517, 391)
+				terminus   	(1633, 361))
 			    (object DataFlowView "" @196
 				font       	(object Font
 				    size       	10
@@ -5233,7 +5293,7 @@
 				line_color 	3342489
 				label      	(object SegLabel @197
 				    Parent_View 	@196
-				    location   	(1564, 397)
+				    location   	(1660, 406)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -5510,7 +5570,17 @@
 			abstract   	TRUE)
 		    (object Class "ExternalProgram"
 			quid       	"3F3BAFC301A2"
-			stereotype 	"business worker"))
+			stereotype 	"business worker"
+			operations 	(list Operations
+			    (object Operation "run"
+				quid       	"3F4E0E0102BF"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0))
+			class_attributes 	(list class_attribute_list
+			    (object ClassAttribute "status"
+				quid       	"3F4E0DEE006D"
+				static     	TRUE))))
 		logical_presentations 	(list unit_reference_list))
 	    (object Mechanism @208
 		logical_models 	(list unit_reference_list
@@ -6327,6 +6397,23 @@
 			line_color 	3342489
 			fill_color 	13434879
 			quidu      	"3F3BAFC301A2"
+			compartment 	(object Compartment
+			    Parent_View 	@212
+			    location   	(1070, 943)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    icon_style 	"Icon"
+			    fill_color 	16777215
+			    anchor     	2
+			    nlines     	3
+			    max_width  	9)
 			width      	438
 			height     	268
 			annotation 	8
@@ -6882,7 +6969,7 @@
 			ShowCompartmentStereotypes 	TRUE
 			IncludeAttribute 	TRUE
 			IncludeOperation 	TRUE
-			location   	(176, 960)
+			location   	(208, 1184)
 			font       	(object Font
 			    size       	10
 			    face       	"Arial"
@@ -6894,7 +6981,7 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@242
-			    location   	(81, 886)
+			    location   	(113, 1110)
 			    fill_color 	13434879
 			    nlines     	1
 			    max_width  	190
@@ -6912,7 +6999,7 @@
 			ShowCompartmentStereotypes 	TRUE
 			IncludeAttribute 	TRUE
 			IncludeOperation 	TRUE
-			location   	(512, 960)
+			location   	(544, 1184)
 			font       	(object Font
 			    size       	10
 			    face       	"Arial"
@@ -6924,7 +7011,7 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@243
-			    location   	(414, 886)
+			    location   	(446, 1110)
 			    fill_color 	13434879
 			    nlines     	1
 			    max_width  	196
@@ -6942,7 +7029,7 @@
 			ShowCompartmentStereotypes 	TRUE
 			IncludeAttribute 	TRUE
 			IncludeOperation 	TRUE
-			location   	(304, 144)
+			location   	(336, 144)
 			font       	(object Font
 			    size       	10
 			    face       	"Arial"
@@ -6954,7 +7041,7 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@244
-			    location   	(149, 101)
+			    location   	(181, 101)
 			    fill_color 	16777215
 			    nlines     	1
 			    max_width  	310
@@ -6967,7 +7054,7 @@
 			quidu      	"3F3A3D690399"
 			compartment 	(object Compartment
 			    Parent_View 	@244
-			    location   	(149, 162)
+			    location   	(181, 162)
 			    font       	(object Font
 				size       	10
 				face       	"Arial"
@@ -6990,7 +7077,7 @@
 			ShowCompartmentStereotypes 	TRUE
 			IncludeAttribute 	TRUE
 			IncludeOperation 	TRUE
-			location   	(1264, 576)
+			location   	(1296, 800)
 			font       	(object Font
 			    size       	10
 			    face       	"Arial"
@@ -7002,7 +7089,7 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@245
-			    location   	(1001, 510)
+			    location   	(1033, 734)
 			    fill_color 	13434879
 			    nlines     	1
 			    max_width  	526
@@ -7015,7 +7102,7 @@
 			quidu      	"3F3B37F70213"
 			compartment 	(object Compartment
 			    Parent_View 	@245
-			    location   	(1001, 615)
+			    location   	(1033, 846)
 			    font       	(object Font
 				size       	10
 				face       	"Arial"
@@ -7028,7 +7115,7 @@
 			    icon_style 	"Icon"
 			    fill_color 	16777215
 			    anchor     	2
-			    nlines     	2
+			    nlines     	3
 			    max_width  	462)
 			width      	544
 			height     	322
@@ -7038,7 +7125,7 @@
 			ShowCompartmentStereotypes 	TRUE
 			IncludeAttribute 	TRUE
 			IncludeOperation 	TRUE
-			location   	(304, 576)
+			location   	(336, 800)
 			font       	(object Font
 			    size       	10
 			    face       	"Arial"
@@ -7050,7 +7137,7 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@246
-			    location   	(9, 488)
+			    location   	(41, 712)
 			    fill_color 	16777215
 			    nlines     	1
 			    max_width  	590
@@ -7063,7 +7150,7 @@
 			quidu      	"3F3A4AD902CE"
 			compartment 	(object Compartment
 			    Parent_View 	@246
-			    location   	(9, 593)
+			    location   	(41, 817)
 			    font       	(object Font
 				size       	10
 				face       	"Arial"
@@ -7090,7 +7177,7 @@
 			supplier   	@246
 			line_style 	0)
 		    (object AssociationViewNew "$UNNAMED$18" @248
-			location   	(304, 334)
+			location   	(336, 446)
 			font       	(object Font
 			    size       	10
 			    face       	"Arial"
@@ -7106,7 +7193,7 @@
 			roleview_list 	(list RoleViews
 			    (object RoleView "blackboard" @249
 				Parent_View 	@248
-				location   	(-928, -178)
+				location   	(-896, -66)
 				font       	(object Font
 				    size       	10
 				    face       	"Arial"
@@ -7118,7 +7205,7 @@
 				    default_color 	TRUE)
 				label      	(object SegLabel @250
 				    Parent_View 	@249
-				    location   	(167, 306)
+				    location   	(199, 354)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -7145,7 +7232,7 @@
 				line_style 	0
 				label      	(object SegLabel @251
 				    Parent_View 	@249
-				    location   	(343, 312)
+				    location   	(375, 375)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -7166,7 +7253,7 @@
 				    orientation 	1))
 			    (object RoleView "$UNNAMED$19" @252
 				Parent_View 	@248
-				location   	(-928, -178)
+				location   	(-896, -66)
 				font       	(object Font
 				    size       	10
 				    face       	"Arial"
@@ -7184,7 +7271,7 @@
 				line_style 	0
 				label      	(object SegLabel @253
 				    Parent_View 	@252
-				    location   	(358, 380)
+				    location   	(390, 593)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -7211,7 +7298,7 @@
 			supplier   	@246
 			line_style 	0)
 		    (object AssociationViewNew "$UNNAMED$23" @255
-			location   	(799, 576)
+			location   	(831, 800)
 			font       	(object Font
 			    size       	10
 			    face       	"Arial"
@@ -7227,7 +7314,7 @@
 			roleview_list 	(list RoleViews
 			    (object RoleView "theDirective" @256
 				Parent_View 	@255
-				location   	(543, 64)
+				location   	(575, 288)
 				font       	(object Font
 				    size       	10
 				    face       	"Arial"
@@ -7239,7 +7326,7 @@
 				    default_color 	TRUE)
 				label      	(object SegLabel @257
 				    Parent_View 	@256
-				    location   	(874, 550)
+				    location   	(906, 774)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -7266,7 +7353,7 @@
 				line_style 	0
 				label      	(object SegLabel @258
 				    Parent_View 	@256
-				    location   	(972, 630)
+				    location   	(1004, 854)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -7287,7 +7374,7 @@
 				    orientation 	1))
 			    (object RoleView "$UNNAMED$24" @259
 				Parent_View 	@255
-				location   	(543, 64)
+				location   	(575, 288)
 				font       	(object Font
 				    size       	10
 				    face       	"Arial"
@@ -7305,7 +7392,7 @@
 				line_style 	0
 				label      	(object SegLabel @260
 				    Parent_View 	@259
-				    location   	(628, 630)
+				    location   	(660, 854)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -7627,7 +7714,7 @@
 		max_height 	28350
 		max_width  	21600
 		origin_x   	0
-		origin_y   	1019
+		origin_y   	3294
 		items      	(list diagram_item_list
 		    (object ClassInstanceView "TopLevelStrategy" @277
 			location   	(1152, 560)
@@ -10351,7 +10438,7 @@
 		zoom       	75
 		max_height 	28350
 		max_width  	21600
-		origin_x   	4205
+		origin_x   	2818
 		origin_y   	2603
 		items      	(list diagram_item_list
 		    (object InterObjView "TopLevelStrategy" @416
@@ -12995,7 +13082,7 @@
 |TMPIProgramEntry.cpp,3f4cb66c,A
 |RMPIProgramEntry.h,3f4cb66c,A
 |mNoSuchBlackBoardComponentException.cpp,3f423223,A
-|kNoSuchBlackBoardComponentException.h,3f4c803e,A
+|kNoSuchBlackBoardComponentException.h,3f4e0303,A
 |
 			))
 		    (object Attribute
@@ -13010,7 +13097,7 @@
 |BlackBoard::skip,f,B,3F41E570032C,A,19,4d
 |MPIProgramEntry,t,G,3F3BB0F2031C,A,67,da
 |MPIProgramEntry::run,f,F,,A,31,80
-|NoSuchBlackBoardComponentException,t,I,3F422885004E,A,b7,2d5
+|NoSuchBlackBoardComponentException,t,I,3F422885004E,A,b7,349
 |
 			))
 		quid       	"3F3B5B23002E"
@@ -13042,12 +13129,20 @@
 |SDataManipulation.h,3f3b5cfe,A
 |NDirective.cpp,3f3b5cfe,A
 |LDirective.h,3f4cb66d,A
+|RDirectiveData.cpp,3f4e02d4,A
+|PDirectiveData.h,3f4e02d4,A
 |LIterate.cpp,3f3b5cfe,A
 |JIterate.h,3f3b5cfe,A
 |ZParameterDistribution.cpp,3f3b5cfe,A
 |XParameterDistribution.h,3f3b5cfe,A
+|KParser.cpp,3f4e02d4,A
+|IParser.h,3f4e02d4,A
+|QPartitioning.cpp,3f4e02d4,A
+|OPartitioning.h,3f4e02d4,A
 |eResponsibilityDistribution.cpp,3f3b5cfe,A
 |cResponsibilityDistribution.h,3f3b5cfe,A
+|SSelectScriptID.cpp,3f4e02d4,A
+|QSelectScriptID.h,3f4e02d4,A
 |WStrategicDirective.cpp,3f3b5cfe,A
 |UStrategicDirective.h,3f3b5cfe,A
 |VTacticalDirective.cpp,3f3b5cfe,A
@@ -13055,11 +13150,13 @@
 |WTechnicalDirective.cpp,3f3b5cfe,A
 |UTechnicalDirective.h,3f3b5cfe,A
 |VTopLevelDirective.cpp,3f3b8f31,A
-|TTopLevelDirective.h,3f44f398,A
+|TTopLevelDirective.h,3f4e02d4,A
 |WTopLevelDirective1.cpp,3f3b8f00,A
 |UTopLevelDirective1.h,3f3b8f00,A
 |RWorkDirective.cpp,3f3b5cfe,A
 |PWorkDirective.h,3f3b5cfe,A
+|WscriptSelectClause.cpp,3f4e02d4,A
+|UscriptSelectClause.h,3f4e02d4,A
 |
 			))
 		    (object Attribute
@@ -13076,14 +13173,23 @@
 |DataIntegration,t,I,3F3B43EB0157,A,85,d2
 |DataManipulation,t,K,3F3B44060128,A,88,d7
 |Directive,t,M,3F3B37F70213,A,5b,cf
-|Iterate,t,O,3F3B51C50196,A,79,c2
-|ParameterDistribution,t,Q,3F3B432E00FA,A,9b,f8
-|ResponsibilityDistribution,t,S,3F3B43890167,A,9c,f5
-|StrategicDirective,t,U,3F3B53E30119,A,6d,a3
-|TacticalDirective,t,W,3F3A60DB004E,A,8b,125
-|TechnicalDirective,t,Y,3F3B53D10109,A,8d,df
-|TopLevelDirective,t,a,3F3A5F9D00BB,A,a1,133
-|WorkDirective,t,e,3F3B510003A9,A,63,94
+|DirectiveData,t,O,3F4DC5270157,A,63,3e4
+|Iterate,t,Q,3F3B51C50196,A,79,c2
+|ParameterDistribution,t,S,3F3B432E00FA,A,9b,f8
+|Parser,t,U,3F4DE33A0399,A,6c,153
+|Parser::getNested,f,T,3F4DE3CF031C,A,8c,cf
+|Parser::getText,f,T,3F4DE3900109,A,55,8a
+|Parser::setText,f,T,3F4DE363005D,Hstring,,15,53
+|Partitioning,t,W,3F432B7F02D0,A,80,103
+|Partitioning::getParts,f,V,3F433C9E0159,A,1b,50
+|ResponsibilityDistribution,t,Y,3F3B43890167,A,9c,f5
+|SelectScriptID,t,a,3F4DC73102EE,A,65,97
+|StrategicDirective,t,c,3F3B53E30119,A,6d,a3
+|TacticalDirective,t,e,3F3A60DB004E,A,8b,125
+|TechnicalDirective,t,g,3F3B53D10109,A,8d,df
+|TopLevelDirective,t,i,3F3A5F9D00BB,A,a1,286
+|WorkDirective,t,m,3F3B510003A9,A,63,94
+|scriptSelectClause,t,o,3F4DC5C401D4,A,6d,d0
 |
 			))
 		quid       	"3F3B5B970290"
@@ -13100,7 +13206,7 @@
 			name       	"FilesEncoding"
 			value      	(value Text 
 |v1:LControl.cpp,3f4cb66c,A
-|JControl.h,3f4cb66c,A
+|JControl.h,3f4e030d,A
 |KDriver.cpp,3f3b5f68,A
 |IDriver.h,3f3b5f68,A
 |dIntermediateLevelStrategy.cpp,3f3b5f68,A
@@ -13111,8 +13217,8 @@
 |PLowerStrategy.h,3f3b5f68,A
 |MStrategy.cpp,3f3b5f68,A
 |KStrategy.h,3f4cb66c,A
-|UTopLevelStrategy.cpp,3f4cb66c,A
-|STopLevelStrategy.h,3f4cb66c,A
+|UTopLevelStrategy.cpp,3f4e030d,A
+|STopLevelStrategy.h,3f4e030d,A
 |
 			))
 		    (object Attribute
@@ -13122,20 +13228,21 @@
 		    (object Attribute
 			tool       	"Cplusplus"
 			name       	"CodeItemsEncoding"
-			value      	(value Text 
-|v3:Control,t,C,3F3A4AD902CE,A,b3,296
+			value      	
+|v3:Control,t,C,3F3A4AD902CE,A,b3,2b3
 |Control::addDirective,f,B,3F3B90830399,LDirective*,,3b,a6
 |Driver,t,E,3F3A4C5A03C8,A,82,107
 |IntermediateLevelStrategy,t,G,3F3A4C6C01E4,A,ae,182
 |LowLevelStrategy,t,I,3F3A4C8600AB,A,98,11f
 |LowerStrategy,t,K,3F3A57460290,A,9a,12c
 |Strategy,t,M,3F3A4BDA00DA,A,6e,ab
-|TopLevelStrategy,t,O,3F3A4C45002E,A,ce,311
-|TopLevelStrategy::Instance,f,N,3F43262B0291,A,ae,156
-|TopLevelStrategy::TopLevelStrategy,f,N,3F4326D20214,A,158,199
-|TopLevelStrategy::_instance,f,N,3F4225A301D4,A,1f,ac
+|TopLevelStrategy,t,O,3F3A4C45002E,A,ce,33a
+|TopLevelStrategy::Instance,f,N,3F43262B0291,A,188,1d3
+|TopLevelStrategy::TopLevelStrategy,f,N,3F4326D20214,A,144,185
+|TopLevelStrategy::_instance,f,N,3F4225A301D4,A,1f,af
+|TopLevelStrategy::run,f,N,3F43262B0291,A,b1,142
 |
-			)))
+			))
 		quid       	"3F3B5E060232"
 		stereotype 	"Task Body"
 		language   	"ANSI C++")
@@ -13149,10 +13256,14 @@
 			tool       	"Cplusplus"
 			name       	"FilesEncoding"
 			value      	(value Text 
-|v1:OBruteForce.cpp,3f3b8f63,A
-|MBruteForce.h,3f3b8f63,A
+|v1:OBruteForce.cpp,3f4e0312,A
+|MBruteForce.h,3f4e0312,A
 |PBruteForce1.cpp,3f3b8e61,A
 |NBruteForce1.h,3f3b8e61,A
+|OMonteCarlo.cpp,3f4e0312,A
+|MMonteCarlo.h,3f4e0312,A
+|LPeeling.cpp,3f4e0312,A
+|JPeeling.h,3f4e0312,A
 |
 			))
 		    (object Attribute
@@ -13163,8 +13274,12 @@
 			tool       	"Cplusplus"
 			name       	"CodeItemsEncoding"
 			value      	
-|v3:BruteForce,t,C,3F3B4466009C,A,5d,c9
-|BruteForce::iterate,f,B,3F3B8E2A0203,A,19,4b
+|v3:BruteForce,t,C,3F3B4466009C,A,7c,fc
+|BruteForce::deploy,f,B,3F3B965A037A,A,1b,4c
+|MonteCarlo,t,G,3F3A5FB7035B,A,7c,fb
+|MonteCarlo::deploy,f,F,3F3B966E0177,A,19,4a
+|Peeling,t,I,3F3A5FC402CE,A,76,f2
+|Peeling::deploy,f,H,3F3B967B029F,A,16,44
 |
 			))
 		quid       	"3F3B5E73004E"
@@ -13214,7 +13329,7 @@
 		max_height 	28350
 		max_width  	21600
 		origin_x   	0
-		origin_y   	0
+		origin_y   	1418
 		items      	(list diagram_item_list
 		    (object ModView "Component View::BlackBoard" "TaskType" "Body" @558
 			location   	(256, 992)
@@ -13275,7 +13390,7 @@
 			width      	674
 			height     	244)
 		    (object ModView "Component View::Directives" "PackageType" "Body" @560
-			location   	(816, 1008)
+			location   	(832, 1008)
 			font       	(object Font
 			    size       	10
 			    face       	"Arial"
@@ -13287,22 +13402,22 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@560
-			    location   	(771, 1048)
+			    location   	(781, 1052)
 			    fill_color 	13434879
 			    anchor_loc 	3
 			    nlines     	2
-			    max_width  	169
+			    max_width  	191
 			    label      	"Directives")
 			icon       	"Package Body"
 			icon_style 	"Decoration"
 			line_color 	3342489
 			fill_color 	13434879
 			quidu      	"3F3B5B970290"
-			width      	304
-			height     	216
+			width      	344
+			height     	237
 			autoResize 	TRUE
-			width      	304
-			height     	216)
+			width      	344
+			height     	237)
 		    (object ModView "Component View::Control" "TaskType" "Body" @561
 			location   	(256, 1312)
 			font       	(object Font
@@ -13333,7 +13448,7 @@
 			width      	304
 			height     	216)
 		    (object ModView "Component View::Selfcal" "PackageType" "Body" @562
-			location   	(816, 1392)
+			location   	(848, 1392)
 			font       	(object Font
 			    size       	10
 			    face       	"Arial"
@@ -13345,7 +13460,7 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@562
-			    location   	(771, 1432)
+			    location   	(803, 1432)
 			    fill_color 	13434879
 			    anchor_loc 	3
 			    nlines     	2

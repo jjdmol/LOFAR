@@ -7,6 +7,9 @@ class Directive
   public:
     //##ModelId=3F3B9602002E
     virtual void deploy() = 0;
+    //##ModelId=3F433C9E0159
+    vector<Directive> getParts();
+
 
 };
 

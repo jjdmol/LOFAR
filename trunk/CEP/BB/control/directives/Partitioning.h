@@ -6,8 +6,6 @@
 class Partitioning : public TacticalDirective
 {
   public:
-    //##ModelId=3F433C9E0159
-    getParts();
 
 };
 
