@@ -23,6 +23,7 @@
 #include "GSB_Controller.h"
 #include <../SB_Protocol.ph>
 #include <GCF/ParameterSet.h>
+#include <GSB_Defines.h>
 
 static string sSBTaskName("GCF-SB");
 

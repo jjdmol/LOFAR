@@ -29,6 +29,8 @@
 #include <GCF/TM/GCF_PortInterface.h>
 
 #include <GCF/ParameterSet.h>
+#include <Common/lofar_fstream.h>
+using std::ifstream;
 
 #include <signal.h>
 #include <stdio.h>
@@ -60,10 +62,24 @@ void GCFTask::init(int argc, char** argv)
   _argv = argv;
   
   ParameterSet* pParamSet = ParameterSet::instance();
-  string configfile(argv[0]);
-  pParamSet->adoptFile(configfile + ".conf");
+  string appName(argv[0]);
+  pParamSet->adoptFile(appName + ".conf");
+
+  ifstream    logPropFile;
+
+  //# Try to open the file
+  string logPropFileName = appName + ".log_prop";
+  logPropFile.open(logPropFileName.c_str(), ifstream::in);
+  if (!logPropFile) 
+  {
+    logPropFileName = "./mac.log_prop";
+  }
+  else
+  {
+    logPropFile.close();
+  }
   
-  INIT_LOGGER("./mac.log_prop");   
+  INIT_LOGGER(logPropFileName.c_str());   
 
   if (_doExit)
     exit(-1);

@@ -22,12 +22,13 @@
 
 
 #include <GCF/TM/GCF_TCPPort.h>
-#include <GTM_Defines.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/ParameterSet.h>
 #include "GTM_TCPServerSocket.h"
 #include <ServiceBroker/GTM_ServiceBroker.h>
+#include <ServiceBroker/GSB_Defines.h>
+#include <GTM_Defines.h>
 #include <errno.h>
 
 GCFTCPPort::GCFTCPPort(GCFTask& task, 

@@ -23,13 +23,14 @@
 #ifndef GSB_DEFINES_H
 #define GSB_DEFINES_H
 
-//#define LOFARLOGGER_SBCKAGE "MAC.GCF.SBL.SB.Logger"
+#define LOFARLOGGER_SUBPACKAGE "SB"
 
 #include <GCF/GCF_Defines.h>
 
 class GCFPValue;
 
-enum TSBResult {
+enum TSBResult 
+{
   SB_NO_ERROR, 
   SB_UNKNOWN_ERROR,
   SB_SERVICE_ALREADY_EXIST,

@@ -23,7 +23,8 @@
 #include "GTM_ServiceBroker.h"
 #include <SB_Protocol.ph>
 #include <GCF/ParameterSet.h>
-
+#include <GTM_Defines.h>
+#include "GSB_Defines.h"
 #include <unistd.h>
 
 static string sSBTaskName("GCF-SB");

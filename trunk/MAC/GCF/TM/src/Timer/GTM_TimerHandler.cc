@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#define LOFARLOGGER_SUBPACKAGE "Timer"
+
 #include <Timer/GTM_TimerHandler.h>
 #include <Timer/GTM_Timer.h>
 #include <GCF/TM/GCF_Task.h>

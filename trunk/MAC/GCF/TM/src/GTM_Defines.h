@@ -23,8 +23,6 @@
 #ifndef GTM_DEFINES_H
 #define GTM_DEFINES_H
 
-//#define LOFARLOGGER_PACKAGE "MAC.GCF.TM.Logger"
-
 #include <GCF/GCF_Defines.h>
 
 #define PARAM_PORT_PROT_TYPE "mac.ns.%s.%s.type"
