@@ -1,0 +1,305 @@
+#!/bin/sh
+
+# rub: do recursive update/checkout and build of packages
+#
+#  Copyright (C) 2004
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#  $Id$
+
+
+# This script is useful to checkout all code needed for a package.
+# It checks out the package itself, looks in its configure.in file which
+# other packages it needs, checks those out, etc..
+# If the package already exists in the code tree, the package is updated,
+# otherwise the package is checked out. The cvs log output is written
+# to the file rub.log. The script generates a warning if it finds
+# that there are cvs update conflicts.
+# Furthermore it generates a lofarconf.in.private file which makes it possible
+# to bootstrap, configure and build all those packages (in the correct order).
+#
+# The command has to be run from the LOFAR directory in the user's tree.
+#
+# Run as:
+#   rub [-cvs cvs-command] [-updq string] [-r<cvstag>] 
+#       [-build variants [-[dist]clean] [-check] [-install]]
+#       package1 [...]
+#
+#     -cvs cvs-command  is an optional cvs command making it possible to
+#                       specify (for example) the root.
+#                       It defaults to cvs.
+#     -updq string      is a string containing qualifiers for the cvs update
+#                       command (default is empty)
+#     -r<cvstag>        cvs tag of the package(s) to be updated/checked out
+#     -build variants   gives the variants to build (e.g. gnu3_debug)
+#                       Separate multiple variants by whitespace, thus they
+#                       have to be enclosed in quotes then.
+#     -conf             do bootstrap and configure before build
+#                       It only takes effect if -build is also given.
+#     -clean            indicates that all build/<variant> directories
+#                       will be cleaned in order to start a clean build.
+#                       It only takes effect if -build is also given.
+#     -distclean        indicates that all build/<variant> directories
+#                       will be fully cleaned in order to start a clean build.
+#                       The difference with -clean is that the appropriate
+#                       makefiles and .la files will also be removed.
+#                       It only takes effect if -build is also given.
+#                       It forces -conf.
+#     -check            indicates that a make check should be done.
+#                       It only takes effect if -build is also given.
+#     -install          indicates that a make install should be done.
+#                       It only takes effect if -build is also given.
+#     package           is the name of the package to update/checkout and
+#                       optionally build.
+#                       Multiple packages can be given separated by whitespace.
+#
+# All options can be undone by preceeding them with no (e.g. -nobuild).
+# If an option is given multiple times, only the last value takes effect.
+
+# For example:
+#   rub -cvs "cvs -d :pserver:user@cvs.astron.nl:/cvs/cvsroot" CEP/CPA/PSS3/BBS
+
+
+# Find the path used to start the script.
+pgmpath=
+pgmbase=`basename $0`
+if [ $pgmbase != $0 ]; then
+  pgmpath=`dirname $0`/
+fi
+
+# Handle possible options.
+cvsdefault=cvs
+cvscomm=$cvsdefault
+updq=
+cvstag=
+variants=
+conf=0
+clean=0
+distclean=0
+check=0
+install=0
+while [ 1 = 1 ]
+do
+  # Special cvs command?
+  if [ "$1" = "-cvs" ]; then
+    shift
+    cvscomm="$1"
+    shift
+  elif [ "$1" = "-nocvs" ]; then
+    shift
+    cvscomm=$cvsdefault
+  # cvs update qualifiers?
+  elif [ "$1" = -updq ]; then
+    shift
+    updq="$1"
+    shift
+  elif [ "$1" = -noupdq ]; then
+    shift
+    updq=
+  # cvs tag?
+  elif [ "$1" = -r ]; then
+    shift
+    cvstag="$1"
+    shift
+  elif [ "$1" = -nor ]; then
+    shift
+    cvstag=
+  # Do we have to build after the checkout/update?
+  elif [ "$1" = -build ]; then
+    shift
+    case "$1" in
+    -*)
+      echo "-build argument must be a variant; option '$1' was given"
+      exit 1
+      ;;
+    esac
+    variants="$1"
+    shift
+  elif [ "$1" = -nobuild ]; then
+    shift
+    variants=
+  elif [ "$1" = -conf ]; then
+    shift
+    conf=1
+  elif [ "$1" = -noconf ]; then
+    shift
+    conf=0
+  elif [ "$1" = -clean ]; then
+    shift
+    clean=1
+  elif [ "$1" = -noclean ]; then
+    shift
+    clean=0
+  elif [ "$1" = -distclean ]; then
+    shift
+    distclean=1
+  elif [ "$1" = -distclean ]; then
+    shift
+    distclean=0
+  elif [ "$1" = -check ]; then
+    shift
+    check=1
+  elif [ "$1" = -nocheck ]; then
+    shift
+    check=0
+  elif [ "$1" = -install ]; then
+    shift
+    install=1
+  elif [ "$1" = -noinstall ]; then
+    shift
+    install=0
+  else
+    case "$1" in
+    -r*)
+      cvstag=`echo $1 | sed -e 's/-r//'`
+      shift
+      ;;
+    *)
+      break
+      ;;
+    esac
+  fi
+done
+if [ $distclean = 1 ]; then
+  clean=2
+  conf=1
+fi
+
+# Check if -build is given if other options needing build are given.
+if [ $install != 0  -o  $clean != 0  -o  $check != 0  -o  $conf != 0 ]; then
+  if [ "$variants" = "" ]; then
+    echo "Error, -build option is required with -conf, -(dist)clean, -check and -install"
+    exit 1
+  fi
+fi
+
+# Check if in correct directory.
+curwd=`pwd`
+curwdl=`basename $curwd`
+if [ "$curwdl" != "LOFAR" ]; then
+  echo "rub should be run from the LOFAR directory in the code tree"
+  exit 1
+fi
+if [ "$1" = "" ]; then
+  echo "Run as:  rub <package> <optional cvs-command>"
+  exit 1
+fi
+\rm -f allpkg.tmp rub.log
+touch allpkg.tmp rub.log
+
+# First update bootstrap and autoconf_share.
+if [ -f bootstrap ]; then
+  echo "Update of LOFAR/bootstrap"
+  $cvscomm update bootstrap >> rub.log 2>&1
+else
+  echo "Checkout of LOFAR/bootstrap"
+  (cd .. && $cvscomm checkout LOFAR/bootstrap) >> rub.log 2>&1
+fi
+${pgmpath}rub1 autoconf_share "" 1 "$cvscomm" "$updq" || exit 1
+\rm -f allpkg.tmp
+touch allpkg.tmp
+
+# Update the packages and all packages they need.
+for PKG in $*
+do
+  ${pgmpath}rub1 $PKG "$cvstag" 1 "$cvscomm" "$updq" || exit 1
+done
+
+# Convert allpkg.tmp to lofarconf.in.private
+# Do it by reversing the order and skipping duplicates.
+if [ -f lofarconf.in.private ]; then
+  mv lofarconf.in.private lofarconf.in.private.bak
+fi
+\rm -f lofarconf.in.private
+touch lofarconf.in.private
+while [ 1 = 1 ]
+do
+  pkg=`tail -1 allpkg.tmp | awk '{ print $1 }'`
+  if [ "$pkg" = "" ]; then
+    break;
+  fi
+  grep -v "^$pkg " allpkg.tmp > allpkg.tmp1
+  mv allpkg.tmp1 allpkg.tmp
+  echo "$pkg" >> lofarconf.in.private
+done
+\rm -f allpkg.tmp
+echo "Created lofarconf.in.private containing all these packages"
+pkgs=`cat lofarconf.in.private`
+
+echo "See rub.log for the cvs update/checkout details"
+egrep "^C " rub.log > greplog.tmp 2>&1
+if [ $? = 0 ]; then
+  echo "Error: there are UPDATE CONFLICTS"
+  cat greplog.tmp
+  \rm -f greplog.tmp
+  exit 1
+else
+  echo "There are no update conflicts"
+fi
+\rm -f greplog.tmp
+
+if [ "$variants" = "" ]; then
+  exit 0;
+fi
+
+# Determine the build commands.
+echo "Variants to be built: $variants"
+echo "See build.log for build details"
+bootcmd=
+confcmd=
+premake=
+postmake=
+# Make sure bootstrap is executable; Eclipse does not set x bit.
+if [ $conf = 1 ]; then
+  bootcmd="chmod +x bootstrap; ./bootstrap; "
+  confcmd="../../lofarconf; "
+  echo "Packages will be bootstrapped and configured"
+fi
+if [ $clean = 1 ]; then
+  premake="make clean; "
+  echo "Packages will be cleaned"
+elif [ $clean = 2 ]; then
+  premake="make distclean; ../../lofarconf; "
+  echo "Packages will be distcleaned"
+fi
+if [ $check = 1 ]; then
+  postmake="make check; "
+  echo "Packages will be checked"
+fi
+if [ $install = 1 ]; then
+  postmake="$postmake make install; "
+  echo "Packages will be installed"
+fi
+
+# Build all variants.
+\rm -f build.log
+touch build.log
+for variant in $variants
+do
+  echo "Building packages in build/$variant ..."
+  echo "" >> build.log
+  echo "***** Building packages in build/$variant ..." >> build.log
+  for pkg in $pkgs
+  do
+    echo "  building package $pkg ..."
+    echo "" >> build.log
+    echo " *** Building package $pkg ***" >> build.log
+    echo "(cd $pkg; mkdir -p build/$variant; $bootcmd cd build/$variant; $confcmd $premake make; $postmake)" >> build.log
+    eval "(cd $pkg; mkdir -p build/$variant; $bootcmd cd build/$variant; $confcmd $premake make; $postmake)" >> build.log 2>&1
+  done
+done

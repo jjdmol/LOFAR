@@ -1,0 +1,110 @@
+#!/bin/sh
+
+# rub1: helper script for rub
+#
+#  Copyright (C) 2004
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#  $Id$
+
+
+# This script is used by rub to do the actual checkout/update.
+# See rub for more details.
+#
+# Use as:
+#   rub1 package cvstag checkout cvscomm updq
+#
+#     package     name of package to checkout/update
+#     cvstag      tag of package to checkout/update (blank = no tag)
+#     checkout    1 = do actual checkout/update if not done yet
+#                 0 = do not checkout/update, but only write used
+#                     packages in allpkg.tmp. This is needed for rub
+#                     to get the correct build order.
+#     cvscomm     cvs command to be used
+#     updq        cvs update qualifiers (e.g. -dAP)
+
+
+# Get package name and tag.
+pkgname="$1"
+pkgtag="$2"
+# Does an actual checkout/update need to be done.
+checkout="$3"
+# Get cvs command (defaults to cvs).
+cvscomm="$4"
+if [ "$cvscomm" = "" ]; then
+  cvscomm="cvs"
+fi
+# Get cvs update flags.
+updq="$5"
+
+# See if this package was already updated.
+grep "^$pkgname " allpkg.tmp > /dev/null 2>&1
+notfound=$?
+# If found, check if tag matches.
+if [ $notfound = 0  -a  "$pkgtag" != "" ]; then
+  tmptag=`grep "^$pkgname [^ ]" allpkg.tmp | head -1 | sed -e 's/.* //'`
+  if [ "$tmptag" != "$pkgtag" ]; then
+    echo "Error: package $pkgname is used with different tags ($pkgtag and $tmptag)"
+    exit 1
+  fi
+fi
+# Add it to the file to get correct build order.
+echo "$pkgname $pkgtag" >> allpkg.tmp
+rtag=
+if [ "$pkgtag" != "" ]; then
+  rtag="-r$pkgtag"
+  tagstr=", cvstag $pkgtag"
+fi
+
+# Checkout/update if needed.
+if [ $notfound != 0  -a  $checkout = 1 ]; then
+  if [ -d $pkgname ]; then
+    echo "Update of package $pkgname$tagstr"
+    echo "(cd $pkgname  &&  $cvscomm update $rtag $updq)" >> rub.log 2>&1
+    (cd $pkgname  &&  $cvscomm update $rtag $updq) >> rub.log 2>&1
+    status=$?
+  else
+    echo "Checkout of package $pkgname$tagstr"
+    echo "(cd ..  &&  $cvscomm checkout $rtag LOFAR/$pkgname)" >> rub.log 2>&1
+    (cd ..  &&  $cvscomm checkout $rtag LOFAR/$pkgname) >> rub.log 2>&1
+    status=$?
+  fi
+  if [ $status != 0 ]; then
+    echo "Exiting; update/checkout returned with an error status ..."
+    tail -2 rub.log
+    exit 1
+  fi
+fi
+
+# Find all packages used to get correct build order.
+if [ -f $pkgname/configure.in ]; then
+  # Do it recursively for packages used by this package.
+  # Find them by looking in the configure.in file.
+  pkgs=`grep "^[ \t]*lofar_\(PACKAGE\)\|\(INTERNAL\)[ \t]*(.*)" $pkgname/configure.in | sed -e 's/ //g'`
+  for pkg in $pkgs
+  do
+    # Extract package name and tag.
+    nma=`echo $pkg | sed -e "s/.*lofar_\(PACKAGE\)\|\(INTERNAL\)//" -e "s/ //g" -e "s/.*(//" -e "s/).*//"`
+    # First name is the package.
+    nm=`echo $nma | sed -e "s/,.*//"`
+    # Possible third name is the tag.
+    tag=`echo $nma | awk -F, '{ print $3 }'`
+    # Check out the package.
+    $0 $nm "$tag" $checkout "$cvscomm" "$updq"  ||  exit 1
+  done
+fi
