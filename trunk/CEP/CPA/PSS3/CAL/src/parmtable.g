@@ -31,16 +31,15 @@ parmtable := function (name, create=F)
 
     if (create) {
 	# Create the main table.
-	d1 := tablecreatescalarcoldesc ('Name', '');
-	d2 := tablecreatescalarcoldesc ('Type', 0);
-	d3 := tablecreatescalarcoldesc ('StartTime', as_double(0));
-	d4 := tablecreatescalarcoldesc ('EndTime', as_double(0));
-	d5 := tablecreatescalarcoldesc ('StartFreq', as_double(0));
-	d6 := tablecreatescalarcoldesc ('EndFreq', as_double(0));
-	d7 := tablecreatearraycoldesc  ('RValues', as_double(0));
-	d8 := tablecreatearraycoldesc  ('CValues', as_dcomplex(0));
-	d9 := tablecreatearraycoldesc  ('Mask', T);
-	td := tablecreatedesc (d1, d2, d3, d4, d5, d6, d7, d8, d9);
+	d1 := tablecreatescalarcoldesc ('NAME', '');
+	d3 := tablecreatescalarcoldesc ('STARTTIME', as_double(0));
+	d4 := tablecreatescalarcoldesc ('ENDTIME', as_double(0));
+	d5 := tablecreatescalarcoldesc ('STARTFREQ', as_double(0));
+	d6 := tablecreatescalarcoldesc ('ENDFREQ', as_double(0));
+	d7 := tablecreatearraycoldesc  ('RVALUES', as_double(0));
+	d8 := tablecreatearraycoldesc  ('CVALUES', as_dcomplex(0));
+	d9 := tablecreatearraycoldesc  ('MASK', T);
+	td := tablecreatedesc (d1, d3, d4, d5, d6, d7, d8, d9);
 	self.tab := table (name, td);
 	if (is_fail(self.tab)) {
 	    fail;
@@ -51,8 +50,8 @@ parmtable := function (name, create=F)
 	self.tab.addreadmeline ('PSS ME parameter values');
 	
 	# Create the table with initial values.
-	itabname := spaste(name,'/InitialValues');
-	td := tablecreatedesc (d1, d2,  d7, d8, d9);
+	itabname := spaste(name,'/INITIALVALUES');
+	td := tablecreatedesc (d1, d7, d8, d9);
 	self.itab := table (itabname, td);
 	if (is_fail(self.itab)) {
 	    fail;
@@ -63,13 +62,13 @@ parmtable := function (name, create=F)
 	self.itab.addreadmeline ('Initial PSS ME parameter values');
 	
 	# Make it a subtable of the main table.
-	self.tab.putkeyword ('InitialValues', spaste('Table: ',itabname));
+	self.tab.putkeyword ('INITIALVALUES', spaste('Table: ',itabname));
     } else {
 	self.tab := table (name, readonly=F);
 	if (is_fail(self.tab)) {
 	    fail;
 	}
-	self.itab := table (self.tab.getkeyword ('InitialValues'), readonly=F);
+	self.itab := table (self.tab.getkeyword ('INITIALVALUES'), readonly=F);
 	if (is_fail(self.itab)) {
 	    fail;
 	}
@@ -85,9 +84,9 @@ parmtable := function (name, create=F)
 	return T;
     }
 
-    public.putinit := function (parmname, parmtype, values, mask=unset)
+    public.putinit := function (parmname, values, mask=unset)
     {
-	t1 := self.itab.query (spaste('Name=="',parmname,'"'));
+	t1 := self.itab.query (spaste('NAME=="',parmname,'"'));
 	nr := t1.nrows();
 	t1.close();
 	if (nr != 0) {
@@ -101,19 +100,18 @@ parmtable := function (name, create=F)
 	}
 	self.itab.addrows(1);
 	rownr := self.itab.nrows();
-	self.itab.putcell ('Name', rownr, parmname);
-	self.itab.putcell ('Type', rownr, parmtype);
+	self.itab.putcell ('NAME', rownr, parmname);
 	if (! is_unset(mask)) {
-	    self.itab.putcell ('Mask', rownr, mask);
+	    self.itab.putcell ('MASK', rownr, mask);
 	}
 	if (is_dcomplex(values) || is_complex(values)) {
-	    self.itab.putcell ('CValues', rownr, as_dcomplex(values));
+	    self.itab.putcell ('CVALUES', rownr, as_dcomplex(values));
 	} else {
-	    self.itab.putcell ('RValues', rownr, as_double(values));
+	    self.itab.putcell ('RVALUES', rownr, as_double(values));
 	}
     }
 
-    public.put := function (parmname, parmtype, timerange, freqrange, values, mask=unset)
+    public.put := function (parmname, timerange, freqrange, values, mask=unset)
     {
 	if (length(timerange) != 2) {
 	    fail 'timerange should be a vector of 2 elements (start,end)';
@@ -121,11 +119,11 @@ parmtable := function (name, create=F)
 	if (length(freqrange) != 2) {
 	    fail 'freqrange should be a vector of 2 elements (start,end)';
 	}
-	t1 := self.tab.query (spaste('Name=="',parmname,'" ',
-				     '&& near(StartTime,', timerange[1],') ',
-				     '&& near(EndTime,'  , timerange[2],') ',
-				     '&& near(StartFreq,', freqrange[1],') ',
-				     '&& near(EndFreq,'  , freqrange[2],') '));
+	t1 := self.tab.query (spaste('NAME=="',parmname,'" ',
+				     '&& near(STARTTIME,', timerange[1],') ',
+				     '&& near(ENDTIME,'  , timerange[2],') ',
+				     '&& near(STARTFREQ,', freqrange[1],') ',
+				     '&& near(ENDFREQ,'  , freqrange[2],') '));
 	nr := t1.nrows();
 	t1.close();
 	if (nr != 0) {
@@ -139,19 +137,18 @@ parmtable := function (name, create=F)
 	}
 	self.tab.addrows(1);
 	rownr := self.tab.nrows();
-	self.tab.putcell ('Name', rownr, parmname);
-	self.tab.putcell ('Type', rownr, parmtype);
-	self.tab.putcell ('StartTime', rownr, timerange[1]);
-	self.tab.putcell ('EndTime', rownr, timerange[2]);
-	self.tab.putcell ('StartFreq', rownr, freqrange[1]);
-	self.tab.putcell ('EndFreq', rownr, freqrange[2]);
+	self.tab.putcell ('NAME', rownr, parmname);
+	self.tab.putcell ('STARTTIME', rownr, timerange[1]);
+	self.tab.putcell ('ENDTIME', rownr, timerange[2]);
+	self.tab.putcell ('STARTFREQ', rownr, freqrange[1]);
+	self.tab.putcell ('ENDFREQ', rownr, freqrange[2]);
 	if (! is_unset(mask)) {
-	    self.tab.putcell ('Mask', rownr, mask);
+	    self.tab.putcell ('MASK', rownr, mask);
 	}
 	if (is_dcomplex(values) || is_complex(values)) {
-	    self.tab.putcell ('CValues', rownr, as_dcomplex(values));
+	    self.tab.putcell ('CVALUES', rownr, as_dcomplex(values));
 	} else {
-	    self.tab.putcell ('RValues', rownr, as_double(values));
+	    self.tab.putcell ('RVALUES', rownr, as_double(values));
 	}
     }
 
