@@ -31,6 +31,7 @@
 #include <MNS/MeqPointSource.h>
 #include <MNS/MeqWsrtInt.h>
 #include <MNS/MeqWsrtPoint.h>
+#include <MNS/MeqLofarPoint.h>
 
 #include <Common/Debug.h>
 
@@ -208,8 +209,8 @@ void MeqCalibrater::fillBaselines (const Vector<int>& ant1,
 //----------------------------------------------------------------------
 void MeqCalibrater::makeWSRTExpr()
 {
-  // Get the point sources from the GSM.
-  itsGSM.getPointSources (itsSources);
+  // Get the sources from the ParmTable.
+  itsSources = itsMEP.getPointSources (Vector<int>());
   for (unsigned int i=0; i<itsSources.size(); i++) {
     itsSources[i].setSourceNr (i);
     itsSources[i].setPhaseRef (&itsPhaseRef);
@@ -231,18 +232,23 @@ void MeqCalibrater::makeWSRTExpr()
       // Expression representing station parameters.
       MeqExpr* frot = new MeqStoredParmPolc ("frot." +
 					     itsStations[i]->getName(),
+					     -1, i,
 					     &itsMEP);
       MeqExpr* drot = new MeqStoredParmPolc ("drot." +
 					     itsStations[i]->getName(),
+					     -1, i,
 					     &itsMEP);
       MeqExpr* dell = new MeqStoredParmPolc ("dell." +
 					     itsStations[i]->getName(),
+					     -1, i,
 					     &itsMEP);
       MeqExpr* gain11 = new MeqStoredParmPolc ("gain.11." +
 					       itsStations[i]->getName(),
+					       -1, i,
 					       &itsMEP);
       MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
 					       itsStations[i]->getName(),
+					       -1, i,
 					       &itsMEP);
       itsStatExpr[i] = new MeqStatExpr (frot, drot, dell, gain11, gain22);
     }
@@ -273,6 +279,107 @@ void MeqCalibrater::makeWSRTExpr()
 
 //----------------------------------------------------------------------
 //
+// ~makeWSRTExpr
+//
+// Make the expression tree per baseline for the WSRT.
+//
+//----------------------------------------------------------------------
+void MeqCalibrater::makeLOFARExpr()
+{
+  // Get the sources from the ParmTable.
+  itsSources = itsMEP.getPointSources (Vector<int>());
+  for (unsigned int i=0; i<itsSources.size(); i++) {
+    itsSources[i].setSourceNr (i);
+    itsSources[i].setPhaseRef (&itsPhaseRef);
+  }
+
+  // Make expressions for each station.
+  itsStatUVW  = vector<MeqStatUVW*>          (itsStations.size(),
+					      (MeqStatUVW*)0);
+  itsStatSrc  = vector<MeqStatSources*>      (itsStations.size(),
+					      (MeqStatSources*)0);
+  itsLSSExpr  = vector<MeqLofarStatSources*> (itsStations.size(),
+					      (MeqLofarStatSources*)0);
+  itsStatExpr = vector<MeqJonesExpr*>        (itsStations.size(),
+					      (MeqJonesExpr*)0);
+  for (unsigned int i=0; i<itsStations.size(); i++) {
+    if (itsStations[i] != 0) {
+      // Expression to calculate UVW per station
+      itsStatUVW[i] = new MeqStatUVW (itsStations[i], &itsPhaseRef);
+      // Expression to calculate contribution per station per source.
+      itsStatSrc[i] = new MeqStatSources (itsStatUVW[i], &itsSources);
+      // Expression representing station parameters.
+      MeqExpr* frot = new MeqStoredParmPolc ("frot." +
+					     itsStations[i]->getName(),
+					     -1, i,
+					     &itsMEP);
+      MeqExpr* drot = new MeqStoredParmPolc ("drot." +
+					     itsStations[i]->getName(),
+					     -1, i,
+					     &itsMEP);
+      MeqExpr* dell = new MeqStoredParmPolc ("dell." +
+					     itsStations[i]->getName(),
+					     -1, i,
+					     &itsMEP);
+      MeqExpr* gain11 = new MeqStoredParmPolc ("gain.11." +
+					       itsStations[i]->getName(),
+					       -1, i,
+					       &itsMEP);
+      MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
+					       itsStations[i]->getName(),
+					       -1, i,
+					       &itsMEP);
+      itsStatExpr[i] = new MeqStatExpr (frot, drot, dell, gain11, gain22);
+      // Make an expression for all source parameters for this station.
+      vector<MeqJonesExpr*> vec;
+      for (unsigned int j=0; j<itsSources.size(); j++) {
+	MeqExpr* gc11 = new MeqStoredParmPolc ("gc.11." +
+					       itsStations[i]->getName(),
+					       j, i,
+					       &itsMEP);
+	MeqExpr* gc12 = new MeqStoredParmPolc ("gc.12." +
+					       itsStations[i]->getName(),
+					       j, i,
+					       &itsMEP);
+	MeqExpr* gc21 = new MeqStoredParmPolc ("gc.21." +
+					       itsStations[i]->getName(),
+					       j, i,
+					       &itsMEP);
+	MeqExpr* gc22 = new MeqStoredParmPolc ("gc.22." +
+					       itsStations[i]->getName(),
+					       j, i,
+					       &itsMEP);
+	vec.push_back (new MeqJonesNode (gc11, gc12, gc21, gc22));
+      }
+      itsLSSExpr[i] = new MeqLofarStatSources (vec, itsStatSrc[i]);
+    }
+  }    
+
+  // Make an expression for each baseline.
+  itsExpr.resize (itsBaselines.size());
+  // Create the histogram object for couting of used #cells in time and freq
+  itsCelltHist.resize (itsBaselines.size());
+  itsCellfHist.resize (itsBaselines.size());
+  int nrant = itsBLIndex.nrow();
+  for (int ant2=0; ant2<nrant; ant2++) {
+    for (int ant1=0; ant1<nrant; ant1++) {
+      int blindex = itsBLIndex(ant1,ant2);
+      if (blindex >= 0) {
+	// Create the DFT kernel.
+	MeqLofarPoint* pnt = new MeqLofarPoint (&itsSources,
+						itsLSSExpr[ant1],
+						itsLSSExpr[ant2],
+						&itsCelltHist[blindex],
+						&itsCellfHist[blindex]);
+	itsExpr[blindex] = new MeqWsrtInt (pnt, itsStatExpr[ant1],
+					   itsStatExpr[ant2]);
+      }
+    }
+  }
+}
+
+//----------------------------------------------------------------------
+//
 // ~MeqCalibrater
 //
 // Constructor. Initialize a MeqCalibrater object.
@@ -286,13 +393,12 @@ MeqCalibrater::MeqCalibrater(const String& msName,
 			     const String& skyModel,
 			           uInt    ddid,
 			     const Vector<Int>& ant1,
-			     const Vector<Int>& ant2)
+			     const Vector<Int>& ant2,
+			     const String& modelType)
   :
   itsMS       (msName, Table::Update),
   itsMSCol    (itsMS),
   itsMEP      (meqModel + ".MEP"),
-  itsGSMTable (skyModel + ".GSM"),
-  itsGSM      (itsGSMTable),
   itsSolver   (1, LSQBase::REAL)
 {
   cdebug(1) << "MeqCalibrater constructor (";
@@ -342,7 +448,11 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   fillBaselines (ant1data, ant2data);
 
   // Set up the expression tree for all baselines.
-  makeWSRTExpr();
+  if (modelType == "WSRT") {
+    makeWSRTExpr();
+  } else {
+    makeLOFARExpr();
+  }
 
   cdebug(1) << "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
 	    << ' ' << MeqMatrixRep::nctor + MeqMatrixRep::ndtor << endl;
@@ -382,6 +492,11 @@ MeqCalibrater::~MeqCalibrater()
   }
   for (vector<MeqStatSources*>::iterator iter = itsStatSrc.begin();
        iter != itsStatSrc.end();
+       iter++) {
+    delete *iter;
+  }
+  for (vector<MeqLofarStatSources*>::iterator iter = itsLSSExpr.begin();
+       iter != itsLSSExpr.end();
        iter++) {
     delete *iter;
   }
@@ -926,23 +1041,6 @@ void MeqCalibrater::saveParms()
     }
     i++;
   }
-
-  // Save the source parameters.
-  // SkyModel writes all sources into the table. So when using the
-  // existing table, all sources would be duplicated.
-  // Therefore the table is recreated.
-  // First get the table description and name.
-  TableDesc td = itsGSMTable.tableDesc();
-  String name  = itsGSMTable.tableName();
-  // Close the table by assigning an empty object to it.
-  itsGSMTable = Table();
-  // Recreate the table and save the parameters.
-  SetupNewTable newtab(name+"_new", td, Table::New);
-  Table tab(newtab);
-  itsGSM.store(tab);
-  // Make the new table the current one and rename it to the original name.
-  tab.rename (name, Table::New);
-  itsGSMTable = tab;
 }
 
 //----------------------------------------------------------------------
@@ -1609,12 +1707,13 @@ MethodResult MeqCalibraterFactory::make(ApplicationObject*& newObject,
       Parameter<Int>        ddid(inputRecord, "ddid",     ParameterSet::In);
       Parameter<Vector<Int> > ant1(inputRecord, "ant1",   ParameterSet::In);
       Parameter<Vector<Int> > ant2(inputRecord, "ant2",   ParameterSet::In);
+      Parameter<String> modelType(inputRecord, "modeltype", ParameterSet::In);
 
       if (runConstructor)
 	{
 	  newObject = new MeqCalibrater(msName(), meqModel(),
 					skyModel(), ddid(),
-					ant1(), ant2());
+					ant1(), ant2(), modelType());
 	}
     }
   else

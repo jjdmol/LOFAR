@@ -228,6 +228,7 @@ const _define_meqcalibrater := function(ref agent, id) {
 #
 const meqcalibrater := function(msname, meqmodel = 'LOFAR', skymodel = 'GSM',
                                 ddid = 0, ant=[], ant1=[], ant2=[], 
+				modeltype='WSRT', 
 				host='', forcenewserver=F) {
     if (len(ant1) == 0) ant1:=ant;
     if (len(ant2) == 0) ant2:=ant;
@@ -235,7 +236,7 @@ const meqcalibrater := function(msname, meqmodel = 'LOFAR', skymodel = 'GSM',
     id := defaultservers.create(agent, 'meqcalibrater', 'meqcalibrater',
                                 [msname=msname, meqmodel=meqmodel,
 				 skymodel=skymodel, ddid=ddid,
-				 ant1=ant1, ant2=ant2]);
+				 ant1=ant1, ant2=ant2, modeltype=modeltype]);
     return ref _define_meqcalibrater(agent, id);
 }
 
