@@ -26,33 +26,71 @@
 
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVString.h>
+#include <GCF/GCF_PVUnsigned.h>
 
 #include "../../../APLCommon/src/APL_Defines.h"
 #include "AVTStationReceptor.h"
 #include "AVTStationBeamformer.h"
 #include "LogicalDevice_Protocol.ph"
 #include "AVTUtilities.h"
+#include "AVTResourceManager.h"
 
 using namespace LOFAR;
 using namespace AVT;
 using namespace std;
+using namespace boost;
 
 AVTStationReceptor::AVTStationReceptor(string& taskName, 
                                          const TPropertySet& primaryPropertySet,
                                          const string& APCName,
-                                         const string& APCScope) :
+                                         const string& APCScope,
+                                         const list<string>& requiredResources) :
   AVTLogicalDevice(taskName,primaryPropertySet,APCName,APCScope),
   m_startTime(0),
   m_stopTime(0),
-  m_frequency(0.0)
+  m_frequency(0.0),
+  m_requiredResources(),
+  m_requiredResourcesStatus()
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptor(%s)::AVTStationReceptor",getName().c_str()));
+  
+  list<string>::const_iterator it=requiredResources.begin();
+  while(it!=requiredResources.end())
+  {
+    shared_ptr<GCFProperty> pProp(new GCFProperty(*it));
+    pProp->setAnswer(&m_propertySetAnswer);
+    m_requiredResources[*it] = pProp;
+    m_requiredResourcesStatus[*it] = false;
+    ++it;
+  }
 }
 
 
 AVTStationReceptor::~AVTStationReceptor()
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptor(%s)::~AVTStationReceptor",getName().c_str()));
+}
+
+bool AVTStationReceptor::checkQualityRequirements()
+{
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptor(%s)::%s",getName().c_str(),__func__));
+  bool requirementsMet=true;
+  
+  // quality requirements for this station receptor:
+  // - no resources unavailable
+  // - no resources in alarm
+  map<string,bool>::iterator it=m_requiredResourcesStatus.begin();
+  while(requirementsMet && it!=m_requiredResourcesStatus.end())
+  {
+    requirementsMet = it->second;
+    if(!requirementsMet)
+    {
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptor(%s)::%s requirement %s not met",getName().c_str(),__func__,it->first.c_str()));
+    }
+    ++it;
+  }
+  
+  return requirementsMet;
 }
 
 void AVTStationReceptor::setStartTime(const time_t startTime)
@@ -88,9 +126,19 @@ GCFEvent::TResult AVTStationReceptor::concrete_initial_state(GCFEvent& event, GC
       break;
 
     case F_ENTRY:
+    {
+      map<string,shared_ptr<GCFProperty> >::iterator it=m_requiredResources.begin();
+      while(it!=m_requiredResources.end())
+      {
+        it->second->subscribe();
+        it->second->requestValue();
+        ++it;
+      }
+
       TRAN(AVTLogicalDevice::idle_state);
       break;
-
+    }
+    
     case F_CONNECTED:
     {
       break;
@@ -184,55 +232,21 @@ void AVTStationReceptor::handlePropertySetAnswer(GCFEvent& answer)
       break;
     }
     
+    case F_VGETRESP:
     case F_VCHANGEMSG:
     {
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&answer);
       assert(pPropAnswer);
-/*
-      if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_STRING) &&
-          (strstr(pPropAnswer->pPropName, "_command") != 0))
+      
+      // is it a required resource status?
+      map<string,bool>::iterator it=m_requiredResourcesStatus.find(string(pPropAnswer->pPropName));
+      if(it != m_requiredResourcesStatus.end())
       {
-        // command received
-        string commandString(((GCFPVString*)pPropAnswer->pValue)->getValue());
-        vector<string> parameters;
-        string command;
-        AVTUtilities::decodeCommand(commandString,command,parameters);
-        
-        // PREPARE <starttime>,<stoptime>,<frequency>,<subbands>,<directiontype>,<directionangle1>,<directionangle2>
-        if(command==string("PREPARE"))
-        {
-          if(parameters.size()==7)
-          {
-            // send prepare message:
-            string prepareParameters;
-            AVTUtilities::encodeParameters(parameters,prepareParameters);
-            
-            // send message to myself using a dummyport. VT will send it to SBF and SRG
-            GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
-            LOGICALDEVICEPrepareEvent prepareEvent;
-            prepareEvent.parameters = prepareParameters;
-            dispatch(prepareEvent,dummyPort);
-          }
-        }
-        // SUSPEND
-        else if(command==string("SUSPEND"))
-        {
-          // send message to myself using a dummyport. VT will send it to SBF and SRG
-          GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
-          LOGICALDEVICESuspendEvent suspendEvent;
-          dispatch(suspendEvent,dummyPort); 
-        }
-        // RESUME
-        else if(command==string("RESUME"))
-        {
-          // send message to myself using a dummyport. VT will send it to SBF and SRG
-          GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
-          LOGICALDEVICEResumeEvent resumeEvent;
-          dispatch(resumeEvent,dummyPort);
-        }
+        GCFPVUnsigned unsignedValue;
+        unsignedValue.copy(*pPropAnswer->pValue);
+        it->second = (unsignedValue.getValue() == 0); // true if status is OK
       }
-*/
       break;
     }  
 
@@ -260,6 +274,13 @@ void AVTStationReceptor::concreteClaim(GCFPortInterface& port)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptor(%s)::concreteClaim",getName().c_str()));
   // claim my own resources
+  AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
+  
+  map<string,shared_ptr<GCFProperty> >::iterator it;
+  for(it=m_requiredResources.begin();it!=m_requiredResources.end();++it)
+  {
+    resourceManager->requestResource(getName(),it->first);
+  }
   
   LOGICALDEVICEClaimedEvent claimedEvent;
   dispatch(claimedEvent,port);
@@ -294,10 +315,19 @@ void AVTStationReceptor::concreteSuspend(GCFPortInterface& /*port*/)
   
 }
 
-void AVTStationReceptor::concreteRelease(GCFPortInterface& /*port*/)
+void AVTStationReceptor::concreteRelease(GCFPortInterface& port)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptor(%s)::concreteRelease",getName().c_str()));
   // release my own resources
+  AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
   
+  map<string,shared_ptr<GCFProperty> >::iterator it;
+  for(it=m_requiredResources.begin();it!=m_requiredResources.end();++it)
+  {
+    resourceManager->releaseResource(getName(),it->first);
+  }
+  
+  LOGICALDEVICEReleasedEvent releasedEvent;
+  dispatch(releasedEvent,port);
 }
 

@@ -27,8 +27,13 @@
 //# Common Includes
 #include <time.h>
 #include <Common/lofar_string.h>
+#include <list>
+#include <map>
+#include <boost/shared_ptr.hpp>
+
 //# GCF Includes
 #include <GCF/GCF_Port.h>
+#include <GCF/GCF_Property.h>
 
 #include "../../../APLCommon/src/APLInterTaskPort.h"
 
@@ -44,9 +49,11 @@ namespace AVT
       explicit AVTStationReceptor(string& name, 
                                   const TPropertySet& primaryPropertySet,
                                   const string& APCName,
-                                  const string& APCScope); 
+                                  const string& APCScope,
+                                  const std::list<std::string>& requiredResources); 
       virtual ~AVTStationReceptor();
 
+      bool checkQualityRequirements();
       void setStartTime(const time_t startTime);
       void setStopTime(const time_t stopTime);
       void setFrequency(const double frequency);
@@ -91,7 +98,8 @@ namespace AVT
       time_t            m_startTime;
       time_t            m_stopTime;
       double            m_frequency;
-
+      std::map<std::string,boost::shared_ptr<GCFProperty> >   m_requiredResources;
+      std::map<std::string,bool>                              m_requiredResourcesStatus;
   };
 };
 

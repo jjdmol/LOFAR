@@ -141,8 +141,10 @@ namespace AVT
       typedef LogicalDeviceScheduleT::iterator                LogicalDeviceScheduleIterT;
       typedef map<unsigned long,MaintenanceScheduleInfoT>     MaintenanceScheduleT;
       typedef MaintenanceScheduleT::iterator                  MaintenanceScheduleIterT;
+      typedef map<string,TPropertySet>                        PropertySetMapT;
+      typedef PropertySetMapT::iterator                       PropertySetMapIterT;
 
-      boost::shared_ptr<AVTStationReceptor> addReceptor(string srName,const TPropertySet& propertySet);
+      boost::shared_ptr<AVTStationReceptor> addReceptor(string srName,const TPropertySet& propertySet, const list<string>& requiredResources);
       void addReceptorGroup(string srName,const TPropertySet& propertySet, vector<boost::shared_ptr<AVTStationReceptor> >& receptors);
       LogicalDeviceMapIterT findLogicalDevice(const unsigned long scheduleId);
       LogicalDeviceMapIterT findClientPort(GCFPortInterface& port);
@@ -175,6 +177,7 @@ namespace AVT
       
       
       void sendWGsettings();
+      void getRequiredResources(list<string>& requiredResources, int rack, int subrack, int board, int ap, int rcu);
 
       static string m_schedulerTaskName;
 
@@ -195,6 +198,9 @@ namespace AVT
       GCFPort                 m_timerPort;
       
       AVTResourceManagerPtr   m_resourceManager;
+      
+      PropertySetMapT         m_propsetVTmap;
+      PropertySetMapT         m_propsetSBFmap;
   };
 };
 #endif

@@ -94,6 +94,30 @@ AVTStationReceptorGroup::~AVTStationReceptorGroup()
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::~AVTStationReceptorGroup",getName().c_str()));
 }
 
+bool AVTStationReceptorGroup::checkQualityRequirements(int maxFailedResources)
+{
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::%s",getName().c_str(),__func__));
+  bool requirementsMet=true;
+  
+  // quality requirements for this station receptor group:
+  // - not more than 1 antenna unavailable
+  // - not more than 1 antenna in alarm
+  
+  int failedResources=0;
+  TStationReceptorVectorIter it = m_stationReceptors.begin();
+  while(requirementsMet && it!=m_stationReceptors.end())
+  {
+    if(!(*it).rcu->checkQualityRequirements())
+    {
+      failedResources++;
+    }
+    requirementsMet = (failedResources < maxFailedResources);
+    it++;
+  }
+  
+  return requirementsMet;
+}
+
 void AVTStationReceptorGroup::setStartTime(const time_t startTime)
 {
   // activate timer that triggers the prepare command
@@ -506,6 +530,13 @@ void AVTStationReceptorGroup::concreteRelease(GCFPortInterface& /*port*/)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::concreteRelease",getName().c_str()));
   // release my own resources
+  AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
+  
+  TStationReceptorVectorIter rIt;
+  for(rIt = m_stationReceptors.begin();rIt != m_stationReceptors.end(); ++rIt)
+  {
+    resourceManager->releaseResource(getName(),(*rIt).rcu->getName());
+  }
   
   // send release message to BeamFormer
   LOGICALDEVICEReleaseEvent releaseEvent;

@@ -56,6 +56,7 @@ namespace AVT
       
       /*
       * requests access to a resource. The first requester gets master access
+      * fails if the resource is not available due to maintenance
       */
       void requestResource(const string& taskName, const string& resourceName);
       /*

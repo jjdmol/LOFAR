@@ -40,6 +40,10 @@ VT1_server=VT1:VT1_server
 VT2_server=VT2:VT2_server
 VT3_server=VT3:VT3_server
 VT4_server=VT4:VT4_server
+VT5_server=VT5:VT5_server
+VT6_server=VT6:VT6_server
+VT7_server=VT7:VT7_server
+VT8_server=VT8:VT8_server
 SRG1_server=SRG1:SRG1_server
 SRG2_server=SRG2:SRG2_server
 SRG3_server=SRG3:SRG3_server
@@ -84,6 +88,34 @@ SRG2_server=SRG2:SRG2_server
 SRG3_server=SRG3:SRG3_server
 SRG4_server=SRG4:SRG4_server
 
+[VT5]
+BF5_server=BF5:BF5_server
+SRG1_server=SRG1:SRG1_server
+SRG2_server=SRG2:SRG2_server
+SRG3_server=SRG3:SRG3_server
+SRG4_server=SRG4:SRG4_server
+
+[VT6]
+BF6_server=BF6:BF6_server
+SRG1_server=SRG1:SRG1_server
+SRG2_server=SRG2:SRG2_server
+SRG3_server=SRG3:SRG3_server
+SRG4_server=SRG4:SRG4_server
+
+[VT7]
+BF7_server=BF7:BF7_server
+SRG1_server=SRG1:SRG1_server
+SRG2_server=SRG2:SRG2_server
+SRG3_server=SRG3:SRG3_server
+SRG4_server=SRG4:SRG4_server
+
+[VT8]
+BF8_server=BF8:BF8_server
+SRG1_server=SRG1:SRG1_server
+SRG2_server=SRG2:SRG2_server
+SRG3_server=SRG3:SRG3_server
+SRG4_server=SRG4:SRG4_server
+
 [BF1]
 # use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
 #BeamServer=ABS:client
@@ -100,6 +132,26 @@ BeamServer=AVTTest:BeamServer
 BeamServer=AVTTest:BeamServer
 
 [BF4]
+# use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
+#BeamServer=ABS:client
+BeamServer=AVTTest:BeamServer
+
+[BF5]
+# use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
+#BeamServer=ABS:client
+BeamServer=AVTTest:BeamServer
+
+[BF6]
+# use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
+#BeamServer=ABS:client
+BeamServer=AVTTest:BeamServer
+
+[BF7]
+# use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
+#BeamServer=ABS:client
+BeamServer=AVTTest:BeamServer
+
+[BF8]
 # use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
 #BeamServer=ABS:client
 BeamServer=AVTTest:BeamServer

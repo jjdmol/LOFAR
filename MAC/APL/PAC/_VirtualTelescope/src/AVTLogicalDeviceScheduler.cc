@@ -25,6 +25,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <time.h>
 
 #include <GCF/GCF_Defines.h>
 #include <GCF/GCF_PValue.h>
@@ -42,6 +43,7 @@
 #include "AVTStationReceptor.h"
 #include "AVTStationReceptorGroup.h"
 #include "AVTUtilities.h"
+#include "../../../PIC/RegisterAccess/src/ARAPropertyDefines.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -74,11 +76,29 @@ AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler() :
   m_logicalDeviceSchedule(),
   m_maintenanceSchedule(),
   m_timerPort(*this, g_timerPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL),
-  m_resourceManager(AVTResourceManager::instance())
+  m_resourceManager(AVTResourceManager::instance()),
+  m_propsetVTmap(),
+  m_propsetSBFmap()
 {
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDeviceScheduler::%s(%s)",__func__,getName().c_str()));
   m_properties.load();
+  m_propsetVTmap["VT1"] = primaryPropertySetVT1;
+  m_propsetVTmap["VT2"] = primaryPropertySetVT2;
+  m_propsetVTmap["VT3"] = primaryPropertySetVT3;
+  m_propsetVTmap["VT4"] = primaryPropertySetVT4;
+  m_propsetVTmap["VT5"] = primaryPropertySetVT5;
+  m_propsetVTmap["VT6"] = primaryPropertySetVT6;
+  m_propsetVTmap["VT7"] = primaryPropertySetVT7;
+  m_propsetVTmap["VT8"] = primaryPropertySetVT8;
+  m_propsetSBFmap["BF1"] = primaryPropertySetSBF1;
+  m_propsetSBFmap["BF2"] = primaryPropertySetSBF2;
+  m_propsetSBFmap["BF3"] = primaryPropertySetSBF3;
+  m_propsetSBFmap["BF4"] = primaryPropertySetSBF4;
+  m_propsetSBFmap["BF5"] = primaryPropertySetSBF5;
+  m_propsetSBFmap["BF6"] = primaryPropertySetSBF6;
+  m_propsetSBFmap["BF7"] = primaryPropertySetSBF7;
+  m_propsetSBFmap["BF8"] = primaryPropertySetSBF8;
 }
 
 
@@ -88,13 +108,13 @@ AVTLogicalDeviceScheduler::~AVTLogicalDeviceScheduler()
   m_apcLDS.unload();
 }
 
-shared_ptr<AVTStationReceptor> AVTLogicalDeviceScheduler::addReceptor(string srName,const TPropertySet& propertySet)
+shared_ptr<AVTStationReceptor> AVTLogicalDeviceScheduler::addReceptor(string srName,const TPropertySet& propertySet, const list<string>& requiredResources)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s)(%s)",__func__,getName().c_str(),srName.c_str()));
   // create receptor logical device
   LogicalDeviceInfoT      srInfo;
   string srApcName(SRAPCNAME);
-  shared_ptr<AVTStationReceptor> sr(new AVTStationReceptor(srName,propertySet,srApcName,string("PAC_")+srName));
+  shared_ptr<AVTStationReceptor> sr(new AVTStationReceptor(srName,propertySet,srApcName,string("PAC_")+srName,requiredResources));
   srInfo.logicalDevice = sr;
   srInfo.permanent = true;
   srInfo.clientPort.reset(new APLInterTaskPort(*sr,*this, sr->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
@@ -184,33 +204,36 @@ bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,co
   boost::posix_time::time_duration startDelay   = boost::posix_time::seconds(2*PREPARE_TIME);
   boost::posix_time::time_duration stopDelay    = boost::posix_time::seconds(3*PREPARE_TIME);
   
-  boost::posix_time::ptime currentTime  = boost::posix_time::second_clock::universal_time();
+  time_t timeNow = time(0);
+  struct tm* utcTimeStruct = gmtime(&timeNow);
+  time_t utcTime = mktime(utcTimeStruct);
+  boost::posix_time::ptime curUTCtime   = boost::posix_time::from_time_t(utcTime);
   boost::posix_time::ptime startTime    = boost::posix_time::from_time_t(rawStartTime);
   boost::posix_time::ptime stopTime     = boost::posix_time::from_time_t(rawStopTime);
   boost::posix_time::ptime prepareTime  = startTime - prepareDelay; //  - 10 seconds
 
   // check validity of the times
-  if(startTime < currentTime + startDelay)
+  if(startTime < curUTCtime + startDelay)
   {
-    startTime = currentTime + startDelay;
-    prepareTime = currentTime + prepareDelay;
+    startTime = curUTCtime + startDelay;
+    prepareTime = curUTCtime + prepareDelay;
   }
   if(rawStopTime == 0) // infinite. let's say 100 years
   {
-    stopTime = currentTime + boost::gregorian::date_duration(100*365);
+    stopTime = curUTCtime + boost::gregorian::date_duration(100*365);
   }
-  else if(stopTime < currentTime + startDelay)
+  else if(stopTime < curUTCtime + startDelay)
   {
-    stopTime = currentTime + stopDelay;
+    stopTime = curUTCtime + stopDelay;
   }
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("(%s)\ncurrent time:          %sscheduled preparetime: %s\nscheduled starttime:   %s\nscheduled stoptime:    %s\n",__func__,posix_time::to_simple_string(currentTime).c_str(),posix_time::to_simple_string(prepareTime).c_str(),posix_time::to_simple_string(startTime).c_str(),posix_time::to_simple_string(stopTime).c_str()));
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("(%s)\ncurrent time:          %sscheduled preparetime: %s\nscheduled starttime:   %s\nscheduled stoptime:    %s\n",__func__,posix_time::to_simple_string(curUTCtime).c_str(),posix_time::to_simple_string(prepareTime).c_str(),posix_time::to_simple_string(startTime).c_str(),posix_time::to_simple_string(stopTime).c_str()));
 
   // check if the schedule already exists
   LogicalDeviceScheduleIterT schIt = m_logicalDeviceSchedule.find(scheduleId);
   if(schIt != m_logicalDeviceSchedule.end())
   {
     // it exists.
-    if(prepareTime < currentTime)
+    if(prepareTime < curUTCtime)
     {
       // can't change prepare time because it has passed
     }
@@ -222,10 +245,10 @@ bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,co
       clientPort->cancelTimer(schIt->second.prepareTimerId);
       
       boost::posix_time::time_duration delay;
-      delay = prepareTime - currentTime; 
+      delay = prepareTime - curUTCtime; 
       schIt->second.prepareTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the prepareTimer
     }
-    if(startTime < currentTime)
+    if(startTime < curUTCtime)
     {
       // can't change start time because it has passed
     }
@@ -236,10 +259,10 @@ bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,co
       clientPort->cancelTimer(schIt->second.startTimerId);
       
       boost::posix_time::time_duration delay;
-      delay = startTime - currentTime; 
+      delay = startTime - curUTCtime; 
       schIt->second.startTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the startTimer
     }
-    if(stopTime < currentTime)
+    if(stopTime < curUTCtime)
     {
       // can't change stop time because it has passed
     }
@@ -250,7 +273,7 @@ bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,co
       clientPort->cancelTimer(schIt->second.stopTimerId);
       
       boost::posix_time::time_duration delay;
-      delay = stopTime - currentTime; 
+      delay = stopTime - curUTCtime; 
       schIt->second.stopTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the stopTimer
     }
   }
@@ -266,13 +289,13 @@ bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,co
   
     // create the timers
     boost::posix_time::time_duration delay;
-    delay = prepareTime - currentTime; 
+    delay = prepareTime - curUTCtime; 
     vtSchedule.prepareTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the prepareTimer
 
-    delay = startTime - currentTime; 
+    delay = startTime - curUTCtime; 
     vtSchedule.startTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the startTimer
 
-    delay = stopTime - currentTime; 
+    delay = stopTime - curUTCtime; 
     vtSchedule.stopTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the stopTimer
   
     m_logicalDeviceSchedule[scheduleId] = vtSchedule;
@@ -412,15 +435,24 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
 
       // create receptors
       vector<shared_ptr<AVTStationReceptor> > receptors;
-
-      receptors.push_back(addReceptor(string("RCU1"),propertySetSR1));
-      receptors.push_back(addReceptor(string("RCU2"),propertySetSR2));
-      receptors.push_back(addReceptor(string("RCU3"),propertySetSR3));
-      receptors.push_back(addReceptor(string("RCU4"),propertySetSR4));
-      receptors.push_back(addReceptor(string("RCU5"),propertySetSR5));
-      receptors.push_back(addReceptor(string("RCU6"),propertySetSR6));
-      receptors.push_back(addReceptor(string("RCU7"),propertySetSR7));
-      receptors.push_back(addReceptor(string("RCU8"),propertySetSR8));
+      
+      list<string> requiredResources;
+      getRequiredResources(requiredResources,1,1,1,1,1);
+      receptors.push_back(addReceptor(string("RCU1"),propertySetSR1,requiredResources));
+      getRequiredResources(requiredResources,1,1,1,1,2);
+      receptors.push_back(addReceptor(string("RCU2"),propertySetSR2,requiredResources));
+      getRequiredResources(requiredResources,1,1,1,2,1);
+      receptors.push_back(addReceptor(string("RCU3"),propertySetSR3,requiredResources));
+      getRequiredResources(requiredResources,1,1,1,2,2);
+      receptors.push_back(addReceptor(string("RCU4"),propertySetSR4,requiredResources));
+      getRequiredResources(requiredResources,1,1,1,3,1);
+      receptors.push_back(addReceptor(string("RCU5"),propertySetSR5,requiredResources));
+      getRequiredResources(requiredResources,1,1,1,3,2);
+      receptors.push_back(addReceptor(string("RCU6"),propertySetSR6,requiredResources));
+      getRequiredResources(requiredResources,1,1,1,4,1);
+      receptors.push_back(addReceptor(string("RCU7"),propertySetSR7,requiredResources));
+      getRequiredResources(requiredResources,1,1,1,4,2);
+      receptors.push_back(addReceptor(string("RCU8"),propertySetSR8,requiredResources));
 
       // create receptor groups
       vector<shared_ptr<AVTStationReceptor> > receptorsSRG1;
@@ -445,6 +477,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       addReceptorGroup(string("SRG3"),propertySetSRG3,receptorsSRG3);
       addReceptorGroup(string("SRG4"),propertySetSRG4,receptorsSRG4);
 
+      m_timerPort.open();
       break;
     }
     
@@ -515,9 +548,16 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       LogicalDeviceMapIterT it = findClientPort(port);
       if(it!=m_logicalDeviceMap.end())
       {
-        // remove the object from the map. The Port instance and children Logical Device instances
-        // are destroyed too because they are smart pointers.
-        m_logicalDeviceMap.erase(it);
+        // check if the LD can be deleted if no more schedules exist
+        if(!it->second.permanent)
+        {
+          // remove the object from the map. The Port instance and children Logical Device instances
+          // are destroyed too because they are smart pointers.
+//          m_logicalDeviceMap.erase(it);
+          LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"));
+          LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("!!!!! NOT DESTROYING RELEASED OBJECT BECAUSE OF DESCTRUCTION PROBLEMS !!!!!!"));
+          LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"));
+        }
       }
       break;
     }
@@ -666,6 +706,7 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
                 LogicalDeviceInfoT srgInfo;
                 LogicalDeviceInfoT sbfInfo;
                 LogicalDeviceInfoT vtInfo;
+                bool schedulingError=false;
 
                 // Check if the thing has already been created
                 bool ldExists=false;
@@ -686,50 +727,73 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
                     srg=boost::static_pointer_cast<AVTStationReceptorGroup>(srgInfo.logicalDevice);
 
                     // create SBF
-                    string sbfApcName(SBFAPCNAME);
-                    string bsName(BSNAME);
-                    boost::shared_ptr<AVTStationBeamformer> sbf(new AVTStationBeamformer(parameters[3],primaryPropertySetSBF,sbfApcName,string("PAC_")+parameters[2]+string("_")+parameters[3],bsName));
-                    sbfInfo.logicalDevice=sbf;
-                    sbfInfo.permanent = false;
-                    if(m_pBeamServer==0)
+                    boost::shared_ptr<AVTStationBeamformer> sbf;
+                    PropertySetMapIterT psIt=m_propsetSBFmap.find(parameters[3]);
+                    if(psIt!=m_propsetSBFmap.end())
                     {
-                      m_pBeamServer=&sbf->getBeamServerPort();
+                      string sbfApcName(SBFAPCNAME);
+                      string bsName(BSNAME);
+                      sbf.reset(new AVTStationBeamformer(parameters[3],psIt->second,sbfApcName,string("PAC_")+parameters[2]+string("_")+parameters[3],bsName));
+                      sbfInfo.logicalDevice=sbf;
+                      sbfInfo.permanent = false;
+                      if(m_pBeamServer==0)
+                      {
+                        m_pBeamServer=&sbf->getBeamServerPort();
+                      }
+                    }
+                    else
+                    {
+                      status.setValue(string("Error SCHEDULE,")+parameters[0]+string(",SBF PropertySet not found"));
+                      schedulingError=true;
                     }
 
                     // create VT
-                    string vtApcName(VTAPCNAME);
-                    boost::shared_ptr<AVTVirtualTelescope> vt(new AVTVirtualTelescope(parameters[2],primaryPropertySetVT,vtApcName,string("PAC_")+parameters[2],*(sbf.get()),*(srg.get())));
-                    vtInfo.logicalDevice=vt;
-                    vtInfo.permanent = false;
-                    vtInfo.clientPort.reset(new APLInterTaskPort(*vt.get(),*this, vt->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
-                    vt->addClientInterTaskPort(vtInfo.clientPort.get());
-                    vtInfo.children[parameters[3]]=sbfInfo;
-                    vtInfo.children[parameters[4]]=srgInfo;
-
-                    // put the new logical device in the map
-                    m_logicalDeviceMap[parameters[2]]=vtInfo;
+                    psIt=m_propsetVTmap.find(parameters[2]);
+                    if(psIt!=m_propsetVTmap.end())
+                    {
+                      string vtApcName(VTAPCNAME);
+                      boost::shared_ptr<AVTVirtualTelescope> vt(new AVTVirtualTelescope(parameters[2],psIt->second,vtApcName,string("PAC_")+parameters[2],*(sbf.get()),*(srg.get())));
+                      vtInfo.logicalDevice=vt;
+                      vtInfo.permanent = false;
+                      vtInfo.clientPort.reset(new APLInterTaskPort(*vt.get(),*this, vt->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
+                      vt->addClientInterTaskPort(vtInfo.clientPort.get());
+                      vtInfo.children[parameters[3]]=sbfInfo;
+                      vtInfo.children[parameters[4]]=srgInfo;
+  
+                      // put the new logical device in the map
+                      m_logicalDeviceMap[parameters[2]]=vtInfo;
+                    }
+                    else
+                    {
+                      status.setValue(string("Error SCHEDULE,")+parameters[0]+string(",VT PropertySet not found"));
+                      schedulingError=true;
+                    }
                   }
                   else
                   {
                     status.setValue(string("Error SCHEDULE,")+parameters[0]+string(",SRG not found"));
+                    schedulingError=true;
                   }
                 }
 
-                // copy parameters[5] to parameters[end] into a new vector
-                vector<string> scheduleParameters(parameters.begin()+5,parameters.end());
-                char *endptr;
-                unsigned long scheduleId = strtoul(parameters[0].c_str(),&endptr,10);
-                submitSchedule(scheduleId,parameters[2],scheduleParameters,vtInfo.clientPort);
-
-                if(!ldExists)
+                if(!schedulingError)
                 {
-                  vtInfo.logicalDevice->start();
-
-                  // increment1: ignore starting and stopping time, start the damn thing right now!
-                  // in the future, the scheduler will claim, prepare and resume the scheduled Logical Devices.
-                  // connect and send the claim and prepare messages            
-                  vtInfo.clientPort->open();
-                  // after receiving connected event, messages are sent            
+                  // copy parameters[5] to parameters[end] into a new vector
+                  vector<string> scheduleParameters(parameters.begin()+5,parameters.end());
+                  char *endptr;
+                  unsigned long scheduleId = strtoul(parameters[0].c_str(),&endptr,10);
+                  submitSchedule(scheduleId,parameters[2],scheduleParameters,vtInfo.clientPort);
+  
+                  if(!ldExists)
+                  {
+                    vtInfo.logicalDevice->start();
+  
+                    // increment1: ignore starting and stopping time, start the damn thing right now!
+                    // in the future, the scheduler will claim, prepare and resume the scheduled Logical Devices.
+                    // connect and send the claim and prepare messages            
+                    vtInfo.clientPort->open();
+                    // after receiving connected event, messages are sent            
+                  }
                 }
               }
             }
@@ -791,9 +855,12 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
               if(ldIt != m_logicalDeviceMap.end())
               {
                 // check begin time, if not yet begun, cancel timers and remove schedule
-                boost::posix_time::ptime currentTime  = boost::posix_time::second_clock::universal_time();
+                time_t timeNow = time(0);
+                struct tm* utcTimeStruct = gmtime(&timeNow);
+                time_t utcTime = mktime(utcTimeStruct);
+                boost::posix_time::ptime curUTCtime   = boost::posix_time::from_time_t(utcTime);
                 boost::posix_time::ptime startTime    = boost::posix_time::from_time_t(scheduleIt->second.startTime);
-                if(startTime > currentTime)
+                if(startTime > curUTCtime)
                 {
                   ldIt->second.clientPort->cancelTimer(scheduleIt->second.prepareTimerId);
                   ldIt->second.clientPort->cancelTimer(scheduleIt->second.startTimerId);
@@ -849,7 +916,10 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
             int rawStartTime = atoi(parameters[2].c_str()); // starttime
             int rawStopTime  = atoi(parameters[3].c_str()); // stoptime
             
-            boost::posix_time::ptime currentTime  = boost::posix_time::second_clock::universal_time();
+            time_t timeNow = time(0);
+            struct tm* utcTimeStruct = gmtime(&timeNow);
+            time_t utcTime = mktime(utcTimeStruct);
+            boost::posix_time::ptime curUTCtime   = boost::posix_time::from_time_t(utcTime);
             boost::posix_time::ptime startTime    = boost::posix_time::from_time_t(rawStartTime);
             boost::posix_time::ptime stopTime     = boost::posix_time::from_time_t(rawStopTime);
             
@@ -860,9 +930,9 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
             scheduleInfo.stopTime  = rawStopTime;
             
             boost::posix_time::time_duration delay;
-            delay = startTime - currentTime; 
+            delay = startTime - curUTCtime; 
             scheduleInfo.startTimerId = m_timerPort.setTimer(static_cast<long int>(delay.total_seconds())); // set the startTimer
-            delay = stopTime - currentTime; 
+            delay = stopTime - curUTCtime; 
             scheduleInfo.stopTimerId = m_timerPort.setTimer(static_cast<long int>(delay.total_seconds())); // set the startTimer
 
             m_maintenanceSchedule[scheduleId] = scheduleInfo;
@@ -928,4 +998,47 @@ void AVTLogicalDeviceScheduler::sendWGsettings()
   {
     m_pBeamServer->send(wgSettingsEvent);
   }
+}
+
+void AVTLogicalDeviceScheduler::getRequiredResources(list<string>& requiredResources, int rack, int subrack, int board, int ap, int rcu)
+{
+  requiredResources.clear();
+
+  char scopeString[300];
+  string propSeparator;
+#ifdef GCF4
+  propSeparator=".";
+#else
+  propSeparator="_";
+#endif
+  requiredResources.push_back(string(SCOPE_PIC)+propSeparator+string(PROPNAME_STATUS));
+  requiredResources.push_back(string(SCOPE_PIC_Maintenance)+propSeparator+string(PROPNAME_STATUS));
+  sprintf(scopeString,SCOPE_PIC_RackN,rack);
+  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  sprintf(scopeString,SCOPE_PIC_RackN_Maintenance,rack);
+  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  sprintf(scopeString,SCOPE_PIC_RackN_Alert,rack);
+  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
+  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Maintenance,rack,subrack);
+  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Alert,rack,subrack);
+  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
+  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
+  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Alert,rack,subrack,board);
+  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rack,subrack,board);
+  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
+  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
+  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
+  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance,rack,subrack,board,ap,rcu);
+  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
 }
