@@ -60,4 +60,19 @@ const std::string formatString(const	char* format, ...) {
 	return   std::string(tmp_cstring);
 }
 
+//
+// timeString(aTime [,format]) --> string
+//
+// Define a global function that convert a timestamp into a humanreadable format.
+//
+const std::string timeString(time_t		aTime, 
+							 bool		gmt,
+							 char* 		format)
+{
+	char	theTimeString [256];
+	strftime(theTimeString, 256, format, gmt ? gmtime(&aTime) : localtime(&aTime));
+
+	return (theTimeString);
+}
+
 } // namespace LOFAR

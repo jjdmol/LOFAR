@@ -63,6 +63,15 @@ namespace LOFAR
 //# In real life this must be %s ofcourse but doxygen need a double %%.
 const std::string formatString(const	char* format, ...);
 
+//
+// timeString(aTime [, gmt, format]) --> string
+//
+// The function timeString format the given timestamp into a human-readable
+// format. The default format is yyyy-mm-dd hh:mm:ss
+const std::string timeString(time_t     aTime, 
+							 bool       gmt = true,
+							 char*      format = "%F %T");
+
 } // namespace LOFAR
 
 #endif
