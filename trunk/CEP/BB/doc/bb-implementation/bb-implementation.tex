@@ -162,6 +162,20 @@
           \caption{data distribution\label{req:data-distribution}}
         \end{requirement}
 
+        The instrumentalist has extensive knowledge on the LOFAR
+        device. He or she will probably think of better calibration
+        algorithms once the device is operational. Also people like
+        that may come up with an partitioning of the algorithm in a
+        different set of steps. Hence they must be able to add new
+        knowledge sources to the system before starting a new job.
+
+        \begin{requirement}
+          It must be possible to add new knowledge sources to the
+          system.
+          \footnote{This was taken from \cite{HOO03}.\label{copied-footnote}}
+          \caption{new knowledge sources\label{req:knowledge-sources}}
+        \end{requirement}
+
       \subsubsection{astronomer-user}
 
         The astronomer that has an observation approved by the LOFAR
@@ -175,6 +189,13 @@
           It must be possible to specify what strategy, or strategies
           to use for a self-calibration job.
           \caption{strategy specification\label{req:strategy-specification}}
+        \end{requirement}
+
+        \begin{requirement}
+          It would be nice to have a library of strategies that would
+          include ``conditions'' and ``actions to take''.
+          \footnotemark[\value{footnote}]
+          \caption{library of strategies\label{req:strategies}}
         \end{requirement}
 
         An a-user would not want to know about the number of nodes
@@ -205,6 +226,18 @@
           It must be possible to reconfigure strategy directives on
           the fly.
           \caption{reconfiguring\label{req:reconfiguring}}
+        \end{requirement}
+
+        Also a user may want to be notified of a certain system
+        state. Another possibility is that the user foresees a certain
+        system state and wants the system to react to it in a certain
+        way.
+
+        \begin{requirement}
+          It must be possible to configure controllers for the way
+          they react to certain states of the system.
+          \footnotemark[\value{footnote}]
+          \caption{configuring controllers\label{req:configure-controllers}}
         \end{requirement}
 
     \subsection{system internals}
@@ -305,7 +338,7 @@
           understand ``advice's'' that come from
           ``ThreadWatcher''s. These advices might be ``split'' to
           start a new strategy on the present parameter-set, ``merge
-          ...'' to merge in the intermediate results of an other
+          \ldots'' to merge in the intermediate results of an other
           thread or ``abandon'' to let go completely of the present
           solution strategy and die. The decision finalize will come
           from the ``ThreadController'' itself.
@@ -318,6 +351,22 @@
           simultaneously. These threads are watched for conversion
           speed, solution quality or possibly other things.
 
+          Apart of this multiple solution threads paradigm is the
+          functional paralleling that will take place in the selfcal
+          application. The data-set and the parameter-set will be
+          distributed over a number of engines that will each
+          calibrate there part of the device.
+
+          \begin{assumption}
+            For the Blackboard to be useful in the self-calibration
+            context it is assumed that the self-calibration algorithm
+            can be partitioned over the dimensions of the dataset, or
+            at least that parameters can be solved for
+            independently.\footnotemark[\value{footnote}]
+            \caption{data partitioning\label{ass:partitionable}}
+          \end{assumption}
+
+
           The ``ThreadWatcher'' \index{BlackBoard!ThreadWatcher} gets
           the assignment to watch a certain solution
           thread\index{solution thread}. It will then start
@@ -326,6 +375,12 @@
           results to that of the other threads it is watching. It will
           also check it against a line of ancestors to see if the
           thread is (still) convergent.
+
+          \begin{assumption}
+            It is assumed that the quality of a preliminary result can be
+            measured.\footnotemark[\value{footnote}]
+            \caption{ quality of a preliminary result\label{ass:quality}}
+          \end{assumption}
 
     \subsection{deployment}
 
@@ -944,4 +999,4 @@
 \end{document}
 
 % LocalWords:  blackboard Blackboard BlackBoard LOFAR API ThreadController Hoogland SQL ASTRON Schaaf
-% LocalWords:  ThreadWatcher der Kjeld Daan
+% LocalWords:  ThreadWatcher der Kjeld Daan selfcal
