@@ -547,7 +547,7 @@ void BeamServerTask::wgenable_action()
   wg.settings()(0).ampl = m_wgsetting.amplitude;
   wg.settings()(0).phase = 0;
   wg.settings()(0).nof_samples = 512;
-  wg.settings()(0).mode = WGSettings::MODE_USER_REPEAT;
+  wg.settings()(0).mode = WGSettings::MODE_REPEAT;
   wg.settings()(0)._pad = 0; /* stop valgrind complaining */
 
   m_rspdriver.send(wg);
