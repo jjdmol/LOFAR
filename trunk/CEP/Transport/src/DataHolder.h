@@ -168,7 +168,7 @@ public:
   int getMaxDataSize() const;
 
   // Get data size (in bytes);
-  int getDataSize() const;
+  virtual int getDataSize() const;
 
   // Get a pointer to the data (the beginning of the blob).
   void* getDataPtr() const;
