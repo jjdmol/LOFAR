@@ -31,13 +31,13 @@ global string  VIEW_COMBOBOX_CTRL      = "ComboBoxViews";
 global string  VIEW_TABS_CTRL          = "TabViews";
 global string  VIEW_TABS_VIEW_NAME     = "View";
 global string  VIEW_TABS_CONFIG_NAME   = "Config";
+
 global mapping g_subViews;
 global mapping g_subViewConfigs;
 global string  g_datapoint;
 global string  g_configPanelFileName;
 global int     g_selectedView;
 global string  g_selectedViewName;
-
 
 ///////////////////////////////////////////////////////////////////////////
 //Function mappingClear
@@ -72,8 +72,8 @@ void NavTabInitialize(string datapoint)
   
   // clear mappings and combobox
   viewsComboBoxCtrl.deleteAllItems();
-//  mappingClear(g_subViews);
-//  mappingClear(g_subViewConfigs);
+  mappingClear(g_subViews);
+  mappingClear(g_subViewConfigs);
   g_selectedView = 1;
   g_selectedViewName = "";
   
@@ -179,6 +179,7 @@ void ComboBoxViewsSelectionChanged()
     "$selectedView:" + g_selectedView,
     "$viewName:" + g_selectedViewName,
     "$selectedElementDpType:" + datapointTypeName,
+    "$datapoint:" + g_datapoint,
     "$configDatapoint:"+g_subViewConfigs[selectedSubView]);
   LOG_TRACE("configPanel,configParameters: ",g_configPanelFileName,configPanelParameters);
   viewTabsCtrl.namedRegisterPanel(VIEW_TABS_CONFIG_NAME,g_configPanelFileName,configPanelParameters);

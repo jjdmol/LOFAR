@@ -698,12 +698,12 @@ void TabViews_HandleEventSelectionChanged()
 
     shape tabCtrl = getTabCtrl();
     string selectedViewCaption = tabCtrl.namedActiveRegister;
-    navConfigSetSelectedView(selectedViewCaption);
-    
     long selectedNode = getSelectedNode();
     if(selectedNode != 0)
     {
       string datapointPath = buildPathFromNode(selectedNode);
+      navConfigSetSelectedView(selectedViewCaption,datapointPath,tabCtrl.activeRegister+1);
+    
       string dpViewConfig = navConfigGetViewConfig(datapointPath);
       if(selectedNode!=0 && dpExists(dpViewConfig))
       {
