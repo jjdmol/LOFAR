@@ -24,7 +24,7 @@
 #ifndef COMMON_SHMEM_ALLOC_H_
 #define COMMON_SHMEM_ALLOC_H_
 
-#include <lofar_config.h>
+#include <config.h>
 
 #include <Common/shmem/dlmalloc.h>
 #include <stddef.h>

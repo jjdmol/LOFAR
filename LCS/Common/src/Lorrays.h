@@ -23,7 +23,7 @@
 #ifndef COMMON_LORRAYS_H
 #define COMMON_LORRAYS_H
 
-#include <lofar_config.h>
+#include <config.h>
     
 #ifndef COMMON_LONUMERICS_H
   #include <Common/Lonumerics.h>

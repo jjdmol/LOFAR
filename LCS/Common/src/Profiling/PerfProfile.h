@@ -23,7 +23,7 @@
 #ifndef COMMON_PERFPROFILE_H
 #define COMMON_PERFPROFILE_H
 
-#include <lofar_config.h>
+#include <config.h>
 
 #if defined(HAVE_MPICH) && defined(HAVE_MPI_PROFILER)
 #define MPICH_SKIP_MPICXX

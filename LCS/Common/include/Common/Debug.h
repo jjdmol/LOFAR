@@ -23,6 +23,8 @@
 #ifndef COMMON_DEBUG_H
 #define COMMON_DEBUG_H
 
+#include <config.h>
+
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
@@ -33,8 +35,6 @@
 #ifdef ENABLE_LATENCY_STATS
 #include <sys/time.h>
 #endif
-
-#include <lofar_config.h>
 
 
 
