@@ -97,7 +97,7 @@ for n in 1 2 3 4 5 6
     	echo "adddef StokesV.CP5 values=0" >> fill.parmdb
 
     	echo "adddef RA.CP6 values=10:26:36.1" >> fill.parmdb
-    	echo "adddef DEC.CP6 values=26.0.59.0" >> fill.parmdb
+    	echo "adddef DEC.CP6 values=25.59.59.0" >> fill.parmdb
     	echo "adddef StokesI.CP6 values=1.0" >> fill.parmdb
     	echo "adddef StokesQ.CP6 values=0 " >> fill.parmdb
     	echo "adddef StokesU.CP6 values=0 " >> fill.parmdb
