@@ -67,7 +67,7 @@ const _define_meqcalibrater := function(ref agent, id) {
         wider self;
         
         # return
-        return defaultservers.run(self.agent, self.nexttimeintervalRec);
+	return defaultservers.run(self.agent, self.nexttimeintervalRec);
     }
     
     self.clearsolvableparmsRec := [_method="clearsolvableparms",
@@ -95,12 +95,12 @@ const _define_meqcalibrater := function(ref agent, id) {
     }
     
     self.predictRec := [_method="predict", _sequence=self.id._sequence]
-    public.predict := function(modelcolname) {
+    public.predict := function(modeldatacolname) {
     
         wider self;
         
         # argument assignment
-        self.predictRec.modelcolname := modelcolname
+        self.predictRec.modeldatacolname := modeldatacolname
         
         # return
         return defaultservers.run(self.agent, self.predictRec);
@@ -124,16 +124,16 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.saveparmsRec);
     }
     
-    self.savedataRec := [_method="savedata", _sequence=self.id._sequence]
-    public.savedata := function(datacolname) {
+    self.savepredicteddataRec := [_method="savepredicteddata", _sequence=self.id._sequence]
+    public.savepredicteddata := function(modeldatacolname) {
     
         wider self;
         
         # argument assignment
-        self.savedataRec.datacolname := datacolname
+        self.savepredicteddataRec.modeldatacolname := modeldatacolname
         
         # return
-        return defaultservers.run(self.agent, self.savedataRec);
+        return defaultservers.run(self.agent, self.savepredicteddataRec);
     }
     
     self.saveresidualdataRec := [_method="saveresidualdata", _sequence=self.id._sequence]
@@ -172,6 +172,15 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.getsolvedomainRec);
     }
 
+    self.timeiteratorpastendRec := [_method="timeiteratorpastend", _sequence=self.id._sequence]
+    public.timeiteratorpastend := function() {
+
+	wider self;
+
+	# return
+	return defaultservers.run(self.agent, self.timeiteratorpastendRec);
+    }
+
     public.id := function() {
 	wider self;
 	return self.id.objectid;
@@ -208,7 +217,7 @@ const meqcalibrater := function(msname, meqmodel = 'LOFAR', skymodel = 'GSM', sp
 #
 const meqcalibratertest := function()
 {
-    local mc := meqcalibrater('myms.ms', 'TEST');
+    local mc := meqcalibrater('myms.ms', 'TEST', 'TEST');
 
     if (is_fail(mc)) {
 	print "meqcalibratertest(): could not instantiate meqcalibrater"
@@ -221,7 +230,7 @@ const meqcalibratertest := function()
     
     mc.resettimeiterator()
     i := 0
-    while (mc.nexttimeinterval())
+    while (! mc.timeiteratorpastend())
     {
 	d := mc.getsolvedomain();
 	print 'solvedomain = ', d;
@@ -235,14 +244,16 @@ const meqcalibratertest := function()
 	  print 'iteration = ', i, ' fit = ', fit
 	}
 
-	mc.savedata('MODEL_DATA');
-	mc.saveresidualdata('DATA', 'MODEL_DATA', 'RESIDUAL_DATA');
-	mc.saveparms();
+	mc.savepredicteddata('MODEL_DATA');
+	# mc.saveresidualdata('DATA', 'MODEL_DATA', 'RESIDUAL_DATA');
+	# mc.saveparms();
 	
 	parms := mc.getparms("f.g.h.i.j.[1-5]");
 	print 'getparms = ', parms
 
 	i+:=1;
+
+	mc.nexttimeinterval();
     }
 
     mc.done();
