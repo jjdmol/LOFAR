@@ -108,30 +108,78 @@ const meqserver := function (appid='MeqServer',
       return public.command(spaste('Command.',cmd_name),[args=args]);
     }
   }
+  
+  # helper function to create a node specification record
+  const self.makenodespec := function (node)
+  {
+    if( is_string(node) )
+      return [ name=node ];
+    else if( is_integer(node) )
+      return [ nodeindex=node ];
+    else
+      fail 'node must be specified by name or index';
+  }
+
   # define shortcuts for common methods
+  # createnode()
   const public.createnode := function (initrec,wait_reply=F)
   {
     wider public;
     return public.meq('Create.Node',initrec,wait_reply=wait_reply);
   }
+  # getnodestate()
   const public.getnodestate := function (node)
   {
     wider self,public;
-    rec := [=];
-    if( is_string(node) )
-      rec.name := node;
-    else if( is_integer(node) )
-      rec.nodeindex := node;
-    else
-      fail 'node must be specified by name or index';
+    rec := self.makenodespec(node);
     return public.meq('Node.Get.State',rec,wait_reply=T);
   }
+  # getnodelist()
   const public.getnodelist := function ()
   {
     wider self,public;
     return public.meq('Get.Node.List',[=],wait_reply=T);
   }
+  # execute()
+  const public.execute := function (node,req)
+  {
+    wider self,public;
+    rec := self.makenodespec(node);
+    rec.request := req;
+    return public.meq('Node.Execute',rec,wait_reply=T);
+  }
   
   return ref public;
 }
+
+default_meq_debuglevels := [  MeqNode       =2,
+                              MeqForest     =2,
+                              MeqSink       =2,
+                              MeqSpigot     =2,
+                              MeqVisHandler =2,
+                              MeqServer     =2,
+                              meqserver     =1 ];
+                      
+# inits a meqserver
+const default_meqserver := function (verbose=3,debug=[=],gui=F)
+{
+  global _default_mqs;
+  if( !is_record(_default_mqs) )
+  {
+    _default_mqs := meqserver(verbose=verbose,options="-d0 -nogw -meq:M:O:MeqServer",gui=gui);
+    if( is_fail(_default_mqs) )
+      fail;
+    _default_mqs.init([output_col="PREDICT"],wait=T);
+    if( !( is_boolean(debug) && !debug ) )
+    {
+      for( lev in field_names(default_meq_debuglevels) )
+        _default_mqs.setdebug(lev,default_meq_debuglevels[lev]);
+      if( is_record(debug) )
+        for( lev in field_names(debug) )
+          _default_mqs.setdebug(lev,debug[lev]);
+    }
+  }
+  return ref _default_mqs;
+}
+
 

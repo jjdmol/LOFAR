@@ -159,8 +159,8 @@ const meptable := function (name, create=F)
                             freqrange=[1,1e20], timerange=[1,1e20], 
                             values=1, perturbation=1e-6, weight=1,
                             freq0=0., time0=4.56e9, 
-                            freqscale=1e6, timescale=1, 
-                            trace=T)
+                            freqscale=1e6, timescale=1,
+                            rownr=-1,trace=T,uniq=T)
     {
         #----------------------------------------------------------------
         funcname := paste('** meptable.put(',parmname,'):');
@@ -172,23 +172,26 @@ const meptable := function (name, create=F)
         if (trace) print funcname,' input=',input;
         #----------------------------------------------------------------
 
-
         if (length(freqrange) != 2) {
             fail 'freqrange should be a vector of 2 elements (start,end)';
         }
         if (length(timerange) != 2) {
             fail 'timerange should be a vector of 2 elements (start,end)';
         }
-        t1 := self.tab.query (spaste('NAME=="',parmname,'" ',
-                                     '&& near(STARTFREQ,', freqrange[1],') ',
-                                     '&& near(ENDFREQ,'  , freqrange[2],') ',
-                                     '&& near(STARTTIME,', timerange[1],') ',
-                                     '&& near(ENDTIME,'  , timerange[2],') '));
-        nr := t1.nrows();
-        t1.close();
-        if (nr != 0) {
-            fail paste('Parameter',parmname,
-                       'already defined for given domain');
+        if( uniq )
+        {
+          t1 := self.tab.query( spaste('NAME=="',parmname,'" ',
+                                       '&& near(STARTFREQ,', freqrange[1],') ',
+                                       '&& near(ENDFREQ,'  , freqrange[2],') ',
+                                       '&& near(STARTTIME,', timerange[1],') ',
+                                       '&& near(ENDTIME,'  , timerange[2],') '));
+          rownrs := t1.rownumbers(self.tab);
+          t1.close();
+          # disallow overwrites, unless the row argument explicitly matches
+          # the row number
+          if( len(rownrs) && rownrs[1] != rownr ) {
+              fail paste('Parameter',parmname,'already defined for given domain');
+          }
         }
         # Turn a scalar into a matrix.
         if (length(shape(values)) == 1  &&  length(values) == 1) {
@@ -197,8 +200,11 @@ const meptable := function (name, create=F)
         if (length(shape(values)) != 2  ||  !is_numeric(values)) {
             fail paste('values should be a 2-dim numerical array');
         }
-        self.tab.addrows(1);
-        rownr := self.tab.nrows();
+        if( rownr <= 0 )
+        {
+          self.tab.addrows(1);
+          rownr := self.tab.nrows();
+        }
         self.tab.putcell ('NAME', rownr, parmname);
         self.tab.putcell ('STARTFREQ', rownr, freqrange[1]);
         self.tab.putcell ('ENDFREQ', rownr, freqrange[2]);
@@ -213,7 +219,25 @@ const meptable := function (name, create=F)
         self.tab.putcell ('WEIGHT', rownr, weight);
         return T;
     }
-
+    
+    public.putpolc := function (parmname,polc,uniq=T)
+    {
+      wider self,public;
+      if( !is_dmi_type(polc,'MeqPolc') )
+        fail 'polc argument must be a meqpolc object';
+      if( has_field(polc,'domain') )
+        dom := polc.domain;
+      else
+        dom := [0,1,0,1];
+      return public.put(parmname,
+                  freqrange=dom[1:2],timerange=dom[3:4],
+                  values=polc.coeff, perturbation=polc.pert,
+                  weight=polc.weight,
+                  freq0=polc.freq_0,time0=polc.time_0,
+                  freqscale=polc.freq_scale,timescale=polc.time_scale,
+                  rownr=polc.dbid_index,uniq=uniq);
+    }
+    
     self.perturb := function (tab, where, perturbation)
     {
         t1 := ref tab;

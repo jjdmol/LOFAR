@@ -176,7 +176,6 @@ int Parm::initSolvable (const Domain &domain)
 int Parm::initDomain (const Domain& domain)
 {
   cdebug(2)<<"initializing for domain "<<domain<<endl;
-  wstate()[FDomain].replace() <<= new Domain(domain);
   // do we have a source for new polcs (i.e. table or default polc?)
   if( parmtable_ || default_polc_.valid() )
   {
@@ -240,9 +239,12 @@ int Parm::getResult (Result::Ref &resref,
 {
   const Domain &domain = request.cells().domain();
   HIID domain_id = getDomainId(request.id()); 
+  cdebug(2)<<"evaluating parm for domain "<<domain<<endl;
   if( domain_id.empty() || domain_id != domain_id_ )
   {
+    cdebug(2)<<"domain changed, initializing"<<domain<<endl;
     initDomain(domain);
+    wstate()[FDomain].replace() <<= new Domain(domain);
     wstate()[FDomainId] = domain_id_ = domain_id;
   }
   // Create result object and attach to the ref that was passed in
@@ -254,6 +256,7 @@ int Parm::getResult (Result::Ref &resref,
   // A single polc can be evaluated immediately.
   if( polcs_.size() == 1 ) 
   {
+    cdebug(3)<<"evaluating and returning single polc"<<endl;
     polcs_[0]->evaluate(vs,request);
     // no further dependencies (specifically, not on domain)
     return retcode;
@@ -272,39 +275,48 @@ int Parm::getResult (Result::Ref &resref,
   double lastMidFreq  = firstMidFreq + (ndFreq-1) * stepFreq;
   double firstMidTime = cells.time(0);
   double lastMidTime  = cells.time(ndTime-1);
-  vs.setReal (ndFreq, ndTime);
+  vs.setReal(ndFreq, ndTime);
   // Iterate over all polynomials.
   // Evaluate one if its domain overlaps the request domain.
-  for( uint i=0; i<polcs_.size(); i++ ) 
+  cdebug(3)<<"midfreqs: "<<firstMidFreq<<":"<<lastMidFreq<<endl;
+  cdebug(3)<<"midtimes: "<<firstMidTime<<":"<<lastMidTime<<endl;
+  cdebug(3)<<"evaluating for "<<polcs_.size()<<" polcs"<<endl;
+  for( uint i=0; i<polcs_.size(); i++ )
   {
     const Polc& polc = *(polcs_[i]);
-    const Domain& polDom = polc.domain();
-    if (firstMidFreq < polDom.endFreq() && lastMidFreq > polDom.startFreq()
-        &&  firstMidTime < polDom.endTime() && lastMidTime > polDom.startTime()) 
+    cdebug(3)<<"polc "<<i<<" domain is "<<polc.domain()<<endl;
+    double pfreq0 = polc.domain().startFreq(), 
+           pfreq1 = polc.domain().endFreq(),
+           ptime0 = polc.domain().startTime(), 
+           ptime1 = polc.domain().endTime();
+    if( firstMidFreq < pfreq1 && lastMidFreq > pfreq0 &&
+        firstMidTime < ptime1 && lastMidTime > ptime0 )
     {
       // Determine which part of the request domain is covered by the
       // polynomial.
       int stFreq = 0;
-      if (firstMidFreq < polDom.startFreq()) {
-        stFreq = 1 + int((polDom.startFreq() - firstMidFreq) / stepFreq);
+      if (firstMidFreq < pfreq0) {
+        stFreq = 1 + int((pfreq0 - firstMidFreq) / stepFreq);
       }
       int nrFreq = ndFreq - stFreq;
-      if (lastMidFreq > polDom.endFreq()) {
-        int remFreq = 1 + int((lastMidFreq - polDom.endFreq()) / stepFreq);
+      if (lastMidFreq > pfreq1) {
+        int remFreq = 1 + int((lastMidFreq - pfreq1) / stepFreq);
         nrFreq -= remFreq;
       }
       int stTime = 0;
-      while (cells.time(stTime) < polDom.startTime()) {
+      while (cells.time(stTime) < ptime0) {
         stTime++;
       }
       int lastTime = ndTime-1;
-      while (cells.time(lastTime) > polDom.endTime()) {
+      while (cells.time(lastTime) > ptime1) {
         lastTime--;
       }
       int nrTime = lastTime - stTime + 1;
+      cdebug(3)<<"polc "<<i<<" overlap: "<<stFreq<<" "<<nrFreq
+                <<" "<<stTime<<" "<<nrTime<<endl;
       // If the overlap is full, only this polynomial needs to be evaluated.
-      if (stFreq == 0  &&  nrFreq == ndFreq
-      &&  stTime == 0  &&  nrTime == ndTime) {
+      if( stFreq == 0 && nrFreq == ndFreq &&
+          stTime == 0 && nrTime == ndTime ) {
         polc.evaluate (vs, request);
         return retcode;
       }
@@ -318,8 +330,8 @@ int Parm::getResult (Result::Ref &resref,
       LoVec_double partStartTime(nrTime);
       LoVec_double partEndTime(nrTime);
       for (int j=0; j<nrTime; j++) {
-        partStartTime(j) = cells.time(stTime+j) - cells.stepTime(stTime+j);
-        partEndTime(j)   = cells.time(stTime+j) + cells.stepTime(stTime+j);
+        partStartTime(j) = cells.time(stTime+j) - cells.stepTime(stTime+j)/2;
+        partEndTime(j)   = cells.time(stTime+j) + cells.stepTime(stTime+j)/2;
       }
       Cells partCells (partDom, nrFreq, partStartTime, partEndTime);
       Request partReq(partCells, request.calcDeriv());
