@@ -112,6 +112,9 @@ public:
   bool getCalcUVW() const;
   void setCalcUVW(bool calc);
 
+  bool getUseAutoCorrelations() const;
+  void setUseAutoCorrelations(bool use);
+
   bool getLockMappedMemory() const;
   void setLockMappedMemory(bool lock);
 
@@ -154,6 +157,7 @@ private:
   double*       itsTimeLength;              // Time interval size (s)
   char*         itsModelType;
   unsigned int* itsCalcUVW;
+  unsigned int* itsUseAutoCorr;
   unsigned int* itsLockMappedMem;
   unsigned int* itsCleanUp;                 // Clean up Prediffer object when finished?
   
@@ -239,6 +243,12 @@ inline bool DH_WOPrediff::getCalcUVW() const
 
 inline void DH_WOPrediff::setCalcUVW(bool calc)
 { *itsCalcUVW = calc; }
+
+inline bool DH_WOPrediff::getUseAutoCorrelations() const
+{ return ((*itsUseAutoCorr==0)?(false):(true)); }
+
+inline void DH_WOPrediff::setUseAutoCorrelations(bool use)
+{ *itsUseAutoCorr = use; }
 
 inline bool DH_WOPrediff::getLockMappedMemory() const
 { return *itsLockMappedMem; }

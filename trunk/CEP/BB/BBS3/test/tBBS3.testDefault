@@ -28,10 +28,11 @@ CTRLparams=[
     startFreq=0,           // Start frequency
     freqLength=49,         // Size of frequency interval
     sources=[0,1,2],       // Solvable source numbers (0 based)
+    modelType="LOFAR.RI",  // Model type
+    calcUVW=F,             // Calculate UVW coordinates?
+    useAutoCorr=T,         // Use auto correlations
+    lockMappedMem=F,       // Call mlock immediately after mapping?
     useSVD=F,              // Use Singular Value Decomposition in solve?
-    modelType="LOFAR.RI",    // Model type
-    calcUVW=F,               // Calculate UVW coordinates?
-    lockMappedMem=F,         // Call mlock immediately after mapping?
 
     MSDBparams=[
       MSName="demo3-1",         // Name of the Measurement Set

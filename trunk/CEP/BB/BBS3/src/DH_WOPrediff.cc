@@ -56,6 +56,7 @@ DH_WOPrediff::DH_WOPrediff (const string& name)
     itsTimeLength      (0),
     itsModelType       (0),
     itsCalcUVW         (0),
+    itsUseAutoCorr     (0),
     itsLockMappedMem   (0),
     itsCleanUp         (0),
     itsPODHWO          (0)
@@ -80,6 +81,7 @@ DH_WOPrediff::DH_WOPrediff(const DH_WOPrediff& that)
     itsTimeLength      (0),
     itsModelType       (0),
     itsCalcUVW         (0),
+    itsUseAutoCorr     (0),
     itsLockMappedMem   (0),
     itsCleanUp         (0),
     itsPODHWO          (0)
@@ -127,6 +129,7 @@ void DH_WOPrediff::preprocess()
   addField ("TimeLength", BlobField<double>(1));
   addField ("ModelType", BlobField<char>(1, MaxModelTypeLength));
   addField ("CalcUVW", BlobField<unsigned int>(1));
+  addField ("UseAutoCorr", BlobField<unsigned int>(1));
   addField ("LockMappedMem", BlobField<unsigned int>(1));
   addField ("CleanUp", BlobField<unsigned int>(1));
 
@@ -155,6 +158,7 @@ void DH_WOPrediff::preprocess()
   *itsStartTime = 0;
   *itsTimeLength = 0;
   *itsCalcUVW = 0;
+  *itsUseAutoCorr = 0;
   *itsLockMappedMem = 0;
   *itsCleanUp = 0;
 }
@@ -176,6 +180,7 @@ void DH_WOPrediff::fillDataPointers()
   itsTimeLength = getData<double> ("TimeLength");
   itsModelType = getData<char> ("ModelType");
   itsCalcUVW = getData<unsigned int> ("CalcUVW");
+  itsUseAutoCorr = getData<unsigned int> ("UseAutoCorr");
   itsLockMappedMem = getData<unsigned int> ("LockMappedMem");
   itsCleanUp = getData<unsigned int> ("CleanUp");
 }
@@ -196,6 +201,7 @@ void DH_WOPrediff::postprocess()
   itsTimeLength = 0;
   itsModelType = 0;
   itsCalcUVW = 0;
+  itsUseAutoCorr = 0;
   itsLockMappedMem = 0;
   itsCleanUp = 0;
 }
@@ -338,6 +344,7 @@ void DH_WOPrediff::dump()
   cout << "Time length = " << getTimeLength() << endl;
   cout << "Model type = " << getModelType() << endl;
   cout << "Calc UVW = " << getCalcUVW() << endl;
+  cout << "Use auto correlations = " << getUseAutoCorrelations() << endl;
   cout << "Lock mapped memory = " << getLockMappedMemory() << endl;
   cout << "Clean up = " << getCleanUp() << endl;
 
@@ -401,6 +408,7 @@ void DH_WOPrediff::clearData()
   setTimeLength(0);
   setModelType("");
   setCalcUVW(false);
+  setUseAutoCorrelations(true);
   setLockMappedMemory(false);
   setCleanUp(false);
 }

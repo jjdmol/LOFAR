@@ -90,6 +90,7 @@ bool SC_Simple::execute()
   float timeLength = itsArgs.getFloat ("timeLength", 10);
   itsWOPD->setTimeLength (timeLength);
   itsWOPD->setModelType (itsArgs.getString ("modelType", "notfound"));
+  itsWOPD->setUseAutoCorrelations(itsArgs.getBool ("useAutoCorr", true));
   itsWOPD->setCalcUVW (itsArgs.getBool ("calcUVW", false));
   itsWOPD->setLockMappedMemory (itsArgs.getBool ("lockMappedMem", false));
   KeyValueMap msParams = (const_cast<KeyValueMap&>(itsArgs))["MSDBparams"].getValueMap();
