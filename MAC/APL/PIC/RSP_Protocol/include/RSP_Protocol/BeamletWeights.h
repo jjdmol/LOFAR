@@ -27,48 +27,48 @@
 
 #include <complex>
 #include <blitz/array.h>
+#include <Common/LofarTypes.h>
 
 namespace RSP_Protocol
 {
   class BeamletWeights
-      {
-      public:
-	  /**
-	   * Constructors for a BeamletWeights object.
-	   * Currently the tv_usec part is always set to 0 irrespective
-	   * of the value passed in.
-	   */
-	  BeamletWeights() { }
+  {
+    public:
+      /**
+       * Constructors for a BeamletWeights object.
+       * Currently the tv_usec part is always set to 0 irrespective
+       * of the value passed in.
+       */
+      BeamletWeights() { }
 	  
-	  /* Destructor for BeamletWeights. */
-	  virtual ~BeamletWeights() {}
+      /* Destructor for BeamletWeights. */
+      virtual ~BeamletWeights() {}
 
-	  static const int NDIM = 3;
+      static const int NDIM = 2;
 
-	  /* get reference to the weights array */
-	  blitz::Array<std::complex<double>, NDIM>& weights();
+      /* get reference to the weights array */
+      blitz::Array<std::complex<int16>, NDIM>& weights();
 
-      public:
-	  /*@{*/
-	  /**
-	   * marshalling methods
-	   */
-	  unsigned int getSize();
-	  unsigned int pack  (void* buffer);
-	  unsigned int unpack(void *buffer);
-	  /*@}*/
+    public:
+      /*@{*/
+      /**
+       * marshalling methods
+       */
+      unsigned int getSize();
+      unsigned int pack  (void* buffer);
+      unsigned int unpack(void *buffer);
+      /*@}*/
 
-      private:
-	  /**
-	   * The beamlet weights.
-	   * Dimension 1: n_timesteps
-	   * Dimension 2: count(rcumask)
-	   * Dimension 3: N_BEAMLETS
-	   */
-	  blitz::Array<std::complex<double>, NDIM> m_weights;
-      };
+    private:
+      /**
+       * The beamlet weights.
+       * Dimension 1: count(rcumask)
+       * Dimension 2: N_BEAMLETS
+       */
+      blitz::Array<std::complex<int16>, NDIM> m_weights;
+  };
 
-  inline blitz::Array<std::complex<double>, RSP_Protocol::BeamletWeights::NDIM>& BeamletWeights::weights() { return m_weights; }
+  inline blitz::Array<std::complex<int16>, RSP_Protocol::BeamletWeights::NDIM>& BeamletWeights::weights() { return m_weights; }
 };
      
 #endif /* BEAMLETWEIGHTS_H_ */

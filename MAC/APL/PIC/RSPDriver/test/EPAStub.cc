@@ -114,8 +114,17 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
 
 
     case EPA_BFCOEFS:
-      // simply ignore
-      break;
+    {
+      EPARspstatusEvent rspstatus;
+      
+      // set the correct header info
+      MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READRES);
+      rspstatus.rsp = 0;
+
+      // early reply of status
+      port.send(rspstatus);
+    }
+    break;
 
     case EPA_RSPSTATUS:
       status = rspstatus(event, port);
@@ -171,8 +180,10 @@ GCFEvent::TResult EPAStub::rspstatus(GCFEvent& event, GCFPortInterface& port)
   // set the correct header info
   MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READRES);
 
+#if 0
   // simply echo the status event
   port.send(rspstatus);
+#endif
 
   return GCFEvent::HANDLED;
 }

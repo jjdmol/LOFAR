@@ -22,6 +22,8 @@
 
 #include "BWSync.h"
 #include "EPA_Protocol.ph"
+#include "RSP_Protocol.ph"
+#include "Cache.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -30,10 +32,12 @@
 
 #include <unistd.h>
 #include <string.h>
+#include <blitz/array.h>
 
 using namespace RSP;
 using namespace LOFAR;
 using namespace EPA_Protocol;
+using namespace blitz;
 
 #define N_RETRIES 3
 
@@ -57,14 +61,11 @@ GCFEvent::TResult BWSync::initial_state(GCFEvent& event, GCFPortInterface& /*por
   {
     case F_INIT:
     {
-      LOG_INFO("initial_state: F_INIT");
     }
     break;
       
     case F_ENTRY:
     {
-      LOG_INFO("initial_state: F_ENTRY");
-      
       // reset extended state variables on initialization
       m_current_blp   = 0;
       m_retries       = 0;
@@ -186,6 +187,11 @@ void BWSync::writecoef(uint8 blp)
   {
     m_regid = MEPHeader::BFXRE; // HACK
   }
+
+  LOG_INFO(formatString(">>>> %s: blp=%d, regid=%d",
+			getBoardPort().getName().c_str(),
+			blp,
+			m_regid));
   
   // send next BF configure message
   EPABfcoefsEvent bfcoefs;
@@ -193,8 +199,24 @@ void BWSync::writecoef(uint8 blp)
   MEP_BF(bfcoefs.hdr, MEPHeader::WRITE, 0, m_regid);
   bfcoefs.hdr.m_fields.addr.dstid = blp;
 
-  memset(&bfcoefs.coef, 0, MEPHeader::BFCOEFS_SIZE);
+  // copy weights from the cache to the message
+  Array<int16, 1> weights((int16*)&bfcoefs.coef,
+			  shape(RSP_Protocol::N_BEAMLETS),
+			  neverDeleteData);
   
+  //
+  // TODO
+  // Make sure we're actually sending the correct weights.
+  //
+  if (0 == (m_regid % 2))
+  {
+    weights = real(Cache::getInstance().getBack().getBeamletWeights(blp).weights()(blp));
+  }
+  else
+  {
+    weights = imag(Cache::getInstance().getBack().getBeamletWeights(blp).weights()(blp));
+  }
+
   getBoardPort().send(bfcoefs);
 }
 

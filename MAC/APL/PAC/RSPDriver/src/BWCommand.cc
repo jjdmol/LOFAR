@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include "RSP_Protocol.ph"
+#include "RSPDriverTask.h"
 #include "BWCommand.h"
 
 #undef PACKAGE
@@ -46,11 +47,32 @@ BWCommand::~BWCommand()
   delete m_event;
 }
 
-void BWCommand::apply(CacheBuffer& cache)
+void BWCommand::ack(CacheBuffer& /*cache*/)
 {
+  RSPSetweightsackEvent ack;
+
+  ack.timestamp = getTimestamp();
+  ack.status = SUCCESS;
+  
+  getPort()->send(ack);
 }
 
-void BWCommand::complete(CacheBuffer& cache)
+void BWCommand::apply(CacheBuffer& cache)
+{
+  int inrcu = 0;
+  for (int outrcu = 0; outrcu < RSPDriverTask::N_RCU; outrcu++)
+  {
+    if (m_event->rcumask[outrcu])
+    {
+      cache.getBeamletWeights(outrcu).weights()
+	= m_event->weights.weights()(inrcu);
+
+      inrcu++;
+    }
+  }
+}
+
+void BWCommand::complete(CacheBuffer& /*cache*/)
 {
 }
 

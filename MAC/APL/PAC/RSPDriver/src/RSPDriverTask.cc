@@ -56,39 +56,9 @@ RSPDriverTask::RSPDriverTask(string name)
     //m_board[boardid].setAddr("eth0", "aa:bb:cc:dd:ee:ff");
   }
 
-  /**
-   * Create synchronization action classes.
-   */
-  BWSync* bwsync[N_RSPBOARDS];
-
-  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
-  {
-    bwsync[boardid] = new BWSync(m_board[boardid], boardid, MEPHeader::BFXRE);
-
-    m_scheduler.addSyncAction(bwsync[boardid]);
-  }
-
-  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
-  {
-    bwsync[boardid] = new BWSync(m_board[boardid], boardid, MEPHeader::BFXIM);
-
-    m_scheduler.addSyncAction(bwsync[boardid]);
-  }
-
-  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
-  {
-    bwsync[boardid] = new BWSync(m_board[boardid], boardid, MEPHeader::BFYRE);
-
-    m_scheduler.addSyncAction(bwsync[boardid]);
-  }
-
-  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
-  {
-    bwsync[boardid] = new BWSync(m_board[boardid], boardid, MEPHeader::BFYIM);
-
-    m_scheduler.addSyncAction(bwsync[boardid]);
-  }
+  addAllSyncActions();
 }
+
 
 RSPDriverTask::~RSPDriverTask()
 {
@@ -107,6 +77,58 @@ bool RSPDriverTask::isEnabled()
   }
   
   return enabled;
+}
+
+/**
+ * Add all synchronization actions per board.
+ * Order is:
+ * - BWSync       // sync of beamformer weights info
+ * - SSSync       // sync of subband selection parameters
+ * - RCUSync      // sync of RCU control info
+ * - StatusSync   // sync of system status info
+ * - StatsSync    // sync of statistics info
+ * - WGSync       // sync of WG control info
+ * - VersionsSync // sync of version info
+ */
+void RSPDriverTask::addAllSyncActions()
+{
+  /**
+   * For each board a separate BWSync instance is created which handles
+   * the synchronization of data between the board and the cache for that board.
+   */
+  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
+  {
+    BWSync* bwsync = 0;
+
+    bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFXRE);
+    m_scheduler.addSyncAction(bwsync);
+    bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFXIM);
+    m_scheduler.addSyncAction(bwsync);
+    bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFYRE);
+    m_scheduler.addSyncAction(bwsync);
+    bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFYIM);
+    m_scheduler.addSyncAction(bwsync);
+
+#if 0
+    SSSync* sssync = new SSSync(m_board[boardid], boardid);
+    m_scheduler.addSyncAction(sssync);
+
+    RCUSync* rcusync = new RCUSync(m_board[boardid], boardid);
+    m_scheduler.addSyncAction(rcusync);
+
+    StatusSync* statussync = new StatusSync(m_board[boardid], boardid);
+    m_scheduler.addSyncAction(statussync);
+
+    StatsSync* statssync = new StatsSync(m_board[boardid], boardid);
+    m_scheduler.addSyncAction(statssync);
+
+    WGSync* wgsync = new WGSync(m_board[boardid], boardid);
+    m_scheduler.addSyncAction(wgsync);
+
+    VersionSync* versionsync = new VersionSync(m_board[boardid], boardid);
+    m_scheduler.addSyncAction(versionsync);
+#endif
+  }
 }
 
 void RSPDriverTask::openBoards()
@@ -212,15 +234,10 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
       /* enter the command in the scheduler's queue */
       BWCommand* command = new BWCommand(event, port, Command::WRITE);
 
-      /* acknowledgement */
-      RSPSetweightsackEvent ack;
-
       /* enter into the scheduler's queue */
-      ack.timestamp = m_scheduler.enter(command);
+      command->setTimestamp(m_scheduler.enter(command));
 
-      ack.status = SUCCESS;
-
-      m_client.send(ack);
+      command->ack(Cache::getInstance().getFront());
     }
     break;
 

@@ -30,7 +30,6 @@
 #include "Command.h"
 #include "SyncAction.h"
 #include "Timestamp.h"
-#include "Cache.h"
 
 namespace RSP
 {
@@ -99,7 +98,6 @@ namespace RSP
 
       RSP_Protocol::Timestamp m_current_time;
 
-      Cache m_cache;
       int m_current_priority;
       bool m_sync_done;
   };

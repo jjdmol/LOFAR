@@ -21,16 +21,24 @@
 //#  $Id$
 
 #include "Cache.h"
+#include "RSPDriverTask.h"
 
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <blitz/array.h>
+
 using namespace RSP;
 using namespace LOFAR;
 using namespace RSP_Protocol;
+using namespace blitz;
 
+/**
+ * Instance pointer for the Cache singleton class.
+ */
+Cache* Cache::m_instance = 0;
 
 /**
  * CacheBuffer implementation
@@ -42,31 +50,53 @@ CacheBuffer::CacheBuffer()
   tv.tv_sec = 0; tv.tv_usec = 0;
   m_timestamp.set(tv);
 
-  m_beamletweights.weights().resize(1 /* 1 timestep */, N_RCUBITS, N_BEAMLETS);
+  m_beamletweights.resize(RSPDriverTask::N_RCU);
+  m_subbandselection.resize(RSPDriverTask::N_RCU);
+  m_rcusettings.resize(RSPDriverTask::N_RCU);
+  m_wgsettings.resize(RSPDriverTask::N_RCU);
+  //m_systemstatus;
+  m_statistics.resize(RSPDriverTask::N_RCU);
+  //m_versions;
+
+  for (int rcu = 0; rcu < m_beamletweights.extent(firstDim); rcu++)
+  {
+    m_beamletweights(rcu).weights().resize(RSPDriverTask::N_RCU,
+					   N_BEAMLETS);
+  }
 }
 
 CacheBuffer::~CacheBuffer()
 {
+  for (int rcu = 0; rcu < m_beamletweights.extent(firstDim); rcu++)
+  {
+    m_beamletweights(rcu).weights().free();
+  }
+
+  m_beamletweights.free();
+  m_subbandselection.free();
+  m_rcusettings.free();
+  m_wgsettings.free();
+  m_statistics.free();
 }
 
-BeamletWeights&   CacheBuffer::getBeamletWeights()
+BeamletWeights&   CacheBuffer::getBeamletWeights(int rcu)
 {
-  return m_beamletweights;
+  return m_beamletweights(rcu);
 }
 
-SubbandSelection& CacheBuffer::getSubbandSelection()
+SubbandSelection& CacheBuffer::getSubbandSelection(int rcu)
 {
-  return m_subbandselection;
+  return m_subbandselection(rcu);
 }
 
-RCUSettings&      CacheBuffer::getRCUSettings()
+RCUSettings&      CacheBuffer::getRCUSettings(int rcu)
 {
-  return m_rcusettings;
+  return m_rcusettings(rcu);
 }
 
-WGSettings&       CacheBuffer::getWGSettings()
+WGSettings&       CacheBuffer::getWGSettings(int rcu)
 {
-  return m_wgsettings;
+  return m_wgsettings(rcu);
 }
 
 SystemStatus&     CacheBuffer::getSystemStatus()
@@ -74,9 +104,9 @@ SystemStatus&     CacheBuffer::getSystemStatus()
   return m_systemstatus;
 }
 
-Statistics&       CacheBuffer::getStatistics()
+Statistics&       CacheBuffer::getStatistics(int rcu)
 {
-  return m_statistics;
+  return m_statistics(rcu);
 }
 
 Versions&         CacheBuffer::getVersions()
@@ -87,6 +117,16 @@ Versions&         CacheBuffer::getVersions()
 /**
  * Cache implementation
  */
+
+Cache& Cache::getInstance()
+{
+  if (0 == m_instance)
+  {
+    m_instance = new Cache();
+    return *m_instance;
+  }
+  else return *m_instance;
+}
 
 Cache::Cache() : m_front(0), m_back(0)
 {

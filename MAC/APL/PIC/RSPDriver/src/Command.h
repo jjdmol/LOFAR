@@ -78,6 +78,12 @@ namespace RSP
 	  /*@}*/
 
 	  /**
+	   * Acknowledge the command by sending the appropriate
+	   * response on m_port.
+	   */
+	  virtual void ack(CacheBuffer& cache) = 0;
+
+	  /**
 	   * Make necessary changes to the cache for the next synchronization.
 	   * Any changes will be sent to the RSP boards.
 	   */

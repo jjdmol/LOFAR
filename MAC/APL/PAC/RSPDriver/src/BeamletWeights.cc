@@ -38,33 +38,33 @@ unsigned int BeamletWeights::getSize()
 {
   /* NDIM extent values plus the array data itself */
   return
-      ((NDIM * sizeof(int32))
-       + (m_weights.size() * sizeof(complex<double>)));
+    ((NDIM * sizeof(int32))
+     + (m_weights.size() * sizeof(complex<double>)));
 }
 
 unsigned int BeamletWeights::pack  (void* buffer)
 {
-    char* bufptr = (char*)buffer;
-    unsigned int offset = 0;
+  char* bufptr = (char*)buffer;
+  unsigned int offset = 0;
 
-    for (int dim = firstDim; dim < firstDim + m_weights.dimensions(); dim++)
-    {
-	int32 extent = m_weights.extent(dim);
-	memcpy(bufptr + offset, &extent, sizeof(int32));
-	offset += sizeof(int32);
-    }
+  for (int dim = firstDim; dim < firstDim + m_weights.dimensions(); dim++)
+  {
+    int32 extent = m_weights.extent(dim);
+    memcpy(bufptr + offset, &extent, sizeof(int32));
+    offset += sizeof(int32);
+  }
 
-    if (m_weights.isStorageContiguous())
-    {
-	memcpy(bufptr + offset, m_weights.data(), m_weights.size() * sizeof(complex<double>));
-	offset += m_weights.size() * sizeof(complex<double>);
-    }
-    else
-    {
-	cerr << "NON-CONTIGUOUS ARRAY STORAGE!" << endl;
-    }
+  if (m_weights.isStorageContiguous())
+  {
+    memcpy(bufptr + offset, m_weights.data(), m_weights.size() * sizeof(complex<double>));
+    offset += m_weights.size() * sizeof(complex<double>);
+  }
+  else
+  {
+    cerr << "NON-CONTIGUOUS ARRAY STORAGE!" << endl;
+  }
     
-    return offset;
+  return offset;
 }
 
 unsigned int BeamletWeights::unpack(void *buffer)
@@ -75,10 +75,10 @@ unsigned int BeamletWeights::unpack(void *buffer)
 
   for (int dim = firstDim; dim < firstDim + m_weights.dimensions(); dim++)
   {
-      int32 extenttmp = m_weights.extent(dim);
-      memcpy(&extenttmp, bufptr + offset, sizeof(int32));
-      offset += sizeof(int32);
-      extent(dim - firstDim) = extenttmp;
+    int32 extenttmp = m_weights.extent(dim);
+    memcpy(&extenttmp, bufptr + offset, sizeof(int32));
+    offset += sizeof(int32);
+    extent(dim - firstDim) = extenttmp;
   }
 
   // resize the array to the correct size
@@ -86,12 +86,13 @@ unsigned int BeamletWeights::unpack(void *buffer)
 
   if (m_weights.isStorageContiguous())
   {
-      memcpy(m_weights.data(), bufptr+offset, m_weights.size() * sizeof(complex<double>));
-      offset += m_weights.size() * sizeof(complex<double>);
+    memcpy(m_weights.data(), bufptr+offset, m_weights.size() * sizeof(complex<double>));
+    offset += m_weights.size() * sizeof(complex<double>);
   }
   else
   {
-	cerr << "NON-CONTIGUOUS ARRAY STORAGE!" << endl;
+    LOG_FATAL("NON-CONTIGUOUS ARRAY STORAGE!");
+    exit(EXIT_FAILURE);
   }
     
   return offset;
