@@ -33,7 +33,7 @@
 #if defined(HAVE_DTL)
 # include <dtl/dtl_config.h>
 #else
-# if defined(__GNUC__) && (__GNUC__ >= 3)
+# if (defined(__GNUC__) && (__GNUC__ >= 3)) || defined(HAVE_BGL)
 
 
 #include <Common/LofarTypedefs.h>
