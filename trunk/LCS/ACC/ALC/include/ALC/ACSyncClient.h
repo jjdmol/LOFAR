@@ -24,8 +24,8 @@
 //#
 //#  $Id$
 
-#ifndef ACC_APSYNCCLIENT_H
-#define ACC_APSYNCCLIENT_H
+#ifndef ACC_ACSYNCCLIENT_H
+#define ACC_ACSYNCCLIENT_H
 
 #include <lofar_config.h>
 

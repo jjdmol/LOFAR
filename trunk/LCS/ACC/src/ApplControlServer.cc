@@ -1,4 +1,4 @@
-//#  ApplControlServer.cc: Implements the service I/F of the Application Controller.
+//#  ApplControlServer.cc: Implements the TCP comm. for the appl. Cntlr.
 //#
 //#  Copyright (C) 2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -19,8 +19,8 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  Abstract:
-//#	 This class implements the client API for managing an Application 
-//#  Controller. 
+//#	 This class implements the communication with the AC client for the
+//#  Application Controller.
 //#
 //#  $Id$
 
@@ -33,6 +33,9 @@
 namespace LOFAR {
   namespace ACC {
 
+//
+// Setup (wait for an) connection with the AC client
+//
 ApplControlServer::ApplControlServer(const uint16			portnr,
 									 const ApplControl*		ACImpl) :
 	itsACImpl(ACImpl)
@@ -43,9 +46,9 @@ ApplControlServer::ApplControlServer(const uint16			portnr,
 	DH_AC_Server->setID(4);
 
 	DH_AC_Client.connectBidirectional(*DH_AC_Server, 
-							 			TH_Socket("", "localhost", portnr, false),
-							 			TH_Socket("localhost", "", portnr, true),
-										true);	// blocking
+					 			TH_Socket("", "localhost", portnr, false, false),
+					 			TH_Socket("localhost", "", portnr, true,  false),
+								false);	// blocking
 	DH_AC_Server->init();
 
 	itsCommChan = new ApplControlComm;
@@ -87,20 +90,21 @@ string		ApplControlServer::askInfo(const string&	keylist) const
 	return (itsCommChan->getDataHolder()->getOptions());
 }
 
-bool ApplControlServer::processACmsgFromClient()
+DH_ApplControl*		ApplControlServer::pollForMessage() const
 {
-	LOG_TRACE_FLOW("ApplControlServer:processACmsgFromClient");
+	LOG_TRACE_FLOW("ApplControlServer:pollForMessage");
 
 	DH_ApplControl*		DHPtr = itsCommChan->getDataHolder();
 
-	if (!DHPtr->read()) {
-		return (false);
-	}
+	return (DHPtr->read() ? DHPtr : 0);
+}
 
-	ACCmd	cmdType 	 = DHPtr->getCommand();
-	time_t	scheduleTime = DHPtr->getScheduleTime();
-	time_t	waitTime     = DHPtr->getWaitTime();
-	string	options		 = DHPtr->getOptions();
+bool ApplControlServer::handleMessage(DH_ApplControl*	theMsg) 
+{
+	ACCmd	cmdType 	 = theMsg->getCommand();
+	time_t	scheduleTime = theMsg->getScheduleTime();
+	time_t	waitTime     = theMsg->getWaitTime();
+	string	options		 = theMsg->getOptions();
 	LOG_DEBUG_STR("cmd=" << cmdType << ", time=" << scheduleTime 
 						 << ", waittime=" << waitTime 
 				  		 << ", options=[" << options << "]" << endl);
@@ -110,23 +114,46 @@ bool ApplControlServer::processACmsgFromClient()
 	string	newOptions;
 
 	switch (cmdType) {
-	case CmdInfo:		newOptions = supplyInfo(options);	
-						result = true; 								break;
-	case CmdAnswer:		sendAnswer = false;
-						//TODO ???							
-																	break;
-	case CmdBoot:		result = itsACImpl->boot	 (scheduleTime, options);	break;
-	case CmdDefine:		result = itsACImpl->define	 (scheduleTime);			break;
-	case CmdInit:		result = itsACImpl->init	 (scheduleTime);			break;
-	case CmdRun:		result = itsACImpl->run	 (scheduleTime);			break;
-	case CmdPause:		result = itsACImpl->pause	 (scheduleTime, waitTime, options);	break;
-	case CmdQuit:		itsACImpl->quit	 (scheduleTime);								
-						result = true;								break;
-	case CmdSnapshot:	result = itsACImpl->snapshot(scheduleTime, options);	break;
-	case CmdRecover:	result = itsACImpl->recover (scheduleTime, options);	break;
-	case CmdReinit:		result = itsACImpl->reinit	 (scheduleTime, options);	break;
-	case CmdResult:		handleAckMessage();
-						sendAnswer = false;							break;
+	case CmdInfo:		
+		newOptions = supplyInfo(options);	
+		result = true; 								
+		break;
+	case CmdAnswer:	
+		sendAnswer = false; 
+		//TODO ???
+		break;
+	case CmdBoot:		
+		result = itsACImpl->boot(scheduleTime, options);	
+		break;
+	case CmdDefine:		
+		result = itsACImpl->define(scheduleTime);			
+		break;
+	case CmdInit:		
+		result = itsACImpl->init(scheduleTime);			
+		break;
+	case CmdRun:		
+		result = itsACImpl->run(scheduleTime);			
+		break;
+	case CmdPause:		
+		result = itsACImpl->pause(scheduleTime, waitTime, options);	
+		break;
+	case CmdQuit:		
+		itsACImpl->quit(scheduleTime);
+		result = true;
+		break;
+	case CmdSnapshot:	
+		result = itsACImpl->snapshot(scheduleTime, options);	
+		break;
+	case CmdRecover:	
+		result = itsACImpl->recover (scheduleTime, options);	
+		break;
+	case CmdReinit:		
+		result = itsACImpl->reinit (scheduleTime, options);	
+		break;
+	case CmdResult:		
+		handleAckMessage(); 
+		sendAnswer = false;
+		break;
 	default:
 		//TODO
 		LOG_DEBUG_STR ("Message type " << cmdType << " not supported!\n");
@@ -134,7 +161,7 @@ bool ApplControlServer::processACmsgFromClient()
 	}
 
 	if (sendAnswer) {
-		DHPtr->setResult(result ? AcCmdMaskOk : 0);
+		theMsg->setResult(result ? AcCmdMaskOk : 0);
 		itsCommChan->sendCmd (CmdAnswer, 0, 0, newOptions);
 	}
 

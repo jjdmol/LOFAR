@@ -72,7 +72,10 @@ public:
 	void	handleAckMessage();
 
 	// Function to read a message an call the corresponding function.
-	bool	processACmsgFromClient();
+	DH_ApplControl*		pollForMessage() const;
+	bool 				handleMessage(DH_ApplControl*	theMsg);
+
+	inline DataHolder*	getDataHolder() const;
 
 private:
 	// NOT default constructable;
@@ -82,6 +85,9 @@ private:
 	ApplControlComm*		itsCommChan;
 };
 
+inline	DataHolder*	ApplControlServer::getDataHolder() const {
+	return (itsCommChan->getDataHolder());
+}
 
 } // namespace ACC
 } // namespace LOFAR
