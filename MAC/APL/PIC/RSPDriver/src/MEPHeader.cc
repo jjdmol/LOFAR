@@ -41,7 +41,6 @@ const MEPHeader::FieldsType MEPHeader::RSR_VERSION_HDR   = { READ,  0, 0, { DST_
 
 const MEPHeader::FieldsType MEPHeader::TST_SELFTEST_HDR  = { WRITE, 0, 0, { DST_RSP, TST, TST_SELFTEST,  0 }, 0, TST_SELFTEST_SIZE  };
 
-const MEPHeader::FieldsType MEPHeader::CFG_RESET_HDR     = { WRITE, 0, 0, { DST_RSP, CFG, CFG_RESET,     0 }, 0, CFG_RESET_SIZE     };
 const MEPHeader::FieldsType MEPHeader::CFG_REPROGRAM_HDR = { WRITE, 0, 0, { DST_RSP, CFG, CFG_REPROGRAM, 0 }, 0, CFG_REPROGRAM_SIZE };
 
 const MEPHeader::FieldsType MEPHeader::WG_XSETTINGS_HDR  = { WRITE, 0, 0, { DST_BLP, WG,  WG_XSETTINGS,  0 }, 0, WG_XSETTINGS_SIZE  };
@@ -56,10 +55,8 @@ const MEPHeader::FieldsType MEPHeader::BF_XIOUT_HDR      = { WRITE, 0, 0, { DST_
 const MEPHeader::FieldsType MEPHeader::BF_YROUT_HDR      = { WRITE, 0, 0, { DST_BLP, BF,  BF_YROUT,      0 }, 0, BF_YROUT_SIZE      };
 const MEPHeader::FieldsType MEPHeader::BF_YIOUT_HDR      = { WRITE, 0, 0, { DST_BLP, BF,  BF_YIOUT,      0 }, 0, BF_YIOUT_SIZE      };
 
-const MEPHeader::FieldsType MEPHeader::BST_MEAN_HDR      = { READ,  0, 0, { DST_RSP, BST, BST_MEAN,      0 }, 0, BST_MEAN_SIZE      };
 const MEPHeader::FieldsType MEPHeader::BST_POWER_HDR     = { READ,  0, 0, { DST_RSP, BST, BST_POWER,     0 }, 0, BST_POWER_SIZE     };
 
-const MEPHeader::FieldsType MEPHeader::SST_MEAN_HDR      = { READ,  0, 0, { DST_BLP, SST, SST_MEAN,      0 }, 0, SST_MEAN_SIZE      };
 const MEPHeader::FieldsType MEPHeader::SST_POWER_HDR     = { READ,  0, 0, { DST_BLP, SST, SST_POWER,     0 }, 0, SST_POWER_SIZE     };
 
 const MEPHeader::FieldsType MEPHeader::RCU_SETTINGS_HDR  = { WRITE, 0, 0, { DST_BLP, RCU, RCU_SETTINGS,  0 }, 0, RCU_SETTINGS_SIZE  };

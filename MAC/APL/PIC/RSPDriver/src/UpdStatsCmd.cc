@@ -88,18 +88,9 @@ void UpdStatsCmd::complete(CacheBuffer& cache)
   {
     if (m_event->rcumask[cache_device])
     {
-      if (m_event->type <= Statistics::SUBBAND_POWER)
-      {
-	ack.stats()(0, result_device, Range::all())
-	  = cache.getSubbandStats()()(m_event->type,
-				      cache_device, Range::all());
-      }
-      else
-      {
-	ack.stats()(0, result_device, Range::all())
-	  = cache.getBeamletStats()()(m_event->type - Statistics::BEAMLET_MEAN,
-				      cache_device, Range::all());
-      }
+      ack.stats()(0, result_device, Range::all())
+	= cache.getSubbandStats()()(m_event->type,
+				    cache_device, Range::all());
 
       result_device++;
     }

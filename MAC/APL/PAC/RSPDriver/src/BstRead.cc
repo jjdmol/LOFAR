@@ -57,14 +57,9 @@ void BstRead::sendrequest()
 
   switch (m_type)
   {
-    case Statistics::BEAMLET_MEAN:
-      bstread.hdr.set(MEPHeader::BST_MEAN_HDR, MEPHeader::DST_RSP,
-			MEPHeader::READ, N_STATS * sizeof(int32), byteoffset);
-      break;
-    
     case Statistics::BEAMLET_POWER:
       bstread.hdr.set(MEPHeader::BST_POWER_HDR, MEPHeader::DST_RSP,
-			MEPHeader::READ, N_STATS * sizeof(uint32), byteoffset);
+		      MEPHeader::READ, N_STATS * sizeof(uint32), byteoffset);
       break;
 
     default:
@@ -82,20 +77,18 @@ void BstRead::sendrequest_status()
 }
 
 /**
- * Functions to cast a complex<int32> and complex<uint32> to a complex<double>
+ * Function to convert the semi-floating point representation used by the
+ * EPA firmware to a double.
  */
-BZ_DECLARE_FUNCTION_RET(convert_int32_to_double, complex<double>)
-inline complex<double> convert_int32_to_double(complex<int32> val)
+BZ_DECLARE_FUNCTION_RET(convert_uint32_to_double, double)
+inline double convert_uint32_to_double(uint32 val)
 {
-  return complex<double>((double)val.real(),
-			 (double)val.imag());
-}
-
-BZ_DECLARE_FUNCTION_RET(convert_uint32_to_double, complex<double>)
-inline complex<double> convert_uint32_to_double(complex<uint32> val)
-{
-  return complex<double>((double)val.real(),
-			 (double)val.imag());
+  uint64 val64 = val;
+  
+  // check if bit 31 is set
+  if ((1<<31) & val64) val64 = val64 << 25;
+  
+  return (double)val64;
 }
 
 GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
@@ -114,68 +107,44 @@ GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
     return GCFEvent::NOT_HANDLED;
   }
 
-  uint16 offset = ack.hdr.m_fields.offset / MEPHeader::N_PHASE / sizeof(int32);
+  uint16 offset = ack.hdr.m_fields.offset / sizeof(int32);
   
   LOG_DEBUG(formatString("BstRead::handleack: boardid=%d, offset=%d",
 			 getBoardId(), offset));
 
   Range fragment_range(offset / MEPHeader::N_POL,
-		       (offset / MEPHeader::N_POL) + (N_STATS / MEPHeader::N_PHASEPOL) - 1);
+		       (offset / MEPHeader::N_POL) + (N_STATS / MEPHeader::N_POL) - 1);
 
   LOG_DEBUG_STR("fragment_range=" << fragment_range);
   
+  if (m_type != ack.hdr.m_fields.addr.regid)
+  {
+    LOG_ERROR("invalid bst ack");
+    return GCFEvent::HANDLED;
+  }
+
   switch (m_type)
   {
-    case Statistics::BEAMLET_MEAN:
-    {
-      Array<complex<int32>, 2> stats((complex<int32>*)&ack.stat,
-				      shape(N_STATS / MEPHeader::N_PHASEPOL,
-					    MEPHeader::N_POL),
-				      neverDeleteData);
-
-      if ((m_type - Statistics::BEAMLET_MEAN) != ack.hdr.m_fields.addr.regid)
-      {
-	LOG_ERROR("invalid bst ack");
-	return GCFEvent::HANDLED;
-      }
-
-      Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getBeamletStats()());
-
-      // x-pol beamlet statistics: copy and convert to double
-      cache(m_type - Statistics::BEAMLET_MEAN, getBoardId() * 2,     fragment_range) =
-	convert_int32_to_double(stats(Range::all(), 0));
-
-      // y-pol beamlet statistics: copy and convert to double
-      cache(m_type - Statistics::BEAMLET_MEAN, getBoardId() * 2 + 1, fragment_range) =
-	convert_int32_to_double(stats(Range::all(), 1));
-    }
-    break;
-
     case Statistics::BEAMLET_POWER:
     {
-      Array<complex<uint32>, 2> stats((complex<uint32>*)&ack.stat,
-				      shape(N_STATS / MEPHeader::N_PHASEPOL,
-					    MEPHeader::N_POL),
-				      neverDeleteData);
+      
+      Array<uint32, 2> stats((uint32*)&ack.stat,
+			     shape(N_STATS / MEPHeader::N_POL,
+				   MEPHeader::N_POL),
+			     neverDeleteData);
 
-      if ((m_type - Statistics::BEAMLET_MEAN) != ack.hdr.m_fields.addr.regid)
-      {
-	LOG_ERROR("invalid bst ack");
-	return GCFEvent::HANDLED;
-      }
-
-      Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getBeamletStats()());
+      Array<double, 3>& cache(Cache::getInstance().getBack().getBeamletStats()());
 
       // x-pol beamlet statistics: copy and convert to double
-      cache(m_type - Statistics::BEAMLET_MEAN, getBoardId() * 2,     fragment_range) =
+      cache(m_type, getBoardId() * 2,     fragment_range) =
 	convert_uint32_to_double(stats(Range::all(), 0));
 
       // y-pol beamlet statistics: copy and convert to double
-      cache(m_type - Statistics::BEAMLET_MEAN, getBoardId() * 2 + 1, fragment_range) =
+      cache(m_type, getBoardId() * 2 + 1, fragment_range) =
 	convert_uint32_to_double(stats(Range::all(), 1));
     }
     break;
-      
+    
     default:
       LOG_ERROR("invalid statistics type");
       break;

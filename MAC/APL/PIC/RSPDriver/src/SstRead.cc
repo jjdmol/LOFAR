@@ -57,14 +57,9 @@ void SstRead::sendrequest()
 
   switch (m_type)
   {
-    case Statistics::SUBBAND_MEAN:
-      sstread.hdr.set(MEPHeader::SST_MEAN_HDR, getCurrentBLP() / SST_N_FRAGMENTS,
-			MEPHeader::READ, N_STATS * sizeof(int32), byteoffset);
-      break;
-    
     case Statistics::SUBBAND_POWER:
       sstread.hdr.set(MEPHeader::SST_POWER_HDR, getCurrentBLP() / SST_N_FRAGMENTS,
-			MEPHeader::READ, N_STATS * sizeof(uint32), byteoffset);
+		      MEPHeader::READ, N_STATS * sizeof(uint32), byteoffset);
       break;
 
     default:
@@ -82,20 +77,18 @@ void SstRead::sendrequest_status()
 }
 
 /**
- * Functions to cast a complex<int32> and complex<uint32> to a complex<double>
+ * Function to convert the semi-floating point representation used by the
+ * EPA firmware to a double.
  */
-BZ_DECLARE_FUNCTION_RET(convert_int32_to_double, complex<double>)
-inline complex<double> convert_int32_to_double(complex<int32> val)
+BZ_DECLARE_FUNCTION_RET(convert_uint32_to_double, double)
+inline double convert_uint32_to_double(uint32 val)
 {
-  return complex<double>((double)val.real(),
-			 (double)val.imag());
-}
-
-BZ_DECLARE_FUNCTION_RET(convert_uint32_to_double, complex<double>)
-inline complex<double> convert_uint32_to_double(complex<uint32> val)
-{
-  return complex<double>((double)val.real(),
-			 (double)val.imag());
+  uint64 val64 = val;
+  
+  // check if bit 31 is set
+  if ((1<<31) & val64) val64 = val64 << 25;
+  
+  return (double)val64;
 }
 
 GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
@@ -116,55 +109,32 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / SST_N_FRAGMENTS);
 
-  uint16 offset = ack.hdr.m_fields.offset / MEPHeader::N_PHASE / sizeof(int32);
+  uint16 offset = ack.hdr.m_fields.offset / sizeof(int32);
   
   LOG_DEBUG(formatString("SstRead::handleack: global_blp=%d, offset=%d",
 			 global_blp, offset));
 
   Range fragment_range(offset / MEPHeader::N_POL,
-		       (offset / MEPHeader::N_POL) + (N_STATS / MEPHeader::N_PHASEPOL) - 1);
+		       (offset / MEPHeader::N_POL) + (N_STATS / MEPHeader::N_POL) - 1);
 
   LOG_DEBUG_STR("fragment_range=" << fragment_range);
   
+  if (m_type != ack.hdr.m_fields.addr.regid)
+  {
+    LOG_ERROR("invalid sst ack");
+    return GCFEvent::HANDLED;
+  }
+
   switch (m_type)
   {
-    case Statistics::SUBBAND_MEAN:
-    {
-      Array<complex<int32>, 2> stats((complex<int32>*)&ack.stat,
-				     shape(N_STATS / MEPHeader::N_PHASEPOL,
-					   MEPHeader::N_POL),
-				     neverDeleteData);
-
-      if (m_type != ack.hdr.m_fields.addr.regid)
-      {
-	LOG_ERROR("invalid sst ack");
-	return GCFEvent::HANDLED;
-      }
-
-      Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getSubbandStats()());
-
-      // x-pol subband statistics: copy and convert to double
-      cache(m_type, global_blp * 2,     fragment_range) = convert_int32_to_double(stats(Range::all(), 0));
-
-      // y-pol subband statistics: copy and convert to double
-      cache(m_type, global_blp * 2 + 1, fragment_range) = convert_int32_to_double(stats(Range::all(), 1));
-    }
-    break;
-      
     case Statistics::SUBBAND_POWER:
     {
-      Array<complex<uint32>, 2> stats((complex<uint32>*)&ack.stat,
-				      shape(N_STATS / MEPHeader::N_PHASEPOL,
-					    MEPHeader::N_POL),
-				      neverDeleteData);
+      Array<uint32, 2> stats((uint32*)&ack.stat,
+			     shape(N_STATS / MEPHeader::N_POL,
+				   MEPHeader::N_POL),
+			     neverDeleteData);
 
-      if (m_type != ack.hdr.m_fields.addr.regid)
-      {
-	LOG_ERROR("invalid sst ack");
-	return GCFEvent::HANDLED;
-      }
-
-      Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getSubbandStats()());
+      Array<double, 3>& cache(Cache::getInstance().getBack().getSubbandStats()());
 
       // x-pol subband statistics: copy and convert to double
       cache(m_type, global_blp * 2,     fragment_range) = convert_uint32_to_double(stats(Range::all(), 0));

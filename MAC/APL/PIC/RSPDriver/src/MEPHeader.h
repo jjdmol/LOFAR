@@ -172,12 +172,11 @@ namespace EPA_Protocol
       /**
        * Read/write sizes in octets (= bytes)
        */
-      static const uint16 RSR_STATUS_SIZE    = 96;
+      static const uint16 RSR_STATUS_SIZE    = 128;
       static const uint16 RSR_VERSION_SIZE   = 3;
       
       static const uint16 TST_SELFTEST_SIZE  = 1;
       
-      static const uint16 CFG_RESET_SIZE     = 1;
       static const uint16 CFG_REPROGRAM_SIZE = 1;
       
       static const uint16 WG_XSETTINGS_SIZE  = 7;
@@ -192,11 +191,9 @@ namespace EPA_Protocol
       static const uint16 BF_YROUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(int16);
       static const uint16 BF_YIOUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(int16);
       
-      static const uint16 BST_MEAN_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(int32);
-      static const uint16 BST_POWER_SIZE     = N_BEAMLETS * N_PHASEPOL * sizeof(uint32);
+      static const uint16 BST_POWER_SIZE     = N_BEAMLETS * N_POL * sizeof(uint32);
 
-      static const uint16 SST_MEAN_SIZE      = N_SUBBANDS * N_POL * N_PHASE * sizeof(int32);
-      static const uint16 SST_POWER_SIZE     = N_SUBBANDS * N_POL * N_PHASE * sizeof(uint32);
+      static const uint16 SST_POWER_SIZE     = N_SUBBANDS * N_POL * sizeof(uint32);
       
       static const uint16 RCU_SETTINGS_SIZE  = 2;
       
@@ -280,7 +277,6 @@ namespace EPA_Protocol
 
       static const FieldsType TST_SELFTEST_HDR;
 
-      static const FieldsType CFG_RESET_HDR;
       static const FieldsType CFG_REPROGRAM_HDR;
 
       static const FieldsType WG_XSETTINGS_HDR;

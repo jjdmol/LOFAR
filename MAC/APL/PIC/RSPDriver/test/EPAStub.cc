@@ -91,12 +91,8 @@ EPAStub::EPAStub(string name)
   m_reg[MEPHeader::BF] [MEPHeader::BF_YROUT].size      = MEPHeader::BF_YROUT_SIZE;
   m_reg[MEPHeader::BF] [MEPHeader::BF_YIOUT].addr      = new char[MEPHeader::BF_YIOUT_SIZE      * GET_CONFIG("RS.N_BLPS", i)];
   m_reg[MEPHeader::BF] [MEPHeader::BF_YIOUT].size      = MEPHeader::BF_YIOUT_SIZE;
-  m_reg[MEPHeader::BST][MEPHeader::BST_MEAN].addr      = new char[MEPHeader::BST_MEAN_SIZE];
-  m_reg[MEPHeader::BST][MEPHeader::BST_MEAN].size      = MEPHeader::BST_MEAN_SIZE;
   m_reg[MEPHeader::BST][MEPHeader::BST_POWER].addr     = new char[MEPHeader::BST_POWER_SIZE];
   m_reg[MEPHeader::BST][MEPHeader::BST_POWER].size     = MEPHeader::BST_POWER_SIZE;
-  m_reg[MEPHeader::SST][MEPHeader::SST_MEAN].addr      = new char[MEPHeader::SST_MEAN_SIZE      * GET_CONFIG("RS.N_BLPS", i)];
-  m_reg[MEPHeader::SST][MEPHeader::SST_MEAN].size      = MEPHeader::SST_MEAN_SIZE;
   m_reg[MEPHeader::SST][MEPHeader::SST_POWER].addr     = new char[MEPHeader::SST_POWER_SIZE     * GET_CONFIG("RS.N_BLPS", i)];
   m_reg[MEPHeader::SST][MEPHeader::SST_POWER].size     = MEPHeader::SST_POWER_SIZE;
   m_reg[MEPHeader::RCU][MEPHeader::RCU_SETTINGS].addr  = new char[MEPHeader::RCU_SETTINGS_SIZE  * GET_CONFIG("RS.N_BLPS", i)];
