@@ -30,7 +30,7 @@
 #include "RefCount.h"
 
 #include <Common/LofarTypes.h>
-#include <GCF/GCF_Control.h>
+#include <GCF/TM/GCF_Control.h>
 
 namespace RSP
 {

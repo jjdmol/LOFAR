@@ -25,7 +25,7 @@
 #ifndef RAWEVENT_H_
 #define RAWEVENT_H_
 
-#include <GCF/GCF_Control.h>
+#include <GCF/TM/GCF_Control.h>
 
 namespace EPA_Protocol
 {

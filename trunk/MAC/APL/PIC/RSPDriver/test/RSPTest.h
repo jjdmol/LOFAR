@@ -26,8 +26,8 @@
 #define RSPTEST_H_
 
 #include <Suite/test.h>
-#include <GCF/GCF_Control.h>
-#include <GCF/GCF_ETHRawPort.h>
+#include <GCF/TM/GCF_Control.h>
+#include <GCF/TM/GCF_ETHRawPort.h>
 
 namespace RSP_Test
 {
