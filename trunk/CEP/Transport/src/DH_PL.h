@@ -45,7 +45,7 @@ public:
 
   virtual ~DH_PL ();
 
-  virtual DH_PL* clone() const;
+  virtual DataHolder* clone() const;
 
   // Get a reference to the PersistentObject.
   PL::PersistentObject& getPO() const;		       

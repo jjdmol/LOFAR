@@ -93,6 +93,7 @@ public:
   // The default implementation does nothing.
   void basePreprocess();
   virtual void preprocess();
+  virtual void init();
 
   // The postprocess method is called after process is done.
   // It can be used to clean up the DataHolder.

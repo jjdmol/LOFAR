@@ -85,6 +85,10 @@ BaseDataHolder::~BaseDataHolder()
   delete itsDataBlob;
 }
 
+void BaseDataHolder::init() {
+  basePreprocess();
+}
+
 void BaseDataHolder::basePreprocess()
 {
   itsReadDelayCount = itsReadDelay;

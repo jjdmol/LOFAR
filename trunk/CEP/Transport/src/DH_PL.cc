@@ -46,7 +46,7 @@ DH_PL::~DH_PL ()
   delete itsPODHPL;
 }
 
-DH_PL* DH_PL::clone() const
+DataHolder* DH_PL::clone() const
 {
   return new DH_PL (*this);
 }
