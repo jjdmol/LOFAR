@@ -1,12 +1,22 @@
-DOCHDRS		 		= \
+INSTHDRS =
+
+NOINSTHDRS = \
 LofarDatabase.h	
+
+TCCHDRS =
+
+nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS = $(NOINSTHDRS)
+
+DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 
 lib_LTLIBRARIES 	= liblofardatabase.la 
 
-liblofardatabase_la_SOURCES 	= $(DOCHDRS)		\
-								  LofarDatabase.cc	\
-								  MySQLDatabase.cc  \
-								  PgSQLDatabase.cc
+liblofardatabase_la_SOURCES 	= \
+				  LofarDatabase.cc	\
+				  MySQLDatabase.cc  \
+				  PgSQLDatabase.cc
 
 bin_PROGRAMS			= testAOD testDTL testOTL updateDTL \
 						  DTLdemo_no_index DTLdemo_indexed
