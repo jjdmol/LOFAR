@@ -1,144 +1,106 @@
-//## begin module%1.4%.codegen_version preserve=yes
-//   Read the documentation to learn more about C++ code generator
-//   versioning.
-//## end module%1.4%.codegen_version
-
-//## begin module%3CEA4ACC018F.cm preserve=no
-//	  %X% %Q% %Z% %W%
-//## end module%3CEA4ACC018F.cm
-
-//## begin module%3CEA4ACC018F.cp preserve=no
-//## end module%3CEA4ACC018F.cp
-
-//## Module: MSFiller%3CEA4ACC018F; Package specification
-//## Subsystem: UVD%3CD133E2028D
-//## Source file: F:\lofar8\oms\LOFAR\src-links\UVD\MSFiller.h
-
 #ifndef MSFiller_h
 #define MSFiller_h 1
 
-//## begin module%3CEA4ACC018F.additionalIncludes preserve=no
 #include "DMI/Common.h"
 #include "DMI/DMI.h"
-//## end module%3CEA4ACC018F.additionalIncludes
 
-//## begin module%3CEA4ACC018F.includes preserve=yes
 #include "DMI/HIID.h"
 #include "DMI/DataRecord.h"
 #include <aips/MeasurementSets.h>
-//## end module%3CEA4ACC018F.includes
-
-//## begin module%3CEA4ACC018F.declarations preserve=no
-//## end module%3CEA4ACC018F.declarations
-
-//## begin module%3CEA4ACC018F.additionalDeclarations preserve=yes
-//## end module%3CEA4ACC018F.additionalDeclarations
 
 
-//## begin MSFiller%3CEA4A9E0070.preface preserve=yes
-//## end MSFiller%3CEA4A9E0070.preface
-
-//## Class: MSFiller%3CEA4A9E0070
-//## Category: UVD%3CD130710240
-//## Subsystem: UVD%3CD133E2028D
-//## Persistence: Transient
-//## Cardinality/Multiplicity: n
-
-
-
+//##ModelId=3CEA4A9E0070
 class MSFiller 
 {
-  //## begin MSFiller%3CEA4A9E0070.initialDeclarations preserve=yes
-  //## end MSFiller%3CEA4A9E0070.initialDeclarations
-
   public:
-    //## Constructors (specified)
-      //## Operation: MSFiller%3CEB5F5A027D
+      //##ModelId=3CEB5F5A027D
       MSFiller (const string &msname = "", const DataRecord &hdr = DataRecord());
 
-    //## Destructor (generated)
+    //##ModelId=3DB9387F02EB
       ~MSFiller();
 
 
-    //## Other Operations (specified)
-      //## Operation: create%3CEA4AFB02B9
+      //##ModelId=3CEA4AFB02B9
       bool create (const string &msname, const DataRecord &hdr);
 
-      //## Operation: startSegment%3CEB5AA201D5
+      //##ModelId=3CEB5AA201D5
       bool startSegment (const DataRecord &hdr);
 
-      //## Operation: addChunk%3CEB5E3E00C6
+      //##ModelId=3CEB5E3E00C6
       bool addChunk (const DataRecord &rec);
 
-      //## Operation: endSegment%3CEB5E4F01CF
+      //##ModelId=3CEB5E4F01CF
       bool endSegment ();
 
-      //## Operation: close%3CECBBD102DA
+      //##ModelId=3CECBBD102DA
       void close ();
 
-    // Additional Public Declarations
-      //## begin MSFiller%3CEA4A9E0070.public preserve=yes
-      //## end MSFiller%3CEA4A9E0070.public
-
-  protected:
-    // Additional Protected Declarations
-      //## begin MSFiller%3CEA4A9E0070.protected preserve=yes
-      //## end MSFiller%3CEA4A9E0070.protected
-
   private:
-    //## Constructors (generated)
+    //##ModelId=3DB9387F0313
       MSFiller(const MSFiller &right);
 
-    //## Assignment Operation (generated)
+    //##ModelId=3DB938800011
       MSFiller & operator=(const MSFiller &right);
 
     // Additional Private Declarations
-      //## begin MSFiller%3CEA4A9E0070.private preserve=yes
+    //##ModelId=3DB9388102D7
       void allocateDDI (int spwid,const vector<int> &corrs);
       
+    //##ModelId=3DB938820075
       void fillAntenna (const DataRecord &rec);
+    //##ModelId=3DB9388201A2
       void fillFeed    (const DataRecord &rec);
+    //##ModelId=3DB938820379
       void fillSource  (const DataRecord &rec);
+    //##ModelId=3DB9388300D1
       void fillField   (const DataRecord &rec);
+    //##ModelId=3DB938830225
       void fillSpectralWindow (const DataRecord &rec);
-      //## end MSFiller%3CEA4A9E0070.private
-  private: //## implementation
+  private:
     // Additional Implementation Declarations
-      //## begin MSFiller%3CEA4A9E0070.implementation preserve=yes
+    //##ModelId=3DB9387E00C7
       MeasurementSet ms_;
+    //##ModelId=3DB9387E013F
       MSMainColumns *mscol_;
+    //##ModelId=3DB9387E01CC
       MSPolarization mspol_;
+    //##ModelId=3DB9387E024E
       MSPolarizationColumns *mspolCol_;
+    //##ModelId=3DB9387E02BC
       MSDataDescription msdd_;
+    //##ModelId=3DB9387E03D0
       MSDataDescColumns *msddCol_;
       
       // MS header
+    //##ModelId=3DB9387F0088
       DataRecord::Ref header_;
       
       // map of correlation types to POLARIZATION ids
+    //##ModelId=3DB9387D0256
       typedef map<int,int> PolMap;
+    //##ModelId=3DB9387D0292
       typedef PolMap::iterator PMI;
+    //##ModelId=3DB9387D02CE
       typedef PolMap::const_iterator CPMI;
+    //##ModelId=3DB9387F0115
       PolMap polmap;
 
       // map of correlation types to DDIs
+    //##ModelId=3DB9387D0301
       typedef map<int,int> DDIMap;
+    //##ModelId=3DB9387D0333
       typedef DDIMap::iterator DDMI;
+    //##ModelId=3DB9387D0365
       typedef DDIMap::const_iterator CDDMI;
+    //##ModelId=3DB9387F015B
       DDIMap ddimap;
           
+    //##ModelId=3DB9387F01AA
       int field_id,num_channels;
       
-      //## end MSFiller%3CEA4A9E0070.implementation
 };
 
-//## begin MSFiller%3CEA4A9E0070.postscript preserve=yes
-//## end MSFiller%3CEA4A9E0070.postscript
-
 // Class MSFiller 
-
-//## begin module%3CEA4ACC018F.epilog preserve=yes
-//## end module%3CEA4ACC018F.epilog
 
 
 #endif

@@ -20,7 +20,9 @@
 #include "DMI/DataRecord.h"
     
 // these typedefs are used as long as we lack a true DataTable class
+//##ModelId=3DB95AB40235
 typedef DataField DataTable;
+//##ModelId=3DB95AB4023E
 typedef DataRecord DataTableRow;
 
 

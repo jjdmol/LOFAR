@@ -1,3 +1,5 @@
+//##ModelId=3DB93884015F
+//##ModelId=3DB9388401EB
 //## begin module%1.4%.codegen_version preserve=yes
 //   Read the documentation to learn more about C++ code generator
 //   versioning.
@@ -44,6 +46,7 @@ MSFillerWP::MSFillerWP()
 }
 
 
+//##ModelId=3DB938840187
 MSFillerWP::~MSFillerWP()
 {
   //## begin MSFillerWP::~MSFillerWP%3CEA38B303B4_dest.body preserve=yes
@@ -52,6 +55,7 @@ MSFillerWP::~MSFillerWP()
 
 
 
+//##ModelId=3CEA38D802A9
 //## Other Operations (implementation)
 void MSFillerWP::setHeader (const HIID &id)
 {
@@ -64,6 +68,7 @@ void MSFillerWP::setHeader (const HIID &id)
   //## end MSFillerWP::setHeader%3CEA38D802A9.body
 }
 
+//##ModelId=3CF60D490192
 void MSFillerWP::setSegmentHeader (const HIID& id)
 {
   //## begin MSFillerWP::setSegmentHeader%3CF60D490192.body preserve=yes
@@ -75,6 +80,7 @@ void MSFillerWP::setSegmentHeader (const HIID& id)
   //## end MSFillerWP::setSegmentHeader%3CF60D490192.body
 }
 
+//##ModelId=3CF60D5602F0
 void MSFillerWP::setChunk (const HIID& id)
 {
   //## begin MSFillerWP::setChunk%3CF60D5602F0.body preserve=yes
@@ -86,6 +92,7 @@ void MSFillerWP::setChunk (const HIID& id)
   //## end MSFillerWP::setChunk%3CF60D5602F0.body
 }
 
+//##ModelId=3CF6215402A9
 void MSFillerWP::setFooter (const HIID &id)
 {
   //## begin MSFillerWP::setFooter%3CF6215402A9.body preserve=yes
@@ -97,6 +104,7 @@ void MSFillerWP::setFooter (const HIID &id)
   //## end MSFillerWP::setFooter%3CF6215402A9.body
 }
 
+//##ModelId=3CF60D670394
 void MSFillerWP::setMSName (const string &ms)
 {
   //## begin MSFillerWP::setMSName%3CF60D670394.body preserve=yes
@@ -104,6 +112,7 @@ void MSFillerWP::setMSName (const string &ms)
   //## end MSFillerWP::setMSName%3CF60D670394.body
 }
 
+//##ModelId=3CEA38C50374
 void MSFillerWP::init ()
 {
   //## begin MSFillerWP::init%3CEA38C50374.body preserve=yes
@@ -117,6 +126,7 @@ void MSFillerWP::init ()
   //## end MSFillerWP::init%3CEA38C50374.body
 }
 
+//##ModelId=3CEA38CD00E0
 int MSFillerWP::receive (MessageRef &mref)
 {
   //## begin MSFillerWP::receive%3CEA38CD00E0.body preserve=yes

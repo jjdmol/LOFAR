@@ -42,6 +42,8 @@
 //## begin module%3CD133DD02E0.additionalDeclarations preserve=yes
 using namespace UVD;
 
+//##ModelId=3CD781CA01B8
+//##ModelId=3DB9388B0390
 //## end module%3CD133DD02E0.additionalDeclarations
 
 
@@ -71,6 +73,7 @@ MSIntegratorWP::MSIntegratorWP (string msname, const HIID &act_msg, int nchan, i
 }
 
 
+//##ModelId=3DB9388B0277
 MSIntegratorWP::~MSIntegratorWP()
 {
   //## begin MSIntegratorWP::~MSIntegratorWP%3CD133700076_dest.body preserve=yes
@@ -79,6 +82,7 @@ MSIntegratorWP::~MSIntegratorWP()
 
 
 
+//##ModelId=3CD133A303B9
 //## Other Operations (implementation)
 void MSIntegratorWP::init ()
 {
@@ -96,6 +100,7 @@ void MSIntegratorWP::init ()
   //## end MSIntegratorWP::init%3CD133A303B9.body
 }
 
+//##ModelId=3CD1339B0349
 bool MSIntegratorWP::start ()
 {
   //## begin MSIntegratorWP::start%3CD1339B0349.body preserve=yes
@@ -103,6 +108,7 @@ bool MSIntegratorWP::start ()
   //## end MSIntegratorWP::start%3CD1339B0349.body
 }
 
+//##ModelId=3CD133AB011C
 int MSIntegratorWP::receive (MessageRef &mref)
 {
   //## begin MSIntegratorWP::receive%3CD133AB011C.body preserve=yes
@@ -154,6 +160,7 @@ int MSIntegratorWP::receive (MessageRef &mref)
 }
 
 // Additional Declarations
+//##ModelId=3DB9388C02FB
   //## begin MSIntegratorWP%3CD133700076.declarations preserve=yes
 // opens and initializes ms based on init message    
 bool MSIntegratorWP::initMS (const Message &msg,MeasurementSet &ms)
@@ -219,6 +226,7 @@ bool MSIntegratorWP::initMS (const Message &msg,MeasurementSet &ms)
 }
 
 // inits segment (a segment is defined by its unique DDI)
+//##ModelId=3DB9388D01F8
 void MSIntegratorWP::initSegment (ROVisibilityIterator &vi)
 {
   chunk_hiid = AidUVData|msid|nchunk;
@@ -336,6 +344,7 @@ void MSIntegratorWP::initSegment (ROVisibilityIterator &vi)
 
 // Send off chunk of integrated data (one integrated timeslot)
 // and reset all accumulators
+//##ModelId=3DB9388E0005
 void MSIntegratorWP::finishIntegration (bool reset)
 {
   // ignore if nothing has been accumulated
@@ -405,6 +414,7 @@ void MSIntegratorWP::finishIntegration (bool reset)
 }
 
 // Main integration loop for one segment
+//##ModelId=3DB9388E020E
 void MSIntegratorWP::integrate (ROVisibilityIterator &vi,VisBuffer &vb)
 {
   integrated_timeslot = 0;

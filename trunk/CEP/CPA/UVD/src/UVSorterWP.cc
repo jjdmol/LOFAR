@@ -32,6 +32,9 @@
 
 //## begin module%3CD79DB900E7.additionalDeclarations preserve=yes
 using namespace UVD;
+//##ModelId=3CD7CF6E020D
+//##ModelId=3DB9389200F2
+//##ModelId=3DB93892014C
 //## end module%3CD79DB900E7.additionalDeclarations
 
 
@@ -50,6 +53,7 @@ UVSorterWP::UVSorterWP (int ipatch, int icorr)
 }
 
 
+//##ModelId=3DB93892008E
 UVSorterWP::~UVSorterWP()
 {
   //## begin UVSorterWP::~UVSorterWP%3CD79D3D0227_dest.body preserve=yes
@@ -58,6 +62,7 @@ UVSorterWP::~UVSorterWP()
 
 
 
+//##ModelId=3CD79D680391
 //## Other Operations (implementation)
 void UVSorterWP::init ()
 {
@@ -79,6 +84,7 @@ void UVSorterWP::init ()
   //## end UVSorterWP::init%3CD79D680391.body
 }
 
+//##ModelId=3CD79D7301B7
 int UVSorterWP::receive (MessageRef &mref)
 {
   //## begin UVSorterWP::receive%3CD79D7301B7.body preserve=yes
