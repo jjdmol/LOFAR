@@ -115,7 +115,7 @@ int main (int argc, const char* argv[])
   INIT_LOGGER("t3C343");
   try {
     if (argc < 5) {
-      cerr << "Run as: t3C343 user msname meqparmtable skyparmtable [nriter]"
+      cerr << "Run as: t3C343 user msname meqparmtable skyparmtable [nriter=1] [calcuvw=1]"
 	   << endl;
       return 1;
     }
@@ -124,6 +124,11 @@ int main (int argc, const char* argv[])
       istringstream iss(argv[5]);
       iss >> nriter;
     }
+    int calcuvw=1;
+    if (argc > 6) {
+      istringstream iss(argv[6]);
+      iss >> calcuvw;
+    }
     // Do a solve for StokesI.
     {
       vector<int> antVec(14);
@@ -131,7 +136,7 @@ int main (int argc, const char* argv[])
 	antVec[i] = i;
       }
       Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
-		     antVec, "LOFAR.AP", false, true);
+		     antVec, "LOFAR.AP", calcuvw, true);
       // Do a further selection; only XX and no autocorrelations.
       vector<int> corr(1,0);
       vector<int> antVec2;

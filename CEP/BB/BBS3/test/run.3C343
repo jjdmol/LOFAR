@@ -1,13 +1,14 @@
 #!/bin/sh
 # this script must be called with nriter and usernm
 
-if [ "$#" != "2" ]; then
- echo "run as:   run.3C343 nriter usernm"
+if [ "$#" != "3" ]; then
+ echo "run as:   run.3C343 nriter usernm calcuvw"
  exit 1
 fi
 
 niter=$1
 usernm=$2
+calcuvw=$3
 
 # Define functions to create the parm tables.
 beginParmdbInputFile () {
@@ -76,4 +77,4 @@ makeGsm
 applyfile
 
 # Run the test.
-./t3C343 $usernm 10008336_p1.MS 10008336 10008336_gsm $niter
+./t3C343 $usernm 10008336_p1.MS 10008336 10008336_gsm $niter $calcuvw
