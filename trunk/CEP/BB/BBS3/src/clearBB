@@ -71,7 +71,8 @@ echo " CREATE TABLE bbs3woprediffer (
        FREQLENGTH DOUBLE PRECISION,
        STARTTIME DOUBLE PRECISION,
        TIMELENGTH DOUBLE PRECISION,
-       CLEANUP INTEGER);" >> sql_create
+       CLEANUP INTEGER,
+       SOLUTIONID INTEGER);" >> sql_create
 echo " CREATE TABLE bbs3wosolver (
        ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
        Owner BIGINT NOT NULL, 

@@ -59,6 +59,7 @@ DH_WOPrediff::DH_WOPrediff (const string& name)
     itsUseAutoCorr     (0),
     itsLockMappedMem   (0),
     itsCleanUp         (0),
+    itsSolutionID      (0),
     itsPODHWO          (0)
 {
   LOG_TRACE_FLOW("DH_WOPrediff constructor");
@@ -84,6 +85,7 @@ DH_WOPrediff::DH_WOPrediff(const DH_WOPrediff& that)
     itsUseAutoCorr     (0),
     itsLockMappedMem   (0),
     itsCleanUp         (0),
+    itsSolutionID      (0),
     itsPODHWO          (0)
 {
   LOG_TRACE_FLOW("DH_WOPrediff copy constructor");
@@ -132,6 +134,7 @@ void DH_WOPrediff::preprocess()
   addField ("UseAutoCorr", BlobField<unsigned int>(1));
   addField ("LockMappedMem", BlobField<unsigned int>(1));
   addField ("CleanUp", BlobField<unsigned int>(1));
+  addField ("SolutionID", BlobField<int>(1));
 
   // Create the data blob (which calls fillPointers).
   createDataBlock();
@@ -161,6 +164,7 @@ void DH_WOPrediff::preprocess()
   *itsUseAutoCorr = 0;
   *itsLockMappedMem = 0;
   *itsCleanUp = 0;
+  *itsSolutionID = -1;
 }
 
 void DH_WOPrediff::fillDataPointers()
@@ -183,6 +187,7 @@ void DH_WOPrediff::fillDataPointers()
   itsUseAutoCorr = getData<unsigned int> ("UseAutoCorr");
   itsLockMappedMem = getData<unsigned int> ("LockMappedMem");
   itsCleanUp = getData<unsigned int> ("CleanUp");
+  itsSolutionID = getData<int> ("SolutionID");
 }
 
 void DH_WOPrediff::postprocess()
@@ -204,6 +209,7 @@ void DH_WOPrediff::postprocess()
   itsUseAutoCorr = 0;
   itsLockMappedMem = 0;
   itsCleanUp = 0;
+  itsSolutionID = 0;
 }
 
 void DH_WOPrediff::setKSType(const string& ksType)
@@ -347,6 +353,7 @@ void DH_WOPrediff::dump()
   cout << "Use auto correlations = " << getUseAutoCorrelations() << endl;
   cout << "Lock mapped memory = " << getLockMappedMemory() << endl;
   cout << "Clean up = " << getCleanUp() << endl;
+  cout << "Solution id = " << getSolutionID() << endl;
 
   KeyValueMap sArguments;
   vector<int> antNrs;
@@ -411,6 +418,7 @@ void DH_WOPrediff::clearData()
   setUseAutoCorrelations(true);
   setLockMappedMemory(false);
   setCleanUp(false);
+  setSolutionID(0);
 }
 
 namespace PL {
@@ -431,6 +439,7 @@ void DBRep<DH_WOPrediff>::bindCols (dtl::BoundIOs& cols)
   cols["STARTTIME"] == itsStartTime;
   cols["TIMELENGTH"] == itsTimeLength;
   cols["CLEANUP"] == itsCleanUp;
+  cols["SOLUTIONID"] == itsSolutionID;
 }
 
 void DBRep<DH_WOPrediff>::toDBRep (const DH_WOPrediff& obj)
@@ -449,6 +458,7 @@ void DBRep<DH_WOPrediff>::toDBRep (const DH_WOPrediff& obj)
   itsStartTime = obj.getStartTime();
   itsTimeLength = obj.getTimeLength();
   itsCleanUp = obj.getCleanUp();
+  itsSolutionID = obj.getSolutionID();
 }
 
 //# Force the instantiation of the templates.

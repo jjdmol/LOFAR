@@ -144,11 +144,12 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   {
     // Create the connection to the database.
     itsPDSteps[index]->connect(itsPDSteps[index], 0, 0, 1, TH_PL("BBS3WOPrediffer"));
+    itsPDSteps[index]->connect(itsPDSteps[index], 1, 1, 1, TH_PL("BBS3Solutions"));
     // Create the connection to the Solver
 #ifdef HAVE_MPI
-    solverStep.connect(itsPDSteps[index], index+2, 1, 1, TH_MPI(index+1,itsNumberPD+1)); 
+    solverStep.connect(itsPDSteps[index], index+2, 2, 1, TH_MPI(index+1,itsNumberPD+1)); 
 #else
-    solverStep.connect(itsPDSteps[index], index+2, 1, 1, TH_Mem(), false);   
+    solverStep.connect(itsPDSteps[index], index+2, 2, 1, TH_Mem(), false);   
 #endif
   }
 
