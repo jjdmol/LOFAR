@@ -891,7 +891,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
     RSPUpdstatusEvent updStatusEvent(e);
 
     time_t curTime=(time_t)updStatusEvent.timestamp.sec();
-    LOG_INFO(formatString("UpdStatus:\n\ttime: \t%s\n\tstatus:\t%d\n\thandle:\t%d", 
+    LOG_INFO(formatString("UpdStatus:time:%s:status:%d:handle:%d", 
         ctime(&curTime),
         updStatusEvent.status,
         updStatusEvent.handle));
@@ -911,18 +911,18 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       rackNr          = boardNr / (m_n_subracks_per_rack*m_n_boards_per_subrack) + 1;
       subRackNr       = boardNr % (m_n_subracks_per_rack*m_n_boards_per_subrack) + 1;
       relativeBoardNr = boardNr % m_n_boards_per_subrack + 1;
-      LOG_INFO(formatString("UpdStatus:\n\tRack:\t%d\n\tSubRack:\t%d\n\tBoard:\t%d\n",rackNr,subRackNr,relativeBoardNr));
+      LOG_INFO(formatString("UpdStatus:Rack:%d:SubRack:%d:Board::%d\n",rackNr,subRackNr,relativeBoardNr));
       
       uint8   rspVoltage_15 = boardStatus(boardNr).rsp.voltage_15;
       uint8   rspVoltage_22 = boardStatus(boardNr).rsp.voltage_22;
       uint16  rspFfi        = boardStatus(boardNr).rsp.ffi;
-      LOG_INFO(formatString("UpdStatus:\n\tRSP voltage_15:\t%d\n\tRSP voltage_22:\t%d\n\tRSP ffi\t%d",rspVoltage_15,rspVoltage_22,rspFfi));
+      LOG_INFO(formatString("UpdStatus:RSP voltage_15:%d:voltage_22:%d:ffi:%d",rspVoltage_15,rspVoltage_22,rspFfi));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
       updateBoardProperties(scopeString,rspVoltage_15,rspVoltage_22,rspFfi);
       
       uint8   bpStatus  = boardStatus(boardNr).bp.status;
       uint8   bpTemp    = boardStatus(boardNr).bp.temp;
-      LOG_INFO(formatString("UpdStatus:\n\tBP status:\t%d\n\tBP temp:\t%d",bpStatus,bpTemp));
+      LOG_INFO(formatString("UpdStatus:BP status:%d:temp:%d",bpStatus,bpTemp));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rackNr,subRackNr,relativeBoardNr);
       updateFPGAproperties(scopeString,bpStatus,bpTemp);
 
@@ -930,7 +930,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       {
         uint8   apStatus  = boardStatus(boardNr).ap[apNr].status;
         uint8   apTemp    = boardStatus(boardNr).ap[apNr].temp;
-        LOG_INFO(formatString("UpdStatus:\n\tAP[%d] status:\t%d\n\tAP[%d] temp:\t%d",apNr,apStatus,apNr,apTemp));
+        LOG_INFO(formatString("UpdStatus:AP[%d] status:%d:temp:%d",apNr,apStatus,apTemp));
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,apNr+1);
         updateFPGAproperties(scopeString,apStatus,apTemp);
       }      
@@ -941,28 +941,28 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       uint8     ethFfi0       = boardStatus(boardNr).eth.ffi0;
       uint8     ethFfi1       = boardStatus(boardNr).eth.ffi1;
       uint8     ethFfi2       = boardStatus(boardNr).eth.ffi2;
-      LOG_INFO(formatString("UpdStatus:\n\tETH frames:\t%d\n\tETH errors:\t%d\n\tETH last_error:\t%d\n\tETH ffi0:\t%d\n\tETH ffi1:\t%d\n\tETH ffi2:\t%d",ethFrames,ethErrors,ethLastError,ethFfi0,ethFfi1,ethFfi2));
+      LOG_INFO(formatString("UpdStatus:ETH frames:%d:errors:%d:last_error:%d:ffi0:%d:ffi1:%d:ffi2:%d",ethFrames,ethErrors,ethLastError,ethFfi0,ethFfi1,ethFfi2));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rackNr,subRackNr,relativeBoardNr);
       updateETHproperties(scopeString,ethFrames,ethErrors,ethLastError,ethFfi0,ethFfi1,ethFfi2);  
   
       uint32    readSeqnr = boardStatus(boardNr).read.seqnr;
       uint8     readError = boardStatus(boardNr).read.error;
       uint8     readFfi   = boardStatus(boardNr).read.ffi;
-      LOG_INFO(formatString("UpdStatus:\n\tREAD seqnr:\t%d\n\tREAD error:\t%d\n\tREAD ffi:\t%d",readSeqnr,readError,readFfi));
+      LOG_INFO(formatString("UpdStatus:READ seqnr:%d:error:%d:ffi:%d",readSeqnr,readError,readFfi));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPReadStatus,rackNr,subRackNr,relativeBoardNr);
       updateMEPStatusProperties(scopeString,readSeqnr,readError,readFfi);  
       
       uint32    writeSeqnr = boardStatus(boardNr).write.seqnr;
       uint8     writeError = boardStatus(boardNr).write.error;
       uint8     writeFfi   = boardStatus(boardNr).write.ffi;
-      LOG_INFO(formatString("UpdStatus:\n\tWRITE seqnr:\t%d\n\tWRITE error:\t%d\n\tWRITE ffi:\t%d",writeSeqnr,writeError,writeFfi));
+      LOG_INFO(formatString("UpdStatus:WRITE seqnr:%d:error:%d:ffi:%d",writeSeqnr,writeError,writeFfi));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPWriteStatus,rackNr,subRackNr,relativeBoardNr);
       updateMEPStatusProperties(scopeString,writeSeqnr,writeError,writeFfi);  
 
       uint32    syncClock_count = boardStatus(boardNr).sync.clock_count;
       uint32    syncCount       = boardStatus(boardNr).sync.count;
       uint32    syncErrors      = boardStatus(boardNr).sync.errors;
-      LOG_INFO(formatString("UpdStatus:\n\tSYNC clock_count:\t%d\n\tSYNC count:\t%d\n\tSYNC errors:\t%d",syncClock_count,syncCount,syncErrors));
+      LOG_INFO(formatString("UpdStatus:clock_count:%d:count:%d:errors:%d",syncClock_count,syncCount,syncErrors));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_SYNCStatus,rackNr,subRackNr,relativeBoardNr);
       updateSYNCStatusProperties(scopeString,syncClock_count,syncCount,syncErrors);  
     }
@@ -970,7 +970,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
     for(int rcuNr=rcuStatus.lbound(blitz::firstDim); rcuNr <= rcuStatus.ubound(blitz::firstDim); ++rcuNr)
     {
       uint8   rcuStatusBits = rcuStatus(rcuNr).status;
-      LOG_INFO(formatString("UpdStatus:\n\tRCU[%d] status:\t0x%x",rcuNr,rcuStatusBits));
+      LOG_INFO(formatString("UpdStatus:RCU[%d] status:0x%x",rcuNr,rcuStatusBits));
       
       int rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr;
       getRCURelativeNumbers(rcuNr,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
@@ -991,7 +991,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
     RSPUpdstatsEvent updStatsEvent(e);
 
     time_t curTime=(time_t)updStatsEvent.timestamp.sec();
-    LOG_INFO(formatString("UpdStats:\n\ttime: \t%s\n\tstatus:\t%d\n\thandle:\t%d", 
+    LOG_INFO(formatString("UpdStats:time:%s:status:%d:handle:%d", 
         ctime(&curTime),
         updStatsEvent.status,
         updStatsEvent.handle));
