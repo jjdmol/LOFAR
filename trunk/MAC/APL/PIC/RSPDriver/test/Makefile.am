@@ -1,4 +1,10 @@
 
+if HAVE_SYS_CAPABILITY_H
+CAPLIBS=$(top_builddir)/src/libnetraw.la -lcap
+else
+CAPLIBS=
+endif
+
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	-I$(top_builddir)/src
@@ -29,8 +35,7 @@ EPAStub_SOURCES = \
 
 EPAStub_LDADD = \
 	$(top_builddir)/src/libepa.la \
-	$(top_builddir)/src/libnetraw.la \
-	-lcap
+	$(CAPLIBS) \
 	-lsuite
 
 BUILT_SOURCES = \

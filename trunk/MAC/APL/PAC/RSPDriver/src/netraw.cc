@@ -21,7 +21,8 @@
 //#
 //#  $Id$
 
-#if defined(ENABLE_CAP_NET_RAW)
+#include <lofar_config.h>
+#ifdef HAVE_SYS_CAPABILITY_H
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -33,7 +34,7 @@ bool enable_cap_net_raw()
   // must be effectively uid root
   if (0 != geteuid() || 0 == getuid())
   {
-    fprintf(stderr, "This program must be run as setuid-root.");
+    fprintf(stderr, "This program must be run as setuid-root.\n");
     return false;  /** RETURN **/
   }
 
@@ -67,4 +68,5 @@ bool enable_cap_net_raw()
 
   return true;
 }
+
 #endif

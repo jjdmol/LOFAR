@@ -1,11 +1,16 @@
 
+if HAVE_SYS_CAPABILITY_H
+CAPLIBS=$(top_builddir)/src/libnetraw.la -lcap
+else
+CAPLIBS=
+endif
+
 #
 # Define ENABLE_CAP_NET_RAW to let RSPDriver run as setuid root
 # with only cap_net_raw capability enabled.
 #
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/src \
-	-DENABLE_CAP_NET_RAW
+	-I$(top_srcdir)/src
 
 INSTALL=install -C
 
@@ -168,8 +173,7 @@ RSPDriver_SOURCES = \
 RSPDriver_LDADD = \
 	$(top_builddir)/src/librsp.la \
 	$(top_builddir)/src/libepa.la \
-	$(top_builddir)/src/libnetraw.la \
-	-lcap
+	$(CAPLIBS)
 
 ViewStats_SOURCES = \
 	gnuplot_i.h \

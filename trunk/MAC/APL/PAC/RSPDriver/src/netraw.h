@@ -21,10 +21,12 @@
 //#
 //#  $Id$
 
-#ifndef __NETRAW_H_
-#define __NETRAW_H_
+#ifndef NETRAW_H_
+#define NETRAW_H_
 
-#if defined(ENABLE_CAP_NET_RAW)
+#include <lofar_config.h>
+
+#ifdef HAVE_SYS_CAPABILITY_H
 bool enable_cap_net_raw();
 #endif
 

@@ -296,9 +296,9 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
     {
       EPAWriteEvent write(event);
 
-      LOG_INFO(formatString("Received event (pid=0x%02x, regid=0x%02x)",
-			    write.hdr.m_fields.addr.pid,
-			    write.hdr.m_fields.addr.regid));
+      LOG_DEBUG(formatString("Received event (pid=0x%02x, regid=0x%02x)",
+			     write.hdr.m_fields.addr.pid,
+			     write.hdr.m_fields.addr.regid));
 
       uint8  pid    = write.hdr.m_fields.addr.pid;
       uint8  regid  = write.hdr.m_fields.addr.regid;
@@ -444,16 +444,20 @@ void EPAStub::run()
 
 int main(int argc, char** argv)
 {
-#if defined(ENABLE_CAP_NET_RAW)
+#ifdef HAVE_SYS_CAPABILITY_H
   //
   // Need to run as (setuid) root (geteuid()==0), but will limit
   // capabilities to cap_net_raw (and cap_net_admin only)
   // and setuid immediately.
+  // Don't do this if there is an --root argument.
   //
-  if (!enable_cap_net_raw())
+  if (! ((argc >= 2) && (!strcmp(argv[1], "--root"))) )
   {
-    fprintf(stderr, "%s: error: failed to enable CAP_NET_RAW capability.",argv[0]);
-    exit(EXIT_FAILURE);
+    if (!enable_cap_net_raw())
+    {
+      fprintf(stderr, "%s: error: failed to enable CAP_NET_RAW capability.\n",argv[0]);
+      exit(EXIT_FAILURE);
+    }
   }
 #endif
 
