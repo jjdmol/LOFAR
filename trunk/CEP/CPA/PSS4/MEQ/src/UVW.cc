@@ -29,6 +29,7 @@
 #include <aips/Measures/MPosition.h>
 #include <aips/Measures/MEpoch.h>
 #include <aips/Measures/MeasConvert.h>
+#include <aips/Measures/MeasTable.h>
 #include <aips/Quanta/MVuvw.h>
 
 namespace Meq {
@@ -38,6 +39,8 @@ const HIID child_labels[] = { AidRA,AidDec,AidStX,AidStY,AidStZ };
 
 UVW::UVW()
 {
+  // Use the Dwingeloo position for the frame.
+  Assert (MeasTable::Observatory(itsEarthPos, "DWL"));
   ///  itsRefU = itsU;
 }
 
@@ -89,7 +92,7 @@ int UVW::getResult (Result::Ref &resref,
   Quantum<double> qepoch(0, "s");
   qepoch.setValue (cells.time(0));
   MEpoch mepoch(qepoch, MEpoch::UTC);
-  MeasFrame frame;
+  MeasFrame frame(itsEarthPos);
   frame.set (mepoch);
   mbl.getRefPtr()->set(frame);      // attach frame
   MBaseline::Convert mcvt(mbl, MBaseline::J2000);
