@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.23  2002/05/08 14:28:37  wierenga
+//  DataHolder allocation moved from constructor to preprocess to be able to
+//  use TransportHolder::allocate.
+//  Bug fixes in P2Perf.cc for -mpi arguments.
+//
 //  Revision 1.22  2002/05/08 08:20:04  schaaf
 //  Modified includes for new build env
 //
@@ -119,7 +124,6 @@
 #include "BaseSim/Corba/TH_Corba.h"
 #endif
 
-
 P2Perf::P2Perf():
   itsSourceSteps(0),
   itsDestSteps(0)
@@ -193,16 +197,18 @@ void P2Perf::define(const ParamBlock& params)
   // -odd and -even are used to have all Sources in one application 
   //                and all destinations in the other
 
-  // determine the number of source/destination steps
-  itsSourceSteps = atoi(argv[1]);
-  itsDestSteps   = atoi(argv[2]);
 
+  // determine the number of source/destination steps
+  
   bool RunInOneAppl = false;
   bool SplitInTwoApps = false;
   bool OddSide=false;
   bool UseMPIRanks = true;
   if ((argc >= 4 )
       && (((!strncmp(argv[3], "-odd", 4))) ||  ((!strncmp(argv[3], "-odd", 4)))) ){
+    itsSourceSteps = atoi(argv[1]);
+    itsDestSteps   = atoi(argv[2]);
+
     TRACER4("Split in Two Apps");
     if ((!strncmp(argv[3], "-odd", 4))) {
       SplitInTwoApps = true;
@@ -214,11 +220,16 @@ void P2Perf::define(const ParamBlock& params)
       simul.setCurAppl(1);
     } 
   } else if ((!strncmp(argv[3], "-one", 4))){
+    itsSourceSteps = atoi(argv[1]);
+    itsDestSteps   = atoi(argv[2]);
     TRACER4("Run in One Appl");
     simul.setCurAppl(0);
     RunInOneAppl = true;
   } else  if (!strncmp(argv[3], "-mpi", 4)){
+    itsSourceSteps = atoi(argv[1]);
+    itsDestSteps   = atoi(argv[2]);
     TRACER4("Split in MPI applications");
+    simul.setCurAppl(0);
 #ifdef HAVE_MPI    
     UseMPIRanks = true;
     simul.setCurAppl(0);
@@ -226,11 +237,18 @@ void P2Perf::define(const ParamBlock& params)
     AssertStr (false,"Need MPI for -mpi flag"); 
 #endif
   } else {
+    TRACER1("Default settings");
     simul.setCurAppl(0);
     RunInOneAppl = true;
+    simul.setCurAppl(0);
+    itsSourceSteps = 2;
+    itsDestSteps   = 2;
+    TRACER1("Use default number of Source      Steps: " << itsSourceSteps);
+    TRACER1("Use default number of Destination Steps: " << itsDestSteps);
+#ifdef HAVE_MPI    
+    UseMPIRanks = true;
+#endif
   }
-
-
 
   // Create the Workholders and Steps
   Sworkholders = new (WH_GrowSize*)[itsSourceSteps];
