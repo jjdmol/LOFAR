@@ -61,9 +61,8 @@ int main(int argc, const char** argv)
   EX1.baseDump();
   EX1.baseRun(10);
   EX1.baseDump();
-  EX1.baseQuit();
 #endif
-  
+  int result=0;  
   if ( 
       ( ((DH_Example*)EX1.itsWHs[0]->getDataManager().getInHolder(0))->getBuffer()[0] == 
         ((DH_Example*)EX1.itsWHs[1]->getDataManager().getOutHolder(0))->getBuffer()[0]) &&
@@ -71,8 +70,11 @@ int main(int argc, const char** argv)
 	((DH_Example*)EX1.itsWHs[1]->getDataManager().getOutHolder(0))->getCounter() ) ) {
     
     // success
-    return 0;
+    result =  0;
   } else {
-    return -1;
+    result =  -1;
   }
+
+  EX1.baseQuit();
+  return result;
 }
