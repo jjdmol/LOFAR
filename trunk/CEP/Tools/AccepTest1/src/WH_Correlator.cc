@@ -52,22 +52,9 @@ WH_Correlator::WH_Correlator(const string& name,
 
   bandwidth=0.0;
 
-  DH_Vis::BufferType* nul_value = new DH_Vis::BufferType(0,0);
-
-  itsResetBuffer = new DH_Vis::BufferType [itsNchannels*itsNelements*itsNelements*itsNpolarisations] ;
-  
-  for (int h = 0; h < itsNchannels; h++) {
-    for (int i = 0; i < itsNelements; i++){ 
-      for (int j = 0; j < itsNelements; j++) {
-	for (int k = 0; k < itsNpolarisations; k++) {
-	  *(itsResetBuffer+
-	    h*itsNelements*itsNelements*itsNpolarisations+
-	    i*itsNelements*itsNpolarisations+
-	    j*itsNpolarisations+ k) = *nul_value;
-	}
-      }
-    }
-  }
+  itsResetBuffer = new DH_Vis::BufferType [itsNchannels*itsNelements*itsNelements*itsNpolarisations];
+  memset(itsResetBuffer, 0, itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType));
+ 
 }
 
 WH_Correlator::~WH_Correlator() {
