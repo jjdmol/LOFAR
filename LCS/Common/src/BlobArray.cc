@@ -37,7 +37,7 @@ void getBlobArrayShape (BlobIStream& bs, uint32* shape, uint ndim,
     bs >> dummy;    // a dummy is added to make #dim odd (for BlobArrayHeader)
   }
   if (swapAxes) {
-    std::vector<uint32> shp;
+    std::vector<uint32> shp(ndim);
     for (uint i=0; i<ndim; i++) {
       shp[i] = shape[i];
     }
