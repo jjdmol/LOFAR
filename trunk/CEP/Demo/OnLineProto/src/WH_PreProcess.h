@@ -27,7 +27,7 @@
 
 #include "CEPFrame/WorkHolder.h"
 #include "OnLineProto/DH_Beamlet.h"
-//#include "OnLineProto/DH_Phase.h"
+#include "OnLineProto/DH_Phase.h"
 #include "OnLineProto/MAC.h"
 
 namespace LOFAR
