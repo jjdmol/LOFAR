@@ -31,7 +31,8 @@ WH_PhaseShift::WH_PhaseShift (int nin,
 							  DataGenerator* dg_config, 
 							  int nfft, 
 							  int source, 
-							  int windowsize)
+							  int windowsize,
+							  string name)
   : WorkHolder        (nin, nout, "aWorkHolder", "WH_PhaseShift"),
 	itsNrcu           (nrcu),
 	itsPos            (0),
@@ -39,7 +40,8 @@ WH_PhaseShift::WH_PhaseShift (int nin,
 	itsSource         (source),
     itsPrevWindowSize (windowsize),
     itsCount          (0),
-	itsConfig         (dg_config)
+	itsConfig         (dg_config),
+	itsName           (name)
 {
   // Allocate blocks to hold pointers to input and output DH-s.
   if (nin > 0) {
@@ -62,6 +64,9 @@ WH_PhaseShift::WH_PhaseShift (int nin,
   for (int i = 0; i < nout; i++) {
     sprintf (str, "%d", i);
     itsOutHolders[i] = new DH_SampleC (string ("out_") + str, nrcu, 1);
+
+// 	// DEBUG
+// 	itsOutHolders [i]->setOutFile (string ("phase_") + str + string ("_") + itsName  + string (".dat"));
   }
 
   itsInputBuffer.resize (nfft);
@@ -74,6 +79,8 @@ WH_PhaseShift::WH_PhaseShift (int nin,
 	PhaseShift::getFreqShift (itsConfig->itsSamplingFreq,
 							  (itsConfig->itsSamplingFreq) / 2, 
 							  itsNfft);
+
+  itsTrajectCount = 0;
 }
 
 WH_PhaseShift::~WH_PhaseShift ()
@@ -95,7 +102,8 @@ WH_PhaseShift* WH_PhaseShift::make (const string&) const
 							itsConfig,
 							itsNfft, 
 							itsSource, 
-							itsPrevWindowSize);
+							itsPrevWindowSize,
+							itsName);
 }
 
 
@@ -111,8 +119,8 @@ void WH_PhaseShift::process ()
 		itsOutputBuffer = 
 		  PhaseShift::phaseShift (itsNfft,
 								  itsInputBuffer,
-								  itsConfig->itsSources[itsSource]->itsTraject->getTheta (itsCount++),
-								  itsConfig->itsSources[itsSource]->itsTraject->getPhi (itsCount),
+								  itsConfig->itsSources[itsSource]->itsTraject->getTheta (itsTrajectCount),
+								  itsConfig->itsSources[itsSource]->itsTraject->getPhi (itsTrajectCount++),
 								  *(itsConfig->itsArray),
 								  itsFreqShift,
 								  itsForwardPlan,
@@ -130,7 +138,7 @@ void WH_PhaseShift::process ()
 				itsNrcu * sizeof (dcomplex));
       }
     }
-	//    itsCount++;
+	itsCount++;
   }
 }
 
