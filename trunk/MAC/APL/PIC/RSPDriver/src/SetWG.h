@@ -78,7 +78,7 @@ class SetWG : public GCFTask, public Test
     // ports
     GCFPort m_server;
 
-    int    m_blp;
+    int    m_rcu;
     uint8  m_phase;
     uint8  m_ampl;
     double m_freq;

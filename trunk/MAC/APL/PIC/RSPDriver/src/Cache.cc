@@ -80,9 +80,21 @@ CacheBuffer::CacheBuffer()
   m_rcusettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
   m_rcusettings() = RCUSettings::RCURegisterType();
 
-  for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; i++)
+  if (GET_CONFIG("RSPDriver.SWAP_RCU_BITS", i))
   {
-    m_rcusettings()(i).value = 82;
+    for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; i++)
+    {
+      m_rcusettings()(i).value = 82;
+    }
+  }
+  else
+  {
+    for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; i++)
+    {
+      m_rcusettings()(i).lba_enable = 1;
+      m_rcusettings()(i).vl_enable  = 1;
+      m_rcusettings()(i).vddvcc_en  = 1;
+    }
   }
   
   m_wgsettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
@@ -225,6 +237,9 @@ Cache::~Cache()
 
 void Cache::swapBuffers()
 {
+  // clear modified flags on back buffer
+  m_back->getWGSettings().clearModified();
+
   CacheBuffer *tmp = m_front;
   m_front = m_back;
   m_back  = tmp;

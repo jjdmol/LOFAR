@@ -82,9 +82,9 @@ do { \
   } \
 } while(0)
 
-SetWG::SetWG(string name, int blp, uint8 phase, uint8 ampl, double freq)
+SetWG::SetWG(string name, int rcu, uint8 phase, uint8 ampl, double freq)
   : GCFTask((State)&SetWG::initial, name), Test(name),
-    m_blp(blp), m_phase(phase), m_ampl(ampl), m_freq(freq)
+    m_rcu(rcu), m_phase(phase), m_ampl(ampl), m_freq(freq)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
@@ -153,15 +153,15 @@ GCFEvent::TResult SetWG::enabled(GCFEvent& e, GCFPortInterface& port)
       RSPSetwgEvent wg;
  
       wg.timestamp.setNow();
-      wg.blpmask.reset();
-      if (m_blp >= 0)
+      wg.rcumask.reset();
+      if (m_rcu >= 0)
       {
-	wg.blpmask.set(m_blp);
+	wg.rcumask.set(m_rcu);
       }
       else
       {
-	for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i); i++)
-	  wg.blpmask.set(i);
+	for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; i++)
+	  wg.rcumask.set(i);
       }
 	
       wg.settings().resize(1);
@@ -313,18 +313,19 @@ int main(int argc, char** argv)
   }
 
   //
-  // Read BLP
+  // Read RCU
   //
-  cout << "Which BLP? (-1 means all): ";
-  int blp = atoi(fgets(buf, 32, stdin));
-  if (blp < -1 || blp >= GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
+  cout << "Which RCU? (-1 means all): ";
+  int rcu = atoi(fgets(buf, 32, stdin));
+  if (rcu < -1 || rcu >= GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
   {
-    LOG_FATAL(formatString("Invalid BLP index, should be >= -1 && < %d; -1 indicates all BLP's", GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i)));
+    LOG_FATAL(formatString("Invalid RCU index, should be >= -1 && < %d; -1 indicates all RCU's",
+			   GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
     exit(EXIT_FAILURE);
   }
   
   Suite s("SetWG", &cerr);
-  s.addTest(new SetWG("SetWG", blp, (uint8)0, (uint8)(ampl*(double)(1<<7)/100.0), freq)); // set phase to 0 for now
+  s.addTest(new SetWG("SetWG", rcu, (uint8)0, (uint8)(ampl*(double)(1<<7)/100.0), freq)); // set phase to 0 for now
   s.run();
   long nFail = s.report();
   s.free();
