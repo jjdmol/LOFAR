@@ -29,17 +29,11 @@
 #include <config.h>
 #endif
 
-#ifdef HAVE_MPI_PROFILER
-#define MPICH_SKIP_MPICXX
-#include <mpe.h>
-#endif
-
 #include <CAL/MeqCalibraterImpl.h>
 #include <Common/lofar_strstream.h>
 #include <aips/Exceptions/Error.h>
 #include <aips/Arrays/Vector.h>
-
-#include <MNS/PerfProfile.h>
+#include <Common/Profiling/PerfProfile.h>
 
 void predict (MeqCalibrater& mc)
 {
@@ -82,17 +76,7 @@ void solve(MeqCalibrater& mc, int loopcnt)
 
 int main(int argc, char* argv[])
 {
-#ifdef HAVE_MPI_PROFILER
-  MPI_Init(&argc, &argv);
-
-  int tt_start = MPE_Log_get_event_number();
-  int tt_stop  = MPE_Log_get_event_number();
-
-  MPE_Describe_state(tt_start, tt_stop, "Total runtime", "red");
-
-  MPE_Start_log();
-  MPE_Log_event(tt_start, 0, "start program");
-#endif
+  PerfProfile::init(&argc, &argv);
 
   try {
     if (argc < 2) {
@@ -216,11 +200,7 @@ int main(int argc, char* argv[])
        << ' ' << MeqResultRep::nctor + MeqResultRep::ndtor << endl;
   cout << "OK" << endl;
 
-#ifdef HAVE_MPI_PROFILER
-  MPE_Log_event(tt_stop, 0, "stop program");
-  MPI_Finalize();
-  //MPE_Finish_log("tWSRT");
-#endif
+  PerfProfile::finalize();
 
   return 0;
 }

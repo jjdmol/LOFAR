@@ -31,8 +31,7 @@ MeqStation.h					\
 MeqStoredParmPolc.h				\
 MeqWsrtInt.h					\
 MeqWsrtPoint.h					\
-ParmTable.h					\
-PerfProfile.h					
+ParmTable.h					
 
 lib_LTLIBRARIES 	= libmns.la
 
@@ -65,8 +64,7 @@ MeqStatUVW.cc					\
 MeqStoredParmPolc.cc				\
 MeqWsrtInt.cc					\
 MeqWsrtPoint.cc					\
-ParmTable.cc					\
-PerfProfile.cc
+ParmTable.cc					
 
 #EXTRA_DIST		=			\
 #Beam.m						\
