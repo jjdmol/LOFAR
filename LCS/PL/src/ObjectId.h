@@ -50,6 +50,9 @@ namespace LCS
       // We will be using a 64-bit integer for our unique key
       typedef unsigned long long oid_t;
 
+      // NullId represents a (default) null object-id value.
+      static const oid_t NullId;
+
       // Default constructor. The object-id is lazily initialized,
       // i.e. it is initialized once get() or set() is being called.
       ObjectId();

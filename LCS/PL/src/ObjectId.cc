@@ -105,16 +105,17 @@ static void get_random_bytes(void *buf, int nbytes)
 //                      Implementation of class methods                     //
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
-    
+
 namespace LCS
 {
   namespace PL
   {
     
-    ObjectId::ObjectId() : itsIsInitialized(false)
+    const ObjectId::oid_t ObjectId::NullId = ObjectId::oid_t();
+
+    ObjectId::ObjectId() : itsOid(oid_t()), itsIsInitialized(false)
     {
     }
-
 
     const ObjectId::oid_t& ObjectId::get() const
     {
@@ -125,13 +126,11 @@ namespace LCS
       return itsOid;
     }
 
-
     void ObjectId::set(const ObjectId::oid_t& aOid)
     {
       itsOid = aOid;
       itsIsInitialized = true;
     }
-
 
     void ObjectId::init() const
     {
