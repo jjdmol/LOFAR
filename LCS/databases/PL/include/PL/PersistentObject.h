@@ -254,7 +254,7 @@ namespace LOFAR
   
         // @name Data members of MetaData
         // All data members of MetaData are using shared pointers. We want to
-        // be able to savely copy MetaData classes. However, we do not want
+        // be able to safely copy MetaData classes. However, we do not want
         // multiple copies of the member data of MetaData, because that would
         // lead to potential inconsistencies in the metadata.
 
@@ -326,7 +326,7 @@ namespace LOFAR
       // data members of \c T.
       virtual void doUpdate() const = 0;
 
-      // Here we keep our metadata. MetaData can be copied savely, because
+      // Here we keep our metadata. MetaData can be copied safely, because
       // the data members within MetaData use shared pointers.
       // \note \c itsMetaData must be mutable because it is modified by
       // logically \c const methods like insert(), update(), etc.
