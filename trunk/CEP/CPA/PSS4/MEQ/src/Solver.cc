@@ -290,7 +290,7 @@ void Solver::fillSolution (DataRecord& rec, const vector<int> spids,
   for (uint i=0; i<nspid; i++) {
     if (spids[i]/256 != lastParmid) {
       DataRecord& drp = rec[lastParmid] <<= new DataRecord;
-      drp[FSetValue] = parmSol;
+      drp[FUpdateValues] = parmSol;
       lastParmid = spids[i] / 256;
       parmSol.resize(0);
       if( save_polc )
@@ -299,7 +299,7 @@ void Solver::fillSolution (DataRecord& rec, const vector<int> spids,
     parmSol.push_back (solution[i]);
   }
   DataRecord& drp = rec[lastParmid] <<= new DataRecord;
-  drp[FSetValue] = parmSol;
+  drp[FUpdateValues] = parmSol;
   if( save_polc )
     drp[FSavePolc] = true;
 }
