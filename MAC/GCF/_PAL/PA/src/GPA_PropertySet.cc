@@ -383,29 +383,33 @@ void GPAPropertySet::unload(PAUnloadPropSetEvent& request, const GCFPortInterfac
   response.result = PA_NO_ERROR;
   _savedSeqnr = request.seqnr;
   _savedResult = PA_NO_ERROR;
+  
   LOG_INFO(formatString(
       "Request to unload prop. set '%s' of type '%s'",
       _name.c_str(),
       _type.c_str()));
+  
   switch (_state)
   {
     case S_LINKED:
-    {
-      _usecount--;
-      LOG_INFO(formatString(
-          "Decrease the usecount to %d",          
-          _usecount));
-
+    {  
       // decrease the load counter and remove the client (if counter == 0),
       // see also 'load'
       TPSClient* pPSClient = findClient(p);
       if (pPSClient)
       {
-        pPSClient->count--;
+        if (_category != PS_CAT_PERM_AUTOLOAD || _usecount > 1)
+        {
+          _usecount--;
+          LOG_INFO(formatString(
+              "Decreased the usecount to %d",          
+              _usecount));
+          pPSClient->count--;
+        }
         if (pPSClient->count == 0)
         {
           _psClients.remove(*pPSClient);
-        }
+        }        
       }
 
       if (_usecount == 0)
