@@ -144,16 +144,69 @@ const meqnode := function (class,name,children=F,default=[=],config_groups="")
   defrec := [ class=class,name=name ];
   if( !is_boolean(children) )
     defrec.children := children;
-  if( !is_record(default) || len(default) )
-    defrec.default := default;
   if( len(config_groups) )
     defrec.config_groups := hiid(config_groups);
   return defrec;
 }
 
-const meqparm := function (name,default=[=],config_groups="")
+const is_dmi_type := function (obj,type)
 {
-  return meqnode('MeqParm',name,default=default,config_groups=config_groups);
+  return has_field(obj,'dmi_actual_type') &&
+         to_lower(obj::dmi_actual_type) == to_lower(type);
+}
+
+const meqpolc := function (coeff,freq0=0,freqsc=1,time0=0,timesc=1,pert=1e-6,
+                           domain=F)
+{
+  rec := [ freq_0=freq0,time_0=time0,freq_scale=freqsc,time_scale=timesc ];
+  # set coeff  
+  if( len(coeff) == 1 )
+    rec.coeff := array(as_double(coeff),1,1);
+  else if( !has_field(coeff,'shape') || len(coeff::shape) != 2 )
+    fail 'meqpolc: coeff must be either scalar or a 2D array';
+  else
+    rec.coeff := as_double(coeff);
+  # set perturbation if specified
+  if( !is_boolean(pert) )
+    rec.pert := pert;
+  # set domain if specified
+  if( !is_boolean(domain) )
+  {
+    if( !is_dmi_type(domain,'MeqDomain') )
+      fail 'meqpolc: domain argument must be a meqdomain';
+    rec.domain := domain;
+  }
+  rec::dmi_actual_type := 'MeqPolc';
+  return rec;
+}
+
+const meqparm := function (name,default=F,polc=F,config_groups="")
+{
+  rec := meqnode('MeqParm',name,config_groups=config_groups);
+  # set default if specified
+  if( !is_boolean(default) )
+  {
+    if( !is_dmi_type(default,'MeqPolc') )
+      default := meqpolc(default);
+    rec.default := default;
+  }
+  # set polcs if specified
+  if( is_record(polc) )
+  {
+    if( is_dmi_type(polc,'MeqPolc') ) # single polc
+      rec.polcs := polc;
+    else
+    {
+      for( i in 1:len(polc) )  # else must be a vector of polcs
+      {
+        if( !is_dmi_type(polc[i],'MeqPolc') )
+          fail 'meqparm: polc argument must be a meqpolc or a vector of meqpolcs';
+      }
+      rec.polcs := polc;
+      rec.polcs::dmi_datafield_content_type := 'MeqPolc';
+    }
+  }
+  return rec;
 }
 
 const meqdomain := function (startfreq,endfreq,starttime,endtime)

@@ -85,10 +85,11 @@ const solver_test := function (gui=T,debug_level=2,verbose=1)
   stx1 := mqs.getnodestate('x');
   sty1 := mqs.getnodestate('y');
 
-  xs := stx1.polcs[1].vellsets;
-  ys := sty1.polcs[1].vellsets;
+  xs := stx1.polcs.coeff;
+  ys := sty1.polcs.coeff;
 
   print sprintf("Expected values: %10.10f %10.10f",x0,y0);
+  print sprintf("Original values: %10.10f %10.10f",stx0.default.coeff,sty0.default.coeff);
   print sprintf("Solution:        %10.10f %10.10f",xs,ys);
 
   if( abs(x0-xs) < 1e-5*abs(x0) && abs(y0-ys) < 1e-5*abs(y0) )
