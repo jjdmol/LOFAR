@@ -62,10 +62,5 @@ namespace LOFAR
     };
   };
 
-  // In-line implementations:
-
-  DH_Database::DH_Database (const string& name, const string& type)
-    : DataHolder (name, type) {}
-  
 }
 #endif
