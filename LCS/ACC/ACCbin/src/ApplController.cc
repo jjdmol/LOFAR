@@ -44,6 +44,12 @@ using namespace LOFAR::ACC;
 
 static	ParameterSet		thePS;
 
+//
+// handleProcMessage(APAdmin*)
+//
+// NOTE: This routine will likely be moved to ProcControlClient when this
+// class is developed. For now it is implemented here for a while.
+//
 void handleProcMessage(APAdmin*	anAP)
 {
 	DH_ProcControl*		DHProcPtr = anAP->getDH();
@@ -67,10 +73,15 @@ void handleProcMessage(APAdmin*	anAP)
 	default:
 		if (command & PCCmdResult) {
 			uint16	result  = DHProcPtr->getResult();
-			APAdminPool::getInstance().registerAck(
+			if (result & AcCmdMaskOk) {
+				APAdminPool::getInstance().registerAck(
 								static_cast<PCCmd>(command^PCCmdResult), anAP);
-			//TODO do something with the result value !!!
-			// Is it an ACK or a NACK !!!
+			}
+			else {			// result is a NACK!
+//				serverStub.sendResult(AcCmdMaskOk, "Nack");	// notify master
+//				theAPAPool.stopAckCollection();				// stop collection
+//				cmdExpireTime = 0;							// stop timer
+			}
 		}
 		else {
 			LOG_WARN(formatString(
@@ -80,7 +91,19 @@ void handleProcMessage(APAdmin*	anAP)
 	} // switch
 }
 
-
+//
+// sendExecutionResult(result)
+//
+// Send the given result to the AC-side and clears the neccesary timers
+// and stacks.
+//
+void sendExecutionResult(uint16			result,
+						 string&		comment)
+{
+//	serverStub.sendResult(result, commment);	// notify master
+//	theAPAPool.stopAckCollection();				// stop collecting
+//	cmdExpireTime = 0;							// stop timer
+}
 
 
 //
@@ -126,7 +149,7 @@ int main (int	argc, char*	argv[]) {
 
 		bool running = true;
 		while (running) {
-			// NOTE 1: The AC should guard the connection with the AM. When the
+			// NOTE: The AC should guard the connection with the AM. When the
 			// AM disconnects a reconnect-timer should be started allowed the
 			// AM some time to reconnect before shutting down everything.
 			// Since the Socket of the AM is hidden behind TH_stuff we don't
@@ -204,6 +227,7 @@ int main (int	argc, char*	argv[]) {
 			// Still a command timer running?
 			if (cmdExpireTime && (cmdExpireTime < time(0))) {
 				serverStub.sendResult(0, "timed out");		// notify master
+				theAPAPool.stopAckCollection();				// stop collection
 				cmdExpireTime = 0;
 			}
 	
