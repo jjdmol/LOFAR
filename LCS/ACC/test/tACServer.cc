@@ -59,15 +59,18 @@ int main (int argc, char *argv[]) {
 		uint16	portNr = atoi(argv[1]);
 		ApplControlServer		ServerStub(portNr, ACF);
 
-		for (;;) {
-			ServerStub.processACmsgFromClient();
+		while (ServerStub.processACmsgFromClient()) {
+			;
 		}
+		LOG_INFO("Connection with client was closed");
+
 	}
 	catch (LOFAR::Exception&	ex) {
 		LOG_FATAL_STR("Caught exception: " << ex << endl);
 		return (0);
 	}
 
+	return (1);	
 }
 
 

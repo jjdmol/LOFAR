@@ -44,18 +44,14 @@ ApplControlClient::ApplControlClient(const string&	hostID)
 	DH_AC_Connect	DH_AC_Server(hostID);
 	DH_AC_Client.setID(1);
 	DH_AC_Server.setID(2);
-	TH_Socket		TH_prototype(hostID, 5050, true);
+	TH_Socket		TCPto  (hostID, "", 5050, false);
+	TH_Socket		TCPfrom("", hostID, 5050, true);
 
 	//TODO define constant for 5050
 	
 	// try to make a connection with the generic AC master at the host.
 	LOG_DEBUG_STR("Trying to connect to master at " << hostID << ", " << 5050);
-	DH_AC_Client.connectTo(DH_AC_Server, TH_prototype, true);
-	DH_AC_Server.connectTo(DH_AC_Client, TH_prototype, true);
-	if (!DH_AC_Client.isValid()) {
-		LOG_DEBUG("Connection to master is not valid?!");
-		//TODO 
-	}
+	DH_AC_Client.connectBidirectional(DH_AC_Server, TCPto, TCPfrom, true);
 	DH_AC_Client.init();
 
 	// send request for new AC to AC master
@@ -71,7 +67,6 @@ ApplControlClient::ApplControlClient(const string&	hostID)
 	if (!DH_AC_Client.read()) {
 		LOG_DEBUG("Answer from master return false");
 	}
-	hexdump (DH_AC_Client.getDataPtr(), DH_AC_Client.getDataSize());
 	
 	// Now build the connection to our own dedicated AC
 	string		host = DH_AC_Client.getServerIPStr();
@@ -83,13 +78,10 @@ ApplControlClient::ApplControlClient(const string&	hostID)
 	DH_CtrlClient->setID(3);
 	DH_CtrlServer.setID(4);
 
-	DH_CtrlClient->connectTo(DH_CtrlServer, 
-							 TH_Socket(host, port, true),
-							 true);	// blocking
-	if (!DH_CtrlClient->isValid()) {
-		LOG_DEBUG("Connection to ACserver is not valid?!");
-		// TODO
-	}
+	DH_CtrlClient->connectBidirectional(DH_CtrlServer, 
+							 			TH_Socket(host, "", port, false),
+							 			TH_Socket("", host, port, true),
+										true);	// blocking
 	DH_CtrlClient->init();
 
 	itsDataHolder = DH_CtrlClient;

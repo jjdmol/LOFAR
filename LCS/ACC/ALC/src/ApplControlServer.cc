@@ -39,14 +39,14 @@ ApplControlServer::ApplControlServer(const uint16				portnr,
 {
 	DH_ApplControl	DH_AC_Client;
 	DH_ApplControl*	DH_AC_Server = new DH_ApplControl;
-	DH_AC_Client.setID(1);
-	DH_AC_Server->setID(2);
-	TH_Socket	TCPConnection("localhost", portnr, true);
-	DH_AC_Client.connectTo(*DH_AC_Server, TCPConnection, false);
-	DH_AC_Server->connectTo(DH_AC_Client, TCPConnection, false);
-	DH_AC_Server->init();
+	DH_AC_Client.setID(3);
+	DH_AC_Server->setID(4);
 
-//	DH_AC_Server->read();	// accept during first read!!!!!!!!!!
+	DH_AC_Client.connectBidirectional(*DH_AC_Server, 
+							 			TH_Socket("", "localhost", portnr, false),
+							 			TH_Socket("localhost", "", portnr, true),
+										true);	// blocking
+	DH_AC_Server->init();
 
 	itsDataHolder = DH_AC_Server;
 }
@@ -54,9 +54,9 @@ ApplControlServer::ApplControlServer(const uint16				portnr,
 // Destructor
 ApplControlServer::~ApplControlServer() 
 {
-	if (itsDataHolder) {
-		delete itsDataHolder;
-	}
+//	if (itsDataHolder) {
+//		delete itsDataHolder;
+//	}
 }
 
 // Copying is allowed.
