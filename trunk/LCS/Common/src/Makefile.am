@@ -36,6 +36,7 @@ lofar_map.h					\
 lofar_stack.h					\
 lofar_iosfwd.h					\
 lofar_string.h					\
+lofar_global_symbol_warning.h   \
 Profiling/PerfProfile.h \
 LofarLogger.h LofarLog4Cplus.h LofarLogCout.h   \
 RunOnNode.h
