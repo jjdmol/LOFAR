@@ -1276,6 +1276,17 @@ void DummySolver::initParms()
     // Initialize the solver.
     itsSolver.set (itsNrScid, 1, 0);
   }
+  // Store list of all solvable parameters in status record.
+  vector<string> names;
+  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+       iter != parmList.end();
+       iter++)
+  {
+    if ((*iter)->isSolvable()) {
+      names.push_back ((*iter)->getName());
+    }
+  }
+  ///  control().setStatus (StSolutionParams, names);
 }
 
 void DummySolver::fillUVW()
