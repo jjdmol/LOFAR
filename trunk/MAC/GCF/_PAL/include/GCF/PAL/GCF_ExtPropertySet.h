@@ -48,8 +48,8 @@ class GCFExtPropertySet : public GCFPropertySet
      * same structure as in the APC specified by the apcName param
      */ 
     GCFExtPropertySet (const char* name,
-                      const TPropertySet& propSet, 
-                      GCFAnswer* pAnswerObj = 0);
+                       const char* type, 
+                       GCFAnswer* pAnswerObj = 0);
     virtual ~GCFExtPropertySet ();
 
     /**
@@ -120,7 +120,7 @@ class GCFExtPropertySet : public GCFPropertySet
     //@}
     
   private: // helper methods
-    GCFProperty* createPropObject(const TProperty& propInfo);
+    GCFProperty* createPropObject(const TPropertyInfo& propInfo);
       
   private: // data members
     bool _isLoaded;

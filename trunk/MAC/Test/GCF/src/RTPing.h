@@ -43,7 +43,7 @@ class Ping : public GCFTask
      * connection establishment information from the FNameService and FAppTopology
      * configuration files.
      */
-    Ping (string name, string scope, const TPropertySet& propSet);
+    Ping (string name, string scope, string type, bool isTemporary);
   
     /**
      * Handler for the initial state. This handler is passed to the constructor

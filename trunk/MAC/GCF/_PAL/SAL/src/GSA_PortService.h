@@ -25,6 +25,8 @@
 
 #include <GSA_Defines.h>
 #include <GSA_Service.h>
+#include <GCF/GCF_PVString.h>
+
 #include <Common/lofar_list.h>
 #include <Common/lofar_map.h>
 
@@ -48,16 +50,20 @@ class GSAPortService : public GSAService
      */
     virtual ssize_t send (void* buf, size_t count, const string& destDpName);
     virtual ssize_t recv (void* buf, size_t count);
+    bool registerPort(GCFPVSSPort& p);
+    void unregisterPort(const string& portID);
     
   protected:
     void dpCreated(const string& propName);
     void dpDeleted(const string& propName);
-    inline void dpeValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {}; 
-    inline void dpeValueChanged(const string& propName, const GCFPValue& value);
-    inline void dpeSubscribed(const string& propName);
-    inline void dpeUnsubscribed(const string& /*propName*/) {};
+    void dpeValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {}; 
+    void dpeValueChanged(const string& propName, const GCFPValue& value);
+    void dpeSubscribed(const string& propName);
+    void dpeSubscriptionLost (const string& propName);
+    void dpeUnsubscribed(const string& /*propName*/) {};
 
   private: // helper methods
+    GCFPVSSPort* findClient(const string& c);
     
   private: // data members
     GCFPVSSPort& _port;
@@ -67,5 +73,10 @@ class GSAPortService : public GSAService
     bool _isSubscribed;
     unsigned char* _msgBuffer;
     unsigned int _bytesLeft;
+    typedef map<string /*peer ID*/, GCFPVSSPort*> TClients;
+    TClients _clients;
+    
+    GCFPVString _curPeerID;
+    GCFPVString _curPeerAddr;
 };
 #endif

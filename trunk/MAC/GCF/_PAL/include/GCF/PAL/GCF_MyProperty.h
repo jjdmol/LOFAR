@@ -86,7 +86,7 @@ class GCFMyProperty : public GCFProperty
   private:
     friend class GCFMyPropertySet;
     
-    GCFMyProperty (const TProperty& propertyFields, 
+    GCFMyProperty (const TPropertyInfo& propertyFields, 
                    GCFMyPropertySet& propertySet);
     virtual ~GCFMyProperty ();
     
@@ -97,6 +97,7 @@ class GCFMyProperty : public GCFProperty
     
   private: // overrides base class methods
     void subscribed ();
+    void subscriptionLost ();
 
     /** 
      * normally this method should never appear

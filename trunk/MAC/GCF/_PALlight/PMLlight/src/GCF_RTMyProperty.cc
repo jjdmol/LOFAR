@@ -24,11 +24,11 @@
 #include <GCF/PALlight/GCF_RTMyPropertySet.h>
 #include <GCF/PALlight/GCF_RTAnswer.h>
 
-GCFRTMyProperty::GCFRTMyProperty(const TProperty& propertyFields,
+GCFRTMyProperty::GCFRTMyProperty(const TPropertyInfo& propertyFields,
                              GCFRTMyPropertySet& propertySet) :
   _name(propertyFields.propName), 
   _propertySet(propertySet),
-  _accessMode(propertyFields.accessMode),
+  _accessMode(GCF_READWRITE_PROP),
   _pCurValue(0),
   _pOldValue(0),
   _isLinked(false),
@@ -38,14 +38,10 @@ GCFRTMyProperty::GCFRTMyProperty(const TProperty& propertyFields,
   _pCurValue = GCFPValue::createMACTypeObject((TMACValueType) propertyFields.type);
   assert(_pCurValue);
   _pOldValue = _pCurValue->clone();
-  if (propertyFields.defaultValue)
-  {
-    _pCurValue->setValue(propertyFields.defaultValue);
-  }
 }
 
 GCFRTMyProperty::GCFRTMyProperty(GCFRTMyPropertySet& propertySet) :
-  _name(""), 
+  _name(""),
   _propertySet(propertySet),
   _accessMode(0),
   _pCurValue(0),

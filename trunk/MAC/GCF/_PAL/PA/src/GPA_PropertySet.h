@@ -44,7 +44,7 @@ class GPAPropertySet : public GSAService
 
     typedef struct
     {
-      string name;
+      GCFPortInterface* pPSClientPort;
       unsigned short count;
     } TPSClient;
 
@@ -57,23 +57,26 @@ class GPAPropertySet : public GSAService
     void linked(PAPropSetLinkedEvent& response);
     void unlinked(PAPropSetUnlinkedEvent& response);
     
+    void clientGone(GCFPortInterface& p);
+    
     bool isOwner(const GCFPortInterface& p) const { return (&p == &_serverPort); }
     bool mayDelete() const { return (_state == S_DISABLED); }
-    bool knowsClient(const string& c) { return (findClient(c) != 0); }
+    bool knowsClient(const GCFPortInterface& p) { return (findClient(p) != 0); }
     			
   protected:
     void dpCreated(const string& propName);
     void dpDeleted(const string& propName);
-    inline void dpeValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {}; 
-    inline void dpeValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {};
-    inline void dpeSubscribed(const string& /*propName*/) {};
-    inline void dpeUnsubscribed(const string& /*propName*/) {};
+    void dpeValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {}; 
+    void dpeValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {};
+    void dpeSubscribed(const string& /*propName*/) {};
+    void dpeSubscriptionLost (const string& propName);
+    void dpeUnsubscribed(const string& /*propName*/) {};
 
   private: // helper methods
     void link();
     void unlink();
     void wrongState(const char* request);
-    TPSClient* findClient(const string& c);
+    TPSClient* findClient(const GCFPortInterface& p);
 
   private: // data members
     GPAController&	  _controller;

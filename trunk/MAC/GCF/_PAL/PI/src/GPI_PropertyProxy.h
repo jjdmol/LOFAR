@@ -42,10 +42,11 @@ class GPIPropertyProxy : public GCFPropertyProxy
     virtual ~GPIPropertyProxy() {;}
   
   private:
-    inline void propSubscribed(const string& /*propName*/) {;}
-    inline void propUnsubscribed(const string& /*propName*/) {;}
-    inline void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {};
-    inline void propValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {;}
+    void propSubscribed(const string& /*propName*/) {;}
+    void propSubscriptionLost(const string& /*propName*/) {;}
+    void propUnsubscribed(const string& /*propName*/) {;}
+    void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {};
+    void propValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {;}
 
     /**
      * Don't allow copying of this object.

@@ -27,9 +27,9 @@
 #include <GCF/Utils.h>
 
 GCFExtPropertySet::GCFExtPropertySet(const char* name, 
-                               const TPropertySet& propSetInfo,
-                               GCFAnswer* pAnswerObj) :
-  GCFPropertySet(name, propSetInfo, pAnswerObj), 
+                                     const char* type,                                      
+                                     GCFAnswer* pAnswerObj) :
+  GCFPropertySet(name, type, pAnswerObj), 
   _isLoaded(false)
 {
   loadPropSetIntoRam();
@@ -44,7 +44,7 @@ GCFExtPropertySet::~GCFExtPropertySet()
   }
 }
 
-GCFProperty* GCFExtPropertySet::createPropObject(const TProperty& propInfo)
+GCFProperty* GCFExtPropertySet::createPropObject(const TPropertyInfo& propInfo)
 {
   return new GCFExtProperty(propInfo, *this);
 }

@@ -29,7 +29,7 @@
 
 bool operator == (const GPAPropertySet::TPSClient& a, const GPAPropertySet::TPSClient& b)
 {
-  return (a.name == b.name);
+  return (a.pPSClientPort == b.pPSClientPort);
 }
 
 
@@ -143,12 +143,17 @@ void GPAPropertySet::disable(PAUnregisterScopeEvent& request)
       LOG_INFO("Inform all client MCA's, which has load this prop. set, about disabling it");
       PAPropSetGoneEvent indication;
       indication.scope = _name;
+      GCFPortInterface* pPSClientPort;
       for (TPSClients::iterator iter = _psClients.begin();
            iter != _psClients.end(); ++iter)
       {
-        GCFPVSSPort& port(_controller.getDistPmlPort());
-        port.setDestAddr(iter->name);
-        port.send(indication);
+        pPSClientPort = iter->pPSClientPort;
+        assert(pPSClientPort);
+        
+        if (pPSClientPort->isConnected())
+        {          
+          pPSClientPort->send(indication);
+        }
       }
       // list will be automatically cleaned up on destruction of this class
     }
@@ -259,7 +264,7 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
         // is 0 the requestor can be deleted from the list. Then the requestor
         // not needed to be and also will not be informed about disabling the 
         // property set.
-        TPSClient* pPSClient = findClient(request.requestor);
+        TPSClient* pPSClient = findClient(p);
         if (pPSClient)
         {
           pPSClient->count++;
@@ -267,7 +272,7 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
         else // client not known yet
         {
           TPSClient psClient;
-          psClient.name = request.requestor;
+          psClient.pPSClientPort = &p;
           psClient.count = 1;
           _psClients.push_back(psClient);
         }
@@ -285,7 +290,7 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
     case S_LINKED:
     {
       assert(GCFPVSSInfo::propExists(_name));
-      TPSClient* pPSClient = findClient(request.requestor);
+      TPSClient* pPSClient = findClient(p);
       if (pPSClient)
       {
         pPSClient->count++;
@@ -293,7 +298,7 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
       else // client not known yet
       {
         TPSClient psClient;
-        psClient.name = request.requestor;
+        psClient.pPSClientPort = &p;
         psClient.count = 1;
         _psClients.push_back(psClient);
       }
@@ -376,7 +381,7 @@ void GPAPropertySet::unload(PAUnloadPropSetEvent& request, const GCFPortInterfac
 
       // decrease the load counter and remove the client (if counter == 0),
       // see also 'load'
-      TPSClient* pPSClient = findClient(request.requestor);
+      TPSClient* pPSClient = findClient(p);
       if (pPSClient)
       {
         pPSClient->count--;
@@ -514,6 +519,31 @@ void GPAPropertySet::configure(PAConfPropSetEvent& request)
   _controller.sendAndNext(response);
 }
 
+void GPAPropertySet::dpeSubscriptionLost(const string& /*dpName*/)
+{
+}
+
+void GPAPropertySet::clientGone(GCFPortInterface& p)
+{
+  assert (&p != &_serverPort);
+  // This means that all load requests of client 'p' have to be undone.
+  // So pretend a unload request is received
+  TPSClient* pPSClient = findClient(p);
+  if (pPSClient)
+  {
+    // this manipulation of the _usecount and the load counter pretends 
+    // that this is the last unload request of the client 'p' for this
+    // property set
+    _usecount -= (pPSClient->count - 1);
+    pPSClient->count = 1;
+
+    PAUnloadPropSetEvent request;
+    request.scope = _name;
+    request.seqnr = 0;
+    unload(request, p);
+  }  
+}
+
 void GPAPropertySet::dpCreated(const string& dpName)
 {
   switch (_state)
@@ -562,13 +592,13 @@ void GPAPropertySet::dpDeleted(const string& /*dpName*/)
   }
 }
 
-GPAPropertySet::TPSClient* GPAPropertySet::findClient(const string& c) 
+GPAPropertySet::TPSClient* GPAPropertySet::findClient(const GCFPortInterface& p) 
 {
   TPSClient* pPSClient(0);
   for (TPSClients::iterator iter = _psClients.begin();
        iter != _psClients.end(); ++iter)
   {
-    if (iter->name == c)
+    if (iter->pPSClientPort == &p)
     {
       pPSClient = &(*iter);
       break;

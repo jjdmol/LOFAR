@@ -36,6 +36,7 @@ class PropertyProxy : public GCFPropertyProxy
   protected:
     
     void propSubscribed(const string& propName);
+    void propSubscriptionLost(const string& /*propName*/) {};
     void propUnsubscribed(const string& propName);
     void propValueGet(const string& propName, const GCFPValue& value);
     void propValueChanged(const string& propName, const GCFPValue& value);

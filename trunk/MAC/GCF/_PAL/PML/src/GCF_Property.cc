@@ -26,7 +26,7 @@
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GPM_PropertyService.h>
 
-GCFProperty::GCFProperty (const TProperty& propInfo, GCFPropertySet* pPropertySet) : 
+GCFProperty::GCFProperty (const TPropertyInfo& propInfo, GCFPropertySet* pPropertySet) : 
   _isBusy(false),
   _pPropertySet(pPropertySet),
   _pAnswerObj(0),
@@ -49,7 +49,7 @@ const string GCFProperty::getFullName () const
   string fullName;
   if (_pPropertySet == 0)
   {
-    if (strchr(_propInfo.propName, ':') > 0)
+    if (_propInfo.propName.find(':') < _propInfo.propName.length())
     {
       fullName = _propInfo.propName;
     }

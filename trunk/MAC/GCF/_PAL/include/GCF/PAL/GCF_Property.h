@@ -84,7 +84,7 @@ class GCFProperty
       {_pAnswerObj = pAnswerObj;}
       
   protected:
-    GCFProperty (const TProperty& propInfo, GCFPropertySet* pPropertySet);
+    GCFProperty (const TPropertyInfo& propInfo, GCFPropertySet* pPropertySet);
     virtual ~GCFProperty ();
 
     virtual TGCFResult subscribe ();
@@ -94,6 +94,8 @@ class GCFProperty
     
     virtual void subscribed ();
     
+    virtual void subscriptionLost () {};
+
     virtual void valueChanged (const GCFPValue& value); 
     
     virtual void valueGet (const GCFPValue& value); 
@@ -105,7 +107,9 @@ class GCFProperty
     friend class GPMPropertyService;
     void propSubscribed (const string& propName)
       { assert(propName == getFullName()); subscribed(); }
-      
+   
+   void propSubscriptionLost (const string& propName)
+      { assert(propName == getFullName()); subscriptionLost(); }
     /** 
      * does nothing (but still in the GCF API)
      * because unsubscribe isn't asynchronous in the SCADA API
@@ -135,10 +139,10 @@ class GCFProperty
     //@}
 
   private: // data members
-    GCFPropertySet*     _pPropertySet;
-    GCFAnswer*          _pAnswerObj;
-    GPMPropertyService* _pPropService;
-    const TProperty&    _propInfo;
+    GCFPropertySet*       _pPropertySet;
+    GCFAnswer*            _pAnswerObj;
+    GPMPropertyService*   _pPropService;
+    const TPropertyInfo&  _propInfo;
 
   private: // admin. data members
 };

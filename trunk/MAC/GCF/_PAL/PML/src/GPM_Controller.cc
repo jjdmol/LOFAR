@@ -100,8 +100,7 @@ TPMResult GPMController::loadPropSet(GCFExtPropertySet& propSet)
     if (index < request.scope.length())
     {
       request.scope.erase(0, index + 1);
-    }
-    request.requestor = _distPropertyAgent.getOwnAddr();
+    }    
     
     _distPropertyAgent.setDestAddr(determineDest(propSet.getScope()));
     _distPropertyAgent.send(request);
@@ -129,7 +128,6 @@ TPMResult GPMController::unloadPropSet(GCFExtPropertySet& propSet)
     {
       request.scope.erase(0, index + 1);
     }
-    request.requestor = _distPropertyAgent.getOwnAddr();
 
     _distPropertyAgent.setDestAddr(determineDest(propSet.getScope()));
     _distPropertyAgent.send(request);
@@ -161,7 +159,6 @@ TPMResult GPMController::configurePropSet(GCFPropertySet& propSet, const string&
       request.scope.erase(0, index + 1);
     }
     request.apcName = apcName;
-    request.requestor = _distPropertyAgent.getOwnAddr();
 
     _distPropertyAgent.setDestAddr(determineDest(propSet.getScope()));
     _distPropertyAgent.send(request);
@@ -534,57 +531,57 @@ void logResult(TPAResult result, GCFPropertySet& propSet)
     case PA_PS_GONE:
       LOG_ERROR(LOFAR::formatString ( 
           "The property set is gone while perfoming an action on it. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PA_MISSING_PROPS:
       LOG_ERROR(LOFAR::formatString ( 
           "One or more loaded properties are not owned by any application. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PA_WRONG_STATE:
       LOG_FATAL(LOFAR::formatString ( 
           "The my property set is in a wrong state. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PA_PROP_SET_NOT_EXISTS:
       LOG_INFO(LOFAR::formatString ( 
           "Prop. set does not exists. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PA_PROP_SET_ALLREADY_EXISTS:
       LOG_INFO(LOFAR::formatString ( 
           "Prop. set allready exists. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PA_DPTYPE_UNKNOWN:
       LOG_INFO(LOFAR::formatString ( 
           "Specified type not known. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PA_INTERNAL_ERROR:
       LOG_FATAL(LOFAR::formatString ( 
           "Internal error in PA. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PA_PI_INTERNAL_ERROR:
       LOG_FATAL(LOFAR::formatString ( 
           "Internal error in PI. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PA_APC_NOT_EXISTS:
       LOG_ERROR(LOFAR::formatString ( 
           "APC not exists. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PA_LINK_TIME_OUT:
       LOG_ERROR(LOFAR::formatString ( 
           "Linking of the prop. set could not be completed in time (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PA_SERVER_GONE:
       LOG_INFO(LOFAR::formatString ( 
           "Server of prop. set is gone (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;      
     default:
       break;

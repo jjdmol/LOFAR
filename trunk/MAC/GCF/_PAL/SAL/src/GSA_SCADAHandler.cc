@@ -35,7 +35,7 @@ GSASCADAHandler* GSASCADAHandler::instance()
   if (0 == _pInstance)
   {
     string cmdline;
-    for (unsigned int i = 0; i < GCFTask::_argc; i++)
+    for (int i = 0; i < GCFTask::_argc; i++)
     {
       cmdline += GCFTask::_argv[i];
       cmdline += " ";

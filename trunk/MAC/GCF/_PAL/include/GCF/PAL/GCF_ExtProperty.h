@@ -50,7 +50,7 @@ class GCFExtProperty : public GCFProperty
      * @param propName it only can mapped to a property in the SCADA DB if the
      *                 scope is included 
      */
-    GCFExtProperty (const TProperty& propInfo);
+    GCFExtProperty (const TPropertyInfo& propInfo);
     virtual ~GCFExtProperty () {}
 
     inline bool isSubscribed () const {return _isSubscribed;}
@@ -79,11 +79,12 @@ class GCFExtProperty : public GCFProperty
      * Creates an instance of the property class, which only can exists in 
      * combination with a GCFExtPropertySet object.
      */
-    GCFExtProperty (const TProperty& propInfo, 
+    GCFExtProperty (const TPropertyInfo& propInfo, 
                     GCFExtPropertySet& pPropertySet);
     
   private: // overrides base class methods
     void subscribed ();
+    void subscriptionLost ();
 
   private:
     //@{ 

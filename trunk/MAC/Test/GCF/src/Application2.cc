@@ -21,16 +21,20 @@ Application::Application() :
   _curRemoteTestNr(0),
   _pSTPort1(0),
   _pSTPort2(0),
-  _propertySetC1("A_H_I", propertySetC1, &_supTask3.getAnswerObj()),
-  _propertySetD1("A_H",   propertySetD1, &_supTask3.getAnswerObj()),  
-  _propertySetB4("A_K",   propertySetB4, &_supTask3.getAnswerObj(), GCFMyPropertySet::USE_DB_DEFAULTS),
-  _ePropertySetAC("LCU1:A_C",  propertySetB1, &_supTask3.getAnswerObj()), 
-  _ePropertySetAE("LCU1:A_E",  propertySetB1, &_supTask3.getAnswerObj()), 
-  _ePropertySetAH("A_H",  propertySetD1, &_supTask3.getAnswerObj()), 
-  _ePropertySetAK("A_K",  propertySetB4, &_supTask3.getAnswerObj()) 
+  _propertySetC1("A_H_I",     "TTypeC", true, &_supTask3.getAnswerObj()),
+  _propertySetD1("A_H",       "TTypeD", true, &_supTask3.getAnswerObj()),  
+  _propertySetB4("A_K",       "TTypeB", false, &_supTask3.getAnswerObj(), GCFMyPropertySet::USE_DB_DEFAULTS),
+  _ePropertySetAC(REMOTESYS2"A_C", "TTypeB", &_supTask3.getAnswerObj()), 
+  _ePropertySetAE(REMOTESYS2"A_E", "TTypeB", &_supTask3.getAnswerObj()), 
+  _ePropertySetAH("A_H",      "TTypeD", &_supTask3.getAnswerObj()), 
+  _ePropertySetAK("A_K",      "TTypeB", &_supTask3.getAnswerObj()) 
 {
     // register the protocol for debugging purposes
-  registerProtocol(TST_PROTOCOL, TST_PROTOCOL_signalnames);  
+  registerProtocol(TST_PROTOCOL, TST_PROTOCOL_signalnames); 
+  
+  _propertySetC1.initProperties(propertiesSC1, NR_OF_PROPCONFIGS(propertiesSC1));
+  _propertySetD1.initProperties(propertiesSD1, NR_OF_PROPCONFIGS(propertiesSD1));
+  _propertySetB4.initProperties(propertiesSB4, NR_OF_PROPCONFIGS(propertiesSB4)); 
 }
 
 Application::~Application()
@@ -452,7 +456,7 @@ GCFEvent::TResult Application::test4_1(GCFEvent& e, GCFPortInterface& /*p*/)
       {
         TESTC_ABORT_ON_FAIL(_ePropertySetAC.requestValue("P1") == GCF_NO_ERROR);
         TESTC_ABORT_ON_FAIL(_ePropertySetAC.requestValue("P2") == GCF_NO_ERROR);
-        TESTC_ABORT_ON_FAIL(_ePropertySetAC.requestValue("P2") == GCF_NO_ERROR);
+        TESTC_ABORT_ON_FAIL(_ePropertySetAC.requestValue("P3") == GCF_NO_ERROR);
       }
       else
       {
@@ -463,13 +467,12 @@ GCFEvent::TResult Application::test4_1(GCFEvent& e, GCFPortInterface& /*p*/)
     case F_VGETRESP:
     {
       GCFPropValueEvent* pResponse = (GCFPropValueEvent*)(&e);
-      const TProperty* pPropInfo;
+      const TPropertyConfig* pPropInfo;
       GCFPValue* pOrigValue(0);
       if (strstr(pResponse->pPropName, "A_C.P1") > 0)
       {
-        pPropInfo = &propertySetB1.properties[0];  
-        TESTC(pResponse->pValue->getType() == pPropInfo->type);        
-        pOrigValue = GCFPValue::createMACTypeObject(pPropInfo->type);
+        pPropInfo = &propertiesSB1[0];
+        pOrigValue = GCFPValue::createMACTypeObject(pResponse->pValue->getType());
         if (pPropInfo->defaultValue)
         {
           pOrigValue->setValue(pPropInfo->defaultValue);
@@ -478,9 +481,8 @@ GCFEvent::TResult Application::test4_1(GCFEvent& e, GCFPortInterface& /*p*/)
       }
       else if (strstr(pResponse->pPropName, "A_C.P2") > 0)
       {
-        pPropInfo = &propertySetB1.properties[0];  
-        TESTC(pResponse->pValue->getType() == pPropInfo->type);        
-        pOrigValue = GCFPValue::createMACTypeObject(pPropInfo->type);
+        pPropInfo = &propertiesSB1[1];        
+        pOrigValue = GCFPValue::createMACTypeObject(pResponse->pValue->getType());
         if (pPropInfo->defaultValue)
         {
           pOrigValue->setValue(pPropInfo->defaultValue);
@@ -489,9 +491,8 @@ GCFEvent::TResult Application::test4_1(GCFEvent& e, GCFPortInterface& /*p*/)
       }
       else if (strstr(pResponse->pPropName, "A_C.P3") > 0)
       {
-        pPropInfo = &propertySetB1.properties[0];  
-        TESTC(pResponse->pValue->getType() == pPropInfo->type);        
-        pOrigValue = GCFPValue::createMACTypeObject(pPropInfo->type);
+        pPropInfo = &propertiesSB1[2];  
+        pOrigValue = GCFPValue::createMACTypeObject(pResponse->pValue->getType());
         if (pPropInfo->defaultValue)
         {
           pOrigValue->setValue(pPropInfo->defaultValue);
@@ -509,11 +510,11 @@ GCFEvent::TResult Application::test4_1(GCFEvent& e, GCFPortInterface& /*p*/)
     case F_TIMER:
       if (loadedInTime)
       {
-        if (GCFPVSSInfo::propExists("LCU1:A_C.P1"))
+        if (GCFPVSSInfo::propExists(REMOTESYS2"A_C.P1"))
         {
           TESTC_ABORT_ON_FAIL(_ePropertySetAC.requestValue("P1") == GCF_NO_ERROR);
           TESTC_ABORT_ON_FAIL(_ePropertySetAC.requestValue("P2") == GCF_NO_ERROR);
-          TESTC_ABORT_ON_FAIL(_ePropertySetAC.requestValue("P2") == GCF_NO_ERROR);
+          TESTC_ABORT_ON_FAIL(_ePropertySetAC.requestValue("P3") == GCF_NO_ERROR);
         }
         else
         {
@@ -524,7 +525,7 @@ GCFEvent::TResult Application::test4_1(GCFEvent& e, GCFPortInterface& /*p*/)
           }
           else
           {
-            FAIL_AND_ABORT("DP LCU1:A_C not known to this app in time.");
+            FAIL_AND_ABORT("DP "REMOTESYS2"A_C not known to this app in time.");
           }
         }        
       }
@@ -1015,7 +1016,7 @@ GCFEvent::TResult Application::test6_6(GCFEvent& e, GCFPortInterface& /*p*/)
       _counter++;
       GCFPVInteger iv;
       iv.copy(*(pResponse->pValue));
-      cerr << "Send nr " << iv.getValue() << " to LCU1:A_C.P1 (" << _counter << ")" << endl;
+      cerr << "Send nr " << iv.getValue() << " to "REMOTESYS2"A_C.P1 (" << _counter << ")" << endl;
       TESTC_ABORT_ON_FAIL(_ePropertySetAC.setValue("P1", iv) == GCF_NO_ERROR);
       if (_counter == 1000)
       {

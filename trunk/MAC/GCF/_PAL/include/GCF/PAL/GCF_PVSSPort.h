@@ -24,8 +24,11 @@
 #define GCF_PVSSPORT_H
 
 #include <GCF/TM/GCF_RawPort.h>
+#include <GCF/GCF_PVString.h>
 #include <Common/lofar_string.h>
+#include <set>
 
+using namespace std;
 // forward declaration
 class GCFTask;
 class GCFEvent;
@@ -64,11 +67,11 @@ class GCFPVSSPort : public GCFRawPort
     virtual ssize_t send (GCFEvent& event);
     virtual ssize_t recv (void* buf,
                           size_t count);
-                          
+           
   public: // pvss port specific methods
 
-    const string getOwnAddr() const;
     void setDestAddr (const string& destDpName);
+    virtual bool accept(GCFPVSSPort& newPort);
 
   private:
     /**
@@ -79,10 +82,22 @@ class GCFPVSSPort : public GCFRawPort
     
     friend class GSAPortService;
     void serviceStarted(bool successfull);
-        
+    const string& getPortID() {return _portId.getValue();}
+    void setService(GSAPortService& service);
+            
+    static unsigned int claimPortNr();
+    static void releasePortNr(const string& portId);
   private:
     GSAPortService*   _pPortService;
-    string          _destDpName;
+    string            _destDpName;
+    GCFPVString       _portId;
+    GCFPVString       _portAddr;
+    
+    bool _acceptedPort;
+    
+    typedef set<unsigned int> TPVSSPortNrs;
+    static TPVSSPortNrs _pvssPortNrs;
+    
 };
 
 #endif

@@ -47,7 +47,7 @@ GPAController::GPAController() :
   // initialize the TCP port provider
   _pmlPortProvider.init(*this, "provider", GCFPortInterface::MSPP, PA_PROTOCOL);
   // initialize the PVSS port for distributed communication between CCU and LCU
-  _distPmlPort.init(*this, "DPA-server", GCFPortInterface::SPP, PA_PROTOCOL);
+  _distPmlPortProvider.init(*this, "DPA-server", GCFPortInterface::MSPP, PA_PROTOCOL);
 
   // To force a connection with the PVSS system at start-up of the PA 
   // a dummy property set will be created temporary. 
@@ -74,7 +74,7 @@ GCFEvent::TResult GPAController::initial(GCFEvent& e, GCFPortInterface& p)
 
     case F_ENTRY:
       _pmlPortProvider.open();
-      _distPmlPort.open();
+      _distPmlPortProvider.open();
       break;
       
     case F_TIMER:
@@ -82,7 +82,7 @@ GCFEvent::TResult GPAController::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_CONNECTED:
-      if (_pmlPortProvider.isConnected() &&  _distPmlPort.isConnected())
+      if (_pmlPortProvider.isConnected() &&  _distPmlPortProvider.isConnected())
       {
         TRAN(GPAController::operational);
       }
@@ -115,26 +115,19 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_ACCEPT_REQ:
-      acceptConnectRequest();
+      acceptConnectRequest(p);
       break;
 
     case F_DISCONNECTED:      
-      if (&p != &_pmlPortProvider && &p != &_distPmlPort) p.close();
+      if (&p != &_pmlPortProvider && &p != &_distPmlPortProvider) p.close();
       // else //TODO: find out this can realy happend
       break;
 
     case F_CLOSED:
     {
       QUEUE_REQUEST(p, e);
-      if (p.getName() == "GPADISTM")
-      {
-        //TODO: propSetClientGone(_distClientManager.getNextGoneClient());
-      }
-      else
-      {
-        // this starts the close port sequence
-        clientPortGone(p);
-      }
+      // this starts the close port sequence
+      clientPortGone(p);
       break;
     }
 
@@ -143,8 +136,6 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
       QUEUE_REQUEST(p, e);
       PALoadPropSetEvent request(e);
       GPAPropertySet* pPropSet = findPropSet(request.scope);
-      GCFPVSSPort* pPvssPort = (GCFPVSSPort*) &p;
-      pPvssPort->setDestAddr(request.requestor);
       if (pPropSet)
       {
         pPropSet->load(request, p);
@@ -163,8 +154,6 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
       QUEUE_REQUEST(p, e);
       PAUnloadPropSetEvent request(e);
       GPAPropertySet* pPropSet = findPropSet(request.scope);
-      GCFPVSSPort* pPvssPort = (GCFPVSSPort*) &p;
-      pPvssPort->setDestAddr(request.requestor);
       if (pPropSet)
       {
         pPropSet->unload(request, p);
@@ -183,8 +172,6 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
       QUEUE_REQUEST(p, e)
       PAConfPropSetEvent request(e);
       GPAPropertySet* pPropSet = findPropSet(request.scope);
-      GCFPVSSPort* pPvssPort = (GCFPVSSPort*) &p;
-      pPvssPort->setDestAddr(request.requestor);
       if (pPropSet)
       {
         pPropSet->configure(request);
@@ -300,7 +287,7 @@ GCFEvent::TResult GPAController::linking(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_ACCEPT_REQ:
-      acceptConnectRequest();
+      acceptConnectRequest(p);
       break;
 
     case F_DISCONNECTED:      
@@ -377,7 +364,7 @@ GCFEvent::TResult GPAController::unlinking(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_ACCEPT_REQ:
-      acceptConnectRequest();
+      acceptConnectRequest(p);
       break;
 
     case F_DISCONNECTED:      
@@ -480,36 +467,50 @@ void GPAController::sendAndNext(GCFEvent& e)
   {
     // this is part of the close port sequence
     // all responses, which are the result of a closed port will be handled here
-    assert (e.signal == PA_SCOPE_UNREGISTERED);
-    // responses of the first step of the close port sequence
-    _counter--; // counter was set in clientPortGone method
-    if (_counter == 0)
-    {
-      // all responses are received now
-      // the port and ass. prop. sets will be deleted from administration here
-      // and must then be destructed by moving it to the garbage collector. 
-      list<string> propSetsToDelete;
-      GPAPropertySet* pPropSet(0);
-      for (TPropertySets::iterator iter = _propertySets.begin();
-           iter != _propertySets.end(); ++iter)
+    if (e.signal == PA_SCOPE_UNREGISTERED)
+    {    
+      // responses of the first step of the close port sequence
+      _counter--; // counter was set in clientPortGone method
+      if (_counter == 0)
       {
-        pPropSet = iter->second;
-        assert(pPropSet);
-        if (pPropSet->mayDelete())
+        // all responses are received now
+        // the port and ass. prop. sets will be deleted from administration here
+        // and must then be destructed by moving it to the garbage collector. 
+        list<string> propSetsToDelete;
+        GPAPropertySet* pPropSet(0);
+        for (TPropertySets::iterator iter = _propertySets.begin();
+             iter != _propertySets.end(); ++iter)
         {
-          // add the scope of the prop. set to be deleted
-          propSetsToDelete.push_back(iter->first); 
-          _propertySetGarbage.push_back(iter->second);
+          pPropSet = iter->second;
+          assert(pPropSet);
+          if (pPropSet->mayDelete())
+          {
+            // add the scope of the prop. set to be deleted
+            propSetsToDelete.push_back(iter->first); 
+            _propertySetGarbage.push_back(iter->second);
+          }
         }
+        for (list<string>::iterator iter = propSetsToDelete.begin();
+             iter != propSetsToDelete.end(); ++iter)
+        {
+          _propertySets.erase(*iter);
+        }
+        LOG_INFO("Closing sequence step 1: Involved prop. sets are disabled. Add to garbage.");
+        propSetClientGone(*pPort);
       }
-      for (list<string>::iterator iter = propSetsToDelete.begin();
-           iter != propSetsToDelete.end(); ++iter)
-      {
-        _propertySets.erase(*iter);
-      }
-      LOG_INFO("Closing sequence step 1: Involved prop. sets are disabled. Add to garbage.");
-      deletePort(*pPort);
     }
+    else if (e.signal == PA_PROP_SET_UNLOADED)
+    {
+      // responses of the second step of the close port sequence
+      PAPropSetUnloadedEvent* pEvent = (PAPropSetUnloadedEvent*)(&e);
+      assert(pEvent->seqnr == 0);
+      propSetClientGone(*pPort);      
+    }
+    else
+    {
+      assert(0);
+    }
+    
   }
   else
   {
@@ -537,12 +538,22 @@ GPAPropertySet* GPAController::findPropSet(const string& scope) const
   return (iter != _propertySets.end() ? iter->second : 0);
 }
 
-void GPAController::acceptConnectRequest()
+void GPAController::acceptConnectRequest(GCFPortInterface& p)
 {
-  GCFTCPPort* pNewPMLPort = new GCFTCPPort();
-  assert(pNewPMLPort);
-  pNewPMLPort->init(*this, "pa", GCFPortInterface::SPP, PA_PROTOCOL);
-  _pmlPortProvider.accept(*pNewPMLPort);
+  if (&p == &_pmlPortProvider)
+  {
+    GCFTCPPort* pNewPMLPort = new GCFTCPPort();
+    assert(pNewPMLPort);
+    pNewPMLPort->init(*this, "tcp-pa-client", GCFPortInterface::SPP, PA_PROTOCOL);
+    _pmlPortProvider.accept(*pNewPMLPort);
+  }
+  else
+  {
+    GCFPVSSPort* pNewPVSSClientPort = new GCFPVSSPort();
+    assert(pNewPVSSClientPort);
+    pNewPVSSClientPort->init(*this, "pvss-pa-client", GCFPortInterface::SPP, PA_PROTOCOL);
+    _distPmlPortProvider.accept(*pNewPVSSClientPort);
+  }
 }
 
 void GPAController::clientPortGone(GCFPortInterface& p)
@@ -589,47 +600,55 @@ void GPAController::clientPortGone(GCFPortInterface& p)
     LOG_INFO("Closing sequence step 1: Nothing to do. End of this step!");
     // no prop. set needed to be disabled
     // move to second step, which deletes the port
-    deletePort(p);
+    propSetClientGone(p);
   }
 }
 
-void GPAController::propSetClientGone(const string& c)
+void GPAController::propSetClientGone(GCFPortInterface& p)
 {
+  // second step of what must be done before the closed port can be deleted too
+  // - find the first prop. set who knows the client port as prop. set client
+  // - delete the client port from prop. set, which results in an unload request
+  //   with sequence 0
+
+  LOG_INFO("Closing sequence step 2: Find (next) prop. set who knows port as client");
   string nextPropSet("");
   GPAPropertySet* pPropSet(0);
-  if (c.length() > 0)
+  for (TPropertySets::iterator iter = _propertySets.begin(); 
+       iter != _propertySets.end(); ++iter)
   {
-    LOG_INFO(formatString("Prop. set client '%s' gone", c.c_str()));
-  
-    for (TPropertySets::iterator iter = _propertySets.begin(); 
-         iter != _propertySets.end(); ++iter)
+    pPropSet = iter->second;
+    assert(pPropSet);            
+    if (pPropSet->knowsClient(p))
     {
-      pPropSet = iter->second;
-      assert(pPropSet);            
-      if (pPropSet->knowsClient(c))
-      {
-        nextPropSet = iter->first;
-        break; 
-      }
+      nextPropSet = iter->first;
+      break; 
     }
   }
+
   if (nextPropSet.length() > 0)
   {
     pPropSet = findPropSet(nextPropSet);
     if (pPropSet)
     {              
-      //TODO: pPropSet->clientGone(c);
+      pPropSet->clientGone(p);
     }   
   }
   else 
   {
-    LOG_INFO("Ready with handling gone property set clients");
+    LOG_INFO("Closing sequence step 2: No more prop. sets needed to be informed.");
+    LOG_INFO("Closing sequence step 3: Delete port");
+    // no more prop. set were involved in this action
+    // so the port 'p' can be deleted
+    // this is only possible after a context switch
+    // this can be forced by means of the 0 timer
+    deletePort(p);
   }
 }
 
 void GPAController::deletePort(GCFPortInterface& p)
 {
-  LOG_INFO("Closing sequence step 2: Deleting the port");  
+  LOG_INFO("Closing sequence step 3: Deleting the port");  
   // In this second step the closed port will be moved to the garbage collector
   // and removes all events, which are received from this port and still in the request 
   // manager
@@ -637,12 +656,13 @@ void GPAController::deletePort(GCFPortInterface& p)
   _pmlPortGarbage.push_back(&p);
   _pmlPorts.remove(&p);
   _requestManager.deleteRequestsOfPort(p);
+  LOG_INFO("Closing sequence step 3: Port deleted");
+  LOG_INFO("----End of closing sequence");  
+
   GCFPortInterface* pPort = _requestManager.getOldestRequestPort();
   GCFEvent* pEvent = _requestManager.getOldestRequest();
   _isBusy = false;
 
-  LOG_INFO("Closing sequence step 2: Port deleted");
-  LOG_INFO("----End of closing sequence");  
   if (pPort) // new request available?
   {
     _isRegistered = true;

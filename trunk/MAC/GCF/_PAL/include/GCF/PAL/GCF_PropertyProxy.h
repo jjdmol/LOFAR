@@ -85,6 +85,10 @@ class GCFPropertyProxy
      */
     virtual void propSubscribed (const string& propName) = 0;
     /**
+     * Indication that the subscription is lost
+     */
+    virtual void propSubscriptionLost (const string& propName) = 0;
+    /**
      * Response on 'unsubscribeProp' request (NOT USED)
      */
     virtual void propUnsubscribed (const string& propName) = 0;

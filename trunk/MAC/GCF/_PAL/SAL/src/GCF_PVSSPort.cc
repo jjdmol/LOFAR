@@ -32,6 +32,7 @@
 static GCFEvent disconnectedEvent(F_DISCONNECTED);
 static GCFEvent connectedEvent   (F_CONNECTED);
 static GCFEvent closedEvent      (F_CLOSED);
+GCFPVSSPort::TPVSSPortNrs GCFPVSSPort::_pvssPortNrs;
 
 GCFPVSSPort::GCFPVSSPort(GCFTask& task, 
                        string name, 
@@ -39,24 +40,33 @@ GCFPVSSPort::GCFPVSSPort(GCFTask& task,
                        int protocol, 
                        bool transportRawData) 
   : GCFRawPort(task, name, type, protocol, transportRawData),
-    _pPortService(0)
+    _pPortService(0),
+    _acceptedPort(false)
 {
-  _pPortService = new GSAPortService(*this);
 }
 
 GCFPVSSPort::GCFPVSSPort()
     : GCFRawPort(),
-    _pPortService(0)
+    _pPortService(0),
+    _acceptedPort(false)
 {
 }
 
 GCFPVSSPort::~GCFPVSSPort()
 {
+  releasePortNr(_portId.getValue());
   if (_pPortService)
   {
-    _pPortService->stop();
-    delete _pPortService;
-    _pPortService = 0;    
+    if (_acceptedPort)
+    {      
+      _pPortService->unregisterPort(_portId.getValue());
+    }
+    else
+    {
+      _pPortService->stop();
+      delete _pPortService;
+      _pPortService = 0;    
+    }
   }
 }
 
@@ -82,6 +92,12 @@ bool GCFPVSSPort::open()
     else
     {
       _pPortService = new GSAPortService(*this);
+      _portAddr.setValue(GCFPVSSInfo::getLocalSystemName() + ":" + getRealName());
+      _portId.setValue(formatString(
+          "%d:API:%d:%d",
+          GCFPVSSInfo::getLocalSystemId(),
+          GCFPVSSInfo::getManNum(),
+          claimPortNr()));
     }
   }
   
@@ -98,6 +114,18 @@ void GCFPVSSPort::serviceStarted(bool successfull)
     schedule_disconnected();
 }
 
+void GCFPVSSPort::setService(GSAPortService& service)
+{ 
+  _pPortService = &service; 
+  _acceptedPort = true; 
+  _portAddr.setValue(GCFPVSSInfo::getLocalSystemName() + ":" + getRealName());
+  _portId.setValue(formatString(
+      "%d:API:%d:%d",
+      GCFPVSSInfo::getLocalSystemId(),
+      GCFPVSSInfo::getManNum(),
+      claimPortNr()));
+}
+
 ssize_t GCFPVSSPort::send(GCFEvent& e)
 {
   ssize_t written = 0;
@@ -111,20 +139,29 @@ ssize_t GCFPVSSPort::send(GCFEvent& e)
   unsigned int packsize;
   void* buf = e.pack(packsize);
 
+  unsigned int newBufSize = packsize + 1 + _portId.getSize() + _portAddr.getSize();
+  char* newBuf = new char[newBufSize];
+  newBuf[0] = 'm'; // just a message
+  unsigned int bytesPacked = 1;
+  bytesPacked += _portId.pack(newBuf + bytesPacked);
+  bytesPacked += _portAddr.pack(newBuf + bytesPacked);
+  memcpy(newBuf + bytesPacked, buf, packsize);
+  
   LOG_DEBUG(formatString (
       "Sending event '%s' for task '%s' on port '%s'",
       getTask()->evtstr(e),
       getTask()->getName().c_str(), 
       getRealName().c_str()));
       
-  if ((written = _pPortService->send(buf, packsize, _destDpName)) != (ssize_t) packsize)
+  if ((written = _pPortService->send(newBuf, newBufSize, _destDpName)) != (ssize_t) newBufSize)
   {  
     setState(S_DISCONNECTING);     
     schedule_disconnected();
     
     written = -1;
   }
- 
+  delete [] newBuf;
+  
   return written;
 }
 
@@ -138,9 +175,18 @@ bool GCFPVSSPort::close()
 {
   setState(S_CLOSING);  
   assert(_pPortService);
-  _pPortService->stop();
-  schedule_close();
 
+  releasePortNr(_portId.getValue());
+  if (_acceptedPort)
+  {
+    releasePortNr(_portId.getValue());
+    _pPortService->unregisterPort(_portId.getValue());
+  }
+  else
+  {
+    _pPortService->stop();    
+  }
+  schedule_close();
   // return success when port is still connected
   // scheduled close will only occur later
   return isConnected();
@@ -148,18 +194,44 @@ bool GCFPVSSPort::close()
 
 void GCFPVSSPort::setDestAddr(const string& destDpName)
 {
-  _destDpName = destDpName;
+  _destDpName.clear();
+  _destDpName += destDpName;
 }
 
-const string GCFPVSSPort::getOwnAddr() const 
+bool GCFPVSSPort::accept(GCFPVSSPort& newPort)
 {
-  if (isConnected())
+  if (MSPP == getType() && SPP == newPort.getType())
   {
-    assert(_pPortService);
-    return GCFPVSSInfo::getLocalSystemName() + ":" + getRealName();
+    newPort.setService(*_pPortService);
+    _pPortService->registerPort(newPort);
+    setState(S_CONNECTING);        
+    newPort.schedule_connected();
+    return true;
   }
-  else
+  return false;
+}
+
+unsigned int GCFPVSSPort::claimPortNr()
+{
+  unsigned int nr(0);
+
+  TPVSSPortNrs::iterator iter;
+  do 
   {
-    return "";
+    nr++;
+    iter = _pvssPortNrs.find(nr);
+  }
+  while (iter != _pvssPortNrs.end()); 
+  
+  return nr; 
+}
+
+void GCFPVSSPort::releasePortNr(const string& portId)
+{
+  string::size_type pos = portId.rfind(':');
+  if (pos > 0 && pos < string::npos)
+  {
+    unsigned int portNr = atoi(portId.c_str() + pos + 1);
+    _pvssPortNrs.erase(portNr);
   }
 }

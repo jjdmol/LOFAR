@@ -191,9 +191,10 @@ void GSAService::handleHotLink(const DpHLGroup& group, const GSAWaitForAnswer& w
   
   if ((pErr = group.getErrorPtr()) != 0)
   {
-    LOG_INFO(LOFAR::formatString (
-            "PVSS Error: (%s) in hotlink",
-            (const char*) pErr->getErrorText()));
+    dpeSubscriptionLost(wait.getDpName());
+    //LOG_INFO(LOFAR::formatString (
+    //        "PVSS Error: (%s) in hotlink",
+    //        (const char*) pErr->getErrorText()));
   }
   // A group consists of pairs of DpIdentifier and values called items.
   // There is exactly one item for all configs we are connected.
@@ -663,9 +664,9 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
         default: break;        
       }
         
-      const DynVar* pDynVar = static_cast<const DynVar*>(&variable);
-      if (pDynVar)
+      if (type != NO_LPT)
       {
+        const DynVar* pDynVar = (const DynVar*) (&variable);
         GCFPValueArray arrayTo;
         GCFPValue* pItemValue(0);
         for (Variable* pVar = pDynVar->getFirst();
@@ -703,6 +704,11 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
           arrayTo.push_back(pItemValue);
         }
         *pMacValue = new GCFPVDynArr(type, arrayTo);
+        for (GCFPValueArray::iterator iter = arrayTo.begin();
+             iter != arrayTo.end(); ++iter)
+        {
+          delete *iter;  
+        }      
       }
       break;
     }
@@ -721,7 +727,7 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
                                   const DpIdentifier& dpId) const                                  
 {
   TSAResult result(SA_NO_ERROR);
-  DpElementType elTypeId;
+  DpElementType elTypeId(DPELEMENT_NOELEMENT);
   *pVar = 0;
   DpTypeContResult res = Manager::getTypeContainerPtr()->getElementType(dpId, elTypeId);
   if (res != DpTypeContOK)
@@ -731,6 +737,7 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
         res));   
     //return SA_DPTYPE_UNKNOWN;
   }
+  fprintf(stderr, "ElTypeId: %d MacValueTypeId: %d\n", elTypeId, macValue.getType());
   switch (macValue.getType())
   {
     case LPT_BOOL:
@@ -839,7 +846,11 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
               break;              
           }
           if (pItemValue)
+          {
             ((DynVar *)(*pVar))->append(*pItemValue);
+            delete pItemValue;
+            pItemValue = 0;
+          }
         }
       }
       else

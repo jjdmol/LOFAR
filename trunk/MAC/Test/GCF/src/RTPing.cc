@@ -39,11 +39,11 @@ static double time_elapsed(timeval* start, timeval* stop)
     + (stop->tv_usec-start->tv_usec)/(double)1e6; 
 }
 
-Ping::Ping(string name, string scope, const TPropertySet& propSet)
+Ping::Ping(string name, string scope, string type, bool isTemporary)
   : GCFTask((State)&Ping::initial, name), 
   _pingTimer(-1), 
   _answerHandler(*this),
-  _echoPingPSET(scope.c_str(), propSet, &_answerHandler)
+  _echoPingPSET(scope.c_str(), type.c_str(), isTemporary, &_answerHandler)
 {
   // register the port for debug tracing
   registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_signalnames);
@@ -56,6 +56,14 @@ Ping::Ping(string name, string scope, const TPropertySet& propSet)
    * - This is a Service Access Port which uses the
    *   ECHO_PROTOCOL 
    */
+  if (type == "TTypeF")
+  {
+    _echoPingPSET.initProperties(propertiesSF1, NR_OF_PROPCONFIGS(propertiesSF1));
+  }
+  else
+  {
+    _echoPingPSET.initProperties(propertiesSG1, NR_OF_PROPCONFIGS(propertiesSG1));
+  }
   _client.init(*this, "client", GCFPortInterface::SAP, ECHO_PROTOCOL);
 }
 
@@ -262,16 +270,19 @@ int main(int argc, char** argv)
     }            
   }
 
-  const TPropertySet* pPropSet;
+  string type;
+  bool isTemporary;
   if (brdnr == "1")
   {
-    pPropSet = &propertySetF1;
+    type = "TTypeF";
+    isTemporary = false;
   }
   else
   {
-    pPropSet = &propertySetG1;
+    type = "TTypeG";
+    isTemporary = true;
   }
-  Ping pingTask(string("RTPING") + brdnr, string("B_A_BRD") + brdnr, *pPropSet);
+  Ping pingTask(string("RTPING") + brdnr, string("B_A_BRD") + brdnr, type, isTemporary);
 
   pingTask.start(); // make initial transition
 

@@ -42,7 +42,8 @@ EXTRA_DIST = \
 	
 configfilesdir=$(bindir)
 configfiles_DATA= \
-	gcf-pmllight.conf
+	gcf-pmllight.conf \
+	genTypeInfo
 
 %.conf: %.conf.in
 	cp $< $@
