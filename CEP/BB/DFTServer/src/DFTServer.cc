@@ -48,13 +48,14 @@ DFTServer::~DFTServer()
 
 void DFTServer::define (const KeyValueMap& params)
 {
+  LOG_TRACE_FLOW_STR("start definition");
   // create and initialise the parameter object.
-  const ParameterSet myPS("params.ps");
+  const ParameterSet myPS("DFTServer.param");
   //  WH_SimStation* myWHStations[myPS.getInt("general.nstations")];
 
 
 
-  // define the top-level composite object; 
+  LOG_TRACE_FLOW_STR("define the top-level composite object");
   // this is the holder for the actual DFTServer Step.
   WH_Empty myWHEmpty("DFTServer");
   Composite toplevelcomp(myWHEmpty);
