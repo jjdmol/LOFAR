@@ -126,6 +126,7 @@ int MSIntegratorWP::receive (MessageRef &mref)
     mref()["Num.Channel"] = auto_nchan;
     mref()["Num.Time"] = auto_ntime;
     mref()["Num.Patch"] = auto_npatch;
+    mref()["Flag.Ignore"] = False;
     send(mref,address());
     auto_ms = "";
   }
@@ -170,6 +171,7 @@ bool MSIntegratorWP::initMS (const Message &msg,MeasurementSet &ms)
   window_chan = msg["Num.Channel"];
   window_time = msg["Num.Time"];
   num_patches = msg["Num.Patch"];
+  ignore_flags = msg["Flag.Ignore"].as_bool(False);
   // open the measurement set
   ms = MeasurementSet(msname.c_str());
   
@@ -476,7 +478,7 @@ void MSIntegratorWP::integrate (ROVisibilityIterator &vi,VisBuffer &vb)
             dcomplex &pd = pdata0[j0];
             int &pn = pnp0[j0];
             for( int j=0; j<window; j++,pvp0+=num_corrs,pfp0+=num_corrs )
-              if( ! *pfp0 )
+              if( ignore_flags || !*pfp0 )
               {
                 pd += *pvp0;
                 pn++;

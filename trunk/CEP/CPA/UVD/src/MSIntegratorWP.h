@@ -116,6 +116,8 @@ class MSIntegratorWP : public WorkProcess  //## Inherits: <unnamed>%3CD1338701E2
             
       string msname;
       
+      bool ignore_flags;
+      
       int window_chan,window_time,num_patches,
           num_antennas,num_times,num_ifrs,num_channels,num_corrs,
           num_integrated_channels,num_integrated_times,
