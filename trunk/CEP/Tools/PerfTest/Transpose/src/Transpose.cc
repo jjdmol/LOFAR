@@ -22,6 +22,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.7  2002/06/06 07:45:25  wierenga
+//  %[BugId:11]%
+//  Add TH_ShMem support.
+//
 //  Revision 1.6  2002/05/24 14:17:18  schaaf
 //  %[BugId: 11]%
 //  Use Parameter block for definition of source/dest steps etc.
@@ -63,6 +67,7 @@
 #include "Transpose/WH_Correlate.h"
 #include "BaseSim/WH_Empty.h"
 #include "BaseSim/ShMem/TH_ShMem.h"
+#include "BaseSim/TH_Mem.h"
 #include TRANSPORTERINCLUDE
 
 #ifdef HAVE_CORBA
@@ -129,7 +134,8 @@ void Transpose::define(const ParamBlock& params)
   itsSourceSteps = params.getInt("stations",1); // nr of stations (?)
   itsDestSteps   = params.getInt("correlators",1);
   cout << "stations = " << itsSourceSteps << "  correlators = " << itsDestSteps << endl;
-  
+  itsDoLogProfile = params.getBool("log",false);
+   
   // Create the Workholders and Steps
   Sworkholders = new (WH_FillTFMatrix*)[itsSourceSteps];
   Ssteps       = new (Step*)[itsSourceSteps];
@@ -151,8 +157,7 @@ void Transpose::define(const ParamBlock& params)
     sprintf(name, "Filler[%d]", iStep);
     Sworkholders[iStep] = new WH_FillTFMatrix(name,
 					      iStep, // source ID
-					      1,     // in; should be 0
-					             //     ...see %[BugId: 14]% 
+					      0,     // NO inputs
 					      itsDestSteps, //nout
 					      timeDim,
 					      freqDim);
@@ -185,7 +190,7 @@ void Transpose::define(const ParamBlock& params)
     sprintf(name, "Correlate[%d]", iStep);
     Cworkholders[iStep] = new WH_Correlate(name,
 					   timeDim,        // inputs
-					   1,              // outputs
+					   timeDim,        // outputs
 					   itsSourceSteps, // stations
 					   freqDim);       // frequency
 
@@ -230,39 +235,38 @@ void Transpose::define(const ParamBlock& params)
 #endif
     }
   }
-
   //simul.optimizeConnectionsWith(TH_ShMem::proto);
 }
 
-void doIt (Simul& simul, const std::string& name, int nsteps) {
-#if 0
-  simul.resolveComm();
-#endif
+void Transpose::run(int nSteps) {
+  nSteps = nSteps;
 
   TRACER1("Ready with definition of configuration");
   Profiler::init();
   Step::clearEventCount();
 
-  TRACER4("Start Processing simul " << name);    
-  for (int i=0; i<nsteps; i++) {
+  TRACER4("Start Processing simul " );    
 #ifdef HAVE_MPI
      TH_MPI::synchroniseAllProcesses();
+  double starttime=MPI_Wtime();
 #endif
-    if (i==2) Profiler::activate();
-    simul.process();
-    if (i==5) Profiler::deActivate();
+   for (int i=0; i<nSteps; i++) {
+#ifdef HAVE_MPI
+     //TH_MPI::synchroniseAllProcesses();
+#endif
+    if (i==2 && itsDoLogProfile) Profiler::activate();
+    getSimul().process();
+    if (i==10 && itsDoLogProfile) Profiler::deActivate();
   }
+#ifdef HAVE_MPI
+  double endtime=MPI_Wtime();
+  cout << "Total Run Time on node " << TH_MPI::getCurrentRank() << " : " << endtime-starttime << endl;
+#endif
 
   TRACER4("END OF SIMUL on node " << TRANSPORTER::getCurrentRank () );
  
   //     close environment
   //  TRANSPORTER::finalize();
-}
-
-void Transpose::run(int nSteps) {
-  nSteps = nSteps;
-  doIt(getSimul(), "Transpose Simulator", nSteps);
-
 }
 
 void Transpose::dump() const {
