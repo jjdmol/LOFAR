@@ -1,4 +1,4 @@
-//#  UnaryExprNode.h: one line description
+//#  UnaryExprNode.h: Unary expression node.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_QUERY_UNARYEXPRNODE_H
 #define LOFAR_PL_QUERY_UNARYEXPRNODE_H
 
+// \file UnaryExprNode.h
+// Unary expression node.
+
 //# Includes
 #include <lofar_config.h>
 #include <PL/Query/Expr.h>
@@ -35,10 +38,12 @@ namespace LOFAR
   {
     namespace Query
     {
-      // @defgroup UnaryExprNode Unary Expression Nodes
-      // @ingroup ExprNode
+      // \ingroup QueryExpr
+      // \defgroup UnaryExprNode Unary Expression Nodes
+      // A unary expression is an expression that takes one operator and one
+      // operand.
+      // @{
 
-      // @ingroup UnaryExprNode
       // This class represents a unary expression node. A unary expression is
       // an expression that takes one operator and one operand.
       class UnaryExprNode : public ExprNode
@@ -63,6 +68,8 @@ namespace LOFAR
         const Expr        itsOperand;
 
       };
+
+      // @}
 
     } // namespace Query
 

@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_ATTRIB_H
 #define LOFAR_PL_ATTRIB_H
 
+// \file Attrib.h
+// Global methods for converting attributes to table columns.
+
 #include <lofar_config.h>
 
 //# Includes
@@ -35,6 +38,9 @@ namespace LOFAR
 {
   namespace PL
   {
+
+    // \addtogroup PL
+    // @{
 
     // Convert the field specifier \a nm into a column expression node that
     // represents the table name and column name plus zero or more join
@@ -83,6 +89,8 @@ namespace LOFAR
     {
       return makeAttrib(TPersistentObject<T>(), nm);
     }
+
+    // @}
 
   } // namespace PL
 

@@ -1,4 +1,4 @@
-//#  ColumnExprNode.h: one line description
+//#  ColumnExprNode.h: Column expression node.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_QUERY_COLUMNEXPRNODE_H
 #define LOFAR_PL_QUERY_COLUMNEXPRNODE_H
 
+// \file ColumnExprNode.h
+// Column expression node.
+
 //# Includes
 #include <lofar_config.h>
 #include <PL/Query/Expr.h>
@@ -35,8 +38,9 @@ namespace LOFAR
   {
     namespace Query
     {
-      // @ingroup ExprNode
-      //
+      // \addtogroup QueryExpr
+      // @{
+
       // This class represents a column expression node. A column expression
       // is an expression that takes two operands, a table name and a column
       // name. A column expression node provides the glue between the class
@@ -77,6 +81,8 @@ namespace LOFAR
         Expr              itsConstraint;
 
       };
+
+      // @}
 
     } // namespace Query
 

@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_DBREPMETA_H
 #define LOFAR_PL_DBREPMETA_H
 
+// \file DBRepMeta.h
+// Database representation of the PersistentObject::MetaData.
+
 #include <lofar_config.h>
 
 #if !defined(HAVE_DTL)
@@ -37,6 +40,9 @@ namespace LOFAR
 {
   namespace PL
   {
+    // \addtogroup PL
+    // @{
+
     // This class is an adapter class that transforms the \e metadata
     // of a persistent object to/from an internal representation, which is
     // guaranteed to be contigous. DTL and ODBC demand that the data they
@@ -56,6 +62,8 @@ namespace LOFAR
       // Version number of the persistent object.
       unsigned int    itsVersionNr;
     };
+
+    // @}
 
   } // namespace PL
 

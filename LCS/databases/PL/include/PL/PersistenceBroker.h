@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_PERSISTENCEBROKER_H
 #define LOFAR_PL_PERSISTENCEBROKER_H
 
+// \file PersistenceBroker.h
+// Handle save/retrieve of persistent objects.
+
 //# Includes
 #include <PL/PLfwd.h>
 #include <string>
@@ -32,6 +35,9 @@ namespace LOFAR
 {
   namespace PL
   {
+    // \addtogroup PL
+    // @{
+
     // PersistenceBroker is responsible for handling (bulk) save and retrieve 
     // operations on (a collection) of persistent objects. PersistenceBroker 
     // "knows" in which database the data reside or must be saved. 
@@ -141,6 +147,8 @@ namespace LOFAR
 //       TPersistentObject<T> retrieve(const ObjectId& oid) const;
 
     };
+
+    // @}
 
   } // namespace PL
 

@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_QUERY_EXPR_H
 #define LOFAR_PL_QUERY_EXPR_H
 
+// \file Expr.h
+// Represents the WHERE clause of a query.
+
 //# Includes
 #include <lofar_config.h>
 #include <PL/Query/ExprNode.h>
@@ -34,13 +37,17 @@ namespace LOFAR
 {
   namespace PL
   {
+    //# Forward declarations
     template<typename T> class Collection;
 
     namespace Query
     {
+      // \addtogroup QueryExpr Query Expressions
+      // @{
 
-      // This class represents the WHERE clause of a query as an expression
-      // tree.
+      // This class represents the \c WHERE clause of a query. A query is
+      // composed by concatenating Expr objects and operators. Internally, the
+      // query is represented as an expression tree.
       //
       // An expression tree consists of an expression node, containing an
       // operator and one or more operands. The operands are again expression
@@ -50,26 +57,21 @@ namespace LOFAR
       // All expression node classes inherit from the abstract base class
       // ExprNode, which defines their interface.
       //
-      // \see For a good example of a C++ implementation of an expression
-      // tree, see <a
-      // href="http://www.cs.wustl.edu/~schmidt/PDF/expression-trees4.pdf">
-      // <em>Object-Oriented Design Case Study with C++</em></a>, by Douglas
-      // C. Schmidt.
       class Expr
       {
       public:
 
-        // @name Constructors for literal types.
-        //@{
+        // \name Constructors for literal types
+        // @{
         Expr();
         Expr(int value);
         Expr(double value);
         Expr(const std::string& value);
         Expr(const char* const value);
-        //@}
+        // @}
 
         // Construct an Expr from an ExprNode pointer.
-        // @attention Expr will take ownership of the pointer that was passed
+        // \attention Expr will take ownership of the pointer that was passed
         // in through \a node and store it in a reference counted pointer.
         Expr(ExprNode* const node);
 
@@ -84,41 +86,41 @@ namespace LOFAR
         // Return the constraints associated with this expression.
         Expr getConstraint() const;
 
-        // @name Unary operators
-        //@{
+        // \name Unary operators
+        // @{
         Expr operator+ () const;
         Expr operator- () const;
         Expr operator! () const;
-        //@}
+        // @}
 
-        // @name SQL-like operators
-        //@{
+        // \name SQL-like operators
+        // @{
 
-        // The BETWEEN operator is used to test if a value is within a given
-        // closed interval.
+        // The \c BETWEEN operator is used to test if a value is within a
+        // given closed interval.
         Expr between(const Expr& lhs, const Expr& rhs) const;
 
-        // The NOT BETWEEN operator is used to test if a value is not within a
-        // given closed interval.
+        // The \c NOT \c BETWEEN operator is used to test if a value is not
+        // within a given closed interval.
         // \see Expr::between()
         Expr notBetween(const Expr& lhs, const Expr& rhs) const;
 
-        // The IN operator is used to test if an expression is contained in a
-        // set of expressions.
+        // The \c IN operator is used to test if an expression is contained in
+        // a set of expressions.
         Expr in (const Collection<Expr>& set) const;
 
-        // The NOT IN operator is used to test if an expression is not
+        // The \c NOT \c IN operator is used to test if an expression is not
         // contained in a set of expressions.
         // \see Expr::in()
         Expr notIn(const Collection<Expr>& set) const;
 
-        // The LIKE operator is used to test if a value matches with the
+        // The \c LIKE operator is used to test if a value matches with the
         // pattern string in \a str. You can use the wildcard characters \c *
-        // and \c ?, where \c * expands to zero or more characters, and \c ? 
-        // expands to exactly one character. If you want to match a literal \c
-        // * or \c ?, you should use the escape character \c \. Consequently,
-        // if you want to match a literal \c \, you should escape it with
-        // another \c \.
+        // and <tt>?</tt>, where \c * expands to zero or more characters, and
+        // <tt>?</tt> expands to exactly one character. If you want to match a
+        // literal \c * or <tt>?</tt>, you should use the escape character
+        // \c \. Consequently, if you want to match a literal \c \, you should
+        // escape it with another \c \.
         //
         // \attention Remember that the backslash character \c \ is also used
         // as an escape character in the C/C++ language. Hence, if you want
@@ -127,50 +129,49 @@ namespace LOFAR
         // str to expand to \c "\", then \a str should contain \c "\\\\".
         Expr like(const std::string& str) const;
 
-        // The NOT LIKE operator is used to test if a value does not have a
-        // match with a pattern expression.
+        // The \c NOT \c LIKE operator is used to test if a value does not
+        // have a match with a pattern expression.
         // \see Expr::like()
         Expr notLike(const std::string& str) const;
 
-        //@}
+        // @}
 
       private:
 
-        // @name Arithmetic operators
-        //@{
+        // \name Arithmetic operators
+        // @{
         friend Expr operator+ (const Expr& lhs, const Expr& rhs);
         friend Expr operator- (const Expr& lhs, const Expr& rhs);
         friend Expr operator* (const Expr& lhs, const Expr& rhs);
         friend Expr operator/ (const Expr& lhs, const Expr& rhs);
-        //@}
+        // @}
         
-        // @name Comparison operators
-        //@{
+        // \name Comparison operators
+        // @{
         friend Expr operator== (const Expr& lhs, const Expr& rhs);
         friend Expr operator!= (const Expr& lhs, const Expr& rhs);
         friend Expr operator>= (const Expr& lhs, const Expr& rhs);
         friend Expr operator>  (const Expr& lhs, const Expr& rhs);
         friend Expr operator<= (const Expr& lhs, const Expr& rhs);
         friend Expr operator<  (const Expr& lhs, const Expr& rhs);
-        //@}
+        // @}
 
-        // @name Logical operators
-        //@{
+        // \name Logical operators
         // \note The logical binary operators behave different from the other
         // binary operators, because \a lhs and \a rhs are allowed to be null
         // expressions. If \a lhs is a null expression, then \a rhs is
         // returned; if \a rhs is a null expression, then \a lhs is returned.
+        // @{
         friend Expr operator&& (const Expr& lhs, const Expr& rhs);
         friend Expr operator|| (const Expr& lhs, const Expr& rhs);
-        //@}
+        // @}
 
-        // @name I/O stream operators
-        //@{
-
+        // \name I/O stream operators
+        // @{
         // Print the expression \a exp and the associated constraints onto the
         // output stream \a os.
         friend std::ostream& operator<< (std::ostream& os, const Expr& exp);
-        //@}
+        // @}
 
         // The actual node of the expression query.
         boost::shared_ptr<ExprNode> itsNode;

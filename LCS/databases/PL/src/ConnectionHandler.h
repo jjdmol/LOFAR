@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_CONNECTIONHANDLER_H
 #define LOFAR_PL_CONNECTIONHANDLER_H
 
+// \file ConnectionHandler.h
+// Handles connection to the database.
+
 //# Includes
 #include <string>
 
@@ -30,6 +33,9 @@ namespace LOFAR
 {
   namespace PL
   {
+    // \addtogroup PL
+    // @{
+
     // This class is responsible for handling the connection to the database.
     // It is an adapter class, because is decouples the PersistenceBroker from
     // the Database Template Library (DTL). As such, this class will not be of
@@ -44,6 +50,8 @@ namespace LOFAR
       ConnectionHandler(const ConnectionHandler&);
       ConnectionHandler& operator=(const ConnectionHandler&);
     };
+
+    // @}
 
   } // namespace PL
 

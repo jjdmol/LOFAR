@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_OBJECTID_H
 #define LOFAR_PL_OBJECTID_H
 
+// \file ObjectId.h
+// ObjectId is used to uniquely identify a persistent object.
+
 #include <Common/LofarTypes.h>
 #include <boost/shared_ptr.hpp>
 
@@ -30,6 +33,9 @@ namespace LOFAR
 {
   namespace PL
   {
+    // \addtogroup PL
+    // @{
+
     // ObjectId is used to uniquely identify a persistent object. The unique
     // key is a 64-bit integer, which is randomly generated using a method
     // that was inspired by the code in gen_uuid.c (part of the e2fsprogs
@@ -65,11 +71,11 @@ namespace LOFAR
 
     private:
 
-      // @name Diallow copying and assignment.
-      //@{
+      // \name Disallow copying and assignment
+      // @{
       ObjectId(const ObjectId&);
       ObjectId& operator=(const ObjectId&);
-      //@}
+      // @}
 
       // NullId represents a (default) null object-id value.
       static const oid_t NullId;
@@ -100,6 +106,7 @@ namespace LOFAR
       return lhs.get() == rhs.get();
     }
 
+    // @}
 
   } // namespace PL
 

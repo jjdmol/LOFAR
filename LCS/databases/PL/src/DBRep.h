@@ -1,4 +1,4 @@
-//#  DBRep.h: one line description
+//#  DBRep.h: Adapter class transforming data to/from internal representation.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_DBREP_H
 #define LOFAR_PL_DBREP_H
 
+// \file DBRep.h
+// Adapter class transforming data to/from internal representation.
+
 #include <lofar_config.h>
 
 //# Includes
@@ -33,6 +36,9 @@ namespace LOFAR
 {
   namespace PL
   {
+    // \addtogroup PL
+    // @{
+
     // This class is an adapter class. It transforms the data in a
     // user-defined class \c T to/from an internal representation, which is
     // guaranteed to be contiguous. DTL and ODBC demand that the data they
@@ -55,9 +61,8 @@ namespace LOFAR
       DBRep();
     };
 
-    // @name Full class template specializations.
-    //@{
-
+    // \name Full class template specializations.
+    // @{
     // ObjectId is part of the metadata of a persistent object. Hence, we
     // must define a specialization.
     template<> 
@@ -66,7 +71,9 @@ namespace LOFAR
       void bindCols(dtl::BoundIOs& cols) { cols["ObjId"] == itsOid; }
       ObjectId::oid_t itsOid;
     };
-    //@}
+    // @}
+
+    // @}
 
   } // namespace PL
 

@@ -1,4 +1,4 @@
-//#  QueryObject.h: one line description
+//#  QueryObject.h: A user-friendly interface for composing queries.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_QUERYOBJECT_H
 #define LOFAR_PL_QUERYOBJECT_H
 
+// \file QueryObject.h
+// A user-friendly interface for composing queries.
+
 //# Includes
 #include <PL/Query/Expr.h>
 
@@ -30,6 +33,9 @@ namespace LOFAR
 {
   namespace PL
   {
+    // \addtogroup PL
+    // @{
+
     //
     // The query class provides a user-friendly interface for composing
     // queries.
@@ -40,7 +46,7 @@ namespace LOFAR
       // Default constructor. Creates an empty query object.
       QueryObject() {}
 
-      //@{
+      // @{
       // Constructor that takes an SQL string. 
       // \todo Do we want to do some sanity checking on \c aString ?
       QueryObject(const std::string& aString) : 
@@ -50,7 +56,7 @@ namespace LOFAR
       QueryObject(const char* const aString) : 
         itsSqlString(aString), itsUseString(true) 
       {}
-      //@}
+      // @}
 
       // Constructor that takes a Query Expression.
       QueryObject(const Query::Expr& aExpr) : 
@@ -84,6 +90,8 @@ namespace LOFAR
       bool itsUseString;
 
     };
+
+    // @}
 
   } // namespace PL
 

@@ -1,4 +1,4 @@
-//#  DBRepHolder.h: one line description
+//#  DBRepHolder.h: Class combining metadata and user-defined class data.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_DBREPHOLDER_H
 #define LOFAR_PL_DBREPHOLDER_H
 
+// \file DBRepHolder.h
+// Class combining metadata and user-defined class data.
+
 #include <lofar_config.h>
 
 //# Includes
@@ -34,9 +37,12 @@ namespace LOFAR
 {
   namespace PL
   {
+    // \addtogroup PL
+    // @{
+
     // This class combines the representation of the metadata of a persistent
     // object (DBRepMeta) and the representation of the data in the
-    // user-defined class \c T (DBRep<T>).
+    // user-defined class \c T (DBRep).
     template <typename T>
     struct DBRepHolder
     {
@@ -46,16 +52,14 @@ namespace LOFAR
       typedef DBRep<T> DBRepType;
 
       // Return a reference to the DBRepMeta part.
-      //@{
       DBRepMeta& repMeta() { return itsRepMeta; }
+      // Return a const reference to the DBRepMeta part.
       const DBRepMeta& repMeta() const { return itsRepMeta; }
-      //@}
 
       // Return a reference to the DBRepType part.
-      //@{
       DBRepType& rep() { return itsRep; }
+      // Return a const reference to the DBRepType part.
       const DBRepType& rep() const { return itsRep; }
-      //@}
 
       // This method 'binds' the database columns to the members of the
       // user-defined class \c T and the metadata of the accompanying
@@ -65,7 +69,7 @@ namespace LOFAR
       {
         itsRepMeta.bindCols(cols);
         itsRep.bindCols(cols);
-     }
+      }
 
     private:
 
@@ -77,8 +81,8 @@ namespace LOFAR
     };
 
 
-    // @name Full class template specializations.
-    //@{
+    // \name Full class template specializations.
+    // @{
 
     // ObjectId is part of the metadata of a persistent object. Hence, we
     // must define a specialization.
@@ -94,7 +98,9 @@ namespace LOFAR
       DBRepType itsRep;
     };
 
-    //@}
+    // @}
+
+    // @}
 
   } // namespace PL
 

@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_EXCEPTION_H
 #define LOFAR_PL_EXCEPTION_H
 
+// \file Exception.h
+// The base exception class for the Persistence Layer.
+
 //# Includes
 #include <Common/Exception.h>
 
@@ -30,6 +33,9 @@ namespace LOFAR {
 
   namespace PL {
 
+    // \addtogroup PL
+    // @{
+    
     //
     // This is the base exception class for the Persistence Layer.
     //
@@ -77,6 +83,8 @@ namespace LOFAR {
     // Collection class.
     //
     EXCEPTION_CLASS(CollectionException, Exception);
+
+    // @}
 
   }
 
