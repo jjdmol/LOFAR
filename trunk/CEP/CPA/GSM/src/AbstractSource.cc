@@ -194,14 +194,17 @@ unsigned int AbstractSource::getParameters(std::vector<const MeqParm* > &paramet
 
 unsigned int AbstractSource::setParameters(const std::vector<MeqParm* > &parameters)
 {
-  unsigned int read=0;
-  
-  *itsRa = *parameters[read];
+  unsigned int         read=0;
+  std::vector<MeqPolc> Polcs;
+
+  Polcs = dynamic_cast<MeqParmPolc*>(parameters[read])->getPolcs();
+  dynamic_cast<MeqParmPolc*>(itsRa)->setPolcs(Polcs);
   read++;
 
-  *itsDec = *parameters[read];
+  Polcs = dynamic_cast<MeqParmPolc*>(parameters[read])->getPolcs();
+  dynamic_cast<MeqParmPolc*>(itsDec)->setPolcs(Polcs);
   read++;
-  
+
   return read;
 }
 

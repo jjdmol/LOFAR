@@ -189,12 +189,14 @@ unsigned int PointSource::getParameters(std::vector<const MeqParm*> &parameters)
 
 unsigned int PointSource::setParameters(const std::vector<MeqParm*> &parameters)
 {
-  unsigned int i = AbstractSource::setParameters(parameters);
+  unsigned int         i = AbstractSource::setParameters(parameters);
+  std::vector<MeqPolc> Polcs;
   
   for(unsigned int j = 0; j < NUMBER_OF_POLARIZATIONS; j++) {
-    *itsFlux[j] = *parameters[i+j];
-    i++;
+    Polcs = dynamic_cast<MeqParmPolc*>(parameters[i+j])->getPolcs();
+    dynamic_cast<MeqParmPolc*>(itsFlux[j])->setPolcs(Polcs);
   }
+  i += NUMBER_OF_POLARIZATIONS;
   return i;
 }
 
