@@ -40,7 +40,8 @@ int ParamHolder::theirSerial = 0;
 
 
 ParamHolder::ParamHolder(const string& name, const string& type)
-  : itsStep(0),
+  : Transportable(),
+    itsStep(0),
     itsName(name),
     itsType(type),
     itsIsParamOwner(false),
@@ -55,7 +56,8 @@ ParamHolder::~ParamHolder()
 {}
 
 ParamHolder::ParamHolder(const ParamHolder& that)
-  :  itsStep(that.itsStep),
+  :  Transportable(),
+     itsStep(that.itsStep),
      itsName(that.itsName),
      itsType(that.itsType),
      itsIsParamOwner(that.itsIsParamOwner),
