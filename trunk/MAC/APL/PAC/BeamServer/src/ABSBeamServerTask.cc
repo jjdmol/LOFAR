@@ -67,7 +67,7 @@ BeamServerTask::BeamServerTask(string name)
       m_pos(N_ELEMENTS, N_POLARIZATIONS, 3),
       m_weights(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS),
       m_weights16(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS),
-      m_stats(N_SUBBANDS, 10),
+      m_stats(N_BEAMLETS, 100),
       board(*this, "board", GCFPortInterface::SAP, true)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
@@ -81,7 +81,7 @@ BeamServerTask::BeamServerTask(string name)
 
   m_wgsetting.frequency     = 1e6; // 1MHz
   m_wgsetting.amplitude     = 128;
-  m_wgsetting.sample_period = 2;
+  m_wgsetting.sample_period = 2; // 80 MHz / 40 MHz == 2
   m_wgsetting.enabled       = false;
 
   // initialize antenna positions
@@ -207,8 +207,6 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
 
-	m_stats.updateRaw(0, 0);
-
 	if (0 == (period % COMPUTE_INTERVAL))
 	{
 	    period = 0;
@@ -296,17 +294,15 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	static char data[ETH_DATA_LEN];
 
 	ssize_t length = board.recv(data, ETH_DATA_LEN);
+	unsigned int* seqnr = (unsigned int*)&data[2];
+	unsigned int* statsdata = (unsigned int*)&data[6];
 
-	//m_stats.updateRaw(data, length);
-
-	if (sizeof(EPADataEvent)-sizeof(GCFEvent) == length)
+	if (STATS_PACKET_SIZE == length)
 	{
-	  EPADataEvent de;
-	  
-	  memcpy((void*)&de.fill, (void*)data, sizeof(de)-sizeof(GCFEvent));
-
-	  unsigned int* seqnr = (unsigned int*)&data[2];
-	  cerr << "seqnr=" << *seqnr << endl;
+	    Array<unsigned int, 3> power_sum(statsdata,
+					     shape(N_BEAMLETS, N_POLARIZATIONS, 2),
+					     neverDeleteData);
+	    m_stats.update(power_sum, *seqnr);
 	}
       }
       break;
@@ -475,14 +471,14 @@ void BeamServerTask::wgenable_action()
 
   ee.command       = 2; // 2 == waveform enable
   ee.seqnr         = 0;
-  ee.pktsize       = htons(12);
+  ee.pktsize       = htons(WGENABLE_PACKET_SIZE);
   ee.frequency     = htons((short)((m_wgsetting.frequency * 65535) / SYSTEM_CLOCK_FREQ));
   ee.reserved1     = 0;
   ee.amplitude     = m_wgsetting.amplitude;
   (void)memset(&ee.reserved2, 0, 3);
   ee.sample_period = m_wgsetting.sample_period;
 
-  board.send(GCFEvent(F_RAW_SIG), &ee.command, 12);
+  board.send(GCFEvent(F_RAW_SIG), &ee.command, WGENABLE_PACKET_SIZE);
   
   LOG_DEBUG("SENT WGENABLE");
 }
@@ -496,10 +492,10 @@ void BeamServerTask::wgdisable_action()
   
   de.command       = 3; // 3 == waveform disable
   de.seqnr         = 0;
-  de.pktsize       = htons(12);
+  de.pktsize       = htons(WGDISABLE_PACKET_SIZE);
   (void)memset(&de.reserved1, 0, 8);
 
-  board.send(GCFEvent(F_RAW_SIG), &de.command, 12);
+  board.send(GCFEvent(F_RAW_SIG), &de.command, WGDISABLE_PACKET_SIZE);
 
   LOG_DEBUG("SENT WGDISABLE");
 }
@@ -563,7 +559,7 @@ void BeamServerTask::send_weights(int period)
   bc.command = 4; // 4 == beamformer configure
   bc.seqnr   = 0;
   bc.pktsize = sizeof(EPABfconfigureEvent)-sizeof(GCFEvent);
-  bc.pktsize = htons(1030);
+  bc.pktsize = htons(BFCONFIGURE_PACKET_SIZE);
 
   Array<complex<int16_t>, 2> weights((complex<int16_t>*)&bc.coeff,
 				     shape(N_SUBBANDS, N_POLARIZATIONS),
@@ -594,7 +590,7 @@ void BeamServerTask::send_weights(int period)
 	  }
 
 	  bc.phasepol = pol;
-	  board.send(GCFEvent(F_RAW_SIG), &bc.command, 1030);
+	  board.send(GCFEvent(F_RAW_SIG), &bc.command, BFCONFIGURE_PACKET_SIZE);
       }
   }
 
@@ -602,10 +598,10 @@ void BeamServerTask::send_weights(int period)
 
   be.command = 5; // 5 == beamformer enable
   be.seqnr = 0;
-  be.pktsize = htons(12);
+  be.pktsize = htons(BFENABLE_PACKET_SIZE);
   memset(&be.reserved1, 0, 8);
 
-  board.send(GCFEvent(F_RAW_SIG), &be.command, 12);
+  board.send(GCFEvent(F_RAW_SIG), &be.command, BFENABLE_PACKET_SIZE);
 }
 
 void BeamServerTask::update_sbselection()
@@ -630,7 +626,7 @@ void BeamServerTask::send_sbselection()
 
       ss.command = 1; // 1 == subband selection
       ss.seqnr = 0;
-      ss.pktsize = htons(5 + m_sbsel.size()*2);
+      ss.pktsize = htons(SBSELECT_PACKET_HDR_SIZE + m_sbsel.size()*2);
       ss.nofbands = (m_sbsel.size() <= 0 ? 0 : m_sbsel.size()*2 - 1);
       
       memset(&ss.bands, 0, sizeof(ss.bands));
@@ -656,20 +652,8 @@ void BeamServerTask::send_sbselection()
 	  ss.bands[sel->first*2+1] = sel->second*2;
       }
 
-      board.send(GCFEvent(F_RAW_SIG), &ss.command, 5 + m_sbsel.size()*2);
+      board.send(GCFEvent(F_RAW_SIG), &ss.command, SBSELECT_PACKET_HDR_SIZE + m_sbsel.size()*2);
   }
-}
-
-void BeamServerTask::sbselect()
-{
-    EPASubbandselectEvent ss;
-
-    ss.command = 1; // 1 == subband selection
-    ss.seqnr = 0;
-    ss.pktsize = htons(5+1);
-    ss.nofbands = 0;
-    ss.bands[0] = 0;
-    board.send(GCFEvent(F_RAW_SIG), &ss.command, 5+1);
 }
 
 int main(int argc, char** argv)

@@ -1,4 +1,4 @@
-//#  ABSSubbandStats.h: interface of the SubbandStats class
+//#  ABSBeamletStats.h: interface of the BeamletStats class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef ABSSUBBANDSTATS_H_
-#define ABSSUBBANDSTATS_H_
+#ifndef ABSBEAMLETSTATS_H_
+#define ABSBEAMLETSTATS_H_
 
 #include <GCF/GCF_RTAnswer.h>
 #include <GCF/GCF_Fsm.h>
@@ -33,27 +33,27 @@
 namespace ABS
 {
 
-  class SubbandStats : public GCFRTAnswer
+  class BeamletStats : public GCFRTAnswer
       {
       public:
 	  /**
 	   * Constructor.
-	   * @param n_subbands Number of subbands.
-	   * @param n_accumulate Number of blocks to accumulate
+	   * @param n_beamlets Number of beamlets.
+	   * @param n_integrations Number of blocks to integrate.
 	   * before updating the property.
 	   */
-	  SubbandStats(int n_subbands, int n_accumulate);
+	  BeamletStats(int n_beamlets, int n_integrations);
 
 	  /**
 	   * Destructor.
 	   */
-	  virtual ~SubbandStats();
+	  virtual ~BeamletStats();
 
 	  /**
 	   * Update statistics from a raw ethernet
 	   * frame.
 	   */
-	  void updateRaw(void* rawdata, size_t count);
+	  void update(blitz::Array<unsigned int, 3>& power_sum, unsigned int seqnr);
 
 	  /**
 	   * @return true if the property set is loaded.
@@ -67,51 +67,58 @@ namespace ABS
 	  void handleAnswer(GCFEvent& event);
 
       protected:
-	  SubbandStats(); // no default constructor
+	  BeamletStats(); // no default constructor
 
       private:
 	  /**
 	   * Don't allow copying this object.
 	   */
-	  SubbandStats (const SubbandStats&); // not implemented
-	  SubbandStats& operator= (const SubbandStats&); // not implemented
+	  BeamletStats (const BeamletStats&); // not implemented
+	  BeamletStats& operator= (const BeamletStats&); // not implemented
 
       private:
 	  /**
-	   * Maximum number of subbands to accumulate
+	   * Maximum number of beamlets to integrate
 	   * statistics for.
 	   */
-	  int                                   m_nsubbands;
+	  int                                   m_nbeamlets;
 
 	  /**
-	   * Total number of block to accumulate before
+	   * Total number of block to integrate before
 	   * updating the property.
 	   */
-	  int                                   m_naccumulate;
+	  int                                   m_nintegrations;
 
 	  /**
-	   * Current accumulation count.
+	   * Current integration count.
 	   */
 	  int                                   m_count;
 
 	  /**
-	   * Index of the subband for which statistics
-	   * are updated.
+	   * Current sequence number.
 	   */
-	  int                                   m_selected_subband;
+	  unsigned int                          m_seqnr;
 
 	  /**
-	   * Array holding accumulated statistics.
+	   * Index of the beamlet for which statistics
+	   * are updated.
 	   */
-	  blitz::Array<std::complex<double>, 1> m_subband_stats;
+	  int                                   m_selected_beamlet;
+
+	  /**
+	   * Array holding integrated power statistic.
+	   * Dimensions m_beamlet_power(first, second)
+	   * first  = n_subbands
+	   * second = 2 -- x and y polarization.
+	   */
+	  blitz::Array<double, 2>               m_beamlet_power;
 
 	  /**
 	   * The property set.
 	   */
 	  GCFRTMyPropertySet                    m_pset;
-
       };
 
 };
      
-#endif /* ABSSUBBAND_H_ */
+#endif /* ABSBEAMLET_H_ */

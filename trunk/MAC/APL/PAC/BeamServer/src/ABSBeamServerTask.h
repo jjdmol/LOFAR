@@ -26,7 +26,7 @@
 #include "ABSSpectralWindow.h"
 #include "ABS_Protocol.ph"
 #include "ABSBeamlet.h"
-#include "ABSSubbandStats.h"
+#include "ABSBeamletStats.h"
 
 #include <GCF/GCF_Control.h>
 #include <GCF/GCF_ETHRawPort.h>
@@ -129,7 +129,6 @@ namespace ABS
 	void wgsettings_action(ABSWgsettingsEvent* we,
 			       GCFPortInterface& port);
 	void wgenable_action();
-	void sbselect();
 
 	/**
 	 * Disable the waveform generator.
@@ -202,7 +201,7 @@ namespace ABS
 	 * Subband statistics object to aggregate statistics
 	 * and to export the statistics as a property.
 	 */
-	SubbandStats m_stats;
+	BeamletStats m_stats;
 
     private:
 	// ports

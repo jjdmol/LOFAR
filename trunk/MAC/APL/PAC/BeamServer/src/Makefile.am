@@ -48,9 +48,9 @@ libabs_la_SOURCES = \
 	ABSBeam.cc \
 	ABSBeamlet.h \
 	ABSBeamlet.cc \
-	ABSSubbandStats.h \
-	ABSSubbandStats.cc \
-	ABSSubbandStatsPSet.h
+	ABSBeamletStats.h \
+	ABSBeamletStats.cc \
+	ABSBeamletStatsPSet.h
 
 bin_PROGRAMS = BeamServer
 
