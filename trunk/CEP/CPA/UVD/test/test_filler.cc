@@ -9,7 +9,7 @@
 
 int main (int argc,const char *argv[])
 {
-  Debug::setLevel("MSIntegratorWP",1);
+  Debug::setLevel("MSIntegratorWP", 1);
   Debug::setLevel("UVSorterWP",1);
   Debug::setLevel("MSFillerWP",2);
   Debug::initLevels(argc,argv);
@@ -19,10 +19,10 @@ int main (int argc,const char *argv[])
   {
     Dispatcher dsp;
     dsp.attach(new LoggerWP(10,Message::LOCAL),DMI::ANON);
-    dsp.attach(new MSIntegratorWP("test.ms",MsgHello|"UVSorterWP.*"),DMI::ANON);
-    dsp.attach(new UVSorterWP(0,5),DMI::ANON);
+    dsp.attach(new MSIntegratorWP, DMI::ANON);
+    //    dsp.attach(new UVSorterWP(0,5),DMI::ANON);
     
-    MSFillerWP *fwp = new MSFillerWP;
+    /*    MSFillerWP *fwp = new MSFillerWP;
     fwp->setHeader("UVData.?.Header");
     fwp->setSegmentHeader("UVData.?.0.Patch.0.Header.Corr.Timeslot");
     fwp->setSegmentHeader("UVData.?.0.Patch.0.Header.Corr.Timeslot");
@@ -31,7 +31,7 @@ int main (int argc,const char *argv[])
     fwp->setMSName("%M.p0.ms");
     
     dsp.attach(fwp,DMI::ANON);
-
+    */
     initGateways(dsp);
     dsp.start();
     dsp.pollLoop();
