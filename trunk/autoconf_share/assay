@@ -103,6 +103,10 @@
 # $Id$
 #
 # $Log$
+# Revision 1.2  2002/07/05 13:38:42  diepen
+# %[BugId: 56]%
+# Added copyright
+#
 # Revision 1.1  2002/05/03 10:50:41  gvd
 # Support of packages in build environement
 #
@@ -133,7 +137,7 @@
 # If there is a .run file then use it.
   if [ -f "$1.run" ]
   then
-     COMMAND="$1.run"
+     COMMAND="./$1.run"
   fi
 
 # If there is a .in file then use it as input.
