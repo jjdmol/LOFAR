@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.4  2002/05/16 15:12:00  schaaf
+//  removed bug in declaration of itsBuffer
+//
 //  Revision 1.3  2002/05/14 11:39:41  gvd
 //  Changed for new build environment
 //
@@ -109,14 +112,14 @@ private:
 
 
 inline int* DH_2DMatrix::getBuffer(int x, int y) { 
-  AssertStr(x >= 0 && x < itsXSize , "x not in range");
-  AssertStr(y >= 0 && y < itsYSize , "y not in range");
+  DbgAssertStr(x >= 0 && x < itsXSize , "x not in range");
+  DbgAssertStr(y >= 0 && y < itsYSize , "y not in range");
   return &(itsDataPacket->itsBuffer[x*itsYSize+y]); 
 }
 
 inline const int* DH_2DMatrix::getBuffer(int x, int y) const { 
-  AssertStr(x >= 0 && x < itsXSize , "x not in range");
-  AssertStr(y >= 0 && y < itsYSize , "y not in range");
+  DbgAssertStr(x >= 0 && x < itsXSize , "x not in range");
+  DbgAssertStr(y >= 0 && y < itsYSize , "y not in range");
   return &(itsDataPacket->itsBuffer[x*itsYSize+y]); 
 }
 
