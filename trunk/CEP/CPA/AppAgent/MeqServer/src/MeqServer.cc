@@ -32,6 +32,7 @@ MeqServer::MeqServer()
   command_map["Get.Node.State"] = &MeqServer::getNodeState;
   command_map["Set.Node.State"] = &MeqServer::setNodeState;
   command_map["Resolve.Children"] = &MeqServer::resolveChildren;
+  command_map["Get.Node.List"] = &MeqServer::getNodeList;
   command_map["Get.Result"] = &MeqServer::getNodeResult;
 }
 
@@ -58,8 +59,14 @@ void MeqServer::createNode (DataRecord::Ref &out,DataRecord::Ref::Xfer &initrec)
   // add to spigot mux if necessary
   data_mux.addNode(ref());
   // form a response message
+  const string & name = ref->name();
+  string classname = ref->className();
+  
   out()[AidNodeIndex] = nodeindex;
-  out()[AidMessage] = ssprintf("node %d created",nodeindex);
+  out()[AidName] = name;
+  out()[AidClass] = classname;
+  out()[AidMessage] = ssprintf("created node %d:%s of class %s",
+                        nodeindex,name.c_str(),classname.c_str());
 }
 
 void MeqServer::deleteNode (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
@@ -106,6 +113,26 @@ void MeqServer::resolveChildren (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   Node & node = resolveNode(*in);
   cdebug(3)<<"resolveChildren for node "<<node.name()<<endl;
   node.resolveChildren();
+}
+
+void MeqServer::getNodeList (DataRecord::Ref &out,DataRecord::Ref::Xfer &)
+{
+  cdebug(2)<<"getNodeList: building list"<<endl;
+  DataRecord &list = out <<= new DataRecord;
+  int count=0;
+  for( int i=1; i<=forest.maxNodeIndex(); i++ )
+  {
+    const Node::Ref & node = forest.getRef(i);
+    if( node.valid() ) // skip deleted nodes
+    {
+      DataRecord & rec = list[AtomicID(i)] <<= new DataRecord;
+      rec[AidName] = node->name();
+      rec[AidNodeIndex] = i;
+      rec[AidClass] = node->className();
+      count++;
+    }
+  }
+  cdebug(2)<<"getNodeList: built list of "<<count<<" nodes"<<endl;
 }
 
 //##ModelId=3F98D91B0064

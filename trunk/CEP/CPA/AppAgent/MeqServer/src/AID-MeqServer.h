@@ -93,6 +93,11 @@ const int AidIndex_int = -1051;
 const AtomicID AidInput(-1092);                   // from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WPInterface.h:19
 const int AidInput_int = -1092;
 #endif
+#ifndef _defined_id_AidList
+#define _defined_id_AidList 1
+const AtomicID AidList(-1046);                    // from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/GWClientWP.h:17
+const int AidList_int = -1046;
+#endif
 #ifndef _defined_id_AidMeqServer
 #define _defined_id_AidMeqServer 1
 const AtomicID AidMeqServer(-1327);               // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:10

@@ -114,7 +114,11 @@ const meqserver := function (appid='MeqServer',
       fail 'node must be specified by name or index';
     return public.meq('Get.Node.State',rec,wait_reply=T);
   }
-  
+  const public.getnodelist := function ()
+  {
+    wider self,public;
+    return public.meq('Get.Node.List',[=],wait_reply=T);
+  }
   
   return ref public;
 }
