@@ -45,7 +45,7 @@ int main()
   DH2.setBlocking(false);
 
   // connect DH1 to DH2
-  DH1.connectTo(DH2, TH_Mem::proto);
+  DH1.connectTo(DH2, TH_Mem());
     
   // initialize
   DH1.init();
