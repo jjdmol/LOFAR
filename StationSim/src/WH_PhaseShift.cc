@@ -119,8 +119,10 @@ void WH_PhaseShift::process ()
 		itsOutputBuffer = 
 		  PhaseShift::phaseShift (itsNfft,
 								  itsInputBuffer,
-								  itsConfig->itsSources[itsSource]->itsTraject->getTheta (itsTrajectCount),
-								  itsConfig->itsSources[itsSource]->itsTraject->getPhi (itsTrajectCount++),
+								  // itsConfig->itsSources[itsSource]->itsTraject->getTheta (itsTrajectCount),
+								  //itsConfig->itsSources[itsSource]->itsTraject->getPhi (itsTrajectCount++),
+								  0.75,//debug
+								  0,
 								  *(itsConfig->itsArray),
 								  itsFreqShift,
 								  itsForwardPlan,
