@@ -43,7 +43,8 @@ namespace LOFAR
     // makeAttrib() is the actual workhorse. It will try to recursively match
     // \a nm against a map of known attributes for the PersistentObject \a
     // po. The recursion ends when there are no more subfields in the field
-    // specifier \a nm (a subfield is delimited by a dot (".")). 
+    // specifier \a nm (a subfield is delimited by a dot (".") or a double
+    // colon ("::")).
     //
     // For example: suppose \a nm contains the string \c
     // "foo.bar". makeAttrib() will first try to match the whole string \c
