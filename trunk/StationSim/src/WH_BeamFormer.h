@@ -36,8 +36,6 @@
 #include <Common/Lorrays.h>
 #include <StationSim/DH_SampleC.h>
 #include <StationSim/GnuPlotInterface.h>
-#include <StationSim/ArrayConfig.h>
-#include <StationSim/QMinterface.h>
 
 class WH_BeamFormer: public WorkHolder
 {
@@ -48,8 +46,7 @@ public:
   /// The first WorkHolder should have nin=0.
   WH_BeamFormer (const string& name,
 				 unsigned int nin, unsigned int nout, unsigned int nrcu,
-				 unsigned int nbeam, unsigned int maxNtarget, 
-				 unsigned int maxNrfi, bool tapstream, string arraycfg, int qms);
+				 unsigned int nsubband, bool tapstream);
 		 
 
   virtual ~WH_BeamFormer();
@@ -96,38 +93,12 @@ private:
   DH_SampleC** itsInHolders;
   DH_SampleC** itsOutHolders;
   DH_SampleC   itsWeight; 
-  //  DH_SampleC   itsLookDir; 
  
   int itsNrcu;       // Number of (active) antennas
-  int itsNbeam;      // Number of beams
-  int itsMaxNtarget; // Maximum number of targets to track
-  int itsMaxNrfi;    // Maximum number of RFI signals that can be detected
+  int itsNsubband;   // Number of subbands
+  LoMat_dcomplex itsW;
   bool itsTapStream;
-
-
-  //DEBUG
-  ifstream itsFileInput;
-  LoMat_dcomplex itsTestVector;
-  gnuplot_ctrl* handle_bp;
-  gnuplot_ctrl* handle_sp;
-  gnuplot_ctrl* handle_ml;
-  int iCount;
-  int plotCount;
-
-  // EXPERIMENT TOOLS
-  ArrayConfig itsArray;
-  LoVec_dcomplex sample; // current sample in Blitz format
-  LoMat_dcomplex itsBuffer;
-  LoVec_dcomplex itsBeamBuffer;
-  LoVec_dcomplex itsLookBuffer;
-
-  int x_size;
-  LoMat_double x_sum;
-
-  int itsPos;
-  int itsQms;
-  LoVec_bool qm;         // Quality measure array
-  ofstream ofWeights;
+  int itsCount;
 };
 
 #endif

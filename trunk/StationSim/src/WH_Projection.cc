@@ -35,24 +35,21 @@
 using namespace blitz;
 
 WH_Projection::WH_Projection (const string& name, unsigned int nin, unsigned int nout,
-			      unsigned int nant, unsigned int maxnrfi, unsigned int ndetnull,
-			      bool tapstream, string arraycfg)
-: WorkHolder       (nin, nout, name, "WH_Projection"),
-  itsInHolders     (0),
-  itsOutHolders    (0),
-  itsNumberOfRFIs  ("in_mdl", 1, 1),
-  itsRFISources    ("in_rfi", nant, maxnrfi),
-  itsNrcu          (nant),
-  itsMaxRFI        (maxnrfi),
-  itsDetectedRFIs  (nin - 3),
-  itsDetNulls      (ndetnull),
-  itsWeight        (itsNrcu),
-  itsSteerv        (itsNrcu),
-  itsV             (0,0),
-  itsA             (itsNrcu),
-  itsTapStream     (tapstream),
-  itsArray         (arraycfg)
-
+							  unsigned int nrcu, unsigned int nsubband, unsigned int maxnrfi, 
+							  bool tapstream)
+  : WorkHolder       (nin, nout, name, "WH_Projection"),
+	itsInHolders     (0),
+	itsOutHolders    (0),
+	itsNumberOfRFIs  ("in_mdl", nsubband, 1),
+	itsRFISources    ("in_rfi", nrcu, nsubband, maxnrfi),
+	itsNrcu          (nrcu),
+	itsNsubband      (nsubband),
+	itsMaxRFI        (maxnrfi),
+	itsNrfi          (nsubband),
+	itsWeight        (nrcu, nsubband),
+	itsA             (nrcu),
+	itsCount         (0),
+	itsTapStream     (tapstream)
 {
   char str[8];
   // nin is the number of steering vectors that will be used as an input (at least one
@@ -62,36 +59,36 @@ WH_Projection::WH_Projection (const string& name, unsigned int nin, unsigned int
   }
     
   for (unsigned int i = 0; i < nin - 2; i++) { // The weight vector from the Weight Determination
-    sprintf (str, "%d",i);                     // And the deterministic nulls
-    if (i == 1) {
-      // make the inholder large enough to contain all the deterministic nulls 
-      itsInHolders[i] = new DH_SampleC(string("in_") + str, itsNrcu, itsDetNulls);
-    } else {
-      itsInHolders[i] = new DH_SampleC(string("in_") + str, itsNrcu, 1);
-    }
+    sprintf (str, "%d",i);
+    itsInHolders[i]= new DH_SampleC (string("in_") + str, itsNrcu, 1);
   }
   if (nout > 0) {
     itsOutHolders = new DH_SampleC* [nout];
   }
   for (unsigned int i = 0; i < nout; i++) {  // The resulting Weight vector
-    sprintf (str, "%d",i);                   // And the steervector for spectrum plot
-    itsOutHolders[i] = new DH_SampleC (string("out_") + str, itsNrcu, 2);
+    sprintf (str, "%d",i);                      
+    itsOutHolders[i] = new DH_SampleC (string("out_") + str, itsNrcu, itsNsubband);
 
     if (itsTapStream) {
       itsOutHolders[i]->setOutFile (string ("Proj_") + str + string(".dat"));
     }
   }
-  int Count = 0;
+  itsV = new LoMat_dcomplex* [itsNsubband];
+  for (unsigned int s = 0; s < itsNsubband; s++) {
+	itsV[s] = new LoMat_dcomplex (itsNrcu, itsMaxRFI);
+  }
+
+  itsNrfi = 0;
 }
 
 WH_Projection::~WH_Projection()
 {
-  for (int i = 0; i < getInputs() - 2; i++) {
+  for (int i = 0; i < getInputs () - 2; i++) {
     delete itsInHolders[i];
   }
   delete [] itsInHolders;
   
- for (int i = 0; i < getOutputs(); i++) {
+ for (int i = 0; i < getOutputs (); i++) {
   delete itsOutHolders[i];
  }
  delete [] itsOutHolders;
@@ -99,8 +96,8 @@ WH_Projection::~WH_Projection()
 
 WH_Projection* WH_Projection::make (const string& name) const
 {
-  return new WH_Projection (name, getInputs(), getOutputs(), itsNrcu, itsMaxRFI, 
-			    itsDetNulls, itsTapStream, itsArray.conf_file);
+  return new WH_Projection (name, getInputs (), getOutputs (), itsNrcu, itsNsubband, 
+							itsMaxRFI, itsTapStream);
 }
 
 
@@ -108,77 +105,51 @@ void WH_Projection::process()
 {
 
   if (getOutputs() > 0) {
-    double phi_det;
-    double theta_det;
-    Count++;
-    LoVec_dcomplex Vvec(itsNrcu);
-    LoMat_dcomplex jVec(itsNrcu, 2); // concatenate the weightvector and the steervector to save connections
-    
-
-	if (itsRFISources.doHandle ()) {  
-
-
-	  // Get the number of detected RFI sources from the STA comp. (internally calc. by MDL)
-	  int NumberOfEigenVectors = (int)(itsNumberOfRFIs.getBuffer()[0]);
-	  //	  itsDetectedRFIs = NumberOfEigenVectors + getInputs() - 3;
-	  
-	  // The number of sources = number of detected sources + deterministic nulls
-	  itsDetectedRFIs = NumberOfEigenVectors + itsDetNulls;
-
-	  // DEBUG
-	  // cout << itsDetectedRFIs << endl;
- 
-	  // Read in the eigenvectors from the STA component. These represent the detected RFI sources and
-	  // should be nulled. The deterministic nulls should be appended to this matrix.
-	  LoMat_dcomplex V (itsRFISources.getBuffer(), shape (itsNrcu, NumberOfEigenVectors), duplicateData);
-	  itsV.resize(V.shape());
-	  itsV = V;
-	  
-  	  if (itsDetNulls != 0 && itsInHolders[1]->doHandle()) {
-	    LoMat_dcomplex detnulls (itsInHolders[1]->getBuffer(), shape (itsNrcu, itsDetNulls), duplicateData);
-	  //	  itsV.transposeSelf(secondDim, firstDim);
-	  // 	  cout << itsV(9,Range::all()) << endl;
-
-	  // Merge the deterministic nulls in the eigenvectors matrix
-	  
-	    itsV.resizeAndPreserve(itsNrcu, itsDetectedRFIs); // Add number of deterministic nulls
-	    itsV(Range::all(), Range(NumberOfEigenVectors, toEnd)) = detnulls;
-
-	    // Test function for deterministic nulls
-//    	    cout << "Checking deterministic nulls" << endl;
-//    	    for (int i = 0; i < itsDetNulls; i++) {
-//    	      LoVec_dcomplex temp(itsNrcu);
-//    	      temp = itsV(Range::all(), NumberOfEigenVectors+i);
-//    	      qm_find_doa(temp , 1, phi_det, theta_det);
-//    	    }
+	// Handle the incoming detected RFI directions
+	if (itsRFISources.doHandle ()) {
+	   LoVec_double rfis (itsNumberOfRFIs.getBuffer (), itsNsubband, duplicateData);
+	   itsNrfi = rfis;
+	   
+	   LoCube_dcomplex V (itsRFISources.getBuffer (), shape (itsNrcu, itsNsubband, itsMaxRFI), duplicateData);
+	   
+	  for (int s = 0; s < itsNsubband; s++) {
+		itsV[s]->resize (itsNrcu, (int)(itsNrfi (s)));
+		*itsV[s] = V (Range::all (), s, Range (V.lbound (thirdDim), (int)(itsNrfi (s)) - 1));
 	  }
 	}
-
+	
+	// Handle the incoming steering vector
 	if (itsInHolders[0]->doHandle ()) {
 	  // Get the steering vector from the weight determination comp. assume that only one will be put in.
 	  LoVec_dcomplex steerv (itsInHolders[0]->getBuffer(), itsNrcu, duplicateData);
 	  itsA = steerv;
-	  itsSteerv = steerv;
 	}
 	
-	if (itsOutHolders[0]->doHandle ()) {  
+	// Calculate the projection and output it.
+	if (itsRFISources.doHandle () || itsInHolders[0]->doHandle ()) { 
 	  // Calculate the weights using the eigenvectors and the steering vector
-	  if (itsDetectedRFIs == 1) {
-	    Vvec = itsV(blitz::Range::all(), itsV.lbound(secondDim));
-	    itsWeight = getWeights(Vvec, itsA);
-	  } else if (itsDetectedRFIs > 1) {		
-	    itsWeight = getWeights(itsV, itsA);
-	  } else {
-	    // itsDetectedRFIs == 0
-	    itsWeight = itsA;
+	  for (unsigned int s = 0; s < itsNsubband; s++) {
+		LoMat_dcomplex* pV = itsV[s];
+		if ((int)(itsNrfi (s)) == 1) {
+		  LoVec_dcomplex Vvec =  (*pV)(blitz::Range::all (), (*pV).lbound (secondDim));
+		  itsWeight (Range::all (), s) = getWeights (Vvec, itsA);
+		} else if ((int)(itsNrfi (s)) > 1) {		
+		  itsWeight (Range::all (), s) = getWeights ((*pV), itsA);   
+		} else {
+		  itsWeight (Range::all (), s) = itsA;
+		}
 	  }
 	}
 
-	// Assign the weightvector and steervector to a matrix for transport
-	jVec(Range::all(), 0) = itsWeight;
-	jVec(Range::all(), 1) = itsSteerv;
-	// Copy output to the next step
-	memcpy(itsOutHolders[0]->getBuffer(), jVec.data(), itsNrcu * 2 * sizeof(DH_SampleC::BufferType));
+	if (itsOutHolders[0]->doHandle ()) {
+	  // DEBUG
+	  cout << "WH_Projection : " << itsCount++ << endl;
+	  
+	  // Copy output to the next step
+	  for (int i = 0; i < getOutputs(); i++) {
+		memcpy(itsOutHolders[i]->getBuffer(), itsWeight.data(), itsNsubband * itsNrcu * sizeof(DH_SampleC::BufferType));
+	  }	  
+	}
   }
 }
 
@@ -272,48 +243,48 @@ LoVec_dcomplex WH_Projection::vm_mult (const LoVec_dcomplex& A, const LoMat_dcom
   return out;
 }
 
-void WH_Projection::qm_find_doa(const LoVec_dcomplex& evec, const double accuracy, double& phi, double& theta)
-{
-  // Estimates the direction of arrival detected by the adaptive algorithms.
-  // Accuracy of the estimation depends on the value of 'accuracy' which is 
-  // given in degrees. Please note that the algorithm is extremely expensive
-  // and inherently inaccurate.
+// void WH_Projection::qm_find_doa(const LoVec_dcomplex& evec, const double accuracy, double& phi, double& theta)
+// {
+//   // Estimates the direction of arrival detected by the adaptive algorithms.
+//   // Accuracy of the estimation depends on the value of 'accuracy' which is 
+//   // given in degrees. Please note that the algorithm is extremely expensive
+//   // and inherently inaccurate.
   
-  LoVec_double px (itsNrcu);
-  LoVec_double py (itsNrcu);
-  LoVec_dcomplex temp_sv(itsNrcu);
+//   LoVec_double px (itsNrcu);
+//   LoVec_double py (itsNrcu);
+//   LoVec_dcomplex temp_sv(itsNrcu);
 
-  px = itsArray.getPointX ();
-  py = itsArray.getPointY ();
+//   px = itsArray.getPointX ();
+//   py = itsArray.getPointY ();
 
-  double c = 0;
-  double max = 0;
-  double phimax = 0;
-  double thetamax = 0;
+//   double c = 0;
+//   double max = 0;
+//   double phimax = 0;
+//   double thetamax = 0;
   
-  for (double a = -180; a <= 180; a = a + accuracy) {
-    for (double b = 0; b <= 90; b = b + accuracy) {
-      temp_sv = steerv ( (a*M_PI/180) , (b*M_PI/180) , px, py );
-      c = abs ( sum ( LCSMath::conj(evec) * temp_sv ) ) ;
-      if ( c > max ) {
-	max = c ; 
-  	phimax = a * M_PI / 180;
-  	thetamax = b * M_PI / 180;
-      }
-    }
-  }
-  phi = phimax;
-  theta = thetamax;
-  cout << "Source found at (" << phimax << ", " << thetamax << ")"<< endl;
-}
+//   for (double a = -180; a <= 180; a = a + accuracy) {
+//     for (double b = 0; b <= 90; b = b + accuracy) {
+//       temp_sv = steerv ( (a*M_PI/180) , (b*M_PI/180) , px, py );
+//       c = abs ( sum ( LCSMath::conj(evec) * temp_sv ) ) ;
+//       if ( c > max ) {
+// 	max = c ; 
+//   	phimax = a * M_PI / 180;
+//   	thetamax = b * M_PI / 180;
+//       }
+//     }
+//   }
+//   phi = phimax;
+//   theta = thetamax;
+//   cout << "Source found at (" << phimax << ", " << thetamax << ")"<< endl;
+// }
 
-LoVec_dcomplex WH_Projection::steerv (double phi, double theta, LoVec_double px, LoVec_double py) {
+// LoVec_dcomplex WH_Projection::steerv (double phi, double theta, LoVec_double px, LoVec_double py) {
   
-  FailWhen1( px.size() != py.size(),"vector size mismatch" );
+//   FailWhen1( px.size() != py.size(),"vector size mismatch" );
 
-  LoVec_dcomplex res( px.size() );
-  dcomplex i = dcomplex (0,1);
+//   LoVec_dcomplex res( px.size() );
+//   dcomplex i = dcomplex (0,1);
 
-  res = exp( -2*M_PI*i*( px*sin(theta)*cos(phi) + py*sin(theta)*sin(phi) ) );
-  return res;
-}
+//   res = exp( -2*M_PI*i*( px*sin(theta)*cos(phi) + py*sin(theta)*sin(phi) ) );
+//   return res;
+// }

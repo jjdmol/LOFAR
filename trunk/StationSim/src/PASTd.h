@@ -26,12 +26,8 @@
 
 #include <Math/LCSMath.h>
 #include <Common/Lorrays.h>
-#include <StationSim/GnuPlotInterface.h>
 
-void pastd_step (LoVec_dcomplex& x, LoMat_dcomplex& W, LoVec_double& d_tmp, 
-		 const int nmax, const double Beta) ;
-
-int pastd (LoMat_dcomplex fifo, int numsnaps, const int interval, const double beta,
+int pastd (LoMat_dcomplex fifo, int numsnaps, int interval, double beta,
 	   LoVec_double Evalue, LoMat_dcomplex Evector);
 
 #endif

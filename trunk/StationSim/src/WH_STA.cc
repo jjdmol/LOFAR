@@ -35,221 +35,212 @@
 #include <StationSim/PASTd.h>
 #endif
 
-WH_STA::WH_STA (const string& name,  int nin,  int nout,
-		int nant,  int maxnrfi,  int buflength, 
-		int alg, int pdinit, int pdupdate, 
-		int pdinterval, double pdbeta, int detNrfi)
-: WorkHolder      (nin, nout, name, "WH_STA"),
-  itsInHolders    (0),
+WH_STA::WH_STA (const string& name, int nout, int nrcu, int nsubband, 
+				int maxnrfi, int buflength, string alg,int pdinit, int pdupdate, 
+				int pdinterval, double pdbeta, const int detrfi)
+: WorkHolder      (1, nout, name, "WH_STA"),
+  itsInHolder     ("in", nrcu, nsubband),
   itsOutHolders   (0),
-  itsNumberOfRFIs ("out_mdl", 1, 1),
-  itsNrcu         (nant),
-  itsDetRFI       (detNrfi),
+  itsNumberOfRFIs (string("out_mdl"), nsubband, 1),
+  itsNrcu         (nrcu),
+  itsNsubband     (nsubband),
   itsMaxRFI       (maxnrfi),
   itsBufLength    (buflength),
-  itsBuffer       (nant, buflength),
+  itsBuffer       (nrcu, nsubband, buflength),
   itsPos          (0),
-  itsEvectors     (nant,nant),
-  itsEvalues      (nant),
-  itsAcm          (nant, nant),
+  itsEvectors     (nrcu, nrcu, nsubband),
+  itsEvalues      (nrcu, nsubband),
+  itsAcm          (nrcu, nrcu), 
   itsAlg          (alg),
   itsPASTdInterval(pdinterval),
   itsPASTdBeta    (pdbeta),
   itsPASTdInit    (pdinit),
-  itsUpdateRate   (pdupdate)
+  itsUpdateRate   (pdupdate),
+  itsCount        (0),
+  itsDetRFI       (detrfi)
 {
   char str[8];
-  if (nant > 0) {
-    itsInHolders = new DH_SampleC* [nant];
-  }
-  for (int i = 0; i < nant; i++) {
-    sprintf (str, "%d",i);
-    itsInHolders[i] = new DH_SampleC (string("in_") + str, 1, 1);
-  } 
   if (nout - 1 > 0) {
-    itsOutHolders = new DH_SampleC* [nout - 1];
+    itsOutHolders = new DH_CubeC* [nout];
   }
   for (int i = 0; i < nout - 1; i++) {
     sprintf (str, "%d",i);
     // Define a space large enough to contain the max number of 
     // RFI sources. This should be implemented more elegantly.
-    itsOutHolders[i] = new DH_SampleC (string("out_") + str, itsNrcu, itsMaxRFI);    
+    itsOutHolders[i] = new DH_CubeC (string("out_") + str, itsNrcu, itsNsubband, itsMaxRFI);    
   }
-  //DEBUG
-//    itsTestVector.resize(29952,92);
-//    itsFileInput.open ("/home/chris/ExperimentData/DatagenTest");
-//    itsFileInput >> itsTestVector;
-//    itsFileInput.close();
-
   itsBuffer = 0;
-  itsRFI = 0;
-  itsCount = 0;
+
+  // DEBUG
+  itsC = 0;
 }
 
 WH_STA::~WH_STA()
 {  
-  for (int i = 0; i < getInputs(); i++) {
-    delete itsInHolders[i];
+  for (int i = 0; i < getOutputs() - 1; i++) {
+	delete itsOutHolders[i];
   }
-  delete [] itsInHolders;
-  
- for (int i = 0; i < getOutputs() - 1; i++) {
-  delete itsOutHolders[i];
- }
- delete [] itsOutHolders;
-
- // DEBUG
- // itsFileInput.close ();
+  delete [] itsOutHolders;
 }
 
 WH_STA* WH_STA::make (const string& name) const
 {
-  return new WH_STA (name, getInputs(), getOutputs(), itsNrcu, itsMaxRFI, 
-		     itsBufLength, itsAlg, itsPASTdInit, itsUpdateRate, itsPASTdInterval,
-		     itsPASTdBeta, itsDetRFI);
+  return new WH_STA (name, getOutputs(), itsNrcu, itsNsubband, itsMaxRFI, itsBufLength, 
+					 itsAlg, itsPASTdInit, itsUpdateRate, itsPASTdInterval, itsPASTdBeta,
+					 itsDetRFI);
 }
-
-void WH_STA::preprocess()
-{
-
-}
-
 
 void WH_STA::process()
 {
   using namespace blitz;
-  double RFI;
+  Range all = Range::all ();
 
   // Place the next incoming sample vector in the snapshot buffer 
   // Keep a cylic buffer for the input snapshots
-  
-  for (int i = 0; i < itsNrcu; i++) {
-    itsBuffer(i, itsPos) = itsInHolders[i]->getBuffer()[0];    
+  for (int r = 0; r < itsNrcu; r++) {
+	for (int s = 0; s < itsNsubband; s++) {
+ 	  itsBuffer (r, s, itsPos) = itsInHolder.getBuffer()[s + r * itsNsubband];
+	}
   }
-  if (itsCount < itsBufLength) {
-    // Buffer not yet filled.. Do nothing
-    itsCount++;
-  } else {
-    
-
-  // DEBUG
-  //  itsCount = (itsCount + 1) % itsTestVector.cols();
+  itsPos = ++itsPos % itsBuffer.extent (thirdDim);
 
   if (getOutHolder(0)->doHandle ()) {
-      // Create contigeous buffer   
-    itsBuffer = CreateContigeousBuffer(itsBuffer, itsPos);
 
-    // Buffer shape 
-    //itsPos = itsBuffer.lbound(secondDim);
-    itsPos = itsBuffer.ubound(secondDim);
-    
-    switch (itsAlg) {
-        case -1 : // Skip the adaptive beamforming 
-	  {
-	    itsEvectors = 0;
-	    itsEvalues  = 0;
-	    break;
+	// Debug
+	//	cout << "WH_STA, oncontigeous buffer: " << endl << itsBuffer << endl;
+
+	// Create contigeous buffer
+	itsBuffer = CreateContigeousBuffer (itsBuffer, itsPos);
+	itsPos = 0; // Set cyclic buffer pointer to the first entry because it is ordered now
+
+	// Debug
+	//	cout << "WH_STA, contigeous buffer: " << endl << itsBuffer << endl;
+	
+	if (itsAlg == "EVD") {
+	  for (int s = 0; s < itsNsubband; s++) {
+		LoMat_dcomplex b = itsBuffer (all, s, all).copy ();
+		LoMat_dcomplex evec (itsNrcu, itsNrcu);
+		LoVec_double eval (itsNrcu);
+
+		// Debug
+		//		cout << "WH_STA, contigeous subband buffer: " << endl << b << endl;
+
+		itsAcm = LCSMath::acm (b);     // calculate the ACM
+		LCSMath::eig (itsAcm, evec, eval); 
+
+		// Debug
+// 		cout << "WH_STA, acm: " << endl << itsAcm << endl;
+// 		cout << "WH_STA, evec: " << endl << evec << endl;
+// 		cout << "WH_STA, eval: " << endl << eval << endl;
+		
+		// Use these functions to reverse a matrix or vector and not the blitz ones, due to memory
+		// incontiguous return values.
+		itsEvectors (all, all, s) = ReverseMatrix (evec, firstDim);
+		itsEvalues (all, s) = ReverseVector (eval);	  
 	  }
+	  ++itsCount;
+	} else if (itsAlg == "SVD") {
+	  for (int s = 0; s < itsNsubband; s++) {
+		LoMat_dcomplex dummy (itsBuffer.extent(blitz::secondDim), itsBuffer.extent(blitz::secondDim));
+		LoMat_dcomplex b = itsBuffer (all, s, all).copy ();
+		LoMat_dcomplex evec;
+		LoVec_double eval;
 
-        case 0 : // ACM and EVD
-	  {
-	    // DEBUG
-//          itsBuffer.resize(itsNrcu, 100);
-//  	    itsBuffer = itsTestVector(Range::all(), Range(0, 99)) ;
+		LCSMath::svd (b, evec, dummy, eval);		  
 
-	    itsAcm = LCSMath::acm(itsBuffer);
-	    LCSMath::eig(itsAcm, itsEvectors, itsEvalues);
-	    itsEvectors = LCSMath::hermitianTranspose(itsEvectors);
-	    itsEvectors = ReverseMatrix (itsEvectors, secondDim);
-  	    itsEvalues = ReverseVector(itsEvalues);
-	    itsCount = (itsCount + 1);
-
-	    break;
+		itsEvectors (all, all, s) = evec;
+		itsEvalues (all, s) = eval;
 	  }
-	case 1 : // SVD
-	  {
-	    LoMat_dcomplex dummy (itsBuffer.extent(blitz::secondDim), itsBuffer.extent(blitz::secondDim));
-	    LCSMath::svd (itsBuffer, itsEvectors, dummy, itsEvalues);
-	    //itsEvalues = sqr(itsEvalues) - 1;
-	    itsCount = (itsCount + 1);
-	    break;
-	  }
-	case 2 : // PASTd -- INIT
-	  {
-  	    if (itsPASTdInit == 0 && itsCount == 0) {
-	      itsAcm = LCSMath::acm (itsBuffer);		    // calculate the ACM
-     	      LCSMath::eig (itsAcm, itsEvectors, itsEvalues);       // using the ACM, calc eigen vect/ values
-	      // EVD places the signal eigenvectors last
-	      // Post process to get them in front
-      	      itsEvectors = LCSMath::hermitianTranspose(itsEvectors);
-	      itsEvectors = ReverseMatrix (itsEvectors, firstDim);
-     	      itsEvalues = ReverseVector (itsEvalues);
-	      itsCount = (itsCount + 1) % itsUpdateRate;
-	    } else if (itsPASTdInit == 1 && itsCount == 0) {
+	  ++itsCount;
+	} else if (itsAlg == "PASTd") {
+	  // Do PASTd
+	  if (itsPASTdInit == 0 && itsCount == 0) {
+		for (int s = 0; s < itsNsubband; s++) {
+		  LoMat_dcomplex b = itsBuffer (all, s, all).copy ();
+		  LoMat_dcomplex evec (itsNrcu, itsNrcu);
+		  LoVec_double eval (itsNrcu);
+		  
+		  itsAcm = LCSMath::acm (b);     // calculate the ACM
+		  //		  LCSMath::eig (itsAcm, evec, eval); 
+		  
+		  // Use these functions to reverse a matrix or vector and not the blitz ones, due to memory
+		  // incontiguous return values.
+		  itsEvectors (all, all, s) = ReverseMatrix (evec, firstDim);
+		  itsEvalues (all, s) = ReverseVector (eval);	  
+		}
+		itsCount = ++itsCount % itsUpdateRate;
+	  } else if (itsPASTdInit == 1 && itsCount == 0) {
 	      // Do an SVD to initialize PASTd
-	      LoMat_dcomplex dummy (itsBuffer.extent(blitz::secondDim), itsBuffer.extent(blitz::secondDim));
-	      LCSMath::svd (itsBuffer, itsEvectors, dummy, itsEvalues);
-	      itsCount = (itsCount + 1) % itsUpdateRate;
-	    } else if (itsCount > 0) {
+		for (int s = 0; s < itsNsubband; s++) {
+		  LoMat_dcomplex dummy (itsBuffer.extent(blitz::secondDim), itsBuffer.extent(blitz::secondDim));
+		  LoMat_dcomplex b = itsBuffer (all, s, all).copy ();
+		  LoMat_dcomplex evec;
+		  LoVec_double eval;
+		  
+		  LCSMath::svd (b, evec, dummy, eval);		  
+		  
+		  itsEvectors (all, all, s) = evec;
+		  itsEvalues (all, s) = eval;
+		}
+		itsCount = ++itsCount % itsUpdateRate;
+	  } else if (itsCount > 0) {
 	    // PASTd step
-	      pastd(itsBuffer, itsBufLength, itsPASTdInterval, itsPASTdBeta, itsEvalues, itsEvectors);
-	      itsCount = (itsCount + 1) % itsUpdateRate;
-	    }
-	    break;
-	  }      
-	default :
-	  itsAlg = 0;
-	  break;
+		for (int s = 0; s < itsNsubband; s++) {
+		  LoMat_dcomplex b = itsBuffer (all, s, all).copy ();
+		  LoVec_double eval = itsEvalues (all, s).copy ();
+		  LoMat_dcomplex evec = itsEvectors (all, all, s).copy ();
+
+		  pastd (b, itsBufLength, itsPASTdInterval, itsPASTdBeta, eval, evec);
+
+		  itsEvectors (all, all, s) = evec;
+		  itsEvalues (all, s) = eval;	  		  
+		}
+		itsCount = ++itsCount % itsUpdateRate;
+	  }
+	} else {
+	  itsAlg = "EVD";	  
 	} 
+
 	// Detect the number of sources in the signal
 	// make sure the number of sources detected does not exceed the 
 	// maximum number of sources that can be handled by the
 	// algorithm. If no adaptive beamforming is done, assume 0
-        // interfering sources.
-        if (itsAlg != -1) {
-	  if (itsDetRFI == 0) {
-	    // No number of RFI given by the user
-	    RFI = (double) mdl (itsEvalues, itsNrcu, itsBufLength);
-	  } else {
-	    // The user provided a number of RFI's detected. This overrides 
-	    // the detected number of RFI's
-	    RFI = itsDetRFI;
+	// interfering sources.
+	// Determine the number of sources in the signal
+	LoVec_double RFI (itsNsubband);
+	if (itsDetRFI == 0) {
+	  for (int s = 0; s < itsNsubband; s++) {
+		RFI (s)= (double) mdl (itsEvalues (all, s), itsNrcu, itsBufLength);
+		
+		if (RFI (s) > itsMaxRFI) RFI (s) = itsMaxRFI;
 	  }
-
-	  // Now check if the number of RFI's is sane
-	  if (RFI > itsMaxRFI) RFI = itsMaxRFI;
-	  // maxNRFI for PASTd is sqrt(N)
-	  // all other eigen vectors may result in NaN
-	  if (RFI > ceil(sqrt((double)itsNrcu)) && itsAlg == 2) RFI = ceil(sqrt((double)itsNrcu));
-	  // maxNRFI for EVD and SVD are N
-	  // this check should not be needed
-	  if (RFI > itsNrcu) RFI = itsNrcu;
-
-	  itsRFI = RFI;
-//	  cout << "RFI's detected : "<< itsRFI << endl;
 	} else {
-	  // no adaptive algorithm used
-	  itsRFI = 0;
+	  // The user provided a number of RFI's detected. This overrides 
+	  // the detected number of RFI's
+	  RFI = itsDetRFI;
 	}
-	// Select the appropriate Eigen vectors corresponding to the detected sources
-	LoMat_dcomplex B (itsNrcu, itsRFI);
-	B = itsEvectors (Range::all(), Range(itsEvectors.lbound(secondDim), itsRFI-1));
 
-	// Now assign the Eigen vectors to the output
+	// Find the appropriate Eigen vectors
+	LoCube_dcomplex B (itsNrcu, itsMaxRFI, itsNsubband);
+	B = itsEvectors (all, Range (itsEvectors.lbound (firstDim), itsMaxRFI - 1), all);
+
+	// Now copy the Eigen vectors to the output
 	for (int i = 0; i < getOutputs() - 1; i++) {
-	  memcpy(itsOutHolders[i]->getBuffer(), B.data(), 
-			 itsNrcu * (int)itsRFI * sizeof(DH_SampleC::BufferType));
+	  memcpy (itsOutHolders[i]->getBuffer (), B.data (), 
+			  itsNrcu * itsNsubband * itsMaxRFI * sizeof (DH_CubeC::BufferType));	  
 	}
-	memcpy(itsNumberOfRFIs.getBuffer(), &itsRFI, sizeof(DH_SampleR::BufferType));
+
+	// Copy the mdl results to the output
+	memcpy (itsNumberOfRFIs.getBuffer (), RFI.data (), sizeof (DH_SampleR::BufferType) * itsNsubband);
+
+	// DEBUG
+	cout << "WH_STA : " << itsC++ << endl;	
+
   } else {
     // The STA is now dormant. Do nothing.
-    if (itsCount != 0 && itsAlg == 2) {
-      itsCount = (itsCount + 1) % itsUpdateRate;
+    if (itsCount != 0 && itsAlg == "PASTd") {
+      itsCount = ++itsCount % itsUpdateRate;
     }
-  }
-  // Buffer shape 
-  //itsPos = (itsPos + itsBuffer.cols() - 1) % itsBuffer.cols();
-  itsPos = (itsPos + 1) % itsBuffer.cols();
   }
 }
 
@@ -260,33 +251,30 @@ void WH_STA::dump() const
 DH_SampleC* WH_STA::getInHolder (int channel)
 {
   AssertStr (channel < getInputs(), "Input channel too high");
-  return itsInHolders[channel];
+  return &itsInHolder;
 }
 
 DataHolder* WH_STA::getOutHolder (int channel)
 {
-  AssertStr (channel < getOutputs(), "Output channel too high"); 
+  AssertStr (channel < (getOutputs()), "Output channel too high"); 
   if (channel < getOutputs() - 1)
 	return itsOutHolders[channel];
   else
 	return &itsNumberOfRFIs;  
 }
 
-LoMat_dcomplex WH_STA::CreateContigeousBuffer (const LoMat_dcomplex& aBuffer, int pos)
+LoCube_dcomplex WH_STA::CreateContigeousBuffer (const LoCube_dcomplex& aBuffer, int pos)
 {
   using namespace blitz;
-  AssertStr (pos <= aBuffer.ubound(secondDim), "Can't create contigeous buffer, pos too high!");
-  
-  Range all = Range::all();
-  int ub = aBuffer.ubound(secondDim) ;
-  LoMat_dcomplex output (aBuffer.shape());
-  
-  // Buffer shape 
-//    output (all, Range(fromStart, ub - pos) ) = aBuffer (all, Range(pos, toEnd) );
-//    output (all, Range(ub - pos + 1, toEnd ) )    = aBuffer (all, Range(fromStart, pos - 1) ) ;
+  AssertStr (pos <= aBuffer.ubound(thirdDim), "Can't create contigeous buffer, pos too high!");
+  Range all = Range::all ();
+  LoCube_dcomplex output (aBuffer.shape ());
 
-  output(all, Range(fromStart, ub - pos - 1)) = aBuffer(all, Range(pos+1, toEnd)) ;
-  output(all, Range(ub - pos, toEnd)) = aBuffer(all, Range(fromStart, pos));
+  output (all, all, Range (output.lbound (thirdDim), itsBufLength - pos - 1)) = 
+	aBuffer (all, all, Range (pos, aBuffer.ubound (thirdDim)));
+
+  output (all, all, Range (itsBufLength - pos, output.ubound (thirdDim))) = 
+	aBuffer (all, all, Range (aBuffer.lbound (thirdDim), pos - 1));
 
   return output;
 }

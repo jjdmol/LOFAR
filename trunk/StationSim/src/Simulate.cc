@@ -24,10 +24,14 @@
 #include <StationSim/StationSim.h>
 #include <BaseSim/SimulatorParseClass.h>
 #include <Common/lofar_iostream.h>
+#include <Common/Debug.h>
 
 
-int main (int argc, const char** argv)
+int main (int argc, char* argv[])
 {
+  // Set trace level.
+  Debug::initLevels (argc, (const char**)argv);
+
   try {
     StationSim simulator;
     simulator.setarg (argc, argv);
