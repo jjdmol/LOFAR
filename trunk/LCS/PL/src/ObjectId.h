@@ -23,11 +23,6 @@
 #ifndef LCS_PL_OBJECTID_H
 #define LCS_PL_OBJECTID_H
 
-//# Includes
-#include <PL/Exception.h>
-
-#include <string>
-
 namespace LCS
 {
   namespace PL
@@ -35,14 +30,6 @@ namespace LCS
 
     //
     // ObjectId is used to uniquely identify a persistent object.
-    //
-    // \todo Currently, random bytes are read from /dev/urandom. It
-    // turned out that reading from this device is relatively slow.
-    // Generating a random 8-byte number using get_random_bytes()
-    // takes approx. 10 microseconds on lofar9 (which has a 1.6 GHz CPU).
-    // If we use random() only we can reduce this time significantly,
-    // to something like 0.7 microseconds or better. This will probably
-    // be good enough for our purposes.
     //
     class ObjectId
     {
@@ -53,36 +40,32 @@ namespace LCS
       // NullId represents a (default) null object-id value.
       static const oid_t NullId;
 
-      // Default constructor. The object-id is lazily initialized,
-      // i.e. it is initialized once get() or set() is being called.
-      ObjectId();
+      // Default constructor.
+      ObjectId() { generate(); }
 
       // Set the stored object-id equal to aOid.
-      // \post itsIsInitialized is true.
-      void set(const oid_t& aOid);
+      void set(const oid_t& aOid) { itsOid = aOid; }
 
       // Return the stored object-id.
-      // \post itsOid will have been initialized if it wasn't already.
-      // \post itsIsInitialized is true.
-      const oid_t& get() const;
+      const oid_t& get() const { return itsOid; }
 
     private:
+      // Flag indicating whether the random generator has been initialized.
+      static bool theirInitFlag;
+
       // Here we keep the unique object-id.
-      // \note itsOid must be mutable because we use lazy initialization in 
-      // the get() method.
-      mutable oid_t itsOid;
+      oid_t itsOid;
 
-      // Flag that indicates whether itsOid has been initialized.
-      // \note itsIsInitialized must be mutable because we use lazy
-      // initialization in the get() method.
-      mutable bool itsIsInitialized;
-
-      // Initialize itsOid with a (hopefully) unique object-id.
-      // \note This method must be const, because it is called by get(), but
-      // it \e does change itsOid and itsIsInitialized.
-      void init() const;
-
+      // Generate a (hopefully) unique object-id.
+      void generate();
     };
+
+
+    inline bool operator==(const ObjectId& lhs, const ObjectId& rhs)
+    {
+      return lhs.get() == rhs.get();
+    }
+
 
   } // namespace PL
 

@@ -29,10 +29,9 @@
  * License.                                                                 *
  ****************************************************************************/
 
-#include <stdlib.h>
-#include <sys/time.h>
+#include <cstdlib>
 #include <unistd.h>
-#include <fcntl.h>
+#include <sys/time.h>
 
 /* 
  * It would probably be better to add a test in configure, but most systems
@@ -45,96 +44,39 @@
 #define rand() 		random()
 #endif
 
-static int get_random_fd(void)
-{
-  struct timeval	tv;
-  static int	fd = -2;
-  int		i;
-
-  if (fd == -2) {
-    gettimeofday(&tv, 0);
-    fd = open("/dev/urandom", O_RDONLY);
-    if (fd == -1)
-      fd = open("/dev/random", O_RDONLY | O_NONBLOCK);
-    srand((getpid() << 16) ^ getuid() ^ tv.tv_sec ^ tv.tv_usec);
-  }
-  /* Crank the random number generator a few times */
-  gettimeofday(&tv, 0);
-  for (i = (tv.tv_sec ^ tv.tv_usec) & 0x1F; i > 0; i--)
-    rand();
-  return fd;
-}
-
-
-/*
- * Generate a series of random bytes.  Use /dev/urandom if possible,
- * and if not, use srandom/random.
- */
-static void get_random_bytes(void *buf, int nbytes)
-{
-  int i, n = nbytes, fd = get_random_fd();
-  int lose_counter = 0;
-  unsigned char *cp = (unsigned char *) buf;
-
-  if (fd >= 0) {
-    while (n > 0) {
-      i = read(fd, cp, n);
-      if (i <= 0) {
-	if (lose_counter++ > 16)
-	  break;
-	continue;
-      }
-      n -= i;
-      cp += i;
-      lose_counter = 0;
-    }
-  }
-	
-  /*
-   * We do this all the time, but this is the only source of
-   * randomness if /dev/random/urandom is out to lunch.
-   */
-  for (cp = (unsigned char *) buf, i = 0; i < nbytes; i++)
-    *cp++ ^= (rand() >> 7) & 0xFF;
-  return;
-}
-
-    
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-//                      Implementation of class methods                     //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
-
 namespace LCS
 {
   namespace PL
   {
-    
+    //
+    // Definition of static members
+    //
     const ObjectId::oid_t ObjectId::NullId = ObjectId::oid_t();
+    bool ObjectId::theirInitFlag = false;
 
-    ObjectId::ObjectId() : itsOid(oid_t()), itsIsInitialized(false)
+    //
+    // Implementation of class methods
+    //
+    void ObjectId::generate()
     {
-    }
-
-    const ObjectId::oid_t& ObjectId::get() const
-    {
-      if (!itsIsInitialized) {
-	init();
-	itsIsInitialized = true;
+      if (!theirInitFlag) {
+        // Initialize the random generator using a random seed.
+        timeval tv;
+        gettimeofday(&tv, 0);
+        srand((getpid() << 16) ^ getuid() ^ tv.tv_sec ^ tv.tv_usec);
+        theirInitFlag = true;
       }
-      return itsOid;
-    }
 
-    void ObjectId::set(const ObjectId::oid_t& aOid)
-    {
-      itsOid = aOid;
-      itsIsInitialized = true;
-    }
+      // Generate our random number one byte at a time.
+      // We have to do it this way, because on older rand() implementations
+      // \li the returned number is in the range from 0 to (2^15)-1;
+      // \li the lower-order bits are much less random than the higher-order
+      //     bits, so we can only use the high-byte.
+      unsigned char *cp = (unsigned char *)(&itsOid);
+      for (unsigned int i = 0; i < sizeof(itsOid); i++) {
+        *cp++ ^= (rand() >> 7) & 0xFF;
+      }
 
-    void ObjectId::init() const
-    {
-      get_random_bytes(&itsOid, sizeof(itsOid));
     }
 
   } // namespace PL
