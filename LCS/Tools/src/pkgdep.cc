@@ -384,14 +384,14 @@ void writeBody (ostream& os, OutType outtype, const string& pkg, UsedMap& dep,
 		const string& hreftxt, bool isLast, bool skipSingle)
 {
   // If it's a single package, only print its children if told so.
-  if (isLast && skipSingle) {
+  set<string> uses = dep[pkg].itsUses;
+  if (isLast && skipSingle && !uses.empty()) {
     uint newSeqnr = 1;
-    set<string> uses = dep[pkg].itsUses;
     for (set<string>::const_iterator iter = uses.begin();
 	 iter != uses.end();
 	 ++iter, ++newSeqnr) {
-      writeBody (os, outtype, *iter, dep, maxdepth, newSeqnr, strip, hreftxt,
-		 newSeqnr==uses.size(), false);
+      writeBody (os, outtype, *iter, dep, maxdepth-1, newSeqnr, strip,
+		 hreftxt, newSeqnr==uses.size(), false);
     }
   } else {
     switch (outtype) {
