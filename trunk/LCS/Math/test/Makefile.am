@@ -1,5 +1,8 @@
 check_PROGRAMS			= tLCSMath tIComplex
 
+TESTS	= tLCSMath_test.sh \
+	  tIComplex_test.sh
+
 tLCSMath_SOURCES		= tLCSMath.cc
 tLCSMath_LDADD			= ../src/libmath.la
 tLCSMath_DEPENDENCIES		= ../src/libmath.la $(LOFAR_DEPEND)
