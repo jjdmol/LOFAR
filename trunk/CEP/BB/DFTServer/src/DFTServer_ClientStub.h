@@ -10,15 +10,17 @@ class DFTServer_ClientStub
 {
  public:
   DFTServer_ClientStub() {
-    const ParameterSet myPS("DFTServer.param");
-    itsTHProtoRequest = new TH_Socket(myPS.getString("DFTConnection.ClientHost"),   // sendhost
-				 myPS.getString("DFTConnection.ServerHost"),   // recvhost
-				 myPS.getInt("DFTConnection.RequestPort")    // port
+   const ParameterSet myPS("DFTServer.param");
+   itsTHProtoRequest = new TH_Socket(myPS.getString("DFTConnection.ClientHost"), // sendhost
+				     myPS.getString("DFTConnection.ServerHost"), // recvhost
+				     myPS.getInt("DFTConnection.RequestPort")    // port
+				     );    
+   itsTHProtoResult = new TH_Socket(myPS.getString("DFTConnection.ServerHost"), // sendhost
+				    myPS.getString("DFTConnection.ClientHost"), // recvhost
+				    myPS.getInt("DFTConnection.ResultPort")     // port
                         );    
-    itsTHProtoResult = new TH_Socket(myPS.getString("DFTConnection.ServerHost"),   // sendhost
-				  myPS.getString("DFTConnection.ClientHost"),   // recvhost
-				  myPS.getInt("DFTConnection.ResultPort")    // port
-                        );    
+    itsRequestDH.setID(998); //todo: come with a usefull ID..
+    itsRequestDH.setID(999);
   };
   ~DFTServer_ClientStub() {};
 
