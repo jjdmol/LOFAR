@@ -43,11 +43,22 @@
   WRITE(os, strm, width); \
   os << endl
 
+#define EXPR(arg) \
+  Expr(arg)
+
+#define EXPR_STR(arg) \
+  "Expr(" << #arg << ")"
+
+#define CONST_EXPR(arg) \
+  WRITE(cout, EXPR_STR(arg), 50); \
+  WRITE(cout, " : ", 0); \
+  WRITELN(cout, EXPR(arg), 0)
+
 #define UNARY(oper, arg) \
-  oper Expr(arg)
+  oper EXPR(arg)
 
 #define UNARY_STR(oper, arg) \
-  #oper << "Expr(" << #arg << ")"
+  #oper << EXPR_STR(arg)
   
 #define UNARY_EXPR(oper, arg) \
   WRITE(cout, UNARY_STR(oper, arg), 50); \
@@ -55,10 +66,10 @@
   WRITELN(cout, UNARY(oper, arg), 0)
 
 #define BINARY(lhs, oper, rhs) \
-  Expr(lhs) oper Expr(rhs)
+  EXPR(lhs) oper EXPR(rhs)
 
 #define BINARY_STR(lhs, oper, rhs) \
-  "Expr(" << #lhs << ") " << #oper << " Expr(" << #rhs << ")"
+  EXPR_STR(lhs) << " " << #oper << " " << EXPR_STR(rhs)
 
 #define BINARY_EXPR(lhs, oper, rhs) \
   WRITE(cout, BINARY_STR(lhs, oper, rhs), 50); \
@@ -66,10 +77,10 @@
   WRITELN(cout, (BINARY(lhs, oper, rhs)), 0)
 
 #define SQL_UNARY(expr, oper, arg) \
-  Expr(expr).oper(arg)
+  EXPR(expr).oper(arg)
 
 #define SQL_UNARY_STR(expr, oper, arg) \
-  "Expr(" << #expr << ")." << #oper << "(" << #arg << ")"
+  EXPR_STR(expr) << "." << #oper << "(" << #arg << ")"
 
 #define SQL_UNARY_EXPR(expr, oper, arg) \
   WRITE(cout, SQL_UNARY_STR(expr, oper, arg), 50); \
@@ -77,11 +88,11 @@
   WRITELN(cout, SQL_UNARY(expr, oper, arg), 0)
 
 #define SQL_BINARY(expr, oper, lhs, rhs) \
-  Expr(expr).oper(Expr(lhs),Expr(rhs))
+  EXPR(expr).oper(EXPR(lhs),EXPR(rhs))
 
 #define SQL_BINARY_STR(expr, oper, lhs, rhs) \
-  "Expr(" << #expr << ")." << #oper \
-          << "(Expr(" << #lhs << "),Expr(" << #rhs << "))"
+  EXPR_STR(expr) << "." << #oper \
+          << "(" << EXPR_STR(lhs) << "," << EXPR_STR(rhs) << ")"
 
 #define SQL_BINARY_EXPR(expr, oper, lhs, rhs) \
   WRITE(cout, SQL_BINARY_STR(expr, oper, lhs, rhs), 50); \
@@ -94,6 +105,14 @@ using namespace LOFAR::PL::Query;
 
 int main()
 {
+  // Constant expressions
+  {
+    cout << endl << "=== Constant expressions ===" << endl;
+    CONST_EXPR(1);
+    CONST_EXPR(3.14);
+    CONST_EXPR("Where's Johnny?!");
+  }
+
   // Arithmetic expressions
   {
     cout << endl << "=== Arithmetic expressions ===" << endl;
@@ -162,8 +181,6 @@ int main()
     SQL_UNARY_EXPR(BINARY(3,*,UNARY(-,4)),notIn,c);
 
     cout << endl << "=== SQL LIKE expressions ===" << endl;
-    cout << (Expr("Hello")+"_World").like("Hello_*") << endl;
-
     SQL_UNARY_EXPR("Hello_World",like,"Hello_*");         // true
     SQL_UNARY_EXPR("Hello_World",like,"*_World");         // true
     SQL_UNARY_EXPR("Hello_World",like,"Hello_?");         // false
@@ -193,6 +210,12 @@ int main()
     SQL_UNARY_EXPR("Hello\\\\World",like,"Hello\\\\?");   // false
     SQL_UNARY_EXPR("Hello\\\\World",like,"?\\\\World");   // false
     SQL_UNARY_EXPR("Hello\\\\World",like,"Hello?World");  // true
+    cout << endl;
+    SQL_UNARY_EXPR("Hello'World",notLike,"Hello'*");      // false
+    SQL_UNARY_EXPR("Hello'World",notLike,"*'World");      // false
+    SQL_UNARY_EXPR("Hello'World",notLike,"Hello'?");      // true
+    SQL_UNARY_EXPR("Hello'World",notLike,"?'World");      // true
+    SQL_UNARY_EXPR("Hello'World",notLike,"Hello?World");  // false
   }
 
   {
