@@ -162,7 +162,7 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
       else
       {
 	for (int i = 0; i < N_RSPBOARDS * N_BLPS; i++)
-	substats.rcumask.set(i);
+	  substats.rcumask.set(i);
       }
 	
       substats.period = 1;
@@ -203,7 +203,7 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
       LOG_INFO_STR("upd.time=" << upd.timestamp);
       LOG_INFO_STR("upd.handle=" << upd.handle);
       
-      LOG_INFO_STR("upd.stats=" << upd.stats());
+      LOG_DEBUG_STR("upd.stats=" << upd.stats());
 
       plot_statistics(upd.stats());
     }
@@ -252,7 +252,7 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
 void ViewStats::plot_statistics(Array<complex<double>, 3>& stats)
 {
   static gnuplot_ctrl* handle = 0;
-  int n_freqbands = stats.extent(3);
+  int n_freqbands = stats.extent(thirdDim);
 
   Array<double, 1> freq(n_freqbands);
   Array<double, 1> value(n_freqbands);
@@ -267,72 +267,98 @@ void ViewStats::plot_statistics(Array<complex<double>, 3>& stats)
 
     gnuplot_setstyle(handle,   "steps");
     gnuplot_cmd(handle, "set grid x y");
+    //gnuplot_cmd(handle, "set bmargin 1");
+    gnuplot_cmd(handle, "set tmargin .05");
   }
 
-  if (Statistics::SUBBAND_POWER == m_type
-      || Statistics::BEAMLET_POWER == m_type)
+#if 1
+  gnuplot_cmd(handle, "set size 1,1");
+  gnuplot_cmd(handle, "set origin 0,0");
+  gnuplot_cmd(handle, "set multiplot");
+  gnuplot_cmd(handle, "set size 1,%f", 1.0 / stats.extent(secondDim));
+#endif
+  for (int rcu = stats.lbound(secondDim);
+       rcu <= stats.ubound(secondDim);
+       rcu++)
   {
-    // add real and imaginary part to get power
-    value  = real(stats(0, 0, Range::all()));
-    value += imag(stats(0, 0, Range::all()));
+    gnuplot_cmd(handle, "set origin 0,%f", 1.0 * rcu / stats.extent(secondDim));
+    if (rcu == stats.lbound(secondDim))
+    {
+      gnuplot_cmd(handle, "set xtics axis");
+    }
+    else
+    {
+      gnuplot_cmd(handle, "set noxtics");
+    }
+    
+    if (Statistics::SUBBAND_POWER == m_type
+	|| Statistics::BEAMLET_POWER == m_type)
+    {
+      // add real and imaginary part to get power
+      value  = real(stats(0, rcu, Range::all()));
+      value += imag(stats(0, rcu, Range::all()));
 
-    // signal + 1e-6 and +10dB calibrated this to the Marconi signal generator
-    value = log10((value + 1e-6) / (1.0*(1<<16))) * 10.0 + 10.0;
+      // signal + 1e-6 and +10dB calibrated this to the Marconi signal generator
+      value = log10((value + 1e-6) / (1.0*(1<<16))) * 10.0 + 10.0;
 
-    // set yrange for power
-    gnuplot_cmd(handle, "set ytics -100,10");
-    gnuplot_cmd(handle, "set yrange [-100:20]");
+      // set yrange for power
+      gnuplot_cmd(handle, "set ytics -100,20");
+      gnuplot_cmd(handle, "set yrange [-100:20]");
+      gnuplot_cmd(handle, "set xrange [0:%f]", 20.0);
+
+      freq = i * (20.0 / n_freqbands); // calculate frequency in MHz
+      gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\" 0, 1.5");
+    }
+    else // MEAN
+    {
+      value =  real(stats(0, rcu, Range::all())) * real(stats(0, rcu, Range::all()));
+      value += imag(stats(0, rcu, Range::all())) * imag(stats(0, rcu, Range::all()));
+      value /= (1<<16);
+      value /= (1<<16);
+      value -= 1.0;
+
+      // set yrange for mean
+      gnuplot_cmd(handle, "set ytics -1.25,.25");
+      gnuplot_cmd(handle, "set yrange [-1.25:1.25]");
+      gnuplot_cmd(handle, "set xrange [0:%f]", 1.0*n_freqbands);
+
+      freq = i; // selected beamlet index
+      gnuplot_cmd(handle, "set xlabel \"Beamlet Index\" 0, 1.5");
+    }
+
+    if (m_type < Statistics::BEAMLET_MEAN)
+    {
+    }
+    else
+    {
+    }
+
+    gnuplot_resetplot(handle);
+
+    char title[128];
+    switch (m_type)
+    {
+      case Statistics::SUBBAND_MEAN:
+	snprintf(title, 128, "Subband Mean Value (RCU=%d)", rcu);
+	break;
+      case Statistics::SUBBAND_POWER:
+	snprintf(title, 128, "Subband Power (RCU=%d)", rcu);
+	break;
+      case Statistics::BEAMLET_MEAN:
+	snprintf(title, 128, "Beamlet Mean Value (RCU=%d)", rcu);
+	break;
+      case Statistics::BEAMLET_POWER:
+	snprintf(title, 128, "Beamlet Power (RCU=%d)", rcu);
+	break;
+      default:
+	snprintf(title, 128, "ERROR: Invalid m_type");
+	break;
+    }
+
+    gnuplot_plot_xy(handle, freq.data(), value.data(), n_freqbands, title);
   }
-  else // MEAN
-  {
-    value =  real(stats(0, 0, Range::all())) * real(stats(0, 0, Range::all()));
-    value += imag(stats(0, 0, Range::all())) * imag(stats(0, 0, Range::all()));
-    value /= (1<<16);
-    value /= (1<<16);
-    value -= 1.0;
 
-    gnuplot_set_xlabel(handle, "beamlet");
-    gnuplot_set_ylabel(handle, "power");
-
-    // set yrange for mean
-    gnuplot_cmd(handle, "set ytics -1.25,.1");
-    gnuplot_cmd(handle, "set yrange [-1.25:1.25]");
-  }
-
-  if (m_type < Statistics::BEAMLET_MEAN)
-  {
-    freq = i * (20.0 / n_freqbands); // calculate frequency in MHz
-    gnuplot_set_xlabel(handle, "Frequency (MHz)");
-  }
-  else
-  {
-    freq = i; // selected beamlet index
-    gnuplot_set_xlabel(handle, "Beamlet index");
-  }
-
-  gnuplot_resetplot(handle);
-
-  char title[128];
-  switch (m_type)
-  {
-    case Statistics::SUBBAND_MEAN:
-      snprintf(title, 128, "Subband Mean Value (RCU=%d)", m_rcu);
-      break;
-    case Statistics::SUBBAND_POWER:
-      snprintf(title, 128, "Subband Power (RCU=%d)", m_rcu);
-      break;
-    case Statistics::BEAMLET_MEAN:
-      snprintf(title, 128, "Beamlet Mean Value (RCU=%d)", m_rcu);
-      break;
-    case Statistics::BEAMLET_POWER:
-      snprintf(title, 128, "Beamlet Power (RCU=%d)", m_rcu);
-      break;
-    default:
-      snprintf(title, 128, "ERROR: Invalid m_type");
-      break;
-  }
-
-  gnuplot_plot_xy(handle, freq.data(), value.data(), n_freqbands, title);
+  gnuplot_cmd(handle, "set nomultiplot");
 }
 
 void ViewStats::run()
