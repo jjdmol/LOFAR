@@ -188,10 +188,10 @@ void BWSync::writecoef(uint8 blp)
     m_regid = MEPHeader::BFXRE; // HACK
   }
 
-  LOG_INFO(formatString(">>>> %s: blp=%d, regid=%d",
-			getBoardPort().getName().c_str(),
-			blp,
-			m_regid));
+  LOG_DEBUG(formatString(">>>> %s: blp=%d, regid=%d",
+			 getBoardPort().getName().c_str(),
+			 blp,
+			 m_regid));
   
   // send next BF configure message
   EPABfcoefsEvent bfcoefs;

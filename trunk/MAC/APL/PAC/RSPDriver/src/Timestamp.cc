@@ -54,3 +54,8 @@ void Timestamp::setNow(double delay)
 #endif
 }
 
+std::ostream& operator<< (std::ostream& os, const RSP_Protocol::Timestamp& ts)
+{
+  time_t seconds = (time_t)ts.sec();
+  return os << ctime(&seconds);
+}

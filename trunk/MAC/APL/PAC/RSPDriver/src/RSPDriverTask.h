@@ -33,6 +33,8 @@
 
 #include "Scheduler.h"
 
+#include <list>
+
 namespace RSP
 {
   class RSPDriverTask : public GCFTask
@@ -82,11 +84,18 @@ namespace RSP
        * commands.
        */
       GCFEvent::TResult enabled(GCFEvent& event, GCFPortInterface &port);
+      
+      /**
+       * Delete the client ports on the m_garbage_list.
+       */
+      void RSPDriverTask::collect_garbage();
 
     private:
       // ports
-      GCFPort m_client;
+      GCFTCPPort m_acceptor; // listen for clients on this port
       GCFPort m_board[N_RSPBOARDS];
+      std::list<GCFPortInterface*> m_client_list;  // list of clients
+      std::list<GCFPortInterface*> m_garbage_list; // list of clients to cleanup
 
       Scheduler m_scheduler;
   };

@@ -47,7 +47,7 @@ RSPDriverTask::RSPDriverTask(string name)
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
-  m_client.init(*this, "client", GCFPortInterface::SPP, RSP_PROTOCOL);
+  m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, RSP_PROTOCOL);
 
   for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
   {
@@ -202,33 +202,42 @@ GCFEvent::TResult RSPDriverTask::initial(GCFEvent& event, GCFPortInterface& port
   return status;
 }
 
+void RSPDriverTask::collect_garbage()
+{
+}
+
 GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  collect_garbage();
 
   switch (event.signal)
   {
     case F_ENTRY:
     {
       // start waiting for clients
-      if (!m_client.isConnected()) m_client.open();
+      if (!m_acceptor.isConnected()) m_acceptor.open();
 
       /* Start the update timer */
       m_board[0].setTimer((long)1,0,1,0); // update every second
     }
     break;
 
-#if 0
     case F_ACCEPT_REQ:
-      m_client.getPortProvider().accept();
-      break;
-#else
+    {
+      GCFTCPPort* client = new GCFTCPPort();
+      client->init(*this, "client", GCFPortInterface::SPP, RSP_PROTOCOL);
+      m_acceptor.accept(*client);
+      m_client_list.push_back(client);
+    }
+    break;
+
     case F_CONNECTED:
     {
       LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
     }
     break;
-#endif
 
     case RSP_SETWEIGHTS:
     {
@@ -238,7 +247,7 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
        * Acknowledge the command.
        */
       SetWeightsCmd* command = new SetWeightsCmd(event, port, Command::WRITE);
-      command->setTimestamp(m_scheduler.enter(command));
+      (void)m_scheduler.enter(command);
       command->ack(Cache::getInstance().getFront());
     }
     break;
@@ -246,14 +255,16 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
     case RSP_GETWEIGHTS:
     {
       GetWeightsCmd* command = new GetWeightsCmd(event, port, Command::READ);
+
+      // if null timestamp get value from the cache and acknowledge immediately
       if (Timestamp(0,0) == command->getTimestamp())
       {
-	command->setTimestamp(m_scheduler.getCurrentTime());
+	command->setTimestamp(m_scheduler.getCurrentTime() + -1);
 	command->ack(Cache::getInstance().getFront());
       }
       else
       {
-	command->setTimestamp(m_scheduler.enter(command));
+	(void)m_scheduler.enter(command);
       }
     }
     break;
@@ -263,7 +274,7 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
       GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
       LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
 
-      if (&port != &m_client)
+      if (&port == &m_board[0] || &port == &m_board[1])
       {
 	/* run the scheduler */
 	status = m_scheduler.run(event,port);
@@ -282,25 +293,32 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
       LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
       port.close();
 
-      if (&port != &m_client)
+      if (&port == &m_board[0] || &port == &m_board[1])
       {
-	m_client.close();
+	m_acceptor.close();
 	TRAN(RSPDriverTask::initial);
       }
-      else port.open(); // re-open for next client
+      else
+      {
+	m_client_list.remove(&port);
+	m_garbage_list.push_back(&port);
+      }
     }
     break;
 
     case F_EXIT:
     {
       // cancel timers
-      m_client.cancelAllTimers();
+      m_acceptor.cancelAllTimers();
       m_board[0].cancelAllTimers();
     }
     break;
 
     default:
-      status = m_scheduler.dispatch(event, port);
+      if (&port == &m_board[0] || &port == &m_board[1])
+      {
+	status = m_scheduler.dispatch(event, port);
+      }
       break;
   }
 

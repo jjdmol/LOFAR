@@ -53,6 +53,11 @@ void Command::setOperation(Operation oper)
   m_operation = oper;
 }
 
+Command::Operation Command::getOperation() const
+{
+  return m_operation;
+}
+
 void Command::setPort(GCFPortInterface& port)
 {
   m_port = &port;

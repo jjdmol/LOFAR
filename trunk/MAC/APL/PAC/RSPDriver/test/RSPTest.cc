@@ -115,6 +115,7 @@ GCFEvent::TResult RSPTest::test001(GCFEvent& e, GCFPortInterface& port)
 	  /* start of the test sequence */
 	  RSPSetweightsEvent sw;
 	  sw.timestamp.setNow(10);
+	  cout << "sw.time=" << sw.timestamp << endl;
 	  sw.rcumask.reset();
 	  sw.weights.weights().resize(1, N_BEAMLETS);
 
@@ -134,6 +135,7 @@ GCFEvent::TResult RSPTest::test001(GCFEvent& e, GCFPortInterface& port)
 	  RSPSetweightsackEvent ack(e);
 
 	  TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+	  cout << "ack.time=" << ack.timestamp << endl;
 
 	  TRAN(RSPTest::test002);
       }
@@ -174,9 +176,10 @@ GCFEvent::TResult RSPTest::test002(GCFEvent& e, GCFPortInterface& port)
 
 	  /* start of the test sequence */
 	  RSPGetweightsEvent sw;
-	  sw.timestamp.setNow(10);
+	  sw.timestamp.setNow(5);
+	  cout << "sw.time= " << sw.timestamp << endl;	  
 	  sw.rcumask.reset();
-	  sw.rcumask.set(20);
+	  sw.rcumask.set(0);
 	  sw.cache = false;
 	  
 	  TESTC_ABORT(m_server.send(sw), RSPTest::final);
@@ -187,13 +190,75 @@ GCFEvent::TResult RSPTest::test002(GCFEvent& e, GCFPortInterface& port)
       {
 	  RSPGetweightsackEvent ack(e);
 
-	  cout << "ack = " << ack.weights.weights() << endl;
+	  cout << "ack.weights = " << ack.weights.weights() << endl;
+	  cout << "ack.time= " << ack.timestamp << endl;
 
 	  TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
 
+	  TRAN(RSPTest::test003);
+      }
+      break;
+
+      case F_DISCONNECTED:
+      {
+	  port.setTimer((long)1);
+	  port.close();
+
+	  TRAN(RSPTest::final);
+      }
+      break;
+
+      case F_EXIT:
+      {
+	  STOP_TEST();
+      }
+      break;
+
+      default:
+	  status = GCFEvent::NOT_HANDLED;
+	  break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RSPTest::test003(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+  {
+      case F_ENTRY:
+      {
+	  START_TEST("test003", "test SETWEIGHTS NOW!");
+
+	  /* start of the test sequence */
+	  RSPSetweightsEvent sw;
+	  sw.timestamp = Timestamp(0,0);
+	  cout << "sw.time=" << sw.timestamp << endl;
+	  sw.rcumask.reset();
+	  sw.weights.weights().resize(1, N_BEAMLETS);
+
+	  for (int i = 0; i < sw.weights.weights().extent(1); i++)
+	  {
+	    sw.weights.weights()(0, i) = 0xff + i;
+	  }
+	  
+	  sw.rcumask.set(0);
+
+	  TESTC_ABORT(m_server.send(sw), RSPTest::final);
+      }
+      break;
+
+      case RSP_SETWEIGHTSACK:
+      {
+	  RSPSetweightsackEvent ack(e);
+
+	  TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+	  cout << "ack.time=" << ack.timestamp << endl;
+
 	  TRAN(RSPTest::final);
 
-	  // close must be after transition to make sure we get the one final event
 	  port.close();
       }
       break;

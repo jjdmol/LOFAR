@@ -113,9 +113,11 @@ GCFEvent::TResult Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
    * Dispatch the event to the first SyncAction that
    * has not yet reached its 'final' state.
    */
-  for (vector<SyncAction*>::iterator sa = m_syncactions[&port].begin();
+  vector<SyncAction*>::iterator sa;
+  int i = 0;
+  for (sa = m_syncactions[&port].begin();
        sa != m_syncactions[&port].end();
-       sa++)
+       sa++, i++)
   {
     if (!(*sa)->hasCompleted())
     {
@@ -129,11 +131,18 @@ GCFEvent::TResult Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
       // it will receive another event to continue
       //
       if (!(*sa)->hasCompleted()) break;
-      else current_event = &timer; 
+      else
+      {
+	sync_completed = true;
+	current_event = &timer; 
+      }
     }
   }
 
-  if (sync_completed) m_sync_completed[&port] = true;
+  if (sync_completed)
+  {
+    m_sync_completed[&port] = true;
+  }
 
   if (syncHasCompleted())
   {
@@ -151,7 +160,7 @@ bool Scheduler::syncHasCompleted()
        it != m_sync_completed.end();
        it++)
   {
-    if (!(*it).second) result = false;
+    if (!(*it).second) { result = false; }
   }
 
   return result;
@@ -160,28 +169,40 @@ bool Scheduler::syncHasCompleted()
 void Scheduler::addSyncAction(SyncAction* action)
 {
   m_syncactions[&(action->getBoardPort())].push_back(action);
-  m_sync_completed[&(action->getBoardPort())] = false;
 }
 
 Timestamp Scheduler::enter(Command* command)
 {
   m_later_queue.push(command);
   
-  Timestamp t = command->getTimestamp();
+  Timestamp scheduled_time = command->getTimestamp();
 
   /* determine at which time the command can actually be carried out */
-  if (t.sec() < m_current_time.sec() + SCHEDULING_DELAY)
+  if (scheduled_time.sec() < m_current_time.sec() + SCHEDULING_DELAY)
   {
-    if (t.sec() > 0)
+    if (scheduled_time.sec() > 0) // filter Timestamp(0,0) case
     {
       LOG_WARN(formatString("command missed deadline by %d seconds",
-			    m_current_time.sec() - t.sec()));
+			    m_current_time.sec() - scheduled_time.sec()));
     }
     
-    t = m_current_time + SCHEDULING_DELAY;
+    scheduled_time = m_current_time + SCHEDULING_DELAY;
+  }
+  else if (Command::READ == command->getOperation())
+  {
+    /**
+     * A read command for time t should be
+     * scheduled for time t + 1, to get the values
+     * on time t.
+     */
+    scheduled_time = scheduled_time + 1;
   }
 
-  return t;
+  // set the actual time at which the command is sent to the boards
+  command->setTimestamp(scheduled_time);
+  LOG_INFO_STR("Scheduler::enter scheduled_time=" << scheduled_time);
+
+  return Timestamp(0,0); // this return value should not be used anymore
 }
 
 void Scheduler::setCurrentTime(long sec, long usec)
@@ -200,12 +221,16 @@ Timestamp Scheduler::getCurrentTime() const
 
 void Scheduler::scheduleCommands()
 {
-  /* move appropriate client commands to the now queue */
+  /**
+   * All commands with a timestamp equal to the
+   * wall-clock time (m_current_time) plus one second
+   * should be scheduled now.
+   */
   while (!m_later_queue.empty())
   {
     Command* command = m_later_queue.top();
 
-    if (m_current_time > command->getTimestamp() + 1)
+    if (command->getTimestamp() < m_current_time)
     {
       /* discard old commands, the're too late! */
       LOG_WARN("discarding late command");
@@ -213,8 +238,10 @@ void Scheduler::scheduleCommands()
       m_later_queue.pop();
       delete command;
     }
-    else if (m_current_time == command->getTimestamp() + 1)
+    else if (command->getTimestamp() <= m_current_time + 1)
     {
+      LOG_INFO_STR("scheduling command with time=" << command->getTimestamp());
+
       m_now_queue.push(command);
       m_later_queue.pop();
     }
@@ -254,6 +281,8 @@ void Scheduler::processCommands()
 
 void Scheduler::initiateSync(GCFEvent& event)
 {
+  m_sync_completed.clear();
+
   /**
    * Send the first syncaction for each board the timer
    * event to set of the data communication to each board.
@@ -262,7 +291,7 @@ void Scheduler::initiateSync(GCFEvent& event)
        port != m_syncactions.end();
        port++)
   {
-    // reset completed flag
+    // reset sync flag
     m_sync_completed[(*port).first] = false;
 
     for (vector<SyncAction*>::iterator sa = (*port).second.begin();
@@ -272,7 +301,7 @@ void Scheduler::initiateSync(GCFEvent& event)
       (*sa)->setCompleted(false);
     }
     
-    // send F_TIMER event to first syncactions for each board
+    // dispatch F_TIMER event to first syncactions for each board
     if (!(*port).second.empty())
     {
       (*port).second[0]->dispatch(event, (*port).second[0]->getBoardPort());
@@ -291,7 +320,12 @@ void Scheduler::completeCommands()
   while (!m_done_queue.empty())
   {
     Command* command = m_done_queue.top();
-
+    
+    /**
+     * The actual activation time is on the next second
+     * therefor we add 1 second to the current time.
+     */
+    command->setTimestamp(getCurrentTime());
     command->complete(Cache::getInstance().getFront());
 
     m_done_queue.pop();

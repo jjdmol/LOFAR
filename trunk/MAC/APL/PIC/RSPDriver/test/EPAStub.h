@@ -25,8 +25,7 @@
 #ifndef EPASTUB_H_
 #define EPASTUB_H_
 
-#include "EPA_Protocol.ph"
-
+#include <Suite/test.h>
 #include <GCF/GCF_Control.h>
 #include <GCF/GCF_ETHRawPort.h>
 
