@@ -1486,7 +1486,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& /*p*/)
       if (propertyACP1.subscribe() != GCF_NO_ERROR)
       {
         failed(306);
-        TRAN(Application::finished);
+        TRAN(Application::test501);
       }
       break;
   
@@ -1501,13 +1501,13 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& /*p*/)
         if (_supTask1.getProxy().setPropValue("A_K_P1", iv) != GCF_NO_ERROR)
         {
           failed(306);
-          TRAN(Application::finished);
+          TRAN(Application::test501);
         }
       }
       else
       {
         failed(306);
-        TRAN(Application::finished);
+        TRAN(Application::test501);
       }
       break;
     }
@@ -1531,12 +1531,12 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& /*p*/)
       if (nrOfSucceded == 1000)
       {
         passed(306);
-        TRAN(Application::finished);
+        TRAN(Application::test501);
       }
       else if (nrOfSucceded + nrOfFaults == 1000)
       {
         failed(306);
-        TRAN(Application::finished);
+        TRAN(Application::test501);
       }
       else
       {
@@ -1544,7 +1544,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& /*p*/)
         if (_supTask1.getProxy().setPropValue("A_K_P1", iv) != GCF_NO_ERROR)
         {
           failed(306);
-          TRAN(Application::finished);
+          TRAN(Application::test501);
         }
       }        
       break;
@@ -1671,6 +1671,84 @@ GCFEvent::TResult Application::test402(GCFEvent& e, GCFPortInterface& p)
       TRAN(Application::test101);
       break;
     
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult Application::test501(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  static GCFApc apc1("ApcTRT", "B_RT1", &_supTask1.getAnswerObj());
+  static GCFApc apc2("ApcTRT", "B_RT2", &_supTask1.getAnswerObj());
+
+  switch (e.signal)
+  {
+    case F_ENTRY_SIG:
+      apc1.load(false);
+      _counter = 0;
+      break;
+
+    case F_APCLOADED_SIG:
+    {
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
+      assert(pResponse);
+      if ((strcmp(pResponse->pScope, "B_RT1") == 0) &&
+          (pResponse->result == GCF_NO_ERROR))
+      {          
+        _supTask1.getPort().setTimer(40.0);
+      }
+      break;
+    }  
+    case F_APCUNLOADED_SIG:
+    {
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
+      assert(pResponse);
+      if ((strcmp(pResponse->pScope, "B_RT1") == 0) &&
+          (pResponse->result == GCF_NO_ERROR))
+      {          
+        apc2.unload();
+      }
+      else
+      {
+        passed(501);
+        TRAN(Application::finished);        
+      }
+      break;
+    }  
+    case F_TIMER_SIG:
+    {
+      GCFTimerEvent* pTIM = static_cast<GCFTimerEvent*>(&e);
+      assert(pTIM);
+      srand(pTIM->sec * 1000000 + pTIM->usec);
+      int maxSeqNr = 20 + (int) (80.0 * rand() / (RAND_MAX + 1.0));
+      GCFPVInteger maxSeqNrV(maxSeqNr);
+      _supTask1.getProxy().setPropValue("B_RT1_maxSeqNr", maxSeqNrV);
+      if (_counter >= 3)
+      {
+        int maxSeqNr = 20 + (int) (80.0 * rand() / (RAND_MAX + 1.0));
+        maxSeqNrV.setValue(maxSeqNr);
+        _supTask1.getProxy().setPropValue("B_RT2_maxSeqNr", maxSeqNrV);
+      }
+      if (_counter < 10)
+      {
+        if (_counter == 3)
+        {
+          apc2.load(false);
+        }
+        _counter++;
+        _supTask1.getPort().setTimer(40.0);
+      }
+      else
+      {
+        apc1.unload();
+      }      
+      break;
+    }
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
