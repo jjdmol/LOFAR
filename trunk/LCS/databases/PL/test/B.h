@@ -2,36 +2,39 @@
 #define LOFAR_PL_TEST_B
 
 #include <PL/PLfwd.h>
-#include <string>
-#include <iostream>
+#include <Common/lofar_string.h>
+#include <Common/lofar_iostream.h>
 
-using std::string;
-
-class B
+namespace LOFAR
 {
-public:
-  B() : 
-    itsBool(false), itsShort(0), itsFloat(0.0), itsString("class B") 
-  {}
-  B(bool b, short i, float f, const std::string& s) :
-    itsBool(b), itsShort(i), itsFloat(f), itsString(s)
-  {}
-  friend std::ostream& operator<<(std::ostream& os, const B& b);
-private:
-  friend class LOFAR::PL::TPersistentObject<B>;
-  bool         itsBool;
-  short        itsShort;
-  float        itsFloat;
-  string       itsString;
-};
 
-inline std::ostream& operator<<(std::ostream& os, const B& b)
-{
-  os << std::endl << "B.itsBool    = " << b.itsBool
-     << std::endl << "B.itsShort   = " << b.itsShort
-     << std::endl << "B.itsFloat   = " << b.itsFloat
-     << std::endl << "B.itsString  = " << b.itsString;
-  return os;
-}
+  class B
+  {
+  public:
+    B() : 
+      itsBool(false), itsShort(0), itsFloat(0.0), itsString("class B") 
+    {}
+    B(bool b, short i, float f, const string& s) :
+      itsBool(b), itsShort(i), itsFloat(f), itsString(s)
+    {}
+    friend ostream& operator<<(ostream& os, const B& b);
+  private:
+    friend class LOFAR::PL::TPersistentObject<B>;
+    bool         itsBool;
+    short        itsShort;
+    float        itsFloat;
+    string       itsString;
+  };
+
+  inline ostream& operator<<(ostream& os, const B& b)
+  {
+    os << endl << "B.itsBool    = " << b.itsBool
+       << endl << "B.itsShort   = " << b.itsShort
+       << endl << "B.itsFloat   = " << b.itsFloat
+       << endl << "B.itsString  = " << b.itsString;
+    return os;
+  }
+
+} // namespace LOFAR
 
 #endif
