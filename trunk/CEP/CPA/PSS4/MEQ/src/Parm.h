@@ -109,7 +109,7 @@ public:
                          const Request &req,bool newreq);
 
   // process parm-specific rider commands
-  virtual void processCommands (const DataRecord &rec,Request::Ref &reqref);
+  virtual int processCommands (const DataRecord &rec,Request::Ref &reqref);
 
   // Initialize the parameter for the given predict domain. This loads
   // the polcs_ vector with polcs relevant to the specified domain. 

@@ -542,10 +542,10 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
   }
 }
 
-void Parm::processCommands (const DataRecord &rec,Request::Ref &reqref)
+int Parm::processCommands (const DataRecord &rec,Request::Ref &reqref)
 {
   // process parent class's commands
-  Node::processCommands(rec,reqref);
+  int retcode = Node::processCommands(rec,reqref);
   bool saved  = False;
   
   // Is an Update.Values command specified? use it to update solve polcs
@@ -568,6 +568,7 @@ void Parm::processCommands (const DataRecord &rec,Request::Ref &reqref)
         save();
         saved = True;
       }
+      retcode |= RES_NO_CACHE;
     }
     else
     {
@@ -591,7 +592,9 @@ void Parm::processCommands (const DataRecord &rec,Request::Ref &reqref)
     for( uint i=0; i<sizeof(flds)/sizeof(flds[0]); i++ )
       wstate()[*(flds[i])].remove();
     domain_id_ = solve_domain_id_ = HIID();
+    retcode |= RES_NO_CACHE;
   }
+  return retcode;
 }
 
 //##ModelId=400E53520391

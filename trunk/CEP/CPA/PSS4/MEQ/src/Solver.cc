@@ -93,10 +93,10 @@ int Solver::pollChildren (std::vector<Result::Ref> &chres,
 
 // Process rider for the given request
 // (this will be called prior to getResult() on the same request)
-void Solver::processCommands (const DataRecord &rec,Request::Ref &reqref)
+int Solver::processCommands (const DataRecord &rec,Request::Ref &reqref)
 {
   const Request &request = *reqref;
-  Node::processCommands(rec,reqref); // required
+  int retcode = Node::processCommands(rec,reqref); // required
   // Get new current values (use default if not given).
   itsCurNumIter   = rec[FNumIter].as<int>(itsDefNumIter);
   if (itsCurNumIter < 1) itsCurNumIter = 1;
@@ -135,6 +135,7 @@ void Solver::processCommands (const DataRecord &rec,Request::Ref &reqref)
     // processCommands is called for the next getResult.
     itsResetCur = true;
   }
+  return retcode;
 }
 
 // Get the result for the given request.
