@@ -74,12 +74,12 @@ namespace ABS
 	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
 
 	/**
-	 * The waiting state. This state is entered when a request has
+	 * The wait4ack state. This state is entered when a request has
 	 * been sent to the RSP driver and the BeamServer is waiting
 	 * for the acknowledgement. After receiving the acknowledgement
 	 * the statemachine returns to the 'enabled' state.
 	 */
-	GCFEvent::TResult waiting(GCFEvent& e, GCFPortInterface &p);
+	GCFEvent::TResult wait4ack(GCFEvent& e, GCFPortInterface &p);
 
 	/**
 	 * This handler handles all events that should be handled
