@@ -37,8 +37,10 @@
 
 namespace LOFAR
 {
-  AH_AccepTest::AH_AccepTest()
+  AH_AccepTest::AH_AccepTest():
+    itsFileOutput(NULL)
   {};
+
   AH_AccepTest::~AH_AccepTest()
   {};
 
@@ -85,6 +87,7 @@ namespace LOFAR
     vector<WH_Heat*> Heat2Nodes;
     vector<WH_Join*> JoinNodes;
 
+    LOG_TRACE_FLOW("Start construction of WorkHolders");
     int lowestFreeNode = 0;
     // create workholders
     char WH_DH_Name[128];
@@ -197,7 +200,7 @@ namespace LOFAR
       delete *it;
     }
     itsWHs.clear();
-    delete itsFileOutput;
+    if (itsFileOutput) delete itsFileOutput;
   }
 
   void AH_AccepTest::init() {
