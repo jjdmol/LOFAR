@@ -26,7 +26,6 @@
 //# Includes
 #include <lofar_config.h>
 #include <MNS/ParmTable.h>
-#include <MNS/ParmTableFiller.h>
 #include <MNS/MeqParmHolder.h>
 #include <MNS/MeqPolc.h>
 #include <Common/lofar_vector.h>
@@ -41,7 +40,7 @@ namespace LOFAR {
   //# Forward Declarations
   class MeqDomain;
 
-  class ParmTableBDB : public ParmTableRep, public ParmTableFiller {
+  class ParmTableBDB : public ParmTableRep{
   public:
     // Create the ParmTable object.
     // The dbType argument gives the database type.
@@ -80,6 +79,11 @@ namespace LOFAR {
 
     // Unlock the underlying table.
     virtual void unlock();
+
+    // Create the database or table
+    virtual void createTable();
+    // clear database or table
+    virtual void clearTable();
 
   private:
     Db itsDb;

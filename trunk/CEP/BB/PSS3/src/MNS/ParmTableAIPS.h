@@ -25,7 +25,6 @@
 
 //# Includes
 #include <PSS3/MNS/ParmTable.h>
-#include <PSS3/MNS/ParmTableFiller.h>
 #include <PSS3/MNS/MeqPolc.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ColumnsIndex.h>
@@ -34,7 +33,7 @@
 
 namespace LOFAR {
 
-class ParmTableAIPS : public ParmTableRep, public ParmTableFiller
+class ParmTableAIPS : public ParmTableRep
 {
 public:
   // Create the ParmTableAIPS object.
@@ -77,6 +76,11 @@ public:
 
   // Unlock the underlying table.
   virtual void unlock();
+
+  // Create the database or table
+  virtual void createTable();
+  // clear database or table
+  virtual void clearTable();
 
 private:
   // Find the table subset containing the parameter values for the

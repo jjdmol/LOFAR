@@ -1,4 +1,4 @@
-//# fillsqldb.cc: put values in the database used for MNS
+//# parmdb.cc: put values in the database used for MNS
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,14 +24,12 @@
 #include <lofar_config.h>
 #include <iostream>
 
+#include <Common/LofarLogger.h>
 #include <Common/KeyValueMap.h>
 #include <Common/KeyParser.h>
 #include <casa/Quanta/MVTime.h>
 #include <string>
 #include <pwd.h>
-#include <MNS/ParmTablePGSQL.h>
-#include <MNS/ParmTableMySQL.h>
-#include <MNS/ParmTableMonet.h>
 #include <MNS/ParmTableAIPS.h>
 #include <MNS/ParmTableBDB.h>
 
@@ -41,18 +39,67 @@ using std::cin;
 using std::cerr;
 using std::endl;
 
-typedef MeqParmHolder MParm;
-typedef vector<MParm> MParmSet;
-
-typedef MeqParmDefHolder MParmDef;
-typedef vector<MParmDef> MParmDefSet;
-
 string dbHost, dbName, dbType, dbUser, tableName;
-ParmTableFiller* PTR;
+ParmTableRep* PTR;
 
-char bool2char (bool val)
+enum Command {
+  NOCMD,
+  SHOW,
+  NEW,
+  UPDATE,
+  DELETE,
+  SHOWDEF,
+  NEWDEF,
+  UPDATEDEF,
+  DELETEDEF,
+  CONNECT,
+  CLEAR,
+  CREATE,
+  SHOWALLSOURCES,
+  SHOWALLDEFSOURCES,
+  QUIT};
+
+Command getCommand (char*& str)
 {
-  return (val  ?  'y' : 'n');
+  Command cmd = NOCMD;
+  while (*str == ' ') {
+    str++;
+  }
+  char* sstr = str;
+  while (*str != ' ' && *str != '\0') {
+    str++;
+  }
+  string sc(sstr, str-sstr);
+  if (sc == "show"  ||  sc == "list") {
+    cmd = SHOW;
+  } else if (sc == "new"  ||  sc == "insert"  ||  sc == "add") {
+    cmd = NEW;
+  } else if (sc == "update") {
+    cmd = UPDATE;
+  } else if (sc == "delete"  ||  sc == "remove"  || sc == "erase") {
+    cmd = DELETE;
+  } else if (sc == "showdef"  ||  sc == "listdef") {
+    cmd = SHOWDEF;
+  } else if (sc == "newdef"  ||  sc == "insertdef"  ||  sc == "adddef") {
+    cmd = NEWDEF;
+  } else if (sc == "updatedef") {
+    cmd = UPDATEDEF;
+  } else if (sc == "deletedef"  ||  sc == "removedef"  || sc == "erasedef") {
+    cmd = DELETEDEF;
+  } else if (sc == "connect") {
+    cmd = CONNECT;
+  } else if (sc == "clear") {
+    cmd = CLEAR;
+  } else if (sc == "create") {
+    cmd = CREATE;
+  } else if (sc == "showAllSources") {
+    cmd = SHOWALLSOURCES;
+  } else if (sc == "showAllDefSources") {
+    cmd = SHOWALLDEFSOURCES;
+  } else if (sc == "stop"  ||  sc == "quit"  || sc == "exit") {
+    cmd = QUIT;
+  } 
+  return cmd;
 }
 
 void showArray (std::ostream& os, const MeqMatrix& mat)
@@ -76,39 +123,6 @@ std::string getUserName()
   return aPwd->pw_name;
 }
 
-int getCommand (char*& str)
-{
-  while (*str == ' ') {
-    str++;
-  }
-  char* sstr = str;
-  while (*str != ' ' && *str != '\0') {
-    str++;
-  }
-  string sc(sstr, str-sstr);
-  if (sc == "show"  ||  sc == "list") {
-    return 1;
-  } else if (sc == "new"  ||  sc == "insert"  ||  sc == "add") {
-    return 2;
-  } else if (sc == "update") {
-    return 3;
-  } else if (sc == "delete"  ||  sc == "remove"  || sc == "erase") {
-    return 4;
-  } else if (sc == "showdef"  ||  sc == "listdef") {
-    return 11;
-  } else if (sc == "newdef"  ||  sc == "insertdef"  ||  sc == "adddef") {
-    return 12;
-  } else if (sc == "updatedef") {
-    return 13;
-  } else if (sc == "deletedef"  ||  sc == "removedef"  || sc == "erasedef") {
-    return 14;
-  } else if (sc == "connect") {
-    return 5;
-  } else if (sc == "stop"  ||  sc == "quit"  || sc == "exit") {
-    return 0;
-  } 
-  return 0;
-}
 
 std::string getParmName (char*& str)
 {
@@ -126,11 +140,11 @@ std::string getParmName (char*& str)
 }
 
 MeqMatrix getArray (const KeyValueMap& kvmap, const std::string& arrName,
-		    uint nx)
+		    uint nx, double defaultValue = 1)
 {
   KeyValueMap::const_iterator value = kvmap.find(arrName);
   if (value == kvmap.end()) {
-    return MeqMatrix (double(1), 1, 1);
+    return MeqMatrix (double(defaultValue), 1, 1);
   }
   vector<double> vec;
   if (value->second.dataType() == KeyValue::DTValueVector) {
@@ -171,16 +185,19 @@ MeqDomain getDomain (const KeyValueMap& kvmap, const std::string& arrName)
   return MD;
 }
 
+// IMPLEMENTATION OF THE COMMANDS
 void newParm (const std::string& tableName, const std::string& parmName,
 		 KeyValueMap& kvmap)
 {
   int srcnr = kvmap.getInt ("srcnr", -1);
   int statnr = kvmap.getInt ("statnr", -1);
   MeqPolc polc;
-  polc.setCoeff (getArray (kvmap, "values", kvmap.getInt("nx", 1)));
-  polc.setSimCoeff (polc.getCoeff().clone());
-  MeqMatrix mat(double(0), polc.getCoeff().nx(), polc.getCoeff().ny());
-  polc.setPertSimCoeff (mat);
+ 
+  polc.setSimCoeff (getArray (kvmap, "values", kvmap.getInt("nx", 1)));
+  polc.setPertSimCoeff(getArray (kvmap, "absPertValues", kvmap.getInt("nx", 1), 0));
+  MeqMatrix MM = polc.getSimCoeff().clone();
+  MM += polc.getPertSimCoeff().clone();
+  polc.setCoeff(MM);  
   polc.setNormalize (kvmap.getBool ("normalize", true));
   double diff = kvmap.getDouble ("diff", 1e-6);
   bool diffrel = kvmap.getBool ("diffrel", true);
@@ -198,10 +215,18 @@ void newParmDef (const std::string& tableName, const std::string& parmName,
   int srcnr = kvmap.getInt ("srcnr", -1);
   int statnr = kvmap.getInt ("statnr", -1);
   MeqPolc polc;
-  polc.setCoeff (getArray (kvmap, "values", kvmap.getInt("nx", 1)));
-  MeqMatrix mat(double(0), polc.getCoeff().nx(), polc.getCoeff().ny());
-  polc.setSimCoeff (mat);
-  polc.setPertSimCoeff (mat);
+  polc.setSimCoeff (getArray (kvmap, "values", kvmap.getInt("nx", 1)));
+  polc.setPertSimCoeff(getArray (kvmap, "absPertValues", kvmap.getInt("nx", 1), 0));
+  MeqMatrix MM = polc.getSimCoeff().clone();
+  MM += polc.getPertSimCoeff().clone();
+  polc.setCoeff(MM);  
+  cout<<"simcoeff:"<<endl;
+  showArray(cout, polc.getSimCoeff());
+  cout<<"coeff:"<<endl;
+  showArray(cout, polc.getCoeff());
+  cout<<"pertsimcoeff:"<<endl;
+  showArray(cout, polc.getPertSimCoeff());
+  cout<<endl;
   polc.setNormalize (kvmap.getBool ("normalize", true));
   double diff = kvmap.getDouble ("diff", 1e-6);
   bool diffrel = kvmap.getBool ("diffrel", true);
@@ -211,6 +236,47 @@ void newParmDef (const std::string& tableName, const std::string& parmName,
   PTR->putNewDefCoeff(parmName, srcnr, statnr, polc);
 }
 
+void ShowDef(string name){
+  cout<<name<<" : "<<endl;
+  MeqPolc MP = PTR->getInitCoeff(name, -1, -1);
+  cout<<" coeff        : "<<MP.getCoeff()<<endl;
+  cout<<" Simcoeff     : "<<MP.getSimCoeff()<<endl;
+  cout<<" PertSimcoeff : "<<MP.getPertSimCoeff()<<endl;
+  cout<<" perturbation : "<<MP.getPerturbation()<<endl;
+  cout<<" relperturb   : "<<MP.isRelativePerturbation()<<endl;
+}
+
+void Show(string name, MeqDomain &domain){
+  vector<MeqPolc> VMP = PTR->getPolcs(name, -1, -1, domain);
+  for (uint i=0; i<VMP.size(); i++){
+    cout<<name<<" : "<<endl;
+    cout<<" coeff        : "<<VMP[i].getCoeff()<<endl;
+    cout<<" Simcoeff     : "<<VMP[i].getSimCoeff()<<endl;
+    cout<<" PertSimcoeff : "<<VMP[i].getPertSimCoeff()<<endl;
+    cout<<" perturbation : "<<VMP[i].getPerturbation()<<endl;
+    cout<<" relperturb   : "<<VMP[i].isRelativePerturbation()<<endl;
+    MeqDomain md = VMP[i].domain();
+    cout<<" domain       : "<<md.startX()<<", "<<md.endX()<<", "<<md.startY()<<", "<<md.endY()<<", "<<endl;
+  }
+}
+
+void ShowAllSources() {
+  vector<string> names = PTR->getSources();
+  cout << "names: "<<names<<endl;
+  MeqDomain MD;
+  for (uint i=0; i<names.size(); i++) {
+    Show(names[i], MD);
+  }
+}
+void ShowAllDefSources() {
+  vector<string> names = PTR->getSources();
+  cout << "names: "<<names<<endl;
+  for (uint i=0; i<names.size(); i++) {
+    ShowDef(names[i]);
+  }
+}
+
+
 void doIt()
 {
   PTR=0;
@@ -218,7 +284,7 @@ void doIt()
   char cstra[buffersize];
   // Loop until stop is given.
   while (true) {
-    //    try {
+    try {
       char* cstr = cstra;
       if (! cin.getline (cstr, buffersize)) {
 	cerr << "Error while reading command" << endl;
@@ -227,12 +293,12 @@ void doIt()
       if (cstr[0] == 0) {
 	break;
       }
-      int command = getCommand (cstr);
-      if (command == 0) {
+      Command cmd = getCommand (cstr);
+      if (cmd == QUIT) {
 	break;
       }
       string parmName;
-      if (command == 5) {
+      if (cmd == CONNECT) {
 	// Connect to database
 	KeyValueMap kvmap = KeyParser::parse (cstr);
 	dbUser = kvmap.getString ("user", getUserName());
@@ -241,13 +307,7 @@ void doIt()
 	dbName = kvmap.getString ("db", dbUser);
 	dbType = kvmap.getString ("dbtype", "postgres");
 	tableName = kvmap.getString ("tablename", "MeqParm");
-	if (dbType=="postgres"){
-	  PTR = new ParmTablePGSQL (dbHost, dbUser, tableName);
-	} else if (dbType=="mysql") {
-	  PTR = new ParmTableMySQL (dbHost, dbUser, tableName);
-	} else if (dbType=="monet") {
-	  PTR = new ParmTableMonet (dbHost, dbUser, tableName, true);
-	} else if (dbType=="aips") {
+	if (dbType=="aips") {
 	  PTR = new ParmTableAIPS (dbUser, tableName);
 	} else if (dbType=="bdb") {
 	  PTR = new ParmTableBDB (dbUser, tableName);
@@ -257,19 +317,39 @@ void doIt()
 	};
 	//cout << "Connected to " << dbType << " database " << dbName
 	//     << endl;
+      } else if (cmd == CLEAR)  {
+	// clear dataBase
+	ASSERTSTR(PTR!=0, "Must connect to database before clearing it");
+	PTR->clearTable();
+      } else if (cmd == CREATE)  {
+	// create dataBase	
+	ASSERTSTR(PTR!=0, "Must have connect info for database before creating it");
+	PTR->createTable();
+      } else if (cmd == SHOWALLSOURCES)  {
+	// show all default values for sources
+	ASSERTSTR(PTR!=0, "Must have connect info for database before creating it");
+	ShowAllSources();
+      } else if (cmd == SHOWALLSOURCES)  {
+	// show all default values for sources
+	ASSERTSTR(PTR!=0, "Must have connect info for database before creating it");
+	ShowAllSources();
+      } else if (cmd == SHOWALLDEFSOURCES)  {
+	// show all default values for sources
+	ASSERTSTR(PTR!=0, "Must have connect info for database before creating it");
+	ShowAllDefSources();
       } else {
 	parmName = getParmName (cstr);
 	KeyValueMap kvmap = KeyParser::parse (cstr);
-	if (command == 12) {
+	if (cmd == NEWDEF) {
 	  newParmDef (tableName, parmName, kvmap);
 	}
-	if (command == 2) {
+	if (cmd == NEW) {
 	  newParm (tableName, parmName, kvmap);
 	}
 	      }
-      //    } catch (std::exception& x) {
-      //      cerr << "Exception: " << x.what() << endl;
-      //    }
+    } catch (std::exception& x) {
+      cerr << "Exception: " << x.what() << endl;
+    }
   }
   delete PTR;
 }
