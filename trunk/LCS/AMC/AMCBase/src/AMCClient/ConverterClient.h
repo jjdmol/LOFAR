@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef AMC_AMCBASE_CONVERTERCLIENT_H
-#define AMC_AMCBASE_CONVERTERCLIENT_H
+#ifndef LOFAR_AMCBASE_AMCCLIENT_CONVERTERCLIENT_H
+#define LOFAR_AMCBASE_AMCCLIENT_CONVERTERCLIENT_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 

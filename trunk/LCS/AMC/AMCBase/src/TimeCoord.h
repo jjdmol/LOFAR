@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef AMC_AMCBASE_TIMECOORD_H
-#define AMC_AMCBASE_TIMECOORD_H
+#ifndef LOFAR_AMCBASE_TIMECOORD_H
+#define LOFAR_AMCBASE_TIMECOORD_H
 
 //# Forward Declarations.
 #include <Common/lofar_iosfwd.h>

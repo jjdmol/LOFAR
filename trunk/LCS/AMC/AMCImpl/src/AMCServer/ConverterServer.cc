@@ -31,7 +31,7 @@ namespace LOFAR
   namespace AMC
   {
 
-    ConverterServer::ConverterServer(uint16 port)
+    ConverterServer::ConverterServer(uint16 /*port*/)
     {
       // The server will create a listener socket that will handle any
       // incoming client requests.

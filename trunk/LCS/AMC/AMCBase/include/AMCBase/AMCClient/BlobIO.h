@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef AMC_AMCBASE_BLOBIO_H
-#define AMC_AMCBASE_BLOBIO_H
+#ifndef LOFAR_AMCBASE_AMCCLIENT_BLOBIO_H
+#define LOFAR_AMCBASE_AMCCLIENT_BLOBIO_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -39,6 +39,7 @@ namespace LOFAR
     class SkyCoord;
     class EarthCoord;
     class TimeCoord;
+    class ConverterCommand;
 
     // Serialize the sky coordinates \a sc to the output blob stream \a bos.
     BlobOStream& operator<<(BlobOStream& bos, const SkyCoord& sc);
@@ -48,6 +49,9 @@ namespace LOFAR
 
     // Serialize the time coordinates \a tc to the output blob stream \a bos.
     BlobOStream& operator<<(BlobOStream& bos, const TimeCoord& tc);
+
+    // Serialize the converter command \a cc to the output blob stream \a bos.
+    BlobOStream& operator<<(BlobOStream& bos, const ConverterCommand& cc);
 
     // De-serialize the input blob stream \a bis to the sky coordinates \a sc.
     BlobIStream& operator>>(BlobIStream& bis, SkyCoord& sc);
@@ -59,6 +63,10 @@ namespace LOFAR
     // De-serialize the input blob stream \a bis to the time coordinates \a
     // tc.
     BlobIStream& operator>>(BlobIStream& bis, TimeCoord& tc);
+
+    // De-serialize the input blob stream \a bis to the converter command \a
+    // cc.
+    BlobIStream& operator>>(BlobIStream& bis, ConverterCommand& cc);
 
   } // namespace AMC
 
