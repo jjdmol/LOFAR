@@ -26,6 +26,11 @@
 #include <MEQ/Forest.h>
 #include <MEQ/Cells.h>
 #include <MEQ/Request.h>
+#include <AppAgent/AppControlAgent.h>
+
+using namespace AppControlAgentVocabulary;
+using namespace VisVocabulary;
+using namespace VisAgent;
     
 //##ModelId=3F9FF71B006A
 Meq::VisDataMux::VisDataMux (Meq::Forest &frst)
@@ -36,8 +41,15 @@ Meq::VisDataMux::VisDataMux (Meq::Forest &frst)
 }
 
 //##ModelId=3FA1016000B0
-void Meq::VisDataMux::init (const DataRecord &rec)
+void Meq::VisDataMux::init (const DataRecord &rec,
+                VisAgent::InputAgent  & inp,
+                VisAgent::OutputAgent & outp,
+                AppControlAgent       & ctrl)
 {
+  input_ = &inp;
+  output_ = &outp;
+  control_ = &ctrl;
+  
   out_columns_.clear();
   out_colnames_.clear();
   // setup output column indices
@@ -125,7 +137,7 @@ int Meq::VisDataMux::formDataId (int sta1,int sta2)
 }
 
 //##ModelId=3F98DAE6024A
-void Meq::VisDataMux::deliverHeader (const DataRecord &header)
+int Meq::VisDataMux::deliverHeader (const DataRecord &header)
 {
   // check header for number of stations, use a reasonable default
   cdebug(3)<<"got header: "<<header.sdebug(DebugLevel)<<endl;
@@ -160,6 +172,19 @@ void Meq::VisDataMux::deliverHeader (const DataRecord &header)
                         out_format_->shape(VisTile::DATA));
     }
   }
+  // notify all handlers of header
+  int result_flag = 0;
+  for( uint i=0; i<handlers_.size(); i++ )
+  {
+    VisHandlerList & hlist = handlers_[i];
+    VisHandlerList::iterator iter = hlist.begin();
+    for( ; iter != hlist.end(); iter++ )
+      result_flag |= (*iter)->deliverHeader(*out_format_);
+  }
+  // cache the header
+  cached_header_.attach(header,DMI::READONLY);
+  writing_data_ = false;
+  return result_flag;
 }
 
 //##ModelId=3F950ACA0160
@@ -191,10 +216,54 @@ int Meq::VisDataMux::deliverTile (VisTile::Ref::Copy &tileref)
     // deliver to all known handlers
     VisHandlerList::iterator iter = hlist.begin();
     for( ; iter != hlist.end(); iter++ )
-      result_flag |= (*iter)->deliver(req,tileref,out_format_);
+    {
+      VisTile::Ref ref(tileref,DMI::COPYREF);
+      int code = (*iter)->deliverTile(req,ref);
+      result_flag |= code;
+      // if an output tile is returned, dump it out
+      if( code&Node::RES_UPDATED )
+      {
+        cdebug(3)<<"handler returns updated tile "<<tileref->tileId()<<", posting to output\n";
+        writing_data_ = true;
+        if( cached_header_.valid() )
+        {
+          output().put(HEADER,cached_header_);
+          cached_header_.detach();
+        }
+        output().put(DATA,ref);
+      }
+    }
   }
   return result_flag;
 }
 
-
-
+int Meq::VisDataMux::deliverFooter (const DataRecord &footer)
+{
+  cdebug(2)<<"delivering footer to all handlers"<<endl;
+  int result_flag = 0;
+  for( uint i=0; i<handlers_.size(); i++ )
+  {
+    VisHandlerList & hlist = handlers_[i];
+    VisHandlerList::iterator iter = hlist.begin();
+    for( ; iter != hlist.end(); iter++ )
+    {
+      VisTile::Ref tileref;
+      int code = (*iter)->deliverFooter(tileref);
+      if( code&Node::RES_UPDATED )
+      {
+        cdebug(2)<<"handler returns updated tile "<<tileref->tileId()<<", posting to output\n";
+        writing_data_ = true;
+        if( cached_header_.valid() )
+        {
+          output().put(HEADER,cached_header_);
+          cached_header_.detach();
+        }
+        output().put(DATA,tileref);
+      }
+      result_flag |= code;
+    }
+  }
+  if( writing_data_ )
+    output().put(FOOTER,ObjRef(footer,DMI::READONLY));
+  return result_flag;
+}

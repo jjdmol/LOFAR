@@ -443,10 +443,10 @@ const rs_test := function (flags=[],flag_mask=-1,flag_bit=0,flag_density=.5)
   # cache of the Resampler node, then send up a request with the same ID
   # but different cells. The parm returns the original (cached) result, and
   # the Resampler integrates or extends it
-  rqid := meq.requestid(0,0,0);
+  rqid := meq.rqid(0);
   # first, init the cache of the parm node
   cells := meq.cells(domain,2,2);
-  req := meq.request(cells,request_id=rqid,calc_deriv=0);
+  req := meq.request(cells,rqid=rqid,calc_deriv=0);
   res := mqs.execute('a',req);
   # add flags to cache, if specified
   if( len(flags) )
@@ -459,17 +459,17 @@ const rs_test := function (flags=[],flag_mask=-1,flag_bit=0,flag_density=.5)
   res := mqs.execute('rs',req);
 
   cells2 := meq.cells(domain,1,1);
-  req2 := meq.request(cells2,request_id=rqid,calc_deriv=2);
+  req2 := meq.request(cells2,rqid=rqid,calc_deriv=2);
   mqs.meq('Node.Clear.Cache',[name='rs'],T);
   res2 := mqs.execute('rs',req2);
 
   cells3 := meq.cells(domain,4,2);
-  req3 := meq.request(cells3,request_id=rqid,calc_deriv=2);
+  req3 := meq.request(cells3,rqid=rqid,calc_deriv=2);
   mqs.meq('Node.Clear.Cache',[name='rs'],T);
   res3 := mqs.execute('rs',req3);
   
   cells4 := meq.cells(domain,1,4);
-  req4 := meq.request(cells3,request_id=rqid,calc_deriv=2);
+  req4 := meq.request(cells3,rqid=rqid,calc_deriv=2);
   mqs.meq('Node.Clear.Cache',[name='rs'],T);
   res4 := mqs.execute('rs',req4);
   

@@ -41,8 +41,7 @@ void Spigot::setStateImpl (DataRecord &rec,bool initializing)
 }
 
 //##ModelId=3F98DAE6023B
-int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
-                     VisTile::Format::Ref &)
+int Spigot::deliverTile (const Request &req,VisTile::Ref::Copy &tileref)
 {
   const VisTile &tile = *tileref;
   const HIID &rqid = req.id();

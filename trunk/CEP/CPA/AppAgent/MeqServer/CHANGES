@@ -1,3 +1,8 @@
+  * Please note: ALL spigots must be created first
+
+
+Committed before 07/2004:
+
   * added Get.NodeIndex (mqs.getnodeindex()) function, returns node index
     from name, or <0 if no such node exists
     

@@ -368,12 +368,11 @@ void MeqServer::run ()
     }
     
     // init the data mux
-    data_mux.init(*initrec);
+    data_mux.init(*initrec,input(),output(),control());
     // get params from control record
     int ntiles = 0;
     DataRecord::Ref header;
-    ObjRef cached_header;
-    bool reading_data=False,writing_data=False;
+    bool reading_data=False;
     HIID vdsid,datatype;
     
     control().setStatus(StStreamState,"none");
@@ -412,19 +411,7 @@ void MeqServer::run ()
             if( !(ntiles%100) )
               control().setStatus(StNumTiles,ntiles);
             // deliver tile to data mux
-            int result = data_mux.deliverTile(tileref);
-            if( result&Node::RES_UPDATED )
-            {
-              cdebug(3)<<"tile is updated, posting to output"<<endl;
-              // post to output only if writing some data
-              writing_data = True;
-              if( cached_header.valid() ) // but first dump out cached header
-              {
-                output().put(HEADER,cached_header);
-                cached_header.detach();
-              }
-              output().put(DATA,ref);
-            }
+            data_mux.deliverTile(tileref);
           }
           else if( instat == FOOTER )
           {
@@ -436,22 +423,20 @@ void MeqServer::run ()
               eventrec[AidHeader] <<= header.copy();
             if( ref.valid() )
               eventrec[AidFooter] <<= ref.copy();
+            data_mux.deliverFooter(*(ref.ref_cast<DataRecord>()));
             output_event = DataSetFooter;
             output_message = ssprintf("received footer for dataset %s, %d tiles written",
                 id.toString().c_str(),ntiles);
             control().setStatus(StStreamState,"END");
             control().setStatus(StNumTiles,ntiles);
             // post to output only if writing some data
-            if( writing_data )
-              output().put(FOOTER,ref);
           }
           else if( instat == HEADER )
           {
             doing_what = "processing input HEADER event";
             cdebug(2)<<"received header"<<endl;
-            reading_data = writing_data = False;
-            cached_header = ref;
-            header = cached_header.ref_cast<DataRecord>().copy();
+            reading_data = False;
+            header = ref;
             data_mux.deliverHeader(*header);
             output_event = DataSetHeader;
             output_message = "received header for dataset "+id.toString();
