@@ -23,7 +23,7 @@
 #ifndef COMMON_DEBUG_H
 #define COMMON_DEBUG_H
 
-#include <config.h>
+#include <lofar_config.h>
 
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_string.h>

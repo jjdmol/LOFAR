@@ -23,7 +23,7 @@
 #ifndef PACKAGE_FILENAME_H
 #define PACKAGE_FILENAME_H
 
-#include <config.h>
+#include <lofar_config.h>
 
 //# Includes
 #include <otherpackage/file.h>
