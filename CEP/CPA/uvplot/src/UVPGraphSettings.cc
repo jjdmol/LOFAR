@@ -29,7 +29,7 @@ UVPGraphSettings::UVPGraphSettings(unsigned int antenna1,
 
 unsigned int UVPGraphSettings::getAntenna1() const
 {
-  return (itsAntenna1 > itsAntenna2 ? itsAntenna2 : itsAntenna1);
+  return itsAntenna1;//(itsAntenna1 > itsAntenna2 ? itsAntenna2 : itsAntenna1);
 }
 
 
@@ -39,7 +39,7 @@ unsigned int UVPGraphSettings::getAntenna1() const
 
 unsigned int UVPGraphSettings::getAntenna2() const
 {
-  return (itsAntenna1 > itsAntenna2 ? itsAntenna1 : itsAntenna2);
+  return itsAntenna2;//(itsAntenna1 > itsAntenna2 ? itsAntenna1 : itsAntenna2);
 }
 
 
