@@ -252,7 +252,10 @@ void DataHolder::createDataBlock()
     // If no max size set, see if the data can grow.
     if (itsMaxDataSize < 0) {
       itsMaxDataSize = 0;
-      itsIsAddMax = !getTransporter().getTransportHolder()->canDataGrow();
+      if (getTransporter().getTransportHolder())
+      {
+	itsIsAddMax = !getTransporter().getTransportHolder()->canDataGrow();
+      }
     }
     // If no or an additive maximum, determine the blob length.
     int  initsz    = itsMaxDataSize;
