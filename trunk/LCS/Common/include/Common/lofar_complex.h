@@ -45,6 +45,7 @@ using LOFAR::tan;
 using LOFAR::exp;
 using LOFAR::sqrt;
 // using LOFAR::conj;
+using std::conj;
 #endif
 
 #endif
