@@ -25,6 +25,7 @@
 #include <PSS3/MNS/ParmTablePGSQL.h>
 #include <PSS3/MNS/ParmTableMySQL.h>
 #include <PSS3/MNS/ParmTableMonet.h>
+#include <PSS3/MNS/ParmTableBDB.h>
 #include <PSS3/MNS/MeqStoredParmPolc.h>
 #include <Common/Debug.h>
 #include <casa/Arrays/Vector.h>
@@ -45,6 +46,8 @@ ParmTable::ParmTable (const string& dbType, const string& tableName,
     itsRep = new ParmTableMySQL (hostName, userName, tableName);
   } else if (dbType == "monet") {
     itsRep = new ParmTableMonet (hostName, "monetdb", tableName);
+  } else if (dbType == "bdb") {
+    itsRep = new ParmTableBDB (userName, tableName);
   } else {
     Assert (dbType=="aips");
   }
