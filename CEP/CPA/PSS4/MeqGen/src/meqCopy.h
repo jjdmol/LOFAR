@@ -1,4 +1,4 @@
-//# compare.h: 
+//# meqCopy.h: 
 //# MeqExpr node class, automatically generated from Glish
 //#
 //# Copyright  (C)  2003
@@ -7,25 +7,25 @@
 //# 
 //# $Id$: 
 
-#ifndef _MeqGen_compare_H
-#define _MeqGen_compare_H
-
+#ifndef MEQ_meqCopy_H
+#define MEQ_meqCopy_H
 #include <MEQ/Function.h>
-
 #pragma aidgroup MeqGen
-#pragma types #Meq::compare
+#pragma types #meq::Copy
 
-namespace Meq 
-{
 
-  class compare : public Function
+namespace meq {
+
+  using namespace Meq;
+
+  class Copy : public Function
   {
 
     public:
 
-      compare();
+      Copy();
 
-      virtual ~compare();
+      virtual ~Copy();
 
       virtual void evaluateVells (Vells& result, const Request&, const vector<Vells*>& values);
 
@@ -34,6 +34,6 @@ namespace Meq
 
   };
 
-} // namespace MEQ 
+} // namespace meq
 
 #endif
