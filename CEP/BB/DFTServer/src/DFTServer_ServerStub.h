@@ -11,6 +11,9 @@ class DFTServer_ServerStub
 public:
   DFTServer_ServerStub() {
     const ParameterSet myPS("DFTServer.param");
+    cout << myPS.getString("DFTConnection.ClientHost") << endl;
+    cout << myPS.getString("DFTConnection.ServerHost") << endl;
+    cout <<  myPS.getInt("DFTConnection.RequestPort") << endl;
     itsTHProtoRequest = new TH_Socket(myPS.getString("DFTConnection.ClientHost"),   // sendhost
 				      myPS.getString("DFTConnection.ServerHost"),   // recvhost
 				      myPS.getInt("DFTConnection.RequestPort")    // port
