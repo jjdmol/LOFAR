@@ -24,10 +24,6 @@ tAttrib_SOURCES		= tAttrib.cc
 tAttrib_LDADD		= ../src/libpl.la
 tAttrib_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
 
-tAttr1_SOURCES		= tAttr1.cc
-tAttr1_LDADD		= ../src/libpl.la
-tAttr1_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
-
 tCollection_SOURCES	= tCollection.cc
 tCollection_LDADD	= ../src/libpl.la
 tCollection_DEPENDENCIES= ../src/libpl.la $(LOFAR_DEPEND)
