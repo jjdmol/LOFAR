@@ -6,8 +6,11 @@ cd tBBS2_tmp
 ln -s ../../../../test/tBBS2.sh .
 ln -s ../../../../test/*.g .
 ln -s ../../../../test/tBBS2.test* .
-ln -s ../../../../src/prepareBBD2 prepareBBD
+# ln -s ../../../../src/prepareBBD2 prepareBBD
 ln -s ../../../../src/clearBB .
+ln -s ../../../../src/clearParamTables .
+ln -s ../../../../src/createParamTables .
+ln -s ../../../../test/initparms .
 ln -s ../tBBS2 . 
 ln -s ../../../../test/generalinfo.sh .
 ln -s ../../../../test/cp2web.sh .

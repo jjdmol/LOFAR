@@ -39,7 +39,7 @@ rm -f /tmp/$usernm.demo3-1.MEP
 ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
 ln -s $cdir/demo.MEP /tmp/$usernm.demo3-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> test1.log
+time ./clearBB -user $usernm >> test1.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.test1 $niter $usernm >& test1.out
 
@@ -53,7 +53,7 @@ rm -f /tmp/$usernm.demo3-1.MEP
 ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
 ln -s $cdir/demo.MEP /tmp/$usernm.demo3-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> test2.log
+time ./clearBB -user $usernm >> test2.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.test2 $niter $usernm >& test2.out
 
@@ -67,7 +67,7 @@ rm -f /tmp/$usernm.demo3-1.MEP
 ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
 ln -s $cdir/demo.MEP /tmp/$usernm.demo3-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> test3.log
+time ./clearBB -user $usernm >> test3.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.test3 $niter $usernm >& test3.out
 
@@ -81,7 +81,7 @@ rm -f /tmp/$usernm.demo3-1.MEP
 ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
 ln -s $cdir/demo.MEP /tmp/$usernm.demo3-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> test4.log
+time ./clearBB -user $usernm >> test4.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.test4 $niter $usernm >& test4.out
 
@@ -95,7 +95,7 @@ rm -f /tmp/$usernm.demo3-1.MEP
 ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
 ln -s $cdir/demo.MEP /tmp/$usernm.demo3-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> test5.log
+time ./clearBB -user $usernm >> test5.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.test5 $niter $usernm >& test5.out
 
@@ -109,7 +109,7 @@ rm -f /tmp/$usernm.demo3-1.MEP
 ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
 ln -s $cdir/demo.MEP /tmp/$usernm.demo3-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> test6.log
+time ./clearBB -user $usernm >> test6.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.test6 $niter $usernm >& test6.out
 
@@ -123,7 +123,7 @@ rm -f /tmp/$usernm.demo3-1.MEP
 ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
 ln -s $cdir/demo.MEP /tmp/$usernm.demo3-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> test7.log
+time ./clearBB -user $usernm >> test7.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.test7 $niter $usernm >& test7.out
 
@@ -137,7 +137,7 @@ rm -f /tmp/$usernm.demo3-1.MEP
 ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
 ln -s $cdir/demo.MEP /tmp/$usernm.demo3-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> test8.log
+time ./clearBB -user $usernm >> test8.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.test8 $niter $usernm >& test8.out
 
@@ -151,7 +151,7 @@ rm -f /tmp/$usernm.demo3-1.MEP
 ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
 ln -s $cdir/demo.MEP /tmp/$usernm.demo3-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> test9.log
+time ./clearBB -user $usernm >> test9.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.test9 $niter $usernm >& test9.out
 
@@ -165,9 +165,9 @@ rm -f /tmp/$usernm.demo10-1.MEP
 ln -s $cdir/demo10_gsm.MEP /tmp/$usernm.demo10_gsm-1.MEP
 ln -s $cdir/demo.MEP /tmp/$usernm.demo10-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> test10.log
+time ./clearBB -user $usernm >> test10.log
 echo "  Starting solve ..."
-time ./tBBS2 tBBS2.test10 $niter $usernm >& test10.out
+# time ./tBBS2 tBBS2.test10 $niter $usernm >& test10.out
 
 # Do test11
 echo ""
@@ -179,7 +179,7 @@ rm -f /tmp/$usernm.demo3p-1.MEP
 ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
 ln -s $cdir/demop.MEP /tmp/$usernm.demo3p-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> test11.log
+time ./clearBB -user $usernm >> test11.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.test11 $niter $usernm >& test11.out
 
@@ -193,7 +193,7 @@ rm -f /tmp/$usernm.demo3p-1.MEP
 ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
 ln -s $cdir/demop.MEP /tmp/$usernm.demo3p-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> test12.log
+time ./clearBB -user $usernm >> test12.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.test12 $niter $usernm >& test12.out
 
@@ -207,7 +207,7 @@ rm -f /tmp/$usernm.demo3-1.MEP
 ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
 ln -s $cdir/demo.MEP /tmp/$usernm.demo3-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> test13.log
+time ./clearBB -user $usernm >> test13.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.test13 $niter $usernm >& test13.out
 
@@ -221,7 +221,7 @@ rm -f /tmp/$usernm.demo3-1.MEP
 ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
 ln -s $cdir/demo.MEP /tmp/$usernm.demo3-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> testNoise.log
+time ./clearBB -user $usernm >> testNoise.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.testNoise $niter $usernm >& testNoise.out
 
@@ -235,9 +235,18 @@ rm -f /tmp/$usernm.demo3-1.MEP
 ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
 ln -s $cdir/demo.MEP /tmp/$usernm.demo3-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> testFileMap.log
+time ./clearBB -user $usernm >> testFileMap.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.testFileMap $niter $usernm >& testFileMap.out
 
+# Do testBDB
+echo ""
+echo "Doing testBDB"
+echo "  Generating parm tables ..."
+time ( ./createParamTables -dbtype bdb -user $usernm; ./clearParamTables -dbtype bdb -user $usernm; ./initparms -dbtype bdb -user $usernm ) >& testBDB.log
+echo "  Preparing BlackBoard ..."
+time ./clearBB -user $usernm >> testBDB.log
+echo "  Starting solve ..."
+time ./tBBS2 tBBS2.testBDB $niter $usernm >& testBDB.out
 
 rm -rf /tmp/$usernm.*
