@@ -12,7 +12,7 @@
 
 //## Module: Message%3C7B7F2F024A; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: f:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\Message.cc
+//## Source file: F:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\Message.cc
 
 //## begin module%3C7B7F2F024A.additionalIncludes preserve=no
 //## end module%3C7B7F2F024A.additionalIncludes
@@ -57,7 +57,7 @@ Message::Message (const HIID &id1, BlockableObject *pload, int flags, int pri)
   //## begin Message::Message%3C7B9C490384.hasinit preserve=no
   //## end Message::Message%3C7B9C490384.hasinit
   //## begin Message::Message%3C7B9C490384.initialization preserve=yes
-   : priority_(pri),id_(id1)
+   : priority_(pri),state_(0),id_(id1)
   //## end Message::Message%3C7B9C490384.initialization
 {
   //## begin Message::Message%3C7B9C490384.body preserve=yes
@@ -69,7 +69,7 @@ Message::Message (const HIID &id1, ObjRef &pload, int flags, int pri)
   //## begin Message::Message%3C7B9D0A01FB.hasinit preserve=no
   //## end Message::Message%3C7B9D0A01FB.hasinit
   //## begin Message::Message%3C7B9D0A01FB.initialization preserve=yes
-   : priority_(pri),id_(id1)
+   : priority_(pri),state_(0),id_(id1)
   //## end Message::Message%3C7B9D0A01FB.initialization
 {
   //## begin Message::Message%3C7B9D0A01FB.body preserve=yes
@@ -84,7 +84,7 @@ Message::Message (const HIID &id1, SmartBlock *bl, int flags, int pri)
   //## begin Message::Message%3C7B9D3B02C3.hasinit preserve=no
   //## end Message::Message%3C7B9D3B02C3.hasinit
   //## begin Message::Message%3C7B9D3B02C3.initialization preserve=yes
-   : priority_(pri),id_(id1)
+   : priority_(pri),state_(0),id_(id1)
   //## end Message::Message%3C7B9D3B02C3.initialization
 {
   //## begin Message::Message%3C7B9D3B02C3.body preserve=yes
@@ -96,7 +96,7 @@ Message::Message (const HIID &id1, BlockRef &bl, int flags, int pri)
   //## begin Message::Message%3C7B9D59014A.hasinit preserve=no
   //## end Message::Message%3C7B9D59014A.hasinit
   //## begin Message::Message%3C7B9D59014A.initialization preserve=yes
-   : priority_(pri),id_(id1)
+   : priority_(pri),state_(0),id_(id1)
   //## end Message::Message%3C7B9D59014A.initialization
 {
   //## begin Message::Message%3C7B9D59014A.body preserve=yes
@@ -111,7 +111,7 @@ Message::Message (const HIID &id1, const char *data, size_t sz, int pri)
   //## begin Message::Message%3C7BB3BD0266.hasinit preserve=no
   //## end Message::Message%3C7BB3BD0266.hasinit
   //## begin Message::Message%3C7BB3BD0266.initialization preserve=yes
-   : priority_(pri),id_(id1)
+   : priority_(pri),state_(0),id_(id1)
   //## end Message::Message%3C7BB3BD0266.initialization
 {
   //## begin Message::Message%3C7BB3BD0266.body preserve=yes
@@ -147,6 +147,7 @@ Message & Message::operator=(const Message &right)
   from_ = right.from_;
   to_ = right.to_;
   state_ = right.state_;
+//  timestamp_ = right.timestamp_;
   payload_.copy(right.payload_,DMI::PRESERVE_RW|DMI::PERSIST);
   block_.copy(right.block_,DMI::PRESERVE_RW|DMI::PERSIST);
   return *this;
@@ -188,22 +189,25 @@ Message & Message::operator <<= (BlockRef &bl)
   //## end Message::operator <<=%3C7B9E1601CE.body
 }
 
-CountedRefTarget* Message::clone (int flags) const
+CountedRefTarget* Message::clone (int flags, int depth) const
 {
   //## begin Message::clone%3C7E32BE01E0.body preserve=yes
   Message *newmsg = new Message(*this);
-  newmsg->privatize(flags);
+  newmsg->privatize(flags,depth);
   return newmsg;
   //## end Message::clone%3C7E32BE01E0.body
 }
 
-void Message::privatize (int flags)
+void Message::privatize (int flags, int depth)
 {
   //## begin Message::privatize%3C7E32C1022B.body preserve=yes
-  if( payload_.valid() )
-    payload_.privatize(flags);
-  if( block_.valid() )
-    block_.privatize(flags);
+  if( flags&DMI::DEEP || depth>0 )
+  {
+    if( payload_.valid() )
+      payload_.privatize(flags,depth-1);
+    if( block_.valid() )
+      block_.privatize(flags,depth-1);
+  }
   //## end Message::privatize%3C7E32C1022B.body
 }
 

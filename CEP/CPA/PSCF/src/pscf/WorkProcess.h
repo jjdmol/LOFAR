@@ -12,7 +12,7 @@
 
 //## Module: WorkProcess%3C7B7F3000C3; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: f:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\WorkProcess.h
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\WorkProcess.h
 
 #ifndef WorkProcess_h
 #define WorkProcess_h 1
@@ -25,14 +25,10 @@
 //## begin module%3C7B7F3000C3.includes preserve=yes
 //## end module%3C7B7F3000C3.includes
 
-// PSCFDebugContext
-#include "PSCFDebugContext.h"
-// Message
-#include "Message.h"
-
-class WPQueue;
-class Dispatcher;
-
+// WPInterface
+#include "WPInterface.h"
+// Dispatcher
+#include "Dispatcher.h"
 //## begin module%3C7B7F3000C3.declarations preserve=no
 //## end module%3C7B7F3000C3.declarations
 
@@ -40,10 +36,10 @@ class Dispatcher;
 //## end module%3C7B7F3000C3.additionalDeclarations
 
 
-//## begin WorkProcess%3C7B6A3702E5.preface preserve=yes
-//## end WorkProcess%3C7B6A3702E5.preface
+//## begin WorkProcess%3C8F25430087.preface preserve=yes
+//## end WorkProcess%3C8F25430087.preface
 
-//## Class: WorkProcess%3C7B6A3702E5; Abstract
+//## Class: WorkProcess%3C8F25430087; Abstract
 //## Category: PSCF%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
@@ -51,228 +47,120 @@ class Dispatcher;
 
 
 
-//## Uses: <unnamed>%3C7E133B016D;Message { -> }
+//## Uses: <unnamed>%3C8F3679014E;Dispatcher { -> }
 
-class WorkProcess : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA31F00CE
+class WorkProcess : public WPInterface  //## Inherits: <unnamed>%3C8F263A00E6
 {
-  //## begin WorkProcess%3C7B6A3702E5.initialDeclarations preserve=yes
-  //## end WorkProcess%3C7B6A3702E5.initialDeclarations
+  //## begin WorkProcess%3C8F25430087.initialDeclarations preserve=yes
+  //## end WorkProcess%3C8F25430087.initialDeclarations
 
   public:
-    //## Constructors (generated)
-      WorkProcess();
-
     //## Constructors (specified)
-      //## Operation: WorkProcess%3C7CBB10027A
-      WorkProcess (AtomicID wpid);
-
-    //## Destructor (generated)
-      virtual ~WorkProcess();
+      //## Operation: WorkProcess%3C8F25DB014E
+      WorkProcess (AtomicID wpc);
 
 
     //## Other Operations (specified)
-      //## Operation: name%3C83541601B4
-      virtual const char * name () const;
-
-      //## Operation: attach%3C7CBAED007B
-      void attach (WPQueue* pq);
-
-      //## Operation: init%3C7F882B00E6
-      virtual void init ();
-
-      //## Operation: start%3C7E4A99016B
+      //## Operation: start%3C9216B701CA
       virtual void start ();
 
-      //## Operation: stop%3C7E4A9C0133
+      //## Operation: stop%3C9216C10015
       virtual void stop ();
 
-      //## Operation: isAttached%3C7CBBD101E1
-      bool isAttached () const;
-
-      //## Operation: subscribe%3C7CB9B70120
-      bool subscribe (const HIID &id);
-
-      //## Operation: unsubscribe%3C7CB9C50365
-      bool unsubscribe (const HIID &id);
-
       //## Operation: addTimeout%3C7D285803B0
-      int addTimeout (int ms, int flags = 0, const HIID &id = HIID(), void *data = 0);
+      void addTimeout (const Timestamp &period, const HIID &id = HIID(), int flags = 0, int priority = Message::PRI_EVENT);
 
       //## Operation: addInput%3C7D2874023E
-      int addInput (int fd, int flags);
+      void addInput (int fd, int flags, int priority = Message::PRI_EVENT);
 
       //## Operation: addSignal%3C7DFE520239
-      int addSignal (int signum);
+      void addSignal (int signum, int flags, int priority = Message::PRI_EVENT);
 
       //## Operation: removeTimeout%3C7D287F02C6
-      bool removeTimeout (int handle);
+      bool removeTimeout (const HIID &id);
 
       //## Operation: removeInput%3C7D28A30141
-      bool removeInput (int handle);
+      bool removeInput (int fd);
 
       //## Operation: removeSignal%3C7DFE480253
       bool removeSignal (int signum);
 
       //## Operation: send%3C7CB9E802CF
-      int send (MessageRef &msg, MsgAddress to);
+      //	Sends message to specified address. Note that the ref is taken over
+      //	by this call, then privatized for writing. See Dispatcher::send()
+      //	for more details.
+      int send (MessageRef msg, MsgAddress to);
 
       //## Operation: publish%3C7CB9EB01CF
-      int publish (MessageRef &msg, int scope = Message::GLOBAL);
-
-      //## Operation: receive%3C7CC0950089
-      virtual int receive (MessageRef& mref) = 0;
-
-      //## Operation: timeout%3C7CC2AB02AD
-      virtual int timeout (int handle, const HIID &id, void* data);
-
-      //## Operation: input%3C7CC2C40386
-      virtual int input (int handle, int fd, int flags);
-
-      //## Operation: signal%3C7DFD240203
-      virtual int signal (int signum);
+      //	Publishes message with the specified scope. Note that the ref is
+      //	taken over by this call, then privatized for writing. This method is
+      //	just a shorthand for send(), with "Publish" in some parts of the
+      //	address, as determined by scope).
+      int publish (MessageRef msg, int scope = Message::GLOBAL);
 
     //## Get and Set Operations for Class Attributes (generated)
 
-      //## Attribute: id%3C7B8EA50093
-      AtomicID getId () const;
-
-      //## Attribute: address%3C7CBA880058
-      const MsgAddress& getAddress () const;
-
-      //## Attribute: state%3C7E343002FB
+      //## Attribute: state%3C8F256E024B
       int getState () const;
-
-    //## Get and Set Operations for Associations (generated)
-
-      //## Association: PSCF::<unnamed>%3C7B736603AF
-      //## Role: WorkProcess::queue%3C7B736702F3
-      const WPQueue * getQueue () const;
-
-      //## Association: PSCF::<unnamed>%3C7E14150352
-      //## Role: WorkProcess::dsp%3C7E1416017C
-      const Dispatcher * getDsp () const;
+      void setState (int value);
 
     // Additional Public Declarations
-      //## begin WorkProcess%3C7B6A3702E5.public preserve=yes
+      //## begin WorkProcess%3C8F25430087.public preserve=yes
       // import in the message result-codes
       typedef Message::MessageResults MessageResults;
-        
-      // This is a typical debug() method setup. The sdebug()
-      // method creates a debug info string at the given level of detail.
-      virtual string sdebug ( int detail = 1,const string &prefix = "",
-                const char *name = 0 ) const;
-      const char * debug ( int detail = 1,const string &prefix = "",
-                           const char *name = 0 ) const
-      { return Debug::staticBuffer(sdebug(detail,prefix,name)); }
-        
-      //## end WorkProcess%3C7B6A3702E5.public
+      
+      Declare_sdebug( );
+      //## end WorkProcess%3C8F25430087.public
   protected:
     // Additional Protected Declarations
-      //## begin WorkProcess%3C7B6A3702E5.protected preserve=yes
-      //## end WorkProcess%3C7B6A3702E5.protected
+      //## begin WorkProcess%3C8F25430087.protected preserve=yes
+      //## end WorkProcess%3C8F25430087.protected
 
   private:
     //## Constructors (generated)
+      WorkProcess();
+
       WorkProcess(const WorkProcess &right);
 
     //## Assignment Operation (generated)
       WorkProcess & operator=(const WorkProcess &right);
 
     // Additional Private Declarations
-      //## begin WorkProcess%3C7B6A3702E5.private preserve=yes
-      //## end WorkProcess%3C7B6A3702E5.private
+      //## begin WorkProcess%3C8F25430087.private preserve=yes
+      //## end WorkProcess%3C8F25430087.private
 
   private: //## implementation
     // Data Members for Class Attributes
 
-      //## begin WorkProcess::id%3C7B8EA50093.attr preserve=no  public: AtomicID {U} 
-      AtomicID id;
-      //## end WorkProcess::id%3C7B8EA50093.attr
-
-      //## begin WorkProcess::address%3C7CBA880058.attr preserve=no  public: MsgAddress {U} 
-      MsgAddress address;
-      //## end WorkProcess::address%3C7CBA880058.attr
-
-      //## begin WorkProcess::state%3C7E343002FB.attr preserve=no  public: int {U} 
+      //## begin WorkProcess::state%3C8F256E024B.attr preserve=no  public: int {U} 
       int state;
-      //## end WorkProcess::state%3C7E343002FB.attr
-
-    // Data Members for Associations
-
-      //## Association: PSCF::<unnamed>%3C7B736603AF
-      //## begin WorkProcess::queue%3C7B736702F3.role preserve=no  public: WPQueue {1 -> 1RFHN}
-      WPQueue *queue;
-      //## end WorkProcess::queue%3C7B736702F3.role
-
-      //## Association: PSCF::<unnamed>%3C7E14150352
-      //## begin WorkProcess::dsp%3C7E1416017C.role preserve=no  public: Dispatcher { -> 1RFHN}
-      Dispatcher *dsp;
-      //## end WorkProcess::dsp%3C7E1416017C.role
+      //## end WorkProcess::state%3C8F256E024B.attr
 
     // Additional Implementation Declarations
-      //## begin WorkProcess%3C7B6A3702E5.implementation preserve=yes
-      //## end WorkProcess%3C7B6A3702E5.implementation
+      //## begin WorkProcess%3C8F25430087.implementation preserve=yes
+      //## end WorkProcess%3C8F25430087.implementation
 
 };
 
-//## begin WorkProcess%3C7B6A3702E5.postscript preserve=yes
-//## end WorkProcess%3C7B6A3702E5.postscript
+//## begin WorkProcess%3C8F25430087.postscript preserve=yes
+//## end WorkProcess%3C8F25430087.postscript
 
 // Class WorkProcess 
 
-
-//## Other Operations (inline)
-inline const char * WorkProcess::name () const
-{
-  //## begin WorkProcess::name%3C83541601B4.body preserve=yes
-  return "WP";
-  //## end WorkProcess::name%3C83541601B4.body
-}
-
-inline bool WorkProcess::isAttached () const
-{
-  //## begin WorkProcess::isAttached%3C7CBBD101E1.body preserve=yes
-  return queue != 0;
-  //## end WorkProcess::isAttached%3C7CBBD101E1.body
-}
-
 //## Get and Set Operations for Class Attributes (inline)
-
-inline AtomicID WorkProcess::getId () const
-{
-  //## begin WorkProcess::getId%3C7B8EA50093.get preserve=no
-  return id;
-  //## end WorkProcess::getId%3C7B8EA50093.get
-}
-
-inline const MsgAddress& WorkProcess::getAddress () const
-{
-  //## begin WorkProcess::getAddress%3C7CBA880058.get preserve=no
-  return address;
-  //## end WorkProcess::getAddress%3C7CBA880058.get
-}
 
 inline int WorkProcess::getState () const
 {
-  //## begin WorkProcess::getState%3C7E343002FB.get preserve=no
+  //## begin WorkProcess::getState%3C8F256E024B.get preserve=no
   return state;
-  //## end WorkProcess::getState%3C7E343002FB.get
+  //## end WorkProcess::getState%3C8F256E024B.get
 }
 
-//## Get and Set Operations for Associations (inline)
-
-inline const WPQueue * WorkProcess::getQueue () const
+inline void WorkProcess::setState (int value)
 {
-  //## begin WorkProcess::getQueue%3C7B736702F3.get preserve=no
-  return queue;
-  //## end WorkProcess::getQueue%3C7B736702F3.get
-}
-
-inline const Dispatcher * WorkProcess::getDsp () const
-{
-  //## begin WorkProcess::getDsp%3C7E1416017C.get preserve=no
-  return dsp;
-  //## end WorkProcess::getDsp%3C7E1416017C.get
+  //## begin WorkProcess::setState%3C8F256E024B.set preserve=no
+  state = value;
+  //## end WorkProcess::setState%3C8F256E024B.set
 }
 
 //## begin module%3C7B7F3000C3.epilog preserve=yes

@@ -12,7 +12,7 @@
 
 //## Module: EchoWP%3C7E49E90399; Package body
 //## Subsystem: Testing%3C7E494F0184
-//## Source file: f:\lofar8\oms\LOFAR\cep\cpa\pscf\test\EchoWP.cc
+//## Source file: F:\lofar8\oms\LOFAR\cep\cpa\pscf\test\EchoWP.cc
 
 //## begin module%3C7E49E90399.additionalIncludes preserve=no
 //## end module%3C7E49E90399.additionalIncludes
@@ -34,11 +34,11 @@ static HIID MsgPing(AidPing),MsgPong(AidPong);
 
 // Class EchoWP 
 
-EchoWP::EchoWP (AtomicID wpid, int pingcount)
+EchoWP::EchoWP (int pingcount)
   //## begin EchoWP::EchoWP%3C7E49B60327.hasinit preserve=no
   //## end EchoWP::EchoWP%3C7E49B60327.hasinit
   //## begin EchoWP::EchoWP%3C7E49B60327.initialization preserve=yes
-    : WorkProcess(wpid),pcount(pingcount)
+    : WorkProcess(AidEchoWP),pcount(pingcount)
   //## end EchoWP::EchoWP%3C7E49B60327.initialization
 {
   //## begin EchoWP::EchoWP%3C7E49B60327.body preserve=yes
@@ -55,9 +55,16 @@ EchoWP::~EchoWP()
 
 
 //## Other Operations (implementation)
+void EchoWP::opname ()
+{
+  //## begin EchoWP::opname%3C9094FF03D4.body preserve=yes
+  //## end EchoWP::opname%3C9094FF03D4.body
+}
+
 void EchoWP::init ()
 {
   //## begin EchoWP::init%3C7F884A007D.body preserve=yes
+  WorkProcess::init();
   if( !pcount )
     subscribe(MsgPing);
   //## end EchoWP::init%3C7F884A007D.body
@@ -73,18 +80,18 @@ void EchoWP::start ()
 int EchoWP::receive (MessageRef& mref)
 {
   //## begin EchoWP::receive%3C7E49AC014C.body preserve=yes
+  dprintf(2)("received %s\n",mref.debug(10));
   if( mref->id() == MsgPing )
   {
-    Message & msg = mref.privatize(DMI::WRITE);
-    dprintf(2)("received %s\n",msg.debug(6));
+    // privatize message & payload
+    Message & msg = mref.privatize(DMI::WRITE,1);
     dprintf(2)("with ping count=%d\n",msg["Count"].as_int());
-    msg.payload().privatize(DMI::WRITE);
     // timestamp the reply
     msg["Reply.Timestamp"] = Timestamp();
     // invert the data block if it's there
     if( msg["Invert"].as_bool() )
     {
-      msg["Data"].privatize();
+      msg["Data"].privatize(DMI::WRITE);
       int sz = msg["Data"].size();
       int *data = &msg["Data"];
       dprintf(2)("inverting %d ints at %x\n",sz,(int)data);
@@ -97,12 +104,11 @@ int EchoWP::receive (MessageRef& mref)
   }
   else if( mref->id() == MsgPong )
   {
-    dprintf(2)("received %s\n",mref->debug(1));
     if( !pcount )
       exit(0);
     sendPing();
   }
-  return Message::MSG_OK;
+  return Message::ACCEPT;
   //## end EchoWP::receive%3C7E49AC014C.body
 }
 

@@ -12,7 +12,7 @@
 
 //## Module: Timestamp%3C7F3B770339; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: f:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\Timestamp.h
+//## Source file: F:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\Timestamp.h
 
 #ifndef Timestamp_h
 #define Timestamp_h 1
@@ -57,7 +57,7 @@ class Timestamp
 
     //## Constructors (specified)
       //## Operation: Timestamp%3C7F3B580321
-      Timestamp (long sec1, long usec1);
+      Timestamp (long sec1, long usec1 = 0);
 
     //## Equality Operations (generated)
       bool operator==(const Timestamp &right) const;
@@ -75,6 +75,15 @@ class Timestamp
 
 
     //## Other Operations (specified)
+      //## Operation: now%3C8F67DD00BD
+      static const Timestamp & now (Timestamp *pts = &Timestamp::tsnow);
+
+      //## Operation: operator bool%3C8F18500073
+      operator bool () const;
+
+      //## Operation: operator !%3C8C9EAA005B
+      bool operator ! () const;
+
       //## Operation: operator +=%3C7F3D500287
       Timestamp & operator += (const Timestamp &other);
 
@@ -123,6 +132,11 @@ class Timestamp
       long usec_;
       //## end Timestamp::usec%3C7F3B2E001D.attr
 
+      //## Attribute: tsnow%3C8F68EA004C
+      //## begin Timestamp::tsnow%3C8F68EA004C.attr preserve=no  private: static Timestamp {U} 
+      static Timestamp tsnow;
+      //## end Timestamp::tsnow%3C8F68EA004C.attr
+
     // Additional Implementation Declarations
       //## begin Timestamp%3C7F3B1D025E.implementation preserve=yes
       //## end Timestamp%3C7F3B1D025E.implementation
@@ -133,6 +147,18 @@ class Timestamp
 //## end Timestamp%3C7F3B1D025E.postscript
 
 // Class Timestamp 
+
+inline Timestamp::Timestamp()
+  //## begin Timestamp::Timestamp%3C7F3B1D025E_const.hasinit preserve=no
+  //## end Timestamp::Timestamp%3C7F3B1D025E_const.hasinit
+  //## begin Timestamp::Timestamp%3C7F3B1D025E_const.initialization preserve=yes
+  //## end Timestamp::Timestamp%3C7F3B1D025E_const.initialization
+{
+  //## begin Timestamp::Timestamp%3C7F3B1D025E_const.body preserve=yes
+  // default constructor: current time
+  Timestamp::now(this);
+  //## end Timestamp::Timestamp%3C7F3B1D025E_const.body
+}
 
 inline Timestamp::Timestamp (long sec1, long usec1)
   //## begin Timestamp::Timestamp%3C7F3B580321.hasinit preserve=no
@@ -192,6 +218,20 @@ inline bool Timestamp::operator>=(const Timestamp &right) const
 
 
 //## Other Operations (inline)
+inline Timestamp::operator bool () const
+{
+  //## begin Timestamp::operator bool%3C8F18500073.body preserve=yes
+  return sec_ || usec_;
+  //## end Timestamp::operator bool%3C8F18500073.body
+}
+
+inline bool Timestamp::operator ! () const
+{
+  //## begin Timestamp::operator !%3C8C9EAA005B.body preserve=yes
+  return ! static_cast<bool>(*this);
+  //## end Timestamp::operator !%3C8C9EAA005B.body
+}
+
 inline Timestamp Timestamp::operator + (const Timestamp &other) const
 {
   //## begin Timestamp::operator +%3C7F3D7800CC.body preserve=yes

@@ -3,7 +3,7 @@
     
 #define paddr(x) printf("=== " #x ": %08x\n",(int)&x)
     
-void TestFunc( const LockedBlockRef &ref )
+void TestFunc( const BlockRef &ref )
 {
   cerr<<"======================= Copying ref in function\n";
   ref.copy();

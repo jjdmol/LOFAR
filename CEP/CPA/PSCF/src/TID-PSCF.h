@@ -8,7 +8,7 @@
 
 #ifndef _defined_Timestamp
 #define _defined_Timestamp 1
-const TypeId TpTimestamp(-80);
+const TypeId TpTimestamp(-104);
 class Timestamp;
 #endif
 
