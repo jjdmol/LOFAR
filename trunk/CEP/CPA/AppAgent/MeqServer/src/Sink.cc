@@ -6,7 +6,7 @@
 #include <MEQ/MeqVocabulary.h>
 
 namespace Meq {
-
+  
 Sink::Sink()
   : VisHandlerNode(1),        // 1 child node expected
     output_col(-1),
@@ -49,7 +49,7 @@ void Sink::setStateImpl (DataRecord &rec,bool initializing)
       output_col = -1;
   }
   // check if output correlation map is specified
-  rec[FCorr].get_vector(output_icorrs,initializing);
+  rec[FCorrIndex].get_vector(output_icorrs,initializing);
   // get flag masks
   rec[FFlagMask].get(flag_mask,initializing);
   rec[FRowFlagMask].get(row_flag_mask,initializing);

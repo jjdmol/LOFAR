@@ -28,7 +28,7 @@
 
 #pragma aidgroup Meq
 #pragma types #Meq::StatPointSourceDFT
-#pragma aid L M N U V W
+#pragma aid LMN UVW
 
 namespace Meq {    
 
@@ -36,8 +36,7 @@ class StatPointSourceDFT: public Function
 {
 public:
   // The default constructor.
-  StatPointSourceDFT()
-    {};
+  StatPointSourceDFT();
 
   virtual ~StatPointSourceDFT();
 
@@ -48,9 +47,6 @@ public:
   virtual int getResult (Result::Ref &resref, 
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);
-
-  // Check and convert the children.
-  void checkChildren();
 
 private:
 };

@@ -23,7 +23,7 @@
 #ifndef MEQ_SQRT_H
 #define MEQ_SQRT_H
     
-#include <MEQ/Function1.h>
+#include <MEQ/Function.h>
 
 #pragma aidgroup Meq
 #pragma types #Meq::Sqrt

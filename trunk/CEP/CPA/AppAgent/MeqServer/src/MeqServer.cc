@@ -352,7 +352,7 @@ void MeqServer::run ()
           Throw("init failed");
       }
     }
-    catch( std::exception &exc )
+    catch( std::exception exc )
     { have_error = true; error_str = exc.what(); }
     catch( ... )
     { have_error = true; error_str = "unknown exception"; }
@@ -466,7 +466,7 @@ void MeqServer::run ()
           if( !output_event.empty() )
             postDataEvent(output_event,output_message,eventrec);
         }
-        catch( std::exception &exc )
+        catch( std::exception exc )
         {
           have_error = true;
           error_str = exc.what();
@@ -525,7 +525,7 @@ void MeqServer::run ()
           else // command not found
             error_str = "unknown command "+cmdid.toString();
         }
-        catch( std::exception &exc )
+        catch( std::exception exc )
         {
           have_error = true;
           error_str = exc.what();

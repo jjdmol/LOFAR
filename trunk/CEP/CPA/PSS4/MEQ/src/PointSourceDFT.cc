@@ -27,35 +27,40 @@ namespace Meq {
 
 using namespace VellsMath;
 
-const HIID child_labels[] = { AidS1F0,AidS1DF,AidS2F0,AidS2DF,AidN };
+const HIID child_labels[] = { AidSt|AidDFT|1,AidSt|AidDFT|2,AidN };
 const int num_children = sizeof(child_labels)/sizeof(child_labels[0]);
+
+PointSourceDFT::PointSourceDFT()
+: Function(num_children,child_labels)
+{}
 
 PointSourceDFT::~PointSourceDFT()
 {}
 
 int PointSourceDFT::getResult (Result::Ref &resref, 
-			       const std::vector<Result::Ref> &childres,
-			       const Request &request, bool newreq)
+                               const std::vector<Result::Ref> &childres,
+                               const Request &request, bool newreq)
 {
-  // Check that child results are all OK (no fails, 1 vellset per child)
+  const int expect_nvs[] = {2,2,1};
+  // Check that child results are all OK (no fails, expected # of vellsets per child)
   string fails;
   for( int i=0; i<num_children; i++ )
   {
     int nvs = childres[i]->numVellSets();
-    if( nvs != 1 )
-      Debug::appendf(fails,"child %s: expecting single VellsSet, got %d;",
-          child_labels[i].toString().c_str(),nvs);
+    if( nvs != expect_nvs[i] )
+      Debug::appendf(fails,"child %s: expecting %d VellsSets, got %d;",
+          child_labels[i].toString().c_str(),expect_nvs[i],nvs);
     if( childres[i]->hasFails() )
       Debug::appendf(fails,"child %s: has fails",child_labels[i].toString().c_str());
   }
   if( !fails.empty() )
     NodeThrow1(fails);
   // Get F0 and DF of S1 and S2.
-  const Vells& vs1f0 = childres[0]().vellSetWr(0).getValue();
-  const Vells& vs1df = childres[1]().vellSetWr(0).getValue();
-  const Vells& vs2f0 = childres[2]().vellSetWr(0).getValue();
-  const Vells& vs2df = childres[3]().vellSetWr(0).getValue();
-  const Vells& vn    = childres[4]().vellSetWr(0).getValue();
+  const Vells& vs1f0 = childres[0]->vellSet(0).getValue();
+  const Vells& vs1df = childres[0]->vellSet(1).getValue();
+  const Vells& vs2f0 = childres[1]->vellSet(0).getValue();
+  const Vells& vs2df = childres[1]->vellSet(1).getValue();
+  const Vells& vn    = childres[2]->vellSet(0).getValue();
   // For the time being we only support 1 frequency range.
   const Cells& cells = request.cells();
   Assert (cells.numSegments(FREQ) == 1);
@@ -123,16 +128,12 @@ int PointSourceDFT::getResult (Result::Ref &resref,
     if (nfreq > 1) {
       dcomplex dval = deltar[i] * conj(deltal[i]);
       for (int j=1; j<nfreq; j++) {
-	val0 *= dval;
-	*resdata++ = val0;
+        val0 *= dval;
+        *resdata++ = val0;
       }
     }
   }
-}
-
-void PointSourceDFT::checkChildren()
-{
-  Function::convertChildren (4);
+  return 0;
 }
 
 } // namespace Meq

@@ -28,7 +28,7 @@
 
 #pragma aidgroup Meq
 #pragma types #Meq::PointSourceDFT
-#pragma aid S1F0 S2F0 S1DF S2DF
+#pragma aid St DFT N
 
 namespace Meq {    
 
@@ -36,8 +36,7 @@ class PointSourceDFT: public Function
 {
 public:
   // The default constructor.
-  PointSourceDFT()
-    {};
+  PointSourceDFT();
 
   virtual ~PointSourceDFT();
 
@@ -48,9 +47,6 @@ public:
   virtual int getResult (Result::Ref &resref, 
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);
-
-  // Check and convert the children.
-  void checkChildren();
 
 private:
 };

@@ -28,7 +28,7 @@
 
 #pragma aidgroup Meq
 #pragma types #Meq::UVW
-#pragma aid RA Dec StX StY StZ
+#pragma aid RA Dec X Y Z
 
 namespace Meq {    
 
@@ -53,13 +53,10 @@ public:
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);
 
-  // Check and convert the children.
-    //##ModelId=400E535502DC
-  void checkChildren();
-
 private:
-    //##ModelId=400E535502D0
-  MPosition itsEarthPos;
+//    //##ModelId=400E535502D0
+//  MPosition itsEarthPos;
+//    get this from children instead!
 };
 
 } // namespace Meq

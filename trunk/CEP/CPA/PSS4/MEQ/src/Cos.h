@@ -23,7 +23,7 @@
 #ifndef MEQ_COS_H
 #define MEQ_COS_H
     
-#include <MEQ/Function1.h>
+#include <MEQ/Function.h>
 
 #pragma aidgroup Meq
 #pragma types #Meq::Cos

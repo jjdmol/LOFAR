@@ -23,7 +23,7 @@
 #ifndef MEQ_DIVIDE_H
 #define MEQ_DIVIDE_H
     
-#include <MEQ/Function2.h>
+#include <MEQ/Function.h>
 
 #pragma aidgroup Meq
 #pragma types #Meq::Divide

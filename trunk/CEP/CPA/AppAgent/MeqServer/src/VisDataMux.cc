@@ -70,8 +70,8 @@ void Meq::VisDataMux::addNode (Node &check_node)
   int did;
   try
   {
-    did = formDataId(state[FStation1].as<int>(),
-                     state[FStation2].as<int>());
+    did = formDataId(state[FStation1Index].as<int>(),
+                     state[FStation2Index].as<int>());
   }
   catch(...)
   {

@@ -27,8 +27,13 @@ namespace Meq {
 
 using namespace VellsMath;
 
-const HIID child_labels[] = { AidL,AidM,AidN,AidU,AidV,AidW };
+const HIID child_labels[] = { AidLMN,AidUVW };
 const int num_children = sizeof(child_labels)/sizeof(child_labels[0]);
+
+
+StatPointSourceDFT::StatPointSourceDFT()
+: Function(num_children,child_labels)
+{}
 
 StatPointSourceDFT::~StatPointSourceDFT()
 {}
@@ -37,13 +42,13 @@ int StatPointSourceDFT::getResult (Result::Ref &resref,
 				   const std::vector<Result::Ref> &childres,
 				   const Request &request, bool newreq)
 {
-  // Check that child results are all OK (no fails, 1 vellset per child)
+  // Check that child results are all OK (no fails, 3 vellsets per child)
   string fails;
   for( int i=0; i<num_children; i++ )
   {
     int nvs = childres[i]->numVellSets();
-    if( nvs != 1 )
-      Debug::appendf(fails,"child %s: expecting single VellsSet, got %d;",
+    if( nvs != 3 )
+      Debug::appendf(fails,"child %s: expecting 3 VellsSets, got %d;",
           child_labels[i].toString().c_str(),nvs);
     if( childres[i]->hasFails() )
       Debug::appendf(fails,"child %s: has fails",child_labels[i].toString().c_str());
@@ -51,15 +56,14 @@ int StatPointSourceDFT::getResult (Result::Ref &resref,
   if( !fails.empty() )
     NodeThrow1(fails);
   // Get L,M,N and U,V,W.
-  const Vells& vl = childres[0]().vellSetWr(0).getValue();
-  const Vells& vm = childres[1]().vellSetWr(0).getValue();
-  const Vells& vn = childres[2]().vellSetWr(0).getValue();
-  const Vells& vu = childres[3]().vellSetWr(0).getValue();
-  const Vells& vv = childres[4]().vellSetWr(0).getValue();
-  const Vells& vw = childres[5]().vellSetWr(0).getValue();
+  const Vells& vl = childres[0]->vellSet(0).getValue();
+  const Vells& vm = childres[0]->vellSet(1).getValue();
+  const Vells& vn = childres[0]->vellSet(2).getValue();
+  const Vells& vu = childres[1]->vellSet(0).getValue();
+  const Vells& vv = childres[1]->vellSet(1).getValue();
+  const Vells& vw = childres[1]->vellSet(2).getValue();
   // For the time being we only support scalars
-  Assert (vl.nelements()==1 && vm.nelements()==1
-      	  && vn.nelements()==1);
+  Assert (vl.isScalar() && vm.isScalar() && vn.isScalar());
   // For the time being we only support 1 frequency range.
   const Cells& cells = request.cells();
   Assert (cells.numSegments(FREQ) == 1);
@@ -76,14 +80,11 @@ int StatPointSourceDFT::getResult (Result::Ref &resref,
   double wavel0 = C::_2pi * f0 / C::c;
   double dwavel = df / f0;
   Vells r1 = (vu*vl + vv*vm + vw*vn) * wavel0;
+  r1.makeNonTemp();  // for now, until Vells problem is fixed
   f0vellset.setValue (tocomplex(cos(r1), sin(r1)));
   r1 *= dwavel;
   dfvellset.setValue (tocomplex(cos(r1), sin(r1)));
-}
-
-void StatPointSourceDFT::checkChildren()
-{
-  Function::convertChildren (6);
+  return 0;
 }
 
 } // namespace Meq
