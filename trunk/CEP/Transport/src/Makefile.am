@@ -6,13 +6,11 @@ endif
 
 
 INSTHDRS = \
-BaseDataHolder.h \
 BaseSim.h \
 CyclicBuffer.h \
 DataHolder.h \
 Socket.h \
 DH_PL.h \
-ParamHolder.h \
 PO_DH_PL.h \
 TH_File.h \
 TH_Mem_Bl.h \
@@ -38,12 +36,10 @@ lib_LTLIBRARIES 	= libtransport.la
 
 
 libtransport_la_SOURCES = \
-BaseDataHolder.cc \
 CyclicBuffer.cc \
 DataHolder.cc \
 Socket.cc \
 DH_PL.cc \
-ParamHolder.cc \
 PO_DH_PL.cc \
 TH_File.cc \
 TH_Mem_Bl.cc \

@@ -72,15 +72,12 @@ int main (int argc, char** argv) {
   DH_Sender.setID(1);
   DH_Receiver.setID(2);
 
-  DH_Sender.setBlocking(true);
-  DH_Receiver.setBlocking(true);
-
   TH_Socket TH_proto("lofar11", 
 		     "lofar12",
 		     8923,
 		     ServerAtSender); //  set the server side
 
-  DH_Sender.connectTo (DH_Receiver, TH_proto);
+  DH_Sender.connectTo (DH_Receiver, TH_proto, true);
   DH_Sender.init();
   DH_Receiver.init();
  

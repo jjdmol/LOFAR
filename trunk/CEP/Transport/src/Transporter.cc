@@ -22,7 +22,7 @@
 
 
 #include <Transport/Transporter.h>
-#include <Transport/BaseDataHolder.h>
+#include <Transport/DataHolder.h>
 #include <Common/Debug.h>
 #include <Common/lofar_iostream.h>
 #include <stdlib.h>
@@ -31,8 +31,9 @@
 namespace LOFAR
 {
 
-Transporter::Transporter (BaseDataHolder* dataHolder)
-  : itsBaseDataHolder  (dataHolder),
+Transporter::Transporter (DataHolder* dataHolder)
+  : itsDataHolder  (dataHolder),
+    itsSourceDH     (0),
     itsTransportHolder (0),
     itsID              (-1),
     itsReadTag         (-1),
@@ -42,8 +43,9 @@ Transporter::Transporter (BaseDataHolder* dataHolder)
     itsIsBlocking      (true)
 {}
 
-Transporter::Transporter(const Transporter& that, BaseDataHolder* dataHolder)
-  : itsBaseDataHolder  (dataHolder),
+Transporter::Transporter(const Transporter& that, DataHolder* dataHolder)
+  : itsDataHolder      (dataHolder),
+    itsSourceDH        (that.itsSourceDH),
     itsTransportHolder (0),
     itsID              (that.itsID),
     itsReadTag         (that.itsReadTag),
@@ -65,7 +67,8 @@ Transporter::~Transporter()
 
 void Transporter::makeTransportHolder (const TransportHolder& prototype)
 {
-  //delete itsTransportHolder;
+  if (itsTransportHolder != 0)
+  { delete itsTransportHolder; }
   itsTransportHolder = 0;
   itsTransportHolder = prototype.make();
   itsTransportHolder -> setTransporter(this);
@@ -74,42 +77,49 @@ void Transporter::makeTransportHolder (const TransportHolder& prototype)
 
 bool Transporter::init()
 {
-  itsTransportHolder->init();
-  return true;
+  if (itsTransportHolder == 0)
+  { return false; }
+  else
+  {
+    itsTransportHolder->init();
+    return true;
+  }
 }
 
-bool Transporter::connect(Transporter& sourceTP,
-			  Transporter& targetTP,
-			  const TransportHolder& prototype) {
+bool Transporter::connect(Transporter& thatTP,
+			  const TransportHolder& prototype,
+			  bool blockingComm) {
 
-  AssertStr(sourceTP.getRate() == targetTP.getRate(), 
+  AssertStr(getRate() == thatTP.getRate(), 
 	    "Transporter::connect; inRate " << 
-	    sourceTP.getRate() << " and outRate " <<
-	    targetTP.getRate() << " not equal!");
+	    getRate() << " and outRate " <<
+	    thatTP.getRate() << " not equal!");
   
+  setIsBlocking(blockingComm);
+  thatTP.setIsBlocking(blockingComm);
+
   // Make a new TransportHolder for both the target and 
   // the source Transporter.
-  sourceTP.makeTransportHolder (prototype);
-  targetTP.makeTransportHolder (prototype);
+  makeTransportHolder (prototype);
+  thatTP.makeTransportHolder (prototype);
 
-  AssertStr(sourceTP.getTransportHolder()->getType() == 
-	    targetTP.getTransportHolder()->getType(),
+  AssertStr(getTransportHolder()->getType() == 
+	    thatTP.getTransportHolder()->getType(),
 	    "Transporter::connect; inType " <<
-	    sourceTP.getTransportHolder()->getType() << 
+	    getTransportHolder()->getType() << 
 	    " and outType " <<
-	    targetTP.getTransportHolder()->getType() << 
+	    thatTP.getTransportHolder()->getType() << 
 	    " not equal!");
   
 
-  DbgAssert (sourceTP.getItsID() >= 0);
+  DbgAssert (getItsID() >= 0);
   
   // Use the source ID as the tag for MPI send/receive.
-  sourceTP.setWriteTag (sourceTP.getItsID());
-  targetTP.setReadTag (sourceTP.getItsID());
-  // And the other way around
-  sourceTP.setReadTag (targetTP.getItsID());
-  targetTP.setWriteTag (targetTP.getItsID());
+  setWriteTag (getItsID());
+  thatTP.setReadTag (getItsID());
    
+  thatTP.setSourceDataHolder(getDataHolder());
+ 
   return true;
 }
 
@@ -174,22 +184,22 @@ void Transporter::dump() const
 
 void* Transporter::getDataPtr()
 {
-  return itsBaseDataHolder->getDataPtr();
+  return itsDataHolder->getDataPtr();
 }
 
 int Transporter::getCurDataSize() const
 {
-  return itsBaseDataHolder->getCurDataSize();  
+  return itsDataHolder->getCurDataSize();  
 }
 
 int Transporter::getDataSize() const
 {
-  return itsBaseDataHolder->getDataSize();   
+  return itsDataHolder->getDataSize();   
 }
 
 int Transporter::getMaxDataSize() const
 {
-  return itsBaseDataHolder->getMaxDataSize();   
+  return itsDataHolder->getMaxDataSize();   
 }
 
 

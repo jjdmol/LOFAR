@@ -1,4 +1,4 @@
-//# Transporter.h: Class which handles transport between BaseDataHolders
+//# Transporter.h: Class which handles transport between DataHolders
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -32,22 +32,22 @@
 namespace LOFAR
 {
 //# Forward declarations
-class BaseDataHolder;
+class DataHolder;
 
-// This is a class which handles data transport between BaseDataHolders.
+// This is a class which handles data transport between DataHolders.
 // It uses an instance of the TransportHolder class to do
-// the actual transport between two connected BaseDataHolders.
+// the actual transport between two connected DataHolders.
 
 class Transporter
 {
  public:
 
   /// Construct the Transporter object.
-  // It sets the pointer to the BaseDataHolder object.
-  Transporter(BaseDataHolder*);
+  // It sets the pointer to the DataHolder object.
+  Transporter(DataHolder*);
 
-  /// Copy constructor for another BaseDataHolder.
-  Transporter (const Transporter&, BaseDataHolder*);
+  /// Copy constructor for another DataHolder.
+  Transporter (const Transporter&, DataHolder*);
 
   ~Transporter();
 
@@ -68,8 +68,8 @@ class Transporter
   TransportHolder* getTransportHolder();
 
   /// Connect two transporters
-  bool connect(Transporter& sourceTP, Transporter& targetTP,
-	       const TransportHolder& prototype);
+  bool connect(Transporter& targetTP, const TransportHolder& prototype, 
+	       bool blockingComm);
   /// After setting the connection, the init() method must be called
   bool init();
 
@@ -93,21 +93,25 @@ class Transporter
   bool isValid() const;
 
   /// Get the DataHolder object for this object.
-  BaseDataHolder* getBaseDataHolder ();
+  DataHolder* getDataHolder ();
 
-  /// Get pointer to the data from the BaseDataHolder.
+  /// Get pointer to the data from the DataHolder.
   void* getDataPtr();
-  /// Get the size of the current data in the BaseDataHolder.
+  /// Get the size of the current data in the DataHolder.
   int getCurDataSize() const;
-  /// Get the maximal size of the data in the BaseDataHolder.
+  /// Get the maximal size of the data in the DataHolder.
   int getMaxDataSize() const;
-  /// Get the size of the data in the BaseDataHolder.
+  /// Get the size of the data in the DataHolder.
   int getDataSize() const;
 
-  /// Set the rate for this Transport (thus for its BaseDataHolder).
+  /// Set the rate for this Transport (thus for its DataHolder).
   void setRate (int aRate);
-  /// Get the rate for this Transport (thus for its BaseDataHolder).
+  /// Get the rate for this Transport (thus for its DataHolder).
   int getRate() const;
+
+  /// Get/set the (other) DataHolder this Transporter is connected to.
+  DataHolder* getSourceDataHolder();
+  void setSourceDataHolder(DataHolder* dh);
 
   bool isBlocking() const ; 
   void setIsBlocking(bool);
@@ -123,8 +127,11 @@ private:
   /// Forbid assignment.
   Transporter& operator= (const Transporter&);
 
-  /// The BaseDataHolder this Transport belongs to.
-  BaseDataHolder* itsBaseDataHolder;
+  /// The DataHolder this Transporter belongs to.
+  DataHolder* itsDataHolder;
+
+  /// The DataHolder where the data comes from.
+  DataHolder* itsSourceDH;
  
   /// The actual TransportHolder.
   TransportHolder* itsTransportHolder;
@@ -132,9 +139,8 @@ private:
   // ID of this Transporter
   int itsID;
   
-  // The tag used for MPI send/receive.
+  // The tags used for send/receive.
   int itsReadTag;
-
   int itsWriteTag;
 
   // Status of the Transporter object
@@ -146,7 +152,7 @@ private:
       Rate=1 means always issue TransportHolder->read/write.
   */
   int itsRate; 
-  bool itsIsBlocking;
+  bool itsIsBlocking;         // Blocking communication on this connection?
 };
 
 
@@ -183,8 +189,8 @@ inline bool Transporter::isValid() const
 inline TransportHolder* Transporter::getTransportHolder()
   { return itsTransportHolder; }
 
-inline BaseDataHolder* Transporter::getBaseDataHolder()
-  { return itsBaseDataHolder; }
+inline DataHolder* Transporter::getDataHolder()
+  { return itsDataHolder; }
 
 inline void Transporter::setRate (int aRate)
   { itsRate = aRate; }
@@ -203,6 +209,12 @@ inline void Transporter::setReadTag (int tag)
 
 inline void Transporter::setWriteTag (int tag)
   { itsWriteTag = tag; }
+
+inline DataHolder* Transporter::getSourceDataHolder()
+  { return itsSourceDH; }
+
+inline void Transporter::setSourceDataHolder(DataHolder* dh)
+  { itsSourceDH = dh; }
 
 } // end namespace
 

@@ -49,14 +49,11 @@ int main(int argc, const char* argv[])
     DH1.setID(1);
     DH2.setID(2);
 
-    DH1.setBlocking(false);
-    DH2.setBlocking(false);
-
     // connect DH1 to DH2
 #ifdef HAVE_MPI
-    DH1.connectTo(DH2, TH_ShMem(0,1));
+    DH1.connectTo(DH2, TH_ShMem(0,1), false);
 #else
-    DH1.connectTo(DH2, TH_Mem());
+    DH1.connectTo(DH2, TH_Mem(), false);
 #endif
     
     // initialize the DataHolders
