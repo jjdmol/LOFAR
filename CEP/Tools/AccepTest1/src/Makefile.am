@@ -13,23 +13,11 @@ WH_Random.h						\
 WH_Dump.h						\
 DH_Empty.h						
 
-Correlator_SOURCES	=	$(DOCHDRS)		\
+SHAREDSRCS		=	$(DOCHDRS)		\
+TestRange.h						\
 TH_Socket.cc						\
 Socket.cc						\
 Config.cc						\
-Correlator.cc						\
-DH_Vis.cc						\
-DH_CorrCube.cc						\
-WH_Correlator.cc					\
-WH_Random.cc						\
-WH_Dump.cc						\
-DH_Empty.cc						
-
-FrontEnd_SOURCES 	=	$(DOCHDRS)		\
-TH_Socket.cc						\
-Socket.cc						\
-Config.cc						\
-FrontEnd.cc						\
 DH_Vis.cc						\
 DH_CorrCube.cc						\
 DH_Empty.cc						\
@@ -37,6 +25,12 @@ WH_Random.cc						\
 WH_Correlator.cc					\
 WH_Dump.cc						
 
+
+Correlator_SOURCES	=	$(SHAREDSRCS)		\
+Correlator.cc						
+
+FrontEnd_SOURCES 	=	$(SHAREDSRCS)		\
+FrontEnd.cc						
 
 Correlator_LDADD = # /bgl/broekema/traceback/traceback.o
 Correlator_DEPENDENCIES = $(LOFAR_DEPEND)
