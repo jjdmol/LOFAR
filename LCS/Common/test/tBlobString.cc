@@ -48,6 +48,10 @@ void doIt (const BlobStringType& type)
   str.resize (11);
   ASSERT (str.capacity() >= 11);
   ASSERT (str.size() == 11);
+  // Make the size a bit less.
+  str.resize (7);
+  ASSERT (str.capacity() >= 7);
+  ASSERT (str.size() == 7);
   // Get the string from the object and a pointer to its first byte.
   // That can only succeed if it uses a string.
   bool exc = false;

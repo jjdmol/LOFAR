@@ -24,6 +24,7 @@
 #define COMMON_BLOBFIELDSET_H
 
 #include <Common/BlobField.h>
+#include <Common/BlobIBufChar.h>
 #include <Common/LofarLogger.h>
 #include <vector>
 #include <string>
@@ -109,10 +110,29 @@ public:
   uint version() const
     { return itsVersion; }
 
+  // Find the length of the blob to be created.
+  uint findBlobSize();
+
   // Create the blob for output.
   // It defines the offsets of the data in the various fields.
   // Pointers to the data can be retrieved using BlobFieldBase::getData.
+  // <group>
+  // Append the blob to the existing stream. The stream should use
+  // a memory buffer.
+  void createBlob (BlobOStream& bs);
+  // Put the blob in the buffer (that is first resized to zero).
   void createBlob (BlobOBufChar&);
+  // </group>
+
+  // Put an extra blob at the end of the data blob in outbuf.
+  // The extra blob should be contained in inbuf.
+  // The length of the blob is given by size. It can be 0.
+  // If size>0, it is checked if the length of the blob in inbuf matches size.
+  void putExtraBlob (BlobOBufChar& outbuf, const void* inbuf, uint size);
+
+  // Get the extra blob from the input.
+  // The size of the returned buffer is the size of the extra blob.
+  BlobIBufChar getExtraBlob (BlobIBufChar& inbuf);
 
   // Read a blob held in the buffer.
   // It finds the offsets of the data in the various fields in the blob.
@@ -153,14 +173,12 @@ public:
   void convertData (BlobIBufChar& buf) const;
 
 private:
-  // Helper function for createBlob.
-  void fill (BlobOStream& bs);
-
   typedef std::map<std::string,int> NameMap;
 
   std::string                 itsName;
   uint                        itsVersion;
   bool                        itsHasFixedShape;
+  uint                        itsNormalSize;
   std::vector<BlobFieldBase*> itsFields;
   NameMap                     itsNameMap;
   ALLOC_TRACER_CONTEXT;

@@ -36,7 +36,8 @@ namespace LOFAR {
   BlobFieldSet::BlobFieldSet (const std::string& name)
     : itsName          (name),
       itsVersion       (0),
-      itsHasFixedShape (true)
+      itsHasFixedShape (true),
+      itsNormalSize    (0)
   {
     LOG_TRACE_FLOW_STR ("Constructed set " << name);
   }
@@ -52,6 +53,7 @@ namespace LOFAR {
       itsName          = that.itsName;
       itsVersion       = that.itsVersion;
       itsHasFixedShape = that.itsHasFixedShape;
+      itsNormalSize    = that.itsNormalSize;
       for (uint i=0; i<itsFields.size(); i++) {
 	delete itsFields[i];
       }
@@ -60,6 +62,7 @@ namespace LOFAR {
       for (uint i=0; i<that.itsFields.size(); i++) {
 	itsFields.push_back (that.itsFields[i]->clone());
       }
+      itsNameMap = that.itsNameMap;
     }
     return *this;
   }
@@ -78,12 +81,7 @@ namespace LOFAR {
       THROW (BlobException,
 	     "BlobFieldBase::add - field" + name + " already exists");
     }
-    if (field.getVersion() > itsVersion) {
-      itsVersion = field.getVersion();
-    }
-    itsHasFixedShape &= field.hasFixedShape();
-    int inx = itsFields.size();
-    itsFields.push_back (field.clone());
+    int inx = add (field);
     itsNameMap[name] = inx;
     return inx;
   }
@@ -99,26 +97,31 @@ namespace LOFAR {
     return inx;
   }
 
-  void BlobFieldSet::fill (BlobOStream& bs)
+  uint BlobFieldSet::findBlobSize()
+  {
+    // Create the blob in a null buffer to determine the length.
+    BlobOBufNull nbuf;
+    BlobOStream nbs(nbuf);
+    createBlob (nbs);
+    return nbuf.size();
+  }
+
+  void BlobFieldSet::createBlob (BlobOStream& bs)
   {
     bs.putStart (itsName, itsVersion);
     for (uint i=0; i<itsFields.size(); i++) {
       itsFields[i]->setSpace (bs);
     }
+    itsNormalSize = bs.tellPos();
     bs.putEnd();
   }
 
   void BlobFieldSet::createBlob (BlobOBufChar& buf)
   {
-    // First do it on a null buffer to determine the length.
-    BlobOBufNull nbuf;
-    BlobOStream nbs(nbuf);
-    fill (nbs);
-    // Now reserve enough space in the buffer.
-    // In this way we avoid possibly costly resizes.
-    buf.reserve (nbuf.size());
+    buf.clear();
+    buf.reserve (findBlobSize());
     BlobOStream bs(buf);
-    fill (bs);
+    createBlob (bs);
   }
 
   void BlobFieldSet::openBlob (BlobIBufChar& buf)
@@ -131,7 +134,59 @@ namespace LOFAR {
     for (uint i=0; i<itsFields.size(); i++) {
       itsFields[i]->getSpace (bs, version);
     }
+    // All fields have been read.
+    // There might be an extra blob at the end.
+    // Skip the possible extra blob, but remember its offset.
+    itsNormalSize = bs.tellPos();
+    BlobIBufChar extra = getExtraBlob (buf);
+    bs.getSpace (extra.size());
     bs.getEnd();
+  }
+
+  void BlobFieldSet::putExtraBlob (BlobOBufChar& outbuf,
+				   const void* inbuf, uint size)
+  {
+    if (size > 0) {
+      // Check if the input buffer is a blob. Get its length.
+      const BlobHeader* hdrin = static_cast<const BlobHeader*>(inbuf);
+      ASSERT (hdrin->checkMagicValue());
+      ASSERT (hdrin->getLength() == size);
+    }
+    // Check if the output buffer contains a blob (created by createBlob). 
+    // Get and check its length.
+    BlobHeader* hdrout = (BlobHeader*)(outbuf.getBuffer());
+    ASSERT (hdrout->checkMagicValue());
+    uint oldsz = hdrout->getLength();
+    ASSERT (outbuf.size() == oldsz);
+    // Insert the extra blob in the normal blob.
+    // Reserve enough space in the buffer.
+    uint32 eob = BlobHeader::eobMagicValue();
+    outbuf.resize (itsNormalSize + size + sizeof(eob));
+    // Put it (followed by end-of-blob) as the extra blob.
+    // Reacquire the buffer pointer, because it might have changed by resize.
+    uchar* dbuf = const_cast<uchar*>(outbuf.getBuffer());
+    memcpy (dbuf+itsNormalSize, inbuf, size);
+    memcpy (dbuf+itsNormalSize+size, &eob, sizeof(eob));
+    // Update the total blob length.
+    hdrout = (BlobHeader*)(dbuf);
+    hdrout->setLength (outbuf.size());
+  }
+
+  BlobIBufChar BlobFieldSet::getExtraBlob (BlobIBufChar& inbuf)
+  {
+    int64 off = itsNormalSize;
+    const void* extra = inbuf.getBuffer() + off;
+    off += sizeof(BlobHeader::eobMagicValue());
+    DBGASSERT (inbuf.size() >= off);
+    uint size = inbuf.size() - off;
+    BlobIBufChar buf(extra, size);
+    if (size > 0) {
+      // There is something extra. Check if indeed a blob with correct length.
+      const BlobHeader* hdr = static_cast<const BlobHeader*>(extra);
+      hdr->checkMagicValue();
+      ASSERT (hdr->getLength() == size);
+    }
+    return buf;
   }
 
   BlobFieldBase& BlobFieldSet::operator[] (const std::string& name)

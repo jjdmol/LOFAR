@@ -24,6 +24,16 @@
 
 namespace LOFAR {
 
+BlobOBufString::BlobOBufString (BlobString& buffer,
+				uint expandSize, uint start)
+  : BlobOBufChar (buffer.data(), buffer.capacity(),
+		  buffer.canExpand() ? expandSize:0,
+		  start, false),
+    itsString    (&buffer)
+{
+  ASSERT(start <= buffer.size());
+}
+
 BlobOBufString::~BlobOBufString()
 {}
 

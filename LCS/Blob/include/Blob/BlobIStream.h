@@ -58,6 +58,9 @@ public:
   // Destructor.
   ~BlobIStream();
 
+  // Clear the object. I.e., reset the current level and position.
+  void clear();
+
   // Start getting a blob which reads the header abd checks if its type
   // matches the given object type.
   // It is the counterpart of BlobOStream::putStart.
@@ -81,7 +84,10 @@ public:
   // information to read.
   // It checks if it finds the correct magic value preceeding
   // the object type.
+  // The second version also returns the size of this next blob.
   const std::string& BlobIStream::getNextType();
+  const std::string& BlobIStream::getNextType (uint& size);
+  // </group>
 
   // Get a single value.
   // A string is stored as a length followed by the characters.
@@ -185,6 +191,13 @@ private:
   BlobIBuffer*       itsStream;
 };
 
+
+inline void BlobIStream::clear()
+{
+  itsCurLength = 0;
+  itsLevel     = 0;
+  itsHasCachedType = false;
+}
 
 inline int BlobIStream::getStart (const char* objectType)
   { return getStart (std::string(objectType)); }

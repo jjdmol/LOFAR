@@ -66,7 +66,6 @@ void lofarLoggerInitNode(void) {
 	// try to resolve the applicationname
 	applNameLen = readlink("/proc/self/exe", applName, MAXLEN-1);
 	applName[applNameLen] = '\0';
-//	else {	// hopefully the user used argc and argv in its main.
 //		strcpy (applName, argv[0]);
 //	}	
 

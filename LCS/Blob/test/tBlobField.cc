@@ -87,6 +87,12 @@ void doOut (BlobFieldSet& fset, BlobOBufChar& bb)
   }
   px[0] = XX(1,2);
   px[1] = XX(2,1);
+  BlobOBufChar buf;
+  BlobOStream bos(buf);
+  bos.putStart ("abcd", 1);
+  bos << "name=xxx";
+  bos.putEnd();
+  fset.putExtraBlob (bb, buf.getBuffer(), buf.size());
 }
 
 // Function to read back and check a blob.
@@ -112,6 +118,16 @@ void doIn (BlobFieldSet& fset, BlobIBufChar& bb)
   }
   ASSERT (px[0] == XX(1,2));
   ASSERT (px[1] == XX(2,1));
+  BlobIBufChar bic = fset.getExtraBlob (bb);
+  if (bic.size() > 0) {
+    bic.setPos (0);
+    BlobIStream bis(bic);
+    bis.getStart ("abcd");
+    std::string str;
+    bis >> str;
+    ASSERT (str == "name=xxx");
+    bis.getEnd();
+  }
 }
 
 // Function to interpret and check a blob.
