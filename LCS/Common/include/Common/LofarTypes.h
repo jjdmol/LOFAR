@@ -44,9 +44,11 @@ using LOFAR::TYPES::ldouble;
 using LOFAR::TYPES::fcomplex;
 using LOFAR::TYPES::dcomplex;
 
+using LOFAR::TYPES::int8;
 using LOFAR::TYPES::int16;
 using LOFAR::TYPES::int32;
 using LOFAR::TYPES::int64;
+using LOFAR::TYPES::uint8;
 using LOFAR::TYPES::uint16;
 using LOFAR::TYPES::uint32;
 using LOFAR::TYPES::uint64;
