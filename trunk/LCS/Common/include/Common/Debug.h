@@ -339,13 +339,13 @@ const char exception_message[] = "\n==================================== EXCEPTI
 #define Throw1(msg) ThrowExc1(LOFAR::Exception,msg)
 
 // The Assert macro will Throw an AssertError if condition is FALSE.
-#define Assert(cond)  { if( !(cond) ) ThrowExc(Debug::AssertError,"Assert failed: " #cond); }
-#define Assert1(cond)  { if( !(cond) ) ThrowExc1(Debug::AssertError,"Assert failed: " #cond); }
+#define Assert(cond)  { if( !(cond) ) ThrowExc(::Debug::AssertError,"Assert failed: " #cond); }
+#define Assert1(cond)  { if( !(cond) ) ThrowExc1(::Debug::AssertError,"Assert failed: " #cond); }
 
 // The FailWhen macro will Throw a Debug::Fail if condition is TRUE
 // Always defined (even with debugging off)
-#define FailWhen(cond,msg)  { if( cond ) ThrowExc(Debug::Fail,msg); }
-#define FailWhen1(cond,msg)  { if( cond ) ThrowExc1(Debug::Fail,msg); }
+#define FailWhen(cond,msg)  { if( cond ) ThrowExc(::Debug::Fail,msg); }
+#define FailWhen1(cond,msg)  { if( cond ) ThrowExc1(::Debug::Fail,msg); }
 
 // The DbgFailWhen macro is like FailWhen, but defined to do nothing if 
 // debugging is off.
@@ -360,8 +360,8 @@ const char exception_message[] = "\n==================================== EXCEPTI
 // The DbgAssert macro is like Assert, but defined to do nothing if 
 // debugging is off.
 #ifdef ENABLE_DBGASSERT
-# define DbgAssert(cond) { if( !(cond) ) ThrowExc(Debug::AssertError,"DbgAssert failed: " #cond); }
-# define DbgAssert1(cond) { if( !(cond) ) ThrowExc1(Debug::AssertError,"DbgAssert failed: " #cond); }
+# define DbgAssert(cond) { if( !(cond) ) ThrowExc(::Debug::AssertError,"DbgAssert failed: " #cond); }
+# define DbgAssert1(cond) { if( !(cond) ) ThrowExc1(::Debug::AssertError,"DbgAssert failed: " #cond); }
 #else
 # define DbgAssert(cond)
 # define DbgAssert1(cond)
@@ -375,7 +375,7 @@ const char exception_message[] = "\n==================================== EXCEPTI
  { if( !(cond) ) { \
      std::ostringstream oss; \
      oss << stream; \
-     ThrowExc(Debug::AssertError,"Assertion `" #cond "' failed: " + oss.str()); \
+     ThrowExc(::Debug::AssertError,"Assertion `" #cond "' failed: " + oss.str()); \
  }}
 
 // The DbgAssertStr macro is like AssertStr, but
@@ -385,7 +385,7 @@ const char exception_message[] = "\n==================================== EXCEPTI
  { if( !(cond) ) { \
      std::ostringstream oss; \
      oss << stream; \
-     ThrowExc(Debug::AssertError,"DbgAssert `" #cond "' failed: " + oss.str()); \
+     ThrowExc(::Debug::AssertError,"DbgAssert `" #cond "' failed: " + oss.str()); \
  }}
 #else
 # define DbgAssertStr(cond,stream)
@@ -399,7 +399,7 @@ const char exception_message[] = "\n==================================== EXCEPTI
      std::ostringstream oss; \
      oss << stream; \
      ::Debug::getDebugStream()<<oss.str()<<std::endl; \
-     throw Debug::AssertError(oss.str()); \
+     throw ::Debug::AssertError(oss.str()); \
  }}
 
 
@@ -555,7 +555,7 @@ namespace Debug {
 }
 
 // Default DebugContext is the one in Debug.
-using Debug::getDebugContext;
+using ::Debug::getDebugContext;
 
 
 // inline functions for converting scalars to strings
