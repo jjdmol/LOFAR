@@ -1,3 +1,3 @@
 include 'fillparms.g'
-setgsmall('demo10-1');
+setgsmall('demo10');
 exit
