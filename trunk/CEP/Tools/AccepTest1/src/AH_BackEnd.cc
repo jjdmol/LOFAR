@@ -113,15 +113,15 @@ void AH_BackEnd::run(int nsteps) {
     }
   }
 
-  if (aggregate_bandwidth != 0.0) {
-    cout << itsNelements << " " ;
-    cout << itsNsamples  << " " ;
-    cout << itsNchannels << " " ;
-    cout << itsNpolarisations << " " ;
+//   if (aggregate_bandwidth != 0.0) {
+//     cout << itsNelements << " " ;
+//     cout << itsNsamples  << " " ;
+//     cout << itsNchannels << " " ;
+//     cout << itsNpolarisations << " " ;
 
-    cout << (8.0*aggregate_bandwidth)/(nsteps*1024.0*1024.0) << " Mbit/sec       ";
-    cout << (800.0*aggregate_bandwidth)/(nsteps*1024.0*1024.0*1024.0) << "% of theoretical peak (Gbit/sec)" << endl;
-  }
+//     cout << (8.0*aggregate_bandwidth)/(nsteps*1024.0*1024.0) << " Mbit/sec       ";
+//     cout << (800.0*aggregate_bandwidth)/(nsteps*1024.0*1024.0*1024.0) << "% of theoretical peak (Gbit/sec)" << endl;
+//   }
   //     gettimeofday(&starttime, NULL);
 }
 
