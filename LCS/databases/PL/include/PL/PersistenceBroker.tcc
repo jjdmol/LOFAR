@@ -1,4 +1,4 @@
-//#  ConnectionHandler.h: handles connection to the database.
+//#  PersistenceBroker.tcc: inline implementation of persistence broker class.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,35 +20,31 @@
 //#
 //#  $Id$
 
-#ifndef LCS_PL_CONNECTIONHANDLER_H
-#define LCS_PL_CONNECTIONHANDLER_H
+#include <PL/Exception.h>
+#include <PL/TPersistentObject.h>
+#include <PL/Collection.h>
 
-//# Includes
-#include <string>
-
-namespace LCS
+namespace LOFAR
 {
   namespace PL
   {
 
-    //
-    // This class is responsible for handling the connection to the database.
-    // Currently, its sole is to decouple the PersistenceBroker from the
-    // Database Template Library (DTL), which we use to access our databases.
-    //
-    class ConnectionHandler
+    template<typename T>
+    Collection<TPersistentObject<T> >
+    PersistenceBroker::retrieve(const Query& query, int maxObjects)
     {
-    public:
-      static void connect(const std::string& aDsn, const std::string& aUid, 
-                          const std::string& aPwd);
-    private:
-      ConnectionHandler();
-      ConnectionHandler(const ConnectionHandler&);
-      ConnectionHandler& operator=(const ConnectionHandler&);
-    };
+      return TPersistentObject<T>::retrieve(query, maxObjects);
+    }
+
+    template <typename T>
+    TPersistentObject<T> 
+    PersistenceBroker::retrieve(const ObjectId& oid) const
+    {
+      TPersistentObject<T> tpo;
+      tpo.retrieve(oid);
+      return tpo;
+    }
 
   } // namespace PL
 
-} // namespace LCS
-
-#endif
+} // namespace LOFAR

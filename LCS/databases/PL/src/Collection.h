@@ -20,14 +20,14 @@
 //#
 //#  $Id$
 
-#ifndef LCS_PL_COLLECTION_H
-#define LCS_PL_COLLECTION_H
+#ifndef LOFAR_PL_COLLECTION_H
+#define LOFAR_PL_COLLECTION_H
 
 //# Includes
 #include <list>
 #include <PL/Exception.h>
 
-namespace LCS
+namespace LOFAR
 {
   namespace PL
   {
@@ -70,6 +70,6 @@ namespace LCS
 
   } // namespace PL
 
-} // namespace LCS
+} // namespace LOFAR
 
 #endif

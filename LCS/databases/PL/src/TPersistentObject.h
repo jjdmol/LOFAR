@@ -20,15 +20,15 @@
 //#
 //#  $Id$
 
-#ifndef LCS_PL_TPERSISTENTOBJECT_H
-#define LCS_PL_TPERSISTENTOBJECT_H
+#ifndef LOFAR_PL_TPERSISTENTOBJECT_H
+#define LOFAR_PL_TPERSISTENTOBJECT_H
 
 //# Includes
 #include <PL/PersistentObject.h>
 // #include <PL/Exception.h>
 #include <loki/static_check.h>
 
-namespace LCS 
+namespace LOFAR 
 {
   namespace PL
   {

@@ -23,7 +23,7 @@
 #include <PL/PersistentObject.h>
 #include <PL/Exception.h>
 
-namespace LCS
+namespace LOFAR
 {
   namespace PL
   {
@@ -126,4 +126,4 @@ namespace LCS
 
   } // namespace PL
 
-} // namespace LCS
+} // namespace LOFAR

@@ -67,8 +67,8 @@ public:
     // 32 Dec 1970 23h60m00s (invalid day and min field)
     const SQLTimeStamp::sql_timestamp_t tsf = 
       { 1970, 12, 32, 23, 60,  0,         0};
-    // must throw LCS::Assert exception
-    TS_ASSERT_THROWS( SQLTimeStamp stsf(tsf), LCS::AssertError );
+    // must throw LOFAR::Assert exception
+    TS_ASSERT_THROWS( SQLTimeStamp stsf(tsf), LOFAR::AssertError );
   }
 
   void testLessThanComparison()

@@ -20,13 +20,13 @@
 //#
 //#  $Id$
 
-#ifndef LCS_PL_OBJECTID_H
-#define LCS_PL_OBJECTID_H
+#ifndef LOFAR_PL_OBJECTID_H
+#define LOFAR_PL_OBJECTID_H
 
 #include <Common/LofarTypes.h>
 #include <boost/shared_ptr.hpp>
 
-namespace LCS
+namespace LOFAR
 {
   namespace PL
   {
@@ -101,6 +101,6 @@ namespace LCS
 
   } // namespace PL
 
-} // namespace LCS
+} // namespace LOFAR
 
 #endif

@@ -20,14 +20,14 @@
 //#
 //#  $Id$
 
-#ifndef LCS_PL_PERSISTENCEBROKER_H
-#define LCS_PL_PERSISTENCEBROKER_H
+#ifndef LOFAR_PL_PERSISTENCEBROKER_H
+#define LOFAR_PL_PERSISTENCEBROKER_H
 
 //# Includes
 #include <string>
 #include <climits>
 
-namespace LCS
+namespace LOFAR
 {
   namespace PL
   {
@@ -65,22 +65,22 @@ namespace LCS
 
       // Erase the specified persistent object, i.e. delete it from the
       // database.
-      // \throw LCS::PL::DeleteError
+      // \throw LOFAR::PL::DeleteError
       void erase(const PersistentObject& po) const;
 
       // Erase all the objects in the collection. All objects will be deleted
       // from the database.
-      // \throw LCS::PL::DeleteError
+      // \throw LOFAR::PL::DeleteError
       template<typename T>
       void erase(const Collection<TPersistentObject<T> >& ctpo) const;
 
       // Erase all persistent objects that match the specified query.
-      // \throw LCS::PL::DeleteError
+      // \throw LOFAR::PL::DeleteError
       void erase(const Query& q) const;
 
       // Retrieve a collection of persistent objects, that match a specific
       // query. At most \c maxObjects are returned.
-      // \throw LCS::PL::QueryError
+      // \throw LOFAR::PL::QueryError
       // \todo maxObjects should become part of the Query.
       template<typename T> 
       static Collection<TPersistentObject<T> > 
@@ -106,7 +106,7 @@ namespace LCS
 
       // Return an iterator to a collection of persistent objects that match 
       // a specific query.
-      // \throw LCS::PL::QueryError
+      // \throw LOFAR::PL::QueryError
       // \todo Should we provide this methods in PersistenceBroker, or will we
       // only support collections??
       template<typename T> 
@@ -124,7 +124,7 @@ namespace LCS
 
   } // namespace PL
 
-} // namespace LCS
+} // namespace LOFAR
 
 #include <PL/PersistenceBroker.tcc>
 

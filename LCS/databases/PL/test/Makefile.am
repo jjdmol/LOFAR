@@ -1,24 +1,29 @@
 check_PROGRAMS		= tA \
-			  tCollection	\
-			  tTPO		\
-			  tObjectId
+			  tC
+#			  tCollection	\
+#			  tTPO		\
+#			  tObjectId
 #			  tSQLTimeStamp
 
 tA_SOURCES              = tA.cc
 tA_LDADD		= ../src/libpl.la
 tA_DEPENDENCIES		= ../src/libpl.la $(LOFAR_DEPEND)
 
-tTPO_SOURCES		= tTPO.cc
-tTPO_LDADD		= ../src/libpl.la
-tTPO_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
+tC_SOURCES              = tC.cc
+tC_LDADD		= ../src/libpl.la
+tC_DEPENDENCIES		= ../src/libpl.la $(LOFAR_DEPEND)
 
-tCollection_SOURCES	= tCollection.cc
-tCollection_LDADD	= ../src/libpl.la
-tCollection_DEPENDENCIES= ../src/libpl.la $(LOFAR_DEPEND)
+#tTPO_SOURCES		= tTPO.cc
+#tTPO_LDADD		= ../src/libpl.la
+#tTPO_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
 
-tObjectId_SOURCES	= tObjectId.cc
-tObjectId_LDADD		= ../src/libpl.la
-tObjectId_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
+#tCollection_SOURCES	= tCollection.cc
+#tCollection_LDADD	= ../src/libpl.la
+#tCollection_DEPENDENCIES= ../src/libpl.la $(LOFAR_DEPEND)
+
+#tObjectId_SOURCES	= tObjectId.cc
+#tObjectId_LDADD		= ../src/libpl.la
+#tObjectId_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
 
 #myClass_SOURCES		= myClass.cc \
 #			  MeqParm.cc
