@@ -27,20 +27,10 @@
 #include <time.h>
 #include <Common/StringUtil.h>
 #include <ACC/ACCmdImpl.h>
+#include <ACC/APAdminPool.h>
 
 namespace LOFAR {
   namespace ACC {
-
-#if 0
-//# local function for formatting time values to human readable format
-string timeString(time_t	aTime)
-{
-	char	theTimeString [20];
-	strftime(theTimeString, 20, "%F %T", gmtime(&aTime));
-
-	return (theTimeString);
-}
-#endif
 
 ACCmdImpl::ACCmdImpl() :
 	ApplControl()
@@ -54,14 +44,20 @@ ACCmdImpl::~ACCmdImpl() { };
 bool	ACCmdImpl::boot  (const time_t		scheduleTime,
 						  const string&		configID) const
 {
+
 	LOG_DEBUG(formatString("boot(%s,%s)", timeString(scheduleTime).c_str(), 
 														configID.c_str()));
 	// TODO
+	// Communicate with the Nodemanager to powerup a couple of nodes.
+	// The nodes are specified in the paramfile or in the nodelist: TODO
 	return(true);
 }
 
 bool	ACCmdImpl::define(const time_t		scheduleTime) const
 {
+	LOG_DEBUG(formatString("define(%s)", timeString(scheduleTime).c_str()));
+	APAdminPool::getInstance().writeToAll(PCCmdDefine, 0x12345678, "some options?");
+
 	// TODO
 	return(true);
 }
@@ -134,7 +130,7 @@ bool	ACCmdImpl::replace	 (const time_t		scheduleTime,
 string	ACCmdImpl::askInfo   (const string& 	keylist) const
 {
 	// TODO
-	return ("Not yet implemented");
+	return ("ACCmdImpl: askInfo not yet implemented");
 }
 
 

@@ -1,4 +1,4 @@
-//#  ApplControlServer.cc: Implements the TCP comm. for the appl. Cntlr.
+//#  ProcControlServer.cc: Implements the TCP comm. for the appl. Cntlr.
 //#
 //#  Copyright (C) 2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -29,35 +29,35 @@
 //# Includes
 #include <Common/StringUtil.h>
 #include <Transport/TH_Socket.h>
-#include <ACC/ApplControlServer.h>
+#include <ACC/ProcControlServer.h>
 
 namespace LOFAR {
   namespace ACC {
 
 //
-// Setup (wait for an) connection with the AC client
+// Setup (wait for an) connection with the PC client
 //
-ApplControlServer::ApplControlServer(const uint16			portnr,
-									 const ApplControl*		ACImpl) :
-	itsACImpl(ACImpl)
+ProcControlServer::ProcControlServer(const uint16				portnr,
+									 const ProcessControl*		PCImpl) :
+	itsPCImpl(PCImpl)
 {
-	DH_ApplControl	DH_AC_Client;
-	DH_ApplControl*	DH_AC_Server = new DH_ApplControl;
-	DH_AC_Client.setID(3);
-	DH_AC_Server->setID(4);
+	DH_ProcControl	DH_PC_Client;
+	DH_ProcControl*	DH_PC_Server = new DH_ProcControl;
+	DH_PC_Client.setID(3);
+	DH_PC_Server->setID(4);
 
-	DH_AC_Client.connectBidirectional(*DH_AC_Server, 
-					 			TH_Socket("", "localhost", portnr, false, false),
-					 			TH_Socket("localhost", "", portnr, true,  false),
+	DH_PC_Client.connectBidirectional(*DH_PC_Server, 
+					 			TH_Socket("", "localhost", portnr, true,  false),
+					 			TH_Socket("localhost", "", portnr, false, false),
 								false);	// blocking
-	DH_AC_Server->init();
+	DH_PC_Server->init();
 
-	itsCommChan = new ApplControlComm(false);		// async
-	itsCommChan->setDataHolder(DH_AC_Server);
+	itsCommChan = new ProcControlComm(false);		// async
+	itsCommChan->setDataHolder(DH_PC_Server);
 }
 
 // Destructor
-ApplControlServer::~ApplControlServer() 
+ProcControlServer::~ProcControlServer() 
 {
 	if (itsCommChan) {
 		delete itsCommChan;
@@ -66,33 +66,33 @@ ApplControlServer::~ApplControlServer()
 
 // Returns a string containing the IP address and portnumber of the
 // Application controller the class is connected to.
-string		ApplControlServer::askInfo(const string&	keylist) const
+string		ProcControlServer::askInfo(const string&	keylist) const
 {
-	if (!itsCommChan->doRemoteCmd (CmdInfo, 0, 0, keylist))
+	if (!itsCommChan->doRemoteCmd (PCCmdInfo, 0, keylist))
 		return (keylist);
 
 	return (itsCommChan->getDataHolder()->getOptions());
 }
 
-bool	ApplControlServer::pollForMessage() const
+bool	ProcControlServer::pollForMessage() const
 {
-	LOG_TRACE_FLOW("ApplControlServer:pollForMessage");
+	LOG_TRACE_FLOW("ProcControlServer:pollForMessage");
 
 	return (itsCommChan->getDataHolder()->read());
 }
 
-bool ApplControlServer::handleMessage(DH_ApplControl*	theMsg) 
+bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg) 
 {
-	ACCommand	ACCmd(static_cast<int16>(theMsg->getCommand()),
-					  theMsg->getScheduleTime(),
+	ACCommand	PCCmd(static_cast<int16>(theMsg->getCommand()),
+					  0,
 					  theMsg->getWaitTime(),
 					  theMsg->getOptions(),
-					  theMsg->getProcList(),
-					  theMsg->getNodeList());
-	return (handleMessage(&ACCmd));
+					  "",
+					  "");
+	return (handleMessage(&PCCmd));
 }
 
-bool ApplControlServer::handleMessage(ACCommand*	theMsg) 
+bool ProcControlServer::handleMessage(ACCommand*	theMsg) 
 {
 	int16	cmdType 	 = theMsg->itsCommand;
 	time_t	scheduleTime = theMsg->itsScheduleTime;
@@ -110,73 +110,68 @@ bool ApplControlServer::handleMessage(ACCommand*	theMsg)
 	bool	result 	   = false;
 
 	switch (cmdType) {
-	case CmdInfo:		
-		sendResult(AcCmdMaskOk, "Not yet implemented");
+	case PCCmdInfo:		
+		sendResult(PcCmdMaskOk, "Not yet implemented");
 		return (true); 								
-	case CmdAnswer:	
+	case PCCmdAnswer:	
 		sendAnswer = false; 
 		//TODO ???
 		break;
-	case CmdBoot:		
-		result = itsACImpl->boot(scheduleTime, options);	
+	case PCCmdDefine:		
+		result = itsPCImpl->define(scheduleTime);			
 		break;
-	case CmdDefine:		
-		result = itsACImpl->define(scheduleTime);			
+	case PCCmdInit:		
+		result = itsPCImpl->init(scheduleTime);			
 		break;
-	case CmdInit:		
-		result = itsACImpl->init(scheduleTime);			
+	case PCCmdRun:		
+		result = itsPCImpl->run(scheduleTime);			
 		break;
-	case CmdRun:		
-		result = itsACImpl->run(scheduleTime);			
+	case PCCmdPause:		
+		result = itsPCImpl->pause(scheduleTime, waitTime, options);	
 		break;
-	case CmdPause:		
-		result = itsACImpl->pause(scheduleTime, waitTime, options);	
-		break;
-	case CmdQuit:		
-		itsACImpl->quit(scheduleTime);
+	case PCCmdQuit:		
+		itsPCImpl->quit(scheduleTime);
 		result = true;
 		break;
-	case CmdSnapshot:	
-		result = itsACImpl->snapshot(scheduleTime, options);	
+	case PCCmdSnapshot:	
+		result = itsPCImpl->snapshot(scheduleTime, options);	
 		break;
-	case CmdRecover:	
-		result = itsACImpl->recover (scheduleTime, options);	
+	case PCCmdRecover:	
+		result = itsPCImpl->recover (scheduleTime, options);	
 		break;
-	case CmdReinit:		
-		result = itsACImpl->reinit (scheduleTime, options);	
-		break;
-	case CmdResult:		
-		handleAckMessage(); 
-		sendAnswer = false;
+	case PCCmdReinit:		
+		result = itsPCImpl->reinit (scheduleTime, options);	
 		break;
 	default:
-		//TODO
-		LOG_DEBUG_STR ("Message type " << cmdType << " not supported!\n");
+		if (cmdType & PCCmdResult) {
+			handleAckMessage(); 
+			sendAnswer = false;
+		}
+		else {
+			//TODO
+			LOG_DEBUG_STR ("Message type " << cmdType << " not supported!\n");
+		}
 		break;
 	}
 
-#if 0
-	// DO NOT send respons: this depends on all received acks from AP's
 	if (sendAnswer) {
-		sendResult(result ? AcCmdMaskOk : 0);
+		sendResult(result ? PcCmdMaskOk : 0);
 	}
-#endif
-
 
 	return (true);
 }
 
 
-void	ApplControlServer::handleAckMessage(void)
+void	ProcControlServer::handleAckMessage(void)
 {
 //	handleAckMessage();
 }
 
-void ApplControlServer::sendResult(uint16	aResult, const string&	someOptions) 
+void ProcControlServer::sendResult(uint16	aResult, const string&	someOptions) 
 {
 	itsCommChan->getDataHolder()->setResult(aResult);
-	ACCmd command = itsCommChan->getDataHolder()->getCommand();
-	itsCommChan->sendCmd (static_cast<ACCmd>(command | CmdResult), 0, 0, someOptions);
+	PCCmd command = itsCommChan->getDataHolder()->getCommand();
+	itsCommChan->sendCmd (static_cast<PCCmd>(command | PCCmdResult), 0, someOptions);
 }
 
 } // namespace ACC

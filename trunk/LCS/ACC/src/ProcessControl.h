@@ -26,7 +26,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <ACC/DH_ProcessControl.h>
+#include <ACC/DH_ProcControl.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -34,7 +34,9 @@ namespace LOFAR {
 //# Description of class.
 // The ProcessControl class defines the interface of the Application
 // processes. All functions in this class are abstract and need to be
-// implemented on both the client and the server-side.
+// implemented on both the client and the server-side. On the client side
+// the implementation will only forward the function-call, on the server
+// side the real implementation must be done.
 //
 class ProcessControl 
 {
@@ -65,8 +67,8 @@ protected:
 	// Not default constructable
 	ProcessControl() {}
 	// Copying is also not allowed
-	ProcessControl(const ProcessControl& that) { operator=(that); };
-	ProcessControl& 	operator=(const ProcessControl& that) { return (*this); };
+	ProcessControl(const ProcessControl& that);
+	ProcessControl& 	operator=(const ProcessControl& that);
 };
 
 

@@ -79,6 +79,38 @@ void 	DH_ApplControl::preprocess()
 
 }
 
+// Redefine the write function.
+bool	DH_ApplControl::write()
+{
+	BlobOStream&	bos = createExtraBlob();		// attached to dataholder
+
+	bos <<	itsOptions;
+	bos <<	itsProcList;
+	bos <<	itsNodeList;
+	
+	return (DataHolder::write());
+}
+
+// Redefine the read function.
+bool	DH_ApplControl::read()
+{
+	if (!DataHolder::read()) {
+		return (false);
+	}
+
+	int32			version;
+	bool			found;
+	BlobIStream&	bis = getExtraBlob(found, version);
+	ASSERTSTR (found, "DH_ApplControl::read has no extra blob");
+
+	bis >>	itsOptions;
+	bis >>	itsProcList;
+	bis >>	itsNodeList;
+	bis.getEnd();
+
+	return (true);
+}
+	
 
 //# ---------- private ----------
 
@@ -86,8 +118,9 @@ void 	DH_ApplControl::preprocess()
 void	DH_ApplControl::fillDataPointers() {
 	itsVersionNumber = getData<uint16>("VersionNumber");
 	itsCommand 		 = getData<int16> ("Command");
-	itsScheduleTime  = &(static_cast<time_t>(*getData<int32> ("ScheduleTime")));
-	itsWaitTime		 = &(static_cast<time_t>(*getData<int32> ("WaitTime")));
+	// need old plain C typecast to get the time_t values back.
+	itsScheduleTime  = (time_t*)(getData<int32>("ScheduleTime"));
+	itsWaitTime		 = (time_t*)(getData<int32>("WaitTime"));
 	itsResult 		 = getData<uint16>("Result");
 
 	*itsVersionNumber = 0x0100;		// TODO define a constant WriteVersion

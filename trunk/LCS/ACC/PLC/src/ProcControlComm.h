@@ -41,14 +41,11 @@ typedef enum { PcCmdMaskOk 	 	  = 0x0001,
 class ProcControlComm 
 {
 public:
+	// The only constructor
 	explicit ProcControlComm(bool	syncComm);
 
 	// Destructor;
 	virtual ~ProcControlComm();
-
-	// Copying is not allowed since sockets are involved.
-	ProcControlComm(const ProcControlComm& that);
-	ProcControlComm& 	operator=(const ProcControlComm& that);
 
 	// CommandInfo returns extra information about the conditions that were met
 	// during the execution of the last command.
@@ -60,9 +57,7 @@ public:
 	// Constructs a command and sends it to the other side.
 	void	sendCmd(const PCCmd			theCmd,
 				 	const time_t		theWaitTime = 0,
-					const string&		theOptions = "",
-					const string&		theProcList = "",
-					const string&		theNodeList = "") const;
+					const string&		theOptions = "") const;
 
 	// Is called after a message is sent to the server. Returns true in async
 	// comm, does a read on the socket in sync comm. and returns the analysed
@@ -71,11 +66,9 @@ public:
 
 	// Executes the given command: fills a dataholder, send it to the sender,
 	// and do a 'waitForResponse'.
-	bool	doRemoteCmd(const ACCmd			theCmd,
+	bool	doRemoteCmd(const PCCmd			theCmd,
 					    const time_t		theWaitTime = 0,
-						const string&		theOptions = "",
-						const string&		theProcList = "",
-						const string&		theNodeList = "") const;
+						const string&		theOptions = "") const;
 
 	DH_ProcControl*		getDataHolder() const;
 	void				setDataHolder(DH_ProcControl*	aDHPtr);

@@ -64,23 +64,6 @@ ApplControlServer::~ApplControlServer()
 	}
 }
 
-// Copying is allowed.
-ApplControlServer::ApplControlServer(const ApplControlServer& that) :
-	itsACImpl(that.itsACImpl),
-	itsCommChan(that.itsCommChan)
-{ }
-
-ApplControlServer& 	ApplControlServer::operator=(const ApplControlServer& that)
-{
-	if (this != &that) {
-		// TODO check this code!
-		itsACImpl  	 = that.itsACImpl;
-		itsCommChan	 = new ApplControlComm(that.itsACImpl);
-	}
-
-	return (*this);
-}
-
 // Returns a string containing the IP address and portnumber of the
 // Application controller the class is connected to.
 string		ApplControlServer::askInfo(const string&	keylist) const
@@ -104,8 +87,8 @@ bool ApplControlServer::handleMessage(DH_ApplControl*	theMsg)
 					  theMsg->getScheduleTime(),
 					  theMsg->getWaitTime(),
 					  theMsg->getOptions(),
-					  "processList",
-					  "nodeList");
+					  theMsg->getProcList(),
+					  theMsg->getNodeList());
 	return (handleMessage(&ACCmd));
 }
 
@@ -115,19 +98,21 @@ bool ApplControlServer::handleMessage(ACCommand*	theMsg)
 	time_t	scheduleTime = theMsg->itsScheduleTime;
 	time_t	waitTime     = theMsg->itsWaitTime;
 	string	options		 = theMsg->itsOptions;
+	string	procList	 = theMsg->itsProcList;
+	string	nodeList	 = theMsg->itsNodeList;
 	LOG_DEBUG_STR("cmd=" << cmdType << ", time=" << timeString(scheduleTime) 
 						 << ", waittime=" << waitTime 
-				  		 << ", options=[" << options << "]" << endl);
+				  		 << ", options=[" << options << "]"
+				  		 << ", options=[" << procList << "]"
+				  		 << ", options=[" << nodeList << "]" << endl);
 
 	bool	sendAnswer = true;
 	bool	result 	   = false;
-	string	newOptions;
 
 	switch (cmdType) {
 	case CmdInfo:		
-		newOptions = supplyInfo(options);	
-		result = true; 								
-		break;
+		sendResult(AcCmdMaskOk, "Not yet implemented");
+		return (true); 								
 	case CmdAnswer:	
 		sendAnswer = false; 
 		//TODO ???
@@ -170,29 +155,28 @@ bool ApplControlServer::handleMessage(ACCommand*	theMsg)
 		break;
 	}
 
+#if 0
+	// DO NOT send respons: this depends on all received acks from AP's
 	if (sendAnswer) {
 		sendResult(result ? AcCmdMaskOk : 0);
 	}
+#endif
+
 
 	return (true);
 }
 
-
-string	ApplControlServer::supplyInfo(const string& 	keyList) const
-{
-	return("Not yet implemented");
-//	return(supplyInfo(keyList));
-}
 
 void	ApplControlServer::handleAckMessage(void)
 {
 //	handleAckMessage();
 }
 
-void ApplControlServer::sendResult(uint16	aResult) 
+void ApplControlServer::sendResult(uint16	aResult, const string&	someOptions) 
 {
 	itsCommChan->getDataHolder()->setResult(aResult);
-	itsCommChan->sendCmd (CmdResult, 0, 0, "");
+	ACCmd command = itsCommChan->getDataHolder()->getCommand();
+	itsCommChan->sendCmd (static_cast<ACCmd>(command | CmdResult), 0, 0, someOptions);
 }
 
 } // namespace ACC

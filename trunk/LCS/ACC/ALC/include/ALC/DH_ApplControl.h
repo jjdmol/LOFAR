@@ -47,7 +47,7 @@ enum ACCmd { CmdBoot = 1, CmdShutdown, CmdQuit,
 				CmdReinit, CmdReplace,
 				CmdInfo, CmdAnswer,
 				CmdReport, CmdAsync,
-				CmdResult = 99
+				CmdResult = 0x1000
 };
 
 
@@ -69,6 +69,8 @@ public:
 
 	// Redefines the preprocess function.
 	virtual void 	preprocess();
+	virtual bool	read();
+	virtual bool	write();
 
 	// The real data-accessor functions
 	void	setCommand		(const ACCmd		theCmd);
@@ -101,6 +103,9 @@ private:
 	time_t		*itsScheduleTime;
 	time_t		*itsWaitTime;
 	uint16		*itsResult;
+	string		itsOptions;
+	string		itsProcList;
+	string		itsNodeList;
 };
 
 // The real data-accessor functions
@@ -121,18 +126,17 @@ inline void	DH_ApplControl::setCommand		(const ACCmd		theCmd)
 
 inline void	DH_ApplControl::setOptions		(const string&		theOptions)
 {
-	BlobOStream&	bos = createExtraBlob();	// attached to dataholder
-	bos << theOptions;
+	itsOptions = theOptions;
 }
 
 inline void	DH_ApplControl::setProcList		(const string&		theProcList)
 {
-	// TODO
+	itsProcList = theProcList;
 }
 
 inline void	DH_ApplControl::setNodeList		(const string&		theNodeList)
 {
-	// TODO
+	itsNodeList = theNodeList;
 }
 
 inline void	DH_ApplControl::setResult		(const uint16			theResult)
@@ -161,29 +165,17 @@ inline ACCmd	DH_ApplControl::getCommand		() const
 
 inline string	DH_ApplControl::getOptions		()
 {
-	// no version support necc. yet.
-	int32			version;
-	bool			found;
-	BlobIStream&	bis = getExtraBlob(found, version);
-	if (!found) {
-		return (string(""));
-	}
-
-	string	theOptions;
-	bis >> theOptions;
-	bis.getEnd();
-
-	return (theOptions);
+	return (itsOptions);
 }
 
 inline string	DH_ApplControl::getProcList		()
 {
-	return ("TODO: proclist");
+	return (itsProcList);
 }
 
 inline string	DH_ApplControl::getNodeList		()
 {
-	return ("TODO: nodelist");
+	return (itsNodeList);
 }
 
 inline uint16	DH_ApplControl::getResult		() const

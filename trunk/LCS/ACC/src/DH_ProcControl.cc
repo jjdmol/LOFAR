@@ -1,4 +1,4 @@
-//#  DH_ApplControl.cc: Implements the Application Controller command protocol.
+//#  DH_ProcControl.cc: Implements the Application Controller command protocol.
 //#
 //#  Copyright (C) 2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,99 +28,68 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <ACC/DH_ApplControl.h>
+#include <ACC/DH_ProcControl.h>
 
 
 namespace LOFAR {
   namespace ACC {
 
 // Constructor
-DH_ApplControl::DH_ApplControl() :
-	DataHolder ("", "DH_ApplControl"),
+DH_ProcControl::DH_ProcControl() :
+	DataHolder      ("", "DH_ProcControl"),
 	itsVersionNumber(0),
-	itsCommand(0),
-	itsScheduleTime(0),
-	itsResult(0)
+	itsCommand      (0),
+	itsWaitTime     (0),
+	itsResult       (0)
 {
 	setExtraBlob ("Extra", 1);
 }
 
 
 // Destructor
-DH_ApplControl::~DH_ApplControl() 
+DH_ProcControl::~DH_ProcControl() 
 { }
 
 // Copying is allowed.
-DH_ApplControl::DH_ApplControl(const DH_ApplControl& that) :
-	DataHolder(that),
+DH_ProcControl::DH_ProcControl(const DH_ProcControl& that) :
+	DataHolder      (that),
 	itsVersionNumber(that.itsVersionNumber),
-	itsCommand(that.itsCommand),
-	itsScheduleTime(that.itsScheduleTime),
-	itsResult(that.itsResult)
-{
-}
+	itsCommand      (that.itsCommand),
+	itsWaitTime     (that.itsWaitTime),
+	itsResult       (that.itsResult)
+{ }
 
-DH_ApplControl*		DH_ApplControl::clone() const
+DH_ProcControl*		DH_ProcControl::clone() const
 {
-	return new DH_ApplControl(*this);
+	return new DH_ProcControl(*this);
 }
 
 
 // Redefines the preprocess function.
-void 	DH_ApplControl::preprocess()
+void 	DH_ProcControl::preprocess()
 {
+	LOG_TRACE_RTTI ("DH_ProcControl:preprocess");
+
 	addField ("VersionNumber", BlobField<uint16>(1));
-	addField ("Command", 	   BlobField<int16>(1));	// ACCmd
-	addField ("ScheduleTime",  BlobField<int32>(1));	// time_t
-	addField ("WaitTime",  	   BlobField<int32>(1));	// time_t
+	addField ("Command", 	   BlobField<int16>(1));	// PCCmd
+	addField ("WaitTime",      BlobField<int32>(1));	// time_t
 	addField ("Result", 	   BlobField<uint16>(1));
 
 	createDataBlock();
 
 }
 
-// Redefine the write function.
-bool	DH_ApplControl::write()
-{
-	BlobOStream&	bos = createExtraBlob();		// attached to dataholder
-
-	bos <<	itsOptions;
-	bos <<	itsProcList;
-	bos <<	itsNodeList;
-	
-	return (DataHolder::write());
-}
-
-// Redefine the read function.
-bool	DH_ApplControl::read()
-{
-	if (!DataHolder::read()) {
-		return (false);
-	}
-
-	int32			version;
-	bool			found;
-	BlobIStream&	bis = getExtraBlob(found, version);
-	ASSERTSTR (found, "DH_ApplControl::read has no extra blob");
-
-	bis >>	itsOptions;
-	bis >>	itsProcList;
-	bis >>	itsNodeList;
-	bis.getEnd();
-
-	return (true);
-}
-	
 
 //# ---------- private ----------
 
 // Implement the initialisation of the pointers
-void	DH_ApplControl::fillDataPointers() {
+void	DH_ProcControl::fillDataPointers() {
+	LOG_TRACE_RTTI ("DH_ProcControl:fillDataPointers");
+
 	itsVersionNumber = getData<uint16>("VersionNumber");
 	itsCommand 		 = getData<int16> ("Command");
-	// need old plain C typecast to get the time_t values back.
-	itsScheduleTime  = (time_t*)(getData<int32>("ScheduleTime"));
-	itsWaitTime		 = (time_t*)(getData<int32>("WaitTime"));
+	// Need old plain C typecast to get the time_t value back.
+	itsWaitTime      = (time_t*)(getData<int32>("WaitTime"));
 	itsResult 		 = getData<uint16>("Result");
 
 	*itsVersionNumber = 0x0100;		// TODO define a constant WriteVersion
