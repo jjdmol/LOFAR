@@ -35,6 +35,9 @@ BUILT_SOURCES = \
 	RSPTest.conf \
 	EPAStub.conf
 
+sysconf_DATA = \
+	EPAStub.conf
+
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 
