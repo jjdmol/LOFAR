@@ -86,6 +86,9 @@ void AH_Correlator::init() {
 }
 
 void AH_Correlator::run(int nsteps) {
+  double avg_bandwidth=0.0;
+  double avg_corr_perf=0.0;
+  
   for (int i = 0; i < nsteps; i++) {
 
 #ifdef HAVE_MPE
@@ -93,12 +96,33 @@ void AH_Correlator::run(int nsteps) {
 #endif
 
     itsWH->baseProcess();
+    
+#ifdef HAVE_MPI
+    if (TH_MPI::getCurrentRank() == 0) {
+      avg_bandwidth += static_cast<WH_Correlator*>(itsWH)->getAggBandwidth();
+      avg_corr_perf += static_cast<WH_Correlator*>(itsWH)->getCorrPerf();
+    }
+#endif
 
 #ifdef HAVE_MPE
     if (i < nsteps-1) MPE_Log_event(3, i, "transporting");
 #endif
 
   }
+#ifdef HAVE_MPI
+  if (TH_MPI::getCurrentRank() == 0) {
+    
+    cout << itsNelements << " " ;
+    cout << itsNsamples  << " " ;
+    cout << itsNchannels << " " ;
+    cout << itsNpolarisations << " " ;
+    cout << ((itsNchannels*itsNelements*itsNsamples*itsNpolarisations*sizeof(DH_CorrCube::BufferType)) + 
+	     (itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType)))/ (1024.0*1024.0) << " ";
+    cout << avg_bandwidth/(nsteps*1024.0*1024.0) << " Mbps " ;
+    cout << (100.0*avg_bandwidth)/(nsteps*1024.0*1024.0*1024.0)<< "%" << " ";
+    cout <<  avg_corr_perf/nsteps << " Mcprod/sec" << endl;
+  }
+#endif
 }
 
 void AH_Correlator::dump () {

@@ -58,6 +58,7 @@ WH_Correlator::WH_Correlator(const string& name,
   t_start.tv_usec = 0;
 
   bandwidth=0.0;
+  agg_bandwidth=0.0;
 }
 
 WH_Correlator::~WH_Correlator() {
@@ -95,7 +96,6 @@ void WH_Correlator::process() {
 
 
 #ifdef DO_TIMING
-  double agg_bandwidth = 0.0;
   if (t_start.tv_sec != 0 && t_start.tv_usec != 0) {
     gettimeofday(&t_stop, NULL);
     
@@ -110,14 +110,6 @@ void WH_Correlator::process() {
     MPI_Reduce(&bandwidth, &agg_bandwidth, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (TH_MPI::getCurrentRank() == 0) {
-      cout << itsNsamples  << " " ;
-      cout << itsNchannels << " " ;
-      cout << itsNelements << " " ;
-      cout << itsNpolarisations << " " ;
-      cout << ((itsNchannels*itsNelements*itsNsamples*itsNpolarisations*sizeof(DH_CorrCube::BufferType)) + 
-	(itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType)))/ (1024.0*1024.0) << " ";
-      cout << agg_bandwidth/(1024.0*1024.0) << " Mbps " ;
-      cout << (100.0*agg_bandwidth)/(1024.0*1024.0*1024.0)<< "%" << " ";
     }
 #endif
   }
@@ -251,7 +243,7 @@ void WH_Correlator::process() {
   MPI_Reduce(&elapsed_time, &min_time, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
   
   if ((TH_MPI::getCurrentRank() == 0) && (t_start.tv_sec != 0) && (t_start.tv_usec != 0)) {
-    cout << 1.0e-6*cmults/min_time << " Mcprod/sec" << endl;
+    corr_perf = 1.0e-6*cmults/min_time;
   }
 
 #endif // HAVE_MPI

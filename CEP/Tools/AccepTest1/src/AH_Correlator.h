@@ -35,6 +35,9 @@
 #include <WH_Random.h>
 #include <WH_Dump.h>
 
+#include <DH_CorrCube.h>
+#include <DH_Vis.h>
+
 using namespace std;
 
 namespace LOFAR 

@@ -90,10 +90,9 @@ void AH_BackEnd::init() {
 
 void AH_BackEnd::run(int nsteps) {
   vector<WorkHolder*>::iterator it;
-
+  double aggregate_bandwidth=0.0;
   
   for (int s = 0; s < nsteps; s++) {
-    double aggregate_bandwidth=0.0;
 
 //     if (starttime.tv_sec != 0 && starttime.tv_usec !=0) {
 //       gettimeofday(&stoptime, NULL);
@@ -112,13 +111,18 @@ void AH_BackEnd::run(int nsteps) {
       (*it)->baseProcess();
       aggregate_bandwidth += reinterpret_cast<WH_Dump*> (*it)->getBandwidth();
     }
-
-    if (aggregate_bandwidth != 0.0) {
-      cout << (8.0*aggregate_bandwidth)/(1024.0*1024.0) << " Mbit/sec       ";
-      cout << (800.0*aggregate_bandwidth)/(1024.0*1024.0*1024.0) << "% of theoretical peak (Gbit/sec)" << endl;
-    }
-//     gettimeofday(&starttime, NULL);
   }
+
+  if (aggregate_bandwidth != 0.0) {
+    cout << itsNelements << " " ;
+    cout << itsNsamples  << " " ;
+    cout << itsNchannels << " " ;
+    cout << itsNpolarisations << " " ;
+
+    cout << (8.0*aggregate_bandwidth)/(nsteps*1024.0*1024.0) << " Mbit/sec       ";
+    cout << (800.0*aggregate_bandwidth)/(nsteps*1024.0*1024.0*1024.0) << "% of theoretical peak (Gbit/sec)" << endl;
+  }
+  //     gettimeofday(&starttime, NULL);
 }
 
 void AH_BackEnd::dump() const {
