@@ -29,6 +29,7 @@
 #endif
 
 #include <BaseSim/DataHolder.h>
+#include <Common/Lorrays.h> 
 
 /**
    This class is the DataHolder holding the SubBand selection
@@ -40,9 +41,9 @@
 class DH_Weight: public DataHolder
 {
 public:
-  typedef double BufferType;
+  typedef LoVec_dcomplex BufferType;
 
-  DH_Weight (const string& name, unsigned int nbeam);
+  DH_Weight (const string& name);
 
   virtual ~DH_Weight();
 
@@ -76,7 +77,6 @@ private:
 
   void*        itsDataPacket;
   BufferType*  itsBuffer;
-  unsigned int itsNbeam;
 };
 
 

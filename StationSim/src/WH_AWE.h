@@ -18,6 +18,8 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Chris Broekema, november 2002.
+//#
 //#  $Id$
 //#
 
@@ -31,13 +33,15 @@
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleC.h>
 #include <StationSim/DH_Weight.h>
-
+#include <StationSim/DH_Fifo.h>
 
 /**
-   This is an example of a WorkHolder class.
-   It has one input and one output DH_RCU object as DataHolders.
-
-   It shows which functions have to be implemented
+   This workholder contains the main AWE procedure.
+   This includes processing of the snapshot fifo, 
+   selection of the adaptive algorithm and calling 
+   the specified algorithm. Inputs consist of a 
+   snapshot vector and a fifo. Outputs are a weight 
+   vector, and an updated fifo.
 */
 
 class WH_AWE: public WorkHolder
@@ -48,8 +52,10 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   WH_AWE (const string& name,
+	  unsigned int nin, 
 	  unsigned int nout,
-	  unsigned int nsubband, unsigned int nbeam);
+	  unsigned int nant,
+	  unsigned int buflength);
 
   virtual ~WH_AWE();
 
@@ -59,6 +65,9 @@ public:
 
   /// Make a fresh copy of the WH object.
   virtual WH_AWE* make (const string& name) const;
+
+  /// Generate a snapshot matrix from the FIFO
+  virtual void preprocess();
 
   /// Do a process step.
   virtual void process();
@@ -81,15 +90,27 @@ private:
   /// Forbid assignment.
   WH_AWE& operator= (const WH_AWE&);
 
+  /// Calculate a steer vector
 
-  DH_SampleC  itsInHolder;
-  /// Pointer to the array of output DataHolders.
-  DH_Weight** itsOutHolders;
+  /// In- and OutHolders
+  DH_SampleC itsInHolder;
+  DH_Weight  itsOutHolder;
+  
+
 
   /// Length of buffers.
-  int itsNsubband;
-  int itsNbeam;
+  unsigned int itsNrcu;
+  unsigned int itsBufLength;
+
+  LoVec_double   px, py; // Array configuration vectors
+  LoMat_dcomplex itsBuffer;
+
+  string   itsDipoleName;
+  ifstream itsDipoleFile;
+  vector<float> itsDipoleLoc;
+
+  LoVec_dcomplex WH_AWE::steerv (double u, double v, LoVec_double px, LoVec_double py) ;
+  LoVec_dcomplex WH_AWE::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) ;
+  LoVec_dcomplex WH_AWE::getWeights (LoMat_dcomplex B, LoVec_dcomplex d) ;
 };
-
-
 #endif

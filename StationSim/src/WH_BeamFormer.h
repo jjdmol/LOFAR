@@ -33,14 +33,13 @@
 #include <StationSim/DH_Weight.h>
 #include <StationSim/DH_TargetTrack.h>
 #include <StationSim/DH_RFITrack.h>
+#include <StationSim/DH_Fifo.h>
 #include <Common/lofar_vector.h>
+#include <Common/Lorrays.h>
 
 
 /**
-   This is an example of a WorkHolder class.
-   It has one input and one output DH_RCU object as DataHolders.
 
-   It shows which functions have to be implemented
 */
 
 class WH_BeamFormer: public WorkHolder
@@ -51,21 +50,22 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   WH_BeamFormer (const string& name,
-		 unsigned int nout, unsigned int nrcu,
+		 unsigned int nin, unsigned int nout, unsigned int nrcu,
 		 unsigned int nsubband, unsigned int nbeam,
 		 unsigned int maxNtarget, unsigned int maxNrfi,
-		 const string& dipoleFileName);
+		 unsigned int fifoLength, unsigned int bufLength);
+		 
 
   virtual ~WH_BeamFormer();
 
   /// Static function to create an object.
-  static WorkHolder* construct (const string& name, int ninput, int noutput,
-				const ParamBlock&);
+  static WorkHolder* construct (const string& name, int ninput, int noutput, 
+				int readpos, int writepos, const ParamBlock&);
 
   /// Make a fresh copy of the WH object.
   virtual WH_BeamFormer* make (const string& name) const;
 
-  /// Preprocess (read dipole file).
+  /// Preprocess 
   virtual void preprocess();
 
   /// Do a process step.
@@ -80,7 +80,7 @@ public:
   virtual DataHolder* getInHolder (int channel);
 
   /// Get a pointer to the i-th output DataHolder.
-  virtual DH_SampleC* getOutHolder (int channel);
+  virtual DataHolder* getOutHolder (int channel);
 
 private:
   /// Forbid copy constructor.
@@ -89,24 +89,29 @@ private:
   /// Forbid assignment.
   WH_BeamFormer& operator= (const WH_BeamFormer&);
 
+  DH_SampleC** itsInHolders;
+  DH_Weight    itsWeight;
+  DH_SampleC** itsOutHolders;
+  DH_SampleC   itsSnapFifo;
 
-  DH_SampleC     itsInHolder;
-  DH_Weight      itsWeight;
-  DH_TargetTrack itsTarget;
-  DH_RFITrack    itsRFI;
-  /// Pointer to the array of output DataHolders.
-  DH_SampleC**   itsOutHolders;
 
-  /// Length of buffers.
-  int itsNrcu;
-  int itsNsubband;
-  int itsNbeam;
-  int itsMaxNtarget;
-  int itsMaxNrfi;
-  string   itsDipoleName;
-  ifstream itsDipoleFile;
-  vector<float> itsDipoleLoc;
+  int itsReadPos;
+  int itsWritePos;
+  int itsNrcu;       // Number of (active) antennas
+  int itsNsubband;   // Number of sub-bands (obviously)
+  int itsNbeam;      // Number of beams
+  int itsMaxNtarget; // Maximum number of targets to track
+  int itsMaxNrfi;    // Maximum number of RFI signals that can be detected
+  int itsFifoLength; // Length of the fifo
+  int itsBufferLength; // Length of the fifo that will be used 
+
+  
+  //  LoMat_dcomplex itsFifo;
+  LoVec_dcomplex sample; // current sample in Blitz format
+  LoMat_dcomplex itsFifo;
+  LoMat_dcomplex itsOutFifo;
+
+
 };
-
 
 #endif
