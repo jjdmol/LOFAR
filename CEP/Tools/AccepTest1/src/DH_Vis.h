@@ -46,7 +46,6 @@ public:
   void              setBufferElement(int station1, int station2, int channel, int polarisation, BufferType* valueptr);
   const int         getFBW() const;
 
-
 private:
   /// Forbid assignment.
   DH_Vis& operator= (const DH_Vis&);

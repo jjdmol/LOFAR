@@ -55,7 +55,7 @@ public:
   BufferType* getBufferElement(int channel, int sample, int station, int polarisation);
   void setBufferElement(int channel, int sample, int station, int polarisation, BufferType* value); 
 
-  const int getFBW() const;
+  const unsigned int getBufSize() const;
 
 private:
   /// Forbid assignment.
@@ -64,8 +64,6 @@ private:
   BufferType*  itsBuffer;    // array containing frequency spectrum.
   unsigned int itsBufSize;
   
-  int          itsFBW; // number of frequency channels within this beamlet
-
   int nstations;
   int nchannels;
   int nsamples ;
@@ -105,8 +103,9 @@ inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int channel,
      polarisation) = *valueptr;
  }
  
- inline const int DH_CorrCube::getFBW() const
-   { return itsFBW; }
+ inline const unsigned int DH_CorrCube::getBufSize() const {
+   return itsBufSize;
+ }
  
 }
 

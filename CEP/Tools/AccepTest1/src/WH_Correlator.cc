@@ -121,31 +121,58 @@ void WH_Correlator::process() {
   starttime = timer();
 #endif
 
-  // calculate the correlations and add to output DataHolder.
-  DH_Vis::BufferType s1_val, s2_val;
 
-  for (int sample = 0; sample < itsNsamples; sample++) {
+  //
+  // this block of code does the cast from complex<uint16> to complex<float>
+  // 
+  uint16* in_ptr = (uint16*) inDH->getBuffer();
+  float*  in_buffer = new float[2*inDH->getBufSize()];
+
+  // consider the input buffer of complex<uint16> to be uint16 of twice that size
+  // we can now offer the compiler a single for loop which has great potential to unroll
+  for ( unsigned int i = 0; i < 2*inDH->getBufSize(); i++ ) {
+    *(in_buffer+i) = static_cast<float> ( *(in_ptr+i) ); 
+  }
+
+   DH_Vis::BufferType s1_val, s2_val;
+   //   DH_Vis::BufferType* out_ptr = outDH->getBuffer();
+
+  for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
 #ifdef HAVE_MPE
     MPE_Log_event(1, sample, "correlating"); 
 #endif
-    for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
+    for (int sample = 0; sample < itsNsamples; sample++) {
+      int sample_addr = itsNpolarisations*itsNelements*itsNsamples*fchannel+
+	itsNpolarisations*itsNelements*sample;
+
       for (int   station1 = 0; station1 < itsNelements; station1++) {
-	for (int station2 = 0; station2 <= station1;    station2++) {
+	int s1_addr = sample_addr+itsNpolarisations*station1;
+
+	for (int station2 = 0; station2 <= station1; station2++) {
+	  int s2_addr = sample_addr+itsNpolarisations*station2;
+
 	  for (int polarisation = 0; polarisation < itsNpolarisations; polarisation++) {
 
-	    // todo: use copy-free multiplication
-	    // todo: remove inner loop getBufferElement calls; consecutive adressing
-	    // todo: do short-> float conversion only once
-	  
-	    // convert complex<short> to complex<float>
-// 	    s1_val = DH_Vis::BufferType((inDH->getBufferElement(fchannel, sample, station1, polarisation))->real(),
-// 					(inDH->getBufferElement(fchannel, sample, station1, polarisation)->imag()));
-// 	    s2_val = DH_Vis::BufferType((inDH->getBufferElement(fchannel, sample, station2, polarisation))->real(),
-// 					(inDH->getBufferElement(fchannel, sample, station2, polarisation)->imag()));
-	    
+ 	    // prefetch from L1
+ 	    s1_val = *( in_buffer + s1_addr + polarisation );
+ 	    s2_val = *( in_buffer + s2_addr + polarisation );
+
+#ifdef HAVE_BGL
+
+	    // load prefetched values into FPU
+	    __lfps((float*) s1_val);
+	    __lfps((float*) s2_val);
+ 
+	    // do the actual complex fused multiply-add
+	    // understand that. Even though it's an inlined function, it may still be too expensive
+	    __fxcxnpma(out_ptr++, (float*)s1_val, (float*)s2_val);
+	    // note that the output buffer is assumed to be contiguous
+
+#else 
+	    // this is purely functional code, very expensive and slow as hell
 	    outDH->addBufferElementVal(station1, station2, fchannel, polarisation,
-				       s1_val * s2_val
-				       );
+				       s1_val * s2_val);
+#endif 	    
  	  }
 	}
       }
@@ -168,6 +195,7 @@ void WH_Correlator::process() {
   // system, we expect these to be the same for each node. While debugging we're not interrested in 
   // transient effects on the nodes, so the maximum performance is a reasonable estimate of the real 
   // performance of the application.
+
   cmults = itsNsamples * itsNchannels * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
   MPI_Reduce(&time, &min_time, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
   
@@ -175,9 +203,9 @@ void WH_Correlator::process() {
     cout << 1.0e-6*cmults/min_time << " Mcprod/sec" << endl;
   }
 
-#endif
+#endif // HAVE_MPI
   gettimeofday(&t_start, NULL);
-#endif
+#endif // DO_TIMING
 }				     
 
 void WH_Correlator::dump() {
