@@ -92,6 +92,15 @@ namespace LCS
       // PersistentObject.
       ObjectId itsOid;
 
+      // Each PersistentObject may have a parent. In order to be able to
+      // recreate an instance of an object, we need to retain the parent-child
+      // relationship. The child holds this reference, because the child's
+      // multiplicity is always one.
+      // \note "Parent" should not be interpreted as "being derived from".
+      // From the data point-of-view containment of one class instance by
+      // another is also considered a parent-child relation. 
+      ObjectId itsParentOid;
+
       // The date and time of last modification of this PersistentObject in
       // the database.
       SQLTimeStamp itsTimeStamp;
