@@ -40,7 +40,7 @@ namespace RSP
       /**
        * Constants. Should probably be moved somewhere else at some point.
        */
-      static const int N_RSPBOARDS = 1; // eventually this should be 24
+      static const int N_RSPBOARDS = 2; // eventually this should be 24
 
     public:
       /**

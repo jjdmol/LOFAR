@@ -31,7 +31,7 @@ using namespace RSP;
 using namespace LOFAR;
 
 SyncAction::SyncAction(State handler, GCFPortInterface& board_port, int board_id) 
-  : GCFFsm(handler), m_priority(0), m_board_port(board_port), m_board_id(board_id), m_final(false)
+  : GCFFsm(handler), m_board_port(board_port), m_board_id(board_id), m_completed(false)
 {
 }
 
@@ -39,23 +39,22 @@ SyncAction::~SyncAction()
 {
 }
 
-void SyncAction::setPriority(int priority)
-{
-  /* TODO: check range of priority argument ?*/
-  m_priority = priority;
-}
-
 int SyncAction::getBoardId()
 {
   return m_board_id;
 }
 
-void SyncAction::setFinal(bool final)
+GCFPortInterface& SyncAction::getBoardPort()
 {
-  m_final = final;
+  return m_board_port;
 }
 
-bool SyncAction::isFinal() const
+void SyncAction::setCompleted(bool completed)
 {
-  return m_final;
+  m_completed = completed;
+}
+
+bool SyncAction::hasCompleted() const
+{
+  return m_completed;
 }

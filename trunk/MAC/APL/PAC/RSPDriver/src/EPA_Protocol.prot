@@ -25,12 +25,12 @@ namespace EPA_Protocol
    * Number of Antenna processors and Beamlet processors.
    */
   /*@{*/
-  static const int N_AP        = 4;
-  static const int N_BLP       = N_AP*2;
-  static const int N_COEF      = 512;
-  static const int N_UWG       = 512;
-  static const int N_SUBBANDS  = 128;
-  static const int N_STATS     = 512;
+  static const int N_AP          = 4;
+  static const int N_BLP         = N_AP*2;
+  static const int N_COEF        = 512;
+  static const int N_USERSAMPLES = 512;
+  static const int N_SUBBANDS    = 128;
+  static const int N_STATS       = 512;
   /*@}*/
 };
 
@@ -111,6 +111,22 @@ event = {
     type = "EPA_Protocol::MEPHeader";
     userdefined;
   };
+  param = {
+    name = "freq";
+    type = "uint16";
+  };
+  param = {
+    name = "ampl";
+    type = "uint16";
+  };
+  param = {
+    name = "nof_usersamples";
+    type = "uint16";
+  };
+  param = {
+    name = "mode";
+    type = "uint8";
+  };
 };
 
 event = {
@@ -120,6 +136,10 @@ event = {
     name = "hdr";
     type = "EPA_Protocol::MEPHeader";
     userdefined;
+  };
+  param = {
+    name = "sample";
+    type = "int16[N_USERSAMPLES]";
   };
 };
 
@@ -144,7 +164,7 @@ event = {
 };
 
 event = {
-  signal = BFXRE;
+  signal = BFCOEFS;
   dir = INOUT;
   param = {
     name = "hdr";
@@ -158,7 +178,7 @@ event = {
 };
 
 event = {
-  signal = BFXIM;
+  signal = STSTATS;
   dir = INOUT;
   param = {
     name = "hdr";
@@ -166,63 +186,7 @@ event = {
     userdefined;
   };
   param = {
-    name = "coef";
-    type = "uint16[N_COEF]";
-  };
-};
-
-event = {
-  signal = BFYRE;
-  dir = INOUT;
-  param = {
-    name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
-    userdefined;
-  };
-  param = {
-    name = "coef";
-    type = "uint16[N_COEF]";
-  };
-};
-
-event = {
-  signal = BFYIM;
-  dir = INOUT;
-  param = {
-    name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
-    userdefined;
-  };
-  param = {
-    name = "coef";
-    type = "uint16[N_COEF]";
-  };
-};
-
-event = {
-  signal = MEAN;
-  dir = INOUT;
-  param = {
-    name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
-    userdefined;
-  };
-  param = {
-    name = "mean";
-    type = "uint16[N_STATS]";
-  };
-};
-
-event = {
-  signal = POWER;
-  dir = INOUT;
-  param = {
-    name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
-    userdefined;
-  };
-  param = {
-    name = "power";
+    name = "stat";
     type = "uint16[N_STATS]";
   };
 };

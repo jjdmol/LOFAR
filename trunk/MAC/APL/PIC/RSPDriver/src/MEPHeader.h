@@ -119,7 +119,7 @@ namespace EPA_Protocol
       /**
        * Read/write sizes in octets (= bytes)
        */
-      static const uint16 RSPSTATUS_SIZE     = 22;
+      static const uint16 RSPSTATUS_SIZE     = 24; // 22 in EPA documentation!
 
       static const uint16 SELFTEST_SIZE      = 1;
 
@@ -132,13 +132,9 @@ namespace EPA_Protocol
       static const uint16 NRSUBBANDS_SIZE    = 2;
       static const uint16 SUBBANDSELECT_SIZE = 256;
 
-      static const uint16 BFXRE_SIZE         = 1024;
-      static const uint16 BFXIM_SIZE         = 1024;
-      static const uint16 BFYRE_SIZE         = 1024;
-      static const uint16 BFYIM_SIZE         = 1024;
+      static const uint16 BFCOEFS_SIZE       = 1024;
 
-      static const uint16 MEAN_SIZE          = 1024;
-      static const uint16 POWER_SIZE         = 1024;
+      static const uint16 STSTATS_SIZE       = 1024;
 
       static const uint16 RCUSETTINGS_SIZE   = 2;
       /*@}*/
@@ -191,21 +187,28 @@ namespace EPA_Protocol
 // macro to shorten writing the context of the constants
 #define CTX(a) EPA_Protocol::MEPHeader::a
 
-#define MEP_RSPSTATUS(hdr, oper)            (hdr).set(oper,         CTX(DST_RSP), CTX(STATUS), CTX(RSPSTATUS), (CTX(READ) == oper?0:CTX(RSPSTATUS_SIZE)))
-#define MEP_SELFTEST(hdr)                   (hdr).set(CTX(WRITE),   CTX(DST_RSP), CTX(TST),    CTX(SELFTEST),  CTX(SELFTEST_SIZE))
-#define MEP_RESET(hdr)                      (hdr).set(CTX(WRITE),   CTX(DST_RSP), CTX(CFG),    CTX(RESET),     CTX(RESET_SIZE))
-#define MEP_REPROGRAM(hdr)                  (hdr).set(CTX(WRITE),   CTX(DST_RSP), CTX(CFG),    CTX(REPROGRAM), CTX(REPROGRAM_SIZE))
+#define MEP_RSPSTATUS(hdr, oper) \
+  (hdr).set(oper,         CTX(DST_RSP),              CTX(STATUS), CTX(RSPSTATUS),     (CTX(READ) == oper?0:CTX(RSPSTATUS_SIZE)))
+#define MEP_SELFTEST(hdr) \
+  (hdr).set(CTX(WRITE),   CTX(DST_RSP),              CTX(TST),    CTX(SELFTEST),      CTX(SELFTEST_SIZE))
+#define MEP_RESET(hdr) \
+  (hdr).set(CTX(WRITE),   CTX(DST_RSP),              CTX(CFG),    CTX(RESET),         CTX(RESET_SIZE))
+#define MEP_REPROGRAM(hdr) \
+  (hdr).set(CTX(WRITE),   CTX(DST_RSP),              CTX(CFG),    CTX(REPROGRAM),     CTX(REPROGRAM_SIZE))
 
-#define MEP_WGSETTINGS(hdr, oper, dstid)    (hdr).set(oper, CTX(DST_BLP_BASE) + dstid, CTX(WG),  CTX(WGSETTINGS),    CTX(WGSETTINGS_SIZE))
-#define MEP_WGUSER(hdr, oper, dstid)        (hdr).set(oper, CTX(DST_BLP_BASE) + dstid, CTX(WG),  CTX(WGUSER),        CTX(WGUSER_SIZE))
-#define MEP_NRSUBBANDS(hdr, oper, dstid)    (hdr).set(oper, CTX(DST_BLP_BASE) + dstid, CTX(SS),  CTX(NRSUBBANDS),    CTX(NRSUBBANDS_SIZE))
-#define MEP_SUBBANDSELECT(mpe, oper, dstid) (hdr).set(oper, CTX(DST_BLP_BASE) + dstid, CTX(SS),  CTX(SUBBANDSELECT), CTX(SUBBANDSELECT_SIZE))
-#define MEP_BFXRE(hdr, oper, dstid)         (hdr).set(oper, CTX(DST_BLP_BASE) + dstid, CTX(BF),  CTX(BFXRE),         CTX(BFXRE_SIZE))
-#define MEP_BFXIM(hdr, oper, dstid)         (hdr).set(oper, CTX(DST_BLP_BASE) + dstid, CTX(BF),  CTX(BFXIM),         CTX(BFXIM_SIZE))
-#define MEP_BFYRE(hdr, oper, dstid)         (hdr).set(oper, CTX(DST_BLP_BASE) + dstid, CTX(BF),  CTX(BFYRE),         CTX(BFYRE_SIZE))
-#define MEP_BFYIM(hdr, oper, dstid)         (hdr).set(oper, CTX(DST_BLP_BASE) + dstid, CTX(BF),  CTX(BFYIM),         CTX(BFYIM_SIZE))
-#define MEP_MEAN(hdr, oper, dstid)          (hdr).set(oper, CTX(DST_BLP_BASE) + dstid, CTX(ST),  CTX(MEAN),          CTX(MEAN_SIZE))
-#define MEP_POWER(hdr, oper, dstid)         (hdr).set(oper, CTX(DST_BLP_BASE) + dstid, CTX(ST),  CTX(POWER),         CTX(POWER_SIZE))
-#define MEP_RCUSETTINGS(hdr, oper, dstid)   (hdr).set(oper, CTX(DST_BLP_BASE) + dstid, CTX(RCU), CTX(RCUSETTINGS),   CTX(RCUSETTINGS_SIZE))
+#define MEP_WGSETTINGS(hdr, oper, dstid) \
+  (hdr).set(oper,         CTX(DST_BLP_BASE) + dstid, CTX(WG),     CTX(WGSETTINGS),    CTX(WGSETTINGS_SIZE))
+#define MEP_WGUSER(hdr, oper, dstid) \
+  (hdr).set(oper,         CTX(DST_BLP_BASE) + dstid, CTX(WG),     CTX(WGUSER),        CTX(WGUSER_SIZE))
+#define MEP_NRSUBBANDS(hdr, oper, dstid) \
+  (hdr).set(oper,         CTX(DST_BLP_BASE) + dstid, CTX(SS),     CTX(NRSUBBANDS),    CTX(NRSUBBANDS_SIZE))
+#define MEP_SUBBANDSELECT(mpe, oper, dstid) \
+  (hdr).set(oper,         CTX(DST_BLP_BASE) + dstid, CTX(SS),     CTX(SUBBANDSELECT), CTX(SUBBANDSELECT_SIZE))
+#define MEP_BF(hdr, oper, dstid, regid) \
+  (hdr).set(oper,         CTX(DST_BLP_BASE) + dstid, CTX(BF),     (regid),            CTX(BFCOEFS_SIZE))
+#define MEP_ST(hdr, oper, dstid, regid) \
+  (hdr).set(oper,         CTX(DST_BLP_BASE) + dstid, CTX(ST),     (regid),            CTX(STSTATS_SIZE))
+#define MEP_RCUSETTINGS(hdr, oper, dstid) \
+  (hdr).set(oper,         CTX(DST_BLP_BASE) + dstid, CTX(RCU),    CTX(RCUSETTINGS),   CTX(RCUSETTINGS_SIZE))
 
 #endif /* MEPHEADER_H_ */

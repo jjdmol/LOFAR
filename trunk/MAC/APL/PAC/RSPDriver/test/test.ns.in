@@ -8,8 +8,14 @@ host=localhost
 client.type=TCP
 client.port=30230
 board0.type=TCP
+board1.type=TCP
 
-[EPAStub]
+[EPAStub0]
 host=localhost
 client.type=TCP
 client.port=30229
+
+[EPAStub1]
+host=localhost
+client.type=TCP
+client.port=30228

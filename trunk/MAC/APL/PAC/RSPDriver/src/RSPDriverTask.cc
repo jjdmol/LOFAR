@@ -60,10 +60,31 @@ RSPDriverTask::RSPDriverTask(string name)
    * Create synchronization action classes.
    */
   BWSync* bwsync[N_RSPBOARDS];
+
   for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
   {
-    bwsync[boardid] = new BWSync(m_board[boardid], boardid);
-    bwsync[boardid]->setPriority(1);
+    bwsync[boardid] = new BWSync(m_board[boardid], boardid, MEPHeader::BFXRE);
+
+    m_scheduler.addSyncAction(bwsync[boardid]);
+  }
+
+  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
+  {
+    bwsync[boardid] = new BWSync(m_board[boardid], boardid, MEPHeader::BFXIM);
+
+    m_scheduler.addSyncAction(bwsync[boardid]);
+  }
+
+  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
+  {
+    bwsync[boardid] = new BWSync(m_board[boardid], boardid, MEPHeader::BFYRE);
+
+    m_scheduler.addSyncAction(bwsync[boardid]);
+  }
+
+  for (int boardid = 0; boardid < N_RSPBOARDS; boardid++)
+  {
+    bwsync[boardid] = new BWSync(m_board[boardid], boardid, MEPHeader::BFYIM);
 
     m_scheduler.addSyncAction(bwsync[boardid]);
   }
@@ -208,15 +229,17 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
       GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
       LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
 
-      if (&port == &m_board[0])
+      if (&port != &m_client)
       {
 	/* run the scheduler */
 	status = m_scheduler.run(event,port);
       }
+#if 0
       else
       {
 	m_scheduler.dispatch(event, port);
       }
+#endif
     }
     break;
 

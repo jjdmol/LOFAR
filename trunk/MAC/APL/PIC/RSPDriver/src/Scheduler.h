@@ -82,7 +82,10 @@ namespace RSP
        */
       void              scheduleCommands();
       void              processCommands();
-      GCFEvent::TResult syncCache(GCFEvent& event, GCFPortInterface& port);
+      void              resetSyncActions();
+      void              initiateSync(GCFEvent& event);
+      //GCFEvent::TResult syncCache(GCFEvent& event, GCFPortInterface& port);
+      void              completeSync();
       void              completeCommands();
       /*@}*/
 
@@ -91,11 +94,14 @@ namespace RSP
       std::priority_queue<Command*> m_periodic_queue;
       std::priority_queue<Command*> m_done_queue;
 
-      std::priority_queue<SyncAction*> m_syncactions;
+      std::map< GCFPortInterface*,
+		std::vector<SyncAction*> > m_syncactions;
 
       RSP_Protocol::Timestamp m_current_time;
 
       Cache m_cache;
+      int m_current_priority;
+      bool m_sync_done;
   };
 };
      

@@ -113,10 +113,7 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
       break;
 
 
-    case EPA_BFXRE:
-    case EPA_BFXIM:
-    case EPA_BFYRE:
-    case EPA_BFYIM:
+    case EPA_BFCOEFS:
       // simply ignore
       break;
 
@@ -188,12 +185,22 @@ void EPAStub::run()
 
 int main(int argc, char** argv)
 {
+  char *name = 0;
+  
   GCFTask::init(argc, argv);
+
+  for (int arg = 0; arg < argc; arg++)
+  {
+    if (!strcmp(argv[arg], "-name"))
+    {
+      if (arg++ < argc) name = argv[arg];
+    }
+  }
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
   Suite s("EPA Firmware Stub", &cerr);
-  s.addTest(new EPAStub("EPAStub"));
+  s.addTest(new EPAStub((name?name:"EPAStub")));
   s.run();
   long nFail = s.report();
   s.free();

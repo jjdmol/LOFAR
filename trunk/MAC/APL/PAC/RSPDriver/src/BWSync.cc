@@ -29,7 +29,7 @@
 #include <Common/LofarLogger.h>
 
 #include <unistd.h>
-//#include <stdlib.h>
+#include <string.h>
 
 using namespace RSP;
 using namespace LOFAR;
@@ -37,10 +37,11 @@ using namespace EPA_Protocol;
 
 #define N_RETRIES 3
 
-BWSync::BWSync(GCFPortInterface& board_port, int board_id)
-  : SyncAction((State)&BWSync::handler, board_port, board_id),
+BWSync::BWSync(GCFPortInterface& board_port, int board_id, int regid)
+  : SyncAction((State)&BWSync::initial_state, board_port, board_id),
     m_current_blp(0),
-    m_retries(0)
+    m_retries(0),
+    m_regid(regid)
 {
 }
 
@@ -48,25 +49,94 @@ BWSync::~BWSync()
 {
 }
 
-GCFEvent::TResult BWSync::handler(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult BWSync::initial_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  LOG_INFO("BWSync::initial_state");
-
   switch (event.signal)
   {
-    case F_TIMER:
+    case F_INIT:
     {
+      LOG_INFO("initial_state: F_INIT");
+    }
+    break;
+      
+    case F_ENTRY:
+    {
+      LOG_INFO("initial_state: F_ENTRY");
+      
       // reset extended state variables on initialization
       m_current_blp   = 0;
       m_retries       = 0;
-
-      writecoef(port, (getBoardId() * N_BLP) + m_current_blp);
-      readstatus(port);
+    }
+    break;
+    
+    case F_TIMER:
+    {
+      TRAN(BWSync::senddata_state);
     }
     break;
 
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return GCFEvent::HANDLED;
+}
+
+GCFEvent::TResult BWSync::senddata_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (event.signal)
+  {
+    case F_ENTRY:
+    {
+      // send next set of coefficients
+      writecoef((getBoardId() * N_BLP) + m_current_blp);
+
+      TRAN(BWSync::waitstatus_state);
+    }
+    break;
+
+    case F_TIMER:
+    {
+      LOG_FATAL("missed real-time deadline");
+      exit(EXIT_FAILURE);
+    }
+    break;
+
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return GCFEvent::HANDLED;
+}
+
+GCFEvent::TResult BWSync::waitstatus_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch(event.signal)
+  {
+    case F_ENTRY:
+    {
+      readstatus();
+
+      // start timer to check for broken comms link
+    }
+    break;
+
+    case F_TIMER:
+    {
+      LOG_FATAL("missed real-time deadline");
+      //exit(EXIT_FAILURE);
+    }
+    break;
+      
     case EPA_RSPSTATUS:
     {
       EPARspstatusEvent rspstatus(event);
@@ -88,9 +158,17 @@ GCFEvent::TResult BWSync::handler(GCFEvent& event, GCFPortInterface& port)
 	}
       }
 
-      // write next and read status
-      writecoef(port, (getBoardId() * N_BLP) + m_current_blp);
-      readstatus(port);
+      if (m_current_blp < N_BLP)
+      {
+	// send next bit of data
+	TRAN(BWSync::senddata_state);
+      }
+      else
+      {
+	// we've completed the update
+	setCompleted(true); // done with this statemachine
+	TRAN(BWSync::initial_state);
+      }
     }
     break;
 
@@ -102,29 +180,38 @@ GCFEvent::TResult BWSync::handler(GCFEvent& event, GCFPortInterface& port)
   return GCFEvent::HANDLED;
 }
 
-void BWSync::writecoef(GCFPortInterface& port, uint8 blp)
+void BWSync::writecoef(uint8 blp)
 {
-  // send next BF configure message
-  EPABfxreEvent bfxre;
+  if (m_regid <= MEPHeader::BFXRE || m_regid > MEPHeader::BFYIM)
+  {
+    m_regid = MEPHeader::BFXRE; // HACK
+  }
   
-  MEP_BFXRE(bfxre.hdr, MEPHeader::WRITE, 0);
-  bfxre.hdr.m_fields.addr.dstid = blp;
-  port.send(bfxre);
+  // send next BF configure message
+  EPABfcoefsEvent bfcoefs;
+      
+  MEP_BF(bfcoefs.hdr, MEPHeader::WRITE, 0, m_regid);
+  bfcoefs.hdr.m_fields.addr.dstid = blp;
+
+  memset(&bfcoefs.coef, 0, MEPHeader::BFCOEFS_SIZE);
+  
+  getBoardPort().send(bfcoefs);
 }
 
-void BWSync::readstatus(GCFPortInterface& port)
+void BWSync::readstatus()
 {
   // send read status request to check status of the write
   EPARspstatusEvent rspstatus;
   MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
-  rspstatus.rsp = 0;
+
+  memset(&rspstatus.rsp, 0, MEPHeader::RSPSTATUS_SIZE);
 
 #if 0
   // on the read request don't send the data
   rspstatus.length -= RSPSTATUS_SIZE;
 #endif
 
-  port.send(rspstatus);
+  getBoardPort().send(rspstatus);
 }
 
 
