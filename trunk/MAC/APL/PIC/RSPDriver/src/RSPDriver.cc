@@ -58,6 +58,8 @@
 #include "RawEvent.h"
 #include "MEPHeader.h"
 
+#include "netraw.h"
+
 #include <PSAccess.h>
 #include <GCF/ParameterSet.h>
 
@@ -1067,6 +1069,19 @@ void RSPDriver::rsp_getversions(GCFEvent& event, GCFPortInterface& port)
 
 int main(int argc, char** argv)
 {
+#if defined(ENABLE_CAP_NET_RAW)
+  //
+  // Need to run as (setuid) root (geteuid()==0), but will limit
+  // capabilities to cap_net_raw (and cap_net_admin only)
+  // and setuid immediately.
+  //
+  if (!enable_cap_net_raw())
+  {
+    fprintf(stderr, "%s: error: failed to enable CAP_NET_RAW capability.",argv[0]);
+    exit(EXIT_FAILURE);
+  }
+#endif
+  
   GCFTask::init(argc, argv);
   
   LOG_INFO(formatString("Program %s has started", argv[0]));

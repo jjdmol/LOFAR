@@ -40,6 +40,7 @@ using namespace RSP_Protocol;
 WGRead::WGRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * 2)
 {
+  memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 WGRead::~WGRead()
@@ -63,7 +64,8 @@ void WGRead::sendrequest()
 			   getCurrentBLP() / 2,
 			   MEPHeader::READ);
   }
-  
+
+  m_hdr = wgsettingsread.hdr;
   getBoardPort().send(wgsettingsread);
 }
 
@@ -74,11 +76,21 @@ void WGRead::sendrequest_status()
 
 GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (event.signal != EPA_WG_SETTINGS) return GCFEvent::HANDLED;
+  if (EPA_WG_SETTINGS != event.signal)
+  {
+    LOG_WARN("WGRead::handleack: unexpected ack");
+    return GCFEvent::NOT_HANDLED;
+  }
   
-  uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
-
   EPAWgSettingsEvent wgsettings(event);
+
+  if (!wgsettings.hdr.isValidAck(m_hdr))
+  {
+    LOG_ERROR("WGRead::handleack: invalid ack");
+    return GCFEvent::NOT_HANDLED;
+  }
+
+  uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
   WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 

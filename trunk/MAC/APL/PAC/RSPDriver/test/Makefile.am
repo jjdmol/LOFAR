@@ -29,6 +29,8 @@ EPAStub_SOURCES = \
 
 EPAStub_LDADD = \
 	$(top_builddir)/src/libepa.la \
+	$(top_builddir)/src/libnetraw.la \
+	-lcap
 	-lsuite
 
 BUILT_SOURCES = \

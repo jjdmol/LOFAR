@@ -1,6 +1,11 @@
 
+#
+# Define ENABLE_CAP_NET_RAW to let RSPDriver run as setuid root
+# with only cap_net_raw capability enabled.
+#
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/src
+	-I$(top_srcdir)/src \
+	-DENABLE_CAP_NET_RAW
 
 INSTALL=install -C
 
@@ -18,9 +23,6 @@ BUILT_SOURCES = \
 	RSPDriverPorts.conf \
 	RSPDriver.conf
 
-#	rspdriver.conf 
-#	log4cplus.properties
-
 clean-local:
 	rm -f \
 	RSP_Protocol.ph \
@@ -37,11 +39,6 @@ sysconf_DATA = \
 	RSPDriverPorts.conf \
 	RSPDriver.conf
 
-#	rspdriver.conf 
-# 	log4cplus.properties 
-# 	abs.ns 
-# 	abs.top
-
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 
@@ -54,7 +51,7 @@ sysconf_DATA = \
 %.top: %.top.in
 	cp $< $@
 
-lib_LTLIBRARIES = librsp.la libepa.la
+lib_LTLIBRARIES = librsp.la libepa.la libnetraw.la
 
 include_HEADERS = \
 	RSP_Protocol.ph \
@@ -91,6 +88,10 @@ libepa_la_SOURCES = \
 	EPA_Protocol.cc \
 	RawEvent.h \
 	RawEvent.cc
+
+libnetraw_la_SOURCES = \
+	netraw.cc \
+	netraw.h
 
 bin_PROGRAMS = \
 	RSPDriver \
@@ -167,7 +168,8 @@ RSPDriver_SOURCES = \
 RSPDriver_LDADD = \
 	$(top_builddir)/src/librsp.la \
 	$(top_builddir)/src/libepa.la \
-	$(PVSS_LDADD)
+	$(top_builddir)/src/libnetraw.la \
+	-lcap
 
 ViewStats_SOURCES = \
 	gnuplot_i.h \

@@ -26,6 +26,7 @@
 #define SSTREAD_H_
 
 #include "SyncAction.h"
+#include "MEPHeader.h"
 #include <Common/LofarTypes.h>
 
 namespace RSP
@@ -58,6 +59,7 @@ namespace RSP
 
     private:
       uint8 m_type;       // statistics type
+      EPA_Protocol::MEPHeader m_hdr;
   };
 };
      

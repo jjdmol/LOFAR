@@ -49,6 +49,7 @@ WriteReg::WriteReg(GCFPortInterface& board_port, int board_id,
   : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i)),
     m_dstid(dstid), m_pid(pid), m_regid(regid), m_size(size), m_offset(offset)
 {
+  memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 WriteReg::~WriteReg()
@@ -96,7 +97,8 @@ void WriteReg::sendrequest()
 		m_offset);
 
   write.payload.setBuffer(m_source_address, m_size);
-  
+
+  m_hdr = write.hdr;
   getBoardPort().send(write);
 }
 
@@ -107,13 +109,18 @@ void WriteReg::sendrequest_status()
 
 GCFEvent::TResult WriteReg::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG("handleack");
+  if (EPA_WRITEACK != event.signal)
+  {
+    LOG_WARN("WriteReg::handleack: unexpected ack");
+    return GCFEvent::NOT_HANDLED;
+  }
 
   EPAWriteackEvent ack(event);
 
-  if (ack.hdr.m_fields.error)
+  if (!ack.hdr.isValidAck(m_hdr))
   {
-    LOG_ERROR_STR("WriteReg::handleack: error " << ack.hdr.m_fields.error);
+    LOG_ERROR("WriteReg::handleack: invalid ack");
+    return GCFEvent::NOT_HANDLED;
   }
  
   return GCFEvent::HANDLED;

@@ -39,6 +39,7 @@ using namespace EPA_Protocol;
 RCURead::RCURead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
 {
+  memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 RCURead::~RCURead()
@@ -52,6 +53,7 @@ void RCURead::sendrequest()
 			  getCurrentBLP(),
 			  MEPHeader::READ);
 
+  m_hdr = rcusettingsread.hdr;
   getBoardPort().send(rcusettingsread);
 }
 
@@ -62,11 +64,22 @@ void RCURead::sendrequest_status()
 
 GCFEvent::TResult RCURead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (event.signal != EPA_RCU_SETTINGS) return GCFEvent::HANDLED;
+  if (EPA_RCU_SETTINGS != event.signal)
+  {
+    LOG_WARN("RCURead::handleack: unexpected ack");
+    return GCFEvent::NOT_HANDLED;
+  }
+
+  EPARcuSettingsEvent rcusettings(event);
+
+  if (!rcusettings.hdr.isValidAck(m_hdr))
+  {
+    LOG_ERROR("RCURead::handleack: invalid ack");
+    return GCFEvent::NOT_HANDLED;
+  }
   
   uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
-  EPARcuSettingsEvent rcusettings(event);
 
   RCUSettings::RCURegisterType& x = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2));
   RCUSettings::RCURegisterType& y = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2) + 1);

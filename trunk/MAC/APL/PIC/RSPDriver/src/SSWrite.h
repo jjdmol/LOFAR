@@ -26,6 +26,7 @@
 #define SSWRITE_H_
 
 #include "SyncAction.h"
+#include "MEPHeader.h"
 #include <Common/LofarTypes.h>
 
 namespace RSP
@@ -55,6 +56,9 @@ namespace RSP
        * Handle the READRES message.
        */
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
+
+    private:
+      EPA_Protocol::MEPHeader m_hdr;
   };
 };
      

@@ -26,38 +26,40 @@
 #define BSTREAD_H_
 
 #include "SyncAction.h"
+#include "MEPHeader.h"
 #include <Common/LofarTypes.h>
 
 namespace RSP
 {
   class BstRead : public SyncAction
   {
-  public:
-    /**
-     * Constructors for a BstRead object.
-     */
-    BstRead(GCFPortInterface& board_port, int board_id, uint8 type);
+    public:
+      /**
+       * Constructors for a BstRead object.
+       */
+      BstRead(GCFPortInterface& board_port, int board_id, uint8 type);
 	  
-    /* Destructor for BstRead. */
-    virtual ~BstRead();
+      /* Destructor for BstRead. */
+      virtual ~BstRead();
 
-    /**
-     * Send the write message.
-     */
-    virtual void sendrequest();
+      /**
+       * Send the write message.
+       */
+      virtual void sendrequest();
 
-    /**
-     * Send the read request.
-     */
-    virtual void sendrequest_status();
+      /**
+       * Send the read request.
+       */
+      virtual void sendrequest_status();
 
-    /**
-     * Handle the read result.
-     */
-    virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
+      /**
+       * Handle the read result.
+       */
+      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
-  private:
-    uint8 m_type;       // statistics type
+    private:
+      uint8 m_type;       // statistics type
+      EPA_Protocol::MEPHeader m_hdr;
   };
 };
      

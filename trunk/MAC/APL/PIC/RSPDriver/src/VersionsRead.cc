@@ -36,6 +36,7 @@ using namespace EPA_Protocol;
 VersionsRead::VersionsRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, 1)
 {
+  memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 VersionsRead::~VersionsRead()
@@ -49,6 +50,7 @@ void VersionsRead::sendrequest()
   EPAReadEvent versionread;
   versionread.hdr.set(MEPHeader::RSR_VERSION_HDR);
 
+  m_hdr = versionread.hdr;
   getBoardPort().send(versionread);
 }
 
@@ -59,9 +61,19 @@ void VersionsRead::sendrequest_status()
 
 GCFEvent::TResult VersionsRead::handleack(GCFEvent& event, GCFPortInterface& port)
 {
-  if (event.signal != EPA_RSR_VERSION) return GCFEvent::HANDLED;
+  if (EPA_RSR_VERSION != event.signal)
+  {
+    LOG_WARN("VersionsRead::handleack: unexpected ack");
+    return GCFEvent::NOT_HANDLED;
+  }
   
   EPARsrVersionEvent ack(event);
+
+  if (!ack.hdr.isValidAck(m_hdr))
+  {
+    LOG_ERROR("VersionsRead::handleack: invalid ack");
+    return GCFEvent::NOT_HANDLED;
+  }
 
   LOG_DEBUG(formatString("Firmware versions on board '%s' are [rsp:%d.%d, bp:%d.%d, ap:%d.%d",
 			 port.getName().c_str(),

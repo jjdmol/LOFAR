@@ -41,6 +41,7 @@ using namespace blitz;
 StatusRead::StatusRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, 1)
 {
+  memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 StatusRead::~StatusRead()
@@ -54,6 +55,7 @@ void StatusRead::sendrequest()
   EPAReadEvent rspstatus;
   rspstatus.hdr.set(MEPHeader::RSR_STATUS_HDR);
 
+  m_hdr = rspstatus.hdr;
   getBoardPort().send(rspstatus);
 }
 
@@ -64,10 +66,19 @@ void StatusRead::sendrequest_status()
 
 GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  // if this is not the signal we expect, simply discard it
-  if (event.signal != EPA_RSR_STATUS) return GCFEvent::HANDLED;
+  if (EPA_RSR_STATUS != event.signal)
+  {
+    LOG_WARN("StatusRead::handleack: unexpected ack");
+    return GCFEvent::NOT_HANDLED;
+  }
 
   EPARsrStatusEvent ack(event);
+
+  if (!ack.hdr.isValidAck(m_hdr))
+  {
+    LOG_ERROR("StatusRead::handleack: invalid ack");
+    return GCFEvent::NOT_HANDLED;
+  }
 
   SystemStatus& status = Cache::getInstance().getBack().getSystemStatus();
 

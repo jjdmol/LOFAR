@@ -119,3 +119,23 @@ void MEPHeader::set(MEPHeader::FieldsType hdrtemplate,
   if (size) m_fields.size = size;
 }
 
+bool MEPHeader::isValidAck(const MEPHeader& reqhdr)
+{
+  /**
+   * This header should be either READACK or WRITEACK,
+   * have no errors and all other fields should
+   * match the fields of request.
+   */
+  return (
+    ( (READACK == this->m_fields.type) ||
+      (WRITEACK == this->m_fields.type) ) &&
+    (0 == this->m_fields.error) &&
+    (this->m_fields.seqnr      == reqhdr.m_fields.seqnr)      &&
+    (this->m_fields.addr.dstid == reqhdr.m_fields.addr.dstid) &&
+    (this->m_fields.addr.pid   == reqhdr.m_fields.addr.pid)   &&
+    (this->m_fields.addr.regid == reqhdr.m_fields.addr.regid) &&
+    (this->m_fields.offset     == reqhdr.m_fields.offset)     &&
+    (this->m_fields.size       == reqhdr.m_fields.size)
+    );
+}
+

@@ -45,6 +45,7 @@ using namespace blitz;
 SSWrite::SSWrite(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
 {
+  memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 SSWrite::~SSWrite()
@@ -70,7 +71,8 @@ void SSWrite::sendrequest()
     
   // copy the actual values from the cache
   subbands = Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range::all()); // (0, N_BEAMLETS - 1));
-    
+
+  m_hdr = ss.hdr;
   getBoardPort().send(ss);
 }
 
@@ -81,13 +83,18 @@ void SSWrite::sendrequest_status()
 
 GCFEvent::TResult SSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG("handleack");
+  if (EPA_WRITEACK != event.signal)
+  {
+    LOG_WARN("SSWrite::handleack: unexpected ack");
+    return GCFEvent::NOT_HANDLED;
+  }
 
   EPAWriteackEvent ack(event);
 
-  if (ack.hdr.m_fields.error)
+  if (!ack.hdr.isValidAck(m_hdr))
   {
-    LOG_ERROR_STR("SSWrite::handleack: error " << ack.hdr.m_fields.error);
+    LOG_ERROR("SSWrite::handleack: invalid ack");
+    return GCFEvent::NOT_HANDLED;
   }
   
   return GCFEvent::HANDLED;

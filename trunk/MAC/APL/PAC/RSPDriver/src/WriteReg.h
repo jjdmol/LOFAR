@@ -27,7 +27,6 @@
 
 #include "SyncAction.h"
 #include "MEPHeader.h"
-
 #include <Common/LofarTypes.h>
 
 namespace RSP
@@ -73,6 +72,8 @@ namespace RSP
       uint16 m_size;
       uint16 m_offset;
       void*  m_source_address;
+
+      EPA_Protocol::MEPHeader m_hdr;
   };
 };
      

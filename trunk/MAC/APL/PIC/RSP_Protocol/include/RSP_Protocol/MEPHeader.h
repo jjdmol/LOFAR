@@ -260,8 +260,13 @@ namespace EPA_Protocol
 	       uint8  type   = MEPHeader::TYPE_UNSET,
 	       uint16 size   = 0,
 	       uint16 offset = 0);
-      
       /*@}*/
+
+      /**
+       * Method to check if this MEPHeader is a valid
+       * acknowledgement for a specific request.
+       */
+      bool isValidAck(const MEPHeader& reqhdr);
 
       /*@{*/
       //

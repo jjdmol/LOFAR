@@ -26,6 +26,7 @@
 #define WGWRITE_H_
 
 #include "SyncAction.h"
+#include "MEPHeader.h"
 
 namespace RSP
 {
@@ -61,6 +62,7 @@ namespace RSP
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
+      EPA_Protocol::MEPHeader m_hdr;
   };
 };
      
