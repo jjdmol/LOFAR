@@ -54,7 +54,7 @@ private:
 };
 // create a logger 'my_test_class' and attach it to myTestclass.
 #ifdef ENABLE_TRACER
-INIT_TRACER_CONTEXT(myTestClass, 'my_test_class');
+INIT_TRACER_CONTEXT(myTestClass, "my_test_class");
 #endif
 
 class foo {
