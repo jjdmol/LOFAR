@@ -261,6 +261,7 @@ void BaseDataHolder::createDataBlock()
   }
   itsDataFields.createBlob (*itsDataBlob);
   itsDataPacketPtr = itsDataFields[0].getData<DataPacket> (*itsDataBlob);
+  fillDataPointers();
 }
 
 void BaseDataHolder::openDataBlock()
@@ -269,7 +270,11 @@ void BaseDataHolder::openDataBlock()
   BlobIBufString bis(*itsData);
   itsDataFields.openBlob (bis);
   itsDataPacketPtr = itsDataFields[0].getData<DataPacket> (*itsDataBlob);
+  fillDataPointers();
 }
+
+void BaseDataHolder::fillDataPointers()
+{}
 
 } // namespace LOFAR
 
