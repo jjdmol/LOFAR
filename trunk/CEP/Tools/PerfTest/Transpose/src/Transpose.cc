@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.9  2002/07/18 09:39:40  schaaf
+//  %[BugId: 11]%
+//  Input parameter handling (a.o. profiling)
+//  deployment
+//
 //  Revision 1.8  2002/06/07 11:40:47  schaaf
 //  %[BugId: 11]%
 //  removed unused dummy in/out holders
@@ -115,14 +120,18 @@ void Transpose::define(const ParamBlock& params)
   // initialize TH_ShMem
   TH_ShMem::init(0, NULL);
 #endif
-
-  params.show (cout);
-
+  
   char name[20];  // name used during Step/WH creation
   
   int rank = TRANSPORTER::getCurrentRank();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
 
+  if (rank == 0) 
+    cout << "************************************** Start Run ************************************" << endl;
+
+
+  if (rank == 0) params.show (cout);
+  
   // free any memory previously allocated
   undefine();
 
@@ -130,7 +139,7 @@ void Transpose::define(const ParamBlock& params)
 
   WH_Empty empty;
 
-  Simul simul(empty, params.getString("name","Transpose").c_str(),true,true);
+  Simul simul(empty, params.getString("name","Transpose").c_str(),true,false);
   setSimul(simul);
   int applicationnr = params.getInt("application",0); 
   // the top-level simul
@@ -139,13 +148,11 @@ void Transpose::define(const ParamBlock& params)
   
   TRACER2("Default settings");
   simul.setCurAppl(applicationnr);
-  itsSourceSteps = params.getInt("stations",1); // nr of stations (?)
-  itsDestSteps   = params.getInt("correlators",1);
-  cout << "stations = " << itsSourceSteps << "  correlators = " << itsDestSteps << endl;
-  //itsDoLogProfile = params.getBool("log",false);
+  itsSourceSteps = params.getInt("stations",3); // nr of stations (?)
+  itsDestSteps   = params.getInt("correlators",3);
+    //itsDoLogProfile = params.getBool("log",false);
   itsDoLogProfile = params.getInt("log",0) == 1;
-  if (itsDoLogProfile) cout << "Logging Enabled" << endl;
- 
+   
   // Create the Workholders and Steps
   Sworkholders = new (WH_FillTFMatrix*)[itsSourceSteps];
   Ssteps       = new (Step*)[itsSourceSteps];
@@ -162,7 +169,9 @@ void Transpose::define(const ParamBlock& params)
 
   // Create the Source Steps
   int timeDim = params.getInt("times",1);
+  itsTimeDim = timeDim;
   int freqDim = params.getInt("freqbandsize",4096);
+  itsFreqs  = freqDim;
   for (int iStep = 0; iStep < itsSourceSteps; iStep++) {
     
     // Create the Source Step
@@ -176,8 +185,6 @@ void Transpose::define(const ParamBlock& params)
     
     Ssteps[iStep] = new Step(Sworkholders[iStep], "TransposeSourceStep", iStep);
 
-    // Determine the node and process to run in
-    // ... sory, this should go in a private method later
     Ssteps[iStep]->runOnNode(iStep ,0); // run in App 0
   }
 
@@ -213,7 +220,7 @@ void Transpose::define(const ParamBlock& params)
 			     "TransposeDestStep", 
 			     iStep);
 
-    int node = iStep+itsSourceSteps;
+    int node = 2*iStep+itsSourceSteps;
     Dsteps[iStep]->runOnNode(node,0); 
 
 
@@ -276,6 +283,8 @@ void Transpose::define(const ParamBlock& params)
 void Transpose::run(int nSteps) {
   nSteps = nSteps;
 
+  int rank = TRANSPORTER::getCurrentRank();
+
   TRACER1("Ready with definition of configuration");
   Profiler::init();
   Step::clearEventCount();
@@ -285,18 +294,34 @@ void Transpose::run(int nSteps) {
   TH_MPI::synchroniseAllProcesses();
   double starttime=MPI_Wtime();
 #endif
-  for (int i=0; i<nSteps; i++) {
+  for (int i=1; i<=nSteps; i++) {
 #ifdef HAVE_MPI
     //TH_MPI::synchroniseAllProcesses();
 #endif
-    if (i==2 && itsDoLogProfile) Profiler::activate();
+    if (i==1 && itsDoLogProfile) Profiler::activate();
     getSimul().process();
     if (i==10 && itsDoLogProfile) Profiler::deActivate();
+
+    if ((rank==0) && (i%10000 == 0)) cout << i/(MPI_Wtime()-starttime) << endl;
   }
 #ifdef HAVE_MPI
   double endtime=MPI_Wtime();
-  cout << "Total Run Time on node " << TH_MPI::getCurrentRank() << " : " << endtime-starttime << endl;
+  //  cout << "Total Run Time on node " << TH_MPI::getCurrentRank() << " : " << endtime-starttime << endl;
+  if (rank == 0) {
+    float F = nSteps/(endtime-starttime);
+    float B = itsFreqs*nSteps/(endtime-starttime)*itsTimeDim*itsDestSteps*4*8/1024/1024/1024;
+    cout << "===> " 
+	 <<  itsFreqs << "  " 
+	 <<  F << "  "
+	 <<  itsTimeDim << "  "
+	 <<  itsSourceSteps << "  "
+	 <<  itsDestSteps << "  " 
+	 <<  B << "  "
+         <<  B * itsSourceSteps << "  "
+	 << endl;
+  }
 #endif
+
 
   TRACER4("END OF SIMUL on node " << TRANSPORTER::getCurrentRank () );
  
