@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  GetWeightsCmd.h: Beamformer Weights get command.
+//#  GetStatusCmd.h: Get system status command.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef GETWEIGHTSCMD_H_
-#define GETWEIGHTSCMD_H_
+#ifndef GETSTATUSCMD_H_
+#define GETSTATUSCMD_H_
 
 #include "Command.h"
 #include "RSP_Protocol.ph"
@@ -33,16 +33,16 @@
 
 namespace RSP
 {
-  class GetWeightsCmd : public Command
+  class GetStatusCmd : public Command
   {
     public:
       /**
-       * Constructors for a GetWeightsCmd object.
+       * Constructors for a GetStatusCmd object.
        */
-      GetWeightsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper);
+      GetStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation oper);
 	  
-      /* Destructor for GetWeightsCmd. */
-      virtual ~GetWeightsCmd();
+      /* Destructor for GetStatusCmd. */
+      virtual ~GetStatusCmd();
 
       /**
        * Acknowledge the command by sending the appropriate
@@ -76,13 +76,13 @@ namespace RSP
       virtual bool validate() const;
 
       /**
-       * Return true if value should be read from cache.
+       * Send failure ack.
        */
-      bool readFromCache() const;
+      void ack_fail();
       
     private:
-      GetWeightsCmd();
-      RSPGetweightsEvent* m_event;
+      GetStatusCmd();
+      RSPGetstatusEvent* m_event;
   };
 };
      

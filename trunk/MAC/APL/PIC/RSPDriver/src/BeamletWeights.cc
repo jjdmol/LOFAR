@@ -37,10 +37,7 @@ using namespace blitz;
 
 unsigned int BeamletWeights::getSize()
 {
-  /* NDIM extent values plus the array data itself */
-  return
-    ((NDIM * sizeof(int32))
-     + (m_weights.size() * sizeof(complex<int16>)));
+  return MSH_ARRAY_SIZE(m_weights, complex<int16>);
 }
 
 unsigned int BeamletWeights::pack  (void* buffer)
@@ -49,26 +46,6 @@ unsigned int BeamletWeights::pack  (void* buffer)
 
   MSH_PACK_ARRAY(buffer, offset, m_weights, complex<int16>);
 
-#if 0
-  for (int dim = firstDim; dim < firstDim + m_weights.dimensions(); dim++)
-  {
-    int32 extent = m_weights.extent(dim);
-    memcpy(bufptr + offset, &extent, sizeof(int32));
-    offset += sizeof(int32);
-  }
-
-  if (m_weights.isStorageContiguous())
-  {
-    memcpy(bufptr + offset, m_weights.data(), m_weights.size() * sizeof(complex<int16>));
-    offset += m_weights.size() * sizeof(complex<int16>);
-  }
-  else
-  {
-    LOG_FATAL("beamlet weights array must be contiguous");
-    exit(EXIT_FAILURE);
-  }
-#endif
-    
   return offset;
 }
 
@@ -78,23 +55,5 @@ unsigned int BeamletWeights::unpack(void *buffer)
 
   MSH_UNPACK_ARRAY(buffer, offset, m_weights, complex<int16>, NDIM);
 
-#if 0
-  TinyVector<int, NDIM> extent;
-
-  for (int dim = firstDim; dim < firstDim + m_weights.dimensions(); dim++)
-  {
-    int32 extenttmp = m_weights.extent(dim);
-    memcpy(&extenttmp, bufptr + offset, sizeof(int32));
-    offset += sizeof(int32);
-    extent(dim - firstDim) = extenttmp;
-  }
-
-  // resize the array to the correct size
-  m_weights.resize(extent);
-
-  memcpy(m_weights.data(), bufptr+offset, m_weights.size() * sizeof(complex<int16>));
-  offset += m_weights.size() * sizeof(complex<int16>);
-#endif
-    
   return offset;
 }

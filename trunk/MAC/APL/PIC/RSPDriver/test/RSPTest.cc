@@ -25,6 +25,7 @@
 #define DECLARE_SIGNAL_NAMES
 
 #include "RSP_Protocol.ph"
+#include "EPA_Protocol.ph"
 
 #include "RSPTestSuite.h"
 #include "RSPTest.h"
@@ -45,6 +46,8 @@ using namespace RSP_Test;
 using namespace std;
 using namespace LOFAR;
 using namespace blitz;
+using namespace EPA_Protocol;
+using namespace RSP_Protocol;
 
 #define N_BEAMLETS 256
 
@@ -78,7 +81,7 @@ GCFEvent::TResult RSPTest::initial(GCFEvent& e, GCFPortInterface& port)
 
       case F_CONNECTED:
       {
-	  TRAN(RSPTest::test001);
+	  TRAN(RSPTest::test006);
       }
       break;
 
@@ -384,6 +387,69 @@ GCFEvent::TResult RSPTest::test005(GCFEvent& e, GCFPortInterface& port)
       TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
       cout << "ack.time=" << ack.timestamp << endl;
 
+      TRAN(RSPTest::test006);
+    }
+    break;
+
+    case F_DISCONNECTED:
+    {
+      port.setTimer((long)1);
+      port.close();
+
+      TRAN(RSPTest::final);
+    }
+    break;
+
+    case F_EXIT:
+    {
+      STOP_TEST();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RSPTest::test006(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+  {
+    case F_ENTRY:
+    {
+      START_TEST("test006", "test GETSTATUS");
+
+      /* start of the test sequence */
+      RSPGetstatusEvent ss;
+
+      ss.timestamp = Timestamp(0,0);
+      ss.rcumask.reset();
+      ss.rcumask.set(0);
+      ss.rcumask.set(1);
+      
+      TESTC_ABORT(m_server.send(ss), RSPTest::final);
+    }
+    break;
+
+    case RSP_GETSTATUSACK:
+    {
+      RSPGetstatusackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      cout << "ack.time=" << ack.timestamp << endl;
+
+      LOG_INFO_STR("rsp="   << ack.sysstatus.rsp());
+      LOG_INFO_STR("read="  << ack.sysstatus.read());
+      LOG_INFO_STR("write=" << ack.sysstatus.write());
+      LOG_INFO_STR("bp="    << ack.sysstatus.bp());
+      LOG_INFO_STR("ap="    << ack.sysstatus.bp());
+      LOG_INFO_STR("rcu="   << ack.sysstatus.rcu());
+      
       TRAN(RSPTest::final);
 
       port.close();

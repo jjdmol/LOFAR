@@ -62,6 +62,7 @@ namespace RSP_Test
       GCFEvent::TResult test003(GCFEvent& e, GCFPortInterface &p);
       GCFEvent::TResult test004(GCFEvent& e, GCFPortInterface &p);
       GCFEvent::TResult test005(GCFEvent& e, GCFPortInterface &p);
+      GCFEvent::TResult test006(GCFEvent& e, GCFPortInterface &p);
 
       /**
        * Run the tests.
