@@ -23,6 +23,7 @@
 #define ONLINEPROTO_MAC_H
 
 #define pi 3.1415926535897932384626433832795028841972
+#define nstations 2
 
 #include <lofar_config.h>
 #include <Common/Lorrays.h>
@@ -56,8 +57,8 @@ public:
    void setTotalBandwidth (float tbw);
    float getLOfrequency ();
    void setLOfrequency (float f_lo);
-   Station** getStations ();
-   void setStations (Station** s);
+   Station* getStations ();
+/*    void setStations (Station* s); */
    int getNumberOfStations ();
    void setNumberOfStations (int ns);
    int getNumberOfBeamlets ();
@@ -81,7 +82,7 @@ public:
    int itsNumberOfBeamlets;
      
    // Station related parameters
-   Station** itsStations;          // the stationpositions 
+   Station itsStations[nstations];          // the stationpositions 
    int itsNumberOfStations;
 };
 
@@ -139,11 +140,11 @@ inline float MAC::getLOfrequency ()
 inline void MAC::setLOfrequency (float f_lo)
   { itsLOfrequency = f_lo; }
 
-inline Station** MAC::getStations ()
+inline Station* MAC::getStations ()
   { return itsStations; }
 
-inline void MAC::setStations (Station** s)
-  { itsStations = s; }
+/* inline void MAC::setStations (Station* s) */
+/*   { itsStations = s; } */
 
 inline int MAC::getNumberOfStations ()
   { return itsNumberOfStations; }
