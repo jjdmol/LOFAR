@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LCS_COMMON_BLOBEXCEPTION_H
-#define LCS_COMMON_BLOBEXCEPTION_H
+#ifndef LOFAR_COMMON_BLOBEXCEPTION_H
+#define LOFAR_COMMON_BLOBEXCEPTION_H
 
 //# Includes
 #include <Common/Exception.h>

@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LCS_COMMON_EXCEPTION_H
-#define LCS_COMMON_EXCEPTION_H
+#ifndef LOFAR_COMMON_EXCEPTION_H
+#define LOFAR_COMMON_EXCEPTION_H
 
 //# Includes
 #ifdef HAVE_CONFIG_H
