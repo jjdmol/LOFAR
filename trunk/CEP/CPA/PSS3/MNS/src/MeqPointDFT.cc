@@ -110,18 +110,18 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
   //  exp(x)/exp(y) = (cos(x) + i.sin(x)) / (cos(y) + i.sin(y))
   //                = (cos(x) + i.sin(x)) * (cos(y) - i.sin(y))
   {
-    const MeqResult& ul = itsLeft->uvw().getU(request);
-    const MeqResult& vl = itsLeft->uvw().getV(request);
-    const MeqResult& wl = itsLeft->uvw().getW(request);
-    const MeqResult& ur = itsRight->uvw().getU(request);
-    const MeqResult& vr = itsRight->uvw().getV(request);
-    const MeqResult& wr = itsRight->uvw().getW(request);
+    //const MeqResult& ul = itsLeft->uvw().getU(request);
+    //const MeqResult& vl = itsLeft->uvw().getV(request);
+    //const MeqResult& wl = itsLeft->uvw().getW(request);
+    //const MeqResult& ur = itsRight->uvw().getU(request);
+    //const MeqResult& vr = itsRight->uvw().getV(request);
+    //const MeqResult& wr = itsRight->uvw().getW(request);
     //cout << "U: " << ur.getValue() - ul.getValue() << endl;
     //cout << "V: " << vr.getValue() - vl.getValue() << endl;
     //cout << "W: " << wr.getValue() - wl.getValue() << endl;
-    TRACER1 ("U: " << ur.getValue() - ul.getValue());
-    TRACER1 ("V: " << vr.getValue() - vl.getValue());
-    TRACER1 ("W: " << wr.getValue() - wl.getValue());
+    //TRACER1 ("U: " << ur.getValue() - ul.getValue());
+    //TRACER1 ("V: " << vr.getValue() - vl.getValue());
+    //TRACER1 ("W: " << wr.getValue() - wl.getValue());
   }
   const complex<double>* tmpl = left.getValue().dcomplexStorage();
   const complex<double>* tmpr = right.getValue().dcomplexStorage();
