@@ -76,7 +76,7 @@ class UVPDataAtomHeader
                     const std::vector<double>& uvw = std::vector<double>(3,0),
                     DataType     dataType        = Raw);
 
-  //! Less-than operator. Keys are itsAntenna1-itsAntenna2-itsTime-itsCorrelationType.
+  //! Less-than operator. Keys are itsAntenna1-itsAntenna2-itsCorrelationType-itsTime.
   bool operator < (const UVPDataAtomHeader &other) const;
 
   //! Makes sure that itsAntenan1 <= itsAntenna2

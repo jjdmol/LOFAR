@@ -47,15 +47,15 @@ bool UVPDataAtomHeader::operator < (const UVPDataAtomHeader &other) const
     if(itsAntenna2 < other.itsAntenna2) {
       return true;
     } else if(itsAntenna2 == other.itsAntenna2) {
-      if(itsTime < other.itsTime) {
+      if(itsCorrelationType < other.itsCorrelationType) {
         return true;
-      } else if(itsTime == other.itsTime) {
-        if(itsCorrelationType < other.itsCorrelationType) {
+      } else if(itsCorrelationType == other.itsCorrelationType) {
+        if(itsTime < other.itsTime) {
           return true;
-        } else if(itsCorrelationType == other.itsCorrelationType) {
+        } else if(itsTime == other.itsTime) {
           return false;
-        } // itsCorrelationType
-      } // itsTime
+        } // itsTime
+      } // itsCorrelationType
     } // itsAntenna2
   } // itsAntenna1
   
