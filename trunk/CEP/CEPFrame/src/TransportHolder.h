@@ -48,7 +48,7 @@
    improved in the future.
 */
 
-class Transport;
+class BaseTransport;
 
 class TransportHolder
 {
@@ -75,15 +75,15 @@ public:
 
   virtual bool connectionPossible (int srcRank, int dstRank) const;
 
-  Transport * getTransport () { return itsTransport; }
-  void setTransport (Transport * Trn) { 
-    itsTransport = Trn; 
+  BaseTransport * getBaseTransport () { return itsBaseTransport; }
+  void setBaseTransport (BaseTransport * Trn) { 
+    itsBaseTransport = Trn; 
   }
 
   virtual bool isBlocking() const = 0;
 
 private:
-  Transport * itsTransport;
+  BaseTransport * itsBaseTransport;
 };
 
 
