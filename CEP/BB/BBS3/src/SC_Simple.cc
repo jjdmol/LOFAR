@@ -56,7 +56,6 @@ bool SC_Simple::execute()
     itsFirstCall = false;
     // Set prediffer workorder data
     itsWOPD->setInitialize(true);
-    itsWOPD->setWorkOrderID(itsWOID);
     itsWOPD->setStatus(DH_WOPrediff::New);
     itsWOPD->setKSType("Prediff1");
     itsWOPD->setFirstChannel (itsArgs.getInt ("startChan", 0));
@@ -75,7 +74,6 @@ bool SC_Simple::execute()
 
     // Set solver workorder data
     itsWOSolve->setInitialize(true);
-    itsWOSolve->setWorkOrderID(itsWOID);
     itsWOSolve->setStatus(DH_WOSolve::New);
     itsWOSolve->setKSType("Solver");
     itsWOSolve->setUseSVD (itsArgs.getBool ("useSVD", false)); 
@@ -97,6 +95,8 @@ bool SC_Simple::execute()
     nextInter = true;
   }
 
+  itsWOPD->setWorkOrderID(itsWOID);
+  itsWOSolve->setWorkOrderID(itsWOID);
   itsWOSolve->setNextInterval(nextInter);
   itsWOPD->setNextInterval(nextInter);
 
@@ -121,7 +121,12 @@ void SC_Simple::readSolution()
 
   // Wait for solution
   bool firstTime = true;
-  while (solPtr->queryDB("woid=" + itsWOID) <= 0)
+  int id = itsWOID - 1;
+  char str[32];
+  sprintf(str, "WOID=%i", id);
+  string query(str);
+
+  while (solPtr->queryDB(query) <= 0)
   {
     if (firstTime)
     {

@@ -40,6 +40,10 @@
 #include <BBS3/WH_Prediff.h>
 #include <BBS3/WH_Solve.h>
 
+#ifdef HAVE_MPI
+#include <Transport/TH_MPI.h>
+#endif
+
 namespace LOFAR
 {
 
