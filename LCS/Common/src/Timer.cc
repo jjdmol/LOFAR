@@ -34,10 +34,10 @@ using namespace std;
 namespace LOFAR {
 
 
-double Timer::CPU_speed_in_MHz = Timer::get_CPU_speed_in_MHz();
+double NSTimer::CPU_speed_in_MHz = NSTimer::get_CPU_speed_in_MHz();
 
 
-double Timer::get_CPU_speed_in_MHz()
+double NSTimer::get_CPU_speed_in_MHz()
 {
 #if defined __linux__ && (defined __GNUC__ || defined __INTEL_COMPILER) && (defined __i386 || defined __x86_64)
     // first a few sanity checks
@@ -59,7 +59,7 @@ double Timer::get_CPU_speed_in_MHz()
 }
 
 
-void Timer::print_time(ostream &str, const char *which, double time) const
+void NSTimer::print_time(ostream &str, const char *which, double time) const
 {
     static const char *units[] = { " ns", " us", " ms", "  s", " ks", 0 };
     const char	      **unit   = units;
@@ -75,9 +75,13 @@ void Timer::print_time(ostream &str, const char *which, double time) const
 }
 
 
-ostream &Timer::print(ostream &str)
+ostream &NSTimer::print(ostream &str)
 {
-    str << left << setw(25) << (name != 0 ? name : "timer") << ": " << right;
+    if (name == 0) {
+      str << "timer: ";
+    } else {
+      str << left << setw(25) << name << ": " << right;
+    }
 
     if (CPU_speed_in_MHz == 0)
 	str << "could not determine CPU speed\n";
@@ -95,7 +99,7 @@ ostream &Timer::print(ostream &str)
 }
 
 
-ostream &operator << (ostream &str, class Timer &timer)
+ostream &operator << (ostream &str, class NSTimer &timer)
 {
     return timer.print(str);
 }

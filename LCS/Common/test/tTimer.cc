@@ -1,4 +1,4 @@
-//# tTimer.cc: Test program for class Timer
+//# tTimer.cc: Test program for class NSTimer
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -31,7 +31,7 @@ using namespace LOFAR;
 
 int main()
 {
-    class Timer timer("test");
+    class NSTimer timer("test");
 
     for (int i = 0; i < 100000; i ++) {
 	timer.start();
