@@ -28,6 +28,7 @@
 #include <Transport/TH_Socket.h>
 #include <DH_Example.h>
 #include <StopWatch.h>
+#include <iomanip>
 
 using namespace LOFAR;
 
@@ -63,17 +64,15 @@ int main (int argc, char** argv) {
   }
 
 
-   const int maxlen = 1024*1024*1;
-   DH_Example DH_Sender("dh1", 
-			100+maxlen*sizeof(DH_Example::BufferType));  //size
-  DH_Example DH_Receiver("dh",
-			 100+maxlen*sizeof(DH_Example::BufferType));  //size
+  const int maxlen = 1024*1024*1;
+  DH_Example DH_Sender("dh1", maxlen);
+  DH_Example DH_Receiver("dh", maxlen);
 
   DH_Sender.setID(1);
   DH_Receiver.setID(2);
 
-  TH_Socket TH_proto("lofar11", 
-		     "lofar12",
+  TH_Socket TH_proto("localhost", 
+		     "localhost",
 		     8923,
 		     ServerAtSender); //  set the server side
 
@@ -103,18 +102,20 @@ int main (int argc, char** argv) {
   watch.stop();
 
 
-  double sizes[10000];
+  int sizes[10000];
   double times[10000];
   int i=0;
 
   for (int l=1; l<maxlen; l= (int)ceil(1.051*l)) {
+    ///  for (int l=1; l<maxlen; l*=2) {
 
-    sizes[i]=(double)l;
     // resize
     if (isReceiver) {
-      DH_Receiver.setCurDataSize(l); 
+      DH_Receiver.setBufferSize(l);
+      sizes[i] = DH_Receiver.getDataSize();
     } else {
-      DH_Sender.setCurDataSize(l); 
+      DH_Sender.setBufferSize(l);
+      sizes[i] = DH_Sender.getDataSize();
     }
     
     // perform measurement
@@ -144,13 +145,13 @@ int main (int argc, char** argv) {
     }
   }
   
-  if (!isReceiver)  {
-    ofstream outFile("bandwidth.dat");
+   if (!isReceiver)  {
+    ofstream outFile("ExampleSocketPerf_tmp.bandwidth_dat");
     for (int m=0; m<i; m++) {
-      outFile << sizes[m] << "  "              // packet size in bytes/
-	      << log(sizes[m]) << "  "               // log packet size 
-	      << times[m] << "  "              // time interval
-	      << sizes[m] /1024. / 1024. / times[m]  // bandwidth in MB/sec
+      outFile << std::setw(8) << sizes[m]           // packet size in bytes/
+	      << std::setw(14) << log(double(sizes[m])) // log packet size 
+	      << std::setw(14) << times[m]          // time interval
+	      << std::setw(10) << sizes[m]/1024./1024./times[m]  // bandwidth in MB/sec
 	      << endl;
     }
     outFile.close();
@@ -180,7 +181,7 @@ int main (int argc, char** argv) {
 
 
 void displayUsage (void) {
-    cout << "Usage: ExampleSocket -s|-r [-Server|-Client]" << endl;
+    cout << "Usage: ExampleSocketPerf -s|-r [-Server|-Client]" << endl;
     cout << "If Client/Server flags are not specified, the receiver side will be Server" << endl;
     cout << "(exit)." << endl;
 }
