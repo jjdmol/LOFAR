@@ -40,6 +40,9 @@ uint32 putBlobArrayHeader (BlobOStream& bs, bool useBlobHeader,
     int64 pos = bs.tellPos();
     if (pos > 0) {
       nalign = (pos + 4 + ndim*sizeof(uint32)) % std::min(8u, align);
+      if (nalign > 0) {
+	nalign = 8 - nalign;
+      }
     }
   }    
   bs << fortranOrder << nalign << ndim;
@@ -92,13 +95,13 @@ void convertArrayHeader (LOFAR::DataFormat fmt, char* header,
   }
   // Skip the first 2 characters that do not need to be converted.
   buf += + 2;
-  int ndim = dataConvert (fmt, *((uint16*)buf));
+  // Get ndim and convert it in the buffer.
+  uint16 ndim;
+  dataConvert16 (fmt, &ndim, buf);
   dataConvert16 (fmt, buf);
   buf += 2;
-  for (int i=0; i<ndim; i++) {
-    dataConvert32 (fmt, buf);
-    buf += 4;
-  }
+  // Convert all dimensions.
+  dataConvert32 (fmt, buf, ndim);
 }
 
 BlobOStream& operator<< (BlobOStream& bs, const std::vector<bool>& vec)
