@@ -85,6 +85,7 @@ UVPMainWindow::UVPMainWindow()
 
   itsInputType     = NoInput;
   itsInputFilename = "";
+  itsCurrentWorkingDirectory= ".";
   itsMSColumnName  = "DATA";
 
   itsBusyPlotting = false;
@@ -527,12 +528,15 @@ void UVPMainWindow::slot_loadData()
 void UVPMainWindow::slot_openMS()
 try
 {
-  QString filename = QFileDialog::getExistingDirectory(".",
+  QString filename = QFileDialog::getExistingDirectory(itsCurrentWorkingDirectory.c_str(),
                                                        this, 
                                                        "", 
                                                        "Open Measurement Set");
+  
   if(!filename.isNull()) {
-    itsInputFilename = filename.latin1();
+    itsInputFilename           = filename.latin1();
+    itsInputFilename           = itsInputFilename.substr(0, itsInputFilename.find_last_of("/"));
+    itsCurrentWorkingDirectory = itsInputFilename.substr(0, itsInputFilename.find_last_of("/"));
     itsInputType     = MS;
     updateCaption();
 
