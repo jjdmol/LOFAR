@@ -25,7 +25,7 @@
 #include <DH_Postgresql.h>			// for class definition
 // TODO: lofar_strstream.h results in warning on lofar17:
 //#include <Common/lofar_strstream.h>		// for ostringstream
-#include <Common/lofar_iostream.h>		// for cout
+#include <Common/lofar_iostream.h>		// for cout, cerr
 #include <Common/Stopwatch.h>			// for Stopwatch class
 #include <Common/Debug.h>			// for AssertStr
 
@@ -53,13 +53,13 @@ DH_Postgresql::DH_Postgresql (const string& name, const string& type)
 
   DH_Postgresql::theirInstanceCount ++;
 
-  cout << DH_Postgresql::theirInstanceCount 
+  cerr << DH_Postgresql::theirInstanceCount 
     << ") DH_Postgresql constructed." << endl;
 } 
 
 
 DH_Postgresql::~DH_Postgresql () {
-  cout << DH_Postgresql::theirInstanceCount
+  cerr << DH_Postgresql::theirInstanceCount
     << ") DH_Postgresql destroyed." << endl;
 
   DH_Postgresql::theirInstanceCount --;
@@ -73,7 +73,7 @@ DH_Postgresql::~DH_Postgresql () {
 void DH_Postgresql::ConnectDatabase (void) {
   // TODO: Make configurable database host and name.
 
-  cout << "DH_Postgresql::ConnectDatabase (); Connecting to databse."
+  cerr << "DH_Postgresql::ConnectDatabase (); Connecting to databse."
        << endl;
 
   ostringstream ConnInfo;
@@ -81,7 +81,7 @@ void DH_Postgresql::ConnectDatabase (void) {
 // NOTE: lofar3 cannot see dop49. Must use ip address.
 
   ConnInfo << "host=" << "10.87.2.49" << " dbname=TransportHolder";
-  cout << "  using: " << ConnInfo.str () << endl;
+  cerr << "  using: " << ConnInfo.str () << endl;
 
   /*
   nStore = 0;
@@ -100,7 +100,7 @@ void DH_Postgresql::ConnectDatabase (void) {
   AssertStr (PQstatus (DH_Postgresql::theirConnection) == CONNECTION_OK, 
     "ConnectDatabase(); Could not connect to database.") 
 
-  cout << "DH_Postgresql::ConnectDatabase (): Succesfully connected "
+  cerr << "DH_Postgresql::ConnectDatabase (): Succesfully connected "
        << "to database" << endl;
 
 //  // Delete all previous message from message table
@@ -123,7 +123,7 @@ void DH_Postgresql::ConnectDatabase (void) {
   ostr << "Connected from " << curhostname << " to " << hostname;
   LogEntry (ostr);
 
-  cout << curhostname << " connecting to database." << endl;
+  cerr << curhostname << " connecting to database." << endl;
 
   LogEntry ("  (Dropped message table).");
   LogEntry ("  (Re-created message table.)");
@@ -159,31 +159,31 @@ void DH_Postgresql::DisconnectDatabase (void) {
 
   // Display the metrics
   // TODO: Perhaps move the metrics to log database.
-  cout << "Average store time: " << avgStore 
+  cerr << "Average store time: " << avgStore 
        << " sec." << endl;
-  cout << "Average insert time: " << avgInsert
+  cerr << "Average insert time: " << avgInsert
        << " sec. (" << (avgInsert / avgStore) * 100 
        << " %)" << endl;
 
-  cout << "Average storage throughput: "
+  cerr << "Average storage throughput: "
        << avgStorageThP << " bytes/sec" << endl;;
 
-  cout << "Average retrieve time: " << avgRetrieve
+  cerr << "Average retrieve time: " << avgRetrieve
        << " sec." << endl;
-  cout << "Average query time: " << avgQuery
+  cerr << "Average query time: " << avgQuery
        << " sec. (" << (avgQuery / avgRetrieve) * 100
        << " %)" << endl;
-  cout << "Average update time: " << avgUpdate 
+  cerr << "Average update time: " << avgUpdate 
        << " sec. (" << (avgUpdate / avgRetrieve) * 100 
        << " %)" << endl;
 
-  cout << "Average retrieval throughput: "
+  cerr << "Average retrieval throughput: "
        << avgRetrievalThP << " bytes/sec" << endl;
 
   LogEntry ("Disconnecting.");
   */
 
-  cout << "DH_Postgresql::Disconnect(); Disconnecting from database." << endl;
+  cerr << "DH_Postgresql::Disconnect(); Disconnecting from database." << endl;
   PQfinish (theirConnection);
 
   // TODO: Check if disconnect has succeeded.
@@ -193,7 +193,7 @@ void DH_Postgresql::DisconnectDatabase (void) {
 // TODO: Do a check on max-bytea-size
 
 bool DH_Postgresql::StoreInDatabase (int, int tag, char * buf, int size) {
-  cout << "DH_Postgresql::StoreInDatabase () called." << endl;
+  //  cerr << "DH_Postgresql::StoreInDatabase () called." << endl;
 
   //  Stopwatch StorageTime;
 
@@ -265,7 +265,7 @@ bool DH_Postgresql::StoreInDatabase (int, int tag, char * buf, int size) {
 
 
 bool DH_Postgresql::RetrieveFromDatabase (int,int tag, char * buf, int size) { 
-  cout << "DH_Postgresql::RetrieveFromDatabase () called." << endl;
+  //  cerr << "DH_Postgresql::RetrieveFromDatabase () called." << endl;
 
   int i;
   i = 0;
@@ -282,13 +282,13 @@ bool DH_Postgresql::RetrieveFromDatabase (int,int tag, char * buf, int size) {
     << "seqno = " << itsReadSeqNo << " AND "
     << "appid = " << 123 << ";";
 
-  cout << "<<<QUERY: " << q.str () << endl;
+  //  cout << "<<<QUERY: " << q.str () << endl;
 
   PGresult * res;
 
   // Block until a packet appears in the table
   do {
-    cout << '.';
+    cerr << '.';
     //    Stopwatch QueryTime;
     res = PQexec (DH_Postgresql::theirConnection, (q.str ()).c_str ());
     //    dtQuery += QueryTime.delta ().real ();
@@ -352,7 +352,7 @@ bool DH_Postgresql::ExecuteSQLCommand (char * str) {
 bool DH_Postgresql::ExecuteSQLCommand (ostringstream & q) {
   PGresult * res;
 
-  cout << ">>>QUERY: " << q.str () << endl;
+  //  cerr << ">>>QUERY: " << q.str () << endl;
 
   res = PQexec (DH_Postgresql::theirConnection, ((q.str ()).c_str ()));
 
@@ -389,94 +389,6 @@ double dtQuery;
 double dtUpdate;
 */
 
-// ==========================================
-// [>] DatabaseRecord
-/*
-void DatabaseRecord::CopyFromByteString (char * dest, int size) {
-  memcpy (dest, itsByteString, size);
-}
-
-
-void DatabaseRecord::CopyToByteString (char * src, int size) {
-  memcpy (itsByteString, src, size);
-}
-*/
-
-
-  /*
-
-bool DH_Postgresql::Retrieve (unsigned long rdseqno ) {
-  int i;
-  i = 0;
-  Stopwatch RetrieveTime;
-
-  cout << "{R} ";
-
-  // Construct query
-  ostringstream q;
-
-  q << "SELECT * FROM message WHERE "
-    << "appid = " << 123 << " AND "
-    << "status = 'Pending' AND "
-    << "tag = " << getMessageTag () << " AND "
-    << "seqno = " << rdseqno << " AND "
-    << "appid = " << 123 << ";";
-
-  PGresult * res;
-
-  // Block until a packet appears in the table
-  do {
-    cout << '.';
-    Stopwatch QueryTime;
-    res = PQexec (pgconn, (q.str ()).c_str ());
-    dtQuery += QueryTime.delta ().real ();
-  
-    AssertStr (PQresultStatus (res) == PGRES_TUPLES_OK,
-	       "DH_Postgressql::Retrieve (); Select query failed.")
-  } while (PQntuples (res) == 0);
-
-  int nRows;
-  nRows = PQntuples (res);
-  AssertStr (nRows == 1, "DH_Postgresql::Retrieve ();"
-    << "ERROR: Found less or more than 1 message in database.")
-  
-  // Read the found tuple
-  setMessageTag       (atoi (PQgetvalue (res, 0, 1)));
-  setByteStringLength (atoi (PQgetvalue (res, 0, 4)));
-  setTimeStamp        (atoi (PQgetvalue (res, 0, 5)));
-  setType             (PQgetvalue (res, 0, 6));
-  setName             (PQgetvalue (res, 0, 7));
-
-  // Copy the data packet
-
-#if defined (__GNUC__) && (__GNUC__) > 2
-  unsigned char * ByteString;
-  size_t size;
-  ByteString = PQunescapeBytea 
-    ((unsigned char*)PQgetvalue (res, 0, 9), & size);
-  
-  memcpy (getByteString (), ByteString, size);
-  // TODO: Must free ByteString here?
-#else
-  unsigned int k;
-  char token[40];
-  istringstream istr (PQgetvalue (res, 0, 8));
-  for (k = 0; k < (unsigned int) getByteStringLength (); k ++) {
-    istr >> token;
-    (getByteString ()) [k] = (char) strtoul (token, NULL, 16);
-  }
-#endif
-
-  PQclear (res);
-
-  dtRetrieve += RetrieveTime.delta ().real ();
-
-  nRetrieve ++;
-  nRetrievedBytes += getByteStringLength ();
-
-  return true;
-}
-  */
 
 /*
 bool LogEntry (char * str) {
