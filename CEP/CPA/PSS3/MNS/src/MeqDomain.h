@@ -68,6 +68,10 @@ public:
   double endY() const
     { return itsOffsetY + itsScaleY; }
 
+  bool operator== (const MeqDomain& that) const
+  { return itsOffsetX == that.itsOffsetX  &&  itsScaleX == that.itsScaleX
+       &&  itsOffsetY == that.itsOffsetY  &&  itsScaleY == that.itsScaleY; }
+
 private:
   double itsOffsetX;
   double itsScaleX;

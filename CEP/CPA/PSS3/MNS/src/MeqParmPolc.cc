@@ -32,6 +32,9 @@ MeqParmPolc::MeqParmPolc (const string& name)
 MeqParmPolc::~MeqParmPolc()
 {}
 
+void MeqParmPolc::readPolcs (const MeqDomain&)
+{}
+
 int MeqParmPolc::initDomain (const MeqDomain&, int spidIndex)
 {
   int nr = 0;

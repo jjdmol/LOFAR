@@ -62,6 +62,9 @@ public:
   const vector<MeqPolc>& getPolcs() const
     { return itsPolcs; }
 
+  // Read the polcs for the given domain.
+  virtual void readPolcs (const MeqDomain& domain);
+
   // Initialize the parameter for the given domain.
   // It also sets the spids and returns the number of spids found.
   virtual int initDomain (const MeqDomain&, int spidIndex);

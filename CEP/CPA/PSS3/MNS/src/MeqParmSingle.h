@@ -39,7 +39,10 @@ public:
 
   ~MeqParmSingle();
 
-  // Initialize the parameter for the given domain.
+  // Read the polcs for the given domain.
+  virtual void readPolcs (const MeqDomain& domain);
+
+  // Initialize the solvable parameter for the given domain.
   virtual int initDomain (const MeqDomain&, int spidIndex);
 
   // Set the parameter value.
