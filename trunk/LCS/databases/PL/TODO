@@ -1,45 +1,10 @@
-2003-10-23, Marcel Loose:
+2004-09-21, Marcel Loose:
 ========================
 
-* How do we handle the case where a class X contains two datamembers y1 and y2
-  of the same type Y? 
+* The current version has been tagged as "PL_1-0".
 
-  We can retrieve these objects through their owner-id; both owner-ids will be
-  pointing to the owning instance of X. However, we DO NOT know which instance
-  of Y needs to be assigned to y1 and which instance to y2. We must somehow be
-  able to discern y1 and y2 within the database. Question is: what is the best
-  way to implement this?
-
-  There are (at least) two options:
-
-  1. Add an extra column in the database table which will record a member
-     count. The advantage of this solution is that little storage room is
-     required---a two-byte number allow for 65536 data member, which is more
-     than enough for practical purposes. The disadvantage of this solution is
-     that you cannot protect the user (and thus yourself) against data member
-     being reordered in the class declaration, because there is no way that
-     you can detect this.
-
-  2. Add an extra column in the database table which will record the name of
-     the data member. Variable names must be unique within one scope, so we
-     can always make sure that we're referring to the right data member.  Only
-     if the user would decide to change the meaning of a data member without
-     changing its name, we would get into trouble.
-
-
-* Transactions are not yet supported.
-
-  When saving a complex object, multiple tables need to be modified. We want
-  to safeguard against partly stored objects in the database in case of
-  failure. So, we must start a database transaction before the object is
-  written to the database, and if the database actions did not complete
-  successfully we must perfrom a rollback. 
-
-  Along with the implementation of transactions is the addition of version
-  numbering, which will be used for optimistic locking facilities. The version
-  number will be incremented in the database by e.g. a trigger. The version
-  number in the TPO will be incremented when the transaction ended
-  succesfully.
+* Issue #2 in the TODO section of 2003-12-08 has been "solved". The Query
+  classes are now part of the PL package.
 
 
 2003-12-08, Marcel Loose:
@@ -82,3 +47,47 @@
      "OO query" into an SQL query. Combined with the proposed changes in the
      retrieve method (see 1.) it will be possible to build a query using any
      attribute of the related classes.
+
+
+2003-10-23, Marcel Loose:
+========================
+
+* How do we handle the case where a class X contains two datamembers y1 and y2
+  of the same type Y? 
+
+  We can retrieve these objects through their owner-id; both owner-ids will be
+  pointing to the owning instance of X. However, we DO NOT know which instance
+  of Y needs to be assigned to y1 and which instance to y2. We must somehow be
+  able to discern y1 and y2 within the database. Question is: what is the best
+  way to implement this?
+
+  There are (at least) two options:
+
+  1. Add an extra column in the database table which will record a member
+     count. The advantage of this solution is that little storage room is
+     required---a two-byte number allow for 65536 data member, which is more
+     than enough for practical purposes. The disadvantage of this solution is
+     that you cannot protect the user (and thus yourself) against data member
+     being reordered in the class declaration, because there is no way that
+     you can detect this.
+
+  2. Add an extra column in the database table which will record the name of
+     the data member. Variable names must be unique within one scope, so we
+     can always make sure that we're referring to the right data member.  Only
+     if the user would decide to change the meaning of a data member without
+     changing its name, we would get into trouble.
+
+
+* Transactions are not yet supported.
+
+  When saving a complex object, multiple tables need to be modified. We want
+  to safeguard against partly stored objects in the database in case of
+  failure. So, we must start a database transaction before the object is
+  written to the database, and if the database actions did not complete
+  successfully we must perfrom a rollback. 
+
+  Along with the implementation of transactions is the addition of version
+  numbering, which will be used for optimistic locking facilities. The version
+  number will be incremented in the database by e.g. a trigger. The version
+  number in the TPO will be incremented when the transaction ended
+  succesfully.
