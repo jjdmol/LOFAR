@@ -21,7 +21,7 @@ class UVPDataAtom
 {
  public:
 
-  typedef double_complex ComplexType;
+  typedef float_complex ComplexType;
   
   //! Default constructor.
   /*!  The header is initialized with its default constructor, The data

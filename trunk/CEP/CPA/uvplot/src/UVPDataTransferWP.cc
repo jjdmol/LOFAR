@@ -136,7 +136,7 @@ int  UVPDataTransferWP::receive(MessageRef &messageRef)
       const DataRecord &record = dynamic_cast<const DataRecord&>(message.payload().deref());
       UVPDataAtomHeader DataHeader;
 
-      const double_complex * DataInRecord = record[FData].as_dcomplex_p();
+      const float_complex *  DataInRecord = record[FData].as_fcomplex_p();
       const double *         UVWPointer   = record[FUVW].as_double_p();
       const int *            AntennaIndexPointer = record[FAntennaIndex].as_int_p();
       unsigned int           timeslot     = record[FTimeSlotIndex].as_int();
