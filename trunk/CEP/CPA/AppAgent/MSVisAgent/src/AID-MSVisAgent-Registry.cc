@@ -43,6 +43,7 @@
         AtomicID::registerId(-48,"string")+
         AtomicID::registerId(-1288,"original")+
         AtomicID::registerId(-1285,"shape")+
+        AtomicID::registerId(-1537,"flip")+
         AtomicID::registerId(-1169,"raw")+
         AtomicID::registerId(-1296,"non")+
         AtomicID::registerId(-1284,"calibrated")+

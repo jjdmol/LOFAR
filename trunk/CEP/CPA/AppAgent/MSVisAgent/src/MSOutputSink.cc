@@ -162,6 +162,7 @@ void MSOutputSink::doPutHeader (const DataRecord &header)
   int chan0 = header[FChannelStartIndex].as<int>(),
       chan1 = header[FChannelEndIndex].as<int>();
   int ncorr = header[FCorr].size(Tpstring);
+  flip_freq_ = header[FFlipFreq].as<bool>(False);
   column_slicer_ = Slicer(IPosition(2,0,chan0),IPosition(2,ncorr-1,chan1),
                    Slicer::endIsLast);
   IPosition origshape = LoShape(header[FOriginalDataShape].as_vector<int>());
@@ -209,7 +210,17 @@ void MSOutputSink::doPutHeader (const DataRecord &header)
 //##ModelId=3F5F436303AB
 void MSOutputSink::putColumn (Column &col,int irow,const LoMat_fcomplex &data)
 {
-  Matrix<Complex> aips_data = copyBlitzToAips(data);
+  Matrix<Complex> aips_data;
+  if( flip_freq_ )
+  {
+    // cast away const here because reverse() is not declared const for some reason
+    // (it ought to be!)
+    LoMat_fcomplex revdata(data);
+    revdata.reverseSelf(blitz::secondDim);
+    copyArray(aips_data,revdata);
+  }
+  else
+    copyArray(aips_data,data);
   cdebug(6)<<"writing "<<col.name<<": "<<aips_data<<endl;
   if( !col.col.isDefined(irow) )
     col.col.put(irow,null_cell_);
@@ -243,11 +254,12 @@ void MSOutputSink::doPutTile (const VisTile &tile)
       rowFlagCol_.put(irow,rowflag&flagmask_ != 0);
       LoMat_bool flags( iter.flags().shape() );
       flags = blitz::cast<bool>(iter.flags() & flagmask_ );
+      if( flip_freq_ )
+        flags.reverseSelf(blitz::secondDim);
       Matrix<Bool> aflags = refBlitzToAips(flags);
       cdebug(6)<<"writing to FLAG column: "<<aflags<<endl;
       flagCol_.putSlice(irow,column_slicer_,aflags);
     }
-    // write data columns
     if( tile.defined(VisTile::DATA) && datacol_.valid )
       putColumn(datacol_,irow,iter.data());
     if( tile.defined(VisTile::PREDICT) && predictcol_.valid )
