@@ -55,7 +55,7 @@ namespace LOFAR
 
         // Construct an Expr from an ExprNode pointer.
         // @attention Expr will take ownership of the pointer that was passed
-        // in through \p node and store it in a reference counted pointer.
+        // in through \a node and store it in a reference counted pointer.
         Expr(ExprNode* const node);
 
         // Print the expression into an output stream.
@@ -122,6 +122,10 @@ namespace LOFAR
 
         // @name Logical operators
         //@{
+        // \note The logical binary operators behave different from the other
+        // binary operators, because \a lhs and \a rhs are allowed to be null
+        // expressions. If \a lhs is a null expression, then \a rhs is
+        // returned; if \a rhs is a null expression, then \a lhs is returned.
         friend Expr operator&& (const Expr& lhs, const Expr& rhs);
         friend Expr operator|| (const Expr& lhs, const Expr& rhs);
         //@}
