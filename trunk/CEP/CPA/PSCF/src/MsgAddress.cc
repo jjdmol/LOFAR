@@ -12,7 +12,7 @@
 
 //## Module: MsgAddress%3C7B7F2F0380; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\MsgAddress.cc
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\MsgAddress.cc
 
 //## begin module%3C7B7F2F0380.additionalIncludes preserve=no
 //## end module%3C7B7F2F0380.additionalIncludes
@@ -21,7 +21,7 @@
 //## end module%3C7B7F2F0380.includes
 
 // MsgAddress
-#include "MsgAddress.h"
+#include "PSCF/MsgAddress.h"
 //## begin module%3C7B7F2F0380.declarations preserve=no
 //## end module%3C7B7F2F0380.declarations
 

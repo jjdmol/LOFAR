@@ -1,8 +1,8 @@
 #ifndef Gateways_h
 #define Gateways_h 1
     
-#include "HIID.h"
-#include "AID-PSCF.h"
+#include "DMI/HIID.h"
+#include "PSCF/AID-PSCF.h"
 
 // this includes declarations common to all gateways
     

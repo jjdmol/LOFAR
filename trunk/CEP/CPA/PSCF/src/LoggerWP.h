@@ -12,14 +12,14 @@
 
 //## Module: LoggerWP%3CA04546008E; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\LoggerWP.h
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\LoggerWP.h
 
 #ifndef LoggerWP_h
 #define LoggerWP_h 1
 
 //## begin module%3CA04546008E.additionalIncludes preserve=no
-#include "Common.h"
-#include "DMI.h"
+#include "DMI/Common.h"
+#include "DMI/DMI.h"
 //## end module%3CA04546008E.additionalIncludes
 
 //## begin module%3CA04546008E.includes preserve=yes
@@ -27,7 +27,7 @@
 //## end module%3CA04546008E.includes
 
 // WorkProcess
-#include "WorkProcess.h"
+#include "PSCF/WorkProcess.h"
 //## begin module%3CA04546008E.declarations preserve=no
 //## end module%3CA04546008E.declarations
 
@@ -40,7 +40,7 @@
 //## end LoggerWP%3CA044DE02AB.preface
 
 //## Class: LoggerWP%3CA044DE02AB
-//## Category: PSCF%3BCEC935032A
+//## Category: OCTOPUSSY%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
 //## Cardinality/Multiplicity: n

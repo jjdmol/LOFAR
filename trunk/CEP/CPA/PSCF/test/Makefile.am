@@ -2,10 +2,11 @@ CXXFLAGS += -Wno-unknown-pragmas -pg
 
 dmi_dir = $(lofar_sharedir)/../DMI
 
-dmi_lib = $(dmi_dir)/build/src/libdmi.la
+dmi_lib = \
+      $(lofar_sharedir)/../DMI/build/gnu_debug/src/libdmi.la \
+      $(lofar_sharedir)/../Common/build/gnu_debug/src/libcommon.la
 
-INCLUDES		= -I$(dmi_dir)/src -I$(top_srcdir)/src -I$(lofar_sharedir)/../src-links
-
+INCLUDES = -I$(top_srcdir)/src
 
 check_PROGRAMS		= test_pscf
 

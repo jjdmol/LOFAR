@@ -12,7 +12,7 @@
 
 //## Module: LoggerWP%3CA045460090; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\LoggerWP.cc
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\LoggerWP.cc
 
 //## begin module%3CA045460090.additionalIncludes preserve=no
 //## end module%3CA045460090.additionalIncludes
@@ -27,7 +27,7 @@
 //## end module%3CA045460090.includes
 
 // LoggerWP
-#include "LoggerWP.h"
+#include "PSCF/LoggerWP.h"
 //## begin module%3CA045460090.declarations preserve=no
 //## end module%3CA045460090.declarations
 

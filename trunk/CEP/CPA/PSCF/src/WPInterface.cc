@@ -12,7 +12,7 @@
 
 //## Module: WPInterface%3C8F26A30123; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\WPInterface.cc
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\WPInterface.cc
 
 //## begin module%3C8F26A30123.additionalIncludes preserve=no
 //## end module%3C8F26A30123.additionalIncludes
@@ -22,9 +22,9 @@
 //## end module%3C8F26A30123.includes
 
 // Dispatcher
-#include "Dispatcher.h"
+#include "PSCF/Dispatcher.h"
 // WPInterface
-#include "WPInterface.h"
+#include "PSCF/WPInterface.h"
 //## begin module%3C8F26A30123.declarations preserve=no
 //## end module%3C8F26A30123.declarations
 
@@ -42,7 +42,7 @@ WPInterface::WPInterface (AtomicID wpc)
   //## begin WPInterface::WPInterface%3C7CBB10027A.hasinit preserve=no
   //## end WPInterface::WPInterface%3C7CBB10027A.hasinit
   //## begin WPInterface::WPInterface%3C7CBB10027A.initialization preserve=yes
-  : DebugContext(wpc.toString(),False,&PSCFDebugContext::DebugContext),
+  : DebugContext(wpc.toString(),&PSCFDebugContext::getDebugContext()),
     config(OctopussyConfig::global()),
     address_(wpc),autoCatch_(False),dsp_(0),
     queue_(0),wpid_(wpc)

@@ -12,26 +12,26 @@
 
 //## Module: Subscriptions%3C999E140208; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Subscriptions.h
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\Subscriptions.h
 
 #ifndef Subscriptions_h
 #define Subscriptions_h 1
 
 //## begin module%3C999E140208.additionalIncludes preserve=no
-#include "Common.h"
-#include "DMI.h"
+#include "DMI/Common.h"
+#include "DMI/DMI.h"
 //## end module%3C999E140208.additionalIncludes
 
 //## begin module%3C999E140208.includes preserve=yes
 #include <list>
 //## end module%3C999E140208.includes
 
-// MsgAddress
-#include "MsgAddress.h"
-// Message
-#include "Message.h"
 // HIID
-#include "HIID.h"
+#include "DMI/HIID.h"
+// MsgAddress
+#include "PSCF/MsgAddress.h"
+// Message
+#include "PSCF/Message.h"
 //## begin module%3C999E140208.declarations preserve=no
 //## end module%3C999E140208.declarations
 
@@ -43,7 +43,7 @@
 //## end Subscriptions%3C999C8400AF.preface
 
 //## Class: Subscriptions%3C999C8400AF
-//## Category: PSCF%3BCEC935032A
+//## Category: OCTOPUSSY%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
 //## Cardinality/Multiplicity: n

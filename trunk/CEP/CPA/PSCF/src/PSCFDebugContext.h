@@ -12,18 +12,18 @@
 
 //## Module: PSCFDebugContext%3C7FA335024C; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: f:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\PSCFDebugContext.h
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\PSCFDebugContext.h
 
 #ifndef PSCFDebugContext_h
 #define PSCFDebugContext_h 1
 
 //## begin module%3C7FA335024C.additionalIncludes preserve=no
-#include "Common.h"
-#include "DMI.h"
+#include "DMI/Common.h"
+#include "DMI/DMI.h"
 //## end module%3C7FA335024C.additionalIncludes
 
 //## begin module%3C7FA335024C.includes preserve=yes
-#include "Debug.h"
+#include "Common/Debug.h"
 //## end module%3C7FA335024C.includes
 
 //## begin module%3C7FA335024C.declarations preserve=no
@@ -37,7 +37,7 @@
 //## end PSCFDebugContext%3C7FA3020068.preface
 
 //## Class: PSCFDebugContext%3C7FA3020068
-//## Category: PSCF%3BCEC935032A
+//## Category: OCTOPUSSY%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
 //## Cardinality/Multiplicity: n
@@ -47,7 +47,7 @@
 class PSCFDebugContext 
 {
   //## begin PSCFDebugContext%3C7FA3020068.initialDeclarations preserve=yes
-  LocalDebugContext(public);
+  LocalDebugContext;
   //## end PSCFDebugContext%3C7FA3020068.initialDeclarations
 
   public:

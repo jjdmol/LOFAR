@@ -12,25 +12,25 @@
 
 //## Module: GWServerWP%3C95AADB0101; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\GWServerWP.h
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\GWServerWP.h
 
 #ifndef GWServerWP_h
 #define GWServerWP_h 1
 
 //## begin module%3C95AADB0101.additionalIncludes preserve=no
-#include "Common.h"
-#include "DMI.h"
+#include "DMI/Common.h"
+#include "DMI/DMI.h"
 //## end module%3C95AADB0101.additionalIncludes
 
 //## begin module%3C95AADB0101.includes preserve=yes
 //## end module%3C95AADB0101.includes
 
-// GatewayWP
-#include "GatewayWP.h"
-// WorkProcess
-#include "WorkProcess.h"
 // Socket
-#include "Socket.h"
+#include "PSCF/Socket.h"
+// GatewayWP
+#include "PSCF/GatewayWP.h"
+// WorkProcess
+#include "PSCF/WorkProcess.h"
 //## begin module%3C95AADB0101.declarations preserve=no
 //## end module%3C95AADB0101.declarations
 

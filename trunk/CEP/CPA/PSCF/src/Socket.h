@@ -12,14 +12,14 @@
 
 //## Module: Socket%3C90D43B0094; Package specification
 //## Subsystem: Networking%3C90D442031F
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Socket.h
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\Socket.h
 
 #ifndef Socket_h
 #define Socket_h 1
 
 //## begin module%3C90D43B0094.additionalIncludes preserve=no
-#include "Common.h"
-#include "DMI.h"
+#include "DMI/Common.h"
+#include "DMI/DMI.h"
 //## end module%3C90D43B0094.additionalIncludes
 
 //## begin module%3C90D43B0094.includes preserve=yes
@@ -56,7 +56,7 @@
 class Socket 
 {
   //## begin Socket%3C90CE58024E.initialDeclarations preserve=yes
-  LocalDebugSubContext(public);
+  LocalDebugSubContext;
   //## end Socket%3C90CE58024E.initialDeclarations
 
   public:

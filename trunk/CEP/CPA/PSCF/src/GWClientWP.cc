@@ -12,7 +12,7 @@
 
 //## Module: GWClientWP%3C95AADB0170; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\GWClientWP.cc
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\GWClientWP.cc
 
 //## begin module%3C95AADB0170.additionalIncludes preserve=no
 //## end module%3C95AADB0170.additionalIncludes
@@ -23,7 +23,7 @@
 //## end module%3C95AADB0170.includes
 
 // GWClientWP
-#include "GWClientWP.h"
+#include "PSCF/GWClientWP.h"
 //## begin module%3C95AADB0170.declarations preserve=no
 //## end module%3C95AADB0170.declarations
 

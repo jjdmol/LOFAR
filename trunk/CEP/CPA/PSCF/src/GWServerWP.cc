@@ -12,7 +12,7 @@
 
 //## Module: GWServerWP%3C95AADB010A; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\GWServerWP.cc
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\GWServerWP.cc
 
 //## begin module%3C95AADB010A.additionalIncludes preserve=no
 //## end module%3C95AADB010A.additionalIncludes
@@ -22,7 +22,7 @@
 //## end module%3C95AADB010A.includes
 
 // GWServerWP
-#include "GWServerWP.h"
+#include "PSCF/GWServerWP.h"
 //## begin module%3C95AADB010A.declarations preserve=no
 //## end module%3C95AADB010A.declarations
 

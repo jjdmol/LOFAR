@@ -12,7 +12,7 @@
 
 //## Module: Subscriptions%3C999E14021C; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Subscriptions.cc
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\Subscriptions.cc
 
 //## begin module%3C999E14021C.additionalIncludes preserve=no
 //## end module%3C999E14021C.additionalIncludes
@@ -21,7 +21,7 @@
 //## end module%3C999E14021C.includes
 
 // Subscriptions
-#include "Subscriptions.h"
+#include "PSCF/Subscriptions.h"
 //## begin module%3C999E14021C.declarations preserve=no
 //## end module%3C999E14021C.declarations
 

@@ -18,15 +18,15 @@
 #define EchoWP_h 1
 
 //## begin module%3C7E49E90390.additionalIncludes preserve=no
-#include "Common.h"
-#include "DMI.h"
+#include "DMI/Common.h"
+#include "DMI/DMI.h"
 //## end module%3C7E49E90390.additionalIncludes
 
 //## begin module%3C7E49E90390.includes preserve=yes
 //## end module%3C7E49E90390.includes
 
 // WorkProcess
-#include "WorkProcess.h"
+#include "PSCF/WorkProcess.h"
 //## begin module%3C7E49E90390.declarations preserve=no
 //## end module%3C7E49E90390.declarations
 

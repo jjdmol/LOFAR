@@ -12,7 +12,7 @@
 
 //## Module: GatewayWP%3C90BFDD0240; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\GatewayWP.cc
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\GatewayWP.cc
 
 //## begin module%3C90BFDD0240.additionalIncludes preserve=no
 //## end module%3C90BFDD0240.additionalIncludes
@@ -22,7 +22,7 @@
 //## end module%3C90BFDD0240.includes
 
 // GatewayWP
-#include "GatewayWP.h"
+#include "PSCF/GatewayWP.h"
 //## begin module%3C90BFDD0240.declarations preserve=no
 //## end module%3C90BFDD0240.declarations
 

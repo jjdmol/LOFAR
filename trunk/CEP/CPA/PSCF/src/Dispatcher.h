@@ -12,14 +12,14 @@
 
 //## Module: Dispatcher%3C7B7F300041; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Dispatcher.h
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\Dispatcher.h
 
 #ifndef Dispatcher_h
 #define Dispatcher_h 1
 
 //## begin module%3C7B7F300041.additionalIncludes preserve=no
-#include "Common.h"
-#include "DMI.h"
+#include "DMI/Common.h"
+#include "DMI/DMI.h"
 //## end module%3C7B7F300041.additionalIncludes
 
 //## begin module%3C7B7F300041.includes preserve=yes
@@ -28,19 +28,19 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stack>
-#include "Timestamp.h"
-#include "ConfigMgr.h"
-#include "OctopussyConfig.h"
+#include "PSCF/Timestamp.h"
+#include "DMI/ConfigMgr.h"
+#include "PSCF/OctopussyConfig.h"
 //## end module%3C7B7F300041.includes
 
-// WPInterface
-#include "WPInterface.h"
-// PSCFDebugContext
-#include "PSCFDebugContext.h"
-// Message
-#include "Message.h"
 // DataRecord
-#include "DataRecord.h"
+#include "DMI/DataRecord.h"
+// WPInterface
+#include "PSCF/WPInterface.h"
+// PSCFDebugContext
+#include "PSCF/PSCFDebugContext.h"
+// Message
+#include "PSCF/Message.h"
 
 
 //## begin module%3C7B7F300041.declarations preserve=no
