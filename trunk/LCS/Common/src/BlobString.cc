@@ -24,6 +24,15 @@
 #include <Common/Debug.h>
 
 
+BlobString::BlobString (bool useString, size_t capacity)
+: itsAllocator (BlobStringType(useString, LOFAR::HeapAllocator())),
+  itsCapacity  (0),
+  itsSize      (0),
+  itsChars     (0)
+{
+  reserve (capacity);
+}
+
 BlobString::BlobString (const BlobStringType& allocator, size_t capacity)
 : itsAllocator (allocator),
   itsCapacity  (0),
@@ -70,7 +79,7 @@ void BlobString::resize (size_t newSize)
   }
 }
 
-const std::basic_string<uchar>& BlobString::getString() const
+std::basic_string<uchar>& BlobString::getString()
 {
   AssertStr (itsAllocator.useString(), "BlobString has no string");
   return itsString;
