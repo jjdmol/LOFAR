@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1  2003/08/21 11:20:32  diepen
+//  Moved Common to LCS
+//
 //  Revision 1.16  2003/05/27 09:09:08  diepen
 //  Also print error in AssertMsg
 //
@@ -242,7 +245,9 @@ namespace Debug
 
 // Use this macro to write file and line (and possibly function) as well.
 #ifdef ENABLE_TRACER
-# ifdef HAVE___FUNCTION__
+# if defined(HAVE_PRETTY_FUNCTION)
+#  define TRACERF(level,stream) cdebug1(level) << "trace" << level << ' ' << __FILE__ << ':' << __LINE__ << '(' << __PRETTY_FUNCTION__ << "): " << stream << endl
+# elif defined(HAVE_FUNCTION)
 #  define TRACERF(level,stream) cdebug1(level) << "trace" << level << ' ' << __FILE__ << ':' << __LINE__ << '(' << __FUNCTION__ << "): " << stream << endl
 # else
 #  define TRACERF(level,stream) cdebug1(level) << "trace" << level << ' ' << __FILE__ << ':' << __LINE__ << ": " << stream << endl
@@ -371,7 +376,7 @@ const char exception_message[] = "\n==================================== EXCEPTI
  { if( !(cond) ) { \
      std::ostringstream oss; \
      oss << stream; \
-     Throw("Assert failed: " + oss.str()); \
+     Throw("Assertion `" #cond "' failed: " + oss.str()); \
  }}
 
 // The DbgAssertStr macro is like AssertStr, but
@@ -381,7 +386,7 @@ const char exception_message[] = "\n==================================== EXCEPTI
  { if( !(cond) ) { \
      std::ostringstream oss; \
      oss << stream; \
-     Throw("DbgAssert failed: " + oss.str()); \
+     Throw("DbgAssert `" #cond "' failed: " + oss.str()); \
  }}
 #else
 # define DbgAssertStr(cond,stream)
