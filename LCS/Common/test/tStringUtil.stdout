@@ -16,12 +16,13 @@ Trimmed C strings:
 
 *** Conversion of fundamental arithmetic types to string ***
 min(bool) = false	 max(bool) = true
-min(char) = -128	 max(char) = 127
+min(char) = 0	 max(char) = 127
+min(signed char) = -128	 max(signed char) = 127
 min(unsigned char) = 0	 max(unsigned char) = 255
 min(short) = -32768	 max(short) = 32767
 min(unsigned short) = 0	 max(unsigned short) = 65535
-min(int) = -2147483648	 max(int) = 2147483647
-min(unsigned int) = 0	 max(unsigned int) = 4294967295
+min(int) = -32768	 max(int) = 32767
+min(unsigned int) = 0	 max(unsigned int) = 65536
 min(long) = -2147483648	 max(long) = 2147483647
 min(unsigned long) = 0	 max(unsigned long) = 4294967295
 min(long long) = -9223372036854775808	 max(long long) = 9223372036854775807
