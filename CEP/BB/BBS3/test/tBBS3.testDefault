@@ -13,20 +13,21 @@
 
 
 nrPrediffers=1,   // Number of Prediffers
-nrRuns=1,         // Number of (CEPFrame) runs
+nrRuns=9,         // Number of (CEPFrame) runs
 
 CTRLparams=[
   nrStrategies=1,   // Number of Strategy Controllers
 
   SC1params=[
     strategy="Simple",     // Strategy type
-    nrIterations=3,        // Number of iterations per time interval
+    nrIterations=9,        // Number of iterations per time interval
+    controlParmUpdate=F,   // Does the controller update the parameters?
     solvableParams=["StokesI.*","RA.*","DEC.*"],
     startTime=0.0e0,       // Start time
-    timeLength=1.0e12,     // Time interval (float)
+    timeLength=1.0e12,         // Time interval (float)
     antennas=[0,4,8,12,16],
     startFreq=137500000,       // Start frequency
-    freqLength=2000000,     // Size of frequency interval
+    freqLength=1000000,     // Size of frequency interval
     sources=[],       // Solvable source numbers (0 based)
     modelType="LOFAR.RI",  // Model type
     calcUVW=F,             // Calculate UVW coordinates?
@@ -35,7 +36,7 @@ CTRLparams=[
     useSVD=F,              // Use Singular Value Decomposition in solve?
 
     MSDBparams=[
-      MSName="demo3-1",         // Name of the Measurement Set
+      MSName="demo3_p1",         // Name of the Measurement Set
       DBHost="dop50.astron.nl",          // Parameter database host name
       DBType="aips",           // Parameter database type
       DBPwd="",                // Parameter database password

@@ -75,7 +75,7 @@ void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
   pre1.clearSolvableParms();
   pre1.setSolvableParms (solv, vector<string>(), true);
   // Set a domain.
-  vector<uint32> shape = pre1.setDomain (137750000-250000, 4*500000,
+  vector<uint32> shape = pre1.setDomain (137750000-250000, 2*500000,
   //vector<uint32> shape = pre1.setDomain (0., 1e12,
 					 0., 1e12);
   uint nrval = shape[0] * shape[1] * shape[2];
@@ -296,7 +296,7 @@ int main (int argc, const char* argv[])
 	   << endl;
       return 1;
     }
-    // Do a solve for RA using a few stations.
+    //    Do a solve for RA using a few stations.
     {
       cout << "Starting first test" << endl;
       vector<int> antVec(10);
@@ -319,6 +319,7 @@ int main (int argc, const char* argv[])
       doSolve (pre1, solv, false, 9);
       cout << "End of first test" << endl;
     }
+
     // Do the same with using the blob in doSolve and using the equations
     // twice.
     {
@@ -334,8 +335,7 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec2.size(); ++i) {
 	antVec2[i] = 4*i;
       }
-      vector<int> corr;
-      pre1.select (antVec2, antVec2, false, corr);    // no autocorrelations
+      pre1.select (antVec2, antVec2, false);    // no autocorrelations
       vector<string> solv(3);
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
@@ -359,9 +359,8 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec2.size(); ++i) {
 	antVec2[i] = 4*i;
       }
-      vector<int> corr;
-      pre1.select (antVec2, antVec2, false, corr);    // no autocorrelations
-      pre2.select (antVec2, antVec2, false, corr);    // no autocorrelations
+      pre1.select (antVec2, antVec2, false);    // no autocorrelations
+      pre2.select (antVec2, antVec2, false);    // no autocorrelations
       vector<string> solv(3);
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
@@ -378,10 +377,7 @@ int main (int argc, const char* argv[])
       }
       Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
 		     antVec, "LOFAR.RI", false, true);
-      // Only use first correlation.
-      vector<int> corrVec(1, 0);
-      vector<int> antVec2;
-      pre1.select (antVec2, antVec2, false, corrVec);  // no autocorrelations
+      pre1.select (antVec, antVec, false);    // no autocorrelations
       vector<string> solv(3);
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
@@ -404,8 +400,7 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec2.size(); ++i) {
 	antVec2[i] = 4*i;
       }
-      vector<int> corr;
-      pre1.select (antVec2, antVec2, false, corr);    // no autocorrelations
+      pre1.select (antVec2, antVec2, false);    // no autocorrelations
       vector<string> solv(3);
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
@@ -413,6 +408,7 @@ int main (int argc, const char* argv[])
       doSolve1 (pre1, solv, 5);
       cout << "End of test with updating parmtable" << endl;
     }
+
   } catch (std::exception& x) {
     cerr << "Unexpected exception: " << x.what() << endl;
     return 1;
