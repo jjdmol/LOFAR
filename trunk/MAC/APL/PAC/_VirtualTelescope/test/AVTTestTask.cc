@@ -20,6 +20,7 @@
 //#
 //#  $Id$
 
+#include <math.h>
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVUnsigned.h>
 #include <GCF/GCF_PVString.h>
@@ -34,6 +35,14 @@
 #include "../src/ABS_Protocol.ph"
 
 #include <stdio.h>
+
+const double pi(asin(1)*2.0);
+
+double generateWave(int subband,double angle1,double angle2)
+{
+  const double amplitude(subband==10?2e4:2e1);
+  return (amplitude*( (1+cos(angle1*pi))^2) * (1+cos(angle2*pi))^2 );
+}
 
 string AVTTestTask::m_taskName("AVTTest");
 bool   AVTTestTask::m_sBeamServerOnly(false);
@@ -59,7 +68,11 @@ AVTTestTask::AVTTestTask(AVTTest& tester) :
   m_BEAMPOINTTO_received(false),
   m_WGSETTINGS_received(false),
   m_WGENABLE_received(false),
-  m_WGDISABLE_received(false)
+  m_WGDISABLE_received(false),
+  m_statisticsTimerID(-1),
+  m_beamAngle1(0.0),
+  m_beamAngle2(0.0),
+  m_seqnr(0)
 {
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
@@ -663,9 +676,18 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
     }
      
     case ABS_BEAMPOINTTO:
+    {
       m_BEAMPOINTTO_received=true;
-      break;
       
+      ABSBeampointtoEvent* pPointToEvent=static_cast<ABSBeampointtoEvent*>(&event);
+      if(pPointToEvent!=0)
+      {
+        m_beamAngle1=pPointToEvent->angle1;
+        m_beamAngle2=pPointToEvent->angle2;
+      }
+      break;
+    }
+     
     case ABS_WGSETTINGS:
     {
       ABSWgsettings_AckEvent ack(SUCCESS);
@@ -682,6 +704,32 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
       m_WGDISABLE_received=true;
       break;
 
+    case F_TIMER_SIG:
+    {
+      GCFTimerEvent *pTimerEvent=static_cast<GCFTimerEvent*>(&event);
+      if(pTimerEvent!=0)
+      {
+        if(m_statisticsTimerID==pTimerEvent->id)
+        {
+          for(int i=0;i<127;i++)
+          {          
+            GCFPVDouble wavePower(generateWave(i,m_beamAngle1,m_beamAngle2));
+            char strPropertyPowerX[100];
+            char strPropertyPowerY[100];
+            sprintf(strPropertyPowerX,"BeamServer_power%03d_x",i);
+            sprintf(strPropertyPowerY,"BeamServer_power%03d_y",i);
+            m_beamServerProperties.setValue(string(strPropertyPowerX),wavePower);
+            m_beamServerProperties.setValue(string(strPropertyPowerY),wavePower);
+          }
+          GCFPVUnsigned seqnr(m_seqnr++);
+          m_beamServerProperties.setValue(string("BeamServer_seqnr"),seqnr);
+          m_statisticsTimerID=m_beamserver.setTimer(3.0); // statistics timer
+        }
+      }
+      status = GCFEvent::NOT_HANDLED; // pass timer event to other handlers
+      break;
+    }
+    
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::handleBeamServerEvents, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -709,6 +757,7 @@ GCFEvent::TResult AVTTestTask::beamServer(GCFEvent& event, GCFPortInterface& p)
         break;
 
       case F_ENTRY_SIG:
+        m_statisticsTimerID=m_beamserver.setTimer(3.0); // statistics update
         break;
       
       case F_CONNECTED_SIG:
@@ -726,4 +775,3 @@ GCFEvent::TResult AVTTestTask::beamServer(GCFEvent& event, GCFPortInterface& p)
   }
   return status;
 }
-
