@@ -211,7 +211,7 @@ public:	\
 
 #define	cLog(level,levelname,message) \
 	DebugTestAndLog(level) << setw(5) << left << levelname \
-		<< " [" << LOFARLOGGER_PACKAGE << "] " << message << endl;
+		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message << endl;
 
 #define cLogstr(level,levelname,stream) { \
 		constructStream(stream) \
@@ -220,7 +220,7 @@ public:	\
 
 #define	cDebug(level,levelname,message) \
 	DebugTestAndLog(level) << setw(5) << left << levelname \
-		<< " [" << LOFARLOGGER_PACKAGE << "] " << message \
+		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message \
 		<< ", File:" << __FILE__ << ", Line:" << __LINE__ << endl;
 
 #define cDebugstr(level,levelname,stream)  { \
