@@ -5,6 +5,9 @@
 
 EXES	= Simulate
 LIBNAME = lofarsim
+
+#LIBS    = $(DIRPREFIX)../BaseSim/$(ALIBDIR)/libbasesim.a -L/usr/local/inprise/vbroker/lib -lorb_r -lpthread
+
 LIBS    += $(DIRPREFIX)../BaseSim/$(ALIBDIR)/libbasesim.a
 
 ifdef CORBA

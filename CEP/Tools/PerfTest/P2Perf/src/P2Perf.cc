@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.8  2001/09/19 09:19:34  wierenga
+//  Allocate WH_Empty on heap.
+//
 //  Revision 1.7  2001/09/19 09:05:09  wierenga
 //  Allocate simul and empty on stack.
 //
@@ -136,9 +139,15 @@ void SeqSim::define(const ParamBlock& params)
 
   for (int iStep = 0; iStep < NR_OF_STEPS; iStep++)
   {
+
     char name[20];
     sprintf(name, "GrowSize[%d]", iStep);
-    workholders[iStep] = new WH_GrowSize(name, (iStep==0?true:false), 1, 1, 1024*1024*10);
+    workholders[iStep] = new WH_GrowSize(name, 
+					 (iStep==0?true:false), 
+					 1, 
+					 1, 
+					 1024*1024*10);
+
     steps[iStep] = new Step(workholders[iStep], "GrowSizeStep", iStep);
 
     steps[iStep]->runOnNode(iStep);
@@ -193,10 +202,13 @@ void doIt (Simul& simul, const std::string& name, int nsteps)
 }
 
 void SeqSim::run(int nSteps)
+
 {
+
   nSteps = nSteps;
 
   doIt(getSimul(), "SeqSimulator", nSteps);
+
 }
 
 void SeqSim::dump() const
