@@ -86,11 +86,10 @@ public:
 
   // Get a typed pointer to an area in the string.
   // It is meant to be used in combination with BlobOStream::setSpace.
-  template<typename U> U* getPointer (uint position)
-    {
-      DbgAssert(position < itsSize);
-      return (U*)(itsBuffer + position);
-    }
+  template<typename U> U* getPointer (uint position);
+
+  // Reserve at least the given size.
+  void reserve (uint newReservedSize);
 
 protected:
   // Set the buffer pointer.
@@ -141,6 +140,19 @@ inline void BlobOBufChar::setBuffer (void* buffer)
 {
   itsBuffer = static_cast<uchar*>(buffer);
 }
+
+template<typename U>
+inline U* BlobOBufChar::getPointer (uint position)
+{
+  DbgAssert(position < itsSize);
+  return (U*)(itsBuffer + position);
+}
+
+inline void BlobOBufChar::reserve (uint newReservedSize)
+{
+  doExpand (newReservedSize, itsSize);
+}
+
 
 } // end namespace
 
