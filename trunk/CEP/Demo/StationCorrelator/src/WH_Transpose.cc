@@ -45,6 +45,8 @@ WH_Transpose::WH_Transpose(const string& name,
   itsNbeamletsinpacket = itsKVM.getInt("NoRSPBeamlets", 92);
   itsNpacketsinframe   = itsKVM.getInt("NoPacketsInFrame", 8);
 
+  itsCurrentSample = 0;
+
   int bufsize = (itsNbeamletsinpacket / itsNcorrelators) * itsNpolarisations * itsNpacketsinframe;
 
   for (int i = 0; i < itsNinputs; i++) {
@@ -76,42 +78,44 @@ void WH_Transpose::process() {
   // note that this transpose only works for our initial demo of two RSP boards
   // it is not generic enough to handle other configurations
 
+  int first_block_id = static_cast<DH_StationData*>(getDataManager().getInHolder(0))->getBlockID();
+  int out_flag = 0;
+  
+  DH_StationData* inDH;
   DH_CorrCube* myDH  = static_cast<DH_CorrCube*> (getDataManager().getOutHolder(0));
 
-  // first check if the blockID's of the Input dataHolders match (this should not fail)
-  if ( static_cast<DH_StationData*>(getDataManager().getInHolder(0))->getBlockID() ==
-       static_cast<DH_StationData*>(getDataManager().getInHolder(1))->getBlockID() ) {
-    myDH->setBlockID(static_cast<DH_StationData*>(getDataManager().getInHolder(0))->getBlockID());
-  } else {
-    // something nasty happened
-    
-  }
+  vector<DH_StationData::BufferType*> val_ptrs;
 
-  // set the flag of the outDH as the bitwise OR of the flags of the input DHs
-  if ( (static_cast<DH_StationData*>(getDataManager().getInHolder(0))->getFlag() | static_cast<DH_StationData*>(getDataManager().getInHolder(1))->getFlag()) != 0 ) {
-    myDH->setFlag( static_cast<DH_StationData*>(getDataManager().getInHolder(0))->getFlag() |
-		   static_cast<DH_StationData*>(getDataManager().getInHolder(1))->getFlag() );
-  }
+  for (int i = 0; i < itsNinputs; i++) {
+    // first check if the blockID's of the Input dataHolders match (this should not fail)
+    inDH = static_cast<DH_StationData*>(getDataManager().getInHolder(i));
+    if ( first_block_id != inDH->getBlockID()) {
+      // block_ids don't match
+      
+      }
+    // set the flag of the outDH as the bitwise OR of the flags of the input DHs
+    out_flag |= inDH->getFlag();
 
-  DH_StationData::BufferType* val_ptr_0 = static_cast<DH_StationData*>(getDataManager().getInHolder(0))->getBuffer();
-  DH_StationData::BufferType* val_ptr_1 = static_cast<DH_StationData*>(getDataManager().getInHolder(1))->getBuffer();
+    // store value pointers in a vector for easy access
+    val_ptrs.push_back(static_cast<DH_StationData*>(getDataManager().getInHolder(i))->getBuffer());
+  }
+  if (out_flag != 0) myDH->setFlag(out_flag);
 
   int offset = 0;
-
   for (int sample = 0; sample < itsNpacketsinframe; sample++) {
     for (int channel = 0; channel < itsNchannels; channel++) {
       for (int polarisation = 0; polarisation < itsNpolarisations; polarisation++) {
-	myDH->setBufferElement(channel, 
-			       sample, 
-			       0,
-			       polarisation,
-			       val_ptr_0+offset);
-	myDH->setBufferElement(channel, 
-			       sample, 
-			       1,
-			       polarisation,
-			       val_ptr_1+offset);
+	for (vector<DH_StationData::BufferType*>::iterator it = val_ptrs.begin(); it != val_ptrs.end(); it++) {
+
+	  myDH->setBufferElement(channel, 
+				 itsCurrentSample, 
+				 0,
+				 polarisation,
+				 *it+offset);
+	 
+	} 
 	offset++;
+	itsCurrentSample %= itsNsamples;
       }
     }
   }

@@ -59,6 +59,8 @@ namespace LOFAR
     int itsNsamples;
     int itsNpacketsinframe;
     int itsNbeamletsinpacket;
+
+    int itsCurrentSample;
   };
 
   // @}
