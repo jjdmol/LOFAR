@@ -202,11 +202,11 @@ void RunNewCal10Sources (int nIters) {
     LOFAR::Calibrator cal ("data/10Sources/demo10-1", "skymodel1", "meijeren",
 			   "meqmodel1", "postgres");
 
-    //    cal.setTimeSlot (2);
+    cal.setTimeSlot (10.0);
     cal.initialize ();
 
     cal.clearSolvableParms ();
-    for (i = 1; i <= 10; i ++) {
+    for (i = 1; i <= 3; i ++) {
       cal.addSolvableParm ("RA", i);
       cal.addSolvableParm ("DEC", i);
       cal.addSolvableParm ("StokesI", i);
@@ -214,7 +214,7 @@ void RunNewCal10Sources (int nIters) {
     cal.commitSolvableParms ();
 
     cal.clearPeelSources ();
-    for (i = 1; i <= 10; i ++) {
+    for (i = 1; i <= 3; i ++) {
       cal.addPeelSource (i);
     }
     cal.commitPeelSourcesAndMasks ();

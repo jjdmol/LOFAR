@@ -87,13 +87,17 @@ namespace LOFAR
 // Get the phase reference of the first field.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::getPhaseRef(double ra, double dec, double startTime)
+void MeqCalibrater::getPhaseRef()
 {
-  // Use the phase reference of the given J2000 ra/dec.
-  MVDirection mvdir(ra, dec);
-  MDirection phaseRef(mvdir, MDirection::J2000);
+  MSField mssub(itsMS.field());
+  ROMSFieldColumns mssubc(mssub);
+  // Use the phase reference of the first field.
+  MDirection phaseRef = mssubc.phaseDirMeasCol()(0)(IPosition(1,0));
+  // Use the time in the first MS row.
+  double startTime = itsMSCol.time()(0);
   itsPhaseRef = MeqPhaseRef (phaseRef, startTime);
 }
+
 
 //----------------------------------------------------------------------
 //
@@ -199,6 +203,7 @@ void MeqCalibrater::fillBaselines (const Vector<int>& ant1,
 
     itsBaselines.push_back (MVBaseline (pos1, pos2));
   }
+
 }
 
 //----------------------------------------------------------------------
@@ -456,7 +461,7 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   cdebug(1) << itsCalcUVW << ")" << endl;
 
   // Get phase reference (for field 0).
-  getPhaseRef(1,2,3);
+  getPhaseRef();
 
   // We only handle field 0, the given data desc id, and antennas.
   // Sort the MS in order of baseline.
@@ -488,8 +493,10 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   // for that antenna pair.
   ROScalarColumn<int> ant1col(blMS, "ANTENNA1");
   ROScalarColumn<int> ant2col(blMS, "ANTENNA2");
+
   Vector<int> ant1data = ant1col.getColumn();
   Vector<int> ant2data = ant2col.getColumn();
+
   // First find all used stations (from the ANTENNA subtable of the MS).
   fillStations (ant1data, ant2data);
   Matrix<int> index;
@@ -638,6 +645,7 @@ void MeqCalibrater::initParms (const MeqDomain& domain, bool readPolcs)
       }
       i++;
     }
+
     // Initialize the solver.
     itsSolver.set (itsNrScid);
   }
@@ -1148,8 +1156,8 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   Matrix<double> covar;
   Vector<double> errors;
   LSQaips tmpSolver = itsSolver;
-  tmpSolver.getCovariance (covar);
-  tmpSolver.getErrors (errors);
+  //  tmpSolver.getCovariance (covar);
+  //  tmpSolver.getErrors (errors);
   int nrs = itsSolution.nelements();
   Vector<double> sol(nrs);
   double* solData = itsSolution.doubleStorage();
@@ -1521,8 +1529,8 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
   Matrix<double> covar;
   Vector<double> errors;
   LSQaips tmpSolver = itsSolver;
-  tmpSolver.getCovariance (covar);
-  tmpSolver.getErrors (errors);
+  //  tmpSolver.getCovariance (covar);
+  //  tmpSolver.getErrors (errors);
   int nrs = itsSolution.nelements();
   Vector<double> sol(nrs);
   double* solData = itsSolution.doubleStorage();
