@@ -1,4 +1,4 @@
- use_suspend  := T;
+# use_suspend  := T;
 # use_gui := T;
 # use_nostart  := T;
 # use_valgrind := T;
@@ -359,6 +359,70 @@ const mep_grow_test := function (gui=use_gui)
   request := meq.request(cells,calc_deriv=1);
   
   res2 := mqs.meq('Node.Execute',[name='a',request=request],T);
+}
+
+
+const flagger_test := function (verbose=4,gui=use_gui)
+{
+  if( is_fail(mqsinit(verbose=verbose,gui=gui)) )
+  {
+    print mqs;
+    fail;
+  }
+  # mqs.setdebug('MeqParm',5);
+  global domain,cells,request;
+  domain := meq.domain(-1,1,-1,1);
+  cells := meq.cells(domain,8,8);
+  request := meq.request(cells);
+  
+  # create polc for this domain
+  polc := meq.polc(array([0,.5,.5,0],2,2),domain=domain);
+  defrec := meq.parm('a',polc,groups='Parm');
+  mqs.meq('Create.Node',defrec,T);
+  
+  # create flagger for >0
+  defrec := meq.node('MeqZeroFlagger','flag1',children="a");
+  defrec.oper := 'gt';
+  defrec.flag_bit := 1;
+  mqs.meq('Create.Node',defrec,T);
+  # create flagger for <0
+  defrec := meq.node('MeqZeroFlagger','flag2',children="a");
+  defrec.oper := 'lt';
+  defrec.flag_bit := 2;
+  mqs.meq('Create.Node',defrec,T);
+  # create flagger for >=0
+  defrec := meq.node('MeqZeroFlagger','flag3',children="a");
+  defrec.oper := 'ge';
+  defrec.flag_bit := 4;
+  mqs.meq('Create.Node',defrec,T);
+  # create flagger for <=0
+  defrec := meq.node('MeqZeroFlagger','flag4',children="a");
+  defrec.oper := 'le';
+  defrec.flag_bit := 8;
+  mqs.meq('Create.Node',defrec,T);
+  # create flagger for ==0
+  defrec := meq.node('MeqZeroFlagger','flag5',children="a");
+  defrec.oper := 'eq';
+  defrec.flag_bit := 16;
+  mqs.meq('Create.Node',defrec,T);
+  # create flagger for !=0
+  defrec := meq.node('MeqZeroFlagger','flag6',children="a");
+  defrec.oper := 'ne';
+  defrec.flag_bit := 32;
+  mqs.meq('Create.Node',defrec,T);
+
+  # create merge for !=0
+  defrec := meq.node('MeqMergeFlags','flag',children="flag1 flag2 flag3 flag4 flag5 flag6");
+  #  defrec.flag_bit := 32;
+  mqs.meq('Create.Node',defrec,T);
+
+  
+  mqs.meq('Node.Resolve.Children',[name='flag'],T);
+  
+  global result;
+  result := mqs.meq('Node.Execute',[name='flag',request=request],T);
+
+  return result;
 }
 
 

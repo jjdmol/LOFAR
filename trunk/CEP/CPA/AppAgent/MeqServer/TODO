@@ -1,12 +1,22 @@
+  for now: MergeFlags; test the flagging stuff
+
 MEQ in general:
 
   * Update documentation! (never goes away, does it?)
+  
+  * look through VellSet and Result classes, check for privatize-on-write
+    where needed.
 
-    - Specify child labels in node constructor; check them in init().
-      Process named children properly.
-      01/01/04: done, need to test w/glish (glish not working on my laptop)
-      16/01/04: tested with default tests; now need to make some nodes
-                with child labels
+  * Specify child labels in node constructor; check them in init().
+    Process named children properly.
+    Re-opening: we want optional children, too (see, e.g., FlagSubtract)
+    01/01/04: done, need to test w/glish (glish not working on my laptop)
+    16/01/04: tested with default tests; now need to make some nodes
+              with child labels
+              
+        + add shape attribute to VellSet, ensure that Vells, etc. have the same 
+          shape (or are scalar)
+          19/03/04: done
         
         + How to tell all the nodes to shut up? (stop publishing)
           15/03/04: done, added command to MeqServer
@@ -80,12 +90,24 @@ Solver:
           (i.e., append iteration index or something?)
           20/01/04: done for now; revisit with hierarchical requests
           
-Sink/Spigot:
-  
-  * handle flags in Spigot 
-  
-  * handle flags in Sink
 
+Flagging:
+
+  * implement ZeroFlagger: flag where value <OP> 0 (OP is ==,!=,<,>,<=,>=)
+  
+  * implement MergeFlags: merge flags of all children
+
+
+Sink/Spigot:
+
+  * improve Spigot flag reading options: e.g., apply mask to input, and
+    if true, place result into 1 bit of the output
+  
+  * handle writing flags in Sink
+  
+        + handle flags in Spigot 
+          19/03/04: done
+  
         + In deliver, just stick the result in the cache and let the caching code
           take care of everything else. 
           10/01/04: done, needs testing
@@ -156,6 +178,8 @@ Function:
           12/12/03 done
           
 DMI & Debug:
+
+  * remove flags argument from DataField constructor
 
   * implement bool Hook::get(T&), for getting stuff by value (or pointer?),
     and simultaneously returning false if not defined.

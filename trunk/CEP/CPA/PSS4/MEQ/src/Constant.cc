@@ -62,6 +62,7 @@ int Constant::getResult (Result::Ref& resref,
   // Create result object and attach to the ref that was passed in
   Result& result = resref <<= new Result(1,request); // result has one vellset
   VellSet& vs = result.setNewVellSet(0);
+  vs.setShape(request.cells().shape());
   vs.setValue(itsValue());
   return 0;
 }

@@ -291,6 +291,7 @@ int Parm::getResult (Result::Ref &resref,
   // Create result object and attach to the ref that was passed in
   Result &result = resref <<= new Result(1,request); // result has one vellset
   VellSet & vs = result.setNewVellSet(0,0,request.calcDeriv());
+  vs.setShape(request.cells().shape());
   // return depencies: depends on domain, plus parm value, if solvable
   // NB: should set UPDATED here if we've received a new parm value
   int retcode = RES_DEP_DOMAIN | (solvable_ ? RES_DEP_ITER : 0);
@@ -359,6 +360,7 @@ int Parm::getResult (Result::Ref &resref,
       }
       // Evaluate polc over overlapping part of grid
       VellSet partRes;
+      partRes.setShape(nrFreq,nrTime);
       polc.evaluate(partRes,
                     midFreq(blitz::Range(ifreq0,ifreq1)),
                     midTime(blitz::Range(itime0,itime1)),

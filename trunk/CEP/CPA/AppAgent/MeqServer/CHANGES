@@ -1,3 +1,12 @@
+  * added ZeroFlagger node. Init with:
+    initrec.oper     := hiid(op)    # op=EQ/NE/GT/LT/GE/LE, EQ by default
+    initrec.flag_bit :=             # Flag mask to raise, 1 by default      
+
+  * added optional flags field to VellSet. Reading controlled by flag_mask
+    and row_flag_mask in Spigot. 
+
+Checked in by 19/03/2004:
+
   * new solver commands/states:
     clear_matrix, invert_matrix, num_iter, save_polcs, weight
     (also, default.nnn, for default settings of same)
