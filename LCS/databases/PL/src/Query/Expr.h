@@ -58,8 +58,9 @@ namespace LOFAR
         // in through \p node and store it in a reference counted pointer.
         Expr(ExprNode* const node);
 
-        // Print the expression into an output stream. Printing an expression
-        // implies printing the expression node and its associated constraint.
+        // Print the expression into an output stream.
+        // \attention This method will \e only print the expression itself, \b
+        // not its associated constraint.
         void print(std::ostream& os) const;
 
         // Test whether this expression is a null expression.
@@ -125,18 +126,8 @@ namespace LOFAR
         // @name I/O stream operators
         //@{
 
-        // Print the expression \a exp onto the output stream \a os.
-        //
-        // \warning operator<<() will \e not always print the constraints
-        // associated with the expression onto the output stream. If you want
-        // to make sure that the constraints are always printed, use the
-        // method Expr::print().
-        //
-        // \todo Modify operator<<() so that it always prints both the
-        // expression and the constraints associated with the expression. This
-        // change implies a modification to the print methods of all the
-        // expression node, because they use operator<<() to print their
-        // expression objects onto the output stream.
+        // Print the expression \a exp and the associated constraints onto the
+        // output stream \a os.
         friend std::ostream& operator<< (std::ostream& os, const Expr& exp);
         //@}
 

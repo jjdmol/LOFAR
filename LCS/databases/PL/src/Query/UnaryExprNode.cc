@@ -42,7 +42,9 @@ namespace LOFAR
 
       void UnaryExprNode::print(std::ostream& os) const
       {
-        os << "(" << itsOperation << itsOperand << ")";
+        os << "(" << itsOperation;
+        itsOperand.print(os);
+        os << ")";
       }
 
       Expr UnaryExprNode::getConstraint() const

@@ -41,8 +41,12 @@ namespace LOFAR
       {
         Expr exp(itsOperand.getConstraint());
         os << "(";
-        if (!exp.isNull()) os << exp << " AND ";
-        os << itsOperation << itsOperand;
+        if (!exp.isNull()) {
+          exp.print(os);
+          os << " AND ";
+        }
+        os << itsOperation;
+        itsOperand.print(os);
         os << ")";
       }
 

@@ -43,9 +43,17 @@ namespace LOFAR
         Expr lhs(itsLeft.getConstraint());
         Expr rhs(itsRight.getConstraint());
         os << "(";
-        if (!lhs.isNull()) os << lhs << " AND ";
-        os << itsLeft << itsOperation << itsRight; 
-        if (!rhs.isNull()) os << " AND " << rhs;
+        if (!lhs.isNull()) {
+          lhs.print(os);
+          os << " AND ";
+        }
+        itsLeft.print(os);
+        os << itsOperation;
+        itsRight.print(os); 
+        if (!rhs.isNull()) {
+          os << " AND ";
+          rhs.print(os);
+        }
         os << ")";
       }
 

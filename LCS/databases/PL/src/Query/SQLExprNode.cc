@@ -49,8 +49,13 @@ namespace LOFAR
 
       void BetweenExprNode::print(std::ostream& os) const
       {
-        os << "(" << itsValue << itsOperation 
-           << itsLower << " AND " << itsUpper << ")";
+        os << "(";
+        itsValue.print(os);
+        os << itsOperation;
+        itsLower.print(os);
+        os << " AND ";
+        itsUpper.print(os);
+        os << ")";
       }
 
       
@@ -67,12 +72,14 @@ namespace LOFAR
 
       void InExprNode::print(std::ostream& os) const
       {
-        os << "(" << itsLeft;
+        os << "(";
+        itsLeft.print(os);
         if (!itsRight.empty()) {
           ostringstream oss;
           Collection<Expr>::const_iterator it;
           for (it = itsRight.begin(); it != itsRight.end(); ++it) {
-            oss << *it  << ",";
+            it->print(oss);
+            oss << ",";
           }
           string s(oss.str());    // convert oss to a string
           s.erase(s.size()-1);    // strip trailing comma
@@ -96,7 +103,7 @@ namespace LOFAR
       void LikeExprNode::print(std::ostream& os) const
       {
         ostringstream oss;
-        oss << itsRight;
+        itsRight.print(oss);
         string rhs(oss.str());
         string pattern;
 
@@ -127,7 +134,9 @@ namespace LOFAR
           }
         }
 
-        os << "(" << itsLeft << itsOperation << pattern << " ESCAPE '\\\\')";
+        os << "(";
+        itsLeft.print(os);
+        os << itsOperation << pattern << " ESCAPE '\\\\')";
       }
 
 
