@@ -25,6 +25,7 @@
 
 
 #include <qdialog.h>
+#include <string>
 
 class QLineEdit;
 class QLabel;

@@ -30,6 +30,7 @@
 
 #if(HAVE_VDM)
 #include <OCTOPUSSY/OctopussyConfig.h>
+#include <OCTOPUSSY/Octopussy.h>
 #endif // HAVE_VDM
 
 #include <unistd.h>
@@ -88,6 +89,8 @@ try
 
 #if(HAVE_VDM)
   OctopussyConfig::initGlobal(argc,(const char **)argv);
+  Octopussy::init();
+  Octopussy::initThread(True);
 #endif
   TSjob_parameters Job(argc, argv);
 
