@@ -23,9 +23,27 @@
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
 #include <iostream>
+#include <limits>
 
 using namespace LOFAR;
 using namespace std;
+
+#define TOSTRING_TEST(type) \
+{ \
+  type min(numeric_limits<type>::min()); \
+  type max(numeric_limits<type>::max()); \
+  ASSERT(min == numeric_limits<type>::min() && \
+         max == numeric_limits<type>::max()); \
+  cout << "min(" #type ") = " << toString(min) \
+       << "\t max(" #type ") = " << toString(max) << endl; \
+}
+
+#define TOSTRING_TEST2(type, val, format) \
+{ \
+  type x(val); \
+  cout << "toString(" #type "(" #val ")," #format ") = " \
+       << toString(x, format) << endl; \
+}
 
 int main()
 {
@@ -71,6 +89,39 @@ int main()
   cout << ">" << p1 << "< , len=" << len1 << endl;
   cout << ">" << p2 << "< , len=" << len2 << endl;
   cout << ">" << p3 << "< , len=" << len3 << endl;
+
+
+  //## Conversion of fundamental arithmetic types to string ##//
+
+  cout << "\n*** Conversion of fundamental arithmetic types to string ***\n";
+  try {
+    TOSTRING_TEST(bool);
+    TOSTRING_TEST(char);
+    TOSTRING_TEST(unsigned char);
+    TOSTRING_TEST(short);
+    TOSTRING_TEST(unsigned short);
+    TOSTRING_TEST(int);
+    TOSTRING_TEST(unsigned int);
+    TOSTRING_TEST(long);
+    TOSTRING_TEST(unsigned long);
+#ifdef HAVE_LONG_LONG
+    TOSTRING_TEST(long long);
+    TOSTRING_TEST(unsigned long long);
+#endif
+    TOSTRING_TEST(float);
+    TOSTRING_TEST(double);
+#ifdef HAVE_LONG_DOUBLE
+    TOSTRING_TEST(long double);
+#endif
+    cout << endl;
+    TOSTRING_TEST2(int, 42, "%06i");
+    TOSTRING_TEST2(float, M_E, "%e");
+    TOSTRING_TEST2(float, M_PI, "%8.4f");
+    TOSTRING_TEST2(double, M_E, "%+08.12g");
+    TOSTRING_TEST2(double, M_PI*1e12, "%+08.12g");
+  } catch (Exception& e) {
+    LOG_ERROR_STR(e);
+  }
 
   return 0;
 }
