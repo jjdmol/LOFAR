@@ -132,12 +132,12 @@ void WH_Correlator::process() {
   // This is an uint16 pointer
   DH_CorrCube::BufferPrimitive* in_ptr = (DH_CorrCube::BufferPrimitive*) inDH->getBuffer();
   // The float pointer is explicit, since DH_Vis is now complex<double>
-  float*  in_buffer = new float[2*inDH->getBufSize()];
+  complex<float>*  in_buffer = new complex<float>[2*inDH->getBufSize()];
 
   // consider the input buffer of complex<uint16> to be uint16 of twice that size
   // we can now offer the compiler a single for loop which has great potential to unroll
-  for ( unsigned int i = 0; i < 2*inDH->getBufSize(); i++ ) {
-    *(in_buffer+i) = static_cast<float> ( *(in_ptr+i) ); 
+  for ( unsigned int i = 0; i < inDH->getBufSize(); i++ ) {
+    *(in_buffer+i) = static_cast<complex<float> > ( *(in_ptr+i) ); 
   }
 
   //
