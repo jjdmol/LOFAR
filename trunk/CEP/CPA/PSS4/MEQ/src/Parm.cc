@@ -276,8 +276,12 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
   // inhibit changing of FPolcs field
   protectStateField(rec,FPolcs);
   Function::setStateImpl(rec,initializing);
-  // Get solvable flag
+  // Get solvable flag; clear domain if it changes (to force initDomain call).
+  bool oldSolvable = itsIsSolvable;
   getStateField(itsIsSolvable,rec,FSolvable);
+  if (oldSolvable != itsIsSolvable) {
+    itsCurrentDomain = Domain();
+  }
   // Get parm value
   if (rec[FValue].exists()) {
     // Update the polc coefficients with the new values.
@@ -288,6 +292,8 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
       inx += itsPolcs[i].update (&values(inx), values.size()-inx);
     }
     Assert (inx == values.size());
+    // Also save the parms (might need to be changed later).
+    save();
   }
   // Get default value (to be used if no table exists)
   if( rec[FDefault].exists() )
