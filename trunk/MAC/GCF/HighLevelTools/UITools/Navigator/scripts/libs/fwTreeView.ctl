@@ -261,8 +261,7 @@ unsigned fwTreeView_appendToParentNode(unsigned parentIndex, string name, anytyp
         if(parentIndex+i <= fwTreeView_getNodeCount(referenceName))
         {       
           testNode = fwTreeView_getNode(parentIndex+i,referenceName);
-		  //DebugTN("##____start_while_loop_______##");
-		  int nodeCount = fwTreeView_getNodeCount(referenceName); // nodeCount retreived from outside the while loop.
+		      int nodeCount = fwTreeView_getNodeCount(referenceName); // nodeCount retreived from outside the while loop.
           while(testNode[fwTreeView_LEVEL] > parentNode[fwTreeView_LEVEL] && 
                 parentIndex+i <= nodeCount)
           {
@@ -271,21 +270,11 @@ unsigned fwTreeView_appendToParentNode(unsigned parentIndex, string name, anytyp
             {
               testNode = fwTreeView_getNode(parentIndex+i,referenceName);
             }
-			//DebugTN(fwTreeView_getNodeCount(referenceName));
           }
         }
-		g_nodeID = i;
-        //DebugTN("##____NOT skipping_while_loop_____##");
+      g_nodeID = i;
       }
-
-/*	    DebugTN("_____parentIndex____");
-        DebugTN("__C__ "+ parentIndex );
-	    DebugTN("__N__ "+ g_parentIndex);
-        DebugTN("_____nodeID____");
-        DebugTN("__C__ "+ i );
-	    DebugTN("__N__ "+ g_nodeID );
-*/
-      fwTreeView_insertTreeNode(parentIndex+i,name,value,handle,level,referenceName);
+    fwTreeView_insertTreeNode(parentIndex+i,name,value,handle,level,referenceName);
 	  nodeId = parentIndex+i;
 	  g_parentIndex = parentIndex;
     }
@@ -360,7 +349,9 @@ fwTreeView_defaultCollapse(unsigned index, string referenceName = "")
 	unsigned subFolderDepth;
 	dyn_anytype node;
 	dyn_anytype parentNode;
-	
+	dyn_string path;
+	dyn_int position;
+
 	if(index >  fwTreeView_getNodeCount(referenceName))
 	{
     	DebugN(	"collapseFolder(dyn_anytype& tree,"
@@ -368,17 +359,18 @@ fwTreeView_defaultCollapse(unsigned index, string referenceName = "")
 	}
 	else
 	{
-		//DebugN("index="+index);
 		// parent node:
 		parentNode = fwTreeView_getNode(index, referenceName);
 		pos = index + 1; //index of first node to collapse
 		int nodeCount = fwTreeView_getNodeCount(referenceName);
+		int i=1;
 		while(pos <=  nodeCount && (node = fwTreeView_getNode(pos, referenceName))[fwTreeView_LEVEL] > parentNode[fwTreeView_LEVEL])
 		{
 			// collapses and hides the folders and leaves
 			// (collapse bit of a leaf is meaningless => we don't care if we change it)
-			node[fwTreeView_STATE] = (node[fwTreeView_STATE] | fwTreeView_HIDDEN) & ~fwTreeView_EXPANDED;
+      node[fwTreeView_STATE] = (node[fwTreeView_STATE] | fwTreeView_HIDDEN) & ~fwTreeView_EXPANDED;
 			fwTreeView_replaceNode(node, pos, referenceName);
+      i++;
 			pos++; // next node
 		}
 		// update the state of the folder that was collapsed:
@@ -560,7 +552,6 @@ fwTreeView_prune(unsigned index, string referenceName = "")
 	}
 	else
 	{
-		//DebugN("index="+index);
 		// parent node:
 		parentNode = fwTreeView_getNode(index, referenceName);
 		
@@ -578,6 +569,58 @@ fwTreeView_prune(unsigned index, string referenceName = "")
 		fwTreeView_removeNode(index, referenceName);
 	}
 }
+
+/** Remove for a node all of its children (if it has any).
+ * @param index index of the node to remove and return the number of removed childs
+ */
+fwTreeView_pruneChildren(unsigned index, int &collapsedNodes, string referenceName = "")
+{
+	unsigned len;
+	unsigned pos;
+	unsigned subFolderDepth;
+	dyn_anytype node;
+	dyn_anytype parentNode;
+	dyn_anytype allPos;
+	int posCount=1;
+
+	if(index >  fwTreeView_getNodeCount(referenceName))
+	{
+		DebugN(	"collapseFolder(dyn_anytype& tree,"
+				" unsigned index): index out of bounds)");
+	}
+	else
+	{
+		//DebugN("index="+index);
+		// parent node:
+		parentNode = fwTreeView_getNode(index, referenceName);
+		
+		// index of first child node to remove
+		pos = index + 1; 
+		len = fwTreeView_getNodeCount(referenceName);
+		while((pos <= len ) && ((node = fwTreeView_getNode(pos, referenceName))[fwTreeView_LEVEL] > parentNode[fwTreeView_LEVEL]))
+		{
+			// remove child node:
+			fwTreeView_removeNode(pos, referenceName);
+			allPos[posCount]=pos;
+			posCount++;
+			len--;
+		}
+		collapsedNodes=dynlen(allPos);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /** Replaces a node of the tree by a new node.
  * @param node new node

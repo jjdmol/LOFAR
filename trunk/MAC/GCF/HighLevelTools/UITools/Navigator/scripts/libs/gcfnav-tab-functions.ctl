@@ -196,14 +196,14 @@ void ComboBoxViewsSelectionChanged()
   }
   else
   {
-	string oldSelectedPanel = selectedPanel;
-	viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"navigator/views/nopanelfound.pnl",panelParameters);
-	LOG_DEBUG("## VIEW_TABS_VIEW_NAME: ", VIEW_TABS_VIEW_NAME);
+	  string oldSelectedPanel = selectedPanel;
+	  viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"navigator/views/nopanelfound.pnl",panelParameters);
+	  LOG_DEBUG("## VIEW_TABS_VIEW_NAME: ", VIEW_TABS_VIEW_NAME);
     LOG_DEBUG("## File does not exist:",oldSelectedPanel);
   }            
  
   string datapointTypeName = "";
-  DebugTN("g_datapoint",g_datapoint);
+  //DebugTN("g_datapoint",g_datapoint);
   if(dpExists(g_datapoint))
     datapointTypeName = dpTypeName(g_datapoint);
   else

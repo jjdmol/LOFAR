@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,388 286 950 740 N "_3DFace" 1
+PANEL,327 188 950 740 N "_3DFace" 1
 "$datapoint"
 EEE E E 1 -1 -1 0  80 350
 "" 0 1
@@ -281,26 +281,6 @@ E "main()
   navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
 }" 0
  0 1 1 0 1 E U  1 E 190 140 220 160
-2 109
-"Text7"
-""
-1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-108 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 12 118 28
-0 2 0 "s" 0 0 0 64 0 0  12 12
- 1
-1
-LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 15 Switch overview
 6 112
 "Border1"
 ""
@@ -539,6 +519,26 @@ E "main()
   navConfigTriggerNavigatorRefreshWithDP($datapoint + \"_Switch01\");
 }" 0
  0 1 1 0 1 E U  1 E 640 540 670 560
+2 126
+"Text31"
+""
+1 10 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+124 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 2 175 18
+0 2 0 "s" 0 0 0 192 0 0  12 2
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 23 View: Wide Area Network
 13 111
 "Button2"
 ""

@@ -467,7 +467,7 @@ bool navConfigSanityCheck(string &message)
     // check number of items in subviews, configs and nrOfSubViews
     int nrOfViews = dynlen(tab[viewsIndex][2]);
     sane = (nrOfViews == dynlen(tab[nrOfSubviewsIndex][2]));
-    DebugTN("check nrOfViews:",sane,nrOfViews,dynlen(tab[nrOfSubviewsIndex][2]));
+    //DebugTN("check nrOfViews:",sane,nrOfViews,dynlen(tab[nrOfSubviewsIndex][2]));
     if(!sane)
     {
       message = "Invalid view configuration\n#views and nrOfSubViews do not correspond\n(" + tab[viewsIndex][1] + ")";
@@ -480,7 +480,7 @@ bool navConfigSanityCheck(string &message)
       for(i=1;i<=dynlen(tab[nrOfSubviewsIndex][2]);i++)
         nrOfSubViews += tab[nrOfSubviewsIndex][2][i];
       sane = (nrOfSubViews == dynlen(tab[subViewsIndex][2]) && nrOfSubViews == dynlen(tab[configsIndex][2]));
-      DebugTN("check nrOfSubViews:",sane,nrOfSubViews,dynlen(tab[subViewsIndex][2]),dynlen(tab[configsIndex][2]));
+      //DebugTN("check nrOfSubViews:",sane,nrOfSubViews,dynlen(tab[subViewsIndex][2]),dynlen(tab[configsIndex][2]));
       if(!sane)
       {
         message = "Invalid view configuration\n#subviews, #configs and total nrOfSubViews do not correspond\n(" + tab[viewsIndex][1] + ")";

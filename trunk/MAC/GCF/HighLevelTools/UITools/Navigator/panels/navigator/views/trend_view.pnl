@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,391 108 954 748 N "_3DFace" 2
+PANEL,327 188 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -46,9 +46,11 @@ PANEL,391 108 954 748 N "_3DFace" 2
 ///////////////////////////////////////////////////////////////////////////////////
 CheckTimeInterval(int Days, int Hours, int Minutes, int Seconds, string TrendNumber)
 {
-  if ((0==Days) && (0==Hours) && (0==Minutes) && (Seconds<2)) 
+  if ((0==Days) && (0==Hours) && (0==Minutes) && (Seconds<2))
+  { 
     dpSet($configDatapoint + \".\"+TrendNumber+\".Minutes\", 5);
     dpSet($configDatapoint + \".\"+TrendNumber+\".Seconds\", 2);
+  }
 }
 
 
