@@ -316,7 +316,6 @@ MeqDomain AbstractSource::load(const Table& table,
   ROArrayColumn<double>  TDomain (table, "TDOMAIN");
   ROArrayColumn<double>  FDomain (table, "FDOMAIN");
 
-
   Vector<double> TVector;
   Vector<double> FVector;
 
@@ -329,7 +328,6 @@ MeqDomain AbstractSource::load(const Table& table,
   std::vector<MeqPolc> RaPolcs(1);
   std::vector<MeqPolc> DecPolcs(1);
 
-  itsRa->setPolcs(RaPolcs);
   Matrix<double> coef(1,1);
   RaParms.get (row, coef, true);
   RaPolcs[0].setDomain(Domain);
