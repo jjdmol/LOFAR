@@ -17,7 +17,7 @@ int main (int argc, const char** argv)
   MPI_Init(&argc,(char***)&argv);
 #endif
   // Set trace level.
-  Debug::initLevels (argc, (const char* [])argv);
+  Debug::initLevels (argc, argv);
 
   try {
     Pipeline simulator;
