@@ -43,12 +43,14 @@ bool DH_Database::StoreInDatabase (int, int tag, char * buf, int size) {
 
   po_dh_db.setTimeStamp (5555);
 
-  po_dh_db.setType ("PODBRecUnkType");
-  po_dh_db.setName ("PODBRecUnkName");
+  po_dh_db.setType (getType ());
+  po_dh_db.setName (getName ());
 
   po_dh_db.setHumanReadableForm ("PODBRecUnkHRF");
 
-  po_dh_db.Store ();
+  po_dh_db.Store (wrSeqNo);
+
+  wrSeqNo ++;
 
   return true; 
 }
@@ -63,9 +65,11 @@ bool DH_Database::RetrieveFromDatabase (int, int tag, char * buf, int size) {
   po_dh_db.setMessageTag (tag);
   po_dh_db.setByteStringLength (getDataPacketSize ());
 
-  po_dh_db.Retrieve ();
+  po_dh_db.Retrieve (rdSeqNo);
 
   po_dh_db.CopyFromByteString (buf, size);
+
+  rdSeqNo ++;
 
   return true;
 }
