@@ -103,12 +103,6 @@ public:
   /// Write the packet data.
   void write();
 
-  /// Fill the packet data with zeroes.
-  virtual void setZeroes();
-
-  /// Fill the packet data with ones.
-  virtual void setOnes();
-
   /** Does the data has to be handled? 
       It returns true if the 
   */
@@ -171,23 +165,6 @@ public:
   void setReadDelay (int delay);
   void setWriteDelay (int delay);
 
-  /** Force the data holder to read input from the file #inFile#.
-      @exception runtime_error: "File not found"
-  */
-  void setInFile(const string& inFile);
-
-  /** Force the data holder to write output to the file #outFile#.
-      #setOutFile# returns false if the output file could not be created,
-      otherwise it returns true.
-  */
-  bool setOutFile(const string& outFile);
-
-  /// Stop reading input data from file.
-  void unsetInFile();
-
-  /// Stop writing output data to file.
-  void unsetOutFile();
-    
   /** Get a pointer to the Transport object used to send the data
       to/from the BaseDataHolder connected to this one.
   */
@@ -220,23 +197,6 @@ private:
   int         itsReadDelayCount;
   int         itsWriteDelayCount;
 
-  /// Pointer to input file stream object. Used when reading input from file.
-  ifstream*    itsIfsPtr;
-
-  /// Pointer to output file stream object. Used when writing to output file.
-  ofstream*    itsOfsPtr;
-
-  /** Read from the input file stream. 
-      Return true if the read operation was successful.
-      #doFsRead()# should be implemented in the derived data holder classes. 
-  */
-  virtual bool doFsRead (ifstream&);
-
-  /** Write to the output file stream.
-      Return true if the write operation was successful.
-      #doFsWrite()# should be implemented in the derived data holder classes.
-  */
-  virtual bool doFsWrite (ofstream&) const;
    
 };
 
