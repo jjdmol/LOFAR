@@ -25,7 +25,7 @@
 #include <Common/lofar_string.h>
 #include <Coord/CoordClient.h>
 #include <Coord/Endian.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MPosition.h>
@@ -252,10 +252,10 @@ void handleConnection (Socket* socket)
   Endian endian;
   double buf[2];
   // Read 2 doubles (for endian and version).
-  Assert (socket->readBlocking (buf, 2*sizeof(double)) == 2*sizeof(double));
+  ASSERT (socket->readBlocking (buf, 2*sizeof(double)) == 2*sizeof(double));
   // Determine if byte swapping is needed.
   bool swap = getEndian(buf) != endian.isLittleEndian();
-  Assert (getVersion(buf, swap) == 1);
+  ASSERT (getVersion(buf, swap) == 1);
   // Send back the endian format and version of the server.
   setEndian (buf);
   setVersion (buf, 1);
@@ -295,6 +295,7 @@ void handleConnection (Socket* socket)
 
 int main (int argc, const char* argv[])
 {
+  INIT_LOGGER(argv[0]);
   ////  initDeamon();    // Do not start the process as a true deamon (yet).
   // Determine the port.
   string port = "31337";
@@ -312,7 +313,17 @@ int main (int argc, const char* argv[])
       handleConnection (connSocket);
       // At this point only the parent process continues.
       // It deletes the connection socket because the child handles it.
-      delete connSocket;
+//       delete connSocket;
+      // GML (02-NOV-2004): Now this delete turned out to be a big mistake, at
+      // least with the "new" Socket class (but I wonder whether it was
+      // correct with the "old" Socket class). The problem is that
+      // handleConnection() hands the Socket pointer, that was just acquired
+      // by calling accept(), to the forked process. When we subsequently
+      // delete this Socket object, the socket will be closed, not just in
+      // this process, but also in the forked process!
+      // Not deleting the Socket object has its drawbacks as well, because
+      // now we've created a memory leak, but at least the server will
+      // continue to handle client requests.
     }
     // Wait (non-blocking) for any child.
     // This is needed to prevent a child from becoming a zombie when it
