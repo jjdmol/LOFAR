@@ -43,6 +43,35 @@ namespace ABS
     {
     public:
 	/**
+	 * Maximum number of beamlets produced by
+	 * the server. The number of beamlets of
+	 * all beams together can not be larger
+	 * than this value. This is always less
+	 * than or equal to N_SUBBANDS
+	 */
+	static const int N_BEAMLETS = 128;
+
+	/**
+	 * Maximum number of input subbands of the
+	 * system. Each spectral window should have
+	 * n_subbands <= N_SUBBANDS. This is always
+	 * greater than or equal to N_BEAMLETS.
+	 */
+	static const int N_SUBBANDS = 128;
+
+	/**
+	 * The number of antenna elements, an
+	 * element can have one or two polarizations.
+	 */
+	static int const N_ELEMENTS      = 1;
+
+	/**
+	 * Number of polarizations for each element.
+	 */
+	static int const N_POLARIZATIONS = 2;
+
+    public:
+	/**
 	 * The constructor of the BeamServerTask task.
 	 * @param name The name of the task. The name is used for looking
 	 * up connection establishment information using the GTMNameService and
@@ -154,7 +183,7 @@ namespace ABS
 	/**
 	 * Receptor positions
 	 */
-	blitz::Array<W_TYPE, 2> m_pos;
+	blitz::Array<W_TYPE, 3> m_pos;
 
 	/**
 	 * Weight array

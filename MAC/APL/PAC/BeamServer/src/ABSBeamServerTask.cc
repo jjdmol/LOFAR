@@ -30,6 +30,7 @@
 
 #include "ABSBeam.h"
 #include "ABSBeamlet.h"
+#include "ABSConstants.h"
 
 #include <iostream>
 #include <time.h>
@@ -56,7 +57,6 @@ using namespace boost::gregorian;
 #define MAX_N_SPECTRAL_WINDOWS 1
 #define COMPUTE_INTERVAL 10
 #define UPDATE_INTERVAL  1
-#define N_SIGNALS (N_ELEMENTS * N_POLARIZATIONS)
 
 #define SCALE (1<<(16-2))
 
@@ -64,7 +64,7 @@ static Array<std::complex<int16_t>, 4> zero_weights;
 
 BeamServerTask::BeamServerTask(string name)
     : GCFTask((State)&BeamServerTask::initial, name),
-      m_pos(N_SIGNALS, 3),
+      m_pos(N_ELEMENTS, N_POLARIZATIONS, 3),
       m_weights(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS),
       m_weights16(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS),
       board(*this, "board", GCFPortInterface::SAP, true)
@@ -74,9 +74,9 @@ BeamServerTask::BeamServerTask(string name)
   client.init(*this, "client", GCFPortInterface::SPP, ABS_PROTOCOL);
   //board.init(*this, "board", GCFPortInterface::SAP, EPA_PROTOCOL, true);
 
-  (void)Beam::init(ABS_Protocol::N_BEAMLETS,
+  (void)Beam::init(ABS::N_BEAMLETS,
 		   UPDATE_INTERVAL, COMPUTE_INTERVAL);
-  (void)Beamlet::init(ABS_Protocol::N_SUBBANDS);
+  (void)Beamlet::init(ABS::N_SUBBANDS);
 
   m_wgsetting.frequency     = 1e6; // 1MHz
   m_wgsetting.amplitude     = 128;
@@ -85,9 +85,9 @@ BeamServerTask::BeamServerTask(string name)
 
   // initialize antenna positions
   Range all = Range::all();
-  m_pos(all, 0) = 1.0;
-  m_pos(all, 1) = 1.0;
-  m_pos(all, 2) = 0.0;
+  m_pos(all, all, 0) = 1.0;
+  m_pos(all, all, 1) = 1.0;
+  m_pos(all, all, 2) = 0.0;
 
   // initialize weight matrix
   m_weights   = complex<W_TYPE>(0,0);
@@ -107,8 +107,8 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
       {
 	  // create a default spectral window from 0MHz to 20MHz
 	  // steps of 256kHz
-	  SpectralWindow* spw = new SpectralWindow(1e6, 20e6/ABS_Protocol::N_BEAMLETS,
-						   ABS_Protocol::N_BEAMLETS);
+	  SpectralWindow* spw = new SpectralWindow(1e6, 20e6/ABS::N_BEAMLETS,
+						   ABS::N_BEAMLETS);
 	  m_spws[0] = spw;
       }
       break;
@@ -433,8 +433,9 @@ void BeamServerTask::wgsettings_action(ABSWgsettingsEvent* wgs,
 {
   ABSWgsettings_AckEvent sa(SUCCESS);
 
+  // max allowed frequency = 20MHz
   if ((wgs->frequency >= 1.0e-6)
-      && (wgs->frequency <= 80.0e6))
+      && (wgs->frequency <= ABS::SYSTEM_CLOCK_FREQUENCY/4.0))
   {
       m_wgsetting.frequency     = wgs->frequency;
       m_wgsetting.amplitude     = wgs->amplitude;
@@ -533,7 +534,10 @@ void BeamServerTask::compute_timeout_action(long current_seconds)
   Range all = Range::all();
   cout << "m_weights=" << m_weights(0, 0, all, all) << endl;
 
+  //
   // need complex conjugate of the weights
+  // as 16bit signed interger to send to the board
+  //
   m_weights16 = convert2complex_int16_t(conj(m_weights));
 
   LOG_DEBUG(formatString("m_weights16 contiguous storage? %s", (m_weights16.isStorageContiguous()?"yes":"no")));
@@ -564,16 +568,22 @@ void BeamServerTask::send_weights(int period)
 	  weights = m_weights16(period, ant, all, all);
 
 	  if (pol == 0) {
-	      weights(all, Range(0,toEnd,2)) = complex<int16_t>(0,0);
+	    // only send x-polarization weights
+	    weights(all, Range(0,toEnd,2)) = complex<int16_t>(0,0);
 	  } else if (pol == 1) {
-	      weights *= complex<int16_t>(0,1);
+	    // only send x-polarization weights (*i)
+	    weights *= complex<int16_t>(0,1);
+	    weights(all, Range(0,toEnd,2)) = complex<int16_t>(0,0);
 	  } else if (pol == 2) {
-	      weights(all, Range(1,toEnd,2)) = complex<int16_t>(0,0);
+	    // only send y-polarization weights
+	    weights(all, Range(1,toEnd,2)) = complex<int16_t>(0,0);
 	  } else if (pol == 3) {
-	      weights *= complex<int16_t>(0,1);
+	    // only send y-polarization weights (*i)	    
+	    weights *= complex<int16_t>(0,1);
+	    weights(all, Range(1,toEnd,2)) = complex<int16_t>(0,0);
 	  }
 
-	  bc.phasepol = pol * ant;
+	  bc.phasepol = pol;
 	  board.send(GCFEvent(F_RAW_SIG), &bc.command, bc.pktsize);
       }
   }

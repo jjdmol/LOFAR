@@ -230,7 +230,7 @@ int Beam::convertPointings(time_period period)
 	  // insert converted LM coordinate at correct 
 	  // position in the m_lmns array
 	  //
-	  time_duration t = pointing.time() - period.begin();
+	  //time_duration t = pointing.time() - period.begin();
 	  register int tsec = (pointing.time()-period.begin()).seconds();
 
 	  if ( (tsec < 0) || (tsec >= m_compute_interval) )

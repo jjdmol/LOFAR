@@ -10,18 +10,11 @@ prefix = "EPA"; // for the signal names
 // e.g.
 include = '<sys/time.h>';
 include = '<linux/types.h>';
-include = '"ABS_Protocol.ph"';
+include = '"ABSConstants.h"';
 
 prelude = << PRELUDE_END
 enum {
 	EPA_PROTOCOL = F_APL_PROTOCOL + 11
-};
-
-namespace EPA_Protocol
-{
-	static double const SYSTEM_CLOCK_FREQ = 80e6; // 80 MHz
-	static int const N_ELEMENTS      = 1;
-	static int const N_POLARIZATIONS = 2;
 };
 
 PRELUDE_END;
@@ -57,7 +50,7 @@ event = {
       param = {
 	    name = "bands";
 	    type = "unsigned char";
-	    dim = N_BEAMLETS*2;
+	    dim = "ABS::N_BEAMLETS*2";
       };
 };
 
@@ -172,7 +165,7 @@ event = {
 	    // beamformer weights
 	    name = "coeff";
 	    type = "int16_t";
-	    dim = "N_BEAMLETS * N_POLARIZATIONS * 2";
+	    dim = "ABS::N_BEAMLETS * ABS::N_POLARIZATIONS * 2";
       };
 };
 
