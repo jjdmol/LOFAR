@@ -32,4 +32,8 @@
   	<MACType> MACInteger  </MACType> 
   	<MACDefault> 1 </MACDefault> 
  	</power>
+  <frequency>      <!-- used by PVSS panels -->
+  	<MACType> MACDouble  </MACType> 
+  	<MACDefault> 110.0 </MACDefault> 
+ 	</frequency>
 </StationReceptorGroup>

@@ -125,7 +125,7 @@ const TPropertySet PROPSET_PIC =
 
 const TProperty PROPS_Rack[] =
 {
-  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP, "0"},
+  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READWRITE_PROP, "0"},
 };
 
 const TPropertySet PROPSET_Racks[] = 
