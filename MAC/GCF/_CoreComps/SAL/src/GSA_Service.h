@@ -36,52 +36,70 @@ class Variable;
 class CharString;
 class DpIdentifier;
 
+/**
+ * This is the abstract class, which provides the possibility to invoke all 
+ * typical SCADA methods and handle their responses. By means of specialisation 
+ * of this abstract class and instantiation on different places in the same 
+ * application it becomes possible to subscribe (for instance) on the same 
+ * property, which results in a separate valueChanged response per specialised 
+ * instance. 
+ * @see GSAWaitForAnswer
+ */
 class GSAService
 {
   public:
-    GSAService();
-    virtual ~GSAService();
+    GSAService ();
+    virtual ~GSAService ();
 
   protected:
-    virtual TSAResult createProp(const string& propName, 
-                                 GCFPValue::TMACValueType macType);
-    virtual TSAResult deleteProp(const string& propName);
-    virtual TSAResult subscribe(const string& propName);
-    virtual TSAResult unsubscribe(const string& propName);
-    virtual TSAResult get(const string& propName);
-    virtual TSAResult set(const string& propName, const GCFPValue& value);
-    virtual bool exists(const string& propName);
+    virtual TSAResult createProp (const string& propName, 
+                                  GCFPValue::TMACValueType macType);
+    virtual TSAResult deleteProp (const string& propName);
+    virtual TSAResult subscribe (const string& propName);
+    virtual TSAResult unsubscribe (const string& propName);
+    virtual TSAResult get (const string& propName);
+    virtual TSAResult set (const string& propName, 
+                           const GCFPValue& value);
+    virtual bool exists (const string& propName);
     
-    virtual void propCreated(const string& propName) = 0;
-    virtual void propDeleted(const string& propName) = 0;
-    virtual void propSubscribed(const string& propName) = 0;
-    virtual void propUnsubscribed(const string& propName) = 0;
-    virtual void propValueGet(const string& propName, const GCFPValue& value) = 0;
-    virtual void propValueChanged(const string& propName, const GCFPValue& value) = 0;
+    virtual void propCreated (const string& propName) = 0;
+    virtual void propDeleted (const string& propName) = 0;
+    virtual void propSubscribed (const string& propName) = 0;
+    virtual void propUnsubscribed (const string& propName) = 0;
+    virtual void propValueGet (const string& propName, 
+                               const GCFPValue& value) = 0;
+    virtual void propValueChanged (const string& propName, 
+                                   const GCFPValue& value) = 0;
         
   private: // methods
     // interface for GSAWaitForAnswer
-    void handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer& wait);
-    void handleHotLink(const DpHLGroup& group);
+    void handleHotLink (const DpMsgAnswer& answer, 
+                        const GSAWaitForAnswer& wait);
+    void handleHotLink (const DpHLGroup& group);
     friend class GSAWaitForAnswer;
   
   private:  
     // helper methods to convert PVSS dpTypes to MAC types and visa versa
-    TSAResult convertPVSSToMAC(const Variable& variable, 
-                          const CharString& typeName, 
-                          GCFPValue** pMacValue) const;
+    TSAResult convertPVSSToMAC (const Variable& variable, 
+                                const CharString& typeName, 
+                                GCFPValue** pMacValue) const;
                           
-    TSAResult convertMACToPVSS(const GCFPValue& macValue, Variable** pVar) const;
-    bool getPVSSType(GCFPValue::TMACValueType macType, CharString& pvssTypeName) const;
+    TSAResult convertMACToPVSS (const GCFPValue& macValue, 
+                                Variable** pVar) const;
+    bool getPVSSType (GCFPValue::TMACValueType macType, 
+                      CharString& pvssTypeName) const;
 
     // helper methods
-    TSAResult getDpId(const string& dpName, DpIdentifier& dpId) const;
-    void convPropToDpConfig(const string& propName, string& pvssDpName, bool read);
-    void convDpConfigToProp(const string& pvssDPEConfigName, string& propName);    
+    TSAResult getDpId (const string& dpName, 
+                       DpIdentifier& dpId) const;
+    void convPropToDpConfig (const string& propName, 
+                             string& pvssDpName, 
+                             bool read);
+    void convDpConfigToProp (const string& pvssDPEConfigName, 
+                             string& propName);    
 
   private: // data members    
     GSAWaitForAnswer* _pWFA;
-    int _error;
 };                                 
 
 #endif

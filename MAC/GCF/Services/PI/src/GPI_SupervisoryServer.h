@@ -1,4 +1,4 @@
-//#  GPI_SupervisoryServer.h: 
+//#  GPI_SupervisoryServer.h: representation of a Supervisory Server in a ERTC env.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -32,44 +32,56 @@
 class GCFEvent;
 class GPIController;
 class GCFPValue;
-
+/**
+ * This class represents and manages the connection with a Supervisory Server 
+ * (part of ERTC framework). It acts as a PML with no owned properties. The 
+ * properties and scopes are 'managed' by the SS and its connected ERTC tasks.
+ */
 class GPISupervisoryServer : public GCFTask
 {
 	public:
-		GPISupervisoryServer(GPIController& controller);
-		virtual ~GPISupervisoryServer();
+		GPISupervisoryServer (GPIController& controller);
+		virtual ~GPISupervisoryServer ();
       
   public: // call back methods for the GPIPropertyProxy
-    void propSubscribed(const string& propName);
-    void propUnsubscribed(const string& propName);
-    void propValueChanged(const string& propName, const GCFPValue& value);
+    void propSubscribed (const string& propName);
+    void propUnsubscribed (const string& propName);
+    void propValueChanged (const string& propName, const GCFPValue& value);
     
 	private: // helper methods
-    void registerScope(const string& scope);
-    void subscribe(char* data, bool onOff);
-    void unpackPropertyList(
-        char* pListData, 
-        unsigned int listDataLength,
-        list<string>& propertyList);
-    TPIResult unLinkProperties(list<string>& properties, bool onOff);
+    void registerScope (const string& scope);
+    void subscribe (char* data, bool onOff);
+    void unpackPropertyList (char* pListData, 
+                             unsigned int listDataLength,
+                             list<string>& propertyList);
+    TPIResult unLinkProperties (list<string>& properties, 
+                                bool onOff);
     void localValueChanged(GCFEvent& e);
     
 	private: // state methods
-		GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-		GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult operational(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult closing(GCFEvent& e, GCFPortInterface& p);
+		GCFEvent::TResult initial     (GCFEvent& e, GCFPortInterface& p);
+		GCFEvent::TResult connected   (GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult operational (GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult closing     (GCFEvent& e, GCFPortInterface& p);
+    
+  private: // helper methods
+    GPISupervisoryServer();
+    /**
+     * Don't allow copying of this object.
+     */
+    GPISupervisoryServer (const GPISupervisoryServer&);
+    GPISupervisoryServer& operator= (const GPISupervisoryServer&);
 
 	private: // data members
 		GCFTCPPort        _ssPort;
     GCFTCPPort        _propertyAgent;
-    GPIController&     _controller;
+    GPIController&    _controller;
     GPIPropertyProxy  _propProxy;
     string            _name;
     
   private: // admin. data members
-    bool _isBusy;
-    unsigned int _counter;
+    bool          _isBusy;
+    unsigned int  _counter;
 };
 
 #endif

@@ -19,7 +19,7 @@ DOCHDRS	=	\
   SS/FPStringValue.h \
   SS/FPDynArrValue.h
     
-lib_LTLIBRARIES 	= libpi.la
+noinst_LTLIBRARIES 	= libpi.la
 
 libpi_la_SOURCES= $(DOCHDRS) \
   GPI_Controller.cc \
@@ -50,11 +50,6 @@ EXTRA_DIST = \
 	mac.top \
 	log4cplus.properties
 	
-pkgdata_DATA = \
-	mac.ns \
-	mac.top \
-	log4cplus.properties
-
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 	

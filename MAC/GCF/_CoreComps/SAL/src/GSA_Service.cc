@@ -115,6 +115,7 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
             varPtr = pAnItem->getValuePtr();
             if (varPtr)      // could be NULL !!
             {
+              TSAResult result;
               if (Manager::getTypeName(pAnItem->getDpIdentifier().getDpType(), 
                                         pvssTypeName) == PVSS_FALSE)
               {
@@ -122,12 +123,12 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
                     "PVSS: Could not get dpTypeName '%d'", 
                     pAnItem->getDpIdentifier().getDpType()));   
               }
-              else if (convertPVSSToMAC(*varPtr, pvssTypeName, 
-                                        &pPropertyValue) != SA_NO_ERROR)
+              else if ((result = convertPVSSToMAC(*varPtr, pvssTypeName, 
+                                        &pPropertyValue)) != SA_NO_ERROR)
               {
                 LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
-                    "Could not convert PVSS DP (%d) to MAC property", 
-                    (const char*)pvssTypeName));   
+                    "Could not convert PVSS DP (%s) to MAC property (res=%d)", 
+                    (const char*)pvssTypeName, result));
               }
               else
               {
@@ -622,42 +623,42 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
                                   GCFPValue** pMacValue) const
 {
   TSAResult result(SA_NO_ERROR);
-  if (typeName == "BOOL_VAL")
+  if (typeName == "LPT_BOOL")
   {
     if (variable.isA() == BIT_VAR)
       *pMacValue = new GCFPVBool(((BitVar *)&variable)->getValue());
     else
       result = SA_VARIABLE_WRONG_TYPE;
   }
-  else if (typeName == "CHAR_VAL")
+  else if (typeName == "LPT_CHAR")
   {
     if (variable.isA() == CHAR_VAR)
       *pMacValue = new GCFPVChar(((CharVar *)&variable)->getValue());
     else
       result = SA_VARIABLE_WRONG_TYPE;
   }
-  else if (typeName == "UNSIGNED_VAL")
+  else if (typeName == "LPT_UNSIGNED")
   {
     if (variable.isA() == UINTEGER_VAR)
       *pMacValue = new GCFPVUnsigned(((UIntegerVar *)&variable)->getValue());
     else
       result = SA_VARIABLE_WRONG_TYPE;
   }
-  else if (typeName == "INTEGER_VAL")
+  else if (typeName == "LPT_INTEGER")
   {
     if (variable.isA() == INTEGER_VAR)
       *pMacValue = new GCFPVInteger(((IntegerVar *)&variable)->getValue());
     else
       result = SA_VARIABLE_WRONG_TYPE;
   }
-  else if (typeName == "DOUBLE_VAL")
+  else if (typeName == "LPT_DOUBLE")
   {
     if (variable.isA() == FLOAT_VAR)
       *pMacValue = new GCFPVDouble(((FloatVar *)&variable)->getValue());
     else
       result = SA_VARIABLE_WRONG_TYPE;     
   }
-  else if (typeName == "STRING_VAL")
+  else if (typeName == "LPT_STRING")
   {
     if (variable.isA() == TEXT_VAR)
       *pMacValue = new GCFPVString(((TextVar *)&variable)->getValue());
@@ -671,28 +672,28 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
     {
       GCFPValueArray arrayTo;
       GCFPValue* pItemValue(0);
-      GCFPValue::TMACValueType type(GCFPValue::NO_VAL);
+      GCFPValue::TMACValueType type(GCFPValue::NO_LPT);
       // the type for the new FPValue must be determined 
       // separate, because the array could be empty
       switch (DynVar::getItemType(pDynVar->isA()))
       {
         case BIT_VAR:
-          type = GCFPValue::DYNBOOL_VAL;
+          type = GCFPValue::LPT_DYNBOOL;
           break;
         case CHAR_VAR:
-          type = GCFPValue::DYNCHAR_VAL;
+          type = GCFPValue::LPT_DYNCHAR;
           break;
         case INTEGER_VAR:
-          type = GCFPValue::DYNINTEGER_VAL;
+          type = GCFPValue::LPT_DYNINTEGER;
           break;
         case UINTEGER_VAR:
-          type = GCFPValue::DYNUNSIGNED_VAL;
+          type = GCFPValue::LPT_DYNUNSIGNED;
           break;
         case FLOAT_VAR:
-          type = GCFPValue::DYNDOUBLE_VAL;
+          type = GCFPValue::LPT_DYNDOUBLE;
           break;
         case TEXT_VAR:
-          type = GCFPValue::DYNSTRING_VAL;
+          type = GCFPValue::LPT_DYNSTRING;
           break;
       }
       for (Variable* pVar = pDynVar->getFirst();
@@ -728,15 +729,15 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
   {
     *pMacValue = new GCFPVBit32(((Bit32Var *)&variable)->getValue());
   }
-  else if (typeName == "REF_VAL")
+  else if (typeName == "LPT_REF")
   {
     *pMacValue = new GCFPVRef(((TextVar *)&variable)->getValue());
   }
-  else if (typeName == "BLOB_VAL")
+  else if (typeName == "LPT_BLOB")
   {
     *pMacValue = new GCFPVBlob(((BlobVar *)&variable)->getValue());
   }
-  else if (typeName == "DATETIME_VAL")
+  else if (typeName == "LPT_DATETIME")
   {
     *pMacValue = new GCFPVDateTime(((TimeVar *)&variable)->getValue());
   }*/
@@ -753,39 +754,39 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
   TSAResult result(SA_NO_ERROR);
   switch (macValue.getType())
   {
-    case GCFPValue::BOOL_VAL:
+    case GCFPValue::LPT_BOOL:
       *pVar = new BitVar(((GCFPVBool*)&macValue)->getValue());
       break;
-    case GCFPValue::CHAR_VAL:
+    case GCFPValue::LPT_CHAR:
       *pVar = new CharVar(((GCFPVChar*)&macValue)->getValue());
       break;
-    case GCFPValue::UNSIGNED_VAL:
+    case GCFPValue::LPT_UNSIGNED:
       *pVar = new UIntegerVar(((GCFPVUnsigned*)&macValue)->getValue());
       break;
-    case GCFPValue::INTEGER_VAL:
+    case GCFPValue::LPT_INTEGER:
       *pVar = new IntegerVar(((GCFPVInteger*)&macValue)->getValue());
       break;
-    case GCFPValue::DOUBLE_VAL:
+    case GCFPValue::LPT_DOUBLE:
       *pVar = new FloatVar(((GCFPVDouble*)&macValue)->getValue());
       break;
-    case GCFPValue::STRING_VAL:
+    case GCFPValue::LPT_STRING:
       *pVar = new TextVar(((GCFPVString*)&macValue)->getValue().c_str());
       break;
-/*    case GCFPValue::REF_VAL:
+/*    case GCFPValue::LPT_REF:
       *pVar = new TextVar(((GCFPVRef*)&macValue)->getValue());
       break;
-    case GCFPValue::BLOB_VAL:
+    case GCFPValue::LPT_BLOB:
       *pVar = new BlobVar(((GCFPVBlob*)&macValue)->getValue());
       break;
-    case GCFPValue::DATETIME_VAL:
+    case GCFPValue::LPT_DATETIME:
       *pVar = new TimeVar(((GCFPVDateTime*)&macValue)->getValue());
       break;
     case GCFPValue::BIT32_VAL:
       *pVar = new Bit32Var(((GCFPVBit32 *)&macValue)->getValue());
       break;*/
     default:
-      if (macValue.getType() > GCFPValue::DYNARR_VAL && 
-          macValue.getType() <= GCFPValue::DYNSTRING_VAL)
+      if (macValue.getType() > GCFPValue::LPT_DYNARR && 
+          macValue.getType() <= GCFPValue::LPT_DYNSTRING)
       {        
         Variable* pItemValue;
         VariableType type(NOTYPE_VAR);
@@ -793,22 +794,22 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
         // separat, because the array could be empty
         switch (macValue.getType())
         {
-          case GCFPValue::DYNBOOL_VAL:
+          case GCFPValue::LPT_DYNBOOL:
             type = BIT_VAR;
             break;
-          case GCFPValue::DYNCHAR_VAL:
+          case GCFPValue::LPT_DYNCHAR:
             type = CHAR_VAR;
             break;
-          case GCFPValue::DYNINTEGER_VAL:
+          case GCFPValue::LPT_DYNINTEGER:
             type = INTEGER_VAR;
             break;
-          case GCFPValue::DYNUNSIGNED_VAL:
+          case GCFPValue::LPT_DYNUNSIGNED:
             type = UINTEGER_VAR;
             break;
-          case GCFPValue::DYNDOUBLE_VAL:
+          case GCFPValue::LPT_DYNDOUBLE:
             type = FLOAT_VAR;
             break;
-          case GCFPValue::DYNSTRING_VAL:
+          case GCFPValue::LPT_DYNSTRING:
             type = TEXT_VAR;
             break;
         }
@@ -821,22 +822,22 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
           pValue = (*iter);
           switch (pValue->getType())
           {
-            case GCFPValue::BOOL_VAL:
+            case GCFPValue::LPT_BOOL:
               pItemValue  = new BitVar(((GCFPVBool*)pValue)->getValue());
               break;
-            case GCFPValue::CHAR_VAL:
+            case GCFPValue::LPT_CHAR:
               pItemValue  = new CharVar(((GCFPVChar*)pValue)->getValue());
               break;
-            case GCFPValue::INTEGER_VAL:
+            case GCFPValue::LPT_INTEGER:
               pItemValue  = new IntegerVar(((GCFPVInteger*)pValue)->getValue());
               break;
-            case GCFPValue::UNSIGNED_VAL:
+            case GCFPValue::LPT_UNSIGNED:
               pItemValue  = new UIntegerVar(((GCFPVUnsigned*)pValue)->getValue());
               break;
-            case GCFPValue::DOUBLE_VAL:
+            case GCFPValue::LPT_DOUBLE:
               pItemValue  = new FloatVar(((GCFPVDouble*)pValue)->getValue());
               break;
-            case GCFPValue::STRING_VAL:
+            case GCFPValue::LPT_STRING:
               pItemValue  = new TextVar(((GCFPVString*)pValue)->getValue().c_str());
               break;
           }
@@ -857,41 +858,41 @@ bool GSAService::getPVSSType(GCFPValue::TMACValueType macType,
 {
   switch (macType)
   {
-    case GCFPValue::BOOL_VAL:
-      pvssTypeName = "BOOL_VAL";
+    case GCFPValue::LPT_BOOL:
+      pvssTypeName = "LPT_BOOL";
       break;
-    case GCFPValue::CHAR_VAL:
-      pvssTypeName = "CHAR_VAL";
+    case GCFPValue::LPT_CHAR:
+      pvssTypeName = "LPT_CHAR";
       break;
-    case GCFPValue::UNSIGNED_VAL:
-      pvssTypeName = "UNSIGNED_VAL";
+    case GCFPValue::LPT_UNSIGNED:
+      pvssTypeName = "LPT_UNSIGNED";
       break;
-    case GCFPValue::INTEGER_VAL:
-      pvssTypeName = "INTEGER_VAL";
+    case GCFPValue::LPT_INTEGER:
+      pvssTypeName = "LPT_INTEGER";
       break;
-    case GCFPValue::DOUBLE_VAL:
-      pvssTypeName = "DOUBLE_VAL";
+    case GCFPValue::LPT_DOUBLE:
+      pvssTypeName = "LPT_DOUBLE";
       break;
-    case GCFPValue::STRING_VAL:
-      pvssTypeName = "STRING_VAL";
+    case GCFPValue::LPT_STRING:
+      pvssTypeName = "LPT_STRING";
       break;
-    case GCFPValue::DYNBOOL_VAL:
-      pvssTypeName = "DYNBOOL_VAL";
+    case GCFPValue::LPT_DYNBOOL:
+      pvssTypeName = "LPT_DYNBOOL";
       break;
-    case GCFPValue::DYNCHAR_VAL:
-      pvssTypeName = "DYNCHAR_VAL";
+    case GCFPValue::LPT_DYNCHAR:
+      pvssTypeName = "LPT_DYNCHAR";
       break;
-    case GCFPValue::DYNUNSIGNED_VAL:
-      pvssTypeName = "DYNUNSIGNED_VAL";
+    case GCFPValue::LPT_DYNUNSIGNED:
+      pvssTypeName = "LPT_DYNUNSIGNED";
       break;
-    case GCFPValue::DYNINTEGER_VAL:
-      pvssTypeName = "DYNINTEGER_VAL";
+    case GCFPValue::LPT_DYNINTEGER:
+      pvssTypeName = "LPT_DYNINTEGER";
       break;
-    case GCFPValue::DYNDOUBLE_VAL:
-      pvssTypeName = "DYNDOUBLE_VAL";
+    case GCFPValue::LPT_DYNDOUBLE:
+      pvssTypeName = "LPT_DYNDOUBLE";
       break;
-    case GCFPValue::DYNSTRING_VAL:
-      pvssTypeName = "DYNSTRING_VAL";
+    case GCFPValue::LPT_DYNSTRING:
+      pvssTypeName = "LPT_DYNSTRING";
       break;
     default:
       return false;

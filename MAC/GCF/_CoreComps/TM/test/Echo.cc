@@ -35,9 +35,9 @@ Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
   server.init(*this, "server", GCFPortInterface::SPP, ECHO_PROTOCOL);
 }
 
-int Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
     {
@@ -49,7 +49,7 @@ int Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
       break;
 
     case F_CONNECTED_SIG:
-      TRAN(&Echo::connected);
+      TRAN(Echo::connected);
       break;
 
     case F_DISCONNECTED_SIG:
@@ -68,15 +68,15 @@ int Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
-int Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
     {
     case F_DISCONNECTED_SIG:
       cout << "Lost connection to client" << endl;
-      TRAN(&Echo::initial);
+      TRAN(Echo::initial);
       break;
 
     case ECHO_PING:

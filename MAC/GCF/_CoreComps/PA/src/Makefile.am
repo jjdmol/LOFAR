@@ -12,7 +12,7 @@ DOCHDRS	=	\
 	GPA_Defines.h \
 	GPA_APC.h
 
-lib_LTLIBRARIES 	= libpa.la
+noinst_LTLIBRARIES 	= libpa.la
 
 libpa_la_SOURCES= $(DOCHDRS) \
 	GPA_Controller.cc \
@@ -28,7 +28,10 @@ PropertyAgent_LDADD		      = libpa.la
 PropertyAgent_DEPENDENCIES	= libpa.la $(LOFAR_DEPEND)
 
 BUILT_SOURCES = \
-	PA_Protocol.ph
+	PA_Protocol.ph \
+	mac.ns \
+	mac.top \
+	log4cplus.properties
 
 EXTRA_DIST = \
 	PA_Protocol.ph \
@@ -36,11 +39,6 @@ EXTRA_DIST = \
 	mac.top \
 	log4cplus.properties
 	
-pkgdata_DATA = \
-	mac.ns \
-	mac.top \
-	log4cplus.properties
-
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 	

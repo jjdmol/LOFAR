@@ -24,9 +24,9 @@
 #include "GCF_PVString.h"
 
 /** No descriptions */
-TSAResult GCFPVString::setValue(const string value)
+TGCFResult GCFPVString::setValue(const string value)
 {
-  TSAResult result(SA_NO_ERROR);
+  TGCFResult result(GCF_NO_ERROR);
 
   _value = value;
   
@@ -41,14 +41,14 @@ GCFPValue* GCFPVString::clone() const
 }
 
 /** No descriptions */
-TSAResult GCFPVString::copy(const GCFPValue& newVal)
+TGCFResult GCFPVString::copy(const GCFPValue& newVal)
 {
-  TSAResult result(SA_NO_ERROR);
+  TGCFResult result(GCF_NO_ERROR);
 
   if (newVal.getType() == getType())
     _value = ((GCFPVString *)&newVal)->getValue();
   else
-    result = SA_DIFFERENT_TYPES;
+    result = GCF_DIFFERENT_TYPES;
   
   return result;
 }

@@ -24,9 +24,9 @@
 #include "GCF_PVChar.h"
 
 /** No descriptions */
-TSAResult GCFPVChar::setValue(const string valueData)
+TGCFResult GCFPVChar::setValue(const string valueData)
 {
-  TSAResult result(SA_NO_ERROR);
+  TGCFResult result(GCF_NO_ERROR);
   
   if (valueData.length() == 1)
   {
@@ -41,13 +41,13 @@ TSAResult GCFPVChar::setValue(const string valueData)
       if (value <= 0xFF || value >= -127)
         _value = value;
       else
-        result = SA_VALUESTRING_NOT_VALID;      
+        result = GCF_VALUESTRING_NOT_VALID;      
     }
     else
-      result = SA_VALUESTRING_NOT_VALID;
+      result = GCF_VALUESTRING_NOT_VALID;
   }
   else
-    result = SA_VALUESTRING_NOT_VALID;
+    result = GCF_VALUESTRING_NOT_VALID;
   
   return result;
 }
@@ -60,14 +60,14 @@ GCFPValue* GCFPVChar::clone() const
 }
 
 /** No descriptions */
-TSAResult GCFPVChar::copy(const GCFPValue& newVal)
+TGCFResult GCFPVChar::copy(const GCFPValue& newVal)
 {
-  TSAResult result(SA_NO_ERROR);
+  TGCFResult result(GCF_NO_ERROR);
 
   if (newVal.getType() == getType())
     _value = ((GCFPVChar *)&newVal)->getValue();
   else
-    result = SA_DIFFERENT_TYPES;
+    result = GCF_DIFFERENT_TYPES;
   
   return result;
 }

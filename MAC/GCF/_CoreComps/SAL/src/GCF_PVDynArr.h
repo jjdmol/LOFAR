@@ -1,4 +1,4 @@
-//#  GCF_PVDynArr.h: 
+//#  GCF_PVDynArr.h: MAC dynamic array property type
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,10 +23,20 @@
 #ifndef GCF_PVDYNARR_H
 #define GCF_PVDYNARR_H
 
-#include "GCF_PValue.h"
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_SAL
+#include <SAL/GCF_PValue.h>
+#else
+#include <GCF_PValue.h>
+#endif
 #include <Common/lofar_vector.h>
 
 typedef vector<GCFPValue*> GCFPValueArray;
+
+/**
+ * By means of this complex property type a dynamic list of property values of 
+ * the same simple type can be managed.
+ */
 
 class GCFPVDynArr : public GCFPValue
 {
@@ -34,22 +44,33 @@ class GCFPVDynArr : public GCFPValue
   	GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val);
     GCFPVDynArr(TMACValueType itemType);
   	virtual ~GCFPVDynArr();
-    /** Write property of list value_. */
+
+    /** Changes the value of this object */
     virtual void setValue(const GCFPValueArray& newVal);
-    /** No descriptions */
-    virtual TSAResult setValue(const string value);
-    /** Read property of list value_. */
+
+    /** 
+     * Changes the value of this object by means of a stringbuffer, 
+     * which will be translated.
+     * NOT YET IMPLEMENTED
+     * @see GCFPValue::setValue(const string value)
+     */
+    virtual TGCFResult setValue(const string value);
+
+    /** Returns the value of this object*/
     virtual inline const GCFPValueArray& getValue() const {return _values;}
-    /** No descriptions */
+
+    /** @see GCFPValue::clone() */
     virtual GCFPValue* clone() const;
-    /** No descriptions */
-    virtual TSAResult copy(const GCFPValue& value);
+
+    /** @see GCFPValue::copy() */
+    virtual TGCFResult copy(const GCFPValue& value);
   
   private: // help members
+    /** cleanup the array item objects */
     void cleanup();
     
   private: // Private attributes
-    /**  */
+    /**  The values*/
     GCFPValueArray _values;
 };
 #endif

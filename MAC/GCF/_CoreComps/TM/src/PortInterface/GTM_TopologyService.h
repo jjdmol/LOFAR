@@ -29,28 +29,31 @@
 // forward declaration
 class GTMConfig; 
 class GCFPeerAddr;
-
+/**
+ * This singleton class provides the possibility to load the topology of all 
+ * used ports on a host.
+ */
 class GTMTopologyService
 {
   public:
-    static GTMTopologyService* instance();
+    static GTMTopologyService* instance ();
 
-    virtual ~GTMTopologyService();
+    virtual ~GTMTopologyService ();
     
-    int init(const char* top_config_file);
+    int init (const char* top_config_file);
     
-    int getPeerAddr(const string& localtaskname,
-    	  string& localportname,
-    	  GCFPeerAddr& peeraddr);
+    int getPeerAddr (const string& localtaskname,
+                	   string& localportname,
+                	   GCFPeerAddr& peeraddr);
 
   private:
-    GTMTopologyService();
+    GTMTopologyService ();
     
     /**
      * Don't allow copying of the GTMTopologyService object.
      */
-    GTMTopologyService(const GTMTopologyService&);
-    GTMTopologyService& operator=(const GTMTopologyService&);
+    GTMTopologyService (const GTMTopologyService&);
+    GTMTopologyService& operator= (const GTMTopologyService&);
 
   private:
     static GTMTopologyService* _pInstance;

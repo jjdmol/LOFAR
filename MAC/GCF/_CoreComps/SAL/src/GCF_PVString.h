@@ -1,4 +1,4 @@
-//#  GCF_PVString.h: 
+//#  GCF_PVString.h: MAC string property type
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,24 +23,37 @@
 #ifndef GCF_PVSTRING_H
 #define GCF_PVSTRING_H
 
-#include "GCF_PValue.h"
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_SAL
+#include <SAL/GCF_PValue.h>
+#else
+#include <GCF_PValue.h>
+#endif
 
+/**
+ * By means of this property type a zero terminated string (max. length ~30.000 
+ * characters) value can be used.
+ */
 class GCFPVString : public GCFPValue
 {
   public:
-  	GCFPVString(string val = "") : GCFPValue(STRING_VAL), _value(val) {;}
+  	GCFPVString(string val = "") : GCFPValue(LPT_STRING), _value(val) {;}
   	virtual ~GCFPVString() {;}
-    /** No descriptions */
-    virtual TSAResult setValue(const string value);
-    /** Read property of string value. */
+    
+    /** Changes the value of this object */
+    virtual TGCFResult setValue(const string value);
+
+    /** Returns the value of this object*/
     virtual inline const string& getValue() const {return _value;}
-    /** No descriptions */
+
+    /** @see GCFPValue::clone() */
     virtual GCFPValue* clone() const;
-    /** No descriptions */
-    virtual TSAResult copy(const GCFPValue& value);
+
+    /** @see GCFPValue::copy() */
+    virtual TGCFResult copy(const GCFPValue& value);
  
   private: // Private attributes
-    /**  */
+    /** The value*/
     string _value;
 };
 #endif

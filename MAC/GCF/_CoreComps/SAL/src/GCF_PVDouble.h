@@ -1,4 +1,4 @@
-//#  GCF_PVDouble.h: 
+//#  GCF_PVDouble.h: MAC double property type 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,24 +23,42 @@
 #ifndef GCF_PVDOUBLE_H
 #define GCF_PVDOUBLE_H
 
-#include "GCF_PValue.h"
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_SAL
+#include <SAL/GCF_PValue.h>
+#else
+#include <GCF_PValue.h>
+#endif
 
+/**
+ * By means of this property type a double value (-3.4*10^38 to 3.4*10^38) can 
+ * be used.
+ */
+ 
 class GCFPVDouble : public GCFPValue
 {
   public: 
-  	GCFPVDouble(double val = 0.0) : GCFPValue(DOUBLE_VAL), _value(val) {;}
-  	virtual ~GCFPVDouble() {;}
+  	GCFPVDouble (double val = 0.0) : GCFPValue(LPT_DOUBLE), _value(val) {;}
+  	virtual ~GCFPVDouble () {;}
     
-    /** Write property of float value_. */
-    inline void setValue( const double newVal) {_value = newVal;};
-    /** No descriptions */
-    virtual TSAResult setValue(const string value);
-    /** Read property of float value_. */
-    inline double getValue() const {return _value;};
-    /** No descriptions */
-    virtual GCFPValue* clone() const;
-    /** No descriptions */
-    virtual TSAResult copy(const GCFPValue& value);
+    /** Changes the value of this object */
+    inline void setValue ( const double newVal) {_value = newVal;};
+
+    /** 
+     * Changes the value of this object by means of a stringbuffer, 
+     * which will be translated.
+     * @see GCFPValue::setValue(const string value)
+     */
+    virtual TGCFResult setValue (const string value);
+
+    /** Returns the value of this object*/
+    inline double getValue () const {return _value;};
+
+    /** @see GCFPValue::clone() */
+    virtual GCFPValue* clone () const;
+
+    /** @see GCFPValue::copy() */
+    virtual TGCFResult copy (const GCFPValue& value);
     
   private: // Private attributes
     /**  */

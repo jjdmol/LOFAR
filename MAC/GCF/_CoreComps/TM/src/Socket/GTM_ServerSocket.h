@@ -23,44 +23,51 @@
 #ifndef GTM_SERVERSOCKET_H
 #define GTM_SERVERSOCKET_H
 
-#include "GTM_Socket.h"
+#include <Socket/GTM_Socket.h>
+
 // forward declaration
 class GCFTCPPort;
 class GCFPeerAddr;
-
+/**
+ * This class will be used by a port implementation when its type is (M)SPP. In 
+ * case the port type is MSPP it only acts as a provider/acceptor. Otherwise 
+ * (SPP) it acts as the message exchange (send/receive) point for a P-t-P 
+ * connection too.
+ */
 class GTMServerSocket : public GTMSocket
 {
  public:
 
-    ////////////////////// Construction methods
-    GTMServerSocket(GCFTCPPort& port, bool isProvider = false);
+    /// Construction methods
+    GTMServerSocket (GCFTCPPort& port, 
+                     bool isProvider = false);
   
-    virtual ~GTMServerSocket();
+    virtual ~GTMServerSocket ();
   
     /**
      * open/close functions
      */
-    virtual int open(GCFPeerAddr& addr);
-    virtual int close();
-    int accept(GTMSocket& newSocket);
+    virtual int open (GCFPeerAddr& addr);
+    virtual int close ();
+    int accept (GTMSocket& newSocket);
     
     /**
      * send/recv functions
      */
-    virtual ssize_t send(void* buf, size_t count);
-    virtual ssize_t recv(void* buf, size_t count);
+    virtual ssize_t send (void* buf, size_t count);
+    virtual ssize_t recv (void* buf, size_t count);
 
   protected:
-    virtual void workProc();
+    virtual void workProc ();
 
   private:
-    //GTMServerSocket();
+    GTMServerSocket();
   
     /**
      * Don't allow copying of the GTMServerSocket object.
      */
-    //GTMServerSocket(const GTMServerSocket&);
-    //GTMServerSocket& operator=(const GTMServerSocket&);
+    GTMServerSocket (const GTMServerSocket&);
+    GTMServerSocket& operator= (const GTMServerSocket&);
     
     bool _isProvider;
     GTMSocket* _pServerSocket;

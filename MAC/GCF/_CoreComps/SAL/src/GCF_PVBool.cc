@@ -24,9 +24,9 @@
 #include "GCF_PVBool.h"
 
 /** No descriptions */
-TSAResult GCFPVBool::setValue(const string valueData)
+TGCFResult GCFPVBool::setValue(const string valueData)
 {
-  TSAResult result(SA_NO_ERROR);
+  TGCFResult result(GCF_NO_ERROR);
 
   if (valueData.length() > 0)
   {
@@ -52,13 +52,13 @@ TSAResult GCFPVBool::setValue(const string valueData)
         _value = true;
       }
       else
-        result = SA_VALUESTRING_NOT_VALID;
+        result = GCF_VALUESTRING_NOT_VALID;
     }
     else
-      result = SA_VALUESTRING_NOT_VALID;
+      result = GCF_VALUESTRING_NOT_VALID;
   }
   else
-    result = SA_VALUESTRING_NOT_VALID;
+    result = GCF_VALUESTRING_NOT_VALID;
   
   return result;
 }
@@ -71,14 +71,14 @@ GCFPValue* GCFPVBool::clone() const
 }
 
 /** No descriptions */
-TSAResult GCFPVBool::copy(const GCFPValue& newVal)
+TGCFResult GCFPVBool::copy(const GCFPValue& newVal)
 {
-  TSAResult result(SA_NO_ERROR);
+  TGCFResult result(GCF_NO_ERROR);
 
   if (newVal.getType() == getType())
     _value = ((GCFPVBool *)&newVal)->getValue();
   else
-    result = SA_DIFFERENT_TYPES;
+    result = GCF_DIFFERENT_TYPES;
   
   return result;
 }

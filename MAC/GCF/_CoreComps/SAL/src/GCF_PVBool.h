@@ -1,4 +1,4 @@
-//#  GCF_PVBool.h: 
+//#  GCF_PVBool.h: MAC boolean property type
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,27 +23,45 @@
 #ifndef GCF_PVBOOL_H
 #define GCF_PVBOOL_H
 
-#include "GCF_PValue.h"
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_SAL
+#include <SAL/GCF_PValue.h>
+#else
+#include <GCF_PValue.h>
+#endif
+
+/**
+   By means of this property type a boolean (TRUE/FALSE or YES/NO) value can be 
+   used.
+*/
 
 class GCFPVBool : public GCFPValue
 {
   public: 
-  	GCFPVBool(bool val = false) : GCFPValue(BOOL_VAL), _value(val) {;}
-  	virtual ~GCFPVBool() {;}
+  	GCFPVBool (bool val = false) : GCFPValue(LPT_BOOL), _value(val) {;}
+  	virtual ~GCFPVBool () {;}
     
-    /** Write property of bool value_. */
-    inline void setValue( const bool newVal) {_value = newVal;};
-    /** No descriptions */
-    virtual TSAResult setValue(const string value);
-    /** Read property of bool value_. */
-    inline bool getValue() const {return _value;};
-    /** No descriptions */
-    virtual GCFPValue* clone() const;
-    /** No descriptions */
-    virtual TSAResult copy(const GCFPValue& value);
+    /** Changes the value of this object */
+    inline void setValue (const bool newVal) {_value = newVal;};
+
+    /** 
+     * Changes the value of this object by means of a stringbuffer, 
+     * which will be translated.
+     * @see GCFPValue::setValue(const string value)
+     */
+    virtual TGCFResult setValue (const string value);
+
+    /** Returns the value of this object*/
+    inline bool getValue () const {return _value;};
+
+    /** @see GCFPValue::clone() */
+    virtual GCFPValue* clone () const;
+
+    /** @see GCFPValue::copy() */
+    virtual TGCFResult copy (const GCFPValue& value);
     
   private: // Private attributes
-    /**  */
+    /** The value */
     volatile bool _value;
 };
 #endif

@@ -1025,7 +1025,8 @@ GCFEvent::TResult Application::test302(GCFEvent& e, GCFPortInterface& p)
   {
     case F_ENTRY_SIG:
       skiped(302);
-      TRAN(Application::test303);
+      if (_curRemoteTestNr == 302)
+        TRAN(Application::test303);
       break;
 
     case TST_TESTREADY:
@@ -1033,6 +1034,8 @@ GCFEvent::TResult Application::test302(GCFEvent& e, GCFPortInterface& p)
       TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
       assert(pIndication);
       _curRemoteTestNr = pIndication->testnr;
+      if (_curRemoteTestNr == 302)
+        TRAN(Application::test303);
       break;
     }
 
@@ -1115,7 +1118,7 @@ GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
     {
       GCFPMLValueEvent* pResponse = static_cast<GCFPMLValueEvent*>(&e);
       assert(pResponse);
-      if ((pResponse->pValue->getType() == GCFPValue::INTEGER_VAL) &&
+      if ((pResponse->pValue->getType() == GCFPValue::LPT_INTEGER) &&
           (strcmp(pResponse->pPropName, "A_C_P1") == 0) &&
           (((GCFPVInteger*)pResponse->pValue)->getValue() == 22) &&
           (&p == &_supTask3.getPort()))
@@ -1186,7 +1189,7 @@ GCFEvent::TResult Application::test304(GCFEvent& e, GCFPortInterface& p)
     {
       GCFPMLValueEvent* pResponse = static_cast<GCFPMLValueEvent*>(&e);
       assert(pResponse);
-      if ((pResponse->pValue->getType() == GCFPValue::DOUBLE_VAL) &&
+      if ((pResponse->pValue->getType() == GCFPValue::LPT_DOUBLE) &&
           (strncmp(pResponse->pPropName, "A_H_J_P", 7) == 0) &&
           (&p == &_supTask3.getPort()))
       {
@@ -1199,14 +1202,13 @@ GCFEvent::TResult Application::test304(GCFEvent& e, GCFPortInterface& p)
         }
         else 
         {
-          double dv = ((GCFPVDouble*)pResponse->pValue)->getValue();
-          cerr << "Propvalue: " << dv << " PropNr: " << propNr << endl;
+          cerr << "Propvalue: " << doubleVal << " PropNr: " << propNr << endl;
           nrOfFaults++;
         }
       }
       else
       {
-        cerr << "Propname fails" << pResponse->pPropName << endl;
+        cerr << "Propname fails " << pResponse->pPropName << endl;
         nrOfFaults++;
       }
       if (_counter == 100 )
@@ -1306,7 +1308,7 @@ GCFEvent::TResult Application::test305(GCFEvent& e, GCFPortInterface& p)
     {
       GCFPMLValueEvent* pResponse = static_cast<GCFPMLValueEvent*>(&e);
       assert(pResponse);
-      if ((pResponse->pValue->getType() == GCFPValue::DOUBLE_VAL) &&
+      if ((pResponse->pValue->getType() == GCFPValue::LPT_DOUBLE) &&
           (strcmp(pResponse->pPropName, "A_H_J_P00") == 0) &&
           (((GCFPVDouble*)pResponse->pValue)->getValue() == 3.12) &&
           (&p == &_supTask3.getPort()))
@@ -1422,7 +1424,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
       GCFPMLValueEvent* pResponse = static_cast<GCFPMLValueEvent*>(&e);
       assert(pResponse);
       if (pResponse->internal) break;
-      if ((pResponse->pValue->getType() == GCFPValue::INTEGER_VAL) &&
+      if ((pResponse->pValue->getType() == GCFPValue::LPT_INTEGER) &&
           (strcmp(pResponse->pPropName, "A_K_P1") == 0) &&
           (((GCFPVInteger*)pResponse->pValue)->getValue() == _counter) &&
           (&p == &_supTask3.getPort()))
@@ -1606,6 +1608,7 @@ GCFEvent::TResult Application::test403(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_ENTRY_SIG:
+      GCFTask::stop();    
       break;
 
     default:

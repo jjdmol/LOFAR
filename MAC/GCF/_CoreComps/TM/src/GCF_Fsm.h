@@ -23,115 +23,140 @@
 #ifndef GCF_FSM_H
 #define GCF_FSM_H
 
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_TM
 #include <TM/GCF_Event.h>
-#include <TM/GTM_Defines.h>
 #include <TM/GCF_TMProtocols.h>
 #include <TM/PortInterface/GCF_PortInterface.h>
+#else
+#include <GCF_Event.h>
+#include <GCF_TMProtocols.h>
+#include <GCF_PortInterface.h>
+#endif
 #include <iostream>
 #include <cstdlib>
 
 #define TRAN(_target_) \
   { \
-    LOFAR_LOG_TRACE(TM_STDOUT_LOGGER, (\
-        "State transition to %s <<== %s", \
-        #_target_, \
-        __func__)); \
-    tran(static_cast<State>(&_target_)); \
+    tran(static_cast<State>(&_target_), __func__, #_target_); \
   }
 
-
 /**
- * Simple Optimal FSM implementation from 
- * "Practical Statecharts in C/C++", Samek, M., CMP Books, 2002.
- *
- * @todo * Implement the <i>hierarchical</i> state machines.
+ * This type of port can be used to transport internal messages linked to a 
+ * port, which does not implement anything of the typical features of a port
  */
-
 class GCFDummyPort : public GCFPortInterface
 {
   public:
-    GCFDummyPort(GCFTask* pTask, string name, int protocol) : 
-      GCFPortInterface(pTask, name, SPP, protocol) {};
+    GCFDummyPort (GCFTask* pTask, 
+                  string name, 
+                  int protocol) : 
+      GCFPortInterface(pTask, name, SPP, protocol) 
+    {};
 
-    inline int close() {return 0;}
-    inline int open() {return 0;}
+    inline int close () {return 0;}
+    inline int open () {return 0;}
 
-    inline ssize_t send(const GCFEvent& /*event*/, 
-                        void* /*buf*/ = 0, 
-                        size_t /*count*/ = 0)
+    inline ssize_t send (const GCFEvent& /*event*/, 
+                         void* /*buf*/ = 0, 
+                         size_t /*count*/ = 0)
     {
       return 0;
     }
     
-    inline ssize_t sendv(const GCFEvent& /*event*/, 
-                  const iovec /*buffers*/[], int /*n*/) 
+    inline ssize_t sendv (const GCFEvent& /*event*/, 
+                          const iovec /*buffers*/[], 
+                          int /*n*/) 
     {
       return 0;
     }
 
-    inline ssize_t recv(void* /*buf*/, size_t /*count*/) 
+    inline ssize_t recv (void* /*buf*/, 
+                         size_t /*count*/) 
     {
       return 0;
     }
 
-    inline ssize_t recvv(iovec /*buffers*/[], int /*n*/) 
+    inline ssize_t recvv (iovec /*buffers*/[], 
+                          int /*n*/) 
     {
 
       return 0;
     }
 
-    inline long setTimer(
-        long  /*delay_sec*/,
-        long  /*delay_usec*/,
-        long  /*interval_sec*/,
-        long  /*interval_usec*/,
-        const void* /*arg*/) 
+    inline long setTimer (long  /*delay_sec*/,
+                          long  /*delay_usec*/,
+                          long  /*interval_sec*/,
+                          long  /*interval_usec*/,
+                          const void* /*arg*/) 
     {
       return 0;
     }
 
-    inline long setTimer(
-        double /*delay_seconds*/, 
-        double /*interval_seconds*/,
-        const void*  /*arg*/)
+    inline long setTimer (double /*delay_seconds*/, 
+                          double /*interval_seconds*/,
+                          const void*  /*arg*/)
     {
       return 0;
     }
 
-    inline int cancelTimer(long /*timerid*/, const void** /*arg*/) 
+    inline int cancelTimer (long /*timerid*/, 
+                            const void** /*arg*/) 
     {
       return 0;
     }
 
-    inline int cancelAllTimers() {return 0;}
+    inline int cancelAllTimers () {return 0;}
 
-    inline int resetTimerInterval(
-        long /*timerid*/,
-        long /*sec*/,
-        long /*usec*/) 
+    inline int resetTimerInterval (long /*timerid*/,
+                                   long /*sec*/,
+                                   long /*usec*/) 
     {
       return 0;
     }
 };
 
+/**
+ * Fsm = Finite State Machine
+ * All tasks implement their behaviour in terms of a finite state machine. The 
+ * implementation in the GCFFsm class from which the GCFTask derives is a direct 
+ * implementation of the design described in [ref. AD.6]. This design is based 
+ * around the concept of state event handlers. Events are received when the 
+ * state machine is in a certain state. This state is represented by a method of 
+ * the APLExampleTaskA class (derived from GCFFTask). This state handler method 
+ * is called when a new event arrives for the task. The handler has two 
+ * arguments: a reference to the event (GCFEvent) that was received, and a 
+ * reference to the port on which it was received (GCFPortInterface).
+ * @code
+
+       int my_state(GCFEvent& e, GCFPortInterface& p);
+       
+ * @encode
+ * A task is therefore an event driven application. In fact the programmer using 
+ * the sub-framework does not control the main loop of the application. This 
+ * loop is handled by the framework through the GCFTask::run() method.
+ */
 class GCFFsm
 {
   public:
     typedef GCFEvent::TResult (GCFFsm::*State)(GCFEvent& event, GCFPortInterface& port); // ptr to state handler type
     
-    GCFFsm(State initial) : _state(initial) {;} 
-    virtual ~GCFFsm() {;}
+    GCFFsm (State initial) : _state(initial) {;} 
+    virtual ~GCFFsm () {;}
   
-    void initFsm();
+    void initFsm ();
   
-    inline GCFEvent::TResult dispatch(GCFEvent& event, GCFPortInterface& port)
+    inline GCFEvent::TResult dispatch (GCFEvent& event, 
+                                       GCFPortInterface& port)
     {
       return (this->*_state)(event, port);
     }
   
   protected:
   
-    void tran(State target);
+    void tran (State target, 
+               const char* from, 
+               const char* to);
   
   protected:
     volatile State _state;

@@ -28,38 +28,43 @@
 // forward declaration
 class GTMConfig;
 class GCFPeerAddr;
+
 /**
- * Singleton class 
+ * This singleton class represents the name service, which provides the 
+ * possibility to configure a port from a configuration file by its port 
+ * name. The advantage is that the application does not need to be rebuild if a 
+ * port number or host name is changed. 
+ * Note: This class works together with the GTMTopologyService class. 
  */
 class GTMNameService
 {
  public:
-  static GTMNameService* instance();
-  virtual ~GTMNameService();
+  static GTMNameService* instance ();
+  virtual ~GTMNameService ();
 
-  int init(const char *ns_config_file);
+  int init (const char *ns_config_file);
 
-  int query(const string& taskname,
-	    GCFPeerAddr& peeraddr);
+  int query (const string& taskname,
+	           GCFPeerAddr& peeraddr);
 
-  int queryPort(const string& taskname,
-		const string& portname,
-		GCFPeerAddr& peeraddr);
+  int queryPort (const string& taskname,
+                 const string& portname,
+                 GCFPeerAddr& peeraddr);
 
-  const char* getTask(int index);
+  const char* getTask (int index);
     
  private:
 
   /**
    * No default constructor.
    */
-  GTMNameService();
+  GTMNameService ();
 
   /**
    * Don't allow copying of the FNameService object.
    */
-  GTMNameService(const GTMNameService&);
-  GTMNameService& operator=(const GTMNameService&);
+  GTMNameService (const GTMNameService&);
+  GTMNameService& operator= (const GTMNameService&);
 
  private:
 

@@ -20,15 +20,15 @@
 //#
 //#  $Id$
 
-#include "GCF_RawPort.h"
-#include "GCF_Port.h"
-#include "GCF_PortInterface.h"
-#include "GCF_Task.h"
-#include "GCF_TMProtocols.h"
-#include "GTM_NameService.h"
-#include "GTM_TopologyService.h"
-#include "GTM_Defines.h"
-#include "Timer/GTM_TimerHandler.h"
+#include <PortInterface/GCF_RawPort.h>
+#include <PortInterface/GCF_Port.h>
+#include <PortInterface/GCF_PortInterface.h>
+#include <GCF_Task.h>
+#include <GCF_TMProtocols.h>
+#include <PortInterface/GTM_NameService.h>
+#include <PortInterface/GTM_TopologyService.h>
+#include <GTM_Defines.h>
+#include <Timer/GTM_TimerHandler.h>
 
 static GCFEvent disconnected_event(F_DISCONNECTED_SIG);
 static GCFEvent connected_event   (F_CONNECTED_SIG);

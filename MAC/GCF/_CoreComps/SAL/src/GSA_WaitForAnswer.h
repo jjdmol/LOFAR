@@ -1,4 +1,4 @@
-//#  GSA_WaitForAnswer.h: 
+//#  GSA_WaitForAnswer.h: Our callback class
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -30,26 +30,40 @@ class GSAService;
 class DpMsgAnswer;
 class DpHLGroup;
 
-// ---------------------------------------------------------------
-// Our callback class
+/**
+ * This special WaitForAnswer class implements the abstract handleAnswer 
+ * methods, which translates the incoming messages to methods in the GSAService 
+ * class. Incoming messages are normally responses on requests on PVSS or 
+ * indications if values of subscribed properties are changed. Actually this 
+ * class is the translator from SCADA termology to PVSS termology and visa 
+ * versa (see table below). It also translates received valueobjects (of type 
+ * PVSS<pvsstype>) to GCFPV<mactype> valueobjects and visa versa.
+ * PVSS               SCADA
+ * dpConnect          subscribe
+ * dpDisconnect       unsubscribe
+ * DpSet              set
+ * dpGet              get
+ * dpCreate           create
+ * dpDelete           delete
+ */
 
 class GSAWaitForAnswer : public HotLinkWaitForAnswer
 {
   public:
-    GSAWaitForAnswer(GSAService& service);
-    virtual ~GSAWaitForAnswer() {};
+    GSAWaitForAnswer (GSAService& service);
+    virtual ~GSAWaitForAnswer () {};
     
-    void hotLinkCallBack(DpMsgAnswer& answer);
-    inline const string& getPropName() const {return _propName;}
-    inline void setPropName(const string& propName) {_propName = propName;}
+    void hotLinkCallBack (DpMsgAnswer& answer);
+    inline const string& getPropName () const {return _propName;}
+    inline void setPropName (const string& propName) {_propName = propName;}
 
   protected:
     // Answer on conenct
-    void hotLinkCallBack(DpHLGroup& group);
+    void hotLinkCallBack (DpHLGroup& group);
 
   private:
     GSAService& _service;
-    string  _propName;
+    string      _propName;
 };                                 
 
 #endif

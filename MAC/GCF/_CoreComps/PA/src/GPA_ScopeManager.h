@@ -1,4 +1,4 @@
-//#  GPA_ScopeManager.h: 
+//#  GPA_ScopeManager.h: manages a list of all (registered) scopes
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,6 +27,11 @@
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 
+/**
+   This class manages a list of all (registered) scope entries for the purpose to 
+   (un)link a number of properties at once.
+*/
+
 class GCFEvent;
 class GCFPortInterface; 
 class GPAController;
@@ -34,25 +39,27 @@ class GPAController;
 class GPAScopeManager
 {
   public:
-    GPAScopeManager(GPAController& controller);
-    virtual ~GPAScopeManager();
+    GPAScopeManager (GPAController& controller);
+    virtual ~GPAScopeManager ();
   
-    TPAResult linkProperties(list<string>& propList);
-    TPAResult unlinkProperties(list<string>& propList);
-    TPAResult registerScope(const string& scope, GCFPortInterface& port);
-    TPAResult unregisterScope(const string& scope);
-    void propertiesLinked(const string& scope);
-    void propertiesUnlinked(const string& scope);
-    void deleteScopesByPort(const GCFPortInterface& requestPort, 
-                            list<string>& deleteScopes);
-    void getSubScopes(const string& scope, list<string>& subscopes);
-    void deleteAllScopes();
-    bool waitForAsyncResponses();
+    TPAResult linkProperties (list<string>& propList);
+    TPAResult unlinkProperties (list<string>& propList);
+    TPAResult registerScope (const string& scope, 
+                             GCFPortInterface& port);
+    TPAResult unregisterScope (const string& scope);
+    void propertiesLinked (const string& scope);
+    void propertiesUnlinked (const string& scope);
+    void deleteScopesByPort (const GCFPortInterface& requestPort, 
+                             list<string>& deleteScopes);
+    void getSubScopes (const string& scope, 
+                       list<string>& subscopes);
+    void deleteAllScopes ();
+    bool waitForAsyncResponses ();
           
   private: // helper methods
-    void resetScopeList();
-    TPAResult fillScopeLists(list<string>& propList);
-    void sendUnLinkEvents(GCFEvent& e);
+    void resetScopeList ();
+    TPAResult fillScopeLists (list<string>& propList);
+    void sendUnLinkEvents (GCFEvent& e);
     
   private: // data members
     typedef struct
@@ -62,7 +69,7 @@ class GPAScopeManager
       bool respond;
     } TScopeData;
     
-    GPAController& _controller;
+    GPAController&          _controller;
     map<string, TScopeData> _scopeList;
     typedef map<string, TScopeData>::iterator TScopeListIter;
   

@@ -1,4 +1,4 @@
-//#  GTM_TimerHandler.h: describes the timeout handler for all running timers
+//#  GTM_TimerHandler.h: the timeout handler for all running timers
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -29,39 +29,46 @@
 #include <time.h>
 
 class GTMTimer;
+class GCFRawPort;
 
+/**
+ * This singleton class implements the part of the application main loop, which 
+ * provides the possibility to receive asynchronous time outs in a task of the 
+ * application.
+ */
 class GTMTimerHandler : GCFHandler
 {
   public:
-    void workProc();
-    void stop();
-    static GTMTimerHandler* instance();
+    static GTMTimerHandler* instance ();
 
+    void workProc ();
+    void stop ();
+
+    unsigned long setTimer (GCFRawPort& port, 
+                            unsigned long delay_seconds, 
+                            unsigned long interval_seconds = 0,
+                            const void*  arg        = 0);
+    int cancelTimer (unsigned long timerid, const void** arg = 0);
+    int cancelAllTimers (GCFRawPort& port);
+
+  private: // helper methods
+      void saveDateTime ();
+  
   private:
-    GTMTimerHandler();
-    virtual ~GTMTimerHandler() {};
+    GTMTimerHandler ();
+    virtual ~GTMTimerHandler () {};
+    static GTMTimerHandler* _pInstance;
+
     /**
      * Don't allow copying of the GTMTimerHandler object.
      */
-    GTMTimerHandler(const GTMTimerHandler&);
-    GTMTimerHandler& operator=(const GTMTimerHandler&);
-    static GTMTimerHandler* _pInstance;
+    GTMTimerHandler (const GTMTimerHandler&);
+    GTMTimerHandler& operator= (const GTMTimerHandler&);
     
+    timeval     _lastTime;
+    struct tm   _lastDateTime;
+    bool        _running;
     map<unsigned long, GTMTimer*> _timers;
     typedef map<unsigned long, GTMTimer*>::iterator TTimerIter;
-
-    void saveDateTime();
-
-    friend class GCFRawPort;
-    unsigned long setTimer(GCFRawPort& port, 
-                           unsigned long delay_seconds, 
-                           unsigned long interval_seconds = 0,
-                           const void*  arg        = 0);
-    int cancelTimer(unsigned long timerid, const void** arg = 0);
-    int cancelAllTimers(GCFRawPort& port);
-    
-    timeval _lastTime;
-    struct tm _lastDateTime;
-    bool  _running;
 };
 #endif

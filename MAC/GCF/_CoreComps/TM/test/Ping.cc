@@ -53,9 +53,9 @@ Ping::Ping(string name)
   client.init(*this, "client", GCFPortInterface::SAP, ECHO_PROTOCOL);
 }
 
-int Ping::initial(GCFEvent& e, GCFPortInterface& /*port*/)
+GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*port*/)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
     {
@@ -73,7 +73,7 @@ int Ping::initial(GCFEvent& e, GCFPortInterface& /*port*/)
       // - every 40 seconds
       ping_timer = client.setTimer(1.0, 2.0);
 
-      TRAN(&Ping::connected);
+      TRAN(Ping::connected);
       break;
 
     case F_DISCONNECTED_SIG:
@@ -92,9 +92,9 @@ int Ping::initial(GCFEvent& e, GCFPortInterface& /*port*/)
   return status;
 }
 
-int Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   static int seqnr = 0;
 
@@ -129,7 +129,7 @@ int Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 
 #endif
 
-	TRAN(&Ping::awaiting_echo); // wait for the echo
+	TRAN(Ping::awaiting_echo); // wait for the echo
       }
       break;
 
@@ -139,7 +139,7 @@ int Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       (void)client.cancelTimer(ping_timer);
 
       seqnr = 0;
-      TRAN(&Ping::initial);
+      TRAN(Ping::initial);
       break;
 
     default:
@@ -150,9 +150,9 @@ int Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
-int Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& /*p*/)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
     {
@@ -170,13 +170,13 @@ int Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& /*p*/)
 	cout << "ECHO received (seqnr=" << echo->seqnr << "): elapsed = "
 	     << time_elapsed(&(echo->ping_time), &echo_time) << " sec."<< endl;
 
-	TRAN(&Ping::connected);
+	TRAN(Ping::connected);
       }
       break;
 
     case F_DISCONNECTED_SIG:
       (void)client.cancelTimer(ping_timer);
-      TRAN(&Ping::initial);
+      TRAN(Ping::initial);
       break;
       
     default:

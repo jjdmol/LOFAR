@@ -28,7 +28,7 @@
 class FPIntegerValue : public FPValue
 {
   public:
-  	FPIntegerValue(int val = 0) : FPValue(INTEGER_VAL), value_(val) {;}
+  	FPIntegerValue(int val = 0) : FPValue(LPT_INTEGER), value_(val) {;}
   	virtual ~FPIntegerValue() {;}
     /** Write property of integer value_. */
     virtual inline void setValue( const int newVal) {value_ = newVal;}

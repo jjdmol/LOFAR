@@ -24,16 +24,16 @@
 #include "GCF_PVDynArr.h"
 
 GCFPVDynArr::GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val) :
-  GCFPValue((TMACValueType) (DYNARR_VAL | itemType))
+  GCFPValue((TMACValueType) (LPT_DYNARR | itemType))
 {
-  assert(itemType != DYNARR_VAL);
+  assert(itemType != LPT_DYNARR);
   setValue(val);
 }
 
 GCFPVDynArr::GCFPVDynArr(TMACValueType itemType) :
-  GCFPValue((TMACValueType) (DYNARR_VAL | itemType))
+  GCFPValue((TMACValueType) (LPT_DYNARR | itemType))
 {
-  assert(itemType != DYNARR_VAL);
+  assert(itemType != LPT_DYNARR);
 }
 
 GCFPVDynArr::~GCFPVDynArr()
@@ -42,9 +42,9 @@ GCFPVDynArr::~GCFPVDynArr()
 }
 
 /** No descriptions */
-TSAResult GCFPVDynArr::setValue(const string value)
+TGCFResult GCFPVDynArr::setValue(const string value)
 {
-  TSAResult result(SA_NO_ERROR);
+  TGCFResult result(GCF_NO_ERROR);
   
   return result;
 }
@@ -55,7 +55,7 @@ void GCFPVDynArr::setValue(const GCFPValueArray& newVal)
   for (GCFPValueArray::const_iterator iter = newVal.begin();
        iter != newVal.end(); ++iter)
   {
-    if ((*iter)->getType() == (getType() & ~DYNARR_VAL))
+    if ((*iter)->getType() == (getType() & ~LPT_DYNARR))
       _values.push_back((*iter)->clone());
   }
 }
@@ -68,14 +68,14 @@ GCFPValue* GCFPVDynArr::clone() const
 }
 
 /** No descriptions */
-TSAResult GCFPVDynArr::copy(const GCFPValue& newVal)
+TGCFResult GCFPVDynArr::copy(const GCFPValue& newVal)
 {
-  TSAResult result(SA_NO_ERROR);
+  TGCFResult result(GCF_NO_ERROR);
 
   if (newVal.getType() == getType())
     setValue(((GCFPVDynArr*)&newVal)->getValue());
   else
-    result = SA_DIFFERENT_TYPES;
+    result = GCF_DIFFERENT_TYPES;
   
   return result;
 }

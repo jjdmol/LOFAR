@@ -38,11 +38,11 @@ class FProperty;
 class FPValue
 {
   public:
-    enum ValueType {NO_VAL = 0, BOOL_VAL, CHAR_VAL, INTEGER_VAL, UNSIGNED_VAL, DOUBLE_VAL,
-                    STRING_VAL, BLOB_VAL, BIT32_VAL, DATETIME_VAL, 
-                    DYNARR_VAL = 0x80,
-                    DYNBOOL_VAL, DYNCHAR_VAL, DYNINTEGER_VAL, DYNUNSIGNED_VAL, DYNDOUBLE_VAL,
-                    DYNSTRING_VAL, DYNBLOB_VAL, DYNBIT32_VAL, DYNDATETIME_VAL};
+    enum ValueType {NO_LPT = 0, LPT_BOOL, LPT_CHAR, LPT_INTEGER, LPT_UNSIGNED, LPT_DOUBLE,
+                    LPT_STRING, LPT_BLOB, BIT32_VAL, LPT_DATETIME, 
+                    LPT_DYNARR = 0x80,
+                    LPT_DYNBOOL, LPT_DYNCHAR, LPT_DYNINTEGER, LPT_DYNUNSIGNED, LPT_DYNDOUBLE,
+                    LPT_DYNSTRING, LPT_DYNBLOB, DYNBIT32_VAL, LPT_DYNDATETIME};
    
   	FPValue(ValueType type) : type_(type) {;}
   	virtual ~FPValue() {;}

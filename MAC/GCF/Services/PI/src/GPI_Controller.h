@@ -1,4 +1,4 @@
-//#  GPI_Controller.h: 
+//#  GPI_Controller.h: main class of the Property Interface application
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -31,32 +31,43 @@
 class GCFEvent;
 class GPISupervisoryServer;
 
+/**
+ * This is the main class of the Property Interface class. It has the 
+ * responsibility to enable SupervisoryServers (ERTC part) to connect to the 
+ * Property Interface. On the connect request an instance of the 
+ * GPISupervisoryServer class will be created, which handles further requests 
+ * from the Supervisory Server or the Property Agent.
+ */
 class GPIController : public GCFTask
 {
 	public:
-		GPIController();
-		virtual ~GPIController();
-    inline GCFTCPPort& getPortProvider() {return _ssPortProvider;}
+		GPIController ();
+		virtual ~GPIController ();
+    inline GCFTCPPort& getPortProvider () {return _ssPortProvider;}
     
-    void close(GPISupervisoryServer& ss);
+    void close (GPISupervisoryServer& ss);
 
-	private: 
-	
 	private: // helper methods
+    /**
+     * Don't allow copying of this object.
+     */
+    GPIController (const GPIController&);
+    GPIController& operator= (const GPIController&);
     
 	private: // state methods
-		GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-		GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult closing(GCFEvent& e, GCFPortInterface& p);
+		GCFEvent::TResult initial   (GCFEvent& e, GCFPortInterface& p);
+		GCFEvent::TResult connected (GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult closing   (GCFEvent& e, GCFPortInterface& p);
 
 	private: // data members
     typedef list<GPISupervisoryServer*> TSupervisoryServers;
-    TSupervisoryServers _supervisoryServers;
-		GCFTCPPort                  _ssPortProvider;
+    
+    TSupervisoryServers   _supervisoryServers;
+		GCFTCPPort            _ssPortProvider;
     
   private: // admin. data members
-    bool _isBusy;
-    unsigned int _counter;
+    bool          _isBusy;
+    unsigned int  _counter;
 };
 
 #endif

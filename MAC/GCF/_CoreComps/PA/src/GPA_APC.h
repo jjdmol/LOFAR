@@ -1,4 +1,4 @@
-//#  GPA_APC.h: 
+//#  GPA_APC.h: helper class for loading XML files with APC into RAM
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -30,6 +30,9 @@
 #include <xercesc/dom/DOMBuilder.hpp>
 #include <Common/lofar_list.h>
 
+/**
+  This is a helper class for loading XML files with APC into RAM
+*/
 class GCFPValue;
 
 XERCES_CPP_NAMESPACE_USE
@@ -40,17 +43,19 @@ class GPAAPC
     GPAAPC();
     virtual ~GPAAPC();
 
-    const list<TAPCProperty>& getProperties() const {return _properties;}
-    TPAResult load(const string apcName, const string scope);
+    inline const list<TAPCProperty>& getProperties() const {return _properties;}
+    TPAResult load(const string apcName, 
+                   const string scope);
 
   private: //helper methods
-    TPAResult makePropList(DOMNode* pN, string path);
-    TPAResult getValue(DOMNode* pN, string& value);
-    TPAResult createMACValueObject(
-      const string& macType, 
-      const string& valueData, 
-      bool defaultSet,
-      GCFPValue** pReturnValue);
+    TPAResult makePropList(DOMNode* pN, 
+                           string path);
+    TPAResult getValue(DOMNode* pN, 
+                       string& value);
+    TPAResult createMACValueObject(const string& macType, 
+                                   const string& valueData, 
+                                   bool defaultSet,
+                                   GCFPValue** pReturnValue);
     
   private:
     

@@ -23,7 +23,12 @@
 #ifndef GCF_PROTOCOLS_H
 #define GCF_PROTOCOLS_H
 
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_TM
 #include <TM/GCF_Event.h>
+#else
+#include <GCF_Event.h>
+#endif
 
 /**
  * Macro to encode an event's signal from the signal id, protocal an in/out direction
@@ -108,14 +113,14 @@ extern const char* F_PORT_PROTOCOL_names[]; // defined in GCF_TMProtocols.cc
 
 struct GCFTimerEvent : public GCFEvent
 {
-    GCFTimerEvent() : GCFEvent(F_TIMER_SIG)
-    {
-        length = sizeof(GCFTimerEvent);
-    }
+  GCFTimerEvent() : GCFEvent(F_TIMER_SIG)
+  {
+    length = sizeof(GCFTimerEvent);
+  }
 
-    long        sec;
-    long        usec;
-    const void* arg;
+  long        sec;
+  long        usec;
+  const void* arg;
 };
 
 #endif

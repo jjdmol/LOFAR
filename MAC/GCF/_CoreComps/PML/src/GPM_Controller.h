@@ -1,4 +1,5 @@
-//#  GPM_Controller.h: 
+//#  GPM_Controller.h: singleton class; bridge between controller application 
+//#                    and Property Agent
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -30,6 +31,14 @@
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 
+/**
+   This singleton class forms the bridge between the PML API classes and the PA. 
+   It is a hidden task with its own state machine in each Application, which 
+   wants to be part of the MAC subsystem of LOFAR. It will be created at the 
+   moment a service of PML will be requested by the Application (like load 
+   property set or load APC).
+*/
+
 class GCFSupervisedTask;
 class GPMPropertySet;
 class GCFPValue;
@@ -39,46 +48,50 @@ class GCFPortInterface;
 class GPMController : public GCFTask
 {
   public:
-    GPMController(GCFSupervisedTask& supervisedTask);
-    ~GPMController();
+    GPMController (GCFSupervisedTask& supervisedTask);
+    ~GPMController ();
 
   private: // member functions
     friend class GCFSupervisedTask;
     friend class GPMService;
     friend class GPMPropertySet;
     
-    TPMResult loadAPC(const string& apcName, const string& scope);
-    TPMResult unloadAPC(const string& apcName, const string& scope);
-    TPMResult reloadAPC(const string& apcName, const string& scope);
-    TPMResult loadMyProperties(const TPropertySet& newSet);
-    TPMResult unloadMyProperties(const string& scope);
-    TPMResult set(const string& propName, const GCFPValue& value);
-    TPMResult get(const string& propName);
-    TPMResult getMyOldValue(const string& propName, GCFPValue** value);
-    void valueChanged(const string& propName, const GCFPValue& value);
-    void valueGet(const string& propName, const GCFPValue& value);
-    void propertiesLinked(const string& scope, list<string>& notLinkedProps);
-    void propertiesUnlinked(const string& scope, list<string>& notUnlinkedProps);
+    TPMResult loadAPC (const string& apcName, const string& scope);
+    TPMResult unloadAPC (const string& apcName, const string& scope);
+    TPMResult reloadAPC (const string& apcName, const string& scope);
+    
+    TPMResult loadMyProperties (const TPropertySet& newSet);
+    TPMResult unloadMyProperties (const string& scope);
+    
+    TPMResult set (const string& propName, const GCFPValue& value);
+    TPMResult get (const string& propName);
+    
+    TPMResult getMyOldValue (const string& propName, GCFPValue** value);
+    void valueChanged (const string& propName, const GCFPValue& value);
+    void valueGet (const string& propName, const GCFPValue& value);
+    
+    void propertiesLinked (const string& scope, list<string>& notLinkedProps);
+    void propertiesUnlinked (const string& scope, list<string>& notUnlinkedProps);
   
   private: // state methods
-    GCFEvent::TResult initial  (GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult initial   (GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult connected (GCFEvent& e, GCFPortInterface& p);
         
   private: // helper methods
-    GPMPropertySet* findPropertySet(const string& propName);
-    void registerScope(const string& scope);
-    void unpackPropertyList(char* pListData, list<string>& propertyList);
+    GPMPropertySet* findPropertySet (const string& propName);
+    void registerScope (const string& scope);
+    void unpackPropertyList (char* pListData, list<string>& propertyList);
     
   private: // data members
-    GCFSupervisedTask& _supervisedTask;
+    GCFSupervisedTask&            _supervisedTask;
     
-    map<string, GPMPropertySet*> _propertySets;
+    GCFPort                       _propertyAgent;
+    GPMService                    _scadaService;
+    bool                          _isBusy;
+    bool                          _preparing;
+    unsigned int                  _counter;
+    map<string, GPMPropertySet*>  _propertySets;
     typedef map<string, GPMPropertySet*>::iterator TPropertySetIter;
-    GCFPort _propertyAgent;
-    GPMService _scadaService;
-    bool _isBusy;
-    bool _preparing;
-    unsigned int _counter;
     
     typedef struct
     {

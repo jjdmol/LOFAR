@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include "GTM_Timer.h"
+#include <Timer/GTM_Timer.h>
 #include <PortInterface/GCF_RawPort.h>
 #include <GCF_TMProtocols.h>
 

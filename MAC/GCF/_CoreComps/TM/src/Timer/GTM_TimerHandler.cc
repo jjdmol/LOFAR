@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#include "GTM_TimerHandler.h"
-#include "GTM_Timer.h"
+#include <Timer/GTM_TimerHandler.h>
+#include <Timer/GTM_Timer.h>
 #include <GCF_Task.h>
 
 GTMTimerHandler* GTMTimerHandler::_pInstance = 0;

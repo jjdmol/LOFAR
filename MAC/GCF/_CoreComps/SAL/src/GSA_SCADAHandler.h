@@ -29,29 +29,34 @@
 #include <SAL/GSA_Defines.h>
 #include <Common/lofar_list.h>
 
+/**
+ * This class implements the main loop part of message exchange handling, which 
+ * uses the PVSS API. It calls the dispatch of the PVSS API to handle incoming 
+ * and outgoing messages from/to PVSS.
+ */
 class GSASCADAHandler : GCFHandler
 {
   public:
-    static GSASCADAHandler* instance();
+    static GSASCADAHandler* instance ();
 
-    void workProc();
-    void stop();
-    TSAResult isOperational();
-    void registerTask(GCFTask& task);
-    void deregisterTask(GCFTask& task);
+    void workProc ();
+    void stop ();
+    TSAResult isOperational ();
+    void registerTask (GCFTask& task);
+    void deregisterTask (GCFTask& task);
 
   private:
-    GSASCADAHandler();
-    virtual ~GSASCADAHandler() {};
+    GSASCADAHandler ();
+    virtual ~GSASCADAHandler () {};
     /**
      * Don't allow copying of the GSASCADAHandler object.
      */
-    GSASCADAHandler(const GSASCADAHandler&);
-    GSASCADAHandler& operator=(const GSASCADAHandler&);
+    GSASCADAHandler (const GSASCADAHandler&);
+    GSASCADAHandler& operator= (const GSASCADAHandler&);
     static GSASCADAHandler* _pInstance;
     
-    GSAPvssApi _pvssApi;
-    bool  _running;
-    list<GCFTask*> _registerdTasks;
+    GSAPvssApi      _pvssApi;
+    bool            _running;
+    list<GCFTask*>  _registerdTasks;
 };
 #endif

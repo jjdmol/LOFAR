@@ -28,35 +28,28 @@
 // This speeds up compilation.
 //
 
-#ifndef GTM_CONTROL_H
-#define GTM_CONTROL_H
+#ifndef GCF_CONTROL_H
+#define GCF_CONTROL_H
 
-#ifndef GCF_PORT_H
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_TM
 #include <TM/PortInterface/GCF_Port.h>
-#endif
-
-#ifndef GCF_PORTINTERACE_H
 #include <TM/PortInterface/GCF_PortInterface.h>
-#endif
-
-#ifndef GCF_TASK_H
-#include <TM/GCF_Task.h>
-#endif
-
-#ifndef GCF_FSM_H
-#include <TM/GCF_Fsm.h>
-#endif
-
-#ifndef GCF_PROTOCOLS_H
-#include <TM/GCF_TMProtocols.h>
-#endif
-
-#ifndef GCF_PEERADDR_H
 #include <TM/PortInterface/GCF_PeerAddr.h>
-#endif
-
-#ifndef GCF_EVENT_H
+#include <TM/Socket/GCF_TCPPort.h>
+#include <TM/GCF_Task.h>
+#include <TM/GCF_Fsm.h>
+#include <TM/GCF_TMProtocols.h>
 #include <TM/GCF_Event.h>
+#else
+#include <GCF_Port.h>
+#include <GCF_PortInterface.h>
+#include <GCF_PeerAddr.h>
+#include <GCF_TCPPort.h>
+#include <GCF_Task.h>
+#include <GCF_Fsm.h>
+#include <GCF_TMProtocols.h>
+#include <GCF_Event.h>
 #endif
 
 #endif /* GCF_CONTROL_H */

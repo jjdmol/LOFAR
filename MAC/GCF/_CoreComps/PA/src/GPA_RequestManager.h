@@ -1,4 +1,4 @@
-//#  GPA_RequestManager.h: 
+//#  GPA_RequestManager.h: manages a FIFO queue of requests of the PA
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,6 +26,10 @@
 #include <GPA_Defines.h>
 #include <Common/lofar_list.h>
 
+/**
+   This class manages a FIFO queue of requests, which 
+   can be received from a PML and not handled immediately.
+*/
 class GCFPortInterface;
 class GCFEvent;
 

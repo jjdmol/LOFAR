@@ -1,8 +1,9 @@
 #include "Service.h"
 
-TSAResult Service::createProp(const string& macType, const string& propName)
+TSAResult Service::createProp(const string& propName, 
+                                 GCFPValue::TMACValueType macType)
 {
-  return GSAService::createProp(macType, propName);
+  return GSAService::createProp(propName, macType);
 }
 
 TSAResult Service::deleteProp(const string& propName)
@@ -36,37 +37,37 @@ bool Service::exists(const string& propName)
 }
 
     
-void Service::propCreated(string& propName)
+void Service::propCreated(const string& propName)
 {
   LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
       "Property '%s' created", propName.c_str()));
 }
 
-void Service::propDeleted(string& propName)
+void Service::propDeleted(const string& propName)
 {
   LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
       "Property '%s' deleted", propName.c_str()));
 }
 
-void Service::propSubscribed(string& propName)
+void Service::propSubscribed(const string& propName)
 {
   LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
       "Property '%s' subscribed", propName.c_str()));
 }
 
-void Service::propUnsubscribed(string& propName)
+void Service::propUnsubscribed(const string& propName)
 {
   LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
       "Property '%s' unsubscribed", propName.c_str()));
 }
 
-void Service::propValueGet(string& propName, GCFPValue& value)
+void Service::propValueGet(const string& propName, const GCFPValue& value)
 {
   LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
       "Value of property '%s' get", propName.c_str()));
 }
 
-void Service::propValueChanged(string& propName, GCFPValue& value)
+void Service::propValueChanged(const string& propName, const GCFPValue& value)
 {
   LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
       "Value of property '%s' changed", propName.c_str()));
