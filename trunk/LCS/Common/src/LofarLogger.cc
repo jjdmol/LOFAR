@@ -23,6 +23,7 @@
 //# Includes
 #include <stdio.h>					// snprintf
 #include <unistd.h>					// readlink
+#include <libgen.h>				// basename
 #include <Common/LofarLogger.h>
 
 namespace LOFAR {
