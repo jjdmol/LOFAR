@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
+//  initial version
+//
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -100,13 +103,13 @@ private:
 inline int* DH_2DMatrix::getBuffer(int x, int y) { 
   AssertStr(x >= 0 && x < itsXSize , "x not in range");
   AssertStr(y >= 0 && y < itsYSize , "y not in range");
-  return &(itsDataPacket->itsBuffer[x*itsXSize+y]); 
+  return &(itsDataPacket->itsBuffer[x*itsYSize+y]); 
 }
 
 inline const int* DH_2DMatrix::getBuffer(int x, int y) const { 
   AssertStr(x >= 0 && x < itsXSize , "x not in range");
   AssertStr(y >= 0 && y < itsYSize , "y not in range");
-  return &(itsDataPacket->itsBuffer[x*itsXSize+y]); 
+  return &(itsDataPacket->itsBuffer[x*itsYSize+y]); 
 }
 
 inline void DH_2DMatrix::setZ (int z){ 
