@@ -24,6 +24,7 @@ check_PROGRAMS			= Example 		\
 				  tParamBlock		\
 				  shmem_alloc1		\
 				  shmem_alloc2		\
+				  TestAutoTrigger       \
 				  CyclicBufferTest	\
 				  tmat	                
 
@@ -34,6 +35,7 @@ tParamBlock_SOURCES		= tParamBlock.cc
 tmat_SOURCES			= tmat.cc
 shmem_alloc1_SOURCES		= shmem_alloc1.cc
 shmem_alloc2_SOURCES		= shmem_alloc2.cc
+TestAutoTrigger_SOURCES         = TestAutoTrigger.cc
 CyclicBufferTest_SOURCES	= CyclicBufferTest.cc
 
 
@@ -64,6 +66,7 @@ TESTS	=					\
 	tmat_test.sh				\
 	shmem_alloc1.sh				\
 	shmem_alloc2.sh				\
+	TestAutoTrigger.sh			\
 	CyclicBufferTest.sh
 
 EXTRA_DIST = 					\
@@ -79,6 +82,7 @@ EXTRA_DIST = 					\
 	tmat_test.sh				\
 	shmem_alloc1.sh				\
 	shmem_alloc2.sh				\
+	TestAutoTrigger.sh			\
 	CyclicBufferTest.sh			\
 	runtest.sh				\
 	cleanipc				\
