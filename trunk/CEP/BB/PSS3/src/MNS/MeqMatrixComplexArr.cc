@@ -30,7 +30,7 @@
 #include <iomanip>
 
 
-#if (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
+#if defined __SSE__
 #include <xmmintrin.h>
 #include <emmintrin.h>
 #endif
@@ -251,7 +251,7 @@ MeqMatrixRep* MeqMatrixComplexArr::NAME (MeqMatrixComplexArr& left, \
   return &left; \
 }
 
-#if !((defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER))
+#if !defined __SSE__
 MNSMATRIXCOMPLEXARR_OP(addRep,+=,+);
 MNSMATRIXCOMPLEXARR_OP(subRep,-=,-);
 MNSMATRIXCOMPLEXARR_OP(mulRep,*=,*);
@@ -259,7 +259,7 @@ MNSMATRIXCOMPLEXARR_OP(mulRep,*=,*);
 MNSMATRIXCOMPLEXARR_OP(divRep,/=,/);
 
 
-#if (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
+#if defined __SSE__
 
 MeqMatrixRep *MeqMatrixComplexArr::addRep(MeqMatrixRealSca& left, bool rightTmp)
 {
