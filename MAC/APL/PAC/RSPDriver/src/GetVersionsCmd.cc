@@ -20,10 +20,10 @@
 //#
 //#  $Id$
 
-#include <APLConfig.h>
 #include "RSP_Protocol.ph"
 #include "GetVersionsCmd.h"
 
+#include <PSAccess.h>
 #include <blitz/array.h>
 
 #undef PACKAGE

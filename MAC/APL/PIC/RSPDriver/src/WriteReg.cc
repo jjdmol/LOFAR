@@ -25,7 +25,7 @@
 #include "RSP_Protocol.ph"
 #include "Cache.h"
 
-#include <APLConfig.h>
+#include <PSAccess.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -46,7 +46,7 @@ using namespace blitz;
 WriteReg::WriteReg(GCFPortInterface& board_port, int board_id,
 		   uint8 dstid, uint8 pid, uint8 regid, uint16 size,
 		   uint16 offset, uint8 pageid)
-  : SyncAction(board_port, board_id, GET_CONFIG("N_BLPS", i)),
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i)),
     m_dstid(dstid), m_pid(pid), m_regid(regid), m_size(size), m_offset(offset), m_pageid(pageid)
 {
 }
@@ -74,7 +74,7 @@ void WriteReg::sendrequest()
   }
   else
   {
-    uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + getCurrentBLP();
+    uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
     LOG_INFO(formatString(">>>> WriteReg(%s) BLP=%d, pid=%d, regid=%d, size=%d, offset=%d, pageid=%d",
 			  getBoardPort().getName().c_str(),

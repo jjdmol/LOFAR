@@ -1,4 +1,6 @@
-//#  APLConfig.h: configuration constants read from config file
+//#  -*- mode: c++ -*-
+//#
+//#  PSAccess.h: shortcut macros for ParamterSet access
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,42 +22,17 @@
 //#
 //#  $Id$
 
-#include "APLConfig.h"
-#include <stdlib.h>
+#ifndef PSACCESS_H_
+#define PSACCESS_H_
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
-using namespace LOFAR;
+#include <GCF/ParameterSet.h>
 
-APLConfig* APLConfig::m_instance = 0;
+#define __psaccess__convert_i getInt
+#define __psaccess__convert_f getFloat
+#define __psaccess__convert_d getDouble
+#define GET_CONFIG(var, type) (GCF::ParameterSet::instance()->__psaccess__convert_##type(var))
 
-APLConfig::APLConfig()
-{
-}
+#define GET_CONFIG_STRING(var) (GCF::ParameterSet::instance()->getString(var).c_str())
 
-APLConfig::~APLConfig()
-{
-}
 
-APLConfig& APLConfig::getInstance()
-{
-  if (!m_instance)
-  {
-    m_instance = new APLConfig;
-  }
-
-  return *m_instance;
-}
-
-void APLConfig::load(const char* blockname, const char* filename)
-{
-  m_blockname = std::string(blockname);
-  m_config.init(filename, '=', 1);
-}
-
-const char* APLConfig::getBlockname()
-{
-  return m_blockname.c_str();
-}
+#endif /* PSACCESS_H_ */

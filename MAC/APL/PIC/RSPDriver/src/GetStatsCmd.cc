@@ -20,10 +20,10 @@
 //#
 //#  $Id$
 
-#include <APLConfig.h>
 #include "RSP_Protocol.ph"
 #include "GetStatsCmd.h"
 
+#include <PSAccess.h>
 #include <blitz/array.h>
 
 #undef PACKAGE
@@ -70,11 +70,11 @@ void GetStatsCmd::ack(CacheBuffer& cache)
   
   int result_rcu = 0;
   for (int cache_rcu = 0;
-       cache_rcu < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL; cache_rcu++)
+       cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * N_POL; cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      if (cache_rcu < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL)
+      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * N_POL)
       {
 	if (m_event->type <= Statistics::SUBBAND_POWER)
 	{
@@ -91,7 +91,7 @@ void GetStatsCmd::ack(CacheBuffer& cache)
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("N_RCUS", i)));
+			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * N_POL));
       }
       
       result_rcu++;
@@ -124,7 +124,7 @@ void GetStatsCmd::setTimestamp(const Timestamp& timestamp)
 bool GetStatsCmd::validate() const
 {
   return ((m_event->rcumask.count()
-	  <= (unsigned int)GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL)
+	  <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * N_POL)
 	  && (m_event->type < Statistics::N_STAT_TYPES));
 }
 

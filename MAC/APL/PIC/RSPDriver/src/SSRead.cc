@@ -25,8 +25,7 @@
 #include "SSRead.h"
 #include "Cache.h"
 
-#include <APLConfig.h>
-
+#include <PSAccess.h>
 #include <blitz/array.h>
 
 #undef PACKAGE
@@ -41,7 +40,7 @@ using namespace LOFAR;
 using namespace blitz;
 
 SSRead::SSRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("N_BLPS", i) * 2 /* for nr_subbands and subbands */)
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * 2 /* for nr_subbands and subbands */)
 {
 }
 
@@ -90,7 +89,7 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   {
     if (event.signal != EPA_SUBBANDSELECT) return GCFEvent::HANDLED;
 
-    uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + (getCurrentBLP() / 2);
+    uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / 2);
 
     LOG_DEBUG("handleack");
 

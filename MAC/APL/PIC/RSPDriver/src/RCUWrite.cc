@@ -24,7 +24,7 @@
 #include "EPA_Protocol.ph"
 #include "Cache.h"
 
-#include <APLConfig.h>
+#include <PSAccess.h>
 #include <string.h>
 
 #undef PACKAGE
@@ -37,7 +37,7 @@ using namespace LOFAR;
 using namespace EPA_Protocol;
 
 RCUWrite::RCUWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("N_BLPS", i))
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
 {
 }
 
@@ -48,7 +48,7 @@ RCUWrite::~RCUWrite()
 
 void RCUWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
   EPARcusettingsEvent rcusettings;
   MEP_RCUSETTINGS(rcusettings.hdr, MEPHeader::WRITE, getCurrentBLP());

@@ -25,7 +25,7 @@
 #include "RSP_Protocol.ph"
 #include "Cache.h"
 
-#include <APLConfig.h>
+#include <PSAccess.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -39,7 +39,7 @@ using namespace RSP_Protocol;
 using namespace blitz;
 
 StatusRead::StatusRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("N_BLPS", i))
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
 {
 }
 
@@ -75,7 +75,7 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
   memcpy(&status.board()(getBoardId()), &ack.board,
 	 sizeof(BoardStatus));
 
-  uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
   // copy x and y-polarization
   status.rcu()(global_blp * N_POL)     = ack.rcu[0];

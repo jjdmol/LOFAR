@@ -25,7 +25,7 @@
 #include "EPA_Protocol.ph"
 #include "Cache.h"
 
-#include <APLConfig.h>
+#include <PSAccess.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -39,7 +39,7 @@ using namespace RSP_Protocol;
 using namespace blitz;
 
 StatsRead::StatsRead(GCFPortInterface& board_port, int board_id, uint8 type)
-  : SyncAction(board_port, board_id, GET_CONFIG("N_BLPS", i)), m_type(type)
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i)), m_type(type)
 {
 }
 
@@ -85,7 +85,7 @@ inline complex<double> convert_uint16_to_double(complex<uint16> val)
 
 GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
   if (m_type <= Statistics::SUBBAND_POWER)
   {

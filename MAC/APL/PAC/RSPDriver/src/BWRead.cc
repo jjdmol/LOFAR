@@ -25,7 +25,7 @@
 #include "RSP_Protocol.ph"
 #include "Cache.h"
 
-#include <APLConfig.h>
+#include <PSAccess.h>
 
 #undef PACKAGE
 #undef VERSION

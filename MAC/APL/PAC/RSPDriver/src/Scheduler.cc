@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include <APLConfig.h>
+#include <PSAccess.h>
 #include "Scheduler.h"
 #include "SyncAction.h"
 
@@ -39,7 +39,7 @@ int Scheduler::SYNC_INTERVAL_INT = 1; // default
 
 Scheduler::Scheduler()
 {
-  SYNC_INTERVAL_INT = (int)trunc(GET_CONFIG("SYNC_INTERVAL", f)+0.5);
+  SYNC_INTERVAL_INT = (int)trunc(GET_CONFIG("RSPDriver.SYNC_INTERVAL", f)+0.5);
 }
 
 Scheduler::~Scheduler()

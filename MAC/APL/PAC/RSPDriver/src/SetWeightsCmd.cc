@@ -20,10 +20,10 @@
 //#
 //#  $Id$
 
-#include <APLConfig.h>
 #include "RSP_Protocol.ph"
 #include "SetWeightsCmd.h"
 
+#include <PSAccess.h>
 #include <blitz/array.h>
 
 #undef PACKAGE
@@ -78,12 +78,12 @@ void SetWeightsCmd::apply(CacheBuffer& cache)
 {
   int input_blp = 0;
   for (int cache_blp = 0;
-       cache_blp < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i);
+       cache_blp < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i);
        cache_blp++)
   {
     if (m_event->blpmask[cache_blp])
     {
-      if (cache_blp < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i))
+      if (cache_blp < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
       {
 	cache.getBeamletWeights()()(0, cache_blp, Range::all(), Range::all())
 	  = m_event->weights()(0, input_blp, Range::all(), Range::all());
@@ -91,7 +91,7 @@ void SetWeightsCmd::apply(CacheBuffer& cache)
       else
       {
 	LOG_WARN(formatString("invalid BLP index %d, there are only %d BLP's",
-			      cache_blp, GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i)));
+			      cache_blp, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i)));
       }
 
       input_blp++;
