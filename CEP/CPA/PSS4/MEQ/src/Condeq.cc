@@ -73,12 +73,15 @@ int Condeq::getResult (Result::Ref &resref,
       values[i] = &(child_res[i]->getValueRW());
       npertsets = std::max(npertsets,child_res[i]->numPertSets());
     }
+    FailWhen(values[0]->shape() != values[1]->shape(),
+            "shapes of child results do not match");
     // Find all spids from the children.
     vector<int> spids = Function::findSpids(child_res);
     // allocate new result object with given number of spids, add to set
     // note that result always has 1 perturbation set (i.e., double-perts
     // are collapsed into a single pert)
     VellSet &vellset = result.setNewVellSet(iplane,spids.size(),1);
+    vellset.setShape(values[0]->shape());
     // The main value is measured-predicted.
     vellset.setValue(*values[0] - *values[1]);
     // Evaluate all perturbed values.

@@ -15,6 +15,7 @@ InitDebugContext(Spigot,"MeqSpigot");
 void Spigot::init (DataRecord::Ref::Xfer &initrec,Forest * frst)
 {
   // default uses DATA column
+  flag_mask = row_flag_mask = -1;
   icolumn = VisTile::DATA;
   VisHandlerNode::init(initrec,frst);
 }
@@ -40,8 +41,8 @@ void Spigot::setStateImpl (DataRecord &rec,bool initializing)
     }
     icolumn = iter->second;
   }
-  flag_mask = rec[FFlagMask].as<int>(0xFFFFFFFF);
-  row_flag_mask = rec[FRowFlagMask].as<int>(0xFFFFFFFF);
+  getStateField(flag_mask,rec,FFlagMask);
+  getStateField(row_flag_mask,rec,FRowFlagMask);
 }
 
 //##ModelId=3F98DAE6023B
@@ -120,11 +121,12 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
       {
         // get flag columns
         const LoCube_int & flags   = tile.flags();
+        cout<<"Tile flags: "<<flags<<endl;
         const LoVec_int  & rowflag = tile.rowflag();
         for( int i=0; i<nplanes; i++ )
         {
           VellSet::FlagArrayType & fl = next_res.vellSet(i).
-                  initOptCol<VellSet::FLAGS>(colshape[1],colshape[2]);
+                  initOptCol<VellSet::FLAGS>();
           // apply flags with mask
           if( flag_mask )
             fl = cast<VellSet::FlagType>(

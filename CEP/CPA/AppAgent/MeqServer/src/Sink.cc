@@ -9,6 +9,7 @@ namespace Meq {
 //##ModelId=3F98DAE60213
 void Sink::init (DataRecord::Ref::Xfer &initrec,Forest* frst)
 {
+  flag_mask = row_flag_mask = -1;
   // assign output column -- default is -1
   output_col = -1;
   // output correlations -- if clear, then plane i = corr i
@@ -59,6 +60,9 @@ void Sink::setStateImpl (DataRecord &rec,bool initializing)
   // check if output correlation map is specified
   if( rec[FCorr].exists() )
     output_icorrs = rec[FCorr].as_vector<int>();
+  // get flag masks
+  getStateField(flag_mask,rec,FFlagMask);
+  getStateField(row_flag_mask,rec,FRowFlagMask);
 }
 
 //##ModelId=3F9509770277

@@ -77,6 +77,9 @@ class Sink : public VisHandlerNode
     //##ModelId=3F9918390123
     vector<int> output_icorrs;
     
+    int flag_mask;
+    int row_flag_mask;
+    
 };
 
 }
