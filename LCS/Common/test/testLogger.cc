@@ -146,8 +146,11 @@ int main (int, char *argv[]) {
 
 	LOG_INFO("We now set the Threshold of the TRACE logger to "
 					  "TRACE_LEVEL_VAR so the loop counter don't show up anymore");
+
+#ifdef HAVE_LOG4CPLUS
 	// You normally do this by editing your propertyfile.
 	log4cplus::Logger::getInstance("TRC").setLogLevel(TRACE_LEVEL_VAR);
+#endif // HAVE_LOG4CPLUS
 
 	for (int i = 0; i < 5; ++i) {
 		LOG_TRACE_LOOP(formatString("Loop counter = %d", i));
