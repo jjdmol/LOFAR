@@ -1,4 +1,4 @@
-//# Add.cc: Add 2 or more nodes
+//# ToComplex.h: Make Complex value of 2 nodes
 //#
 //# Copyright (C) 2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,31 +20,30 @@
 //#
 //# $Id$
 
-#include <MEQ/Add.h>
+#ifndef MEQ_TOCOMPLEX_H
+#define MEQ_TOCOMPLEX_H
+    
+#include <MEQ/Function.h>
+
+#pragma aidgroup MEQ
+#pragma types #MEQ::ToComplex
 
 namespace MEQ {    
 
 
-Add::Add()
-{}
-
-Add::Add (Function* ch1, Function* ch2)
+class ToComplex : public Function
 {
-  children().push_back (ch1);
-  children().push_back (ch2);
-}
+public:
+  ToComplex();
 
-Add::~Add()
-{}
+  virtual ~ToComplex();
 
-void Add::evaluateVells (Vells& result, const Request&,
-			 const vector<Vells*>& values)
-{
-  result.init (0.);
-  for (unsigned int i=0; i<values.size(); i++) {
-    result += *(values[i]);
-  }
-}
+  // Evaluate the value for the given request.
+  virtual Vells evaluate (const Request&,
+			  const vector<Vells*>& values);
+};
 
 
 } // namespace MEQ
+
+#endif

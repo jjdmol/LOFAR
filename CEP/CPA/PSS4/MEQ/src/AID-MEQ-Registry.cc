@@ -7,12 +7,30 @@
     
 #include "Add.h"
 BlockableObject * __construct_MEQAdd (int n) { return n>0 ? new MEQ::Add [n] : new MEQ::Add; }
+#include "Conj.h"
+BlockableObject * __construct_MEQConj (int n) { return n>0 ? new MEQ::Conj [n] : new MEQ::Conj; }
 #include "Cos.h"
 BlockableObject * __construct_MEQCos (int n) { return n>0 ? new MEQ::Cos [n] : new MEQ::Cos; }
+#include "Divide.h"
+BlockableObject * __construct_MEQDivide (int n) { return n>0 ? new MEQ::Divide [n] : new MEQ::Divide; }
+#include "Exp.h"
+BlockableObject * __construct_MEQExp (int n) { return n>0 ? new MEQ::Exp [n] : new MEQ::Exp; }
+#include "Multiply.h"
+BlockableObject * __construct_MEQMultiply (int n) { return n>0 ? new MEQ::Multiply [n] : new MEQ::Multiply; }
 #include "Node.h"
 BlockableObject * __construct_MEQNode (int n) { return n>0 ? new MEQ::Node [n] : new MEQ::Node; }
 #include "ParmPolcStored.h"
 BlockableObject * __construct_MEQParmPolcStored (int n) { return n>0 ? new MEQ::ParmPolcStored [n] : new MEQ::ParmPolcStored; }
+#include "Sin.h"
+BlockableObject * __construct_MEQSin (int n) { return n>0 ? new MEQ::Sin [n] : new MEQ::Sin; }
+#include "Sqr.h"
+BlockableObject * __construct_MEQSqr (int n) { return n>0 ? new MEQ::Sqr [n] : new MEQ::Sqr; }
+#include "Sqrt.h"
+BlockableObject * __construct_MEQSqrt (int n) { return n>0 ? new MEQ::Sqrt [n] : new MEQ::Sqrt; }
+#include "Subtract.h"
+BlockableObject * __construct_MEQSubtract (int n) { return n>0 ? new MEQ::Subtract [n] : new MEQ::Subtract; }
+#include "ToComplex.h"
+BlockableObject * __construct_MEQToComplex (int n) { return n>0 ? new MEQ::ToComplex [n] : new MEQ::ToComplex; }
   
     int aidRegistry_MEQ ()
     {
@@ -25,9 +43,21 @@ BlockableObject * __construct_MEQParmPolcStored (int n) { return n>0 ? new MEQ::
         AtomicID::registerId(-1429,"Nfreq")+
         AtomicID::registerId(-1428,"Times")+
         AtomicID::registerId(-1430,"TimeSteps")+
+        AtomicID::registerId(-1442,"MEQConj")+
+        TypeInfoReg::addToRegistry(-1442,TypeInfo(TypeInfo::DYNAMIC,0))+
+        DynamicTypeManager::addToRegistry(-1442,__construct_MEQConj)+
         AtomicID::registerId(-1424,"MEQCos")+
         TypeInfoReg::addToRegistry(-1424,TypeInfo(TypeInfo::DYNAMIC,0))+
         DynamicTypeManager::addToRegistry(-1424,__construct_MEQCos)+
+        AtomicID::registerId(-1437,"MEQDivide")+
+        TypeInfoReg::addToRegistry(-1437,TypeInfo(TypeInfo::DYNAMIC,0))+
+        DynamicTypeManager::addToRegistry(-1437,__construct_MEQDivide)+
+        AtomicID::registerId(-1440,"MEQExp")+
+        TypeInfoReg::addToRegistry(-1440,TypeInfo(TypeInfo::DYNAMIC,0))+
+        DynamicTypeManager::addToRegistry(-1440,__construct_MEQExp)+
+        AtomicID::registerId(-1435,"MEQMultiply")+
+        TypeInfoReg::addToRegistry(-1435,TypeInfo(TypeInfo::DYNAMIC,0))+
+        DynamicTypeManager::addToRegistry(-1435,__construct_MEQMultiply)+
         AtomicID::registerId(-1419,"Node")+
         AtomicID::registerId(-1427,"Class")+
         AtomicID::registerId(-1163,"Name")+
@@ -47,6 +77,21 @@ BlockableObject * __construct_MEQParmPolcStored (int n) { return n>0 ? new MEQ::
         AtomicID::registerId(-1426,"ParmValues")+
         AtomicID::registerId(-1433,"Spids")+
         AtomicID::registerId(-1423,"Perturbations")+
+        AtomicID::registerId(-1439,"MEQSin")+
+        TypeInfoReg::addToRegistry(-1439,TypeInfo(TypeInfo::DYNAMIC,0))+
+        DynamicTypeManager::addToRegistry(-1439,__construct_MEQSin)+
+        AtomicID::registerId(-1443,"MEQSqr")+
+        TypeInfoReg::addToRegistry(-1443,TypeInfo(TypeInfo::DYNAMIC,0))+
+        DynamicTypeManager::addToRegistry(-1443,__construct_MEQSqr)+
+        AtomicID::registerId(-1441,"MEQSqrt")+
+        TypeInfoReg::addToRegistry(-1441,TypeInfo(TypeInfo::DYNAMIC,0))+
+        DynamicTypeManager::addToRegistry(-1441,__construct_MEQSqrt)+
+        AtomicID::registerId(-1436,"MEQSubtract")+
+        TypeInfoReg::addToRegistry(-1436,TypeInfo(TypeInfo::DYNAMIC,0))+
+        DynamicTypeManager::addToRegistry(-1436,__construct_MEQSubtract)+
+        AtomicID::registerId(-1438,"MEQToComplex")+
+        TypeInfoReg::addToRegistry(-1438,TypeInfo(TypeInfo::DYNAMIC,0))+
+        DynamicTypeManager::addToRegistry(-1438,__construct_MEQToComplex)+
     0;
     return res;
   }

@@ -1,4 +1,4 @@
-//# Add.cc: Add 2 or more nodes
+//# Multiply.cc: Multiply 2 or more nodes
 //#
 //# Copyright (C) 2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,29 +20,23 @@
 //#
 //# $Id$
 
-#include <MEQ/Add.h>
+#include <MEQ/Multiply.h>
 
 namespace MEQ {    
 
 
-Add::Add()
+Multiply::Multiply()
 {}
 
-Add::Add (Function* ch1, Function* ch2)
-{
-  children().push_back (ch1);
-  children().push_back (ch2);
-}
-
-Add::~Add()
+Multiply::~Multiply()
 {}
 
-void Add::evaluateVells (Vells& result, const Request&,
-			 const vector<Vells*>& values)
+void Multiply::evaluateVells (Vells& result, const Request&,
+			      const vector<Vells*>& values)
 {
-  result.init (0.);
+  result.init (1.);
   for (unsigned int i=0; i<values.size(); i++) {
-    result += *(values[i]);
+    result *= *(values[i]);
   }
 }
 
