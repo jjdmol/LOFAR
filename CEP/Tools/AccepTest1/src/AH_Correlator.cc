@@ -82,17 +82,17 @@ void AH_Correlator::init() {
   int maxrank = TH_MPI::getNumberOfNodes();
   MPI_Status status;
   int     buf = 0;
-  cout << "Correlator " << myrank << " wait for token " << endl;
+//   cout << "Correlator " << myrank << " wait for token " << endl;
   if (myrank > 0) MPI_Recv(&buf, 1, MPI_INT, myrank-1, 645327, MPI_COMM_WORLD, &status);
-  cout << "Correlator " << myrank << " start baseprocess " << endl;
+//   cout << "Correlator " << myrank << " start baseprocess " << endl;
 #endif
   itsWH->basePreprocess();
 #ifdef HAVE_MPI
-  cout << "Correlator " << myrank << " send token " << endl;
+//   cout << "Correlator " << myrank << " send token " << endl;
   if (myrank < maxrank-1) MPI_Send(&buf, 1, MPI_INT, myrank+1, 645327, MPI_COMM_WORLD);
-  cout << "Correlator " << myrank << " ended baseprocess " << endl;
+//   cout << "Correlator " << myrank << " ended baseprocess " << endl;
   TH_MPI::synchroniseAllProcesses();
-  if (myrank == maxrank) cout << "All connections initialised" << endl;
+//   if (myrank == maxrank) cout << "All connections initialised" << endl;
 #endif
 }
 
@@ -106,23 +106,8 @@ void AH_Correlator::run(int nsteps) {
     if (i != 0) MPE_Log_event(4, i, "transported");
 #endif
 
-#ifdef NOTHAVE_MPI
-  int  myrank = TH_MPI::getCurrentRank();
-  int maxrank = TH_MPI::getNumberOfNodes();
-  MPI_Status status;
-  int     buf = 0;
-  //  cout << "Correlator " << myrank << " wait for token " << endl;
-  //  if (myrank > 0) MPI_Recv(&buf, 1, MPI_INT, myrank-1, 645324, MPI_COMM_WORLD, &status);
-  //  cout << "Correlator " << myrank << " start baseprocess " << endl;
-#endif
     itsWH->baseProcess();
-#ifdef NOTHAVE_MPI
-    //  cout << "Correlator " << myrank << " send token " << endl;
-    //  if (myrank < maxrank-1) MPI_Send(&buf, 1, MPI_INT, myrank+1, 645324, MPI_COMM_WORLD);
-    //  cout << "Correlator " << myrank << " ended baseprocess " << endl;
-#endif
 
-    
     if (itsRank == 0 && i > 0) {
       avg_bandwidth += static_cast<WH_Correlator*>(itsWH)->getAggBandwidth();
       avg_corr_perf += static_cast<WH_Correlator*>(itsWH)->getCorrPerf();

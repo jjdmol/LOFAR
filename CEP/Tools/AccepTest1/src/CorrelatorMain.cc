@@ -7,6 +7,8 @@
 //#
 //#  $Id$
 
+#define MAX_TARGETGROUPS 4
+
 #include <AH_Correlator.h>
 #include <Common/KeyParser.h>
 #include <Common/KeyValueMap.h>
@@ -42,11 +44,13 @@ int main (int argc, const char** argv) {
   std::string loggerfile = kvm.getString("loggerfile", "CorrelatorLogger.prop");
 //   kvm.show(cout);
 
+  if (targetgroups > MAX_TARGETGROUPS) targetgroups=MAX_TARGETGROUPS;
+
   INIT_LOGGER(loggerfile);
 
   //ASSERTSTR(targetgroups == NRFE,"Code not unrolled for other than 4 target groups yet..." );
-  std::string FE_ip[targetgroups];
-  std::string BE_ip[targetgroups];
+  std::string FE_ip[MAX_TARGETGROUPS];
+  std::string BE_ip[MAX_TARGETGROUPS];
   char f_ip[32];
   char b_ip[32];
   for (int n=0; n<targetgroups; n++) { 
