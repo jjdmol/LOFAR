@@ -288,7 +288,7 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
     # resolve children on all root nodes
     print 'Root nodes are: ',rootnodes;
     for( r in rootnodes )
-      mqs.meq('Resolve.Children',[name=r]);
+      mqs.resolve(r);
   }
   if( save )
     mqs.meq('Save.Forest',[file_name=save]);
@@ -311,7 +311,10 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
 }
 
 
+do_test(solve=T,run=T,st1set=1:10,st2set=1:10,publish=2);
 # do_test(solve=T,run=T,st1set=1:10,st2set=1:10,publish=1,save='solve.forest');
-do_test(solve=T,run=T,publish=1,load='solve.forest');
+# do_test(solve=T,run=T,publish=1,load='solve.forest');
 
 print 'errors reported:',mqs.num_errors();
+
+# mqs.halt();

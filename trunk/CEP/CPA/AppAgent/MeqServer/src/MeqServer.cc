@@ -32,7 +32,7 @@ MeqServer::MeqServer()
 {
   command_map["Create.Node"] = &MeqServer::createNode;
   command_map["Delete.Node"] = &MeqServer::deleteNode;
-  command_map["Resolve.Children"] = &MeqServer::resolveChildren;
+  command_map["Resolve"] = &MeqServer::resolve;
   command_map["Get.Node.List"] = &MeqServer::getNodeList;
   command_map["Get.NodeIndex"] = &MeqServer::getNodeIndex;
   
@@ -136,31 +136,17 @@ void MeqServer::nodeSetState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
 }
 
 //##ModelId=3F98D91A03B9
-void MeqServer::resolveChildren (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
+void MeqServer::resolve (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
 {
-//  Node & node = resolveNode(*in);
-//  cdebug(3)<<"resolveChildren for node "<<node.name()<<endl;
-//  node.resolveChildren();
   DataRecord::Ref rec = in;
   Node & node = resolveNode(*rec);
-  cdebug(2)<<"resolveChildren for node "<<node.name()<<endl;
+  cdebug(2)<<"resolve for node "<<node.name()<<endl;
   // create request for the commands. Note that request ID will be null,
-  // meaning it will ignore cache and go up the entire tree 
-  Request::Ref reqref(DMI::ANONWR);
-  // add commands for all nodes (group FAll)
-  DataRecord &cmdrec = Node::Rider::getCmdRec_All(reqref,FAll);
-  cmdrec[FResolveChildren] = true;
-  cmdrec[FInitDepMask] = true;
-  reqref().validateRider();
-  Result::Ref resref;
-  int flags = node.execute(resref,*reqref);
-  cdebug(2)<<"  execute() returns flags "<<flags<<" with result"<<endl;
-  cdebug(3)<<"    result is "<<resref.sdebug(DebugLevel-1,"    ")<<endl;
-  out[AidResult|AidCode] = flags;
-  if( resref.valid() )
-    out[AidResult] <<= resref;
-  out[AidMessage] = ssprintf("node %d (%s): resolveChildren: execute() returns %x",
-      node.nodeIndex(),node.name().c_str(),flags);
+  // meaning it will ignore cache and go up the entire tree
+  node.resolve(rec,0);
+  cdebug(3)<<"resolve complete"<<endl;
+  out[AidMessage] = ssprintf("node %d (%s): resolve complete",
+      node.nodeIndex(),node.name().c_str());
 }
 
 void MeqServer::getNodeList (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)

@@ -92,7 +92,7 @@ const meq.fitpolcs_mqs := function (polcs,degx=0,degy=0,domain=F,scale=F,verbose
   print mqs.createnode(rec);
   
   # resolve children
-  print mqs.meq('Resolve.Children',[name='fitpolc_solver']);
+  mqs.resolve('fitpolc_solver');
   
   if( verbose>1 )
   {

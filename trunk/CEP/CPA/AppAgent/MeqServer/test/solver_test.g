@@ -100,7 +100,7 @@ const solver_test := function (stage=0,gui=use_gui,debug=[=],verbose=default_ver
     mqs.meq('Create.Node',rec);
 
     # resolve children
-    mqs.meq('Resolve.Children',[name='solver']);
+    mqs.resolve('solver');
 
 #    for( n in "eq1 lhs1 c1 a1x x" )
     for( n in "x eq1 eq2" )
