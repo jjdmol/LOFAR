@@ -14,7 +14,6 @@
 
 
 nrKS=1,           // Number of Knowledge Sources
-BBDBname="test",  // BlackBoard database name (must be a postgres database on dop50)
 
 CTRLparams=[
   strategy="Simple",
@@ -35,7 +34,6 @@ KSparams=[
   MSName="demo10-",         // Name of the Measurement Set
   DBHost="dop50",          // Parameter database host name
   DBType="aips",           // Parameter database type
-  DBName="test",           // Parameter database name
   DBPwd="",                // Parameter database password
   meqTableName="demo10-",   // Meq model table name *       
   skyTableName="demo10_gsm-", // Sky model table name *
