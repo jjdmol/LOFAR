@@ -23,6 +23,7 @@
 
 #include <Common/DataConvert.h>
 #include <Common/LofarLogger.h>
+#include <iomanip>
 
 using namespace LOFAR;
 
@@ -106,6 +107,48 @@ int main()
       ASSERT (v2[0] == v1[0]);
       ASSERT (v2[1] == v1[1]);
       ASSERT (v2[2] == v1[2]);
+    }
+    {
+      bool bufb[50];
+      bool bufb2[51];
+      uchar bufc[20];
+      for (int i=0; i<20; i++) {
+	bufc[i] = 0;
+      }
+      for (int i=0; i<50; i++) {
+	bufb[i] = (i%3 == 0);
+      }
+      int nrb = boolToBit (bufc, bufb, 50);
+      for (int i=0; i<nrb; i++) {
+	cout << ushort(bufc[i]) << ' ';
+      }
+      cout << endl;
+      int nrb2 = bitToBool (bufb2, bufc, 50);
+      ASSERT (nrb2 == nrb);
+      for (int i=0; i<50; i++) {
+	ASSERT (bufb2[i] == bufb[i]);
+      }
+      nrb2 = bitToBool (bufb2, bufc, 50-1, 1);
+      ASSERT (nrb2 == nrb);
+      for (int i=0; i<50-1; i++) {
+	ASSERT (bufb2[i] == bufb[i+1]);
+      }
+      nrb2 = bitToBool (bufb2, bufc, 40-2, 2);
+      ASSERT (nrb2 == nrb-2);
+      for (int i=0; i<40-2; i++) {
+	ASSERT (bufb2[i] == bufb[i+2]);
+      }
+      nrb = boolToBit (bufc, bufb, 50, 25);
+      for (int i=0; i<nrb+3; i++) {
+	cout << ushort(bufc[i]) << ' ';
+      }
+      cout << endl;
+      nrb2 = bitToBool (bufb2, bufc, 50+25, 0);
+      ASSERT (nrb2 == nrb+3);
+      ASSERT (bufb2[0]);
+      for (int i=0; i<50; i++) {
+	ASSERT (bufb2[i+25] == bufb[i]);
+      }
     }
   } catch (std::exception& x) {
     std::cout << "Unexpected exception: " << x.what() << std::endl;
