@@ -146,7 +146,6 @@ class Socket
 
       //## Attribute: sigpipe_counter%3C90CE5803B3
       //## begin Socket::sigpipe_counter%3C90CE5803B3.attr preserve=no  public: int {VT} 
-      volatile int sigpipe_counter;
       //## end Socket::sigpipe_counter%3C90CE5803B3.attr
 
     // Additional Public Declarations
@@ -180,6 +179,21 @@ class Socket
           SHUTDOWN      = -19,  // shutdown() failure
           NOINIT        = -20   // uninitialized socket
       } ErrorCodes;
+
+      // sets blocking mode on socket if block is true
+      // (default sockets are non-blocking)
+      int setBlocking (bool block=true);
+      
+      // interrupts readblock / writeblock calls (for multithreaded sockets)
+      void interrupt (bool intr=True);
+      
+      // points socket at SIGPIPE counter
+      void setSigpipeCounter (const volatile int *counter);
+      
+      //	Reads maxn bytes from socket (in blocking mode)
+      int readblock (void *buf, int maxn);
+      //	Writes n bytes to socket (in blocking mode)
+      int writeblock (const void *buf, int n);
 
       // helper function: prints formatted data from buffer
       static void printData (const void *buf,int n);
@@ -269,9 +283,13 @@ class Socket
 
     // Additional Implementation Declarations
       //## begin Socket%3C90CE58024E.implementation preserve=yes
+      bool do_intr;  // flag: interrupt readblock/writeblock call
       bool bound;
       struct sockaddr_in rmt_addr;  // connected client address (TCP)
       struct sockaddr_un unix_addr; // connected client address (UNIX)
+      
+      const volatile int *sigpipe_counter;
+      static int default_sigpipe_counter;
       //## end Socket%3C90CE58024E.implementation
 };
 
@@ -366,6 +384,11 @@ inline int Socket::set_errcode ( int n )
 {
   errno_sys_ = errno;
   return errcode_ = n;
+}
+
+inline void Socket::setSigpipeCounter (const volatile int *counter)
+{
+  sigpipe_counter = counter;
 }
 //## end module%3C90D43B0094.epilog
 

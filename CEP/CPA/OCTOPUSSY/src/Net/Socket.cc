@@ -40,6 +40,16 @@
 
 //## begin module%3C90D43B0096.additionalDeclarations preserve=yes
 InitDebugSubContext(Socket,OctopussyDebugContext,"Socket");
+
+int Socket::default_sigpipe_counter;
+
+int Socket::setBlocking (bool block)
+{
+  if( fcntl(sid,F_SETFL,block?0:FNDELAY)<0 )
+    return set_errcode(SOCKOPT);
+  return 0;
+}
+
 //## end module%3C90D43B0096.additionalDeclarations
 
 
@@ -53,6 +63,7 @@ Socket::Socket (const string &sname)
   //## end Socket::Socket%3C91BA4300F6.initialization
 {
   //## begin Socket::Socket%3C91BA4300F6.body preserve=yes
+  sigpipe_counter = &default_sigpipe_counter;
   //## end Socket::Socket%3C91BA4300F6.body
 }
 
@@ -64,6 +75,7 @@ Socket::Socket (const string &sname, const string &serv, int proto, int backlog)
   //## end Socket::Socket%9FD2BC39FEED.initialization
 {
   //## begin Socket::Socket%9FD2BC39FEED.body preserve=yes
+  sigpipe_counter = &default_sigpipe_counter;
   initServer(serv,proto,backlog);
   //## end Socket::Socket%9FD2BC39FEED.body
 }
@@ -76,6 +88,7 @@ Socket::Socket (const string &sname, const string &host, const string &serv, int
   //## end Socket::Socket%C15CE2A5FEED.initialization
 {
   //## begin Socket::Socket%C15CE2A5FEED.body preserve=yes
+  sigpipe_counter = &default_sigpipe_counter;
   initClient(host,serv,proto,wait_ms);
   //## end Socket::Socket%C15CE2A5FEED.body
 }
@@ -88,6 +101,7 @@ Socket::Socket (int id, struct sockaddr_in &sa)
   //## end Socket::Socket%4760B82BFEED.initialization
 {
   //## begin Socket::Socket%4760B82BFEED.body preserve=yes
+  sigpipe_counter = &default_sigpipe_counter;
   dprintf(1)("creating connected socket\n");
   // constructs a generic socket (used by accept(), below)
   rmt_addr = sa;
@@ -111,6 +125,7 @@ Socket::Socket (int id, struct sockaddr_un &sa)
   //## end Socket::Socket%3CC95D6E032A.initialization
 {
   //## begin Socket::Socket%3CC95D6E032A.body preserve=yes
+  sigpipe_counter = &default_sigpipe_counter;
   dprintf(1)("creating connected socket\n");
   unix_addr = sa;
   if( setDefaults()<0 )
@@ -493,9 +508,9 @@ int Socket::read (void *buf, int maxn)
     while( nleft>0 && !errcode_ && !sigpipe )
     {
       errno = 0;
-      int old_counter = sigpipe_counter;
+      int old_counter = *sigpipe_counter;
       nread = ::read( sid,buf,nleft ); // try to read something
-      sigpipe = old_counter != sigpipe_counter; // check for SIGPIPE
+      sigpipe = old_counter != *sigpipe_counter; // check for SIGPIPE
       dprintf(3)("read(%d)=%d%s, errno=%d (%s)\n",nleft,nread,
             sigpipe?" SIGPIPE":"",errno,strerror(errno));
       if( Debug(10) && nread>0 )
@@ -561,9 +576,9 @@ int Socket::write (const void *buf, int n)
     while( nleft>0 && !errcode_ && !sigpipe)
     {
       errno = 0;
-      int old_counter = sigpipe_counter;
+      int old_counter = *sigpipe_counter;
       nwr = ::write(sid,buf,nleft);
-      sigpipe = old_counter != sigpipe_counter; // check for SIGPIPE
+      sigpipe = old_counter != *sigpipe_counter; // check for SIGPIPE
       dprintf(3)("write(%d)=%d%s, errno=%d (%s)\n",nleft,nwr,
             sigpipe?" SIGPIPE":"",errno,strerror(errno));
       if( Debug(10) && nwr>0 )
@@ -657,6 +672,114 @@ int Socket::setDefaults ()
 
 // Additional Declarations
   //## begin Socket%3C90CE58024E.declarations preserve=yes
+int Socket::readblock (void *buf, int maxn)
+{
+  if( sid<0 ) 
+    return errcode_=NOINIT; 
+  if( !maxn ) 
+    return 0;
+  FailWhen(!buf,"null buffer");
+  errcode_ = 0;
+  int nread,nleft=maxn;
+  if( type != UDP )
+  {
+    while( nleft>0 )
+    {
+      errno = 0;
+      nread = ::read( sid,buf,nleft ); // try to read something
+      dprintf(3)("read(%d)=%d, errno=%d (%s)\n",nleft,nread,errno,strerror(errno));
+      if( do_intr )
+        return set_errcode(INCOMPLETE);
+      if( Debug(10) && nread>0 )
+        printData(buf,min(nread,200));
+      if( nread<0 ) // error?
+      {
+        // return error (except in a few special cases)
+        if( errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR ) 
+          return set_errcode(READERR);
+      }
+      else if( nread == 0 )  // peer closed connection -- return
+        return errcode_ = PEERCLOSED;
+      else
+      {
+        buf = nread + (char*)buf;
+        nleft -= nread;
+      }
+    }
+  }
+  else // UDP socket
+  {
+    errno = 0;
+//    if ((wres=Wait(rtimeout,SWAIT_READ))==0)
+//      errcode_=SK_TIMEOUT;
+//    else 
+    socklen_t alen = sizeof(rmt_addr);
+    if( (nread=recvfrom(sid,(char*)buf,maxn,0,
+                        (struct sockaddr*)&rmt_addr,&alen))<=0 ||
+         errno )
+      return set_errcode(READERR);
+    else
+    {
+      nleft = 0;
+      connected = True;
+    }
+  }
+  
+  return maxn;
+}
+
+int Socket::writeblock (const void *buf, int n)
+{
+  //## begin Socket::write%139EF112FEED.body preserve=yes
+  if( sid<0 ) 
+    return errcode_=NOINIT; 
+  if( !n ) 
+    return 0;
+  FailWhen(!buf,"null buffer");
+  errcode_ = 0;
+  
+  int nleft=n,nwr;
+  if( type != UDP ) // TCP or UNIX: write to stream
+  {
+    while( nleft>0 )
+    {
+      errno = 0;
+      nwr = ::write(sid,buf,nleft);
+      dprintf(3)("write(%d)=%d, errno=%d (%s)\n",nleft,nwr,errno,strerror(errno));
+      if( do_intr )
+        return set_errcode(INCOMPLETE);
+      if( Debug(10) && nwr>0 )
+        printData(buf,min(nwr,200));
+      if( nwr<0 )
+      {
+        if( errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR ) 
+          return set_errcode(WRITERR);
+      }
+      else if( nwr==0 )
+        return errcode_ = PEERCLOSED;
+      else
+      {
+        buf = nwr + (char*)buf;
+        nleft -= nwr;
+      }
+    }
+  }
+  else // UDP
+  {
+    errno = 0;
+    if( !connected )
+      return errcode_ = WRITERR;
+    if( (nwr = sendto(sid,(char*)buf,n,0,(struct sockaddr*)&rmt_addr,
+                         sizeof(rmt_addr)))<=0 || errno )
+      return set_errcode(WRITERR);
+    else
+      nleft=0;
+  }
+  
+  return n;
+  //## end Socket::write%139EF112FEED.body
+}
+
 
 void Socket::printData (const void *buf,int n)
 {
@@ -682,6 +805,10 @@ void Socket::printData (const void *buf,int n)
   }
 }
 
+void Socket::interrupt (bool intr)
+{
+  do_intr = intr;
+}
 
 string Socket::sdebug ( int detail,const string &,const char *name ) const
 {
