@@ -18,8 +18,6 @@ INSTHDRS = \
 	Query/Expr.h \
 	Query/ExprNode.h \
 	Query/FunctionExprNode.h \
-	Query/LogicalBinaryExprNode.h \
-	Query/LogicalUnaryExprNode.h \
 	Query/SQLExprNode.h \
 	Query/UnaryExprNode.h
 
@@ -54,8 +52,6 @@ libpl_la_SOURCES = \
 	Query/ConstExprNode.cc \
 	Query/Expr.cc \
 	Query/ExprNode.cc \
-	Query/LogicalBinaryExprNode.cc \
-	Query/LogicalUnaryExprNode.cc \
 	Query/SQLExprNode.cc \
 	Query/UnaryExprNode.cc
 
