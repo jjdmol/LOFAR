@@ -20,6 +20,11 @@
 //
 //  $Id$
 
+//#
+//# DO NOT INCLUDE ANY HEADER FILES IN THIS SOURCE FILE. THIS FILE CONTAINS
+//# COMMON CODE THAT WILL BE INCLUDED BY OTHER SOURCE FILES.
+//#
+
 namespace Debug 
 {
   // -----------------------------------------------------------------------
