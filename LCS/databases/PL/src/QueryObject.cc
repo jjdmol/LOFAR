@@ -1,4 +1,4 @@
-//#  Query.cc: one line description
+//#  QueryObject.cc: implementation of the QueryObject class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include <PL/Query.h>
+#include <PL/QueryObject.h>
 #include <Common/Debug.h>
 #include <sstream>
 
@@ -29,7 +29,7 @@ namespace LOFAR
   namespace PL
   {
 
-    bool QueryObject::empty() const
+    bool QueryObject::isEmpty() const
     {
       if (itsUseString) return itsSqlString.empty();
       else return itsQueryExpr.isNull();
@@ -39,7 +39,7 @@ namespace LOFAR
     {
       TRACER3 (__PRETTY_FUNCTION__ << ": itsUseString = "
                << (itsUseString ? "true" : "false"));
-      if (empty()) return "";
+      if (isEmpty()) return "";
       if (itsUseString) {
         return "WHERE " + itsSqlString;
       }

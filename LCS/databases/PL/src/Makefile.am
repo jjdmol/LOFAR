@@ -10,7 +10,7 @@ INSTHDRS = \
 	ObjectId.h \
 	PersistenceBroker.h \
 	PersistentObject.h \
-	Query.h \
+	QueryObject.h \
 	TPersistentObject.h \
 	Query/BinaryExprNode.h \
 	Query/ColumnExprNode.h \
@@ -45,7 +45,7 @@ libpl_la_SOURCES = \
 	DBRepMeta.cc \
 	ObjectCache.cc \
 	ObjectId.cc \
-	Query.cc \
+	QueryObject.cc \
 	PersistenceBroker.cc \
 	PersistentObject.cc \
 	TPersistentObject.cc \
