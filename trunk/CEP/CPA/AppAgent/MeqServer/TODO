@@ -3,11 +3,13 @@ MEQ in general:
   * think through writability & privatization issues. Perhaps finally
     implement copy-on-write in DMI?
     
+  * automatically add the cells to the ResultSet? Some nodes (Freq,Time)
+    are still missing it!
+    
     + ResultSet shows up in Glish with ::dmi_actual_type=datarecord. WTF?
       24/11/03: it got cloned along the way, clone's not implemented, and
       the parent's version produces a DataRecord. To solve this, need to
       clear up this whole writability/privatization shebang, see above.
-
 
 ResultSet:
 
