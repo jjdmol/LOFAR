@@ -51,8 +51,6 @@ void Correlator::define(const KeyValueMap& /*params*/) {
 
   // create the primary WorkHolder to do the actual work
   itsWH = (WorkHolder*) new WH_Correlator("noname",
-					  1, 
-					  1, 
 					  itsNelements, 
 					  itsNsamples,
 					  itsNchannels, 
@@ -62,15 +60,11 @@ void Correlator::define(const KeyValueMap& /*params*/) {
   // now create two dummy workholders to connect to
   // these will not exist outside the scope of this method
   WH_Random myWHRandom("noname",
-		       1, 
-		       1, 
 		       itsNelements, 
 		       itsNsamples,
 		       itsNchannels);
   
   WH_Dump myWHDump("noname",
-		   1, 
-		   1, 
 		   itsNelements,
 		   itsNchannels);
   
@@ -91,9 +85,6 @@ void Correlator::define(const KeyValueMap& /*params*/) {
 }
 
 void Correlator::undefine() {
-  delete itsWH->getDataManager().getInHolder(0)->getTransporter().getTransportHolder();
-  delete itsWH->getDataManager().getOutHolder(0)->getTransporter().getTransportHolder();
-
   delete itsWH;
 }
 
@@ -119,57 +110,9 @@ void Correlator::postrun() {
 void Correlator::quit() {
 }
 
-int parse_config() {
-  int end = 0;
-
-  config_file.open("config.dat");
-
-  while (!config_file.eof()) {
-    config_file.get(config_buffer[end++] );
-  }
-  config_file.close();
-
-  Config params('=', 1, config_buffer);
-
-  const char* ch = params("Correlator", "channels");
-  if (ch) {
-    nchannels = atoi(ch);
-  }
-
-  const char* el = params("Correlator", "elements");
-  if (el) {
-    nelements = atoi(el);
-  }
-  
-  const char* rn = params("Correlator", "runs");
-  if (rn) {
-    nruns = atoi(rn);
-  }
-
-  const char* sa = params("Correlator", "samples");
-  if (sa) {
-    nsamples = atoi(sa);
-  }
-  
-  const char* ip = params("Correlator", "frontendip");
-  if (ip) {
-    frontend_ip = (char*)malloc(15*sizeof(char));
-    frontend_ip = strndup(ip, 15);
-  }
-  
-  const char* pt = params("Correlator", "baseport");
-  if (pt) {
-    baseport = atoi(pt);
-  }
-   
-  return 1;
-}
-
-
-
 int main (int argc, const char** argv) {
 
-  INIT_LOGGER("CorrelatorLogger.prop");
+  //INIT_LOGGER("CorrelatorLogger.prop");
 #ifdef HAVE_MPI
   TH_MPI::init(argc, argv);
 
