@@ -33,6 +33,7 @@ namespace LOFAR {
 
   BlobFieldBase::BlobFieldBase (uint version)
     : itsOffset       (-1),
+      itsArrayOffset  (0),
       itsVersion      (version),
       itsNelem        (1),
       itsFortranOrder (true),
@@ -41,6 +42,7 @@ namespace LOFAR {
 
   BlobFieldBase::BlobFieldBase (uint version, uint32 size0)
     : itsOffset       (-1),
+      itsArrayOffset  (0),
       itsVersion      (version),
       itsNelem        (size0),
       itsFortranOrder (true),
@@ -53,6 +55,7 @@ namespace LOFAR {
   BlobFieldBase::BlobFieldBase (uint version, uint32 size0, uint32 size1,
 				bool fortranOrder)
     : itsOffset       (-1),
+      itsArrayOffset  (0),
       itsVersion      (version),
       itsFortranOrder (fortranOrder),
       itsIsScalar     (false)
@@ -65,6 +68,7 @@ namespace LOFAR {
   BlobFieldBase::BlobFieldBase (uint version, uint32 size0, uint32 size1,
 				uint32 size2, bool fortranOrder)
     : itsOffset       (-1),
+      itsArrayOffset  (0),
       itsVersion      (version),
       itsFortranOrder (fortranOrder),
       itsIsScalar     (false)
@@ -78,6 +82,7 @@ namespace LOFAR {
   BlobFieldBase::BlobFieldBase (uint version, uint32 size0, uint32 size1,
 				uint32 size2, uint32 size3, bool fortranOrder)
     : itsOffset       (-1),
+      itsArrayOffset  (0),
       itsVersion      (version),
       itsFortranOrder (fortranOrder),
       itsIsScalar     (false)
@@ -92,6 +97,7 @@ namespace LOFAR {
   BlobFieldBase::BlobFieldBase (uint version, const std::vector<uint32>& shape,
 				bool fortranOrder)
     : itsOffset       (-1),
+      itsArrayOffset  (0),
       itsVersion      (version),
       itsShape        (shape),
       itsFortranOrder (fortranOrder),
@@ -102,6 +108,7 @@ namespace LOFAR {
   BlobFieldBase::BlobFieldBase (uint version, const uint32* shape, uint16 ndim,
 				bool fortranOrder)
     : itsOffset       (-1),
+      itsArrayOffset  (0),
       itsVersion      (version),
       itsFortranOrder (fortranOrder),
       itsIsScalar     (false)
@@ -201,9 +208,10 @@ namespace LOFAR {
   {
     if (isScalar()) {
       bs.align (std::min(sizeof(T),8u));
-      setOffset (bs.setSpace (sizeof(T)));
+      setOffset (bs.setSpace (sizeof(T)), 0);
     } else {
-      setOffset (setSpaceBlobArray<T> (bs, getShape(), isFortranOrder()));
+      int64 off = bs.tellPos();     // array offset
+      setOffset (setSpaceBlobArray<T> (bs, getShape(), isFortranOrder()), off);
     }
   }
 
@@ -213,10 +221,11 @@ namespace LOFAR {
   {
     if (isScalar()) {
       bs.align (std::min(sizeof(T),8u));
-      setOffset (bs.getSpace (sizeof(T)));
+      setOffset (bs.getSpace (sizeof(T)), 0);
     } else {
+      int64 off = bs.tellPos();     // array offset
       std::vector<uint32> shp;
-      setOffset (getSpaceBlobArray<T> (bs, shp, fortranOrder()));
+      setOffset (getSpaceBlobArray<T> (bs, shp, fortranOrder()), off);
       setShape (shp);
     }
   }
@@ -267,6 +276,10 @@ namespace LOFAR {
       DbgAssert (getOffset() + getNelem()*sizeof(T) <= buf.size());
       T* data = (T*)(buf.getBuffer() + getOffset());
       LOFAR::dataConvert (fmt, data, getNelem());
+      if (! isScalar()) {
+	LOFAR::convertArrayHeader (fmt, (char*)(buf.getBuffer() +
+						getArrayOffset()));
+      }
     }
   }
 

@@ -198,6 +198,10 @@ inline void getBlobArrayStart (BlobIStream& bs, bool& fortranOrder,
   bs >> fortranOrder >> dummy >> ndim;
 }
 
+
+// Convert the header data.
+void convertArrayHeader (LOFAR::DataFormat, char* header);
+
 // Get the shape of an array from the blob.
 // This is a helper function for the functions reading an array.
 void getBlobArrayShape (BlobIStream& bs, uint32* shape, uint ndim,

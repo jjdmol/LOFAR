@@ -21,6 +21,7 @@
 //# $Id$
 
 #include <Common/BlobArray.h>
+#include <Common/BlobHeader.h>
 #include <vector>
 
 namespace LOFAR
@@ -44,6 +45,20 @@ void getBlobArrayShape (BlobIStream& bs, uint32* shape, uint ndim,
     for (uint i=0; i<ndim; i++) {
       shape[i] = shp[ndim-i-1];
     }
+  }
+}
+
+void convertArrayHeader (LOFAR::DataFormat fmt, char* header)
+{
+  BlobHeaderBase* hdr = (BlobHeaderBase*)header;
+  hdr->setLocalDataFormat();
+  char* buf = header + hdr->getHeaderLength() + 2;
+  int ndim = dataConvert (fmt, *((uint16*)buf));
+  dataConvert16 (fmt, buf);
+  buf += 2;
+  for (int i=0; i<ndim; i++) {
+    dataConvert32 (fmt, buf);
+    buf += 4;
   }
 }
 
