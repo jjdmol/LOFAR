@@ -47,6 +47,17 @@ solve := function(fname='michiel.demo', ant=4*[0:20], niter=1)
 {
     annotator := imgannotator(spaste(fname, '.img'), 'raster');
     
+    # Plot correct position, initial flux magnitude and final flux magnitude
+    src_mrk[1] := annotator.add_marker(1, 2.734,   0.45379, F, F, 1, 100, 3);
+    src_mrk[2] := annotator.add_marker(6, 2.734,   0.45379, F, F, 1, 100, 12);
+    src_mrk[3] := annotator.add_marker(2, 2.73402, 0.45369, F, F, 1, 100, 3);
+    src_mrk[4] := annotator.add_marker(5, 2.73402, 0.45369, F, F, 1, 50, 12);
+    src_mrk[5] := annotator.add_marker(3, 2.73398, 0.45375, F, F, 1, 100, 3);
+    src_mrk[6] := annotator.add_marker(4, 2.73398, 0.45375, F, F, 1, 30, 12);
+
+    #
+    # Create calibrater object
+    #
     mc := meqcalibrater(spaste(fname,'.MS'), fname, fname, ant=ant);
 
     if (is_fail(mc)) {
@@ -70,6 +81,8 @@ solve := function(fname='michiel.demo', ant=4*[0:20], niter=1)
             stokesI := parms[spaste('GSM.',i,'.I')].value[1];
             print 'src = ', i, ' ra = ', ra, ' dec = ', dec, ' I = ', stokesI;
 
+	    annotator.change_marker_size(src_mrk[(i*2)-1], stokesI * 100);
+
 	    if (is_fail(annotator)) fail;
             annotator.add_marker(i, real(ra), real(dec), i==nrpos);
         }
@@ -92,6 +105,7 @@ solve := function(fname='michiel.demo', ant=4*[0:20], niter=1)
         
         for (i in [1:niter]) {
             print "iteration", i;
+
             srec := mc.solve('MODEL_DATA');
 	    solverec[spaste("iter",i)] := srec;
             
@@ -104,10 +118,13 @@ solve := function(fname='michiel.demo', ant=4*[0:20], niter=1)
                     stokesI := parms[spaste('GSM.',j,'.I')].value[1];
                     print 'src = ', j, ' ra = ', ra, ' dec = ', dec, ' I = ', stokesI;
                     
+		    annotator.change_marker_size(src_mrk[(j*2)-1], stokesI * 100.0);
+
                     if (is_fail(annotator)) fail;
                     annotator.add_marker(j, real(ra), real(dec), j==nrpos);
                 }
             }
+
         }
         print mc.getstatistics()
         }
