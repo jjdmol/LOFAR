@@ -1,15 +1,13 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,224 108 954 748 N "_3DFace" 2
+PANEL,224 138 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
 {
 	//Simulation for altering a few selected DP's
 	startThread( \"Simulation\" );	
-
-  DebugN(\"Hé dude, this panel initilized.\");
 
 	//Check for existance trend config data.
 	if (dpExists($configDatapoint + \".Standard\") &&
@@ -346,9 +344,13 @@ void Simulation()
 {
   float fRandom;
   srand();
-  while(1 )
+  while(1)
   {
-    delay( 3, 0 );
+    delay(3, 0);
+    dpSet(  \"System1:PIC_Rack1_SubRack1_Board1_AP1_RCU1.status\", GetRandomValue( 20, 10 ));
+    dpSet(  \"System1:PIC_Rack1_SubRack1_Board1_AP1_RCU2.status\", GetRandomValue( 10, 20 ));
+    dpSet(  \"System1:PIC_Rack1_SubRack1_Board1_AP2_RCU1.status\", GetRandomValue( 30, 10 ));
+    dpSet(  \"System1:PIC_Rack1_SubRack1_Board1_AP2_RCU2.status\", GetRandomValue( 10, 30 ));
     dpSet(  \"System1:PIC_Rack1_SubRack1.status\", GetRandomValue( 10, 10 ));
     dpSet(  \"System1:PIC_Rack2_SubRack1.status\", GetRandomValue( 50, 10 ));
     dpSet(  \"System1:PIC_Rack3_SubRack1.status\", GetRandomValue( 60, 10 ));
