@@ -14,7 +14,7 @@ class TopLevelStrategy : public Strategy, public MPIProgramEntry
     //##ModelId=3F4225A301D4
     run();
     //##ModelId=3F43262B0291
-    static TopLevelStrategy &instance();
+    static TopLevelStrategy &Instance();
 
 
     //##ModelId=3F3A4C8201F4
@@ -25,7 +25,7 @@ class TopLevelStrategy : public Strategy, public MPIProgramEntry
 
   private:
     //##ModelId=3F43290401D9
-    static TopLevelStrategy * instance;
+    static TopLevelStrategy * _instance;
 
 
 };
