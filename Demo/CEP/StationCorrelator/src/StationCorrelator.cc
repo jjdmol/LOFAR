@@ -30,7 +30,7 @@
 
 #include <Transport/TH_Mem.h>
 #include <Transport/TH_MPI.h>
-#include <Transport/TH_Ethernet.h>
+#include <TH_RSP.h>
 
 #include <tinyCEP/WorkHolder.h>
 
@@ -108,15 +108,15 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     itsRSPsteps[i] = new Step(*whRSP, H_name, false);
 
     if (useRealRSP) {
-      // The constructor for TH_Ethernet also expects etype and dhcheck
-      // There is no error checking. If this fails the program will fail (and that is fine)
       string iface = itsKVM["interfaces"].getVecString()[i];
       cout<<"interface: "<<iface<<endl;
       string oMac  = itsKVM["oMacs"].getVecString()[i];
       string rMac  = itsKVM["rMacs"].getVecString()[i];
-      // The constructor for TH_Ethernet expects char* instead of const char* or string
-      // That should change. It also should copy the contents of the char*s to its own memory
-      //itsRSPsteps[i]->connect(&StepRSPemulator, 0, i, 1, TH_Ethernet(iface.c_str(), rMac.c_str(), oMac.c_str()), true);
+      itsRSPsteps[i]->connect(&StepRSPemulator, 0, i, 1, TH_RSP(iface.c_str(), 
+								rMac.c_str(), 
+								oMac.c_str(), 
+								0x000, 
+								true), true);
       StepRSPemulator.runOnNode(-1);
     } else {
       // Use the WH_RSPBoard to emulate a real RSP Board
