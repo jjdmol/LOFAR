@@ -146,12 +146,14 @@ private:
   bool            itsDefClearMatrix;
   bool            itsDefInvertMatrix;
   bool            itsDefSavePolcs;
+  bool            itsDefLastUpdate;
   int             itsCurNumIter;
   double          itsCurEpsilon;
   bool            itsCurUseSVD;
   bool            itsCurClearMatrix;
   bool            itsCurInvertMatrix;
   bool            itsCurSavePolcs;
+  bool            itsCurLastUpdate;
   bool            itsResetCur;
   vector<int>     itsSpids;
   

@@ -568,7 +568,8 @@ int Parm::processCommands (const DataRecord &rec,Request::Ref &reqref)
         save();
         saved = True;
       }
-      retcode |= RES_NO_CACHE;
+      // result depends on everything
+      retcode |= domain_depend_mask_|solve_depend_mask_;
     }
     else
     {
@@ -592,7 +593,7 @@ int Parm::processCommands (const DataRecord &rec,Request::Ref &reqref)
     for( uint i=0; i<sizeof(flds)/sizeof(flds[0]); i++ )
       wstate()[*(flds[i])].remove();
     domain_id_ = solve_domain_id_ = HIID();
-    retcode |= RES_NO_CACHE;
+//    retcode |= RES_NO_CACHE;
   }
   return retcode;
 }
