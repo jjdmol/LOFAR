@@ -6,6 +6,7 @@ cd tBBS2_tmp
 ln -s ../../../../test/tBBS2.sh .
 ln -s ../../../../test/*.g .
 ln -s ../../../../test/tBBS2.test*[0-9] .
+ln -s ../../../../test/generalinfo.sh .
 ln -s ../../../../src/prepareBBD2 prepareBBD
 ln -s ../../../../src/clearBB .
 ln -s ../tBBS2 .
