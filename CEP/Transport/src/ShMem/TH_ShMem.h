@@ -70,6 +70,7 @@ public:
   */
   void initRecv(void* buf, int source, int tag);
   virtual bool recvBlocking(void* buf, int nbytes, int source, int tag);
+  virtual bool recvNonBlocking(void* buf, int nbytes, int source, int tag);
 
   /**
      Send the data.
@@ -80,6 +81,7 @@ public:
   */
   void initSend(void* buf, int destination, int tag);
   virtual bool sendBlocking(void* buf, int nbytes, int destination, int tag);
+  virtual bool sendNonBlocking(void* buf, int nbytes, int destination, int tag);
 
   /// Get the type of transport.
   virtual string getType() const;

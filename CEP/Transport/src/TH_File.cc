@@ -119,6 +119,13 @@ bool TH_File::recvBlocking(void* buf, int nbytes, int, int)
   return result;
 }
 
+bool TH_File::recvNonBlocking(void* buf, int nbytes, int, int)
+{ 
+  cerr << "**Warning** TH_File::recvNonBlocking() is not implemented. " 
+       << "recvBlocking() is used instead." << endl;    
+  return recvBlocking(buf, nbytes, 0, 0);
+}
+
 bool TH_File::sendBlocking(void* buf, int nbytes, int, int)
 {
   bool result = true;
@@ -158,6 +165,13 @@ bool TH_File::sendBlocking(void* buf, int nbytes, int, int)
     cdebug(4) << "Skip Write to File"  << endl;
   }
   return result;
+}
+
+bool TH_File::sendNonBlocking(void* buf, int nbytes, int, int)
+{
+  cerr << "**Warning** TH_File::sendNonBlocking() is not implemented. " 
+       << "The sendBlocking() method is used instead." << endl;    
+  return sendBlocking(buf, nbytes, 0, 0);
 }
 
 void TH_File::waitForBroadCast()

@@ -89,6 +89,13 @@ bool TH_MPI::recvBlocking(void* buf, int nbytes, int source, int tag)
     return (result == MPI_SUCCESS);
 }
 
+bool TH_MPI::recvNonBlocking(void* buf, int nbytes, int source, int tag)
+{
+  cerr << "**Warning** TH_MPI::recvNonBlocking() is not implemented. " 
+       << "recvBlocking() is used instead." << endl;    
+  return recvBlocking(buf, nbytes, source, tag);
+}
+
 bool TH_MPI::sendBlocking(void* buf, int nbytes, int destination, int tag)
 {
     int result;
@@ -100,6 +107,13 @@ bool TH_MPI::sendBlocking(void* buf, int nbytes, int destination, int tag)
     unlock();
   
     return (result == MPI_SUCCESS);
+}
+
+bool TH_MPI::sendBlocking(void* buf, int nbytes, int destination, int tag)
+{
+  cerr << "**Warning** TH_MPI::sendNonBlocking() is not implemented. " 
+       << "The sendBlocking() method is used instead." << endl;    
+  return sendBlocking(buf, nbytes, destination, tag);
 }
 
 void TH_MPI::waitForBroadCast()

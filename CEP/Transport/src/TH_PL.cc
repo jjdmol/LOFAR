@@ -131,6 +131,13 @@ bool TH_PL::sendBlocking(void* buf, int nbytes, int destination, int tag)
   return true;
 }
 
+bool TH_PL::sendNonBlocking(void* buf, int nbytes, int destination, int tag)
+{
+  cerr << "**Warning** TH_PL::sendNonBlocking() is not implemented. " 
+       << "The sendBlocking() method is used instead." << endl;    
+  return sendBlocking(buf, nbytes, destination, tag);
+}
+
 bool TH_PL::recvBlocking(void* buf, int nbytes, int source , int tag)
 { 
   // Get a reference to the DHPL's TPO object.
@@ -158,6 +165,13 @@ bool TH_PL::recvBlocking(void* buf, int nbytes, int source , int tag)
 	       "TH_PL::recv - non matching size; found "
 	       << itsDHPL->getDataBlock().size() << ", expected " << nbytes);
   return true;
+}
+
+bool TH_PL::recvNonBlocking(void* buf, int nbytes, int source , int tag)
+{ 
+  cerr << "**Warning** TH_PL::recvNonBlocking() is not implemented. " 
+       << "recvBlocking() is used instead." << endl;    
+  return recvBlocking(buf, nbytes, source, tag);
 }
 
 void TH_PL::waitForBroadCast () {}

@@ -235,6 +235,13 @@ bool TH_ShMem::recvBlocking(void* buf, int nbytes, int source, int tag)
     return true;
 }
 
+bool TH_ShMem::recvNonBlocking(void* buf, int nbytes, int source, int tag)
+{
+  cerr << "**Warning** TH_ShMem::recvNonBlocking() is not implemented. " 
+       << "recvBlocking() is used instead." << endl;    
+  return recvBlocking(buf, nbytes, source, tag);
+} 
+
 void TH_ShMem::initSend(void* buf, int destination, int tag)
 {
     void *itsSendBufPtr = 0;
@@ -324,6 +331,13 @@ bool TH_ShMem::sendBlocking(void* buf, int nbytes, int destination, int tag)
     }
 
     return true;
+}
+
+bool TH_ShMem::sendNonBlocking(void* buf, int nbytes, int destination, int tag)
+{
+  cerr << "**Warning** TH_ShMem::sendNonBlocking() is not implemented. " 
+       << "The sendBlocking() method is used instead." << endl;    
+  return sendBlocking(buf, nbytes, destination, tag);
 }
 
 void TH_ShMem::waitForBroadCast()

@@ -66,10 +66,20 @@ public:
   virtual bool recvBlocking(void* buf, int nbytes, int source, int tag);
 
   /**
+     This method calls the blocking receive method.
+  */
+  virtual bool recvNonBlocking(void* buf, int nbytes, int source, int tag);  
+
+  /**
      Send the data. If the Direction is defined as Write, this method writes 
      the next DataHolder to file.
   */
   virtual bool sendBlocking(void* buf, int nbytes, int source, int tag);
+
+  /**
+     This method calls the blocking receive method.
+  */
+  virtual bool sendNonBlocking(void* buf, int nbytes, int source, int tag);
 
   /// Get the type of transport, i.e. "TH_File"
   virtual string getType() const;

@@ -43,7 +43,10 @@ public:
   virtual bool init();
 
   virtual bool recvBlocking (void* buf, int nbytes, int source, int tag);
+  virtual bool recvNonBlocking (void* buf, int nbytes, int source, int tag);
+
   virtual bool sendBlocking (void* buf, int nbytes, int destination, int tag);
+  virtual bool sendNonBlocking (void* buf, int nbytes, int destination, int tag);
 
   virtual string getType () const;
 
