@@ -36,19 +36,21 @@
 #include <UVPGraphSettingsWidget.h>
 #include <uvplot/UVPDataSet.h>
 
-//#include <VisAgent/VisInputAgent.h>
+
+#if(HAVE_VDM)
 class OctoMultiplexer;
 class VisInputAgent;
 #include <DMI/HIID.h>
+
+#pragma aidgroup uvplot
+#pragma aid VisualizerWP
+#endif // HAVE_VDM
+
 
 
 #if(DEBUG_MODE)
 #include <Common/Debug.h>
 #endif
-
-#pragma aidgroup uvplot
-#pragma aid VisualizerWP
-
 
 //! The main window class
 /*!
@@ -65,8 +67,11 @@ class UVPMainWindow:public QMainWindow
 
   enum e_plotDataType{plotAmplitude, plotPhase, plotReal, plotImaginary};
 
+#if(HAVE_VDM)
   enum InputType{NoInput, VDM, MS, PVD};
-
+#else
+  enum InputType{NoInput, MS, PVD};
+#endif
 
   //! Constructor
    UVPMainWindow();
@@ -88,25 +93,27 @@ class UVPMainWindow:public QMainWindow
   void slot_setProgressTotalSteps(int steps);
   void slot_setProgress(int steps);
       
-  //  void slot_plotTimeFrequencyImage();
 
+#if(HAVE_VDM)
   //! VDM input selected by user
-  void slot_vdmInput();
+  //  void slot_vdmInput();
 
   //! Initialize VDM communications. Called from slot_vdmInput().
-  void slot_vdmInit(const HIID& header = HIID(""),
-		    const HIID& data   = HIID(""));
+  //  void slot_vdmInit(const HIID& header = HIID(""),
+  //		    const HIID& data   = HIID(""));
 
-  //! Stop VDM
+  //! Lets the user select an MS filename. Sets itsInputType to "VDM".
+  //  void slot_vdmOpenMS();
+
+  //  void slot_vdmOpenPipe();
+#endif // HAVE_VDM
+
+  //! Interrupt current plotting / data input
   void slot_quitPlotting();
+
 
   //! Lets the user select an MS filename. Sets itsInputType to "MS".
   void slot_openMS();
-
-  //! Lets the user select an MS filename. Sets itsInputType to "VDM".
-  void slot_vdmOpenMS();
-
-  void slot_vdmOpenPipe();
 
   //! Called when "load" button is pressed
   void slot_loadData();
@@ -151,8 +158,11 @@ class UVPMainWindow:public QMainWindow
   std::string     itsInputFilename;
   std::string     itsMSColumnName;
 
+#if(HAVE_VDM)
   VisInputAgent*   itsVisInputAgent;
   OctoMultiplexer* itsOctoMultiplexer;
+#endif
+
 
   virtual void resizeEvent  (QResizeEvent* event);
   virtual void keyPressEvent(QKeyEvent*    event);
