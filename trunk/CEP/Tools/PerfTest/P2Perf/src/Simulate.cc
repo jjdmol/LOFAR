@@ -19,13 +19,14 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
-
+//
+/////////////////////////////////////////////////////////////////
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "BaseSim/SimulatorParseClass.h"
+#include "CEPFrame/SimulatorParseClass.h"
 #include <Common/lofar_iostream.h>
 #include <Common/Debug.h>
 #include "P2Perf/P2Perf.h"

@@ -21,35 +21,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.9  2002/05/08 14:28:37  wierenga
-//  DataHolder allocation moved from constructor to preprocess to be able to
-//  use TransportHolder::allocate.
-//  Bug fixes in P2Perf.cc for -mpi arguments.
-//
-//  Revision 1.8  2002/05/08 08:20:04  schaaf
-//  Modified includes for new build env
-//
-//  Revision 1.7  2002/05/02 12:21:56  schaaf
-//  Produce simple monitoring data in getMonitorValue() method
-//
-//  Revision 1.6  2002/04/18 07:55:03  schaaf
-//  Documentation and code update
-//
-//  Revision 1.5  2002/04/12 15:51:44  schaaf
-//  Explicit definition of source and destination side
-//
-//  Revision 1.4  2001/12/17 16:30:00  schaaf
-//  new logic in process() measurements counting
-//
-//  Revision 1.3  2001/10/26 10:06:28  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.2  2001/09/19 08:00:13  wierenga
-//  Added code to do performance tests.
-//
-//  Revision 1.1  2001/08/16 15:14:23  wierenga
-//  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
 //
 //
 //////////////////////////////////////////////////////////////////////
@@ -61,7 +32,7 @@
 #include <config.h>
 #endif
 
-#include "BaseSim/WorkHolder.h"
+#include "CEPFrame/WorkHolder.h"
 #include "P2Perf/DH_GrowSize.h"
 #include "P2Perf/StopWatch.h"
 

@@ -21,88 +21,13 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.21  2002/07/19 13:52:44  wierenga
-//
-//  %[BugId: 73]%
-//
-//  Add fixedsize parameter to allow fixed message size transfers tests.
-//
-//  Revision 1.20  2002/06/20 07:53:07  wierenga
-//  %[BugId: 33]%
-//
-//  First working reader thread implementation.
-//
-//  Revision 1.19  2002/06/20 06:54:34  wierenga
-//
-//  %[BugId: 33]%
-//
-//  Baseline buffered TH_MPI implementation. This is a single threaded solution
-//  which doesn't improve performance.
-//
-//  Revision 1.18  2002/05/13 12:51:26  schaaf
-//  move Asserts to DbgAssert
-//
-//  Revision 1.17  2002/05/08 14:28:37  wierenga
-//  DataHolder allocation moved from constructor to preprocess to be able to
-//  use TransportHolder::allocate.
-//  Bug fixes in P2Perf.cc for -mpi arguments.
-//
-//  Revision 1.16  2002/05/08 08:20:04  schaaf
-//  Modified includes for new build env
-//
-//  Revision 1.15  2002/05/02 12:21:56  schaaf
-//  Produce simple monitoring data in getMonitorValue() method
-//
-//  Revision 1.14  2002/04/18 07:55:03  schaaf
-//  Documentation and code update
-//
-//  Revision 1.13  2002/04/12 15:51:44  schaaf
-//  Explicit definition of source and destination side
-//
-//  Revision 1.12  2002/03/27 09:47:47  schaaf
-//  Use get{Cur/Max}DataPacketSize
-//
-//  Revision 1.11  2002/03/18 12:18:56  schaaf
-//  Uncommented performance output....
-//
-//  Revision 1.10  2002/03/08 11:38:42  wierenga
-//  Upgraded from firewalls.h use to Debug.h use. This version was used for performance tests.
-//
-//  Revision 1.9  2001/12/18 12:57:58  schaaf
-//  Added tag for performance measurement report
-//
-//  Revision 1.8  2001/12/17 16:30:00  schaaf
-//  new logic in process() measurements counting
-//
-//  Revision 1.7  2001/11/28 16:15:40  schaaf
-//  .
-//
-//  Revision 1.6  2001/11/05 17:01:07  schaaf
-//  Output of multiple measurement on one line
-//
-//  Revision 1.5  2001/10/31 11:34:18  wierenga
-//  LOFAR CVS Repository structure change and transition to autotools (autoconf, automake and libtool).
-//
-//  Revision 1.4  2001/10/26 10:06:28  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.3  2001/09/19 08:10:51  wierenga
-//  Changes to do perform bandwidth tests.
-//
-//  Revision 1.2  2001/09/19 08:00:13  wierenga
-//  Added code to do performance tests.
-//
-//  Revision 1.1  2001/08/16 15:14:23  wierenga
-//  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
-//
 //
 //////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>             // for sprintf
 #include <math.h>
 
-#include "BaseSim/Step.h"
+#include "CEPFrame/Step.h"
 #include <Common/Debug.h>
 
 #include "P2Perf/WH_GrowSize.h"
