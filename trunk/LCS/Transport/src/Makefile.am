@@ -13,10 +13,13 @@ DataBlobExtra.h \
 TH_File.h \
 TH_Mem.h \
 TH_MPI.h \
-TH_ShMem.h \
 TH_Socket.h \
 Transporter.h \
 TransportHolder.h 
+
+if HAVE_SHMEM
+INSTHDRS += TH_ShMem.h
+endif
 
 NOINSTHDRS =
 
@@ -40,16 +43,16 @@ DataBlobExtra.cc \
 TH_File.cc \
 TH_Mem.cc \
 TH_MPI.cc \
-TH_ShMem.cc \
 TH_Socket.cc \
 Transporter.cc \
 TransportHolder.cc 
 
+if HAVE_SHMEM
+libtransport_la_SOURCES += TH_ShMem.cc
+endif
 
 if HAVE_CORBA
 libtransport_la_LIBADD = Corba/libth_corba.la
-else
-libtransport_la_LIBADD = 
 endif
 
 include $(lofar_sharedir)/Makefile.common

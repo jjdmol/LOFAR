@@ -1,4 +1,6 @@
+if HAVE_SHMEM
 SUBDIRS	= shmem .
+endif
 
 INSTHDRS = \
         Allocator.h \
@@ -128,7 +130,9 @@ AM_YFLAGS		= -d -p KeyParse
 AM_LFLAGS		= -PKeyTokenize
 LEX_OUTPUT_ROOT		= lex.KeyTokenize
 
+if HAVE_SHMEM
 libcommon_la_LIBADD	= shmem/libshmem.la
+endif
 
 bin_PROGRAMS		= LimitExec pkgdep
 LimitExec_SOURCES	= LimitExec.cc
