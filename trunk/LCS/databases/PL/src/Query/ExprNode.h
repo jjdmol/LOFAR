@@ -23,11 +23,8 @@
 #ifndef LOFAR_PL_QUERY_EXPRNODE_H
 #define LOFAR_PL_QUERY_EXPRNODE_H
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>
-#endif
-
 //# Includes
+#include <lofar_config.h>
 #include <iosfwd>
 
 namespace LOFAR
