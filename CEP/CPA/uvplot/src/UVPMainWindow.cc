@@ -22,6 +22,7 @@
 #include <aips/Arrays/Vector.h>
 #include <aips/Tables/ExprNode.h>
 #include <aips/Tables/TableColumn.h>
+#include <aips/Quanta/MVTime.h>
 
 
 #if(DEBUG_MODE)
@@ -65,9 +66,11 @@ UVPMainWindow::UVPMainWindow()
   itsProgressBar = new QProgressBar(itsStatusBar);
   itsXPosLabel   = new QLabel(itsStatusBar);
   itsYPosLabel   = new QLabel(itsStatusBar);
+  itsTimeLabel   = new QLabel(itsStatusBar);
 
   itsStatusBar->addWidget(itsXPosLabel, 2, true);
   itsStatusBar->addWidget(itsYPosLabel, 2, true);
+  itsStatusBar->addWidget(itsTimeLabel, 2, true);
   itsStatusBar->addWidget(itsProgressBar, 5, true);
   
   itsStatusBar->show();
@@ -97,6 +100,13 @@ UVPMainWindow::UVPMainWindow()
 
   connect(itsGraphSettingsWidget, SIGNAL(signalAntenna2Changed(unsigned int)),
           this, SLOT(slot_redraw()));
+
+  connect(itsGraphSettingsWidget, SIGNAL(signalCorrelationChanged(UVPDataAtomHeader::Correlation)),
+          this, SLOT(slot_redraw()));
+
+  connect(itsCanvas, SIGNAL(signal_timeChanged(double)),
+          this, SLOT(slot_setTime(double)));
+
   resizeEvent(0);
   itsCanvas->drawView();
 
@@ -187,6 +197,12 @@ void UVPMainWindow::drawDataSet()
 
   UVPDataSet::iterator EndOfRecords = itsDataSet.upper_bound(ToHeader);
   UVPDataSet::iterator EndOfData = itsDataSet.end();
+  
+  UVPDataAtomHeader::Correlation Correlation = itsGraphSettingsWidget->getSettings().getCorrelation();
+
+#if(DEBUG_MODE)
+  TRACER1("Correlation= " << Correlation);
+#endif
 
   for(UVPDataSet::iterator p = itsDataSet.upper_bound(FromHeader);
       p != EndOfRecords && p != EndOfData; p++) {
@@ -194,7 +210,7 @@ void UVPMainWindow::drawDataSet()
     const   UVPDataAtom *dataAtom = &(p->second);
     
     //********** Data are only added if correlation type is right ********
-    if(dataAtom->getHeader().itsCorrelationType == UVPDataAtomHeader::RR) {
+    if(dataAtom->getHeader().itsCorrelationType == Correlation) {
 
       unsigned int NumChan = dataAtom->getNumberOfChannels();
       double*      Values  = new double[NumChan];
@@ -479,7 +495,7 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
     Array<Bool>    FlagArray(FlagColumn(i));
     const bool*    Flag = FlagArray.getStorage(DeleteFlag);
     
-    // ******* LOOK AT THIS LOOP VERY CAREFULLY, STILL INCORRECT!!!!
+    // ******* LOOK AT THIS LOOP VERY CAREFULLY
     for(unsigned int j = 0; j < NumChannels; j++) {
       for(unsigned int k = 0; k < NumPolarizations; k++) {      
         Atoms[k].setData(j, *Data++);
@@ -566,4 +582,23 @@ void UVPMainWindow::slot_readPVD(const std::string& pvdName)
   } // while
 
   itsBusyPlotting = false;
+}
+
+
+
+
+
+//====================>>>  UVPMainWindow::slot_setTime  <<<====================
+
+void UVPMainWindow::slot_setTime(double time /* in MJD seconds*/)
+{
+  time/= 3600.0*24.0;
+
+  MVTime Time(time);            // Expects time in MJD days
+  std::ostringstream out;
+  
+  if(time != 0) {
+    Time.print(out, MVTime::YMD);
+  }
+  itsTimeLabel->setText(out.str().c_str());
 }
