@@ -116,7 +116,21 @@ EPAStub::EPAStub(string name)
     for (int pid = 0; pid <= MEPHeader::MAX_PID; pid++)
       for (int regid = 0; regid <= MEPHeader::MAX_REGID; regid++)
       {
-	if (m_reg[pid][regid].addr) memset(m_reg[pid][regid].addr, 0, m_reg[pid][regid].size);
+	uint16 size = m_reg[pid][regid].size;
+	
+	switch (pid)
+	{
+	  case MEPHeader::WG:
+	  case MEPHeader::SS:
+	  case MEPHeader::BF:
+	  case MEPHeader::SST:
+	  case MEPHeader::RCU:
+	  case MEPHeader::CRB:
+	    size *= GET_CONFIG("RS.N_BLPS", i);
+	    break;
+	}
+	
+	if (m_reg[pid][regid].addr) memset(m_reg[pid][regid].addr, 0, size);
       }
 
     //
@@ -229,7 +243,7 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
       else
       {
 	offset += read.hdr.m_fields.addr.dstid * m_reg[pid][regid].size;
-	ASSERT(offset + size <= m_reg[pid][regid].size * (int16)GET_CONFIG("RS.N_BLPS", i));
+	ASSERT(offset + size <= m_reg[pid][regid].size * (uint16)GET_CONFIG("RS.N_BLPS", i));
       }
       
       ack.payload.setBuffer(m_reg[pid][regid].addr + offset, size);
