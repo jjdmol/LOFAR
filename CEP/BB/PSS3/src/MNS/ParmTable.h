@@ -27,15 +27,10 @@
 #include <PSS3/MNS/MeqPolc.h>
 #include <PSS3/MNS/MeqSourceList.h>
 #include <Common/lofar_vector.h>
-#include <Common/Stopwatch.h>
-
-#include <iomanip>
 
 //# Forward Declarations
 class MeqDomain;
 template<class T> class Vector;
-
-using std::setw;
 
 class ParmTableRep
 {
@@ -84,11 +79,7 @@ public:
 	     const string& dbName, const string& pwd, const string& hostName = "dop50");
 
   ~ParmTable()
-    { 
-      cout<<setw(16)<<std::left<<itsTableName<<std::right<<"puts"    <<setw(20)<<"getPolcs"     <<setw(20)<<"getPointS" <<setw(20)<<"getICs"    <<endl;
-      cout<<"Counts:"<<setw(13)   <<itsPuts   <<setw(20)<<itsGetPolcs    <<setw(20)<<itsGetPSs   <<setw(20)<<itsGetICs   <<endl;
-      cout<<"Time  :"<<setw(13)   <<itsPutTime<<setw(20)<<itsGetPolcsTime<<setw(20)<<itsGetPSTime<<setw(20)<<itsGetICTime<<endl;
-      delete itsRep; }
+    { delete itsRep; }
 
   // Get the parameter values for the given parameter and domain.
   // The matchDomain argument is set telling if the found parameter
@@ -97,18 +88,18 @@ public:
   vector<MeqPolc> getPolcs (const string& parmName,
 			    int sourceNr, int station,
 			    const MeqDomain& domain)
-    { itsGetPolcs++; itsWatch.reset(); vector<MeqPolc> VMP = itsRep->getPolcs (parmName, sourceNr, station, domain); itsGetPolcsTime += itsWatch.delta().real(); return VMP;}
+    { return itsRep->getPolcs (parmName, sourceNr, station, domain);}
 
   // Get the initial polynomial coefficients for the given parameter.
   MeqPolc getInitCoeff (const string& parmName,
 			int sourceNr, int station)
-    { itsGetICs++; itsWatch.reset(); MeqPolc MP = itsRep->getInitCoeff (parmName, sourceNr, station); itsGetICTime += itsWatch.delta().real(); return MP;}
+    { return itsRep->getInitCoeff (parmName, sourceNr, station);}
 
   // Put the polynomial coefficient for the given parameter and domain.
   void putCoeff (const string& parmName,
 		 int sourceNr, int station,
 		 const MeqPolc& polc)
-    { itsPuts++; itsWatch.reset(); itsRep->putCoeff (parmName, sourceNr, station, polc); itsPutTime += itsWatch.delta().real();}
+    { itsRep->putCoeff (parmName, sourceNr, station, polc);}
 
   // Return point sources for the given source numbers.
   // An empty sourceNr vector means all sources.
@@ -130,18 +121,6 @@ private:
   ParmTable& operator= (const ParmTable&);
 
   ParmTableRep* itsRep;
-
-  //following members are for performance measurements only
-  int itsPuts;
-  int itsGetPolcs;
-  int itsGetPSs;
-  int itsGetICs;
-  double itsPutTime;
-  double itsGetPolcsTime;
-  double itsGetPSTime;
-  double itsGetICTime;
-  Stopwatch itsWatch;
-  string itsTableName;
 };
 
 
