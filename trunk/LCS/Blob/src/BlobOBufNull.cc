@@ -1,4 +1,4 @@
-//# Allocator.h: Abstract base class for LOFAR memory (de)allocator
+//# BlobOBufNull.cc: Output buffer for a blob using an onull
 //#
 //# Copyright (C) 2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,53 +20,36 @@
 //#
 //# $Id$
 
-#ifndef COMMON_ALLOCATOR_H
-#define COMMON_ALLOCATOR_H
+#include <Common/BlobOBufNull.h>
 
-#include <unistd.h>
 
-namespace LOFAR
+BlobOBufNull::BlobOBufNull()
+: itsSize (0),
+  itsPos  (0)
+{}
+
+BlobOBufNull::~BlobOBufNull()
+{}
+
+uint BlobOBufNull::put (const void*, uint nbytes)
 {
+  itsPos += nbytes;
+  if (itsPos > itsSize) {
+    itsSize = itsPos;
+  }
+  return nbytes;
+}
 
-class Allocator
+int64 BlobOBufNull::tellPos() const
 {
-public:
-  Allocator()
-    {}
+  return itsPos;
+}
 
-  virtual ~Allocator();
-
-  // Clone the allocator.
-  virtual Allocator* clone() const = 0;
-
-  // Allocate memory.
-  virtual void* allocate (size_t nbytes) = 0;
-
-  // Deallocate memory.
-  virtual void deallocate (void* data) = 0;
-};
-
-
-
-class HeapAllocator: public Allocator
+int64 BlobOBufNull::setPos (int64 pos)
 {
-public:
-  HeapAllocator()
-    {}
-
-  virtual ~HeapAllocator();
-
-  // Clone the allocator.
-  virtual HeapAllocator* clone() const;
-
-  // Allocate memory.
-  virtual void* allocate (size_t nbytes);
-
-  // Deallocate memory.
-  virtual void deallocate (void* data);
-};
-
-
-} // end namespace LOFAR
-
-#endif
+  itsPos = pos;
+  if (itsPos > itsSize) {
+    itsSize = itsPos;
+  }
+  return itsPos;
+}

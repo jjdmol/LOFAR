@@ -1,4 +1,4 @@
-//# Allocator.h: Abstract base class for LOFAR memory (de)allocator
+//# BlobOBufNull.h: Output buffer for a blob using a plain pointer
 //#
 //# Copyright (C) 2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,53 +20,46 @@
 //#
 //# $Id$
 
-#ifndef COMMON_ALLOCATOR_H
-#define COMMON_ALLOCATOR_H
+#ifndef COMMON_BLOBOBUFNULL_H
+#define COMMON_BLOBOBUFNULL_H
 
-#include <unistd.h>
+#include <Common/BlobOBuffer.h>
 
-namespace LOFAR
-{
 
-class Allocator
+// This class is the BlobOBuffer that makes use of a null buffer.
+// It can be used to determine the length of a blob.
+
+class BlobOBufNull : public BlobOBuffer
 {
 public:
-  Allocator()
-    {}
+  // Construct a dynamic buffer with the given initial length.
+  BlobOBufNull();
 
-  virtual ~Allocator();
+  // Destructor.
+  virtual ~BlobOBufNull();
 
-  // Clone the allocator.
-  virtual Allocator* clone() const = 0;
+  // Put the requested nr of bytes.
+  virtual uint put (const void* buffer, uint nbytes);
 
-  // Allocate memory.
-  virtual void* allocate (size_t nbytes) = 0;
+  // Get the position in the buffer.
+  virtual int64 tellPos() const;
 
-  // Deallocate memory.
-  virtual void deallocate (void* data) = 0;
+  // Set the position in the buffer.
+  virtual int64 setPos (int64 pos);
+
+  // Get the size of the data in the buffer.
+  uint size() const;
+
+private:
+  uint itsSize;
+  uint itsPos;
 };
 
 
-
-class HeapAllocator: public Allocator
+inline uint BlobOBufNull::size() const
 {
-public:
-  HeapAllocator()
-    {}
+  return itsSize;
+}
 
-  virtual ~HeapAllocator();
-
-  // Clone the allocator.
-  virtual HeapAllocator* clone() const;
-
-  // Allocate memory.
-  virtual void* allocate (size_t nbytes);
-
-  // Deallocate memory.
-  virtual void deallocate (void* data);
-};
-
-
-} // end namespace LOFAR
 
 #endif
