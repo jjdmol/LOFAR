@@ -72,8 +72,6 @@ void MeqJonesExpr::multiply (const MeqJonesExpr& left,
       v22[i] = dl21[i] * dr12[i] + dl22[i] * dr22[i];
     }
   } else {
-    its11.setDComplex (std::max(l11.getValue().nx(), r11.getValue().nx()),
-		       std::max(l11.getValue().ny(), r11.getValue().ny()));
     dcomplex* v11 = its11.setDComplex (nx, ny);
     dcomplex* v12 = its12.setDComplex (nx, ny);
     dcomplex* v21 = its21.setDComplex (nx, ny);
