@@ -54,6 +54,15 @@ namespace LOFAR
     static std::vector<std::string> split(const std::string& str, char c);
   };
 
+//
+// formatString(format, ...) --> string
+//
+// The function formatString accepts printf-like arguments and returns a
+// formatted std::string. It can be used e.g. in cout constructions:
+// cout << formatString("Opening connection with host %%s", hostName);
+//# In real life this must be %s ofcourse but doxygen need a double %%.
+const std::string formatString(const	char* format, ...);
+
 } // namespace LOFAR
 
 #endif
