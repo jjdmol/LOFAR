@@ -234,7 +234,7 @@ namespace EPA_Protocol
 #define MEP_NRSUBBANDS(hdr, oper, dstid) \
   (hdr).set(oper,         dstid, CTX(SS),     CTX(NRSUBBANDS),    CTX(NRSUBBANDS_SIZE))
 #define MEP_SUBBANDSELECT(hdr, oper, dstid) \
-  (hdr).set(oper,         dstid, CTX(SS),     CTX(SUBBANDSELECT), CTX(SUBBANDSELECT_SIZE), MEPHeader::PAGE_ACTIVE)
+  (hdr).set(oper,         dstid, CTX(SS),     CTX(SUBBANDSELECT), CTX(SUBBANDSELECT_SIZE))
 #define MEP_BF(hdr, oper, dstid, regid) \
   (hdr).set(oper,         dstid, CTX(BF),     (regid),            CTX(BFCOEFS_SIZE))
 #define MEP_ST(hdr, oper, dstid, regid) \
