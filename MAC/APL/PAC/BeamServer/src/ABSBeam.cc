@@ -26,6 +26,9 @@
 #include <sys/time.h>
 #include <queue>
 
+#include <blitz/array.h>
+using namespace blitz;
+
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
@@ -37,8 +40,10 @@ using namespace std;
 
 int   Beam::m_ninstances = 0;
 Beam* Beam::m_beams = 0;
+//static const int timestep = Beam::TIMESTEP;
+//static const int _n_timesteps_var = Beam::N_TIMESTEPS;
 
-Beam::Beam() : m_allocated(false)
+Beam::Beam() : m_allocated(false), m_pointing(), m_track(2, N_TIMESTEPS)
 {}
 
 Beam::~Beam()
@@ -47,19 +52,30 @@ Beam::~Beam()
   m_ninstances = 0;
 }
 
-Beam* Beam::getInstance(int beam)
+Beam* Beam::getInstance()
 {
   // if not yet initialised, just return 0
   if (!m_beams) return 0;
-
-  // only return beam if beam is a valid index
-  if (beam >= 0 && beam < m_ninstances)
+  
+  for (int i = 0; i < m_ninstances; i++)
   {
-      return &m_beams[beam];
+      if (!m_beams[i].allocated())
+	  return &m_beams[i];
   }
 
   // otherwise return 0
   return 0;
+}
+
+Beam* Beam::getFromHandle(int handle)
+{
+  // if invalid handle return 0
+  if (!m_beams
+      || handle < 0
+      || handle > m_ninstances
+      || !m_beams[handle].allocated()) return 0;
+
+  return &m_beams[handle];
 }
 
 int Beam::setNInstances(int ninstances)
@@ -68,35 +84,43 @@ int Beam::setNInstances(int ninstances)
   // only one initialisation is allowed
   if (m_beams) return -1;
 
+  m_beams = new Beam[ninstances];
+  if (!m_beams) return -1;
   m_ninstances = ninstances;
-  m_beams = new Beam[m_ninstances];
+
+  for (int i = 0; i < m_ninstances; i++)
+  {
+      m_beams[i].m_index = i; // assign index
+  }
 
   return (m_beams ? 0 : -1);
 }
 
-int Beam::allocate(SpectralWindow const& spw, set<int> subbands)
+Beam* Beam::allocate(SpectralWindow const& spw, set<int> subbands)
 {
-  // cannot allcate an already allocated beam
-  if (m_allocated) return -1;
+  // get a free beam instance
+  Beam* beam = Beam::getInstance();
+
+  if (!beam) return 0;
   
   // clear the beamlet set just to be sure
-  m_beamlets.clear();
+  beam->m_beamlets.clear();
 
   // obtain enough beamlet instances
-  for (set<int>::iterator sb = subbands.begin(); sb != subbands.end(); ++sb)
+  for (set<int>::iterator sb = subbands.begin();
+       sb != subbands.end(); ++sb)
   {
       Beamlet* beamlet = Beamlet::getInstance();
 
       if (!beamlet) goto failure;
+      if (beamlet->allocate(*beam, spw, *sb) < 0) goto failure;
 
-      if (beamlet->allocate(*this, spw, *sb) < 0) goto failure;
-
-      m_beamlets.insert(beamlet);
+      beam->m_beamlets.insert(beamlet);
   }
   
-  m_allocated = true;
+  beam->m_allocated = true;
 
-  return 0;
+  return beam;
 
  failure:
   //
@@ -105,10 +129,10 @@ int Beam::allocate(SpectralWindow const& spw, set<int> subbands)
   // to prevent failure of deallocate
   // will be reset to false in deallocate
   //
-  m_allocated = true;
-  (void)deallocate();
+  beam->m_allocated = true;
+  (void)beam->deallocate();
 
-  return -1;
+  return 0;
 }
 
 int Beam::deallocate()
@@ -134,11 +158,6 @@ int Beam::deallocate()
   return 0;
 }
 
-bool Beam::allocated() const
-{
-  return m_allocated;
-}
-
 int Beam::addPointing(const Pointing& pointing)
 {
   if (!m_allocated) return -1;
@@ -147,7 +166,10 @@ int Beam::addPointing(const Pointing& pointing)
   return 0;
 }
 
-int Beam::convertPointings(struct timeval fromtime, unsigned long duration)
+int Beam::convertPointings(struct timeval fromtime,
+			   unsigned long duration)
+//			   int timestep, // in seconds
+//			   int ntimesteps)
 {
   // only works on allocated beams
   if (!allocated()) return -1;
@@ -225,17 +247,9 @@ int Beam::convertPointings(struct timeval fromtime, unsigned long duration)
   return 0;
 }
 
-int Beam::getCoordinates(priority_queue<Pointing>& coords) const
+const Array<double,2>& Beam::getCoordinates() const
 {
-  priority_queue<Pointing> coord_track = m_coord_track;
-
-  while (!coord_track.empty())
-  {
-      coords.push(coord_track.top());
-      coord_track.pop();
-  }
-
-  return 0;
+  return m_track;
 }
 
 void Beam::getSubbandSelection(map<int,int>& selection) const

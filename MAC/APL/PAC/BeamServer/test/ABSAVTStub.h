@@ -59,6 +59,7 @@ namespace ABS
 	GCFEvent::TResult test002(GCFEvent& e, GCFPortInterface &p);
 	GCFEvent::TResult test003(GCFEvent& e, GCFPortInterface &p);
 	GCFEvent::TResult test004(GCFEvent& e, GCFPortInterface &p);
+	GCFEvent::TResult test005(GCFEvent& e, GCFPortInterface &p);
 	GCFEvent::TResult done(GCFEvent& e, GCFPortInterface &p);
 	//@}
 

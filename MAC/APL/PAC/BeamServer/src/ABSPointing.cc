@@ -25,7 +25,7 @@
 using namespace ABS;
 
 Pointing::Pointing() :
-    m_direction(), m_time()
+    m_direction()
 {
   m_time.tv_sec  = 0;
   m_time.tv_usec = 0;

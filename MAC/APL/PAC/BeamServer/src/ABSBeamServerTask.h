@@ -136,7 +136,7 @@ namespace ABS
 	/**
 	 * Set of currently allocated beams by index.
 	 */
-	std::set<int> m_beams;
+	std::set<Beam*> m_beams;
 
 	/**
 	 * Current subband selection

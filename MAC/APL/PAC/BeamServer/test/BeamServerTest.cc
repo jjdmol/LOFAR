@@ -49,14 +49,31 @@ private:
     SpectralWindow m_spw;
 
 public:
+
+    /**
+     * create a spectral window from 10MHz to 90Mhz
+     * steps of 256kHz
+     * SpectralWindow spw(10e6, 256*1e3, 80*(1000/256));
+     */
+    BeamServerTest() :
+	Test("BeamServerTest"),
+	m_spw(10e6, 256*1e3, 80*(1000/256))
+	{
+	  //cerr << "c";
+	  Beam::setNInstances(N_BEAMS);
+	  Beamlet::setNInstances(N_BEAMLETS);
+	}
+
     void setUp()
 	{
+#if 0
 	  //cerr << "s";
 	  for (int i = 0; i < N_BEAMS; i++)
 	  {
-	      m_beam[i] = Beam::getInstance(i);
+	      m_beam[i] = Beam::getInstance();
 	      _test(m_beam[i] != 0);
 	  }
+#endif
 	}
 
     void tearDown()
@@ -75,25 +92,10 @@ public:
 	  oneTooManyBeam();
 	  oneTooManyBeamlet();
 	  emptyBeam();
-	  doubleAllocate();
 	  pointing();
 	  convert_pointings();
 
 	  tearDown();
-	}
-
-    /**
-     * create a spectral window from 10MHz to 90Mhz
-     * steps of 256kHz
-     * SpectralWindow spw(10e6, 256*1e3, 80*(1000/256));
-     */
-    BeamServerTest() :
-	Test("BeamServerTest"),
-	m_spw(10e6, 256*1e3, 80*(1000/256))
-	{
-	  //cerr << "c";
-	  Beam::setNInstances(N_BEAMS);
-	  Beamlet::setNInstances(N_BEAMLETS);
 	}
 
     void allocate()
@@ -108,7 +110,7 @@ public:
 	  }
 	  for (int i = 0; i < N_BEAMS; i++)
 	  {
-	      _test(m_beam[i]->allocate(m_spw, subbands) == 0);
+	      _test(0 != (m_beam[i] = Beam::allocate(m_spw, subbands)));
 	  }
 	}
 
@@ -138,11 +140,17 @@ public:
 
     void oneTooManyBeam()
 	{
-	  // try to get N_BEAMS instance, should fail
-	  _test(Beam::getInstance(N_BEAMS) == 0);
-	 
-	  // try to get -1 instance, should fail
-	  _test(Beam::getInstance(-1) == 0);
+	  allocate();
+
+	  // and allocate one more
+	  Beam* beam = 0;
+	  set<int> subbands;
+
+	  subbands.clear();
+	  for (int i = 0; i < N_SUBBANDS_PER_BEAM; i++) subbands.insert(i);
+	  _test(0 == (beam = Beam::allocate(m_spw, subbands)));
+
+	  deallocate();
 	}
 
     void oneTooManyBeamlet()
@@ -154,23 +162,14 @@ public:
 	  {
 	      subbands.insert(i);
 	  }
-	  _test(m_beam[0]->allocate(m_spw, subbands) < 0);
+	  _test(0 == (m_beam[0] = Beam::allocate(m_spw, subbands)));
 	}
 
     void emptyBeam()
 	{
 	  set<int> subbands;
 	  subbands.clear();
-	  _test(m_beam[0]->allocate(m_spw, subbands) == 0);
-	  _test(m_beam[0]->deallocate() == 0);
-	}
-
-    void doubleAllocate()
-	{
-	  set<int> subbands;
-	  subbands.clear();
-	  _test(m_beam[0]->allocate(m_spw, subbands) == 0);
-	  _test(m_beam[0]->allocate(m_spw, subbands) < 0);
+	  _test(0 != (m_beam[0] = Beam::allocate(m_spw, subbands)));
 	  _test(m_beam[0]->deallocate() == 0);
 	}
 
@@ -181,7 +180,7 @@ public:
 	  struct timeval t = {0,0};
 
 	  // allocate beam, addPointing, should succeed
-	  _test(m_beam[0]->allocate(m_spw, subbands) == 0);
+	  _test(0 != (m_beam[0] = Beam::allocate(m_spw, subbands)));
 	  _test(m_beam[0]->addPointing(Pointing(Direction(
 			    0.0, 0.0, Direction::J2000), t)) == 0);
 
@@ -209,7 +208,7 @@ public:
 	  for (int i = 0; i < N_BEAMS; i++)
 	  {
 	      int ret = 0;
-	      _test(0 == (ret = Beam::getInstance(i)->convertPointings(fromtime, 20)));
+	      _test(0 == (ret = m_beam[i]->convertPointings(fromtime, 20)));
 	      if (ret < 0) { deallocate(); return; }
 	  }
 
