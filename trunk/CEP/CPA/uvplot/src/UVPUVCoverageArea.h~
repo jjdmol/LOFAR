@@ -1,0 +1,28 @@
+// Copyright notice should go here
+
+// $ID$
+
+#if !defined(UVPUVCOVERAGEAREA_H)
+#define UVPUVCOVERAGEAREA_H
+
+
+
+#include <UVPDisplayArea.h>
+#include <UVPImageCube.h>
+
+
+class UVPUVCoverageArea : public UVPDisplayArea
+{
+ public:
+
+            UVPUVCoverageArea(const UVPImageCube *data);
+  
+ protected:
+ private:
+
+  // Just a pointer. The datastructure is managed by an external object
+  const UVPImageCube *itsCurrentImage;
+};
+
+
+#endif // UVPUVCOVERAGEAREA_H
