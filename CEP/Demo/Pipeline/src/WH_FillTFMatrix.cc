@@ -125,7 +125,7 @@ void WH_FillTFMatrix::process()
       
   for (int outch=0; outch<getOutputs(); outch++) {
     DHptr = getOutHolder(outch);
-    AssertStr(DHptr != 0, "GetOutHolder returned NULL");
+    DbgAssertStr(DHptr != 0, "GetOutHolder returned NULL");
     //    DHptr->setZ(itsSourceID);      
     //    DHptr->setYOffset(DHptr->getYSize()*outch);
     Xsize = DHptr->getXSize();
@@ -133,10 +133,11 @@ void WH_FillTFMatrix::process()
       Ysize = DHptr->getYSize();
       for (int y=0; y < Ysize; y++) {
 	for (int pol=0; pol<itsPols; pol++) {
-//  	  int val = cnt++ + itsSourceID + pol;
-//  	  *DHptr->getBuffer(x,y,pol) = DH_2DMatrix::DataType(val,0);
-	  // fill output buffer with random integer 0-99
-	  *DHptr->getBuffer(x,y,pol) = DH_2DMatrix::DataType((int)(100.0*random()/RAND_MAX+1.0),(int)(100.0*random()/RAND_MAX+1.0));
+  	  // fill the output buffer with a regular pattern
+	  //*DHptr->getBuffer(x,y,pol) = DH_2DMatrix::DataType(cnt++ + itsSourceID + pol,0);
+	  
+	  // fill output buffer with random integer 0-127 (2^7=128)
+	  *DHptr->getBuffer(x,y,pol) = DH_2DMatrix::DataType((int)(127.0*random()/RAND_MAX+1.0),(int)(127.0*random()/RAND_MAX+1.0));
 	}
       }
       
