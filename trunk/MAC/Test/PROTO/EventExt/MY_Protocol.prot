@@ -9,7 +9,7 @@ id = "(F_GCF_PROTOCOL + 3)";
 
 // specify extra include files
 // e.g.
-//include = '<sys/time.h>';
+include = "<TransObject.h>";
 
 // An "event" has a "signal" and a "dir" (direction)
 // and zero or more "param"s.
