@@ -123,7 +123,7 @@ int main(int argc, char** argv)
     }            
   }
 
-  Echo echoTask(string("ECHO") + brdnr);
+  Echo echoTask(string("RTECHO") + brdnr);
   
   echoTask.start();
 

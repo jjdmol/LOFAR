@@ -29,7 +29,7 @@
 #include <PI_Protocol.ph>
 #include <PA_Protocol.ph>
 
-static string sPLSTaskName("PI");
+static string sPLSTaskName("GCF-PI");
 
 GPIPMLlightServer::GPIPMLlightServer(GPIController& controller) : 
   GCFTask((State)&GPIPMLlightServer::initial, sPLSTaskName),

@@ -26,7 +26,7 @@
 #define _ECHO_H_
 
 #include <GCF/TM/GCF_Control.h>
-#include <GCF/GCF_DevicePort.h>
+#include <GCF/TM/GCF_DevicePort.h>
 #include <Common/lofar_string.h>
 
 /**

@@ -32,4 +32,5 @@ AC_OUTPUT([
 	Makefile
 	src/Makefile
 	aclocal/Makefile
+	tools/Makefile
 ])

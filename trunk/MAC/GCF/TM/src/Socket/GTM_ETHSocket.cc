@@ -26,7 +26,6 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GTM_Defines.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <GCF/TM/GCF_PeerAddr.h>
 #include <netinet/in.h>
 #include <net/if.h>
 #include <net/if_arp.h>

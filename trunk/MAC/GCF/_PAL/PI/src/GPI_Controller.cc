@@ -23,8 +23,11 @@
 #include "GPI_Controller.h"
 #include "GPI_PMLlightServer.h"
 #include "PI_Protocol.ph"
+#include <GCF/ParameterSet.h>
 
-static string sPITaskName("PI");
+using namespace GCF;
+
+static string sPITaskName("GCF-PI");
 
 GPIController::GPIController() : 
   GCFTask((State)&GPIController::initial, sPITaskName),
@@ -34,7 +37,8 @@ GPIController::GPIController() :
   registerProtocol(PI_PROTOCOL, PI_PROTOCOL_signalnames);
 
   // initialize the port provider
-  _ssPortProvider.init(*this, "server", GCFPortInterface::MSPP, PI_PROTOCOL);
+  _ssPortProvider.init(*this, "provider", GCFPortInterface::MSPP, PI_PROTOCOL);
+  ParameterSet::instance()->adoptFile("PropertyAgent.conf");  
 }
 
 GPIController::~GPIController()

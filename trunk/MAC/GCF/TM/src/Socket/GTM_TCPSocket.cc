@@ -26,7 +26,6 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GTM_Defines.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <GCF/TM/GCF_PeerAddr.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -111,7 +110,7 @@ ssize_t GTMTCPSocket::recv(void* buf, size_t count)
   }
 }
 
-int GTMTCPSocket::open(GCFPeerAddr& /*addr*/)
+int GTMTCPSocket::open(unsigned int /*portNumber*/)
 {
   if (_socketFD > -1)
     return 0;
@@ -122,17 +121,17 @@ int GTMTCPSocket::open(GCFPeerAddr& /*addr*/)
   }
 }
 
-int GTMTCPSocket::connect(GCFPeerAddr& serveraddr)  
+int GTMTCPSocket::connect(unsigned int portNumber, const string& host)  
 {
   int result(-2);
   if (_socketFD >= -1)
   {
     struct sockaddr_in serverAddr;
     struct hostent *hostinfo;
-    hostinfo = gethostbyname(serveraddr.getHost().c_str());
+    hostinfo = gethostbyname(host.c_str());
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr = *(struct in_addr *) *hostinfo->h_addr_list;
-    serverAddr.sin_port = htons(serveraddr.getPortnumber());
+    serverAddr.sin_port = htons(portNumber);
     result = ::connect(_socketFD, 
               (struct sockaddr *)&serverAddr, 
               sizeof(struct sockaddr_in));

@@ -33,7 +33,6 @@
 
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_PortInterface.h>
-#include <GCF/TM/GCF_PeerAddr.h>
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Fsm.h>

@@ -27,10 +27,9 @@
 #include <GCF/TM/GCF_Handler.h>
 
 #include <GCF/TM/GCF_PortInterface.h>
-#include <PortInterface/GTM_NameService.h>
-#include <PortInterface/GTM_TopologyService.h>
 
 #include <GCF/CmdLine.h>
+#include <GCF/ParameterSet.h>
 
 #include <signal.h>
 #include <stdio.h>
@@ -42,6 +41,8 @@ GCFTask::TProtocols GCFTask::_protocols;
 int GCFTask::_argc = 0;
 char** GCFTask::_argv = 0;
 
+using namespace LOFAR;
+using namespace GCF;
 
 GCFTask::GCFTask(State initial, string& name) :
   GCFFsm(initial), _name(name)
@@ -74,35 +75,17 @@ void GCFTask::init(int argc, char** argv)
     }            
   }
   
-  if (serviceFilesPrefix == "mac")
-  {
-    char* macConfigPath = getenv("MAC_CONFIG");
-    if (macConfigPath)
-    {
-      serviceFilesPath = macConfigPath;
-    }
-  }
   if (serviceFilesPath.rfind("/") != (serviceFilesPath.length() - 1))
     serviceFilesPath += '/';
   
   serviceFilesPrefix = serviceFilesPath + serviceFilesPrefix;
 
+  ParameterSet* pParamSet = ParameterSet::instance();
+  
+  string configfile(argv[0]);
+  pParamSet->adoptFile(configfile + ".conf");
   INIT_LOGGER(serviceFilesPath + "log4cplus.properties");   
 
-  if (GTMNameService::instance()->init(serviceFilesPrefix.c_str()) < 0)
-  {
-    LOG_ERROR(LOFAR::formatString ( 
-        "Could not open NameService configuration file: %s.ns",
-        serviceFilesPrefix.c_str()));
-    _doExit = true;
-  }
-  if (GTMTopologyService::instance()->init(serviceFilesPrefix.c_str()) < 0)
-  {
-    LOG_ERROR(LOFAR::formatString ( 
-        "Could not open TopologyService configuration file: %s.top",
-        serviceFilesPrefix.c_str()));
-    _doExit = true;
-  }
   if (_doExit)
     exit(-1);
 }

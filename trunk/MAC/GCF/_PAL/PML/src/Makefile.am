@@ -56,5 +56,12 @@ BUILT_SOURCES = \
 EXTRA_DIST = \
 	PA_Protocol.ph
 
+configfilesdir=$(bindir)
+configfiles_DATA= \
+	gcf-pml.conf
+
+%.conf: %.conf.in
+	cp $< $@
+
 include $(lofar_sharedir)/Makefile.common
 

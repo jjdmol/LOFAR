@@ -42,12 +42,14 @@ class GCFDevicePort : public GCFRawPort
 
     /// Construction methods
     /** @param protocol NOT USED */    
-    GCFDevicePort (GCFTask& task,
+    explicit GCFDevicePort (GCFTask& task,
           	    string name,
           	    TPortType type,
                 int protocol, 
+                const string& deviceName,
                 bool transportRawData = false);
-    GCFDevicePort ();
+    explicit GCFDevicePort (const string& deviceName);
+    explicit GCFDevicePort ();
   
     virtual ~GCFDevicePort ();
   
@@ -56,8 +58,8 @@ class GCFDevicePort : public GCFRawPort
     /**
      * open/close functions
      */
-    virtual int open ();
-    virtual int close ();
+    virtual bool open ();
+    virtual bool close ();
   
     /**
      * send/recv functions
@@ -66,10 +68,7 @@ class GCFDevicePort : public GCFRawPort
     virtual ssize_t recv (void* buf,
                           size_t count);
   public:
-
-    // addr is local address if getType == (M)SPP
-    // addr is remote addres if getType == SAP
-    void setAddr (const GCFPeerAddr& addr);
+    void setDeviceName (const string& deviceName);
 
   private:
     /**
@@ -79,9 +78,9 @@ class GCFDevicePort : public GCFRawPort
     GCFDevicePort& operator= (const GCFDevicePort&);
     
   private:
-    bool                _addrIsSet;
+    bool                _devNameIsSet;
     GTMDevice*          _pDevice;
-    GCFPeerAddr         _addr;
+    string              _deviceName;
 };
 
 #endif

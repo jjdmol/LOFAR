@@ -25,7 +25,6 @@
 
 #include <GCF/GCF_Defines.h>
 #include <GCF/TM/GCF_RawPort.h>
-#include <GCF/TM/GCF_PeerAddr.h>
 
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
@@ -69,8 +68,8 @@ class GCFETHRawPort : public GCFRawPort
     /**
      * open/close functions
      */
-    virtual int open();
-    virtual int close();
+    virtual bool open();
+    virtual bool close();
   
     /**
      * send/recv functions

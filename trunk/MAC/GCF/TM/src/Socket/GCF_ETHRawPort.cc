@@ -28,6 +28,9 @@
 #include "GTM_ETHSocket.h"
 #include <GTM_Defines.h>
 #include <errno.h>
+#include <GCF/ParameterSet.h>
+
+using namespace GCF;
 
 
 GCFETHRawPort::GCFETHRawPort(GCFTask& task,
@@ -55,65 +58,111 @@ GCFETHRawPort::~GCFETHRawPort()
   
 }
 
-int GCFETHRawPort::close()
+bool GCFETHRawPort::close()
 {
-  LOG_DEBUG(LOFAR::formatString ( 
+  LOG_DEBUG(formatString ( 
       "close -> schedule_close"));
 
+  setState(S_CLOSING);
   schedule_close();
 
-  return 0;
+  return true;
 }
 
-int GCFETHRawPort::open()
+bool GCFETHRawPort::open()
 {
-  int retval = 0;
-
   if (isConnected())
   {
-    LOG_WARN(LOFAR::formatString ( 
+    LOG_WARN(formatString ( 
         "already connected"));
    
-    return -1;
+    return false;
   }
-
   // check for if name
   if (_ifname == "")
-  {
-    LOG_ERROR(LOFAR::formatString ( 
-        "no interface name specified"));
-    return -1;
+  {    
+    try 
+    {
+      string ifNameParam = formatString(
+          PARAM_ETH_IFNAME,
+          getTask()->getName().c_str(),
+          getRealName().c_str());
+      _ifname += ParameterSet::instance()->getString(ifNameParam);      
+    }
+    catch (...)
+    {
+      LOG_ERROR(formatString ( 
+          "no interface name specified"));
+      return false;
+    }
   }
 
+  if (_destMacStr == "")
+  {    
+    try 
+    {
+      string destMacParam = formatString(
+          PARAM_ETH_MACADDR,
+          getTask()->getName().c_str(),
+          getRealName().c_str());
+      _destMacStr += ParameterSet::instance()->getString(destMacParam);      
+    }
+    catch (...)
+    {
+      LOG_ERROR(formatString ( 
+          "no destination mac adres is specified"));
+      return false;
+    }
+  }
+
+  if (_ethertype == 0x0000)
+  {
+    try 
+    {
+      string ethertypeParam = formatString(
+          PARAM_ETH_ETHERTYPE,
+          getTask()->getName().c_str(),
+          getRealName().c_str());
+      _ethertype += ParameterSet::instance()->getInt(ethertypeParam);      
+    }
+    catch (...)
+    {
+      // is optional so no problem.
+    }
+  }
   if (!_pSocket && isSlave())
   {
-      LOG_ERROR(LOFAR::formatString (
-			  "ERROR: Port %s is not initialised.",
-			  _name.c_str()));
-    return -1;
+    if (isSlave())
+    {
+      LOG_ERROR(formatString (
+  			  "ERROR: Port %s is not initialised.",
+  			  getRealName().c_str()));
+      return false;
+    }
+    else    
+    {
+      _pSocket = new GTMETHSocket(*this);
+    }
   } 
-  else if (!_pSocket && !isSlave())
-  {
-    _pSocket = new GTMETHSocket(*this);
-  }
    
   if (_pSocket->open(_ifname.c_str(), _destMacStr.c_str(), _ethertype) < 0)
-  {
-    _isConnected = false;
+  {    
     if (SAP == getType())
     {
+      setState(S_DISCONNECTING);
       schedule_disconnected();
     }
     else
     {
-      retval = 0;
+      return false;
     }
   }
   else
   { 
+    setState(S_CONNECTING);
     schedule_connected();
   }
-  return retval;
+  return true;
 }
 
 ssize_t GCFETHRawPort::send(GCFEvent& e)
@@ -128,12 +177,19 @@ ssize_t GCFETHRawPort::send(GCFEvent& e)
   unsigned int packsize;
   void* buf = e.pack(packsize);
 
+  LOG_DEBUG(formatString (
+      "Sending event '%s' for task '%s' on port '%s'",
+      getTask()->evtstr(e),
+      getTask()->getName().c_str(), 
+      getRealName().c_str()));
+
   if ((written = _pSocket->send(buf, packsize)) != packsize)
   {
-    LOG_DEBUG(LOFAR::formatString (
+    LOG_DEBUG(formatString (
         "truncated send: %s",
         strerror(errno)));
-        
+      
+    setState(S_DISCONNECTING);  
     schedule_disconnected();
     
     written = 0;

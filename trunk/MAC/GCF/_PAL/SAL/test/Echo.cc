@@ -76,7 +76,7 @@ GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
-GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static string propName("Test_Prop");
@@ -87,6 +87,9 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       service.dpDelete(propName);
       service.dpDelete(propName + "_test");
       cout << "Lost connection to client" << endl;
+      p.close();
+      break;
+    case F_CLOSED:
       GCFTask::stop();
       break;
 

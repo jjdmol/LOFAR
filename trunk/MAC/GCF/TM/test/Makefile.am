@@ -1,18 +1,16 @@
-check_PROGRAMS 		= echoapp ping clocksim spidreset
+check_PROGRAMS 		= echoapp ping
 
 TESTS			= #echoapp ping
-
-clocksim_SOURCES = ClockSim.c
-
-spidreset_SOURCES = SPIDreset.c
 
 echoapp_SOURCES 		= Echo.cc Echo_Protocol.cc
 echoapp_LDADD		= ../src/libgcftm.la
 echoapp_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
+echoapp_CPPFLAGS=-I$(top_srcdir)/include
 
 ping_SOURCES 		= Ping.cc Echo_Protocol.cc
 ping_LDADD		= ../src/libgcftm.la
 ping_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
+ping_CPPFLAGS=-I$(top_srcdir)/include
 
 AUTOGEN = autogen
 SUFFIXES = .ph
@@ -22,23 +20,27 @@ SUFFIXES = .ph
 
 BUILT_SOURCES = \
 	Echo_Protocol.ph \
-	tutorial.ns \
-	tutorial.top \
+	echoapp.conf \
+	ping.conf \
+	ServiceBroker.conf \
 	log4cplus.properties	
 
 EXTRA_DIST = \
 	Echo_Protocol.ph \
-	tutorial.ns \
-	tutorial.top \
+	echoapp.conf \
+	ping.conf \
+	ServiceBroker.conf \
 	log4cplus.properties
 	
+MAC_CONFIG = $(top_srcdir)/../../Config
+
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
-	
-%.ns: %.ns.in
-	cp $< $@
 
-%.top: %.top.in
+%.conf:	tm-test.conf.in
+	ln -sf $< $@
+
+ServiceBroker.conf:	$(bindir)/ServiceBroker.conf
 	cp $< $@
 
 include $(lofar_sharedir)/Makefile.common

@@ -53,6 +53,8 @@ class GCFPortInterface
         MSPP,       /**< Multi Service Provision Point     (port provider)*/
     } TPortType;
     
+    typedef enum TSTATE {S_DISCONNECTED, S_CONNECTING, S_CONNECTED, S_DISCONNECTING, S_CLOSING};
+
     /** @param protocol NOT USED */
     explicit GCFPortInterface (GCFTask* pTask, 
                       string name, 
@@ -61,7 +63,7 @@ class GCFPortInterface
                       bool transportRawData) :
         _pTask(pTask), 
         _name(name), 
-        _isConnected(false), 
+        _state(S_DISCONNECTED), 
         _type(type), 
         _protocol(protocol),
         _transportRawData(transportRawData)
@@ -70,8 +72,8 @@ class GCFPortInterface
     
     virtual ~GCFPortInterface () {};
     
-    virtual int close () = 0;
-    virtual int open ()  = 0;
+    virtual bool close () = 0;
+    virtual bool open ()  = 0;
     
     /**
     * send/recv functions
@@ -110,7 +112,8 @@ class GCFPortInterface
     */
     inline const string&  getName ()     const {return _name;}
     inline TPortType      getType ()     const {return _type;}
-    inline bool           isConnected () const {return _isConnected;}
+    inline bool           isConnected () const {return _state == S_CONNECTED;}
+    inline TSTATE         getState ()    const {return _state;}
     inline const GCFTask* getTask ()     const {return _pTask;}
     inline int            getProtocol () const {return _protocol;}
     inline bool           isTransportRawData () const {return _transportRawData;}
@@ -118,12 +121,12 @@ class GCFPortInterface
   protected:
     GCFTask*  _pTask;
     string    _name;
-    bool      _isConnected;
+    TSTATE    _state;
     TPortType _type;
     int       _protocol; /**< NOT USED */
     bool      _transportRawData;
     
-    virtual inline void setIsConnected (bool connected) {_isConnected = connected;}
+    virtual inline void setState (TSTATE newState) {_state = newState;}
     
     /** @param protocol NOT USED */
     virtual void init(GCFTask& task, 
@@ -136,7 +139,7 @@ class GCFPortInterface
       _name = name;  
       _type = type;
       _protocol = protocol;
-      _isConnected = false;
+      _state = S_DISCONNECTED;
       _transportRawData = transportRawData;
     }
 };

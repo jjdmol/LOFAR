@@ -21,7 +21,6 @@
 //#  $Id$
 
 #include "GTM_NameService.h"
-#include <GCF/TM/GCF_PeerAddr.h>
 #include "GTM_Defines.h"
 #include "GTM_Config.h"
 

@@ -30,6 +30,7 @@
 class GCFTask;
 class GCFEvent;
 class GTMTCPSocket;
+class GTMServiceBroker;
 
 /**
  * This is the class, which implements the special port with the TCP message 
@@ -56,10 +57,10 @@ class GCFTCPPort : public GCFRawPort
     /**
      * open/close functions
      */
-    virtual int open ();
-    virtual int close ();
+    virtual bool open ();
+    virtual bool close ();
   
-    virtual int accept (GCFTCPPort& port);
+    virtual bool accept (GCFTCPPort& port);
     /**
      * send/recv functions
      */
@@ -70,7 +71,7 @@ class GCFTCPPort : public GCFRawPort
 
     // addr is local address if getType == (M)SPP
     // addr is remote addres if getType == SAP
-    void setAddr (const GCFPeerAddr& addr);
+    void setAddr (const TPeerAddr& addr);
 
   private:
     /**
@@ -79,10 +80,21 @@ class GCFTCPPort : public GCFRawPort
     GCFTCPPort (const GCFTCPPort&);
     GCFTCPPort& operator= (const GCFTCPPort&);
     
+    friend class GTMServiceBroker;
+    void serviceRegistered(unsigned int result, unsigned int portNumber);
+    void serviceUnregistered();
+    void serviceInfo(unsigned int result, unsigned int portNumber, const string& host);
+    void serviceGone();
+    
+  protected:
+    GTMTCPSocket*   _pSocket;
+
   private:
-    bool                _addrIsSet;
-    GTMTCPSocket*       _pSocket;
-    GCFPeerAddr         _addr;
+    bool            _addrIsSet;
+    TPeerAddr       _addr;
+    string          _host;
+    unsigned int    _portNumber;
+    GTMServiceBroker* _broker;
 };
 
 #endif

@@ -47,31 +47,29 @@ RTPing_DEPENDENCIES					= libgcfrttest.la $(LOFAR_DEPEND)
 BUILT_SOURCES = \
 	TST_Protocol.ph \
 	Echo_Protocol.ph \
-	test.ns \
-	test.top \
 	log4cplus.properties
 
 EXTRA_DIST = \
 	TST_Protocol.ph \
 	Echo_Protocol.ph \
-	test.ns \
-	test.top \
 	log4cplus.properties
 	
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
 configfiles_DATA= \
-	test.ns \
-	test.top \
+	Echo.conf \
+	Ping.conf \
+	RTEcho.conf \
+	RTPing.conf \
+	Application1.conf \
+	Application2.conf \
 	log4cplus.properties
 	
-%.properties: $(top_srcdir)/../../Config/%.properties
+MAC_CONFIG = $(top_srcdir)/../../Config
+%.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 	
-%.ns: %.ns.in
-	cp $< $@
-
-%.top: %.top.in
+%.conf: gcf-test.conf.in
 	cp $< $@
 
 include $(lofar_sharedir)/Makefile.common

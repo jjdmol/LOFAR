@@ -24,7 +24,6 @@
 #include <GCF/GCF_Defines.h>
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <GCF/TM/GCF_PeerAddr.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -42,7 +41,7 @@ GTMTCPServerSocket::~GTMTCPServerSocket()
   close();  
 }
 
-int GTMTCPServerSocket::open(GCFPeerAddr& localaddr)
+int GTMTCPServerSocket::open(unsigned int portNumber)
 {
   int result(-1);
   if (_socketFD == -1)
@@ -63,7 +62,7 @@ int GTMTCPServerSocket::open(GCFPeerAddr& localaddr)
       
       address.sin_family = AF_INET;
       address.sin_addr.s_addr = htonl(INADDR_ANY);
-      address.sin_port = htons(localaddr.getPortnumber());
+      address.sin_port = htons(portNumber);
       addrLen = sizeof(address);
       if (bind(socketFD, (struct sockaddr*)&address, addrLen) > -1)
       {

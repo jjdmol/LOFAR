@@ -63,13 +63,9 @@ GCFEvent::TResult Application::test1_1(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_ENTRY:
-      _supTask3.getPort().init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
-      TESTC(1 == _supTask3.getPort().open());
-      break;
-
+    case F_ENTRY:      
     case F_TIMER:
-      TESTC(1 == _supTask3.getPort().open());
+      TESTC(_supTask3.getPort().open());
       break;
 
     case F_CONNECTED:
@@ -112,7 +108,7 @@ GCFEvent::TResult Application::test1_2(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_TIMER:
-      TESTC(1 == _port.open());
+      TESTC(_port.open());
       break;
 
     case F_CONNECTED:
@@ -124,21 +120,21 @@ GCFEvent::TResult Application::test1_2(GCFEvent& e, GCFPortInterface& p)
       {
         _pSTPort1 = new GCFTCPPort();
         _pSTPort1->init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
-        TESTC(0 == _port.accept(*_pSTPort1));
+        TESTC(_port.accept(*_pSTPort1));
       }
       else
       {
         _pSTPort2 = new GCFTCPPort();
         _pSTPort2->init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
-        TESTC(0 == _port.accept(*_pSTPort2));
+        TESTC(_port.accept(*_pSTPort2));
       }
       break;
       
     case F_DISCONNECTED:
       if (closing)
       {
-        _port.init(_supTask3, "server", GCFPortInterface::MSPP, TST_PROTOCOL);
-        TESTC(1 == _port.open());
+        _port.init(_supTask3, "provider", GCFPortInterface::MSPP, TST_PROTOCOL);
+        TESTC(_port.open());
         closing = false;
       }
       else
@@ -149,8 +145,8 @@ GCFEvent::TResult Application::test1_2(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_CLOSED:
-      _port.init(_supTask3, "server", GCFPortInterface::MSPP, TST_PROTOCOL);
-      TESTC(1 == _port.open());
+      _port.init(_supTask3, "provider", GCFPortInterface::MSPP, TST_PROTOCOL);
+      TESTC(_port.open());
       closing = false;
       break;
 

@@ -25,12 +25,13 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Event.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <PortInterface/GTM_NameService.h>
-#include <PortInterface/GTM_TopologyService.h>
+#include <GCF/ParameterSet.h>
 #include <GTM_Defines.h>
 
 // all possible implementations are included here
 #include <GCF/TM/GCF_TCPPort.h>
+
+using namespace GCF;
 
 /**
  * ::GCFPort constructor
@@ -57,12 +58,12 @@ GCFPort::GCFPort() :
  */
 GCFPort::~GCFPort()
 {
-    //
-    // if the open method on the port has been called, there will be
-    // a slave port which needs to be cleaned up.
-    //
-    if (_pSlave) delete _pSlave;
-    _pSlave = 0;
+  //
+  // if the open method on the port has been called, there will be
+  // a slave port which needs to be cleaned up.
+  //
+  if (_pSlave) delete _pSlave;
+  _pSlave = 0;
 }
 
 /**
@@ -74,15 +75,21 @@ void GCFPort::init(GCFTask& task,
 		 int protocol, 
      bool transportRawData)
 {
-    GCFPortInterface::init(task, name, type, protocol, transportRawData);
-    _pSlave = 0;
+  GCFPortInterface::init(task, name, type, protocol, transportRawData);
+  _pSlave = 0;
 }
 
 /**
  * ::open
  */
-int GCFPort::open()
+bool GCFPort::open()
 {
+  if (_state != S_DISCONNECTED)
+  {
+    return false;
+  }
+  _state = S_CONNECTING;
+  
   //
   // If the port has been openend before then the _pSlave port has already
   // been connected, and we don't need to connect it again. We can simply
@@ -92,84 +99,82 @@ int GCFPort::open()
   
   //
   // This is the first call to open.
-  // Determine what kind of slave port to create, get the necessary information
-  // to connect it to its peer and open it.
+  // Determine what kind of slave port to create and open it.
   //
-  if (SAP == _type)
-  {  
-    // find local and remote address
-    if (GTMTopologyService::instance()->getPeerAddr(_pTask->getName(),
-    			    _name, _remoteAddr) < 0)
+
+  string typeParam = formatString(
+      PARAM_PORT_PROT_TYPE,
+      _pTask->getName().c_str(),
+      _name.c_str());
+  string type;
+  try
+  {
+    type = ParameterSet::instance()->getString(typeParam);
+  }
+  catch (...)
+  {
+    if (SAP == getType())
     {
-      LOG_DEBUG(LOFAR::formatString (
-          "No address found for port '%s' of task '%s'",
-          _name.c_str(), _pTask->getName().c_str()));
-    
-      return -1;
+      // try to retrive the type from via the remote server name
+      string remoteServiceNameParam = formatString(
+          PARAM_SERVER_SERVICE_NAME,
+          _pTask->getName().c_str(),
+          _name.c_str());
+      TPeerAddr addr;
+      try 
+      {
+        string remoteAddr;
+        remoteAddr += ParameterSet::instance()->getString(remoteServiceNameParam);
+        const char* pRemoteTaskName = remoteAddr.c_str();
+        char* colon = strchr(pRemoteTaskName, ':');
+        if (colon) *colon = '\0';
+        addr.taskname = pRemoteTaskName;
+        addr.portname = colon + 1;
+        
+        typeParam = formatString(
+            PARAM_PORT_PROT_TYPE,
+            addr.taskname.c_str(),
+            addr.portname.c_str());
+        type = ParameterSet::instance()->getString(typeParam);
+      }
+      catch (...)
+      {
+        LOG_ERROR(formatString (
+            "Could not find port info for port '%s' of task '%s via (%s:%s)'.", 
+            _name.c_str(), _pTask->getName().c_str(),
+            addr.taskname.c_str(),
+            addr.portname.c_str()));
+        
+        return false;        
+      }
     }
-  }
-  
-  // find my own address in the nameservice
-  if (GTMNameService::instance()->query(_pTask->getName(),
-				      _localAddr) < 0)
-  {
-    LOG_ERROR(LOFAR::formatString (
-        "Could not find own address for task '%s'.", 
-        _pTask->getName().c_str()));
-    
-    return -1;
-  }
-  if (GTMNameService::instance()->queryPort(_pTask->getName(),
-					  getName(),
-					  _localAddr))
-  {
-    LOG_ERROR(LOFAR::formatString (
+    else
+    {
+      LOG_ERROR(formatString (
         "Could not find port info for port '%s' of task '%s'.", 
         _name.c_str(), _pTask->getName().c_str()));
-    
-    return -1;
-  }
-
-  if (SAP == _type)
-  {
-    LOG_DEBUG(LOFAR::formatString (
-        "Connecting local SAP [%s:%s] to remote SPP [%s(%s,%d):%s].",
-        _pTask->getName().c_str(),
-        _name.c_str(),
-        _remoteAddr.getTaskname().c_str(),
-        _remoteAddr.getHost().c_str(),
-        _remoteAddr.getPortnumber(),
-        _remoteAddr.getPortname().c_str()));
-  }
-  else if (SPP == _type && MSPP == _type)
-  {
-    LOG_DEBUG(LOFAR::formatString (
-        "Local SPP [%s:%s] listening on port %d for connections.",
-        _localAddr.getTaskname().c_str(),
-        _localAddr.getPortname().c_str(),
-        _localAddr.getPortnumber()));
+        
+      return -1;        
+    }      
   }
 
   // Check for the various port types
-  if (_localAddr.getPorttype() == "TCP")
+  if (type == "TCP")
   {
     GCFTCPPort* pNewPort(0);
     string pseudoName = _name + "_TCP";
     pNewPort = new GCFTCPPort(*_pTask, pseudoName, _type, _protocol, _transportRawData);
-    pNewPort->setMaster(this);
-
-    if (SAP == _type) pNewPort->setAddr(_remoteAddr);
-    else pNewPort->setAddr(_localAddr);
+    pNewPort->setMaster(this);    
 
     _pSlave = pNewPort;
   }
   else
   {
-    LOG_ERROR(LOFAR::formatString (
+    LOG_ERROR(formatString (
         "no implementation found for port type '%s'",
-	      _localAddr.getPorttype().c_str()));
+	      type.c_str()));
     
-    return -1;
+    return false;
   }
 
   return _pSlave->open();
@@ -178,17 +183,29 @@ int GCFPort::open()
 /**
  * ::close
  */
-int GCFPort::close()
+bool GCFPort::close()
 {
+  _state = S_CLOSING;
   if (!_pSlave)
   {
-    LOG_ERROR(LOFAR::formatString (
+    LOG_ERROR(formatString (
         "GCFPort::close: _pSlave == 0"));
     
-    return -1;
+    return false;
   }
 
   return _pSlave->close();
+}
+
+bool GCFPort::setRemoteAddr(const string& remotetask, const string& remoteport)
+{
+  if (_type == SAP)
+  {
+    _remotetask = remotetask;
+    _remoteport = remoteport;
+    return (_remotetask.length() > 0 && _remoteport.length() > 0);
+  }
+  return false;
 }
 
 /**
@@ -196,20 +213,11 @@ int GCFPort::close()
  */
 ssize_t GCFPort::send(GCFEvent& e)
 {
-  if (F_RAW_DATA != e.signal)
-  {
-    LOG_DEBUG(LOFAR::formatString (
-      "Sending event '%s' for task %s on port %s",
-      getTask()->evtstr(e),
-      getTask()->getName().c_str(), 
-      getName().c_str()));
-  }
-
   if (SPP == _type)
   {
     if (!(F_EVT_INOUT(e) & F_OUT))
     {
-      LOG_ERROR(LOFAR::formatString (
+      LOG_ERROR(formatString (
           "Trying to send IN event '%s' on SPP "
 		      "port '%s'; discarding this event.",
 		      getTask()->evtstr(e), _name.c_str()));
@@ -221,7 +229,7 @@ ssize_t GCFPort::send(GCFEvent& e)
   {
     if (!(F_EVT_INOUT(e) & F_IN))
     {
-      LOG_ERROR(LOFAR::formatString (
+      LOG_ERROR(formatString (
           "Trying to send OUT event '%s' on SAP "
 		      "port '%s'; discarding this event.",
 		      getTask()->evtstr(e), _name.c_str()));
@@ -230,7 +238,7 @@ ssize_t GCFPort::send(GCFEvent& e)
   }
   else if (MSPP == _type)
   {
-     LOG_ERROR(LOFAR::formatString (
+     LOG_ERROR(formatString (
         "Trying to send event '%s' by means of the portprovider: %s (MSPP). "
         "Not supported yet",
          getTask()->evtstr(e), _name.c_str()));

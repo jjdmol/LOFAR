@@ -26,7 +26,6 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GTM_Defines.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <GCF/TM/GCF_PeerAddr.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -57,21 +56,19 @@ ssize_t GTMDevice::recv(void* buf, size_t count)
     return 0;
 }
 
-int GTMDevice::open(GCFPeerAddr& addr)
+int GTMDevice::open(const string& deviceName)
 {
   if (_socketFD > -1)
     return 0;
   else
   {
     int socketFD;
-    char devName[30];
-    sprintf(devName,"/dev/%s%d", addr.getPortname().c_str(), addr.getPortnumber());
-    socketFD = ::open(devName, O_RDWR);
+    socketFD = ::open(deviceName.c_str(), O_RDWR);
     if (socketFD < 0)
     {
-      LOG_FATAL(LOFAR::formatString (
+      LOG_FATAL(formatString (
           "Could not open device '%s' with following reason: %s",
-          devName,
+          deviceName.c_str(),
           strerror(errno)));
     }
     setFD(socketFD);

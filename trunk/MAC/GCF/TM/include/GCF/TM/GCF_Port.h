@@ -24,7 +24,6 @@
 #define GCF_PORT_H
 
 #include <GCF/TM/GCF_PortInterface.h>
-#include <GCF/TM/GCF_PeerAddr.h>
 
 // forward declaration
 class GCFTask;
@@ -69,9 +68,10 @@ class GCFPort : public GCFPortInterface
     /**
     * open/close functions
     */
-    virtual int open ();
-    virtual int close ();
+    virtual bool open ();
+    virtual bool close ();
     
+    virtual bool setRemoteAddr(const string& remotetask, const string& remoteport);
     /**
     * send/recv functions
     */
@@ -115,10 +115,8 @@ class GCFPort : public GCFPortInterface
     friend class GCFRawPort;
  
   private:
-
-    GCFPeerAddr     _localAddr;
-    GCFPeerAddr     _remoteAddr;
-    
+    string _remotetask;
+    string _remoteport;
     GCFPortInterface* _pSlave;
 };
 #endif

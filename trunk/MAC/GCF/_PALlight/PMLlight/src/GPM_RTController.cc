@@ -25,8 +25,11 @@
 #include <stdio.h>
 #include <GCF/Utils.h>
 #include <PI_Protocol.ph>
+#include <GCF/ParameterSet.h>
 
-static string sPMLTaskName("PMLlite");
+using namespace GCF;
+
+static string sPMLTaskName("GCF-PMLlight");
 GPMRTHandler* GPMRTHandler::_pInstance = 0;
 
 extern void logResult(TPIResult result, GCFRTMyPropertySet& propSet);
@@ -39,6 +42,8 @@ GPMRTController::GPMRTController() :
 
   // initialize the port
   _propertyInterface.init(*this, "client", GCFPortInterface::SAP, PI_PROTOCOL);
+  ParameterSet::instance()->adoptFile("gcf-pmllight.conf");
+  ParameterSet::instance()->adoptFile("PropertyInterface.conf");
 }
 
 GPMRTController* GPMRTController::instance(bool temporary)

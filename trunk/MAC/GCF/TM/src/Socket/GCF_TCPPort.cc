@@ -25,10 +25,14 @@
 #include <GTM_Defines.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <PortInterface/GTM_NameService.h>
-#include <PortInterface/GTM_TopologyService.h>
 #include <Socket/GTM_TCPServerSocket.h>
+#include <ServiceBroker/GTM_ServiceBroker.h>
 #include <errno.h>
+
+
+static GCFEvent disconnectedEvent(F_DISCONNECTED);
+static GCFEvent connectedEvent   (F_CONNECTED);
+static GCFEvent closedEvent      (F_CLOSED);
 
 GCFTCPPort::GCFTCPPort(GCFTask& task, 
                        string name, 
@@ -36,8 +40,9 @@ GCFTCPPort::GCFTCPPort(GCFTask& task,
                        int protocol, 
                        bool transportRawData) 
   : GCFRawPort(task, name, type, protocol, transportRawData),
+    _pSocket(0),
     _addrIsSet(false),
-    _pSocket(0)
+    _portNumber(0)
 {
   if (SPP == getType() || MSPP == getType())
   {
@@ -47,44 +52,51 @@ GCFTCPPort::GCFTCPPort(GCFTask& task,
   {
     _pSocket = new GTMTCPSocket(*this);
   }
+  _broker = GTMServiceBroker::instance();
 }
 
 GCFTCPPort::GCFTCPPort()
     : GCFRawPort(),
+    _pSocket(0),
     _addrIsSet(false),
-    _pSocket(0)
+    _portNumber(0)
 {
+  _broker = GTMServiceBroker::instance();
 }
 
 GCFTCPPort::~GCFTCPPort()
 {
   if (_pSocket)
+  {
     delete _pSocket;
+    _pSocket = 0;
+    assert(_broker);
+    _broker->deletePort(*this);
+    GTMServiceBroker::release();
+    _broker = 0;
+  }
 }
 
 
-int GCFTCPPort::open()
+bool GCFTCPPort::open()
 {
-  GCFPeerAddr fwaddr;
-  int result(1);
-
-  if (isConnected())
+  if (getState() != S_DISCONNECTED)
   {
-    LOG_ERROR(LOFAR::formatString ( 
+    LOG_ERROR(formatString ( 
         "ERROR: Port %s already open.",
 	      _name.c_str()));
-    result = 0;
+    return false;
   }
-  else if (!_pSocket && isSlave())
+  else if (!_pSocket)
   {
-    LOG_ERROR(LOFAR::formatString ( 
-        "ERROR: Port %s not initialised.",
-        _name.c_str()));
-    result = 0;
-  }
-  else if (!_addrIsSet && !isSlave())
-  {
-    if (!_pSocket)
+    if (isSlave())
+    {
+      LOG_ERROR(formatString ( 
+          "ERROR: Port %s not initialised.",
+          _name.c_str()));
+      return false;
+    }
+    else
     {
       if (SPP == getType() || MSPP == getType())
       {
@@ -95,49 +107,129 @@ int GCFTCPPort::open()
         _pSocket = new GTMTCPSocket(*this);
       }
     }
-    
+  }
+  
+  setState(S_CONNECTING);
+  if (SAP == getType()) 
+  {
+    TPeerAddr fwaddr;
     if (findAddr(fwaddr))
     {
       setAddr(fwaddr);
     }
     else
     {
-      LOG_ERROR(LOFAR::formatString (
-          "Could not get address info for port '%s' of task '%s'",
-		      _name.c_str(), _pTask->getName().c_str()));
-      result = 0;
+      if (!_addrIsSet)
+      {
+        LOG_ERROR(formatString (
+            "No remote address info is set for port '%s' of task '%s'.",
+            getRealName().c_str(), _pTask->getName().c_str()));
+        LOG_INFO("See the last log of ParameterSet.cc file or use setAddr method.");
+        setState(S_DISCONNECTED);
+        return false;
+      }
+    }
+    if (_host != "" && _portNumber > 0)
+    {
+      serviceInfo(SB_NO_ERROR, _portNumber, _host);
+    }      
+    else
+    {
+      string remoteServiceName = formatString("%s:%s", _addr.taskname.c_str(), _addr.portname.c_str());
+      assert(_broker);
+      _broker->getServiceinfo(*this, remoteServiceName);
     }
   }
-  if (result == 0) return result;
-  
-  if (_pSocket->open(_addr) < 0)
+  else 
   {
-    _isConnected = false;
-    if (SAP == getType())
+    if (_portNumber > 0)
+    {
+      serviceRegistered(SB_NO_ERROR, _portNumber);
+    }
+    else
+    {
+      assert(_broker);
+      _broker->registerService(*this);
+    }
+  }
+  return true;
+}
+
+void GCFTCPPort::serviceRegistered(unsigned int result, unsigned int portNumber)
+{
+  assert(MSPP == getType() || SPP == getType());
+  if (result == SB_NO_ERROR)
+  {
+    LOG_DEBUG(formatString (
+        "(M)SPP port '%s' in task '%s' listens on portnumber %d.",
+        getRealName().c_str(),
+        _pTask->getName().c_str(),
+        portNumber));
+    _portNumber = portNumber;
+    if (_pSocket->open(portNumber) < 0)
+    {
+      schedule_disconnected();
+    }
+    else if (MSPP == getType())
+    {
+      schedule_connected();
+    }
+  }
+  else
+  {
+    schedule_disconnected();
+  }
+}
+
+void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const string& host)
+{
+  assert(SAP == getType());
+  if (result == SB_UNKNOWN_SERVICE)
+  {
+    LOG_DEBUG(formatString (
+        "Cannot connect the local SAP [%s:%s] to remote (M)SPP [%s:%s]. Try again!!!",
+        _pTask->getName().c_str(),
+        getRealName().c_str(),
+        _addr.taskname.c_str(),
+        _addr.portname.c_str()));
+        
+    schedule_disconnected();
+  }
+  else if (result == SB_NO_ERROR)
+  {
+    _portNumber = portNumber;
+    _host = host;
+    LOG_DEBUG(formatString (
+        "Can now connect the local SAP [%s:%s] to remote (M)SPP [%s:%s@%s:%d].",
+        _pTask->getName().c_str(),
+        getRealName().c_str(),
+        _addr.taskname.c_str(),
+        _addr.portname.c_str(),
+        host.c_str(),
+        portNumber));
+        
+    if (_pSocket->open(portNumber) < 0)
     {
       schedule_disconnected();
     }
     else
-    {
-      result = 0;
-    }
-  }
-  else
-  { 
-    if (SAP == getType())
-    {   
-      if (_pSocket->connect(_addr) < 0)
+    { 
+      if (_pSocket->connect(portNumber, host) < 0)
       {
-        _isConnected = false;
         schedule_disconnected();
       }
       else
+      {
         schedule_connected();
-    } 
-    else if (MSPP == getType())
-      schedule_connected();
+      }
+    }
   }
-  return result;
+}
+
+void GCFTCPPort::serviceGone()
+{
+  _host = "";
+  _portNumber = 0;
 }
 
 ssize_t GCFTCPPort::send(GCFEvent& e)
@@ -153,16 +245,15 @@ ssize_t GCFTCPPort::send(GCFEvent& e)
   unsigned int packsize;
   void* buf = e.pack(packsize);
 
-  if (!isSlave())
-  {
-    LOG_DEBUG(LOFAR::formatString (
-      "Sending event '%s' for task %s on port '%s'",
+  LOG_DEBUG(formatString (
+      "Sending event '%s' for task '%s' on port '%s'",
       getTask()->evtstr(e),
       getTask()->getName().c_str(), 
-      getName().c_str()));
-  }
+      getRealName().c_str()));
+      
   if ((written = _pSocket->send(buf, packsize)) != (ssize_t) packsize)
-  {       
+  {  
+    setState(S_DISCONNECTING);     
     schedule_disconnected();
     
     written = -1;
@@ -177,37 +268,46 @@ ssize_t GCFTCPPort::recv(void* buf, size_t count)
   return _pSocket->recv(buf, count);
 }
 
-int GCFTCPPort::close()
+bool GCFTCPPort::close()
 {
+  setState(S_CLOSING);  
   _pSocket->close();
   schedule_close();
 
   // return success when port is still connected
   // scheduled close will only occur later
-  return (isConnected() ? 0 : -1);
+  return isConnected();
 }
 
-void GCFTCPPort::setAddr(const GCFPeerAddr& addr)
+void GCFTCPPort::setAddr(const TPeerAddr& addr)
 {
+  if (_addr.taskname != addr.taskname || _addr.portname != addr.portname)
+  {
+    _host = "";
+    _portNumber = 0;
+  }
   _addr = addr;
-  _addrIsSet = true;
+  if (_addr.taskname != "" && _addr.portname != "")
+  {
+    _addrIsSet = true;
+  }
 }
 
-int GCFTCPPort::accept(GCFTCPPort& port)
+bool GCFTCPPort::accept(GCFTCPPort& port)
 {
   if (MSPP == getType() && SPP == port.getType())
   {
-    GTMTCPServerSocket* pProvider = static_cast<GTMTCPServerSocket*>(_pSocket);
-    if (pProvider)
+    GTMTCPServerSocket* pProvider = (GTMTCPServerSocket*)_pSocket;
+    if (port._pSocket == 0)
     {
-      if (port._pSocket == 0)
-      {
-        port._pSocket = new GTMTCPSocket(port);
-      }
-      if (pProvider->accept(*port._pSocket) >= 0)
-        port.schedule_connected();
-      return 0;
-    }    
+      port._pSocket = new GTMTCPSocket(port);
+    }
+    if (pProvider->accept(*port._pSocket) >= 0)
+    {
+      setState(S_CONNECTING);        
+      port.schedule_connected();
+    }
+    return true;
   }
-  return -1;
+  return false;
 }

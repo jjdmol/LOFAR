@@ -3,7 +3,8 @@ EXTRA_DIST = \
 
 SUBDIRS = \
 	src \
-	aclocal
+	aclocal \
+	tools
 
 sbin_SCRIPTS = \
 	load_spid
