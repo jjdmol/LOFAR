@@ -540,6 +540,7 @@ event = {
   param = {
     name = "stats";
     type = "Statistics";
+    userdefined;
   };
 };
 
@@ -580,6 +581,7 @@ event = {
   param = {
     name = "stats";
     type = "Statistics";
+    userdefined;
   };
 };    
     
@@ -587,17 +589,32 @@ event = {
   signal = GETVERSION;
   dir = IN;
   param = {
-    name = "dummy";
-    type = "int";
+    name = "timestamp";
+    type = "Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "cache";
+    type = "bool";
   };
 };
 
 event = {
   signal = GETVERSIONACK;
-  dir = IN;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
   param = {
     name = "versions";
     type = "Versions";
+    userdefined;
   };
 };
 

@@ -37,23 +37,27 @@
   reportSubTest()
 
 #define FAIL_ABORT(_txt_, _final_state_) \
-  { \
+do { \
     FAIL(_txt_);  \
-    ABORT_TESTS(_final_state_; \
-  }
+    TRAN(_final_state_); \
+} while (0)
 
 #define TESTC_ABORT(cond, _final_state_) \
+do { \
   if (!TESTC(cond)) \
   { \
     TRAN(_final_state_); \
     break; \
-  }
+  } \
+} while (0)
 
 #define TESTC_DESCR_ABORT(cond, _descr_, _final_state_) \
+do { \
   if (!TESTC_DESCR(cond, _descr_)) \
   { \
     TRAN(_final_state_); \
     break; \
-  }
+  } \
+} while(0)
 
 #endif

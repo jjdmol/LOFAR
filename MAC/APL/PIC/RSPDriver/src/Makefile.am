@@ -86,8 +86,8 @@ RSPDriver_SOURCES = \
 	Config.cc \
 	RSPConfig.h \
 	RSPConfig.cc \
-	RSPDriverTask.h \
-	RSPDriverTask.cc \
+	RSPDriver.h \
+	RSPDriver.cc \
 	Scheduler.h \
 	Scheduler.cc \
 	Command.h \
@@ -105,6 +105,16 @@ RSPDriver_SOURCES = \
 	GetSubbandsCmd.cc \
 	GetStatusCmd.h \
 	GetStatusCmd.cc \
+	SetRCUCmd.h \
+	SetRCUCmd.cc \
+	GetRCUCmd.h \
+	GetRCUCmd.cc \
+	SetWGCmd.h \
+	SetWGCmd.cc \
+	GetWGCmd.h \
+	GetWGCmd.cc \
+	GetVersionsCmd.h \
+	GetVersionsCmd.cc \
 	\
 	SyncAction.h \
 	SyncAction.cc \

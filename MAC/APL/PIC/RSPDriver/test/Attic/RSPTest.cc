@@ -70,109 +70,6 @@ GCFEvent::TResult RSPTest::initial(GCFEvent& e, GCFPortInterface& port)
   {
     case F_INIT:
     {
-      // send write register message to RA test port
-      RSPUpdstatusEvent updStatusEvent;
-      struct timeval timeValNow;
-      time(&timeValNow.tv_sec);
-      timeValNow.tv_usec=0;
-      updStatusEvent.timestamp.set(timeValNow);
-      updStatusEvent.status=1;
-      updStatusEvent.handle=1;
-     
-      EPA_Protocol::BoardStatus boardStatus;
-      boardStatus.rsp.voltage_15 = 0;
-      boardStatus.rsp.voltage_22 = 0;
-      boardStatus.rsp.ffi = 0;
-      boardStatus.bp.status = 0;
-      boardStatus.bp.temp = static_cast<uint8>(27.13*100.0);
-      boardStatus.ap[0].status = 0;
-      boardStatus.ap[0].temp = static_cast<uint8>(27.23*100.0);
-      boardStatus.ap[1].status = 0;
-      boardStatus.ap[1].temp = static_cast<uint8>(27.33*100.0);
-      boardStatus.ap[2].status = 0;
-      boardStatus.ap[2].temp = static_cast<uint8>(27.43*100.0);
-      boardStatus.ap[3].status = 0;
-      boardStatus.ap[3].temp = static_cast<uint8>(27.53*100.0);
-      boardStatus.eth.nof_frames = 0;
-      boardStatus.eth.nof_errors = 0;
-      boardStatus.eth.last_error = 0;
-      boardStatus.eth.ffi0 = 0;
-      boardStatus.eth.ffi1 = 0;
-      boardStatus.eth.ffi2 = 0;
-      boardStatus.read.seqnr = 0;
-      boardStatus.read.error = 0;
-      boardStatus.read.ffi = 0;
-      boardStatus.write.seqnr = 0;
-      boardStatus.write.error = 0;
-      boardStatus.write.ffi = 0;
- 
-      EPA_Protocol::RCUStatus rcuStatus;
-      std::bitset<8> rcuBitStatus;
-      rcuBitStatus[7] = 1; // overflow
-      rcuStatus.status = rcuBitStatus.to_ulong();
-      updStatusEvent.sysstatus.board().resize(1);
-      updStatusEvent.sysstatus.board()(0) = boardStatus;
-      updStatusEvent.sysstatus.rcu().resize(1);
-      updStatusEvent.sysstatus.rcu()(0) = rcuStatus;
- 
-/////////////////////////////////  Debug requiredSize berekening 
- 
-// volledig uitgeschreven gaat het goed:
-      unsigned int sizeOFsignal = sizeof(updStatusEvent.signal);
-      unsigned int sizeOFlength = sizeof(updStatusEvent.length);
-      unsigned int sizeOFtimestamp = updStatusEvent.timestamp.getSize();
-      unsigned int sizeOFstatus = sizeof(updStatusEvent.status);
-      unsigned int sizeOFhandle = sizeof(updStatusEvent.handle);
-      unsigned int sizeOFdimensions = updStatusEvent.sysstatus.board().dimensions()*sizeof(int32);
-      unsigned int sizeOFarray = updStatusEvent.sysstatus.board().size()*sizeof(EPA_Protocol::BoardStatus);
-      unsigned int sizeOFboard = sizeOFdimensions + sizeOFarray;
-      sizeOFdimensions = updStatusEvent.sysstatus.rcu().dimensions()*sizeof(int32);
-      sizeOFarray = updStatusEvent.sysstatus.rcu().size()*sizeof(EPA_Protocol::RCUStatus);
-      unsigned int sizeOFrcu = sizeOFdimensions + sizeOFarray;
-     
-      unsigned int sizeOFsysstatus = sizeOFboard + sizeOFrcu;
- 
-      unsigned int requiredSize = sizeOFsignal + sizeOFlength
-        + sizeOFtimestamp
-       
-        + sizeOFstatus
-       
-        + sizeOFhandle
-       
-        + sizeOFsysstatus
-        ;
-      LOG_INFO(formatString("sizeOf UPDSTATUS: %d",requiredSize));
- 
-// precies zoals in pack() gaat het niet goed:
-      requiredSize = sizeof(updStatusEvent.signal) + sizeof(updStatusEvent.length)
-	+ updStatusEvent.timestamp.getSize()
-   
-	+ sizeof(updStatusEvent.status)
-   
-	+ sizeof(updStatusEvent.handle)
-   
-	+ updStatusEvent.sysstatus.getSize()
-	;
-      LOG_INFO(formatString("sizeOf UPDSTATUS: %d",requiredSize));
- 
-// precies zoals in pack(), maar dan met uitgeschreven macro's gaat het weer wel goed:
-      requiredSize = sizeof(updStatusEvent.signal) + sizeof(updStatusEvent.length)
-	+ updStatusEvent.timestamp.getSize()
-   
-	+ sizeof(updStatusEvent.status)
-   
-	+ sizeof(updStatusEvent.handle)
-   
-//    + updStatusEvent.sysstatus.getSize()
-	+ ((updStatusEvent.sysstatus.board().dimensions()*sizeof(int32)) + (updStatusEvent.sysstatus.board().size() * sizeof(EPA_Protocol::BoardStatus)))
-	+ ((updStatusEvent.sysstatus.rcu().dimensions()*sizeof(int32)) + (updStatusEvent.sysstatus.rcu().size() * sizeof(EPA_Protocol::RCUStatus)))
-	;
-      LOG_INFO(formatString("sizeOf UPDSTATUS: %d",requiredSize));
- 
-      ////////////////////////////////////////////////  Debug requiredSize berekening
- 
-      //m_RSPserver.send(updStatusEvent);
-
     }
     break;
 
@@ -227,7 +124,7 @@ GCFEvent::TResult RSPTest::test001(GCFEvent& e, GCFPortInterface& port)
       sw.rcumask.reset();
       sw.weights().resize(1, 1, N_BEAMLETS);
 
-      sw.weights()(0, 0, Range::all()) = 0xbeaf;
+      sw.weights()(0, 0, Range::all()) = complex<int16>(0xdead, 0xbeaf);
 	  
       sw.rcumask.set(0);
 
@@ -248,10 +145,9 @@ GCFEvent::TResult RSPTest::test001(GCFEvent& e, GCFPortInterface& port)
 
     case F_DISCONNECTED:
     {
-      port.setTimer((long)1);
       port.close();
 
-      TRAN(RSPTest::final);
+      FAIL_ABORT("unexpected disconnect", RSPTest::final);
     }
     break;
 
@@ -306,10 +202,9 @@ GCFEvent::TResult RSPTest::test002(GCFEvent& e, GCFPortInterface& port)
 
       case F_DISCONNECTED:
       {
-	  port.setTimer((long)1);
 	  port.close();
 
-	  TRAN(RSPTest::final);
+	  FAIL_ABORT("unexpected disconnect", RSPTest::final);
       }
       break;
 
@@ -344,7 +239,7 @@ GCFEvent::TResult RSPTest::test003(GCFEvent& e, GCFPortInterface& port)
       sw.rcumask.reset();
       sw.weights().resize(1, 1, N_BEAMLETS);
 
-      sw.weights()(0, 0, Range::all()) = 0xbeaf;
+      sw.weights()(0, 0, Range::all()) = complex<int16>(0xdead, 0xbeaf);
 	  
       sw.rcumask.set(0);
 
@@ -365,10 +260,9 @@ GCFEvent::TResult RSPTest::test003(GCFEvent& e, GCFPortInterface& port)
 
     case F_DISCONNECTED:
     {
-      port.setTimer((long)1);
       port.close();
 
-      TRAN(RSPTest::final);
+      FAIL_ABORT("unexpected disconnect", RSPTest::final);
     }
     break;
 
@@ -407,7 +301,7 @@ GCFEvent::TResult RSPTest::test004(GCFEvent& e, GCFPortInterface& port)
       // send weights for 10 timesteps
       sw.weights().resize(10, 1, N_BEAMLETS);
 
-      sw.weights()(Range::all(), 0, Range::all()) = 0xbeaf;
+      sw.weights()(Range::all(), 0, Range::all()) = complex<int16>(0xdead, 0xbeaf);
 	  
       sw.rcumask.set(0);
 
@@ -428,10 +322,9 @@ GCFEvent::TResult RSPTest::test004(GCFEvent& e, GCFPortInterface& port)
 
     case F_DISCONNECTED:
     {
-      port.setTimer((long)1);
       port.close();
 
-      TRAN(RSPTest::final);
+      FAIL_ABORT("unexpected disconnect", RSPTest::final);
     }
     break;
 
@@ -462,7 +355,7 @@ GCFEvent::TResult RSPTest::test005(GCFEvent& e, GCFPortInterface& port)
       /* start of the test sequence */
       RSPSetsubbandsEvent ss;
 
-      ss.timestamp.setNow(10);
+      ss.timestamp.setNow(5);
       ss.rcumask.reset();
       ss.rcumask.set(0);
       ss.rcumask.set(1);
@@ -496,10 +389,9 @@ GCFEvent::TResult RSPTest::test005(GCFEvent& e, GCFPortInterface& port)
 
     case F_DISCONNECTED:
     {
-      port.setTimer((long)1);
       port.close();
 
-      TRAN(RSPTest::final);
+      FAIL_ABORT("unexpected disconnect", RSPTest::final);
     }
     break;
 
@@ -549,6 +441,134 @@ GCFEvent::TResult RSPTest::test006(GCFEvent& e, GCFPortInterface& port)
       LOG_INFO_STR("board=" << ack.sysstatus.board());
       LOG_INFO_STR("rcu="   << ack.sysstatus.rcu());
       
+      TRAN(RSPTest::test007);
+    }
+    break;
+
+    case F_DISCONNECTED:
+    {
+      port.close();
+
+      FAIL_ABORT("unexpected disconnect", RSPTest::final);
+    }
+    break;
+
+    case F_EXIT:
+    {
+      STOP_TEST();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RSPTest::test007(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+  {
+    case F_ENTRY:
+    {
+      START_TEST("test007", "test GETSUBBANDS");
+
+      RSPGetsubbandsEvent ss;
+
+      ss.timestamp.setNow(6);
+      ss.rcumask.reset(0);
+      ss.rcumask.set(0);
+      ss.cache = false;
+      
+      TESTC_ABORT(m_server.send(ss), RSPTest::final);
+    }
+    break;
+
+    case RSP_GETSUBBANDSACK:
+    {
+      RSPGetsubbandsackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      cout << "ack.time=" << ack.timestamp << endl;
+
+      LOG_INFO_STR("subbands=" << ack.subbands());
+      LOG_INFO_STR("nsubbands=" << ack.subbands.nrsubbands());
+      
+      TRAN(RSPTest::test008);
+    }
+    break;
+
+    case F_DISCONNECTED:
+    {
+      port.close();
+
+      FAIL_ABORT("unexpected disconnect", RSPTest::final);
+    }
+    break;
+
+    case F_EXIT:
+    {
+      STOP_TEST();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RSPTest::test008(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+  {
+    case F_ENTRY:
+    {
+      START_TEST("test008", "test GETVERSION");
+
+      RSPGetversionEvent gv;
+
+      gv.timestamp = Timestamp(0,0);
+      gv.cache = true;
+      
+      TESTC_ABORT(m_server.send(gv), RSPTest::final);
+    }
+    break;
+
+    case RSP_GETVERSIONACK:
+    {
+      RSPGetversionackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      cout << "ack.time=" << ack.timestamp << endl;
+
+      for (int i = 0; i < ack.versions.rsp().extent(firstDim); i++)
+      {
+	printf("versions[board=%d] = rsp=%d.%d, bp=%d.%d, ",
+	       i,
+	       ack.versions.rsp()(i) >> 4,
+	       ack.versions.rsp()(i) & 0xF,
+	       ack.versions.bp()(i)  >> 4,
+	       ack.versions.bp()(i)  & 0xF);
+
+	for (int j = 0; j < EPA_Protocol::N_AP; j++)
+	{
+	  printf("ap[%d]=%d.%d, ",
+		 i * EPA_Protocol::N_AP + j,
+		 ack.versions.ap()(i * EPA_Protocol::N_AP + j) >> 4,
+		 ack.versions.ap()(i * EPA_Protocol::N_AP + j) &  0xF);
+	}
+	printf("\n");
+      }
+      
       TRAN(RSPTest::final);
 
       port.close();
@@ -557,10 +577,9 @@ GCFEvent::TResult RSPTest::test006(GCFEvent& e, GCFPortInterface& port)
 
     case F_DISCONNECTED:
     {
-      port.setTimer((long)1);
       port.close();
 
-      TRAN(RSPTest::final);
+      FAIL_ABORT("unexpected disconnect", RSPTest::final);
     }
     break;
 

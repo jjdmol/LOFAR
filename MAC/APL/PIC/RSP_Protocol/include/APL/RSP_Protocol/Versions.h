@@ -47,8 +47,10 @@ namespace RSP_Protocol
       /* Destructor for Versions. */
       virtual ~Versions() {}
 
-      /* get reference to versions array */
-      blitz::Array<uint16, 1>& operator()();
+      /* get references to the version arrays */
+      blitz::Array<uint8, 1>& rsp();
+      blitz::Array<uint8, 1>& bp();
+      blitz::Array<uint8, 1>& ap();
 
     public:
       /*@{*/
@@ -63,11 +65,20 @@ namespace RSP_Protocol
     private:
       /**
        * Versions
+       *
+       * Dimensions of the arrays are:
+       *  - m_rsp_versions  [N_RSPBOARDS]
+       *  - m_bp_versions   [N_RSPBOARDS]
+       *  - m_ap_versions   [N_RSPBOARDS * N_AP]
        */
-      blitz::Array<uint16, 1> m_versions;
+      blitz::Array<uint8, 1> m_rsp_versions;
+      blitz::Array<uint8, 1> m_bp_versions;
+      blitz::Array<uint8, 1> m_ap_versions;      
   };
 
-  inline blitz::Array<uint16, 1>& Versions::operator()() { return m_versions; }
+  inline blitz::Array<uint8, 1>& Versions::rsp() { return m_rsp_versions; }
+  inline blitz::Array<uint8, 1>& Versions::bp()  { return m_bp_versions; }
+  inline blitz::Array<uint8, 1>& Versions::ap()  { return m_ap_versions; }
 };
      
 #endif /* STATISTICS_H_ */

@@ -88,10 +88,11 @@ void SSWrite::sendrequest()
     uint16 nr_subbands = Cache::getInstance().getBack().getSubbandSelection().nrsubbands()(global_blp);
     LOG_DEBUG(formatString("nr_subbands=%d", nr_subbands));
 
-    Array<uint16, 1> subbands(nr_subbands);
-    ss.ch    = subbands.data();
-    ss.chDim = nr_subbands;
+    Array<uint16, 1> subbands((uint16*)&ss.ch,
+			      shape(EPA_Protocol::N_SUBBANDS),
+			      neverDeleteData);
     
+    // copy the actual values from the cache
     subbands = Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range(0, nr_subbands - 1));
     
     getBoardPort().send(ss);

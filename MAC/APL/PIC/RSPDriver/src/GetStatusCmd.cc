@@ -58,7 +58,7 @@ void GetStatusCmd::ack(CacheBuffer& cache)
   ack.status = SUCCESS;
 
   ack.sysstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
-  ack.sysstatus.board()   = cache.getSystemStatus().board();
+  ack.sysstatus.board() = cache.getSystemStatus().board();
 
   ack.sysstatus.rcu().resize(m_event->rcumask.count());
 

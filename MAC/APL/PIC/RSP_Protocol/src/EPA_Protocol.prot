@@ -34,6 +34,7 @@ namespace EPA_Protocol
   static const int N_COEF        = MEPHeader::BFCOEFS_SIZE / sizeof(uint16);      /* should be 512 */
   static const int N_USERSAMPLES = MEPHeader::WGUSER_SIZE / sizeof(uint16);       /* should be 512 */
   static const int N_STATS       = MEPHeader::STSTATS_SIZE / sizeof(uint16);      /* should be 512 */
+  static const int N_SUBBANDS    = MEPHeader::SUBBANDSELECT_SIZE / sizeof(uint16);/* should be 512 */
   /*@}*/
 
   typedef struct RSPStatus
@@ -194,8 +195,16 @@ event = {
     userdefined;
   };
   param = {
-    name = "version";
-    type = "uint16";
+    name = "rsp_version";
+    type = "uint8";
+  };
+  param = {
+    name = "bp_version";
+    type = "uint8";
+  };
+  param = {
+    name = "ap_version";
+    type = "uint8[EPA_Protocol::N_AP]";
   };
 };
 
@@ -359,7 +368,7 @@ event = {
   };
   param = {
     name = "ch";
-    type = "uint16[]";
+    type = "uint16[EPA_Protocol::N_SUBBANDS]";
   };
 };
 

@@ -24,7 +24,7 @@
 //#define EARLY_REPLY
 
 #include "EPA_Protocol.ph"
-#include "RawDispatch.h"
+#include "RawEvent.h"
 
 #include "EPAStub.h"
 #include "RSPTestSuite.h"
@@ -187,8 +187,14 @@ GCFEvent::TResult EPAStub::fwversion(GCFEvent& /*event*/, GCFPortInterface& port
 
   // set the correct header info
   MEP_FWVERSION(version.hdr, MEPHeader::READRES);
-  version.version = 777;
-
+  version.rsp_version = (1 << 4) & 2; // version 1.2
+  version.bp_version = (3 << 4) & 4;  // version 2.4
+  
+  for (int i = 0; i < EPA_Protocol::N_AP; i++)
+  {
+    version.ap_version[i] = (5 << 4) & 6; // version 5.6
+  }
+  
   port.send(version);
 
   return GCFEvent::HANDLED;

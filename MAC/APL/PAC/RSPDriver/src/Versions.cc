@@ -35,14 +35,19 @@ using namespace blitz;
 
 unsigned int Versions::getSize()
 {
-  return MSH_ARRAY_SIZE(m_versions, uint16);
+  return
+      MSH_ARRAY_SIZE(m_rsp_versions, uint8)
+    + MSH_ARRAY_SIZE(m_bp_versions, uint8)
+    + MSH_ARRAY_SIZE(m_ap_versions, uint8);
 }
 
 unsigned int Versions::pack  (void* buffer)
 {
   unsigned int offset = 0;
 
-  MSH_PACK_ARRAY(buffer, offset, m_versions, uint16);
+  MSH_PACK_ARRAY(buffer, offset, m_rsp_versions, uint8);
+  MSH_PACK_ARRAY(buffer, offset, m_bp_versions,  uint8);
+  MSH_PACK_ARRAY(buffer, offset, m_ap_versions,  uint8);
 
   return offset;
 }
@@ -51,7 +56,9 @@ unsigned int Versions::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_versions, uint16, 1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_rsp_versions, uint8, 1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_bp_versions,  uint8, 1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_ap_versions,  uint8, 1);
 
   return offset;
 }

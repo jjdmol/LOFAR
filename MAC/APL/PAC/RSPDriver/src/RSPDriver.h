@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  RSPDriverTask.h: class definition for the Beam Server task.
+//#  RSPDriver.h: class definition for the Beam Server task.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -38,7 +38,7 @@
 
 namespace RSP
 {
-  class RSPDriverTask : public GCFTask
+  class RSPDriver : public GCFTask
   {
     public:
       /**
@@ -47,8 +47,8 @@ namespace RSP
        * up connection establishment information using the GTMNameService and
        * GTMTopologyService classes.
        */
-      RSPDriverTask(string name);
-      virtual ~RSPDriverTask();
+      RSPDriver(string name);
+      virtual ~RSPDriver();
       
       /**
        * Add all required synchronization actions.
@@ -76,7 +76,7 @@ namespace RSP
       /**
        * Delete the client ports on the m_garbage_list.
        */
-      void RSPDriverTask::collect_garbage();
+      void RSPDriver::collect_garbage();
 
       /**
        * The enabled state. In this state the task can receive

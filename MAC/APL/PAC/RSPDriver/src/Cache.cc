@@ -83,8 +83,12 @@ CacheBuffer::CacheBuffer()
   m_systemstatus.board() = boardinit;
   m_systemstatus.rcu()   = rcuinit;
 
-  m_versions().resize(GET_CONFIG("N_RSPBOARDS", i));
-  m_versions() = 0;
+  m_versions.rsp().resize(GET_CONFIG("N_RSPBOARDS", i));
+  m_versions.rsp() = 0;
+  m_versions.bp().resize(GET_CONFIG("N_RSPBOARDS", i));
+  m_versions.bp() = 0;
+  m_versions.ap().resize(GET_CONFIG("N_RSPBOARDS", i) * EPA_Protocol::N_AP);
+  m_versions.ap() = 0;
 }
 
 CacheBuffer::~CacheBuffer()
@@ -97,7 +101,9 @@ CacheBuffer::~CacheBuffer()
   m_statistics().free();
   m_systemstatus.board().free();
   m_systemstatus.rcu().free();
-  m_versions().free();
+  m_versions.rsp().free();
+  m_versions.bp().free();
+  m_versions.ap().free();
 }
 
 RSP_Protocol::Timestamp CacheBuffer::getTimestamp() const
