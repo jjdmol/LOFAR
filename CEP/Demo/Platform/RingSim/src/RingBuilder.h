@@ -136,8 +136,8 @@ inline void RingBuilder<DH_T>::buildSimul(Simul* aSimul) {
     RingOutStep[stepnr]->setOutRate(itsChannels+1);
   }
 
-  //  aSimul->connectOutputToArray(RingOutStep,
-  //			       itsChannels);
+    aSimul->connectOutputToArray(RingOutStep,
+				 itsChannels);
   cout << "Finished RingBuilder::build" << endl;
 }
 
