@@ -58,6 +58,13 @@ void doIt1()
   cout << "coeff: " << parm00.getPolcs()[0].getCoeff() << endl;
 
   MeqRequest request (domain, 10, 1, nrspid);
+  {
+    Timer timer;
+    for (int i=0; i<100000; i++) {
+      MeqResult res = parm00.getResult (request);
+    }
+    timer.show();
+  }
   MeqResult original = parm00.getResult (request);
   const double* orval = original.getValue().doubleStorage();
   cout << original << endl;
@@ -118,6 +125,117 @@ void doIt1()
 }
 
 
+// Evaluate some polynomials.
+void doIt2()
+{
+  cout << endl << "doIt2" << endl;
+  {
+    MeqParmPolc parm("parm1");
+    MeqPolc polc;
+    double coeff[2] = {2, 3};
+    polc.setDomain (MeqDomain(2,4,0,2));
+    polc.setCoeff  (MeqMatrix(coeff, 2, 1));
+    parm.addPolc (polc);
+    polc.setDomain (MeqDomain(4,6,0,2));
+    polc.setCoeff  (MeqMatrix(coeff, 1, 2));
+    parm.addPolc (polc);
+    MeqDomain domain(2,6,0,2);
+    MeqRequest request(domain,8,2);
+    MeqResult result = parm.getResult (request);
+    cout << result << endl;
+  }
+  {
+    MeqParmPolc parm("parm2");
+    MeqPolc polc;
+    complex<double> coeff[2];
+    coeff[0] = complex<double>(2,3);
+    coeff[1] = complex<double>(3,4);
+    polc.setDomain (MeqDomain(2,4,0,2));
+    polc.setCoeff  (MeqMatrix(coeff, 2, 1));
+    parm.addPolc (polc);
+    polc.setDomain (MeqDomain(4,6,0,2));
+    polc.setCoeff  (MeqMatrix(coeff, 1, 2));
+    parm.addPolc (polc);
+    MeqDomain domain(2,6,0,2);
+    MeqRequest request(domain,8,2);
+    MeqResult result = parm.getResult (request);
+    cout << result << endl;
+  }
+  {
+    MeqParmPolc parm("parm3");
+    MeqPolc polc;
+    complex<double> coeff[1];
+    coeff[0] = complex<double>(2,3);
+    polc.setDomain (MeqDomain(0,2,2,4));
+    polc.setCoeff  (MeqMatrix(coeff, 1, 1));
+    parm.addPolc (polc);
+    complex<double> coeff2[9];
+    coeff2[0] = complex<double>(2,3);
+    coeff2[1] = complex<double>(2.4, 3.6);
+    coeff2[2] = complex<double>(-2, -3);
+    coeff2[3] = complex<double>(-1, 10);
+    coeff2[4] = complex<double>(-2, 5);
+    coeff2[5] = complex<double>(3, -0.5);
+    coeff2[6] = complex<double>(1.2, 1.3);
+    coeff2[7] = complex<double>(1.5, 3);
+    coeff2[8] = complex<double>(1.4, 2.3);
+    polc.setDomain (MeqDomain(0,2,4,7));
+    polc.setCoeff  (MeqMatrix(coeff2, 3, 3));
+    parm.addPolc (polc);
+    MeqDomain domain(0,2,2,7);
+    MeqRequest request(domain,4,10);
+    MeqResult result = parm.getResult (request);
+    cout << result << endl;
+  }
+  {
+    MeqParmPolc parm("parm4");
+    MeqPolc polc;
+    double coeff[1] = {2};
+    polc.setDomain (MeqDomain(0,2,2,4));
+    polc.setCoeff  (MeqMatrix(coeff, 1, 1));
+    parm.addPolc (polc);
+    double coeff2[9] = {2, 2.4, -2, -1, -2, 3, 1.2, 1.5, 1.4};
+    polc.setDomain (MeqDomain(0,2,4,7));
+    polc.setCoeff  (MeqMatrix(coeff2, 3, 3));
+    parm.addPolc (polc);
+    MeqDomain domain(0,2,2,7);
+    MeqRequest request(domain,4,10);
+    MeqResult result = parm.getResult (request);
+    cout << result << endl;
+  }
+  {
+    MeqParmPolc parm("parm5");
+    MeqPolc polc;
+    double coeff[1] = {2};
+    polc.setDomain (MeqDomain(0,2,2,4));
+    polc.setCoeff  (MeqMatrix(coeff, 1, 1));
+    parm.addPolc (polc);
+    parm.setSolvable(true);
+    MeqDomain domain(0,2,2,4);
+    int nrspid = 0;
+    nrspid += parm.initDomain (domain, nrspid);
+    MeqRequest request(domain,4,2,nrspid);
+    MeqResult result = parm.getResult (request);
+    cout << result << endl;
+  }
+  {
+    MeqParmPolc parm("parm6");
+    MeqPolc polc;
+    double coeff2[9] = {2, 2.4, -2, -1, -2, 3, 1.2, 1.5, 1.4};
+    polc.setDomain (MeqDomain(0,2,4,7));
+    polc.setCoeff  (MeqMatrix(coeff2, 3, 3));
+    parm.addPolc (polc);
+    parm.setSolvable(true);
+    MeqDomain domain(0,2,4,7);
+    int nrspid = 0;
+    nrspid += parm.initDomain (domain, nrspid);
+    MeqRequest request(domain,2,4,nrspid);
+    MeqResult result = parm.getResult (request);
+    cout << result << endl;
+  }
+}
+
+
 int main (int argc, char** argv)
 {
   uInt nr = 100;
@@ -127,6 +245,7 @@ int main (int argc, char** argv)
   }
   try {
     doIt1();
+    doIt2();
   } catch (AipsError& x) {
     cout << "Caught an AIPS++ exception: " << x.getMesg() << endl;
     return 1;
