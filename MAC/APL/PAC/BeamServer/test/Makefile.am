@@ -47,7 +47,7 @@ AVTStub_SOURCES = \
 
 AVTStub_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	-lsuite -lgcflite
+	-lsuite
 
 EPATest_SOURCES = \
 	ABSEPATest.h \
@@ -55,7 +55,7 @@ EPATest_SOURCES = \
 
 EPATest_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	-lsuite -lgcflite
+	-lsuite
 
 SweepTest_SOURCES = \
 	ABSSweepTest.h \

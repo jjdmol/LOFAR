@@ -44,8 +44,8 @@ using namespace boost::posix_time;
 #include "ABS_Protocol.ph"
 #include <Suite/test.h>
 
-#include <GCF/GCF_Control.h>
-#include <GCF/GCF_ETHRawPort.h>
+#include <GCF/TM/GCF_Control.h>
+#include <GCF/TM/GCF_ETHRawPort.h>
 
 using namespace ABS;
 using namespace std;
