@@ -28,7 +28,7 @@
 
 #include <CEPFrame/DH_Database.h>		// for class definition
 #include <Common/LofarTypes.h>			// for ulong
-#include <pgsql/libpq-fe.h>				// for PGconn et al
+#include <libpq-fe.h>				// for PGconn et al
 #include <sstream>
 
 using namespace std;
