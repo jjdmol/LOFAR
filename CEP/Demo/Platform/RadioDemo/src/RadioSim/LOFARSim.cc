@@ -32,9 +32,13 @@
 #include "WH_MakeMS.h"
 #include "WH_Controller.h"
 #include "Profiler.h"
+#include "TH_MPI.h"
+#include "TH_Mem.h"
 #include TRANSPORTERINCLUDE
+
 #ifdef CORBA_
 #include "BS_Corba.h"
+#include "TH_Corba.h"
 #endif
 
 #include <unistd.h>
@@ -49,21 +53,62 @@
 #define WAVE_FILE_2 "./WAVE/antenna2.wav"
 #define CORRNODE (STATIONS+1)
 
+#ifdef CORBA_
+int atexit(void (*function)(void))
+{
+  return 0;
+}
+#endif
+
 LOFARSim::LOFARSim()
 : itsFiller (0)
 {
+  for (int i=0; i<10; i++) itsRunInApp[i]=999;
 }
 
 
 void LOFARSim::define(const ParamBlock&)
 {
+  const TH_Mem   TH_Mem_Proto;
+  const TH_MPI   TH_MPI_Proto;
 
 #ifdef CORBA_
+  const TH_Corba TH_Corba_Proto;
+
   // Start Orb Environment
   Firewall::Assert(BS_Corba::init(),
 		   __HERE__,
 		   "Could not initialise CORBA environment");
 #endif
+
+  // Set the Application number
+  int    argc = 0;
+  char** argv = NULL;
+  int App=0;
+  getarg(&argc, &argv);
+  if (argc == 3)
+  {
+    if (!strncmp(argv[1], "-app", 4))
+    {
+      App = atoi(argv[2]);
+      cout << "Application = " << App << endl;
+    }
+  }
+  int itsSkipApp1=0;
+  int itsSkipApp2=0;
+  if (App==2) {
+    itsSkipApp1=999;
+    itsRunInApp[2]=0;
+    cout << "Skip Application 1 code " << endl;
+    sleep(1);
+  }
+  if (App==1) {
+    itsSkipApp2=999;
+    itsRunInApp[1]=0;
+    cout << "Skip Application 2 code " << endl;
+    sleep(1);
+  }
+
 
   unsigned int rank = TRANSPORTER::getCurrentRank ();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
@@ -76,8 +121,9 @@ void LOFARSim::define(const ParamBlock&)
 
   // create the main Simul; Steps and Simuls will be added to this one
   // Uses an empty workholder.
-  Simul simul(new WH_Empty(),"LofarSim",0);
-  setSimul (simul);
+
+  Simul* simul = new Simul(new WH_Empty(),"LofarSim",0);
+  setSimul (*simul);
 
   // define the arrays of Simuls and Steps to filled later
   Simul *theStations[STATIONS];
@@ -97,19 +143,20 @@ void LOFARSim::define(const ParamBlock&)
       new Simul (new WH_Station (ELEMENTS,1),
 		 "Lofar Station",
 		 0);
-    theStations[station]->runOnNode(station);
+    theStations[station]->runOnNode(station+itsSkipApp1);
     ////////////////////////////////////////////////////////////////////////
     // First put the antenna's in the Sation Simul
     for (element = 0; element < ELEMENTS; element++)
       {
-	  antenna[station][element] =
-	    new Step (new WH_WAV(1,1,station*LAGS), //WH_Antenna (1,1),
-		      "Antenna", 
-		      station);
-	  antenna[station][element]->runOnNode(station);
-	  theStations[station]->addStep (antenna[station][element]);
-        }
-      
+
+	antenna[station][element] =
+	  new Step (new WH_WAV(1,1,station*LAGS), //WH_Antenna (1,1),
+		    "Antenna", 
+		    0);
+	antenna[station][element]->runOnNode(station+itsSkipApp1);
+	theStations[station]->addStep (antenna[station][element]);
+      }
+    
     //////////////////////////////////////////////////////////////////////////
     // Add FFTs to the station
       
@@ -117,8 +164,10 @@ void LOFARSim::define(const ParamBlock&)
 	  fft[element] = new Step(new WH_FFT(1,1),
 				  "FFT",
 				  0);
-	  fft[element]->runOnNode(station);
-	  fft[element]->connectInput(antenna[station][element]);
+	  fft[element]->runOnNode(station+itsSkipApp1);
+	  cout << "Connect FFT " ;
+	  fft[element]->connectInput(antenna[station][element] /*,
+								 TH_Corba_Proto*/);
 	  theStations[station]->addStep(fft[element]); 
     }
     ///////////////////////////////////////////////////////////////////////////
@@ -131,7 +180,7 @@ void LOFARSim::define(const ParamBlock&)
 				 FREQS),
 		  "TransposeF",
 		  0);
-      transf->runOnNode(station);
+      transf->runOnNode(station+itsSkipApp1);
       transf->connectInputArray(fft,ELEMENTS);
       theStations[station]->addStep(transf);
     }
@@ -146,7 +195,7 @@ void LOFARSim::define(const ParamBlock&)
 		    WH_Beam (1,1),
 		    "BeamFormer", 
 		    0);
-	beamformer[freq]->runOnNode(station);
+	beamformer[freq]->runOnNode(station+itsSkipApp1);
 	theStations[station]->addStep (beamformer[freq]);
     } 
    // Connect the inputs of the beamformers to the transf step.
@@ -162,7 +211,7 @@ void LOFARSim::define(const ParamBlock&)
 	new Step (new WH_TransB (FREQS,1),
 		  "TransposeB",
 		  0);
-      transb->runOnNode(station);
+      transb->runOnNode(station+itsSkipApp1);
       transb->connectInputArray(beamformer,FREQS);
       //transb->getWorker()->setProcMode(zeroes);
       theStations[station]->addStep (transb);
@@ -181,9 +230,11 @@ void LOFARSim::define(const ParamBlock&)
     for (station=0; station<STATIONS; station++) {
       cpinput[station] = new Step(new WH_CPInput(1,BEAMS*FREQBANDS),
 				  "CPInput",
-				  STATIONS);
-      simul.addStep(cpinput[station]); 
-      cpinput[station]->connectInput(theStations[station]);
+				  0);
+      cpinput[station]->runOnNode(STATIONS+itsSkipApp1);
+      simul->addStep(cpinput[station]); 
+      cpinput[station]->connectInput(theStations[station]
+				     /*,TH_Corba_Proto*/);
     }
     
       //    dataprocessor->connectInputToArray(cpinput,STATIONS);
@@ -196,9 +247,9 @@ void LOFARSim::define(const ParamBlock&)
 	correlator[beam*FREQBANDS+freqband] =
 	  new Step (new WH_Corr (STATIONS,1),
 		    correlatorname,
-		    STATIONS+1);
-	simul.addStep (correlator[beam*FREQBANDS+freqband]);
-	correlator[0]->runOnNode(CORRNODE); 
+		    0);
+	simul->addStep (correlator[beam*FREQBANDS+freqband]);
+	correlator[0]->runOnNode(CORRNODE+itsSkipApp2); 
 	
 	// Connect the correlators with the CPInput steps;
 	// these connects are the typical crosses needed in correlation
@@ -208,7 +259,8 @@ void LOFARSim::define(const ParamBlock&)
 	  correlator[beam*FREQBANDS+freqband]->connect(cpinput[station],
 						       station,
 						       beam*FREQBANDS+freqband,
-						       1);
+						       1   ,
+						       TH_Corba_Proto  );
 	}
       }
     } 
@@ -234,13 +286,16 @@ void LOFARSim::run (int nsteps)
 {
 
   unsigned int rank = TRANSPORTER::getCurrentRank ();
+
   // create the time Controller; All the simuls will be synchronized with this object
   Simul Controller(new WH_Controller(),"Controller",CONTROLLER_NODE);
 
   while (1) {
 
-    if (rank == 0)  ((WH_WAV*)antenna[0][0]->getWorker())->readFile(WAVE_FILE_1);
-    if (rank == 1)  ((WH_WAV*)antenna[1][0]->getWorker())->readFile(WAVE_FILE_1);
+    if (itsRunInApp[1]==0 && rank == 0)
+      ((WH_WAV*)antenna[0][0]->getWorker())->readFile(WAVE_FILE_1);
+    if (itsRunInApp[1]==0 && rank == 1) 
+      ((WH_WAV*)antenna[1][0]->getWorker())->readFile(WAVE_FILE_1);
 
     nsteps = LAGS;
 
@@ -252,7 +307,10 @@ void LOFARSim::run (int nsteps)
 #endif
   Profiler::init();
   if (rank == 0) cout << endl <<  "Start Process" << endl;    
-  if (rank == CORRNODE) ((WH_Corr*)correlator[0]->getWorker())->openFile(CORR_TMP_FILE);
+  if (itsRunInApp[2]==0 && rank == CORRNODE) {
+    cout << "Open Corr output file " << endl;
+    ((WH_Corr*)correlator[0]->getWorker())->openFile(CORR_TMP_FILE);
+  }
 
   for (int i = 1; i <= nsteps; i++) {
 
@@ -264,7 +322,7 @@ void LOFARSim::run (int nsteps)
       Controller.getWorker()->process();
       //sleep(3);
     } 
-    if (rank != CONTROLLER_NODE) TRANSPORTER::waitForBroadCast();
+    if (rank != (unsigned int)CONTROLLER_NODE) TRANSPORTER::waitForBroadCast();
     TRANSPORTER::synchroniseAllProcesses();
     getSimul().process ();
     if (i==4)   Profiler::deActivate();
@@ -277,7 +335,7 @@ void LOFARSim::run (int nsteps)
   //cout << "DUMP from Node " << rank << endl;
   cout << endl << "END OF SIMUL on node " << rank << endl;
  
-  if (rank == CORRNODE) ((WH_Corr*)correlator[0]->getWorker())->closeFile();
+  if (itsRunInApp[2]==0 && rank == CORRNODE) ((WH_Corr*)correlator[0]->getWorker())->closeFile();
   usleep(500);
   system("/bin/cp ./WAVE/Corr.tmp ./WAVE/Corr.ext");
   usleep(500);
