@@ -1,0 +1,93 @@
+#!/bin/ksh
+
+
+
+for n in 1 2 3 
+  do
+    	tablename=meqmodel$n
+    	echo ${tablename}
+
+	echo " " > sql_create
+	echo "drop table ${tablename};" >> sql_create
+	echo "drop table ${tablename}def;" >> sql_create
+	echo "create table ${tablename}def (ObjID bigint not null unique primary key, Owner bigint not null, VersionNr integer not null, NAME text, SRCNR integer, STATNR integer, VALUES00 double precision, VALUES text, SIM_VALUES text, SIM_PERT text, TIME0 double precision, FREQ0 double precision, NORMALIZED smallint, SOLVABLE text, DIFF double precision, DIFF_REL smallint);" >> sql_create
+	echo "create trigger ${tablename}def_updateversionnr before insert on ${tablename}def for each row execute procedure updateversionnr();" >> sql_create
+	echo "create table ${tablename} (ObjID bigint not null unique primary key, Owner bigint not null, VersionNr integer not null, NAME text, SRCNR integer, STATNR integer, VALUES00 double precision, VALUES text, SIM_VALUES text, SIM_PERT text, TIME0 double precision, FREQ0 double precision, NORMALIZED smallint, SOLVABLE text, DIFF double precision, DIFF_REL smallint, STARTTIME double precision, ENDTIME double precision, STARTFREQ double precision, ENDFREQ double precision);" >> sql_create
+	echo "create trigger ${tablename}_updateversionnr before insert on ${tablename} for each row execute procedure updateversionnr();" >> sql_create
+	echo "\q" >> sql_create
+	#cat sql_create
+	psql -h dop50 -U postgres schaaf < sql_create
+
+	echo "connect db='schaaf', dbtype='postgres', tablename='${tablename}'" > fill.parmdb
+	echo "adddef frot values=0" >> fill.parmdb
+	echo "adddef drot values=0" >> fill.parmdb
+	echo "adddef dell values=0" >> fill.parmdb
+	echo "adddef gain.11 values=1" >> fill.parmdb
+	echo "adddef gain.22 values=1" >> fill.parmdb
+	echo "adddef EJ11.real.SR1.CP1 values=1" >> fill.parmdb
+	echo "adddef EJ11.real.SR1.CP2 values=1" >> fill.parmdb
+	echo "adddef EJ11.real.SR1.CP3 values=1" >> fill.parmdb
+	echo "adddef EJ11.real.SR2.CP1 values=1" >> fill.parmdb
+	echo "adddef EJ11.real.SR2.CP2 values=1" >> fill.parmdb
+	echo "adddef EJ11.real.SR2.CP3 values=1" >> fill.parmdb
+	echo "adddef EJ11.real.SR5.CP1 values=1" >> fill.parmdb
+	echo "adddef EJ11.real.SR5.CP2 values=1" >> fill.parmdb
+	echo "adddef EJ11.real.SR5.CP3 values=1" >> fill.parmdb
+	echo "adddef EJ11.real.SR9.CP1 values=1" >> fill.parmdb
+	echo "adddef EJ11.real.SR9.CP2 values=1" >> fill.parmdb
+	echo "adddef EJ11.real.SR9.CP3 values=1" >> fill.parmdb
+	echo "adddef EJ11.real values=1" >> fill.parmdb
+	echo "adddef EJ12.real values=0" >> fill.parmdb
+	echo "adddef EJ21.real values=0" >> fill.parmdb
+	echo "adddef EJ22.real values=1" >> fill.parmdb
+	echo "adddef EJ11.imag values=1" >> fill.parmdb
+	echo "adddef EJ12.imag values=0" >> fill.parmdb
+	echo "adddef EJ21.imag values=0" >> fill.parmdb
+	echo "adddef EJ22.imag values=1" >> fill.parmdb
+	echo "quit" >> fill.parmdb
+	#cat fill.parmdb
+	../../../../CPA/PSS3/MNS/build/gnu3_debug/src/parmdb < fill.parmdb
+
+    	tablename=skymodel$n
+    	echo ${tablename}
+
+	echo " " > sql_create
+	echo "drop table ${tablename};" >> sql_create
+	echo "drop table ${tablename}def;" >> sql_create
+	echo "create table ${tablename}def (ObjID bigint not null unique primary key, Owner bigint not null, VersionNr integer not null, NAME text, SRCNR integer, STATNR integer, VALUES00 double precision, VALUES text, SIM_VALUES text, SIM_PERT text, TIME0 double precision, FREQ0 double precision, NORMALIZED smallint, SOLVABLE text, DIFF double precision, DIFF_REL smallint);" >> sql_create
+	echo "create trigger ${tablename}def_updateversionnr before insert on ${tablename}def for each row execute procedure updateversionnr();" >> sql_create
+	echo "create table ${tablename} (ObjID bigint not null unique primary key, Owner bigint not null, VersionNr integer not null, NAME text, SRCNR integer, STATNR integer, VALUES00 double precision, VALUES text, SIM_VALUES text, SIM_PERT text, TIME0 double precision, FREQ0 double precision, NORMALIZED smallint, SOLVABLE text, DIFF double precision, DIFF_REL smallint, STARTTIME double precision, ENDTIME double precision, STARTFREQ double precision, ENDFREQ double precision);" >> sql_create
+	echo "create trigger ${tablename}_updateversionnr before insert on ${tablename} for each row execute procedure updateversionnr();" >> sql_create
+	echo "\q" >> sql_create
+	#cat sql_create
+	psql -h dop50 -U postgres schaaf < sql_create
+
+	echo "connect db='schaaf', dbtype='postgres', tablename='${tablename}'" > fill.parmdb
+    	echo "adddef RA.CP1 values=2.73403" >> fill.parmdb
+    	echo "adddef DEC.CP1 values=0.453785 " >> fill.parmdb
+    	echo "adddef StokesI.CP1 values=1.0" >> fill.parmdb
+    	echo "adddef StokesQ.CP1 values=0 " >> fill.parmdb
+    	echo "adddef StokesU.CP1 values=0 " >> fill.parmdb
+    	echo "adddef StokesV.CP1 values=0" >> fill.parmdb
+    	echo "adddef RA.CP2 values=2.734025" >> fill.parmdb
+    	echo "adddef DEC.CP2 values=0.453687 " >> fill.parmdb
+    	echo "adddef StokesI.CP2 values=1.0" >> fill.parmdb
+    	echo "adddef StokesQ.CP2 values=0 " >> fill.parmdb
+    	echo "adddef StokesU.CP2 values=0 " >> fill.parmdb
+    	echo "adddef StokesV.CP2 values=0" >> fill.parmdb
+    	echo "adddef RA.CP3 values=2.73399" >> fill.parmdb
+    	echo "adddef DEC.CP3 values=0.4537525" >> fill.parmdb
+    	echo "adddef StokesI.CP3 values=1.0" >> fill.parmdb
+    	echo "adddef StokesQ.CP3 values=0 " >> fill.parmdb
+    	echo "adddef StokesU.CP3 values=0 " >> fill.parmdb
+    	echo "adddef StokesV.CP3 values=0" >> fill.parmdb
+	echo "quit" >> fill.parmdb
+	#cat fill.parmdb
+	../../../../CPA/PSS3/MNS/build/gnu3_debug/src/parmdb < fill.parmdb
+
+done
+
+#clear the bb tables
+echo "delete from bbsolutions;"   > sql_batch
+echo "delete from bbworkorders;" >> sql_batch
+psql -h dop50 -U postgres schaaf < sql_batch
