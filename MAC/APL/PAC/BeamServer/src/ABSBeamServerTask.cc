@@ -119,7 +119,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
   
   switch(e.signal)
   {
-      case F_INIT_SIG:
+      case F_INIT:
       {
 	  // create a default spectral window from 0MHz to 20MHz
 	  // steps of 156.25 kHz
@@ -128,7 +128,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-      case F_ENTRY_SIG:
+      case F_ENTRY:
       {
 	  if (!client.isConnected()) client.open(); // need this otherwise GTM_Sockethandler is not called
 	  board.setAddr("eth0", "aa:bb:cc:dd:ee:ff");
@@ -136,7 +136,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-      case F_CONNECTED_SIG:
+      case F_CONNECTED:
       {
 	LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
 	if (isEnabled())
@@ -149,7 +149,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-      case F_DISCONNECTED_SIG:
+      case F_DISCONNECTED:
       {
 	  port.setTimer((long)3); // try again in 3 seconds
 	  LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
@@ -157,14 +157,14 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-      case F_TIMER_SIG:
+      case F_TIMER:
       {
 	  LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
 	  port.open();
       }
       break;
 
-      case F_DATAIN_SIG:
+      case F_DATAIN:
       {
 	  if (&port == &board)
 	  {
@@ -173,7 +173,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-    case F_EXIT_SIG:
+    case F_EXIT:
       {
 	// cancel timers
 	board.cancelAllTimers();
@@ -199,11 +199,11 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
   switch (e.signal)
     {
 #if 0
-    case F_ACCEPT_REQ_SIG:
+    case F_ACCEPT_REQ:
       client.getPortProvider().accept();
       break;
 #endif
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       {
 	ptime nowtime = from_time_t(time(0)); 
 	time_duration now = nowtime - ptime(date(1970,1,1));
@@ -222,7 +222,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-    case F_TIMER_SIG:
+    case F_TIMER:
       {
 	GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
 
@@ -314,7 +314,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-    case F_DATAIN_SIG:
+    case F_DATAIN:
       {
 	  if (&port == &board)
 	  {
@@ -323,11 +323,11 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-    case F_DATAOUT_SIG:
+    case F_DATAOUT:
       LOG_DEBUG("dataout");
       break;
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       {
 	LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
 	port.close();
@@ -336,7 +336,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-    case F_EXIT_SIG:
+    case F_EXIT:
       {
 	// deallocate all beams
 	for (set<Beam*>::iterator bi = m_beams.begin();
@@ -383,12 +383,13 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,
 {
   int   spwindex = 0;
   Beam* beam = 0;
-  ABSBeamalloc_AckEvent ack(-1, SUCCESS);
+  ABSBeamallocAckEvent ack;
+  ack.handle = -1;
+  ack.status = SUCCESS;
 
   // check parameters
   if (((spwindex = ba->spectral_window) < 0)
-      || (spwindex >= MAX_N_SPECTRAL_WINDOWS)
-      || !(ba->n_subbands > 0 && ba->n_subbands <= N_BEAMLETS))
+      || (spwindex >= MAX_N_SPECTRAL_WINDOWS))
   {
       LOG_ERROR("argument range error");
       ack.status = ERR_RANGE;
@@ -398,11 +399,11 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,
   
   // create subband selection set
   set<int> subbands;
-  for (int i = 0; i < ba->n_subbands; i++) subbands.insert(ba->subbands[i]);
+  for (int i = 0; i < ABS::N_BEAMLETS; i++) subbands.insert(ba->subbands[i]);
 
   // check if array of subbands did not contain any duplicate subband
   // selection
-  if (ba->n_subbands != (int)subbands.size())
+  if (ABS::N_BEAMLETS != (int)subbands.size())
   {
     LOG_ERROR("subband selection contains duplicates");
     ack.status = ERR_RANGE;
@@ -431,7 +432,9 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,
 void BeamServerTask::beamfree_action(ABSBeamfreeEvent* bf,
 				     GCFPortInterface& port)
 {
-  ABSBeamfree_AckEvent ack(bf->handle, SUCCESS);
+  ABSBeamfreeAckEvent ack;
+  ack.handle = bf->handle;
+  ack.status = SUCCESS;
 
   Beam* beam = 0;
   if (!(beam = Beam::getFromHandle(bf->handle)))
@@ -463,7 +466,7 @@ void BeamServerTask::beampointto_action(ABSBeampointtoEvent* pt,
       time_t pointto_time = pt->time;
 
       LOG_DEBUG(formatString("received new coordinates: %f, %f",
-			     pt->angle1, pt->angle2));
+			     pt->angle[0], pt->angle[1]));
 
       //
       // If the time is not set, then activate the command
@@ -471,8 +474,8 @@ void BeamServerTask::beampointto_action(ABSBeampointtoEvent* pt,
       // long it takes the command to flow through the pipeline.
       //
       if (0 == pt->time) pointto_time = time(0) + 2 * COMPUTE_INTERVAL;
-      if (beam->addPointing(Pointing(Direction(pt->angle1,
-					       pt->angle2,
+      if (beam->addPointing(Pointing(Direction(pt->angle[0],
+					       pt->angle[1],
 					       (Direction::Types)pt->type),
 				     from_time_t(pointto_time))) < 0)
       {
@@ -485,7 +488,8 @@ void BeamServerTask::beampointto_action(ABSBeampointtoEvent* pt,
 void BeamServerTask::wgsettings_action(ABSWgsettingsEvent* wgs,
 				       GCFPortInterface& port)
 {
-  ABSWgsettings_AckEvent sa(SUCCESS);
+  ABSWgsettingsAckEvent sa;
+  sa.status = SUCCESS;
 
   // max allowed frequency = 20MHz
   if ((wgs->frequency >= 1.0e-6)
@@ -525,7 +529,7 @@ void BeamServerTask::wgenable_action()
   (void)memset(&ee.reserved2, 0, 3);
   ee.sample_period = m_wgsetting.sample_period;
 
-  board.send(GCFEvent(F_RAW_SIG), &ee.command, WGENABLE_PACKET_SIZE);
+  //board.send(GCFEvent(F_RAW_DATA), &ee.command, WGENABLE_PACKET_SIZE);
   usleep(EPA_DELAY_TIME); // give EPA board time to process buffer
   
   LOG_DEBUG("SENT WGENABLE");
@@ -543,7 +547,7 @@ void BeamServerTask::wgdisable_action()
   de.pktsize       = htons(WGDISABLE_PACKET_SIZE);
   (void)memset(&de.reserved1, 0, 8);
 
-  board.send(GCFEvent(F_RAW_SIG), &de.command, WGDISABLE_PACKET_SIZE);
+  //board.send(GCFEvent(F_RAW_DATA), &de.command, WGDISABLE_PACKET_SIZE);
   usleep(EPA_DELAY_TIME); // give EPA board time to process buffer
 
   LOG_DEBUG("SENT WGDISABLE");
@@ -698,7 +702,7 @@ void BeamServerTask::send_weights(int period)
 					      htons(weights(i,j).imag()));
 
 	  bc.phasepol = pol;
-	  board.send(GCFEvent(F_RAW_SIG), &bc.command, BFCONFIGURE_PACKET_SIZE);
+	  //board.send(GCFEvent(F_RAW_DATA), &bc.command, BFCONFIGURE_PACKET_SIZE);
 	  usleep(EPA_DELAY_TIME); // give EPA board time to process buffer
       }
   }
@@ -710,7 +714,7 @@ void BeamServerTask::send_weights(int period)
   be.pktsize = htons(BFENABLE_PACKET_SIZE);
   memset(&be.reserved1, 0, 8);
 
-  board.send(GCFEvent(F_RAW_SIG), &be.command, BFENABLE_PACKET_SIZE);
+  //board.send(GCFEvent(F_RAW_DATA), &be.command, BFENABLE_PACKET_SIZE);
   usleep(EPA_DELAY_TIME); // give EPA board time to process buffer
 }
 
@@ -762,7 +766,7 @@ void BeamServerTask::send_sbselection()
 	  ss.bands[sel->first*2+1] = sel->second * 2 + 1;
       }
 
-      board.send(GCFEvent(F_RAW_SIG), &ss.command, SBSELECT_PACKET_HDR_SIZE + m_sbsel.size()*2);
+      //board.send(GCFEvent(F_RAW_DATA), &ss.command, SBSELECT_PACKET_HDR_SIZE + m_sbsel.size()*2);
       usleep(EPA_DELAY_TIME); // give EPA board time to process buffer
   }
 }

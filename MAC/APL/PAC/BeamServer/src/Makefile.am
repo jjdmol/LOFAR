@@ -9,18 +9,20 @@ AM_CXXFLAGS = \
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../../../GCF/GCFCommon/autogen $<
+	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
+%.cc: %.prot
+	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
 
 BUILT_SOURCES = \
-	$(top_builddir)/src/ABS_Protocol.ph \
-	$(top_builddir)/src/EPA_Protocol.ph \
+	ABS_Protocol.ph \
+	EPA_Protocol.ph \
 	log4cplus.properties \
 	abs.ns \
 	abs.top
 
 EXTRA_DIST = \
-	$(top_builddir)/src/ABS_Protocol.ph \
-	$(top_builddir)/src/EPA_Protocol.ph \
+	ABS_Protocol.ph \
+	EPA_Protocol.ph \
 	log4cplus.properties \
 	abs.ns \
 	abs.top
@@ -56,7 +58,9 @@ libabs_la_SOURCES = \
 	ABSBeamletStats.cc \
 	ABSBeamletStatsPSet.h \
 	gnuplot_i.h \
-	gnuplot_i.cc
+	gnuplot_i.cc \
+	$(top_builddir)/src/ABS_Protocol.cc \
+	$(top_builddir)/src/EPA_Protocol.cc
 
 bin_PROGRAMS = BeamServer
 
@@ -65,6 +69,6 @@ BeamServer_SOURCES = \
 	ABSBeamServerTask.cc
 
 BeamServer_LDADD = \
-	$(top_builddir)/src/libabs.la -lpmllite -lsal -ltm -lgcfcommon
+	$(top_builddir)/src/libabs.la -lgcf
 
 include $(lofar_sharedir)/Makefile.common

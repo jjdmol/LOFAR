@@ -5,6 +5,7 @@ autogen definitions protocol;
 
 description = "Protocol for the EPA Demonstrator Board";
 prefix = "EPA"; // for the signal names
+id = "(F_APL_PROTOCOL+11)";
 
 // specify extra include files
 // e.g.
@@ -13,9 +14,6 @@ include = '<linux/types.h>';
 include = '"ABSConstants.h"';
 
 prelude = << PRELUDE_END
-enum {
-	EPA_PROTOCOL = F_APL_PROTOCOL + 11
-};
 
 /**
  * Define Ethernet packet sizes for the
@@ -67,8 +65,7 @@ event = {
       };
       param = {
 	    name = "bands";
-	    type = "unsigned char";
-	    dim = "ABS::N_BEAMLETS*2";
+	    type = "unsigned char[]"; // max size == ABS::N_BEAMLETS * 2
       };
 };
 
@@ -182,8 +179,7 @@ event = {
       param = {
 	    // beamformer weights
 	    name = "coeff";
-	    type = "int16_t";
-	    dim = "ABS::N_BEAMLETS * ABS::N_POLARIZATIONS * 2";
+	    type = "int16_t[ABS::N_BEAMLETS * ABS::N_POLARIZATIONS * 2]";
       };
 };
 

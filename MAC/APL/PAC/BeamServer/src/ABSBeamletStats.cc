@@ -294,13 +294,13 @@ void BeamletStats::handleAnswer(GCFEvent& event)
 {
   switch (event.signal)
   {
-      case F_MYPLOADED_SIG:
+      case F_MYPLOADED:
       {
 	  LOG_DEBUG("BeamServer PSet Loaded");
       }
       break;
 
-      case F_VCHANGEMSG_SIG:
+      case F_VCHANGEMSG:
       {
 	  GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&event);
 	  if (strcmp(pResponse->pPropName, "BeamServer_beamlet") == 0)
