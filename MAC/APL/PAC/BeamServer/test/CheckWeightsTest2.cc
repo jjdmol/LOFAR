@@ -153,15 +153,19 @@ public:
 	      for (int k = 0; k < N_SUBBANDS; k++)
 		for (int l = 0; l < N_POLARIZATIONS; l++)
 		  {
-		    weights16(i,j,k,l) = conj(weights16(i,j,k,l));
+		    //weights16(i,j,k,l) = conj(weights16(i,j,k,l));
 		    weights16(i,j,k,l) = complex<int16_t>((int16_t)round(weights(i,j,k,l).real()*SCALE),
-							  (int16_t)round(weights(i,j,k,l).imag()*SCALE));
+							  -1*(int16_t)round(weights(i,j,k,l).imag()*SCALE));
 		  }	  
 	  cout << "weights16 = " << weights16 << endl;
 	  
 	  imag(weights16(all, all, all, 1)) *= -1;
 
 	  cout << "weights16_imag_neg = " << weights16 << endl;
+
+	  weights16 *= complex<int16_t>(0,1);
+
+	  cout << "weights16_times_i = " << weights16 << endl;
 
 #if 0
 	  Array<complex<W_TYPE>, 2> weights_ref(COMPUTE_INTERVAL, N_ELEMENTS);
