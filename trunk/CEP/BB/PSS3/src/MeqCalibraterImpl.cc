@@ -87,14 +87,11 @@ namespace LOFAR
 // Get the phase reference of the first field.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::getPhaseRef()
+void MeqCalibrater::getPhaseRef(double ra, double dec, double startTime)
 {
-  MSField mssub(itsMS.field());
-  ROMSFieldColumns mssubc(mssub);
-  // Use the phase reference of the first field.
-  MDirection phaseRef = mssubc.phaseDirMeasCol()(0)(IPosition(1,0));
-  // Use the time in the first MS row.
-  double startTime = itsMSCol.time()(0);
+  // Use the phase reference of the given J2000 ra/dec.
+  MVDirection mvdir(ra, dec);
+  MDirection phaseRef(mvdir, MDirection::J2000);
   itsPhaseRef = MeqPhaseRef (phaseRef, startTime);
 }
 
@@ -449,7 +446,7 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   itsCalcUVW  (calcUVW),
   itsDataColName (dataColName),
   itsResColName  (residualColName),
-  itsSolver   (1, LSQBase::REAL)
+  itsSolver   (1)
 {
   cdebug(1) << "MeqCalibrater constructor (";
   cdebug(1) << "'" << msName   << "', ";
@@ -459,7 +456,7 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   cdebug(1) << itsCalcUVW << ")" << endl;
 
   // Get phase reference (for field 0).
-  getPhaseRef();
+  getPhaseRef(1,2,3);
 
   // We only handle field 0, the given data desc id, and antennas.
   // Sort the MS in order of baseline.
@@ -642,7 +639,7 @@ void MeqCalibrater::initParms (const MeqDomain& domain, bool readPolcs)
       i++;
     }
     // Initialize the solver.
-    itsSolver.set (itsNrScid, 1, 0);
+    itsSolver.set (itsNrScid);
   }
   // Unlock the parm tables.
   itsMEP.unlock();
@@ -988,9 +985,9 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
 	    DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
 	    diff -= xx.getDComplex(0,i);
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1005,9 +1002,9 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
 	    DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
 	    diff -= xx.getDComplex(0,i);
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1021,9 +1018,9 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
 	    DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
 	    diff -= yy.getDComplex(0,i);
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1049,9 +1046,9 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
  		   << diff.real() << ' ' << diff.imag() << endl;
  	    }
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1073,9 +1070,9 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
  		   << diff.real() << ' ' << diff.imag() << endl;
  	    }
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1097,9 +1094,9 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
  		   << diff.real() << ' ' << diff.imag() << endl;
  	    }
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1121,9 +1118,9 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
  		   << diff.real() << ' ' << diff.imag() << endl;
  	    }
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1138,8 +1135,6 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   // Solve the equation.
   uInt rank;
   double fit;
-  double stddev;
-  double mu;
   cdebug(1) << "Solution before: " << itsSolution << endl;
   // cout << "Solution before: " << itsSolution << endl;
   // It looks as if LSQ has a bug so that solveLoop and getCovariance
@@ -1147,7 +1142,7 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   // So make a copy to separate them.
   Matrix<double> covar;
   Vector<double> errors;
-  FitLSQ tmpSolver = itsSolver;
+  LSQaips tmpSolver = itsSolver;
   tmpSolver.getCovariance (covar);
   tmpSolver.getErrors (errors);
   int nrs = itsSolution.nelements();
@@ -1156,7 +1151,7 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   for (int i=0; i<itsSolution.nelements(); i++) {
     sol[i] = solData[i];
   }
-  bool solFlag = itsSolver.solveLoop (fit, rank, sol, stddev, mu, useSVD);
+  bool solFlag = itsSolver.solveLoop (fit, rank, sol);
   for (int i=0; i<itsSolution.nelements(); i++) {
     solData[i] = sol[i];
   }
@@ -1184,8 +1179,8 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   rec.add ("fit", fit);
   rec.add ("diag", GlishArray(errors));
   rec.add ("covar", GlishArray(covar));
-  rec.add ("mu", mu);
-  rec.add ("stddev", stddev);
+  rec.add ("mu", itsSolver.getWeightedSD());
+  rec.add ("stddev", itsSolver.getWeightedSD());
   rec.add ("chi", itsSolver.getChi());
 
   itsMS.unlock();
@@ -1363,9 +1358,9 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
 	    DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
 	    diff -= xx.getDComplex(0,i);
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1380,9 +1375,9 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
 	    DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
 	    diff -= xx.getDComplex(0,i);
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1396,9 +1391,9 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
 	    DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
 	    diff -= yy.getDComplex(0,i);
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1424,9 +1419,9 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
  		   << diff.real() << ' ' << diff.imag() << endl;
  	    }
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1448,9 +1443,9 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
  		   << diff.real() << ' ' << diff.imag() << endl;
  	    }
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1472,9 +1467,9 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
  		   << diff.real() << ' ' << diff.imag() << endl;
  	    }
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1496,9 +1491,9 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
  		   << diff.real() << ' ' << diff.imag() << endl;
  	    }
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1513,8 +1508,6 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
   // Solve the equation.
   uInt rank;
   double fit;
-  double stddev;
-  double mu;
   cdebug(1) << "Solution before: " << itsSolution << endl;
   //  cout << "Solution before: " << itsSolution << endl;
   // It looks as if LSQ has a bug so that solveLoop and getCovariance
@@ -1522,7 +1515,7 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
   // So make a copy to separate them.
   Matrix<double> covar;
   Vector<double> errors;
-  FitLSQ tmpSolver = itsSolver;
+  LSQaips tmpSolver = itsSolver;
   tmpSolver.getCovariance (covar);
   tmpSolver.getErrors (errors);
   int nrs = itsSolution.nelements();
@@ -1531,7 +1524,7 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
   for (int i=0; i<itsSolution.nelements(); i++) {
     sol[i] = solData[i];
   }
-  bool solFlag = itsSolver.solveLoop (fit, rank, sol, stddev, mu, useSVD);
+  bool solFlag = itsSolver.solveLoop (fit, rank, sol);
   for (int i=0; i<itsSolution.nelements(); i++) {
     solData[i] = sol[i];
   }
@@ -1566,8 +1559,8 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
   resultQuality.itsSolFlag = solFlag;
   resultQuality.itsRank = rank;
   resultQuality.itsFit = fit;
-  resultQuality.itsMu = mu;
-  resultQuality.itsStddev = stddev;
+  resultQuality.itsMu = itsSolver.getWeightedSD();
+  resultQuality.itsStddev = itsSolver.getSD();
   resultQuality.itsChi = itsSolver.getChi();
   cout << resultQuality << endl;
 
