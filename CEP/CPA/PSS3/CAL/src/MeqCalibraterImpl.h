@@ -51,6 +51,8 @@
 #include <MNS/MeqStatUVW.h>
 #include <MNS/ParmTable.h>
 
+using namespace casa;
+
 /*!
  * Class to perform self-calibration on a MeasurementSet using the
  * MeqTree approach.

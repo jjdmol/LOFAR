@@ -77,6 +77,8 @@
 #include <stdexcept>
 #include <stdio.h>
 
+using namespace casa;
+
 
 //----------------------------------------------------------------------
 //

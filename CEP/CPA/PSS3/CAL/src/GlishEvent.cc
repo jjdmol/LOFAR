@@ -4,6 +4,9 @@
 #include <sys/time.h>
 #include <signal.h>
 
+using namespace casa;
+
+
 static GlishSysEventSource *expire_s = 0;
 
 void timer_expired(int)
