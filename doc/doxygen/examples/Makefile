@@ -2,34 +2,28 @@
 # Makefile for the examples that accompany the Doxygen Quick Guide.
 #
 
-# Export all variables
-export
-
 # Set variables if they are undefined
-#DOXYGEN ?= /usr/bin/doxygen
-#DOCDIR  ?= ../../html
+export LOFAR   ?= $(shell pwd | sed 's|/LOFAR/.*|/LOFAR|')
+export DOXYGEN ?= /usr/bin/doxygen
+export DOCDIR  ?= $(LOFAR)/doc/html
 
-# Add this documentation to the "examples" subdirectory.
-DOCDIR  := $(DOCDIR)/examples
+# Add this documentation to the "doxygen/examples" subdirectory.
+THISDOCDIR := $(DOCDIR)/doxygen/examples
 
-# Determine the "root" directory of the LOFAR tree.
-LOFAR=`pwd | sed 's|/LOFAR/.*|/LOFAR|'`
-
-doc: $(DOCDIR)/group/index.html \
-     $(DOCDIR)/memgrp/index.html
+doc: $(THISDOCDIR)/group/index.html \
+     $(THISDOCDIR)/memgrp/index.html
 
 clean:
-	$(RM) -r $(DOCDIR)
+	$(RM) -r $(THISDOCDIR) doxygen.cfg
 
-$(DOCDIR)/group/index.html: group.h group.cfg
-	@if ! [ -d $(DOCDIR) ]; then mkdir $(DOCDIR); fi
+$(THISDOCDIR)/group/index.html: group.h group.cfg
+	@if ! [ -d $(THISDOCDIR) ]; then mkdir $(THISDOCDIR); fi
 	@cp group.cfg doxygen.cfg
-	@echo "HTML_OUTPUT          = $(DOCDIR)/group" >> doxygen.cfg
-	@$(DOXYGEN) doxygen.cfg
+	@echo "HTML_OUTPUT          = $(THISDOCDIR)/group" >> doxygen.cfg
+	$(DOXYGEN) doxygen.cfg
 
-$(DOCDIR)/memgrp/index.html: memgrp.h memgrp.cfg
-	@if ! [ -d $(DOCDIR) ]; then mkdir $(DOCDIR); fi
+$(THISDOCDIR)/memgrp/index.html: memgrp.h memgrp.cfg
+	@if ! [ -d $(THISDOCDIR) ]; then mkdir $(THISDOCDIR); fi
 	@cp memgrp.cfg doxygen.cfg
-	@echo "HTML_OUTPUT          = $(DOCDIR)/memgrp" >> doxygen.cfg
-	@$(DOXYGEN) doxygen.cfg
-
+	@echo "HTML_OUTPUT          = $(THISDOCDIR)/memgrp" >> doxygen.cfg
+	$(DOXYGEN) doxygen.cfg
