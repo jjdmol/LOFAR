@@ -38,7 +38,12 @@ namespace LOFAR
 	       const int portno,
 	       const bool ServerAtSender=true); // determine who is the server
                                                 // this default is very usefull for CEPFrame
-                                               
+
+    // ServerAtSender determines which peer opens the connection and is completely
+    // independent from the direction of the transfer (i.e. the sender can either
+    // open or accept a connection). The server is said to be the peer that accepts 
+    // the connection.
+
     
     virtual ~TH_Socket();
     
