@@ -115,14 +115,18 @@ void WH_FillTFMatrix::process()
 {  
   Profiler::enterState (theirProcessProfilerState);
 
-  int cnt=0;
+  int cnt_real=0;
+  int cnt_imag=0;
   DH_2DMatrix *DHptr;
   int Xsize,Ysize; 
   // the time step is the Xsize; 
   int timestep;      
-      itsTime += (timestep = getOutHolder(0)->getXSize()); // increase local clock
-
-      
+  itsTime += (timestep = getOutHolder(0)->getXSize()); // increase local clock
+  
+  // initialise the counters
+  cnt_real=(int)(127.0*random()/RAND_MAX+1.0);
+  cnt_imag=(int)(127.0*random()/RAND_MAX+1.0);;
+  
   for (int outch=0; outch<getOutputs(); outch++) {
     DHptr = getOutHolder(outch);
     DbgAssertStr(DHptr != 0, "GetOutHolder returned NULL");
@@ -133,11 +137,7 @@ void WH_FillTFMatrix::process()
       Ysize = DHptr->getYSize();
       for (int y=0; y < Ysize; y++) {
 	for (int pol=0; pol<itsPols; pol++) {
-  	  // fill the output buffer with a regular pattern
-	  //*DHptr->getBuffer(x,y,pol) = DH_2DMatrix::DataType(cnt++ + itsSourceID + pol,0);
-	  
-	  // fill output buffer with random integer 0-127 (2^7=128)
-	  *DHptr->getBuffer(x,y,pol) = DH_2DMatrix::DataType((int)(127.0*random()/RAND_MAX+1.0),(int)(127.0*random()/RAND_MAX+1.0));
+	  *DHptr->getBuffer(x,y,pol) = DH_2DMatrix::DataType(cnt_real++,cnt_imag++);
 	}
       }
       
