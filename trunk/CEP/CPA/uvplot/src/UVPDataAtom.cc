@@ -14,9 +14,7 @@
 //====================>>>  UVPDataAtom::UVPDataAtom  <<<====================
 
 UVPDataAtom::UVPDataAtom()
-  : itsData(0),
-    itsTime(0),
-    itsUVW(3)
+  : itsData(0)
 {
 }
 
@@ -26,16 +24,11 @@ UVPDataAtom::UVPDataAtom()
 
 //====================>>>  UVPDataAtom::UVPDataAtom  <<<====================
 
-UVPDataAtom::UVPDataAtom(unsigned int  numberOfChannels,
-                         double          time,
-                         const std::vector<double> &uvw)
-  : itsData(numberOfChannels),
-    itsTime(time),
-    itsUVW(uvw)
+UVPDataAtom::UVPDataAtom(unsigned int               numberOfChannels,
+                         const UVPDataAtomHeader &  header)
+  : itsHeader(header),
+    itsData(numberOfChannels)
 {
-#if(DEBUG_MODE)
-  assert(uvw.size() == 3);
-#endif
 }
 
 
@@ -46,7 +39,7 @@ UVPDataAtom::UVPDataAtom(unsigned int  numberOfChannels,
 
 void UVPDataAtom::setChannels(unsigned int numberOfChannels)
 {
-  itsData = std::vector<double_complex>(numberOfChannels);
+  itsData = std::vector<ComplexType>(numberOfChannels);
 }
 
 
@@ -55,8 +48,8 @@ void UVPDataAtom::setChannels(unsigned int numberOfChannels)
 
 //====================>>>  UVPDataAtom::setData  <<<====================
 
-void UVPDataAtom::setData(unsigned int channel,
-                          const double_complex& data)
+void UVPDataAtom::setData(unsigned int       channel,
+                          const ComplexType& data)
 {
   itsData[channel] = data;
 }
@@ -68,7 +61,7 @@ void UVPDataAtom::setData(unsigned int channel,
 
 //====================>>>  UVPDataAtom::setData  <<<====================
 
-void UVPDataAtom::setData(const std::vector<double_complex>& data)
+void UVPDataAtom::setData(const std::vector<ComplexType>& data)
 {
 #if(DEBUG_MODE)
   assert(data.size() == itsData.size());
@@ -77,21 +70,6 @@ void UVPDataAtom::setData(const std::vector<double_complex>& data)
   itsData = data;
 }
 
-
-
-
-
-
-//====================>>>  UVPDataAtom::setUVW  <<<====================
-
-void UVPDataAtom::setUVW(const std::vector<double> &uvw)
-{
-#if(DEBUG_MODE)
-  assert(uvw.size() == itsUVW.size());
-#endif
-
-  itsUVW = uvw;
-}
 
 
 
@@ -111,10 +89,20 @@ unsigned int  UVPDataAtom::getNumberOfChannels() const
 
 //====================>>>  UVPDataAtom::getData  <<<====================
 
-const double_complex * UVPDataAtom::getData(unsigned int channel) const
+const UVPDataAtom::ComplexType * UVPDataAtom::getData(unsigned int channel) const
 {
 #if(DEBUG_MODE)
   assert(channel < itsData.size());
 #endif
   return &(itsData[channel]);
+}
+
+
+
+
+//====================>>>  UVPDataAtom::getHeader <<<====================
+
+const UVPDataAtomHeader& UVPDataAtom::getHeader() const
+{
+  return itsHeader;
 }
