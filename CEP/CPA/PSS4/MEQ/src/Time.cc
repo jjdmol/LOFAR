@@ -40,7 +40,9 @@ void Time::init (DataRecord::Ref::Xfer &initrec, Forest* frst)
   FailWhen(numChildren(),"Time node cannot have children");
 }
 
-int Time::getResult (Result::Ref &resref, const Request& request, bool)
+int Time::getResult (Result::Ref &resref, 
+                     const std::vector<Result::Ref> &,
+                     const Request &request,bool newreq)
 {
   // Get cells.
   const Cells& cells = request.cells();
@@ -48,8 +50,8 @@ int Time::getResult (Result::Ref &resref, const Request& request, bool)
   int ntime = cells.ntime();
   // Create result object and attach to the ref that was passed in.
   resref <<= new Result(1);                // 1 plane
-  VellSet& result = resref().setNewVellSet(0);  // create new object for plane 0
-  LoMat_double& arr = result.setReal (nfreq,ntime);
+  VellSet& vs = resref().setNewVellSet(0);  // create new object for plane 0
+  LoMat_double& arr = vs.setReal (nfreq,ntime);
   // Evaluate the main value.
   for (int i=0; i<ntime; i++) {
     double time = cells.time(i);
@@ -57,8 +59,8 @@ int Time::getResult (Result::Ref &resref, const Request& request, bool)
       arr(j,i) = time;
     }
   }
-  // There are no perturbations.
-  return 0;
+  // result depends on domain; is updated if request is new.
+  return RES_DEP_DOMAIN|(newreq?RES_UPDATED:0);
 }
 
 } // namespace Meq

@@ -42,38 +42,33 @@ void Composer::checkInitState (DataRecord &rec)
 void Composer::setStateImpl (DataRecord &rec,bool initializing)
 {
   Node::setStateImpl(rec,initializing);
-  if( rec[FContagiousFail].exists() )
-    contagious_fail = rec[FContagiousFail].as<bool>();
+  getStateField(contagious_fail,rec,FContagiousFail);
 }
 
-int Composer::getResult (Result::Ref &resref, const Request& request, bool)
+int Composer::getResult (Result::Ref &resref, 
+                         const std::vector<Result::Ref> &childres,
+                         const Request &request,bool)
 {
-  std::vector<Result::Ref> childref;
-  // get results from children
-  int resflag = getChildResults(childref,request);
-  // return wait if some child has returned a wait
-  if( resflag != RES_FAIL && resflag&RES_WAIT )
-    return resflag;
   // count # of output planes, and # of fails among them
   int nres = 0, nfails = 0;
-  for( uint i=0; i<childref.size(); i++ )
+  for( uint i=0; i<childres.size(); i++ )
   {
-    nres += childref[i]->numVellSets();
-    nfails += childref[i]->numFails();
+    nres += childres[i]->numVellSets();
+    nfails += childres[i]->numFails();
   }
   // if fail is contagious, generate a fully failed result
-  if( nfails && ( contagious_fail || nres == nfails ) )
+  if( nfails && contagious_fail )
   {
     Result &result = resref <<= new Result(nfails,request);
     int ires = 0;
-    for( uint i=0; i<childref.size(); i++ )
+    for( uint i=0; i<childres.size(); i++ )
     {
-      Result &childres = childref[i]();
-      for( int j=0; j<childres.numVellSets(); j++ )
+      Result &chres = childres[i]();
+      for( int j=0; j<chres.numVellSets(); j++ )
       {
-        VellSet &res = childres.vellSet(j);
-        if( res.isFail() )
-          result.setVellSet(ires++,&res);
+        VellSet &vs = chres.vellSet(j);
+        if( vs.isFail() )
+          result.setVellSet(ires++,&vs);
       }
     }
     return RES_FAIL;
@@ -86,13 +81,13 @@ int Composer::getResult (Result::Ref &resref, const Request& request, bool)
     int ires=0;
     for( int i=0; i<numChildren(); i++ )
     {
-      Result &childres = childref[i]();
-      for( int j=0; j<childres.numVellSets(); j++ )
-        result.setVellSet(ires++,&(childres.vellSet(j)));
-      childref[i].detach();
+      Result &chres = childres[i]();
+      for( int j=0; j<chres.numVellSets(); j++ )
+        result.setVellSet(ires++,&(chres.vellSet(j)));
     }
-    return resflag;
   }
+  // we do not introduce any dependencies
+  return 0;
 }
 
 } // namespace Meq

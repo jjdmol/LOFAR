@@ -44,8 +44,9 @@ public:
 
 protected:
   // Evaluate the value for the given request.
-  int getResult (Result::Ref &resref, const Request& request, bool newReq);
-
+  virtual int getResult (Result::Ref &resref, 
+                         const std::vector<Result::Ref> &childres,
+                         const Request &req,bool newreq);
 };
 
 } // namespace Meq

@@ -54,9 +54,12 @@ class Composer : public Node
     { return TpMeqComposer; }
     
   protected:
-    virtual int getResult (Result::Ref &resref, const Request& request, bool newReq);
     virtual void checkInitState (DataRecord &rec);
     virtual void setStateImpl (DataRecord &rec,bool initializing);
+    // Get the result for the given request.
+    virtual int getResult (Result::Ref &resref, 
+                           const std::vector<Result::Ref> &childres,
+                           const Request &req,bool newreq);
   
   private:
     bool contagious_fail;

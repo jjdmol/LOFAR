@@ -170,6 +170,49 @@ const meqrequest := function (cells,reqid=F,calc_deriv=F)
     _meqrequest_id := reqid;
   rec := [ cells=cells,request_id=hiid(reqid),calc_deriv=calc_deriv ];
   rec::dmi_actual_type := 'MeqRequest';
-  return rec;
+  
+  const rec.addstate := function (group,node,state)
+  {
+    wider rec;
+    # add node_state and group subrecord
+    if( !has_field(rec,'node_state') )
+      rec.node_state := [=];
+    if( !has_field(rec.node_state,group) )
+      rec.node_state[group] := [=];
+    ns := ref rec.node_state[group];
+    # node specified by index
+    if( is_integer(node) )
+    {
+      if( len(node) == 1 )  # single index: add to by_nodeindex map
+      {
+        if( !has_field(ns,'by_nodeindex') )
+          ns.by_nodeindex := [=];
+        ns.by_nodeindex['#'+as_string(node)] := state;
+      }
+      else # multiple indices: add to by_list map
+      {
+        if( !has_field(ns,'by_list') )
+        {
+          ns.by_list := [=];
+          ns.by_list::dmi_datafield_content_type := 'DataRecord';
+        }
+        ns.by_list[len(ns.by_list)+1] := [ nodeindex=node,state=state ];
+      }
+    }
+    else if( is_string(node) ) # string nodes: add to by_list map
+    {
+      if( !has_field(ns,'by_list') )
+      {
+        ns.by_list := [=];
+        ns.by_list::dmi_datafield_content_type := 'DataRecord';
+      }
+      ns.by_list[len(ns.by_list)+1] := [ name=node,state=state ];
+    }
+    else
+      fail 'meqrequest.addstate(): node must be specified by index or name(s)';
+    return T;
+  }
+  
+  return ref rec;
 }
 

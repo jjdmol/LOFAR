@@ -131,29 +131,36 @@ int Parm::initDomain (const Domain& domain)
   return nr;
 }
 
-int Parm::getResult (Result::Ref& resultset, const Request& request, bool)
+int Parm::getResult (Result::Ref &resref,
+                     const std::vector<Result::Ref> &,
+                     const Request &request,bool newreq)
 {
-  const Domain & reqdomain = request.cells().domain();
+  const Domain & domain = request.cells().domain();
 //  if( reqdomain != current_domain )
 //  {
-//    initDomain(request.cells().domain());
+  initDomain(domain);
 //    // set current_domain, too
 //  }
   // Create result object and attach to the ref that was passed in
-  resultset <<= new Result(1); // resulting set is always 1 plane
-  const Cells& cells = request.cells();
-  resultset().setCells(cells);
+  Result &result = resref <<= new Result(1,request); // result has one vellset
   // *** NB: Should pass in the proper # of spids here, because
   // VellSet does not allow for changing it later!
-  VellSet & res = resultset().setNewVellSet(0);
+  VellSet & vs = result.setNewVellSet(0);
+  // return depencies: depends on parm value, if solvable
+  // NB: should set UPDATED here if we've received a new parm value
+  int retcode = itsIsSolvable ? RES_DEP_VALUE : 0;
   // A single polc can be evaluated immediately.
-  if (itsPolcs.size() == 1) 
+  if( itsPolcs.size() == 1 ) 
   {
-    itsPolcs[0].evaluate (res, request);
-    return 0;
+    itsPolcs[0].evaluate(vs,request);
+    // no further dependencies (specifically, not on domain)
+    return retcode;
   }
+  // value now depends on domain and has probably been updated
+  // NB: we need to compare domains above, and adjust UPDATED accordingly
+  retcode |= RES_DEP_DOMAIN | (newreq?RES_UPDATED:0);
   // Get the domain, etc.
-  const Domain& domain = cells.domain();
+  const Cells &cells = request.cells();
   int ndFreq = cells.nfreq();
   int ndTime = cells.ntime();
   double* datar = 0;
@@ -163,7 +170,7 @@ int Parm::getResult (Result::Ref& resultset, const Request& request, bool)
   double lastMidFreq  = firstMidFreq + (ndFreq-1) * stepFreq;
   double firstMidTime = cells.time(0);
   double lastMidTime  = cells.time(ndTime-1);
-  res.setReal (ndFreq, ndTime);
+  vs.setReal (ndFreq, ndTime);
   // Iterate over all polynomials.
   // Evaluate one if its domain overlaps the request domain.
   for (unsigned int i=0; i<itsPolcs.size(); i++) {
@@ -175,27 +182,27 @@ int Parm::getResult (Result::Ref& resultset, const Request& request, bool)
       // polynomial.
       int stFreq = 0;
       if (firstMidFreq < polDom.startFreq()) {
-	stFreq = 1 + int((polDom.startFreq() - firstMidFreq) / stepFreq);
+        stFreq = 1 + int((polDom.startFreq() - firstMidFreq) / stepFreq);
       }
       int nrFreq = ndFreq - stFreq;
       if (lastMidFreq > polDom.endFreq()) {
-	int remFreq = 1 + int((lastMidFreq - polDom.endFreq()) / stepFreq);
-	nrFreq -= remFreq;
+        int remFreq = 1 + int((lastMidFreq - polDom.endFreq()) / stepFreq);
+        nrFreq -= remFreq;
       }
       int stTime = 0;
       while (cells.time(stTime) < polDom.startTime()) {
-	stTime++;
+        stTime++;
       }
       int lastTime = ndTime-1;
       while (cells.time(lastTime) > polDom.endTime()) {
-	lastTime--;
+        lastTime--;
       }
       int nrTime = lastTime - stTime + 1;
       // If the overlap is full, only this polynomial needs to be evaluated.
       if (stFreq == 0  &&  nrFreq == ndFreq
       &&  stTime == 0  &&  nrTime == ndTime) {
-	polc.evaluate (res, request);
-	return 0;
+        polc.evaluate (vs, request);
+        return retcode;
       }
       // Form the domain and request for the overlapping part
       // and evaluate the polynomial.
@@ -203,12 +210,12 @@ int Parm::getResult (Result::Ref& resultset, const Request& request, bool)
       double startTime = cells.time(stTime) - cells.stepTime(stTime) / 2;
       double endTime   = cells.time(lastTime) + cells.stepTime(lastTime) / 2;
       Domain partDom(startFreq, startFreq + nrFreq*stepFreq,
-		     startTime, endTime);
+                     startTime, endTime);
       LoVec_double partStartTime(nrTime);
       LoVec_double partEndTime(nrTime);
       for (int j=0; j<nrTime; j++) {
-	partStartTime(j) = cells.time(stTime+j) - cells.stepTime(stTime+j);
-	partEndTime(j)   = cells.time(stTime+j) + cells.stepTime(stTime+j);
+        partStartTime(j) = cells.time(stTime+j) - cells.stepTime(stTime+j);
+        partEndTime(j)   = cells.time(stTime+j) + cells.stepTime(stTime+j);
       }
       Cells partCells (partDom, nrFreq, partStartTime, partEndTime);
       Request partReq(partCells);
@@ -220,8 +227,8 @@ int Parm::getResult (Result::Ref& resultset, const Request& request, bool)
       // which saves the initialization Time. It requires that the
       // request domain is entirely covered by the polcs.
       if (datar == 0) {
-	LoMat_double& mat = res.setReal (ndFreq, ndTime);
-	datar = mat.data();
+        LoMat_double& mat = vs.setReal (ndFreq, ndTime);
+        datar = mat.data();
       }
       // Move the values to the correct place in the output result.
       // Note that in principle a polynomial could be a single coefficient
@@ -229,23 +236,23 @@ int Parm::getResult (Result::Ref& resultset, const Request& request, bool)
       const double* from = partRes.getValue().realStorage();
       double* to = datar + stFreq + stTime*ndFreq;
       if (partRes.getValue().nelements() == 1) {
-	for (int iTime=0; iTime<nrTime; iTime++) {
-	  for (int iFreq=0; iFreq<nrFreq; iFreq++) {
-	    to[iFreq] = *from;
-	  }
-	  to += ndFreq;
-	}
+        for (int iTime=0; iTime<nrTime; iTime++) {
+          for (int iFreq=0; iFreq<nrFreq; iFreq++) {
+            to[iFreq] = *from;
+          }
+          to += ndFreq;
+        }
       } else {
-	for (int iTime=0; iTime<nrTime; iTime++) {
-	  for (int iFreq=0; iFreq<nrFreq; iFreq++) {
-	    to[iFreq] = *from++;
-	  }
-	  to += ndFreq;
-	}
+        for (int iTime=0; iTime<nrTime; iTime++) {
+          for (int iFreq=0; iFreq<nrFreq; iFreq++) {
+            to[iFreq] = *from++;
+          }
+          to += ndFreq;
+        }
       }
     }
   }
-  return 0;
+  return retcode;
 }
 
 void Parm::update (const Vells& value)
@@ -269,8 +276,7 @@ void Parm::setStateImpl (DataRecord& rec,bool initializing)
 {
   Function::setStateImpl(rec,initializing);
   // Get solvable flag
-  if( rec[FSolvable].exists() )
-    itsIsSolvable = rec[FSolvable].as<bool>();
+  getStateField(itsIsSolvable,rec,FSolvable);
   // Get parm value
   if( rec[FValue].exists() )
   { // TBD
@@ -288,8 +294,7 @@ void Parm::setStateImpl (DataRecord& rec,bool initializing)
       itsTable = ParmTable::openTable(tableName);
   }
   // Override ParmName if supplied
-  if( rec[FParmName].exists() )
-    itsName = rec[FParmName].as<string>();
+  getStateField(itsName,rec,FParmName);
 }
 
 string Parm::sdebug (int detail, const string &prefix,const char* nm) const
