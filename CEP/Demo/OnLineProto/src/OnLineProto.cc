@@ -101,16 +101,19 @@ void OnLineProto::define(const KeyValueMap& params)
   app.runOnNode(0,0);
   app.setCurAppl(0);
 
-  // Get any extra params from input
-  int NStations = params.getInt("stations",NSTATIONS);
-  //  int NBeamlets = params.getInt("beamlets",32);
-  int NBeamlets = (NBEAMLETS);
-  //  int myFBW     = params.getInt("beamlet_FBW",256);
-  int myFBW= (BFBW);
-
   // Create a global settings MAC
   MAC myMac;
   char str[8];
+
+  // Get any extra params from input
+  //int NStations = params.getInt("stations",2);
+  int NStations = myMac.getNumberOfStations();
+  //  int NBeamlets = params.getInt("beamlets",32);
+  //  int NBeamlets = (NBEAMLETS);
+  int NBeamlets = myMac.getNumberOfBeamlets();
+  //  int myFBW     = params.getInt("beamlet_FBW",256);
+  //int myFBW= (BFBW);
+  int myFBW= myMac.getBeamletSize();;
 
 
   ////////////////////////////////////////////////////////////////
@@ -121,12 +124,14 @@ void OnLineProto::define(const KeyValueMap& params)
   WH_SimStation* myWHStations[NStations];
   Step*          myStationSteps[NStations];
 
+  cout << "Number of Beamlets : " << NBeamlets << endl;
+
   for (int s=0; s < NStations; s++) {
     sprintf (str, "%d", s+1);
     // ToDo: pass stationID, freq offset etc. to DH
     myWHStations[s] = new WH_SimStation("noname",  // name,
 					myMac.getNumberOfBeamlets(),  // nout
-					string("/home/alex/temp/signal_")+str+string(".txt"),
+					string("/home/gerdes/temp/signal_")+str+string(".txt"),
 					myMac,
 					s);
 
@@ -245,7 +250,7 @@ void OnLineProto::define(const KeyValueMap& params)
     myWHDumps[s] = new WH_Dump("noname",1);    
 
     myDumpSteps[s] = new Step(myWHDumps[s],"noname");
-    myDumpSteps[s]->runOnNode(NCorr,0);
+    myDumpSteps[s]->runOnNode(0,0);
     myDumpSteps[s]->setRate(TSIZE);
     app.addStep(myDumpSteps[s]);
     // connect the preprocess step to the station step

@@ -97,7 +97,7 @@ namespace LOFAR
     TRACER4("WH_SimStation::Process()");  
 
     ReadData ();
-
+    
     for (int i = 0; i < itsMac.getNumberOfBeamlets(); ++i) {
       ((DH_Beamlet*)getDataManager().getOutHolder(i))->setElapsedTime((float)(itsData[i*itsMac.getBeamletSize()].real()));
       for (int j = 0; j < itsMac.getBeamletSize(); j++) { 
@@ -105,13 +105,18 @@ namespace LOFAR
 	  = itsData[i * itsMac.getBeamletSize() + j + 1];
       }
     }
+    dump();
   }
   
   void WH_SimStation::dump()
   {
-//     cout << "WH_ReadSignal " << getName () << " Buffers:" << endl;
-//     cout << itsOutHolders[0]->getBuffer ()[0] << ','
-// 	 << itsOutHolders[getOutputs () - 1]->getBuffer ()[0] << endl;
+    cout << "WH_SimStation " << getName () << " Buffers:" << endl;
+    for (int i = 0; i < itsMac.getNumberOfBeamlets(); i++) {
+      for (int j = 0; j < itsMac.getBeamletSize(); j++) {
+	cout << *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) << ' ';
+      }
+      cout << endl;
+    }
   }
 
   void WH_SimStation::ReadData ()

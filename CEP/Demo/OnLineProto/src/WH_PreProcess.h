@@ -64,7 +64,7 @@ private:
   /// Forbid assignment.
   WH_PreProcess& operator= (const WH_PreProcess&);
 
-  MAC itsMAC;
+  MAC itsMac;
   int itsStationID;
 };
 

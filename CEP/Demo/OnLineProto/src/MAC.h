@@ -150,7 +150,7 @@ inline void MAC::setNumberOfStations (int ns)
   { itsNumberOfStations = ns; }
 
 inline int MAC::getNumberOfBeamlets ()
-  { return itsNumberOfStations; }
+  { return itsNumberOfBeamlets; }
 
 inline void MAC::setNumberOfBeamlets (int nb)
   { itsNumberOfBeamlets = nb; }
