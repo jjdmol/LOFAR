@@ -102,10 +102,6 @@ unsigned long GTMTimerHandler::setTimer(GCFRawPort& port,
   unsigned long timerid(0);
   unsigned long foundTimerID(1);
 
-  GTMTimer* pNewTimer = new GTMTimer(port, 
-                                 delay_seconds, 
-                                 interval_seconds,
-                                 arg);
   if (_timers.empty()) saveDateTime(); // start timer
 
   // search the first unused timerid
@@ -118,7 +114,13 @@ unsigned long GTMTimerHandler::setTimer(GCFRawPort& port,
   }
   while (foundTimerID == timerid);
 
+  GTMTimer* pNewTimer = new GTMTimer(port, 
+				     timerid,
+				     delay_seconds, 
+				     interval_seconds,
+				     arg);
   _timers[timerid] = pNewTimer;
+
   return timerid;
 }
 

@@ -36,7 +36,8 @@ class GTMTimer
   private:
     friend class GTMTimerHandler;
     
-    GTMTimer (GCFRawPort& port, 
+    GTMTimer (GCFRawPort& port,
+	      unsigned long id,
               unsigned long timeVal, 
               unsigned long intervalTime = 0, 
               const void* arg = 0);
@@ -58,6 +59,7 @@ class GTMTimer
     void decreaseTime (unsigned long microSec);
 
     GCFRawPort&     _port;
+    unsigned long   _id;
     unsigned long   _time;
     unsigned long   _timeLeft;
     unsigned long   _intervalTime;
