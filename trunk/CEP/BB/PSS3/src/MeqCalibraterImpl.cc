@@ -593,7 +593,7 @@ MeqCalibrater::~MeqCalibrater()
 // its initDomain method.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::initParms (const MeqDomain& domain)
+void MeqCalibrater::initParms (const MeqDomain& domain, bool readPolcs)
 {
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
@@ -606,6 +606,10 @@ void MeqCalibrater::initParms (const MeqDomain& domain)
   {
     itsIsParmSolvable[i] = false;
     if (*iter) {
+      if (readPolcs) {
+        (*iter)->readPolcs (domain);
+      }
+
       int nr = (*iter)->initDomain (domain, itsNrScid);
       if (nr > 0) {
 	itsIsParmSolvable[i] = true;
@@ -677,7 +681,7 @@ void MeqCalibrater::resetIterator()
 // Set the request belonging to that.
 //
 //----------------------------------------------------------------------
-bool MeqCalibrater::nextInterval(bool callInitParms)
+bool MeqCalibrater::nextInterval(bool callReadPolcs)
 {
   itsCurRows.resize(0);
   // Exit when no more chunks.
@@ -711,9 +715,7 @@ bool MeqCalibrater::nextInterval(bool callInitParms)
   itsSolveDomain = MeqDomain(timeStart, timeStart + nrtim*timeStep,
 			     itsStartFreq + itsFirstChan*itsStepFreq,
 			     itsStartFreq + (itsLastChan+1)*itsStepFreq);
-  if (callInitParms) {
-    initParms (itsSolveDomain);
-  }
+  initParms (itsSolveDomain, callReadPolcs);
 
   itsSolveColName = itsDataColName;
   return true;
