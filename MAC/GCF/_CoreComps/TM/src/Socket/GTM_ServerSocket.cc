@@ -21,64 +21,149 @@
 //#  $Id$
 
 #include "GTM_ServerSocket.h"
-#include "GTM_SocketHandler.h"
+#include "GCF_TCPPort.h"
+//#include <GCF_Event.h>
+#include <GCF_TMProtocols.h>
+#include <PortInterface/GCF_PeerAddr.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
+#include <fcntl.h>
 
-GTMServerSocket::GTMServerSocket(GCFRawPort& port, bool isProvider) : 
+GTMServerSocket::GTMServerSocket(GCFTCPPort& port, bool isProvider) : 
   GTMSocket(port),
-  _isProvider(isProvider)
-  _serverSocketFD(0)
+  _isProvider(isProvider),
+  _pServerSocket(0)
 {
 }
 
-int GTMServerSocket::open(GTMPeerAddr& addr)
+GTMServerSocket::~GTMServerSocket()
 {
-  if (_socketFD == 0)
+  close();  
+}
+
+int GTMServerSocket::open(GCFPeerAddr& localaddr)
+{
+  int result(-1);
+  if (_socketFD == -1)
   {
     struct sockaddr_in address;
     int addrLen;
-    
-    setFD(socket(AF_INET, SOCK_STREAM, 0));
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = htonl(INADDR_ANY);
-    address.sin_port = htons(addr.getPortnumber());
-    addrLen = sizeof(address);
-    bind(_socketFD, (struct sockaddr*)&address, addrLen);
-    listen(_socketFD, 5);    
+    int socketFD = ::socket(AF_INET, SOCK_STREAM, 0);
+    if (socketFD > -1)
+    {
+      unsigned int val = 1;
+      struct linger lin = { 1,1 };
+
+      if (::setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, (char*)&val, sizeof(val)) < 0)
+        return -2;
+
+      if (::setsockopt(socketFD, SOL_SOCKET, SO_LINGER, (const char*)&lin, sizeof(lin)) < 0)
+        return -2;
+      
+      address.sin_family = AF_INET;
+      address.sin_addr.s_addr = htonl(INADDR_ANY);
+      address.sin_port = htons(localaddr.getPortnumber());
+      addrLen = sizeof(address);
+      if (bind(socketFD, (struct sockaddr*)&address, addrLen) > -1)
+      {
+        if (listen(socketFD, 5) > -1)
+        {    
+          setFD(socketFD);
+          result = (fcntl(socketFD,F_SETFL,FNDELAY) < 0 ? -1 : 0);            
+        }
+      }
+      if (result < 0)
+        close();
+    }    
   }
+  else
+  {
+    if (_pServerSocket != 0)
+    {
+      _pServerSocket->close();
+      result = 0;
+    }
+  }
+    
+  return result;
 }
 
 void GTMServerSocket::workProc()
 {
   if (_isProvider)
   {
-    _port.dispatch(GCFEvent(F_ACCEPT_REQ_SIG));
+    GCFEvent acceptReqEvent(F_ACCEPT_REQ_SIG);
+    _port.dispatch(acceptReqEvent);
   }
   else
   {
-    if (_serverSocketFD == 0)
+    struct sockaddr_in clientAddress;
+    socklen_t clAddrLen = sizeof(clientAddress);
+    if (_pServerSocket == 0)
     {
-      struct sockaddr_in clientAddress;
-      int clAddrLen;
-      _serverSocketFD = _socketFD;
-      _socketFD = ::accept(_serverSocketFD, 
-                         (struct sockaddr*) &clientAddress, 
-                         &clAddrLen);
+      _pServerSocket = new GTMSocket(_port);
     }
+    if (_pServerSocket->getFD() < 0)
+      _pServerSocket->setFD(::accept(_socketFD, 
+                   (struct sockaddr*) &clientAddress, 
+                   &clAddrLen));
+         
+    if (_pServerSocket->getFD() >= 0)
+    {
+      GCFEvent connectedEvent(F_CONNECTED_SIG);
+      _port.dispatch(connectedEvent);
+    }
+    // else ignore further connect requests
   }
 }
 
-void GTMServerSocket::accept(GTMSocket& newSocket)
+int GTMServerSocket::accept(GTMSocket& newSocket)
 {
-  if (_isProvider)
+  int result(-2);
+  if (!_isProvider && _pServerSocket != 0)
   {
     struct sockaddr_in clientAddress;
-    int clAddrLen;
+    socklen_t clAddrLen = sizeof(clientAddress);
     int newSocketFD;
-    newSocketFD = ::accept(_serverSocketFD, 
+    newSocketFD = ::accept(_socketFD, 
                        (struct sockaddr*) &clientAddress, 
                        &clAddrLen);
-    newSocket.setFD(newSocketFD);                       
+    
+    result = newSocket.setFD(newSocketFD);
   }
+  
+  return result;
+}
+
+int GTMServerSocket::close()
+{
+  int result(0);
+  
+  if (!_isProvider && _pServerSocket != 0)
+  {
+    result = _pServerSocket->close();
+    delete _pServerSocket;
+    _pServerSocket = 0;
+  }
+  if (result >= 0)
+    result = GTMSocket::close();
+    
+  return result;
+}
+
+ssize_t GTMServerSocket::send(void* buf, size_t count)
+{
+  if (!_isProvider && _pServerSocket != 0) 
+    return _pServerSocket->send(buf, count);
+  else
+    return 0;
+}
+
+ssize_t GTMServerSocket::recv(void* buf, size_t count)
+{
+  if (!_isProvider && _pServerSocket != 0) 
+    return _pServerSocket->recv(buf, count);
+  else
+    return 0;
 }

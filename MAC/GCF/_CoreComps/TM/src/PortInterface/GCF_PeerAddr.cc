@@ -28,15 +28,15 @@ GCFPeerAddr::GCFPeerAddr()
 }
 
 GCFPeerAddr::GCFPeerAddr(string& taskname,
-		     const char* host,
+		     string& host,
 		     string& portname,
-		     const char* porttype,
+		     string& porttype,
 		     int portnumber)
 {
   _taskname = taskname;
-  strncpy(_host, host, MAXHOSTNAMELEN);
+  _host = host;
   _portname = portname;
-  strncpy(_porttype, porttype, MAX_PORTTYPE_LEN);
+  _porttype = porttype;
   _portnumber = portnumber;
 }
 
@@ -49,22 +49,22 @@ string& GCFPeerAddr::getTaskname()
   return _taskname;
 }
 
-const char* GCFPeerAddr::getHost() const
+string& GCFPeerAddr::getHost()
 {
   return _host;
 }
 
-string& GCFPeerAddr::getPortname() 
+string& GCFPeerAddr::getPortname()
 {
   return _portname;
 }
 
-const char* GCFPeerAddr::getPorttype() const
+string& GCFPeerAddr::getPorttype()
 {
   return _porttype;
 }
 
-int GCFPeerAddr::getPortnumber() const
+int GCFPeerAddr::getPortnumber()
 {
   return _portnumber;
 }
@@ -74,9 +74,9 @@ void GCFPeerAddr::setTaskname(string& taskname)
   _taskname = taskname;
 }
 
-void GCFPeerAddr::setHost(const char* host)
+void GCFPeerAddr::setHost(string& host)
 {
-  strncpy(_host, host, MAXHOSTNAMELEN);
+  _host = host;
 }
 
 void GCFPeerAddr::setPortname(string& portname)
@@ -84,9 +84,9 @@ void GCFPeerAddr::setPortname(string& portname)
   _portname = portname;
 }
 
-void GCFPeerAddr::setPorttype(const char* porttype)
+void GCFPeerAddr::setPorttype(string& porttype)
 {
-  strncpy(_porttype, porttype, MAX_PORTTYPE_LEN);
+  _porttype = porttype;
 }
 
 void GCFPeerAddr::setPortnumber(int portnumber)

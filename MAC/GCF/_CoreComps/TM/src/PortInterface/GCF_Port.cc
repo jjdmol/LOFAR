@@ -27,19 +27,10 @@
 #include <GCF_TMProtocols.h>
 #include "GTM_NameService.h"
 #include "GTM_TopologyService.h"
+#include "GTM_Defines.h"
 
 // all possible implementations are included here
 #include <Socket/GCF_TCPPort.h>
-//#include <Socket/GCF_TCPPortProvider.h>
-
-// debug macro's
-#ifdef DEBUG_SIGNAL
-#define F_DEBUG_SEND(e) do     { debug_send(e);     } while (0)
-#define F_DEBUG_DISPATCH(e) do { debug_dispatch(e); } while (0)
-#else
-#define F_DEBUG_SEND(e)
-#define F_DEBUG_DISPATCH(e)
-#endif
 
 /**
  * ::GCFPort constructor
@@ -74,7 +65,7 @@ GCFPort::~GCFPort()
  * ::init
  */
 void GCFPort::init(GCFTask& task,
-		 string& name,
+		 string name,
 		 TPortType type,
 		 int protocol)
 {
@@ -101,23 +92,25 @@ int GCFPort::open()
   //
   if (SAP == _type)
   {  
-      // find local and remote address
-      if (GTMTopologyService::instance()->getPeerAddr(_pTask->getName(),
-						    _name, _remoteAddr) < 0)
-      {
-	  LOG_DEBUG(("No address found for port '%s' of task '%s'\n",
-		     _name, _pTask->getName()));
-	  
-	  return -1;
-      }
+    // find local and remote address
+    if (GTMTopologyService::instance()->getPeerAddr(_pTask->getName(),
+    			    _name, _remoteAddr) < 0)
+    {
+      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
+          "No address found for port '%s' of task '%s'\n",
+          _name.c_str(), _pTask->getName().c_str()));
+    
+      return -1;
+    }
   }
   
   // find my own address in the nameservice
   if (GTMNameService::instance()->query(_pTask->getName(),
 				      _localAddr) < 0)
   {
-    LOG_ERROR(("Could not find own address for "
-	       "task '%s'.\n", _pTask->getName()));
+    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+        "Could not find own address for task '%s'.\n", 
+        _pTask->getName().c_str()));
     
     return -1;
   }
@@ -125,57 +118,51 @@ int GCFPort::open()
 					  getName(),
 					  _localAddr))
   {
-    LOG_ERROR(("Could not find port info for port '%s' of "
-	       "task '%s'.\n", getName(), _pTask->getName()));
+    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+        "Could not find port info for port '%s' of task '%s'.\n", 
+        _name.c_str(), _pTask->getName().c_str()));
     
     return -1;
   }
 
   if (SAP == _type)
   {
-    LOG_DEBUG((
-	       "Connecting local SAP [%s:%s] "
-	       "to remote SPP [%s(%s,%d):%s].\n",
-	       _pTask->getName(),
-	       getName(),
-	       _remoteAddr.getTaskname(),
-	       _remoteAddr.getHost(),
-	       _remoteAddr.getPortnumber(),
-	       _remoteAddr.getPortname()));
+    LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
+        "Connecting local SAP [%s:%s] to remote SPP [%s(%s,%d):%s].\n",
+        _pTask->getName().c_str(),
+        _name.c_str(),
+        _remoteAddr.getTaskname().c_str(),
+        _remoteAddr.getHost().c_str(),
+        _remoteAddr.getPortnumber(),
+        _remoteAddr.getPortname().c_str()));
   }
   else if (SPP == _type && MSPP == _type)
   {
-    LOG_DEBUG((
-	       "Local SPP [%s:%s] listening on port %d for connections.\n",
-	       _localAddr.getTaskname(),
-	       _localAddr.getPortname(),
-	       _localAddr.getPortnumber()));
+    LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
+        "Local SPP [%s:%s] listening on port %d for connections.\n",
+        _localAddr.getTaskname().c_str(),
+        _localAddr.getPortname().c_str(),
+        _localAddr.getPortnumber()));
   }
 
   // Check for the various port types
-  if (!strcmp(_localAddr.getPorttype(), "TCP"))
+  if (_localAddr.getPorttype() == "TCP")
   {
-    GCFRawPort* pNewPort(0);
+    GCFTCPPort* pNewPort(0);
     string pseudoName = _name + "_TCP";
-    if (MSPP == _type)
-    {
-      //pNewPort = new GCFTCPPortProvider(*_pTask, pseudoName, _type, _protocol);
-    }
-    else
-    {
-      pNewPort = new GCFTCPPort(*_pTask, pseudoName, _type, _protocol);
-    }  
+    pNewPort = new GCFTCPPort(*_pTask, pseudoName, _type, _protocol);
     pNewPort->setMaster(this);
 
-    //if (SAP == _type) pNewPort->setAddr(_remoteAddr);
-    //else pNewPort->setAddr(_localAddr);
+    if (SAP == _type) pNewPort->setAddr(_remoteAddr);
+    else pNewPort->setAddr(_localAddr);
 
     _pSlave = pNewPort;
   }
   else
   {
-    LOG_ERROR(("no implementation found for port type '%s'",
-	       _localAddr.getPorttype()));
+    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+        "no implementation found for port type '%s'",
+	      _localAddr.getPorttype().c_str()));
     
     return -1;
   }
@@ -190,7 +177,8 @@ int GCFPort::close()
 {
   if (!_pSlave)
   {
-    LOG_ERROR(("GCFPort::close: _pSlave == 0\n"));
+    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+        "GCFPort::close: _pSlave == 0\n"));
     
     return -1;
   }
@@ -207,9 +195,11 @@ ssize_t GCFPort::send(const GCFEvent& e, void* buf, size_t count)
   {
     if (F_EVT_INOUT(e) & F_IN)
     {
-      LOG_ERROR(("Trying to send IN event '%s' on SPP "
-		 "port '%s'; discarding this event.\n",
-		 getTask()->evtstr(e), getName()));
+      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+          "Trying to send IN event '%s' on SPP "
+		      "port '%s'; discarding this event.\n",
+		      getTask()->evtstr(e), _name.c_str()));
+         
       return -1; // RETURN
     }
   }
@@ -217,16 +207,19 @@ ssize_t GCFPort::send(const GCFEvent& e, void* buf, size_t count)
   {
     if (F_EVT_INOUT(e) & F_OUT)
     {
-      LOG_ERROR(("Trying to send OUT event '%s' on SAP "
-		 "port '%s'; discarding this event.\n",
-		 getTask()->evtstr(e), getName()));
+      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+          "Trying to send OUT event '%s' on SAP "
+		      "port '%s'; discarding this event.\n",
+		      getTask()->evtstr(e), _name.c_str()));
       return -1; // RETURN
     }
   }
   else if (MSPP == _type)
   {
-     LOG_ERROR(("Trying to send events by means of the portprovider. Not supported yet",
-         getTask()->evtstr(e), getName()));
+     LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+        "Trying to send event '%s' by means of the portprovider: %s (MSPP). "
+        "Not supported yet\n",
+         getTask()->evtstr(e), _name.c_str()));
       return -1; // RETURN
   }
 
@@ -249,9 +242,10 @@ ssize_t GCFPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
   {
     if (F_EVT_INOUT(e) & F_IN)
     {
-      LOG_ERROR(("Trying to send IN event '%s' on SPP "
-		 "port '%s'; discarding this event.\n",
-		 getTask()->evtstr(e), getName()));
+      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+          "Trying to send IN event '%s' on SPP "
+		      "port '%s'; discarding this event.\n",
+		      getTask()->evtstr(e), _name.c_str()));
       return -1; // RETURN
     }
   }
@@ -259,16 +253,19 @@ ssize_t GCFPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
   {
     if (F_EVT_INOUT(e) & F_OUT)
     {
-      LOG_ERROR(("Trying to send OUT event '%s' on SAP "
-		 "port '%s'; discarding this event.\n",
-		 getTask()->evtstr(e), getName()));
+      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+          "Trying to send OUT event '%s' on SAP "
+		      "port '%s'; discarding this event.\n",
+		      getTask()->evtstr(e), _name.c_str()));
       return -1; // RETURN
     }
   }
   else if (MSPP == _type)
   {
-     LOG_ERROR(("Trying to send events by means of the portprovider. Not supported yet",
-         getTask()->evtstr(e), getName()));
+     LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+        "Trying to send event '%s' by means of the portprovider: %s (MSPP). "
+        "Not supported yet\n",
+         getTask()->evtstr(e), _name.c_str()));
       return -1; // RETURN
   }
 
@@ -366,11 +363,12 @@ int GCFPort::resetTimerInterval(long timerid,
 /**
  * ::debug_signal
  */
-void GCFPort::debug_signal(const GCFEvent& /*e*/)
+void GCFPort::debug_signal(const GCFEvent& e)
 {
-  LOG_DEBUG(("[%s:%s] %s %s\n",
-	     getName(), p.getName(),
-	     ((F_EVT_INOUT(e) & F_IN) ? "<-" : "->"), evtstr(e)));
+  LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
+      "[%s:%s] %s %s\n",
+	    _pTask->getName().c_str(), _name.c_str(),
+	    ((F_EVT_INOUT(e) & F_IN) ? "<-" : "->"), _pTask->evtstr(e)));
 }
 
 /**
@@ -380,144 +378,19 @@ void GCFPort::debug_send(const GCFEvent& e)
 {
   if (SAP == _type)
   {      
-    LOG_DEBUG(("%s: port=%s event=%s ====> [%s:%s]\n",
-	       _pTask->getName(), getName(),
-	       _pTask->evtstr(e),
-	       _remoteAddr.getTaskname(),
-	       _remoteAddr.getPortname()
-	       ));
+    LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
+        "%s: port=%s event=%s ====> [%s:%s]\n",
+	      _pTask->getName().c_str(), _name.c_str(),
+	      _pTask->evtstr(e),
+	      _remoteAddr.getTaskname().c_str(),
+	      _remoteAddr.getPortname().c_str()
+	      ));
   }
   else
   {
-    LOG_DEBUG(("%s: port=%s event=%s ====>\n",
-	       _pTask->getName(), getName(),
-	       _pTask->evtstr(e)));
+    LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
+        "%s: port=%s event=%s ====>\n",
+        _pTask->getName().c_str(), getName().c_str(),
+        _pTask->evtstr(e)));
   }
 }
-
-/**
- * ::debug_dispatch
- */
-void GCFPort::debug_dispatch(const GCFEvent& e)
-{
-  if (SAP == _type)
-  {
-    LOG_DEBUG(("%s: port=%s <**** event=%s [%s:%s]\n",
-	       _pTask->getName(), getName(),
-	       _pTask->evtstr(e),
-	       _remoteAddr.getTaskname(),
-	       _remoteAddr.getPortname()));
-  }
-  else
-  {
-    LOG_DEBUG(("%s: port=%s <**** event=%s\n",
-	       _pTask->getName(), getName(),
-	       _pTask->evtstr(e)));
-  }
-}
-
-/**
- * ::dispatch
- */
-/*int GCFPort::dispatch(GCFEvent& event)
-{
-  if (F_DATAIN_SIG != event.signal)
-    {
-      // only F_DATAIN_SIG is handled by this method
-
-      F_DEBUG_DISPATCH(event);
-
-      return getTask()->dispatch(event, *this);     // RETURN
-    }
-
-  static  GCFEvent e;
-  char*   event_buf  = 0;
-  GCFEvent* full_event = 0;
-  int     n          = 0;
-  int     status     = GCFEvent::HANDLED;
-
-  //ACE_DEBUG((LM_DEBUG, "GCFPort::dispatch\n"));
-
-  // receive the event header and check for errors
-  n = _pSlave->recv(&e, sizeof(GCFEvent));
-
-  if (n == 0) return GCFEvent::ERROR; // connection closed
-
-  if (n < 0)
-    {
-      perror("GCFPort::dispatch");
-      return GCFEvent::ERROR; 
-    }
-
-  //ACE_DEBUG((LM_DEBUG, "event length=%d\n", e.length));
-
-  // check if the whole header was received
-  if (sizeof(GCFEvent) == n)
-    {
-      // check for correct event direction
-      // SAP only receives OUT events
-      // SPP only receives IN events
-      if (SAP == getType())
-	{
-	  if (F_EVT_INOUT(e) & F_IN)
-	    {
-	      ACE_ERROR_RETURN((LM_ERROR, "Received IN event '%s' on SAP "
-				"port '%s'; ignoring this event.\n",
-				getTask()->evtstr(e), getName()), GCFEvent::HANDLED);
-	    }
-	}
-      else if (SPP == getType())
-	{
-	  if (F_EVT_INOUT(e) & F_OUT)
-	    {
-	      ACE_ERROR_RETURN((LM_ERROR, "Received OUT event '%s' on SPP "
-				"port '%s'; ignoring this event.\n",
-				getTask()->evtstr(e), getName()), GCFEvent::HANDLED);
-	    }
-	}
-    
-      // allocate space for the full message
-      event_buf = (char*)malloc(e.length);
-      full_event = (GCFEvent*)event_buf;
-      if (!event_buf)
-	{
-	  ACE_ERROR_RETURN((LM_ERROR, "failed malloc\n"), GCFEvent::ERROR);
-	}
-
-      memcpy(event_buf, &e, sizeof(GCFEvent));
-      if (e.length - sizeof(GCFEvent) > 0)
-	{
-	  // recv the rest of the message (payload)
-	  ssize_t count = _pSlave->recv(event_buf + sizeof(GCFEvent),
-				       e.length - sizeof(GCFEvent));
-
-	  if ((ssize_t)(e.length - sizeof(GCFEvent)) != count)
-	    {
-	      ACE_ERROR_RETURN((LM_ERROR, "truncated recv (count=%d)\n", count), GCFEvent::ERROR);
-	    }
-	}
-
-      //
-      // DISPATCH the event to the task
-      //
-      F_DEBUG_DISPATCH(*full_event);
-      status = getTask()->dispatch(*full_event, *this);
-      if (GCFEvent::NOT_HANDLED == status)
-	{
-	  ACE_DEBUG((LM_DEBUG, "Unhandled event in GCFPort::dispatch\n"
-		     "'%s' on port '%s'\n",
-		     getTask()->evtstr(e), getName()));
-	}
-      free(event_buf);
-
-      return status;
-    }
-  else
-    {
-      // handle_close send F_D_isConnectedSIG to the task
-      return GCFEvent::ERROR; // cause close
-    }
-
-  return status;
-}*/
-

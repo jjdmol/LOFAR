@@ -23,7 +23,7 @@
 #ifndef GTM_CONFIG_H
 #define GTM_CONFIG_H
  
-#include <fstream>
+#include <Common/lofar_fstream.h>
 #include <Common/lofar_string.h>
 
 #define DEF_CONFIG       "config.cfg"
@@ -88,9 +88,9 @@ public:
   ~GTMConfig(void);
   
   const char* value(string& name, int col = 1);
-  const char* value(string& block, const char* name, int col = 1);
+  const char* value(string& block, string& name, int col = 1);
   const char* operator()(string& name, int col = 1);
-  const char* operator()(string& block, const char* name, int col = 1);
+  const char* operator()(string& block, string& name, int col = 1);
 
   const char* _ivalue(const char* block, const char* name, int index, int col);
   const char* ivalue(int index, int col = 1);

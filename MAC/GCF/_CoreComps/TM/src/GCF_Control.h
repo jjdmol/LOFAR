@@ -32,47 +32,38 @@
 #define GTM_CONTROL_H
 
 #ifndef GCF_PORT_H
-#include <GCF_Port.h>
-#endif
-
-#ifndef GCF_REPLICATEDPORT_H
-#include <GCF_RepPort.h>
+#include <TM/PortInterface/GCF_Port.h>
 #endif
 
 #ifndef GCF_PORTINTERACE_H
-#include <GCF_PortInterface.h>
+#include <TM/PortInterface/GCF_PortInterface.h>
 #endif
 
 #ifndef GCF_TASK_H
-#include <GCF_Task.h>
+#include <TM/GCF_Task.h>
 #endif
 
-#ifndef GCF_NAMESERVICE_H
-#include <GCF_NameService.h>
-#endif
-
-#ifndef GCF_TOPOLOGYSERVICE_H
-#include <GCF_TopologyService.h>
-#endif
-
-#ifndef GCF_SM_H
-#include <GCF_sm.h>
+#ifndef GCF_FSM_H
+#include <TM/GCF_Fsm.h>
 #endif
 
 #ifndef GCF_PROTOCOLS_H
-#include <GCF_Protocols.h>
+#include <TM/GCF_TMProtocols.h>
 #endif
 
 #ifndef GCF_PEERADDR_H
-#include <GCF_PeerAddr.h>
+#include <TM/PortInterface/GCF_PeerAddr.h>
 #endif
 
 #ifndef GCF_EVENT_H
-#include <GCF_Event.h>
+#include <TM/GCF_Event.h>
 #endif
 
-#ifndef GCF_DEFINES_H
-#include <GCF_Defines.h>
+#ifndef GTM_NAMESERVICE_H
+#include <TM/PortInterface/GTM_NameService.h>
 #endif
 
+#ifndef GTM_TOPOLOGYSERVICE_H
+#include <TM/PortInterface/GTM_TopologyService.h>
+#endif
 #endif /* GCF_CONTROL_H */

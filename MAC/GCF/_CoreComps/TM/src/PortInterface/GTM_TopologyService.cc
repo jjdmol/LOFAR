@@ -25,6 +25,7 @@
 #include "GTM_Config.h"
 #include "GTM_NameService.h"
 #include "GCF_PeerAddr.h"
+#include "GTM_Defines.h"
 
 GTMTopologyService* GTMTopologyService::_pInstance = 0;
 
@@ -48,9 +49,10 @@ int GTMTopologyService::init(const char* top_config_file)
   try { _pConfig = new GTMConfig(fname); }
   catch (...)
   {
-    LOG_ERROR((
-		      "Failed to open TopologyService config file '%s'\n",
-		      top_config_file));
+    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+        "Failed to open TopologyService config file '%s'\n",
+        top_config_file));
+    return -1;
   }
 
   return 0;
@@ -73,32 +75,33 @@ int GTMTopologyService::getPeerAddr(string& localtaskname,
   if (!_pConfig) return -1;
 
   string sRemoteTaskName;
-  char remote_task_name[MAX_TASKNAME_LEN + 1];
+  string sPortPeer;
 
   // use app topology config to find peer task and port name
   // use name server to find peer address
-  const char* port_peer = (*_pConfig)(localtaskname, localportname.c_str());
+  const char* port_peer = (*_pConfig)(localtaskname, localportname);
 
   if (port_peer)
   {
-    //remote_task_name = port_peer;
-    strncpy(remote_task_name, port_peer, MAX_TASKNAME_LEN);
-    char* colon = strchr(remote_task_name, ':');
+    sPortPeer = port_peer;
+    const char* pRemoteTaskName = sPortPeer.c_str();
+    char* colon = strchr(pRemoteTaskName, ':');
     if (colon) *colon = '\0';
     else
     {
-      LOG_ERROR((
-		 "Missing remote port name in port connection "
-		 "for port '%s'\n", localportname));
+      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+          "Missing remote port name in port connection "
+          "for port '%s'\n", 
+          localportname.c_str()));
     }
-    sRemoteTaskName = remote_task_name;
+    sRemoteTaskName = pRemoteTaskName;
     if (GTMNameService::instance()->query(sRemoteTaskName,
 					peeraddr) < 0)
     {
-      LOG_ERROR((
-			"Could not find task '%s' in "
-			"name service configuration file.\n",
-			remote_task_name));
+      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+          "Could not find task '%s' in "
+          "name service configuration file.\n",
+          sRemoteTaskName.c_str()));
     }
     string sPortName = colon + 1;
     peeraddr.setPortname(sPortName); // remote portname position
@@ -108,18 +111,18 @@ int GTMTopologyService::getPeerAddr(string& localtaskname,
 					    peeraddr.getPortname(),
 					    peeraddr))
     {
-      LOG_ERROR((
-			"Could not find port '%s' of task '%s' in "
-			"name service configuration file.\n",
-			peeraddr.getPortname(), remote_task_name));
+      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+          "Could not find port '%s' of task '%s' in "
+          "name service configuration file.\n",
+          peeraddr.getPortname().c_str(), sRemoteTaskName.c_str()));
     }
   }
   else
   {
-    LOG_ERROR((
-	       "Task '%s' or local port '%s' not found in "
-	       "application topology configuration file.\n",
-	       localtaskname, localportname));
+    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+        "Task '%s' or local port '%s' not found in "
+        "application topology configuration file.\n",
+        localtaskname.c_str(), localportname.c_str()));
   }
 
   return 0;

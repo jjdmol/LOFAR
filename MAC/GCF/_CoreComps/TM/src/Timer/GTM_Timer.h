@@ -28,25 +28,29 @@ class GTMTimerHandler;
 
 class GTMTimer
 {
-  public:
-    GTMTimer(GCFRawPort& port, unsigned long time, 
+  private:
+    friend class GTMTimerHandler;
+    
+    GTMTimer(GCFRawPort& port, unsigned long timeVal, 
              unsigned long intervalTime = 0, const void* arg = 0);
     virtual ~GTMTimer() {};
-    inline unsigned long getID() const {return _id;}
     inline unsigned long getTime() const {return _time;}
     inline const void* getTimerArg() const {return _arg;}
     inline bool hasInterval() const { return _intervalTime > 0;}
-    int stop();
+    inline GCFRawPort& getPort() const {return _port;}
+    inline bool isElapsed() const {return _elapsed;}
+    inline bool isCanceled() const {return _canceled;}
+    inline void cancel() {_canceled = true;}
     
-  private:
+
     void decreaseTime(unsigned long microSec);
-    friend class GTMTimerHandler;
 
     GCFRawPort& _port;
-    unsigned long _id;
     unsigned long _time;
     unsigned long _timeLeft;
     unsigned long _intervalTime;
     const void* _arg;
+    bool _elapsed;
+    bool _canceled;
 };
 #endif

@@ -32,30 +32,29 @@ class GCFPeerAddr;
 
 class GTMTopologyService
 {
- public:
-  virtual ~GTMTopologyService();
+  public:
+    static GTMTopologyService* instance();
 
-  int init(const char* top_config_file);
+    virtual ~GTMTopologyService();
+    
+    int init(const char* top_config_file);
+    
+    int getPeerAddr(string& localtaskname,
+    	  string& localportname,
+    	  GCFPeerAddr& peeraddr);
 
-  static GTMTopologyService* instance();
+  private:
+    GTMTopologyService();
+    
+    /**
+     * Don't allow copying of the GTMTopologyService object.
+     */
+    GTMTopologyService(const GTMTopologyService&);
+    GTMTopologyService& operator=(const GTMTopologyService&);
 
-  int getPeerAddr(string& localtaskname,
-		  string& localportname,
-		  GCFPeerAddr& peeraddr);
-
- private:
-  GTMTopologyService();
-
-  /**
-   * Don't allow copying of the FTopologyService object.
-   */
-  GTMTopologyService(const GTMTopologyService&);
-  GTMTopologyService& operator=(const GTMTopologyService&);
-
- private:
-
-  static GTMTopologyService* _pInstance;
-  GTMConfig* _pConfig;
+  private:
+    static GTMTopologyService* _pInstance;
+    GTMConfig* _pConfig;
 };
 
 #endif

@@ -23,7 +23,9 @@
 #ifndef GTM_SOCKETHANDLER_H
 #define GTM_SOCKETHANDLER_H
 
-#include <GCF_Hanlder.h>
+#include <GCF_Handler.h>
+#include <Common/lofar_map.h>
+#include <sys/time.h>
 
 // forward declaration
 class GTMSocket;
@@ -31,14 +33,14 @@ class GTMSocket;
 class GTMSocketHandler : public GCFHandler
 {
   public:
+    static GTMSocketHandler* instance();
+    virtual ~GTMSocketHandler() {};
   
     void workProc();
     void stop();
-    static GTMSocketHandler* instance();
 
   private:
     GTMSocketHandler();
-    virtual ~GTMSocketHandler() {};
     /**
      * Don't allow copying of the GTMTimerHandler object.
      */
@@ -46,12 +48,19 @@ class GTMSocketHandler : public GCFHandler
     GTMSocketHandler& operator=(const GTMSocketHandler&);
     static GTMSocketHandler* _pInstance;
     
-    map<int, GTMSocket*> _timers;
+    map<int, GTMSocket*> _sockets;
     typedef map<int, GTMSocket*>::iterator TSocketIter;
 
     friend class GTMSocket;
     void registerSocket(GTMSocket& timer);
     void deregisterSocket(GTMSocket& timer); 
+    
+    fd_set _readFDs;
+    fd_set _writeFDs;
+    fd_set _errotFDs;
+    struct timeval _timeout;
+    bool _running;
+    
 };
 
 #endif

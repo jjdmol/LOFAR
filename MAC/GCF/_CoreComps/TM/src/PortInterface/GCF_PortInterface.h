@@ -27,12 +27,11 @@
 #include <sys/uio.h>
 #include <string.h>
 
-#include <GCF_Defines.h>
-#include <GCF_Event.h>
 #include <Common/lofar_string.h>
 
 // forward declacations
 class GCFTask;
+class GCFEvent;
 
 class GCFPortInterface
 {

@@ -16,12 +16,12 @@ DOCHDRS	=	\
   Timer/GTM_TimerHandler.h \
   Socket/GCF_TCPPort.h \
   Socket/GTM_Socket.h \
-  Socket/GTM_ClientSocket.h \
-  Socket/GTM_ServerSocket.h
+  Socket/GTM_ServerSocket.h \
+  Socket/GTM_HandlerSocket.h
     
-lib_LTLIBRARIES 	= libgcftm.la
+lib_LTLIBRARIES 	= libtm.la
 
-libgcftm_la_SOURCES= $(DOCHDRS) \
+libtm_la_SOURCES= $(DOCHDRS) \
   GCF_Fsm.cc \
   GCF_TMProtocols.cc \
   GCF_Task.cc \
@@ -33,7 +33,10 @@ libgcftm_la_SOURCES= $(DOCHDRS) \
   PortInterface/GTM_TopologyService.cc \
   Timer/GTM_Timer.cc \
   Timer/GTM_TimerHandler.cc \
-  Socket/GCF_TCPPort.cc
+  Socket/GCF_TCPPort.cc \
+  Socket/GTM_Socket.cc \
+  Socket/GTM_ServerSocket.cc \
+  Socket/GTM_SocketHandler.cc 
 
 include $(lofar_sharedir)/Makefile.common
 
