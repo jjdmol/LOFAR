@@ -208,6 +208,22 @@ void MeqCalibrater::makeWSRTExpr()
 					     itsStations[i].getName(),
 					     &itsMEP);
     itsStatExpr.push_back (new MeqJonesNode (stat11, stat12, stat21, stat22));
+    MeqExpr* frot = new MeqStoredParmPolc ("frot." +
+					   itsStations[i].getName(),
+					   &itsMEP);
+    MeqExpr* drot = new MeqStoredParmPolc ("drot." +
+					   itsStations[i].getName(),
+					   &itsMEP);
+    MeqExpr* dell = new MeqStoredParmPolc ("dell." +
+					   itsStations[i].getName(),
+					   &itsMEP);
+    MeqExpr* gain11 = new MeqStoredParmPolc ("gain.11." +
+					     itsStations[i].getName(),
+					     &itsMEP);
+    MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
+					     itsStations[i].getName(),
+					     &itsMEP);
+    ///    MeqExpr* st11 = new MeqStatExpr (frot, drot, dell, gain11, gain22);
   }    
 
   // Get the point sources from the GSM.
@@ -400,6 +416,7 @@ void MeqCalibrater::initParms (const MeqDomain& domain)
 
   itsIsParmSolvable.resize (parmList.size());
   int i = 0;
+  itsNrScid = 0;
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
        iter++)
@@ -498,7 +515,7 @@ bool MeqCalibrater::nextInterval()
     int nrr = itsCurRows.nelements();
     int nrn = itsIter.table().nrow();
     itsCurRows.resize (nrr+nrn, True);
-    itsCurRows(Slice(nrr,nrn)) = itsIter.table().rowNumbers();
+    itsCurRows(Slice(nrr,nrn)) = itsIter.table().rowNumbers(itsMS);
     nrtim++;
     itsIter++;
   }
@@ -622,7 +639,7 @@ Double MeqCalibrater::solve (const String& colName)
   // Complex values are separated in real and imaginary.
   // Loop through all rows in the current solve domain.
   for (unsigned int rowinx=0; rowinx<itsCurRows.nelements(); rowinx++) {
-    ///  for (unsigned int rowinx=0; rowinx<1; rowinx++) {
+    ///for (unsigned int rowinx=0; rowinx<5; rowinx++) {
     int rownr = itsCurRows(rowinx);
     ///    MeqPointDFT::doshow = rownr==44;
     uInt ant1 = itsMSCol.antenna1()(rownr);
@@ -655,7 +672,7 @@ Double MeqCalibrater::solve (const String& colName)
       MeqMatrix val;
       if (expr.getResult11().isDefined(scinx)) {
 	val = expr.getResult11().getPerturbedValue(scinx);
-	///	cout << "Pert  " << val << endl;
+	///cout << "Pert  " << val << endl;
 	val -= expr.getResult11().getValue();
 	///cout << "Diff  " << val << endl;
 	val /= expr.getResult11().getPerturbation(scinx);
@@ -760,11 +777,11 @@ Double MeqCalibrater::solve (const String& colName)
 	    for (int j=0; j<itsNrScid; j++) {
 	      derivReal[j] = derivs[j][i].real();
 	      derivImag[j] = derivs[j][i].imag();
-	      ///	      cout << derivReal[j] << ' ' << derivImag[j] << ", ";
+	      ///cout << derivReal[j] << ' ' << derivImag[j] << ", ";
 	    }
-	    ///	    cout << endl;
+	    ///cout << endl;
 	    DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
-	    ///	    cout << "Value " << diff << ' ' << xx.getDComplex(0,i) << endl;
+	    ///cout << "Value " << diff << ' ' << xx.getDComplex(0,i) << endl;
 	    diff -= xx.getDComplex(0,i);
 	    double val = diff.real();
 	    itsSolver.makeNorm (&(derivReal[0]), 1., &val);
