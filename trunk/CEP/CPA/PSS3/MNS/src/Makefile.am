@@ -50,8 +50,8 @@ DOCHDRS = \
 	$(INSTHDRS) \
 	$(NOINSTHDRS)
 
-#lib_LTLIBRARIES 	= libmns.la
-noinst_LTLIBRARIES 	= libmns.la
+lib_LTLIBRARIES 	= libmns.la
+#noinst_LTLIBRARIES 	= libmns.la
 
 libmns_la_SOURCES 	= $(DOCHDRS)		\
 MeqDomain.cc					\
