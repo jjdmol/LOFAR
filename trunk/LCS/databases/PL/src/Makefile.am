@@ -2,10 +2,13 @@ INSTHDRS = \
 	Attrib.h \
 	Collection.h \
 	ConnectionHandler.h \
+	DBRep.h \
+	DBRepHolder.h \
+	DBRepMeta.h \
 	DTLBase.h \
 	Exception.h \
 	ObjectCache.h \
-	ObjecId.h \
+	ObjectId.h \
 	PersistenceBroker.h \
 	PersistentObject.h \
 	Query.h \
@@ -38,6 +41,7 @@ lib_LTLIBRARIES = \
 libpl_la_SOURCES = $(DOCHDRS) \
 	Attrib.cc \
 	ConnectionHandler.cc \
+	DBRepMeta.cc \
 	ObjectCache.cc \
 	ObjectId.cc \
 	Query.cc \

@@ -140,19 +140,19 @@ namespace LOFAR
       return nm;
     }
 
-    void PersistentObject::toDBRepMeta(DBRepMeta& dest) const
-    {
-      dest.itsOid = metaData().oid()->get();
-      dest.itsOwnerOid = metaData().ownerOid()->get();
-      dest.itsVersionNr = metaData().versionNr();
-    }
+//     void PersistentObject::toDBRepMeta(DBRepMeta& dest) const
+//     {
+//       dest.itsOid = metaData().oid()->get();
+//       dest.itsOwnerOid = metaData().ownerOid()->get();
+//       dest.itsVersionNr = metaData().versionNr();
+//     }
     
-    void PersistentObject::fromDBRepMeta(const DBRepMeta& org)
-    {
-      metaData().oid()->set(org.itsOid);
-      metaData().ownerOid()->set(org.itsOwnerOid);
-      metaData().versionNr() = org.itsVersionNr;
-    }
+//     void PersistentObject::fromDBRepMeta(const DBRepMeta& org)
+//     {
+//       metaData().oid()->set(org.itsOid);
+//       metaData().ownerOid()->set(org.itsOwnerOid);
+//       metaData().versionNr() = org.itsVersionNr;
+//     }
 
   } // namespace PL
 
