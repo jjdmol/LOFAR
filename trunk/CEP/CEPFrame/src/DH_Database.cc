@@ -23,7 +23,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <DH_Database.h>
-#include <PO_DH_Database.h>
 #include <Common/lofar_iostream.h>
 
 namespace LOFAR
