@@ -1,3 +1,5 @@
+CXXFLAGS += -Wno-unknown-pragmas
+
 INCLUDES			= -I$(top_srcdir)/src
 check_PROGRAMS			= test_crefs
 

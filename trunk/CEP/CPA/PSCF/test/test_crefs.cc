@@ -80,11 +80,11 @@ void TestDataField ()
 
   cerr<<"======================= allocating field of 32 ints\n";
   DataField f2(Tpint,32);
-  *(int*)f2[0] = 1;
-  *(int*)f2[15] = 2;
+  f2[0] = 1;
+  f2[15] = 2;
   cerr<<f2.sdebug(2)<<endl;
   for( int i=0; i<32; i++ )
-    cerr<<*(int*)f2[i]<<" ";
+    cerr<<f2[i].as_double()<<" ";
   cerr<<endl;
 
   cerr<<"======================= converting to block: \n";
@@ -99,7 +99,7 @@ void TestDataField ()
   cerr<<"remaining set: "<<set.sdebug(1)<<endl;
   cerr<<"resulting field is: "<<f2a.sdebug(2)<<endl;
   for( int i=0; i<32; i++ )
-    cerr<<*(int*)f2a[i]<<" ";
+    cerr<<f2a[i].as_float()<<" ";
   cerr<<endl;
   cerr<<"======================= exiting and destroying:\n";
 }
@@ -115,18 +115,21 @@ void TestDataRecord ()
   DataRecord rec;
 
   cerr<<"======================= allocating field of 32 ints\n";
-  DataFieldRef f2( new DataField(Tpint,32),DMI::ANON|DMI::WRITE ); 
-  int *data = getFieldWr(f2(),int,0);
-  data[0] = 1;
-  data[15] = 2;
+  DataFieldRef f2(new DataField(Tpint,32),DMI::ANON|DMI::WRITE); 
+  DataField &f = f2.dewr();
+  f[0] = 1;
+  f[15] = 2.5;
   cerr<<f2->sdebug(2)<<endl;
   for( int i=0; i<32; i++ )
-    cerr<<data[i]<<" ";
+    cerr<<(float)(f[i])<<" ";
   cerr<<endl;
   cerr<<"======================= adding to record\n";
   HIID id("A.B.C.D");
   cerr<<"ID: "<<id.toString()<<endl;
   rec.add(id,f2,DMI::COPYREF|DMI::WRITE);
+  rec["A.B.C.D"][20] = 5;
+  cerr<<(int)(rec["A.B.C.D"][20])<<" "<<(int*)&(rec["A.B.C.D"][20])
+      <<"  "<<rec["A.B.C.D"].as_int_p();
   cerr<<"======================= record debug info:\n";
   cerr<<rec.sdebug(3)<<endl;
   cerr<<"======================= old field debug info:\n";
@@ -137,10 +140,10 @@ void TestDataRecord ()
   rec.add(AidC,f2,DMI::COPYREF);
   rec.add(AidD,f2,DMI::COPYREF);
   cerr<<"===== added subrecord B\n"<<rec.sdebug(3)<<endl;
-  getFieldWr(rec,DataRecord,AidB)->add(AidC,new DataField(TpDataRecord,1));
+  rec["B"]->add(AidC,new DataField(TpDataRecord,1));
   cerr<<"===== added subrecord B.C\n"<<rec.sdebug(10)<<endl;
-  getFieldWr(rec,DataRecord,"B.C")->add(AidA,new DataField(Tpint,32));
-  
+  ((DataRecord&)(rec["B"]))["C"]->add(AidA,new DataField(Tpint,32));
+  cerr<<"Record is "<<rec.sdebug(10)<<endl;
   
   cerr<<"======================= converting record to blockset\n";
   BlockSet set;
@@ -150,11 +153,11 @@ void TestDataRecord ()
   cerr<<"======================= loading record from blockset\n";
   DataRecord rec2;
   rec2.fromBlock(set);
-  cerr<<"New record is "<<rec.sdebug(3)<<endl;
+  cerr<<"New record is "<<rec2.sdebug(10)<<endl;
   cerr<<"Blockset now "<<set.sdebug(2)<<endl;
 
   cerr<<"======================= accessing cached field\n";
-  getField(rec,int,HIID("B.C.A"));
+  cerr<<"Value: "<<rec2["B.C.A.10"].as_double()<<endl;
   
   cerr<<"======================= exiting\n";
 }
