@@ -177,6 +177,7 @@ void OnLineProto::define(const KeyValueMap& params)
   WH_Transpose*  myWHTranspose[NBeamlets];
   Step*          myTransposeSteps[NBeamlets];
 
+   // create a Transpose step for each beamlet (raw freq channel)
   for (int b=0; b < NBeamlets; b++) {
     // ToDo: pass stationID, freq offset etc. to DH
     myWHTranspose[b] = new WH_Transpose("noname",  // name,
@@ -229,13 +230,13 @@ void OnLineProto::define(const KeyValueMap& params)
 
   ////////////////////////////////////////////////////////////////
   //
-  // connect the preprocess step to the station step
+  // connect the correlator steps to the transpose steps
   //
   ////////////////////////////////////////////////////////////////
   int correlator=0;
-  for (int t=0; t<NBeamlets; t++) {
-    for (int c=0; c<NVis; c++) {
-      myCorrelatorSteps[correlator]->connect(myTransposeSteps[t],0,c,1);
+  for (int b=0; b<NBEAMLETS; b++) { //NBeamlets
+    for (int f=0; f<BFBW; f++) {
+      myCorrelatorSteps[correlator]->connect(myTransposeSteps[b],0,f,1);
       correlator++;
     }
   }
@@ -265,16 +266,6 @@ void OnLineProto::define(const KeyValueMap& params)
     myDumpSteps[s]->connectInput(myCorrelatorSteps[s]);
   }
 
-  // Create the cross connections between Steps
-  // Example:     #ifdef HAVE_MPI
-  //              targetStep.connect(sourceStep, 0, 0, 1, TH_MPI::proto);
-  //              #endif
-
-
-  // Optional: Performance optimisations
-  // Example:     #ifdef HAVE_MPI
-  //                app.optimizeConnectionsWith(TH_ShMem::proto);
-  //              #endif 
 
 }
   

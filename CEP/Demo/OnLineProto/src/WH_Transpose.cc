@@ -36,7 +36,6 @@
 #include "OnLineProto/DH_Beamlet.h"
 #include "OnLineProto/DH_CorrCube.h"
 
-#define min(a,b) (a<b?a:b)
 namespace LOFAR
 {
 
@@ -45,7 +44,8 @@ WH_Transpose::WH_Transpose (const string& name,
 			    unsigned int nout,
 			    const int FBW)
   : WorkHolder    (nin, nout, name,"WH_Transpose"),
-    itsFBW(FBW)
+    itsFBW(FBW),
+    itsIntegrationTime(0)
 {
   char str[8];
   // create the input dataholders
@@ -88,39 +88,46 @@ void WH_Transpose::process()
 {
   TRACER4("WH_Transpose::Process()");
   // Transpose receives one beamlet per station
-  //DbgAssertStr(getDataManager().getInputs() == NSTATIONS,"Nr inputs");
-  DbgAssertStr(getDataManager().getOutputs() == NVis,"Nr outputs");
+ 
+   // DbgAssertStr(getOutRate() == TSIZE,"Outrate error");
+   //DbgAssertStr(getDataManager().getInputs() == NSTATIONS,"Nr inputs");
+  //DbgAssertStr(getDataManager().getOutputs() == NVis,"Nr outputs");
   
-  DbgAssertStr(NVis == BFBW,"Assume one freq channel per corrcube");
+  //DbgAssertStr(NVis == BFBW,"Assume one freq channel per corrcube");
 
-  // copy all data in the input beamlets into 
-  // the CorrCube plane corresponding to the timestamp in the beamlets.
+   // ToDo: optimise transpose speed by copiing larger freq intevals
+   //       in one memcopy instead of one by one.
 
-  // firts get the timestamp of the first input channel;
-  // all other channels will be checked against this timestamp later.
-  
-  int OutChannel;
-  int OutStation;
-  int OutFreqBin;
-  int OutTime = 1;//(int)((DH_Beamlet*)getDataManager().getInHolder(0))->getElapsedTime();
-
-  // loop over all input beamlets and channels therein
-  for (int InChannel=0; InChannel< getDataManager().getInputs(); InChannel++) {
-    for (int InFreqBin=0; InFreqBin<BFBW; InFreqBin++) {
-      // ToDo: calculate the correct output channel and freq channels therein
-      // 
-      OutChannel = InFreqBin;
-      OutFreqBin = 0; // single frequency assumed
-      OutStation=InChannel; // channel nr == station nr
+  // loop over input stations and channels within the corresponding beamlets
+  for (int station=0; station< getDataManager().getInputs(); station++) {
+    for (int freq=0; freq<BFBW; freq++) {
      
-      // now copy the data
-      *((DH_CorrCube*)getDataManager().getOutHolder(OutChannel))
-	->getBufferElement(OutStation, OutTime, OutFreqBin) 
-	= 
-	*((DH_Beamlet*)getDataManager().getInHolder(InChannel))
-	->getBufferElement(InFreqBin) ;
-    } 
+      // in this version we make the corrcube monochromatic (see assert above)
+      // therefore  the outholder channel corresponds to the freq.
+
+      ((DH_CorrCube*)getDataManager().getOutHolder(freq))
+	   ->setBufferElement(station, 
+			      itsIntegrationTime, 
+			      0, // remember we assume monochromatic correlators
+			      ((DH_Beamlet*)getDataManager().getInHolder(station))
+	                               ->getBufferElement(freq)
+			      );      
+    
+       
+       // temporary test to find signal above noise level
+       if (((DH_Beamlet*)getDataManager().getInHolder(station))->getBufferElement(freq)->real() > 0.01)
+	 {
+	    cout << "stations " << station
+	      << "  time " << itsIntegrationTime
+	      << "value " 
+	      << ((DH_Beamlet*)getDataManager().getInHolder(station))->getBufferElement(freq)
+		<< endl;
+	 }
+
+	 } 
   }
+  // keep track of the time channel
+  if (itsIntegrationTime++ == TSIZE-1) itsIntegrationTime=0;
 }
 
 void WH_Transpose::dump()
@@ -131,18 +138,21 @@ void WH_Transpose::dump()
   for (int s=0; s<10; s++) {
     cout << "in station=" << s << ":  ";
     for (int f=0; f<10; f++) {
-      cout << 	*((DH_Beamlet*)getDataManager().getInHolder(0))
-	->getBufferElement(f*BFBW+s) << "  ";
+      cout << 	*((DH_Beamlet*)getDataManager().getInHolder(s))
+	->getBufferElement(f) << "  ";
     }
     cout << endl;
   }
 
   cout << " output " << endl;
+
+  
   for (int s=0; s<10; s++) {
     cout << "out station=" << s << ":  ";
     for (int t=0; t<10; t++) {
-      cout << 	*((DH_Beamlet*)getDataManager().getOutHolder(0))
-	->getBufferElement(t*NSTATIONS+s) << "  ";
+      cout << *((DH_CorrCube*)getDataManager().getOutHolder(1))
+	->getBufferElement(s, 0, t) ;
+
     }
     cout << endl;
   }
