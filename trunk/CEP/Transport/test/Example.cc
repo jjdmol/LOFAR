@@ -18,6 +18,11 @@ int main()
   Transporter TR1(&DH1);
   Transporter TR2(&DH2);
     
+  // Assign an ID for each transporter by hand for now
+  // This will be done by the framework later on
+  TR1.setItsID(1);
+  TR2.setItsID(2);
+
   // connect DH1 to DH2
   TH_Mem proto;
   TR2.connectTo(&TR1, proto);
