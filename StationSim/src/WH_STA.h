@@ -85,7 +85,7 @@ private:
   /// In- and OutHolders
   DH_SampleC** itsInHolders;
   DH_SampleC** itsOutHolders; 
-  DH_SampleR* itsNumberOfRFIs;
+  DH_SampleR   itsNumberOfRFIs;
 
   /// Length of buffers.
   unsigned int itsNrcu;
@@ -93,7 +93,6 @@ private:
   unsigned int itsBufLength;
 
   LoMat_dcomplex itsBuffer;
-  LoMat_dcomplex itsSigBuffer;
   LoVec_dcomplex itsSnapshot;
   unsigned int itsCurPos;
 };

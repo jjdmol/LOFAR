@@ -219,61 +219,58 @@ void StationSim::define (const ParamBlock& params)
 	simul.addStep (subband_filter);	
   }
 
-  // The beamformer object
+  // Create the beam forming components
   for (int i = 0; i < nsubband; ++i) {
     sprintf (suffix, "%d", i);
-    Step beam (WH_BeamFormer(suffix, nrcu + 1, nrcu, nrcu, nbeam, maxNtarget, maxNrfi), 
-	       string("beam_former_") + suffix, false);
-    for (int j = 0; j < nrcu; ++j) {
+
+	// The beamformer object    
+	Step beam (WH_BeamFormer(suffix, nrcu + 1, 1, nrcu, nbeam, maxNtarget, maxNrfi), 
+			   string("beam_former_") + suffix, false);
+    for (int j = 0; j < nrcu; ++j) { 
       beam.getInData (j).setReadDelay (delaySubFilt); 
     }
-    beam.getInData (nrcu).setReadDelay (delaySubFilt + delayBeamForm); 
-    for (int j = 0; j < nrcu; ++j) {
-      beam.getOutData (j).setWriteDelay (delaySubFilt + delayBeamForm);
-    }
+    for (int j = 0; j < 1; ++j) { 
+	  beam.getOutData (j).setWriteDelay (delaySubFilt + delayBeamForm);
+	}   
+	beam.getInData (nrcu).setReadDelay (delaySubFilt + delayBeamForm);
 	beam.setRate(nsubband);
     simul.addStep (beam);
-  } 
 
-  // The Space Time Analysis object
-  for (int i = 0; i < nsubband; ++i) {
-    sprintf(suffix, "%d", i);
-
-    Step sta (WH_STA("", nrcu, 2, nrcu, maxNrfi, buflength), string ("sta_") + suffix, false);
+	
+	// The Space Time Analysis object
+    Step sta (WH_STA(suffix, nrcu, 2, nrcu, maxNrfi, buflength), 
+			  string ("sta_") + suffix, false);
 
     for (int j = 0; j < nrcu; ++j) {
       sta.getInData (j).setReadDelay (delaySubFilt);
     }
-    sta.getOutData (0).setWriteDelay (delaySubFilt);
-	sta.setRate(nsubband);
-    sta.getOutData (1).setWriteDelay (delaySubFilt);
+    for (int j = 0; j < 2; ++j) {                // the 1 + 1 is for the #rfi connection
+	  sta.getOutData (j).setWriteDelay (delaySubFilt);
+	}
 	sta.setRate(nsubband);
     simul.addStep (sta);
-  }
 
-  // the Weight Determination Object
-  for (int i = 0;i < nsubband; ++i) {
-    sprintf (suffix, "%d", i);
-    Step weight_det (WH_WeightDetermination("wd", 0, 1, nrcu, bfDipoleFile), 
-		     string("weight_det_") + suffix, false);   
+	
+	// the Weight Determination Object
+    Step weight_det (WH_WeightDetermination(suffix, 0, 1, nrcu, bfDipoleFile), 
+					 string("weight_det_") + suffix, false);   
         
     weight_det.getOutData (0).setWriteDelay (delaySubFilt);
     weight_det.setRate(nsubband);
     simul.addStep(weight_det);
- }
     
-  // the projection object
-  for (int i = 0; i < nsubband; i++) {
-    sprintf(suffix, "%d", i);
-    Step projection (WH_Projection("prj", 3, 1, nrcu, maxNrfi), 
-		     string("projection_") + suffix, false);
-    
+	
+	// the projection object
+    Step projection (WH_Projection(suffix, 3, 1, nrcu, maxNrfi), 
+					 string("projection_") + suffix, false);
 
-
-    projection.getInData (0).setReadDelay (delaySubFilt);
-    projection.getInData (1).setReadDelay (delaySubFilt);
-    projection.getInData (2).setReadDelay (delaySubFilt);
-    projection.getOutData (0).setWriteDelay (delaySubFilt);
+    for (int j = 0; j < 3; ++j) {                       // One input + mdl + eigvectors
+      projection.getInData (j).setReadDelay (delaySubFilt);
+    }
+    for (int j = 0; j < 1; ++j) {                
+	  projection.getOutData (j).setWriteDelay (delaySubFilt);
+	}
+ 
     projection.setRate(nsubband);
     simul.addStep(projection); 
   }
@@ -328,26 +325,26 @@ void StationSim::define (const ParamBlock& params)
 
       // connect the subband filterbank to the Beamformer
       simul.connect (string ("subband_filter_") + suffix + string (".out0_") + suffix2,
-		     string ("beam_former_") + suffix2 + string(".in_") + suffix);
+					 string ("beam_former_") + suffix2 + string(".in_") + suffix);
 
       // connect the subband filterbank to STA
       simul.connect (string ("subband_filter_") + suffix + string (".out1_") + suffix2,
- 		     string ("sta_") + suffix2 + string (".in_") + suffix);
+					 string ("sta_") + suffix2 + string (".in_") + suffix);
     }
 
-    // connect the STA to Projection
-    simul.connect (string ("sta_") + suffix2 + string (".out"),
-		   string ("projection_") + suffix2 + string (".in-sta"));
-//     simul.connect (string ("sta_") + suffix2 + string (".mdl"), 
-// 		   string ("projection_") + suffix2 + string (".in-mdl"));
-
     // connect Projection to Beamformer
-    simul.connect (string ("projection_") + suffix2 + string (".out"),
-		   string ("beam_former_") + suffix2 + string (".weights"));
-    
+    simul.connect (string ("projection_") + suffix2 + string (".out_0"),
+				   string ("beam_former_") + suffix2 + string (".weights"));
+
+    // connect the STA to Projection
+	simul.connect (string ("sta_") + suffix2 + string (".out_0"),
+				   string ("projection_") + suffix2 + string (".in_rfi"));
+	simul.connect (string ("sta_") + suffix2 + string (".out_mdl"), 
+				   string ("projection_") + suffix2 + string (".in_mdl"));
+  
     // connect the Weight determinator to Projection
     simul.connect (string ("weight_det_") + suffix2 + string (".out"),
-		   string ("projection_") + suffix2 + string (".in-wd"));
+				   string ("projection_") + suffix2 + string (".in_0"));
   }
 
   // Connect the data_reader to the subband filterbank  
