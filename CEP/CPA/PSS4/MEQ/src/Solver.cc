@@ -83,8 +83,8 @@ int Solver::getResult (Result::Ref &resref,
                        const std::vector<Result::Ref> &,
                        const Request &request, bool newreq)
 {
-  // Check that calc_deriv is set
-  FailWhen(!request.calcDeriv(),"request calcDeriv must be set");
+  // Use 1 derivative by default, or 2 if specified in request
+  int calcDeriv = std::max(request.calcDeriv(),1);
   // The result has 1 plane.
   Result& result = resref <<= new Result(request, 1);
   VellSet& vellset = result.setNewVellSet(0);
@@ -106,7 +106,7 @@ int Solver::getResult (Result::Ref &resref,
   HIID rqid = makeNormalRequestId(request.id());
   // Copy the request and attach the solvable parms to it.
   Request::Ref reqref;
-  Request & newReq = reqref <<= new Request(request.cells(),true,rqid);
+  Request & newReq = reqref <<= new Request(request.cells(),calcDeriv,rqid);
   
   if (state()[FSolvableParm].exists()) {
     if (! newReq[FNodeState].exists()) {
