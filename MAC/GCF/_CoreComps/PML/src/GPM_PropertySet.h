@@ -36,7 +36,7 @@ class GPMPropertySet : public GSAService
 {
   public:
     GPMPropertySet(GPMController& controller, TPropertySet& propSet);
-    virtual ~GPMPropertySet();
+    ~GPMPropertySet();
     
   protected:
     void propCreated(const string& /*propName*/) {};

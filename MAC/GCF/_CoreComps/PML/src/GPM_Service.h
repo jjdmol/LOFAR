@@ -42,7 +42,7 @@ class GPMService : public GSAService
     inline void propDeleted(const string& /*propName*/) {};
     inline void propSubscribed(const string& /*propName*/) {};
     inline void propUnsubscribed(const string& /*propName*/) {};
-    void propValueGet(const string& propName, const GCFPValue& value);
+    inline void propValueGet(const string& propName, const GCFPValue& value);
     inline void propValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {};
   
   private:

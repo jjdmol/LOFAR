@@ -36,7 +36,8 @@ GPMProperty::GPMProperty(GCFPValue::TMACValueType type, string name) :
   _pOldValue = createValue(type);
 }
 
-GPMProperty::GPMProperty(TProperty& propertyFields)
+GPMProperty::GPMProperty(TProperty& propertyFields) :
+  _isLinked(false)
 {
   _name = propertyFields.propName;
   _pCurValue = createValue((GCFPValue::TMACValueType) propertyFields.type);

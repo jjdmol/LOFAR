@@ -45,6 +45,14 @@ GPMController::GPMController(GCFSupervisedTask& supervisedTask) :
 
 GPMController::~GPMController()
 {
+  GPMPropertySet* pPropertySet;
+  for (TPropertySetIter iter = _propertySets.begin();
+       iter != _propertySets.end(); ++iter)
+  {
+    pPropertySet = iter->second;
+    assert(pPropertySet);
+    delete pPropertySet;
+  }
 }
 
 TPMResult GPMController::loadAPC(const string& apcName, const string& scope)
@@ -220,7 +228,7 @@ TPMResult GPMController::get(const string& propName)
     {
       TGetData* pGetData = new TGetData;
       pGetData->pValue = pValue;
-      pGetData->pPropName = new string(propName);
+      pGetData->propName = propName;
       _propertyAgent.setTimer(0, 0, 0, 0, pGetData);
     }
   }
@@ -507,12 +515,10 @@ int GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       if (pTimer->arg)
       {
         const TGetData* pGetData = static_cast<const TGetData*>(pTimer->arg);
-        if (pGetData)
-        {
-          _supervisedTask.valueGet(*pGetData->pPropName, *pGetData->pValue);
-          delete pGetData->pPropName;
-          delete pGetData->pValue;
-        }
+        assert(pGetData);
+        assert(pGetData->pValue);
+        _supervisedTask.valueGet(pGetData->propName, *pGetData->pValue);
+        delete pGetData->pValue;
       }      
       break;
     }

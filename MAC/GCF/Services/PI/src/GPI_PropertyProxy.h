@@ -23,53 +23,24 @@
 #ifndef GPI_PROPERTYPROXY_H
 #define GPI_PROPERTYPROXY_H
 
+
 #include <PML/GCF_PropertyProxy.h>
-#include <SAL/GSA_Service.h>
 
 class GCFPValue;
 class GPISupervisoryServer;
 
-class GPIPropertyProxy: public GSAService
+class GPIPropertyProxy : public GCFPropertyProxy
 {
   public:
-    inline GPIPropertyProxy(GPISupervisoryServer& ss) : _ss(ss) {};
-    virtual ~GPIPropertyProxy() {;}
-    
-    inline TSAResult get(const string& propName)
-    {
-      return GSAService::get(propName);
-    }
-    
-    inline TSAResult set(const string& propName, const GCFPValue& value)
-    {
-      return GSAService::set(propName, value);
-    }
-  
-    inline bool exists(const string& propName)
-    {
-      return GSAService::exists(propName);
-    }
+    GPIPropertyProxy(GPISupervisoryServer& ss) : _ss(ss) {}
+    virtual ~GPIPropertyProxy() {}
 
-    inline TSAResult subscribe(const string& propName)
-    {
-      return GSAService::subscribe(propName);
-    }
-    
-    inline TSAResult unsubscribe(const string& propName)
-    {
-      return GSAService::unsubscribe(propName);
-    }
-
-  protected:
-    inline void propCreated(const string& /*propName*/) {};
-    inline void propDeleted(const string& /*propName*/) {};
     void propSubscribed(const string& propName);
     void propUnsubscribed(const string& propName);
-    void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {;}
+    inline void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {};
     void propValueChanged(const string& propName, const GCFPValue& value);
   
   private:
-
     GPISupervisoryServer& _ss;
-};
+};    
 #endif

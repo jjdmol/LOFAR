@@ -312,13 +312,13 @@ TPIResult GPISupervisoryServer::unLinkProperties(list<string>& properties, bool 
       propName = _name + "_" + *iter;
       if (onOff)
       {
-        result = (_propProxy.subscribe(propName) == SA_NO_ERROR ?
+        result = (_propProxy.subscribe(propName) == GCF_NO_ERROR ?
                   PI_NO_ERROR :
                   PI_SCADA_ERROR);
       }
       else
       {
-        result = (_propProxy.unsubscribe(propName) == SA_NO_ERROR ?
+        result = (_propProxy.unsubscribe(propName) == GCF_NO_ERROR ?
                   PI_NO_ERROR :
                   PI_SCADA_ERROR);
       }
@@ -585,7 +585,7 @@ void GPISupervisoryServer::localValueChanged(GCFEvent& e)
   
   if (pGCFVal)
   {
-    if (_propProxy.set(propName, *pGCFVal) != SA_NO_ERROR)
+    if (_propProxy.set(propName, *pGCFVal) != GCF_NO_ERROR)
     {
       LOFAR_LOG_ERROR(PI_STDOUT_LOGGER, (
         "Value of property '%s' could not be set in the SCADA DB", 
