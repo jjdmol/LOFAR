@@ -56,7 +56,9 @@ lofar_MATLAB
 lofar_MPI
 lofar_QATOOLS
 lofar_DOCXX
+lofar_BLITZ
 lofar_PACKAGE(CEP/CEPFrame)
+lofar_PACKAGE(LCS/Common)
 
 dnl
 dnl Output Makefiles
