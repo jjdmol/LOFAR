@@ -37,8 +37,8 @@ namespace LOFAR
     extern void * dummy_pvoid;
     extern int dummy_int;
   
-    extern Debug::Context DebugContext;
-    inline Debug::Context & getDebugContext() 
+    extern ::Debug::Context DebugContext;
+    inline ::Debug::Context & getDebugContext() 
     { return DebugContext; }
   
     //##ModelId=3D1049B401F1
@@ -209,5 +209,9 @@ namespace LOFAR
 #endif
 
 } // namespace LOFAR
+
+#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
+using LOFAR::Thread;
+#endif
 
 #endif
