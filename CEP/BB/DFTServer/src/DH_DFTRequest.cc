@@ -61,8 +61,10 @@ void DH_DFTRequest::preprocess()
   addField ("M", BlobField<double>(1));
   addField ("N", BlobField<double>(1));
   // The Ant nrs tell the antenna pairs froming the baselines.
+  addField ("Ant", BlobField<int32> (1, 0u));
   addField ("Ant1", BlobField<int32> (1, 0u));
   addField ("Ant2", BlobField<int32> (1, 0u));
+  createDataBlock();
 }
 
 void DH_DFTRequest::set (double startFreq, double stepFreq, int nFreq,
@@ -90,12 +92,12 @@ void DH_DFTRequest::fillDataPointers()
 {
   // Fill in the data pointers.
   itsUVW = getData<double> ("UVW");
-  itsNFreq     = getData<uint32> ("NFreq");
+  itsNFreq     = getData<int32> ("NFreq");
   itsStartFreq = getData<double> ("StartFreq");
   itsStepFreq  = getData<double> ("StepFreq");
   itsStartTime = getData<double> ("StartTime");
   itsStepTime  = getData<double> ("StepTime");
-  itsNTime     = getData<uint32> ("NTime");
+  itsNTime     = getData<int32> ("NTime");
   itsL         = getData<double> ("L");
   itsM         = getData<double> ("M");
   itsN         = getData<double> ("N");

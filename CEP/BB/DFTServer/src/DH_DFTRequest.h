@@ -92,10 +92,10 @@ private:
   double* itsUVW;
   double* itsStartFreq;
   double* itsStepFreq;
-  uint32* itsNFreq;
+  int32* itsNFreq;
   double* itsStartTime;
   double* itsStepTime;
-  uint32* itsNTime;
+  int32* itsNTime;
   double* itsL;
   double* itsM;
   double* itsN;
