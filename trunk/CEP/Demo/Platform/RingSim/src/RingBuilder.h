@@ -31,7 +31,7 @@ inline RingBuilder<DH_T>::RingBuilder(int channels):
   itsChannels(channels)
 {
   cout << "RingBuilder C'tor" << endl; 
-  setWorker (new WH_RingSimul<DH_T>(itsChannels));
+  setWorker (WH_RingSimul<DH_T>(itsChannels));
 }
 
 template <class DH_T>
@@ -53,11 +53,13 @@ inline void RingBuilder<DH_T>::buildSimul(Simul& aSimul) const
   Step *RingStep[itsChannels];
   Step *RingOutStep[itsChannels];
 
+  int ringSeqNr = 0;
   int firstringstart=0;
   int firstringend = itsChannels/2-1;
   int ringsize = firstringend-firstringstart+1;
   for (int stepnr=firstringstart; stepnr<=firstringend; stepnr++) {
-    RingStep[stepnr] = new Step(new WH_Ring<DH_T>());
+    RingStep[stepnr] = new Step(WH_Ring<DH_T>(ringSeqNr));
+    ringSeqNr++;
     RingStep[stepnr]->runOnNode(stepnr+1);
     RingStep[stepnr]->setInRate(itsChannels+1,0); // set inrate for channel 0
     if (stepnr >  firstringstart) {
@@ -89,7 +91,8 @@ inline void RingBuilder<DH_T>::buildSimul(Simul& aSimul) const
   int secondringstart=itsChannels/2;
   int secondringend = itsChannels-1;
   for (int stepnr=secondringstart; stepnr<=secondringend; stepnr++) {
-    RingStep[stepnr] = new Step(new WH_Ring<DH_T>());
+    RingStep[stepnr] = new Step(WH_Ring<DH_T>(ringSeqNr));
+    ringSeqNr++;
     RingStep[stepnr]->runOnNode(stepnr-secondringstart+1);
     RingStep[stepnr]->setInRate(itsChannels+1,0); // set inrate for channel 0
     if (stepnr >  secondringstart) {
@@ -127,7 +130,7 @@ inline void RingBuilder<DH_T>::buildSimul(Simul& aSimul) const
   cout << "connected ring elements to input" << endl;
 
   for (int stepnr=0; stepnr<itsChannels; stepnr++) {
-    RingOutStep[stepnr] = new Step(new WH_RingOut());
+    RingOutStep[stepnr] = new Step(WH_RingOut(stepnr));
     if (stepnr <= firstringend) {
       RingOutStep[stepnr]->runOnNode(0);
     } else {
@@ -138,8 +141,18 @@ inline void RingBuilder<DH_T>::buildSimul(Simul& aSimul) const
     RingOutStep[stepnr]->setOutRate(itsChannels+1);
   }
 
-    aSimul.connectOutputToArray(RingOutStep,
-				 itsChannels);
+  aSimul.connectOutputToArray(RingOutStep, itsChannels);
+
+  // Delete all Steps created.
+  for (int stepnr=0; stepnr<itsChannels; stepnr++) {
+    delete RingOutStep[stepnr];
+  }
+  for (int stepnr=firstringstart; stepnr<=firstringend; stepnr++) {
+    delete RingStep[stepnr];
+  }
+  for (int stepnr=secondringstart; stepnr<=secondringend; stepnr++) {
+    delete RingStep[stepnr];
+  }
+
   cout << "Finished RingBuilder::build" << endl;
 }
-

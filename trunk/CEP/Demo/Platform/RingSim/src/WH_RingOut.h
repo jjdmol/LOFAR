@@ -14,17 +14,20 @@
 class WH_RingOut:public WorkHolder
 {
  public:
-  WH_RingOut ();
+  WH_RingOut (int seqNr);
   virtual ~ WH_RingOut ();
-  void process ();
-  void dump () const;
 
-  short getInstanceCnt();
+  /// Make a fresh copy of the WH object.
+  virtual WH_RingOut* make (const string& name) const;
+
+  virtual void process ();
+  virtual void dump () const;
+
   /// Retrieve a pointer to the input data holder for the given channel
-  DH_Ring<DH_Test>* getInHolder (int channel); 
+  virtual DH_Ring<DH_Test>* getInHolder (int channel); 
 
   /// Retrieve a pointer to the output data holder for the given channel
-  DH_Ring<DH_Test>* getOutHolder (int channel); 
+  virtual DH_Ring<DH_Test>* getOutHolder (int channel); 
 
  private:
   /** vector with pointers to the input dataholders
@@ -37,24 +40,12 @@ class WH_RingOut:public WorkHolder
   */
   vector<DH_Ring<DH_Test>*> itsOutDataHolders; 
 
-  static short   itsInstanceCnt;
-  short          myInstanceCnt;
+  int itsSeqNr;
 
   queue<DH_Ring<DH_Test>* >  itsQDataHolders;
 
 };
 
-inline short  WH_RingOut::getInstanceCnt()         { 
-  return myInstanceCnt; 
-}
-
-inline DH_Ring<DH_Test>* WH_RingOut::getInHolder (int channel)  { 
-  return itsInDataHolders[channel]; 
-}
-
-inline DH_Ring<DH_Test>* WH_RingOut::getOutHolder (int channel) { 
-  return itsOutDataHolders[channel];
-}
 
 #endif 
 

@@ -15,17 +15,21 @@
 class WH_ToRing:public WorkHolder
 {
  public:
-  WH_ToRing ();
+  WH_ToRing (int seqNr);
   virtual ~ WH_ToRing ();
-  void process ();
-  void dump () const;
+
+  /// Make a fresh copy of the WH object.
+  virtual WH_ToRing* make (const string& name) const;
+
+  virtual void process ();
+  virtual void dump () const;
 
   short getInstanceCnt();
   /// Retrieve a pointer to the input data holder for the given channel
-  DH_Ring<DH_Test>* getInHolder (int channel); 
+  virtual DH_Ring<DH_Test>* getInHolder (int channel); 
 
   /// Retrieve a pointer to the output data holder for the given channel
-  DH_Ring<DH_Test>* getOutHolder (int channel); 
+  virtual DH_Ring<DH_Test>* getOutHolder (int channel); 
 
  private:
   /** vector with pointers to the input dataholders
@@ -38,22 +42,10 @@ class WH_ToRing:public WorkHolder
   */
   vector<DH_Ring<DH_Test>*> itsOutDataHolders; 
 
-  static short itsInstanceCnt;
-  short        myInstanceCnt;
-
-  static short BeamNr;
+  int          itsSeqNr;
+  static short theirBeamNr;
 };
 
-inline DH_Ring<DH_Test>* WH_ToRing::getInHolder (int channel)  { 
-  return itsInDataHolders[channel]; 
-}
 
-inline DH_Ring<DH_Test>* WH_ToRing::getOutHolder (int channel) { 
-  return itsOutDataHolders[channel];
-}
-
-inline short  WH_ToRing::getInstanceCnt()         { 
-  return myInstanceCnt; 
-}
 #endif 
 
