@@ -93,7 +93,6 @@ libcommon_la_SOURCES 	= \
         Allocator.cc \
         BlobArray.cc \
         BlobField2.cc \
-        BlobField.cc \
         BlobFieldSet.cc \
         BlobHeader.cc \
         BlobIBufChar.cc \
@@ -138,5 +137,8 @@ endif
 bin_PROGRAMS		= LimitExec pkgdep
 LimitExec_SOURCES	= LimitExec.cc
 pkgdep_SOURCES		= pkgdep.cc
+
+scriptsdir = $(bindir)
+dist_scripts_SCRIPTS = finddep
 
 include $(lofar_sharedir)/Makefile.common
