@@ -31,7 +31,8 @@ class Parser
   //##ModelId=3F53423103C8
   std::vector<Directive> nested;
 
-
+  std::vector<std::string> &parse(std::string txt);
+      
 };
 
 #endif /* PARSER_H_HEADER_INCLUDED_C0B1CBD5 */
