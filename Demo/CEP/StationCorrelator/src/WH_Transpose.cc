@@ -37,7 +37,7 @@ WH_Transpose::WH_Transpose(const string& name,
 {
   char str[128];
   
-  itsNstations         = itsKVM.getInt("stations", 2);
+  itsNstations         = itsKVM.getInt("NoWH_RSP", 2);
   itsNcorrelators      = itsKVM.getInt("NoWH_Correlator", 7);
   itsNsamples          = itsKVM.getInt("samples", 256000);
   itsNchannels         = itsKVM.getInt("NoRSPBeamlets", 92)/itsKVM.getInt("NoWH_Correlator", 92);

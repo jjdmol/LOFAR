@@ -52,7 +52,7 @@ WH_Correlator::WH_Correlator(const string& name,
   : WorkHolder( 1, 1, name, "WH_Correlator"),
     itsKVM    (kvm)
 {
-  itsNelements = itsKVM.getInt("stations", 92);
+  itsNelements = itsKVM.getInt("NoWH_RSP", 92);
   itsNsamples  = itsKVM.getInt("samples", 256000);
   itsNchannels = itsKVM.getInt("NoRSPBeamlets", 92)/itsKVM.getInt("NoWH_Correlator", 92);
   itsNpolarisations = itsKVM.getInt("polarisations", 2);

@@ -1,18 +1,21 @@
-stations         = 2, 	   # the number of RSP boards
-samples          = 100,    # number of samples to integrate 
-#channels         = 46,  the number of individual channels     don't use this, use NoRSPBeamlets instead
+# don't use SzDH_RSP, it depends on other values
+# SzDH_RSP       = 6000,# Size (payload in bytes) of RSP ethernet frame
+# don't use stations, use NoWH_RSP instead
+# stations       = 2,	# the number of RSP boards
+# don't use channels, use NoRSPBeamlets instead
+# channels       = 46,	# the number of individual channels
+useRealRSPBoard  = F,	# Use the real RSPBoard T or the WH_RSPBoard F
+interfaces       = ["eth0", "eth0"], # interface names for all TH_Ethernets
+oMacs            = ["00:10:DC:F0:3A:35", "00:10:DC:F0:3A:35"], # interface names for all TH_Ethernets
+rMacs            = ["00:10:DC:F0:3A:35", "00:10:DC:F0:3A:35"], # interface names for all TH_Ethernets
+NoRSPBeamlets    = 92,	# Number of beamlets in one EPA-packet
 polarisations    = 2,	
-NoWH_RSP         = 2,      
-NoWH_Correlator  = 7,      # This also defines the number of WH_Transpose as well as the number of Transpose inputs
-NoWH_Dump        = 1,
-# SzDH_RSP         = 6000,   # Size (payload in bytes) of RSP ethernet frame     don't use this, it depends on other values
-NoRSPBeamlets    = 92,     # Number of beamlets in one EPA-packet
-NoPacketsInFrame = 8,      # Number of EPA-packets in one RSP ethernet frame
-SzEPAheader      = 14,     # Size (in bytes) of the header of an EPA-packet
-outFileName      = "/tmp/StationCorrelator.out", # Filename for dump outputfile
-interfaces = ["eth0", "eth0"], # interface names for all TH_Ethernets
-oMacs = ["00:10:DC:F0:3A:35", "00:10:DC:F0:3A:35"], # interface names for all TH_Ethernets
-rMacs = ["00:10:DC:F0:3A:35", "00:10:DC:F0:3A:35"], # interface names for all TH_Ethernets
-useRealRSPBoard  = F      # Use the real RSPBoard T or the WH_RSPBoard F
+SzEPAheader      = 14,	# Size (in bytes) of the header of an EPA-packet
+NoPacketsInFrame = 8,	# Number of EPA-packets in one RSP ethernet frame
+NoWH_RSP         = 2,	   
+NoWH_Correlator  = 7,	# This also defines the number of WH_Transpose as well as the number of Transpose inputs
+samples          = 100,	# number of samples to integrate 
+NoWH_Dump        = 1,	
+outFileName      = "/tmp/StationCorrelator.out"	# Filename for dump outputfile
 
 
