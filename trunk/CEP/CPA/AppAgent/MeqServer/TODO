@@ -8,6 +8,10 @@ MEQ in general:
       16/01/04: tested with default tests; now need to make some nodes
                 with child labels
                 
+  * Use the same mechanism to check the request rider as we do for state
+    updates. E.g., polc values from the solver should be passed in this 
+    manner -- and not via state.
+                
   * check performance: why does privatizing message arguments in MeqServer
     sometimes lead to cloning? I don't see why anybody else would be holding
     onto the message.
@@ -91,6 +95,18 @@ Spigot:
 
 Parm:
 
+    + move the update-via-FValue mechanism to the request rider; it doesn't
+      really belong in state proper. (The rider needs to be reworked, see 
+      entry above).
+      25/02/04: done
+  
+  * for grow_domain: use the envelope domain, rather than checking for 
+    strict supersets.
+    
+  * rework parm so that predict-only requests may be satisfied without dropping
+    the solvable polc (i.e. keep the solvable polc and the per-domain cached
+    polcs separate)
+
   * develop different strategies for handling multiple polcs
 
         + If a polc with the right domain is already specified in the init-record,
@@ -137,6 +153,17 @@ Function:
           
 DMI & Debug:
 
+  * add protect feature to container fields (for use in classes such as 
+    Meq::Result etc.)
+    (merged with: expose lock()/unlock() of DataRecord fields. Do not lock 
+    fields by default. Use locking to "protect" fields, e.g., in the MEQ 
+    Request & Result classes.)
+
+  * ? implement CountedRef::makeWritable since this seems to be a very common
+    operation
+    
+  * implement Hook = Hook and Hook <<= Hook, should be easy to do now
+    
         + In Debug: add capability to redirect the debug message stream
           30/01/04 done
 
@@ -147,21 +174,10 @@ DMI & Debug:
         + provide conversions between scalars and single-element arrays
           09/02/04 done & tested
 
-  * add protect feature to container fields (for use in classes such as 
-    Meq::Result etc.) 
-    (merged with: expose lock()/unlock() of DataRecord fields. Do not lock 
-    fields by default. Use locking to "protect" fields, e.g., in the MEQ 
-    Request & Result classes.)
-
-  * ? implement CountedRef::makeWritable since this seems to be a very common
-    operation
-    
-  * implement Hook = Hook and Hook <<= Hook, should be easy to do now
-    
-      + DataField: getting a non-existing element as an ObjRef makes the
-        element MODIFIED. This can cause confusion later on. Perhaps it
-        should only be returned as MODIFIED if write-access is requested?
-        apparently fixed 25/01/04
+        + DataField: getting a non-existing element as an ObjRef makes the
+          element MODIFIED. This can cause confusion later on. Perhaps it
+          should only be returned as MODIFIED if write-access is requested?
+          apparently fixed 25/01/04
     
 
 OCTOPUSSY:

@@ -81,14 +81,16 @@ const meq.fitpolcs_mqs := function (polcs,degx=0,degy=0,domain=F,scale=F,verbose
   mqs.meq('Clear.Forest');
   
   print mqs.createnode(meq.parm('fitpolc_p1',polc=polcs));
-  print mqs.createnode(meq.parm('fitpolc_p2',polc=newpolc,config_groups='Solvable.Parm'));
+  print mqs.createnode(meq.parm('fitpolc_p2',polc=newpolc,groups='Parm'));
   print mqs.createnode(meq.node('MeqCondeq','fitpolc_eq',children="fitpolc_p1 fitpolc_p2"));
   
   rec := meq.node('MeqSolver','fitpolc_solver',children="fitpolc_eq");
   rec.num_steps := 5;
-  rec.solvable_parm := [ by_list=meq.initstatelist() ];
-  meq.addstatelist(rec.solvable_parm.by_list,"fitpolc_p2",[solvable=T]); 
-  meq.addstatelist(rec.solvable_parm.by_list,"*",[solvable=F]); 
+  rec.parm_group := hiid('Parm');
+    solv := meq.initcmdlist();
+    solv[1] := [ name="fitpolc_p2",state=[solvable=T] ];
+    solv[2] := [ state=[solvable=F] ];
+  rec.solvable := [ command_by_list=solv ];
   print mqs.createnode(rec);
   
   # resolve children

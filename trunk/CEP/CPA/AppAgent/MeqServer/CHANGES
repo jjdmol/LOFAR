@@ -1,3 +1,25 @@
+  * renamed config_groups into node_groups
+    (meq.node() has a "groups" argument now)
+    Affected: meqtypes.g, solvable parms
+  
+  * merged node_state with the rider; changed the rider structure:
+  
+      rider.group.command_all
+      rider.group.command_by_nodeindex
+      rider.group.command_by_list
+    
+    and command can now include "state=[...]"
+    Affected: meqtypes.g, solvable parms, solver tests
+    
+  * changed structure of solver staterec:
+  
+      rec.parm_group        parm group to use ("Parm" by default)
+      rec.solvable          solvable parms (used to be rec.solvable_parm)
+      
+  * renamed inis/addstatlist to init/addcmdlist in meqtypes.g
+
+Check in of 18/02/04:
+
   * stuffed everything into namespace meq.
 
   * Renamed parmtable.g to meptable.g; the object is now called 'meptable()'
