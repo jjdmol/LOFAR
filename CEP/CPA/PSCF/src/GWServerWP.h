@@ -12,7 +12,7 @@
 
 //## Module: GWServerWP%3C95AADB0101; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\GWServerWP.h
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\GWServerWP.h
 
 #ifndef GWServerWP_h
 #define GWServerWP_h 1
@@ -26,7 +26,7 @@
 //## end module%3C95AADB0101.includes
 
 // Socket
-#include "pscf/Socket.h"
+#include "Socket.h"
 // GWClientWP
 #include "GWClientWP.h"
 // GatewayWP

@@ -1,8 +1,7 @@
 SUBDIRS=src test 
 
-ids:
-	(cd src && make ids)
-	(cd src/pscf && make ids)
-	(cd test && make ids)
+aids:
+	(cd src && make aids)
+	(cd test && make aids)
 
 include $(lofar_sharedir)/Makefile.common

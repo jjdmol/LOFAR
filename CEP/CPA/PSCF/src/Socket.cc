@@ -12,7 +12,7 @@
 
 //## Module: Socket%3C90D43B0096; Package body
 //## Subsystem: Networking%3C90D442031F
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\Socket.cc
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Socket.cc
 
 //## begin module%3C90D43B0096.additionalIncludes preserve=no
 //## end module%3C90D43B0096.additionalIncludes
@@ -33,7 +33,7 @@
 //## end module%3C90D43B0096.includes
 
 // Socket
-#include "pscf/Socket.h"
+#include "Socket.h"
 //## begin module%3C90D43B0096.declarations preserve=no
 //## end module%3C90D43B0096.declarations
 

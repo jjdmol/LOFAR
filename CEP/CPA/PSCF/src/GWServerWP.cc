@@ -12,7 +12,7 @@
 
 //## Module: GWServerWP%3C95AADB010A; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\GWServerWP.cc
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\GWServerWP.cc
 
 //## begin module%3C95AADB010A.additionalIncludes preserve=no
 //## end module%3C95AADB010A.additionalIncludes
@@ -153,5 +153,3 @@ void GWServerWP::tryOpen ()
   //## end GWServerWP%3C8F942502BA.declarations
 //## begin module%3C95AADB010A.epilog preserve=yes
 //## end module%3C95AADB010A.epilog
-
-

@@ -12,7 +12,7 @@
 
 //## Module: GatewayWP%3C90BFDD0240; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\GatewayWP.cc
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\GatewayWP.cc
 
 //## begin module%3C90BFDD0240.additionalIncludes preserve=no
 //## end module%3C90BFDD0240.additionalIncludes
