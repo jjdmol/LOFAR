@@ -20,6 +20,7 @@
 //#
 //# $Id$
 
+
 //# Make AIPS++ Arrays available in Hooks.
 #define AIPSPP_HOOKS 1
 #include <DMI/AIPSPP-Hooks.h>
@@ -1265,28 +1266,21 @@ void DummySolver::initParms()
     if (itsSolution.isNull()  ||  itsSolution.nx() != itsNrScid) {
       itsSolution = MeqMatrix (double(), itsNrScid, 1);
     }
+    vector<string> names;
     for (vector<MeqParm*>::const_iterator iter = parmList.begin();
 	 iter != parmList.end();
 	 iter++)
     {
       if (*iter  &&  (*iter)->isSolvable()) {
 	(*iter)->getInitial (itsSolution);
+	names.push_back ((*iter)->getName());
       }
     }
     // Initialize the solver.
     itsSolver.set (itsNrScid, 1, 0);
+    // Put names of all solvable parms in status record.
+    control().setStatus (StSolutionSolvParams, names);
   }
-  // Store list of all solvable parameters in status record.
-  vector<string> names;
-  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-       iter != parmList.end();
-       iter++)
-  {
-    if ((*iter)->isSolvable()) {
-      names.push_back ((*iter)->getName());
-    }
-  }
-  ///  control().setStatus (StSolutionParams, names);
 }
 
 void DummySolver::fillUVW()

@@ -37,6 +37,7 @@ static AtomicID::Register aid_reg_GSM(-1365,"GSM");
 static AtomicID::Register aid_reg_Save(-1369,"Save");
 static AtomicID::Register aid_reg_Parms(-1370,"Parms");
 static AtomicID::Register aid_reg_Residuals(-1257,"Residuals");
+static AtomicID::Register aid_reg_SolvParams(-1378,"SolvParams");
 static AtomicID::Register aid_reg_Rank(-1372,"Rank");
 static AtomicID::Register aid_reg_Fit(-1373,"Fit");
 static AtomicID::Register aid_reg_Errors(-1374,"Errors");
