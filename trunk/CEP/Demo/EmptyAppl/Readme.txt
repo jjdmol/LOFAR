@@ -10,12 +10,14 @@
 Actions necessary to create your own application "YourFirstApp" using 
 EmptyAppl:
 
-* Copy EmptyAppl directory and rename to "YourFirstApp"
+* Copy EmptyAppl directory and rename to "YourFirstApp". (Don't forget to
+  remove the CVS directory!)
 
 * Rename files src/EmptyAppl.h and src/EmptyAppl.cc to src/YourFirstApp.h
   and src/YourFirstApp.cc.
 
-* Replace all occurences of 'EmptyAppl' in all files with 'YourFirstApp'.
+* Replace all occurences of 'EmptyAppl' (in all files in all directories) 
+  with 'YourFirstApp'.
 
 * File: bootstrap ->Make sure the path in this file points to the bootstrap
                     script in the autoconf_share directory in the LOFAR tree.
