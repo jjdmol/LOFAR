@@ -79,9 +79,11 @@ public:
   const string& name() const
     { return itsTable.tableName(); }
 
+  // Lock the parm table (for write).
+  void lock();
+
   // Unlock the parm table.
-  void unlock()
-    { itsTable.unlock(); }
+  void unlock();
 
   // Open the table if not opened yet. If opened, it is added to the map.
     //##ModelId=3F95060D033E
@@ -94,6 +96,9 @@ public:
   // Close all tables in the map. All ParmTable objects are deleted.
     //##ModelId=3F95060D0372
   static void closeTables();
+
+  // Lock all tables for write.
+  static void lockTables();
 
   // Unlock all tables.
   static void unlockTables();
