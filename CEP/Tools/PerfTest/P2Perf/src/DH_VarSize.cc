@@ -35,7 +35,6 @@ DH_VarSize::DH_VarSize (const string& name,
 			unsigned int initialSize,
                         unsigned int maxSize)
   : DataHolder (name, "DH_VarSize"),
-    itsDataPacket(0),
     itsMaxSpoofedDataSize(maxSize),
     itsSpoofedDataSize(initialSize),
     itsOverhead(40)
