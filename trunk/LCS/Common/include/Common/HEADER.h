@@ -25,7 +25,7 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-// \file filename
+// \file filename.h
 // one line description.
 
 //# Includes

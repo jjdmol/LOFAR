@@ -24,6 +24,7 @@
 #define LOFAR_COMMON_TIMER_H
 
 // \file Timer
+.h
 // Accurate timer
 
 #include <cstdlib>

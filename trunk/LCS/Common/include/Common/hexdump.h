@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_HEXDUMP_H
 #define LOFAR_COMMON_HEXDUMP_H
 
-// \file hexdump
+// \file hexdump.h
 // create hexdump of given datablock.
 
 #include <lofar_config.h>

@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_THREAD_H
 #define LOFAR_COMMON_THREAD_H
    
-// \file Thread
+// \file Thread.h
 // basic header for the Thread package 
 
 #include <Common/Thread/Thread.h>

@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_LOFAR_COMPLEX_H
 #define LOFAR_COMMON_LOFAR_COMPLEX_H
 
-// \file lofar_complex
+// \file lofar_complex.h
 //
 
 #include <complex>

@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_LOFAR_IOMANIP_H
 #define LOFAR_COMMON_LOFAR_IOMANIP_H
 
-// \file lofar_iomanip
+// \file lofar_iomanip.h
 //
 
 #include <iomanip>

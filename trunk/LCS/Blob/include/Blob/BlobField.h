@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLOBFIELD_H
 #define LOFAR_COMMON_BLOBFIELD_H
 
-// \file  BlobField
+// \file  BlobField.h
 // Definition of a field in a blob.
 
 #include <Common/LofarTypes.h>

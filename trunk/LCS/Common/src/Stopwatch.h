@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_STOPWATCH_H
 #define LOFAR_COMMON_STOPWATCH_H
 
-// \file StopWatch
+// \file StopWatch.h
 // timer class
 
 //# Includes

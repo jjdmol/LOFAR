@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLOBSTRINGTYPE_H
 #define LOFAR_COMMON_BLOBSTRINGTYPE_H
 
-// \file BlobStringType
+// \file BlobStringType.h
 //Define type for a blob string.
 
 #include <Common/Allocator.h>

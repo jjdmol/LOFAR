@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_VECTORUTIL_H
 #define LOFAR_COMMON_VECTORUTIL_H
 
-// \file VectorUtil
+// \file VectorUtil.h
 // Utility functions on the std::vector class.
 
 #include <vector>

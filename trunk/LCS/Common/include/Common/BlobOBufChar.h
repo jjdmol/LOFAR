@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLOBOBUFCHAR_H
 #define LOFAR_COMMON_BLOBOBUFCHAR_H
 
-// \file BlobOBufChar
+// \file BlobOBufChar.h
 // Output buffer for a blob using a plain pointer.
 
 #include <Common/BlobOBuffer.h>

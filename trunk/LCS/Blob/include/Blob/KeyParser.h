@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_KEYPARSER_H
 #define LOFAR_COMMON_KEYPARSER_H
 
-// \file KeyParser
+// \file KeyParser.h
 // Class for parsing a key=value line.
 
 //# Includes

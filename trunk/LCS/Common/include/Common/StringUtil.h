@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_STRINGUTIL_H
 #define LOFAR_COMMON_STRINGUTIL_H
 
-// \fileStringUtil
+// \fileStringUtil.h
 
 
 //#include <lofar_config.h>

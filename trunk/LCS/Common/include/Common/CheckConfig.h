@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_CHECKCONFIG_H
 #define LOFAR_COMMON_CHECKCONFIG_H
 
-// \file CheckConfig
+// \file CheckConfig.h
 // Macros for declaring a config-dependent data structure.
 
 // The CHECK_CONFIG macros should be used if and when you declare a

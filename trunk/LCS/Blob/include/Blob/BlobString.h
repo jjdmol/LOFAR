@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLOBSTRING_H
 #define LOFAR_COMMON_BLOBSTRING_H
 
-// \file BlobString
+// \file BlobString.h
 //Blob buffer that can be a string<uchar> or char.
 
 #include <Common/LofarTypes.h>

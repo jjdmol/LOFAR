@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLOBOBUFSTRING_H
 #define LOFAR_COMMON_BLOBOBUFSTRING_H
 
-// \file BlobOBufString
+// \file BlobOBufString.h
 // Input buffer for a blob using a string.
 
 #include <Common/BlobOBufChar.h>

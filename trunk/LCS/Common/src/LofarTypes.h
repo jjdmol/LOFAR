@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_LOFARTYPES_H
 #define LOFAR_COMMON_LOFARTYPES_H
 
-// \file LofarTypes
+// \file LofarTypes.h
 //
 
 #include <Common/LofarTypedefs.h>
@@ -41,7 +41,7 @@
 
 namespace LOFAR
 {
-  // \addtogroup LOFAR
+  // \addtogroup Common
   // @{
 
   //# Make the type names defined in LofarTypedefs.h available in the
