@@ -32,7 +32,6 @@ EPAStub_LDADD = \
 	-lsuite
 
 BUILT_SOURCES = \
-	log4cplus.properties \
 	test.ns \
 	test.top
 
