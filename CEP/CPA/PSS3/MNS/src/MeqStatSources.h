@@ -1,4 +1,4 @@
-//# MeqStatSources.h: The precalculated source DFT exponents for a domain
+//# MeqStatSources.h: The precalculated source DFT exponents for a station
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -51,6 +51,11 @@ public:
     { if (request.getId() != itsLastReqId) calculate(request);
       return itsResults[request.getSourceNr()]; }
 
+  // Get the delta for the given source.
+  const MeqResult& getDelta (const MeqRequest& request)
+    { if (request.getId() != itsLastReqId) calculate(request);
+      return itsDeltas[request.getSourceNr()]; }
+
   // Get N (= sqrt(1-l^2-m^2) for the given source.
   const MeqResult& getN (const MeqRequest& request)
     { return (*itsSources)[request.getSourceNr()].getN(request); }
@@ -66,6 +71,7 @@ private:
   MeqStatUVW*  itsUVW;
   vector<MeqPointSource>* itsSources;
   vector<MeqResult> itsResults;
+  vector<MeqResult> itsDeltas;
   MeqRequestId itsLastReqId;
 };
 

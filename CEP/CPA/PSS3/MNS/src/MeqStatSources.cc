@@ -1,4 +1,4 @@
-//# MeqStatSources.cc: The precalculated source DFT exponents for a domain
+//# MeqStatSources.cc: The precalculated source DFT exponents for a station
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#include <PerfProfile.h>
+#include <MNS/PerfProfile.h>
 
 #include <MNS/MeqStatSources.h>
 #include <MNS/MeqPointSource.h>
@@ -43,26 +43,52 @@ MeqStatSources::MeqStatSources (MeqStatUVW* statUVW,
 void MeqStatSources::calculate (const MeqRequest& request)
 {
   PERFPROFILE(__PRETTY_FUNCTION__);
-
+  const MeqDomain& domain = request.domain();
+  // The exponent and its frequency delta are calculated.
+  // However, the delta is only calculated if there are multiple channels.
   itsResults.resize (itsSources->size());
+  bool calcDelta = request.ny() > 1;
+  // Calculate 2pi/wavelength, where wavelength=c/freq.
+  // Calculate it for the frequency step if needed.
+  double df = request.stepY();
+  double f0 = domain.startY() + df/2;
+  MeqMatrix wavel0 (C::_2pi * f0 / C::c);
+  MeqMatrix dwavel;
+  if (calcDelta) {
+    itsDeltas.resize (itsSources->size());
+    dwavel = MeqMatrix (df / f0);
+  } else {
+    itsDeltas.resize (0);
+  }
+  // Get the UVW coordinates.
   const MeqResult& resU = itsUVW->getU(request);
   const MeqResult& resV = itsUVW->getV(request);
   const MeqResult& resW = itsUVW->getW(request);
+  const MeqMatrix& u = resU.getValue();
+  const MeqMatrix& v = resV.getValue();
+  const MeqMatrix& w = resW.getValue();
+  // Calculate the DFT contribution for this station for all sources.
   vector<MeqResult>::iterator iterRes = itsResults.begin();
+  vector<MeqResult>::iterator iterDelta = itsDeltas.begin();
   for (vector<MeqPointSource>::iterator iter=itsSources->begin();
        iter != itsSources->end();
        ++iter) {
     MeqPointSource& src = *iter;
-    const MeqMatrix& u = resU.getValue();
-    const MeqMatrix& v = resV.getValue();
-    const MeqMatrix& w = resW.getValue();
     const MeqResult& lrk  = src.getL(request);
     const MeqResult& mrk  = src.getM(request);
     const MeqResult& nrk  = src.getN(request);
     MeqResult result(request.nspid());
-    MeqMatrix r1 = u*lrk.getValue() + v*mrk.getValue() + w*nrk.getValue();
+    MeqMatrix r1 = (u*lrk.getValue() + v*mrk.getValue() + w*nrk.getValue()) *
+                   wavel0;
     MeqMatrix res = tocomplex(cos(r1), sin(r1));
     result.setValue (res);
+    MeqResult delta;
+    if (calcDelta) {
+      delta = MeqResult(request.nspid());
+      r1 *= dwavel;
+      res = tocomplex(cos(r1), sin(r1));
+      delta.setValue (res);
+    }
 
     // Evaluate (if needed) for the perturbed parameter values.
     MeqMatrix perturbation;
@@ -99,10 +125,17 @@ void MeqStatSources::calculate (const MeqRequest& request)
 	res = tocomplex(cos(r1), sin(r1));
 	result.setPerturbedValue (spinx, res);
 	result.setPerturbation (spinx, perturbation);
+	if (calcDelta) {
+	  r1 *= dwavel;
+	  res = tocomplex(cos(r1), sin(r1));
+	  delta.setPerturbedValue (spinx, res);
+	}
       }
     }
     *iterRes = result;
     ++iterRes;
+    *iterDelta = delta;
+    ++iterDelta;
   }
   itsLastReqId = request.getId();
 }

@@ -66,11 +66,37 @@ public:
     { return (isDefined(i)  ?  *(itsPerturbation[i]) : itsDefPert); }
 
   // Set the value.
+  // The current value is replaced by the new one.
   void setValue (const MeqMatrix&);
-  
+
+  // Set the value with a given type and shape.
+  // It won't change if the current value type and shape matches.
+  double* setDouble (int nx, int ny)
+    { return itsValue.setDouble (nx, ny); }
+  complex<double>* setDComplex (int nx, int ny)
+    { return itsValue.setDComplex (nx, ny); }
+
+  // Remove all perturbed values.
+  void clear();
+
   // Set the i-th perturbed value.
   void setPerturbedValue (int i, const MeqMatrix&);
 
+  // Set the i-th perturbed value with a given type and shape.
+  // It won't change if the current value type and shape matches.
+  double* setPerturbedDouble (int i, int nx, int ny)
+    { if (!isDefined(i)) {
+        itsPerturbedValues[i] = new MeqMatrix();
+      }
+      return itsPerturbedValues[i]->setDouble (nx, ny);
+    } 
+  complex<double>* setPerturbedDComplex (int i, int nx, int ny)
+    { if (!isDefined(i)) {
+        itsPerturbedValues[i] = new MeqMatrix();
+      }
+      return itsPerturbedValues[i]->setDComplex (nx, ny);
+    } 
+  
   // Set the i-th perturbed parameter.
   void setPerturbation (int i, const MeqMatrix& value)
     { itsPerturbation[i] = new MeqMatrix(value); }
@@ -136,9 +162,28 @@ public:
   void setValue (const MeqMatrix& value)
     { itsRep->setValue (value); }
   
+  // Set the value with a given type and shape.
+  // It won't change if the current value type and shape matches.
+  // It returns a pointer to the internal storage.
+  double* setDouble (int nx, int ny)
+    { return itsRep->setDouble (nx, ny); }
+  complex<double>* setDComplex (int nx, int ny)
+    { return itsRep->setDComplex (nx, ny); }
+
+  // Remove all perturbed values.
+  void clear()
+    { itsRep->clear(); }
+
   // Set the i-th perturbed value.
   void setPerturbedValue (int i, const MeqMatrix& value)
     { itsRep->setPerturbedValue (i, value); }
+
+  // Set the i-th perturbed value with a given type and shape.
+  // It won't change if the current value type and shape matches.
+  double* setPerturbedDouble (int i, int nx, int ny)
+    { return itsRep->setPerturbedDouble (i, nx, ny); }
+  complex<double>* setPerturbedDComplex (int i, int nx, int ny)
+    { return itsRep->setPerturbedDComplex (i, nx, ny); }
 
   // Set the i-th perturbed parameter.
   void setPerturbation (int i, const MeqMatrix& value)

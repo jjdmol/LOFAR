@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#include <PerfProfile.h>
+#include <MNS/PerfProfile.h>
 
 #include <MNS/MeqWsrtInt.h>
 #include <MNS/MeqWsrtPoint.h>
