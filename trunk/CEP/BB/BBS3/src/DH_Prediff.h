@@ -54,8 +54,8 @@ public:
 
   DataHolder* clone() const;
 
-  // Create a TPO object and set the table name in it.
-  virtual void initPO (const string& tableName);
+/*   // Create a TPO object and set the table name in it. */
+/*   virtual void initPO (const string& tableName); */
 
   /// Allocate the buffers.
   virtual void preprocess();

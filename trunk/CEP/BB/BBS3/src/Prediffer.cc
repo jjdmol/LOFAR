@@ -1566,25 +1566,14 @@ void Prediffer::showSettings() const
   cout << endl;
 }
 
-void Prediffer::showParmValues()
+void Prediffer::updateSolvableParms()
 {
-  vector<string> parms(itsSolvableParms.nelements());
-  for (unsigned int i=0; i<itsSolvableParms.nelements(); i++)
-  {
-    parms[i] = itsSolvableParms[i];
-  }
 
-  vector <double> vals;
-  getParmValues (parms, vals);
-
-  vector<string>::iterator i;
-  char str [20];
-  vector<double>::iterator j = vals.begin();
-  for (i=parms.begin (); i!=parms.end (); ++i, ++j) {
-    sprintf (str, "%12.9f ", *j);
-    cout << "BBSTest: parm " << *i << " = " << str << endl;
-  }
 }
 
+std::list<MeqResult> Prediffer::getEquations ()
+{
+  LOG_TRACE_FLOW("Prediffer::getEquations");
+}
 
 } // namespace LOFAR

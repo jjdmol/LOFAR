@@ -13,14 +13,17 @@
 //   time domain is all times
 
 
-nrKS=1,           // Number of Knowledge Sources
+nrPrediffers=1,           // Number of Prediffers
 BBDBname="test",  // BlackBoard database name (must be a postgres database on dop50)
 
 CTRLparams=[
-  strategy="Simple",
-  solvableParams=["StokesI.CP1","RA.CP1","DEC.CP1","StokesI.CP2","RA.CP2","DEC.CP2","StokesI.CP3","RA.CP3","DEC.CP3"],
+  nrStrategies=1,     // Number of Strategy Controllers
 
-  STRATparams=[
+  SC1params=[
+    strategy="Simple",
+    solvableParams=["StokesI.CP1","RA.CP1","DEC.CP1","StokesI.CP2","RA.CP2","DEC.CP2","StokesI.CP3","RA.CP3","DEC.CP3"],
+
+
     nrIterations=5,        // Number of iterations
     timeInterval=10.0e0,   // Time interval (float)
     antennas=[0,4,8,12,16,20,24,28,32,36,40,44,48,52,56,60,64,68,72,76,80],
@@ -31,18 +34,19 @@ CTRLparams=[
     endChan=0,            // End (frequency) channel
     sources=[0,1,2],       // Solvable source numbers (0 based)
     useSVD=F,              // Use Singular Value Decomposition in solve?
-    saveAllIter=F          // Save parameters in parameter database every iteration?
-  ]
-],
+    ddid=0,                  // 
+    modelType="LOFAR.RI",    // Model type
+    calcUVW=F,               // Calculate UVW coordinates?
+    lockMappedMem=F,         // Call mlock immediately after mapping?
 
-KSparams=[
-  MSName="demo3-",         // Name of the Measurement Set
-  DBHost="dop50",          // Parameter database host name
-  DBType="aips",           // Parameter database type
-  DBName="test",           // Parameter database name
-  DBPwd="",                // Parameter database password
-  meqTableName="demo3-",   // Meq model table name *       
-  skyTableName="demo3_gsm-", // Sky model table name *
-  calcUVW=F,               // Calculate UVW coordinates?
-  writeAllSols=F           // Write DH_Solutions in the BB database for every iteration?
+    MSDBparams=[
+      MSName="demo3-",         // Name of the Measurement Set
+      DBHost="dop50",          // Parameter database host name
+      DBType="aips",           // Parameter database type
+      DBName="test",           // Parameter database name
+      DBPwd="",                // Parameter database password
+      meqTableName="demo3-",   // Meq model table name *       
+      skyTableName="demo3_gsm-" // Sky model table name *
+    ]
+  ]
 ]

@@ -49,7 +49,7 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   explicit WH_Control (const string& name,
-			const KeyValueMap& args);
+		       const KeyValueMap& args);
 
   virtual ~WH_Control();
 
@@ -79,6 +79,9 @@ private:
   /// Forbid assignment.
   WH_Control& operator= (const WH_Control&);
 
+  // Private help functions to create strategy controller(s)
+  void createStrategyControllers();
+
   int itsNrKS;        // number of KS available
   int itsCurrentRun;
   int itsEventCnt;
@@ -92,6 +95,8 @@ private:
   KeyValueMap itsArgs;
 
   list<StrategyController*> itsControllers;
+  
+  bool itsFirstCall;
 
 };
 

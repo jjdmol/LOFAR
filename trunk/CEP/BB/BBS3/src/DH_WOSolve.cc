@@ -211,16 +211,23 @@ void DH_WOSolve::dump()
   KeyValueMap sArguments;
   int timeInterval;
   vector<string> pNames;
-  cout << "MS name = " << sArguments.getString ("MSName", "notfound");
-  cout << "Database host = " << sArguments.getString ("DBHost", "notfound");
-  cout << "Database type = " << sArguments.getString ("DBType", "notfound");
-  cout << "Database name = " << sArguments.getString ("DBName", "notfound");
-  cout << "Database password = " << sArguments.getString ("DBPwd", "notfound");
-  cout << "Meq table name = " << sArguments.getString ("meqTableName", "notfound");
-  cout << "Sky table name = " << sArguments.getString ("skyTableName", "notfound");
-
   if (getVarData(sArguments, timeInterval, pNames))
   { 
+    cout << "MS name = " << sArguments.getString ("MSName", "notfound") 
+	 << endl;
+    cout << "Database host = " << sArguments.getString ("DBHost", "notfound") 
+	 << endl;
+    cout << "Database type = " << sArguments.getString ("DBType", "notfound") 
+	 << endl;
+    cout << "Database name = " << sArguments.getString ("DBName", "notfound")
+	 << endl;
+    cout << "Database password = " << sArguments.getString ("DBPwd", "notfound")
+	 << endl;
+    cout << "Meq table name = " << sArguments.getString ("meqTableName", "notfound")
+	 << endl;
+    cout << "Sky table name = " << sArguments.getString ("skyTableName", "notfound")
+	 << endl;
+
     cout << "Time interval = " << timeInterval << endl;
     cout << "Number of parameters = "  << pNames.size() << endl;
     

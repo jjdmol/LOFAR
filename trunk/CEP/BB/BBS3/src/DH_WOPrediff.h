@@ -198,7 +198,7 @@ inline bool DH_WOPrediff::getCalcUVW() const
 { return ((*itsCalcUVW==0)?(false):(true)); }
 
 inline void DH_WOPrediff::setCalcUVW(bool calc)
-{ *itsInitialize = calc; }
+{ *itsCalcUVW = calc; }
 
 inline bool DH_WOPrediff::getLockMappedMemory() const
 { return *itsLockMappedMem; }

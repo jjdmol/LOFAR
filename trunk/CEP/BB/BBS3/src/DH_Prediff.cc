@@ -38,11 +38,6 @@
 namespace LOFAR
 {
 
-const unsigned int MaxKSTypeLength = 8;
-const unsigned int MaxNoStartSols = 16;
-const unsigned int MaxParamNameLength = 16;
-const unsigned int MaxNumberOfParam = 32;
-
 DH_Prediff::DH_Prediff (const string& name)
   : DataHolder    (name, "DH_Prediff", 1),
     itsNResults   (0),
@@ -87,7 +82,7 @@ void DH_Prediff::preprocess()
   addField ("NFreq", BlobField<int>(1));
   addField ("Nspids", BlobField<int>(1));
   addField ("DataBuf", BlobField<dcomplex>(1, 0));
-  addField ("ParmData", BlobField<ParmData>(1, 0));
+  addField ("ParmData", BlobField<char>(1, 0));
 
 }
 
@@ -122,7 +117,7 @@ void DH_Prediff::getParmData(vector<ParmData>& pdata)
   pdata.clear();
   for (uint i=0; i<size; i++)
   {
-    pdata.push_back(itsParmDataPtr[i]);
+    pdata.push_back(*dynamic_cast<ParmData*>((itsParmDataPtr+(i*sizeof(ParmData)))));
   }
 }
 

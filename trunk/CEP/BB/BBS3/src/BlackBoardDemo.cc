@@ -33,12 +33,12 @@
 #include <CEPFrame/Step.h>
 #include <CEPFrame/WH_Empty.h>
 #include <tinyCEP/Profiler.h>
+#include <Transport/TH_Mem.h>
 #include <TransportPL/TH_PL.h>
 #include <BBS3/BlackBoardDemo.h>
 #include <BBS3/WH_Control.h>
 #include <BBS3/WH_Prediff.h>
 #include <BBS3/WH_Solve.h>
-#include TRANSPORTERINCLUDE
 
 namespace LOFAR
 {
@@ -105,31 +105,41 @@ void BlackBoardDemo::define(const KeyValueMap& params)
     // Create the Workholders and Steps
     pdID = i2string(pdNo);
 
-    WH_Prediff predWH("Pred"+pdID, pdNo);
+    WH_Prediff predWH("Prediff"+pdID, pdNo);
 
     int index = pdNo - 1;
     itsPDSteps[index] = new Step(predWH, "prediffer"+pdID);
     itsPDSteps[index]->runOnNode(pdNo,0);
     topComposite.addStep(itsPDSteps[index]);
   }
-
-  // Share input and output DataHolders of Controller
-  controlStep.setInBufferingProperties(0, true, false);
-  controlStep.setInBufferingProperties(1, true, false);
   
-  // Create the connections to the database.
-  controlStep.connect(&controlStep, 0, 0, 1, TH_PL("BBWorkOrders"));
-  controlStep.connect(&controlStep, 1, 1, 1, TH_PL("BBSolutions"));
+  // Create the Solver
+  WH_Solve solveWH("Solver", itsNumberPD);
+  Step solverStep(solveWH, "solverStep");
+  solverStep.runOnNode(itsNumberPD+1,0);
+  topComposite.addStep(solverStep);
+
+  // All DataHolders connected to a database table are connected to their 
+  // dummy equivalent in the same WorkHolder. In this way the number of 
+  // writing DataHolders remains independent of the number of reading 
+  // DataHolders also connected to the same table. (However, this introduces
+  // some overhead in the preprocess phase)
+
+  // Create the connections to the database (themselves).
+  controlStep.connect(&controlStep, 0, 0, 1, TH_PL("BBS3Solutions"));
+  controlStep.connect(&controlStep, 1, 1, 1, TH_PL("BBS3WOPrediffer"));
+  controlStep.connect(&controlStep, 2, 2, 1, TH_PL("BBS3WOSolver"));
+
+  // Same for Solver
+  solverStep.connect(&solverStep, 0, 0, 1, TH_PL("BBS3WOSolver"));
+  solverStep.connect(&solverStep, 1, 1, 1, TH_PL("BBS3Solutions"));
 
   for (int index = 0; index < itsNumberPD; index++)
   {
-    // Share input and output DataHolders of Knowledge Sources
-    itsPDSteps[index]->setInBufferingProperties(0, true, false);
-    itsPDSteps[index]->setInBufferingProperties(1, true, false);
-
-    // Create the connections to the database.
-    itsPDSteps[index]->connect(itsPDSteps[index], 0, 0, 1, TH_PL("BBWorkOrders"));
-    itsPDSteps[index]->connect(itsPDSteps[index], 1, 1, 1, TH_PL("BBSolutions"));
+    // Create the connection to the database.
+    itsPDSteps[index]->connect(itsPDSteps[index], 0, 0, 1, TH_PL("BBS3WOPrediffer"));
+    // Create the connection to the Solver
+    solverStep.connect(itsPDSteps[index], index+2, 1, 1, TH_Mem());
   }
 
 }  
