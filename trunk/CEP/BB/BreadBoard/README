@@ -1,8 +1,12 @@
---*-- text --*--
+-*- text -*-
 $Id$
 
 This module is for prototyping a blackboard system for use by selfcal engines.
 
 $Log$
+Revision 1.1  2003/04/14 12:26:54  daan
+%[ER 5]%
+Wat gaan we hier doen?
+
 
 End Of Readme

@@ -1,4 +1,4 @@
---*-- text --*--
+-*- text -*-
 
 Herein the logical database model is described, as it is to be used by
 the blackboard patern for the SelfCal application of LOFAR. The idea
