@@ -8,6 +8,7 @@ libuvplot_la_SOURCES := UVPGraphSettings.cc    \
                         UVPDataHeader.cc       \
                         UVPDataAtomHeader.cc   \
                         UVPDataAtom.cc         \
+                        UVPDataAtomVector.cc   \
                         UVPDataCacheElement.cc \
                         UVPDataTransferWP.cc   \
 	                     UVPMessagesToFileWP.cc \
