@@ -245,10 +245,11 @@ int Solver::getResult (Result::Ref &resref,
       newReq[FNodeState][FSolvableParm].replace() <<= new DataRecord;
     DataRecord& dr2 = dr1[FByNodeIndex] <<= new DataRecord;
     fillSolution (dr2, spids, solution);
-    
     // update request ID
     rqid.back() = AtomicID(step+1);
     newReq.setId(rqid);
+    // Unlock all parm tables used.
+    ParmTable::unlockTables();
   }
   // Put the spids in the result.
   vellset.setSpids(spids);
