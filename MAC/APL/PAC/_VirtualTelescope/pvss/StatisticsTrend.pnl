@@ -1,0 +1,337 @@
+V 10
+1
+LANG:1 22 PanelSubbandStatistics
+PANEL,75 57 1082 800 N "_3DFace" 2
+"$SUBBANDEND"
+"$SUBBANDSTART"
+"main()
+{
+  SpinButtonSubbandStatistics.sbMinimum=$SUBBANDSTART;
+  SpinButtonSubbandStatistics.sbMaximum=$SUBBANDEND;
+  
+  SpinButtonSubbandStatistics.text=$SUBBANDSTART;
+}" 0
+ E E E E 1 -1 -1 0  10 10
+""0  1
+E E 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+2 0
+"Text12"
+""
+1 -228 97 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 96 141 111
+0 2 0 "s" 0 0 0 192 0 0  22 96 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 22 Statistics for subband
+21 1
+"SpinButtonSubbandStatistics"
+""
+1 159 90 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  159 90 219 116
+0
+
+E
+"main()
+{
+  int subband;
+  string scope;
+  string dpPowerX;
+  string dpPowerY;
+  time t;
+
+  getValue(\"\",\"text\",subband);
+  sprintf(scope,\"power%03d\",subband);
+  dpPowerX=\"System1:BeamServer_\"+scope+\"_x.:_original.._value\";
+  dpPowerY=\"System1:BeamServer_\"+scope+\"_y.:_original.._value\";
+
+  dpConnect(\"EP_SubbandStatisticsPowerXChanged\",dpPowerX);
+  dpConnect(\"EP_SubbandStatisticsPowerYChanged\",dpPowerY);
+  dpConnect(\"EP_SubbandStatisticsLastBlockChanged\",\"System1:BeamServer_seqnr.:_original.._value\");
+
+  t=getCurrentTime();
+  TREND1.curveRemoveData(\"powerX\", t);
+  TREND1.curveRemoveData(\"powerY\", t);
+  TREND1.connectDirectly(\"powerX\", dpPowerX);
+  TREND1.connectDirectly(\"powerY\", dpPowerY);
+}
+
+EP_SubbandStatisticsPowerXChanged(string dp, string sNewValue)
+{
+  setValue(\"TextFieldSubbandStatisticsPowerX\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+EP_SubbandStatisticsPowerYChanged(string dp, string sNewValue)
+{
+  setValue(\"TextFieldSubbandStatisticsPowerY\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+EP_SubbandStatisticsLastBlockChanged(string dp, string sNewValue)
+{
+  setValue(\"TextFieldSubbandStatisticsLastBlock\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+" 0
+
+E
+
+N 0 127 1 0 1 1
+2 2
+"Text9"
+""
+1 -451 -44 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 242 66 361 81
+0 2 0 "s" 0 0 0 192 0 0  242 66 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 7 Power X
+14 3
+"TextFieldSubbandStatisticsPowerX"
+""
+1 307.304347826087 62 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  306 60 411 87
+2 "s" 0 0 0 0 0 -1  E "main()
+{
+  TextFieldDirectionAngle1.text=\"0.0\";
+}" 0
+ E
+2 4
+"Text10"
+""
+1 -451 -14 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 242 96 361 111
+0 2 0 "s" 0 0 0 192 0 0  242 96 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 7 Power Y
+14 5
+"TextFieldSubbandStatisticsPowerY"
+""
+1 307.304347826087 92 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  306 90 411 117
+2 "s" 0 0 0 0 0 -1  E "main()
+{
+  TextFieldDirectionAngle2.text=\"0.0\";
+}" 0
+ E
+2 6
+"Text11"
+""
+1 -451 16 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 242 126 305 141
+0 2 0 "s" 0 0 0 192 0 0  242 126 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 10 Last block
+14 7
+"TextFieldSubbandStatisticsLastBlock"
+""
+1 307.304347826087 122 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  306 120 411 147
+2 "s" 0 0 0 0 0 -1  E E E
+23 8
+"TREND1"
+""
+1 10 160 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+26 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  10 160 1070 790
+5 E E E 1 486 N {0,0,0} 0 0 1 0 1 0 2 0 "powerX" "System1:BeamServer_power000_x." 2 2 0 0 1 "3 2 0.000000" "%x" 1 1 2 1 E
+E
+1 0 0 3 2
+1
+LANG:1 1 X
+1
+LANG:1 1 ?
+1 "" ""  0 0 1 0 2 1 0 1 N {0,0,255}
+1 0 0 0 0 0 0 0
+0 "powerY" "System1:BeamServer_power000_y." 6 2 0 0 1 "3 2 0.000000" "%x" 1 1 3 1 E
+E
+1 0 0 3 2
+1
+LANG:1 1 Y
+1
+LANG:1 1 ?
+1 "" ""  0 0 1 0 2 1 0 1 N {255,0,0}
+1 0 0 0 0 0 0 0
+1 1 "%H:%M:%S" "%x" 1 1 0 0 
+E 1 1 0 0 50 1 20 300
+1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  100 
+N {0,0,0} 0 0 1 0 1 150 1 5 5 1 2
+0
+2 9
+"Text18"
+""
+1 20 9.684210526315789 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22.31578947368421 12 457.6842105263158 42.10526315789474
+0 2 0 "s" 0 0 0 64 0 0  22.31578947368421 12 1
+1
+LANG:1 58 -adobe-helvetica-bold-o-normal-*-*-240-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 18 Subband Statistics
+4 10
+"Line4"
+""
+1 20 49.68421052631579 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+25 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E  1060 49.68421052631579 20 49.68421052631579
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0
