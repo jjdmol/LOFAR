@@ -53,8 +53,7 @@ public:
   /// The first WorkHolder should have nin=0.
   WH_BandSep (const string& name,
 			  unsigned int nsubband,
-			  const string& coeffFileName,
-			  bool plot);
+			  const string& coeffFileName);
 
   virtual ~WH_BandSep();
 
@@ -96,7 +95,6 @@ private:
   /// Length of buffers.
   int itsNsubband;
   string itsCoeffName;
-  bool itsDoPlot;
   int itsPos;
   int itsFilterLength;
   FilterBank <dcomplex> * itsFilterbank;
@@ -104,7 +102,8 @@ private:
 
   // DEBUG
   gnuplot_ctrl* handle;
-  ofstream itsFileOut;
+  ofstream itsFileOutReal;
+  ofstream itsFileOutComplex;
 };
 
 
