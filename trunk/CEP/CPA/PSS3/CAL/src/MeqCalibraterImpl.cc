@@ -196,20 +196,6 @@ void MeqCalibrater::makeWSRTExpr()
   // Make an expression for each station.
   itsStatExpr.reserve (itsStations.size());
   for (unsigned int i=0; i<itsStations.size(); i++) {
-    // Represent the leakage per station by constant parms.
-    MeqExpr* stat11 = new MeqStoredParmPolc ("Leakage.11." + 
-					     itsStations[i].getName(),
-					     &itsMEP);
-    MeqExpr* stat12 = new MeqStoredParmPolc ("Leakage.12." + 
-					     itsStations[i].getName(),
-					     &itsMEP);
-    MeqExpr* stat21 = new MeqStoredParmPolc ("Leakage.21." + 
-					     itsStations[i].getName(),
-					     &itsMEP);
-    MeqExpr* stat22 = new MeqStoredParmPolc ("Leakage.22." + 
-					     itsStations[i].getName(),
-					     &itsMEP);
-    itsStatExpr.push_back (new MeqJonesNode (stat11, stat12, stat21, stat22));
     MeqExpr* frot = new MeqStoredParmPolc ("frot." +
 					   itsStations[i].getName(),
 					   &itsMEP);
@@ -225,7 +211,7 @@ void MeqCalibrater::makeWSRTExpr()
     MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
 					     itsStations[i].getName(),
 					     &itsMEP);
-    MeqJonesExpr* stat = new MeqStatExpr (frot, drot, dell, gain11, gain22);
+    itsStatExpr.push_back (new MeqStatExpr (frot, drot, dell, gain11, gain22));
   }    
 
   // Get the point sources from the GSM.
@@ -1217,7 +1203,7 @@ Bool MeqCalibrater::select(const String& where)
 // evaluation of the parameter on the current time domain.
 //
 //----------------------------------------------------------------------
-GlishRecord MeqCalibrater::getStatistics (bool detailed)
+GlishRecord MeqCalibrater::getStatistics (bool detailed, bool clear)
 {
   GlishRecord rec;
 
@@ -1238,6 +1224,19 @@ GlishRecord MeqCalibrater::getStatistics (bool detailed)
 	  String str = String::toString(ant1) + '_' + str2;
 	  rec.add ("timecells_" + str, itsCelltHist[blindex].get());
 	  rec.add ("freqcells_" + str, itsCellfHist[blindex].get());
+	}
+      }
+    }
+  }
+  if (clear) {
+    int nrant = itsBLIndex.nrow();
+    for (int ant2=0; ant2<nrant; ant2++) {
+      String str2 = String::toString(ant2);
+      for (int ant1=0; ant1<nrant; ant1++) {
+	int blindex = itsBLIndex(ant1,ant2);
+	if (blindex >= 0) {
+	  itsCelltHist[blindex].clear();
+	  itsCellfHist[blindex].clear();
 	}
       }
     }
@@ -1428,10 +1427,12 @@ MethodResult MeqCalibrater::runMethod(uInt which,
     {
       Parameter<Bool> detailed(inputRecord, "detailed",
 			       ParameterSet::In);
+      Parameter<Bool> clear(inputRecord, "clear",
+			    ParameterSet::In);
       Parameter<GlishRecord> returnval(inputRecord, "returnval",
 				       ParameterSet::Out);
 
-      if (runMethod) returnval() = getStatistics (detailed());
+      if (runMethod) returnval() = getStatistics (detailed(), clear());
     }
     break;
 
