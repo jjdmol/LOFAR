@@ -1144,7 +1144,7 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   Vector<double> errors;
   LSQaips tmpSolver = itsSolver;
   ///tmpSolver.getCovariance (covar);
-  tmpSolver.getErrors (errors);
+    ///tmpSolver.getErrors (errors);
   int nrs = itsSolution.nelements();
   Vector<double> sol(nrs);
   double* solData = itsSolution.doubleStorage();
