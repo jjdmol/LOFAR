@@ -14,6 +14,7 @@
 
 #include <lofar_config.h>
 #include <tinyCEP/WorkHolder.h>
+#include <Common/KeyValueMap.h>
 
 using namespace std;
 namespace LOFAR
@@ -37,8 +38,10 @@ public:
   /// Make a fresh copy of the WH object.
   virtual WH_Dump* make (const string& name);
 
+  virtual void preprocess();
   /// Do a process step.
   virtual void process();
+  virtual void postProcess();
 
   /// Show the work holder on stdout.
   virtual void dump();
@@ -54,24 +57,21 @@ private:
   
   int itsFBW; // frequency bandwidth of the DH_Beamlet 
 
-  //  ofstream itsOutputFile;
-  int itsIndex;
-  int itsCounter;
+  string itsOutputFileName;
+  int itsOutputFile;
   
   int itsNelements;
   int itsNchannels;
   int itsNpolarisations;
     
-  struct timeval starttime;
-  struct timeval stoptime;
+  struct timeval itsLastTime;
 
-  float bandwidth;    // stores 'measured' bandwidth in bytes/sec
+  float itsBandwidth;    // stores 'measured' bandwidth in bytes/sec
 
-  KeyValueMap itsKVM;
-
+  KeyValueMap itsKvm;
 };
 
- inline float WH_Dump::getBandwidth() { return bandwidth; } 
+ inline float WH_Dump::getBandwidth() { return itsBandwidth; } 
 } // namespace LOFAR
 
 #endif
