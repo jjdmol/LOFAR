@@ -74,9 +74,10 @@ vlink="#551A8B" alink="#FF0000">
 The DTL has been tested on these compilers: <br>
 Microsoft Visual C++ 6.0, service pack 5, using Windows NT 2000<br>
 Microsoft Visual C++ 7, using Windows NT 5<br>
+Microsoft Visual C++ 2005 Express, under Windows NT 2000<br>
 Borland 5.5, 6.0 under Windows NT 2000<br>
 GNU C++ 2.96, 3.2 using Red Hat Linux 7 with unixODBC 2.0.8<br>
-GNU C++ 3.2 using Cygwin and Microsoft ODBC DLLs<br>
+GNU C++ 3.3 using Cygwin and Microsoft ODBC DLLs<br>
 GNU C++ 2.95.4 under FreeBSD with STLPort (as reported by R. Kotha).<br>
 Sun Solaris Workshop 6, Update 1 using the Merant 3.7 ODBC drivers<br>
 HP with aCC A.03.35 using the Merant 3.7 ODBC drivers<br>
@@ -89,8 +90,10 @@ Oracle 8, 9<br>
 SQL Server 2000<br>
 Access 2000<br>
 MySQL<br>
-We have also had reports that others have successfully used DTL against Sybase and DB2.<br>
-</p>
+We have also had reports that others have successfully used DTL against Sybase, Postgres and DB2.<br>
+(Please note, as reported by Ben Martin, that if you are using Postrgres versus unixODBC then
+you should use the official Postgres driver from <a href="http://gborg.postgresql.org/project/psqlodbc/projdisplay.php">http://gborg.postgresql.org/project/psqlodbc/projdisplay.php</a>
+since the one that comes with unixODBC does not work with DTL).</p>
 
 <p>If you succeed in using the DTL with some other compiler or database,
 please <a
@@ -115,13 +118,31 @@ use of an optional jtime_c structure.  These functions will process dates
 both before and after the year 2000 correctly.
 See jtime_c for details. </p>
 
+<p><b>Can I build DTL as a DLL and just link to it?</b> <br>
+No, you cannot.  DTL is a template library.  This means that the code
+gets instantiated and customized based on the classes you supply.  Therefore you cannot simply
+build DTL as a DLL library, the code is largely in the templates / header files. </p>
+
+<p><b>When I call DTL from a DLL, sometimes I get an error when the DLL exits?</b><br>
+In principle, the C++ global destructors should correctly release the environment.
+In practice, sometimes these destructors get called after the ODBC connection
+has been dropped which may cause an error.  To handle this, it is best to
+place the following in your finalize routine for the DLL:
+<pre><code>void finalize()
+{
+    if(dtl::DBConnection::GetDefaultConnection().IsConnected())
+    {
+	dtl::DBConnection::GetDefaultConnection().Release();
+	dtl::DBConnection::GetDefaultEnvironment().Release();
+    }
+}
+</pre></code>
+</p>
+
 <p><b>What is the roadmap for future development of DTL?</b> <br>
 The top ones on my wish list would be (in order of when we are likely to get to them):<br>
 1. Improve the internals documentation - give more explanation of the design behind DTL.<br>
-2. Improve support for binding user defined types such as CString or other proprietary classes.<br>
-3. Maybe expand a bit the dictionary capabilities of DTL in terms of being able to list
-the tables in the database & browse ODBC metadata - this is kind of peripheral to what we do
-though.<br>
+<br>
 </p>
 
 <p><b>Do you have any plans to add support for native drivers?</b> <br>

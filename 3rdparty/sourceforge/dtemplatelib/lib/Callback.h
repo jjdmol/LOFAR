@@ -302,8 +302,10 @@ void operator()(T t)const{};
 typedef bool CB_BOOL;
 enum {CB_FALSE ,CB_TRUE};
 
+#include "std_warn_off.h"
 #include <string.h> //for memstuff
 #include <stddef.h> //for size_t
+#include "std_warn_on.h"
 
 //typeless representation of a function and optional object
 

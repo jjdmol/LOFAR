@@ -1,0 +1,139 @@
+<h1>Binding Non-primitive Types</h1>
+<pre>&gt;Question:
+&gt;1) We like to store non-primitive types in the database like
+&gt;complex-numbers. We have been sniffing around in the sourcecode of DTL
+&gt;(bind_basics, BoundsIO, etc) how to extend DTL, but there seem to be
+&gt;many places where we have to add some code. Do you have some kind of
+&gt;'manual' or guideline which routines we should extend/add to DTL in
+&gt;order to support 'foreign' types?
+
+Answer:
+There are two ways to do this.  The first method is to simply create
+a binding operator for your non-primitive type.  The second method
+is to add appropriate constructors and cast operators to
+the class that uses the non-primitive type.
+
+<h2>Method 1</h2>
+Suppose we have a non primitive type called &quot;cplx&quot; used to store complex numbers.
+Suppose also that we have a simple table called multiplex that holds some complex numbers:
+<code>
+<span class="codeComment">/*
+create table multiplex (
+AC1_re INTEGER NOT NULL, 
+AC1_im INTEGER NOT NULL,
+AC2_re INTEGER NOT NULL,
+AC2_im INTEGER NOT NULL);
+
+insert into multiplex(AC1_re, AC1_im, AC2_re, AC2_im) VALUES(1, 2, 3,4);
+*/</span>
+
+
+struct cplx
+{
+	int re, im;
+};
+ostream&amp; operator &lt;&lt; (ostream &amp;o, const cplx &amp;c)
+{
+	o &lt;&lt; &quot;(&quot; &lt;&lt; c.re &lt;&lt; &quot;, &quot; &lt;&lt; c.im &lt;&lt; &quot;)&quot;;
+	return o;
+}
+
+<span class="codeComment">// Here is the key step!  
+// Override the binding operator for the cplex
+// class so that it will bind the individual 
+// members in this class as needed.</span>
+BoundIO operator &gt;&gt; (BoundIO &amp;b, cplx &amp;c) {
+	 BoundIOs *pCols = b.GetBoundIOsPtr();
+	 tstring root_name = b.GetName();
+
+	 <span class="codeComment">// Remove base column.</span>
+	 pCols-&gt;EraseColumn(root_name);
+	 
+	 <span class="codeComment">// Bind individual columns from root_name.
+	 // If you don't have a naming convention you can just
+	 // pass in desired field names as a comma delimited list and 
+	 // use vector&lt;tstring&gt; fields = ParseCommaDelimitedList(root_name)</span>
+	 (*pCols)[root_name + &quot;_re&quot;] &gt;&gt; c.re;
+	 return (*pCols)[root_name + &quot;_im&quot;] &gt;&gt; c.im;
+}
+
+
+struct multiplex
+{
+	cplx AC1, AC2;
+};
+ostream&amp; operator &lt;&lt; (ostream &amp;o, const multiplex &amp;mp)
+{
+	o &lt;&lt; mp.AC1 &lt;&lt; &quot;, &quot; &lt;&lt; mp.AC2;
+	return o;
+}
+
+BEGIN_DTL_NAMESPACE
+template&lt;&gt; class DefaultBCA&lt;multiplex&gt;
+{
+public:
+ void operator()(BoundIOs &amp;cols, multiplex &amp;row)
+ {
+  <span class="codeComment">// N.B.!! These binding operators generate two columns each as per
+  // our specialization of the binding operator for cplx</span>
+  cols[&quot;AC1&quot;] &gt;&gt; row.AC1;
+  cols[&quot;AC2&quot;] &gt;&gt; row.AC2; 
+ }
+};
+END_DTL_NAMESPACE
+
+
+void test_non_primitive() {
+	DBView&lt;multiplex&gt; view(&quot;multiplex&quot;);
+	copy(view.begin(), view.end(), ostream_iterator&lt;multiplex&gt;(cout, &quot;\n&quot;));
+}
+</code>
+
+
+<h2>Method 2</h2>
+<code>
+<span class="codeComment">// Example of mapping a user defined type to a database.
+// In this case the database holds complex numbers as two fields,
+// but we want to map them into a single &quot;complex&quot; type in our class.
+
+// We can hanlde this by defining appropriate constructors and
+// cast operators for the class.
+
+// Define a struct and DBView to hold complex numbers from the table &quot;complex_value&quot;</span>
+DTL_TABLE2(complex_value,
+    int, real,
+    int, imaginary
+);
+
+<span class="codeComment">// The above MACRO defines
+// struct complex_value_row {int real; int imaginary;}
+// DBView&lt;complex_value_row&gt; complex_value_view;
+
+// For our final class we want to represent items in the object/class
+// differently than they are held in the database so we define our class as</span>
+
+class cplx_value {
+         complex c;
+public:
+      <span class="codeComment">// construct from a database row format for read</span>
+      cplx_value(const complex_value_row &amp;r) : c(r.real, r.imaginary) {}
+
+      <span class="codeComment">// convert to a database row format for write</span>
+      operator complex_value_row() {complex_value_row r; r.real = c.re(); r.imaginary = c.im(); return r;}
+}
+
+<span class="codeComment">// This cleanly separates the database representation from the class representation, but we can still read/write quite transparently</span>
+<span class="codeComment">// to or from this class. e.g.</span>
+
+void read_function() {
+         <span class="codeComment">// read from DB</span>
+         vector&lt;cplx_value&gt; values;
+
+         <span class="codeComment">// copy / read just as we normally would, the only difference is that the
+         // iterator holds an representation for the database rows since they
+         // don't exactly match the structure we want for our class</span>
+         copy(complex_value_view.begin(), complex_value_view.end(), back_inserter(values));
+}</pre>
+
+
+</pre></code>

@@ -246,10 +246,9 @@ ParamObj&gt;</font></p>
     </tr>
     <tr>
         <td valign="top"><tt>ParamObj</tt> </td>
-        <td valign="top">The type of object that will be used to
-        specify the postfix parameters to the <font size="2"
-        face="Courier New">DynamicDBView</font>.</td>
-        <td valign="top"><font size="2" face="Courier New">DefaultParamObj&lt;variant_row&gt;</font>&nbsp;
+        <td valign="top">Type of object to hold parameters for the query.  This must be convertible to a <font size="2"
+        face="Courier New">variant_row</font>.</td>
+        <td valign="top"><font size="2" face="Courier New">variant_row</font>&nbsp;
         </td>
     </tr>
 </table>
@@ -294,7 +293,6 @@ ParamObj&gt;</font></p>
       DynamicDBView(const string &amp;tableList,<br> 
 const string &amp;fieldList,<br>
 const string postfix = &quot;&quot;,<br> 
-const <a href="BPA.htm">BPA</a> bpa_functor = DefaultBPA&lt;ParamObj&gt;(),<br>
 const <a href="SelVal.htm">SelVal</a> sel_val = DefaultSelVal&lt;variant_row&gt;(),<br>
 const <a href="InsVal.htm">InsVal</a> ins_val = DefaultInsVal&lt;variant_row&gt;(),<br>
 const IOHandler&lt;variant_row, ParamObj&gt; io_hand = DEFAULT_IO_HANDLER&lt;variant_row, ParamObj&gt;(),<br>
@@ -313,17 +311,17 @@ const string &amp;keyList = &quot;&quot;)<br>
         + tableList + postfix</font></p>
       <p>In the SQL clause, users may also specify dynamic parameters through 
         the use of SQL <font size="2"
-        face="Courier New">'(?)'</font> syntax. In this case <font
-        size="2" face="Courier New">BPA</font> is a class that is used to hold 
-        these runtime parameters and <font size="2"
-        face="Courier New">bpa_functor</font> is a functor used to associate fields 
-        in the parameters class with parameter fields in the query. The ability 
+        face="Courier New">'(?)'</font> syntax. In this case these runtime parameters
+	are automatically bound to a variant_row which can be accessed via <font size="2"
+        face="Courier New">iterator.Params()</font>. An example of this can be found in
+	<font size="2" face="Courier New, Courier, mono">example/SimpleDynamicRead.cpp</font>
+        in the function <font size="2" face="Courier New, Courier, mono">SimpleDynamicWhere()</font>.  The ability 
         to override the default SQL query is inherited from <font size="2" face="Courier New, Courier, mono">DBView</font> 
         with the <font size="2" face="Courier New, Courier, mono"><a href="DBView.htm#BuildSpecialQry">BuildSpecialQry 
         </a></font>functor, but you will need to downcast the <font size="2" face="Courier New, Courier, mono">DBView 
         </font>reference to get the <font size="2" face="Courier New, Courier, mono">DynamicDBView 
         </font>for use in the <font size="2" face="Courier New, Courier, mono">operator()() 
-        </font>implementation for his functor. </p>
+        </font>implementation for this functor. </p>
       <p>The <font face="Courier New, Courier, mono" size="2">km</font> parameter 
         specifies whether the view supports autokeys, which are used for updates 
         and deletes. If <font size="2" face="Courier New, Courier, mono">km == 
@@ -368,7 +366,6 @@ size="2" face="Courier New"> </font>with the following changes.</p>
       <pre><tt>DynamicDBView(const string &amp;tableList, 
 const string &amp;fieldList,
 const string &amp;postfix = &quot;&quot;, 
-const </tt><a href="BPA.htm"><tt>BPA</tt></a><tt> bpa_functor = DefaultBPA&lt;ParamObj&gt;(),
 const </tt><a href="SelVal.htm"><tt>SelVal</tt></a><tt> sel_val = DefaultSelVal&lt;variant_row&gt;(),
 const </tt><a href="InsVal.htm"><tt>InsVal</tt></a><tt> ins_val = DefaultInsVal&lt;variant_row&gt;(),
 const <a href="IOHandler.htm">IOHandler&lt;variant_row, ParamObj&gt;</a> io_hand = DEFAULT_IO_HANDLER&lt;variant_row, ParamObj&gt;(),

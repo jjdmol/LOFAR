@@ -10,6 +10,9 @@ of this software for any purpose.
 It is provided "as is" without express or implied warranty.
 */ 
 
+// Edited: 10/26/2003 - Paul Grenyer http://www.paulgrenyer.co.uk, added static_cast as required by MSVC 7.1
+
+
 #include "DBException.h"
 #include "DBConnection.h"
 #include "DBStmt.h"
@@ -51,11 +54,7 @@ BEGIN_DTL_NAMESPACE
 
 		  tstring statestring = statestr.str();
 
-		  // statestr.freeze(false);
-
 		  tstring msgstring = msgstr.str();
-
-		  // msgstr.freeze(false);
 
 		  ODBCErrorInfo info(statestring, nErr, msgstring);
 
@@ -86,7 +85,7 @@ BEGIN_DTL_NAMESPACE
 		  
 		  for (size_t i = 0; i < sqlErrors.size(); i++)
 		  {
-			  o << _TEXT("(") << i << _TEXT(") ") << sqlErrors[i] << STD_::endl; 
+			  o << _TEXT("(") << static_cast<int>(i) << _TEXT(") ") << sqlErrors[i] << STD_::endl; 
 		  }
 
 	   }

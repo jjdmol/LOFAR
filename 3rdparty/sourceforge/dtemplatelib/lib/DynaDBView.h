@@ -13,6 +13,7 @@ It is provided "as is" without express or implied warranty.
 // Code to bind a dynamic row
 // Initial: 11/18/2000 - CJ
 // Edited: 12/19/2000 - MG - added namespaces
+// Edited: 03/24/2004 - Alexander Motzkau, Optimized DefaultSelValidate<variant_row>
 
 #ifndef DTL_DYNADBVIEW_H
 #define DTL_DYNADBVIEW_H
@@ -34,7 +35,7 @@ variant_row_fields GetFieldInfo(const tstring &TableName, tstring &TableFields, 
 								tstring &UniqueFields,
 								STD_::vector<tstring> &AppendedFields,
 								KeyMode keyMode,
-								DBConnection &conn);
+								DBConnection &conn, HSTMT *p_have_stmt = NULL);
 
 class DynamicRowBCA
 {
@@ -43,26 +44,46 @@ class DynamicRowBCA
 	  STD_::vector<tstring> appendedFieldNames; 
 						// fields appended by GetFieldInfo() for the key
 	  KeyMode km;
+	  bool bBindParams;
   public:
-	  DynamicRowBCA() : fields(), appendedFieldNames(), km(USE_ALL_FIELDS) { }
+	  DynamicRowBCA() : fields(), appendedFieldNames(), km(USE_ALL_FIELDS), bBindParams(false) { }
 	  DynamicRowBCA(const variant_row_fields &f, KeyMode mode = USE_AUTO_KEY, 
-				const STD_::vector<tstring> &appended = 
-				STD_::vector<tstring>()) : 
-					fields(f), appendedFieldNames(appended), 
-						km(mode) {}
+	  const STD_::vector<tstring> &appended = 
+	  STD_::vector<tstring>()) : 
+	  fields(f), appendedFieldNames(appended), 
+	  km(mode), bBindParams(false) 
+	  {}
 
 	  // should be exception-safe as synthesized copy constructor used for fields
 	  DynamicRowBCA(const DynamicRowBCA &bca) :
 		fields(bca.fields), appendedFieldNames(bca.appendedFieldNames),
-		km(bca.km)
+		km(bca.km), bBindParams(bca.bBindParams)
 		{ }
 
+	  DynamicRowBCA(const DynamicRowBCA &bca, bool BindParams) :
+		fields(bca.fields), appendedFieldNames(bca.appendedFieldNames),
+		km(bca.km), bBindParams(BindParams)
+		{ 
+			if (!bBindParams)
+				return;
+
+			// correct fields to only hold parameters
+			variant_row_fields param_fields;
+			for (STD_::vector<tstring>::iterator i = fields.names.begin(); i != fields.names.end(); i++)
+			{
+					int idx = i - fields.names.begin();
+					if (fields.types[idx].IsParam()) 
+						param_fields.push_back(fields.types[idx], *i);
+			}
+			fields = param_fields;
+		}
 	  // exception-safe swap()
 	  void swap(DynamicRowBCA &other)
 	  {
 		fields.swap(other.fields);
 		appendedFieldNames.swap(other.appendedFieldNames);
 		STD_::swap(km, other.km);
+		STD_::swap(bBindParams, other.bBindParams);
 	  }
 
 	  // exception-safe assignment
@@ -83,25 +104,73 @@ class DynamicRowBCA
 		  // initialize progenitor row class
 		  // all other rows must be assign constructed or copy constructed from this row
 		  // to have the correct size & types
+
+		  // only put the fields we need in the variant object
+		  variant_row_fields filtered;
+	
 		  if (!rowbuf.IsInit()) {
-			  variant_row row(fields.types, fields.names);
+			  for (STD_::vector<tstring>::iterator i = fields.names.begin(); i != fields.names.end(); i++)
+			  {
+				  int idx = i - fields.names.begin();
+				  TypeTranslation tt = fields.types[idx];
+				  if (bBindParams) 
+				  {
+					if (fields.types[idx].IsParam()) 
+					{
+						filtered.push_back(tt, *i);
+					}
+				  }
+				  else
+				  {
+					if (!fields.types[idx].IsParam()) 
+					{
+						filtered.push_back(tt, *i);
+					}
+				  }
+			  }
+
+			  variant_row row(filtered.types, filtered.names);
 			  rowbuf = row;
 		  }
+		  else
+		  {
+			  filtered = rowbuf.GetVariantRowFields();
+		  }
+
+		  
 		 
 		  // boundIOs.clear();
-		  boundIOs.BindAsBase(rowbuf.p_data, fields.row_size, DTL_TYPEID_NAME (rowbuf));
+		  boundIOs.BindAsBase(rowbuf.p_data, filtered.row_size, DTL_TYPEID_NAME (rowbuf));
 
 	
 		  // create boundIOs with full data
-		  for (STD_::vector<tstring>::iterator i = fields.names.begin(); i != fields.names.end(); i++)
+		  int param_no = 0;
+		  for (STD_::vector<tstring>::iterator i = filtered.names.begin(); i != filtered.names.end(); i++)
 		  {
 
-				int idx = i - fields.names.begin();
+				int idx = i - filtered.names.begin();
 			    // Create full boundIO versus rowbuf
-			    BoundIO boundIO(boundIOs, *i, fields.types[idx], rowbuf.p_data + fields.offsets[idx], rowbuf.p_data, fields.row_size);
-				boundIO.SetAsVariantRow();
-				boundIO.SetColNo(idx);
-				boundIOs[*i] = boundIO; // reentrancy fix for DB_iterator bug
+			    BoundIO boundIO(boundIOs, *i, filtered.types[idx], rowbuf.p_data + filtered.offsets[idx], rowbuf.p_data, filtered.row_size);
+				boundIO.SetAsVariantRow(idx);
+				TypeTranslation tt = filtered.types[idx];
+				if (bBindParams) {
+					if (filtered.types[idx].IsParam()) 
+					{
+						boundIO.SetParamType(SQL_PARAM_INPUT);
+						boundIO.SetBindingType(BoundIO::PARAM);
+						boundIOs[param_no++] = boundIO; // N.B.! We bind with integer here to indicate a paramter
+					}
+					else
+						continue;
+				}
+				else {
+					if (!filtered.types[idx].IsParam())
+					{
+						boundIO.SetColNo(idx);
+						boundIOs[*i] = boundIO;
+					}
+				}
+				
 		  }
 
 		  // we do NOT want the appended fields if the keyMode is not set to use autokey
@@ -253,7 +322,6 @@ inline STD_::vector<tstring> GetAppendedFieldNames(BCAWrap<variant_row> &bca) {
 
 
 
-
 // select default behavior ... record null columns in rowbuf
 // if there are other checks you wish to make, put them in
 // your own SelValidate function (of type DBView<DataObj, ParamObj>::SelVal)
@@ -270,7 +338,7 @@ public:
 			BoundIO &boundIO = (*b_it).second;
 			if ((boundIO.IsColumn() || boundIO.GetParamType() == SQL_PARAM_OUTPUT  || boundIO.GetParamType() == SQL_PARAM_INPUT_OUTPUT) 
 				&& boundIO.IsNull())
-				rowbuf.SetNull(boundIO.GetName()); // found null column ... record null status in rowbuf 
+				rowbuf.SetNull(boundIO.GetVariantRowIdx()); // found null column ... record null status in rowbuf 
 		}
 
 		return true;	// assume data is OK
@@ -321,7 +389,7 @@ public:
 
 		           const timestamp_t InvalidTimestamp = {0, 0, 0, 0, 0, 0, 0};
 			   if (TS == InvalidTimestamp)
-				   throw VariantException(_TEXT("DefaultInsValidate<variant_row>()"),
+				   DTL_THROW VariantException(_TEXT("DefaultInsValidate<variant_row>()"),
 						_TEXT("Uninitialized date field '") + boundIO.GetName() + 
 						_TEXT("' in variant_row!"));
 			}
@@ -333,12 +401,22 @@ public:
 };
 
 
-template<class ParamObj = DefaultParamObj<variant_row> >
+template<class ParamObj = variant_row >
 class DynamicDBView : public DBView<variant_row, ParamObj> {
 public:
+	typedef BCAWrap<variant_row> BCA;
 	typedef BPAWrap<ParamObj> BPA;
 	typedef typename DBView<variant_row, ParamObj>::InsVal InsVal;
 	typedef typename DBView<variant_row, ParamObj>::SelVal SelVal;
+
+#if !defined (__BORLANDC__)
+	using DBView<variant_row, ParamObj>::GetBCA; 
+	using DBView<variant_row, ParamObj>::SetBPA; 
+	using DBView<variant_row, ParamObj>::bca; 
+	using DBView<variant_row, ParamObj>::rawSQL; 
+	using DBView<variant_row, ParamObj>::keyMode; 
+	using DBView<variant_row, ParamObj>::pConn; 
+#endif
 
 	DynamicDBView(typename DBView<variant_row, ParamObj>::Args args) : 
 	DBView<variant_row, ParamObj>(
@@ -354,6 +432,8 @@ public:
 	)
 		
 	{
+		SetBPA(DynamicRowBCA(GetBCA().get((DynamicRowBCA *)NULL), true));
+
 		if (args.keyMode == USE_AUTO_KEY)
 		{
 			SetAutoKey(args.keyList);
@@ -364,14 +444,15 @@ public:
 
 			bca_ref.SetAppendedFieldNames(args.appendedFieldNames);
 		}
+
 	}
 
 	typedef  DEFAULT_IO_HANDLER<variant_row, ParamObj> DIOH;
-
+	
     // note that keyList and appendedFieldNames are for internal use only and
     // are not meant to be called by the user!!!!
 	DynamicDBView(const tstring tableList, const tstring fieldList,
-		const tstring postfix = _TEXT(""),	const BPA bpa_fn = DefaultBPA<ParamObj>(),
+		const tstring postfix = _TEXT(""),	
 		const SelVal sel_val = DefaultSelValidate<variant_row>(),
 		const InsVal ins_val = DefaultInsValidate<variant_row>(),
 		const IOHandler<variant_row, ParamObj> io_hand = DIOH(),
@@ -386,8 +467,10 @@ public:
 				const_cast<STD_::vector<tstring> &>(appendedFieldNames),
 				keyMode,
 				connection), keyMode),
-				postfix, bpa_fn, sel_val, ins_val, io_hand, connection, keyList, keyMode)
+				postfix, DynamicRowBCA(), sel_val, ins_val, io_hand, connection, keyList, keyMode)
 		{
+			SetBPA(DynamicRowBCA(GetBCA().get((DynamicRowBCA *)NULL), true));
+
 			if (keyMode == USE_AUTO_KEY)
 			{
 				this->SetAutoKey(keyList);
@@ -398,6 +481,7 @@ public:
 
 				bca_ref.SetAppendedFieldNames(appendedFieldNames);
 			}
+
 		}
 
 
@@ -419,6 +503,16 @@ public:
 		}
 
 		return *this;
+	}
+
+
+	// reset BCA to be built from a particular HSTMT
+	// used only by sql_iterator
+	const BCA & RefreshBCA(HSTMT *p_stmt) { 
+		tstring dmy1, dmy2, dmy3;
+		bca = DynamicRowBCA(GetFieldInfo(rawSQL, dmy1,  dmy2, dmy3, STD_::vector<tstring>(), 
+			                             keyMode, *pConn, p_stmt), keyMode);
+		return bca;			  
 	}
 };
 
@@ -504,6 +598,7 @@ public:
 			this_type temp(other);
 			swap(temp);
 		}
+		return *this;
 	}
 };
 

@@ -67,7 +67,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GR /GX /ZI /Od /I "../lib" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "DTL_UC" /FR /YX /FD /GZ /Zm250 /c
+# ADD CPP /nologo /MDd /W3 /Gm /GR /GX /ZI /Od /I "../lib" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "DTL_UC" /FR /YX /FD /GZ /Zm250 /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -92,7 +92,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /Gm /GR /GX /ZI /Od /I "../lib" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /FR /YX /FD /GZ /Zm250 /c
-# ADD CPP /nologo /Gm /GR /GX /ZI /Od /I "../lib" /I "C:\stlport" /I "C:\stlport\old_hp" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "__STL_USE_OWN_NAMESPACE" /D "__STL_USE_NAMESPACES" /D "__STL_USE_NEW_C_HEADERS" /FR /YX /FD /GZ /Zm250 /c
+# ADD CPP /nologo /MDd /Gm /GR /GX /ZI /Od /I "../lib" /I "C:\stlport" /I "C:\stlport\old_hp" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "__STL_USE_OWN_NAMESPACE" /D "__STL_USE_NAMESPACES" /D "__STL_USE_NEW_C_HEADERS" /FR /YX /FD /GZ /Zm250 /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -127,6 +127,10 @@ SOURCE=.\example.cpp
 # Begin Source File
 
 SOURCE=.\example_core.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\GlobalHandler.cpp
 # End Source File
 # Begin Source File
 

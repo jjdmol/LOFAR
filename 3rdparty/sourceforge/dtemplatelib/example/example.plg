@@ -3,39 +3,138 @@
 <pre>
 <h1>Build Log</h1>
 <h3>
---------------------Configuration: example - Win32 Debug STLPort--------------------
+--------------------Configuration: DTL - Win32 Debug--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "C:\DOCUME~1\corwinj\LOCALS~1\Temp\RSP138E.tmp" with contents
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP189B.tmp" with contents
 [
-/nologo /MLd /Gm /GR /GX /ZI /Od /I "../lib" /I "C:\stlport" /I "C:\stlport\old_hp" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "__STL_USE_OWN_NAMESPACE" /D "__STL_USE_NAMESPACES" /D "__STL_USE_NEW_C_HEADERS" /FR"example___Win32_Debug_STLPort/" /Fp"example___Win32_Debug_STLPort/example.pch" /YX /Fo"example___Win32_Debug_STLPort/" /Fd"example___Win32_Debug_STLPort/" /FD /GZ /Zm250 /c 
-"G:\dtl35\example\example.cpp"
+/nologo /MDd /W3 /Gm /GR /GX /ZI /Od /I "." /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /D "DTL_UC" /FR"Debug/" /Fp"Debug/DTL.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"C:\dtl_36\dtl_36\lib\bind_basics.cpp"
+"C:\dtl_36\dtl_36\lib\BoundIO.cpp"
+"C:\dtl_36\dtl_36\lib\clib_fwd.cpp"
+"C:\dtl_36\dtl_36\lib\CountedPtr.cpp"
+"C:\dtl_36\dtl_36\lib\date_util.cpp"
+"C:\dtl_36\dtl_36\lib\DB_Base.cpp"
+"C:\dtl_36\dtl_36\lib\DBConnection.cpp"
+"C:\dtl_36\dtl_36\lib\DBException.cpp"
+"C:\dtl_36\dtl_36\lib\DBStmt.cpp"
+"C:\dtl_36\dtl_36\lib\DBView.cpp"
+"C:\dtl_36\dtl_36\lib\dtl_base_types.cpp"
+"C:\dtl_36\dtl_36\lib\LocalBCA.cpp"
+"C:\dtl_36\dtl_36\lib\RootException.cpp"
+"C:\dtl_36\dtl_36\lib\string_util.cpp"
+"C:\dtl_36\dtl_36\lib\validate.cpp"
+"C:\dtl_36\dtl_36\lib\variant_row.cpp"
+"C:\dtl_36\dtl_36\lib\VariantException.cpp"
 ]
-Creating command line "cl.exe @C:\DOCUME~1\corwinj\LOCALS~1\Temp\RSP138E.tmp" 
-Creating temporary file "C:\DOCUME~1\corwinj\LOCALS~1\Temp\RSP138F.tmp" with contents
+Creating command line "cl.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP189B.tmp" 
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP189C.tmp" with contents
 [
-../lib/DTL___Win32_Debug_STLPort/DTL.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:yes /pdb:"example___Win32_Debug_STLPort/example.pdb" /debug /machine:I386 /out:"example___Win32_Debug_STLPort/example.exe" /pdbtype:sept 
-.\example___Win32_Debug_STLPort\CStringExample.obj
-.\example___Win32_Debug_STLPort\DynamicIndexedViewExample.obj
-.\example___Win32_Debug_STLPort\example.obj
-.\example___Win32_Debug_STLPort\example_core.obj
-.\example___Win32_Debug_STLPort\IndexedViewExample.obj
-.\example___Win32_Debug_STLPort\main.obj
-.\example___Win32_Debug_STLPort\range.obj
-.\example___Win32_Debug_STLPort\ReadData.obj
-.\example___Win32_Debug_STLPort\ReadDataNoMatches.obj
-.\example___Win32_Debug_STLPort\ReadJoinedData.obj
-.\example___Win32_Debug_STLPort\ShareConn.obj
-.\example___Win32_Debug_STLPort\SimpleDynamicRead.obj
-.\example___Win32_Debug_STLPort\SpecialQryExample.obj
-.\example___Win32_Debug_STLPort\StoredProc.obj
-.\example___Win32_Debug_STLPort\WriteData.obj
-\dtl35\lib\DTL___Win32_Debug_STLPort\DTL.lib
+/nologo /out:"Debug\DTL.lib" 
+.\Debug\bind_basics.obj
+.\Debug\BoundIO.obj
+.\Debug\clib_fwd.obj
+.\Debug\CountedPtr.obj
+.\Debug\date_util.obj
+.\Debug\DB_Base.obj
+.\Debug\DBConnection.obj
+.\Debug\DBException.obj
+.\Debug\DBStmt.obj
+.\Debug\DBView.obj
+.\Debug\dtl_base_types.obj
+.\Debug\LocalBCA.obj
+.\Debug\RootException.obj
+.\Debug\string_util.obj
+.\Debug\validate.obj
+.\Debug\variant_row.obj
+.\Debug\VariantException.obj
 ]
-Creating command line "link.exe @C:\DOCUME~1\corwinj\LOCALS~1\Temp\RSP138F.tmp"
+Creating command line "link.exe -lib @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP189C.tmp"
 <h3>Output Window</h3>
 Compiling...
+bind_basics.cpp
+BoundIO.cpp
+clib_fwd.cpp
+CountedPtr.cpp
+date_util.cpp
+DB_Base.cpp
+DBConnection.cpp
+DBException.cpp
+DBStmt.cpp
+DBView.cpp
+dtl_base_types.cpp
+LocalBCA.cpp
+RootException.cpp
+string_util.cpp
+validate.cpp
+variant_row.cpp
+VariantException.cpp
+Creating library...
+<h3>
+--------------------Configuration: example - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP189E.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GR /GX /ZI /Od /I "../lib" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "DTL_UC" /FR"Debug/" /Fp"Debug/example.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /Zm250 /c 
+"C:\dtl_36\dtl_36\example\CStringExample.cpp"
+"C:\dtl_36\dtl_36\example\DynamicIndexedViewExample.cpp"
+"C:\dtl_36\dtl_36\example\example.cpp"
+"C:\dtl_36\dtl_36\example\example_core.cpp"
+"C:\dtl_36\dtl_36\example\GlobalHandler.cpp"
+"C:\dtl_36\dtl_36\example\IndexedViewExample.cpp"
+"C:\dtl_36\dtl_36\example\main.cpp"
+"C:\dtl_36\dtl_36\example\range.cpp"
+"C:\dtl_36\dtl_36\example\ReadData.cpp"
+"C:\dtl_36\dtl_36\example\ReadDataNoMatches.cpp"
+"C:\dtl_36\dtl_36\example\ReadJoinedData.cpp"
+"C:\dtl_36\dtl_36\example\ShareConn.cpp"
+"C:\dtl_36\dtl_36\example\SimpleDynamicRead.cpp"
+"C:\dtl_36\dtl_36\example\SpecialQryExample.cpp"
+"C:\dtl_36\dtl_36\example\StoredProc.cpp"
+"C:\dtl_36\dtl_36\example\WriteData.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP189E.tmp" 
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP189F.tmp" with contents
+[
+../lib/debug/DTL.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:yes /pdb:"Debug/example.pdb" /debug /machine:I386 /out:"Debug/example.exe" /pdbtype:sept 
+.\Debug\CStringExample.obj
+.\Debug\DynamicIndexedViewExample.obj
+.\Debug\example.obj
+.\Debug\example_core.obj
+.\Debug\GlobalHandler.obj
+.\Debug\IndexedViewExample.obj
+.\Debug\main.obj
+.\Debug\range.obj
+.\Debug\ReadData.obj
+.\Debug\ReadDataNoMatches.obj
+.\Debug\ReadJoinedData.obj
+.\Debug\ShareConn.obj
+.\Debug\SimpleDynamicRead.obj
+.\Debug\SpecialQryExample.obj
+.\Debug\StoredProc.obj
+.\Debug\WriteData.obj
+\dtl_36\dtl_36\lib\Debug\DTL.lib
+]
+Creating command line "link.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSP189F.tmp"
+<h3>Output Window</h3>
+Compiling...
+CStringExample.cpp
+DynamicIndexedViewExample.cpp
 example.cpp
+example_core.cpp
+GlobalHandler.cpp
+IndexedViewExample.cpp
+main.cpp
+range.cpp
+ReadData.cpp
+ReadDataNoMatches.cpp
+ReadJoinedData.cpp
+ShareConn.cpp
+SimpleDynamicRead.cpp
+SpecialQryExample.cpp
+StoredProc.cpp
+WriteData.cpp
 Linking...
 
 

@@ -11,15 +11,13 @@ It is provided "as is" without express or implied warranty.
 */ 
 
 #include "validate.h"
+#include "clib_fwd.h"
 
 #include "std_warn_off.h"
 #include <sstream>
 #include <typeinfo>
 #include <algorithm>
 #include "std_warn_on.h"
-
-#include "clib_fwd.h"
-
 
 BEGIN_DTL_NAMESPACE
 
@@ -82,7 +80,7 @@ void ValidatedObject::invalidate()
 void ValidatedObject::validate() const
 {
 		 if (!valid())
-			 throw ValidityException(_TEXT("ValidatedObject::validate()"), 
+			 DTL_THROW ValidityException(_TEXT("ValidatedObject::validate()"), 
 			 tstring_cast((tstring *)NULL, STD_::string(typeid(*this).name())));
 }
 
@@ -94,7 +92,7 @@ void ValidatedObject::revalidate()
 		 if (valid())
 			 return;
 
-		 			 throw ValidityException(_TEXT("ValidatedObject::revalidate()"), 
+		 			 DTL_THROW ValidityException(_TEXT("ValidatedObject::revalidate()"), 
 			 tstring_cast((tstring *)NULL, STD_::string(typeid(*this).name())),
 			 ValidityException::REVALIDATE_FAILED);
 }

@@ -2,9 +2,7 @@
 
 BEGIN_DTL_NAMESPACE
 
-static
-tstring
-trim (const tstring& s) // trim a macro?
+static tstring trim (const tstring& s) // trim a macro?
 {
   tstring::size_type
     pos1 = s.find_first_not_of (tstring::value_type (_TEXT(' '))),
@@ -15,9 +13,7 @@ trim (const tstring& s) // trim a macro?
   return s.substr (pos1).substr (0, pos2 + 1 - pos1);
 }
 
-static
-tstring
-maybe_quote (const tstring& s, const tstring& q)
+static tstring maybe_quote (const tstring& s, const tstring& q)
 {
   tstring r (trim (s));
 
@@ -30,16 +26,12 @@ maybe_quote (const tstring& s, const tstring& q)
   return r;
 }
 
-static
-void
-default_append_column (tstring& r, const tstring& c, const tstring& q)
+static void default_append_column (tstring& r, const tstring& c, const tstring& q)
 {
   r.append (maybe_quote (c, q));
 }
 
-static
-void
-update_append_column (tstring& r, const tstring& c, const tstring& q)
+static void update_append_column (tstring& r, const tstring& c, const tstring& q)
 {
   r.append (maybe_quote (c, q));
   r.append (_TEXT (" = (?) "));
@@ -47,9 +39,7 @@ update_append_column (tstring& r, const tstring& c, const tstring& q)
 
 typedef void (*append_column_t) (tstring&, const tstring&, const tstring&);
 
-static
-tstring
-quoted_list (const STD_::vector<tstring>& l, const tstring& q,
+static tstring quoted_list (const STD_::vector<tstring>& l, const tstring& q,
 	     append_column_t append_column = default_append_column)
 {
   tstring r;
@@ -91,14 +81,14 @@ tstring MakeQryString( const tstring &postfixClause ,
 	  case SELECT: {
 		 // SELECT colNames FROM tableNames postfixClause
 		 if (tableNames.empty())
-			throw DBException(_TEXT("DBView::BuildQry()"),
+			DTL_THROW DBException(_TEXT("DBView::BuildQry()"),
 				   _TEXT("SELECT : must select from at least one table"), NULL, NULL);
 
 		 // Catch this error in MakeBindings()
 		 // Need to leave this test out so that sql_iterator can work
 		 //
 		 //if (colNames.empty())
-		 //	throw DBException(_TEXT("DBView::BuildQry()"),
+		 //	DTL_THROW DBException(_TEXT("DBView::BuildQry()"),
 		 //		   _TEXT("SELECT : must select from at least one column"), NULL, NULL);
 
 		 // build SELECT stmt into Query
@@ -120,11 +110,11 @@ tstring MakeQryString( const tstring &postfixClause ,
 		 // VALUES (?, ?, ...) postfixClause
 
 		 if (tableNames.size() != 1)	
-			throw DBException(_TEXT("DBView::BuildQry()"),
+			DTL_THROW DBException(_TEXT("DBView::BuildQry()"),
 				_TEXT("INSERT:  must insert into exactly one table"), NULL, NULL);
 
 		 if (colNames.empty())
-			throw DBException(_TEXT("DBView::BuildQry()"),
+			DTL_THROW DBException(_TEXT("DBView::BuildQry()"),
 				_TEXT("INSERT:  must insert with at least one column"), NULL, NULL); 
 
 		 // build INSERT stmt into Query
@@ -154,11 +144,11 @@ tstring MakeQryString( const tstring &postfixClause ,
 	  case UPDATE: {
 		 // UPDATE tableName SET colName[0]=?, colName[1]=?, ... postfixClause
 		 if (tableNames.size() != 1)
-			throw DBException(_TEXT("DBView::BuildQry()"), 
+			DTL_THROW DBException(_TEXT("DBView::BuildQry()"), 
 				_TEXT("UPDATE: must update in exactly one table"), NULL, NULL);
 
 		 if (colNames.empty())
-			throw DBException(_TEXT("DBView::BuildQry()"),
+			DTL_THROW DBException(_TEXT("DBView::BuildQry()"),
 				_TEXT("UPDATE: must update at least one column"), NULL, NULL);
 
 		 // build UPDATE stmt into Query
@@ -179,7 +169,7 @@ tstring MakeQryString( const tstring &postfixClause ,
 	  case DEL: {
 		 // DELETE FROM tableName WHERE colName[0] and colName[1] ... postfixClause
 		 if (tableNames.size() != 1)
-			throw DBException(_TEXT("DBView::BuildQry()"),
+			DTL_THROW DBException(_TEXT("DBView::BuildQry()"),
 				_TEXT("DELETE: must delete from exactly one table"), NULL, NULL);
 
 		 // build DELETE stmt into Query
@@ -193,7 +183,7 @@ tstring MakeQryString( const tstring &postfixClause ,
 
 		 // don't allow deletes to wipe out a whole table
 		 if (colNames.empty())
-			 throw DBException(_TEXT("DBView::BuildQry()"),
+			 DTL_THROW DBException(_TEXT("DBView::BuildQry()"),
 			   _TEXT("DELETE: Must specify at least one column to filter on!"), NULL, NULL);
 
 		 // now build colNames clause in form of
@@ -203,7 +193,7 @@ tstring MakeQryString( const tstring &postfixClause ,
 		 break;
 		 }
 	   default: // shouldn't happen ... throw exception if it does
-		   throw DBException(_TEXT("DBView::BuildQry()"),
+		   DTL_THROW DBException(_TEXT("DBView::BuildQry()"),
 			    _TEXT("Invalid statement type!"), NULL, NULL);
 	  }
 

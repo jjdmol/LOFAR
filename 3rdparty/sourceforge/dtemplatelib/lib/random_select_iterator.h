@@ -19,7 +19,7 @@ It is provided "as is" without express or implied warranty.
 #define DTL_RANDOM_SELECT_ITERATOR_H
 
 #include "select_iterator.h"
-#include <dtl_algo.h>
+#include "dtl_algo.h"
 
 BEGIN_DTL_NAMESPACE
 
@@ -72,7 +72,9 @@ private:
 		base_row = ((int)((row-1)/buffer_size)) * buffer_size + 1;
 
 		DataObj *buf_begin = reinterpret_cast<DataObj *>(&*buffer.begin());
-		DataObj *buf_end = reinterpret_cast<DataObj *>(&*buffer.end());
+		// DataObj *buf_end = reinterpret_cast<DataObj *>(&*buffer.end());
+		// Have to be careful, compilers like MSVC 2005 will freak if they think we are accessing *end()
+		DataObj *buf_end = reinterpret_cast<DataObj *>(&*buffer.begin() + buffer.size() + 1);
 
 		rows_in_buffer = 0;
 
@@ -85,7 +87,7 @@ public:
 	DB_random_select_iterator_buffer(const SelectIterator &sel_it) : 
 		read_it(sel_it), 
 		NumColumns(read_it.GetBoundIOs().NumColumns()),
-		row_size(MAX(get_row_size(read_it.GetDataObj()), MAX(sizeof(SQLINTEGER) * NumColumns, sizeof(TIMESTAMP_STRUCT) * NumColumns))),
+		row_size(DTL_MAX(get_row_size(read_it.GetDataObj()), DTL_MAX(sizeof(SQLINTEGER) * NumColumns, sizeof(TIMESTAMP_STRUCT) * NumColumns))),
 		buffer(row_size * buffer_size),
 		base_row(0),
 		rows_in_buffer(0),
@@ -114,7 +116,10 @@ public:
 		construct_buffer(tmp);
 		
 		DataObj *buf_begin = reinterpret_cast<DataObj *>(&*buffer.begin());
-		DataObj *buf_end = reinterpret_cast<DataObj *>(&*buffer.end());
+		// DataObj *buf_end = reinterpret_cast<DataObj *>(&*buffer.end());
+		// Have to be careful, compilers like MSVC 2005 will freak if they think we are accessing *end()
+		DataObj *buf_end = reinterpret_cast<DataObj *>(&*buffer.begin() + buffer.size() + 1);
+
 
 		rows_in_buffer = 0;
 
@@ -126,7 +131,6 @@ public:
 
 		return last_row;
 	}
-
 
 
 	const DataObj *get_row(SQLINTEGER row, bool &at_end)  {  
@@ -157,7 +161,7 @@ public:
 				if (!sel_val.operator()(bios, *copy_me))
 				{
 					 
-					throw DBException(_TEXT("DB_random_select_iterator_buffer::get_row()"),
+					DTL_THROW DBException(_TEXT("DB_random_select_iterator_buffer::get_row()"),
 							  _TEXT("SelValidate() failed on statement \"") +
 							  read_it.GetQuery() + _TEXT("\"!"), NULL, NULL);
 				}
@@ -333,13 +337,13 @@ private:
    const DataObj &get_value() const
    {
 	   if (row < 1)
-		   throw DBException(_TEXT("DB_random_select_iterator::get_value()"),
+		   DTL_THROW DBException(_TEXT("DB_random_select_iterator::get_value()"),
 				_TEXT("Attempt to access element past end of iterator range!"), NULL, NULL);
 
 	   bool at_end;
 	   const DataObj *pd = pselect_buffer->get_row(row, at_end);
 	   if (at_end)
-		   throw DBException(_TEXT("DB_random_select_iterator::get_value()"),
+		   DTL_THROW DBException(_TEXT("DB_random_select_iterator::get_value()"),
 				_TEXT("Attempt to access element past end of iterator range!"), NULL, NULL);
 
 	   return *pd;

@@ -31,6 +31,9 @@ It is provided "as is" without express or implied warranty.
 // Because Michael Gradman & Corwin Joy have modified this extensively from
 // the original version, please contact us if you have any questions
 
+// Edited: 10/26/2003 - Paul Grenyer http://www.paulgrenyer.co.uk, added static_cast as required by MSVC 7.1
+// Edited: 03/24/2004 - Alexander Motzkau, give the variant_row index to the TypeTranslationField
+
 #ifndef VARIANT_H
 #define VARIANT_H
 
@@ -56,7 +59,7 @@ BEGIN_DTL_NAMESPACE
 
 class variant_row ;
 class variant_field;
-class variant_t;
+class dtl_variant_t;
 
 // marker used to indicate we want a field to be null
 struct NullField 
@@ -72,8 +75,8 @@ struct NullField
 void variant_row_SetNull(variant_row *vr, int i);
 void variant_row_ClearNull(variant_row *vr, int i);
 
-// needed for variant_t(const variant_field &vf) constructor
-variant_t variant_val(const variant_field &vf);
+// needed for dtl_variant_t(const variant_field &vf) constructor
+dtl_variant_t variant_val(const variant_field &vf);
 
 
 // Note: Some compilers fail to explicitely instantiate member template functions:
@@ -102,7 +105,7 @@ variant_t variant_val(const variant_field &vf);
 #ifdef _GCC_CAST_BUG
 // gnu C++ 2.95 for some reason does not recognize e.g. short int as a
 // single typename.  Hacky workaround to fix
-// This class has been moved from within the variant_t class because of 
+// This class has been moved from within the dtl_variant_t class because of 
 // problems with the aCC compiler (A.03.33) on HPUX
 template<class TT> 
 class integral_type 
@@ -149,7 +152,7 @@ public:
   T data ;
 };
 
-// Class variant_t
+// Class dtl_variant_t
 // Encapsulates a value of arbitrary type.
 // It can be constructed with values of any type without
 // explicit casting. Its value can be retrieved by
@@ -157,28 +160,28 @@ public:
 // If an attempt is made to convert it to a type other than
 // the type used with the constructor, invalid_argument is
 // thrown.
-// variant_t objects can be efficiently and safely copied
+// dtl_variant_t objects can be efficiently and safely copied
 // without loosing the value and type.
 //
 // Original Mar 2000, Fernando Luis Cacciola Carballal.
 //                      to avoid overload resolution problems.
 //  
-class variant_t
+class dtl_variant_t
 {
 protected:
     template<typename T>
     static Impl_t<T>* CastFromBase ( ImplBase_t* v , T const* =NULL )
     {
       // This upcast will fail if T is other than the T used
-      // with the constructor of variant_t.
+      // with the constructor of dtl_variant_t.
       Impl_t<T>* p = dynamic_cast<Impl_t<T>*> ( v ) ;
       if ( p == NULL )
 	  {
 		  STD_::string errmsg;
 		  errmsg.reserve(512);
 		  errmsg += typeid(T).name();
-		  errmsg += " is not a valid type";
-		  throw VariantException(_TEXT("variant_t::CastFromBase()"),
+		  errmsg += " is not a valid type cast for this data";
+		  DTL_THROW VariantException(_TEXT("dtl_variant_t::CastFromBase()"),
              tstring_cast((tstring *) NULL, errmsg));
 	  }
       return p ;
@@ -229,7 +232,13 @@ protected:
 		  unsigned long *dmy=NULL; 
 		  return T(DTL_TEMPLATE_FUNC(CastFromBase, unsigned long)(data, dmy)->data);
 		}
-	  case C_DOUBLE: 
+	  case C_INT64:
+		{
+		  ODBCINT64 *dmy=NULL; 
+		  return T(DTL_TEMPLATE_FUNC(CastFromBase, ODBCINT64)(data, dmy)->data);
+		}
+
+      case C_DOUBLE:
 		{
 		  double *dmy=NULL; 
 		  return T(DTL_TEMPLATE_FUNC(CastFromBase, double)(data, dmy)->data);
@@ -327,10 +336,12 @@ protected:
 		// case C_TIMESTAMP: 
 
 		default:
-		  throw VariantException
-			(_TEXT("variant_t::numeric_cast()"),
+		  DTL_THROW VariantException
+			(_TEXT("dtl_variant_t::numeric_cast()"),
 			 tstring_cast((tstring *)NULL, STD_::string(typeid(T).name()))+
 			 tstring(_TEXT(" cannot be cast to a numeric type")));
+
+		  return T(0);
 	  }
 	  
 	}
@@ -338,7 +349,7 @@ protected:
     // Map the class to our typeid enumeration
 	template<class T> char find_typeid(const T &t) {
 		// use RTTI to get the type of the object
-		static STD_::string nameOfSelf = typeid(variant_t).name();
+		static STD_::string nameOfSelf = typeid(dtl_variant_t).name();
 		STD_::string nameOfType = DTL_TYPEID_NAME (T);
 	        STD_::string::size_type del = 6, pos;
 
@@ -360,7 +371,7 @@ protected:
 		if (tt.complexity == TypeTranslation::TYPE_INVALID)
 		{
 			STD_::ostringstream str;
-			str << SQL_types_to_C.size();
+			str << static_cast<unsigned int>(SQL_types_to_C.size());
 			STD_::string errmsg;
 			errmsg.reserve(512);
 			errmsg += typeid(T).name();
@@ -370,7 +381,7 @@ protected:
 			errmsg += str.str();
 			errmsg += "types.";	
 			errmsg += "This is not a valid type";
-		    throw VariantException(_TEXT("variant_t::find_typeid()"),
+		    DTL_THROW VariantException(_TEXT("dtl_variant_t::find_typeid()"),
 			    tstring_cast((tstring *)NULL, errmsg));
 		}
 
@@ -384,28 +395,50 @@ protected:
 		typeId = find_typeid(other);
 	}
 
-  	void private_construct(const variant_t &other);
+  	void private_construct(const dtl_variant_t &other);
 	
 public :
 
-  variant_t();
+  dtl_variant_t();
 
   // This member template constructor allows you to
-  // instance a variant_t object with a value of any type.
-#if 1
-  template<typename T> /*PS explicit*/ variant_t (const T & v)
-  {private_construct(v);}
+  // instance a dtl_variant_t object with a value of any type.
+
+  // N.B.!!! we *must* have explicit below.
+  // If not the following would be legal via an unwanted conversion to dtl_variant_t
+
+  /*
+  using namespace std;
+using namespace dtl;
+ 
+class A
+{
+};
+ 
+int main()
+{
+  A a;
+  cout << a << endl;  // ERROR.  The compiler converts "a" to a dtl_variant_t w/o explicit This code will now erroneously compile! -- but fail at runtime
+}
+  */
+	
+  template<typename T> 
+#ifndef _MSC_VER	  
+	  explicit  // Visual C++ 7 chokes on explicit here, in Visual C++ 6 explicit does not do anything
 #endif
+	  dtl_variant_t (const T & v)
+  {private_construct(v);}
 
-  variant_t (const variant_t & v);
 
-  variant_t (const variant_field &vf);
+  dtl_variant_t (const dtl_variant_t & v);
 
-  variant_t(void *p, const TypeTranslation &f);
+  dtl_variant_t (const variant_field &vf);
 
-  ~variant_t();
+  dtl_variant_t(void *p, const TypeTranslation &f);
 
-  template<typename T> /*PS const*/ variant_t & operator=(const T &other) {
+  ~dtl_variant_t();
+
+  template<typename T> /*PS const*/ dtl_variant_t & operator=(const T &other) {
 		if (((void *)this) != ((void *)&other)) {
 			if (data != NULL)
 				data->Release();
@@ -415,10 +448,10 @@ public :
 	}
 
   // exception-safe swap()
-  void swap(variant_t &other);
+  void swap(dtl_variant_t &other);
 
   // exception-safe assignment
-  variant_t &operator=(const variant_t &other);
+  dtl_variant_t &operator=(const dtl_variant_t &other);
 
 // This generic conversion operator let you retrieve
 // the value held.
@@ -449,6 +482,8 @@ public :
 	operator bool() const;
 
 	operator int () const;
+	
+	operator ODBCINT64 () const;
 	
 	operator float () const;
 
@@ -496,19 +531,19 @@ public :
   template<typename T> const T & get( T const* dmy =NULL ) const
     { return CastFromBase( data , dmy )->data ; }
 
-  // This method can be used to test if this variant_t
+  // This method can be used to test if this dtl_variant_t
   // holds a value of type T. It takes no arguments,
   // so it can only be used with a explicit template
   // instancing:
-  //   variant_t var(3) ; if ( var.is_type<int>() ) ...
+  //   dtl_variant_t var(3) ; if ( var.is_type<int>() ) ...
   template<typename T> bool is_type( T const* =NULL ) const
      { return typeid(*data)==typeid(Impl_t<T>); }
 
-  // This method can be used to test if this variant_t
+  // This method can be used to test if this dtl_variant_t
   // holds a value of type T.
   // It takes one argument, so it can be used with
   // a test variable of the desired type:
-  //   int n=3; variant_t var(n) ;
+  //   int n=3; dtl_variant_t var(n) ;
   //   if ( var.is_type_as(n) ) ...
   template<typename T> bool is_type_as(T const& v) const
     { return typeid(*data)==typeid(Impl_t<T>); }
@@ -531,7 +566,7 @@ public :
 
 // usage: int n = variant_cast<int>(my_variant);
 template<typename T>
-T variant_cast  (const variant_t& v)
+T variant_cast  (const dtl_variant_t& v)
 {
      return v.get((T const*)(NULL));
 }
@@ -541,20 +576,20 @@ T variant_cast  (const variant_t& v)
 // NOTE: For some reason MSVC fails to properly instantiate this functions unless
 // the 'T const&' argument is added.
 template<typename T>
-bool variant_is_type_as (const variant_t& v, T const& t)
+bool variant_is_type_as (const dtl_variant_t& v, T const& t)
 {
   return v.is_type_as(t);
 }
 template<typename T>
-bool variant_is_type_as (const variant_t& v, T const* t)
+bool variant_is_type_as (const dtl_variant_t& v, T const* t)
 {
   return v.is_type_as(t);
 }
 
-// powerful stream operator for variant_t's!!!!
-STD_::ostream &operator<<(STD_::ostream &o, const variant_t &v);
+// powerful stream operator for dtl_variant_t's!!!!
+STD_::ostream &operator<<(STD_::ostream &o, const dtl_variant_t &v);
 #if !defined(DTL_NO_UNICODE)
-STD_::wostream &operator<<(STD_::wostream &o, const variant_t &v);
+STD_::wostream &operator<<(STD_::wostream &o, const dtl_variant_t &v);
 #endif
 
 // this module defines basic variant types for dynamic row binding
@@ -696,6 +731,9 @@ public:
 	// return type information for the columns in the row
 	STD_::vector<TypeTranslation> GetTypes() const;
 
+	// return type information for the columns in the row
+	const variant_row_fields &variant_row::GetVariantRowFields() const;
+
 	// used for debugging to print out contents of variant row as a tstring
 	STD_::string Stringify() const;
 #ifndef DTL_NO_UNICODE
@@ -755,10 +793,9 @@ public:
 				(void *) (p_row_fields->offsets[tt_i]), // field offset
 				(void *) 0, // base_addr
 				32768, // large arbitrary size to disable field check
-				p_row_fields->names[tt_i] // field name
+				p_row_fields->names[tt_i], // field name
+				tt_i++ // field nr
 			);
-
-			++tt_i;
 
 			return ttf;
 		}
@@ -780,7 +817,8 @@ public:
 			(void *) (p_row_fields->offsets.back()), // field offset
 			(void *) 0, // base_addr
 			32768, // large arbitrary size to disable field check
-			p_row_fields->names.back() // field_name
+			p_row_fields->names.back(), // field_name
+			p_row_fields->size()-1 // field_nr
 		);
 	}
 
@@ -800,13 +838,17 @@ public:
 
 	TypeTranslationField _unsigned_long();
 
-	TypeTranslationField _double();
+	TypeTranslationField _ODBCINT64();
+
+    TypeTranslationField _double();
 
 	TypeTranslationField _float();
 
 	TypeTranslationField _timestamp();
 
 	TypeTranslationField _string();
+
+	TypeTranslationField variant_row::_tchar_star();
 
 #ifndef DTL_NO_UNICODE
 	TypeTranslationField _wstring();
@@ -832,7 +874,7 @@ private:
 
 class variant_field {
     friend class variant_row;
-	variant_t m_val;
+	dtl_variant_t m_val;
 	variant_row *p_row;
 	int m_col;
 	bool m_IsNull;
@@ -842,7 +884,7 @@ public:
 
 	variant_field(const variant_field &other);
 
-	variant_field(const variant_t &v, variant_row *row, int field, const bool b = false);
+	variant_field(const dtl_variant_t &v, variant_row *row, int field, const bool b = false);
 
 	// exception-safe swap()
 	void swap(variant_field &other);
@@ -876,6 +918,8 @@ public:
 
 	operator int () const;
 
+	operator ODBCINT64 () const;
+
 	operator float () const;
 
 	operator double () const;
@@ -887,14 +931,13 @@ public:
 	operator STD_::wstring() const;
 #endif
 
-
 	operator char() const;
 
 	operator char*() const;
 
 	operator struct tagTIMESTAMP_STRUCT() const;
 
-	operator variant_t() const;
+	operator dtl_variant_t() const;
 
 	// end of cast of thousands
 
@@ -914,7 +957,7 @@ public:
 
 	void ClearNull();
 
-	friend variant_t variant_val(const variant_field &vf);
+	friend dtl_variant_t variant_val(const variant_field &vf);
 
     // needed to resolve ambiguity for casts
     STD_::string get_string() const;
@@ -930,11 +973,11 @@ public:
 	// returns an enumeration listing the type of the variant data
 	char type() const;
 
-	// This method can be used to test if this variant_t
+	// This method can be used to test if this dtl_variant_t
     // holds a value of type T. It takes no arguments,
     // so it can only be used with a explicit template
     // instancing:
-    //   variant_t var(3) ; if ( var.is_type<int>() ) ...
+    //   dtl_variant_t var(3) ; if ( var.is_type<int>() ) ...
     template<typename T> bool is_type( T const*t =NULL ) const {
 		return m_val.is_type(t);
 	}

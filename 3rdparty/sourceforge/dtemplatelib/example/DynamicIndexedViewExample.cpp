@@ -4,17 +4,26 @@
 
 const TIMESTAMP_STRUCT then = {2000, 12, 15, 0, 0, 0, 0};
 
+void SetParamsDynamicExample(variant_row &params)
+ {
+	params[_TEXT("0")] = 1;
+	params[_TEXT("1")] = 10;
+	params[_TEXT("2")] = tstring(_TEXT("01-MAR-2000"));
+	params[_TEXT("3")] = tstring(_TEXT("Example"));
+	
+}
+
 // Dynamic IndexedDBView example
 void DynamicIndexedViewExample()
 {
-  typedef DynamicDBView<ParamObjExample>  DynaDBV;
+  typedef DynamicDBView<>  DynaDBV;
   typedef DEFAULT_DYNA_VIEW(DynaDBV)      DynaIdxDBV;
 
   DynaDBV dynamic_view("DB_EXAMPLE",
 		       "INT_VALUE, STRING_VALUE, DOUBLE_VALUE, EXAMPLE_LONG,  EXAMPLE_DATE",
 		       "WHERE INT_VALUE BETWEEN (?) AND (?) OR "
-		       "EXAMPLE_DATE <= (?) OR STRING_VALUE = (?)" + exampleOrderBy,
-		       BPAExampleObj());
+		       "EXAMPLE_DATE <= (?) OR STRING_VALUE = (?)" + exampleOrderBy
+		       );
 
   // make the functor needed for SetParams out of SetParamsExample() by calling
   // cb_ptr_fun(SetParamsExample)
@@ -22,7 +31,7 @@ void DynamicIndexedViewExample()
 						  "PrimaryIndex; STRING_VALUE;"
 						  "UNIQUE IndexLongDate; EXAMPLE_LONG, EXAMPLE_DATE",
 						  BOUND, USE_ALL_FIELDS, 
-						  cb_ptr_fun(SetParamsExample));
+						  cb_ptr_fun(SetParamsDynamicExample));
   
   // Find the item where the STRING_VALUE matches the string  "Foozle"
   DynaIdxDBV::indexed_iterator  idxview_it = 

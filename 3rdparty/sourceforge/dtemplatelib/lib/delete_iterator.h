@@ -54,7 +54,7 @@ private:
 
 		    if (this->bad())
 			{
-			  throw DBException(_TEXT("DBView::delete_iterator::ExecDelete()"),
+			  DTL_THROW DBException(_TEXT("DBView::delete_iterator::ExecDelete()"),
 				 _TEXT("iterator tested bad!"), NULL, NULL);
 			}
 
@@ -189,7 +189,7 @@ public:
 		{
 		    if (this->bad())
 			{
-			   throw DBException(_TEXT("DBView::delete_iterator::ExecDelete()"),
+			   DTL_THROW DBException(_TEXT("DBView::delete_iterator::ExecDelete()"),
 				  _TEXT("iterator tested bad!"), NULL, NULL);
 			}
 

@@ -448,7 +448,7 @@ using <font size="2" face="Courier New, Courier, mono">std::vector&lt;int&gt;::p
 inserted <font size="2" face="Courier New, Courier, mono">&vec[i]</font> into a <font size="2" face="Courier New, Courier, mono">vector&lt;int *&gt;</font> called <font size="2" face="Courier New, Courier, mono">pvec</font>.
 3. Call <font size="2" face="Courier New, Courier, mono">std::stable_sort(pvec.begin(), pvec.end(), 
 IntStarLess())</font> where <font size="2" face="Courier New, Courier, mono">IntStarLess::operator()(pInt1,
-pInt2)</font> is true iff <font face="Courier New, Courier, mono" size="2">*p1 < *p2</font>.
+pInt2)</font> is true iff <font face="Courier New, Courier, mono" size="2">*p1 &lt; *p2</font>.
 4. Perform 15,000,000 <font size="2" face="Courier New, Courier, mono">std::lower_bound()</font> calls over the
 <font size="2" face="Courier New, Courier, mono">pvec.begin()</font> to <font size="2" face="Courier New, Courier, mono">pvec.end()</font> range with an IntStarLess
 as the predicate.

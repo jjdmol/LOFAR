@@ -1,17 +1,21 @@
 #include "clib_fwd.h"
 #include "string_util.h"
+
+#include "std_warn_off.h"
+
 #include <cstring>
 #include <cctype>
 
 #ifdef  WIN32
-#include <TCHAR.h>
+  #include <TCHAR.h>
 #else
-#include "unix_tchar.h"
+  #include "unix_tchar.h"
 #endif
 
 #include <wchar.h>
 #include <wctype.h>
 
+#include "std_warn_on.h"
 
 using namespace std;
 

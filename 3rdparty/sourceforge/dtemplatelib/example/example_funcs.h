@@ -16,5 +16,6 @@
 #include "ShareConn.h"
 #include "SpecialQryExample.h"
 #include "CStringExample.h"
+#include "GlobalHandler.h"
 
 #endif

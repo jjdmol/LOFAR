@@ -36,10 +36,13 @@ void ResetTables()
 	DBConnection::GetDefaultConnection().CommitAll();
 }
 
+
+
 int main(int argc, char **argv)
 {
   try
   {
+    
 	if (argc != 2)
 	{
 		tcout << _TEXT("Usage: tests.exe <DSN connect string>") << endl;
@@ -413,10 +416,13 @@ int main(int argc, char **argv)
 
 #include "JoinExample.h"
 
+
 int main(int argc, char **argv)
 {
   try
   {
+	
+
 	const string DSN_argv(argv[1]);
 	const tstring DSN_str = tstring_cast((tstring *) NULL, DSN_argv);
 

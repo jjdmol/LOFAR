@@ -23,9 +23,9 @@ It is provided "as is" without express or implied warranty.
 #include "RootException.h"
 
 #include "std_warn_off.h"
+
 #include <sstream>
 #include <vector>
-#include "std_warn_on.h"
 
 #ifdef  WIN32
 #ifdef WIN32
@@ -39,6 +39,8 @@ It is provided "as is" without express or implied warranty.
 #endif
 #include <sql.h>
 #include <sqlext.h>
+
+#include "std_warn_on.h"
 
 BEGIN_DTL_NAMESPACE
 

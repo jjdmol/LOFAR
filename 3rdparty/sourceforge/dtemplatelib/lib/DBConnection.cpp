@@ -13,6 +13,8 @@ It is provided "as is" without express or implied warranty.
 // Initial: 9/20/2000 - MG
 // Reviewed: 11/12/2000 - CJ
 // Edited: 12/19/2000 - MG - added namespaces
+// Edited: 10/26/2003 - Paul Grenyer http://www.paulgrenyer.co.uk, added static_cast as required by MSVC 7.1
+
 
 #ifdef _MSC_VER
 #pragma	warning(disable: 4786)
@@ -22,6 +24,9 @@ It is provided "as is" without express or implied warranty.
 #include "DBException.h"
 #include "clib_fwd.h"
 #include "dtl_base_types.h"
+#include "bind_basics.h"
+
+#include "std_warn_off.h"
 
 #ifdef  WIN32
 #ifdef WIN32
@@ -37,15 +42,33 @@ It is provided "as is" without express or implied warranty.
 #include <sql.h>
 #include <sqlext.h>
 
-#include "std_warn_off.h"
 #include <cassert>
+
 #include "std_warn_on.h"
+
+// #define DTL_NO_POOLING
+// Note, by default we turn pooling on.  If you want to allow DTL to browse
+// for connections you will need to turn ODBC connection pooling off.
+
 
 BEGIN_DTL_NAMESPACE
 
 DBEnvironment DBConnection::dbe;
 
 DBConnection DBConnection::defaultConn;
+
+
+static void InitGlobals()
+{
+	// Initialize and global singletons
+
+	// Initialize the global ETI_Map here to avoid any multi-threading problems
+	GetSQL_types_to_C();
+
+	// Initialize global error handler
+	GetErrorHandler();
+
+}
 
 // ***************** Implementation code for DBEnvironment ****************
 	DBEnvironment::DBEnvironment() : 
@@ -100,15 +123,17 @@ DBConnection DBConnection::defaultConn;
 		owns_environment = false;
 	}
 
-	void DBEnvironment::init() {
+	void DBEnvironment::init(bool bPool) {
 		if (henv != SQL_NULL_HENV)
 			return;
+
+		// Initialize any globals
+		InitGlobals();
 
 		// Before we allocate our first environment handle, try to turn on connection pooling
 		// Note we are not checking error codes here, we just try to turn it on,
 		// and if the driver does not support pooling there is nothing we can do.
 		RETCODE rc;
-		bool bPool = true;
 #ifdef UNICODE
 	//	if (std_tstrnicmp(stmt.GetConnection().GetDBMSName().c_str(), _TEXT("Microsoft SQL Server"), std_tstrlen(_TEXT("SQL Server"))) == 0)	
 			//	{
@@ -116,6 +141,10 @@ DBConnection DBConnection::defaultConn;
 			// in UNICODE mode.  Disable pooling in this case
 	//		bPool = false; 
 	//	}
+		bPool = false;
+#endif
+
+#ifdef	DTL_NO_POOLING
 		bPool = false;
 #endif
 
@@ -127,7 +156,7 @@ DBConnection DBConnection::defaultConn;
 			if (!RC_SUCCESS(rc))
 			{
 			   henv = SQL_NULL_HENV;
-			   throw DBException(_TEXT("DBEnvironment::init()"),
+			   DTL_THROW DBException(_TEXT("DBEnvironment::init()"),
 								 _TEXT("Unable to pool across the environment handle!"),
 								 NULL, NULL);
 			}
@@ -137,7 +166,7 @@ DBConnection DBConnection::defaultConn;
 		if (!RC_SUCCESS(rc))
 		{
 		   henv = SQL_NULL_HENV;
-		   throw DBException(_TEXT("DBEnvironment::init()"),
+		   DTL_THROW DBException(_TEXT("DBEnvironment::init()"),
 							 _TEXT("Unable to allocate SQL environment handle!"),
 							 NULL, NULL);
 		}
@@ -174,7 +203,7 @@ DBConnection DBConnection::defaultConn;
 
 			// errmsg.freeze(false);
 
-			throw DBException(_TEXT("DBEnvironment::init()"),
+			DTL_THROW DBException(_TEXT("DBEnvironment::init()"),
 							  errstr,
 							  NULL, NULL);
 		}
@@ -203,7 +232,7 @@ DBConnection DBConnection::defaultConn;
 
 			// errmsg.freeze(false);
 
-			throw DBException(_TEXT("DBEnvironment::init()"),
+			DTL_THROW DBException(_TEXT("DBEnvironment::init()"),
 							  errstr,
 							  NULL, NULL);
 		}
@@ -215,7 +244,7 @@ DBConnection DBConnection::defaultConn;
 	HENV DBEnvironment::GetHENV() const
 	{
 		if (henv == SQL_NULL_HENV)
-			throw DBException(_TEXT("DBEnvironment::GetHENV()"),
+			DTL_THROW DBException(_TEXT("DBEnvironment::GetHENV()"),
 				_TEXT("Environment is not allocated!"), NULL, NULL);
 
 		return henv;
@@ -223,51 +252,107 @@ DBConnection DBConnection::defaultConn;
 
 
 // ****************** Implementation code for DBConnection *****************
-	// not responsible for allocating hdbc and dbe.henv,
-	// that is done by the public version of Connect()
-    void DBConnection::InternalConnect (const TCHAR *szConnStrIn)
+
+// **** stmt. logging stuff ****
+	
+// stuff to log stmts out to an ostream
+
+void DBConnection::ClearLog()
+{
+	sorted_stmt_log.clear();
+	stmt_log.clear();
+}
+
+void DBConnection::PrintLog(tostream &o) const
+{
+	for (RawStmtLog::const_iterator it = stmt_log.begin(); it != stmt_log.end(); ++it)
 	{
-      RETCODE rc;    			/* Return code for ODBC functions */
-      TCHAR szConnStrOut[2048];  // Microsoft ODBC requires at least 1024
-										 // bytes here, otherwise will overwrite
-										 // memory
-      SWORD cbConnStrOut;
-      UWORD fDriverCompletion;
-      bool bUseConnectStr;
+		o << *it << _TEXT("\n\n");
+	}
+}
 
-	  // needed statics
-	  static HWND g_AppHwnd = NULL;
+void DBConnection::PrintSortedLog(tostream &o) const
+{
+	for (SortedStmtLog::const_iterator it = sorted_stmt_log.begin(); 
+			it != sorted_stmt_log.end(); ++it)
+	{
+		o << **it << _TEXT("\n\n");
+	}	
+}
 
-	  validate();
+void DBConnection::AddToLog(const tstring &sqlQuery)
+{
+	stmt_log.push_back(sqlQuery);
+	sorted_stmt_log.insert(&stmt_log.back());
+}
 
-	  if (state == CONNECTED)
-		  return;
+void DBConnection::EnableLog()
+{
+	bStmtLogEnabled = true;
+}
 
-   
-   // To prompt for connection, use SQL_DRIVER_COMPLETE
-#define NO_PROMPT
-#ifdef NO_PROMPT
-   fDriverCompletion = SQL_DRIVER_NOPROMPT;
-#else
-   fDriverCompletion = SQL_DRIVER_COMPLETE;
+void DBConnection::DisableLog()
+{
+	bStmtLogEnabled = false;
+}
+
+bool DBConnection::IsLogEnabled() const
+{
+	return bStmtLogEnabled;
+}
+	
+// **** end stmt. logging stuff ****
+
+// not responsible for allocating hdbc and dbe.henv,
+// that is done by the public version of Connect()
+void DBConnection::InternalConnect (const TCHAR *szConnStrIn, bool bPrompt, bool auto_commit_setting)
+{
+	RETCODE rc;    			/* Return code for ODBC functions */
+	TCHAR szConnStrOut[2048];  // Microsoft ODBC requires at least 1024
+									 // bytes here, otherwise will overwrite
+									 // memory
+	SWORD cbConnStrOut;
+	UWORD fDriverCompletion;
+	bool bUseConnectStr;
+
+	// needed statics
+	HWND g_AppHwnd = NULL;
+#ifdef WIN32
+	g_AppHwnd = GetDesktopWindow();
 #endif
 
-   // Prompt for connection
+	validate();
+
+	if (state == CONNECTED)
+	  return;
+
+	// To prompt for connection, use SQL_DRIVER_COMPLETE
+	if (bPrompt)
+		fDriverCompletion = SQL_DRIVER_COMPLETE;	
+	else
+		fDriverCompletion = SQL_DRIVER_NOPROMPT;
+
+    // Prompt for connection
 	bUseConnectStr = false;
 	if (szConnStrIn != NULL)
-		if (std_tstrlen((TCHAR *)szConnStrIn) > 0)
-			bUseConnectStr = true;
+		bUseConnectStr = true;
 
 #include "merant.h"
 
+	
 	if (bUseConnectStr)
-   		rc  = SQLDriverConnect(hdbc, g_AppHwnd, (SQLTCHAR *)szConnStrIn, 
-			std_tstrlen((TCHAR *)szConnStrIn)*sizeof(TCHAR), (SQLTCHAR *)szConnStrOut, sizeof(szConnStrOut),
-			&cbConnStrOut, fDriverCompletion);
+		rc  = SQLDriverConnect(	hdbc, 
+								g_AppHwnd, (SQLTCHAR *)szConnStrIn, 
+								static_cast<SQLSMALLINT>(std_tstrlen((TCHAR *)szConnStrIn)*sizeof(TCHAR)), 
+								(SQLTCHAR *)szConnStrOut, 
+								sizeof(szConnStrOut),
+								&cbConnStrOut, 
+								fDriverCompletion);
 	else
 		rc  = SQLDriverConnect(hdbc, g_AppHwnd, (SQLTCHAR *)szConnStrIn, 
-			0, (SQLTCHAR *)szConnStrOut, sizeof(szConnStrOut), 
-			&cbConnStrOut, fDriverCompletion);
+		0, (SQLTCHAR *)szConnStrOut, sizeof(szConnStrOut), 
+		&cbConnStrOut, fDriverCompletion);	
+		
 
     if (!RC_SUCCESS(rc))
 	{
@@ -275,8 +360,17 @@ DBConnection DBConnection::defaultConn;
 	   errmsg.reserve(256);
 	   errmsg += _TEXT("Unable to connect to database using DSN ");
 	   errmsg += (TCHAR *) szConnStrIn;
-	   errmsg += _TEXT("!");
-	   throw DBException(_TEXT("DBConnection::Connect(const TCHAR *DSN)"),
+	   errmsg += _TEXT("! \n\n");
+	   if (bPrompt) 
+	   {
+		   errmsg += _TEXT("Note that in order to browse for a connection, connection pooling must be turned off.\n");
+		   errmsg += _TEXT("To do this you must #define DTL_NO_POOL or manually initialize the environment with no pooling via \n");
+		   errmsg += _TEXT("DBConnection.GetDefaultEnvironment().init(false);  \nbefore you connect for the first time.\n");
+		   errmsg += _TEXT("(If you prompt for a connection the first time you connect then pooling is automatically turned off.)\n\n");
+	   }
+
+
+	   DTL_THROW DBException(_TEXT("DBConnection::Connect(const TCHAR *DSN)"),
 			errmsg, this, NULL);
 	}
 
@@ -294,14 +388,14 @@ DBConnection DBConnection::defaultConn;
     // DBConnection class commits on destruction or if auto_commit is set
     // N.B.!! If we do not do this takes 3 TIMES as long to run write to DB.
     // For sample data set takes 7.6 Seconds w/o autocommit v.s. 22.4 seconds with autocommit.
-    if (dbType != DB_MYSQL && dbType != DB_EXCEL)
+    if (dbType != DB_MYSQL && dbType != DB_EXCEL && auto_commit_setting == false)
 	{
 		rc = SQLSetConnectOption(hdbc, SQL_AUTOCOMMIT, SQL_AUTOCOMMIT_OFF);
 
 		// Throw exception if no auto commit, but still have state as connected
 		// since this is a usable connection
 	    if (!RC_SUCCESS(rc))
-		    throw DBException(_TEXT("DBConnection::Connect(const TCHAR *DSN)"),
+		    DTL_THROW DBException(_TEXT("DBConnection::Connect(const TCHAR *DSN)"),
 			  _TEXT("Unable to turn off autocommit!"), this, NULL);
     }
 
@@ -367,7 +461,8 @@ DBConnection DBConnection::defaultConn;
 	DBConnection::DBConnection(const tstring &DSN)
 		: ValidatedObject(), hdbc(SQL_NULL_HDBC), auto_commit(false), state(CONN_UNALLOCATED),
 		  owns_connection(true), dbType(DB_UNKNOWN), szQuoteChar(_TEXT("\"")), 
-		  szDriverName(), szDriverVer(), usedDSN(DSN)
+		  szDriverName(), szDriverVer(), usedDSN(DSN), stmt_log(), sorted_stmt_log(),
+		  bStmtLogEnabled(false)
 	{ }
 
 
@@ -398,7 +493,7 @@ DBConnection DBConnection::defaultConn;
 	}
 
 	// cleanup issues here if exception is thrown!!!!
-	void DBConnection::Connect(const tstring &DSN)
+	void DBConnection::Connect(const tstring &DSN, bool bPrompt, bool auto_commit_setting)
 	{
 		validate();
 		
@@ -410,7 +505,13 @@ DBConnection DBConnection::defaultConn;
 		
 		RETCODE rc;
 
-		dbe.init();		
+		bool bPool = true;
+
+		// cannot prompt for connection if pooling is turned on.
+		if (bPrompt)
+			bPool = false;
+
+		dbe.init(bPool);		
 
 		assert(dbe.GetHENV() != SQL_NULL_HENV);
 			
@@ -420,7 +521,7 @@ DBConnection DBConnection::defaultConn;
 		if (!RC_SUCCESS(rc))
 		{
 			tmp.invalidate();
-			throw DBException(_TEXT("DBConnection::DBConnection()"),
+			DTL_THROW DBException(_TEXT("DBConnection::DBConnection()"),
 							  _TEXT("Unable to allocate new connection handle!"),
 							  this, NULL);
 		}
@@ -430,7 +531,7 @@ DBConnection DBConnection::defaultConn;
 
 		// try to connect to DB instance
 		try {
-			tmp.InternalConnect(DSN.c_str());
+			tmp.InternalConnect(DSN.c_str(), bPrompt, auto_commit_setting);
 		}
 		catch (...) 
 		{
@@ -485,7 +586,7 @@ DBConnection DBConnection::defaultConn;
 
 			if (!RC_SUCCESS(rc))
 			{
-				throw DBException(_TEXT("DBConnection::SetAutoCommit()"),
+				DTL_THROW DBException(_TEXT("DBConnection::SetAutoCommit()"),
 					_TEXT("Unable to toggle auto commit!"), this, NULL);
 			}
     }
@@ -493,7 +594,7 @@ DBConnection DBConnection::defaultConn;
 		auto_commit = commit;
 	}
 
-	bool DBConnection::GetAutoCommit()
+	bool DBConnection::GetAutoCommit() const
     {
 		return auto_commit;
 	}
@@ -517,7 +618,7 @@ DBConnection DBConnection::defaultConn;
 		if (!RC_SUCCESS(rc))
 		{
 			invalidate();
-			throw DBException(_TEXT("DBConnection::CommitAll()"),
+			DTL_THROW DBException(_TEXT("DBConnection::CommitAll()"),
 							  _TEXT("Unable to commit transaction!"),
 							  this, NULL);
 		}
@@ -642,7 +743,7 @@ DBConnection DBConnection::defaultConn;
 		    state = CONN_UNALLOCATED;
 		    hdbc = SQL_NULL_HDBC;
 			// usedDSN = _TEXT("");
-			throw DBException(_TEXT("DBConnection::Release()"), errmsg, this, NULL);
+			DTL_THROW DBException(_TEXT("DBConnection::Release()"), errmsg, this, NULL);
 		}
 
 		// up to here, we're exception safe
@@ -670,7 +771,7 @@ DBConnection DBConnection::defaultConn;
 				hdbc = SQL_NULL_HDBC;
 				// usedDSN = _TEXT("");
 
-				throw DBException(_TEXT("DBConnection::Release()"), errmsg, this, NULL);
+				DTL_THROW DBException(_TEXT("DBConnection::Release()"), errmsg, this, NULL);
 				break;
 			}
 
@@ -692,7 +793,7 @@ DBConnection DBConnection::defaultConn;
 					hdbc = SQL_NULL_HDBC;
 					// usedDSN = _TEXT("");
 
-					throw DBException(_TEXT("DBConnection;:Release()"), errmsg, this, NULL);
+					DTL_THROW DBException(_TEXT("DBConnection;:Release()"), errmsg, this, NULL);
 					break;
 				}
 				
@@ -710,7 +811,7 @@ DBConnection DBConnection::defaultConn;
 		// usedDSN = _TEXT("");
 
 		if (!errmsg.empty())
-			throw DBException(_TEXT("DBConnection::Release()"), errmsg, NULL, NULL);
+			DTL_THROW DBException(_TEXT("DBConnection::Release()"), errmsg, NULL, NULL);
 	}
 
 	DBConnection &DBConnection::GetDefaultConnection()
@@ -723,10 +824,58 @@ DBConnection DBConnection::defaultConn;
 		return dbe;
 	}
 
+	// return a list of ODBC data source names by calling SQLDataSources
+	// SourceType = Direction parameter for SQLDataSources
+	//
+	// SourceType = SQL_FETCH_FIRST = get all sources
+	// SourceType = SQL_FETCH_FIRST_USER = get only user data sources
+	// SourceType = SQL_FETCH_FIRST_SYSTEM = get only system data sources
+	//
+	// Return vector of pair(ServerName, Description)
+	STD_::vector<STD_::pair<tstring, tstring> > DBConnection::GetDataSources(SQLUSMALLINT SourceType)
+	{
+		RETCODE rc;
+		const SQLSMALLINT MAX_LEN = 100;
+		SQLTCHAR ServerName[MAX_LEN], Description[MAX_LEN];
+		SQLSMALLINT cbServerName, cbDescription;
+		STD_::vector<STD_::pair<tstring, tstring> >  sources;
+
+		dbe.init(true);  // init dbe if not already done
+		SQLHENV henv = dbe.GetHENV();
+
+		rc = SQLDataSources(henv, SourceType, ServerName, MAX_LEN, &cbServerName, 
+			Description, MAX_LEN, &cbDescription);
+		
+		if (!RC_SUCCESS(rc))
+				DTL_THROW DBException(_TEXT("DBConnection::GetDataSources()"),
+					_TEXT("Unable to retrieve data source names!"), NULL, NULL);
+
+		sources.push_back(STD_::pair<tstring, tstring>(tstring((TCHAR *)ServerName), tstring((TCHAR *)Description)));
+
+		for (;;)
+		{
+			rc = SQLDataSources(henv, SQL_FETCH_NEXT, ServerName, MAX_LEN, &cbServerName, 
+			Description, MAX_LEN, &cbDescription);
+
+			if (rc == SQL_NO_DATA)
+				break;
+
+			if (!RC_SUCCESS(rc))
+				DTL_THROW DBException(_TEXT("DBConnection::GetDataSources()"),
+					_TEXT("Error while retrieving data source names!"), NULL, NULL);
+
+
+			sources.push_back(STD_::pair<tstring, tstring>(tstring((TCHAR *)ServerName), tstring((TCHAR *)Description)));
+
+		}
+
+		return sources;
+	}
+
 	HDBC DBConnection::GetHDBC() const 
 	{ 
 		if (state == CONN_UNALLOCATED)
-			throw DBException(_TEXT("DBConnection::GetHDBC()"),
+			DTL_THROW DBException(_TEXT("DBConnection::GetHDBC()"),
 				_TEXT("Connection is not allocated!"), NULL, NULL);
 
 		return hdbc; 
@@ -746,7 +895,7 @@ DBConnection DBConnection::defaultConn;
         &cbDummy);
 
 	 if (!RC_SUCCESS(rc))
-				throw DBException(_TEXT("DBConnection::GetDBMSName()"),
+				DTL_THROW DBException(_TEXT("DBConnection::GetDBMSName()"),
 					_TEXT("Unable to get name of DBMS!"), this, NULL);
 
      return szDriverName;
@@ -769,7 +918,7 @@ DBConnection DBConnection::defaultConn;
         &cbDummy);
 
 	  if (!RC_SUCCESS(rc))
-				throw DBException(_TEXT("DBConnection::GetDBMSVersion()"),
+				DTL_THROW DBException(_TEXT("DBConnection::GetDBMSVersion()"),
 					_TEXT("Unable to get version of DBMS!"), this, NULL);
 
       return szDriverVer;
@@ -796,7 +945,7 @@ DBConnection DBConnection::defaultConn;
 	HDBC GetHDBC(const DBConnection &conn)
 	{
 		if (conn.state == DBConnection::CONN_UNALLOCATED)
-			throw DBException(_TEXT("DBConnection::GetHDBC()"),
+			DTL_THROW DBException(_TEXT("DBConnection::GetHDBC()"),
 				_TEXT("Connection is not allocated!"), NULL, NULL);
 
 		return conn.GetHDBC();

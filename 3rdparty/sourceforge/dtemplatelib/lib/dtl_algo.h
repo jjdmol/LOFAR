@@ -4,7 +4,9 @@
 #include "dtl_config.h"
 #include "variant_row.h"
 
+#include "std_warn_off.h"
 #include <memory>
+#include "std_warn_on.h"
 
 BEGIN_DTL_NAMESPACE
 // DTL algorithms for functions such as bulk_copy(), etc.
@@ -101,8 +103,8 @@ OutputIterator output) {
 
 			// we must pad the buffer which will hold the fetched DataObj's
 			// with extra bytes if necessary
-			const size_t row_size = MAX(get_row_size(tmp), 
-					MAX(sizeof(SQLINTEGER) * NumColumns,
+			const size_t row_size = DTL_MAX(get_row_size(tmp), 
+					DTL_MAX(sizeof(SQLINTEGER) * NumColumns,
 						sizeof(TIMESTAMP_STRUCT) * NumColumns)
 					);
 
@@ -122,7 +124,9 @@ OutputIterator output) {
 				// add in row_size parameter
 
 				DataObj *buf_begin = reinterpret_cast<DataObj *>(&*buffer.begin());
-				DataObj *buf_end = reinterpret_cast<DataObj *>(&*buffer.end());
+				// DataObj *buf_end = reinterpret_cast<DataObj *>(buffer.end());
+				// Have to be tricky to get end.  Some compilers like MSVC 2005 will give error if they think we are accessing *end()
+				DataObj *buf_end = reinterpret_cast<DataObj *>(&*buffer.begin() + buffer.size() + 1);
 
 				bulk_copy(read_it, buf_begin, buf_end,
 						  true, row_size);
@@ -197,15 +201,16 @@ InsertIterator ins_it) {
 
 			// we must pad the buffer which will hold the fetched DataObj's
 			// with extra bytes if necessary
-			const size_t row_size = MAX(sizeof(DataObj), 
-					MAX(sizeof(SQLINTEGER) * NumColumns,
+			const size_t row_size = DTL_MAX(sizeof(DataObj), 
+					DTL_MAX(sizeof(SQLINTEGER) * NumColumns,
 						sizeof(TIMESTAMP_STRUCT) * NumColumns)
 					);
 
 			STD_::vector<BYTE> buffer(row_size * buffer_size);
 			BYTE *pdata_begin = &*buffer.begin();
-			BYTE *pdata_end = &*buffer.end();
-
+			// BYTE *pdata_end = &*buffer.end();
+			// Have to be careful, compilers like MSVC 2005 will freak if they think you are accessing *end()
+			BYTE *pdata_end = &*buffer.begin() + buffer.size() + 1;
 			do
 			{
 				// add in row_size parameter

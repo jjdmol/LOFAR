@@ -16,22 +16,13 @@ It is provided "as is" without express or implied warranty.
 
 BEGIN_DTL_NAMESPACE
 
-#ifdef __hpux
-#  ifdef MIN
-#    undef MIN
-#  endif
-#  ifdef MAX
-#    undef MAX
-#  endif
-#endif 
-
 // template functions for min and max ... due to ambiguities in stlport
-template<class T> inline const T &MIN(const T& a, const T& b)
+template<class T> inline const T &DTL_MIN(const T& a, const T& b)
 {
 	return (a < b ? a : b);	
 }
 
-template<class T> inline const T &MAX(const T& a, const T& b)
+template<class T> inline const T &DTL_MAX(const T& a, const T& b)
 {
 	return (a > b ? a : b);
 }

@@ -21,6 +21,8 @@ It is provided "as is" without express or implied warranty.
 #ifndef DTL_VEC_MULTISET_H
 #define DTL_VEC_MULTISET_H
 
+#include "std_warn_off.h"
+
 #include <algorithm>
 #include <vector>
 #include <list>
@@ -31,6 +33,7 @@ It is provided "as is" without express or implied warranty.
 #include <iostream>
 #include <utility>
 #include <iterator>
+#include "std_warn_on.h"
 
 #include "dtl_config.h"
 
@@ -209,7 +212,7 @@ public:
 
 		}
 
-		void index_adjust() const
+		void index_adjust(void) const
 		{
 			if (pvec_ms && pvec_ms->bSorted)
 			{
@@ -227,7 +230,7 @@ public:
 			this_mutant->check_index();
 
 			if (!valid())
-				throw RootException(_TEXT("vec_multiset::index_adjust()"),						
+				DTL_THROW RootException(_TEXT("vec_multiset::index_adjust()"),						
 					_TEXT("Unable to dereference invalidated iterator!"));
 			}
 		}
@@ -302,6 +305,11 @@ public:
 	// ******************* iterator definition *******************
 	class iterator : public const_iterator
 	{
+#if !defined(__BORLANDC__)
+	using const_iterator::index_adjust;
+	using const_iterator::pvec_ms;
+	using const_iterator::index;
+#endif
 	protected:
 		// for use only by vec_multiset
 		// construct an iterator pointing to (*pContainer)[idx]

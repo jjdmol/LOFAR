@@ -91,7 +91,7 @@ public:
 };
 END_DTL_NAMESPACE
 
-#if 0
+#if 1
 // Read the contents of the DB_EXAMPLE table and return a vector of the
 // resulting rows
 // Use DTL

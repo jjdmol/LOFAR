@@ -98,7 +98,11 @@ vlink="#551A8B" alink="#FF0000">
 
 <p>The <font size="2" face="Courier New">DBStmt </font>object manages a single ODBC statement, such as
 INSERT, SELECT, UPDATE or native SQL strings that need to be
-passed through to the database.</p>
+passed through to the database which do not return values. For more complex ODBC statements that need runtime 
+parameters or return result sets you may need to use <a href="sql_iterator.htm"><font size="2"
+face="Courier New">sql_iterator</font></a> which can support more general types of operations than
+a DBStmt.</p>
+
 
 <h3>Definition</h3>
 
@@ -237,6 +241,21 @@ bool bPrepare = false)</pre>
     <td valign="top" width="126">Returns the prepare flag.</td>
     <td valign="top" width="93">&nbsp;</td>
   </tr>
+  <tr>
+    <td valign="top" width="76">Log all SQL statements executed by DTL.</td>
+    <td valign="top" width="512"><pre>EnableLog()
+DisableLog()
+ClearLog()
+IsLogEnabled()</pre></td>
+    <td valign="top" width="86">&nbsp;</td>
+    <td valign="top" width="126">Support the logging of all SQL executed by DTL through the use of 
+DBStmt::PrintLog(tostream &o).  To turn logging on, use DBStmt::EnableLog().  
+To turn logging off, use DBStmt::DisableLog()  To clear out the SQL log, use DBStmt::ClearLog().  
+To inquire if the log is currently enabled, use DBStmt::IsLogEnabled().  All of these functions are static 
+members of DBStmt.  SQL logging is turned off by default.</td>
+    <td valign="top" width="93">&nbsp;</td>
+  </tr>
+
 </table>
 
 <h3>Notes</h3>

@@ -8,7 +8,7 @@
       IndexedViewExample.obj main.obj range.obj ReadData.obj 
       ReadDataNoMatches.obj ReadJoinedData.obj ShareConn.obj 
       SimpleDynamicRead.obj SpecialQryExample.obj StoredProc.obj 
-      DynamicIndexedViewExample.obj"/>
+      DynamicIndexedViewExample.obj GlobalHandler.obj"/>
     <RESFILES value="example.res"/>
     <IDLFILES value=""/>
     <IDLGENFILES value=""/>
@@ -40,9 +40,8 @@
     <OTHERFILES value=""/>
   </MACROS>
   <OPTIONS>
-    <IDLCFLAGS value="-IC:\dtl325_bug\dtl_future\dtl\example -I$(BCB)\include 
-      -I$(BCB)\include\vcl -I..\lib -I$(BCB)\Include\stlport -src_suffix cpp 
-      -D_DEBUG -DWIN32 -boa"/>
+    <IDLCFLAGS value="-src_suffix cpp -D_DEBUG -DWIN32 -IC:\dtl325_bug\dtl_future\dtl\example 
+      -I$(BCB)\include -I$(BCB)\include\vcl -I..\lib -I$(BCB)\Include\stlport -boa"/>
     <CFLAG1 value="-Od -P -Vx -Ve -X- -r- -a8 -b- -k -y -v -vi- -tWC -tWM- -c"/>
     <PFLAGS value="-$YD -$W -$O- -$A8 -v -JPHNE -M"/>
     <RFLAGS value=""/>
@@ -76,6 +75,7 @@
       <FILE FILENAME="DynamicIndexedViewExample.cpp" FORMNAME="" UNITNAME="DynamicIndexedViewExample.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="..\lib\dtl.lib" FORMNAME="" UNITNAME="dtl.lib" CONTAINERID="LibTool" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="C:\Program Files\Borland\CBuilder6\Lib\Psdk\odbc32.lib" FORMNAME="" UNITNAME="odbc32.lib" CONTAINERID="LibTool" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="GlobalHandler.cpp" FORMNAME="" UNITNAME="GlobalHandler" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
   </FILELIST>
   <BUILDTOOLS>
   </BUILDTOOLS>

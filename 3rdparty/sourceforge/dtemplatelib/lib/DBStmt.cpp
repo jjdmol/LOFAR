@@ -11,6 +11,9 @@ It is provided "as is" without express or implied warranty.
 */ 
 #include "DBStmt.h"
 #include "clib_fwd.h"
+#include "string_util.h"
+
+#include "std_warn_off.h"
 
 #ifdef  WIN32
 #ifdef WIN32
@@ -25,15 +28,15 @@ It is provided "as is" without express or implied warranty.
 #include <sql.h>
 #include <sqlext.h>
 
-#include "std_warn_off.h"
+
 #include <algorithm>
 #include <cassert>
+
 #include "std_warn_on.h"
 
-#include "string_util.h"
-
-
 // Edited: 12/19/2000 - MG - added namespaces
+// Edited: 10/26/2003 - Paul Grenyer http://www.paulgrenyer.co.uk, added static_cast as required by MSVC 7.1
+
 
 BEGIN_DTL_NAMESPACE
 
@@ -79,10 +82,11 @@ void mcheck::revalidate() {
 #endif
 
 // ************** Implementation code for DBStmt *****************
+
 HSTMT GetHSTMT(const DBStmt &stmt)
 {
    if (stmt.state == DBStmt::STMT_UNALLOCATED)
-			throw DBException(_TEXT("DBStmt::GetHSTMT()"),
+			DTL_THROW DBException(_TEXT("DBStmt::GetHSTMT()"),
 				_TEXT("Statement is not allocated!"), NULL, NULL);
 
    return stmt.hstmt;
@@ -91,7 +95,7 @@ HSTMT GetHSTMT(const DBStmt &stmt)
 HSTMT DBStmt::GetHSTMT() const
 {
    if (state == STMT_UNALLOCATED)
-			throw DBException(_TEXT("DBStmt::GetHSTMT()"),
+			DTL_THROW DBException(_TEXT("DBStmt::GetHSTMT()"),
 				_TEXT("Statement is not allocated!"), NULL, NULL);
 
    return hstmt;
@@ -159,6 +163,14 @@ HSTMT DBStmt::GetHSTMT() const
 			SetStmtAttr(SQL_ATTR_CONCURRENCY, SQL_CONCUR_ROWVER,
 						SQL_IS_INTEGER);
 	   }
+	}
+
+	DBStmt::DBStmt(const DBStmt &other):
+		   ValidatedObject(), pConn(other.pConn),
+		   hstmt(SQL_NULL_HSTMT), sqlQuery(other.sqlQuery), state(STMT_UNALLOCATED), attrs(other.attrs), 
+		   bPrepare(other.bPrepare)
+	{ 
+			   // Statement attributes are copied by this constructor, handle is not
 	}
 
 		   
@@ -267,7 +279,7 @@ HSTMT DBStmt::GetHSTMT() const
 				state = STMT_UNALLOCATED;
 				hstmt = SQL_NULL_HSTMT;
 
-				throw DBException(_TEXT("DBStmt::Initialize()"), errmsg, pConn, this);
+				DTL_THROW DBException(_TEXT("DBStmt::Initialize()"), errmsg, pConn, this);
 			}
 
 			
@@ -277,13 +289,113 @@ HSTMT DBStmt::GetHSTMT() const
 			// user-set attributes override the defaults we've set above
 			LoadAttributes();
 
-			if (bPrepare)
-				Prepare();		
-
-			state = STMT_PREPARED;
-
+			if (sqlQuery[0] != TCHAR('_'))
+			{
+				if (bPrepare)
+				{
+				  Prepare();
+				}
+				state = STMT_PREPARED;
+			}
+			else
+			{
+				CallCatalogFunction();
+				state = STMT_EXECUTED;
+			}	
 	   }
 	}
+
+
+	//std_tstrncpy(field_cstr, fieldNames.c_str(), fieldNames.length() + 1);
+		    
+	// Interpret SQL statement as a call to an ODBC catalog function
+	void TrimCopy(TCHAR *dest, const STD_::vector<tstring> &args, size_t arg_no, size_t max_size)
+	{
+		if(args.size() > arg_no)
+		{
+			std_tstrncpy(dest, args[arg_no].c_str(), max_size);
+			*(dest + max_size) = 0;
+			trim(dest);
+		}
+		else
+		{
+			*dest = 0;
+		}
+	}
+
+	void DBStmt::CallCatalogFunction()
+	{
+		 RETCODE rc;
+		 STD_::vector<tstring> args(ParseCommaDelimitedList(sqlQuery)); 
+		 tstring fn = EliminateSpaces(args[0]);
+
+		 const size_t MAXNAME = 50;
+		 TCHAR CatalogName[MAXNAME+1], SchemaName[MAXNAME+1], TableName[MAXNAME+1], ColumnName[MAXNAME+1];
+
+
+		 // DTL supported catalog functions
+
+		 // "_SQLTables, TableName, SchemaName, CatalogName"
+         if (std_tstricmp(fn.c_str(), _TEXT("_SQLTables")) == 0)
+         {
+			// pass arguments from args vector to SQLTables along with DBStmt::hstmt to set up cursor
+			TrimCopy(TableName, args, 1, MAXNAME);
+			TrimCopy(SchemaName, args, 2, MAXNAME);
+			TrimCopy(CatalogName, args, 3, MAXNAME);
+
+			rc = SQLTables(hstmt, (SQLTCHAR *)CatalogName, SQL_NTS, (SQLTCHAR *)SchemaName, SQL_NTS, 
+				(SQLTCHAR *)TableName, SQL_NTS, NULL, 0);
+		 }
+
+		 // "_SQLColumns, ColumnName, TableName, SchemaName, CatalogName"
+		 else if (std_tstricmp(fn.c_str(), _TEXT("_SQLColumns")) == 0)
+         {
+			// pass arguments from args vector to SQLTables along with DBStmt::hstmt to set up cursor
+			TrimCopy(ColumnName, args, 1, MAXNAME);
+			TrimCopy(TableName, args, 2, MAXNAME);
+			TrimCopy(SchemaName, args, 3, MAXNAME);
+			TrimCopy(CatalogName, args, 4, MAXNAME);
+
+			rc = SQLColumns(hstmt, (SQLTCHAR *)CatalogName, SQL_NTS, (SQLTCHAR *)SchemaName, SQL_NTS, 
+				(SQLTCHAR *)TableName, SQL_NTS, (SQLTCHAR *)ColumnName, SQL_NTS);
+		 }
+	     else
+		 {
+			tstring errmsg = _TEXT("Unrecognized SQL catalog function \"");
+			errmsg += sqlQuery;
+			errmsg += _TEXT("\".  Did you forget a comma?");
+
+			// N.B.!! it is very important to capture the SQLError messages
+			// here before we free the handle
+			DBException dbe(_TEXT("DBStmt::Initialize()"), errmsg, pConn, this);
+
+			invalidate();
+
+			Destroy();
+
+			DTL_THROW dbe;
+		 }
+
+		 if (!RC_SUCCESS(rc))
+		 {
+			tstring errmsg = _TEXT("Unable to call catalog function for \"");
+			errmsg += sqlQuery;
+			errmsg += _TEXT("\"");
+
+			// N.B.!! it is very important to capture the SQLError messages
+			// here before we free the handle
+			DBException dbe(_TEXT("DBStmt::Initialize()"), errmsg, pConn, this);
+
+			invalidate();
+
+			Destroy();
+
+			DTL_THROW dbe;
+		 }
+
+
+	}
+
 
 	// Prepare a statement for repeated execution
 	void DBStmt::Prepare()
@@ -300,7 +412,7 @@ HSTMT DBStmt::GetHSTMT() const
 			else {
 				invalidate();
 				Destroy();
-				throw DBException(_TEXT("DBStmt::Execute()"), _TEXT("Unable to allocate memory for query"), pConn, this);
+				DTL_THROW DBException(_TEXT("DBStmt::Execute()"), _TEXT("Unable to allocate memory for query"), pConn, this);
 			}
 
 			if (!RC_SUCCESS(rc))
@@ -317,7 +429,7 @@ HSTMT DBStmt::GetHSTMT() const
 
 				Destroy();
 
-				throw dbe;
+				DTL_THROW dbe;
 			}
 	}
 
@@ -337,9 +449,9 @@ HSTMT DBStmt::GetHSTMT() const
 			return true;
 
 		// no more results, clear the EXECUTED state
-		state = STMT_PREPARED;
+		state = STMT_EXECUTED;
   
-		if (rc == SQL_ERROR)
+		if (rc == SQL_ERROR || rc == SQL_INVALID_HANDLE)
 		{ 
 		  tstring errmsg;
 		  errmsg.reserve(1024);
@@ -358,10 +470,10 @@ HSTMT DBStmt::GetHSTMT() const
 			  szSQLError) != FatalErrors.end())
 			  invalidate();
 
-		  throw dbe;
+		  DTL_THROW dbe;
 		}
 		
-
+        // No error, no more results available
 		return false;
 	}
 
@@ -395,18 +507,26 @@ HSTMT DBStmt::GetHSTMT() const
 		  else {
 			invalidate();
 			Destroy();
-			throw DBException(_TEXT("DBStmt::Execute()"), _TEXT("Unable to allocate memory for query"), pConn, this);
+			DTL_THROW DBException(_TEXT("DBStmt::Execute()"), _TEXT("Unable to allocate memory for query"), pConn, this);
 		  }
 	  }
 	  else
 		rc = SQLExecute(hstmt);
 
+      if (pConn->IsLogEnabled())
+      {
+          pConn->AddToLog(sqlQuery);
+      }
 
-	  if (!RC_SUCCESS(rc) && rc != SQL_NO_DATA && rc != SQL_NEED_DATA)
+	  if (!RC_SUCCESS(rc) && rc != SQL_NO_DATA && rc != SQL_NEED_DATA || rc == SQL_SUCCESS_WITH_INFO)
 	  { 
 		  tstring errmsg;
 		  errmsg.reserve(1024);
-		  errmsg += _TEXT("Unable to execute statement \"");
+		  if (rc != SQL_SUCCESS_WITH_INFO)
+				errmsg += _TEXT("Unable to execute statement \"");
+		  else
+				errmsg += _TEXT("Warning when executing statement \"");
+
 		  errmsg += sqlQuery;
 		  errmsg += _TEXT("\"");
 
@@ -416,12 +536,19 @@ HSTMT DBStmt::GetHSTMT() const
 		  STD_::pair<tstring, tstring> info = dbe.GetODBCError();
 		  const tstring szSQLError = info.first;
 
-		  // if error is fatal, invalidate the DBStmt
-		  if (STD_::find(FatalErrors.begin(), FatalErrors.end(),
-			  szSQLError) != FatalErrors.end())
-			  invalidate();
+		  if (rc != SQL_SUCCESS_WITH_INFO)
+		  {
+			  // if error is fatal, invalidate the DBStmt
+			  if (STD_::find(FatalErrors.begin(), FatalErrors.end(),
+				  szSQLError) != FatalErrors.end())
+				  invalidate();
 
-		  throw dbe;
+			  DTL_THROW dbe;
+		  }
+		  else
+		  {
+			  DTL_WARN dbe;
+		  }
   
 		  // destructor should free statement
 	  }
@@ -494,7 +621,7 @@ HSTMT DBStmt::GetHSTMT() const
 				  szSQLError) != FatalErrors.end())
 				  invalidate();
 			   			    
-			  throw dbe;
+			  DTL_THROW dbe;
 			}
 		}
 		return NO_DATA_FETCHED;
@@ -563,7 +690,7 @@ SQLINTEGER FetchOffset)
 				  szSQLError) != FatalErrors.end())
 				  invalidate();
 			   			    
-			  throw dbe;
+			  DTL_THROW dbe;
 			}
 		}
 		return NO_DATA_FETCHED;
@@ -585,7 +712,7 @@ SQLINTEGER FetchOffset)
 			  STD_::pair<tstring, tstring> info = dbe.GetODBCError();
 			  const tstring szSQLError = info.first;
 			   			    
-			  throw dbe;
+			  DTL_THROW dbe;
 
 		}
 
@@ -617,7 +744,7 @@ SQLINTEGER FetchOffset)
 				state = STMT_UNALLOCATED;
 				hstmt = SQL_NULL_HSTMT;
 				
-				throw DBException(_TEXT("DBStmt::Destroy()"), errmsg, pConn, this);
+				DTL_THROW DBException(_TEXT("DBStmt::Destroy()"), errmsg, pConn, this);
 			 }
 			 else
 			 {
@@ -680,7 +807,7 @@ SQLINTEGER FetchOffset)
 			assert(hstmt != SQL_NULL_HSTMT);
 			RETCODE rc = SQLFreeStmt(hstmt, SQL_RESET_PARAMS);
 			if (!RC_SUCCESS(rc))
-				throw DBException(_TEXT("DBStmt::UnbindParams()"),
+				DTL_THROW DBException(_TEXT("DBStmt::UnbindParams()"),
 					_TEXT("Unable to unbind params for stmt '") + sqlQuery + _TEXT("'!"),
 					pConn, this);
 			// Destroy();	
@@ -697,7 +824,7 @@ SQLINTEGER FetchOffset)
 			assert(hstmt != SQL_NULL_HSTMT);
 			RETCODE rc = SQLFreeStmt(hstmt, SQL_UNBIND);
 			if (!RC_SUCCESS(rc))
-				throw DBException(_TEXT("DBStmt::UnbindParams()"),
+				DTL_THROW DBException(_TEXT("DBStmt::UnbindParams()"),
 					_TEXT("Unable to unbind params for stmt '") + sqlQuery + _TEXT("'!"),
 					pConn, this);
 			// Destroy();
@@ -772,7 +899,7 @@ SQLINTEGER FetchOffset)
 				  szSQLError) != FatalErrors.end())
 				  invalidate();
 			   			    
-			throw dbe;
+			DTL_THROW dbe;
 		  }
 
 #ifdef DTL_MEM_DEBUG	  
@@ -825,7 +952,7 @@ SQLINTEGER FetchOffset)
 				  szSQLError) != FatalErrors.end())
 				  invalidate();
 			   			    
-			throw dbe;
+			DTL_THROW dbe;
 		  }
 		  
 #ifdef DTL_MEM_DEBUG	  
@@ -855,7 +982,7 @@ SQLINTEGER FetchOffset)
 
 	      if (!RC_SUCCESS(rc)  && rc != SQL_NO_DATA)
 		  {
-			tstring errmsg = _TEXT("GetData failed for column #");
+			tstring errmsg = _TEXT("SQLGetData() failed for column #");
 
 			// get parameter number
 			tostringstream errstr;
@@ -878,7 +1005,7 @@ SQLINTEGER FetchOffset)
 				  szSQLError) != FatalErrors.end())
 				  invalidate();
 			   			    
-			throw dbe;
+			DTL_THROW dbe;
 		  }
 		  
 		if (rc == SQL_NO_DATA || *StrLen_or_IndPtr < 1)
@@ -888,7 +1015,7 @@ SQLINTEGER FetchOffset)
 	}
 
 	// put data for a field
-	void DBStmt::PutData(void *DataPtr, SDWORD StrLen_or_Ind)
+	void DBStmt::PutData(const void *DataPtr, SDWORD StrLen_or_Ind)
 	{
 		validate();
 
@@ -925,7 +1052,7 @@ SQLINTEGER FetchOffset)
 				  szSQLError) != FatalErrors.end())
 				  invalidate();
 			   			    
-			throw dbe;		
+			DTL_THROW dbe;		
 
 		}
 
@@ -968,7 +1095,7 @@ SQLINTEGER FetchOffset)
 				  szSQLError) != FatalErrors.end())
 				  invalidate();
 			   			    
-			throw dbe;		
+			DTL_THROW dbe;		
 
 		}
 
@@ -998,7 +1125,7 @@ SQLINTEGER FetchOffset)
 		   errmsg += sqlQuery;
 		   errmsg += _TEXT("\"");
 
-		   throw DBException(_TEXT("DBStmt::RowCount()"),
+		   DTL_THROW DBException(_TEXT("DBStmt::RowCount()"),
 							 errmsg, pConn, this);
 		}
 
@@ -1006,7 +1133,7 @@ SQLINTEGER FetchOffset)
 	}
 
 	// get the query tstring for this statement
-	tstring DBStmt::GetQuery() const
+	const tstring &DBStmt::GetQuery() const
 	{
 	     return sqlQuery;
 	}
@@ -1022,7 +1149,7 @@ SQLINTEGER FetchOffset)
 	   RETCODE rc = SQLBulkOperations(hstmt, Operation);
 
 	   if (!RC_SUCCESS(rc))
-		   throw DBException(_TEXT("DBStmt::BulkOperations()"),
+		   DTL_THROW DBException(_TEXT("DBStmt::BulkOperations()"),
 							 _TEXT("Unable to perform bulk operation for statement \"") + sqlQuery +
 							 _TEXT("\"!"), pConn, this);
 	}
@@ -1041,7 +1168,7 @@ SQLINTEGER FetchOffset)
 
 				tstring toString = tostr.str();
 
-				throw DBException(_TEXT("DBStmt::GetStmtAttr()"),
+				DTL_THROW DBException(_TEXT("DBStmt::GetStmtAttr()"),
 							 _TEXT("Unable to get statement attribute for ") +
                                                          toString + _TEXT(" statement \"") + sqlQuery +
 							 _TEXT("\"!"), pConn, this);
@@ -1069,6 +1196,19 @@ SQLINTEGER FetchOffset)
 	   attrs.insert(attr);
 	}		
 
+	// Clear the attribute with the given attribute number
+	void DBStmt::ClearStmtAttr(SQLINTEGER Attribute)
+	{
+	   Attr attr(Attribute, 0, 0);
+
+		// erase the old value of the attribute if it was previously set
+	   STD_::set<Attr>::iterator find_it = attrs.find(attr);
+	   if (find_it != attrs.end())
+	   {
+			attrs.erase(find_it);  
+	   }
+	}
+
 	void DBStmt::ClearStmtAttrs()
 	{
 	   attrs.clear();
@@ -1084,7 +1224,7 @@ SQLINTEGER FetchOffset)
 		for (STD_::set<Attr>::iterator attr_it = attrs.begin();
 					attr_it != attrs.end(); ++attr_it)
 		{
-			rc = SQLSetStmtAttr(hstmt, attr_it->attr, (SQLPOINTER) attr_it->value, attr_it->length);
+			rc = SQLSetStmtAttr(hstmt, attr_it->attr, (SQLPOINTER) (attr_it->value), attr_it->length);
 			
 			if (!RC_SUCCESS(rc))
 			{
@@ -1094,7 +1234,7 @@ SQLINTEGER FetchOffset)
 
 								tstring toString = tostr.str();
 
-				throw DBException(_TEXT("DBStmt::LoadAttributes()"),
+				DTL_THROW DBException(_TEXT("DBStmt::LoadAttributes()"),
 							 _TEXT("Unable to set statement attribute for ") +
                                                          toString + _TEXT(" statement \"") + sqlQuery +
 							 _TEXT("\"!"), pConn, this);

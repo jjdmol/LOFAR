@@ -17,7 +17,7 @@ It is provided "as is" without express or implied warranty.
 #ifndef DTL_TABLE_H
 #define DTL_TABLE_H
 
-#include <DTL.h>
+#include "DTL.h"
 
 
 #define DTL_LESS(A, B, FIELD) \

@@ -20,6 +20,7 @@ It is provided "as is" without express or implied warranty.
 
 BEGIN_DTL_NAMESPACE
 
+
 // *********** Implementation code for RootException ***************
 RootException::RootException() : STD_::exception(), method(_TEXT("")), errmsg(_TEXT("")), exType(_TEXT("RootException")), whatbuf() { }
 
@@ -58,6 +59,14 @@ const char *RootException::what() const throw()
 #else
 	   return twhat();
 #endif
+}
+
+
+ErrorHandler &GetErrorHandler()
+{
+	static ErrorHandler h;
+
+	return h;
 }
 
 END_DTL_NAMESPACE

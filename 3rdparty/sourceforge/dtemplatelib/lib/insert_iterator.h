@@ -36,6 +36,21 @@ template<class DataObj, class ParamObj = DefaultParamObj<DataObj> >
 	public STD_::forward_iterator<DataObj, ptrdiff_t>
 #endif
 {
+#ifdef __GNUC__ // need to declare members used from base template
+
+    using DB_iterator<DataObj, ParamObj>::boundIOs;
+    using DB_iterator<DataObj, ParamObj>::bpa;
+    using DB_iterator<DataObj, ParamObj>::count;
+    using DB_iterator<DataObj, ParamObj>::io_handler;
+    using DB_iterator<DataObj, ParamObj>::lastCount;
+    using DB_iterator<DataObj, ParamObj>::pDBview;
+    using DB_iterator<DataObj, ParamObj>::pParambuf;
+    using DB_iterator<DataObj, ParamObj>::pRowbuf;
+    using DB_iterator<DataObj, ParamObj>::sqlQryType;
+    using DB_iterator<DataObj, ParamObj>::stmt;
+
+#endif
+
 private:
 
 	InsValWrap<DataObj> InsValidate;
@@ -50,27 +65,25 @@ private:
 		  if (!this->IsReady())
 		  {
 	    	 this->open();
-			 
-			 // must call InsValidate() here to fix bug with NULL's
-			 // BoundIO columns get erased in this instance with open()
-			 if (!InsValidate(this->boundIOs, *(this->pRowbuf)))
-			 {
-				throw DBException(_TEXT("DBView::insert_iterator::WriteCurrentRow()"),
-					_TEXT("InsValidate() call failed!"), NULL, NULL);
-			 }
 		  }
 		
+		  // must call InsValidate() here to fix bug with NULL's
+		  // BoundIO columns get erased in this instance with open()
+		  if (!InsValidate(this->boundIOs, *(this->pRowbuf)))
+		  {
+			DTL_THROW DBException(_TEXT("DBView::insert_iterator::WriteCurrentRow()"),
+				_TEXT("InsValidate() failed on statement ") + this->stmt.GetQuery(), NULL, NULL);
+		  }
+
+		  validRowbuf = true;
+
 		  this->lastCount = 0;
 
 		  if (this->bad())
 		  {
-			throw DBException(_TEXT("DBView::insert_iterator::WriteCurrentRow()"),
+			DTL_THROW DBException(_TEXT("DBView::insert_iterator::WriteCurrentRow()"),
 				_TEXT("iterator tested bad!"), NULL, NULL);
 		  }
-
-		  // do nothing if rowbuf is invalid
-		  if (!validRowbuf)
-			return;
 
 		  // propagate STL strings to their strbufs for proper binding
 		  this->boundIOs.PropagateToSQL(this->sqlQryType, this->stmt);
@@ -176,7 +189,7 @@ public:
 		{  
 			if (this->bad())
 			{
-			   throw DBException(_TEXT("DBView::insert_iterator::operator=(const DataObj &)"),
+			   DTL_THROW DBException(_TEXT("DBView::insert_iterator::operator=(const DataObj &)"),
 				_TEXT("iterator tested bad!"), NULL, NULL);
 			}
 			
@@ -184,24 +197,6 @@ public:
 		
 
 			dtl_assign(data, *pData);
-		  
-		    
-			// if user specified a InsVal, apply it
-			if (!InsValidate(this->boundIOs, *pData))
-			{
-				validRowbuf = false;
-		
-				if (this->stmt.valid())
-					setstate(this->failbit);
-				else
-					setstate(this->badbit);
-
-				throw DBException(_TEXT("DBView::insert_iterator::operator=(const DataObj &)"),
-							  _TEXT("InsValidate() failed on statement \"") +
-							  this->stmt.GetQuery() + _TEXT("\"!"), NULL, NULL);
-			}
-		
-			validRowbuf = true;
 		}
 		catch (RootException &ex)
 		{
@@ -239,9 +234,7 @@ public:
 	// IO handler logic is inside of WriteCurrentRow()
 	DB_insert_iterator<DataObj, ParamObj> &operator++()
 	{
-        // commit on operator++()
-		WriteCurrentRow();
-		return *this;
+        return *this;
 	}
 
     // _TEXT("advance to next record") (postincrement) ... involves writing out latest record
@@ -313,7 +306,7 @@ public:
 						<< _TEXT(" > ") << sizeof(SQLINTEGER) * this->boundIOs.NumColumns() <<
 						_TEXT(" (this is sizeof(SQLINTEGER) * # of bound columns).  To use bulk_copy you will ")
 						_TEXT("need to pad your row object with extra bytes at the end to bring it up to this minimum size.");
-					throw DBException(_TEXT("DBView::insert_iterator::bulk_copy()"), errStream.str(), NULL, NULL);				
+					DTL_THROW DBException(_TEXT("DBView::insert_iterator::bulk_copy()"), errStream.str(), NULL, NULL);				
 				}
 				
 
@@ -334,7 +327,7 @@ public:
 						<< _TEXT(" > ") << sizeof(TIMESTAMP_STRUCT) * NumDates <<
 						_TEXT("  (this is sizeof(TIMESTAMP_STRUCT) * # of bound columns).  To use bulk_copy you will ")
 						_TEXT("need to pad your row object with extra bytes at the end to bring it up to this minimum size.");
-						throw DBException(_TEXT("DBView::insert_iterator::bulk_copy()"), errStream.str(), NULL, NULL);				
+						DTL_THROW DBException(_TEXT("DBView::insert_iterator::bulk_copy()"), errStream.str(), NULL, NULL);				
 					}
 					this->boundIOs.pDatesFetchedArray.reset(bufferRows * row_size);
 					pDatesFetchedArray = (TIMESTAMP_STRUCT *)this->boundIOs.pDatesFetchedArray.get() ;		
@@ -452,7 +445,7 @@ public:
 
 						tostringstream errStream;
 						errStream << _TEXT("InsValidate failed for row #") << i;
-						throw DBException(_TEXT("DBView::insert_iterator::bulk_copy()"), errStream.str(), NULL, NULL);
+						DTL_THROW DBException(_TEXT("DBView::insert_iterator::bulk_copy()"), errStream.str(), NULL, NULL);
 				
 					}
 				
@@ -546,9 +539,9 @@ public:
 				  // Drivers seem to be returning the token.  For now, throw if they do not
 				  if (pToken > (void *)50) {
 						setstate(this->badbit);
-						throw DBException(_TEXT("DBView::insert_iterator::bulk_copy()"), 
-							_TEXT("Driver is not returning column # token when calling SQLParamData.  Unable to send long "
-							" data for bulk insert."), NULL, NULL);
+						DTL_THROW DBException(_TEXT("DBView::insert_iterator::bulk_copy()"), 
+							_TEXT("Driver is not returning column # token when calling SQLParamData.  Unable to send long data for bulk insert."), 
+							NULL, NULL);
 				  }
 				  
 				  if (i != last_i) {

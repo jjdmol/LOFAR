@@ -18,6 +18,8 @@ It is provided "as is" without express or implied warranty.
 #include "string_util.h"
 #include "clib_fwd.h"
 
+#include "std_warn_off.h"
+
 #include <cstdlib>
 
 #ifdef __BORLANDC__
@@ -30,6 +32,8 @@ It is provided "as is" without express or implied warranty.
 
 #include <cassert>
 #include <sstream>
+
+#include "std_warn_on.h"
 
 BEGIN_DTL_NAMESPACE
 
@@ -117,7 +121,7 @@ bool operator>=(const TIMESTAMP_STRUCT &ts1, const TIMESTAMP_STRUCT &ts2)
 
 STD_::ostream &operator<<(STD_::ostream &o, const TIMESTAMP_STRUCT &ts)
 {
-	static char mm_name[13][4] = {"", "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+	static const char mm_name[13][4] = {"", "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
 				"JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 	
 	o << mm_name[ts.month] << "-";
@@ -149,7 +153,7 @@ STD_::ostream &operator<<(STD_::ostream &o, const TIMESTAMP_STRUCT &ts)
 #if !defined(DTL_NO_UNICODE)
 STD_::wostream &operator<<(STD_::wostream &o, const TIMESTAMP_STRUCT &ts)
 {
-	static wchar_t mm_name[13][4] = {L"", L"JAN", L"FEB", L"MAR", L"APR", L"MAY", L"JUN",
+	static const wchar_t mm_name[13][4] = {L"", L"JAN", L"FEB", L"MAR", L"APR", L"MAY", L"JUN",
 				L"JUL", L"AUG", L"SEP", L"OCT", L"NOV", L"DEC"};
 	
 	o << mm_name[ts.month] << L"-";
@@ -686,7 +690,7 @@ tstring jul2str(jtime_t juldate) {
  * the number of hours since midnight.
  *------------------------------------------------------------------------*/
 RETCODE str2jultm(const TCHAR *szDt, jtime_t *pjtime) {
-	static TCHAR mm_name[13][4] = {_TEXT(""), _TEXT("JAN"), _TEXT("FEB"), _TEXT("MAR"), _TEXT("APR"), _TEXT("MAY"), _TEXT("JUN"),
+	static const TCHAR mm_name[13][4] = {_TEXT(""), _TEXT("JAN"), _TEXT("FEB"), _TEXT("MAR"), _TEXT("APR"), _TEXT("MAY"), _TEXT("JUN"),
 				_TEXT("JUL"), _TEXT("AUG"), _TEXT("SEP"), _TEXT("OCT"), _TEXT("NOV"), _TEXT("DEC")};
 	int mm, dd, yy, hh, mi, ss;
 	int monField;
@@ -773,8 +777,8 @@ RETCODE str2jultm(const TCHAR *szDt, jtime_t *pjtime) {
  * Convert a Julian time to a tstring in the form MON-DD-YYYY HH:MM:SS
  *------------------------------------------------------------------------*/
 tstring jul2strtm(jtime_t jtime) {
-	static TCHAR szErr[]=_TEXT("#DATE_ERR");
-	static TCHAR mm_name[13][4] = {_TEXT(""), _TEXT("JAN"), _TEXT("FEB"), _TEXT("MAR"), _TEXT("APR"), _TEXT("MAY"), _TEXT("JUN"),
+	static const TCHAR szErr[]=_TEXT("#DATE_ERR");
+	static const TCHAR mm_name[13][4] = {_TEXT(""), _TEXT("JAN"), _TEXT("FEB"), _TEXT("MAR"), _TEXT("APR"), _TEXT("MAY"), _TEXT("JUN"),
 				_TEXT("JUL"), _TEXT("AUG"), _TEXT("SEP"), _TEXT("OCT"), _TEXT("NOV"), _TEXT("DEC")};
 	RETCODE rc;
 	jtime_tm time;
@@ -817,7 +821,7 @@ tstring jul2strtm(jtime_t jtime) {
  * {ts 'yyyy-mm-dd hh:mm:ss'}
  *------------------------------------------------------------------------*/
 void jul2SQLtm(jtime_t jultime, TCHAR *szSQLtm) {
-	static TCHAR szErr[]=_TEXT("#DATE_ERR");
+	static const TCHAR szErr[]=_TEXT("#DATE_ERR");
 	RETCODE rc;
 	jtime_tm time;
 	tostringstream o;
@@ -900,7 +904,7 @@ double diffsecs(jtime_t end, jtime_t begin) {
  * Outputs: number of days in the month
  *------------------------------------------------------------------------*/
 int month_days(int year, int month) {
-	static TCHAR daytab[2][13] = {
+	static const TCHAR daytab[2][13] = {
 		{0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30 ,31},
 		{0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30 ,31}
 	};
@@ -1249,14 +1253,14 @@ void date_unit_test(void) {
  * Given two times, return the later (max) of these two times
  *------------------------------------------------------------------------*/
 jtime_t maxtime(jtime_t a, jtime_t b) {
-	return MAX(a, b);
+	return DTL_MAX(a, b);
 }
 
 /*------------------------------------------------------------------------*
  * Given two times, return the earlier (min) of these two times
  *------------------------------------------------------------------------*/
 jtime_t mintime(jtime_t a, jtime_t b) {
-	return MIN(a, b);
+	return DTL_MIN(a, b);
 }
 
 /*------------------------------------------------------------------------*
@@ -1332,7 +1336,7 @@ jtime_c::jtime_c(const timestamp_t &ts) {
 	RETCODE rc;
 	rc = Timestamp2Jtime(&ts, &jtime );
 	if (!RC_SUCCESS(rc))
-		throw RootException(_TEXT("jtime_c::jtime_c(timestamp t&)"), _TEXT("Invalid time passed to constructor"));
+		DTL_THROW RootException(_TEXT("jtime_c::jtime_c(timestamp t&)"), _TEXT("Invalid time passed to constructor"));
 }
 
 jtime_c::jtime_c() : jtime (MIN_JTIME) {	}
@@ -1346,7 +1350,7 @@ jtime_c::operator timestamp_t() const {
 	RETCODE rc;
 	rc = Jtime2Timestamp(jtime, &tst);
 	if (!RC_SUCCESS(rc))
-		throw RootException(_TEXT("jtime_c::operator timestamp_t()"), _TEXT("Invalid time held by class."));
+		DTL_THROW RootException(_TEXT("jtime_c::operator timestamp_t()"), _TEXT("Invalid time held by class."));
 
 
 	return tst;
@@ -1368,7 +1372,7 @@ jtime_c &jtime_c::operator=(const timestamp_t &ts) {
 	RETCODE rc;
 	rc = Timestamp2Jtime(&ts, &jtime );
 	if (!RC_SUCCESS(rc))
-		throw RootException(_TEXT("jtime_c::jtime_c(timestamp t&)"), _TEXT("Invalid time passed to constructor"));
+		DTL_THROW RootException(_TEXT("jtime_c::jtime_c(timestamp t&)"), _TEXT("Invalid time passed to constructor"));
 
     return *this;
 }

@@ -170,6 +170,66 @@ void StoredProcRead3() {
 		 << print_it.Params().numRecords << endl;
 }
 
+
+#if 0
+DROP PROCEDURE TestParm 
+
+-- Example procedure returns three things:
+-- 1. A set of records from the select statement: "SELECT STRING_VALUE FROM DB_EXAMPLE"
+-- After all records have been retrieved, output paramenters are returned:
+-- 2. OutParm
+-- 3. Return value for function
+CREATE PROCEDURE TestParm @OutParm int OUTPUT AS
+SELECT STRING_VALUE FROM db_example
+SELECT @OutParm = 66
+RETURN 99
+
+
+DECLARE @RetVal INT
+
+DECLARE @Param INT
+
+  
+
+-- Execute the procedure, which returns
+
+-- the result set from the first SELECT.
+
+EXEC @RetVal = TestParm @OutParm = @Param OUTPUT
+
+  
+
+-- Use the return code and output parameter.
+
+PRINT 'The return value from the procedure was: ' +
+
+                 CONVERT(CHAR(6), @RetVal)
+
+PRINT 'The value of the output parameter in the procedure was: ' +
+
+                 CONVERT(CHAR(6), @Param)
+
+#endif
+
+
+void TestParmCreate() 
+{
+	try{
+		DBStmt("DROP PROCEDURE TestParm").Execute();
+	}
+	catch (std::exception)
+	{
+	}
+
+	DBStmt(
+		"CREATE PROCEDURE TestParm @OutParm int OUTPUT AS "
+	    "SELECT STRING_VALUE FROM db_example "
+		"SELECT @OutParm = 66 "
+		"RETURN 99"
+	).Execute();
+
+}
+
 class TestParmBCA {
 public:
  void operator()(BoundIOs &cols, variant_row &row)
@@ -183,69 +243,88 @@ public:
 };
 
 
+#if 0
+
+class TestParmBPA {
+public:
+	void operator()(dtl::BoundIOs &cols, dtl::variant_row &row)
+	{
+		cols[0] >> row._int();  //ERROR?  This specifies an output parameter.  Do you want an output parameter, an input parameter, or an i/o parameter
+		cols[1] >> row._int();
+		cols.BindVariantRow(row);
+	}
+};
+  
+
+void TestMe()
+{
+
+DynamicDBView<> view("{? = call TestParm(?)}", "");
+// DynamicDBView is really just an alias for DBView<variant_row, variant_row> where the BCA and BPA are built automatically from meta-data.
+
+
+view.SetBPA(TestParmBPA());
+// You will need to add a method to DBView here.  See below
+
+DynamicDBView<>::sql_iterator print_it = view.begin();
+DynamicDBView<>::sql_iterator end_it = view.end();
+
+// set params
+print_it.Params()[0] =0;
+print_it.Params()[1] =0;
+
+
+// output rows
+copy(print_it, end_it, ostream_iterator<variant_row>(cout, "\n"));
+
+// get return values
+print_it.MoreResults();
+cout <<print_it.Params() << endl;
+	
+}
+#endif
+
+
+
 // Read the contents of a table and print the resulting rows
 void StoredProcReadTestParm() {
+	cout << "SQL Server stored procedure test" << endl;
 
- DBView<variant_row> view("{? = call TestParm(?)}",
-  TestParmBCA());
-
-
-
-
- // NOTE: We need to construct r from the view itself since we
- // don't know what fields the table will contain.
- // We therefore make a call to the DataObj() function to have the
- // table return us a template row with the correct number of fields
- // and field types.
- // We use this construction since we can't be guaranteed that the table
- // is non-empty & we want to still display column names in this case.
-
- variant_row s(view.GetDataObj());
-
- // Print out the column names
- vector<string> colNames = s.GetNames();
- for (vector<string>::iterator name_it = colNames.begin(); name_it !=
-      colNames.end(); ++name_it)
-        cout << (*name_it) << " ";
- cout << endl;
-
- // Print out all rows and columns from our query
- DBView<variant_row>::sql_iterator print_it = view;
+	TestParmCreate() ;
+	DBView<variant_row> view("{? = call TestParm(?)}", TestParmBCA());
 
 
- // By default DTL uses server side cursors for SQL Server so that more than
- // one iterator can be active at a time.  This is set in the constructor
- // for DBStmt.
- // Here we require a client side cursor because our stored procedure returns
- // multiple result sets.  Therfore we clear out the setting to use server
- // side cursors in which case SQL server will default to a client side cursor.
- // For details on server side versus client side cursors
- // see "Rowsets and SQL Server cursors, " 
- // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/oledbsql/9_ole_07_212r.asp 
- print_it.GetStmt().ClearStmtAttrs();
+	// Print out the column names
+	cout << "column names" << endl;
+	vector<string> colNames = view.GetColNames();
+	for (vector<string>::iterator name_it = colNames.begin(); name_it !=
+	  colNames.end(); ++name_it)
+		cout << (*name_it) << " ";
+	cout << endl;
 
- variant_row r = view.GetDataObj();
- r[0] = 0;
- r[1] = 0;
+	// Print out all rows and columns from our query
+	DBView<variant_row>::sql_iterator print_it = view;
 
- for (++print_it; print_it != view.end(); ++print_it)
- {
-  r = *print_it;
-  for (size_t i = 0; i < r.size(); ++i)
-    cout << r[i] << " ";
-  cout << endl;
- }
+	variant_row r(view.GetDataObj());
+	r["0"] = 0;
+	r["1"] = 0;
 
- cout << endl;
- cout << "After call to MoreResults(), "
-  "SQL-Server gives results in output parameters & return code." << endl;
- print_it.MoreResults();
- r = *print_it;
- for (size_t i = 0; i < r.size(); ++i)
-    cout << r[i] << " ";
- cout << endl;
+	*print_it = r; // assign parameters to execute
+
+	for (++print_it; print_it != view.end(); ++print_it)
+	{
+		cout << (variant_row) *print_it << endl;
+	}
+
+	cout << endl;
+	cout << "After call to MoreResults(), "
+	"SQL-Server gives results in output parameters & return code." << endl;
+	print_it.MoreResults();
+
+	r = *print_it;
+	cout << "param 0 = " << r["0"] << endl;
+	cout << "param 1 = " << r["1"] << endl;
+
+	cout << endl;
 
 }
-
-
-

@@ -17,6 +17,7 @@ It is provided "as is" without express or implied warranty.
 // Reviewed: 11/12/2000 - CJ
 // Edited: 11/14/2000 - MG - inherited ETIException from RootException
 // Edited: 12/19/2000 - MG - added namespaces
+// Edited: 03/24/2004 - Alexander Motzkau, TypeTranslationField remembers variant_row index
 
 #ifndef DTL_BIND_BASICS_H
 #define DTL_BIND_BASICS_H
@@ -24,6 +25,9 @@ It is provided "as is" without express or implied warranty.
 #include "dtl_config.h"
 #include "RootException.h"
 #include "minimax.h"
+#include "array_string.h"
+
+#include "std_warn_off.h"
 
 #ifdef  WIN32
 #ifdef WIN32
@@ -37,14 +41,12 @@ It is provided "as is" without express or implied warranty.
 #endif
 #include <sql.h>
 
-#include "std_warn_off.h"
 #include <string>
 #include <map>
-#include "std_warn_on.h"
 
 #include <typeinfo>
 
-#include "array_string.h"
+#include "std_warn_on.h"
 
 BEGIN_DTL_NAMESPACE
 
@@ -137,6 +139,7 @@ public:
    SDWORD cType;
    TypeComplexity complexity;  // is the type primitive or complex
    size_t size;
+   bool bParam;
 
    TypeTranslation();
 
@@ -151,6 +154,10 @@ public:
 
    // is this a primitive type
    bool IsPrimitive() const;
+
+   // is this a parameter type
+   bool IsParam() const;
+   void SetParam(bool isParamter);
 
    friend bool operator==(const TypeTranslation &tt1, const TypeTranslation &tt2);
 
@@ -215,8 +222,9 @@ public:
 		void *base_addr;
 		size_t base_size;
 		tstring &field_name;
+		int field_nr;
 
-		TypeTranslationField(TypeTranslation &t, void *f, void *ba, size_t bs, tstring &fn);
+		TypeTranslationField(TypeTranslation &t, void *f, void *ba, size_t bs, tstring &fn, int fi);
 };
 
 END_DTL_NAMESPACE

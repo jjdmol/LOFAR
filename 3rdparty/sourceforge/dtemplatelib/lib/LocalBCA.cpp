@@ -1,5 +1,8 @@
 #include "LocalBCA.h"
+
+#include "std_warn_off.h"
 #include <sstream>
+#include "std_warn_on.h"
 
 BEGIN_DTL_NAMESPACE
 

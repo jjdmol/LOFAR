@@ -40,6 +40,18 @@ template<class DataObj, class ParamObj = DefaultParamObj<DataObj> >
 	 public STD_::forward_iterator<DataObj, ptrdiff_t>
 #endif
 {
+#ifdef __GNUC__ // need to declare members used from base template
+    using DB_iterator<DataObj, ParamObj>::boundIOs;
+    using DB_iterator<DataObj, ParamObj>::bpa;
+    using DB_iterator<DataObj, ParamObj>::count;
+    using DB_iterator<DataObj, ParamObj>::io_handler;
+    using DB_iterator<DataObj, ParamObj>::lastCount;
+    using DB_iterator<DataObj, ParamObj>::pDBview;
+    using DB_iterator<DataObj, ParamObj>::pParambuf;
+    using DB_iterator<DataObj, ParamObj>::pRowbuf;
+    using DB_iterator<DataObj, ParamObj>::sqlQryType;
+    using DB_iterator<DataObj, ParamObj>::stmt;
+#endif
 private:
     InsValWrap<DataObj> InsValidate;
     bool validRowbuf; // was previous object valid?
@@ -52,39 +64,31 @@ private:
 	// exception-safety questionable
 	int ExecUpdate()
 	{
-			bool need_to_call_ins_validate = false;
-
-		    if (!this->IsReady())
+			if (!this->IsReady())
 			{
 	    	    this->open();
-			
-				need_to_call_ins_validate = true;
 			}
 
 		    if (this->bad())
 			{
-			  throw DBException(_TEXT("DBView::delete_iterator::ExecDelete()"),
+			  DTL_THROW DBException(_TEXT("DBView::delete_iterator::ExecDelete()"),
 				_TEXT("iterator tested bad!"), NULL, NULL);
 			}
-			
-			if (!validRowbuf)
-				return (this->lastCount = 0);
 
+			this->lastCount = 0;
 			int updatedRows = 0;
 			try
 			{
 			   // must call InsValidate() here to fix bug with NULL's
 			   // BoundIO columns get erased in this instance with open()
-			   if (need_to_call_ins_validate)
+		   
+			   if (!InsValidate(this->boundIOs, *this->pRowbuf))
 			   {
-				   if (!InsValidate(this->boundIOs, *this->pRowbuf))
-				   {
-				     throw DBException(_TEXT("DBView::update_iterator::ExecUpdate()"),
-					   _TEXT("InsValidate() call failed!"), NULL, NULL);
-				   }
-
-				   need_to_call_ins_validate = false;
+				 DTL_THROW DBException(_TEXT("DBView::update_iterator::ExecUpdate()"),
+				   _TEXT("InsValidate() call failed on statement ") + this->stmt.GetQuery(), NULL, NULL);
 			   }
+			   validRowbuf = true; 
+
 			   // propagate STL strings to their strbufs for proper binding
 			   this->boundIOs.PropagateToSQL(this->sqlQryType, this->stmt);
 			   this->stmt.Execute();
@@ -108,7 +112,6 @@ private:
 				}
 			}
 
-			validRowbuf = false; // may write out only once per operator++()
 
 			// object becomes inconsistent if this line fails
 			try
@@ -218,23 +221,6 @@ public:
 		{ 
 		   pData = this->GetRowbufPtr();
 		   dtl_assign(data, *pData);
-		  
-	
-			// if user specified a InsVal, apply it
-			if (!InsValidate(this->boundIOs, *pData))
-			{
-				validRowbuf = false;
-
-				if (this->stmt.valid())
-					setstate(this->failbit);
-				else
-					setstate(this->badbit);
-
-				throw DBException(_TEXT("DBView::update_iterator::operator=(const DataObj &)"),
-							  _TEXT("InsValidate() failed on statement \"") +
-							  this->stmt.GetQuery() + _TEXT("\"!"), NULL, NULL);
-			}
-
 		}
 		catch (RootException &ex)
 		{
@@ -249,7 +235,6 @@ public:
 			}
 		}
 
-		validRowbuf = true;
 		this->clear();
 
         // commit on operator=()

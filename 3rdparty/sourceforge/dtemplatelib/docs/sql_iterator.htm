@@ -101,7 +101,9 @@ size="2" face="Courier New">DBView</font><font size="2"> </font>.
   The SQL string that is used by this iterator is controlled by the <tt>DBView</tt> constructor.
   Because the SQL string can be arbitrary (SELECT, INSERT, UPDATE, DELETE or other SQL commands) <tt>sql_iterator</tt>
   can do anything the other DTL iterators do and much more.  In practice, the primary
-  application for <tt>sql_iterator</tt> is for use in calling stored procedures.</p>
+  application for <tt>sql_iterator</tt> is for use in calling stored procedures or complex SQL
+  queries that return results. For simple SQL, the <a href="DBStmt.htm">DBStmt<a> class is often an easier to use than
+  sql_iterator.</p>
 <p>As with the other subclasses of <font size="2" face="Courier New">DB_iterator</font>, parameters and columns are bound respectively through the 
   use of BPAs and BCAs. However, for <tt>sql_iterator</tt>, it is possible to 
   specify parameter bindings either in the BCA or BPA. This flexiblity is necessary because a
@@ -118,7 +120,8 @@ size="2" face="Courier New">DBView</font><font size="2"> </font>.
   This matches the behavior given by <tt>select_iterator</tt> which means the SQL statement will get executed
   only once when the iterator is initialized and subseqent calls to operator++ will read additional values through
   the use of SQLFetch(). (If your SQL statement exposes multiple result sets these may be retrieved through the use of the
-  MoreResults() function described below).
+  MoreResults() function described below).  Please also note that if your statement reads/writes std::string or dtl::blob columns
+  then these columns/parameters must come last. (See <a href="#3"><font size="3">[3]</font></a> for details). 
   <p>Because <tt>sql_iterator</tt> 
   can run against arbitrary SQL statements it must distinguish what kinds of parameters are being bound.  The three possible
   types of parameters are INPUT, OUTPUT and INPUT/OUTPUT. To make this distinction, <tt>sql_iterator</tt> introduces
@@ -881,6 +884,28 @@ size="2" face="Courier New">DBView</font><font size="2">. </font><font
 size="3">It is used internally and should never be called by the
 end user.</font></p>
 
+<p><a name="3"></a>[3] 
+This is because we use SQLGetData()/SQLPutData() to read/write std::string data and many ODBC
+  drivers require that these columns come last.  (Many more modern drivers such as those by Merant don't care about the
+column order, the problem is primarily with the Microsoft drivers).
+If it is not possible to arrange your query so that string columns come last, 
+you should either use fixed length strings (such as char[N], tcstring&lt;N&gt;),
+  or in the case of DynamicDBView you should #define DTL_VARIANT_USE_FIXED_LEN_STRING to force the use of fixed length strings.
+<pre>
+For details on the SQLGetData restriction see
+<a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/odbc/htm/odch10pr_11.asp">
+http://msdn.microsoft.com/library/default.asp?url=/library/en-us/odbc/htm/odch10pr_11.asp</a>
+
+To summarize, there are a number of restrictions on using SQLGetData. In general, columns accessed with SQLGetData: 
+-Must be accessed in order of increasing column number (because of the way the columns of a result set are read from the data source). 
+   For example, it is an error to call SQLGetData for column 5 and then call it for column 4. 
+-Cannot be bound. 
+-Must have a higher column number than the last bound column. For example, if the last bound column is column 3, it is an 
+error to call SQLGetData for column 2. For this reason, applications should be careful to place long data columns at the end of the select list. 
+-Cannot be used if SQLFetch or SQLFetchScroll was called to retrieve more than one row. For more information, see Using Block Cursors. 
+</pre>
+In DTL we use bound columns for everything except std::string and blob fields.
+</p>
 
 <h3>See also</h3>
 

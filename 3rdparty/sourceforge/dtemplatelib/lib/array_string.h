@@ -4,8 +4,66 @@
 #include "dtl_config.h"
 #include "clib_fwd.h"
 #include "date_util.h"
+#include "CountedPtr.h"
 
 BEGIN_DTL_NAMESPACE
+
+// implement blob class to hold a counted pointer to a string of type
+// STD_::basic_string<BYTE> blob.  The reason that we hold a pointer
+// here is that typically we expect blob data to be large so that
+// we want to minimize copies unless absolutely necessary.
+
+class blob
+{
+public:
+	typedef STD_::basic_string<BYTE> blob_data;
+	
+	typedef blob_data::iterator iterator;
+	typedef blob_data::const_iterator const_iterator;
+
+private:
+	CountedPtr<blob_data> bdata;
+
+public:
+	blob() : bdata(new blob_data()) {}
+	blob(const blob &other) : bdata(other.bdata) {}
+	void swap(blob &other) {bdata.swap(other.bdata);}
+
+	// forward string functions
+	blob & append(const BYTE *s, size_t n) {bdata->append(s, n); return *this;}
+	blob & append(const BYTE *s) {bdata->append(s); return *this;}
+	blob & append(size_t n, BYTE b) {bdata->append(n, b); return *this;}
+	// here we use BYTE *first, instead of templating on a const_iterator since this is all that MSVC 6 dinkum supports
+	blob & append(const BYTE *first, const BYTE *last) {bdata->append(first, last); return *this;}
+
+	blob & assign(const blob &s) {bdata->assign(*(s.bdata)); return *this;}
+	blob & assign(const blob &s, size_t posn, size_t n) {bdata->assign(*(s.bdata), posn, n); return *this;}
+	blob & assign(const BYTE *s, size_t n) {bdata->assign(s, n); return *this;}
+	blob & assign(const BYTE *s) {bdata->assign(s); return *this;}
+	blob & assign(size_t n, BYTE c) {bdata->assign(n, c); return *this;}
+	blob & assign(const BYTE *first, const BYTE *last) {bdata->assign(first, last); return *this;}
+
+	const_iterator begin() const {return bdata->begin();}
+	iterator begin() {return bdata->begin();}
+	size_t capacity() const {return bdata->capacity();}
+	int compare (const blob &s) const {return bdata->compare(*(s.bdata));}
+	size_t copy(BYTE *s, size_t n, size_t posn = 0) {return bdata->copy(s, n, posn);}
+	const BYTE * data() const {return bdata->data();}
+	bool empty() const { return bdata->empty();}
+	const_iterator end() const {return bdata->end();}
+	iterator end() {return bdata->end();}
+	size_t length() const {return bdata->size();}
+	void reserve(size_t t) {bdata->reserve(t);}
+	size_t size() const {return bdata->size();}
+	
+	blob & operator= (const blob &other) {bdata = other.bdata; return *this;}
+	blob & operator+= (BYTE *s) {*bdata += s; return *this;}
+	blob & operator+= (BYTE b) {*bdata += b; return *this;}
+	const BYTE & operator[] (size_t posn) const {return (*bdata)[posn];}
+	BYTE & operator[] (size_t posn) {return (*bdata)[posn];}
+
+	~blob() {};
+};
 
 template<size_t N>
 class tcstring
@@ -45,118 +103,104 @@ public:
   typedef STD_::reverse_iterator<const_iterator> const_reverse_iterator;
 #endif
 
-  inline
-  tcstring ( )  { buf[0]=0; }
+  inline tcstring()  { buf[0]=0; }
 
-  inline
-  tcstring (const tcstring& that)
-    
+  // convert from a tcstring of different size ...
+  // will truncate any tcstrings of longer length to size N
+  template<size_t N2> inline tcstring(const tcstring<N2>& that)
+  { copy_terminate (that.c_str()); }
+
+  inline tcstring(const tcstring& that)
   { copy_terminate (that.buf);}
 
-  inline
-  tcstring (const TCHAR* s) 
+
+  inline tcstring(const TCHAR* s) 
   { copy_terminate (s); }
 
-  inline
-  tcstring (const STD_::basic_string<TCHAR>& s)
-  { copy_terminate (s.c_str ( )); }
+  inline tcstring(const STD_::basic_string<TCHAR>& s)
+  { copy_terminate(s.c_str ( )); }
 
  
-  tcstring& operator= (const STD_::basic_string<TCHAR>& s)
+  tcstring& operator=(const STD_::basic_string<TCHAR>& s)
   {
-    copy_terminate (s.c_str ( ));
+    copy_terminate(s.c_str ( ));
     return *this;
   }
 
-  tcstring& operator= (const TCHAR* s)
+  tcstring& operator=(const TCHAR* s)
   {
-    copy_terminate (s);
+    copy_terminate(s);
     return *this;
   }
 
-  tcstring& operator= (const tcstring &that)
+  // assign from a tcstring of different size ...
+  // will truncate any tcstrings of longer length to size N
+  template<size_t N2> tcstring& operator=(const tcstring<N2> &that)
+  {
+    copy_terminate(that.c_str());
+    return *this;
+  }
+
+  tcstring& operator=(const tcstring &that)
   {
     copy_terminate(that.buf);
     return *this;
   }
 
-  inline
-  iterator begin ( ) { return buf; }
-  inline
-  const_iterator begin ( ) const { return buf; }
-  inline
-  iterator end ( ) { return buf + length(); }
-  inline
-  const_iterator end ( ) const { return buf + length ( ); }
+  inline iterator begin() { return buf; }
+  
+  inline const_iterator begin() const { return buf; }
+  
+  inline iterator end() { return buf + length(); }
+  
+  inline const_iterator end() const { return buf + length ( ); }
 
 #if 0 // conflicts with TCHAR * operator
-  inline
-  TCHAR operator[] (size_type pos) { return buf[pos]; }
+  inline TCHAR operator[] (size_type pos) { return buf[pos]; }
 #endif
   
-  inline
-  const TCHAR* c_str ( ) const { return buf; }
-  inline
-  const TCHAR* data ( ) const { return buf; }
+  inline const TCHAR* c_str ( ) const { return buf; }
+  inline const TCHAR* data ( ) const { return buf; }
 
-  inline
-  size_type length ( ) const { return std_tstrlen (buf); }
-  inline
-  size_type size ( ) const { return length ( ); }
-  inline
-  size_type max_size ( ) const { return 1; }
-  inline
-  size_type capacity ( ) const { return 1; }
+  inline size_type length ( ) const { return std_tstrlen (buf); }
+  
+  inline size_type size ( ) const { return length ( ); }
+  
+  inline size_type max_size ( ) const { return 1; }
+  
+  inline size_type capacity ( ) const { return 1; }
 
 
-  inline
-  void clear ( ) { buf[0] = 0; }
-  inline
-  bool empty ( ) const { return buf[0] == 0; }
+  inline void clear ( ) { buf[0] = 0; }
+  
+  inline bool empty ( ) const { return buf[0] == 0; }
 
 public:
-  template<size_t N2>
-  inline
-  int compare (const tcstring<N2>& rhs) const
+  template<size_t N2> inline int compare (const tcstring<N2>& rhs) const
   { return std_tstrcmp (buf, rhs.buf); }
 
-  inline
-  int compare (const STD_::basic_string<TCHAR>& s) const
+  inline int compare (const STD_::basic_string<TCHAR>& s) const
   { return std_tstrcmp (buf, s.c_str()); }
 
-  inline
-  int compare (const TCHAR* s) const
-
+  inline int compare (const TCHAR* s) const
   { return std_tstrcmp(buf, s); }
 
-  template<size_t N2>
-  inline
-  bool operator== (const tcstring<N2>& rhs)
+  template<size_t N2> inline bool operator== (const tcstring<N2>& rhs)
   { return compare (rhs) == 0; }
 
-  template<size_t N2>
-  inline
-  bool operator!= (const tcstring<N2>& rhs)
+  template<size_t N2> inline bool operator!= (const tcstring<N2>& rhs)
   { return compare (rhs) != 0; }
 
-  template<size_t N2>
-  inline
-  bool operator< (const tcstring<N2>& rhs)
+  template<size_t N2> inline bool operator< (const tcstring<N2>& rhs)
   { return compare (rhs) < 0; }
 
-  template<size_t N2>
-  inline
-  bool operator<= (const tcstring<N2>& rhs)
+  template<size_t N2> inline bool operator<= (const tcstring<N2>& rhs)
   { return compare (rhs) <= 0; }
 
-  template<size_t N2>
-  inline
-  bool operator> (const tcstring<N2>& rhs)
+  template<size_t N2> inline bool operator> (const tcstring<N2>& rhs)
   { return compare (rhs) > 0; }
 
-  template<size_t N2>
-  inline
-  bool operator>= (const tcstring<N2>& rhs)
+  template<size_t N2> inline bool operator>= (const tcstring<N2>& rhs)
   { return compare (rhs) >= 0; }
 
   inline operator const TCHAR *() const { return buf; }
@@ -167,8 +211,7 @@ public:
   { return STD_::basic_string<TCHAR>(buf); }
 };
 
-template<>
-class tcstring<1>
+template<> class tcstring<1>
 {
   TCHAR buf[2];
 
@@ -204,23 +247,18 @@ public:
   typedef STD_::reverse_iterator<const_iterator> const_reverse_iterator;
 #endif
 
-  inline
-  tcstring ( ) { buf[0] = 0; }
+  inline tcstring ( ) { buf[0] = 0; }
 
-  template<size_t N2>
-  inline
-  tcstring (const tcstring<N2>& that)
+  template<size_t N2> inline tcstring (const tcstring<N2>& that)
   { copy_terminate (that.buf); }
 
   inline tcstring(const tcstring& that)
   { copy_terminate (that.buf); }
 
-  inline
-  tcstring (const TCHAR* s) 
+  inline tcstring (const TCHAR* s) 
   { copy_terminate (s); }
 
-  inline
-  tcstring (const STD_::basic_string<TCHAR>& s)
+  inline tcstring (const STD_::basic_string<TCHAR>& s)
   { copy_terminate (s.c_str ( )); }
 
   tcstring& operator= (const STD_::basic_string<TCHAR>& s)
@@ -241,39 +279,33 @@ public:
     return *this;
   }
 
-  inline
-  iterator begin ( ) { return buf; }
-  inline
-  const_iterator begin ( ) const { return buf; }
-  inline
-  iterator end ( ) { return buf + length ( ); }
-  inline
-  const_iterator end ( ) const { return buf + length ( ); }
+  inline iterator begin ( ) { return buf; }
+
+  inline const_iterator begin ( ) const { return buf; }
+  
+  inline iterator end ( ) { return buf + length ( ); }
+  
+  inline const_iterator end ( ) const { return buf + length ( ); }
 
 #if 0 // conflicts with TCHAR * operator
-  inline
-  TCHAR operator[] (size_type pos) { return buf[pos]; }
+  inline TCHAR operator[] (size_type pos) { return buf[pos]; }
 #endif
   
-  inline
-  const TCHAR* c_str ( ) const { return buf; }
-  inline
-  const TCHAR* data ( ) const { return buf; }
+  inline const TCHAR* c_str ( ) const { return buf; }
 
-  inline
-  size_type length ( ) const { if (*buf) return 1; return 0; }
-  inline
-  size_type size ( ) const { return length ( ); }
-  inline
-  size_type max_size ( ) const { return 1; }
-  inline
-  size_type capacity ( ) const { return 1; }
+  inline const TCHAR* data ( ) const { return buf; }
 
+  inline size_type length ( ) const { if (*buf) return 1; return 0; }
+  
+  inline size_type size ( ) const { return length ( ); }
+  
+  inline size_type max_size ( ) const { return 1; }
+  
+  inline size_type capacity ( ) const { return 1; }
 
-  inline
-  void clear ( ) { buf[0] = 0; }
-  inline
-  bool empty ( ) const { return buf[0] == 0; }
+  inline void clear ( ) { buf[0] = 0; }
+  
+  inline bool empty ( ) const { return buf[0] == 0; }
 
 private:
   int simple_compare (const TCHAR* s) const
@@ -289,47 +321,31 @@ private:
   }
 
 public:
-  template<size_t N2>
-  inline
-  int compare (const tcstring<N2>& rhs) const
+  template<size_t N2> inline int compare (const tcstring<N2>& rhs) const
   { return simple_compare (rhs.buf); }
 
-  inline
-  int compare (const STD_::basic_string<TCHAR>& s) const
+  inline int compare (const STD_::basic_string<TCHAR>& s) const
   { return simple_compare (s.c_str ( )); }
 
-  inline
-  int compare (const TCHAR* s) const
+  inline int compare (const TCHAR* s) const
   { return simple_compare (s); }
 
-  template<size_t N2>
-  inline
-  bool operator== (const tcstring<N2>& rhs)
+  template<size_t N2> inline bool operator== (const tcstring<N2>& rhs)
   { return compare (rhs) == 0; }
 
-  template<size_t N2>
-  inline
-  bool operator!= (const tcstring<N2>& rhs)
+  template<size_t N2> inline bool operator!= (const tcstring<N2>& rhs)
   { return compare (rhs) != 0; }
 
-  template<size_t N2>
-  inline
-  bool operator< (const tcstring<N2>& rhs)
+  template<size_t N2> inline bool operator< (const tcstring<N2>& rhs)
   { return compare (rhs) < 0; }
 
-  template<size_t N2>
-  inline
-  bool operator<= (const tcstring<N2>& rhs)
+  template<size_t N2> inline bool operator<= (const tcstring<N2>& rhs)
   { return compare (rhs) <= 0; }
 
-  template<size_t N2>
-  inline
-  bool operator> (const tcstring<N2>& rhs)
+  template<size_t N2> inline bool operator> (const tcstring<N2>& rhs)
   { return compare (rhs) > 0; }
 
-  template<size_t N2>
-  inline
-  bool operator>= (const tcstring<N2>& rhs)
+  template<size_t N2> inline bool operator>= (const tcstring<N2>& rhs)
   { return compare (rhs) >= 0; }
 
   inline operator const TCHAR* ( ) const { return buf; }
@@ -349,37 +365,22 @@ public:
 };
 
 #define COMPARISON_OPS(OP) \
-  template<size_t N> \
-  inline \
-  bool \
-  operator OP (const tcstring<N>& lhs, \
+  template<size_t N> inline bool operator OP (const tcstring<N>& lhs, \
   	    const tcstring<N>& rhs) \
   { return lhs.compare (rhs) OP 0; } \
  \
-  template<size_t N> \
-  inline \
-  bool \
-  operator OP (const tcstring<N>& lhs, \
+  template<size_t N> inline bool operator OP (const tcstring<N>& lhs, \
   	    const STD_::basic_string<TCHAR>& rhs) \
   { return lhs.compare (rhs) OP 0; } \
  \
-  template<size_t N> \
-  inline \
-  bool \
-  operator OP (const STD_::basic_string<TCHAR>& lhs, \
+  template<size_t N> inline bool operator OP (const STD_::basic_string<TCHAR>& lhs, \
   	    const tcstring<N>& rhs) \
   { return rhs.compare (lhs) OP 0; } \
  \
-  template<size_t N> \
-  inline \
-  bool \
-  operator OP (const tcstring<N>& lhs, const TCHAR* rhs) \
+  template<size_t N> inline bool operator OP (const tcstring<N>& lhs, const TCHAR* rhs) \
   { return lhs.compare (rhs) OP 0; } \
  \
-  template<size_t N> \
-  inline \
-  bool \
-  operator OP (const TCHAR* lhs, const tcstring<N>& rhs) \
+  template<size_t N> inline bool operator OP (const TCHAR* lhs, const tcstring<N>& rhs) \
   { return rhs.compare (lhs) OP 0; }
   
 COMPARISON_OPS(==)
@@ -390,9 +391,7 @@ COMPARISON_OPS(>)
 COMPARISON_OPS(>=)
 #undef COMPARISON_OPS
 
-template<size_t N>
-inline
-tostream& operator<< (tostream& os, const tcstring<N>& rhs)
+template<size_t N> inline tostream& operator<< (tostream& os, const tcstring<N>& rhs)
 { return os.write (rhs.data ( ), rhs.length ( )); }
 
 // returns whether the object is a tcstring ... templated form below causes ambiguity

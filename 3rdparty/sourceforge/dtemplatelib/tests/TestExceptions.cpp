@@ -86,7 +86,7 @@ void TestBadBCASelect()
 		catch (RootException &ex)
 		{
           tcout << _TEXT("Caught Exception!!!!") << endl;
-		  tcout << ex.what() << endl;
+		  tcout << ex.twhat() << endl;
 		}
 	}
 
@@ -163,7 +163,7 @@ void TestBadBPASelect()
 		catch (RootException &ex)
 		{
           tcout << _TEXT("Caught Exception!!!!") << endl;
-		  tcout << ex.what() << endl;
+		  tcout << ex.twhat() << endl;
 		}
 	}
 
@@ -241,7 +241,7 @@ void TestBadSelValidate()
 		catch (RootException &ex)
 		{
           tcout << _TEXT("Caught Exception!!!!") << endl;
-		  tcout << ex.what() << endl;
+		  tcout << ex.twhat() << endl;
 		}
 	}
 
@@ -307,7 +307,7 @@ void TestBadBCAInsert()
 		catch (RootException &ex)
 		{
 		  tcout << _TEXT("Exception caught!") << endl;
-		  tcout << ex.what() << endl;
+		  tcout << ex.twhat() << endl;
 		}
 	}
 
@@ -373,7 +373,7 @@ void TestBadInsValidate()
 		catch (RootException &ex)
 		{
 		  tcout << _TEXT("Exception caught!") << endl;
-		  tcout << ex.what() << endl;
+		  tcout << ex.twhat() << endl;
 		}
 	}
 
@@ -442,7 +442,7 @@ void TestBadBCAUpdate()
 	catch (RootException &ex)
 	{
 		tcout << _TEXT("Exception caught!") << endl;
-		tcout << ex.what() << endl;
+		tcout << ex.twhat() << endl;
 	}
 
 	try
@@ -475,7 +475,7 @@ void TestBadBCAUpdate()
 	catch (RootException &ex)
 	{
 		tcout << _TEXT("Exception caught!") << endl;
-		tcout << ex.what() << endl;
+		tcout << ex.twhat() << endl;
 	}
 
 	LoggingHandler<Example> handler = 
@@ -539,7 +539,7 @@ void TestBadUpdateValidate()
 	catch (RootException &ex)
 	{
 	  tcout << _TEXT("Exception caught!") << endl;
-	  tcout << ex.what() << endl;
+	  tcout << ex.twhat() << endl;
 	}
 
 	// execute the update
@@ -572,7 +572,7 @@ void TestBadUpdateValidate()
 	catch (RootException &ex)
 	{
 	  tcout << _TEXT("Exception caught!") << endl;
-	  tcout << ex.what() << endl;
+	  tcout << ex.twhat() << endl;
 	}
 
 	// execute the update
@@ -635,7 +635,7 @@ void TestBadBCADelete()
 	catch (RootException &ex)
 	{
 		tcout << _TEXT("Exception caught!") << endl;
-		tcout << ex.what() << endl;
+		tcout << ex.twhat() << endl;
 	}
 
 	try
@@ -658,7 +658,7 @@ void TestBadBCADelete()
 	catch (RootException &ex)
 	{
 		tcout << _TEXT("Exception caught!") << endl;
-		tcout << ex.what() << endl;
+		tcout << ex.twhat() << endl;
 	}
 
 	PrintSeparator(tcout);
@@ -702,7 +702,7 @@ void TestBadBPADelete()
 	catch (RootException &ex)
 	{
 		tcout << _TEXT("Exception caught!") << endl;
-		tcout << ex.what() << endl;
+		tcout << ex.twhat() << endl;
 	}
 
 	try
@@ -725,7 +725,7 @@ void TestBadBPADelete()
 	catch (RootException &ex)
 	{
 		tcout << _TEXT("Exception caught!") << endl;
-		tcout << ex.what() << endl;
+		tcout << ex.twhat() << endl;
 	}
 
 	LoggingHandler<Example> handler = 

@@ -19,11 +19,12 @@ It is provided "as is" without express or implied warranty.
 #define DTL_COUNTED_PTR_H
 
 #include "dtl_config.h"
+
 #include "std_warn_off.h"
+
 #include <algorithm>
 #include <cstdlib>
 #include <set>
-#include "std_warn_on.h"
 
 // sql.h below needed to define SDWORD
 #ifdef  WIN32
@@ -37,6 +38,8 @@ It is provided "as is" without express or implied warranty.
 
 #endif
 #include <sql.h>
+
+#include "std_warn_on.h"
 
 #ifdef  _MSC_VER
 #pragma warning(disable: 4284)  // Disable infix warning
