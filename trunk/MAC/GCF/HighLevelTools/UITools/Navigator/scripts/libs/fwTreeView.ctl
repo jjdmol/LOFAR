@@ -28,6 +28,11 @@
 //											Defined constants for: indexes to access node, state, etc
 //											Added possibility to refresh the tree from outside
 //
+// Jan 13, 05      de Bruijn      v2.04     Added function fwTreeView_Tree2ViewIndex
+//
+//
+//
+//
 //------------------------------------------------------------------------------
 
 /** @name treeView.ctl library.
@@ -588,6 +593,28 @@ unsigned fwTreeView_view2TreeIndex(unsigned viewIndex, string referenceName = ""
   
 	return treeIndex;
 }
+
+///////////////////////////////////////////////////////////////////////////
+//Function fwTreeView_Tree2ViewIndex
+// 
+// returns of the selected position in the view of the given node
+///////////////////////////////////////////////////////////////////////////
+unsigned fwTreeView_Tree2ViewIndex(unsigned treeIndex, string referenceName = "")
+{
+	unsigned itree;
+	unsigned viewIndex = 0; //result
+  
+	// the following for loop scan the tree from 1 to viewIndex
+	// skipping the "hidden" nodes; the iview loop index is not
+	// incremented for these nodes.
+	for(itree = 1 ; itree <= treeIndex ; itree++)
+		if(!(fwTreeView_getNode(itree, referenceName)[fwTreeView_STATE]& fwTreeView_HIDDEN)) 
+			viewIndex++;
+  
+	return viewIndex;
+}
+
+
 
 /** This function start a garbage collector. This garbage collector
  * looks for memory (in _trees_... array) not released
