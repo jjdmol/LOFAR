@@ -110,7 +110,7 @@ MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
 						    srcnr, -1, this);
       exprDel.push_back (mv);
       sources.add (MeqPointSource(name, mi, mq, mu, mv, mr, md));
-      cout << "Found source " << name << " (srcnr=" << srcnr << ')' << endl;
+//    cout << "Found source " << name << " (srcnr=" << srcnr << ')' << endl;
     }
   }
   return sources;
