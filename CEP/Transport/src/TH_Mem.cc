@@ -24,7 +24,7 @@
 #include <Transport/TH_Mem.h>
 #include <Transport/Transporter.h>
 #include <Transport/DataHolder.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -46,10 +46,14 @@ TH_Mem::TH_Mem()
     itsFirstRecvCall (true),
     itsDataSource    (0),
     itsFirstCall     (true)
-{}
+{
+  LOG_TRACE_FLOW("TH_Mem constructor");
+}
 
 TH_Mem::~TH_Mem()
-{}
+{
+  LOG_TRACE_FLOW("TH_Mem destructor");
+}
 
 TH_Mem* TH_Mem::make() const
 {
@@ -63,9 +67,9 @@ string TH_Mem::getType() const
 
 bool TH_Mem::connectionPossible(int srcRank, int dstRank) const
 {
-  cdebug(3) << "TH_Mem::connectionPossible between "
-            << srcRank << " and "
-            << dstRank << "?" << endl;
+  LOG_TRACE_RTTI_STR( "TH_Mem::connectionPossible between "
+		      << srcRank << " and "
+		      << dstRank << "?" );
   return srcRank == dstRank;
 }
 
@@ -87,16 +91,17 @@ void TH_Mem::initConditionVariables(int tag)
 
 bool TH_Mem::recvNonBlocking(void* buf, int nbytes, int tag)
 { 
+  LOG_TRACE_RTTI("TH_Mem recvNonBlocking()");  
   // If first time, get the source DataHolder.
   if (itsFirstRecvCall) {
     itsDataSource = theSources[tag];
-    AssertStr (itsDataSource != 0, "TH_Mem: no matching send for recv");
-    Assert (nbytes == itsDataSource->getDataSize());
+    ASSERTSTR (itsDataSource != 0, "TH_Mem: no matching send for recv");
+    ASSERT (nbytes == itsDataSource->getDataSize());
     // erase the record
     theSources.erase (tag);
     itsFirstRecvCall = false;
   }
-  DbgAssert (nbytes == itsDataSource->getDataSize());
+  DBGASSERT (nbytes == itsDataSource->getDataSize());
   memcpy(buf, itsDataSource->getDataPtr(), nbytes);
   return true;
 }
@@ -107,6 +112,7 @@ bool TH_Mem::recvNonBlocking(void* buf, int nbytes, int tag)
  */
 bool TH_Mem::sendNonBlocking(void* buf, int nbytes, int tag)
 {
+  LOG_TRACE_RTTI("TH_Mem sendNonBlocking()"); 
   if (itsFirstSendCall) {
     theSources[tag] = getTransporter()->getDataHolder();
     itsFirstSendCall = false;
@@ -116,10 +122,11 @@ bool TH_Mem::sendNonBlocking(void* buf, int nbytes, int tag)
 
 bool TH_Mem::recvVarNonBlocking(int tag)
 { 
+  LOG_TRACE_RTTI("TH_Mem recvVarNonBlocking()"); 
   // If first time, get the source DataHolder.
   if (itsFirstRecvCall) {
     itsDataSource = theSources[tag];
-    AssertStr (itsDataSource != 0, "TH_Mem: no matching send for recv");
+    ASSERTSTR (itsDataSource != 0, "TH_Mem: no matching send for recv");
     // erase the record
     theSources.erase (tag);
     itsFirstRecvCall = false;
@@ -133,9 +140,7 @@ bool TH_Mem::recvVarNonBlocking(int tag)
 
 bool TH_Mem::recvBlocking(void* buf, int nbytes, int tag)
 { 
-  cerr << "Warning: TH_Mem::recvBlocking() "  
-       << "Using blocking in-memory transport can cause a dead-lock." 
-       << endl;
+  LOG_WARN("TH_Mem::recvBlocking().Using blocking in-memory transport can cause a dead-lock.")
 
   pthread_mutex_lock(&theirMapLock);
   if (itsFirstCall)
@@ -164,7 +169,7 @@ bool TH_Mem::recvBlocking(void* buf, int nbytes, int tag)
     // erase the record
     theSources.erase(tag);
         
-    Throw("Number of bytes do not match");
+    THROW(LOFAR::Exception, "Number of bytes do not match");
   }
 
   pthread_cond_signal(&dataReceived[tag]);
@@ -177,9 +182,7 @@ bool TH_Mem::recvBlocking(void* buf, int nbytes, int tag)
  */
 bool TH_Mem::sendBlocking(void* buf, int nbytes, int tag)
 {
-  cerr << "Warning: TH_Mem::sendBlocking() "  
-       << "Using blocking in-memory transport can cause a dead-lock." 
-       << endl;
+  LOG_WARN("TH_Mem::sendBlocking(). Using blocking in-memory transport can cause a dead-lock."); 
 
   pthread_mutex_lock(&theirMapLock);
   if (itsFirstCall)
@@ -197,10 +200,8 @@ bool TH_Mem::sendBlocking(void* buf, int nbytes, int tag)
 }
 
 bool TH_Mem::recvVarBlocking(int tag)
-{
-  cerr << "Warning: TH_Mem::recvVarBlocking() "  
-       << "Using blocking in-memory transport can cause a dead-lock." 
-       << endl;
+{ 
+  LOG_WARN("TH_Mem::recvVarBlocking(). Using blocking in-memory transport can cause a dead-lock.");
 
   pthread_mutex_lock(&theirMapLock);
   if (itsFirstCall)
@@ -230,14 +231,20 @@ bool TH_Mem::recvVarBlocking(int tag)
 }
 
 void TH_Mem::waitForBroadCast()
-{}
+{
+  LOG_TRACE_RTTI("TH_Mem waitForBroadCast()"); 
+}
 
 void TH_Mem::waitForBroadCast(unsigned long&)
-{}
+{
+  LOG_TRACE_RTTI("TH_Mem waitForBroadCast(..)");
+}
 
 
 void TH_Mem::sendBroadCast(unsigned long)
-{}
+{
+  LOG_TRACE_RTTI("TH_Mem sendBroadCast()");
+}
 
 int TH_Mem::getCurrentRank()
 {
@@ -250,12 +257,18 @@ int TH_Mem::getNumberOfNodes()
 }
 
 void TH_Mem::init(int, const char* [])
-{}
+{
+  LOG_TRACE_RTTI("TH_Mem init()");
+}
 
 void TH_Mem::finalize()
-{}
+{
+  LOG_TRACE_RTTI("TH_Mem finalize()");
+}
 
 void TH_Mem::synchroniseAllProcesses()
-{}
+{ 
+  LOG_TRACE_RTTI("TH_Mem synchroniseAllProcesses()");
+}
 
 }

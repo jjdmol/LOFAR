@@ -27,7 +27,7 @@
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 #include <Common/BlobString.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <vector>
 
 namespace LOFAR
@@ -43,16 +43,20 @@ DataBlobExtra::DataBlobExtra(const string& name, int version, DataHolder* DH)
    itsCreateDone (false),
    itsLastDone   (0),
    itsDH         (DH)
-{}
+{
+  LOG_TRACE_FLOW("DataBlobExtra constructor");
+}
 
 DataBlobExtra::~DataBlobExtra()
 {
+  LOG_TRACE_FLOW("DataBlobExtra destructor");
   delete itsOut;
   delete itsIn;
 }
 
 void DataBlobExtra::write()
 {
+  LOG_TRACE_FLOW("DataBlobExtra write()");
   // Only do something if a createExtraBlock was done.
   // This has the following effect:
   // - an existing extra blob in the buffer is kept.
@@ -123,7 +127,7 @@ BlobIStream& DataBlobExtra::getBlock()
   bool found;
   int version;
   BlobIStream& bis = getBlock (found, version);
-  Assert (found);
+  ASSERT (found);
   return bis;
 }
 

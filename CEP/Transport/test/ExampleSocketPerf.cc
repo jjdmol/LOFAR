@@ -157,13 +157,6 @@ int main (int argc, char** argv) {
     outFile.close();
   }
   
-  
-  //    note that transport is bi-directional.
-  // so this will also work:
-  //   DH_Receiver.write();
-  //   DH_Sender.read();
-  // 
-  
   if (isReceiver) {
     cout << " After transport  : " 
 	 << DH_Sender.getBuffer()[1] << ' ' << DH_Sender.getCounter()

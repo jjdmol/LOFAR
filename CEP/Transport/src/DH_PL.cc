@@ -24,7 +24,6 @@
 #include <Transport/DH_PL.h>		        // for class definition
 #include <Transport/PO_DH_PL.h>
 #include <Transport/TH_PL.h>                    // for class definition
-#include <Common/lofar_iostream.h>		// for cout, cerr
 #include <Common/Exception.h>
 #include <sstream>				// for ostringstream
 

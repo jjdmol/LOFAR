@@ -22,25 +22,18 @@
 
 
 #include <Transport/TH_File.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
-
-/**
- * Prototype variable declaration. Can be
- * used in functions requiring a prototype
- * argument (for the prototype design patterns).
- */
-
-TH_File TH_File::proto;
 
 TH_File::TH_File():
   itsFileName ("unknown"),
   itsDirection(UnDefined),
   itsInFile(NULL),
   itsOutFile(NULL)
-{  
+{
+  LOG_TRACE_FLOW("TH_File default constructor");
   sprintf(itsSeparator,"SEPARATOR");
   itsSepLen = strlen(itsSeparator);
 }
@@ -51,13 +44,15 @@ TH_File::TH_File(string aFileName,
   itsDirection(aDirection),
   itsInFile(NULL),
   itsOutFile(NULL)
-{  
+{ 
+  LOG_TRACE_FLOW("TH_File constructor"); 
   sprintf(itsSeparator,"SEPARATOR");
   itsSepLen = strlen(itsSeparator);
 }
 
 TH_File::~TH_File()
 {
+  LOG_TRACE_FLOW("TH_File destructor");
   //  if (itsInFile) fclose(itsInFile);
   //if (itsOutFile) fclose(itsOutFile);
 }
@@ -79,120 +74,125 @@ bool TH_File::connectionPossible(int, int) const
 
 bool TH_File::recvBlocking(void* buf, int nbytes, int)
 { 
+  LOG_TRACE_RTTI( "TH_File recvBlocking()" );
   bool result = true;
   if (itsDirection == Read) {
     // test if the file is already opened
     if (itsInFile == NULL) {
-      cdebug(4) << "Input file not open yet" << endl;
+      LOG_TRACE_COND( "Input file not open yet" );
       itsInFile = fopen(itsFileName.c_str(), "r");
       if (!itsInFile) {
-	cdebug(1) << "Error opening input file " << itsFileName << endl;
+	LOG_ERROR_STR( "Error opening input file " << itsFileName );
 	result = false;
       } else {
-	cdebug(4) << "Input file " << itsFileName << " opened" << endl;
+	LOG_TRACE_COND_STR( "Input file " << itsFileName << " opened" );
       }
     }
     // read data from file
     if (itsInFile != NULL) {
       int n_read;
       n_read = fread(buf, 1, nbytes, itsInFile);
-      FailWhen(result = (n_read != nbytes),
-	       "Error during read");
-      cdebug(8) << "Read main block " << n_read << endl; 
+      FAILWHEN(result = (n_read != nbytes));
+      LOG_TRACE_CALC_STR( "Read main block " << n_read ); 
       char mySep[255];
       n_read = fread(mySep,
 		     1,
 		     itsSepLen,
 		     itsInFile);
-      cdebug(8) << "Read separator block " << n_read << " : " << mySep << endl; 
-      FailWhen(result = ((n_read != itsSepLen)
-			 && strncmp(itsSeparator,mySep, itsSepLen)),
-	       "Error during read");
-      cdebug(4) << "Read from File " << itsFileName << endl;
+      LOG_TRACE_CALC_STR( "Read separator block " << n_read << " : " << mySep ); 
+      FAILWHEN(result = ((n_read != itsSepLen)
+			 && strncmp(itsSeparator,mySep, itsSepLen)));
+
+      LOG_TRACE_COND_STR( "Read from File " << itsFileName );
     } else {
-      cdebug(1) << "Error reading from file" << endl;
+      LOG_ERROR_STR( "Error reading from file " << itsFileName );
       result = false;	
     }
   } else {
-    cdebug(4) << "Skip Read from File"  << endl;
+      LOG_TRACE_COND( "Skip read from file" );
   }
   return result;
 }
 
 bool TH_File::recvNonBlocking(void* buf, int nbytes, int)
-{ 
-  cerr << "**Warning** TH_File::recvNonBlocking() is not implemented. " 
-       << "recvBlocking() is used instead." << endl;    
+{
+  LOG_WARN("TH_File::recvNonBlocking() is not implemented. The recvBlocking() method is used instead."); 
   return recvBlocking(buf, nbytes, 0);
 }
 
 bool TH_File::sendBlocking(void* buf, int nbytes, int)
 {
+  LOG_TRACE_RTTI("TH_File sendBlocking()");
   bool result = true;
   if (itsDirection == Write) {
     // test if the file is already opened
     if (itsOutFile == NULL) {
-      cdebug(4) << "Output file not open yet" << endl;
+      LOG_TRACE_COND( "Output file not open yet" );
       itsOutFile = fopen(itsFileName.c_str(), "w");
       if (!itsOutFile) {
-	cdebug(1) << "Error opening output file " << itsFileName << endl;
+	LOG_ERROR_STR( "Error opening output file " << itsFileName );
 	result = false;
       } else {
-	cdebug(4) << "Output file " << itsFileName << " opened" << endl;
+	LOG_TRACE_COND_STR( "Output file " << itsFileName << " opened" );
       }
     }
     // write data to file
     if (itsOutFile) {
       int n_written;
       n_written = fwrite(buf, 1, nbytes, itsOutFile);
-      FailWhen(result = (n_written != nbytes),
-	       "Error during write");
+      FAILWHEN(result = (n_written != nbytes));
       n_written = fwrite(itsSeparator,
 			 1,
 			 itsSepLen,
 			 itsOutFile);
-      FailWhen(result = (n_written != itsSepLen),
-	       "Error during write");
-      cdebug(4) << "Write to File " << itsFileName 
-		<< " (" << nbytes 
-		<< "," << itsSepLen 
-		<< ") bytes" << endl;
+      FAILWHEN(result = (n_written != itsSepLen));
+      LOG_TRACE_COND_STR ( "Write to File " << itsFileName 
+			   << " (" << nbytes 
+			   << "," << itsSepLen 
+			   << ") bytes" );
     } else {
-      cdebug(1) << "Error writing to file" << endl;
+      LOG_ERROR_STR( "Error writing to file" << itsFileName);
       result = false;	
     }
   } else {
-    cdebug(4) << "Skip Write to File"  << endl;
+    LOG_TRACE_COND( "Skip Write to File" );
   }
   return result;
 }
 
 bool TH_File::sendNonBlocking(void* buf, int nbytes, int)
 {
-  cerr << "**Warning** TH_File::sendNonBlocking() is not implemented. " 
-       << "The sendBlocking() method is used instead." << endl;    
+  LOG_WARN("TH_File::sendNonBlocking() is not implemented. The sendBlocking() method is used instead.");
   return sendBlocking(buf, nbytes, 0);
 }
 
 bool TH_File::waitForSent(void*, int, int)
 {
+  LOG_TRACE_RTTI("TH_File waitForSent()");
   return true;
 }
 
 bool TH_File::waitForReceived(void*, int, int)
 {
+  LOG_TRACE_RTTI("TH_File waitForReceived()");
   return true;
 }
 
 void TH_File::waitForBroadCast()
-{}
+{
+  LOG_TRACE_RTTI("TH_File waitForBroadCast()");
+}
 
 void TH_File::waitForBroadCast(unsigned long&)
-{}
+{
+  LOG_TRACE_RTTI("TH_File waitForBroadCast(..)");
+}
 
 
 void TH_File::sendBroadCast(unsigned long)
-{}
+{
+  LOG_TRACE_RTTI("TH_File sendBroadCast()");
+}
 
 int TH_File::getCurrentRank()
 {
@@ -206,9 +206,12 @@ int TH_File::getNumberOfNodes()
 
 void TH_File::finalize()
 {
+  LOG_TRACE_RTTI("TH_File finalize()");
 }
 
 void TH_File::synchroniseAllProcesses()
-{}
+{
+  LOG_TRACE_RTTI("TH_File synchroniseAllProcesses()");
+}
 
 }

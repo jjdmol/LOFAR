@@ -23,13 +23,12 @@
 #include <Transport/TH_Socket.h>
 #include <Transport/Transporter.h>
 #include <Transport/DataHolder.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <unistd.h>
 
 
 namespace LOFAR
 {
-
   
   TH_Socket::TH_Socket (const std::string& sendhost, 
 			const std::string& recvhost, 
@@ -43,12 +42,13 @@ namespace LOFAR
       itsServerSocket      (0),
       itsDataSocket        (0)
   {
-    cout << "Creating a socket...(" << (serverAtSender ? "SS" : "SC" )
-	 << ")"<< endl;
+    LOG_TRACE_FLOW_STR( "TH_Socket constructor. Creating a socket...(" 
+			<< (serverAtSender ? "SS" : "SC" ) << ")" );;
   }
 
   TH_Socket::~TH_Socket()
   {
+    LOG_TRACE_FLOW( "TH_Socket destructor" );
     if (itsIsConnected) {
       itsDataSocket->shutdown (true, true);
     }
@@ -76,6 +76,7 @@ namespace LOFAR
   
   bool TH_Socket::recvBlocking (void* buf, int nbytes, int)
   { 
+    LOG_TRACE_RTTI( "TH_Socket recvBlocking()" );
     if (!itsIsConnected) {
       if (itsServerAtSender) {
 	// Client side behaviour (default)
@@ -89,7 +90,7 @@ namespace LOFAR
     int received_len = itsDataSocket->readblock (buf, nbytes);
     //cout << "TH_Socket received " << received_len << "/" <<nbytes<<endl; 
     bool result = received_len == nbytes;
-    DbgAssertStr(result,"TH_Socket: data not succesfully received")
+    DBGASSERTSTR(result,"TH_Socket: data not succesfully received")
     return result;
   }
   
@@ -113,26 +114,25 @@ namespace LOFAR
 
   bool TH_Socket::recvNonBlocking(void* buf, int nbytes, int tag)
   {
-    cerr << "**Warning** TH_Socket::recvNonBlocking() is not implemented. " 
-	 << "recvBlocking() is used instead." << endl;    
+    LOG_WARN( "TH_Socket::recvNonBlocking() is not implemented. recvBlocking() is used instead." );
     return recvBlocking (buf, nbytes, tag);
   }
 
   bool TH_Socket::recvVarNonBlocking(int tag)
   {
-    cerr << "**Warning** TH_Socket::recvVarNonBlocking() is not implemented. " 
-	 << "recvVarBlocking() is used instead." << endl;    
+    LOG_WARN( "TH_Socket::recvVarNonBlocking() is not implemented. recvVarBlocking() is used instead." );  
     return recvVarBlocking (tag);
   }
 
   bool TH_Socket::waitForReceived(void*, int, int)
   {
+    LOG_TRACE_RTTI( "TH_Socket waitForReceived()" );
     return true;
   }
 
   bool TH_Socket::sendBlocking (void* buf, int nbytes, int /*tag*/)
   {
-    
+    LOG_TRACE_RTTI( "TH_Socket sendBlocking()" );
     if (!itsIsConnected) {
       if (itsServerAtSender) {
 	// Server side behaviour
@@ -149,18 +149,19 @@ namespace LOFAR
    
   bool TH_Socket::sendNonBlocking(void* buf, int nbytes, int tag)
   {
-    cerr << "**Warning** TH_Socket::sendNonBlocking() is not implemented. " 
-	 << "The sendBlocking() method is used instead." << endl;    
+    LOG_WARN( "TH_Socket::sendNonBlocking() is not implemented. The sendBlocking() method is used instead." );    
     return sendBlocking (buf, nbytes, tag);
   }
   
   bool TH_Socket::waitForSent(void*, int, int)
   {
+    LOG_TRACE_RTTI( "TH_Socket waitForSent()" );
     return true;
   }
 
 
   bool TH_Socket::init () { 
+    LOG_TRACE_RTTI( "TH_Socket init()" );
     // Code to open the connection
     return true; 
   }
@@ -184,7 +185,7 @@ namespace LOFAR
       itsDataSocket->setBlocking();
       sts = itsDataSocket->connect();
     }
-    AssertStr (sts > 0, "TH_Socket: could not connect to server");
+    ASSERTSTR (sts > 0, "TH_Socket: could not connect to server");
     itsIsConnected = true;
     return true;
   }
@@ -195,7 +196,7 @@ namespace LOFAR
     std::stringstream str;
     str << itsPortNo;
     itsServerSocket = new Socket("TH_Socket", str.str());
-    cout << "Waiting to accept connection..." << endl;
+    LOG_INFO( "Waiting to accept connection..." );
     itsDataSocket = itsServerSocket->accept();
     while (itsDataSocket == 0) {
       // Sleep 0.1 millisec.

@@ -24,7 +24,7 @@
 #include <Transport/TH_Mem.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <iostream>
 
 using namespace LOFAR;
@@ -494,9 +494,9 @@ bool testVar2()
 
 int main(int argc, const char** argv)
 {
-  Debug::initLevels (argc, argv);
   bool result = true;
   try {
+    INIT_LOGGER("ExampleBlMem.log_prop");
     cout << "Transport Example test program" << endl;
     cout << "test1 ..." << endl;
     result &= test1();

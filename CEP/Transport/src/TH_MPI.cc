@@ -32,7 +32,7 @@
 #include <Transport/TH_MPI.h>
 #include <Transport/BaseSim.h>
 #include <Transport/DataHolder.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <Common/lofar_deque.h>
 #include <Common/lofar_list.h>
 
@@ -47,10 +47,12 @@ TH_MPI::TH_MPI(int sourceNode, int targetNode)
   : itsSourceNode(sourceNode),
     itsTargetNode(targetNode)
 {
+  LOG_TRACE_FLOW("TH_MPI constructor");
 }
 
 TH_MPI::~TH_MPI()
 {
+  LOG_TRACE_FLOW("TH_MPI destructor");
 }
 
 TH_MPI* TH_MPI::make() const
@@ -79,153 +81,161 @@ void TH_MPI::unlock()
 
 bool TH_MPI::recvBlocking(void* buf, int nbytes, int tag)
 {
-    int result = MPI_SUCCESS;
-
-    MPI_Status status;
-
-    TRACER2("MPI::recv(" << buf << "," << nbytes << ",....)");
-    result = MPI_Recv (buf, nbytes, MPI_BYTE, itsSourceNode, tag,
-		       MPI_COMM_WORLD, &status);
-    if (MPI_SUCCESS != result) cerr << "result = " << result << endl;
-
-    return (result == MPI_SUCCESS);
+  LOG_TRACE_RTTI_STR("TH_MPI recvBlocking(" << buf << "," 
+		     << nbytes << ",...)");
+  int result = MPI_SUCCESS;
+  
+  MPI_Status status;
+  
+  result = MPI_Recv (buf, nbytes, MPI_BYTE, itsSourceNode, tag,
+		     MPI_COMM_WORLD, &status);
+  if (MPI_SUCCESS != result) {
+    LOG_ERROR_STR( "TH_MPI::recvBlocking result = " << result );
+  }
+  return (result == MPI_SUCCESS);
 }
 
 bool TH_MPI::recvVarBlocking(int tag)
 {
-    int result = MPI_SUCCESS;
+  LOG_TRACE_RTTI( "TH_MPI recvVarBlocking" );
+  int result = MPI_SUCCESS;
 
-    MPI_Status status;
+  MPI_Status status;
 
-    TRACER2("MPI::probe ....");
-    result = MPI_Probe (itsSourceNode, tag, MPI_COMM_WORLD, &status);
-    int nbytes = status.count;
-    DataHolder* target = getTransporter()->getDataHolder();
-    target->resizeBuffer (nbytes);
-    void* buf = target->getDataPtr();
-    TRACER2("MPI::recv(" << buf << "," << nbytes << ",....)");
-    result = MPI_Recv (buf, nbytes, MPI_BYTE, itsSourceNode, tag,
-		       MPI_COMM_WORLD, &status);
-    if (MPI_SUCCESS != result) cerr << "result = " << result << endl;
-
-    return (result == MPI_SUCCESS);
+  LOG_TRACE_STAT("MPI::probe ....");
+  result = MPI_Probe (itsSourceNode, tag, MPI_COMM_WORLD, &status);
+  int nbytes = status.count;
+  DataHolder* target = getTransporter()->getDataHolder();
+  target->resizeBuffer (nbytes);
+  void* buf = target->getDataPtr();
+  LOG_TRACE_STAT_STR("MPI::recv(" << buf << "," << nbytes << ",....)");
+  result = MPI_Recv (buf, nbytes, MPI_BYTE, itsSourceNode, tag,
+		     MPI_COMM_WORLD, &status);
+  if (MPI_SUCCESS != result) {
+    LOG_ERROR_STR( "TH_MPI::recvVarBlocking result = " << result );
+  }
+  return (result == MPI_SUCCESS);
 }
 
 bool TH_MPI::recvNonBlocking(void* buf, int nbytes, int tag)
 {
-  cerr << "**Warning** TH_MPI::recvNonBlocking() is not implemented. " 
-       << "recvBlocking() is used instead." << endl;    
+  LOG_WARN( "TH_MPI::recvNonBlocking() is not implemented. recvBlocking() is used instead." );    
   return recvBlocking(buf, nbytes, tag);
 }
 
 bool TH_MPI::recvVarNonBlocking(int tag)
 {
-  cerr << "**Warning** TH_MPI::recvVarNonBlocking() is not implemented. " 
-       << "recvVarBlocking() is used instead." << endl;    
+  LOG_WARN( "TH_MPI::recvVarNonBlocking() is not implemented. recvVarBlocking() is used instead." );    
   return recvVarBlocking(tag);
 }
 
 bool TH_MPI::waitForReceived(void*, int, int)
 {
+  LOG_TRACE_RTTI("TH_MPI waitForReceived()");
   return true;
 }
 
 bool TH_MPI::sendBlocking(void* buf, int nbytes, int tag)
 {
-    int result;
-
-    TRACER2("MPI::send(" << buf << "," << nbytes << ",....)");
-    lock();
-    result = MPI_Send(buf, nbytes, MPI_BYTE, itsTargetNode, tag,
-		      MPI_COMM_WORLD);
-    unlock();
+  LOG_TRACE_RTTI_STR("TH_MPI::sendBlocking(" << buf << "," 
+		     << nbytes << ",....)");
+  int result;
   
-    return (result == MPI_SUCCESS);
+  lock();
+  result = MPI_Send(buf, nbytes, MPI_BYTE, itsTargetNode, tag,
+		    MPI_COMM_WORLD);
+  unlock();
+  
+  return (result == MPI_SUCCESS);
 }
 
 bool TH_MPI::sendNonBlocking(void* buf, int nbytes, int tag)
 {
-  cerr << "**Warning** TH_MPI::sendNonBlocking() is not implemented. " 
-       << "The sendBlocking() method is used instead." << endl;    
+  LOG_WARN( "TH_MPI::sendNonBlocking() is not implemented. The sendBlocking() method is used instead." );    
   return sendBlocking(buf, nbytes, tag);
 }
 
 bool TH_MPI::waitForSent(void*, int, int)
 {
+  LOG_TRACE_RTTI("TH_MPI waitForSent()");
   return true;
 }
 
 void TH_MPI::waitForBroadCast()
 {
-    /// Wait for a broadcast message with MPI
-    unsigned long timeStamp;
-    MPI_Bcast(&timeStamp, 1, MPI_UNSIGNED_LONG,
-	      CONTROLLER_NODE, MPI_COMM_WORLD);
-    TRACER2("Broadcast received timestamp " <<timeStamp
-	    << " rank=  " << getCurrentRank());
+  LOG_TRACE_RTTI("TH_MPI waitForBroadCast()");
+  /// Wait for a broadcast message with MPI
+  unsigned long timeStamp;
+  MPI_Bcast(&timeStamp, 1, MPI_UNSIGNED_LONG,
+	    CONTROLLER_NODE, MPI_COMM_WORLD);
+  LOG_TRACE_STAT_STR( "Broadcast received timestamp " << timeStamp
+		      << " rank=  " << getCurrentRank());
 }
 
 void TH_MPI::waitForBroadCast(unsigned long& aVar)
 {
-    TRACER2("wait for broadcast");
-    /// Wait for a broadcast message with MPI
-    MPI_Bcast(&aVar, 1, MPI_UNSIGNED_LONG, CONTROLLER_NODE, MPI_COMM_WORLD);
-    TRACER2("Broadcast received timestamp " << aVar
-	    << " rank=  " << getCurrentRank());
+  LOG_TRACE_RTTI( "TH_MPI waitForBroadCast(..)" );
+  /// Wait for a broadcast message with MPI
+  MPI_Bcast(&aVar, 1, MPI_UNSIGNED_LONG, CONTROLLER_NODE, MPI_COMM_WORLD);
+  LOG_TRACE_STAT_STR(" Broadcast received timestamp " << aVar
+		     << " rank=  " << getCurrentRank());
 }
-
 
 void TH_MPI::sendBroadCast(unsigned long timeStamp)
 {
-    TRACER2("send broadcast");
-    /// Send a broadcast timestamp
-    MPI_Bcast(&timeStamp, 1, MPI_UNSIGNED_LONG, CONTROLLER_NODE, MPI_COMM_WORLD);
-    TRACER2("Broadcast sent timestamp " <<timeStamp); 
+  LOG_TRACE_RTTI( "TH_MPI SendBroadCast" );
+  /// Send a broadcast timestamp
+  MPI_Bcast(&timeStamp, 1, MPI_UNSIGNED_LONG, CONTROLLER_NODE, MPI_COMM_WORLD);
+  LOG_TRACE_STAT_STR( "Broadcast sent timestamp " << timeStamp ); 
 }
 
 int TH_MPI::getCurrentRank()
 {
-    int rank;
+  LOG_TRACE_RTTI( "TH_MPI getCurrentRank()" );
+  int rank;
 
-    ///  Get the current node 
-    MPI_Comm_rank (MPI_COMM_WORLD, &rank);
-
-    return rank;
+  ///  Get the current node 
+  MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+    
+  return rank;
 }
 
 int TH_MPI::getNumberOfNodes()
 {
-    int size;
+  LOG_TRACE_RTTI( "TH_MPI getNumberOfNodes()" );
+  int size;
 
-    /// get the Number of nodes
-    MPI_Comm_size (MPI_COMM_WORLD, &size);
-
-    return size;
+  /// get the Number of nodes
+  MPI_Comm_size (MPI_COMM_WORLD, &size);
+  
+  return size;
 }
 
 void TH_MPI::init(int argc, const char *argv[])
 {
-    int initialized = 0;
+  LOG_TRACE_RTTI( "TH_MPI init()" );
+  int initialized = 0;
   
-    /// Initialize the MPI communication
-    MPI_Initialized(&initialized);
-    if (!initialized)
-    {
-      MPI_Init (&argc,(char***)&argv);
-    }
+  /// Initialize the MPI communication
+  MPI_Initialized(&initialized);
+  if (!initialized)
+  {
+    MPI_Init (&argc,(char***)&argv);
+  }
 }
 
 void TH_MPI::finalize()
 {
-    /// finalize the MPI communication
-    MPI_Finalize();
+  LOG_TRACE_RTTI( "TH_MPI finalize()" );
+  /// finalize the MPI communication
+  MPI_Finalize();
 }
 
 void TH_MPI::synchroniseAllProcesses()
 {
-    TRACER2("Synchronise all");
-    MPI_Barrier(MPI_COMM_WORLD);
-    TRACER2("Synchronised...");
+  LOG_TRACE_RTTI( "TH_MPI synchroniseAllProcesses()" );
+  MPI_Barrier(MPI_COMM_WORLD);
+  LOG_TRACE_STAT("Synchronised...");
 }
 
 }

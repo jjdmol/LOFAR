@@ -169,7 +169,7 @@ TYPE& CyclicBuffer<TYPE>::GetWriteLockedDataItem(int* ID)
   // wait until space becomes available
   while (itsCount >= (int)itsBuffer.size())
   {
-    AssertStr(itsCount == (int)itsBuffer.size(),
+    ASSERTSTR(itsCount == (int)itsBuffer.size(),
 	      "itsCount=" << itsCount << " out of range (" << itsBuffer.size() << ")");
     pthread_cond_wait(&space_available, &buffer_mutex);
   }
@@ -207,7 +207,7 @@ TYPE& CyclicBuffer<TYPE>::GetRWLockedDataItem(int* ID)
   // wait until data becomes available
   while (itsCount <= 0)
   {
-    AssertStr(0 == itsCount, "itsCount=" << itsCount << " out of range (min=0)");
+    ASSERTSTR(0 == itsCount, "itsCount=" << itsCount << " out of range (min=0)");
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
   
@@ -236,7 +236,7 @@ const TYPE& CyclicBuffer<TYPE>::GetReadDataItem(int* ID)
   // wait until data becomes available
   while (itsCount <= 0)
   {
-    AssertStr(0 == itsCount, "itsCount=" << itsCount << " out of range (min=0)");
+    ASSERTSTR(0 == itsCount, "itsCount=" << itsCount << " out of range (min=0)");
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
   
@@ -304,10 +304,10 @@ bool CyclicBuffer<TYPE>::CheckConsistency(int max)
 
   for (i=0; i< CEPF_MIN(max, (int)itsBuffer.size()); i++)
   {
-    cerr << "elem("  << i << "): readers_reading=" << 
+    LOG_ERROR_STR( "elem("  << i << "): readers_reading=" << 
       itsBuffer[i].itsRWLock.GetReadersReading() <<
       ", writer_writing=" << itsBuffer[i].itsRWLock.GetWriterWriting() <<
-      ", maxcount=" << itsBuffer[i].itsRWLock.GetMaxReaders() << endl;
+      ", maxcount=" << itsBuffer[i].itsRWLock.GetMaxReaders() );
   }
 
   return result;
@@ -320,9 +320,9 @@ void CyclicBuffer<TYPE>::DumpState(void)
 
   CheckConsistency(1000);
   
-  cerr << "itsHeadIdx = " << itsHeadIdx << endl;
-  cerr << "itsTailIdx = " << itsTailIdx << endl;
-  cerr << "itsCount   = " << itsCount << endl;
+  LOG_TRACE_STAT_STR( "itsHeadIdx = " << itsHeadIdx );
+  LOG_TRACE_STAT_STR( "itsTailIdx = " << itsTailIdx );
+  LOG_TRACE_STAT_STR( "itsCount   = " << itsCount );
 
   pthread_mutex_unlock(&buffer_mutex);
 }

@@ -55,7 +55,7 @@ public:
   TH_Mem();
   virtual ~TH_Mem();
 
-  /// method to make a TH_Mem instance; used for prototype pattern
+  /// method to make a TH_Mem instance
   virtual TH_Mem* make() const;
 
   /**

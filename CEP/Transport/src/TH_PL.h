@@ -61,8 +61,6 @@ public:
 
   virtual bool connectionPossible (int srcRank, int dstRank) const;
 
-  static TH_PL proto;
-  
   static void finalize ();
   static void waitForBroadCast ();
   static void waitForBroadCast (unsigned long& aVar);

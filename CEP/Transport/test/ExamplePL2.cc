@@ -66,11 +66,6 @@ int main()
     // do the data transport
     DH1.write();
     DH2.read();
-    // note that transport is bi-directional.
-    // so this will also work:
-    //   DH2.write();
-    //   DH1.read();
-    // 
   
     cout << "After transport  : " 
 	 << DH1.getBuffer()[0] << ' ' << DH1.getCounter() 

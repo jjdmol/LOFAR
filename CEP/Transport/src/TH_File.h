@@ -56,7 +56,7 @@ public:
   TH_File(string    aFileName, direction aDirection);
   virtual ~TH_File();
 
-  /// method to make a TH_File instance; used for prototype pattern
+  /// method to make a TH_File instance;
   virtual TH_File* make() const;
 
   /**
@@ -96,11 +96,6 @@ public:
   **/
   virtual bool connectionPossible(int srcRank, int dstRank) const;
 
-  /// Declare a TH_File prototype variable
-  /// that can be used in functions
-  /// requiring a TransportHolder prototype
-  static TH_File proto;
-  
   static void finalize();
   static void waitForBroadCast();
   static void waitForBroadCast (unsigned long& aVar);
