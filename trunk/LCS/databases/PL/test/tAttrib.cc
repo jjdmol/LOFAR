@@ -14,6 +14,25 @@ using namespace std;
 |*                                                              *|
 \****************************************************************/
 
+class Z
+{
+public:
+  Z() : s("Z") {}
+private:
+  friend class TPersistentObject<Z>;
+  string s;
+};
+
+class Y
+{
+public:
+  Y() : s("Y") {}
+private:
+  friend class TPersistentObject<Y>;
+  string s;
+  Z z;
+};
+
 class X
 {
 public:
@@ -32,33 +51,24 @@ private:
   string s;
 };
 
-class B : public X
+class B : public A
 {
 public:
   B() : s("B") {}
 private:
   friend class TPersistentObject<B>;
   string s;
-  A a;
+  X x;
 };
 
-class C : public A
+class C : public B
 {
 public:
   C() : s("C") {}
 private:
   friend class TPersistentObject<C>;
   string s;
-};
-
-class D : public B
-{
-public:
-  D() : s("D") {}
-private:
-  friend class TPersistentObject<D>;
-  string s;
-  C c;
+  Y y;
 };
 
 
@@ -72,6 +82,31 @@ private:
 namespace LOFAR { 
 
   namespace PL {
+
+    template<> struct DBRep<Z> { void bindCols(dtl::BoundIOs&) {} };
+    template<> void TPersistentObject<Z>::toDBRep(DBRep<Z>& dest) const {}
+    template<> void TPersistentObject<Z>::fromDBRep(const DBRep<Z>& src) {}
+    template<> void TPersistentObject<Z>::init()
+    { metaData().tableName() = "Z"; }
+    template<> void TPersistentObject<Z>::initAttribMap()
+    { theirAttribMap["s"] = "STR_Z"; }
+
+    template<> struct DBRep<Y> { void bindCols(dtl::BoundIOs&) {} };
+    template<> void TPersistentObject<Y>::toDBRep(DBRep<Y>& dest) const {}
+    template<> void TPersistentObject<Y>::fromDBRep(const DBRep<Y>& src) {}
+    template<> void TPersistentObject<Y>::init()
+    {
+      metaData().tableName() = "Y"; 
+      Pointer p(new TPersistentObject<Z>(data().z));
+      p->metaData().ownerOid() = metaData().oid();
+      ownedPOs().push_back(p);
+    }
+    template<> void TPersistentObject<Y>::initAttribMap()
+    { 
+      theirAttribMap["s"] = "STR_Y"; 
+      theirAttribMap["z"] = 
+        "@" + string(typeid(TPersistentObject<Z>).name()); 
+    }
 
     template<> struct DBRep<X> { void bindCols(dtl::BoundIOs&) {} };
     template<> void TPersistentObject<X>::toDBRep(DBRep<X>& dest) const {}
@@ -95,10 +130,10 @@ namespace LOFAR {
     template<> void TPersistentObject<B>::init()
     { 
       Pointer p;
-      p.reset(new TPersistentObject<X>(data()));
+      p.reset(new TPersistentObject<A>(data()));
       p->metaData().ownerOid() = metaData().oid();
       ownedPOs().push_back(p);
-      p.reset(new TPersistentObject<A>(data().a));
+      p.reset(new TPersistentObject<X>(data().x));
       p->metaData().ownerOid() = metaData().oid();
       ownedPOs().push_back(p);
       metaData().tableName() = "B"; 
@@ -106,10 +141,10 @@ namespace LOFAR {
     template<> void TPersistentObject<B>::initAttribMap() 
     { 
       theirAttribMap["s"] = "STR_B"; 
-      theirAttribMap["a"] = 
+      theirAttribMap["A::"] = 
         "@" + string(typeid(TPersistentObject<A>).name()); 
-      theirAttribMap["X::"]  = 
-        "@" + string(typeid(TPersistentObject<X>).name());
+      theirAttribMap["x"] = 
+        "@" + string(typeid(TPersistentObject<X>).name()); 
     }
 
     template<> struct DBRep<C> { void bindCols(dtl::BoundIOs&) {} };
@@ -117,7 +152,11 @@ namespace LOFAR {
     template<> void TPersistentObject<C>::fromDBRep(const DBRep<C>& src) {}
     template<> void TPersistentObject<C>::init()
     {
-      Pointer p(new TPersistentObject<A>(data()));
+      Pointer p;
+      p.reset(new TPersistentObject<B>(data()));
+      p->metaData().ownerOid() = metaData().oid();
+      ownedPOs().push_back(p);
+      p.reset(new TPersistentObject<Y>(data().y));
       p->metaData().ownerOid() = metaData().oid();
       ownedPOs().push_back(p);
       metaData().tableName() = "C"; 
@@ -125,31 +164,10 @@ namespace LOFAR {
     template<> void TPersistentObject<C>::initAttribMap()
     {
       theirAttribMap["s"] = "STR_C";
-      theirAttribMap["A::"] =  
-        "@" + string(typeid(TPersistentObject<A>).name());
-    }
-
-    template<> struct DBRep<D> { void bindCols(dtl::BoundIOs&) {} };
-    template<> void TPersistentObject<D>::toDBRep(DBRep<D>& dest) const {}
-    template<> void TPersistentObject<D>::fromDBRep(const DBRep<D>& src) {}
-    template<> void TPersistentObject<D>::init()
-    {
-      Pointer p;
-      p.reset(new TPersistentObject<B>(data()));
-      p->metaData().ownerOid() = metaData().oid();
-      ownedPOs().push_back(p);
-      p.reset(new TPersistentObject<C>(data().c));
-      p->metaData().ownerOid() = metaData().oid();
-      ownedPOs().push_back(p);
-      metaData().tableName() = "D"; 
-    }
-    template<> void TPersistentObject<D>::initAttribMap()
-    {
-      theirAttribMap["s"] = "STR_D";
-      theirAttribMap["c"] = 
-        "@" + string(typeid(TPersistentObject<C>).name());
       theirAttribMap["B::"] =  
         "@" + string(typeid(TPersistentObject<B>).name());
+      theirAttribMap["y"] = 
+        "@" + string(typeid(TPersistentObject<Y>).name());
     }
 
   }
@@ -166,25 +184,23 @@ int main(int argc, const char* argv[])
 
   try {
 
-    TPersistentObject<A> a;
-    TPersistentObject<B> b;
-    TPersistentObject<C> c;
-    TPersistentObject<D> d;
+    cout << "attrib<Z>(\"s\")       = " << attrib<Z>("s")       << endl;
+    cout << "attrib<Y>(\"s\")       = " << attrib<Y>("s")       << endl;
+    cout << "attrib<Y>(\"z.s\")     = " << attrib<Y>("z.s")     << endl;
+    cout << "attrib<X>(\"s\")       = " << attrib<X>("s")       << endl;
 
     cout << "attrib<A>(\"s\")       = " << attrib<A>("s")       << endl;
-    cout << "attrib<B>(\"a.s\")     = " << attrib<B>("a.s")     << endl;
-//     cout << "attrib<C>(\"A::s\")    = " << attrib<C>("A::s")    << endl;
-//     cout << "attrib<D>(\"B::a.s\"   = " << attrib<D>("B::a.s")  << endl;
-//     cout << "attrib<D>(\"c.A::s\")  = " << attrib<D>("c.A::s")  << endl;
     cout << "attrib<B>(\"s\")       = " << attrib<B>("s")       << endl;
-//     cout << "attrib<D>(\"B::s\")    = " << attrib<D>("B::s")    << endl;
+    cout << "attrib<B>(\"x.s\")     = " << attrib<B>("x.s")     << endl;
+    cout << "attrib<B>(\"A::s\")    = " << attrib<B>("A::s")    << endl;
+
     cout << "attrib<C>(\"s\")       = " << attrib<C>("s")       << endl;
-    cout << "attrib<D>(\"c.s\")     = " << attrib<D>("c.s")     << endl;
-    cout << "attrib<D>(\"s\")       = " << attrib<D>("s")       << endl;
-//     cout << "attrib<B>(\"X::s\")    = " << attrib<B>("X::s")    << endl;
-//     cout << "attrib<D>(\"B::X::s\") = " << attrib<D>("B::X::s") << endl;
-//     cout << "attrib<D>(\"X::s\")    = " << attrib<D>("X::s")    << endl;
-    
+    cout << "attrib<C>(\"y.s\")     = " << attrib<C>("y.s")     << endl;
+    cout << "attrib<C>(\"y.z.s\")   = " << attrib<C>("y.z.s")   << endl;
+    cout << "attrib<C>(\"B::s\")    = " << attrib<C>("B::s")    << endl;
+    cout << "attrib<C>(\"B::x.s\")  = " << attrib<C>("B::x.s")  << endl;
+    cout << "attrib<C>(\"B::A::s\") = " << attrib<C>("B::A::s") << endl;
+
   }
 
   catch (LOFAR::Exception& e) {
