@@ -282,8 +282,8 @@ const meqcalibrater := function(msname, meqmodel = 'LOFAR', skymodel = 'GSM',
 				 skymodel=skymodel, ddid=ddid,
 				 ant1=ant1, ant2=ant2, modeltype=modeltype,
 				 calcuvw=calcuvw, datacolname=datacolname,
-				 residualcolname=residualcolname]);
-				 dbtype=dbtype, dbname=dbname, dbpwd=dbpwd,
+				 residualcolname=residualcolname,
+				 dbtype=dbtype, dbname=dbname, dbpwd=dbpwd])
     return ref _define_meqcalibrater(agent, id);
 }
 
