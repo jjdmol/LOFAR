@@ -1,10 +1,11 @@
 // Copyright Notice
 
-// $ID
-
-
 #if !defined(UVPDATAHEADER_H)
 #define UVPDATAHEADER_H
+
+// $Id$
+
+
 
 #include <iostream>
 #include <string>

@@ -1,9 +1,9 @@
 // Copyright notice
 
-// $Id$
-
 #if !defined(UVPDATAATOM_H)
 #define UVPDATAATOM_H
+
+// $Id$
 
 
 #include <vector>

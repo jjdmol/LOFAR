@@ -1,9 +1,9 @@
 // Copyright notice should go here
 
-// $ID$
-
 #if !defined(UVPDISPLAYAREA_H)
 #define UVPDISPLAYAREA_H
+
+// $Id$
 
 
 #include <vector>

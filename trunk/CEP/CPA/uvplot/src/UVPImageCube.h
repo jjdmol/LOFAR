@@ -3,7 +3,7 @@
 #if !defined(UVPIMAGECUBE_H)
 #define UVPIMAGECUBE_H
 
-// $ID$
+// $Id$
 
 // Includes
 #include <UVPPixel.h>

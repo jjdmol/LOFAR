@@ -1,9 +1,9 @@
 // Copyright notice should go here
 
-// $ID$
-
 #if !defined(UVPUVCOVERAGEAREA_H)
 #define UVPUVCOVERAGEAREA_H
+
+// $Id$
 
 
 

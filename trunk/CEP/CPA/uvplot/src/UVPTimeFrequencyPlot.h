@@ -1,9 +1,9 @@
 // Copyright notice should go here
 
-// $ID$
-
 #if !defined(UVPTIMEFREQUENCYPLOT_H)
 #define UVPTIMEFREQUENCYPLOT_H
+
+// $Id$
 
 #include <UVPDisplayArea.h>
 #include <UVPSpectrumVector.h>

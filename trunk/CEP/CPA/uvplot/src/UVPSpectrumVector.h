@@ -1,9 +1,9 @@
 // Copyright notice should go here
 
-// $ID$
-
 #if !defined(UVPSPECTRUMVECTOR_H)
 #define UVPSPECTRUMVECTOR_H
+
+// $Id$
 
 #include <UVPSpectrum.h>
 #include <vector>

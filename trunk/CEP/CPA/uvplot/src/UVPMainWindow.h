@@ -1,9 +1,9 @@
 // Copyright notice should go here
 
-// $ID$
-
 #if !defined(UVPMAINWINDOW_H)
 #define UVPMAINWINDOW_H
+
+// $Id$
 
 
 //#include <qwidget.h>
@@ -46,10 +46,10 @@ class UVPMainWindow:public QMainWindow
 
  protected:                     /* Protected part */
   
-  QMenuBar*       m_menu_bar;
-  QPopupMenu*     m_file_menu;
-  QPopupMenu*     m_plot_menu;
-  QPopupMenu*     m_help_menu;
+  QMenuBar*       itsMenuBar;
+  QPopupMenu*     itsFileMenu;
+  QPopupMenu*     itsPlotMenu;
+  QPopupMenu*     itsHelpMenu;
   
   int            itsMenuPlotImageID;
   int            itsMenuPlotStopID;

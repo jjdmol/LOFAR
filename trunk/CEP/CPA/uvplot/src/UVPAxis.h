@@ -3,7 +3,7 @@
 #if !defined(UVPAXIS_H)
 #define UVPAXIS_H
 
-// $ID$
+// $Id$
 
 // Includes
 #include <string>
