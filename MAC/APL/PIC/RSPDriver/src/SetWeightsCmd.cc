@@ -42,8 +42,8 @@ SetWeightsCmd::SetWeightsCmd(RSPSetweightsEvent& sw_event, GCFPortInterface& por
   RSPSetweightsEvent* event = new RSPSetweightsEvent();
   m_event = event;
   
-  event->timestamp   = sw_event.timestamp + timestep;
-  event->blpmask = sw_event.blpmask;
+  event->timestamp = sw_event.timestamp + timestep;
+  event->blpmask   = sw_event.blpmask;
 
   setOperation(oper);
   setPeriod(0);

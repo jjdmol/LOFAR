@@ -61,6 +61,7 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_COMPILETOOLS
+#lofar_PVSS(1)
 
 dnl lofar_EXTERNAL(lofarlogger,1,LofarLogger/LofarLogger.h,,)
 lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)

@@ -10,6 +10,12 @@ MAC_BASE=1 # Start from address: 00:00:00:00:00:MAC_BASE
 IF_NAME=eth0
 
 #
+# Make sure that initially the
+# beamlet statistics match the subband statistics
+#
+IDENTITY_WEIGHTS=1
+
+#
 # normal update sequence
 #
 WRITE_BF=1

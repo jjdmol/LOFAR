@@ -18,7 +18,7 @@ RSPTest_SOURCES = \
 
 RSPTest_LDADD = \
 	$(top_builddir)/src/librsp.la \
-	-lsuite -lgcf
+	-lsuite -lgcflite
 
 EPAStub_SOURCES = \
 	RSPTestSuite.h \
@@ -27,7 +27,7 @@ EPAStub_SOURCES = \
 
 EPAStub_LDADD = \
 	$(top_builddir)/src/libepa.la \
-	-lsuite -lgcf
+	-lsuite -lgcflite
 
 BUILT_SOURCES = \
 	log4cplus.properties \

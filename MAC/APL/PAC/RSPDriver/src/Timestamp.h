@@ -63,7 +63,7 @@ namespace RSP_Protocol
 	  /*@{*/
 	  /**
 	   * Set the timestamp value to the current time (now)
-	   * plus an optional delay.
+	   * plus an optional delay in seconds.
 	   */
 	  void setNow(double delay = 0.0);
 	  /*@}*/
@@ -118,7 +118,7 @@ namespace RSP_Protocol
   /**
    * Inline methods.
    */
-  inline void Timestamp::set(const struct timeval& tv)  { m_tv = tv; m_tv.tv_usec = 0; }
+  inline void Timestamp::set(const struct timeval& tv)  { m_tv = tv; }
   inline void Timestamp::get(struct timeval *tv)        { if (tv) *tv = m_tv;          }
 
   inline unsigned int Timestamp::getSize()

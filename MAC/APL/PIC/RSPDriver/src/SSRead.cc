@@ -22,9 +22,10 @@
 
 #include "RSP_Protocol.ph"
 #include "EPA_Protocol.ph"
-
 #include "SSRead.h"
 #include "Cache.h"
+
+#include <APLConfig.h>
 
 #include <blitz/array.h>
 
@@ -33,15 +34,6 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-//
-// Final RSP board will have 4 BLPs (N_BLP == 4)
-// Proto2 board has one BLP (N_PROTO2_BLP == 1)
-//
-#ifdef N_PROTO2_BLP
-#undef N_BLP
-#define N_BLP N_PROTO2_BLP
-#endif
-
 #define N_RETRIES 3
 
 using namespace RSP;
@@ -49,7 +41,7 @@ using namespace LOFAR;
 using namespace blitz;
 
 SSRead::SSRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, N_BLP * 2 /* for nr_subbands and subbands */)
+  : SyncAction(board_port, board_id, GET_CONFIG("N_BLPS", i) * 2 /* for nr_subbands and subbands */)
 {
 }
 
@@ -94,7 +86,7 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   }
   else
   {
-    uint8 global_blp = (getBoardId() * N_BLP) + (getCurrentBLP() / 2);
+    uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + (getCurrentBLP() / 2);
 
     LOG_DEBUG("handleack");
 

@@ -25,6 +25,8 @@
 #include "RSP_Protocol.ph"
 #include "Cache.h"
 
+#include <APLConfig.h>
+
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
@@ -33,15 +35,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <blitz/array.h>
-
-//
-// Final RSP board will have 4 BLPs (N_BLP == 4)
-// Proto2 board has one BLP (N_PROTO2_BLP == 1)
-//
-#ifdef N_PROTO2_BLP
-#undef N_BLP
-#define N_BLP 4 /*N_PROTO2_BLP*/
-#endif
 
 #define N_RETRIES 3
 
@@ -53,7 +46,7 @@ using namespace blitz;
 WriteReg::WriteReg(GCFPortInterface& board_port, int board_id,
 		   uint8 dstid, uint8 pid, uint8 regid, uint16 size,
 		   uint16 offset, uint8 pageid)
-  : SyncAction(board_port, board_id, N_BLP),
+  : SyncAction(board_port, board_id, GET_CONFIG("N_BLPS", i)),
     m_dstid(dstid), m_pid(pid), m_regid(regid), m_size(size), m_offset(offset), m_pageid(pageid)
 {
 }
@@ -81,7 +74,7 @@ void WriteReg::sendrequest()
   }
   else
   {
-    uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP();
+    uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + getCurrentBLP();
 
     LOG_INFO(formatString(">>>> WriteReg(%s) BLP=%d, pid=%d, regid=%d, size=%d, offset=%d, pageid=%d",
 			  getBoardPort().getName().c_str(),

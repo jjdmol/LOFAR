@@ -1,7 +1,6 @@
 
 AM_CXXFLAGS = \
 	-I$(top_srcdir)/src \
-	-DN_PROTO2_BLP=1 \
 	-DTOGGLE_LEDS
 
 AUTOGEN = autogen
@@ -89,7 +88,11 @@ libaplconfig_la_SOURCES = \
 	Config.cc \
 	APLConfig.cc
 
-bin_PROGRAMS = RSPDriver
+lib_aplconfig_la_LIBS =
+
+bin_PROGRAMS = \
+	RSPDriver \
+	ViewStats
 
 RSPDriver_SOURCES = \
 	RefCount.h \
@@ -156,11 +159,21 @@ RSPDriver_SOURCES = \
 	WGRead.h \
 	WGRead.cc
 
-
 RSPDriver_LDADD = \
 	$(top_builddir)/src/librsp.la \
 	$(top_builddir)/src/libepa.la \
 	$(top_builddir)/src/libaplconfig.la \
-	-lgcf
+	-lgcflite \
+	$(PVSS_LDADD)
+
+ViewStats_SOURCES = \
+	gnuplot_i.h \
+	gnuplot_i.cc \
+	ViewStats.h \
+	ViewStats.cc
+
+ViewStats_LDADD = \
+	$(top_builddir)/src/librsp.la \
+	-lsuite -lgcflite
 
 include $(lofar_sharedir)/Makefile.common

@@ -76,9 +76,9 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
   int result_rcu = 0;
   for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_BLPS", i) * 2; cache_rcu++)
   {
-    if (m_event->rcumask[result_rcu])
+    if (m_event->rcumask[cache_rcu])
     {
-      if (result_rcu < GET_CONFIG("N_BLPS", i) * 2)
+      if (cache_rcu < GET_CONFIG("N_BLPS", i) * 2)
       {
 	ack.sysstatus.rcu()(result_rcu)
 	  = cache.getSystemStatus().rcu()(cache_rcu);
@@ -86,7 +86,7 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      result_rcu, GET_CONFIG("N_BLPS", i) * 2));
+			      cache_rcu, GET_CONFIG("N_BLPS", i) * 2));
       }
       
       result_rcu++;

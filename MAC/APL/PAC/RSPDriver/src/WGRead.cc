@@ -25,19 +25,12 @@
 #include "RSP_Protocol.ph"
 #include "Cache.h"
 
+#include <APLConfig.h>
+
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-
-//
-// Final RSP board will have 4 BLPs (N_BLP == 4)
-// Proto2 board has one BLP (N_PROTO2_BLP == 1)
-//
-#ifdef N_PROTO2_BLP
-#undef N_BLP
-#define N_BLP N_PROTO2_BLP
-#endif
 
 using namespace RSP;
 using namespace LOFAR;
@@ -45,7 +38,7 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
 WGRead::WGRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, N_BLP)
+  : SyncAction(board_port, board_id, GET_CONFIG("N_BLPS", i))
 {
 }
 
@@ -69,7 +62,7 @@ void WGRead::sendrequest_status()
 
 GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + getCurrentBLP();
 
   EPAWgsettingsEvent wgsettings(event);
 
