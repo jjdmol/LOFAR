@@ -132,21 +132,21 @@ namespace LOFAR
 
       //############## Do we need these methods below ??? ##################
 
-      // Return an iterator to a collection of persistent objects that match 
-      // a specific query.
-      // \throw LOFAR::PL::QueryError
-      // \todo Should we provide this methods in PersistenceBroker, or will we
-      // only support collections??
-      template<typename T> 
-      typename Collection<TPersistentObject<T> >::iterator
-      retrieveIterator(const QueryObject& q) const;
+//       // Return an iterator to a collection of persistent objects that match 
+//       // a specific query.
+//       // \throw LOFAR::PL::QueryError
+//       // \todo Should we provide this methods in PersistenceBroker, or will we
+//       // only support collections??
+//       template<typename T> 
+//       typename Collection<TPersistentObject<T> >::iterator
+//       retrieveIterator(const QueryObject& q) const;
 
-      // Retrieve the object associated with the given object-id.
-      // \todo Should we provide this method in PersistenceBroker?? This will
-      // clearly expose the internals of how TPersistentObject keeps track
-      // of object instances.
-      template <typename T>
-      TPersistentObject<T> retrieve(const ObjectId& oid) const;
+//       // Retrieve the object associated with the given object-id.
+//       // \todo Should we provide this method in PersistenceBroker?? This will
+//       // clearly expose the internals of how TPersistentObject keeps track
+//       // of object instances.
+//       template <typename T>
+//       TPersistentObject<T> retrieve(const ObjectId& oid) const;
 
     };
 
