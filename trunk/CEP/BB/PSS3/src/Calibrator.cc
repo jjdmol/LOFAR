@@ -60,7 +60,7 @@ Calibrator::Calibrator (const string & ObservationData,
   itsSolvParms           = "{RA,DEC,StokesI}.*";
   itsStChan              = 0;
   itsEndChan             = 0;
-  itsSelStr              = "all([ANTENNA1,ANTENNA2] in 4*[0:20])";
+  itsSelStr              = "all([ANTENNA1,ANTENNA2] in 1*[0:1])";
   itsCalcUVW             = false;
   itsTimeSlot        = 10.0;
   itsDataColumn          = "CORRECTED_DATA";
@@ -301,7 +301,7 @@ void Calibrator::showCurrentParms (void) {
   vector<string> :: iterator i;
   for (i = itsSolvableParms.begin (); i != itsSolvableParms.end (); ++ i) {
     strcpy (str2, i -> c_str ());
-    str2[5] = 0;
+    str2[12] = 0;
     sprintf (str, "%12s ", str2);
     cout << str;
   }

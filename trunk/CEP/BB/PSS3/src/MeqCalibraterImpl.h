@@ -245,7 +245,7 @@ private:
   void initParms    (const MeqDomain& domain, bool callReadPocs);
 
   //! Get the phase reference position of the first field.
-  void getPhaseRef  (double ra, double dec, double startTime);
+  void getPhaseRef  ();
 
   //! Get the frequency info of the given data desc (spectral window).
   void getFreq      (int ddid);
