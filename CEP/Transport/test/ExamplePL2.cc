@@ -22,6 +22,7 @@
 
 #include <Transport/TH_PL.h>
 #include <DH_Example2.h>
+#include <Common/LofarLogger.h>
 #include <iostream>
 
 
@@ -72,6 +73,32 @@ int main()
     // 
   
     cout << "After transport  : " 
+	 << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
+	 << " -- " 
+	 << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
+	 << endl;
+
+    // do the data transport again with different values.
+    DH1.getBuffer()[0] = fcomplex(117,-13.15);
+    DH2.getBuffer()[0] = 0;
+    DH1.setCounter(10);
+    DH2.setCounter(0);
+    DH1.write();
+    DH1.getBuffer()[0] = fcomplex(200,114);
+    DH2.getBuffer()[0] = 0;
+    DH1.setCounter(21);
+    DH2.setCounter(0);
+    DH1.write();
+    DH2.read();
+    cout << "After 2nd transport  : " 
+	 << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
+	 << " -- " 
+	 << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
+	 << endl;
+    ASSERT (DH2.getBuffer()[0] == fcomplex(117,-13.15)
+	    &&  DH2.getCounter() == 10);
+    DH2.read();
+    cout << "After 3rd transport  : " 
 	 << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
 	 << " -- " 
 	 << DH2.getBuffer()[0] << ' ' << DH2.getCounter()

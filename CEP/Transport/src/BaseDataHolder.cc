@@ -120,15 +120,25 @@ bool BaseDataHolder::read()
   } else {
     // Otherwise do 2 separate reads (one for header and one for data).
     ////result = itsTransporter.readHeader();
-      ////result = itsTransporter.readData();
-    }
-    // Check the data header in debug mode.
+    ////result = itsTransporter.readData();
+  }
+  // Check and convert data if needed.
+  handleDataRead();
+  return result;
+}
+
+void BaseDataHolder::handleDataRead()
+{
+  // Check the data header in debug mode.
 #ifdef ENABLE_DBGASSERT
   BlobIBufChar bibc(itsData->data(), itsData->size());
   itsDataFields.checkHeader (bibc, itsType.c_str(),
 			     itsDataFields.version(), 0);
 #endif
   // Convert the data (swap bytes) if needed.
+  // todo: note that for, say, TH_PL it is possible that the database is filled
+  // from different sources; in such a case it should be checked for each
+  // read if conversion has to be done.
   if (itsReadConvert) {
     BlobIBufChar bib(itsData->data(), itsData->size());
     if (itsReadConvert != 1) {
@@ -144,8 +154,6 @@ bool BaseDataHolder::read()
       itsDataFields.convertData (bib);
     }
   }
-
-  return result;
 }
 
 void BaseDataHolder::write()

@@ -121,12 +121,36 @@ bool TH_PL::connectionPossible (int srcRank, int dstRank) const
   return srcRank == dstRank;
 }
 
+void TH_PL::insertDB (void* buf, int nbytes, int tag)
+{
+  PL::PersistentObject& aPO = itsDHPL->preparePO (tag, itsWriteSeqNo++);
+  theirPersistenceBroker.save(aPO, PL::PersistenceBroker::INSERT);
+}
+
+void TH_PL::updateDB (void* buf, int nbytes, int tag)
+{
+  PL::PersistentObject& aPO = itsDHPL->preparePO (tag, itsWriteSeqNo++);
+  theirPersistenceBroker.save(aPO, PL::PersistenceBroker::UPDATE);
+}
+
+int TH_PL::queryDB (const string& queryString,
+		    void* buf, int nbytes, int tag)
+{
+  // Get a reference to the DHPL's TPO object.
+  PL::PersistentObject& aPO = itsDHPL->getPO();
+  int result = aPO.retrieveInPlace(PL::QueryObject(queryString));
+  Assert (result > 0);
+  DbgAssertStr(int(itsDHPL->getDataBlock().size()) == nbytes,
+	       "TH_PL::queryDB - non matching size; found "
+	       << itsDHPL->getDataBlock().size() << ", expected " << nbytes);
+  itsReadSeqNo++;
+  return result;
+}
+
 bool TH_PL::sendBlocking(void* buf, int nbytes, int tag)
 {
-  DbgAssertStr(getTransporter() -> getBaseDataHolder() != 0, 
-	       "TH_PL::send():Transportable not found.");
   PL::PersistentObject& aPO = itsDHPL->preparePO (tag, itsWriteSeqNo++);
-  theirPersistenceBroker.save(aPO);
+  theirPersistenceBroker.save(aPO, PL::PersistenceBroker::INSERT);
   return true;
 }
 
@@ -146,25 +170,15 @@ bool TH_PL::recvBlocking(void* buf, int nbytes, int tag)
 { 
   // Get a reference to the DHPL's TPO object.
   PL::PersistentObject& aPO = itsDHPL->getPO();
-
   // PL is based on query objects to identify records in database
   // tables. A query object is now prepared to retrieve the record with
   // the correct tag and sequence number.
   std::ostringstream q;
   q << "tag=" << tag << " AND seqnr=" << itsReadSeqNo;
   itsReadSeqNo++;
-  // Perform the actual query and obtain the record.
-  // Check that only 1 is found.
-  ///  PL::TPersistentObject<PL::ObjectId> tpoid;
-    ///tpoid.tableName (aPO.tableName());
-    ///  PL::Collection<PL::TPersistentObject <PL::ObjectId> > result =
-    ///tpoid.retrieve (PL::QueryObject(q.str()));
-    ///Assert (result.size() == 1);
-    ///aPO.retrieve (result.begin()->data());
   int result = aPO.retrieveInPlace(PL::QueryObject(q.str()));
   Assert (result == 1);
   // ToDo: DbgAssertStr(itsReadSeqnNo == ... ,"");
-  
   DbgAssertStr(int(itsDHPL->getDataBlock().size()) == nbytes,
 	       "TH_PL::recv - non matching size; found "
 	       << itsDHPL->getDataBlock().size() << ", expected " << nbytes);

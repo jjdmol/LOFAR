@@ -22,10 +22,10 @@
 //#
 //#  $Id$
 
-#include <Socket.h>
+#include <Transport/Socket.h>
+#include <Common/lofar_iostream.h>
 #include <Common/lofar_fstream.h>
 
-#include <iostream.h>
 #include <unistd.h>
 #include <errno.h>
 #include <sys/poll.h>
@@ -37,39 +37,36 @@
 namespace LOFAR
 {
 
-Socket::Socket() :
-	itsHostname(""),
-	itsPortnr(0),
-	itsSocketID(0),
-	itsBufferSize(0),
-	itsRptr(0),
-	itsWptr(0),
-	itsData(0),
-	itsConnected(false),
-        itsIsMyBuffer(false),
-	itsIsAllocated(false)
-
-{ }
+Socket::Socket()
+  : itsHostname    (""),
+    itsPortnr      (0),
+    itsSocketID    (0),
+    itsBufferSize  (0),
+    itsRptr        (0),
+    itsWptr        (0),
+    itsData        (0),
+    itsConnected   (false),
+    itsIsMyBuffer  (false),
+    itsIsAllocated (false)
+{}
 
 Socket::~Socket()
 {
   if (itsIsMyBuffer && itsIsAllocated) {
-    if (itsData) {
-      //! delete [] itsData;
-    }
+    //! delete [] itsData;
   }
 }
 
-Socket::Socket(const Socket&	that) :
-	itsHostname		(that.itsHostname),
-	itsPortnr		(that.itsPortnr),
-	itsSocketID		(that.itsSocketID),
-        itsIsMyBuffer(false),
-	itsRptr			(that.itsRptr),
-	itsWptr			(that.itsWptr),
-	itsData			(0),
-	itsConnected    (that.itsConnected),
-	itsIsAllocated  (that.itsIsAllocated)
+Socket::Socket(const Socket& that)
+  : itsHostname	   (that.itsHostname),
+    itsPortnr      (that.itsPortnr),
+    itsSocketID	   (that.itsSocketID),
+    itsRptr        (that.itsRptr),
+    itsWptr        (that.itsWptr),
+    itsData        (0),
+    itsConnected   (that.itsConnected),
+    itsIsMyBuffer  (false),
+    itsIsAllocated (that.itsIsAllocated)
 { 
 	//# alloc databuffer and copy data
 	allocBuffer(that.itsBufferSize);
@@ -83,10 +80,10 @@ Socket& Socket::operator=(const Socket& that)
 {
 	if (this != &that) {
 		itsHostname 	= that.itsHostname;
-		itsPortnr	 	= that.itsPortnr;
+		itsPortnr	= that.itsPortnr;
 		itsSocketID 	= that.itsSocketID;
-		itsRptr 		= that.itsRptr;
-		itsWptr			= that.itsWptr;
+		itsRptr 	= that.itsRptr;
+		itsWptr		= that.itsWptr;
 		itsConnected 	= that.itsConnected;
 		itsIsAllocated  = that.itsIsAllocated;
 
@@ -111,10 +108,10 @@ bool Socket::connect (const string&	hostname,
 		      const int16	portnr) 
 {
 	//# Try to resolve the hostname, it may be a quartet of digits but
-	//# also a name to be resolve by /etc/hosts or NIS.
+	//# also a name to be resolved by /etc/hosts or NIS.
 	in_addr_t 			IPaddr;
 	struct hostent		*host_ent;
-	if ((IPaddr = inet_addr (hostname.c_str())) == -1) {	//# try digit quartet
+	if ((IPaddr = inet_addr (hostname.c_str())) == (in_addr_t)-1) {	//# try digit quartet
 		if (!(host_ent = gethostbyname (hostname.c_str()))) {	//# try hostname
 		  //LOG_DEBUG(formatString("Unknown hostname (%s)\n", hostname.c_str()));
 		  return (false);
@@ -276,6 +273,7 @@ void Socket::setBuffer( int   buffersize,
     //cout << "accept: reuse buffer  " << endl;
     itsData = bufferptr;
     itsBufferSize = buffersize;
+    itsIsMyBuffer = true;
   } else {
     // no external puffer specified, so we will
     // allocate our own buffer
@@ -336,9 +334,7 @@ void Socket::allocBuffer (int32	bufferSize)
 void Socket::freeBuffer() 
 {
   if (itsIsMyBuffer) {
-    if (itsData) {
-      delete [] itsData;
-    }
+    delete [] itsData;
   } 
   itsData = 0;
 }

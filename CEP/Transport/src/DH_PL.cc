@@ -23,9 +23,10 @@
 
 #include <Transport/DH_PL.h>		        // for class definition
 #include <Transport/PO_DH_PL.h>
+#include <Transport/TH_PL.h>		        // for class definition
 #include <Common/lofar_iostream.h>		// for cout, cerr
-#include <Common/Debug.h>			// for AssertStr
-#include <sstream>				// for ostrstream
+#include <Common/Exception.h>
+#include <sstream>				// for ostringstream
 
 namespace LOFAR {
 
@@ -50,7 +51,6 @@ DataHolder* DH_PL::clone() const
   return new DH_PL (*this);
 }
 
-
 void DH_PL::initPO (const string& tableName)
 {
   itsPODHPL = new PO_DH_PL(*this);
@@ -62,6 +62,37 @@ PL::PersistentObject& DH_PL::getPO() const
   return *itsPODHPL;
 }
 
+int DH_PL::queryDB (const string& queryString)
+{
+  TH_PL* ptr = dynamic_cast<TH_PL*>(getTransporter().getTransportHolder());
+  ASSERT (ptr != 0);
+  int result;
+  // If the data block is fixed shape and has version 1, we can simply read.
+  if (dataFieldSet().hasFixedShape()  &&  dataFieldSet().version() == 1) {
+    result = ptr->queryDB (queryString, getDataPtr(), getCurDataSize(),
+			   getTransporter().getReadTag());
+  } else {
+    THROW (LOFAR::Exception, "queryDB cannot handle var.length yet");
+  }
+  handleDataRead();
+  return result;
+}
+
+void DH_PL::insertDB()
+{
+  TH_PL* ptr = dynamic_cast<TH_PL*>(getTransporter().getTransportHolder());
+  ASSERT (ptr != 0);
+  ptr->insertDB (getDataPtr(), getCurDataSize(),
+		 getTransporter().getWriteTag());
+}
+
+void DH_PL::updateDB()
+{
+  TH_PL* ptr = dynamic_cast<TH_PL*>(getTransporter().getTransportHolder());
+  ASSERT (ptr != 0);
+  ptr->updateDB (getDataPtr(), getCurDataSize(),
+		 getTransporter().getWriteTag());
+}
 
 } // end namespace
 
