@@ -144,7 +144,7 @@ parmtable := function (name, create=F)
         self.dtab.putcell ('FREQSCALE', rownr, freqscale)
         self.dtab.putcell ('TIMESCALE', rownr, timescale)
         self.dtab.putcell ('VALUES', rownr, as_double(values));
-        self.dtab.putcell ('PERTURBATION', rownr, perturbation);
+        self.dtab.putcell ('PERT', rownr, perturbation);
         return T;
     }
 
@@ -202,7 +202,7 @@ parmtable := function (name, create=F)
         self.tab.putcell ('FREQSCALE', rownr, freqscale)
         self.tab.putcell ('TIMESCALE', rownr, timescale)
         self.tab.putcell ('VALUES', rownr, as_double(values));
-        self.tab.putcell ('PERTURBATION', rownr, perturbation);
+        self.tab.putcell ('PERT', rownr, perturbation);
         return T;
     }
 
