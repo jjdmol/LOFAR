@@ -118,6 +118,10 @@ RSPDriver_SOURCES = \
 	GetWGCmd.cc \
 	GetVersionsCmd.h \
 	GetVersionsCmd.cc \
+	GetStatsCmd.h \
+	GetStatsCmd.cc \
+	UpdStatsCmd.h \
+	UpdStatsCmd.cc \
 	\
 	SyncAction.h \
 	SyncAction.cc \

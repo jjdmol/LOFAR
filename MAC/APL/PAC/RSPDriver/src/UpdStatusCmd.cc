@@ -41,13 +41,13 @@ UpdStatusCmd::UpdStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation op
   m_event = new RSPSubstatusEvent(event);
 
   setOperation(oper);
-  setPeriod(0);
+  setPeriod(m_event->period);
   setPort(port);
 }
 
 UpdStatusCmd::~UpdStatusCmd()
 {
-  if (isOwner()) delete m_event;
+  delete m_event;
 }
 
 void UpdStatusCmd::ack(CacheBuffer& /*cache*/)
@@ -66,7 +66,7 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
 
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
-  ack.handle = (uint32)this; // opaque pointer returned in unsubscribe
+  ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
 
   ack.sysstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
   ack.sysstatus.board() = cache.getSystemStatus().board();
@@ -110,26 +110,3 @@ bool UpdStatusCmd::validate() const
 {
   return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i));
 }
-
-void UpdStatusCmd::ack_fail()
-{
-  RSPUpdstatusEvent ack;
-
-  ack.timestamp = Timestamp(0,0);
-  ack.status = FAILURE;
-
-  ack.sysstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
-  ack.sysstatus.rcu().resize(GET_CONFIG("N_RCU", i));
-
-  BoardStatus boardinit;
-  RCUStatus rcuinit;
-
-  memset(&boardinit, 0, sizeof(BoardStatus));
-  memset(&rcuinit, 0, sizeof(RCUStatus));
-  
-  ack.sysstatus.board() = boardinit;
-  ack.sysstatus.rcu()   = rcuinit;
-
-  getPort()->send(ack);
-}
-

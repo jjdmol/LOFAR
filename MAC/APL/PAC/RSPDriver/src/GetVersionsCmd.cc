@@ -47,7 +47,7 @@ GetVersionsCmd::GetVersionsCmd(GCFEvent& event, GCFPortInterface& port, Operatio
 
 GetVersionsCmd::~GetVersionsCmd()
 {
-  if (isOwner()) delete m_event;
+  delete m_event;
 }
 
 void GetVersionsCmd::ack(CacheBuffer& cache)

@@ -1,4 +1,4 @@
-//#  GetWGCmd.cc: implementation of the GetWGCmd class
+//#  GetStatsCmd.cc: implementation of the GetStatsCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,7 @@
 
 #include "RSP_Protocol.ph"
 #include "RSPConfig.h"
-#include "GetWGCmd.h"
+#include "GetStatsCmd.h"
 
 #include <blitz/array.h>
 
@@ -36,28 +36,30 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace blitz;
 
-GetWGCmd::GetWGCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetStatsCmd::GetStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  m_event = new RSPGetwgEvent(event);
+  m_event = new RSPGetstatsEvent(event);
 
   setOperation(oper);
   setPeriod(0);
   setPort(port);
 }
 
-GetWGCmd::~GetWGCmd()
+GetStatsCmd::~GetStatsCmd()
 {
   delete m_event;
 }
 
-void GetWGCmd::ack(CacheBuffer& cache)
+void GetStatsCmd::ack(CacheBuffer& cache)
 {
-  RSPGetwgackEvent ack;
+  RSPGetstatsackEvent ack;
 
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.settings().resize(m_event->rcumask.count());
+  ack.stats().resize(Statistics::N_STAT_TYPES,
+		     m_event->rcumask.count(),
+		     cache.getStatistics()().extent(thirdDim));
   
   int result_rcu = 0;
   for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
@@ -66,7 +68,8 @@ void GetWGCmd::ack(CacheBuffer& cache)
     {
       if (result_rcu < GET_CONFIG("N_RCU", i))
       {
-	ack.settings()(result_rcu) = cache.getWGSettings()()(cache_rcu);
+	ack.stats()(Range::all(), result_rcu, Range::all())
+	  = cache.getStatistics()()(Range::all(), cache_rcu, Range::all());
       }
       else
       {
@@ -81,32 +84,43 @@ void GetWGCmd::ack(CacheBuffer& cache)
   getPort()->send(ack);
 }
 
-void GetWGCmd::apply(CacheBuffer& /*cache*/)
+void GetStatsCmd::apply(CacheBuffer& /*cache*/)
 {
-  /* intentionally left empty */
+  // no-op
 }
 
-void GetWGCmd::complete(CacheBuffer& cache)
+void GetStatsCmd::complete(CacheBuffer& cache)
 {
   ack(cache);
 }
 
-const Timestamp& GetWGCmd::getTimestamp() const
+const Timestamp& GetStatsCmd::getTimestamp() const
 {
   return m_event->timestamp;
 }
 
-void GetWGCmd::setTimestamp(const Timestamp& timestamp)
+void GetStatsCmd::setTimestamp(const Timestamp& timestamp)
 {
   m_event->timestamp = timestamp;
 }
 
-bool GetWGCmd::validate() const
+bool GetStatsCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i)));
+  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i));
 }
 
-bool GetWGCmd::readFromCache() const
+bool GetStatsCmd::readFromCache() const
 {
   return m_event->cache;
+}
+
+void GetStatsCmd::ack_fail()
+{
+  RSPGetstatsackEvent ack;
+
+  ack.timestamp = getTimestamp();
+  ack.status = FAILURE;
+  ack.stats().resize(0, 0, 0);
+
+  getPort()->send(ack);
 }

@@ -97,28 +97,28 @@ namespace EPA_Protocol
   inline std::ostream& operator<<(std::ostream& s, const EPA_Protocol::BoardStatus&  stat)
   {
     return s << "[" << std::endl
-	     << "voltage_15 =" << int(stat.rsp.voltage_15) << ", " << std::endl
-	     << "voltage_22 =" << int(stat.rsp.voltage_22) << ", " << std::endl
-	     << "bp_status  =" << int(stat.bp.status)      << ", " << std::endl
-	     << "bp_temp    =" << int(stat.bp.temp)        << ", " << std::endl
-	     << "ap1_status =" << int(stat.ap[0].status)   << ", " << std::endl
-	     << "ap1_temp   =" << int(stat.ap[0].temp)     << ", " << std::endl
-	     << "ap2_status =" << int(stat.ap[1].status)   << ", " << std::endl
-	     << "ap2_temp   =" << int(stat.ap[1].temp)     << ", " << std::endl
-	     << "ap3_status =" << int(stat.ap[2].status)   << ", " << std::endl
-	     << "ap3_temp   =" << int(stat.ap[2].temp)     << ", " << std::endl
-	     << "ap4_status =" << int(stat.ap[3].status)   << ", " << std::endl
-	     << "ap4_temp   =" << int(stat.ap[3].temp)     << ", " << std::endl
-	     << "nof_frames =" << stat.eth.nof_frames      << ", " << std::endl
-	     << "nof_error  =" << stat.eth.nof_errors      << ", " << std::endl
-	     << "last_error =" << int(stat.eth.last_error) << ", " << std::endl
-	     << "read_seqnr =" << stat.read.seqnr          << ", " << std::endl
-	     << "read_error =" << int(stat.read.error)     << ", " << std::endl
-	     << "write_seqnr=" << stat.write.seqnr         << ", " << std::endl
-	     << "write_error=" << int(stat.write.error)    << ", " << std::endl
-	     << "clock_count=" << stat.sync.clock_count    << ", " << std::endl
-	     << "sync_count="  << stat.sync.count          << ", " << std::endl
-	     << "sync_errors"  << stat.sync.errors         << ", " << std::endl
+	     << "voltage_15  =" << int(stat.rsp.voltage_15) << ", " << std::endl
+	     << "voltage_22  =" << int(stat.rsp.voltage_22) << ", " << std::endl
+	     << "bp_status   =" << int(stat.bp.status)      << ", " << std::endl
+	     << "bp_temp     =" << int(stat.bp.temp)        << ", " << std::endl
+	     << "ap1_status  =" << int(stat.ap[0].status)   << ", " << std::endl
+	     << "ap1_temp    =" << int(stat.ap[0].temp)     << ", " << std::endl
+	     << "ap2_status  =" << int(stat.ap[1].status)   << ", " << std::endl
+	     << "ap2_temp    =" << int(stat.ap[1].temp)     << ", " << std::endl
+	     << "ap3_status  =" << int(stat.ap[2].status)   << ", " << std::endl
+	     << "ap3_temp    =" << int(stat.ap[2].temp)     << ", " << std::endl
+	     << "ap4_status  =" << int(stat.ap[3].status)   << ", " << std::endl
+	     << "ap4_temp    =" << int(stat.ap[3].temp)     << ", " << std::endl
+	     << "nof_frames  =" << stat.eth.nof_frames      << ", " << std::endl
+	     << "nof_error   =" << stat.eth.nof_errors      << ", " << std::endl
+	     << "last_error  =" << int(stat.eth.last_error) << ", " << std::endl
+	     << "read_seqnr  =" << stat.read.seqnr          << ", " << std::endl
+	     << "read_error  =" << int(stat.read.error)     << ", " << std::endl
+	     << "write_seqnr =" << stat.write.seqnr         << ", " << std::endl
+	     << "write_error =" << int(stat.write.error)    << ", " << std::endl
+	     << "clock_count =" << stat.sync.clock_count    << ", " << std::endl
+	     << "sync_count  ="  << stat.sync.count         << ", " << std::endl
+	     << "sync_errors ="  << stat.sync.errors        << ", " << std::endl
 	     << "]" << std::endl;
   }
   

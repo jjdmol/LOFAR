@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  GetStatusCmd.h: Get system status command.
+//#  GetStatsCmd.h: Beamformer Stats get command.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef GETSTATUSCMD_H_
-#define GETSTATUSCMD_H_
+#ifndef GETSTATSCMD_H_
+#define GETSTATSCMD_H_
 
 #include "Command.h"
 #include "RSP_Protocol.ph"
@@ -33,16 +33,16 @@
 
 namespace RSP
 {
-  class GetStatusCmd : public Command
+  class GetStatsCmd : public Command
   {
     public:
       /**
-       * Constructors for a GetStatusCmd object.
+       * Constructors for a GetStatsCmd object.
        */
-      GetStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation oper);
+      GetStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper);
 	  
-      /* Destructor for GetStatusCmd. */
-      virtual ~GetStatusCmd();
+      /* Destructor for GetStatsCmd. */
+      virtual ~GetStatsCmd();
 
       /**
        * Acknowledge the command by sending the appropriate
@@ -81,14 +81,14 @@ namespace RSP
       bool readFromCache() const;
 
       /**
-       * Send failure ack.
+       * Acknowledge failure.
        */
       void ack_fail();
       
     private:
-      GetStatusCmd();
-      RSPGetstatusEvent* m_event;
+      GetStatsCmd();
+      RSPGetstatsEvent* m_event;
   };
 };
      
-#endif /* GETSTATUSCMD_H_ */
+#endif /* GETSTATSCMD_H_ */

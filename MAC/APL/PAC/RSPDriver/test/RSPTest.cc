@@ -81,7 +81,7 @@ GCFEvent::TResult RSPTest::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_CONNECTED:
     {
-      TRAN(RSPTest::test001);
+      TRAN(RSPTest::test010);
     }
     break;
 
@@ -741,8 +741,8 @@ GCFEvent::TResult RSPTest::test010(GCFEvent& e, GCFPortInterface& port)
 
       LOG_INFO_STR("ack.handle=" << ack.handle);
 
-      TRAN(RSPTest::final);
       port.close();
+      TRAN(RSPTest::final);
     }
     break;
 
