@@ -29,7 +29,7 @@
 
 DBTYPE="mysql"
 HOST="localhost"
-USER="zwart"
+USER=`whoami`
 INDEXCMDSUFFIX="(name)"
 AIPSTABLECREATOR="glish -l /lofarbuild/weekly/LOFAR/CEP/CPA/PSS3/CAL/src/parmtable.g"
 
@@ -80,12 +80,12 @@ fi
 for n in 1 2 3 4 5 6 ; do
   tablename=meqmodel$n
   if [ "$DBTYPE" = "aips" ]; then
-    rm -rf ${tablename}.MEP
-    echo "parmtable(\"${tablename}.MEP\", T)" > aipscreate
+    rm -rf /tmp/*.${tablename}.MEP
+    echo "parmtable(\"/tmp/${USER}.${tablename}.MEP\", T)" > aipscreate
     echo "exit" >> aipscreate
     $AIPSTABLECREATOR < aipscreate
   elif [ "$DBTYPE" = "bdb" ]; then
-    rm -rf *.bdb
+    rm -rf /tmp/*.${tablename}.bdb
   else
 # do the drops in seperate commands
 # if they fail (because the old tables do not exist) the script will continue
@@ -138,10 +138,12 @@ for n in 1 2 3 4 5 6 ; do
   
   tablename=skymodel$n
   if [ "$DBTYPE" = "aips" ]; then
-    rm -rf ${tablename}.MEP
-    echo "parmtable(\"${tablename}.MEP\", T)" > aipscreate
+    rm -rf /tmp/*.${tablename}.MEP
+    echo "parmtable(\"/tmp/${USER}.${tablename}.MEP\", T)" > aipscreate
     echo "exit" >> aipscreate
     $AIPSTABLECREATOR < aipscreate
+  elif [ "$DBTYPE" = "bdb" ]; then
+    rm -rf /tmp/*.${tablename}.bdb
   else
     echo " " > sql_create
     echo "drop table ${tablename};" >> sql_create

@@ -248,7 +248,7 @@ void doIt()
 	} else if (dbType=="monet") {
 	  PTR = new ParmTableMonet (dbHost, dbUser, tableName, true);
 	} else if (dbType=="aips") {
-	  PTR = new ParmTableAIPS (tableName);
+	  PTR = new ParmTableAIPS (dbUser, tableName);
 	} else if (dbType=="bdb") {
 	  PTR = new ParmTableBDB (dbUser, tableName);
 	} else {

@@ -37,8 +37,8 @@
 
 namespace LOFAR {
 
-ParmTableAIPS::ParmTableAIPS (const string& tableName)
-: itsTable       (tableName+".MEP"),
+ParmTableAIPS::ParmTableAIPS (const string& userName, const string& tableName)
+: itsTable       ("/tmp/" + userName + "." + tableName+".MEP"),
   itsIndex       (itsTable, stringToVector("SRCNR,STATNR,NAME")),
   itsIndexSrcnr  (itsIndex.accessKey(), "SRCNR"),
   itsIndexStatnr (itsIndex.accessKey(), "STATNR"),

@@ -29,7 +29,7 @@
 
 DBTYPE="mysql"
 HOST="localhost"
-USER="zwart"
+USER=`whoami`
 AIPSTABLECREATOR="glish -l /lofarbuild/weekly/LOFAR/CEP/CPA/PSS3/CAL/src/parmtable.g"
 
 # read commandline options
@@ -77,21 +77,12 @@ fi
 
 if [ "$DBTYPE" = "aips" ]; then
 # for aips, simply delete tables and recreate them
-    echo " " > aipscreate
-    for n in 1 2 3 4 5 6 ; do
-      tablename=meqmodel${n}.MEP
-      rm -rf $tablename
-      echo "parmtable(\"${tablename}\", T)" >> aipscreate
-      tablename=skymodel${n}.MEP
-      rm -rf $tablename
-      echo "parmtable(\"${tablename}\", T)" >> aipscreate
-    done
-    echo "exit" >> aipscreate
-    $AIPSTABLECREATOR < aipscreate
+    ../../src/createParamTables -host $HOST -dbtype $DBTYPE -user $USER
 # we need to fill the default tables again
     ../../src/fillDefaultTables -host $HOST -dbtype $DBTYPE -user $USER
 elif [ "$DBTYPE" = "bdb" ]; then
-    rm -rf *.bdb
+# for bdb, simply delete tables and recreate them
+    ../../src/createParamTables -host $HOST -dbtype $DBTYPE -user $USER
 # we need to fill the default tables again
     ../../src/fillDefaultTables -host $HOST -dbtype $DBTYPE -user $USER
 else
