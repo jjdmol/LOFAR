@@ -40,7 +40,8 @@
 using namespace LOFAR;
 using namespace std;
 
-// This program can be called with input file name(1) and user name(2)
+// This program should be called with input file name(1) and user name(2) as
+// arguments
 
 int main (int argc, const char** argv)
 {

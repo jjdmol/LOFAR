@@ -178,6 +178,23 @@ bool SC_Simple::execute()
   return true;
 }
 
+void SC_Simple::postprocess()
+{
+  bool writeParms = itsArgs.getBool("writeParms", false);
+  if (writeParms)
+  {
+    readSolution();
+    // Controller writes found parameter values in the tables
+    vector<ParmData> pData;
+    getSolution()->getSolution(pData);
+    double fStart = getSolution()->getStartFreq();
+    double fEnd = getSolution()->getEndFreq();
+    double tStart = getSolution()->getStartTime();
+    double tEnd = getSolution()->getEndTime();
+    getParmWriter().write(pData, fStart, fEnd, tStart, tEnd);
+  }
+}
+
 void SC_Simple::readSolution()
 {
   LOG_TRACE_FLOW("SC_Simple reading solution");

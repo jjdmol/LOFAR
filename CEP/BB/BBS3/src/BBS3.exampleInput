@@ -22,6 +22,7 @@ CTRLparams=[
     useAutoCorr=F,           // Use auto correlations
     lockMappedMem=T,         // Call mlock immediately after mapping?
     useSVD=F,                // Use Singular Value Decomposition in solve?
+    writeParms=T,            // Write final parameters values in parm table?
 
     MSDBparams=[
       MSName="/data/PSS3/diepen/BBS2/demo3_p1.MS", // Measurement Set name

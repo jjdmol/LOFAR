@@ -120,6 +120,11 @@ void WH_Control::dump()
 
 void WH_Control::postprocess()
 {
+  list<StrategyController*>::iterator iter;
+  for (iter=itsControllers.begin(); iter!=itsControllers.end(); iter++)
+  {
+    (*iter)->postprocess();
+  }
 }
 
 void WH_Control::createStrategyControllers()
