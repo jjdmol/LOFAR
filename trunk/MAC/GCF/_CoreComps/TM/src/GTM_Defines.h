@@ -23,9 +23,8 @@
 #ifndef GTM_DEFINES_H
 #define GTM_DEFINES_H
 
-#include <LofarLogger/LofarLogger.h>
+#include <GCF/GCF_Defines.h>
 
-#define GCF_LOGGER_ROOT       (MAC_LOGGER_ROOT + string(".GCF"))
 #define CORE_COMPS_TM_LOGGER  (GCF_LOGGER_ROOT + string(".CoreComps.TM"))
 
 #define TM_STDOUT_LOGGER      (CORE_COMPS_TM_LOGGER + string(".Logger"))
