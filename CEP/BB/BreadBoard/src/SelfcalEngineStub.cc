@@ -36,7 +36,7 @@ SelfcalEngineStub::~SelfcalEngineStub() {
 }
 
 void SelfcalEngineStub::init(int len,
-			     float *parameters) {
+			     float parameters[]) {
   //  if (itsParamValues != NULL) delete[] itsParamValues;
   itsLen = len;
 
@@ -46,8 +46,8 @@ void SelfcalEngineStub::init(int len,
   }
 }
 
-void SelfcalEngineStub::Solve(bool    *workdef, 
-			      float  **outparams) {
+float * SelfcalEngineStub::Solve(bool    *workdef, 
+                                  float   outparams[]) {
 
   cout << "start Solving" << flush;
   for (int i=0; i<itsLen; i++) {
@@ -55,12 +55,13 @@ void SelfcalEngineStub::Solve(bool    *workdef,
     cout << "." << flush;
 
     if (workdef[i] == true) {
-      *outparams[i] = itsParamValues[i] = 0.5*(itsParamValues[i] + i);
-      cout << i << " " << *outparams[i] << "  ";
+      outparams[i] = itsParamValues[i] = 0.5*(itsParamValues[i] + i);
+      cout << i << " " << outparams[i] << "  ";
     }
   }
   cout << "OK" << endl;;
   
+  return outparams;
   
 }
 

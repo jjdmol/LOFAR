@@ -7,7 +7,7 @@ CPPFLAGS+=-I/usr/include/python2.3
 %_wrap.cxx:	%.swg
 	swig -c++ -python $<
 
-_selfcal.so:	selfcal.o selfcal_wrap.o
+_selfcal.so:	selfcal.o selfcal_wrap.o ../SelfcalEngineStub.o
 	ld -shared -o _selfcal.so $^
 
 clean:
@@ -15,3 +15,4 @@ clean:
 	-@rm _selfcal.so
 	-@rm selfcal_wrap.*
 	-@rm selfcal.py
+	-@rm core
