@@ -1,4 +1,4 @@
-//  .cc:
+//  FilterBank.cc:
 //
 //  Copyright (C) 2002
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -60,24 +60,20 @@ Array<complex<double>, 2> FilterBank<Type>::filter(Array<Type, 1> Input)
 {
   Array<complex<double>, 2> FilterBankOutput(itsNumberOfBands, 1);
 
-  if (itsOverlapSamples > 0)
-  {
-    // Rearrange the input so that it can be easily convolved with the filtercoefficients
-    ReArrangeWithOverlap(Input);
-  }
-  else
-  {
+  if (itsOverlapSamples > 0) {
+	// Rearrange the input so that it can be easily convolved with the filtercoefficients
+	ReArrangeWithOverlap(Input);
+  } else {
     ReArrange(Input);
   }
-
+  
   // Convolve the rearrangedsignals with the filtercoefficients
   Array<Type, 1> ConvolvedSignal = Convolve();
 
   // Do a FFT n the convolved signal and return the output
   FilterBankOutput = FFT(ConvolvedSignal);
 
-  if (isReal == 0)
-  {
+  if (isReal == 0) {
     // Convert the output of the FFT into the appropriate format:
     // 2. Invert the order of the output. [1 2 3 4] -(fftw)-> [4 3 2 1] -> [2 1 4 3]
     //FilterBankOutput.reverseSelf(firstDim);
@@ -95,8 +91,7 @@ template<class Type>
 void FilterBank<Type>::ReArrange(Array<Type, 1> Input) // This function might be not necessary instead use ReArrange with overlap with overlap = 0
 {
   // The input must be number of bands long!
-  for (int i = 0; i < itsNumberOfBands; ++i)
-  {
+  for (int i = 0; i < itsNumberOfBands; ++i) {
     itsReArrangedSignal(i, itsMatrixPosition) = Input(i);
   }
 
@@ -109,15 +104,13 @@ void FilterBank<Type>::ReArrangeWithOverlap(Array<Type, 1> Input)
 {
   // The input must be number of bands - number of overlap samples) long
   int PreviousMatrixPosition = (itsMatrixPosition == 0) ? itsOrder - 1 : itsMatrixPosition - 1;
-
-  for (int i = 0; i < itsOverlapSamples; ++i)
-  {
+  
+  for (int i = 0; i < itsOverlapSamples; ++i) {
     itsReArrangedSignal(i, itsMatrixPosition) = itsReArrangedSignal(itsNumberOfBands - itsOverlapSamples + i,
                                                                     PreviousMatrixPosition);
   }
 
-  for (int i = itsOverlapSamples; i < itsNumberOfBands; ++i)
-  {
+  for (int i = itsOverlapSamples; i < itsNumberOfBands; ++i) {
     itsReArrangedSignal(i, itsMatrixPosition) = Input(i - itsOverlapSamples);
   }
   itsMatrixPosition = ++itsMatrixPosition % itsOrder;
@@ -130,16 +123,13 @@ Array<Type, 1> FilterBank<Type>::Convolve()
   Array<Type, 1> ConvolvedSignal(itsNumberOfBands);
   ConvolvedSignal(Range(Range::all())) = 0;
 
-  for (int b = 0; b < itsNumberOfBands; ++b)
-  {
+  for (int b = 0; b < itsNumberOfBands; ++b) {
     // MatrixPosition points to the last addition to the rearranged signal
     int i = 0;
-    for (int o = itsMatrixPosition; o < itsOrder; ++o)
-    {
+    for (int o = itsMatrixPosition; o < itsOrder; ++o) {
       ConvolvedSignal(b) += itsReArrangedSignal(b, o) * itsFilterCoefficients(b, i++);
     }
-    for (int o = 0; o < itsMatrixPosition; ++o)
-    {
+    for (int o = 0; o < itsMatrixPosition; ++o) {
       ConvolvedSignal(b) += itsReArrangedSignal(b, o) * itsFilterCoefficients(b, i++);
     }
   }
@@ -155,7 +145,7 @@ Array<complex<double>, 2> FilterBank< complex<double> >::FFT(Array<complex<doubl
   fftw_one(fftplancomplex, (fftw_complex*)ConvolvedSignal.data(), (fftw_complex*)FilterBankOutput.data());
 
   FilterBankOutput /= itsNumberOfBands;
-
+  
   return FilterBankOutput;
 }
 

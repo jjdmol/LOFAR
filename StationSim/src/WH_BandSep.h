@@ -28,13 +28,16 @@
 #include <config.h>
 #endif
 
+#include <Common/Lorrays.h>
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleR.h>
 #include <StationSim/DH_SampleC.h>
-#include <Common/lofar_vector.h>
+#include <StationSim/FilterBank.h>
+#include <StationSim/GnuPlotInterface.h>         // for gnuplot plotting capabilities
 
-#include <aips/Arrays/Vector.h>
-#include <aips/Mathematics/FFTServer.h>
+const int itsOverlapSamples = 0;
+const int isReal = 1;
+const int isComplex = 0;
 
 
 /**
@@ -48,15 +51,17 @@ public:
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  WH_BandSep (const string& name, unsigned nout,
-	      unsigned int nrcu, unsigned int nsubband,
-	      const string& coeffFileName);
+  WH_BandSep (const string& name,
+			  unsigned int nsubband,
+			  const string& coeffFileName,
+			  bool plot);
 
   virtual ~WH_BandSep();
 
   /// Static function to create an object.
-  static WorkHolder* construct(const string& name, int ninput, int noutput,
-			       const ParamBlock&);
+  static WorkHolder* construct(const string& name, 
+							   int noutput,
+							   const ParamBlock&);
 
   /// Make a fresh copy of the WH object.
   virtual WH_BandSep* make(const string& name) const;
@@ -71,7 +76,7 @@ public:
   virtual void dump() const;
 
   /// Get a pointer to the i-th input DataHolder.
-  virtual DH_SampleR* getInHolder(int channel);
+  virtual DH_SampleC* getInHolder(int channel);
 
   /// Get a pointer to the i-th output DataHolder.
   virtual DH_SampleC* getOutHolder(int channel);
@@ -83,28 +88,23 @@ private:
   /// Forbid assignment.
   WH_BandSep& operator= (const WH_BandSep&);
 
-
   /// Pointer to the array of input DataHolders.
-  DH_SampleR itsInHolder;
+  DH_SampleC itsInHolder;
   /// Pointer to the array of output DataHolders.
   DH_SampleC** itsOutHolders;
 
   /// Length of buffers.
-  int itsNrcu;
   int itsNsubband;
-  int itsFilterLength;
   string itsCoeffName;
-  vector<vector<DH_SampleR::BufferType> > itsFilters;  // nsubband vectors
-  vector<vector<DH_SampleR::BufferType> > itsBuffers;  // nrcu buffers
-  Vector<DH_SampleR::BufferType> itsConv;
-  Vector<DH_SampleC::BufferType> itsFFTBuf;
-  FFTServer<DH_SampleR::BufferType,DH_SampleC::BufferType> itsFFTserver;
-  int itsSubPos;
-  int itsFiltPos;
+  bool itsDoPlot;
+  int itsPos;
+  int itsFilterLength;
+  FilterBank <dcomplex> * itsFilterbank;
+  LoVec_dcomplex itsBuffer;
 
   // DEBUG
-  ofstream osDebugInput;
-  int iCount;
+  gnuplot_ctrl* handle;
+  ofstream itsFileOut;
 };
 
 

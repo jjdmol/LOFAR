@@ -38,6 +38,7 @@ class Trajectory
 public:
 
    Trajectory (string config_file, int fs, double length);
+   ~Trajectory ();
 
   // returns source coordinates
   double getPhi (int index);
@@ -51,7 +52,9 @@ private:
   string       itsType;
   LoVec_double itsTheta;
   LoVec_double itsPhi;
-  LoVec_double itsTime;
+
+  // DEBUG
+  ofstream itsFileOut;
 };
 
 #endif

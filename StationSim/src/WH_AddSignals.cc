@@ -59,7 +59,7 @@ WH_AddSignals::WH_AddSignals (const string& name,
   }
   // DEBUG
   itsCount = 0;
-  itsFileOut.open ("/home/alex/gerdes/output.txt");
+  itsFileOut.open ("/home/alex/gerdes/add.txt");
 }
 
 WH_AddSignals::~WH_AddSignals ()
