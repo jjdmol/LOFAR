@@ -44,18 +44,13 @@ unsigned int MEPData::pack  (void* buffer)
   return m_count;
 }
 
-unsigned int MEPData::unpack(void* /*buffer*/)
+unsigned int MEPData::unpack(void* buffer)
 {
-#if 0
-  /**
-   * Should never be called.
-   */
-  LOG_FATAL("MEPData::unpack should never be called.");
-  exit(EXIT_FAILURE);
-#else
-  // this is a no-op
-  return 0;
-#endif
+  if (m_count && m_dataptr)
+  {
+    memcpy(m_dataptr, buffer, m_count);
+  }
+  return m_count;
 }
 
 void MEPData::setBuffer(void* buf, size_t count)

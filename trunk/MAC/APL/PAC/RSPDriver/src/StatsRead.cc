@@ -38,8 +38,8 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 using namespace blitz;
 
-StatsRead::StatsRead(GCFPortInterface& board_port, int board_id, uint8 type, uint8 nfragments)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * nfragments), m_type(type), m_nfragments(nfragments)
+StatsRead::StatsRead(GCFPortInterface& board_port, int board_id, uint8 type, uint8 nblps, uint8 nfragments)
+  : SyncAction(board_port, board_id, nblps * nfragments), m_type(type), m_nblps(nblps), m_nfragments(nfragments)
 {
 }
 
@@ -110,8 +110,7 @@ GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port
 {
   EPAStatsEvent ack(event);
 
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) 
-    + (getCurrentBLP() / m_nfragments);
+  uint8 global_blp = (getBoardId() * m_nblps) + (getCurrentBLP() / m_nfragments);
 
   uint16 offset = ack.hdr.m_fields.offset / MEPHeader::N_PHASE / sizeof(int32);
   
