@@ -186,14 +186,14 @@ const meqaddstatelist := function (ref rec,node,state)
   return ref rec;
 }
 
-const meqrequest := function (cells,reqid=F,calc_deriv=F)
+const meqrequest := function (cells,request_id=F,calc_deriv=F)
 {
   global _meqrequest_id;
-  if( is_boolean(reqid) )
-    reqid := _meqrequest_id +:= 1;
+  if( is_boolean(request_id) )
+    request_id := _meqrequest_id +:= 1;
   else
-    _meqrequest_id := reqid;
-  rec := [ cells=cells,request_id=hiid(reqid),calc_deriv=calc_deriv ];
+    _meqrequest_id := request_id;
+  rec := [ cells=cells,request_id=hiid(request_id),calc_deriv=calc_deriv ];
   rec::dmi_actual_type := 'MeqRequest';
   
   const rec.addstate := function (group,node,state)
