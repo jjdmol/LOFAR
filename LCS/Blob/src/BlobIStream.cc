@@ -243,14 +243,6 @@ BlobIStream& BlobIStream::operator>> (dcomplex& var)
   }
   return *this;
 }
-BlobIStream& BlobIStream::operator>> (scomplex& var)
-{
-  getBuf (&var, sizeof(var));
-  if (itsMustConvert) {
-    LOFAR::dataConvert16 (itsDataFormat, &var, 2);
-  }
-  return *this;
-}
 BlobIStream& BlobIStream::operator>> (std::string& var)
 {
   int32 len;
@@ -350,13 +342,6 @@ void BlobIStream::get (dcomplex* values, uint nrval)
   getBuf (values, nrval*sizeof(dcomplex));
   if (itsMustConvert) {
     LOFAR::dataConvertDouble (itsDataFormat, values, 2*nrval);
-  }
-}
-void BlobIStream::get (scomplex* values, uint nrval)
-{
-  getBuf (values, nrval*sizeof(scomplex));
-  if (itsMustConvert) {
-    LOFAR::dataConvert16 (itsDataFormat, values, 2*nrval);
   }
 }
 void BlobIStream::get (string* values, uint nrval)

@@ -109,10 +109,4 @@ namespace LOFAR
       static std::string str ("dcomplex");
       return str;
     }
-
-  const std::string& typeName (const scomplex*)
-    {
-      static std::string str ("scomplex");
-      return str;
-    }
 }

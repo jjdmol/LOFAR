@@ -63,8 +63,7 @@
             Do(double,arg) sep \
             Do(ldouble,arg) sep \
             Do(fcomplex,arg) sep \
-            Do(dcomplex,arg) sep \
-            Do(scomplex,arg) 
+            Do(dcomplex,arg)
             
 #define DoForAllNumericTypes(Do,arg) DoForAllNumericTypes_Sep(Do,arg,;)
         
@@ -84,8 +83,7 @@
         Do(double,arg) , \
         Do(ldouble,arg) , \
         Do(fcomplex,arg) , \
-        Do(dcomplex,arg) , \
-        Do(scomplex,arg)  
+        Do(dcomplex,arg)
         
 #endif
 

@@ -51,7 +51,6 @@ namespace LOFAR
   const std::string& typeName (const double*);
   const std::string& typeName (const fcomplex*);
   const std::string& typeName (const dcomplex*);
-  const std::string& typeName (const scomplex*);
   template<typename T> const std::string& typeName (const std::complex<T>*);
   template<typename T> const std::string& typeName (T**);
   // </group>

@@ -105,7 +105,6 @@ public:
   BlobIStream& operator>> (double& value);
   BlobIStream& operator>> (fcomplex& value);
   BlobIStream& operator>> (dcomplex& value);
-  BlobIStream& operator>> (scomplex& value);
   BlobIStream& operator>> (std::string& value);
   // </group>
 
@@ -125,7 +124,6 @@ public:
   void get (double* values, uint nrval);
   void get (fcomplex* values, uint nrval);
   void get (dcomplex* values, uint nrval);
-  void get (scomplex* values, uint nrval);
   void get (std::string* values, uint nrval);
   // </group>
 
