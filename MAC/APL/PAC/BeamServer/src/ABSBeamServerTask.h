@@ -187,9 +187,9 @@ namespace ABS
 	 * Current WG settings.
 	 */
 	struct {
-	    double        frequency;
+	    double         frequency;
 	    unsigned short amplitude;
-	    bool          enabled;
+	    bool           enabled;
 	} m_wgsetting;
 
 	/**
@@ -205,9 +205,10 @@ namespace ABS
 
     private:
 	// ports
-	GCFPort       m_client;
-	GCFPort       m_rspdriver;
+	GCFPort          m_client;
+	GCFPort          m_rspdriver;
 	std::list<char*> m_saveq;
+	bool             m_subbands_modified;
     };
 
 };

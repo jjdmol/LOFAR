@@ -64,6 +64,7 @@ using namespace RSP_Protocol;
 #define MAX_N_SPECTRAL_WINDOWS 1
 #define COMPUTE_INTERVAL 10
 #define UPDATE_INTERVAL  1
+#define N_DIM 3 // x, y, z or l, m, n
 
 #define SCALE (1<<(16-2))
 
@@ -71,9 +72,10 @@ using namespace RSP_Protocol;
 
 BeamServerTask::BeamServerTask(string name)
     : GCFTask((State)&BeamServerTask::initial, name),
-      m_pos(GET_CONFIG("N_BLPS", i), N_POL, 3),
+      m_pos(GET_CONFIG("N_BLPS", i), N_POL, N_DIM),
       m_weights(COMPUTE_INTERVAL, GET_CONFIG("N_BLPS", i), N_BEAMLETS, N_POL),
-      m_weights16(COMPUTE_INTERVAL, GET_CONFIG("N_BLPS", i), N_BEAMLETS, N_POL)
+      m_weights16(COMPUTE_INTERVAL, GET_CONFIG("N_BLPS", i), N_BEAMLETS, N_POL),
+      m_subbands_modified(false)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
@@ -85,17 +87,17 @@ BeamServerTask::BeamServerTask(string name)
 		   UPDATE_INTERVAL, COMPUTE_INTERVAL);
   (void)Beamlet::init(N_BEAMLETS);
 
-  m_wgsetting.frequency     = 1.5e6; // 1MHz
-  m_wgsetting.amplitude     = 1024;
+  m_wgsetting.frequency     = 1.5625e6; // 1.5625 MHz
+  m_wgsetting.amplitude     = 0x8000;
   m_wgsetting.enabled       = false;
 
   // initialize antenna positions
   Range all = Range::all();
   m_pos(all, 0, all) = 0.0;
-  m_pos(all, 0, 0)   = 0.0;
+  m_pos(all, 0, 0)   = 50.0;
 
   m_pos(all, 1, all) = 0.0;
-  m_pos(all, 1, 0)   = 100.0;
+  m_pos(all, 1, 0)   = -50.0;
 
   // initialize weight matrix
   m_weights   = complex<W_TYPE>(0,0);
@@ -189,6 +191,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 
   static int period = 0;
   static bool recall = false;
+  static bool wait4weightsack = false;
   
   switch (e.signal)
   {
@@ -220,6 +223,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 
       LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
 
+      period++;
       if (0 == (period % COMPUTE_INTERVAL))
       {
 	period = 0;
@@ -228,22 +232,39 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	compute_weights(timer->sec);
 
 	send_weights();
+	wait4weightsack = true;
       }
 
-      period++;
+      if (wait4weightsack)
+      {
+	wait4weightsack = false;
+	TRAN(BeamServerTask::wait4ack);
+      }
+      else if (m_subbands_modified)
+      {
+	send_sbselection();
+	TRAN(BeamServerTask::wait4ack);
+      }
     }
     break;
 
     case ABS_BEAMPOINTTO:
+    case ABS_WGSETTINGS:
+    case ABS_BEAMALLOC:
+    case ABS_BEAMFREE:
+      // these signals don't result in communication
+      // with the RSP board, therefor no transition
+      // to the wait4ack state
       handle_abs_request(e, port);
       break;
       
-    case ABS_BEAMALLOC:
-    case ABS_BEAMFREE:
-    case ABS_WGSETTINGS:
     case ABS_WGENABLE:
     case ABS_WGDISABLE:
     {
+      // these signals result in communication
+      // with the RSP board, therefor transition
+      // to the wait4ack state to wait for the
+      // acknowledgement from the RSP driver
       handle_abs_request(e, port);
       TRAN(BeamServerTask::wait4ack);
     }
@@ -286,9 +307,6 @@ GCFEvent::TResult BeamServerTask::wait4ack(GCFEvent& e, GCFPortInterface& port)
   switch (e.signal)
   {
     case ABS_BEAMPOINTTO:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-      
     case ABS_BEAMALLOC:
     case ABS_BEAMFREE:
     case ABS_WGSETTINGS:
@@ -453,11 +471,11 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent& ba,
   
   // create subband selection set
   set<int> subbands;
-  for (int i = 0; i < N_BEAMLETS; i++) subbands.insert(ba.subbands[i]);
+  for (int i = 0; i < ba.n_subbands; i++) subbands.insert(ba.subbands[i]);
 
   // check if array of subbands did not contain any duplicate subband
   // selection
-  if (N_BEAMLETS != (int)subbands.size())
+  if (ba.n_subbands != (int)subbands.size())
   {
     LOG_ERROR("\nsubband selection contains duplicates\n");
     ack.status = ERR_RANGE;
@@ -521,8 +539,8 @@ void BeamServerTask::beampointto_action(ABSBeampointtoEvent& pt,
   {
       time_t pointto_time = pt.time;
 
-      LOG_DEBUG(formatString("received new coordinates: %f, %f",
-			     pt.angle[0], pt.angle[1]));
+      LOG_DEBUG(formatString("received new coordinates: %f, %f, time=%s",
+			     pt.angle[0], pt.angle[1], to_simple_string(from_time_t(pt.time)).c_str()));
 
       //
       // If the time is not set, then activate the command
@@ -538,7 +556,7 @@ void BeamServerTask::beampointto_action(ABSBeampointtoEvent& pt,
 	  LOG_ERROR("\nbeam not allocated\n");
       }
   }
-  else LOG_ERROR("\ninvalid beam_index in BEAMPOINTTO\n");
+  else LOG_ERROR(formatString("\ninvalid beam_index (%d) in BEAMPOINTTO\n", pt.handle));
 }
 
 void BeamServerTask::wgsettings_action(ABSWgsettingsEvent& wgs,
@@ -548,18 +566,16 @@ void BeamServerTask::wgsettings_action(ABSWgsettingsEvent& wgs,
   sa.status = ABS_Protocol::SUCCESS;
 
   // max allowed frequency = 20MHz
-  if ((wgs.frequency >= 1.0e-6)
+  if ((wgs.frequency >= 1e-6)
       && (wgs.frequency <= SYSTEM_CLOCK_FREQ/4.0))
   {
-      m_wgsetting.frequency     = wgs.frequency;
-      m_wgsetting.amplitude     = wgs.amplitude;
-      
-      wgenable_action();
+    m_wgsetting.frequency     = wgs.frequency;
+    m_wgsetting.amplitude     = wgs.amplitude;
   }
   else
   {
-      LOG_ERROR("\nargument range error\n");
-      sa.status = ERR_RANGE;
+    LOG_ERROR("\nargument range error\n");
+    sa.status = ABS_Protocol::ERR_RANGE;
   }
 
   // send ack
@@ -628,7 +644,8 @@ void BeamServerTask::compute_weights(long current_seconds)
 					   + time_duration(seconds(COMPUTE_INTERVAL)),
 					   seconds(COMPUTE_INTERVAL));
 
-  Array<W_TYPE,2> lmns(COMPUTE_INTERVAL, 3);  // l,m,n coordinates
+  Array<W_TYPE,2> lmns(COMPUTE_INTERVAL, N_DIM);  // l,m,n coordinates
+  lmns = 0;
 
   // iterate over all beams
   for (set<Beam*>::iterator bi = m_beams.begin();
@@ -704,7 +721,7 @@ void BeamServerTask::update_sbselection()
       (*bi)->getSubbandSelection(m_sbsel);
   }
 
-  send_sbselection();
+  m_subbands_modified = true;
 }
 
 void BeamServerTask::send_sbselection()
@@ -744,7 +761,11 @@ void BeamServerTask::send_sbselection()
     ss.subbands()(0, sel->first*2+1) = sel->second * 2 + 1;
   }
 
+  cout << "ss.subbands() = " << ss.subbands() << endl;
+
   m_rspdriver.send(ss);
+
+  m_subbands_modified = false;
 }
 
 void BeamServerTask::saveq_defer(GCFEvent& e)

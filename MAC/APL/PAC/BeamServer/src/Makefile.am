@@ -48,7 +48,7 @@ include_HEADERS = \
 %.top: %.top.in
 	cp $< $@
 
-noinst_LTLIBRARIES = libabs.la
+lib_LTLIBRARIES = libabs.la
 
 libabs_la_SOURCES = \
 	ABSDirection.h \
@@ -75,6 +75,6 @@ BeamServer_SOURCES = \
 	ABSBeamServerTask.cc
 
 BeamServer_LDADD = \
-	$(top_builddir)/src/libabs.la -lgcf -lrsp
+	$(top_builddir)/src/libabs.la -lgcflite -lrsp
 
 include $(lofar_sharedir)/Makefile.common

@@ -42,6 +42,10 @@ event = {
 	    type = "int";
       };
       param = {
+	    name = "n_subbands";
+	    type = "int";
+      };
+      param = {
 	    name = "subbands";
 	    type = "int[N_BEAMLETS]";
       };
