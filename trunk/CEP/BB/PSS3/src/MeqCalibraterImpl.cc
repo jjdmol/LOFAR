@@ -1133,7 +1133,7 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   double stddev;
   double mu;
   cdebug(1) << "Solution before: " << itsSolution << endl;
-  cout << "Solution before: " << itsSolution << endl;
+  // cout << "Solution before: " << itsSolution << endl;
   // It looks as if LSQ has a bug so that solveLoop and getCovariance
   // interact badly (maybe both doing an invert).
   // So make a copy to separate them.
@@ -1154,7 +1154,7 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   }
   if (Debug(1)) timer.show("solve");
   cdebug(1) << "Solution after:  " << itsSolution << endl;
-  cout << "Solution after:  " << itsSolution << endl;
+  // cout << "Solution after:  " << itsSolution << endl;
   
   // Update all parameters.
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
@@ -1509,7 +1509,7 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
   double stddev;
   double mu;
   cdebug(1) << "Solution before: " << itsSolution << endl;
-  cout << "Solution before: " << itsSolution << endl;
+  // cout << "Solution before: " << itsSolution << endl;
   // It looks as if LSQ has a bug so that solveLoop and getCovariance
   // interact badly (maybe both doing an invert).
   // So make a copy to separate them.
@@ -1530,7 +1530,7 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
   }
   if (Debug(1)) timer.show("solve");
   cdebug(1) << "Solution after:  " << itsSolution << endl;
-  cout << "Solution after:  " << itsSolution << endl;
+  // cout << "Solution after:  " << itsSolution << endl;
   
   resultParmValues.clear();
   for (int nr=0; nr < itsSolution.nx(); nr++)
