@@ -21,38 +21,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.9  2002/07/12 09:07:34  schaaf
-//  %[BugId: 11]%
-//  removed compiler warning (comparision int vs unsigned int)
-//
-//  Revision 1.8  2002/05/13 12:50:57  schaaf
-//  removed screen debug output
-//
-//  Revision 1.7  2002/05/08 14:28:37  wierenga
-//  DataHolder allocation moved from constructor to preprocess to be able to
-//  use TransportHolder::allocate.
-//  Bug fixes in P2Perf.cc for -mpi arguments.
-//
-//  Revision 1.6  2002/05/08 08:20:04  schaaf
-//  Modified includes for new build env
-//
-//  Revision 1.5  2002/04/18 07:55:03  schaaf
-//  Documentation and code update
-//
-//  Revision 1.4  2002/03/19 16:34:57  schaaf
-//  reverted to version 1.2
-//
-//  Revision 1.3  2002/03/08 11:38:42  wierenga
-//  Upgraded from firewalls.h use to Debug.h use. This version was used for performance tests.
-//
-//  Revision 1.2  2001/09/19 08:00:13  wierenga
-//  Added code to do performance tests.
-//
-//  Revision 1.1  2001/08/16 15:14:22  wierenga
-//  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
-//
-//
 //
 //////////////////////////////////////////////////////////////////////
 

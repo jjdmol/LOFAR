@@ -21,44 +21,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.12  2002/05/08 14:28:37  wierenga
-//  DataHolder allocation moved from constructor to preprocess to be able to
-//  use TransportHolder::allocate.
-//  Bug fixes in P2Perf.cc for -mpi arguments.
-//
-//  Revision 1.11  2002/05/08 08:20:04  schaaf
-//  Modified includes for new build env
-//
-//  Revision 1.10  2002/04/18 07:55:03  schaaf
-//  Documentation and code update
-//
-//  Revision 1.9  2002/04/12 15:52:18  schaaf
-//  Updated for multiple source steps and cross connects
-//
-//  Revision 1.8  2002/03/27 09:48:00  schaaf
-//  Use get{Cur/Max}DataPacketSize
-//
-//  Revision 1.7  2002/03/19 16:19:08  schaaf
-//  increased max growsize
-//
-//  Revision 1.6  2002/03/08 11:38:42  wierenga
-//  Upgraded from firewalls.h use to Debug.h use. This version was used for performance tests.
-//
-//  Revision 1.5  2001/10/31 11:34:18  wierenga
-//  LOFAR CVS Repository structure change and transition to autotools (autoconf, automake and libtool).
-//
-//  Revision 1.4  2001/10/26 10:06:28  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.3  2001/09/19 08:00:13  wierenga
-//  Added code to do performance tests.
-//
-//  Revision 1.2  2001/08/16 15:14:22  wierenga
-//  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
-//
-//  Revision 1.1  2001/08/09 15:48:48  wierenga
-//  Implemented first version of TH_Corba and test program
 //
 //
 //////////////////////////////////////////////////////////////////////////
@@ -70,8 +32,8 @@
 #include <config.h>
 #endif
 
-#include "BaseSim/Simulator.h"
-#include "BaseSim/ParamBlock.h"
+#include "CEPFrame/Simulator.h"
+#include "CEPFrame/ParamBlock.h"
 #include "P2Perf/WH_GrowSize.h"
 
 // define the maximum data block size used in this simulation
