@@ -901,13 +901,13 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       uint32    boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap1_rcu.nof_overflowy;
       LOG_INFO(formatString("BoardRCUStatus ap1:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY);
+      updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1);
       int rcuNr=1;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusX);
+      updateRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
       rcuNr++;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusY);
+      updateRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
 
       apNr++;
       boardRCUstatusStatusX       = boardStatus(boardNr).ap2_rcu.statusx;
@@ -918,13 +918,13 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap2_rcu.nof_overflowy;
       LOG_INFO(formatString("BoardRCUStatus ap2:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY);
+      updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1);
       rcuNr=1;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusX);
+      updateRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
       rcuNr++;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusY);
+      updateRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
 
       apNr++;
       boardRCUstatusStatusX       = boardStatus(boardNr).ap3_rcu.statusx;
@@ -935,13 +935,13 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap3_rcu.nof_overflowy;
       LOG_INFO(formatString("BoardRCUStatus ap3:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY);
+      updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1);
       rcuNr=1;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusX);
+      updateRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
       rcuNr++;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusY);
+      updateRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
 
       apNr++;
       boardRCUstatusStatusX       = boardStatus(boardNr).ap4_rcu.statusx;
@@ -952,13 +952,13 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap4_rcu.nof_overflowy;
       LOG_INFO(formatString("BoardRCUStatus ap4:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
-      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY);
+      updateBoardRCUproperties(scopeString,boardRCUstatusFFI0,boardRCUstatusFFI1);
       rcuNr=1;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusX);
+      updateRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX);
       rcuNr++;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
-      updateRCUproperties(scopeString,boardRCUstatusStatusY);
+      updateRCUproperties(scopeString,boardRCUstatusStatusY,boardRCUstatusNofOverflowY);
     }
 
 /*
@@ -1193,12 +1193,8 @@ void RegisterAccessTask::updateFPGAproperties(string scope, uint8 status,
   }
 }
 
-void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8  statusX,
-                                                               uint8  statusY,
-                                                               uint8  ffi0,
-                                                               uint8  ffi1,
-                                                               uint32 nof_overflowX,
-                                                               uint32 nof_overflowY)
+void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8  ffi0,
+                                                               uint8  ffi1)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
@@ -1207,22 +1203,14 @@ void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8  statusX,
   }
   else
   {
-    GCFPVUnsigned pvUns(statusX);
-    it->second->setValue(string(PROPNAME_STATUSX),pvUns);
-    pvUns.setValue(statusY);
-    it->second->setValue(string(PROPNAME_STATUSY),pvUns);
-    pvUns.setValue(ffi0);
+    GCFPVUnsigned pvUns(ffi0);
     it->second->setValue(string(PROPNAME_FFI0),pvUns);
     pvUns.setValue(ffi1);
     it->second->setValue(string(PROPNAME_FFI1),pvUns);
-    pvUns.setValue(nof_overflowX);
-    it->second->setValue(string(PROPNAME_NOFOVERFLOWX),pvUns);
-    pvUns.setValue(nof_overflowY);
-    it->second->setValue(string(PROPNAME_NOFOVERFLOWY),pvUns);
   }
 }
 
-void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
+void RegisterAccessTask::updateRCUproperties(string scope,uint8 status,uint32 nof_overflow)
 {
   // layout rcu status (for both statusX and statusY): 
   // 7         6         5         4        3        2       1          0
@@ -1284,6 +1272,9 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
       GCFPVUnsigned pvUnsignedStatus(STATUS_OK);
       it->second->setValue(string(PROPNAME_STATUS),pvUnsignedStatus);
     }       
+
+    GCFPVUnsigned pvUns(nof_overflow);
+    it->second->setValue(string(PROPNAME_NOFOVERFLOW),pvUns);
   }
 }
 
