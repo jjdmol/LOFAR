@@ -28,11 +28,9 @@ if( has_field(lofar_software,'print_versions') &&
   print '$Id$';
 }
 
-include 'appagent/app_proxy.g'
-include 'meq/meqtypes.g'
-include 'recutil.g'
-
-# These can be uncommented (or set elsewhre prior to include) for debugging
+# These can be uncommented (or set elsewhre prior to include) for debugging.
+# app_defaults.g will parse the command line and recognize the following
+# options: -suspend, -nostart, -valgrind, -gui
 #
 #   use_suspend  := T;
 #   use_nostart  := T;
@@ -43,16 +41,20 @@ include 'recutil.g'
 #     "--gdb-path=/usr/bin/ddd", 
 #   ""];
 
-# scan command line
-for( arg in argv )
-{
-  if( arg == '-nostart' )
-    use_nostart := T;
-  else if( arg == '-suspend' )
-    use_suspend := T;
-  else if( arg == '-valgrind' )
-    use_valgrind := T;
-}
+# these should be declared prior to including app_defaults.g
+if( !is_record(default_debuglevels) )
+  default_debuglevels := [  MeqNode       =2,
+                            MeqForest     =2,
+                            MeqSink       =2,
+                            MeqSpigot     =2,
+                            MeqVisHandler =2,
+                            MeqServer     =2,
+                            meqserver     =1 ];
+
+include 'appagent/app_defaults.g'
+include 'appagent/app_proxy.g'
+include 'meq/meqtypes.g'
+include 'recutil.g'
 
 # find path to server binary
 if( has_field(lofar_software,'meq') && has_field(lofar_software.meq,'servers') )
@@ -81,7 +83,8 @@ const _meqserver :=
   
 const meq.server := function (appid='MeqServer',
     server=_meqserver,options="-nogw -d0 -meq:M:M:MeqServer",
-    verbose=1,gui=F,ref parent_frame=F,ref widgetset=dws,
+    verbose=default_verbosity,gui=use_gui,
+    ref parent_frame=F,ref widgetset=dws,
     ref self=[=],ref public=[=])
 {
   # construct base app_proxy object
@@ -244,13 +247,6 @@ const meq.server := function (appid='MeqServer',
   return ref public;
 }
 
-default_meq_debuglevels := [  MeqNode       =2,
-                              MeqForest     =2,
-                              MeqSink       =2,
-                              MeqSpigot     =2,
-                              MeqVisHandler =2,
-                              MeqServer     =2,
-                              meqserver     =1 ];
                       
 # inits a meqserver
 const default_meqserver := function (verbose=3,debug=[=],gui=F)

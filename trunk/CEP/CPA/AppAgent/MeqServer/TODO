@@ -1,5 +1,20 @@
 MEQ in general:
 
+  * BUG: RES_UPDATED gets propagated, should it?
+
+  * BUG: assigning children record using a=,b= does not insure order.
+    Should it?
+  
+  * BUG: Sink does not handle a fail-result gracefully. Or does it?
+  
+  * BUG: Condeq cannot handle spids but no pert sets?
+    (this is really a malformed result -- added exception)
+  
+  * BUG: If spigot is created implicitly (via nested init-records), it does not
+    get added to the data mux!!! Maybe it's time to rethink this whole I/O
+    business?
+    (I.e. tie it to forest?)
+
   * Better ways to check for a running meqserver?
 
   * new name for Polc? Maybe Fitfunc? Repfunc?
