@@ -56,6 +56,8 @@ protected:
 	It returns -1, 0 or 1 (for <, ==, >).
      */
     int compareTimeStamp(const DataPacket& that) const;
+
+    void setTransporter(Transporter& aTransporter);
   private:
     unsigned long itsTimeStamp;
   };
@@ -278,6 +280,9 @@ inline const string& BaseDataHolder::getType () const
 
 inline void BaseDataHolder::setType(const string& type)
   { itsType = type; }
+
+inline void BaseDataHolder::setTransporter(Transporter& aTransporter)
+{ itsTransporter = aTransporter; }
 
 }
 
