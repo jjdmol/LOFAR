@@ -33,10 +33,10 @@ const int CONTROLLER_NODE = 0;
 // Define correct transporter mechanism.
 #ifdef HAVE_MPI
 # define TRANSPORTER TH_MPI    // to MPI or  not to MPI ..
-# define TRANSPORTERINCLUDE "TH_MPI.h"
+# define TRANSPORTERINCLUDE <libTransport/TH_MPI.h>
 #else // don't use MPI
 # define TRANSPORTER TH_Mem    // to MPI or  not to MPI ..
-# define TRANSPORTERINCLUDE "TH_Mem.h"
+# define TRANSPORTERINCLUDE <libTransport/TH_Mem.h>
 #endif // MPI
 
 
