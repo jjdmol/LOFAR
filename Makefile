@@ -164,6 +164,10 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 %.variant_configure:
 	@date; \
 	variant=`basename $@ .variant_configure`; \
+	case $$variant in gnu3*) inst_var=gcc3;; \
+	                  gnu*)  inst_var=gcc2;; \
+	                  icc*)  inst_var=icc;; \
+	esac; \
 	for pkg in $(PACKAGES); do \
 	    if test -d $$pkg; then \
 		( echo \
@@ -173,7 +177,7 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 		&& (( $(RM) -rf $$pkg/build/$$variant \
 		&& mkdir -p $$pkg/build/$$variant \
 		&& cd $$pkg/build/$$variant \
-		&& $(LOFARDIR)/autoconf_share/lofarconf ) \
+		&& $(LOFARDIR)/autoconf_share/lofarconf --prefix=/opt/LOFAR/$$inst_var ) \
 			|| echo ":::::: ERROR" ) \
 		&& echo \
 		&& echo ":::::: FINISHED CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
