@@ -25,7 +25,7 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/Profiler.h"
+#include "tinyCEP/Profiler.h"
 #include <Common/Debug.h>
 #include <Common/lofar_iostream.h>
 
@@ -34,7 +34,7 @@
 #include "mpi.h"
 
 #ifdef HAVE_MPI
-#include "/opt/scali/contrib/mpe/include/mpe.h"
+#include "/usr/local/Cluster-Apps/mpich-1.2.5.2-icc80/include/mpe.h"
 #endif
 
 namespace LOFAR

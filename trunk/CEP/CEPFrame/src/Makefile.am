@@ -3,7 +3,6 @@ DOCHDRS		 	= 			\
 DH_Empty.h					\
 DH_Example.h					\
 DH_Tester.h					\
-Profiler.h					\
 Composite.h						\
 NetworkBuilder.h					\
 CompositeRep.h					\
@@ -29,7 +28,6 @@ libcepframe_la_SOURCES 	= $(DOCHDRS)		\
 DH_Empty.cc					\
 DH_Example.cc					\
 DH_Tester.cc					\
-Profiler.cc					\
 Composite.cc					\
 NetworkBuilder.cc					\
 CompositeRep.cc					\

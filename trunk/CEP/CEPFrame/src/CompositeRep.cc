@@ -26,7 +26,7 @@
 #include "CEPFrame/CompositeRep.h"
 #include "CEPFrame/Step.h"
 #include "CEPFrame/Composite.h"
-#include "CEPFrame/Profiler.h"
+#include "tinyCEP/Profiler.h"
 #include "CEPFrame/WH_Empty.h"
 #include "CEPFrame/VirtualMachine.h"
 #include <Common/Debug.h>
