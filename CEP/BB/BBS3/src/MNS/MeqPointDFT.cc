@@ -125,17 +125,17 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
     //LOG_TRACE_FLOW ("V: " << vr.getValue() - vl.getValue());
     //LOG_TRACE_FLOW ("W: " << wr.getValue() - wl.getValue());
   }
-  const complex<double>* tmpl = left.getValue().dcomplexStorage();
-  const complex<double>* tmpr = right.getValue().dcomplexStorage();
-  const complex<double>* deltal = 0;
-  const complex<double>* deltar = 0;
+  const dcomplex* tmpl = left.getValue().dcomplexStorage();
+  const dcomplex* tmpr = right.getValue().dcomplexStorage();
+  const dcomplex* deltal = 0;
+  const dcomplex* deltar = 0;
   if (multFreq) {
     deltal = leftDelta.getValue().dcomplexStorage();
     deltar = rightDelta.getValue().dcomplexStorage();
   }
-  MeqMatrix res(complex<double>(0,0), request.nx(), request.ny(), false);
-  complex<double>* resdata = res.dcomplexStorage();
-  complex<double> dval, val0;
+  MeqMatrix res(makedcomplex(0,0), request.nx(), request.ny(), false);
+  dcomplex* resdata = res.dcomplexStorage();
+  dcomplex dval, val0;
   const double* tmpnk = nk.getValue().doubleStorage();
   // nk can be a scalar or an array (in time axis), so set its step to 0
   // if it is a scalar.
@@ -172,8 +172,8 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
 	deltal = leftDelta.getPerturbedValue(spinx).dcomplexStorage();
 	deltar = rightDelta.getPerturbedValue(spinx).dcomplexStorage();
       }
-      MeqMatrix pres(complex<double>(0,0), request.nx(), request.ny(), false);
-      complex<double>* presdata = pres.dcomplexStorage();
+      MeqMatrix pres(makedcomplex(0,0), request.nx(), request.ny(), false);
+      dcomplex* presdata = pres.dcomplexStorage();
       tmpnk = nk.getPerturbedValue(spinx).doubleStorage();
       nki = 0;
       for (int i=0; i<request.ny(); i++) {

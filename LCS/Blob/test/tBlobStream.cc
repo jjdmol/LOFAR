@@ -72,7 +72,7 @@ int doOut (BlobOBuffer& bb, bool header8=false)
   ln = 17;
   if (header8) doAlign(bos,ln);
   bos << int16(2);
-  bos << fcomplex(1,2);
+  bos << makefcomplex(1,2);
   ln += 10;
   if (header8) doAlign(bos,ln);
   ASSERT (bos.putStart ("test1a", 3) == 2);
@@ -90,7 +90,7 @@ int doOut (BlobOBuffer& bb, bool header8=false)
   ln = 17;
   if (header8) doAlign(bos,ln);
   bos << int64(100);
-  bos << dcomplex(5,6);
+  bos << makedcomplex(5,6);
   ln += 28;
   ASSERT (bos.putEnd() == ln);
   len += ln;
@@ -130,10 +130,10 @@ int doOut (BlobOBuffer& bb, bool header8=false)
   valsf[1] = float(-2.4);
   valsd[0] = double(47.3);
   valsd[1] = double(-32.4);
-  valdc[0] = fcomplex(-3.4,8.7);
-  valdc[1] = fcomplex(3.4,-8.7);
-  valdc[0] = dcomplex(-43.4,58.7);
-  valdc[1] = dcomplex(33.4,-68.7);
+  valfc[0] = makefcomplex(0,0);
+  valfc[1] = makefcomplex(0,0);
+  valdc[0] = makedcomplex(-43.4,58.7);
+  valdc[1] = makedcomplex(33.4,-68.7);
   valst[0] = string("0123456789");
   valst[1] = "abcdefghijklmnopqrstuvwxyz";
   bos << valbl[0];
@@ -220,7 +220,7 @@ void doIn (BlobIBuffer& bb, bool header8=false)
   bis >> val16;
   ASSERT (val16 == 2);
   bis >> valfcx;
-  ASSERT (valfcx == fcomplex(1,2));
+  ASSERT (valfcx == makefcomplex(1,2));
   ln += 10;
   if (header8) doAlign(bis,ln);
   ASSERT (bis.getStart ("test1a") == 3);
@@ -240,7 +240,7 @@ void doIn (BlobIBuffer& bb, bool header8=false)
   bis >> val64;
   ASSERT (val64 == 100);
   bis >> valdcx;
-  ASSERT (valdcx == dcomplex(5,6));
+  ASSERT (valdcx == makedcomplex(5,6));
   ln += 28;
   ASSERT (bis.getEnd() == ln);
 
@@ -280,10 +280,10 @@ void doIn (BlobIBuffer& bb, bool header8=false)
   valsf[1] = float(-2.4);
   valsd[0] = double(47.3);
   valsd[1] = double(-32.4);
-  valdc[0] = fcomplex(-3.4,8.7);
-  valdc[1] = fcomplex(3.4,-8.7);
-  valdc[0] = dcomplex(-43.4,58.7);
-  valdc[1] = dcomplex(33.4,-68.7);
+  valfc[0] = makefcomplex(0,0);
+  valfc[1] = makefcomplex(0,0);
+  valdc[0] = makedcomplex(-43.4,58.7);
+  valdc[1] = makedcomplex(33.4,-68.7);
   valst[0] = string("0123456789");
   valst[1] = "abcdefghijklmnopqrstuvwxyz";
   bis >> valblc[0];

@@ -36,7 +36,7 @@ void* startWriterThread(void* thread_arg)
   DH_Example* dh = (DH_Example*)thread_arg;
   for (int count = 1; count <= 20; count++)
   {
-    dh->getBuffer()[0] = fcomplex(count+17,-3.5);
+    dh->getBuffer()[0] = makefcomplex(count+17,-3.5);
     dh->setCounter(count);
     dh->write();
   }
@@ -52,7 +52,7 @@ void* startReaderThread(void* thread_arg)
   for (int count = 1; count <= 20; count++)
   {
     dh->read();
-    if (dh->getBuffer()[0] != fcomplex(count+15, -4.5) ||
+    if (dh->getBuffer()[0] != makefcomplex(count+15, -4.5) ||
 	dh->getCounter() != count)
     {
       *result = 0;
@@ -69,7 +69,7 @@ void* startVarWriterThread(void* thread_arg)
   {
     // fill the DataHolders.
     {
-      dh->getBuffer()[0] = fcomplex(17,-3.5*count);
+      dh->getBuffer()[0] = makefcomplex(17,-3.5*count);
       dh->setCounter(1);
       // fill extra blob
       BlobOStream& bos = dh->createExtraBlob();
@@ -78,20 +78,20 @@ void* startVarWriterThread(void* thread_arg)
       dh->write();
     }
     {
-      dh->getBuffer()[0] = fcomplex(15,-4.5*count);
+      dh->getBuffer()[0] = makefcomplex(15,-4.5*count);
       dh->setCounter(2);
       // do the data transport (without data in the extra blob)
       dh->write();
     }
     {
-      dh->getBuffer()[0] = fcomplex(151,-4.5*count);
+      dh->getBuffer()[0] = makefcomplex(151,-4.5*count);
       dh->setCounter(20);
       dh->clearExtraBlob();
       // do the data transport (without data in the extra blob)
       dh->write();
     }
     {
-      dh->getBuffer()[0] = fcomplex(1.7,3.52);
+      dh->getBuffer()[0] = makefcomplex(1.7,3.52);
       dh->setCounter(3);
       BlobOStream& bos = dh->createExtraBlob();
       bos << int(1) << float(3*count);
@@ -115,7 +115,7 @@ void* startVarReaderThread(void* thread_arg)
     {
       dh->read();
       cout << "read a " << count << endl;
-      if (dh->getBuffer()[0] != fcomplex(17, -3.5*count) ||
+      if (dh->getBuffer()[0] != makefcomplex(17, -3.5*count) ||
 	  dh->getCounter() != 1)
       {
 	*result = 0;
@@ -138,7 +138,7 @@ void* startVarReaderThread(void* thread_arg)
     {
       dh->read();
       cout << "read a " << count << endl;
-      if (dh->getBuffer()[0] != fcomplex(15, -4.5*count) ||
+      if (dh->getBuffer()[0] != makefcomplex(15, -4.5*count) ||
 	  dh->getCounter() != 2)
       {
 	*result = 0;
@@ -161,7 +161,7 @@ void* startVarReaderThread(void* thread_arg)
     {
       dh->read();
       cout << "read a " << count << endl;
-      if (dh->getBuffer()[0] != fcomplex(151, -4.5*count) ||
+      if (dh->getBuffer()[0] != makefcomplex(151, -4.5*count) ||
 	  dh->getCounter() != 2)
       {
 	*result = 0;
@@ -177,7 +177,7 @@ void* startVarReaderThread(void* thread_arg)
     {
       dh->read();
       cout << "read a " << count << endl;
-      if (dh->getBuffer()[0] != fcomplex(1.7, 3.52) ||
+      if (dh->getBuffer()[0] != makefcomplex(1.7, 3.52) ||
 	  dh->getCounter() != 3)
       {
 	*result = 0;
@@ -236,7 +236,7 @@ bool test1()
 
   usleep(1000000); // Wait a second
 
-  DH2.getBuffer()[0] = 0;
+  DH2.getBuffer()[0] = makefcomplex(0,0);
   DH2.setCounter(0);
 
   // Read
@@ -244,7 +244,7 @@ bool test1()
   for (int count = 1; count <= 20; count++)
   {
     DH2.read();
-    if (DH2.getBuffer()[0] != fcomplex(count+17, -3.5) ||
+    if (DH2.getBuffer()[0] != makefcomplex(count+17, -3.5) ||
 	DH2.getCounter() != count)
     {
       result = false;
@@ -278,7 +278,7 @@ bool test2()
   DH1.init();
   DH2.init();
 
-  DH2.getBuffer()[0] = 0;
+  DH2.getBuffer()[0] = makefcomplex(0,0);
   DH2.setCounter(0);
   
   // Create a reading thread
@@ -293,7 +293,7 @@ bool test2()
   // Write
   for (int count = 1; count <= 20; count++)
   {
-    DH1.getBuffer()[0] = fcomplex(count+15,-4.5);
+    DH1.getBuffer()[0] = makefcomplex(count+15,-4.5);
     DH1.setCounter(count);
     DH1.write();
   }
@@ -335,7 +335,7 @@ bool testVar1()
 
   usleep(1000000); // Wait a second
 
-  DH2.getBuffer()[0] = 0;
+  DH2.getBuffer()[0] = makefcomplex(0,0);
   DH2.setCounter(0);
   // Read
   bool result = true;
@@ -343,7 +343,7 @@ bool testVar1()
   {
     {
       DH2.read();
-      if (DH2.getBuffer()[0] != fcomplex(17, -3.5*count) ||
+      if (DH2.getBuffer()[0] != makefcomplex(17, -3.5*count) ||
 	  DH2.getCounter() != 1)
       {
 	result = false;
@@ -363,7 +363,7 @@ bool testVar1()
     }
     {
       DH2.read();
-      if (DH2.getBuffer()[0] != fcomplex(15, -4.5*count) ||
+      if (DH2.getBuffer()[0] != makefcomplex(15, -4.5*count) ||
 	  DH2.getCounter() != 2)
       {
 	result = false;
@@ -383,7 +383,7 @@ bool testVar1()
     }
     {
       DH2.read();
-      if (DH2.getBuffer()[0] != fcomplex(151, -4.5*count) ||
+      if (DH2.getBuffer()[0] != makefcomplex(151, -4.5*count) ||
 	  DH2.getCounter() != 20)
       {
 	result = false;
@@ -397,7 +397,7 @@ bool testVar1()
     } 
     {
       DH2.read();
-      if (DH2.getBuffer()[0] != fcomplex(1.7, 3.52) ||
+      if (DH2.getBuffer()[0] != makefcomplex(1.7, 3.52) ||
 	  DH2.getCounter() != 3)
       {
 	result = false;
@@ -446,7 +446,7 @@ bool testVar2()
   DH1.init();
   DH2.init();
 
-  DH2.getBuffer()[0] = 0;
+  DH2.getBuffer()[0] = makefcomplex(0,0);
   DH2.setCounter(0);
   
   // Create a reading thread
@@ -463,7 +463,7 @@ bool testVar2()
   {
     // fill the DataHolders.
     {
-      DH1.getBuffer()[0] = fcomplex(17,-3.5*count);
+      DH1.getBuffer()[0] = makefcomplex(17,-3.5*count);
       DH1.setCounter(1);
       // fill extra blob
       BlobOStream& bos = DH1.createExtraBlob();
@@ -473,14 +473,14 @@ bool testVar2()
       cout << "wrote a " << count << endl;
     }
     {
-      DH1.getBuffer()[0] = fcomplex(15,-4.5*count);
+      DH1.getBuffer()[0] = makefcomplex(15,-4.5*count);
       DH1.setCounter(2);
       // do the data transport (without data in the extra blob)
       DH1.write();
       cout << "wrote b " << count << endl;
     }
     {
-      DH1.getBuffer()[0] = fcomplex(151,-4.5*count);
+      DH1.getBuffer()[0] = makefcomplex(151,-4.5*count);
       DH1.setCounter(2);
       DH1.clearExtraBlob();
       // do the data transport (without data in the extra blob)
@@ -488,7 +488,7 @@ bool testVar2()
       cout << "wrote c " << count << endl;
     }
     {
-      DH1.getBuffer()[0] = fcomplex(1.7,3.52);
+      DH1.getBuffer()[0] = makefcomplex(1.7,3.52);
       DH1.setCounter(3);
       BlobOStream& bos = DH1.createExtraBlob();
       bos << int(1) << float(3*count);
@@ -513,7 +513,7 @@ bool testVar2()
 
 
 
-int main(int argc, const char** argv)
+int main()
 {
   bool result = true;
   try {

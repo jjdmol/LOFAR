@@ -54,38 +54,38 @@ int main()
     DH2.init();
     
     // fill the DataHolders with some initial data
-    DH1.getBuffer()[0] = fcomplex(17,-3.5);
-    DH2.getBuffer()[0] = 0;
+    DH1.getBuffer()[0] = makefcomplex(17,-3.5);
+    DH2.getBuffer()[0] = makefcomplex(0,0);
     DH1.setCounter(2);
     DH2.setCounter(0);
     
     // do the data transport
     DH1.write();
     ASSERT (DH2.queryDB ("counter=2 order by counter") == 1);
-    ASSERT (DH2.getBuffer()[0] == fcomplex(17,-3.5)
+    ASSERT (DH2.getBuffer()[0] == makefcomplex(17,-3.5)
 	    &&  DH2.getCounter() == 2);
 
     // do the data transport again with different values.
-    DH1.getBuffer()[0] = fcomplex(117,-13.15);
+    DH1.getBuffer()[0] = makefcomplex(117,-13.15);
     DH1.setCounter(10);
     DH1.write();
-    DH1.getBuffer()[0] = fcomplex(200,114);
+    DH1.getBuffer()[0] = makefcomplex(200,114);
     DH1.setCounter(21);
     DH1.write();
 
     ASSERT (DH2.queryDB ("counter>2 order by counter") == 2);
-    ASSERT (DH2.getBuffer()[0] == fcomplex(117,-13.15)
+    ASSERT (DH2.getBuffer()[0] == makefcomplex(117,-13.15)
 	    &&  DH2.getCounter() == 10);
     ASSERT (DH2.queryDB ("counter<4") == 1);
-    ASSERT (DH2.getBuffer()[0] == fcomplex(17,-3.5)
+    ASSERT (DH2.getBuffer()[0] == makefcomplex(17,-3.5)
 	    &&  DH2.getCounter() == 2);
     ASSERT (DH2.queryDB ("counter>2 order by counter desc") == 2);
-    ASSERT (DH2.getBuffer()[0] == fcomplex(200,114)
+    ASSERT (DH2.getBuffer()[0] == makefcomplex(200,114)
 	    &&  DH2.getCounter() == 21);
     DH2.setCounter(22);
     DH2.updateDB();
     ASSERT (DH2.queryDB ("counter>2 order by counter desc") == 2);
-    ASSERT (DH2.getBuffer()[0] == fcomplex(200,114)
+    ASSERT (DH2.getBuffer()[0] == makefcomplex(200,114)
 	    &&  DH2.getCounter() == 22);
     return 0;
 

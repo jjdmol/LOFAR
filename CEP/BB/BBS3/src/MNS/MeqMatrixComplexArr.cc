@@ -44,10 +44,10 @@ size_t MeqMatrixComplexArr::theirHeaderSize =
   + ((sizeof(MeqMatrixComplexArr) & 0x7)? 8 : 0);
 
 MeqMatrixComplexArr::MeqMatrixComplexArr (int nx, int ny)
-: MeqMatrixRep (nx, ny, sizeof(complex<double>))
+: MeqMatrixRep (nx, ny, sizeof(dcomplex))
 {
   // data is found after the header
-  itsValue = (complex<double>*)(((char*)this) + theirHeaderSize);
+  itsValue = (dcomplex*)(((char*)this) + theirHeaderSize);
 }
 
 MeqMatrixComplexArr::~MeqMatrixComplexArr()
@@ -62,12 +62,12 @@ MeqMatrixRep* MeqMatrixComplexArr::clone() const
   MeqMatrixComplexArr* v;
   
   v = MeqMatrixComplexArr::poolNew (nx(), ny());
-  memcpy (v->itsValue, itsValue, sizeof(complex<double>) * nelements());
+  memcpy (v->itsValue, itsValue, sizeof(dcomplex) * nelements());
 
   return v;
 }
 
-void MeqMatrixComplexArr::set (complex<double> value)
+void MeqMatrixComplexArr::set (dcomplex value)
 {
   for (int i=0; i<nelements(); i++) {
     itsValue[i] = value;
@@ -81,8 +81,8 @@ void MeqMatrixComplexArr::show (ostream& os) const
     if (i > 0) {
       os << ", ";
     }
-    os << '(' << std::setprecision(12) << itsValue[i].real()
-       << ',' << std::setprecision(12) << itsValue[i].imag() << ')';
+    os << '(' << std::setprecision(12) << real(itsValue[i])
+       << ',' << std::setprecision(12) << imag(itsValue[i]) << ')';
   }
   os << ']';
 }
@@ -104,7 +104,7 @@ MeqMatrixComplexArr* MeqMatrixComplexArr::poolNew(int nx, int ny)
       // only nx * ny elements will be used, but the array can be reused for an array
       // of size theirNElements
       newArr = (MeqMatrixComplexArr*)malloc(theirHeaderSize +
-					    (theirNElements * sizeof(complex<double>)));
+					    (theirNElements * sizeof(dcomplex)));
 
       // placement new to call constructor
       newArr = new (newArr) MeqMatrixComplexArr(nx, ny);
@@ -125,7 +125,7 @@ MeqMatrixComplexArr* MeqMatrixComplexArr::poolNew(int nx, int ny)
   {
     // allocate enough memory
     newArr = (MeqMatrixComplexArr*)malloc(theirHeaderSize +
-					  (nx * ny * sizeof(complex<double>)));
+					  (nx * ny * sizeof(dcomplex)));
     // placement new
     newArr = new (newArr) MeqMatrixComplexArr(nx, ny);
 
@@ -184,17 +184,17 @@ MeqMatrixRep* MeqMatrixComplexArr::divide (MeqMatrixRep& right, bool rightTmp)
   return right.divRep (*this, rightTmp);
 }
 
-const complex<double>* MeqMatrixComplexArr::dcomplexStorage() const
+const dcomplex* MeqMatrixComplexArr::dcomplexStorage() const
 {
   return itsValue;
 }
 double MeqMatrixComplexArr::getDouble (int x, int y) const
 {
-  ASSERTSTR (itsValue[offset(x,y)].imag()==0,
+  ASSERTSTR (imag(itsValue[offset(x,y)])==0,
 	     "MeqMatrix: dcomplex->double conversion not possible");
-  return itsValue[offset(x,y)].real();
+  return real(itsValue[offset(x,y)]);
 }
-complex<double> MeqMatrixComplexArr::getDComplex (int x, int y) const
+dcomplex MeqMatrixComplexArr::getDComplex (int x, int y) const
 {
   return itsValue[offset(x,y)];
 }
@@ -257,7 +257,7 @@ MeqMatrixRep* MeqMatrixComplexArr::negate()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
-    itsValue[i] = -(itsValue[i]);
+    itsValue[i] = -1. * itsValue[i];
   }
   return this;
 }
@@ -266,7 +266,7 @@ MeqMatrixRep* MeqMatrixComplexArr::sin()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
-    itsValue[i] = std::sin(itsValue[i]);
+    itsValue[i] = LOFAR::sin(itsValue[i]);
   }
   return this;
 }
@@ -275,7 +275,7 @@ MeqMatrixRep* MeqMatrixComplexArr::cos()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
-    itsValue[i] = std::cos(itsValue[i]);
+    itsValue[i] = LOFAR::cos(itsValue[i]);
   }
   return this;
 }
@@ -284,7 +284,7 @@ MeqMatrixRep* MeqMatrixComplexArr::exp()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
-    itsValue[i] = std::exp(itsValue[i]);
+    itsValue[i] = LOFAR::exp(itsValue[i]);
   }
   return this;
 }
@@ -302,7 +302,7 @@ MeqMatrixRep* MeqMatrixComplexArr::sqrt()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
-    itsValue[i] = std::sqrt(itsValue[i]);
+    itsValue[i] = LOFAR::sqrt(itsValue[i]);
   }
   return this;
 }
@@ -311,14 +311,14 @@ MeqMatrixRep* MeqMatrixComplexArr::conj()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
-    itsValue[i] = std::conj(itsValue[i]);
+    itsValue[i] = LOFAR::conj(itsValue[i]);
   }
   return this;
 }
 
 MeqMatrixRep* MeqMatrixComplexArr::min()
 {
-  complex<double> val = 0;
+  dcomplex val = makedcomplex(0,0);
   int n = nelements();
   if (n > 0) {
     val = itsValue[0];
@@ -335,7 +335,7 @@ MeqMatrixRep* MeqMatrixComplexArr::min()
 }
 MeqMatrixRep* MeqMatrixComplexArr::max()
 {
-  complex<double> val = 0;
+  dcomplex val = makedcomplex(0,0);
   int n = nelements();
   if (n > 0) {
     val = itsValue[0];
@@ -352,7 +352,7 @@ MeqMatrixRep* MeqMatrixComplexArr::max()
 }
 MeqMatrixRep* MeqMatrixComplexArr::mean()
 {
-  complex<double> sum = 0;
+  dcomplex sum = makedcomplex(0,0);
   int n = nelements();
   for (int i=0; i<n; i++) {
     sum += itsValue[i];
@@ -361,7 +361,7 @@ MeqMatrixRep* MeqMatrixComplexArr::mean()
 }
 MeqMatrixRep* MeqMatrixComplexArr::sum()
 {
-  complex<double> sum = 0;
+  dcomplex sum = makedcomplex(0,0);
   int n = nelements();
   for (int i=0; i<n; i++) {
     sum += itsValue[i];

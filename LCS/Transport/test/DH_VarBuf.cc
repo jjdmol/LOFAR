@@ -60,7 +60,7 @@ void DH_VarBuf::preprocess()
   createDataBlock();
   // Initialize the buffer.
   for (unsigned int i=0; i<itsBufSize; i++) {
-    itsBuffer[i] = 0;
+    itsBuffer[i] = makefcomplex(0,0);
   }
 }
 
@@ -73,7 +73,7 @@ void DH_VarBuf::setBufferSize (unsigned int nelements)
   createDataBlock();
   for (unsigned int i=0; i<itsBufSize; i++)
   {
-    itsBuffer[i] = 0;
+    itsBuffer[i] = makefcomplex(0,0);
   }
 }
 

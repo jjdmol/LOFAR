@@ -161,6 +161,16 @@ BlobOStream& BlobOStream::operator<< (const double& var)
   putBuf (&var, sizeof(var));
   return *this;
 }
+BlobOStream& BlobOStream::operator<< (const i16complex& var)
+{
+  putBuf (&var, sizeof(var));
+  return *this;
+}
+BlobOStream& BlobOStream::operator<< (const u16complex& var)
+{
+  putBuf (&var, sizeof(var));
+  return *this;
+}
 BlobOStream& BlobOStream::operator<< (const fcomplex& var)
 {
   putBuf (&var, sizeof(var));
@@ -236,6 +246,14 @@ void BlobOStream::put (const float* values, uint nrval)
 void BlobOStream::put (const double* values, uint nrval)
 {
   putBuf (values, nrval*sizeof(double));
+}
+void BlobOStream::put (const i16complex* values, uint nrval)
+{
+  putBuf (values, nrval*sizeof(i16complex));
+}
+void BlobOStream::put (const u16complex* values, uint nrval)
+{
+  putBuf (values, nrval*sizeof(u16complex));
 }
 void BlobOStream::put (const fcomplex* values, uint nrval)
 {

@@ -115,8 +115,8 @@ void doIt()
   par["i1"] = 10;
   par["f1"] = float(20);
   par["d1"] = double(30);
-  par["c1"] = fcomplex(40,50);
-  par["dc1"] = dcomplex(60,70);
+  par["c1"] = makefcomplex(40,50);
+  par["dc1"] = makedcomplex(60,70);
   par["s1"] = "abc";
   par["s2"] = std::string("defg");
   cout << "KeyValueMap par:" << endl;
@@ -151,8 +151,8 @@ void doIt()
   vec.push_back (100);
   vec.push_back (float(100.01));
   vec.push_back (double(100.02));
-  vec.push_back (fcomplex (3.5, 6.2));
-  vec.push_back (dcomplex (1.123456789, -3));
+  vec.push_back (makefcomplex (3.5, 6.2));
+  vec.push_back (makedcomplex (1.123456789, -3));
   vec.push_back ("a");
   vec.push_back ("");
   vec.push_back ("abc");

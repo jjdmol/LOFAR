@@ -42,13 +42,13 @@ public:
 
   virtual MeqMatrixRep* clone() const;
 
-  void set (complex<double> value);
+  void set (dcomplex value);
 
-  void set (int x, int y, complex<double> value)
+  void set (int x, int y, dcomplex value)
     { itsValue[offset(x,y)] = value; }
 
-  void set (const complex<double>* values)
-    { memcpy (itsValue, values, nelements() * sizeof(complex<double>)); }
+  void set (const dcomplex* values)
+    { memcpy (itsValue, values, nelements() * sizeof(dcomplex)); }
 
   virtual void show (ostream& os) const;
 
@@ -63,9 +63,9 @@ public:
   virtual MeqMatrixRep* multiply (MeqMatrixRep& right, bool rightTmp);
   virtual MeqMatrixRep* divide   (MeqMatrixRep& right, bool rightTmp);
 
-  virtual const complex<double>* dcomplexStorage() const;
+  virtual const dcomplex* dcomplexStorage() const;
   virtual double getDouble (int x, int y) const;
-  virtual complex<double> getDComplex (int x, int y) const;
+  virtual dcomplex getDComplex (int x, int y) const;
 
 private:
   virtual MeqMatrixRep* addRep (MeqMatrixRealSca& left, bool rightTmp);
@@ -102,7 +102,7 @@ private:
   virtual MeqMatrixRep* sum();
 
 
-  complex<double>* itsValue;
+  dcomplex* itsValue;
 
   static deque<MeqMatrixComplexArr*> theirPool;
   static int theirNElements;

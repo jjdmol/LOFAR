@@ -20,16 +20,11 @@
 //
 //  $Id$
 
-#if !defined(MATH_LCSMATH_H)
+#ifndef MATH_LCSMATH_H
 #define MATH_LCSMATH_H
 
 //# Includes
 #include <Common/Lorrays-Blitz.h>
-
-#ifdef HAVE_FFTW2
-# include <rfftw.h>
-# include <fftw.h>
-#endif
 
 namespace LOFAR
 {

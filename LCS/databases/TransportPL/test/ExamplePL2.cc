@@ -52,8 +52,8 @@ int main()
     DH2.init();
     
     // fill the DataHolders with some initial data
-    DH1.getBuffer()[0] = fcomplex(17,-3.5);
-    DH2.getBuffer()[0] = 0;
+    DH1.getBuffer()[0] = makefcomplex(17,-3.5);
+    DH2.getBuffer()[0] = makefcomplex(0,0);
     DH1.setCounter(2);
     DH2.setCounter(0);
     
@@ -74,13 +74,13 @@ int main()
 	 << endl; 
     
     // do the data transport again with different values. 
-    DH1.getBuffer()[0] = fcomplex(117,-13.15); 
-    DH2.getBuffer()[0] = 0; 
+    DH1.getBuffer()[0] = makefcomplex(117,-13.15); 
+    DH2.getBuffer()[0] = makefcomplex(0,0); 
     DH1.setCounter(10); 
     DH2.setCounter(0); 
     DH1.write(); 
-    DH1.getBuffer()[0] = fcomplex(200,114); 
-    DH2.getBuffer()[0] = 0; 
+    DH1.getBuffer()[0] = makefcomplex(200,114); 
+    DH2.getBuffer()[0] = makefcomplex(0,0); 
     DH1.setCounter(21); 
     DH2.setCounter(0); 
     DH1.write(); 
@@ -90,7 +90,7 @@ int main()
 	 << " -- "  
 	 << DH2.getBuffer()[0] << ' ' << DH2.getCounter() 
 	 << endl; 
-    ASSERT (DH2.getBuffer()[0] == fcomplex(117,-13.15) 
+    ASSERT (DH2.getBuffer()[0] == makefcomplex(117,-13.15) 
 	    &&  DH2.getCounter() == 10); 
     DH2.read(); 
     cout << "After 3rd transport  : "  
@@ -100,13 +100,13 @@ int main()
 	 << endl;
 
     // do the data transport again with different values.
-    DH1.getBuffer()[0] = fcomplex(117,-13.15);
-    DH2.getBuffer()[0] = 0;
+    DH1.getBuffer()[0] = makefcomplex(117,-13.15);
+    DH2.getBuffer()[0] = makefcomplex(0,0);
     DH1.setCounter(10);
     DH2.setCounter(0);
     DH1.write();
-    DH1.getBuffer()[0] = fcomplex(200,114);
-    DH2.getBuffer()[0] = 0;
+    DH1.getBuffer()[0] = makefcomplex(200,114);
+    DH2.getBuffer()[0] = makefcomplex(0,0);
     DH1.setCounter(21);
     DH2.setCounter(0);
     DH1.write();
@@ -116,7 +116,7 @@ int main()
 	 << " -- " 
 	 << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
 	 << endl;
-    ASSERT (DH2.getBuffer()[0] == fcomplex(117,-13.15)
+    ASSERT (DH2.getBuffer()[0] == makefcomplex(117,-13.15)
 	    &&  DH2.getCounter() == 10);
     DH2.read();
     cout << "After 3rd transport  : " 

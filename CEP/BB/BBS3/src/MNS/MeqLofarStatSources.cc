@@ -50,7 +50,7 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
   MeqRequest req(request);
   // Size the K vector such that all channels can be held.
   int nfreq = request.nx();
-  complex<double>* kdat = itsK.setDComplex (1, nfreq);
+  dcomplex* kdat = itsK.setDComplex (1, nfreq);
   // Multiply the station J matrices by the source contribution K.
   int nrsrc = itsSrc->nsources();
   for (int i=0; i<nrsrc; i++) {
@@ -63,12 +63,12 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
     // See also MeqStatSources for more info.
     // Note that a baseline AB has uvw coordinates u(B) - u(A).
     // Therefore the conjugate is applied to the J Jones.
-    complex<double> val0 = conj(kjones.getValue().getDComplex());
+    dcomplex val0 = conj(kjones.getValue().getDComplex());
     kdat[0] = val0;
     if (nfreq > 1) {
       // The next channels are times a constant factor.
       kdel = &(itsSrc->getDelta (req));
-      complex<double> delta = conj(kdel->getValue().getDComplex());
+      dcomplex delta = conj(kdel->getValue().getDComplex());
       for (int i=1; i<nfreq; i++) {
 	val0 *= delta;
 	kdat[i] = val0;
@@ -151,11 +151,11 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
 	kpmat = &itsPertK;
 	eval = true;
 	perturbation = kjones.getPerturbation(j);
-	complex<double>* kdatp = itsPertK.setDComplex (1, nfreq);
+	dcomplex* kdatp = itsPertK.setDComplex (1, nfreq);
 	val0 = conj(kjones.getPerturbedValue(j).getDComplex());
 	kdatp[0] = val0;
 	if (nfreq > 1) {
-	  complex<double> delta = conj(kdel->getPerturbedValue(j).getDComplex());
+	  dcomplex delta = conj(kdel->getPerturbedValue(j).getDComplex());
 	  for (int i=1; i<nfreq; i++) {
 	    val0 *= delta;
 	    kdatp[i] = val0;

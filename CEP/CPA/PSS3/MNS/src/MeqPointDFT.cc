@@ -125,17 +125,18 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
     //TRACER1 ("V: " << vr.getValue() - vl.getValue());
     //TRACER1 ("W: " << wr.getValue() - wl.getValue());
   }
-  const complex<double>* tmpl = left.getValue().dcomplexStorage();
-  const complex<double>* tmpr = right.getValue().dcomplexStorage();
-  const complex<double>* deltal = 0;
-  const complex<double>* deltar = 0;
+  const dcomplex* tmpl = left.getValue().dcomplexStorage();
+  const dcomplex* tmpr = right.getValue().dcomplexStorage();
+  const dcomplex* deltal = 0;
+  const dcomplex* deltar = 0;
   if (multFreq) {
     deltal = leftDelta.getValue().dcomplexStorage();
     deltar = rightDelta.getValue().dcomplexStorage();
   }
-  MeqMatrix res(complex<double>(0,0), request.nx(), request.ny(), false);
-  complex<double>* resdata = res.dcomplexStorage();
-  complex<double> dval, val0;
+  MeqMatrix res(LOFAR::makedcomplex(0,0),
+		request.nx(), request.ny(), false);
+  dcomplex* resdata = res.dcomplexStorage();
+  dcomplex dval, val0;
   // Note that some optimization can be achieved here, because usually
   // request.nx()==1. 'Roll out' the loop by making a special case for nx==1
   // so it can use tmpnk[0], deltal[0], etc. and does not need nx in
@@ -158,11 +159,11 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
   int stepnk = (nk.getValue().nx() > 1  ?  1 : 0);
   int nki = 0;
   for (int i=0; i<request.nx(); i++) {
-    val0 = tmpr[i] * conj(tmpl[i]) / tmpnk[nki];
+    val0 = tmpr[i] * LOFAR::conj(tmpl[i]) / tmpnk[nki];
     nki += stepnk;
     resdata[i] = val0;
     if (multFreq) {
-      dval = deltar[i] * conj(deltal[i]);
+      dval = deltar[i] * LOFAR::conj(deltal[i]);
       for (int j=1; j<request.ny(); j++) {
 	val0 *= dval;
 	resdata[i + j*request.nx()] = val0;
@@ -192,16 +193,17 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
 	deltal = leftDelta.getPerturbedValue(spinx).dcomplexStorage();
 	deltar = rightDelta.getPerturbedValue(spinx).dcomplexStorage();
       }
-      MeqMatrix pres(complex<double>(0,0), request.nx(), request.ny(), false);
-      complex<double>* presdata = pres.dcomplexStorage();
+      MeqMatrix pres(LOFAR::makedcomplex(0,0),
+		     request.nx(), request.ny(), false);
+      dcomplex* presdata = pres.dcomplexStorage();
       tmpnk = nk.getPerturbedValue(spinx).doubleStorage();
       nki = 0;
       for (int i=0; i<request.nx(); i++) {
-	val0 = tmpr[i] * conj(tmpl[i]) / tmpnk[nki];
+	val0 = tmpr[i] * LOFAR::conj(tmpl[i]) / tmpnk[nki];
 	nki += stepnk;
 	presdata[i] = val0;
 	if (multFreq) {
-	  dval = deltar[i] * conj(deltal[i]);
+	  dval = deltar[i] * LOFAR::conj(deltal[i]);
 	  for (int j=1; j<request.ny(); j++) {
 	    val0 *= dval;
 	    presdata[i + j*request.nx()] = val0;

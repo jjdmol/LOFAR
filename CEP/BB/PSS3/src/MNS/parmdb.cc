@@ -30,6 +30,7 @@
 #include <casa/Quanta/MVTime.h>
 #include <string>
 #include <pwd.h>
+#include <unistd.h>
 #include <MNS/ParmTableAIPS.h>
 #include <MNS/ParmTableBDB.h>
 

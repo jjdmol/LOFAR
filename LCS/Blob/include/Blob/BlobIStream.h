@@ -32,6 +32,7 @@
 #include <stack>
 #include <vector>
 #include <string>
+#include <complex>
 
 namespace LOFAR {
 
@@ -111,6 +112,9 @@ namespace LOFAR {
       BlobIStream& operator>> (uint64& value);
       BlobIStream& operator>> (float& value);
       BlobIStream& operator>> (double& value);
+      template<class T> BlobIStream& operator>> (std::complex<T>& value);
+      BlobIStream& operator>> (i16complex& value);
+      BlobIStream& operator>> (u16complex& value);
       BlobIStream& operator>> (fcomplex& value);
       BlobIStream& operator>> (dcomplex& value);
       BlobIStream& operator>> (std::string& value);
@@ -130,6 +134,9 @@ namespace LOFAR {
       void get (uint64* values, uint nrval);
       void get (float* values, uint nrval);
       void get (double* values, uint nrval);
+      template<class T> void get (std::complex<T>* values, uint nrval);
+      void get (i16complex* values, uint nrval);
+      void get (u16complex* values, uint nrval);
       void get (fcomplex* values, uint nrval);
       void get (dcomplex* values, uint nrval);
       void get (std::string* values, uint nrval);
@@ -221,6 +228,24 @@ namespace LOFAR {
   inline LOFAR::DataFormat BlobIStream::dataFormat() const
     { return itsDataFormat; }
   
+  template<typename T>
+    inline BlobIStream& BlobIStream::operator>> (std::complex<T>& value)
+    {
+      getBuf (values, sizeof(std::complex<T>));
+      if (itsMustConvert) {
+	LOFAR::dataConvert (itsDataFormat, &value, 1);
+      }
+      return *this;
+    }
+  template<typename T>
+    inline void BlobIStream::get (std::complex<T>* values, uint nrval)
+    {
+      getBuf (values, nrval*sizeof(std::complex<T>));
+      if (itsMustConvert) {
+	LOFAR::dataConvert (itsDataFormat, values, nrval);
+      }
+    }
+
   template<typename T>
     inline void BlobIStream::get (std::vector<T>& vec)
     {

@@ -38,6 +38,7 @@ MeqMatrixRep* MeqMatrixComplexSca::clone() const
 
 void MeqMatrixComplexSca::show (ostream& os) const
 {
+  using namespace LOFAR;
   os << itsValue;
 }
 
@@ -60,17 +61,17 @@ MeqMatrixRep* MeqMatrixComplexSca::divide (MeqMatrixRep& right, bool rightTmp)
   return right.divRep (*this, rightTmp);
 }
 
-const complex<double>* MeqMatrixComplexSca::dcomplexStorage() const
+const dcomplex* MeqMatrixComplexSca::dcomplexStorage() const
 {
   return &itsValue;
 }
 double MeqMatrixComplexSca::getDouble (int, int) const
 {
-  AssertMsg (itsValue.imag()==0,
+  AssertMsg (LOFAR::imag(itsValue)==0,
 	     "MeqMatrix: dcomplex->double conversion not possible");
-  return itsValue.real();
+  return LOFAR::real(itsValue);
 }
-complex<double> MeqMatrixComplexSca::getDComplex (int, int) const
+dcomplex MeqMatrixComplexSca::getDComplex (int, int) const
 {
   return itsValue;
 }
@@ -119,25 +120,26 @@ MNSMATRIXCOMPLEXSCA_OP(divRep,/=,/);
 
 MeqMatrixRep* MeqMatrixComplexSca::negate()
 {
-  itsValue = -itsValue;
+  itsValue = LOFAR::makedcomplex (-LOFAR::real(itsValue),
+				  -LOFAR::imag(itsValue));
   return this;
 }
 
 MeqMatrixRep* MeqMatrixComplexSca::sin()
 {
-  itsValue = std::sin(itsValue);
+  itsValue = LOFAR::sin(itsValue);
   return this;
 }
 
 MeqMatrixRep* MeqMatrixComplexSca::cos()
 {
-  itsValue = std::cos(itsValue);
+  itsValue = LOFAR::cos(itsValue);
   return this;
 }
 
 MeqMatrixRep* MeqMatrixComplexSca::exp()
 {
-  itsValue = std::exp(itsValue);
+  itsValue = LOFAR::exp(itsValue);
   return this;
 }
 
@@ -149,13 +151,13 @@ MeqMatrixRep* MeqMatrixComplexSca::sqr()
 
 MeqMatrixRep* MeqMatrixComplexSca::sqrt()
 {
-  itsValue = std::sqrt(itsValue);
+  itsValue = LOFAR::sqrt(itsValue);
   return this;
 }
 
 MeqMatrixRep* MeqMatrixComplexSca::conj()
 {
-  itsValue = std::conj(itsValue);
+  itsValue = LOFAR::conj(itsValue);
   return this;
 }
 

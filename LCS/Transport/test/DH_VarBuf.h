@@ -38,7 +38,7 @@ namespace LOFAR
 class DH_VarBuf: public DataHolder
 {
 public:
-  typedef complex<float> BufferType;
+  typedef fcomplex BufferType;
 
   explicit DH_VarBuf (const string& name="dh_example");
 

@@ -4,7 +4,7 @@
 #include "B.h"
 #include <PL/PLfwd.h>
 #include <Common/lofar_string.h>
-#include <Common/lofar_complex.h>
+#include <Common/LofarTypes.h>
 #include <Common/lofar_iostream.h>
 
 namespace LOFAR
@@ -14,9 +14,9 @@ namespace LOFAR
   {
   public:
     A() : 
-      itsInt(0), itsDouble(0.0), itsString("class A") {}
-    A(int i, double d, const string& s, const complex<double>& c, 
-      const B& b) :
+      itsInt(0), itsDouble(0.0), itsString("class A"),
+      itsComplex (makedcomplex(0,0)) {}
+    A(int i, double d, const string& s, const dcomplex& c, const B& b) :
       itsInt(i), itsDouble(d), itsString(s), itsComplex(c), itsB(b)
     {}
     friend ostream& operator<<(ostream& os, const A& a);
@@ -25,7 +25,7 @@ namespace LOFAR
     int             itsInt;
     double          itsDouble;
     string          itsString;
-    complex<double> itsComplex;
+    dcomplex        itsComplex;
     B               itsB;
   };
 

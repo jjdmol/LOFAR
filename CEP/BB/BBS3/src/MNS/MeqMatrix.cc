@@ -43,7 +43,7 @@ MeqMatrix::MeqMatrix (double value)
     itsRep = v->link();
 }
 
-MeqMatrix::MeqMatrix (complex<double> value)
+MeqMatrix::MeqMatrix (dcomplex value)
 {
     MeqMatrixComplexSca* v = new MeqMatrixComplexSca (value);
     itsRep = v->link();
@@ -58,7 +58,7 @@ MeqMatrix::MeqMatrix (double value, int nx, int ny, bool init)
     itsRep = v->link();
 }
 
-MeqMatrix::MeqMatrix (complex<double> value, int nx, int ny, bool init)
+MeqMatrix::MeqMatrix (dcomplex value, int nx, int ny, bool init)
 {
     MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (nx, ny);
     if (init) {
@@ -74,7 +74,7 @@ MeqMatrix::MeqMatrix (const double* values, int nx, int ny)
     itsRep = v->link();
 }
 
-MeqMatrix::MeqMatrix (const complex<double>* values, int nx, int ny)
+MeqMatrix::MeqMatrix (const dcomplex* values, int nx, int ny)
 {
     MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew(nx, ny);
     v->set (values);
@@ -92,10 +92,10 @@ MeqMatrix::MeqMatrix (const Matrix<double>& array)
     array.freeStorage (values, deleteIt);
 }
 
-MeqMatrix::MeqMatrix (const Matrix<complex<double> >& array)
+MeqMatrix::MeqMatrix (const Matrix<dcomplex >& array)
 {
     bool deleteIt;
-    const complex<double>* values = array.getStorage (deleteIt);
+    const dcomplex* values = array.getStorage (deleteIt);
     MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (array.shape()(0),
 							   array.shape()(1));
     v->set (values);
@@ -146,7 +146,7 @@ void MeqMatrix::setDCMat (int nx, int ny)
     MeqMatrixRep::unlink (itsRep);
     itsRep = 0;
     if (nx == 1  &&  ny == 1) {
-        itsRep = new MeqMatrixComplexSca (complex<double>());
+        itsRep = new MeqMatrixComplexSca (dcomplex());
     } else {
         itsRep = MeqMatrixComplexArr::poolNew (nx, ny);
     }
@@ -158,9 +158,9 @@ Matrix<double> MeqMatrix::getDoubleMatrix() const
   return Matrix<double> (IPosition(2,nx(),ny()), doubleStorage());
 }
 
-Matrix<complex<double> > MeqMatrix::getDComplexMatrix() const
+Matrix<dcomplex > MeqMatrix::getDComplexMatrix() const
 {
-  Matrix<complex<double> > mat(nx(), ny());
+  Matrix<dcomplex > mat(nx(), ny());
   for (int i1=0; i1<ny(); i1++) {
     for (int i0=0; i0<nx(); i0++) {
       mat(i0,i1) = getDComplex(i0,i1);
@@ -359,11 +359,11 @@ LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
       }
     } else {
       if (isScalar) {
-	complex<double> val;
+	dcomplex val;
 	bs >> val;
 	vec = MeqMatrix(val);
       } else {
-	Matrix<complex<double> > mat;
+	Matrix<dcomplex > mat;
 	bs >> mat;
 	vec = MeqMatrix(mat);
       }
@@ -374,3 +374,16 @@ LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
 }
 
 }
+
+
+//# Instantiate the AIPS++ templates needed for Matrix<dcomplex>
+//# This is needed because dcomplex is usually not the same as casa::DComplex.
+//# The inclusion of the other .cc files is needed for the automatic
+//# instantiation of the templates used by Matrix.
+#include <casa/Arrays/Matrix.cc>
+#include <casa/Arrays/Vector.cc>
+#include <casa/Arrays/Array.cc>
+#include <casa/Arrays/MaskedArray.cc>
+#include <casa/Utilities/Copy.cc>
+#include <casa/Utilities/CountedPtr.cc>
+template class Matrix<LOFAR::dcomplex>;

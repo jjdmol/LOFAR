@@ -99,7 +99,7 @@ int MeqFunklet::makeSolvable (int spidIndex)
     double* pert  = itsPerturbation.doubleStorage();
     for (int i=0; i<itsCoeff.nelements(); i++) {
       double perturbation = itsPertValue;
-      if (itsIsRelPert  &&  abs(coeff[i]) > 1e-10) {
+      if (itsIsRelPert  &&  std::abs(coeff[i]) > 1e-10) {
 	perturbation *= coeff[i];
       }
       pert[i] = perturbation;

@@ -102,13 +102,9 @@ bool SI_Simple::execute(vector<string>& parmNames,
       itsFirstCall = true;
       return false;       
     }
-    cout << "BBSTest: BeginOfIteration " << itsCurIter << endl;
     itsCurIter = 0;                      // Reset iterator
   }
-  else
-  {
-    cout << "BBSTest: BeginOfIteration " << itsCurIter << endl;
-  }
+  cout << "BBSTest: BeginOfIteration " << itsCurIter << endl;
 
   // The actual solve
   TRACER1("Solve for " << itsNSources <<" sources, " 

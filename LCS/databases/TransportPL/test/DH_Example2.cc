@@ -80,7 +80,7 @@ void DH_Example2::preprocess()
   createDataBlock();
   // Initialize the buffer.
   for (unsigned int i=0; i<itsBufSize; i++) {
-    itsBuffer[i] = 0;
+    itsBuffer[i] = makefcomplex(0,0);
   }
 }
 

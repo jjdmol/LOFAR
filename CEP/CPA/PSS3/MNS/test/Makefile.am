@@ -1,10 +1,14 @@
-check_PROGRAMS 		= tPoly tMeqMatrix tMeqPolc
+check_PROGRAMS 		= tPoly tRosenbrock tMeqMatrix tMeqPolc
 
 TESTS			= tPoly tMeqMatrix tMeqPolc
 
 tPoly_SOURCES 		= tPoly.cc 
 tPoly_LDADD		= ../src/libmns.la 
 tPoly_DEPENDENCIES	= ../src/libmns.la $(LOFAR_DEPEND)
+
+tRosenbrock_SOURCES 	= tRosenbrock.cc 
+tRosenbrock_LDADD	= ../src/libmns.la 
+tRosenbrock_DEPENDENCIES= ../src/libmns.la $(LOFAR_DEPEND)
 
 tMeqMatrix_SOURCES 	= tMeqMatrix.cc 
 tMeqMatrix_LDADD	= ../src/libmns.la 

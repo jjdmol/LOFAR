@@ -30,8 +30,8 @@ void TPersistentObject< A >::toDBRep(DBRep< A >& dest) const
 	dest.itsInt	= data().itsInt;
 	dest.itsDouble	= data().itsDouble;
 	dest.itsString	= data().itsString;
-	dest.itsComplex_real	= data().itsComplex.real();
-	dest.itsComplex_imag	= data().itsComplex.imag();
+	dest.itsComplex_real	= real(data().itsComplex);
+	dest.itsComplex_imag	= imag(data().itsComplex);
 }
 
 
@@ -42,8 +42,8 @@ void TPersistentObject< A >::fromDBRep(const DBRep< A >& src)
 	data().itsInt	= src.itsInt;
 	data().itsDouble	= src.itsDouble;
 	data().itsString	= src.itsString;
-        data().itsComplex	= std::complex<double>(src.itsComplex_real,
-                                                       src.itsComplex_imag);
+        data().itsComplex	= makedcomplex(src.itsComplex_real,
+					       src.itsComplex_imag);
 }
 
 

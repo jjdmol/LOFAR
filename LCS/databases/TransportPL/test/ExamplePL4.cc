@@ -49,7 +49,7 @@ int main()
     
     // fill the DataHolders with some initial data
     {
-      DH1.getBuffer()[0] = fcomplex(17,-3.5);
+      DH1.getBuffer()[0] = makefcomplex(17,-3.5);
       DH1.setCounter(2);
       BlobOStream& bos = DH1.createExtraBlob();
       bos << "test1";
@@ -61,7 +61,7 @@ int main()
     }
     // write another record.
     {
-      DH1.getBuffer()[0] = fcomplex(117,-3.5);
+      DH1.getBuffer()[0] = makefcomplex(117,-3.5);
       DH1.setCounter(3);
       BlobOStream& bos = DH1.createExtraBlob();
       bos << float(4.5) << "test1a";
@@ -70,7 +70,7 @@ int main()
     // read first record back and check it.
     {
       ASSERT (DH1.queryDB ("counter=2") == 1);
-      ASSERT (DH1.getBuffer()[0] == fcomplex(17,-3.5)
+      ASSERT (DH1.getBuffer()[0] == makefcomplex(17,-3.5)
 	      &&  DH1.getCounter() == 2);
       bool found;
       int version;
@@ -89,7 +89,7 @@ int main()
     DH1.updateDB();
     {
       ASSERT (DH1.queryDB ("counter=4") == 1);
-      ASSERT (DH1.getBuffer()[0] == fcomplex(17,-3.5)
+      ASSERT (DH1.getBuffer()[0] == makefcomplex(17,-3.5)
 	      &&  DH1.getCounter() == 4);
       bool found;
       int version;
@@ -104,7 +104,7 @@ int main()
     // read second record back and check it.
     {
       ASSERT (DH1.queryDB ("counter=3") == 1);
-      ASSERT (DH1.getBuffer()[0] == fcomplex(117,-3.5)
+      ASSERT (DH1.getBuffer()[0] == makefcomplex(117,-3.5)
 	      &&  DH1.getCounter() == 3);
       bool found;
       int version;
@@ -117,12 +117,12 @@ int main()
       ASSERT (val == 4.5  &&  str == "test1a");
     }
     // update the record, read it back and check it.
-    DH1.getBuffer()[0] = -DH1.getBuffer()[0];
+    DH1.getBuffer()[0] = -1. * DH1.getBuffer()[0];
     DH1.clearExtraBlob();
     DH1.updateDB();
     {
       ASSERT (DH1.queryDB ("counter=3") == 1);
-      ASSERT (DH1.getBuffer()[0] == fcomplex(-117,3.5)
+      ASSERT (DH1.getBuffer()[0] == makefcomplex(-117,3.5)
 	      &&  DH1.getCounter() == 3);
       bool found;
       int version;

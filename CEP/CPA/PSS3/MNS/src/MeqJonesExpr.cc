@@ -73,21 +73,21 @@ void MeqJonesExpr::multiply (const MeqJonesExpr& left,
   } else {
     its11.setDComplex (std::max(l11.getValue().nx(), r11.getValue().nx()),
 		       std::max(l11.getValue().ny(), r11.getValue().ny()));
-    complex<double>* v11 = its11.setDComplex (nx, ny);
-    complex<double>* v12 = its12.setDComplex (nx, ny);
-    complex<double>* v21 = its21.setDComplex (nx, ny);
-    complex<double>* v22 = its22.setDComplex (nx, ny);
+    dcomplex* v11 = its11.setDComplex (nx, ny);
+    dcomplex* v12 = its12.setDComplex (nx, ny);
+    dcomplex* v21 = its21.setDComplex (nx, ny);
+    dcomplex* v22 = its22.setDComplex (nx, ny);
     nl = l11.getValue().nelements();
     nr = r11.getValue().nelements();
     Assert(nl==nr);
-    const complex<double>* dl11 = l11.getValue().dcomplexStorage();
-    const complex<double>* dl12 = l12.getValue().dcomplexStorage();
-    const complex<double>* dl21 = l21.getValue().dcomplexStorage();
-    const complex<double>* dl22 = l22.getValue().dcomplexStorage();
-    const complex<double>* dr11 = r11.getValue().dcomplexStorage();
-    const complex<double>* dr12 = r12.getValue().dcomplexStorage();
-    const complex<double>* dr21 = r21.getValue().dcomplexStorage();
-    const complex<double>* dr22 = r22.getValue().dcomplexStorage();
+    const dcomplex* dl11 = l11.getValue().dcomplexStorage();
+    const dcomplex* dl12 = l12.getValue().dcomplexStorage();
+    const dcomplex* dl21 = l21.getValue().dcomplexStorage();
+    const dcomplex* dl22 = l22.getValue().dcomplexStorage();
+    const dcomplex* dr11 = r11.getValue().dcomplexStorage();
+    const dcomplex* dr12 = r12.getValue().dcomplexStorage();
+    const dcomplex* dr21 = r21.getValue().dcomplexStorage();
+    const dcomplex* dr22 = r22.getValue().dcomplexStorage();
     for (int i=0; i<nl; i++) {
       v11[i] = dl11[i] * dr11[i] + dl12[i] * dr21[i];
       v12[i] = dl11[i] * dr12[i] + dl12[i] * dr22[i];
@@ -154,18 +154,18 @@ void MeqJonesExpr::multiply (const MeqJonesExpr& left,
 	  v22[i] = pl21[i] * pr12[i] + pl22[i] * pr22[i];
 	}
       } else {
-	complex<double>* v11 = its11.setPerturbedDComplex (j, nx, ny);
-	complex<double>* v12 = its12.setPerturbedDComplex (j, nx, ny);
-	complex<double>* v21 = its21.setPerturbedDComplex (j, nx, ny);
-	complex<double>* v22 = its22.setPerturbedDComplex (j, nx, ny);
-	const complex<double>* pl11 = l11.getPerturbedValue(j).dcomplexStorage();
-	const complex<double>* pl12 = l12.getPerturbedValue(j).dcomplexStorage();
-	const complex<double>* pl21 = l21.getPerturbedValue(j).dcomplexStorage();
-	const complex<double>* pl22 = l22.getPerturbedValue(j).dcomplexStorage();
-	const complex<double>* pr11 = r11.getPerturbedValue(j).dcomplexStorage();
-	const complex<double>* pr12 = r12.getPerturbedValue(j).dcomplexStorage();
-	const complex<double>* pr21 = r21.getPerturbedValue(j).dcomplexStorage();
-	const complex<double>* pr22 = r22.getPerturbedValue(j).dcomplexStorage();
+	dcomplex* v11 = its11.setPerturbedDComplex (j, nx, ny);
+	dcomplex* v12 = its12.setPerturbedDComplex (j, nx, ny);
+	dcomplex* v21 = its21.setPerturbedDComplex (j, nx, ny);
+	dcomplex* v22 = its22.setPerturbedDComplex (j, nx, ny);
+	const dcomplex* pl11 = l11.getPerturbedValue(j).dcomplexStorage();
+	const dcomplex* pl12 = l12.getPerturbedValue(j).dcomplexStorage();
+	const dcomplex* pl21 = l21.getPerturbedValue(j).dcomplexStorage();
+	const dcomplex* pl22 = l22.getPerturbedValue(j).dcomplexStorage();
+	const dcomplex* pr11 = r11.getPerturbedValue(j).dcomplexStorage();
+	const dcomplex* pr12 = r12.getPerturbedValue(j).dcomplexStorage();
+	const dcomplex* pr21 = r21.getPerturbedValue(j).dcomplexStorage();
+	const dcomplex* pr22 = r22.getPerturbedValue(j).dcomplexStorage();
 	for (int i=0; i<nl; i++) {
 	  v11[i] = pl11[i] * pr11[i] + pl12[i] * pr21[i];
 	  v12[i] = pl11[i] * pr12[i] + pl12[i] * pr22[i];

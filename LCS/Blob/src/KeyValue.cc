@@ -363,9 +363,9 @@ fcomplex KeyValue::getFComplex() const
 {
   switch (itsDataType) {
   case DTInt:
-    return fcomplex (float(*(int32*)itsValuePtr), 0.0f);
+    return fcomplex (makefcomplex(float(*(int32*)itsValuePtr), 0.0f));
   case DTFloat:
-    return fcomplex (*(float*)itsValuePtr, 0.0f);
+    return fcomplex (makefcomplex(*(float*)itsValuePtr, 0.0f));
   case DTFComplex:
     return *(fcomplex*)itsValuePtr;
   // avoid icc (EM64T) bug
@@ -381,14 +381,13 @@ dcomplex KeyValue::getDComplex() const
 {
   switch (itsDataType) {
   case DTInt:
-    return dcomplex (double(*(int32*)itsValuePtr), 0.0);
+    return makedcomplex(double(*(int32*)itsValuePtr), 0.0);
   case DTFloat:
-    return dcomplex (double(*(float*)itsValuePtr), 0.0);
+    return makedcomplex(double(*(float*)itsValuePtr), 0.0);
   case DTDouble:
-    return dcomplex (*(double*)itsValuePtr, 0.0);
+    return makedcomplex(*(double*)itsValuePtr, 0.0);
   case DTFComplex:
-    return dcomplex (((fcomplex*)itsValuePtr)->real(),
-		     ((fcomplex*)itsValuePtr)->imag());
+    return *(fcomplex*)itsValuePtr;
   case DTDComplex:
     return *(dcomplex*)itsValuePtr;
 #if !(defined __x86_64 && __INTEL_COMPILER_BUILD_DATE == 20041123)
@@ -546,7 +545,7 @@ vector<fcomplex> KeyValue::getVecFComplex() const
       const vector<int32>& vec1 = *(vector<int32>*)itsValuePtr;
       vector<fcomplex> vec2(vec1.size());
       for (uint i=0; i<vec2.size(); i++) {
-	vec2[i] = float(vec1[i]);
+	vec2[i] = makefcomplex(float(vec1[i]), 0.f);
       }
       return vec2;
     }
@@ -555,7 +554,7 @@ vector<fcomplex> KeyValue::getVecFComplex() const
       const vector<float>& vec1 = *(vector<float>*)itsValuePtr;
       vector<fcomplex> vec2(vec1.size());
       for (uint i=0; i<vec2.size(); i++) {
-	vec2[i] = vec1[i];
+	vec2[i] = makefcomplex(vec1[i], 0.f);
       }
       return vec2;
     }
@@ -587,7 +586,7 @@ vector<dcomplex> KeyValue::getVecDComplex() const
       const vector<int32>& vec1 = *(vector<int32>*)itsValuePtr;
       vector<dcomplex> vec2(vec1.size());
       for (uint i=0; i<vec2.size(); i++) {
-	vec2[i] = double(vec1[i]);
+	vec2[i] = makedcomplex(double(vec1[i]), 0.);
       }
       return vec2;
     }
@@ -596,7 +595,7 @@ vector<dcomplex> KeyValue::getVecDComplex() const
       const vector<float>& vec1 = *(vector<float>*)itsValuePtr;
       vector<dcomplex> vec2(vec1.size());
       for (uint i=0; i<vec2.size(); i++) {
-	vec2[i] = double(vec1[i]);
+	vec2[i] = makedcomplex(double(vec1[i]), 0.);
       }
       return vec2;
     }
@@ -605,7 +604,7 @@ vector<dcomplex> KeyValue::getVecDComplex() const
       const vector<double>& vec1 = *(vector<double>*)itsValuePtr;
       vector<dcomplex> vec2(vec1.size());
       for (uint i=0; i<vec2.size(); i++) {
-	vec2[i] = vec1[i];
+	vec2[i] = makedcomplex(vec1[i], 0.);
       }
       return vec2;
     }
@@ -707,13 +706,13 @@ ostream& operator<< (ostream& os, const KeyValue& param)
   case KeyValue::DTFComplex:
     {
       const fcomplex& val = *(fcomplex*)(param.itsValuePtr);
-      os << val.real() << '+' << val.imag() << 'i';
+      os << real(val) << '+' << imag(val) << 'i';
     }
     break;
   case KeyValue::DTDComplex:
     {
       const dcomplex& val = *(dcomplex*)(param.itsValuePtr);
-      os << val.real() << '+' << val.imag() << 'i';
+      os << real(val) << '+' << imag(val) << 'i';
     }
     break;
   case KeyValue::DTString:
@@ -779,7 +778,7 @@ ostream& operator<< (ostream& os, const KeyValue& param)
 	if (i > 0) {
 	  os << ',';
 	}
-	os << vec[i].real() << '+' << vec[i].imag() << 'i';
+	os << real(vec[i]) << '+' << imag(vec[i]) << 'i';
       }
       os << ']';
     }
@@ -792,7 +791,7 @@ ostream& operator<< (ostream& os, const KeyValue& param)
 	if (i > 0) {
 	  os << ',';
 	}
-	os << vec[i].real() << '+' << vec[i].imag() << 'i';
+	os << real(vec[i]) << '+' << imag(vec[i]) << 'i';
       }
       os << ']';
     }

@@ -198,7 +198,7 @@ private:
 
   // Create the LOFAR expressions for each baseline.
   // The EJones can be expressed as real/imag or ampl/phase.
-  void makeLOFARExpr (casa::Bool asAP);
+  void makeLOFARExpr (bool asAP);
 
   // Get equations for a single time and baseline.
   void getEquation (double* result, char* flagResult,

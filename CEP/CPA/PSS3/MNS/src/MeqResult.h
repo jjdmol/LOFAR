@@ -74,7 +74,7 @@ public:
   // It won't change if the current value type and shape match.
   double* setDouble (int nx, int ny)
     { return itsValue.setDouble (nx, ny); }
-  complex<double>* setDComplex (int nx, int ny)
+  dcomplex* setDComplex (int nx, int ny)
     { return itsValue.setDComplex (nx, ny); }
 
   // Remove all perturbed values.
@@ -94,7 +94,7 @@ public:
       }
       return itsPerturbedValues[i]->setDouble (nx, ny);
     } 
-  complex<double>* setPerturbedDComplex (int i, int nx, int ny)
+  dcomplex* setPerturbedDComplex (int i, int nx, int ny)
     { if (!isDefined(i)) {
         itsPerturbedValues[i] = new MeqMatrix();
       }
@@ -106,7 +106,7 @@ public:
     { itsPerturbation[i] = new MeqMatrix(value); }
   void setPerturbation (int i, const double& value)
     { itsPerturbation[i] = new MeqMatrix(value); }
-  void setPerturbation (int i, const complex<double>& value)
+  void setPerturbation (int i, const dcomplex& value)
     { itsPerturbation[i] = new MeqMatrix(value); }
 
   void show (ostream&) const;
@@ -171,7 +171,7 @@ public:
   // It returns a pointer to the internal storage.
   double* setDouble (int nx, int ny)
     { return itsRep->setDouble (nx, ny); }
-  complex<double>* setDComplex (int nx, int ny)
+  dcomplex* setDComplex (int nx, int ny)
     { return itsRep->setDComplex (nx, ny); }
 
   // Remove all perturbed values.
@@ -189,7 +189,7 @@ public:
   // It won't change if the current value type and shape matches.
   double* setPerturbedDouble (int i, int nx, int ny)
     { return itsRep->setPerturbedDouble (i, nx, ny); }
-  complex<double>* setPerturbedDComplex (int i, int nx, int ny)
+  dcomplex* setPerturbedDComplex (int i, int nx, int ny)
     { return itsRep->setPerturbedDComplex (i, nx, ny); }
 
   // Set the i-th perturbed parameter.
@@ -197,7 +197,7 @@ public:
     { itsRep->setPerturbation (i, value); }
   void setPerturbation (int i, double value)
     { itsRep->setPerturbation (i, value); }
-  void setPerturbation (int i, const complex<double>& value)
+  void setPerturbation (int i, const dcomplex& value)
     { itsRep->setPerturbation (i, value); }
 
   friend ostream& operator<< (ostream& os, const MeqResult& result)

@@ -30,7 +30,7 @@
 
 #include <Common/LofarTypes.h>
 #include <Common/DataFormat.h>
-
+#include <complex>
 
 namespace LOFAR
 {
@@ -62,8 +62,10 @@ namespace LOFAR
   void dataConvert (DataFormat, uint64* inout, uint nrval);
   void dataConvert (DataFormat, float* inout, uint nrval);
   void dataConvert (DataFormat, double* inout, uint nrval);
-  void dataConvert (DataFormat, std::complex<uint16>* inout, uint nrval);
-  void dataConvert (DataFormat, std::complex<int16>* inout, uint nrval);
+  template<class T> void dataConvert (DataFormat, std::complex<T>* inout,
+				      uint nrval);
+  void dataConvert (DataFormat, i16complex* inout, uint nrval);
+  void dataConvert (DataFormat, u16complex* inout, uint nrval);
   void dataConvert (DataFormat, fcomplex* inout, uint nrval);
   void dataConvert (DataFormat, dcomplex* inout, uint nrval);
   // </group>
@@ -168,6 +170,10 @@ namespace LOFAR
 
 namespace LOFAR
 {
+  template<class T>
+  inline void dataConvert (DataFormat fmt, std::complex<T>* inout, uint nrval)
+    { dataConvert (fmt, (T*)inout, 2*nrval); }
+
   inline void dataConvert (DataFormat, char*, uint)
     {}
   inline void dataConvert (DataFormat, uchar*, uint)
@@ -188,14 +194,16 @@ namespace LOFAR
     { dataConvert32 (fmt, inout, nrval); }
   inline void dataConvert (DataFormat fmt, double* inout, uint nrval)
     { dataConvert64 (fmt, inout, nrval); }
-  inline void dataConvert (DataFormat fmt, std::complex<uint16>* inout, uint nrval)
+  inline void dataConvert (DataFormat fmt, i16complex* inout, uint nrval)
+    { dataConvert16 (fmt, inout, 2*nrval); }
+  inline void dataConvert (DataFormat fmt, u16complex* inout, uint nrval)
     { dataConvert16 (fmt, inout, 2*nrval); }
   inline void dataConvert (DataFormat fmt, std::complex<int16>* inout, uint nrval)
     { dataConvert16 (fmt, inout, 2*nrval); }
   inline void dataConvert (DataFormat fmt, fcomplex* inout, uint nrval)
-    { dataConvert32 (fmt, inout, 2*nrval); }
+    { dataConvertFloat (fmt, inout, 2*nrval); }
   inline void dataConvert (DataFormat fmt, dcomplex* inout, uint nrval)
-    { dataConvert64 (fmt, inout, 2*nrval); }
+    { dataConvertDouble (fmt, inout, 2*nrval); }
 
   inline char dataConvert (DataFormat, char in)
     { return in; }

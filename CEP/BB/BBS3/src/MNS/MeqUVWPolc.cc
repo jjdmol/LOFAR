@@ -61,7 +61,7 @@ void MeqUVWPolc::calcCoeff (const Vector<double>& times,
   MeqPolc polc;
   polc.setDomain (domain);
   Vector<double> sigma(nr, 1);
-  Vector<Double> sol = itsFitter.fit (normTimes, uvws.row(0), sigma);
+  Vector<double> sol = itsFitter.fit (normTimes, uvws.row(0), sigma);
   polc.setCoeff (Matrix<double>(sol));
   itsUCoeff->addPolc (polc);
   sigma = 1;

@@ -39,8 +39,8 @@ bool compare(const MeqMatrix& m1, const MeqMatrix& m2)
   if (res.isDouble()) {
     return (res.getDouble() < 1.e-7);
   }
-  complex<double> resc = res.getDComplex();
-  return (resc.real() < 1.e-7  &&  resc.imag() < 1.e-7);
+  dcomplex resc = res.getDComplex();
+  return (LOFAR::real(resc) < 1.e-7  &&  LOFAR::imag(resc) < 1.e-7);
 }
 
 void doIt (MeqPolc& polc)

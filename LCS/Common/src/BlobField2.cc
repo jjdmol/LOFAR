@@ -173,8 +173,17 @@ namespace LOFAR {
   template class BlobField<uint64>;
   template class BlobField<float>;
   template class BlobField<double>;
-  template class BlobField<std::complex<uint16> >;
-  template class BlobField<std::complex<int16> >;
+  template class BlobField<i16complex>;
+  template class BlobField<u16complex>;
   template class BlobField<fcomplex>;
   template class BlobField<dcomplex>;
+  // Also instantiate for complex<T> if builtin is used for complex.
+#ifdef LOFAR_BUILTIN_COMPLEXFP
+  template class BlobField<std::complex<float> >;
+  template class BlobField<std::complex<double> >;
+#endif
+#ifdef LOFAR_BUILTIN_COMPLEXINT
+  template class BlobField<std::complex<int16> >;
+  template class BlobField<std::complex<uint16> >;
+#endif
 }

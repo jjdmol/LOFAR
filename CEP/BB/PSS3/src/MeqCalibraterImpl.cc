@@ -927,13 +927,13 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
 	// Make a default derivative vector with values 0.
 	eqTimer.start();
 	MeqMatrix defaultDeriv (DComplex(0,0), 1, nrchan);
-	const complex<double>* defaultDerivPtr = defaultDeriv.dcomplexStorage();
+	const dcomplex* defaultDerivPtr = defaultDeriv.dcomplexStorage();
 
 /// showd = (ant1==4 && ant2==8);
 	// >>>>>>>>>>>>>> Diff 
 	// Calculate the derivatives and get pointers to them.
 	// Use the default if no perturbed value defined.                    //>>>> uses predicted data
-	vector<const complex<double>*> derivs(itsNPol*itsNrScid);
+	vector<const dcomplex*> derivs(itsNPol*itsNrScid);
 	bool foundDeriv = false;
 	if (showd) {
 	  cout << "xx val " << expr.getResult11().getValue() << endl;;
@@ -1271,10 +1271,10 @@ static NSTimer tmpTimer;
 
 void MeqCalibrater::formEqs(const MeqResult *result, fcomplex *data, unsigned nrchan, unsigned &nrDerivsFound)
 {
-  MeqMatrix defaultDeriv (DComplex(0,0), 1, nrchan);
-  const complex<double>* defaultDerivPtr = defaultDeriv.dcomplexStorage();
-  vector<const complex<double>*> derivatives(itsNrScid);
-  const complex<double> **derivs = &derivatives[0];
+  MeqMatrix defaultDeriv (makedcomplex(0,0), 1, nrchan);
+  const dcomplex* defaultDerivPtr = defaultDeriv.dcomplexStorage();
+  vector<const dcomplex*> derivatives(itsNrScid);
+  const dcomplex **derivs = &derivatives[0];
   vector<unsigned> indices(itsNrScid);
 
   const MeqMatrix *value = &result->getValue();
@@ -1305,14 +1305,16 @@ void MeqCalibrater::formEqs(const MeqResult *result, fcomplex *data, unsigned nr
       // use sparse implementation if > 75% zero
       for (unsigned i = 0; i < nrchan; i ++) {
 	for (unsigned j = 0; j < nrParamsFound; j ++) {
-	  const complex<double> val = derivs[indices[j]][i];
-	  derivReal[j] = val.real();
-	  derivImag[j] = val.imag();
+	  const dcomplex val = derivs[indices[j]][i];
+	  derivReal[j] = real(val);
+	  derivImag[j] = imag(val);
 	}
-	DComplex diff = static_cast<DComplex>(data[i*itsNPol]) - value->getDComplex(0,i);
+	dcomplex diff = static_cast<dcomplex>(data[i*itsNPol]) - value->getDComplex(0,i);
 tmpTimer.start();
-	itsSolver.makeNorm(nrParamsFound, &indices[0], &derivReal[0], 1., diff.real());
-	itsSolver.makeNorm(nrParamsFound, &indices[0], &derivImag[0], 1., diff.imag());
+	itsSolver.makeNorm(nrParamsFound, &indices[0], &derivReal[0], 1.,
+			   real(diff));
+	itsSolver.makeNorm(nrParamsFound, &indices[0], &derivImag[0], 1.,
+			   imag(diff));
 tmpTimer.stop();
       }
     } else {
@@ -1324,14 +1326,14 @@ tmpTimer.stop();
       // Fill in all equations.
       for (unsigned i = 0; i < nrchan; i ++) {
 	for (unsigned j = 0; j < itsNrScid; j ++) {
-	  const complex<double> val = derivs[j][i];
-	  derivReal[j] = val.real();
-	  derivImag[j] = val.imag();
+	  const dcomplex val = derivs[j][i];
+	  derivReal[j] = real(val);
+	  derivImag[j] = imag(val);
 	}
-	DComplex diff = static_cast<DComplex>(data[i*itsNPol]) - value->getDComplex(0,i);
+	dcomplex diff = static_cast<dcomplex>(data[i*itsNPol]) - value->getDComplex(0,i);
 tmpTimer.start();
-	itsSolver.makeNorm (&derivReal[0], 1., diff.real());
-	itsSolver.makeNorm (&derivImag[0], 1., diff.imag());
+	itsSolver.makeNorm (&derivReal[0], 1., real(diff));
+	itsSolver.makeNorm (&derivImag[0], 1., imag(diff));
 tmpTimer.stop();
       }
     }
@@ -1572,6 +1574,7 @@ void MeqCalibrater::saveAllSolvableParms()
 //----------------------------------------------------------------------
 void MeqCalibrater::saveResidualData()
 {
+  /*
   if (itsDataMap->getFileName() != itsMSName+".res")
   {
     // copy file <msname>.dat to <msname>.res
@@ -1695,7 +1698,7 @@ void MeqCalibrater::saveResidualData()
 
   // Make sure file is updated
   itsDataMap->unmapFile();
-
+  */
 }
 
 

@@ -137,25 +137,25 @@ namespace LOFAR {
   //# The ifdef is needed to avoid compiler warnings about unused.
   template<typename T>
 #ifdef ENABLE_DBGASSERT
-  void* BlobField<T>::getOData (const std::type_info& info,
+  void* BlobField<T>::getOData (const std::string& type,
 #else
-  void* BlobField<T>::getOData (const std::type_info&,
+  void* BlobField<T>::getOData (const std::string&,
 #endif
 				BlobOBufChar& buf) const
   {
-    DBGASSERT(info == typeid(T));
+    DBGASSERT(type == typeName((T*)0));
     return getOData(buf);
   }
   
   template<typename T>
 #ifdef ENABLE_DBGASSERT
-  const void* BlobField<T>::getIData (const std::type_info& info,
+  const void* BlobField<T>::getIData (const std::string& type,
 #else
-  const void* BlobField<T>::getIData (const std::type_info&,
+  const void* BlobField<T>::getIData (const std::string&,
 #endif
 				      BlobIBufChar& buf) const
   {
-    DBGASSERT(info == typeid(T));
+    DBGASSERT(type == typeName((T*)0));
     return getIData(buf);
   }
 

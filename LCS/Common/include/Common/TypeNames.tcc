@@ -30,13 +30,6 @@
 namespace LOFAR
 {
   template<typename T>
-  const std::string& typeName (const std::complex<T>*)
-    {
-      static std::string str ("complex<" + typeName((const T*)0) + ">");
-      return str;
-    }
-
-  template<typename T>
   const std::string& typeName (const T**)
     {
       static std::string str ("array<" + typeName((const T*)0) + ">");

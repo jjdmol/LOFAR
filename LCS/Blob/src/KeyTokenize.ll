@@ -23,10 +23,10 @@
 */
 
 %{
-#include <KeyValue.h>
-#include <KeyValueMap.h>
-#include <KeyParser.h>
-#include <KeyParse.h>     // output of bison
+#include <Common/KeyValue.h>
+#include <Common/KeyValueMap.h>
+#include <Common/KeyParser.h>
+#include <Common/KeyParse.h>           // output of bison
 #include <Common/lofar_iostream.h>
 using namespace LOFAR;
 
@@ -86,28 +86,28 @@ COMMENT   "#".*"\n"
             KeyParser::position() += yyleng;
             float valr,vali;
 	    sscanf(KeyTokenizetext, "%f%*c+%f%*ci", &valr, &vali);
-            lvalp->val = new KeyValue (complex<float> (valr, vali));
+            lvalp->val = new KeyValue (makefcomplex(valr, vali));
 	    return LITERAL;
 	  }
 {IMAG} {
             KeyParser::position() += yyleng;
             float vali;
 	    sscanf(KeyTokenizetext, "%f%*ci", &vali);
-            lvalp->val = new KeyValue (complex<float> (0., vali));
+            lvalp->val = new KeyValue (makefcomplex(0., vali));
 	    return LITERAL;
 	  }
 {DCOMPLEX} {
             KeyParser::position() += yyleng;
             double valr,vali;
 	    sscanf(KeyTokenizetext, "%lf+%lfi", &valr, &vali);
-            lvalp->val = new KeyValue (complex<double> (valr, vali));
+            lvalp->val = new KeyValue (makedcomplex(valr, vali));
 	    return LITERAL;
 	  }
 {DIMAG} {
             KeyParser::position() += yyleng;
             double vali;
 	    sscanf(KeyTokenizetext, "%lfi", &vali);
-            lvalp->val = new KeyValue (complex<double> (0., vali));
+            lvalp->val = new KeyValue (makedcomplex(0., vali));
 	    return LITERAL;
 	  }
 {FLOAT}   {

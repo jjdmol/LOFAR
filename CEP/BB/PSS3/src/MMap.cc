@@ -25,6 +25,7 @@
 #include <PSS3/MMap.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <Common/LofarLogger.h>
 #include <errno.h>
 

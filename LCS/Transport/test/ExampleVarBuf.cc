@@ -36,7 +36,7 @@ void fillDataHolder(DH_VarBuf& dh, unsigned int size, float factor)
   for (unsigned int i=0; i<size; i++)
   {
     value = factor*i;
-    *(dataPtr+i) = fcomplex(value, value+1);
+    *(dataPtr+i) = makefcomplex(value, value+1);
   }
 }
 

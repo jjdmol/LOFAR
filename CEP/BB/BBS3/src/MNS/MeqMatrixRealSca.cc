@@ -83,9 +83,9 @@ double MeqMatrixRealSca::getDouble (int, int) const
 {
   return itsValue;
 }
-complex<double> MeqMatrixRealSca::getDComplex (int, int) const
+dcomplex MeqMatrixRealSca::getDComplex (int, int) const
 {
-  return itsValue;
+  return makedcomplex(itsValue, 0);
 }
 
 
@@ -115,7 +115,7 @@ MeqMatrixRep* MeqMatrixRealSca::NAME (MeqMatrixRealArr& left,  \
 MeqMatrixRep* MeqMatrixRealSca::NAME (MeqMatrixComplexArr& left, \
 				      bool) \
 { \
-  complex<double>* value = left.itsValue; \
+  dcomplex* value = left.itsValue; \
   int n = left.nelements(); \
   for (int i=0; i<n; i++) { \
     *value OP itsValue; \
@@ -162,17 +162,17 @@ MeqMatrixRep* MeqMatrixRealSca::posdiffRep (MeqMatrixRealArr& left)
 
 MeqMatrixRep* MeqMatrixRealSca::tocomplexRep (MeqMatrixRealSca& left)
 {
-  return new MeqMatrixComplexSca (complex<double> (left.itsValue, itsValue));
+  return new MeqMatrixComplexSca (makedcomplex (left.itsValue, itsValue));
 }
 MeqMatrixRep* MeqMatrixRealSca::tocomplexRep (MeqMatrixRealArr& left)
 {
   MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (left.nx(), left.ny());
-  complex<double>* value = v->itsValue;
+  dcomplex* value = v->itsValue;
   double  rvalue = itsValue;
   double* lvalue = left.itsValue;
   int n = left.nelements();
   for (int i=0; i<n; i++) {
-    value[i] = complex<double> (lvalue[i], rvalue);
+    value[i] = makedcomplex (lvalue[i], rvalue);
   }
   return v;
 }

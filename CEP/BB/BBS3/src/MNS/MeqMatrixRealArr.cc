@@ -106,9 +106,9 @@ double MeqMatrixRealArr::getDouble (int x, int y) const
 {
   return itsValue[offset(x,y)];
 }
-complex<double> MeqMatrixRealArr::getDComplex (int x, int y) const
+dcomplex MeqMatrixRealArr::getDComplex (int x, int y) const
 {
-  return itsValue[offset(x,y)];
+  return makedcomplex(itsValue[offset(x,y)], 0);
 }
 
 #define MNSMATRIXREALARR_OP(NAME, OP, OP2) \
@@ -132,9 +132,9 @@ MeqMatrixRep* MeqMatrixRealArr::NAME (MeqMatrixComplexSca& left, \
 				      bool) \
 { \
   MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (nx(), ny()); \
-  complex<double>* value = v->itsValue; \
+  dcomplex* value = v->itsValue; \
   double* value2 = itsValue; \
-  complex<double> lvalue = left.itsValue; \
+  dcomplex lvalue = left.itsValue; \
   int n = nelements(); \
   for (int i=0; i<n; i++) { \
     *value++ = lvalue OP2 *value2++; \
@@ -157,7 +157,7 @@ MeqMatrixRep* MeqMatrixRealArr::NAME (MeqMatrixComplexArr& left, \
 				      bool) \
 { \
   ASSERT (nelements() == left.nelements()); \
-  complex<double>* value = left.itsValue; \
+  dcomplex* value = left.itsValue; \
   double* value2 = itsValue; \
   int n = left.nelements(); \
   for (int i=0; i<n; i++) { \
@@ -214,12 +214,12 @@ MeqMatrixRep* MeqMatrixRealArr::posdiffRep (MeqMatrixRealArr& left)
 MeqMatrixRep* MeqMatrixRealArr::tocomplexRep (MeqMatrixRealSca& left)
 {
   MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (nx(), ny());
-  complex<double>* value = v->itsValue;
+  dcomplex* value = v->itsValue;
   double* rvalue = itsValue;
   double  lvalue = left.itsValue;
   int n = nelements();
   for (int i=0; i<n; i++) {
-    value[i] = complex<double> (lvalue, rvalue[i]);
+    value[i] = makedcomplex (lvalue, rvalue[i]);
   }
   return v;
 }
@@ -227,12 +227,12 @@ MeqMatrixRep* MeqMatrixRealArr::tocomplexRep (MeqMatrixRealArr& left)
 {
   ASSERT (nelements() == left.nelements());
   MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (nx(), ny());
-  complex<double>* value = v->itsValue;
+  dcomplex* value = v->itsValue;
   double* rvalue = itsValue;
   double* lvalue = left.itsValue;
   int n = nelements();
   for (int i=0; i<n; i++) {
-    value[i] = complex<double> (lvalue[i], rvalue[i]);
+    value[i] = makedcomplex (lvalue[i], rvalue[i]);
   }
   return v;
 }

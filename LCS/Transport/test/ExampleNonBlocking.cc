@@ -35,14 +35,14 @@ using namespace LOFAR;
 void* startWriterThread(void* thread_arg)
 {
   DH_Example* dh = (DH_Example*)thread_arg;
-  dh->getBufferElement(0) = fcomplex(17,-3.5);
+  dh->getBufferElement(0) = makefcomplex(17,-3.5);
   dh->setCounter(1);
   cout << "Sending buffer[0] = " << dh->getBufferElement(0)
        << "  counter = " << dh->getCounter() << endl;
   dh->write();
   // Modify the dataholder before the previous write has completely sent
   // the data.
-  dh->getBufferElement(0) = fcomplex(2,8);
+  dh->getBufferElement(0) = makefcomplex(2,8);
   dh->setCounter(2);
 
   usleep(3000000); // Wait
@@ -70,7 +70,7 @@ bool test1()
   DH1.init();
   DH2.init();
 
-  DH2.getBuffer()[0] = 0;
+  DH2.getBuffer()[0] = makefcomplex(0,0);
   DH2.setCounter(0);
   
   // Create a writing thread
@@ -89,7 +89,7 @@ bool test1()
        << "  counter = " << DH2.getCounter() << endl;
 
   // The read data is not equal to the sent data, but to the modified value!
-  if (DH2.getBufferElement(0) != fcomplex(2, 8) ||
+  if (DH2.getBufferElement(0) != makefcomplex(2, 8) ||
 	DH2.getCounter() != 2)
   {
       result = false;
@@ -105,7 +105,7 @@ bool test1()
 }
 
 
-int main(int argc, const char** argv)
+int main()
 {
   bool result = true;
   try {
