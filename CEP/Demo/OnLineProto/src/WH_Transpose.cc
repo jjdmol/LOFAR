@@ -53,13 +53,13 @@ WH_Transpose::WH_Transpose (const string& name,
   for (unsigned int i=0; i<nin; i++) {
     sprintf (str, "%d", i);
     getDataManager().addInDataHolder(i, 
-				     new DH_Beamlet (string("in_") + str, itsFBW));
+				     new DH_Beamlet (string("Transpose in_") + str, itsFBW));
   }
   // create the output dataholders
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
     getDataManager().addOutDataHolder(i, 
-				      new DH_CorrCube (string("out_") + str, ps));
+				      new DH_CorrCube (string("Transpose out_") + str, ps));
   }
 }
 
