@@ -54,7 +54,7 @@ void WH_Tester::process()
 {
   for (int ch=0; ch<10; ch++){
     ((DH_Tester*)getDataManager().getOutHolder(0))->getBuffer()[ch] = 
-    ((DH_Tester*)getDataManager().getInHolder(0))->getBuffer()[ch] + complex<float>(0.01,0);
+    ((DH_Tester*)getDataManager().getInHolder(0))->getBuffer()[ch] + makefcomplex(0.01,0);
   }
   getDataManager().getOutHolder(0)->copyTimeStamp(
 					getDataManager().getInHolder(0));

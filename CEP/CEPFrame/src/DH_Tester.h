@@ -39,7 +39,7 @@ namespace LOFAR
 class DH_Tester: public DataHolder
 {
 public:
-  typedef complex<float> DataBufferType;
+  typedef fcomplex DataBufferType;
 
   explicit DH_Tester (const string& name);
   DH_Tester (const DH_Tester&);

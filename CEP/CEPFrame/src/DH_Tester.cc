@@ -60,7 +60,7 @@ void DH_Tester::preprocess()
   createDataBlock();
   // Initialize the buffer.
   for (unsigned int i=0; i<bufSize; i++) {
-    itsBuffer[i] = 0;
+    itsBuffer[i] = makefcomplex(0,0);
   }
 }
 

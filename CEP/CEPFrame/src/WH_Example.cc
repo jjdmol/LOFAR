@@ -72,11 +72,11 @@ void WH_Example::process()
   DH_Example::BufferType* buf = ((DH_Example*)getDataManager().getOutHolder(0))
                                  ->getBuffer();
   for (int j=0; j<itsBufLength; j++) {
-    buf[j] = 0;
+    buf[j] = makefcomplex(0,0);
   }
   cout << "Processing Data! "
        << buf[0] << ',' << buf[itsBufLength-1] << "   --->  ";
-  const complex<float> cp1(1,0);
+  const fcomplex cp1 = makefcomplex(1,0);
   if (getDataManager().getInputs() == 0) {
     for (int j=0; j<itsBufLength; j++) {
       buf[j] = cp1 + DH_Example::BufferType (Step::getEventCount());

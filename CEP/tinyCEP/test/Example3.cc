@@ -63,7 +63,7 @@ int main (int argv, const char** argc) {
   if (!strcmp(argc[1], "-r")) {
 
     if ( ((DH_Example*)EX1->itsWHs[0]->getDataManager().getOutHolder(0))->getBuffer()[0] ==
-	  complex<float> (4, 3) ) {
+	  makefcomplex(4, 3) ) {
       return 0;
     } else { 
       return 1;
