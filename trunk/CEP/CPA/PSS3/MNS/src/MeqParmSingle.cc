@@ -31,7 +31,6 @@ MeqParmSingle::MeqParmSingle (const string& name, double value)
 : MeqParm         (name),
   itsInitialValue (value),
   itsCurValue     (value),
-  itsIsSolvable   (false),
   itsSolveIndex   (-1)
 {}
 
@@ -40,18 +39,13 @@ MeqParmSingle::~MeqParmSingle()
 
 int MeqParmSingle::initDomain (const MeqDomain&, int spidIndex)
 {
-  if (itsIsSolvable) {
+  if (isSolvable()) {
     itsSolveIndex = spidIndex;
     return 1;
   } else {
     itsSolveIndex = -1;
   }
   return 0;
-}
-
-void MeqParmSingle::setSolvable (bool solvable)
-{
-  itsIsSolvable = solvable;
 }
 
 void MeqParmSingle::setValue (double value)
@@ -69,7 +63,7 @@ MeqResult MeqParmSingle::getResult (const MeqRequest& request)
 {
   MeqResult result(request.nspid());
   result.setValue (MeqMatrix(itsCurValue));
-  if (itsIsSolvable) {
+  if (isSolvable()) {
     double perturbation = 1e-6;
     if (std::abs(itsCurValue) > 1e-10) {
       perturbation *= itsCurValue;
@@ -83,24 +77,24 @@ MeqResult MeqParmSingle::getResult (const MeqRequest& request)
 
 void MeqParmSingle::getInitial (MeqMatrix& values) const
 {
-  if (itsIsSolvable) {
+  if (isSolvable()) {
     Assert (itsSolveIndex < values.nx());
     values.dcomplexStorage()[itsSolveIndex] = complex<double>(itsCurValue,0);
   }
 }
 
-void MeqParmSingle::getCurrentValue(MeqMatrix& value) const
+void MeqParmSingle::getCurrentValue(MeqMatrix& value, bool) const
 {
   value = MeqMatrix(complex<double>(), 1, 1);
 
-  if (itsIsSolvable) {
+  if (isSolvable()) {
     value.dcomplexStorage()[0] = complex<double>(itsCurValue,0);
   }
 }
 
 void MeqParmSingle::update (const MeqMatrix& value)
 {
-  if (itsIsSolvable) {
+  if (isSolvable()) {
     itsCurValue = value.getDouble (itsSolveIndex, 1);
   }
 }

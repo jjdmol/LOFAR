@@ -29,7 +29,8 @@ vector<MeqParm*>* MeqParm::theirParms = 0;
 
 
 MeqParm::MeqParm (const string& name)
-: itsName (name)
+: itsName       (name),
+  itsIsSolvable (false)
 {
   if (theirParms == 0) {
     theirParms = new vector<MeqParm*>;

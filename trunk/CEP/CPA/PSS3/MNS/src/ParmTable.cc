@@ -33,7 +33,9 @@
 #include <aips/Arrays/Matrix.h>
 #include <aips/Arrays/Vector.h>
 #include <aips/Arrays/ArrayUtil.h>
+#include <aips/Arrays/Slice.h>
 #include <aips/Utilities/Regex.h>
+#include <aips/Utilities/GenSort.h>
 #include <aips/Mathematics/Math.h>
 
 ParmTable::ParmTable (const string& tableName)
@@ -69,43 +71,26 @@ vector<MeqPolc> ParmTable::getPolcs (const string& parmName,
     ROScalarColumn<double> etCol (sel, "ENDTIME");
     ROScalarColumn<double> sfCol (sel, "STARTFREQ");
     ROScalarColumn<double> efCol (sel, "ENDFREQ");
-    ROArrayColumn<bool> maskCol (sel, "MASK");
-    ROArrayColumn<double> valCol (sel, "RVALUES");
+    ROArrayColumn<bool> maskCol (sel, "SOLVABLE");
+    ROArrayColumn<double> valCol (sel, "VALUES");
+    ROArrayColumn<double> simvalCol (sel, "SIM_VALUES");
+    ROArrayColumn<double> simpertCol (sel, "SIM_PERT");
+    ROScalarColumn<bool> normCol (sel, "NORMALIZED");
     ROScalarColumn<double> diffCol (sel, "DIFF");
     ROScalarColumn<bool> drelCol (sel, "DIFF_REL");
-    if (valCol.isDefined (0)) {
-      ROArrayColumn<double> simvalCol (sel, "SIM_RVALUES");
-      ROArrayColumn<double> simpertCol (sel, "SIM_RPERT");
-      for (unsigned int i=0; i<sel.nrow(); i++) {
-	MeqPolc polc;
-	if (maskCol.isDefined(i)) {
-	  polc.setCoeff (Matrix<double>(valCol(i)), maskCol(i));
-	} else {
-	  polc.setCoeff (Matrix<double>(valCol(i)));
-	}
-	polc.setSimCoeff (Matrix<double>(simvalCol(i)));
-	polc.setPertSimCoeff (Matrix<double>(simpertCol(i)));
-	polc.setDomain (MeqDomain(stCol(i), etCol(i), sfCol(i), efCol(i)));
-	polc.setPerturbation (diffCol(i), drelCol(i));
-	result.push_back (polc);
+    for (unsigned int i=0; i<sel.nrow(); i++) {
+      MeqPolc polc;
+      if (maskCol.isDefined(i)) {
+	polc.setCoeff (Matrix<double>(valCol(i)), maskCol(i));
+      } else {
+	polc.setCoeff (Matrix<double>(valCol(i)));
       }
-    } else {
-      ROArrayColumn<DComplex> valDCol (sel, "CVALUES");
-      ROArrayColumn<DComplex> simvalDCol (sel, "SIM_CVALUES");
-      ROArrayColumn<DComplex> simpertDCol (sel, "SIM_CPERT");
-      for (unsigned int i=0; i<sel.nrow(); i++) {
-	MeqPolc polc;
-	if (maskCol.isDefined(i)) {
-	  polc.setCoeff (Matrix<DComplex>(valDCol(i)), maskCol(i));
-	} else {
-	  polc.setCoeff (Matrix<DComplex>(valDCol(i)));
-	}
-	polc.setSimCoeff (Matrix<DComplex>(simvalDCol(i)));
-	polc.setPertSimCoeff (Matrix<DComplex>(simpertDCol(i)));
-	polc.setDomain (MeqDomain(stCol(i), etCol(i), sfCol(i), efCol(i)));
-	polc.setPerturbation (diffCol(i), drelCol(i));
-	result.push_back (polc);
-      }
+      polc.setNormalize (normCol(i));
+      polc.setSimCoeff (Matrix<double>(simvalCol(i)));
+      polc.setPertSimCoeff (Matrix<double>(simpertCol(i)));
+      polc.setDomain (MeqDomain(stCol(i), etCol(i), sfCol(i), efCol(i)));
+      polc.setPerturbation (diffCol(i), drelCol(i));
+      result.push_back (polc);
     }
   }
   return result;
@@ -133,33 +118,22 @@ MeqPolc ParmTable::getInitCoeff (const string& parmName,
 	  if (rownrs.nelements() > 0) {
 	    Assert (rownrs.nelements() == 1);
 	    int row = rownrs(0);
-	    ROArrayColumn<bool> maskCol (itsInitTable, "MASK");
-	    ROArrayColumn<Double> valCol (itsInitTable, "RVALUES");
+	    ROArrayColumn<bool> maskCol (itsInitTable, "SOLVABLE");
+	    ROArrayColumn<Double> valCol (itsInitTable, "VALUES");
+	    ROScalarColumn<bool> normCol (itsInitTable, "NORMALIZED");
 	    ROScalarColumn<double> diffCol (itsInitTable, "DIFF");
 	    ROScalarColumn<bool> drelCol (itsInitTable, "DIFF_REL");
-	    if (valCol.isDefined (row)) {
-	      ROArrayColumn<double> simvalCol (itsInitTable, "SIM_RVALUES");
-	      ROArrayColumn<double> simpertCol (itsInitTable, "SIM_RPERT");
-	      if (maskCol.isDefined(row)) {
-		result.setCoeff (Matrix<double>(valCol(row)), maskCol(row));
-	      } else {
-		result.setCoeff (Matrix<double>(valCol(row)));
-	      }
-	      result.setSimCoeff (Matrix<double>(simvalCol(row)));
-	      result.setPertSimCoeff (Matrix<double>(simpertCol(row)));
+	    ROArrayColumn<double> simvalCol (itsInitTable, "SIM_VALUES");
+	    ROArrayColumn<double> simpertCol (itsInitTable, "SIM_PERT");
+	    if (maskCol.isDefined(row)) {
+	      result.setCoeff (Matrix<double>(valCol(row)), maskCol(row));
 	    } else {
-	      ROArrayColumn<DComplex> valDCol (itsInitTable, "CVALUES");
-	      ROArrayColumn<DComplex> simvalDCol (itsInitTable, "SIM_CVALUES");
-	      ROArrayColumn<DComplex> simpertDCol (itsInitTable, "SIM_CPERT");
-	      if (maskCol.isDefined(row)) {
-		result.setCoeff (Matrix<DComplex>(valDCol(row)), maskCol(row));
-	      } else {
-		result.setCoeff (Matrix<DComplex>(valDCol(row)));
-	      }
-	      result.setSimCoeff (Matrix<DComplex>(simvalDCol(row)));
-	      result.setPertSimCoeff (Matrix<DComplex>(simpertDCol(row)));
+	      result.setCoeff (Matrix<double>(valCol(row)));
 	    }
+	    result.setNormalize (normCol(row));
 	    result.setPerturbation (diffCol(row), drelCol(row));
+	    result.setSimCoeff (Matrix<double>(simvalCol(row)));
+	    result.setPertSimCoeff (Matrix<double>(simpertCol(row)));
 	    break;
 	  }
 	  string::size_type idx = name.rfind ('.');
@@ -207,17 +181,10 @@ void ParmTable::putCoeff (const string& parmName,
 	       " has a partially instead of fully matching entry for time "
 		 << domain.startX() << ':' << domain.endX() << " and freq "
 		 << domain.startY() << ':' << domain.endY());
-    if (values.isDouble()) {
-      ArrayColumn<double> valCol (sel, "RVALUES");
-      ArrayColumn<double> simvalCol (sel, "SIM_RVALUES");
-      ArrayColumn<double> simpertCol (sel, "SIM_RPERT");
-      valCol.put (0, values.getDoubleMatrix());
-    } else {
-      ArrayColumn<DComplex> valCol (sel, "CVALUES");
-      ArrayColumn<DComplex> simvalCol (sel, "SIM_CVALUES");
-      ArrayColumn<DComplex> simpertCol (sel, "SIM_CPERT");
-      valCol.put (0, values.getDComplexMatrix());
-    }
+    ArrayColumn<double> valCol (sel, "VALUES");
+    ArrayColumn<double> simvalCol (sel, "SIM_VALUES");
+    ArrayColumn<double> simpertCol (sel, "SIM_PERT");
+    valCol.put (0, values.getDoubleMatrix());
   } else {
     uInt rownr = itsTable.nrow();
     itsTable.addRow();
@@ -228,6 +195,7 @@ void ParmTable::putCoeff (const string& parmName,
     ScalarColumn<double> etCol (itsTable, "ENDTIME");
     ScalarColumn<double> sfCol (itsTable, "STARTFREQ");
     ScalarColumn<double> efCol (itsTable, "ENDFREQ");
+    ScalarColumn<bool> normCol (itsTable, "NORMALIZED");
     ScalarColumn<double> diffCol (itsTable, "DIFF");
     ScalarColumn<bool> drelCol (itsTable, "DIFF_REL");
     namCol.put (rownr, parmName);
@@ -237,21 +205,13 @@ void ParmTable::putCoeff (const string& parmName,
     etCol.put (rownr, domain.endX());
     sfCol.put (rownr, domain.startY());
     efCol.put (rownr, domain.endY());
-    if (values.isDouble()) {
-      ArrayColumn<double> valCol (itsTable, "RVALUES");
-      ArrayColumn<double> simvalCol (itsTable, "SIM_RVALUES");
-      ArrayColumn<double> simpertCol (itsTable, "SIM_RPERT");
-      valCol.put (rownr, values.getDoubleMatrix());
-      simvalCol.put (rownr, simvalues.getDoubleMatrix());
-      simpertCol.put (rownr, pertsimvalues.getDoubleMatrix());
-    } else {
-      ArrayColumn<DComplex> valCol (itsTable, "CVALUES");
-      ArrayColumn<DComplex> simvalCol (itsTable, "SIM_CVALUES");
-      ArrayColumn<DComplex> simpertCol (itsTable, "SIM_CPERT");
-      valCol.put (rownr, values.getDComplexMatrix());
-      simvalCol.put (rownr, simvalues.getDComplexMatrix());
-      simpertCol.put (rownr, pertsimvalues.getDComplexMatrix());
-    }
+    ArrayColumn<double> valCol (itsTable, "VALUES");
+    ArrayColumn<double> simvalCol (itsTable, "SIM_VALUES");
+    ArrayColumn<double> simpertCol (itsTable, "SIM_PERT");
+    valCol.put (rownr, values.getDoubleMatrix());
+    simvalCol.put (rownr, simvalues.getDoubleMatrix());
+    simpertCol.put (rownr, pertsimvalues.getDoubleMatrix());
+    normCol.put (rownr, polc.isNormalized());
     diffCol.put (rownr, polc.getPerturbation());
     drelCol.put (rownr, polc.isRelativePerturbation());
   }
@@ -283,34 +243,46 @@ Table ParmTable::find (const string& parmName,
 MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs)
 {
   // Get all parm rows containing RA in the name.
-  // Use the InitTable if available.
-  Table sel;
-  if (itsInitTable.isNull()) {
-    TableExprNode expr(itsTable.col("NAME") ==
-                                      Regex(Regex::fromPattern("RA.*")));
-    if (srcnrs.nelements() > 0) {
-      expr = expr  &&  itsTable.col("SRCNR").in (TableExprNodeSet(srcnrs));
-    }
-    sel = itsTable(expr);
-  } else {
-    TableExprNode expr(itsInitTable.col("NAME") ==
-                                      Regex(Regex::fromPattern("RA.*")));
-    if (srcnrs.nelements() > 0) {
-      expr = expr  &&  itsInitTable.col("SRCNR").in (TableExprNodeSet(srcnrs));
-    }
-    sel = itsInitTable(expr);
+  // Use the DEFAULTTABLE only if available.
+  int st = 0;
+  Table tab = itsInitTable;
+  if (tab.isNull()) {
+    tab = itsTable;
+    st = 1;
   }
-  // Sort them uniquely on sourcenr.
-  Table sor = sel.sort("SRCNR", Sort::Ascending,
-		       Sort::QuickSort | Sort::NoDuplicates);
-  AssertMsg (sel.nrow() == sor.nrow(),
-	     "Only constant GSM parameters are supported");
+  Vector<int> srcs;
+  Vector<String> nams;
+  for (int i=st; i<2; i++) {
+    TableExprNode expr(tab.col("NAME") == Regex(Regex::fromPattern("RA.*")));
+    if (srcnrs.nelements() > 0) {
+      expr = expr  &&  tab.col("SRCNR").in (TableExprNodeSet(srcnrs));
+    }
+    Table sel = tab(expr);
+    if (sel.nrow() > 0) {
+      // Sort them uniquely on sourcenr.
+      Table sor = sel.sort("SRCNR", Sort::Ascending,
+			   Sort::QuickSort | Sort::NoDuplicates);
+      //    AssertMsg (sel.nrow() == sor.nrow(),
+      //	       "Only constant GSM parameters are supported");
+      ROScalarColumn<int> srcCol(sor, "SRCNR");
+      ROScalarColumn<String> namCol(sor, "NAME");
+      int nrold = srcs.nelements();
+      srcs.resize (nrold + sor.nrow(), True);
+      nams.resize (nrold + sor.nrow(), True);
+      srcs(Slice(nrold,sor.nrow())) = srcCol.getColumn();
+      nams(Slice(nrold,sor.nrow())) = namCol.getColumn();
+    }
+    tab = itsTable;
+  }
+  // Sort the srcs uniquely (because both tables may contain same sources).
+  Vector<uInt> index;
+  int nr = GenSortIndirect<Int>::sort (index, srcs, Sort::Ascending,
+				       Sort::QuickSort | Sort::NoDuplicates);
   MeqSourceList sources;
-  ROScalarColumn<int> srcCol(sor, "SRCNR");
-  ROScalarColumn<String> nameCol(sor, "NAME");
-  for (unsigned int row=0; row<sor.nrow(); row++) {
-    int srcnr = srcCol(row);
-    string name = nameCol(row);
+  for (int i=0; i<nr; i++) {
+    int inx = index(i);
+    int srcnr = srcs(inx);
+    string name = nams(inx);
     string::size_type idx = name.rfind ('.');
     Assert (idx != string::npos);
     // Remove first part (RA).

@@ -26,22 +26,16 @@
 #include <aips/Arrays/Matrix.h>
 
 MeqParmPolc::MeqParmPolc (const string& name)
-: MeqParm       (name),
-  itsIsSolvable (false)
+: MeqParm (name)
 {}
 
 MeqParmPolc::~MeqParmPolc()
 {}
 
-void MeqParmPolc::setSolvable (bool solvable)
-{
-  itsIsSolvable = solvable;
-}
-
 int MeqParmPolc::initDomain (const MeqDomain&, int spidIndex)
 {
   int nr = 0;
-  if (itsIsSolvable) {
+  if (isSolvable()) {
     // For the time being we allow only one polc if the parameter
     // has to be solved.
     AssertStr (itsPolcs.size() == 1,
@@ -60,72 +54,6 @@ int MeqParmPolc::initDomain (const MeqDomain&, int spidIndex)
   return nr;
 }
 
-/*
-MeqResult MeqParmPolc::getResult (const MeqRequest& request)
-{
-  if (itsPolcs.size() == 1) {
-    return itsPolcs[0].getResult (request);
-  }
-  const MeqDomain& domain = request.domain();
-  MeqResult result(0);
-  int ndx = request.nx();
-  int ndy = request.ny();
-  double* datar;
-  complex<double>* datac;
-  if (itsNPolcsY == 1) {
-    double stepx = request.stepX();
-    // Note that this can be optimized a bit by ensuring that the polcs
-    // are in increasing order of x.
-    // The question is what to do in the general 2-dim case.
-    double midx = request.startX() + stepx/2; 
-    int inx = 0;
-    while (inx < ndx) {
-      for (unsigned int i=0; i<itsPolcs.size(); i++) {
-	MeqPolc& polc = itsPolcs[i];
-	if (midx >= polc.startX()  &&  midx < polc.endX()) {
-	  int nrx = ndx - inx;
-	  double stx = midx - stepx/2;
-	  double endx = stx + nrx*stepx;
-	  if (endx-stepx/2 > polc.endX()) {
-	    nrx = int((polc.endX() + stepx/2 - stx) / stepx);
-	    endx = stx + nrx*stepx;
-	  }
-	  if (inx == 0) {
-	    if (nrx == ndx) {
-	      return polc.getResult (request);
-	    }
-	    if (itsPolcs[0].isDouble()) {
-	      result.setValue (MeqMatrix(double(), ndx. ndy));
-	      datar = result.getValueRW().doubleStorage();
-	    } else {
-	      result.setValue (MeqMatrix(complex<double>(), ndx. ndy));
-	      datac = result.getValueRW().dcomplexStorage();
-	    }
-	  }
-	  MeqDomain partDom(stx, endx, domain.startY(), domain.endY());
-	  MeqRequest partReq(partDom, nrx, request.ny());
-	  MeqResult partRes = polc.getResult (partReq);
-	  if (itsPolcs[0].isDouble()) {
-	    const double* from = partRes.gtValue().doubleStorage();
-	    double* to = datar + inx;
-	    for (int iy=0; iy<ndy; iy++) {
-	      for (int ix=0; iy<nrx; ix++) {
-		to[ix] = from++;
-	      }
-	      to += ndx;
-	    }
-	  } else {
-	  }
-	  inx += nrx;
-	  midx += nrx*stepx;
-	  break;
-	}
-      }
-    }
-  }
-  return result;
-}
-*/
 
 MeqResult MeqParmPolc::getResult (const MeqRequest& request)
 {
@@ -139,7 +67,6 @@ MeqResult MeqParmPolc::getResult (const MeqRequest& request)
   int ndx = request.nx();
   int ndy = request.ny();
   double* datar = 0;
-  complex<double>* datac = 0;
   double stepx = request.stepX();
   double stepy = request.stepY();
   double halfStepx = stepx * .5;
@@ -187,63 +114,36 @@ MeqResult MeqParmPolc::getResult (const MeqRequest& request)
 			starty, starty + nry*stepy);
       MeqRequest partReq(partDom, nrx, nry);
       MeqResult partRes = polc.getResult (partReq);
-      if (itsPolcs[0].getCoeff().isDouble()) {
-	// Create the result matrix if it is the first time.
-	// Now it is initialized with zeroes (to see possiible errors).
-	// In the future the outcommnented statement can be used
-	// which saves the initialization time. It requires that the
-	// request domain is entirely covered by the polcs.
-	if (datar == 0) {
-	  Matrix<double> mat(ndx, ndy);
-	  mat = 0;
-	  ////	  result.setValue (MeqMatrix(double(), ndx. ndy));
-	  result.setValue (mat);
-	  datar = result.getValueRW().doubleStorage();
-	}
-	// Move the values to the correct place in the output result.
-	// Note that in principle a polynomial could be a single coefficient
-	// in which case it returns a single value.
-	const double* from = partRes.getValue().doubleStorage();
-	double* to = datar + stx + sty*ndx;
-	if (partRes.getValue().nelements() == 1) {
-	  for (int iy=0; iy<nry; iy++) {
-	    for (int ix=0; ix<nrx; ix++) {
-	      to[ix] = *from;
-	    }
-	    to += ndx;
+      // Create the result matrix if it is the first time.
+      // Now it is initialized with zeroes (to see possiible errors).
+      // In the future the outcommnented statement can be used
+      // which saves the initialization time. It requires that the
+      // request domain is entirely covered by the polcs.
+      if (datar == 0) {
+	Matrix<double> mat(ndx, ndy);
+	mat = 0;
+	////	  result.setValue (MeqMatrix(double(), ndx. ndy));
+	result.setValue (mat);
+	datar = result.getValueRW().doubleStorage();
+      }
+      // Move the values to the correct place in the output result.
+      // Note that in principle a polynomial could be a single coefficient
+      // in which case it returns a single value.
+      const double* from = partRes.getValue().doubleStorage();
+      double* to = datar + stx + sty*ndx;
+      if (partRes.getValue().nelements() == 1) {
+	for (int iy=0; iy<nry; iy++) {
+	  for (int ix=0; ix<nrx; ix++) {
+	    to[ix] = *from;
 	  }
-	} else {
-	  for (int iy=0; iy<nry; iy++) {
-	    for (int ix=0; ix<nrx; ix++) {
-	      to[ix] = *from++;
-	    }
-	    to += ndx;
-	  }
+	  to += ndx;
 	}
       } else {
-	if (datac == 0) {
-	  Matrix<complex<double> > mat(ndx, ndy);
-	  mat = complex<double>();
-	  ////	  result.setValue (MeqMatrix(double(), ndx. ndy));
-	  result.setValue (mat);
-	  datac = result.getValueRW().dcomplexStorage();
-	}
-	const complex<double>* from = partRes.getValue().dcomplexStorage();
-	complex<double>* to = datac + stx + sty*ndx;
-	if (partRes.getValue().nelements() == 1) {
-	  for (int iy=0; iy<nry; iy++) {
-	    for (int ix=0; ix<nrx; ix++) {
-	      to[ix] = *from;
-	    }
-	    to += ndx;
+	for (int iy=0; iy<nry; iy++) {
+	  for (int ix=0; ix<nrx; ix++) {
+	    to[ix] = *from++;
 	  }
-	} else {
-	  for (int iy=0; iy<nry; iy++) {
-	    for (int ix=0; ix<nrx; ix++) {
-	      to[ix] = *from++;
-	    }
-	    to += ndx;
-	  }
+	  to += ndx;
 	}
       }
     }
@@ -258,11 +158,10 @@ void MeqParmPolc::getInitial (MeqMatrix& values) const
   }
 }
 
-void MeqParmPolc::getCurrentValue(MeqMatrix& value) const
+void MeqParmPolc::getCurrentValue(MeqMatrix& value, bool denormalize) const
 {
   Assert(1 == itsPolcs.size());
-
-  itsPolcs[0].getCurrentValue(value);
+  itsPolcs[0].getCurrentValue(value, denormalize);
 }
 
 void MeqParmPolc::update (const MeqMatrix& value)

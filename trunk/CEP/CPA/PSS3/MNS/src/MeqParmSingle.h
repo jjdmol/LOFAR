@@ -42,11 +42,6 @@ public:
   // Initialize the parameter for the given domain.
   virtual int initDomain (const MeqDomain&, int spidIndex);
 
-  // Make parameter solvable, thus perturbed values have to be calculated.
-  // spidIndex is index the first spid of this parm.
-  // It returns the number of spids in this parm.
-  virtual void setSolvable (bool solvable);
-
   // Set the parameter value.
   void setValue (double value);
 
@@ -62,7 +57,7 @@ public:
 
   // Get the current value of the solvable parameter and store it
   // in the argument.
-  virtual void getCurrentValue(MeqMatrix& value) const;
+  virtual void getCurrentValue(MeqMatrix& value, bool) const;
 
   // Update the solvable parameter with the new value.
   virtual void update (const MeqMatrix& value);
@@ -73,7 +68,6 @@ public:
 private:
   double  itsInitialValue;
   double  itsCurValue;
-  bool    itsIsSolvable;
   int     itsSolveIndex;
 };
 
