@@ -25,7 +25,7 @@
 
 #include <Common/BlobOBufChar.h>
 #include <Common/BlobString.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
@@ -47,7 +47,7 @@ public:
 		    expandSize, start, false),
       itsString    (&buffer)
     {
-      Assert (start <= buffer.size());
+      ASSERT(start <= buffer.size());
     }
 
   // Destructor.

@@ -22,43 +22,44 @@
 
 
 #include <Common/DataConvert.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 
 int main()
 {
   try {
+    INIT_LOGGER("tDataConvert.log_prop");
     {
       // Swap 2 byte integer and check if correct.
       // Double swapping should give the original.
       uint16 v1 = 0xbecd;
       uint16 v2 = v1;
-      Assert (byteSwap(byteSwap(v1)) == v2);
+      ASSERT (byteSwap(byteSwap(v1)) == v2);
       byteSwap16 (&v2, &v1, 1);
-      Assert (v2 == 0xcdbe);
+      ASSERT (v2 == 0xcdbe);
     }
     {
       // Swap 4 byte integer and check if correct.
       // Double swapping should give the original.
       uint32 v1 = 0xbecd0256;
       uint32 v2 = v1;
-      Assert (byteSwap(byteSwap(v1)) == v2);
+      ASSERT (byteSwap(byteSwap(v1)) == v2);
       byteSwap32 (&v2, &v1, 1);
-      Assert (v2 == 0x5602cdbe);
+      ASSERT (v2 == 0x5602cdbe);
       byteSwap16 (&v2, &v1, 2);
-      Assert (v2 == 0xcdbe5602);
+      ASSERT (v2 == 0xcdbe5602);
     }
     {
       // Swap 8 byte integer and check if correct.
       // Double swapping should give the original.
       uint64 v1 = 0xbecd025613890574ULL;
       uint64 v2 = v1;
-      Assert (byteSwap(byteSwap(v1)) == v2);
+      ASSERT (byteSwap(byteSwap(v1)) == v2);
       byteSwap64 (&v2, &v1, 1);
-      Assert (v2 == 0x740589135602cdbeULL);
+      ASSERT (v2 == 0x740589135602cdbeULL);
       byteSwap32 (&v2, &v1, 2);
-      Assert (v2 == 0x5602cdbe74058913ULL);
+      ASSERT (v2 == 0x5602cdbe74058913ULL);
     }
     {
       // Swap 2 byte integers in a vector.
@@ -67,13 +68,13 @@ int main()
       v1[0]=0x0123; v1[1]=0x4567; v1[2]=0x89ab;
       uint16 v2[3];
       byteSwap16 (v2, v1, 3);
-      Assert (v2[0] == 0x2301);
-      Assert (v2[1] == 0x6745);
-      Assert (v2[2] == 0xab89);
+      ASSERT (v2[0] == 0x2301);
+      ASSERT (v2[1] == 0x6745);
+      ASSERT (v2[2] == 0xab89);
       byteSwap16 (v2, 3);
-      Assert (v2[0] == v1[0]);
-      Assert (v2[1] == v1[1]);
-      Assert (v2[2] == v1[2]);
+      ASSERT (v2[0] == v1[0]);
+      ASSERT (v2[1] == v1[1]);
+      ASSERT (v2[2] == v1[2]);
     }
     {
       // Swap 4 byte integers in a vector.
@@ -82,13 +83,13 @@ int main()
       v1[0]=0x01233210; v1[1]=0x45677654; v1[2]=0x89abba98;
       uint32 v2[3];
       byteSwap32 (v2, v1, 3);
-      Assert (v2[0] == 0x10322301);
-      Assert (v2[1] == 0x54766745);
-      Assert (v2[2] == 0x98baab89);
+      ASSERT (v2[0] == 0x10322301);
+      ASSERT (v2[1] == 0x54766745);
+      ASSERT (v2[2] == 0x98baab89);
       byteSwap32 (v2, 3);
-      Assert (v2[0] == v1[0]);
-      Assert (v2[1] == v1[1]);
-      Assert (v2[2] == v1[2]);
+      ASSERT (v2[0] == v1[0]);
+      ASSERT (v2[1] == v1[1]);
+      ASSERT (v2[2] == v1[2]);
     }
     {
       // Swap 8 byte integers in a vector.
@@ -98,13 +99,13 @@ int main()
       v1[2]=0x89abcdeffedcba98ULL;
       uint64 v2[3];
       byteSwap64 (v2, v1, 3);
-      Assert (v2[0] == 0x5476674510322301ULL);
-      Assert (v2[1] == 0x2143658778563412ULL);
-      Assert (v2[2] == 0x98badcfeefcdab89ULL);
+      ASSERT (v2[0] == 0x5476674510322301ULL);
+      ASSERT (v2[1] == 0x2143658778563412ULL);
+      ASSERT (v2[2] == 0x98badcfeefcdab89ULL);
       byteSwap64 (v2, 3);
-      Assert (v2[0] == v1[0]);
-      Assert (v2[1] == v1[1]);
-      Assert (v2[2] == v1[2]);
+      ASSERT (v2[0] == v1[0]);
+      ASSERT (v2[1] == v1[1]);
+      ASSERT (v2[2] == v1[2]);
     }
   } catch (std::exception& x) {
     std::cout << "Unexpected exception: " << x.what() << std::endl;

@@ -24,37 +24,36 @@
 #include <Common/BlobArray.h>
 #include <Common/BlobIStream.h>
 #include <Common/BlobIBufStream.h>
-#include <Common/Debug.h>
 #include <iostream>
 #include <vector>
 
 using namespace LOFAR;
 
-int main (int argc, const char* argv[])
+int main()
 {
-  Debug::initLevels (argc, argv);
+  INIT_LOGGER("tBlobArrayHeader.log_prop");
   // Create a header for a C-order array.
   BlobArrayHeader<fcomplex,4> bl(false);
   cout << sizeof(bl) << endl;
   // Check various things.
-  Assert (sizeof(bl) % 8 == 0);
-  Assert (bl.plainSize() == 14);
-  Assert (bl.lengthOffset() == 4);
-  Assert (!bl.mustConvert());
-  Assert (bl.checkMagicValue());
-  Assert (bl.checkType("array<fcomplex>"));
-  Assert (bl.getLength() == 0);
+  ASSERT (sizeof(bl) % 8 == 0);
+  ASSERT (bl.plainSize() == 14);
+  ASSERT (bl.lengthOffset() == 4);
+  ASSERT (!bl.mustConvert());
+  ASSERT (bl.checkMagicValue());
+  ASSERT (bl.checkType("array<fcomplex>"));
+  ASSERT (bl.getLength() == 0);
   // Set an arbitrary length and check it.
   bl.setLength (100);
-  Assert (bl.getLength() == 100);
-  Assert (!bl.isFortranOrder());
+  ASSERT (bl.getLength() == 100);
+  ASSERT (!bl.isFortranOrder());
   // Define a shape and check if the length is correct (including end-of-blob).
   bl.setShape (11,12,13,14);
-  Assert (bl.getAxisSize(0) == 11);
-  Assert (bl.getAxisSize(1) == 12);
-  Assert (bl.getAxisSize(2) == 13);
-  Assert (bl.getAxisSize(3) == 14);
-  Assert (bl.getLength() == sizeof(bl) + 11*12*13*14*sizeof(fcomplex) +
+  ASSERT (bl.getAxisSize(0) == 11);
+  ASSERT (bl.getAxisSize(1) == 12);
+  ASSERT (bl.getAxisSize(2) == 13);
+  ASSERT (bl.getAxisSize(3) == 14);
+  ASSERT (bl.getLength() == sizeof(bl) + 11*12*13*14*sizeof(fcomplex) +
 	  sizeof(uint32));
   {
     // Check if a static BlobArray can be read dynamically.
@@ -68,7 +67,7 @@ int main (int argc, const char* argv[])
     // Make an object and define the array shape in the header.
     XA xa;
     xa.hdr.setShape (20,15);
-    Assert (xa.hdr.getLength() == sizeof(xa));
+    ASSERT (xa.hdr.getLength() == sizeof(xa));
     // Fill the array.
     int k=0;
     for (int i=0; i<20; i++) {
@@ -86,26 +85,26 @@ int main (int argc, const char* argv[])
     std::vector<uint> shape;
     // Get the array from the blob (shape and data) and check it.
     getBlobArray (bs, data, shape, false);
-    Assert (shape.size() == 2);
-    Assert (shape[0]==20  &&  shape[1]==15);
+    ASSERT (shape.size() == 2);
+    ASSERT (shape[0]==20  &&  shape[1]==15);
     for (int i=0; i<15*20; i++) {
-      Assert (data[i] == i);
+      ASSERT (data[i] == i);
     }
 
     // Check if a copy of the blob is correct.
     XA xb(xa);
-    Assert (!xb.hdr.mustConvert());
-    Assert (xb.hdr.checkMagicValue());
-    Assert (xb.hdr.checkArrayType());
-    Assert (xb.hdr.checkNdim());
-    Assert (!xb.hdr.isFortranOrder());
-    Assert (xb.hdr.getAxisSize(0) == 20);
-    Assert (xb.hdr.getAxisSize(1) == 15);
-    Assert (xb.hdr.getLength() == sizeof(XA));
+    ASSERT (!xb.hdr.mustConvert());
+    ASSERT (xb.hdr.checkMagicValue());
+    ASSERT (xb.hdr.checkArrayType());
+    ASSERT (xb.hdr.checkNdim());
+    ASSERT (!xb.hdr.isFortranOrder());
+    ASSERT (xb.hdr.getAxisSize(0) == 20);
+    ASSERT (xb.hdr.getAxisSize(1) == 15);
+    ASSERT (xb.hdr.getLength() == sizeof(XA));
     k=0;
     for (int i=0; i<20; i++) {
       for (int j=0; j<15; j++) {
-	Assert (xb.data[i][j] == k++);
+	ASSERT (xb.data[i][j] == k++);
       }
     }
     delete [] data;

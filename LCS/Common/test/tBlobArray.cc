@@ -26,7 +26,6 @@
 #include <Common/BlobOBufString.h>
 #include <Common/BlobIBufString.h>
 #include <Common/BlobOBufNull.h>
-#include <Common/Debug.h>
 #include <iostream>
 #include <fstream>
 
@@ -43,9 +42,9 @@ uint doOut (BlobOBuffer& bb)
   bs << vec;
   // Check if alignment is done properly.
   int pos = bs.tellPos();
-  Assert (bs.align(0) == 0);
-  Assert (bs.align(1) == 0);
-  Assert (bs.align(128) == uint(128-pos));
+  ASSERT (bs.align(0) == 0);
+  ASSERT (bs.align(1) == 0);
+  ASSERT (bs.align(128) == uint(128-pos));
   // Reserve space for a complex array and the offset of the array.
   return setSpaceBlobArray1<fcomplex> (bs, true, 2);
 }
@@ -56,28 +55,29 @@ void doIn (BlobIBuffer& bb, bool read2=false)
   BlobIStream bs(bb);
   std::vector<double> vec(5);
   bs >> vec;
-  Assert (vec.size() == 3);
-  Assert (vec[0] == double(2));
-  Assert (vec[1] == double(1e10));
-  Assert (vec[2] == double(-3.1));
+  ASSERT (vec.size() == 3);
+  ASSERT (vec[0] == double(2));
+  ASSERT (vec[1] == double(1e10));
+  ASSERT (vec[2] == double(-3.1));
   if (read2) {
     // Do alignment and check if done as expected.
     int pos = bs.tellPos();
-    Assert (bs.align(0) == 0);
-    Assert (bs.align(1) == 0);
-    Assert (bs.align(128) == uint(128-pos));
+    ASSERT (bs.align(0) == 0);
+    ASSERT (bs.align(1) == 0);
+    ASSERT (bs.align(128) == uint(128-pos));
     // Read and check the complex vector.
     std::vector<fcomplex> vecc;
     bs >> vecc;
-    Assert (vecc.size() == 2);
-    Assert (vecc[0] == fcomplex(2,3));
-    Assert (vecc[1] == fcomplex(-1,1e10));
+    ASSERT (vecc.size() == 2);
+    ASSERT (vecc[0] == fcomplex(2,3));
+    ASSERT (vecc[1] == fcomplex(-1,1e10));
   }
 }
 
 int main()
 {
   try {
+    INIT_LOGGER("tBlobArray.log_prop");
     {
       {
 	// Create the blob in a file.
@@ -114,18 +114,18 @@ int main()
 	bs >> vec;
 	int pos = bs.tellPos();
 	// Do the alignment again.
-	Assert (bs.align(0) == 0);
-	Assert (bs.align(1) == 0);
-	Assert (bs.align(128) == uint(128-pos));
+	ASSERT (bs.align(0) == 0);
+	ASSERT (bs.align(1) == 0);
+	ASSERT (bs.align(128) == uint(128-pos));
 	// Interpret the complex vector directly as an array.
 	// Check if the shape and values are correct.
 	std::vector<uint32> shape;
 	uint cpos = getSpaceBlobArray<fcomplex> (bs, true, shape, false);
-	Assert (shape.size() == 1);
-	Assert (shape[0] == 2);
+	ASSERT (shape.size() == 1);
+	ASSERT (shape[0] == 2);
 	const fcomplex* ptr = bob2.getPointer<fcomplex> (cpos);
-	Assert (ptr[0] == fcomplex(2,3));
-	Assert (ptr[1] == fcomplex(-1,1e10));
+	ASSERT (ptr[0] == fcomplex(2,3));
+	ASSERT (ptr[1] == fcomplex(-1,1e10));
       }
     }
     {

@@ -24,7 +24,7 @@
 #define COMMON_BLOBOBUFVECTOR_H
 
 #include <Common/BlobOBufChar.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <vector>
 
 namespace LOFAR {
@@ -51,8 +51,8 @@ public:
 		   expandSize, start, false),
       itsVector (&buffer)
     {
-      Assert (sizeof(T)==1);
-      Assert (start <= buffer.size());
+      ASSERT(sizeof(T)==1);
+      ASSERT(start <= buffer.size());
     }
 
   // Destructor.

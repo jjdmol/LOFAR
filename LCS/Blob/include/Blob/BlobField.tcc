@@ -27,7 +27,7 @@
 #include <Common/BlobIBufChar.h>
 #include <Common/BlobOBufChar.h>
 #include <Common/DataConvert.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
@@ -246,7 +246,7 @@ namespace LOFAR {
     if (getOffset() < 0) {
       return 0;
     }
-    DbgAssert (getOffset() + getNelem()*sizeof(T) <= buf.size());
+    DBGASSERT (getOffset() + getNelem()*sizeof(T) <= buf.size());
     T* data = (T*)(buf.getBuffer() + getOffset());
     return data;
   }
@@ -257,24 +257,33 @@ namespace LOFAR {
     if (getOffset() < 0) {
       return 0;
     }
-    DbgAssert (getOffset() + getNelem()*sizeof(T) <= buf.size());
+    DBGASSERT (getOffset() + getNelem()*sizeof(T) <= buf.size());
     T* data = (T*)(buf.getBuffer() + getOffset());
     return data;
   }
 
+  //# The ifdef is needed to avoid compiler warnings about unused.
   template<typename T>
+#ifdef ENABLE_DBGASSERT
   void* BlobField<T>::getOData (const std::type_info& info,
+#else
+  void* BlobField<T>::getOData (const std::type_info&,
+#endif
 				BlobOBufChar& buf) const
   {
-    DbgAssert(info == typeid(T));
+    DBGASSERT(info == typeid(T));
     return getOData(buf);
   }
   
   template<typename T>
+#ifdef ENABLE_DBGASSERT
   const void* BlobField<T>::getIData (const std::type_info& info,
+#else
+  const void* BlobField<T>::getIData (const std::type_info&,
+#endif
 				      BlobIBufChar& buf) const
   {
-    DbgAssert(info == typeid(T));
+    DBGASSERT(info == typeid(T));
     return getIData(buf);
   }
 
@@ -283,7 +292,7 @@ namespace LOFAR {
 				  LOFAR::DataFormat fmt) const
   {
     if (getOffset() >= 0) {
-      DbgAssert (getOffset() + getNelem()*sizeof(T) <= buf.size());
+      DBGASSERT (getOffset() + getNelem()*sizeof(T) <= buf.size());
       T* data = (T*)(buf.getBuffer() + getOffset());
       LOFAR::dataConvert (fmt, data, getNelem());
       if (! isScalar()) {

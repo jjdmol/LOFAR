@@ -27,6 +27,7 @@
 #include <Common/BlobIBufChar.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
+#include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 
 using namespace LOFAR;
@@ -201,6 +202,7 @@ void doItParse()
 int main()
 {
   try {
+    INIT_LOGGER("tKeyValueMap.log_prop");
     doIt();
     doItParse();
   } catch (...) {

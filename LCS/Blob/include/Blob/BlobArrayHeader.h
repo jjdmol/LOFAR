@@ -25,7 +25,7 @@
 
 #include <Common/BlobHeader.h>
 #include <Common/TypeNames.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
@@ -89,7 +89,7 @@ public:
   // Set the size of the given axis.
   void setAxisSize (uint axis, uint size)
     {
-      DbgAssert (axis < NDIM);
+      DBGASSERT (axis < NDIM);
       itsSize[axis] = size;
       setTotalLength();
     }
@@ -97,7 +97,7 @@ public:
   // Get the size of the given axis.
   uint getAxisSize (uint axis) const
     {
-      DbgAssert (axis < NDIM);
+      DBGASSERT (axis < NDIM);
       return (mustConvert() ?
 	      LOFAR::dataConvert(getDataFormat(), itsSize[axis]) :
 	      itsSize[axis]);

@@ -26,7 +26,7 @@
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 #include <Common/TypeNames.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 #if defined(HAVE_AIPSPP) 
 # include <aips/Arrays/Array.h>
@@ -132,7 +132,7 @@ BlobIStream& operator>> (BlobIStream& bs, blitz::array<T,NDIM>& arr)
   bool fortranOrder;
   uint16 ndim;
   getBlobArrayStart (bs, fortranOrder, ndim);
-  Assert (ndim == NDIM);
+  ASSERT (ndim == NDIM);
   TinyVector<NDIM>(uint32,NDIM) shape;
   getBlobArrayShape (bs, shape.data(), NDIM, fortranOrder!=arr.isMinorRank());
   arr.resize (shape);
@@ -195,7 +195,7 @@ BlobIStream& getBlobVector (BlobIStream& bs, T*& arr, uint32& size)
   bool fortranOrder;
   uint16 ndim;
   getBlobArrayStart (bs, fortranOrder, ndim);
-  Assert (ndim == 1);
+  ASSERT (ndim == 1);
   getBlobArrayShape (bs, &size, 1, false);
   arr = new T[size];
   getBlobArrayData (bs, arr, size);
@@ -254,7 +254,7 @@ BlobIStream& operator>> (BlobIStream& bs, std::vector<T>& arr)
   bool fortranOrder;
   uint16 ndim;
   getBlobArrayStart (bs, fortranOrder, ndim);
-  Assert (ndim == 1);
+  ASSERT (ndim == 1);
   uint32 size;
   getBlobArrayShape (bs, &size, 1, false);
   arr.resize (size);

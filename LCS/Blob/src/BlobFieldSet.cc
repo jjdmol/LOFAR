@@ -30,12 +30,16 @@
 #include <Common/Exception.h>
 
 namespace LOFAR {
+
+  INIT_TRACER_CONTEXT(BlobFieldSet, "BlobFieldSet");
   
   BlobFieldSet::BlobFieldSet (const std::string& name)
     : itsName          (name),
       itsVersion       (0),
       itsHasFixedShape (true)
-  {}
+  {
+    LOG_TRACE_FLOW_STR ("Constructed set " << name);
+  }
 
   BlobFieldSet::BlobFieldSet (const BlobFieldSet& that)
   {

@@ -25,7 +25,7 @@
 
 #include <Common/BlobHeader.h>
 #include <Common/DataFormat.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 
 // Use the same magic value as used in the AIPS++ class AipsIO.
@@ -42,11 +42,11 @@ LOFAR::BlobHeader<NAMELENGTH>::BlobHeader (const char* objectType, int version,
   itsReservedLength (sizeof(itsName))
 {
   uint len = strlen(objectType);
-  Assert (len <= NAMELENGTH);
-  Assert (len < 256);
+  ASSERT (len <= NAMELENGTH);
+  ASSERT (len < 256);
   memcpy (itsName, objectType, len);
   itsNameLength = len;
-  DbgAssert (plainSize() == (char*)(&itsName) - (char*)this);
+  DBGASSERT (plainSize() == (char*)(&itsName) - (char*)this);
 }
     
 template<uint NAMELENGTH>

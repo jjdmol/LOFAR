@@ -1,4 +1,4 @@
-check_PROGRAMS			= tDebug \
+check_PROGRAMS			= tDebug testLogger \
                                   tBlobString tBlobHeader tBlobArrayHeader \
                                   tBlobStream tBlobArray tBlobField \
 				  tDataConvert tKeyValueMap \
@@ -6,6 +6,7 @@ check_PROGRAMS			= tDebug \
 #				  tLorrays
 
 TESTS	= tDebug_test.sh \
+	  testLogger_test.sh \
           tBlobString_test.sh \
 	  tBlobHeader_test.sh \
 	  tBlobArrayHeader_test.sh \
@@ -20,6 +21,10 @@ TESTS	= tDebug_test.sh \
 tDebug_SOURCES			= tDebug.cc
 tDebug_LDADD			= ../src/libcommon.la
 tDebug_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
+
+testLogger_SOURCES		= testLogger.cc
+testLogger_LDADD		= ../src/libcommon.la	
+testLogger_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 tBlobString_SOURCES		= tBlobString.cc
 tBlobString_LDADD		= ../src/libcommon.la

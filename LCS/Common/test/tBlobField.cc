@@ -30,7 +30,6 @@
 #include <Common/BlobIBufVector.h>
 #include <Common/BlobHeader.h>
 #include <Common/DataConvert.h>
-#include <Common/Debug.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -71,12 +70,12 @@ void doOut (BlobFieldSet& fset, BlobOBufChar& bb)
   // Create the blob for the given field set.
   fset.createBlob (bb);
   // Check if fields are correct.
-  Assert (fset[0].getNelem() == 1);
-  Assert (fset[0].isScalar());
-  Assert (fset[1].getNelem() == 20);
-  Assert (! fset[1].isScalar());
-  Assert (fset[2].getNelem() == 2);
-  Assert (! fset[2].isScalar());
+  ASSERT (fset[0].getNelem() == 1);
+  ASSERT (fset[0].isScalar());
+  ASSERT (fset[1].getNelem() == 20);
+  ASSERT (! fset[1].isScalar());
+  ASSERT (fset[2].getNelem() == 2);
+  ASSERT (! fset[2].isScalar());
   // Get pointers to the data in the buffer.
   int* pint = fset[0].getData<int> (bb);
   fcomplex* pfcomplex = fset[1].getData<fcomplex> (bb);
@@ -96,23 +95,23 @@ void doOut (BlobFieldSet& fset, BlobOBufChar& bb)
 void doIn (BlobFieldSet& fset, BlobIBufChar& bb)
 {
   // Check if fields are correct.
-  Assert (fset[0].getNelem() == 1);
-  Assert (fset[0].isScalar());
-  Assert (fset[1].getNelem() == 20);
-  Assert (! fset[1].isScalar());
-  Assert (fset[2].getNelem() == 2);
-  Assert (! fset[2].isScalar());
+  ASSERT (fset[0].getNelem() == 1);
+  ASSERT (fset[0].isScalar());
+  ASSERT (fset[1].getNelem() == 20);
+  ASSERT (! fset[1].isScalar());
+  ASSERT (fset[2].getNelem() == 2);
+  ASSERT (! fset[2].isScalar());
   // Get pointers to the data.
   const int* pint = fset[0].getData<int> (bb);
   const fcomplex* pfcomplex = fset[1].getData<fcomplex> (bb);
   const XX* px = fset[2].getData<XX> (bb);
   // Check if data matches as put in doOut.
-  Assert (*pint == 3);
+  ASSERT (*pint == 3);
   for (uint i=0; i<fset[1].getNelem(); i++) {
-    Assert (pfcomplex[i] == fcomplex(i+1.,i+2.));
+    ASSERT (pfcomplex[i] == fcomplex(i+1.,i+2.));
   }
-  Assert (px[0] == XX(1,2));
-  Assert (px[1] == XX(2,1));
+  ASSERT (px[0] == XX(1,2));
+  ASSERT (px[1] == XX(2,1));
 }
 
 // Function to interpret and check a blob.
@@ -121,12 +120,12 @@ void doIn2 (BlobFieldSet& fset, BlobIBufChar& bb)
   bool convert = BlobFieldSet::checkHeader (bb, 0, 0, bb.size());
   fset.openBlob (bb);
   // Check if fields are correct.
-  Assert (fset[0].getNelem() == 1);
-  Assert (fset[0].isScalar());
-  Assert (fset[1].getNelem() == 20);
-  Assert (! fset[1].isScalar());
-  Assert (fset[2].getNelem() == 2);
-  Assert (! fset[2].isScalar());
+  ASSERT (fset[0].getNelem() == 1);
+  ASSERT (fset[0].isScalar());
+  ASSERT (fset[1].getNelem() == 20);
+  ASSERT (! fset[1].isScalar());
+  ASSERT (fset[2].getNelem() == 2);
+  ASSERT (! fset[2].isScalar());
   // Get pointers to the data.
   const int* pint = fset[0].getData<int> (bb);
   const fcomplex* pfcomplex = fset[1].getData<fcomplex> (bb);
@@ -137,24 +136,24 @@ void doIn2 (BlobFieldSet& fset, BlobIBufChar& bb)
       ((BlobHeaderBase*)(bb.getBuffer()))->getDataFormat();
     fcomplex valfc;
     XX valxx(0,0);
-    Assert (LOFAR::dataConvert (fmt, *pint) == 3);
+    ASSERT (LOFAR::dataConvert (fmt, *pint) == 3);
     for (uint i=0; i<fset[1].getNelem(); i++) {
       LOFAR::dataConvertFloat (fmt, &valfc, pfcomplex+i, 2);
-      Assert (valfc == fcomplex(i+1.,i+2.));
+      ASSERT (valfc == fcomplex(i+1.,i+2.));
     }
     memcpy (&valxx, px, sizeof(XX));
     LOFAR::dataConvert (fmt, &valxx, 1);
-    Assert (valxx == XX(1,2));
+    ASSERT (valxx == XX(1,2));
     memcpy (&valxx, px+1, sizeof(XX));
     LOFAR::dataConvert (fmt, &valxx, 1);
-    Assert (valxx == XX(2,1));
+    ASSERT (valxx == XX(2,1));
   } else {
-    Assert (*pint == 3);
+    ASSERT (*pint == 3);
     for (uint i=0; i<fset[1].getNelem(); i++) {
-      Assert (pfcomplex[i] == fcomplex(i+1.,i+2.));
+      ASSERT (pfcomplex[i] == fcomplex(i+1.,i+2.));
     }
-    Assert (px[0] == XX(1,2));
-    Assert (px[1] == XX(2,1));
+    ASSERT (px[0] == XX(1,2));
+    ASSERT (px[1] == XX(2,1));
   }
 }
 
@@ -193,6 +192,7 @@ void readFile (BlobFieldSet& fset, BlobFieldSet& fset2,
 int main()
 {
   try {
+    INIT_LOGGER("tBlobField.log_prop");
     {
       // Create a version 1 field set.
       BlobFieldSet fset("test1");
@@ -206,7 +206,7 @@ int main()
       BlobFieldSet fset2(fset);
       fset2.add (BlobField<double> (2));
       fset2[3].setUseBlobHeader(true);
-      Assert (fset2.hasFixedShape());
+      ASSERT (fset2.hasFixedShape());
       {
 	// Create the blob and read it back.
 	BlobString bstr;

@@ -31,7 +31,6 @@
 #include <Common/BlobIBufString.h>
 #include <Common/BlobOBufString.h>
 #include <Common/BlobOBufNull.h>
-#include <Common/Debug.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -57,7 +56,7 @@ int doOut (BlobOBuffer& bb, bool header8=false)
 {
   uint len = 0;
   BlobOStream bos(bb);
-  Assert (bos.putStart ("test", 1) == 1);
+  ASSERT (bos.putStart ("test", 1) == 1);
   uint ln = 18;
   if (header8) doAlign(bos,ln);
   bos << true;
@@ -65,35 +64,35 @@ int doOut (BlobOBuffer& bb, bool header8=false)
   bos << int32(4);
   bos.put ("defg", 4);
   ln += 20;
-  Assert (bos.putEnd() == ln);
+  ASSERT (bos.putEnd() == ln);
   len += ln;
 
   if (header8) doAlign(bos,len);
-  Assert (bos.putStart ("test1", 1) == 1);
+  ASSERT (bos.putStart ("test1", 1) == 1);
   ln = 19;
   if (header8) doAlign(bos,ln);
   bos << int16(2);
   bos << fcomplex(1,2);
   ln += 10;
   if (header8) doAlign(bos,ln);
-  Assert (bos.putStart ("test1a", 3) == 2);
+  ASSERT (bos.putStart ("test1a", 3) == 2);
   uint ln2 = 20;
   if (header8) doAlign(bos,ln2);
   bos << std::string("defg");
   ln2 += 12;
-  Assert (bos.putEnd() == ln2);
+  ASSERT (bos.putEnd() == ln2);
   ln += ln2 + 4;
-  Assert (bos.putEnd() == ln);
+  ASSERT (bos.putEnd() == ln);
   len += ln;
 
   if (header8) doAlign(bos,len);
-  Assert (bos.putStart ("test2", -1) == 1);
+  ASSERT (bos.putStart ("test2", -1) == 1);
   ln = 19;
   if (header8) doAlign(bos,ln);
   bos << int64(100);
   bos << dcomplex(5,6);
   ln += 28;
-  Assert (bos.putEnd() == ln);
+  ASSERT (bos.putEnd() == ln);
   len += ln;
 
   if (header8) doAlign(bos,len);
@@ -182,7 +181,7 @@ int doOut (BlobOBuffer& bb, bool header8=false)
     ln += (2007+7)/8;
   }
   ln += 4;
-  Assert (bos.putEnd() == ln);
+  ASSERT (bos.putEnd() == ln);
   len += ln;
 
   return len;
@@ -202,48 +201,48 @@ void doIn (BlobIBuffer& bb, bool header8=false)
   std::string  vals;
 
   BlobIStream bis(bb);
-  Assert (bis.getStart ("test") == 1);
+  ASSERT (bis.getStart ("test") == 1);
   uint ln = 18;
   if (header8) doAlign(bis,ln);
   bis >> valb;
-  Assert (valb == true);
+  ASSERT (valb == true);
   bis >> vals;
-  Assert (vals.size() == 3  &&  vals == "abc");
+  ASSERT (vals.size() == 3  &&  vals == "abc");
   bis >> vals;
-  Assert (vals.size() == 4  &&  vals == "defg");
+  ASSERT (vals.size() == 4  &&  vals == "defg");
   ln += 20;
-  Assert (bis.getEnd() == ln);
+  ASSERT (bis.getEnd() == ln);
 
   if (header8) doAlign(bis,dumlen);
-  Assert (bis.getStart ("test1") == 1);
+  ASSERT (bis.getStart ("test1") == 1);
   ln = 19;
   if (header8) doAlign(bis,ln);
   bis >> val16;
-  Assert (val16 == 2);
+  ASSERT (val16 == 2);
   bis >> valfcx;
-  Assert (valfcx == fcomplex(1,2));
+  ASSERT (valfcx == fcomplex(1,2));
   ln += 10;
   if (header8) doAlign(bis,ln);
-  Assert (bis.getStart ("test1a") == 3);
+  ASSERT (bis.getStart ("test1a") == 3);
   uint ln2 = 20;
   if (header8) doAlign(bis,ln2);
   bis >> vals;
-  Assert (vals.size() == 4  &&  vals == "defg");
+  ASSERT (vals.size() == 4  &&  vals == "defg");
   ln2 += 12;
-  Assert (bis.getEnd() == ln2);
+  ASSERT (bis.getEnd() == ln2);
   ln += ln2 + 4;
-  Assert (bis.getEnd() == ln);
+  ASSERT (bis.getEnd() == ln);
 
   if (header8) doAlign(bis,dumlen);
-  Assert (bis.getStart ("test2") == -1);
+  ASSERT (bis.getStart ("test2") == -1);
   ln = 19;
   if (header8) doAlign(bis,ln);
   bis >> val64;
-  Assert (val64 == 100);
+  ASSERT (val64 == 100);
   bis >> valdcx;
-  Assert (valdcx == dcomplex(5,6));
+  ASSERT (valdcx == dcomplex(5,6));
   ln += 28;
-  Assert (bis.getEnd() == ln);
+  ASSERT (bis.getEnd() == ln);
 
   if (header8) doAlign(bis,dumlen);
   bis.getStart ("testall");
@@ -288,29 +287,29 @@ void doIn (BlobIBuffer& bb, bool header8=false)
   valst[0] = string("0123456789");
   valst[1] = "abcdefghijklmnopqrstuvwxyz";
   bis >> valblc[0];
-  Assert (valbl[0] == valblc[0]);
+  ASSERT (valbl[0] == valblc[0]);
   bis >> valscc[0];
-  Assert (valsc[0] == valscc[0]);
+  ASSERT (valsc[0] == valscc[0]);
   bis >> valucc[0];
-  Assert (valuc[0] == valucc[0]);
+  ASSERT (valuc[0] == valucc[0]);
   bis >> valssc[0];
-  Assert (valss[0] == valssc[0]);
+  ASSERT (valss[0] == valssc[0]);
   bis >> valusc[0];
-  Assert (valus[0] == valusc[0]);
+  ASSERT (valus[0] == valusc[0]);
   bis >> valsic[0];
-  Assert (valsi[0] == valsic[0]);
+  ASSERT (valsi[0] == valsic[0]);
   bis >> valuic[0];
-  Assert (valui[0] == valuic[0]);
+  ASSERT (valui[0] == valuic[0]);
   bis >> valsfc[0];
-  Assert (valsf[0] == valsfc[0]);
+  ASSERT (valsf[0] == valsfc[0]);
   bis >> valsdc[0];
-  Assert (valsd[0] == valsdc[0]);
+  ASSERT (valsd[0] == valsdc[0]);
   bis >> valfcc[0];
-  Assert (valfc[0] == valfcc[0]);
+  ASSERT (valfc[0] == valfcc[0]);
   bis >> valdcc[0];
-  Assert (valdc[0] == valdcc[0]);
+  ASSERT (valdc[0] == valdcc[0]);
   bis >> valstc[0];
-  Assert (valst[0] == valstc[0]);
+  ASSERT (valst[0] == valstc[0]);
   bis.get (valb2c, sizeof(valb2c));
   bis.get (valblc, 2);
   bis.get (valscc, 2);
@@ -325,37 +324,37 @@ void doIn (BlobIBuffer& bb, bool header8=false)
   bis.get (valdcc, 2);
   bis.get (valstc, 2);
   for (uint i=0; i<2; i++) {
-    Assert (valbl[i] == valblc[i]);
-    Assert (valsc[i] == valscc[i]);
-    Assert (valuc[i] == valucc[i]);
-    Assert (valss[i] == valssc[i]);
-    Assert (valus[i] == valusc[i]);
-    Assert (valsi[i] == valsic[i]);
-    Assert (valui[i] == valuic[i]);
-    Assert (valsf[i] == valsfc[i]);
-    Assert (valsd[i] == valsdc[i]);
-    Assert (valfc[i] == valfcc[i]);
-    Assert (valdc[i] == valdcc[i]);
-    Assert (valst[i] == valstc[i]);
+    ASSERT (valbl[i] == valblc[i]);
+    ASSERT (valsc[i] == valscc[i]);
+    ASSERT (valuc[i] == valucc[i]);
+    ASSERT (valss[i] == valssc[i]);
+    ASSERT (valus[i] == valusc[i]);
+    ASSERT (valsi[i] == valsic[i]);
+    ASSERT (valui[i] == valuic[i]);
+    ASSERT (valsf[i] == valsfc[i]);
+    ASSERT (valsd[i] == valsdc[i]);
+    ASSERT (valfc[i] == valfcc[i]);
+    ASSERT (valdc[i] == valdcc[i]);
+    ASSERT (valst[i] == valstc[i]);
   }
   for (uint i=0; i<sizeof(valb2); i++) {
-    Assert (valb2[i] == valb2c[i]);
+    ASSERT (valb2[i] == valb2c[i]);
   }
   {
     std::vector<uint> veci;
     std::vector<bool> vecb;
     bis.get (veci);
     bis.get (vecb);
-    Assert (veci.size() == 600);
-    Assert (veci.size() == vecb.size());
+    ASSERT (veci.size() == 600);
+    ASSERT (veci.size() == vecb.size());
     for (uint i=0; i<veci.size(); i++) {
-      AssertStr (veci[i] == i, i);
-      AssertStr (vecb[i] == bool(i%3), i);
+      ASSERTSTR (veci[i] == i, i);
+      ASSERTSTR (vecb[i] == bool(i%3), i);
     }
     bool bufb[2007];
     bis.get (bufb, 2007);
     for (uint i=0; i<2007; i++) {
-      Assert (bufb[i] == bool(i%7));
+      ASSERT (bufb[i] == bool(i%7));
     }
   }
   bis.getEnd();
@@ -365,6 +364,7 @@ void doIn (BlobIBuffer& bb, bool header8=false)
 int main()
 {
   try {
+    INIT_LOGGER("tBlobStream.log_prop");
     {
       int len;
       {
@@ -372,28 +372,28 @@ int main()
 	std::ofstream os ("tBlobStream_tmp.dat");
 	BlobOBufStream bob(os);
         len = doOut (bob);
-	Assert (int(os.tellp()) == len);
+	ASSERT (int(os.tellp()) == len);
       }
       {
 	// Use the file as input.
 	std::ifstream is ("tBlobStream_tmp.dat");
 	BlobIBufStream bib(is);
 	doIn (bib);
-	Assert (int(is.tellg()) == len);
+	ASSERT (int(is.tellg()) == len);
       }
       {
 	// Use a standard little-endian file as input.
 	std::ifstream is ("tBlobStream.in_le");
 	BlobIBufStream bib(is);
 	doIn (bib);
-	Assert (int(is.tellg()) == len);
+	ASSERT (int(is.tellg()) == len);
       }
       {
 	// Use a standard big-endian file as input.
 	std::ifstream is ("tBlobStream.in_be");
 	BlobIBufStream bib(is);
 	doIn (bib);
-	Assert (int(is.tellg()) == len);
+	ASSERT (int(is.tellg()) == len);
       }
     }
     {
@@ -446,7 +446,7 @@ int main()
       uchar buf[3500];
       BlobOBufChar bob(buf,3500);
       doOut (bob);
-      Assert (bob.getBuffer() == buf);
+      ASSERT (bob.getBuffer() == buf);
       BlobIBufChar bib(bob.getBuffer(), bob.size());
       doIn (bib);
     }
@@ -455,7 +455,7 @@ int main()
       uchar buf[20];
       BlobOBufChar bob(buf,20,20);
       doOut (bob);
-      Assert (bob.getBuffer() != buf);
+      ASSERT (bob.getBuffer() != buf);
       BlobIBufChar bib(bob.getBuffer(), bob.size());
       doIn (bib);
     }

@@ -391,29 +391,31 @@ namespace LOFAR {
 	oss << stream;				\
 	log4cplus::Logger::getInstance(LOFARLOGGER_PACKAGE ".EXCEPTION").log( \
 					log4cplus::DEBUG_LOG_LEVEL, oss.str(), __FILE__, __LINE__); \
-	} \
-	throw (exc(stream, __HERE__))
+	throw (exc(oss.str(), __HERE__)); \
+	}
 
 // If the condition of assert is NOT met a logrequest is sent to the logger
 // <module>.EXCEPTION and an AsserError exception is thrown.
-#define ASSERT(cond,stream) \
+#define ASSERT(cond) \
 	if (!(cond))  THROW(LOFAR::AssertError, "Assertion: " #cond)
+#define ASSERTSTR(cond,stream) \
+	if (!(cond))  THROW(LOFAR::AssertError, "Assertion: " #cond "; " << stream)
 
 // If the condition of failwhen is met a logrequest is sent to the logger
 // <module>.EXCEPTION and an AsserError exception is thrown.
-#define FAILWHEN(cond,stream) \
+#define FAILWHEN(cond) \
 	if (cond)  THROW(LOFAR::AssertError, "Failtest: " #cond)
 
 // The DBG... version of ASSERT and FAILWHEN will only be in your compiled
 // code when the (pre)compiler flag ENABLE_DBGASSERT is defined.
 #ifdef ENABLE_DBGASSERT
-#define DBGASSERT(cond,stream)		ASSERT(cond,stream)
-#define DBGFAILWHEN(cond,stream)	FAILWHEN(cond,stream)
+#define DBGASSERT(cond)		   ASSERT(cond)
+#define DBGASSERTSTR(cond,stream)  ASSERTSTR(cond,stream)
+#define DBGFAILWHEN(cond)          FAILWHEN(cond)
 #else
-#define DBGASSERT(cond,stream)
-#define DBGFAILWHEN(cond,stream)
+#define DBGASSERT(cond)
+#define DBGASSERTSTR(cond,stream)
+#define DBGFAILWHEN(cond)
 #endif
 
 #endif // file read before
-
-
