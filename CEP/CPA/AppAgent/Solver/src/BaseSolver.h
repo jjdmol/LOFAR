@@ -1,8 +1,8 @@
 #ifndef SOLVER_SRC_BASESOLVER_H_HEADER_INCLUDED_F6597D9B
 #define SOLVER_SRC_BASESOLVER_H_HEADER_INCLUDED_F6597D9B
     
-#include <VisAgent/VisInputAgent.h>
-#include <VisAgent/VisOutputAgent.h>
+#include <VisAgent/InputAgent.h>
+#include <VisAgent/OutputAgent.h>
 #include <SolverControl/SolverControlAgent.h>
 #include <Solver/AID-Solver.h>
     
@@ -16,11 +16,11 @@ class BaseSolver
 {
   public:
     //##ModelId=3E00AC30030A
-    BaseSolver (VisInputAgent &in,VisOutputAgent &out,
+    BaseSolver (VisAgent::InputAgent &in,VisAgent::OutputAgent &out,
                 SolverControlAgent &control);
 
     //##ModelId=3E00AA510160
-    virtual bool init (const DataRecord::Ref &data);
+    virtual bool init (const DataRecord &data);
 
     //##ModelId=3E00AA510173
     virtual void run () = 0;
@@ -41,24 +41,24 @@ class BaseSolver
     
   private:
     //##ModelId=3E00AA51011E
-    VisInputAgent & inputAgent;
+    VisAgent::InputAgent & inputAgent;
 
     //##ModelId=3E00AA51012C
-    VisOutputAgent & outputAgent;
+    VisAgent::OutputAgent & outputAgent;
 
     //##ModelId=3E00AA51013D
-    SolverControl::SolverControlAgent & controlAgent;
+    SolverControlAgent & controlAgent;
     
   protected:
       
     //##ModelId=3E00C7DC027D
-    VisInputAgent  & input  ()      { return inputAgent; }
+    VisAgent::InputAgent  & input  ()      { return inputAgent; }
   
     //##ModelId=3E00C7DC0304
-    VisOutputAgent & output ()      { return outputAgent; }
+    VisAgent::OutputAgent & output ()      { return outputAgent; }
     
     //##ModelId=3E00C7DC0393
-    SolverControl::SolverControlAgent & control () { return controlAgent; }
+    SolverControlAgent    & control () { return controlAgent; }
       
 };
 

@@ -36,6 +36,9 @@ namespace SolverControl {
 using namespace AppControlAgentVocabulary;
 
 const HIID 
+    FSolverControlParams = AidSolver|FControlParams,
+    
+    
     // Constants for event names
     //    Posted at start of every solve domain
     StartDomainEvent    = AidStart|AidDomain,
@@ -98,7 +101,7 @@ class SolverControlAgent : public AppControlAgent
     //##ModelId=3E01FD1D03DB
     //##Documentation
     //## inits various counters
-    virtual bool init (const DataRecord::Ref &data);
+    virtual bool init (const DataRecord &data);
   
     //##ModelId=3DFF2D300027
     //##Documentation
@@ -142,11 +145,6 @@ class SolverControlAgent : public AppControlAgent
     //## function and/or rely on the return code.
     virtual int endIteration (double conv);
 
-    //##ModelId=3E3E52570074
-    //##Documentation
-    //## Posts an event on behalf of the application.
-    //## Default version here simply debug-prints it
-    virtual void postEvent(const HIID &id, const DataRecord::Ref &data = DataRecord::Ref());
     
     //##ModelId=3DFF2D6400EA
     //##Documentation
@@ -211,8 +209,12 @@ class SolverControlAgent : public AppControlAgent
     //##Documentation
     //## Constructor is protected; objects of this class may not be
     //## instantiated directly.
-    SolverControlAgent ()
-    {}
+    SolverControlAgent (const HIID &initf)
+      : AppControlAgent(initf) {}
+  
+    //##ModelId=3E4276F00147
+    SolverControlAgent (AppEventSink &sink,const HIID &initf)
+      : AppControlAgent(sink,initf) {}
   
     //##ModelId=3E0095CB0143
     //##Documentation
@@ -223,7 +225,13 @@ class SolverControlAgent : public AppControlAgent
     
 
   private:
-      
+    //##ModelId=3E42770000EC
+    SolverControlAgent();
+    //##ModelId=3E4277B5029C
+    SolverControlAgent(const SolverControlAgent& right);
+    //##ModelId=3E427701009D
+    SolverControlAgent& operator=(const SolverControlAgent& right);
+
     //##ModelId=3E005C7A016B
     //##Documentation
     //## Record containing current soution status

@@ -25,32 +25,50 @@
 namespace SolverControl {
 
 //##ModelId=3DFF2CCD01A1
-BatchAgent::BatchAgent()
+BatchAgent::BatchAgent(const HIID &initf)
+    : SolverControlAgent(initf)
+{
+}
+    //##ModelId=3E42792B02D8
+BatchAgent::BatchAgent(AppEventSink &sink, const HIID &initf)
+    : SolverControlAgent(sink,initf)
 {
 }
 
 //##ModelId=3E005A8403E5
-bool BatchAgent::init (const DataRecord::Ref &data)
+bool BatchAgent::init (const DataRecord &data)
 {
-  if( !SolverControlAgent::init(data) )
-    return False;
-  
-  const DataRecord &rec = *data;
-  cdebug(3)<<"init: "<<data->sdebug(6)<<endl;
-  // get the sub-record of solution jobs
-  int nparams = rec[FBatchControlJobs].size();
-  FailWhen( !nparams,"no job sun-records in in "+FBatchControlJobs.toString()+" field" );
-  // copy all solution jobs to the queue
-  jobs_.resize(nparams);
-  for( int i=0; i<nparams; i++ )
+  bool rethrow = data[FThrowError].as_bool(False);
+  try
   {
-    // attach a ref to the parameter subrecord
-    jobs_[i].attach( rec[FBatchControlJobs][i].as_DataRecord() );
+    FailWhen( !SolverControlAgent::init(data),"base init failed" );
+    
+    const DataRecord &rec = data[initfield()];
+    cdebug(3)<<"init: "<<rec.sdebug(6)<<endl;
+    
+    // get the sub-record of solution jobs
+    int nparams = rec[FBatchControlJobs].size();
+    FailWhen( !nparams,"no job sun-records in in "+FBatchControlJobs.toString()+" field" );
+    // copy all solution jobs to the queue
+    jobs_.resize(nparams);
+    for( int i=0; i<nparams; i++ )
+    {
+      // attach a ref to the parameter subrecord
+      jobs_[i].attach( rec[FBatchControlJobs][i].as_DataRecord() );
+    }
+    current_job_ = 0;
+
+    dprintf(1)("init: %d solve jobs initialized\n",nparams);  
+    return True;
   }
-  current_job_ = 0;
-  
-  dprintf(1)("init: %d solve jobs initialized\n",nparams);  
-  return True;
+  catch( std::exception &exc )
+  {
+    // throw it on, if requested
+    if( rethrow )
+      throw(exc);
+    setState(ERROR);
+    return False;
+  }
 }
 
 //##ModelId=3E0060C50000

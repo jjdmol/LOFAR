@@ -20,16 +20,16 @@
 //
 //  $Id$
 
-#ifndef _VISAGENT_VISINPUTAGENT_H
-#define _VISAGENT_VISINPUTAGENT_H 1
+#ifndef _VISAGENT_INPUTAGENT_H
+#define _VISAGENT_INPUTAGENT_H 1
     
 #include <AppAgent/AppAgent.h>
+#include <AppAgent/AppEventAgentBase.h>
+#include <VisAgent/VisAgentVocabulary.h>
 #include <VisCube/VisTile.h>
-//#include <VisAgent/AID-VisAgent.h>
-    
-#pragma aidgroup VisAgent
-#pragma aid Vis VisAgent VisInputAgent VisOutputAgent 
-#pragma aid Input Output Event Have Data Header End Message Error
+
+namespace VisAgent 
+{
 
 //##ModelId=3DF9FECD0169
 //##Documentation
@@ -43,9 +43,24 @@
 //## 
 //## A visibility stream is represented by a header (a DataRecord), followed by
 //## a number of VisTiles. 
-class VisInputAgent : public virtual AppAgent
+class InputAgent : public AppEventAgentBase
 {
   public:
+    //##ModelId=3E41433F01DD
+    explicit InputAgent (const HIID &initf = VisAgent::FInputParams)
+      : AppEventAgentBase(initf) {}
+
+    //##ModelId=3E41433F037E
+    InputAgent (AppEventSink &sink, const HIID &initf = VisAgent::FInputParams)
+      : AppEventAgentBase(sink,initf) {}
+    
+    //##ModelId=3E42350F01EB
+    //##Documentation
+    //## Agent initialization method. Called by the application to initialize
+    //## or reinitialize an agent. Agent parameters are supplied via a
+    //## DataRecord.
+    virtual bool init (const DataRecord &data);
+  
     //##ModelId=3DF9FECF0310
     //##Documentation
     //## Gets visibilities header from input stream. If wait=True, blocks until
@@ -54,7 +69,7 @@ class VisInputAgent : public virtual AppAgent
     //##          WAIT      header has not yet arrived (only for wait=False)
     //##          CLOSED    stream closed
     //##          OUTOFSEQ  next object in stream is not a header (i.e. a tile)
-      virtual int getHeader   (DataRecord::Ref &hdr,int wait = AppAgent::WAIT) =0;
+      virtual int getHeader   (DataRecord::Ref &hdr,int wait = AppEventSink::WAIT);
   
     //##ModelId=3DF9FECF03A9
     //##Documentation
@@ -64,19 +79,19 @@ class VisInputAgent : public virtual AppAgent
     //##          WAIT      a tile has not yet arrived (only for wait=False)
     //##          CLOSED    stream closed
     //##          OUTOFSEQ  next object in stream is not a tile (i.e. a header)
-      virtual int getNextTile (VisTile::Ref &tile,int wait = AppAgent::WAIT) =0;
+      virtual int getNextTile (VisTile::Ref &tile,int wait = AppEventSink::WAIT);
       
     //##ModelId=3DF9FED0005A
     //##Documentation
     //## Checks if a header is waiting in the stream. Return value: same as
     //## would have been returned by getHeader(wait=False).
-      virtual int hasHeader   () =0;
+      virtual int hasHeader   () const;
       
     //##ModelId=3DF9FED00076
     //##Documentation
     //## Checks if a tile is waiting in the stream. Return value: same as would
     //## have been returned by getNextTile(wait=False).
-      virtual int hasTile     () =0;
+      virtual int hasTile     () const;
       
     //##ModelId=3DF9FED00090
     //##Documentation
@@ -84,14 +99,15 @@ class VisInputAgent : public virtual AppAgent
     //## implement this. An application can use suspend() to "advise" the input
     //## agent that it is not keeping up with the input data rate; the agent
     //## can use this to determine it queuing or load balancing strategy.
-      virtual void suspend     ()
-      {};
+      virtual void suspend     ();
       
     //##ModelId=3DF9FED000AA
     //##Documentation
     //## Resumes a stream after a suspend(). 
-      virtual void resume      ()
-      {};
+      virtual void resume      ();
+      
+    //##ModelId=3E4273B30013
+      bool suspended() const;
       
     //##ModelId=3DF9FED000C6
     //##Documentation
@@ -101,10 +117,32 @@ class VisInputAgent : public virtual AppAgent
       virtual int  numPendingTiles ()
       { return hasTile() == SUCCESS ? 1 : 0; }
       
-  protected:
-    //##ModelId=3E3AA72F01DD
-      AppAgent::getEvent;
+    //##ModelId=3E41141D029F
+      virtual string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;
+
+
+  private:
+    //##ModelId=3E4165150313
+    InputAgent();
+
+    //##ModelId=3E41651601E4
+    InputAgent(const InputAgent& right);
+
+    //##ModelId=3E416516038F
+    InputAgent& operator=(const InputAgent& right);
+    
+    //##ModelId=3E42350E030A
+    bool suspended_;
+
 };
+
+//##ModelId=3E4273B30013
+inline bool InputAgent::suspended() const
+{
+    return suspended_;
+}
+
+} // namespace VisAgent
  
 #endif
 

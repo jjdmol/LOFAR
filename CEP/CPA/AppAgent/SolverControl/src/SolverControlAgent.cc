@@ -25,18 +25,17 @@
 namespace SolverControl
 {
   
-using namespace AppControlAgentVocabulary;
-  
 static int __dum = aidRegistry_SolverControl();
 
 InitDebugContext(SolverControlAgent,"SolverControl");
 
 
 //##ModelId=3E01FD1D03DB
-bool SolverControlAgent::init (const DataRecord::Ref &)
+bool SolverControlAgent::init (const DataRecord &data)
 {
+  if( !AppControlAgent::init(data) )
+    return False;
   domainNum_ = -1;
-  setState(INIT);
   return True;
 }
 
@@ -70,20 +69,14 @@ int SolverControlAgent::endIteration (double conv)
   return state();
 }
 
-//##ModelId=3E3E52570074
-void SolverControlAgent::postEvent (const HIID &id,const DataRecord::Ref &)
-{
-  dprintf(2)("posted event %s\n",id.toString().c_str());
-}
-
 //##ModelId=3DFF2D6400EA
 void SolverControlAgent::close ()
 {
   dprintf(1)("closing\n");
   Thread::Mutex::Lock lock(mutex());
-  setState(INIT);
   status_.detach();
   postEvent(SolverEndEvent);
+  AppControlAgent::close();
 }
 
 //##ModelId=3DFF5B240397

@@ -20,13 +20,17 @@
 //
 //  $Id$
 
-#include "VisFileInputAgent.h"
+#include "FileInputAgent.h"
 #include "AID-VisAgent.h"
 
+namespace VisAgent
+{
+  
 static int dum = aidRegistry_VisAgent();
 
+
 //##ModelId=3DF9FECE03AB
-DataRecord & VisFileInputAgent::initHeader ()
+DataRecord & FileInputAgent::initHeader ()
 {
   DataRecord *hdr;
   header_ <<= hdr = new DataRecord;
@@ -34,9 +38,9 @@ DataRecord & VisFileInputAgent::initHeader ()
 }
 
 //##ModelId=3DF9FECF009D
-int VisFileInputAgent::hasHeader ()
+int FileInputAgent::hasHeader ()
 {
-  if( suspended_ ) 
+  if( suspended() ) 
     return WAIT;
   if( fileState() == HEADER )
     return SUCCESS;
@@ -47,7 +51,7 @@ int VisFileInputAgent::hasHeader ()
 }
 
 //##ModelId=3DF9FECE03D1
-int VisFileInputAgent::getHeader (DataRecord::Ref &hdr,int wait)
+int FileInputAgent::getHeader (DataRecord::Ref &hdr,int wait)
 {
   // is the file state correct for a header?
   int res = hasHeader();
@@ -59,16 +63,16 @@ int VisFileInputAgent::getHeader (DataRecord::Ref &hdr,int wait)
   }
   else
   {
-    FailWhen( res == WAIT && wait != AppAgent::NOWAIT,
+    FailWhen( res == WAIT && wait != NOWAIT,
         "can't wait here: would block indefinitely" );
     return res;
   }
 }
 
 //##ModelId=3DF9FECF00BF
-int VisFileInputAgent::hasTile   ()
+int FileInputAgent::hasTile   ()
 {
-  if( suspended_ )
+  if( suspended() )
     return WAIT;
   if( fileState() == HEADER )
     return OUTOFSEQ;
@@ -79,7 +83,7 @@ int VisFileInputAgent::hasTile   ()
 }
 
 //##ModelId=3E2C299201D6
-int VisFileInputAgent::state() const
+int FileInputAgent::state() const
 {
   return fileState() != FILEERROR 
           ? SUCCESS 
@@ -87,10 +91,14 @@ int VisFileInputAgent::state() const
 }
 
 //##ModelId=3E2C2999029A
-string VisFileInputAgent::stateString() const
+string FileInputAgent::stateString() const
 {
   return fileState() == FILEERROR 
          ? "ERROR " + errorString()
          :  "OK (" + fileStateString() + ")";
+}
+
+
+
 }
 
