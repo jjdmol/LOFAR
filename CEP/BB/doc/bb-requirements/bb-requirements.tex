@@ -158,9 +158,9 @@
   \label{id2712500}\hypertarget{id2712500}{}%
   \begin{figure}
     \includegraphics[]{../figures/blackboard-use_concept.eps}
-    \label{figure-blackboard-use}\hypertarget{figure-blackboard-use}{}
+    \hypertarget{figure-blackboard-use}{}
     \caption{the way the BlackBoard will be used to monitor several
-    solution threads}
+    solution threads\label{figure-blackboard-use}}
   \end{figure}
 
     \subsection{a demo use-case}
@@ -169,8 +169,8 @@
       \label{id2719712}\hypertarget{id2719712}{}%
       \begin{figure}
         \epsfig{file=../figures/demo.usecase.eps}
-        \label{figure-demo-usecase}\hypertarget{demo-usecase}{}
-        \caption{the basic use-case for the self-calibration application}
+        \hypertarget{demo-usecase}{}
+        \caption{the basic use-case for the self-calibration application\label{figure-demo-usecase}}
       \end{figure}
 
       This use-case is intended to demonstrate the use of the
@@ -223,7 +223,7 @@
       \begin{table}[hbt]
         \begin{center}%
           \hypertarget{parametertable}{}%
-          \caption{parameters used}
+          \caption{parameters used, responsibilities and end-results}
           \begin{tabular}{|c|c|c|c|c|c|}
             \hline 
             parameter & assigned to 1 & to 2 & to 3 & modelled value & result\tabularnewline
@@ -266,7 +266,7 @@
      
       \end{em}
 
-      In \hyperlink{parametertable}{Table \ref{parametertable}} the
+      In \hyperlink{parametertable}{parametertable} the
       column ``model value'' stands for ``value according to global
       sky- or instrument model''
 
@@ -317,51 +317,106 @@ outparams[i] = itsParamValues[i] = 0.8*(itsParamValues[i] + i + 1) +
 
       \begin{figure}
         \includegraphics[]{../figures/results.eps}
-        \label{results}\hypertarget{results}{}%
-        \caption{the full set of results evolving through time}
+        \hypertarget{results}{}%
+        \caption{the full set of results evolving through time\label{results}}
       \end{figure}
 
       In \hyperlink{results}{figure \ref{results}} several parameters
-      can be seen that are not being solved for.
-
-      \begin{figure}
-        \includegraphics[]{../figures/1st.eps}
-        \label{1st}\hypertarget{1st}{}%
-        \caption{the results of the first engine evolving through time}
-      \end{figure}
-
-      \begin{figure}
-        \includegraphics[]{../figures/2nd.eps}
-        \label{2nd}\hypertarget{2nd}{}%
-        \caption{the results of the second evolving through time}
-      \end{figure}
-
-      \begin{figure}
-        \includegraphics[]{../figures/3rd.eps}
-        \label{3rd}\hypertarget{3rd}{}%
-        \caption{the results of the third evolving through time}
-      \end{figure}
+      can be seen that are not being solved for. These are exchanged
+      from the engine that does solve for them to the engines that
+      don't. for instance the pink and green lines that stay near 78
+      are the parameters 2 as engines one and three use them. As the
+      solution is found sound they get transferred to these engines
+      and used henceforth.
 
       \begin{figure}
         \includegraphics[]{../figures/param1.eps}
-        \label{param1}\hypertarget{param1}{}%
-        \caption{the results on parameter number one for the three engines evolving through time}
+        \hypertarget{param1}{}%
+        \caption{the results on parameter number one for the three engines evolving through time\label{param1}}
+      \end{figure}
+
+      In \hyperlink{param1}{figure \ref{param1}} the relevant
+      evolutions of parameters having to do with parameter \#1 can be
+      seen.
+
+      \begin{figure}
+        \includegraphics[]{../figures/1st.eps}
+        \hypertarget{1st}{}%
+        \caption{the results of the first engine evolving through time\label{1st}}
+      \end{figure}
+
+      In \hyperlink{1st}{figure \ref{1st}} the solution threads of the
+      first engine can be seen. As parameter \#1 somewhat depends on
+      parameter \#2, and engine 1 uses 78 instead of 8 to begin with,
+      it's solution is going totally the wrong way. As the semi-good
+      solution of about 13 is handed by engine \#2, the value of
+      parameter one converges back to the expected/right solution of 4.
+
+      \begin{figure}
+        \includegraphics[]{../figures/2nd.eps}
+        \hypertarget{2nd}{}%
+        \caption{the results of the second engine evolving through time\label{2nd}}
+      \end{figure}
+
+      in \hyperlink{2nd}{figure \ref{2nd}} the same thing happens but
+      in this case the value of parameter \#2 drags the value of
+      parameter \#3 beyond the value that was expected.
+
+      \begin{figure}
+        \includegraphics[]{../figures/3rd.eps}
+        \hypertarget{3rd}{}%
+        \caption{the results of the third engine evolving through time\label{3rd}}
       \end{figure}
 
       \begin{figure}
         \includegraphics[]{../figures/param3.eps}
-        \label{param3}\hypertarget{param3}{}%
-        \caption{the results on parameter number one for the three engines evolving through time}
+        \hypertarget{param3}{}%
+        \caption{the results on parameter number one for the three engines evolving through time\label{param3}}
       \end{figure}
 
     \subsection{evaluation}
     \label{subsection-evaluation}\hypertarget{subsection-evaluation}{}%
 
+      Figure out a priority mechanism.
 
+  \section{lessons learned}
+
+    It seems hard to find an example of a implementation of a
+    Blackboard system that compares to this one. The facts, that there
+    is only one fundamental knowledge-source, that the amount of data
+    is so huge, that several strategies might be explored
+    simultaneously, that priority might be added to a strategy, that
+    watchers hang around to evaluate intermediate results, have no or
+    hardly any prior implementations.
+
+    The metaphor blackboard seems not to the point as the main task of
+    the system is to distribute simple and similar tasks as opposed to
+    highly specialised ones.
 
 \newcommand{\dbappendix}[1]{\section{#1}}%
 
-  \appendix
+\appendix
+
+  \dbappendix{requirements list}
+  \label{requirements list}\hypertarget{requirements list}{}%
+
+    \begin{itemize}
+
+      \item
+
+        It must be possible to add new knowledge sources to the system.
+
+      \item
+
+        It must be possible to configure controllers to react in a
+        certain way to a certain state of the system.
+
+      \item
+
+        It would be nice to have a library of strategies that would
+        include "conditions" and "actions to take".
+
+    \end{itemize}
 
   \dbappendix{strategy}
   \label{start script}\hypertarget{start script}{}%

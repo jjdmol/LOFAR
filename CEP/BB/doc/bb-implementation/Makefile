@@ -7,14 +7,13 @@ PDFS=bb-requirements.pdf
 %.pdf:   %.dvi
 	dvipdfm $<
 
-bb-requirements.pdf: \
-	bb-requirements.tex \
+bb-implementation.pdf: \
+	bb-implementation.tex \
 	definitions.tex \
 	../figures/astronpro.eps \
 	../figures/astronple.eps \
 	../figures/llofar.eps \
-	../figures/blackboard-use_concept.eps \
-	../figures/demo.usecase.eps \
+
 
 
 clean:

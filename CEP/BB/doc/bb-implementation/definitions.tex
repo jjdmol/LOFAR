@@ -1,20 +1,24 @@
 %
 % Define the information of the page header
 %
-\renewcommand{\theAuthor}  {D.\ Highland}
-\renewcommand{\theDOIssue} {2002-Feb-27}
+%\renewcommand{\theAuthor}  {D.\ Hoogland \and\ K.\ van der Schaaf}
+\renewcommand{\theAuthor}  {D.\ Hoogland}
+\renewcommand{\theDOIssue} {2003-Jul-02}
 \renewcommand{\theKOIssue} {Public}
 \renewcommand{\theStatus}  {Draft}
-\renewcommand{\theRevNR}   {0.9.6}
-\renewcommand{\theScope}   {Project Documentation}
-\renewcommand{\theDocNR}   {LOFAR-ASTRON-DOC-005}
+\renewcommand{\theRevNR}   {0.1.1}
+\renewcommand{\theScope}   {CEP}
+\renewcommand{\theDocNR}   {LOFAR-ASTRON-DOC-xxx}
 \renewcommand{\theFile}    {ftp://kant.astron.nl/pub/tex/lofar-cls-0.9.6.tgz}
 %
 % Define the title of the document
 %
-\renewcommand{\theTitle}   { Publishing LOFAR reports with the LOFAR \LaTeX\ 
-                             document class named lofar.cls}
-\renewcommand{\theTAuthor} {G.W.\ Kant}
+
+\renewcommand{\theTitle}
+{the implementation details of a blackboard application framework for
+ self calibration in the LOFAR Central Processor} 
+
+\renewcommand{\theTAuthor} {D.\ Hoogland}
 %
 % Define the names in the Verified table
 %
@@ -23,20 +27,20 @@
 \renewcommand{\theVSigList}  {o.p.v. \\
                               ......................................
                              }
-\renewcommand{\theVDateList} {2002-Feb-26\\
+\renewcommand{\theVDateList} {2003-Jul-02\\
                               .....................
                              }
-\renewcommand{\theVRevList}  {0.9.0 \\
-                              0.9.6 }
+\renewcommand{\theVRevList}  {0.1.0 \\
+                              0.1.1 }
 %
 % Define the names in the Accepted table
 %
 \renewcommand{\theAHeada}    {Work Package Manager}
 \renewcommand{\theAHeadb}    {System Engineering Manager}
 \renewcommand{\theAHeadc}    {Program Manager}
-\renewcommand{\theAManagera} {C.M.\ de Vos}
-\renewcommand{\theAManagerb} {C.M.\ de Vos}
-\renewcommand{\theAManagerc} {J.\ Reitsma}
+\renewcommand{\theAManagera} {D.\ Hoogland}
+\renewcommand{\theAManagerb} {K.\ van\ der\ Schaaf}
+\renewcommand{\theAManagerc} {C.M.\ de\ Vos}
 %
 % This goes into the footer
 %
@@ -46,47 +50,38 @@
 %
 \renewcommand{\dGList} {%
                         ASTRON\\
-                        \hspace{0.5cm} M.\ Arts\\
-                        \hspace{0.5cm} A.J.\ Boonstra\\
-                        \hspace{0.5cm} J.\ Bregman\\
-                        \hspace{0.5cm} W.\ van Cappellen\\
+                        \hspace{0.5cm} D.\ Hoogland\\
+                        \hspace{0.5cm} K.\ van\ der\ Schaaf
                         \hspace{0.5cm} G.\  van Diepen\\
                         \hspace{0.5cm} A.\  van Gerdes\\
-                        \hspace{0.5cm} G.W.\ Kant\\
-                        \hspace{0.5cm} J.\ Morawietz\\
                         \hspace{0.5cm} J.\ Noordam
                        }
 %
 \renewcommand{\ddGList}{%
                         \\
                         J.\ Reitsma\\
-                        K.\ van der Schaaf\\
                         O.\ Smirnov\\
                         C.M.\ de Vos
                        }
 %
 \renewcommand{\dOList}{%
                         ORDINA\\
-                        \hspace{0.5cm} E.\ Lauwerman\\
-                        \hspace{0.5cm} F.\ van Eck\\[\baselineskip]
-                        Fokker Space\\
-                        \hspace{0.5cm} J.\ Doornink\\
-                        \hspace{0.5cm} J.H.\ Kollen\\
-                        \hspace{0.5cm} E.\ Overbosch\\
-                        \hspace{0.5cm} H.\ de Wolf
+                        \hspace{0.5cm} K-J.\ Wieringa\\[\baselineskip]
+                        Snow B.V.\\
+                        \hspace{0.5cm} D.\ Hoogland
 }
 %
 % Define the version history
 %
 \renewcommand{\revList}     {%
-                             0.5\\
-                             0.9.0\\
-                             0.9.6
+                             0.0.1\\
+                             0.1.0\\
+                             0.1.1
                             }
 \renewcommand{\dateList}    {%
-                             2002-Feb-20\\
-                             2002-Feb-21\\
-                             2002-Feb-27
+                             2003-Jun-18\\
+                             2003-Jun-24\\
+                             2003-Jul-02
                             }
 \renewcommand{\sectionList} {%
                              -\\
@@ -100,7 +95,7 @@
                             }
 
 \renewcommand{\changeList} {%
-                            Creation\\
-                            Updated class description\\
-                            Updated class with comments on ver.\ 0.9.0
+                            Creation in xml\\
+                            rough sketch\\
+                            Creation \LATEX version
                            }
