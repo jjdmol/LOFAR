@@ -92,7 +92,7 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
   resYY.setValue (MeqMatrix (value));
   
   for (int srcnr=0; srcnr<nrsrc; srcnr++) {
-    dftReq.setSourceNr (srcnr++);
+    dftReq.setSourceNr (srcnr);
     MeqPointSource& src = (*itsSources)[srcnr];
     MeqResult ik = src.getI()->getResult (dftReq);
     MeqResult qk = src.getQ()->getResult (dftReq);
