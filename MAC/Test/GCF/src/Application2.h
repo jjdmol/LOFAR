@@ -30,6 +30,9 @@ class Application : public GCFTask , public Test
     GCFEvent::TResult test4_4(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test5_3(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test6_3(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult test6_4(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult test6_5(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult test6_6(GCFEvent& e, GCFPortInterface& p);
 
     GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
     

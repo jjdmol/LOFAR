@@ -31,6 +31,9 @@ class Application : public GCFTask, public Test
     GCFEvent::TResult test6_1(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test6_2(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test6_3(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult test6_4(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult test6_5(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult test6_6(GCFEvent& e, GCFPortInterface& p);
 
     GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
     
@@ -50,6 +53,7 @@ class Application : public GCFTask, public Test
 
     GCFExtPropertySet _ePropertySetAC;
     GCFExtPropertySet _ePropertySetAD;
+    GCFExtPropertySet _ePropertySetAH;
     GCFExtPropertySet _ePropertySetAL;
 };
 #endif

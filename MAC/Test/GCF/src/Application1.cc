@@ -5,12 +5,16 @@
 #include <GCF/GCF_PVDouble.h>
 #include <GCF/PAL/GCF_Property.h>
 #include <GCF/PAL/GCF_MyProperty.h>
+#include <GCF/PAL/GCF_ExtProperty.h>
 #include <math.h>
 #include <stdio.h>
 #include "TST_Protocol.ph"
 #include <Suite/suite.h>
 
 static string sTaskName = "TA1";
+
+const TProperty propertyAHJP00Def =
+  {"A_H.J.P00", LPT_DOUBLE, GCF_READWRITE_PROP, 0};
 
 Application::Application() :
   GCFTask((State)&Application::initial, sTaskName),
@@ -27,6 +31,7 @@ Application::Application() :
   _propertySetB3("A_E",   propertySetB3, &_supTask2.getAnswerObj()),
   _ePropertySetAC("A_C",  propertySetB1, &_supTask2.getAnswerObj()),   
   _ePropertySetAD("A_D",  propertySetB2, &_supTask2.getAnswerObj()),   
+  _ePropertySetAH("A_H",  propertySetD1, &_supTask2.getAnswerObj()),   
   _ePropertySetAL("A_L",  propertySetE1, &_supTask2.getAnswerObj())   
 {
     // register the protocol for debugging purposes
@@ -194,7 +199,7 @@ GCFEvent::TResult Application::test2_1(GCFEvent& e, GCFPortInterface& p)
       }
       TESTC(&p == &_supTask1.getPort());
       TESTC(_propertySetA1.isEnabled());
-      TESTC(_supTask1.getProxy().exists("A_B_temp"));
+      TESTC_DESCR(_supTask1.getProxy().exists("A_B_temp"), "may fail");
       NEXT_TEST(2_2, "Disable property set");
       break;
     }  
@@ -233,7 +238,7 @@ GCFEvent::TResult Application::test2_2(GCFEvent& e, GCFPortInterface& p)
       }
       TESTC(&p == &_supTask1.getPort());
       TESTC(!_propertySetA1.isEnabled());
-      TESTC(!_supTask1.getProxy().exists("A_B_temp"));
+      TESTC_DESCR(!_supTask1.getProxy().exists("A_B_temp"), "may fail");
       NEXT_TEST(2_3, "Recognize that a property set is alrady in use");
       break;
     }  
@@ -270,7 +275,7 @@ GCFEvent::TResult Application::test2_3(GCFEvent& e, GCFPortInterface& p)
       }
       TESTC(&p == &_supTask1.getPort());
       TESTC(_propertySetB1.isEnabled());
-      TESTC(_supTask1.getProxy().exists("A_C_temp"));
+      TESTC_DESCR(_supTask1.getProxy().exists("A_C_temp"), "may fail");
       if (TESTC(_propertySetB1.enable() != GCF_NO_ERROR))
       {
         TSTTestreadyEvent r;
@@ -320,21 +325,21 @@ GCFEvent::TResult Application::test2_5(GCFEvent& e, GCFPortInterface& p)
           TESTC(strcmp(pResponse->pScope, _propertySetA1.getScope().c_str()) == 0);
           TESTC(&p == &_supTask1.getPort());
           TESTC(_propertySetA1.isEnabled());
-          TESTC(_supTask1.getProxy().exists("A_B_temp"));
+          TESTC_DESCR(_supTask1.getProxy().exists("A_B_temp"), "may fail");
         }
         else if (strcmp(pResponse->pScope, "A_D") == 0)
         {
           TESTC(strcmp(pResponse->pScope, _propertySetB2.getScope().c_str()) == 0);
           TESTC(&p == &_supTask2.getPort());
           TESTC(_propertySetB2.isEnabled());
-          TESTC(_supTask2.getProxy().exists("A_D_temp"));
+          TESTC_DESCR(_supTask2.getProxy().exists("A_D_temp"), "may fail");
         }
         else if (strcmp(pResponse->pScope, "A_E") == 0)
         {
           TESTC(strcmp(pResponse->pScope, _propertySetB3.getScope().c_str()) == 0);
           TESTC(&p == &_supTask2.getPort());
           TESTC(_propertySetB3.isEnabled());
-          TESTC(_supTask2.getProxy().exists("A_E_temp"));
+          TESTC_DESCR(_supTask2.getProxy().exists("A_E_temp"), "may fail");
         }
       }
       
@@ -468,7 +473,7 @@ GCFEvent::TResult Application::test4_1(GCFEvent& e, GCFPortInterface& p)
       }
       TESTC(&p == &_supTask1.getPort());
       TESTC(_propertySetB1.isEnabled());
-      TESTC(_supTask1.getProxy().exists("A_C_temp"));
+      TESTC_DESCR(_supTask1.getProxy().exists("A_C_temp"), "may fail");
       TSTTestreadyEvent r;
       r.testnr = 401;
       _supTask1.getPort().send(r);
@@ -889,7 +894,7 @@ GCFEvent::TResult Application::test6_3(GCFEvent& e, GCFPortInterface& /*p*/)
       TESTC(strcmp(pResponse->pPropName, "A_E.P1") == 0);
       TESTC(pResponse->pValue->getType() == LPT_INTEGER);
       TESTC(((GCFPVInteger*)pResponse->pValue)->getValue() == 22);            
-      FINISH;
+      NEXT_TEST(6_4, "Subscribe to multiple properties, test if changes are received with valid information");
       break;
     }  
     default:
@@ -899,369 +904,82 @@ GCFEvent::TResult Application::test6_3(GCFEvent& e, GCFPortInterface& /*p*/)
 
   return status;
 }
-/*
-GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
+
+GCFEvent::TResult Application::test6_4(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
     case F_ENTRY:
-      break;
-
-    case TST_TESTREADY:
     {
-      TSTTestreadyEvent indicationIn(e);
-      _curRemoteTestNr = indicationIn.testnr;
-      if (_curRemoteTestNr == 303) 
-      {
-        GCFPVInteger iv(22);
-        if (_supTask1.getProxy().setPropValue("A_C_P1", iv) != GCF_NO_ERROR)
-        {
-          failed(303);
-          TRAN(Application::test304);
-        }
-      }
+      TESTC_ABORT_ON_FAIL(_ePropertySetAH.load() == GCF_NO_ERROR);
       break;
     }
-    case F_VCHANGEMSG:
+    case F_EXTPS_LOADED:
     {
-      GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
-      assert(pResponse);
-      if ((pResponse->pValue->getType() == GCFPValue::LPT_INTEGER) &&
-          (strcmp(pResponse->pPropName, "A_C_P1") == 0) &&
-          (((GCFPVInteger*)pResponse->pValue)->getValue() == 22) &&
-          (&p == &_supTask1.getPort()))
-      {
-        passed(303);
-        TRAN(Application::test304);
-      }
-      else
-      {
-        failed(303);
-        TRAN(Application::test304);            
-      }
-      break;
-    }    
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult Application::test304(GCFEvent& e, GCFPortInterface& p)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-  static unsigned int nrOfFaults = 0;
-
-  switch (e.signal)
-  {
-    case F_ENTRY:
       _counter = 0;
-      if (_apcT3.load(false) != GCF_NO_ERROR)
+      TESTC_ABORT_ON_FAIL(_ePropertySetAH.isLoaded());
+      char propName[] = "J.P00";
+      for (unsigned int i = 0; i <= 9; i++)
       {
-        failed(304);
-        TRAN(Application::test305);
-      }
-      break;
-
-    case F_APCLOADED:
-    {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      if ((strcmp(pResponse->pScope, "A_H") == 0) &&
-          (strcmp(pResponse->pApcName, "ApcT3") == 0) &&
-          (pResponse->result == GCF_NO_ERROR) &&
-          (&p == &_supTask1.getPort()))
-      {
-        char propName[] = "A_H_J_P00";
-        for (unsigned int i = 0; i <= 9; i++)
+        propName[3] = i + '0';
+        for (unsigned int j = 0; j <= 9; j++)
         {
-          propName[7] = i + '0';
-          for (unsigned int j = 0; j <= 9; j++)
+          propName[4] = j + '0';
+          if (TESTC(_ePropertySetAH.subscribeProp(propName) == GCF_NO_ERROR))
           {
-            propName[8] = j + '0';
-            if (_supTask1.getProxy().subscribeProp(propName) == GCF_NO_ERROR)
-            {
-              _counter++;
-            }
+            _counter++;
           }
-        }        
-      }
-      else
-      {
-        failed(304);
-        TRAN(Application::test305);
-      }
-      break;
-    }
-    case F_SUBSCRIBED:
-    {
-      GCFPropAnswerEvent* pResponse = static_cast<GCFPropAnswerEvent*>(&e);
-      assert(pResponse);
-      if ((strncmp(pResponse->pPropName, "A_H_J_P", 7) == 0) &&
-          (&p == &_supTask1.getPort()))
-      {
-        _counter--;
-        if (_counter == 0)
-        {
-          TSTTestreadyEvent r;
-          r.testnr = 304;
-          _supTask1.getPort().send(r);
-        }
-      }
-      else
-      {
-        failed(304);
-        TRAN(Application::test305);
-      }
-      break;
-    }
-    case F_VCHANGEMSG:
-    {
-      GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
-      assert(pResponse);
-      if ((pResponse->pValue->getType() == GCFPValue::LPT_DOUBLE) &&
-          (strncmp(pResponse->pPropName, "A_H_J_P", 7) == 0) &&
-          (&p == &_supTask1.getPort()))
-      {
-        double dv = ((GCFPVDouble*)pResponse->pValue)->getValue();
-        unsigned int propNr = atoi(pResponse->pPropName + 7);
-        unsigned int doubleVal = (unsigned int) floor((dv * 100.0) + 0.5);
-        if (doubleVal == propNr)
-        {
-          _counter++;
-        }
-        else 
-        {
-          cerr << "Propvalue: " << dv * 100 << " PropNr: " << propNr << endl;
-          nrOfFaults++;
-        }
-      }
-      else
-      {
-        cerr << "Propname fails" << pResponse->pPropName << endl;
-        nrOfFaults++;
-      }
-      if (_counter == 100 )
-      {
-        passed(304);
-        TRAN(Application::test305);
-      }
-      else if (_counter + nrOfFaults == 100)
-      {
-        failed(304);
-        TRAN(Application::test305);
-      }
-      break;
-    }    
-    case TST_TESTREADY:
-    {
-      TSTTestreadyEvent indicationIn(e);
-      _curRemoteTestNr = indicationIn.testnr;
-      break;
-    }
-      
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult Application::test305(GCFEvent& e, GCFPortInterface& p)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-  static unsigned int nrOfFaults = 0;
-
-  static GCFProperty propertyAHJP00_1("A_H_J_P00");
-  propertyAHJP00_1.setAnswer(&_supTask1.getAnswerObj());
-  static GCFProperty propertyAHJP00_2("A_H_J_P00");
-  propertyAHJP00_2.setAnswer(&_supTask2.getAnswerObj());
-
-  switch (e.signal)
-  {
-    case TST_TESTREADY:
-    {
-      TSTTestreadyEvent indicationIn(e);
-      _curRemoteTestNr = indicationIn.testnr;
-      //intentional fall through
-    }
-    case F_ENTRY:
-      if (_curRemoteTestNr != 305) break;
-      _counter = 0;
-      if (propertyAHJP00_1.subscribe() != GCF_NO_ERROR)
-      {
-        failed(305);
-        TRAN(Application::test306);
-      }
-      break;
-  
-    case F_SUBSCRIBED:
-    {
-      GCFPropAnswerEvent* pResponse = static_cast<GCFPropAnswerEvent*>(&e);
-      assert(pResponse);
-      if ((strcmp(pResponse->pPropName, "A_H_J_P00") == 0))
-      {
-        if (&p == &_supTask1.getPort())
-        {
-          if (propertyAHJP00_2.subscribe() != GCF_NO_ERROR)
-          {
-            failed(305);
-            TRAN(Application::test306);
-          }
-        }
-        else if (&p == &_supTask2.getPort())
-        {
-          TSTTestreadyEvent r;
-          r.testnr = 305;
-          _supTask1.getPort().send(r);
-        }
-      }
-      else
-      {
-        failed(305);
-        TRAN(Application::test306);
-      }
-      break;
-    }
-
-    case F_VCHANGEMSG:
-    {
-      GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
-      assert(pResponse);
-      if ((pResponse->pValue->getType() == GCFPValue::LPT_DOUBLE) &&
-          (strcmp(pResponse->pPropName, "A_H_J_P00") == 0) &&
-          (((GCFPVDouble*)pResponse->pValue)->getValue() == 3.12))
-      {
-        _counter++;
-      }
-      else
-      {
-        nrOfFaults++;
-      }
-      if (_counter == 3 )
-      {
-        passed(305);
-        TRAN(Application::test306);
-      }
-      else if (_counter + nrOfFaults == 3)
-      {
-        failed(305);
-        TRAN(Application::test306);
-      }
-      break;
-    }
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-  static unsigned int nrOfFaults = 0;
-  static unsigned int nrOfSucceded = 0;
-  
-  static GCFProperty propertyACP1("A_C_P1");
-  propertyACP1.setAnswer(&_supTask1.getAnswerObj());
-  
-  switch (e.signal)
-  {
-    case TST_TESTREADY:
-    {
-      TSTTestreadyEvent indicationIn(e);
-      _curRemoteTestNr = indicationIn.testnr;
-      //intentional fall through
-    }
-    case F_ENTRY:
-      if (_curRemoteTestNr != 306) break;
-      
-      if (propertyACP1.subscribe() != GCF_NO_ERROR)
-      {
-        failed(306);
-        TRAN(Application::test501);
-      }
-      break;
-  
-    case F_SUBSCRIBED:
-    {
-      GCFPropAnswerEvent* pResponse = static_cast<GCFPropAnswerEvent*>(&e);
-      assert(pResponse);
-      _counter = 0;
-      if ((strcmp(pResponse->pPropName, "A_C_P1") == 0))
-      {
-        cerr << "Send nr " << _counter << " to A_K_P1" << endl;
-        GCFPVInteger iv(_counter);
-        if (_supTask1.getProxy().setPropValue("A_K_P1", iv) != GCF_NO_ERROR)
-        {
-          failed(306);
-          TRAN(Application::test501);
-        }
-      }
-      else
-      {
-        failed(306);
-        TRAN(Application::test501);
-      }
-      break;
-    }
-
-    case F_VCHANGEMSG:
-    {
-      GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
-      assert(pResponse);
-      if (pResponse->internal) break;
-      if ((pResponse->pValue->getType() == GCFPValue::LPT_INTEGER) &&
-          (strcmp(pResponse->pPropName, "A_C_P1") == 0) &&
-          ((unsigned int)((GCFPVInteger*)pResponse->pValue)->getValue() == _counter))
-      {   
-        nrOfSucceded++;
-      }
-      else
-      {
-        nrOfFaults++;
-      }
-      cerr << "Received nr " << (unsigned int)((GCFPVInteger*)pResponse->pValue)->getValue() << " from A_C_P1(" << _counter << ")" << endl;
-      _counter++;
-      if (nrOfSucceded == 1000)
-      {
-        passed(306);
-        TRAN(Application::test501);
-      }
-      else if (nrOfSucceded + nrOfFaults == 1000)
-      {
-        failed(306);
-        TRAN(Application::test501);
-      }
-      else
-      {
-        cerr << "Send nr " << _counter << " to A_K_P1" << endl;
-        GCFPVInteger iv(_counter);
-        if (_supTask1.getProxy().setPropValue("A_K_P1", iv) != GCF_NO_ERROR)
-        {
-          failed(306);
-          TRAN(Application::test501);
         }
       }        
       break;
     }
-
-    case F_EXIT:
+    case F_SUBSCRIBED:
     {
-      TSTTestreadyEvent r;
-      r.testnr = 306;
-      _supTask1.getPort().send(r);
+      GCFPropAnswerEvent* pResponse = (GCFPropAnswerEvent*)(&e);
+      TESTC_ABORT_ON_FAIL(strncmp(pResponse->pPropName, "A_H.J.P", 7) == 0);
+      _counter--;
+      if (_counter == 0)
+      {
+        TSTTestreadyEvent r;
+        r.testnr = 603;
+        _supTask1.getPort().send(r);
+      }
       break;
     }
+    case F_VCHANGEMSG:
+    {
+      GCFPropValueEvent* pResponse = (GCFPropValueEvent*)(&e);
+
+      TESTC(pResponse->pValue->getType() == LPT_DOUBLE);
+      TESTC(!pResponse->internal);
+      TESTC(strncmp(pResponse->pPropName, "A_H.J.P", 7) == 0);
+      unsigned int expectedVal = atoi(pResponse->pPropName + 7);
+      double dv = ((GCFPVDouble*)pResponse->pValue)->getValue();
+      unsigned int receivedVal = (unsigned int) floor((dv * 100.0) + 0.5);
+      TESTC(receivedVal == expectedVal);
+      _counter++;
+      cerr << "Received prop. val: " << receivedVal << " Expected prop. val: " << expectedVal << endl;
+      if (_counter == 100 )
+      {
+        char propName[] = "J.P00";
+        for (unsigned int i = 0; i <= 9; i++)
+        {
+          propName[3] = i + '0';
+          for (unsigned int j = 0; j <= 9; j++)
+          {
+            propName[4] = j + '0';
+            TESTC(_ePropertySetAH.unsubscribeProp(propName) == GCF_NO_ERROR);
+          }
+        }        
+        TSTTestreadyEvent r;
+        r.testnr = 604;
+        _supTask1.getPort().send(r);
+        NEXT_TEST(6_5, "Property change is distributed to multiple subscribers");
+      }
+      break;
+    }    
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -1270,7 +988,132 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
+GCFEvent::TResult Application::test6_5(GCFEvent& e, GCFPortInterface& p)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
+  static GCFExtProperty propertyAHJP00(propertyAHJP00Def); 
+  propertyAHJP00.setAnswer(&_supTask1.getAnswerObj());
+
+  switch (e.signal)
+  {
+    case TST_TESTREADY:
+    {
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
+      //intentional fall through
+    }
+    case F_ENTRY:
+      if (_curRemoteTestNr != 604) break;
+      _counter = 0;
+      TESTC_ABORT_ON_FAIL(propertyAHJP00.subscribe() == GCF_NO_ERROR);      
+      break;
+  
+    case F_SUBSCRIBED:
+    {
+      GCFPropAnswerEvent* pResponse = (GCFPropAnswerEvent*)(&e);
+      TESTC_ABORT_ON_FAIL(strcmp(pResponse->pPropName, "A_H.J.P00") == 0);
+      if (&p == &_supTask1.getPort())
+      {
+        TESTC_ABORT_ON_FAIL(propertyAHJP00.isSubscribed());
+        TESTC_ABORT_ON_FAIL(_ePropertySetAH.subscribeProp("J.P00") == GCF_NO_ERROR);
+      }
+      else if (&p == &_supTask2.getPort())
+      {
+        TESTC_ABORT_ON_FAIL(_ePropertySetAH.isPropSubscribed("J.P00"));
+        TSTTestreadyEvent r;
+        r.testnr = 605;
+        _supTask1.getPort().send(r);
+      }
+      break;
+    }
+
+    case F_VCHANGEMSG:
+    {
+       GCFPropValueEvent* pResponse = (GCFPropValueEvent*)(&e);
+
+      TESTC(pResponse->pValue->getType() == LPT_DOUBLE);
+      TESTC(!pResponse->internal);
+      TESTC(strncmp(pResponse->pPropName, "A_H.J.P", 7) == 0);
+      TESTC(((GCFPVDouble*)pResponse->pValue)->getValue() == 3.12);
+      _counter++;
+      if (_counter == 2 )
+      {
+        NEXT_TEST(6_6, "Send and receive properties between tasks, test stability and performance");
+      }
+      break;
+    }
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult Application::test6_6(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+  {
+    case TST_TESTREADY:
+    {
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
+      //intentional fall through
+    }
+    case F_ENTRY:
+      if (_curRemoteTestNr != 606) break;
+      
+      TESTC_ABORT_ON_FAIL(_supTask1.getProxy().subscribeProp("A_C.P1") == GCF_NO_ERROR);
+      break;
+  
+    case F_SUBSCRIBED:
+    {
+      GCFPropAnswerEvent* pResponse = (GCFPropAnswerEvent*)(&e);
+      assert(pResponse);
+      _counter = 0;
+      TESTC_ABORT_ON_FAIL(strcmp(pResponse->pPropName, "A_C.P1") == 0);
+      cerr << "Send nr " << _counter << " to A_K.P1" << endl;
+      GCFPVInteger iv(_counter);
+      TESTC_ABORT_ON_FAIL(_supTask1.getProxy().setPropValue("A_K.P1", iv) == GCF_NO_ERROR);
+      break;
+    }
+
+    case F_VCHANGEMSG:
+    {
+      GCFPropValueEvent* pResponse = (GCFPropValueEvent*)(&e);
+      assert(pResponse);
+      if (pResponse->internal) break;
+      assert(pResponse->pValue->getType() == LPT_INTEGER);
+      assert(strcmp(pResponse->pPropName, "A_C.P1") == 0);
+      TESTC((unsigned int)((GCFPVInteger*)pResponse->pValue)->getValue() == _counter);
+      cerr << "Received nr " << (unsigned int)((GCFPVInteger*)pResponse->pValue)->getValue() << " from A_C.P1 (" << _counter << ")" << endl;
+      _counter++;
+      if (_counter == 1000)
+      {
+        FINISH;
+      }
+      else
+      {
+        cerr << "Send nr " << _counter << " to A_K.P1" << endl;
+        GCFPVInteger iv(_counter);
+        TESTC_ABORT_ON_FAIL(_supTask1.getProxy().setPropValue("A_K.P1", iv) == GCF_NO_ERROR);
+      }        
+      break;
+    }
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+/*
 GCFEvent::TResult Application::test501(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
