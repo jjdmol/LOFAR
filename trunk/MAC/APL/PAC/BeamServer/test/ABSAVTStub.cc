@@ -136,7 +136,7 @@ GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& port)
 	alloc.n_subbands = 1;
 	memset(alloc.subbands, 0, sizeof(alloc.subbands));
 
-	_test(sizeof(alloc) == beam_server.send(alloc));
+	TESTC(sizeof(alloc) == beam_server.send(alloc));
       }
       break;
 
@@ -169,14 +169,14 @@ GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& port)
       {
 	// abort test
 	beam_server.close();
-	_fail("timeout");
+	FAIL("timeout");
 	TRAN(AVTStub::done);
       }
       break;
 
       case F_DISCONNECTED_SIG:
       {
-	_fail("disconnected");
+	FAIL("disconnected");
 	port.close();
 	TRAN(AVTStub::done);
       }

@@ -2,21 +2,13 @@
 AM_CXXFLAGS = \
 	-I$(top_srcdir)/src \
 	-I$(top_builddir)/src \
-	-I$(top_srcdir)/test \
-	-I$(top_srcdir)/../../APLCommon/src
+	-I$(top_srcdir)/test
 
 TESTS = \
 	BeamServerTest \
 	CheckWeightsTest \
 	CheckWeightsTest2 \
 	avtstub.sh
-
-
-noinst_LTLIBRARIES = libunittest.la
-
-libunittest_la_SOURCES = \
-	$(top_srcdir)/../../APLCommon/src/test.cpp \
-	$(top_srcdir)/../../APLCommon/src/suite.cpp
 
 check_PROGRAMS = \
 	BeamServerTest \
@@ -33,21 +25,21 @@ BeamServerTest_SOURCES = \
 
 BeamServerTest_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	$(top_builddir)/test/libunittest.la
+	-lsuite
 
 CheckWeightsTest_SOURCES = \
 	CheckWeightsTest.cc
 
 CheckWeightsTest_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	$(top_builddir)/test/libunittest.la
+	-lsuite
 
 CheckWeightsTest2_SOURCES = \
 	CheckWeightsTest2.cc
 
 CheckWeightsTest2_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	$(top_builddir)/test/libunittest.la
+	-lsuite
 
 AVTStub_SOURCES = \
 	ABSAVTStub.h \
@@ -55,8 +47,7 @@ AVTStub_SOURCES = \
 
 AVTStub_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	$(top_builddir)/test/libunittest.la \
-	 -ltm -lgcfcommon
+	-lsuite -ltm -lgcfcommon
 
 EPATest_SOURCES = \
 	ABSEPATest.h \
@@ -64,8 +55,7 @@ EPATest_SOURCES = \
 
 EPATest_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	$(top_builddir)/test/libunittest.la \
-	 -ltm -lgcfcommon
+	-lsuite -ltm -lgcfcommon
 
 SweepTest_SOURCES = \
 	ABSSweepTest.h \
@@ -73,8 +63,7 @@ SweepTest_SOURCES = \
 
 SweepTest_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	$(top_builddir)/test/libunittest.la \
-	 -ltm -lgcfcommon
+	-lsuite -ltm -lgcfcommon
 
 SetFreq_SOURCES = \
 	ABSSetFreq.h \
@@ -82,8 +71,7 @@ SetFreq_SOURCES = \
 
 SetFreq_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	$(top_builddir)/test/libunittest.la \
-	 -ltm -lgcfcommon
+	-l suite -ltm -lgcfcommon
 
 EPAStub_SOURCES = \
 	ABSEPAStub.h \
@@ -91,8 +79,7 @@ EPAStub_SOURCES = \
 
 EPAStub_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	$(top_builddir)/test/libunittest.la \
-	-ltm -lgcfcommon
+	-lsuite	-ltm -lgcfcommon
 
 BUILT_SOURCES = \
 	log4cplus.properties \

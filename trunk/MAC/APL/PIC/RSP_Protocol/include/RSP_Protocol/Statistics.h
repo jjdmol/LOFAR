@@ -1,4 +1,4 @@
-//#  RCUSettings.h: RCU control information
+//#  Statistics.h: Statistics information from the RSP board.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef RCUSETTINGS_H_
-#define RCUSETTINGS_H_
+#ifndef STATISTICS_H_
+#define STATISTICS_H_
 
 #include <complex>
 #include <blitz/array.h>
@@ -29,18 +29,30 @@
 
 namespace RSP_Protocol
 {
-  class RCUSettings
+  typedef enum StatsReduction
+  {
+      SUM = 1,
+      REPLACE,
+      MEAN,
+      MAX,
+      MIN,
+      PRODUCT,
+      MIN_INDEX,
+      MAX_INDEX,
+  };
+
+  class Statistics
       {
       public:
 	  /**
-	   * Constructors for a RCUSettings object.
+	   * Constructors for a Statistics object.
 	   * Currently the tv_usec part is always set to 0 irrespective
 	   * of the value passed in.
 	   */
-	  RCUSettings() { }
+	  Statistics() { }
 	  
-	  /* Destructor for RCUSettings. */
-	  virtual ~RCUSettings() {}
+	  /* Destructor for Statistics. */
+	  virtual ~Statistics() {}
 
       public:
 	  /**
@@ -54,29 +66,16 @@ namespace RSP_Protocol
 
       private:
 	  /**
-	   * Setting bitfield for an RCU.
+	   * Statistics
+	   * First dimension is the number of bits in
+	   * the rcumask.
+	   * 
 	   */
-	  union RCURegisterType
-	  {
-	      typedef struct
-	      {
-		  uint8 filter_0:1;
-		  uint8 filter_1:1;
-		  uint8 filter_2:1;
-		  uint8 filter_3:1;
-		  uint8 lba_pwr:1;
-		  uint8 hba_pwr:1;
-		  uint8 rcu_pwr:1;
-		  uint8 ovrflw:1;
-	      } RCUBits;
-	  
-	      RCUBits Bits; 
-	      uint8   Register;
-
-	  };
-
-	  blitz::Array<RCURegisterType, 1> settings;
+	  blitz::Array<uint16, 2> m_ap_status;
+	  blitz::Array<uint16, 1> m_bp_status;
+	  blitz::Array<uint32, 1> m_eth_status;
+	  blitz::Array<uint16, 1> m_rcu_status;
       };
 };
      
-#endif /* RCUSETTING_H_ */
+#endif /* STATISTICS_H_ */
