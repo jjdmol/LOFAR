@@ -24,7 +24,7 @@
 #define MEQ_CONSTANT_H
 
 //# Includes
-#include <MEQ/Function.h>
+#include <MEQ/Node.h>
 #include <MEQ/Vells.h>
 #include <Common/lofar_vector.h>
 
@@ -44,7 +44,7 @@
 namespace Meq {
 
 //##ModelId=400E53030283
-class Constant: public Function
+class Constant: public Node
 {
 public:
   // Create a constant with the given value.
@@ -65,10 +65,6 @@ public:
   virtual int getResult (Result::Ref& resref, 
                          const std::vector<Result::Ref>& childres,
                          const Request& req, bool newreq);
-
-  // Initialize the object from the record.
-    //##ModelId=400E530500A6
-  virtual void init (DataRecord::Ref::Xfer& initrec, Forest* frst);
 
     //##ModelId=400E530500AD
   //## Standard debug info method

@@ -30,6 +30,7 @@ namespace Meq {
 
 //##ModelId=400E5355022C
 Selector::Selector()
+    : Node(1) // exactly 1 child expected
 {}
 
 //##ModelId=400E5355022D
@@ -40,8 +41,7 @@ Selector::~Selector()
 void Selector::setStateImpl (DataRecord &rec,bool initializing)
 {
   Node::setStateImpl(rec,initializing);
-  if( rec[FIndex].exists() )
-    selection = rec[FIndex].as_vector<int>();
+  rec[FIndex].get_vector(selection,initializing);
 }
 
 //##ModelId=400E53550237

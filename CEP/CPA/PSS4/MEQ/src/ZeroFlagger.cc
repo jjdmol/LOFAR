@@ -26,7 +26,8 @@ namespace Meq {
 
 //##ModelId=400E5355029C
 ZeroFlagger::ZeroFlagger()
-  : Node(1),flagbit_(1),oper_(AidNE)
+  : Node(1), // 1 child expected
+    flagbit_(1),oper_(AidNE)
 {}
 
 //##ModelId=400E5355029D
@@ -37,7 +38,7 @@ void ZeroFlagger::setStateImpl (DataRecord &rec,bool initializing)
 {
   Node::setStateImpl(rec,initializing);
   // get flag bit
-  getStateField(flagbit_,rec,FFlagBit);
+  rec[FFlagBit].get(flagbit_,initializing);
   // get operation
   DataRecord::Hook oper(rec,FOper);
   if( oper.exists() )
@@ -53,6 +54,8 @@ void ZeroFlagger::setStateImpl (DataRecord &rec,bool initializing)
       NodeThrow1("illegal "+FOper.toString()+"="+op.toString()+" state field");
     oper_ = op.front();
   }
+  else if( initializing )
+    oper = oper_;
 }
 
 int ZeroFlagger::getResult (Result::Ref &resref, 

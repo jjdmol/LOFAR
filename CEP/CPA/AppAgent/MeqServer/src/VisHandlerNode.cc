@@ -7,8 +7,9 @@ namespace Meq {
 InitDebugContext(VisHandlerNode,"MeqVisHandler");
   
 //##ModelId=3F98DAE60319
-VisHandlerNode::VisHandlerNode ()
-    : data_id(-1)
+VisHandlerNode::VisHandlerNode (int nchildren,const HIID *labels,int nmandatory)
+ : Node(nchildren,labels,nmandatory),
+   data_id(-1)
 {}
 
 //##ModelId=3F98DAE60336

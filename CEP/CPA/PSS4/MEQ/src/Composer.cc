@@ -30,23 +30,26 @@ namespace Meq {
 
 //##ModelId=400E53050042
 Composer::Composer()
+  : Node(-1,0,1), // at least 1 child must be present
+    contagious_fail(false)
 {}
 
 //##ModelId=400E53050043
 Composer::~Composer()
 {}
 
-//##ModelId=400E53050047
-void Composer::checkInitState (DataRecord &rec)
-{
-  defaultInitField(rec,FContagiousFail,false);
-}
-    
+// //##ModelId=400E53050047
+// void Composer::checkInitState (DataRecord &rec)
+// {
+//   defaultInitField(rec,FContagiousFail,false);
+// }
+//     
+
 //##ModelId=400E5305004A
 void Composer::setStateImpl (DataRecord &rec,bool initializing)
 {
   Node::setStateImpl(rec,initializing);
-  getStateField(contagious_fail,rec,FContagiousFail);
+  rec[FContagiousFail].get(contagious_fail,initializing);
 }
 
 //##ModelId=400E5305004F

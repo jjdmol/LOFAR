@@ -1,4 +1,4 @@
-//# Resampler.h: resamples result resolutions
+//# ReqMux.h: resamples result resolutions
 //#
 //# Copyright (C) 2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,20 +20,20 @@
 //#
 //# $Id$
 
-#ifndef MEQ_RESAMPLER_H
-#define MEQ_RESAMPLER_H
+#ifndef MEQ_REQMUX_H
+#define MEQ_REQMUX_H
     
 #include <MEQ/Node.h>
 #include <MEQ/AID-Meq.h>
 
 #pragma aidgroup Meq
-#pragma types #Meq::Resampler 
-#pragma aid Integrate Flag Density
+#pragma types #Meq::ReqMux 
+#pragma aid Integrate Oper Upsample Integrate Freq Time Pass Wait
 
 // The comments below are used to automatically generate a default
 // init-record for the class 
 
-//defrec begin MeqResampler
+//defrec begin MeqReqMux
 //  Resamples the Vells in its child's Result to the Cells of the parent's
 //  Request. Current version ignores cell centers, sizes, domains, etc.,
 //  and goes for a simple integrate/expand by an integer factor.
@@ -57,70 +57,51 @@
 namespace Meq {    
 
 //##ModelId=400E530400A3
-class Resampler : public Node
+class ReqMux : public Node
 {
 public:
     //##ModelId=400E5355029C
-  Resampler();
+  ReqMux();
 
     //##ModelId=400E5355029D
-  virtual ~Resampler();
+  virtual ~ReqMux();
 
   //##ModelId=400E5355029F
   virtual TypeId objectType() const
-  { return TpMeqResampler; }
-  
+  { return TpMeqReqMux; }
   
 
 protected:
   virtual void setStateImpl (DataRecord &rec,bool initializing);
     
+  virtual int pollChildren (std::vector<Result::Ref> &child_results,
+                            Result::Ref &resref,
+                            const Request &req);
+
   virtual int getResult (Result::Ref &resref, 
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);
   
 private:
-  // resamples vells according to current setup (see below)
-  Vells::Ref resampleVells (const Vells &in);
-    
-  // templated helper function for above, which does the actual work
-  template<class T>
-  void doResample (Vells::Ref &voutref,const blitz::Array<T,2> &in);
+  // the OpSpec class specifies an operation that is applied to
+  // every request
+  class OpSpec
+  {
+    public:
+      int   integrate[2];
+      int   upsample[2];
+      bool  resample;
+      bool  wait;
 
-  // if true, signal is assumed to be integrated over the cell
-  // if false, signal is assumed to be a sampling at the cell center
-  bool integrate;
+      OpSpec()
+      { 
+        upsample[0]=upsample[1]=integrate[0]=integrate[1]=0; 
+        resample=wait=false; 
+      }
+  };
   
-  int flag_mask;
-  
-  int flag_bit;
-  
-  float flag_density;
-
-  // All members below are used by resampleVells() to do the actual
-  // resampling. These are meant to be set up by getResult(), before calling
-  // resampleVells() repeatedly on all input Vells.
-  
-  // shape of output Vells
-  LoShape outshape;    
-  // # of cells to integrate in X/Y (1 if expanding)
-  int     nsum[2];
-  // # of cells to expand by in X/Y (1 if integrating)
-  int     nexpand[2];  
-  // renormalization factor applied to output cell after summing up 
-  // the input cells. 
-  double  renorm_factor;
-  // Renormalization matrix, incorporating renorm_factor, plus
-  // corrections for partially flagged integrations
-  LoMat_double renorm_matrix;
-  
-  // pointer to output flags, 0 if no flagging
-  VellSet::FlagArrayType *outflags;
-  
-  // pointer to input flags, 0 if no flagging
-  const VellSet::FlagArrayType *inflags;
-  
-  
+  std::vector<OpSpec> ops_;
+  int pass_child_;
   
 };
 

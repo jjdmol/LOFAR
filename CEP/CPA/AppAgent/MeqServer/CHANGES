@@ -1,3 +1,7 @@
+  * added MeqReqMux node: request multiplexer
+    can be used to drive one tree at full resolution, and the other at
+    partial resolution
+
   * added flag_mask state field to all Function nodes. Use, e.g.:
       initrec.flag_mask := mask
     where mask is a single common mask applied to all flags (-1 to pass

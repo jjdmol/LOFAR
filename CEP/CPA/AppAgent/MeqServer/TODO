@@ -1,8 +1,12 @@
 MEQ in general:
 
-  * Resolution coupler node
+  * Think throguh some more RequestId issues:
+    1) user-defined dependencies ("config" would fall into this category)
+    2) dependency on resolution (same domain, different sampling), and
+       how this affects caching issues in a muti-res tree
 
   * Update documentation! (never goes away, does it?)
+    Specifically, a Node construction checklist
   
   * Specify child labels in node constructor; check them in init().
     Process named children properly.
@@ -10,6 +14,17 @@ MEQ in general:
     01/01/04: done, need to test w/glish (glish not working on my laptop)
     16/01/04: tested with default tests; now need to make some nodes
               with child labels
+              
+        + go through setStateImpl, and clean up usage of getStateField
+          31/03/04: done
+
+        + add checkInitState() to recent nodes, setup defaults in state record
+          Move children checks to constructior
+          31/03/04: done
+
+              
+        + Resolution coupler node
+          27/03/04 done: called Resampler
               
         + look through VellSet and Result classes, check for privatize-on-write
           where needed.
@@ -188,13 +203,8 @@ Function:
           
 DMI & Debug:
 
-  * remove flags argument from DataField constructor
-
-  * implement bool Hook::get(T&), for getting stuff by value (or pointer?),
-    and simultaneously returning false if not defined.
-
-  * add protect feature to container fields (for use in classes such as 
-    Meq::Result etc.)
+  * ? add protect feature to container fields (for use in classes such as 
+    Meq::Result etc.) Note that Hook::replace() does not play well with this.
     (merged with: expose lock()/unlock() of DataRecord fields. Do not lock 
     fields by default. Use locking to "protect" fields, e.g., in the MEQ 
     Request & Result classes.)
@@ -202,7 +212,18 @@ DMI & Debug:
   * ? implement CountedRef::makeWritable since this seems to be a very common
     operation
     
+  * ? think about recursive makeReadonly: do this on a data structure to make
+    sure recepient can't change anything without COW. What to do if we hit
+    a readonly branch?
+    
   * implement Hook = Hook and Hook <<= Hook, should be easy to do now
+  
+        + remove flags argument from DataField constructor
+          31/03/04: done
+
+        + implement bool Hook::get(T&), for getting stuff by value (or pointer?),
+          and simultaneously returning false if not defined.
+          31/03/04: done
     
         + In Debug: add capability to redirect the debug message stream
           30/01/04 done

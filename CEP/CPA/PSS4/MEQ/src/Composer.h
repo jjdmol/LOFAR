@@ -58,8 +58,9 @@ class Composer : public Node
     { return TpMeqComposer; }
     
   protected:
-    //##ModelId=400E53050047
-    virtual void checkInitState (DataRecord &rec);
+//    //##ModelId=400E53050047
+//    virtual void checkInitState (DataRecord &rec);
+      
     //##ModelId=400E5305004A
     virtual void setStateImpl (DataRecord &rec,bool initializing);
     // Get the result for the given request.

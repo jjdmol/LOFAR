@@ -35,7 +35,8 @@ const HIID FFlagDensity = AidFlag|AidDensity;
 
 //##ModelId=400E5355029C
 Resampler::Resampler()
-: integrate(false),flag_mask(-1),flag_bit(0),flag_density(0.5)
+: Node(1), // 1 child expected
+  integrate(false),flag_mask(-1),flag_bit(0),flag_density(0.5)
 {}
 
 //##ModelId=400E5355029D
@@ -45,12 +46,10 @@ Resampler::~Resampler()
 void Resampler::setStateImpl (DataRecord &rec,bool initializing)
 {
   Node::setStateImpl(rec,initializing);
-  if( numChildren() != 1 )
-    NodeThrow1("Resampler node must have exactly one child");
-  getStateField(integrate,rec,FIntegrate);
-  getStateField(flag_mask,rec,FFlagMask);
-  getStateField(flag_bit,rec,FFlagBit);
-  getStateField(flag_density,rec,FFlagDensity);
+  rec[FIntegrate].get(integrate,initializing);
+  rec[FFlagMask].get(flag_mask,initializing);
+  rec[FFlagBit].get(flag_bit,initializing);
+  rec[FFlagDensity].get(flag_density,initializing);
 }
 
 template<class T>

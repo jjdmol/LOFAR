@@ -35,7 +35,7 @@ InitDebugContext(Parm,"MeqParm");
 
 //##ModelId=3F86886F021B
 Parm::Parm()
-: Function  (),
+: Node  (0), // no children allowed
   solvable_ (false),
   auto_save_(false),
   parmtable_(0)
@@ -44,7 +44,7 @@ Parm::Parm()
 //##ModelId=3F86886F0242
 Parm::Parm (const string& name, ParmTable* table,
 	          const Polc::Ref::Xfer & defaultValue)
-: Function   (),
+: Node  (0), // no children allowed
   solvable_  (false),
   auto_save_ (false),
   name_      (name),
@@ -413,22 +413,19 @@ void Parm::save()
 //##ModelId=400E5353033A
 void Parm::setStateImpl (DataRecord& rec, bool initializing)
 {
-  // inhibit changing of FPolcs field
-  if( !initializing )
-  {
-    protectStateField(rec,FPolcs);
-    protectStateField(rec,FSolvePolcs);
-  }
-  Function::setStateImpl(rec,initializing);
-  getStateField(auto_save_,rec,FAutoSave);
-  getStateField(name_,rec,FParmName);
-//  // Get solvable flag; clear domain if it changes (to force 
-//  // initDomain call next time 'round)
-//  bool oldSolvable = solvable_;
-  getStateField(solvable_,rec,FSolvable);
-//  // reset domain ID, if solvability changes
-//  if( oldSolvable != solvable_) 
-//    domain_id_ = HIID();
+// 31/03/04: we do allow changing the Polcs now, see below
+//  // inhibit changing of FPolcs field
+//  if( !initializing )
+//  {
+//    protectStateField(rec,FPolcs);
+//    protectStateField(rec,FSolvePolcs);
+//  }
+  Node::setStateImpl(rec,initializing);
+  
+  rec[FAutoSave].get(auto_save_,initializing);
+  rec[FParmName].get(name_,initializing);
+  rec[FSolvable].get(solvable_,initializing);
+  
   // Are polcs specified? 
   int npolcs = rec[FPolcs].size(TpMeqPolc);
   FailWhen(npolcs<0,"illegal "+FPolcs.toString()+" state field");
@@ -469,15 +466,16 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
     }
   }
   // get domain IDs, if specified
-  getStateField(domain_id_,rec,FDomainId);
-  getStateField(solve_domain_id_,rec,FSolveDomainId);
+  rec[FDomainId].get(domain_id_);
+  rec[FSolveDomainId].get(solve_domain_id_);
   // Get default polc (to be used if no table exists)
-  if( rec[FDefault].exists() )
-    default_polc_ <<= rec[FDefault].as_p<Polc>();
+  const Polc *defpolc = rec[FDefault].as_po<Polc>();
+  if( defpolc )
+    default_polc_ <<= defpolc;
   // Get ParmTable name 
-  if( rec[FTableName].exists() )
+  string tableName;
+  if( rec[FTableName].get(tableName) )
   {
-    string tableName = state()[FTableName].as<string>();
     if( tableName.empty() )  // no table
       parmtable_ = 0;
     else    // else open a table
@@ -488,7 +486,7 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
 void Parm::processCommands (const DataRecord &rec,const Request &req)
 {
   // process parent class's commands
-  Function::processCommands(rec,req);
+  Node::processCommands(rec,req);
   bool saved  = False;
   
   // Is an Update.Values command specified? use it to update solve polcs
