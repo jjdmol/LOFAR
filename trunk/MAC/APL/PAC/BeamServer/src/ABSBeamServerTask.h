@@ -187,7 +187,9 @@ namespace ABS
 	} m_wgsetting;
 
 	/**
-	 * Receptor positions
+	 * Receptor positions in 3 dimensions (x, y and z)
+	 * \note The type is set to W_TYPE to make sure the computations
+	 * are all carried out in the same precision.
 	 */
 	blitz::Array<W_TYPE, 3> m_pos;
 

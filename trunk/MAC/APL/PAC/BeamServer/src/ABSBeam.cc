@@ -30,10 +30,6 @@
 #include <blitz/array.h>
 using namespace blitz;
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-using namespace boost::gregorian;
-using namespace boost::posix_time;
-
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
@@ -189,7 +185,7 @@ int Beam::addPointing(const Pointing& pointing)
   return 0;
 }
 
-int Beam::convertPointings(time_period period)
+int Beam::convertPointings(time_t begintime)
 {
   // remember last pointing from previous call
   Pointing current_pointing = m_pointing;
@@ -200,23 +196,25 @@ int Beam::convertPointings(time_period period)
   // only works on allocated beams
   if (!allocated()) return -1;
 
+#if 0
   if (period.length().seconds() != m_compute_interval)
   {
     LOG_ERROR("\ninvalid time period\n");
     return -1;
   }
+#endif
 
   // reset azel, lm arrays
   m_azels = 0.0;
   m_lmns = 0.0;
 
-  LOG_DEBUG_STR("Period=" << to_simple_string(period));
+  LOG_DEBUG_STR("Begintime=" << begintime);
 
   while (!m_pointing_queue.empty())
   {
       Pointing pointing = m_pointing_queue.top();
 
-      LOG_DEBUG_STR("Pointing time=" << to_simple_string(pointing.time()));
+      LOG_DEBUG_STR("Pointing time=" << pointing.time());
 
       if (pointing.direction().type() != Direction::LOFAR_LMN)
       {
@@ -225,19 +223,19 @@ int Beam::convertPointings(time_period period)
 	continue;
       }
 
-      if (pointing.time() < period.begin())
+      if (pointing.time() < begintime)
       {
 	//
 	// Deadline missed, print warning but execute the command anyway
 	// as soon as possible.
 	//
-	LOG_WARN(formatString("Deadline missed by %d seconds(%f,%f) @ %s",
-			      (period.begin() - pointing.time()).seconds(),
+	LOG_WARN(formatString("Deadline missed by %d seconds(%f,%f) @ %d",
+			      (begintime - pointing.time()),
 			      pointing.direction().angle1(),
 			      pointing.direction().angle2(),
-			      to_simple_string(pointing.time()).c_str()));
+			      pointing.time()));
 
-	pointing.time() = period.begin();
+	pointing.setTime(begintime);
       }
 
 #if 0
@@ -246,7 +244,7 @@ int Beam::convertPointings(time_period period)
       else
 #endif
       
-      if (pointing.time() < period.end())
+      if (pointing.time() < begintime + m_compute_interval)
       {
 	  m_pointing_queue.pop(); // remove from queue
 
@@ -262,11 +260,11 @@ int Beam::convertPointings(time_period period)
 	  // insert converted LM coordinate at correct 
 	  // position in the m_lmns array
 	  //
-	  register int tsec = (pointing.time()-period.begin()).seconds();
+	  register int tsec = pointing.time() - begintime;
 
 	  if ( (tsec < 0) || (tsec >= m_compute_interval) )
 	  {
-	    LOG_ERROR_STR("\ninvalid pointing time\n" << to_simple_string(pointing.time()));
+	    LOG_ERROR_STR("\ninvalid pointing time" << pointing.time());
 	    continue;
 	  }
 	  
@@ -290,8 +288,7 @@ int Beam::convertPointings(time_period period)
   // there are not necessarily pointings at each second
   // these holes are fixed up in this loop
   //
-  time_iterator thetime(period.begin(), seconds(m_update_interval));
-  for (int t=0; t < m_compute_interval; ++t, ++thetime)
+  for (int t=0; t < m_compute_interval; ++t)
   {
     if (!pset[t])
     {
@@ -316,8 +313,8 @@ int Beam::convertPointings(time_period period)
 	m_lmns(t,2) = 0.0;
     }
 
-    LOG_TRACE_VAR(formatString("direction@%s=(%f,%f,%f)",
-			       to_simple_string(*thetime).c_str(),
+    LOG_TRACE_VAR(formatString("direction@%d=(%f,%f,%f)",
+			       begintime + t,
 			       m_lmns(t,0), m_lmns(t,1), m_lmns(t,2)));
   }
 

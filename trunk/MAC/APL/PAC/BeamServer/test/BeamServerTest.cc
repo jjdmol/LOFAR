@@ -27,8 +27,6 @@
 #include "ABSTest.h"
 
 #include <iostream>
-#include <boost/date_time/posix_time/posix_time.hpp>
-using namespace boost::posix_time;
 
 #include <blitz/array.h>
 using namespace blitz;
@@ -185,7 +183,7 @@ public:
 	  set<int> subbands;
 	  subbands.clear();
 
-	  ptime thetime = from_time_t(time(0)) + seconds(20);
+	  time_t thetime = time(0) + 20;
 
 	  // allocate beam, addPointing, should succeed
 	  TESTC(0 != (m_beam[0] = Beam::allocate(0, subbands)));
@@ -195,7 +193,7 @@ public:
 	  // deallocate beam, addPointing, should fail
 	  TESTC(m_beam[0]->deallocate() == 0);
 	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 0.0, Direction::J2000), thetime + seconds(5))) < 0);
+			    0.0, 0.0, Direction::J2000), thetime + 5)) < 0);
 
 	  STOP_TEST();
 	}
@@ -208,28 +206,27 @@ public:
 
 	  allocate();
 
-	  ptime now = from_time_t(time(0));
+	  time_t now = time(0);
 
 	  // add a few pointings
 	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 1.0, Direction::LOFAR_LMN), now + seconds(1))) == 0);
+			    0.0, 1.0, Direction::LOFAR_LMN), now + 1)) == 0);
 	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 0.2, Direction::LOFAR_LMN), now + seconds(3))) == 0);
+			    0.0, 0.2, Direction::LOFAR_LMN), now + 3)) == 0);
 	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.3, 0.0, Direction::LOFAR_LMN), now + seconds(5))) == 0);
+			    0.3, 0.0, Direction::LOFAR_LMN), now + 5)) == 0);
 	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.4, 0.0, Direction::LOFAR_LMN), now + seconds(8))) == 0);
+			    0.4, 0.0, Direction::LOFAR_LMN), now + 8)) == 0);
 	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
-			    0.5, 0.0, Direction::LOFAR_LMN), now + seconds(COMPUTE_INTERVAL))) == 0);
+			    0.5, 0.0, Direction::LOFAR_LMN), now + COMPUTE_INTERVAL)) == 0);
 
 	  struct timeval start, delay;
 	  gettimeofday(&start, 0);
 	  // iterate over all beams
-	  time_period period(now, seconds(COMPUTE_INTERVAL));
+	  time_t begintime = now;
 
-	  TESTC(0 == m_beam[0]->convertPointings(period));
-	  period = time_period(now + seconds(COMPUTE_INTERVAL), seconds(COMPUTE_INTERVAL));
-	  TESTC(0 == m_beam[0]->convertPointings(period));
+	  TESTC(0 == m_beam[0]->convertPointings(begintime));
+	  TESTC(0 == m_beam[0]->convertPointings(begintime + COMPUTE_INTERVAL));
 
 	  Array<W_TYPE, 3>          pos(N_ELEMENTS, N_POLARIZATIONS, 3);
 	  Array<complex<W_TYPE>, 4> weights(COMPUTE_INTERVAL, N_ELEMENTS, N_BEAMLETS, N_POLARIZATIONS);
