@@ -25,7 +25,7 @@
 #ifndef RTECHO_H
 #define RTECHO_H
 
-#include <GCF/GCF_Control.h>
+#include <GCF/TM/GCF_Control.h>
 
 /**
  * The Echo task receives ECHO_PING events from the Ping task and

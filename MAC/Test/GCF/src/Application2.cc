@@ -32,6 +32,12 @@ Application::Application() :
   registerProtocol(TST_PROTOCOL, TST_PROTOCOL_signalnames);  
 }
 
+Application::~Application()
+{
+  if (_pSTPort1) delete _pSTPort1;
+  if (_pSTPort2) delete _pSTPort2;
+}
+
 GCFEvent::TResult Application::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -1071,7 +1077,7 @@ int main(int argc, char* argv[])
 {
   GCFTask::init(argc, argv);
   
-  Suite s("GCF Test", &cerr);
+  Suite s("GCF Test", &cout);
   s.addTest(new Application);
   s.run();
   s.report();

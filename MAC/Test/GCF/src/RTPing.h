@@ -24,8 +24,8 @@
 #ifndef RTPING_H
 #define RTPING_H
 
-#include <GCF/GCF_Control.h>
-#include <GCF/GCF_RTMyPropertySet.h>
+#include <GCF/TM/GCF_Control.h>
+#include <GCF/PALlight/GCF_RTMyPropertySet.h>
 #include "RTAnswer.h"
 #include <sys/time.h>
 
@@ -43,7 +43,7 @@ class Ping : public GCFTask
      * connection establishment information from the FNameService and FAppTopology
      * configuration files.
      */
-    Ping (string name, const char* scope);
+    Ping (string name, string scope, const TPropertySet& propSet);
   
     /**
      * Handler for the initial state. This handler is passed to the constructor
@@ -85,7 +85,7 @@ class Ping : public GCFTask
     
     Answer _answerHandler;
     GCFRTMyPropertySet _echoPingPSET;    
-    long _maxSeqNr;
+    unsigned int _maxSeqNr;
 };
 
 #endif

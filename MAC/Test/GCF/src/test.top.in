@@ -26,11 +26,8 @@ client=PA:server
 [PI]
 client=PA:server
 
-[SS]
-client=PI:server
-
 [PMLlite]
-client=SS:server
+client=PI:server
 
 [ST1]
 client=ST3:server
@@ -41,8 +38,14 @@ client=ST3:server
 [PA]
 # has no SAP's
 
-[PING]
-client=ECHO:server
+[PING1]
+client=ECHO1:server
 
-[ECHO]
+[ECHO1]
+# has no SAP's
+
+[PING2]
+client=ECHO2:server
+
+[ECHO2]
 # has no SAP's

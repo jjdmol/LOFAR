@@ -39,11 +39,11 @@ static double time_elapsed(timeval* start, timeval* stop)
     + (stop->tv_usec-start->tv_usec)/(double)1e6; 
 }
 
-Ping::Ping(string name, const char* scope)
+Ping::Ping(string name, string scope, const TPropertySet& propSet)
   : GCFTask((State)&Ping::initial, name), 
   _pingTimer(-1), 
   _answerHandler(*this),
-  _echoPingPSET(echoPingPSET, scope, &_answerHandler)
+  _echoPingPSET(scope.c_str(), propSet, &_answerHandler)
 {
   // register the port for debug tracing
   registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_signalnames);
@@ -69,16 +69,13 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*p*/)
       break;
 
     case F_ENTRY:
-      _echoPingPSET.load();
+      _echoPingPSET.enable();
       _client.open();
       break;
 
     case F_CONNECTED:
       
-      // start ping_timer
-      // - after 1 second
-      // - every 40 seconds
-      if (_client.isConnected() && _echoPingPSET.isLoaded())
+      if (_client.isConnected() && _echoPingPSET.isEnabled())
       {
         TRAN(Ping::connected);
       }
@@ -92,17 +89,38 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*p*/)
       _client.open();
       break;
 
-    case F_MYPLOADED:
-    {
-      if (_client.isConnected() && _echoPingPSET.isLoaded())
+    case F_MYPS_ENABLED:
+      if (_client.isConnected() && _echoPingPSET.isEnabled())
       {
         TRAN(Ping::connected);
       }
       break;
-    }
-    case F_EXIT:
-      _pingTimer = _client.setTimer(1.0, 0.1);
+
+    case F_VCHANGEMSG:
+    {
+      GCFPropValueEvent* pResponse = (GCFPropValueEvent*)(&e);
+      assert(pResponse);
+      if ((strncmp(pResponse->pPropName, "B_A_BRD", 7) == 0) && 
+          (strncmp(pResponse->pPropName + 8, ".max", 4) == 0))
+      {
+        GCFPVInteger* pMaxSeqProp = (GCFPVInteger*)(pResponse->pValue);
+        assert(pMaxSeqProp);
+        if (pResponse->pPropName[7] == '1')
+        {
+          _echoPingPSET["sn"].setValue(*pMaxSeqProp);
+        }
+        else
+        {
+          _echoPingPSET["sn000"].setValue(*pMaxSeqProp);
+        }
+      }
       break;
+    }
+
+    case F_EXIT:
+      _pingTimer = _client.setTimer(1.0, 0.5);
+      break;
+      
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -115,16 +133,15 @@ GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static unsigned int seqnr = 0;
-  static unsigned int maxSeqNr = 0;
   
   switch (e.signal)
   {
 
     case F_ENTRY:
     {
-      GCFPVInteger* pMaxSeqProp = static_cast<GCFPVInteger*>(_echoPingPSET["maxSeqNr"].getValue());
+      GCFPVInteger* pMaxSeqProp = (GCFPVInteger*)(_echoPingPSET["max"].getValue());
       assert(pMaxSeqProp);
-      maxSeqNr = pMaxSeqProp->getValue();
+      _maxSeqNr = pMaxSeqProp->getValue();
       delete pMaxSeqProp; // was created by the first getValue() - clone of current value
       break;
     }
@@ -132,11 +149,12 @@ GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     {
       GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
       assert(pResponse);
-      if (strcmp(pResponse->pPropName, "B_RT_maxSeqNr") == 0)
+      if ((strncmp(pResponse->pPropName, "B_A_BRD", 7) == 0) && 
+          (strncmp(pResponse->pPropName + 8, ".max", 4) == 0))
       {
-        const GCFPVInteger* pMaxSeqProp = static_cast<const GCFPVInteger*>(pResponse->pValue);
+        GCFPVInteger* pMaxSeqProp = (GCFPVInteger*)(pResponse->pValue);
         assert(pMaxSeqProp);
-        maxSeqNr = pMaxSeqProp->getValue();
+        _maxSeqNr = pMaxSeqProp->getValue();
       }
       break;
     }
@@ -153,13 +171,20 @@ GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 
       // send the event
       _client.send(ping);
-      char seqNrName[9];
-      for (unsigned int i = 0; i < 256; i++)
+      if (seqnr >= _maxSeqNr) seqnr = 0;
+      if (_echoPingPSET.getScope()[7] == '1')
       {
-        sprintf(seqNrName, "seqNr%03d", i);
-        _echoPingPSET[seqNrName].setValue(GCFPVDouble(ping.seqnr));
+        _echoPingPSET["sn"].setValue(GCFPVInteger(ping.seqnr));
       }
-      if (seqnr >= maxSeqNr) seqnr = 0;
+      else
+      {
+        char seqNrName[6];
+        for (unsigned int i = 0; i < 256; i++)
+        {
+          sprintf(seqNrName, "sn%03d", i);
+          _echoPingPSET[seqNrName].setValue(GCFPVInteger(ping.seqnr));
+        }
+      }
       printf("PING sent (seqnr=%d)\n", ping.seqnr);
 
       TRAN(Ping::awaiting_echo); // wait for the echo
@@ -220,8 +245,7 @@ int main(int argc, char** argv)
 {
   GCFTask::init(argc, argv);
   
-
-  string scope("B_RT1");
+  string brdnr("1");
   if (argv != 0)
   {
     CCmdLine cmdLine;
@@ -229,11 +253,20 @@ int main(int argc, char** argv)
     // parse argc,argv 
     if (cmdLine.SplitLine(argc, argv) > 0)
     {
-      scope = cmdLine.GetSafeArgument("-scope", 0, "B_RT1");
+      brdnr = cmdLine.GetSafeArgument("-brdnr", 0, "1");
     }            
   }
 
-  Ping pingTask("PING", scope.c_str());
+  const TPropertySet* pPropSet;
+  if (brdnr == "1")
+  {
+    pPropSet = &propertySetF1;
+  }
+  else
+  {
+    pPropSet = &propertySetG1;
+  }
+  Ping pingTask(string("PING") + brdnr, string("B_A_BRD") + brdnr, *pPropSet);
 
   pingTask.start(); // make initial transition
 

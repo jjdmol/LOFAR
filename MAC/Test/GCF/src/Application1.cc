@@ -1,5 +1,6 @@
 #include "Application1.h"
 #include "Defines.h"
+#include <RTDefines.h>
 #include <GCF/GCF_PVInteger.h>
 #include <GCF/GCF_PVChar.h>
 #include <GCF/GCF_PVDouble.h>
@@ -32,7 +33,9 @@ Application::Application() :
   _ePropertySetAC("A_C",  propertySetB1, &_supTask2.getAnswerObj()),   
   _ePropertySetAD("A_D",  propertySetB2, &_supTask2.getAnswerObj()),   
   _ePropertySetAH("A_H",  propertySetD1, &_supTask2.getAnswerObj()),   
-  _ePropertySetAL("A_L",  propertySetE1, &_supTask2.getAnswerObj())   
+  _ePropertySetAL("A_L",  propertySetE1, &_supTask2.getAnswerObj()),   
+  _ePropertySetBRD1("B_A_BRD1",  propertySetF1, &_supTask1.getAnswerObj()),
+  _ePropertySetBRD2("B_A_BRD2",  propertySetG1, &_supTask1.getAnswerObj())   
 {
     // register the protocol for debugging purposes
   registerProtocol(TST_PROTOCOL, TST_PROTOCOL_signalnames);  
@@ -927,7 +930,7 @@ GCFEvent::TResult Application::test6_4(GCFEvent& e, GCFPortInterface& /*p*/)
         for (unsigned int j = 0; j <= 9; j++)
         {
           propName[4] = j + '0';
-          if (TESTC(_ePropertySetAH.subscribeProp(propName) == GCF_NO_ERROR))
+          if (TESTC_DESCR(_ePropertySetAH.subscribeProp(propName) == GCF_NO_ERROR, propName))
           {
             _counter++;
           }
@@ -970,7 +973,7 @@ GCFEvent::TResult Application::test6_4(GCFEvent& e, GCFPortInterface& /*p*/)
           for (unsigned int j = 0; j <= 9; j++)
           {
             propName[4] = j + '0';
-            TESTC(_ePropertySetAH.unsubscribeProp(propName) == GCF_NO_ERROR);
+            TESTC_DESCR(_ePropertySetAH.unsubscribeProp(propName) == GCF_NO_ERROR, propName);
           }
         }        
         TSTTestreadyEvent r;
@@ -1094,7 +1097,7 @@ GCFEvent::TResult Application::test6_6(GCFEvent& e, GCFPortInterface& /*p*/)
       _counter++;
       if (_counter == 1000)
       {
-        FINISH;
+         NEXT_TEST(7_1, "access board properties");
       }
       else
       {
@@ -1113,73 +1116,104 @@ GCFEvent::TResult Application::test6_6(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
-/*
-GCFEvent::TResult Application::test501(GCFEvent& e, GCFPortInterface& p)
+
+GCFEvent::TResult Application::test7_1(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
-  static GCFApc apc1("ApcTRT", "B_RT1", &_supTask1.getAnswerObj());
-  static GCFApc apc2("ApcTRT", "B_RT2", &_supTask1.getAnswerObj());
-
   switch (e.signal)
   {
     case F_ENTRY:
-      apc1.load(false);
-      _counter = 0;
+      TESTC_ABORT_ON_FAIL(system("./RTPing -sfp test -brdnr 1 2&> RTPing1.out &") != -1);
+      TESTC_ABORT_ON_FAIL(system("./RTPing -sfp test -brdnr 2 2&> RTPing2.out &") != -1);
+      _supTask1.getPort().setTimer(2.0);      
       break;
 
-    case F_APCLOADED:
-    {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      if ((strcmp(pResponse->pScope, "B_RT1") == 0) &&
-          (pResponse->result == GCF_NO_ERROR))
-      {          
-        _supTask1.getPort().setTimer(40.0);
-      }
+    case F_TIMER:
+      TESTC_ABORT_ON_FAIL(_ePropertySetBRD1.load() == GCF_NO_ERROR);
+      TESTC_ABORT_ON_FAIL(_ePropertySetBRD2.load() == GCF_NO_ERROR);
       break;
-    }  
-    case F_APCUNLOADED:
+    
+    case F_EXTPS_LOADED:
     {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      if ((strcmp(pResponse->pScope, "B_RT1") == 0) &&
-          (pResponse->result == GCF_NO_ERROR))
-      {          
-        //if (apc2.unload() != GCF_NO_ERROR)
+      GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
+      if (pResponse->result != GCF_NO_ERROR)
+      {
+        if (strcmp(pResponse->pScope, "B_A_BRD1") == 0)
         {
-          TSTTestreadyEvent r;
-          r.testnr = 501;
-          if (_supTask1.getPort().isConnected())
-            _supTask1.getPort().send(r);
-          passed(501);
-          TRAN(Application::finished);        
+          TESTC_ABORT_ON_FAIL(_ePropertySetBRD1.load() == GCF_NO_ERROR);
+        }
+        else
+        {
+          TESTC_ABORT_ON_FAIL(_ePropertySetBRD2.load() == GCF_NO_ERROR);
         }
       }
-      else
+      else if (_ePropertySetBRD1.isLoaded() &&  _ePropertySetBRD2.isLoaded())
       {
-        TSTTestreadyEvent r;
-        r.testnr = 501;
-        if (_supTask1.getPort().isConnected())
-          _supTask1.getPort().send(r);
-        passed(501);
-        TRAN(Application::finished);        
+        TESTC_ABORT_ON_FAIL(_ePropertySetBRD1.subscribeProp("sn") == GCF_NO_ERROR);
+        TESTC_ABORT_ON_FAIL(_ePropertySetBRD2.subscribeProp("sn000") == GCF_NO_ERROR);        
       }
       break;
-    }  
+    } 
+    case F_SUBSCRIBED:
+      if (_ePropertySetBRD1.isPropSubscribed("sn") && _ePropertySetBRD2.isPropSubscribed("sn000"))
+      {
+        GCFPVInteger iv(10);
+        _ePropertySetBRD1["max"].setValue(iv);
+        iv.setValue(200);
+        _ePropertySetBRD2["max"].setValue(iv);
+      }
+      break;
+    
+    case F_VCHANGEMSG:
+    {
+      GCFPropValueEvent* pResponse = (GCFPropValueEvent*)(&e);
+      assert(pResponse);
+      if (pResponse->internal) break;
+      assert(pResponse->pValue->getType() == LPT_INTEGER);
+      if (strcmp(pResponse->pPropName, "B_A_BRD1.sn") == 0)
+      {
+        TESTC((unsigned int)((GCFPVInteger*)pResponse->pValue)->getValue() == 10);
+      }
+      else if (strcmp(pResponse->pPropName, "B_A_BRD2.sn000") == 0)
+      {
+        TESTC((unsigned int)((GCFPVInteger*)pResponse->pValue)->getValue() == 200);
+        NEXT_TEST(7_2, "follow the sequence numbers of both boards");
+      }
+      break;
+    }
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+  
+  return status;
+}
+
+GCFEvent::TResult Application::test7_2(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+  {
+    case F_ENTRY:
+      TESTC_ABORT_ON_FAIL(system("./RTEcho -sfp test -brdnr 1 2&> RTEcho1.out &") != -1);
+      TESTC_ABORT_ON_FAIL(system("./RTEcho -sfp test -brdnr 2 2&> RTEcho2.out &") != -1);      
+      _supTask1.getPort().setTimer(40.0);
+      _counter = 0;
+      break;
     case F_TIMER:
     {
-      GCFTimerEvent* pTIM = static_cast<GCFTimerEvent*>(&e);
-      assert(pTIM);
+      GCFTimerEvent* pTIM = (GCFTimerEvent*)(&e);
       srand(pTIM->sec * 1000000 + pTIM->usec);
       int maxSeqNr = 20 + (int) (80.0 * rand() / (RAND_MAX + 1.0));
       GCFPVInteger maxSeqNrV(maxSeqNr);
-      _supTask1.getProxy().setPropValue("B_RT1_maxSeqNr", maxSeqNrV);
+      _supTask1.getProxy().setPropValue("B_A_BRD1.max", maxSeqNrV);
       if (_counter >= 3)
       {
         int maxSeqNr = 20 + (int) (80.0 * rand() / (RAND_MAX + 1.0));
         maxSeqNrV.setValue(maxSeqNr);
-        //_supTask1.getProxy().setPropValue("B_RT2_maxSeqNr", maxSeqNrV);
+        _supTask1.getProxy().setPropValue("B_A_BRD2.max", maxSeqNrV);
       }
       if (_counter < 7)
       {
@@ -1192,7 +1226,7 @@ GCFEvent::TResult Application::test501(GCFEvent& e, GCFPortInterface& p)
       }
       else
       {
-        apc1.unload();
+        FINISH;
       }      
       break;
     }
@@ -1203,7 +1237,8 @@ GCFEvent::TResult Application::test501(GCFEvent& e, GCFPortInterface& p)
 
   return status;
 }
-*/
+
+
 GCFEvent::TResult Application::finished(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -1218,6 +1253,8 @@ GCFEvent::TResult Application::finished(GCFEvent& e, GCFPortInterface& /*p*/)
     }
     case F_ENTRY:
     {
+      system("killall RTPing");
+      system("killall RTEcho");
       //if (_curRemoteTestNr != 999) break;           
       TSTTestreadyEvent r;
       r.testnr = 999;
@@ -1246,7 +1283,7 @@ int main(int argc, char* argv[])
 {
   GCFTask::init(argc, argv);
     
-  Suite s("GCF Test", &cerr);
+  Suite s("GCF Test", &cout);
   s.addTest(new Application);
   s.run();
   s.report();
