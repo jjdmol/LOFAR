@@ -33,7 +33,7 @@ namespace LOFAR
 class DH_StationData: public DataHolder
 {
  public:
-  typedef complex<uint16> BufferType;
+  typedef complex<int16> BufferType;
 
   explicit DH_StationData (const string& name,
                            const unsigned int bufsize);

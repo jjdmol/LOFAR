@@ -87,7 +87,7 @@ public:
   void setBufferElement(const int EPApacket, 
 			const int beamlet,
 			const int polarisation,
-			const complex<uint16>& value);
+			const complex<int16>& value);
   
  private:
   /// Forbid assignment.
@@ -134,14 +134,14 @@ inline void DH_RSP:: resetBuffer()
   (ePacket + 1)* itsEPAheaderSize \
   + ((ePacket * itsNoBeamlets + beamlet) \
   * itsNoPolarisations + polarisation) \
-  * sizeof(complex<uint16>)
+  * sizeof(complex<int16>)
 
 inline void DH_RSP::setBufferElement(const int EPApacket, 
 				     const int beamlet,
 				     const int polarisation,
-				     const complex<uint16>& value)
+				     const complex<int16>& value)
 {
-  *((complex<uint16>*)&itsBuffer[GETADDRESS(EPApacket, beamlet, polarisation)]) = value;
+  *((complex<int16>*)&itsBuffer[GETADDRESS(EPApacket, beamlet, polarisation)]) = value;
 }
 
 

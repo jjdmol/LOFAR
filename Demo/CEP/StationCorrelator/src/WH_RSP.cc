@@ -57,7 +57,7 @@ WH_RSP::WH_RSP(const string& name,
   itsNbeamlets     = kvm.getInt("NoRSPBeamlets", 92) / itsNCorrOutputs; // number of EPA-packet beamlets per OutDataholder
   itsNpackets      = kvm.getInt("NoPacketsInFrame", 8);             // number of EPA-packets in RSP-ethernetframe
   itsSzEPAheader   = kvm.getInt("SzEPAheader", 14);                 // headersize in bytes
-  itsSzEPApacket   = (itsPolarisations * sizeof(complex<uint16>) * kvm.getInt("NoRSPBeamlets", 92)) + itsSzEPAheader;           // packetsize in bytes
+  itsSzEPApacket   = (itsPolarisations * sizeof(complex<int16>) * kvm.getInt("NoRSPBeamlets", 92)) + itsSzEPAheader;           // packetsize in bytes
 
   // create buffer for incoming dataholders 
   // implement a cyclic buffer later !!!
@@ -65,7 +65,7 @@ WH_RSP::WH_RSP(const string& name,
                * (kvm.getInt("SzEPAheader", 14)        // headersize in bytes
                   + (kvm.getInt("polarisations",2)     // number of polarisations
 		     * kvm.getInt("NoRSPBeamlets", 92) // number of beamlets per packet
-		     * sizeof(complex<uint16>)));
+		     * sizeof(complex<int16>)));
 
   getDataManager().addInDataHolder(0, new DH_RSP("DH_RSP_in", itsKVM)); // buffer of char
   
@@ -73,7 +73,7 @@ WH_RSP::WH_RSP(const string& name,
   int bufsize =  itsPolarisations * itsNbeamlets * itsNpackets;
   for (int i=0; i < itsNCorrOutputs; i++) {
     snprintf(str, 32, "DH_out_%d", i);
-    getDataManager().addOutDataHolder(i, new DH_StationData(str, bufsize)); // buffer of complex<uint16>
+    getDataManager().addOutDataHolder(i, new DH_StationData(str, bufsize)); // buffer of complex<int16>
   }
 
   if (itsIsSyncMaster) {
@@ -172,9 +172,9 @@ void WH_RSP::process()
       
       // todo: insert the correct number of packets in one go
 
-      // determine blocksizes of char-based InHolder and complex<uint16-based> OutHolder
-      int char_blocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<uint16>); 
-      int complex_uint16_blocksize = itsNbeamlets * itsPolarisations;
+      // determine blocksizes of char-based InHolder and complex<int16-based> OutHolder
+      int char_blocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<int16>); 
+      int complex_int16_blocksize = itsNbeamlets * itsPolarisations;
       
       //todo: create an appropriate dummy packet only once and re-use.
 
@@ -188,7 +188,7 @@ void WH_RSP::process()
       for (int i=0;i<itsNpackets;i++) {
 	for (int j=0;j<itsNCorrOutputs;j++) {
 	  outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
-          memset( &outDHp->getBuffer()[i * complex_uint16_blocksize], 
+          memset( &outDHp->getBuffer()[i * complex_int16_blocksize], 
 		  0,
 		  char_blocksize );
 	}
@@ -202,9 +202,9 @@ void WH_RSP::process()
       LOG_TRACE_COND_STR("Package has correct timestamp");
       // this is the right packet, so send it
       
-      // determine blocksizes of char-based InHolder and complex<uint16-based> OutHolder
-      int char_blocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<uint16>); 
-      int complex_uint16_blocksize = itsNbeamlets * itsPolarisations;
+      // determine blocksizes of char-based InHolder and complex<int16-based> OutHolder
+      int char_blocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<int16>); 
+      int complex_int16_blocksize = itsNbeamlets * itsPolarisations;
       
       // copy stationID and blockID of first EPA-packet in OutDataholder
       outDHp = (DH_StationData*)getDataManager().getOutHolder(0);
@@ -216,14 +216,14 @@ void WH_RSP::process()
       for (int i=0;i<itsNpackets;i++) {
 	for (int j=0;j<itsNCorrOutputs;j++) {
           outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
-          memcpy( &outDHp->getBuffer()[i * complex_uint16_blocksize], 
+          memcpy( &outDHp->getBuffer()[i * complex_int16_blocksize], 
 		  &inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)],
 		  char_blocksize );
 #define DUMP_NOT_DEFINED
 #ifdef DUMP
 	  cout<<"packet: "<<i<<"  output: "<<j<<"   ";
-	  for (int c=0; c<char_blocksize/sizeof(complex<uint16>); c++) {
-	    cout<<((complex<uint16>*)&inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)])[c]<<" ";
+	  for (int c=0; c<char_blocksize/sizeof(complex<int16>); c++) {
+	    cout<<((complex<int16>*)&inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)])[c]<<" ";
 	  }
 	  cout<<endl;
 #endif
@@ -244,16 +244,16 @@ void WH_RSP::dump() {
   DH_StationData* outDHp;
   inDHp = (DH_RSP*)getDataManager().getInHolder(0);
       
-  // determine blocksizes of char-based InHolder and complex<uint16-based> OutHolder
-  int char_blocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<uint16>); 
-  int complex_uint16_blocksize = itsNbeamlets * itsPolarisations;
+  // determine blocksizes of char-based InHolder and complex<int16-based> OutHolder
+  int char_blocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<int16>); 
+  int complex_int16_blocksize = itsNbeamlets * itsPolarisations;
       
   for (int i=0;i<itsNpackets;i++) {
     for (int j=0;j<itsNCorrOutputs;j++) {
       outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
       cout<<"packet: "<<i<<"  output: "<<j<<"   ";
-      for (int c=0; c<char_blocksize/sizeof(complex<uint16>); c++) {
-	cout<<((complex<uint16>*)&inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)])[c]<<" ";
+      for (int c=0; c<char_blocksize/sizeof(complex<int16>); c++) {
+	cout<<((complex<int16>*)&inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)])[c]<<" ";
       }
       cout<<endl;
     }
