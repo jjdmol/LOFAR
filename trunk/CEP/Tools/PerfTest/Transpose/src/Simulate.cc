@@ -22,14 +22,13 @@ int main (int argc, char** argv)
   try {
     Transpose simulator;
     simulator.setarg (argc, argv);
-#ifndef HAVE_MPI
-        cout << endl;
-	cout << "  * Type 'define;' to define the simulation" << endl;
-	cout <<	"  * Type 'run;'    to run the simulation" << endl;
-	cout <<	"  * Type 'dump;'   to dump the simulators data" << endl;
-	cout <<	"  * Type 'quit'    to quit" << endl;
-	cout << endl;
-#endif
+#ifndef HAVE_MPICH
+//          cout << endl;
+//  	cout << "  * Type 'define;' to define the simulation" << endl;
+//  	cout <<	"  * Type 'run;'    to run the simulation" << endl;
+//  	cout <<	"  * Type 'dump;'   to dump the simulators data" << endl;
+//  	cout <<	"  * Type 'quit'    to quit" << endl;
+//  	cout << endl;
 	try {
 	  SimulatorParse::parse (simulator);
 	} catch (SimulatorParseError x) {
@@ -38,11 +37,12 @@ int main (int argc, char** argv)
 	  //cout << x.what() << endl;
 
 	}
-
-//  	simulator.baseDefine();
-//  	simulator.baseRun(1000); // 1 sec worth of data
-//  	simulator.baseDump();
-//  	simulator.baseQuit();
+#else
+  	simulator.baseDefine();
+  	simulator.baseRun(10); // 1 sec worth of data
+  	simulator.baseDump();
+  	simulator.baseQuit();
+#endif
 
   } catch (...) {
     cout << "Unexpected exception" << endl;
