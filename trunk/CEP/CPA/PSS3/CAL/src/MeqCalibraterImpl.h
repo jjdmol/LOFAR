@@ -88,7 +88,9 @@ public:
    * Make specific parameters solvable (isSolvable = True) or
    * non-solvable (False).
    */
-  void setSolvableParms (Vector<String>& parmPatterns, Bool isSolvable);
+  void setSolvableParms (Vector<String>& parmPatterns, 
+			 Vector<String>& excludePatterns,
+			 Bool isSolvable);
 
   //! Predict visibilities for the current domain and store in column
   void predict(const String& modelDataColName);

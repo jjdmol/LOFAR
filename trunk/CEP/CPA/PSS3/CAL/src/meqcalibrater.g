@@ -82,13 +82,14 @@ const _define_meqcalibrater := function(ref agent, id) {
     
     self.setsolvableparmsRec := [_method="setsolvableparms",
 				 _sequence=self.id._sequence]
-    public.setsolvableparms := function(parmpatterns, issolvable) {
+    public.setsolvableparms := function(parmpatterns, excludepatterns="", issolvable=T) {
     
         wider self;
         
         # argument assignment
-        self.setsolvableparmsRec.parmpatterns := parmpatterns
-        self.setsolvableparmsRec.issolvable := issolvable
+        self.setsolvableparmsRec.parmpatterns    := parmpatterns
+	self.setsolvableparmsRec.excludepatterns := excludepatterns
+        self.setsolvableparmsRec.issolvable      := issolvable
         
         # return
         return defaultservers.run(self.agent, self.setsolvableparmsRec);
@@ -208,8 +209,8 @@ const meqcalibratertest := function()
 
     mc.settimeinterval(3600); # calibrate per 1 hour
     mc.clearsolvableparms();
-    mc.setsolvableparms("a.b.* f.g.*[34]", T);
-    mc.setsolvableparms("Leakage.*", T);
+    mc.setsolvableparms("a.b.* f.g.*[34]");
+    mc.setsolvableparms("Leakage.*");
     
     mc.resetiterator()
     i := 0
