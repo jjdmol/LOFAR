@@ -58,6 +58,8 @@ solve := function(fname='michiel.demo', niter=1)
             ra  := parms[spaste('GSM.',i,'.RA')].value[1];
             dec := parms[spaste('GSM.',i,'.DEC')].value[1];
             print 'src = ', i, ' ra = ', ra, ' dec = ', dec;
+
+	    if (is_fail(annotator)) fail;
             annotator.add_marker(i, real(ra), real(dec), i==nrpos);
         }
     }
@@ -68,7 +70,7 @@ solve := function(fname='michiel.demo', niter=1)
     #mc.setsolvableparms("GSM.*.RA GSM.*.DEC");
     mc.setsolvableparms("GSM.*.DEC GSM.*.RA");
     #mc.setsolvableparms("Leakage.{11,22}.*");
-    
+
     mc.resetiterator()
     while (mc.nextinterval())
     {
@@ -87,6 +89,7 @@ solve := function(fname='michiel.demo', niter=1)
 	            dec := parms[spaste('GSM.',j,'.DEC')].value[1];
 	            print 'src =', j, ' ra =', ra, ' dec =', dec;
 
+		    if (is_fail(annotator)) fail;
 	            annotator.add_marker(j, real(ra), real(dec), j==nrpos);
                 }
             }
@@ -124,6 +127,8 @@ solvepos := function(fname='michiel.demo', niter=1)
             ra  := parms[spaste('GSM.',i,'.RA')].value[1];
             dec := parms[spaste('GSM.',i,'.DEC')].value[1];
             print 'src = ', i, ' ra = ', ra, ' dec = ', dec;
+
+	    if (is_fail(annotator)) fail;
             annotator.add_marker(i, real(ra), real(dec), i==nrpos);
         }
     }
@@ -158,6 +163,7 @@ solvepos := function(fname='michiel.demo', niter=1)
 	            dec := parms[spaste('GSM.',j,'.DEC')].value[1];
 	            print 'src =', j, ' ra =', ra, ' dec =', dec;
 
+		    if (is_fail(annotator)) fail;
 	            annotator.add_marker(j, real(ra), real(dec), j==nrpos);
                 }
             }
@@ -239,15 +245,23 @@ setchan := function()
 
 init := function()
 {
-	initleakage();
+	initparms();
 	initgsm();
 	predict();
 }
 
-demo := function()
+demo := function(solver=0,niter=10)
 {
 	global annotator;
+	setparms();
 	setgsm();
-	annotator:=solvepos(niter=10);
+	if (0 == solver)
+	{
+		annotator:=solve(niter=niter);
+	}
+	else
+	{
+		annotator:=solvepos(niter=niter);
+	}
 }
 
