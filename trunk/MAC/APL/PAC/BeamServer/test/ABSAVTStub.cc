@@ -33,6 +33,7 @@
 #include <iostream>
 #include <sys/time.h>
 #include <string.h>
+#include <time.h>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 using namespace boost::posix_time;
@@ -223,7 +224,7 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& /*port*/)
 	// send pointto command
 	ABSBeampointtoEvent pointto;
 	pointto.handle = ack->handle;
-	pointto.time = from_time_t(time(0)) + seconds(15);
+	pointto.time = time(0) + 15;
 	pointto.type=(int)Direction::LOFAR_LMN;
 	pointto.angle1=0.0;
 	pointto.angle2=-1.0;
@@ -328,7 +329,7 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& /*port*/)
 	// send pointto command
 	ABSBeampointtoEvent pointto;
 	pointto.handle = ack->handle;
-	pointto.time = from_time_t(time(0)) + seconds(15);
+	pointto.time = time(0) + 15;
 	pointto.type=(int)Direction::LOFAR_LMN;
 	pointto.angle1=0.0;
 	pointto.angle2=-1.0;
@@ -524,7 +525,7 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
 	// send pointto command (zenith)
 	ABSBeampointtoEvent pointto;
 	pointto.handle = ack->handle;
-	pointto.time = from_time_t(time(0)) + seconds(20);
+	pointto.time = time(0) + 20;
 	pointto.type=(int)Direction::LOFAR_LMN;
 	pointto.angle1=0.0;
 	pointto.angle2=1.0;
@@ -532,7 +533,7 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
 	_test(sizeof(pointto) == beam_server.send(pointto));
 
 	// send pointto command (northern horizon)
-	pointto.time = from_time_t(time(0)) + seconds(25);
+	pointto.time = time(0) + 25;
 	pointto.angle1=1.0;
 	pointto.angle2=0.0;
 

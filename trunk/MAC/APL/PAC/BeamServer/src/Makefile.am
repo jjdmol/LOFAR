@@ -47,7 +47,10 @@ libabs_la_SOURCES = \
 	ABSBeam.h \
 	ABSBeam.cc \
 	ABSBeamlet.h \
-	ABSBeamlet.cc
+	ABSBeamlet.cc \
+	ABSSubbandStats.h \
+	ABSSubbandStats.cc \
+	ABSSubbandStatsPSet.h
 
 bin_PROGRAMS = BeamServer
 
@@ -56,6 +59,6 @@ BeamServer_SOURCES = \
 	ABSBeamServerTask.cc
 
 BeamServer_LDADD = \
-	$(top_builddir)/src/libabs.la -ltm -lgcfcommon
+	$(top_builddir)/src/libabs.la -lpmllite -lsal -ltm -lgcf -lgcfcommon
 
 include $(lofar_sharedir)/Makefile.common
