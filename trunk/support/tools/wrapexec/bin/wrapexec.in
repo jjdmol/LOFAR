@@ -6,13 +6,28 @@
 wrapexec_wrapper=INSTALL_BINDIR/wrapexec_wrapper
 
 #
+# Find config file
+#
+if test -f $HOME/.wrapexec.cfg; then
+    conffile=$HOME/.wrapexec.cfg;
+else
+  if test -f INSTALL_SYSCONFDIR/wrapexec.cfg; then
+    conffile=INSTALL_SYSCONFDIR/wrapexec.cfg;
+  else
+    echo "wrapexec: error: Could not find configuration file in '$HOME/.wrapexec.cfg'"
+    echo "or INSTALL_SYSCONFDIR/wrapexec.cfg"
+    exit 1
+  fi
+fi
+
+#
 # Test for correct usage
 #
 if test $# -ne 2; then
 	echo "Usage: wrapexec /path/to/program_to_wrap <toolname>."
 	echo "Example: wrapexec ./mytest ddd"
 	echo "<toolname> can be one of:"
-	tools=`grep "^\[.*" ~/.wrapexec | sed -e 's/^\[//'  | sed 's/\]$//' `
+	tools=`grep "^\[.*" $conffile | sed -e 's/^\[//'  | sed 's/\]$//' `
 	for t in $tools; do
 		echo -e "       \t$t";
 	done;
@@ -30,8 +45,8 @@ shift
 #
 # Test whether the program has already been wrapped by comparing inodes
 #
-wrapexec_inode=`ls -iL $wrapexec_wrapper | cut -d\  -f1`
-program_inode=`ls -iL $program | cut -d\  -f1`
+wrapexec_inode=`ls -iL $wrapexec_wrapper | cut -c1-8`
+program_inode=`ls -iL $program | cut -c1-8`
 if test $program_inode -eq $wrapexec_inode; then
 	existing_toolname=`ls -1 $program.wrap_* | cut -d_ -f2`
 	echo "wrapexec: error: program '$program' already wrapped by '$existing_toolname'"
