@@ -14,26 +14,37 @@ namespace MEQ {
 class Spigot : public VisHandlerNode
 {
   public:
+    //##ModelId=3F98DAE6022D
     virtual void init (DataRecord::Ref::Xfer &initrec,Forest * frst);
 
+    //##ModelId=3F98DAE60235
     virtual void setState (const DataRecord &rec);
     
-    virtual int deliver (const Request &req,VisTile::Ref::Copy &tileref);
+    //##ModelId=3F98DAE6023B
+    virtual int deliver (const Request &req,VisTile::Ref::Copy &tileref,
+                         VisTile::Format::Ref &outformat);
     
+    //##ModelId=3F98DAE6023E
     virtual TypeId objectType() const
     { return TpMEQSpigot; }
     
+    //##ModelId=3F9FF6AA016C
     LocalDebugContext;
 
   protected:
+    //##ModelId=3F9FF6AA0300
     virtual int getResultImpl (Result::Ref &resref, const Request &req,bool newreq);
   
   private:
+    //##ModelId=3F9FF6AA03D2
     void setStateImpl (const DataRecord &rec);
   
+    //##ModelId=3F9FF6AA01A3
     int icolumn,icorr;
     
+    //##ModelId=3F9FF6AA0221
     Result::Ref next_res;
+    //##ModelId=3F9FF6AA0238
     HIID next_rqid;
 };
 

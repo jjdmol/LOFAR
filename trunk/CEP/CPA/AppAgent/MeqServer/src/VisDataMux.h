@@ -4,7 +4,7 @@
 #include <MeqServer/VisHandlerNode.h>
 #include <vector>
     
-#pragma aid Station Index 
+#pragma aid Station Index Tile Format
     
 namespace MEQ {
 
@@ -12,6 +12,7 @@ namespace MEQ {
 class VisDataMux
 {
   public:
+    //##ModelId=3F9FF71B006A
     VisDataMux (MEQ::Forest &frst);
       
     //##ModelId=3F98DAE6024A
@@ -31,7 +32,9 @@ class VisDataMux
     ImportDebugContext(VisHandlerNode);
     
   private:
+    //##ModelId=3F9FF71B00AE
     VisDataMux ();
+    //##ModelId=3F9FF71B00C7
     VisDataMux (const VisDataMux &);
     
     //##ModelId=3F992F280174
@@ -42,7 +45,10 @@ class VisDataMux
     //##ModelId=3F98DAE60247
     std::vector<VisHandlerList> handlers_;
     
+    //##ModelId=3F9FF71B004E
     MEQ::Forest & forest_;
+    
+    VisTile::Format::Ref output_format_;
 };
 
 } // namespace MEQ

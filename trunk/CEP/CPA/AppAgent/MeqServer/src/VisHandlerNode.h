@@ -34,9 +34,11 @@ class VisHandlerNode : public Node
     //## bit flags:
     //##    RES_WAIT    result not yet available, must wait
     //##    RES_UPDATED result available and tile was updated
-    virtual int deliver (const Request &req,VisTile::Ref::Copy &tileref) =0;
+    virtual int deliver (const Request &req,VisTile::Ref::Copy &tileref,
+                         VisTile::Format::Ref &outformat) =0;
     
     // returns MEQ::Cells object corresponding to this VisTile
+    //##ModelId=3F9FF6970269
     static Cells makeCells (const VisTile &tile);
     
     //##ModelId=3F98DAE602DA

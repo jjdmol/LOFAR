@@ -52,6 +52,8 @@ BlockableObject * __construct_MEQSpigot (int n) { return n>0 ? new MEQ::Spigot [
         TypeInfoReg::addToRegistry(-1492,TypeInfo(TypeInfo::DYNAMIC,0))+
         DynamicTypeManager::addToRegistry(-1492,__construct_MEQSpigot)+
         AtomicID::registerId(-1167,"Station")+
+        AtomicID::registerId(-1123,"Tile")+
+        AtomicID::registerId(-1126,"Format")+
         AtomicID::registerId(-1459,"VisHandlerNode")+
     0;
     return res;

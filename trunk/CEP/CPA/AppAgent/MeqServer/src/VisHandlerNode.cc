@@ -19,10 +19,11 @@ void VisHandlerNode::setDataId (int id)
   wstate()[FDataId] = data_id = id;
 }
 
+//##ModelId=3F9FF6970269
 Cells VisHandlerNode::makeCells (const VisTile &tile)
 {
   // form domain & cells based on stuff in the tile
-  LoVec_bool valid( tile.rowflag() == 0 );
+  LoVec_bool valid( tile.rowflag() != int(VisTile::MissingData) );
   cdebug1(5)<<"valid rows: "<<valid<<endl;
   double maxtime = max(where(valid,tile.time(),0));
   LoVec_double 

@@ -229,7 +229,7 @@ void MSOutputSink::doPutTile (const VisTile &tile)
   for( VisTile::const_iterator iter = tile.begin(); iter != tile.end(); iter++ )
   {
     int rowflag = iter.rowflag();
-    if( rowflag == VisTile::MissingData )
+    if( rowflag == int(VisTile::MissingData) )
     {
       cdebug(5)<<"  tile row flagged as missing, skipping\n";
       continue;

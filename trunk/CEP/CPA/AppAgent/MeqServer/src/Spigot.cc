@@ -14,6 +14,7 @@ const HIID FInputColumn = AidInput|AidCol,
            FRequestId   = AidRequest|AidId,
            FResult      = AidResult;
     
+//##ModelId=3F98DAE6022D
 void Spigot::init (DataRecord::Ref::Xfer &initrec,Forest * frst)
 {
   // let the base class initialize itself
@@ -25,6 +26,7 @@ void Spigot::init (DataRecord::Ref::Xfer &initrec,Forest * frst)
   setStateImpl(state());
 }
 
+//##ModelId=3F9FF6AA03D2
 void Spigot::setStateImpl (const DataRecord &rec)
 {
   if( rec[FCorr].exists() )
@@ -50,7 +52,8 @@ void Spigot::setState (const DataRecord &rec)
 }
 
 //##ModelId=3F98DAE6023B
-int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref)
+int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
+                     VisTile::Format::Ref &)
 {
   const VisTile &tile = *tileref;
   const HIID &rqid = req.getId();
@@ -66,6 +69,7 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref)
     const VisTile::Format &tileformat = tile.format();
     TypeId coltype = tileformat.type(icolumn);
     LoShape colshape = tileformat.shape(icolumn);
+    colshape.push_back(tile.nrow());
     // casting away const because blitz constructors below only take non-const
     // pointers
     void *coldata = const_cast<void*>(tile.column(icolumn));
@@ -117,9 +121,10 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref)
     rec[FRequestId] = next_rqid = rqid;
     rec[FResult] <<= static_cast<const DataRecord*>(next_res.deref_p());
   }
-  return 1;
+  return 0;
 }
 
+//##ModelId=3F9FF6AA0300
 int Spigot::getResultImpl (Result::Ref &resref,const Request &req,bool newreq)
 {
   // have we got a cached result?

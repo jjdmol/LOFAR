@@ -147,11 +147,9 @@ const meqsink_test := function ()
   mqs := meqserver(verbose=4,server='./meqserver',
                     options="-d0 -meq:M:O:MeqServer",suspend=F);
   # set verbose debugging messages
-  for( context in "MeqNode MeqForest MeqSink MeqSpigot MeqNode MeqVisHandler MeqServ" )
-    mqs.setdebug(context,5);
-  for( context in "MeqServ MeqVisHandler" )
-    mqs.setdebug(context,3);
-  mqs.setdebug('MeqServer',1);
+  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot MeqNode MeqVisHandler MeqServ",5);
+  mqs.setdebug("MeqServ MeqVisHandler",3);
+  mqs.setdebug("MeqServer",1);
   # initialize meqserver
   mqs.init([=],wait=T);
   
@@ -172,7 +170,7 @@ const meqsink_test := function ()
   print mqs.meq('Create.Node',spigrec);
   
   # create sink
-  sinkrec := meqnode('MEQSink','sink1',children="spigot1");
+  sinkrec := meqnode('MEQSink','sink1',children="add1_2");
   sinkrec.output_col := 'DATA'; # no output for now
   sinkrec.corr_index := 1;
   sinkrec.station_1_index := 1;

@@ -21,7 +21,8 @@ class Sink : public VisHandlerNode
     virtual void setState (const DataRecord &rec);
     
     //##ModelId=3F98DAE6021E
-    virtual int deliver (const Request &req,VisTile::Ref::Copy &tileref);
+    virtual int deliver (const Request &req,VisTile::Ref::Copy &tileref,
+                         VisTile::Format::Ref &outformat);
     
     //##ModelId=3F98DAE60222
     virtual TypeId objectType() const
