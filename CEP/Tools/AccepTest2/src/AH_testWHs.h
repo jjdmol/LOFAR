@@ -30,7 +30,7 @@ namespace LOFAR
     
     vector<WorkHolder*> itsWHs;
 
-    void connectWHs_MPI(WorkHolder* srcWH, int srcDH, WorkHolder* dstWH, int dstDH, bool isBlocking = false);
+    void connectWHs(WorkHolder* srcWH, int srcDH, WorkHolder* dstWH, int dstDH);
   private:
     fstream* itsFileOutput;
   };
