@@ -52,7 +52,11 @@ int MeqParmPolc::initDomain (const MeqDomain&, int spidIndex)
       nr += nrs;
       spidIndex += nrs;
     }
-  }
+  } else {
+    for (unsigned int i=0; i<itsPolcs.size(); i++) {
+      itsPolcs[i].clearSolvable();
+    }
+  }    
   return nr;
 }
 

@@ -90,11 +90,11 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
     MeqResult uk = iter->getU()->getResult (dftReq);
     MeqResult vk = iter->getV()->getResult (dftReq);
     MeqResult dft = itsDFT->getResult (dftReq);
-    MeqMatrix ivk = tocomplex(0., vk.getValue());
+    MeqMatrix vki = tocomplex(0., vk.getValue());
     if (MeqPointDFT::doshow) {
       cout << "MeqWsrtPoint iquvk,dft: " << ik.getValue() << ' '
 	   << qk.getValue() << ' ' << uk.getValue() << ' ' << vk.getValue()
-	   << ' ' << ivk << ' ' << dft.getValue() << endl;
+	   << ' ' << vki << ' ' << dft.getValue() << endl;
     }
     // Calculate XX, etc. Note that the values should be divided by 2.
     // That is done later in MeqWsrtInt, because that is less expensive.
@@ -102,13 +102,9 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
     if (MeqPointDFT::doshow) {
       cout << "MeqWsrtPoint abs(xx) " << abs(xx.getDComplex(0,0)) << endl;
     }
-    MeqMatrix yx = (uk.getValue() - ivk) * dft.getValue();
-    MeqMatrix xy = (uk.getValue() + ivk) * dft.getValue();
+    MeqMatrix yx = (uk.getValue() - vki) * dft.getValue();
+    MeqMatrix xy = (uk.getValue() + vki) * dft.getValue();
     MeqMatrix yy = (ik.getValue() - qk.getValue()) * dft.getValue();
-    itsXX.getValueRW() += xx;
-    itsXY.getValueRW() += xy;
-    itsYX.getValueRW() += yx;
-    itsYY.getValueRW() += yy;
     if (MeqPointDFT::doshow) {
       cout << "MeqWsrtPoint XX: " << xx << endl << itsXX.getValue() << endl;
     }
@@ -131,11 +127,11 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
 	evaluv = true;
 	perturbation = uk.getPerturbation(spinx);
       }
-      MeqMatrix ivkp(ivk);
+      MeqMatrix vkip(vki);
       if (vk.isDefined(spinx)) {
 	evaluv = true;
 	perturbation = vk.getPerturbation(spinx);
-	ivkp = tocomplex(0., vk.getPerturbedValue(spinx));
+	vkip = tocomplex(0., vk.getPerturbedValue(spinx));
       }
       if (dft.isDefined(spinx)) {
 	evaliq = true;
@@ -148,8 +144,8 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
 	if (evaliq) {
 	  const MeqMatrix& ikp = ik.getPerturbedValue(spinx);
 	  const MeqMatrix& qkp = qk.getPerturbedValue(spinx);
-	  xx = (ikp + qkp) * dkp;
-	  yy = (ikp - qkp) * dkp;
+	  MeqMatrix xxp = (ikp + qkp) * dkp;
+	  MeqMatrix yyp = (ikp - qkp) * dkp;
 	  // If not calculated before, initialize to unperturbed sum.
 	  if (! itsXX.isDefined(spinx)) {
 	    itsXX.setPerturbedValue (spinx, itsXX.getValue().clone());
@@ -159,13 +155,13 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
 	    itsYY.setPerturbedValue (spinx, itsYY.getValue().clone());
 	    itsYY.setPerturbation (spinx, perturbation);
 	  }
-	  itsXX.getPerturbedValueRW(spinx) += xx;
-	  itsYY.getPerturbedValueRW(spinx) += yy;
+	  itsXX.getPerturbedValueRW(spinx) += xxp;
+	  itsYY.getPerturbedValueRW(spinx) += yyp;
 	}
 	if (evaluv) {
 	  const MeqMatrix& ukp = uk.getPerturbedValue(spinx);
-	  xy = (ukp - ivkp) * dkp;
-	  yx = (ukp + ivkp) * dkp;
+	  MeqMatrix xyp = (ukp - vkip) * dkp;
+	  MeqMatrix yxp = (ukp + vkip) * dkp;
 	  if (! itsXY.isDefined(spinx)) {
 	    itsXY.setPerturbedValue (spinx, itsXY.getValue().clone());
 	    itsXY.setPerturbation (spinx, perturbation);
@@ -174,8 +170,8 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
 	    itsYX.setPerturbedValue (spinx, itsYX.getValue().clone());
 	    itsYX.setPerturbation (spinx, perturbation);
 	  }
-	  itsXY.getPerturbedValueRW(spinx) += xy;
-	  itsYX.getPerturbedValueRW(spinx) += yx;
+	  itsXY.getPerturbedValueRW(spinx) += xyp;
+	  itsYX.getPerturbedValueRW(spinx) += yxp;
 	}
       } else {
 	// No perturbed values in result for this parameter.
@@ -194,5 +190,11 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
 	}
       }
     }
+
+    // Now add the source contribution to the unperturbed value.
+    itsXX.getValueRW() += xx;
+    itsXY.getValueRW() += xy;
+    itsYX.getValueRW() += yx;
+    itsYY.getValueRW() += yy;
   }
 }
