@@ -18,6 +18,7 @@ unsigned long long int line_no = 0;
 /*
 %option debug
 %option verbose
+%option reentrant
 */
 %option yylineno
 %option noyywrap

@@ -32,8 +32,8 @@ std::vector<Directive> &Parser::getNested()
   return nested;
 }
 
-static std::string *scriptText = 0;
-static std::vector<Directive> *directives = 0;
+static std::string scriptText;// = 0;
+static std::vector<Directive> directives;// = 0;
 pthread_mutex_t parser_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void Parser::parse(const std::string& text)
@@ -41,18 +41,16 @@ void Parser::parse(const std::string& text)
   TRACE t("Parser::parse(std::string)");
   //start mutex
   pthread_mutex_lock(&parser_mutex);
-  if(directives)
-  {
-    delete directives;
-  }
-  directives = new std::vector<Directive>;
+  directives.clear();
   DEBUG("creating stream to parse");
   selfparseStream = new std::istringstream(text);
+  //  selfparserestart(selfparseStream); // not needed according to flex-2.5.31 documentation
   DEBUG("start to parse");
   selfparseparse();
   DEBUG("retrieving result");
-  this->txt = *scriptText;
-  this->nested = *directives;
+  this->txt = scriptText;
+  this->nested = directives;
+  delete selfparseStream;
   // <todo>empty scripts</todo>
   pthread_mutex_unlock(&parser_mutex);
   //end mutex
@@ -96,7 +94,7 @@ extern "C"
     Directive *d = new Directive(std::string(bn),
 				 newScript);
     DEBUG("new directive created");
-    directives->insert(directives->end(),
+    directives.insert(directives.end(),
 		       *d
 		       );
   }
@@ -106,12 +104,7 @@ extern "C"
     // replace txt of the present Parser-object by
     // std::string(command + block) both in the object and in
     // the db
-    if (scriptText)
-    {
-      delete scriptText;
-    }
-    scriptText = new std::string(std::string(command) + " "
-				 + block);
+    scriptText = std::string(command) + " " + block;
   }
 
 #ifdef __cplusplus

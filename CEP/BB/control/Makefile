@@ -39,6 +39,8 @@ CPP_SOURCES = \
 		control/Control.cpp \
 		control/ControllerFactory.cpp \
 		control/TopLevelStrategy.cpp \
+		control/IntermediateLevelStrategy.cpp \
+		control/LowerStrategy.cpp \
 		knowledge/WorkerWrapper.cpp \
 		directives/Directive.cpp\
 		directives/TopLevelDirective.cpp\
@@ -63,9 +65,11 @@ OBJS	= $(CPP_OBJS) \
 	$(PARSER_OBJS)
 
 #FLEX	= ${HOME}/bin/flex
-FLEX	= /usr/bin/flex
+#FLEX	= /usr/local/flex-2.5.31/bin/flex
+FLEX	= flex
 #BISON	= ${HOME}/bin/bison
-BISON	= /usr/local/bison-1.875/bin/bison
+#BISON	= /usr/local/bison-1.875/bin/bison
+BISON	= bison
 BISON_LDLIBS	= -L/usr/local/bison-1.875/lib -ly
 CXX     = g++
 CC      = gcc
@@ -94,6 +98,8 @@ bbdb:	blackboard/createdb.o
 	$(CXX) $< -o $@ \
 	      -L$(MPI_HOME)/lib $(MPI_LDLIBS) $(MACH_LDFLAGS) -L$(DTLLIBDIR) $(DTLLIB) -lodbc
 
+all:	bbdb $(TARGET) read_script
+
 clean:
 	-@rm $(OBJS)
 	-@rm $(TARGET).o
@@ -120,10 +126,15 @@ lex.%.cc:	parser/%.l Makefile
 %.tab.c:	parser/%.y Makefile
 	$(BISON) -p$* $(BISONFLAGS) parser/$*.y
 
+%.tab.cpp:	parser/%.ypp Makefile
+	$(BISON) -p$* $(BISONFLAGS) parser/$*.ypp
+
 read_script:	parser/parse_util.o parser/main.o selfparse.tab.o lex.selfparse.o
 	$(CXX) $+ -o $@ -lfl $(BISON_LDLIBS)
 
+# rather have them depend on the .cpp variants
 lex.selfparse.o:	lex.selfparse.c
+selfparse.tab.o:	selfparse.tab.c
 
 .PRECIOUS:	selfparse.tab.c
 

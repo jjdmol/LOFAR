@@ -11,7 +11,7 @@
 const std::string Directive::tableName("scripts");
 
 //##ModelId=3F433C9E0159
-std::vector<Directive> &Directive::getParts()
+std::vector<Directive> Directive::getParts()
 {
   TRACE t("Directive::getParts()");
   Parser p;
@@ -26,7 +26,7 @@ Directive::Directive(const std::string& initId,
   id(initId),
   text(initText)
 {
-  TRACE t("Directive::Directive(" + id + ", " + text + ")");
+  TRACE t("Directive::Directive(" + id + ", ...)");
 
   // find the record with rec.id == id
 
@@ -53,8 +53,8 @@ std::string Directive::getScript()
   DEBUG("view created");
   dtl::DBView<DirectiveData,scriptSelectClause>::select_iterator iter = view.begin();
   DEBUG("select_iterator created");
-  iter.Params().id = id;
-  DEBUG(std::string("Parameter set: ") + id);
+  iter.Params().id = this->id;
+  DEBUG(std::string("Parameter set: ") + this->id);
   std::string dat;
   DEBUG("data record == 0");
   if(iter != view.end())
@@ -77,16 +77,9 @@ void Directive::setScript(const std::string& text)
 						     "WHERE id = (?)",
 						     SelectScriptID());
   dtl::DBView<DirectiveData,scriptSelectClause>::select_iterator iter = view.begin();
+  iter.Params().id = this->id;
   DirectiveData d(id,text);
-  if(iter != view.end())
-  {
-    // we update
-    dtl::DBView<DirectiveData, scriptSelectClause>::update_iterator updIter = view;
-    TRACE u("update_iterator created");
-    d.text = text;
-    *updIter = d;
-  }
-  else
+  if(iter == view.end())
   {
     // we need to insert
     dtl::DBView<DirectiveData, scriptSelectClause>::insert_iterator insIter = view;
@@ -94,6 +87,15 @@ void Directive::setScript(const std::string& text)
     d.id = id;
     d.text = text;
     *insIter = d;
+  }
+    else
+  {
+    // we update
+    dtl::DBView<DirectiveData, scriptSelectClause>::update_iterator updIter = view;
+    TRACE u("update_iterator created");
+    updIter.Params().id = this->id;
+    d.text = text;
+    *updIter = d;
   }
 }
 

@@ -13,10 +13,14 @@ class Directive
     //##ModelId=3F3B9602002E
   //  virtual void deploy() = 0;
     //##ModelId=3F433C9E0159
-  std::vector<Directive> &getParts();
+  std::vector<Directive> getParts();
 
   Directive(const std::string &id = std::string("start"),
 	    const std::string &text = std::string(""));
+
+  Directive(const Directive & other):id(other.id),text(other.text)
+  {}
+  const std::string& getId() const {return id;}
  private:
   std::string getScript();
   void setScript(const std::string& text);

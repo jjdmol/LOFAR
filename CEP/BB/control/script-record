@@ -6,8 +6,10 @@ insert into scripts values ('start',
 /*
  some traditional comment
 */
-        part devide [ time  0 , 2385789023 , 127638076 ] {
-// this should become part start.1.1 after two parse steps
+        part devide [ time  0 , 23857823:127638076 ] {
+// this should become part start.0.0 after two parse steps
+        }
+        part devide [ time  1:23857822 , 127638077:127638090 ] {
         }
       }
     }

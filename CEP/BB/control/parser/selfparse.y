@@ -9,7 +9,7 @@
 
     /* <todo> Not all three of these are needed. Did I choose ok? </todo> */
     //int topLevel  = 1; /* true that is, if we have a toplevel to deal with */
-   unsigned int level = 0; /* look at the "control" produktion rules for explanation */
+   unsigned int level; /* look at the "control" produktion rules for explanation */
     //int topScript = 1; /* first token indicates script */
 
 %}
@@ -97,17 +97,18 @@
 %left BRANCH
 %%
 
+
 script :
-         SCRIPT_TOKEN control_block {
+         SCRIPT_TOKEN { level = 0; newSiblings(); } control_block {
   //          printf("\nscript parsed:\n%s\nend of script\n",$2);
-          saveScript("callibrate_observation", $2);
+          saveScript("callibrate_observation", $3);
        }
        | topbranch {
        /*
          It doesn't matter whether this is a branch or a ref,
          the numbering should continue.
        */
-          branch = $1;
+          branch = $1; level = 0; newSiblings();
        }
        definition_part {
 	 //          printf("\nbranch-parsed:\n%s\ndefinition-part:\n%s\nend of parsed branch\n",$1,$3);

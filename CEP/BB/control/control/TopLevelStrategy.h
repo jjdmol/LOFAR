@@ -34,7 +34,7 @@ class TopLevelStrategy : public Strategy, public MPIProgramEntry
 
     TopLevelDirective itsDirective;
 
-    std::vector<IntermediateLevelStrategy> &makeChildren(std::vector<Directive> &dirs);
+    std::vector<IntermediateLevelStrategy> makeChildren(std::vector<Directive> &dirs);
 };
 
 #endif /* TOPLEVELSTRATEGY_H_HEADER_INCLUDED_C0C4B372 */
