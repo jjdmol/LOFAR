@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
   dsp.attach(new MSIntegratorWP, DMI::ANON);
   //  dsp.attach(new UVSorterWP(0,5),DMI::ANON);
   //  dsp.attach(new UVSorterWP(0,8),DMI::ANON);
-  dsp.attach(new UVPMessagesToFileWP("test.ms", "test.pvd", false), DMI::ANON);
+  dsp.attach(new UVPMessagesToFileWP(argv[1], argv[2], false), DMI::ANON);
 
   initGateways(dsp);
   dsp.start();
