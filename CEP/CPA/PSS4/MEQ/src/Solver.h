@@ -82,9 +82,14 @@ public:
   // was created.
     //##ModelId=400E53550265
   virtual void checkChildren();
+  
+  // called to process request rider commands, if any.
+  virtual void processCommands (const DataRecord &rec,const Request &req);
 
 // no need for now
 //  virtual void init (DataRecord::Ref::Xfer& initrec, Forest* frst);
+  
+  LocalDebugContext;
 
 protected:
   // virtual void checkInitState (DataRecord &rec);
