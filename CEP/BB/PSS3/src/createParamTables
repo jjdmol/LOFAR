@@ -67,7 +67,10 @@ elif [ "$DBTYPE" = "monet" ]; then
 # for monet:
     SQLCLIENT="MapiClient -h $HOST -l sql -u monetdb -P monetdb"
 elif [ "$DBTYPE" = "aips" ]; then
-# for monet:
+# for aips:
+    SQLCLIENT=""
+elif [ "$DBTYPE" = "bdb" ]; then
+# for Berkeley db:
     SQLCLIENT=""
 else
     echo "Unkown dbtype"
@@ -81,6 +84,8 @@ for n in 1 2 3 4 5 6 ; do
     echo "parmtable(\"${tablename}.MEP\", T)" > aipscreate
     echo "exit" >> aipscreate
     $AIPSTABLECREATOR < aipscreate
+  elif [ "$DBTYPE" = "bdb" ]; then
+    rm -rf *.bdb
   else
 # do the drops in seperate commands
 # if they fail (because the old tables do not exist) the script will continue
