@@ -466,24 +466,24 @@ namespace LCSMath
 
     double alpha = 0; // forgetting factor
 
-    LoMat_double out(nant, nant);
-
     LoVec_dcomplex ones(nant);
+    ones = 1;
     LoMat_dcomplex eye = diag(ones); // Identity matrix
     LoMat_dcomplex ACM(nant, nant);
 
     ACM = (dcomplex) 0;
 
     for (int k=lb; k<=ub; k++) {
-      ACM = (1-alpha) * ACM + alpha * (matMult(a(blitz::Range::all(), k), 
-				       a(blitz::Range::all(), k))) ;
+      ACM = (1-alpha) * ACM + 
+	alpha * (matMult(a(blitz::Range::all(), k), 
+			 a(blitz::Range::all(), k))) ;
 
 //       ACM = ACM + matMult(a(blitz::Range::all(), k), 
 // 			  a(blitz::Range::all(), k).
 // 			      transpose(blitz::firstDim, blitz::secondDim)) ;
     }
-    ACM = ACM/nsh;
-    ACM = ACM-eye;
+    ACM = ACM / (double)nsh;
+    ACM = ACM - eye;
     return ACM;
   }
 
