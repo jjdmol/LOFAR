@@ -33,59 +33,66 @@ int main()
     broker.connect("test","postgres");
 
     // Should call insert(), saving data in a
-    cout << "Saving tpoa1 -- tpoa1.data() = " << tpoa1.data() << endl;
     broker.save(tpoa1); 
+    cout << "Saved tpoa1 <-- tpoa1 = " 
+         << tpoa1.metaData() << tpoa1.data() << endl;
 
-    cout << "Press <Enter> to continue" << endl;
+    cout << "Press <Enter> to continue";
     cin.get();
 
     // Should call insert(), saving data in a
-    cout << "Saving tpoa -- tpoa.data() = " << tpoa.data() << endl;
     broker.save(tpoa); 
+    cout << "Saved tpoa <-- tpoa = " 
+         << tpoa.metaData() << tpoa.data() << endl;
 
-    cout << "Press <Enter> to continue" << endl;
+    cout << "Press <Enter> to continue";
     cin.get();
 
     // Should call update(), saving data in a2
     tpoa.data() = a2;
-    cout << "Saving tpoa1 -- tpoa.data() = " << tpoa.data() << endl;
     broker.save(tpoa);
+    cout << "Updated tpoa <-- tpoa = " 
+         << tpoa.metaData() << tpoa.data() << endl;
 
-    cout << "Press <Enter> to continue" << endl;
+    cout << "Press <Enter> to continue";
     cin.get();
 
     // Should call retrieve(ObjectId&), returning a TPO that contains a1
     oid.set(tpoa1.metaData().oid()->get());
-    tpoa2 = broker.retrieve<A>(oid);
-    cout << "Retrieved tpoa1 -- tpoa1.data() = " << tpoa2.data() << endl;
+//     tpoa2 = broker.retrieve<A>(oid);
+    tpoa2.retrieve(oid);
+    cout << "Retrieved tpoa1 --> tpoa2 = " 
+         << tpoa2.metaData() << tpoa2.data() << endl;
 
-    cout << "Press <Enter> to continue" << endl;
+    cout << "Press <Enter> to continue";
     cin.get();
 
     // Should call retrieve(ObjectId&), returning a TPO that contains a2
     oid.set(tpoa.metaData().oid()->get());
-    tpoa2 = broker.retrieve<A>(oid);
-    cout << "Retrieved tpoa -- tpoa.data() = " << tpoa2.data() << endl;
+//     tpoa2 = broker.retrieve<A>(oid);
+    tpoa2.retrieve(oid);
+    cout << "Retrieved tpoa --> tpoa2 = " 
+         << tpoa2.metaData() << tpoa2.data() << endl;
     
-    cout << "Press <Enter> to continue" << endl;
+    cout << "Press <Enter> to continue";
     cin.get();
 
     // Should erase the database entry for a2
+    cout << "Erasing a in tpoa2.data() -- tpoa2 = "
+         << tpoa2.metaData() << tpoa2.data() << endl;
     tpoa2.erase();
-    cout << "Erased tpoa -- tpoa.data() (still present in memory) = " 
-         << tpoa2.data() << endl;
 
-    cout << "Press <Enter> to continue" << endl;
+    cout << "Press <Enter> to continue";
     cin.get();
 
-    cout << "Retrieve collection of tpoa using query" << endl;
-    Collection< TPersistentObject<A> > ctpoa;
-    Collection< TPersistentObject<A> >::const_iterator iter;
     QueryObject q(attrib<A>("itsInt") == 42);
+    cout << "Retrieve collection of tpoa using query: " << q.getSql() << endl;
+    Collection< TPersistentObject<A> > ctpoa;
     ctpoa = broker.retrieve<A>(q);
     cout << "Found " << ctpoa.size() << " matches ..." << endl;
+    Collection< TPersistentObject<A> >::const_iterator iter;
     for(iter = ctpoa.begin(); iter != ctpoa.end(); ++iter) {
-      cout << "Press <Enter> to continue" << endl;
+      cout << "Press <Enter> to continue";
       cin.get();
       cout << iter->metaData() << iter->data() << endl;
     }

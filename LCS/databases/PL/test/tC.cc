@@ -36,53 +36,58 @@ int main()
     broker.connect("test","postgres");
 
     // Should call insert(), saving data in c
-    cout << "Saving tpoc1 -- tpoc1.data() = " << tpoc1.data() << endl;
     broker.save(tpoc1); 
+    cout << "Saved tpoc1 <-- tpoc1 = " 
+         << tpoc1.metaData() << tpoc1.data() << endl;
 
-    cout << "Press <Enter> to continue" << endl;
+    cout << "Press <Enter> to continue";
     cin.get();
 
-    // Should call insert(), saving data in a
-    cout << "Saving tpoc -- tpoc.data() = " << tpoc.data() << endl;
+    // Should call insert(), saving data in c
     broker.save(tpoc); 
+    cout << "Saved tpoc <-- tpoc = " 
+         << tpoc.metaData() << tpoc.data() << endl;
 
-    cout << "Press <Enter> to continue" << endl;
+    cout << "Press <Enter> to continue";
     cin.get();
 
-    // Should call update(), saving data in a2
+    // Should call update(), saving data in c2
     tpoc.data() = c2;
-    cout << "Saving tpoc1 -- tpoc.data() = " << tpoc.data() << endl;
     broker.save(tpoc);
+    cout << "Updated tpoc <-- tpoc = " 
+         << tpoc.metaData() << tpoc.data() << endl;
     
-    cout << "Press <Enter> to continue" << endl;
+    cout << "Press <Enter> to continue";
     cin.get();
 
     // Should call retrieve(ObjectId&), returning a TPO that contains a1
     oid.set(tpoc1.metaData().oid()->get());
-    tpoc2 = broker.retrieve<C>(oid);
-    cout << "Retrieved tpoc1 -- tpoc1.data() = " << tpoc2.data() << endl;
+    tpoc2.retrieve(oid);
+    cout << "Retrieved tpoc1 --> tpoc2 = " 
+         << tpoc2.metaData() << tpoc2.data() << endl;
 
-    cout << "Press <Enter> to continue" << endl;
+    cout << "Press <Enter> to continue";
     cin.get();
 
     // Should call retrieve(ObjectId&), returning a TPO that contains a2
     oid.set(tpoc.metaData().oid()->get());
-    tpoc2 = broker.retrieve<C>(oid);
-    cout << "Retrieved tpoc -- tpoc.data() = " << tpoc2.data() << endl;
+    tpoc2.retrieve(oid);
+    cout << "Retrieved tpoc --> tpoc2 = " 
+         << tpoc2.metaData() << tpoc2.data() << endl;
     
-    cout << "Press <Enter> to continue" << endl;
+    cout << "Press <Enter> to continue";
     cin.get();
 
     QueryObject q(attrib<C>("itsString") == "C4Y2");
     cout << "Retrieve collection of tpoc using query: " << q.getSql() << endl;
     Collection< TPersistentObject<C> > ctpoc;
-    Collection< TPersistentObject<C> >::const_iterator iter;
     ctpoc = broker.retrieve<C>(q);
     cout << "Found " << ctpoc.size() << " matches ..." << endl;
+    Collection< TPersistentObject<C> >::const_iterator iter;
     for(iter = ctpoc.begin(); iter != ctpoc.end(); ++iter) {
-      cout << "Press <Enter> to continue" << endl;
+      cout << "Press <Enter> to continue";
       cin.get();
-      cout << iter->data() << endl;
+      cout << iter->metaData() << iter->data() << endl;
     }
 
   }
