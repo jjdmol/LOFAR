@@ -66,12 +66,13 @@ RSPDriverTask::RSPDriverTask(string name)
   for (int boardid = 0; boardid < GET_CONFIG("N_RSPBOARDS", i); boardid++)
   {
     char name[64] = "board";
+    char macaddrstr[64] = "";
+      
     snprintf(name, 64, "board%d", boardid);
+    snprintf(macaddrstr, 64, "00:00:00:00:00:%02x", boardid + 1);
 
-    GCFETHRawPort* p = new ((char*)&m_board[boardid]) GCFETHRawPort(*this, string(name), GCFPortInterface::SAP, true /*raw*/);
-    p = p; // keep compiler happy
-    //m_board[boardid].init(*this, name, GCFPortInterface::SAP, EPA_PROTOCOL,true /*raw*/);
-    m_board[boardid].setAddr(GET_CONFIG_STRING("IF_NAME"), GET_CONFIG_STRING("IF_MAC"));
+    m_board[boardid].init(*this, name, GCFPortInterface::SAP, EPA_PROTOCOL,true /*raw*/);
+    m_board[boardid].setAddr(GET_CONFIG_STRING("IF_NAME"), macaddrstr);
   }
 
   addAllSyncActions();
@@ -422,7 +423,7 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
     break;
 
     default:
-      if (&port == &m_board[0] || &port == &m_board[1])
+      if (isBoardPort(port))
       {
 	status = m_scheduler.dispatch(event, port);
       }
@@ -430,6 +431,16 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
   }
 
   return status;
+}
+
+bool RSPDriverTask::isBoardPort(GCFPortInterface& port)
+{
+  for (int i = 0; i < GET_CONFIG("N_RSPBOARDS", i); i++)
+  {
+    if (&port == &m_board[i]) return true;
+  }
+  
+  return false;
 }
 
 GCFEvent::TResult RSPDriverTask::clock_tick(GCFPortInterface& port)

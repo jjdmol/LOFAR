@@ -34,12 +34,21 @@
 #include <string.h>
 #include <blitz/array.h>
 
+//
+// Final RSP board will have 4 BLPs (N_BLP == 4)
+// Proto2 board has one BLP (N_PROTO2_BLP == 1)
+//
+#ifdef N_PROTO2_BLP
+#undef N_BLP
+#define N_BLP N_PROTO2_BLP
+#endif
+
+#define N_RETRIES 3
+
 using namespace RSP;
 using namespace LOFAR;
 using namespace EPA_Protocol;
 using namespace blitz;
-
-#define N_RETRIES 3
 
 BWSync::BWSync(GCFPortInterface& board_port, int board_id, int regid)
   : SyncAction(board_port, board_id, N_BLP),

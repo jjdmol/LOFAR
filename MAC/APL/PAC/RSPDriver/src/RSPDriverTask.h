@@ -85,6 +85,11 @@ namespace RSP
       GCFEvent::TResult enabled(GCFEvent& event, GCFPortInterface &port);
 
       /**
+       * Is this port connected to a board?
+       */
+      bool isBoardPort(GCFPortInterface& port);
+
+      /**
        * Handle a F_DATAIN on the clock port.
        */
       GCFEvent::TResult clock_tick(GCFPortInterface& port);
