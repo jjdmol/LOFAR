@@ -37,6 +37,12 @@ class UVPDataAtom
   UVPDataAtom(unsigned int               numberOfChannels,
               const UVPDataAtomHeader&   header);
 
+  //! Copy constructor.
+  /*! Slightly dirty, should be faster than the one supplied by the compiler.
+   */
+  UVPDataAtom(const UVPDataAtom &other);
+
+
   //! Sets a new number of channels.
   /*! setChannels destroys the previous contents of itsData and
     allocates new storage for numberOfChannels channels.

@@ -32,6 +32,19 @@ UVPDataAtom::UVPDataAtom(unsigned int               numberOfChannels,
 
 
 
+//====================>>>  UVPDataAtom::UVPDataAtom  <<<====================
+
+UVPDataAtom::UVPDataAtom(const UVPDataAtom & other)
+  :itsData(other.itsData.size())
+{
+  itsHeader = other.itsHeader;
+  setData(other.itsData.begin());
+}
+
+
+
+
+
 //====================>>>  UVPDataAtom::setChannels  <<<====================
 
 void UVPDataAtom::setChannels(unsigned int numberOfChannels)
