@@ -35,12 +35,9 @@
 #include <unistd.h>				// for gethostname ()
 #include <stdlib.h>				// for strtoul
 
-
 using namespace std;
 
-namespace LOFAR
-{
-
+namespace LOFAR{
 
 // TODO: Convert all couts to debug trace statements
 
@@ -319,9 +316,9 @@ bool DH_Postgresql::RetrieveFromDatabase (int,int tag, char * buf, int size) {
 
 #if defined (__GNUC__) && (__GNUC__) > 2
   unsigned char * ByteString;
-  size_t size;
+  size_t sizeRes;
   ByteString = PQunescapeBytea 
-    ((unsigned char*)PQgetvalue (res, 0, 9), & size);
+    ((unsigned char*)PQgetvalue (res, 0, 9), & sizeRes);
   
   memcpy (buf, ByteString, size);
   // TODO: Must free ByteString here?
@@ -420,5 +417,6 @@ bool LogEntry (ostringstream & q) {
 
 
 */
-
 }
+
+
