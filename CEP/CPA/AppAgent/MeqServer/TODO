@@ -1,5 +1,7 @@
 MEQ in general:
 
+  * Better ways to check for a running meqserver?
+
   * new name for Polc? Maybe Fitfunc? Repfunc?
     Funklet!!
     
@@ -10,8 +12,7 @@ MEQ in general:
   
   * change Result constructor to take a Cells argument; change it to do
     copy-or-attach (perhaps move this function to CountedRef?)
-  * Work out caching issues with resampled children
-  
+    
   * Figure out the right value of epsilon for Cells comparisons
   
   * Align glish request_id with new C++ structure
@@ -177,6 +178,7 @@ Nodes:
   * make ReqSeq node
   
   * add resampled child result caching to Node 
+    Work out caching issues with resampled children
   
   * review init()/reinit(): could they perhaps be merged? Can we serialize
     a node before a resolveChildren() call?
