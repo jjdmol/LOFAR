@@ -21,20 +21,17 @@
 //#
 //#  $Id$
 
-
 #include <Correlator.h>
 
 using namespace LOFAR;
 
 Correlator::Correlator(int elements, int samples, int channels, 
-		       char* ip, int baseport, int targets):
+		       char* ip, int baseport):
   itsNelements(elements),
   itsNsamples (samples),
   itsNchannels(channels), 
   itsIP       (ip),
-  itsBaseport (baseport),
-  itsNtargets (targets)
-  
+  itsBaseport (baseport)
 {
 }  
 
@@ -59,18 +56,18 @@ void Correlator::define(const KeyValueMap& /*params*/) {
 		       itsNelements, 
 		       itsNsamples,
 		       itsNchannels);
-
+  
   WH_Dump myWHDump("noname",
 		   1, 
 		   1, 
 		   itsNelements,
 		   itsNchannels);
-		   
+  
   // now connect to the dummy workholders. 
   myWHRandom.getDataManager().getOutHolder(0)->connectTo 
     ( *itsWH->getDataManager().getInHolder(0), 
-      TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getCurrentRank(), false, true) );
-
+      TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getCurrentRank(), false, false) );
+  
   itsWH->getDataManager().getOutHolder(0)->connectTo
     ( *myWHDump.getDataManager().getInHolder(0), 
       TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getNumberOfNodes()+TH_MPI::getCurrentRank(), true, false) );
@@ -158,43 +155,46 @@ int main (int argc, const char** argv) {
   INIT_LOGGER("CorrelatorLogger.prop");
   TH_MPI::init(argc, argv);
 
-  for (int samples = min_samples; samples <= max_samples; samples++) {
-    for (int elements = min_elements; elements <= max_elements; elements++) {
-      
-      // init the MPI environment.
-      
-      try {
+  if (TH_MPI::getCurrentRank() < targets) {
+
+    for (int samples = min_samples; samples <= max_samples; samples++) {
+      for (int elements = min_elements; elements <= max_elements; elements++) {
 	
-	Correlator correlator(elements, samples, channels, frontend_ip, port, targets);
-	correlator.setarg(argc, argv);
+	// init the MPI environment.
 	
-	/* Automatic run of the correlator */
-	
-	correlator.baseDefine();
-	correlator.basePrerun();
-	
-	correlator.baseRun(runs);
-	
-	correlator.basePostrun();
-	// 	correlator.baseDump();
-	correlator.baseQuit();
-	
-      } catch (LOFAR::Exception ex) {
-	// catch known exceptions
-	cout << "Caught a known exception" << endl;
-	cout << ex.what() << endl;
-	
-      } catch (...) {
-	
-	cout << "Unexpected exception" << endl;
+	try {
+	  
+	  Correlator correlator(elements, samples, channels, frontend_ip, port);
+	  correlator.setarg(argc, argv);
+	  
+	  /* Automatic run of the correlator */
+	  
+	  correlator.baseDefine();
+	  correlator.basePrerun();
+	  
+	  correlator.baseRun(runs);
+	  
+	  correlator.basePostrun();
+	  // 	correlator.baseDump();
+	  correlator.baseQuit();
+	  
+	} catch (LOFAR::Exception ex) {
+	  // catch known exceptions
+	  cout << "Caught a known exception" << endl;
+	  cout << ex.what() << endl;
+	  
+	} catch (...) {
+	  
+	  cout << "Unexpected exception" << endl;
+	  
+	}
 	
       }
-      
-      // finalize the MPI environment
-      
     }
   }
 
+  // finalize the MPI environment
   TH_MPI::finalize();
+
   return 0;
 }
