@@ -39,6 +39,7 @@ namespace ARA
 
 int main(int argc, char* argv[])
 {
+  printf("Hallooooo???\n");
 #if 0
   char prop_path[PATH_MAX];
   const char* mac_config = getenv("MAC_CONFIG");
