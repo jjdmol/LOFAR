@@ -253,13 +253,13 @@ void handleConnection (Socket* socket)
   // The parent continues to accept other connections.
   pid_t pid;
   if ( (pid = fork()) < 0) {
-    cout << "Failed to fork a child process" << endl;
+    LOG_ERROR("Failed to fork a child process");
     return;
   } else if (pid != 0) {
     // Parent
     return;
   }
-  cout << "Established connection and forked" << endl;
+  LOG_DEBUG("Established connection and forked");
   socket->setBlocking();
 
   // This is the child process.
@@ -281,7 +281,7 @@ void handleConnection (Socket* socket)
     // Read 1 double (for command).
     if (socket->readBlocking (buf, sizeof(double)) == sizeof(double)) {
       int cmd = CoordClient::getInt (buf, swap);
-      cout << "read command " << cmd << endl;
+      LOG_DEBUG(formatString("read command %d", cmd));
       switch (cmd) {
       case CoordClient::J2000ToAzel:
 	j2000ToAzel (*socket, swap);
@@ -292,10 +292,10 @@ void handleConnection (Socket* socket)
       case CoordClient::Disconnect:
 	socket->shutdown (true, true);
 	delete socket;
-	cout << "Shutdown connection" << endl;
+	LOG_DEBUG("Shutdown connection");
 	exit(0);
       default:
-	cout << "Unknown command " << cmd << endl;
+	LOG_WARN(formatString("Unknown command %d", cmd));
 	exit(1);
       }
     } else {
@@ -317,28 +317,22 @@ int main (int argc, const char* argv[])
   if (argc > 1) {
     port = argv[1];
   }
+
+  // Create the main socket
   Socket mainSocket ("CoordConv", port);
-  // Loop endlessly.
+  if (!mainSocket.ok()) {
+    LOG_ERROR(formatString("Failed to create main socket: %s", 
+                           mainSocket.errstr().c_str()));
+    return 1;
+  }
+
   while (true) {
     // See if there is a connection request.
     // If so, handle it in a child process.
     Socket* connSocket = mainSocket.accept();
     if (connSocket != 0) {
-      cout << "Found connection" << endl;
+      LOG_DEBUG("Found connection");
       handleConnection (connSocket);
-      // At this point only the parent process continues.
-      // It deletes the connection socket because the child handles it.
-//       delete connSocket;
-      // GML (02-NOV-2004): Now this delete turned out to be a big mistake, at
-      // least with the "new" Socket class (but I wonder whether it was
-      // correct with the "old" Socket class). The problem is that
-      // handleConnection() hands the Socket pointer, that was just acquired
-      // by calling accept(), to the forked process. When we subsequently
-      // delete this Socket object, the socket will be closed, not just in
-      // this process, but also in the forked process!
-      // Not deleting the Socket object has its drawbacks as well, because
-      // now we've created a memory leak, but at least the server will
-      // continue to handle client requests.
     }
     // Wait (non-blocking) for any child.
     // This is needed to prevent a child from becoming a zombie when it
@@ -347,4 +341,6 @@ int main (int argc, const char* argv[])
     // Sleep 0.1 millisec.
     usleep(100);
   }
+  
+  return 0;
 }
