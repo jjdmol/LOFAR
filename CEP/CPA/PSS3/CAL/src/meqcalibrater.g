@@ -192,7 +192,7 @@ const _define_meqcalibrater := function(ref agent, id) {
     }
     
     self.getparmnamesRec := [_method="getparmnames", _sequence=self.id._sequence]
-    public.getparmnames := function(parmpatterns, excludepatterns="u.* v.* w.*") {
+    public.getparmnames := function(parmpatterns="*", excludepatterns="u.* v.* w.*") {
     
         wider self;
         

@@ -20,7 +20,8 @@
 ###
 ### $Id$
 
-pragma include once
+# pragma include once
+print 'include parmtable.g   d11nov2002';
 
 include 'table.g'
 
@@ -86,9 +87,16 @@ parmtable := function (name, create=F)
 	return T;
     }
 
-    public.putinit := function (parmname, values, mask=unset,
-                                perturbation=1e-6, pertrelative=T)
+    public.putinit := function (parmname='parmXXX', values=0, mask=unset,
+                                perturbation=1e-6, pertrelative=T, trace=T)
     {
+	#----------------------------------------------------------------
+	funcname := paste('** pamtable.putinit(',parmname,'):');
+	input := [parmname=parmname, values=values, mask=mask,
+		  perturbation=perturbation, pertrelative=pertrelative];
+	if (trace) print funcname,' input=',input;
+	#----------------------------------------------------------------
+
 	t1 := self.itab.query (spaste('NAME=="',parmname,'"'));
 	nr := t1.nrows();
 	t1.close();
@@ -123,11 +131,26 @@ parmtable := function (name, create=F)
 	}
 	self.itab.putcell ('PERTURBATION', rownr, perturbation);
 	self.itab.putcell ('PERT_REL', rownr, pertrelative);
+	return T;
     }
 
-    public.put := function (parmname, timerange, freqrange, values, mask=unset,
-                            perturbation=1e-6, pertrelative=T)
+
+
+    public.put := function (parmname='parmYYY', 
+			    timerange=[1,1e20], freqrange=[1,1e20], 
+			    values=0, mask=unset,
+                            perturbation=1e-6, pertrelative=T,
+			    trace=F)
     {
+	#----------------------------------------------------------------
+	funcname := paste('** pamtable.put(',parmname,'):');
+	input := [parmname=parmname, values=values, mask=mask,
+		  timerange=timerange, freqrange=freqrange,
+		  perturbation=perturbation, pertrelative=pertrelative];
+	if (trace) print funcname,' input=',input;
+	#----------------------------------------------------------------
+
+
 	if (length(timerange) != 2) {
 	    fail 'timerange should be a vector of 2 elements (start,end)';
 	}
@@ -167,6 +190,7 @@ parmtable := function (name, create=F)
 	}
 	self.tab.putcell ('PERTURBATION', rownr, perturbation);
 	self.tab.putcell ('PERT_REL', rownr, pertrelative);
+	return T;
     }
 
     public.table := function()

@@ -8,8 +8,9 @@ include 'mkimg.g'
 #
 # Demo function showing the predict functionality and creating an image of it.
 #
-predict := function(fname='michiel.demo', ant=4*[0:20])
+predict := function(fname='michiel.demo', ant=4*[0:20], trace=T)
 {
+
     local mc := meqcalibrater(spaste(fname,'.MS'), 
                               fname, fname, ant=ant);
     if (is_fail(mc)) {
@@ -56,6 +57,8 @@ solve := function(fname='michiel.demo', ant=4*[0:20], niter=1)
     mc.select('', 5, 5);
 
     # Plot initial position
+    ss := mc.getparmnames();
+    print len(ss),'parmnames:',ss[1:10],'...';           # rather long!
     parms := mc.getparms("GSM.*.RA GSM.*.DEC GSM.*.I");
     print parms
     print len(parms)

@@ -20,7 +20,8 @@
 ###
 ### $Id$
 
-pragma include once
+# pragma include once
+print 'include gsm.g   d11nov2002';
 
 include 'table.g'
 
@@ -69,10 +70,20 @@ gsm := function (name, create=F)
 	return T;
     }
 
-    public.addpointsource := function (name, timerange, freqrange,
-				       raparms, decparms,
-				       iparms, qparms, uparms, vparms)
+    public.addpointsource := function (name='srcXXX', 
+				       timerange=[0,1e20], freqrange=[0,1e20],
+				       raparms=2.5, decparms=0.5,
+				       iparms=1, qparms=0, uparms=0, vparms=0,
+				       trace=T)
     {
+	#---------------------------------------------------------------------
+	funcname := paste('** gsm.addpointsource(',name,'):');
+	input := [name=name, timerange=timerange, freqrange=freqrange,
+		  raparms=raparms, decparms=decparms,
+		  iparms=iparms, qparms=qparms, uparms=uparms, vparms=vparms];
+	if (trace) print funcname,' input=',input;
+	#---------------------------------------------------------------------
+
 	if (length(timerange) != 2) {
 	    fail 'timerange should be a vector of 2 elements (start,end)';
 	}
@@ -136,6 +147,7 @@ gsm := function (name, create=F)
 	} else {
 	    number := 1 + max(self.tab.getcol('NUMBER'));
 	}
+	if (trace) print funcname,input.name,' -> NUMBER=',number;
 	self.tab.putcell ('NAME', rownr, name);
 	self.tab.putcell ('NUMBER', rownr, number);
 	self.tab.putcell ('TYPE', rownr, 1);    # point source
@@ -148,6 +160,70 @@ gsm := function (name, create=F)
 	self.tab.putcell ('UPARMS', rownr, as_double(uparms));
 	self.tab.putcell ('VPARMS', rownr, as_double(vparms));
     }
+
+
+#Perturb the parameters of the specified source:
+
+    public.perturb := function (name='srcXXX', number=0,
+				dRA_rad=0, dDEC_rad=0, I_mult=1.0, 
+				modify=T, trace=T)
+    {
+	wider self;
+	#---------------------------------------------------------------------
+	funcname := paste('** gsm.perturb(',name,'):');
+	input := [name=name, number=number,  modify=modify,
+		  dRA_rad=dRA_rad, dDEC_rad=dDEC_rad, I_mult=I_mult];
+	if (trace) print funcname,' input=',input;
+	#---------------------------------------------------------------------
+
+	# Check the presence (and the rownr) of the specified source(s):
+	# s := spaste('NAME=="',name,'" || NUMBER==[',number,']');
+	# s := spaste('NAME in "',name,'" || NUMBER==[',number,']');
+	# s := spaste('NUMBER==',number[1]);           # temporary
+	s := spaste('NUMBER in [',number,']');      # temporary
+	if (trace) print funcname,'query=',s;
+	t1 := self.tab.query(s);
+	if (!is_record(t1)) {
+	    fail paste(funcname,'subtable t1 is not a record');
+	} else {
+	    rownr := t1.rownumbers();           # row nrs in self.tab
+	    if (trace) print funcname,len(rownr),' rownr=',rownr;
+	    t1.close();
+	    if (len(rownr) == 0) {
+		fail paste(funcname,'Source', name, number,'not in GSM');
+	    } else if (len(rownr) > 1) {
+		fail paste(funcname,'Only one source at a time');
+	    }
+	}
+
+	# Modify the source.
+	if (modify) {
+	    if (dRA_rad != 0) {
+		colname := 'RAPARMS';
+		v := self.tab.getcell (colname, rownr);
+		v[1,1] +:= dRA_rad;
+		self.tab.putcell (colname, rownr, v);
+		if (trace) print rownr, colname,'->',v; 
+	    }
+	    if (dDEC_rad != 0) {
+		colname := 'DECPARMS';
+		v := self.tab.getcell (colname, rownr);
+		v[1,1] +:= dDEC_rad;
+		self.tab.putcell (colname, rownr, v);	
+		if (trace) print rownr, colname,'->',v; 
+	    }
+	    if (I_mult != 1.0) {
+		colname := 'IPARMS';
+		v := self.tab.getcell (colname, rownr);
+		v[1,1] *:= I_mult;
+		self.tab.putcell (colname, rownr, v);
+		if (trace) print rownr, colname,'->',v; 
+	    }
+	}
+	return T;
+    }
+
+# Table access:
 
     public.table := function()
     {
