@@ -113,8 +113,9 @@ void MeqCalibrater::getFreq (int ddid)
   Vector<double> chanFreq = mssubc.chanFreq()(spw);
   Vector<double> chanWidth = mssubc.chanWidth()(spw);
   // So far, only equal frequency spacings are possible.
-  AssertMsg (allEQ (chanWidth, chanWidth(0)),
-	     "Channels must have equal spacings");
+  if (! allEQ (chanWidth, chanWidth(0))) {
+    throw AipsError("Channels must have equal spacings");
+  }
   itsNrChan    = chanWidth.nelements();
   itsStepFreq  = chanWidth(0);
   itsStartFreq = chanFreq(0) - itsStepFreq/2;
@@ -128,24 +129,33 @@ void MeqCalibrater::getFreq (int ddid)
 // Fill the station positions and names.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::fillStations()
+void MeqCalibrater::fillStations (const Vector<Int>& ant1,
+				  const Vector<Int>& ant2)
 {
   MSAntenna          mssub(itsMS.antenna());
   ROMSAntennaColumns mssubc(mssub);
-  itsStations.reserve (mssub.nrow());
-  // Get all stations from the antenna subtable.
-  for (uInt i=0; i<mssub.nrow(); i++) {
-    // Store each position as a constant parameter.
-    // Use the antenna name as the parameter name.
-    Vector<Double> antpos = mssubc.position()(i);
-    String name = mssubc.name()(i);
-    MeqParmSingle* px = new MeqParmSingle ("AntPosX." + name,
-					   antpos(0));
-    MeqParmSingle* py = new MeqParmSingle ("AntPosY." + name,
-					   antpos(1));
-    MeqParmSingle* pz = new MeqParmSingle ("AntPosZ." + name,
-					   antpos(2));
-    itsStations.push_back (MeqStation(px, py, pz, name));
+  int nrant = mssub.nrow();
+  itsStations = vector<MeqStation*>(nrant, (MeqStation*)0);
+  // Get all stations actually used.
+  for (uInt i=0; i<ant1.nelements(); i++) {
+    for (int j=0; j<2; j++) {
+      int ant = ant1(i);
+      if (j==1) ant = ant2(i);
+      Assert (ant < nrant);
+      if (itsStations[ant] == 0) {
+	// Store each position as a constant parameter.
+	// Use the antenna name as the parameter name.
+	Vector<Double> antpos = mssubc.position()(ant);
+	String name = mssubc.name()(ant);
+	MeqParmSingle* px = new MeqParmSingle ("AntPosX." + name,
+					       antpos(0));
+	MeqParmSingle* py = new MeqParmSingle ("AntPosY." + name,
+					       antpos(1));
+	MeqParmSingle* pz = new MeqParmSingle ("AntPosZ." + name,
+					       antpos(2));
+	itsStations[ant] = new MeqStation(px, py, pz, name);
+      }
+    }
   }
 }
 
@@ -175,13 +185,13 @@ void MeqCalibrater::fillBaselines (const Vector<int>& ant1,
     Assert (a1 < itsStations.size()  &&  a2 < itsStations.size());
     itsBLIndex(a1,a2) = itsBaselines.size();
     MVPosition pos1
-      (itsStations[a1].getPosX()->getResult(req).getValue().getDouble(),
-       itsStations[a1].getPosY()->getResult(req).getValue().getDouble(),
-       itsStations[a1].getPosZ()->getResult(req).getValue().getDouble());
+      (itsStations[a1]->getPosX()->getResult(req).getValue().getDouble(),
+       itsStations[a1]->getPosY()->getResult(req).getValue().getDouble(),
+       itsStations[a1]->getPosZ()->getResult(req).getValue().getDouble());
     MVPosition pos2
-      (itsStations[a2].getPosX()->getResult(req).getValue().getDouble(),
-       itsStations[a2].getPosY()->getResult(req).getValue().getDouble(),
-       itsStations[a2].getPosZ()->getResult(req).getValue().getDouble());
+      (itsStations[a2]->getPosX()->getResult(req).getValue().getDouble(),
+       itsStations[a2]->getPosY()->getResult(req).getValue().getDouble(),
+       itsStations[a2]->getPosZ()->getResult(req).getValue().getDouble());
 
     itsBaselines.push_back (MVBaseline (pos1, pos2));
   }
@@ -197,24 +207,26 @@ void MeqCalibrater::fillBaselines (const Vector<int>& ant1,
 void MeqCalibrater::makeWSRTExpr()
 {
   // Make an expression for each station.
-  itsStatExpr.reserve (itsStations.size());
+  itsStatExpr = vector<MeqJonesExpr*> (itsStations.size(), (MeqJonesExpr*)0);
   for (unsigned int i=0; i<itsStations.size(); i++) {
-    MeqExpr* frot = new MeqStoredParmPolc ("frot." +
-					   itsStations[i].getName(),
-					   &itsMEP);
-    MeqExpr* drot = new MeqStoredParmPolc ("drot." +
-					   itsStations[i].getName(),
-					   &itsMEP);
-    MeqExpr* dell = new MeqStoredParmPolc ("dell." +
-					   itsStations[i].getName(),
-					   &itsMEP);
-    MeqExpr* gain11 = new MeqStoredParmPolc ("gain.11." +
-					     itsStations[i].getName(),
+    if (itsStations[i] != 0) {
+      MeqExpr* frot = new MeqStoredParmPolc ("frot." +
+					     itsStations[i]->getName(),
 					     &itsMEP);
-    MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
-					     itsStations[i].getName(),
+      MeqExpr* drot = new MeqStoredParmPolc ("drot." +
+					     itsStations[i]->getName(),
 					     &itsMEP);
-    itsStatExpr.push_back (new MeqStatExpr (frot, drot, dell, gain11, gain22));
+      MeqExpr* dell = new MeqStoredParmPolc ("dell." +
+					     itsStations[i]->getName(),
+					     &itsMEP);
+      MeqExpr* gain11 = new MeqStoredParmPolc ("gain.11." +
+					       itsStations[i]->getName(),
+					       &itsMEP);
+      MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
+					       itsStations[i]->getName(),
+					       &itsMEP);
+      itsStatExpr[i] = new MeqStatExpr (frot, drot, dell, gain11, gain22);
+    }
   }    
 
   // Get the point sources from the GSM.
@@ -375,9 +387,7 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   Table blMS = sortMS.sort (keys, Sort::Ascending,
 			    Sort::NoDuplicates + Sort::InsSort);
 
-  // Find all stations (from the ANTENNA subtable of the MS).
-  fillStations();
-  // Now generate the baseline objects for the baselines.
+  // Generate the baseline objects for the baselines.
   // If we ever want to solve for station positions, we cannot use the
   // fixed MVBaseline objects, but instead they should be recalculated
   // after each solve iteration.
@@ -386,8 +396,12 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   // for that antenna pair.
   ROScalarColumn<int> ant1(blMS, "ANTENNA1");
   ROScalarColumn<int> ant2(blMS, "ANTENNA2");
+  Vector<int> ant1data = ant1.getColumn();
+  Vector<int> ant2data = ant2.getColumn();
+  // First find all used stations (from the ANTENNA subtable of the MS).
+  fillStations (ant1data, ant2data);
   Matrix<int> index;
-  fillBaselines (ant1.getColumn(), ant2.getColumn());
+  fillBaselines (ant1data, ant2data);
 
   // Calculate the UVW polynomial coefficients for each baseline.
   calcUVWPolc (sortMS);
@@ -433,6 +447,11 @@ MeqCalibrater::~MeqCalibrater()
   }
   for (vector<MeqUVWPolc*>::iterator iter = itsUVWPolc.begin();
        iter != itsUVWPolc.end();
+       iter++) {
+    delete *iter;
+  }
+  for (vector<MeqStation*>::iterator iter = itsStations.begin();
+       iter != itsStations.end();
        iter++) {
     delete *iter;
   }
@@ -667,6 +686,9 @@ GlishRecord MeqCalibrater::solve (const String& colName)
 {
   cdebug(1) << "solve using column " << colName << endl;
 
+  if (itsCurRows.nelements() == 0) {
+    throw AipsError("nextInterval needs to be done before solve");
+  }
   if (itsNrScid == 0) {
     throw AipsError ("No parameters are set to solvable");
   }
@@ -995,6 +1017,9 @@ void MeqCalibrater::predict (const String& modelDataColName)
 {
   cdebug(1) << "predict('" << modelDataColName << "')" << endl;
 
+  if (itsCurRows.nelements() == 0) {
+    throw AipsError("nextInterval needs to be done before predict");
+  }
   Timer timer;
 
   ////  itsMS.reopenRW();
@@ -1162,12 +1187,14 @@ void MeqCalibrater::addParm(const MeqParm& parm, GlishRecord& rec)
 GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns,
 				    Vector<String>& excludePatterns)
 {
+  cdebug(1) << "getParms: " << endl;
+  if (itsCurRows.nelements() == 0) {
+    throw AipsError("nextInterval needs to be done before getParms");
+  }
   GlishRecord rec;
   //  vector<MeqParm*> parmVector;
 
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
-
-  cdebug(1) << "getParms: " << endl;
 
   // Convert patterns to regexes.
   vector<Regex> parmRegex;
