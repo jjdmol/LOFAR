@@ -21,70 +21,74 @@
 //# $Id$
 
 #include <BBS3/MNS/MeqParm.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 
 namespace LOFAR {
 
-unsigned int MeqParm::theirNparm = 0;
-vector<MeqParm*>* MeqParm::theirParms = 0;
 
-
-MeqParm::MeqParm (const string& name)
+MeqParm::MeqParm (const string& name, MeqParmGroup* group)
 : itsName       (name),
-  itsIsSolvable (false)
+  itsIsSolvable (false),
+  itsGroup      (group)
 {
-  if (theirParms == 0) {
-    theirParms = new vector<MeqParm*>;
-  }
-  if (theirNparm == theirParms->size()) {
-    itsParmId = theirParms->size();
-    theirParms->push_back (this);
-  } else {
-    Assert (theirNparm < theirParms->size());
-    bool found = false;
-    int cnt = 0;
-    for (vector<MeqParm*>::iterator iter=theirParms->begin();
-	 iter != theirParms->end();
-	 iter++, cnt++) {
-      if (*iter == 0) {
-	itsParmId = cnt;
-	*iter = this;
-	found = true;
-	break;
-      }
-    }
-    Assert (found);
-  }
-  theirNparm++;
-  Assert (theirNparm <= theirParms->size());
-  Assert ((*theirParms)[itsParmId] == this);
+  itsParmId = itsGroup->add (this);
+  DBGASSERT (itsGroup->getParm(itsParmId) == this);
 }
 
 MeqParm::~MeqParm()
 {
-  Assert (theirNparm <= theirParms->size());
-  Assert ((*theirParms)[itsParmId] == this);
-  (*theirParms)[itsParmId] = 0;
-  theirNparm--;
+  ASSERT (itsGroup->getParm(itsParmId) == this);
+  itsGroup->remove (itsParmId);
 }
 
-const vector<MeqParm*>& MeqParm::getParmList()
+
+
+MeqParmGroup::MeqParmGroup()
+  : itsNparm (0)
+{}
+
+int MeqParmGroup::add (MeqParm* parmPtr)
 {
-  if (theirParms == 0) {
-    theirParms = new vector<MeqParm*>;
+  int inx = 0;
+  if (itsNparm == itsParms.size()) {
+    inx = itsParms.size();
+    itsParms.push_back (parmPtr);
+  } else {
+    ASSERT (itsNparm < itsParms.size());
+    bool found = false;
+    for (vector<MeqParm*>::iterator iter=itsParms.begin();
+	 iter != itsParms.end();
+	 iter++, inx++) {
+      if (*iter == 0) {
+	*iter = parmPtr;
+	found = true;
+	break;
+      }
+    }
+    ASSERT (found);
   }
-  return *theirParms;
+  itsNparm++;
+  ASSERT (itsNparm <= itsParms.size());
+  return inx;
 }
 
-void MeqParm::clearParmList()
+void MeqParmGroup::remove (int index)
 {
-  for (uint i=0; i<theirParms->size(); ++i) {
-    delete (*theirParms)[i];
+  ASSERT (itsNparm <= itsParms.size());
+  itsParms[index] = 0;
+  itsNparm--;
+}
+
+void MeqParmGroup::clear()
+{
+  for (uint i=0; i<itsParms.size(); ++i) {
+    if (itsParms[i]) {
+      // Note that the MeqParm destructor calls remove.
+      delete itsParms[i];
+    }
   }
-  delete theirParms;
-  theirParms = 0;
-  theirNparm = 0;
+  ASSERT (itsNparm == 0);
 }
 
 }

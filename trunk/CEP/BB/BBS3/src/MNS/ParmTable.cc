@@ -33,7 +33,8 @@ using namespace casa;
 namespace LOFAR {
 
 ParmTable::ParmTable (const string& dbType, const string& tableName,
-		      const string& userName, const string& passwd, const string& hostName)
+		      const string& userName, const string& passwd,
+		      const string& hostName)
 : itsRep (0)
 {
   if (dbType == "aips") {
@@ -46,14 +47,8 @@ ParmTable::ParmTable (const string& dbType, const string& tableName,
   itsRep->connect();
 }
 
-MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs)
-{
-  vector<MeqExpr*> exprDel;
-  return getPointSources (srcnrs, exprDel);
-}
-
-MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
-					  vector<MeqExpr*>& exprDel)
+MeqSourceList ParmTable::getPointSources (MeqParmGroup* group,
+					  const Vector<int>& srcnrs)
 {
   // Get the vector of all parms containing a source name.
   vector<string> nams = itsRep->getSources();
@@ -98,23 +93,17 @@ MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
     if (fnd) {
       string name = nams[inx];
       MeqStoredParmPolc* mr = new MeqStoredParmPolc("RA."+name,
-						    srcnr, -1, this);
-      exprDel.push_back (mr);
+						    group, this);
       MeqStoredParmPolc* md = new MeqStoredParmPolc("DEC."+name,
-						    srcnr, -1, this);
-      exprDel.push_back (md);
+						    group, this);
       MeqStoredParmPolc* mi = new MeqStoredParmPolc("StokesI."+name,
-						    srcnr, -1, this);
-      exprDel.push_back (mi);
+						    group, this);
       MeqStoredParmPolc* mq = new MeqStoredParmPolc("StokesQ."+name,
-						    srcnr, -1, this);
-      exprDel.push_back (mq);
+						    group, this);
       MeqStoredParmPolc* mu = new MeqStoredParmPolc("StokesU."+name,
-						    srcnr, -1, this);
-      exprDel.push_back (mu);
+						    group, this);
       MeqStoredParmPolc* mv = new MeqStoredParmPolc("StokesV."+name,
-						    srcnr, -1, this);
-      exprDel.push_back (mv);
+						    group, this);
       sources.add (MeqPointSource(name, mi, mq, mu, mv, mr, md));
 //    cout << "Found source " << name << " (srcnr=" << srcnr << ')' << endl;
     }

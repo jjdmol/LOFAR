@@ -33,6 +33,7 @@ namespace LOFAR {
 
 //# Forward declarations
 class MeqDomain;
+class MeqParmGroup;
 
 
 // This class is the (abstract) base class for parameters.
@@ -44,7 +45,7 @@ class MeqParm : public MeqExpr
 public:
   // Create a parameter with the given name.
   // Assign a parameter id (a sequence number) to it.
-  explicit MeqParm (const string& name);
+  explicit MeqParm (const string& name, MeqParmGroup*);
 
   virtual ~MeqParm();
 
@@ -105,13 +106,45 @@ private:
   MeqParm (const MeqParm&);
   MeqParm& operator= (const MeqParm&);
 
-  string       itsName;
-  unsigned int itsParmId;
-  bool         itsIsSolvable;
+  string        itsName;
+  unsigned int  itsParmId;
+  bool          itsIsSolvable;
+  MeqParmGroup* itsGroup;
 
   // A static vector of pointers to parms.
-  static unsigned int      theirNparm;
-  static vector<MeqParm*>* theirParms;
+};
+
+
+
+class MeqParmGroup
+{
+public:
+  MeqParmGroup();
+
+  // Add a Parm object to the list and return its id (seqnr in the list).
+  int add (MeqParm*);
+
+  // Remove a parm from the list.
+  void remove (int index);
+
+  // Get the nr of parms in the group.
+  unsigned int nparms() const
+    { return itsNparm; }
+
+  // Get access to the parm list.
+  const vector<MeqParm*>& getParms() const
+    { return itsParms; }
+
+  // Get a particular parm.
+  const MeqParm* getParm (int index) const
+    { return itsParms[index]; }
+
+  // Clear the group and delete all its parms.
+  void clear();
+
+private:
+  unsigned int     itsNparm;
+  vector<MeqParm*> itsParms;
 };
 
 }

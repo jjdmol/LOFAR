@@ -83,7 +83,6 @@ namespace LOFAR {
   }
 
   vector<MeqPolc> ParmTableBDB::getPolcs (const string& parmName,
-					  int, int,
 					  const MeqDomain& domain)
   {
     LOG_TRACE_STAT("retreiving polynomial coefficients");
@@ -96,8 +95,7 @@ namespace LOFAR {
     return result;
   }
 
-  MeqPolc ParmTableBDB::getInitCoeff (const string& parmName,
-				      int srcnr, int statnr)
+  MeqPolc ParmTableBDB::getInitCoeff (const string& parmName)
   {
     // Try to find the default initial values in the InitialValues subtable.
     // The parameter name consists of parts (separated by dots), so the
@@ -139,7 +137,6 @@ namespace LOFAR {
   }
 				    
   void ParmTableBDB::putCoeff (const string& parmName,
-			       int srcnr, int statnr,
 			       const MeqPolc& polc)
   {
     const MeqDomain& domain = polc.domain();
@@ -166,34 +163,31 @@ namespace LOFAR {
 	}
     }
     cursorp->close();
-    putNewCoeff (parmName, srcnr, statnr, polc);
+    putNewCoeff (parmName, polc);
   }
 
   void ParmTableBDB::putDefCoeff (const string& parmName,
-				  int srcnr, int statnr,
 				  const MeqPolc& polc)
   {
     // For Berkeley DB there is no difference between a default and a normal parm (yet)
-    putCoeff (parmName, srcnr, statnr, polc);  
+    putCoeff (parmName, polc);  
   }
 
 
   void ParmTableBDB::putNewCoeff (const string& parmName,
-				  int srcnr, int statnr,
 				  const MeqPolc& polc)
   {
     MPHKey key(parmName, polc.domain());
-    MeqParmHolder mph(parmName, srcnr, statnr, polc);
+    MeqParmHolder mph(parmName, polc);
     MPHValue value(mph);
     itsDb.put(NULL, &key, &value, 0);
   }
 
   void ParmTableBDB::putNewDefCoeff (const string& parmName,
-				     int srcnr, int statnr,
 				     const MeqPolc& polc)
   {
     // For Berkeley DB there is no difference between a default and a normal parm (yet)
-    putNewCoeff (parmName, srcnr, statnr, polc);  
+    putNewCoeff (parmName, polc);  
   }
 
   vector<MeqParmHolder> ParmTableBDB::find (const string& parmName,
@@ -348,8 +342,6 @@ namespace LOFAR {
     mphdata->x0 = itsMPH.getPolc().getX0();
     mphdata->y0 = itsMPH.getPolc().getY0();
     mphdata->domain = itsMPH.getPolc().domain();
-    mphdata->sourceNr = itsMPH.getSourceNr();
-    mphdata->station = itsMPH.getStation();
     mphdata->isRelPerturbation = itsMPH.getPolc().isRelativePerturbation();
     mphdata->isNormalized = itsMPH.getPolc().isNormalized();
 
@@ -371,8 +363,6 @@ namespace LOFAR {
     mp.setX0(mphdata->x0);
     mp.setY0(mphdata->y0);
     mp.setDomain(mphdata->domain);
-    itsMPH.setSourceNr(mphdata->sourceNr);
-    itsMPH.setStation(mphdata->station);
     mp.setNormalize(mphdata->isNormalized);
 	
     // copy values of variable length

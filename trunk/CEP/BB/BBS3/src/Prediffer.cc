@@ -158,7 +158,7 @@ Prediffer::~Prediffer()
 {
   LOG_TRACE_FLOW( "Prediffer destructor" );
 
-  MeqParm::clearParmList();     // Clear static parameter data
+  itsParmGroup.clear();         // Delete all parameters
 
   for (vector<MeqJonesExpr*>::iterator iter = itsExpr.begin();
        iter != itsExpr.end();
@@ -287,11 +287,11 @@ void Prediffer::fillStations (const vector<int>& antnrs)
       sprintf (str, "%d", ant+1);
       String name = string("SR") + str;
       MeqParmSingle* px = new MeqParmSingle ("AntPosX." + name,
-					     antpos(0));
+					     &itsParmGroup, antpos(0));
       MeqParmSingle* py = new MeqParmSingle ("AntPosY." + name,
-					     antpos(1));
+					     &itsParmGroup, antpos(1));
       MeqParmSingle* pz = new MeqParmSingle ("AntPosZ." + name,
-					     antpos(2));
+					     &itsParmGroup, antpos(2));
       itsStations[ant] = new MeqStation(px, py, pz, name);
     }
   }
@@ -377,7 +377,7 @@ void Prediffer::countBaselines()
 void Prediffer::makeWSRTExpr()
 {
   // Get the sources from the ParmTable.
-  itsSources = itsGSMMEP.getPointSources (Vector<int>());
+  itsSources = itsGSMMEP.getPointSources (&itsParmGroup, Vector<int>());
   for (int i=0; i<itsSources.size(); i++) {
     itsSources[i].setSourceNr (i);
     itsSources[i].setPhaseRef (&itsPhaseRef);
@@ -403,24 +403,19 @@ void Prediffer::makeWSRTExpr()
       // Expression representing station parameters.
       MeqExpr* frot = new MeqStoredParmPolc ("frot." +
 					     itsStations[i]->getName(),
-					     -1, i+1,
-					     &itsMEP);
+					     &itsParmGroup, &itsMEP);
       MeqExpr* drot = new MeqStoredParmPolc ("drot." +
 					     itsStations[i]->getName(),
-					     -1, i+1,
-					     &itsMEP);
+					     &itsParmGroup, &itsMEP);
       MeqExpr* dell = new MeqStoredParmPolc ("dell." +
 					     itsStations[i]->getName(),
-					     -1, i+1,
-					     &itsMEP);
+					     &itsParmGroup, &itsMEP);
       MeqExpr* gain11 = new MeqStoredParmPolc ("gain.11." +
 					       itsStations[i]->getName(),
-					       -1, i+1,
-					       &itsMEP);
+					       &itsParmGroup, &itsMEP);
       MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
 					       itsStations[i]->getName(),
-					       -1, i+1,
-					       &itsMEP);
+					       &itsParmGroup, &itsMEP);
       itsStatExpr[i] = new MeqStatExpr (frot, drot, dell, gain11, gain22);
     }
   }    
@@ -460,7 +455,7 @@ void Prediffer::makeWSRTExpr()
 void Prediffer::makeLOFARExpr(Bool asAP)
 {
   // Get the sources from the ParmTable.
-  itsSources = itsGSMMEP.getPointSources (Vector<int>());
+  itsSources = itsGSMMEP.getPointSources (&itsParmGroup, Vector<int>());
   for (int i=0; i<itsSources.size(); i++) {
     itsSources[i].setSourceNr (i);
     itsSources[i].setPhaseRef (&itsPhaseRef);
@@ -490,53 +485,40 @@ void Prediffer::makeLOFARExpr(Bool asAP)
       // Expression representing station parameters.
       MeqExpr* frot = new MeqStoredParmPolc ("frot." +
 					     itsStations[i]->getName(),
-					     -1, i+1,
-					     &itsMEP);
+					     &itsParmGroup, &itsMEP);
       MeqExpr* drot = new MeqStoredParmPolc ("drot." +
 					     itsStations[i]->getName(),
-					     -1, i+1,
-					     &itsMEP);
+					     &itsParmGroup, &itsMEP);
       MeqExpr* dell = new MeqStoredParmPolc ("dell." +
 					     itsStations[i]->getName(),
-					     -1, i+1,
-					     &itsMEP);
+					     &itsParmGroup, &itsMEP);
       MeqExpr* gain11 = new MeqStoredParmPolc ("gain.11." +
 					       itsStations[i]->getName(),
-					       -1, i+1,
-					       &itsMEP);
+					       &itsParmGroup, &itsMEP);
       MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
 					       itsStations[i]->getName(),
-					       -1, i+1,
-					       &itsMEP);
+					       &itsParmGroup, &itsMEP);
       itsStatExpr[i] = new MeqStatExpr (frot, drot, dell, gain11, gain22);
       // Make an expression for all source parameters for this station.
       vector<MeqJonesExpr*> vec;
       for (int j=0; j<itsSources.size(); j++) {
 	string nm = itsStations[i]->getName() + '.' +  itsSources[j].getName();
 	MeqExpr* ej11r = new MeqStoredParmPolc ("EJ11." + ejname1 + nm,
-						j+1, i+1,
-						&itsMEP);
+						&itsParmGroup, &itsMEP);
 	MeqExpr* ej11i = new MeqStoredParmPolc ("EJ11." + ejname2 + nm,
-						j+1, i+1,
-						&itsMEP);
+						&itsParmGroup, &itsMEP);
 	MeqExpr* ej12r = new MeqStoredParmPolc ("EJ12." + ejname1 + nm,
-						j+1, i+1,
-						&itsMEP);
+						&itsParmGroup, &itsMEP);
 	MeqExpr* ej12i = new MeqStoredParmPolc ("EJ12." + ejname2 + nm,
-						j+1, i+1,
-						&itsMEP);
+						&itsParmGroup, &itsMEP);
 	MeqExpr* ej21r = new MeqStoredParmPolc ("EJ21." + ejname1 + nm,
-						j+1, i+1,
-						&itsMEP);
+						&itsParmGroup, &itsMEP);
 	MeqExpr* ej21i = new MeqStoredParmPolc ("EJ21." + ejname2 + nm,
-						j+1, i+1,
-						&itsMEP);
+						&itsParmGroup, &itsMEP);
 	MeqExpr* ej22r = new MeqStoredParmPolc ("EJ22." + ejname1 + nm,
-						j+1, i+1,
-						&itsMEP);
+						&itsParmGroup, &itsMEP);
 	MeqExpr* ej22i = new MeqStoredParmPolc ("EJ22." + ejname2 + nm,
-						j+1, i+1,
-						&itsMEP);
+						&itsParmGroup, &itsMEP);
 	MeqExpr *ej11, *ej12, *ej21, *ej22;
 	if (asAP) {
 	  ej11 = new MeqExprAPToComplex (ej11r, ej11i);
@@ -597,7 +579,7 @@ void Prediffer::makeLOFARExpr(Bool asAP)
 //----------------------------------------------------------------------
 void Prediffer::initParms (const MeqDomain& domain, bool readPolcs)
 {
-  const vector<MeqParm*>& parmList = MeqParm::getParmList();
+  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
 
   itsIsParmSolvable.resize (parmList.size());
   itsParmData.clear();
@@ -615,7 +597,7 @@ void Prediffer::initParms (const MeqDomain& domain, bool readPolcs)
 
       int nr = (*iter)->initDomain (domain, itsNrScid);
       if (nr > 0) {
-	itsParmData.push_back (ParmData((*iter)->getName(), nr, itsNrScid,
+	itsParmData.push_back (ParmData((*iter)->getName(), 0, nr, itsNrScid,
 					(*iter)->getCoeffValues()));
 	itsIsParmSolvable[i] = true;
 	itsNrScid += nr;
@@ -741,7 +723,7 @@ void Prediffer::clearSolvableParms()
 {
   LOG_TRACE_FLOW( "clearSolvableParms" );
 
-  const vector<MeqParm*>& parmList = MeqParm::getParmList();
+  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
 
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
@@ -769,7 +751,7 @@ void Prediffer::setSolvableParms (const vector<string>& parms,
   LOG_INFO_STR( "setSolvableParms: "
 		<< "isSolvable = " << isSolvable);
 
-  const vector<MeqParm*>& parmList = MeqParm::getParmList();
+  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
 
   // Convert patterns to regexes.
   vector<Regex> parmRegex;
@@ -915,7 +897,7 @@ void Prediffer::getEquation (double* result, const fcomplex* data,
   itsEqTimer.start();
   int nrchan = request.ny();
   bool showd = false;
-  ///  showd = (ant1==4 && ant2==8);
+  /// showd = (ant1==4 && ant2==8);
   // Put the results in a single array for easier handling.
   const MeqResult* predResults[4];
   predResults[0] = &(expr.getResult11());
@@ -1332,7 +1314,7 @@ void Prediffer::getParmValues (vector<string>& names,
   names.resize (0);
   values.resize (0);
   // Iterate through all parms and get solvable ones.
-  const vector<MeqParm*>& parmList = MeqParm::getParmList();
+  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
   int i=0;
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
@@ -1365,7 +1347,7 @@ void Prediffer::setParmValues (const vector<string>& names,
 {
   ASSERT (names.size() == values.size());
   // Iterate through all parms and get solvable ones.
-  const vector<MeqParm*>& parmList = MeqParm::getParmList();
+  const vector<MeqParm*>& parmList = itsParmGroup.getParms();
   int i;
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();

@@ -42,11 +42,13 @@ class MeqUVWPolc
 {
 public:
   // Create with the given ra and dec of the phase reference position.
-  MeqUVWPolc();
+  // Add the parameters to the given group.
+  MeqUVWPolc (MeqParmGroup*);
 
   // Calculate the polynomial coefficients by fitting to the given values.
   // It results in a polynomial for the given times and all frequencies.
-  void calcCoeff (const casa::Vector<double>& times, const casa::Matrix<double>& uvws,
+  void calcCoeff (const casa::Vector<double>& times,
+		  const casa::Matrix<double>& uvws,
 		  bool addPolc = true);
 
   // Calculate the UVW for the given domain.
@@ -61,20 +63,20 @@ public:
     { return itsW; }
 
   const MeqParmPolc& getUCoeff() const
-    { return itsUCoeff; }
+    { return *itsUCoeff; }
   const MeqParmPolc& getVCoeff() const
-    { return itsVCoeff; }
+    { return *itsVCoeff; }
   const MeqParmPolc& getWCoeff() const
-    { return itsWCoeff; }
+    { return *itsWCoeff; }
 
   void setName(const string& name);
 
 private:
   casa::Polynomial<casa::AutoDiff<double> > itsPoly;
   casa::LinearFit<casa::Double> itsFitter;
-  MeqParmPolc  itsUCoeff;
-  MeqParmPolc  itsVCoeff;
-  MeqParmPolc  itsWCoeff;
+  MeqParmPolc* itsUCoeff;
+  MeqParmPolc* itsVCoeff;
+  MeqParmPolc* itsWCoeff;
   MeqRequestId itsLastRequest;
   MeqResult itsU;
   MeqResult itsV;

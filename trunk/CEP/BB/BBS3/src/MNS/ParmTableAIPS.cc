@@ -73,8 +73,6 @@ void ParmTableAIPS::createTable(const string& userName, const string& tableName)
   TableDesc td("PSS parameter table", TableDesc::New);
   td.comment() = String("Table containing parameters for PSS");
   td.addColumn (ScalarColumnDesc<String>("NAME"));
-  td.addColumn (ScalarColumnDesc<Int>   ("SRCNR"));
-  td.addColumn (ScalarColumnDesc<Int>   ("STATNR"));
   td.addColumn (ScalarColumnDesc<double>("STARTTIME"));
   td.addColumn (ScalarColumnDesc<double>("ENDTIME"));
   td.addColumn (ScalarColumnDesc<double>("STARTFREQ"));
@@ -94,8 +92,6 @@ void ParmTableAIPS::createTable(const string& userName, const string& tableName)
   TableDesc tddef("PSS default parameter values", TableDesc::New);
   tddef.comment() = String("Table containing default parameters for PSS");
   tddef.addColumn (ScalarColumnDesc<String>("NAME"));
-  tddef.addColumn (ScalarColumnDesc<Int>   ("SRCNR"));
-  tddef.addColumn (ScalarColumnDesc<Int>   ("STATNR"));
   tddef.addColumn (ArrayColumnDesc <double>("VALUES"));
   tddef.addColumn (ArrayColumnDesc <double>("SIM_VALUES"));
   tddef.addColumn (ArrayColumnDesc <double>("SIM_PERT"));
@@ -128,11 +124,10 @@ void ParmTableAIPS::clearTable() {
 }
 
 vector<MeqPolc> ParmTableAIPS::getPolcs (const string& parmName,
-					 int srcnr, int statnr,
 					 const MeqDomain& domain)
 {
   vector<MeqPolc> result;
-  Table sel = find (parmName, srcnr, statnr, domain);
+  Table sel = find (parmName, domain);
   if (sel.nrow() > 0) {
     ROScalarColumn<double> stCol (sel, "STARTTIME");
     ROScalarColumn<double> etCol (sel, "ENDTIME");
@@ -167,8 +162,7 @@ vector<MeqPolc> ParmTableAIPS::getPolcs (const string& parmName,
   return result;
 }
 
-MeqPolc ParmTableAIPS::getInitCoeff (const string& parmName,
-				     int srcnr, int statnr)
+MeqPolc ParmTableAIPS::getInitCoeff (const string& parmName)
 {
   // Try to find the default initial values in the InitialValues subtable.
   // The parameter name consists of parts (separated by dots), so the
@@ -221,7 +215,6 @@ MeqPolc ParmTableAIPS::getInitCoeff (const string& parmName,
 }
 				    
 void ParmTableAIPS::putCoeff (const string& parmName,
-			      int srcnr, int statnr,
 			      const MeqPolc& polc)
 {
   itsTable.reopenRW();
@@ -229,7 +222,7 @@ void ParmTableAIPS::putCoeff (const string& parmName,
   //const MeqMatrix& values = polc.getCoeff();
   //const MeqMatrix& simvalues = polc.getSimCoeff();
   //const MeqMatrix& pertsimvalues = polc.getPertSimCoeff();
-  Table sel = find (parmName, srcnr, statnr, domain);
+  Table sel = find (parmName, domain);
   if (sel.nrow() > 0) {
     ASSERTSTR (sel.nrow()==1, "Parameter " << parmName <<
 		 " has multiple entries for time "
@@ -252,13 +245,12 @@ void ParmTableAIPS::putCoeff (const string& parmName,
     ArrayColumn<double> simpertCol (sel, "SIM_PERT");
     valCol.put (0, polc.getCoeff().getDoubleMatrix());
   } else {
-    putNewCoeff(parmName, srcnr, statnr, polc);
+    putNewCoeff(parmName, polc);
   }
 }
 
 void ParmTableAIPS::putDefCoeff (const string& parmName,
-			      int srcnr, int statnr,
-			      const MeqPolc& polc)
+				 const MeqPolc& polc)
 {
   itsInitTable.reopenRW();
   //const MeqMatrix& values = polc.getCoeff();
@@ -271,16 +263,12 @@ void ParmTableAIPS::putDefCoeff (const string& parmName,
     Table sel = itsInitTable(rownrs);
     uInt rownr=0;
     ScalarColumn<String> namCol (sel, "NAME");
-    ScalarColumn<int> srcCol   (sel, "SRCNR");
-    ScalarColumn<int> statCol  (sel, "STATNR");
     ScalarColumn<double> t0Col (sel, "TIME0");
     ScalarColumn<double> f0Col (sel, "FREQ0");
     ScalarColumn<bool> normCol (sel, "NORMALIZED");
     ScalarColumn<double> diffCol (sel, "DIFF");
     ScalarColumn<bool> drelCol (sel, "DIFF_REL");
     namCol.put (rownr, parmName);
-    srcCol.put (rownr, srcnr);
-    statCol.put (rownr, statnr);
     ArrayColumn<double> valCol (sel, "VALUES");
     ArrayColumn<double> simvalCol (sel, "SIM_VALUES");
     ArrayColumn<double> simpertCol (sel, "SIM_PERT");
@@ -293,23 +281,19 @@ void ParmTableAIPS::putDefCoeff (const string& parmName,
     diffCol.put (rownr, polc.getPerturbation());
     drelCol.put (rownr, polc.isRelativePerturbation());
   } else if (rownrs.nelements() == 0) {
-    putNewDefCoeff(parmName, srcnr, statnr, polc);
+    putNewDefCoeff(parmName, polc);
   } else {
     ASSERTSTR (false, "Too many default parms with the same name/domain")
   }
 }
 
 void ParmTableAIPS::putNewCoeff (const string& parmName, 
-				 int srcnr,
-				 int statnr,
 				 const MeqPolc& polc)
 {
   itsTable.reopenRW();
   uInt rownr = itsTable.nrow();
   itsTable.addRow();
   ScalarColumn<String> namCol (itsTable, "NAME");
-  ScalarColumn<int> srcCol   (itsTable, "SRCNR");
-  ScalarColumn<int> statCol  (itsTable, "STATNR");
   ScalarColumn<double> stCol (itsTable, "STARTTIME");
   ScalarColumn<double> etCol (itsTable, "ENDTIME");
   ScalarColumn<double> sfCol (itsTable, "STARTFREQ");
@@ -320,8 +304,6 @@ void ParmTableAIPS::putNewCoeff (const string& parmName,
   ScalarColumn<double> diffCol (itsTable, "DIFF");
   ScalarColumn<bool> drelCol (itsTable, "DIFF_REL");
   namCol.put (rownr, parmName);
-  srcCol.put (rownr, srcnr);
-  statCol.put (rownr, statnr);
   stCol.put (rownr, polc.domain().startX());
   etCol.put (rownr, polc.domain().endX());
   sfCol.put (rownr, polc.domain().startY());
@@ -341,8 +323,6 @@ void ParmTableAIPS::putNewCoeff (const string& parmName,
 
 
 void ParmTableAIPS::putNewDefCoeff (const string& parmName, 
-				    int srcnr,
-				    int statnr,
 				    const MeqPolc& polc)
 {
   itsTable.reopenRW();
@@ -351,8 +331,6 @@ void ParmTableAIPS::putNewDefCoeff (const string& parmName,
   uInt rownr = itsInitTable.nrow();
   itsInitTable.addRow();
   ScalarColumn<String> namCol (itsInitTable, "NAME");
-  ScalarColumn<int> srcCol   (itsInitTable, "SRCNR");
-  ScalarColumn<int> statCol  (itsInitTable, "STATNR");
   //    ScalarColumn<double> stCol (itsInitTable, "STARTTIME");
   //    ScalarColumn<double> etCol (itsInitTable, "ENDTIME");
   //    ScalarColumn<double> sfCol (itsInitTable, "STARTFREQ");
@@ -363,8 +341,6 @@ void ParmTableAIPS::putNewDefCoeff (const string& parmName,
   ScalarColumn<double> diffCol (itsInitTable, "DIFF");
   ScalarColumn<bool> drelCol (itsInitTable, "DIFF_REL");
   namCol.put (rownr, parmName);
-  srcCol.put (rownr, srcnr);
-  statCol.put (rownr, statnr);
   //stCol.put (rownr, polc.domain.startX());
   //    etCol.put (rownr, polc.domain.endX());
   //    sfCol.put (rownr, polc.domain.startY());
@@ -383,7 +359,6 @@ void ParmTableAIPS::putNewDefCoeff (const string& parmName,
 }
 
 Table ParmTableAIPS::find (const string& parmName,
-			   int srcnr, int statnr,
 			   const MeqDomain& domain)
 {
   // First see if the parameter name exists at all.

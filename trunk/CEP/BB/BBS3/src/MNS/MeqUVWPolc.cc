@@ -29,11 +29,13 @@ using namespace casa;
 
 namespace LOFAR {
 
-MeqUVWPolc::MeqUVWPolc()
+// Note that the newly created MeqParmPolc objects are deleted by the
+// MeqParmGroup.
+MeqUVWPolc::MeqUVWPolc (MeqParmGroup* group)
 : itsPoly   (3),
-  itsUCoeff ("u"),
-  itsVCoeff ("v"),
-  itsWCoeff ("w")
+  itsUCoeff (new MeqParmPolc("u", group)),
+  itsVCoeff (new MeqParmPolc("v", group)),
+  itsWCoeff (new MeqParmPolc("w", group))
 {
   itsFitter.setFunction (itsPoly);
 }
@@ -52,43 +54,43 @@ void MeqUVWPolc::calcCoeff (const Vector<double>& times,
   }
   if (!addPolc) {
     vector<MeqPolc> emptyPolc;
-    itsUCoeff.setPolcs (emptyPolc);
-    itsVCoeff.setPolcs (emptyPolc);
-    itsWCoeff.setPolcs (emptyPolc);
+    itsUCoeff->setPolcs (emptyPolc);
+    itsVCoeff->setPolcs (emptyPolc);
+    itsWCoeff->setPolcs (emptyPolc);
   }
   MeqPolc polc;
   polc.setDomain (domain);
   Vector<double> sigma(nr, 1);
   Vector<Double> sol = itsFitter.fit (normTimes, uvws.row(0), sigma);
   polc.setCoeff (Matrix<double>(sol));
-  itsUCoeff.addPolc (polc);
+  itsUCoeff->addPolc (polc);
   sigma = 1;
   sol = itsFitter.fit (normTimes, uvws.row(1), sigma);
   polc.setCoeff (Matrix<double>(sol));
-  itsVCoeff.addPolc (polc);
+  itsVCoeff->addPolc (polc);
   sigma = 1;
   sol = itsFitter.fit (normTimes, uvws.row(2), sigma);
   polc.setCoeff (Matrix<double>(sol));
-  itsWCoeff.addPolc (polc);
+  itsWCoeff->addPolc (polc);
 }
 
 void MeqUVWPolc::calcUVW (const MeqRequest& request)
 {
   if (MeqPointDFT::doshow) {
-    cout << "UCoeff: " << itsUCoeff.getPolcs()[0].getCoeff() << endl;
-    cout << "VCoeff: " << itsVCoeff.getPolcs()[0].getCoeff() << endl;
-    cout << "WCoeff: " << itsWCoeff.getPolcs()[0].getCoeff() << endl;
+    cout << "UCoeff: " << itsUCoeff->getPolcs()[0].getCoeff() << endl;
+    cout << "VCoeff: " << itsVCoeff->getPolcs()[0].getCoeff() << endl;
+    cout << "WCoeff: " << itsWCoeff->getPolcs()[0].getCoeff() << endl;
   }
-  itsU = itsUCoeff.getResult (request);
-  itsV = itsVCoeff.getResult (request);
-  itsW = itsWCoeff.getResult (request);
+  itsU = itsUCoeff->getResult (request);
+  itsV = itsVCoeff->getResult (request);
+  itsW = itsWCoeff->getResult (request);
 }
 
 void MeqUVWPolc::setName(const string& name)
 {
-  itsUCoeff.setName("u" + name);
-  itsVCoeff.setName("v" + name);
-  itsWCoeff.setName("w" + name);
+  itsUCoeff->setName("u" + name);
+  itsVCoeff->setName("v" + name);
+  itsWCoeff->setName("w" + name);
 }
 
 }

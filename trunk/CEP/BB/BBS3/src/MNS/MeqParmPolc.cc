@@ -29,8 +29,8 @@ using namespace casa;
 
 namespace LOFAR {
 
-MeqParmPolc::MeqParmPolc (const string& name)
-: MeqParm (name)
+MeqParmPolc::MeqParmPolc (const string& name, MeqParmGroup* group)
+: MeqParm (name, group)
 {}
 
 MeqParmPolc::~MeqParmPolc()

@@ -30,10 +30,11 @@
 
 //# Forward Declarations
 namespace casa {
-template<class T> class Vector;
+  template<class T> class Vector;
 }
 namespace LOFAR {
-class MeqDomain;
+  class MeqDomain;
+  class MeqParmGroup;
 }
 
 namespace LOFAR {
@@ -52,21 +53,17 @@ public:
   // matches the domain exactly.
   // Note that the requested domain may contain multiple polcs.
   virtual vector<MeqPolc> getPolcs (const string& parmName,
-				    int sourceNr, int station,
 				    const MeqDomain& domain) = 0;
 
   // Get the initial polynomial coefficients for the given parameter.
-  virtual MeqPolc getInitCoeff (const string& parmName,
-				int sourceNr, int station) = 0;
+  virtual MeqPolc getInitCoeff (const string& parmName) = 0;
 
   // Put the polynomial coefficient for the given parameter and domain.
   virtual void putCoeff (const string& parmName,
-			 int sourceNr, int station,
 			 const MeqPolc& polc) = 0;
 
   // Put the default coefficients
   virtual void putDefCoeff (const string& parmName,
-			    int srcnr, int statnr,
 			    const MeqPolc& polc) = 0;
 
   // Get the names of all sources in the table.
@@ -85,10 +82,8 @@ public:
   // clear database or table
   virtual void clearTable() = 0;
   virtual void putNewDefCoeff (const string& parmName,
-			    int srcnr, int statnr,
-			    const MeqPolc& polc) = 0;
+			       const MeqPolc& polc) = 0;
   virtual void putNewCoeff (const string& parmName,
-			    int srcnr, int statnr,
 			    const MeqPolc& polc) = 0;
 };
 
@@ -103,43 +98,35 @@ public:
   // otherwise a database of the given type.
   // For an AIPS++ table, the extension .MEP is added to the table name.
   ParmTable (const string& dbType, const string& tableName,
-	     const string& dbName, const string& pwd, const string& hostName = "localhost");
+	     const string& dbName, const string& pwd,
+	     const string& hostName = "localhost");
 
   ~ParmTable()
-    {delete itsRep; }
+    { delete itsRep; }
 
   // Get the parameter values for the given parameter and domain.
   // The matchDomain argument is set telling if the found parameter
   // matches the domain exactly.
   // Note that the requested domain may contain multiple polcs.
   vector<MeqPolc> getPolcs (const string& parmName,
-			    int sourceNr, int station,
 			    const MeqDomain& domain)
-    { 
-      return itsRep->getPolcs (parmName, sourceNr, station, domain); 
-    }
+    { return itsRep->getPolcs (parmName, domain); }
 
   // Get the initial polynomial coefficients for the given parameter.
-  MeqPolc getInitCoeff (const string& parmName,
-			int sourceNr, int station)
-    { 
-      return itsRep->getInitCoeff (parmName, sourceNr, station); 
-    }
+  MeqPolc getInitCoeff (const string& parmName)
+    { return itsRep->getInitCoeff (parmName); }
 
   // Put the polynomial coefficient for the given parameter and domain.
-  void putCoeff (const string& parmName,
-		 int sourceNr, int station,
-		 const MeqPolc& polc)
-    { itsRep->putCoeff (parmName, sourceNr, station, polc);}
+  void putCoeff (const string& parmName, const MeqPolc& polc)
+    { itsRep->putCoeff (parmName, polc); }
 
   // Return point sources for the given source numbers.
   // An empty sourceNr vector means all sources.
   // In the 2nd version the pointers to the created MeqParm objects
   // are added to the vector of objects to be deleted.
   // <group>
-  MeqSourceList getPointSources (const casa::Vector<int>& sourceNrs);
-  MeqSourceList getPointSources (const casa::Vector<int>& sourceNrs,
-				 vector<MeqExpr*>& exprDel);
+  MeqSourceList getPointSources (MeqParmGroup*,
+				 const casa::Vector<int>& sourceNrs);
   // </group>
 
   // Unlock the underlying table.

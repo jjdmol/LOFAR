@@ -37,7 +37,8 @@ class MeqParmSingle : public MeqParm
 {
 public:
   // Create a parameter with the given name.
-  explicit MeqParmSingle (const string& name, double initValue = 1);
+  explicit MeqParmSingle (const string& name, MeqParmGroup*,
+			  double initValue = 1);
 
   ~MeqParmSingle();
 
