@@ -29,39 +29,44 @@ namespace LCS
   {
 
     template<typename T>
-    void TPersistentObjectBase<T>::erase(const PersistenceBroker* const b)
+    void 
+    TPersistentObjectBase<T>::erase() const
     {
       THROW(NotImplemented, "Method is not yet implemented");
     }
 
     template<typename T>
-    void TPersistentObjectBase<T>::insert(const PersistenceBroker* const b)
+    void
+    TPersistentObjectBase<T>::insert() const
     {
-      doInsert(itsOwnerOid);
+      metaData() = MetaData();  // reset the meta data structure
+      doInsert(metaData());
     }
 
     template<typename T>
-    void TPersistentObjectBase<T>::retrieve(const PersistenceBroker* const b)
+    void
+    TPersistentObjectBase<T>::retrieve() const
     {
       THROW(NotImplemented, "Method is not yet implemented");
     }
 
     template<typename T>
-    void TPersistentObjectBase<T>::save(const PersistenceBroker* const b)
+    void
+    TPersistentObjectBase<T>::save() const
     {
       if (isPersistent()) {
-        doUpdate(itsOwnerOid);
+        doUpdate(metaData());
       }
       else {
-        doInsert(itsOwnerOid);
+        doInsert(metaData());
       }
-      isPersistent(true);
     }
 
     template<typename T>
-    void TPersistentObjectBase<T>::update(const PersistenceBroker* const b)
+    void
+    TPersistentObjectBase<T>::update() const
     {
-      doUpdate(itsOwnerOid);
+      doUpdate(metaData());
     }
 
   } // namespace PL
