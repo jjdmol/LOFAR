@@ -23,8 +23,7 @@ Stopwatch.h \
 StringUtil.h \
 hexdump.h \
 CheckConfig.h \
-Lorrays.h Lorrays-Blitz.h blitz_array-impl.h BlitzToAips.h \
-Lonumerics.h \
+Lorrays.h Lorrays-Blitz.h BlitzToAips.h Lonumerics.h \
 lofar_iostream.h				\
 lofar_fstream.h					\
 lofar_strstream.h				\
