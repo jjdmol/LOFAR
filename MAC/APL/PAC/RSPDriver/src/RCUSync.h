@@ -1,4 +1,4 @@
-//#  WGSetting.h: Waveform Generator control information
+//#  RCUSync.h: Synchronize rcu settings with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,51 +20,34 @@
 //#
 //#  $Id$
 
-#ifndef WGSETTING_H_
-#define WGSETTING_H_
+#ifndef RCUSYNC_H_
+#define RCUSYNC_H_
 
-#include <complex>
-#include <blitz/array.h>
-#include <Common/LofarTypes.h>
+#include "SyncAction.h"
 
-namespace RSP_Protocol
+namespace RSP
 {
-  class WGSetting
+  class RCUSync : public SyncAction
       {
       public:
 	  /**
-	   * Constructors for a WGSetting object.
-	   * Currently the tv_usec part is always set to 0 irrespective
-	   * of the value passed in.
+	   * Constructors for a RCUSync object.
 	   */
-	  WGSetting() { }
+	  explicit RCUSync(State initial);
 	  
-	  /* Destructor for WGSetting. */
-	  virtual ~WGSetting() {}
+	  /* Destructor for RCUSync. */
+	  virtual ~RCUSync();
 
-      public:
 	  /**
-	   * marshalling methods
+	   * Initial state handler.
 	   */
-	  /*@{*/
-	  unsigned int getSize();
-	  unsigned int pack  (void* buffer);
-	  unsigned int unpack(void *buffer);
-	  /*@}*/
+	  GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
 
       private:
-	  /**
-	   * Settings of the Waveform Generator
-	   */
-	  typedef struct WGRegister
-	  {
-	      uint16 mode;
-	      uint16 frequency;
-	      uint16 amplitude;
-	  };
+	  RCUSync();
 
-	  blitz::Array<WGRegister, 1> registers;
+      private:
       };
 };
      
-#endif /* WGSETTING_H_ */
+#endif /* RCUSYNC_H_ */

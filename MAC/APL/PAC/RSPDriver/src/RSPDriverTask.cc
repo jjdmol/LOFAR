@@ -43,6 +43,7 @@ RSPDriverTask::RSPDriverTask(string name)
     : GCFTask((State)&RSPDriverTask::initial, name)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
+  registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
   m_client.init(*this, "client", GCFPortInterface::SPP, RSP_PROTOCOL);
   m_board.init(*this, "board", GCFPortInterface::SAP, EPA_PROTOCOL /*, true*/);
@@ -57,11 +58,11 @@ bool RSPDriverTask::isEnabled()
   return m_client.isConnected() && m_board.isConnected();
 }
 
-GCFEvent::TResult RSPDriverTask::initial(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult RSPDriverTask::initial(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
-  switch(e.signal)
+  switch(event.signal)
   {
       case F_INIT:
       {
@@ -122,13 +123,13 @@ GCFEvent::TResult RSPDriverTask::initial(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   static int period = 0;
 
-  switch (e.signal)
+  switch (event.signal)
     {
 #if 0
     case F_ACCEPT_REQ:
@@ -137,12 +138,17 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& e, GCFPortInterface& port)
 #endif
     case F_ENTRY:
       {
+	/* Start the update timer */
+	m_board.setTimer((long)1); // update every second
       }
       break;
 
     case F_TIMER:
       {
-	GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
+	/* run the scheduler */
+	m_scheduler.run(event,port);
+
+	GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
 
 	LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
 

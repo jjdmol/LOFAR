@@ -30,7 +30,7 @@
 using namespace RSP;
 using namespace LOFAR;
 
-SyncAction::SyncAction()
+SyncAction::SyncAction(State handler) : GCFFsm(handler), m_priority(0), m_final(false)
 {
 }
 
@@ -43,4 +43,14 @@ void SyncAction::setPriority(int priority)
 {
   /* TODO: check range of priority argument ?*/
   m_priority = priority;
+}
+
+void SyncAction::setFinal(bool final)
+{
+  m_final = final;
+}
+
+bool SyncAction::isFinal() const
+{
+  return m_final;
 }

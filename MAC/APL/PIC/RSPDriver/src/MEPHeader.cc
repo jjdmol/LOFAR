@@ -1,4 +1,4 @@
-//#  Scheduler.cc: implementation of the Scheduler class
+//#  MEPHeader.h: implementation of the MEPHeader class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,29 +20,30 @@
 //#
 //#  $Id$
 
-#include "Scheduler.h"
+#include "MEPHeader.h"
 
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-
-using namespace RSP;
 using namespace LOFAR;
 
-Scheduler::Scheduler()
-{}
+using namespace RSP_Protocol;
+using namespace std;
 
-Scheduler::~Scheduler()
-{}
-
-void Scheduler::run(GCFEvent& event, GCFPortInterface& port)
+unsigned int MEPHeader::getSize()
 {
-  //event = event;
-  port = port;
+  return MEPHeader::SIZE;
 }
 
-void Scheduler::enter(Command& command)
+unsigned int MEPHeader::pack  (void* buffer)
 {
-  
+  buffer = buffer;
+  return 0;
+}
+
+unsigned int MEPHeader::unpack(void *buffer)
+{
+  buffer = buffer;
+  return 0;
 }

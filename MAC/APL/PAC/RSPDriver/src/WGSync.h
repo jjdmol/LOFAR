@@ -1,4 +1,4 @@
-//#  Scheduler.cc: implementation of the Scheduler class
+//#  WGSync.h: Synchronize rcu settings with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,29 +20,34 @@
 //#
 //#  $Id$
 
-#include "Scheduler.h"
+#ifndef WGSYNC_H_
+#define WGSYNC_H_
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
+#include "SyncAction.h"
 
-using namespace RSP;
-using namespace LOFAR;
-
-Scheduler::Scheduler()
-{}
-
-Scheduler::~Scheduler()
-{}
-
-void Scheduler::run(GCFEvent& event, GCFPortInterface& port)
+namespace RSP
 {
-  //event = event;
-  port = port;
-}
+  class WGSync : public SyncAction
+      {
+      public:
+	  /**
+	   * Constructors for a WGSync object.
+	   */
+	  explicit WGSync(State initial);
+	  
+	  /* Destructor for WGSync. */
+	  virtual ~WGSync();
 
-void Scheduler::enter(Command& command)
-{
-  
-}
+	  /**
+	   * Initial state handler.
+	   */
+	  GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+
+      private:
+	  WGSync();
+
+      private:
+      };
+};
+     
+#endif /* WGSYNC_H_ */

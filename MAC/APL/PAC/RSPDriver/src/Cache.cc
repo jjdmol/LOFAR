@@ -1,4 +1,4 @@
-//#  Scheduler.cc: implementation of the Scheduler class
+//#  Cache.cc: implementation of the Cache class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include "Scheduler.h"
+#include "Cache.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -29,20 +29,67 @@
 
 using namespace RSP;
 using namespace LOFAR;
+using namespace RSP_Protocol;
 
-Scheduler::Scheduler()
-{}
+/**
+ * CacheBuffer implementation
+ */
 
-Scheduler::~Scheduler()
-{}
-
-void Scheduler::run(GCFEvent& event, GCFPortInterface& port)
+CacheBuffer::CacheBuffer()
 {
-  //event = event;
-  port = port;
 }
 
-void Scheduler::enter(Command& command)
+CacheBuffer::~CacheBuffer()
 {
-  
+}
+
+const BeamletWeights&   CacheBuffer::getBeamletWeights()   const
+{
+  return m_beamletweights;
+}
+
+const SubbandSelection& CacheBuffer::getSubbandSelection() const
+{
+  return m_subbandselection;
+}
+
+const RCUSettings&      CacheBuffer::getRCUSettings()      const
+{
+  return m_rcusettings;
+}
+
+const WGSettings&       CacheBuffer::getWGSettings()       const
+{
+  return m_wgsettings;
+}
+
+const SystemStatus&     CacheBuffer::getSystemStatus()     const
+{
+  return m_systemstatus;
+}
+
+const Statistics&       CacheBuffer::getStatistics()       const
+{
+  return m_statistics;
+}
+
+const Versions&         CacheBuffer::getVersions()         const
+{
+  return m_versions;
+}
+
+/**
+ * Cache implementation
+ */
+
+Cache::Cache()
+{
+}
+
+Cache::~Cache()
+{
+}
+
+void Cache::swapBuffers()
+{
 }

@@ -1,4 +1,4 @@
-//#  Scheduler.cc: implementation of the Scheduler class
+//#  VersionsSync.cc: implementation of the VersionsSync class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include "Scheduler.h"
+#include "VersionsSync.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -30,19 +30,16 @@
 using namespace RSP;
 using namespace LOFAR;
 
-Scheduler::Scheduler()
-{}
-
-Scheduler::~Scheduler()
-{}
-
-void Scheduler::run(GCFEvent& event, GCFPortInterface& port)
+VersionsSync::VersionsSync() : SyncAction((State)&VersionsSync::initial_state)
 {
-  //event = event;
-  port = port;
 }
 
-void Scheduler::enter(Command& command)
+VersionsSync::~VersionsSync()
 {
-  
+  /* TODO: delete event? */
+}
+
+GCFEvent::TResult VersionsSync::initial_state(GCFEvent& event, GCFPortInterface& port)
+{
+  return GCFEvent::HANDLED;
 }

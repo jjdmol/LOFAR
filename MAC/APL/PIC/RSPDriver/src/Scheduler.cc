@@ -36,14 +36,13 @@ Scheduler::Scheduler()
 Scheduler::~Scheduler()
 {}
 
-void Scheduler::run(GCFEvent& event, GCFPortInterface& port, long tick)
+void Scheduler::run(GCFEvent& event, GCFPortInterface& port)
 {
   //event = event;
   port = port;
-  tick = tick;
 }
 
-void Scheduler::enter(Command command)
+void Scheduler::enter(Command& command)
 {
-  command = command;
+  
 }

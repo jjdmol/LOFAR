@@ -66,6 +66,11 @@ namespace RSP
 	  void setAnswerPort(GCFPortInterface* port);
 
 	  /**
+	   * Set the type of operation (READ/WRITE)
+	   */
+	  void setOperation(Operation oper);
+
+	  /**
 	   * Make necessary changes to the cache for the next synchronization.
 	   * Any changes will be sent to the RSP boards.
 	   */

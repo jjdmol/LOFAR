@@ -52,8 +52,8 @@ librsp_la_SOURCES = \
 	SubbandSelection.cc \
 	RCUSettings.h \
 	RCUSettings.cc \
-	WGSetting.h \
-	WGSetting.cc \
+	WGSettings.h \
+	WGSettings.cc \
 	SystemStatus.h \
 	SystemStatus.cc \
 	Statistics.h \
@@ -63,6 +63,8 @@ librsp_la_SOURCES = \
 	RSP_Protocol.cc
 
 libepa_la_SOURCES = \
+	MEPHeader.h \
+	MEPHeader.cc \
 	EPA_Protocol.cc
 
 bin_PROGRAMS = RSPDriver
@@ -74,8 +76,24 @@ RSPDriver_SOURCES = \
 	Scheduler.cc \
 	Command.h \
 	Command.cc \
+	Cache.h \
+	Cache.cc \
 	SyncAction.h \
-	SyncAction.cc
+	SyncAction.cc \
+	BWSync.h \
+	BWSync.cc \
+	SSSync.h \
+	SSSync.cc \
+	RCUSync.h \
+	RCUSync.cc \
+	WGSync.h \
+	WGSync.cc \
+	StatusSync.h \
+	StatusSync.cc \
+	StatsSync.h \
+	StatsSync.cc \
+	VersionsSync.h \
+	VersionsSync.cc
 
 RSPDriver_LDADD = \
 	$(top_builddir)/src/librsp.la \

@@ -28,6 +28,8 @@
 #include <GCF/GCF_Control.h>
 #include <GCF/GCF_ETHRawPort.h>
 
+#include "Scheduler.h"
+
 namespace RSP
 {
     class RSPDriverTask : public GCFTask
@@ -55,18 +57,20 @@ namespace RSP
 	 * and board ports. When they are both connected a transition
 	 * to the enabled state is made.
 	 */
-	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+	GCFEvent::TResult initial(GCFEvent& event, GCFPortInterface &port);
 
 	/**
 	 * The enabled state. In this state the task can receive
 	 * commands.
 	 */
-	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
+	GCFEvent::TResult enabled(GCFEvent& event, GCFPortInterface &port);
 
     private:
 	// ports
 	GCFPort m_client;
 	GCFPort m_board;
+
+	Scheduler m_scheduler;
     };
 
 };
