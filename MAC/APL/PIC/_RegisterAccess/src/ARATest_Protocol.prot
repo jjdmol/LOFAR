@@ -1,0 +1,114 @@
+//
+// Protocol definition for the RegisterAccess Test protocol
+//
+autogen definitions protocol;
+
+description = "Protocol for the RegisterAccess Test";
+prefix = "ARATEST"; // for the signal names
+id = "(F_APL_PROTOCOL+12)";
+
+// specify extra include files
+// e.g.
+include = '<sys/time.h>';
+//include = '"ARAConstants.h"';
+
+prelude = << PRELUDE_END
+
+namespace ARATest_Protocol
+{
+// define enums here
+};
+
+PRELUDE_END;
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+event = {
+      signal = WRITE_REGISTER;
+      dir = IN;
+      param = {
+	    name = "board";
+	    type = "unsigned int";
+      };
+      param = {
+	    name = "BP";
+	    type = "unsigned int";
+      };
+      param = {
+	    name = "AP";
+	    type = "unsigned int";
+      };
+      param = {
+	    name = "ETH";
+	    type = "unsigned int";
+      };
+      param = {
+	    name = "RCU";
+	    type = "unsigned int";
+      };
+      param = {
+        // new value for the register
+	    name = "value";
+	    type = "unsigned long";
+      };
+};
+
+event = {
+      signal = READ_REGISTER;
+      dir = IN;
+      param = {
+	    name = "board";
+	    type = "unsigned int";
+      };
+      param = {
+	    name = "BP";
+	    type = "unsigned int";
+      };
+      param = {
+	    name = "AP";
+	    type = "unsigned int";
+      };
+      param = {
+	    name = "ETH";
+	    type = "unsigned int";
+      };
+      param = {
+	    name = "RCU";
+	    type = "unsigned int";
+      };
+};
+
+event = {
+      signal = REGISTER_VALUE;
+      dir = OUT;
+      param = {
+	    name = "board";
+	    type = "unsigned int";
+      };
+      param = {
+	    name = "BP";
+	    type = "unsigned int";
+      };
+      param = {
+	    name = "AP";
+	    type = "unsigned int";
+      };
+      param = {
+	    name = "ETH";
+	    type = "unsigned int";
+      };
+      param = {
+	    name = "RCU";
+	    type = "unsigned int";
+      };
+      param = {
+        // value for the register
+	    name = "value";
+	    type = "int";
+      };
+};
+

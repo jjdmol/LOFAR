@@ -23,6 +23,14 @@
 #include "ARATestAnswer.h"
 #include <GCF/GCF_Task.h>
 
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
+using namespace LOFAR;
+using namespace ARA;
+
 ARATestAnswer::ARATestAnswer() : 
   m_dummyPort(),
   m_task(0)

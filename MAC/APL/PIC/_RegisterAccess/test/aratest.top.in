@@ -1,0 +1,10 @@
+
+[ARATest]
+RAtest=ARA:testServer
+
+[SS]
+client=PI:server
+
+[PMLlite]
+client=SS:server
+

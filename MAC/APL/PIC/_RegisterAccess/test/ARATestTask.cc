@@ -41,14 +41,28 @@
 #include "ARATestTask.h"
 #include "PropertyDefines.h" 
 
+#define DECLARE_SIGNAL_NAMES
+#include "ARATest_Protocol.ph"
+
 #include <stdio.h>
 
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
+using namespace LOFAR;
+using namespace ARA;
+using namespace std;
+
 string ARATestTask::m_taskName("ARATest");
+string ARATestTask::m_RATestServerName("RAtest");
 
 ARATestTask::ARATestTask(ARATest& tester) :
   GCFTask((State)&ARATestTask::initial, m_taskName),
   m_tester(tester),
   m_answer(),
+  m_RAtestPort(*this, m_RATestServerName, GCFPortInterface::SAP, ARATEST_PROTOCOL),
   m_test_passCounter(0),
   m_psBP(string("ApcFPGAType"),string(PROPERTIES_AP1)),
   m_psRCUmaintenance(string("ApcMaintenanceType"),string(PROPERTIES_AP1_RCU1_MAINTENANCE)),
@@ -64,7 +78,12 @@ ARATestTask::~ARATestTask()
 {
 }
 
-GCFEvent::TResult ARATestTask::initial(GCFEvent& event, GCFPortInterface& /*p*/)
+bool ARATestTask::isEnabled()
+{
+  return (m_RAtestPort.isConnected());
+}
+
+GCFEvent::TResult ARATestTask::initial(GCFEvent& event, GCFPortInterface& port)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::initial (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -75,8 +94,44 @@ GCFEvent::TResult ARATestTask::initial(GCFEvent& event, GCFPortInterface& /*p*/)
       break;
 
     case F_ENTRY:
+      if (!m_RAtestPort.isConnected()) 
+      {
+        m_RAtestPort.open();
+      }
       break;
     
+    case F_CONNECTED:
+    {
+      LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
+      if (isEnabled())
+      {
+        TRAN(ARATestTask::test1);
+      }
+      break;
+    }
+  
+    case F_DISCONNECTED:
+    {
+      port.setTimer((long)3); // try again in 3 seconds
+      LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+      port.close();
+      break;
+    }
+
+    case F_TIMER:
+    {
+      LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
+      port.open();
+      break;
+    }
+
+    case F_EXIT:
+    {
+      // cancel timers
+      m_RAtestPort.cancelAllTimers();
+      break;
+    }
+      
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::initial, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -541,13 +596,17 @@ GCFEvent::TResult ARATestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
     {
       m_psBoard1Alert.subscribe(string(PROPERTY_STATUS));
       
-      GCFPVUnsigned boardStatus(1);
-      bool testOk = (GCF_NO_ERROR==m_psBoard1.setValue(string(PROPERTY_STATUS),boardStatus));
-      m_tester._avttest(testOk);
-      if(!testOk)
-      {
-        TRAN(ARATestTask::test9);
-      }
+      // send write register message to RA test port
+      ARATESTWriteRegisterEvent wrEvent;
+      wrEvent.board = 1;
+      wrEvent.BP = 0; // not used
+      wrEvent.AP = 0; // not used
+      wrEvent.ETH = 0; // not used
+      wrEvent.RCU = 0; // not used
+      wrEvent.value = 1; // what is the status for erreur?
+      m_RAtestPort.send(wrEvent);
+
+      // now wait for the alert status to change    
       break;
     }
     
@@ -603,16 +662,19 @@ GCFEvent::TResult ARATestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
 
     case F_ENTRY:
     {
-      m_psBoard1Alert.subscribe(string(PROPERTY_STATUS));
+      // test8 already subscribed us to the alert status property
       
-      GCFPVUnsigned boardStatus(0);
-      bool testOk = (GCF_NO_ERROR==m_psBoard1.setValue(string(PROPERTY_STATUS),boardStatus));
-      m_tester._avttest(testOk);
-      if(!testOk)
-      {
-        m_psBoard1Alert.unsubscribe(string(PROPERTY_STATUS));
-        TRAN(ARATestTask::finished);
-      }
+      // send write register message to RA test port
+      ARATESTWriteRegisterEvent wrEvent;
+      wrEvent.board = 1;
+      wrEvent.BP = 0; // not used
+      wrEvent.AP = 0; // not used
+      wrEvent.ETH = 0; // not used
+      wrEvent.RCU = 0; // not used
+      wrEvent.value = 0; // what is the status for ok?
+      m_RAtestPort.send(wrEvent);
+
+      // now wait for the alert status to change    
       break;
     }
     

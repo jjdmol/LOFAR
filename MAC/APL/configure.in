@@ -73,6 +73,7 @@ PAC/VirtualTelescope/src/Makefile
 PAC/VirtualTelescope/test/Makefile
 PAC/VirtualTelescope/Makefile
 PAC/Makefile
+PIC/RegisterAccess/src/Makefile
 PIC/RegisterAccess/test/Makefile
 PIC/RegisterAccess/Makefile
 PIC/Makefile

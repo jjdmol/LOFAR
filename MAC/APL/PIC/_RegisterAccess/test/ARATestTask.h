@@ -35,49 +35,55 @@
 
 // forward declaration
 class GCFEvent;
-class ARATest;
 
-class ARATestTask : public GCFTask
+namespace ARA
 {
-  public:
-    ARATestTask(ARATest& tester);
-    virtual ~ARATestTask();
-
-  protected:
-    // protected copy constructor
-    ARATestTask(const ARATestTask&);
-    // protected assignment operator
-    ARATestTask& operator=(const ARATestTask&);
-    
-  private: 
-    GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test1(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test2(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test3(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test4(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test5(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test6(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test7(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test8(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test9(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test10(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
-    
-    
-    static string m_taskName;
-    
-    ARATest&        m_tester;
-    ARATestAnswer   m_answer;
-    
-    int             m_test_passCounter;
-    
-    GCFPropertySet m_psBP;
-    GCFPropertySet m_psRCUmaintenance;
-    GCFPropertySet m_psStationMaintenance;
-    GCFPropertySet m_psLDScommand;
-    GCFPropertySet m_psBoard1Alert;
-    GCFPropertySet m_psBoard1;
-    
+  class ARATest;
+  
+  class ARATestTask : public GCFTask
+  {
+    public:
+      ARATestTask(ARATest& tester);
+      virtual ~ARATestTask();
+  
+    protected:
+      // protected copy constructor
+      ARATestTask(const ARATestTask&);
+      // protected assignment operator
+      ARATestTask& operator=(const ARATestTask&);
+      
+    private: 
+      bool isEnabled();
+      GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test1(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test2(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test3(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test4(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test5(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test6(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test7(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test8(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test9(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test10(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
+      
+      
+      static string m_taskName;
+      static string m_RATestServerName;
+      
+      ARATest&        m_tester;
+      ARATestAnswer   m_answer;
+      GCFPort         m_RAtestPort;
+      
+      int             m_test_passCounter;
+      
+      GCFPropertySet m_psBP;
+      GCFPropertySet m_psRCUmaintenance;
+      GCFPropertySet m_psStationMaintenance;
+      GCFPropertySet m_psLDScommand;
+      GCFPropertySet m_psBoard1Alert;
+      GCFPropertySet m_psBoard1;
+  };  
 };
 
 #endif

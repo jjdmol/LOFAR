@@ -1,0 +1,14 @@
+[ARA]
+host=localhost
+testServer.type=TCP
+testServer.port=22040
+
+[SS]
+host=localhost
+client.type=TCP
+server.port=20042 # MSPP
+server.type=TCP
+
+[PMLlite]
+host=localhost
+client.type=TCP # SAP

@@ -5,6 +5,7 @@ autogen definitions protocol;
 
 description = "Protocol for the Beam Server";
 prefix = "ABS"; // for the signal names
+id = "(F_APL_PROTOCOL+10)";
 
 // specify extra include files
 // e.g.
@@ -12,9 +13,6 @@ include = '<sys/time.h>';
 include = '"ABSConstants.h"';
 
 prelude = << PRELUDE_END
-enum {
-	ABS_PROTOCOL = F_APL_PROTOCOL + 10
-};
 
 namespace ABS_Protocol
 {

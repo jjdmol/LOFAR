@@ -1,4 +1,4 @@
-//#  ARATestAnswer.h
+//#  ARAMain.cc: Main entry for the Register Access application
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,31 +20,41 @@
 //#
 //#  $Id$
 
-#ifndef ARATESTANSWER_H
-#define ARATESTANSWER_H
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
-#include <GCF/GCF_Answer.h>
-#include <GCF/GCF_Port.h>
+#include "ARARegisterAccessTask.h"
 
-class GCFEvent;
-class GCFTask;
+using namespace LOFAR;
+using namespace ARA;
+using namespace std;
 
-namespace ARA
+
+int main(int argc, char* argv[])
 {
-  class ARATestAnswer : public GCFAnswer
-  {
-    public:
-      ARATestAnswer();
-      ~ARATestAnswer();
-  
-      void setTask(GCFTask* t);
-      void handleAnswer(GCFEvent& answer);
-      
-    private:    
-      GCFPort  m_dummyPort;
-      GCFTask* m_task;
-  };
-  
-};
+#if 0
+  char prop_path[PATH_MAX];
+  const char* mac_config = getenv("MAC_CONFIG");
 
+  snprintf(prop_path, PATH_MAX-1,
+     "%s/%s", (mac_config?mac_config:"."),
+    "log4cplus.properties");
+  INIT_LOGGER(prop_path);
 #endif
+
+  LOG_INFO(formatString("Program %s has started", argv[0]));
+
+  GCFTask::init(argc, argv);
+
+  RegisterAccessTask ara("ARA");
+
+  ara.start(); // make initial transition
+
+  GCFTask::run();
+
+  LOG_INFO(formatString("Normal termination of program %s", argv[0]));
+
+}
+
