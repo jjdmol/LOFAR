@@ -41,7 +41,7 @@
 #include <CEPFrame/Step.h>
 #include <CEPFrame/Composite.h>
 #include <CEPFrame/WH_Empty.h>
-#include <CEPFrame/Profiler.h>
+#include <tinyCEP/Profiler.h>
 #include <OnLineProto/OnLineProto.h>
 
 //WorkHolders:
