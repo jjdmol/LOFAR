@@ -29,6 +29,13 @@
 #include <Common/Debug.h>
 #include <iomanip>
 
+
+#if (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
+#include <xmmintrin.h>
+#include <emmintrin.h>
+#endif
+
+
 namespace LOFAR {
 
 std::deque<MeqMatrixComplexArr*> MeqMatrixComplexArr::theirPool;
@@ -37,17 +44,15 @@ std::deque<MeqMatrixComplexArr*> MeqMatrixComplexArr::theirPool;
 // or smaller matrices
 int MeqMatrixComplexArr::theirNElements = 0;
 
-// to ensure 8-byte alignment of the data round the size
-// of the header up to the nearest multiple of 8 bytes
-size_t MeqMatrixComplexArr::theirHeaderSize =
-    ((sizeof(MeqMatrixComplexArr) >> 3) << 3)
-  + ((sizeof(MeqMatrixComplexArr) & 0x7)? 8 : 0);
+// to ensure 16-byte alignment of the data round the size
+// of the header up to the nearest multiple of 16 bytes
+#define MEQ_MATRIX_COMPLEX_ARR_HEADER_SIZE ((sizeof(MeqMatrixComplexArr) + 15) & ~15)
 
 MeqMatrixComplexArr::MeqMatrixComplexArr (int nx, int ny)
 : MeqMatrixRep (nx, ny, sizeof(complex<double>))
 {
   // data is found after the header
-  itsValue = (complex<double>*)(((char*)this) + theirHeaderSize);
+  itsValue = (complex<double>*)(((char*)this) + MEQ_MATRIX_COMPLEX_ARR_HEADER_SIZE);
 }
 
 MeqMatrixComplexArr::~MeqMatrixComplexArr()
@@ -96,6 +101,7 @@ MeqMatrixComplexArr* MeqMatrixComplexArr::poolNew(int nx, int ny)
 {
   MeqMatrixComplexArr* newArr = 0;
 
+#if 1
   if (nx * ny <= theirNElements)
   {
     if (theirPool.empty())
@@ -103,50 +109,47 @@ MeqMatrixComplexArr* MeqMatrixComplexArr::poolNew(int nx, int ny)
       // allocate memory for the header and the maximum amount of data (theirNElements)
       // only nx * ny elements will be used, but the array can be reused for an array
       // of size theirNElements
-      newArr = (MeqMatrixComplexArr*)malloc(theirHeaderSize +
-					    (theirNElements * sizeof(complex<double>)));
-
-      // placement new to call constructor
-      newArr = new (newArr) MeqMatrixComplexArr(nx, ny);
-      newArr->setInPool(true);
-      newArr->setIsMalloced(true);
+      newArr = (MeqMatrixComplexArr*) new char [MEQ_MATRIX_COMPLEX_ARR_HEADER_SIZE +
+					    (theirNElements * sizeof(complex<double>))];
     }
     else
     {
       newArr = theirPool.back();
-      newArr = new (newArr) MeqMatrixComplexArr(nx, ny);
-      newArr->setInPool(true);
-      newArr->setIsMalloced(true);
-
       theirPool.pop_back();
     }
+    // placement new to call constructor
+    new (newArr) MeqMatrixComplexArr(nx, ny);
+    newArr->setInPool(true);
   }
   else
+#endif
   {
     // allocate enough memory
-    newArr = (MeqMatrixComplexArr*)malloc(theirHeaderSize +
-					  (nx * ny * sizeof(complex<double>)));
+    newArr = (MeqMatrixComplexArr*) new char [MEQ_MATRIX_COMPLEX_ARR_HEADER_SIZE +
+					  (nx * ny * sizeof(complex<double>))];
     // placement new
-    newArr = new (newArr) MeqMatrixComplexArr(nx, ny);
+    new (newArr) MeqMatrixComplexArr(nx, ny);
 
-    // set inPool to false so this matrix will be delete'd.
-    newArr->setInPool(false);
-    newArr->setIsMalloced(true);
+    // set inPool is cleared by constructor so this matrix will be delete'd.
+    // newArr->setInPool(false);
   }
 
+  newArr->setIsMalloced(true);
   return newArr;
 }
 
 void MeqMatrixComplexArr::poolDelete()
 {
+#if 1
   Assert(inPool() || isMalloced());
   if (inPool())
   {
     theirPool.push_front(this);
   }
   else // isMalloced
+#endif
   {
-    free(this);
+    delete (char *) this;
   }
 }
 
@@ -156,7 +159,7 @@ void MeqMatrixComplexArr::poolDeactivate()
   deque<MeqMatrixComplexArr*>::iterator pos;
   for (pos = theirPool.begin(); pos < theirPool.end(); ++pos)
   {
-    free(*pos);
+    delete (char *) *pos;
   }
   theirPool.clear();
 
@@ -198,6 +201,7 @@ complex<double> MeqMatrixComplexArr::getDComplex (int x, int y) const
 {
   return itsValue[offset(x,y)];
 }
+
 
 #define MNSMATRIXCOMPLEXARR_OP(NAME, OP, OP2) \
 MeqMatrixRep* MeqMatrixComplexArr::NAME (MeqMatrixRealSca& left, \
@@ -247,10 +251,226 @@ MeqMatrixRep* MeqMatrixComplexArr::NAME (MeqMatrixComplexArr& left, \
   return &left; \
 }
 
+#if !((defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER))
 MNSMATRIXCOMPLEXARR_OP(addRep,+=,+);
 MNSMATRIXCOMPLEXARR_OP(subRep,-=,-);
 MNSMATRIXCOMPLEXARR_OP(mulRep,*=,*);
+#endif
 MNSMATRIXCOMPLEXARR_OP(divRep,/=,/);
+
+
+#if (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
+
+MeqMatrixRep *MeqMatrixComplexArr::addRep(MeqMatrixRealSca& left, bool rightTmp)
+{
+  MeqMatrixComplexArr* v = this;
+
+  if (!rightTmp)
+    v = (MeqMatrixComplexArr*) clone();
+
+  __m128d src   = _mm_load_sd(&left.itsValue);
+  __m128d *dest = (__m128d *) v->itsValue;
+  size_t  count = nelements();
+
+  for (size_t i = 0; i < count; i ++)
+    dest[i] = _mm_add_pd(src, dest[i]);
+
+  return v;
+}
+
+MeqMatrixRep *MeqMatrixComplexArr::addRep(MeqMatrixComplexSca& left, bool rightTmp)
+{
+  MeqMatrixComplexArr* v = this;
+
+  if (!rightTmp)
+    v = (MeqMatrixComplexArr*) clone();
+
+  __m128d src   = _mm_loadu_pd((double *) &left.itsValue);
+  __m128d *dest = (__m128d *) v->itsValue;
+  size_t  count = nelements();
+
+  for (size_t i = 0; i < count; i ++)
+    dest[i] = _mm_add_pd(src, dest[i]);
+
+  return v;
+}
+
+MeqMatrixRep *MeqMatrixComplexArr::addRep(MeqMatrixRealArr& left, bool rightTmp)
+{
+  MeqMatrixComplexArr* v = this;
+
+  if (!rightTmp)
+    v = (MeqMatrixComplexArr*) clone();
+
+  __m128d *dest = (__m128d *) v->itsValue;
+  size_t  count = nelements();
+
+  for (size_t i = 0; i < count; i ++)
+    dest[i] = _mm_add_pd(_mm_load_sd(left.itsValue + i), dest[i]);
+
+  return v;
+}
+
+MeqMatrixRep *MeqMatrixComplexArr::addRep(MeqMatrixComplexArr& left, bool rightTmp)
+{
+  __m128d *src  = (__m128d *) itsValue;
+  __m128d *dest = (__m128d *) left.itsValue;
+  size_t  count = nelements();
+
+  for (size_t i = 0; i < count; i ++)
+    dest[i] = _mm_add_pd(dest[i], src[i]);
+
+  return &left;
+}
+
+MeqMatrixRep *MeqMatrixComplexArr::subRep(MeqMatrixRealSca& left, bool rightTmp)
+{
+  MeqMatrixComplexArr* v = this;
+
+  if (!rightTmp)
+    v = (MeqMatrixComplexArr*) clone();
+
+  __m128d src   = _mm_load_sd(&left.itsValue);
+  __m128d *dest = (__m128d *) v->itsValue;
+  size_t  count = nelements();
+
+  for (size_t i = 0; i < count; i ++)
+    dest[i] = _mm_sub_pd(src, dest[i]);
+
+  return v;
+}
+
+MeqMatrixRep *MeqMatrixComplexArr::subRep(MeqMatrixComplexSca& left, bool rightTmp)
+{
+  MeqMatrixComplexArr* v = this;
+
+  if (!rightTmp)
+    v = (MeqMatrixComplexArr*) clone();
+
+  __m128d src   = _mm_loadu_pd((double *) &left.itsValue);
+  __m128d *dest = (__m128d *) v->itsValue;
+  size_t  count = nelements();
+
+  for (size_t i = 0; i < count; i ++)
+    dest[i] = _mm_sub_pd(src, dest[i]);
+
+  return v;
+}
+
+MeqMatrixRep *MeqMatrixComplexArr::subRep(MeqMatrixRealArr& left, bool rightTmp)
+{
+  MeqMatrixComplexArr* v = this;
+
+  if (!rightTmp)
+    v = (MeqMatrixComplexArr*) clone();
+
+  __m128d *dest = (__m128d *) v->itsValue;
+  size_t  count = nelements();
+
+  for (size_t i = 0; i < count; i ++)
+    dest[i] = _mm_sub_pd(_mm_load_sd(left.itsValue + i), dest[i]);
+
+  return v;
+}
+
+MeqMatrixRep *MeqMatrixComplexArr::subRep(MeqMatrixComplexArr& left, bool rightTmp)
+{
+  __m128d *src  = (__m128d *) itsValue;
+  __m128d *dest = (__m128d *) left.itsValue;
+  size_t  count = nelements();
+
+  for (size_t i = 0; i < count; i ++)
+    dest[i] = _mm_sub_pd(dest[i], src[i]);
+
+  return &left;
+}
+
+MeqMatrixRep *MeqMatrixComplexArr::mulRep(MeqMatrixRealSca& left, bool rightTmp)
+{
+  MeqMatrixComplexArr* v = this;
+
+  if (!rightTmp)
+    v = (MeqMatrixComplexArr*) clone();
+
+  __m128d src   = _mm_load1_pd(&left.itsValue);
+  __m128d *dest = (__m128d *) v->itsValue;
+  size_t  count = nelements();
+
+  for (size_t i = 0; i < count; i ++)
+    dest[i] = _mm_mul_pd(src, dest[i]);
+
+  return v;
+}
+
+MeqMatrixRep *MeqMatrixComplexArr::mulRep(MeqMatrixComplexSca& left, bool rightTmp)
+{
+  MeqMatrixComplexArr* v = this;
+
+  if (!rightTmp)
+    v = (MeqMatrixComplexArr*) clone();
+
+  __m128d *dest = (__m128d *) v->itsValue;
+  __m128d ar    = _mm_load1_pd((double *) &left.itsValue);
+  __m128d ai    = _mm_load1_pd((double *) &left.itsValue + 1);
+  size_t  count = nelements() - 1;
+
+  for (size_t i = 0; i < count; i += 2) {
+    __m128d br = _mm_unpacklo_pd(dest[i], dest[i+1]);
+    __m128d bi = _mm_unpackhi_pd(dest[i], dest[i+1]);
+    __m128d cr = _mm_sub_pd(_mm_mul_pd(ar, br), _mm_mul_pd(ai, bi));
+    __m128d ci = _mm_add_pd(_mm_mul_pd(ar, bi), _mm_mul_pd(ai, br));
+
+    dest[i]    = _mm_unpacklo_pd(cr,ci);
+    dest[i+1]  = _mm_unpackhi_pd(cr,ci);
+  }
+
+  if ((count & 1) == 0) // uneven array length
+    v->itsValue[count] *= left.itsValue;
+
+  return v;
+}
+
+MeqMatrixRep *MeqMatrixComplexArr::mulRep(MeqMatrixRealArr& left, bool rightTmp)
+{
+  MeqMatrixComplexArr* v = this;
+
+  if (!rightTmp)
+    v = (MeqMatrixComplexArr*) clone();
+
+  __m128d *dest = (__m128d *) v->itsValue;
+  size_t  count = nelements();
+
+  for (size_t i = 0; i < count; i ++)
+    dest[i] = _mm_mul_pd(_mm_load1_pd(left.itsValue + i), dest[i]);
+
+  return v;
+}
+
+MeqMatrixRep *MeqMatrixComplexArr::mulRep(MeqMatrixComplexArr& left, bool rightTmp)
+{
+  __m128d *src  = (__m128d *) itsValue;
+  __m128d *dest = (__m128d *) left.itsValue;
+  size_t  count = nelements() - 1;
+
+  for (size_t i = 0; i < count; i += 2) {
+    __m128d ar = _mm_unpacklo_pd(src[i], src[i+1]);
+    __m128d ai = _mm_unpackhi_pd(src[i], src[i+1]);
+    __m128d br = _mm_unpacklo_pd(dest[i], dest[i+1]);
+    __m128d bi = _mm_unpackhi_pd(dest[i], dest[i+1]);
+    __m128d cr = _mm_sub_pd(_mm_mul_pd(ar, br), _mm_mul_pd(ai, bi));
+    __m128d ci = _mm_add_pd(_mm_mul_pd(ar, bi), _mm_mul_pd(ai, br));
+
+    dest[i]    = _mm_unpacklo_pd(cr,ci);
+    dest[i+1]  = _mm_unpackhi_pd(cr,ci);
+  }
+
+  if ((count & 1) == 0) // uneven array length
+    left.itsValue[count] *= itsValue[count];
+
+  return &left;
+}
+
+#endif
 
 
 MeqMatrixRep* MeqMatrixComplexArr::negate()
