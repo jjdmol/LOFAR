@@ -74,8 +74,10 @@ WH_PreCorrect::WH_PreCorrect (const string& name,
 }
   // allocate the correctionvector and initialise to unit
   itsCorrectionVector = new DH_2DMatrix::DataType[stationDim];
-  for (int i=0; i<stationDim; i++) setCorrectionVector(i,DH_2DMatrix::DataType(1,0));
-
+  for (int i=0; i<stationDim; i++) {
+    setCorrectionVector(i,DH_2DMatrix::DataType(0.5+1.0*random()/RAND_MAX,0.5+1.0*random()/RAND_MAX));
+    //setCorrectionVector(i,DH_2DMatrix::DataType(1,0));
+  }
   if (theirProcessProfilerState == 0) {
     theirProcessProfilerState = Profiler::defineState("WH_PreCorrect","purple");
   }
