@@ -113,7 +113,7 @@ void DBRep<DH_Example2>::toDBRep (const DH_Example2& obj)    //PL
   itsCounter = obj.getCounter();                             //PL
 }                                                            //PL
 
-//# Force the instantiation of the templates.                //PL
+//# Force the instantiation of the template.                 //PL
 template class TPersistentObject<DH_Example2>;               //PL
 
 }  // end namespace PL                                       //PL 
