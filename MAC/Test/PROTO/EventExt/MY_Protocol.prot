@@ -18,7 +18,7 @@ include = "<TransObject.h>";
 //
 
 event = {
-	signal = BEAM_ALLOC;
+	signal = BeamAlloc;
 	dir = IN;
 	param = {
 		name = "param1";
@@ -46,3 +46,31 @@ event = {
 	};
 };
 
+event = {
+	signal = SetRCU;
+	dir = IN;
+	param = {
+		name = "param1";
+		type = "int";
+	};
+	sequence = {
+		name = "ext1";
+		type = "int";
+	};
+	param = {
+		name = "param2";
+		type = "int";
+	};
+	sequence = {
+		name = "ext2";
+		type = "char";
+	};
+	object = {
+		name = "ext3";
+		type = "string";
+	};
+	object = {
+		name = "obj1";
+		type = "TransObject";
+	};
+};
