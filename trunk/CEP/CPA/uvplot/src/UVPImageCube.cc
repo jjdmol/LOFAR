@@ -14,6 +14,7 @@
 
 
 
+#ifdef KRCS_USE_VECTOR
 //====================>>>  UVPImageCube::UVPImageCube  <<<====================
 
 UVPImageCube::UVPImageCube(unsigned int nx,
@@ -27,11 +28,52 @@ UVPImageCube::UVPImageCube(unsigned int nx,
     itsAxis(3)
 {
 }
+#endif
+
+
+
+//====================>>>  UVPImageCube::UVPImageCube  <<<====================
+
+UVPImageCube::UVPImageCube(unsigned int nx,
+                           unsigned int ny,
+                           unsigned int nz)
+  : itsCube(0),
+    itsNx(nx),
+    itsNy(ny),
+    itsNz(nz),
+    itsAxis(3)
+{
+  itsCube = new UVPPixel**[nx];
+  for(unsigned int x = 0; x < nx; x++) {
+    itsCube[x] = new UVPPixel*[ny];
+    
+    for(unsigned int y = 0; y < ny; y++) {
+      itsCube[x][y] = new UVPPixel[nz];
+    }
+  }
+}
 
 
 
 
 
+//====================>>>  UVPImageCube::UVPImageCube  <<<====================
+
+UVPImageCube::~UVPImageCube()  
+{
+  for(unsigned int x = 0; x < itsNx; x++) {
+    for(unsigned int y = 0; y < itsNy; y++) {
+      delete[] itsCube[x][y];
+    }
+    delete[] itsCube[x];
+  }
+  delete[] itsCube;
+}
+
+
+
+
+#if NOT_INLINE_GETPIXELasdaf
 //====================>>>  UVPImageCube::getPixel  <<<====================
 
 UVPPixel *UVPImageCube::getPixel(unsigned int x,
@@ -39,9 +81,9 @@ UVPPixel *UVPImageCube::getPixel(unsigned int x,
                                  unsigned int z)
 {
 #if(DEBUG_MODE)
-  assert( x >= 0 && x < itsCube().size());
-  assert( y >= 0 && y < itsCube()[0].size());
-  assert( z >= 0 && z < itsCube()[0][0].size());
+  assert( x >= 0 && x < itsNx);
+  assert( y >= 0 && y < itsNy);
+  assert( z >= 0 && z < itsNz);
 #endif
 
   return &(itsCube[x][y][z]);
@@ -59,14 +101,14 @@ const UVPPixel *UVPImageCube::getPixel(unsigned int x,
                                        unsigned int z) const
 {
 #if(DEBUG_MODE)
-  assert( x >= 0 && x < itsCube().size());
-  assert( y >= 0 && y < itsCube()[0].size());
-  assert( z >= 0 && z < itsCube()[0][0].size());
+  assert( x >= 0 && x < itsNx);
+  assert( y >= 0 && y < itsNy);
+  assert( z >= 0 && z < itsNz);
 #endif
 
   return &(itsCube[x][y][z]);
 }
-
+#endif
 
 
 
@@ -87,19 +129,19 @@ unsigned int UVPImageCube::getN(Coordinate coordinate) const
   switch(coordinate) {
   case X:
     {
-      n = itsCube.size();
+      n = itsNx;
     }
     break;
 
   case Y:
     {
-      n = itsCube[0].size();
+      n = itsNy;
     }
     break;
 
   case Z:
     {
-      n = itsCube[0][0].size();
+      n = itsNz;
     }
     break;
 

@@ -10,35 +10,39 @@
 
 
 #include <qwidget.h>
-#include <qpainter.h>
 #include <qpixmap.h>
+
+
 
 
 class UVPDisplayArea : public QWidget
 {
  public:                        /* Public part */
 
-               UVPDisplayArea(QWidget *parent);
+               UVPDisplayArea(QWidget *parent, int numColors=256);
               ~UVPDisplayArea();
 
- void         initColormap(double slope,
-                           double center);
+ void          initColormap(double slope,
+                            double center);
 
-  void         drawView();
+ unsigned int  getNumberOfColors() const;
+ const QColor *getColor(unsigned int color) const;
+ 
+
+ virtual void drawView();
 
  protected:                     /* Protected part */
+
+  QPixmap      itsBuffer;
 
   virtual void paintEvent(QPaintEvent *event);
   virtual void resizeEvent(QResizeEvent *event);
   virtual void mousePressEvent(QMouseEvent *event);
   virtual void mouseMoveEvent(QMouseEvent *event);
 
-
  private:
   
   std::vector<QColor> itsColormap;
-  QPixmap             itsBuffer;
-
 
 };
 

@@ -24,7 +24,7 @@ UVPPixel::UVPPixel()
 
 
 
-
+#if(ADD_POINT_TRUECALKJHD)
 //====================>>>  UVPPixel::addPoint  <<<====================
 
 bool UVPPixel::addPoint(double value,
@@ -46,7 +46,9 @@ bool UVPPixel::addPoint(double value,
   itsRowIndex.push_back(rowIndex);
 
   itsAverageValue = 0.0;
-  for(unsigned int i = 0; i < itsValue.size(); i++) {
+
+  unsigned int N = itsValue.size();
+  for(unsigned int i = 0; i < N; i++) {
     cumulativeWeight += itsWeight[i];
     itsAverageValue  += itsWeight[i]*itsValue[i];
   }
@@ -57,6 +59,7 @@ bool UVPPixel::addPoint(double value,
   
   return true;
 }
+#endif
 
 
 
@@ -65,13 +68,30 @@ bool UVPPixel::addPoint(double value,
 
 
 
+//====================>>>  UVPPixel::addPointUniform  <<<====================
 
-//====================>>>  UVPPixel::getAverageValue  <<<====================
-
-double UVPPixel::getAverageValue() const
+bool UVPPixel::addPointUniform(double value,
+                               int    rowIndex)
 {
-  return itsAverageValue;
+  #if(DEBUG_MODE)
+  assert(weight > 0);
+  #endif
+
+  double CumulativeWeight = 0.0;
+  int    NumberOfPoints = itsRowIndex.size();
+
+  itsRowIndex.push_back(rowIndex);
+
+  itsAverageValue *= NumberOfPoints;
+  itsAverageValue += value;
+  itsAverageValue /= (NumberOfPoints+1);
+
+
+  return true;
 }
+
+
+
 
 
 
