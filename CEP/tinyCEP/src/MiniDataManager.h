@@ -69,6 +69,14 @@ namespace LOFAR
     void readyWithInHolder(int channel);
     void readyWithOutHolder(int channel);
 
+    void setProcessRate(int rate);
+    void setInputRate(int rate);
+    void setOutputRate(int rate);
+
+    int getProcessRate();
+    int getInputRate();
+    int getOutputRate();
+
     /// Get the number of inputs or outputs.
     int getInputs() const;
     int getOutputs() const;
@@ -86,6 +94,13 @@ namespace LOFAR
 
     /// A static to keep track of the DataHolderID's
     static int DataHolderID;
+
+    /// the DataManager also stores the input- output- and 
+    /// processrates.
+    int itsProcessRate;
+    int itsInputRate;
+    int itsOutputRate;
+
   };
 
 inline int MiniDataManager::getInputs() const
@@ -105,6 +120,24 @@ inline bool MiniDataManager::doAutoTriggerIn(int channel) const
 
 inline bool MiniDataManager::doAutoTriggerOut(int channel) const
 { return false; }
+
+inline void MiniDataManager::setProcessRate(int rate)
+{ itsProcessRate = rate; }
+
+inline void MiniDataManager::setInputRate(int rate)
+{ itsInputRate = rate; }
+
+inline void MiniDataManager::setOutputRate(int rate)
+{ itsOutputRate = rate; }
+
+inline int MiniDataManager::getProcessRate()
+{ return itsProcessRate; }
+
+inline int MiniDataManager::getInputRate()
+{ return itsInputRate; }
+
+inline int MiniDataManager::getOutputRate()
+{ return itsOutputRate; }
 
 } // namespace LOFAR
 #endif

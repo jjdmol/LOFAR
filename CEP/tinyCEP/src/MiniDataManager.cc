@@ -29,7 +29,11 @@ namespace LOFAR
 
   MiniDataManager::MiniDataManager(int ninputs, int noutputs):
     itsNinputs(ninputs), 
-    itsNoutputs(noutputs) {
+    itsNoutputs(noutputs),
+    itsProcessRate(1),
+    itsInputRate(1),
+    itsOutputRate(1)
+  {
     
     itsInDHs = new DataHolder* [ninputs];
     itsOutDHs = new DataHolder* [noutputs];

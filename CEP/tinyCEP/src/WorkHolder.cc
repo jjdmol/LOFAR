@@ -50,19 +50,21 @@ WorkHolder::WorkHolder (int inputs, int outputs,
   itsNoutputs         (outputs),
   itsName             (name),
   itsType             (type),
-  itsFirstProcessCall (true)
+  itsFirstProcessCall (true),
+  itsProcessStep      (1)
 {
 //   TRACER2("WorkHolder constructor");
   itsDataManager = new MiniDataManager(inputs, outputs);
 }
 
 WorkHolder::WorkHolder (const WorkHolder& that)
-: itsNinputs          (that.itsNinputs), 
+: itsDataManager      (0),
+  itsNinputs          (that.itsNinputs), 
   itsNoutputs         (that.itsNoutputs),
   itsName             (that.itsName),
   itsType             (that.itsType),
-  itsDataManager      (0),
-  itsFirstProcessCall (that.itsFirstProcessCall)
+  itsFirstProcessCall (that.itsFirstProcessCall),
+  itsProcessStep      (that.itsProcessStep)
 {}
 
 WorkHolder::~WorkHolder()
@@ -128,6 +130,9 @@ void WorkHolder::baseProcess ()
 
     for (int input=0; input<itsNinputs; input++) {
 //       if (getDataManager().getGeneralInHolder(input)->doHandle()) {
+
+      // temporary in-rate sollution
+      if ( itsProcessStep % getDataManager().getInputRate() == 0 ) {
 	
 	// for selector type handle locking
 	if (getDataManager().hasInputSelector() == false) {
@@ -141,25 +146,33 @@ void WorkHolder::baseProcess ()
 	  getDataManager().readyWithInHolder(input); 
 	  
 	}
-//       }
+      }
     }
   } 
 
   // Now we have the input data avialable
   // and it is time to do the real work; call the process()
-  process();
-  
+  if ( (itsProcessStep % getDataManager().getProcessRate()) == 0) {
+    process();
+  }
 
   for (int output=0; output<itsNoutputs; output++)	{
+
 //     if (getDataManager().getGeneralOutHolder(output)->doHandle()) {
+    if ( itsProcessStep % getDataManager().getOutputRate() == 0 ) {
+
       if (getDataManager().hasOutputSelector() == false) {
 	getDataManager().getOutHolder(output);
       }
       if (getDataManager().doAutoTriggerOut(output)) { 
 	getDataManager().readyWithOutHolder(output); // Will cause writing of data
       }
-//     }
+
+    }
   } 
+
+  
+  itsProcessStep++;
 }
 
 void WorkHolder::basePostprocess()
@@ -249,6 +262,10 @@ WorkHolder::WHConstruct* WorkHolder::getConstruct (const string& name)
 int WorkHolder::getMonitorValue (const char*)
 {
   return 0;
+}
+
+bool WorkHolder::doHandle() {
+  return ( itsProcessStep % getDataManager().getProcessRate() == 0 );
 }
 
 }
