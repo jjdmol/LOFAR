@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.6  2001/11/05 17:01:07  schaaf
+//  Output of multiple measurement on one line
+//
 //  Revision 1.5  2001/10/31 11:34:18  wierenga
 //  LOFAR CVS Repository structure change and transition to autotools (autoconf, automake and libtool).
 //
@@ -115,7 +118,10 @@ void WH_GrowSize::process()
 	       << log10(itsInHolders[0]->getDataPacketSize()) << " ";
 	}
 	cout << (itsInHolders[0]->getDataPacketSize() / (1024. * 1024.) / watch.elapsed()) 
-	     << "  ";
+	     << "  "
+	     << watch.elapsed()
+	     << "  "
+;
       }
     watch.start();
   }

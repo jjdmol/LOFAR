@@ -16,7 +16,8 @@ int main (int argc, char** argv)
     P2Perf simulator;
     simulator.setarg (argc, argv);
 
-#ifndef HAVE_MPI
+//#ifndef HAVE_MPI
+#ifdef NOTDEFINED
         cout << endl;
 	cout << "  * Type 'define;' to define the simulation" << endl;
 	cout <<	"  * Type 'run;'    to run the simulation" << endl;
