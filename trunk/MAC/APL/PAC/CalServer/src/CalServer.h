@@ -24,49 +24,60 @@
 #ifndef CALSERVER_H_
 #define CALSERVER_H_
 
+#include "SpectralWindow.h"
+#include "AntennaArray.h"
+
 #include <GCF/TM/GCF_Control.h>
 
 namespace CAL
 {
   class CalServer : public GCFTask
   {
-    public:
-      /**
-       * The constructor of the CalServer task.
-       * @param name The name of the task. The name is used for looking
-       * up connection establishment information using the GTMNameService and
-       * GTMTopologyService classes.
-       */
-      CalServer(string name);
-      virtual ~CalServer();
+  public:
+    /**
+     * The constructor of the CalServer task.
+     * @param name The name of the task. The name is used for looking
+     * up connection establishment information using the GTMNameService and
+     * GTMTopologyService classes.
+     */
+    CalServer(string name);
+    virtual ~CalServer();
 
-      /**
-       * Are all ports connected and are we ready to go to the
-       * enabled state?
-       */
-      bool isEnabled();
+    /**
+     * Are all ports connected and are we ready to go to the
+     * enabled state?
+     */
+    bool isEnabled();
 
-      /**
-       * The initial state.
-       */
-      GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+    /**
+     * The initial state.
+     */
+    GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
 
-      /**
-       * The undertaker method deletes dead clients on the m_dead_clients list.
-       */
-      void undertaker();
+    /**
+     * The undertaker method deletes dead clients on the m_dead_clients list.
+     */
+    void undertaker();
 
-      /**
-       * The enabled state.
-       */
-      GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
+    /**
+     * The enabled state.
+     */
+    GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
 
-    private:
-      GCFTCPPort                   m_acceptor;     // connect point for clients
-      std::list<GCFPortInterface*> m_clients;      // list of clients
-      std::list<GCFPortInterface*> m_dead_clients; // list of disconnected clients
+  private:
+    /**
+     * List of defined spectral windows.
+     */
+    std::vector<SpectralWindow*> m_spws;          // vector of spectral windows (read from config file)
+    std::vector<AntennaArray*>   m_antennaarrays; // vector of antenna arrays (read from config file)
 
-      GCFPort m_acmserver; // connection to the ACM server
+    /**
+     * Client/Server management member variables.
+     */
+    GCFTCPPort                   m_acceptor;     // connect point for clients
+    std::list<GCFPortInterface*> m_clients;      // list of clients
+    std::list<GCFPortInterface*> m_dead_clients; // list of disconnected clients
+    GCFPort                      m_acmserver;    // connection to the ACM server
   };
 };
      

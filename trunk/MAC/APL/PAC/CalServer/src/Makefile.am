@@ -15,13 +15,15 @@ SUFFIXES = .ph
 
 BUILT_SOURCES = \
 	CalServer.conf \
-	CAL_Protocol.ph
+	CAL_Protocol.ph \
+	SpectralWindow.conf
 
 EXTRA_DIST = \
 	CAL_Protocol.ph
 
 sysconf_DATA = \
-	CalServer.conf
+	CalServer.conf \
+	SpectralWindow.conf
 
 include_HEADERS = \
 	$(top_builddir)/src/CAL_Protocol.ph
@@ -35,10 +37,26 @@ include_HEADERS = \
 lib_LTLIBRARIES = libcal.la
 
 libcal_la_SOURCES = \
-	CalInterface.h \
-	CalAlgorithm.h \
-	CalAlgorithm.cc \
-	$(top_builddir)/src/CAL_Protocol.cc
+	$(top_builddir)/src/CAL_Protocol.cc \
+	ACC.h \
+	ACC.cc \
+	Source.h \
+	Source.cc \
+	SourceCatalog.h \
+	SourceCatalog.cc \
+	SpectralWindow.h \
+	SpectralWindow.cc \
+	AntennaArray.h \
+	AntennaArray.cc \
+	SubArray.h \
+	SubArray.cc \
+	CalibrationInterface.h \
+	CalibrationAlgorithm.h \
+	CalibrationAlgorithm.cc \
+	CalibrationResult.h \
+	CalibrationResult.cc \
+	RemoteStationCalibration.h \
+	RemoteStationCalibration.cc
 
 bin_PROGRAMS = CalServer
 

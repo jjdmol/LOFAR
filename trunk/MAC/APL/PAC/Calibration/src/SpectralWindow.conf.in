@@ -1,0 +1,8 @@
+
+#
+# Definitions of Spectral Windows
+#
+# Define the first three nyquist zones for 160 and 200 MHz sampling rate
+#
+SpectralWindow.params= 6 x 3 [ 160e6 1 512 160e6 2 512 160e6 3 512 200e6 1 512 200e6 2 512 200e6 3 512 ]
+SpectralWindow.names=  6     [     "80"        "160"       "240"       "100"       "200"       "300"   ]
