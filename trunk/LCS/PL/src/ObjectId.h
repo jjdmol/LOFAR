@@ -59,21 +59,25 @@ namespace LCS
       void set(const oid_t& aOid);
 
       // Return the stored object-id.
-      // \note We cannot make this method const, because we use lazy
-      // initialization for itsOid.
       // \post itsOid will have been initialized if it wasn't already.
       // \post itsIsInitialized is true.
-      const oid_t& get();
+      const oid_t& get() const;
 
     private:
       // Here we keep the unique object-id.
-      oid_t itsOid;
+      // \note itsOid must be mutable because we use lazy initialization in 
+      // the get() method.
+      mutable oid_t itsOid;
 
       // Flag that indicates whether itsOid has been initialized.
-      bool itsIsInitialized;
+      // \note itsIsInitialized must be mutable because we use lazy
+      // initialization in the get() method.
+      mutable bool itsIsInitialized;
 
       // Initialize itsOid with a (hopefully) unique object-id.
-      void init();
+      // \note This method must be const, because it is called by get(), but
+      // it \e does change itsOid and itsIsInitialized.
+      void init() const;
 
     };
 
