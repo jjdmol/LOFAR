@@ -22,6 +22,12 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2002/11/20 11:05:43  schaaf
+//
+//  %[BugId: 117]%
+//
+//  working initial version for Scali
+//
 //  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
 //  %[BugId: 117]%
 //
@@ -98,7 +104,8 @@ void Pipeline::define(const ParamBlock& params)
   
   TRACER2("Handle the input parameters");
   if (rank == 0) params.show (cout);
-    itsSourceSteps = params.getInt("stations",3); // nr of stations (?)
+  int Pols       = params.getInt("polarisations",2); 
+  itsSourceSteps = params.getInt("stations",3); 
   itsDestSteps   = params.getInt("correlators",3);
   itsDoLogProfile = params.getInt("log",0) == 1;
    
@@ -127,7 +134,7 @@ void Pipeline::define(const ParamBlock& params)
 					itsDestSteps, //nout
 					timeDim,
 					freqDim,
-					2); //pols
+					Pols); 
     
     FillSteps[iStep] = new Step(FillWH[iStep],
 				"PipelineSourceStep", 
@@ -151,7 +158,7 @@ void Pipeline::define(const ParamBlock& params)
 				      timeDim,
 				      timeDim,
 				      freqDim,
-				      2); //pols 
+				      Pols);  
     TransSteps[iStep] = new Step(TransWH[iStep], 
 				 "PipelineDestStep", 
 				 iStep);
@@ -175,7 +182,7 @@ void Pipeline::define(const ParamBlock& params)
 				     1,              // outputs
 				     itsSourceSteps, // stations
 				     freqDim,        // frequency
-				     2);             // pols
+				     Pols);             
     
     CorrSteps[iStep] = new Step(CorrWH[iStep],
 				"Correlator",
