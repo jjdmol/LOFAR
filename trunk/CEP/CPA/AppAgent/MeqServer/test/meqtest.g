@@ -135,7 +135,7 @@ const state_test_init := function ()
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",1);
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",1);
   mqs.setdebug("MeqServ MeqVisHandler",1);
-  mqs.setdebug("Glish",5);
+  mqs.setdebug("Glish",1);
   mqs.setdebug("meqserver",1);
   # initialize meqserver
   mqs.init([output_col="PREDICT"],wait=T);
@@ -180,6 +180,7 @@ const state_test := function ()
   cells := meqcells(meqdomain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);
   request := meqrequest(cells);
   
+  # mqs.setdebug("DMI",5);
   res1 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
   req1 := request;
   print res1;

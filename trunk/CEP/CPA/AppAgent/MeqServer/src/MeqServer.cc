@@ -300,8 +300,8 @@ void MeqServer::run ()
         }
         catch( AipsError &x )
         {
-          error_str = x.what();
-          cdebug(2)<<"got AipsError while processing input: "<<x.what()<<endl;
+          error_str = x.getMesg();
+          cdebug(2)<<"got AipsError while processing input: "<<error_str<<endl;
         }
         catch( std::exception &exc )
         {
