@@ -20,41 +20,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
-//
-//  $Log$
-//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
-//  %[BugId: 117]%
-//
-//  Initial working version
-//
-//  Revision 1.8  2002/08/19 20:36:59  schaaf
-//  %[BugId: 11]%
-//  Layout
-//  little performance enhancement
-//
-//  Revision 1.7  2002/06/07 11:37:41  schaaf
-//  %[BugId: 11]%
-//  Removed unnessesary Assert in C'tor
-//  Improved performance of process() inner loop
-//
-//  Revision 1.6  2002/05/24 10:47:52  schaaf
-//  %[BugId: 11]%
-//  Removed ^M characters
-//
-//  Revision 1.5  2002/05/16 15:05:40  schaaf
-//  Added profiler state for process() method
-//
-//  Revision 1.3  2002/05/07 14:59:16  schaaf
-//  optimised performance of process()
-//
-//  Revision 1.2  2002/05/07 11:15:38  schaaf
-//  minor
-//
-//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
-//  initial version
-//
-//
-//
+///
 //////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>             // for sprintf
