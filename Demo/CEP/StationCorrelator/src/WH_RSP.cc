@@ -115,7 +115,7 @@ void WH_RSP::process()
       // so take get current time stamp and wait 1 sec to 
       DH_RSP* inDHp = (DH_RSP*)getDataManager().getInHolder(0);
       itsNextStamp.setStamp(inDHp->getSeqID(), 0);
-      itsNextStamp += itsNpackets * 10000; // at 1 Gb/s I think this is .5 sec
+      itsNextStamp += itsNpackets * 10000; // at 1 Gb/s I think this is .5 sec later
     } else {
       itsNextStamp += itsNpackets;
     }
