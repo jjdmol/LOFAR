@@ -119,26 +119,26 @@ void OnLineProto::define(const KeyValueMap& params)
   // create the station steps
   //
   ////////////////////////////////////////////////////////////////
-  WH_SimStation* myWHStations[myPS.getInt("general.nstations")];
-  Step*          myStationSteps[myPS.getInt("general.nstations")];
+  vector<WH_SimStation*> myWHStations;
+  vector<Step*>          myStationSteps;
 
   for (int s=0; s < myPS.getInt("general.nstations"); s++) {
     // ToDo: pass stationID, freq offset etc. to DH
     if (s==0){
-      myWHStations[s] = new WH_SimStation("mysimstation",  // name,
-					  myPS.getInt("station.nbeamlets"),  // nout
-					  string("/home/gerdes/temp/signal_1.txt"),
-					  myPS,
-					  s);
+      myWHStations.push_back(new WH_SimStation("mysimstation",  // name,
+					       myPS.getInt("station.nbeamlets"),  // nout
+					       string("signal_1.txt"),
+					       myPS,
+					       s));
     } else {
-      myWHStations[s] = new WH_SimStation("mysimstation",  // name,
-					  myPS.getInt("station.nbeamlets"),  // nout
-					  string("/home/gerdes/temp/signal_2.txt"),
-					  myPS,
-					  s);
+      myWHStations.push_back(new WH_SimStation("mysimstation",  // name,
+					       myPS.getInt("station.nbeamlets"),  // nout
+					       string("signal_2.txt"),
+					       myPS,
+					       s));
     }
 
-    myStationSteps[s] = new Step(myWHStations[s],"mystationstep");
+    myStationSteps.push_back(new Step(myWHStations[s],"mystationstep"));
     myStationSteps[s]->runOnNode(0,0);
     app.addStep(myStationSteps[s]);
   }
@@ -173,17 +173,17 @@ void OnLineProto::define(const KeyValueMap& params)
   // create the preproces steps
   //
   ////////////////////////////////////////////////////////////////
-  WH_PreProcess* myWHPreProcess[myPS.getInt("general.nstations")];
-  Step*          myPreProcessSteps[myPS.getInt("general.nstations")];
+  vector<WH_PreProcess*> myWHPreProcess;
+  vector<Step*>          myPreProcessSteps;
 
   for (int s=0; s < myPS.getInt("general.nstations"); s++) {
     // ToDo: pass stationID, freq offset etc. to DH
-    myWHPreProcess[s] = new WH_PreProcess("mypreprocess",  // name,
-					  myPS.getInt("station.nbeamlets"),  // channels
-					  myPS,
-					  s);
+    myWHPreProcess.push_back(new WH_PreProcess("mypreprocess",  // name,
+					       myPS.getInt("station.nbeamlets"),  // channels
+					       myPS,
+					       s));
 
-    myPreProcessSteps[s] = new Step(myWHPreProcess[s],"mypreprocess_step");
+    myPreProcessSteps.push_back(new Step(myWHPreProcess[s],"mypreprocess_step"));
     myPreProcessSteps[s]->runOnNode(0,0);
     app.addStep(myPreProcessSteps[s]);
 
@@ -201,20 +201,20 @@ void OnLineProto::define(const KeyValueMap& params)
   // create the Transpose steps
   //
   ////////////////////////////////////////////////////////////////
-  WH_Transpose*  myWHTranspose[myPS.getInt("station.nbeamlets")];
-  Step*          myTransposeSteps[myPS.getInt("station.nbeamlets")];
+  vector<WH_Transpose*>  myWHTranspose;
+  vector<Step*>          myTransposeSteps;
 
    // create a Transpose step for each beamlet (raw freq channel)
   for (int b=0; b < myPS.getInt("station.nbeamlets"); b++) {
     // ToDo: pass stationID, freq offset etc. to DH
-    myWHTranspose[b] = new WH_Transpose("mytranspose",  // name,
-					myPS.getInt("general.nstations"),  // nin
-					myPS.getInt("corr.ncorr"),         //nout
-					myPS
-					);
+    myWHTranspose.push_back(new WH_Transpose("mytranspose",  // name,
+					     myPS.getInt("general.nstations"),  // nin
+					     myPS.getInt("corr.ncorr"),         //nout
+					     myPS
+					     ));
 
 
-    myTransposeSteps[b] = new Step(myWHTranspose[b],"mytranspose_step");
+    myTransposeSteps.push_back(new Step(myWHTranspose[b],"mytranspose_step"));
     myTransposeSteps[b]->runOnNode(0,0);
 
     app.addStep(myTransposeSteps[b]);
@@ -239,21 +239,21 @@ void OnLineProto::define(const KeyValueMap& params)
   // create the Correlator steps
   //
   ////////////////////////////////////////////////////////////////
-  WH_Correlate*  myWHCorrelators[myPS.getInt("station.nbeamlets") * myPS.getInt("corr.ncorr")];
-  Step*          myCorrelatorSteps[myPS.getInt("station.nbeamlets") * myPS.getInt("corr.ncorr")];
+  vector<WH_Correlate*>  myWHCorrelators;
+  vector<Step*>          myCorrelatorSteps;
 
   for (int b=0; b < myPS.getInt("station.nbeamlets"); b++) { //NBeamlets
     for (int f=0; f < myPS.getInt("corr.ncorr"); f++) {
       int correlator = b * myPS.getInt("corr.ncorr") + f;
       
       // ToDo: pass stationID, freq offset etc. to DH
-      myWHCorrelators[correlator] = new WH_Correlate("mycorrelate",     // name,
-						     1,                 // channels (=nin=nout)
-						     myPS
-						     );
+      myWHCorrelators.push_back(new WH_Correlate("mycorrelate",     // name,
+						 1,                 // channels (=nin=nout)
+						 myPS
+						 ));
       
 
-      myCorrelatorSteps[correlator] = new Step(myWHCorrelators[correlator],"mycorrelate_step");
+      myCorrelatorSteps.push_back(new Step(myWHCorrelators[correlator],"mycorrelate_step"));
       myCorrelatorSteps[correlator]->runOnNode(0,0);
       // todo: only output rate?
       myCorrelatorSteps[correlator]->getWorker()->getDataManager().setOutputRate(myPS.getInt("corr.tsize"));
@@ -277,16 +277,16 @@ void OnLineProto::define(const KeyValueMap& params)
   // create the Dump steps
   //
   ////////////////////////////////////////////////////////////////
-  WH_Dump*  myWHDumps[myPS.getInt("corr.ncorr")];
-  Step*     myDumpSteps[myPS.getInt("corr.ncorr")];
+  vector<WH_Dump*>  myWHDumps;
+  vector<Step*>     myDumpSteps;
 
 
   for (int s=0; s < myPS.getInt("corr.ncorr") * myPS.getInt("station.nbeamlets"); s++) {
     // ToDo: pass stationID, freq offset etc. to DH
 
-    myWHDumps[s] = new WH_Dump("mydump",1,myPS,s);
+    myWHDumps.push_back(new WH_Dump("mydump",1,myPS,s));
 
-    myDumpSteps[s] = new Step(myWHDumps[s],"mydump_step");
+    myDumpSteps.push_back(new Step(myWHDumps[s],"mydump_step"));
     myDumpSteps[s]->runOnNode(0,0);
 
     myDumpSteps[s]->getWorker()->getDataManager().setInputRate(myPS.getInt("corr.tsize"));

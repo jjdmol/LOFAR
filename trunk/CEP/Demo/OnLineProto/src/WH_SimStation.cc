@@ -75,6 +75,7 @@ namespace LOFAR
   
   WH_SimStation::~WH_SimStation()
   {
+    free (itsData);
     itsInputFile.close();
   }
   
@@ -130,7 +131,8 @@ namespace LOFAR
 
   void WH_SimStation::ReadData ()
   {
-    complex<float> InputData[NINPUT_BEAMLETS*itsPS.getInt("station.nchannels")+1];
+    std::streamsize buffersize = (NINPUT_BEAMLETS*itsPS.getInt("station.nchannels")+1)*sizeof(complex<float>);
+    char* InputBuffer = (char*)malloc(buffersize);
 
     ASSERTSTR( itsInputFile.is_open(), "WH_SimStation input file " 
 	       << itsFileName << " could not be opened.");
@@ -138,15 +140,14 @@ namespace LOFAR
 
     // Read the data
     if (!itsInputFile.eof()) {
-      itsInputFile.read((char*)InputData, 
-		  (NINPUT_BEAMLETS*itsPS.getInt("station.nchannels")+1)*sizeof(complex<float>));
+      itsInputFile.read(InputBuffer, buffersize);
     } else {
       // Wrap around
       itsInputFile.seekg(0);
-      itsInputFile.read((char*)InputData,
-		  (NINPUT_BEAMLETS*itsPS.getInt("station.nchannels")+1)*sizeof(complex<float>));
+      itsInputFile.read(InputBuffer, buffersize);
     }
 
-    memcpy (itsData, InputData, itsPS.getInt("station.nbeamlets")*itsPS.getInt("station.nchannels")*sizeof(complex<float>));
+    memcpy (itsData, InputBuffer, itsPS.getInt("station.nbeamlets")*itsPS.getInt("station.nchannels")*sizeof(complex<float>));
+    free (InputBuffer);
   }
 }// namespace LOFAR
