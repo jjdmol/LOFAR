@@ -28,6 +28,7 @@
 #include <Transport/DataHolder.h>
 #include <Transport/Transporter.h> 
 #include <Common/LofarLogger.h>
+#include <Common/hexdump.h>
 
 
 #include <sys/types.h>
@@ -46,6 +47,7 @@
 
 //#define DH_HEADERSIZE 44
 #define DH_HEADERSIZE 40
+#define DH_TAILSIZE 4
 
 namespace LOFAR
 {
@@ -114,6 +116,7 @@ bool TH_RSP::recvBlocking(void* buf, int32 nbytes, int32 tag)
   // if necessary, use offset to prevent that dataholder-header will be overwritten
   if (itsDHheader) {
     buf = (char *) buf + DH_HEADERSIZE; 
+    endptr = (char *) endptr - DH_TAILSIZE;
   }
 
   // Pointer to received data excl. ethernetheader
@@ -121,7 +124,6 @@ bool TH_RSP::recvBlocking(void* buf, int32 nbytes, int32 tag)
   
   // Repeat recvfrom call until end of buffer is reached
   while ((char*)buf < endptr) {
-    
     // Catch ethernet frame from Socket
     framesize = recvfrom(itsSocketFD, itsRecvPacket, itsMaxframesize , 0,
                           (struct sockaddr*)&recvSockaddr, &recvSockaddrLen);
@@ -133,7 +135,7 @@ bool TH_RSP::recvBlocking(void* buf, int32 nbytes, int32 tag)
     if (framesize <= MIN_FRAME_LEN) {
       continue;
     } 
-    
+
     // Copy payload, filter header
     // Note that 'buf' cannot contain more than 'nbytes'
     if ((char*)buf + payloadsize <= endptr) {
@@ -145,6 +147,7 @@ bool TH_RSP::recvBlocking(void* buf, int32 nbytes, int32 tag)
       buf = endptr;
     }  
   }
+
   return true;
 }
 
