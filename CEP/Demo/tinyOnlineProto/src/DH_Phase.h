@@ -83,8 +83,8 @@ private:
     BufferType*  itsBuffer;     // array containing frequency spectrum.
     unsigned int itsBufSize;  
 
-    float* itsElapsedTime;
-    int*   itsStationID;
+    float itsElapsedTime;
+    int   itsStationID;
 
     void fillDataPointers();
 };
@@ -96,16 +96,16 @@ inline const DH_Phase::BufferType* DH_Phase::getBuffer() const
   { return itsBuffer; }
 
 inline float DH_Phase::getElapsedTime () const
-  { DbgAssertStr(*itsElapsedTime >= 0, "itsElapsedTime not initialised"); 
-    return *itsElapsedTime; 
+  { DbgAssertStr(itsElapsedTime >= 0, "itsElapsedTime not initialised"); 
+    return itsElapsedTime; 
   }
 
 inline void DH_Phase::setElapsedTime (float time)
-  {  *itsElapsedTime = time; }
+  {  itsElapsedTime = time; }
 
 inline int DH_Phase::getStationID() const
-  { DbgAssertStr(*itsStationID >= 0, "itsStationID not initialised"); 
-    return *itsStationID; 
+  { DbgAssertStr(itsStationID >= 0, "itsStationID not initialised"); 
+    return itsStationID; 
   }
 }
 

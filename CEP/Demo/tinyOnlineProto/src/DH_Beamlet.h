@@ -96,11 +96,11 @@ private:
 
     //    DataPacket*  itsDataPacket;    
     BufferType* itsBuffer;     // array containing frequency spectrum.
-    int* itsStationID;          // source station ID
-    float* itsFrequencyOffset;  // frequency offset for this beamlet
-    float* itsChannelWidth;     // frequency width of each frequency channel
-    float* itsElapsedTime;      // the hourangle
-    int* itsNumberOfChannels;   // number of frequency channels within this beamlet
+    int itsStationID;          // source station ID
+    float itsFrequencyOffset;  // frequency offset for this beamlet
+    float itsChannelWidth;     // frequency width of each frequency channel
+    float itsElapsedTime;      // the hourangle
+    int itsNumberOfChannels;   // number of frequency channels within this beamlet
     unsigned int itsBufSize;  
 
     void fillDataPointers();
@@ -116,27 +116,27 @@ inline DH_Beamlet::BufferType* DH_Beamlet::getBufferElement(int freq)
   { return itsBuffer+freq; }
 
 inline int DH_Beamlet::getNumberOfChannels () const
-  { return *itsNumberOfChannels; }
+  { return itsNumberOfChannels; }
 
 inline float DH_Beamlet::getElapsedTime () const
-  { DbgAssertStr(*itsElapsedTime >= 0, "itsElapsedTime not initialised");
-    return *itsElapsedTime;
+  { DbgAssertStr(itsElapsedTime >= 0, "itsElapsedTime not initialised");
+    return itsElapsedTime;
   }
 
 inline void DH_Beamlet::setElapsedTime (float time)
-  {  *itsElapsedTime = time; }
+  {  itsElapsedTime = time; }
 
 inline float DH_Beamlet::getFrequencyOffset() const
-  { DbgAssertStr(*itsFrequencyOffset >= 0, "itsFrequencyOffset not initialised");
-    return *itsFrequencyOffset; }
+  { DbgAssertStr(itsFrequencyOffset >= 0, "itsFrequencyOffset not initialised");
+    return itsFrequencyOffset; }
 
 inline float DH_Beamlet::getChannelWidth() const 
-  { DbgAssertStr(*itsChannelWidth >= 0, "itsChannelWidth not initialised");
-    return *itsChannelWidth; }
+  { DbgAssertStr(itsChannelWidth >= 0, "itsChannelWidth not initialised");
+    return itsChannelWidth; }
 
 inline int DH_Beamlet::getStationID() const
-  { DbgAssertStr(*itsStationID >= 0, "itsStationID not initialised");
-    return *itsStationID;
+  { DbgAssertStr(itsStationID >= 0, "itsStationID not initialised");
+    return itsStationID;
   }
 
 }
