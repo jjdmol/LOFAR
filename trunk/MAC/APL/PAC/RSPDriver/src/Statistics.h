@@ -28,6 +28,8 @@
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
 
+using namespace LOFAR;
+
 namespace RSP_Protocol
 {
   typedef enum StatsReduction

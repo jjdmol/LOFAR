@@ -29,6 +29,8 @@
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
 
+using namespace LOFAR;
+
 namespace EPA_Protocol
 {
   class MEPHeader
