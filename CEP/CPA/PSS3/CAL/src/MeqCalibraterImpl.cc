@@ -428,6 +428,9 @@ void MeqCalibrater::makeLOFARExpr(Bool asAP)
 MeqCalibrater::MeqCalibrater(const String& msName,
 			     const String& meqModel,
 			     const String& skyModel,
+			     const String& dbType,
+			     const String& dbName,
+			     const String& dbPwd,
 			           uInt    ddid,
 			     const Vector<Int>& ant1,
 			     const Vector<Int>& ant2,
@@ -438,8 +441,8 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   :
   itsMS       (msName, Table::Update),
   itsMSCol    (itsMS),
-  itsMEP      (meqModel + ".MEP"),
-  itsGSMMEP   (skyModel + ".MEP"),
+  itsMEP      (dbType, meqModel, dbName, dbPwd),
+  itsGSMMEP   (dbType, skyModel, dbName, dbPwd),
   itsCalcUVW  (calcUVW),
   itsDataColName (dataColName),
   itsResColName  (residualColName),
@@ -525,6 +528,9 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   // itsNrChan is the numnber frequency channels
   // 1 is the number of time steps. this code is limited to one timestep only
   MeqMatrixComplexArr::poolActivate(itsNrChan * 1);
+  // Unlock the parm tables.
+  itsMEP.unlock();
+  itsGSMMEP.unlock();
 }
 
 //----------------------------------------------------------------------
@@ -626,6 +632,9 @@ void MeqCalibrater::initParms (const MeqDomain& domain)
     // Initialize the solver.
     itsSolver.set (itsNrScid, 1, 0);
   }
+  // Unlock the parm tables.
+  itsMEP.unlock();
+  itsGSMMEP.unlock();
 }
 
 //----------------------------------------------------------------------
@@ -2195,6 +2204,9 @@ MethodResult MeqCalibraterFactory::make(ApplicationObject*& newObject,
       Parameter<String>   msName(inputRecord, "msname",   ParameterSet::In);
       Parameter<String> meqModel(inputRecord, "meqmodel", ParameterSet::In);
       Parameter<String> skyModel(inputRecord, "skymodel", ParameterSet::In);
+      Parameter<String> dbType  (inputRecord, "dbtype",   ParameterSet::In);
+      Parameter<String> dbName  (inputRecord, "dbname",   ParameterSet::In);
+      Parameter<String> dbPwd   (inputRecord, "dbpwd",    ParameterSet::In);
       Parameter<Int>        ddid(inputRecord, "ddid",     ParameterSet::In);
       Parameter<Vector<Int> > ant1(inputRecord, "ant1",   ParameterSet::In);
       Parameter<Vector<Int> > ant2(inputRecord, "ant2",   ParameterSet::In);
@@ -2207,10 +2219,10 @@ MethodResult MeqCalibraterFactory::make(ApplicationObject*& newObject,
 
       if (runConstructor)
 	{
-	  newObject = new MeqCalibrater(msName(), meqModel(),
-					skyModel(), ddid(),
-					ant1(), ant2(), modelType(),
-					calcUVW(),
+	  newObject = new MeqCalibrater(msName(), meqModel(), skyModel(),
+					dbType(), dbName(), dbPwd(),
+					ddid(), ant1(), ant2(),
+					modelType(), calcUVW(),
 					dataColName(), resColName());
 	}
     }
