@@ -68,12 +68,15 @@ public:
   void setCoeff (const MeqMatrix& coeff, const Matrix<bool>& mask);
 
   // Get the domain.
-  const MeqDomain& getDomain() const
+  const MeqDomain& domain() const
     { return itsDomain; }
 
   // Set the domain.
   void setDomain (const MeqDomain& domain)
     { itsDomain = domain; }
+
+  // Make the polynomial non-solvable.
+  void clearSolvable();
 
   // Make the parameters solvable, thus perturbed values have to be calculated.
   // spidIndex is the index of the first spid of this polc.
@@ -85,9 +88,11 @@ public:
 
 private:
   MeqMatrix    itsCoeff;
+  MeqMatrix    itsPerturbation;
   MeqDomain    itsDomain;
   vector<bool> itsMask;
   vector<int>  itsSpidInx;     //# -1 is not solvable
+  int          itsMaxNrSpid;
 };
 
 

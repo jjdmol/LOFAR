@@ -70,7 +70,7 @@ void MeqResultRep::show (ostream& os) const
   os << "Value: " << itsValue << endl;
   for (unsigned int i=0; i<itsPerturbedValues.size(); i++) {
     if (isDefined(i)) {
-      os << "deriv parm " << i << " with " << itsPerturbation[i] << endl;
+      os << "deriv parm " << i << " with " << *(itsPerturbation[i]) << endl;
       os << "   " << (*(itsPerturbedValues[i]) - itsValue) /
 	 *(itsPerturbation[i]) << endl;
     }

@@ -55,6 +55,10 @@ public:
   void setPolcs (const vector<MeqPolc>& polcs)
     { itsPolcs = polcs; }
 
+  // Add a polynomial.
+  void addPolc (const MeqPolc& polc)
+    { itsPolcs.push_back (polc); }
+
   // Get the polynomials.
   const vector<MeqPolc>& getPolcs() const
     { return itsPolcs; }
