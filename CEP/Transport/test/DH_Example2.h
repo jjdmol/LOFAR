@@ -47,7 +47,8 @@ public:
   typedef complex<float> BufferType;
 
   explicit DH_Example2 (const string& name="dh_example2",
-			unsigned int nbuffer = 10);
+			unsigned int nbuffer = 10,
+			bool useExtra = false);
 
   DH_Example2(const DH_Example2&);
 
