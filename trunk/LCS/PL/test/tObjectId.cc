@@ -1,5 +1,4 @@
 #include <PL/ObjectId.h>
-#include <Common/Trace.h>
 #include <iostream>
 #include <iomanip>
 
@@ -14,25 +13,38 @@ int main()
   ObjectId oid2;
   cout << hex << setfill('0');
   oid1.get();
-  cout << "oid1.get() = 0x" << oid1.get() << endl;
-  cout << "oid2.get() = 0x" << oid2.get() << endl;
-  cout << "Assiging oid1 to oid2..." << endl;
+  cout << endl << "oid1.get() = 0x" << oid1.get();
+  cout << endl << "oid2.get() = 0x" << oid2.get();
+  cout << endl << "(oid1 == oid2) = " << (oid1 == oid2 ? "true" : "false") 
+       << endl;
+
+  cout << endl << "Assiging oid1 to oid2...";
   oid2.set(oid1.get());
-  cout << "oid2.get() = 0x" << oid2.get() << endl;
+  cout << endl << "oid2.get() = 0x" << oid2.get();
+  cout << endl << "(oid1 == oid2) = " << (oid1 == oid2 ? "true" : "false") 
+       << endl;
+
+  cout << endl << "Making oid1 and oid2 equal to global null object-id ...";
+  oid1.set(ObjectId::nullId()->get());
+  oid2.set(ObjectId::nullId()->get());
+  cout << endl << "oid1.get() = 0x" << oid1.get();
+  cout << endl << "oid2.get() = 0x" << oid2.get();
+  cout << endl << "(oid1 == oid2) = " << (oid1 == oid2 ? "true" : "false") 
+       << endl;
 
   timeval tv_start, tv_end;
   double sec;
-  cout << "Generating 1.000.000 uninitialized Object-IDs ..." << endl;
+  cout << endl << "Generating 1.000.000 uninitialized Object-IDs ...";
   gettimeofday(&tv_start,0);
   for (int i=0; i<1000000; i++) {
-    ObjectId();
+    ObjectId(0).get();
   }
   gettimeofday(&tv_end,0);
   sec = (tv_end.tv_sec - tv_start.tv_sec) + 
         (tv_end.tv_usec - tv_start.tv_usec) * 1e-6;
-  cout << "Elapsed time: " << sec << " seconds." << endl;
+  cout << endl << "Elapsed time: " << sec << " seconds." << endl;
 
-  cout << "Generating 1.000.000 initialized Object-IDs ..." << endl;
+  cout << endl << "Generating 1.000.000 initialized Object-IDs ...";
   gettimeofday(&tv_start,0);
   for (int i=0; i<1000000; i++) {
     ObjectId().get();
@@ -40,7 +52,7 @@ int main()
   gettimeofday(&tv_end,0);
   sec = (tv_end.tv_sec - tv_start.tv_sec) + 
         (tv_end.tv_usec - tv_start.tv_usec) * 1e-6;
-  cout << "Elapsed time: " << sec << " seconds." << endl;
+  cout << endl << "Elapsed time: " << sec << " seconds." << endl << endl;
 
   return 0;
 }
