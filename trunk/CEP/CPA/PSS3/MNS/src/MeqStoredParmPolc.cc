@@ -25,6 +25,8 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/BasicMath/Math.h>
 
+using namespace casa;
+
 MeqStoredParmPolc::MeqStoredParmPolc (const string& name, int srcnr,
 				      int statnr, ParmTable* table)
 : MeqParmPolc (name),

@@ -29,6 +29,8 @@
 #include <Common/Debug.h>
 #include <casa/BasicSL/Constants.h>
 
+using namespace casa;
+
 
 bool MeqPointDFT::doshow = false;
 

@@ -55,6 +55,9 @@
 #include <stdexcept>
 #include <stdio.h>
 
+using namespace casa;
+
+
 MDirection getPhaseRef(const MeasurementSet& ms)
 {
   MSField mssub(ms.field());

@@ -42,8 +42,6 @@ typedef LOFAR::PL::Collection<TPOMParmDef> MParmDefSet;
 
 //# Forward Declarations
 class MeqDomain;
-template<class T> class Vector;
-
 
 
 class ParmTableDB : public ParmTableRep

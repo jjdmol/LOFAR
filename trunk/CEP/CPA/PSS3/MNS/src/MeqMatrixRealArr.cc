@@ -28,6 +28,7 @@
 #include <Common/Debug.h>
 #include <casa/BasicSL/Constants.h>
 
+using namespace casa;
 
 MeqMatrixRealArr::MeqMatrixRealArr (int nx, int ny)
 : MeqMatrixRep (nx, ny, sizeof(double))

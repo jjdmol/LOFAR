@@ -109,31 +109,31 @@ public:
 
   friend MeqMatrixTmp operator+ (const MeqMatrixTmp& left,
 				 const MeqMatrixTmp& right)
-    { return left.itsRep->add (*right.itsRep, True); }
+    { return left.itsRep->add (*right.itsRep, true); }
   friend MeqMatrixTmp operator+ (const MeqMatrixTmp& left,
 				 const MeqMatrix& right)
-    { return left.itsRep->add (*right.rep(), False); }
+    { return left.itsRep->add (*right.rep(), false); }
 
   friend MeqMatrixTmp operator- (const MeqMatrixTmp& left,
 				 const MeqMatrixTmp& right)
-    { return left.itsRep->subtract (*right.itsRep, True); }
+    { return left.itsRep->subtract (*right.itsRep, true); }
   friend MeqMatrixTmp operator- (const MeqMatrixTmp& left,
 				 const MeqMatrix& right)
-    { return left.itsRep->subtract (*right.rep(), False); }
+    { return left.itsRep->subtract (*right.rep(), false); }
 
   friend MeqMatrixTmp operator* (const MeqMatrixTmp& left,
 				 const MeqMatrixTmp& right)
-    { return left.itsRep->multiply (*right.itsRep, True); }
+    { return left.itsRep->multiply (*right.itsRep, true); }
   friend MeqMatrixTmp operator* (const MeqMatrixTmp& left,
 				 const MeqMatrix& right)
-    { return left.itsRep->multiply (*right.rep(), False); }
+    { return left.itsRep->multiply (*right.rep(), false); }
 
   friend MeqMatrixTmp operator/ (const MeqMatrixTmp& left,
 				 const MeqMatrixTmp& right)
-    { return left.itsRep->divide (*right.itsRep, True); }
+    { return left.itsRep->divide (*right.itsRep, true); }
   friend MeqMatrixTmp operator/ (const MeqMatrixTmp& left,
 				 const MeqMatrix& right)
-    { return left.itsRep->divide (*right.rep(), False); }
+    { return left.itsRep->divide (*right.rep(), false); }
 
   MeqMatrixTmp operator-() const;
 
