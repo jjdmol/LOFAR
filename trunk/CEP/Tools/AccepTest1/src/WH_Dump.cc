@@ -17,7 +17,6 @@
 // Application specific includes
 #include <WH_Dump.h>
 #include <DH_Vis.h>
-#include <DH_Empty.h> 
 
 using namespace LOFAR;
 

@@ -14,7 +14,6 @@
 #include <Common/KeyValueMap.h>
 
 #include <WH_Random.h>
-#include <DH_Empty.h>
 #include <DH_CorrCube.h>
 
 namespace LOFAR
@@ -72,14 +71,15 @@ namespace LOFAR
   void WH_Random::process() {
     
     DH_CorrCube::BufferType acc = DH_CorrCube::BufferType(0,0);
-    short seed = rand()/(RAND_MAX);
+    float seed = rand();
+    seed = seed/(RAND_MAX);
 
+    long it = 0;
     for (int channel = 0; channel < itsNchannels; channel++) {
       for (int station = 0; station < itsNelements; station++) {
 	for (int sample = 0; sample < itsNsamples; sample++) {
 	  
-	  DH_CorrCube::BufferType rval = DH_CorrCube::BufferType (channel+sample+station*seed , station*seed - 1);
-	  
+	  DH_CorrCube::BufferType rval = DH_CorrCube::BufferType (10*seed , 2*seed);
 	  if (channel == 0 && station == 0) {
 	    acc += DH_CorrCube::BufferType(
 				   rval.real() * rval.real() - 
