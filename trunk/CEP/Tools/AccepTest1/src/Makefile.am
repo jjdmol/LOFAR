@@ -13,7 +13,6 @@ WH_Dump.h
 
 SHAREDSRCS		=	$(DOCHDRS)		\
 TestRange.h						\
-Config.cc						\
 DH_Vis.cc						\
 DH_CorrCube.cc						\
 WH_Random.cc						\

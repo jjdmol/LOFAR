@@ -136,8 +136,8 @@ void WH_Correlator::process() {
     for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
       for (int   station1 = 0; station1 < itsNelements; station1++) {
 	for (int station2 = 0; station2 <= station1;    station2++) {
-
 	  for (int polarisation = 0; polarisation < itsNpolarisations; polarisation++) {
+
 	    // todo: use copy-free multiplication
 	    // todo: remove inner loop getBufferElement calls; consecutive adressing
 	    // todo: do short-> float conversion only once
@@ -166,17 +166,18 @@ void WH_Correlator::process() {
 
 #ifdef DO_TIMING
 #ifdef HAVE_MPI
-  double max_cmults;
+  double time = (stoptime-starttime);
+  double min_time;
 
   // we're selecting the highest performance figure of the nodes. Since BG/L is a hard real-time 
   // system, we expect these to be the same for each node. While debugging we're not interrested in 
   // transient effects on the nodes, so the maximum performance is a reasonable estimate of the real 
   // performance of the application.
   cmults = itsNsamples * itsNchannels * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
-  MPI_Reduce(&cmults, &max_cmults, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&min_time, &min_time, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
   
   if ((TH_MPI::getCurrentRank() == 0) && (t_start.tv_sec != 0) && (t_start.tv_usec != 0)) {
-    cout << 10e-6*max_cmults/(stoptime-starttime) << " Mcprod/sec" << endl;
+    cout << 1.0e-6*cmults/min_time << " Mcprod/sec" << endl;
   }
 
 #endif
