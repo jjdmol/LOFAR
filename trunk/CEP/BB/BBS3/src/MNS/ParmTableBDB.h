@@ -130,7 +130,6 @@ namespace LOFAR {
       double y0;
       MeqDomain domain;
       bool isRelPerturbation;
-      bool isNormalized;
       unsigned int stringSizes[4];
     };
   };

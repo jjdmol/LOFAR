@@ -26,7 +26,7 @@
 #include <BBS3/MNS/MeqPhaseRef.h>
 #include <BBS3/MNS/MeqRequest.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 
 namespace LOFAR {
@@ -74,7 +74,7 @@ void MeqPointSource::calculate (const MeqRequest& request)
   MeqMatrix mk = sin(deck.getValue()) * refCosDec -
                  cosdec * refSinDec * cos(radiff);
   MeqMatrixTmp nks = 1. - sqr(lk) - sqr(mk);
-  AssertStr (min(nks).getDouble() > 0, "source " << itsSourceNr
+  ASSERTSTR (min(nks).getDouble() > 0, "source " << itsSourceNr
 	     << " too far from phaseref " << refRa << ", " << refDec);
   MeqMatrix nk = sqrt(nks);
   itsL.setValue (lk);
@@ -102,7 +102,7 @@ void MeqPointSource::calculate (const MeqRequest& request)
       MeqMatrix pmk = sin(deck.getPerturbedValue(spinx)) * refCosDec -
 	   pcosdec * refSinDec * cos(pradiff);
       MeqMatrixTmp nks = MeqMatrixTmp(1.) - sqr(plk) - sqr(pmk);
-      AssertStr (min(nks).getDouble() > 0, "perturbed source " << itsSourceNr
+      ASSERTSTR (min(nks).getDouble() > 0, "perturbed source " << itsSourceNr
 		 << " too far from phaseref " << refRa << ", " << refDec);
       MeqMatrix pnk = sqrt(nks);
       itsL.setPerturbedValue (spinx, plk);

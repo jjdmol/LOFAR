@@ -29,7 +29,7 @@
 #include <BBS3/MNS/MeqHist.h>
 #include <BBS3/MNS/MeqMatrix.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <casa/Arrays/Matrix.h>
 
 using namespace casa;
@@ -56,7 +56,7 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
 
   // We can only calculate for a single time bin.
   const MeqDomain& domain = request.domain();
-  Assert (request.nx() == 1);
+  ASSERT (request.nx() == 1);
   // Find the maximum nr of cells needed.
   // Use 1 cell only until more cells are needed.
   int ncellt = 1;
@@ -122,11 +122,11 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
     const MeqResult& resr22  = itsRight->getResult22 (dftReq);
     // Get the source fluxes and calculate the Stokes values from them.
     // We assume (and check) that the fluxes are independent of frequency.
-    Assert (ik.getValue().nelements() == 1);
-    Assert (qk.getValue().nelements() == 1);
-    Assert (uk.getValue().nelements() == 1);
-    Assert (vk.getValue().nelements() == 1);
-    Assert (nk.getValue().nelements() == 1);
+    ASSERT (ik.getValue().nelements() == 1);
+    ASSERT (qk.getValue().nelements() == 1);
+    ASSERT (uk.getValue().nelements() == 1);
+    ASSERT (vk.getValue().nelements() == 1);
+    ASSERT (nk.getValue().nelements() == 1);
     double ival = ik.getValue().getDouble();
     double qval = qk.getValue().getDouble();
     double uval = uk.getValue().getDouble();

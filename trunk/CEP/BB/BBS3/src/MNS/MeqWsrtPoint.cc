@@ -29,7 +29,7 @@
 #include <BBS3/MNS/MeqHist.h>
 #include <BBS3/MNS/MeqMatrix.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <casa/Arrays/Matrix.h>
 
 using namespace casa;
@@ -54,7 +54,7 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
 
   // We can only calculate for a single time bin.
   const MeqDomain& domain = request.domain();
-  Assert (request.nx() == 1);
+  ASSERT (request.nx() == 1);
   // Find the maximum nr of cells needed.
   int ncellt = 1;
   int ncellf = 1;

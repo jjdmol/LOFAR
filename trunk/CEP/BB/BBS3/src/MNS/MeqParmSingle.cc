@@ -22,7 +22,6 @@
 
 #include <BBS3/MNS/MeqParmSingle.h>
 #include <BBS3/MNS/MeqRequest.h>
-#include <Common/Debug.h>
 #include <Common/lofar_vector.h>
 #include <casa/Utilities/BinarySearch.h>
 
@@ -81,21 +80,9 @@ MeqResult MeqParmSingle::getResult (const MeqRequest& request)
   return result;
 }
 
-void MeqParmSingle::getInitial (MeqMatrix& values) const
+void MeqParmSingle::getCurrentValue (MeqMatrix& value) const
 {
-  if (isSolvable()) {
-    Assert (itsSolveIndex < values.nx());
-    values.dcomplexStorage()[itsSolveIndex] = complex<double>(itsCurValue,0);
-  }
-}
-
-void MeqParmSingle::getCurrentValue(MeqMatrix& value, bool) const
-{
-  value = MeqMatrix(complex<double>(), 1, 1);
-
-  if (isSolvable()) {
-    value.dcomplexStorage()[0] = complex<double>(itsCurValue,0);
-  }
+  value = MeqMatrix(itsCurValue, 1, 1);
 }
 
 void MeqParmSingle::update (const MeqMatrix& value)

@@ -30,7 +30,7 @@
 #include <Common/BlobArray.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <casa/Arrays/Matrix.h>
 
 using namespace casa;
@@ -173,42 +173,42 @@ Matrix<complex<double> > MeqMatrix::getDComplexMatrix() const
 void MeqMatrix::operator+= (const MeqMatrix& right)
 {
   MeqMatrixRep* res = itsRep->add (*right.itsRep, False);
-  AssertStr (res == itsRep, "Mismatching types");
+  ASSERTSTR (res == itsRep, "Mismatching types");
 }   
 void MeqMatrix::operator+= (const MeqMatrixTmp& right)
 {
   MeqMatrixRep* res = itsRep->add (*right.rep(), False);
-  AssertStr (res == itsRep, "Mismatching types");
+  ASSERTSTR (res == itsRep, "Mismatching types");
 }   
 void MeqMatrix::operator-= (const MeqMatrix& right)
 {
   MeqMatrixRep* res = itsRep->subtract (*right.rep(), False);
-  AssertStr (res == itsRep, "Mismatching types");
+  ASSERTSTR (res == itsRep, "Mismatching types");
 }   
 void MeqMatrix::operator-= (const MeqMatrixTmp& right)
 {
   MeqMatrixRep* res = itsRep->subtract (*right.rep(), False);
-  AssertStr (res == itsRep, "Mismatching types");
+  ASSERTSTR (res == itsRep, "Mismatching types");
 }   
 void MeqMatrix::operator*= (const MeqMatrix& right)
 {
   MeqMatrixRep* res = itsRep->multiply (*right.rep(), False);
-  AssertStr (res == itsRep, "Mismatching types");
+  ASSERTSTR (res == itsRep, "Mismatching types");
 }   
 void MeqMatrix::operator*= (const MeqMatrixTmp& right)
 {
   MeqMatrixRep* res = itsRep->multiply (*right.rep(), False);
-  AssertStr (res == itsRep, "Mismatching types");
+  ASSERTSTR (res == itsRep, "Mismatching types");
 }   
 void MeqMatrix::operator/= (const MeqMatrix& right)
 {
   MeqMatrixRep* res = itsRep->divide (*right.rep(), False);
-  AssertStr (res == itsRep, "Mismatching types");
+  ASSERTSTR (res == itsRep, "Mismatching types");
 }   
 void MeqMatrix::operator/= (const MeqMatrixTmp& right)
 {
   MeqMatrixRep* res = itsRep->divide (*right.rep(), False);
-  AssertStr (res == itsRep, "Mismatching types");
+  ASSERTSTR (res == itsRep, "Mismatching types");
 }   
 
 MeqMatrixTmp MeqMatrix::operator+ (const MeqMatrix& right) const

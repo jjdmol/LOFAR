@@ -26,7 +26,7 @@
 #include <BBS3/MNS/MeqRequest.h>
 #include <BBS3/MNS/MeqMatrix.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
@@ -36,7 +36,7 @@ MeqLofarStatSources::MeqLofarStatSources (const vector<MeqJonesExpr*>& stat,
   itsSrc  (sources),
   itsLastReqId (InitMeqRequestId)
 {
-  Assert (stat.size() == sources->nsources());
+  ASSERT (stat.size() == sources->nsources());
 }
 
 MeqLofarStatSources::~MeqLofarStatSources()
@@ -46,7 +46,7 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
 {
   PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
 
-  Assert (request.nx() == 1);
+  ASSERT (request.nx() == 1);
   MeqRequest req(request);
   // Size the K vector such that all channels can be held.
   int nfreq = request.ny();

@@ -117,7 +117,7 @@ void doSolve2 (Prediffer& pre1, Prediffer& pre2, const vector<string>& solv)
       } else {
 	ASSERT (more);
       }
-      solver.setEquations (buffer, nreq, shape1[1], shape1[0], 0);
+      solver.setEquations (buffer, nreq, shape1[1]-1, shape1[0], 0);
     }
     delete [] buffer;
   }
@@ -138,7 +138,7 @@ void doSolve2 (Prediffer& pre1, Prediffer& pre2, const vector<string>& solv)
       } else {
 	ASSERT (more);
       }
-      solver.setEquations (buffer, nreq, shape2[1], shape2[0], 1);
+      solver.setEquations (buffer, nreq, shape2[1]-1, shape2[0], 1);
     }
     delete [] buffer;
   }
@@ -156,6 +156,7 @@ void doSolve2 (Prediffer& pre1, Prediffer& pre2, const vector<string>& solv)
 int main (int argc, const char* argv[])
 {
   cout << ">>>" << endl;
+  INIT_LOGGER("tPredSolv");
   try {
     if (argc < 5) {
       cerr << "Run as: tPredSolv user msname meqparmtable skyparmtable"
@@ -183,7 +184,6 @@ int main (int argc, const char* argv[])
       doSolve (pre1, solv);
     }
     // Do a solve using 2 prediffers.
-    /*
     {
       vector<int> antVec(10);
       for (uint i=0; i<antVec.size(); ++i) {
@@ -206,7 +206,6 @@ int main (int argc, const char* argv[])
       solv[2] = "StokesI.*";
       doSolve2 (pre1, pre2, solv);
     }
-    */
     // Do a solve using all stations.
     {
       vector<int> antVec(100);

@@ -22,7 +22,7 @@
 
 #include <BBS3/MNS/MeqParmPolc.h>
 #include <BBS3/MNS/MeqRequest.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <casa/Arrays/Matrix.h>
 
 using namespace casa;
@@ -45,7 +45,7 @@ int MeqParmPolc::initDomain (const MeqDomain&, int spidIndex)
   if (isSolvable()) {
     // For the time being we allow only one polc if the parameter
     // has to be solved.
-    AssertStr (itsPolcs.size() == 1,
+    ASSERTSTR (itsPolcs.size() == 1,
 	       "Multiple polcs used in the solve domain for parameter "
 	       << getName());
     for (unsigned int i=0; i<itsPolcs.size(); i++) {
@@ -158,17 +158,10 @@ MeqResult MeqParmPolc::getResult (const MeqRequest& request)
   return result;
 }
 
-void MeqParmPolc::getInitial (MeqMatrix& values) const
+void MeqParmPolc::getCurrentValue (MeqMatrix& value) const
 {
-  for (unsigned int i=0; i<itsPolcs.size(); i++) {
-    itsPolcs[i].getInitial (values);
-  }
-}
-
-void MeqParmPolc::getCurrentValue(MeqMatrix& value, bool denormalize) const
-{
-  Assert(1 == itsPolcs.size());
-  itsPolcs[0].getCurrentValue(value, denormalize);
+  ASSERT(1 == itsPolcs.size());
+  itsPolcs[0].getCurrentValue (value);
 }
 
 void MeqParmPolc::update (const MeqMatrix& value)

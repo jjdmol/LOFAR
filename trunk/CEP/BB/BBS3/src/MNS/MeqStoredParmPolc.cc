@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <BBS3/MNS/MeqStoredParmPolc.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/BasicMath/Math.h>
 
@@ -38,6 +38,15 @@ MeqStoredParmPolc::MeqStoredParmPolc (const string& name, MeqParmGroup* group,
 MeqStoredParmPolc::~MeqStoredParmPolc()
 {}
 
+string MeqStoredParmPolc::getTableName() const
+{
+  return itsTable->getName();
+}
+string MeqStoredParmPolc::getTableType() const
+{
+  return itsTable->getType();
+}
+
 void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
 {
   // Find the polc(s) for the given domain.
@@ -46,14 +55,9 @@ void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
   // If no default found, use a 2nd order polynomial with values 1.
   if (polcs.size() == 0) {
     MeqPolc polc = itsTable->getInitCoeff (getName());
-    AssertMsg (!polc.getCoeff().isNull(), "No value found for parameter "
+    ASSERTSTR (!polc.getCoeff().isNull(), "No value found for parameter "
 	       << getName());
     polc.setDomain (domain);
-    // If needed, normalize the initial values.
-    if (polc.isNormalized()) {
-      polc.setCoeffOnly (polc.normalize(polc.getCoeff(), domain));
-      polc.setSimCoeff  (polc.normalize(polc.getSimCoeff(), domain));
-    }
     ///    itsTable->putCoeff (getName(), polc);
     polcs.push_back (polc);
   } else {
@@ -67,16 +71,16 @@ void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
 
 int MeqStoredParmPolc::initDomain (const MeqDomain& domain, int spidIndex)
 {
-  AssertStr (domain==itsDomain, "MeqStoredParmPolc::initDomain - "
+  ASSERTSTR (domain==itsDomain, "MeqStoredParmPolc::initDomain - "
 	     "domain mismatches domain given in last readPolcs");
   if (isSolvable()) {
     const vector<MeqPolc>& polcs = getPolcs();
-    AssertMsg (polcs.size() == 1, "Solvable parameter " << getName() <<
+    ASSERTSTR (polcs.size() == 1, "Solvable parameter " << getName() <<
 	       " has multiple matching domains for time "
 	       << domain.startX() << ':' << domain.endX() << " and freq "
 	       << domain.startY() << ':' << domain.endY());
     const MeqDomain& polDom = polcs[0].domain();
-    AssertMsg (near(domain.startX(), polDom.startX())  &&
+    ASSERTSTR (near(domain.startX(), polDom.startX())  &&
 	       near(domain.endX(), polDom.endX())  &&
 	       near(domain.startY(), polDom.startY())  &&
 	       near(domain.endY(), polDom.endY()),

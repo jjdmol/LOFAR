@@ -28,7 +28,7 @@
 #include <BBS3/MNS/MeqRequest.h>
 #include <BBS3/MNS/MeqExpr.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <measures/Measures/MBaseline.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MEpoch.h>
@@ -80,19 +80,19 @@ void MeqStatUVW::calculate (const MeqRequest& request)
     }
   }
   // Calculate the UVW coordinates using the AIPS++ code.
-  AssertStr (itsStation, "UVW coordinates cannot be calculated");
+  ASSERTSTR (itsStation, "UVW coordinates cannot be calculated");
   MeqResult posx = itsStation->getPosX()->getResult (request);
   MeqResult posy = itsStation->getPosY()->getResult (request);
   MeqResult posz = itsStation->getPosZ()->getResult (request);
-  TRACER1 ("posx" << posx.getValue());
-  TRACER1 ("posy" << posy.getValue());
-  TRACER1 ("posz" << posz.getValue());
+  LOG_TRACE_FLOW ("posx" << posx.getValue());
+  LOG_TRACE_FLOW ("posy" << posy.getValue());
+  LOG_TRACE_FLOW ("posz" << posz.getValue());
   MVPosition mvpos(posx.getValue().getDouble(),
 		   posy.getValue().getDouble(),
 		   posz.getValue().getDouble());
   MVBaseline mvbl(mvpos);
   MBaseline mbl(mvbl, MBaseline::ITRF);
-  TRACER1 ("mbl " << mbl);
+  LOG_TRACE_FLOW ("mbl " << mbl);
   Quantum<double> qepoch(0, "s");
   qepoch.setValue (time);
   MEpoch mepoch(qepoch, MEpoch::UTC);
@@ -101,13 +101,13 @@ void MeqStatUVW::calculate (const MeqRequest& request)
   MBaseline::Convert mcvt(mbl, MBaseline::J2000);
   for (Int i=0; i<request.nx(); i++) {
     itsFrame.set (mepoch);
-    TRACER1 ("frame " << mbl.getRefPtr()->getFrame());
+    LOG_TRACE_FLOW ("frame " << mbl.getRefPtr()->getFrame());
     const MVBaseline& bas2000 = mcvt().getValue();
-    TRACER1 (bas2000);
-    TRACER1 (itsPhaseRef->direction().getValue());
+    LOG_TRACE_FLOW (bas2000);
+    LOG_TRACE_FLOW (itsPhaseRef->direction().getValue());
     MVuvw uvw2000 (bas2000, itsPhaseRef->direction().getValue());
     const Vector<double>& xyz = uvw2000.getValue();
-    TRACER1 (xyz(0) << ' ' << xyz(1) << ' ' << xyz(2));
+    LOG_TRACE_FLOW (xyz(0) << ' ' << xyz(1) << ' ' << xyz(2));
     *uptr++ = xyz(0);
     *vptr++ = xyz(1);
     *wptr++ = xyz(2);
@@ -148,9 +148,9 @@ void MeqStatUVW::calculate (const MeqRequest& request)
 //   itsW.setValue (cosdec * posx.getValue() * cosha - 
 // 		 cosdec * posy.getValue() * sinha +
 // 		 sindec * posz.getValue());
-  TRACER1 ('U' << itsU.getValue());
-  TRACER1 ('V' << itsV.getValue());
-  TRACER1 ('W' << itsW.getValue());
+  LOG_TRACE_FLOW ('U' << itsU.getValue());
+  LOG_TRACE_FLOW ('V' << itsV.getValue());
+  LOG_TRACE_FLOW ('W' << itsW.getValue());
 
   // Evaluate (if needed) for the perturbed parameter values.
   // Only station positions can be perturbed.

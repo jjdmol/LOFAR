@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <BBS3/MNS/MeqSourceList.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 
 namespace LOFAR {
@@ -41,8 +41,8 @@ void MeqSourceList::setSelected (const vector<int>& sel)
     }
   } else {
     for (unsigned int i=0; i<sel.size(); i++) {
-      Assert (sel[i] >= 0);
-      Assert (sel[i] < int(itsSources.size()));
+      ASSERT (sel[i] >= 0);
+      ASSERT (sel[i] < int(itsSources.size()));
     }
     itsSelected = sel;
   }

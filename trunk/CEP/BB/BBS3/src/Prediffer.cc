@@ -597,7 +597,10 @@ void Prediffer::initParms (const MeqDomain& domain, bool readPolcs)
 
       int nr = (*iter)->initDomain (domain, itsNrScid);
       if (nr > 0) {
-	itsParmData.push_back (ParmData((*iter)->getName(), 0, nr, itsNrScid,
+	itsParmData.push_back (ParmData((*iter)->getName(),
+					(*iter)->getTableName(),
+					(*iter)->getTableType(),
+					nr, itsNrScid,
 					(*iter)->getCoeffValues()));
 	itsIsParmSolvable[i] = true;
 	itsNrScid += nr;
@@ -1322,7 +1325,7 @@ void Prediffer::getParmValues (vector<string>& names,
   {
     if ((*iter)->isSolvable()) {
       names.push_back ((*iter)->getName());
-      (*iter)->getCurrentValue (val, false);
+      (*iter)->getCurrentValue (val);
       values.push_back (val);
     }
     i++;

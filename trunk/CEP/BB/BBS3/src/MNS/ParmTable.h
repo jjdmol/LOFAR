@@ -85,6 +85,21 @@ public:
 			       const MeqPolc& polc) = 0;
   virtual void putNewCoeff (const string& parmName,
 			    const MeqPolc& polc) = 0;
+
+  // Set or get the name and type.
+  // <group>
+  const string& getName() const
+    { return itsName; }
+  const string& getType() const
+    { return itsType; }
+  void setName (const string& name)
+    { itsName = name; }
+  void setType (const string& type)
+    { itsType = type; }
+  // </group>
+private:
+  string itsName;
+  string itsType;
 };
 
 
@@ -132,6 +147,13 @@ public:
   // Unlock the underlying table.
   void unlock()
     { itsRep->unlock(); }
+
+  // Get the name and type.
+  // <group>
+  const string& getName() const
+    { return itsRep->getName(); }
+  const string& getType() const
+    { return itsRep->getType(); }
 
 private:
   // Forbid copy and assignment.

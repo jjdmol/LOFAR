@@ -196,7 +196,6 @@ void newParm (const std::string& tableName, const std::string& parmName,
   MeqMatrix MM = polc.getSimCoeff().clone();
   MM += polc.getPertSimCoeff().clone();
   polc.setCoeff(MM);  
-  polc.setNormalize (kvmap.getBool ("normalize", true));
   double diff = kvmap.getDouble ("diff", 1e-6);
   bool diffrel = kvmap.getBool ("diff_rel", true);
   polc.setPerturbation (diff, diffrel);
@@ -223,7 +222,6 @@ void newParmDef (const std::string& tableName, const std::string& parmName,
   cout<<"pertsimcoeff:"<<endl;
   showArray(cout, polc.getPertSimCoeff());
   cout<<endl;
-  polc.setNormalize (kvmap.getBool ("normalize", true));
   double diff = kvmap.getDouble ("diff", 1e-6);
   bool diffrel = kvmap.getBool ("diff_rel", true);
   polc.setPerturbation (diff, diffrel);
@@ -247,7 +245,6 @@ void updateDef (const std::string& tableName, const std::string& parmName,
   cout<<"pertsimcoeff:"<<endl;
   showArray(cout, polc.getPertSimCoeff());
   cout<<endl;
-  polc.setNormalize (kvmap.getBool ("normalize", true));
   double diff = kvmap.getDouble ("diff", 1e-6);
   bool diffrel = kvmap.getBool ("diff_rel", true);
   polc.setPerturbation (diff, diffrel);

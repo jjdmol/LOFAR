@@ -343,7 +343,6 @@ namespace LOFAR {
     mphdata->y0 = itsMPH.getPolc().getY0();
     mphdata->domain = itsMPH.getPolc().domain();
     mphdata->isRelPerturbation = itsMPH.getPolc().isRelativePerturbation();
-    mphdata->isNormalized = itsMPH.getPolc().isNormalized();
 
     // adjust database thang to newly calculated values
     set_data(itsBuffer);
@@ -363,7 +362,6 @@ namespace LOFAR {
     mp.setX0(mphdata->x0);
     mp.setY0(mphdata->y0);
     mp.setDomain(mphdata->domain);
-    mp.setNormalize(mphdata->isNormalized);
 	
     // copy values of variable length
     char* extraData = &dataptr[sizeof(MPHData)];

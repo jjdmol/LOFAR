@@ -25,7 +25,7 @@
 #include <BBS3/MNS/MeqMatrixRealArr.h>
 #include <BBS3/MNS/MeqMatrixComplexSca.h>
 #include <BBS3/MNS/MeqMatrixComplexArr.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <casa/BasicSL/Constants.h>
 
 using namespace casa;
@@ -144,7 +144,7 @@ MeqMatrixRep* MeqMatrixRealArr::NAME (MeqMatrixComplexSca& left, \
 MeqMatrixRep* MeqMatrixRealArr::NAME (MeqMatrixRealArr& left,  \
 				      bool) \
 { \
-  Assert (nelements() == left.nelements()); \
+  ASSERT (nelements() == left.nelements()); \
   double* value = left.itsValue; \
   double* value2 = itsValue; \
   double* end = value + nelements(); \
@@ -156,7 +156,7 @@ MeqMatrixRep* MeqMatrixRealArr::NAME (MeqMatrixRealArr& left,  \
 MeqMatrixRep* MeqMatrixRealArr::NAME (MeqMatrixComplexArr& left, \
 				      bool) \
 { \
-  Assert (nelements() == left.nelements()); \
+  ASSERT (nelements() == left.nelements()); \
   complex<double>* value = left.itsValue; \
   double* value2 = itsValue; \
   int n = left.nelements(); \
@@ -192,7 +192,7 @@ MeqMatrixRep* MeqMatrixRealArr::posdiffRep (MeqMatrixRealSca& left)
 }
 MeqMatrixRep* MeqMatrixRealArr::posdiffRep (MeqMatrixRealArr& left)
 {
-  Assert (nelements() == left.nelements());
+  ASSERT (nelements() == left.nelements());
   MeqMatrixRealArr* v = new MeqMatrixRealArr (nx(), ny());
   double* value = v->itsValue;
   double* rvalue = itsValue;
@@ -225,7 +225,7 @@ MeqMatrixRep* MeqMatrixRealArr::tocomplexRep (MeqMatrixRealSca& left)
 }
 MeqMatrixRep* MeqMatrixRealArr::tocomplexRep (MeqMatrixRealArr& left)
 {
-  Assert (nelements() == left.nelements());
+  ASSERT (nelements() == left.nelements());
   MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (nx(), ny());
   complex<double>* value = v->itsValue;
   double* rvalue = itsValue;

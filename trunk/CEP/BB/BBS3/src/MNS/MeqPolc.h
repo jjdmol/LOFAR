@@ -96,13 +96,10 @@ public:
   // It returns the number of spids in this polc.
   int makeSolvable (int spidIndex);
 
-  // Get the current values of the solvable parameter and store them
-  // in the argument.
-  void getInitial (MeqMatrix& values) const;
-
   // Get the current value of the solvable parameter and store it
   // in the argument.
-  void getCurrentValue (MeqMatrix& value, bool denormalize) const;
+  void getCurrentValue (MeqMatrix& value) const
+    { value = itsCoeff; }
 
   // Update the solvable parameters with the new values.
   void update (const MeqMatrix& value);
@@ -135,28 +132,7 @@ public:
   double getY0() const
     { return itsY0; }
 
-  // Tell if the coefficients have to be normalized.
-  void setNormalize (bool normalize)
-    { itsNormalized = normalize; }
-
-  // Tell if the coefficients are normalized.
-  bool isNormalized() const
-    { return itsNormalized; }
-
-  // Normalize the coefficients for the given domain.
-  MeqMatrix normalize (const MeqMatrix& coeff, const MeqDomain&);
-
-  // Denormalize the coefficients.
-  MeqMatrix denormalize (const MeqMatrix& coeff) const;
-
-  // (De)normalize real coefficients.
-  static MeqMatrix normDouble (const MeqMatrix& coeff, double sx,
-			       double sy, double ox, double oy);
-
 private:
-  // Fill Pascal's triangle.
-  static void fillPascal();
-
   MeqMatrix    itsCoeff;
   MeqMatrix    itsSimCoeff;
   MeqMatrix    itsPertSimCoeff;
@@ -169,11 +145,6 @@ private:
   bool         itsIsRelPert;   //# true = perturbation is relative
   double       itsX0;
   double       itsY0;
-  bool         itsNormalized;  //# true = coefficients normalized to domain
-
-  //# Pascal's triangle for the binomial coefficients needed when normalizing.
-  static double theirPascal[10][10];
-  static bool   theirPascalFilled;
 };
 
 }
