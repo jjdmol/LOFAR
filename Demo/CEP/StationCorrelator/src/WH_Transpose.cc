@@ -113,9 +113,9 @@ void WH_Transpose::process() {
 				 *it+offset);
 	} 
 	offset++;
-	itsCurrentSample = (itsCurrentSample+1) % itsNsamples;
       }
     }
+    itsCurrentSample = (itsCurrentSample+1) % itsNsamples;
   }
 }
 
