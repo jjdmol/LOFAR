@@ -17,7 +17,7 @@ do
     shift
   elif [ "$1" = "-tag" ]; then
     shift
-    TESTNAME="${1}-${TESTNAME}"
+    TESTNAME="${TESTNAME}-${1}"
     shift
   else
     break;
