@@ -50,6 +50,7 @@ namespace LOFAR
     WH_RSP& operator= (const WH_RSP&);
 
     int itsNpackets;
+    int itsPolarisations;
     int itsNbeamlets;
     int itsNoutputs;
     int itsSzEPAheader;
