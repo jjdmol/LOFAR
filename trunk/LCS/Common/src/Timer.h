@@ -39,10 +39,10 @@ namespace LOFAR {
   // The measured time is real time (as opposed to user or system time).
   // The timer can be used to measure 10 nanosecond to a century time intervals.
 
-  class Timer {
+  class NSTimer {
     public:
-			   Timer(const char *name = 0);
-			   ~Timer();
+			   NSTimer(const char *name = 0);
+			   ~NSTimer();
 
 	void		   start();
 	void		   stop();
@@ -60,17 +60,17 @@ namespace LOFAR {
   };
 
 
-  std::ostream &operator << (std::ostream &, class Timer &);
+  std::ostream &operator << (std::ostream &, class NSTimer &);
 
 
-  inline void Timer::reset()
+  inline void NSTimer::reset()
   {
     total_time = 0;
     count      = 0;
   }
 
 
-  inline Timer::Timer(const char *name)
+  inline NSTimer::NSTimer(const char *name)
     :
     name(name != 0 ? strdup(name) : 0)
   {
@@ -78,14 +78,14 @@ namespace LOFAR {
   }
 
 
-  inline Timer::~Timer()
+  inline NSTimer::~NSTimer()
   {
     if (name != 0)
       free(name);
   }
 
 
-  inline void Timer::start()
+  inline void NSTimer::start()
   {
 #if (defined __GNUC__ || defined __INTEL_COMPILER) && (defined __i386 || defined __x86_64)
     asm volatile
@@ -104,7 +104,7 @@ namespace LOFAR {
   }
 
 
-  inline void Timer::stop()
+  inline void NSTimer::stop()
   {
 #if (defined __GNUC__ || defined __INTEL_COMPILER) && (defined __i386 || defined __x86_64)
     asm volatile
