@@ -610,9 +610,9 @@ const ars_test := function ()
   print res;
 }
 
-const stress_test := function (n=10000)
+const stress_test := function (n=10000,verbose=0)
 {
-  if( is_fail(mqsinit(verbose=0,gui=gui)) )
+  if( is_fail(mqsinit(verbose=verbose,gui=gui)) )
   {
     print mqs;
     fail;
@@ -649,7 +649,7 @@ const stress_test := function (n=10000)
       rec.children.b.children :=
       rec.children.c.children :=
       rec.children.d.children := spaste('const',i);
-    mqs.meq('Create.Node',rec,wait_reply=((i%10)==0),silent=T);
+    mqs.meq('Create.Node',rec,wait_reply=((i%10)==0),silent=T); 
     print 'Message sent';
   }
   print 'getting node list'
