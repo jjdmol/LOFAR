@@ -23,7 +23,9 @@ MEQ in general:
     waking up until the entire send() cycle is complete.
     
   * Fix MeqServer/test/solver_test to run in a "clean" environment
-   (i.e. no install, no .glishrc, etc -- mostly related to include paths)
+    (i.e. no install, no .glishrc, etc -- mostly related to include paths)
+   
+  * How to tell all the nodes to shut up?
     
         + publish intermediate results
           29/01/04: done

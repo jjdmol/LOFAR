@@ -1,3 +1,4 @@
+# use_suspend := T;
 # use_nostart  := T;
 # use_valgrind := T;
 # "--skin=helgrind --logfile=hg.meqserver";
@@ -63,6 +64,12 @@ const solver_test := function (gui=T,debug_level=2,verbose=1)
 
   # resolve children
   print mqs.meq('Resolve.Children',[name='solver']);
+  
+  print mqs.meq('Node.Publish.Results',[name='eq1']);
+  print mqs.meq('Node.Publish.Results',[name='lhs1']);
+  print mqs.meq('Node.Publish.Results',[name='c1']);
+  print mqs.meq('Node.Publish.Results',[name='a1x']);
+  print mqs.meq('Node.Publish.Results',[name='x']);
 
   global stx0,stx1,sty0,sty1,xs,ys;
 
@@ -96,6 +103,8 @@ const solver_test := function (gui=T,debug_level=2,verbose=1)
 
 if( any(argv == '-runtest' ) )
 {
+  global use_suspend,use_nostart;
+  use_suspend := use_nostart := F;
   if( solver_test(gui=F,debug_level=0,verbose=0) )
     exit 0;
   else
