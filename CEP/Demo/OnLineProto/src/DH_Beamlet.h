@@ -81,6 +81,12 @@ protected:
   public:
     DataPacket(){};
     BufferType itsFill;         // to ensure alignment
+
+    int itsStationID;        // source station ID
+    float itsFrequencyOffset;    // frequency offset for this beamlet
+    float itsElapsedTime;      // the hourangle
+    int itsNumberOfChannels; // number of frequency channels within this beamlet
+    float itsChannelWidth;      // frequency width of each frequency channel
   };
 
 private:
@@ -107,27 +113,27 @@ inline DH_Beamlet::BufferType* DH_Beamlet::getBufferElement(int freq)
   { return itsBuffer+freq; }
 
 inline int DH_Beamlet::getNumberOfChannels () const
-  { return itsNumberOfChannels; }
+  { return itsDataPacket->itsNumberOfChannels; }
 
 inline float DH_Beamlet::getElapsedTime () const
-  { DbgAssertStr(itsElapsedTime >= 0, "itsElapsedTime not initialised"); 
-    return itsElapsedTime; 
+  { DbgAssertStr(itsDataPacket->itsElapsedTime >= 0, "itsElapsedTime not initialised"); 
+    return itsDataPacket->itsElapsedTime; 
   }
 
 inline void DH_Beamlet::setElapsedTime (float time)
-  {  itsElapsedTime = time; }
+  {  itsDataPacket->itsElapsedTime = time; }
 
 inline float DH_Beamlet::getFrequencyOffset() const
-  { DbgAssertStr(itsFrequencyOffset >= 0, "itsFrequencyOffset not initialised"); 
-    return itsFrequencyOffset; }
+  { DbgAssertStr(itsDataPacket->itsFrequencyOffset >= 0, "itsFrequencyOffset not initialised"); 
+    return itsDataPacket->itsFrequencyOffset; }
 
 inline float DH_Beamlet::getChannelWidth() const
-  { DbgAssertStr(itsChannelWidth >= 0, "itsChannelWidth not initialised"); 
-    return itsChannelWidth; }
+  { DbgAssertStr(itsDataPacket->itsChannelWidth >= 0, "itsChannelWidth not initialised"); 
+    return itsDataPacket->itsChannelWidth; }
 
 inline int DH_Beamlet::getStationID() const
-  { DbgAssertStr(itsStationID >= 0, "itsStationID not initialised"); 
-    return itsStationID; 
+  { DbgAssertStr(itsDataPacket->itsStationID >= 0, "itsStationID not initialised"); 
+    return itsDataPacket->itsStationID; 
   }
 
 }
