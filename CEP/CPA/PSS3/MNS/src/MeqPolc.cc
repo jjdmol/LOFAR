@@ -225,7 +225,9 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
 
 int MeqPolc::makeSolvable (int spidIndex)
 {
-  Assert (itsSpidInx.size() == 0);
+  // Removed Assert, so the same parm can be set solvable multiple times
+  // in a row.
+  //  Assert (itsSpidInx.size() == 0);
   itsSpidInx.resize (itsCoeff.nelements());
   itsMaxNrSpid = 0;
   int nr=0;
