@@ -33,13 +33,13 @@
 # Note that PACKAGE and PACKAGES are synonyms.
 #
 PACKAGE = \
-         Common \
+         LCS/Common \
+	 LCS/CRD/Coord \
+	 LCS/CRD/CoordServer \
          DMI \
          BaseSim \
          LOFARSim \
          StationSim \
-	 LCS/CRD/Coord \
-	 LCS/CRD/CoordServer \
          CEP/Tools/PerfTest/P2Perf \
          CEP/CPA/OCTOPUSSY \
          CEP/CPA/OCTOGlish \
@@ -352,7 +352,7 @@ help:
 #
 # Create a new release
 #
-DEFAULT_FILES_TO_TAG=Makefile Versions autoconf_share Common
+DEFAULT_FILES_TO_TAG=Makefile Versions autoconf_share LCS/Common
 release:
 	@trap "rm -f /tmp/inputrc.$$PPID; exit" SIGINT;\
 	echo "TAB: complete-filename" > /tmp/inputrc.$$PPID;\
@@ -463,7 +463,7 @@ release:
 #
 # Create a new tag
 #
-DEFAULT_FILES_TO_TAG=Makefile Versions autoconf_share Common
+DEFAULT_FILES_TO_TAG=Makefile Versions autoconf_share LCS/Common
 tag:
 	@trap "rm -f /tmp/inputrc.$$PPID; exit" SIGINT;\
 	echo "TAB: complete-filename" > /tmp/inputrc.$$PPID;\
