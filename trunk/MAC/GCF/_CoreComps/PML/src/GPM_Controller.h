@@ -91,7 +91,7 @@ class GPMController : public GCFTask
 
   private: // admin members
     unsigned int                  _counter;
-    static const unsigned int MAX_BUF_SIZE = 1000;
+    static const unsigned int MAX_BUF_SIZE = 5000;
     char                          _buffer[MAX_BUF_SIZE];    
 };
 #endif

@@ -61,7 +61,7 @@ class GSSController : public GCFTask
 
 	private: // data members
 		static const unsigned int MAX_NR_OF_CLIENTS = 64;
-    static const unsigned int MAX_BUF_SIZE = 256;
+    static const unsigned int MAX_BUF_SIZE = 5000;
 
 		GCFTCPPort* _supClientPorts[MAX_NR_OF_CLIENTS];
     typedef map<string /*scope*/, GCFPortInterface*> TScopeRegister;

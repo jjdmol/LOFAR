@@ -71,7 +71,7 @@ class GPISupervisoryServer : public GCFTask
     TScopeRegister    _scopeRegister;
     
   private: // admin. data members
-    static const unsigned int MAX_BUF_SIZE = 256;
+    static const unsigned int MAX_BUF_SIZE = 5000;
     char              _buffer[MAX_BUF_SIZE];
 };
 
