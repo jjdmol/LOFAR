@@ -25,10 +25,12 @@
 #include <GCF/GCF_TMProtocols.h>
 
 GTMTimer::GTMTimer(GCFRawPort& port, 
+		   unsigned long id,
                    unsigned long timeVal, 
                    unsigned long intervalTime, 
                    const void* arg) :
-  _port(port), _time(timeVal), _timeLeft(timeVal), 
+  _port(port), _id(id), _time(timeVal),
+  _timeLeft(timeVal), 
   _intervalTime(intervalTime), 
   _arg(arg), _elapsed(false), _canceled(false)
 {
@@ -45,6 +47,7 @@ void GTMTimer::decreaseTime(unsigned long microSec)
     GCFTimerEvent te;
     te.sec = _time / 1000000;
     te.usec = _time - (te.sec * 1000000);
+    te.id = _id;
     te.arg = _arg;
     
     _port.dispatch(te);
