@@ -73,6 +73,10 @@ namespace AVT
       */
       virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error);
       /**
+      * concrete implementation of the active state
+      */
+      virtual GCFEvent::TResult concrete_active_state(GCFEvent& e, GCFPortInterface& p);
+      /**
       * returns true if the releasing state has finished
       */
       virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);

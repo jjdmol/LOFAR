@@ -23,7 +23,7 @@
 #ifndef AVTDefines_H
 #define AVTDefines_H
 
-#define PREPARE_TIME 10   
+#define PREPARE_TIME 5   
 
 #define LD_COMMAND_SCHEDULE           "SCHEDULE"
 #define LD_COMMAND_CANCEL             "CANCEL"
@@ -31,7 +31,6 @@
 #define LD_COMMAND_PREPARE            "PREPARE"
 #define LD_COMMAND_SUSPEND            "SUSPEND"
 #define LD_COMMAND_RESUME             "RESUME"
-#define LD_COMMAND_PREPARE            "PREPARE"
 #define LD_COMMAND_MAINTENANCE        "MAINTENANCE"
 #define LD_COMMAND_CANCELMAINTENANCE  "CANCELMAINTENANCE"
 

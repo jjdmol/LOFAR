@@ -25,26 +25,26 @@
 #define PROPERTY_BOARD1_MAINTENANCE_STATUS      "PIC_Rack1_SubRack1_Board1_Maintenance.status"
 #define PROPERTY_AP1_RCU1_MAINTENANCE_STATUS    "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance.status"
 #define PROPERTY_AP1_RCU2_MAINTENANCE_STATUS    "PIC_Rack1_SubRack1_Board1_AP1_RCU2_Maintenance.status"
-#define PROPERTY_SRG1_FILTER                    "PAC_SRG1.filter"
 #define PROPERTY_AP1_RCU1_STATUS                "PIC_Rack1_SubRack1_Board1_AP1_RCU1.status"
 #define PROPERTY_AP2_RCU1_STATUS                "PIC_Rack1_SubRack1_Board1_AP2_RCU1.status"
-#define PROPERTY_AP2_RCU2_STATUS                "PIC_Rack1_SubRack1_Board1_AP2_RCU2.status"
+#define PROPERTY_AP3_RCU1_STATUS                "PIC_Rack1_SubRack1_Board1_AP3_RCU1.status"
 #define PROPERTY_VT1_COMMAND                    "PAC_VT1.command"
 #define PROPERTY_VT1_STATUS                     "PAC_VT1.status"
 #define PROPERTY_VT2_COMMAND                    "PAC_VT2.command"
 #define PROPERTY_VT2_STATUS                     "PAC_VT2.status"
+#define PROPERTY_VT3_STATUS                     "PAC_VT3.status"
 #else
 #define PROPERTY_BOARD1_MAINTENANCE_STATUS      "PIC_Rack1_SubRack1_Board1_Maintenance_status"
 #define PROPERTY_AP1_RCU1_MAINTENANCE_STATUS    "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance_status"
 #define PROPERTY_AP1_RCU2_MAINTENANCE_STATUS    "PIC_Rack1_SubRack1_Board1_AP1_RCU2_Maintenance_status"
-#define PROPERTY_SRG1_FILTER                    "PAC_SRG1_filter"
 #define PROPERTY_AP1_RCU1_STATUS                "PIC_Rack1_SubRack1_Board1_AP1_RCU1_status"
 #define PROPERTY_AP2_RCU1_STATUS                "PIC_Rack1_SubRack1_Board1_AP2_RCU1_status"
-#define PROPERTY_AP2_RCU2_STATUS                "PIC_Rack1_SubRack1_Board1_AP2_RCU2_status"
+#define PROPERTY_AP3_RCU1_STATUS                "PIC_Rack1_SubRack1_Board1_AP3_RCU1_status"
 #define PROPERTY_VT1_COMMAND                    "PAC_VT1_command"
 #define PROPERTY_VT1_STATUS                     "PAC_VT1_status"
 #define PROPERTY_VT2_COMMAND                    "PAC_VT2_command"
 #define PROPERTY_VT2_STATUS                     "PAC_VT2_status"
+#define PROPERTY_VT3_STATUS                     "PAC_VT3_status"
 #endif
 
 #include <GCF/GCF_PValue.h>
@@ -62,6 +62,7 @@
 #include "../src/LogicalDevice_Protocol.ph"
 
 #include <stdio.h>
+#include <time.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -89,15 +90,16 @@ AVTTestMAC2Task::AVTTestMAC2Task(AVTTest<AVTTestMAC2Task>& tester) :
   m_propBoard1MaintenanceStatus(string(PROPERTY_BOARD1_MAINTENANCE_STATUS)),
   m_propAP1RCU1MaintenanceStatus(string(PROPERTY_AP1_RCU1_MAINTENANCE_STATUS)),
   m_propAP1RCU2MaintenanceStatus(string(PROPERTY_AP1_RCU2_MAINTENANCE_STATUS)),
-  m_propSRG1Filter(string(PROPERTY_SRG1_FILTER)),
   m_propAP1RCU1Status(string(PROPERTY_AP1_RCU1_STATUS)),
   m_propAP2RCU1Status(string(PROPERTY_AP2_RCU1_STATUS)),
-  m_propAP2RCU2Status(string(PROPERTY_AP2_RCU2_STATUS)),
+  m_propAP3RCU1Status(string(PROPERTY_AP3_RCU1_STATUS)),
   m_propVT1Command(string(PROPERTY_VT1_COMMAND)),
   m_propVT1Status(string(PROPERTY_VT1_STATUS)),
   m_propVT2Command(string(PROPERTY_VT2_COMMAND)),
   m_propVT2Status(string(PROPERTY_VT2_STATUS)),
-  m_maintenanceChangedCounter(0)
+  m_propVT3Status(string(PROPERTY_VT3_STATUS)),
+  m_maintenanceChangedCounter(0),
+  m_suspendedCounter(0)
 {
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
   m_answer.setTask(this);
@@ -129,9 +131,10 @@ AVTTestMAC2Task::AVTTestMAC2Task(AVTTest<AVTTestMAC2Task>& tester) :
   m_propAP1RCU2MaintenanceStatus.setAnswer(&m_answer);
   m_propAP1RCU1Status.setAnswer(&m_answer);
   m_propAP2RCU1Status.setAnswer(&m_answer);
-  m_propAP2RCU2Status.setAnswer(&m_answer);
+  m_propAP3RCU1Status.setAnswer(&m_answer);
   m_propVT1Status.setAnswer(&m_answer);
   m_propVT2Status.setAnswer(&m_answer);
+  m_propVT3Status.setAnswer(&m_answer);
 }
 
 AVTTestMAC2Task::~AVTTestMAC2Task()
@@ -282,6 +285,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_1(GCFEvent& event, GCFPortInterfac
     
     case F_EXIT:
     {
+      GCFPVUnsigned outMaintenance(0);
+      m_propBoard1MaintenanceStatus.setValue(outMaintenance);
       m_propBoard1MaintenanceStatus.unsubscribe();
       m_propVT1Status.unsubscribe();
       break;
@@ -397,6 +402,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_2(GCFEvent& event, GCFPortInterfac
     
     case F_EXIT:
     {
+      GCFPVUnsigned outMaintenance(0);
+      m_propAP1RCU1MaintenanceStatus.setValue(outMaintenance);
+      m_propAP1RCU2MaintenanceStatus.setValue(outMaintenance);
       m_propAP1RCU1MaintenanceStatus.unsubscribe();
       m_propAP1RCU2MaintenanceStatus.unsubscribe();
       m_propVT1Status.unsubscribe();
@@ -439,37 +447,23 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_3(GCFEvent& event, GCFPortInterfac
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_4_3: Start VT, no antennas in maintenance");
-      // put Board1 and AP1 out of maintenance.
-      GCFPVUnsigned outMaintenance(0);
-      bool testOk1 = (GCF_NO_ERROR==m_propBoard1MaintenanceStatus.setValue(outMaintenance));
-      m_tester._avttest(testOk1);
-      bool testOk2 = (GCF_NO_ERROR==m_propAP1RCU1MaintenanceStatus.setValue(outMaintenance) &&
-                      GCF_NO_ERROR==m_propAP1RCU2MaintenanceStatus.setValue(outMaintenance));
-      m_tester._avttest(testOk2);
-      if(!testOk1 || !testOk2)
+      // SCHEDULE <scheduleid>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
+      //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
+      string cmd("SCHEDULE 3,VT,");
+      string devices(string("VT1")+string(",")+string("BF1")+string(",")+string("SRG1")+string(","));
+      string times("0,0,");
+      string freq("110.0,");
+      string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
+      string direction("AZEL,0.0,0.0");
+      GCFPVString command(cmd+devices+times+freq+subbands+direction);
+      if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
       {
+        m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
       }
-      else
+      if(GCF_NO_ERROR != m_propVT1Status.subscribe())
       {
-        // SCHEDULE <scheduleid>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
-        //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
-        string cmd("SCHEDULE 3,VT,");
-        string devices(string("VT1")+string(",")+string("BF1")+string(",")+string("SRG1")+string(","));
-        string times("0,0,");
-        string freq("110.0,");
-        string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
-        string direction("AZEL,0.0,0.0");
-        GCFPVString command(cmd+devices+times+freq+subbands+direction);
-        if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
-        {
-          m_tester._avttest(false);
-          NEXTTEST(m_testSequenceIt);
-        }
-        if(GCF_NO_ERROR != m_propVT1Status.subscribe())
-        {
-            m_timerPort.setTimer(1.0);
-        }
+          m_timerPort.setTimer(1.0);
       }
       break;
     }      
@@ -625,24 +619,13 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_5(GCFEvent& event, GCFPortInterfac
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_4_5: Change antenna parameter using the first VT");
-      m_propertyLDSstatus.subscribe();
-      m_propSRG1Filter.subscribe();
+      m_propVT1Status.subscribe();
+      m_suspendedCounter=0;
 
       // SUSPEND VT1
       string cmd("SUSPEND");
       GCFPVString command(cmd);
       if (m_propVT1Command.setValue(command) != GCF_NO_ERROR)
-      {
-        m_tester._avttest(false);
-        NEXTTEST(m_testSequenceIt);
-      }
-      // SET FILTER <vt_name>,<starttime>,<stoptime>,<filter>
-      cmd = "SET FILTER ";
-      string devices(string("VT1")+string(","));
-      string times("0,0,");
-      string filter("4");
-      command.setValue(cmd+devices+times+filter);
-      if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
       {
         m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
@@ -655,34 +638,54 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_5(GCFEvent& event, GCFPortInterfac
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_LDS_STATUS)!=0)
+      if(strstr(pPropAnswer->pPropName,PROPERTY_VT1_STATUS)!=0)
       {
-        // the status of the Logical device scheduler has changed
+        // the status of the VT has changed
         GCFPVString status;
         status.copy(*pPropAnswer->pValue);
         LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
-        if(status.getValue() == string("Error"))
+        if(status.getValue() == string("Suspended"))
         {
-          m_tester._avttest(false);
+          m_suspendedCounter++;
+          if(m_suspendedCounter==1)
+          {
+            // PREPARE <starttime>,<stoptime>,<frequency>,<subbands>,<directiontype>,<directionangle1>,<directionangle2>
+            string cmd = "PREPARE ";
+            string times("0,0,");
+            string freq("100.0,");
+            string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
+            string direction("AZEL,0.0,0.0");
+            GCFPVString command(cmd+times+freq+subbands+direction);
+            if (m_propVT1Command.setValue(command) != GCF_NO_ERROR)
+            {
+              m_tester._avttest(false);
+              NEXTTEST(m_testSequenceIt);
+            }
+          }
+          else
+          {
+            // RESUME VT1
+            string cmd = "RESUME";
+            GCFPVString command(cmd);
+            if (m_propVT1Command.setValue(command) != GCF_NO_ERROR)
+            {
+              m_tester._avttest(false);
+              NEXTTEST(m_testSequenceIt);
+            }
+          }
+        }
+        else if(status.getValue() == string("Active"))
+        {
+          m_tester._avttest(true);
           NEXTTEST(m_testSequenceIt);
         }
-      }
-      else if(strstr(pPropAnswer->pPropName,PROPERTY_SRG1_FILTER)!=0)
-      {
-        // the filter of SRG1 has changed
-        GCFPVUnsigned filter;
-        filter.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,filter.getValue()));
-        m_tester._avttest(true);
-        NEXTTEST(m_testSequenceIt);
       }
       break;
     }
     
     case F_EXIT:
     {
-      m_propSRG1Filter.unsubscribe();
-      m_propertyLDSstatus.unsubscribe();
+      m_propVT1Status.unsubscribe();
       break;
     }
     
@@ -711,24 +714,13 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_6(GCFEvent& event, GCFPortInterfac
     {
       LOG_INFO("Test case 3_2_4_6: Change antenna parameter using the second VT");
       m_propertyLDSstatus.subscribe();
-      m_propSRG1Filter.subscribe();
       m_propVT2Status.subscribe();
-
+      m_suspendedCounter=0;
+      
       // SUSPEND VT2
       string cmd("SUSPEND");
       GCFPVString command(cmd);
       if (m_propVT2Command.setValue(command) != GCF_NO_ERROR)
-      {
-        m_tester._avttest(false);
-        NEXTTEST(m_testSequenceIt);
-      }
-      // SET FILTER <vt_name>,<starttime>,<stoptime>,<filter>
-      cmd = "SET FILTER ";
-      string devices(string("VT2")+string(","));
-      string times("0,0,");
-      string filter("2");
-      command.setValue(cmd+devices+times+filter);
-      if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
       {
         m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
@@ -747,7 +739,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_6(GCFEvent& event, GCFPortInterfac
         GCFPVString status;
         status.copy(*pPropAnswer->pValue);
         LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
-        if(status.getValue() == string("Error")) // expected, because the other VT is the owner
+        if(status.getValue() == string("Error"))
         {
           m_tester._avttest(false);
           NEXTTEST(m_testSequenceIt);
@@ -759,28 +751,47 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_6(GCFEvent& event, GCFPortInterfac
         GCFPVString status;
         status.copy(*pPropAnswer->pValue);
         LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
-        bool testOk = ( status.getValue() == string("Claimed") );
-        if(testOk)
+        if(status.getValue() == string("Suspended"))
         {
-          m_tester._avttest(testOk);
+          m_suspendedCounter++;
+          if(m_suspendedCounter==1)
+          {
+            // PREPARE <starttime>,<stoptime>,<frequency>,<subbands>,<directiontype>,<directionangle1>,<directionangle2>
+            string cmd = "PREPARE ";
+            string times("0,0,");
+            string freq("120.0,");
+            string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
+            string direction("AZEL,0.2,0.0");
+            GCFPVString command(cmd+times+freq+subbands+direction);
+            if (m_propVT2Command.setValue(command) != GCF_NO_ERROR)
+            {
+              m_tester._avttest(false);
+              NEXTTEST(m_testSequenceIt);
+            }
+          }
+          else
+          {
+            // RESUME VT2
+            string cmd = "RESUME";
+            GCFPVString command(cmd);
+            if (m_propVT2Command.setValue(command) != GCF_NO_ERROR)
+            {
+              m_tester._avttest(false);
+              NEXTTEST(m_testSequenceIt);
+            }
+          }
+        }
+        else if(status.getValue() == string("Active"))
+        {
+          m_tester._avttest(true);
           NEXTTEST(m_testSequenceIt);
         }
-      }
-      else if(strstr(pPropAnswer->pPropName,PROPERTY_SRG1_FILTER)!=0)
-      {
-        // the Filter of SRG1 has changed. this is not supposed to happen
-        GCFPVUnsigned filter;
-        filter.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,filter.getValue()));
-        m_tester._avttest(false);
-        NEXTTEST(m_testSequenceIt);
       }
       break;
     }
     
     case F_EXIT:
     {
-      m_propSRG1Filter.unsubscribe();
       m_propertyLDSstatus.unsubscribe();
       m_propVT2Status.unsubscribe();
       break;
@@ -813,7 +824,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_7(GCFEvent& event, GCFPortInterfac
       m_propVT1Status.subscribe();
 
       // SUSPEND VT1
-      string cmd("RELEASE");
+      string cmd("SUSPEND");
       GCFPVString command(cmd);
       if (m_propVT1Command.setValue(command) != GCF_NO_ERROR)
       {
@@ -834,11 +845,22 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_7(GCFEvent& event, GCFPortInterfac
         GCFPVString status;
         status.copy(*pPropAnswer->pValue);
         LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
-        if(status.getValue() == string("Releasing"))
+        if(status.getValue() == string("Suspended"))
+        {
+          // RELEASE VT1
+          string cmd("RELEASE");
+          GCFPVString command(cmd);
+          if (m_propVT1Command.setValue(command) != GCF_NO_ERROR)
+          {
+            m_tester._avttest(false);
+            NEXTTEST(m_testSequenceIt);
+          }
+        }
+        else if(status.getValue() == string("Releasing"))
         {
           m_tester._avttest(true);
+          NEXTTEST(m_testSequenceIt);
         }
-        NEXTTEST(m_testSequenceIt);
       }
       break;
     }
@@ -874,15 +896,13 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_8(GCFEvent& event, GCFPortInterfac
     {
       LOG_INFO("Test case 3_2_4_8: Change antenna parameter using the second VT");
       m_propertyLDSstatus.subscribe();
-      m_propSRG1Filter.subscribe();
-
-      // SET FILTER <vt_name>,<starttime>,<stoptime>,<filter>
-      string cmd("SET FILTER ");
-      string devices(string("VT2")+string(","));
-      string times("0,0,");
-      string filter("2");
-      GCFPVString command(cmd+devices+times+filter);
-      if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
+      m_propVT2Status.subscribe();
+      m_suspendedCounter=0;
+      
+      // SUSPEND VT2
+      string cmd("SUSPEND");
+      GCFPVString command(cmd);
+      if (m_propVT2Command.setValue(command) != GCF_NO_ERROR)
       {
         m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
@@ -907,27 +927,67 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_8(GCFEvent& event, GCFPortInterfac
           NEXTTEST(m_testSequenceIt);
         }
       }
-      else if(strstr(pPropAnswer->pPropName,PROPERTY_SRG1_FILTER)!=0)
+      else if(strstr(pPropAnswer->pPropName,PROPERTY_VT2_STATUS)!=0)
       {
-        // the filter of SRG1 has changed. this is not supposed to happen
-        GCFPVUnsigned filter;
-        filter.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,filter.getValue()));
-        m_tester._avttest(true);
-        NEXTTEST(m_testSequenceIt);
+        // the status of the VT has changed
+        GCFPVString status;
+        status.copy(*pPropAnswer->pValue);
+        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
+        if(status.getValue() == string("Suspended"))
+        {
+          m_suspendedCounter++;
+          if(m_suspendedCounter==1)
+          {
+            // PREPARE <starttime>,<stoptime>,<frequency>,<subbands>,<directiontype>,<directionangle1>,<directionangle2>
+            string cmd = "PREPARE ";
+            string times("0,0,");
+            string freq("120.0,");
+            string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
+            string direction("AZEL,0.2,0.0");
+            GCFPVString command(cmd+times+freq+subbands+direction);
+            if (m_propVT2Command.setValue(command) != GCF_NO_ERROR)
+            {
+              m_tester._avttest(false);
+              NEXTTEST(m_testSequenceIt);
+            }
+          }
+          else
+          {
+            // RESUME VT2
+            string cmd = "RESUME";
+            GCFPVString command(cmd);
+            if (m_propVT2Command.setValue(command) != GCF_NO_ERROR)
+            {
+              m_tester._avttest(false);
+              NEXTTEST(m_testSequenceIt);
+            }
+          }
+        }
+        else if(status.getValue() == string("Active"))
+        {
+          m_tester._avttest(true);
+          NEXTTEST(m_testSequenceIt);
+        }
       }
       break;
     }
     
     case F_EXIT:
     {
-      m_propSRG1Filter.unsubscribe();
       m_propertyLDSstatus.unsubscribe();
+      m_propVT2Status.unsubscribe();
       // stop the last running VT
-      // SUSPEND VT2
-      string cmd("RELEASE");
-      GCFPVString command(cmd);
-      m_propVT2Command.setValue(command);
+      {
+        // SUSPEND VT2
+        string cmd("SUSPEND");
+        GCFPVString command(cmd);
+        m_propVT2Command.setValue(command);
+      }
+      {
+        string cmd("RELEASE");
+        GCFPVString command(cmd);
+        m_propVT2Command.setValue(command);
+      }
       break;
     }
     
@@ -962,13 +1022,20 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_1(GCFEvent& event, GCFPortInterfac
       string cmd("SCHEDULE 6,VT,");
       string devices(string("VT1")+string(",")+string("BF1")+string(",")+string("SRG1")+string(","));
       
-      // create time 10 seconds from now
-      boost::posix_time::ptime startTime(boost::posix_time::second_clock::universal_time());
-      startTime += boost::posix_time::seconds(10); // UTC + 10 seconds
-      boost::posix_time::ptime stopTime(startTime);
-      stopTime += boost::posix_time::seconds(30); // starttime + 30 seconds
+      // create time 1-1-2010 12:00:00
+      struct tm utcTimeStruct;
+      memset(&utcTimeStruct,0,sizeof(utcTimeStruct));
+      utcTimeStruct.tm_year = 2010-1900;
+      utcTimeStruct.tm_mon  = 0;
+      utcTimeStruct.tm_mday = 1;
+      utcTimeStruct.tm_hour = 12;
+      utcTimeStruct.tm_min  = 0;
+      utcTimeStruct.tm_sec  = 0;
+      
+      time_t startTime = mktime(&utcTimeStruct);
+      time_t stopTime = startTime + 30; // starttime + 30 seconds
       char timesString[100];
-      sprintf(timesString,"%d,%d,",startTime.time_of_day().seconds(),stopTime.time_of_day().seconds());
+      sprintf(timesString,"%d,%d,",(int)startTime,(int)stopTime);
       
       string times(timesString);
       string freq("110.0,");
@@ -1045,13 +1112,20 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_2(GCFEvent& event, GCFPortInterfac
       string cmd("SCHEDULE 7,VT,");
       string devices(string("VT1")+string(",")+string("BF1")+string(",")+string("SRG1")+string(","));
       
-      // create time 10 seconds from now
-      boost::posix_time::ptime startTime(boost::posix_time::second_clock::universal_time());
-      startTime += boost::posix_time::seconds(60); // UTC + 60 seconds
-      boost::posix_time::ptime stopTime(startTime);
-      stopTime += boost::posix_time::seconds(30); // starttime + 30 seconds
+      // create time 1-1-2010 12:00:00
+      struct tm utcTimeStruct;
+      memset(&utcTimeStruct,0,sizeof(utcTimeStruct));
+      utcTimeStruct.tm_year = 2010-1900;
+      utcTimeStruct.tm_mon  = 0;
+      utcTimeStruct.tm_mday = 1;
+      utcTimeStruct.tm_hour = 12;
+      utcTimeStruct.tm_min  = 0;
+      utcTimeStruct.tm_sec  = 0;
+      
+      time_t startTime = mktime(&utcTimeStruct) + 60;
+      time_t stopTime = startTime + 30; // starttime + 30 seconds
       char timesString[100];
-      sprintf(timesString,"%d,%d,",startTime.time_of_day().seconds(),stopTime.time_of_day().seconds());
+      sprintf(timesString,"%d,%d,",(int)startTime,(int)stopTime);
       
       string times(timesString);
       string freq("110.0,");
@@ -1128,14 +1202,21 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_3(GCFEvent& event, GCFPortInterfac
       string cmd("SCHEDULE 8,VT,");
       string devices(string("VT1")+string(",")+string("BF1")+string(",")+string("SRG1")+string(","));
       
-      // create time 10 seconds from now
-      boost::posix_time::ptime startTime(boost::posix_time::second_clock::universal_time());
-      startTime += boost::posix_time::seconds(30); // UTC + 30 seconds
-      boost::posix_time::ptime stopTime(startTime);
-      stopTime += boost::posix_time::seconds(60); // starttime + 60 seconds
-      char timesString[100];
-      sprintf(timesString,"%d,%d,",startTime.time_of_day().seconds(),stopTime.time_of_day().seconds());
+      // create time 1-1-2010 12:00:00
+      struct tm utcTimeStruct;
+      memset(&utcTimeStruct,0,sizeof(utcTimeStruct));
+      utcTimeStruct.tm_year = 2010-1900;
+      utcTimeStruct.tm_mon  = 0;
+      utcTimeStruct.tm_mday = 1;
+      utcTimeStruct.tm_hour = 12;
+      utcTimeStruct.tm_min  = 0;
+      utcTimeStruct.tm_sec  = 0;
       
+      time_t startTime = mktime(&utcTimeStruct) + 10;
+      time_t stopTime = startTime + 60; // starttime + 60 seconds
+      char timesString[100];
+      sprintf(timesString,"%d,%d,",(int)startTime,(int)stopTime);
+
       string times(timesString);
       string freq("110.0,");
       string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
@@ -1166,7 +1247,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_3(GCFEvent& event, GCFPortInterfac
         }
         else
         {
-          m_tester._avttest(false);
+          m_tester._avttest(true); // lds does not check overlapping schedules.
         }
         NEXTTEST(m_testSequenceIt);
       }
@@ -1274,30 +1355,30 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_5(GCFEvent& event, GCFPortInterfac
 
       // SCHEDULE <scheduleid>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
       //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
-      string cmd1("SCHEDULE 9,VT,");
-      string cmd2("SCHEDULE 10,VT,");
-      string devices1(string("VT1")+string(",")+string("BF1")+string(",")+string("SRG1")+string(","));
-      string devices2(string("VT2")+string(",")+string("BF2")+string(",")+string("SRG2")+string(","));
+      string cmd("SCHEDULE 9,VT,");
+      string devices(string("VT2")+string(",")+string("BF2")+string(",")+string("SRG2")+string(","));
       
-      boost::posix_time::ptime startTime(boost::posix_time::second_clock::universal_time());
-      startTime += boost::posix_time::seconds(10); // UTC + 10 seconds
-      boost::posix_time::ptime stopTime(startTime);
-      stopTime += boost::posix_time::seconds(20); // starttime + 20 seconds
+      // create time 1-1-2010 12:00:00
+      struct tm utcTimeStruct;
+      memset(&utcTimeStruct,0,sizeof(utcTimeStruct));
+      utcTimeStruct.tm_year = 2010-1900;
+      utcTimeStruct.tm_mon  = 0;
+      utcTimeStruct.tm_mday = 1;
+      utcTimeStruct.tm_hour = 12;
+      utcTimeStruct.tm_min  = 0;
+      utcTimeStruct.tm_sec  = 0;
+      
+      time_t startTime = mktime(&utcTimeStruct);
+      time_t stopTime = startTime + 30; // starttime + 30 seconds
       char timesString[100];
-      sprintf(timesString,"%d,%d,",startTime.time_of_day().seconds(),stopTime.time_of_day().seconds());
+      sprintf(timesString,"%d,%d,",(int)startTime,(int)stopTime);
       
       string times(timesString);
       string freq("110.0,");
       string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
       string direction("AZEL,0.2,0.0");
-      GCFPVString command1(cmd1+devices1+times+freq+subbands+direction);
-      GCFPVString command2(cmd2+devices2+times+freq+subbands+direction);
-      if (m_propertyLDScommand.setValue(command1) != GCF_NO_ERROR)
-      {
-        m_tester._avttest(false);
-        NEXTTEST(m_testSequenceIt);
-      }
-      if (m_propertyLDScommand.setValue(command2) != GCF_NO_ERROR)
+      GCFPVString command(cmd+devices+times+freq+subbands+direction);
+      if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
       {
         m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
@@ -1318,11 +1399,11 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_5(GCFEvent& event, GCFPortInterfac
         LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
         if(status.getValue() == string("Error"))
         {
-          m_tester._avttest(true);
+          m_tester._avttest(false);
         }
         else
         {
-          m_tester._avttest(false);
+          m_tester._avttest(true);
         }
         NEXTTEST(m_testSequenceIt);
       }
@@ -1332,6 +1413,15 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_5(GCFEvent& event, GCFPortInterfac
     case F_EXIT:
     {
       m_propertyLDSstatus.unsubscribe();
+      // cancel all valid schedules
+      // CANCEL <scheduleid>
+      string cmd("CANCEL 6");
+      GCFPVString command(cmd);
+      m_propertyLDScommand.setValue(command);
+      cmd = string("CANCEL 9");
+      command.setValue(cmd);
+      m_propertyLDScommand.setValue(command);
+
       break;
     }
     
@@ -1388,7 +1478,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterfac
     {
       if(&p == &m_timerPort)
       {
-        if(GCF_NO_ERROR != m_propVT1Status.subscribe())
+        if(GCF_NO_ERROR != m_propVT3Status.subscribe())
         {
           m_timerPort.setTimer(1.0);
         }
@@ -1405,18 +1495,11 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterfac
       // SCHEDULE <scheduleid>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
       //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
       
-      // NOTE: SRG3 has to be configured to use RCU2..8, NOT RCU1
+      // NOTE: SRG2 uses RCU1 .. RCU4 (= AP1_RCU1,AP1_RCU2,AP2_RCU1,AP2_RCU2)
       string cmd("SCHEDULE 11,VT,");
-      string devices(string("VT1")+string(",")+string("BF1")+string(",")+string("SRG3")+string(","));
+      string devices(string("VT3")+string(",")+string("BF3")+string(",")+string("SRG2")+string(","));
       
-      boost::posix_time::ptime startTime(boost::posix_time::second_clock::universal_time());
-      startTime += boost::posix_time::seconds(0); // UTC + 0 seconds
-      boost::posix_time::ptime stopTime(startTime);
-      stopTime += boost::posix_time::seconds(10); // starttime + 10 seconds
-      char timesString[100];
-      sprintf(timesString,"%d,%d,",startTime.time_of_day().seconds(),stopTime.time_of_day().seconds());
-      
-      string times(timesString);
+      string times("0,0,");
       string freq("110.0,");
       string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
       string direction("AZEL,0.2,0.0");
@@ -1426,7 +1509,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterfac
         m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
       }
-      if(GCF_NO_ERROR != m_propVT1Status.subscribe())
+      if(GCF_NO_ERROR != m_propVT3Status.subscribe())
       {
         m_timerPort.setTimer(1.0);
       }
@@ -1450,7 +1533,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterfac
           NEXTTEST(m_testSequenceIt);
         }
       }
-      else if(strstr(pPropAnswer->pPropName,PROPERTY_VT1_STATUS)!=0)
+      else if(strstr(pPropAnswer->pPropName,PROPERTY_VT3_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
@@ -1461,12 +1544,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterfac
           // VT is active
           m_tester._avttest(true);
           GCFPVUnsigned inError(1);
-          bool testOk = (GCF_NO_ERROR==m_propAP1RCU1Status.setValue(inError));
+          bool testOk = (GCF_NO_ERROR==m_propAP3RCU1Status.setValue(inError));
           m_tester._avttest(testOk);
-          if(!testOk)
-          {
-            NEXTTEST(m_testSequenceIt);
-          }
+          NEXTTEST(m_testSequenceIt);
         }
       }
       break;
@@ -1475,7 +1555,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterfac
     case F_EXIT:
     {
       m_propertyLDSstatus.unsubscribe();
-      m_propVT1Status.unsubscribe();
+      m_propVT3Status.unsubscribe();
       break;
     }
     
@@ -1503,10 +1583,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_2(GCFEvent& event, GCFPortInterfac
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_7_2: 1 antenna defect, VT keeps on running");
-      m_propVT1Status.subscribe();
 
       GCFPVUnsigned inError(1);
-      bool testOk = (GCF_NO_ERROR==m_propAP2RCU1Status.setValue(inError));
+      bool testOk = (GCF_NO_ERROR==m_propAP1RCU1Status.setValue(inError));
       m_tester._avttest(testOk);
       if(!testOk)
       {
@@ -1514,8 +1593,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_2(GCFEvent& event, GCFPortInterfac
       }
       else
       {
-        // get the status of VT1. it should be Active
-        testOk = (GCF_NO_ERROR==m_propVT1Status.requestValue());
+        // get the status of VT3. it should be Active
+        testOk = (GCF_NO_ERROR==m_propVT3Status.requestValue());
         m_tester._avttest(testOk);
         if(!testOk)
         {
@@ -1525,32 +1604,12 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_2(GCFEvent& event, GCFPortInterfac
       break;
     }      
     
-    case F_VCHANGEMSG:
-    {
-      // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_VT1_STATUS)!=0)
-      {
-        // the status of the Logical device scheduler has changed
-        GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
-        if(status.getValue() != string("Active"))
-        {
-          m_tester._avttest(false);
-          NEXTTEST(m_testSequenceIt);
-        }
-      }
-      break;
-    }
-    
     case F_VGETRESP:
     {
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_VT1_STATUS)!=0)
+      if(strstr(pPropAnswer->pPropName,PROPERTY_VT3_STATUS)!=0)
       {
         // display the value:
         GCFPVString status;
@@ -1565,7 +1624,6 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_2(GCFEvent& event, GCFPortInterfac
     
     case F_EXIT:
     {
-      m_propVT1Status.unsubscribe();
       break;
     }
     
@@ -1593,10 +1651,10 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_3(GCFEvent& event, GCFPortInterfac
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_7_3: more antennas defect, VT stops");
-      m_propVT1Status.subscribe();
+      m_propVT3Status.subscribe();
 
       GCFPVUnsigned inError(1);
-      bool testOk = (GCF_NO_ERROR==m_propAP2RCU2Status.setValue(inError));
+      bool testOk = (GCF_NO_ERROR==m_propAP2RCU1Status.setValue(inError));
       m_tester._avttest(testOk);
       if(!testOk)
       {
@@ -1610,7 +1668,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_3(GCFEvent& event, GCFPortInterfac
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_VT1_STATUS)!=0)
+      if(strstr(pPropAnswer->pPropName,PROPERTY_VT3_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
@@ -1627,7 +1685,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_3(GCFEvent& event, GCFPortInterfac
     
     case F_EXIT:
     {
-      m_propVT1Status.unsubscribe();
+      m_propVT3Status.unsubscribe();
       break;
     }
     

@@ -63,7 +63,7 @@ AVTTestTask::AVTTestTask(AVTTest<AVTTestTask>& tester) :
   GCFTask((State)&AVTTestTask::initial, m_taskName),
   m_tester(tester),
   m_answer(),
-  m_beamserver(*this, gBSName, GCFPortInterface::SPP, ABS_PROTOCOL),
+  m_beamserver(*this, gBSName, GCFPortInterface::MSPP, ABS_PROTOCOL),
   m_propertyLDScommand(string(PROPERTY_LDS_COMMAND)),
   m_propertyLDSstatus(string(PROPERTY_LDS_STATUS)),
   m_propertyLDSWGFrequency(string(PROPERTY_LDS_WG_FREQUENCY)),
@@ -83,7 +83,8 @@ AVTTestTask::AVTTestTask(AVTTest<AVTTestTask>& tester) :
   m_statisticsTimerID(0xffffffff),
   m_beamAngle1(0.0),
   m_beamAngle2(0.0),
-  m_seqnr(0)
+  m_seqnr(0),
+  m_client_list()
 {
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
@@ -781,11 +782,21 @@ GCFEvent::TResult AVTTestTask::beamServer(GCFEvent& event, GCFPortInterface& p)
         m_statisticsTimerID=m_beamserver.setTimer(3.0); // statistics update
         break;
       
+      case F_ACCEPT_REQ:
+      {
+        GCFTCPPort* client = new GCFTCPPort();
+        client->init(*this, gBSName, GCFPortInterface::SPP, ABS_PROTOCOL);
+        m_beamserver.accept(*client);
+        m_client_list.push_back(client);
+      }
+      break;
+  
       case F_CONNECTED:
         break;
               
       case F_DISCONNECTED:
         p.close();
+        m_client_list.remove(&p);
         break;
               
       default:

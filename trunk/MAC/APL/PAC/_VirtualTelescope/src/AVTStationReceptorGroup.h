@@ -54,6 +54,7 @@ namespace AVT
                                        std::vector<boost::shared_ptr<AVTStationReceptor> >& rcus); 
       virtual ~AVTStationReceptorGroup();
 
+      virtual bool isPrepared(vector<string>& parameters);
       bool checkQualityRequirements(int maxFailedResources);
       void setStartTime(const time_t startTime);
       void setStopTime(const time_t stopTime);
@@ -80,6 +81,10 @@ namespace AVT
       */
       virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error);
       /**
+      * concrete implementation of the active state
+      */
+      virtual GCFEvent::TResult concrete_active_state(GCFEvent& e, GCFPortInterface& p);
+      /**
       * returns true if the releasing state has finished
       */
       virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
@@ -103,13 +108,11 @@ namespace AVT
                                     string&                               _name, 
                                     GCFPort::TPortType                    _type, 
                                     int                                   _protocol,
-                                    bool                                  _connected,
-                                    TLogicalDeviceState                   _ldState);
+                                    bool                                  _connected);
 
         boost::shared_ptr<AVTStationReceptor>   rcu;
         boost::shared_ptr<APLInterTaskPort>     clientPort;
         bool                                    connected;
-        TLogicalDeviceState                     ldState;
       };
       typedef std::vector<TStationReceptorConnection>  TStationReceptorVector;
       typedef TStationReceptorVector::iterator         TStationReceptorVectorIter;

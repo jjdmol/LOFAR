@@ -75,7 +75,8 @@ bool AVTStationReceptor::checkQualityRequirements()
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptor(%s)::%s",getName().c_str(),__func__));
   bool requirementsMet=true;
-  
+  int  unavailableCounter = 0;
+  int maxUnavailable = 1;
   // quality requirements for this station receptor:
   // - no resources unavailable
   // - no resources in alarm
@@ -199,6 +200,12 @@ GCFEvent::TResult AVTStationReceptor::concrete_preparing_state(GCFEvent& event, 
   }
 
   return status;
+}
+
+GCFEvent::TResult AVTStationReceptor::concrete_active_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptor(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  return GCFEvent::NOT_HANDLED;
 }
 
 GCFEvent::TResult AVTStationReceptor::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)

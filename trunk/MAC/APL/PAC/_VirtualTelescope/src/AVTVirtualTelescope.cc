@@ -52,10 +52,9 @@ AVTVirtualTelescope::AVTVirtualTelescope(string& taskName,
 // use process-internal-inter-task-port 
   m_beamFormerClient(sbf,*this, sbf.getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL),
   m_beamFormerConnected(false),
-  m_beamFormerState(LOGICALDEVICE_STATE_IDLE),
   m_stationReceptorGroupClient(srg,*this, srg.getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL),
   m_stationReceptorGroupConnected(false),
-  m_stationReceptorGroupState(LOGICALDEVICE_STATE_IDLE),
+  m_qualityCheckTimerId(0),
   m_startTime(0),
   m_stopTime(0),
   m_frequency(0.0)
@@ -107,32 +106,58 @@ void AVTVirtualTelescope::setFrequency(const double frequency)
   m_frequency=frequency;
 }
 
-bool AVTVirtualTelescope::_isBeamFormerClient(GCFPortInterface& port)
+bool AVTVirtualTelescope::_isBeamFormerClient(GCFPortInterface& port) const
 {
   return (&port == &m_beamFormerClient); // comparing two pointers. yuck?
 }
 
-bool AVTVirtualTelescope::_isStationReceptorGroupClient(GCFPortInterface& port)
+bool AVTVirtualTelescope::_isStationReceptorGroupClient(GCFPortInterface& port) const
 {
   return (&port == &m_stationReceptorGroupClient); // comparing two pointers. yuck?
 }
 
-bool AVTVirtualTelescope::allInState(GCFPortInterface& port, TLogicalDeviceState state)
+bool AVTVirtualTelescope::allInState(GCFPortInterface& port, TLogicalDeviceState state, bool requireSlaveActive) const
 {
   bool inState = false;
+  AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
   if(_isBeamFormerClient(port))
   {
-    m_beamFormerState = state;
+    // if the VT is the master, the state of the BF must be the same
+    if(resourceManager->isMaster(getName(),m_stationBeamformer.getName()))
+    {
+      inState = (state == m_stationBeamformer.getLogicalDeviceState());
+    }
+    else
+    {
+      if(requireSlaveActive)
+      {
+        inState = (LOGICALDEVICE_STATE_ACTIVE == m_stationBeamformer.getLogicalDeviceState());
+      }
+      else
+      {
+        inState = true;
+      }
+    }
   }
+  
   else if(_isStationReceptorGroupClient(port))
   {
-    m_stationReceptorGroupState = state;
-  }
-  if(_isBeamFormerClient(port) || _isStationReceptorGroupClient(port))
-  {
-    inState = (state == m_beamFormerState && 
-               state == m_stationReceptorGroupState);
-  }
+    if(resourceManager->isMaster(getName(),m_stationReceptorGroup.getName()))
+    {
+      inState = (state == m_stationReceptorGroup.getLogicalDeviceState());
+    }
+    else
+    {
+      if(requireSlaveActive)
+      {
+        inState = (LOGICALDEVICE_STATE_ACTIVE == m_stationReceptorGroup.getLogicalDeviceState());
+      }
+      else
+      {
+        inState = true;
+      }
+    }
+  } 
   return inState;
 }
 
@@ -241,8 +266,10 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_claiming_state(GCFEvent& event, 
   switch (event.signal)
   {
     case LOGICALDEVICE_CLAIMED:
+    {
+      AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
       // claimed event is received from the beam former or station receptor group
-      if(allInState(port,LOGICALDEVICE_STATE_CLAIMED))
+      if(allInState(port,LOGICALDEVICE_STATE_CLAIMED,true)) // require slave LD's to be active
       {
         // check quality requirements
         if(checkQualityRequirements())
@@ -256,6 +283,7 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_claiming_state(GCFEvent& event, 
         }
       }
       break;
+    }
     
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope(%s)::concrete_claiming_state, default",getName().c_str()));
@@ -276,13 +304,55 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_preparing_state(GCFEvent& event,
   switch (event.signal)
   {
     case LOGICALDEVICE_PREPARED:
+    {
+      AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
       // prepared event is received from the beam former or station receptor group
-      if(allInState(port,LOGICALDEVICE_STATE_SUSPENDED))
+      if(allInState(port,LOGICALDEVICE_STATE_SUSPENDED,true)) // require slave LD's to be active
       {
         stateFinished=true;
       }
       break;
-    
+    }
+        
+    default:
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope(%s)::concrete_preparing_state, default",getName().c_str()));
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult AVTVirtualTelescope::concrete_active_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (event.signal)
+  {
+    case F_TIMER:
+    {
+      GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
+      
+      if(timerEvent.id == (unsigned long)m_qualityCheckTimerId)
+      {
+        if(!checkQualityRequirements())
+        {
+          LOFAR_LOG_ERROR(VT_STDOUT_LOGGER,("AVTVirtualTelescope(%s): quality too low",getName().c_str(),__func__));
+          GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
+          LOGICALDEVICESuspendEvent suspendEvent;
+          dispatch(suspendEvent,dummyPort); 
+        }
+        // set quality check timer
+        m_qualityCheckTimerId = m_beamFormerClient.setTimer(5.0); // every 5 seconds
+      }
+      else 
+      {
+        status = GCFEvent::NOT_HANDLED;
+      }
+      break;
+    }
+        
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope(%s)::concrete_preparing_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -300,13 +370,15 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_releasing_state(GCFEvent& event,
   switch (event.signal)
   {
     case LOGICALDEVICE_RELEASED:
+    {
+      AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
       // released event is received from the beam former
-      if(allInState(port,LOGICALDEVICE_STATE_RELEASED))
+      if(allInState(port,LOGICALDEVICE_STATE_RELEASED,false)) // ignore slave LD's
       {
         stateFinished=true;
       }
       break;
-    
+    }
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope(%s)::concrete_releasing_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -354,7 +426,19 @@ void AVTVirtualTelescope::handlePropertySetAnswer(GCFEvent& answer)
             GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
             LOGICALDEVICEPrepareEvent prepareEvent;
             prepareEvent.parameters = prepareParameters;
-            dispatch(prepareEvent,dummyPort);
+            
+            unsigned int packSize;
+            char* buffer = (char*)prepareEvent.pack(packSize); // otherwise, the parameters are not available
+            GCFEvent e;
+            e.signal = prepareEvent.signal;
+            e.length = prepareEvent.length;
+            char* event_buf = new char[sizeof(e) + e.length];
+            memcpy(event_buf, &e, sizeof(e));
+            memcpy(event_buf+sizeof(e), buffer+packSize-e.length, e.length);
+            
+            dispatch(*((GCFEvent*)event_buf),dummyPort);
+            
+            delete[] event_buf;
           }
         }
         // SUSPEND
@@ -406,7 +490,7 @@ void AVTVirtualTelescope::handleAPCAnswer(GCFEvent& answer)
   }  
 }
 
-void AVTVirtualTelescope::concreteClaim(GCFPortInterface& /*port*/)
+void AVTVirtualTelescope::concreteClaim(GCFPortInterface& port)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope(%s)::%s",getName().c_str(),__func__));
   // claim my own resources
@@ -415,14 +499,28 @@ void AVTVirtualTelescope::concreteClaim(GCFPortInterface& /*port*/)
   resourceManager->requestResource(getName(),m_stationReceptorGroup.getName());
   
   // send claim message to BeamFormer and SRG
+  bool eventSent=false;
   LOGICALDEVICEClaimEvent claimEvent;
-  m_beamFormerClient.send(claimEvent);
-  m_stationReceptorGroupClient.send(claimEvent);
+  if(resourceManager->isMaster(getName(),m_stationBeamformer.getName()))
+  {
+    m_beamFormerClient.send(claimEvent);
+    eventSent=true;
+  }
+  if(resourceManager->isMaster(getName(),m_stationReceptorGroup.getName()))
+  {
+    m_stationReceptorGroupClient.send(claimEvent);
+    eventSent=true;
+  }
+  if(!eventSent)
+  {
+    LOGICALDEVICEClaimedEvent claimedEvent;
+    dispatch(claimedEvent,port);
+  }
 }
 
 void AVTVirtualTelescope::concretePrepare(GCFPortInterface& /*port*/,string& parameters)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope(%s)::%s",getName().c_str(),__func__));
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope(%s)::%s(%s)",getName().c_str(),__func__,parameters.c_str()));
   
   bool unableToPrepare = false;
   AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
@@ -474,20 +572,37 @@ void AVTVirtualTelescope::concretePrepare(GCFPortInterface& /*port*/,string& par
   }
   else
   {
-    LOFAR_LOG_ERROR(VT_STDOUT_LOGGER,("Unable to prepare Virtual Telescope %s",getName().c_str()));
-    TRAN(AVTLogicalDevice::claimed_state);
+    LOFAR_LOG_WARN(VT_STDOUT_LOGGER,("Unable to prepare Virtual Telescope %s",getName().c_str()));
   }
 }
 
-void AVTVirtualTelescope::concreteResume(GCFPortInterface& /*port*/)
+void AVTVirtualTelescope::concreteResume(GCFPortInterface& port)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope(%s)::%s",getName().c_str(),__func__));
   // resume my own resources
   
   // send resume message to BeamFormer and SRGT
+  bool eventSent=false;
   LOGICALDEVICEResumeEvent resumeEvent;
-  m_beamFormerClient.send(resumeEvent);
-  m_stationReceptorGroupClient.send(resumeEvent);
+  AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
+  if(resourceManager->isMaster(getName(),m_stationBeamformer.getName()))
+  {
+    m_beamFormerClient.send(resumeEvent);
+    eventSent=true;
+  }
+  if(resourceManager->isMaster(getName(),m_stationReceptorGroup.getName()))
+  {
+    m_stationReceptorGroupClient.send(resumeEvent);
+    eventSent=true;
+  }
+  if(!eventSent)
+  {
+    LOGICALDEVICEResumedEvent resumedEvent;
+    dispatch(resumedEvent,port);
+  }
+  
+  // set quality check timer
+  m_qualityCheckTimerId = m_beamFormerClient.setTimer(5.0); // every 5 seconds
 }
 
 void AVTVirtualTelescope::concreteSuspend(GCFPortInterface& /*port*/)
@@ -497,8 +612,15 @@ void AVTVirtualTelescope::concreteSuspend(GCFPortInterface& /*port*/)
   
   // send suspend message to BeamFormer and SRG
   LOGICALDEVICESuspendEvent suspendEvent;
-  m_beamFormerClient.send(suspendEvent);
-  m_stationReceptorGroupClient.send(suspendEvent);
+  AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
+  if(resourceManager->isMaster(getName(),m_stationBeamformer.getName()))
+  {
+    m_beamFormerClient.send(suspendEvent);
+  }
+  if(resourceManager->isMaster(getName(),m_stationReceptorGroup.getName()))
+  {
+    m_stationReceptorGroupClient.send(suspendEvent);
+  }
 }
 
 void AVTVirtualTelescope::concreteRelease(GCFPortInterface& /*port*/)
@@ -514,6 +636,6 @@ void AVTVirtualTelescope::concreteRelease(GCFPortInterface& /*port*/)
   // send release message to BeamFormer and SRG
   LOGICALDEVICEReleaseEvent releaseEvent;
   m_beamFormerClient.send(releaseEvent);
-  m_stationReceptorGroupClient.send(releaseEvent);
+  //m_stationReceptorGroupClient.send(releaseEvent);
 }
 

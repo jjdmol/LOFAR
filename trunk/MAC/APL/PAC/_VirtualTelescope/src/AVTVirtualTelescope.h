@@ -79,6 +79,10 @@ namespace AVT
       */
       virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error);
       /**
+      * concrete implementation of the active state
+      */
+      virtual GCFEvent::TResult concrete_active_state(GCFEvent& e, GCFPortInterface& p);
+      /**
       * returns true if the releasing state has finished
       */
       virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
@@ -97,10 +101,10 @@ namespace AVT
       /**
       * returns true if the specified port is the BeamFormer logical device SAP
       */
-      bool _isBeamFormerClient(GCFPortInterface& port);
-      bool _isStationReceptorGroupClient(GCFPortInterface& port);
+      bool _isBeamFormerClient(GCFPortInterface& port) const;
+      bool _isStationReceptorGroupClient(GCFPortInterface& port) const;
       
-      bool allInState(GCFPortInterface& port, TLogicalDeviceState state);
+      bool allInState(GCFPortInterface& port, TLogicalDeviceState state, bool requireSlaveActive) const;
 
       // The BeamFormer task    
       AVTStationBeamformer&     m_stationBeamformer;
@@ -111,10 +115,11 @@ namespace AVT
   //    GCFPort m_beamFormerClient;
       APLInterTaskPort    m_beamFormerClient;
       bool                m_beamFormerConnected;
-      TLogicalDeviceState m_beamFormerState;
       APLInterTaskPort    m_stationReceptorGroupClient;
       bool                m_stationReceptorGroupConnected;
-      TLogicalDeviceState m_stationReceptorGroupState;
+      long                m_qualityCheckTimerId;
+      GCFPort             m_qualityCheckTimerPort;
+      
       
       time_t              m_startTime;
       time_t              m_stopTime;

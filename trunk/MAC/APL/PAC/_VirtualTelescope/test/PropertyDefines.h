@@ -210,37 +210,37 @@ const TPropertySet primaryPropertySetSBF1 =
 
 const TPropertySet primaryPropertySetSBF2 = 
 {
-  5, "PAC_VT1_BF2", primaryPropertiesSBF
+  5, "PAC_VT2_BF2", primaryPropertiesSBF
 };
 
 const TPropertySet primaryPropertySetSBF3 = 
 {
-  5, "PAC_VT1_BF3", primaryPropertiesSBF
+  5, "PAC_VT3_BF3", primaryPropertiesSBF
 };
 
 const TPropertySet primaryPropertySetSBF4 = 
 {
-  5, "PAC_VT1_BF4", primaryPropertiesSBF
+  5, "PAC_VT4_BF4", primaryPropertiesSBF
 };
 
 const TPropertySet primaryPropertySetSBF5 = 
 {
-  5, "PAC_VT1_BF5", primaryPropertiesSBF
+  5, "PAC_VT5_BF5", primaryPropertiesSBF
 };
 
 const TPropertySet primaryPropertySetSBF6 = 
 {
-  5, "PAC_VT1_BF6", primaryPropertiesSBF
+  5, "PAC_VT6_BF6", primaryPropertiesSBF
 };
 
 const TPropertySet primaryPropertySetSBF7 = 
 {
-  5, "PAC_VT1_BF7", primaryPropertiesSBF
+  5, "PAC_VT7_BF7", primaryPropertiesSBF
 };
 
 const TPropertySet primaryPropertySetSBF8 = 
 {
-  5, "PAC_VT1_BF8", primaryPropertiesSBF
+  5, "PAC_VT8_BF8", primaryPropertiesSBF
 };
 
 const TProperty propertiesBeamServer[] =

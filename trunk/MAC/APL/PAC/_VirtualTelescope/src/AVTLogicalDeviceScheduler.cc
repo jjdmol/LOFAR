@@ -582,6 +582,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
         LOG_TRACE_OBJ("Logical device timer triggered");
         if(checkPrepareTimer(it->first,timerEvent.id))
         {
+          port.cancelTimer(timerEvent.id);
           // this is a prepare timer for the schedule of a logical device. claim the device
           LOGICALDEVICEClaimEvent claimEvent;
           port.send(claimEvent);
@@ -590,12 +591,14 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
         }
         else if(checkStartTimer(it->first,timerEvent.id))
         {
+          port.cancelTimer(timerEvent.id);
           // this is a start timer for the schedule of a logical device. resume the device
           LOGICALDEVICEResumeEvent resumeEvent;
           port.send(resumeEvent);
         }
         else if(checkStopTimer(it->first,timerEvent.id))
         {
+          port.cancelTimer(timerEvent.id);
           // this is a stop timer for the schedule of a logical device. suspend the device
           LOGICALDEVICESuspendEvent suspendEvent;
           port.send(suspendEvent);
