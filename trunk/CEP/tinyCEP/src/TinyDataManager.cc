@@ -111,11 +111,14 @@ namespace LOFAR
     itsInDHs = new DataHolder* [itsNinputs];          // Clones the DataHolders
     itsDoAutoTriggerIn = new bool[itsNinputs];
     itsInputRates = new int[itsNinputs];
+    itsReadyInFlag = new bool[itsNinputs];
+    itsReadyOutFlag = new bool[itsNoutputs];
     for (int ch = 0; ch < itsNinputs; ch++)
     {
       itsInDHs[ch] = that.itsInDHs[ch]->clone();
       itsDoAutoTriggerIn[ch] = that.doAutoTriggerIn(ch);
       itsInputRates[ch] = that.itsInputRates[ch];
+      itsReadyInFlag[ch] = that.itsReadyInFlag[ch];
     }
     itsOutDHs = new DataHolder* [itsNoutputs];
     itsDoAutoTriggerOut = new bool[itsNoutputs];
@@ -125,6 +128,7 @@ namespace LOFAR
       itsOutDHs[ch] = that.itsOutDHs[ch]->clone();
       itsDoAutoTriggerOut[ch]=that.doAutoTriggerOut(ch);
       itsOutputRates[ch] = that.itsOutputRates[ch];
+      itsReadyOutFlag[ch] = that.itsReadyOutFlag[ch];
     }
   }
 
