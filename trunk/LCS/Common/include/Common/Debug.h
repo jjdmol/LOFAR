@@ -129,15 +129,21 @@ namespace LOFAR
 // DebugLevel expands to the debugging level of current context (an int)
 //
 #define DebugName       (getDebugContext().name())
-#define DebugLevel      (getDebugContext().level())
 //
 // Debug(level) is True if the debugging level of the current context
 // is >= the specified level.
 //
-#if defined(LOFAR_DEBUG) && !defined(DISABLE_DEBUG_OUTPUT) 
-#define Debug(level) getDebugContext().check(level)
-#else
+#if !defined(LOFAR_DEBUG)
+#undef DISABLE_DEBUG_OUTPUT 
+#define DISABLE_DEBUG_OUTPUT 1
+#endif
+
+#ifdef DISABLE_DEBUG_OUTPUT
+#define DebugLevel   (-1)
 #define Debug(level) (false)
+#else
+#define DebugLevel   (getDebugContext().level())
+#define Debug(level) getDebugContext().check(level)
 #endif
 
 //      =====[ Generating debugging messages ]=====
