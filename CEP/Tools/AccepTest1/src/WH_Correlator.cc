@@ -21,6 +21,8 @@
 #include <DH_CorrCube.h>
 #include <WH_Correlator.h>
 
+#define DO_TIMING
+
 using namespace LOFAR;
 
 WH_Correlator::WH_Correlator(const string& name, 
@@ -75,10 +77,12 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 }
 
 void WH_Correlator::process() {
-  
   double starttime, stoptime, cmults;
-#define DO_TIMING
+  // variables to store prefetched antenna data
+  DH_Vis::BufferType *s1_val_0, *s1_val_1;
+  DH_Vis::BufferType *s2_val_0, *s2_val_1;
 
+  // 
 #ifdef DO_TIMING
   double agg_bandwidth = 0.0;
   if (t_start.tv_sec != 0 && t_start.tv_usec != 0) {
@@ -108,6 +112,7 @@ void WH_Correlator::process() {
   }
 #endif 
 
+
   DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
   DH_Vis      *outDH = (DH_Vis*)(getDataManager().getOutHolder(0));
 
@@ -115,7 +120,6 @@ void WH_Correlator::process() {
   memset(outDH->getBuffer(), 
 	 0,
 	 itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType));
-
 
 #ifdef DO_TIMING
   starttime = timer();
@@ -125,8 +129,10 @@ void WH_Correlator::process() {
   //
   // this block of code does the cast from complex<uint16> to complex<float>
   // 
-  uint16* in_ptr = (uint16*) inDH->getBuffer();
-  float*  in_buffer = new float[2*inDH->getBufSize()];
+  // This is a uint16 pointer
+  DH_CorrCube::BufferPrimitive* in_ptr = (DH_CorrCube::BufferPrimitive*) inDH->getBuffer();
+  // This is a float pointer
+  DH_Vis::BufferPrimitive*  in_buffer = new DH_Vis::BufferPrimitive[2*inDH->getBufSize()];
 
   // consider the input buffer of complex<uint16> to be uint16 of twice that size
   // we can now offer the compiler a single for loop which has great potential to unroll
@@ -134,8 +140,15 @@ void WH_Correlator::process() {
     *(in_buffer+i) = static_cast<float> ( *(in_ptr+i) ); 
   }
 
-   DH_Vis::BufferType s1_val, s2_val;
-   //   DH_Vis::BufferType* out_ptr = outDH->getBuffer();
+
+  //
+  // This is the actual correlator
+  // Note that there is both a general correlator as well as a BlueGene specific
+  // implementation.
+  // 
+#ifdef HAVE_BGL
+  DH_Vis::BufferType* out_ptr = outDH->getBuffer();
+#endif
 
   for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
 #ifdef HAVE_MPE
@@ -147,33 +160,54 @@ void WH_Correlator::process() {
 
       for (int   station1 = 0; station1 < itsNelements; station1++) {
 	int s1_addr = sample_addr+itsNpolarisations*station1;
+	// prefetch station1, both polarisation 0 and 1
+	s1_val_0 = reinterpret_cast<DH_Vis::BufferType*>( in_buffer + s1_addr );
+	s1_val_1 = reinterpret_cast<DH_Vis::BufferType*>( in_buffer + s1_addr + 1 );
 
 	for (int station2 = 0; station2 <= station1; station2++) {
 	  int s2_addr = sample_addr+itsNpolarisations*station2;
 
-	  for (int polarisation = 0; polarisation < itsNpolarisations; polarisation++) {
-
- 	    // prefetch from L1
- 	    s1_val = *( in_buffer + s1_addr + polarisation );
- 	    s2_val = *( in_buffer + s2_addr + polarisation );
-
+ 	    // prefetch station2, both polarisation 0 and 1
+  	    s2_val_0 = reinterpret_cast<DH_Vis::BufferType*>( in_buffer + s2_addr );
+	    s2_val_1 = reinterpret_cast<DH_Vis::BufferType*>( in_buffer + s2_addr +1 ) ;
 #ifdef HAVE_BGL
-
 	    // load prefetched values into FPU
-	    __lfps((float*) s1_val);
-	    __lfps((float*) s2_val);
- 
-	    // do the actual complex fused multiply-add
-	    // understand that. Even though it's an inlined function, it may still be too expensive
-	    __fxcxnpma(out_ptr++, (float*)s1_val, (float*)s2_val);
-	    // note that the output buffer is assumed to be contiguous
+	    __lfps((float*) s1_val_0);
+	    __lfps((float*) __real__ s2_val_0.real());
 
+	    // do the actual complex fused multiply-add (polarisation 0)
+	    // note that s1_val and s2_val are pointer of the type complex<float>
+	    // this may be incompatible with the __real__ and __imag__ macro
+	    // - we may want to use the .real() and .imag() methods of the complex class instead
+	    // - if this is too slow, we should consider rewriting the correlator using the C complex.h header
+	    out_ptr += __fxcpmadd(out_ptr, s1_val_0, __real__ s2_val_0) ;
+	    __lfps((float *) __imag__ s2_val_0);
+	    out_ptr += __fxcxnpma(out_ptr, s1_val_0, __imag__ s2_val_0);
+
+	    // note that the output buffer is assumed to be contiguous
+	    // also note that I'm trying to force a add-store by using the += in the intrinsic.
+	    // I don't know if this will work, since the first argument of the intrinsic may very well 
+	    // just overwrite the resulting value.
+
+	    out_ptr++;
+	    // now do the same thing for polarisation 1
+	    __lfps((float*) s1_val_1);
+	    __lfps((float*) __real__ s2_val_2);
+	    out_ptr += __fxcpmadd(out_ptr, s1_val_1, __real__ s2_val_1) ;
+	    __lfps((float*) __imag__ s2_val_1);
+	    out_ptr += __fxcxnpma(out_ptr, s1_val_1, __imag__ s2_val_1);
+	    
+	    out_ptr++;
 #else 
 	    // this is purely functional code, very expensive and slow as hell
-	    outDH->addBufferElementVal(station1, station2, fchannel, polarisation,
-				       s1_val * s2_val);
+	    outDH->addBufferElementVal(station1, station2, fchannel, 0,
+				       *(s1_val_0) * *(s2_val_0));
+	    outDH->addBufferElementVal(station1, station2, fchannel, 1,
+				       *(s1_val_1) * *(s2_val_1));
+	    
+	    
 #endif 	    
- 	  }
+//  	  }
 	}
       }
     }
@@ -188,7 +222,7 @@ void WH_Correlator::process() {
 
 #ifdef DO_TIMING
 #ifdef HAVE_MPI
-  double time = (stoptime-starttime);
+  double elapsed_time = (stoptime-starttime);
   double min_time;
 
   // we're selecting the highest performance figure of the nodes. Since BG/L is a hard real-time 
@@ -197,7 +231,7 @@ void WH_Correlator::process() {
   // performance of the application.
 
   cmults = itsNsamples * itsNchannels * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
-  MPI_Reduce(&time, &min_time, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&elapsed_time, &min_time, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
   
   if ((TH_MPI::getCurrentRank() == 0) && (t_start.tv_sec != 0) && (t_start.tv_usec != 0)) {
     cout << 1.0e-6*cmults/min_time << " Mcprod/sec" << endl;
