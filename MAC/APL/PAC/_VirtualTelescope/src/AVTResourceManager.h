@@ -40,6 +40,9 @@
 class GCFEvent;
 class GCFPortInterface;
 
+namespace LOFAR
+{
+  
 namespace AVT
 {
   class AVTResourceManager; // forward declaration because of typedef
@@ -99,5 +102,6 @@ namespace AVT
       ResourceRequestsT                               m_resourceRequests;
   };
 
-};
+};//AVT
+};//LOFAR
 #endif

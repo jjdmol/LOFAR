@@ -35,6 +35,9 @@
 //# VirtualTelescope Includes
 #include "AVTLogicalDevice.h"
 
+namespace LOFAR
+{
+  
 namespace AVT
 {
   // forward declaration
@@ -125,5 +128,7 @@ namespace AVT
 
   };
   
-};
+};//AVT
+
+};//LOFAR
 #endif

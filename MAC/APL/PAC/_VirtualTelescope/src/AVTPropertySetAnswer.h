@@ -27,29 +27,38 @@
 //# Common Includes
 //# GCF Includes
 #include <GCF/PAL/GCF_Answer.h>
+#include <GCF/TM/GCF_Event.h>
 //# VirtualTelescope Includes
 
 // forward declaration
 
-class GCFEvent;
-class AVTPropertySetAnswerHandlerInterface;
-
-class AVTPropertySetAnswer : public GCFAnswer
+namespace LOFAR
 {
-  public:
-    explicit AVTPropertySetAnswer(AVTPropertySetAnswerHandlerInterface& handler);
-    virtual ~AVTPropertySetAnswer();
+  
+namespace AVT
+{
 
-    virtual void handleAnswer(GCFEvent& answer);
-    
-  protected:
-    AVTPropertySetAnswer();
-    // protected copy constructor
-    AVTPropertySetAnswer(const AVTPropertySetAnswer&);
-    // protected assignment operator
-    AVTPropertySetAnswer& operator=(const AVTPropertySetAnswer&);
-
-  private:    
-    AVTPropertySetAnswerHandlerInterface& m_handler;
-};
+  class GCFEvent;
+  class AVTPropertySetAnswerHandlerInterface;
+  
+  class AVTPropertySetAnswer : public GCFAnswer
+  {
+    public:
+      explicit AVTPropertySetAnswer(AVTPropertySetAnswerHandlerInterface& handler);
+      virtual ~AVTPropertySetAnswer();
+  
+      virtual void handleAnswer(GCFEvent& answer);
+      
+    protected:
+      AVTPropertySetAnswer();
+      // protected copy constructor
+      AVTPropertySetAnswer(const AVTPropertySetAnswer&);
+      // protected assignment operator
+      AVTPropertySetAnswer& operator=(const AVTPropertySetAnswer&);
+  
+    private:    
+      AVTPropertySetAnswerHandlerInterface& m_handler;
+  };
+};//AVT
+};//LOFAR
 #endif

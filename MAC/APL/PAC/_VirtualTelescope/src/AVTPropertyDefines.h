@@ -23,6 +23,9 @@
 #ifndef AVTPropertyDefines_H
 #define AVTPropertyDefines_H
 
+namespace LOFAR
+{
+  
 namespace AVT
 {
 
@@ -159,6 +162,7 @@ PROPERTYCONFIG_ITEM(PROPNAME_SUBBANDSTART, GCF_WRITABLE_PROP, "0")
 PROPERTYCONFIG_ITEM(PROPNAME_SUBBANDEND, GCF_WRITABLE_PROP, "127")
 PROPERTYCONFIG_END
 
-};
+};//AVT
+};//LOFAR
 
 #endif //AVTPropertyDefines_h

@@ -32,25 +32,33 @@
 
 // forward declaration
 
-class AVTPropertySetAnswerHandlerInterface
+namespace LOFAR
 {
-  public:
-
-    AVTPropertySetAnswerHandlerInterface() {}; 
-    virtual ~AVTPropertySetAnswerHandlerInterface() {};
-
-    /**
-     * PropertySet answer handling is implemented in the derived classes. 
-     */
-    virtual void handlePropertySetAnswer(GCFEvent& answer)=0;
-
-  protected:
-    // protected copy constructor
-    AVTPropertySetAnswerHandlerInterface(const AVTPropertySetAnswerHandlerInterface&);
-    // protected assignment operator
-    AVTPropertySetAnswerHandlerInterface& operator=(const AVTPropertySetAnswerHandlerInterface&);
-
-  private:
   
-};
+namespace AVT
+{
+
+  class AVTPropertySetAnswerHandlerInterface
+  {
+    public:
+  
+      AVTPropertySetAnswerHandlerInterface() {}; 
+      virtual ~AVTPropertySetAnswerHandlerInterface() {};
+  
+      /**
+       * PropertySet answer handling is implemented in the derived classes. 
+       */
+      virtual void handlePropertySetAnswer(GCFEvent& answer)=0;
+  
+    protected:
+      // protected copy constructor
+      AVTPropertySetAnswerHandlerInterface(const AVTPropertySetAnswerHandlerInterface&);
+      // protected assignment operator
+      AVTPropertySetAnswerHandlerInterface& operator=(const AVTPropertySetAnswerHandlerInterface&);
+  
+    private:
+    
+  };
+};//AVT
+};//LOFAR
 #endif

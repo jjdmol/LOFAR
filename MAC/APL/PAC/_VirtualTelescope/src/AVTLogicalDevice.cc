@@ -33,9 +33,12 @@
 #define DECLARE_SIGNAL_NAMES
 #include "LogicalDevice_Protocol.ph"
 
-using namespace LOFAR;
-using namespace AVT;
 using namespace std;
+
+namespace LOFAR
+{
+namespace AVT
+{
 
 AVTLogicalDevice::AVTLogicalDevice(string& taskName, 
                                    const string& scope,
@@ -529,3 +532,6 @@ GCFEvent::TResult AVTLogicalDevice::releasing_state(GCFEvent& event, GCFPortInte
 
   return status;
 }
+
+};
+};

@@ -39,6 +39,9 @@
 #include "AVTDefines.h"
 #include "AVTLogicalDevice.h"
 
+namespace LOFAR
+{
+  
 namespace AVT
 {
   // forward declaration
@@ -129,6 +132,7 @@ namespace AVT
       time_t                  m_stopTime;
       double                  m_frequency;
   };
-};
+};//AVT
+};//LOFAR
 
 #endif
