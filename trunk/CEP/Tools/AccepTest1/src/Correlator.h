@@ -34,7 +34,10 @@
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
 
+#ifdef HAVE_MPI
 #include <Transport/TH_MPI.h>
+#endif
+
 //#include <Transport/TH_Socket.h>
 #include "TH_Socket.h"    // local Socket Transport Holder. This is a workaround for the BGL socket bugs.
 

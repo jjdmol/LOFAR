@@ -83,7 +83,7 @@ void WH_Dump::process() {
 
   // negative indices are invalid. This are results calculated from 
   // uninitialized values.
-  cout << "COR [" << -2+itsIndex++ <<"]: "<< *((DH_Vis*)getDataManager().getInHolder(0))->getBufferElement(0,0,0) << endl;
+  cout << "COR [" << -2+itsIndex++ <<"]: "<< *((DH_Vis*)getDataManager().getInHolder(0))->getBuffer() << endl;
 }
 
 void WH_Dump::dump() {

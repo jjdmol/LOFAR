@@ -181,7 +181,7 @@ TH_Socket::~TH_Socket()
     itsServerSocket.openListener (itsPortNo);
       
       
-      cout << "Waiting to accept connection..." << endl;
+    cout << "Waiting to accept connection..." << itsPortNo << endl;
       itsDataSocket = itsServerSocket.accept();
       itsDataSocket.setBuffer(getTransporter()->getDataSize(), 
 			      (char*)(getTransporter()->getDataPtr()));
