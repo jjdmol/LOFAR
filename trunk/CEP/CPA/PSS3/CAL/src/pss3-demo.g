@@ -46,7 +46,7 @@ predict := function(fname='demo', ant=4*[0:20],
     }
     print mssel;
     mkimg(spaste(fname, '.MS'), spaste(fname, '.img'), msselect=mssel,
-          cellx='0.25arcsec', celly='0.25arcsec', npix=1000, type='model');
+          cellx='1arcsec', celly='1arcsec', npix=1000, type='model');
 
     return T;
 }
@@ -237,7 +237,8 @@ solveej := function(fname='demo', ant=4*[0:20],
 
     mc.settimeinterval(3600); # calibrate per 3600 seconds
     mc.clearsolvableparms();
-    mc.setsolvableparms(parmpatterns="EJ11.phase.*", excludepatterns="EJ11.phase.SR1.CP1");
+#    mc.setsolvableparms(parmpatterns="EJ11.phase.*", excludepatterns="EJ11.phase.SR1.CP1");
+#    mc.setsolvableparms(parmpatterns="EJ11.phase.SR23.CP1");
 
 #    mc.setsolvableparms("EJ11.SR{1,5,9,13,17,21,25,29,33,37}.*");
 #    print mc.getparmnames();
@@ -723,13 +724,13 @@ setparms := function(fname='demo')
     pt.putinit ('gain.22', values=0);
     
     pt.putinit ('EJ11.ampl', values=1);
-    pt.putinit ('EJ11.phase', values=0, diff=1e-4, diffrelative=F);
+    pt.putinit ('EJ11.phase', values=0, diff=1e-6, diffrelative=F);
     pt.putinit ('EJ12.ampl', values=0);
-    pt.putinit ('EJ12.phase', values=0, diff=1e-4, diffrelative=F);
+    pt.putinit ('EJ12.phase', values=0, diff=1e-6, diffrelative=F);
     pt.putinit ('EJ21.ampl', values=0);
-    pt.putinit ('EJ21.phase', values=0, diff=1e-4, diffrelative=F);
+    pt.putinit ('EJ21.phase', values=0, diff=1e-6, diffrelative=F);
     pt.putinit ('EJ22.ampl', values=0);
-    pt.putinit ('EJ22.phase', values=0, diff=1e-4, diffrelative=F);
+    pt.putinit ('EJ22.phase', values=0, diff=1e-6, diffrelative=F);
 
 #    pt.putinit ('EJ11.real', values=1);
 #    pt.putinit ('EJ12.real', values=0);
@@ -750,8 +751,8 @@ setparms := function(fname='demo')
 lm_to_alpha_delta := function(l, m, alpha0, delta0)
 {
     alphadelta := [0.0, 0.0];
-    alphadelta[1] := alpha0 + atan(l/(cos(delta0)*sqrt(1.0 - l*l - m*m) - m*sin(delta0) ));
-    alphadelta[2] := asin(m*cos(delta0)+sin(delta0)*sqrt(1.0-l*l - m*m));
+    alphadelta[1] := alpha0 + atan(l/(cos(delta0)*sqrt(1.0 - (l*l + m*m)) - m*sin(delta0) ));
+    alphadelta[2] := asin(m*cos(delta0)+sin(delta0)*sqrt(1.0-(l*l + m*m)));
     
     if(alphadelta[1] < 0.0) {
         alphadelta[1] +:= 2*pi;

@@ -133,8 +133,8 @@ init_gsm_ionosphere := function(fname='')
     if (is_fail(tg)) fail;
     
     arcsec_per_radian := 180.0*3600.0/pi;
-    alpha0 := (10.0+26.0/60 + 36.3/3600)*15.0*pi/180;
-    delta0 := (34.0+1.0/60.0 +33.0/3600.0)*pi/180.0;
+    alpha0 := (10.0*pi*15.0+(15.0*pi*26.0)/60 + (15.0*pi*36.3)/3600.0)/180.0;
+    delta0 := (34.0*pi+(1.0*pi)/60.0 +(33.0*pi)/3600.0)/180.0;
     print 'alpha0 = ', alpha0;
     print 'delta0 = ', delta0;
     
@@ -142,32 +142,37 @@ init_gsm_ionosphere := function(fname='')
     m := 24/arcsec_per_radian;
     pos := lm_to_alpha_delta(l,m,alpha0, delta0);
     tg.addpointsource ('CP1', [0,1e20], [0,1e20],
-                       pos[1], pos[2] , 1, 0, 0, 0);
+                       2.7336354788504295676, 0.59397913192924178816,
+                       2.0, 0, 0, 0);
 
 
     l := 9/arcsec_per_radian;
     m := -123/arcsec_per_radian;
     pos := lm_to_alpha_delta(l,m,alpha0, delta0);
     tg.addpointsource ('CP2', [0,1e20], [0,1e20],
-                       pos[1], pos[2], 0.5, 0, 0, 0);
+                       2.7341327161798134604, 0.59326650097878796952,
+                       1.0, 0, 0, 0);
 
     l := 168/arcsec_per_radian;
     m := 111/arcsec_per_radian;
     pos := lm_to_alpha_delta(l,m,alpha0, delta0);
     tg.addpointsource ('CP3', [0,1e20], [0,1e20],
-                       pos[1], pos[2] , 0.3, 0, 0, 0);
+                       2.7350631953284945119, 0.59440074164746736773,
+                       0.6, 0, 0, 0);
 
     l := 151/arcsec_per_radian;
     m := 148/arcsec_per_radian;
     pos := lm_to_alpha_delta(l,m,alpha0, delta0);
     tg.addpointsource ('CP4', [0,1e20], [0,1e20],
-                       pos[1], pos[2], 0.1, 0, 0, 0);
+                       2.7349638216242917466, 0.59458016577168659733,
+                       0.2, 0, 0, 0);
 
     l := -7/arcsec_per_radian;
     m := -16/arcsec_per_radian;
     pos := lm_to_alpha_delta(l,m,alpha0, delta0);
     tg.addpointsource ('CP5', [0,1e20], [0,1e20],
-                       pos[1], pos[2], 0.05, 0, 0, 0);
+                       2.7340391444793006315, 0.59378525189734854273,
+                       0.1, 0, 0, 0);
 
     tg.done();
     pt := parmtable(spaste(fname,'_gsm.MEP'), T);
@@ -186,6 +191,7 @@ solve_no_ionosphere := function(niter=50,fname='',sleep=F,
 {
     solverec := [];
 
+    
     init_gsm_ionosphere(fname);
     setparms(fname);
     mssel := '';
@@ -202,14 +208,32 @@ solve_no_ionosphere := function(niter=50,fname='',sleep=F,
 }
 
 
+determine_goodness_initial_model := function(niter=10, fname='')
+{
+    ant := [];
 
+    init_gsm_ionosphere(fname);
+    setparms(fname);
+    mssel:='';
+    
+    predict(fname, ant);
+    t := table(spaste(fname, '.MS'), readonly=F);
+    model := t.getcol('MODEL_DATA');
+    data  := t.getcol('DATA');
+    residual := data-2*model;
+    t.putcol('CORRECTED_DATA', residual);
+    t.close();
+    
+    mkimg(spaste(fname, '.MS'), spaste(fname, '.img-resid'), msselect=mssel,
+          cellx='1arcsec', celly='1arcsec', npix=1000, type='corrected');
+}
 
 
 
 solve_ionosphere_simultaneous := function(niter=10, fname='')
 {
     solverec := [];
-    ant := [0:20]*4;
+    ant := [];
 
     sleep:=F;
     sleeptime:=2;
@@ -218,7 +242,7 @@ solve_ionosphere_simultaneous := function(niter=10, fname='')
     init_gsm_ionosphere(fname);
     setparms(fname);
     mssel:='';
-
+    
     mkimg(spaste(fname, '.MS'), spaste(fname, '.img'), msselect=mssel,
           cellx='1arcsec', celly='1arcsec', npix=1000, type='observed');
 
