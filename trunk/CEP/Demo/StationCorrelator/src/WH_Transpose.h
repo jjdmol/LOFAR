@@ -52,9 +52,6 @@ namespace LOFAR
    
     KeyValueMap itsKVM; 
 
-    int itsNinputs;
-    int itsNoutputs;
-
     int itsNstations;
     int itsNcorrelators;
     int itsNchannels;
