@@ -22,11 +22,11 @@
 
 
 #include "GCF_TCPPort.h"
+#include "GTM_Defines.h"
 #include <GCF_Task.h>
 #include <GCF_TMProtocols.h>
 #include <PortInterface/GTM_NameService.h>
 #include <PortInterface/GTM_TopologyService.h>
-#include <Socket/GTM_ClientSocket.h>
 #include <Socket/GTM_ServerSocket.h>
 
 GCFTCPPort::GCFTCPPort(GCFTask& task, string name, TPortType type, int protocol) 
@@ -40,7 +40,7 @@ GCFTCPPort::GCFTCPPort(GCFTask& task, string name, TPortType type, int protocol)
   }
   else if (SAP == getType())
   {
-    _pSocket = new GTMClientSocket(*this);
+    _pSocket = new GTMSocket(*this);
   }
 }
 
@@ -59,32 +59,37 @@ GCFTCPPort::~GCFTCPPort()
 int GCFTCPPort::open()
 {
   GCFPeerAddr fwaddr;
-  int result(0);
+  int result(1);
 
   if (isConnected())
   {
-    LOG_ERROR(( "ERROR: Port %s already open.\n",
-	       getName()));
+    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, ( 
+        "ERROR: Port %s already open.\n",
+	      _name.c_str()));
+    result = 0;
   }
   else if (!_pSocket)
   {
-    LOG_ERROR(( "ERROR: Port %s not initialised.\n",
-         getName()));
+    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, ( 
+        "ERROR: Port %s not initialised.\n",
+        _name.c_str()));
+    result = 0;
   }
   else if (!_addrIsSet && !isSlave())
   {
     if (findAddr(fwaddr))
     {
       setAddr(fwaddr);
-      result = 1;
     }
     else
     {
-      LOG_ERROR(("Could not get address info for port '%s' of task '%s'\n",
-		     _name, _pTask->getName()));
+      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+          "Could not get address info for port '%s' of task '%s'\n",
+		      _name.c_str(), _pTask->getName().c_str()));
+      result = 0;
     }
   }
-  if (!result) return result;
+  if (result == 0) return result;
   
   if (_pSocket->open(_addr) < 0)
   {
@@ -92,12 +97,24 @@ int GCFTCPPort::open()
     if (SAP == getType())
     {
       schedule_disconnected();
-    }    
+    }
+    else
+    {
+      result = 0;
+    }
   }
   else
-  {    
-    schedule_connected();
-    result = 1;
+  { 
+    if (SAP == getType())
+    {   
+      if (_pSocket->connect(_addr) < 0)
+      {
+        _isConnected = false;
+        schedule_disconnected();
+      }
+      else
+        schedule_connected();
+    }
   }
   return result;
 }
@@ -105,6 +122,7 @@ int GCFTCPPort::open()
 ssize_t GCFTCPPort::send(const GCFEvent& e, void* buf, size_t count)
 {
   size_t written = 0;
+
   if (MSPP == getType())  
     return 0; // no messages can be send by this type of port
 
@@ -123,8 +141,7 @@ ssize_t GCFTCPPort::send(const GCFEvent& e, void* buf, size_t count)
   {
     if ((written = _pSocket->send(buf, count)) != count)
     {
-      cerr << "GCFTCPPort::sendv(data)\n";
-      LOG_DEBUG(("truncated send\n"));
+      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, ("truncated send\n"));
     }
   }
 
@@ -143,8 +160,7 @@ ssize_t GCFTCPPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
     count = e.length;
     if ((written = _pSocket->send((void*)&e, e.length)) != count)
     {
-      cerr << "GCFTCPPort::sendv(data)\n";
-      LOG_DEBUG(("truncated send\n"));
+      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, ("truncated sendv\n"));
     }
   }
 
@@ -153,8 +169,7 @@ ssize_t GCFTCPPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
     count += buffers[i].iov_len;
     if ((written += _pSocket->send(buffers[i].iov_base, buffers[i].iov_len)) != count)
     {
-      cerr << "GCFTCPPort::sendv(data)\n";
-      LOG_DEBUG(("truncated send\n"));
+      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, ("truncated sendv\n"));
     }
   }
 

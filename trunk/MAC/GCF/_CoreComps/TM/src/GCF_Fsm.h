@@ -23,9 +23,9 @@
 #ifndef GCF_FSM_H
 #define GCF_FSM_H
 
-#include <GCF_Event.h>
-#include <GCF_TMProtocols.h>
-#include <PortInterface/GCF_PortInterface.h>
+#include <TM/GCF_Event.h>
+#include <TM/GCF_TMProtocols.h>
+#include <TM/PortInterface/GCF_PortInterface.h>
 #include <iostream>
 #include <cstdlib>
 
@@ -130,7 +130,7 @@ class GCFFsm
 			e.signal = F_INIT_SIG;
 			if (0 != (this->*_state)(e, _gcfPort)) // initial transition
 			{
-				cerr << "Fsm::init: initial transition F_SIGNAL(F_FSM_PROTOCOL, F_INIT_SIG) not handled.\n";
+				cerr << "Fsm::init: initial transition F_SIGNAL(F_FSM_PROTOCOL, F_INIT_SIG) not handled." << endl;
 				exit(1); // EXIT
 			}
 		}

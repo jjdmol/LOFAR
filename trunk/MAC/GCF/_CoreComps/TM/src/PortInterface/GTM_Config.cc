@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#include <algorithm>
 #include "GTM_Config.h"
+#include <Common/lofar_algorithm.h>
 
 int S_count(const std::string& s, char c);
 
@@ -151,8 +151,9 @@ GTMConfig::~GTMConfig(void)
 int
 GTMConfig::open_config_file(const char* name)
 {
+  //_file = fopen(name, "r");
   _file.open(name);
-  if (!_file)
+  if (_file == NULL)
       throw "File Open Error";
     
   return 0;
@@ -161,6 +162,7 @@ GTMConfig::open_config_file(const char* name)
 int
 GTMConfig::close_config_file(void)
 {
+  //fclose(_file);
   _file.close();
   
   return 0;
@@ -174,13 +176,13 @@ GTMConfig::operator()(string& name, int col)
 }
 
 const char*
-GTMConfig::operator()(string&  block, const char* name, int col)
+GTMConfig::operator()(string&  block, string& name, int col)
 {
   return value(block, name, col);
 }
 
 const char*
-GTMConfig::value(string& block, const char* name, int col)
+GTMConfig::value(string& block, string& name, int col)
 {
   if (name == "" || col < 1)
       return NULL;
@@ -393,9 +395,9 @@ GTMConfig::read_config_file(void)
           _pSValue->_pNext = new GTMValue;
           _pSValue = _pSValue->_pNext;
         }
-        
-      if (getline(_file, str_buf) == 0)
-          break;
+              
+      if (getline(_file, str_buf) == 0)   
+        break;
 
       str_buf += '#';
       str_buf = str_buf.substr(0, str_buf.find('#'));

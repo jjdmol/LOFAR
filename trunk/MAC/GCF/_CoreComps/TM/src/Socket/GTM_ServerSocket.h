@@ -25,7 +25,7 @@
 
 #include "GTM_Socket.h"
 // forward declaration
-class GCFRawPort;
+class GCFTCPPort;
 class GCFPeerAddr;
 
 class GTMServerSocket : public GTMSocket
@@ -33,7 +33,7 @@ class GTMServerSocket : public GTMSocket
  public:
 
     ////////////////////// Construction methods
-    GTMServerSocket(GCFRawPort& port, bool isProvider = false);
+    GTMServerSocket(GCFTCPPort& port, bool isProvider = false);
   
     virtual ~GTMServerSocket();
   
@@ -42,23 +42,28 @@ class GTMServerSocket : public GTMSocket
      */
     virtual int open(GCFPeerAddr& addr);
     virtual int close();
-    void accept(GTMSocket& newSocket);
+    int accept(GTMSocket& newSocket);
     
+    /**
+     * send/recv functions
+     */
+    virtual ssize_t send(void* buf, size_t count);
+    virtual ssize_t recv(void* buf, size_t count);
 
   protected:
-    void workProc();
+    virtual void workProc();
 
   private:
-    GTMServerSocket();
+    //GTMServerSocket();
   
     /**
-     * Don't allow copying of the FPort object.
+     * Don't allow copying of the GTMServerSocket object.
      */
-    GTMServerSocket(const GTMServerSocket&);
-    GTMServerSocket& operator=(const GTMServerSocket&);
+    //GTMServerSocket(const GTMServerSocket&);
+    //GTMServerSocket& operator=(const GTMServerSocket&);
     
     bool _isProvider;
-    int _serverSocketFD;
+    GTMSocket* _pServerSocket;
 };
 
 #endif

@@ -23,7 +23,6 @@
 #ifndef GCF_TCPPORT_H
 #define GCF_TCPPORT_H
 
-#include <GCF_Defines.h>
 #include <PortInterface/GCF_RawPort.h>
 #include <PortInterface/GCF_PeerAddr.h>
 #include <Common/lofar_string.h>
@@ -31,62 +30,66 @@
 // forward declaration
 class GCFTask;
 class GTMSocket;
+class GCFEvent;
 
 class GCFTCPPort : public GCFRawPort
 {
  public:
 
-  ////////////////////// Construction methods
-  GCFTCPPort(GCFTask& task,
-	    string name,
-	    TPortType type,
-      int protocol = 0);
-  GCFTCPPort();
+    ////////////////////// Construction methods
+    GCFTCPPort(GCFTask& task,
+  	    string name,
+  	    TPortType type,
+        int protocol = 0);
+    GCFTCPPort();
+  
+    virtual ~GCFTCPPort();
+  
+    ////////////////////// GCFPortInterface methods
 
-  virtual ~GCFTCPPort();
+  public:
 
-  ////////////////////// GCFPortInterface methods
-
- public:
-
-  /**
-   * open/close functions
-   */
-  virtual int open();
-  virtual int close();
-
-  /**
-   * send/recv functions
-   */
-  virtual ssize_t send(const GCFEvent& event,
-		       void* buf = 0, size_t count = 0);
-  virtual ssize_t sendv(const GCFEvent& e,
-			const iovec buffers[], int n);
-  virtual ssize_t recv(void* buf,     size_t count);
-  virtual ssize_t recvv(iovec buffers[], int n);
+    /**
+     * open/close functions
+     */
+    virtual int open();
+    virtual int close();
+  
+    /**
+     * send/recv functions
+     */
+    virtual ssize_t send(const GCFEvent& event,
+  		       void* buf = 0, size_t count = 0);
+    virtual ssize_t sendv(const GCFEvent& e,
+  			const iovec buffers[], int n);
+    virtual ssize_t recv(void* buf,     size_t count);
+    virtual ssize_t recvv(iovec buffers[], int n);
 
   ////////////////////// EOF GCFPortInterface methods
-
- private:
-
-  /**
-   * Don't allow copying of the FPort object.
-   */
-  GCFTCPPort(const GCFTCPPort&);
-  GCFTCPPort& operator=(const GCFTCPPort&);
-
- public:
-
-  // addr is local address if getType == (M)SPP
-  // addr is remote addres if getType == SAP
-  void setAddr(const GCFPeerAddr& addr);
-
-  string _remotePortname;
+  protected:
+    friend class GTMSocket;
+    friend class GTMServerSocket;
   
- private:
-  bool                _addrIsSet;
-  GTMSocket*          _pSocket;
-  GCFPeerAddr         _addr;
+  private:
+
+    /**
+     * Don't allow copying of the FPort object.
+     */
+    GCFTCPPort(const GCFTCPPort&);
+    GCFTCPPort& operator=(const GCFTCPPort&);
+
+  public:
+
+    // addr is local address if getType == (M)SPP
+    // addr is remote addres if getType == SAP
+    void setAddr(const GCFPeerAddr& addr);
+    
+    string _remotePortname;
+  
+  private:
+    bool                _addrIsSet;
+    GTMSocket*          _pSocket;
+    GCFPeerAddr         _addr;
 };
 
 #endif

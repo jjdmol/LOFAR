@@ -23,7 +23,6 @@
 #ifndef GCF_RAWPORT_H
 #define GCF_RAWPORT_H
 
-#include <GCF_Defines.h>
 #include "GCF_PortInterface.h"
 #include "GCF_PeerAddr.h"
 #include <Common/lofar_string.h>
@@ -43,7 +42,7 @@ class GCFRawPort : public GCFPortInterface
 
   virtual ~GCFRawPort();
 
-  void init(GCFTask& task, string& name, TPortType type, int protocol = 0 ); 
+  void init(GCFTask& task, string name, TPortType type, int protocol = 0 ); 
 
   ////////////////////// GCFPortInterface methods
 
@@ -88,26 +87,17 @@ class GCFRawPort : public GCFPortInterface
     virtual int     dispatch(GCFEvent& event);
     bool findAddr(GCFPeerAddr& addr);
     friend class GCFPort; // to access the setMaster method
-    virtual void handleTimeout(const GTMTimer& timer);
     friend class GTMTimer;
 
  private:
 
     /**
     * Don't allow copying of the GCFRawPort object.
-    */
-    typedef struct
-    {
-        GTMTimer* pTimer;
-    } TTimer;
-       
-    
+    */   
     GCFRawPort(const GCFRawPort&);
     GCFRawPort& operator=(const GCFRawPort&);
 
     GCFPort* _pMaster;
-    map<unsigned long, GTMTimer*> _timers;
-    typedef map<unsigned long, GTMTimer*>::iterator TTimerIter;
 };
 
 #endif

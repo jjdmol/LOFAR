@@ -22,6 +22,8 @@
 
 #include "GTM_NameService.h"
 #include "GCF_PeerAddr.h"
+#include "GTM_Defines.h"
+#include "GTM_Config.h"
 
 GTMNameService* GTMNameService::_pInstance = 0;
 
@@ -56,9 +58,10 @@ int GTMNameService::init(const char *ns_config_file)
   }
   catch (...)
   {
-    LOG_ERROR((
-	       "Failed to open NameService config file '%s'\n",
-	       fname));
+    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+	     "Failed to open NameService config file '%s'\n",
+	     fname));
+    return -1;
   }
   
   return 0;
@@ -69,14 +72,17 @@ int GTMNameService::query(string& taskname,
 {
   if (!_pConfig) return -1;
 
-  const char* host = (*_pConfig)(taskname, "host");
+  string label("host");
+  const char* host = (*_pConfig)(taskname, label);
 
   if (host)
   {
+    string porttype("");
+    string hostName(host);
     peeraddr.setTaskname(taskname);
-    peeraddr.setHost(host);
+    peeraddr.setHost(hostName);
     peeraddr.setPortnumber(0);
-    peeraddr.setPorttype("");
+    peeraddr.setPorttype(porttype);
 
     return 0; // success
   }
@@ -90,27 +96,30 @@ int GTMNameService::queryPort(string& taskname,
 {
   if (!_pConfig) return -1;
 
-  char label[MAX_PORTNAME_LEN + 1];
-
-  strncpy(label, portname.c_str(), MAX_PORTNAME_LEN);
-  strncat(label, ".type", MAX_PORTNAME_LEN - sizeof(label));
+  string label(portname + string(".type"));
 
   const char* type = (*_pConfig)(taskname, label);
 
-  strncpy(label, portname.c_str(), MAX_PORTNAME_LEN);
-  strncat(label, ".port", MAX_PORTNAME_LEN - sizeof(label));
+  label = portname + string(".port");
 
   const char* port = (*_pConfig)(taskname, label);
 
-  strncpy(label, portname.c_str(), MAX_PORTNAME_LEN);
-  strncat(label, ".host", MAX_PORTNAME_LEN - sizeof(label));
+  label = portname + string(".host");
 
   const char* host = (*_pConfig)(taskname, label);
 
   peeraddr.setPortname(portname);
-  if (type)     peeraddr.setPorttype(type);
+  if (type)     
+  {
+    string porttype(type);
+    peeraddr.setPorttype(porttype);
+  }
   if (port)     peeraddr.setPortnumber(atoi(port));
-  if (host)     peeraddr.setHost(host);
+  if (host)
+  {
+    string hostName(host);        
+    peeraddr.setHost(hostName);
+  }
 
   // type and port are optional
   // but at least one must be specified

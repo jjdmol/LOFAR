@@ -23,49 +23,53 @@
 #ifndef GTM_SOCKET_H
 #define GTM_SOCKET_H
 
+#include "unistd.h"
 // forward declaration
-class GCFRawPort;
+class GCFTCPPort;
 class GCFPeerAddr;
 class GTMSocketHandler;
+class GTMServerSocket;
+class GCFEvent;
 
 class GTMSocket
 {
   public:
-  
+    GTMSocket(GCFTCPPort& port);
     virtual ~GTMSocket();
   
     /**
      * open/close functions
      */
-    virtual int open(GCFPeerAddr& addr) = 0;
+    virtual int open(GCFPeerAddr& addr);
     virtual int close();
+    virtual int connect(GCFPeerAddr& addr);
   
     /**
      * send/recv functions
      */
     virtual ssize_t send(void* buf, size_t count);
     virtual ssize_t recv(void* buf, size_t count);
-    
-  protected:
-    GTMSocket(GCFRawPort& port);
 
     virtual inline int getFD() const {return _socketFD;}
-    virtual void setFD(int fd);
-    virtual void workProc() = 0;
-    friend class GTMSocketHandler;
     
+  protected:
+
+    virtual int setFD(int fd);
+    virtual void workProc();
+    friend class GTMSocketHandler;
+    friend class GTMServerSocket;
+
+    GCFTCPPort&   _port;
+    int           _socketFD;
   
   private:
     GTMSocket();
     /**
-     * Don't allow copying of the FPort object.
+     * Don't allow copying of the GTMSocket object.
      */
     GTMSocket(const GTMSocket&);
     GTMSocket& operator=(const GTMSocket&);
-  
-    GCFPeerAddr&  _addr;
-    int           _socketFD;
-    GCFRawPort&   _rawPort;
+    int eventReceived(const GCFEvent& e);
 };
 
 #endif

@@ -23,7 +23,7 @@
 #ifndef GCF_PROTOCOLS_H
 #define GCF_PROTOCOLS_H
 
-#include <GCF_Event.h>
+#include <TM/GCF_Event.h>
 
 /**
  * Macro to encode an event's signal from the signal id, protocal an in/out direction
@@ -57,7 +57,7 @@ enum {
     F_FSM_PROTOCOL = 1,     // state machine protocol (encoded in msb)
     F_PORT_PROTOCOL,        	// port connection protocol
     F_GCF_PROTOCOL, 			// GCF specific protocol numbers start here
-    F_APP_PROTOCOL = 10, 	// APPlication specific protocol numbers start here
+    F_APL_PROTOCOL = 10, 	// APPlication specific protocol numbers start here
 };
 
 /**

@@ -27,7 +27,8 @@
 #include "GCF_TMProtocols.h"
 #include "GTM_NameService.h"
 #include "GTM_TopologyService.h"
-#include <Timer/GTM_Timer.h>
+#include "GTM_Defines.h"
+#include "Timer/GTM_TimerHandler.h"
 
 static GCFEvent disconnected_event(F_DISCONNECTED_SIG);
 static GCFEvent connected_event   (F_CONNECTED_SIG);
@@ -46,7 +47,7 @@ GCFRawPort::GCFRawPort() :
 {
 }
 
-void GCFRawPort::init(GCFTask& task, string& name, TPortType type, int protocol)
+void GCFRawPort::init(GCFTask& task, string name, TPortType type, int protocol)
 {
     GCFPortInterface::init(task, name, type, protocol);
     _pMaster = 0;
@@ -64,121 +65,88 @@ void GCFRawPort::setMaster(GCFPort* pMaster)
 int GCFRawPort::dispatch(GCFEvent& event)
 {
   int status = GCFEvent::NOT_HANDLED;
-
-  if (F_TIMER_SIG == event.signal)
+  // this dispatch function is only called when the port
+  // is used in raw mode => _pMaster must be 0
+  if ((F_DATAIN_SIG != event.signal) && 
+      (F_DATAOUT_SIG != event.signal) &&
+      (F_EVT_PROTOCOL(event) != F_FSM_PROTOCOL) &&
+      (F_EVT_PROTOCOL(event) != F_PORT_PROTOCOL))
   {
+    cout << getTask()->getName() << ": RAW RECVD: "
+          << " on port " << getName()
+          << endl;
   }
+
+  if (event.signal == F_CONNECTED_SIG)
+  {
+    _isConnected = true;
+  }
+  else if (event.signal == F_DISCONNECTED_SIG || event.signal == F_CLOSED_SIG)
+  {
+    _isConnected = false;
+  }
+  else if (event.signal == F_TIMER_SIG)
+  {
+    GCFTimerEvent* pTE = static_cast<GCFTimerEvent*>(&event);
+    if (&disconnected_event == pTE->arg || 
+        &connected_event == pTE->arg ||
+        &closed_event == pTE->arg)
+    {    
+      return dispatch(*((GCFEvent*) pTE->arg));
+    }
+  }
+  else if (SPP == getType() && (F_EVT_INOUT(event) & F_OUT)) 
+  {
+    // developer error: received an out event in a SPP
+    return status;
+  }
+  else if (SAP == getType() && (F_EVT_INOUT(event) & F_IN)) 
+  {
+    // developer error: received an IN event in a SAP
+    return status;
+  }
+
   if (isSlave())
   {
-    status = _pTask->dispatch(event, *_pMaster);
+    _pMaster->setIsConnected(_isConnected);
+    status = _pTask->dispatch(event, *_pMaster);      
   }
   else
   {
-    // this dispatch function is only called when the port
-    // is used in raw mode => master_ must be 0
-    if ((F_DATAIN_SIG != event.signal)
-	&& (F_DATAOUT_SIG != event.signal))
-    {
-      cout << getTask()->getName() << ": RAW RECVD: "
-	   << " on port " << getName()
-	   << endl;
-    }
-
     status = _pTask->dispatch(event, *this);
   }
 
   return status;
 }
 
-void GCFRawPort::handleTimeout(const GTMTimer& timer)
-{
-  if (&disconnected_event == timer.getTimerArg() || 
-      &connected_event == timer.getTimerArg() ||
-      &closed_event == timer.getTimerArg())
-  {
-    _isConnected = (&connected_event == timer.getTimerArg());
-
-    if (isSlave()) _pMaster->setIsConnected(_isConnected);
-    
-    dispatch(*((GCFEvent*) timer.getTimerArg()));
-  }
-  else
-  {
-    GCFTimerEvent te;
-    te.sec = timer.getTime() / 1000000;
-    te.usec = timer.getTime() - (te.sec * 1000000);
-    te.arg = timer.getTimerArg();
-    if (!timer.hasInterval())
-    {
-      GTMTimer* pCurTimer(0);
-      TTimerIter iter = _timers.find(timer.getID());
-      pCurTimer = iter->second;
-      if (pCurTimer)
-        delete pCurTimer;
-      _timers.erase(iter);    
-    }
-    dispatch(te);
-  }
-}
-
 long GCFRawPort::setTimer(long delay_sec, long delay_usec,
 			long interval_sec, long interval_usec,
 			const void* arg)
 {
-  GTMTimer* pNewTimer = new GTMTimer(*this, 
-                                 delay_sec * 1000000 + delay_usec, 
-                                 interval_sec * 1000000 + interval_usec,
-                                 arg);
-  _timers.insert(make_pair(pNewTimer->getID(),pNewTimer));
-  return pNewTimer->getID();
+  return GTMTimerHandler::instance()->setTimer(*this, 
+          (unsigned long) (delay_sec * 1000000 + delay_usec), 
+          (unsigned long) (interval_sec * 1000000 + interval_usec),
+          arg);  
 }
 
 long GCFRawPort::setTimer(double delay_seconds, 
 			double interval_seconds,
 			const void* arg)
 {
-  GTMTimer* pNewTimer = new GTMTimer(*this, 
-                                 (unsigned long) (delay_seconds * 1000000.0), 
-                                 (unsigned long) (interval_seconds * 1000000.0),
-                                 arg);
-  _timers.insert(make_pair(pNewTimer->getID(),pNewTimer));
-  return pNewTimer->getID();
+  return GTMTimerHandler::instance()->setTimer(*this, 
+         (unsigned long) (delay_seconds * 1000000.0), 
+         (unsigned long) (interval_seconds * 1000000.0),
+         arg);
 }
 
 int GCFRawPort::cancelTimer(long timerid, const void **arg)
 {
-  int result(-1);
-  GTMTimer* pCurTimer(0);
-  TTimerIter iter = _timers.find(timerid);
-  pCurTimer = iter->second; //second is of type GTMTimer*
-  if (pCurTimer)
-  {
-    *arg = pCurTimer->getTimerArg();
-    result = pCurTimer->stop();
-    delete pCurTimer;
-  }
-  _timers.erase(iter);
-    
-  return result;
+  return GTMTimerHandler::instance()->cancelTimer(timerid, arg);
 }
 
 int GCFRawPort::cancelAllTimers()
 {
-  int result(1);
-  GTMTimer* pCurTimer(0);
-  
-  for (TTimerIter iter = _timers.begin(); iter != _timers.end(); ++iter)
-  {
-    pCurTimer = iter->second;
-    if (pCurTimer)
-    {
-      result = pCurTimer->stop();
-      delete pCurTimer;
-    }
-  }
-  _timers.clear();
-  
-  return result;
+  return GTMTimerHandler::instance()->cancelAllTimers(*this);
 }
 
 int GCFRawPort::resetTimerInterval(long timerid,
@@ -201,44 +169,49 @@ bool GCFRawPort::findAddr(GCFPeerAddr& addr)
     if (GTMTopologyService::instance()->getPeerAddr(_pTask->getName(),
 				      _name, theaddr) < 0)
     {
-      LOG_DEBUG(("No remote address found for port '%s' of task '%s'\n",
-                 _name, _pTask->getName()));
+      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
+          "No remote address found for port '%s' of task '%s'\n",
+          _name.c_str(), _pTask->getName().c_str()));
       
       return false;
     }
 
-    LOG_DEBUG((
-            "Connecting local SAP [%s:%s] "
-            "to remote SPP [%s:%s]@(%s:%d).\n",
-            _pTask->getName(),
-            _name,
-            theaddr.getTaskname(),
-            theaddr.getPortname(),
-            theaddr.getHost(),
-            theaddr.getPortnumber()));
+    LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
+        "Connecting local SAP [%s:%s] "
+        "to remote SPP [%s:%s]@(%s:%d).\n",
+        _pTask->getName().c_str(),
+        _name.c_str(),
+        theaddr.getTaskname().c_str(),
+        theaddr.getPortname().c_str(),
+        theaddr.getHost().c_str(),
+        theaddr.getPortnumber()));
   }
-  else if (SPP == _type)
+  else if (SPP == _type || MSPP == _type)
   {
     // find my own address in the nameservice
     if (GTMNameService::instance()->query(_pTask->getName(),
     		    theaddr) < 0)
     {
      
-        LOG_ERROR(("Could not find own address for "
-                    "task '%s'.\n", _pTask->getName()));
-        return false;
+      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+          "Could not find own address for "
+          "task '%s'.\n", 
+          _pTask->getName().c_str()));
+      return false;
     }
     if (GTMNameService::instance()->queryPort(_pTask->getName(),
     			_name,
     			theaddr))
     {
-        LOG_ERROR(("Could not find port info for port '%s' of "
-                    "task '%s'.\n", getName(), task_->getName()));
+      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+          "Could not find port info for port '%s' of "
+          "task '%s'.\n", _name.c_str(), 
+          _pTask->getName().c_str()));
      
-        return false;
+      return false;
     }
     
-    LOG_DEBUG(("Listening on port %d for clients.\n",
+    LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, ("Listening on port %d for clients.\n",
                 theaddr.getPortnumber()));
   }
   else 

@@ -1,4 +1,4 @@
-//#  GTM_Timer.cc: one line description
+//#  GTM_Defines.h: preprocessor definitions of various constants
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,39 +20,14 @@
 //#
 //#  $Id$
 
-#include "GTM_Timer.h"
-#include <PortInterface/GCF_RawPort.h>
-#include <GCF_TMProtocols.h>
+#ifndef GTM_DEFINES_H
+#define GTM_DEFINES_H
 
-GTMTimer::GTMTimer(GCFRawPort& port, 
-                   unsigned long timeVal, 
-                   unsigned long intervalTime = 0, 
-                   const void* arg = 0) :
-  _port(port), _time(timeVal), _timeLeft(timeVal), 
-  _intervalTime(intervalTime), 
-  _arg(arg), _elapsed(false), _canceled(false)
-{
-}
- 
-void GTMTimer::decreaseTime(unsigned long microSec)
-{
-  if (_timeLeft > microSec)
-  {
-    _timeLeft -= microSec;
-  }
-  else
-  {
-    GCFTimerEvent te;
-    te.sec = _time / 1000000;
-    te.usec = _time - (te.sec * 1000000);
-    te.arg = _arg;
-    
-    _port.dispatch(te);
-    if (_intervalTime > 0)
-    {
-      _timeLeft = _intervalTime;
-    }
-    else
-      _elapsed = true;
-  } 
-}
+#include <LofarLogger/LofarLogger.h>
+
+#define GCF_LOGGER_ROOT       (MAC_LOGGER_ROOT + string(".GCF"))
+#define CORE_COMPS_TM_LOGGER  (GCF_LOGGER_ROOT + string(".CoreComps.TM"))
+
+#define TM_STDOUT_LOGGER      (CORE_COMPS_TM_LOGGER + string(".Logger"))
+
+#endif

@@ -24,8 +24,7 @@
 #ifndef GCF_PEERADDR_H
 #define GCF_PEERADDR_H
 
-#include "GTM_Config.h"
-#include <GCF_Defines.h>
+#include <Common/lofar_string.h>
 
 class GCFPeerAddr
 {
@@ -33,22 +32,22 @@ class GCFPeerAddr
 
   GCFPeerAddr();
   GCFPeerAddr(string& taskname,
-	    const char* host,
-	    string& portname,
-	    const char* porttype,
-	    int portnumber = 0);
+        	    string& host,
+        	    string& portname,
+        	    string& porttype,
+        	    int portnumber = 0);
   virtual ~GCFPeerAddr();
 
   string& getTaskname();
-  const char* getHost() const;
-  int         getPortnumber() const;
+  string& getHost();
+  int     getPortnumber();
   string& getPortname();
-  const char* getPorttype() const;
+  string& getPorttype();
 
   void setTaskname(string& taskname);
-  void setHost(const char* host);
+  void setHost(string& host);
   void setPortname(string& portname);
-  void setPorttype(const char* porttype);
+  void setPorttype(string& porttype);
   void setPortnumber(int portnumber);
 
  protected:
@@ -56,9 +55,9 @@ class GCFPeerAddr
  private:
 
   string _taskname;
-  char _host[MAXHOSTNAMELEN   + 1];
+  string _host;
   string _portname;
-  char _porttype[MAX_PORTTYPE_LEN + 1];
+  string _porttype;
   int  _portnumber;
 };
 

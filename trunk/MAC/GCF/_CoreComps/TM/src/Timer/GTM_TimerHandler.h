@@ -50,10 +50,15 @@ class GTMTimerHandler : GCFHandler
     map<unsigned long, GTMTimer*> _timers;
     typedef map<unsigned long, GTMTimer*>::iterator TTimerIter;
 
-    friend class GTMTimer;
-    unsigned long registerTimer(GTMTimer& timer);
-    int deregisterTimer(GTMTimer& timer);
     void saveDateTime();
+
+    friend class GCFRawPort;
+    unsigned long setTimer(GCFRawPort& port, 
+                           unsigned long delay_seconds, 
+                           unsigned long interval_seconds = 0,
+                           const void*  arg        = 0);
+    int cancelTimer(unsigned long timerid, const void** arg = 0);
+    int cancelAllTimers(GCFRawPort& port);
     
     timeval _lastTime;
     struct tm _lastDateTime;

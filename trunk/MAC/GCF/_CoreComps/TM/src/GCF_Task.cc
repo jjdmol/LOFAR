@@ -22,19 +22,25 @@
 //#  $Id$
 
 #include <GCF_Task.h>
+#include <GTM_Defines.h>
 #include <PortInterface/GCF_PortInterface.h>
 #include <GCF_TMProtocols.h>
 #include <GCF_Handler.h>
-
+#include <signal.h>
 #include <stdio.h>
 
 bool GCFTask::_doExit = false;
+vector<GCFHandler*> GCFTask::_handlers;
+map<unsigned short, const char**> GCFTask::_protocols;
+int GCFTask::_argc = 0;
+char** GCFTask::_argv = 0;
+
 
 GCFTask::GCFTask(State initial, string& name) :
   GCFFsm(initial), _name(name)
 {
-    registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_names);
-    registerProtocol(F_PORT_PROTOCOL, F_PORT_PROTOCOL_names);
+  registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_names);
+  registerProtocol(F_PORT_PROTOCOL, F_PORT_PROTOCOL_names);
 }
 
 
@@ -44,15 +50,21 @@ GCFTask::~GCFTask()
 
 void GCFTask::run()
 {
-    while (!_doExit)
+  signal(SIGINT,  GCFTask::signalHandler);
+  signal(SIGTERM, GCFTask::signalHandler);
+
+  while (!_doExit)
+  {
+    vector<GCFHandler*> tempHandlers(_handlers);
+
+    for (THandlerIter iter = tempHandlers.begin() ;
+          iter != tempHandlers.end() && !_doExit; 
+          ++iter)
     {
-        for (vector<THandler>::iterator iter = _handlers.begin() ;
-                iter != _handlers.end() ; 
-                ++iter)
-        {
-            iter->pHandler->workProc();
-        }
+      (*iter)->workProc();
     }
+  }
+  stop();
 }
 
 void GCFTask::start()
@@ -62,32 +74,40 @@ void GCFTask::start()
 
 void GCFTask::stop()
 {
-    for (vector<THandler>::iterator iter = _handlers.begin() ;
-           iter != _handlers.end() ; 
-           ++iter)
-    {
-        iter->pHandler->stop();
-    }  
-    _doExit = true;
+  vector<GCFHandler*> tempHandlers(_handlers);
+
+  for (THandlerIter iter = tempHandlers.begin() ;
+        iter != tempHandlers.end() ; 
+        ++iter)
+  {
+      (*iter)->stop();
+  }  
 }
 
 void GCFTask::registerHandler(GCFHandler& handler)
 {
-    THandler handlerEntry;
-    handlerEntry.pHandler = &handler;
-    _handlers.insert(&handlerEntry);
+  _handlers.push_back(&handler);
 }
 
-void GCFTask::registerProtocol(unsigned short protocol_id,
+void GCFTask::registerProtocol(unsigned short protocolID,
               const char* signal_names[])
 {
-}
-
-void GCFTask::debug_signal(const GCFEvent& e, GCFPortInterface& p, const char* info)
-{
+  _protocols[protocolID] = signal_names;
 }
 
 const char* GCFTask::evtstr(const GCFEvent& e)
 {
-    return 0;
+  static const char* unknown = "unknown signal";
+  const char* signame;
+  
+  signame = _protocols[F_EVT_PROTOCOL(e)][F_EVT_SIGNAL(e)];
+
+  return (signame?signame:unknown);
 }
+
+void GCFTask::signalHandler(int sig)
+{
+  if ( (sig == SIGINT) || (sig == SIGTERM) )
+    _doExit = true;
+}                                            
+
