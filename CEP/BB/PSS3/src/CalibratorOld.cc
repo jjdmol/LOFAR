@@ -30,7 +30,6 @@
 #include <aips/Exceptions/Error.h>
 #include "CalibratorOld.h"
 
-#include <iostream>
 
 // RMME: const int DefaultAntennaCount = 21;
 
@@ -215,14 +214,14 @@ void CalibratorOld::commitSolvableParms (void) {
   // Create AIPS data structures to hold params
   Vector <String> pp (itsSolvableParms.size ());
   Vector <String> ep (itsSolvableParms.size ());
-  ostringstream oss [itsSolvableParms.size ()];
 
   vector<string> :: iterator i;
   int idx = 0;
 
   for (i = itsSolvableParms.begin (); i != itsSolvableParms.end (); ++ i) {
-    oss [idx] << *i;
-    pp [idx] = oss[idx].str ();
+    ostringstream oss;
+    oss << *i;
+    pp [idx] = oss.str ();
     idx ++;
   }
 
