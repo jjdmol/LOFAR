@@ -33,15 +33,15 @@ namespace LOFAR
   {
     // Set to the value zero.
     // <group>
-    void setZero (int& x)
+    inline void setZero (int& x)
       { x = 0; }
-    void setZero (float& x)
+    inline void setZero (float& x)
       { x = 0; }
-    void setZero (double& x)
+    inline void setZero (double& x)
       { x = 0; }
-    void setZero (fcomplex& x)
+    inline void setZero (fcomplex& x)
       { x = makefcomplex(0,0); }
-    void setZero (dcomplex& x)
+    inline void setZero (dcomplex& x)
       { x = makedcomplex(0,0); }
     // </group>
 
