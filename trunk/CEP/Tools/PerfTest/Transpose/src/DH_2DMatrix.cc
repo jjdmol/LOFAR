@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2002/05/14 11:39:41  gvd
+//  Changed for new build environment
+//
 //  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
 //  initial version
 //
@@ -47,31 +50,28 @@ DH_2DMatrix::DH_2DMatrix (const string& name,
   // the size is that of the DataPacket object, plus the size of the Buffer
   unsigned int size = sizeof(DataPacket) + ((Xsize*Ysize) * sizeof(int));
   // allocate the memmory
-  char* ptr = new char[size];
+  void* ptr = new char[size+4]; // extra 4 bytes to avoid problems with word allignment
   
   // Fill in the data packet pointer and initialize the memory.
   itsDataPacket = (DataPacket*)(ptr);
   *itsDataPacket = DataPacket();
-
-  // Fill in the buffer pointer and initialize the buffer.
-  // the buffer starts after the DataPacket object
-  itsDataPacket->itsBuffer = (int*)(ptr + sizeof(DataPacket)); 
-
+  
   for (int x=0; x<Xsize; x++) {
     for (int y=0; y<Ysize; y++) {
       *getBuffer(x,y) = 0;
     }
   }
-  
-  // Initialize base class.
-  setDataPacket (itsDataPacket, size);
 
+  
   // fill in the names of the variables
   TRACER4("Set names");
   itsXName = std::string(Xname);
   itsYName = std::string(Yname);
   itsZName = std::string(Zname);
-
+  
+  // Initialize base class.
+  setDataPacket (itsDataPacket, size);
+  TRACER2("Created 2D matrix : " << itsDataPacket << "   size="  << size);
   TRACER4("End of C'tor");
 }
 
