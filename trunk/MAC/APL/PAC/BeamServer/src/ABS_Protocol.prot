@@ -14,6 +14,30 @@ prelude = << PRELUDE_END
 enum {
 	ABS_PROTOCOL = F_APL_PROTOCOL + 10
 };
+
+namespace ABS_Protocol
+{
+	/** Maximum number of beamlets produced by
+	 * the system. The number of beamlets of
+	 * all beams together can not be larger
+	 * than this value.
+	 */
+	static const int N_BEAMLETS = 256;
+
+	/** Maximum number of input subbands of the
+	 * system. Each spectral window should have
+	 * n_subbands <= N_SUBBANDS.
+	 */
+	static const int N_SUBBANDS = 1024;
+
+	enum {
+	     STATUS_SUCCESS = 0,
+	     STATUS_ERR_RANGE,     // range error in message parameters
+	     STATUS_ERR_BEAMALLOC, // could not allocate beam
+	     STATUS_ERR_BEAMFREE,  // could not free beam
+	};
+};
+
 PRELUDE_END;
 
 //
@@ -23,15 +47,17 @@ PRELUDE_END;
 // A "param" has a "name" and a "type".
 //
 event = {
-      signal = ALLOCBEAM;
+      signal = BEAMALLOC;
       dir = IN;
       param = {
 	    name = "beam_index";
 	    type = "int";
       };
       param = {
-	    name = "reference_frequency";
-	    type = "double";
+            // index of the spectral window to use
+	    // 0 for now
+	    name = "spectral_window";
+	    type = "int";
       };
       param = {
 	    name = "n_subbands";
@@ -40,12 +66,12 @@ event = {
       param = {
 	    name = "subbands";
 	    type = "int";
-	    dim = 128;
+	    dim = N_BEAMLETS;
       };
 };
 
 event = {
-      signal = ALLOCBEAM_ACK;
+      signal = BEAMALLOC_ACK;
       dir = OUT;
       param = {
 	    name = "beam_index";
@@ -58,7 +84,7 @@ event = {
 };
 
 event = {
-      signal = FREEBEAM;
+      signal = BEAMFREE;
       dir = IN;
       param = {
 	    name = "beam_index";
@@ -67,7 +93,7 @@ event = {
 };
 
 event = {
-      signal = FREEBEAM_ACK;
+      signal = BEAMFREE_ACK;
       dir = OUT;
       param = {
 	    name = "beam_index";
@@ -80,14 +106,15 @@ event = {
 };
 
 event = {
-      signal = POINTTO;
+      signal = BEAMPOINTTO;
       dir = IN;
       param = {
 	    name = "beam_index";
 	    type = "int";
       };
       param = {
-	    name = "activation_time";
+            // time at which the new direction should be effective
+	    name = "time";
 	    type = "struct timeval";
       };
       param = {

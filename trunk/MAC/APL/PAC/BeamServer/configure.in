@@ -56,7 +56,6 @@ lofar_DOCXX
 dnl lofar_EXTERNAL(common,1,Common/LofarTypes.h,,~/workspace3/LOFAR/installed/gnu_debug)
 lofar_EXTERNAL(lofarlogger,1,LofarLogger/LofarLogger.h,,~/workspace3/LOFAR/installed/gnu_debug)
 lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
-lofar_EXTERNAL(cppunit,1,cppunit/TestCase.h,,)
 
 dnl
 dnl Output Makefiles

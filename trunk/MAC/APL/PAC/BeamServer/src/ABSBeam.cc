@@ -85,7 +85,7 @@ int Beam::allocate(SpectralWindow const& spw, set<int> subbands)
 
       m_beamlets.insert(beamlet);
   }
-
+  
   m_allocated = true;
 
   return 0;
@@ -101,6 +101,7 @@ int Beam::deallocate()
 {
   if (!m_allocated) return -1;
 
+  // deallocate all beamlets
   for (set<Beamlet*>::iterator bl = m_beamlets.begin();
        bl != m_beamlets.end(); ++bl)
   {
@@ -108,13 +109,21 @@ int Beam::deallocate()
   }
   m_beamlets.clear();
 
+  // reset pointing to zenith
+  m_pointing = Pointing();
+
+  // clear the pointing queue
+  while (!m_pointing_queue.empty()) m_pointing_queue.pop();
+
   m_allocated = false;
 
   return 0;
 }
 
-int Beam::addPointing()
-{ return 0; }
+void Beam::addPointing(const Pointing& pointing)
+{
+  m_pointing_queue.push(pointing);
+}
 
 int Beam::convertPointings()
 { return 0; }

@@ -21,16 +21,16 @@
 //#
 //#  $Id$
 
-#include <ABSBeamServerTask.h>
+// this include needs to be first!
 #define DECLARE_SIGNAL_NAMES
 #include "ABS_Protocol.ph"
+
+#include "ABSBeamServerTask.h"
 
 #include "ABSBeam.h"
 #include "ABSBeamlet.h"
 
 #include <iostream>
-
-#define N_SUBBANDS (128)
 
 using namespace ABS;
 using namespace std;
@@ -43,9 +43,12 @@ BeamServerTask::BeamServerTask(string name)
   client.init(*this, "client", GCFPortInterface::SPP, ABS_PROTOCOL);
   board.init(*this, "board", GCFPortInterface::SAP, 0);
 
-  (void)Beam::setNInstances(N_SUBBANDS);
-  (void)Beamlet::setNInstances(N_SUBBANDS);
+  (void)Beam::setNInstances(ABS_Protocol::N_BEAMLETS);
+  (void)Beamlet::setNInstances(ABS_Protocol::N_SUBBANDS);
 }
+
+BeamServerTask::~BeamServerTask()
+{}
 
 GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 {
@@ -61,7 +64,8 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 
 	  // create a spectral window from 10MHz to 90Mhz
 	  // steps of 256kHz
-	  SpectralWindow spw(10e6, 256*1e3, 80*(1000/256));
+	  SpectralWindow* spw = new SpectralWindow(10e6, 256*1e3, 80*(1000/256));
+	  m_spws[0] = spw;
 
 	  // create subband set
 	  std::set<int> subbands;
@@ -78,7 +82,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 	  subbands.insert(10);
 	  subbands.insert(20);
 	  
-	  if (beam->allocate(spw, subbands) < 0)
+	  if (beam->allocate(*m_spws[0], subbands) < 0)
 	  {
 	      cerr << "failed to allocate beam 0" << endl;
 	  }
@@ -100,7 +104,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 	  subbands.insert(121);
 	  subbands.insert(141);
 
-	  if (beam->allocate(spw, subbands) < 0)
+	  if (beam->allocate(*m_spws[0], subbands) < 0)
 	  {
 	      cerr << "failed to allocate beam 1" << endl;
 	  }
@@ -110,7 +114,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 	  }
 
 	  beam = Beam::getInstance(2);
-	  if (beam->allocate(spw, subbands) < 0)
+	  if (beam->allocate(*m_spws[0], subbands) < 0)
 	  {
 	      cerr << "failed to allocate beam 2" << endl;
 	  }
@@ -167,6 +171,27 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	  break;
 #endif
 
+      case ABS_BEAMALLOC:
+      {
+	  ABSBeamallocEvent* event = static_cast<ABSBeamallocEvent*>(&e);
+	  beamalloc_action(event, port);
+      }
+      break;
+
+      case ABS_BEAMFREE:
+      {
+	  ABSBeamfreeEvent* event = static_cast<ABSBeamfreeEvent*>(&e);
+	  beamfree_action(event, port);
+      }
+      break;
+
+      case ABS_BEAMPOINTTO:
+      {
+	  ABSBeampointtoEvent* event = static_cast<ABSBeampointtoEvent*>(&e);
+	  beampointto_action(event, port);
+      }
+      break;
+
       case F_DATAIN_SIG:
 	  cout << "datain" << endl;
 	  break;
@@ -181,6 +206,78 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
   }
 
   return status;
+}
+
+void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,
+				      GCFPortInterface& port)
+{
+  int   spwindex = 0;
+  Beam* beam = 0;
+  ABSBeamalloc_AckEvent ack(ba->beam_index, STATUS_SUCCESS);
+
+  if (!(beam = Beam::getInstance(ba->beam_index))
+      || ((spwindex = ba->spectral_window) != 0)
+      || !(ba->n_subbands > 0 && ba->n_subbands < N_BEAMLETS))
+  {
+      ack.status = STATUS_ERR_RANGE;
+      port.send(ack);
+      return;                         // RETURN
+  }
+
+  set<int> subbands;
+  for (int i = 0; i < ba->n_subbands; i++)
+  {
+      subbands.insert(ba->subbands[i]);
+
+      // allocate the beam
+      if (beam->allocate(*m_spws[spwindex], subbands) < 0)
+      {
+	  ack.status = STATUS_ERR_BEAMALLOC;
+	  port.send(ack);
+      }
+
+      m_beams.insert(ba->beam_index);
+  }
+
+  port.send(ack);
+}
+
+void BeamServerTask::beamfree_action(ABSBeamfreeEvent* bf,
+				     GCFPortInterface& port)
+{
+  ABSBeamfree_AckEvent ack(bf->beam_index, STATUS_SUCCESS);
+
+  Beam* beam = 0;
+  if (!(beam = Beam::getInstance(bf->beam_index)))
+  {
+      ack.status = STATUS_ERR_RANGE;
+      port.send(ack);
+      return;                      // RETURN
+  }
+
+  if (beam->deallocate() < 0)
+  {
+      ack.status = STATUS_ERR_BEAMFREE;
+      port.send(ack);
+      return;                     // RETURN
+  }
+
+  port.send(ack);
+}
+
+void BeamServerTask::beampointto_action(ABSBeampointtoEvent* pt,
+					GCFPortInterface& /*port*/)
+{
+  Beam* beam = Beam::getInstance(pt->beam_index);
+
+  if (beam)
+  {
+      beam->addPointing(Pointing(Direction(pt->angle1,
+					   pt->angle2,
+					   (Direction::Types)pt->type),
+				 pt->time));
+  }
+  else cerr << "invalid beam_index in BEAMPOINTTO" << endl;
 }
 
 int main(int argc, char** argv)

@@ -34,3 +34,6 @@ Pointing::Pointing() :
 Pointing::Pointing(Direction direction, struct timeval time) :
     m_direction(direction), m_time(time)
 {}
+
+Pointing::~Pointing()
+{}

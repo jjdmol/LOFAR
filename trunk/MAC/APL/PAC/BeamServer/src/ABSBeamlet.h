@@ -81,7 +81,7 @@ namespace ABS
 
       protected:
 	  Beamlet(); // no direct construction
-	  ~Beamlet();
+	  virtual ~Beamlet();
 
       private:
 	  /** is the beamlet allocated? */

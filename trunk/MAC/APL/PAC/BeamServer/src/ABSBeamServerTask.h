@@ -23,14 +23,14 @@
 #ifndef ABSBEAMSERVERTASK_H_
 #define ABSBEAMSERVERTASK_H_
 
+#include "ABSSpectralWindow.h"
+#include "ABS_Protocol.ph"
+
 #include <GCF/GCF_Control.h>
 #include <GCF/GCF_ETHRawPort.h>
 
-/**
- * The maximum number of subbands that can
- * be handled by this Beam Server.
- */
-#define N_SUBBANDS (128)
+#include <set>
+#include <map>
 
 namespace ABS
 {
@@ -48,6 +48,7 @@ namespace ABS
 	 * GTMTopologyService classes.
 	 */
 	BeamServerTask(string name);
+	virtual ~BeamServerTask();
 
 	// state methods
 
@@ -65,11 +66,24 @@ namespace ABS
 	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
 
 	// action methods
+	
+	/**
+	 * allocate a new beam
+	 */
+	void beamalloc_action(ABSBeamallocEvent* ba,
+			      GCFPortInterface& port);
+
+	/**
+	 * free a beam
+	 */
+	void beamfree_action(ABSBeamfreeEvent* bf,
+			     GCFPortInterface& port);
 
 	/**
 	 * Change the direction of a beam.
 	 */
-	void pointto();
+	void beampointto_action(ABSBeampointtoEvent* pt,
+				GCFPortInterface& port);
 
 	/**
 	 * Start a new compute cycle.
@@ -90,11 +104,15 @@ namespace ABS
     private:
 	// member variables
 
-#if 0
-	Beam* m_beams;      // 128 singletons
-	Beamlet* m_beamlet; // 128 singletons
-	Subband* m_subband; // 128 singletons
-#endif
+	/**
+	 * Set of currently allocated beams by index.
+	 */
+	std::set<int> m_beams;
+
+	/**
+	 * List of configured spectral windowds.
+	 */
+	std::map<int, SpectralWindow*> m_spws;
 
     private:
 	// ports

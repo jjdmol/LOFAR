@@ -37,10 +37,11 @@ namespace ABS
       public:
 	  //@{
 	  /**
-	   * Constructors for a pointing.
+	   * Constructors and destructors for a pointing.
 	   */
 	  Pointing();
 	  Pointing(Direction direction, struct timeval time);
+	  virtual ~Pointing();
 	  //@}
 
 	  //@{
