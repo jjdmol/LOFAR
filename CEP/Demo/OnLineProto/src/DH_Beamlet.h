@@ -88,13 +88,13 @@ private:
     DH_Beamlet& operator= (const DH_Beamlet&);
 
     DataPacket*  itsDataPacket;    
-    BufferType* itsBuffer;   // array containing frequency spectrum.
-    unsigned int itsBufSize;  
-    int itsStationID;        // source station ID
-    float itsFrequencyOffset;    // frequency offset for this beamlet
+    BufferType* itsBuffer;     // array containing frequency spectrum.
+    int itsStationID;          // source station ID
+    float itsFrequencyOffset;  // frequency offset for this beamlet
+    float itsChannelWidth;     // frequency width of each frequency channel
     float itsElapsedTime;      // the hourangle
-    int itsNumberOfChannels; // number of frequency channels within this beamlet
-    float itsChannelWidth;      // frequency width of each frequency channel
+    int itsNumberOfChannels;   // number of frequency channels within this beamlet
+    unsigned int itsBufSize;  
 };
 
 inline DH_Beamlet::BufferType* DH_Beamlet::getBuffer()
