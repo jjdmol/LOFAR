@@ -5,26 +5,39 @@
 #include <VisAgent/InputAgent.h>
 #include <VisAgent/OutputAgent.h>
 #include <MeqServer/VisHandlerNode.h>
+#include <DMI/Events.h>
 #include <vector>
     
-#pragma aid Station Index Tile Format
+#pragma aid Station Index Tile Format Create Delete
 
 class AppControlAgent;
         
 namespace Meq {
   
+const HIID VisDataMux_EventCreate = AidCreate;
+const HIID VisDataMux_EventDelete = AidDelete;
+   
 //##ModelId=3F98DAE503DA
-class VisDataMux
+class VisDataMux : public EventRecepient
 {
   public:
+    static const HIID EventCreate;
+    static const HIID EventDelete; 
+  
     //##ModelId=3F9FF71B006A
     VisDataMux (Meq::Forest &frst);
+    
+    virtual ~VisDataMux () 
+    {}
       
     //##ModelId=3FA1016000B0
     void init (const DataRecord &rec,
                 VisAgent::InputAgent  & inp,
                 VisAgent::OutputAgent & outp,
                 AppControlAgent       & ctrl);
+    
+    // this receives node create/delete events
+    virtual int receiveEvent (const EventIdentifier &evid,const ObjRef::Xfer &evdata,void *);
     
     //##ModelId=3F98DAE6024C
     void addNode (Node &node);
