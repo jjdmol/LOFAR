@@ -26,7 +26,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <BaseDataHolder.h>
+#include <libTransport/BaseDataHolder.h>
 
 namespace LOFAR
 {

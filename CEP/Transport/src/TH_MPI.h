@@ -27,7 +27,7 @@
 
 #ifdef HAVE_MPI
 
-#include <TransportHolder.h>
+#include <libTransport/TransportHolder.h>
 #include <Common/lofar_deque.h>
 #include <Common/lofar_list.h>
 #include <mpi.h>

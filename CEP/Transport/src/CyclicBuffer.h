@@ -25,7 +25,7 @@
 
 #include <lofar_config.h>
 
-#include "Lock.h"
+#include <Lock.h>
 //#include <Common/lofar_deque.h>
 #include <Common/lofar_vector.h>
 

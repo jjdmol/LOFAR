@@ -40,7 +40,7 @@ namespace LOFAR {
       void fromDBRep (DH_PL&) const;
 
     private:
-      int       itsSeqNr;
+      long      itsSeqNr;
       int       itsId;
       int       itsTag;
       dtl::blob itsData;

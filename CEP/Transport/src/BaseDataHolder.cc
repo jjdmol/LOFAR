@@ -136,8 +136,17 @@ void BaseDataHolder::dump() const
 bool BaseDataHolder::read()
 {
   bool result = false;
-  if (itsReadDelayCount <= 0) {
-    result = itsTransporter->read();
+  if (itsReadDelayCount > 0) {
+    itsReadDelayCount--;
+  } else {
+    // If the data block is fixed shape and has version 1, we can simply read.
+    if (itsDataFields.hasFixedShape()  &&  itsDataFields.version() == 1) {
+      result = itsTransporter->read();
+    } else {
+      // Otherwise do 2 separate reads (one for header and one for data).
+      ////result = itsTransporter->readHeader();
+      ////result = itsTransporter->readData();
+    }
     // Check the data header in debug mode.
 #ifdef ENABLE_DBGASSERT
     BlobIBufChar bibc(itsData->data(), itsData->size());
@@ -160,18 +169,16 @@ bool BaseDataHolder::read()
 	itsDataFields.convertData (bib);
       }
     }
-  } else {
-    itsReadDelayCount--;
   }
   return result;
 }
 
 void BaseDataHolder::write()
 { 
-  if (itsWriteDelayCount <= 0) {
-    itsTransporter->write();
-  } else {
+  if (itsWriteDelayCount > 0) {
     itsWriteDelayCount--;
+  } else {
+    itsTransporter->write();
   }
 }
 

@@ -55,8 +55,11 @@ void DBRep<DH_PL>::toDBRep (const DH_PL& obj)
 // to the persistency layer and the MeqParmHolder class.
 void DBRep<DH_PL>::fromDBRep (DH_PL& obj) const
 {
-  obj.getDataBlock().resize (itsData.size());
-  obj.getDataBlock().getString() = itsData;
+  dtl::blob& str =  obj.getDataBlock().getString();
+  if (str.size() != itsData.size()) {
+    str.resize (itsData.size());
+  }
+  memcpy (&(str[0]), itsData.data(), itsData.size());
 }
 
 

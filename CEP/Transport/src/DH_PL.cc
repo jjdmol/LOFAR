@@ -54,7 +54,7 @@ DataHolder* DH_PL::clone() const
 
 void DH_PL::initPO (const string& tableName)
 {
-  itsPODHPL = new PO_DH_PL();
+  itsPODHPL = new PO_DH_PL(*this);
   itsPODHPL->tableName (tableName);
 } 
 
