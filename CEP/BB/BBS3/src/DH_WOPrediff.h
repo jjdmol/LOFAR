@@ -121,6 +121,9 @@ public:
   bool getCleanUp() const;
   void setCleanUp(bool clean);
 
+  bool getUpdateParms() const;
+  void setUpdateParms(bool update);
+
   int getSolutionID() const;
   void setSolutionID(int id);
 
@@ -163,6 +166,7 @@ private:
   unsigned int* itsUseAutoCorr;
   unsigned int* itsLockMappedMem;
   unsigned int* itsCleanUp;                 // Clean up Prediffer object when finished?
+  unsigned int* itsUpdateParms;             // Update solvable parameters?
   int*          itsSolutionID;              // (wo)ID of solution in solution table
   
   PO_DH_WOPrediff* itsPODHWO; 
@@ -266,6 +270,12 @@ inline bool DH_WOPrediff::getCleanUp() const
 inline void DH_WOPrediff::setCleanUp(bool clean)
 { *itsCleanUp = clean; }
 
+inline bool DH_WOPrediff::getUpdateParms() const
+{ return *itsUpdateParms; }
+
+inline void DH_WOPrediff::setUpdateParms(bool update)
+{ *itsUpdateParms = update; }
+
 inline int DH_WOPrediff::getSolutionID() const
 { return *itsSolutionID; }
  
@@ -295,6 +305,7 @@ namespace PL {
       double       itsStartTime;
       double       itsTimeLength;
       unsigned int itsCleanUp;
+      unsigned int itsUpdateParms;
       int          itsSolutionID;
     };   
                                                       

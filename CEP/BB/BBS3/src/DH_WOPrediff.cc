@@ -59,6 +59,7 @@ DH_WOPrediff::DH_WOPrediff (const string& name)
     itsUseAutoCorr     (0),
     itsLockMappedMem   (0),
     itsCleanUp         (0),
+    itsUpdateParms     (0),
     itsSolutionID      (0),
     itsPODHWO          (0)
 {
@@ -85,6 +86,7 @@ DH_WOPrediff::DH_WOPrediff(const DH_WOPrediff& that)
     itsUseAutoCorr     (0),
     itsLockMappedMem   (0),
     itsCleanUp         (0),
+    itsUpdateParms     (0),
     itsSolutionID      (0),
     itsPODHWO          (0)
 {
@@ -134,6 +136,7 @@ void DH_WOPrediff::preprocess()
   addField ("UseAutoCorr", BlobField<unsigned int>(1));
   addField ("LockMappedMem", BlobField<unsigned int>(1));
   addField ("CleanUp", BlobField<unsigned int>(1));
+  addField ("UpdateParms", BlobField<unsigned int>(1));
   addField ("SolutionID", BlobField<int>(1));
 
   // Create the data blob (which calls fillPointers).
@@ -164,6 +167,7 @@ void DH_WOPrediff::preprocess()
   *itsUseAutoCorr = 0;
   *itsLockMappedMem = 0;
   *itsCleanUp = 0;
+  *itsUpdateParms = 0;
   *itsSolutionID = -1;
 }
 
@@ -187,6 +191,7 @@ void DH_WOPrediff::fillDataPointers()
   itsUseAutoCorr = getData<unsigned int> ("UseAutoCorr");
   itsLockMappedMem = getData<unsigned int> ("LockMappedMem");
   itsCleanUp = getData<unsigned int> ("CleanUp");
+  itsUpdateParms = getData<unsigned int> ("UpdateParms");
   itsSolutionID = getData<int> ("SolutionID");
 }
 
@@ -209,6 +214,7 @@ void DH_WOPrediff::postprocess()
   itsUseAutoCorr = 0;
   itsLockMappedMem = 0;
   itsCleanUp = 0;
+  itsUpdateParms = 0;
   itsSolutionID = 0;
 }
 
@@ -353,6 +359,7 @@ void DH_WOPrediff::dump()
   cout << "Use auto correlations = " << getUseAutoCorrelations() << endl;
   cout << "Lock mapped memory = " << getLockMappedMemory() << endl;
   cout << "Clean up = " << getCleanUp() << endl;
+  cout << "Update parameters = " << getUpdateParms() << endl;
   cout << "Solution id = " << getSolutionID() << endl;
 
   KeyValueMap sArguments;
@@ -418,6 +425,7 @@ void DH_WOPrediff::clearData()
   setUseAutoCorrelations(true);
   setLockMappedMemory(false);
   setCleanUp(false);
+  setUpdateParms(false);
   setSolutionID(0);
 }
 
@@ -439,6 +447,7 @@ void DBRep<DH_WOPrediff>::bindCols (dtl::BoundIOs& cols)
   cols["STARTTIME"] == itsStartTime;
   cols["TIMELENGTH"] == itsTimeLength;
   cols["CLEANUP"] == itsCleanUp;
+  cols["UPDATEPARMS"] == itsUpdateParms;
   cols["SOLUTIONID"] == itsSolutionID;
 }
 
@@ -458,6 +467,7 @@ void DBRep<DH_WOPrediff>::toDBRep (const DH_WOPrediff& obj)
   itsStartTime = obj.getStartTime();
   itsTimeLength = obj.getTimeLength();
   itsCleanUp = obj.getCleanUp();
+  itsUpdateParms = obj.getUpdateParms();
   itsSolutionID = obj.getSolutionID();
 }
 

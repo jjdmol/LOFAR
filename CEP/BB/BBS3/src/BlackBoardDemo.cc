@@ -98,7 +98,7 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   TH_PL::useDatabase(bbDBName); 
 
   // Create the controller WorkHolder and Step
-  WH_Control controlWH("control", ctrlParams);
+  WH_Control controlWH("control", itsNumberPD, ctrlParams);
   Step controlStep(controlWH, "controlStep");
   controlStep.runOnNode(0,0);
   topComposite.addStep(controlStep);

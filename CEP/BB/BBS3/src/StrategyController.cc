@@ -31,11 +31,13 @@ namespace LOFAR
 StrategyController::StrategyController(int id,
 				       DH_Solution* inDH, 
 				       DH_WOPrediff* outWOPD, 
-				       DH_WOSolve* outWOSolve)
-  : itsInDH   (inDH),
-    itsWOPD   (outWOPD),
-    itsWOSolve(outWOSolve),
-    itsID     (id)
+				       DH_WOSolve* outWOSolve,
+				       int nrPrediffers)
+  : itsInDH      (inDH),
+    itsWOPD      (outWOPD),
+    itsWOSolve   (outWOSolve),
+    itsID        (id),
+    itsNrPrediffers(nrPrediffers)
 {
   LOG_TRACE_FLOW("StrategyController constructor");
 }

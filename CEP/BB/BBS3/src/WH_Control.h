@@ -48,7 +48,7 @@ public:
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  explicit WH_Control (const string& name,
+  explicit WH_Control (const string& name, int nrPrediffers,
 		       const KeyValueMap& args);
 
   virtual ~WH_Control();
@@ -57,7 +57,7 @@ public:
   virtual WH_Control* make (const string& name);
 
   /// Static function to create an object.
-  static WorkHolder* construct (const string& name, 
+  static WorkHolder* construct (const string& name, int nrPrediffers,
 				const KeyValueMap& args);
 
   /// Preprocess
@@ -84,6 +84,7 @@ private:
   // Private help functions to create strategy controller(s)
   void createStrategyControllers();
 
+  int                      itsNrPrediffers;  // Number of available prediffers
   KeyValueMap              itsArgs;          // Input parameters
   ControllerList           itsControllers;   // All StrategyControllers   
   ControllerList::iterator itsCtrlIter;      // Iterator indicating the currently

@@ -14,6 +14,7 @@ MMap.h						\
 Prediffer.h					\
 Solver.h					\
 ParmData.h					\
+ParmWriter.h					\
 MNS/MeqDomain.h \
 MNS/MeqExpr.h \
 MNS/MeqFunklet.h \
@@ -82,6 +83,7 @@ MMap.cc							\
 Prediffer.cc						\
 Solver.cc						\
 ParmData.cc						\
+ParmWriter.cc						\
 MNS/MeqDomain.cc \
 MNS/MeqExpr.cc \
 MNS/MeqFunklet.cc \

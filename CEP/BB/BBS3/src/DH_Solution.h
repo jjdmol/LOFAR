@@ -76,6 +76,12 @@ public:
   bool getSolution(vector<ParmData>& pData);
   void setSolution(const vector<ParmData>& pData);
 
+  double getStartFreq() const;
+  double getEndFreq() const;
+  double getStartTime() const;
+  double getEndTime() const;
+  void setDomain(double fStart, double fEnd, double tStart, double tEnd);
+
   // Resets (clears) the contents of its DataPacket 
   void clearData();
   
@@ -94,10 +100,14 @@ private:
   double*       itsMu;
   double*       itsStdDev;
   double*       itsChi;
-   
+  
   PO_DH_SOL*    itsPODHSOL; 
 
   int itsCurDataSize;
+  double*       itsStartFreq;        // Start frequency of the domain
+  double*       itsEndFreq;          // End frequency of the domain
+  double*       itsStartTime;        // Start time of the domain
+  double*       itsEndTime;          // End time of the domain
 
 };
 
@@ -106,6 +116,18 @@ inline int DH_Solution::getWorkOrderID() const
 
 inline void DH_Solution::setWorkOrderID(const int id)
 { *itsWOID = id; }
+
+inline double DH_Solution::getStartFreq() const
+{ return *itsStartFreq; }
+
+inline double DH_Solution::getEndFreq() const
+{ return *itsEndFreq; }
+
+inline double DH_Solution::getStartTime() const
+{ return *itsStartTime; }
+
+inline double DH_Solution::getEndTime() const
+{ return *itsEndTime; }
 
 
 // Define the class needed to tell PL that there should be
@@ -124,6 +146,10 @@ namespace PL {
       double itsMu;
       double itsStdDev;
       double itsChi;
+      double itsStartFreq;
+      double itsEndFreq;
+      double itsStartTime;
+      double itsEndTime;
     };   
                                                       
 } // end namespace PL   

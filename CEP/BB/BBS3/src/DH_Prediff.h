@@ -74,6 +74,12 @@ public:
   bool getParmData(vector<ParmData>& pdata); 
   void setParmData(const vector<ParmData>& pdata);
 
+  double getStartFreq();
+  double getEndFreq();
+  double getStartTime();
+  double getEndTime();
+  void setDomain(double fStart, double fEnd, double tStart, double tEnd);
+
   bool moreDataToCome();
   void setMoreData(bool more);
 
@@ -91,6 +97,10 @@ private:
   unsigned int* itsDataSize;    // Number of equations in data buffer
   double* itsDataBuffer;
   unsigned int* itsMoreData;   // More result to come?
+  double* itsStartFreq;        // Start frequency of the domain
+  double* itsEndFreq;          // End frequency of the domain
+  double* itsStartTime;        // Start time of the domain
+  double* itsEndTime;          // End time of the domain
 };
 
 inline void DH_Prediff::setDataSize(unsigned int size)
@@ -107,6 +117,19 @@ inline bool DH_Prediff::moreDataToCome()
 
 inline void DH_Prediff::setMoreData(bool more)
 { *itsMoreData = more; }
+
+inline double DH_Prediff::getStartFreq()
+{ return *itsStartFreq; }
+
+inline double DH_Prediff::getEndFreq()
+{ return *itsEndFreq; }
+
+inline double DH_Prediff::getStartTime()
+{ return *itsStartTime; }
+
+inline double DH_Prediff::getEndTime()
+{ return *itsEndTime; }
+
 
 } // namespace LOFAR
 

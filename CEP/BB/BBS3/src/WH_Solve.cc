@@ -33,6 +33,11 @@
 #include <BBS3/Solver.h>
 #include <BBS3/ParmData.h>
 
+#include <iostream>
+#include <Common/VectorUtil.h>
+
+using namespace std;
+
 namespace LOFAR
 {
 
@@ -152,6 +157,13 @@ void WH_Solve::process()
   }
   cout << " ]" << endl;
 
+  //>>>Temporary:
+  streamsize prec = cout.precision();
+  cout.precision(10);
+  cout << "Per prediffer: " << solver->getSolutions() << endl;
+  cout.precision (prec);
+
+
   // Write result
   // Get solution dataholder DH_Solution* sol;
   DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getOutHolder(1));
@@ -161,6 +173,13 @@ void WH_Solve::process()
   sol->setQuality(resultQuality);
   sol->setWorkOrderID(wo->getWorkOrderID());
   wo->setStatus(DH_WOSolve::Executed);
+
+  //>>>> For now: Assume all prediffer domains are equal!!
+  DH_Prediff* predInp1 = 
+    dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(2));
+  sol->setDomain(predInp1->getStartFreq(), predInp1->getEndFreq(),
+		 predInp1->getStartTime(), predInp1->getEndTime());
+
   // Add solution to database and update work order
   solPtr->insertDB();
   woPtr->updateDB();

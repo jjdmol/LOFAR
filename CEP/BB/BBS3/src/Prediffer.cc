@@ -1394,6 +1394,9 @@ void Prediffer::updateSolvableParms()
     }
   }
   resetEqLoop();
+
+  itsMEP.unlock();
+  itsGSMMEP.unlock();
 }
 
 void Prediffer::resetEqLoop()
