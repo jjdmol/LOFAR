@@ -73,9 +73,8 @@ void GSAPvssApi::workProc()
 {
   if (getManagerState() == STATE_RUNNING)
   {
-   	long sec(0), usec(0);        // No wait
+   	long sec(0), usec(1);
 
-    sec = 0;
     dispatch(sec, usec);
   }
   else

@@ -42,6 +42,7 @@ GPMController::GPMController() :
 
   // initialize the port
   _propertyAgent.init(*this, "client", GCFPortInterface::SAP, PA_PROTOCOL);
+  memset(_buffer, '0', MAX_BUF_SIZE);
 }
 
 GPMController::~GPMController()
@@ -309,8 +310,8 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     {
       pData = (char*)(&e) + sizeof(PALinkpropertiesEvent);
       unsigned int scopeDataLength = Utils::unpackString(pData, scope);
-      string linkListData(pData + scopeDataLength, 
-        e.length - sizeof(PALinkpropertiesEvent) - scopeDataLength);
+      string linkListData(pData + scopeDataLength + Utils::SLEN_FIELD_SIZE, 
+        e.length - sizeof(PALinkpropertiesEvent) - scopeDataLength - Utils::SLEN_FIELD_SIZE);
       list<string> propertyList;
       LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
         "PA-REQ: Link properties %s on scope %s",
@@ -342,8 +343,8 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     {
       pData = (char*)(&e) + sizeof(PAUnlinkpropertiesEvent);
       unsigned int scopeDataLength = Utils::unpackString(pData, scope);
-      string unlinkListData(pData + scopeDataLength, 
-        e.length - sizeof(PAUnlinkpropertiesEvent) - scopeDataLength);
+      string unlinkListData(pData + scopeDataLength + Utils::SLEN_FIELD_SIZE, 
+        e.length - sizeof(PALinkpropertiesEvent) - scopeDataLength - Utils::SLEN_FIELD_SIZE);
       LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
         "PA-REQ: Unlink properties %s on scope %s",
         unlinkListData.c_str(), 

@@ -32,7 +32,7 @@ GSASCADAHandler* GSASCADAHandler::instance()
   if (0 == _pInstance)
   {
     char buf[100];
-    sprintf(buf, "%s/LCU/config/config", getenv("LOFARHOME"));
+    snprintf(buf, 100, "%s/LCU/config/config", getenv("LOFARHOME"));
     setenv("PVSS_II", buf, true);
     
     GSAResources::init(GCFTask::_argc, GCFTask::_argv);

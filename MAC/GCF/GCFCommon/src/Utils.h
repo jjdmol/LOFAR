@@ -19,7 +19,7 @@ class Utils
                              string& value);
    
     static unsigned short getStringDataLength(char* pStringData);
-    static const unsigned int SLEN_FIELD_SIZE = 3;
+    static const unsigned int SLEN_FIELD_SIZE = sizeof(unsigned int);
     static unsigned int packPropertyList(list<string>& propertyList, 
                                          char* buffer, 
                                          unsigned int maxBufferSize);

@@ -45,6 +45,7 @@ GCFPropertySetBase::GCFPropertySetBase (string scope,
 GCFPropertySetBase::~GCFPropertySetBase()
 {
   clearAllProperties();
+  _dummyProperty.resetPropSetRef();
 }
 
 GCFPropertyBase* GCFPropertySetBase::getProperty (const string propName) const
