@@ -304,5 +304,13 @@ void ParmTable::createTable (const String& tableName)
   Table tab(newtab);
 }
 
+void ParmTable::unlockTables()
+{
+  for (std::map<string,ParmTable*>::const_iterator iter = theirTables.begin();
+       iter != theirTables.end();
+       ++iter) {
+    iter->second->unlock();
+  }
+}
 
 } // namespace Meq
