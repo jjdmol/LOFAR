@@ -2,6 +2,7 @@
 // macro defined in QT :-)
 #include <OCTOPUSSY/Dispatcher.h> 
 #include <OCTOPUSSY/Gateways.h>
+#include <UVD/MSIntegratorWP.h>
 
 #include <UVPMainWindow.h>
 #include <UVPDataTransferWP.h>    // Communications class
@@ -162,34 +163,55 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
     m_plot_menu->setItemEnabled(itsMenuPlotImageID, false);
     m_plot_menu->setItemEnabled(itsMenuPlotStopID, true);
     
-    // First experiment to see how fast I can paint...
-    const unsigned int Channels = 512;
-    double     Values[Channels];
-    UVPSpectrum   Spectrum(Channels);
-    
-    
     Dispatcher    dispatcher;     // Octopussy Message Dispatcher
 
     // Octopussy
     const int corr     = 5;
-    const int baseline = 46;
+    const int baseline = 6;
     const int patch    = 0;
     
     // Anonymous counted reference. No need to delete.
-    dispatcher.attach(new UVPDataTransferWP(corr, baseline, patch), DMI::ANON);
+    UVPDataTransferWP *transfer = new UVPDataTransferWP(corr, baseline, patch);
+    dispatcher.attach(transfer, DMI::ANON);
+    dispatcher.attach(new MSIntegratorWP("test.ms", 8, 1, 1), DMI::ANON);
     initGateways(dispatcher);     // Octopussy
     
     dispatcher.start();           // Octopussy
     
-    itsCanvas->setChannels(Channels);
-    
     slot_setProgressTotalSteps(600);
     
     itsBusyPlotting = true;
+
+    itsCanvas->setChannels(16);
     
+    unsigned int spectraAdded(0);
     while(itsBusyPlotting) {
       dispatcher.poll();
       qApp->processEvents();
+
+      bool doDraw(false);
+      
+      // First experiment to see how fast I can paint...
+
+      if(transfer->size() > spectraAdded) {doDraw = true;};
+
+      for(unsigned int i = spectraAdded; i < transfer->size(); i++)
+        {
+          const   UVPDataAtom *dataAtom = transfer->getRow(i);
+          double *Values = new double[dataAtom->getNumberOfChannels()];
+          for(unsigned int j = 0; j < dataAtom->getNumberOfChannels(); j++) {
+            Values[j] = sqrt(dataAtom->getData(j)->real()*dataAtom->getData(j)->real() +
+                             dataAtom->getData(j)->imag()*dataAtom->getData(j)->imag());
+          }
+          UVPSpectrum   Spectrum(dataAtom->getNumberOfChannels(), i, Values);
+          itsCanvas->slot_addSpectrum(Spectrum);
+          spectraAdded++;
+          delete[] Values;
+        }
+      if(doDraw)
+        {
+          itsCanvas->drawView();
+        }
     }
     
 #if(ARTIFICIAL_IMAGE_ASDJKNF)
