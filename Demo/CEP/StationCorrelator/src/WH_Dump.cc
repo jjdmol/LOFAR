@@ -118,27 +118,6 @@ void WH_Dump::process() {
       totalWritten += written;
     }
   }
-#define DUMP
-#ifdef DUMP
-  for (int i=0; i<itsNinputs; i++) {
-    dhp = (DH_Vis*)getDataManager().getInHolder(i);
-    recSize += dhp->getBufSize()*sizeof(DH_Vis::BufferType);
-    for (int channel=0; channel<itsNchannels; channel++) {
-      cout<<"channel: "<< channel <<" of input: "<<i<<endl;
-      for (int el1=0; el1<itsNelements; el1++){
-	cout<<el1<<": ";
-	for (int el2=0; el2<itsNelements; el2++){
-	  int offset = el2 * (itsNelements * itsNpolarisations) + el1 * itsNpolarisations;
-	  for (int pol=0; pol<itsNpolarisations; pol++){
-	    cout<<freqBlock[offset+pol]<<" ";
-	  }
-	  cout<<"  ";
-	}
-	cout<<endl;
-      }
-    }
-  }
-#endif
   recSize = recSize / 1024; // from now recSize is in kB
   totalWrittenKB = totalWritten / 1024;
   gettimeofday(&newTime, NULL);
@@ -162,5 +141,24 @@ void WH_Dump::postProcess() {
 }
 
 void WH_Dump::dump() {
+  cout<<"DUMP OF WH_DUMP: "<<getName()<<endl;
+  DH_Vis* dhp;
+  for (int i=0; i<itsNinputs; i++) {
+    dhp = (DH_Vis*)getDataManager().getInHolder(i);
+    for (int channel=0; channel<itsNchannels; channel++) {
+      cout<<"channel: "<< channel <<" of input: "<<i<<endl;
+      for (int el1=0; el1<itsNelements; el1++){
+	cout<<el1<<": ";
+	for (int el2=0; el2<itsNelements; el2++){
+	  int offset = el2 * (itsNelements * itsNpolarisations) + el1 * itsNpolarisations;
+	  for (int pol=0; pol<itsNpolarisations; pol++){
+	    cout<<*dhp->getBufferElement(el1, el2, channel, pol)<<" ";
+	  }
+	  cout<<"  ";
+	}
+	cout<<endl;
+      }
+    }
+  }
 }
 		 
