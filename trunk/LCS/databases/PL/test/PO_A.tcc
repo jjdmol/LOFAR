@@ -20,6 +20,8 @@ namespace LOFAR {
       cols["ITSINT"]  == itsInt;
       cols["ITSDOUBLE"]  == itsDouble;
       cols["ITSSTRING"]  == itsString;
+      cols["ITSCOMPLEX_REAL"] == itsComplex_real;
+      cols["ITSCOMPLEX_IMAG"] == itsComplex_imag;
     }
 
     // toDBRep copies the fields from the A class to the DBRep<A> structure.
@@ -28,6 +30,8 @@ namespace LOFAR {
       dest.itsInt  = data().itsInt;
       dest.itsDouble  = data().itsDouble;
       dest.itsString  = data().itsString;
+      dest.itsComplex_real = data().itsComplex.real();
+      dest.itsComplex_imag = data().itsComplex.imag();
     }
 
 
@@ -37,6 +41,8 @@ namespace LOFAR {
       data().itsInt  = src.itsInt;
       data().itsDouble  = src.itsDouble;
       data().itsString  = src.itsString;
+      data().itsComplex = std::complex<double>(src.itsComplex_real, 
+                                               src.itsComplex_imag);
     }
 
     // Initialize the internals of TPersistentObject<A>

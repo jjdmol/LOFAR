@@ -25,6 +25,8 @@ namespace LOFAR {
       int              itsInt;
       double           itsDouble;
       std::string      itsString;
+      double           itsComplex_real;
+      double           itsComplex_imag;
     };
 
   } // close namespace PL
