@@ -66,10 +66,13 @@ public:
   void setDataSize(const vector<uint32>& shape);
   const vector<uint32>& getDataSize();
 
-  double* getDataPtr();
+  double* getDataBuffer();
 
   bool getParmData(vector<ParmData>& pdata); 
   void setParmData(const vector<ParmData>& pdata);
+
+  bool moreDataToCome();
+  void setMoreData(bool more);
 
   void dump();
 
@@ -82,12 +85,18 @@ private:
   // Fill the pointers to the data in the blob.
   virtual void fillDataPointers();
 
-  double* itsDataPtr;
-
+  double* itsDataBuffer;
+  unsigned int* itsMoreData;   // More result to come?
 };
 
-inline double* DH_Prediff::getDataPtr()
-{ return itsDataPtr; }
+inline double* DH_Prediff::getDataBuffer()
+{ return itsDataBuffer; }
+
+inline bool DH_Prediff::moreDataToCome()
+{ return ((*itsMoreData==0)?(false):(true));}
+
+inline void DH_Prediff::setMoreData(bool more)
+{ *itsMoreData = more; }
 
 } // namespace LOFAR
 

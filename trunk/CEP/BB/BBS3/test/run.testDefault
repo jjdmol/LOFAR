@@ -9,24 +9,36 @@ fi
 niter=$1
 usernm=$2
 
-. ./initparms
+# . ./initparms
+\rm -rf /tmp/$USER.demo*
+ln -s /data/PSS3/diepen/BBS2/demo3.MEP /tmp/$USER.demo.MEP
+ln -s /data/PSS3/diepen/BBS2/demo3_gsm.MEP /tmp/$USER.demo_gsm.MEP
+
 
 # Do testDefault
-echo ""
-echo "Doing testDefault"
+# echo ""
+# echo "Doing testDefault"
 
-echo "  Generating parm tables ..."
+# echo "  Generating parm tables ..."
 # use functions in initparms to initialize parmtables
-beginParmdbInputFile "dbtype='aips', user='$usernm', tablename='demo3-1'"
-makeMeq
-applyfile
+# beginParmdbInputFile "dbtype='aips', user='$usernm', tablename='demo3-1'"
+# makeMeq
+# applyfile
 
-beginParmdbInputFile "dbtype='aips', user='$usernm', tablename='demo3_gsm-1'"
-makeGsm
-perturbGsm
-applyfile
+# beginParmdbInputFile "dbtype='aips', user='$usernm', tablename='demo3_gsm-1'"
+# makeGsm
+# perturbGsm
+# applyfile
 
 echo "  Preparing BlackBoard ..."
 time ./clearBB -user $usernm
 echo "  Starting solve ..."
-time ./tBBS3 tBBS3.testDefault $niter $usernm >& testDefault.out
+# time ./tBBS3 tBBS3.testDefault $niter $usernm >& testDefault.out
+
+echo "localhost" > tBBS3_tmp.machinefile
+echo "localhost" >> tBBS3_tmp.machinefile
+echo "localhost" >> tBBS3_tmp.machinefile
+# tBBS3 tBBS3.testDefault $niter $usernm >& testDefault.out
+#  mpirun -np 3 -machinefile tBBS3_tmp.machinefile tBBS3 tBBS3.testDefault $niter $usernm >& testDefault.out
+  /usr/local/mpich/bin/mpirun -np 3 -machinefile tBBS3_tmp.machinefile tBBS3 tBBS3.testDefault $niter $usernm > testDefault.out
+

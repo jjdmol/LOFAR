@@ -23,6 +23,9 @@
 #include <lofar_config.h>
 
 #include <BBS3/BlackBoardDemo.h>
+#ifdef HAVE_MPI
+#include <Transport/TH_MPI.h>
+#endif
 #include <Common/KeyParser.h>
 #include <string>
 #include <iostream>
@@ -38,24 +41,28 @@ int main (int argc, const char** argv)
     // framework, use following two statements:
     INIT_LOGGER("tBBS3.log_prop");
 
+#ifdef HAVE_MPI
+    TH_MPI::init(argc, argv);
+#endif
+
     BlackBoardDemo simulator;
     
     simulator.setarg (argc, argv);
 
     // Get input script.
-    string name = "tBBS3.in";
-    if (argc > 1) {
-      name = argv[1];
-    }
+    string name = "tBBS3.testDefault";
+//     if (argc > 1) {
+//       name = argv[1];
+//     }
     int nriter = 1;
-    if (argc > 2) {
-      istringstream istr(argv[2]);
-      istr >> nriter;
-    }
-    string usernm = "test";
-    if (argc > 3) {
-      usernm = argv[3];
-    }
+//     if (argc > 2) {
+//       istringstream istr(argv[2]);
+//       istr >> nriter;
+//     }
+    string usernm = "meijeren";
+//     if (argc > 3) {
+//       usernm = argv[3];
+//     }
     // Read the input script until eof.
     // Remove // comments.
     // Combine it into a single key=value command.

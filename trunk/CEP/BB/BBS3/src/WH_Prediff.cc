@@ -31,6 +31,8 @@
 #include <BBS3/DH_Prediff.h>
 #include <BBS3/Prediffer.h>
 
+#include <Common/hexdump.h>
+
 namespace LOFAR
 {
 
@@ -46,6 +48,7 @@ WH_Prediff::WH_Prediff(const string& name, int id)
   // switch input and output channel trigger off
   getDataManager().setAutoTriggerIn(0, false);
   getDataManager().setAutoTriggerOut(0, false);
+  getDataManager().setAutoTriggerOut(1, false);
 }
 
 WH_Prediff::~WH_Prediff()
@@ -115,64 +118,128 @@ void WH_Prediff::process()
   if (wo->getNewBaselines())
   {
     pred->select(ant, ant, wo->getUseAutoCorrelations());
-    vector<uint32> dataShape;
-    dataShape = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
-				wo->getStartTime(), wo->getTimeLength());
-    dhRes->setDataSize(dataShape);              // Set data field of output DH_Prediff to correct size
+
     vector<int> emptyS(0);
-    pred->setPeelSources(peelSrcs, emptyS);
+    if (peelSrcs.size() > 0)
+    {
+      pred->setPeelSources(peelSrcs, emptyS);
+    }
     pred->clearSolvableParms();
     vector<string> emptyP(0);
     pred->setSolvableParms(pNames, emptyP, true);
     pred->updateSolvableParms();
-    // Calculate and put in output dataholder buffer
-    pred->getEquations(dhRes->getDataPtr(), dataShape);
-    if (wo->getSubtractSources())
+
+    vector<uint32> dataShape;
+    dataShape = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
+				wo->getStartTime(), wo->getTimeLength());
+   
+    dhRes->setDataSize(dataShape);              // Set data field of output DH_Prediff to correct size
+
+    vector<ParmData> pData = pred->getSolvableParmData();
+
+    cout << "***Getting parm data: [ ";
+    for (uint j=0; j<pData.size(); j++)
     {
-      pred->subtractPeelSources(true);   // >>>For now: always write in new file 
+      cout << pData[j].getValues() << " ";
     }
-    dhRes->setParmData(pred->getSolvableParmData());    
+    cout << "]" << endl;
+    dhRes->setParmData(pData);
+
+    //    dhRes->setParmData(pred->getSolvableParmData());   
+ 
+    // Calculate and put in output dataholder buffer
+    bool more=false;
+    ulong counter = 1000;
+    do
+    {
+      dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(1));
+      more = pred->getEquations(dhRes->getDataBuffer(), dataShape);
+      dhRes->setMoreData(more);
+      counter += 1;
+      dhRes->setTimeStamp(counter);
+      cout << "***Sending timestamp: " << counter << endl; 
+      hexdump(dhRes->getDataBuffer(), dataShape[0]*dataShape[1]*dataShape[2]);
+      // send result to solver
+      getDataManager().readyWithOutHolder(1);
+    }
+    while (more);
+
+    pred->showSettings();
+
   }
   else if (wo->getNewDomain())
   {
-    vector<uint32> dataShape;
-    dataShape = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
-				wo->getStartTime(), wo->getTimeLength());
-    dhRes->setDataSize(dataShape);              // Set data field of output DH_Prediff to correct size
     vector<int> emptyS(0);
-    pred->setPeelSources(peelSrcs, emptyS);
+    if (peelSrcs.size() > 0)
+    {
+      pred->setPeelSources(peelSrcs, emptyS);
+    }
     pred->clearSolvableParms();
     vector<string> emptyP(0);
     pred->setSolvableParms(pNames, emptyP, true);
     pred->updateSolvableParms();
-    // Calculate and put in output dataholder buffer
-    pred->getEquations(dhRes->getDataPtr(), dataShape);
+
+    vector<uint32> dataShape;
+    dataShape = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
+				wo->getStartTime(), wo->getTimeLength());
+    dhRes->setDataSize(dataShape);              // Set data field of output DH_Prediff to correct size
+
     dhRes->setParmData(pred->getSolvableParmData());
+    // Calculate and put in output dataholder buffer
+    bool more=false;
+    do
+    {
+      dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(1));
+      more = pred->getEquations(dhRes->getDataBuffer(), dataShape);
+      dhRes->setMoreData(more);
+      // send result to solver
+      getDataManager().readyWithOutHolder(1);
+    }
+    while (more);
+
   }
   else if (wo->getNewPeelSources())
   {
     vector<int> emptyS(0);
-    pred->setPeelSources(peelSrcs, emptyS);
+    if (peelSrcs.size() > 0)
+    {
+      pred->setPeelSources(peelSrcs, emptyS);
+    }
     pred->clearSolvableParms();
     vector<string> emptyP(0);
     pred->setSolvableParms(pNames, emptyP, true);
     pred->updateSolvableParms();
     // Calculate and put in output dataholder buffer
-    pred->getEquations(dhRes->getDataPtr(), dhRes->getDataSize());
- }
+    bool more=false;
+    do
+    {
+      dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(1));
+      more = pred->getEquations(dhRes->getDataBuffer(), dhRes->getDataSize());
+      dhRes->setMoreData(more);
+      // send result to solver
+      getDataManager().readyWithOutHolder(1);
+    }
+    while (more);
+  }
   else
   {
     pred->updateSolvableParms();
     // Calculate and put in output dataholder buffer
-    pred->getEquations(dhRes->getDataPtr(), dhRes->getDataSize());
+    bool more=false;
+    do
+    {
+      dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(1));
+      more = pred->getEquations(dhRes->getDataBuffer(), dhRes->getDataSize());
+      dhRes->setMoreData(more);
+      // send result to solver
+      getDataManager().readyWithOutHolder(1);
+    }
+    while (more);
   }
   if (wo->getSubtractSources())
   {
     pred->subtractPeelSources(true);   // >>>For now: always write in new file 
   }
-
-  // send result to solver
-  getDataManager().readyWithOutHolder(1);
 
   // Update workorder status
   wo->setStatus(DH_WOPrediff::Executed);

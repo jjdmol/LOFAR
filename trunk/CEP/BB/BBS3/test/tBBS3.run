@@ -24,3 +24,4 @@ echo "  Preparing BlackBoard ..."
 time prepareBBD >> test.log
 echo "  Starting solve ..."
 time tBBS3 tBBS3.in 3 >& test.out
+

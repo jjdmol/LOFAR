@@ -70,7 +70,7 @@ class WH_Solve : public LOFAR::WorkHolder
   Solver* getSolver(int id);
 
   // Read all Prediffer inputs
-  void readInputs(Solver* solver);
+  void readInputs(Solver* solver, bool firstRead);
   
   // Read all Prediffer inputs and set solvable parameter data.
   void setParmData(Solver* solver);

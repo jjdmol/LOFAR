@@ -33,6 +33,7 @@
 #include <CEPFrame/Step.h>
 #include <CEPFrame/WH_Empty.h>
 #include <tinyCEP/Profiler.h>
+#include <Transport/TH_MPI.h>
 #include <Transport/TH_Mem.h>
 #include <TransportPL/TH_PL.h>
 #include <BBS3/BlackBoardDemo.h>
@@ -144,7 +145,11 @@ void BlackBoardDemo::define(const KeyValueMap& params)
     // Create the connection to the database.
     itsPDSteps[index]->connect(itsPDSteps[index], 0, 0, 1, TH_PL("BBS3WOPrediffer"));
     // Create the connection to the Solver
-    solverStep.connect(itsPDSteps[index], index+2, 1, 1, TH_Mem(), false);
+#ifdef HAVE_MPI
+    solverStep.connect(itsPDSteps[index], index+2, 1, 1, TH_MPI(index+1,itsNumberPD+1)); 
+#else
+    solverStep.connect(itsPDSteps[index], index+2, 1, 1, TH_Mem(), false);   
+#endif
   }
 
 }  
