@@ -70,7 +70,8 @@ void SetWGCmd::apply(CacheBuffer& cache)
     {
       if (cache_blp < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
       {
-	cache.getWGSettings()()(cache_blp) = m_event->settings()(0);
+	cache.getWGSettings()()(cache_blp * 2)     = m_event->settings()(0);
+	cache.getWGSettings()()(cache_blp * 2 + 1) = m_event->settings()(0);
       }
       else
       {
