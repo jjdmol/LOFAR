@@ -160,7 +160,7 @@ void MeqCalSolver::endDomain ()
 
 //##ModelId=3EC9F6EC026C
 void MeqCalSolver::endSolution (const DataRecord& endrec,
-			       const DataRecord::Ref& header)
+                                DataRecord::Ref& header)
 {
   cdebug(2)<< "end solution: "<<endrec.sdebug(3)<<endl;
   if (endrec[SaveParms].exists()) {
@@ -243,11 +243,20 @@ void MeqCalSolver::run ()
       }
       if( control().checkState() <= 0 )
         continue;
-      // we have a valid header now
-      processHeader (*initrec, *header);
-      // ought to post the header to the output later, because the solver
-      // may want to update something in it.
-      // MeqCalSolver doesn't post anything to the output.
+      
+      // we have a valid header now, process it
+      processHeader(*initrec, *header);
+      
+      // get tile format from header and add a residuals column 
+      tileformat_.attach((*header)[FTileFormat].as_p<VisTile::Format>(),DMI::READONLY);
+      if( !tileformat_->defined(VisTile::RESIDUALS) ) 
+      {
+        tileformat_.privatize(DMI::WRITE);
+        tileformat_().add(VisTile::RESIDUALS,
+                            tileformat_->type(VisTile::DATA),
+                            tileformat_->shape(VisTile::DATA));
+        // this will be applied to each tile as necessary later on
+      }
       
       // --------- read full domain from input ---------------------------
       in_domain = True;
@@ -290,13 +299,32 @@ void MeqCalSolver::run ()
         // the tile belongs to the next domain, it will leave the ref in place
         // and clear the in_domain flag.
         if( tile.valid() )
+        {
+          // tiles are held as read-only
+          tile.privatize(DMI::READONLY|DMI::DEEP);
           addTileToDomain(tile);
+        }
       }
       if( control().checkState() <= 0 )
         continue;
       // ought to check that we've actually got a domain of data (we could
       // have received two headers in a row, for example). If no data,
       // do a continue to top of loop. But we won't bother for now.
+      
+      // generate a domain header
+      DataRecord::Ref domainheader = header.copy();
+      // make it writable at the top level, since that's the only place
+      // where we'll change any fields
+      domainheader.privatize(DMI::WRITE,0);
+      // generate new dataset ID
+      HIID &vdsid = domainheader()[FVDSID];
+      vdsid[1] = control().domainNum() + 1;
+      vdsid[2] = dataset_seq_num_ = 0;
+      // put relevant info into domain header
+      domainheader()[FDomainIndex] = control().domainNum();
+      domainheader()[FDomainStartTime] = domain_start;
+      domainheader()[FDomainEndTime] = domain_end;
+      domainheader()[FTileFormat] <<= tileformat_.copy(); 
       
       // We have a full domain of data now. Start the solution loop
       // control state ought to be IDLE at start of every solution. (Otherwise,
@@ -307,28 +335,28 @@ void MeqCalSolver::run ()
         // get solution parameters, break out if none
         if( control().startSolution(paramrec) != RUNNING ) {
           break;
-	}
+        }
         cdebug(2)<< "startSolution: "<<paramrec->sdebug(3)<<endl;
-	const DataRecord& params = *paramrec;
-	if (params[SolvableParm].exists()) {
-	  setSolvable (params[SolvableParm], params[SolvableFlag]);
-	  initParms();
-	}
-	if (params[PeelNrs].exists()) {
-	  setPeel (params[PeelNrs],
-		   params[PredNrs].as_vector<int>(vector<int>()));
-	}
-	if (params[Ant1].exists()) {
-	  solveSelect (params[Ant1], params[Ant2], params[AntMode][0],
-		       params[CorrSel]);
-	}
-//	int niter = params[Niter].as<int>(0);
-//	cdebug(2) << "niter=" << niter << endl;
-	bool useSVD = params[UseSVD].as<bool>(false);
+        const DataRecord& params = *paramrec;
+        if (params[SolvableParm].exists()) {
+          setSolvable (params[SolvableParm], params[SolvableFlag]);
+          initParms();
+        }
+        if (params[PeelNrs].exists()) {
+          setPeel (params[PeelNrs],
+                   params[PredNrs].as_vector<int>(vector<int>()));
+        }
+        if (params[Ant1].exists()) {
+          solveSelect (params[Ant1], params[Ant2], params[AntMode][0],
+                       params[CorrSel]);
+        }
+//        int niter = params[Niter].as<int>(0);
+//        cdebug(2) << "niter=" << niter << endl;
+        bool useSVD = params[UseSVD].as<bool>(false);
         double converge = 1;
         // iterate the solution until stopped
         do {
-	  solve (useSVD, header);
+          solve (useSVD, domainheader);
           converge -= 1;
         }
         while( control().endIteration(converge) == AppState::RUNNING );
@@ -337,9 +365,9 @@ void MeqCalSolver::run ()
         if( control().state() == ENDSOLVE )
         {
           cdebug(2)<<"ENDSOLVE, converge="
-		   <<converge<<endl;
+                   <<converge<<endl;
           int res = control().endSolution(endrec);
-          endSolution(*endrec, header);
+          endSolution(*endrec, domainheader);
         }
         // else we were probably interrupted
         else
@@ -348,8 +376,6 @@ void MeqCalSolver::run ()
         }
       }
       // end of solving in this domain, for whatever reason.
-      // output data and/or whatever
-      
       // go back to top of loop and check for state
     }
     // broke out of main loop -- close i/o agents
@@ -363,7 +389,7 @@ void MeqCalSolver::run ()
 
 //##ModelId=3EC9F6EC024C
 void MeqCalSolver::setSolvable (const vector<string>& parms,
-			       const vector<bool>& flags)
+                               const vector<bool>& flags)
 {
   // Add them to the current settings.
   Assert (parms.size() == flags.size());
@@ -391,14 +417,14 @@ void MeqCalSolver::setSolvable (const vector<string>& parms,
     Regex parmRegex (Regex::fromPattern(String(itsSolvParms[i])));
     // Find all parms matching the parmPatterns
     for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-	 iter != parmList.end();
-	 iter++) {
+         iter != parmList.end();
+         iter++) {
       if (*iter != 0) {
-	if (String((*iter)->getName()).matches (parmRegex)) {
-	  (*iter)->setSolvable(itsSolvFlags[i]);
-	  cdebug(2) << "parm " << (*iter)->getName() << " set to "
-		    << (itsSolvFlags[i] ? "" : "non-") << "solvable" << endl;
-	}
+        if (String((*iter)->getName()).matches (parmRegex)) {
+          (*iter)->setSolvable(itsSolvFlags[i]);
+          cdebug(2) << "parm " << (*iter)->getName() << " set to "
+                    << (itsSolvFlags[i] ? "" : "non-") << "solvable" << endl;
+        }
       }
     }
   }
@@ -406,7 +432,7 @@ void MeqCalSolver::setSolvable (const vector<string>& parms,
 
 //##ModelId=3EC9F6EC0252
 void MeqCalSolver::setPeel (const vector<int>& peelSourceNrs,
-			   const vector<int>& extraSourceNrs)
+                           const vector<int>& extraSourceNrs)
 {
   // Keep the new sources to peel.
   if (peelSourceNrs.size() > 0) {
@@ -432,9 +458,9 @@ void MeqCalSolver::setPeel (const vector<int>& peelSourceNrs,
 
 //##ModelId=3EC9F6EC0255
 void MeqCalSolver::solveSelect (const vector<int>& ant1,
-			       const vector<int>& ant2,
-			       int antMode,
-			       const vector<bool>& corrSel)
+                               const vector<int>& ant2,
+                               int antMode,
+                               const vector<bool>& corrSel)
 {
   cdebug(1) << "solveSelect" << endl;
   if (corrSel.size() == 0) {
@@ -450,101 +476,107 @@ void MeqCalSolver::solveSelect (const vector<int>& ant1,
       Assert (ant1.size() == ant2.size());
       int inx = 0;
       for (vector<VisTile::Ref>::const_iterator iter = itsVisTiles.begin();
-	 iter != itsVisTiles.end();
-	 iter++, inx++) {
-	const VisTile& tile = **iter;
-	int a1 = tile.antenna1();
-	int a2 = tile.antenna2();
-	for (unsigned int i=0; i<ant1.size(); i++) {
-	  if (a1 == ant1[i]  &&  a2 == ant2[i]) {
-	    itsVisTilesSel[inx] = true;
-	    break;
-	  }
-	}
+         iter != itsVisTiles.end();
+         iter++, inx++) {
+        const VisTile& tile = **iter;
+        int a1 = tile.antenna1();
+        int a2 = tile.antenna2();
+        for (unsigned int i=0; i<ant1.size(); i++) {
+          if (a1 == ant1[i]  &&  a2 == ant2[i]) {
+            itsVisTilesSel[inx] = true;
+            break;
+          }
+        }
       }
     } else if (antMode == 1) {
       int inx = 0;
       for (vector<VisTile::Ref>::const_iterator iter = itsVisTiles.begin();
-	 iter != itsVisTiles.end();
-	 iter++, inx++) {
-	const VisTile& tile = **iter;
-	int a1 = tile.antenna1();
-	int a2 = tile.antenna2();
-	bool fnd = false;
-	for (unsigned int i=0; i<ant1.size(); i++) {
-	  if (a1 == ant1[i]) {
-	    fnd = true;
-	    break;
-	  }
-	}
-	if (!fnd) {
-	  for (unsigned int i=0; i<ant2.size(); i++) {
-	    if (a2 == ant2[i]) {
-	      fnd = true;
-	      break;
-	    }
-	  }
-	}
-	if (fnd) itsVisTilesSel[inx] = true;
+         iter != itsVisTiles.end();
+         iter++, inx++) {
+        const VisTile& tile = **iter;
+        int a1 = tile.antenna1();
+        int a2 = tile.antenna2();
+        bool fnd = false;
+        for (unsigned int i=0; i<ant1.size(); i++) {
+          if (a1 == ant1[i]) {
+            fnd = true;
+            break;
+          }
+        }
+        if (!fnd) {
+          for (unsigned int i=0; i<ant2.size(); i++) {
+            if (a2 == ant2[i]) {
+              fnd = true;
+              break;
+            }
+          }
+        }
+        if (fnd) itsVisTilesSel[inx] = true;
       }
     } else {
       int inx = 0;
       for (vector<VisTile::Ref>::const_iterator iter = itsVisTiles.begin();
-	 iter != itsVisTiles.end();
-	 iter++, inx++) {
-	const VisTile& tile = **iter;
-	int a1 = tile.antenna1();
-	int a2 = tile.antenna2();
-	bool fnd = false;
-	for (unsigned int i=0; i<ant1.size(); i++) {
-	  if (a1 == ant1[i]) {
-	    fnd = true;
-	    break;
-	  }
-	}
-	if (fnd) {
-	  fnd = false;
-	  for (unsigned int i=0; i<ant2.size(); i++) {
-	    if (a2 == ant2[i]) {
-	      fnd = true;
-	      break;
-	    }
-	  }
-	  if (fnd) itsVisTilesSel[inx] = true;
-	}
+         iter != itsVisTiles.end();
+         iter++, inx++) {
+        const VisTile& tile = **iter;
+        int a1 = tile.antenna1();
+        int a2 = tile.antenna2();
+        bool fnd = false;
+        for (unsigned int i=0; i<ant1.size(); i++) {
+          if (a1 == ant1[i]) {
+            fnd = true;
+            break;
+          }
+        }
+        if (fnd) {
+          fnd = false;
+          for (unsigned int i=0; i<ant2.size(); i++) {
+            if (a2 == ant2[i]) {
+              fnd = true;
+              break;
+            }
+          }
+          if (fnd) itsVisTilesSel[inx] = true;
+        }
       }
     }
   }
 }
 
 //##ModelId=3EC9F6EC025A
-void MeqCalSolver::solve (bool useSVD, const DataRecord::Ref& header)
+void MeqCalSolver::solve (bool useSVD, DataRecord::Ref& header)
 {
   cdebug(1) << "solve; useSVD=" << useSVD << endl;
   AssertMsg (itsNrScid > 0, "No parameters are set to solvable");
 
-  // If needed add the RESIDUALS column with the same type and
-  // shape as the DATA column.
-  VisTile::FormatRef tabform (itsVisTiles[0]->format());
-  if (! tabform->defined(VisTile::RESIDUALS)) {
-    VisTile::FormatRef tform = tabform.privatize(DMI::WRITE);
-    tform.dewr().add (VisTile::RESIDUALS, tform->type(VisTile::DATA),
-		      tform->shape(VisTile::DATA));
-    for (vector<VisTile::Ref>::iterator iter = itsVisTiles.begin();
-	 iter != itsVisTiles.end();
-	 iter++)
-    {
-      iter->dewr().changeFormat (tform);
-    }
-  }
-  ///output().putHeader (header.copy());
+  // change the header to reflect an intermediate data set
+  HIID &vdsid = header()[FVDSID];
+  vdsid[2] = ++dataset_seq_num_;
+  header()[FDataType] = DataType_Intermediate;
+  header()[FSolveIterNum] = control().iterationNum();
+  
+  // write the header
+  output().put(HEADER,header.copy());
 
   int nrpoint = 0;
   Timer timer;
   for (unsigned int i=0; i<itsVisTiles.size(); i++) {
     if (itsVisTilesSel[i]) {
-      const VisTile& visTile = *(itsVisTiles[i]);
+      // Privatize the tile for writing (this is a no-op if we have the only
+      // copy). This is good practice to minimize data copying between
+      // threads: we hold a writable ref to the tile only as long as we're 
+      // really writing to it.
+      itsVisTiles[i].privatize(DMI::WRITE|DMI::DEEP);
+      VisTile& visTile = itsVisTiles[i];
+      // apply format if we don't have a residuals column in this tile
+      if( !visTile.format().defined(VisTile::RESIDUALS) )
+        visTile.changeFormat(tileformat_);
+      
+      // update the tile ID with the new dataset ID
+      visTile.setTileId(-1,-1,vdsid);
+      
       cout << "Tile: "<<visTile.sdebug(5)<<endl;
+      
       // Do a predict for the elements in this range.
       bool showd = false;
       //bool showd = i==0;
@@ -555,320 +587,329 @@ void MeqCalSolver::solve (bool useSVD, const DataRecord::Ref& header)
       int blindex = itsBLIndex[blnr];
       Assert (blnr >= 0);
       for (VisTile::const_iterator iter = visTile.begin();
-	   iter != visTile.end();
-	   iter++) {
-	// First make a domain.
-	double time = iter.time();
-	double interval = iter.interval();
-	MeqDomain domain(time - interval/2, time + interval/2,
-			 itsStartFreq, itsEndFreq);
-	MeqRequest request(domain, 1, itsNrChan, itsNrScid);
-	MeqJonesExpr& expr = *(itsExpr[blindex]);
-	expr.calcResult (request);
-	// Form the equations for this row.
-	// Complex values are separated in real and imaginary.
-	// Make a default derivative vector with values 0.
-	MeqMatrix defaultDeriv (DComplex(0,0), 1, itsNrChan);
-	const complex<double>* defaultDerivPtr = defaultDeriv.dcomplexStorage();
-	// Get the data of this row for the given channels.
-	const LoMat_fcomplex data (iter.data());
-	int npol = data.shape()[0];
-	// Calculate the derivatives and get pointers to them.
-	// Use the default if no perturbed value defined.
-	vector<const complex<double>*> derivs(npol*itsNrScid);
-	bool foundDeriv = false;
-	if (showd) {
-	  cout << "xx val " << expr.getResult11().getValue() << endl;;
-	  cout << "xy val " << expr.getResult12().getValue() << endl;;
-	  cout << "yx val " << expr.getResult21().getValue() << endl;;
-	  cout << "yy val " << expr.getResult22().getValue() << endl;;
-	}
-	for (int scinx=0; scinx<itsNrScid; scinx++) {
-	  MeqMatrix val;
-	  if (expr.getResult11().isDefined(scinx)) {
-	    val = expr.getResult11().getPerturbedValue(scinx);
-	    if (showd) {
-	      cout << "xx" << scinx << ' ' << val;
-	    }
-	    val -= expr.getResult11().getValue();
-	    if (showd) {
-	      cout << "  diff=" << val;
-	    }
-	    ///cout << "Diff  " << val << endl;
-	    val /= expr.getResult11().getPerturbation(scinx);
-	    if (showd) {
-	      cout << "  der=" << val << endl;
-	    }
-	    ///cout << "Deriv " << val << endl;
-	    derivs[scinx] = val.dcomplexStorage();
-	    foundDeriv = true;
-	  } else {
-	    derivs[scinx] = defaultDerivPtr;
-	  }
-	  if (npol == 4) {
-	    if (expr.getResult12().isDefined(scinx)) {
-	      val = expr.getResult12().getPerturbedValue(scinx);
-	      if (showd) {
-		cout << "xy" << scinx << ' ' << val;
-	      }
-	      val -= expr.getResult12().getValue();
-	      if (showd) {
-		cout << "  diff=" << val;
-	      }
-	      val /= expr.getResult12().getPerturbation(scinx);
-	      if (showd) {
-		cout << "  der=" << val << endl;
-	      }
-	      derivs[scinx + itsNrScid] = val.dcomplexStorage();
-	      foundDeriv = true;
-	    } else {
-	      derivs[scinx + itsNrScid] = defaultDerivPtr;
-	    }
-	    if (expr.getResult21().isDefined(scinx)) {
-	      val = expr.getResult21().getPerturbedValue(scinx);
-	      if (showd) {
-		cout << "yx" << scinx << ' ' << val;
-	      }
-	      val -= expr.getResult21().getValue();
-	      if (showd) {
-		cout << "  diff=" << val;
-	      }
-	      val /= expr.getResult21().getPerturbation(scinx);
-	      if (showd) {
-		cout << "  der=" << val << endl;
-	      }
-	      derivs[scinx + 2*itsNrScid] = val.dcomplexStorage();
-	      foundDeriv = true;
-	    } else {
-	      derivs[scinx + 2*itsNrScid] = defaultDerivPtr;
-	    }
-	  }
-	  if (npol > 1) {
-	    if (expr.getResult22().isDefined(scinx)) {
-	      val = expr.getResult22().getPerturbedValue(scinx);
-	      if (showd) {
-		cout << "yy" << scinx << ' ' << val;
-	      }
-	      val -= expr.getResult22().getValue();
-	      if (showd) {
-		cout << "  diff=" << val;
-	      }
-	      val /= expr.getResult22().getPerturbation(scinx);
-	      if (showd) {
-		cout << "  der=" << val << endl;
-	      }
-	      derivs[scinx + (npol-1)*itsNrScid] = val.dcomplexStorage();
-	      foundDeriv = true;
-	    } else {
-	      derivs[scinx + (npol-1)*itsNrScid] = defaultDerivPtr;
-	    }
-	  }
-	}
-	// Only add to solver if at least one derivative was found.
-	// Otherwise these data are not dependent on the solvable parameters.
-	if (foundDeriv) {
-	  // Get pointer to array storage; the data in it is contiguous.
-	  const fcomplex* dataPtr = data.data();
-	  vector<double> derivVec(2*itsNrScid);
-	  double* derivReal = &(derivVec[0]);
-	  double* derivImag = &(derivVec[itsNrScid]);
-	  // Fill in all equations.
-	  if (npol == 1) {
-	    {
-	      const MeqMatrix& xx = expr.getResult11().getValue();
-	      for (int i=0; i<itsNrChan; i++) {
-		for (int j=0; j<itsNrScid; j++) {
-		  derivReal[j] = derivs[j][i].real();
-		  derivImag[j] = derivs[j][i].imag();
-		  if (showd) {
-		    cout << "derxx: " << j << ' '
-			 << derivReal[j] << ' ' << derivImag[j] << endl;
-		  }
-		}
-		DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
-		diff -= xx.getDComplex(0,i);
-		if (showd) {
-		  cout << "diffxx: " << i << ' '
-		       << diff.real() << ' ' << diff.imag() << endl;
-		}
-		double val = diff.real();
-		itsSolver.makeNorm (derivReal, 1., &val);
-		val = diff.imag();
-		itsSolver.makeNorm (derivImag, 1., &val);
-		nrpoint++;
-	      }
-	    }
-	  } else if (npol == 2) {
-	    {
-	      const MeqMatrix& xx = expr.getResult11().getValue();
-	      for (int i=0; i<itsNrChan; i++) {
-		for (int j=0; j<itsNrScid; j++) {
-		  derivReal[j] = derivs[j][i].real();
-		  derivImag[j] = derivs[j][i].imag();
-		}
-		DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
-		diff -= xx.getDComplex(0,i);
-		double val = diff.real();
-		itsSolver.makeNorm (derivReal, 1., &val);
-		val = diff.imag();
-		itsSolver.makeNorm (derivImag, 1., &val);
-		nrpoint++;
-	      }
-	    }
-	    {
-	      const MeqMatrix& yy = expr.getResult22().getValue();
-	      for (int i=0; i<itsNrChan; i++) {
-		for (int j=0; j<itsNrScid; j++) {
-		  derivReal[j] = derivs[j+itsNrScid][i].real();
-		  derivImag[j] = derivs[j+itsNrScid][i].imag();
-		}
-		DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
-		diff -= yy.getDComplex(0,i);
-		double val = diff.real();
-		itsSolver.makeNorm (derivReal, 1., &val);
-		val = diff.imag();
-		itsSolver.makeNorm (derivImag, 1., &val);
-		nrpoint++;
-	      }
-	    }
-	  } else if (npol == 4) {
-	    {
-	      const MeqMatrix& xx = expr.getResult11().getValue();
-	      for (int i=0; i<itsNrChan; i++) {
-		for (int j=0; j<itsNrScid; j++) {
-		  derivReal[j] = derivs[j][i].real();
-		  derivImag[j] = derivs[j][i].imag();
-		  if (showd) {
-		    cout << "derxx: " << j << ' '
-			 << derivReal[j] << ' ' << derivImag[j] << endl;
-		  }
-		}
-		DComplex diff (dataPtr[i*4].real(), dataPtr[i*4].imag());
-		diff -= xx.getDComplex(0,i);
-		if (showd) {
-		  cout << "diffxx: " << i << ' '
-		       << diff.real() << ' ' << diff.imag() << endl;
-		}
-		double val = diff.real();
-		itsSolver.makeNorm (derivReal, 1., &val);
-		val = diff.imag();
-		itsSolver.makeNorm (derivImag, 1., &val);
-		nrpoint++;
-	      }
-	    }
-	    {
-	      const MeqMatrix& xy = expr.getResult12().getValue();
-	      for (int i=0; i<itsNrChan; i++) {
-		for (int j=0; j<itsNrScid; j++) {
-		  derivReal[j] = derivs[j+itsNrScid][i].real();
-		  derivImag[j] = derivs[j+itsNrScid][i].imag();
-		  if (showd) {
-		    cout << "derxy: " << i << ' '
-			 << derivReal[j] << ' ' << derivImag[j] << endl;
-		  }
-		}
-		DComplex diff (dataPtr[i*4+1].real(), dataPtr[i*4+1].imag());
-		diff -= xy.getDComplex(0,i);
-		if (showd) {
-		  cout << "diffxy: " << i << ' '
-		       << diff.real() << ' ' << diff.imag() << endl;
-		}
-		double val = diff.real();
-		itsSolver.makeNorm (derivReal, 1., &val);
-		val = diff.imag();
-		itsSolver.makeNorm (derivImag, 1., &val);
-		nrpoint++;
-	      }
-	    }
-	    {
-	      const MeqMatrix& yx = expr.getResult21().getValue();
-	      for (int i=0; i<itsNrChan; i++) {
-		for (int j=0; j<itsNrScid; j++) {
-		  derivReal[j] = derivs[j+2*itsNrScid][i].real();
-		  derivImag[j] = derivs[j+2*itsNrScid][i].imag();
-		  if (showd) {
-		    cout << "deryx: " << i << ' '
-			 << derivReal[j] << ' ' << derivImag[j] << endl;
-		  }
-		}
-		DComplex diff (dataPtr[i*4+2].real(), dataPtr[i*4+2].imag());
-		diff -= yx.getDComplex(0,i);
-		if (showd) {
-		  cout << "diffyx: " << i << ' '
-		       << diff.real() << ' ' << diff.imag() << endl;
-		}
-		double val = diff.real();
-		itsSolver.makeNorm (derivReal, 1., &val);
-		val = diff.imag();
-		itsSolver.makeNorm (derivImag, 1., &val);
-		nrpoint++;
-	      }
-	    }
-	    {
-	      const MeqMatrix& yy = expr.getResult22().getValue();
-	      for (int i=0; i<itsNrChan; i++) {
-		for (int j=0; j<itsNrScid; j++) {
-		  derivReal[j] = derivs[j+3*itsNrScid][i].real();
-		  derivImag[j] = derivs[j+3*itsNrScid][i].imag();
-		  if (showd) {
-		    cout << "deryy: " << i << ' '
-			 << derivReal[j] << ' ' << derivImag[j] << endl;
-		  }
-		}
-		DComplex diff (dataPtr[i*4+3].real(), dataPtr[i*4+3].imag());
-		diff -= yy.getDComplex(0,i);
-		if (showd) {
-		  cout << "diffyy: " << i << ' '
-		       << diff.real() << ' ' << diff.imag() << endl;
-		}
-		double val = diff.real();
-		itsSolver.makeNorm (derivReal, 1., &val);
-		val = diff.imag();
-		itsSolver.makeNorm (derivImag, 1., &val);
-		nrpoint++;
-	      }
-	    }
-	  } else {
-	    AssertMsg(false, "Number of polarizations should be 1, 2, or 4");
-	  }
-	}
-	// Subtract the predicted data from the measured data
-	// and return it to the output stream.
-	LoMat_fcomplex resdata (iter.residuals());
-	int nchan = resdata.shape()[1];
-	// Make Blitz vectors of the predicted data.
-	LoVec_dcomplex xx (const_cast<complex<double>*>
-			   (expr.getResult11().getValue().dcomplexStorage()),
-			   blitz::shape(nchan),
-			   blitz::neverDeleteData);
-	LoVec_dcomplex xy (const_cast<complex<double>*>
-			   (expr.getResult12().getValue().dcomplexStorage()),
-			   blitz::shape(nchan),
-			   blitz::neverDeleteData);
-	LoVec_dcomplex yx (const_cast<complex<double>*>
-			   (expr.getResult21().getValue().dcomplexStorage()),
-			   blitz::shape(nchan),
-			   blitz::neverDeleteData);
-	LoVec_dcomplex yy (const_cast<complex<double>*>
-			   (expr.getResult22().getValue().dcomplexStorage()),
-			   blitz::shape(nchan),
-			   blitz::neverDeleteData);
-	resdata = data;
-	if (1 == npol) {
-	  resdata(0,blitz::Range::all()) -= xx;
-	} else if (2 == npol) {
-	  resdata(0,blitz::Range::all()) -= xx;
-	  resdata(1,blitz::Range::all()) -= yy;
-	} else if (4 == npol) {
-	  resdata(0,blitz::Range::all()) -= xx;
-	  resdata(1,blitz::Range::all()) -= xy;
-	  resdata(2,blitz::Range::all()) -= yx;
-	  resdata(3,blitz::Range::all()) -= yy;
-	}
-	output().putNextTile (itsVisTiles[i].copy());
-      }
-    }
-  }
+           iter != visTile.end();
+           iter++) {
+        // First make a domain.
+        double time = iter.time();
+        double interval = iter.interval();
+        MeqDomain domain(time - interval/2, time + interval/2,
+                         itsStartFreq, itsEndFreq);
+        MeqRequest request(domain, 1, itsNrChan, itsNrScid);
+        MeqJonesExpr& expr = *(itsExpr[blindex]);
+        expr.calcResult (request);
+        // Form the equations for this row.
+        // Complex values are separated in real and imaginary.
+        // Make a default derivative vector with values 0.
+        MeqMatrix defaultDeriv (DComplex(0,0), 1, itsNrChan);
+        const complex<double>* defaultDerivPtr = defaultDeriv.dcomplexStorage();
+        // Get the data of this row for the given channels.
+        const LoMat_fcomplex data (iter.data());
+        int npol = data.shape()[0];
+        // Calculate the derivatives and get pointers to them.
+        // Use the default if no perturbed value defined.
+        vector<const complex<double>*> derivs(npol*itsNrScid);
+        bool foundDeriv = false;
+        if (showd) {
+          cout << "xx val " << expr.getResult11().getValue() << endl;;
+          cout << "xy val " << expr.getResult12().getValue() << endl;;
+          cout << "yx val " << expr.getResult21().getValue() << endl;;
+          cout << "yy val " << expr.getResult22().getValue() << endl;;
+        }
+        for (int scinx=0; scinx<itsNrScid; scinx++) {
+          MeqMatrix val;
+          if (expr.getResult11().isDefined(scinx)) {
+            val = expr.getResult11().getPerturbedValue(scinx);
+            if (showd) {
+              cout << "xx" << scinx << ' ' << val;
+            }
+            val -= expr.getResult11().getValue();
+            if (showd) {
+              cout << "  diff=" << val;
+            }
+            ///cout << "Diff  " << val << endl;
+            val /= expr.getResult11().getPerturbation(scinx);
+            if (showd) {
+              cout << "  der=" << val << endl;
+            }
+            ///cout << "Deriv " << val << endl;
+            derivs[scinx] = val.dcomplexStorage();
+            foundDeriv = true;
+          } else {
+            derivs[scinx] = defaultDerivPtr;
+          }
+          if (npol == 4) {
+            if (expr.getResult12().isDefined(scinx)) {
+              val = expr.getResult12().getPerturbedValue(scinx);
+              if (showd) {
+                cout << "xy" << scinx << ' ' << val;
+              }
+              val -= expr.getResult12().getValue();
+              if (showd) {
+                cout << "  diff=" << val;
+              }
+              val /= expr.getResult12().getPerturbation(scinx);
+              if (showd) {
+                cout << "  der=" << val << endl;
+              }
+              derivs[scinx + itsNrScid] = val.dcomplexStorage();
+              foundDeriv = true;
+            } else {
+              derivs[scinx + itsNrScid] = defaultDerivPtr;
+            }
+            if (expr.getResult21().isDefined(scinx)) {
+              val = expr.getResult21().getPerturbedValue(scinx);
+              if (showd) {
+                cout << "yx" << scinx << ' ' << val;
+              }
+              val -= expr.getResult21().getValue();
+              if (showd) {
+                cout << "  diff=" << val;
+              }
+              val /= expr.getResult21().getPerturbation(scinx);
+              if (showd) {
+                cout << "  der=" << val << endl;
+              }
+              derivs[scinx + 2*itsNrScid] = val.dcomplexStorage();
+              foundDeriv = true;
+            } else {
+              derivs[scinx + 2*itsNrScid] = defaultDerivPtr;
+            }
+          }
+          if (npol > 1) {
+            if (expr.getResult22().isDefined(scinx)) {
+              val = expr.getResult22().getPerturbedValue(scinx);
+              if (showd) {
+                cout << "yy" << scinx << ' ' << val;
+              }
+              val -= expr.getResult22().getValue();
+              if (showd) {
+                cout << "  diff=" << val;
+              }
+              val /= expr.getResult22().getPerturbation(scinx);
+              if (showd) {
+                cout << "  der=" << val << endl;
+              }
+              derivs[scinx + (npol-1)*itsNrScid] = val.dcomplexStorage();
+              foundDeriv = true;
+            } else {
+              derivs[scinx + (npol-1)*itsNrScid] = defaultDerivPtr;
+            }
+          }
+        }
+        // Only add to solver if at least one derivative was found.
+        // Otherwise these data are not dependent on the solvable parameters.
+        if (foundDeriv) {
+          // Get pointer to array storage; the data in it is contiguous.
+          const fcomplex* dataPtr = data.data();
+          vector<double> derivVec(2*itsNrScid);
+          double* derivReal = &(derivVec[0]);
+          double* derivImag = &(derivVec[itsNrScid]);
+          // Fill in all equations.
+          if (npol == 1) {
+            {
+              const MeqMatrix& xx = expr.getResult11().getValue();
+              for (int i=0; i<itsNrChan; i++) {
+                for (int j=0; j<itsNrScid; j++) {
+                  derivReal[j] = derivs[j][i].real();
+                  derivImag[j] = derivs[j][i].imag();
+                  if (showd) {
+                    cout << "derxx: " << j << ' '
+                         << derivReal[j] << ' ' << derivImag[j] << endl;
+                  }
+                }
+                DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
+                diff -= xx.getDComplex(0,i);
+                if (showd) {
+                  cout << "diffxx: " << i << ' '
+                       << diff.real() << ' ' << diff.imag() << endl;
+                }
+                double val = diff.real();
+                itsSolver.makeNorm (derivReal, 1., &val);
+                val = diff.imag();
+                itsSolver.makeNorm (derivImag, 1., &val);
+                nrpoint++;
+              }
+            }
+          } else if (npol == 2) {
+            {
+              const MeqMatrix& xx = expr.getResult11().getValue();
+              for (int i=0; i<itsNrChan; i++) {
+                for (int j=0; j<itsNrScid; j++) {
+                  derivReal[j] = derivs[j][i].real();
+                  derivImag[j] = derivs[j][i].imag();
+                }
+                DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
+                diff -= xx.getDComplex(0,i);
+                double val = diff.real();
+                itsSolver.makeNorm (derivReal, 1., &val);
+                val = diff.imag();
+                itsSolver.makeNorm (derivImag, 1., &val);
+                nrpoint++;
+              }
+            }
+            {
+              const MeqMatrix& yy = expr.getResult22().getValue();
+              for (int i=0; i<itsNrChan; i++) {
+                for (int j=0; j<itsNrScid; j++) {
+                  derivReal[j] = derivs[j+itsNrScid][i].real();
+                  derivImag[j] = derivs[j+itsNrScid][i].imag();
+                }
+                DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
+                diff -= yy.getDComplex(0,i);
+                double val = diff.real();
+                itsSolver.makeNorm (derivReal, 1., &val);
+                val = diff.imag();
+                itsSolver.makeNorm (derivImag, 1., &val);
+                nrpoint++;
+              }
+            }
+          } else if (npol == 4) {
+            {
+              const MeqMatrix& xx = expr.getResult11().getValue();
+              for (int i=0; i<itsNrChan; i++) {
+                for (int j=0; j<itsNrScid; j++) {
+                  derivReal[j] = derivs[j][i].real();
+                  derivImag[j] = derivs[j][i].imag();
+                  if (showd) {
+                    cout << "derxx: " << j << ' '
+                         << derivReal[j] << ' ' << derivImag[j] << endl;
+                  }
+                }
+                DComplex diff (dataPtr[i*4].real(), dataPtr[i*4].imag());
+                diff -= xx.getDComplex(0,i);
+                if (showd) {
+                  cout << "diffxx: " << i << ' '
+                       << diff.real() << ' ' << diff.imag() << endl;
+                }
+                double val = diff.real();
+                itsSolver.makeNorm (derivReal, 1., &val);
+                val = diff.imag();
+                itsSolver.makeNorm (derivImag, 1., &val);
+                nrpoint++;
+              }
+            }
+            {
+              const MeqMatrix& xy = expr.getResult12().getValue();
+              for (int i=0; i<itsNrChan; i++) {
+                for (int j=0; j<itsNrScid; j++) {
+                  derivReal[j] = derivs[j+itsNrScid][i].real();
+                  derivImag[j] = derivs[j+itsNrScid][i].imag();
+                  if (showd) {
+                    cout << "derxy: " << i << ' '
+                         << derivReal[j] << ' ' << derivImag[j] << endl;
+                  }
+                }
+                DComplex diff (dataPtr[i*4+1].real(), dataPtr[i*4+1].imag());
+                diff -= xy.getDComplex(0,i);
+                if (showd) {
+                  cout << "diffxy: " << i << ' '
+                       << diff.real() << ' ' << diff.imag() << endl;
+                }
+                double val = diff.real();
+                itsSolver.makeNorm (derivReal, 1., &val);
+                val = diff.imag();
+                itsSolver.makeNorm (derivImag, 1., &val);
+                nrpoint++;
+              }
+            }
+            {
+              const MeqMatrix& yx = expr.getResult21().getValue();
+              for (int i=0; i<itsNrChan; i++) {
+                for (int j=0; j<itsNrScid; j++) {
+                  derivReal[j] = derivs[j+2*itsNrScid][i].real();
+                  derivImag[j] = derivs[j+2*itsNrScid][i].imag();
+                  if (showd) {
+                    cout << "deryx: " << i << ' '
+                         << derivReal[j] << ' ' << derivImag[j] << endl;
+                  }
+                }
+                DComplex diff (dataPtr[i*4+2].real(), dataPtr[i*4+2].imag());
+                diff -= yx.getDComplex(0,i);
+                if (showd) {
+                  cout << "diffyx: " << i << ' '
+                       << diff.real() << ' ' << diff.imag() << endl;
+                }
+                double val = diff.real();
+                itsSolver.makeNorm (derivReal, 1., &val);
+                val = diff.imag();
+                itsSolver.makeNorm (derivImag, 1., &val);
+                nrpoint++;
+              }
+            }
+            {
+              const MeqMatrix& yy = expr.getResult22().getValue();
+              for (int i=0; i<itsNrChan; i++) {
+                for (int j=0; j<itsNrScid; j++) {
+                  derivReal[j] = derivs[j+3*itsNrScid][i].real();
+                  derivImag[j] = derivs[j+3*itsNrScid][i].imag();
+                  if (showd) {
+                    cout << "deryy: " << i << ' '
+                         << derivReal[j] << ' ' << derivImag[j] << endl;
+                  }
+                }
+                DComplex diff (dataPtr[i*4+3].real(), dataPtr[i*4+3].imag());
+                diff -= yy.getDComplex(0,i);
+                if (showd) {
+                  cout << "diffyy: " << i << ' '
+                       << diff.real() << ' ' << diff.imag() << endl;
+                }
+                double val = diff.real();
+                itsSolver.makeNorm (derivReal, 1., &val);
+                val = diff.imag();
+                itsSolver.makeNorm (derivImag, 1., &val);
+                nrpoint++;
+              }
+            }
+          } else {
+            AssertMsg(false, "Number of polarizations should be 1, 2, or 4");
+          }
+        }
+        // Subtract the predicted data from the measured data
+        // and return it to the output stream.
+        LoMat_fcomplex resdata (iter.residuals());
+        int nchan = resdata.shape()[1];
+        // Make Blitz vectors of the predicted data.
+        LoVec_dcomplex xx (const_cast<complex<double>*>
+                           (expr.getResult11().getValue().dcomplexStorage()),
+                           blitz::shape(nchan),
+                           blitz::neverDeleteData);
+        LoVec_dcomplex xy (const_cast<complex<double>*>
+                           (expr.getResult12().getValue().dcomplexStorage()),
+                           blitz::shape(nchan),
+                           blitz::neverDeleteData);
+        LoVec_dcomplex yx (const_cast<complex<double>*>
+                           (expr.getResult21().getValue().dcomplexStorage()),
+                           blitz::shape(nchan),
+                           blitz::neverDeleteData);
+        LoVec_dcomplex yy (const_cast<complex<double>*>
+                           (expr.getResult22().getValue().dcomplexStorage()),
+                           blitz::shape(nchan),
+                           blitz::neverDeleteData);
+        resdata = data;
+        if (1 == npol) {
+          resdata(0,blitz::Range::all()) -= xx;
+        } else if (2 == npol) {
+          resdata(0,blitz::Range::all()) -= xx;
+          resdata(1,blitz::Range::all()) -= yy;
+        } else if (4 == npol) {
+          resdata(0,blitz::Range::all()) -= xx;
+          resdata(1,blitz::Range::all()) -= xy;
+          resdata(2,blitz::Range::all()) -= yx;
+          resdata(3,blitz::Range::all()) -= yy;
+        }
+      } // end iteration over current tile
+      // change the tile back to read-only
+      itsVisTiles[i].privatize(DMI::READONLY|DMI::DEEP);
+      // dump a copy to the output stream
+      output().put(DATA,itsVisTiles[i].copy());
+    } // end if( itsVisTileSel[i] )
+  } // end loop over tiles
+  
+  // write footer to output stream
+  DataRecord::Ref footer(DMI::ANONWR);
+  footer()[FVDSID] = vdsid;
+  output().put(FOOTER,footer);
+  
   if (Debug(1)) timer.show("fill ");
 
   Assert (nrpoint >= itsNrScid);
@@ -917,26 +958,26 @@ void MeqCalSolver::solve (bool useSVD, const DataRecord::Ref& header)
        iter++)
     {
       if (*iter  &&  (*iter)->isSolvable()) {
-	(*iter)->update (itsSolution);
+        (*iter)->update (itsSolution);
       }
       i++;
     }
-	
-  //	DataRecord rec;
-  //	rec.add ("solflag", solFlag);
-  //	rec.add ("sol", GlishArray(sol));
-  //	rec.add ("rank", Int(rank));
-  //	rec.add ("fit", fit);
-  //	rec.add ("diag", GlishArray(errors));
-  //	rec.add ("covar", GlishArray(covar));
-  //	rec.add ("mu", mu);
-  //	rec.add ("stddev", stddev);
-  //	rec.add ("chi", itsSolver.getChi());
+        
+  //        DataRecord rec;
+  //        rec.add ("solflag", solFlag);
+  //        rec.add ("sol", GlishArray(sol));
+  //        rec.add ("rank", Int(rank));
+  //        rec.add ("fit", fit);
+  //        rec.add ("diag", GlishArray(errors));
+  //        rec.add ("covar", GlishArray(covar));
+  //        rec.add ("mu", mu);
+  //        rec.add ("stddev", stddev);
+  //        rec.add ("chi", itsSolver.getChi());
 }
 
 //##ModelId=3EC9F6EC0236
 void MeqCalSolver::processHeader (const DataRecord& initrec,
-				 const DataRecord& header)
+                                 const DataRecord& header)
 {
   cdebug(2) << "processHeader:" << endl;
   clear();
@@ -971,13 +1012,13 @@ void MeqCalSolver::processHeader (const DataRecord& initrec,
   itsStartFreq = freq - itsStepFreq/2;
   itsEndFreq = itsStartFreq + itsNrChan*itsStepFreq;
   cdebug(2) << " freq:     " << itsStartFreq << " - " << itsEndFreq
-	    << " (" << itsStepFreq << ")" << endl;
+            << " (" << itsStepFreq << ")" << endl;
   // Get the phase reference direction.
   LoVec_double phdir = header[FPhaseRef];
   MVDirection dir(phdir(0), phdir(1));
   MDirection phaseRef (dir, MDirection::J2000);
   cdebug(2) << " phasedir: " << phdir(0) << ' ' << phdir(1) << " ("
-	    << phaseRef << ")" << endl;
+            << phaseRef << ")" << endl;
   double tim = header[FTime];
   MEpoch ep(Quantity(tim,"s"), MEpoch::UTC);
   cdebug(2) << " time:     " << tim << " (" << ep << ")" << endl;
@@ -1092,25 +1133,25 @@ void MeqCalSolver::makeExpr()
     str << "SR" << i+1;
     string name = str.str();
     MeqParmSingle* px = new MeqParmSingle ("AntPosX." + name,
-					   itsAntPos(0,i));
+                                           itsAntPos(0,i));
     itsExprDel.push_back (px);
     MeqParmSingle* py = new MeqParmSingle ("AntPosY." + name,
-					   itsAntPos(1,i));
+                                           itsAntPos(1,i));
     itsExprDel.push_back (py);
     MeqParmSingle* pz = new MeqParmSingle ("AntPosZ." + name,
-					   itsAntPos(2,i));
+                                           itsAntPos(2,i));
     itsExprDel.push_back (pz);
     itsStations[i] = new MeqStation(px, py, pz, name);
   }
   // Initialize the various vectors.
   itsStatUVW  = vector<MeqStatUVW*>     (itsStations.size(),
-					 (MeqStatUVW*)0);
+                                         (MeqStatUVW*)0);
   itsStatSrc  = vector<MeqStatSources*> (itsStations.size(),
-					 (MeqStatSources*)0);
+                                         (MeqStatSources*)0);
   itsLSSExpr  = vector<MeqLofarStatSources*> (itsStations.size(),
-					      (MeqLofarStatSources*)0);
+                                              (MeqLofarStatSources*)0);
   itsStatExpr = vector<MeqJonesExpr*>   (itsStations.size(),
-					 (MeqJonesExpr*)0);
+                                         (MeqJonesExpr*)0);
   // Make one pass through the data to find the baselines actually used.
   // Also find start and end time.
   itsStartTime = 1e30;
@@ -1131,8 +1172,8 @@ void MeqCalSolver::makeExpr()
       if (itsStatUVW[ant2] == 0) makeStatExpr (ant2, wsrtModel);
     }
     for (VisTile::const_iterator iter = visTile.begin();
-	 iter != visTile.end();
-	 iter++) {
+         iter != visTile.end();
+         iter++) {
       double stime = iter.time() - iter.interval()/2;
       double etime = iter.time() + iter.interval()/2;
       if (stime < itsStartTime) itsStartTime = stime;
@@ -1164,29 +1205,29 @@ void MeqCalSolver::makeStatExpr (int ant, bool wsrtModel)
   itsStatSrc[ant] = new MeqStatSources (itsStatUVW[ant], &itsSources);
   // Expression representing station parameters.
   MeqExpr* frot = new MeqStoredParmPolc ("frot." +
-					 itsStations[ant]->getName(),
-					 -1, ant+1,
-					 itsMEP);
+                                         itsStations[ant]->getName(),
+                                         -1, ant+1,
+                                         itsMEP);
   itsExprDel.push_back (frot);
   MeqExpr* drot = new MeqStoredParmPolc ("drot." +
-					 itsStations[ant]->getName(),
-					 -1, ant+1,
-					 itsMEP);
+                                         itsStations[ant]->getName(),
+                                         -1, ant+1,
+                                         itsMEP);
   itsExprDel.push_back (drot);
   MeqExpr* dell = new MeqStoredParmPolc ("dell." +
-					 itsStations[ant]->getName(),
-					 -1, ant+1,
-					 itsMEP);
+                                         itsStations[ant]->getName(),
+                                         -1, ant+1,
+                                         itsMEP);
   itsExprDel.push_back (dell);
   MeqExpr* gain11 = new MeqStoredParmPolc ("gain.11." +
-					   itsStations[ant]->getName(),
-					   -1, ant+1,
-					   itsMEP);
+                                           itsStations[ant]->getName(),
+                                           -1, ant+1,
+                                           itsMEP);
   itsExprDel.push_back (gain11);
   MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
-					   itsStations[ant]->getName(),
-					   -1, ant+1,
-					   itsMEP);
+                                           itsStations[ant]->getName(),
+                                           -1, ant+1,
+                                           itsMEP);
   itsExprDel.push_back (gain22);
   itsStatExpr[ant] = new MeqStatExpr (frot, drot, dell, gain11, gain22);
   if (!wsrtModel) {
@@ -1195,36 +1236,36 @@ void MeqCalSolver::makeStatExpr (int ant, bool wsrtModel)
     for (int j=0; j<itsSources.size(); j++) {
       string nm = itsStations[ant]->getName() + '.' +  itsSources[j].getName();
       MeqExpr* ej11r = new MeqStoredParmPolc ("EJ11.real." + nm,
-					      j+1, ant+1,
-					      itsMEP);
+                                              j+1, ant+1,
+                                              itsMEP);
       itsExprDel.push_back (ej11r);
       MeqExpr* ej11i = new MeqStoredParmPolc ("EJ11.imag." + nm,
-					      j+1, ant+1,
-					      itsMEP);
+                                              j+1, ant+1,
+                                              itsMEP);
       itsExprDel.push_back (ej11i);
       MeqExpr* ej12r = new MeqStoredParmPolc ("EJ12.real." + nm,
-					      j+1, ant+1,
-					      itsMEP);
+                                              j+1, ant+1,
+                                              itsMEP);
       itsExprDel.push_back (ej12r);
       MeqExpr* ej12i = new MeqStoredParmPolc ("EJ12.imag." + nm,
-					      j+1, ant+1,
-					      itsMEP);
+                                              j+1, ant+1,
+                                              itsMEP);
       itsExprDel.push_back (ej12i);
       MeqExpr* ej21r = new MeqStoredParmPolc ("EJ21.real." + nm,
-					      j+1, ant+1,
-					      itsMEP);
+                                              j+1, ant+1,
+                                              itsMEP);
       itsExprDel.push_back (ej21r);
       MeqExpr* ej21i = new MeqStoredParmPolc ("EJ21.imag." + nm,
-					      j+1, ant+1,
-					      itsMEP);
+                                              j+1, ant+1,
+                                              itsMEP);
       itsExprDel.push_back (ej21i);
       MeqExpr* ej22r = new MeqStoredParmPolc ("EJ22.real." + nm,
-					      j+1, ant+1,
-					      itsMEP);
+                                              j+1, ant+1,
+                                              itsMEP);
       itsExprDel.push_back (ej22r);
       MeqExpr* ej22i = new MeqStoredParmPolc ("EJ22.imag." + nm,
-					      j+1, ant+1,
-					      itsMEP);
+                                              j+1, ant+1,
+                                              itsMEP);
       itsExprDel.push_back (ej22i);
       MeqExpr* ej11 = new MeqExprToComplex (ej11r, ej11i);
       itsExprDel.push_back (ej11);
@@ -1252,23 +1293,23 @@ void MeqCalSolver::makeBLExpr (bool wsrtModel)
       int ant1 = ant2/16384;
       ant2 -= ant1*16384;
       if (wsrtModel) {
-	// Create the DFT kernel.
-	MeqPointDFT* dft = new MeqPointDFT (itsStatSrc[ant1],
-					    itsStatSrc[ant2]);
-	itsExprDel.push_back (dft);
-	itsResExpr[blinx] = new MeqWsrtPoint (&itsSources, dft,
-					      &itsCelltHist[blinx],
-					      &itsCellfHist[blinx]);
+        // Create the DFT kernel.
+        MeqPointDFT* dft = new MeqPointDFT (itsStatSrc[ant1],
+                                            itsStatSrc[ant2]);
+        itsExprDel.push_back (dft);
+        itsResExpr[blinx] = new MeqWsrtPoint (&itsSources, dft,
+                                              &itsCelltHist[blinx],
+                                              &itsCellfHist[blinx]);
       } else {
-	itsResExpr[blinx] = new MeqLofarPoint (&itsSources,
-					       itsLSSExpr[ant1],
-					       itsLSSExpr[ant2],
-					       &itsCelltHist[blinx],
-					       &itsCellfHist[blinx]);
+        itsResExpr[blinx] = new MeqLofarPoint (&itsSources,
+                                               itsLSSExpr[ant1],
+                                               itsLSSExpr[ant2],
+                                               &itsCelltHist[blinx],
+                                               &itsCellfHist[blinx]);
       }
       itsExpr[blinx] = new MeqWsrtInt (itsResExpr[blinx],
-				       itsStatExpr[ant1],
-				       itsStatExpr[ant2]);
+                                       itsStatExpr[ant1],
+                                       itsStatExpr[ant2]);
       itsBLIndex[i] = blinx++;
     }
   }
@@ -1299,12 +1340,12 @@ void MeqCalSolver::initParms()
     }
     vector<string> names;
     for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-	 iter != parmList.end();
-	 iter++)
+         iter != parmList.end();
+         iter++)
     {
       if (*iter  &&  (*iter)->isSolvable()) {
-	(*iter)->getInitial (itsSolution);
-	names.push_back ((*iter)->getName());
+        (*iter)->getInitial (itsSolution);
+        names.push_back ((*iter)->getName());
       }
     }
     // Initialize the solver.
@@ -1326,17 +1367,17 @@ void MeqCalSolver::fillUVW()
     vector<double> times;
     int seqnr = 0;
     for (vector<VisTile::Ref>::const_iterator iter = itsVisTiles.begin();
-	 iter != itsVisTiles.end();
-	 iter++, seqnr++) {
+         iter != itsVisTiles.end();
+         iter++, seqnr++) {
       const VisTile& tile = **iter;
       int inxnr = 0;
       for (VisTile::const_iterator viter = tile.begin();
-	   viter != tile.end();
-	   viter++, inxnr++) {
-	// First make a domain.
-	times.push_back (viter.time());
-	tilenr.push_back(seqnr);
-	tileinx.push_back(inxnr);
+           viter != tile.end();
+           viter++, inxnr++) {
+        // First make a domain.
+        times.push_back (viter.time());
+        tilenr.push_back(seqnr);
+        tileinx.push_back(inxnr);
       }
     }
     // Sort them in time order.
@@ -1367,22 +1408,22 @@ void MeqCalSolver::fillUVW()
     if (!statDone[a2]) {
       AssertMsg (statDone[a1], "fillUVW: ordering problems");
       if (statDone[a1]) {
-	statuvw[3*a2]   = uvw(0, inxnr) - statuvw[3*a1];
-	statuvw[3*a2+1] = uvw(1, inxnr) - statuvw[3*a1+1];
-	statuvw[3*a2+2] = uvw(2, inxnr) - statuvw[3*a1+2];
-	statDone[a2] = true;
-	itsStatUVW[a2]->set (time, statuvw[3*a2], statuvw[3*a2+1],
-			     statuvw[3*a2+2]);
+        statuvw[3*a2]   = uvw(0, inxnr) - statuvw[3*a1];
+        statuvw[3*a2+1] = uvw(1, inxnr) - statuvw[3*a1+1];
+        statuvw[3*a2+2] = uvw(2, inxnr) - statuvw[3*a1+2];
+        statDone[a2] = true;
+        itsStatUVW[a2]->set (time, statuvw[3*a2], statuvw[3*a2+1],
+                             statuvw[3*a2+2]);
       }
     } else if (!statDone[a1]) {
       AssertMsg (statDone[a2], "fillUVW: ordering problems");
       if (statDone[a2]) {
-	statuvw[3*a1]   = statuvw[3*a2]   - uvw(0, inxnr);
-	statuvw[3*a1+1] = statuvw[3*a2+1] - uvw(1, inxnr);
-	statuvw[3*a1+2] = statuvw[3*a2+2] - uvw(2, inxnr);
-	statDone[a1] = true;
-	itsStatUVW[a1]->set (time, statuvw[3*a1], statuvw[3*a1+1],
-			     statuvw[3*a1+2]);
+        statuvw[3*a1]   = statuvw[3*a2]   - uvw(0, inxnr);
+        statuvw[3*a1+1] = statuvw[3*a2+1] - uvw(1, inxnr);
+        statuvw[3*a1+2] = statuvw[3*a2+2] - uvw(2, inxnr);
+        statDone[a1] = true;
+        itsStatUVW[a1]->set (time, statuvw[3*a1], statuvw[3*a1+1],
+                             statuvw[3*a1+2]);
       }
     }
   }
@@ -1406,25 +1447,20 @@ void MeqCalSolver::saveParms()
 }
 
 //##ModelId=3EC9F6EC0262
-void MeqCalSolver::saveResiduals (const DataRecord::Ref& header)
+void MeqCalSolver::saveResiduals (DataRecord::Ref& header)
 {
   cout << "saveResidualData" << endl;
 
-  // If needed add the RESIDUALS column with the same type and
-  // shape as the DATA column.
-  VisTile::FormatRef tabform (itsVisTiles[0]->format());
-  if (! tabform->defined(VisTile::RESIDUALS)) {
-    VisTile::FormatRef tform = tabform.privatize(DMI::WRITE);
-    tform.dewr().add (VisTile::RESIDUALS, tform->type(VisTile::DATA),
-		      tform->shape(VisTile::DATA));
-    for (vector<VisTile::Ref>::iterator iter = itsVisTiles.begin();
-	 iter != itsVisTiles.end();
-	 iter++)
-    {
-      iter->dewr().changeFormat (tform);
-    }
-  }
-
+  // generate new vdsid for the data set
+  HIID &vdsid = header()[FVDSID];
+  vdsid[2] = ++dataset_seq_num_;
+  // put relevant info into header
+  header()[FDataType] = DataType_Final;
+  header()[FSolveIterNum] = control().iterationNum();
+  
+  // write the header
+  output().put(HEADER,header.copy());
+  
   cout << "Using peel sources ";
   for (unsigned int i=0; i<itsPeelSourceNrs.size(); i++) {
     cout << itsPeelSourceNrs[i] << ',';
@@ -1432,10 +1468,19 @@ void MeqCalSolver::saveResiduals (const DataRecord::Ref& header)
   cout << endl;
   itsSources.setSelected (itsPeelSourceNrs);
 
-  output().putHeader (header.copy());
   Timer timer;
-  for (unsigned int i=0; i<itsVisTiles.size(); i++) {
-    const VisTile& visTile = *(itsVisTiles[i]);
+  for (unsigned int i=0; i<itsVisTiles.size(); i++) 
+  {
+    // Privatize the tile for writing (this is a no-op if we have the only
+    // copy). This is good practice to minimize data copying between
+    // threads: we hold a writable ref to the tile only as long as we're 
+    // really writing to it.
+    itsVisTiles[i].privatize(DMI::WRITE|DMI::DEEP);
+    VisTile& visTile = itsVisTiles[i];
+    // apply format if we don't have a residuals column in this tile
+    if( !visTile.format().defined(VisTile::RESIDUALS) )
+      visTile.changeFormat(tileformat_);
+      
     cout << "Tile: "<<visTile.sdebug(5)<<endl;
     // Do a predict for the elements in this range.
     int ant1 = visTile.antenna1();
@@ -1445,13 +1490,14 @@ void MeqCalSolver::saveResiduals (const DataRecord::Ref& header)
     int blindex = itsBLIndex[blnr];
     Assert (blnr >= 0);
     for (VisTile::const_iterator iter = visTile.begin();
-	 iter != visTile.end();
-	 iter++) {
+         iter != visTile.end();
+         iter++) 
+    {
       // First make a domain.
       double time = iter.time();
       double interval = iter.interval();
       MeqDomain domain(time - interval/2, time + interval/2,
-		       itsStartFreq, itsEndFreq);
+                       itsStartFreq, itsEndFreq);
       MeqRequest request(domain, 1, itsNrChan);
       MeqJonesExpr& expr = *(itsExpr[blindex]);
       expr.calcResult (request);
@@ -1462,37 +1508,44 @@ void MeqCalSolver::saveResiduals (const DataRecord::Ref& header)
       int nchan = data.shape()[1];
       // Make Blitz vectors of the predicted data.
       LoVec_dcomplex xx (const_cast<complex<double>*>
-			 (expr.getResult11().getValue().dcomplexStorage()),
-			 blitz::shape(nchan),
-			 blitz::neverDeleteData);
+                         (expr.getResult11().getValue().dcomplexStorage()),
+                         blitz::shape(nchan),
+                         blitz::neverDeleteData);
       LoVec_dcomplex xy (const_cast<complex<double>*>
-			 (expr.getResult12().getValue().dcomplexStorage()),
-			 blitz::shape(nchan),
-			 blitz::neverDeleteData);
+                         (expr.getResult12().getValue().dcomplexStorage()),
+                         blitz::shape(nchan),
+                         blitz::neverDeleteData);
       LoVec_dcomplex yx (const_cast<complex<double>*>
-			 (expr.getResult21().getValue().dcomplexStorage()),
-			 blitz::shape(nchan),
-			 blitz::neverDeleteData);
+                         (expr.getResult21().getValue().dcomplexStorage()),
+                         blitz::shape(nchan),
+                         blitz::neverDeleteData);
       LoVec_dcomplex yy (const_cast<complex<double>*>
-			 (expr.getResult22().getValue().dcomplexStorage()),
-			 blitz::shape(nchan),
-			 blitz::neverDeleteData);
+                         (expr.getResult22().getValue().dcomplexStorage()),
+                         blitz::shape(nchan),
+                         blitz::neverDeleteData);
       // Subtract the predicted data from the measured data.
       resdata = data;
       if (1 == npol) {
-	resdata(0,blitz::Range::all()) -= xx;
+        resdata(0,blitz::Range::all()) -= xx;
       } else if (2 == npol) {
-	resdata(0,blitz::Range::all()) -= xx;
-	resdata(1,blitz::Range::all()) -= yy;
+        resdata(0,blitz::Range::all()) -= xx;
+        resdata(1,blitz::Range::all()) -= yy;
       } else if (4 == npol) {
-	resdata(0,blitz::Range::all()) -= xx;
-	resdata(1,blitz::Range::all()) -= xy;
-	resdata(2,blitz::Range::all()) -= yx;
-	resdata(3,blitz::Range::all()) -= yy;
+        resdata(0,blitz::Range::all()) -= xx;
+        resdata(1,blitz::Range::all()) -= xy;
+        resdata(2,blitz::Range::all()) -= yx;
+        resdata(3,blitz::Range::all()) -= yy;
       } else {
-	AssertMsg(false, "Number of polarizations should be 1, 2, or 4");
+        AssertMsg(false, "Number of polarizations should be 1, 2, or 4");
       }
     }
-    output().putNextTile (itsVisTiles[i].copy());
+    // change the tile back to read-only
+    itsVisTiles[i].privatize(DMI::READONLY|DMI::DEEP);
+    // dump a copy to the output stream
+    output().put(DATA,itsVisTiles[i].copy());
   }
+  // write footer to output stream
+  DataRecord::Ref footer(DMI::ANONWR);
+  footer()[FVDSID] = vdsid;
+  output().put(FOOTER,footer);
 }
