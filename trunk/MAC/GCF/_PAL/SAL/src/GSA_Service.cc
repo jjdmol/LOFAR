@@ -495,13 +495,13 @@ TSAResult GSAService::dpeGet(const string& propName)
     LOG_FATAL(LOFAR::formatString (
         "Unable to request of property: '%s'", 
         propName.c_str()));
-    result = SA_PROP_DOES_NOT_EXIST;      
   }
   else if (!dpeExists(propName))
   {
     LOG_WARN(LOFAR::formatString (
         "Property: '%s' does not exists", 
         propName.c_str()));    
+    result = SA_PROP_DOES_NOT_EXIST;      
   }
   else if ((result = getDpId(pvssDpName, dpId)) != SA_NO_ERROR)
   {

@@ -98,6 +98,10 @@ class GCFExtPropertySet : public GCFPropertySet
      */
     TGCFResult unsubscribeProp (const string propName) const;
     
+    /**
+     * 
+     */
+    bool isPropSubscribed (const string propName) const;
     bool isLoaded() const { return _isLoaded;} 
     
   private:

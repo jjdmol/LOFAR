@@ -119,7 +119,8 @@ void GCFProperty::dispatchAnswer(GCFEvent& answer)
 void GCFProperty::subscribed ()
 {
   GCFPropAnswerEvent e(F_SUBSCRIBED);
-  e.pPropName = _propInfo.propName;
+  string fullName(getFullName());
+  e.pPropName = fullName.c_str();
   dispatchAnswer(e);
 }
 
@@ -127,7 +128,8 @@ void GCFProperty::valueChanged (const GCFPValue& value)
 {
   GCFPropValueEvent e(F_VCHANGEMSG);
   e.pValue = &value;
-  e.pPropName = _propInfo.propName;
+  string fullName(getFullName());
+  e.pPropName = fullName.c_str();
   e.internal = false;
   dispatchAnswer(e);
 }
@@ -136,6 +138,7 @@ void GCFProperty::valueGet (const GCFPValue& value)
 {
   GCFPropValueEvent e(F_VGETRESP);
   e.pValue = &value;
-  e.pPropName = _propInfo.propName;
+  string fullName(getFullName());
+  e.pPropName = fullName.c_str();
   dispatchAnswer(e);
 }

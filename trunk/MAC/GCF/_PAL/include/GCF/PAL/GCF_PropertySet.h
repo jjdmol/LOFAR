@@ -89,7 +89,6 @@ class GCFPropertySet
   protected: // helper methods
     virtual GCFProperty* createPropObject(const TProperty& propInfo) = 0;
     void dispatchAnswer (unsigned short sig, TGCFResult result);
-    void setDefaults();
     void loadPropSetIntoRam();
     
   protected: // helper attributes

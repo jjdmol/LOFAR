@@ -63,6 +63,8 @@ const char* [+ protocol_name +]_signalnames[] =
 #include <string>
 #endif
 
+[+ (get "prelude") +]
+
 //
 // Define protocol ID
 //
@@ -135,7 +137,7 @@ void* [+ event_class_name +]::pack(unsigned int& packsize)
 {
   [+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +]assert([+ (get "name") +]);[+ ENDIF +]
   [+ ENDFOR +]
-  unsigned int requiredSize = [+ IF (not (exist? "noheader")) +]sizeof(signal) + sizeof(length)[+ ENDIF +][+ FOR param "" +]
+  unsigned int requiredSize = [+ IF (not (exist? "noheader")) +]sizeof(signal) + sizeof(length)[+ ELSE +]0[+ ENDIF +][+ FOR param "" +]
     [+ IF (exist? "userdefined") +]+ [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]getSize()
     [+ ELIF (not (*== (get "type") "]")) +]+ [+ IF (== (get "type") "string") +][+ (get "name") +].length() + sizeof(unsigned int)[+ ELSE +]sizeof([+ (get "name") +])[+ ENDIF+]
     [+ ELIF (*== (get "type") "[]") +]+ sizeof([+ (get "name") +]Dim) + ([+ (get "name") +]Dim * sizeof([+ (get "name") +][0]))

@@ -497,7 +497,7 @@ void GPAPropertySet::configure(PAConfPropSetEvent& request)
               loadAPCcmd.c_str()));
           paResult = PA_INTERNAL_ERROR;
           break;
-        case 1:
+        case 256:
           LOG_ERROR("Apc file does exists in $MAC_CONFIG/Apc");
           paResult = PA_APC_NOT_EXISTS;
           break;
