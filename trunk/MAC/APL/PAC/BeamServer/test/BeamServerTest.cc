@@ -41,7 +41,7 @@ using namespace blitz;
 using namespace LOFAR;
 
 #define N_BEAMS              (8)
-#define N_BEAMLETS           (128)
+#define N_BEAMLETS           (206)
 #define N_SUBBANDS_PER_BEAM  (N_BEAMLETS/N_BEAMS)
 
 using namespace ABS;
