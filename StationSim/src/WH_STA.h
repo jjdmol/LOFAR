@@ -18,7 +18,6 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Chris Broekema, january 2003.
 //#
 
 #ifndef STATIONSIM_WH_STA_H
@@ -31,6 +30,7 @@
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleC.h>
 #include <StationSim/DH_SampleR.h>
+#include <StationSim/DH_CubeC.h>
 #include <Common/Lorrays.h>
 
 class WH_STA: public WorkHolder
@@ -41,18 +41,18 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   WH_STA (const string& name,
-	  int nin, 
-	  int nout,
-	  int nant,
-	  int maxnrfi,
-	  int buflength,
-	  int alg, 
-	  int pdinit,
-	  int pdupdate,
-	  int pdinterval,
-	  double pdbeta,
-	  int detNrfi
-		  );
+		  int nout,
+		  int nrcu,
+		  int nsubband,
+		  int maxnrfi,
+		  int buflength,
+		  string alg, 
+		  int pdinit,
+		  int pdupdate,
+		  int pdinterval,
+		  double pdbeta,
+		  const int detrfi);
+
   virtual ~WH_STA();
 
   /// Static function to create an object.
@@ -61,8 +61,6 @@ public:
 
   /// Make a fresh copy of the WH object.
   virtual WH_STA* make (const string& name) const;
-
-  virtual void preprocess();
 
   /// Do a process step.
   virtual void process();
@@ -85,39 +83,40 @@ private:
   /// Forbid assignment.
   WH_STA& operator= (const WH_STA&);
 
-  LoMat_dcomplex CreateContigeousBuffer (const LoMat_dcomplex& aBuffer, int pos);
+  LoCube_dcomplex CreateContigeousBuffer (const LoCube_dcomplex& aBuffer, int pos);
   LoMat_dcomplex TransposeMatrix (const LoMat_dcomplex& aMat);
   LoVec_double ReverseVector (const LoVec_double& aVec);
   LoMat_dcomplex ReverseMatrix (const LoMat_dcomplex& aMat, int dim);
 
   /// In- and OutHolders
-  DH_SampleC** itsInHolders;
-  DH_SampleC** itsOutHolders; 
+  DH_SampleC   itsInHolder;
+  DH_CubeC**   itsOutHolders; 
   DH_SampleR   itsNumberOfRFIs;
 
   /// Length of buffers.
   int itsNrcu;
-  int itsDetRFI;
+  int itsNsubband;
   int itsMaxRFI;
   int itsBufLength;
 	
-  LoMat_dcomplex itsBuffer;
-  int itsPos;
-  LoMat_dcomplex itsEvectors;
-  LoVec_double   itsEvalues;
-  LoMat_dcomplex itsAcm;
-  int            itsAlg;
-  int            itsPASTdInterval;
-  double         itsPASTdBeta;
-  int            itsPASTdInit;
-  int            itsUpdateRate;
-  double         itsRFI;
+  LoCube_dcomplex itsBuffer;
+  int             itsPos;
+  LoCube_dcomplex itsEvectors;
+  LoMat_double    itsEvalues;
+  LoMat_dcomplex  itsAcm;
+  string          itsAlg;
+  int             itsPASTdInterval;
+  double          itsPASTdBeta;
+  int             itsPASTdInit;
+  int             itsUpdateRate;
+  int             itsDetRFI;
+  int             itsCount;
 
   // DEBUG
   ifstream itsFileInput; 
   ofstream itsResults;
   LoMat_dcomplex itsTestVector; 
-  int itsCount;
+  int itsC;
   int itsUbound;
 };
 #endif

@@ -33,6 +33,7 @@
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleC.h>
 #include <StationSim/DH_SampleR.h>
+#include <StationSim/DH_CubeC.h>
 #include <StationSim/DataGenConfig.h>
 #include <Common/Lorrays.h>
 
@@ -45,13 +46,12 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   WH_Projection (const string& name,
-		 unsigned int nin, 
-		 unsigned int nout,
-		 unsigned int nant,
-		 unsigned int maxnrfi,
-		 unsigned int ndetnull,
-		 bool tapstream, 
-		 string arraycfg);
+				 unsigned int nin, 
+				 unsigned int nout,
+				 unsigned int nrcu,
+				 unsigned int nsubband,
+				 unsigned int maxnrfi,
+				 bool tapstream);
   
   virtual ~WH_Projection();
 
@@ -86,22 +86,19 @@ private:
   /// In- and OutHolders
   DH_SampleC** itsInHolders;
   DH_SampleC** itsOutHolders; 
-  DH_SampleR itsNumberOfRFIs;
-  DH_SampleC itsRFISources;
+  DH_SampleR   itsNumberOfRFIs;
+  DH_CubeC     itsRFISources;
 
   /// Length of buffers.
   unsigned int itsNrcu;
+  unsigned int itsNsubband;
   unsigned int itsMaxRFI;
-  int itsDetectedRFIs;
-  unsigned int itsDetNulls;
-  LoVec_dcomplex itsWeight;
-  LoVec_dcomplex itsSteerv;
-  LoMat_dcomplex itsV;
-  LoVec_dcomplex itsA;
-  bool           itsTapStream;
-  ArrayConfig    itsArray;
-
-  int Count;
+  LoVec_double     itsNrfi;
+  LoMat_dcomplex   itsWeight;
+  LoMat_dcomplex** itsV;
+  LoVec_dcomplex   itsA;
+  int              itsCount;
+  bool             itsTapStream;
 
   LoVec_dcomplex WH_Projection::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) ;
   LoVec_dcomplex WH_Projection::getWeights (LoMat_dcomplex V, LoVec_dcomplex a) ;
@@ -109,7 +106,7 @@ private:
   LoVec_dcomplex WH_Projection::vm_mult (const LoVec_dcomplex& A, const LoMat_dcomplex& B); 
 
   // QM procedures
-  void WH_Projection::qm_find_doa(const LoVec_dcomplex& evec, const double accuracy, double& phi, double& theta);
-  LoVec_dcomplex WH_Projection::steerv (double phi, double theta, LoVec_double px, LoVec_double py);
+/*   void WH_Projection::qm_find_doa(const LoVec_dcomplex& evec, const double accuracy, double& phi, double& theta); 
+	 LoVec_dcomplex WH_Projection::steerv (double phi, double theta, LoVec_double px, LoVec_double py);*/
 };
 #endif

@@ -38,7 +38,7 @@ using namespace blitz;
 
 
 void pastd_step (LoVec_dcomplex& x, LoMat_dcomplex& W, LoVec_double& d_tmp, 
-		 const int nmax, const double Beta) {
+                 const int nmax, const double Beta) {
   // This is the actual algorithm
   int nr = x.size();
   LoVec_dcomplex y; y.resize(nr);
@@ -59,7 +59,7 @@ void pastd_step (LoVec_dcomplex& x, LoMat_dcomplex& W, LoVec_double& d_tmp,
 
 
 int pastd (LoMat_dcomplex fifo, int numsnaps, int interval, double beta,
-	   LoVec_double Evalue, LoMat_dcomplex Evector)
+           LoVec_double Evalue, LoMat_dcomplex Evector)
 {
  
   int nantl = Evalue.ubound(firstDim) - Evalue.lbound(firstDim) + 1;

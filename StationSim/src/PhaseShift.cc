@@ -58,9 +58,9 @@ namespace PhaseShift
 	dprintf1 (2) ("inverse fft length %d bins %d\n", nfft, nbins);
 
 	//AG: Do a ifftshift, put the DC component in the middle of the band
-// 	temp = result (Range (nfft / 2, nfft - 1));
-// 	result (Range (nfft / 2, nfft - 1)) = result (Range (0, nfft / 2 - 1));
-// 	result (Range (0, nfft / 2 - 1)) = temp;
+	temp = result (Range (nfft / 2, nfft - 1));
+	result (Range (nfft / 2, nfft - 1)) = result (Range (0, nfft / 2 - 1));
+	result (Range (0, nfft / 2 - 1)) = temp;
 
     // do inverse fft
 	FFTW::inverse_fft (result, nfft, nbins, invplan);
@@ -98,9 +98,9 @@ namespace PhaseShift
     LoVec_dcomplex cdata = FFTW::forward_fft (source (Range (0, siglen - 1)), nfft, nbins, fwdplan);
 
 	//AG: Do a fftshift, put the DC component in the middle of the band
-// 	temp = cdata (Range (nfft / 2, nfft - 1));
-// 	cdata (Range (nfft / 2, nfft - 1)) = cdata (Range (0, nfft / 2 - 1));
-// 	cdata (Range (0, nfft / 2 - 1)) = temp;
+	temp = cdata (Range (nfft / 2, nfft - 1));
+	cdata (Range (nfft / 2, nfft - 1)) = cdata (Range (0, nfft / 2 - 1));
+	cdata (Range (0, nfft / 2 - 1)) = temp;
 
     dprintf1 (1) ("foward fft done\n");
 
@@ -133,11 +133,12 @@ namespace PhaseShift
   LoVec_double getFreqShift (double bandwidth, double center_freq, int nfft) 
   {
     LoVec_double fs (nfft);
+	//    LoVec_double fs2 (nfft);
 
 	// JD/AG: look at the phased array book
-// 	fs = ((tensor::i - (nfft / 2.0 + 1.0) + 1) * (bandwidth / nfft) + center_freq) / center_freq;
+	fs = ((tensor::i - (nfft / 2.0 + 1.0) + 1) * (bandwidth / nfft) + center_freq) / center_freq;
 
-	fs = ((tensor::i - nfft / 2.0 + 1) * (bandwidth / nfft) + center_freq) / center_freq; // Oleg's original code
+	//	fs2 = ((tensor::i - nfft / 2.0 + 1) * (bandwidth / nfft) + center_freq) / center_freq; // Oleg's original code
     return fs;
   }
 
@@ -149,7 +150,7 @@ namespace PhaseShift
     res = -2 * M_PI * (px * sin (theta) * cos (phi) + py * sin (theta) * sin (phi));
 
 	// JD/AG: put in the divide by nfft
-//     return res / nfft;
+	//	return res / nfft;
     return res;
   }
 };				// namespace PhaseShift

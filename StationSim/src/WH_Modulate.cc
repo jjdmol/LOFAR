@@ -74,6 +74,7 @@ WH_Modulate::WH_Modulate (int nin,
   }
   itsInputBuffer.resize (itsWindowSize);
   itsOutputBuffer.resize (itsWindowSize);
+  itsOutputBuffer = 0;
 }
 
 
@@ -150,7 +151,7 @@ void WH_Modulate::process ()
     itsp = itsTc - (itsP - itsWindowSize);
     itsPhi = itsp / itsSampFreq;
   }
-  
+
   if (getOutputs () > 0) {
     for (int i = 0; i < getOutputs (); i++) {
       getOutHolder (i)->getBuffer ()[0] = itsOutputBuffer (itsPos);

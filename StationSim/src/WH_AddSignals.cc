@@ -35,15 +35,18 @@ WH_AddSignals::WH_AddSignals (const string& name,
   itsInHolders  (0),
   itsOutHolders (0),
   itsNrcu       (nrcu),
-  itsTapStream  (tapstream)
+  itsTapStream  (tapstream),
+  itsFileOut    ("/home/alex/data/data/DG_out.dat"),
+  itsCount      (0)
 {
   // Allocate blocks to hold pointers to input and output DH-s.
   if (nin > 0) {
-    itsInHolders = new DH_SampleC *[nin];
+    itsInHolders = new DH_SampleC* [nin];
   }
   if (nout > 0) {
-    itsOutHolders = new DH_SampleC *[nout];
+    itsOutHolders = new DH_SampleC* [nout];
   }
+
   // Create the input DH-s.
   char str[8];
 
@@ -51,18 +54,19 @@ WH_AddSignals::WH_AddSignals (const string& name,
     sprintf (str, "%d", i);
     itsInHolders[i] = new DH_SampleC (string ("in_") + str, nrcu, 1);
   }
+
   // Create the output DH-s.
-  if (nin == 0) {
-    nin = 1;
-  }
   for (unsigned int i = 0; i < nout; i++) {
     sprintf (str, "%d", i);
-    itsOutHolders[i] = new DH_SampleC (string ("out_") + str, 1, 1);
+    itsOutHolders[i] = new DH_SampleC (string ("out_") + str, nrcu, 1);
 
 	if (itsTapStream) {
 	  itsOutHolders [i]->setOutFile (string ("DG_") + str + string (".dat"));
 	}
   }
+
+  // DEBUG
+  //  itsFileOut << "99968 x 92" << endl << "[ ";
 }
 
 WH_AddSignals::~WH_AddSignals ()
@@ -75,6 +79,10 @@ WH_AddSignals::~WH_AddSignals ()
     delete itsOutHolders[i];
   }
   delete[]itsOutHolders;
+
+//   // DEBUG
+//   itsFileOut << " ]" << endl;
+  itsFileOut.close ();
 }
 
 WorkHolder* WH_AddSignals::construct (const string& name, 
@@ -90,18 +98,30 @@ WH_AddSignals* WH_AddSignals::make (const string& name) const
   return new WH_AddSignals (name, getInputs (), getOutputs (), itsNrcu, itsTapStream);
 }
 
+
+
 void WH_AddSignals::process ()
 {
   if (getOutputs () > 0) {
-    for (int i = 0; i < itsNrcu; i++) {
-      itsOutHolders[i]->getBuffer ()[0] = 0;
+    for (int i = 0; i < getOutputs (); i++) {
+	  for (int r = 0 ; r < itsNrcu; r++) {
+		itsOutHolders[i]->getBuffer ()[r] = 0;
+	  }
     }
 
-    for (int i = 0; i < getInputs (); i++) {
-      for (int j = 0; j < itsNrcu; j++) {
-		itsOutHolders[j]->getBuffer ()[0] += itsInHolders[i]->getBuffer ()[j];
-      }
-    }
+	for (int o = 0; o < getOutputs (); o++) {
+	  for (int i = 0; i < getInputs (); i++) {
+		for (int r = 0; r < itsNrcu; r++) {
+		  itsOutHolders [o]->getBuffer ()[r] += itsInHolders[i]->getBuffer ()[r];
+		}
+	  }
+	}
+	
+	for (int r = 0; r < itsNrcu; r++) {
+	  itsFileOut << itsOutHolders [0]->getBuffer ()[r] << ' ';
+	}
+	itsFileOut << endl;
+
   }
 }
 

@@ -66,14 +66,17 @@ void WH_WeightDetermination::preprocess()
 
 void WH_WeightDetermination::process()
 {
-  if (getOutputs() > 0) {
-    LoVec_dcomplex d = steerv(itsBeamTraject.getPhi (itsCount), 
-			      itsBeamTraject.getTheta (itsCount++), 
-			      itsArray.getPointX (), itsArray.getPointY ());
-    
-    for (int i = 0; i < getOutputs(); i++) {
-      memcpy(itsOutHolders[i]->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
-    }
+  if (getOutputs() > 0 && itsOutHolders[0]->doHandle ()) {
+	LoVec_dcomplex d = steerv(itsBeamTraject.getPhi (itsCount), 
+							  itsBeamTraject.getTheta (itsCount++), 
+							  itsArray.getPointX (), itsArray.getPointY ());
+	
+	for (int i = 0; i < getOutputs(); i++) {
+	  memcpy(itsOutHolders[i]->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
+	}
+
+	// DEBUG
+	cout << "WH_WeightDetermination : " << itsCount-1 << endl;
   }
 }
 

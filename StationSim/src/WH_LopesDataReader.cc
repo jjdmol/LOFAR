@@ -65,7 +65,7 @@ WH_LopesDataReader* WH_LopesDataReader::make (const string& name) const
 
 void WH_LopesDataReader::process()
 {
-  unsigned int channid;
+  char channid [4];
 
   if (itsBlockPointer == itsLength - 1) {
 	// Open the next file
@@ -80,10 +80,10 @@ void WH_LopesDataReader::process()
 	
 	// Read in the data and put it in the buffer
 	for (unsigned int r = 0; r < itsNrcu; r++) {
-	  itsCurrentFile->read (&channid, 4);
-	  itsCurrentFile->read (&itsLength, 4);	  
+	  itsCurrentFile->read (channid, 4);
+	  itsCurrentFile->read ((char*)&itsLength, 4);	  
 	  itsBuffer[r] = new buftype[itsLength];
-	  itsCurrentFile->read (&itsBuffer[r][0], itsLength * 2);
+	  itsCurrentFile->read ((char*)&itsBuffer[r][0], itsLength * 2);
 	}
 
 	// close current file
@@ -140,10 +140,10 @@ void WH_LopesDataReader::readLopesHeader ()
   char temp[20];
 
   // Read header data
-  itsCurrentFile->read (&length, 4);
-  itsCurrentFile->read (&temp, 20);
-  itsCurrentFile->read (&blocksize, 4);
-  itsCurrentFile->read (&temp, 20);
+  itsCurrentFile->read ((char*)&length, 4);
+  itsCurrentFile->read ((char*)&temp, 20);
+  itsCurrentFile->read ((char*)&blocksize, 4);
+  itsCurrentFile->read ((char*)&temp, 20);
   
   // Determine number of channels from filesize
   AssertStr ((length - 48) / (blocksize * 2 + 8) == itsNrcu, "The LOPES channels don't correspond with the number of rcu's");

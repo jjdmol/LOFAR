@@ -37,6 +37,7 @@ WH_ReadSignal::WH_ReadSignal (const string & name, unsigned int nout,
   AssertStr (itsFile, "Failed to open file " << fileName);
   // Set the file pointer to the begining of the data
   char s[256];
+  strcpy (s, "Empty");
 
   while (strncmp (s, "Data :", 6) != 0)
     itsFile.getline (s, 256);

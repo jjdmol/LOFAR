@@ -81,6 +81,10 @@ private:
 
   int itsNrcu;
   bool itsTapStream;
+
+  // DEBUG
+  ofstream itsFileOut;
+  int itsCount;
 };
 
 

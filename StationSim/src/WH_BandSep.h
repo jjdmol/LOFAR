@@ -52,8 +52,10 @@ public:
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  WH_BandSep (const string& name, unsigned int nsubband,
-	      const string& coeffFileName, int nout, bool tapstream, int qms);
+
+  WH_BandSep (const string& name, unsigned int nsubband, unsigned int nrcu,
+			  const string& coeffFileName, int nout, bool tapstream,
+			  string subselfile, int nselsubband, int qms);
 
   virtual ~WH_BandSep();
 
@@ -81,7 +83,9 @@ public:
   //  void spectrumplot (gnuplot_ctrl* handle, const LoMat_dcomplex& buffer, const int pos);
 
 private:
-  void WH_BandSep::plot_freq_spectrum(const LoMat_dcomplex& sb_signals, const int pos) ;
+/*   void WH_BandSep::plot_freq_spectrum(const LoMat_dcomplex& sb_signals, const int pos) ;
+ */
+
   /// Forbid copy constructor.
   WH_BandSep(const WH_BandSep&);
 
@@ -95,26 +99,32 @@ private:
 
   /// Length of buffers.
   int itsNsubband;
+  int itsNrcu;
   string itsCoeffName;
   int itsPos;
   int itsNout;
   int itsFilterLength;
-  FilterBank <dcomplex> * itsFilterbank;
-  LoVec_dcomplex itsBuffer;
+  FilterBank <dcomplex> **itsFilterbank;
+  LoMat_dcomplex itsBuffer;
+  LoMat_dcomplex itsSubbandSignals;
+  LoMat_dcomplex itsTemp;
   bool itsTapStream;
+  int itsNselsubband;
+  string itsSubSelFile;
+  LoVec_bool itsSelection;
+  LoMat_dcomplex itsSelSubSignals;
+  int itsCount;
+  int itsQms; 
 
-  int itsQms;
-  LoVec_bool qm; // Quality measure array;
-  
-  bool plot;
-  gnuplot_ctrl* handle;
-  LoMat_dcomplex buffer; // buffer for the output signals
-  int buffersize ;       // size of the buffer
-  int buffer_pos;        // current position in the buffer
-
-  int Count;
-  int itsSpecPos;
-  int itsTickCount;
+/*   LoVec_bool qm; // Quality measure array;  */
+/*   bool plot; */
+/*   gnuplot_ctrl* handle; */
+/*   LoMat_dcomplex buffer; // buffer for the output signals */
+/*   int buffersize ;       // size of the buffer */
+/*   int buffer_pos;        // current position in the buffer */
+/*   int Count; */
+/*   int itsSpecPos; */
+/*   int itsTickCount; */
 };
 
 
