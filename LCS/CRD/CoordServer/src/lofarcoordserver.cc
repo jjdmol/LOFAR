@@ -334,6 +334,7 @@ int main (int argc, const char* argv[])
     if (connSocket != 0) {
       LOG_DEBUG("Found connection");
       handleConnection (connSocket);
+      delete connSocket;
     }
     // Wait (non-blocking) for any child.
     // This is needed to prevent a child from becoming a zombie when it
