@@ -26,8 +26,8 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <libTransport/DataHolder.h>
-#include <libTransport/Transporter.h>
+#include <Transport/DataHolder.h>
+#include <Transport/Transporter.h>
 #include <tinyCEP/MiniDataManager.h>
 
 #include <Common/KeyValueMap.h>

@@ -22,8 +22,8 @@
 
 #include <iostream>
 
-#include <libTransport/Transporter.h>
-#include <libTransport/TH_Mem.h>
+#include <Transport/Transporter.h>
+#include <Transport/TH_Mem.h>
 #include <tinyCEP/ApplicationHolder.h>
 #include <tinyCEP/DH_Example.h>
 

@@ -25,7 +25,7 @@
 
 /*  #include <lofar_config.h> */
 
-#include <libTransport/DataHolder.h>
+#include <Transport/DataHolder.h>
 #include <Common/Debug.h>
 
 namespace LOFAR
