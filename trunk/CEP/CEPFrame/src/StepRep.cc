@@ -62,7 +62,6 @@ StepRep::StepRep (WorkHolder& worker,
   itsID         (-1),
   itsNode       (0),
   itsAppl       (0),
-  itsRate       (1),
   itsAddSuffix  (addNameSuffix),
   itsSeqNr      (-1),
   itsName       (name),
@@ -131,10 +130,6 @@ void StepRep::preprocess()
 
 void StepRep::process()
 {
-  if (! doHandle()) {
-    TRACER4( "Skip Process " << theirEventCnt << " " << itsRate);
-    return;
-  }
   // extra check if process is on the right node
   if (getNode() < 0) {
     cout << "StepRep::Process Node < 0 for Step " << getName() << endl;
@@ -295,54 +290,23 @@ void StepRep::dump() const
   if (shouldProcess()) itsWorker->dump();
 }
 
-bool StepRep::setRate (int rate, int dhIndex)
+bool StepRep::setProcessRate (int rate)
 {
   bool result = true;
-  result &= setInRate (rate, dhIndex);
-  result &= setOutRate (rate, dhIndex);
-  itsRate = rate;
+  getWorker()->getDataManager().setProcessRate(rate);
   return result;
 }
 
 bool StepRep::setInRate(int rate, int dhIndex)
 {
-  AssertStr (rate>0,
-	     "Step Rate not within limits");
-  AssertStr (dhIndex >= -1,
-	     "Step dhIndex not within limits");
-  if (dhIndex >= 0) {
-    getInData(dhIndex).getTransporter().setRate (rate); 
-    return true;
-  } else {
-    if (dhIndex == -1) {
-      for (int ch=0; ch<getWorker()->getDataManager().getInputs(); ch++) {
-
-	getInData(ch).getTransporter().setRate (rate); 
-      }
-      return true;
-    }
-  }
-  return false;
+  getWorker()->getDataManager().setInputRate(rate, dhIndex);
+  return true;
 }
 
 bool StepRep::setOutRate (int rate, int dhIndex)
 {
-  AssertStr (rate>0,
-	     "Step Rate not within limits");
-  AssertStr (dhIndex >= -1,
-	     "Step dhIndex not within limits");
-  if (dhIndex >= 0) {
-    getOutData(dhIndex).getTransporter().setRate (rate); 
-    return true;
-  } else {
-    if (dhIndex == -1) {
-      for (int ch=0; ch<getWorker()->getDataManager().getOutputs(); ch++) {
-	getOutData(ch).getTransporter().setRate (rate); 
-      }
-      return true;
-    }
-  }
-  return false;
+  getWorker()->getDataManager().setOutputRate(rate, dhIndex);
+  return true;
 }
 
 }

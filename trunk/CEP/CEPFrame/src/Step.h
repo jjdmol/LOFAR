@@ -230,20 +230,14 @@ public:
       Step::itsRate.
       The monitor argument is used to create a CorbaMonitor object
   */
-  bool setRate (int rate=1, int dhIndex=-1)
-    { return itsRep->setRate (rate, dhIndex); }
+  bool setProcessRate (int rate=1)
+    { return itsRep->setProcessRate (rate); }
   bool setInRate (int rate=1, int dhIndex=-1)
     { return itsRep->setInRate (rate, dhIndex); }
   bool setOutRate (int rate=1, int dhIndex=-1)
     { return itsRep->setOutRate (rate, dhIndex); }
 
-  /** Decide whether to handle this event or not based on rate and
-      event count.
-  */
-  bool doHandle() const
-    { return itsRep->doHandle(); }
-
-  /// Get the event count.
+   /// Get the event count.
   static unsigned int getEventCount()
     { return StepRep::getEventCount(); }
 
