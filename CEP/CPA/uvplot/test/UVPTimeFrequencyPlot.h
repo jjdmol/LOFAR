@@ -83,12 +83,16 @@ class UVPTimeFrequencyPlot: public UVPDisplayArea
  protected:
 
   virtual void       mouseMoveEvent(QMouseEvent *event);
+  virtual void       mousePressEvent(QMouseEvent *event);
+
 
  private:
 
   UVPDataAtomVector  itsComplexSpectrum;
   
   UVPAxis            itsValueAxis;
+  
+  double             itsMaxAbs;
 };
 
 #endif // UVPTIMEFREQUENCYPLOT_H

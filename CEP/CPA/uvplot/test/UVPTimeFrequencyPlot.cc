@@ -36,7 +36,8 @@ InitDebugContext(UVPTimeFrequencyPlot, "DEBUG_CONTEXT");
 UVPTimeFrequencyPlot::UVPTimeFrequencyPlot(QWidget *parent)
   : UVPDisplayArea(parent),
     itsComplexSpectrum(),
-    itsValueAxis()
+    itsValueAxis(),
+    itsMaxAbs(0.0)
   
 {
 #if(DEBUG_MODE)
@@ -82,10 +83,10 @@ void UVPTimeFrequencyPlot::slot_addDataAtom(const UVPDataAtom* atom)
   if(itsComplexSpectrum.min() != itsComplexSpectrum.max()) {
     double absmin = fabs(itsComplexSpectrum.min());
     double absmax = fabs(itsComplexSpectrum.max());
-    double maxabs = (absmin > absmax? absmin: absmax);
+    itsMaxAbs = (absmin > absmax? absmin: absmax);
 
-    itsValueAxis.calcTransferFunction(-maxabs,
-                                      maxabs,
+    itsValueAxis.calcTransferFunction(-itsMaxAbs,
+                                      itsMaxAbs,
                                       0,
                                       getNumberOfColors()-1);
   }
@@ -138,14 +139,14 @@ void UVPTimeFrequencyPlot::drawView()
           if(colre < Ncol && colim < Ncol) {
             BufferPainter.setPen(itsComplexColormap[itsRealIndex[colre]+itsImagIndex[colim]]); 
           } else {
-            std::cout << "*************************************" << std::endl;
+            /*            std::cout << "*************************************" << std::endl;
             std::cout << __FILE__ << ":" << __PRETTY_FUNCTION__ << ":" << __LINE__ << std::endl;
             std::cout << "colre: " << colre << std::endl;
             std::cout << "colim: " << colim << std::endl;
             std::cout << "real : " << spectrum->real() << std::endl;
             std::cout << "imag : " << spectrum->imag() << std::endl;
             std::cout << "Ncol: " << Ncol << std::endl;
-            std::cout << "*************************************" << std::endl;
+            std::cout << "*************************************" << std::endl;*/
           }
         }
         spectrum++;
@@ -198,4 +199,21 @@ void UVPTimeFrequencyPlot::mouseMoveEvent(QMouseEvent *event)
   } else {
     emit signal_timeChanged(0);
   }
+  if(event->state() & RightButton) {
+    itsMaxAbs *= (10.0*event->pos().x())/width();
+  }
 }
+
+
+
+
+//===============>>>  UVPTimeFrequencyPlot::mousePressEvent  <<<===============
+
+void UVPTimeFrequencyPlot::mousePressEvent(QMouseEvent *event)
+{
+  UVPDisplayArea::mousePressEvent(event);
+  if(event->button() == RightButton) {
+    itsMaxAbs *= (10.0*event->pos().x())/width();
+  }
+}
+
