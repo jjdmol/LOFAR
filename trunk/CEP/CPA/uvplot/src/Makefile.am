@@ -11,6 +11,7 @@ uvplot_SOURCES := main.cc \
                   UVPUVCoverageArea.cc UVPUVCoverageArea.moc.cc \
                   UVPDataTransferWP.cc \
                   UVPDataAtom.cc       \
+                  UVPDataHeader.cc     \
                   AID-uvplot-Registry.cc
 
 
