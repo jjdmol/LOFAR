@@ -8,7 +8,7 @@ rescol := 'CORRECTED_DATA';
 predcol := 'PREDICTED_DATA';
 solverec := [ iter_step=1,max_iter=5,
 	            solvableparm="{RA,DEC,StokesI}.*", solvableflag=T,
-	            peelnrs=1, prednrs=[2], 
+	            peel_index=1, pred_index=[2], 
               when_max_iter=[save_residuals=T,save_params=F] ];
 
 
