@@ -35,11 +35,6 @@
 // forward declaration
 class AVTStationBeamformer;
 
-/**
- * This is the main task of the VirtualTelescope process. 
- * @todo 
- */
-
 class AVTVirtualTelescope : public AVTLogicalDevice
 {
   public:

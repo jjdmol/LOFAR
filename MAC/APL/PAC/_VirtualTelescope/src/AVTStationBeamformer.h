@@ -34,19 +34,15 @@
 
 // forward declaration
 
-/**
- * This is the main task of the VirtualTelescope process. 
- * @todo 
- */
-
 class AVTStationBeamformer : public AVTLogicalDevice
 {
   public:
 
     explicit AVTStationBeamformer(const string& name, 
-                                 const TPropertySet& primaryPropertySet,
-                                 const string& APCName,
-                                 const string& APCScope); 
+                                  const TPropertySet& primaryPropertySet,
+                                  const string& APCName,
+                                  const string& APCScope,
+                                  const string& beamServerPortName); 
     virtual ~AVTStationBeamformer();
 
   protected:

@@ -27,7 +27,8 @@
 AVTStationBeamformer::AVTStationBeamformer(const string& taskName, 
                                            const TPropertySet& primaryPropertySet,
                                            const string& APCName,
-                                           const string& APCScope) :
+                                           const string& APCScope,
+                                           const string& beamServerPortName) :
   AVTLogicalDevice(taskName,primaryPropertySet,APCName,APCScope),
   m_beamServer(*this, beamServerPortName, GCFPortInterface::SAP, BEAMSERVER_PROTOCOL)
 {

@@ -1,4 +1,4 @@
-//#  AVTAPCAnswer.h: forwards property set answers to the specified task.
+//#  AVTTest.h: Automatic test of the Virtual Telescope logical device
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,37 +20,47 @@
 //#
 //#  $Id$
 
-#ifndef AVTAPCAnswer_H
-#define AVTAPCAnswer_H
+#ifndef AVTTest_H
+#define AVTTest_H
 
 //# Includes
 //# Common Includes
+#include "APL/APLCommon/src/test.h"
+
 //# GCF Includes
-#include <GCF/GCF_Answer.h>
+
 //# VirtualTelescope Includes
+#include "AVTTestTask.h"
 
 // forward declaration
 
-class GCFEvent;
-class AVTLogicalDevice;
 
-class AVTAPCAnswer : public GCFAnswer
+// redefine the _test and _fail macros to get the correct file and linenumbers
+// in the output.
+#define _avttest(cond) avt_do_test(cond, #cond, __FILE__, __LINE__)
+#define _avtfail(str)  avt_do_fail(str, __FILE__, __LINE__)
+
+class AVTTest : public Test
 {
   public:
-    explicit Answer(AVTLogicalDevice& ld);
-    virtual ~Answer();
+    AVTTest();
+    virtual ~AVTTest();
 
-    virtual void handleAnswer(GCFEvent& answer);
+    virtual void run();
     
+    void avt_do_test(bool cond, const string& lbl,
+                     const char* fname, long lineno);
+    void avt_do_fail(const string& lbl,
+                     const char* fname, long lineno);
+        
   protected:
-    // protected default constructor
-    AVTAPCAnswer();
     // protected copy constructor
-    AVTAPCAnswer(const AVTAPCAnswer&);
+    AVTTest(const AVTTest&);
     // protected assignment operator
-    AVTAPCAnswer& operator=(const AVTAPCAnswer&);
-
-  private:    
-    AVTLogicalDevice& m_logicalDevice;
+    AVTTest& operator=(const AVTTest&);
+    
+  private: 
+    
+    AVTTestTask m_testTask;
 };
 #endif
