@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.6  2002/03/08 11:38:42  wierenga
+//  Upgraded from firewalls.h use to Debug.h use. This version was used for performance tests.
+//
 //  Revision 1.5  2001/10/31 11:34:18  wierenga
 //  LOFAR CVS Repository structure change and transition to autotools (autoconf, automake and libtool).
 //
@@ -50,7 +53,7 @@
 #include "WH_GrowSize.h"
 #include "ParamBlock.h"
 
-#define MAX_GROW_SIZE (10*1024) //(4*1024*1024)
+#define MAX_GROW_SIZE (4*1024*1024)
 
 /**
    This class is an example of a concrete Simulator.
