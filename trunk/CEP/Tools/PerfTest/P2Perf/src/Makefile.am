@@ -5,22 +5,27 @@ INCLUDES 	= \
 endif
 
 bin_PROGRAMS	= P2Perf
-P2Perf_SOURCES = \
-DH_GrowSize.cc					\
+
+DOCHDRS 	=				\
 DH_GrowSize.h					\
-DH_IntArray.cc					\
 DH_IntArray.h					\
-P2Perf.cc					\
 P2Perf.h					\
+StopWatch.h					\
+WH_GrowSize.h					\
+WH_Square.h
+
+P2Perf_SOURCES  	= $(DOCHDRS)		\
+DH_GrowSize.cc					\
+DH_IntArray.cc					\
+P2Perf.cc					\
 Simulate.cc					\
 StopWatch.cc					\
-StopWatch.h					\
 WH_GrowSize.cc					\
-WH_GrowSize.h					\
 WH_Square.cc					\
-WH_Square.h
 
 if HAVE_CORBA
 P2Perf_LDADD = $(basesim_top_builddir)/src/Corba/libth_corba.la
 endif
 
+
+include $(top_srcdir)/../autoconf_share/Makefile.common
