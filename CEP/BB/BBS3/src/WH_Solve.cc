@@ -33,8 +33,6 @@
 #include <BBS3/Solver.h>
 #include <BBS3/ParmData.h>
 
-#include <Common/hexdump.h>
-
 namespace LOFAR
 {
 
@@ -216,8 +214,6 @@ void WH_Solve::readInputs(Solver* solver, bool firstRead)
       solver->setEquations(dh->getDataBuffer(), dh->getDataSize(),
 			   shape[1]-1, shape[0], i);     // id = i or from prediffer?
       more = dh->moreDataToCome();
-      cout << "***SetEquations with data timestamp: " << dh->getTimeStamp() << endl;
-      hexdump(dh->getDataBuffer(), shape[0]*shape[1]*shape[2]);
       if (more)
       {
 	getDataManager().readyWithInHolder(i+2);  // Cause input to be read
@@ -240,12 +236,6 @@ void WH_Solve::setParmData(Solver* solver)
     dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i+2));
     vector<ParmData> pData;
     dh->getParmData(pData);
-    cout << "***Setting parm data: [ ";
-    for (uint j=0; j<pData.size(); j++)
-    {
-      cout << pData[j].getValues() << " ";
-    }
-    cout << "]" << endl;
     solver->setSolvableParmData(pData, i);           // id = i or from prediffer?
   }
 }

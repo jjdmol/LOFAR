@@ -31,8 +31,6 @@
 #include <BBS3/DH_Prediff.h>
 #include <BBS3/Prediffer.h>
 
-#include <Common/hexdump.h>
-
 namespace LOFAR
 {
 
@@ -134,17 +132,7 @@ void WH_Prediff::process()
    
     dhRes->setBufferSize(dataShape);              // Set data field of output DH_Prediff to correct size
 
-    vector<ParmData> pData = pred->getSolvableParmData();
-
-    cout << "***Getting parm data: [ ";
-    for (uint j=0; j<pData.size(); j++)
-    {
-      cout << pData[j].getValues() << " ";
-    }
-    cout << "]" << endl;
-    dhRes->setParmData(pData);
-
-    //    dhRes->setParmData(pred->getSolvableParmData());   
+    dhRes->setParmData(pred->getSolvableParmData());   
   }
   else if (wo->getNewDomain())
   {
@@ -184,18 +172,12 @@ void WH_Prediff::process()
   // Calculate and put in output dataholder buffer
   bool more=false;
   int nresult = 0;
-  ulong counter = 1000;
   do
   {
     dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(1));
     more = pred->getEquations(dhRes->getDataBuffer(), dhRes->getBufferSize(), nresult);
     dhRes->setMoreData(more);
     dhRes->setDataSize(nresult);
-    counter += 1;
-    dhRes->setTimeStamp(counter);
-    cout << "***Sending timestamp: " << counter << endl; 
-    vector<uint32> dataShape =  dhRes->getBufferSize();
-    hexdump(dhRes->getDataBuffer(), dataShape[0]*dataShape[1]*dataShape[2]);
     // send result to solver
     getDataManager().readyWithOutHolder(1);
   }
