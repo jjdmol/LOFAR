@@ -75,6 +75,11 @@ class Connection
   /// Get its TransportHolder
   TransportHolder* getTransportHolder();
 
+  // Get one of its DataHolders  [REO]
+  // Returns DH that is not NULL. When both DHs are set, the forceDest
+  // argument determines which DH is returned.
+  DataHolder* getDataHolder(bool forceDest = false) const;
+
   /// Is connection blocking?
   bool isBlocking() const ; 
 
@@ -118,6 +123,13 @@ inline int Connection::getTag() const
 
 inline TransportHolder* Connection::getTransportHolder()
   { return itsTransportHolder; }
+
+inline DataHolder* Connection::getDataHolder(bool forceDest) const
+  { if ((forceDest && !itsDestDH) || (!forceDest && itsSourceDH)) {
+      return itsSourceDH;
+    }
+    return (itsDestDH);
+  }
 
 inline bool Connection::isBlocking() const
   { return itsIsBlocking; }

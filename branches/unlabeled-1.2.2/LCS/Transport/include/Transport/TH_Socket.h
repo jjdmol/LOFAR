@@ -28,101 +28,76 @@
 #include <Transport/TransportHolder.h>
 #include <Common/Net/Socket.h>
 
-namespace LOFAR
+namespace LOFAR {
+
+class TH_Socket: public TransportHolder
 {
-  class TH_Socket: public TransportHolder
-  {
-  public:
-    // Create the socket transport holder.
-	// The sourceName and destinationName correspond with the machines on which
-	// the endpoints (dataholders) are situated. 
-	// The flag listenerAtDestination determines which peer starts the listener.
-	// When sAD is true the dataholder TO which the connection is made starts
-	// the listener, this is the most common situation.
-	// When sAD is false the dataholder FROM which the connection originates
-	// will start the listener.
-	//
-	// E.g.: DH1.connectTo(DH2, TH_Socket([host_DH1], host_DH2, port, true))
-	//
-	//    DH1 ---------> DH2
-	//    Clnt           Srvr
-	//
-	// E.g.: DH1.connectTo(DH2, TH_Socket(host_DH1, [host_DH2], port, false))
-	//
-	//    DH1 ---------> DH2
-	//    Srvr           Clnt
-	//
-	// Note: one of the hostnames is always obsolete, but this makes the API
-	//       more confirm to other TH API's.
-	//
-    TH_Socket (const string&	sourceName,
-			   const string&	destinationName, 
-			   int32			portno,
-			   const bool		listenerAtDestination = true,
-			   const bool		blocking = true);
+public:
+	// Create a TH_Socket with a server socket (starts a listener).
+	// Note: this is a little bit strange form of a TH_Socket since it owns
+	//       a listener-socket and a datasocket whereas the other constructors
+	//       only contain a datasocket.
+    TH_Socket (const string& 	service,
+			   const bool		sync = true,
+			   int32			protocol = Socket::TCP,
+			   int32			backlog = 5);
+
+	// Create a TH_Socket with a client socket.
+    TH_Socket (const string&	hostName,
+			   const string& 	service,
+			   const bool		sync = true,
+			   int32			protocol = Socket::TCP);
+
+	// Create a TH_Socket based on an existing data socket.
+	TH_Socket (Socket*		aDataSocket);
     
     virtual ~TH_Socket();
 
-        // Make an instance of the transportholder
-    virtual TH_Socket* make() const;
- 
-    // Sets up the connection(s) between server and client
-    virtual bool	init();
-     
     /// Get the type of transport.
     virtual string getType() const;
 
     /// Read the data.
-    virtual bool recvBlocking 		(void* buf, int32 nbytes, int32 tag);
-    virtual bool recvVarBlocking 	(int32 tag);
-    virtual bool recvNonBlocking 	(void* buf, int32 nbytes, int32 tag);
-    virtual bool recvVarNonBlocking (int32 tag);
+    virtual bool recvBlocking 		(void* buf, int32 nbytes, int32 tag,
+									 int nBytesRead = 0, DataHolder* dh = 0);
+    virtual bool recvNonBlocking 	(void* buf, int32 nbytes, int32 tag,
+									 int nBytesRead = 0, DataHolder* dh = 0);
     /// Wait for the data to be received
-    virtual bool waitForReceived 	(void* buf, int32 nbytes, int32 tag);
+    virtual void waitForReceived 	(void* buf, int32 nbytes, int32 tag);
 
     /// Write the data.
-    virtual bool sendBlocking 		(void* buf, int32 nbytes, int32 tag);
-    virtual bool sendNonBlocking	(void* buf, int32 nbytes, int32 tag);
+    virtual bool sendBlocking 		(void* buf, int32 nbytes, int32 tag,
+									 DataHolder* dh = 0);
+    virtual bool sendNonBlocking	(void* buf, int32 nbytes, int32 tag,
+									 DataHolder* dh = 0);
     /// Wait for the data to be sent
-    virtual bool waitForSent 		(void* buf, int32 nbytes, int32 tag);
+    virtual void waitForSent 		(void* buf, int32 nbytes, int32 tag);
 
-    virtual bool connectionPossible (int32 srcRank, int32 dstRank) const;
-	virtual bool isBidirectional() const
-		{ return(true); }
+	// new
+	virtual bool isConnected() const
+		{ return (itsDataSocket && itsDataSocket->isConnected()); }
 
-    virtual bool isBlocking() const
-      { return (itsDataSocket && itsDataSocket->isBlocking()); }
-   
-	void		setDataSocket (Socket*	aDataSocket);
-	Socket*		getDataSocket() const; 
-    bool		connectToServer(int32	waitMs = -1);
-    bool		connectToClient(int32	waitMs = -1);
-  private:
+	// make the connection
+	bool		init();
+
+private:
+    bool		connectToServer();
+    bool		connectToClient();
+
 	typedef enum {
 		CmdNone = 0,
 		CmdRecvNonBlock,
-		CmdRecvVarNonBlock,
 	} CmdTypes;
 
-    string		itsServerHostname;
-    int32		itsPort;
-    bool		itsIsConnected;
-    bool		itsSyncComm;
-    bool		itsDestHasListener;
-    Socket*		itsServerSocket;
-    Socket*		itsDataSocket;
-	int32		itsReadOffset;
+    Socket*		itsServerSocket;		// Listener socket (server only)
+    Socket*		itsDataSocket;			// The transport channel.
+	bool		itsIsOwner;				// Owner of socket(s).
+	int32		itsReadOffset;			// For partial reads.
 
 	// Administration for non-blocking receiving. In the recv-call
 	// these fields are filled so that waitForRecv knows what to do.
 	int16		itsLastCmd;
-  };
+};
   
-
-inline Socket* TH_Socket::getDataSocket() const
-{
-	return (itsDataSocket);
-}
 
 } // namespace LOFAR
 
