@@ -5,6 +5,6 @@
 
 EXES	= routetest
 LIBNAME = routesim
-
+LIBS    = ../BaseSim/$(LIBDIR)/libbasesim.a
 
 include ../BaseSim/Makedefs
