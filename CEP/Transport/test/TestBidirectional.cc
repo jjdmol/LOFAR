@@ -24,12 +24,14 @@
 
 #include <Transport/TH_Mem.h>
 #include <DH_Example.h>
+#include <Common/Debug.h>
 
 using namespace LOFAR;
 
-int main()
+int main(int argc, const char** argv)
 {
     
+  Debug::initLevels (argc, argv);
   cout << "Bidirectional transport test program" << endl;
     
   DH_Example DH1("dh1", 1);
@@ -40,8 +42,10 @@ int main()
   DH1.setID(1);
   DH2.setID(2);
 
-  // connect DH1 to DH2, TH_Mem doesn't implement a blocking send
+  // connect DH1 to DH2, TH_Mem doesn't implement a blocking send, so we select nonblocking
   DH1.connectTo(DH2, TH_Mem(), false);
+  // and everse
+  DH2.connectTo(DH1, TH_Mem(), false);
     
   // initialize
   DH1.init();
@@ -77,6 +81,7 @@ int main()
 
   // now we change the data somewhat and do the "backwards" transport
   DH2.getBuffer()[0] += fcomplex(1,1);
+  DH2.setCounter(3);
   DH2.write();
   DH1.read();
   // 
