@@ -111,6 +111,8 @@ public:
 
   virtual bool connectionPossible(int srcRank, int dstRank) const;
 
+  virtual bool isBidirectional() const;
+ 
   // Static functions which are the same as those in TH_ShMem and TH_MPI.
   // They don't do anything. In this way templating on TH type can be done.
   // <group>
@@ -149,6 +151,9 @@ public:
 
   bool        itsFirstCall;
 };
+
+inline bool TH_Mem::isBidirectional() const
+  { return true; }
 
 }
 
