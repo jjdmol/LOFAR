@@ -85,8 +85,8 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 void WH_Correlator::process() {
   double starttime, stoptime, cmults;
   // variables to store prefetched antenna data
-  DH_Vis::BufferType *s1_val_0, *s1_val_1;
-  DH_Vis::BufferType *s2_val_0, *s2_val_1;
+  complex<float> *s1_val_0, *s1_val_1;
+  complex<float> *s2_val_0, *s2_val_1;
 
   // 
 #ifdef DO_TIMING
@@ -137,8 +137,8 @@ void WH_Correlator::process() {
   // 
   // This is a uint16 pointer
   DH_CorrCube::BufferPrimitive* in_ptr = (DH_CorrCube::BufferPrimitive*) inDH->getBuffer();
-  // This is a float pointer
-  DH_Vis::BufferPrimitive*  in_buffer = new DH_Vis::BufferPrimitive[2*inDH->getBufSize()];
+  // The float pointer is explicit, since DH_Vis is complex<double>
+  float*  in_buffer = new float[2*inDH->getBufSize()];
 
   // consider the input buffer of complex<uint16> to be uint16 of twice that size
   // we can now offer the compiler a single for loop which has great potential to unroll
@@ -146,13 +146,13 @@ void WH_Correlator::process() {
     *(in_buffer+i) = static_cast<float> ( *(in_ptr+i) ); 
   }
 
-
   //
   // This is the actual correlator
   // Note that there is both a general correlator as well as a BlueGene specific
   // implementation.
   // 
 #ifdef HAVE_BGL
+  // complex<double> pointer to the output buffer
   DH_Vis::BufferType* out_ptr = outDH->getBuffer();
 #endif
 
@@ -167,15 +167,15 @@ void WH_Correlator::process() {
       for (int   station1 = 0; station1 < itsNelements; station1++) {
 	int s1_addr = sample_addr+itsNpolarisations*station1;
 	// prefetch station1, both polarisation 0 and 1
-	s1_val_0 = reinterpret_cast<DH_Vis::BufferType*>( in_buffer + s1_addr );
-	s1_val_1 = reinterpret_cast<DH_Vis::BufferType*>( in_buffer + s1_addr + 1 );
+	s1_val_0 = reinterpret_cast<complex<float>*>( in_buffer + s1_addr );
+	s1_val_1 = reinterpret_cast<complex<float>*>( in_buffer + s1_addr + 1 );
 
 	for (int station2 = 0; station2 <= station1; station2++) {
 	  int s2_addr = sample_addr+itsNpolarisations*station2;
 
  	    // prefetch station2, both polarisation 0 and 1
-  	    s2_val_0 = reinterpret_cast<DH_Vis::BufferType*>( in_buffer + s2_addr );
-	    s2_val_1 = reinterpret_cast<DH_Vis::BufferType*>( in_buffer + s2_addr +1 ) ;
+  	    s2_val_0 = reinterpret_cast<complex<float>*>( in_buffer + s2_addr );
+	    s2_val_1 = reinterpret_cast<complex<float>*>( in_buffer + s2_addr +1 ) ;
 #ifdef HAVE_BGL
 	    // load prefetched values into FPU
 	    __lfps((float*) s1_val_0);
