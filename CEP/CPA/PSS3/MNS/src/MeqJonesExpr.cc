@@ -42,8 +42,8 @@ void MeqJonesExpr::multiply (const MeqJonesExpr& left,
               &&  l21.getValue().isDouble()  &&  l22.getValue().isDouble()
               &&  r11.getValue().isDouble()  &&  r22.getValue().isDouble()
               &&  r21.getValue().isDouble()  &&  r22.getValue().isDouble();
-  int nx = max(l11.getValue().nx(), r11.getValue().nx());
-  int ny = max(l11.getValue().ny(), r11.getValue().ny());
+  int nx = std::max(l11.getValue().nx(), r11.getValue().nx());
+  int ny = std::max(l11.getValue().ny(), r11.getValue().ny());
   int nl = l11.getValue().nelements();
   int nr = r11.getValue().nelements();
   Assert(nl==nr);
@@ -68,8 +68,8 @@ void MeqJonesExpr::multiply (const MeqJonesExpr& left,
       v22[i] = dl21[i] * dr12[i] + dl22[i] * dr22[i];
     }
   } else {
-    its11.setDComplex (max(l11.getValue().nx(), r11.getValue().nx()),
-		       max(l11.getValue().ny(), r11.getValue().ny()));
+    its11.setDComplex (std::max(l11.getValue().nx(), r11.getValue().nx()),
+		       std::max(l11.getValue().ny(), r11.getValue().ny()));
     complex<double>* v11 = its11.setDComplex (nx, ny);
     complex<double>* v12 = its12.setDComplex (nx, ny);
     complex<double>* v21 = its21.setDComplex (nx, ny);
@@ -93,11 +93,11 @@ void MeqJonesExpr::multiply (const MeqJonesExpr& left,
     }
   }
 
-  int np11 = max(l11.nperturbed(), r11.nperturbed());
-  int np12 = max(l12.nperturbed(), r12.nperturbed());
-  int np21 = max(l21.nperturbed(), r21.nperturbed());
-  int np22 = max(l22.nperturbed(), r22.nperturbed());
-  int npert = max(np11, max(np12, max(np21, np22)));
+  int np11 = std::max(l11.nperturbed(), r11.nperturbed());
+  int np12 = std::max(l12.nperturbed(), r12.nperturbed());
+  int np21 = std::max(l21.nperturbed(), r21.nperturbed());
+  int np22 = std::max(l22.nperturbed(), r22.nperturbed());
+  int npert = std::max(np11, std::max(np12, std::max(np21, np22)));
   for (int j=0; j<npert; j++) {
     MeqMatrix perturbation;
     bool eval = false;
