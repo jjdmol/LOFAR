@@ -24,25 +24,29 @@
 
 namespace LOFAR
 {
-  ApplicationHolder::ApplicationHolder(int ninput, int noutput, DataHolder* dhptr)
+//   ApplicationHolder::ApplicationHolder(int ninput, int noutput, DataHolder* dhptr)
+//     : itsArgc(0),
+//       itsArgv(0),
+//       itsProto(dhptr),
+//       itsDataManager(0),
+//       itsNinputs(ninput),
+//       itsNoutputs(noutput){
+    
+//     itsDataManager = new MiniDataManager(ninput, noutput);
+
+//     for (int i=0; i < itsNinputs; i++) {
+//       itsDataManager->addInDataHolder(i, dhptr);
+//     }
+//     for (int i=0; i < itsNoutputs; i++){
+//       itsDataManager->addOutDataHolder(i, dhptr);
+//     }
+//   }
+
+  ApplicationHolder::ApplicationHolder()
     : itsArgc(0),
       itsArgv(0),
-      itsProto(dhptr),
-      itsDataManager(0),
-      itsNinputs(ninput),
-      itsNoutputs(noutput){
-    
-    itsDataManager = new MiniDataManager(ninput, noutput);
-
-    for (int i=0; i < itsNinputs; i++) {
-      itsDataManager->addInDataHolder(i, dhptr);
-    }
-    for (int i=0; i < itsNoutputs; i++){
-      itsDataManager->addOutDataHolder(i, dhptr);
-    }
-  }
-
-  ApplicationHolder::ApplicationHolder() {
+      itsProto(0),
+      itsDataManager(0) {
   }
 
   ApplicationHolder::~ApplicationHolder() {
@@ -55,12 +59,42 @@ namespace LOFAR
     : itsArgc        (that.itsArgc),
       itsArgv        (that.itsArgv),
       itsProto       (that.itsProto),
-      itsDataManager (that.itsDataManager),
-      itsNinputs     (that.itsNinputs),
-      itsNoutputs    (that.itsNoutputs) {
+      itsDataManager (that.itsDataManager) {
   }
       
     
+  void ApplicationHolder::baseDefine(const KeyValueMap& params) {
+    // Initialize MPI environment
+    //    TRANSPORTER::init(itsArgc, itsArgv);
+
+    // Let derived class define the Application
+    define(params);
+  }
+
+  void ApplicationHolder::baseCheck() {
+  }
+
+  void ApplicationHolder::basePrerun() {
+    init();
+  }
+
+  void ApplicationHolder::baseRun(int nsteps) {
+    run(nsteps);
+  }
+
+  void ApplicationHolder::baseDump() {
+    dump();
+  }
+
+  void ApplicationHolder::baseDHFile(const string& dh, const string& name) {
+  }
+  
+  void ApplicationHolder::basePostrun() {
+  }
+
+  void ApplicationHolder::baseQuit() {
+  }
+
   void ApplicationHolder::define(const KeyValueMap& map) {
     
   }
@@ -73,21 +107,21 @@ namespace LOFAR
     // * inputs and outputs map 1 on 1
     // * DataHolder prototype is equal for input and output
 
-    for (int i = 0; i < itsNinputs; i++) {
-      Transporter& TR1 = itsDataManager->getInHolder(i)->getTransporter();
-      Transporter& TR2 = itsDataManager->getOutHolder(i)->getTransporter();
+//     for (int i = 0; i < itsNinputs; i++) {
+//       Transporter& TR1 = itsDataManager->getInHolder(i)->getTransporter();
+//       Transporter& TR2 = itsDataManager->getOutHolder(i)->getTransporter();
 
-      TR1.setItsID(i);
-      TR2.setItsID(itsNinputs+i);
+//       TR1.setItsID(i);
+//       TR2.setItsID(itsNinputs+i);
       
-      TR1.setSourceAddr(itsDataManager->getOutHolder(i));
-      TR2.setSourceAddr(itsDataManager->getInHolder(i));
+//       TR1.setSourceAddr(itsDataManager->getOutHolder(i));
+//       TR2.setSourceAddr(itsDataManager->getInHolder(i));
 
-      TR2.connectTo(TR1, *itsProto->getTransporter().getTransportHolder());
+//       TR2.connectTo(TR1, *itsProto->getTransporter().getTransportHolder());
 
-      TR1.init();
-      TR2.init();
-    }
+//       TR1.init();
+//       TR2.init();
+//     }
   }
   
   void ApplicationHolder::run(int nsteps) {
@@ -97,6 +131,9 @@ namespace LOFAR
   }
 
   void ApplicationHolder::quit() {
+  }
+
+  void ApplicationHolder::dump() const{
   }
 
   void ApplicationHolder::setarg (int argc, const char** argv) {
