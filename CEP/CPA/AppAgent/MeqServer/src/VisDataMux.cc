@@ -150,7 +150,7 @@ void Meq::VisDataMux::deliverHeader (const DataRecord &header)
   }
   handlers_.resize(VisVocabulary::ifrNumber(nstations,nstations)+1);
   // init output tile format
-  out_format_.attach(header[AidTile|AidFormat].as_p<VisTile::Format>(),DMI::READONLY);
+  out_format_.attach(header[FTileFormat].as_p<VisTile::Format>(),DMI::READONLY);
   for( uint i=0; i<out_columns_.size(); i++ )
   {
     if( out_format_->defined(out_columns_[i]) )
