@@ -65,7 +65,7 @@ Transporter::~Transporter()
 
 void Transporter::makeTransportHolder (const TransportHolder& prototype)
 {
-  delete itsTransportHolder;
+  //delete itsTransportHolder;
   itsTransportHolder = 0;
   itsTransportHolder = prototype.make();
   itsTransportHolder -> setTransporter(this);
@@ -100,6 +100,7 @@ bool Transporter::connect(Transporter& sourceTP,
 	    targetTP.getTransportHolder()->getType() << 
 	    " not equal!");
   
+
   DbgAssert (sourceTP.getItsID() >= 0);
   
   // Use the source ID as the tag for MPI send/receive.
