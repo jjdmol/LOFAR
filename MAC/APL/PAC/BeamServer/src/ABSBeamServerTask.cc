@@ -123,8 +123,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
       {
 	  // create a default spectral window from 0MHz to 20MHz
 	  // steps of 256kHz
-	  SpectralWindow* spw = new SpectralWindow(1.5e6, 20e6/ABS::N_BEAMLETS,
-						   ABS::N_BEAMLETS);
+	  SpectralWindow* spw = new SpectralWindow(0.0, 20.0e6/N_SUBBANDS, N_SUBBANDS);
 	  m_spws[0] = spw;
       }
       break;
@@ -600,7 +599,7 @@ void BeamServerTask::compute_timeout_action(long current_seconds)
   
   Beamlet::calculate_weights(m_pos, m_weights);
 
-  cout << "m_weights(t=,element=0,subband=10,pol=all) = " << m_weights(0,0,10,Range::all()) << endl;
+  cout << "m_weights(t=0,element=0,subband=10,pol=all) = " << m_weights(0,0,10,Range::all()) << endl;
 
   // show weights for timestep 0, element 0, all subbands, both polarizations
   //Range all = Range::all();
@@ -621,8 +620,8 @@ void BeamServerTask::compute_timeout_action(long current_seconds)
 	      //
 	      // -1 * imaginary part to take complex conjugate of the weight
 	      //
-	      m_weights16(i,j,k,l) = complex<int16_t>(htons(   (int16_t)round(m_weights(i,j,k,l).real()*SCALE)),
-						      htons(-1*(int16_t)round(m_weights(i,j,k,l).imag()*SCALE)));
+	      m_weights16(i,j,k,l) = complex<int16_t>(   (int16_t)round(m_weights(i,j,k,l).real()*SCALE),
+						      -1*(int16_t)round(m_weights(i,j,k,l).imag()*SCALE));
 	  }
 #endif
 
@@ -684,6 +683,11 @@ void BeamServerTask::send_weights(int period)
 	    // weights for y-imaginary part
 	    weights *= complex<int16_t>(0,1);
 	  }
+
+	  for (int i = 0; i < N_SUBBANDS; i++)
+	    for (int j = 0; j < N_POLARIZATIONS; j++)
+	      weights(i,j) = complex<int16_t>(htons(weights(i,j).real()),
+					      htons(weights(i,j).imag()));
 
 	  bc.phasepol = pol;
 	  board.send(GCFEvent(F_RAW_SIG), &bc.command, BFCONFIGURE_PACKET_SIZE);
