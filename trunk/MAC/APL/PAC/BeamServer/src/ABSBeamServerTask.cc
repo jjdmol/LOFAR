@@ -73,6 +73,7 @@ BeamServerTask::BeamServerTask(string name)
       m_stats(N_BEAMLETS, BEAMLETSTATS_INTEGRATION_COUNT)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
+  registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
   m_client.init(*this, "client", GCFPortInterface::SPP, ABS_PROTOCOL);
   m_rspdriver.init(*this, "rspdriver", GCFPortInterface::SAP, RSP_PROTOCOL);
@@ -143,9 +144,6 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
       {
 	TRAN(BeamServerTask::enabled);
       }
-	
-      // start with WG disabled.
-      if (m_rspdriver.isConnected()) wgdisable_action();
     }
     break;
 
@@ -233,18 +231,18 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
     case ABS_WGSETTINGS:
     case ABS_WGENABLE:
     case ABS_WGDISABLE:
+    {
       handle_abs_request(e, port);
-      break;
-
-    case F_DATAOUT:
-      LOG_DEBUG("dataout");
-      break;
+      TRAN(BeamServerTask::wait4ack);
+    }
+    break;
 
     case F_DISCONNECTED:
     {
       LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
       port.close();
 
+      m_rspdriver.cancelAllTimers();
       TRAN(BeamServerTask::initial);
     }
     break;
@@ -257,12 +255,6 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
       {
 	(*bi)->deallocate();
       }
-
-      // disable the waveform generator
-      //wgdisable_action();
-
-      // cancel timers
-//      board.cancelAllTimers();
     }
     break;
 
@@ -274,7 +266,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult BeamServerTask::waiting(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult BeamServerTask::wait4ack(GCFEvent& e, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -286,8 +278,44 @@ GCFEvent::TResult BeamServerTask::waiting(GCFEvent& e, GCFPortInterface& port)
     case ABS_WGSETTINGS:
     case ABS_WGENABLE:
     case ABS_WGDISABLE:
-      handle_abs_request(e, port);
+      /* ignore these events, they will be signalled again in the enabled state. */
       break;
+
+    case RSP_SETWEIGHTSACK:
+    {
+      RSPSetweightsackEvent ack(e);
+      if (RSP_Protocol::SUCCESS != ack.status)
+      {
+	LOG_ERROR("RSP_SETWEIGHTSACK: Error");
+      }
+
+      TRAN(BeamServerTask::enabled);
+    }
+    break;
+      
+    case RSP_SETSUBBANDSACK:
+    {
+      RSPSetsubbandsackEvent ack(e);
+      if (RSP_Protocol::SUCCESS != ack.status);
+      {
+	LOG_ERROR("RSP_SETSUBBANDSACK: Error");
+      }
+
+      TRAN(BeamServerTask::enabled);
+    }
+    break;
+      
+    case RSP_SETWGACK:
+    {
+      RSPSetwgackEvent ack(e);
+      if (RSP_Protocol::SUCCESS != ack.status)
+      {
+	LOG_ERROR("RSP_SETWGACK: Error");
+      }
+
+      TRAN(BeamServerTask::enabled);
+    }
+    break;
 
     default:
       status = GCFEvent::NOT_HANDLED;
@@ -344,7 +372,6 @@ GCFEvent::TResult BeamServerTask::handle_abs_request(GCFEvent& e, GCFPortInterfa
     {
       ABSWgsettingsEvent* event = static_cast<ABSWgsettingsEvent*>(&e);
       wgsettings_action(event, port);
-      if (m_wgsetting.enabled) wgenable_action();
     }
     break;
 
@@ -462,6 +489,8 @@ void BeamServerTask::beamfree_action(ABSBeamfreeEvent* bf,
       return;                     // RETURN
   }
 
+  update_sbselection();
+
   port.send(ack);
 }
 
@@ -508,7 +537,7 @@ void BeamServerTask::wgsettings_action(ABSWgsettingsEvent* wgs,
       m_wgsetting.amplitude     = wgs->amplitude;
       m_wgsetting.sample_period = wgs->sample_period;
       
-      if (m_wgsetting.enabled) wgenable_action();
+      wgenable_action();
   }
   else
   {
@@ -522,6 +551,20 @@ void BeamServerTask::wgsettings_action(ABSWgsettingsEvent* wgs,
 
 void BeamServerTask::wgenable_action()
 {
+  RSPSetwgEvent wg;
+  
+  wg.timestamp.setNow();
+  wg.rcumask.reset();
+  for (int i = 0; i < N_ELEMENTS * N_POLARIZATIONS; i++) wg.rcumask.set(i);
+  wg.settings().resize(1);
+  wg.settings()(0).freq = (uint16)(m_wgsetting.frequency * (1 << 16) / SYSTEM_CLOCK_FREQ);
+  wg.settings()(0).ampl = m_wgsetting.amplitude;
+  wg.settings()(0).nof_usersamples = 0;
+  wg.settings()(0).mode = WGSettings::MODE_SINE;
+  wg.settings()(0)._pad = 0; /* stop valgrind complaining */
+
+  m_rspdriver.send(wg);
+
 #if 0
   // mark enabled
   m_wgsetting.enabled = true;
@@ -548,6 +591,19 @@ void BeamServerTask::wgenable_action()
 
 void BeamServerTask::wgdisable_action()
 {
+  RSPSetwgEvent wg;
+  
+  wg.timestamp.setNow();
+  wg.rcumask.reset();
+  for (int i = 0; i < N_ELEMENTS * N_POLARIZATIONS; i++) wg.rcumask.set(i);
+  wg.settings().resize(1);
+  wg.settings()(0).freq = 0;
+  wg.settings()(0).ampl = 0;
+  wg.settings()(0).nof_usersamples = 0;
+  wg.settings()(0).mode = WGSettings::MODE_OFF;
+
+  m_rspdriver.send(wg);
+
 #if 0
   // mark disabled
   m_wgsetting.enabled = false;
