@@ -32,8 +32,6 @@ int main(int argc, char *argv[])
   
   GCFTask::run();
 
-  cerr << "Bye Bye" << endl;
-
   // Just make the compilers happy...
 	return 0;
 }
