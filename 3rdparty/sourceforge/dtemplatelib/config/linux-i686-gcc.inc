@@ -17,5 +17,9 @@ CFLAGS += -DDTL_UC -DDTL_SINGLE_FETCH
 # Also, we need to tell unixODBC that gcc supports the "long long" data type
 CFLAGS += -DUNIX -DHAVE_LONG_LONG
 
+# ASTRON
+# Setup compilerflags to compile our own patches.
+CFLAGS += -DPOSTGRES_BLOB_PATCH
+
 include ../config/unixODBC.inc
 MAKEFILEDEPS += ../config/unixODBC.inc

@@ -2,7 +2,8 @@
 # usage: build.sh [targets]
 # this file should be located under config
 
-BUILD=debug # default
+#BUILD=debug # default
+BUILD=release # ASTRON
 
 MSVC_PROFILE=""
 RUN_ARGS=""
