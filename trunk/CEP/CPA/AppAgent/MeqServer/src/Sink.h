@@ -7,6 +7,29 @@
 #pragma aid Sink 
 #pragma aid Output Col Corr Index
 #pragma types #Meq::Sink
+
+// The comments below are used to automatically generate a default
+// init-record for the class 
+
+//defrec begin MeqSink
+//  A MeqSink is attached to a VisAgent data source. A MeqSink represents
+//  one interferometer. For every matching VisTile at the input of the 
+//  source, it generates a MeqRequest corresponding to the domain/cells 
+//  of the tile, and optionally stores the result back in the tile.
+//  A MeqSink must have exactly one child. The child may return a 
+//  multi-plane result.
+//field: station_1_index 0
+//  Index (1-based) of first station composing the interferometer
+//field: station_2_index 0
+//  Index (1-based) of second station composing the interferometer
+//field: output_col ''
+//  tile column to write results to: DATA, PREDICT or RESIDUALS.
+//  If empty, then no output is generated.
+//field: corr_index []
+//  Defines mappings from result planes to correlations. If empty, then
+//  a default one-to-one mapping is used. Otherwise, should contain one
+//  correlation index (1-based) per each result plane.
+//defrec end
     
 namespace Meq {
 
