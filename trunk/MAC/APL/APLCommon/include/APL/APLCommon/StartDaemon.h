@@ -34,6 +34,7 @@
 
 //# Common Includes
 #include <Common/lofar_map.h>
+#include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 
 //# local includes
@@ -49,6 +50,9 @@ namespace LOFAR
   
 namespace APLCommon
 {
+  class LogicalDevice;
+  class LogicalDeviceFactory;
+  
   class StartDaemon : public ::GCFTask,
                              PropertySetAnswerHandlerInterface
   {
@@ -57,12 +61,13 @@ namespace APLCommon
       static const string PSTYPE_STARTDAEMON;
       static const string SD_PROPNAME_COMMAND;
       static const string SD_PROPNAME_STATUS;
+      static const string SD_COMMAND_SCHEDULE;
 
       StartDaemon(const string& name); 
       virtual ~StartDaemon();
       
       void registerFactory(TLogicalDeviceTypes ldType, boost::shared_ptr<LogicalDeviceFactory> factory);
-      TSDResult createLogicalDevice(const TLogicalDeviceTypes ldType, const string& fileName);
+      TSDResult createLogicalDevice(const TLogicalDeviceTypes ldType, const string& taskName, const string& fileName);
 
       /**
       * The initial state handler. This handler is passed to the GCFTask constructor
@@ -95,7 +100,7 @@ namespace APLCommon
 
       typedef map<TLogicalDeviceTypes,boost::shared_ptr<LogicalDeviceFactory> > TFactoryMap;
       typedef vector<boost::shared_ptr<LogicalDevice> > TLogicalDeviceVector;
-      typedef vector<boost::shared_ptr<::GCFPVSSPort> > TPVSSPortVector;
+      typedef vector<boost::shared_ptr< ::GCFPVSSPort> > TPVSSPortVector;
 
       PropertySetAnswer               m_propertySetAnswer;
       ::GCFMyPropertySet              m_properties;

@@ -32,6 +32,14 @@ include = '<sys/time.h>';
 prelude = << PRELUDE_END
 // define namespace and enumerations here
 
+enum TLDResult
+{
+  LD_RESULT_NO_ERROR = 0, 
+  LD_RESULT_FILENOTFOUND,
+  LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS,
+  LD_RESULT_UNKNOWN_COMMAND,
+};
+
 PRELUDE_END;
 
 //

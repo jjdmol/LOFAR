@@ -34,7 +34,7 @@ prelude = << PRELUDE_END
 
 enum TLogicalDeviceTypes 
 {
-  LDTYPE_VIRTUALINSTRUMENT, 
+  LDTYPE_VIRTUALINSTRUMENT = 1, 
   LDTYPE_VIRTUALTELESCOPE, 
   LDTYPE_VIRTUALARRAY, 
   LDTYPE_STATIONRECEPTORGROUP, 
@@ -45,9 +45,11 @@ enum TLogicalDeviceTypes
 
 enum TSDResult
 {
-  SD_NO_ERROR, 
-  SD_UNSUPPORTED_LD, 
-  SD_FILENOTFOUND,
+  SD_RESULT_NO_ERROR = 0, 
+  SD_RESULT_UNSUPPORTED_LD, 
+  SD_RESULT_FILENOTFOUND,
+  SD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS,
+  SD_RESULT_UNKNOWN_COMMAND,
 };
 
 PRELUDE_END;
@@ -64,6 +66,10 @@ event = {
 	param = {
 		name = "logicalDeviceType";
 		type = "TLogicalDeviceTypes";
+	};
+	param = {
+	  name = "taskName";
+	  type = "string";
 	};
 	param = {
 		name = "fileName";

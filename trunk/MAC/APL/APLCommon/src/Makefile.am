@@ -8,11 +8,15 @@ SUFFIXES = .ph
 pkgincludedir = $(includedir)/APLCommon
 
 pkginclude_HEADERS = \
-	../include/APLCommon/APLInterTaskPort.h \
 	../include/APLCommon/APL_Defines.h \
+	../include/APLCommon/APLCommonExceptions.h \
+	../include/APLCommon/APLInterTaskPort.h \
+	../include/APLCommon/APLUtilities.h \
 	../include/APLCommon/LogicalDevice.h \
+	../include/APLCommon/LogicalDeviceFactory.h \
 	../include/APLCommon/PropertySetAnswer.h \
 	../include/APLCommon/PropertySetAnswerHandlerInterface.h \
+	../include/APLCommon/StartDaemon.h \
 	LogicalDevice_Protocol.ph \
 	StartDaemon_Protocol.ph
 
@@ -29,7 +33,9 @@ libaplcommon_la_CPPFLAGS= \
 
 libaplcommon_la_SOURCES= $(DOCHDRS) \
 	APLInterTaskPort.cc \
+	APLUtilities.cc \
 	LogicalDevice.cc \
+	StartDaemon.cc \
 	PropertySetAnswer.cc \
 	LogicalDevice_Protocol.cc \
 	StartDaemon_Protocol.cc

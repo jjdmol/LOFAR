@@ -39,7 +39,7 @@
 namespace LOFAR
 {
   
-namespace VIC
+namespace AVI
 {
 
   class VirtualInstrument : public APLCommon::LogicalDevice
