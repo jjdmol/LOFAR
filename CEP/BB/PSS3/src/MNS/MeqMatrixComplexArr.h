@@ -108,7 +108,6 @@ private:
 
   static deque<MeqMatrixComplexArr*> theirPool;
   static int theirNElements;
-  static size_t theirHeaderSize;
 };
 
 }

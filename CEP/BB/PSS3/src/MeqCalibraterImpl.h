@@ -255,6 +255,8 @@ private:
   ///  void MeqCalibrater::addParm(const MeqParm& parm, bool denormalize,
   ///			      casa::GlishRecord& rec);
 
+  void formEqs(const MeqResult *result, fcomplex *data, unsigned nrchan, unsigned &nrDerivsFound);
+
   /**
    * \defgroup PrivVariable Private variables
    */
