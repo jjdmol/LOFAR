@@ -25,12 +25,13 @@
 
 //# Includes
 #include <PL/PersistentObject.h>
+#include <iostream>
 
-#if defined(__GNUC__) && (__GNUC__ < 3)
-#else
-//# Only include this file if this is not GCC version prior to 3.
-#include <loki/TypeTraits.h>
-#endif
+// #if defined(__GNUC__) && (__GNUC__ < 3)
+// #else
+// //# Only include this file if this is not GCC version prior to 3.
+// #include <loki/TypeTraits.h>
+// #endif
 
 namespace LCS 
 {
@@ -47,26 +48,40 @@ namespace LCS
     {
     public:
   
+      typedef T            value_type;
+      typedef value_type&  reference;
+      typedef value_type*  pointer;
 
-      //# Unfortunatly GCC 2.95.x does not like the Loki Typelist.h file
-#if defined(__GNUC__) && (__GNUC__ < 3)
-      typedef T value_type;
-#else
-      // Figure out whether T is \c const or not. Use a \c typedef
-      // to refer to the type of \c T. This solves all kinds of nasty
-      // \c const problems.
-      typedef 
-      typename Loki::Select<Loki::TypeTraits<T>::isConst, const T, T>::Result
-      value_type;
-#endif
+//       // We need the default constructor, because the static create() method
+//       // must be able to create such objects.
+//       TPersistentObject() : 
+// 	itsObject(0), isOwner(false) 
+//       {}
 
-      // Obviously, value_type& is a reference, so let's use a \c typedef
-      // here too.
-      typedef value_type&       reference;
+      // \c T is passed by refererence, but internally we keep a pointer
+      // to the instance of T. We need a pointer because pointer can have
+      // a null value, whereas references cannot.
+      explicit TPersistentObject(reference t) : 
+	itsObject(&t), isOwner(false) 
+      { }
 
-      // \note T is passed as refererence, because we really want 
-      // TPersistentObject to only wrap the instance of T.
-      TPersistentObject(reference t): itsObject(t) {}
+      // If TPersistentObject is the owner of \c itsObject then it will be
+      // deleted when TPersistentObject is destroyed.
+      // \warning itsObject must be a heap object, because it will be deleted.
+      ~TPersistentObject() 
+      { 
+	if (isOwner) delete itsObject; 
+      }
+      
+      // Dynamically create a new TPersistentObject. It will contain an 
+      // instance of a default constructed object T.
+      static TPersistentObject<T>* create()
+      { 
+	T* anObject(new T());
+	TPersistentObject<T>* aTPO(new TPersistentObject<T>(*anObject));
+	aTPO->isOwner = true;
+	return aTPO;
+      }
 
       virtual void insert() {}
       virtual void update() {}
@@ -75,12 +90,22 @@ namespace LCS
       virtual void erase() {}
 
       // Return a reference to the contained PersistentObject.
-      reference value() { return itsObject; }
+      // \note This is a \e non-const reference, because we want to allow
+      // modification of *itsObject.
+      reference value() { return *itsObject; }
 
     private:
-      // Here we keep the \e reference to the instance of T, because we want
-      // to wrap the original instance of T, \e not a copy.
-      reference itsObject;
+      // For now, let's forbid copying and assignment.
+      TPersistentObject(const TPersistentObject<T>&);
+      TPersistentObject<T>& operator=(const TPersistentObject<T>&);
+
+      // Here we keep a pointer to the instance of T.
+      pointer itsObject;
+
+      // Keep track of ownership of the the instance of T. If we created it
+      // dynamically (using the static create() method), we must also delete
+      // it.
+      bool isOwner;
 
     };
 
