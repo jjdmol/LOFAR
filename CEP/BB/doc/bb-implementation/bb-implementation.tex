@@ -418,13 +418,41 @@
         the LOFAR cluster.\label{fig:deployment-hierarchy}}
       \end{figure}
 
-      figure
-      \hyperlink{fig:deployment-hierarchy}{\ref{fig:deployment-hierarchy}}
-      a simple possibility of an distribution of components is shown.
+      In figure
+      \hyperlink{fig:deployment-hierarchy}{\ref{fig:deployment-hierarchy}},
+      a simple possibility of an distribution of components is
+      shown. This examples assumes that there is going to be a set of
+      blackboards in the system. This can be convenient if the problem
+      at hand can be partitioned in reasonably independent parts. If
+      the blackboard are going to be exchanging vast quantities of
+      relatively small chunks of information. It will probably be a
+      better idea to keep one centralised blackboard.
+
+      The deployment is organised by means of a data-table called
+      ``deploymentdata''.
 
     \subsection{code organisation}
 
+      \begin{figure}
+        \includegraphics[]{../figures/components.eps}
+        \hypertarget{fig:components}{}
+        \caption{The components in the blackboard framework.\label{fig:components}}
+      \end{figure}
+
+      The code of the blackboard system is organized in six packages,
+      as can be seen in figure
+      \hyperlink{fig:components}{\ref{fig:components}}. Five of those
+      are standard for the framework. The sixth is ``Selfcal'' which
+      is application specific. The package ``parser'' contains a
+      c-parser in bison and flex. The capitalized packages contain c++
+      classes for different tasks.
+
       \subsubsection{writing enhancements}
+
+        To write a custom worker one would have to write a ``Directive''
+        and a ``WorkerWrapper''. At run time such a ``Directive'' will be
+        assigned to a ``Driver'', telling the ``Driver'' what worker
+        to start for this directive.
 
   \section{data storage}
   \label{sec:data-storage}\hypertarget{sec:data-storage}{}
@@ -958,14 +986,19 @@
   \section{to do}
   \label{sec:todo}\hypertarget{sec:todo}{}
 
-    Whether in code or in configuration, it should be easy to adjust
-    the BlackBoard. This should result in a different
-    state-machine. An interface has to be written for that. It will
-    include definitions of preconditions, postconditions and
-    quality-of-results types for different knowledge-sources.
+    \paragraph{business rules}
+      Whether in code or in configuration, it should be easy to adjust
+      the BlackBoard. This should result in a different state-machine
+      behaviour. An interface has to be written for that. It will
+      include definitions of preconditions, postconditions and
+      quality-of-results types for different knowledge-sources.
 
-    All of this can be hard-coded in c++, as long as it is easy to
-    write and, in the first place efficient to run.
+      All of this can be hard-coded in c++, as long as it is easy to
+      write and, in the first place efficient to run.
+
+    \paragraph{message queue}
+      A queueing mechanism has to be implemented in order to be able
+      to fill different workers with work, in a efficient way.
 
     \subsection{extra figures}
     \begin{figure}
@@ -1045,4 +1078,5 @@
 \end{document}
 
 % LocalWords:  blackboard Blackboard BlackBoard LOFAR API ThreadController Hoogland SQL ASTRON Schaaf
-% LocalWords:  ThreadWatcher der Kjeld Daan selfcal
+% LocalWords:  ThreadWatcher der Kjeld Daan selfcal deploymentdata
+% LocalWords:  WorkerWrapper
