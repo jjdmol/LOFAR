@@ -21,7 +21,7 @@ UVPDataCacheElement::UVPDataCacheElement()
 
 bool UVPDataCacheElement::isDirty() const
 {
-  return itsDirty();
+  return itsDirty;
 }
 
 
