@@ -33,25 +33,45 @@ using namespace LOFAR::AMC;
 using namespace LOFAR;
 using namespace std;
 
+const double usec = 1e-6; // microsecond expressed in seconds
+
 int main(int, const char* argv[])
 {
-  int yy,mm,dd,h,m;
-  double s;
-
-  const double usec = 1e-6; // microsecond expressed in seconds
-
   INIT_LOGGER(argv[0]);
 
   try {
-    TimeCoord now;
-    now.ymd(yy,mm,dd);
-    now.hms(h,m,s);
 
-    ASSERT(abs(now.utc() + TimeCoord::getUTCDiff() - now.local()) < usec);
+    TimeCoord now, then(0);
+    int yy,mm,dd,h,m;
+    double s;
+
     ASSERT(abs(now.utc() - TimeCoord(now.mjd()).utc()) < usec);
     ASSERT(abs(now.utc() - TimeCoord(now.getDay(), now.getFraction()).utc())
            < usec);
-    ASSERT(abs(now.local() - TimeCoord(yy,mm,dd,h,m,s).local()) < usec);
+    ASSERT(abs(now.utc() - now.local() + now.getUTCDiff()) < usec);
+
+    now.ymd(yy, mm, dd); now.hms(h, m, s);
+    ASSERT(abs(now.utc() - TimeCoord(yy, mm, dd, h, m, s).utc())
+           < usec);
+
+    now.ymd(yy, mm, dd, true); now.hms(h, m, s, true);
+    ASSERT(abs(now.local() - TimeCoord(yy, mm, dd, h, m, s).utc()) < usec);
+
+    then.utc(now.utc());
+    ASSERT(abs(then.local() - now.local()) < usec);
+    then.mjd(0);
+
+    then.local(now.local());
+    ASSERT(abs(then.utc() - now.utc()) < usec);
+    then.mjd(0);
+
+    then.mjd(now.mjd());
+    ASSERT(abs(then.utc() + then.getUTCDiff() - now.local()) < usec);
+    then.mjd(0);
+
+    then.mjd(now.getDay() + now.getFraction());
+    ASSERT(abs(then.local() - now.utc() - now.getUTCDiff()) < usec);
+    then.mjd(0);
 
   }
   catch (Exception& e) {
@@ -59,17 +79,5 @@ int main(int, const char* argv[])
     return 1;
   }
   
-  TimeCoord then(0); // MJD == 0
-  then.ymd(yy,mm,dd);
-  then.hms(h,m,s);
-  cout.precision(18);
-  cout << "then = " << then << endl;
-  cout << "then.utc() = " << then.utc() << endl;
-  cout << "then.mjd() = " << then.mjd() << endl;
-  cout << "then.getDay() = " << then.getDay() << endl;
-  cout << "then.getFraction() = " << then.getFraction() << endl;
-  cout << "yy = " << yy << ", mm = " << mm << ", dd = " << dd 
-       << "h = " << h << ", m = " << m << ", s = " << s << endl;
-
   return 0;
 }
