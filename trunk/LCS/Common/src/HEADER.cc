@@ -20,3 +20,7 @@
 //#
 //#  $Id$
 
+namespace LOFAR
+{
+
+} // namespace LOFAR
