@@ -77,6 +77,13 @@ bool TH_Corba::recvBlocking(void* buf, int nbytes, int source, int tag)
   return true;
 }
 
+bool TH_Corba::recvNonBlocking(void* buf, int nbytes, int source, int tag)
+{
+  cerr << "**Warning** TH_Corba::recvNonBlocking() is not implemented. " 
+       << "recvBlocking() is used instead." << endl;    
+  return recvBlocking(buf, nbytes, source, tag);
+}
+
 bool TH_Corba::sendBlocking(void* buf, int nbytes, int destination, int tag)
 {
     if (itsCorbaOut == 0) {
@@ -95,4 +102,12 @@ bool TH_Corba::sendBlocking(void* buf, int nbytes, int destination, int tag)
     }
 
     return true;
+}
+
+bool TH_Corba::sendNonBlocking(void* buf, int nbytes, int destination, int tag)
+{
+  cerr << "**Warning** TH_Corba::sendNonBlocking() is not implemented. " 
+       << "The sendBlocking() method is used instead." << endl;    
+  return sendBlocking(buf, nbytes, destination, tag);
+
 }

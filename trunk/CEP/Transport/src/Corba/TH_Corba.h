@@ -46,12 +46,14 @@ public:
 
   /// Read the data.
   bool recvBlocking(void* buf, int nbytes, int source, int tag);
+  bool recvNonBlocking(void* buf, int nbytes, int source, int tag);
 
   /** Write the data.
       It does not really write, because the read is doing the memcpy.
       The only thing it does is setting the status.
   */
   bool sendBlocking(void* buf, int nbytes, int destination, int tag);  
+  bool sendNonBlocking(void* buf, int nbytes, int destination, int tag);  
 
   /// Get the type of transport.
   virtual string getType() const;
