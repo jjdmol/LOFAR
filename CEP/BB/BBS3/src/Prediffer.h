@@ -83,7 +83,8 @@ public:
   ~Prediffer();
 
   // Make a selection of the MS to be used in the domain iteration.
-  void select (const vector<int>& ant1, const vector<int>& ant2);
+  void select (const vector<int>& ant1, const vector<int>& ant2,
+	       bool useAutoCorrelations);
 
   // Set the domain (in frequency and time).
   // Hereafter getSolvableParmData can be called.
@@ -164,12 +165,13 @@ private:
   void getPhaseRef (double ra, double dec, double startTime);
 
   // Get the station info (position and name).
-  void fillStations (const vector<unsigned int>& ant1,
-		     const vector<unsigned int>& ant2);
+  void fillStations (const vector<int>& antnrs);
 
   // Get all baseline info.
-  void fillBaselines (const vector<unsigned int>& ant1,
-		      const vector<unsigned int>& ant2);
+  void fillBaselines (const vector<int>& antnrs);
+
+  // Count nr of baselines selected.
+  void countBaselines();
 
   // Fill all UVW coordinates if they are not calculated.
   void fillUVW();
@@ -199,7 +201,6 @@ private:
   MeqPhaseRef           itsPhaseRef;    //# Phase reference position in J2000
   MeqDomain             itsSolveDomain;
 
-  casa::Matrix<int>           itsBLIndex;     //# baseline index of antenna pair
   MeqSourceList         itsSources;
   casa::Vector<int>     itsPeelSourceNrs;
   vector<MeqStation*>   itsStations;
@@ -224,20 +225,21 @@ private:
   vector<bool> itsIsParmSolvable;     //# is corresponding parmlist solvable?
   vector<ParmData> itsParmData;       // solvable parm info. 
 
-  casa::Vector<int>    itsAnt1Data;         // Antenna 1 data
-  casa::Vector<int>    itsAnt2Data;         // Antenna 2 data
-  int                  itsNPol;             // Number of polarisations
-  casa::Vector<double> itsTimes;            // All times in MS
-  casa::Vector<double> itsIntervals;        // All intervals in MS
-  casa::Matrix<double> itsAntPos;           // All antenna positions
-  unsigned int         itsNrBl;             // Total number of unique baselines
-  casa::Matrix<bool>   itsBLSelection;      // Matrix to indicate which baselines are selected
-  vector<int>    itsSelAnt;         // The selected antennas
-
-  unsigned int   itsTimeIndex;      // The index of the current time
-  unsigned int   itsNrTimes;        // The number of times in the time interval
-  MMap*          itsDataMap;        // Data file to map
-  bool           itsLockMappedMem;  // Lock memory immediately after mapping?
+  vector<int>          itsAnt1;        //# Antenna1 antenna numbers
+  vector<int>          itsAnt2;        //# Antenna2 antenna numbers
+  int                  itsNPol;        //# Number of polarisations
+  casa::Vector<double> itsTimes;       //# All times in MS
+  casa::Vector<double> itsIntervals;   //# All intervals in MS
+  casa::Matrix<double> itsAntPos;      //# All antenna positions
+  unsigned int         itsNrBl;        //# Total number of unique baselines
+  casa::Matrix<bool>   itsBLSelection; //# true = baseline is selected
+  casa::Matrix<int>    itsBLIndex;     //# baseline index of antenna pair
+                                       //# -1 is baseline is absent
+  unsigned int         itsNrSelBl;     //# nr of selected baselines
+  unsigned int   itsTimeIndex;      //# The index of the current time
+  unsigned int   itsNrTimes;        //# The number of times in the time interval
+  MMap*          itsDataMap;        //# Data file to map
+  bool           itsLockMappedMem;  //# Lock memory immediately after mapping?
 };
 
 } // namespace LOFAR
