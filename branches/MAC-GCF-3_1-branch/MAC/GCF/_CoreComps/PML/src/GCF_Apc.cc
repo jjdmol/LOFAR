@@ -1,4 +1,4 @@
-//#  GCF_Apc.cc: 
+//#  GCF_Apc.cc:
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -69,6 +69,10 @@ TGCFResult GCFApc::load (bool loadDefaults)
     {
       _isBusy = true;
     }
+    else
+    {
+      result = GCF_APCLOAD_ERROR;
+    }
   }
   return result;
 }
@@ -76,39 +80,43 @@ TGCFResult GCFApc::load (bool loadDefaults)
 TGCFResult GCFApc::unload ()
 {
   TGCFResult result(GCF_NO_ERROR);
-  
+
   if (_isBusy)
   {
     result = GCF_BUSY;
   }
   else if (!_isLoaded)
   {
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, (
         "This Apc %s with scope %s is not loaded in this context.",
         _name.c_str(), _scope.c_str()));
     result = GCF_NOT_LOADED;
   }
-  else if (_name.length() == 0 || 
-           _scope.length() == 0 || 
+  else if (_name.length() == 0 ||
+           _scope.length() == 0 ||
            !Utils::isValidPropName(_scope.c_str()))
   {
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, (
         "APC name or scope not set or scope (%s) meets not the naming convention.",
         _scope.c_str()));
     result = GCF_NO_PROPER_DATA;
   }
   else
-  {    
+  {
     GPMController* pController = GPMController::instance();
     assert(pController);
     _loadDefaults = false;
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, (
         "REQ: Unload Apc %s with scope %s",
         _name.c_str(), _scope.c_str()));
     TPMResult pmResult = pController->unloadAPC(*this);
     if (pmResult == PM_NO_ERROR)
     {
       _isBusy = true;
+    }
+    else
+    {
+      result = GCF_APCUNLOAD_ERROR;
     }
   }
   return result;
@@ -117,23 +125,23 @@ TGCFResult GCFApc::unload ()
 TGCFResult GCFApc::reload ()
 {
   TGCFResult result(GCF_NO_ERROR);
-  
+
   if (_isBusy)
   {
     result = GCF_BUSY;
   }
   else if (!_isLoaded)
   {
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, (
         "This Apc %s with scope %s is not loaded in this context.",
         _name.c_str(), _scope.c_str()));
     result = GCF_NOT_LOADED;
   }
-  else if (_name.length() == 0 || 
-           _scope.length() == 0 || 
+  else if (_name.length() == 0 ||
+           _scope.length() == 0 ||
            !Utils::isValidPropName(_scope.c_str()))
   {
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, (
         "APC name or scope not set or scope (%s) meets not the naming convention.",
         _scope.c_str()));
     result = GCF_NO_PROPER_DATA;
@@ -143,13 +151,17 @@ TGCFResult GCFApc::reload ()
     GPMController* pController = GPMController::instance();
     assert(pController);
     _loadDefaults = true;
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, (
         "REQ: Reload Apc %s with scope %s",
         _name.c_str(), _scope.c_str()));
     TPMResult pmResult = pController->reloadAPC(*this);
     if (pmResult == PM_NO_ERROR)
     {
       _isBusy = true;
+    }
+    else
+    {
+      result = GCF_APCRELOAD_ERROR;
     }
   }
   return result;
