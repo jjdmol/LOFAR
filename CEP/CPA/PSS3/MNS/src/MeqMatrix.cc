@@ -375,3 +375,4 @@ LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
 #include <casa/Utilities/Copy.cc>
 #include <casa/Utilities/CountedPtr.cc>
 template class Matrix<dcomplex>;
+template class Array<dcomplex>;

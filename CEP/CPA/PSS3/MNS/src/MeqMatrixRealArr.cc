@@ -27,6 +27,7 @@
 #include <MNS/MeqMatrixComplexArr.h>
 #include <Common/Debug.h>
 #include <casa/BasicSL/Constants.h>
+#include <cmath>
 
 using namespace casa;
 
@@ -249,7 +250,7 @@ MeqMatrixRep* MeqMatrixRealArr::sin()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
-    itsValue[i] = ::sin(itsValue[i]);
+    itsValue[i] = std::sin(itsValue[i]);
   }
   return this;
 }
@@ -258,7 +259,7 @@ MeqMatrixRep* MeqMatrixRealArr::cos()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
-    itsValue[i] = ::cos(itsValue[i]);
+    itsValue[i] = std::cos(itsValue[i]);
   }
   return this;
 }
@@ -267,7 +268,7 @@ MeqMatrixRep* MeqMatrixRealArr::exp()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
-    itsValue[i] = ::exp(itsValue[i]);
+    itsValue[i] = std::exp(itsValue[i]);
   }
   return this;
 }
@@ -285,7 +286,7 @@ MeqMatrixRep* MeqMatrixRealArr::sqrt()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
-    itsValue[i] = ::sqrt(itsValue[i]);
+    itsValue[i] = std::sqrt(itsValue[i]);
   }
   return this;
 }
