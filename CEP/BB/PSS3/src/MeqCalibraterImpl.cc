@@ -70,6 +70,8 @@
 #include <Common/BlobArray.h>
 #include <PSS3/MMap.h>
 
+using namespace casa;
+
 namespace LOFAR
 {
 

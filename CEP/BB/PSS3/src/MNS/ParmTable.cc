@@ -28,6 +28,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Utilities/GenSort.h>
 
+using namespace casa;
 
 namespace LOFAR {
 

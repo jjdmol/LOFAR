@@ -35,6 +35,7 @@
 #include <measures/Measures/MeasConvert.h>
 #include <casa/Quanta/MVuvw.h>
 
+using namespace casa;
 
 namespace LOFAR {
 

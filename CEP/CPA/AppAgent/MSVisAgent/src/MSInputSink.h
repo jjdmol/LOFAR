@@ -101,9 +101,9 @@ class MSInputSink : public FileSink
     //##ModelId=3DFDFC06033A
       string msname_;  
     //##ModelId=3DF9FECD0199
-      MeasurementSet ms_;
+      casa::MeasurementSet ms_;
     //##ModelId=3DF9FECD019A
-      MeasurementSet selms_;
+      casa::MeasurementSet selms_;
       
       // VDS id
     //##ModelId=3E00AA5101A0
@@ -143,7 +143,7 @@ class MSInputSink : public FileSink
       int current_timeslot_;
       // iterator
     //##ModelId=3DF9FECD01EE
-      TableIterator tableiter_;
+      casa::TableIterator tableiter_;
       
       // tile format
     //##ModelId=3DF9FECD01F6

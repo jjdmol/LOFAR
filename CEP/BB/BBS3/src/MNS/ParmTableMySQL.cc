@@ -28,8 +28,9 @@
 #include <stdlib.h>
 #include <sstream>
 
-namespace LOFAR {
+using namespace casa;
 
+namespace LOFAR {
 
 ParmTableMySQL::ParmTableMySQL (const string& hostName, const string& userName, const string& tableName) : itsTableName (tableName)
 {

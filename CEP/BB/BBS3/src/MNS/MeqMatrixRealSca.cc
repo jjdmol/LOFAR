@@ -29,6 +29,7 @@
 #include <casa/BasicSL/Constants.h>
 #include <Common/lofar_iostream.h>
 
+using namespace casa;
 
 namespace LOFAR {
 

@@ -28,12 +28,15 @@
 #include <PSS3/MNS/MeqSourceList.h>
 #include <Common/lofar_vector.h>
 
+//# Forward Declarations
+namespace casa {
 template<class T> class Vector;
+}
+namespace LOFAR {
+class MeqDomain;
+}
 
 namespace LOFAR {
-
-//# Forward Declarations
-class MeqDomain;
 
 class ParmTableRep
 {
@@ -134,8 +137,8 @@ public:
   // In the 2nd version the pointers to the created MeqParm objects
   // are added to the vector of objects to be deleted.
   // <group>
-  MeqSourceList getPointSources (const Vector<int>& sourceNrs);
-  MeqSourceList getPointSources (const Vector<int>& sourceNrs,
+  MeqSourceList getPointSources (const casa::Vector<int>& sourceNrs);
+  MeqSourceList getPointSources (const casa::Vector<int>& sourceNrs,
 				 vector<MeqExpr*>& exprDel);
   // </group>
 

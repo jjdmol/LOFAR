@@ -34,6 +34,8 @@
 #include <stdlib.h>
 #include <sstream>
 
+using namespace casa;
+
 namespace LOFAR {
 
   ParmTableBDB::ParmTableBDB (const string& userName, const string& tableName) : 

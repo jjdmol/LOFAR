@@ -65,7 +65,7 @@ public:
   void setCoeff (const MeqMatrix& coeff);
 
   // Set the coefficients and mask.
-  void setCoeff (const MeqMatrix& coeff, const Matrix<bool>& mask);
+  void setCoeff (const MeqMatrix& coeff, const casa::Matrix<bool>& mask);
 
   // Set the coefficients only. The mask is left alone.
   void setCoeffOnly (const MeqMatrix& coeff);

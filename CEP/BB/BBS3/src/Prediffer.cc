@@ -64,6 +64,8 @@
 #include <iostream>
 #include <fstream>
 
+using namespace casa;
+
 namespace LOFAR
 {
 

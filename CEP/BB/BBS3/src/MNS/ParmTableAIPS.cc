@@ -34,6 +34,7 @@
 #include <casa/Utilities/Regex.h>
 #include <casa/BasicMath/Math.h>
 
+using namespace casa;
 
 namespace LOFAR {
 

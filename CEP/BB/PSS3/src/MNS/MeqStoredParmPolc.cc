@@ -25,6 +25,8 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/BasicMath/Math.h>
 
+using namespace casa;
+
 namespace LOFAR {
 
 MeqStoredParmPolc::MeqStoredParmPolc (const string& name, int srcnr,

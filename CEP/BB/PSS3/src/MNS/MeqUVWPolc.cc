@@ -25,6 +25,8 @@
 
 #include <PSS3/MNS/MeqPointDFT.h>
 
+using namespace casa;
+
 namespace LOFAR {
 
 MeqUVWPolc::MeqUVWPolc()

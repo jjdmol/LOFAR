@@ -33,6 +33,7 @@
 
 #include <BBS3/MNS/MeqPointDFT.h>
 
+using namespace casa;
 
 namespace LOFAR {
 

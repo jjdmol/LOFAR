@@ -31,11 +31,13 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Utilities/GenSort.h>
 
+using namespace casa;
 
 namespace LOFAR {
 
 ParmTable::ParmTable (const string& dbType, const string& tableName,
-		      const string& userName, const string& passwd, const string& hostName)
+		      const string& userName, const string& passwd,
+		      const string& hostName)
 : itsRep (0)
 {
   if (dbType == "aips") {
@@ -53,13 +55,13 @@ ParmTable::ParmTable (const string& dbType, const string& tableName,
   }
 }
 
-MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs)
+MeqSourceList ParmTable::getPointSources (const casa::Vector<int>& srcnrs)
 {
   vector<MeqExpr*> exprDel;
   return getPointSources (srcnrs, exprDel);
 }
 
-MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
+MeqSourceList ParmTable::getPointSources (const casa::Vector<int>& srcnrs,
 					  vector<MeqExpr*>& exprDel)
 {
   // Get the vector of all parms containing a source name.
@@ -83,7 +85,7 @@ MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
     }
   }
   // Sort the srcnrs uniquely.
-  Vector<uInt> index;
+  casa::Vector<uInt> index;
   int nr = GenSortIndirect<int>::sort (index, &srcs[0], srcs.size(),
 				       Sort::Ascending,
 				       Sort::QuickSort|Sort::NoDuplicates);

@@ -27,15 +27,18 @@
 //# Includes
 #include <BBS3/MNS/MeqMatrixRep.h>
 
+//# Forward Declarations
+namespace casa {
 template<class T> class Matrix;
+}
 
 namespace LOFAR {
-
-//# Forward Declarations
 class BlobOStream;
 class BlobIStream;
 class MeqMatrixTmp;
+}
 
+namespace LOFAR {
 
 class MeqMatrix
 {
@@ -63,8 +66,8 @@ public:
   // <group>
   MeqMatrix (const double* values, int nx, int ny);
   MeqMatrix (const complex<double>* values, int nx, int ny);
-  MeqMatrix (const Matrix<double>&);
-  MeqMatrix (const Matrix<complex<double> >&);
+  MeqMatrix (const casa::Matrix<double>&);
+  MeqMatrix (const casa::Matrix<complex<double> >&);
   // </group>
 
   // Create a MeqMatrix from a MeqMatrixRep.
@@ -117,7 +120,7 @@ public:
   int elemLength() const
     { return itsRep->elemLength(); }
 
-  Bool isNull() const
+  bool isNull() const
     { return (itsRep == 0); }
 
   void show (ostream& os) const
@@ -126,8 +129,8 @@ public:
   bool isDouble() const
     { return itsRep->isDouble(); }
 
-  Matrix<double> getDoubleMatrix() const;
-  Matrix<complex<double> > getDComplexMatrix() const;
+  casa::Matrix<double> getDoubleMatrix() const;
+  casa::Matrix<complex<double> > getDComplexMatrix() const;
 
   const double* doubleStorage() const
     { return itsRep->doubleStorage(); }

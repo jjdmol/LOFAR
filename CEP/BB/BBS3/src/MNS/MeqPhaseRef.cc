@@ -32,6 +32,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/BasicSL/Constants.h>
 
+using namespace casa;
 
 namespace LOFAR {
 

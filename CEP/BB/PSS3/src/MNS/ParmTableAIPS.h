@@ -92,22 +92,23 @@ public:
 private:
   // Find the table subset containing the parameter values for the
   // requested domain.
-  Table find (const string& parmName, 
-	      int sourceNr, int station,
-	      const MeqDomain& domain);
+  casa::Table find (const string& parmName, 
+		    int sourceNr, int station,
+		    const MeqDomain& domain);
 
-  Table                  itsTable;
-  ColumnsIndex           itsIndex;
-  RecordFieldPtr<Int>    itsIndexSrcnr;
-  RecordFieldPtr<Int>    itsIndexStatnr;
-  RecordFieldPtr<String> itsIndexName;
-  Table                  itsInitTable;
-  ColumnsIndex*          itsInitIndex;
-  RecordFieldPtr<Int>    itsInitIndexSrcnr;
-  RecordFieldPtr<Int>    itsInitIndexStatnr;
-  RecordFieldPtr<String> itsInitIndexName;
+  casa::Table                  itsTable;
+  casa::ColumnsIndex           itsIndex;
+  casa::RecordFieldPtr<casa::Int>    itsIndexSrcnr;
+  casa::RecordFieldPtr<casa::Int>    itsIndexStatnr;
+  casa::RecordFieldPtr<casa::String> itsIndexName;
+  casa::Table                  itsInitTable;
+  casa::ColumnsIndex*          itsInitIndex;
+  casa::RecordFieldPtr<casa::Int>    itsInitIndexSrcnr;
+  casa::RecordFieldPtr<casa::Int>    itsInitIndexStatnr;
+  casa::RecordFieldPtr<casa::String> itsInitIndexName;
 
   string itsTableName;
+
 };
 
 }

@@ -39,6 +39,7 @@
 #include <fcntl.h>
 
 using namespace LOFAR;
+using namespace casa;
 
 
 // Initialize the deamon.

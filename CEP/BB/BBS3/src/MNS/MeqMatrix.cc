@@ -33,6 +33,7 @@
 #include <Common/Debug.h>
 #include <casa/Arrays/Matrix.h>
 
+using namespace casa;
 
 namespace LOFAR {
 

@@ -257,17 +257,17 @@ class VariVector : public std::vector<int>
       
 #ifdef HAVE_AIPSPP      
       // convert to/from AIPS++ IPosition
-      VariVector(const IPosition &ipos)
+      VariVector(const casa::IPosition &ipos)
           : std::vector<int>(ipos.storage(),ipos.storage()+ipos.nelements()) {};
-      IPosition as_IPosition () const
+      casa::IPosition as_IPosition () const
       {
-        IPosition ipos(size());
+        casa::IPosition ipos(size());
         const_iterator iter = begin();
         for( uint i=0; i<size(); i++ )
           ipos[i] = *iter++;
         return ipos;
       }
-      operator IPosition () const
+      operator casa::IPosition () const
       { return as_IPosition(); }
         
 #endif
