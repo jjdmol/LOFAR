@@ -33,6 +33,7 @@ DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 
 lib_LTLIBRARIES 	= libtransport.la 
 
+libtransport_la_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 libtransport_la_SOURCES = \
 CyclicBuffer.cc \
