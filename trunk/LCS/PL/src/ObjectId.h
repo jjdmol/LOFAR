@@ -36,6 +36,14 @@ namespace LCS
     //
     // ObjectId is used to uniquely identify a persistent object.
     //
+    // \todo Currently, random bytes are read from /dev/urandom. It
+    // turned out that reading from this device is relatively slow.
+    // Generating a random 8-byte number using get_random_bytes()
+    // takes approx. 10 microseconds on lofar9 (which has a 1.6 GHz CPU).
+    // If we use random() only we can reduce this time significantly,
+    // to something like 0.7 microseconds or better. This will probably
+    // be good enough for our purposes.
+    //
     class ObjectId
     {
     public:
