@@ -22,6 +22,7 @@
 
 
 #include <MEQ/Add.h>
+#include <MEQ/Cos.h>
 #include <MEQ/Request.h>
 #include <MEQ/Result.h>
 #include <MEQ/VellsTmp.h>
@@ -52,7 +53,8 @@ int main()
     ParmTable ptab("meqadd.MEP");
     ParmPolcStored p1("p1", &ptab);
     ParmPolcStored p2("p2", &ptab);
-    Add add(&p1, &p2);
+    Cos ncos(&p1);
+    Add add(&ncos, &p2);
     Domain domain(1,4, -2,3);
     Request req(Cells(domain, 4, 4));
     Result res;

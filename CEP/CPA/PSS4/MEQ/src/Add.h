@@ -41,8 +41,8 @@ public:
   virtual ~Add();
 
   // Evaluate the value for the given request.
-  virtual void evaluate (Vells& result, const Request&,
-			 const vector<Vells*>& values);
+  virtual void evaluateVells (Vells& result, const Request&,
+			      const vector<Vells*>& values);
 };
 
 

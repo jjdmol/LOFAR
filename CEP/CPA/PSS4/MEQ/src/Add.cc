@@ -37,8 +37,8 @@ Add::Add (Function* ch1, Function* ch2)
 Add::~Add()
 {}
 
-void Add::evaluate (Vells& result, const Request&,
-		    const vector<Vells*>& values)
+void Add::evaluateVells (Vells& result, const Request&,
+			 const vector<Vells*>& values)
 {
   result.init();
   for (unsigned int i=0; i<values.size(); i++) {

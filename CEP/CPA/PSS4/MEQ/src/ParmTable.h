@@ -30,6 +30,7 @@
 #include <MEQ/Polc.h>
 //#include <MEQ/MeqSourceList.h>
 #include <Common/lofar_vector.h>
+#include <map>
 
 
 namespace MEQ {
@@ -65,6 +66,15 @@ public:
   //  MeqSourceList getPointSources (const Vector<int>& sourceNrs,
   //				 vector<MeqExpr*>& exprDel);
 
+  // Open the table if not opened yet. If opened, it is added to the map.
+  static ParmTable* openTable (const String& tableName);
+  // Close all tables in the map.
+  static void closeTables();
+
+  // Get the name of the ParmTable.
+  const string& name() const
+    { return itsTable.tableName(); }
+
 private:
   // Find the table subset containing the parameter values for the
   // requested domain.
@@ -76,6 +86,8 @@ private:
   Table                  itsInitTable;
   ColumnsIndex*          itsInitIndex;
   RecordFieldPtr<String> itsInitIndexName;
+
+  static std::map<string, ParmTable*> theirTables;
 };
 
 

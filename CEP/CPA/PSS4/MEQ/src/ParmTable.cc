@@ -39,6 +39,9 @@
 
 namespace MEQ {
 
+std::map<string, ParmTable*> ParmTable::theirTables;
+
+
 Matrix<double> toParmMatrix (const Vells& values)
 {
   return Matrix<double> (IPosition(2, values.nx(), values.ny()),
@@ -245,5 +248,27 @@ Table ParmTable::find (const string& parmName,
   }
   return result;
 }
+
+ParmTable* ParmTable::openTable (const String& tableName)
+{
+  std::map<string,ParmTable*>::const_iterator p = theirTables.find(tableName);
+  if (p != theirTables.end()) {
+    return p->second;
+  }
+  ParmTable* tab = new ParmTable(tableName);
+  theirTables[tableName] = tab;
+  return tab;
+}
+
+void ParmTable::closeTables()
+{
+  for (std::map<string,ParmTable*>::const_iterator iter = theirTables.begin();
+       iter != theirTables.end();
+       ++iter) {
+    delete iter->second;
+  }
+  theirTables.clear();
+}
+
 
 } // namespace MEQ
