@@ -44,26 +44,17 @@ namespace LOFAR {
 
 ParmTableAIPS::ParmTableAIPS (const string& userName, const string& tableName)
 : itsTable       ("/tmp/" + userName + "." + tableName+".MEP"),
-  itsIndex       (itsTable, stringToVector("SRCNR,STATNR,NAME")),
-  itsIndexSrcnr  (itsIndex.accessKey(), "SRCNR"),
-  itsIndexStatnr (itsIndex.accessKey(), "STATNR"),
+  itsIndex       (itsTable, "NAME"),
   itsIndexName   (itsIndex.accessKey(), "NAME"),
   itsInitIndex   (0)
 {
   itsTableName = string("/tmp/") + userName + string(".") + tableName + string(".MEP");
 
-
   // these things should be done in the connect (just like the initialization of itsTable etc)
   if (itsTable.keywordSet().isDefined ("DEFAULTVALUES")) {
     itsInitTable = itsTable.keywordSet().asTable ("DEFAULTVALUES");
-    itsInitIndex = new ColumnsIndex (itsInitTable,
-				     stringToVector("SRCNR,STATNR,NAME"));
-
-    itsInitIndexSrcnr  = RecordFieldPtr<Int> (itsInitIndex->accessKey(),
-					      "SRCNR");
-    itsInitIndexStatnr = RecordFieldPtr<Int> (itsInitIndex->accessKey(),
-					      "STATNR");
-    itsInitIndexName   = RecordFieldPtr<String> (itsInitIndex->accessKey(),
+    itsInitIndex = new ColumnsIndex (itsInitTable, "NAME");
+    itsInitIndexName = RecordFieldPtr<String> (itsInitIndex->accessKey(),
 						 "NAME");
   }
 }
@@ -187,52 +178,43 @@ MeqPolc ParmTableAIPS::getInitCoeff (const string& parmName,
   // So look up until found or until no more parts are left.
   MeqPolc result;
   if (itsInitIndex) {
-    *itsInitIndexSrcnr = srcnr;
-    for (int i=0; i<2; i++) {
-      *itsInitIndexStatnr = statnr;
-      for (int j=0; j<2; j++) {
-	string name = parmName;
-	while (true) {
-	  *itsInitIndexName   = name;
-	  Vector<uInt> rownrs = itsInitIndex->getRowNumbers();
-	  if (rownrs.nelements() > 0) {
-	    ASSERTSTR (rownrs.nelements() == 1, "Too many default coefficients in parmtableAIPS");
-	    int row = rownrs(0);
-	    ROArrayColumn<bool> maskCol (itsInitTable, "SOLVABLE");
-	    ROArrayColumn<Double> valCol (itsInitTable, "VALUES");
-	    ROScalarColumn<double> t0Col (itsInitTable, "TIME0");
-	    ROScalarColumn<double> f0Col (itsInitTable, "FREQ0");
-	    ROScalarColumn<bool> normCol (itsInitTable, "NORMALIZED");
-	    ROScalarColumn<double> diffCol (itsInitTable, "DIFF");
-	    ROScalarColumn<bool> drelCol (itsInitTable, "DIFF_REL");
-	    ROArrayColumn<double> simvalCol (itsInitTable, "SIM_VALUES");
-	    ROArrayColumn<double> simpertCol (itsInitTable, "SIM_PERT");
-	    if (maskCol.isDefined(row)) {
-	      result.setCoeff (Matrix<double>(valCol(row)), maskCol(row));
-	    } else {
-	      result.setCoeff (Matrix<double>(valCol(row)));
-	    }
-	    result.setX0 (t0Col(row));
-	    result.setY0 (f0Col(row));
-	    result.setNormalize (normCol(row));
-	    result.setPerturbation (diffCol(row), drelCol(row));
-	    result.setSimCoeff (Matrix<double>(simvalCol(row)));
-	    result.setPertSimCoeff (Matrix<double>(simpertCol(row)));
-	    break;
-	  }
-	  string::size_type idx = name.rfind ('.');
-	  // Exit loop if no more name parts.
-	  if (idx == string::npos) {
-	    break;
-	  }
-	  // Remove last part and try again.
-	  name = name.substr (0, idx);
+    string name = parmName;
+    while (true) {
+      *itsInitIndexName = name;
+      Vector<uInt> rownrs = itsInitIndex->getRowNumbers();
+      if (rownrs.nelements() > 0) {
+	ASSERTSTR (rownrs.nelements() == 1,
+		   "Too many default coefficients in parmtableAIPS");
+	int row = rownrs(0);
+	ROArrayColumn<bool> maskCol (itsInitTable, "SOLVABLE");
+	ROArrayColumn<Double> valCol (itsInitTable, "VALUES");
+	ROScalarColumn<double> t0Col (itsInitTable, "TIME0");
+	ROScalarColumn<double> f0Col (itsInitTable, "FREQ0");
+	ROScalarColumn<bool> normCol (itsInitTable, "NORMALIZED");
+	ROScalarColumn<double> diffCol (itsInitTable, "DIFF");
+	ROScalarColumn<bool> drelCol (itsInitTable, "DIFF_REL");
+	ROArrayColumn<double> simvalCol (itsInitTable, "SIM_VALUES");
+	ROArrayColumn<double> simpertCol (itsInitTable, "SIM_PERT");
+	if (maskCol.isDefined(row)) {
+	  result.setCoeff (Matrix<double>(valCol(row)), maskCol(row));
+	} else {
+	  result.setCoeff (Matrix<double>(valCol(row)));
 	}
-	// Try to find if for any station.
-	*itsInitIndexStatnr = -1;
+	result.setX0 (t0Col(row));
+	result.setY0 (f0Col(row));
+	result.setNormalize (normCol(row));
+	result.setPerturbation (diffCol(row), drelCol(row));
+	result.setSimCoeff (Matrix<double>(simvalCol(row)));
+	result.setPertSimCoeff (Matrix<double>(simpertCol(row)));
+	break;
       }
-	// Try to find if for any source.
-      *itsInitIndexSrcnr = -1;
+      string::size_type idx = name.rfind ('.');
+      // Exit loop if no more name parts.
+      if (idx == string::npos) {
+	break;
+      }
+      // Remove last part and try again.
+      name = name.substr (0, idx);
     }
   }
   return result;
@@ -283,9 +265,7 @@ void ParmTableAIPS::putDefCoeff (const string& parmName,
   //const MeqMatrix& simvalues = polc.getSimCoeff();
   //const MeqMatrix& pertsimvalues = polc.getPertSimCoeff();
   // First see if the parameter name exists at all.
-  *itsInitIndexSrcnr = srcnr;
-  *itsInitIndexStatnr = statnr;
-  *itsInitIndexName   = parmName;
+  *itsInitIndexName = parmName;
   Vector<uInt> rownrs = itsInitIndex->getRowNumbers();
   if (rownrs.nelements() == 1) {
     Table sel = itsInitTable(rownrs);
@@ -319,10 +299,10 @@ void ParmTableAIPS::putDefCoeff (const string& parmName,
   }
 }
 
-void ParmTableAIPS::putNewCoeff( const string& parmName, 
-				  int srcnr,
-				  int statnr,
-				  const MeqPolc& polc)
+void ParmTableAIPS::putNewCoeff (const string& parmName, 
+				 int srcnr,
+				 int statnr,
+				 const MeqPolc& polc)
 {
   itsTable.reopenRW();
   uInt rownr = itsTable.nrow();
@@ -360,10 +340,10 @@ void ParmTableAIPS::putNewCoeff( const string& parmName,
 }
 
 
-void ParmTableAIPS::putNewDefCoeff( const string& parmName, 
-				  int srcnr,
-				  int statnr,
-				  const MeqPolc& polc)
+void ParmTableAIPS::putNewDefCoeff (const string& parmName, 
+				    int srcnr,
+				    int statnr,
+				    const MeqPolc& polc)
 {
   itsTable.reopenRW();
   itsInitTable.reopenRW();
@@ -408,9 +388,7 @@ Table ParmTableAIPS::find (const string& parmName,
 {
   // First see if the parameter name exists at all.
   Table result;
-  *itsIndexSrcnr  = srcnr;
-  *itsIndexStatnr = statnr;
-  *itsIndexName   = parmName;
+  *itsIndexName = parmName;
   Vector<uInt> rownrs = itsIndex.getRowNumbers();
   if (rownrs.nelements() > 0) {
     Table sel = itsTable(rownrs);

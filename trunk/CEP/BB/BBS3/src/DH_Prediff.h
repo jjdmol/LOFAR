@@ -66,7 +66,7 @@ public:
   void setDataSize(const vector<uint32>& shape);
   const vector<uint32>& getDataSize();
 
-  dcomplex* getDataPtr();
+  double* getDataPtr();
 
   bool getParmData(vector<ParmData>& pdata); 
   void setParmData(const vector<ParmData>& pdata);
@@ -82,11 +82,11 @@ private:
   // Fill the pointers to the data in the blob.
   virtual void fillDataPointers();
 
-  dcomplex* itsDataPtr;
+  double* itsDataPtr;
 
 };
 
-inline dcomplex* DH_Prediff::getDataPtr()
+inline double* DH_Prediff::getDataPtr()
 { return itsDataPtr; }
 
 } // namespace LOFAR

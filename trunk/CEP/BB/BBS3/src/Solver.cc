@@ -46,7 +46,8 @@ namespace LOFAR
 //
 //----------------------------------------------------------------------
 Solver::Solver ()
-: itsSolver (1)
+: itsSolver (1),
+  itsDoSet  (true)
 {
   LOG_INFO_STR( "Solver constructor" );
 }
@@ -80,11 +81,18 @@ void Solver::solve (bool useSVD,
   timer.start();
   ASSERT (itsSolvableValues.size() > 0);
 
+  // Initialize the solver (needed after a setSolvable).
+  // Note it is usually already done in setEquations.
+  if (itsDoSet) {
+    itsSolver.set (itsSolvableValues.size());
+    itsDoSet = false;
+  }
   // Solve the equation. 
   uint rank;
   double fit;
   LOG_INFO_STR( "Solution before: " << itsSolvableValues);
-  bool solFlag = itsSolver.solveLoop (fit, rank, itsSolvableValues, useSVD);
+  bool solFlag = itsSolver.solveLoop (fit, rank, &(itsSolvableValues[0]),
+				      useSVD);
   LOG_INFO_STR( "Solution after:  " << itsSolvableValues);
 
   resultQuality.init();
@@ -102,7 +110,7 @@ void Solver::solve (bool useSVD,
     ParmData& parm = itsSolvableParms[i];
     double* value = parm.getRWValues().doubleStorage();
     for (int j=0; j<parm.getNrSpid(); ++j) {
-      value[i] = *val++;
+      value[j] = *val++;
     }
   }
 
@@ -112,20 +120,24 @@ void Solver::solve (bool useSVD,
 }
 
 
-void Solver::setEquations (const dcomplex* data, int nresult, int nrspid,
+void Solver::setEquations (const double* data, int nresult, int nrspid,
 			   int nval, int prediffer)
 {
   ASSERT (uint(prediffer) < itsIndices.size());
+  // Initialize the solver (needed after a setSolvable).
+  if (itsDoSet) {
+    itsSolver.set (itsSolvableValues.size());
+    itsDoSet = false;
+  }
   vector<int>& predInx = itsIndices[prediffer];
   ASSERT (uint(nrspid) = predInx.size());
   // Use a consecutive vector to assemble all derivatives.
   vector<double> derivVec(nrspid);
   double* derivs = &(derivVec[0]);
-  // Treat a dcomplex as 2 doubles.
-  int nrval = 2*nval;
-  const double* ddata = (const double*)(data);
   // Each result is a 2d array of [nrval,nrspid+1] (nrval varies most rapidly).
   // The first value is the difference; the others the derivatives. 
+  const double* ddata = data;
+  int nrval = nval;
   for (int i=0; i<nresult; ++i) {
     for (int j=0; j<nrval; ++j) {
       // Each value result,time,freq gives an equation.
@@ -134,7 +146,8 @@ void Solver::setEquations (const dcomplex* data, int nresult, int nrspid,
       for (int k=0; k<nrspid; ++k) {
 	derivs[k] = derivdata[k*nrval];
       }
-      itsSolver.makeNorm (predInx.size(), predInx, derivVec, 1., diff);
+      itsSolver.makeNorm (predInx.size(), &(predInx[0]), &(derivVec[0]),
+      			  1., diff);
       // Go to next time,freq value.
       ddata++;
     }
@@ -150,6 +163,7 @@ void Solver::initSolvableParmData (int nrPrediffers)
   itsSolvableParms.resize (0);
   itsIndices.resize (nrPrediffers);
   itsSolvableValues.resize (0);
+  itsDoSet = true;
 }
 
 // The solvable parameters coming from the prediffers have to be collected
@@ -161,6 +175,7 @@ void Solver::setSolvableParmData (const std::vector<ParmData>& data,
   if (data.size() == 0) {
     return;
   }
+  itsDoSet = true;
   // Usually the last entry has the highest spid; so use that to reserve to
   // avoid (hopefully) resizes.
   vector<int> predInx;
@@ -201,3 +216,7 @@ void Solver::setSolvableParmData (const std::vector<ParmData>& data,
 }
 
 } // namespace LOFAR
+
+//# Instantiate the makeNorm template.
+#include <scimath/Fitting/LSQFit2.cc>
+template void casa::LSQFit::makeNorm<double, double*, int*>(unsigned, int* const&, double* const&, double const&, double const&, bool, bool);

@@ -75,7 +75,7 @@ public:
   // Also note that setEquations cannot be called before setSolvableParmData
   // has been called for all prediffers.
   // After the last setEquations, the solve function can be called.
-  void setEquations (const dcomplex* data, int nresult, int nrspid,
+  void setEquations (const double* data, int nresult, int nrspid,
 		     int nval, int prediffer);
 
   // Solve which returns solved parameter values in a vector and fit value 
@@ -100,6 +100,7 @@ private:
   vector<vector<int> > itsIndices;       //# Index of coefficient in prediffer
                                          //# to coefficient in solver
   vector<double>       itsSolvableValues;
+  bool                 itsDoSet;         //# true = do itsSolver.set
 };
 
 } // namespace LOFAR
