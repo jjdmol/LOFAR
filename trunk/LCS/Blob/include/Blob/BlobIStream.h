@@ -85,6 +85,7 @@ public:
   // It checks if it finds the correct magic value preceeding
   // the object type.
   // The second version also returns the size of this next blob.
+  // <group>
   const std::string& BlobIStream::getNextType();
   const std::string& BlobIStream::getNextType (uint& size);
   // </group>

@@ -177,7 +177,7 @@ uint getSpaceBlobArray (BlobIStream& bs, bool useBlobHeader,
 
 
 
-// Reserve space for a 1-dim array of the given size.
+//# Reserve space for a 1-dim array of the given size.
 template<typename T>
 inline uint setSpaceBlobArray1 (BlobOStream& bs, bool useBlobHeader,
 				uint32 size0)
@@ -185,14 +185,14 @@ inline uint setSpaceBlobArray1 (BlobOStream& bs, bool useBlobHeader,
   return setSpaceBlobArray<T> (bs, useBlobHeader, &size0, 1, true);
 }
 
-// Put a vector object as an array.
+//# Put a vector object as an array.
 template<typename T>
 inline BlobOStream& operator<< (BlobOStream& bs, const std::vector<T>& vec)
 {
   return putBlobVector (bs, &(vec[0]), vec.size());
 }
 
-// Put a C-style vector of values as an array.
+//# Put a C-style vector of values as an array.
 template<typename T>
 inline BlobOStream& putBlobVector (BlobOStream& bs, const T* vec, uint32 size)
 {

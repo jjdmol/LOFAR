@@ -161,6 +161,7 @@ public:
 
 protected:
   // Helper functions for derived classes.
+  // <group>
   void setOffset (int64 offset, int64 arrayOffset)
     { itsOffset = offset; itsArrayOffset = arrayOffset; }
   int64 getOffset() const
