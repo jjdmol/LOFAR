@@ -30,11 +30,13 @@
 
 using namespace LOFAR;
 
-int main(int argc, const char* argv[])
+int main (int argc, const char* argv[])
 {
   Debug::initLevels (argc, argv);
+  // Create a header for a C-order array.
   BlobArrayHeader<fcomplex,4> bl(false);
   cout << sizeof(bl) << endl;
+  // Check various things.
   Assert (sizeof(bl) % 8 == 0);
   Assert (bl.plainSize() == 14);
   Assert (bl.lengthOffset() == 4);
@@ -42,37 +44,47 @@ int main(int argc, const char* argv[])
   Assert (bl.checkMagicValue());
   Assert (bl.checkType("array<fcomplex>"));
   Assert (bl.getLength() == 0);
+  // Set an arbitrary length and check it.
   bl.setLength (100);
   Assert (bl.getLength() == 100);
   Assert (!bl.isFortranOrder());
+  // Define a shape and check if the length is correct (including end-of-blob).
   bl.setShape (11,12,13,14);
   Assert (bl.getAxisSize(0) == 11);
   Assert (bl.getAxisSize(1) == 12);
   Assert (bl.getAxisSize(2) == 13);
   Assert (bl.getAxisSize(3) == 14);
-  Assert (bl.getLength() == sizeof(bl) + 11*12*13*14*sizeof(fcomplex));
+  Assert (bl.getLength() == sizeof(bl) + 11*12*13*14*sizeof(fcomplex) +
+	  sizeof(uint32));
   {
     // Check if a static BlobArray can be read dynamically.
+    // Define a struct containing a blob (header, array and eob).
     struct XA {
-      XA() : hdr(false) {}
+      XA() : hdr(false), eob(BlobHeaderBase::eobMagicValue()) {}
       BlobArrayHeader<float,2> hdr;
       float data[20][15];
+      uint32 eob;
     };
+    // Make an object and define the array shape in the header.
     XA xa;
     xa.hdr.setShape (20,15);
     Assert (xa.hdr.getLength() == sizeof(xa));
+    // Fill the array.
     int k=0;
     for (int i=0; i<20; i++) {
       for (int j=0; j<15; j++) {
 	xa.data[i][j] = k++;
       }
     }
+    // Copy the object to a string.
+    // Check if it can be interpreted correctly as a blob.
     std::string xastr((const char*)&xa, sizeof(xa));
     std::istringstream ss(xastr);
     BlobIBufStream bib(ss);
     BlobIStream bs(&bib);
     float* data;
     std::vector<uint> shape;
+    // Get the array from the blob (shape and data) and check it.
     getBlobArray (bs, data, shape, false);
     Assert (shape.size() == 2);
     Assert (shape[0]==20  &&  shape[1]==15);

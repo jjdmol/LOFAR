@@ -30,6 +30,8 @@ int main()
 {
   try {
     {
+      // Swap 2 byte integer and check if correct.
+      // Double swapping should give the original.
       uint16 v1 = 0xbecd;
       uint16 v2 = v1;
       Assert (byteSwap(byteSwap(v1)) == v2);
@@ -37,6 +39,8 @@ int main()
       Assert (v2 == 0xcdbe);
     }
     {
+      // Swap 4 byte integer and check if correct.
+      // Double swapping should give the original.
       uint32 v1 = 0xbecd0256;
       uint32 v2 = v1;
       Assert (byteSwap(byteSwap(v1)) == v2);
@@ -46,6 +50,8 @@ int main()
       Assert (v2 == 0xcdbe5602);
     }
     {
+      // Swap 8 byte integer and check if correct.
+      // Double swapping should give the original.
       uint64 v1 = 0xbecd025613890574ULL;
       uint64 v2 = v1;
       Assert (byteSwap(byteSwap(v1)) == v2);
@@ -55,6 +61,8 @@ int main()
       Assert (v2 == 0x5602cdbe74058913ULL);
     }
     {
+      // Swap 2 byte integers in a vector.
+      // Double swapping should give the original.
       uint16 v1[3];
       v1[0]=0x0123; v1[1]=0x4567; v1[2]=0x89ab;
       uint16 v2[3];
@@ -68,6 +76,8 @@ int main()
       Assert (v2[2] == v1[2]);
     }
     {
+      // Swap 4 byte integers in a vector.
+      // Double swapping should give the original.
       uint32 v1[3];
       v1[0]=0x01233210; v1[1]=0x45677654; v1[2]=0x89abba98;
       uint32 v2[3];
@@ -81,6 +91,8 @@ int main()
       Assert (v2[2] == v1[2]);
     }
     {
+      // Swap 8 byte integers in a vector.
+      // Double swapping should give the original.
       uint64 v1[3];
       v1[0]=0x0123321045677654ULL; v1[1]=0x1234567887654321ULL;
       v1[2]=0x89abcdeffedcba98ULL;

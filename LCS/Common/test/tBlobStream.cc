@@ -38,42 +38,68 @@
 
 using namespace LOFAR;
 
+// Do alignment in an output stream.
+void doAlign (BlobOStream& bos, uint& ln)
+{
+  ln += bos.align(8);
+}
+// Do alignment in an input stream.
+void doAlign (BlobIStream& bis, uint& ln)
+{
+  ln += bis.align(8);
+}
+
+// Create a blob in the given buffer.
+// If header8 is true, all data is aligned on 8 bytes.
+// Put all possible types in the blob (but scalars and vectors).
+// Always check if the length (including end-of-blob) is as expected.
 int doOut (BlobOBuffer* bb, bool header8=false)
 {
   uint len = 0;
-  BlobOStream bos(bb, header8);
+  BlobOStream bos(bb);
   Assert (bos.putStart ("test", 1) == 1);
+  uint ln = 18;
+  if (header8) doAlign(bos,ln);
   bos << true;
   bos << "abc";
   bos << int32(4);
   bos.put ("defg", 4);
-  uint ln = 34;
-  if (header8) ln = 40;
+  ln += 20;
   Assert (bos.putEnd() == ln);
   len += ln;
 
+  if (header8) doAlign(bos,len);
   Assert (bos.putStart ("test1", 1) == 1);
+  ln = 19;
+  if (header8) doAlign(bos,ln);
   bos << int16(2);
   bos << fcomplex(1,2);
+  ln += 10;
+  if (header8) doAlign(bos,ln);
   Assert (bos.putStart ("test1a", 3) == 2);
+  uint ln2 = 20;
+  if (header8) doAlign(bos,ln2);
   bos << std::string("defg");
-  ln = 28;
-  if (header8) ln = 32;
-  Assert (bos.putEnd() == ln);
-  ln += 29;
-  if (header8) ln += 5;
+  ln2 += 12;
+  Assert (bos.putEnd() == ln2);
+  ln += ln2 + 4;
   Assert (bos.putEnd() == ln);
   len += ln;
 
+  if (header8) doAlign(bos,len);
   Assert (bos.putStart ("test2", -1) == 1);
+  ln = 19;
+  if (header8) doAlign(bos,ln);
   bos << int64(100);
   bos << dcomplex(5,6);
-  ln = 43;
-  if (header8) ln = 48;
+  ln += 28;
   Assert (bos.putEnd() == ln);
   len += ln;
 
+  if (header8) doAlign(bos,len);
   bos.putStart ("testall", 1);
+  ln = 21;
+  if (header8) doAlign(bos,ln);
   bool valbl[2];
   char valsc[2];
   uchar valuc[2];
@@ -136,9 +162,9 @@ int doOut (BlobOBuffer* bb, bool header8=false)
   bos.put (valfc, 2);
   bos.put (valdc, 2);
   bos.put (valst, 2);
-  ln = 233;
-  if (header8) ln += 3;
+  ln += 212;
   {
+    // Do a long vector of bools, because they are stored as bits.
     std::vector<uint> veci(600);
     std::vector<bool> vecb(veci.size());
     for (uint i=0; i<veci.size(); i++) {
@@ -155,14 +181,19 @@ int doOut (BlobOBuffer* bb, bool header8=false)
     bos.put (bufb, 2007);
     ln += (2007+7)/8;
   }
+  ln += 4;
   Assert (bos.putEnd() == ln);
   len += ln;
 
   return len;
 }
 
+// Read back the blob from the buffer and check if all data in it matches
+// the value given in doOut.
+// Again, align if needed.
 void doIn (BlobIBuffer* bb, bool header8=false)
 {
+  uint dumlen;
   bool  valb;
   int16 val16;
   int64 val64;
@@ -172,41 +203,52 @@ void doIn (BlobIBuffer* bb, bool header8=false)
 
   BlobIStream bis(bb);
   Assert (bis.getStart ("test") == 1);
+  uint ln = 18;
+  if (header8) doAlign(bis,ln);
   bis >> valb;
   Assert (valb == true);
   bis >> vals;
   Assert (vals.size() == 3  &&  vals == "abc");
   bis >> vals;
   Assert (vals.size() == 4  &&  vals == "defg");
-  uint ln = 34;
-  if (header8) ln = 40;
+  ln += 20;
   Assert (bis.getEnd() == ln);
 
+  if (header8) doAlign(bis,dumlen);
   Assert (bis.getStart ("test1") == 1);
+  ln = 19;
+  if (header8) doAlign(bis,ln);
   bis >> val16;
   Assert (val16 == 2);
   bis >> valfcx;
   Assert (valfcx == fcomplex(1,2));
+  ln += 10;
+  if (header8) doAlign(bis,ln);
   Assert (bis.getStart ("test1a") == 3);
+  uint ln2 = 20;
+  if (header8) doAlign(bis,ln2);
   bis >> vals;
   Assert (vals.size() == 4  &&  vals == "defg");
-  ln = 28;
-  if (header8) ln = 32;
-  Assert (bis.getEnd() == ln);
-  ln += 29;
-  if (header8) ln += 5;
+  ln2 += 12;
+  Assert (bis.getEnd() == ln2);
+  ln += ln2 + 4;
   Assert (bis.getEnd() == ln);
 
+  if (header8) doAlign(bis,dumlen);
   Assert (bis.getStart ("test2") == -1);
+  ln = 19;
+  if (header8) doAlign(bis,ln);
   bis >> val64;
   Assert (val64 == 100);
   bis >> valdcx;
   Assert (valdcx == dcomplex(5,6));
-  ln = 43;
-  if (header8) ln = 48;
+  ln += 28;
   Assert (bis.getEnd() == ln);
 
+  if (header8) doAlign(bis,dumlen);
   bis.getStart ("testall");
+  ln = 21;
+  if (header8) doAlign(bis,ln);
   bool valbl[2], valblc[2];
   char valsc[2], valscc[2];
   uchar valuc[2], valucc[2];
@@ -459,7 +501,7 @@ int main()
    }
     {
       try {
-	// Use a fixed char buffer which is too small.
+	// Use a fixed char buffer which is too small, thus an exception.
 	char buf[50];
 	BlobOBufChar bob(buf,50);
 	doOut (&bob);
@@ -469,7 +511,7 @@ int main()
     }
     {
       try {
-	// Use a fixed vector buffer which is too small.
+	// Use a fixed vector buffer which is too small, thus an exception.
 	std::vector<char> buf(50);
 	BlobOBufVector<char> bob(buf);
 	doOut (&bob);
