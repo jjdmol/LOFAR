@@ -1,4 +1,4 @@
-# use_suspend  := T;
+ use_suspend  := T;
 # use_nostart  := T;
 # use_valgrind := T;
 use_valgrind_opts := [ "",
@@ -69,6 +69,7 @@ const meqsink_test := function ()
   mqs := meqserver(verbose=4,options="-d0 -meq:M:M:MeqServer");
   # set verbose debugging messages
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",1);
+  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",1);
   mqs.setdebug("MeqServ MeqVisHandler",1);
   mqs.setdebug("MeqServer",1);
   # initialize meqserver
@@ -77,22 +78,22 @@ const meqsink_test := function ()
   # create a small subtree
   defval1 := array(as_double(1),2,2);
   defval2 := array(as_double(2),1,1);
-  addrec := meqnode('meqCompare','compare',
-              children=[ x=meqparm('p1',default=defval1), 
-                         y='spigot1' ]);
+  addrec := meqnode('meqCompare','compare',children="spigot1 spigot2");
   print mqs.meq('Create.Node',addrec);
   # create spigot (note! for now, a spigot MUST be created first)
-  spigrec := meqnode('MeqSpigot','spigot1');
-  spigrec.input_col := 'DATA';
-  spigrec.corr_index := 1;
-  spigrec.station_1_index := 1;
-  spigrec.station_2_index := 2;
-  print mqs.meq('Create.Node',spigrec);
-  
+  spigrec1 := meqnode('MeqSpigot','spigot1');
+  spigrec1.input_col := 'DATA';
+  spigrec1.station_1_index := 1;
+  spigrec1.station_2_index := 2;
+  print mqs.meq('Create.Node',spigrec1);
+  spigrec2 := meqnode('MeqSpigot','spigot2');
+  spigrec2.input_col := 'DATA';
+  spigrec2.station_1_index := 1;
+  spigrec2.station_2_index := 2;
+  print mqs.meq('Create.Node',spigrec2);
   # create sink
   sinkrec := meqnode('MeqSink','sink1',children="compare");
   sinkrec.output_col := 'PREDICT'; 
-  sinkrec.corr_index := 1;
   sinkrec.station_1_index := 1;
   sinkrec.station_2_index := 2;
   print mqs.meq('Create.Node',sinkrec);
@@ -105,4 +106,38 @@ const meqsink_test := function ()
   inputrec := [ ms_name = 'test.ms',data_column_name = 'DATA',tile_size=10,
                 selection = [=]  ];
   mqs.init(input=inputrec); 
+}
+
+const meqsel_test := function ()
+{
+  global mqs;
+  mqs := meqserver(verbose=4,options="-d0 -meq:M:M:MeqServer");
+  # set verbose debugging messages
+  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
+  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
+  mqs.setdebug("MeqServ MeqVisHandler",5);
+  mqs.setdebug("MeqServer",1);
+  # initialize meqserver
+  mqs.init([output_col="PREDICT"],wait=T);
+  
+  # create a small subtree
+  defval1 := array(as_double(1),2,2);
+  defval2 := array(as_double(2),1,1);
+  defval3 := array(as_double(3),1,1);
+  print mqs.meq('Create.Node',meqparm('parm1',defval1));
+  print mqs.meq('Create.Node',meqparm('parm2',defval2));
+  print mqs.meq('Create.Node',meqparm('parm3',defval3));
+  print mqs.meq('Create.Node',meqnode('MeqComposer','compose',children="parm1 parm2 parm3"));
+  rec := meqnode('MeqSelector','select',children="compose");
+  rec.index := [1,3];
+  print mqs.meq('Create.Node',rec);
+  
+  # resolve children
+  print mqs.meq('Resolve.Children',[name='select'],T);
+  
+  global cells,request,res;
+  cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
+  request := meqrequest(cells);
+  res := mqs.meq('Get.Result',[name='select',request=request],T);
+  print res;
 }

@@ -112,14 +112,17 @@ void MeqServer::resolveChildren (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
 void MeqServer::getNodeResult (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
 {
   Node & node = resolveNode(*in);
-  cdebug(3)<<"getNodeResult for node "<<node.name()<<endl;
-  Request req((*in)[AidRequest].as<DataRecord>());
-  Result::Ref res;
+  cdebug(2)<<"getNodeResult for node "<<node.name()<<endl;
+  const Request & req = (*in)[AidRequest].as<Request>();
+  cdebug(3)<<"    request is "<<req.sdebug(DebugLevel-1,"    ")<<endl;
+  ResultSet::Ref res;
   int flags = node.getResult(res,req);
-  cdebug(3)<<"returns flags "<<flags<<" and result "<<res->getValue()<<endl;
+  cdebug(2)<<"  getResult returns flags "<<flags<<" with result"<<endl;
+  cdebug(3)<<"    result is "<<res.sdebug(DebugLevel-1,"    ")<<endl;
   out <<= new DataRecord;
   out()[AidResult|AidCode] = flags;
-  out()[AidResult] <<= static_cast<DataRecord*>(res.dewr_p());
+  if( res.valid() )
+    out()[AidResult] <<= res;
 }
 
 //##ModelId=3F608106021C

@@ -189,7 +189,7 @@ int Meq::VisDataMux::deliverTile (VisTile::Ref::Copy &tileref)
     // For now, generate the request right here.
     Request req(VisHandlerNode::makeCells(*tileref),False);
     forest_.assignRequestId(req);
-    cdebug(3)<<"have handler, generated request id="<<req.getId()<<endl;
+    cdebug(3)<<"have handler, generated request id="<<req.id()<<endl;
     // deliver to all known handlers
     VisHandlerList::iterator iter = hlist.begin();
     for( ; iter != hlist.end(); iter++ )

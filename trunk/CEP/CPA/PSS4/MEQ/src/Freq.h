@@ -23,7 +23,7 @@
 #ifndef MEQ_FREQ_H
 #define MEQ_FREQ_H
     
-#include <MEQ/Function.h>
+#include <MEQ/Node.h>
 
 #pragma aidgroup Meq
 #pragma types #Meq::Freq
@@ -31,18 +31,23 @@
 namespace Meq {    
 
 
-class Freq : public Function
+class Freq : public Node
 {
 public:
   Freq();
 
   virtual ~Freq();
+  
+  void init (DataRecord::Ref::Xfer &initrec, Forest* frst);
+  
+  
+  virtual TypeId objectType() const
+  { return TpMeqFreq; }
 
+protected:
   // Evaluate the value for the given request.
-  int getResultImpl (Result::Ref &resref, const Request& request, bool newReq);
+  int getResultImpl (ResultSet::Ref &resref, const Request& request, bool newReq);
 
-  // Check if no children have been given.
-  virtual void checkChildren();
 };
 
 

@@ -9,7 +9,7 @@ namespace Meq {
 InitDebugContext(Spigot,"MeqSpigot");
   
 const HIID FInputColumn = AidInput|AidCol,
-           FCorr        = AidCorr|AidIndex,
+//           FCorr        = AidCorr|AidIndex,
            FNext        = AidNext,
            FRequestId   = AidRequest|AidId,
            FResult      = AidResult;
@@ -21,7 +21,7 @@ void Spigot::init (DataRecord::Ref::Xfer &initrec,Forest * frst)
   VisHandlerNode::init(initrec,frst);
   // default uses DATA column
   icolumn = VisTile::DATA;
-  icorr = 0;
+//  icorr = 0;
   // setup stuff from state record
   setStateImpl(state());
 }
@@ -29,10 +29,10 @@ void Spigot::init (DataRecord::Ref::Xfer &initrec,Forest * frst)
 //##ModelId=3F9FF6AA03D2
 void Spigot::setStateImpl (const DataRecord &rec)
 {
-  if( rec[FCorr].exists() )
-  {
-    wstate()[FCorr] = icorr = rec[FCorr].as<int>();
-  }
+//  if( rec[FCorr].exists() )
+//  {
+//    wstate()[FCorr] = icorr = rec[FCorr].as<int>();
+//  }
   if( rec[FInputColumn].exists() )
   {
     string colname = struppercase( rec[FInputColumn].as<string>() );
@@ -56,7 +56,7 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
                      VisTile::Format::Ref &)
 {
   const VisTile &tile = *tileref;
-  const HIID &rqid = req.getId();
+  const HIID &rqid = req.id();
   cdebug(3)<<"deliver: tile "<<tile.tileId()<<", rqid "<<rqid<<endl;
   // already waiting for such a request? Do nothing for now
   if( currentRequestId() == rqid )
@@ -73,21 +73,22 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
     // casting away const because blitz constructors below only take non-const
     // pointers
     void *coldata = const_cast<void*>(tile.column(icolumn));
-    next_res <<= new Result;
+    int nplanes = colshape.size() == 3 ? colshape[0] : 1;
+    next_res <<= new ResultSet(nplanes);
     // get array 
     if( coltype == Tpdouble )
     {
       if( colshape.size() == 3 )
       {
-        LoMat_double mat = 
-            LoCube_double(static_cast<double*>(coldata),colshape,blitz::neverDeleteData)
-            (icorr,LoRange::all(),LoRange::all());
-        next_res().setReal(colshape[1],colshape[2]) = mat;
+        LoCube_double cube(static_cast<double*>(coldata),colshape,blitz::neverDeleteData);
+        for( int i=0; i<nplanes; i++ )
+          next_res().setNewResult(i).setReal(colshape[1],colshape[2]) = 
+            cube(i,LoRange::all(),LoRange::all());
       }
       else if( colshape.size() == 2 )
       {
         LoMat_double mat(static_cast<double*>(coldata),colshape,blitz::neverDeleteData);
-        next_res().setReal(colshape[0],colshape[1]) = mat;
+        next_res().setNewResult(0).setReal(colshape[0],colshape[1]) = mat;
       }
       else
         Throw("bad input column shape");
@@ -96,16 +97,15 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
     {
       if( colshape.size() == 3 )
       {
-        LoMat_fcomplex mat = 
-            LoCube_fcomplex(static_cast<fcomplex*>(coldata),colshape,blitz::neverDeleteData)
-            (icorr,LoRange::all(),LoRange::all());
-        next_res().setComplex(colshape[1],colshape[2]) = 
-            blitz::cast<dcomplex>(mat);
+        LoCube_fcomplex cube(static_cast<fcomplex*>(coldata),colshape,blitz::neverDeleteData);
+        for( int i=0; i<nplanes; i++ )
+          next_res().setNewResult(i).setComplex(colshape[1],colshape[2]) = 
+              blitz::cast<dcomplex>(cube(i,LoRange::all(),LoRange::all()));
       }
       else if( colshape.size() == 2 )
       {
         LoMat_fcomplex mat(static_cast<fcomplex*>(coldata),colshape,blitz::neverDeleteData);
-        next_res().setComplex(colshape[0],colshape[1]) = 
+        next_res().setNewResult(0).setComplex(colshape[0],colshape[1]) = 
             blitz::cast<dcomplex>(mat);
       }
       else
@@ -125,13 +125,13 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
 }
 
 //##ModelId=3F9FF6AA0300
-int Spigot::getResultImpl (Result::Ref &resref,const Request &req,bool newreq)
+int Spigot::getResultImpl (ResultSet::Ref &resref,const Request &req,bool newreq)
 {
   // have we got a cached result?
   if( next_res.valid() )
   {
     // return fail if unable to satisfy this request
-    if( req.getId() != next_rqid )
+    if( req.id() != next_rqid )
       return RES_FAIL;
     // return result and clear cache
     resref = next_res;

@@ -65,7 +65,7 @@ public:
     { return itsIsSolvable; }
 
   // Get the requested result of the parameter.
-  virtual int getResultImpl (Result::Ref&, const Request&, bool newReq);
+  virtual int getResultImpl (ResultSet::Ref&, const Request&, bool newReq);
 
   // Initialize the parameter for the given domain.
   virtual int initDomain (const Domain&, int spidIndex);

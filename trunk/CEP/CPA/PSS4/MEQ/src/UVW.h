@@ -26,7 +26,7 @@
 #include <MEQ/Function.h>
 
 #pragma aidgroup Meq
-#pragma types #Meq::UVW #Meq::U
+#pragma types #Meq::UVW
 
 namespace Meq {    
 
@@ -39,81 +39,12 @@ public:
   virtual ~UVW();
 
   // Get the result for the given request.
-  virtual int getResultImpl (Result::Ref &resref, const Request&, bool newReq);
+  virtual int getResultImpl (ResultSet::Ref &resref, const Request&, bool newReq);
 
   // Check and convert the children.
   void checkChildren();
 
-  Result::Ref& getU()
-    { return itsRefU; }
-  Result::Ref& getV()
-    { return itsRefV; }
-  Result::Ref& getW()
-    { return itsRefW; }
-
-private:
-  Result itsU;
-  Result itsV;
-  Result itsW;
-  Result::Ref itsRefU;
-  Result::Ref itsRefV;
-  Result::Ref itsRefW;
 };
-
-
-class UVWFunc : public Function
-{
-public:
-  UVWFunc();
-
-  virtual ~UVWFunc();
-
-  // Get the result for the given request.
-  void makeResult (Result::Ref &resref, const Request&, const Result& res);
-
-  // Check and convert the children.
-  void checkChildren();
-
-protected:
-  UVW* itsUVW;
-};
-
-
-class U : public UVWFunc
-{
-public:
-  U();
-
-  virtual ~U();
-
-  // Get the result for the given request.
-  virtual int getResultImpl (Result::Ref &resref, const Request&, bool newReq);
-};
-
-
-class V : public UVWFunc
-{
-public:
-  V();
-
-  virtual ~V();
-
-  // Get the result for the given request.
-  virtual int getResultImpl (Result::Ref &resref, const Request&, bool newReq);
-};
-
-
-class W : public UVWFunc
-{
-public:
-  W();
-
-  virtual ~W();
-
-  // Get the result for the given request.
-  virtual int getResultImpl (Result::Ref &resref, const Request&, bool newReq);
-};
-
 
 } // namespace Meq
 

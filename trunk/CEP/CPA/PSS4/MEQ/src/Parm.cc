@@ -138,19 +138,24 @@ int Parm::initDomain (const Domain& domain, int spidIndex)
   return nr;
 }
 
-int Parm::getResultImpl (Result::Ref& result, const Request& request, bool)
+int Parm::getResultImpl (ResultSet::Ref& resultset, const Request& request, bool)
 {
   int spidIndex=0;
   initDomain (request.cells().domain(), spidIndex);
   // Create result object and attach to the ref that was passed in
-  Result & res = result <<= new Result();
+  resultset <<= new ResultSet(1); // resulting set is always 1 plane
+  const Cells& cells = request.cells();
+  resultset().setCells(cells);
+  // *** NB: Should pass in the proper # of spids here, because
+  // Result does not allow for changing it later!
+  Result & res = resultset().setNewResult(0);
   // A single polc can be evaluated immediately.
-  if (itsPolcs.size() == 1) {
-    itsPolcs[0].getResult (result, request);
+  if (itsPolcs.size() == 1) 
+  {
+    itsPolcs[0].getResult (res, request);
     return 0;
   }
   // Get the domain, etc.
-  const Cells& cells = request.cells();
   const Domain& domain = cells.domain();
   int ndFreq = cells.nfreq();
   int ndTime = cells.ntime();
@@ -192,7 +197,7 @@ int Parm::getResultImpl (Result::Ref& result, const Request& request, bool)
       // If the overlap is full, only this polynomial needs to be evaluated.
       if (stFreq == 0  &&  nrFreq == ndFreq
       &&  stTime == 0  &&  nrTime == ndTime) {
-	polc.getResult (result, request);
+	polc.getResult (res, request);
 	return 0;
       }
       // Form the domain and request for the overlapping part
@@ -211,8 +216,7 @@ int Parm::getResultImpl (Result::Ref& result, const Request& request, bool)
       Cells partCells (partDom, nrFreq, partStartTime, partEndTime);
       Request partReq(partCells);
       Result partRes;
-      Result::Ref partResRef (partRes, DMI::WRITE||DMI::EXTERNAL);
-      polc.getResult (partResRef, partReq);
+      polc.getResult (partRes, partReq);
       // Create the result matrix if it is the first Time.
       // Now it is initialized with zeroes (to see possible errors).
       // In the future the outcommnented statement can be used
