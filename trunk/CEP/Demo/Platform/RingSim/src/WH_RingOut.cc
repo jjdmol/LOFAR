@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "WH_RingOut.h"
+#include "WH_Ring.h" // need NOTADDRESSED value
 #include "firewalls.h"
 
 short   WH_RingOut::itsInstanceCnt = 0;
@@ -53,7 +54,7 @@ void WH_RingOut::process ()
   //  cout << "Added to Q " << getInstanceCnt() << " size now is " << itsQDataHolders.size() 
   //     << "\t " << aDH->getBuffer()[0] << endl;
 
-  Firewall::Assert(itsQDataHolders.size() <= 20,
+  Firewall::Assert(itsQDataHolders.size() <= 50,
 		   __HERE__,
 		   "Queue length too long!! %i",itsQDataHolders.size());
 
@@ -61,7 +62,8 @@ void WH_RingOut::process ()
 	 << " Filled DHBuffer[" << aSourceID << "] ");
   }
   
-  if (getOutHolder(0)->doHandle() && itsQDataHolders.size() > 0) {
+  if (getOutHolder(0)->doHandle())
+    if (itsQDataHolders.size() > 0) {
     
     DH_Ring<DH_Test> *aDH;
     aDH = itsQDataHolders.front();
@@ -73,15 +75,18 @@ void WH_RingOut::process ()
     memcpy((void*)itsOutDataHolders[0]->getPacket(), 
 	   (void*)aDH->getPacket(),
 	   itsInDataHolders[0]->getDataPacketSize());
-  }
+    } else {
+      itsOutDataHolders[0]->getPacket()->destination = NOTADDRESSED;
+    }
 
 }
 
 void WH_RingOut::dump () const
 {
-  cout << "WH_RingOut Buffer: " << getInstanceCnt() << "   ";
+  cout << "WH_RingOut Buffer: " ; //<< getInstanceCnt() << "   ";
   cout << " " <<  itsOutDataHolders[0]->getBuffer()[0] ;
   cout << endl;
+  cout << "Q length = " << itsQDataHolders.size() << endl;
 }
 
 
