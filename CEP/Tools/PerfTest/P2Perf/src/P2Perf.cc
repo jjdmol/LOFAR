@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.7  2001/09/19 09:05:09  wierenga
+//  Allocate simul and empty on stack.
+//
 //  Revision 1.6  2001/09/19 08:47:20  wierenga
 //  Make sure it compiles again with latest changes in BaseSim.
 //
@@ -124,8 +127,7 @@ void SeqSim::define(const ParamBlock& params)
   cout << "SeqSim Processor " << rank << " of " << size << " operational."
        << flush << endl;
 
-  WH_Empty empty;
-  Simul simul((WorkHolder*)(&empty), "SeqSim", 0);
+  Simul simul(new WH_Empty(), "SeqSim", 0);
   setSimul(simul);
   simul.runOnNode(0);
 
