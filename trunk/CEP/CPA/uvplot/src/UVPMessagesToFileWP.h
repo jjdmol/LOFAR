@@ -21,6 +21,68 @@
 //*********** End of AID mechanism declarations
 
 
+namespace UVP
+{
+  const HIID  SorterHeaderHIID  = HIID(AidUVData|
+                                       AidAny|  // UV-Set ID
+                                       AidAny|  // Segment ID
+                                       AidPatch|
+                                       AidAny|  // Patch ID
+                                       AidHeader|
+                                       AidCorr|
+                                       AidIFR);;
+
+  const HIID  SorterMessageHIID = HIID(AidUVData|
+                                       AidAny|  // UV-Set ID
+                                       AidAny|  // Segment ID
+                                       AidPatch|
+                                       AidAny|  // Patch ID
+                                       AidData|
+                                       AidCorr|
+                                       AidIFR|
+                                       AidAny|  // Correlation ID
+                                       AidAny); // IFR;
+
+  const HIID  SorterFooterHIID  = HIID(AidUVData|
+                                       AidAny|
+                                       AidAny|
+                                       AidPatch|
+                                       AidAny|
+                                       AidFooter|
+                                       AidCorr|
+                                       AidIFR);
+
+  const HIID  IntegraterHeaderHIID  = HIID(AidUVData|
+                                           AidAny|
+                                           AidAny|
+                                           AidPatch|
+                                           AidAny|
+                                           AidHeader|
+                                           AidCorr|
+                                           AidTimeslot);
+
+  const HIID  IntegraterMessageHIID = HIID(AidUVData|
+                                           AidAny|
+                                           AidAny|
+                                           AidPatch|
+                                           AidAny|
+                                           AidData|
+                                           AidCorr|
+                                           AidTimeslot|
+                                           AidAny|
+                                           AidAny);
+
+  const HIID  IntegraterFooterHIID  = HIID(AidUVData|
+                                           AidAny|  // UV-Set ID
+                                           AidAny|  // Segment ID
+                                           AidPatch|
+                                           AidAny|  // Patch ID
+                                           AidFooter|
+                                           AidCorr|
+                                           AidTimeslot);
+};
+
+
 //! Receives (time-frequency) sorted UV data and writes them to a file
 /*!
   
@@ -28,7 +90,7 @@
 class UVPMessagesToFileWP: public WorkProcess
 {
 public:
-  
+
   UVPMessagesToFileWP(const std::string& inputFilename,
                       const std::string& outputFilename,
                       bool               useSorter = true);
@@ -46,12 +108,6 @@ private:
   bool        itsIntegratorIsPresent;
   bool        itsSorterIsPresent;
   bool        itsIntegratorIsStarted;
-
-  HIID        itsSorterHeaderHIID;
-  HIID        itsSorterMessageHIID;
-
-  HIID        itsIntegraterHeaderHIID;
-  HIID        itsIntegraterMessageHIID;
 
   bool        itsUseSorter;
 };
