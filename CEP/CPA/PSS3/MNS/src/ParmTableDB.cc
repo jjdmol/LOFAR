@@ -26,7 +26,7 @@
 #include <aips/Mathematics/Math.h>
 
 #ifdef HAVE_LOFAR_PL
-# include <PL/Query.h>
+# include <PL/QueryObject.h>
 # include <PL/Attrib.h>
 # include <PL/Collection.h>
 
