@@ -33,7 +33,7 @@
 #include <tinyOnlineProto/MAC.h>
 #include <Common/Lorrays.h>
 #include <Common/lofar_complex.h>
-#include <fstream>
+#include <Common/lofar_fstream.h>
 
 namespace LOFAR
 {
