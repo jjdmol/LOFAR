@@ -1,42 +1,12 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Common/Debug.h>			// some source still uses this
+#include <Common/hexdump.h>
 
-#include <ApplControlServer.h>
+#include <ACC/ApplControlServer.h>
 
 
 using namespace LOFAR;
-
-void hexdump (char	*memblock, long	size)
-{
-#define BTS_P_LINE		16
-	long	left, index;
-	char	c;
-
-	for (left = 0; left < size; left += BTS_P_LINE) {
-		printf ("%04lX: ", left);
-		for (index = 0; index < BTS_P_LINE; index ++) {
-			if (index == BTS_P_LINE / 2)			/* add extra space in	*/
-				printf (" ");					/* the middle o.t. line	*/
-
-			if (left + index < size)
-				printf ("%02X ", (unsigned char) memblock [left + index]);
-			else
-				printf ("   ");
-		}
-
-		for (index = 0; index < BTS_P_LINE; index ++) {	/* print char if	*/
-			if (left + index < size) {					/* printable char	*/
-				c = memblock [left + index];
-				if (c < 0x20 || c > 0x7e)
-					printf (".");
-				else
-					printf ("%c", c);
-			}
-		}
-		printf ("\n");
-	}
-}
+using namespace LOFAR::ACC;
 
 void ping ()
 {
@@ -71,7 +41,6 @@ void handleAckMessage()
 
 int main (int argc, char *argv[]) {
 	INIT_LOGGER ("default.log_prop");
-	Debug::loadLevels("default.debug");
 
 	try {
 		ApplCtrlFunctions		ACF(doubleParam,
