@@ -562,6 +562,17 @@ addToMapFile()
 	}
 
 	#
+	# makeSymbolicName membername
+	#
+	# Constructs some symbolicname for the given member
+	# 'its' is stripped of and the first letter is forced to lowercase
+	function makeSymbolicName(theMember) {
+		gsub("^its", "", theMember)
+		SymName=tolower(substr(theMember,1,1)) substr(theMember,2)
+		return SymName
+	}
+
+	#
 	# addBaseClass classname
 	#
 	# Adds the given class as base class to the map file.
@@ -571,7 +582,7 @@ addToMapFile()
 		}
 		MemberName="BC" baseClass
 		ColumnName="BaseClass"
-		printf "%-18s %-18s %-18s %s\n", baseClass, MemberName, ColumnName, baseClass
+		printf "%-16s %-16s %-14s %-16s %s\n", baseClass, MemberName, baseClass, ColumnName, baseClass
 	}
 
 	# MAIN awk loop
@@ -598,11 +609,11 @@ addToMapFile()
 			}
 
 			printf "\n"
-			printf "Class		%s\n", Class
-			printf "Table		%s\n", Class
-			printf "File		%s\n", pathParts[nrParts]
-			printf "#TYPE              MEMBER             COLUMN             TYPE\n"
-			printf "#--------------------------------------------------------------------\n"
+			printf "Class      %s\n", Class
+			printf "Table      %s\n", Class
+			printf "File       %s\n", pathParts[nrParts]
+			printf "#C-TYPE          MEMBER           SYMB.NAME      COLUMN           DB.TYPE\n"
+			printf "#-------------------------------------------------------------------------------\n"
 			prevClass=Class
 			prevBaseClass=BaseClass
 
@@ -618,8 +629,9 @@ addToMapFile()
 		MemberName=resolveMemberInfo("MN", field[5], Class)
 		ColumnType=resolveMemberInfo("CT", field[5], Class)
 		ColumnName=resolveMemberInfo("CN", field[5], Class)
+		SymbolicName=makeSymbolicName(MemberName)
 
-		printf "%-18s %-18s %-18s %s\n", MemberType, MemberName, ColumnName, ColumnType
+		printf "%-16s %-16s %-14s %-16s %s\n", MemberType, MemberName, SymbolicName, ColumnName, ColumnType
 		if (substr(ColumnType,1,3) == "@@@") {
 			print substr(ColumnType,4) >>NEEDEDFILE
 		}
