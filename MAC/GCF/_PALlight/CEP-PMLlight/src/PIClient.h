@@ -27,8 +27,8 @@
 #include "PICEPDefines.h"
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
-#include <Common/Thread.h>    
-#include <Common/Thread/Mutex.h>
+#include <GCF/Thread.h>    
+#include <GCF/Mutex.h>
 #include <GCF/Protocols/DH_PIProtocol.h>
 #include <GCF/Protocols/PI_Protocol.ph> // for the TPIResult enumeration
 
@@ -83,9 +83,7 @@ class PIClient
 
   private: // helper methods
     void bufferAction (DH_PIProtocol::TEventID event, 
-                       CEPPropertySet* pPropSet, 
-                       const string& scope = "",
-                       TPIResult result = PI_UNKNOWN_ERROR);
+                       CEPPropertySet* pPropSet);
                        
     void processOutstandingActions();
 
@@ -113,10 +111,8 @@ class PIClient
     // </group>
     
   private: // data members     
-    // the transporter   
-    TH_Socket*      _pTHSocket;
     // the protocol
-    DH_PIProtocol   _dhProto;
+    DH_PIProtocol   _dhPIClient;
     
     typedef map<string /* scope */, CEPPropertySet*>  TMyPropertySets;
     TMyPropertySets _myPropertySets;
@@ -126,8 +122,8 @@ class PIClient
     {
       CEPPropertySet* pPropSet;
       DH_PIProtocol::TEventID eventID;
-      TPIResult result;
-      string scope;
+      char* extraData;
+      uint32 extraDataSize;
     } TAction;
     typedef list<TAction>  TBufferedActions;
     TBufferedActions _bufferedActions;    
@@ -135,10 +131,9 @@ class PIClient
     typedef map<uint16 /*seqnr*/, CEPPropertySet*>  TStartedSequences;
     TStartedSequences _startedSequences;    
 
-    Thread::ThrID _thread;
-    Thread::Mutex _connMutex;
-    Thread::Mutex _actionMutex;
-    Thread::Mutex _propSetMutex;
+    GCF::Thread::ThrID _thread;
+    GCF::Thread::Mutex _bufferMutex;
+    GCF::Thread::Mutex _propSetMutex;
     
     static PIClient* _pInstance;
     // count the usage of this singleton
@@ -146,6 +141,7 @@ class PIClient
     
     char*         _valueBuf;
     unsigned int  _upperboundValueBuf;
+    BlobOBufChar  _extraDataBuf;
 };
   } // namespace CEPPMLlight
  } // namespace GCF
