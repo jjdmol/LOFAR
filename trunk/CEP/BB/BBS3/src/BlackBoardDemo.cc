@@ -76,7 +76,8 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   undefine();
 
   // Create the top-level Simul
-  Composite topComposite(new WH_Empty(), 
+  WH_Empty empty;
+  Composite topComposite(empty, 
 	      "BlackBoardDemo",
 	      true, 
 	      true,  // controllable	      
