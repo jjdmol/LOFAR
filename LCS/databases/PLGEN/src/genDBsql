@@ -334,7 +334,8 @@ esac
 ALLFILESWRKFILE=/tmp/allfiles.LCS.$$
 CLASSLOCATIONWRKFILE=/dev/null				# to satisfy convertMapfile
 MAPWORKFILE=/tmp/mapinfo.sql.LCS.$$
-MODULEFILE=${DESTDIR}/${PREFIX}create_databases.sql
+TARGET=`basename ${MAPFILE} | cut -d"." -f1`
+MODULEFILE=${DESTDIR}/${PREFIX}${TARGET}_create_databases.sql
 
 # Make sure there are no old workfiles left
 cleanupWorkFiles
