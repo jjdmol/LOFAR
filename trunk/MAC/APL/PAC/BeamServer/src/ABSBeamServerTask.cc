@@ -55,7 +55,7 @@ using namespace boost::posix_time;
 using namespace boost::gregorian;
 
 #define MAX_N_SPECTRAL_WINDOWS 1
-#define COMPUTE_INTERVAL 10
+#define COMPUTE_INTERVAL 1
 #define UPDATE_INTERVAL  1
 
 #define SCALE (1<<(16-2))
