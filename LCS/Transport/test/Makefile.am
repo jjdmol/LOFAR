@@ -5,7 +5,7 @@ AM_CPPFLAGS = \
 	-DMORECORE_CANNOT_TRIM=1 \
 	-DSHMEM_ALLOC
 
-check_PROGRAMS			= Example TestBidirectional ExampleMem ExampleBlMem ExampleNonBlocking ExampleShMem ExampleMPI ExampleSocket ExampleSocketPerf tTH_Socket
+check_PROGRAMS			= Example TestBidirectional ExampleMem ExampleBlMem ExampleNonBlocking ExampleShMem ExampleMPI ExampleVarBuf ExampleSocket ExampleSocketPerf tTH_Socket
 
 Example_SOURCES 		= Example.cc DH_Example.cc
 
@@ -18,6 +18,8 @@ ExampleNonBlocking_SOURCES      = ExampleNonBlocking.cc DH_Example.cc
 ExampleShMem_SOURCES 		= ExampleShMem.cc DH_Example.cc
 
 ExampleMPI_SOURCES 		= ExampleMPI.cc DH_Example.cc
+
+ExampleVarBuf_SOURCES           = ExampleVarBuf.cc DH_VarBuf.cc
 
 ExampleSocket_SOURCES		= ExampleSocket.cc DH_Example.cc
 
@@ -38,10 +40,11 @@ TESTS	=					\
 	TestBidirectional_test.sh		\
 	ExampleMem_test.sh			\
 	ExampleBlMem_test.sh			\
-	ExampleNonBlocking_test.sh			\
+	ExampleNonBlocking_test.sh		\
 	ExampleShMem_test.sh			\
 	ExampleMPI_test.sh			\
-	ExampleSocket_test.sh		\
+	ExampleVarBuf_test.sh			\
+	ExampleSocket_test.sh		        \
 	tTH_Socket_test.sh
 
 
