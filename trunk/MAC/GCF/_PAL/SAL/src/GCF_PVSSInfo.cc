@@ -21,9 +21,9 @@
 //#  $Id$
 
 #include <GCF/PAL/GCF_PVSSInfo.h>
+#include <GCF/Utils.h>
 #include "GSA_Service.h"
 #include "GSA_Defines.h"
-
 #include <Manager.hxx>
 
 string GCFPVSSInfo::_sysName = "";
@@ -217,7 +217,7 @@ void buildTypeStructTree(const string path,
                          const DpElementId elId, 
                          list<TPropertyInfo>& propInfos)
 {
-  string newPath = path;
+  string propName = path;
   DpElementType elType = pType->getTypeNodePtr(elId)->getElementType();
   if (elId != pType->getRootElement())
   {
@@ -230,8 +230,8 @@ void buildTypeStructTree(const string path,
     }
     if (elType != DPELEMENT_TYPEREFERENCE)
     {
-      if (newPath.length() > 0) newPath += '.';
-      newPath += elName;
+      if (propName.length() > 0) propName += '.';
+      propName += elName;
     }
     delete [] elName; 
   }
@@ -239,17 +239,27 @@ void buildTypeStructTree(const string path,
   {
     if (macValueTypes[elType] != NO_LPT)
     {
-      TPropertyInfo propInfo;
-      propInfo.propName += newPath;
-      propInfo.type = macValueTypes[elType];
-      propInfos.push_back(propInfo);
+      
+      if (Utils::isValidPropName(propName.c_str()))
+      {
+        TPropertyInfo propInfo;
+        propInfo.propName = propName;
+        propInfo.type = macValueTypes[elType];
+        propInfos.push_back(propInfo);
+      }
+      else
+      {
+        LOG_WARN(formatString ( 
+            "Property name %s meets not the name convention! Not add!!!",
+            propName.c_str()));
+      }
     }
     else
     {
       LOG_ERROR(formatString(
           "TypeElement type %d (see DpElementType.hxx) is unknown to GCF (%s). No add!!!",
           elType, 
-          newPath.c_str()));      
+          propName.c_str()));      
     }
   } 
   else
@@ -259,7 +269,7 @@ void buildTypeStructTree(const string path,
     for (DynPtrArrayIndex i = 0; i < nrOfChilds; i++)
     {
       childElId = pType->getSon(elId, i);
-      buildTypeStructTree(newPath, pType, childElId, propInfos);
+      buildTypeStructTree(propName, pType, childElId, propInfos);
     }
   }
 }

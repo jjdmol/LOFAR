@@ -22,6 +22,8 @@
 
 #include "GPA_PropertySet.h"
 #include "GPA_Controller.h"
+#include <GCF/GCF_PVBool.h>
+#include <GCF/GCF_PVString.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <strings.h>
 #include <stdio.h>
@@ -89,13 +91,18 @@ bool GPAPropertySet::enable(PARegisterScopeEvent& request)
         LOG_ERROR("DP's for permanent prop. sets must already exists");
         response.result = PA_PROP_SET_NOT_EXISTS;
       }
-      else if (_isTemporary)
+      else if (GCFPVSSInfo::propExists(_name + "__enabled"))
       {
-        if ((saResult = dpCreate(_name + string("_temp"), string("GCFTempRef"))) != SA_NO_ERROR)
+        LOG_ERROR("Framework DP's for PS which are enabled may not already exists before enabling them!");
+        response.result = PA_PROP_SET_ALLREADY_EXISTS;
+      }
+      else
+      {
+        if ((saResult = dpCreate(_name + string("__enabled"), string("GCFPaPsEnabled"))) != SA_NO_ERROR)
         {
           if (saResult == SA_DPTYPE_UNKNOWN)
           {
-            LOG_FATAL("Please check the existens of dpType 'GCFTempRef' in PVSS DB!!!");
+            LOG_FATAL("Please check the existens of dpType 'GCFPaPsEnabled' in PVSS DB!!!");
           }
           response.result = PA_INTERNAL_ERROR;
         }
@@ -109,11 +116,6 @@ bool GPAPropertySet::enable(PARegisterScopeEvent& request)
       else
       {
         enabled = true;
-        if (!_isTemporary)
-        {
-          _state = S_ENABLED;
-          _controller.sendAndNext(response);
-        }
       }
       break;
     }
@@ -164,22 +166,24 @@ void GPAPropertySet::disable(PAUnregisterScopeEvent& request)
     {
       _state = S_DISABLING;
       _counter = 0;
+      GCFPVString indication("d|" + _name);
+      dpeSet("__pa_PSIndication", indication);
+      if (GCFPVSSInfo::propExists(_name + "__enabled"))
+      {
+        LOG_INFO(formatString (
+            "DP %s__enabled must be removed!",
+            _name.c_str()));
+        if (dpDelete(_name + "__enabled") != SA_NO_ERROR)
+        {
+          response.result = PA_INTERNAL_ERROR;
+        }
+        else
+        {
+          _counter += 1;
+        }
+      }
       if (_isTemporary)
       {
-        if (GCFPVSSInfo::propExists(_name + string("_temp")))
-        {
-          LOG_INFO(formatString (
-              "DP %s_temp must be removed!",
-              _name.c_str()));
-          if (dpDelete(_name + string("_temp")) != SA_NO_ERROR)
-          {
-            response.result = PA_INTERNAL_ERROR;
-          }
-          else
-          {
-            _counter += 1;
-          }
-        }
         if (GCFPVSSInfo::propExists(_name))
         {
           LOG_INFO(formatString (
@@ -549,7 +553,14 @@ void GPAPropertySet::dpCreated(const string& dpName)
   {
     case S_ENABLING:
     {
-      assert(dpName.find(_name + string("_temp")) < dpName.length());
+      assert(dpName.find(_name + "__enabled") < dpName.length());
+      
+      GCFPVBool category(_isTemporary);
+      dpeSet(_name + "__enabled", category);
+      
+      GCFPVString indication("e|" + _name);
+      dpeSet("__pa_PSIndication", indication);
+
       _state = S_ENABLED;
       PAScopeRegisteredEvent response;
       response.seqnr = _savedSeqnr;

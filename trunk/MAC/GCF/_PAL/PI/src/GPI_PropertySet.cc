@@ -89,7 +89,7 @@ void GPIPropertySet::propValueChanged(const string& propName, const GCFPValue& v
 
 void GPIPropertySet::enable(PIRegisterScopeEvent& requestIn)
 {
-  LOG_INFO(LOFAR::formatString(
+  LOG_INFO(formatString(
       "Request to enable prop. set '%s' of type '%s'",
       requestIn.scope.c_str(),
       requestIn.type.c_str()));
@@ -124,7 +124,7 @@ void GPIPropertySet::enable(PIRegisterScopeEvent& requestIn)
 
 void GPIPropertySet::retryEnable()
 {
-  LOG_INFO(LOFAR::formatString(
+  LOG_INFO(formatString(
       "Retry enable prop. set '%s', because Property Agent was not available yet",
       _scope.c_str()));
   switch (_state)
@@ -182,7 +182,7 @@ void GPIPropertySet::enabled(TPAResult result)
 
 void GPIPropertySet::disable(PIUnregisterScopeEvent& requestIn)
 {
-  LOG_INFO(LOFAR::formatString(
+  LOG_INFO(formatString(
       "Request to disable prop. set '%s' of type '%s'",
       _scope.c_str(),
       _type.c_str()));
@@ -267,7 +267,7 @@ void GPIPropertySet::linkPropSet(PALinkPropSetEvent& requestIn)
     }
     case S_DISABLED:
     case S_DISABLING:
-      LOG_DEBUG(LOFAR::formatString ( 
+      LOG_DEBUG(formatString ( 
           "Property set with scope %s is deleting in the meanwhile", 
           _scope.c_str()));
       erResponse.result = PA_PS_GONE;   
@@ -435,7 +435,7 @@ void GPIPropertySet::unlinkPropSet(PAUnlinkPropSetEvent& requestIn)
     }
     case S_DISABLED:
     case S_DISABLING:
-      LOG_DEBUG(LOFAR::formatString ( 
+      LOG_DEBUG(formatString ( 
           "Property set with scope %s is deleting in the meanwhile", 
           _scope.c_str()));
       propSetUnlinkedInPI(PA_PS_GONE);
@@ -501,7 +501,7 @@ void GPIPropertySet::wrongState(const char* request)
     "UNLINKING",
     "DELAYED DISABLING"
   };
-  LOG_WARN(LOFAR::formatString ( 
+  LOG_WARN(formatString ( 
         "Could not perform '%s' on property set '%s'. Wrong state: %s",
         request,
         getScope().c_str(),

@@ -55,29 +55,28 @@ TGCFResult GCFExtPropertySet::load()
   
   if (_isBusy)
   {
-    LOG_INFO(LOFAR::formatString ( 
+    LOG_INFO(formatString ( 
         "This property set with Instance name (%s) is busy with an action. Ignored!",
         getScope().c_str()));
     result = GCF_BUSY;
   }
   else if (_isLoaded)
   {
-    LOG_INFO(LOFAR::formatString ( 
+    LOG_INFO(formatString ( 
         "This instance of the property set with Instance name (%s) is already loaded. Ignored!",
         getScope().c_str()));
     result = GCF_ALREADY_LOADED;
   }
-  else if (getScope().length() == 0 || 
-           !Utils::isValidPropName(getScope().c_str()))
+  else if (getScope().length() == 0)
   {
-    LOG_INFO(LOFAR::formatString ( 
-        "Instance name not set or meets not the naming convention (%s). Ignored!",
+    LOG_INFO(formatString ( 
+        "Instance name not set. Ignored!",
         getScope().c_str()));
     result = GCF_NO_PROPER_DATA;
   }
   else
   {
-    LOG_INFO(LOFAR::formatString ( 
+    LOG_INFO(formatString ( 
         "REQ: Load ext. property set %s",
         getScope().c_str()));
 
@@ -101,7 +100,7 @@ void GCFExtPropertySet::loaded(TGCFResult result)
   assert(_isBusy);
   assert(!_isLoaded);
   _isBusy = false;
-  LOG_INFO(LOFAR::formatString ( 
+  LOG_INFO(formatString ( 
       "PA-RESP: Prop. set '%s' is loaded%s",
       getScope().c_str(), 
       (result == GCF_NO_ERROR ? "" : " (with errors)")));
@@ -119,29 +118,28 @@ TGCFResult GCFExtPropertySet::unload()
   
   if (_isBusy)
   {
-    LOG_INFO(LOFAR::formatString ( 
+    LOG_INFO(formatString ( 
         "This property set with Instance name (%s) is busy with an action. Ignored!",
         getScope().c_str()));
     result = GCF_BUSY;
   }
   else if (!_isLoaded)
   {
-    LOG_INFO(LOFAR::formatString ( 
+    LOG_INFO(formatString ( 
         "This instance of the property set with Instance name (%s) was not loaded here. Ignored!",
         getScope().c_str()));
     result = GCF_NOT_LOADED;
   }
-  else if (getScope().length() == 0 || 
-           !Utils::isValidPropName(getScope().c_str()))
+  else if (getScope().length() == 0)
   {
-    LOG_INFO(LOFAR::formatString ( 
-        "Instance name not set or meets not the naming convention (%s). Ignored!",
+    LOG_INFO(formatString ( 
+        "Instance name not set. Ignored!",
         getScope().c_str()));
     result = GCF_NO_PROPER_DATA;
   }
   else
   {    
-    LOG_INFO(LOFAR::formatString ( 
+    LOG_INFO(formatString ( 
         "REQ: Unload ext. property set %s",
         getScope().c_str()));
 
@@ -165,7 +163,7 @@ void GCFExtPropertySet::unloaded(TGCFResult result)
   assert(_isBusy);
   assert(_isLoaded);
   _isBusy = false;
-  LOG_INFO(LOFAR::formatString ( 
+  LOG_INFO(formatString ( 
       "PA-RESP: Prop. set '%s' is unloaded%s",
       getScope().c_str(), 
       (result == GCF_NO_ERROR ? "" : " (with errors)")));
@@ -191,7 +189,7 @@ void GCFExtPropertySet::serverIsGone()
 {
   assert(_isLoaded);
 
-  LOG_INFO(LOFAR::formatString ( 
+  LOG_INFO(formatString ( 
       "PA-IND: Server for prop. set '%s' is gone",
       getScope().c_str()));
   _isLoaded = false;
@@ -220,7 +218,7 @@ TGCFResult GCFExtPropertySet::requestValue(const string propName) const
   }
   else 
   {
-    LOG_INFO(LOFAR::formatString ( 
+    LOG_INFO(formatString ( 
         "This property set has no property '%s'. Ignored!",
         propName.c_str()));
     return GCF_PROP_NOT_IN_SET;
@@ -236,7 +234,7 @@ TGCFResult GCFExtPropertySet::subscribeProp(const string propName) const
   }
   else 
   {
-    LOG_INFO(LOFAR::formatString ( 
+    LOG_INFO(formatString ( 
         "This property set has no property '%s'. Ignored!",
         propName.c_str()));
     return GCF_PROP_NOT_IN_SET;
@@ -252,7 +250,7 @@ TGCFResult GCFExtPropertySet::unsubscribeProp(const string propName) const
   }
   else 
   {
-    LOG_INFO(LOFAR::formatString ( 
+    LOG_INFO(formatString ( 
         "This property set has no property '%s'. Ignored!",
         propName.c_str()));
     return GCF_PROP_NOT_IN_SET;
@@ -268,7 +266,7 @@ bool GCFExtPropertySet::isPropSubscribed (const string propName) const
   }
   else 
   {
-    LOG_INFO(LOFAR::formatString ( 
+    LOG_INFO(formatString ( 
         "This property set has no property '%s'.",
         propName.c_str()));
     return false;

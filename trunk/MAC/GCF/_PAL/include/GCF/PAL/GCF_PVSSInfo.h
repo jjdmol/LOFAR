@@ -65,7 +65,7 @@ class GCFPVSSInfo
     GCFPVSSInfo (const GCFPVSSInfo&);
     GCFPVSSInfo& operator= (const GCFPVSSInfo&);
 
-  public:
+  private:
     friend class GCFPropertySet;
     static TGCFResult getTypeStruct(const string& typeName, list<TPropertyInfo>& propInfo, unsigned int sysNr);    
 };

@@ -41,75 +41,64 @@ GCFPVDynArr::~GCFPVDynArr()
   cleanup();
 }
 
-unsigned int GCFPVDynArr::unpack(const char* valBuf)
+unsigned int GCFPVDynArr::unpackConcrete(const char* valBuf)
 {
-  unsigned int result(0);
-  unsigned int unpackedBytes = unpackBase(valBuf);
-  if (unpackedBytes > 0)
+  unsigned int unpackedBytes(0);
+  cleanup();
+  unsigned int arraySize(0);
+  unsigned int curUnpackedBytes(0);
+  GCFPValue* pNewValue(0);
+  memcpy((void *) &arraySize, valBuf, sizeof(unsigned int));
+  unpackedBytes += sizeof(unsigned int);
+  for (unsigned int i = 0; i < arraySize; i++)
   {
-    cleanup();
-    unsigned int arraySize(0);
-    unsigned int curUnpackedBytes(0);
-    GCFPValue* pNewValue(0);
-    memcpy((void *) &arraySize, valBuf + unpackedBytes, sizeof(unsigned int));
-    unpackedBytes += sizeof(unsigned int);
-    for (unsigned int i = 0; i < arraySize; i++)
+    pNewValue = GCFPValue::createMACTypeObject((TMACValueType) (getType() | LPT_DYNARR));
+    
+    curUnpackedBytes = pNewValue->unpackConcrete(valBuf + unpackedBytes);
+    if (curUnpackedBytes > 0)
     {
-      pNewValue = GCFPValue::createMACTypeObject((TMACValueType) (getType() | LPT_DYNARR));
-      
-      curUnpackedBytes = pNewValue->unpack(valBuf + unpackedBytes);
-      if (curUnpackedBytes > 0)
-      {
-        unpackedBytes += curUnpackedBytes;
-        _values.push_back(pNewValue);
-      }
-      else
-      {
-        unpackedBytes = 0; 
-        break;
-      }
+      unpackedBytes += curUnpackedBytes;
+      _values.push_back(pNewValue);
     }
-    result = unpackedBytes;
-  }
-  return result;
-}
-
-unsigned int GCFPVDynArr::pack(char* valBuf) const
-{
-  unsigned int result(0);  
-  unsigned int packedBytes = packBase(valBuf);
-  if (packedBytes > 0)
-  {
-    unsigned int arraySize(_values.size());
-    memcpy(valBuf + packedBytes, (void *) &arraySize, sizeof(unsigned int));
-    packedBytes += sizeof(unsigned int);
-    unsigned int curPackedBytes = 0;
-    for (GCFPValueArray::const_iterator iter = _values.begin();
-         iter != _values.end(); ++iter)
+    else
     {
-      curPackedBytes = (*iter)->pack(valBuf + packedBytes);
-      packedBytes += curPackedBytes;
-      if (curPackedBytes == 0)
-      {
-        packedBytes = 0;
-        break;
-      }        
-    }  
-    result = packedBytes;
+      unpackedBytes = 0; 
+      break;
+    }
   }
-  return result;
+  return unpackedBytes;
 }
 
-unsigned int GCFPVDynArr::getSize() const
+unsigned int GCFPVDynArr::packConcrete(char* valBuf) const
+{
+  unsigned int packedBytes(0);  
+  unsigned int arraySize(_values.size());
+  memcpy(valBuf, (void *) &arraySize, sizeof(unsigned int));
+  packedBytes += sizeof(unsigned int);
+  unsigned int curPackedBytes = 0;
+  for (GCFPValueArray::const_iterator iter = _values.begin();
+       iter != _values.end(); ++iter)
+  {
+    curPackedBytes = (*iter)->packConcrete(valBuf + packedBytes);
+    packedBytes += curPackedBytes;
+    if (curPackedBytes == 0)
+    {
+      packedBytes = 0;
+      break;
+    }        
+  }  
+  return packedBytes;
+}
+
+unsigned int GCFPVDynArr::getConcreteSize() const
 {
   unsigned int totalSize(sizeof(unsigned int));
 
   for (GCFPValueArray::const_iterator iter = _values.begin();
        iter != _values.end(); ++iter)
   {
-    totalSize += (*iter)->getSize();
+    totalSize += (*iter)->getConcreteSize();
   }  
-  totalSize += getBaseSize();
   return totalSize;
 }
 

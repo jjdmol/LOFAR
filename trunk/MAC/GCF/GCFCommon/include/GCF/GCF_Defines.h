@@ -29,8 +29,14 @@ using namespace LOFAR;
 
 #include <assert.h>
 
-#define GCF_PROP_NAME_SEP     '.'
+// This header file will be included by each GCF API class header and provides
+// therefore a number of defines, structs or macro's. They can/must be used when
+// calling a GCF API class memberfunction.
 
+#define GCF_PROP_NAME_SEP     '.' // separates the levels in property sets
+#define GCF_SCOPE_NAME_SEP     '_' // separates the levels in structure of property sets
+
+// possible results of GCF api class member calls.
 enum TGCFResult {
   GCF_NO_ERROR, 
   GCF_UNKNOWN_ERROR,
@@ -48,7 +54,6 @@ enum TGCFResult {
   GCF_PROP_NOT_VALID,
   GCF_PROP_WRONG_TYPE,
   GCF_PROP_NOT_IN_SET,
-  GCF_PROTECTED_STATE,
   GCF_NO_PROPER_DATA,
   GCF_SCOPE_ALREADY_REG,
   GCF_ALREADY_SUBSCRIBED,
@@ -59,17 +64,12 @@ enum TGCFResult {
 
 typedef unsigned char TAccessMode;
 
-#define GCF_READABLE_PROP 1
-#define GCF_WRITABLE_PROP 2
+#define GCF_READABLE_PROP 1 // means monitorable
+#define GCF_WRITABLE_PROP 2 // means controllable
 #define GCF_READWRITE_PROP (GCF_READABLE_PROP | GCF_WRITABLE_PROP)
 
-typedef enum TMACValueType {NO_LPT, LPT_BOOL, LPT_CHAR, LPT_UNSIGNED, LPT_INTEGER, 
-                    LPT_BIT32, LPT_BLOB, LPT_REF, LPT_DOUBLE, LPT_DATETIME,
-                    LPT_STRING, LPT_DYNARR = 0x80,
-                    LPT_DYNBOOL, LPT_DYNCHAR, LPT_DYNUNSIGNED, LPT_DYNINTEGER, 
-                    LPT_DYNBIT32, LPT_DYNBLOB, LPT_DYNREF, LPT_DYNDOUBLE, LPT_DYNDATETIME,
-                    LPT_DYNSTRING };
- 
+// struct for initalize properties with accessMode and/or defaultValue
+// if defaultValue == 0 no default value will be set
 struct TPropertyConfig
 {
   char*         propName;
@@ -77,6 +77,42 @@ struct TPropertyConfig
   char*         defaultValue;
 };
 
+// start macro of a list of configurations of properties belonging to the same
+// property set
+#define PROPERTYCONFIGLIST_BEGIN(_name_) \
+const TPropertyConfig _name_[] = \
+{
+
+// config item of the list of configurations of properties belonging to the same
+// property set
+#define PROPERTYCONFIGLIST_ITEM(_propname_,_flags_,_default_) \
+{_propname_,_flags_,_default_},
+
+// end macro of a list of configurations of properties belonging to the same
+// property set
+#define PROPERTYCONFIGLIST_END \
+{0,0,0} \
+}; 
+
+/**
+ * The enumeration of possible MAC property types
+ * In case a dynamic array will be used the type ID enumeration starts on 
+ * 0x80.
+ * END_* are only delimeters
+ */
+typedef enum TMACValueType 
+{
+  NO_LPT, LPT_BOOL, LPT_CHAR, LPT_UNSIGNED, LPT_INTEGER, 
+  LPT_BIT32, LPT_BLOB, LPT_REF, LPT_DOUBLE, LPT_DATETIME,
+  LPT_STRING, END_LPT, 
+  LPT_DYNARR = 0x80, LPT_DYNBOOL, LPT_DYNCHAR, LPT_DYNUNSIGNED, LPT_DYNINTEGER, 
+  LPT_DYNBIT32, LPT_DYNBLOB, LPT_DYNREF, LPT_DYNDOUBLE, LPT_DYNDATETIME,
+  LPT_DYNSTRING, END_DYNLPT
+};
+
+// struct which holds the information about a property (name, type)
+// the information is retrieved from PVSS and converted to this struct or set by 
+// the user
 struct TPropertyInfo
 {
   string         propName;
@@ -92,17 +128,4 @@ struct TPropertyInfo
     }
   }; 
 };
-
-
-#define PROPERTYCONFIGLIST_BEGIN(_name_) \
-const TPropertyConfig _name_[] = \
-{
-
-#define PROPERTYCONFIGLIST_ITEM(_propname_,_flags_,_default_) \
-{_propname_,_flags_,_default_},
-
-#define PROPERTYCONFIGLIST_END \
-{0,0,0} \
-}; 
-
 #endif

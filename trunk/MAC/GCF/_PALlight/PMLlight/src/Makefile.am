@@ -1,3 +1,4 @@
+INSTALL=/usr/bin/install -C
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: $(top_srcdir)/../PAL/PI/src/%.prot

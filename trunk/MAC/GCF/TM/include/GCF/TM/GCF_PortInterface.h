@@ -28,13 +28,14 @@
 #include <string.h>
 
 #include <Common/lofar_string.h>
+#include <GCF/GCF_Defines.h>
 
 // forward declacations
 class GCFTask;
 class GCFEvent;
 
 /**
- * This is the abstract base class for all port implementations like TCP, shared 
+ * This is the abstract base class for all port implementations like TCP or shared 
  * memory. It provides the possibility to:
  * - send and receive events to/from peers in a generic way.
  * - start and stop timers on the port
@@ -43,33 +44,25 @@ class GCFPortInterface
 {
   public:
 
-    /**
-    * port types
-    */
-    typedef enum 
+    /** port types */
+    typedef enum TPortType
     {
         SAP = 1,    /**< Service Access Point              (port connector)*/
         SPP,        /**< Service Provision Point           (port acceptor)*/
         MSPP,       /**< Multi Service Provision Point     (port provider)*/
-    } TPortType;
+    };
     
-    typedef enum TSTATE {S_DISCONNECTED, S_CONNECTING, S_CONNECTED, S_DISCONNECTING, S_CLOSING};
-
-    /** @param protocol NOT USED */
-    explicit GCFPortInterface (GCFTask* pTask, 
-                      string name, 
-                      TPortType type, 
-                      int protocol, 
-                      bool transportRawData) :
-        _pTask(pTask), 
-        _name(name), 
-        _state(S_DISCONNECTED), 
-        _type(type), 
-        _protocol(protocol),
-        _transportRawData(transportRawData)
-    {
-    }
-    
+    /** port states */
+    typedef enum TSTATE 
+    { 
+      S_DISCONNECTED, 
+      S_CONNECTING, 
+      S_CONNECTED,
+      S_DISCONNECTING, 
+      S_CLOSING
+    };
+   
+    /// destructor
     virtual ~GCFPortInterface () {};
     
     virtual bool close () = 0;
@@ -85,7 +78,7 @@ class GCFPortInterface
     
     /**
     * Timer functions.
-    * Upon expiration of a timer a F_TIMER_SIG will be
+    * Upon expiration of a timer a F_TIMER will be
     * received on the port.
     */
     virtual long setTimer (long  delay_sec,
@@ -102,46 +95,77 @@ class GCFPortInterface
                               void** arg = 0) = 0;
     
     virtual int  cancelAllTimers() = 0;
-    
-    virtual int  resetTimerInterval(long timerid,
-                                    long sec,
-                                    long usec = 0) = 0;
-    
+        
     /**
     * Attribute access functions
     */
-    inline const string&  getName ()     const {return _name;}
-    inline TPortType      getType ()     const {return _type;}
-    inline bool           isConnected () const {return _state == S_CONNECTED;}
-    inline TSTATE         getState ()    const {return _state;}
-    inline const GCFTask* getTask ()     const {return _pTask;}
-    inline int            getProtocol () const {return _protocol;}
-    inline bool           isTransportRawData () const {return _transportRawData;}
+    const string&  getName ()     const {return _name;}
+    TPortType      getType ()     const {return _type;}
+    bool           isConnected () const {return _state == S_CONNECTED;}
+    TSTATE         getState ()    const {return _state;}
+    const GCFTask* getTask ()     const {return _pTask;}
+    int            getProtocol () const {return _protocol;}
+    bool           isTransportRawData () const {return _transportRawData;}
 
-  protected:
-    GCFTask*  _pTask;
-    string    _name;
-    TSTATE    _state;
-    TPortType _type;
-    int       _protocol; /**< NOT USED */
-    bool      _transportRawData;
+  protected: // constructors
+    /**
+     * @param pTask task on which the port is adapted
+     * @param name name of the port
+     * @param type port type
+     * @param protocol NOT USED 
+     * @param transportRawData indicates wether the user of this port is only 
+     * interested in an indication that there is data (F_DATAIN event) and thus 
+     * not in the received data (unpacked in a GCFEvent) itself. In case of F_DATAIN
+     * the user is responsible to flush the data from the incomming event buffer
+     */
+    explicit GCFPortInterface (GCFTask* pTask, 
+                      string name, 
+                      TPortType type, 
+                      int protocol, 
+                      bool transportRawData) :
+        _pTask(pTask), 
+        _name(name), 
+        _state(S_DISCONNECTED), 
+        _type(type), 
+        _protocol(protocol),
+        _transportRawData(transportRawData)
+    {
+    }
+
+  private:
+    /// default constructor is not allowed
+    GCFPortInterface();
+    /// copying is not allowed
+    GCFPortInterface (GCFPortInterface&);
+    GCFPortInterface& operator=(GCFPortInterface&);
+
+  protected: // helper methods    
+    virtual void setState (TSTATE newState) {_state = newState;}
     
-    virtual inline void setState (TSTATE newState) {_state = newState;}
-    
-    /** @param protocol NOT USED */
+    /** params see constructor */
     virtual void init(GCFTask& task, 
                       string& name, 
                       TPortType type,  
                       int protocol, 
                       bool transportRawData = false)
     {
-      _pTask = &task;
-      _name = name;  
-      _type = type;
-      _protocol = protocol;
-      _state = S_DISCONNECTED;
-      _transportRawData = transportRawData;
+      if (_state == S_DISCONNECTED)
+      {
+        _pTask = &task;
+        _name = name;  
+        _type = type;
+        _protocol = protocol;
+        _transportRawData = transportRawData;
+      }
     }
+
+  protected: // data members
+    GCFTask*  _pTask;
+    string    _name;
+    TSTATE    _state;
+    TPortType _type;
+    int       _protocol; /**< NOT USED */
+    bool      _transportRawData;
 };
 
 #endif

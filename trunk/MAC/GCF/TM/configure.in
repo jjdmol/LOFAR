@@ -54,10 +54,10 @@ lofar_DEBUG_OPTIMIZE
 #lofar_QT
 lofar_QATOOLS
 lofar_DOCXX
+lofar_LOG4CPLUS
 lofar_MPI(0)
-lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
-lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
-lofar_EXTERNAL(gcfcommon,1,GCF/GCF_Defines.h,,)
+lofar_INTERNAL(LCS/Common, Common, Common-v1_0, 1,Common/LofarTypes.h,,)
+lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-4_1alpha, 1,GCF/GCF_Defines.h,,)
 
 dnl
 dnl Output Makefiles

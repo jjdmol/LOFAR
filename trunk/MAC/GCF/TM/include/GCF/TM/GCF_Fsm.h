@@ -48,51 +48,51 @@ class GCFDummyPort : public GCFPortInterface
       GCFPortInterface(pTask, name, SPP, protocol, false) 
     {};
 
-    inline bool close () {return false;}
-    inline bool open () {return false;}
+    bool close () {return false;}
+    bool open () {return false;}
 
-    inline ssize_t send (GCFEvent& /*event*/)
+    ssize_t send (GCFEvent& /*event*/)
     {
       return 0;
     }
     
 
-    inline ssize_t recv (void* /*buf*/, 
-                         size_t /*count*/) 
+    ssize_t recv (void* /*buf*/, 
+                  size_t /*count*/) 
     {
       return 0;
     }
 
-    inline long setTimer (long  /*delay_sec*/,
-                          long  /*delay_usec*/,
-                          long  /*interval_sec*/,
-                          long  /*interval_usec*/,
-                          void* /*arg*/) 
+    long setTimer (long  /*delay_sec*/,
+                   long  /*delay_usec*/,
+                   long  /*interval_sec*/,
+                   long  /*interval_usec*/,
+                   void* /*arg*/) 
     {
       return 0;
     }
 
-    inline long setTimer (double /*delay_seconds*/, 
-                          double /*interval_seconds*/,
-                          void*  /*arg*/)
+    long setTimer (double /*delay_seconds*/, 
+                   double /*interval_seconds*/,
+                   void*  /*arg*/)
     {
       return 0;
     }
 
-    inline int cancelTimer (long /*timerid*/, 
-                            void** /*arg*/) 
+    int cancelTimer (long /*timerid*/, 
+                     void** /*arg*/) 
     {
       return 0;
     }
 
-    inline int cancelAllTimers () {return 0;}
+    int cancelAllTimers () {return 0;}
+  
+  private:
+    // not allowed
+    GCFDummyPort();
+    GCFDummyPort(GCFDummyPort&);
+    GCFDummyPort& operator= (GCFDummyPort&);
 
-    inline int resetTimerInterval (long /*timerid*/,
-                                   long /*sec*/,
-                                   long /*usec*/) 
-    {
-      return 0;
-    }
 };
 
 /**
@@ -117,22 +117,36 @@ class GCFDummyPort : public GCFPortInterface
  */
 class GCFFsm
 {
-  public:
+  protected: // constructors && destructors
     typedef GCFEvent::TResult (GCFFsm::*State)(GCFEvent& event, GCFPortInterface& port); // ptr to state handler type
     
     explicit  GCFFsm (State initial) : _state(initial) {;} 
+
+  private:
+    GCFFsm();
+
+  public:
     virtual ~GCFFsm () {;}
   
+    /// starts the statemachine with a F_ENTRY signal followed by a F_INIT signal
     void initFsm ();
   
-    inline GCFEvent::TResult dispatch (GCFEvent& event, 
-                                       GCFPortInterface& port)
+    /// dispatch incomming signals to the adapted task in the current state
+    GCFEvent::TResult dispatch (GCFEvent& event, 
+                                GCFPortInterface& port)
     {
       return (this->*_state)(event, port);
     }
   
   protected:
   
+    /** state transition; will be used by the MACRO TRAN see above
+     * sends a F_EXIT signal to the current state followed by the state transition
+     * and finaly sends a F_ENTRY signal to the new current state
+     * @param target new state
+     * @param from text of the current state
+     * @param to text of the new state
+     */
     void tran (State target, 
                const char* from, 
                const char* to);
@@ -141,9 +155,7 @@ class GCFFsm
     volatile State _state;
   
   private:
-    GCFFsm();
     static GCFDummyPort _gcfPort;
 };
-
 
 #endif

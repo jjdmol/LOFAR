@@ -100,9 +100,9 @@ GCFRTMyPropertySet::GCFRTMyPropertySet(const char* name,
   GCFRTMyProperty* pProperty;
   TPropertyInfo* pPropInfo;
   
-  if (!Utils::isValidPropName(_scope.c_str()))
+  if (!Utils::isValidScope(_scope.c_str()))
   {
-    LOG_WARN(LOFAR::formatString ( 
+    LOG_WARN(formatString ( 
         "Scope %s meets not the name convention! Set to \"\"",
         _scope.c_str()));
     _scope = "";
@@ -141,7 +141,7 @@ TGCFResult GCFRTMyPropertySet::enable ()
 {
   TGCFResult result(GCF_NO_ERROR);
     
-  LOG_INFO(LOFAR::formatString ( 
+  LOG_INFO(formatString ( 
       "REQ: Enable property set '%s'",
       getScope().c_str()));
   if (_state != S_DISABLED)
@@ -159,7 +159,7 @@ TGCFResult GCFRTMyPropertySet::enable ()
     }
     else if (pmResult == PM_SCOPE_ALREADY_EXISTS)
     {
-      LOG_ERROR(LOFAR::formatString ( 
+      LOG_ERROR(formatString ( 
           "Property set with scope %s already exists in this Application",
           getScope().c_str()));    
       result = GCF_SCOPE_ALREADY_REG;
@@ -172,7 +172,7 @@ TGCFResult GCFRTMyPropertySet::disable ()
 {
   TGCFResult result(GCF_NO_ERROR);
   
-  LOG_INFO(LOFAR::formatString ( 
+  LOG_INFO(formatString ( 
       "REQ: Disable property set '%s'",
       getScope().c_str()));
   switch (_state)
@@ -215,7 +215,7 @@ TGCFResult GCFRTMyPropertySet::disable ()
 void GCFRTMyPropertySet::scopeRegistered (TGCFResult result)
 {
   assert(_state == S_ENABLING);
-  LOG_INFO(LOFAR::formatString ( 
+  LOG_INFO(formatString ( 
       "PA-RESP: Property set '%s' is enabled%s",
       getScope().c_str(), 
       (result == GCF_NO_ERROR ? "" : " (with errors)")));
@@ -235,7 +235,7 @@ void GCFRTMyPropertySet::scopeUnregistered (TGCFResult result)
 {
   assert(_state == S_DISABLING);
    
-  LOG_INFO(LOFAR::formatString ( 
+  LOG_INFO(formatString ( 
       "Property set '%s' is disabled%s",
       getScope().c_str(), 
       (result == GCF_NO_ERROR ? "" : " (with errors)")));
@@ -460,7 +460,7 @@ void GCFRTMyPropertySet::addProperty(const string& propName, GCFRTMyProperty& pr
   }
   else
   {
-    LOG_DEBUG(LOFAR::formatString ( 
+    LOG_DEBUG(formatString ( 
       "Property %s already existing in scope '%s'",
       shortPropName.c_str(),
       _scope.c_str()));
@@ -539,7 +539,7 @@ void GCFRTMyPropertySet::wrongState(const char* request)
     "LINKED",
     "DELAYED_DISABLING"
   };
-  LOG_WARN(LOFAR::formatString ( 
+  LOG_WARN(formatString ( 
         "Could not perform '%s' on property set '%s'. Wrong state: %s",
         request,
         getScope().c_str(),
@@ -601,7 +601,7 @@ void buildTypeStructTree(const string path,
                          char*        curAsciiLine, 
                          list<TPropertyInfo>& propInfos)
 {
-  string newPath = path;
+  string propName = path;
   static char asciiLine[1024];
   static bool rootElementFound = false;
   static bool readWithBuild = false;
@@ -627,8 +627,8 @@ void buildTypeStructTree(const string path,
     }
     if (elType != 41) //type ref
     {
-      if (newPath.length() > 0) newPath += '.';
-      newPath += elName;  
+      if (propName.length() > 0) propName += '.';
+      propName += elName;  
     }
   }
   if (elName == 0)
@@ -637,24 +637,33 @@ void buildTypeStructTree(const string path,
   {
     while (pvssAsciiFile.getline (asciiLine, 1024) && !readWithBuild)
     {
-      buildTypeStructTree(newPath, pvssAsciiFile, asciiLine, propInfos);
+      buildTypeStructTree(propName, pvssAsciiFile, asciiLine, propInfos);
     }
   }
   else
   {
     if (macValueTypes[elType] != NO_LPT)
     {
-      TPropertyInfo propInfo;
-      propInfo.propName += newPath;
-      propInfo.type = macValueTypes[elType];
-      propInfos.push_back(propInfo);
+      if (Utils::isValidPropName(propName.c_str()))
+      {
+        TPropertyInfo propInfo;
+        propInfo.propName = propName;
+        propInfo.type = macValueTypes[elType];
+        propInfos.push_back(propInfo);
+      }
+      else
+      {
+        LOG_WARN(formatString ( 
+            "Property name %s meets not the name convention! Not add!!!",
+            propName.c_str()));
+      }
     }
     else
     {
       LOG_ERROR(formatString(
           "TypeElement type %d (see DpElementType.hxx) is unknown to GCF (%s). No add!!!",
           elType, 
-          newPath.c_str()));      
+          propName.c_str()));      
     }
   }
 }

@@ -43,8 +43,8 @@ class GPIPMLlightServer : public GCFTask
 	public:
 		GPIPMLlightServer (GPIController& controller);
 		virtual ~GPIPMLlightServer ();
-    inline GCFTCPPort& getPort()    {return _plsPort;}
-    inline GCFTCPPort& getPAPort()  {return _propertyAgent;}
+    GCFTCPPort& getPort()    {return _plsPort;}
+    GCFTCPPort& getPAPort()  {return _propertyAgent;}
       
 	private: // helper methods
     GPIPropertySet* findPropertySet(string& scope);

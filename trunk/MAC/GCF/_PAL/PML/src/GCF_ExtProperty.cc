@@ -29,12 +29,6 @@ GCFExtProperty::GCFExtProperty (const TPropertyInfo& propInfo) :
    GCFProperty(propInfo, 0),
    _isSubscribed(false)
 {
-  if (!Utils::isValidPropName(propInfo.propName.c_str()))
-  {
-    LOG_WARN(LOFAR::formatString ( 
-        "Property %s meets not the name convention! Set to \"\"",
-        propInfo.propName.c_str()));
-  }
 }
 
 GCFExtProperty::GCFExtProperty (const TPropertyInfo& propInfo, 
@@ -42,12 +36,6 @@ GCFExtProperty::GCFExtProperty (const TPropertyInfo& propInfo,
    GCFProperty(propInfo, &propertySet),
    _isSubscribed(false)
 {
-  if (!Utils::isValidPropName(propInfo.propName.c_str()))
-  {
-    LOG_WARN(LOFAR::formatString ( 
-        "Property %s meets not the name convention! Set to \"\"",
-        propInfo.propName.c_str()));
-  }
 }
 
 TGCFResult GCFExtProperty::subscribe ()

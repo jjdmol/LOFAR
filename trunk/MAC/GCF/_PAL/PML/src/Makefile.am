@@ -1,3 +1,4 @@
+INSTALL=/usr/bin/install -C
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: $(top_srcdir)/PA/src/%.prot
@@ -27,7 +28,6 @@ lib_LTLIBRARIES 	= libgcfpal.la
 libgcfpal_la_SOURCES=
 libgcfpal_la_LIBADD= libpml.la\
 	$(top_builddir)/SAL/src/libsal.la
-libgcfpal_la_LDFLAGS= -static
 libgcfpal_la_DEPENDENCIES= libpml.la $(LOFAR_DEPEND) \
 	$(top_builddir)/SAL/src/libsal.la
 
@@ -51,7 +51,6 @@ libpml_la_SOURCES= $(DOCHDRS) \
 libpml_la_CPPFLAGS= -I$(top_srcdir)/include \
 	-I$(top_srcdir)/SAL/src \
 	-I$(top_srcdir)/PA/src
-libpml_la_LDFLAGS= -static
 	
 BUILT_SOURCES = \
 	PA_Protocol.ph

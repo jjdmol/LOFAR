@@ -22,7 +22,6 @@ libpa_la_SOURCES= $(DOCHDRS) \
 	
 libpa_la_CPPFLAGS= -I$(top_srcdir)/include \
 	-I$(top_srcdir)/SAL/src
-libpa_la_LDFLAGS= -static
 
 bin_PROGRAMS   		= PropertyAgent
   

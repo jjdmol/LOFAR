@@ -39,61 +39,67 @@ class GTMServiceBroker;
  */
 class GCFTCPPort : public GCFRawPort
 {
- public:
-
-    /// Construction methods
-    /** @param protocol NOT USED */    
+  public:// consturctors && destructors
+    /// params see constructor of GCFPortInterface    
     explicit GCFTCPPort (GCFTask& task,
           	    string name,
           	    TPortType type,
                 int protocol, 
                 bool transportRawData = false);
-    explicit GCFTCPPort ();
+    
+    /** default constructor 
+     * GCFPortInterface params are:
+     * pTask => 0
+     * name => ""
+     * type => SAP
+     * protocol => 0
+     * transportRawData => false
+     */ 
+    GCFTCPPort ();
   
+  private:  
+    /// copying is not allowed.
+    GCFTCPPort (const GCFTCPPort&);
+    GCFTCPPort& operator= (const GCFTCPPort&);
+
+  public:
+    /// desctructor
     virtual ~GCFTCPPort ();
   
-  public:
-
+  public: // GCFPortInterface overloaded/defined methods
     /**
-     * open/close functions
+     * open/close methods
      */
     virtual bool open ();
     virtual bool close ();
-  
-    virtual bool accept (GCFTCPPort& port);
+      
     /**
      * send/recv functions
      */
     virtual ssize_t send (GCFEvent& event);
     virtual ssize_t recv (void* buf,
                           size_t count);
-  public:
-
+  public: // GCFTCPPort specific methods    
+    virtual bool accept (GCFTCPPort& port); 
     // addr is local address if getType == (M)SPP
     // addr is remote addres if getType == SAP
     void setAddr (const TPeerAddr& addr);
 
-  private:
-    /**
-     * Don't allow copying this object.
-     */
-    GCFTCPPort (const GCFTCPPort&);
-    GCFTCPPort& operator= (const GCFTCPPort&);
-    
+  private: // helper methods
     friend class GTMServiceBroker;
     void serviceRegistered(unsigned int result, unsigned int portNumber);
     void serviceUnregistered();
     void serviceInfo(unsigned int result, unsigned int portNumber, const string& host);
     void serviceGone();
     
-  protected:
+  protected: // data members
     GTMTCPSocket*   _pSocket;
 
   private:
-    bool            _addrIsSet;
-    TPeerAddr       _addr;
-    string          _host;
-    unsigned int    _portNumber;
+    bool              _addrIsSet;
+    TPeerAddr         _addr;
+    string            _host;
+    unsigned int      _portNumber;
     GTMServiceBroker* _broker;
 };
 

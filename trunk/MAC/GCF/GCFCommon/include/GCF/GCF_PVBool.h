@@ -34,6 +34,8 @@ class GCFPVBool : public GCFPValue
 {
   public: 
   	explicit GCFPVBool (bool val = false) : GCFPValue(LPT_BOOL), _value(val) {;}
+    explicit GCFPVBool(const GCFPVBool& val) : GCFPValue(LPT_BOOL), _value(val.getValue()) {;}
+
   	virtual ~GCFPVBool () {;}
     
     /** Changes the value of this object */
@@ -55,11 +57,14 @@ class GCFPVBool : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy (const GCFPValue& value);
     
-    virtual unsigned int unpack(const char* valBuf);
+    /// @see GCFPValue::unpack()
+    virtual unsigned int unpackConcrete(const char* valBuf);
 
-    virtual unsigned int pack(char* valBuf) const;
+    /// @see GCFPValue::pack()
+    virtual unsigned int packConcrete(char* valBuf) const;
 
-    virtual unsigned int getSize() const { return 1 + getBaseSize(); }
+    /// @see GCFPValue::getSize()
+    virtual unsigned int getConcreteSize() const { return 1; }
     
   private: // Private attributes
     /** The value */

@@ -26,8 +26,6 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/ParameterSet.h>
 
-using namespace GCF;
-
 GSASCADAHandler* GSASCADAHandler::_pInstance = 0;
 
 GSASCADAHandler* GSASCADAHandler::instance()
@@ -114,7 +112,6 @@ GSASCADAHandler::GSASCADAHandler() :
   _running(true)
   
 {  
-  GCFTask::registerHandler(*this);
 }
 
 void GSASCADAHandler::stop()

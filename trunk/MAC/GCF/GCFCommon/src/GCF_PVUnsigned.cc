@@ -23,28 +23,16 @@
 
 #include <GCF/GCF_PVUnsigned.h>
 
-unsigned int GCFPVUnsigned::unpack(const char* valBuf)
+unsigned int GCFPVUnsigned::unpackConcrete(const char* valBuf)
 {
-  unsigned int result(0);
-  unsigned int unpackedBytes = unpackBase(valBuf);
-  if (unpackedBytes > 0)
-  {
-    memcpy((void*) &_value, valBuf + unpackedBytes, sizeof(unsigned int));
-    result = sizeof(unsigned int) + unpackedBytes;
-  }
-  return result;
+  memcpy((void*) &_value, valBuf, sizeof(unsigned int));
+  return sizeof(unsigned int);
 }
 
-unsigned int GCFPVUnsigned::pack(char* valBuf) const
+unsigned int GCFPVUnsigned::packConcrete(char* valBuf) const
 {
-  unsigned int result(0);
-  unsigned int packedBytes = packBase(valBuf);
-  if (packedBytes > 0)
-  {
-    memcpy(valBuf + packedBytes, (void*) &_value, sizeof(unsigned int));
-    result = sizeof(unsigned int) + packedBytes;
-  }
-  return result;
+  memcpy(valBuf, (void*) &_value, sizeof(unsigned int));
+  return sizeof(unsigned int);
 }
 
 TGCFResult GCFPVUnsigned::setValue(const string valueData)

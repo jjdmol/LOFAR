@@ -23,7 +23,7 @@
 
 #include "Echo.h"
 #include <GCF/GCF_PVBool.h>
-#include <GCF/GCF_PVChar.h>
+#include <GCF/GCF_PVInteger.h>
 #include <Common/lofar_iostream.h>
 #include "Echo_Protocol.ph"
 #include <GCF/PAL/GCF_PVSSInfo.h>
@@ -98,13 +98,13 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
     {
       EchoPingEvent ping(e);
 
-      switch (ping.seqnr % 14)
+      switch (ping.seqnr % 13)
       {
         case 0:
-          service.dpCreate(propName, "LPT_BOOL");
+          service.dpCreate(propName, "ExampleDP_Bit");
           break;
         case 1:
-          service.dpCreate(propName + "_test", "LPT_CHAR");
+          service.dpCreate(propName + "_test", "ExampleDP_Int");
           break;
         case 2:
           service.dpeSubscribe(propName);
@@ -119,7 +119,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
         {
           GCFPVBool wrongTestVal(true);
           service.dpeSet(propName + "_test", wrongTestVal);
-          GCFPVChar goodTestVal('A');
+          GCFPVInteger goodTestVal(1000);
           service.dpeSet(propName + "_test", goodTestVal);
           break;
         }
@@ -130,7 +130,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
           break;
         case 7:
         {
-          GCFPVChar testVal('B');
+          GCFPVInteger testVal(2000);
           service.dpeSet(propName + "_test", testVal);
           break;
         }
@@ -161,12 +161,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
         case 12:
           service.dpDelete(propName);
           service.dpDelete(propName + "_test");
-          break;
-        case 13:
-          list<TPropertyInfo> propertyInfo;
-          GCFPVSSInfo::getTypeStruct("TTypeA", propertyInfo, GCFPVSSInfo::getLocalSystemId());
-          break;
-          
+          break;          
       }
       
       

@@ -23,7 +23,6 @@
 #ifndef GCF_TASK_H
 #define GCF_TASK_H
 
-//# Includes
 #include <GCF/TM/GCF_Fsm.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -39,22 +38,39 @@ class GCFHandler;
  * machines with own ports to other tasks (in other processes). 
  * Note: This is not a representation of a 'thread' related to the 
  * multithreading concept.
- * @todo Don't register protocol in static task context but in port interface. 
- *       Because the protocol parameter of the port (interface) is not used the 
- *       protocol string can be passed to the port (interface) instead of the 
- *       protocol ID.
  */
 
 class GCFTask : public GCFFsm
 {
-  public:
+  
+  public:  // constuctors && destructors
+    virtual ~GCFTask();
 
+  protected:
+    explicit GCFTask (State initial, 
+                      string& name); 
+  private:
+    /// Is private to avoid initialising a task without giving an inital state and the task name
+    GCFTask();
+  
+  public: // member methods
+
+    /// "starts" this task; see code example from run method
+    void start () { initFsm(); }
+    
+    /** static method; 
+     * inits a number of services for the GCF based application:
+     * - holds the argc and argv parameters in static data members
+     * - lofar logger("log4cplus.properties")
+     * - parameterset(argv[0] + ".conf")
+     */     
+    static void init (int argc, char** argv);
+    
     /**
     * The static run method. This starts the event processing loop.
     * When multiple tasks are declared within the same binary, only
     * one call to GCFTask::run will suffice.
-    * A call to this function will NEVER return. It is an error if it
-    * does return.
+    * A call to this function will NEVER return (except on stop). 
     *
     * @code
     *
@@ -67,32 +83,31 @@ class GCFTask : public GCFFsm
     * 
     *         MyTask a("a");
     *         MyTask b("b");
-    *		      a.start();
-    * 		    b.start();
+    *         a.start();
+    *         b.start();
     *         // start the event processing loop
     *         GCFTask::run();
     *     }
     * 
     * @endcode
     */
-    void start ();
-    static void init (int argc, char** argv);
     static void run ();
+    
+    /// registers a GCFHandler for the mainloop
     static void registerHandler (GCFHandler& handler);
+    
+    /// stops the application; it stops all registered handlers
     static void stop ();
  
     // Get the name of the task.
-    inline const string& getName () const {return _name;}
+    const string& getName () const {return _name;}
     /// Set the name of the task.
-    inline void setName (string& name) {_name = name;}
-    static int _argc;
-    static char** _argv;
+    void setName (string& name) {_name = name;}
+
+    /// returns the "define" of a signal ID as a string    
     const char* evtstr(const GCFEvent& e) const;
-   
+
   protected:
-		explicit GCFTask (State initial, 
-                      string& name); 
-		virtual ~GCFTask();
     /**
     * Register the protocol. This is used for logging. The name of each event
     * that is part of the protocol is specified. Index 0 should not be used for
@@ -102,18 +117,30 @@ class GCFTask : public GCFFsm
                           const char* signal_names[]);
 
   private:
+    /// handles system signals
+    static void signalHandler(int sig);
+
+  public: // data members
+    /** the command line arguments passed to the application at start-up
+     * they are set by means of the static init method
+     */    
+    static int _argc;
+    static char** _argv;
+   
+  private:
     friend class GCFPort;
     friend class GCFRawPort;
-		/// Is private to avoid initialising a task without giving an inital state and the task name
-    GCFTask();
+    /// the task name
     string _name;
+    /// all registered handlers, which should be invoked (workProc) circulair
     typedef vector<GCFHandler*> THandlers;
     static THandlers _handlers;
 
+    /// all registered protocols in the application
     typedef map<unsigned short, const char**> TProtocols;
     static TProtocols _protocols;
 
-    static void signalHandler(int sig);
+    /// indicates wether the application should be stop or not
     static bool _doExit;
 };
 #endif

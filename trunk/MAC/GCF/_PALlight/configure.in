@@ -52,13 +52,13 @@ dnl Check for LOFAR specific things
 dnl
 lofar_DEBUG_OPTIMIZE
 #lofar_QT
+lofar_LOG4CPLUS
 lofar_QATOOLS
 lofar_DOCXX
 lofar_MPI(0)
-lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
-lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
-lofar_EXTERNAL(gcfcommon,1,GCF/GCF_Defines.h,,)
-lofar_EXTERNAL(gcftm,1,GCF/TM/GCF_Task.h,,)
+lofar_INTERNAL(LCS/Common, common, Common-v1_0, 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, MAC-GCF-4_1alpha, 1, GCF/GCF_Defines.h,,)
+lofar_INTERNAL(MAC/GCF/TM, gcftm, MAC-GCF-4_1alpha, 1, GCF/TM/GCF_Task.h,,)
 
 dnl
 dnl Output Makefiles

@@ -23,28 +23,16 @@
 
 #include <GCF/GCF_PVDouble.h>
 
-unsigned int GCFPVDouble::unpack(const char* valBuf)
+unsigned int GCFPVDouble::unpackConcrete(const char* valBuf)
 {
-  unsigned int result(0);
-  unsigned int unpackedBytes = unpackBase(valBuf);
-  if (unpackedBytes > 0)
-  {
-    memcpy((void *) &_value, valBuf + unpackedBytes, sizeof(double));
-    result = sizeof(double) + unpackedBytes;
-  }
-  return result;
+  memcpy((void *) &_value, valBuf, sizeof(double));
+  return sizeof(double);
 }
 
-unsigned int GCFPVDouble::pack(char* valBuf) const
+unsigned int GCFPVDouble::packConcrete(char* valBuf) const
 {
-  unsigned int result(0);
-  unsigned int packedBytes = packBase(valBuf);
-  if (packedBytes > 0)
-  {
-    memcpy(valBuf + packedBytes, (void *) &_value, sizeof(double));
-    result = sizeof(double) + packedBytes;
-  }
-  return result;
+  memcpy(valBuf, (void *) &_value, sizeof(double));
+  return sizeof(double);
 }
 
 TGCFResult GCFPVDouble::setValue(const string valueData)

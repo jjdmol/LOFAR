@@ -42,7 +42,7 @@ GCFPropertySet::GCFPropertySet (const char* name,
   _type((type ? type : "")),
   _dummyProperty(dummyPropInfo, this)
 {
-  if (!Utils::isValidPropName(_scope.c_str()))
+  if (!Utils::isValidScope(_scope.c_str()))
   {
     LOG_WARN(LOFAR::formatString ( 
         "Scope %s meets not the name convention! Set to \"\"",

@@ -124,8 +124,7 @@ class GPMHandler : public GCFHandler
     
   private:
     friend class GPMController;
-    GPMHandler()
-    { GCFTask::registerHandler(*this);}
+    GPMHandler() {};
 
     static GPMHandler* _pInstance;
     GPMController _controller;
