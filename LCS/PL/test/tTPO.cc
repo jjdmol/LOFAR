@@ -3,6 +3,9 @@
 #include <PL/Query.h>
 #include <iostream>
 
+#define TRACER std::cout << __PRETTY_FUNCTION__ << " (" \
+                         << __FILE__ << ":" << __LINE__ << ")\n" 
+
 class X
 {
 };
@@ -14,17 +17,13 @@ class Y
 using namespace LCS::PL;
 using namespace std;
 
-// template<>
-// void TPersistentObject<X>::save(const PersistenceBroker* const) 
-// {
-//   cout << __PRETTY_FUNCTION__ << endl;
-// }
-
-// template<> 
-// void TPersistentObject<X>::retrieve(const PersistenceBroker* const)
-// {
-//   cout << __PRETTY_FUNCTION__ << endl;
-// }
+template<> void TPersistentObject<X>::doErase() const { TRACER; }
+template<> void TPersistentObject<X>::doInsert() const { TRACER; }
+template<> void TPersistentObject<X>::doUpdate() const { TRACER; }
+template<> void TPersistentObject<X>::init() { TRACER; }
+template<> Collection< TPersistentObject<Y> > 
+TPersistentObject<Y>::doRetrieve(const Query&, int) 
+{ TRACER; return Collection< TPersistentObject<Y> >(); }
 
 int main()
 {
@@ -33,12 +32,13 @@ int main()
   PersistenceBroker* b = new PersistenceBroker();
 
   try {
-    cout << "Try to connect to database ..." << endl;
-    b->connect("dtl_example","postgres");
+    cout << "Try to connect to database ...";
+    b->connect("dtl_example","postgres","");
   }
   catch (PLException& e) {
-    cerr << e << endl;
+    cerr << endl << e << endl;
   }
+  cout << "  ok" << endl;
 
   TPersistentObject<X> tpox(x);
   try {
