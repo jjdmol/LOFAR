@@ -158,7 +158,7 @@ int Parm::getResult (Result::Ref &resref,
   if( domain_id != itsCurrentDomainId )
   {
     initDomain(domain);
-    wstate()[FDomainId] = domain_id;
+    wstate()[FDomainId] = itsCurrentDomainId = domain_id;
   }
   // Create result object and attach to the ref that was passed in
   Result &result = resref <<= new Result(1,request); // result has one vellset
