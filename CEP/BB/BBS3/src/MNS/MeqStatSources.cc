@@ -28,7 +28,7 @@
 #include <BBS3/MNS/MeqRequest.h>
 #include <BBS3/MNS/MeqDomain.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <casa/BasicSL/Constants.h>
 
 using namespace casa;
@@ -143,7 +143,7 @@ void MeqStatSources::calculate (const MeqRequest& request)
 double MeqStatSources::getExponent (int sourceNr,
 				    const MeqRequest& request)
 {
-  DbgAssert (request.nx() == 1);
+  DBGASSERT (request.nx() == 1);
   double u = itsUVW->getU(request).getValue().getDouble();
   double v = itsUVW->getV(request).getValue().getDouble();
   double w = itsUVW->getW(request).getValue().getDouble();

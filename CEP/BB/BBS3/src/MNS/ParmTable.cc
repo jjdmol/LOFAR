@@ -24,7 +24,7 @@
 #include <BBS3/MNS/ParmTableAIPS.h>
 #include <BBS3/MNS/ParmTableBDB.h>
 #include <BBS3/MNS/MeqStoredParmPolc.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Utilities/GenSort.h>
 
@@ -42,8 +42,10 @@ ParmTable::ParmTable (const string& dbType, const string& tableName,
   } else if (dbType == "bdb") {
     itsRep = new ParmTableBDB (userName, tableName);
   } else {
-    Assert (dbType=="aips");
+    ASSERT (dbType=="aips");
   }
+  itsRep->setName (tableName);
+  itsRep->setType (dbType);
   itsRep->connect();
 }
 
@@ -58,7 +60,7 @@ MeqSourceList ParmTable::getPointSources (MeqParmGroup* group,
     string name = nams[i];
     // Remove first part from the name which looks like RA.CPn..
     string::size_type idx = name.rfind ('.');
-    Assert (idx != string::npos);
+    ASSERT (idx != string::npos);
     // Remove first part (RA or so).
     name = name.substr (idx+1);
     nams[i] = name;

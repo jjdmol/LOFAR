@@ -42,6 +42,14 @@ MeqParm::~MeqParm()
   itsGroup->remove (itsParmId);
 }
 
+string MeqParm::getTableName() const
+{
+  return "";
+}
+string MeqParm::getTableType() const
+{
+  return "";
+}
 
 
 MeqParmGroup::MeqParmGroup()

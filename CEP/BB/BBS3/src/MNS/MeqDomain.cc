@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <BBS3/MNS/MeqDomain.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
@@ -35,9 +35,9 @@ MeqDomain::MeqDomain()
 MeqDomain::MeqDomain (double startX, double endX,
 		      double startY, double endY)
 {
-  AssertMsg (startX < endX, "MeqDomain: startX " << startX <<
+  ASSERTSTR (startX < endX, "MeqDomain: startX " << startX <<
 	     " must be < endX " << endX);
-  AssertMsg (startY < endY, "MeqDomain: startY " << startY <<
+  ASSERTSTR (startY < endY, "MeqDomain: startY " << startY <<
 	     " must be < endY " << endY);
   itsOffsetX = (endX + startX) * .5;
   itsScaleX  = (endX - startX) * .5;

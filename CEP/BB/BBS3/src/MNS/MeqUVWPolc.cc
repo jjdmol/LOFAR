@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <BBS3/MNS/MeqUVWPolc.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 #include <BBS3/MNS/MeqPointDFT.h>
 
@@ -45,7 +45,7 @@ void MeqUVWPolc::calcCoeff (const Vector<double>& times,
 			    bool addPolc)
 {
   int nr = times.nelements();
-  Assert (uvws.shape()(0) == 3  &&  uvws.shape()(1) == nr);
+  ASSERT (uvws.shape()(0) == 3  &&  uvws.shape()(1) == nr);
   double step = times(1) - times(0);
   MeqDomain domain (times(0)-step/2, times(nr-1)+step/2, 0, 1e15);
   Vector<double> normTimes(nr);

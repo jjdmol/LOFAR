@@ -26,7 +26,7 @@
 #include <BBS3/MNS/MeqMatrixRealArr.h>
 #include <BBS3/MNS/MeqMatrixComplexSca.h>
 #include <BBS3/MNS/MeqMatrixComplexArr.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <iomanip>
 
 namespace LOFAR {
@@ -139,7 +139,7 @@ MeqMatrixComplexArr* MeqMatrixComplexArr::poolNew(int nx, int ny)
 
 void MeqMatrixComplexArr::poolDelete()
 {
-  Assert(inPool() || isMalloced());
+  ASSERT(inPool() || isMalloced());
   if (inPool())
   {
     theirPool.push_front(this);
@@ -190,7 +190,7 @@ const complex<double>* MeqMatrixComplexArr::dcomplexStorage() const
 }
 double MeqMatrixComplexArr::getDouble (int x, int y) const
 {
-  AssertMsg (itsValue[offset(x,y)].imag()==0,
+  ASSERTSTR (itsValue[offset(x,y)].imag()==0,
 	     "MeqMatrix: dcomplex->double conversion not possible");
   return itsValue[offset(x,y)].real();
 }
@@ -227,7 +227,7 @@ MeqMatrixRep* MeqMatrixComplexArr::NAME (MeqMatrixComplexSca& left, \
 MeqMatrixRep* MeqMatrixComplexArr::NAME (MeqMatrixRealArr& left,  \
 					 bool rightTmp) \
 { \
-  Assert (nelements() == left.nelements()); \
+  ASSERT (nelements() == left.nelements()); \
   MeqMatrixComplexArr* v = this; \
   if (!rightTmp) { \
     v = (MeqMatrixComplexArr*)clone(); \
@@ -240,7 +240,7 @@ MeqMatrixRep* MeqMatrixComplexArr::NAME (MeqMatrixRealArr& left,  \
 MeqMatrixRep* MeqMatrixComplexArr::NAME (MeqMatrixComplexArr& left, \
 					 bool) \
 { \
-  Assert (nelements() == left.nelements()); \
+  ASSERT (nelements() == left.nelements()); \
   for (int i=0; i<left.nelements(); i++) { \
     left.itsValue[i] OP itsValue[i]; \
   } \

@@ -28,7 +28,7 @@
 #include <BBS3/MNS/MeqResult.h>
 #include <BBS3/MNS/MeqMatrix.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <BBS3/MNS/MeqPointDFT.h>
@@ -53,7 +53,7 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
 
   // We can handle only 1 time at a time (for PSS-1 at least).
   // It makes life much easier.
-  Assert (request.nx() == 1);
+  ASSERT (request.nx() == 1);
   // Create the result objects.
   setResult11 (MeqResult(request.nspid()));
   setResult12 (MeqResult(request.nspid()));

@@ -23,7 +23,7 @@
 #include <Common/Profiling/PerfProfile.h>
 
 #include <BBS3/MNS/MeqJonesExpr.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
@@ -50,7 +50,7 @@ void MeqJonesExpr::multiply (const MeqJonesExpr& left,
   int ny = std::max(l11.getValue().ny(), r11.getValue().ny());
   int nl = l11.getValue().nelements();
   int nr = r11.getValue().nelements();
-  Assert(nl==nr);
+  ASSERT(nl==nr);
 
   if (isDouble) {
     double* v11 = its11.setDouble (nx, ny);
@@ -80,7 +80,7 @@ void MeqJonesExpr::multiply (const MeqJonesExpr& left,
     complex<double>* v22 = its22.setDComplex (nx, ny);
     nl = l11.getValue().nelements();
     nr = r11.getValue().nelements();
-    Assert(nl==nr);
+    ASSERT(nl==nr);
     const complex<double>* dl11 = l11.getValue().dcomplexStorage();
     const complex<double>* dl12 = l12.getValue().dcomplexStorage();
     const complex<double>* dl21 = l21.getValue().dcomplexStorage();

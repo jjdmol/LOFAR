@@ -56,6 +56,13 @@ public:
   void setName (const string& name)
     { itsName = name; }
 
+  // Get the name and type of the table holding the parameter.
+  // By default it returns an empty string.
+  // <group>
+  virtual string getTableName() const;
+  virtual string getTableType() const;
+  // </group>
+
   // Get the parameter id.
   unsigned int getParmId() const
     { return itsParmId; }
@@ -78,28 +85,17 @@ public:
   // Get the result of the parameter for the given domain.
   virtual MeqResult getResult (const MeqRequest&) = 0;
 
-  // Get the current values of the solvable parameter and store them
-  // at their correct position in the argument.
-  virtual void getInitial (MeqMatrix& values) const = 0;
-
   // Get the current values of the solvable parameter and store
   // them in the argument.
-  // If needed, polynomial coefficients are denormalized.
-  virtual void getCurrentValue(MeqMatrix& value, bool denormalize) const = 0;
+  virtual void getCurrentValue (MeqMatrix& value) const = 0;
   MeqMatrix getCoeffValues() const
-    { MeqMatrix tmp; getCurrentValue(tmp,false); return tmp; }
+    { MeqMatrix tmp; getCurrentValue(tmp); return tmp; }
 
   // Update the parameter with the new values.
   virtual void update (const MeqMatrix& value) = 0;
 
   // Make the new value persistent (for the given domain).
   virtual void save() = 0;
-
-  // Get the list of all MeqParm objects.
-  static const vector<MeqParm*>& getParmList();
-
-  // Clear the list of all MeqParm objects.
-  static void clearParmList();
 
 private:
   // A parm cannot be copied, otherwise problems arise with theirParms.

@@ -25,7 +25,7 @@
 #include <BBS3/MNS/MeqMatrixRealArr.h>
 #include <BBS3/MNS/MeqMatrixComplexSca.h>
 #include <BBS3/MNS/MeqMatrixComplexArr.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
@@ -67,7 +67,7 @@ const complex<double>* MeqMatrixComplexSca::dcomplexStorage() const
 }
 double MeqMatrixComplexSca::getDouble (int, int) const
 {
-  AssertMsg (itsValue.imag()==0,
+  ASSERTSTR (itsValue.imag()==0,
 	     "MeqMatrix: dcomplex->double conversion not possible");
   return itsValue.real();
 }

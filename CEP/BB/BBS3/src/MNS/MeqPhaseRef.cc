@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <BBS3/MNS/MeqPhaseRef.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MEpoch.h>
@@ -52,7 +52,7 @@ MeqPhaseRef::MeqPhaseRef (const MDirection& phaseRef, double startTime)
   MVPosition mgwPos;
   MPosition gwPos (mgwPos, MPosition::WGS84);
   // Use the Dwingeloo position instead of Greenwich.
-  Assert (MeasTable::Observatory(gwPos, "DWL"));
+  ASSERT (MeasTable::Observatory(gwPos, "DWL"));
   MeasFrame frame(gwPos);
   // Convert start time to an epoch and put in frame.
   Quantum<Double> qtime(0, "s");

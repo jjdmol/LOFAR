@@ -26,7 +26,6 @@
 #include <BBS3/MNS/MeqRequest.h>
 #include <BBS3/MNS/MeqResult.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
-#include <Common/Debug.h>
 #include <casa/BasicSL/Constants.h>
 
 using namespace casa;
@@ -122,9 +121,9 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
     //cout << "U: " << ur.getValue() - ul.getValue() << endl;
     //cout << "V: " << vr.getValue() - vl.getValue() << endl;
     //cout << "W: " << wr.getValue() - wl.getValue() << endl;
-    //TRACER1 ("U: " << ur.getValue() - ul.getValue());
-    //TRACER1 ("V: " << vr.getValue() - vl.getValue());
-    //TRACER1 ("W: " << wr.getValue() - wl.getValue());
+    //LOG_TRACE_FLOW ("U: " << ur.getValue() - ul.getValue());
+    //LOG_TRACE_FLOW ("V: " << vr.getValue() - vl.getValue());
+    //LOG_TRACE_FLOW ("W: " << wr.getValue() - wl.getValue());
   }
   const complex<double>* tmpl = left.getValue().dcomplexStorage();
   const complex<double>* tmpr = right.getValue().dcomplexStorage();
