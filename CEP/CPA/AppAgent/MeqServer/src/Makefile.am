@@ -15,6 +15,9 @@ meqserver_LDADD		      = libmeqserver.la
 # -lglish -lsos -lnpd
 meqserver_DEPENDENCIES	= libmeqserver.la $(LOFAR_DEPEND)
 
+glishdir = $(libexecdir)/glish/meq
+dist_glish_SCRIPTS = meqserver.g
+
 # script used to generate AID maps
 MAPBUILDER = $(dmi_dir)/src/build_aid_maps.pl 
 

@@ -1,5 +1,5 @@
 pragma include once
-include 'app_proxy.g'
+include 'appagent/app_proxy.g'
 
 const solver := function (appid='Solver',
     server='./applauncher',options="-d0 -meq:M:M:Solver",suspend=F,
