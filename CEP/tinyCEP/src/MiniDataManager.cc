@@ -32,7 +32,9 @@ namespace LOFAR
     itsNoutputs(noutputs),
     itsProcessRate(1),
     itsInputRate(1),
-    itsOutputRate(1)
+    itsOutputRate(1),
+    itsDoAutoTriggerIn(true),
+    itsDoAutoTriggerOut(true)
   {
     
     itsInDHs = new DataHolder* [ninputs];
