@@ -27,6 +27,14 @@
 #include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
 
+#if defined(__sun)
+#include <arpa/nameser.h>
+#include <netinet/in.h>
+// Note: should be uint32(=size_t), but in all TCP calls it is impl. as int32
+typedef	int	socklen_t;		
+#define    INADDR_NONE             ((in_addr_t) 0xffffffff)
+#endif
+
 #include <resolv.h>
 #include <errno.h>
 #include <sys/un.h>

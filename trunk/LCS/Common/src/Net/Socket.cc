@@ -20,7 +20,6 @@
 //#
 //# $Id$
 
-//#include <Common/Net/Socket.h>
 #include <Common/Net/Socket.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
@@ -425,12 +424,22 @@ int32 Socket::connect (int32 waitMs)
 		return (itsErrno = INPROGRESS);
 	}
 
+#if defined(__sun)
+	char		connRes [16];
+	int			resLen = sizeof(connRes);
+	if ((getsockopt(itsSocketID, SOL_SOCKET, SO_ERROR, connRes, &resLen))) {
+		return (setErrno(CONNECT));		// getsockopt failed, assume conn failed
+	}
+	errno = atoi(connRes);				// put it were it belongs
+#else
 	int32		connRes;				// check for sys errors
 	socklen_t	resLen = sizeof(connRes);
-	if ((getsockopt(itsSocketID, SOL_SOCKET, SO_ERROR, &connRes, &resLen))) {
+	if ((getsockopt(itsSocketID, SOL_SOCKET, SO_ERROR, 
+									(void*)(&connRes), &resLen))) {
 		return (setErrno(CONNECT));		// getsockopt failed, assume conn failed
 	}
 	errno = connRes;					// put it were it belongs
+#endif
 
 	if (connRes != 0) {					// not yet connected
 		LOG_DEBUG(formatString("delayed connect failed also, err=%d(%s)",
@@ -478,7 +487,7 @@ Socket* Socket::accept(int32	waitMs)
 	setBlocking(waitMs < 0 ? true : false);		// switch temp to non-blocking?
 
 	struct sockaddr*	addrPtr;
-	socklen_t addrLen;
+	socklen_t 			addrLen;
 	if (itsType == UNIX) {
 		addrPtr = (struct sockaddr*) &itsUnixAddr;
 		addrLen = sizeof(itsUnixAddr);
@@ -528,14 +537,24 @@ Socket* Socket::accept(int32	waitMs)
 		return (0);
 	}
 
+#if defined(__sun)
+	char		connRes [16];
+	int			resLen = sizeof(connRes);
+	if ((getsockopt(itsSocketID, SOL_SOCKET, SO_ERROR, connRes, &resLen))) {
+#else
 	int32		connRes;				// check for errors
 	socklen_t	resLen = sizeof(connRes);
 	if ((getsockopt(itsSocketID, SOL_SOCKET, SO_ERROR, &connRes, &resLen))) {
+#endif
 		setErrno(ACCEPT);				// getsockopt failed, assume conn failed
 		return (0);
 	}
 
+#if defined (__sun)
+	if (atoi(connRes) != 0) {			// not yet connected
+#else
 	if (connRes != 0) {			// not yet connected
+#endif
 		setErrno(INPROGRESS);
 		return (0);
 	}
@@ -653,7 +672,7 @@ int32 Socket::read (void	*buf, int32	maxBytes)
 
 			// try to read something
 			LOG_TRACE_FLOW(formatString("read for %d bytes", bytesLeft));
-			bytesRead = ::recv (itsSocketID, buf, bytesLeft, 0);
+			bytesRead = ::recv (itsSocketID, (char*)buf, bytesLeft, 0);
 			sigpipe = (oldCounter != *sigpipeCounter); 	// check for SIGPIPE
 			LOG_TRACE_FLOW(formatString("read(%d)=%d%s, errno=%d (%s)", 
 						bytesLeft, bytesRead, sigpipe ? " SIGPIPE" : "", 
@@ -663,7 +682,7 @@ int32 Socket::read (void	*buf, int32	maxBytes)
 			if (itsIsBlocking && itsAllowIntr)
 				return (setErrno(INCOMPLETE));
 
-#ifdef ENABLE_TRACER
+#ifdef IN_SERIOUS_TROUBLE
 			// trace databytes
 			if (bytesRead > 0) {
 				string	hdump;
@@ -755,7 +774,7 @@ int32 Socket::write (const void*	buf, int32	nrBytes)
 			if (itsIsBlocking && itsAllowIntr)
 				return (setErrno(INCOMPLETE));
 
-#ifdef ENABLE_TRACER
+#ifdef IN_SERIUOS_TROUBLE
 			// trace databytes
 			string	hdump;
 			hexdump (hdump, buf, bytesWritten);
