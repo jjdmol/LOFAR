@@ -22,5 +22,5 @@ profile: tCAL
 profile2:
 	MPIBIN=$(MPIBIN) MPE_LOG_FORMAT=CLOG $(lofar_sharedir)/profiletool tCAL \
 		$(MPIBIN)/mpirun -np 1 ./tCAL \
-		$(lofar_sharedir)/../data/6365.data/10206365 0 0 LOFAR solve 5
+		$(lofar_sharedir)/../data/test/CAL/10206365/10206365 0 0 LOFAR predict 5
 
