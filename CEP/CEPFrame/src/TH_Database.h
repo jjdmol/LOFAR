@@ -69,7 +69,7 @@ private:
 };
 
 inline bool TH_Database::isBlocking() const
-{ return false;}
+{ return true; }
 
 }
 
