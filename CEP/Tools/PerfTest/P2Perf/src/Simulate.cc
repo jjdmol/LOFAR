@@ -3,7 +3,6 @@
 #endif
 
 #include "BaseSim/SimulatorParseClass.h"
-#include "BaseSim/ShMem/shmem_alloc.h"
 #include <Common/lofar_iostream.h>
 #include <Common/Debug.h>
 #include "P2Perf/P2Perf.h"
@@ -32,8 +31,6 @@ int main (int argc, char** argv)
     P2Perf simulator;
     simulator.setarg (argc, argv);
 
-
-    shmem_debug();
     simulator.baseDefine();
     //simulator.baseRun(5000);
     simulator.baseRun(3651);

@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.26  2002/05/15 15:04:49  wierenga
+//  Use static class prototypes.
+//
 //  Revision 1.25  2002/05/14 11:48:36  gvd
 //  Use lofar_string and lofar_iostream
 //
@@ -119,7 +122,6 @@
 #include "BaseSim/WH_Empty.h"
 #include "BaseSim/ParamBlock.h"
 #include "BaseSim/ShMem/TH_ShMem.h"
-#include "BaseSim/ShMem/shmem_alloc.h"
 #include "P2Perf/P2Perf.h"
 #include "P2Perf/WH_GrowSize.h"
 
