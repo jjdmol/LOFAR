@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.6  2001/09/19 08:47:20  wierenga
+//  Make sure it compiles again with latest changes in BaseSim.
+//
 //  Revision 1.5  2001/09/19 08:10:51  wierenga
 //  Changes to do perform bandwidth tests.
 //
@@ -121,9 +124,10 @@ void SeqSim::define(const ParamBlock& params)
   cout << "SeqSim Processor " << rank << " of " << size << " operational."
        << flush << endl;
 
-  Simul *simul = new Simul(new WH_Empty(), "SeqSim", 0);
-  setSimul(*simul);
-  simul->runOnNode(0);
+  WH_Empty empty;
+  Simul simul((WorkHolder*)(&empty), "SeqSim", 0);
+  setSimul(simul);
+  simul.runOnNode(0);
 
   workholders = new (WH_GrowSize*)[NR_OF_STEPS];
   steps       = new (Step*)[NR_OF_STEPS];
@@ -139,7 +143,7 @@ void SeqSim::define(const ParamBlock& params)
 
     if ( ((iStep % 2) == divisor) || (divisor < 0))
     {
-      simul->addStep(steps[iStep]);
+      simul.addStep(steps[iStep]);
     }
 
     if (iStep > 0)
@@ -155,14 +159,14 @@ void SeqSim::define(const ParamBlock& params)
   
   //steps[0]->connectInput(NULL);
 #if 0
-  simul->connectOutputToArray(&steps[NR_OF_STEPS-1], 1);
+  simul.connectOutputToArray(&steps[NR_OF_STEPS-1], 1);
 #endif
 }
 
-void doIt (Simul *simul, const std::string& name, int nsteps)
+void doIt (Simul& simul, const std::string& name, int nsteps)
 {
 #if 0
-  simul->resolveComm();
+  simul.resolveComm();
 #endif
   TRACER(debug,"Ready with definition of configuration");
   Profiler::init();
@@ -171,13 +175,13 @@ void doIt (Simul *simul, const std::string& name, int nsteps)
   cout << endl << "Start Processing simul " << name << endl;    
   for (int i=0; i<nsteps; i++) {
     if (i==2) Profiler::activate();
-    // cout << "Call simul->process() " << i << endl;
-    simul->process();
+    // cout << "Call simul.process() " << i << endl;
+    simul.process();
     if (i==5) Profiler::deActivate();
   }
 
   cout << endl << "DUMP Data from last Processing step: " << endl;
-  simul->dump ();
+  simul.dump ();
   cout << endl << "END OF SIMUL on node " 
        << TRANSPORTER::getCurrentRank () 
        << endl;
@@ -190,7 +194,7 @@ void SeqSim::run(int nSteps)
 {
   nSteps = nSteps;
 
-  doIt(&getSimul(), "SeqSimulator", nSteps);
+  doIt(getSimul(), "SeqSimulator", nSteps);
 }
 
 void SeqSim::dump() const
