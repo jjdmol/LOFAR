@@ -41,11 +41,13 @@ namespace LOFAR {
   void DFTStub::connect (DH_DFTRequest& req, DH_DFTResult& res)
   {
     const ParameterSet myPS(itsParmFileName);
-    TH_Socket thReq(myPS.getString("DFTConnection.ServerHost"), // recvhost
+    TH_Socket thReq(myPS.getString("DFTConnection.ClientHost"), // sendhost
+		    myPS.getString("DFTConnection.ServerHost"),   // recvhost
 		    myPS.getInt("DFTConnection.RequestPort"),   // port
 		    false
 		    );
     TH_Socket thRes(myPS.getString("DFTConnection.ServerHost"), // sendhost
+			myPS.getString("DFTConnection.ClientHost"), // recvhost
 		    myPS.getInt("DFTConnection.ResultPort"),    // port
 		    true
 		    );    
