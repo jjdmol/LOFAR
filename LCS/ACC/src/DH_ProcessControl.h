@@ -33,6 +33,9 @@
 //# Includes
 #include <sys/time.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <Common/BlobIStream.h>
+#include <Common/BlobOStream.h>
 #include <Transport/DataHolder.h>
 
 namespace LOFAR {
@@ -40,6 +43,14 @@ namespace LOFAR {
 
 //# Forward Declarations
 //class forward;
+
+// Make list of supported commands.
+enum PCCmd { PCCmdNone = 0, 
+				PCCmdStart = 100, PCCmdQuit, 
+				PCCmdHalt, PCCmdResume, 
+				PCCmdSnapshot, PCCmdRecover, 
+				PCCmdDefine, PCCmdCheckParSet, PCCmdLoadParSet
+};
 
 
 //# Description of class.
@@ -49,14 +60,6 @@ namespace LOFAR {
 class DH_ProcessControl : public DataHolder
 {
 public:
-	// Make list of supported commands.
-	typedef enum { CmdStart = 100, CmdQuit, 
-					CmdHalt, CmdResume, 
-					CmdSnapshot, CmdRecover, 
-					CmdDefine, CmdCheckParSet, CmdLoadParSet,
-					CmdAlive, CmdSayt, CmdReport
-	} PCCmd;
-
 	// Constructor
 	explicit DH_ProcessControl(const string	hostID);
 
@@ -71,11 +74,11 @@ public:
 	virtual void 	preprocess();
 
 	// The real data-accessor functions
-	void	setCommand		(const ACCmd		theCmd);
+	void	setCommand		(const PCCmd		theCmd);
 	void	setOptions		(const string		theOptions);
 	void	setResult		(const int32		theResult);
 
-	ACCmd	getCommand		();
+	PCCmd	getCommand		();
 	string	getOptions		();
 	int32	getResult		();
 
@@ -89,7 +92,7 @@ private:
 
 	// fields transferred between the server and the client
 	int32		*itsVersionNumber;
-	ACCmd		*itsCommand;
+	PCCmd		*itsCommand;
 	string		*itsOptions;
 	int32		*itsResult;
 

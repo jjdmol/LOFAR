@@ -38,7 +38,7 @@ namespace LOFAR {
 
 ApplControlClient::ApplControlClient(const string&	hostID,
 									 bool			syncClient) :
-	ApplControl(syncClient)
+	ApplControl()
 {
 	// First setup a connection with the AC master at node 'hostID' and
 	// ask on which node our ACC will be running
