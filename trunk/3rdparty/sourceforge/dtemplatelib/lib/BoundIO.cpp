@@ -113,7 +113,8 @@ void Postgresblob2DTL(blob&	dest, const blob& org) {
 		} else 
 		if (c == lub) {						// LUB --> 0
 			dest.append(&RNB, 1);
-		} else {
+		        // A bug in DTL inserts 0 at MINSTRBUFLEN; ignore.
+		} else if (c != RNB) {
 			dest.append(&c, 1);
 		}
 	}
