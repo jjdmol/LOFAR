@@ -47,8 +47,8 @@ namespace LOFAR
 
   ApplicationHolder::~ApplicationHolder() {
     // dit segfault op dit moment nog.. FIXME!
-//     delete itsProto;
-//     delete itsDataManager;
+    //    delete itsProto;
+    //    delete itsDataManager;
   }
 
   ApplicationHolder::ApplicationHolder(const ApplicationHolder& that)
@@ -62,6 +62,7 @@ namespace LOFAR
       
     
   void ApplicationHolder::define(const KeyValueMap& map) {
+    
   }
   
   void ApplicationHolder::init() {
@@ -97,5 +98,18 @@ namespace LOFAR
 
   void ApplicationHolder::quit() {
   }
+
+  void ApplicationHolder::setarg (int argc, const char** argv) {
+    itsArgc = argc;
+    itsArgv = argv;
+  }
+
+
+  void ApplicationHolder::getarg (int* argc, const char** argv[]) {
+  *argc = itsArgc;
+  *argv = itsArgv;
+  }
+
+
 
 } // namespace LOFAR

@@ -49,13 +49,14 @@ namespace LOFAR
 
     virtual WH_Example* make(const string& name);
     
+    virtual void preprocess();
     virtual void process();
-
-    virtual void dump();
 
   private:
     WH_Example (const WH_Example&);
     WH_Example& operator= (const WH_Example&);
+    
+    DH_Example itsProto;
 
     int itsBufLength;
   };

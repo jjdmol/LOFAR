@@ -4,36 +4,32 @@
 namespace LOFAR
 {
 
-  MyExample::MyExample(int ninput, int noutput, DataHolder* dhptr)
+  MyExample::MyExample(int ninput, int noutput)
     : itsArgv(0),
       itsArgc(0),
       itsProto(dhptr),
       itsNinputs(ninput),
       itsNoutputs(noutput) {
-
-    itsWorkHolder = new WH_Example("WH_Example", 1, 1, 10);
   }
 
 
   MyExample::~MyExample() {
+    delete itsWorkHolder;
   }
 
   void MyExample::define(const KeyValueMap& map) {
+    // create a WorkHolder
+    itsWorkHolder = new WH_Example("WH_Example", 1, 1, 10);
   }
 
   void MyExample::init() {
+    itsWorkHolder->preprocess();
   }
 
   void MyExample::run(int nsteps) {
-
     for (int i = 0; i < nsteps; i++) {
-      
-      itsWorkHolder->preprocess();
       itsWorkHolder->process();
-      itsWorkHolder->postprocess();
-
     }
-    
   }
   
   void MyExample::run_once() {
@@ -41,6 +37,7 @@ namespace LOFAR
   }
 
   void MyExample::quit(){
+    itsWorkHolder->postprocess();
   }
 
 } // namespace LOFAR

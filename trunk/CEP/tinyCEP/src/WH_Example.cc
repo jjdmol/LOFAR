@@ -33,7 +33,17 @@ namespace LOFAR
 			  unsigned int nbuffer)
     : WorkHolder (nin, nout, name, "WH_Example"),
       itsBufLength (nbuffer) {
+    char str[8];
 
+    for (unsigned int i = 0; i < nin; i++) {
+      sprintf(str, "%d", i);
+      getDataManager().addInDataHolder(i, new DH_Example(string("in_") + str));
+    }
+
+    for (unsigned int i = 0; i < nout; i++) {
+      sprintf(str, "%d", i);
+      getDataManager().addOutDataHolder(i, new DH_Example(string("out_") + str));
+    }
   }
   
 
@@ -49,14 +59,14 @@ namespace LOFAR
   WH_Example* WH_Example::make (const string& name) {
     return new WH_Example (name, getDataManager().getInputs(),
 			   getDataManager().getOutputs(), itsBufLength) ;
-      }
-  
-  void WH_Example::process() {
+  }
 
+  void WH_Example::preprocess() {
   }
   
-  void WH_Example::dump() {
- 
- }
-
+  void WH_Example::process() {
+    // copy input to output
+    
+  }
+  
 } // namespace LOFAR

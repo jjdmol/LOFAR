@@ -44,6 +44,9 @@ namespace LOFAR
     virtual ~ApplicationHolder();
     
 /*     virtual ApplicationHolder* clone() const = 0; */
+
+    void setarg (int argc, const char* argv[]);
+    void getarg (int* argc, const char** argv[]);
  
   protected:
     /**@name Virtual functions
