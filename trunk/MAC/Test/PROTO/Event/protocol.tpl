@@ -46,6 +46,7 @@ const char* [+ protocol_name +]_signalnames[] =
 %include GCF/GCF_Event.h
 %include carrays.i
 %include std_string.i
+%include typemaps.i
 [+ FOR include "" +]
 %include [+ (get "include") +][+ ENDFOR +]
 [+ FOR unbounded_array_types "" +][+ FOR type "" +]
@@ -143,7 +144,7 @@ namespace [+ (base-name) +]
 
       [+ FOR param ";" +]
       [+ IF (== (get "type") "string") +]std::[+ ENDIF +][+ event_class_member +][+ IF (*== (get "type") "[]") +]; unsigned int [+ (get "name") +]Dim[+ ENDIF +][+ ENDFOR +];
-          
+
       void* pack(unsigned int& packsize);
 
     private:
