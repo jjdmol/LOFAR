@@ -12,7 +12,7 @@
 
 //## Module: Message%3C7B7F2F0248; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\Message.h
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\Message.h
 
 #ifndef Message_h
 #define Message_h 1
@@ -25,14 +25,6 @@
 //## begin module%3C7B7F2F0248.includes preserve=yes
 //## end module%3C7B7F2F0248.includes
 
-// PSCFDebugContext
-#include "PSCFDebugContext.h"
-// MsgAddress
-#include "MsgAddress.h"
-// CountedRef
-#include "CountedRef.h"
-// CountedRefTarget
-#include "CountedRefTarget.h"
 // SmartBlock
 #include "SmartBlock.h"
 // NestableContainer
@@ -41,15 +33,18 @@
 #include "HIID.h"
 // BlockableObject
 #include "BlockableObject.h"
+// PSCFDebugContext
+#include "PSCFDebugContext.h"
+// MsgAddress
+#include "MsgAddress.h"
+// CountedRef
+#include "CountedRef.h"
 //## begin module%3C7B7F2F0248.declarations preserve=no
 //## end module%3C7B7F2F0248.declarations
 
 //## begin module%3C7B7F2F0248.additionalDeclarations preserve=yes
-#pragma aidgroup PSCF
-// standard event messages
-#pragma aid MsgEvent MsgTimeout MsgInput MsgSignal
-// hello/bye messages for WPs
-#pragma aid MsgHello MsgBye
+#pragma typegroup PSCF
+#pragma types #Message
 
 #include "AID-PSCF.h"
 //## end module%3C7B7F2F0248.additionalDeclarations
@@ -71,8 +66,8 @@ class WPQueue;
 //## Uses: <unnamed>%3C7B708B00DD;HIID { -> }
 //## Uses: <unnamed>%3C7E4D87012D;NestableContainer { -> }
 
-class Message : public CountedRefTarget, //## Inherits: <unnamed>%3C7B903501C5
-                	public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA31802FF
+class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
+                	public BlockableObject  //## Inherits: <unnamed>%3C960F080308
 {
   //## begin Message%3C7B6A2D01F0.initialDeclarations preserve=yes
   //## end Message%3C7B6A2D01F0.initialDeclarations
@@ -101,9 +96,6 @@ class Message : public CountedRefTarget, //## Inherits: <unnamed>%3C7B903501C5
 
       //## Operation: Message%3C7BB3BD0266
       Message (const HIID &id1, const char *data, size_t sz, int pri = 0);
-
-      //## Operation: Message%3C7B9E29013F
-      Message (char *block, size_t sz);
 
     //## Destructor (generated)
       ~Message();
@@ -158,6 +150,21 @@ class Message : public CountedRefTarget, //## Inherits: <unnamed>%3C7B903501C5
 
       //## Operation: datasize%3C7E443E01B6
       size_t datasize () const;
+
+      //## Operation: objectType%3C960F16009B
+      //	Returns the class TypeId
+      virtual TypeId objectType () const;
+
+      //## Operation: fromBlock%3C960F1B0373
+      //	Creates object from a set of block references. Appropriate number of
+      //	references are removed from the head of the BlockSet. Returns # of
+      //	refs removed.
+      virtual int fromBlock (BlockSet& set);
+
+      //## Operation: toBlock%3C960F20037A
+      //	Stores an object into a set of blocks. Appropriate number of refs
+      //	added to tail of BlockSet. Returns # of block refs added.
+      virtual int toBlock (BlockSet &set) const;
 
     //## Get and Set Operations for Class Attributes (generated)
 
@@ -223,7 +230,7 @@ class Message : public CountedRefTarget, //## Inherits: <unnamed>%3C7B903501C5
       typedef enum {  
         ACCEPT   = 0, // message processed, OK to remove from queue
         HOLD     = 1, // hold the message (and block queue) until something else happens
-        REQUEUE  = 2, // requeue the message and try next one
+        REQUEUE  = 2, // requeue the message and try again
 
         CANCEL   = 3  // for input()/timeout()/signal(), cancel the input or timeout
 
@@ -310,8 +317,11 @@ class Message : public CountedRefTarget, //## Inherits: <unnamed>%3C7B903501C5
 
     // Additional Implementation Declarations
       //## begin Message%3C7B6A2D01F0.implementation preserve=yes
+      typedef struct {  int priority,state,idsize,fromsize,tosize;
+                        bool has_block;
+                        TypeId payload_type; 
+                     }  HeaderBlock;
       //## end Message%3C7B6A2D01F0.implementation
-
 };
 
 //## begin Message%3C7B6A2D01F0.postscript preserve=yes
@@ -404,6 +414,13 @@ inline size_t Message::datasize () const
   //## begin Message::datasize%3C7E443E01B6.body preserve=yes
   return block_.valid() ? block_->size() : 0;
   //## end Message::datasize%3C7E443E01B6.body
+}
+
+inline TypeId Message::objectType () const
+{
+  //## begin Message::objectType%3C960F16009B.body preserve=yes
+  return TpMessage;
+  //## end Message::objectType%3C960F16009B.body
 }
 
 //## Get and Set Operations for Class Attributes (inline)

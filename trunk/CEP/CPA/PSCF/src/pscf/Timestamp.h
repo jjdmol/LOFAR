@@ -12,7 +12,7 @@
 
 //## Module: Timestamp%3C7F3B770339; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\Timestamp.h
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\Timestamp.h
 
 #ifndef Timestamp_h
 #define Timestamp_h 1
@@ -58,6 +58,9 @@ class Timestamp
     //## Constructors (specified)
       //## Operation: Timestamp%3C7F3B580321
       Timestamp (long sec1, long usec1 = 0);
+
+      //## Operation: Timestamp%3C95C5F90389
+      explicit Timestamp (double sec1);
 
     //## Equality Operations (generated)
       bool operator==(const Timestamp &right) const;
@@ -145,6 +148,23 @@ class Timestamp
 
 //## begin Timestamp%3C7F3B1D025E.postscript preserve=yes
 //## end Timestamp%3C7F3B1D025E.postscript
+
+//## begin Timeval%3C95AC350111.preface preserve=yes
+//## end Timeval%3C95AC350111.preface
+
+//## Class: Timeval%3C95AC350111
+//## Category: PSCF%3BCEC935032A
+//## Subsystem: PSCF%3C5A73670223
+//## Persistence: Transient
+//## Cardinality/Multiplicity: n
+
+
+
+//## Uses: <unnamed>%3C95AC4D02E2;Timestamp { -> }
+
+typedef Timestamp Timeval;
+//## begin Timeval%3C95AC350111.postscript preserve=yes
+//## end Timeval%3C95AC350111.postscript
 
 // Class Timestamp 
 
