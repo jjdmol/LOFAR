@@ -5,6 +5,7 @@
 
 <!-- $Id$ -->
 <!-- look at bottom for revision Log. -->
+
 <article lang="en">
  <artheader>
   <title>nested transactions</title>
@@ -92,7 +93,7 @@
 
   <mediaobject>
    <imageobject>
-    <imagedata fileref="database.gif" format="GIF" />
+    <imagedata fileref="database.png" format="PNG" />
     </imageobject>
    <caption>the action sequence that asks for nested transactions</caption>
   </mediaobject>
@@ -134,7 +135,7 @@
 
   <mediaobject>
    <imageobject>
-    <imagedata fileref="nestedTransaction.gif" format="GIF" />
+    <imagedata fileref="nestedTransaction.png" format="PNG" />
     </imageobject>
    <caption>sample sequence of a nested transaction</caption>
   </mediaobject>
