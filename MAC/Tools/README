@@ -28,6 +28,7 @@ cd to directory above LOFAR
 Configure, build and install the EPA plugin
 -------------------------------------------
 > cd LOFAR/MAC/Tools/ethereal-0.9.8-epaplugin
+> mkdir aclocal-missing          # autogen assumes that this directory exists
 > ./autogen.sh --prefix=/usr
 > cd plugins/epa
 > make
