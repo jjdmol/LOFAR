@@ -21,7 +21,7 @@ public:
   {}
   friend std::ostream& operator<<(std::ostream& os, const A& a);
 private:
-  friend class    TPersistentObject<A>;
+  friend class    LOFAR::PL::TPersistentObject<A>;
   int             itsInt;
   double          itsDouble;
   string          itsString;

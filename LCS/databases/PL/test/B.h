@@ -18,7 +18,7 @@ public:
   {}
   friend std::ostream& operator<<(std::ostream& os, const B& b);
 private:
-  friend class TPersistentObject<B>;
+  friend class LOFAR::PL::TPersistentObject<B>;
   bool         itsBool;
   short        itsShort;
   float        itsFloat;
