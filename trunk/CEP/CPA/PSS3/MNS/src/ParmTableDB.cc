@@ -26,15 +26,9 @@
 #include <aips/Mathematics/Math.h>
 
 #ifdef HAVE_LOFAR_PL
-# include <MNS/TPOParm.h>
 # include <PL/Query.h>
 # include <PL/Attrib.h>
 # include <PL/Collection.h>
-
-typedef LOFAR::PL::TPersistentObject<MeqParmHolder> TPOMParm;
-typedef LOFAR::PL::Collection<TPOMParm> MParmSet;
-typedef LOFAR::PL::TPersistentObject<MeqParmDefHolder> TPOMParmDef;
-typedef LOFAR::PL::Collection<TPOMParmDef> MParmDefSet;
 
 using namespace LOFAR::PL;
 #endif
