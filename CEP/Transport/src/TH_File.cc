@@ -174,6 +174,16 @@ bool TH_File::sendNonBlocking(void* buf, int nbytes, int, int)
   return sendBlocking(buf, nbytes, 0, 0);
 }
 
+bool TH_File::waitForSent(void*, int, int, int)
+{
+  return true;
+}
+
+bool TH_File::waitForReceived(void*, int, int, int)
+{
+  return true;
+}
+
 void TH_File::waitForBroadCast()
 {}
 
@@ -193,9 +203,6 @@ int TH_File::getNumberOfNodes()
 {
     return 1;
 }
-
-void TH_File::init(int, char* [])
-{}
 
 void TH_File::finalize()
 {

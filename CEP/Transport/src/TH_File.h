@@ -81,6 +81,12 @@ public:
   */
   virtual bool sendNonBlocking(void* buf, int nbytes, int source, int tag);
 
+  // Wait until the data has been sent
+  virtual bool waitForSent(void* buf, int nbytes, int source, int tag); 
+
+  // Wait until the data has been received
+  virtual bool waitForReceived(void* bug, int nbytes, int source, int tag);
+
   /// Get the type of transport, i.e. "TH_File"
   virtual string getType() const;
 
@@ -95,7 +101,6 @@ public:
   /// requiring a TransportHolder prototype
   static TH_File proto;
   
-  static void init (int argc, char *argv[]);
   static void finalize();
   static void waitForBroadCast();
   static void waitForBroadCast (unsigned long& aVar);

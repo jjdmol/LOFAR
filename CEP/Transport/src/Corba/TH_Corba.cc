@@ -84,6 +84,11 @@ bool TH_Corba::recvNonBlocking(void* buf, int nbytes, int source, int tag)
   return recvBlocking(buf, nbytes, source, tag);
 }
 
+bool TH_Corba::waitForReceived(void*, int, int, int)
+{
+  return true;
+}
+
 bool TH_Corba::sendBlocking(void* buf, int nbytes, int destination, int tag)
 {
     if (itsCorbaOut == 0) {
@@ -110,4 +115,9 @@ bool TH_Corba::sendNonBlocking(void* buf, int nbytes, int destination, int tag)
        << "The sendBlocking() method is used instead." << endl;    
   return sendBlocking(buf, nbytes, destination, tag);
 
+}
+
+bool TH_Corba::waitForSent(void*, int, int, int)
+{
+  return true;
 }

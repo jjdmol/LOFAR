@@ -72,6 +72,9 @@ public:
   virtual bool recvBlocking(void* buf, int nbytes, int source, int tag);
   virtual bool recvNonBlocking(void* buf, int nbytes, int source, int tag);
 
+  // Wait for the data to be received
+  virtual bool waitForReceived(void* bug, int nbytes, int source, int tag);
+  
   /**
      Send the data.
      It does not really send, because the recv is doing the memcpy.
@@ -82,6 +85,7 @@ public:
   void initSend(void* buf, int destination, int tag);
   virtual bool sendBlocking(void* buf, int nbytes, int destination, int tag);
   virtual bool sendNonBlocking(void* buf, int nbytes, int destination, int tag);
+  virtual bool waitForSent(void* buf, int nbytes, int destination, int tag);
 
   /// Get the type of transport.
   virtual string getType() const;
