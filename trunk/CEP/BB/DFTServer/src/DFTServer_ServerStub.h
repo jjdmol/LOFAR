@@ -11,23 +11,22 @@ class DFTServer_ServerStub
 public:
   DFTServer_ServerStub() {
     const ParameterSet myPS("params.ps");
-    itsTHProtoIn = new TH_Socket(myPS.getString("DFTConnection.ServerHost"),   // sendhost
-				 myPS.getString("DFTConnection.ServerHost"),   // recvhost
-				 myPS.getInt("DFTConnection.ServerPort")    // port
-                        );    
-    itsTHProtoOut = new TH_Socket(myPS.getString("DFTConnection.ServerHost"),   // sendhost
-				  myPS.getString("DFTConnection.ServerHost"),   // recvhost
-				  myPS.getInt("DFTConnection.ServerPort")    // port
-                        );    
-    
+    itsTHProtoRequest = new TH_Socket(myPS.getString("DFTConnection.ClientHost"),   // sendhost
+				      myPS.getString("DFTConnection.ServerHost"),   // recvhost
+				      myPS.getInt("DFTConnection.RequestPort")    // port
+				      );
+    itsTHProtoResult = new TH_Socket(myPS.getString("DFTConnection.ServerHost"),   // sendhost
+				     myPS.getString("DFTConnection.ClientHost"),   // recvhost
+				     myPS.getInt("DFTConnection.ResultPort")    // port
+				     );    
   };
   ~DFTServer_ServerStub() {};
   
   DH_DFTRequest      itsRequestDH;  
   DH_DFTResult     itsResultDH; 
   
-  TH_Socket *itsTHProtoIn;
-  TH_Socket *itsTHProtoOut;
+  TH_Socket *itsTHProtoRequest;
+  TH_Socket *itsTHProtoResult;
   bool      itsSynchronisity;
 };
 
