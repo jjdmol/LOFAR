@@ -372,6 +372,11 @@ void MeqPolc::getInitial (MeqMatrix& values) const
   }
 }
 
+void MeqPolc::getCurrentValue(MeqMatrix& value) const
+{
+  value = itsCoeff;
+}
+
 void MeqPolc::update (const MeqMatrix& value)
 {
   if (itsCoeff.isDouble()) {

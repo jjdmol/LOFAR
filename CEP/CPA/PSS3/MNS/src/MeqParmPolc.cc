@@ -254,6 +254,13 @@ void MeqParmPolc::getInitial (MeqMatrix& values) const
   }
 }
 
+void MeqParmPolc::getCurrentValue(MeqMatrix& value) const
+{
+  Assert(1 == itsPolcs.size());
+
+  itsPolcs[0].getCurrentValue(value);
+}
+
 void MeqParmPolc::update (const MeqMatrix& value)
 {
   for (unsigned int i=0; i<itsPolcs.size(); i++) {

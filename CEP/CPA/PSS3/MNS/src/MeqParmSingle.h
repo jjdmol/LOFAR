@@ -60,6 +60,10 @@ public:
   // in the argument.
   virtual void getInitial (MeqMatrix& values) const;
 
+  // Get the current value of the solvable parameter and store it
+  // in the argument.
+  virtual void getCurrentValue(MeqMatrix& value) const;
+
   // Update the solvable parameter with the new value.
   virtual void update (const MeqMatrix& value);
 
