@@ -39,11 +39,11 @@ WH_ToRing::~WH_ToRing ()
 
 void WH_ToRing::process ()
 {
-  if (getOutHolder(0)->doHandle()) {
+  if (getOutHolder(0)->doHandle() && BeamNr < 5) {
     if (getInstanceCnt() == 0) BeamNr++;
 
     itsOutDataHolders[0]->getBuffer()[0] = BeamNr+100*getInstanceCnt();
-    itsOutDataHolders[0]->getPacket()->destination = BeamNr;
+    itsOutDataHolders[0]->getPacket()->destination = 2*BeamNr;
     while (itsOutDataHolders[0]->getPacket()->destination >= 10) {
       itsOutDataHolders[0]->getPacket()->destination -= 10;
     }
