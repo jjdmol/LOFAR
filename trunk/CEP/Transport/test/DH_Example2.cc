@@ -28,13 +28,18 @@
 namespace LOFAR
 {
 
-  DH_Example2::DH_Example2 (const string& name, unsigned int nbuffer)
+  DH_Example2::DH_Example2 (const string& name, unsigned int nbuffer,
+			    bool useExtra)
 : DH_PL      (name, "DH_Example2"),
   itsCounter (0),
   itsBuffer  (0),
   itsBufSize (nbuffer),
   itsPODHEX  (0)                                              //PL
-{}
+{
+  if (useExtra) {
+    setExtraBlob ("Extra2", 1);
+  }
+}
 
 DH_Example2::DH_Example2(const DH_Example2& that)
 : DH_PL      (that),
