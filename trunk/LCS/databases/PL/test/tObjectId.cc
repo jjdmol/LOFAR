@@ -5,7 +5,7 @@
 #include <sys/time.h>
 
 using namespace std;
-using namespace LCS::PL;
+using namespace LOFAR::PL;
 
 int main()
 {

@@ -14,7 +14,7 @@ class Y
 {
 };
 
-using namespace LCS::PL;
+using namespace LOFAR::PL;
 using namespace std;
 
 template<> void TPersistentObject<X>::doErase() const { TRACER; }

@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LCS_PL_PERSISTENTOBJECT_H
-#define LCS_PL_PERSISTENTOBJECT_H
+#ifndef LOFAR_PL_PERSISTENTOBJECT_H
+#define LOFAR_PL_PERSISTENTOBJECT_H
 
 //# Includes
 #include <PL/ObjectId.h>
@@ -29,7 +29,7 @@
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
-namespace LCS
+namespace LOFAR
 {
   namespace PL
   {
@@ -174,7 +174,7 @@ namespace LCS
       // \note update() will \e always modify an existing stored object. 
       // Therefore, calling update() on a PersistentObject that is not
       // already present in the database is an error.
-      // \throw LCS::PL::Exception
+      // \throw LOFAR::PL::Exception
       void update() const;
 
       // Return a reference to the meta data.
@@ -257,6 +257,6 @@ namespace LCS
 
   } // namespace PL
 
-} // namespace LCS
+} // namespace LOFAR
 
 #endif

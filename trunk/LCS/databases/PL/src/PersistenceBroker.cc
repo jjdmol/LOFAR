@@ -28,7 +28,7 @@
 
 using namespace std;
 
-namespace LCS
+namespace LOFAR
 {
   namespace PL
   {
@@ -75,4 +75,4 @@ namespace LCS
 
   } // namespace PL
 
-} // namespace LCS
+} // namespace LOFAR

@@ -47,7 +47,7 @@ void SQLTimeStampTest::tearDown()
 
 void SQLTimeStampTest::testConstructorThrows() 
 {
-  stsf = SQLTimeStamp(tsf);  // must throw LCS::AssertError
+  stsf = SQLTimeStamp(tsf);  // must throw LOFAR::AssertError
 }
 
 void SQLTimeStampTest::testLessThanComparison()

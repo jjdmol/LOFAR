@@ -12,7 +12,7 @@ class SQLTimeStampTest : public CppUnit::TestFixture
 {
 public:
   CPPUNIT_TEST_SUITE(SQLTimeStampTest);
-  CPPUNIT_TEST_EXCEPTION(testConstructorThrows, LCS::AssertError);
+  CPPUNIT_TEST_EXCEPTION(testConstructorThrows, LOFAR::AssertError);
   CPPUNIT_TEST(testLessThanComparison);
   CPPUNIT_TEST_FAIL(testLessThanIsNotEqual);
   CPPUNIT_TEST_FAIL(testShouldOverflow);

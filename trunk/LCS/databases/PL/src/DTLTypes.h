@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LCS_PL_DTLTYPES_H
-#define LCS_PL_DTLTYPES_H
+#ifndef LOFAR_PL_DTLTYPES_H
+#define LOFAR_PL_DTLTYPES_H
 
 #if defined(HAVE_CONFIG_H)
 #include <config.h>
@@ -34,7 +34,7 @@
 //# Includes
 #include <dtl/DTL.h>
 
-namespace LCS
+namespace LOFAR
 {
   namespace PL
   {
@@ -64,6 +64,6 @@ namespace LCS
 
   } // namespace PL
   
-} // namespace LCS
+} // namespace LOFAR
 
 #endif

@@ -5,7 +5,7 @@
 #include <iostream>
 
 using namespace std;
-using namespace LCS::PL;
+using namespace LOFAR::PL;
 
 class X
 {

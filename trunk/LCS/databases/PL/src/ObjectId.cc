@@ -36,7 +36,7 @@
 #define rand() 		random()
 #endif
 
-namespace LCS
+namespace LOFAR
 {
   namespace PL
   {
@@ -102,4 +102,4 @@ namespace LCS
 
   } // namespace PL
 
-} // namespace LCS
+} // namespace LOFAR

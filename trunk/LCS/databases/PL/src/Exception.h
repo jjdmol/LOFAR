@@ -20,20 +20,20 @@
 //#
 //#  $Id$
 
-#ifndef LCS_PL_EXCEPTION_H
-#define LCS_PL_EXCEPTION_H
+#ifndef LOFAR_PL_EXCEPTION_H
+#define LOFAR_PL_EXCEPTION_H
 
 //# Includes
 #include <Common/Exception.h>
 
-namespace LCS {
+namespace LOFAR {
 
   namespace PL {
 
     //
     // This is the base exception class for the Persistence Layer.
     //
-    EXCEPTION_CLASS(PLException, LCS::Exception);
+    EXCEPTION_CLASS(PLException, LOFAR::Exception);
 
 
     // 

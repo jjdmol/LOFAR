@@ -20,14 +20,14 @@
 //#
 //#  $Id$
 
-#ifndef LCS_PL_QUERY_H
-#define LCS_PL_QUERY_H
+#ifndef LOFAR_PL_QUERY_H
+#define LOFAR_PL_QUERY_H
 
 //# Includes
 
 //# Forward Declarations
 
-namespace LCS
+namespace LOFAR
 {
   namespace PL
   {
@@ -71,6 +71,6 @@ namespace LCS
 
   } // namespace PL
 
-} // namespace LCS
+} // namespace LOFAR
 
 #endif

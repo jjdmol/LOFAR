@@ -1,4 +1,4 @@
-//#  ConnectionHandler.cc: implementation of the database connection handler
+//#  ObjectCache.cc: one line description
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,34 +20,19 @@
 //#
 //#  $Id$
 
-#include <PL/ConnectionHandler.h>
-#include <PL/Exception.h>
-#include <dtl/DBConnection.h>
-#include <dtl/DBException.h>
-#include <sstream>
+#include <PL/ObjectCache.h>
 
-namespace LCS
+namespace LOFAR
 {
   namespace PL
   {
 
-    using namespace dtl;
-    using namespace std;
-
-    void ConnectionHandler::connect(const string& aDsn, 
-                                    const string& aUid, 
-                                    const string& aPwd)
+    ObjectCache& theObjectCache()
     {
-      try {
-        ostringstream oss;
-        oss << "DSN=" << aDsn << ";UID=" << aUid << ";PWD=" << aPwd << ";";
-        DBConnection::GetDefaultConnection().Connect(oss.str());
-      }
-      catch (DBException& e) {
-        THROW(PLException,"Failed to connect to database.\n" << e.what());
-      }
+      static ObjectCache itsCache;
+      return itsCache;
     }
-    
+
   } // namespace PL
 
-} // namespace LCS
+} // namespace LOFAR
