@@ -54,6 +54,7 @@ namespace LOFAR
   using TYPES::ldouble;
   using TYPES::fcomplex;
   using TYPES::dcomplex;
+  using TYPES::scomplex;
  
   using TYPES::int8;
   using TYPES::uint8;
@@ -80,6 +81,7 @@ using LOFAR::ulonglong;
 using LOFAR::ldouble;
 using LOFAR::fcomplex;
 using LOFAR::dcomplex;
+using LOFAR::scomplex;
 
 using LOFAR::int8;
 using LOFAR::int16;
