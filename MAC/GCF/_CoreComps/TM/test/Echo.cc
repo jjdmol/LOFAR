@@ -23,6 +23,8 @@
 
 #include "Echo.h"
 #include "Echo_Protocol.ph"
+#include <Common/lofar_iostream.h>
+
 
 Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 {

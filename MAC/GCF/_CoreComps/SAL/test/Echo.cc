@@ -24,6 +24,7 @@
 #include "Echo.h"
 #include <GCF/GCF_PVBool.h>
 #include <GCF/GCF_PVChar.h>
+#include <Common/lofar_iostream.h>
 #include "Echo_Protocol.ph"
 
 

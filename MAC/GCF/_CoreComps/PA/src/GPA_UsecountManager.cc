@@ -227,6 +227,8 @@ void GPAUsecountManager::propDeleted(const string& propName)
       case DELETE_ALL:
         _controller.allPropertiesDeleted();
         break;
+      default:
+        break;  
     }
     _tempPropList.clear();
   }  
