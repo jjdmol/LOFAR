@@ -130,7 +130,8 @@ class GCFMyPropertySet : public GCFPropertySet
     //@}
 
   private: // attribute members
-    typedef enum TSTATE {S_DISABLED, S_DISABLING, S_ENABLING, S_ENABLED, S_LINKING, S_LINKED};
+    typedef enum TSTATE {S_DISABLED, S_DISABLING, S_ENABLING, S_ENABLED, 
+                         S_LINKING, S_LINKED, S_DELAYED_DISABLING};
     TSTATE _state;
     TDefaultUse _defaultUse;
     

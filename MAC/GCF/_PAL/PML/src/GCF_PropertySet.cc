@@ -241,17 +241,3 @@ void GCFPropertySet::dispatchAnswer(unsigned short sig, TGCFResult result)
     _pAnswerObj->handleAnswer(e);
   }
 }
-
-void GCFPropertySet::setDefaults()
-{
-  const TProperty* pPropertyFields;
-  for (unsigned int i = 0; i < _propSetInfo.nrOfProperties; i++)
-  {
-    pPropertyFields = &_propSetInfo.properties[i];
-    if (pPropertyFields->defaultValue)
-    {
-      setValue(pPropertyFields->propName, pPropertyFields->defaultValue);
-    }
-  }
-}
-

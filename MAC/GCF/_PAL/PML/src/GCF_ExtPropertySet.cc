@@ -251,3 +251,19 @@ TGCFResult GCFExtPropertySet::unsubscribeProp(const string propName) const
     return GCF_PROP_NOT_IN_SET;
   }
 }
+
+bool GCFExtPropertySet::isPropSubscribed (const string propName) const
+{
+  GCFExtProperty* pProperty = (GCFExtProperty*) getProperty(propName);
+  if (pProperty)
+  {
+    return pProperty->isSubscribed();    
+  }
+  else 
+  {
+    LOG_INFO(LOFAR::formatString ( 
+        "This property set has no property '%s'.",
+        propName.c_str()));
+    return false;
+  }
+}
