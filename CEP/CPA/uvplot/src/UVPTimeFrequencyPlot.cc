@@ -1,8 +1,6 @@
 // Copyright notice should go here
 
-// $ID$
-
-#include <UVPTimeFrequencyPlot.h>
+#include <uvplot/UVPTimeFrequencyPlot.h>
 
 
 #include <qpainter.h>
