@@ -151,15 +151,25 @@ const _define_meqcalibrater := function(ref agent, id) {
     }
     
     self.getparmsRec := [_method="getparms", _sequence=self.id._sequence]
-    public.getparms := function(parmpatterns) {
+    public.getparms := function(parmpatterns, excludepatterns="") {
     
         wider self;
         
         # argument assignment
-        self.getparmsRec.parmpatterns := parmpatterns
+        self.getparmsRec.parmpatterns    := parmpatterns
+	self.getparmsRec.excludepatterns := excludepatterns
         
         # return
         return defaultservers.run(self.agent, self.getparmsRec);
+    }
+
+    self.getsolvedomainRec := [_method="getsolvedomain", _sequence=self.id._sequence]
+    public.getsolvedomain := function() {
+    
+        wider self;
+        
+        # return
+        return defaultservers.run(self.agent, self.getsolvedomainRec);
     }
 
     public.id := function() {
@@ -184,13 +194,12 @@ const _define_meqcalibrater := function(ref agent, id) {
 #
 # meqcalibrater constructor
 #
-const meqcalibrater := function(msname, meqmodel = 'WSRT', skymodel = 'GSM',
-				mepdb = 'MEP', spw = 0,
+const meqcalibrater := function(msname, meqmodel = 'LOFAR', skymodel = 'GSM', spw = 0,
 				host='',forcenewserver=F) {
     agent := defaultservers.activate('meqcalibrater', host, forcenewserver)
     id := defaultservers.create(agent, 'meqcalibrater', 'meqcalibrater',
                                 [msname=msname, meqmodel=meqmodel,
-				 skymodel=skymodel, mepdb=mepdb, spw=spw]);
+				 skymodel=skymodel, spw=spw]);
     return ref _define_meqcalibrater(agent, id);
 }
 
@@ -199,7 +208,7 @@ const meqcalibrater := function(msname, meqmodel = 'WSRT', skymodel = 'GSM',
 #
 const meqcalibratertest := function()
 {
-    local mc := meqcalibrater('test','meqModel','skyModel','mepDB');
+    local mc := meqcalibrater('myms.ms', 'TEST');
 
     if (is_fail(mc)) {
 	print "meqcalibratertest(): could not instantiate meqcalibrater"
@@ -208,12 +217,15 @@ const meqcalibratertest := function()
 
     mc.settimeintervalsize(3600); # calibrate per 1 hour
     mc.clearsolvableparms();
-    mc.setsolvableparms("a.*.b d.e.*", T);
+    mc.setsolvableparms("a.b.* f.g.*[34]", T);
     
     mc.resettimeiterator()
     i := 0
     while (mc.nexttimeinterval())
     {
+	d := mc.getsolvedomain();
+	print 'solvedomain = ', d;
+
  	fit := 1.0;
 	while (fit > 0.0001 || fit < -0.0001)
 	{
@@ -227,7 +239,8 @@ const meqcalibratertest := function()
 	mc.saveresidualdata('DATA', 'MODEL_DATA', 'RESIDUAL_DATA');
 	mc.saveparms();
 	
-	p := mc.getparms("a.b.* a.b.c.*.d");
+	parms := mc.getparms("f.g.h.i.j.[1-5]");
+	print 'getparms = ', parms
 
 	i+:=1;
     }

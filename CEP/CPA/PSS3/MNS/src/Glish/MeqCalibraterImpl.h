@@ -29,37 +29,82 @@
 
 #include <aips/MeasurementSets/MeasurementSet.h>
 #include <MNS/ParmTable.h>
+#include <MNS/MeqDomain.h>
+#include <MNS/MeqParm.h>
+#include <MNS/MeqStoredParmPolc.h>
+#include <MNS/MeqMatrix.h>
+#include <MNS/MeqRequest.h>
+#include <MNS/MeqExpr.h>
 
+//
+// Class to perform self-calibration on a MeasurementSet using the
+// MeqTree approach.
+//
 class MeqCalibrater : public ApplicationObject
 {
 
  public:
-  // MeqCalibrater specific methods
+  //
+  // Create MeqCalibrater object for a specific
+  // MeaurementSet, MEQ model (with associated MEP database) and skymodel
+  // for the specified spectral window.
+  // 
   MeqCalibrater(const String& msName,
 		const String& meqModel,
 		const String& skyModel,
-		const String& mepDB,
 		Int spw);
+
+  // destructor
   ~MeqCalibrater();
 
+  // set the time interval for which to solve
   void setTimeIntervalSize(Int secInterval);
+
+  // reset the time interval iterator
   void resetTimeIterator();
+
+  // advance the time interval iterator
   Bool nextTimeInterval();
 
+  // make all parameters non-solvable
   void clearSolvableParms();
+
+  // make specific parameters solvable (isSolvable = True) or non-solvable (False)
   void setSolvableParms(Vector<String>& parmPatterns, Bool isSolvable);
 
+  // predict visibilities for the current domain
   void   predict(const String& modelColName);
-  Double solve(); /* returns double fit, updates parameters */
+  
+  //
+  // Solve for the current domain.
+  // Return fit value to indicate fitness of the solution and updates the
+  // parameters for which to solve.
+  // 
+  Double solve();
 
+  // Save modified parameters to the MEP database.
   void saveParms();
-  void saveData(const String& dataColName); /* save data, e.g. "MODEL" */
+
+  // Save the predicted data to the named column of the MeasurementSet.
+  void saveData(const String& dataColName);
+
+  // Save residual data in the named column (residualColName) by substracting
+  // data in the first named column (colAName) from data in the second named
+  // column (colBName).
   void saveResidualData(const String& colAName, const String& colBName,
-			const String& residualColName); /* save A-B in residualColName */
+			const String& residualColName);
 
-  GlishRecord getParms(Vector<String>& parmPatterns);
+  // Get info about the parameters whose name matches one of the parameter
+  // patterns in a GlishRecord, exlude parameters which match one of the
+  // exclude pattterns.
+  GlishRecord getParms(Vector<String>& parmPatterns,
+		       Vector<String>& excludePatterns);
 
-  // standard methods
+  // Get a description of the current solve domain, which changes
+  // after each call to nextTimeIteration.
+  GlishRecord getSolveDomain();
+
+  // standard DO methods
   virtual String         className() const;
   virtual Vector<String> methods() const;
   virtual Vector<String> noTraceMethods() const;
@@ -73,16 +118,27 @@ class MeqCalibrater : public ApplicationObject
   MeqCalibrater(const MeqCalibrater& other);            // no copy constructor
   MeqCalibrater& operator=(const MeqCalibrater& other); // no assignment operator
 
-
-  // variables
-  MeasurementSet ms;
-  ParmTable      mep;
+  // initialize all parameters in the MeqExpr tree for the current domain
+  void initParms(MeqDomain& domain);
 
   //
-  Int timeIteration;
-  Double fitValue;
+  // variables
+  //
+  MeasurementSet itsMs;
+  ParmTable      itsMEP;
+  MeqDomain      itsDomain;
+  MeqExpr*       itsTree;
+
+  //
+  // variables used in the dummy implementation
+  //
+  Int itsTimeIteration;
+  Double itsFitValue;
 };
 
+//
+// Factory class to instantiate the MeqCalibrater object
+//
 class MeqCalibraterFactory : public ApplicationObjectFactory
 {
   virtual MethodResult make(ApplicationObject*& newObject,
