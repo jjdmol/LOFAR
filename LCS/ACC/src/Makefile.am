@@ -1,5 +1,9 @@
 INSTHDRS = \
-ParameterSet.h 
+	ParameterCollection.h \
+	ParameterTemplate.h \
+	ParameterUnion.h \
+	TemplateUnion.h \
+	ParameterSet.h
 
 NOINSTHDRS =
 
@@ -14,6 +18,10 @@ DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 lib_LTLIBRARIES                 = libacc.la
 
 libacc_la_SOURCES = \
+					ParameterCollection.cc \
+					ParameterTemplate.cc \
+					TemplateUnion.cc \
+					ParameterUnion.cc \
 					ParameterSet.cc 
 
 #					ApplControl.cc DH_ApplControl.cc \
@@ -23,4 +31,3 @@ libacc_la_SOURCES = \
 
 include $(lofar_sharedir)/Makefile.common
 
-#AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL
