@@ -123,6 +123,7 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
 	  //m_pset[i*2+1].setValue(GCFPVDouble(m_beamlet_power(i, 1)));
 	  m_pset[propnamex].setValue(GCFPVDouble(m_beamlet_power(i, 0)));
 	  m_pset[propnamey].setValue(GCFPVDouble(m_beamlet_power(i, 1)));
+//	  LOG_DEBUG(formatString("Updating statistics properties: %s=%.3f,%s=%.3f",propnamex,m_beamlet_power(i,0),propnamey,m_beamlet_power(i,1)));
       }
 
       // update the seqnr property
