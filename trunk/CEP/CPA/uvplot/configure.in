@@ -60,6 +60,8 @@ lofar_DOCXX
 dnl lofar_BASESIM
 lofar_QT
 lofar_PACKAGE(Common)
+lofar_PACKAGE(CEP/CPA/OCTOPUSSY)
+lofar_PACKAGE(DMI)
 
 
 dnl
