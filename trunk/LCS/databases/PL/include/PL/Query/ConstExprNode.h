@@ -45,15 +45,19 @@ namespace LOFAR
 
       //@{
 
+      // This class represents a null expression node, i.e. an empty
+      // expression node.
+      // \note The method isNull() is overridden only in this class.
       class NullExprNode : public ExprNode
       {
       public:
         NullExprNode();
         virtual ~NullExprNode();
         virtual void print(std::ostream&) const;
+        virtual bool isNull() const;
       };
-      
-      // Expression node class for an int.
+
+      // This class represents an expression node for an integer.
       class IntExprNode : public ExprNode
       {
       public:
@@ -64,7 +68,7 @@ namespace LOFAR
         const int itsOperand;
       };
 
-      // Expression node class for a double.
+      // This class represents a expression node for a double.
       class DoubleExprNode : public ExprNode
       {
       public:
@@ -75,7 +79,7 @@ namespace LOFAR
         const double itsOperand;
       };
       
-      // Expression node class for a string.
+      // This class represents an expression node for a string.
       class StringExprNode : public ExprNode
       {
       public:

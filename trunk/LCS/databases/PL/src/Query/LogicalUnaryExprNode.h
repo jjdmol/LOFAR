@@ -1,6 +1,6 @@
-//#  UnaryExprNode.h: one line description
+//#  LogicalUnaryExprNode.h: one line description
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_PL_QUERY_UNARYEXPRNODE_H
-#define LOFAR_PL_QUERY_UNARYEXPRNODE_H
+#ifndef LOFAR_PL_QUERY_LOGICALUNARYEXPRNODE_H
+#define LOFAR_PL_QUERY_LOGICALUNARYEXPRNODE_H
 
 //# Includes
 #include <lofar_config.h>
@@ -35,24 +35,32 @@ namespace LOFAR
   {
     namespace Query
     {
-      // @defgroup UnaryExprNode Unary Expression Nodes
-      // @ingroup ExprNode
+
+      //# Forward Declarations
 
       // @ingroup UnaryExprNode
-      // This class represents a unary expression node. A unary expression is
-      // an expression that takes one operator and one operand.
-      class UnaryExprNode : public ExprNode
+      //
+      // This class represents a logcial unary expression node. A logical
+      // unary expression is a unary expression that represents a unary
+      // logcial operator (e.g. !). The main difference between an ordinary
+      // UnaryExprNode and a LogicalUnaryExprNode is that the latter does not
+      // have an associated constraint. The reason for this is that a
+      // constraint can only be associated with a \e branch of a logical
+      // expression node.
+      //
+      // \note We do not need to override the method getConstraint(), because
+      // there is no constraint associated with a logical unary expression
+      // node. Hence, we can use the default implementation in ExprNode.
+      class LogicalUnaryExprNode : public ExprNode
       {
       public:
-        // Construct a unary expression node.
-        UnaryExprNode(const std::string& oper, 
-                      const Expr& value);
+        // Construct a unary expression node. 
+        LogicalUnaryExprNode(const std::string& oper, 
+                             const Expr& value);
 
-        virtual ~UnaryExprNode();
+        virtual ~LogicalUnaryExprNode() {}
 
         virtual void print(std::ostream& os) const;
-
-        virtual Expr getConstraint() const;
 
       private:
 

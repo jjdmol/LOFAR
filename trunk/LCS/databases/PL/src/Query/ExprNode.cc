@@ -1,4 +1,4 @@
-//#  UnaryExprNode.h: one line description
+//#  ExprNode.cc: implemenation of the base class for expression nodes.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,14 +20,7 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_PL_QUERY_UNARYEXPRNODE_H
-#define LOFAR_PL_QUERY_UNARYEXPRNODE_H
-
-//# Includes
-#include <lofar_config.h>
 #include <PL/Query/Expr.h>
-#include <PL/Query/ExprNode.h>
-#include <string>
 
 namespace LOFAR
 {
@@ -35,39 +28,19 @@ namespace LOFAR
   {
     namespace Query
     {
-      // @defgroup UnaryExprNode Unary Expression Nodes
-      // @ingroup ExprNode
 
-      // @ingroup UnaryExprNode
-      // This class represents a unary expression node. A unary expression is
-      // an expression that takes one operator and one operand.
-      class UnaryExprNode : public ExprNode
+      Expr ExprNode::getConstraint() const
       {
-      public:
-        // Construct a unary expression node.
-        UnaryExprNode(const std::string& oper, 
-                      const Expr& value);
+        return Expr();
+      }
 
-        virtual ~UnaryExprNode();
-
-        virtual void print(std::ostream& os) const;
-
-        virtual Expr getConstraint() const;
-
-      private:
-
-        // The operation
-        const std::string itsOperation;
-
-        // The operand
-        const Expr        itsOperand;
-
-      };
+      bool ExprNode::isNull() const
+      {
+        return false;
+      }
 
     } // namespace Query
 
   } // namespace PL
 
 } // namespace LOFAR
-
-#endif

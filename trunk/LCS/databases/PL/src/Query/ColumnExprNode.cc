@@ -30,10 +30,10 @@ namespace LOFAR
     namespace Query
     {
 
-      ColumnExprNode::ColumnExprNode(const std::string& column,
-                                     const std::string& constraint) :
-        itsColumn(column),
-        itsConstraint(constraint)
+      ColumnExprNode::ColumnExprNode(const std::string& tableName,
+                                     const std::string& columnName) :
+        itsTableName(tableName),
+        itsColumnName(columnName)
       {
       }
 
@@ -43,7 +43,18 @@ namespace LOFAR
 
       void ColumnExprNode::print(std::ostream& os) const
       {
-        os << itsColumn;
+        os << itsTableName << "." << itsColumnName;
+      }
+
+      Expr ColumnExprNode::getConstraint() const
+      {
+        return itsConstraint;
+      }
+
+      void ColumnExprNode::addConstraint(const Expr& constraint)
+      {
+        if (itsConstraint.isNull()) itsConstraint = constraint;
+        else itsConstraint = itsConstraint && constraint;
       }
 
     } // namespace Query

@@ -33,11 +33,14 @@ namespace LOFAR
   {
     namespace Query
     {
+      //# Forward Declarations
+      class Expr;
+
       // @defgroup ExprNode Expression Nodes
       //
       // ExprNode is an abstract base class that represents the node of an
       // expression query. We will need to derive specific expression node
-      // classes (e.g. ExprNodeBinary) from it.
+      // classes (e.g. BinaryExprNode) from it.
       class ExprNode
       {
       public:
@@ -47,6 +50,18 @@ namespace LOFAR
 
         // Print the expression node into an output stream.
         virtual void print(std::ostream& os) const = 0;
+
+        // Return the constraint associated with this expression node.  Most
+        // expression nodes have a constraint associated with them. The
+        // constraint represents the relation between the branches of a node.
+        // The default implementation returns a null expression.
+        virtual Expr getConstraint() const;
+
+        // Return true if this expression node is a null expression node.
+        // The default implementation returns false; only NullExprNode will
+        // override the default implementation.
+        virtual bool isNull() const;
+
       };
 
     } // namespace Query

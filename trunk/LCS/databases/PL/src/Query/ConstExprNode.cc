@@ -44,6 +44,11 @@ namespace LOFAR
       {
       }
 
+      bool NullExprNode::isNull() const
+      {
+        return true;
+      }
+
 
       IntExprNode::IntExprNode(int i) : 
         itsOperand(i)

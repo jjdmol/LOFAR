@@ -1,6 +1,6 @@
-//#  UnaryExprNode.h: one line description
+//#  LogicalUnaryExprNode.cc: one line description
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,14 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_PL_QUERY_UNARYEXPRNODE_H
-#define LOFAR_PL_QUERY_UNARYEXPRNODE_H
-
-//# Includes
-#include <lofar_config.h>
-#include <PL/Query/Expr.h>
-#include <PL/Query/ExprNode.h>
-#include <string>
+#include <PL/Query/LogicalUnaryExprNode.h>
+#include <iostream>
 
 namespace LOFAR
 {
@@ -35,39 +29,25 @@ namespace LOFAR
   {
     namespace Query
     {
-      // @defgroup UnaryExprNode Unary Expression Nodes
-      // @ingroup ExprNode
-
-      // @ingroup UnaryExprNode
-      // This class represents a unary expression node. A unary expression is
-      // an expression that takes one operator and one operand.
-      class UnaryExprNode : public ExprNode
+      
+      LogicalUnaryExprNode::LogicalUnaryExprNode(const std::string& oper, 
+                                                 const Expr& value) : 
+        itsOperation(oper), 
+        itsOperand(value)
       {
-      public:
-        // Construct a unary expression node.
-        UnaryExprNode(const std::string& oper, 
-                      const Expr& value);
+      }
 
-        virtual ~UnaryExprNode();
-
-        virtual void print(std::ostream& os) const;
-
-        virtual Expr getConstraint() const;
-
-      private:
-
-        // The operation
-        const std::string itsOperation;
-
-        // The operand
-        const Expr        itsOperand;
-
-      };
+      void LogicalUnaryExprNode::print(std::ostream& os) const
+      {
+        Expr exp(itsOperand.getConstraint());
+        os << "(";
+        if (!exp.isNull()) os << exp << " AND ";
+        os << itsOperation << itsOperand;
+        os << ")";
+      }
 
     } // namespace Query
 
   } // namespace PL
 
 } // namespace LOFAR
-
-#endif

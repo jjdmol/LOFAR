@@ -35,21 +35,24 @@ namespace LOFAR
   {
     namespace Query
     {
-      //# Forward Declarations
+      // @defgroup BinaryExprNode Binary Expression Nodes
+      // @ingroup ExprNode
 
+      // @ingroup BinaryExprNode
       // This class represents a binary expression node. A binary expression
       // is an expression that takes one operator and two operands, one
       // left-hand-side operand and one right-hand-side operand.
       class BinaryExprNode : public ExprNode
       {
       public:
-        // Construct a binary expression node. 
         BinaryExprNode(const std::string& oper, 
                        const Expr& lhs, const Expr& rhs);
 
         virtual ~BinaryExprNode();
 
         virtual void print(std::ostream& os) const;
+
+        virtual Expr getConstraint() const;
 
       private:
 
