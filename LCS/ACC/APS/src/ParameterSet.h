@@ -84,6 +84,7 @@ public:
 
 	int		getInt   (const string& theKey) const;
 	double	getDouble(const string& theKey) const;
+	float	getFloat(const string& theKey) const;
 	string	getString(const string& theKey) const;
 
 	friend std::ostream& operator<<(std::ostream& os, const ParameterSet &thePS);
