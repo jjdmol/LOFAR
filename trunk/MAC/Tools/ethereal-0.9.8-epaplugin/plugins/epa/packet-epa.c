@@ -363,7 +363,7 @@ static const value_string eth_error_vals[] =
   { 2, "Frame delimiter had other value than 0xAB"           },
   { 3, "Not enough preamble nibbles"                         },
   { 4, "Frame ended during frame header."                    },
-  { 5, "Caculated CRC does not match received CRC"           },
+  { 5, "Calculated CRC does not match received CRC"          },
   { 6, "An odd number of nibbles was received from ethernet" },
   { 7, "Length specified in the frame size field does not match the real number of received bytes" },
   { 0,     NULL   },
@@ -377,7 +377,8 @@ static const value_string mep_error_vals[] =
   { 3, "Invalid PID"                                         },
   { 4, "Register does not exist"                             },
   { 5, "Message is too large"                                },
-  { 0,     NULL   },
+  { 6, "Error occurred during inter-FPGA transmission."      },
+  { 0, NULL },
 };
 
 static const value_string wg_mode_vals[] =
