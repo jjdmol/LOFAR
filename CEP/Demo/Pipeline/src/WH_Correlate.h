@@ -20,18 +20,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
-//  %[BugId: 117]%
-//
-//  Initial working version
-//
-//  Revision 1.1  2002/05/23 15:40:44  schaaf
-//
-//  %[BugId: 11]%
-//  Added WH_Correlate
-//
-//
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -106,5 +94,20 @@ private:
   static int          theirProcessProfilerState; 
   
 };
+
+inline DH_2DMatrix* WH_Correlate::getInHolder (int channel) {
+  DbgAssertStr (channel >= 0,          "input channel too low");
+  DbgAssertStr (channel < getInputs(), "input channel too high");
+  TRACER4("channel = " << channel);
+  return itsInHolders[channel];
+}
+
+
+inline DH_Correlations* WH_Correlate::getOutHolder (int channel) {
+  DbgAssertStr (channel >= 0,           "output channel too low");
+  DbgAssertStr (channel < getOutputs(), "output channel too high");
+  return itsOutHolders[channel];
+}
+
 
 #endif
