@@ -83,6 +83,8 @@ public:
      The only thing it does is setting the status. 
   */
   virtual bool sendNonBlocking(void* buf, int nbytes, int destination, int tag);
+  // Wait until the data has been sent.
+  virtual bool waitForSent(void* buf, int nbytes, int destination, int tag);
 
   // Wait for a notification that the receiving party has received the data.
   // (i.e. recv has performed the memcpy)

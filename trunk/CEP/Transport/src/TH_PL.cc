@@ -138,6 +138,11 @@ bool TH_PL::sendNonBlocking(void* buf, int nbytes, int destination, int tag)
   return sendBlocking(buf, nbytes, destination, tag);
 }
 
+bool TH_PL::waitForSent(void*, int, int, int)
+{
+  return true;
+}
+
 bool TH_PL::recvBlocking(void* buf, int nbytes, int source , int tag)
 { 
   // Get a reference to the DHPL's TPO object.
@@ -174,12 +179,16 @@ bool TH_PL::recvNonBlocking(void* buf, int nbytes, int source , int tag)
   return recvBlocking(buf, nbytes, source, tag);
 }
 
+bool TH_PL::waitForReceived(void*, int, int, int)
+{
+  return true;
+}
+
 void TH_PL::waitForBroadCast () {}
 void TH_PL::waitForBroadCast (unsigned long&) {}
 void TH_PL::sendBroadCast (unsigned long) {}
 int  TH_PL::getCurrentRank () { return -1; }
 int  TH_PL::getNumberOfNodes () { return 1; }
-void TH_PL::init (int, const char * []) {}
 void TH_PL::finalize () {}
 void TH_PL::synchroniseAllProcesses () {}
 

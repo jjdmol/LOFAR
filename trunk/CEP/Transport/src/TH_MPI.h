@@ -59,10 +59,14 @@ public:
   /// Read the data.
   virtual bool recvBlocking(void* buf, int nbytes, int source, int tag);
   virtual bool recvNonBlocking(void* buf, int nbytes, int source, int tag);
+  /// Wait foe the data to be received
+  virtual bool waitForReceived(void* buf, int nbytes, int source, int tag);
 
   /// Write the data.
   virtual bool sendBlocking(void* buf, int nbytes, int destination, int tag);
   virtual bool sendNonBlocking(void* buf, int nbytes, int destination, int tag);
+  /// Wait for the data to be sent
+  virtual bool wairForSent(void* buf, int nbytes, int destination, int tag);
 
   /// Get the type of transport.
   virtual string getType() const;

@@ -45,8 +45,12 @@ public:
   virtual bool recvBlocking (void* buf, int nbytes, int source, int tag);
   virtual bool recvNonBlocking (void* buf, int nbytes, int source, int tag);
 
+  virtual bool waitForReceived (void* buf, int nbytes, int source, int tag);
+
   virtual bool sendBlocking (void* buf, int nbytes, int destination, int tag);
   virtual bool sendNonBlocking (void* buf, int nbytes, int destination, int tag);
+
+  virtual bool waitForSent (void* buf, int nbytes, int destination, int tag);
 
   virtual string getType () const;
 
@@ -57,7 +61,6 @@ public:
 
   static TH_PL proto;
   
-  static void init (int argc, const char *argv[]);
   static void finalize ();
   static void waitForBroadCast ();
   static void waitForBroadCast (unsigned long& aVar);

@@ -179,6 +179,11 @@ bool TH_Mem_Bl::sendNonBlocking(void* buf, int nbytes, int, int tag)
   return true;
 }
 
+bool TH_Mem_Bl::waitForSent(void* buf, int nbytes, int destination, int tag)
+{
+  waitForRecvAck(buf, nbytes, destination, tag);
+}
+
 bool TH_Mem_Bl::waitForRecvAck(void*, int, int, int tag)
 {
   pthread_mutex_lock(&theirTHMemLock);

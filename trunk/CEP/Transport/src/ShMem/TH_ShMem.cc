@@ -242,6 +242,11 @@ bool TH_ShMem::recvNonBlocking(void* buf, int nbytes, int source, int tag)
   return recvBlocking(buf, nbytes, source, tag);
 } 
 
+bool TH_ShMem::waitForReceived(void*, int, int, int)
+{
+  return true;
+}
+
 void TH_ShMem::initSend(void* buf, int destination, int tag)
 {
     void *itsSendBufPtr = 0;
@@ -338,6 +343,11 @@ bool TH_ShMem::sendNonBlocking(void* buf, int nbytes, int destination, int tag)
   cerr << "**Warning** TH_ShMem::sendNonBlocking() is not implemented. " 
        << "The sendBlocking() method is used instead." << endl;    
   return sendBlocking(buf, nbytes, destination, tag);
+}
+
+bool TH_ShMem::waitForSent(void*, int, int, int)
+{
+  return true;
 }
 
 void TH_ShMem::waitForBroadCast()
