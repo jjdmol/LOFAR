@@ -32,7 +32,7 @@ namespace Debug
 
   // debug output stream -- same as cerr on startup
   ostream * dbg_stream_p = &cerr;
-  std::ofstream dbg_file;
+  ofstream dbg_file;
 
   // timestamp
   struct timeval tv_init;
@@ -74,7 +74,7 @@ namespace Debug
 
   // -----------------------------------------------------------------------
   // staticBuffer(str)
-  // copies an std::string into a static buffer, return char *.
+  // copies an string into a static buffer, return char *.
   // This is thread-safe
   // -----------------------------------------------------------------------
 #ifdef USE_THREADS
@@ -402,7 +402,7 @@ namespace Debug
 
   // -----------------------------------------------------------------------
   // ssprintf
-  // Like sprintf, but returns an std::string with the output
+  // Like sprintf, but returns an string with the output
   // -----------------------------------------------------------------------
   const string ssprintf( const char *format,... )
   {
@@ -460,7 +460,7 @@ namespace Debug
   {
     itsDo    = true;
     itsLevel = level;
-    std::ostringstream oss;
+    ostringstream oss;
     if (file != 0) {
       oss << file << ':' << line;
     }
@@ -473,14 +473,13 @@ namespace Debug
     if (msg != 0) {
       oss << ": " << msg;
     }
-    oss << ends;
     itsMsg = oss.str();
-    getDebugStream() << "trace" << itsLevel << " start " << itsMsg << endl;
+    getDebugStream() << "TRACE" << itsLevel << " start " << itsMsg << endl;
   }
 
   void Tracer::endMsg()
   {
-    getDebugStream() << "trace" << itsLevel << " end " << itsMsg << endl;
+    getDebugStream() << "TRACE" << itsLevel << " end " << itsMsg << endl;
     //    delete [] itsMsg;
     //     itsMsg = 0;
   }
