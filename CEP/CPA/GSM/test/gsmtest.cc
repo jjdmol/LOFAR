@@ -23,8 +23,9 @@
 #include <GSM/PointSource.h>
 #include <GSM/SkyModel.h>
 
+#include <aips/aips.h>
 #include <aips/Tables/Table.h>
-#include <aips/Tables/SetupNewTable.h>
+#include <aips/Tables/SetupNewTab.h>
 #include <aips/Tables/TableDesc.h>
 #include <aips/Tables/ScaColDesc.h>
 #include <aips/Tables/ArrColDesc.h>
@@ -34,19 +35,22 @@
 void createPointSourceTable(const std::string &tableName)
 {
   TableDesc description("PointSource", "1.0", TableDesc::New);
-  description.add(ScalarColumnDesc<int>("NUMBER", "Catalog Number."));
-  description.add(ScalarColumnDesc<std::string>("NAME", "Name of Source, e.g. M31, Virgo A, etc..."));
-  description.add(ScalarColumnDesc<int>("TYPE", "Type of source."));
-  description.add(ArrayColumnDesc<double>("RAPARMS", "J2000 RA in radians"));
-  description.add(ArrayColumnDesc<double>("DECPARMS", "J2000 Dec in radians"));
-  description.add(ArrayColumnDesc<double>("IPARMS", "I in Jansky"));
-  description.add(ArrayColumnDesc<double>("QPARMS", "Q in Jansky"));
-  description.add(ArrayColumnDesc<double>("UPARMS", "U in Jansky"));
-  description.add(ArrayColumnDesc<double>("VPARMS", "V in Jansky"));
+  description.addColumn(ScalarColumnDesc<int>("NUMBER", "Catalog Number."));
+  description.addColumn(ScalarColumnDesc<String>("NAME", "Name of Source, e.g. M31, Virgo A, etc..."));
+  description.addColumn(ScalarColumnDesc<int>("TYPE", "Type of source."));
+  description.addColumn(ArrayColumnDesc<double>("RAPARMS", "J2000 RA in radians"));
+  description.addColumn(ArrayColumnDesc<double>("DECPARMS", "J2000 Dec in radians"));
+  description.addColumn(ArrayColumnDesc<double>("IPARMS", "I in Jansky"));
+  description.addColumn(ArrayColumnDesc<double>("QPARMS", "Q in Jansky"));
+  description.addColumn(ArrayColumnDesc<double>("UPARMS", "U in Jansky"));
+  description.addColumn(ArrayColumnDesc<double>("VPARMS", "V in Jansky"));
 
   SetupNewTable newTable(tableName, description, Table::New);
   
-  Table tabel(newTable,0);
+  Table table(newTable);
+  table.addRow();
+  table.addRow();
+  table.addRow();
 }
 
 

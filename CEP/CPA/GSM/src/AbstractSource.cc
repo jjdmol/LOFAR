@@ -21,11 +21,15 @@
 
 #include <GSM/AbstractSource.h>
 
-#include <MNS/MeqParmSingle.h>
+#include <MNS/MesParmSingle.h>
 
 #include <aips/Measures.h>
 #include <aips/Measures/MDirection.h>
 
+#include <aips/Tables/Table.h>
+#include <aips/Tables/ScalarColumn.h>
+#include <aips/Tables/ArrayColumn.h>
+#include <aips/Arrays/Matrix.h>
 
 using namespace GSM;
 
@@ -58,8 +62,8 @@ AbstractSource::AbstractSource(SourceType          type,
     itsName(name),
     itsSourceType(type)
 {
-  itsRA  = new MeqParmSingle(0);
-  itsDec = new MeqParmSingle(0);
+  itsRA  = new MesParmSingle(0);
+  itsDec = new MesParmSingle(0);
 }
 
 
@@ -118,7 +122,7 @@ unsigned int AbstractSource::getNumberOfParameters() const
 
 //===============>>>  AbstractSource::getParameters  <<<===============
 
-unsigned int AbstractSource::getParameters(std::vector<MeqParm* > &parameters)
+unsigned int AbstractSource::getParameters(std::vector<MesParm* > &parameters)
 {
   unsigned int added=0;
   
@@ -136,7 +140,7 @@ unsigned int AbstractSource::getParameters(std::vector<MeqParm* > &parameters)
 
 //===============>>>  AbstractSource::setParameters  <<<===============
 
-unsigned int AbstractSource::setParameters(const std::vector<MeqParm* > &parameters)
+unsigned int AbstractSource::setParameters(const std::vector<MesParm* > &parameters)
 {
   unsigned int read=0;
   
@@ -174,8 +178,8 @@ MDirection AbstractSource::getPosition(double time,
 
 //===============>>>  AbstractSource::getPositionExpressions  <<<===============
 
-void AbstractSource::getPositionExpressions(MeqExpr* ra,
-                                            MeqExpr* dec)
+void AbstractSource::getPositionExpressions(MesExpr* ra,
+                                            MesExpr* dec)
 {
   ra  = itsRA;
   dec = itsDec;
@@ -198,7 +202,7 @@ void AbstractSource::store(Table&      table,
 
   Number.put(row, itsCatalogNumber);
   Name.put  (row, itsName);
-  Type.put  (row, int(itsType));
+  Type.put  (row, int(itsSourceType));
   RAParms.put (row, itsRA->getCoeff().getDoubleMatrix());
   DecParms.put(row, itsDec->getCoeff().getDoubleMatrix());
 }
@@ -217,9 +221,13 @@ void AbstractSource::load(Table&      table,
   ROArrayColumn<double>       RAParms (table, "RAPARMS");
   ROArrayColumn<double>       DecParms(table, "DECPARMS");
 
-  Number.get(row, itsCatalogNumber);
+  int temp;
+  Number.get(row, temp);
+  itsCatalogNumber = (unsigned int)temp;
+
   Name.get  (row, itsName);
-  Type.get  (row, itsType);
+  Type.get  (row, temp);
+  itsSourceType = SourceType(temp);
 
   Matrix<double> coef(1,1);
   RAParms.get (row, coef, true);
@@ -247,8 +255,8 @@ std::ostream& AbstractSource::writeNiceAscii(std::ostream& out) const
 
   Matrix<double> coef(itsRA->getCoeff().getDoubleMatrix());
   out << "RA  : " << endl;
-  for(unsigned int t = 0; t < coef.nrows(); t++) {
-    for(unsigned int f = 0; f < coef.ncols(); f++) {
+  for(unsigned int t = 0; t < coef.nrow(); t++) {
+    for(unsigned int f = 0; f < coef.ncolumn(); f++) {
       out.width(10);
       out << coef(t,f);
     }
@@ -256,8 +264,8 @@ std::ostream& AbstractSource::writeNiceAscii(std::ostream& out) const
   }
   out << "Dec : " << endl;
   coef = itsDec->getCoeff().getDoubleMatrix();
-  for(unsigned int t = 0; t < coef.nrows(); t++) {
-    for(unsigned int f = 0; f < coef.ncols(); f++) {
+  for(unsigned int t = 0; t < coef.nrow(); t++) {
+    for(unsigned int f = 0; f < coef.ncolumn(); f++) {
       out.width(10);
       out << coef(t,f);
     }
