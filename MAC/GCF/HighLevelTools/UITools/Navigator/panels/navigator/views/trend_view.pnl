@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,387 337 954 748 N "_3DFace" 2
+PANEL,258 108 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -330,7 +330,7 @@ void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
 // FunctionName: GetRandomValue
 //
 /////////////////////////////////////////////////////////////////////
-float GetRandomValue( float fOffset, float fSwing)
+float GetRandomValue(int i, float fOffset, float fSwing)
 {
   float fRandom;
   float fValue;
@@ -339,7 +339,7 @@ float GetRandomValue( float fOffset, float fSwing)
   fRandom = fRandom / 32767.0;
   fRandom *= fSwing;
   fRandom -= (fSwing / 2.0);
-  fValue = fOffset + fRandom;
+  fValue = fOffset + fRandom + sin(i/50);
   return fValue;
 }
 
@@ -354,16 +354,16 @@ void Simulation()
 {
   float fRandom;
   srand();
+  int i=0;
   while(1)
   {
-    delay(3, 0);
-    dpSet(  \"System1:PIC_Rack1_SubRack1_Board1_AP1_RCU1.status\", GetRandomValue( 20, 10 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack1_Board1_AP1_RCU2.status\", GetRandomValue( 10, 20 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack1_Board1_AP2_RCU1.status\", GetRandomValue( 30, 10 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack1_Board1_AP2_RCU2.status\", GetRandomValue( 10, 30 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack1.status\", GetRandomValue( 10, 10 ));
-    dpSet(  \"System1:PIC_Rack2_SubRack1.status\", GetRandomValue( 50, 10 ));
-    dpSet(  \"System1:PIC_Rack3_SubRack1.status\", GetRandomValue( 60, 10 ));
+    i++;
+    delay(0, 500);
+    dpSet(  $datapoint + \"_Board1_AP1.temperature\", 40 + GetRandomValue(i, 1, 0.2 ));
+    dpSet(  $datapoint + \"_Board1_AP2.temperature\", 41 + GetRandomValue(i, 1, 0.15 ));
+    dpSet(  $datapoint + \"_Board1_AP3.temperature\", 39 + GetRandomValue(i, 1, 0.25 ));
+    dpSet(  $datapoint + \"_Board1_AP4.temperature\", 41 + GetRandomValue(i, 1, 0.33 ));
+    dpSet(  $datapoint + \"_Board1_BP.temperature\",  42 + GetRandomValue(i, 1, 0.11 ));
   }
 }" 0
 EE E E 1 -1 -1 0  20 30
@@ -875,5 +875,7 @@ LANG:1 6 Layer8
 0
 3 0 ""
 "objects\\Nav\\warning_trend_dp_illegal.pnl" 230 340 T 33 1 0 1  80 70  
-0
+2
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
 0
