@@ -21,8 +21,8 @@
 //  $Id$
 
 
-#include "BaseSim/TH_Mem.h"
-#include "BaseSim/StepRep.h"
+#include "CEPFrame/TH_Mem.h"
+#include "CEPFrame/StepRep.h"
 #include "Common/Debug.h"
 
 /**
