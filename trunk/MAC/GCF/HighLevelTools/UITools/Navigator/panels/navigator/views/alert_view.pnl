@@ -1,10 +1,16 @@
 V 10
 1
 LANG:1 5 panel
-PANEL,233 122 1006 750 N "_3DFace" 1
+PANEL,321 171 1006 750 N "_3DFace" 2
 "$configDatapoint"
+"$datapoint"
 "main()
 {
+
+  // Is it a datapoint element? then disable control
+	// This includes that this control is only suitable for DP-Types
+	if (dpGetElementName($datapoint)==\"\")
+  {
   dpConnect(\"ArrangeTable\", $configDatapoint + \".1.nrOfRows:_online.._value\",
                             $configDatapoint + \".1.nrOfColumns:_online.._value\",
                             $configDatapoint + \".1.Title:_online.._value\",
@@ -31,7 +37,7 @@ PANEL,233 122 1006 750 N "_3DFace" 1
                                  $configDatapoint + \".1.nrOfRows:_online.._value\",
                                  $configDatapoint + \".2.nrOfRows:_online.._value\",
                                  $configDatapoint + \".3.nrOfRows:_online.._value\");
-
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -43,16 +49,11 @@ PANEL,233 122 1006 750 N "_3DFace" 1
 ArrangeAlertList(string dp1, float nrOfRowsList,
                  string dp2, bool ListActive)
 {
-int x, y;
+  int x, y;
 
- setValue(\"AlertList\", \"scale\", 1, (nrOfRowsList+1)/28 );
-getValue(\"AlertList\", \"size\", x, y );
-DebugN(\"x: \" + x);
-DebugN(\"y: \" + y);
-
+  setValue(\"AlertList\", \"scale\", 1, (nrOfRowsList+1)/28 );
+  getValue(\"AlertList\", \"size\", x, y );
 }
-
-
 
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +69,7 @@ ArrangeTableContent(string dp1, dyn_string Column1Titles,
   string CellContent, titel;
   int nrOfRows, i, TableNumber;
   anytype Row;
-  
+  string connectDatapoint;
   getTableNumber(dp1, TableNumber);
   getColumnTitle(dp2, ColumnTitle);
   dpGet($configDatapoint + \".\"+TableNumber+\".nrOfRows:_online.._value\", nrOfRows);
@@ -92,31 +93,42 @@ ArrangeTableContent(string dp1, dyn_string Column1Titles,
     if (dynlen(Column1dpNames)>i)
     {
       
+      if (1==dynlen(strsplit(Column1dpNames[ConvIndex(i)], \".\")))
+      {
+        connectDatapoint = $datapoint + \".\" + Column1dpNames[ConvIndex(i)];// + \":_online.._value\";
+      }
+      else
+      {
+        connectDatapoint = $datapoint + \"_\" + Column1dpNames[ConvIndex(i)];// + \":_online.._value\";
+      }
+      
       if (Column1dpNames[ConvIndex(i)] == CellContent)
       {
         if ((\"\" != Column1dpNames[ConvIndex(i)]) && (\"0\" != Column1dpNames[ConvIndex(i)]))
         {
-	        dpConnect(\"UpdateCell\", Column1dpNames[ConvIndex(i)], dp2);
+          dpConnect(\"UpdateCell\", connectDatapoint + \":_online.._value\", dp2);
 	        setValue (\"Table\"+TableNumber+\"_dpNames\", \"cellValueRC\", i, ColumnTitle+\"Titles\", Column1dpNames[ConvIndex(i)]);
   	    }
 	      else
+	      {
           setValue (\"Table\"+TableNumber, \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"_3DFace\"); 
+        }
       }
       else if (Column1dpNames[ConvIndex(i)] != CellContent)
       {
         if (dpExists(CellContent))
         {
-          dpDisconnect(\"UpdateCell\", CellContent, dp2);
+          dpDisconnect(\"UpdateCell\", CellContent + \":_online.._value\", dp2);
         }
         if ((\"\" == Column1dpNames[ConvIndex(i)]) || (\"0\" == Column1dpNames[ConvIndex(i)]))
         {
           setValue (\"Table\"+TableNumber, \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"_3DFace\");
         }
-        else if (\"\" != Column1dpNames[ConvIndex(i)])
+        else if (\"\" != $datapoint + \"_\" + Column1dpNames[ConvIndex(i)])
         {
-          if (dpExists(Column1dpNames[ConvIndex(i)])) //Exists the configured datapoint? 
+          if (dpExists(connectDatapoint)) //Exists the configured datapoint? 
           {
-            dpConnect(\"UpdateCell\", Column1dpNames[ConvIndex(i)], dp2);
+            dpConnect(\"UpdateCell\", connectDatapoint + \":_online.._value\", dp2);            
             setValue (\"Table\"+TableNumber+\"_dpNames\", \"cellValueRC\", i, ColumnTitle+\"Titles\", Column1dpNames[ConvIndex(i)]);
           }
           else //No, display color DpDoesNotExist
@@ -149,16 +161,21 @@ void UpdateCell(string dpName, string value,
 {
   int i, TableNumber;
   anytype Row, AlertColor;
-  string ColumnTitle;
+  string ColumnTitle, connectDatapoint;
   getTableNumber(dp1, TableNumber);
   getColumnTitle(dp1, ColumnTitle);
   
   for(i=0; i<dynlen(ColumndpNames) ; i++)
   {
-    if (dpName == ColumndpNames[ConvIndex(i)]+ \":_online.._value\")
+    if (1==dynlen(strsplit(ColumndpNames[ConvIndex(i)], \".\"))) //check or the last part only a dpe is
+      connectDatapoint = $datapoint + \".\" + ColumndpNames[ConvIndex(i)];
+    else
+      connectDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(i)];
+  
+    if (dpName == connectDatapoint + \":_online.._value\")
     {
       Row=i;
-      dpGet(ColumndpNames[ConvIndex(i)]+\":_alert_hdl.._act_state_color\", AlertColor);
+      dpGet(connectDatapoint + \":_alert_hdl.._act_state_color\", AlertColor);
       setValue (\"Table\"+TableNumber, \"cellBackColRC\", Row, ColumnTitle+\"Titles\", AlertColor);
     }
   }
@@ -239,11 +256,9 @@ PostitionObjects(string dp1, int Area1Active,
   setValue(\"Table3_title\", \"visible\", Area3Active);
   setValue(\"Table3\"      , \"visible\", Area3Active);
   setValue(\"AlertList\"   , \"visible\", ListActive);
-
-
   
   //Show a warning on the panel when panelheight is exceeded.
-  if (panelHeigth < (120 + space + label + (space+label+Area1nrOfRows*26)*Area1Active + (space+label+Area2nrOfRows*26)*Area2Active + (space+label+Area3nrOfRows*26)*Area3Active))
+/*  if (panelHeigth < (120 + space + label + (space+label+Area1nrOfRows*26)*Area1Active + (space+label+Area2nrOfRows*26)*Area2Active + (space+label+Area3nrOfRows*26)*Area3Active))
   {
     setValue(\"txt_warning\"  , \"visible\", TRUE);
     setValue(\"txt_warning1\" , \"visible\", TRUE);
@@ -254,11 +269,11 @@ PostitionObjects(string dp1, int Area1Active,
     setValue(\"txt_warning\"  , \"visible\", FALSE);
     setValue(\"txt_warning1\" , \"visible\", FALSE);
     setValue(\"icon_warning\" , \"visible\", FALSE);
-  }
+  }*/
 }" 0
 EE E E 1 -1 -1 0  0 0
 "" 0 1
-E"#uses \"navigator_view_config.ctl\"" 0
+E"#uses \"gcfnav_view.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
@@ -328,59 +343,6 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 0 
-2 112
-"txt_warning"
-""
-1 848 690 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-104 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 850 692 904 714
-0 2 0 "s" 0 0 0 192 0 0  850 692
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-160-100-100-*-*-iso8859-1|-19,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 6 Height
-6 113
-"icon_warning"
-""
-1 857 690 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
- E E
-105 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 3 "pictures/icon_warning.bmp" 13434828 E 857 650 897 690
-2 115
-"txt_warning1"
-""
-1 830 710 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-107 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 832 712 923 734
-0 2 0 "s" 0 0 0 192 0 0  832 712
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-160-100-100-*-*-iso8859-1|-19,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 exceeded!
 25 94
 "Table2_dpNames"
 ""
@@ -607,7 +569,7 @@ LANG:0 0
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 LANG:0 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
--2 -2 882 730
+-2 -2 932 730
 "dyn_bool g_colVis;           // holds the flag wheter an optional column is visible or not
 string   g_connectId;        // holds id of current query
 dyn_int  g_counterConnectId; // holds numbers of Id's
@@ -635,7 +597,7 @@ main()
   as_init();
 }
 " 0
- E 1 0 1 22 3 "_abbr" 0 1 0 "s" 1
+ E 1 0 1 22 3 "_abbr" 0 1 -1 "s" 1
 LANG:1 5 Abbr.
 "main(int row, string col)
 {
@@ -643,7 +605,7 @@ LANG:1 5 Abbr.
 }" 0
 1
 LANG:1 0 
- 34 "_prior" 0 1 0 "s" 1
+ 34 "_prior" 0 1 -1 "s" 1
 LANG:1 8 Priority
 "main(int row, string col)
 {
@@ -651,7 +613,7 @@ LANG:1 8 Priority
 }" 0
 1
 LANG:1 0 
- 30 "timeStr" 0 1 0 "s" 1
+ 24 "timeStr" 0 1 0 "s" 1
 LANG:1 4 Time
 "main(int row, string col)
 {
@@ -659,7 +621,7 @@ LANG:1 4 Time
 }" 0
 1
 LANG:1 0 
- 145 "dpElement" 0 0 0 "s" 1
+ 130 "dpElement" 0 0 0 "s" 1
 LANG:1 10 DP element
 "main(int row, string col)
 {
@@ -667,7 +629,7 @@ LANG:1 10 DP element
 }" 0
 1
 LANG:1 0 
- 200 "dpComment" 0 1 0 "s" 1
+ 200 "dpComment" 0 1 -1 "s" 1
 LANG:1 9 Datapoint
 "main(int row, string col)
 {
@@ -797,169 +759,30 @@ LANG:1 2 #3
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 LANG:0 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
-0 1 0 3 0
+0 0 0 3 0
 1 0
-13 45
-"Button1"
-""
-1 840 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-40 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-838 -2 862 22
-T 
-1
-LANG:1 2 11
-"// SimpleCtrlScriptStart {valid}
-main()
-{
-  EP_toggleDP();
-}
-
-EP_toggleDP()
-{
-bool bo;
-
-  dpGet(\"System1:PIC_Rack1_Alert1.Alert1:_online.._value\", bo);
-  dpSet(\"System1:PIC_Rack1_Alert1.Alert1:_original.._value\", !bo);
-}
-
-// SimpleCtrlScript {EP_toggleDP}
-// DP {System1:PIC_Rack1_Alert1.Alert1}
-// Config {:_original.._value}
-// DPType {bool}
-// SimpleCtrlScriptEnd {EP_toggleDP}
-" 0
- E E E
-13 46
-"Button2"
-""
-1 860 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-41 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-858 -2 882 22
-T 
-1
-LANG:1 2 12
-"// SimpleCtrlScriptStart {invalid}
-main()
-{
-  EP_toggleDP();
-}
-
-EP_toggleDP()
-{
-bool bo;
-
-  dpGet(\"System1:PIC_Rack1_Alert1.Alert2:_online.._value\", bo);
-  dpSet(\"System1:PIC_Rack1_Alert1.Alert2:_original.._value\", !bo);
-}
-
-// SimpleCtrlScript {EP_toggleDP}
-// DP {System1:PIC_Rack1_Alert1.Alert1}
-// Config {:_original.._value}
-// DPType {bool}
-// SimpleCtrlScriptEnd {EP_toggleDP}
-" 0
- E E E
-13 47
-"Button3"
-""
-1 880 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-42 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-878 -2 902 22
-T 
-1
-LANG:1 2 21
-"// SimpleCtrlScriptStart {invalid}
-main()
-{
-  EP_toggleDP();
-}
-
-EP_toggleDP()
-{
-bool bo;
-
-  dpGet(\"System1:PIC_Rack1_Alert2.Alert1:_online.._value\", bo);
-  dpSet(\"System1:PIC_Rack1_Alert2.Alert1:_original.._value\", !bo);
-}
-
-// SimpleCtrlScript {EP_toggleDP}
-// DP {System1:PIC_Rack1_Alert1.Alert1}
-// Config {:_original.._value}
-// DPType {bool}
-// SimpleCtrlScriptEnd {EP_toggleDP}
-" 0
- E E E
-13 48
-"Button4"
-""
-1 900 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-43 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-898 -2 922 22
-T 
-1
-LANG:1 2 22
-"// SimpleCtrlScriptStart {invalid}
-main()
-{
-  EP_toggleDP();
-}
-
-EP_toggleDP()
-{
-bool bo;
-
-  dpGet(\"System1:PIC_Rack1_Alert2.Alert2:_online.._value\", bo);
-  dpSet(\"System1:PIC_Rack1_Alert2.Alert2:_original.._value\", !bo);
-}
-
-// SimpleCtrlScript {EP_toggleDP}
-// DP {System1:PIC_Rack1_Alert1.Alert1}
-// Config {:_original.._value}
-// DPType {bool}
-// SimpleCtrlScriptEnd {EP_toggleDP}
-" 0
- E E E
 25 1
 "Table1"
 ""
 1 0 0 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
- E E
+ E "main()
+{
+
+  int Row, Column;
+  dyn_string ColumndpNames;
+
+  getValue(\"\", \"currentCell\", Row, Column);
+  dpGet($configDatapoint + \".1.Column\" + Column + \"dpNames\", ColumndpNames); 
+  string newDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)];
+  DebugN(\"newDatapoint: \" + newDatapoint);
+  if (dpExists(newDatapoint))
+  {
+    DebugN(\"Jumping to: \"+ $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)]);
+    DebugN(\"altered: \" + dpSubStr(newDatapoint, DPSUB_SYS_DP));
+    navConfigTriggerNavigatorRefreshWithDP(dpSubStr(newDatapoint, DPSUB_SYS_DP));
+  }
+}" 0
+
 1 0 0 0 0 0
 EE E
 0

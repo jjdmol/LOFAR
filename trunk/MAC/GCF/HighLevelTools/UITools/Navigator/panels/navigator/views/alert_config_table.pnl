@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,457 497 879 398 N "_3DFace" 3
+PANEL,342 333 861 471 N "_3DFace" 3
 "$AreaNr"
 "$configDatapoint"
 "$datapoint"
@@ -19,6 +19,8 @@ PANEL,457 497 879 398 N "_3DFace" 3
   }
   
   setColumnConfig(1, nrOfColumns, 15, \"Config\");
+  setValue(\"Table1\", \"scale\", 1.0, nrOfRows/15.0);  
+  setValue(\"Table1\", \"visible\", TRUE);  
 }
 
 
@@ -27,7 +29,7 @@ ArrangeConfigTableContent(string dp1, dyn_string ColumnTitles,
 {
   string ColumnTitle;
   int i;
-  
+  string connectDatapoint;
   getColumnTitle(dp2, ColumnTitle);
   int nrOfRows, nrOfColumns, TableNumber;
   
@@ -48,19 +50,28 @@ ArrangeConfigTableContent(string dp1, dyn_string ColumnTitles,
         setValue (\"Table1\", \"cellValueRC\", i, ColumnTitle+\"Titles\" , \"\");
       }
     }
-    // Change the backCOl of a cell when no DP is present
+    // Change the backCol of a cell when no DP is present
     if (dynlen(ColumndpNames)>i) //Check or the dun_string had this index
     {
+      // Set the right notation for the dp \"_\" or \".\"
+      if (1==dynlen(strsplit(ColumndpNames[ConvIndex(i)], \".\")))
+      {
+        connectDatapoint = $datapoint + \".\" + ColumndpNames[ConvIndex(i)];
+      }
+      else
+      {
+        connectDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(i)];
+      }
+
       if (ColumndpNames[ConvIndex(i)] == \"\")
       {
         setValue (\"Table1\", \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"_3DFace\");
       }
-      else if (!dpExists(ColumndpNames[ConvIndex(i)])) //Exists the configured datapoint? 
+      else if (!dpExists(connectDatapoint))// + ColumndpNames[ConvIndex(i)])) //Exists the configured datapoint? No
       {
-        DebugN(\"DpDoesNotExist\");
         setValue (\"Table\"+TableNumber, \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"DpDoesNotExist\");
       }
-      else
+      else if (dpExists(connectDatapoint)) //Exists the configured datapoint? Yes
       {
         setValue (\"Table\"+TableNumber, \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"white\");
       }
@@ -84,70 +95,10 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-2 9
-"Text4"
-""
-1 630 13 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-8 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 632 15 672 31
-0 2 0 "s" 0 0 0 192 0 0  632 15
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 6 AreaNr
-2 17
-"Text5"
-""
-1 10 313 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-16 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 315 26 331
-0 2 0 "s" 0 0 0 192 0 0  12 315
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 dp
-2 19
-"Text6"
-""
-1 10 343 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-18 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 345 62 361
-0 2 0 "s" 0 0 0 192 0 0  12 345
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 8 configDp
 2 22
 "Text7"
 ""
-1 10 260 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 20 0 0 0 0 0
 EE E
@@ -156,87 +107,18 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 262 106 278
-0 2 0 "s" 0 0 0 192 0 0  12 262
+E E 0 1 1 0 1 E U  0 E 12 12 106 28
+0 2 0 "s" 0 0 0 192 0 0  12 12
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 17 Configured alert:
-14 10
-"TextField1"
-""
-1 682 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-9 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-680 8 774 35
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-setValue(\"\", \"text\", $AreaNr);
-}" 0
-
-E
-14 18
-"TextField4"
-""
-1 72 310 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-17 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-70 308 492 335
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-setValue(\"\", \"text\", $datapoint);
-}" 0
-
-E
-14 20
-"TextField5"
-""
-1 72 340 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-19 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-70 338 492 365
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-setValue(\"\", \"text\", $configDatapoint);
-}" 0
-
-E
 14 21
 "test"
 ""
-1 110 260 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 110 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 19 0 0 0 0 0
 EE E
@@ -247,7 +129,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-108 258 682 285
+108 8 682 35
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -255,7 +137,7 @@ E
 25 24
 "Table1"
 ""
-1 -181 -4097 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 10 40 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
  "main()
 {
   int Row,Column;
@@ -296,13 +178,12 @@ E
       	break;
   	case 2:
 				setValue (\"Table1\", \"cellBackCol\", \"white\");
-				//ChildPanelOnModal
-        ChildPanelOnCentral(\"navigator/views/alert_config_table_cell.pnl\",
-				                    \"Select DP\", makeDynString(\"$Row:\" + Row,
-				                                               \"$Column:\" + Column,
-				                                               \"$configDatapoint:\" + $configDatapoint,
-				                                               \"$datapoint:\" + $datapoint,
-				                                               \"$AreaNr:\" + $AreaNr));
+        ChildPanelOnCentralModal(\"navigator/views/alert_config_table_cell.pnl\",
+				                         \"Select DP\", makeDynString(\"$Row:\" + Row,
+				                                                    \"$Column:\" + Column,
+				                                                    \"$configDatapoint:\" + $configDatapoint,
+				                                                    \"$datapoint:\" + $datapoint,
+				                                                    \"$AreaNr:\" + $AreaNr));
       	break;
     default:
     		break;
@@ -312,11 +193,29 @@ E
 {
   int Row, Column;
   dyn_string ColumndpNames;
+  string connectDatapoint;
 
   getValue(\"\", \"currentCell\", Row, Column);
   dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + Column + \"dpNames\", ColumndpNames); 
-  setValue(\"test\", \"text\", ColumndpNames[ConvIndex(Row)]);
-
+  if (dynlen(ColumndpNames)>0)
+  {
+    if ((0 != ColumndpNames[ConvIndex(Row)]) && (\"\" != ColumndpNames[ConvIndex(Row)]))
+    {
+      if (1==dynlen(strsplit(ColumndpNames[ConvIndex(Row)], \".\")))
+      {
+        connectDatapoint = $datapoint + \".\" + ColumndpNames[ConvIndex(Row)];
+      }
+      else
+      {
+        connectDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)];
+      }
+      setValue(\"test\", \"text\", connectDatapoint);
+    }
+    else
+    {
+      setValue(\"test\", \"text\", \"None\");
+    }
+  }
 }
 " 0
 
@@ -329,8 +228,11 @@ LANG:1 0
 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
-8 38 832 252
-E E 0 0 1 15 1 "Column0Titles" 0 -1 0 "s" 1
+8 38 852 432
+"main()
+{
+}" 0
+ E 0 0 1 15 1 "Column0Titles" 0 -1 0 "s" 1
 LANG:1 1 0
 E1
 LANG:1 0 
@@ -395,8 +297,31 @@ LANG:1 2 #1
 8 30 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
-0 1 0 3 0
+0 0 0 3 0
 1 0
+13 25
+"Button1"
+""
+1 784 438 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+21 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+782 436 852 464
+T 
+1
+LANG:1 5 Close
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
 0
 LAYER, 1 
 1

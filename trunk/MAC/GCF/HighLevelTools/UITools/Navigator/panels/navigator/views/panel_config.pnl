@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,281 138 941 694 N "_3DFace" 5
+PANEL,593 182 941 694 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -9,7 +9,8 @@ PANEL,281 138 941 694 N "_3DFace" 5
 "$viewName"
 EEE E E 1 -1 -1 0  20 20
 "" 0 1
-EE 2
+E"#uses \"gcfnav_view.ctl\"" 0
+ 2
 "CBRef""1"
 "EClose"E
 ""
@@ -162,6 +163,16 @@ LANG:1 0
 E E 0 1 1 0 1 E  72 111 10 111
 1 14 1 "" 57
 0
+1 18 2 "" 0
+0
+1 19 2 "" 4
+0
+1 19 2 "" 1
+0
+1 20 2 "" 2
+0
+1 21 2 "" 3
+0
 14 8
 "txt_fileName"
 ""
@@ -185,10 +196,14 @@ main()
   if (dpExists($configDatapoint))
   {
     setValue(\"\", \"enabled\", TRUE);
-    string subViewName;
-    getSubviewName(subViewName);
-    dpConnect(\"EP_textFieldInCB\", \"System1:__nav_subview_Panel_\" + subViewName + \".filename:_online.._value\");
-
+    string currentSubview = substr($configDatapoint ,strlen(\"System1:__nav_\"+$selectedElementDpType+\"_config_\"+$viewName+\"_\"), strlen($configDatapoint));
+    dpConnect(\"EP_textFieldInCB\", \"System1:__nav_subview_Panel_\" + currentSubview + \".filename:_online.._value\");
+   	// Is it a datapoint element? then disable control
+	  // This includes that this control is only suitable for DP-Types
+	  if (dpGetElementName($datapoint)!=\"\")
+    {
+      setValue (\"\", \"enabled\", FALSE);
+    }
 	}
 	else
   {
@@ -252,11 +267,20 @@ LANG:1 4 Load
     setValue(\"\", \"enabled\", FALSE);
   }
 
+ 	// Is it a datapoint element? then disable control
+	// This includes that this control is only suitable for DP-Types
+	if (dpGetElementName($datapoint)!=\"\")
+  {
+    setValue (\"\", \"enabled\", FALSE);
+  }
+
 }" 0
 
 1 15 1 "" 54
 0
 1 16 1 "" 55
+0
+1 17 1 "" 58
 0
 0
 LAYER, 1 
@@ -294,4 +318,8 @@ LANG:1 6 Layer8
 "$selectedElementDpType""$selectedElementDpType"
 "$selectedView""$selectedView"
 "$viewName""$viewName"
+3 2 "Group3"
+"objects\\Nav\\info_config disabled_because_dpe.pnl" 90 590 T 11 1 0 1  10 70  
+1
+"$datapoint""$datapoint"
 0

@@ -1,8 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,235 463 222 182 N "_3DFace" 2
-"$APNr"
+PANEL,295 138 222 182 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -274,9 +273,9 @@ E"main(int button, bool state)
     
     if (state == TRUE)        // if checkbox is checked, show details and connect textbox to the datapoints
     {
-      if(!dpExists($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\") ||
-         !dpExists($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\") ||
-         !dpExists($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\"))
+      if(!dpExists($datapoint + \"_Board1_ETH.packetsReceived:_online.._value\") ||
+         !dpExists($datapoint + \"_Board1_ETH.packetsError:_online.._value\") ||
+         !dpExists($datapoint + \"_Board1_ETH.lastError:_online.._value\"))
       {
         setValue(\"output_packetsReceived\", \"backCol\", \"_dpdoesnotexist\");
         setValue(\"output_packetsError\", \"backCol\", \"_dpdoesnotexist\");

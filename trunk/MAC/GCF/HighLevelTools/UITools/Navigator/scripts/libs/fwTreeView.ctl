@@ -372,8 +372,8 @@ fwTreeView_defaultCollapse(unsigned index, string referenceName = "")
 		// parent node:
 		parentNode = fwTreeView_getNode(index, referenceName);
 		pos = index + 1; //index of first node to collapse
-		
-		while(pos <= fwTreeView_getNodeCount(referenceName) && (node = fwTreeView_getNode(pos, referenceName))[fwTreeView_LEVEL] > parentNode[fwTreeView_LEVEL])
+		int nodeCount = fwTreeView_getNodeCount(referenceName);
+		while(pos <=  nodeCount && (node = fwTreeView_getNode(pos, referenceName))[fwTreeView_LEVEL] > parentNode[fwTreeView_LEVEL])
 		{
 			// collapses and hides the folders and leaves
 			// (collapse bit of a leaf is meaningless => we don't care if we change it)
@@ -518,7 +518,7 @@ fwTreeView_insertNode(dyn_anytype node, unsigned index, string referenceName = "
 	int treeIndex;
 	string treeIndexString;
 	//anytype node_ = node;
-  
+
 	getValue(referenceName + "TreeArrayIndex", "text", treeIndexString);
 	treeIndex = treeIndexString;
 	//dynInsertAt(_trees_AWqOe1L6[treeIndex+offset], node_, index);

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 11 Subrack_RCU
-PANEL,352 135 139 149 N "_3DFace" 3
+PANEL,321 171 139 149 N "_3DFace" 3
 "$APNr"
 "$RCUNr"
 "$datapoint"
@@ -112,7 +112,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 40 40 100 110
+E "main()
+{
+  jump2StationSubrackRCU();
+}" 0
+ 0 1 1 0 1 E U  1 E 40 40 100 110
 2 5
 "text_RCUNr"
 ""
@@ -149,7 +153,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 50 68 90 108
+E "main()
+{
+  jump2StationSubrackRCU();
+}" 0
+ 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 50 68 90 108
 0
 LAYER, 1 
 1

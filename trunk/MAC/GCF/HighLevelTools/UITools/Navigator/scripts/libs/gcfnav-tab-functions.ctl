@@ -177,10 +177,33 @@ void ComboBoxViewsSelectionChanged()
     "$datapoint:" + g_datapoint,
     "$configDatapoint:" + g_subViewConfigs[selectedSubView]);
   LOG_TRACE("selectedSubView,selectedPanel,panelParameters: ",selectedSubView,selectedPanel,panelParameters);
-  viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,selectedPanel,panelParameters);
   
+  //---------------------------------------------------------------
+  //viewTabsCtrl.namedRegisterPanel divided in three possibilities.
+  //1. panelfile present and accessable
+  //2. There is no subview configured for this DP-Type
+  //3. The configured panel file for this subview has not been found
+  if(access(getPath(PANELS_REL_PATH)+selectedPanel,F_OK) == 0 && selectedPanel!="")
+  {
+    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,selectedPanel,panelParameters);
+	LOG_TRACE("## selectedPanel:", selectedPanel);
+  }
+  else if (selectedPanel=="0")
+  {
+    selectedPanel = "navigator/views/nopanel.pnl";
+    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"navigator/views/nopanel.pnl",panelParameters);
+    LOG_DEBUG("## No panel configured for this subview");
+  }
+  else
+  {
+	string oldSelectedPanel = selectedPanel;
+	viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,"navigator/views/nopanelfound.pnl",panelParameters);
+	LOG_DEBUG("## VIEW_TABS_VIEW_NAME: ", VIEW_TABS_VIEW_NAME);
+    LOG_DEBUG("## File does not exist:",oldSelectedPanel);
+  }            
+ 
   string datapointTypeName = "";
-DebugTN("g_datapoint",g_datapoint);
+  DebugTN("g_datapoint",g_datapoint);
   if(dpExists(g_datapoint))
     datapointTypeName = dpTypeName(g_datapoint);
   else

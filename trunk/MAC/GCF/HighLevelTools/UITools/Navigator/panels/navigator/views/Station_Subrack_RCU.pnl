@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 station_subrack_rcu
-PANEL,224 108 923 749 N "_3DFace" 1
+PANEL,746 167 923 749 N "_3DFace" 1
 "$datapoint"
 EEE E E 1 -1 -1 0  130 290
 "" 0 1

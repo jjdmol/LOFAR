@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 14 19inch_Subrack
-PANEL,407 248 182 113 N "_3DFace" 3
+PANEL,295 138 182 113 N "_3DFace" 3
 "$RackNr"
 "$SubrackNr"
 "$datapoint"
@@ -412,29 +412,9 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  EP_childPanelOn();
+  jump2StationSubrack($datapoint);
+  
 }
-
-EP_childPanelOn()
-{
-//  RootPanelOn
-//(\"diverse\", \"P1\", ), \"\");
-
-//  ChildPanelOnModal 
-  RootPanelOnModule(\"navigator/views/Station_Subrack.pnl\",
-      \"Subrack_\" + $SubrackNr, myModuleName(),
-      makeDynString(\"$datapoint:\"+ $datapoint));
-}
-
-// SimpleCtrlScript {EP_childPanelOn}
-// Function {RootPanelOn}
-// File {Subrack.pnl}
-// Panel {Subrack}
-// Parent {}
-// Module {}
-// OffsetX {0}
-// OffsetY {0}
-// SimpleCtrlScriptEnd {EP_childPanelOn}
 " 0
  0 1 1 0 1 E U  1 E 31 25 159 89
 7 1
@@ -618,7 +598,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 76 33 116 73
+E "main()
+{
+  jump2StationSubrack($datapoint);
+}" 0
+ 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 76 33 116 73
 0
 LAYER, 1 
 1

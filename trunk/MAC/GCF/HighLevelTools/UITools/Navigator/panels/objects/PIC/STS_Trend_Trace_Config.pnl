@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,224 108 258 47 N "_3DFace" 4
+PANEL,295 138 258 47 N "_3DFace" 4
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"
@@ -83,8 +83,12 @@ E E 0 1 1 0 1 E U  0 E 10 10 155 34
   	{
   	//Configure Trace
   	case 2:
-				ChildPanelOnCentral(\"navigator/views/trend_view_trace_config.pnl\",
-	  		                    \"Configure Trace \" + $TraceNr +\" of Trend \"+$TrendNr, makeDynString(\"$datapoint:\" + $datapoint, \"$configDatapoint:\" + $configDatapoint, \"$TrendNr:\" + $TrendNr, \"$TraceNr:\" + $TraceNr));
+				ChildPanelOnCentralModal(\"navigator/views/trend_view_trace_config.pnl\",
+	  		                         \"Configure Trace \" + $TraceNr +\" of Trend \"+$TrendNr,
+	  		                         makeDynString(\"$datapoint:\" + $datapoint,
+	  		                                       \"$configDatapoint:\" + $configDatapoint,
+	  		                                       \"$TrendNr:\" + $TrendNr,
+	  		                                       \"$TraceNr:\" + $TraceNr));
 
   			break;
   	//Delete trace
@@ -124,14 +128,17 @@ dyn_errClass err;
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
   }
+  if (dpGetElementName($datapoint)!=\"\")
+  {
+    setValue (\"\", \"enabled\", FALSE);
+  }
 
-  dpConnect(\"EP_textFieldInCB\",
-            $configDatapoint + \".\" + $TrendNr+\".Trace\"+$TraceNr+\".LegendName:_online.._value\",
-            $configDatapoint + \".\" + $TrendNr+\".Trace\"+$TraceNr+\".dpName:_online.._value\");
-  err = getLastError();
-  if (dynlen(err) > 0)
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
-
+    dpConnect(\"EP_textFieldInCB\",
+              $configDatapoint + \".\" + $TrendNr+\".Trace\"+$TraceNr+\".LegendName:_online.._value\",
+              $configDatapoint + \".\" + $TrendNr+\".Trace\"+$TraceNr+\".dpName:_online.._value\");
+    err = getLastError();
+    if (dynlen(err) > 0)
+      setValue(\"\", \"color\", \"_dpdoesnotexist\");
 }
 
 

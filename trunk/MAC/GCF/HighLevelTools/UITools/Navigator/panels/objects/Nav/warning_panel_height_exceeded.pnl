@@ -1,0 +1,187 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,295 138 343 81 N "_3DFace" 2
+"$configDatapoint"
+"$datapoint"
+"main()
+{
+ 
+
+ 
+ 
+ 
+ 
+  if ((dpExists($configDatapoint)) && (dpGetElementName($datapoint)==\"\"))
+  {
+
+    dpConnect(\"CheckHeigth\", $configDatapoint + \".1.Active:_online.._value\",
+                             $configDatapoint + \".2.Active:_online.._value\",
+                             $configDatapoint + \".3.Active:_online.._value\",
+                             $configDatapoint + \".ListActive:_online.._value\",
+                             $configDatapoint + \".1.nrOfRows:_online.._value\",
+                             $configDatapoint + \".2.nrOfRows:_online.._value\",
+                             $configDatapoint + \".3.nrOfRows:_online.._value\",
+                             $configDatapoint + \".nrOfRowsList:_online.._value\");
+
+  }
+
+}
+
+
+
+
+
+
+CheckHeigth(string dp1, int Area1Active,
+            string dp2, int Area2Active,
+            string dp3, int Area3Active,
+            string dp4, int ListActive,
+            string dp5, int Area1nrOfRows,
+            string dp6, int Area2nrOfRows,
+            string dp7, int Area3nrOfRows,
+            string dp8, int nrOfRowsList)
+{
+  int label=20, space=10;
+  int panelHeigth = 746;
+// 120 + verwijderd
+  if (panelHeigth < ( space + label + (space+label+Area1nrOfRows*26)*Area1Active +
+                    (space+label+Area2nrOfRows*26)*Area2Active + (space+label+Area3nrOfRows*26)*Area3Active)+
+                    (space+label+nrOfRowsList*26)*ListActive)
+  {
+    setValue (\"txt_info\", \"visible\", TRUE);
+    setValue (\"icon_info\", \"visible\", TRUE);
+    setValue (\"txt_info_2\", \"visible\", TRUE);
+    setValue (\"Border\", \"visible\", TRUE);
+    setValue (\"Border3\", \"visible\", TRUE);
+  }
+  else
+  {
+    setValue (\"txt_info\", \"visible\", FALSE);
+    setValue (\"icon_info\", \"visible\", FALSE);
+    setValue (\"txt_info_2\", \"visible\", FALSE);
+    setValue (\"Border\", \"visible\", FALSE);
+    setValue (\"Border3\", \"visible\", FALSE);
+  }
+}
+
+" 0
+EE E E 1 -1 -1 0  10 70
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"Border"
+""
+1 10 70 E E E 1 E 0 E N "_WindowText" E N {204,204,204} E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  3 0 8 3E 10 10 330 70
+6 4
+"Border3"
+""
+1 19 47 E E E 1 E 0 E N "_3DFace" E N "_3DFace" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 19 19 321 63
+6 1
+"icon_info"
+""
+1 20 58 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 3 "pictures/icon_warning.bmp" 13434828 E 20 21 60 58
+2 2
+"txt_info"
+""
+1 67 21 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 69 23 308 40
+0 2 0 "s" 0 0 0 64 0 0  69 23
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 32 Area configurations exceed panel
+2 3
+"txt_info_2"
+""
+1 67 41 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 69 43 318 60
+0 2 0 "s" 0 0 0 64 0 0  69 43
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 35 height. Not everything is visible!!
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,638 308 502 319 N "_3DFace" 5
+PANEL,499 188 502 255 N "_3DFace" 5
 "$AreaNr"
 "$Column"
 "$Row"
@@ -10,7 +10,6 @@ PANEL,638 308 502 319 N "_3DFace" 5
 "main()
 {
   startThread(\"FillSelectionList\");
-  
 }
 
 
@@ -32,33 +31,52 @@ void FillSelectionList()
   dyn_string Items;
  	bool state;
  	int TotalDPE;
-
+  //DebugTN(\"## start dpQuery\");
   if ($datapoint==\"\")
   {
     dpQuery(\"SELECT '_online.._value' FROM 'PIC*' \", tab);
-    DebugN(\"Query is PIC*\");
+    //DebugN(\"Query is PIC*\");
   }
   else
   {
     dpQuery(\"SELECT '_online.._value' FROM '\" + $datapoint + \"*' \", tab);
   }
+  //DebugTN(\"## stop  dpQuery\");
   SelectionList1.deleteAllItems();
   TotalDPE = dynlen(tab);
   for (i=2; i<=TotalDPE ; i++)
   {
     if (\"\" != tab[i][1])
     {
+      //DebugTN(\"-----------------------\");
+      //DebugTN(\"----- get ------\");
       dpGet(tab[i][1] + \":_alert_hdl.._class\", CurrentAlertClass); // Get the alertclass of the DPE
+      //DebugTN(\"-- get ready ---\");
       if (CurrentAlertClass !=\"\")                                  // If \"\" there is no alertclass
       {                                                            // configured!
-        Items[j] = tab[i][1];
+        //////////////////////////////////
+        //string hulp, EntryForSelectionList;
+        //hulp=dpSubStr(tab[i][1]  , DPSUB_DP_EL_CONF_DET_ATT);
+        //EntryForSelectionList = strltrim(hulp, dpSubStr($datapoint, DPSUB_DP_EL));
+        ///////////////////////////////////
+        // Items[j] = tab[i][1];  // this is the old, absolute addition
+        EntryForSelectionList = strltrim(dpSubStr(tab[i][1], DPSUB_DP_EL_CONF_DET_ATT), (dpSubStr($datapoint, DPSUB_DP_EL)+\"_\"));
+        if (0==(strpos (EntryForSelectionList, \"_\")))
+          Items[j] = strltrim(EntryForSelectionList, \"_\");
+        else if (0==(strpos (EntryForSelectionList, \".\")))
+          Items[j] = strltrim(EntryForSelectionList, \".\");
+        else
+          Items[j] = EntryForSelectionList;
+        
         j++;
+
       }
       ProgressBar(TotalDPE, i);
     }
   }
 
 	setValue(\"SelectionList1\", \"items\", Items);  //Insert all items in one time, faster the inserting every item apart
+  //DebugTN(\"## Total: \" + TotalDPE);
   ProgressBar(TotalDPE, TotalDPE);
 //  SelectionList1.selectedPos(SelectionPosition);
 //	DebugN(\"SelectionPosition: \"+SelectionPosition);
@@ -97,7 +115,7 @@ E E 0 1 1 0 1 E U  0 E 19 224 115 240
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 13 Name in table
+LANG:1 13 Label in cell
 6 27
 "Border1"
 ""
@@ -170,26 +188,6 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  1 E 13 197 486 207
-2 47
-"Text9"
-""
-1 20 280 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-37 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 22 282 40 298
-0 2 0 "s" 0 0 0 192 0 0  22 282
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 DP
 17 1
 "SelectionList1"
 ""
@@ -212,10 +210,7 @@ E
   string SelectedItem;
   int RowNumber, RefRowNumber;
 	dyn_string ColumndpNames, ColumnTitles;
-//	string UnloadDpName;
-	
-//  dpGet($configDatapoint + \".1\" + $TrendNr + \".Trace\"+$TraceNr+\".dpName\", UnloadDpName); 
-   
+
   getValue(\"SelectionList1\", \"selectedText\", SelectedItem);
   dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"dpNames\", ColumndpNames); 
   dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"Titles\", ColumnTitles);
@@ -225,7 +220,6 @@ E
   ColumndpNames[ConvIndex($Row)]=SelectedItem;
   dpSet($configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"dpNames\", ColumndpNames); 
   dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"dpNames\", ColumndpNames); 
-//  DebugN(ColumndpNames);
 	
 }" 0
 
@@ -249,7 +243,46 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 8 28 492 55
 3 "s" 0 0 0 0 0 0 
 E
-E
+"main()
+{
+  dpConnect(\"updateSelectedDatapoint\",
+            $configDatapoint + \".\" + $AreaNr + \".Column\" + $Column + \"dpNames\"); 
+
+}
+
+
+updateSelectedDatapoint(string dp1, dyn_string ColumndpNames)
+{
+
+
+//  int Row, Column;
+//  dyn_string ColumndpNames;
+  string connectDatapoint;
+
+//  getValue(\"\", \"currentCell\", Row, Column);
+//  dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + Column + \"dpNames\", ColumndpNames); 
+  
+  if (dynlen(ColumndpNames)>0)
+  {
+    if ((0 != ColumndpNames[ConvIndex($Row)]) && (\"\" != ColumndpNames[ConvIndex($Row)]))
+    {
+      if (1==dynlen(strsplit(ColumndpNames[ConvIndex($Row)], \".\")))
+      {
+        connectDatapoint = $datapoint + \".\" + ColumndpNames[ConvIndex($Row)];
+      }
+      else
+      {
+        connectDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex($Row)];
+      }
+      setValue(\"\", \"text\", connectDatapoint);
+    }
+    else
+    {
+      setValue(\"\", \"text\", \"None\");
+    }
+  }
+}" 0
+
 E
 14 5
 "txt_legend"
@@ -290,35 +323,12 @@ main()
  	DisplayText(\"txt_legend\", \" Ok\", InsertedText);
 }" 0
 
-13 37
+13 48
 "Button1"
 ""
-1 430 285 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 420 220 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
-29 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-428 283 492 310
-T 
-1
-LANG:1 2 OK
-"main()
-{
-  PanelOff();
-}" 0
- E E E
-14 45
-"TextField1"
-""
-1 70 280 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-35 0 0 0 0 0
+38 0 0 0 0 0
 EE E
 0
 1
@@ -327,15 +337,15 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-68 278 382 305
-3 "s" 0 0 0 0 0 0 
-E
+418 218 488 246
+T 
+1
+LANG:1 5 Close
 "main()
 {
-setValue(\"\", \"text\", $datapoint);
+  PanelOff();
 }" 0
-
-E
+ E E E
 0
 LAYER, 1 
 1

@@ -1,12 +1,13 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,459 230 227 62 N "_3DFace" 5
+PANEL,343 200 227 62 N "_3DFace" 6
 "$ElementName"
 "$Maximum"
 "$Minimum"
 "$TrendNr"
 "$configDatapoint"
+"$datapoint"
 "main()
 {
 setValue(\"txt_ElementName\", \"text\", $ElementName);
@@ -73,6 +74,15 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 "main()
 {
   fill_combobox();
+
+ 	// Is it a datapoint element? then disable control
+	// This includes that this control is only suitable for DP-Types
+	if (dpGetElementName($datapoint)!=\"\")
+  {
+    setValue (\"\", \"enabled\", FALSE);
+  }
+
+  
 }
 
 ///////////////////////////////////////////////////////////////////

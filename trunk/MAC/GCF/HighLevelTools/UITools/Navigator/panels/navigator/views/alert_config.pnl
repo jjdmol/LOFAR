@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,329 165 800 603 N "_3DFace" 5
+PANEL,467 216 800 679 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -9,7 +9,10 @@ PANEL,329 165 800 603 N "_3DFace" 5
 "$viewName"
 EEE E E 1 -1 -1 0  30 30
 "" 0 1
-EE 2
+E"//Include of ctl file
+#uses \"gcfnav_view.ctl\"
+" 0
+ 2
 "CBRef""1"
 "EClose"E
 ""
@@ -267,6 +270,22 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 LANG:1 0 
 1 219 12 "" 57
 0
+1 223 13 "" 0
+0
+1 224 13 "" 1
+0
+1 225 13 "" 2
+0
+1 226 13 "" 3
+0
+1 227 14 "" 0
+0
+1 228 14 "" 1
+0
+1 229 14 "" 2
+0
+1 230 14 "" 3
+0
 1 159 7 "0" 0
 0
 1 160 7 "" 15
@@ -304,6 +323,8 @@ LANG:1 0
 1 220 12 "" 54
 0
 1 221 12 "" 55
+0
+1 222 12 "" 58
 0
 0
 LAYER, 1 
@@ -354,7 +375,8 @@ LANG:1 6 Layer8
 "$datapoint""$datapoint"
 3 10 ""
 "objects\\Nav\\nav_radiobutton_dp.pnl" 309 502 T 86 1 0 1  -9 -11  
-2
+3
+"$datapoint""$datapoint"
 "$dp""$configDatapoint + \".ListActive\""
 "$label""Display alert-list"
 3 12 ""
@@ -364,10 +386,20 @@ LANG:1 6 Layer8
 "$selectedElementDpType""$selectedElementDpType"
 "$selectedView""$selectedView"
 "$viewName""$viewName"
+3 13 "Group8"
+"objects\\Nav\\info_config disabled_because_dpe.pnl" 90 600 T 96 1 0 1  0 50  
+1
+"$datapoint""$datapoint"
+3 14 ""
+"objects\\Nav\\warning_panel_height_exceeded.pnl" 460 540 T 96 1 0 1  -370 110  
+2
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
 3 11 ""
 "objects\\Nav\\nav_combobox_min_max_dp.pnl" 297 502 T 86 1 0 1  -112 -12  
-3
+4
 "$Maximum""26"
 "$Minimum""4"
+"$datapoint""$datapoint"
 "$dp""$configDatapoint + \".nrOfRowsList\""
 0

@@ -1,7 +1,8 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,498 733 307 48 N "_3DFace" 2
+PANEL,295 138 307 48 N "_3DFace" 3
+"$datapoint"
 "$dp"
 "$label"
 "main()
@@ -74,6 +75,13 @@ E E
   else
   {
     btn_Active.enabled = FALSE;
+  }
+  
+  // Is it a datapoint element? then disable control
+	// This includes that this control is only suitable for DP-Types
+	if (dpGetElementName($datapoint)!=\"\")
+  {
+    setValue (\"\", \"enabled\", FALSE);
   }
 }" 0
 "main(int button, bool state)

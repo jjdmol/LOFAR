@@ -1,11 +1,12 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,281 138 954 748 N "_3DFace" 2
+PANEL,387 337 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
 {
+  DebugTN(\"Trend-view.pnl initialized\");
 	//Simulation for altering a few selected DP's
 	startThread( \"Simulation\" );	
 
@@ -64,17 +65,26 @@ ArrangeTrendPlots(string dp1, bool StandardTrend, string dp2, bool Trend2Active,
   //Standard Trend-plot on dpElement
   if ((dpGetElementName($datapoint)!=\"\") && StandardTrend)
   {
-    dpSet(\"__nav_SingleElement_Trend.1.Trace1.dpName\", dpSubStr($datapoint, DPSUB_DP_EL_CONF_DET_ATT));
-    dpGet(\"__nav_SingleElement_Trend.1.Title\", Trend1Title);
-    setValue(\"Trend1_txt_Title\", \"text\", Trend1Title);
-		dpConnectElement2Trend();
- 	  setTrend1Properties();
-		setTrendVisible(1, TRUE);
-		setTrendVisible(2, FALSE);
-    dpConnect(\"CalculateTimeInterval\", \"__nav_SingleElement_Trend.1.Days\",
-                                       \"__nav_SingleElement_Trend.1.Hours\",
-                                       \"__nav_SingleElement_Trend.1.Minutes\",
-                                       \"__nav_SingleElement_Trend.1.Seconds\");
+    string hulp = dpSubStr($datapoint, DPSUB_DP_EL_CONF_DET_ATT);
+    if ((20==dpElementType(hulp)) || (21==dpElementType(hulp)) ||  (22==dpElementType(hulp)) || (23==dpElementType(hulp)))
+    {
+      dpSet(\"__nav_SingleElement_Trend.1.Trace1.dpName\", dpSubStr($datapoint, DPSUB_DP_EL_CONF_DET_ATT));
+      dpGet(\"__nav_SingleElement_Trend.1.Title\", Trend1Title);
+      setValue(\"Trend1_txt_Title\", \"text\", Trend1Title);
+		  dpConnectElement2Trend();
+ 	    setTrend1Properties();
+		  setTrendVisible(1, TRUE);
+		  setTrendVisible(2, FALSE);
+      dpConnect(\"CalculateTimeInterval\", \"__nav_SingleElement_Trend.1.Days\",
+                                         \"__nav_SingleElement_Trend.1.Hours\",
+                                         \"__nav_SingleElement_Trend.1.Minutes\",
+                                         \"__nav_SingleElement_Trend.1.Seconds\");
+    }
+    else
+    {
+      DebugN(\"####### This is an illegal DPE type  #################\");
+    }
+
   }
   //Standard Trend-plot on dpType
   else if ((dpGetElementName($datapoint)==\"\") && StandardTrend)
@@ -562,6 +572,16 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  2 0 3 "pictures/icon_warning.bmp" 13434828 E 260 360 300 400
+1 48 0 "" 0
+0
+1 49 0 "" 4
+0
+1 50 0 "" 1
+0
+1 51 0 "" 2
+0
+1 52 0 "" 3
+0
 23 1
 "Trend1"
 ""
@@ -852,5 +872,8 @@ LANG:1 6 Layer7
 LAYER, 7 
 1
 LANG:1 6 Layer8
+0
+3 0 ""
+"objects\\Nav\\warning_trend_dp_illegal.pnl" 230 340 T 33 1 0 1  80 70  
 0
 0

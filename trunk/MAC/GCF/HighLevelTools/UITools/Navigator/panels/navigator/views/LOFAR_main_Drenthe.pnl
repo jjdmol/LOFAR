@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 0 
-PANEL,258 108 543 478 N "_3DFace" 0
+PANEL,390 215 543 478 N "_3DFace" 0
 EEE E E 1 -1 -1 0  470 496
 "" 0 1
 EE 2
@@ -51,99 +51,6 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  3 0 8 1E 272 239 40 60
-6 193
-"Border8"
-""
-1 7 110 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
- E E
-84 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/kompas.gif" 16777215 E 7 24 95 111
-2 194
-"Text26"
-""
-1 46 13 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
- E E
-85 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 48 15 56 27
-0 2 0 "s" 0 0 0 192 0 0  48 15
- 1
-1
-LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
-0 ""
-1
-LANG:1 1 N
-2 195
-"Text27"
-""
-1 91 60 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
- E E
-86 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 93 62 101 74
-0 2 0 "s" 0 0 0 192 0 0  93 62
- 1
-1
-LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
-0 ""
-1
-LANG:1 1 E
-2 196
-"Text28"
-""
-1 1 60 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
- E E
-87 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 3 62 11 74
-0 2 0 "s" 0 0 0 192 0 0  3 62
- 1
-1
-LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
-0 ""
-1
-LANG:1 1 W
-2 197
-"Text29"
-""
-1 48 105 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
- E E
-88 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 50 107 58 119
-0 2 0 "s" 0 0 0 192 0 0  50 107
- 1
-1
-LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
-0 ""
-1
-LANG:1 1 S
 4 218
 "Line3"
 ""
@@ -768,6 +675,112 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 4 Arm4
+6 298
+"Border1"
+""
+1 22 132 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+172 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 1 "pictures/compass.gif" 16777215 E 22 46 110 133
+6 193
+"Border8"
+""
+1 21 132 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+84 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 21 46 109 133
+2 194
+"Text26"
+""
+1 60 35 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
+ E E
+85 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 62 37 70 49
+0 2 0 "s" 0 0 0 192 0 0  62 37
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 N
+2 195
+"Text27"
+""
+1 105 82 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
+ E E
+86 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 107 84 115 96
+0 2 0 "s" 0 0 0 192 0 0  107 84
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 E
+2 196
+"Text28"
+""
+1 15 82 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
+ E E
+87 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 17 84 25 96
+0 2 0 "s" 0 0 0 192 0 0  17 84
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 W
+2 197
+"Text29"
+""
+1 62 127 E E E 1 E 1 E N {0,0,0} E N {204,204,204} E E
+ E E
+88 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 64 129 72 141
+0 2 0 "s" 0 0 0 192 0 0  64 129
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 S
 0
 LAYER, 1 
 1
@@ -797,6 +810,6 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-2 "Group12" 1 13 103 121
+2 "Group12" 15 35 117 143
 5 197 196 195 194 193
 0

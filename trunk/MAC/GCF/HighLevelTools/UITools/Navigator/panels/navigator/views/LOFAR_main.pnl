@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 0 
-PANEL,258 108 600 518 N "_3DFace" 0
+PANEL,281 138 600 518 N "_3DFace" 0
 EEE E E 1 -1 -1 0  470 496
 "" 0 1
 EE 2
@@ -25,99 +25,6 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  2 0 3 "pictures/LOFAR_main.bmp" 13434828 E 0 0 600 514
-6 193
-"Border8"
-""
-1 16 107 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
- E E
-84 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/kompas.gif" 16777215 E 16 21 104 108
-2 194
-"Text26"
-""
-1 55 10 E E E 1 E 1 E N {255,255,255} E N {153,153,153} E E
- E E
-85 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 57 12 65 24
-0 2 0 "s" 0 0 0 192 0 0  57 12
- 1
-1
-LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
-0 ""
-1
-LANG:1 1 N
-2 195
-"Text27"
-""
-1 100 57 E E E 1 E 1 E N {255,255,255} E N {153,153,153} E E
- E E
-86 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 102 59 110 71
-0 2 0 "s" 0 0 0 192 0 0  102 59
- 1
-1
-LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
-0 ""
-1
-LANG:1 1 E
-2 196
-"Text28"
-""
-1 10 57 E E E 1 E 1 E N {255,255,255} E N {153,153,153} E E
- E E
-87 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 12 59 20 71
-0 2 0 "s" 0 0 0 192 0 0  12 59
- 1
-1
-LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
-0 ""
-1
-LANG:1 1 W
-2 197
-"Text29"
-""
-1 57 102 E E E 1 E 1 E N {255,255,255} E N {153,153,153} E E
- E E
-88 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 59 104 67 116
-0 2 0 "s" 0 0 0 192 0 0  59 104
- 1
-1
-LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
-0 ""
-1
-LANG:1 1 S
 7 241
 "Ellipse14"
 ""
@@ -130,30 +37,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E "// SimpleCtrlScriptStart {valid}
-main()
-{
-  EP_childPanelOn();
-}
-
-EP_childPanelOn()
-{
-  RootPanelOn(\"main_Drenthe.pnl\",
-      \"Drenthe\",
-      makeDynString(\"\"));
-}
-
-// SimpleCtrlScript {EP_childPanelOn}
-// Function {RootPanelOn}
-// File {main_Drenthe.pnl}
-// Panel {Drenthe}
-// Parent {}
-// Module {}
-// OffsetX {0}
-// OffsetY {0}
-// SimpleCtrlScriptEnd {EP_childPanelOn}
-" 0
- 0 1 1 0 1 E U  3 0 8 1E 268 212 15 20
+E E 0 1 1 0 1 E U  3 0 8 1E 268 212 15 20
 10 242
 "Polyline12"
 ""
@@ -1315,6 +1199,112 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 4 Arm4
+6 284
+"Border1"
+""
+1 16 106 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+169 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 1 "pictures/compass.gif" 16777215 E 16 20 104 107
+6 193
+"Border8"
+""
+1 16 107 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+84 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 16 21 104 108
+2 194
+"Text26"
+""
+1 55 10 E E E 1 E 1 E N {255,255,255} E N {153,153,153} E E
+ E E
+85 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 57 12 65 24
+0 2 0 "s" 0 0 0 192 0 0  57 12
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 N
+2 195
+"Text27"
+""
+1 100 57 E E E 1 E 1 E N {255,255,255} E N {153,153,153} E E
+ E E
+86 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 102 59 110 71
+0 2 0 "s" 0 0 0 192 0 0  102 59
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 E
+2 196
+"Text28"
+""
+1 10 57 E E E 1 E 1 E N {255,255,255} E N {153,153,153} E E
+ E E
+87 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 12 59 20 71
+0 2 0 "s" 0 0 0 192 0 0  12 59
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 W
+2 197
+"Text29"
+""
+1 57 102 E E E 1 E 1 E N {255,255,255} E N {153,153,153} E E
+ E E
+88 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 59 104 67 116
+0 2 0 "s" 0 0 0 192 0 0  59 104
+ 1
+1
+LANG:1 115 -microsoft windows-Terminal-normal-r-normal-*-*-100-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,255,3,2,1,49,Terminal
+0 ""
+1
+LANG:1 1 S
 0
 LAYER, 1 
 1
