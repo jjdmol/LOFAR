@@ -1,5 +1,6 @@
 pragma include once
 include 'octopussy.g'
+include 'recutil.g'
 
 default_octopussy := F;
 
@@ -39,6 +40,7 @@ const define_app_proxy := function (ref self,ref public,
   self.verbose_events := T;
   self.rqid := 1;
   self.waiting_init := F;
+  self.last_cmd_arg := [=];
 
   # setup fail/exit handlers
   whenever self.agentref->["fail done exit"] do 
@@ -108,16 +110,37 @@ const define_app_proxy := function (ref self,ref public,
     wider self;
     return ref self.relay;
   }
-  # Sends an app control command to the app
-  const public.command := function (message,payload=F)
+  const public.get_default_args := function (command)
+  {
+    if( has_field(self.last_cmd_arg,command) )
+      return self.last_cmd_arg[command];
+    else
+      return [=];
+  }
+  const public.set_default_args := function (command,data,update_gui=T)
   {
     wider self;
-    return self.octo.publish(spaste(self.appid,".In.App.Control.",message),
-                priority=10,
-                rec=payload);
+    self.last_cmd_arg[command] := data;
+    if( update_gui )
+      self.update_command_dialog(command,data);
+  }
+  # Sends an app control command to the app
+  const public.command := function (message,payload=F,update_gui=T,set_default=F)
+  {
+    wider self;
+    wider public;
+    public.set_default_args(message,payload);
+    if( !set_default )
+    {
+      # report as event to relay
+      self.relay->[spaste('sending_command_',message)](payload);
+      return self.octo.publish(spaste(self.appid,".In.App.Control.",message),
+                  priority=10,
+                  rec=payload);
+    }
   }
   # Reinitializes the app with a (possibly) partial init record
-  const public.reinit := function ( initrec,wait=F )
+  const public.reinit := function (initrec,wait=F)
   {
     wider public;
     wider self;
@@ -148,24 +171,25 @@ const define_app_proxy := function (ref self,ref public,
     public.reinit(initrec,wait);
   }
   # Shortcuts for sending various commands to the app
-  const public.stop := function ()
+  const public.stop := function (from_gui=F)
   {
     wider public;
     public.command("Stop");
   }
-  const public.halt := function ()
+  const public.halt := function (from_gui=F)
   {
     wider public;
     public.command("Halt");
   }
-  const public.pause := function ()
+  const public.pause := function (from_gui=F)
   {
     wider public;
     public.command("Pause");
   }
-  const public.resume := function (rec=F)
+  public.resume := function (rec=F,from_gui=F)
   {
     wider public;
+    wider self;
     public.command("Resume",rec);
   }
   # Returns current state, pause state and state string
@@ -205,6 +229,110 @@ const define_app_proxy := function (ref self,ref public,
     return $value.value;
   }
   
+  const self.make_text_frame := function (parent,disabled=T,
+                        size=[60,20],wrap='none',text='')
+  {
+    rec := [=];
+    rec.tf := dws.frame(parent,side='left',borderwidth=0);
+    rec.text := dws.text(rec.tf,disabled=disabled,text=text,
+          relief='sunken',width=size[1],height=size[2],wrap=wrap);
+    rec.vsb := dws.scrollbar(rec.tf);
+    rec.bf := dws.frame(parent,side='right',borderwidth=0,expand='x');
+    rec.pad := dws.frame(rec.bf,
+                expand='none',width=23,height=23,relief='groove');
+    rec.hsb := dws.scrollbar(rec.bf,orient='horizontal');
+    whenever rec.vsb->scroll, rec.hsb->scroll do
+        rec.text->view($value);
+    whenever rec.text->yscroll do
+        rec.vsb->view($value);
+    whenever rec.text->xscroll do
+        rec.hsb->view($value);
+    const rec.settext := function (text)
+    {
+      wider rec;
+      rec.text->delete('1.0','99999.99999');
+      rec.text->append(text);
+      rec.text->see('0.0')
+    }
+    return rec;
+  }
+  
+  const self.update_command_dialog := function (command,payload)
+  {
+    wider self;
+    if( has_field(self,'gui') && has_field(self.gui,'dialog') &&
+        has_field(self.gui.dialog,command) )
+    {
+      text := rec2string(payload);
+      self.gui.dialog[command].browser.settext(text);
+    }
+  }
+  const self.make_command_dialog := function (name,command,button=F,size=[40,20])
+  {
+    wider self;
+    rec := [=];
+    rec.topfr := dws.frame(parent=F,title=spaste(self.appid,': ',name),
+                            tlead=button,relief='groove');
+    rec.topfr->unmap();
+    
+    rec.label := dws.label(rec.topfr,paste(self.appid,': ',name));
+    if( has_field(self.last_cmd_arg,command) )
+      text := rec2string(self.last_cmd_arg[command]); 
+    else
+      text := '';
+    rec.browser := self.make_text_frame(rec.topfr,disabled=F,
+            size=size,text=text);
+    rec.browser.text->see('0,0');
+    rec.cmdframe := dws.frame(parent=rec.topfr,side='left',expand='none');
+    rec.accept := dws.button(rec.cmdframe,to_upper(name));
+    rec.reset  := dws.button(rec.cmdframe,'Reset');
+    rec.cancel := dws.button(rec.cmdframe,'Cancel');
+    
+    rec.error := dws.frame(parent=F,tlead=rec.accept,relief='groove');
+    rec.error->unmap();
+    rec.error_msg := dws.label(rec.error,'Failed to parse input record');
+    rec.error_dismiss := dws.button(rec.error,'Dismiss');
+    
+    whenever rec.error_dismiss->press do rec.error->unmap();
+    whenever rec.cancel->press do 
+    {
+      rec.topfr->unmap();
+      rec.error->unmap();
+    }
+    whenever rec.reset->press do
+    {
+      if( has_field(self.last_cmd_arg,command) )
+        text := rec2string(self.last_cmd_arg[command]); 
+      else
+        text := '';
+      rec.browser.settext(text);
+    }
+    whenever rec.accept->press do 
+    {
+      str := rec.browser.text->get('0.0','end');
+#      print 'browser contents: ',str;
+      data := string2rec(str);
+      # failed conversion?
+      if( is_fail(data) )
+      {
+        rec.error->map();
+      }
+      else
+      {
+#      print 'executing ',command,'with',data;
+        public.command(command,data,update_gui=F);
+        rec.topfr->unmap();
+        rec.error->unmap();
+      }
+    }
+    # setup event handler for parent button
+    if( !is_boolean(button) )
+    {
+      whenever button->press do rec.topfr->map();
+    }
+    self.gui.dialog[command] := rec;
+  }
+  
   const public.make_gui_frame := function (parent=F)
   {
     wider self;
@@ -229,51 +357,46 @@ const define_app_proxy := function (ref self,ref public,
     self.gui.resume := dws.button(self.gui.cmd_frame,'RESUME');
     self.gui.updstatus := dws.button(self.gui.cmd_frame,'Update status');
     self.gui.resume_pad := dws.frame(self.gui.cmd_frame,expand='none',width=20,height=5);
+    self.gui.init := dws.button(self.gui.cmd_frame,'INIT');
+    self.make_command_dialog('Init','Init',self.gui.init);
     self.gui.stop := dws.button(self.gui.cmd_frame,'STOP');
     self.gui.stop_pad := dws.frame(self.gui.cmd_frame,expand='none',width=20,height=5);
     self.gui.halt := dws.button(self.gui.cmd_frame,'HALT');
     # register event handlers for command buttons
-    whenever self.gui.pause->press do public.pause();
-    whenever self.gui.resume->press do public.resume();
-    whenever self.gui.stop->press do public.stop();
-    whenever self.gui.halt->press do public.halt();
-    whenever self.gui.updstatus->press do public.reqstatus();
+    whenever self.gui.pause->press do public.pause(from_gui=T);
+    whenever self.gui.resume->press do public.resume(from_gui=T);
+    whenever self.gui.stop->press do public.stop(from_gui=T);
+    whenever self.gui.halt->press do public.halt(from_gui=T);
     # create event logger
-    self.gui.eventlog_tf := dws.frame(self.gui.topframe,side='left',borderwidth=0);
-    self.gui.eventlog := dws.text(self.gui.eventlog_tf,disabled=T,
-          relief='sunken',width=60,height=20,wrap='none');
-    self.gui.eventlog->config('event',foreground="#808080");
-    self.gui.eventlog->config('text',foreground="black");
-    self.gui.eventlog->config('error',foreground="red");
-    self.gui.eventlog_vsb := dws.scrollbar(self.gui.eventlog_tf);
-    self.gui.eventlog_bf := dws.frame(self.gui.topframe,side='right',borderwidth=0,expand='x');
-    self.gui.eventlog_pad := dws.frame(self.gui.eventlog_bf,
-                expand='none',width=23,height=23,relief='groove');
-    self.gui.eventlog_hsb := dws.scrollbar(self.gui.eventlog_bf,orient='horizontal');
-    whenever self.gui.eventlog_vsb->scroll, self.gui.eventlog_hsb->scroll do
-        self.gui.eventlog->view($value);
-    whenever self.gui.eventlog->yscroll do
-        self.gui.eventlog_vsb->view($value);
-    whenever self.gui.eventlog->xscroll do
-        self.gui.eventlog_hsb->view($value);
+    self.gui.eventlog := self.make_text_frame(self.gui.topframe,disabled=T,size=[60,20]);
+    self.gui.eventlog.text->config('event',foreground="#808080");
+    self.gui.eventlog.text->config('text',foreground="black");
+    self.gui.eventlog.text->config('error',foreground="red");
+    # create second command panel
+    self.gui.cmd2_frame := dws.frame(parent=self.gui.topframe,side='right',expand='none');
+    self.gui.updstatus := dws.button(self.gui.cmd2_frame,'Update status');
     # create status record panel
     self.gui.statusbrowser := dws.recordbrowser(self.gui.topframe,[status='none']);
 #    self.gui.statusrec_tf := dws.frame(self.gui.topframe,borderwidth=0);
 #    self.gui.statusrec_f1 := dws.frame(self.gui.statusrec_tf,borderwidth=0);
 #    self.gui.statusrec_f2 := dws.frame(self.gui.statusrec_tf,borderwidth=0);
     self.gui.statusrec := [=];
+    whenever self.gui.updstatus->press do public.reqstatus();
+    # create general event handler
     whenever self.relay->* do
     {
       report := T;
+      name := $name;
+      if( $name ~ m/^sending_command_/ )
+        report := F;
       # update state
-      if( $name == 'app_notify_state' ) 
+      else if( $name == 'app_notify_state' ) 
       {
         self.gui.state->delete('0','end');
         self.gui.state->insert($value.state_string);
       }
       # update status record
-      name := $name;
-      if( name =~ s/^app_update_status_// )
+      else if( name =~ s/^app_update_status_// )
       {
         name := split(name,'/');
         if( len(name) == 1 )
@@ -293,22 +416,22 @@ const define_app_proxy := function (ref self,ref public,
         self.gui.statusbrowser->newrecord(self.gui.statusrec);
         report := F;
       }
-      if( name ~ m/^app_status/ )
+      else if( $name ~ m/^app_status/ )
       {
-        self.gui.statusrec := $value;
+        self.gui.statusrec := $value.value;
         self.gui.statusbrowser->newrecord(self.gui.statusrec);
         report := F;
       }
       # update event log
       if( report )
       {
-        self.gui.eventlog->append(spaste($name,': ',$value,'\n'),'event');
+        self.gui.eventlog.text->append(spaste($name,': ',$value,'\n'),'event');
         if( has_field($value,'text') )
         {
           tag := 'text';
           if( has_field($value,'error') )
             tag := 'error';
-          self.gui.eventlog->append(spaste($value.text,'\n'),tag);
+          self.gui.eventlog.text->append(spaste($value.text,'\n'),tag);
         }
       }
     }

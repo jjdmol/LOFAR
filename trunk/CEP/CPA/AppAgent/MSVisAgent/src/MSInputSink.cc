@@ -146,8 +146,15 @@ void MSInputSink::openMS (DataRecord &header,const DataRecord &select)
   header[FDomainIndex] = -1; // negative domain index indicates full data
   
   // Get range of channels (default values: all channles)
-  channels_[0] = header[FChannelStartIndex] = select[FChannelStartIndex].as<int>(0);
-  channels_[1] = header[FChannelEndIndex]   = select[FChannelEndIndex].as<int>(header[FChannelFreq].size()-1);
+  channels_[0] = select[FChannelStartIndex].as<int>(0);
+  channels_[1] = select[FChannelEndIndex].as<int>(-1);
+  if( channels_[0] < 0 )
+    channels_[0] = 0;
+  if( channels_[1] < 0 )
+    channels_[1] = header[FChannelFreq].size()-1;
+  FailWhen( channels_[1] < channels_[0],"illegal channel selection");
+  header[FChannelStartIndex] = channels_[0];
+  header[FChannelEndIndex]   = channels_[1];
   
   // get and apply selection string
   String where = select[FSelectionString].as<string>("");
