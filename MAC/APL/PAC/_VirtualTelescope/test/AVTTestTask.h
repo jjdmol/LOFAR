@@ -30,6 +30,7 @@
 #include <GCF/GCF_Task.h>
 #include <GCF/GCF_Port.h>
 #include <GCF/GCF_Property.h>
+#include <GCF/GCF_MyPropertySet.h>
 #include <boost/shared_ptr.hpp>
 
 #include "AVTTestAnswer.h"
@@ -82,6 +83,8 @@ class AVTTestTask : public GCFTask
     GCFProperty     m_propertySBFdirectionAngle1;
     GCFProperty     m_propertySBFdirectionAngle2;
     GCFProperty     m_propertySBFstatus;
+
+    GCFMyPropertySet      m_beamServerProperties;
 };
 
 #endif
