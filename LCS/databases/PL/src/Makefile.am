@@ -7,12 +7,10 @@ INSTHDRS = \
 	DBRepMeta.h \
 	DTLBase.h \
 	Exception.h \
-	ObjectCache.h \
 	ObjectId.h \
 	PersistenceBroker.h \
 	PersistentObject.h \
 	Query.h \
-	SQLTimeStamp.h \
 	TPersistentObject.h \
 	Query/BinaryExprNode.h \
 	Query/ColumnExprNode.h \
@@ -26,12 +24,14 @@ INSTHDRS = \
 	Query/UnaryExprNode.h
 
 NOINSTHDRS = 
+	ObjectCache.h \
+	SQLTimeStamp.h
 
 TCCHDRS = \
 	PersistenceBroker.tcc \
 	TPersistentObject.tcc
 
-include_HEADERS = $(INSTHDRS) $(TCCHDRS)
+pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
 
 noinst_HEADERS = $(NOINSTHDRS)
 
@@ -39,7 +39,7 @@ DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
 
 lib_LTLIBRARIES = libpl.la
 
-libpl_la_SOURCES = $(DOCHDRS) \
+libpl_la_SOURCES = \
 	Attrib.cc \
 	ConnectionHandler.cc \
 	DBRepMeta.cc \
