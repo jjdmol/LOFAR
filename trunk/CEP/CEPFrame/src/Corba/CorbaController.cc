@@ -18,16 +18,15 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//  $Id:
+//  $Id$
 //
-//  $Log:
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "BaseSim/BaseSim.h"
+///////////////////////////////////////////////////////////////////////////////////////
+
+#include "CEPFrame/BaseSim.h"
 #include "Common/Debug.h"
-#include "BaseSim/Corba/CorbaController.h"
-#include "BaseSim/VirtualMachine.h"
+#include "CEPFrame/Corba/CorbaController.h"
+#include "CEPFrame/VirtualMachine.h"
 #include <unistd.h>
 
 CorbaController::CorbaController(PortableServer::POA_var        aRootPOA,

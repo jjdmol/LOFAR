@@ -20,20 +20,13 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.2  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
 //
-//  Revision 1.1  2002/05/02 12:10:50  schaaf
-//  new class CorbaMonitor
-//
-//
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "BaseSim/BaseSim.h"
+#include "CEPFrame/BaseSim.h"
 #include "Common/Debug.h"
-#include "BaseSim/Corba/CorbaMonitor.h"
-#include "BaseSim/WorkHolder.h"
+#include "CEPFrame/Corba/CorbaMonitor.h"
+#include "CEPFrame/WorkHolder.h"
 
 CorbaMonitor::CorbaMonitor(PortableServer::POA_var        aRootPOA,
 			   PortableServer::POAManager_var aPOAManager,

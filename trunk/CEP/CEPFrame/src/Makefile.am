@@ -16,8 +16,6 @@ ParamBlock.h					\
 ParamHolder.h					\
 ParamValue.h					\
 Profiler.h					\
-SAXHandler.h					\
-SAXSimulParser.h				\
 Simul.h						\
 SimulBuilder.h					\
 SimulRep.h					\
@@ -40,9 +38,9 @@ Simul2XML.h					\
 Lock.h						\
 CyclicBuffer.h
 
-lib_LTLIBRARIES 	= libbasesim.la
+lib_LTLIBRARIES 	= libcepframe.la
 
-libbasesim_la_SOURCES 	= $(DOCHDRS)		\
+libcepframe_la_SOURCES 	= $(DOCHDRS)		\
 SimulatorParse.yy				\
 SimulatorParse.h				\
 SimulatorTokenize.ll				\
@@ -56,8 +54,6 @@ ParamBlock.cc					\
 ParamHolder.cc					\
 ParamValue.cc					\
 Profiler.cc					\
-SAXHandler.cc					\
-SAXSimulParser.cc				\
 Simul.cc					\
 SimulBuilder.cc					\
 SimulRep.cc					\
@@ -86,9 +82,9 @@ AM_LFLAGS		= -PSimulatorTokenize
 LEX_OUTPUT_ROOT		= lex.SimulatorTokenize
 
 if HAVE_CORBA
-libbasesim_la_LIBADD = ShMem/libth_shmem.la Corba/libth_corba.la -lpthread
+libcepframe_la_LIBADD = ShMem/libth_shmem.la Corba/libth_corba.la -lpthread
 else
-libbasesim_la_LIBADD = ShMem/libth_shmem.la -lpthread
+libcepframe_la_LIBADD = ShMem/libth_shmem.la -lpthread
 endif
 
 include $(lofar_sharedir)/Makefile.common

@@ -18,22 +18,20 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//  $Id:
-//
-//  $Log:
-//
+//  $Id$
+
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_CORBACONTROLLER_H
-#define BASESIM_CORBACONTROLLER_H
+#ifndef CEPFRAME_CORBACONTROLLER_H
+#define CEPFRAME_CORBACONTROLLER_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include "corba.h"
-#include "BaseSim/Corba/CorbaControl_s.hh"
+#include "CEPFrame/Corba/CorbaControl_s.hh"
 class VirtualMachine;
 
 class CorbaController:public POA_CorbaControl::Controller

@@ -20,42 +20,12 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.10  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.9  2002/03/14 14:25:12  wierenga
-//  Adapted to the new TransportHolder interface.
-//
-//  Revision 1.8  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.7  2001/11/02 11:29:48  gvd
-//  Changed TH_Corba for Transport changes
-//
-//  Revision 1.5  2001/10/05 11:50:37  gvd
-//  Added getType function
-//
-//  Revision 1.4  2001/09/05 08:07:26  wierenga
-//  Use getTransport method instead of private itsTransport.
-//  Implement new transport holder interface for prototype pattern.
-//
-//  Revision 1.3  2001/08/13 13:15:40  schaaf
-//  removed sleep in write before construction of CorbaTransportOut object
-//
-//  Revision 1.2  2001/08/13 12:07:02  schaaf
-//  Use BS_Corba for ORB and POA
-//
-//  Revision 1.1  2001/08/09 15:48:48  wierenga
-//  Implemented first version of TH_Corba and test program
-//
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "BaseSim/Corba/TH_Corba.h"
-#include "BaseSim/Corba/BS_Corba.h"
-#include "BaseSim/StepRep.h"
+#include "CEPFrame/Corba/TH_Corba.h"
+#include "CEPFrame/Corba/BS_Corba.h"
+#include "CEPFrame/StepRep.h"
 #include "Common/Debug.h"
 
 /// declare tranportholder corba prototype

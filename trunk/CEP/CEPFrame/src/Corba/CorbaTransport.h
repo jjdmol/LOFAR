@@ -20,22 +20,12 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.3  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.2  2001/10/26 10:06:28  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.1  2001/08/09 15:48:48  wierenga
-//  Implemented first version of TH_Corba and test program
 //
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_CORBA_TRANSPORT_H
-#define BASESIM_CORBA_TRANSPORT_H
+#ifndef CEPFRAME_CORBA_TRANSPORT_H
+#define CEPFRAME_CORBA_TRANSPORT_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

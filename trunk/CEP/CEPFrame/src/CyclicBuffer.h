@@ -22,71 +22,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.13  2002/10/15 11:36:48  wierenga
-//
-//    %[BugId: 102 ]%
-//
-//  Test checkin. Should work now.
-//
-//  Revision 1.12  2002/10/15 11:24:27  wierenga
-//  %[BugId:102]%
-//  Add missing call to pthread_mutex_lock in CyclicBuffer::AddBufferElement.
-//  This error was found by valgrind!
-//
-//  Revision 1.11  2002/07/05 09:13:36  wierenga
-//
-//  %[BugId: 33]%
-//
-//  Finished implementation and documentation. See LOFAR-ASTRON-RPT-016.
-//
-//  Revision 1.10  2002/06/13 11:56:53  wierenga
-//  %[BugId: 2]%
-//  Remove maxclients argument from CyclicBuffer constructor, it is not needed.
-//
-//  Revision 1.9  2002/06/04 14:42:10  wierenga
-//  %[BugId:28]%
-//  First stab at using CyclicBuffer.
-//
-//  Revision 1.8  2002/06/04 12:25:12  wierenga
-//  %[BugId:2]%
-//  Fixed bug in CyclicBufferTest. The UNIX signal facility does not
-//  combine well with pthreads :-). The signal handler was only used
-//  to periodically print the status of the circular buffer. After taking
-//  out the SIGALRM signal the code works fine.
-//
-//  Revision 1.7  2002/06/04 07:23:47  wierenga
-//  %[BugId:2]%
-//  Use pthread_cond_broadcast instead of pthread_cond_signal.
-//
-//  Revision 1.6  2002/05/28 14:33:52  wierenga
-//  %[BugId:2]%
-//  Trying to get the CyclicBufferTest to work on multi-CPU machine (lofar8).
-//  It is currently failing in some cases.
-//
-//  Revision 1.5  2002/05/28 08:35:15  wierenga
-//  %[BugId: 2]%
-//  Signal space_available and data_available before unlocking the buffer.
-//
-//  Revision 1.4  2002/05/28 07:44:52  wierenga
-//  %[BugId:2]%
-//  Needed global lock around global counter.
-//  Moved Lock.h from BaseSim/Corba to BaseSim.
-//
-//  Revision 1.3  2002/05/24 14:39:49  wierenga
-//  %[BugId: 2]%
-//  First completed version of the CyclicBuffer implementation.
-//  This includes a test program in BaseSim/test which will be run
-//  if you run 'make check'.
-//
-//  Revision 1.2  2002/05/23 11:18:47  wierenga
-//  %[BugId: 2]%
-//  Initial version of CyclicBuffer which compiles correctly.
-//
-//  Revision 1.1  2002/05/23 07:23:50  wierenga
-//  %[BugId: 2]%
-//
-//  New files for CyclicBuffer class.
 //
 //
 //////////////////////////////////////////////////////////////////////
@@ -98,7 +33,7 @@
 #include <config.h>
 #endif
 
-#include "BaseSim/Lock.h"
+#include "CEPFrame/Lock.h"
 #include <Common/lofar_deque.h>
 
 #define MIN(a,b) ((a)<(b)?(a):(b))

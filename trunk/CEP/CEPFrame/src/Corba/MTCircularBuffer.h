@@ -22,29 +22,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.3  2002/05/28 07:44:57  wierenga
-//  %[BugId:2]%
-//  Needed global lock around global counter.
-//  Moved Lock.h from BaseSim/Corba to BaseSim.
-//
-//  Revision 1.2  2002/05/23 08:44:42  wierenga
-//  %[BugId: 2]%
-//
-//  Don't add semicolon to macro.
-//
-//  Revision 1.1  2002/05/22 07:04:29  wierenga
-//  Renamed CircularBuffer.h to MTCircularBuffer.h to make room for new
-//  circular buffer implementation.
-//
-//  Revision 1.3  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.2  2001/10/26 10:06:28  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.1  2001/08/09 15:48:48  wierenga
-//  Implemented first version of TH_Corba and test program
 //
 //
 //////////////////////////////////////////////////////////////////////
@@ -56,7 +33,7 @@
 #include <config.h>
 #endif
 
-#include "BaseSim/Lock.h"
+#include "CEPFrame/Lock.h"
 
 /** A circular buffer template, like a fifo */
 template <class TYPE> class MTCircularBuffer

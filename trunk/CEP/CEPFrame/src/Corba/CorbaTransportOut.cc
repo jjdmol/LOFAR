@@ -20,30 +20,12 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.11  2002/06/06 14:10:06  wierenga
-//  %[BugId:28]%
-//  Revert to versions before change to CyclicBuffer.
-//  Move from MTCircularBuffer to CyclicBuffer has been cancelled.
 //
-//  Revision 1.9  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.8  2002/03/14 14:24:54  wierenga
-//  change #ifdef 0 (which is wrong) to #if 0
-//
-//  Revision 1.7  2002/03/08 11:29:19  wierenga
-//  Increased nr of circular buffers to 5.
-//
-//  Revision 1.6  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
+///////////////////////////////////////////////////////////////////////////
 
-
-#include "BaseSim/BaseSim.h"
+#include "CEPFrame/BaseSim.h"
 #include "Common/Debug.h"
-#include "BaseSim/Corba/CorbaTransportOut.h"
+#include "CEPFrame/Corba/CorbaTransportOut.h"
 
 CorbaTransportOut::CorbaTransportOut(
 			     PortableServer::POA_var        itsRootPOA,

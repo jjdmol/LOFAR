@@ -20,23 +20,9 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.6  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.5  2002/05/02 12:13:51  schaaf
-//  cout -> TRACER2
-//
-//  Revision 1.4  2002/03/08 11:27:54  wierenga
-//  Removed sleep call. No longer needed.
-//
-//  Revision 1.3  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
+///////////////////////////////////////////////////////////////////////////////
 
-
-#include "BaseSim/Corba/BS_Corba.h"
+#include "CEPFrame/Corba/BS_Corba.h"
 #include "Common/Debug.h"
 #include <unistd.h>
 

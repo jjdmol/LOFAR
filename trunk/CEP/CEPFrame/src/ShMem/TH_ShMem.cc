@@ -19,7 +19,8 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
-
+//
+//////////////////////////////////////////////////////////////////////////
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -27,10 +28,10 @@
 
 #ifdef HAVE_MPI
 
-#include "BaseSim/ShMem/TH_ShMem.h"
+#include "CEPFrame/ShMem/TH_ShMem.h"
 #include "Common/Debug.h"
 #include "Common/shmem/shmem_alloc.h"
-#include "BaseSim/BaseSim.h"
+#include "CEPFrame/BaseSim.h"
 #ifdef HAVE_MPI
 #include "mpi.h"
 #endif

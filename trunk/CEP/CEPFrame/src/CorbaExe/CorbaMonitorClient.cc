@@ -20,26 +20,19 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.2  2002/05/07 10:49:07  gvd
-//  Added package prefixes to includes
-//
-//  Revision 1.1  2002/05/07 10:40:50  schaaf
-//  initial
-//
-//
+////////////////////////////////////////////////////////////////////////
 
 
-#include "BaseSim/BaseSim.h"
+#include "CEPFrame/BaseSim.h"
 #include "Common/Debug.h"
-#include "BaseSim/Corba/BS_Corba.h"
+#include "CEPFrame/Corba/BS_Corba.h"
 #include <unistd.h>
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "BaseSim/Corba/CorbaControl_c.hh"
+#include "CEPFrame/Corba/CorbaControl_c.hh"
 
 main(int argc, char** argv) {
     AssertStr (argc >= 3, 
