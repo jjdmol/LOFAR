@@ -60,6 +60,8 @@ VARLINES = $(shell if [ -f ../builds.$(HOST) ]; then egrep "^make\..*\.variants:
 VARIANT = $(shell for NM in $(VARLINES); do cmp=`echo $$NM | sed -e "s%/.*%%"`; vars=`echo $$NM | sed -e "s%.*/%%" -e "s%,% %g"`; for VAR in $$vars; do echo $${cmp}_$$VAR; done; done)
 VARIANTS = $(VARIANT)
 VARIANTNAMES = $(addsuffix .variant, $(VARIANTS))
+DOCPACKAGES = $(addsuffix /src, $(addprefix ./,$(PACKAGES)))
+
 #
 # Keep the make directory (which is LOFAR).
 #
@@ -327,6 +329,22 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 	    fi\
 	done; \
 	date
+
+
+# Rules for building documentation using doxygen or doc++.
+# Default output directory is docxxhtml.
+DOCDIR := /data/LOFAR/docxxhtml
+DOXYGEN := /usr/bin/doxygen
+
+docxx:
+	@cp autoconf_share/doxygen.cfg doxygen.cfg ; \
+	echo "PROJECT_NAME = LOFAR" >> doxygen.cfg ; \
+	echo "INPUT = $(DOCPACKAGES)" >> doxygen.cfg ; \
+	echo "RECURSIVE = YES" >> doxygen.cfg ; \
+	echo "HTML_OUTPUT = $(DOCDIR)" >> doxygen.cfg ; \
+	echo "EXCLUDE = build test" >> doxygen.cfg; \
+	$(DOXYGEN) doxygen.cfg ; \
+
 
 #
 # Install crontab to run daily and weekly builds;
