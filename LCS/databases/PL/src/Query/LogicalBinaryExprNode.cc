@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <PL/Query/LogicalBinaryExprNode.h>
+#include <PL/Exception.h>
 #include <iostream>
 
 namespace LOFAR
@@ -36,12 +37,12 @@ namespace LOFAR
         itsOperation(oper), 
         itsLeft(lhs), itsRight(rhs)
       {
+        if (lhs.isNull() || rhs.isNull()) 
+          THROW(QueryError, "Null expression argument is not allowed");
       }
 
       void LogicalBinaryExprNode::print(std::ostream& os) const
       {
-        if (isNull()) return;
-
         os << "(";
         itsLeft.print(os);
         os << itsOperation;
@@ -58,11 +59,6 @@ namespace LOFAR
         lc.print(os);
         if (!lcNull && !rcNull) os << " AND ";
         rc.print(os);
-      }
-
-      bool LogicalBinaryExprNode::isNull() const
-      {
-        return itsLeft.isNull() || itsRight.isNull();
       }
 
     } // namespace Query
