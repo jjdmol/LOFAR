@@ -11,26 +11,23 @@
     }
 
 static AtomicID::Register aid_reg_Agent(-1249,"Agent");
-static AtomicID::Register aid_reg_Map(-1248,"Map");
-static AtomicID::Register aid_reg_Receive(-1247,"Receive");
-static AtomicID::Register aid_reg_Post(-1250,"Post");
-static AtomicID::Register aid_reg_Default(-1236,"Default");
+static AtomicID::Register aid_reg_Map(-1320,"Map");
+static AtomicID::Register aid_reg_Receive(-1319,"Receive");
+static AtomicID::Register aid_reg_Post(-1326,"Post");
+static AtomicID::Register aid_reg_In(-1312,"In");
+static AtomicID::Register aid_reg_Out(-1314,"Out");
+static AtomicID::Register aid_reg_Default(-1327,"Default");
 static AtomicID::Register aid_reg_Scope(-1234,"Scope");
-static AtomicID::Register aid_reg_Unmapped(-1237,"Unmapped");
-static AtomicID::Register aid_reg_Prefix(-1235,"Prefix");
+static AtomicID::Register aid_reg_Unmapped(-1316,"Unmapped");
+static AtomicID::Register aid_reg_Prefix(-1325,"Prefix");
 static AtomicID::Register aid_reg_Local(-1059,"Local");
 static AtomicID::Register aid_reg_Host(-1083,"Host");
-static AtomicID::Register aid_reg_Global(-1233,"Global");
-static AtomicID::Register aid_reg_Priority(-1243,"Priority");
-static AtomicID::Register aid_reg_Lowest(-1238,"Lowest");
-static AtomicID::Register aid_reg_Lower(-1239,"Lower");
-static AtomicID::Register aid_reg_Low(-1240,"Low");
-static AtomicID::Register aid_reg_Normal(-1241,"Normal");
-static AtomicID::Register aid_reg_High(-1242,"High");
-static AtomicID::Register aid_reg_Higher(-1244,"Higher");
-static AtomicID::Register aid_reg_Vis(-1116,"Vis");
-static AtomicID::Register aid_reg_Header(-1133,"Header");
-static AtomicID::Register aid_reg_Tile(-1123,"Tile");
-static AtomicID::Register aid_reg_Suspend(-1252,"Suspend");
-static AtomicID::Register aid_reg_Resume(-1251,"Resume");
+static AtomicID::Register aid_reg_Global(-1313,"Global");
+static AtomicID::Register aid_reg_Priority(-1317,"Priority");
+static AtomicID::Register aid_reg_Lowest(-1321,"Lowest");
+static AtomicID::Register aid_reg_Lower(-1322,"Lower");
+static AtomicID::Register aid_reg_Low(-1315,"Low");
+static AtomicID::Register aid_reg_Normal(-1323,"Normal");
+static AtomicID::Register aid_reg_High(-1324,"High");
+static AtomicID::Register aid_reg_Higher(-1318,"Higher");
 

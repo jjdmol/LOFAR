@@ -27,6 +27,7 @@
 #include <AppAgent/AppEventAgentBase.h>
 #include <VisAgent/VisAgentVocabulary.h>
 #include <VisCube/VisTile.h>
+class AppEventSink;
 
 namespace VisAgent 
 {
@@ -47,12 +48,15 @@ class InputAgent : public AppEventAgentBase
 {
   public:
     //##ModelId=3E41433F01DD
-    explicit InputAgent (const HIID &initf = VisAgent::FInputParams)
+    explicit InputAgent (const HIID &initf = AidInput)
       : AppEventAgentBase(initf) {}
-
     //##ModelId=3E41433F037E
-    InputAgent (AppEventSink &sink, const HIID &initf = VisAgent::FInputParams)
+    InputAgent (AppEventSink &sink, const HIID &initf = AidInput)
       : AppEventAgentBase(sink,initf) {}
+    //##ModelId=3E50FAB702CB
+    InputAgent(AppEventSink *sink, int dmiflags, const HIID &initf = AidInput)
+      : AppEventAgentBase(sink,dmiflags,initf) {}
+
     
     //##ModelId=3E42350F01EB
     //##Documentation
@@ -119,7 +123,6 @@ class InputAgent : public AppEventAgentBase
       
     //##ModelId=3E41141D029F
       virtual string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;
-
 
   private:
     //##ModelId=3E4165150313

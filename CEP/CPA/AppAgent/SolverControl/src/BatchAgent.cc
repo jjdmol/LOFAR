@@ -26,17 +26,6 @@ namespace SolverControl {
 
 using namespace AppState;
 
-//##ModelId=3DFF2CCD01A1
-BatchAgent::BatchAgent(const HIID &initf)
-    : SolverControlAgent(initf)
-{
-}
-    //##ModelId=3E42792B02D8
-BatchAgent::BatchAgent(AppEventSink &sink, const HIID &initf)
-    : SolverControlAgent(sink,initf)
-{
-}
-
 //##ModelId=3E005A8403E5
 bool BatchAgent::init (const DataRecord &data)
 {
@@ -49,17 +38,15 @@ bool BatchAgent::init (const DataRecord &data)
     cdebug(3)<<"init: "<<rec.sdebug(6)<<endl;
     
     // get the sub-record of solution jobs
-    int nparams = rec[FBatchControlJobs].size();
-    FailWhen( !nparams,"no job sub-records in in "+FBatchControlJobs.toString()+" field" );
+    int nparams = rec[FBatchJobs].size();
+    FailWhen( !nparams,"no job sub-records in in "+FBatchJobs.toString()+" field" );
     // copy all solution jobs to the queue
     jobs_.resize(nparams);
     for( int i=0; i<nparams; i++ )
     {
       // attach a ref to the parameter subrecord
-      jobs_[i].attach( rec[FBatchControlJobs][i].as_DataRecord() );
+      jobs_[i].attach(rec[FBatchJobs][i].as_DataRecord());
     }
-    current_job_ = 0;
-
     dprintf(1)("init: %d solve jobs initialized\n",nparams);  
     return True;
   }
@@ -73,69 +60,20 @@ bool BatchAgent::init (const DataRecord &data)
   }
 }
 
-//##ModelId=3E0060C50000
-int BatchAgent::endIteration (double conv)
-{
-  // call parent's endIteration
-  int endstate = SolverControlAgent::endIteration(conv);
-  if( endstate != RUNNING )
-    return endstate;
-  // setup endstate depending on what's happening
-  if( current_job_ < jobs_.size() )
-    endstate = NEXT_SOLUTION;
-  else if( endOfData() )
-    endstate = STOPPED;
-  else
-    endstate = NEXT_DOMAIN;
-  // check for max iteration count -- interrupt if reached
-  if( iterationNum() >= max_iterations_ )
-    endSolution("Iteration count exceeded",endstate);
-  // check for convergence -- end if reached
-  if( convergence() <= conv_threshold_ )
-    endSolution("Converged",endstate);
-  
-  return state();
-}
-
 //##ModelId=3E01FA8D02FF
 int BatchAgent::startDomain (const DataRecord::Ref &data)
 {
-  if( SolverControlAgent::startDomain() == NEXT_SOLUTION )
-  {
-    current_job_ = 0;
-    sink().raiseEventFlag(); // start solution should be called
-  }
-  return state();
+  int res = SolverControlAgent::startDomain();
+  if( res <= 0 )
+    return res;
+  // re-copy job queue for entire domain
+  Thread::Mutex::Lock lock(mutex()); // lock to make it faster
+  for( uint i=0; i < jobs_.size(); i++ )
+    addSolution(jobs_[i]);
+  return res;
 }
 
-//##ModelId=3E0098E90136
-int BatchAgent::startSolution (DataRecord::Ref &params)
-{
-  if( checkState() > 0 )
-  {
-    // if in NEXT_DOMAIN state, return immediately
-    if( state() == NEXT_DOMAIN )
-      return state();
-    if( current_job_ >= jobs_.size() )
-      return setState(NEXT_DOMAIN);
-    // get next set of solution parameters from job queue
-    params = jobs_[current_job_].copy();
-    // advance pointer to next solve job
-    current_job_++;  
-    // get solve criteria
-    conv_threshold_ = (*params)[FConvergence].as_double(DefaultConvergence);
-    max_iterations_ = (*params)[FMaxIterations].as_int(DefaultMaxIterations);
 
-    dprintf(1)("starting solution, niter=%d, convergence=%f\n",
-                max_iterations_,conv_threshold_);
-
-    // init the solution
-    initSolution(params);
-
-    setState(RUNNING);
-  }
-  return state();
-}
 
 //##ModelId=3E009B2E01DF
 void BatchAgent::close ()
@@ -155,7 +93,7 @@ string BatchAgent::sdebug ( int detail,const string &prefix,
 
   string out = SolverControlAgent::sdebug(detail,prefix,name?name:"BatchAgent");
   if( detail >= 1 || detail == -1 )
-    appendf(out,"maxi:%d c0:%f job %d/%d",max_iterations_,conv_threshold_,current_job_,jobs_.size());
+    appendf(out,"%d jobs",jobs_.size());
 
   return out;
 }

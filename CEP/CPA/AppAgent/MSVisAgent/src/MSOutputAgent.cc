@@ -99,7 +99,7 @@ bool MSOutputAgent::setupDataColumn (Column &col)
 
 
 //##ModelId=3E28316403E4
-int MSOutputAgent::putHeader (DataRecord::Ref &hdr)
+int MSOutputAgent::putHeader (const DataRecord::Ref::Xfer &hdr)
 {
   try
   {
@@ -151,6 +151,8 @@ int MSOutputAgent::putHeader (DataRecord::Ref &hdr)
     // set state to indicate success
     tilecount_ = rowcount_ = 0;
     setFileState(HEADER);
+    // cast away const and detach ref since we're supposed to xfer the header
+    const_cast<DataRecord::Ref&>(hdr).detach();
     return SUCCESS;
   }
   catch( std::exception &exc )
@@ -161,11 +163,13 @@ int MSOutputAgent::putHeader (DataRecord::Ref &hdr)
   {
     setErrorState(err.getMesg());
   }
+  // cast away const and detach ref since we're supposed to xfer the header
+  const_cast<DataRecord::Ref&>(hdr).detach();
   return ERROR;
 }
 
 //##ModelId=3E28316B012D
-int MSOutputAgent::putNextTile (VisTile::Ref &tileref)
+int MSOutputAgent::putNextTile (const VisTile::Ref::Xfer &tileref)
 {
   if( fileState() == FILECLOSED )
     return OUTOFSEQ;
@@ -221,7 +225,8 @@ int MSOutputAgent::putNextTile (VisTile::Ref &tileref)
   {
     cdebug(1)<<"exception writing tile: "<<err.getMesg()<<endl;
   }
-  
+  // cast away const and detach ref since we're supposed to xfer the header
+  const_cast<VisTile::Ref&>(tileref).detach();
   return SUCCESS;
 }
 
