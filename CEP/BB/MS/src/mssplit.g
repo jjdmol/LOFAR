@@ -144,13 +144,9 @@ mssplit := function (msin, selcommand, msout, datacolumn='DATA', deepcopy=T)
 		nmu := i-1;
 	    }
 	}
-	# Write the description file.
-	shell(paste('MSDesc',msout,'DATA'));
 	# Create symlinks for the data, flags and uvw file.
 	shell(spaste('ln -s ','table.f',nmd,'_TSM0 ',msout,'/vis.dat'));
 	shell(spaste('ln -s ','table.f',nmf,'_TSM0 ',msout,'/vis.flg'));
 	shell(spaste('ln -s ','table.f',nmu,'_TSM0 ',msout,'/vis.uvw'));
-	# Make it readable for the world.
-	shell(paste('chmod -R +r',msout));
     }   
 }

@@ -17,6 +17,11 @@ if test "$1" = ""  -o  "$1" = "-h"  -o  "$1" = "--help"; then
     exit 0
 fi
 
+if [ "$2" = "" ]; then
+    echo "No output name given"
+    exit 1;
+fi
+
 col=$3
 if [ "$col" = "" ]; then
   col="DATA"
@@ -31,6 +36,9 @@ EOFXXXXX
 
 # Execute the script.
 glish /tmp/$USER_mssplit_tmp.g
+
+# Create the description file.
+shell(paste('MSDesc',msout,'DATA'));
 
 # Set the protections such that the world can read the MS created.
 chmod -R +r $2
