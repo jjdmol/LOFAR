@@ -169,7 +169,7 @@ class EventSink : public AppEventSink
     bool publish_unmapped_events;
     //##ModelId=3E0A367402F0
     HIID default_receive_prefix;
-    //##ModelId=3E9BD63F0330
+    //##ModelId=3F5F4364028A
     HIID default_post_prefix;
     //##ModelId=3E0A3A980187
     int default_receive_scope;

@@ -225,6 +225,7 @@ int SolverControlAgent::endSolution (const DataRecord::Ref::Copy &data,DataRecor
   return setEndSolutionState();
 }
 
+//##ModelId=3F5F4365012C
 int SolverControlAgent::failSolution  (const string &msg)
 {
   FailWhen(state()<0,"unexpected state");
@@ -270,6 +271,7 @@ int SolverControlAgent::setEndSolutionState ()
   return state();
 }
 
+//##ModelId=3F5F43650271
 int SolverControlAgent::setNextDomainState ()
 {
   dprintf(2)("proceeding to next domain, clearing solve queue\n");

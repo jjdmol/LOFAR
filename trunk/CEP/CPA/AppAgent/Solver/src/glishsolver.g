@@ -1,7 +1,7 @@
 pragma include once
 include 'app_proxy.g'
 
-solver := function (appid='Solver',
+const solver := function (appid='Solver',
     server='./applauncher',options="-d0 -meq:M:M:Solver",suspend=F,
     verbose=1,
     gui=F,ref parent_frame=F,ref widgetset=dws,

@@ -188,8 +188,11 @@ private:
     //##ModelId=3EC9F6EC01E4
   bool in_domain;
   
+    //##ModelId=3F5F436400AE
   VisTile::Format::Ref tileformat_;
+    //##ModelId=3F5F436400EA
   int  dataset_seq_num_;
+    //##ModelId=3F5F43640128
   DataRecord::Ref solution_;
     
     //##ModelId=3EC9F6EC01E6

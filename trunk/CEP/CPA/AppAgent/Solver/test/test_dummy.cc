@@ -25,6 +25,8 @@
 #include <aips/Exceptions/Error.h>
 #include "../src/BatchAgent.h"
 #include "../src/DummySolver.h"
+#include <DMI/DataField.h>
+
 
 int main (int argc,const char *argv[])
 {

@@ -26,6 +26,7 @@
 
 #include <DMI/DataRecord.h>
 #include <DMI/DataArray.h>
+#include <DMI/DataField.h>
 
 //#include <AppAgent/BOIOSink.h>
 #include <MSVisAgent/MSInputSink.h>

@@ -125,6 +125,7 @@ class MSOutputSink : public FileSink, public MSVisAgentDebugContext
     //##          CLOSED    stream closed
     virtual void doPutTile (const VisTile &tile);
 
+    //##ModelId=3F5F436303AB
     void putColumn (Column &col,int irow,const LoMat_fcomplex &data);
     
     //##ModelId=3E2D6130030C
@@ -161,6 +162,7 @@ class MSOutputSink : public FileSink, public MSVisAgentDebugContext
     //##ModelId=3E2ED50E0190
     ArrayColumn<Bool> flagCol_;
     
+    //##ModelId=3F5F43630379
     Array<Complex> null_cell_;
 };
 

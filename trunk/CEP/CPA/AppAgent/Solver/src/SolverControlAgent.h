@@ -283,6 +283,7 @@ class SolverControlAgent : public AppControlAgent
     
     
     // called if a solution has failed
+    //##ModelId=3F5F4365012C
     virtual int failSolution (const string &msg = "solution failed" );
     
     //##ModelId=3DFF2D6400EA
@@ -387,6 +388,7 @@ class SolverControlAgent : public AppControlAgent
 
     //##ModelId=3E5F675C02FC
     int setEndSolutionState ();
+    //##ModelId=3F5F43650271
     int setNextDomainState ();
     
     //##ModelId=3E56568200E6
@@ -426,7 +428,7 @@ class SolverControlAgent : public AppControlAgent
     //## end of solution queue has been reached?
     bool stop_on_end_;
     
-    //##ModelId=3E56097702E3
+    //##ModelId=3F5F43640342
     //##Documentation
     //## ID of most recently received command
     HIID last_command_id_;
