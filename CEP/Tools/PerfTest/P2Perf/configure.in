@@ -51,7 +51,6 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_DEBUG_OPTIMIZE
-lofar_FIREWALLS
 lofar_CORBA
 lofar_MATLAB
 lofar_AIPSPP
