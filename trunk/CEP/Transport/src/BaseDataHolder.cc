@@ -43,7 +43,7 @@ BaseDataHolder::BaseDataHolder(const string& name, const string& type)
   : itsDataFields     (type),
     itsData           (0),
     itsDataBlob       (0),
-    itsTransporter    (0),
+    itsTransporter    (this),
     itsName           (name),
     itsType           (type),
     itsReadConvert    (-1),
@@ -59,7 +59,7 @@ BaseDataHolder::BaseDataHolder(const BaseDataHolder& that)
   : itsDataFields     (that.itsDataFields),
     itsData           (0),
     itsDataBlob       (0),
-    itsTransporter    (0),
+    itsTransporter    (that.itsTransporter, this),
     itsName           (that.itsName),
     itsType           (that.itsType),
     itsReadConvert    (that.itsReadConvert),
@@ -105,11 +105,11 @@ void BaseDataHolder::basePostprocess()
 {
   // Read the possible outstanding buffers.
   for (int i=0; i<itsReadDelay; i++) {
-    itsTransporter->read();
+    itsTransporter.read();
   }
   // Write the possible outstanding buffers.
   for (int i=0; i<itsWriteDelay; i++) {
-    itsTransporter->write();
+    itsTransporter.write();
   }
   postprocess();
   // Delete the memory.
@@ -141,11 +141,11 @@ bool BaseDataHolder::read()
   } else {
     // If the data block is fixed shape and has version 1, we can simply read.
     if (itsDataFields.hasFixedShape()  &&  itsDataFields.version() == 1) {
-      result = itsTransporter->read();
+      result = itsTransporter.read();
     } else {
       // Otherwise do 2 separate reads (one for header and one for data).
-      ////result = itsTransporter->readHeader();
-      ////result = itsTransporter->readData();
+      ////result = itsTransporter.readHeader();
+      ////result = itsTransporter.readData();
     }
     // Check the data header in debug mode.
 #ifdef ENABLE_DBGASSERT
@@ -178,7 +178,7 @@ void BaseDataHolder::write()
   if (itsWriteDelayCount > 0) {
     itsWriteDelayCount--;
   } else {
-    itsTransporter->write();
+    itsTransporter.write();
   }
 }
 
@@ -196,7 +196,7 @@ int BaseDataHolder::DataPacket::compareTimeStamp (const DataPacket& that) const
 
 bool BaseDataHolder::isValid() const
 {
-  return itsTransporter->isValid();
+  return itsTransporter.isValid();
 }
 
 int BaseDataHolder::getNode() const

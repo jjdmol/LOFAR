@@ -173,10 +173,9 @@ public:
   void setReadDelay (int delay);
   void setWriteDelay (int delay);
 
-  // Get a pointer to the Transport object used to send the data
+  // Get the Transport object used to send the data
   // to/from the BaseDataHolder connected to this one.
   Transporter& getTransporter();
-  void setTransporter(Transporter& aTransporter);
 
 protected:
   BaseDataHolder(const BaseDataHolder&);
@@ -232,7 +231,7 @@ private:
   BlobString*     itsData;
   BlobOBufString* itsDataBlob;
   DataPacket*  itsDataPacketPtr;
-  Transporter* itsTransporter;
+  Transporter  itsTransporter;
   string       itsName;
   string       itsType;
   int          itsReadConvert;  //# conversion needed after a read?
@@ -269,7 +268,7 @@ inline void* BaseDataHolder::getDataPtr()
   { return itsData->data(); }
 
 inline Transporter& BaseDataHolder::getTransporter()
-  { return *itsTransporter; }
+  { return itsTransporter; }
 
 inline void BaseDataHolder::setTimeStamp (unsigned long aTimeStamp)
   { itsDataPacketPtr->setTimeStamp (aTimeStamp); }
@@ -311,11 +310,6 @@ inline const string& BaseDataHolder::getType () const
 
 inline void BaseDataHolder::setType(const string& type)
   { itsType = type; }
-
-inline void BaseDataHolder::setTransporter(Transporter& aTransporter)
-{
-  itsTransporter = &aTransporter;
-}
 
 
 inline BlobFieldBase& BaseDataHolder::getDataField (uint fieldIndex)

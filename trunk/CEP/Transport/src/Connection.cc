@@ -20,7 +20,8 @@
 //#
 //#  $Id$
 
-#include <Connection.h>
+#include <libTransport/Connection.h>
+#include <libTransport/Transporter.h>
 
 namespace LOFAR
 {
