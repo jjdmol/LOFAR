@@ -87,8 +87,8 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
   resYY = MeqResult(request.nspid());
   Matrix<complex<double> > value(ncellt, ncellf, complex<double>(0,0));
   resXX.setValue (MeqMatrix (value));
-  resYX.setValue (MeqMatrix (value));
   resXY.setValue (MeqMatrix (value));
+  resYX.setValue (MeqMatrix (value));
   resYY.setValue (MeqMatrix (value));
   // Allocate matrices to hold the result of a single source.
   MeqMatrix xx, xy, yx, yy;
@@ -107,6 +107,7 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
     MeqResult qk = src.getQ()->getResult (dftReq);
     MeqResult uk = src.getU()->getResult (dftReq);
     MeqResult vk = src.getV()->getResult (dftReq);
+    const MeqResult& nk = itsLeft->getN (dftReq);
     // Calculate the left and right station Jones matrix elements.
     const MeqResult& resl11  = itsLeft->getResult11 (dftReq);
     const MeqResult& resl12  = itsLeft->getResult12 (dftReq);
@@ -122,14 +123,16 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
     Assert (qk.getValue().nelements() == 1);
     Assert (uk.getValue().nelements() == 1);
     Assert (vk.getValue().nelements() == 1);
+    Assert (nk.getValue().nelements() == 1);
     double ival = ik.getValue().getDouble();
-    double qval = ik.getValue().getDouble();
-    double uval = ik.getValue().getDouble();
-    double vval = ik.getValue().getDouble();
-    double s1 = (ival + qval) * .5;
-    complex<double> s2(uval*.5, vval*.5);
+    double qval = qk.getValue().getDouble();
+    double uval = uk.getValue().getDouble();
+    double vval = vk.getValue().getDouble();
+    double fact = 1 / (2*nk.getValue().getDouble());
+    double s1 = (ival + qval)  * fact;
+    complex<double> s2(uval*fact, vval*fact);
     complex<double> s3(conj(s2));
-    double s4 = (ival - qval) * .5;
+    double s4 = (ival - qval) * fact;
     // Get pointers to storage of the left and right station Jones elements.
     const complex<double>* l11 = resl11.getValue().dcomplexStorage();
     const complex<double>* l12 = resl12.getValue().dcomplexStorage();
@@ -178,20 +181,26 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
       double ps4 = s4;
       complex<double> ps2 = s2;
       complex<double> ps3 = s3;
+      double pfact = fact;
+      if (nk.isDefined(spinx)) {
+	pfact = 1 / (2*nk.getPerturbedValue(spinx).getDouble());
+	evaliq = true;
+	evaluv = true;
+      }
       bool eval = false;
       if (evaliq) {
 	eval = true;
 	double ival = ik.getPerturbedValue(spinx).getDouble();
-	double qval = ik.getPerturbedValue(spinx).getDouble();
-	ps1 = (ival + qval) * .5;
-	ps4 = (ival - qval) * .5;
+	double qval = qk.getPerturbedValue(spinx).getDouble();
+	ps1 = (ival + qval) * pfact;
+	ps4 = (ival - qval) * pfact;
       }
-      if (evaluv ) {
+      if (evaluv) {
 	eval = true;
-	double uval = ik.getPerturbedValue(spinx).getDouble();
-	double vval = ik.getPerturbedValue(spinx).getDouble();
-	ps2 = complex<double>(uval/2, vval/2);
-	ps3 = conj(s2);
+	double uval = uk.getPerturbedValue(spinx).getDouble();
+	double vval = vk.getPerturbedValue(spinx).getDouble();
+	ps2 = complex<double>(uval*pfact, vval*pfact);
+	ps3 = conj(ps2);
       }
       // See if an element in the station Jones is perturbed.
       // If so, determine which value to recalculate.
@@ -261,9 +270,9 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
 	}
 	if (evalxy) {
 	  dpxy = pxy.setDComplex (ncellt, ncellf);
-	  if (! resYY.isDefined(spinx)) {
-	    resYY.setPerturbedValue (spinx, resYY.getValue().clone());
-	    resYY.setPerturbation (spinx, perturbation);
+	  if (! resXY.isDefined(spinx)) {
+	    resXY.setPerturbedValue (spinx, resXY.getValue().clone());
+	    resXY.setPerturbation (spinx, perturbation);
 	  }
 	}
 	if (evalyx) {
@@ -316,12 +325,12 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
 	  }
 	  resYX.getPerturbedValueRW(spinx) += pyx;
 	}
-	if (evalyx && evalyy) {
+	if (evalxy && evalyy) {
 	  for (int i=0; i<ncell; i++) {
 	    complex<double> sf12 = ps1*conj(r21[i]) + ps2*conj(r22[i]);
 	    complex<double> sf22 = ps3*conj(r21[i]) + ps4*conj(r22[i]);
-	    dxy[i] = l11[i]*sf12 + l12[i]*sf22;
-	    dyy[i] = l21[i]*sf12 + l22[i]*sf22;
+	    dpxy[i] = l11[i]*sf12 + l12[i]*sf22;
+	    dpyy[i] = l21[i]*sf12 + l22[i]*sf22;
 	  }
 	  resXY.getPerturbedValueRW(spinx) += pxy;
 	  resYY.getPerturbedValueRW(spinx) += pyy;
@@ -329,33 +338,37 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
 	  for (int i=0; i<ncell; i++) {
 	    complex<double> sf12 = ps1*conj(r21[i]) + ps2*conj(r22[i]);
 	    complex<double> sf22 = ps3*conj(r21[i]) + ps4*conj(r22[i]);
-	    dxy[i] = l11[i]*sf12 + l12[i]*sf22;
+	    dpxy[i] = l11[i]*sf12 + l12[i]*sf22;
 	  }
 	  resXY.getPerturbedValueRW(spinx) += pxy;
 	} else if (evalyy) {
 	  for (int i=0; i<ncell; i++) {
 	    complex<double> sf12 = ps1*conj(r21[i]) + ps2*conj(r22[i]);
 	    complex<double> sf22 = ps3*conj(r21[i]) + ps4*conj(r22[i]);
-	    dyy[i] = l21[i]*sf12 + l22[i]*sf22;
+	    dpyy[i] = l21[i]*sf12 + l22[i]*sf22;
 	  }
 	  resYY.getPerturbedValueRW(spinx) += pyy;
 	}
-      } else {
-	// No perturbed values in result for this parameter.
-	// Add unperturbed value if previous results were perturbed.
-	if (resXX.isDefined(spinx)) {
-	  resXX.getPerturbedValueRW(spinx) += xx;
-	}
-	if (resXY.isDefined(spinx)) {
-	  resXY.getPerturbedValueRW(spinx) += xy;
-	}
-	if (resYX.isDefined(spinx)) {
-	  resYX.getPerturbedValueRW(spinx) += yx;
-	}
-	if (resYY.isDefined(spinx)) {
-	  resYY.getPerturbedValueRW(spinx) += yy;
-	}
       }
+      // See if there is a perturbed values in result for this parameter.
+      // Add unperturbed value if previous results were perturbed.
+      if (!evalxx  &&  resXX.isDefined(spinx)) {
+	resXX.getPerturbedValueRW(spinx) += xx;
+      }
+      if (!evalxy  &&  resXY.isDefined(spinx)) {
+	resXY.getPerturbedValueRW(spinx) += xy;
+      }
+      if (!evalyx  &&  resYX.isDefined(spinx)) {
+	resYX.getPerturbedValueRW(spinx) += yx;
+      }
+      if (!evalyy  &&  resYY.isDefined(spinx)) {
+	resYY.getPerturbedValueRW(spinx) += yy;
+      }
+//       cout << srcnr << ' ' << spinx
+// 	   << ' ' << evalxx << evalxy << evalyx << evalyy
+// 	   << ' ' << resXX.isDefined(spinx) << resXY.isDefined(spinx)
+// 	   << ' ' << resYX.isDefined(spinx) << resYY.isDefined(spinx)
+// 	   << endl;
     }
 
     // Now add the source contribution to the unperturbed value.
@@ -364,4 +377,16 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
     resYX.getValueRW() += yx;
     resYY.getValueRW() += yy;
   }
+   for (int spinx=0; spinx<request.nspid(); spinx++) {
+//      cout << "XX" << resXX.isDefined(spinx)
+//  	 << ' ' << resXX.getPerturbedValue(spinx)
+//  	 << "XY" << resXY.isDefined(spinx)
+//  	 << ' ' << resXY.getPerturbedValue(spinx)
+//  	 << "YX" << resYX.isDefined(spinx)
+//  	 << ' ' << resYX.getPerturbedValue(spinx)
+//  	 << "YY" << resYY.isDefined(spinx)
+//  	 << ' ' << resYY.getPerturbedValue(spinx)
+//  	 << endl;
+   }
+
 }

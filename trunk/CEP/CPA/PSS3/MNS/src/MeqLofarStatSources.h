@@ -25,10 +25,9 @@
 
 //# Includes
 #include <MNS/MeqJonesExpr.h>
+#include <MNS/MeqStatSources.h>
 #include <Common/lofar_vector.h>
 
-//# Forward Declarations
-class MeqStatSources;
 
 // This class represents the Jones matrix for all sources for a station.
 
@@ -48,22 +47,29 @@ public:
     { if (request.getId() != itsLastReqId) {
         calcResult(request);
       }
-      return itsStat[request.getSourceNr()]->getResult11(); }
+      int srcnr = itsSrc->actualSourceNr (request.getSourceNr());
+      return itsStat[srcnr]->getResult11(); }
   const MeqResult& getResult12 (const MeqRequest& request)
     { if (request.getId() != itsLastReqId) {
         calcResult(request);
       }
-      return itsStat[request.getSourceNr()]->getResult12(); }
+      int srcnr = itsSrc->actualSourceNr (request.getSourceNr());
+      return itsStat[srcnr]->getResult12(); }
   const MeqResult& getResult21 (const MeqRequest& request)
     { if (request.getId() != itsLastReqId) {
         calcResult(request);
       }
-      return itsStat[request.getSourceNr()]->getResult21(); }
+      int srcnr = itsSrc->actualSourceNr (request.getSourceNr());
+      return itsStat[srcnr]->getResult21(); }
   const MeqResult& getResult22 (const MeqRequest& request)
     { if (request.getId() != itsLastReqId) {
         calcResult(request);
       }
-      return itsStat[request.getSourceNr()]->getResult22(); }
+      int srcnr = itsSrc->actualSourceNr (request.getSourceNr());
+      return itsStat[srcnr]->getResult22(); }
+
+  const MeqResult& getN (const MeqRequest& request)
+    { return itsSrc->getN(request); }
 
 private:
   // Calculate the result of its members.

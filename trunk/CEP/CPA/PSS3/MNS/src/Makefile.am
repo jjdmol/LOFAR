@@ -32,6 +32,7 @@ MeqStatSources.h				\
 MeqStatUVW.h					\
 MeqStation.h					\
 MeqStoredParmPolc.h				\
+MeqUVWPolc.h					\
 MeqWsrtInt.h					\
 MeqWsrtPoint.h					\
 ParmTable.h					
@@ -68,6 +69,7 @@ MeqStation.cc					\
 MeqStatSources.cc				\
 MeqStatUVW.cc					\
 MeqStoredParmPolc.cc				\
+MeqUVWPolc.cc					\
 MeqWsrtInt.cc					\
 MeqWsrtPoint.cc					\
 ParmTable.cc					

@@ -105,17 +105,42 @@ public:
   // Update the solvable parameters with the new values.
   void update (const MeqMatrix& value);
 
-  // Set the original coefficients.
-  void setOrigCoeff (const MeqMatrix& coeff)
-    { itsOrigCoeff = coeff; }
+  // Set the original simulation coefficients.
+  void setSimCoeff (const MeqMatrix& coeff)
+    { itsSimCoeff = coeff; }
 
-  // Get the original coefficients.
-  const MeqMatrix& getOrigCoeff() const
-    { return itsOrigCoeff; }
+  // Set the perturbation of the simulation coefficients.
+  void setPertSimCoeff (const MeqMatrix& coeff)
+    { itsPertSimCoeff = coeff; }
+
+  // Get the original simulation coefficients.
+  const MeqMatrix& getSimCoeff() const
+    { return itsSimCoeff; }
+
+  // Get the perturbation of the simulation coefficients.
+  const MeqMatrix& getPertSimCoeff() const
+    { return itsPertSimCoeff; }
+
+  // Normalize the coefficients for the given domain.
+  MeqMatrix normalize (const MeqDomain&);
+
+  // Denormalize the coefficients.
+  MeqMatrix denormalize() const;
+
+  // (De)normalize real coefficients.
+  static MeqMatrix normDouble (const MeqMatrix& coeff, double sx,
+			       double sy, double ox, double oy);
+  // (De)normalize complex coefficients.
+  static MeqMatrix normDComplex (const MeqMatrix& coeff, double sx,
+				 double sy, double ox, double oy);
 
 private:
+  // Fill Pascal's triangle.
+  static void fillPascal();
+
   MeqMatrix    itsCoeff;
-  MeqMatrix    itsOrigCoeff;
+  MeqMatrix    itsSimCoeff;
+  MeqMatrix    itsPertSimCoeff;
   MeqMatrix    itsPerturbation;
   MeqDomain    itsDomain;
   vector<bool> itsMask;
@@ -123,6 +148,10 @@ private:
   int          itsMaxNrSpid;
   double       itsPertValue;
   bool         itsIsRelPert;   //# true = perturbation is relative
+
+  //# Pascal's triangle for the binomial coefficients needed when normalizing.
+  static double theirPascal[10][10];
+  static bool   theirPascalFilled;
 };
 
 

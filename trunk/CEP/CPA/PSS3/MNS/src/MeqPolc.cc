@@ -30,6 +30,10 @@
 #include <aips/Arrays/Matrix.h>
 
 
+double MeqPolc::theirPascal[10][10];
+bool   MeqPolc::theirPascalFilled = false;
+
+
 MeqPolc::MeqPolc()
 : itsMaxNrSpid (0),
   itsPertValue (1e-6),
@@ -65,17 +69,19 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
 {
   PERFPROFILE(__PRETTY_FUNCTION__);
 
-  // First check if the domain is valid.
-  // Because the values are calculaed for the center of each cell,
+  // It is not checked if the domain is valid.
+  // In that way any value can be used for the default domain [-1,1].
+  // Because the values are calculated for the center of each cell,
   // it is only checked if the centers are in the polc domain.
   const MeqDomain& domain = request.domain();
-  Assert (domain.startX() + request.stepX()/2 >= itsDomain.startX());
-  Assert (domain.startY() + request.stepY()/2 >= itsDomain.startY());
-  Assert (domain.endX() - request.stepX()/2 <= itsDomain.endX());
-  Assert (domain.endY() - request.stepY()/2 <= itsDomain.endY());
+  //Assert (domain.startX() + request.stepX()/2 >= itsDomain.startX());
+  //Assert (domain.startY() + request.stepY()/2 >= itsDomain.startY());
+  //Assert (domain.endX() - request.stepX()/2 <= itsDomain.endX());
+  //Assert (domain.endY() - request.stepY()/2 <= itsDomain.endY());
   // Create the result object containing as many spids as needed for
   // this polynomial (but not more).
-  MeqResult result(itsMaxNrSpid);
+  //////  MeqResult result(itsMaxNrSpid);
+  MeqResult result(request.nspid());
   // If there is only one coefficient, the polynomial is independent
   // of x and y.
   // So set the value to the coefficient and possibly set the perturbed value.
@@ -85,7 +91,6 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
       result.setValue (MeqMatrix(itsCoeff.getDouble()));
       if (itsMaxNrSpid) {
 	result.setPerturbedValue (itsSpidInx[0],
-				  ///				  MeqMatrix(itsCoeff.getDouble()));
 				  MeqMatrix(itsCoeff.getDouble()
 					    + itsPerturbation.getDouble()));
 	result.setPerturbation (itsSpidInx[0], itsPerturbation.getDouble());
@@ -97,6 +102,9 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
 				  MeqMatrix(itsCoeff.getDComplex()
 					    + itsPerturbation.getDComplex()));
 	result.setPerturbation (itsSpidInx[0], itsPerturbation.getDComplex());
+// 	cout << "polc " << itsSpidInx[0] << ' ' << result.getValue()
+// 	     << result.getPerturbedValue(itsSpidInx[0]) << itsPerturbation
+// 	     << ' ' << itsCoeff << endl;
       }
     }
   } else {
@@ -405,4 +413,109 @@ void MeqPolc::update (const MeqMatrix& value)
       }
     }
   }
+}
+
+
+MeqMatrix MeqPolc::normalize (const MeqDomain& domain)
+{
+  if (itsCoeff.isDouble()) {
+    return normDouble (itsCoeff,
+		       domain.scaleX(), domain.scaleY(),
+		       domain.offsetX(), domain.offsetY());
+  }
+  return normDComplex (itsCoeff,
+		       domain.scaleX(), domain.scaleY(),
+		       domain.offsetX(), domain.offsetY());
+}
+  
+MeqMatrix MeqPolc::denormalize() const
+{
+  if (itsCoeff.isDouble()) {
+    return normDouble (itsCoeff,
+		       1/itsDomain.scaleX(), 1/itsDomain.scaleY(),
+		       -itsDomain.offsetX()/itsDomain.scaleX(),
+		       -itsDomain.offsetY()/itsDomain.scaleY());
+  }
+  return normDComplex (itsCoeff,
+		       1/itsDomain.scaleX(), 1/itsDomain.scaleY(),
+		       -itsDomain.offsetX()/itsDomain.scaleX(),
+		       -itsDomain.offsetY()/itsDomain.scaleY());
+}
+  
+void MeqPolc::fillPascal()
+{
+  for (int j=0; j<10; j++) {
+    theirPascal[j][0] = 1;
+    for (int i=1; i<=j; i++) {
+      theirPascal[j][i] = theirPascal[j-1][i-1] + theirPascal[j-1][i];
+    }
+  }
+  theirPascalFilled = true;
+}
+
+MeqMatrix MeqPolc::normDouble (const MeqMatrix& coeff, double sx,
+			       double sy, double ox, double oy)
+{
+  // Fill Pascal's triangle if not done yet.
+  if (!theirPascalFilled) {
+    fillPascal();
+  }
+  int nx = coeff.nx();
+  int ny = coeff.ny();
+  const double* pcold = coeff.doubleStorage();
+  // Create vectors holding the powers of the scale and offset values.
+  vector<double> sxp(nx);
+  vector<double> syp(ny);
+  vector<double> oxp(nx);
+  vector<double> oyp(ny);
+  sxp[0] = 1;
+  oxp[0] = 1;
+  for (int i=1; i<nx; i++) {
+    sxp[i] = sxp[i-1] * sx;
+    oxp[i] = oxp[i-1] * ox;
+  }
+  syp[0] = 1;
+  oyp[0] = 1;
+  for (int i=1; i<ny; i++) {
+    syp[i] = syp[i-1] * sy;
+    oyp[i] = oyp[i-1] * oy;
+  }
+  // Create the new coefficient matrix.
+  // Create a vector to hold the terms of (sy+oy)^j
+  MeqMatrix newc (double(0), nx, ny, true);
+  double* pcnew = newc.doubleStorage();
+  vector<double> psyp(ny);
+  // Loop through all coefficients in the y direction.
+  for (int j=0; j<ny; j++) {
+    // Precalculate the terms of (sy+oy)^j
+    for (int k=0; k<=j; k++) {
+      psyp[k] = oyp[j-k] * syp[k] * theirPascal[j][k];
+    }
+    // Loop through all coefficients in the x direction.
+    for (int i=0; i<nx; i++) {
+      // Get original coefficient.
+      double f = *pcold++;
+      // Calculate all terms of (sx+ox)^i
+      for (int k1=0; k1<=i; k1++) {
+	double c = oxp[i-k1] * sxp[k1] * theirPascal[i][k1] * f;
+	// Multiply each term with the precalculated terms of (sy+oy)^j
+	// and add the result to the appropriate new coefficient.
+	for (int k2=0; k2<=j; k2++) {
+	  pcnew[k1 + k2*nx] += c * psyp[k2];
+	}
+      }
+    }
+  }
+  return newc;
+}
+
+
+MeqMatrix MeqPolc::normDComplex (const MeqMatrix& coeff, double sx,
+				 double sy, double ox, double oy)
+{
+  if (!theirPascalFilled) {
+    fillPascal();
+  }
+  MeqMatrix newc (complex<double>(0,0), coeff.nx(), coeff.ny(), true);
+  return newc;
 }

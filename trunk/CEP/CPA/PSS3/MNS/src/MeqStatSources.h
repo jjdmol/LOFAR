@@ -70,6 +70,10 @@ public:
   unsigned int nsources() const
     { return itsSources->size(); }
 
+  // Get the actual source number in the source list.
+  int actualSourceNr (int sourceNr) const
+    { return itsSources->actualSourceNr (sourceNr); }
+
 private:
   MeqStatUVW*       itsUVW;
   MeqSourceList*    itsSources;

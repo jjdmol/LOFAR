@@ -141,7 +141,7 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
   // A similar optimization in the perturbed value calculation.
   const double* tmpnk = nk.getValue().doubleStorage();
   //if request.nx() == 1) {
-  //  val0 = tmpr[0] / (tmpl[0] * tmpnk[0]);
+  //  val0 = tmpr[0] * conj(tmpl[0]) / tmpnk[0]);
   //  resdata[0] = val0;
   //  if (multFreq) {
   //    dval = deltar[0] / deltal[0];
@@ -156,7 +156,7 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
   int stepnk = (nk.getValue().nx() > 1  ?  1 : 0);
   int nki = 0;
   for (int i=0; i<request.nx(); i++) {
-    val0 = tmpr[i] * conj(tmpl[i]) * tmpnk[nki];
+    val0 = tmpr[i] * conj(tmpl[i]) / tmpnk[nki];
     nki += stepnk;
     resdata[i] = val0;
     if (multFreq) {
@@ -190,21 +190,23 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
 	deltal = leftDelta.getPerturbedValue(spinx).dcomplexStorage();
 	deltar = rightDelta.getPerturbedValue(spinx).dcomplexStorage();
       }
+      MeqMatrix pres(complex<double>(0,0), request.nx(), request.ny(), false);
+      complex<double>* presdata = pres.dcomplexStorage();
       tmpnk = nk.getPerturbedValue(spinx).doubleStorage();
       nki = 0;
       for (int i=0; i<request.nx(); i++) {
-	val0 = tmpr[i] * conj(tmpl[i]) * tmpnk[nki];
+	val0 = tmpr[i] * conj(tmpl[i]) / tmpnk[nki];
 	nki += stepnk;
-	resdata[i] = val0;
+	presdata[i] = val0;
 	if (multFreq) {
 	  dval = deltar[i] * conj(deltal[i]);
 	  for (int j=1; j<request.ny(); j++) {
 	    val0 *= dval;
-	    resdata[i + j*request.nx()] = val0;
+	    presdata[i + j*request.nx()] = val0;
 	  }
 	}
       }
-      result.setPerturbedValue (spinx, res);
+      result.setPerturbedValue (spinx, pres);
       result.setPerturbation (spinx, perturbation);
     }
   }

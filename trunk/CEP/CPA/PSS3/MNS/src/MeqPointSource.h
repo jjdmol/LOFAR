@@ -27,6 +27,7 @@
 #include <MNS/MeqExpr.h>
 #include <MNS/MeqResult.h>
 #include <MNS/MeqRequest.h>
+#include <Common/lofar_string.h>
 
 //# Forward Declarations
 class MeqPhaseRef;
@@ -38,9 +39,13 @@ public:
   // The default constructor.
   MeqPointSource();
 
-  MeqPointSource (MeqExpr* fluxI, MeqExpr* fluxQ,
+  MeqPointSource (const string& name,
+		  MeqExpr* fluxI, MeqExpr* fluxQ,
 		  MeqExpr* fluxU, MeqExpr* fluxV,
 		  MeqExpr* ra, MeqExpr* dec);
+
+  const string& getName() const
+    { return itsName; }
 
   MeqExpr* getI()
     { return itsI; }
@@ -71,6 +76,7 @@ public:
 
 private:
   int       itsSourceNr;
+  string    itsName;
   MeqExpr*  itsI;
   MeqExpr*  itsQ;
   MeqExpr*  itsU;

@@ -90,7 +90,7 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
   MeqMatrix yxres;
   MeqMatrix yyres;
   double fact = 1./nsubc;
-  if (nsubc == request.ny()) {
+  if (nsubc == 1) {
     xxres = xx.getValue();
     xyres = xy.getValue();
     yxres = yx.getValue();
@@ -171,24 +171,40 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
   MeqMatrix conj22 = conj(itsStat2->getResult22().getValue());
   result11().getValueRW() =
 	s11 * conj11 * xxres +
-	s11 * conj12 * xyres +
-	s12 * conj11 * yxres +
-	s12 * conj12 * yyres;
+	s11 * conj21 * xyres +
+	s21 * conj11 * yxres +
+	s21 * conj21 * yyres;
+// 	s11 * conj11 * xxres +
+// 	s11 * conj12 * xyres +
+// 	s12 * conj11 * yxres +
+// 	s12 * conj12 * yyres;
   result12().getValueRW() =
-	s11 * conj21 * xxres +
+	s11 * conj12 * xxres +
 	s11 * conj22 * xyres +
-	s12 * conj21 * yxres +
-	s12 * conj22 * yyres;
+	s21 * conj12 * yxres +
+	s21 * conj22 * yyres;
+// 	s11 * conj21 * xxres +
+// 	s11 * conj22 * xyres +
+// 	s12 * conj21 * yxres +
+// 	s12 * conj22 * yyres;
   result21().getValueRW() =
-	s21 * conj11 * xxres +
-	s21 * conj12 * xyres +
+	s12 * conj11 * xxres +
+	s12 * conj21 * xyres +
 	s22 * conj11 * yxres +
-	s22 * conj12 * yyres;
+	s22 * conj21 * yyres;
+// 	s21 * conj11 * xxres +
+// 	s21 * conj12 * xyres +
+// 	s22 * conj11 * yxres +
+// 	s22 * conj12 * yyres;
   result22().getValueRW() =
-	s21 * conj21 * xxres +
-	s21 * conj22 * xyres +
-	s22 * conj21 * yxres +
+	s12 * conj12 * xxres +
+	s12 * conj22 * xyres +
+	s22 * conj12 * yxres +
 	s22 * conj22 * yyres;
+// 	s21 * conj21 * xxres +
+// 	s21 * conj22 * xyres +
+// 	s22 * conj21 * yxres +
+// 	s22 * conj22 * yyres;
 
   // Determine which values are perturbed and determine the perturbation.
   MeqMatrix perturbation;
@@ -221,13 +237,13 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
     }
     if (itsStat1->getResult12().isDefined(spinx)) {
       perturbation = itsStat1->getResult12().getPerturbation(spinx);
-      evalxx = true;
-      evalxy = true;
+      evalyx = true;
+      evalyy = true;
     }
     if (itsStat1->getResult21().isDefined(spinx)) {
       perturbation = itsStat1->getResult21().getPerturbation(spinx);
-      evalyx = true;
-      evalyy = true;
+      evalxx = true;
+      evalxy = true;
     }
     if (itsStat1->getResult22().isDefined(spinx)) {
       perturbation = itsStat1->getResult22().getPerturbation(spinx);
@@ -241,13 +257,13 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
     }
     if (itsStat2->getResult12().isDefined(spinx)) {
       perturbation = itsStat2->getResult12().getPerturbation(spinx);
-      evalxx = true;
-      evalyx = true;
+      evalxy = true;
+      evalyy = true;
     }
     if (itsStat2->getResult21().isDefined(spinx)) {
       perturbation = itsStat2->getResult21().getPerturbation(spinx);
-      evalxy = true;
-      evalyy = true;
+      evalxx = true;
+      evalyx = true;
     }
     if (itsStat2->getResult22().isDefined(spinx)) {
       perturbation = itsStat2->getResult22().getPerturbation(spinx);
@@ -292,7 +308,7 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
       MeqMatrix pconj21 = conj21;
       MeqMatrix pconj22 = conj22;
       if (xx.isDefined(spinx)) {
-	if (nsubc == request.ny()) {
+	if (nsubc == 1) {
 	  pxxres = xx.getPerturbedValue(spinx);
 	} else {
 	  const complex<double>* dc =
@@ -309,8 +325,8 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
 	}
       }
       if (xy.isDefined(spinx)) {
-	if (nsubc == request.ny()) {
-	  pxxres = xy.getPerturbedValue(spinx);
+	if (nsubc == 1) {
+	  pxyres = xy.getPerturbedValue(spinx);
 	} else {
 	  const complex<double>* dc =
 	    xy.getPerturbedValue(spinx).dcomplexStorage();
@@ -326,8 +342,8 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
 	}
       }
       if (yx.isDefined(spinx)) {
-	if (nsubc == request.ny()) {
-	  pxxres = yx.getPerturbedValue(spinx);
+	if (nsubc == 1) {
+	  pyxres = yx.getPerturbedValue(spinx);
 	} else {
 	  const complex<double>* dc =
 	    yx.getPerturbedValue(spinx).dcomplexStorage();
@@ -343,8 +359,8 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
 	}
       }
       if (yy.isDefined(spinx)) {
-	if (nsubc == request.ny()) {
-	  pxxres = yy.getPerturbedValue(spinx);
+	if (nsubc == 1) {
+	  pyyres = yy.getPerturbedValue(spinx);
 	} else {
 	  const complex<double>* dc =
 	    yy.getPerturbedValue(spinx).dcomplexStorage();
@@ -386,31 +402,53 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
       if (evalxx) {
 	result11().getPerturbedValueRW(spinx) =
 	  ps11 * pconj11 * pxxres +
-	  ps11 * pconj12 * pxyres +
-	  ps12 * pconj11 * pyxres +
-	  ps12 * pconj12 * pyyres;
+	  ps11 * pconj21 * pxyres +
+	  ps21 * pconj11 * pyxres +
+	  ps21 * pconj21 * pyyres;
+// 	  ps11 * pconj11 * pxxres +
+// 	  ps11 * pconj12 * pxyres +
+// 	  ps12 * pconj11 * pyxres +
+// 	  ps12 * pconj12 * pyyres;
       }
       if (evalxy) {
 	result12().getPerturbedValueRW(spinx) =
-	  ps11 * pconj21 * pxxres +
+	  ps11 * pconj12 * pxxres +
 	  ps11 * pconj22 * pxyres +
-	  ps12 * pconj21 * pyxres +
-	  ps12 * pconj22 * pyyres;
+	  ps21 * pconj12 * pyxres +
+	  ps21 * pconj22 * pyyres;
+// 	  ps11 * pconj21 * pxxres +
+// 	  ps11 * pconj22 * pxyres +
+// 	  ps12 * pconj21 * pyxres +
+// 	  ps12 * pconj22 * pyyres;
       }
       if (evalyx) {
 	result21().getPerturbedValueRW(spinx) =
-	  ps21 * pconj11 * pxxres +
-	  ps21 * pconj12 * pxyres +
+	  ps12 * pconj11 * pxxres +
+	  ps12 * pconj21 * pxyres +
 	  ps22 * pconj11 * pyxres +
-	  ps22 * pconj12 * pyyres;
+	  ps22 * pconj21 * pyyres;
+// 	  ps21 * pconj11 * pxxres +
+// 	  ps21 * pconj12 * pxyres +
+// 	  ps22 * pconj11 * pyxres +
+// 	  ps22 * pconj12 * pyyres;
       }
       if (evalyy) {
 	result22().getPerturbedValueRW(spinx) =
-	  ps21 * pconj21 * pxxres +
-	  ps21 * pconj22 * pxyres +
-	  ps22 * pconj21 * pyxres +
+	  ps12 * pconj12 * pxxres +
+	  ps12 * pconj22 * pxyres +
+	  ps22 * pconj12 * pyxres +
 	  ps22 * pconj22 * pyyres;
+// 	  ps21 * pconj21 * pxxres +
+// 	  ps21 * pconj22 * pxyres +
+// 	  ps22 * pconj21 * pyxres +
+// 	  ps22 * pconj22 * pyyres;
       }
     }
+//     cout << spinx << ' ' << evalxx << evalxy << evalyx << evalyy << ' '
+// 	 << result11().getPerturbedValue(spinx)
+// 	 << result12().getPerturbedValue(spinx)
+// 	 << result21().getPerturbedValue(spinx)
+// 	 << result22().getPerturbedValue(spinx)
+// 	 << endl;
   }
 }
