@@ -24,8 +24,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef CEPFRAME_SIMULATOR_EXAMPLE_H
-#define CEPFRAME_SIMULATOR_EXAMPLE_H
+#ifndef CEPFRAME_DFTSERVER_H
+#define CEPFRAME_DFTSERVER_H
 
 #include <lofar_config.h>
 
