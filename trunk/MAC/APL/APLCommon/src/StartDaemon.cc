@@ -194,8 +194,8 @@ void StartDaemon::_disconnectedHandler(::GCFPortInterface& port)
       client->init(*this, m_serverPortName, GCFPortInterface::SPP, STARTDAEMON_PROTOCOL);
       m_serverPort.accept(*(client.get()));
       m_childPorts.push_back(client);
+      break;
     }
-    break;
   
     case F_DISCONNECTED:
       _disconnectedHandler(port);

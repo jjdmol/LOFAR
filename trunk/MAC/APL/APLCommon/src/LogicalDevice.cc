@@ -65,7 +65,8 @@ LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile
   ::GCFTask((State)&LogicalDevice::initial_state,taskName),
   PropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
-  m_properties(),
+  m_propertySet(),
+  m_referencesPropSet(),
   m_serverPortName(taskName+string("_server")),
   m_parentPort(),
   m_serverPort(*this, m_serverPortName, ::GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL),
@@ -102,15 +103,28 @@ LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile
     THROW(APLCommon::ParameterNotFoundException,e.message());
   }
   
-  m_properties = boost::shared_ptr<GCFMyPropertySet>(new GCFMyPropertySet(psName.c_str(),psType.c_str(),PS_CAT_TEMPORARY,&m_propertySetAnswer));
-  m_properties->enable();
+  m_propertySet = boost::shared_ptr<GCFMyPropertySet>(new GCFMyPropertySet(
+      psName.c_str(),
+      psType.c_str(),
+      PS_CAT_TEMPORARY,
+      &m_propertySetAnswer));
+  m_propertySet->enable();
+  
+  string refPSName = psName + "__ref";
+  m_referencesPropSet = boost::shared_ptr<GCFMyPropertySet>(new GCFMyPropertySet(
+      refPSName.c_str(),
+      "TLDReference",
+      PS_CAT_TEMPORARY,
+      &m_propertySetAnswer));
+  m_referencesPropSet->enable();
 }
 
 
 LogicalDevice::~LogicalDevice()
 {
   LOG_DEBUG(formatString("LogicalDevice(%s)::~LogicalDevice",getName().c_str()));
-  m_properties->disable();
+  m_propertySet->disable();
+  m_referencesPropSet->disable();
 }
 
 string& LogicalDevice::getServerPortName()
@@ -188,7 +202,7 @@ void LogicalDevice::handlePropertySetAnswer(::GCFEvent& answer)
           else
           {
             TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+            m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
           }
         }
         // CANCELSCHEDULE <fileName>
@@ -200,7 +214,7 @@ void LogicalDevice::handlePropertySetAnswer(::GCFEvent& answer)
           else
           {
             TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+            m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
           }
         }
         // CLAIM
@@ -212,7 +226,7 @@ void LogicalDevice::handlePropertySetAnswer(::GCFEvent& answer)
           else
           {
             TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+            m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
           }
         }
         // PREPARE
@@ -224,7 +238,7 @@ void LogicalDevice::handlePropertySetAnswer(::GCFEvent& answer)
           else
           {
             TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+            m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
           }
         }
         // RESUME
@@ -236,7 +250,7 @@ void LogicalDevice::handlePropertySetAnswer(::GCFEvent& answer)
           else
           {
             TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+            m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
           }
         }
         // SUSPEND
@@ -248,7 +262,7 @@ void LogicalDevice::handlePropertySetAnswer(::GCFEvent& answer)
           else
           {
             TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+            m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
           }
         }
         // RELEASE
@@ -260,13 +274,13 @@ void LogicalDevice::handlePropertySetAnswer(::GCFEvent& answer)
           else
           {
             TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+            m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
           }
         }
         else
         {
           TLDResult result = LD_RESULT_UNKNOWN_COMMAND;
-          m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+          m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
         }
       }
       break;
@@ -421,9 +435,11 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_IDLE;
       ::GCFPVString status(LD_STATE_STRING_INITIAL);
-      m_properties->setValue(LD_PROPNAME_STATUS,status);
+      m_propertySet->setValue(LD_PROPNAME_STATUS,status);
       
       // connect to parent.
+      string parentPort = m_parameterSet.getString(m_parameterSet.getName() + string(".parentPort"));
+      m_parentPort.setDestAddr(parentPort);
       m_parentPort.open();
       
       // set timers
@@ -439,8 +455,23 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
     }
   
     case F_CONNECTED:
+      if(_isParentPort(port))
+      {
+        LOGICALDEVICEConnectEvent connectEvent;
+        port.send(connectEvent);
+      }
       break;
 
+    case LOGICALDEVICE_CONNECTED:
+    {
+      LOGICALDEVICEConnectedEvent connectedEvent;
+      if(connectedEvent.result == LD_RESULT_NO_ERROR)
+      {
+        _doStateTransition(LOGICALDEVICE_STATE_IDLE);
+      }
+      break;
+    }
+      
     case F_DISCONNECTED:
       port.close();
       break;
@@ -453,10 +484,12 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
       status = ::GCFEvent::NOT_HANDLED;
       break;
   }    
-  TLogicalDeviceState newState;
-  status = concrete_initial_state(event, port, newState);
-  _doStateTransition(newState);
-
+  if(status == ::GCFEvent::NOT_HANDLED)
+  {
+    TLogicalDeviceState newState;
+    status = concrete_initial_state(event, port, newState);
+    _doStateTransition(newState);
+  }
   return status;
 }
 
@@ -478,14 +511,25 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
       
       // send initialized event to the parent
       LOGICALDEVICEScheduledEvent scheduledEvent;
-      scheduledEvent.result=0;//OK
+      scheduledEvent.result=LD_RESULT_NO_ERROR;//OK
       m_parentPort.send(scheduledEvent);
       
       ::GCFPVString status(LD_STATE_STRING_IDLE);
-      m_properties->setValue(LD_PROPNAME_STATUS,status);
+      m_propertySet->setValue(LD_PROPNAME_STATUS,status);
       break;
     }
   
+    case F_ACCEPT_REQ:
+    {
+      boost::shared_ptr<GCFPVSSPort> client(new GCFPVSSPort);
+      client->init(*this, m_serverPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL);
+      m_serverPort.accept(*(client.get()));
+      addChildPort(client);
+      
+      // add reference
+      break;
+    }
+
     case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;
@@ -494,6 +538,14 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
       _handleTimers(event,port);
       break;
 
+    case LOGICALDEVICE_CONNECT:
+    {
+      LOGICALDEVICEConnectedEvent connectedEvent;
+      connectedEvent.result = LD_RESULT_NO_ERROR;
+      port.send(connectedEvent);
+      break;
+    }
+      
     case LOGICALDEVICE_CLAIM:
       TRAN(LogicalDevice::claiming_state);
       concreteClaim(port);
@@ -522,7 +574,7 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_CLAIMING;
       ::GCFPVString status(LD_STATE_STRING_CLAIMING);
-      m_properties->setValue(LD_PROPNAME_STATUS,status);
+      m_propertySet->setValue(LD_PROPNAME_STATUS,status);
       
       // send claim event to childs
       LOGICALDEVICEClaimEvent claimEvent;
@@ -567,7 +619,7 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_CLAIMED;
       ::GCFPVString status(LD_STATE_STRING_CLAIMED);
-      m_properties->setValue(LD_PROPNAME_STATUS,status);
+      m_propertySet->setValue(LD_PROPNAME_STATUS,status);
 
       // send claimed message to the parent.
       LOGICALDEVICEClaimedEvent claimedEvent;
@@ -619,7 +671,7 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_PREPARING;
       ::GCFPVString status(LD_STATE_STRING_PREPARING);
-      m_properties->setValue(LD_PROPNAME_STATUS,status);
+      m_propertySet->setValue(LD_PROPNAME_STATUS,status);
 
       // send prepare event to childs
       LOGICALDEVICEPrepareEvent prepareEvent;
@@ -666,7 +718,7 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_SUSPENDED;
       ::GCFPVString status(LD_STATE_STRING_SUSPENDED);
-      m_properties->setValue(LD_PROPNAME_STATUS,status);
+      m_propertySet->setValue(LD_PROPNAME_STATUS,status);
 
       // send to parent
       LOGICALDEVICESuspendedEvent suspendedEvent;
@@ -734,7 +786,7 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_ACTIVE;
       ::GCFPVString status(LD_STATE_STRING_ACTIVE);
-      m_properties->setValue(LD_PROPNAME_STATUS,status);
+      m_propertySet->setValue(LD_PROPNAME_STATUS,status);
 
       // send resumed message to parent.
       LOGICALDEVICEResumedEvent resumedEvent;
@@ -790,7 +842,7 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_RELEASING;
       ::GCFPVString status(LD_STATE_STRING_RELEASING);
-      m_properties->setValue(LD_PROPNAME_STATUS,status);
+      m_propertySet->setValue(LD_PROPNAME_STATUS,status);
       break;
     }
   

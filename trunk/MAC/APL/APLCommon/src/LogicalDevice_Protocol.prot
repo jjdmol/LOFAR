@@ -49,6 +49,20 @@ PRELUDE_END;
 // A "param" has a "name" and a "type".
 //
 event = {
+  signal = CONNECT;
+  dir = IN;
+};
+
+event = {
+  signal = CONNECTED;
+  dir = OUT;
+  param = {
+    name = "result";
+    type = "TLDResult";
+  };
+};
+
+event = {
 	signal = SCHEDULE;
 	dir = IN;
 	param = {
@@ -62,7 +76,7 @@ event = {
 	dir = OUT;
 	param = {
 	  name = "result";
-	  type = "int";
+	  type = "TLDResult";
 	};
 };
 
@@ -80,7 +94,7 @@ event = {
 	dir = OUT;
 	param = {
 	  name = "result";
-	  type = "int";
+	  type = "TLDResult";
 	};
 };
 
