@@ -77,6 +77,10 @@ elif [ "$DBTYPE" = "monet" ]; then
 # for monet:
     SQLCLIENT="MapiClient -h $HOST -l sql -u monetdb -P monetdb"
     PARMDBCONNECT="connect db='$USER', dbtype='$DBTYPE', host='$HOST', user ='monetdb'"
+elif [ "$DBTYPE" = "aips" ]; then
+# for monet:
+    SQLCLIENT=""
+    PARMDBCONNECT="connect db='$USER', dbtype='$DBTYPE', host='', user =''"
 else
     echo "Unkown dbtype"
     exit 1
