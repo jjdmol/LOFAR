@@ -130,10 +130,12 @@ int Parm::initDomain (const Domain& domain)
     }
   }
   // Store the polcs found into the state.
-  DataRecord & polcrec = wstate()[FPolcs].replace() <<= new DataRecord();
+  // OMS: use a DataField instead, since we only need a vector of records
+//  DataRecord & polcrec = wstate()[FPolcs].replace() <<= new DataRecord();
+  DataField & polcrec = wstate()[FPolcs].replace() <<= new DataField(TpDataRecord,itsPolcs.size());
   for (uint i=0; i<itsPolcs.size(); i++) 
   {
-    DataRecord& rec = polcrec[i] <<= new DataRecord();
+    DataRecord& rec = polcrec[i] <<= new DataRecord;
     rec[FDomain] <<= new Domain(itsPolcs[i].domain());
     rec[FVellSets] <<= &(itsPolcs[i].getCoeff().getDataArray());
   }
@@ -274,7 +276,10 @@ void Parm::save()
 void Parm::setStateImpl (DataRecord& rec, bool initializing)
 {
   // inhibit changing of FPolcs field
-  protectStateField(rec,FPolcs);
+  if( !initializing )
+  {
+    protectStateField(rec,FPolcs);
+  }
   Function::setStateImpl(rec,initializing);
   // Get solvable flag; clear domain if it changes (to force initDomain call).
   bool oldSolvable = itsIsSolvable;
@@ -282,7 +287,21 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
   if (oldSolvable != itsIsSolvable) {
     itsCurrentDomain = Domain();
   }
-  // Get parm value
+//   // Are polcs directly specified? 
+//   if( rec[FPolcs].exists() )
+//   {
+//     int npolc = rec[FPolcs].size(TpDataRecord);
+//     vector<Polc> polcs(npolc);
+//     for( int i=0; i<npolc; i++ )
+//     {
+//       polcs[i].setCoeff
+//       DataRecord &polcrec = rec[FPolcs][i];
+//       rec[FDomain] <<= new Domain(itsPolcs[i].domain());
+//       rec[FVellSets] <<= &(itsPolcs[i].getCoeff().getDataArray());
+//     }
+//     
+//   }
+  // Is the parm value specified? use it to update polcs
   if (rec[FValue].exists()) {
     // Update the polc coefficients with the new values.
     LoVec_double values = rec[FValue].as<LoVec_double>();
@@ -291,7 +310,7 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
     for (uint i=0; i<itsPolcs.size(); i++) {
       inx += itsPolcs[i].update (&values(inx), values.size()-inx);
     }
-    Assert (inx == values.size());
+    Assert (inx == uint(values.size()));
     // Also save the parms (might need to be changed later).
     save();
   }
