@@ -34,7 +34,11 @@ class PointSource:public AbstractSource
 {
 public:
   
-   PointSource(double             ra        = 0,
+   PointSource(double             startTime = 0,
+               double             endTime   = 1,
+               double             startFreq = 0,
+               double             endFreq   = 1,
+               double             ra        = 0,
                double             dec       = 0,
                unsigned int       catNumber = 0,
                const std::string& name      = "",
@@ -42,13 +46,14 @@ public:
 
   ~PointSource();
 
-  virtual void load(const Table& table,
-                    unsigned int row);
+  virtual MeqDomain load(const Table& table,
+                         unsigned int row);
 
-  virtual void store(Table&       table,
-                     unsigned int row);
+  virtual MeqDomain store(Table&       table,
+                          unsigned int row);
 
   virtual unsigned int getParameters(std::vector<MeqParm*> &parameters);
+  virtual unsigned int getParameters(std::vector<const MeqParm*> &parameters) const;
 
   //! Makes deep copy of parameters;
   /*! 

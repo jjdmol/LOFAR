@@ -19,10 +19,12 @@
 //
 
 
+#include <sstream>
+
 #include <GSM/AbstractSource.h>
 
 #include <MNS/MeqParmPolc.h>
-#include <MNS/MnsMatrix.h>
+#include <MNS/MeqMatrix.h>
 
 #include <aips/aips.h>
 #include <aips/Measures.h>
@@ -58,19 +60,43 @@ static const char* SourceTypeNames[MaxSourceTypeName+1] =
 //================>>>  AbstractSource::AbstractSource  <<<================
 
 AbstractSource::AbstractSource(SourceType          type,
+                               double              startTime,
+                               double              endTime,
+                               double              startFreq,
+                               double              endFreq,
                                double              ra,
                                double              dec,
                                unsigned int        catNumber,
                                const std::string&  name)
-  : itsCatalogNumber(catNumber),
+  : itsStokesNames(4),
+    itsCatalogNumber(catNumber),
     itsName(name),
     itsSourceType(type)
 {
-  MnsMatrix RaMatrix(ra);
-  MnsMatrix DecMatrix(dec);
+  itsStokesNames[0] = "I";
+  itsStokesNames[1] = "Q";
+  itsStokesNames[2] = "U";
+  itsStokesNames[3] = "V";
+  MeqDomain Domain(startTime, endTime, startFreq, endFreq);
+  std::vector<MeqPolc> RaPolcs(1);
+  std::vector<MeqPolc> DecPolcs(1);
 
-  itsRA  = new MeqParmPolc("Ra", RaMatrix);
-  itsDec = new MeqParmPolc("Dec", DecMatrix);
+  MeqMatrix RaMatrix(ra);
+  MeqMatrix DecMatrix(dec);
+
+  RaPolcs [0].setCoeff(RaMatrix);
+  RaPolcs [0].setDomain(Domain);
+  DecPolcs[0].setCoeff(DecMatrix);
+  DecPolcs[0].setDomain(Domain);
+  
+  
+  std::string ParmName(createParmName());
+
+  itsRa  = new MeqParmPolc(ParmName+"RA");
+  dynamic_cast<MeqParmPolc*>(itsRa)->setPolcs(RaPolcs);
+
+  itsDec = new MeqParmPolc(ParmName+"DEC");
+  dynamic_cast<MeqParmPolc*>(itsDec)->setPolcs(DecPolcs);
 }
 
 
@@ -81,7 +107,7 @@ AbstractSource::AbstractSource(SourceType          type,
 
 AbstractSource::~AbstractSource()
 {
-  delete itsRA;
+  delete itsRa;
   delete itsDec;
 }
 
@@ -133,7 +159,25 @@ unsigned int AbstractSource::getParameters(std::vector<MeqParm* > &parameters)
 {
   unsigned int added=0;
   
-  parameters[added] = itsRA;
+  parameters[added] = itsRa;
+  added++;
+
+  parameters[added] = itsDec;
+  added++;
+  
+  return added;
+}
+
+
+
+
+//===============>>>  AbstractSource::getParameters  <<<===============
+
+unsigned int AbstractSource::getParameters(std::vector<const MeqParm* > &parameters) const
+{
+  unsigned int added=0;
+  
+  parameters[added] = itsRa;
   added++;
 
   parameters[added] = itsDec;
@@ -151,13 +195,27 @@ unsigned int AbstractSource::setParameters(const std::vector<MeqParm* > &paramet
 {
   unsigned int read=0;
   
-  *itsRA = *parameters[read];
+  *itsRa = *parameters[read];
   read++;
 
   *itsDec = *parameters[read];
   read++;
   
   return read;
+}
+
+
+
+
+//===============>>>  AbstractSource::createParmName  <<<===============
+
+std::string AbstractSource::createParmName() const
+{
+  std::ostringstream out;
+
+  out << "GSM." << getCatalogNumber() << ".";
+
+  return out.str();
 }
 
 
@@ -188,7 +246,7 @@ MDirection AbstractSource::getPosition(double time,
 void AbstractSource::getPositionExpressions(MeqExpr* ra,
                                             MeqExpr* dec)
 {
-  ra  = itsRA;
+  ra  = itsRa;
   dec = itsDec;
 }
 
@@ -198,21 +256,43 @@ void AbstractSource::getPositionExpressions(MeqExpr* ra,
 
 //===============>>>  AbstractSource::store  <<<===============
 
-void AbstractSource::store(Table&      table,
-                           unsigned int row) const
+MeqDomain AbstractSource::store(Table&      table,
+                                unsigned int row) const
 {
+  std::vector<MeqPolc> Polcs;
+
   writeNiceAscii(std::cout);
   ScalarColumn<int>         Number  (table, "NUMBER");
   ScalarColumn<String>      Name    (table, "NAME");
   ScalarColumn<int>         Type    (table, "TYPE");
-  ArrayColumn<double>       RAParms (table, "RAPARMS");
+  ArrayColumn<double>       RaParms (table, "RAPARMS");
   ArrayColumn<double>       DecParms(table, "DECPARMS");
+  ArrayColumn<double>       TDomain (table, "TDOMAIN");
+  ArrayColumn<double>       FDomain (table, "FDOMAIN");
 
   Number.put(row, itsCatalogNumber);
   Name.put  (row, itsName);
   Type.put  (row, int(itsSourceType));
-  RAParms.put (row, itsRA->getCoeff().getDoubleMatrix());
-  DecParms.put(row, itsDec->getCoeff().getDoubleMatrix());
+
+  Polcs = dynamic_cast<MeqParmPolc*>(itsRa)->getPolcs();
+  RaParms.put (row, Polcs[0].getCoeff().getDoubleMatrix());
+
+  Polcs = dynamic_cast<MeqParmPolc*>(itsDec)->getPolcs();
+  DecParms.put(row, Polcs[0].getCoeff().getDoubleMatrix());
+
+  MeqDomain Domain = Polcs[0].getDomain();
+
+  Matrix<double> TMatrix(2, 1);
+  TMatrix(0,0) = Domain.startX();
+  TMatrix(1,0) = Domain.endX();
+  TDomain.put(row, TMatrix);
+  
+  Matrix<double> FMatrix(2, 1);
+  FMatrix(0,0) = Domain.startY();
+  FMatrix(1,0) = Domain.endY();
+  FDomain.put(row, FMatrix);
+
+  return Domain;
 }
 
 
@@ -220,15 +300,42 @@ void AbstractSource::store(Table&      table,
 
 //===============>>>  AbstractSource::load  <<<===============
 
-void AbstractSource::load(const Table& table,
+MeqDomain AbstractSource::load(const Table& table,
                           unsigned int row)
 {
   ROScalarColumn<int>    Number  (table, "NUMBER");
   ROScalarColumn<String> Name    (table, "NAME");
   ROScalarColumn<int>    Type    (table, "TYPE");
-  ROArrayColumn<double>  RAParms (table, "RAPARMS");
+  ROArrayColumn<double>  RaParms (table, "RAPARMS");
   ROArrayColumn<double>  DecParms(table, "DECPARMS");
+  ROArrayColumn<double>  TDomain (table, "TDOMAIN");
+  ROArrayColumn<double>  FDomain (table, "FDOMAIN");
 
+
+  Matrix<double> TMatrix;
+  Matrix<double> FMatrix;
+
+  TDomain.get(row, TMatrix);
+  FDomain.get(row, FMatrix);
+
+  MeqDomain Domain(TMatrix(0,0), TMatrix(1,0),
+                   FMatrix(0,0), FMatrix(1,0));
+
+  std::vector<MeqPolc> RaPolcs(1);
+  std::vector<MeqPolc> DecPolcs(1);
+
+  Matrix<double> coef(1,1);
+  RaParms.get (row, coef, true);
+  RaPolcs[0].setDomain(Domain);
+  RaPolcs[0].setCoeff(coef);
+  dynamic_cast<MeqParmPolc*>(itsRa)->setPolcs(RaPolcs);
+
+  DecParms.get(row, coef, true);
+  DecPolcs[0].setCoeff(coef);
+  DecPolcs[0].setDomain(Domain);
+  dynamic_cast<MeqParmPolc*>(itsDec)->setPolcs(DecPolcs);
+
+  
   int temp;
   Number.get(row, temp);
   itsCatalogNumber = (unsigned int)temp;
@@ -239,13 +346,8 @@ void AbstractSource::load(const Table& table,
 
   Type.get  (row, temp);
   itsSourceType = SourceType(temp);
-
-  Matrix<double> coef(1,1);
-  RAParms.get (row, coef, true);
-  itsRA->setCoeff(coef);
-
-  DecParms.get(row, coef, true);
-  itsDec->setCoeff(coef);
+  
+  return Domain;
 }
 
 
@@ -264,11 +366,25 @@ std::ostream& AbstractSource::writeNiceAscii(std::ostream& out) const
 
   out << "Type: " << (int(itsSourceType) > MaxSourceTypeName? "Unknown" : SourceTypeNames[itsSourceType]) << endl;
 
-  out << "itsRA: " << itsRA << endl;
-  MnsMatrix mat(itsRA->getCoeff());
+  out << "Parms:" << endl;
+
+  std::vector<const MeqParm*> ParmList(getNumberOfParameters());
+  getParameters(ParmList);
+  out << "Number of parameters: " << getNumberOfParameters() << endl;
+
+  for(unsigned int i = 0; i < ParmList.size(); i++) {
+    out << i <<"/" << ParmList.size()<<": " <<ParmList[i] << ": " << std::flush;
+    std::string Name(ParmList[i]->getName());
+    out << Name << endl << std::flush;
+  }
+
+  out << "itsRa: " << itsRa << endl;
+  std::vector<MeqPolc> Polcs = dynamic_cast<MeqParmPolc*>(itsRa)->getPolcs();
+
+  MeqMatrix mat(Polcs[0].getCoeff());
   
   Matrix<double> coef(mat.getDoubleMatrix());
-  out << "RA  : " << endl;
+  out << "Ra  : " << endl;
   for(unsigned int t = 0; t < coef.nrow(); t++) {
     for(unsigned int f = 0; f < coef.ncolumn(); f++) {
       out.width(10);
@@ -277,7 +393,8 @@ std::ostream& AbstractSource::writeNiceAscii(std::ostream& out) const
     out << endl;
   }
   out << "Dec : " << endl;
-  coef = itsDec->getCoeff().getDoubleMatrix();
+  Polcs = dynamic_cast<MeqParmPolc*>(itsDec)->getPolcs();
+  coef = Polcs[0].getCoeff().getDoubleMatrix();
   for(unsigned int t = 0; t < coef.nrow(); t++) {
     for(unsigned int f = 0; f < coef.ncolumn(); f++) {
       out.width(10);
