@@ -1,12 +1,13 @@
 check_PROGRAMS	      =	tDebug testLogger tBlobString \
 			tBlobStream tBlobArray tBlobField \
-			tDataConvert tKeyValueMap tStringUtil tHexdump
-#			tLorrays
+			tDataConvert tKeyValueMap tStringUtil tHexdump \
+			tLorrays
 
 # programs to run through supplied checktools
 CHECKTOOLPROGS 	      =	tDebug testLogger tBlobString \
 			tBlobStream tBlobArray tBlobField \
-			tDataConvert tKeyValueMap tStringUtil tHexdump
+			tDataConvert tKeyValueMap tStringUtil tHexdump \
+			tLorrays
 #ENDCHECKTOOLPROGS
 
 TESTS	= tDebug_test.sh \
@@ -19,7 +20,7 @@ TESTS	= tDebug_test.sh \
 	  tKeyValueMap_test.sh \
 	  tStringUtil_test.sh \
 	  tHexdump
-#	  tLorrays_test.sh				
+	  tLorrays_test.sh				
 
 tDebug_SOURCES			= tDebug.cc
 tDebug_LDADD			= ../src/libcommon.la
@@ -61,9 +62,9 @@ tHexdump_SOURCES		= tHexdump.cc
 tHexdump_LDADD			= ../src/libcommon.la	
 tHexdump_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
 
-#tLorrays_SOURCES		= tLorrays.cc
-#tLorrays_LDADD			= ../src/libcommon.la	
-#tLorrays_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
+tLorrays_SOURCES		= tLorrays.cc
+tLorrays_LDADD			= ../src/libcommon.la	
+tLorrays_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir)
 
