@@ -31,6 +31,7 @@
 /*  #endif */
 
 #include "CEPFrame/DataHolder.h"
+#include "Common/Debug.h"
 
 namespace LOFAR
 {
@@ -103,6 +104,17 @@ public:
   bool hasInputSelector();
   bool hasOutputSelector();
 
+  /**  accessor functions to the auto trigger flags.
+       This flag determines if automated triggering of read/write
+       sequences is wanted. 
+   **/
+  bool doAutoTriggerIn(int channel) const;
+  bool doAutoTriggerOut(int channel) const;
+  void setAutoTriggerIn(int channel, 
+			bool newflag) const;
+  void setAutoTriggerOut(int channel, 
+			bool newflag) const;
+
 private:
   /// Copy constructor (copy semantics).
   DataManager (const DataManager&);
@@ -115,14 +127,46 @@ private:
 
   Selector* itsInputSelector;  // Input selection mechanism
   Selector* itsOutputSelector; // Output selection mechanism
+
+  /**  The auto trigger flags.
+       This flag determines if automated triggering of read/write
+       sequences is wanted. 
+   **/
+  bool*     itsDoAutoTriggerIn;
+  bool*     itsDoAutoTriggerOut;
 };
 
-inline int DataManager::getInputs() const
-  { return itsNinputs; }
+inline int DataManager::getInputs() const { 
+  return itsNinputs; }
 
-inline int DataManager::getOutputs() const
-  { return itsNoutputs; }
+inline int DataManager::getOutputs() const { 
+  return itsNoutputs; }
 
+inline bool DataManager::doAutoTriggerIn(int channel) const {
+  DbgAssertStr(channel >= 0, "input channel too low");
+  DbgAssertStr(channel < itsNinputs, "input channel too high");
+  return itsDoAutoTriggerIn[channel];
 }
 
+inline bool DataManager::doAutoTriggerOut(int channel) const {
+  DbgAssertStr(channel >= 0, "output channel too low");
+  DbgAssertStr(channel < itsNoutputs, "output channel too high");
+  return itsDoAutoTriggerOut[channel];
+}
+
+inline void DataManager::setAutoTriggerIn(int channel, 
+					  bool newflag) const {
+  DbgAssertStr(channel >= 0, "input channel too low");
+  DbgAssertStr(channel < itsNinputs, "input channel too high");
+  itsDoAutoTriggerIn[channel] = newflag;
+}
+
+inline void DataManager::setAutoTriggerOut(int channel, 
+					  bool newflag) const {
+  DbgAssertStr(channel >= 0, "output channel too low");
+  DbgAssertStr(channel < itsNoutputs, "output channel too high");
+  itsDoAutoTriggerIn[channel] = newflag;
+}
+
+} // namespace
 #endif

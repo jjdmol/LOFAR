@@ -27,7 +27,6 @@
 #include "CEPFrame/DataManager.h"
 #include "CEPFrame/SynchronisityManager.h"
 #include "CEPFrame/DHPoolManager.h"
-#include "Common/Debug.h"
 #include "CEPFrame/Selector.h"
 
 namespace LOFAR
@@ -47,15 +46,20 @@ DataManager::DataManager (int inputs, int outputs)
   itsSynMan = new SynchronisityManager(inputs, outputs);
   itsInDHs = new DH_info[inputs];
   itsOutDHs = new DH_info[outputs];
+  itsDoAutoTriggerIn = new bool[inputs];
+  itsDoAutoTriggerOut = new bool[outputs];
+
   for (int i = 0; i < inputs; i++)
   {
     itsInDHs[i].currentDH = 0;
     itsInDHs[i].id = -1;
+    itsDoAutoTriggerIn[i]=true;
   }
   for (int j = 0; j < outputs; j++)
   {
     itsOutDHs[j].currentDH = 0;
     itsOutDHs[j].id = -1;
+    itsDoAutoTriggerOut[j]=true;
   }
 }
 
@@ -70,11 +74,15 @@ DataManager::DataManager (const DataManager& that)
   {
     itsInDHs[i].currentDH = 0;
     itsInDHs[i].id = -1;
+    itsDoAutoTriggerIn[i] = that.doAutoTriggerIn(i);
+;
+
   }
   for (int j = 0; j < itsNoutputs; j++)
   {
     itsOutDHs[j].currentDH = 0;
     itsOutDHs[j].id = -1;
+    itsDoAutoTriggerOut[j]=that.doAutoTriggerOut(j);
   }
 }
 
@@ -83,6 +91,8 @@ DataManager::~DataManager()
   delete itsSynMan;
   delete itsInDHs;
   delete itsOutDHs;
+  delete itsDoAutoTriggerIn;
+  delete itsDoAutoTriggerOut;
   if (itsInputSelector != 0)
   {
     delete itsInputSelector;

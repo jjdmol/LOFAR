@@ -123,13 +123,14 @@ void WorkHolder::baseProcess ()
   else
   {
     for (int input=0; input<itsNinputs; input++) {
-    
       if (getDataManager().getGeneralInHolder(input)->doHandle()) {
-	if (getDataManager().hasInputSelector() == false)
-	{
+	if (getDataManager().hasInputSelector() == false) {
+	  // wait for unlocking if needed
 	  getDataManager().getInHolder(input);
 	}
-	getDataManager().readyWithInHolder(input); // Will cause reading of new data
+	if (getDataManager().doAutoTriggerIn(input)) { 
+	  getDataManager().readyWithInHolder(input); // Will cause reading of new data
+	}
       }
     }
   } 
@@ -156,14 +157,14 @@ void WorkHolder::baseProcess ()
 
   for (int output=0; output<itsNoutputs; output++)	{
     if (getDataManager().getGeneralOutHolder(output)->doHandle()) {
-      if (getDataManager().hasOutputSelector() == false)
-      {
+      if (getDataManager().hasOutputSelector() == false) {
 	getDataManager().getOutHolder(output);
       }
-      getDataManager().readyWithOutHolder(output); // Will cause writing of data
+      if (getDataManager().doAutoTriggerOut(output)) { 
+	getDataManager().readyWithOutHolder(output); // Will cause writing of data
+      }
     }
-  }
-
+  } 
 }
 
 void WorkHolder::basePostprocess()
