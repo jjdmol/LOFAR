@@ -42,6 +42,7 @@ ParmTable::ParmTable (const string& dbType, const string& tableName,
   } else {
     Assert (dbType=="aips");
   }
+  itsRep->connect();
 }
 
 MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs)

@@ -61,14 +61,24 @@ public:
 			 int sourceNr, int station,
 			 const MeqPolc& polc) = 0;
 
+  // Put the default coefficients
+  virtual void putDefCoeff (const string& parmName,
+			    int srcnr, int statnr,
+			    const MeqPolc& polc) = 0;
+
   // Get the names of all sources in the table.
   virtual vector<string> getSources() = 0;
 
   // Unlock the underlying table.
   virtual void unlock() = 0;
 
+  // Connect to the database or table
+  virtual void connect() = 0;
   // Create the database or table
-  virtual void createTable() = 0;
+  //  This has now become a static function and so it can't be overloaded.
+  //  When creating a new ParmTable class, you can implement this function 
+  //  and use it in parmdb just like with the other ParmTables.
+  //virtual void createTable() = 0;
   // clear database or table
   virtual void clearTable() = 0;
   virtual void putNewDefCoeff (const string& parmName,

@@ -67,6 +67,11 @@ namespace LOFAR {
 			   int sourceNr, int station,
 			   const MeqPolc& polc);
 
+    // Put the default coefficients
+    virtual void putDefCoeff (const string& parmName,
+			      int srcnr, int statnr,
+			      const MeqPolc& polc);
+
     virtual void putNewCoeff (const string& parmName,
 			      int srcnr, int statnr,
 			      const MeqPolc& polc);
@@ -80,8 +85,10 @@ namespace LOFAR {
     // Unlock the underlying table.
     virtual void unlock();
 
+    // Connect to the database
+    virtual void connect();
     // Create the database or table
-    virtual void createTable();
+    static void createTable(const string& userName, const string& tableName);
     // clear database or table
     virtual void clearTable();
 

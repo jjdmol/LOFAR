@@ -200,7 +200,7 @@ void newParm (const std::string& tableName, const std::string& parmName,
   polc.setCoeff(MM);  
   polc.setNormalize (kvmap.getBool ("normalize", true));
   double diff = kvmap.getDouble ("diff", 1e-6);
-  bool diffrel = kvmap.getBool ("diffrel", true);
+  bool diffrel = kvmap.getBool ("diff_rel", true);
   polc.setPerturbation (diff, diffrel);
   polc.setX0 (kvmap.getDouble ("time0", 0.));
   polc.setY0 (kvmap.getDouble ("freq0", 0.));
@@ -229,11 +229,37 @@ void newParmDef (const std::string& tableName, const std::string& parmName,
   cout<<endl;
   polc.setNormalize (kvmap.getBool ("normalize", true));
   double diff = kvmap.getDouble ("diff", 1e-6);
-  bool diffrel = kvmap.getBool ("diffrel", true);
+  bool diffrel = kvmap.getBool ("diff_rel", true);
   polc.setPerturbation (diff, diffrel);
   polc.setX0 (kvmap.getDouble ("time0", 0.));
   polc.setY0 (kvmap.getDouble ("freq0", 0.));
   PTR->putNewDefCoeff(parmName, srcnr, statnr, polc);
+}
+void updateDef (const std::string& tableName, const std::string& parmName,
+		KeyValueMap& kvmap)
+{
+  int srcnr = kvmap.getInt ("srcnr", -1);
+  int statnr = kvmap.getInt ("statnr", -1);
+  MeqPolc polc;
+  polc.setSimCoeff (getArray (kvmap, "values", kvmap.getInt("nx", 1)));
+  polc.setPertSimCoeff(getArray (kvmap, "absPertValues", kvmap.getInt("nx", 1), 0));
+  MeqMatrix MM = polc.getSimCoeff().clone();
+  MM += polc.getPertSimCoeff().clone();
+  polc.setCoeff(MM);  
+  cout<<"simcoeff:"<<endl;
+  showArray(cout, polc.getSimCoeff());
+  cout<<"coeff:"<<endl;
+  showArray(cout, polc.getCoeff());
+  cout<<"pertsimcoeff:"<<endl;
+  showArray(cout, polc.getPertSimCoeff());
+  cout<<endl;
+  polc.setNormalize (kvmap.getBool ("normalize", true));
+  double diff = kvmap.getDouble ("diff", 1e-6);
+  bool diffrel = kvmap.getBool ("diff_rel", true);
+  polc.setPerturbation (diff, diffrel);
+  polc.setX0 (kvmap.getDouble ("time0", 0.));
+  polc.setY0 (kvmap.getDouble ("freq0", 0.));
+  PTR->putDefCoeff(parmName, srcnr, statnr, polc);
 }
 
 void ShowDef(string name){
@@ -315,16 +341,29 @@ void doIt()
 	  cerr<<"Unknown database type: '"<<dbType<<"'"<<endl;
 	  exit(1);
 	};
+	PTR->connect();
 	//cout << "Connected to " << dbType << " database " << dbName
 	//     << endl;
       } else if (cmd == CLEAR)  {
 	// clear dataBase
-	ASSERTSTR(PTR!=0, "Must connect to database before clearing it");
 	PTR->clearTable();
       } else if (cmd == CREATE)  {
 	// create dataBase	
-	ASSERTSTR(PTR!=0, "Must have connect info for database before creating it");
-	PTR->createTable();
+	KeyValueMap kvmap = KeyParser::parse (cstr);
+	dbUser = kvmap.getString ("user", getUserName());
+	tableName = "MeqParm";
+	dbHost = kvmap.getString ("host", "dop50");
+	dbName = kvmap.getString ("db", dbUser);
+	dbType = kvmap.getString ("dbtype", "postgres");
+	tableName = kvmap.getString ("tablename", "MeqParm");
+	if (dbType=="aips") {
+	  ParmTableAIPS::createTable(dbUser, tableName);
+	} else if (dbType=="bdb") {
+	  ParmTableBDB::createTable(dbUser, tableName);
+	} else {
+	  cerr<<"Unknown database type: '"<<dbType<<"'"<<endl;
+	  exit(1);
+	};
       } else if (cmd == SHOWALLSOURCES)  {
 	// show all default values for sources
 	ASSERTSTR(PTR!=0, "Must have connect info for database before creating it");
@@ -342,11 +381,12 @@ void doIt()
 	KeyValueMap kvmap = KeyParser::parse (cstr);
 	if (cmd == NEWDEF) {
 	  newParmDef (tableName, parmName, kvmap);
-	}
-	if (cmd == NEW) {
+	} else if (cmd == NEW) {
 	  newParm (tableName, parmName, kvmap);
+	} else if (cmd == UPDATEDEF) {
+	  updateDef (tableName, parmName, kvmap);
 	}
-	      }
+      }
     } catch (std::exception& x) {
       cerr << "Exception: " << x.what() << endl;
     }
