@@ -1,0 +1,329 @@
+//
+// Protocol definition for the RSP driver interface
+//
+autogen definitions protocol;
+
+description = "Protocol for the RSP driver interface";
+prefix = "RSP"; // for the signal names
+id = "(F_APL_PROTOCOL+12)";
+
+// specify extra include files
+// e.g.
+include = '<sys/time.h>';
+include = '<linux/types.h>';
+include = '<bitset>';
+include = '<Common/LofarTypes.h>';
+
+include = '"Timestamp.h"';
+include = '"BeamletWeights.h"';
+include = '"SubbandSelection.h"';
+include = '"RCUSettings.h"';
+
+prelude = << PRELUDE_END
+
+namespace RSP_Protocol
+{
+    static const int N_RCUBITS = 256;
+};
+
+PRELUDE_END;
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+// Userdefine types are 
+//
+
+//
+// Beam-former Weights
+//
+event = {
+    signal = SETWEIGHTS;
+    dir = IN;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "rcumask";
+	type = "std::bitset<N_RCUBITS>";
+    };
+    param = {
+	name = "weights";
+	type = "BeamletWeights";
+	userdefined;
+    };
+};
+
+event = {
+    signal = SETWEIGHTS_ACK;
+    dir = OUT;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+};
+
+event = {
+    signal = GETWEIGHTS;
+    dir = IN;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "rcumask";
+	type = "std::bitset<N_RCUBITS>";
+    };
+    param = {
+	name = "cache";
+	type = "bool";
+    };
+};
+
+event = {
+    signal = GETWEIGHTS_ACK;
+    dir = OUT;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+    param = {
+	name = "weights";
+	type = "BeamletWeights";
+	userdefined;
+    };
+};    
+
+//
+// Subband Selection
+//
+event = {
+    signal = SETSUBBANDS;
+    dir = IN;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "rcumask";
+	type = "std::bitset<N_RCUBITS>";
+    };
+    param = {
+	name = "subbands";
+	type = "SubbandSelection";
+	userdefined;
+    };
+};
+
+event = {
+    signal = SETSUBBANDS_ACK;
+    dir = OUT;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+};
+
+event = {
+    signal = GETSUBBANDS;
+    dir = IN;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "rcumask";
+	type = "std::bitset<N_RCUBITS>";
+    };
+    param = {
+	name = "cache";
+	type = "bool";
+    };
+};
+
+event = {
+    signal = GETSUBBANDS_ACK;
+    dir = OUT;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+    param = {
+	name = "subbands";
+	type = "SubbandSelection";
+	userdefined;
+    };
+};
+
+//
+// RCU Control
+//
+event = {
+    signal = SETRCU;
+    dir = IN;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "rcumask";
+	type = "std::bitset<N_RCUBITS>";
+    };
+    param = {
+	name = "settings";
+	type = "RCUSettings";
+	userdefined;
+    };
+};
+
+event = {
+    signal = SETRCU_ACK;
+    dir = OUT;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+};
+
+event = {
+    signal = GETRCU;
+    dir = IN;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "rcumask";
+	type = "std::bitset<N_RCUBITS>";
+    };
+    param = {
+	name = "cache";
+	type = "bool";
+    };
+};
+
+event = {
+    signal = GETRCU_ACK;
+    dir = OUT;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+    param = {
+	name = "settings";
+	type = "RCUSettings";
+	userdefined;
+    };
+};
+
+//
+// Waveform Generator
+//
+event = {
+    signal = SETWG;
+    dir = IN;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "rcumask";
+	type = "std::bitset<N_RCUBITS>";
+    };
+//    param = {
+//	name = "setting";
+//	type = "WGSetting";
+//	userdefined;
+//    };
+};
+
+event = {
+    signal = SETWG_ACK;
+    dir = OUT;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+};
+
+event = {
+    signal = GETWG;
+    dir = IN;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "rcumask";
+	type = "std::bitset<N_RCUBITS>";
+    };
+    param = {
+	name = "cache";
+	type = "bool";
+    };
+};
+
+event = {
+    signal = GETWG_ACK;
+    dir = OUT;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+//    param = {
+//	name = "setting";
+//	type = "WGSetting";
+//	userdefined;
+//    };
+};    
