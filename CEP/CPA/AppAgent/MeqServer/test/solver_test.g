@@ -67,8 +67,8 @@ const solver_test := function (stage=0,gui=T,debug=[=],verbose=1)
   if( stage == 0 )
   {
     # use default record for parms
-    print mqs.meq('Create.Node',meq.parm('x',meq.polc(0),config_groups='Solvable.Parm'));
-    print mqs.meq('Create.Node',meq.parm('y',meq.polc(0),config_groups='Solvable.Parm'));
+    print mqs.meq('Create.Node',meq.parm('x',meq.polc(0),groups='Parm'));
+    print mqs.meq('Create.Node',meq.parm('y',meq.polc(0),groups='Parm'));
   }
   else if( stage == 1 )
   {
@@ -78,9 +78,9 @@ const solver_test := function (stage=0,gui=T,debug=[=],verbose=1)
     pt.putdef('x',0);
     pt.putdef('y',0);
     pt.done();
-    x := meq.parm('x',config_groups='Solvable.Parm');
+    x := meq.parm('x',groups='Parm');
     x.table_name := tablename;
-    y := meq.parm('y',config_groups='Solvable.Parm');
+    y := meq.parm('y',groups='Parm');
     y.table_name := tablename;
     print mqs.meq('Create.Node',x);
     print mqs.meq('Create.Node',y);
@@ -106,9 +106,11 @@ const solver_test := function (stage=0,gui=T,debug=[=],verbose=1)
     global rec;
     rec := meq.node('MeqSolver','solver',children="eq1 eq2");
     rec.num_steps := 5;
-    rec.solvable_parm := [ by_list=meq.initstatelist() ];
-    meq.addstatelist(rec.solvable_parm.by_list,"x y",[solvable=T]); 
-    meq.addstatelist(rec.solvable_parm.by_list,"*",[solvable=F]); 
+    rec.parm_group := hiid('Parm');
+      solv := meq.initcmdlist();
+      solv[1] := [ name="x y",state=[solvable=T] ];
+      solv[2] := [ state=[solvable=F] ];
+    rec.solvable := [ command_by_list=solv ];
     print mqs.meq('Create.Node',rec);
 
     # resolve children
