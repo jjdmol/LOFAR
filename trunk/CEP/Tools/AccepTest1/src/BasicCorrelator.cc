@@ -222,13 +222,12 @@ int main (int argc, const char** argv) {
     }
 
   } else {
-#ifdef HAVE_BGL
     int rank;
+#ifdef HAVE_BGL
     MPI_Comm_rank (MPI_COMM_WORLD, &rank);
     if (rank == 0) cout << "ERROR: MPI size does not match the number of targets. Restart with BLGMPI_SIZE=" << targets << endl;
 #endif 
 #ifdef HAVE_MPI
-    int rank;
     MPI_Comm_rank (MPI_COMM_WORLD, &rank);
     if (rank == 0) cout << "ERROR: MPI size does not match the number of targets. Restart with -np " << targets << endl;
 #endif
