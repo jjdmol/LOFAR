@@ -87,16 +87,11 @@ public:
   void select (const vector<int>& ant1, const vector<int>& ant2,
 	       int itsFirstChan, int itsLastChan);
 
-  // Set the time interval for which to read and predict.
-  void setTimeInterval (double intervalInSeconds);
-
-  // Reset the iterator.
-  void resetIterator();
-
-  // Advance the iterator.
-  // \returns false if at end of iteration.
+  // Start another time interval.
   // Hereafter getSolvableParmData can be called.
-  bool nextInterval (bool callReadPolcs = true);
+  // It returns false if the start value is outside the observation domain.
+  // Length is trimmed if beyond end of observation.
+  bool nextInterval (double start, double length, bool callReadPolcs = true);
 
   // Update the solvable parm values (reread from table).
   void updateSolvableParms();
@@ -208,19 +203,17 @@ private:
 
   casa::Matrix<int>           itsBLIndex;     //# baseline index of antenna pair
   MeqSourceList         itsSources;
-  casa::Vector<casa::Int>           itsPeelSourceNrs;
+  casa::Vector<int>     itsPeelSourceNrs;
   vector<MeqStation*>   itsStations;
   vector<MeqStatUVW*>   itsStatUVW;
   vector<MeqStatSources*> itsStatSrc;
   vector<MeqLofarStatSources*> itsLSSExpr; //# Lofar sources per station
   vector<MeqJonesExpr*> itsStatExpr;    //# Expression per station
-  vector<casa::MVBaseline>    itsBaselines;
+  vector<casa::MVBaseline>     itsBaselines;
   vector<MeqHist>       itsCelltHist;   //# Histogram of #cells in time
   vector<MeqHist>       itsCellfHist;   //# Histogram of #cells in freq
   vector<MeqJonesExpr*> itsExpr;        //# solve expression tree per baseline
   vector<MeqJonesExpr*> itsResExpr;     //# residual expr tree per baseline
-
-  double itsTimeInterval;
 
   double itsStartFreq;
   double itsEndFreq;
@@ -236,18 +229,18 @@ private:
 
   casa::Vector<int>    itsAnt1Data;         // Antenna 1 data
   casa::Vector<int>    itsAnt2Data;         // Antenna 2 data
-  int            itsNPol;             // Number of polarisations
+  int                  itsNPol;             // Number of polarisations
   casa::Vector<double> itsTimes;            // All times in MS
   casa::Vector<double> itsIntervals;        // All intervals in MS
   casa::Matrix<double> itsAntPos;           // All antenna positions
-  unsigned int   itsNrBl;             // Total number of unique baselines
+  unsigned int         itsNrBl;             // Total number of unique baselines
   casa::Matrix<bool>   itsBLSelection;      // Matrix to indicate which baselines are selected
-  vector<int>    itsSelAnt;           // The selected antennas
+  vector<int>    itsSelAnt;         // The selected antennas
 
-  unsigned int   itsTimeIndex;        // The index of the current time
-  unsigned int   itsNrTimes;          // The number of times in the time interval
-  MMap*          itsDataMap;          // Data file to map
-  bool           itsLockMappedMem;    // Lock memory immediately after mapping?
+  unsigned int   itsTimeIndex;      // The index of the current time
+  unsigned int   itsNrTimes;        // The number of times in the time interval
+  MMap*          itsDataMap;        // Data file to map
+  bool           itsLockMappedMem;  // Lock memory immediately after mapping?
 };
 
 } // namespace LOFAR

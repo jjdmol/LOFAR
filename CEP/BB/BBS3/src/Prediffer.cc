@@ -620,41 +620,13 @@ void Prediffer::initParms (const MeqDomain& domain, bool readPolcs)
 
 //----------------------------------------------------------------------
 //
-// ~setTimeInterval
-//
-// Set the time domain (interval) for which the solver will solve.
-// The predict could be on a smaller domain (but not larger) than
-// this domain.
-//
-//----------------------------------------------------------------------
-void Prediffer::setTimeInterval (double secInterval)
-{
-  LOG_INFO_STR("setTimeInterval = " << secInterval);
-  itsTimeInterval = secInterval;
-}
-
-//----------------------------------------------------------------------
-//
-// ~resetIterator
-//
-// Start iteration over time domains from the beginning.
-//
-//----------------------------------------------------------------------
-void Prediffer::resetIterator()
-{
-  LOG_TRACE_FLOW( "resetTimeIterator" );
-  itsTimeIndex = 0;
-}
-
-//----------------------------------------------------------------------
-//
 // ~nextInterval
 //
 // Move to the next interval (domain).
 // Set the request belonging to that.
 //
 //----------------------------------------------------------------------
-bool Prediffer::nextInterval(bool callReadPolcs)
+bool Prediffer::nextInterval(double start, double length, bool callReadPolcs)
 {
   NSTimer mapTimer;
   mapTimer.start();
@@ -662,31 +634,37 @@ bool Prediffer::nextInterval(bool callReadPolcs)
 
   cout << "BBSTest: EndOfInterval" << endl;
 
+  // Normally the times are in sequential order, so we can continue searching.
+  // Otherwise start the search at the start.
+  if (start < itsTimes[itsTimeIndex]) {
+    itsTimeIndex = 0;
+  }
+  // Find the time matching the start time.
+  while (itsTimeIndex < itsTimes.nelements()
+	 && start < itsTimes[itsTimeIndex] - itsIntervals[itsTimeIndex]/2) {
+    ++itsTimeIndex;
+  }
   // Exit when no more chunks.
   if (itsTimeIndex >= itsTimes.nelements()) {
     return false;
   }
-  cout << "BBSTest: BeginOfInterval" << endl;
   
-  double timeSize = 0;
-  double timeStart = 0;
-  double timeStep = 0;
+  cout << "BBSTest: BeginOfInterval" << endl;
+
+  // Find the end of the interval.
+  int startIndex = itsTimeIndex;
+  double startTime = itsTimes[itsTimeIndex] - itsIntervals[itsTimeIndex]/2;
+  double endTime = start + length;
   itsNrTimes = 0;
-  // Get the next chunk until the time interval size is exceeded.
-  while (timeSize < itsTimeInterval  &&  itsTimeIndex < itsTimes.nelements())
-  {
-      // If first time, calculate interval and start time.
-    if (timeStart == 0) {
-      timeStep  = itsIntervals[itsTimeIndex];
-      timeStart = itsTimes[itsTimeIndex] - timeStep/2;
-    }
-    timeSize += timeStep;
-    itsNrTimes++;
-    itsTimeIndex++;
+  while (itsTimeIndex < itsTimes.nelements()
+	 && endTime <= itsTimes[itsTimeIndex] + itsIntervals[itsTimeIndex]/2) {
+    ++itsTimeIndex;
+    ++itsNrTimes;
   }
+  endTime = itsTimes[itsTimeIndex-1] + itsIntervals[itsTimeIndex-1]/2;
   
   // Map the correct data subset (this time interval)
-  long long startOffset = (itsTimeIndex-itsNrTimes)*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
+  int64 startOffset = startIndex*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
   size_t nrBytes = itsNrTimes*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
   // Map this time interval
   itsDataMap->mapFile(startOffset, nrBytes); 
@@ -700,7 +678,7 @@ bool Prediffer::nextInterval(bool callReadPolcs)
 
   NSTimer parmTimer;
   parmTimer.start();
-  itsSolveDomain = MeqDomain(timeStart, timeStart + itsNrTimes*timeStep,
+  itsSolveDomain = MeqDomain(startTime, endTime,
 			     itsStartFreq + itsFirstChan*itsStepFreq,
 			     itsStartFreq + (itsLastChan+1)*itsStepFreq);
   initParms (itsSolveDomain, callReadPolcs);
@@ -1554,7 +1532,6 @@ void Prediffer::showSettings() const
   cout << "  msname:    " << itsMSName << endl;
   cout << "  mepname:   " << itsMEPName << endl;
   cout << "  gsmname:   " << itsGSMMEPName << endl;
-  cout << "  time interval: " << itsTimeInterval << endl;
   cout << "  solvparms: " << itsSolvableParms << endl;
   cout << "  stchan:    " << itsFirstChan << endl;
   cout << "  endchan:   " << itsLastChan << endl;
