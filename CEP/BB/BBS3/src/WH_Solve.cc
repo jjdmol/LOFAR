@@ -33,6 +33,8 @@
 #include <BBS3/Solver.h>
 #include <BBS3/ParmData.h>
 
+#include <Common/hexdump.h>
+
 namespace LOFAR
 {
 
@@ -57,6 +59,7 @@ WH_Solve::WH_Solve(const string& name, int nPrediffInputs)
   for (int i=0; i<itsNPrediffers; i++)
   {
     getDataManager().addInDataHolder(i+2, new DH_Prediff(name+"_in"));
+    getDataManager().setAutoTriggerIn(i+2, false);
   }
 
 }
@@ -116,16 +119,40 @@ void WH_Solve::process()
   Solver* solver = getSolver(contrID);
   DBGASSERTSTR(solver!=0, "The solver has not been created and initialized.");
 
-  if (wo->getNewDomain())         // New domain
+  if (wo->getNewDomain())         // New domain 
   {
-    setParmData(solver);
+     setParmData(solver);
+     readInputs(solver, false);   // Skip first read
   }
-
-  readInputs(solver);
+  else
+  {
+    readInputs(solver, true);     // Read inputs first
+  }
 
   Quality resultQuality;
   // Do the solve
+  // Do the solve.
+  vector<double> res = solver->getSolvableValues();
+  char strVal[20];
+  cout << "Before: [ " ;
+  for (unsigned int i = 0; i < res.size(); i++)
+  {
+    sprintf(strVal, "%1.10f ", res[i]);
+    cout << strVal << " ";
+  }
+  cout << " ]" << endl;
+
   solver->solve(wo->getUseSVD(), resultQuality);
+
+  // Do the solve.
+  res = solver->getSolvableValues();
+  cout << "After: [ ";
+  for (unsigned int i = 0; i < res.size(); i++)
+  {
+    sprintf(strVal, "%1.10f ", res[i]);
+    cout << strVal << " ";
+  }
+  cout << " ]" << endl;
 
   // Write result
   // Get solution dataholder DH_Solution* sol;
@@ -169,15 +196,34 @@ Solver* WH_Solve::getSolver(int id)
   }
 }
 
-void WH_Solve::readInputs(Solver* solver)
+void WH_Solve::readInputs(Solver* solver, bool firstRead)
 {
   LOG_TRACE_FLOW("WH_Solve::readInputs");
-  for (int i=1; i<=itsNPrediffers; i++)
+  bool more = false;
+  DH_Prediff* dh;
+  for (int i=0; i<itsNPrediffers; i++)
   {
-    DH_Prediff* dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i));
-    vector<uint32> shape = dh->getDataSize();
-    solver->setEquations(dh->getDataPtr(), shape[0],
-                         shape[1], shape[2], i);     // id = i or from prediffer?
+    if (firstRead)
+    {
+      dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i+2));
+      getDataManager().readyWithInHolder(i+2);  // Cause input to be read
+    }
+    do
+    {
+
+      dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i+2));
+      vector<uint32> shape = dh->getDataSize();
+      solver->setEquations(dh->getDataBuffer(), shape[2],
+			   shape[1]-1, shape[0], i);     // id = i or from prediffer?
+      more = dh->moreDataToCome();
+      cout << "***SetEquations with data timestamp: " << dh->getTimeStamp() << endl;
+      hexdump(dh->getDataBuffer(), shape[0]*shape[1]*shape[2]);
+      if (more)
+      {
+	getDataManager().readyWithInHolder(i+2);  // Cause input to be read
+      }
+    }
+    while (more);
   }
 }
 
@@ -185,13 +231,21 @@ void WH_Solve::setParmData(Solver* solver)
 {
   LOG_TRACE_FLOW("WH_Solve::readInputsAndSetParmData");
 
-  solver->initSolvableParmData(itsNPrediffers);
-
-  for (int i=1; i<=itsNPrediffers; i++)
+  solver->initSolvableParmData(itsNPrediffers); 
+  DH_Prediff* dh;
+  for (int i=0; i<itsNPrediffers; i++)
   {
-    DH_Prediff* dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i));
+    getDataManager().getInHolder(i+2);
+    getDataManager().readyWithInHolder(i+2);  // Causes data to be read
+    dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i+2));
     vector<ParmData> pData;
     dh->getParmData(pData);
+    cout << "***Setting parm data: [ ";
+    for (uint j=0; j<pData.size(); j++)
+    {
+      cout << pData[j].getValues() << " ";
+    }
+    cout << "]" << endl;
     solver->setSolvableParmData(pData, i);           // id = i or from prediffer?
   }
 }

@@ -7,5 +7,6 @@ ln -s /data/PSS3/diepen/BBS2/demo3_gsm.MEP /tmp/$USER.demo_gsm.MEP
 
 ./tPredSolv $USER /tmp/$USER.demo/demo demo demo_gsm
 status=$?
-\rm -rf /tmp/$USER.demo*
+#\rm -rf /tmp/$USER.demo*
 exit $status
+

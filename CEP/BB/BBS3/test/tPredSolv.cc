@@ -29,6 +29,14 @@
 #include <iomanip>
 #include <malloc.h>
 
+#include <Common/hexdump.h>
+
+#include <Common/BlobOStream.h>
+#include <Common/BlobIStream.h>
+#include <Common/BlobOBufChar.h>
+#include <Common/BlobIBufChar.h>
+
+
 using namespace LOFAR;
 using namespace std;
 
@@ -43,8 +51,9 @@ void doSolve (Prediffer& pre1, const vector<string>& solv)
   pre1.clearSolvableParms();
   pre1.setSolvableParms (solv, vector<string>(), true);
   // Set a domain.
-  ///  vector<uint32> shape = pre1.setDomain (137750000-250000, 2*500000,
-  vector<uint32> shape = pre1.setDomain (0., 1e12,
+  //    vector<uint32> shape = pre1.setDomain (137750000-250000, 2*500000,
+    vector<uint32> shape = pre1.setDomain (137750000-250000, 4*500000,
+  //vector<uint32> shape = pre1.setDomain (0., 1e12,
 					 0., 1e12);
   uint nrval = shape[0] * shape[1] * shape[2];
   uint bufnreq = shape[2];
@@ -56,7 +65,19 @@ void doSolve (Prediffer& pre1, const vector<string>& solv)
   // Get the ParmData from the Prediffer and send it to the solver.
   Solver solver;
   solver.initSolvableParmData (1);
-  solver.setSolvableParmData (pre1.getSolvableParmData(), 0);
+  vector<ParmData> pData = pre1.getSolvableParmData();
+  cout << "***Parm data: [ ";
+  for (uint j=0; j<pData.size(); j++)
+    {
+      cout << pData[j].getValues() << " ";
+    }
+  cout << "]" << endl;
+
+  solver.setSolvableParmData(pData, 0);
+
+  pre1.showSettings();
+
+    //  solver.setSolvableParmData (pre1.getSolvableParmData(), 0);
 
   // Get the equations from the prediffer and give them to the solver.
   for (uint i=0; i<nrloop; i++) {
@@ -68,6 +89,8 @@ void doSolve (Prediffer& pre1, const vector<string>& solv)
     } else {
       ASSERT (more);
     }
+    cout << "*** buffer " << i << " ***" << endl;
+    hexdump(buffer, nrval);
     solver.setEquations (buffer, nreq, shape[1]-1, shape[0], 0);
   }
 
@@ -165,6 +188,7 @@ int main (int argc, const char* argv[])
     }
     // Do a solve for RA using a few stations.
     {
+      cout << "Starting first test" << endl;
       vector<int> antVec(10);
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = 2*i;
@@ -182,6 +206,7 @@ int main (int argc, const char* argv[])
       solv[1] = "DEC.*";
       solv[2] = "StokesI.*";
       doSolve (pre1, solv);
+      cout << "End of first test" << endl;
     }
     // Do a solve using 2 prediffers.
     {
@@ -206,6 +231,7 @@ int main (int argc, const char* argv[])
       solv[2] = "StokesI.*";
       doSolve2 (pre1, pre2, solv);
     }
+
     // Do a solve using all stations.
     {
       vector<int> antVec(100);
@@ -220,6 +246,7 @@ int main (int argc, const char* argv[])
       solv[2] = "StokesI.*";
       doSolve (pre1, solv);
     }
+
   } catch (std::exception& x) {
     cerr << "Unexpected exception: " << x.what() << endl;
     return 1;

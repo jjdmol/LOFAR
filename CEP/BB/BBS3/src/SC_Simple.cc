@@ -84,8 +84,8 @@ bool SC_Simple::execute()
   // Set prediffer workorder data
   itsWOPD->setStatus(DH_WOPrediff::New);
   itsWOPD->setKSType("Prediff1");
-  itsWOPD->setStartFreq (itsArgs.getInt ("startFreq", 0));
-  itsWOPD->setFreqLength (itsArgs.getInt ("freqLength", 0));
+  itsWOPD->setStartFreq (itsArgs.getFloat ("startFreq", 0));
+  itsWOPD->setFreqLength (itsArgs.getFloat ("freqLength", 0));
   itsWOPD->setStartTime (itsCurStartTime);
   float timeLength = itsArgs.getFloat ("timeLength", 10);
   itsWOPD->setTimeLength (timeLength);
