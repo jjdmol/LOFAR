@@ -25,7 +25,8 @@ class UVPDataAtomHeader
 {
  public:
 
-  enum Correlation{XX=1,
+  enum Correlation{None=0,
+                   XX=1,
                    XY=2,
                    YX=3,
                    YY=4,
