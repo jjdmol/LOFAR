@@ -35,9 +35,9 @@ PACKAGES = \
          DMI \
          BaseSim \
          LOFARSim \
-         CEP/CPA/PSCF
+         CEP/CPA/PSCF \
          CEP/Demo/Platform/RingSim \
-         CEP/Tools/PerfTest/P2Perf \
+         CEP/Tools/PerfTest/P2Perf
 #
 # Find all variants to be built for this host (without possible domain).
 # There can be multiple lines (one for each compiler).
@@ -106,7 +106,7 @@ bootstrap:
 		&& $(RM) -rf $$pkg/build/$$variant \
 		&& mkdir -p $$pkg/build/$$variant \
 		&& cd $$pkg/build/$$variant \
-		&& ( $(LOFARDIR)/autoconf_share/lofarconf \
+		&& ( (test "X$(CONFIGURE)" = "Xno" || $(LOFARDIR)/autoconf_share/lofarconf ) \
 			&& make -k $(MAKE_OPTIONS) `cat makeoptions` \
 			|| echo ":::::: ERROR" ) \
 		&& echo \
