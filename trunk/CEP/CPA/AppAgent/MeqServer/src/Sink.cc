@@ -5,7 +5,7 @@
 #include <MEQ/Request.h>
 #include <MEQ/Result.h>
 
-namespace MEQ {
+namespace Meq {
 
 const HIID FOutputColumn = AidOutput|AidCol,
            FCorr         = AidCorr|AidIndex;
@@ -137,7 +137,7 @@ int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref,
   VisTile *ptile = 0;  // we will privatize the tile for writing as needed
   for( int ichild=0; ichild<numChildren(); ichild++ )
   {
-    FailWhen(flags[ichild]&RES_WAIT,"MEQ::Sink can't cope with a WAIT result code yet");
+    FailWhen(flags[ichild]&RES_WAIT,"Meq::Sink can't cope with a WAIT result code yet");
     int icol = output_cols[ichild], icorr = child_icorrs[ichild];
     if( icol >= 0 && icorr >= 0 )
     {

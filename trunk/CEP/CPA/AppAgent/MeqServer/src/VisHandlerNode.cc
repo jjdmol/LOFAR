@@ -2,7 +2,7 @@
 #include "AID-MeqServer.h"
 #include <MEQ/Cells.h>
 
-namespace MEQ {
+namespace Meq {
 
 InitDebugContext(VisHandlerNode,"MeqVisHandler");
   

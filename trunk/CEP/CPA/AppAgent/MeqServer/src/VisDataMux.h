@@ -6,14 +6,14 @@
     
 #pragma aid Station Index Tile Format
     
-namespace MEQ {
+namespace Meq {
 
 //##ModelId=3F98DAE503DA
 class VisDataMux
 {
   public:
     //##ModelId=3F9FF71B006A
-    VisDataMux (MEQ::Forest &frst);
+    VisDataMux (Meq::Forest &frst);
       
     //##ModelId=3FA1016000B0
     void init (const DataRecord &rec);
@@ -49,7 +49,7 @@ class VisDataMux
     std::vector<VisHandlerList> handlers_;
     
     //##ModelId=3F9FF71B004E
-    MEQ::Forest & forest_;
+    Meq::Forest & forest_;
  
     //  list of columns to be added to output tiles
     std::vector<int>     out_columns_;
@@ -57,6 +57,6 @@ class VisDataMux
     VisTile::Format::Ref out_format_;
 };
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif /* MEQSERVER_SRC_SPIGOTMUX_H_HEADER_INCLUDED_82375EEB */
