@@ -28,14 +28,13 @@
 
 //# GCF Includes
 #include <GCF/GCF_Task.h>
-#include <GCF/GCF_PropertySet.h>
+#include <GCF/GCF_Property.h>
 #include <boost/shared_ptr.hpp>
 
 #include "ARATestAnswer.h"
 
 // forward declaration
 class GCFEvent;
-
 namespace ARA
 {
   class ARATest;
@@ -73,16 +72,16 @@ namespace ARA
       
       ARATest&        m_tester;
       ARATestAnswer   m_answer;
-      GCFPort         m_RAtestPort;
+      GCFPort         m_RSPserver;
       
       int             m_test_passCounter;
       
-      GCFPropertySet m_psBP;
-      GCFPropertySet m_psRCUmaintenance;
-      GCFPropertySet m_psStationMaintenance;
-      GCFPropertySet m_psLDScommand;
-      GCFPropertySet m_psBoard1Alert;
-      GCFPropertySet m_psBoard1;
+      GCFProperty m_propAP1status;
+      GCFProperty m_propAP1RCUmaintenanceStatus;
+      GCFProperty m_propStationMaintenanceStatus;
+      GCFProperty m_propLDScommand;
+      GCFProperty m_propBoard1AlertStatus;
+      
   };  
 };
 

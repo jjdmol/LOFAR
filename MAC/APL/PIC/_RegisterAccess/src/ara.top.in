@@ -1,10 +1,13 @@
-
 [ARA]
+ARAtestRSPserver=ARATest:ARAtestRSPserver
+ARAtestRSPserver=ARATestDriver:ARAtestRSPserver
+
+[ARATest]
 #intentionally left empty: no SAP's
 
-[SS]
-client=PI:server
+[ARATestDriver]
+#intentionally left empty: no SAP's
 
-[PMLlite]
-client=SS:server
+[PML]
+client=PA:server
 

@@ -24,6 +24,12 @@
 #define ARAREGISTERACCESSTASK_H_
 
 #include <GCF/GCF_Control.h>
+#include <GCF/GCF_MyPropertySet.h>
+#include <GCF/GCF_Apc.h>
+#include <boost/shared_ptr.hpp>
+#include <map>
+
+#include "ARAAnswer.h"
 
 namespace ARA
 {
@@ -42,10 +48,10 @@ namespace ARA
       // state methods
       
       /**
-       * @return true if ready to transition to the enabled
+       * @return true if ready to transition to the connected
        * state.
        */
-      bool isEnabled();
+      bool isConnected();
       
       /**
        * The initial state. This state is used to connect the client
@@ -55,61 +61,77 @@ namespace ARA
       GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
       
       /**
-       * The enabled state. In this state the task can receive
+       * The myPropSetsLoaded state. In this state the propertysets are loaded and the task 
+       * waits for a client to connect
+       */
+      GCFEvent::TResult myPropSetsLoaded(GCFEvent& e, GCFPortInterface &p);
+
+      /**
+       * The myAPCsLoaded state. In this state the propertysets are loaded and the task 
+       * waits for a client to connect
+       */
+      GCFEvent::TResult APCsLoaded(GCFEvent& e, GCFPortInterface &p);
+
+      /**
+       * The connected state. In this state the task can receive
        * commands.
        */
-      GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
+      GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface &p);
     
     private:
       // action methods
       /**
-       * Handle the write register event
+       * Handle the update status event
        */
-      GCFEvent::TResult handleWriteRegister(GCFEvent& e, GCFPortInterface& port);
-      
-      /**
-       * Handle the read register event
-       */
-      GCFEvent::TResult handleReadRegister(GCFEvent& e, GCFPortInterface& port);
-
-      /**
-       * send the register value event
-       */
-      void sendRegisterValue(
-        GCFPortInterface& port, 
-        unsigned int board, 
-        unsigned int BP,
-        unsigned int AP,
-        unsigned int ETH,
-        unsigned int RCU, 
-        unsigned long value);
+      GCFEvent::TResult handleUpdStatus(GCFEvent& e, GCFPortInterface& port);
       
     private:
       // internal types
-      typedef struct
-      {
-        unsigned int          boardStatus;
-        vector<unsigned int>  BPStatus;
-        vector<unsigned int>  APStatus;
-        vector<unsigned int>  ETHStatus;
-        vector<unsigned int>  RCUStatus;
-      } TRSPStatus;
+      // gcf 3.1: needs specific apc's for every resource
+      // in gcf4.0, only the top level apc has to be loaded, and links to other
+      // apc's are in the apc's themselves
+      typedef map<string,boost::shared_ptr<GCFMyPropertySet> > TMyPropertySetMap;
+      typedef map<string,boost::shared_ptr<GCFApc> > TAPCMap;
       
       /**
-       * query the property sets and create an RSPStatus struct
+       * create propertyset object, add it to the map
        */
-      void readRegisterPropertySets(RegisterAccessTask::TRSPStatus& RSPStatus);
-      
+      void addMyPropertySet(const TPropertySet& propset,const char* scope);
+
       /**
-       * update the property sets with the current RSPStatus
+       * create apc object, add it to the map
        */
-      void writeRegisterPropertySets(RegisterAccessTask::TRSPStatus RSPStatus);
+      void addAPC(string apc,string scope);
+
+      /**
+       * update eth properties based on status bits
+       */
+      void updateETHproperties(string scope,unsigned int status);
+      /**
+       * update fpga properties based on status bits
+       */
+      void updateFPGAproperties(string scope,unsigned int status);
+      /**
+       * update rcu properties based on status bits
+       */
+      void updateRCUproperties(string scope,unsigned int status);
       
     private:
+    
       // member variables
+      ARAAnswer   m_answer;
+      
+      TMyPropertySetMap m_myPropertySetMap;
+      TAPCMap           m_APCMap;
+      
+      bool              m_myPropsLoaded;
+      unsigned long     m_myPropsLoadCounter;
+      bool              m_APCsLoaded;
+      unsigned long     m_APCsLoadCounter;
 
       // ports
-      GCFPort       m_testDriverServer;
+      static string     m_RSPserverName;
+      GCFPort           m_RSPclient;
 
   };
 
