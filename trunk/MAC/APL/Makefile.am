@@ -1,5 +1,6 @@
 SUBDIRS= \
   APLCommon \
+  GSO \
   PIC \
 	PAC \
   VIC

@@ -42,7 +42,7 @@
 using namespace GCF;
 using namespace std;
 
-const char SCOPE_VIC_VIStartDaemon[] = "VIC_VIStartDaemon";
+const char SCOPE_VIC_VIStartDaemon[] = "CCU1_VIC_VIStartDaemon";
 const char SCOPE_VIC_VI1[] = "VIC_VI1";
 
 
@@ -59,8 +59,8 @@ string AVITestDriverTask::m_taskName("AVITestDriver");
 AVITestDriverTask::AVITestDriverTask() :
   GCFTask((State)&AVITestDriverTask::initial, m_taskName),
   m_answer(),
-  m_extPropSetVISD(SCOPE_VIC_VIStartDaemon,StartDaemon::PSTYPE_STARTDAEMON.c_str(),&m_answer),
-  m_extPropSetVI1(SCOPE_VIC_VI1,"TAplVI",&m_answer)
+  m_extPropSetCCU1VISD(SCOPE_VIC_VIStartDaemon,StartDaemon::PSTYPE_STARTDAEMON.c_str(),&m_answer),
+  m_extPropSetVI1(SCOPE_VIC_VI1,"TAplVicVI",&m_answer)
 {
   m_answer.setTask(this);
 
@@ -79,7 +79,7 @@ GCFEvent::TResult AVITestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
   switch (event.signal)
   {
     case F_INIT:
-      m_extPropSetVISD.load();
+      m_extPropSetCCU1VISD.load();
       m_extPropSetVI1.load();
       TRAN(AVITestDriverTask::enabled);
       

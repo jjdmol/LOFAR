@@ -176,6 +176,44 @@ void MACScheduler::handlePropertySetAnswer(::GCFEvent& answer)
         {
           if(parameters.size()==1)
           {
+            string shareLocation = _getShareLocation();
+
+            try
+            {
+              // read the parameterset from the database:
+#ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
+              boost::shared_ptr<ACC::ParameterSet> ps(m_configurationManager->getPS(parameters[0], "latest");
+#else // ACC_CONFIGURATIONMGR_UNAVAILABLE
+              LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
+              // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
+              ACC::ParameterCollection pc(shareLocation + string("share/") + parameters[0]); // assume VIrootID is a file
+              boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
+              // End of soon to be obsolete code
+#endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+              
+              // get some parameters and write it to the allocated CCU
+              string allocatedCCU = ps->getString("allocatedCCU");
+              string viName = ps->getString("name");
+              string psFileName = string("/") + viName + string(".ps");
+              string psFilePath = shareLocation + string("mnt/") + allocatedCCU + string("/") + psFileName;
+              ps->writeFile(psFilePath);
+              
+              // send the schedule event to the VI-StartDaemon on the CCU
+              STARTDAEMONScheduleEvent sdScheduleEvent;
+              sdScheduleEvent.logicalDeviceType = LDTYPE_VIRTUALINSTRUMENT;
+              sdScheduleEvent.taskName = viName;
+              sdScheduleEvent.fileName = psFileName;
+              
+              TStringRemotePortMap::iterator it = m_VISDclientPorts.find(allocatedCCU);
+              if(it != m_VISDclientPorts.end())
+              {
+                it->second->send(sdScheduleEvent);
+              }
+            }
+            catch(Exception& e)
+            {
+              LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
+            }
           }
           else
           {
@@ -291,6 +329,21 @@ void MACScheduler::_disconnectedHandler(::GCFPortInterface& port)
   }
 }
 
+string MACScheduler::_getShareLocation() const
+{
+  string shareLocation("/home/lofar/MACTransport/");
+  GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
+  try
+  {
+    shareLocation = pParamSet->getString("shareLocation");
+  } 
+  catch(Exception& e)
+  {
+    LOG_WARN(formatString("(%s) Sharelocation parameter not found. Using /home/lofar/MACTransport/",e.message().c_str()));
+  }
+  return shareLocation;
+}
+
 ::GCFEvent::TResult MACScheduler::initial_state(::GCFEvent& event, ::GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
@@ -395,19 +448,12 @@ void MACScheduler::_disconnectedHandler(::GCFPortInterface& port)
     
     case SAS_SCHEDULE:
     {
-      string shareLocation("/home/lofar/MACTransport/");
-      GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
-      try
-      {
-        shareLocation = pParamSet->getString(MS_CONFIG_PREFIX + string("shareLocation"));
-      } 
-      catch(Exception& e)
-      {
-        LOG_WARN(formatString("Sharelocation parameter not found. Using %s",e.message().c_str(),shareLocation.c_str()));
-      }
-      
+      string shareLocation = _getShareLocation();
+            
       // schedule event received from SAS
       SASScheduleEvent sasScheduleEvent(event);
+      SASResponseEvent sasResponseEvent;
+      sasResponseEvent.result = SAS_RESULT_NO_ERROR;
       
       try
       {
@@ -417,7 +463,7 @@ void MACScheduler::_disconnectedHandler(::GCFPortInterface& port)
 #else // ACC_CONFIGURATIONMGR_UNAVAILABLE
         LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
         // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
-        ACC::ParameterCollection pc(sasScheduleEvent.VIrootID); // assume VIrootID is a file
+        ACC::ParameterCollection pc(shareLocation + string("share/") + sasScheduleEvent.VIrootID); // assume VIrootID is a file
         boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
         // End of soon to be obsolete code
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
@@ -425,8 +471,9 @@ void MACScheduler::_disconnectedHandler(::GCFPortInterface& port)
         // get some parameters and write it to the allocated CCU
         string allocatedCCU = ps->getString("allocatedCCU");
         string viName = ps->getString("name");
-        string psFileName = shareLocation + string("mnt/") + allocatedCCU;
-        ps->writeFile(psFileName);
+        string psFileName = string("/") + viName + string(".ps");
+        string psFilePath = shareLocation + string("mnt/") + allocatedCCU + string("/") + psFileName;
+        ps->writeFile(psFilePath);
         
         // send the schedule event to the VI-StartDaemon on the CCU
         STARTDAEMONScheduleEvent sdScheduleEvent;
@@ -439,11 +486,17 @@ void MACScheduler::_disconnectedHandler(::GCFPortInterface& port)
         {
           it->second->send(sdScheduleEvent);
         }
+        else
+        {
+          sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+        }        
       }
       catch(Exception& e)
       {
         LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
+        sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
       }
+      port.send(sasResponseEvent);      
       break;
     }
 
@@ -456,6 +509,13 @@ void MACScheduler::_disconnectedHandler(::GCFPortInterface& port)
       LOGICALDEVICEConnectedEvent connectedEvent;
       connectedEvent.result = LD_RESULT_NO_ERROR;
       port.send(connectedEvent);
+      break;
+    }
+    
+    case LOGICALDEVICE_SCHEDULED:
+    {
+      LOGICALDEVICEScheduledEvent scheduledEvent(event);
+      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(scheduledEvent.result));
       break;
     }
       

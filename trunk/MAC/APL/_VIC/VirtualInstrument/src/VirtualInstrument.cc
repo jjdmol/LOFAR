@@ -117,34 +117,41 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(::GCFEvent& answer)
         {
           if(strstr(pPropAnswer->pScope, it->second->getScope().c_str()) != 0)
           {
-            stringstream schedule;
-            schedule << "SCHEDULE ";
-            // SCHEDULE <sch.nr>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
-            //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
-            schedule << "1,";
-            schedule << "VT,";
-            schedule << it->first << ",";
-            
-            string childs = m_parameterSet.getString(it->first + string(".") + string("childs"));
-            vector<string> childsVector;
-            APLUtilities::string2Vector(childs,childsVector);
-            
-            schedule << childsVector[0] << ",";
-            schedule << childsVector[1] << ",";
-            time_t startTime = _decodeTimeParameter(m_parameterSet.getString(it->first + string(".") + string("startTime")));
-            schedule << startTime << ",";
-            time_t stopTime = _decodeTimeParameter(m_parameterSet.getString(it->first + string(".") + string("stopTime")));
-            schedule << stopTime << ",";
-            
-            schedule << m_parameterSet.getString(it->first + string(".") + string("frequency")) << ",";
-            schedule << m_parameterSet.getString(it->first + string(".") + string("subbands")) << ",";
-            schedule << m_parameterSet.getString(it->first + string(".") + string("directionType")) << ",";
-            schedule << m_parameterSet.getString(it->first + string(".") + string("angle1")) << ",";
-            schedule << m_parameterSet.getString(it->first + string(".") + string("angle2")) << ",";
-            
-            GCFPVString pvSchedule(schedule.str());
-            it->second->setValue("command",pvSchedule);
-            scheduleSent = true;
+            try
+            {
+              stringstream schedule;
+              schedule << "SCHEDULE ";
+              // SCHEDULE <sch.nr>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
+              //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
+              schedule << "1,";
+              schedule << "VT,";
+              schedule << it->first << ",";
+              
+              string childs = m_parameterSet.getString(it->first + string(".") + string("childs"));
+              vector<string> childsVector;
+              APLUtilities::string2Vector(childs,childsVector);
+              
+              schedule << childsVector[0] << ",";
+              schedule << childsVector[1] << ",";
+              time_t startTime = _decodeTimeParameter(m_parameterSet.getString(it->first + string(".") + string("startTime")));
+              schedule << startTime << ",";
+              time_t stopTime = _decodeTimeParameter(m_parameterSet.getString(it->first + string(".") + string("stopTime")));
+              schedule << stopTime << ",";
+              
+              schedule << m_parameterSet.getString(it->first + string(".") + string("frequency")) << ",";
+              schedule << m_parameterSet.getString(it->first + string(".") + string("subbands")) << ",";
+              schedule << m_parameterSet.getString(it->first + string(".") + string("directionType")) << ",";
+              schedule << m_parameterSet.getString(it->first + string(".") + string("angle1")) << ",";
+              schedule << m_parameterSet.getString(it->first + string(".") + string("angle2")) << ",";
+              
+              GCFPVString pvSchedule(schedule.str());
+              it->second->setValue("command",pvSchedule);
+              scheduleSent = true;
+            }
+            catch(Exception& e)
+            {
+              LOG_FATAL(e.message().c_str());
+            }
           }
           ++it;
         }

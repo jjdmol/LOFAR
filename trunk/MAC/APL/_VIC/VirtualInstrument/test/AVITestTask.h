@@ -78,7 +78,7 @@ namespace AVI
       int             m_test_passCounter;
       int             m_propsetLoadedCounter;
       
-      GCFExtPropertySet m_extPropSetVISD;
+      GCFExtPropertySet m_extPropSetCCU1VISD;
       GCFExtPropertySet m_extPropSetVI1;
       
   };  

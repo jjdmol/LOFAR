@@ -133,7 +133,6 @@ LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile
       PS_CAT_TEMPORARY,
       &m_propertySetAnswer));
   m_propertySet->enable();
-  LOG_TRACE_FLOW(formatString("LogicalDevice(%s)::LogicalDevice end",getName().c_str()));
 }
 
 
@@ -341,7 +340,8 @@ void LogicalDevice::handlePropertySetAnswer(::GCFEvent& answer)
 
 time_t LogicalDevice::_decodeTimeParameter(const string& timeStr) const
 {
-  time_t returnTime=time(0);
+  // specified times are in UTC, seconds since 1-1-1970
+  time_t returnTime=APLUtilities::getUTCtime();
   string::size_type plusPos = timeStr.find('+');
   if(plusPos != string::npos)
   {
@@ -359,7 +359,7 @@ void LogicalDevice::_schedule()
   //
   // set timers
   // specified times are in UTC, seconds since 1-1-1970
-  time_t timeNow = time(0);
+  time_t timeNow = APLUtilities::getUTCtime();
   time_t prepareTime = _decodeTimeParameter(m_parameterSet.getString("prepareTime"));
   time_t startTime   = _decodeTimeParameter(m_parameterSet.getString("startTime"));
   time_t stopTime    = _decodeTimeParameter(m_parameterSet.getString("stopTime"));
@@ -464,7 +464,7 @@ void LogicalDevice::_sendToAllChilds(::GCFEvent& event)
     }
     catch(Exception& e)
     {
-      LOG_FATAL(formatString("Fatal error while sending message to child %s: %s",it->first.c_str(),e.message().c_str()));
+      LOG_FATAL(formatString("(%s) Fatal error while sending message to child %s",e.message().c_str(),it->first.c_str()));
     }
     ++it;
   }
@@ -575,7 +575,6 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
       } 
       catch(Exception& e)
       {
-        LOG_WARN(formatString("retryTimeout parameter not found. Using %d",e.message().c_str(),retryTimeout));
       }
 
       // loop through the buffered events and try to send each one.
@@ -676,7 +675,7 @@ void LogicalDevice::_sendScheduleToClients()
       }
       catch(Exception& e)
       {
-        LOG_FATAL(formatString("Fatal error while scheduling child: %s",e.message().c_str()));
+        LOG_FATAL(formatString("(%s) Fatal error while scheduling child",e.message().c_str()));
       }
       ++it;
     }
@@ -704,7 +703,7 @@ void LogicalDevice::_sendScheduleToClients()
       }
       catch(Exception& e)
       {
-        LOG_FATAL(formatString("Fatal error while scheduling child: %s",e.message().c_str()));
+        LOG_FATAL(formatString("(%s) Fatal error while scheduling child",e.message().c_str()));
       }
       ++it;
     }
@@ -721,7 +720,7 @@ string LogicalDevice::_getShareLocation() const
   } 
   catch(Exception& e)
   {
-    LOG_WARN(formatString("Sharelocation parameter not found. Using /home/lofar/MACTransport/",e.message().c_str()));
+    LOG_WARN(formatString("(%s) Sharelocation parameter not found. Using /home/lofar/MACTransport/",e.message().c_str()));
   }
   return shareLocation;
 }
@@ -776,7 +775,7 @@ string LogicalDevice::_getShareLocation() const
         }
         catch(Exception& e)
         {
-          LOG_FATAL(formatString("Unable to create child %s",(*chIt).c_str()));
+          LOG_FATAL(formatString("(%s) Unable to create child %s",e.message().c_str(),(*chIt).c_str()));
         }
       }
       

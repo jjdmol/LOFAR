@@ -24,6 +24,7 @@
 #define AVTUtilities_H
 
 //# Includes
+#include <time.h>
 //# Common Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_vector.h>
@@ -52,6 +53,8 @@ class AVTUtilities
     static void decodeParameters(const string& parametersString, vector<string>& parameters); 
     static void decodeSubbandsParameter(const string& subbandsString, vector<int>& subbands);
     static void encodeParameters(const vector<string>& parameters,string& parameters);
+    
+    static time_t getUTCtime();
     
   protected:
     // protected copy constructor

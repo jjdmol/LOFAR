@@ -201,9 +201,7 @@ bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,co
   boost::posix_time::time_duration startDelay   = boost::posix_time::seconds(2*prepareDelayInt);
   boost::posix_time::time_duration stopDelay    = boost::posix_time::seconds(3*prepareDelayInt);
   
-  time_t timeNow = time(0);
-  struct tm* utcTimeStruct = gmtime(&timeNow);
-  time_t utcTime = mktime(utcTimeStruct);
+  time_t utcTime = AVTUtilities::getUTCtime();
   boost::posix_time::ptime curUTCtime   = boost::posix_time::from_time_t(utcTime);
   boost::posix_time::ptime startTime    = boost::posix_time::from_time_t(rawStartTime);
   boost::posix_time::ptime stopTime     = boost::posix_time::from_time_t(rawStopTime);
@@ -909,9 +907,7 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
               if(ldIt != m_logicalDeviceMap.end())
               {
                 // check begin time, if not yet begun, cancel timers and remove schedule
-                time_t timeNow = time(0);
-                struct tm* utcTimeStruct = gmtime(&timeNow);
-                time_t utcTime = mktime(utcTimeStruct);
+                time_t utcTime = AVTUtilities::getUTCtime();
                 boost::posix_time::ptime curUTCtime   = boost::posix_time::from_time_t(utcTime);
                 boost::posix_time::ptime startTime    = boost::posix_time::from_time_t(scheduleIt->second.startTime);
                 if(startTime > curUTCtime)
@@ -972,9 +968,7 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
             int rawStartTime = atoi(parameters[2].c_str()); // starttime
             int rawStopTime  = atoi(parameters[3].c_str()); // stoptime
             
-            time_t timeNow = time(0);
-            struct tm* utcTimeStruct = gmtime(&timeNow);
-            time_t utcTime = mktime(utcTimeStruct);
+            time_t utcTime = AVTUtilities::getUTCtime();
             boost::posix_time::ptime curUTCtime   = boost::posix_time::from_time_t(utcTime);
             boost::posix_time::ptime startTime    = boost::posix_time::from_time_t(rawStartTime);
             boost::posix_time::ptime stopTime     = boost::posix_time::from_time_t(rawStopTime);

@@ -24,6 +24,7 @@
 #define APLUtilities_H
 
 //# Includes
+#include <time.h>
 //# Common Includes
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
@@ -49,6 +50,7 @@ class APLUtilities
 
     static void decodeCommand(const string& commandString, string& command, vector<string>& parameters);
     static void string2Vector(const string& parametersString, vector<string>& parameters); 
+    static time_t getUTCtime();
     
   protected:
     // protected copy constructor

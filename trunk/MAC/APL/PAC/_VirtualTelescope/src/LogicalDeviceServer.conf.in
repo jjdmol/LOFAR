@@ -1,4 +1,6 @@
 mac.ns.AVTTest.BeamServer.type=TCP
+mac.ns.AVTTest.BeamServer.host=localhost
+mac.ns.AVTTest.BeamServer.port=27001
 mac.ns.AVTTestMAC2.timerPort.type=TCP
 mac.ns.LogicalDeviceScheduler.timerPort.type=TCP
 #mac.top.LogicalDeviceScheduler.BeamServer.remoteservice=ABS:client
