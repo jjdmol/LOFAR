@@ -29,6 +29,7 @@ namespace LOFAR
   {
     namespace Query
     {
+
       UnaryExprNode::UnaryExprNode(const std::string& oper, 
                                    const Expr& value) : 
         itsOperation(oper), 
@@ -42,7 +43,7 @@ namespace LOFAR
 
       void UnaryExprNode::print(std::ostream& os) const
       {
-        if (itsOperand.isNull()) return;
+        if (isNull()) return;
 //         os << "(";
         os << itsOperation;
         itsOperand.print(os);
@@ -52,6 +53,11 @@ namespace LOFAR
       Expr UnaryExprNode::getConstraint() const
       {
         return itsOperand.getConstraint();
+      }
+
+      bool UnaryExprNode::isNull() const
+      {
+        return itsOperand.isNull();
       }
 
     } // namespace Query
