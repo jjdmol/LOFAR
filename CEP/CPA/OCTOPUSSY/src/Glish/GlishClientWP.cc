@@ -37,7 +37,112 @@ GlishClientWP::~GlishClientWP()
     delete evsrc;
 }
 
+void GlishClientWP::init ()
+{
+  dprintf(2)("init: waiting for glish start event\n");
+  glish_started = False;
+  while( !glish_started )
+  {
+    GlishSysEvent event = evsrc->nextGlishEvent();
+    handleEvent(event);
+  }
+  dprintf(2)("init complete\n");
+}
 
+void GlishClientWP::handleEvent (GlishSysEvent &event)
+{
+  dprintf(2)("got event '%s'\n", event.type().c_str());
+  Bool result = True;       // AIPS++ Bool for event result
+
+  if( event.type() == "shutdown" ) // shutdown event
+  {
+    shutdown();
+  }
+  else 
+  {
+    try // catch all event processing exceptions
+    {
+      // all other events must carry a GlishRecord
+      FailWhen(event.valType() != GlishValue::RECORD,"event value not a record");
+      // get the record out and process stuff
+      GlishRecord rec = event.val();
+      GlishArray tmp;
+      if( event.type() == "start" )
+      {
+        FailWhen( glish_started,"unexpected start event" );
+        glish_started = True;
+      }
+      else if( event.type() == "subscribe" )
+      {
+        FailWhen( rec.nelements() != 2,"illegal event value" );
+        String idstr; int scope;
+        tmp = rec.get(0); tmp.get(idstr);
+        tmp = rec.get(1); tmp.get(scope);
+        HIID id(idstr);
+        FailWhen( !id.size(),"null HIID in subscribe" );
+        subscribe(id,scope);
+      }
+      else if( event.type() == "unsubscribe" )
+      {
+        FailWhen( rec.nelements() != 1,"illegal event value" );
+        String idstr; 
+        tmp = rec.get(0); tmp.get(idstr);
+        HIID id(idstr);
+        FailWhen( !id.size(),"null HIID in unsubscribe" );
+        unsubscribe(id);
+      }
+      else if( event.type() == "send" )
+      {
+        FailWhen(!glish_started,"got send event before start event");
+        String tostr; 
+        FailWhen(!rec.attributeExists("to"),"missing 'to' attribute");
+        tmp = rec.getAttribute("to"); tmp.get(tostr);
+        HIID to(tostr);
+        FailWhen(!to.size(),"bad 'to' attribute");
+        AtomicID wpi,process=AidLocal,host=AidLocal;
+        if( to.size() > 1 )  wpi = to[1];
+        if( to.size() > 2 )  process = to[2];
+        if( to.size() > 3 )  host = to[3];
+        MessageRef ref = glishRecToMessage(rec);
+        setState(ref->state());
+        dprintf(4)("sending message: %s\n",ref->sdebug(10).c_str());
+        send(ref,MsgAddress(to[0],wpi,process,host));
+      }
+      else if( event.type() == "publish" )
+      {
+        FailWhen(!glish_started,"got publish event before start event");
+        int scope;
+        FailWhen( !rec.attributeExists("scope"),"missing 'scope' attribute");
+        tmp = rec.getAttribute("scope"); tmp.get(scope);
+        MessageRef ref = glishRecToMessage(rec);
+        setState(ref->state());
+        dprintf(4)("publishing message: %s\n",ref->sdebug(10).c_str());
+        publish(ref,scope);
+      }
+      else if( event.type() == "log" )
+      {
+        FailWhen(!glish_started,"got log event before start event");
+        FailWhen( rec.nelements() != 3,"illegal event value" );
+        String msg,typestr; int level;
+        tmp = rec.get(0); tmp.get(msg);
+        tmp = rec.get(1); tmp.get(level);
+        tmp = rec.get(2); tmp.get(typestr);
+        AtomicID type(typestr);
+        log(msg,level,type);
+      }
+      else
+        Throw("unknown event");
+    } // end try 
+    catch ( std::exception &exc ) 
+    {
+      dprintf(1)("error processing glish event, ignoring: %s\n",exc.what());
+      result = False;
+    }
+  }
+  // if we fell through to here, return the reply
+  if( evsrc->replyPending() )
+    evsrc->reply(GlishArray(result));
+}
 
 //##ModelId=3CBA97E70232
 bool GlishClientWP::start ()
@@ -93,92 +198,7 @@ int GlishClientWP::input (int , int )
       }
       else   // else process the event
       {
-        dprintf(2)("got event '%s'\n", event.type().c_str());
-// oh fuck, thisreturns 0:
-//        GlishSysEventSource *src = event.glishSource();
-        GlishSysEventSource *src = evsrc;
-        Bool result = True; // AIPS++ Bool
-        
-        if( event.type() == "shutdown" ) // shutdown event
-        {
-          shutdown();
-        }
-        else 
-        {
-          try // catch all event processing exceptions
-          {
-            // all other events must carry a GlishRecord
-            FailWhen(event.valType() != GlishValue::RECORD,"event value not a record");
-            // get the record out and process stuff
-            GlishRecord rec = event.val();
-            GlishArray tmp;
-            if( event.type() == "subscribe" )
-            {
-              FailWhen( rec.nelements() != 2,"illegal event value" );
-              String idstr; int scope;
-              tmp = rec.get(0); tmp.get(idstr);
-              tmp = rec.get(1); tmp.get(scope);
-              HIID id(idstr);
-              FailWhen( !id.size(),"null HIID in subscribe" );
-              subscribe(id,scope);
-            }
-            else if( event.type() == "unsubscribe" )
-            {
-              FailWhen( rec.nelements() != 1,"illegal event value" );
-              String idstr; 
-              tmp = rec.get(0); tmp.get(idstr);
-              HIID id(idstr);
-              FailWhen( !id.size(),"null HIID in unsubscribe" );
-              unsubscribe(id);
-            }
-            else if( event.type() == "send" )
-            {
-              String tostr; 
-              FailWhen(!rec.attributeExists("to"),"missing 'to' attribute");
-              tmp = rec.getAttribute("to"); tmp.get(tostr);
-              HIID to(tostr);
-              FailWhen(!to.size(),"bad 'to' attribute");
-              AtomicID wpi,process=AidLocal,host=AidLocal;
-              if( to.size() > 1 )  wpi = to[1];
-              if( to.size() > 2 )  process = to[2];
-              if( to.size() > 3 )  host = to[3];
-              MessageRef ref = glishRecToMessage(rec);
-              setState(ref->state());
-              dprintf(4)("sending message: %s\n",ref->sdebug(10).c_str());
-              send(ref,MsgAddress(to[0],wpi,process,host));
-            }
-            else if( event.type() == "publish" )
-            {
-              int scope;
-              FailWhen( !rec.attributeExists("scope"),"missing 'scope' attribute");
-              tmp = rec.getAttribute("scope"); tmp.get(scope);
-              MessageRef ref = glishRecToMessage(rec);
-              setState(ref->state());
-              dprintf(4)("publishing message: %s\n",ref->sdebug(10).c_str());
-              publish(ref,scope);
-            }
-            else if( event.type() == "log" )
-            {
-              FailWhen( rec.nelements() != 3,"illegal event value" );
-              String msg,typestr; int level;
-              tmp = rec.get(0); tmp.get(msg);
-              tmp = rec.get(1); tmp.get(level);
-              tmp = rec.get(2); tmp.get(typestr);
-              AtomicID type(typestr);
-              log(msg,level,type);
-            }
-            else
-              Throw("unknown event");
-          } // end try 
-          catch ( std::exception &exc ) 
-          {
-            dprintf(1)("error processing glish event, ignoring: %s\n",exc.what());
-            result = False;
-          }
-        }
-        // if we fell through to here, return the reply
-        if( src->replyPending() )
-          src->reply(GlishArray(result));
+        handleEvent(event);
       } // end of event loop
   }
   return Message::ACCEPT;

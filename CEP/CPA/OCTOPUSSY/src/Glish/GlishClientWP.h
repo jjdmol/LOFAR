@@ -11,6 +11,7 @@
 #pragma aidgroup Glish
 #pragma aid GlishClientWP
 
+class GlishSysEvent;
 class GlishSysEventSource;
 class GlishRecord;
 
@@ -25,6 +26,7 @@ class GlishClientWP : public WorkProcess
     //##ModelId=3DB9369201C7
       ~GlishClientWP();
 
+      virtual void init ();
 
       //##ModelId=3CBA97E70232
       virtual bool start ();
@@ -80,6 +82,10 @@ class GlishClientWP : public WorkProcess
       // shuts down the link
     //##ModelId=3DB9369900E1
       void shutdown ();
+      
+      
+      void handleEvent (GlishSysEvent &event);
+      
   private:
     // Data Members for Class Attributes
 
@@ -92,7 +98,7 @@ class GlishClientWP : public WorkProcess
     // Additional Implementation Declarations
       // flag: have unprocessed events in the stream
     //##ModelId=3DB936920005
-      bool connected,has_events;
+      bool connected,glish_started,has_events;
       // tick of oldest unprocessed event
     //##ModelId=3DB936920146
       ulong evtick;

@@ -3,7 +3,7 @@ pragma include once
 
 include "note.g";
 
-octopussy := function (wpclass="",server="gloctopussy",options="",autoexit=T) 
+octopussy := function (wpclass="",server="./octoglish",options="",autoexit=T) 
 {
   self := [=];
   public := [=];
@@ -11,6 +11,7 @@ octopussy := function (wpclass="",server="gloctopussy",options="",autoexit=T)
   self.opClient := F;
   self.opClient::Died := T;
   self.state := 0;
+  self.started := F;
 
 # Private functions
 #------------------------------------------------------------------------------
@@ -75,7 +76,7 @@ octopussy := function (wpclass="",server="gloctopussy",options="",autoexit=T)
   
 # Public functions
 #------------------------------------------------------------------------------
-  const public.init := function (wpclass="",server="gloctopussy",options="") 
+  const public.init := function (wpclass="",server="",options="") 
   {
     wider self;
     if( is_boolean(self.opClient) || self.opClient::Died ) 
@@ -115,10 +116,27 @@ octopussy := function (wpclass="",server="gloctopussy",options="",autoexit=T)
     else
       fail 'unsubscribe() failed';
   }
+  
+  const public.start := function ()
+  {
+    wider self;
+    if( self.started  )
+      fail 'octopussy already started';
+    if( self.opClient->start([=]) )
+    {
+      self.started := T;
+      return T;
+    }
+    else
+      fail 'start() failed';
+  }
 
   const public.log := function (msg,type="normal",level=1)
   {
     wider self;
+    # check that we're started
+    if( !self.started )
+      fail 'octopussy not started';
     # set the type
     tp := to_lower(type);
     if( tp == "normal" )
@@ -143,6 +161,9 @@ octopussy := function (wpclass="",server="gloctopussy",options="",autoexit=T)
   const public.send := function (id,dest,rec=F,priority="normal",datablock=F,blockset=F)
   {
     wider self;
+    # check that we're started
+    if( !self.started )
+      fail 'octopussy not started';
     rec := self.makemsg(id,rec,priority,datablock,blockset);
     rec::to := dest;
     # send the event
@@ -154,9 +175,12 @@ octopussy := function (wpclass="",server="gloctopussy",options="",autoexit=T)
 
   const public.publish := function (id,rec=F,scope="global",priority="normal",datablock=F,blockset=F)
   {
+    wider self;
+    # check that we're started
+    if( !self.started )
+      fail 'octopussy not started';
     # set the scope
     print "publish: ",id,rec,scope;
-    wider self;
     sc := self.getscope(scope);
     if( is_fail(sc) )
       return sc;
@@ -174,6 +198,10 @@ octopussy := function (wpclass="",server="gloctopussy",options="",autoexit=T)
   const public.receive := function (autoexit=T)
   {
     wider self;
+    # check that we're started
+    if( !self.started )
+      fail 'octopussy not started';
+    # wait for message
     await self.opClient->receive,self.opClient->exit;
     if( $name == "receive " )
     {
@@ -214,6 +242,12 @@ octopussy := function (wpclass="",server="gloctopussy",options="",autoexit=T)
   {
     wider self;
     return !self.opClient::Died;
+  }
+  
+  const public.started := function ()
+  {
+    wider self;
+    return self.started;
   }
   
   res := public.init(wpclass,server=server,options=options);
