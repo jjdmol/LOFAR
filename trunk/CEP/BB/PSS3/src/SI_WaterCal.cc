@@ -20,26 +20,31 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <PSS3/SI_WaterCal.h>
 #include <Common/Debug.h>
-#include <PSS3/CalibratorOld.h>
+#include <Common/KeyValueMap.h>
+#include <PSS3/MeqCalibraterImpl.h>
 #include <unistd.h>
 
 namespace LOFAR
 {
 
-SI_WaterCal::SI_WaterCal(CalibratorOld* cal, int argSize, char* args)
+SI_WaterCal::SI_WaterCal(MeqCalibrater* cal, const KeyValueMap& args)
   : StrategyImpl(),
     itsCal(cal),
     itsCurIter(-1),
     itsInitialized(false),
     itsFirstCall(true)
 {
-  AssertStr(argSize == sizeof(WaterCal_data), "Incorrect argument list");
-  SI_WaterCal::WaterCal_data* pData = (SI_WaterCal::WaterCal_data*)args;
-  itsNIter = pData->nIter;
-  itsSourceNo = pData->sourceNo;
-  itsTimeInterval = pData->timeInterval;
+  itsNIter = args.getInt("nrIterations", 1);
+  itsSourceNo = args.getInt("source", 1);
+  itsTimeInterval = args.getFloat("timeInterval", 10.0);
+  itsStartChan = args.getInt("startChan", 0);
+  itsEndChan = args.getInt("endChan", 0);
+  itsAnt = (const_cast<KeyValueMap&>(args))["antennas"].getVecInt();
+
   TRACER1("Creating WaterCal strategy implementation with " 
 	  << "number of iterations = " << itsNIter << ", "
 	  << "source number = " << itsSourceNo << ", "
@@ -63,33 +68,31 @@ bool SI_WaterCal::execute(vector<string>& parmNames,
   {
     if (!itsInitialized)
     {
-      itsCal->Initialize();
-      itsCal->ShowSettings();
+      itsCal->select(itsAnt, itsAnt, itsStartChan, itsEndChan);
+      itsCal->setTimeInterval(itsTimeInterval);
+      itsCal->clearSolvableParms();
       itsInitialized = true;
     }
-    for (unsigned int i=0; i < parmNames.size(); i++)      // Add all parms
-    { 
-      itsCal->addSolvableParm(parmNames[i]);
-      TRACER1("SI_WaterCal::execute  Addding solvable parm " << parmNames[i]
-	      << " for source " << itsSourceNo);
-    }
-    itsCal->commitSolvableParms();
 
-    itsCal->clearPeelSources();
-    itsCal->addPeelSource(itsSourceNo);
+    vector<string> emptyP(0);
+    itsCal->setSolvableParms(parmNames, emptyP, true);
+
+    vector<int> emptyS;
+    vector<int> sources;
+    sources.push_back(itsSourceNo);
     vector<int>::const_iterator iter;
     for (iter = itsExtraPeelSrcs.begin(); iter!= itsExtraPeelSrcs.end(); iter++)
     {
       if (*iter != itsSourceNo)
       { 
-	itsCal->addPeelSource(*iter);
-	TRACER1("SI_WaterCal::execute : Adding an extra peel source " << *iter);
+	sources.push_back(*iter);
+	TRACER1("SI_Randomized::execute : Adding an extra peel source " << *iter);
       }
     }
-    itsCal->commitPeelSourcesAndMasks();
+    itsCal->peel(sources, emptyS);  
     
-    itsCal->resetTimeIntervalIterator();
-    itsCal->advanceTimeIntervalIterator();
+    itsCal->resetIterator();
+    itsCal->nextInterval();
     TRACER1("Next interval");
    
     itsFirstCall = false;
@@ -99,7 +102,7 @@ bool SI_WaterCal::execute(vector<string>& parmNames,
   if (++itsCurIter >= itsNIter)          // Next iteration
   {                                      // Finished with all iterations
     TRACER1("Next interval");
-    if (itsCal->advanceTimeIntervalIterator() == false) // Next time interval
+    if (itsCal->nextInterval() == false) // Next time interval
     {                                    // Finished with all time intervals
       itsCurIter = -1;
       itsInitialized = false;
@@ -113,11 +116,11 @@ bool SI_WaterCal::execute(vector<string>& parmNames,
   TRACER1("Solve for source = " << itsSourceNo  
 	  << " iteration = " << itsCurIter << " of " << itsNIter);
 
-  itsCal->Run(resultParmNames, resultParmValues, resultQuality);
+  itsCal->solve(false, resultParmNames, resultParmValues, resultQuality);
   //  itsCal->SubtractOptimizedSources();
   // itsCal->showCurrentParms ();
 
-  itsCal->CommitOptimizedParameters();
+  itsCal->saveParms();
   resultIterNo = itsCurIter;
   return true;
 }
@@ -129,23 +132,21 @@ bool SI_WaterCal::useParms (const vector<string>& parmNames,
   AssertStr(itsCal != 0, 
 	    "Calibrator pointer not set for this watercal strategy");
 
-  itsCal->Initialize();
+  itsCal->select(itsAnt, itsAnt, itsStartChan, itsEndChan);
+  itsCal->setTimeInterval(itsTimeInterval);
+  itsCal->clearSolvableParms();
   itsInitialized = true;
   //itsCal->ShowSettings();
-  itsCal->resetTimeIntervalIterator();
-  itsCal->advanceTimeIntervalIterator();
+  itsCal->resetIterator();
+  itsCal->nextInterval();
 
   itsCal->setParmValues(parmNames, parmValues);
 
-  for (vector<string>::const_iterator iter = parmNames.begin();
-       iter != parmNames.end(); iter++)        // Add all parms
-  { 
-    itsCal->addSolvableParm(*iter);
-    TRACER1("SI_WaterCal::useParms  Addding solvable parm " << *iter);
-  }
-  itsCal->commitSolvableParms();
+  vector<string> emptyP(0);
+  itsCal->setSolvableParms(const_cast<vector<string>&>(parmNames), 
+                           emptyP, true); // Add all parms
 
-  itsCal->commitAllSolvableParameters();         // save values in parm table
+  itsCal->saveParms();                               // save values in parm table
 
   itsCal->clearSolvableParms();
 

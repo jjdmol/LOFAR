@@ -23,7 +23,6 @@
 #ifndef PSS3_SI_RANDOMIZED_H
 #define PSS3_SI_RANDOMIZED_H
 
-#include <lofar_config.h>
 
 //# Includes
 #include <PSS3/StrategyImpl.h>
@@ -33,22 +32,24 @@ namespace LOFAR
 {
 
 //# Forward Declarations
-
+  class KeyValueMap;
 // This is a class which implements the Randomized strategy.
 // This strategy solves all parameters for a source and can take into 
 // account a parameters found for another source
+// Arguments for the SI_Randomized class:
+//   A KeyValueMap containing the following keys:
+//    - nrIterations  integer
+//    - timeInterval  float
+//    - source        integer
+//    - startChan       integer
+//    - endChan         integer
+//    - antennas        vector<int>
 
 class SI_Randomized : public StrategyImpl
 {
 public:
 
- typedef struct {       // Struct containing data specific
-   int    nIter;        // for Randomized strategy
-   int    sourceNo;
-   double timeInterval;
- }Randomized_data;
-
-  SI_Randomized(CalibratorOld* cal, int argSize, char* args);
+  SI_Randomized(MeqCalibrater* cal, const KeyValueMap& args);
 
   virtual ~SI_Randomized();
 
@@ -71,9 +72,12 @@ public:
   SI_Randomized(const SI_Randomized&);
   SI_Randomized& operator=(const SI_Randomized&);
 
-  CalibratorOld*    itsCal;             // The calibrator
+  MeqCalibrater* itsCal;             // The calibrator
   int            itsNIter;           // Number of iterations
   double         itsTimeInterval;    // Time interval for which to solve
+  int            itsStartChan;
+  int            itsEndChan;
+  vector<int>    itsAnt;
   int            itsCurIter;         // The current iteration
   int            itsSourceNo;        // The current source
   bool           itsInitialized;     // Has initialization taken place?

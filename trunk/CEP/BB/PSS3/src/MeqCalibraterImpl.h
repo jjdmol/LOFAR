@@ -23,19 +23,14 @@
 #ifndef BB_PSS3_MEQCALIBRATER_H
 #define BB_PSS3_MEQCALIBRATER_H
 
-#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Fitting/LSQaips.h>
-#include <ms/MeasurementSets/MSMainColumns.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Quanta/MVBaseline.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableIter.h>
 #include <casa/BasicSL/String.h>
 #include <casa/aips.h>
-#include <tasking/Glish/GlishArray.h>
 #include <tasking/Glish/GlishRecord.h>
-#include <tasking/Glish/GlishValue.h>
 
 #include <PSS3/MNS/MeqDomain.h>
 #include <PSS3/MNS/MeqHist.h>
@@ -52,8 +47,13 @@
 #include <PSS3/MNS/ParmTable.h>
 #include <PSS3/Quality.h>
 
+#include <Common/LofarTypes.h>
+
 namespace LOFAR
 {
+
+  //# Forward Declarations
+  class MMap;
 
 /*!
  * Class to perform self-calibration on a MeasurementSet using the
@@ -81,12 +81,9 @@ public:
 		 const String& dbHost,
 		 const String& dbPwd,
 		 uInt ddid,
-		 const Vector<Int>& ant1,
-		 const Vector<Int>& ant2,
+		 const vector<int>& ant,
 		 const String& modelType,
-		 Bool calcUVW,
-		 const String& dataColName,
-		 const String& residualColName);
+		 Bool calcUVW);
 
   //! Destructor
   ~MeqCalibrater();
@@ -113,15 +110,12 @@ public:
    * Make specific parameters solvable (isSolvable = True) or
    * non-solvable (False).
    */
-  void setSolvableParms (Vector<String>& parmPatterns, 
-			 Vector<String>& excludePatterns,
-			 Bool isSolvable);
-
-  //! Predict visibilities for the current domain and store in column
-  void predict(const String& modelDataColName);
-  
+  void setSolvableParms (vector<string>& parms, 
+			 vector<string>& excludePatterns,
+			 bool isSolvable);
+ 
   /*!
-   * Solve for the data in the itsSolveColName column in the current domain.
+   * Solve for the data in the current domain.
    * \returns Returns fit value to indicate fitness of the solution and
    * updates the parameters for which to solve.
    */
@@ -147,13 +141,6 @@ public:
    * the results from the itsSolveColName column.
    */
   void saveResidualData();
-
-  /*!
-   * Get the residual data.
-   * It does a predict for the sources to be peeled off and subtracts
-   * the results from the itsSolveColName column.
-   */
-  GlishRecord getResidualData();
 
   /*!
    * Get info about the parameters whose name matches one of the parameter
@@ -184,21 +171,14 @@ public:
   /*!
    * Set the source numbers to use in this peel step.
    */
-  Bool peel (const Vector<int>& peelSourceNrs,
-	     const Vector<Int>& extraSourceNrs);
+  bool peel (const vector<int>& peelSources,
+	     const vector<int>& extraSources);
 
   /*!
    * Make a selection of the MS to be used in the domain iteration.
-   * The 'where' string selects the rows.
-   * itsLastChan<0 means until the last channel.
    */
-  Int select(const String& where, int itsFirstChan, int itsLastChan);
-
-  /*!
-   * Make a selection of the MS to be used in the solve.
-   * The 'where' string selects the rows.
-   */
-  Int solveselect(const String& where);
+  void select(const vector<int>& ant1, const vector<int>& ant2,
+	      int itsFirstChan, int itsLastChan);
 
   /*!
    * Return some statistics (optionally detailed (i.e. per baseline)).
@@ -232,6 +212,10 @@ public:
   int getNrChan() const
     { return itsNrChan; }
 
+  void showSettings() const;
+
+  void showParmValues();
+
 private:
   /**
    * \defgroup DisallowedContructors Dissallowed constructors.
@@ -241,20 +225,20 @@ private:
   MeqCalibrater& operator=(const MeqCalibrater& other);
   /*@}*/
 
+  // Get measurement set description from file
+  void readDescriptiveData(const string& fileName);
+
   //! initialize all parameters in the MeqExpr tree for the current domain
   void initParms    (const MeqDomain& domain, bool callReadPocs);
 
   //! Get the phase reference position of the first field.
-  void getPhaseRef  ();
-
-  //! Get the frequency info of the given data desc (spectral window).
-  void getFreq      (int ddid);
+  void getPhaseRef  (double ra, double dec, double startTime);
 
   //! Get the station info (position and name).
-  void fillStations (const Vector<int>& ant1, const Vector<int>& ant2);
+  void fillStations (const vector<unsigned int>& ant1, const vector<unsigned int>& ant2);
 
   //! Get all baseline info.
-  void fillBaselines(const Vector<int>& ant1, const Vector<int>& ant2);
+  void fillBaselines(const vector<unsigned int>& ant1, const vector<unsigned int>& ant2);
 
   //! Fill all UVW coordinates if they are not calculated.
   void fillUVW();
@@ -274,16 +258,13 @@ private:
    * \defgroup PrivVariable Private variables
    */
   /*@{*/
-  MeasurementSet        itsMS;          //# MS as given
-  ROMSMainColumns       itsMSCol;
-  Table                 itsSelMS;       //# Selected rows from MS
+  string                itsMSName;      // Measurement set name
+  string                itsMEPName;     // Common parmtable name
   ParmTable             itsMEP;         //# Common parmtable
+  string                itsGSMMEPName;  // GSM parameters parmtable name
   ParmTable             itsGSMMEP;      //# parmtable for GSM parameters
   bool                  itsCalcUVW;
 
-  Vector<uInt>          itsCurRows;     //# Rows in the current iter step
-  Vector<uInt>          itsSolveRows;   //# Rows to use in solve function
-  TableIterator         itsIter;        //# Iterator on selected part of MS
   int                   itsFirstChan;   //# first channel selected
   int                   itsLastChan;    //# last channel selected
 
@@ -311,10 +292,7 @@ private:
   double itsStepFreq;
   int    itsNrChan;
 
-  String itsDataColName;                //# column containing data
-  String itsResColName;                 //# column to store residuals in
-  String itsSolveColName;               //# column to be used in solve
-                                        //# (is dataColName or resColName)
+  string itsSolveFileName;              //# Data file used in solve (.dat or .res)
 
   LSQaips      itsSolver;
   int          itsNrScid;               //# Nr of solvable parameter coeff.
@@ -324,6 +302,23 @@ private:
   vector<complex<double> > itsDeriv;    //# derivatives of predict
   
   Quality itsSol;                       //# Solution quality
+
+  Vector<String> itsSolvableParms;     // Solvable parameters
+
+  Vector<int>    itsAnt1Data;          // Antenna 1 data
+  Vector<int>    itsAnt2Data;          // Antenna 2 data
+  int            itsNPol;              // Number of polarisations
+  Vector<double> itsTimes;             // All times in MS
+  Vector<double> itsIntervals;         // All intervals in MS
+  Matrix<double> itsAntPos;            // All antenna positions
+  unsigned int   itsNrBl;              // Total number of unique baselines
+  Matrix<bool>   itsBLSelection;       // Matrix to indicate which baselines are selected
+  vector<int>    itsSelAnt;            // The selected antennas
+
+
+  unsigned int   itsTimeIndex;         // The index of the current time
+  unsigned int   itsNrTimes;           // The number of times in the time interval
+  MMap*          itsDataMap;           // Data file to map
 
   /*@}*/
 };

@@ -23,8 +23,6 @@
 #ifndef PSS3_QUALITY_H
 #define PSS3_QUALITY_H
 
-#include <lofar_config.h>
-
 //# Includes
 #include <Common/lofar_iostream.h>
 

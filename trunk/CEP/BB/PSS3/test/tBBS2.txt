@@ -1,0 +1,44 @@
+How to use tBBS2
+----------------
+
+tBBS2 is the program to perform tBBS2 tests.
+It accepts 2 parameters:
+ 1. Name of the input file containing the BB settings keyvalue-map.
+ 2. Optional nrIterations (defaults to 1).
+nrIterations is added to the keyvalue-map if the map does not contain
+that parameter. In this way the same input file can be used with
+different nrIterations settings.
+
+Usually the program is not run directly.
+The script tBBS2.sh runs all BBS2 tests in succession. Currently 9 are
+defined, but more will be added. The test parameters can be shown by:
+  head -14 tBBS2.test*[0-9]
+Those files contain the keyvalue-map for each test.
+
+tBBS2 assumes that all data files, scripts, etc. can be found.
+In the build/variant/test directory one can achieve that by doing:
+  ../../../test/tBBS2.init
+It creates a tBBS2_tmp directory and makes symlinks in it to the data
+files and scripts used. Note that the data files are taken from
+/data/PPS3/diepen/BBS2.
+Thereafter you should do
+  cd tBBS2_tmp
+after which you can run tBBS2.sh by
+  ./tBBS2.sh [nriter]
+default nriter=1.
+Each test in the run generates an output file testn.out, where n is
+the test number (1,2,...). It contains the settings, the parameter
+values after each iteration, and various timings (wall-clock using
+John's NSTimer class).
+
+The current tests use AIPS++ tables for the parameter tables.
+It should be straightforward to add tests using database tables.
+
+
+The BB/PSS3 code is in the branch ER_148_development.
+Note you might also need to update and build LCS/Common to get the
+NSTimer class and updates to KeyValue.cc.
+It uses file prepareBBD2 in the src directory. Unfortunately I have
+forgotten to set the correct permissions for it, so you have to do
+  chmod 755 src/prepareBBD2
+after checking out or updating the code.

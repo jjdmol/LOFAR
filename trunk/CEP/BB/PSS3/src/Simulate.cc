@@ -28,7 +28,6 @@
 #include <Common/lofar_iostream.h>
 #include <Common/Debug.h>
 #include <PSS3/BlackBoardDemo.h>
-#include <PSS3/TryOut.h>
 
 #ifdef HAVE_MPI
 #include <mpi.h>
@@ -51,7 +50,8 @@ int main (int argc, const char** argv)
   try {
     // To try out different (serial) experiments without the CEP
     // framework, use following two statements:
-    //    TryOut (); return 0;
+    INIT_LOGGER("BlackboardDemo.log_prop");
+
     BlackBoardDemo simulator;
 
     // Set trace level.
@@ -59,18 +59,64 @@ int main (int argc, const char** argv)
 
     simulator.setarg (argc, argv);
 
-    simulator.baseDefine();
-    simulator.baseRun(3);
+    // **** Set Knowledge Source parameters ****
+    KeyValueMap KSparams;
+    KSparams["MSName"] = "/data/meijeren/10Sources/demo10-"; // Name of the Measurement Set
+                                                   // Currently each KS takes its own MS: KS1 takes <MSName>1
+                                                   // (here: demo10-1,) KS3 takes <MSName>3 (demo10-3) etc.
+    KSparams["DBHost"] = string("dop50");          // Parameter database host name
+    KSparams["DBType"] = string("postgres");       // Parameter database type
+    KSparams["DBName"] = string("meijeren");       // Parameter database name
+    KSparams["DBPwd"] = string("");                // Parameter database password
+    KSparams["meqTableName"] = string("meqmodel"); // Meq model table name *       
+    KSparams["skyTableName"] = string("skymodel"); // Sky model table name *
+                                                   // * each KS takes its own table: KS1 takes <meqTableName>1
+                                                   // (meqmodel1) and KS4 takes <skyTableName>3 (skymodel3)
+
+    // **** Set Control parameters ****
+    KeyValueMap CTRLparams;
+    CTRLparams["strategy"] = string("Simple");    // Strategy name
+    vector<string> pNames(9);
+    pNames[0] = "StokesI.CP1";
+    pNames[1] = "RA.CP1";
+    pNames[2] = "DEC.CP1";
+    pNames[3] = "StokesI.CP2";
+    pNames[4] = "RA.CP2";
+    pNames[5] = "DEC.CP2";
+    pNames[6] = "StokesI.CP3";
+    pNames[7] = "RA.CP3";
+    pNames[8] = "DEC.CP3";
+    CTRLparams["solvableParams"] = pNames;        // Solvable parameter names
+      // Set strategy parameters
+      KeyValueMap STRATparams;
+      STRATparams["nrIterations"] = 3;               // Number of iterations
+      STRATparams["timeInterval"] = float(10.0);     // Time interval 
+      vector<int> antNumbers;
+      for (int i = 0; i <=20; i++)
+      {
+        antNumbers.push_back(i*4);
+      }
+      STRATparams["antennas"] = antNumbers;          // Baselines for which to solve
+      STRATparams["startChan"] = 0;                  // Start (frequency) channel
+      STRATparams["endChan"] = 0;                    // End (frequency) channel
+      vector<int> srcNumbers(3);
+      srcNumbers[0] = 1;
+      srcNumbers[1] = 2;
+      srcNumbers[2] = 3;    
+      STRATparams["sources"] = srcNumbers;           // Solvable source numbers 
+    CTRLparams["STRATparams"] = STRATparams;   
+
+    // Create a KeyValueMap containing all parameter KeyValueMaps
+    KeyValueMap params;
+    params["nrKS"] = 1;                       // Number of Knowledge Sources
+    params["BBDBname"] = string("meijeren");  // BlackBoard database name (must be a postgres database on dop50)
+    params["KSparams"] = KSparams;
+    params["CTRLparams"] = CTRLparams;
+
+    simulator.baseDefine(params);
+    simulator.baseRun(1);
     simulator.baseQuit();
 
-
-//     try {
-//       LOFAR::SimulatorParse::parse (simulator);
-//     }
-//     catch (LOFAR::SimulatorParseError x) {
-	    
-//       cout << x.what() << endl;        
-//     }
   }
   catch (LOFAR::Exception& e)
   {

@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <PSS3/StrategyImpl.h>
 #include <Common/Debug.h>
 

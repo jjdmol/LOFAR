@@ -26,20 +26,19 @@
 #ifndef PSS3_WH_PSS3_H
 #define PSS3_WH_PSS3_H
 
-#include <lofar_config.h>
-
 #include <Common/lofar_vector.h>
+#include <Common/KeyValueMap.h>
 #include <tinyCEP/WorkHolder.h>
 
 namespace LOFAR
 {
 
 class DH_Solution;
-class CalibratorOld;
+class MeqCalibrater;
 
 /**
    This workholder acts as a knowledge source in the black board.
-   It contains a Calibrator object for calibration. 
+   It contains a MeqCalibrater object for calibration. 
 */
 
 class WH_PSS3: public LOFAR::WorkHolder
@@ -48,15 +47,8 @@ public:
   /// Construct the work holder and give it a name.
 /*   explicit WH_PSS3(const string& name, bool outputAllIter, int number); */
 
-  explicit WH_PSS3(const string& name, const string& msName,
-		   const string& meqModel, const string& skyModel,
-		   const string& dbType, const string& dbName,
-		   const string& dbHost,
-		   const string& dbPwd, unsigned int ddid, 
-		   const string& modelType, bool calcUVW, 
-		   const string& dataColName,
-		   const string& residualColName, bool outputAllIter,
-		   int number);
+  explicit WH_PSS3(const string& name, string nr, int id, 
+		   const KeyValueMap& args);
 
   virtual ~WH_PSS3();
 
@@ -88,26 +80,17 @@ private:
   // Get the source numbers from the parameter names
   void getSourceNumbersFromNames(vector<string>& names, vector<int>& srcNumbers) const;
 
-  CalibratorOld* itsCal;
-  string itsMSName;
-  string itsMeqModel;
-  string itsSkyModel;
-  string itsDbType;
-  string itsDbName;
-  string itsDbHost;
-  string itsDbPwd;
+  MeqCalibrater* itsCal;
   unsigned int itsDDID;
-  vector<int> itsAnt1;        // Aips vector type for antenna numbers
-  vector<int> itsAnt2;        // Aips vector type for antenna numbers
   string itsModelType;
-  bool itsCalcUVW;
   string itsDataColName;
   string itsResidualColName;
 
   bool itsOutputAllIter;     // Send the results of all iterations to the
                              // database
-  int itsNumber;      // Temporary: used for unique output
-
+  string itsNr;              // Number of Knowledge Source
+  int itsIden;               // Temporary: used for unique output
+  KeyValueMap itsArgs;
 };
 
 } // namespace LOFAR

@@ -23,8 +23,6 @@
 #ifndef PSS3_SI_PEELING_H
 #define PSS3_SI_PEELING_H
 
-#include <lofar_config.h>
-
 //# Includes
 #include <PSS3/StrategyImpl.h>
 #include <Common/lofar_string.h>
@@ -33,24 +31,27 @@ namespace LOFAR
 {
 
 //# Forward Declarations
+class KeyValueMap;
 
 // This is a class which implements the peeling strategy.
 // This strategy solves for a number of sources. It starts with solving all 
 // parameters of one source (all iterations and intervals) and then moves 
 // on to the next source.
+// Arguments for the SI_Peeling class:
+//   A KeyValueMap containing the following keys:
+//    - nrIterations   integer
+//    - timeInterval   float
+//    - nrSources      integer
+//    - startSource    integer
+//    - startChan       integer
+//    - endChan         integer
+//    - antennas        vector<int>
 
 class SI_Peeling : public StrategyImpl
 {
 public:
 
- typedef struct {       // Struct containing data specific for peeling strategy
-   int    nIter;
-   int    nSources;
-   int    startSource;
-   double timeInterval;
- }Peeling_data;
-
-  SI_Peeling(CalibratorOld* cal, int argSize, char* args);
+  SI_Peeling(MeqCalibrater* cal, const KeyValueMap& args);
 
   virtual ~SI_Peeling();
 
@@ -73,10 +74,13 @@ public:
   void splitVector(vector<string>& allParams, vector<string>& params,
 		   vector<string>& srcParams) const;
 
-  CalibratorOld* itsCal;             // The calibrator
+  MeqCalibrater* itsCal;             // The calibrator
   int            itsNIter;           // Number of iterations
   int            itsNSources;        // Number of sources for which to solve
   double         itsTimeInterval;    // Time interval for which to solve
+  int            itsStartChan;
+  int            itsEndChan;
+  vector<int>    itsAnt;
   int            itsCurIter;         // The current iteration
   int            itsStartSource;     // Start source number
   int            itsCurSource;       // The current source

@@ -23,6 +23,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.h>
 
 #include <PSS3/DH_Solution.h>
 #include <PL/TPersistentObject.h>
@@ -45,7 +46,7 @@ string dtos(double dbl) // Convert double to string
 }
 
 DH_Solution::DH_Solution (const string& name)
-  : DH_PL           (name, "DH_Solution"),
+  : DH_PL           (name, "DH_Solution", 1),
     itsID           (0),
     itsWOID         (0),
     itsIteration    (0),
@@ -317,7 +318,6 @@ void DBRep<DH_Solution>::toDBRep (const DH_Solution& obj)
 
 //# Force the instantiation of the templates.
 template class TPersistentObject<DH_Solution>;
-template class DBRep<DH_Solution>;
 
 }  // end namespace PL
 

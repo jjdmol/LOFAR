@@ -26,9 +26,9 @@
 #ifndef PSS3_WH_EVALUATE_H
 #define PSS3_WH_EVALUATE_H
 
-#include <lofar_config.h>
 #include <Common/lofar_vector.h>
 #include <tinyCEP/WorkHolder.h>
+#include <Common/KeyValueMap.h>
 
 namespace LOFAR
 {
@@ -44,8 +44,8 @@ public:
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  explicit WH_Evaluate (const string& name="aWH_Evaluate",
-			const int     NrKS=1);
+  explicit WH_Evaluate (const string& name,
+			const KeyValueMap& args);
 
   virtual ~WH_Evaluate();
 
@@ -54,7 +54,7 @@ public:
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, 
-				const int NrKS);
+				const KeyValueMap& args);
 
   /// Do a process step.
   virtual void process();
@@ -84,6 +84,8 @@ private:
                                   // in start solution vector.
 
   static int theirNextWorkOrderID;
+
+  KeyValueMap itsArgs;
 
 };
 

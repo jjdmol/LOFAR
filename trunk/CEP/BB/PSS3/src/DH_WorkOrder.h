@@ -27,7 +27,6 @@
 #define PSS3_DH_WORKORDER_H
 
 #include <Common/lofar_vector.h>
-#include <lofar_config.h>
 
 #include <TransportPL/DH_PL.h>
 #include <TransportPL/PO_DH_PL.h>
@@ -39,6 +38,8 @@ namespace LOFAR
 /**
    This class is a DataHolder which contains the work orders.
 */
+ //# Forward Declarations
+class KeyValueMap;
 
 class DH_WorkOrder: public DH_PL
 {
@@ -91,18 +92,15 @@ public:
   int getNoStartSolutions() const;
   void setNoStartSolutions(int no);
 
-  unsigned int getArgsSize() const;
-  void setArgsSize(int size);
-
   int getParamNameLength();
   void setParamNameLength(int length);
   unsigned int getNumberOfParam() const;
   void setNumberOfParam(int number);
 
-  void setVarData(char* stratArgs, int size,
+  void setVarData(const KeyValueMap& stratArgs, 
 		  vector<string>& pNames, 
 		  vector<int>& startSols);
-  bool getVarData(char* stratArgs,
+  bool getVarData(KeyValueMap& stratArgs,
 		  vector<string>& pNames,
 		  vector<int>& startSols);
 
@@ -120,7 +118,6 @@ private:
   char*         itsKSType;
   unsigned int* itsStrategyNo;
   int*          itsNoStartSols;
-  unsigned int* itsArgsSize; 
   unsigned int* itsNumberOfParam;
 
   PO_DH_WO*    itsPODHWO; 
@@ -153,12 +150,6 @@ inline unsigned int DH_WorkOrder::getStrategyNo() const
 inline void DH_WorkOrder::setStrategyNo(unsigned int no)
 { *itsStrategyNo = no; }
 
-inline unsigned int DH_WorkOrder::getArgsSize() const
-{ return *itsArgsSize; }
-
-inline void DH_WorkOrder::setArgsSize(int size)
-{ *itsArgsSize = size; }
-
 inline int DH_WorkOrder::getNoStartSolutions() const
 { return *itsNoStartSols; }
 
@@ -179,7 +170,8 @@ inline void DH_WorkOrder::setCurDataSize(const int nbytes)
 
 // Define the class needed to tell PL that there should be
 // extra fields stored in the database table.
-namespace PL {                                                  
+namespace PL {  
+  template<>                                                 
   class DBRep<DH_WorkOrder> : public DBRep<DH_PL>               
   {                                                             
     public:                                                     
@@ -191,7 +183,6 @@ namespace PL {
       string itsKSType;
       unsigned int itsStrategyNo;
       int itsNoStartSols;
-      unsigned int itsArgsSize;
       unsigned int itsNumberOfParam;
     };   
                                                       

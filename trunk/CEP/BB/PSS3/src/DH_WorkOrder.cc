@@ -23,9 +23,11 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.h>
 
 #include <PSS3/DH_WorkOrder.h>
 #include <PL/TPersistentObject.h>
+#include <Common/KeyValueMap.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 #include <Common/Debug.h>
@@ -39,18 +41,16 @@ int DH_WorkOrder::theirWriteCount = 0;
 
 const unsigned int MaxKSTypeLength = 8;
 const unsigned int MaxNoStartSols = 16;
-const unsigned int MaxArgsSize = 32;
 const unsigned int MaxParamNameLength = 16;
 const unsigned int MaxNumberOfParam = 32;
 
 DH_WorkOrder::DH_WorkOrder (const string& name)
-  : DH_PL(name, "DH_WorkOrder"),
+  : DH_PL(name, "DH_WorkOrder", 1),
     itsWOID            (0),
     itsStatus          (0),
     itsKSType          (0),
     itsStrategyNo      (0),
     itsNoStartSols     (0),
-    itsArgsSize        (0),
     itsNumberOfParam   (0),
     itsPODHWO          (0)
 {
@@ -64,7 +64,6 @@ DH_WorkOrder::DH_WorkOrder(const DH_WorkOrder& that)
     itsKSType          (0),
     itsStrategyNo      (0),
     itsNoStartSols     (0),
-    itsArgsSize        (0),
     itsNumberOfParam   (0),
     itsPODHWO          (0)
 {
@@ -101,7 +100,6 @@ void DH_WorkOrder::preprocess()
   addField ("KSType", BlobField<char>(1, MaxKSTypeLength));
   addField ("StrategyNo", BlobField<unsigned int>(1));
   addField ("NoStartSols", BlobField<int>(1));
-  addField ("ArgsSize", BlobField<unsigned int>(1));
   addField ("NumberOfParam", BlobField<unsigned int> (1));
 
   // Create the data blob (which calls fillPointers).
@@ -116,7 +114,6 @@ void DH_WorkOrder::preprocess()
   *itsStatus = DH_WorkOrder::New;
   *itsStrategyNo = 0;
   *itsNoStartSols = 0;
-  *itsArgsSize = 0;
   *itsNumberOfParam = 0;
 
    // By default use the normal data size as current;
@@ -134,7 +131,6 @@ void DH_WorkOrder::fillDataPointers()
   itsKSType = getData<char> ("KSType");
   itsStrategyNo = getData<unsigned int> ("StrategyNo");
   itsNoStartSols = getData<int> ("NoStartSols");
-  itsArgsSize = getData<unsigned int> ("ArgsSize");
   itsNumberOfParam = getData<unsigned int> ("NumberOfParam");
 }
 
@@ -145,7 +141,6 @@ void DH_WorkOrder::postprocess()
   itsKSType = 0;
   itsStrategyNo = 0;
   itsNoStartSols = 0;
-  itsArgsSize = 0;
   itsNumberOfParam = 0;
 }
 
@@ -157,17 +152,13 @@ void DH_WorkOrder::setKSType(const string& ksType)
   strcpy(ptr, ksType.c_str());
 }
 
-void DH_WorkOrder::setVarData(char* stratArgs, int size,
+void DH_WorkOrder::setVarData(const KeyValueMap& stratArgs,
 			      vector<string>& pNames, 
 			      vector<int>& startSols)
 {
   BlobOStream& bos = createExtraBlob();
   // Put strategy arguments into extra blob
-  for (int i=0; i<size; i++)
-  { 
-    bos << stratArgs[i];
-  }
-  setArgsSize(size);
+  bos << stratArgs;
 
   // Put parameter names into extra blob
   bos.putStart("names", 1);
@@ -189,10 +180,9 @@ void DH_WorkOrder::setVarData(char* stratArgs, int size,
   }
   setNoStartSolutions(noSols);
   bos.putEnd();
-  
 }
 
-bool DH_WorkOrder::getVarData(char* stratArgs,
+bool DH_WorkOrder::getVarData(KeyValueMap& stratArgs,
 			      vector<string>& pNames,
 			      vector<int>& startSols)
 {
@@ -205,11 +195,8 @@ bool DH_WorkOrder::getVarData(char* stratArgs,
   else
   {
     // Get strategy arguments
-    unsigned int size = getArgsSize();
-    for (unsigned int i=0; i<size; i++)
-    { 
-      bis >> stratArgs[i];
-    }
+    bis >> stratArgs;
+
     // Get parameter names.
     bis.getStart("names");
     pNames.clear();
@@ -243,11 +230,11 @@ void DH_WorkOrder::dump()
   cout << "KS Type = " << getKSType() << endl;
   cout << "Strategy number = " << getStrategyNo() << endl;
   cout << "Number of start solutions = " << getNoStartSolutions() << endl;
-  int size = getArgsSize();
-  char data[size];
+
+  KeyValueMap sArguments;
   vector<string> pNames;
   vector<int> sols;
-  if (getVarData(data, pNames, sols))
+  if (getVarData(sArguments, pNames, sols))
   { 
     cout << "Start solutions : " << endl;
     for (unsigned int i = 0; i < sols.size(); i++)
@@ -274,7 +261,6 @@ void DBRep<DH_WorkOrder>::bindCols (dtl::BoundIOs& cols)
   cols["KSTYPE"] == itsKSType;
   cols["STRATEGYNO"] == itsStrategyNo;
   cols["NOSTARTSOLS"] == itsNoStartSols;
-  cols["ARGSSIZE"] == itsArgsSize;
   cols["NUMBEROFPARAM"] == itsNumberOfParam;
 }
 
@@ -286,13 +272,11 @@ void DBRep<DH_WorkOrder>::toDBRep (const DH_WorkOrder& obj)
   itsKSType = obj.getKSType();
   itsStrategyNo = obj.getStrategyNo();
   itsNoStartSols = obj.getNoStartSolutions();
-  itsArgsSize = obj.getArgsSize();
   itsNumberOfParam = obj.getNumberOfParam();
 }
 
 //# Force the instantiation of the templates.
 template class TPersistentObject<DH_WorkOrder>;
-template class DBRep<DH_WorkOrder>;
 
 }  // end namespace PL
 

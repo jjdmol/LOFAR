@@ -28,8 +28,6 @@
 #define PSS3_BLACKBOARDDEMO_H
 
 
-#include <lofar_config.h>
-
 #include <CEPFrame/ApplicationHolder.h>
 #include <Common/KeyValueMap.h>
 
@@ -38,19 +36,8 @@
    This is a Simulator class which demonstrates the use of a blackboard control
    architecture in combination with PSS3 calibration software.
 */
-/** 
 
-Steps to undertake before building and running:
 
- 1. In BlackBoardDemo.cc change 'databaseName' to your own database name.
-
- 2. In ./build/gnu3_debug script file change 'meijeren' to your own database 
-    name and run the script.
-
- 3. Set the correct path the your Measurement Sets in WH_PSS3 constructor
-    in BlackBoardDemo::define.
-
-*/
 namespace LOFAR
 {
 
