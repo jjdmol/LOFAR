@@ -100,6 +100,7 @@ void MSOutputSink::postEvent (const HIID &id, const ObjRef::Xfer &data, const HI
         cdebug(2)<<"got footer event, flushing & closing ms\n";
         setState(CLOSED);
         ms_.unlock();
+        ms_.flush();
         ms_ = MeasurementSet();
       }
       else
@@ -132,8 +133,8 @@ bool MSOutputSink::setupDataColumn (Column &col)
   // add column to MS, if it doesn't exist
   if( !ms_.tableDesc().isColumn(col.name) ) 
   {
-    cdebug(2)<<"creating new column "<<col.name<<endl;
-    ArrayColumnDesc<Complex> coldesc(col.name);
+    cdebug(2)<<"creating new column "<<col.name<<", shape "<<null_cell_.shape()<<endl;
+    ArrayColumnDesc<Complex> coldesc(col.name,"added by MSOutputAgent",2);
     ms_.addColumn(coldesc);
   }
   // init the column

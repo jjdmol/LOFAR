@@ -122,7 +122,10 @@ int main (int argc,const char *argv[])
     for( int i=1; i<argc; i++ )
       args[i-1] = argv[i];
     // parse various options
-    bool glish = std::find(args.begin(),args.end(),string("-noglish")) == args.end();
+    bool glish = 
+        std::find(args.begin(),args.end(),string("-noglish")) == args.end();
+    bool start_gateways = 
+        std::find(args.begin(),args.end(),string("-nogw")) == args.end();
     
 //     Debug::setLevel("VisRepeater",2);
 //     Debug::setLevel("MSVisAgent",2);
@@ -137,7 +140,7 @@ int main (int argc,const char *argv[])
     
     cout<<"=================== initializing OCTOPUSSY =====================\n";
     OctopussyConfig::initGlobal(argc,argv);
-    Octopussy::init();
+    Octopussy::init(start_gateways);
     
     if( glish )
     {

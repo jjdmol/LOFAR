@@ -72,7 +72,7 @@ const meqserver_test := function ()
 const meqsink_test := function ()
 {
   global mqs;
-  mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer",gui=F);
+  mqs := meqserver(verbose=1,options="-d0 -nogw -meq:M:M:MeqServer",gui=T);
   if( is_fail(mqs) )
   {
     print mqs;
@@ -81,11 +81,19 @@ const meqsink_test := function ()
   # set verbose debugging messages
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",1);
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot MeqNode",2);
-  mqs.setdebug("MeqServer MeqVisHandler",2);
+  mqs.setdebug("MeqServer MeqVisHandler",3);
   mqs.setdebug("meqserver",1);
-  mqs.setdebug("MeqNode",5);
+  mqs.setdebug("MeqNode",3);
+  mqs.setdebug("MSVisAgent",10);
+  # remove output column from table
+  tbl:=table('test.ms',readonly=F);
+  tbl.removecols('CORRECTED_DATA');
+  tbl.done()
+
   # initialize meqserver
-  mqs.init([output_col="PREDICT"],wait=T);
+  mqs.init([output_col="PREDICT"],
+      output=[write_flags=F,predict_column='MODEL_DATA'],
+      wait=T);
   
   # create a small subtree
   defval1 := array(as_double(1),2,2);
@@ -148,7 +156,7 @@ const meqsel_test := function ()
   print mqs.meq('Create.Node',meqparm('parm5',defval2));
   print mqs.meq('Create.Node',meqparm('parm6',defval3));
   print mqs.meq('Create.Node',meqnode('MeqComposer','compose1',children="parm1 parm2 parm3"));
-  print mqs.meq('Create.Node',meqnode('MeqComposer','compose2',children="parm4 parm5 parm6"));
+  print mqs.meq('Create.Node',meqnode('MeqComposer','compose2',children="parm3 parm5 parm6"));
   rec := meqnode('MeqSelector','select1',children="compose1");
   rec.index := [1,5];
   print mqs.meq('Create.Node',rec);
