@@ -149,7 +149,7 @@ void* shmbrk(int size)
     }
 
 #if 0
-    printf("shmbrk(%d) = %x\n", size, segment_address);
+    printf("shmbrk(%d) = %p\n", size, segment_address);
 #endif
     
     return (void*)segment_address;
