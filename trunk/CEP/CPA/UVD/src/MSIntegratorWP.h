@@ -61,8 +61,13 @@ class MSIntegratorWP : public WorkProcess  //## Inherits: <unnamed>%3CD1338701E2
   //## end MSIntegratorWP%3CD133700076.initialDeclarations
 
   public:
+  
+  typedef fcomplex ComplexType;
+
+    //## Constructors (specified)
+
       //## Operation: MSIntegratorWP%3CD781CA01B8
-      MSIntegratorWP (string msname = "", const HIID &act_msg = HIID(), int nchan = 8, int ntime = 10, int npatch = 2);
+      MSIntegratorWP (string msname, const HIID &act_msg = HIID(), int nchan = 8, int ntime = 10, int npatch = 2);
 
     //## Destructor (generated)
       ~MSIntegratorWP();
@@ -122,7 +127,7 @@ class MSIntegratorWP : public WorkProcess  //## Inherits: <unnamed>%3CD1338701E2
           *pnumtimes;
       
       vector<int*> pnumpixels;
-      vector<dcomplex*> pdata;
+      vector<ComplexType*> pdata;
       
       HIID chunk_hiid;
       vector<int> corrtype,recpt1,recpt2;
