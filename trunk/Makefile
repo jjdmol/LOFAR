@@ -33,7 +33,7 @@
 # Note that PACKAGE and PACKAGES are synonyms.
 #
 
-PACKAGE =$(shell if [ -f lofarconf.in ]; then cat lofarconf.in;else echo""; fi)
+PACKAGE =$(shell if [ -f lofarconf.in ]; then sed lofarconf.in -e 's/\#.*//'; else echo""; fi)
 PACKAGES = $(PACKAGE)
 #
 
@@ -356,22 +356,24 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 # Rules for building documentation using doxygen or doc++.
 # Default output directory is docxxhtml.
 ifeq "$(DOCDIR)"  "" 
-   DOCDIR := /data/LOFAR/installed/docxxhtml
+   export DOCDIR := /data/LOFAR/installed/docxxhtml
 endif
 
 ifeq "$(DOXYGEN)" ""
-   DOXYGEN := /usr/bin/doxygen
+   export DOXYGEN := /usr/bin/doxygen
 endif
 
 docxx:
-	@cp autoconf_share/doxygen.cfg doxygen.cfg ; \
-	echo "PROJECT_NAME = LOFAR" >> doxygen.cfg ; \
+	@if ! [ -d $(DOCDIR) ]; then mkdir $(DOCDIR); fi
+	@cp autoconf_share/doxygen.cfg doxygen.cfg
+	@echo "PROJECT_NAME = LOFAR" >> doxygen.cfg ; \
 	echo "INPUT = $(DOCPACKAGES)" >> doxygen.cfg ; \
 	echo "RECURSIVE = YES" >> doxygen.cfg ; \
 	echo "HTML_OUTPUT = $(DOCDIR)" >> doxygen.cfg ; \
 	echo "EXCLUDE = build test" >> doxygen.cfg; \
-	$(DOXYGEN) doxygen.cfg ; \
-
+	echo "TAGFILES = $(DOCDIR)/doxygen.tag=$(DOCDIR)/doxygen" >> doxygen.cfg
+	@$(MAKE) doc -C doc/doxygen
+	@$(DOXYGEN) doxygen.cfg
 
 #
 # Install crontab to run daily and weekly builds;
