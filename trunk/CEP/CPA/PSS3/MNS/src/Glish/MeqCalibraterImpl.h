@@ -1,4 +1,24 @@
-
+//# MeqCalibraterImpl.h: Implementation of the MeqCalibrater DO
+//#
+//# Copyright (C) 2002
+//# ASTRON (Netherlands Foundation for Research in Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//# This program is free software; you can redistribute it and/or modify
+//# it under the terms of the GNU General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or
+//# (at your option) any later version.
+//#
+//# This program is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License
+//# along with this program; if not, write to the Free Software
+//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//# $Id$
 
 #ifndef MEQ_CALIBRATER_H
 #define MEQ_CALIBRATER_H
@@ -6,6 +26,8 @@
 #include <aips/aips.h>
 #include <trial/Tasking/ApplicationObject.h>
 #include <aips/Utilities/String.h>
+
+#include <aips/MeasurementSets/MeasurementSet.h>
 
 class MeqCalibrater : public ApplicationObject
 {
@@ -21,20 +43,20 @@ class MeqCalibrater : public ApplicationObject
 
   void setTimeIntervalSize(Int secInterval);
   void resetTimeIterator();
-  GlishRecord nextTimeInterval();
+  Bool nextTimeInterval();
 
   void clearSolvableParms();
-  void setSolvableParms(const String& parmPatterns, Bool isSolvable);
+  void setSolvableParms(Vector<String>& parmPatterns, Bool isSolvable);
 
-  void        predict(const String& modelColName);
-  GlishRecord solve(); /* returns double fit, updates parameters */
+  void   predict(const String& modelColName);
+  Double solve(); /* returns double fit, updates parameters */
 
   void saveParms();
   void saveData(const String& dataColName); /* save data, e.g. "MODEL" */
   void saveResidualData(const String& colAName, const String& colBName,
 			const String& residualColName); /* save A-B in residualColName */
 
-  GlishRecord getParms(const String& parmPatterns);
+  GlishRecord getParms(Vector<String>& parmPatterns);
 
   // standard methods
   virtual String         className() const;
@@ -50,6 +72,12 @@ class MeqCalibrater : public ApplicationObject
   MeqCalibrater(const MeqCalibrater& other);            // no copy constructor
   MeqCalibrater& operator=(const MeqCalibrater& other); // no assignment operator
 
+
+  // variables
+  MeasurementSet ms;
+
+  //
+  Int timeIteration;
   
 };
 
