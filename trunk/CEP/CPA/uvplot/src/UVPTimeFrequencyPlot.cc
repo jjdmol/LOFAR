@@ -151,6 +151,7 @@ void UVPTimeFrequencyPlot::drawView()
   }
   
   */
+  const unsigned int Ncol(getNumberOfColors());
   const unsigned int N(itsComplexSpectrum.size());
   unsigned int Nch(0);
   QColor Blue(0,0,255);
@@ -173,9 +174,22 @@ void UVPTimeFrequencyPlot::drawView()
         if(*flag) {
           BufferPainter.setPen(Blue);
         } else {
+          // SOMETIMES colre > Ncol ?!?!?!
           int colre = int(itsValueAxis.worldToAxis(spectrum->real()));
           int colim = int(itsValueAxis.worldToAxis(spectrum->imag()));
-          BufferPainter.setPen(itsComplexColormap[itsRealIndex[colre]+itsImagIndex[colim]]);
+          
+          if(colre < Ncol && colim < Ncol && colre >= 0 && colim >= 0) {
+            BufferPainter.setPen(itsComplexColormap[itsRealIndex[colre]+itsImagIndex[colim]]); 
+          } else {
+            std::cout << "*************************************" << std::endl;
+            std::cout << __FILE__ << ":" << __PRETTY_FUNCTION__ << ":" << __LINE__ << std::endl;
+            std::cout << "colre: " << colre << std::endl;
+            std::cout << "colim: " << colim << std::endl;
+            std::cout << "real : " << spectrum->real() << std::endl;
+            std::cout << "imag : " << spectrum->imag() << std::endl;
+            std::cout << "Ncol: " << Ncol << std::endl;
+            std::cout << "*************************************" << std::endl;
+          }
         }
         spectrum++;
         flag++;

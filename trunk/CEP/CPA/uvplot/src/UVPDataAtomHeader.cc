@@ -45,8 +45,6 @@ UVPDataAtomHeader::UVPDataAtomHeader(unsigned int antenna1,
     itsUVW[0] = uvw[0];
     itsUVW[1] = uvw[1];
     itsUVW[2] = uvw[2];
-
-    sortAntennae();
 }
 
 
@@ -82,18 +80,6 @@ bool UVPDataAtomHeader::operator < (const UVPDataAtomHeader &other) const
 }
 
 
-
-
-//===============>>>  UVPDataAtomHeader::sortAntennae  <<<===============
-
-void UVPDataAtomHeader::sortAntennae()
-{
-  if(itsAntenna1 > itsAntenna2) {
-    unsigned int tmp = itsAntenna1;
-    itsAntenna1 = itsAntenna2;
-    itsAntenna2 = tmp;
-  }
-}
 
 
 

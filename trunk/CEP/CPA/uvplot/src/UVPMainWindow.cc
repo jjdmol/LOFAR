@@ -1,3 +1,23 @@
+//
+// Copyright (C) 2002
+// ASTRON (Netherlands Foundation for Research in Astronomy)
+// P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+
 // Must be included first. Has a member "signals", which is also a
 // macro defined in QT :-)
 #include <OCTOPUSSY/Dispatcher.h> 
@@ -16,6 +36,7 @@
 #include <sstream>              // std::ostringstream
 
 #include <aips/aips.h>
+#include <aips/Exceptions.h>
 #include <aips/MeasurementSets/MeasurementSet.h>
 #include <aips/MeasurementSets/MSMainColumns.h>
 #include <aips/MeasurementSets/MSPolColumns.h>
@@ -262,6 +283,8 @@ void UVPMainWindow::drawDataSet()
     return;
   }
 
+  unsigned int spectraAdded = 0;
+
   unsigned int ant1 = itsGraphSettingsWidget->getSettings().getAntenna1();
   unsigned int ant2 = itsGraphSettingsWidget->getSettings().getAntenna2();
 
@@ -271,10 +294,21 @@ void UVPMainWindow::drawDataSet()
   ToHeader.itsAntenna2 = ToHeader.itsAntenna2 + 1;
 
   itsCanvas->setChannels(itsNumberOfChannels); // Number of channels. Clears buffer.
-  unsigned int spectraAdded = 0;
+
+  UVPDataSet::iterator EndOfData = itsDataSet.end();
+  UVPDataSet::iterator Start = itsDataSet.upper_bound(FromHeader);
+
+  if(Start->second.getHeader().itsAntenna1 != ant1 ||
+     Start->second.getHeader().itsAntenna2 != ant2) {
+    FromHeader.itsAntenna1 = ant2;
+    FromHeader.itsAntenna2 = ant1;
+    ToHeader = FromHeader;
+    ToHeader.itsAntenna2++;
+  }
+  Start = itsDataSet.upper_bound(FromHeader);
 
   UVPDataSet::iterator EndOfRecords = itsDataSet.upper_bound(ToHeader);
-  UVPDataSet::iterator EndOfData = itsDataSet.end();
+
   
   UVPDataAtomHeader::Correlation Correlation = itsGraphSettingsWidget->getSettings().getCorrelation();
 
@@ -282,7 +316,8 @@ void UVPMainWindow::drawDataSet()
   TRACER1("Correlation= " << Correlation);
 #endif
 
-  for(UVPDataSet::iterator p = itsDataSet.upper_bound(FromHeader);
+
+  for(UVPDataSet::iterator p = Start;
       p != EndOfRecords && p != EndOfData; p++) {
     
     const   UVPDataAtom *dataAtom = &(p->second);
@@ -529,13 +564,13 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
 //==============>>>  UVPMainWindow::slot_readMeasurementSet  <<<==============
 
 void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
+try
 {
   itsDataSet.clear();
 
   MeasurementSet ms(msName);
   MSField        FieldTable(ms.field());
 
-  std::cout << "=========>>> Table thing  <<<=========" << std::endl;
   Int ant1        = Int(itsGraphSettingsWidget->getSettings().getAntenna1());
   Int ant2        = Int(itsGraphSettingsWidget->getSettings().getAntenna2());
   itsMSColumnName = itsGraphSettingsWidget->getSettings().getColumnName();
@@ -622,10 +657,10 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
       Headers[k].itsAntenna2     = Antenna2Column(i);
       Headers[k].itsExposureTime = ExposureColumn(i);
       Headers[k].itsFieldID      = FieldColumn(i);
-      Headers[k].sortAntennae();
       Atoms[k].setHeader(Headers[k]);
       itsDataSet[Headers[k]]= Atoms[k];
     }      
+    //std::cout << "read: " << Antenna1Column(i) <<"-"<< Antenna2Column(i) <<std::endl;  
 
     DataArray.freeStorage(Data, DeleteData); 
     FlagArray.freeStorage(Flag, DeleteFlag);
@@ -641,6 +676,14 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
   itsBusyPlotting = false;
 
   drawDataSet();  
+}
+catch(AipsError &err)
+{
+  QMessageBox::critical(0, "Aips++", (const char*)err.getMesg().c_str(), QMessageBox::Ok|QMessageBox::Default,QMessageBox::NoButton);
+}
+catch(...)
+{
+  std::cerr << "slot_readMeasurementSet: Unhandled exception caught." << std::endl << std::flush;
 }
 
 

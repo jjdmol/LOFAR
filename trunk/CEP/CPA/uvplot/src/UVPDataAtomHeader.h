@@ -33,11 +33,7 @@
 /*!  Its primary purpose is to make looking up and storing UVPDataAtom
      objects faster by minimizing the number of parameters in function
      calls.  Pass objects of this class as a reference.
-     
-     Always call "sortAntennae" when you have changed either
-     itsANtenna1 or itsAntenna2. It will make sure that itsAntenna1 is
-     ALWAYS less than or equal to itsAntenna2.
- */
+*/
 
 class UVPDataAtomHeader
 {
@@ -95,7 +91,7 @@ class UVPDataAtomHeader
                     unsigned int antenna2        = 0,
                     double       time            = -MAXDOUBLE,
                     float        exposureTime    = 0.0,
-                    Correlation  correlationType = XX,
+                    Correlation  correlationType = None,
                     unsigned int fieldID         = 0,
                     const std::vector<double>& uvw = std::vector<double>(3,0),
                     DataType     dataType        = Raw);
@@ -104,13 +100,6 @@ class UVPDataAtomHeader
   //itsAntenna1-itsAntenna2-itsCorrelationType-itsTime.
   bool operator < (const UVPDataAtomHeader &other) const;
   
-  //! Makes sure that its Antenna1 <= itsAntenna2
-  /*! This method should always be called when itsAntenna1 or
-    itsAntenna2 is changed
-    */
-  void sortAntennae();
-
-
   //! Stores internal state in binary format.
   /*!
     - Bytes  0- 3:     unsigned int     Antenna 1
