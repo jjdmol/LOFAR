@@ -25,72 +25,56 @@
 
 #include "GPM_Defines.h"
 #include <SAL/GSA_Service.h>
-//#include "GCF_PropertyProxy.h"
+#include "GCF_PropertyProxy.h"
 
 class GCFPropertyProxy;
 
 class GPMPropertyProxy : public GSAService
 {
   public:
-    GPMPropertyProxy(GCFPropertyProxy& gcfProxy);
-    ~GPMPropertyProxy();
-
-/*    GPMPropertyProxy(GCFPropertyProxy& gcfProxy) : _gcfProxy(gcfProxy) {;}
+    GPMPropertyProxy(GCFPropertyProxy& gcfProxy) : _gcfProxy(gcfProxy) {;}
     virtual ~GPMPropertyProxy() {;}
 
-    inline TSAResult subscribe(const string& propName)
+    inline TSAResult subscribePM(const string& propName)
     {
       return GSAService::subscribe(propName);
     }
-    inline TSAResult unsubscribe(const string& propName)
+    inline TSAResult unsubscribePM(const string& propName)
     {
       return GSAService::unsubscribe(propName);
     }
-    inline TSAResult get(const string& propName)
+    inline TSAResult getPM(const string& propName)
     {
       return GSAService::get(propName);
     }
-    inline TSAResult set(const string& propName, const GCFPValue& value)
+    inline TSAResult setPM(const string& propName, const GCFPValue& value)
     {
       return GSAService::set(propName, value);
     }
-    inline bool exists(const string& propName)
+    inline bool existsPM(const string& propName)
     {
       return GSAService::exists(propName);
     }
-*/
-    TPMResult subscribePM(const string& propName);
-    TPMResult unsubscribePM(const string& propName);
-    TPMResult getPM(const string& propName);
-    TPMResult setPM(const string& propName, const GCFPValue& value);
-    bool existsPM(const string& propName);
 
   protected:
-/*    inline void propCreated(string& propName) {};
-    inline void propDeleted(string& propName) {};
-    inline void propSubscribed(string& propName)
+    inline void propCreated(const string& /*propName*/) {};
+    inline void propDeleted(const string& /*propName*/) {};
+    inline void propSubscribed(const string& propName)
     {
       _gcfProxy.propSubscribed(propName);
     }
-    inline void propUnsubscribed(string& propName)
+    inline void propUnsubscribed(const string& propName)
     {
       _gcfProxy.propUnsubscribed(propName);
     }
-    inline void propValueGet(string& propName, GCFPValue& value)
+    inline void propValueGet(const string& propName, const GCFPValue& value)
     {
       _gcfProxy.propValueGet(propName, value);
     }
-    inline void propValueChanged(string& propName, GCFPValue& value)
+    inline void propValueChanged(const string& propName, const GCFPValue& value)
     {
       _gcfProxy.propValueChanged(propName, value);
     }
-*/
-    void propCreated(const string& propName);
-    void propDeleted(const string& propName);
-    void propSubscribed(const string& propName);
-    void propUnsubscribed(const string& propName);
-    void propValueGet(const string& propName, const GCFPValue& value);
-    void propValueChanged(const string& propName, const GCFPValue& value);
 
   private:
     GCFPropertyProxy& _gcfProxy;

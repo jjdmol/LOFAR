@@ -34,7 +34,7 @@ class GPMProperty
   public:
     GPMProperty(GCFPValue::TMACValueType type, string name = "");
     GPMProperty(TProperty& propertyFields);
-    virtual ~GPMProperty();
+    ~GPMProperty();
     
   private:
     friend class GPMPropertySet;

@@ -40,7 +40,7 @@ class GPMController : public GCFTask
 {
   public:
     GPMController(GCFSupervisedTask& supervisedTask);
-    virtual ~GPMController();
+    ~GPMController();
 
   private: // member functions
     friend class GCFSupervisedTask;
@@ -83,7 +83,7 @@ class GPMController : public GCFTask
     typedef struct
     {
       GCFPValue* pValue;
-      string* pPropName;
+      string propName;
     } TGetData;
 };
 #endif

@@ -37,22 +37,22 @@ GCFPropertyProxy::~GCFPropertyProxy()
 
 TGCFResult GCFPropertyProxy::subscribe(const string& propName)
 {
-  return (_pPMProxy->subscribePM(propName) == PM_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+  return (_pPMProxy->subscribePM(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
 TGCFResult GCFPropertyProxy::unsubscribe(const string& propName)
 {
-  return (_pPMProxy->unsubscribePM(propName) == PM_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+  return (_pPMProxy->unsubscribePM(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
 TGCFResult GCFPropertyProxy::get(const string& propName)
 {
-  return (_pPMProxy->getPM(propName) == PM_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+  return (_pPMProxy->getPM(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
 TGCFResult GCFPropertyProxy::set(const string& propName, const GCFPValue& value)
 {
-  return (_pPMProxy->setPM(propName, value) == PM_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+  return (_pPMProxy->setPM(propName, value) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
 bool GCFPropertyProxy::exists(const string& propName)
