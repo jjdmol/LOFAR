@@ -58,7 +58,7 @@ class UVPMainWindow:public QMainWindow
 
   enum e_plotDataType{plotAmplitude, plotPhase, plotReal, plotImaginary};
 
-  enum InputType{NoInput, DMI, MS, PVD};
+  enum InputType{NoInput, VDM, MS, PVD};
 
 
   //! Constructor
@@ -81,7 +81,10 @@ class UVPMainWindow:public QMainWindow
   void slot_setProgressTotalSteps(int steps);
   void slot_setProgress(int steps);
       
-  void slot_plotTimeFrequencyImage();
+  //  void slot_plotTimeFrequencyImage();
+
+  //! VDM input selected by user
+  void slot_vdmInput();
 
   void slot_quitPlotting();
 
@@ -96,8 +99,9 @@ class UVPMainWindow:public QMainWindow
  protected:                     /* Protected part */
   
   QMenuBar*       itsMenuBar;
-  QPopupMenu*     itsFileMenu;
-  QPopupMenu*     itsPlotMenu;
+  QPopupMenu*     itsApplicationMenu;
+  QPopupMenu*     itsDatasourceMenu;
+  QPopupMenu*     itsProcessControlMenu;
   QPopupMenu*     itsHelpMenu;
   
   int             itsMenuPlotImageID;
