@@ -142,7 +142,10 @@ void UVPTimeFrequencyPlot::drawView()
 
 void UVPTimeFrequencyPlot::setChannels(unsigned int numberOfChannels)
 {
+  itsSpectrum.clear();
   itsSpectrum        = UVPSpectrumVector(numberOfChannels);
+
+  itsComplexSpectrum.clear();
   itsComplexSpectrum = UVPDataAtomVector();
   itsValueAxis       = UVPAxis();
 }

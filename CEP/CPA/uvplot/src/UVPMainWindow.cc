@@ -2,7 +2,6 @@
 // macro defined in QT :-)
 #include <OCTOPUSSY/Dispatcher.h> 
 #include <OCTOPUSSY/Gateways.h>
-//#include <UVD/MSIntegratorWP.h>
 
 #include <uvplot/UVPMainWindow.h>
 #include <uvplot/UVPDataTransferWP.h>    // Communications class
@@ -36,8 +35,8 @@ InitDebugContext(UVPMainWindow, "DEBUG_CONTEXT");
 UVPMainWindow::UVPMainWindow()
   : QMainWindow()
 {
-  //  itsDataSet = new UVPDataSet;
 
+  // Construct a menu
   itsFileMenu = new QPopupMenu;
   itsFileMenu->insertItem("&Open MS", this, SLOT(slot_openMS()));
   itsFileMenu->insertItem("&Open PVD", this, SLOT(slot_openPVD()));
@@ -61,7 +60,7 @@ UVPMainWindow::UVPMainWindow()
   itsMenuBar->insertItem("&Plot", itsPlotMenu);
   itsMenuBar->insertSeparator();
   itsMenuBar->insertItem("&Help", itsHelpMenu);
-
+  // Menu constructed
 
 
   itsStatusBar   = new QStatusBar(this);
@@ -74,6 +73,7 @@ UVPMainWindow::UVPMainWindow()
   itsStatusBar->addWidget(itsProgressBar, 5, true);
   
   itsStatusBar->show();
+
   itsBusyPlotting = false;
 
   itsNumberOfChannels  = 0;
@@ -83,15 +83,10 @@ UVPMainWindow::UVPMainWindow()
   setCentralWidget(CentralWidget);
   itsGraphSettingsWidget = new UVPGraphSettingsWidget(30, CentralWidget);
 
-  itsScrollView = new QScrollView(CentralWidget);
-  
+  itsScrollView        = new QScrollView(CentralWidget);
+  itsCanvas            = new UVPTimeFrequencyPlot(itsScrollView->viewport());
+
   QHBoxLayout *hLayout = new QHBoxLayout(CentralWidget);
-
-#if(DEBUG_MODE)
-  TRACER1("itsCanvas = new UVPTimeFrequencyPlot(itsScrollView->viewport());");
-#endif
-  itsCanvas              = new UVPTimeFrequencyPlot(itsScrollView->viewport());
-
   hLayout->addWidget(itsScrollView, 5);
   hLayout->addWidget(itsGraphSettingsWidget, 1);
 
@@ -449,7 +444,7 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
   unsigned int NumBaselines     = NumAntennae*(NumAntennae-1)/2;
   unsigned int NumPolarizations = DataColumn(0).shape()[0];
   unsigned int NumChannels      = DataColumn(0).shape()[1];
-  unsigned int NumSelected     = Selection.nrow();
+  unsigned int NumSelected      = Selection.nrow();
 
   itsNumberOfChannels  = NumChannels;
   itsNumberOfTimeslots = 1500;
@@ -499,6 +494,7 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
       qApp->processEvents();
     }
   }
+  itsBusyPlotting = false;
 
   drawDataSet();  
 
@@ -538,7 +534,7 @@ void UVPMainWindow::slot_readPVD(const std::string& pvdName)
 
   itsScrollView->removeChild(itsCanvas);
   itsNumberOfTimeslots = 1500;
-  itsCanvas->setGeometry(0, 0, itsNumberOfChannels, 1500);
+  itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
   itsScrollView->addChild(itsCanvas);
   resizeEvent(0);
 
@@ -556,5 +552,7 @@ void UVPMainWindow::slot_readPVD(const std::string& pvdName)
     pass++;
     qApp->processEvents();
     
-  } // while 
+  } // while
+
+  itsBusyPlotting = false;
 }
