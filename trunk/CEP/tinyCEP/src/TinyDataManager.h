@@ -74,12 +74,12 @@ namespace LOFAR
     int getOutputs() const;
 
     void setProcessRate(int rate);
-    void setInputRate(int rate);
-    void setOutputRate(int rate);
+    void setInputRate(int rate, int dhIndex=-1);
+    void setOutputRate(int rate, int dhIndex=-1);
 
     int getProcessRate();
-    int getInputRate();
-    int getOutputRate();
+    int getInputRate(int dhIndex=-1);
+    int getOutputRate(int dhIndex=-1);
 
     // The following methods are used for selecting one of the inputs/outputs
     void setInputSelector(Selector* selector);  // Set an input selector
@@ -104,8 +104,8 @@ namespace LOFAR
     /// the DataManager also stores the input- output- and 
     /// processrates.
     int itsProcessRate;
-    int itsInputRate;
-    int itsOutputRate;
+    int* itsInputRates;
+    int* itsOutputRates;
 
   /**  The auto trigger flags.
        This flag determines if automated triggering of read/write
@@ -133,20 +133,9 @@ inline int TinyDataManager::getOutputs() const {
 inline void TinyDataManager::setProcessRate(int rate)
 { itsProcessRate = rate; }
 
-inline void TinyDataManager::setInputRate(int rate)
-{ itsInputRate = rate; }
-
-inline void TinyDataManager::setOutputRate(int rate)
-{ itsOutputRate = rate; }
-
 inline int TinyDataManager::getProcessRate()
 { return itsProcessRate; }
 
-inline int TinyDataManager::getInputRate()
-{ return itsInputRate; }
-
-inline int TinyDataManager::getOutputRate()
-{ return itsOutputRate; }
 
 } // namespace LOFAR
 #endif

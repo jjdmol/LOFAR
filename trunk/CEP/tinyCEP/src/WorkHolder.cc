@@ -130,7 +130,7 @@ void WorkHolder::baseProcess ()
 //       if (getDataManager().getGeneralInHolder(input)->doHandle()) {
 
       // temporary in-rate sollution
-      if ( itsProcessStep % getDataManager().getInputRate() == 0 ) {
+      if ( itsProcessStep % getDataManager().getInputRate(input) == 0 ) {
 	
 	// for selector type handle locking
 	if (getDataManager().hasInputSelector() == false) {
@@ -157,7 +157,7 @@ void WorkHolder::baseProcess ()
   for (int output=0; output<itsNoutputs; output++)	{
 
 //     if (getDataManager().getGeneralOutHolder(output)->doHandle()) {
-    if ( itsProcessStep % getDataManager().getOutputRate() == 0 ) {
+    if ( itsProcessStep % getDataManager().getOutputRate(output) == 0 ) {
 
       if (getDataManager().hasOutputSelector() == false) {
 	getDataManager().getOutHolder(output);
