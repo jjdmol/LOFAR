@@ -17,7 +17,9 @@ Spigot::Spigot ()
       colname("DATA"),
       flag_mask(-1),
       row_flag_mask(-1)
-{}
+{
+  setActiveSymDeps(FDomain);
+}
   
 //##ModelId=3F9FF6AA03D2
 void Spigot::setStateImpl (DataRecord &rec,bool initializing)
@@ -65,7 +67,7 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
     void *coldata = const_cast<void*>(tile.column(icolumn));
     int nplanes = colshape.size() == 3 ? colshape[0] : 1;
     Result::Ref resref;
-    Result & next_res = resref <<= new Result(nplanes);
+    Result & next_res = resref <<= new Result(nplanes,true);
     // get array 
     if( coltype == Tpdouble )
     {

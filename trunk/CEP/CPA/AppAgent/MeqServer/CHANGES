@@ -1,3 +1,28 @@
+  * Parm ignores the default depend_mask_, instead it returns a combination
+    of its own domain_depend_mask and solve_depend_mask, depending on
+    what kind of polc is being evaluated. 
+
+  * added symbolic dependencies to Node, along with Set/Clear.Depend.Mask
+    rider commands, to facilitate automatic building of dependency masks.
+    
+  * processCommands() is now allowed to modify the request (presumably,
+    by modifying/adding commands)
+
+  * added auto_resample field to Node (currently called auto_depend: change
+    this!) controlling auto-resampling of child results:
+    -2 to fail; -1 to integrate, 0 to do none, 1 to upsample
+    Also added caching of resampled child results within Node; still have to
+    update documentation and work through the caching issues.
+  
+  * added "integrated" property to Result. Set in leaf nodes to indicate
+    whether the value is a sampling or an integration; handled by the
+    resampling code. Spigot always produces an integrated result, Time/Freq
+    always produce a sampling, Parm/Constant produce a sampling by default,
+    or an integration if staterec.integrated=T
+
+  * Cells are now split into regular segments based on step _and_ cell size
+    (used to be only step)
+
   * revised the request_id structure; added depend_mask to all nodes,
     plus solve_depend_mask to Solver, and domain_depend_mask + 
     solve_depend_mask to Parm. Defaults should be fine 99% of the time.

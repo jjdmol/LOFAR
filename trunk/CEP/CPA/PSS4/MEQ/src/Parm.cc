@@ -33,15 +33,28 @@ namespace Meq {
 
 InitDebugContext(Parm,"MeqParm");
 
+const HIID symdeps_all[]    = { FDomain,FResolution,FParmValue };
+const HIID symdeps_domain[] = { FDomain,FResolution };
+const HIID symdeps_solve[]  = { FParmValue };
+
+
 //##ModelId=3F86886F021B
 Parm::Parm()
 : Node  (0), // no children allowed
   solvable_ (false),
   auto_save_(false),
   parmtable_(0),
-  domain_depend_mask_(RQIDM_CELLS),
-  solve_depend_mask_(RQIDM_VALUE)
+  domain_depend_mask_(0),
+  solve_depend_mask_(0),
+  domain_symdeps_(symdeps_domain,symdeps_domain+2),
+  solve_symdeps_(symdeps_solve,symdeps_solve+1),
+  integrated_(false)
 {
+// note that we leave the default dependency mask at 0: instead, we
+// maintain two of our own masks. domain_depend_mask is returned
+// if the polc has >1 coefficient; solve_depend_mask is added if
+// the parm is solvable
+  setKnownSymDeps(symdeps_all,3);
 }
 
 //##ModelId=3F86886F0242
@@ -53,8 +66,11 @@ Parm::Parm (const string& name, ParmTable* table,
   name_      (name),
   parmtable_ (table),
   default_polc_(defaultValue),
-  domain_depend_mask_(RQIDM_CELLS),
-  solve_depend_mask_(RQIDM_VALUE)
+  domain_depend_mask_(0),
+  solve_depend_mask_(0),
+  domain_symdeps_(symdeps_domain,symdeps_domain+2),
+  solve_symdeps_(symdeps_solve,symdeps_solve+1),
+  integrated_(false)
 {
 }
 
@@ -304,19 +320,19 @@ int Parm::getResult (Result::Ref &resref,
   VellSet & vs = result.setNewVellSet(0,0,request.calcDeriv());
   vs.setShape(request.cells().shape());
   
-  // add dependency on domain, unless we have a single c00 polc
-  if( ppolcs->size()>1 || ppolcs->front()->ncoeff() )
+  // add dependency on domain, unless we're not integrated and have a 
+  // single c00 polc
+  if( ppolcs->size()>1 || integrated_ || ppolcs->front()->ncoeff() )
     depend |= domain_depend_mask_;
-  
-  setDependMask(depend);
   
   // A single polc can be evaluated immediately.
   if( ppolcs->size() == 1 )
   {
     cdebug(3)<<"evaluating and returning single polc"<<endl;
     ppolcs->front()->evaluate(vs,request);
-    // no further dependencies 
-    return 0;
+    if( integrated_ )
+      result.integrate();
+    return depend;
   }
   
   // Get the domain, etc.
@@ -368,7 +384,9 @@ int Parm::getResult (Result::Ref &resref,
           itime0 == 0 && itime1 == ndTime-1 )
       {
         polc.evaluate(vs,request);
-        return 0;
+        if( integrated_ )
+          result.integrate();
+        return depend;
       }
       // Evaluate polc over overlapping part of grid
       VellSet partRes;
@@ -408,7 +426,9 @@ int Parm::getResult (Result::Ref &resref,
       }
     }
   }
-  return 0;
+  if( integrated_ )
+    result.integrate();
+  return depend;
 }
 
 //##ModelId=3F86886F023C
@@ -419,6 +439,17 @@ void Parm::save()
     cdebug(2)<<"saving "<<solve_polcs_.size()<<" polcs"<<endl;
     for( uint i=0; i<solve_polcs_.size(); i++) 
       parmtable_->putCoeff1(name_,solve_polcs_[i]());
+  }
+}
+
+void Parm::resetDependMasks ()
+{
+  domain_depend_mask_ = computeDependMask(domain_symdeps_);
+  solve_depend_mask_ = computeDependMask(solve_symdeps_);
+  if( hasState() )
+  {
+    wstate()[FDomainDependMask] = domain_depend_mask_;
+    wstate()[FSolveDependMask] = solve_depend_mask_;
   }
 }
 
@@ -437,9 +468,23 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
   rec[FAutoSave].get(auto_save_,initializing);
   rec[FParmName].get(name_,initializing);
   rec[FSolvable].get(solvable_,initializing);
+  rec[FIntegrated].get(integrated_,initializing);
+  // recompute depmasks if active sysdeps change
+  if( rec[FDomainSymDeps].get_vector(domain_symdeps_,initializing) )
+  {
+    cdebug(2)<<"domain_symdeps set via state\n";
+    resetDependMasks();
+  }
+  if( rec[FSolveSymDeps].get_vector(solve_symdeps_,initializing) )
+  {
+    cdebug(2)<<"solve_symdeps set via state\n";
+    resetDependMasks();
+  }
+  // now set the dependency mask if specified; this will override
+  // possible modifications made above
   rec[FDomainDependMask].get(domain_depend_mask_,initializing);
   rec[FSolveDependMask].get(solve_depend_mask_,initializing);
-  
+ 
   // Are polcs specified? 
   int npolcs = rec[FPolcs].size(TpMeqPolc);
   FailWhen(npolcs<0,"illegal "+FPolcs.toString()+" state field");
@@ -497,17 +542,17 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
   }
 }
 
-void Parm::processCommands (const DataRecord &rec,const Request &req)
+void Parm::processCommands (const DataRecord &rec,Request::Ref &reqref)
 {
   // process parent class's commands
-  Node::processCommands(rec,req);
+  Node::processCommands(rec,reqref);
   bool saved  = False;
   
   // Is an Update.Values command specified? use it to update solve polcs
   DataRecord::Hook hset(rec,FUpdateValues);
   if( hset.exists() )
   {
-    HIID req_domain_id = maskSubId(req.id(),domain_depend_mask_);
+    HIID req_domain_id = maskSubId(reqref->id(),domain_depend_mask_);
     if( req_domain_id == solve_domain_id_ )
     {
       cdebug(4)<<"got "<<FUpdateValues<<" command"<<endl;

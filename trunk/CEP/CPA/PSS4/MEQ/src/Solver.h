@@ -33,6 +33,7 @@
 // init-record for the class 
 
 //defrec begin MeqSolver
+//  ***UPDATE THIS***
 //  Represents a solver,
 //  A MeqSolver can have an arbitrary number of children.
 //  Only the results from the children that are a MeqCondeq are used.
@@ -75,53 +76,57 @@ public:
     //##ModelId=400E53550263
   virtual TypeId objectType() const;
 
-  // Check the children after they have been resolved in class Node.
-  // The order of the children is the order as given when the Node object
-  // was created.
     //##ModelId=400E53550265
+  //##Documentation
   virtual void checkChildren();
   
   // called to process request rider commands, if any.
-  virtual void processCommands (const DataRecord &rec,const Request &req);
+  virtual void processCommands (const DataRecord &rec,Request::Ref &reqref);
 
   LocalDebugContext;
 
 protected:
-  // virtual void checkInitState (DataRecord &rec);
     //##ModelId=400E53550267
+  //##Documentation
   virtual void setStateImpl (DataRecord& rec,bool initializing);
   
-  // override this, since we poll children ourselves
     //##ModelId=400E5355026B
+  //##Documentation
+  //## override this, since we poll children ourselves
   virtual int pollChildren (std::vector<Result::Ref> &child_results,
                             Result::Ref &resref,
                             const Request &req);
   
-  // Get the result for the given request.
     //##ModelId=400E53550270
+  //##Documentation
+  //## Get the result for the given request.
   virtual int getResult (Result::Ref &resref, 
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);
-
+  
 private:
-  // Do a solution.
-  // If it is the last iteration, the solution is put in a new request
-  // and 'sent' to the children to update the parms. Optionally the parm
-  // tables are updated too.
-  // <br> If it is not the last iteration, the solution is put in the
-  // given request, so a next iteration can first update the parms.
-  void solve (Vector<double>& solution, const Request& request,
+  //##Documentation
+  //## Do a solution.
+  //## If it is the last iteration, the solution is put in a new request
+  //## and 'sent' to the children to update the parms. Optionally the parm
+  //## tables are updated too.
+  //## <br> If it is not the last iteration, the solution is put in the
+  //## given request, so a next iteration can first update the parms.
+  void solve (Vector<double>& solution, Request::Ref &reqref,
 	      DataRecord& solRec, Result::Ref& resref,
 	      std::vector<Result::Ref>& child_results,
 	      bool savePolcs, bool lastIter);
 
-  // Result current values to default values.
+  //##Documentation
+  //## Result current values to default values.
   void resetCur();
-  // Put current values in wstate.
+  //##Documentation
+  //## Put current values in wstate.
   void setCurState();
 
-  // Fill the solution (per parmid) in the DataRecord.
     //##ModelId=400E53550276
+  //##Documentation
+  //## Fill the solution (per parmid) in the DataRecord.
   void fillSolution (DataRecord& rec, const vector<int>& spids,
 		     const Vector<double>& solution,bool save_polc);
 
@@ -150,10 +155,10 @@ private:
   bool            itsResetCur;
   vector<int>     itsSpids;
   
-  // solvable parm group for this solver ("Parm" by default)
+  //##Documentation
+  //## solvable parm group for this solver ("Parm" by default)
   HIID            itsParmGroup;
   
-  int             itsSolveDependMask;
 };
 
 

@@ -31,17 +31,33 @@
 
 namespace Meq {
 
+const HIID symdeps[] = { FDomain,FResolution };
+
+//const HIID FDomain = AidDomain;
+
 //##ModelId=400E5305008F
-Constant::Constant (double value)
+Constant::Constant (double value,bool integrated)
 : Node (0), // must have 0 children
-  itsValue (new Vells(value, false),DMI::ANONWR)
-{}
+  itsValue (new Vells(value, false),DMI::ANONWR),
+  itsIntegrated(integrated)
+{
+  setKnownSymDeps(symdeps,2);
+  // intregrated results depend on cells
+  if( integrated )
+    setActiveSymDeps(symdeps,2);
+}
 
 //##ModelId=400E53050094
-Constant::Constant (const dcomplex& value)
+Constant::Constant (const dcomplex& value,bool integrated)
 : Node (0),
-  itsValue(new Vells(value, false),DMI::ANONWR)
-{}
+  itsValue(new Vells(value, false),DMI::ANONWR),
+  itsIntegrated(integrated)
+{
+  setKnownSymDeps(symdeps,2);
+  // intregrated results depend on cells
+  if( integrated )
+    setActiveSymDeps(symdeps,2);
+}
 
 //##ModelId=400E53050098
 Constant::~Constant()
@@ -55,8 +71,11 @@ int Constant::getResult (Result::Ref& resref,
   // Create result object and attach to the ref that was passed in
   Result& result = resref <<= new Result(1,request); // result has one vellset
   VellSet& vs = result.setNewVellSet(0);
-  vs.setShape(request.cells().shape());
+  const Cells &cells = request.cells();
+  vs.setShape(cells.shape());
   vs.setValue(itsValue());
+  if( itsIntegrated )
+    result.integrate();
   return 0;
 }
 
@@ -64,6 +83,14 @@ int Constant::getResult (Result::Ref& resref,
 void Constant::setStateImpl (DataRecord& rec, bool initializing)
 {
   Node::setStateImpl(rec,initializing);
+  // get integrated flag
+  if( rec[FIntegrated].get(itsIntegrated,initializing) )
+  {
+    if( itsIntegrated )
+      setActiveSymDeps(symdeps,2);
+    else // not integrated -- no dependency (value same regardless of domain/cells)
+      setActiveSymDeps();
+  }
   // Get value
   DataRecord::Hook hook(rec,FValue);
   if( hook.exists() ) 

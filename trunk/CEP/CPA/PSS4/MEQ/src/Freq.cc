@@ -27,11 +27,13 @@
 
 namespace Meq {    
 
+const HIID FDomain = AidDomain;
 
 //##ModelId=400E53050214
 Freq::Freq()
 { 
-  setDependMask(RQIDM_CELLS);
+  const HIID symdeps[] = { FDomain,FResolution };
+  setActiveSymDeps(symdeps,2);
 }
 
 //##ModelId=400E53050215

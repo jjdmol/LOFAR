@@ -1,6 +1,83 @@
+    - change Result constructor to take a Cells argument; change it to do
+      copy-or-attach (perhaps move this function to CountedRef?)
+      
+    - add child result caching to Node 
+
+    - Add integrate/sample flag to Result -- not to VellSet
+      13/04/04 done
+
+    - Add flag to Cells for equisized cells
+      13/04/04 done: included in segment comparison
+   
+    - Make ResampleMachine
+      13/04/04: done
+  
+    - Modify Resampler
+      13/04/04: done
+  
+    - Handle integrated flag in Compose  
+      13/04/04: done
+
+    - Add handling of integrate to leaf nodes 
+      Spigot: set          impl 
+      Time/Freq: not set   impl
+      Const: from config   impl
+      Parm: from config?   impl
+      13/04/04: done
+      
+    - Add automatic resampling to Function node; handle integrated flag
+      14/04/04: done
+      
+    - Add ModRes node
+      14/04/04: done
+      
+    - Add capability to recalc the dependency mask on the fly -- must 
+      remember the dependency masks then.
+      Note that parm should return different masks depending on whether a predict
+      or solve is done.
+      Propagate dependency handling throughout the system:
+      add request modification to nodes that generate new requests
+      18/04/04: done, fucking eh!
+
+    - Add debug flag to Node that enables extra sanity checking
+      18/04/04: added, not really used yet
+      
+    - figure out caching of cells in ModRes: comparing rqid is wrong wrong wrong
+      18/04/04: actually our own dependMask() is right -- the cached cells
+      depend on request only
+      
+    - All nodes that generate requests (Sink, Solver, ModRes) must send up
+      the symdeps that they generate.
+      Is there perhaps an easier way to do it?
+      19/04/04: yes there is, done: see Node::setGenSymDeps()
+      
+    - Add Init.Dep.Masks command to MeqServer; change ResolveChildren to a command
+      19/04/04: somewhat done, see next item
+
+    - rework this whole pollChildren() business as it is a mess (in ModRes and
+      Solver)
+      19/04/04: done, it's OK. Have the redefined pollChildren() defer to the
+      standard method if the request has no cells.
+
+    - Make sure Solver passes on cell-less requests transparently
+      19/04/04: done in pollChildren()
+
+  * Start using the depmask in Node::getCacheResult()
+  
+  * Possibly use empty Cells to indicate constant values? Propagate these
+    properly.
+      
+  * Work out caching issues with resampled children
+  
+  * Add Integrator/Differencer node
+  
+  * Figure out the right value of epsilon for Cells comparisons
+  
   * Align glish request_id with new C++ structure
   
-  * Add a test
+  * Add tests for all this crap
+  
+  * Update the default node defrec.g
 
   * Look for const_cast in Solver and figure out why it's there!
 
@@ -11,6 +88,12 @@ MEQ in general:
       3) dependency on resolution (same domain, different sampling), and
          how this affects caching issues in a multi-res tree
       4) document this!
+      OK, here's an idea: the nodes generating new requests are assigned
+      dependency masks for the parts of the rqid that they update. 
+      These masks are propagated recursively thorugh the tree. For example,
+      a Parm knows it depends on VALUE; the mask corresponding to VALUE is
+      set by the solver and sent up the tree. This way, parms connected to
+      multiple solvers can get their masks right.
     
   * Update documentation! (never goes away, does it?)
     Specifically, a Node construction checklist

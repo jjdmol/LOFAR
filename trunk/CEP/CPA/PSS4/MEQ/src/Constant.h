@@ -35,10 +35,12 @@
 // init-record for the class 
 
 //defrec begin MeqConstant
-//  Represents a constnat created on-the-fly.
-//  A MeqConstant cannot have any children.
+//  Represents a constant node. A MeqConstant cannot have any children.
 //field: value 0.0  
-//  value - expected double/complex double scalar
+//  value of constant - expected double/complex double scalar
+//field: integrated F  
+//  if true, constant represents an integration -- result value will be 
+//  multiplied by cell size
 //defrec end
 
 namespace Meq {
@@ -49,9 +51,9 @@ class Constant: public Node
 public:
   // Create a constant with the given value.
     //##ModelId=400E5305008F
-  explicit Constant (double value=0.);
+  explicit Constant (double value=0.,bool integrated=false);
     //##ModelId=400E53050094
-  explicit Constant (const dcomplex& value);
+  explicit Constant (const dcomplex& value,bool integrated=false);
 
     //##ModelId=400E53050098
   virtual ~Constant();
@@ -79,6 +81,8 @@ protected:
 private:
     //##ModelId=400E53050085
   Vells::Ref itsValue;
+
+  bool itsIntegrated;
 };
 
 

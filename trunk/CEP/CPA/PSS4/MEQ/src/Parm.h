@@ -51,6 +51,9 @@
 //field: default [=]
 //  default polc. A meqpolc() object. This is used when an applicable
 //  polc is not found in the table, or a table is not provided.
+//field: integrated F  
+//  if true, the parm represents an integration -- result value will be 
+//  multiplied by cell size
 //field: table_name '' 
 //  MEP table name. If empty, then the default parameter value is used
 //field: parm_name '' 
@@ -64,6 +67,7 @@
 //defrec end
 
 namespace Meq {
+
 
 // This class contains the coefficients of a 2-dim polynomial.
 // The order in time and frequency must be given.
@@ -105,7 +109,7 @@ public:
                          const Request &req,bool newreq);
 
   // process parm-specific rider commands
-  virtual void processCommands (const DataRecord &rec,const Request &req);
+  virtual void processCommands (const DataRecord &rec,Request::Ref &reqref);
 
   // Initialize the parameter for the given predict domain. This loads
   // the polcs_ vector with polcs relevant to the specified domain. 
@@ -127,6 +131,7 @@ public:
   LocalDebugContext;
 
 protected:
+  virtual void resetDependMasks ();
     //##ModelId=400E5353019E
   // finds polcs in table or uses the default
   void findRelevantPolcs (vector<Polc::Ref> &polcs,const Domain &domain);
@@ -177,16 +182,20 @@ private:
   //##ModelId=400E535000B2
   //##Documentation
   //## default polc (used if no table or no matching polcs in the table)
-  Polc::Ref    default_polc_;
+  Polc::Ref   default_polc_;
   
   //##Documentation
   //## ID of current domain
-  HIID         domain_id_;
+  HIID        domain_id_;
   
-  HIID         solve_domain_id_;
+  HIID        solve_domain_id_;
   
-  int          domain_depend_mask_;
-  int          solve_depend_mask_;
+  int         domain_depend_mask_;
+  int         solve_depend_mask_;
+  std::vector<HIID> domain_symdeps_;
+  std::vector<HIID> solve_symdeps_;
+  
+  bool        integrated_;
   
   //##Documentation
   //## active polcs for current domain 

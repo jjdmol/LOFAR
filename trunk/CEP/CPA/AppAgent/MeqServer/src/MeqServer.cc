@@ -131,9 +131,28 @@ void MeqServer::nodeSetState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
 //##ModelId=3F98D91A03B9
 void MeqServer::resolveChildren (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
 {
-  Node & node = resolveNode(*in);
-  cdebug(3)<<"resolveChildren for node "<<node.name()<<endl;
-  node.resolveChildren();
+//  Node & node = resolveNode(*in);
+//  cdebug(3)<<"resolveChildren for node "<<node.name()<<endl;
+//  node.resolveChildren();
+  DataRecord::Ref rec = in;
+  Node & node = resolveNode(*rec);
+  cdebug(2)<<"resolveChildren for node "<<node.name()<<endl;
+  // create request for the commands. Note that request ID will be null,
+  // meaning it will ignore cache and go up the entire tree 
+  Request::Ref reqref(DMI::ANONWR);
+  // add commands for all nodes (group FAll)
+  DataRecord &cmdrec = Node::Rider::getCmdRec_All(reqref,FAll);
+  cmdrec[FResolveChildren] = true;
+  cmdrec[FInitDepMask] = true;
+  Result::Ref resref;
+  int flags = node.execute(resref,*reqref);
+  cdebug(2)<<"  execute() returns flags "<<flags<<" with result"<<endl;
+  cdebug(3)<<"    result is "<<resref.sdebug(DebugLevel-1,"    ")<<endl;
+  out[AidResult|AidCode] = flags;
+  if( resref.valid() )
+    out[AidResult] <<= resref;
+  out[AidMessage] = ssprintf("node %d (%s): resolveChildren: execute() returns %x",
+      node.nodeIndex(),node.name().c_str(),flags);
 }
 
 void MeqServer::getNodeList (DataRecord::Ref &out,DataRecord::Ref::Xfer &)
@@ -167,7 +186,7 @@ void MeqServer::nodeExecute (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   cdebug(3)<<"    request is "<<req.sdebug(DebugLevel-1,"    ")<<endl;
   Result::Ref resref;
   int flags = node.execute(resref,req);
-  cdebug(2)<<"  getResult returns flags "<<flags<<" with result"<<endl;
+  cdebug(2)<<"  execute() returns flags "<<flags<<" with result"<<endl;
   cdebug(3)<<"    result is "<<resref.sdebug(DebugLevel-1,"    ")<<endl;
   if( DebugLevel>3 && resref.valid() )
   {

@@ -13,6 +13,9 @@ Sink::Sink()
     flag_mask(-1),
     row_flag_mask(-1)
 {
+  const HIID gendeps[] = { FDomain,FResolution };
+  const int  masks[]   = { RQIDM_DOMAIN,RQIDM_RESOLUTION }; 
+  setGenSymDeps(gendeps,masks,2);
 }
    
 //##ModelId=400E5B6D0048
