@@ -19,44 +19,7 @@ UVPMessagesToFileWP::UVPMessagesToFileWP(const std::string& inputFilename,
     itsIntegratorIsStarted(false),
     itsUseSorter(useSorter)
 {
-  itsSorterHeaderHIID  = HIID(AidUVData|
-                              AidAny|  // UV-Set ID
-                              AidAny|  // Segment ID
-                              AidPatch|
-                              AidAny|  // Patch ID
-                              AidHeader|
-                              AidCorr|
-                              AidIFR);
 
-  itsSorterMessageHIID = HIID(AidUVData|
-                              AidAny| // UV-Set ID
-                              AidAny| // Segment ID
-                              AidPatch|
-                              AidAny| // Patch ID
-                              AidData|
-                              AidCorr|
-                              AidIFR|
-                              AidAny| // Correlation ID
-                              AidAny);// IFR
-
-  itsIntegraterHeaderHIID  = HIID(AidUVData|
-                                  AidAny|
-                                  AidAny|
-                                  AidPatch|
-                                  AidAny|
-                                  AidHeader|
-                                  AidCorr|
-                                  AidTimeslot);
-  itsIntegraterMessageHIID = HIID(AidUVData|
-                                  AidAny|
-                                  AidAny|
-                                  AidPatch|
-                                  AidAny|
-                                  AidData|
-                                  AidCorr|
-                                  AidTimeslot|
-                                  AidAny|
-                                  AidAny);
 }
 
 
@@ -71,11 +34,13 @@ void UVPMessagesToFileWP::init()
   WorkProcess::init();
 
   if(itsUseSorter) {
-    subscribe(itsSorterHeaderHIID);
-    subscribe(itsSorterMessageHIID);
+    subscribe(UVP::SorterHeaderHIID);
+    subscribe(UVP::SorterMessageHIID);
+    subscribe(UVP::SorterFooterHIID);
   } else {
-    subscribe(itsIntegraterHeaderHIID);
-    subscribe(itsIntegraterMessageHIID);
+    subscribe(UVP::IntegraterHeaderHIID);
+    subscribe(UVP::IntegraterMessageHIID);
+    subscribe(UVP::IntegraterFooterHIID);
   }
   subscribe(MsgHello|"MSIntegratorWP.*");
   subscribe(MsgHello|"UVSorterWP.*");
