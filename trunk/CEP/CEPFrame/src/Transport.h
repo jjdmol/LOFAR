@@ -39,6 +39,7 @@ namespace LOFAR
 
 //# Forward Declarations
 class StepRep;
+class DataHolder;
 
 /**
    A Transport object is conected to a DataHolder.
