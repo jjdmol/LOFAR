@@ -11,6 +11,9 @@ beam_server=ABS:client
 [SweepTest]
 beam_server=ABS:client
 
+[SetFreq]
+beam_server=ABS:client
+
 [EPAStub]
 #intenionally left empty
 

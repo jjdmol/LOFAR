@@ -1,5 +1,5 @@
 //#
-//#  ABSEPATest.cc: implementation of EPATest class
+//#  ABSSetFreq.cc: implementation of SetFreq class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,8 +28,6 @@
 #include "ABS_Protocol.ph"
 #include "ABSDirection.h"
 
-#include "ABSEPATest.h"
-
 #include <iostream>
 #include <sys/time.h>
 #include <string.h>
@@ -43,22 +41,67 @@ using namespace boost::posix_time;
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include "ABS_Protocol.ph"
+#include "test.h"
+
+#include <GCF/GCF_Control.h>
+#include <GCF/GCF_ETHRawPort.h>
+
 using namespace ABS;
 using namespace std;
 using namespace LOFAR;
 
-EPATest::EPATest(string name)
-  : GCFTask((State)&EPATest::initial, name), Test("EPATest")
+namespace ABS
+{
+    class SetFreq : public GCFTask, public Test
+    {
+    public:
+	/**
+	 * The constructor of the SetFreq task.
+	 * @param name The name of the task. The name is used for looking
+	 * up connection establishment information using the GTMNameService and
+	 * GTMTopologyService classes.
+	 */
+	SetFreq(string name, double freq);
+	virtual ~SetFreq();
+
+	// state methods
+
+	/**
+	 * The initial state. In this state the beam_server port
+	 * is opened.
+	 */
+	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+	GCFEvent::TResult setfreq(GCFEvent& e, GCFPortInterface &p);	
+	GCFEvent::TResult done   (GCFEvent& e, GCFPortInterface &p);
+
+	/**
+	 * The test run method. This should start the task
+	 */
+	void run();
+
+    private:
+	// member variables
+
+    private:
+	// ports
+	GCFPort       beam_server;
+	double m_freq;
+    };
+};
+
+SetFreq::SetFreq(string name, double freq)
+    : GCFTask((State)&SetFreq::initial, name), Test("SetFreq"), m_freq(freq)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
 
   beam_server.init(*this, "beam_server", GCFPortInterface::SAP, ABS_PROTOCOL);
 }
 
-EPATest::~EPATest()
+SetFreq::~SetFreq()
 {}
 
-GCFEvent::TResult EPATest::initial(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult SetFreq::initial(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static int disconnect_count = 0;
@@ -81,7 +124,8 @@ GCFEvent::TResult EPATest::initial(GCFEvent& e, GCFPortInterface& port)
       case F_CONNECTED_SIG:
       {
 	  LOG_DEBUG(formatString("port %s connected", port.getName().c_str()));
-	  TRAN(EPATest::test001);
+
+	  TRAN(SetFreq::setfreq);
       }
       break;
 
@@ -91,7 +135,7 @@ GCFEvent::TResult EPATest::initial(GCFEvent& e, GCFPortInterface& port)
 	  if (disconnect_count++ > 5)
 	  {
 	      _fail("timeout");
-	      TRAN(EPATest::done);
+	      TRAN(SetFreq::done);
 	  }
 	  port.setTimer((long)2);
       }
@@ -114,112 +158,61 @@ GCFEvent::TResult EPATest::initial(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult SetFreq::setfreq(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  static int timerid = 0;
-  static int beam_handle = -1;
-  
-  switch (e.signal)
+
+  LOG_DEBUG(formatString("initial received event on port %s", port.getName().c_str()));
+
+  switch(e.signal)
   {
       case F_ENTRY_SIG:
       {
-	LOG_INFO("running test005");
+	  // this should finish within 1 second
+	  beam_server.setTimer((long)1);
 
-	// send wgenable
-	ABSWgsettingsEvent wgs;
-	wgs.frequency=1.5e6; // 1.5625MHz
-	wgs.amplitude=128; // was 128
-	wgs.sample_period=2;
+	  // send wgenable
+	  ABSWgsettingsEvent wgs;
+	  wgs.frequency=m_freq;
+	  wgs.amplitude=128; // was 128
+	  wgs.sample_period=2;
 
-	_test(sizeof(wgs) == beam_server.send(wgs));
+	  _test(sizeof(wgs) == beam_server.send(wgs));
       }
       break;
-      
+
       case ABS_WGSETTINGS_ACK:
       {
-	// check acknowledgement
-	ABSWgsettings_AckEvent* wgsa = static_cast<ABSWgsettings_AckEvent*>(&e);
-	_test(SUCCESS == wgsa->status);
-
-	// send WGENABLE
-	_test(sizeof(GCFEvent) == beam_server.send(GCFEvent(ABS_WGENABLE)));
-
-	// send beam allocation, select all subbands
-	ABSBeamallocEvent alloc;
-	alloc.spectral_window = 0;
-	alloc.n_subbands = N_BEAMLETS;
-	memset(alloc.subbands, 0, sizeof(alloc.subbands));
-	for (int i = 0; i < N_BEAMLETS; i++)
-	{
-	    alloc.subbands[i] = i;
-	}
-
-	_test(sizeof(alloc) == beam_server.send(alloc));
-      }
-      break;
-
-      case ABS_BEAMALLOC_ACK:
-      {
-	ABSBeamalloc_AckEvent* ack = static_cast<ABSBeamalloc_AckEvent*>(&e);
-	_test(SUCCESS == ack->status);
-
-	beam_handle = ack->handle;
-	LOG_DEBUG(formatString("got beam_handle=%d", beam_handle));
-
-	// send pointto command (zenith)
-	ABSBeampointtoEvent pointto;
-	pointto.handle = ack->handle;
-	pointto.type=(int)Direction::LOFAR_LMN;
-
-	time_t now = time(0);
-	for (int t = 0; t <= 600; t+=5)
-	{
-	    pointto.time = now + t + 10;
-	    pointto.angle1=0.0;
-	    pointto.angle2=cos(((double)t/600)*M_PI);
-
-	    _test(sizeof(pointto) == beam_server.send(pointto));
-	}
-
-	// let the beamformer compute for 30 seconds
-	timerid = beam_server.setTimer((long)620);
-      }
-      break;
-
-      case F_TIMER_SIG:
-      {
-	  // done => send BEAMFREE
-	  ABSBeamfreeEvent beamfree;
-	  beamfree.handle = beam_handle;
-
-	  _test(sizeof(beamfree) == beam_server.send(beamfree));
-      }
-      break;
-
-      case ABS_BEAMFREE_ACK:
-      {
-	ABSBeamfree_AckEvent* ack = static_cast<ABSBeamfree_AckEvent*>(&e);
-	_test(SUCCESS == ack->status);
-	_test(beam_handle == ack->handle);
-
-	// test completed, next test
-	TRAN(EPATest::done);
+	  // check acknowledgement
+	  ABSWgsettings_AckEvent* wgsa = static_cast<ABSWgsettings_AckEvent*>(&e);
+	  _test(SUCCESS == wgsa->status);
+	  
+	  // send WGENABLE
+	  _test(sizeof(GCFEvent) == beam_server.send(GCFEvent(ABS_WGENABLE)));
+	  
+	  TRAN(SetFreq::done);
       }
       break;
 
       case F_DISCONNECTED_SIG:
       {
-        _fail("disconnected");
-	port.close();
-	TRAN(EPATest::done);
+	  _fail("disconnected");
+	  port.close();
+	  TRAN(SetFreq::done);
+      }
+      break;
+
+      case F_TIMER_SIG:
+      {
+	  // too late
+	  _fail("timeout");
+	  TRAN(SetFreq::done);
       }
       break;
 
       case F_EXIT_SIG:
       {
-	// before leaving, cancel the timer
-	beam_server.cancelTimer(timerid);
+	  beam_server.cancelAllTimers();
       }
       break;
 
@@ -233,7 +226,7 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult EPATest::done(GCFEvent& e, GCFPortInterface& /*port*/)
+GCFEvent::TResult SetFreq::done(GCFEvent& e, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -247,7 +240,7 @@ GCFEvent::TResult EPATest::done(GCFEvent& e, GCFPortInterface& /*port*/)
   return status;
 }
 
-void EPATest::run()
+void SetFreq::run()
 {
   start(); // make initial transition
   GCFTask::run();
@@ -268,8 +261,17 @@ int main(int argc, char** argv)
 
   GCFTask::init(argc, argv);
 
+  cout << "Frequency to select: ";
+  char buf[32];
+  double freq = atof(fgets(buf, 32, stdin));
+  if (freq < 0.0 | freq > 20e6)
+  {
+      LOG_FATAL(formatString("Invalid frequency, should >= 0 && < %f", 20e6));
+      exit(EXIT_FAILURE);
+  }
+
   Suite s("Beam Server Process Test Suite", &cerr);
-  s.addTest(new EPATest("EPATest"));
+  s.addTest(new SetFreq("SetFreq", freq));
   s.run();
   long nFail = s.report();
   s.free();

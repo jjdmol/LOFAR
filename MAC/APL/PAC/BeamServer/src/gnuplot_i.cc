@@ -26,6 +26,7 @@
  ---------------------------------------------------------------------------*/
 
 #include "gnuplot_i.h"
+#include <unistd.h>
 
 /*---------------------------------------------------------------------------
                                 Defines
@@ -48,9 +49,6 @@
 /*---------------------------------------------------------------------------
                             Function codes
  ---------------------------------------------------------------------------*/
-
-static int plotcount = 0;
-
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -746,14 +744,26 @@ void gnuplot_splot(
         outfile << endl;
     }
     outfile.close();
+    sync();
 
 #if 0
+static int plotcount = 0;
+
     gnuplot_cmd(h, "set terminal postscript color");
     gnuplot_cmd(h, "set output \"skyplot_%d.ps\"", plotcount++);
     gnuplot_cmd(h, "set zrange [1e7:3.5e7]");
 #endif
 
-    gnuplot_cmd(h, "set pm3d at bs");
+#if 0
+    gnuplot_cmd(h, "set pm3d at s hidden3d 100");
+    gnuplot_cmd(h, "set style line 100 lt 5 lw 0.5");
+    gnuplot_cmd(h, "unset hidden3d");
+    gnuplot_cmd(h, "unset surf");
+#else
+    gnuplot_cmd(h, "set pm3d at s scansforward corners2color c1");
+    gnuplot_cmd(h, "unset hidden3d");
+    //gnuplot_cmd(h, "unset surf");
+#endif
 //     gnuplot_cmd(h, "set pm3d at s scansforward");
 //     gnuplot_cmd(h, "set key below");
 //     gnuplot_cmd(h, "set border 4095");
@@ -761,8 +771,11 @@ void gnuplot_splot(
 //     gnuplot_cmd(h, "set samples 25");
 //     gnuplot_cmd(h, "set isosamples 20");
 //     gnuplot_cmd(h, "set ticslevel 0");
-	gnuplot_cmd(h, "set title '%s'", title);
-	//  gnuplot_cmd(h, "set view 0,0");
+    gnuplot_cmd(h, "set xrange [0:%d]", matrix.cols());
+    gnuplot_cmd(h, "set yrange [0:%d]", matrix.rows());
+    gnuplot_cmd(h, "set title '%s'", title);
+    gnuplot_cmd(h, "set view 130,40");
+
     gnuplot_cmd(h, "splot '/tmp/temp.dat' matrix") ;
 }
 
