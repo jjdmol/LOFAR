@@ -20,8 +20,10 @@
 //#
 //# $Id$
 
-#if !defined(PERFPROFILE_H)
-#define PERFPROFILE_H
+#if !defined(MEQ_PERFPROFILE_H)
+#define MEQ_PERFPROFILE_H
+
+#include <Common/lofar_string.h>
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -31,27 +33,28 @@
 
 class PerfProfile
 {
- public:
-  PerfProfile(int start, int stop, const char* tag) : m_stop(stop)
+public:
+  PerfProfile(int start, int stop, const char* tag) : m_stop(stop), m_tag(tag)
   {
-    MPE_Log_event(start, 0, tag);
+    MPE_Log_event(start, 0, m_tag.c_str());
   }
   ~PerfProfile()
   {
-    MPE_Log_event(m_stop, 0, tag);
+    MPE_Log_event(m_stop, 0, m_tag.c_str());
   }
 
-  private:
-    int m_stop;
+private:
+  int m_stop;
+  string m_tag;
 };
 
 #define PERFPROFILE(tag) \
   static int _mpe_entry_ = MPE_Log_get_event_number(); \
   static int _mpe_exit_  = MPE_Log_get_event_number(); \
-  MPEProfile _mpe_profile_(_mpe_entry_, _mpe_exit_, tag);
+  PerfProfile _mpe_profile_(_mpe_entry_, _mpe_exit_, tag);
 
 #else
-#define PERFPROFILE()
+#define PERFPROFILE(tag)
 #endif
 
 #endif
