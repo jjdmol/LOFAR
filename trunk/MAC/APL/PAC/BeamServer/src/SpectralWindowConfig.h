@@ -65,6 +65,13 @@ namespace ABS
        const SpectralWindow* get(int index) const;
 
        /**
+	* Replace all spectral windows by a single
+	* specific spectral window, accessible under index 0.
+	* 'window' must point to an allocated valid spectral window.
+	*/
+       void setSingle(SpectralWindow* window);
+
+       /**
 	* Increase or decrease reference count for a spectral window.
 	* Only one spectral window may have refcount > 0, this is 
 	* to ensure that only one spectral window is used at a time.

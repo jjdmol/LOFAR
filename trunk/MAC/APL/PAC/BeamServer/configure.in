@@ -71,7 +71,7 @@ lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-
 lofar_EXTERNAL(boost_date_time,1,boost/date_time/date.hpp,boost_date_time-gcc,/usr/local/boost,,,[gnu:-Wl,-rpath=/usr/local/boost/lib])
 lofar_EXTERNAL(suite,1,Suite/suite.h,,)
 lofar_EXTERNAL(rsp,1,RSP_Protocol.ph,,)
-lofar_EXTERNAL(aplconfig,1,APLConfig.h,,)
+dnl lofar_EXTERNAL(aplconfig,1,APLConfig.h,,)
 lofar_EXTERNAL(GCFTM,1,GCF/TM/GCF_Control.h,,)
 lofar_EXTERNAL(GCFCommon,1,GCF/GCF_Defines.h,,)
 

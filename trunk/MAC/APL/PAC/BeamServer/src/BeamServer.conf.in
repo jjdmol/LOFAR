@@ -36,14 +36,14 @@
 # 200e6 2  512 70e6  10e6   206
 # 200e6 3  512 10e6  60e6   214
 # ]
-BeamServer.SpectralWindows=6 x 6 [ 160e6 1  512 10e6  40e6   185 160e6 1  512 30e6  10e6   185 160e6 2  512 10e6  10e6   198 160e6 3  512 10e6  10e6   206 200e6 1  512 10e6  60e6   185 200e6 1  512 30e6  20e6   185 200e6 2  512 10e6  10e6   198 200e6 2  512 70e6  10e6   206 200e6 3  512 10e6  60e6   214 ]
-BeamServer.SpectralWindow_0=LBL_10_40_160MHz
-BeamServer.SpectralWindow_1=LBH_30_70_160MHz
-BeamServer.SpectralWindow_2=HB_110_150_160MHz
-BeamServer.SpectralWindow_3=HB_170_230_160MHz
-BeamServer.SpectralWindow_4=LBL_10_40_200MHz
-BeamServer.SpectralWindow_5=LBH_30_80_200MHz
-BeamServer.SpectralWindow_6=HB_110_190_200MHz
-BeamServer.SpectralWindow_7=HB_170_190_200MHz
-BeamServer.SpectralWindow_8=HB_210_240_200MHz
+SpectralWindowConfig.windows=6 x 6 [ 160e6 1  512 10e6  40e6   185 160e6 1  512 30e6  10e6   185 160e6 2  512 10e6  10e6   198 160e6 3  512 10e6  10e6   206 200e6 1  512 10e6  60e6   185 200e6 1  512 30e6  20e6   185 200e6 2  512 10e6  10e6   198 200e6 2  512 70e6  10e6   206 200e6 3  512 10e6  60e6   214 ]
+SpectralWindowConfig.window_0=LBL_10_40_160MHz
+SpectralWindowConfig.window_1=LBH_30_70_160MHz
+SpectralWindowConfig.window_2=HB_110_150_160MHz
+SpectralWindowConfig.window_3=HB_170_230_160MHz
+SpectralWindowConfig.window_4=LBL_10_40_200MHz
+SpectralWindowConfig.window_5=LBH_30_80_200MHz
+SpectralWindowConfig.window_6=HB_110_190_200MHz
+SpectralWindowConfig.window_7=HB_170_190_200MHz
+SpectralWindowConfig.window_8=HB_210_240_200MHz
 

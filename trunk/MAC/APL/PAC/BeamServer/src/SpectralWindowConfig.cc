@@ -50,7 +50,12 @@ SpectralWindowConfig::SpectralWindowConfig()
 
 SpectralWindowConfig::~SpectralWindowConfig()
 {
-  if (m_spws)     delete [] m_spws;
+  if (m_spws)
+  {
+    for (int i = 0; i < m_n_spws; i++) if (m_spws[i]) delete m_spws[i];
+    delete [] m_spws;
+  }
+  
   if (m_refcount) delete [] m_refcount;
   m_n_spws = 0;
 }
@@ -82,7 +87,7 @@ bool SpectralWindowConfig::load()
   
   Array<double, N_SPW_PARAMETERS_DIM> params;
     
-  istringstream config(GET_CONFIG_STRING("BeamServer.SpectralWindows"));
+  istringstream config(GET_CONFIG_STRING("SpectralWindowConfig.windows"));
   config >> params;
 
   LOG_INFO_STR("BeamServer.SpectralWindows=" << params);
@@ -125,6 +130,24 @@ const SpectralWindow* SpectralWindowConfig::get(int index) const
 {
   if (index < 0 || index >= m_n_spws) return 0;
   return m_spws[index];
+}
+
+void SpectralWindowConfig::setSingle(SpectralWindow* window)
+{
+  if (!window) return;
+  if (m_n_spws > 0)
+  {
+    for (int i = 0; i < m_n_spws; i++) if (m_spws[i]) delete m_spws[i];
+    delete [] m_spws;
+  }
+
+  m_n_spws = 1;
+  m_spws = new SpectralWindow*[m_n_spws];
+  m_spws[0] = window;
+
+  if (m_refcount) delete [] m_refcount;
+  m_refcount = new int[m_n_spws];
+  for (int i = 0; i < m_n_spws; i++) m_refcount[i] = 0;
 }
 
 int SpectralWindowConfig::incRef(int index)

@@ -70,7 +70,6 @@ class CheckWeightsTest : public Test
 {
 private:
   Beam*          m_beam[N_BEAMS];
-  SpectralWindow m_spw;
 
 public:
 
@@ -80,12 +79,14 @@ public:
      * SpectralWindow spw(1.5e6, 256*1e3, 80*(1000/250));
      */
     CheckWeightsTest() :
-	Test("CheckWeightsTest"),
-	m_spw(1.5e6, 256*1e3, 80*(1000/256))
+	Test("CheckWeightsTest")
 	{
 	  //cerr << "c";
 	  Beam::init(N_BEAMS, UPDATE_INTERVAL, COMPUTE_INTERVAL);
 	  Beamlet::init(N_BEAMLETS);
+
+	  SpectralWindow* window = new SpectralWindow(1.5e6, 256*1e3, 80*(1000/256), 0 /*don't care*/);
+	  SpectralWindowConfig::getInstance().setSingle(window);
 	}
 
     void run()
@@ -104,7 +105,7 @@ public:
 
 	  subbands.clear();
 	  for (int i = 0; i < N_SUBBANDS; i++) subbands.insert(i);
-	  TESTC(0 != (m_beam[0] = Beam::allocate(m_spw, subbands)));
+	  TESTC(0 != (m_beam[0] = Beam::allocate(0, subbands)));
 
 	  ptime now = from_time_t(time(0));
 
@@ -210,6 +211,7 @@ int main(int /*argc*/, char** /*argv*/)
   Pointing p;
   p = p;
 
+#if 0
   char prop_path[PATH_MAX];
   const char* mac_config = getenv("MAC_CONFIG");
 
@@ -217,6 +219,7 @@ int main(int /*argc*/, char** /*argv*/)
 	   "%s/%s", (mac_config?mac_config:"."),
 	   "log4cplus.properties");
   INIT_LOGGER(prop_path);
+#endif
 
   Suite s("Check Weights Test Suite", &cout);
 
