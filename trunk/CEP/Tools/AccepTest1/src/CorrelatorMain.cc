@@ -64,7 +64,7 @@ int main (int argc, const char** argv) {
 #ifdef HAVE_MPI
   TH_MPI::init(argc, argv);
 
-  if (TH_MPI::getCurrentRank() < targets) {
+  if (TH_MPI::getNumberOfNodes() == targets) {
 #else 
   if (true) {
 #endif
@@ -157,6 +157,12 @@ int main (int argc, const char** argv) {
 	}
       }
     }
+  } else {
+#ifdef HAVE_BGL
+    if (TH_MPI::getCurrentRank() == 0) cout << "ERROR: MPI size does not match the number of targets. Restart with BLGMPI_SIZE=" << targets << endl;
+#else
+    if (TH_MPI::getCurrentRank() == 0) cout << "ERROR: MPI size does not match the number of targets. Restart with -np " << targets << endl;
+#endif
   }
 
 #ifdef HAVE_MPE
