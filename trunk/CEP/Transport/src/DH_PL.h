@@ -25,9 +25,10 @@
 #ifndef CEPFRAME_DH_PL_H
 #define CEPFRAME_DH_PL_H
 
-#include <CEPFrame/DH_Database.h>		// for super-class definition
+#include <DataHolder.h>		// for super-class definition
 #include <Common/LofarTypes.h>			// for ulong
-#include <PL/PersistenceObject.h>
+#include <PL/PersistentObject.h>
+#include <PL/TPersistentObject.h>
 
 using namespace std;
 using namespace LOFAR::PL;
@@ -46,16 +47,15 @@ public:
   virtual ~DH_PL ();
 
   // get a reference to the PersistentObject.
-  PL::PersistentObject& getPO(); const
+  PL::PersistentObject& getPO() const;
 			       
 			       
-protected:
   class DataPacket:
-    public DH_Database::DataPacket
+    public DataHolder::DataPacket
     {
       
     public:
-      DataPacket () {}
+      DataPacket () {};
       
       int AppId;
       int Tag;
@@ -79,20 +79,16 @@ private:
   static ulong theirInstanceCount;
   
   
-  // Now create a DH_PL_MessageRecord object. This object is a simple
-  // structure with members for storing all of the information needed for
-  // a message.
-  DH_PL_MessageRecord itsMr;
-  
   // Create the PersistentObject class 'around' DH_PL_MessageRecord. The
   // PersistentObject is a wrapper which knows how to store a
   // DH_PL_MessageRecord on a (PL supported) database and make it persistent. 
-  TPersistentObject <DH_PL::DataPacket> *itsPO;
-  
+  TPersistentObject <DH_PL::DataPacket> itsTPO;
+
+
 };
  
-inline  PL::PersistentObject& DH_PL::getPO() const {
-  return itsPO;
+inline  PL::PersistentObject& DH_PL::getPO() const{
+  return (PL::PersistentObject&)itsTPO;
 }
  
  
