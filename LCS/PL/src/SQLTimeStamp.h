@@ -33,7 +33,7 @@
 
 //# Includes
 #include <sqltypes.h>
-#include <Common/Assert.h>
+#include <Common/Debug.h>
 
 //
 // SQLTimeStamp is a thin wrapper around the \c TIMESTAMP_STRUCT which is
