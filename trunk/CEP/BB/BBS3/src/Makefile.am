@@ -16,6 +16,7 @@ Solver.h					\
 ParmData.h					\
 MNS/MeqDomain.h \
 MNS/MeqExpr.h \
+MNS/MeqFunklet.h \
 MNS/MeqHist.h \
 MNS/MeqJonesExpr.h \
 MNS/MeqJonesNode.h \
@@ -83,6 +84,7 @@ Solver.cc						\
 ParmData.cc						\
 MNS/MeqDomain.cc \
 MNS/MeqExpr.cc \
+MNS/MeqFunklet.cc \
 MNS/MeqHist.cc \
 MNS/MeqJonesExpr.cc \
 MNS/MeqJonesNode.cc \
