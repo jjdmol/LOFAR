@@ -753,13 +753,14 @@ try
       int draw_list = 0;
 
       int intype = 1;
-      while( intype > 0 && itsBusyPlotting) {
+      while( intype >= 0 && itsBusyPlotting) {
         HIID   id;
         ObjRef ref;
         
-        intype = itsInputAgent->getNext(id, ref, 0, AppEvent::WAIT);
+	
+        intype = itsInputAgent->getNext(id, ref, 0, AppEvent::NOWAIT);
 
-        if(intype <= 0) {
+        if(intype < 0) {
           std::cout << "intype: " << intype << std::endl;
         } else {
           
@@ -828,8 +829,8 @@ try
             break;
             
           default:
-            {
-              std::cout << "ERROR: " << intype << std::endl;
+            {//just wait
+	      qApp->processEvents();
             }
             break;
           }//switch intype
