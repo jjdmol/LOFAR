@@ -1,6 +1,7 @@
-DOCHDRS = \
+INSTHDRS = \
 	Collection.h \
 	ConnectionHandler.h \
+	DTLHelperClasses.h \
 	Exception.h \
 	ObjectCache.h \
 	ObjecId.h \
@@ -8,15 +9,37 @@ DOCHDRS = \
 	PersistentObject.h \
 	Query.h \
 	SQLTimeStamp.h \
-	TPersistentObject.h
+	TPersistentObject.h \
+	Query/BinaryExprNode.h \
+	Query/ColumnExprNode.h \
+	Query/ConstExprNode.h \
+	Query/Expr.h \
+	Query/ExprNode.h \
+	Query/FunctionExprNode.h \
+	Query/UnaryExprNode.h
 
-lib_LTLIBRARIES = libpl.la
+NOINSTHDRS = 
+
+TCCHDRS = \
+	PersistenceBroker.tcc
+
+DOCHDRS = \
+	$(INSTHDRS) \
+	$(NOINSTHDRS)
+
+lib_LTLIBRARIES = \
+	libpl.la
 
 libpl_la_SOURCES = $(DOCHDRS) \
 	ConnectionHandler.cc \
 	ObjectCache.cc \
 	ObjectId.cc \
 	PersistenceBroker.cc \
-	PersistentObject.cc
+	PersistentObject.cc \
+	Query/BinaryExprNode.cc \
+	Query/ColumnExprNode.cc \
+	Query/ConstExprNode.cc \
+	Query/Expr.cc \
+	Query/UnaryExprNode.cc
 
 include $(lofar_sharedir)/Makefile.common
