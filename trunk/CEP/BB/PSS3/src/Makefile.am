@@ -1,7 +1,5 @@
-bin_PROGRAMS    = BlackBoardDemo
-
-DOCHDRS         =                                \
-DH_DFTRequest.h DH_DFTResult.h \
+INSTHDRS         =                                \
+DFTAll.h \
 DH_Solution.h                                   \
 DH_WorkOrder.h                                  \
 WH_Evaluate.h                                   \
@@ -19,15 +17,25 @@ CalibratorOld.h                                 \
 Calibrator.h					\
 TryOut.h
 
+NOINSTHDRS =
 
-BlackBoardDemo_SOURCES          = $(DOCHDRS)                \
-DH_DFTRequest.cc DH_DFTResult.cc \
+TCCHDRS =
+
+pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS = $(NOINSTHDRS)
+
+DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
+
+lib_LTLIBRARIES = libpss3.la
+
+libpss3_la_SOURCES = \
+DFTAll.cc \
 Simulate.cc                                             \
 DH_Solution.cc                                          \
 DH_WorkOrder.cc                                         \
 WH_Evaluate.cc                                          \
 WH_PSS3.cc                                              \
-BlackBoardDemo.cc                                       \
 Quality.cc                                              \
 Strategy.cc                                             \
 StrategyImpl.cc                                         \
@@ -41,7 +49,12 @@ Calibrator.cc						\
 TryOut.cc
 
 
-BlackBoardDemo_DEPENDENCIES = $(LOFAR_DEPEND)
+bin_PROGRAMS = BlackBoardDemo
+
+BlackBoardDemo_SOURCES = BlackBoardDemo.cc
+
+BlackBoardDemo_LDADD = libpss3.la
+BlackBoardDemo_DEPENDENCIES = libpss3.la $(LOFAR_DEPEND)
+
 
 include $(lofar_sharedir)/Makefile.common
-
