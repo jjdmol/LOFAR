@@ -417,9 +417,10 @@ void MeqCalibrater::initParms (const MeqDomain& domain)
   if (itsNrScid > 0) {
     // Get the initial values of all solvable parms.
     // Resize the solution vector if needed.
-    if (itsSolution.nx() != itsNrScid) {
+    if (itsSolution.isNull()  ||  itsSolution.nx() != itsNrScid) {
       itsSolution = MeqMatrix (complex<double>(), itsNrScid, 1);
     }
+    int i = 0;
     for (vector<MeqParm*>::const_iterator iter = parmList.begin();
 	 iter != parmList.end();
 	 iter++)
@@ -427,6 +428,7 @@ void MeqCalibrater::initParms (const MeqDomain& domain)
       if (itsIsParmSolvable[i]) {
 	(*iter)->getInitial (itsSolution);
       }
+      i++;
     }
     // Initialize the solver.
     itsSolver.set (itsNrScid, 1, 0);
@@ -574,7 +576,7 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
 // Solve for the solvable parameters on the current time domain.
 //
 //----------------------------------------------------------------------
-Double MeqCalibrater::solve()
+Double MeqCalibrater::solve (const String& colName)
 {
   cout << "solve" << endl;
 
@@ -584,6 +586,7 @@ Double MeqCalibrater::solve()
   int nrpoint = 0;
   Timer timer;
 
+  ROArrayColumn<Complex> dataCol (itsMS, colName);
   // Complex values are separated in real and imaginary.
   // Loop through all rows in the current solve domain.
   for (unsigned int i=0; i<itsCurRows.nelements(); i++) {
@@ -604,7 +607,7 @@ Double MeqCalibrater::solve()
     MeqJonesExpr& expr = *(itsExpr[blindex]);
     expr.calcResult (request);
     // Form the equations for this row.
-    Matrix<Complex> data = itsMSCol.data()(rownr);
+    Matrix<Complex> data = dataCol(rownr);
     int npol = data.shape()(0);
     Assert (itsNrChan == data.shape()(1));
     // Calculate the derivatives and get pointers to them.
@@ -613,28 +616,28 @@ Double MeqCalibrater::solve()
       MeqMatrix val;
       val = expr.getResult11().getPerturbedValue(i);
       val -= expr.getResult11().getValue();
-      val /= expr.getResult11().getPerturbedValue(i);
+      val /= expr.getResult11().getPerturbation(i);
       derivs[i] = val.dcomplexStorage();
       if (npol == 4) {
 	val = expr.getResult12().getPerturbedValue(i);
 	val -= expr.getResult12().getValue();
-	val /= expr.getResult12().getPerturbedValue(i);
+	val /= expr.getResult12().getPerturbation(i);
 	derivs[i + itsNrScid] = val.dcomplexStorage();
 	val = expr.getResult21().getPerturbedValue(i);
 	val -= expr.getResult21().getValue();
-	val /= expr.getResult21().getPerturbedValue(i);
+	val /= expr.getResult21().getPerturbation(i);
 	derivs[i + 2*itsNrScid] = val.dcomplexStorage();
       }
       if (npol > 1) {
 	val = expr.getResult22().getPerturbedValue(i);
 	val -= expr.getResult22().getValue();
-	val /= expr.getResult22().getPerturbedValue(i);
+	val /= expr.getResult22().getPerturbation(i);
 	derivs[i + (npol-1)*itsNrScid] = val.dcomplexStorage();
       }
     }
     // Get pointer to array storage; the data in it is contiguous.
     Complex* dataPtr = &(data(0,0));
-    vector<complex<double> > derivVec;
+    vector<complex<double> > derivVec(itsNrScid);
     // Fill in all equations.
     if (npol == 1) {
       const MeqMatrix& xx = expr.getResult11().getValue();
@@ -732,9 +735,11 @@ Double MeqCalibrater::solve()
   double fit;
   vector<double> stddev(2*nrpoint);
   double mu[2];
+  cout << "Solution before: " << itsSolution << endl;
   Assert (itsSolver.solveLoop (fit, rank, itsSolution.dcomplexStorage(),
 			       &(stddev[0]), mu));
   timer.show("solve");
+  cout << "Solution after:  " << itsSolution << endl;
   
   // Update all parameters.
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
@@ -765,6 +770,7 @@ void MeqCalibrater::saveParms()
 
   cout << "saveParms" << endl;
 
+  Assert (!itsSolution.isNull()  &&  itsSolution.nx() == itsNrScid);
   int i=0;
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
@@ -922,7 +928,7 @@ void MeqCalibrater::saveResidualData(const String& colAName,
 // for the purpose of passing the information back to a glish script.
 //
 //----------------------------------------------------------------------
-static void addParm(MeqParm* parm, GlishRecord* rec)
+static void addParm(const MeqParm& parm, GlishRecord& rec)
 {
   GlishRecord parmRec;
 
@@ -941,9 +947,9 @@ static void addParm(MeqParm* parm, GlishRecord* rec)
   else               rec->add("result", mm.getDComplexMatrix());
 #endif
 
-  parmRec.add("parmid", Int(parm->getParmId()));
+  parmRec.add("parmid", Int(parm.getParmId()));
   
-  rec->add(parm->getName(), parmRec);
+  rec.add(parm.getName(), parmRec);
 }
 
 //----------------------------------------------------------------------
@@ -959,67 +965,55 @@ GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns,
 				    Vector<String>& excludePatterns)
 {
   GlishRecord rec;
-  bool parmDone = false;
   vector<MeqParm*> parmVector;
 
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
   cout << "getParms: " << endl;
 
-
+  // Convert patterns to regexes.
+  vector<Regex> parmRegex;
+  for (unsigned int i=0; i<parmPatterns.nelements(); i++) {
+    parmRegex.push_back (Regex::fromPattern(parmPatterns[i]));
+  }
+  vector<Regex> excludeRegex;
+  for (unsigned int i=0; i<excludePatterns.nelements(); i++) {
+    excludeRegex.push_back (Regex::fromPattern(excludePatterns[i]));
+  }
   //
   // Find all parms matching the parmPatterns
+  // Exclude them if matching an excludePattern
   //
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
        iter++)
   {
-    parmDone = false;
+    String parmName ((*iter)->getName());
 
-    for (int i=0; i < (int)parmPatterns.nelements(); i++)
+    for (vector<Regex>::const_iterator incIter = parmRegex.begin();
+	 incIter != parmRegex.end();
+	 incIter++)
     {
-      Regex pattern(Regex::fromPattern(parmPatterns[i]));
-
-      if (*iter && !parmDone)
       {
-	if (String((*iter)->getName()).matches(pattern))
+	if (parmName.matches(*incIter))
 	{
-	  parmDone = true;
-	  parmVector.push_back(*iter);
-	}
-      }
-    }
-  }
-
-  //
-  // Make record of parms to return, but exclude parms
-  // matching the excludePatterns
-  //
-  for (vector<MeqParm*>::iterator iter = parmVector.begin();
-       iter != parmVector.end();
-       iter++)
-  {
-    if (0 == excludePatterns.nelements())
-    {
-      if (*iter) addParm((*iter), &rec);
-    }
-    else
-    {
-      for (int i=0; i < (int)excludePatterns.nelements(); i++)
-      {
-	Regex pattern(Regex::fromPattern(excludePatterns[i]));
-	
-	if (*iter)
-	{
-	  if (! String((*iter)->getName()).matches(pattern))
+	  bool parmExc = false;
+	  for (vector<Regex>::const_iterator excIter = excludeRegex.begin();
+	       excIter != excludeRegex.end();
+	       excIter++)
 	  {
-	    addParm((*iter), &rec);
+	    if (parmName.matches(*excIter))
+	    parmExc = true;
+	    break;
 	  }
+	  if (!parmExc) {
+	    addParm (**iter, rec);
+	  }
+	  break;
 	}
       }
     }
   }
-
   return rec;
 }
 
@@ -1155,10 +1149,12 @@ MethodResult MeqCalibrater::runMethod(uInt which,
 
   case 6: // solve
     {
+      Parameter<String> colName(inputRecord, "datacolname",
+				ParameterSet::In);
       Parameter<Double> returnval(inputRecord, "returnval",
 				  ParameterSet::Out);
 
-      if (runMethod) returnval() = solve();
+      if (runMethod) returnval() = solve (colName());
     }
     break;
 

@@ -94,11 +94,11 @@ public:
   void predict(const String& modelDataColName);
   
   /*!
-   * Solve for the current domain.
-   * \returns Returns fit value to indicate fitness of the solution and updates the
-   * parameters for which to solve.
+   * Solve for the data in the given column in the current domain.
+   * \returns Returns fit value to indicate fitness of the solution and
+   * updates the parameters for which to solve.
    */
-  Double solve();
+  Double solve (const String& colName);
 
   //! Save solved parameters to the MEP database.
   void saveParms();
