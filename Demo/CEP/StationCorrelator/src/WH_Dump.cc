@@ -101,8 +101,8 @@ void WH_Dump::process() {
     for (int channel=0; channel<itsNchannels; channel++) {
       for (int el1=0; el1<itsNelements; el1++){
 	for (int el2=0; el2<=el1; el2++){
-	  int offsetRe = el1 * (itsNelements * itsNpolarisations) + el2 * itsNpolarisations;
-	  int offsetIm = el2 * (itsNelements * itsNpolarisations) + el1 * itsNpolarisations;
+	  int offsetIm = el1 * (itsNelements * itsNpolarisations) + el2 * itsNpolarisations;
+	  int offsetRe = el2 * (itsNelements * itsNpolarisations) + el1 * itsNpolarisations;
 	  for (int pol=0; pol<itsNpolarisations; pol++){
 	    freqBlock[ offsetIm + pol ] = dhp->getBufferElement(el1, el2, channel, pol)->imag();
 	    freqBlock[ offsetRe + pol ] = dhp->getBufferElement(el1, el2, channel, pol)->real();
@@ -110,12 +110,12 @@ void WH_Dump::process() {
 	}
       }
       written = write(itsOutputFile, freqBlock, itsNelements * itsNelements * itsNpolarisations * sizeof(DH_Vis::BufferPrimitive));
-#define DUMP_NOT_DEFINED
+#define DUMP
 #ifdef DUMP
       for (int el1=0; el1<itsNelements; el1++){
 	cout<<el1<<": ";
 	for (int el2=0; el2<itsNelements; el2++){
-	  int offset = el1 * (itsNelements * itsNpolarisations) + el2 * itsNpolarisations;
+	  int offset = el2 * (itsNelements * itsNpolarisations) + el1 * itsNpolarisations;
 	  for (int pol=0; pol<itsNpolarisations; pol++){
 	    cout<<freqBlock[offset+pol]<<" ";
 	  }
