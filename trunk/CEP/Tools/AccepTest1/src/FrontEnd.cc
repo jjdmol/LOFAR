@@ -25,8 +25,7 @@
 // TransportHolders
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
-//#include <Transport/TH_Socket.h>
-#include "TH_Socket.h"
+#include <Transport/TH_Socket.h>
 #include <tinyCEP/SimulatorParseClass.h>
 
 #include <FrontEnd.h>
@@ -58,8 +57,6 @@ void FrontEnd::define(const KeyValueMap& /*params*/) {
   undefine();
 
   WH_Correlator myWHCorrelator("noname",
-			       1,
-			       1, 
 			       itsNelements, 
 			       itsNsamples,
 			       itsNchannels, 
@@ -72,8 +69,6 @@ void FrontEnd::define(const KeyValueMap& /*params*/) {
 
       itsWHs.push_back((WorkHolder*) 
 		       new WH_Random("noname",
-				     1, 
-				     1, 
 				     itsNelements,
 				     itsNsamples,
 				     itsNchannels));
@@ -90,8 +85,6 @@ void FrontEnd::define(const KeyValueMap& /*params*/) {
   
       itsWHs.push_back((WorkHolder*)
 		       new WH_Dump("noname",
-				   1, 
-				   1,
 				   itsNelements, 
 				   itsNchannels));
     
@@ -104,12 +97,9 @@ void FrontEnd::define(const KeyValueMap& /*params*/) {
 }
 
 void FrontEnd::undefine() {
-
   vector<WorkHolder*>::iterator it = itsWHs.begin();
   for (; it!=itsWHs.end(); it++) {
-    delete (*it)->getDataManager().getInHolder(0)->getTransporter().getTransportHolder();
-    delete (*it)->getDataManager().getOutHolder(0)->getTransporter().getTransportHolder();
-
+    delete *it;
   }
   itsWHs.clear();
 }
@@ -143,58 +133,11 @@ void FrontEnd::quit() {
   this->undefine();
 }
 
-int parse_config() {
-  int end = 0;
-
-  config_file.open("config.dat");
-
-  while (!config_file.eof()) {
-    config_file.get(config_buffer[end++] );
-  }
-  config_file.close();
-
-  Config params('=', 1, config_buffer);
-
-  const char* ch = params("Correlator", "channels");
-  if (ch) {
-    nchannels = atoi(ch);
-  }
-
-  const char* el = params("Correlator", "elements");
-  if (el) {
-    nelements = atoi(el);
-  }
-  
-  const char* rn = params("Correlator", "runs");
-  if (rn) {
-    nruns = atoi(rn);
-  }
-
-  const char* sa = params("Correlator", "samples");
-  if (sa) {
-    nsamples = atoi(sa);
-  }
-  
-  const char* ip = params("Correlator", "frontendip");
-  if (ip) {
-    frontend_ip = (char*)malloc(15*sizeof(char));
-    frontend_ip = strndup(ip, 15);
-  }
-  
-  const char* pt = params("Correlator", "baseport");
-  if (pt) {
-    baseport = atoi(pt);
-  }
-   
-  return 1;
-}
-
-
 int main (int argc, const char** argv) {
 
   bool isFrontEnd = true;
 
-  INIT_LOGGER("CorrelatorLogger.prop");
+  // INIT_LOGGER("CorrelatorLogger.prop");
 
   if (argc >= 2 && !strcmp(argv[1], "-b")) {
     

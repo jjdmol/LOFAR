@@ -33,8 +33,6 @@ namespace LOFAR
   {
   public:
     explicit WH_Random (const string& name,
-			unsigned int nin,
-			unsigned int nout,
 			const int nelemenents,
 			const int nsamples,
 			const int nchannels);
@@ -42,8 +40,6 @@ namespace LOFAR
     virtual ~WH_Random();
 
     static WorkHolder* construct (const string& name,
-				  unsigned int nin,
-				  unsigned int nout,
 				  const int nelements, 
 				  const int nsamples, 
 				  const int nchannels);

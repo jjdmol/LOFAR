@@ -36,30 +36,14 @@ using namespace LOFAR;
 
 
 WH_Dump::WH_Dump(const string& name,
-		 unsigned int nin, 
-		 unsigned int nout, 
 		 const int    elements, 
 		 const int    channels) 
-  : WorkHolder(nin, nout, name, "WH_Dump"),
-    itsIndex     (0),
-    itsCounter   (0),
+  : WorkHolder(1, 0, name, "WH_Dump"),
     itsNelements (elements),
     itsNchannels (channels)
 {
-  char str[8];
-  for (unsigned int i = 0; i < nin; i++) {
-    
-    sprintf (str, "%d", i);
-    getDataManager().addInDataHolder(i, new DH_Vis(string("in_") + str, 
-						   itsNelements, itsNchannels));
-    
-  }
-  for (unsigned int i = 0; i < nout; i++) {
-    
-    sprintf (str, "%d", i);
-    getDataManager().addOutDataHolder(i, new DH_Empty(string("out_") + str));
-
-  }
+  getDataManager().addInDataHolder(0, new DH_Vis("in_", 
+						 itsNelements, itsNchannels));
 }
 
 WH_Dump::~WH_Dump() {
@@ -67,16 +51,14 @@ WH_Dump::~WH_Dump() {
 }
 
 WorkHolder* WH_Dump::construct (const string& name, 
-				unsigned int nin, 
-				unsigned int nout, 
 				const int    elements, 
 				const int    channels) {
-  return new WH_Dump(name, nin, nout, elements, channels);
+  return new WH_Dump(name, elements, channels);
 }
 
 WH_Dump* WH_Dump::make(const string& name) {
 
-  return new WH_Dump(name, getDataManager().getInputs(), getDataManager().getOutputs(), itsNelements, itsNchannels);
+  return new WH_Dump(name, itsNelements, itsNchannels);
 }
 
 void WH_Dump::process() {

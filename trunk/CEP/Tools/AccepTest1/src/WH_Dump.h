@@ -38,8 +38,6 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   explicit WH_Dump (const string& name,
-		    unsigned int nin,
-		    unsigned int nout,
 		    const int    elements, 
 		    const int    channels);
 
@@ -47,8 +45,6 @@ public:
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, 
-				unsigned int nin,
-				unsigned int nout,
 				const int    elements,
 				const int    channels);
 

@@ -14,4 +14,4 @@ const int runs          = 10;
 
 const int targets       = 2;       /* The number of compute nodes per front end */
 
-char* frontend_ip       = "172.24.1.31";
+char* frontend_ip       = "192.168.1.117";
