@@ -84,12 +84,14 @@ class GPMController : public GCFTask
 
   private: // data members        
     GCFPort                       _propertyAgent;
-    bool                          _isBusy;
-    bool                          _preparing;
-    unsigned int                  _counter;
     typedef map<string, GCFMyPropertySet*>  TPropertySets;
-    typedef map<unsigned short, GCFApc*>  TApcList;
     TPropertySets _propertySets;
+    typedef map<unsigned short, GCFApc*>  TApcList;
     TApcList _apcList;
+
+  private: // admin members
+    unsigned int                  _counter;
+    static const unsigned int MAX_BUF_SIZE = 1000;
+    char                          _buffer[MAX_BUF_SIZE];    
 };
 #endif

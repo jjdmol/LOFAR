@@ -24,6 +24,7 @@
 #include <GCF/GCF_MyPropertySet.h>
 #include <GCF/GCF_Apc.h>
 #include <stdio.h>
+#include <Utils.h>
 #define DECLARE_SIGNAL_NAMES
 #include <PA_Protocol.ph>
 
@@ -33,7 +34,8 @@ GPMController* GPMController::_pInstance = 0;
 extern void logResult(TPAResult result, GCFApc& apc);
 
 GPMController::GPMController() :
-  GCFTask((State)&GPMController::initial, sPMLTaskName)
+  GCFTask((State)&GPMController::initial, sPMLTaskName),
+  _counter(0)
 {
   // register the protocol for debugging purposes
   registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
@@ -126,15 +128,10 @@ void GPMController::sendAPCRequest(GCFEvent& e, const GCFApc& apc)
 {
   if (_propertyAgent.isConnected())
   {
-    unsigned short bufLength(apc.getName().size() + apc.getScope().size() + 6);
-    char* buffer = new char[bufLength + 1];
-    sprintf(buffer, "%03x%s%03x%s", apc.getName().size(), 
-                                    apc.getName().c_str(), 
-                                    apc.getScope().size(),
-                                    apc.getScope().c_str());
-    e.length += bufLength;
-    _propertyAgent.send(e, buffer, bufLength);
-    delete [] buffer;    
+    unsigned int dataLength = Utils::packString(apc.getName(), _buffer, MAX_BUF_SIZE);
+    dataLength += Utils::packString(apc.getScope(), _buffer + dataLength, MAX_BUF_SIZE - dataLength);
+    e.length += dataLength;
+    _propertyAgent.send(e, _buffer, dataLength);
   }
 }
 
@@ -195,12 +192,9 @@ void GPMController::sendMyPropSetMsg(GCFEvent& e, const string& scope)
 {
   if (_propertyAgent.isConnected())
   {
-    unsigned short bufLength(scope.size() + 3);
-    char* buffer = new char[bufLength + 1];
-    sprintf(buffer, "%03x%s", scope.size(), scope.c_str());
-    e.length += bufLength;
-    _propertyAgent.send(e, buffer, bufLength);
-    delete [] buffer;    
+    unsigned int dataLength = Utils::packString(scope, _buffer, MAX_BUF_SIZE);
+    e.length += dataLength;
+    _propertyAgent.send(e, _buffer, dataLength);
   }
 }
 
@@ -238,6 +232,8 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   TGCFResult result;
+  static char* pData = 0;
+  static string scope = "";
 
   switch (e.signal)
   {
@@ -272,10 +268,8 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     {
       PAScoperegisteredEvent* pResponse = static_cast<PAScoperegisteredEvent*>(&e);
       assert(pResponse);
-      char* pResponseData = ((char*)pResponse) + sizeof(PAScoperegisteredEvent);
-      unsigned int scopeNameLength(0);
-      sscanf(pResponseData, "%03x", &scopeNameLength);
-      string scope(pResponseData + 3, scopeNameLength);
+      pData = (char*)(&e) + sizeof(PAScoperegisteredEvent);
+      Utils::unpackString(pData, scope);
       if (pResponse->result == PA_SCOPE_ALREADY_REGISTERED)
       {
         LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
@@ -299,10 +293,8 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     {
       PAScopeunregisteredEvent* pResponse = static_cast<PAScopeunregisteredEvent*>(&e);
       assert(pResponse);
-      char* pResponseData = ((char*)pResponse) + sizeof(PAScopeunregisteredEvent);
-      unsigned int scopeNameLength(0);
-      sscanf(pResponseData, "%03x", &scopeNameLength);
-      string scope(pResponseData + 3, scopeNameLength);
+      pData = (char*)(&e) + sizeof(PAScopeunregisteredEvent);
+      Utils::unpackString(pData, scope);
       GCFMyPropertySet* pPropertySet = _propertySets[scope];
       result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPROPSUNLOAD_ERROR);
       if (pPropertySet)
@@ -315,19 +307,17 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 
     case PA_LINKPROPERTIES:
     {
-      PALinkpropertiesEvent* response = static_cast<PALinkpropertiesEvent*>(&e);
-      char* pScopeData = ((char*)response) + sizeof(PALinkpropertiesEvent);
-      unsigned int scopeNameLength(0);
-      sscanf(pScopeData, "%03x", &scopeNameLength);
-      string scope(pScopeData + 3, scopeNameLength);
-      string linkListData(pScopeData + 3 + scopeNameLength, 
-        e.length - sizeof(PALinkpropertiesEvent) - 3 - scopeNameLength);
+      pData = (char*)(&e) + sizeof(PALinkpropertiesEvent);
+      unsigned int scopeDataLength = Utils::unpackString(pData, scope);
+      string linkListData(pData + scopeDataLength, 
+        e.length - sizeof(PALinkpropertiesEvent) - scopeDataLength);
       list<string> propertyList;
       LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
         "PA-REQ: Link properties %s on scope %s",
         linkListData.c_str(),
         scope.c_str()));
-      unpackPropertyList(pScopeData + 3 + scopeNameLength, propertyList);
+        
+      Utils::unpackPropertyList(pData + scopeDataLength, propertyList);
       GCFMyPropertySet* pPropertySet = _propertySets[scope];
       if (pPropertySet)
       {
@@ -350,19 +340,16 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     }
     case PA_UNLINKPROPERTIES:
     {
-      PAUnlinkpropertiesEvent* response = static_cast<PAUnlinkpropertiesEvent*>(&e);
-      char* pScopeData = ((char*)response) + sizeof(PAUnlinkpropertiesEvent);
-      unsigned int scopeNameLength(0);
-      sscanf(pScopeData, "%03x", &scopeNameLength);
-      string scope(pScopeData + 3, scopeNameLength);
-      string unlinkListData(pScopeData + 3 + scopeNameLength, 
-        e.length - sizeof(PAUnlinkpropertiesEvent) - 3 - scopeNameLength);
+      pData = (char*)(&e) + sizeof(PAUnlinkpropertiesEvent);
+      unsigned int scopeDataLength = Utils::unpackString(pData, scope);
+      string unlinkListData(pData + scopeDataLength, 
+        e.length - sizeof(PAUnlinkpropertiesEvent) - scopeDataLength);
       LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
         "PA-REQ: Unlink properties %s on scope %s",
         unlinkListData.c_str(), 
         scope.c_str()));
       list<string> propertyList;
-      unpackPropertyList(pScopeData + 3 + scopeNameLength, propertyList);
+      Utils::unpackPropertyList(pData + scopeDataLength, propertyList);
       GCFMyPropertySet* pPropertySet = _propertySets[scope];
       if (pPropertySet)
       {
@@ -438,27 +425,6 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
   }
 
   return status;
-}
-
-void GPMController::unpackPropertyList(char* pListData, list<string>& propertyList)
-{
-  unsigned int dataLength;
-  char* pPropertyData;
-  sscanf(pListData, "%03x", &dataLength);
-  pPropertyData = pListData + 3;
-  propertyList.clear();
-  if (dataLength > 0)
-  {
-    string propName;
-    char* pPropName = strtok(pPropertyData, "|");
-    while (pPropName && dataLength > 0)
-    {
-      propName = pPropName;      
-      pPropName = strtok(NULL, "|");
-      dataLength -= (propName.size() + 1);
-      propertyList.push_back(propName);
-    }
-  }
 }
 
 void logResult(TPAResult result, GCFApc& apc)

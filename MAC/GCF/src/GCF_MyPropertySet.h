@@ -101,7 +101,7 @@ class GCFMyPropertySet : public GCFPropertySetBase
     GCFPValue* getValue (const string propName); 
     GCFPValue* getOldValue (const string propName);
     //@}
-              
+             
   private: // interface methods
     friend class GCFMyProperty;
     void linked ();

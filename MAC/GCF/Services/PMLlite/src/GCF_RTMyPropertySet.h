@@ -69,7 +69,13 @@ class GCFRTMyPropertySet
      * @returns 0 if not in this property set
      */
     GCFRTMyProperty* getProperty (const string propName) const;
-    GCFRTMyProperty* operator[] (const string propName);
+
+    /**
+     * Searches the property specified by the propName param
+     * @param propName with or without the scope
+     * @returns a dummy port if property could not be found
+     */
+    GCFRTMyProperty& operator[] (const string propName);
 
     /**
      * Asynchronous method

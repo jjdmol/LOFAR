@@ -228,18 +228,18 @@ void GCFMyPropertySet::linkProperties(list<string>& properties)
 {
   if (_isLoaded && !_isBusy)
   {
-    GPMController* pController = GPMController::instance();
-    assert(pController);
-    pController->propertiesLinked(getScope(), PA_PROP_SET_GONE);
-  }
-  else
-  {  
     _tempLinkList = properties;
   
     assert(_counter == 0);
     
     _missing = 0;
     retryLinking();
+  }
+  else
+  {  
+    GPMController* pController = GPMController::instance();
+    assert(pController);
+    pController->propertiesLinked(getScope(), PA_PROP_SET_GONE);
   }
 }
 

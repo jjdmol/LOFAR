@@ -24,6 +24,7 @@
 #define GCF_PROPERTYSETBASE_H
 
 #include <GCF/GCF_Defines.h>
+#include <GCF/GCF_PropertyBase.h>
 
 class GCFPropertyBase;
 class GCFAnswer;
@@ -49,6 +50,14 @@ class GCFPropertySetBase
      * @returns 0 if not in this property set
      */
     GCFPropertyBase* getProperty (const string propName) const;
+
+    /**
+     * Searches the property specified by the propName param
+     * @param propName with or without the scope
+     * @returns a dummy port if property could not be found
+     */
+    virtual GCFPropertyBase& operator[] (const string propName);
+    
     /**
      * Searches the property specified by the propName param
      * @param propName with or without the scope
@@ -86,5 +95,6 @@ class GCFPropertySetBase
   private:
     GCFAnswer*    _pAnswerObj;
     string        _scope;
+    GCFPropertyBase _dummyProperty;
 };
 #endif
