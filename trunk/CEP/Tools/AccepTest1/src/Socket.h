@@ -199,9 +199,9 @@ namespace LOFAR
     static void printData (const void *buf,int n);
       
     //##ModelId=3DB936D80210
-    Declare_sdebug( );
-    //##ModelId=3DB936D802BA
-    Declare_debug( );
+/*     Declare_sdebug( ); */
+/*     //##ModelId=3DB936D802BA */
+/*     Declare_debug( ); */
   protected:
     //##ModelId=4760B82BFEED
     //##Documentation

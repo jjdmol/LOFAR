@@ -38,7 +38,7 @@ WH_Correlator.cc					\
 WH_Dump.cc						
 
 
-Correlator_LDADD = /bgl/broekema/traceback/traceback.o
+Correlator_LDADD = # /bgl/broekema/traceback/traceback.o
 Correlator_DEPENDENCIES = $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common
