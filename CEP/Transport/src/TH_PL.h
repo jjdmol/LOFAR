@@ -23,7 +23,8 @@
 #ifndef CEPFRAME_TH_PL_H
 #define CEPFRAME_TH_PL_H
 
-#include <CEPFrame/TransportHolder.h>
+#include <TransportHolder.h>
+#include <DH_PL.h>
 #include <PL/PersistenceBroker.h>		// for PersistenceBroker
 namespace LOFAR
 {
@@ -57,8 +58,8 @@ public:
   bool isBlocking() const;
 
 protected:
-  static PersistenceBroker theirPersistenceBroker;
-
+   static PL::PersistenceBroker theirPersistenceBroker;
+   static int theirInstanceCount;
 private:
   // methods to manage the connection to the dbms
   void ConnectDatabase (void);
@@ -73,7 +74,10 @@ private:
     
     // The results from a query is returned as a collection of
     // DH_PL_MessageRecord. So we need an object for that purpose:
-    Collection<TPersistentObject<DH_PL_MessageRecord> > Results;  
+   Collection<PL::TPersistentObject<DH_PL::DataPacket> > Results;  
+
+   long itsWriteSeqNo;
+   long itsReadSeqNo;
 };
  
  inline bool TH_PL::isBlocking() const
