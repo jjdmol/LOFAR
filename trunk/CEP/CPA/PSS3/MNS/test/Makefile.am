@@ -1,6 +1,6 @@
-check_PROGRAMS 		= tWSRT tPoly tMeqMatrix tuvw
+check_PROGRAMS 		= tPoly tMeqMatrix tMeqPolc tuvw
 
-TESTS			= tWSRT tPoly tMeqMatrix tuvw
+TESTS			= tPoly tMeqMatrix tMeqPolc tuvw
 
 tPoly_SOURCES 		= tPoly.cc 
 tPoly_LDADD		= ../src/libmns.la 
@@ -9,6 +9,10 @@ tPoly_DEPENDENCIES	= ../src/libmns.la $(LOFAR_DEPEND)
 tMeqMatrix_SOURCES 	= tMeqMatrix.cc 
 tMeqMatrix_LDADD	= ../src/libmns.la 
 tMeqMatrix_DEPENDENCIES	= ../src/libmns.la $(LOFAR_DEPEND)
+
+tMeqPolc_SOURCES 	= tMeqPolc.cc 
+tMeqPolc_LDADD		= ../src/libmns.la 
+tMeqPolc_DEPENDENCIES	= ../src/libmns.la $(LOFAR_DEPEND)
 
 tuvw_SOURCES 		= tuvw.cc 
 tuvw_LDADD		= ../src/libmns.la 

@@ -43,12 +43,12 @@
 
 
 // Solve for a single 3rd-order polynomial.
-void doIt1()
+void doIt1 (const string& ptabName)
 {
   cout << endl << "test ParmPolc" << endl;
-  ParmTable ptab("parm.pss");
+  ParmTable ptab(ptabName);
   MeqDomain domain(1, 2, 2, 4);
-  MeqStoredParmPolc parm00("parmp", &ptab);
+  MeqStoredParmPolc parm00("parmp", -1, -1, &ptab);
   int nrspid = 0;
   parm00.setSolvable(true);
   nrspid += parm00.initDomain (domain, nrspid);
@@ -238,13 +238,17 @@ void doIt2()
 
 int main (int argc, char** argv)
 {
+  if (argc <= 1) {
+    cout << "Run as:  tPoly parmtable_name" << endl;
+    return 0;
+  }
   uInt nr = 100;
-  if (argc > 1) {
+  if (argc > 2) {
     istrstream istr(argv[1]);
     istr >> nr;
   }
   try {
-    doIt1();
+    doIt1(argv[1]);
     doIt2();
   } catch (AipsError& x) {
     cout << "Caught an AIPS++ exception: " << x.getMesg() << endl;
