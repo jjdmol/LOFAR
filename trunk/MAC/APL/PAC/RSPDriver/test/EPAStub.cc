@@ -119,38 +119,24 @@ EPAStub::EPAStub(string name)
       for (int regid = 0; regid <= MEPHeader::MAX_REGID; regid++)
       {
 	uint16 size = m_reg[pid][regid].size;
-	
-	switch (pid)
-	{
-	  case MEPHeader::WG:
-	  case MEPHeader::SS:
-	  case MEPHeader::BF:
-	  case MEPHeader::SST:
-	  case MEPHeader::RCU:
-	  case MEPHeader::CRB:
-	    size *= GET_CONFIG("RS.N_BLPS", i);
-	    break;
-	}
 
-	for (int i = 0; i < size; i++)
+	if (size)
 	{
-	  m_reg[pid][regid].addr[i] = i;
+	  switch (pid)
+	  {
+	    case MEPHeader::WG:
+	    case MEPHeader::SS:
+	    case MEPHeader::BF:
+	    case MEPHeader::SST:
+	    case MEPHeader::RCU:
+	    case MEPHeader::CRB:
+	      size *= GET_CONFIG("RS.N_BLPS", i);
+	      break;
+	  }
+
+	  for (int i = 0; i < size; i++) m_reg[pid][regid].addr[i] = i;
 	}
-	
-	//if (m_reg[pid][regid].addr) memset(m_reg[pid][regid].addr, 0, size);
       }
-
-#if 0
-    //
-    // Initialize read-only registers to some test pattern
-    //
-    for (int i = 0; i < MEPHeader::RSR_STATUS_SIZE; i++)  m_reg[MEPHeader::RSR][MEPHeader::RSR_STATUS].addr[i]  = i;
-    for (int i = 0; i < MEPHeader::RSR_VERSION_SIZE; i++) m_reg[MEPHeader::RSR][MEPHeader::RSR_VERSION].addr[i] = i;
-    for (int i = 0; i < MEPHeader::BST_MEAN_SIZE; i++)    m_reg[MEPHeader::BST][MEPHeader::BST_MEAN].addr[i]    = i;
-    for (int i = 0; i < MEPHeader::BST_POWER_SIZE; i++)   m_reg[MEPHeader::BST][MEPHeader::BST_POWER].addr[i]   = i;
-    for (int i = 0; i < MEPHeader::SST_MEAN_SIZE; i++)    m_reg[MEPHeader::SST][MEPHeader::SST_MEAN].addr[i]    = i;
-    for (int i = 0; i < MEPHeader::SST_POWER_SIZE; i++)   m_reg[MEPHeader::SST][MEPHeader::SST_POWER].addr[i]   = i;
-#endif
   }
 }
 

@@ -50,8 +50,9 @@ SSRead::~SSRead()
 
 void SSRead::sendrequest()
 {
-  EPASsSelectEvent ssread;
-  ssread.hdr.set(MEPHeader::SS_SELECT_HDR, getCurrentBLP());
+  EPAReadEvent ssread;
+  ssread.hdr.set(MEPHeader::SS_SELECT_HDR, getCurrentBLP(),
+		 MEPHeader::READ);
 
   getBoardPort().send(ssread);
 }
