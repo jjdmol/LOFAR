@@ -26,13 +26,16 @@
 #include <Common/LofarTypedefs.h>
 
 // Define some unsigned only if not already done is /usr/include/sys/types.h
-
+#if (HAVE_QT)
+#include <qglobal.h>
+#else
 using LOFAR::uchar;
 #if !defined(_SYS_TYPES_H) || !defined(__USE_MISC)
 using LOFAR::ushort;
 using LOFAR::uint;
 using LOFAR::ulong;
 #endif
+#endif // QT
 using LOFAR::longlong;
 using LOFAR::ulonglong;
 using LOFAR::ldouble;
