@@ -1,34 +1,31 @@
-//  WH_Selector.cc:
-//
-//  Copyright (C) 2002
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//
-//  This program is free software; you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation; either version 2 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-//  $Id$
-//
-//  $Log$
-//
-//////////////////////////////////////////////////////////////////////
+//#  WH_Selector.cc:
+//#
+//#  Copyright (C) 2002
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
+//#
 
 #include <stdio.h>             // for sprintf
 
-#include "StationSim/WH_Selector.h"
-#include "BaseSim/ParamBlock.h"
-#include "Common/Debug.h"
+#include <StationSim/WH_Selector.h>
+#include <BaseSim/ParamBlock.h>
+#include <Common/Debug.h>
 #include <Common/lofar_vector.h>
 
 
@@ -44,13 +41,13 @@ WH_Selector::WH_Selector (const string& name,
   itsNbandout   (nsubbandout)
 {
   if (nout > 0) {
-    itsOutHolders = new DH_Sample* [nout];
+    itsOutHolders = new DH_SampleC* [nout];
   }
   char str[8];
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
-    itsOutHolders[i] = new DH_Sample (string("out_") + str, nrcu,
-				      nsubbandout);
+    itsOutHolders[i] = new DH_SampleC (string("out_") + str, nrcu,
+				       nsubbandout);
   }
 }
 
@@ -84,9 +81,9 @@ void WH_Selector::process()
   if (getOutputs() > 0) {
     // Keep track of which output subbands have been filled.
     vector<bool> outDone(itsNbandout, false);
-    DH_Sample::BufferType* bufin = itsInHolder.getBuffer();
+    DH_SampleC::BufferType* bufin = itsInHolder.getBuffer();
     const int* sel = itsInSel.getBuffer();
-    DH_Sample::BufferType* bufout = itsOutHolders[0]->getBuffer();
+    DH_SampleC::BufferType* bufout = itsOutHolders[0]->getBuffer();
     // Copy the selected input subband to the given output subband.
     // Check if the selection is given correctly.
     for (int i=0; i<itsNbandin; i++) {
@@ -96,14 +93,19 @@ void WH_Selector::process()
 	AssertStr (outDone[out] == false,
 		   "Output subband " << out << " multiply used");
 	outDone[out] = true;
-	memcpy (bufout+out*itsNrcu, bufin, itsNrcu);
+	memcpy (bufout+out*itsNrcu, bufin,
+		itsNrcu * sizeof(DH_SampleC::BufferType));
+	for (int j=0; j<itsNrcu; j++) {
+	  cout << bufin[j] << ' ';
+	}
+	cout << endl;
       }
       bufin += itsNrcu;
     }
     // Clear the buffers for which no input subband is selected.
     for (int i=0; i<itsNbandout; i++) {
       if (! outDone[i]) {
-	DH_Sample::BufferType* buf = bufout + i*itsNrcu;
+	DH_SampleC::BufferType* buf = bufout + i*itsNrcu;
 	for (int j=0; j<itsNrcu; j++) {
 	  buf[j] = 0;
 	}
@@ -112,7 +114,7 @@ void WH_Selector::process()
     // Copy the output if multiple outputs are used.
     for (int i=1; i<getOutputs(); i++) {
       memcpy (itsOutHolders[i]->getBuffer(), bufout,
-	      itsNrcu * itsNbandout * sizeof(DH_Sample::BufferType));
+	      itsNrcu * itsNbandout * sizeof(DH_SampleC::BufferType));
     }
   }
 }
@@ -136,7 +138,7 @@ DataHolder* WH_Selector::getInHolder (int channel)
   }
   return &itsInSel;
 }
-DH_Sample* WH_Selector::getOutHolder (int channel)
+DH_SampleC* WH_Selector::getOutHolder (int channel)
 {
   AssertStr (channel < getOutputs(),
 	     "output channel too high");

@@ -1,34 +1,31 @@
-//  WH_Merge.cc:
-//
-//  Copyright (C) 2002
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//
-//  This program is free software; you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation; either version 2 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-//  $Id$
-//
-//  $Log$
-//
-//////////////////////////////////////////////////////////////////////
+//#  WH_Merge.cc:
+//#
+//#  Copyright (C) 2002
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
+//#
 
 #include <stdio.h>             // for sprintf
 
-#include "StationSim/WH_Merge.h"
-#include "BaseSim/ParamBlock.h"
-#include "Common/Debug.h"
+#include <StationSim/WH_Merge.h>
+#include <BaseSim/ParamBlock.h>
+#include <Common/Debug.h>
 
 
 WH_Merge::WH_Merge (const string& name,
@@ -43,7 +40,7 @@ WH_Merge::WH_Merge (const string& name,
     itsInHolders  = new DH_RCU* [nin];
   }
   if (nout > 0) {
-    itsOutHolders = new DH_Sample* [nout];
+    itsOutHolders = new DH_SampleR* [nout];
   }
   // Create the input DH-s.
   char str[8];
@@ -57,7 +54,7 @@ WH_Merge::WH_Merge (const string& name,
   }
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
-    itsOutHolders[i] = new DH_Sample (string("out_") + str, nin, 1);
+    itsOutHolders[i] = new DH_SampleR (string("out_") + str, nin, 1);
   }
 }
 
@@ -114,7 +111,7 @@ DH_RCU* WH_Merge::getInHolder (int channel)
 	     "input channel too high");
   return itsInHolders[channel];
 }
-DH_Sample* WH_Merge::getOutHolder (int channel)
+DH_SampleR* WH_Merge::getOutHolder (int channel)
 {
   AssertStr (channel < getOutputs(),
 	     "output channel too high");

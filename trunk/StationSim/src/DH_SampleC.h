@@ -1,4 +1,4 @@
-//#  DH_SubBandSel.h: 
+//#  DH_SampleC.h: 
 //#
 //#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,67 +21,73 @@
 //#  $Id$
 //#
 
-#ifndef STATIONSIM_DH_SUBBANDSEL_H
-#define STATIONSIM_DH_SUBBANDSEL_H
+#ifndef STATIONSIM_DH_SAMPLEC_H
+#define STATIONSIM_DH_SAMPLEC_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include <BaseSim/DataHolder.h>
+#include <Common/lofar_complex.h>
 
 /**
-   This class is the DataHolder holding the SubBand selection
-   to be used by WH_Selector.
-   Each input subband can have a value -1 meaning don't select.
-   A value >= 0 means put the data into that subband output.
+   This class is the DataHolder holding real sample data.
 */
 
-class DH_SubBandSel: public DataHolder
+class DH_SampleC: public DataHolder
 {
 public:
-  DH_SubBandSel (const string& name, unsigned int nsubband);
+  typedef complex<double> BufferType;
 
-  virtual ~DH_SubBandSel();
+  DH_SampleC (const string& name, unsigned int nx,
+	      unsigned int ny);
 
-  /// Aloocate the buffers.
+  virtual ~DH_SampleC();
+
+  /// Allocate the buffers.
   virtual void preprocess();
 
   /// Deallocate the buffers.
   virtual void postprocess();
 
   /// Get write access to the Buffer in the DataPacket.
-  int* getBuffer();
+  BufferType* getBuffer();
   /// Get read access to the Buffer in the DataPacket.
-  const int* getBuffer() const;
+  const BufferType* getBuffer() const;
+
+  /// Write the buffer into an ASCII file.
+  virtual bool doFsWrite (ofstream&) const;
 
 protected:
   // Definition of the DataPacket type.
   class DataPacket: public DataHolder::DataPacket
   {
   public:
-    DataPacket() {};
+    DataPacket()
+      {};
 
-    int itsFill;         // to ensure alignment
+    BufferType itsFill;           // to ensure alignment
   };
 
 private:
   /// Forbid copy constructor.
-  DH_SubBandSel (const DH_SubBandSel&);
+  DH_SampleC (const DH_SampleC&);
   /// Forbid assignment.
-  DH_SubBandSel& operator= (const DH_SubBandSel&);
+  DH_SampleC& operator= (const DH_SampleC&);
 
 
   void*        itsDataPacket;
-  int*         itsBuffer;
-  unsigned int itsNsubband;
+  BufferType*  itsBuffer;
+  int          itsNx;
+  int          itsNy;
 };
 
 
-inline int* DH_SubBandSel::getBuffer()
+inline DH_SampleC::BufferType* DH_SampleC::getBuffer()
   { return itsBuffer; }
 
-inline const int* DH_SubBandSel::getBuffer() const
+inline const DH_SampleC::BufferType* DH_SampleC::getBuffer() const
   { return itsBuffer; }
 
 

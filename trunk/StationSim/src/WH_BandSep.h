@@ -1,4 +1,4 @@
-//#  WH_RCUAdd.h:
+//#  WH_BandSep.h:
 //#
 //#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,39 +21,48 @@
 //#  $Id$
 //#
 
-#ifndef STATIONSIM_WH_RCUADD_H
-#define STATIONSIM_WH_RCUADD_H
+#ifndef STATIONSIM_WH_BANDSEP_H
+#define STATIONSIM_WH_BANDSEP_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include <BaseSim/WorkHolder.h>
-#include <StationSim/DH_RCU.h>
+#include <StationSim/DH_SampleR.h>
+#include <StationSim/DH_SampleC.h>
+#include <Common/lofar_vector.h>
+
+#include <aips/Arrays/Vector.h>
+#include <aips/Mathematics/FFTServer.h>
 
 
 /**
-   This WorkHolder adds n RCU signals.
+   This WorkHolder downsamples the data and splits them into subbands.
 */
 
-class WH_RCUAdd: public WorkHolder
+class WH_BandSep: public WorkHolder
 {
 public:
   /// Construct the work holder and give it a name.
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  WH_RCUAdd (const string& name, unsigned int nin,
-	     unsigned int nout);
+  WH_BandSep (const string& name, unsigned nout,
+	      unsigned int nrcu, unsigned int nsubband,
+	      const string& coeffFileName);
 
-  virtual ~WH_RCUAdd();
+  virtual ~WH_BandSep();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, int ninput, int noutput,
 				const ParamBlock&);
 
   /// Make a fresh copy of the WH object.
-  virtual WH_RCUAdd* make (const string& name) const;
+  virtual WH_BandSep* make (const string& name) const;
+
+  /// Preprocess (open coeff file and allocate internal buffer).
+  virtual void preprocess();
 
   /// Do a process step.
   virtual void process();
@@ -62,23 +71,36 @@ public:
   virtual void dump() const;
 
   /// Get a pointer to the i-th input DataHolder.
-  virtual DH_RCU* getInHolder (int channel);
+  virtual DH_SampleR* getInHolder (int channel);
 
   /// Get a pointer to the i-th output DataHolder.
-  virtual DH_RCU* getOutHolder (int channel);
+  virtual DH_SampleC* getOutHolder (int channel);
 
 private:
   /// Forbid copy constructor.
-  WH_RCUAdd (const WH_RCUAdd&);
+  WH_BandSep (const WH_BandSep&);
 
   /// Forbid assignment.
-  WH_RCUAdd& operator= (const WH_RCUAdd&);
+  WH_BandSep& operator= (const WH_BandSep&);
 
 
   /// Pointer to the array of input DataHolders.
-  DH_RCU** itsInHolders;
+  DH_SampleR itsInHolder;
   /// Pointer to the array of output DataHolders.
-  DH_RCU** itsOutHolders;
+  DH_SampleC** itsOutHolders;
+
+  /// Length of buffers.
+  int itsNrcu;
+  int itsNsubband;
+  int itsFilterLength;
+  string itsCoeffName;
+  vector<vector<DH_SampleR::BufferType> > itsFilters;  // nsubband vectors
+  vector<vector<DH_SampleR::BufferType> > itsBuffers;  // nrcu buffers
+  Vector<DH_SampleR::BufferType> itsConv;
+  Vector<DH_SampleC::BufferType> itsFFTBuf;
+  FFTServer<DH_SampleR::BufferType,DH_SampleC::BufferType> itsFFTserver;
+  int itsSubPos;
+  int itsFiltPos;
 };
 
 

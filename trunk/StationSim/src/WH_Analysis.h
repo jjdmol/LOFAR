@@ -1,4 +1,4 @@
-//#  WH_RCUAdd.h:
+//#  WH_Analysis.h:
 //#
 //#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,39 +21,41 @@
 //#  $Id$
 //#
 
-#ifndef STATIONSIM_WH_RCUADD_H
-#define STATIONSIM_WH_RCUADD_H
+#ifndef STATIONSIM_WH_ANALYSIS_H
+#define STATIONSIM_WH_ANALYSIS_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include <BaseSim/WorkHolder.h>
-#include <StationSim/DH_RCU.h>
+#include <StationSim/DH_SampleR.h>
+#include <StationSim/DH_SampleC.h>
 
 
 /**
-   This WorkHolder adds n RCU signals.
+   This WorkHolder analyses the complex data buffer.
 */
 
-class WH_RCUAdd: public WorkHolder
+class WH_Analysis: public WorkHolder
 {
 public:
   /// Construct the work holder and give it a name.
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  WH_RCUAdd (const string& name, unsigned int nin,
-	     unsigned int nout);
+  WH_Analysis (const string& name, unsigned nout,
+	       unsigned int nx, unsigned int ny,
+	       double threshold);
 
-  virtual ~WH_RCUAdd();
+  virtual ~WH_Analysis();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, int ninput, int noutput,
 				const ParamBlock&);
 
   /// Make a fresh copy of the WH object.
-  virtual WH_RCUAdd* make (const string& name) const;
+  virtual WH_Analysis* make (const string& name) const;
 
   /// Do a process step.
   virtual void process();
@@ -62,23 +64,28 @@ public:
   virtual void dump() const;
 
   /// Get a pointer to the i-th input DataHolder.
-  virtual DH_RCU* getInHolder (int channel);
+  virtual DH_SampleC* getInHolder (int channel);
 
   /// Get a pointer to the i-th output DataHolder.
-  virtual DH_RCU* getOutHolder (int channel);
+  virtual DH_SampleR* getOutHolder (int channel);
 
 private:
   /// Forbid copy constructor.
-  WH_RCUAdd (const WH_RCUAdd&);
+  WH_Analysis (const WH_Analysis&);
 
   /// Forbid assignment.
-  WH_RCUAdd& operator= (const WH_RCUAdd&);
+  WH_Analysis& operator= (const WH_Analysis&);
 
 
   /// Pointer to the array of input DataHolders.
-  DH_RCU** itsInHolders;
+  DH_SampleC itsInHolder;
   /// Pointer to the array of output DataHolders.
-  DH_RCU** itsOutHolders;
+  DH_SampleR** itsOutHolders;
+
+  /// Length of buffers.
+  int itsNx;
+  int itsNy;
+  double itsThreshold;
 };
 
 

@@ -1,0 +1,30 @@
+define
+ nrcu=2,
+ nsubband1=8,
+ nselband=2,
+ nbeam=2,
+ maxntarget=10,
+ maxnrfi=10,
+ awerate=2,
+ rcufilename="generated_data.dat",
+ selfilename="sel.dat",
+ coefffilename="h.dat",
+ dipolefilename="dipole.dat",
+ targettrackfilename="targettrack.dat",
+ rfitrackfilename="rfitrack.dat",
+ rcuall_outname="rcu.out",
+ bandsep_outname="bandsep.out",
+ select_outname="select.out",
+ beamformer_outname="beam.out",
+ awe_outname="awe.out"
+;
+dhfile dh="rcuall.out_0",     file="rcu.out";
+dhfile dh="bandsep.out_0",    file="bandsep.out";
+dhfile dh="select.out_0",     file="select.out";
+dhfile dh="beamformer.out_0", file="beamformer.out";
+dhfile dh="awe.out_0",        file="awe.out";
+step 8;
+dump;
+step 1016;
+dump;
+quit;
