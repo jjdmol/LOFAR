@@ -1,4 +1,4 @@
-lib_LTLIBRARIES 	= libtinyframe.la
+lib_LTLIBRARIES 	= libtinycep.la
 
 DOCHDRS = \
 SimulatorParseClass.h \
@@ -31,7 +31,7 @@ MyExample.h
 # CFinput_LDADD		= \
 #			libcepframe.la
 
-libtinyframe_la_SOURCES = $(DOCHDRS) \
+libtinycep_la_SOURCES = $(DOCHDRS) \
 SimulatorParse.yy                               \
 SimulatorParse.h                                \
 SimulatorTokenize.ll                            \
