@@ -33,7 +33,7 @@
     project a self-calibration program shall be written
     \hyperlink{LOFAR-ASTRON-ADD-006}{[SCH02-1]}. The idea
     is that this program will have the architectural structure of a
-    "BlackBoard". Such a pattern caught in a framework will have
+    ``BlackBoard''. Such a pattern caught in a framework will have
     broader use then just the self-calibration. The applicability of a
     framework following this design pattern will be investigated and a
     rapport hereof will be included in this document.
@@ -138,9 +138,8 @@
     add control-strategies and low-level algorithms as we go.
 
     \begin{requirement}
-      It would be nice to have a library of strategies that
-      would include "conditions" and "actions to
-      take".
+      It would be nice to have a library of strategies that would
+      include ``conditions'' and ``actions to take''.
       \caption{library of strategies\label{req:strategies}}
     \end{requirement}
 
@@ -221,13 +220,13 @@
       \item \em{WorkerProxy}: Polls for work to do in the
       database.(pull, push is more desirable. Can be done when the
       database supports action paradigm/trigger) It has an abstract
-      function, e.g. "perform" that starts applying the real
+      function, e.g. ``perform'' that starts applying the real
       knowledge.
 
-      \item \em{SelfcalWrapper}: Triggers the selfcal engine by means of its "perform"
-      function. It puts the status of the real knowledge-source on the
-      blackboard, when it changes. It also writes back results to the
-      blackboard if needed.
+      \item \em{SelfcalWrapper}: Triggers the selfcal engine by means
+      of its ``perform'' function. It puts the status of the real
+      knowledge-source on the blackboard, when it changes. It also
+      writes back results to the blackboard if needed.
 
       \item \em{selfcal engine}: The actual (external) program that
       can perform a series of calibration steps.
