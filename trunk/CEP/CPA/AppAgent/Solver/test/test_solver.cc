@@ -221,7 +221,7 @@ int main (int argc, const char *argv[])
         solveargs[FBatchJobs][0][FWhenConverged] <<= new DataRecord;
         solveargs[FBatchJobs][0][FWhenMaxIter] <<= new DataRecord;
 	solveargs[FBatchJobs][0][FWhenMaxIter][SaveResiduals] = True;
-	solveargs[FBatchJobs][0][FWhenMaxIter][SaveParms] = True;
+	solveargs[FBatchJobs][0][FWhenMaxIter][SaveParms] = False;
 
     cout<<"=================== creating agents ===========================\n";
     VisAgent::InputAgent::Ref inagent(

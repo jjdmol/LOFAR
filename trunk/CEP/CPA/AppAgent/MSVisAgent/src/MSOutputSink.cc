@@ -165,6 +165,9 @@ void MSOutputSink::doPutHeader (const DataRecord &header)
   int ncorr = header[FCorr].size(Tpint);
   column_slicer_ = Slicer(IPosition(2,0,chan0),IPosition(2,ncorr-1,chan1),
                    Slicer::endIsLast);
+  IPosition origshape = LoShape(header[FOriginalDataShape].as_vector<int>());
+  null_cell_.resize(origshape);
+  null_cell_.set(0);
   // setup parameters from default record
   write_flags_       = params_[FWriteFlags].as<bool>(False);
   flagmask_          = params_[FFlagMask].as<int>(0xFFFFFFFF);
@@ -192,6 +195,7 @@ void MSOutputSink::doPutHeader (const DataRecord &header)
   }
 
   cdebug(2)<<"got header for MS "<<msname_<<endl;
+  cdebug(2)<<"  orig shape: "<<origshape<<endl;
   cdebug(2)<<"  channels: "<<chan0<<"-"<<chan1<<endl;
   cdebug(2)<<"  correlations: "<<ncorr<<endl;
   cdebug(2)<<"  write_flags: "<<write_flags_<<endl;
@@ -202,6 +206,15 @@ void MSOutputSink::doPutHeader (const DataRecord &header)
   // set state to indicate success
   tilecount_ = rowcount_ = 0;
 }
+
+void MSOutputSink::putColumn (Column &col,int irow,const LoMat_fcomplex &data)
+{
+  Matrix<Complex> aips_data = copyBlitzToAips(data);
+  cdebug(6)<<"writing "<<col.name<<": "<<aips_data<<endl;
+  if( !col.col.isDefined(irow) )
+    col.col.put(irow,null_cell_);
+  col.col.putSlice(irow,column_slicer_,aips_data);
+}    
 
 //##ModelId=3E28316B012D
 void MSOutputSink::doPutTile (const VisTile &tile)
@@ -224,7 +237,7 @@ void MSOutputSink::doPutTile (const VisTile &tile)
     rowcount_++;
     int irow = iter.seqnr();
     cdebug(5)<<"  writing to table row "<<irow<<endl;
-    // write flags?
+    // write flags if required
     if( write_flags_ )
     {
       rowFlagCol_.put(irow,rowflag&flagmask_ != 0);
@@ -236,23 +249,11 @@ void MSOutputSink::doPutTile (const VisTile &tile)
     }
     // write data columns
     if( tile.defined(VisTile::DATA) && datacol_.valid )
-    {
-      Matrix<Complex> adata = copyBlitzToAips(iter.data());
-      cdebug(6)<<"writing data: "<<adata<<endl;
-      datacol_.col.putSlice(irow,column_slicer_,adata);
-    }
+      putColumn(datacol_,irow,iter.data());
     if( tile.defined(VisTile::PREDICT) && predictcol_.valid )
-    {
-      Matrix<Complex> apredict = copyBlitzToAips(iter.predict());
-      cdebug(6)<<"writing predict: "<<apredict<<endl;
-      predictcol_.col.putSlice(irow,column_slicer_,apredict);
-    }
+      putColumn(predictcol_,irow,iter.predict());
     if( tile.defined(VisTile::RESIDUALS) && rescol_.valid )
-    {
-      Matrix<Complex> ares = copyBlitzToAips(iter.residuals());
-      cdebug(6)<<"writing residuals: "<<ares<<endl;
-      rescol_.col.putSlice(irow,column_slicer_,ares);
-    }
+      putColumn(rescol_,irow,iter.residuals());
   }
   cdebug(4)<<"  wrote "<<count<<"/"<<tile.nrow()<<" rows\n";
 }

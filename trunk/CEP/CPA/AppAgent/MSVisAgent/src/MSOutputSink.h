@@ -31,6 +31,7 @@
 
 #include <aips/MeasurementSets/MeasurementSet.h>
 #include <aips/Arrays/Slicer.h>
+#include <aips/Arrays/Array.h>
 #include <aips/Tables/ArrayColumn.h>
 #include <aips/Tables/ScalarColumn.h>
 
@@ -123,6 +124,8 @@ class MSOutputSink : public FileSink, public MSVisAgentDebugContext
     //##          WAIT      stream has been suspended from other end    
     //##          CLOSED    stream closed
     virtual void doPutTile (const VisTile &tile);
+
+    void putColumn (Column &col,int irow,const LoMat_fcomplex &data);
     
     //##ModelId=3E2D6130030C
     string msname_;
@@ -157,6 +160,8 @@ class MSOutputSink : public FileSink, public MSVisAgentDebugContext
     ScalarColumn<Bool> rowFlagCol_;
     //##ModelId=3E2ED50E0190
     ArrayColumn<Bool> flagCol_;
+    
+    Array<Complex> null_cell_;
 };
 
 

@@ -15,12 +15,14 @@ Mask                             1254       ; from /home/oms/LOFAR/autoconf_shar
 Message                          1067       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:50
 Name                             1163       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/VisCube/src/VisCube.aidlist:44
 Non                              1380       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:17
+Original                         1387       ; from /home/oms/LOFAR/CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgentVocabulary.h:37
 Output                           1130       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:6
 Params                           1135       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:19
 Predict                          1256       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:20
 Raw                              1159       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/VisCube/src/VisCube.aidlist:58
 Residuals                        1257       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:22
 Selection                        1124       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:23
+Shape                            1388       ; from /home/oms/LOFAR/CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgentVocabulary.h:37
 Size                             1127       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:24
 Start                            1134       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:66
 String                           1128       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/AppAgent/src/AppAgent.aidlist:32
@@ -32,4 +34,4 @@ VDSID                            1121       ; from /home/oms/LOFAR/autoconf_shar
 Vis                              1116       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:11
 Write                            1253       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:33
 start                            1043       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOGlish/src/OCTOGlish.aidlist:6
-string                           48         ; from /home/oms/LOFAR/autoconf_share/../DMI/src/DMI.aidlist:45
+string                           48         ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:35
