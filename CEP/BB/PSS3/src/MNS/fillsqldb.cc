@@ -33,6 +33,7 @@
 #include <MNS/ParmTableMySQL.h>
 #include <MNS/ParmTableMonet.h>
 #include <MNS/ParmTableAIPS.h>
+#include <MNS/ParmTableBDB.h>
 
 using namespace LOFAR;
 using std::cout;
@@ -198,8 +199,8 @@ void newParmDef (const std::string& tableName, const std::string& parmName,
   int statnr = kvmap.getInt ("statnr", -1);
   MeqPolc polc;
   polc.setCoeff (getArray (kvmap, "values", kvmap.getInt("nx", 1)));
-  polc.setSimCoeff (polc.getCoeff().clone());
   MeqMatrix mat(double(0), polc.getCoeff().nx(), polc.getCoeff().ny());
+  polc.setSimCoeff (mat);
   polc.setPertSimCoeff (mat);
   polc.setNormalize (kvmap.getBool ("normalize", true));
   double diff = kvmap.getDouble ("diff", 1e-6);
@@ -248,6 +249,8 @@ void doIt()
 	  PTR = new ParmTableMonet (dbHost, dbUser, tableName, true);
 	} else if (dbType=="aips") {
 	  PTR = new ParmTableAIPS (tableName);
+	} else if (dbType=="bdb") {
+	  PTR = new ParmTableBDB (dbUser, tableName);
 	} else {
 	  cerr<<"Unknown database type: '"<<dbType<<"'"<<endl;
 	  exit(1);
