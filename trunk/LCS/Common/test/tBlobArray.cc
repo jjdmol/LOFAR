@@ -34,22 +34,25 @@ using namespace LOFAR;
 
 uint doOut (BlobOBuffer* bb)
 {
-  BlobOStream bs(bb, true);
+  // Write a vector into the blob.
+  BlobOStream bs(bb);
   std::vector<double> vec(3);
   vec[0] = double(2);
   vec[1] = double(1e10);
   vec[2] = double(-3.1);
   bs << vec;
+  // Check if alignment is done properly.
   int pos = bs.tellPos();
   Assert (bs.align(0) == 0);
   Assert (bs.align(1) == 0);
-  Assert (bs.align(8) == 0);
   Assert (bs.align(128) == uint(128-pos));
-  return setSpaceBlobArray1<fcomplex> (bs, 2, false);
+  // Reserve space for a complex array and the offset of the array.
+  return setSpaceBlobArray1<fcomplex> (bs, 2);
 }
 
 void doIn (BlobIBuffer* bb, bool read2=false)
 {
+  // Read the vector from the blob and check if it is correct.
   BlobIStream bs(bb);
   std::vector<double> vec(5);
   bs >> vec;
@@ -58,11 +61,12 @@ void doIn (BlobIBuffer* bb, bool read2=false)
   Assert (vec[1] == double(1e10));
   Assert (vec[2] == double(-3.1));
   if (read2) {
+    // Do alignment and check if done as expected.
     int pos = bs.tellPos();
     Assert (bs.align(0) == 0);
     Assert (bs.align(1) == 0);
-    Assert (bs.align(8) == 0);
     Assert (bs.align(128) == uint(128-pos));
+    // Read and check the complex vector.
     std::vector<fcomplex> vecc;
     bs >> vecc;
     Assert (vecc.size() == 2);
@@ -76,36 +80,45 @@ int main()
   try {
     {
       {
+	// Create the blob in a file.
 	std::ofstream os ("tBlobArray_tmp.dat");
 	BlobOBufStream bob(os);
         doOut (&bob);
       }
       {
+	// Read it back from the file.
 	std::ifstream is ("tBlobArray_tmp.dat");
 	BlobIBufStream bib(is);
 	doIn (&bib);
       }
     }
     {
+      // Create the blob in memory.
       BlobString str(BlobStringType(false));
       BlobOBufString bob(str);
       uint cpos = doOut (&bob);
+      // Print the offset of the complex vector.
       std::cout << "stringpos=" << cpos << std::endl;
+      // Get a pointer to the complex vector in the buffer and fill the vector.
       fcomplex* ptr = bob.getPointer<fcomplex> (cpos);
       ptr[0] = fcomplex(2,3);
       ptr[1] = fcomplex(-1,1e10);
+      // Read the blob back from the string and check it.
       BlobIBufString bib(str);
       doIn (&bib, true);
       {
+	// Read back the blob another time, so create a new BlobIBuf object.
 	BlobIBufString bob2(str);
 	BlobIStream bs(&bob2);
 	std::vector<double> vec;
 	bs >> vec;
 	int pos = bs.tellPos();
+	// Do the alignment again.
 	Assert (bs.align(0) == 0);
 	Assert (bs.align(1) == 0);
-	Assert (bs.align(8) == 0);
 	Assert (bs.align(128) == uint(128-pos));
+	// Interpret the complex vector directly as an array.
+	// Check if the shape and values are correct.
 	std::vector<uint32> shape;
 	uint cpos = getSpaceBlobArray<fcomplex> (bs, shape, false);
 	Assert (shape.size() == 1);
@@ -116,9 +129,12 @@ int main()
       }
     }
     {
+      // Create the blob in a null buffer to determine its length.
       BlobOBufNull bobn;
       uint cposn = doOut (&bobn);
       std::cout << "stringpos=" << cposn << ' ' << bobn.size() << std::endl;
+      // Create a non-expandable buffer of that size.
+      // Create and interpret the blob again.
       BlobString str(BlobStringType(false), bobn.size(), false);
       BlobOBufString bob(str);
       uint cpos = doOut (&bob);

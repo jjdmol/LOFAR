@@ -26,19 +26,13 @@
 
 using namespace LOFAR;
 
-class XX
-{
-public:
-  XX() :hdr("gervandiepen", 1) {}
-  char           chr;
-  //  double         d;
-  BlobHeader<12> hdr;
-};
 
-int main(int argc, const char* argv[])
+int main (int argc, const char* argv[])
 {
   Debug::initLevels (argc, argv);
+  // Define a blob header.
   BlobHeader<12> bl("abc",1);
+  // Check if all data in it are correct.
   cout << sizeof(bl) << endl;
   Assert (sizeof(bl) % 8 == 0);
   Assert (bl.plainSize() == 14);
@@ -52,9 +46,5 @@ int main(int argc, const char* argv[])
   bl.setLength (100);
   Assert (bl.getLength() == 100);
 
-  XX x;
-  cout << sizeof(x) << ' ' << &x << " " << (void*)(&x.chr)
-       << ' ' << &x.hdr << endl;
-  cout << "OK" << endl;
   return 0;
 }

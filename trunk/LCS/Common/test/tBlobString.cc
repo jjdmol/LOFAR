@@ -27,22 +27,29 @@ using namespace LOFAR;
 
 void doIt (const BlobStringType& type)
 {
+  // Create an empty object.
   BlobString str(type);
   DbgAssert (str.capacity() == 0);
   DbgAssert (str.size() == 0);
+  // Reserve some space.
   str.reserve (10);
   uint cap = str.capacity();
   DbgAssert (str.capacity() >= 10);
   DbgAssert (str.size() == 0);
+  // Size the object.
   str.resize (8);
   DbgAssert (str.capacity() == cap);
   DbgAssert (str.size() == 8);
+  // This reserve should not do anything.
   str.reserve (10);
   DbgAssert (str.capacity() == cap);
   DbgAssert (str.size() == 8);
+  // Make the size a bit more.
   str.resize (11);
   DbgAssert (str.capacity() >= 11);
   DbgAssert (str.size() == 11);
+  // Get the string from the object and a pointer to its first byte.
+  // That can only succeed if it uses a string.
   bool exc = false;
   char* ptr = str.data();
   try {
@@ -51,13 +58,16 @@ void doIt (const BlobStringType& type)
     exc = true;
   }
   DbgAssert (exc != type.useString());
+  // Check if the pointer is correct.
   DbgAssert (ptr == str.data());
 }
 
 int main()
 {
   try {
+    // Try it for a char* buffer.
     doIt (BlobStringType(false,LOFAR::HeapAllocator()));
+    // Try it for a string buffer.
     doIt (BlobStringType(true,LOFAR::HeapAllocator()));
   } catch (std::exception& x) {
     std::cout << "Unexpected exception: " << x.what() << std::endl;
