@@ -1,12 +1,9 @@
+#include <lofar_config.h>
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
-
 #include <PL/SQLTimeStamp.h>
 #include <Common/Debug.h>
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>
-#endif
 
 class SQLTimeStampTest : public CppUnit::TestFixture
 {

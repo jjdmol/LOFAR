@@ -23,11 +23,8 @@
 #ifndef LOFAR_PL_QUERY_UNARYEXPRNODE_H
 #define LOFAR_PL_QUERY_UNARYEXPRNODE_H
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>
-#endif
-
 //# Includes
+#include <lofar_config.h>
 #include <PL/Query/Expr.h>
 #include <PL/Query/ExprNode.h>
 #include <string>

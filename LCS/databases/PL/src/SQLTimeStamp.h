@@ -23,13 +23,12 @@
 #ifndef LOFAR_PL_SQLTIMESTAMP_H
 #define LOFAR_PL_SQLTIMESTAMP_H
 
-#include <config.h>
-
 #if !defined(HAVE_ODBC)
 #error "ODBC support is required"
 #endif
 
 //# Includes
+#include <lofar_config.h>
 #include <sqltypes.h>
 #include <Common/LofarTypes.h>
 #include <Common/Debug.h>

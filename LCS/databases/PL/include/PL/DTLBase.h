@@ -23,13 +23,12 @@
 #ifndef LOFAR_PL_DTLBASE_H
 #define LOFAR_PL_DTLBASE_H
 
-#include <config.h>
-
 #if !defined(HAVE_DTL)
 #error "DTL library is required"
 #endif
 
 //# Includes
+#include <lofar_config.h>
 #include <PL/ObjectId.h>
 #include <PL/PersistentObject.h>
 #include <dtl/DTL.h>
