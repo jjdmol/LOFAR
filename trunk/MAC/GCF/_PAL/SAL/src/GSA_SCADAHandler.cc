@@ -40,21 +40,16 @@ GSASCADAHandler* GSASCADAHandler::instance()
       cmdline += GCFTask::_argv[i];
       cmdline += " ";
     }
+    cmdline += "-currentproj ";
     string pvssCmdLineParam = PARAM_DEFAULT_PVSS_CMDLINE;
     char* appName = strrchr(GCFTask::_argv[0], '/');
     if (!ParameterSet::instance()->isDefined(pvssCmdLineParam))
     {            
       pvssCmdLineParam = formatString(PARAM_PVSS_CMDLINE, (appName ? appName + 1 : GCFTask::_argv[0]));
     }
-    try 
+    if (ParameterSet::instance()->isDefined(pvssCmdLineParam))
     {
       cmdline += ParameterSet::instance()->getString(pvssCmdLineParam);
-    }
-    catch (...)
-    {
-      LOG_WARN(formatString (
-          "Specify the requested (see above) key in your '%s.conf.in' file.",
-          (appName ? appName + 1 : GCFTask::_argv[0])));
     }
     // The PVSS API 3.0.1 redirects stdout and stderr output automatically to 
     // a file created by the API

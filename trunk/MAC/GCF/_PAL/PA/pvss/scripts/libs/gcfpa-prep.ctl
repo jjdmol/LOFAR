@@ -42,17 +42,6 @@ main()
 		xxdepei[2] = makeDynInt (0, DPEL_BOOL);
 		dpTypeCreate(xxdepes,xxdepei);
 	}
-
-  deleteDPs("TTypeA");
-  deleteDPs("TTypeB");
-  deleteDPs("TTypeC");
-  deleteDPs("TTypeD");
-  deleteDPs("TTypeE");
-  deleteDPs("TTypeF");
-  deleteDPs("TTypeG");
-  dpCreate("A_K", "TTypeB");
-  dpCreate("A_L", "TTypeE");
-  dpCreate("B_A_BRD1", "TTypeF");
 }
 
 deleteDPs(string type)
@@ -66,8 +55,11 @@ deleteDPs(string type)
     for (i = 1; i <= len; i++)
     {
       dpName = names[i];
-      dpDelete(dpName);
-      DebugN(dpName + " deleted");
+      if (dpName != getSystemName() + "DPA_server")
+      {
+      	dpDelete(dpName);
+      	DebugN(dpName + " deleted");
+      }
     }
   }
 }

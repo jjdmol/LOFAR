@@ -50,18 +50,7 @@ GPAController::GPAController() :
   _pmlPortProvider.init(*this, "provider", GCFPortInterface::MSPP, PA_PROTOCOL);
   // initialize the PVSS port for distributed communication between CCU and LCU
   _distPmlPortProvider.setConverter(_converter);
-  _distPmlPortProvider.init(*this, "DPA-server", GCFPortInterface::MSPP, PA_PROTOCOL);
-
-  // To force a connection with the PVSS system at start-up of the PA 
-  // a dummy property set will be created temporary. 
-  // The GPAPropertySet class inherits from the GSAService class which initiates
-  // the connection with the PVSS system on construction. Because it will managed
-  // by a singleton the property set only needs to be temporary.
-  GPAPropertySet dummy(*this, _pmlPortProvider);  
-  LOG_INFO("Prepare PVSS DB for proper use by PA");
-  system("chmod 777 preparePVSS-DB");
-  string sysCmd = "preparePVSS-DB " + GCFPVSSInfo::getProjectName();
-  system(sysCmd.c_str());
+  _distPmlPortProvider.init(*this, "DPA_server", GCFPortInterface::MSPP, PA_PROTOCOL);
 }
 
 GPAController::~GPAController()
@@ -77,11 +66,15 @@ GCFEvent::TResult GPAController::initial(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_INIT:
+    {
+      LOG_INFO("Prepare PVSS DB for proper use by PA");
+      system("chmod 777 preparePVSS-DB");
+      system("preparePVSS-DB");
       break;
-
+    }
     case F_ENTRY:
       _pmlPortProvider.open();
-      _distPmlPortProvider.open();
+      _distPmlPortProvider.open();      
       break;
       
     case F_TIMER:

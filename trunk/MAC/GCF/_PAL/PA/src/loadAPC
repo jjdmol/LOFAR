@@ -11,6 +11,6 @@ else
 fi
 
 echo "`sed -e "s/__default_[A-Za-z0-9_]*/$1/g" $APC_HOME/$2.apc`" > $2.apc.tmp
-PVSS00ascii -in $2.apc.tmp -proj $3
+PVSS00ascii -in $2.apc.tmp -currentproj
 rm $2.apc.tmp
 exit 0

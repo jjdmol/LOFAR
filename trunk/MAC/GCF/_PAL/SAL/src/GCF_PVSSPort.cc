@@ -97,7 +97,7 @@ bool GCFPVSSPort::open()
       if (_type == SAP)
       {
         _portAddr.setValue(formatString(
-            "%s:%s-API%d-%d", 
+            "%s:%s_API%d_%d", 
             GCFPVSSInfo::getLocalSystemName().c_str(),
             getRealName().c_str(),
             GCFPVSSInfo::getManNum(), 
