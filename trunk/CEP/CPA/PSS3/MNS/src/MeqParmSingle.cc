@@ -63,7 +63,7 @@ MeqResult MeqParmSingle::getResult (const MeqRequest& request)
 {
   MeqResult result(request.nspid());
   result.setValue (MeqMatrix(itsCurValue));
-  if (isSolvable()) {
+  if (isSolvable()  &&  request.nspid() > 0) {
     double perturbation = 1e-6;
     if (std::abs(itsCurValue) > 1e-10) {
       perturbation *= itsCurValue;
