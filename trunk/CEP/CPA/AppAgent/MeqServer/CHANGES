@@ -1,5 +1,16 @@
 
   * Renamed parmtable.g to meptable.g; the object is now called 'meptable()'
+  
+  * parm defrec:
+      defrec.default: must be a meqpolc() now, not an arbitrary value
+      defrec.auto_save = T: enables auto-saving of intermediate polc values
+      
+  * request rider:
+      req.rider.save_polc = T: saves polc values
+      
+  * polc attributes:
+      polc.grow_domain: enables growing domains
+      polc.inf_domain:  makes domain "infinite" (i.e. applies to all)
 
 
 Check in of 12/12/03:

@@ -283,6 +283,7 @@ const mep_test := function ()
     print mqs;
     fail;
   }
+  mqs.setdebug('MeqParm',5);
   
   defrec := meqparm('a',config_groups='Solvable.Parm');
   defrec.table_name := tablename;
