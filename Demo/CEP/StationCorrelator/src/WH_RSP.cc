@@ -54,7 +54,7 @@ WH_RSP::WH_RSP(const string& name,
   itsNCorrOutputs  = kvm.getInt("NoWH_Correlator", 7);  
   itsNRSPOutputs   = kvm.getInt("NoWH_RSP", 2) - 1;  
   itsPolarisations = kvm.getInt("polarisations",2);           
-  itsNbeamlets     = kvm.getInt("NoRSPbeamlets", 92) / itsNCorrOutputs; // number of EPA-packet beamlets per OutDataholder
+  itsNbeamlets     = kvm.getInt("NoRSPBeamlets", 92) / itsNCorrOutputs; // number of EPA-packet beamlets per OutDataholder
   itsNpackets      = kvm.getInt("NoPacketsInFrame", 8);             // number of EPA-packets in RSP-ethernetframe
   itsSzEPAheader   = kvm.getInt("SzEPAheader", 14);                 // headersize in bytes
   itsSzEPApacket   = (8 * itsNbeamlets) + itsSzEPAheader;           // packetsize in bytes
@@ -146,8 +146,8 @@ void WH_RSP::process()
     inDHp = (DH_RSP*)getDataManager().getInHolder(0);
     thisStamp.setStamp(inDHp->getSeqID(), inDHp->getBlockID());
     
-    cout<<"next timestamp: "<<itsNextStamp<<"    received: "<<thisStamp<<endl;
-    cout<<"next timestamp + n: "<<(itsNextStamp+(itsNpackets-1))<<endl;
+//     cout<<"next timestamp: "<<itsNextStamp<<"    received: "<<thisStamp<<endl;
+//     cout<<"next timestamp + n: "<<(itsNextStamp+(itsNpackets-1))<<endl;
 
     if (thisStamp < itsNextStamp) {
 

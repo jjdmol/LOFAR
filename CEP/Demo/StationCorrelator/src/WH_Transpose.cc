@@ -42,7 +42,7 @@ WH_Transpose::WH_Transpose(const string& name,
   itsNsamples          = itsKVM.getInt("samples", 256000);
   itsNchannels         = itsKVM.getInt("NoRSPBeamlets", 92)/itsKVM.getInt("NoWH_Correlator", 92);
   itsNpolarisations    = itsKVM.getInt("polarisations", 2);
-  itsNbeamletsinpacket = itsKVM.getInt("NoRSPbeamlets", 92);
+  itsNbeamletsinpacket = itsKVM.getInt("NoRSPBeamlets", 92);
   itsNpacketsinframe   = itsKVM.getInt("NoPacketsInFrame", 8);
 
   int bufsize = (itsNbeamletsinpacket / itsNcorrelators) * itsNpolarisations * itsNpacketsinframe;
@@ -103,9 +103,7 @@ void WH_Transpose::process() {
   int offset = 0;
 
   for (int sample = 0; sample < itsNpacketsinframe; sample++) {
-    //offset += itsNpolarisations + itsNbeamletsinpacket;
     for (int channel = 0; channel < itsNchannels; channel++) {
-      //offset += itsNpolarisations;
       for (int polarisation = 0; polarisation < itsNpolarisations; polarisation++) {
 	myDH->setBufferElement(channel, 
 			       sample, 
