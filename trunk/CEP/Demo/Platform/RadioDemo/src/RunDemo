@@ -2,5 +2,5 @@
 
 cd $HOME/RadioDemo
 # 
-xterm -e mpirun -np 4 ./RadioSim/Simulate 2>&1 > Simulate.out & 
+mpirun -np 4 ./RadioSim/Simulate 2>&1 > Simulate.out & 
 ./start.csh
