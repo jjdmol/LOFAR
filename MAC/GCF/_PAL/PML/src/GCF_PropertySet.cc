@@ -35,12 +35,12 @@ const TPropertyInfo dummyPropInfo("DUMMY", LPT_BOOL);
 GCFPropertySet::GCFPropertySet (const char* name,
                                 const char* type,
                                 GCFAnswer* pAnswerObj) : 
-  _isBusy(false),
   _pController(0),
   _pAnswerObj(pAnswerObj),
   _scope((name ? name : "")),
   _type((type ? type : "")),
-  _dummyProperty(dummyPropInfo, this)
+  _dummyProperty(dummyPropInfo, this),
+  _isBusy(false)  
 {
   if (!Utils::isValidScope(_scope.c_str()))
   {
@@ -84,7 +84,7 @@ void GCFPropertySet::loadPropSetIntoRam()
   }
 }
 
-GCFProperty* GCFPropertySet::getProperty (const string propName) const
+GCFProperty* GCFPropertySet::getProperty (const string& propName) const
 {
   string shortPropName(propName);
   cutScope(shortPropName);
@@ -101,7 +101,7 @@ GCFProperty* GCFPropertySet::getProperty (const string propName) const
   }
 }
 
-GCFProperty& GCFPropertySet::operator[] (const string propName)
+GCFProperty& GCFPropertySet::operator[] (const string& propName)
 { 
   GCFProperty* pProperty = getProperty(propName);
   if (!pProperty)
@@ -111,8 +111,8 @@ GCFProperty& GCFPropertySet::operator[] (const string propName)
   return *pProperty;
 }
 
-TGCFResult GCFPropertySet::setValue (const string propName, 
-                                         const GCFPValue& value)
+TGCFResult GCFPropertySet::setValue (const string& propName, 
+                                     const GCFPValue& value)
 {
   GCFProperty* pProperty = getProperty(propName);
   if (pProperty)
@@ -125,8 +125,8 @@ TGCFResult GCFPropertySet::setValue (const string propName,
   }
 }
 
-TGCFResult GCFPropertySet::setValue (const string propName, 
-                                         const string value)
+TGCFResult GCFPropertySet::setValue (const string& propName, 
+                                     const string& value)
 {
   GCFProperty* pProperty = getProperty(propName);
   if (pProperty)
@@ -152,7 +152,7 @@ void GCFPropertySet::setAnswer (GCFAnswer* pAnswerObj)
   _pAnswerObj = pAnswerObj;
 }
 
-bool GCFPropertySet::exists (const string propName) const
+bool GCFPropertySet::exists (const string& propName) const
 {
   GCFProperty* pProperty = getProperty(propName);
   if (pProperty)
@@ -165,7 +165,7 @@ bool GCFPropertySet::exists (const string propName) const
   }
 }
 
-void GCFPropertySet::configure(const string apcName)
+void GCFPropertySet::configure(const string& apcName)
 {
   LOG_INFO(LOFAR::formatString ( 
       "REQ: Configure prop. set '%s' with apc '%s'",

@@ -29,13 +29,13 @@
 
 GCFMyPropertySet::GCFMyPropertySet(const char* name,
                                    const char* type, 
-                                   bool isTemporary,
+                                   TPSCategory category,
                                    GCFAnswer* pAnswerObj,
                                    TDefaultUse defaultUse) : 
   GCFPropertySet(name, type, pAnswerObj),
   _state(S_DISABLED),
-  _defaultUse((isTemporary ? defaultUse : USE_MY_DEFAULTS)),
-  _isTemporary(isTemporary),
+  _defaultUse((category != PS_CAT_TEMPORARY ? defaultUse : USE_MY_DEFAULTS)),
+  _category(category),
   _counter(0),
   _missing(0)
 {
@@ -44,12 +44,12 @@ GCFMyPropertySet::GCFMyPropertySet(const char* name,
 
 GCFMyPropertySet::GCFMyPropertySet(const char* name,
                                    const char* type, 
-                                   bool isTemporary,
+                                   TPSCategory category,
                                    TDefaultUse defaultUse) : 
   GCFPropertySet(name, type, 0),
   _state(S_DISABLED),
-  _defaultUse(defaultUse),
-  _isTemporary(isTemporary),
+  _defaultUse((category != PS_CAT_TEMPORARY ? defaultUse : USE_MY_DEFAULTS)),
+  _category(category),
   _counter(0),
   _missing(0)
 {
@@ -125,7 +125,7 @@ TGCFResult GCFMyPropertySet::disable ()
       {
         pProperty = (GCFMyProperty*)(iter->second);
         assert(pProperty);
-        if (pProperty->isLinked())
+        if (pProperty->isMonitoringOn())
         {
           pProperty->unlink();
         }
@@ -218,12 +218,14 @@ bool GCFMyPropertySet::linkProperties()
     case S_DISABLING:
       _pController->propertiesLinked(getScope(), PA_PS_GONE);
       break;
+      
     case S_ENABLED:
       assert(_counter == 0);
       _missing = 0;
       _state = S_LINKING;
       successful = tryLinking();
       break;
+      
     default:
       wrongState("linkProperties");
       _pController->propertiesLinked(getScope(), PA_WRONG_STATE);
@@ -243,10 +245,12 @@ bool GCFMyPropertySet::tryLinking()
       _state = S_ENABLED;
       disable();
       break;
+      
     case S_DISABLED:
     case S_DISABLING:
       _pController->propertiesLinked(getScope(), PA_PS_GONE);
       break;
+      
     case S_LINKING:
     {
       GCFMyProperty* pProperty(0);
@@ -316,15 +320,17 @@ void GCFMyPropertySet::linked (GCFMyProperty& prop)
     switch (_state)
     {
       case S_DELAYED_DISABLING:
-        _pController->propertiesLinked(getScope(), PA_PS_GONE);
+        _pController->propertiesLinked(getScope(), PA_NO_ERROR);
         _state = S_LINKED;
         disable();
         break;
+        
       case S_DISABLED:
       case S_DISABLING:
         prop.unlink();
         _pController->propertiesLinked(getScope(), PA_PS_GONE);
         break;
+        
       case S_LINKING:
       {
         _state = S_LINKED;
@@ -356,17 +362,11 @@ void GCFMyPropertySet::unlinkProperties()
   assert(_pController);
   switch (_state)
   {
-    case S_ENABLING:
-    case S_LINKING:
-    case S_ENABLED:
-    case S_DELAYED_DISABLING:
-      wrongState("unlinkProperties");
-      _pController->propertiesUnlinked(getScope(), PA_WRONG_STATE);
-      break;
     case S_DISABLED:
     case S_DISABLING:
       _pController->propertiesUnlinked(getScope(), PA_PS_GONE);
       break;
+      
     case S_LINKED:
     {
       _state = S_ENABLED;
@@ -380,6 +380,10 @@ void GCFMyPropertySet::unlinkProperties()
       _pController->propertiesUnlinked(getScope(), PA_NO_ERROR);
       break;
     }
+    default:
+      wrongState("unlinkProperties");
+      _pController->propertiesUnlinked(getScope(), PA_WRONG_STATE);
+      break;      
   }
 }
 

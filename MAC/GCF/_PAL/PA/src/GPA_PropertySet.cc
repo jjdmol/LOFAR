@@ -22,12 +22,18 @@
 
 #include "GPA_PropertySet.h"
 #include "GPA_Controller.h"
-#include <GCF/GCF_PVBool.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <strings.h>
 #include <stdio.h>
 #include <unistd.h>
+
+const char* PS_CAT_NAMES[] =
+{
+  "temporary",
+  "permanent",
+  "autoloaded",
+};
 
 bool operator == (const GPAPropertySet::TPSClient& a, const GPAPropertySet::TPSClient& b)
 {
@@ -41,7 +47,7 @@ GPAPropertySet::GPAPropertySet(GPAController& controller, GCFPortInterface& serv
   _name(""),
   _type(""),
   _serverPort(serverPort),
-  _isTemporary(true),
+  _category(PS_CAT_TEMPORARY),
   _state(S_DISABLED),
   _counter(0),
   _savedResult(PA_NO_ERROR),
@@ -72,7 +78,7 @@ bool GPAPropertySet::enable(PARegisterScopeEvent& request)
       assert(_psClients.size() == 0);
       _name = request.scope;
       _type = request.type;
-      _isTemporary = request.isTemporary;
+      _category = request.category;
       TSAResult saResult(SA_NO_ERROR);
       if (!GCFPVSSInfo::typeExists(_type))
       {
@@ -81,20 +87,20 @@ bool GPAPropertySet::enable(PARegisterScopeEvent& request)
             _type.c_str()));
         response.result = PA_DPTYPE_UNKNOWN;
       }
-      else if (GCFPVSSInfo::propExists(_name) && _isTemporary)
+      else if (GCFPVSSInfo::propExists(_name) && (_category == PS_CAT_TEMPORARY))
       {
-        LOG_ERROR("DP's for temporary prop. sets may not already exists!");
-        response.result = PA_PROP_SET_ALLREADY_EXISTS;
+        LOG_INFO("DP for temporary prop. set may not already exists!");
+        response.result = PA_PROP_SET_ALREADY_EXISTS;
       }
-      else if (!GCFPVSSInfo::propExists(_name) && !_isTemporary)
+      else if (!GCFPVSSInfo::propExists(_name) && (_category != PS_CAT_TEMPORARY))
       {
-        LOG_ERROR("DP's for permanent prop. sets must already exists");
+        LOG_INFO("DP for permanent prop. set must already exists");
         response.result = PA_PROP_SET_NOT_EXISTS;
       }
       else if (GCFPVSSInfo::propExists(_name + "__enabled"))
       {
-        LOG_ERROR("Framework DP's for PS which are enabled may not already exists before enabling them!");
-        response.result = PA_PROP_SET_ALLREADY_EXISTS;
+        LOG_ERROR("Framework DP, for enabled PS, may not already exists before enabling it!");
+        response.result = PA_PROP_SET_ALREADY_EXISTS;
       }
       else
       {
@@ -142,7 +148,7 @@ void GPAPropertySet::disable(PAUnregisterScopeEvent& request)
   {
     case S_LINKED:
     {
-      LOG_INFO("Inform all client MCA's, which has load this prop. set, about disabling it");
+      LOG_INFO("Inform all client MCA's, which has loaded this prop. set, about disabling it");
       PAPropSetGoneEvent indication;
       indication.scope = GCFPVSSInfo::getLocalSystemName() + ":" + _name;
       GCFPortInterface* pPSClientPort;
@@ -182,7 +188,7 @@ void GPAPropertySet::disable(PAUnregisterScopeEvent& request)
           _counter += 1;
         }
       }
-      if (_isTemporary)
+      if (_category == PS_CAT_TEMPORARY)
       {
         if (GCFPVSSInfo::propExists(_name))
         {
@@ -236,7 +242,7 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
     {            
       _state = S_LINKING;
       assert(_usecount == 0);
-      if (_isTemporary)
+      if (_category == PS_CAT_TEMPORARY)
       {
         LOG_INFO("Prop. set must be created");
         if (dpCreate(_name, _type) != SA_NO_ERROR)
@@ -263,28 +269,21 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
         //      clientport list and thus not needed to be informed about disabling 
         //      the prop. set anymore. 
         // If client has allready loaded a property set with this scope (_name),
-        // only the counter needed to be increased.
+        // only the counter needed to be increased (see state handling S_LINKED below).
         // On unloading the counter will be decreased and if counter 
         // is 0 the requestor can be deleted from the list. Then the requestor
         // not needed to be and also will not be informed about disabling the 
         // property set.
-        TPSClient* pPSClient = findClient(p);
-        if (pPSClient)
-        {
-          pPSClient->count++;
-        }
-        else // client not known yet
-        {
-          TPSClient psClient;
-          psClient.pPSClientPort = &p;
-          psClient.count = 1;
-          _psClients.push_back(psClient);
-        }
+        assert(_psClients.size() == 0);
+        TPSClient psClient;
+        psClient.pPSClientPort = &p;
+        psClient.count = 1;
+        _psClients.push_back(psClient);
         _usecount++;
         
         // on permanent prop. sets no DP's needed to be created
         // so it can be linked immediately
-        if (!_isTemporary)
+        if (_category != PS_CAT_TEMPORARY)
         {
           link();
         }
@@ -349,18 +348,32 @@ void GPAPropertySet::linked(PAPropSetLinkedEvent& response)
 {
   PAPropSetLoadedEvent loadedResponse;
   loadedResponse.seqnr = _savedSeqnr;
-  if (_state == S_LINKING && response.result == PA_NO_ERROR)
+  if (_state == S_LINKING)
   {
-    _state = S_LINKED;
+    if (response.result == PA_NO_ERROR)
+    {
+      _state = S_LINKED;      
+    }
+    else 
+    {
+      _state = S_ENABLED;
+    }
     loadedResponse.result = response.result;
   }
   else
   {
-    _state = S_ENABLED;
     wrongState("linked");
+    _state = S_ENABLED;
     loadedResponse.result = PA_WRONG_STATE;
   }
-  _controller.sendAndNext(loadedResponse);
+  if (_savedSeqnr == 0) // auto load
+  {
+    _controller.doNextRequest();
+  }
+  else
+  {
+    _controller.sendAndNext(loadedResponse);
+  }  
 }
 
 void GPAPropertySet::unload(PAUnloadPropSetEvent& request, const GCFPortInterface& p)
@@ -398,7 +411,7 @@ void GPAPropertySet::unload(PAUnloadPropSetEvent& request, const GCFPortInterfac
       if (_usecount == 0)
       {         
         _state = S_UNLINKING;        
-        if (_isTemporary)
+        if (_category == PS_CAT_TEMPORARY)
         {
           LOG_INFO("Must delete related DP due to usecount is null");
           if (dpDelete(_name) != SA_NO_ERROR)
@@ -555,7 +568,7 @@ void GPAPropertySet::dpCreated(const string& dpName)
     {
       assert(dpName.find(_name + "__enabled") < dpName.length());
       
-      GCFPVBool category(_isTemporary);
+      GCFPVString category(PS_CAT_NAMES[_category]);
       dpeSet(_name + "__enabled", category);
       
       GCFPVString indication("e|" + _name);
@@ -565,7 +578,21 @@ void GPAPropertySet::dpCreated(const string& dpName)
       PAScopeRegisteredEvent response;
       response.seqnr = _savedSeqnr;
       response.result = PA_NO_ERROR;
-      _controller.sendAndNext(response);      
+      if (_category == PS_CAT_PERM_AUTOLOAD)
+      {
+        if (_serverPort.isConnected())
+        {
+          _serverPort.send(response);
+          PALoadPropSetEvent autoRequest;
+          autoRequest.seqnr = 0;
+          autoRequest.scope = _name;
+          load(autoRequest, _serverPort);
+        }
+      }
+      else
+      {
+        _controller.sendAndNext(response);
+      }
       break;
     }
     case S_LINKING:

@@ -31,18 +31,16 @@ class GCFAnswer;
 class GCFEvent;
 class GCFPValue;
 
-/** 
- * This is the base class for 2 types of properties. The owned (GCFMyProperty) 
- * and the external (GCFExtProperty) property. This class manages the: 
- *  - name of the property, which points, together with the scopes of the 
- *    related property set, to a property in the SCADA DB 
- *  - answer object, which will be used for responses and indications from the 
- *    SCADA system if specified.  
- * 
- * It uses the GCFPropertyProxy interface and provides the possibility to create 
- * and manage property objects by its name, which refers to one single SCADA 
- * property if existing.
-*/
+// This is the base class for 2 types of properties. The owned (GCFMyProperty) 
+// and the external (GCFExtProperty) property. This class manages the: 
+//  - name of the property, which points, together with the scopes of the 
+//    related property set, to a property in the SCADA DB 
+//  - answer object, which will be used for responses and indications from the 
+//    SCADA system if specified.  
+// 
+// It uses the GCFPropertyProxy interface and provides the possibility to create 
+// and manage property objects by its name, which refers to one single SCADA 
+// property if existing.
 
 class GCFProperty
 {
@@ -50,34 +48,26 @@ class GCFProperty
     const string getName () const 
       { return _propInfo.propName;}
       
-    /// @return the given property name including the scope of the related property set
+    // @return the given property name including the scope of the related property set
     virtual const string getFullName () const;
     
-    /**
-     * Asynchronous action
-     * Performs a get operation on the SCADA DB
-     * @return can be GCF_NO_ERROR or GCF_PML_ERROR
-     */ 
+    // Asynchronous action
+    // Performs a get operation on the SCADA DB
+    // @return can be GCF_NO_ERROR or GCF_PML_ERROR
     virtual TGCFResult requestValue ();
       
-    /**
-     * Synchronous (!) action
-     * Performs a set operation on the SCADA DB
-     * @return can be GCF_NO_ERROR or GCF_PML_ERROR
-     */ 
+    // Synchronous (!) action
+    // Performs a set operation on the SCADA DB
+    // @return can be GCF_NO_ERROR or GCF_PML_ERROR
     virtual TGCFResult setValue(const GCFPValue& value);
       
-    /**
-     * Synchronous (!) action
-     * Performs a set operation on the SCADA DB
-     * @return can be GCF_NO_ERROR or GCF_PML_ERROR
-     */ 
+    // Synchronous (!) action
+    // Performs a set operation on the SCADA DB
+    // @return can be GCF_NO_ERROR or GCF_PML_ERROR
     virtual TGCFResult setValue(const string& value);
 
-    /**
-     * Synchronous (!) action
-     * Checks whether the property exists in the SCADA DB or not
-     */ 
+    // Synchronous (!) action
+    // Checks whether the property exists in the SCADA DB or not
     virtual bool exists ();
       
     virtual void setAnswer (GCFAnswer* pAnswerObj) 
@@ -110,10 +100,9 @@ class GCFProperty
    
    void propSubscriptionLost (const string& propName)
       { assert(propName == getFullName()); subscriptionLost(); }
-    /** 
-     * does nothing (but still in the GCF API)
-     * because unsubscribe isn't asynchronous in the SCADA API
-     */
+    
+    // does nothing (but still in the GCF API)
+    // because unsubscribe isn't asynchronous in the SCADA API
     void propUnsubscribed (const string& propName)
       { assert(propName == getFullName()); }
       
@@ -127,16 +116,28 @@ class GCFProperty
   
   private:
     friend class GCFPropertySet;
-    inline void resetPropSetRef () 
+    // Normally a property object can only constructed by a property set object.
+    // The constructor and destructor are therefor protected. At this way the 
+    // property objects are protected from deleting by others than property 
+    // sets. 
+    // There is one exception: a GCFExtProperty can be instantiated by a user.
+    // In that case the instance is not related to a property set and should 
+    // therefor be able to delete by the user. This conflicts with the above 
+    // description. Therefor the property set objects gets by this method the 
+    // possibility to uncouple the properties before deleting them (in destructor
+    // of GCFPropertySet). So the destruction of a property is made dependent on
+    // the value of the pointer to a property set. If 0 it may be deleted 
+    // otherwise we get an assert!!!
+    void resetPropSetRef () 
       { _pPropertySet = 0; }
     
   private:
     GCFProperty();
-    //@{ 
-    /// Copy contructors. Don't allow copying this object.
+    // Don't allow copying this object.
+    // <group>
     GCFProperty (const GCFProperty&);
     GCFProperty& operator= (const GCFProperty&);
-    //@}
+    // </group>
 
   private: // data members
     GCFPropertySet*       _pPropertySet;

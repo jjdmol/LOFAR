@@ -87,7 +87,7 @@ GCFEvent::TResult GPICEPServer::operational(GCFEvent& e, GCFPortInterface& p)
           blob >> requestIn.scope;
           requestIn.scope = sysScope + requestIn.scope;
           blob >> requestIn.type;
-          blob >> requestIn.isTemporary;          
+          blob >> (char) requestIn.category;          
           registerPropSet(requestIn);
           break;
         }

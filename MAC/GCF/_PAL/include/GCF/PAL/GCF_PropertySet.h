@@ -33,14 +33,17 @@ class GCFAnswer;
 class GCFPValue;
 class GPMController;
 
-/** 
- * This class is the base class for the 2 types of property set containers. It 
- * implements a number of generic features of a property set (like scope 
- * management, property container).
-*/
+// This class is the base class for the 2 types of property set containers. It 
+// implements a number of generic features of a property set (like scope 
+// management, property container).
 
 class GCFPropertySet
 {
+  protected: // constructor
+    GCFPropertySet (const char* name,
+                    const char* type, 
+                    GCFAnswer* pAnswerObj);
+    
   public:
     virtual ~GCFPropertySet ();
 
@@ -53,74 +56,77 @@ class GCFPropertySet
     GCFAnswer* getAnswerObj() const 
       { return _pAnswerObj; }
 
-    /**
-     * Searches the property specified by the propName param
-     * @param propName with or without the scope
-     * @returns 0 if not in this property set
-     */
-    GCFProperty* getProperty (const string propName) const;
+    // Searches the property specified by the propName param
+    // @param propName with or without the scope
+    // @returns 0 if not in this property set
+    GCFProperty* getProperty (const string& propName) const;
 
-    /**
-     * Searches the property specified by the propName param
-     * @param propName with or without the scope
-     * @returns a dummy port if property could not be found
-     */
-    virtual GCFProperty& operator[] (const string propName);
+    // Searches the property specified by the propName param
+    // @param propName with or without the scope
+    // @returns a dummy port if property could not be found
+    virtual GCFProperty& operator[] (const string& propName);
     
-    /**
-     * Searches the property specified by the propName param
-     * @param propName with or without the scope
-     * @returns 0 if not in this property set
-     */
-    TGCFResult setValue (const string propName, 
-                                 const GCFPValue& value);
+    // Changes the property value, if isMonitoringOn is true and property is 
+    // readable the value will be forwared to the DP element in DB
+    // @param propName with or without the scope
+    // @param value can be of type GCFPValue or string (will be converted to 
+    //              GCFPValue content)
+    // @returns GCF_PROP_NOT_IN_SET,  GCF_PROP_WRONG_TYPE, GCF_PROP_NOT_VALID
+    // <group>
+    TGCFResult setValue (const string& propName, 
+                         const GCFPValue& value);
 
-    TGCFResult setValue (const string propName, ///< can be specified with or without the scope
-                         const string value);
+    TGCFResult setValue (const string& propName,
+                         const string& value);
+    // </group>
 
+    // changes the answerobject pointer for all properties
     virtual void setAnswer (GCFAnswer* pAnswerObj);          
 
-    virtual bool exists (const string propName) const;
-    void configure(const string apcName);
-
-  protected:
-    GCFPropertySet (const char* name,
-                    const char* type, 
-                    GCFAnswer* pAnswerObj);
+    virtual bool exists (const string& propName) const;
     
+    // Asynchrnous method !
+    // Asks the Property Agent to load the apc file for this property set
+    // Answer will be indicated to the user by a GCFConfAnswerEvent object
+    void configure(const string& apcName);
+
   protected: // helper methods
     virtual GCFProperty* createPropObject(const TPropertyInfo& propInfo) = 0;
     void dispatchAnswer (unsigned short sig, TGCFResult result);
     void loadPropSetIntoRam();
-    
-  protected: // helper attributes
-    typedef map<string /*propName*/, GCFProperty*> TPropertyList;
-    TPropertyList   _properties;
-    bool            _isBusy;
-    GPMController*  _pController;
 
-  private: // methods called by GPMController
-    friend class GPMController;
-    void configured(TGCFResult result, const string& apcName);
-    
   private: // helper methods
     bool cutScope(string& propName) const;
     void addProperty(const string& propName, GCFProperty& prop);
     void clearAllProperties();
-  
-  private: // default/copy constructors
+    
+  private: // methods called by GPMController
+    friend class GPMController;
+    void configured(TGCFResult result, const string& apcName);
+    
+  private:
     GCFPropertySet();
     
-    /// Don't allow copying this object.
+    // Don't allow copying this object.
+    // <group> 
     GCFPropertySet (const GCFPropertySet&);
     GCFPropertySet& operator= (const GCFPropertySet&);  
+    // </group>
 
-  private:
+  protected: // data members
+    GPMController*      _pController;
+    typedef map<string /*propName*/, GCFProperty*> TPropertyList;
+    TPropertyList       _properties;
+
+  private: // data members
     GCFAnswer*          _pAnswerObj;
     string              _scope;
     string              _type;
-    GCFProperty         _dummyProperty;
     typedef list<TPropertyInfo> TPropInfoList;
-    TPropInfoList _propSetInfo;
+    TPropInfoList       _propSetInfo;
+
+  protected: // helper attributes
+    GCFProperty _dummyProperty;
+    bool        _isBusy;
 };
 #endif

@@ -76,10 +76,10 @@ void GPIPropertySet::enable(const PIRegisterScopeEvent& requestIn)
       requestOut.scope = requestIn.scope;
       requestOut.type = requestIn.type;
       requestOut.seqnr = requestIn.seqnr;
-      requestOut.isTemporary = requestIn.isTemporary;
+      requestOut.category = requestIn.category;
       _scope = requestIn.scope;
       _type = requestIn.type;
-      _isTemporary = requestIn.isTemporary;
+      _category = requestIn.category;
       _savedSeqnr = requestIn.seqnr;
       sendMsgToPA(requestOut);
       break;
@@ -109,7 +109,7 @@ void GPIPropertySet::retryEnable()
       requestOut.scope = _scope;
       requestOut.type = _type;
       requestOut.seqnr = _savedSeqnr;
-      requestOut.isTemporary = _isTemporary;
+      requestOut.category = _category;
       sendMsgToPA(requestOut);
       break;
     }
@@ -356,7 +356,7 @@ bool GPIPropertySet::trySubscribing()
     }
     case S_DELAYED_DISABLING:
     {
-      propSetLinkedInPI(PA_PS_GONE);
+      propSetLinkedInPI(PA_NO_ERROR);
       _state = S_LINKED;
       PIUnregisterScopeEvent dummy;
       disable(dummy);
@@ -496,7 +496,7 @@ TPAResult convertPIToPAResult(TPIResult result)
     case PI_WRONG_STATE:              return PA_WRONG_STATE;
     case PI_PS_GONE:                  return PA_PS_GONE;
     case PI_PROP_SET_NOT_EXISTS:      return PA_PROP_SET_NOT_EXISTS;
-    case PI_PROP_SET_ALLREADY_EXISTS: return PA_PROP_SET_ALLREADY_EXISTS;
+    case PI_PROP_SET_ALREADY_EXISTS:  return PA_PROP_SET_ALREADY_EXISTS;
     case PI_DPTYPE_UNKNOWN:           return PA_DPTYPE_UNKNOWN;
     case PI_INTERNAL_ERROR:           return PA_PI_INTERNAL_ERROR;
     case PI_PA_INTERNAL_ERROR:        return PA_INTERNAL_ERROR; 
@@ -513,7 +513,7 @@ TPIResult convertPAToPIResult(TPAResult result)
     case PA_WRONG_STATE:              return PI_WRONG_STATE;
     case PA_PS_GONE:                  return PI_PS_GONE;
     case PA_PROP_SET_NOT_EXISTS:      return PI_PROP_SET_NOT_EXISTS;
-    case PA_PROP_SET_ALLREADY_EXISTS: return PI_PROP_SET_ALLREADY_EXISTS;
+    case PA_PROP_SET_ALREADY_EXISTS:  return PI_PROP_SET_ALREADY_EXISTS;
     case PA_DPTYPE_UNKNOWN:           return PI_DPTYPE_UNKNOWN;
     case PA_INTERNAL_ERROR:           return PI_PA_INTERNAL_ERROR;
     case PA_PI_INTERNAL_ERROR:        return PI_INTERNAL_ERROR; 

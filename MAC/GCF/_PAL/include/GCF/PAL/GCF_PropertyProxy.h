@@ -27,16 +27,15 @@
 
 #include <GCF/GCF_Defines.h>
 
-/** 
-  This abstract class provides the possibility to (un)subscribe from/on, set or 
-  get property (values) in the SCADA DB and handle their responses. Opposite to 
-  classes based on the GCFPropertyBase class this class has no knowledge about 
-  the property itself but only which actions on properties are possible. So it 
-  could happen that APL can perform multiple subscriptions on a certain property 
-  by means of the same proxy. Then multiple value-changed indications on one 
-  value change in the SCADA DB will be received. In most of the cases this is 
-  not wanted. Always use this class with cautions.
-*/
+// This abstract class provides the possibility to (un)subscribe from/on, set or 
+// get property (values) in the SCADA DB and handle their responses. Opposite to 
+// classes based on the GCFPropertyBase class this class has no knowledge about 
+// the property itself but only which actions on properties are possible. So it 
+// could happen that APL can perform multiple subscriptions on a certain property 
+// by means of the same proxy. Then multiple value-changed indications on one 
+// value change in the SCADA DB will be received. In most of the cases this is 
+// not wanted. Always use this class with cautions.
+
 class GPMPropertyProxy;
 class GCFPValue;
 
@@ -46,69 +45,59 @@ class GCFPropertyProxy
     GCFPropertyProxy ();
     virtual ~GCFPropertyProxy ();
 
-    /**
-     * Asynchronous request (results in response 'propSubscribed' and 
-     * indication(s) 'propValueChanged')
-     * Note that subscription could be made multiple times on the same 
-     * property, but this results in multiple 'propValueChanged' indications too
-     * 
-     * @returns GCF_NO_ERROR, GCF_PML_ERROR (see in logging whats wrong)
-     */
+    // Asynchronous request (results in response 'propSubscribed' and 
+    // indication(s) 'propValueChanged')
+    // Note that subscription could be made multiple times on the same 
+    // property, but this results in multiple 'propValueChanged' indications too
+    // 
+    // @returns GCF_NO_ERROR, GCF_PML_ERROR (see in logging whats wrong)
     virtual TGCFResult subscribeProp (const string& propName);
-    /**
-     * Synchronous (!) request
-     * Note that subscription could be made multiple times on the same 
-     * property. They had to be undone by multipe unsubscription too to avoid 
-     * more 'propValueChanged' indications
-     * 
-     * @returns GCF_NO_ERROR, GCF_PML_ERROR (see in logging whats wrong)
-     */
+
+    // Synchronous (!) request
+    // Note that subscription could be made multiple times on the same 
+    // property. They had to be undone by multipe unsubscription too to avoid 
+    // more 'propValueChanged' indications
+    // 
+    // @returns GCF_NO_ERROR, GCF_PML_ERROR (see in logging whats wrong)
     virtual TGCFResult unsubscribeProp (const string& propName);
-    /**
-     * Asynchronous request (results in response 'propValueGet')
-     * 
-     * @returns GCF_NO_ERROR, GCF_PML_ERROR (see in logging whats wrong)
-     */
+
+    // Asynchronous request (results in response 'propValueGet')
+    // 
+    // @returns GCF_NO_ERROR, GCF_PML_ERROR (see in logging whats wrong)
     virtual TGCFResult requestPropValue (const string& propName);
-    /**
-     * Synchronous (!) request
-     * 
-     * @returns GCF_NO_ERROR, GCF_PML_ERROR (see in logging whats wrong)
-     */
+
+    // Synchronous (!) request
+    // 
+    // @returns GCF_NO_ERROR, GCF_PML_ERROR (see in logging whats wrong)
     virtual TGCFResult setPropValue (const string& propName, 
                                  const GCFPValue& value);
 
   protected:
     friend class GPMPropertyProxy;
-    /**
-     * Response on 'subscribeProp' request
-     */
+
+    // Response on 'subscribeProp' request
     virtual void propSubscribed (const string& propName) = 0;
-    /**
-     * Indication that the subscription is lost
-     */
+
+    // Indication that the subscription is lost
     virtual void propSubscriptionLost (const string& propName) = 0;
-    /**
-     * Response on 'unsubscribeProp' request (NOT USED)
-     */
+
+    // Response on 'unsubscribeProp' request (NOT USED)
     virtual void propUnsubscribed (const string& propName) = 0;
-    /**
-     * Response on 'requestPropValue' request
-     */
+
+    // Response on 'requestPropValue' request
     virtual void propValueGet (const string& propName, 
                                const GCFPValue& value) = 0;
-    /**
-     * Indication after propSubscribed is received successfully
-     */
+
+    // Indication after propSubscribed is received successfully
     virtual void propValueChanged (const string& propName, 
                                    const GCFPValue& value) = 0;
   
   private:
-    //@{ 
-    /// Copy contructors. Don't allow copying this object.
+    // Don't allow copying this object.
+    // <group>
     GCFPropertyProxy (const GCFPropertyProxy&);
     GCFPropertyProxy& operator= (const GCFPropertyProxy&);
-    //@}
+    // </group>
   
     GPMPropertyProxy* _pPMProxy;
 };

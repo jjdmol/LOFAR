@@ -53,7 +53,7 @@ class GCFRTMyPropertySet
      */
     explicit GCFRTMyPropertySet (const char* name,
                                  const char* type, 
-                                 bool isTemporary,
+                                 TPSCategory category,
                                  GCFRTAnswer* pAnswerObj = 0);
     virtual ~GCFRTMyPropertySet ();
 
@@ -64,7 +64,10 @@ class GCFRTMyPropertySet
       { return _type; }
       
     bool isTemporary () const 
-      { return _isTemporary; }
+      { return (_category == PS_CAT_TEMPORARY); }
+     
+    TPSCategory getCategory () const 
+      { return _category; }
     
     virtual void setAnswer (GCFRTAnswer* pAnswerObj);          
     
@@ -172,14 +175,14 @@ class GCFRTMyPropertySet
   private: // attribute members
     string  _scope;     
     string  _type;   
-    bool    _isTemporary;
+    TPSCategory _category;
     typedef map<string /*propName*/, GCFRTMyProperty*> TPropertyList;
     TPropertyList       _properties;
     GCFRTAnswer*        _pAnswerObj;
 
   private: // administrative members
     typedef enum TState {S_DISABLED, S_DISABLING, S_ENABLING, S_ENABLED, 
-                         S_LINKED, S_DELAYED_DISABLING};
+                         S_LINKED};
     TState _state;
     typedef list<TPropertyInfo> TPropInfoList;
     TPropInfoList       _propSetInfo;

@@ -35,10 +35,10 @@ namespace LOFAR {
 
 CEPPropertySet::CEPPropertySet(const char* name,
                                const char* type,
-                               bool isTemporary) : 
+                               TPSCategory category) : 
   _scope(name),
   _type(type),
-  _isTemporary(isTemporary),
+  _category(category),
   _state(S_DISABLED),
   _dummyProperty(*this)
 {
@@ -163,12 +163,6 @@ void CEPPropertySet::linkProperties()
   assert(_pClient);
   switch (_state)
   {
-    case S_ENABLING:
-    case S_LINKED:
-      wrongState("linkProperties");
-      _pClient->propertiesLinked(getScope(), PI_WRONG_STATE);
-      break;
-
     case S_ENABLED:
       _state = S_LINKED;
       _pClient->propertiesLinked(getScope(), PI_NO_ERROR);
@@ -178,6 +172,11 @@ void CEPPropertySet::linkProperties()
     case S_DISABLING:
       _pClient->propertiesLinked(getScope(), PI_PS_GONE);
       break;
+
+    default:
+      wrongState("linkProperties");
+      _pClient->propertiesLinked(getScope(), PI_WRONG_STATE);
+      break;
   }
 }
 
@@ -186,18 +185,19 @@ void CEPPropertySet::unlinkProperties()
   assert(_pClient);
   switch (_state)
   {
-    case S_ENABLING:
-    case S_ENABLED:
-      wrongState("unlinkProperties");
-      _pClient->propertiesUnlinked(getScope(), PI_WRONG_STATE);
-      break;
     case S_DISABLED:
     case S_DISABLING:
       _pClient->propertiesUnlinked(getScope(), PI_PS_GONE);
       break;
+
     case S_LINKED:
       _state = S_ENABLED;
       _pClient->propertiesUnlinked(getScope(), PI_NO_ERROR);
+      break;
+
+    default:
+      wrongState("unlinkProperties");
+      _pClient->propertiesUnlinked(getScope(), PI_WRONG_STATE);
       break;
   }
 }

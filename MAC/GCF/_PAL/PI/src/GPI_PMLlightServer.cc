@@ -251,7 +251,7 @@ void GPIPMLlightServer::registerPropSet(const PIRegisterScopeEvent& requestIn)
   else
   {
     PIScopeRegisteredEvent responseOut;
-    responseOut.result = PI_PROP_SET_ALLREADY_EXISTS;
+    responseOut.result = PI_PROP_SET_ALREADY_EXISTS;
     responseOut.seqnr = requestIn.seqnr;
     sendMsgToClient(responseOut);
   }      

@@ -28,11 +28,11 @@ GCFMyProperty::GCFMyProperty(const TPropertyInfo& propInfo,
                              GCFMyPropertySet& propertySet) :
   GCFProperty(propInfo, &propertySet),
   _accessMode(GCF_READWRITE_PROP),
-  _changingAccessMode(false),
   _pCurValue(0),
   _pOldValue(0),
   _isLinked(false),
-  _propertySet(propertySet)
+  _propertySet(propertySet),
+  _changingAccessMode(false)
 {
   if (propertySet.isTemporary()) assert(!exists());
   _pCurValue = GCFPValue::createMACTypeObject(propInfo.type);

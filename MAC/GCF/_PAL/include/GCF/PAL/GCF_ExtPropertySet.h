@@ -28,80 +28,67 @@
 
 class GPMController;
 
-/**
- * This class represents a property set of properties specified in an APC. It 
- * gives the Application the possibility to access properties of for instance a 
- * just loaded APC. 
- * This class knows no asynchronous actions. Therefore no relation with a 
- * GCFAnswer instances is necessary. But there is a possibility to set a 
- * GCFAnswer instance for each managed property with one method.  
- * This container class keeps properties belonging to a 'scope' (root) together. 
- * A scope means the path in the SCADA DB, where the properties should be 
- * created by GCF. 
-*/
+// This class represents a property set of properties specified in an APC. It 
+// gives the Application the possibility to access properties of for instance a 
+// just loaded APC. 
+// This class knows no asynchronous actions. Therefore no relation with a 
+// GCFAnswer instances is necessary. But there is a possibility to set a 
+// GCFAnswer instance for each managed property with one method.  
+// This container class keeps properties belonging to a 'scope' (root) together. 
+// A scope means the path in the SCADA DB, where the properties should be 
+// created by GCF. 
 
 class GCFExtPropertySet : public GCFPropertySet
 {
   public:
-    /**
-     * By means of this contructor a property set will be loaded, which has the
-     * same structure as in the APC specified by the apcName param
-     */ 
+    // By means of this contructor a property set will be loaded, which has the
+    // same structure as in the APC specified by the apcName param
     GCFExtPropertySet (const char* name,
                        const char* type, 
                        GCFAnswer* pAnswerObj = 0);
     virtual ~GCFExtPropertySet ();
 
-    /**
-     * Asynchronous method
-     * In fact it registers the scope on the Property Agent.
-     * Note that this method also resets all values of the managed list of 
-     * properties (loaded into RAM on contruction of the instance) with the 
-     * values from the given propSet parameter in the construtor.
-     * 
-     * @return can be GCF_NO_ERROR, GCF_BUSY, GCF_ALREADY_LOADED
-     *         Note that in case of no GCF_NO_ERROR this action ends synchronous.
-     *         Otherwise an anwer of type @link GCFPropSetAnswerEvent @endlink 
-     *         will be given.
-     */
+    // Asynchronous method
+    // In fact it registers the scope on the Property Agent.
+    // Note that this method also resets all values of the managed list of 
+    // properties (loaded into RAM on contruction of the instance) with the 
+    // values from the given propSet parameter in the construtor.
+    // 
+    // @return can be GCF_NO_ERROR, GCF_BUSY, GCF_ALREADY_LOADED
+    //         Note that in case of no GCF_NO_ERROR this action ends synchronous.
+    //         Otherwise an anwer of type @link GCFPropSetAnswerEvent @endlink 
+    //         will be given.
     TGCFResult load ();
 
-    /**
-     * Asynchronous method
-     * In fact it unregisters the scope from the Property Agent.
-     * Note that this implies too that all properties created by the Property 
-     * Agent will be deleted even if there are controllers which are subscribed 
-     * on one or more of them.
-     * 
-     * @return can be GCF_NO_ERROR, GCF_BUSY, GCF_NOT_LOADED.
-     *         Note that in case of no GCF_NO_ERROR this action ends synchronous.
-     *         Otherwise an anwer of type @link GCFPropSetAnswerEvent @endlink 
-     *         will be given.
-     */
+    // Asynchronous method
+    // In fact it unregisters the scope from the Property Agent.
+    // Note that this implies too that all properties created by the Property 
+    // Agent will be deleted even if there are controllers which are subscribed 
+    // on one or more of them.
+    // 
+    // @return can be GCF_NO_ERROR, GCF_BUSY, GCF_NOT_LOADED.
+    //         Note that in case of no GCF_NO_ERROR this action ends synchronous.
+    //         Otherwise an anwer of type @link GCFPropSetAnswerEvent @endlink 
+    //         will be given.
     TGCFResult unload ();
-    /**
-     * Asynchronous request (results in a response via the GCFAnswer object)
-     * @return GCF_NO_ERROR, GCF_PROP_NOT_IN_SET, GCF_PML_ERROR (see for more 
-     *         info in the logging of the SAL of GCF
-     */
+
+    // Asynchronous request (results in a response via the GCFAnswer object)
+    // @return GCF_NO_ERROR, GCF_PROP_NOT_IN_SET, GCF_PML_ERROR (see for more 
+    //         info in the logging of the SAL of GCF
     TGCFResult requestValue (const string propName) const;
-    /**
-     * Asynchronous request (results in a response via the GCFAnswer object)
-     * @return GCF_NO_ERROR, GCF_PROP_NOT_IN_SET, GCF_BUSY, GCF_ALREADY_SUBSCRIBED,
-     *         GCF_PML_ERROR (see for more info in the logging of the SAL of GCF)
-     */
+
+    // Asynchronous request (results in a response via the GCFAnswer object)
+    // @return GCF_NO_ERROR, GCF_PROP_NOT_IN_SET, GCF_BUSY, GCF_ALREADY_SUBSCRIBED,
+    //         GCF_PML_ERROR (see for more info in the logging of the SAL of GCF)
     TGCFResult subscribeProp (const string propName) const;
-    /**
-     * Asynchronous request (results in a response via the GCFAnswer object)
-     * @return GCF_NO_ERROR, GCF_PROP_NOT_IN_SET, GCF_BUSY, GCF_NOT_SUBSCRIBED, 
-     *         GCF_PML_ERROR (see for more info in the logging of the SAL of GCF)
-     */
+
+    // Asynchronous request (results in a response via the GCFAnswer object)
+    // @return GCF_NO_ERROR, GCF_PROP_NOT_IN_SET, GCF_BUSY, GCF_NOT_SUBSCRIBED, 
+    //         GCF_PML_ERROR (see for more info in the logging of the SAL of GCF)
     TGCFResult unsubscribeProp (const string propName) const;
     
-    /**
-     * 
-     */
     bool isPropSubscribed (const string propName) const;
+
     bool isLoaded() const { return _isLoaded;} 
     
   private:
@@ -109,15 +96,15 @@ class GCFExtPropertySet : public GCFPropertySet
     void loaded(TGCFResult result);
     
     void unloaded(TGCFResult result);
-    void GCFExtPropertySet::serverIsGone();
+    void serverIsGone();
     
   private:
     GCFExtPropertySet();
-    //@{ 
-    /// Copy contructors. Don't allow copying this object.
+    // Copy contructors. Don't allow copying this object.
+    // <group>
     GCFExtPropertySet (const GCFExtPropertySet&);
     GCFExtPropertySet& operator= (const GCFExtPropertySet&);     
-    //@}
+    // </group>
     
   private: // helper methods
     GCFProperty* createPropObject(const TPropertyInfo& propInfo);

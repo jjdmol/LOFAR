@@ -28,7 +28,9 @@
 #include <Common/lofar_string.h>
 #include <set>
 
-using namespace std;
+using std::set;
+using std::string;
+
 // forward declaration
 class GCFTask;
 class GCFEvent;
@@ -36,21 +38,21 @@ class GSAPortService;
 class GCFPVBlob;
 class GCFPVSSUIMConverter;
 
-/**
- * This is the class, which implements the special port with the PVSS message 
- * transport protocol. 
- */
+// This is the class, which implements the special port with the PVSS message 
+// transport protocol. 
+// NOTE: This class is intended to use outside of GCF but is not yet ready for use.
 class GCFPVSSPort : public GCFRawPort
 {
  public:
 
-    /// Construction methods
-    /** @param protocol NOT USED */    
+    // Construction methods
+    // @param protocol NOT USED
     explicit GCFPVSSPort (GCFTask& task,
           	    string name,
           	    TPortType type,
                 int protocol, 
                 bool transportRawData = false);
+
     explicit GCFPVSSPort ();
   
     virtual ~GCFPVSSPort ();
@@ -58,18 +60,19 @@ class GCFPVSSPort : public GCFRawPort
   public:
 
     void setConverter(GCFPVSSUIMConverter& converter);
-    /**
-     * open/close functions
-     */
+
+    // open/close functions
+    // <group>
     virtual bool open ();
     virtual bool close ();
+    // </group>
   
-    /**
-     * send/recv functions
-     */
+    // send/recv functions
+    // <group>
     virtual ssize_t send (GCFEvent& event);
     virtual ssize_t recv (void* buf,
                           size_t count);
+    // </group>
            
   public: // pvss port specific methods
 
@@ -80,12 +83,13 @@ class GCFPVSSPort : public GCFRawPort
     virtual bool accept(GCFPVSSPort& newPort);
 
   private:
-    /**
-     * Don't allow copying this object.
-     */
+    // Don't allow copying this object.
+    // <group>
     GCFPVSSPort (const GCFPVSSPort&);
     GCFPVSSPort& operator= (const GCFPVSSPort&);
+    // </group>
     
+  private: // helper methods
     friend class GSAPortService;
     void serviceStarted(bool successfull);
     void setService(GSAPortService& service);
@@ -93,7 +97,7 @@ class GCFPVSSPort : public GCFRawPort
     static unsigned int claimPortNr();
     static void releasePortNr(const string& portId);
     
-  private:
+  private: // data members
     GSAPortService*   _pPortService;
     string            _destDpName;
     GCFPVString       _portId;
@@ -107,6 +111,7 @@ class GCFPVSSPort : public GCFRawPort
     static TPVSSPortNrs _pvssPortNrs;        
 };
 
+// Abstract converter class to be able to convert string messages from/for UIM
 class GCFPVSSUIMConverter
 {
   public:

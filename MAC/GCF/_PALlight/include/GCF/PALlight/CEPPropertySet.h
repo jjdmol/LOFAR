@@ -62,7 +62,7 @@ class CEPPropertySet
     // preprocess time of an application.
     explicit CEPPropertySet (const char* name,
                              const char* type, 
-                             bool isTemporary);
+                             TPSCategory category);
 
     virtual ~CEPPropertySet ();
 
@@ -74,6 +74,9 @@ class CEPPropertySet
       
     // @return true if is marked as a temporary property set
     bool isTemporary () const;
+     
+    // @return the category data member value
+    TPSCategory getCategory () const;
 
     // @param propName with or without the scope
     // @return true if property with 'propName' exists in this set
@@ -169,8 +172,8 @@ class CEPPropertySet
     string  _scope;     
     // the type
     string  _type;   
-    // temporary or permanent?
-    bool    _isTemporary;
+    // temporary, permanent or permanent autoloading on enable?
+    TPSCategory _category;
     
     typedef map<string /*propName*/, CEPProperty*> TPropertyList;
     TPropertyList       _properties;
@@ -193,8 +196,11 @@ inline const string& CEPPropertySet::getType () const
   { return _type; }
   
 inline bool CEPPropertySet::isTemporary () const 
-  { return _isTemporary; }
-
+  { return (_category == PS_CAT_TEMPORARY); }
+     
+inline TPSCategory CEPPropertySet::getCategory () const 
+  { return _category; }
+  
 inline bool CEPPropertySet::isEnabled () 
   { return (_state == S_ENABLED || _state == S_LINKED); }
   

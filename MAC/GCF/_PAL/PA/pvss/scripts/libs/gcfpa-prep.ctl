@@ -5,7 +5,7 @@ main()
 	dyn_string types;
 
 	types = dpTypes("GCF*");
-	handleType(types, "GCFPaPsEnabled", DPEL_BOOL);
+	handleType(types, "GCFPaPsEnabled", DPEL_STRING);
 	handleType(types, "GCFPaPsIndication", DPEL_STRING);
 	handleType(types, "GCFDistPort", DPEL_BLOB);
 	handleType(types, "GCFWDGoneSys", DPEL_UINT);
@@ -31,21 +31,19 @@ deleteDPs(string type)
       }
     }
   }
+  dpTypeDelete(type);
 }
 
 void handleType(dyn_string types, string type, int dpelType)
 {
-	if (!dynContains(types, type))
-	{
-		dyn_dyn_string xxdepes;
-		dyn_dyn_int xxdepei;
-		xxdepes[1] = makeDynString (type);
-		xxdepei[1] = makeDynInt (dpelType);
-		dpTypeCreate(xxdepes,xxdepei);
-		DebugN("Add type " + type);
-	}
-	else
+	if (dynContains(types, type))
 	{
 		deleteDPs(type);
 	}
+	dyn_dyn_string xxdepes;
+	dyn_dyn_int xxdepei;
+	xxdepes[1] = makeDynString (type);
+	xxdepei[1] = makeDynInt (dpelType);
+	dpTypeCreate(xxdepes,xxdepei);
+	DebugN("Add type " + type);
 }
