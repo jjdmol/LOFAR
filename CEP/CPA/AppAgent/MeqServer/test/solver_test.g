@@ -96,7 +96,7 @@ const solver_test := function (stage=0,gui=F,debug=[=],verbose=1)
     # create solver
     global rec;
     rec := meq.node('MeqSolver','solver',children="eq1 eq2");
-    rec.num_steps := 10;
+    rec.default := [ num_iter = 3 ];
     rec.parm_group := hiid('Parm');
     rec.solvable := meq.solvable_list("x y");
     print mqs.meq('Create.Node',rec);

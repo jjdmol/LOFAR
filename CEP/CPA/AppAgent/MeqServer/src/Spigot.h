@@ -15,7 +15,7 @@
 //  A MeqSpigot is attached to a VisAgent data source, and represents
 //  one interferometer. For every matching VisTile at the input of the 
 //  source, it caches the visibility data. If a matching request is then
-//  received, it returns that data as the result set (with one plane per
+//  received, it returns that data as the result (with one plane per
 //  correlation.) A MeqSpigot usually works in concert with a MeqSink,
 //  in that a sink is placed at the base of the tree, and generates 
 //  results matching the input data. Note that for this to work properly,
@@ -27,6 +27,14 @@
 //  Index (1-based) of second station comprising the interferometer
 //field: input_col 'DATA'
 //  tile column to get result from: DATA, PREDICT or RESIDUALS. 
+//field: flag_mask -1
+//  Flags bitmask. This is AND-ed with the FLAGS column of the tile to 
+//  generate output VellSet flags. Use -1 for a full mask. If both 
+//  flag_mask and row_flag_mask are 0, no output flags will be generated.
+//field: row_flag_mask -1
+//  Row flags bitmask. This is AND-ed with the ROWFLAG column of the tile 
+//  and added to the output VellSet flags. Use -1 for a full mask. If both
+//  flag_mask and row_flag_mask are 0, no output flags will be generated.
 //defrec end
 
 namespace Meq {
@@ -64,7 +72,9 @@ class Spigot : public VisHandlerNode
   private:
     //##ModelId=3F9FF6AA01A3
     int icolumn;
-//,icorr;
+    string colname;
+    int flag_mask;
+    int row_flag_mask;
     
     //##ModelId=3F9FF6AA0221
     Result::Ref next_res;
