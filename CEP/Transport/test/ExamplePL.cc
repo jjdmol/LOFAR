@@ -95,7 +95,7 @@ void test1()
   dh1.init();
   dh2.init();
 
-  // Use a TH_Mem to check if the socket receiver gets the correct data.
+  // Use a TH_Mem to check if the TH_PL receiver gets the correct data.
   // It should match the data sent via TH_Mem.
   cout << "Send data1" << endl;
   sendData1 (DH_Sender);
@@ -121,7 +121,7 @@ void test2()
   dh1.init();
   dh2.init();
 
-  // Use a TH_Mem to check if the socket receiver gets the correct data.
+  // Use a TH_Mem to check if the TH_PL receiver gets the correct data.
   // It should match the data sent via TH_Mem.
   cout << "Send data1" << endl;
   sendData1 (DH_Sender);

@@ -99,7 +99,7 @@ void test1 (bool isReceiver)
   dh1.init();
   dh2.init();
 
-  // Use a TH_Mem to check if the socket receiver gets the correct data.
+  // Use a TH_Mem to check if the TH_ShMem receiver gets the correct data.
   // It should match the data sent via TH_Mem.
   if (isReceiver) {
     sendData1 (dh1);
@@ -130,7 +130,7 @@ void test2 (bool isReceiver, int maxSize)
   dh1.init();
   dh2.init();
 
-  // Use a TH_Mem to check if the socket receiver gets the correct data.
+  // Use a TH_Mem to check if the TH_ShMem receiver gets the correct data.
   // It should match the data sent via TH_Mem.
   if (isReceiver) {
     sendData1 (dh1);
