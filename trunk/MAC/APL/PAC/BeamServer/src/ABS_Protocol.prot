@@ -130,4 +130,37 @@ event = {
 	    type = "double";
       };
 };
-      
+
+event = {
+      //
+      // enable or change settings of the waveform generator
+      // disables the ADC input
+      //
+      signal = WGENABLE;
+      dir = IN;
+      param = {
+	    // Frequency of the sine wave. Current design
+	    // min = 0.0Hz, max = 80.0MHz
+	    name = "frequency";
+	    type = "double";
+      };
+      param = {
+	    // applitude of the signal, values between
+	    // 0 and 128 scale the amplitude linearly
+	    name = "amplitude";
+	    type = "unsigned char"; // allowed values 0..128
+      };
+      param = {
+	    // number of clock cycles for each sample
+	    name = "sample_period";
+	    type = "unsigned char";
+      };
+};
+
+event = {
+      //
+      // disable the waveform generator, enables the ADC input
+      //
+      signal = WGDISABLE;
+      dir = IN;
+};

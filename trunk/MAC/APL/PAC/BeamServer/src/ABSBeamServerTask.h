@@ -86,14 +86,31 @@ namespace ABS
 				GCFPortInterface& port);
 
 	/**
-	 * Start a new compute cycle.
+	 * Enable or change setting of the waveform generator.
+	 * Enabling the waveform generator disables the ADC input.
 	 */
-	void compute_timeout();
+	void wgenable_action(ABSWgenableEvent* we);
+
+	/**
+	 * Disable the waveform generator.
+	 * This enables the ADC input.
+	 */
+	void wgdisable_action();
+			      
+	/**
+	 * Time to compute some more weights.
+	 */
+	void compute_timeout_action();
 
 	/**
 	 * Calculate beam former weights.
 	 */
-	void calc_weigths();
+	void calculate_weights();
+
+	/**
+	 * Send weights to the board.
+	 */
+	void send_weights();
 
 	/**
 	 * Determine the new subband selection after a beam
@@ -101,8 +118,18 @@ namespace ABS
 	 */
 	void update_sbselection();
 
+	/**
+	 * Send subbands selection to the board.
+	 */
+	void send_sbselection();
+
     private:
 	// member variables
+
+	/**
+	 * List of configured spectral windowds.
+	 */
+	std::map<int, SpectralWindow*> m_spws;
 
 	/**
 	 * Set of currently allocated beams by index.
@@ -110,9 +137,9 @@ namespace ABS
 	std::set<int> m_beams;
 
 	/**
-	 * List of configured spectral windowds.
+	 * Current subband selection
 	 */
-	std::map<int, SpectralWindow*> m_spws;
+	std::map<int, int> m_sbsel;
 
     private:
 	// ports

@@ -66,8 +66,14 @@ namespace ABS
 	   */
 	  int allocate(SpectralWindow const & spw, std::set<int> subbands);
 	  int deallocate();
-	  void addPointing(const Pointing& pointing);
-	  int convertPointings();
+	  int addPointing(const Pointing& pointing);
+
+	  /**
+	   * Convert coordinates from the m_pointing_queue
+	   * to the local coordinate system, for times >= time
+	   * and time < time + duration.
+	   */
+	  int convertPointings(struct timeval time, unsigned long duration);
 	  int getPointings();
 
 	  /**
@@ -93,6 +99,9 @@ namespace ABS
 
 	  /** queue of future pointings */
 	  std::priority_queue<Pointing> m_pointing_queue;
+
+	  /** current coordinate track */
+	  std::priority_queue<Pointing> m_coordinate_track;
 
 	  /**
 	   * Set of beamlets belonging to this beam.
