@@ -28,7 +28,6 @@
 
 #include "CEPFrame/Transport.h"
 #include "CEPFrame/DataHolder.h"
-#include "CEPFrame/Transport.h"
 #include "CEPFrame/StepRep.h"
 #include "Common/Debug.h"
 
@@ -284,4 +283,7 @@ void DataHolder::setWriteDelay (int delay)
   itsWriteDelayCount = delay;
 }
 
-}
+bool DataHolder::doHandle() const
+{ return itsTransportPtr->doHandle(); }
+
+} // namespace LOFAR

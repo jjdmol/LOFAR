@@ -34,9 +34,9 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_fstream.h>
 
-#include <CEPFrame/BaseSim.h>
-#include <CEPFrame/TransportHolder.h>
-#include <CEPFrame/Transportable.h>
+#include "CEPFrame/BaseSim.h"
+#include "CEPFrame/TransportHolder.h"
+#include "CEPFrame/Transportable.h"
 
 namespace LOFAR
 {
@@ -322,8 +322,6 @@ inline const DataHolder::DataPacket& DataHolder::getDataPacket() const
 inline void* DataHolder::getDataPtr()
 { return itsDataPacketPtr; }
 
-inline bool DataHolder::doHandle() const
-{ return itsTransportPtr->doHandle(); }
 
 inline void DataHolder::setTimeStamp (unsigned long aTimeStamp)
   { itsDataPacketPtr->setTimeStamp (aTimeStamp); }
