@@ -24,7 +24,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include <tinyCEP/SimulatorParseClass.h>
-#include <tinyCEP/ApplicationHolder.h>
+//#include <tinyCEP/TinyApplicationHolder.h>
 #include <Common/KeyValueMap.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iostream.h>
@@ -50,9 +50,9 @@ namespace LOFAR
 // Initialize statics.
 int SimulatorParse::theirLine = 0;
 int SimulatorParse::theirPosition = 0;
-ApplicationHolder* SimulatorParse::theirSimulator = 0;
+TinyApplicationHolder* SimulatorParse::theirSimulator = 0;
 
-void SimulatorParse::parse (ApplicationHolder& simulator)
+void SimulatorParse::parse (TinyApplicationHolder& simulator)
 {
   // Set global Simulator pointer and call the bison parser.
   theirSimulator = &simulator;

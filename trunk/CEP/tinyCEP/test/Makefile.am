@@ -20,17 +20,18 @@ CXXFLAGS += \
 
 check_PROGRAMS			= Example Example2
 
+
 Example_SOURCES 		= \
 				DH_Example.cc \
 				WH_Example.cc \
-				MyExample.cc  \
+				MyExample.cc \
 				Example.cc 
 
-Example2_SOURCES		= \
-				DH_Example.cc \
-				WH_Example.cc \
-				MySecondExample.cc \
-				Example2.cc
+Example2_SOURCES           	= \
+                                DH_Example.cc \
+                                WH_Example.cc \
+                                MySecondExample.cc \
+                                Example2.cc
 
 LDADD				= ../src/libtinycep.la
 DEPENDENCIES			= ../src/libtinycep.la $(LOFAR_DEPEND)

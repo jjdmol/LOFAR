@@ -7,15 +7,14 @@
 #include <Common/KeyValueMap.h>
 
 #include <Transport/DataHolder.h>
-#include <tinyCEP/ApplicationHolder.h>
-#include <tinyCEP/BaseDataManager.h>
-#include <tinyCEP/MiniDataManager.h>
+#include <tinyCEP/TinyApplicationHolder.h>
+#include <tinyCEP/TinyDataManager.h>
 #include <DH_Example.h>
 #include <WH_Example.h>
 
 namespace LOFAR
 {
-  class MyExample: public ApplicationHolder
+  class MyExample: public TinyApplicationHolder
   {
   public:
     MyExample(int ninput, int noutput);

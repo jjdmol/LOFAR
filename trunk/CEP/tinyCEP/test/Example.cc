@@ -29,6 +29,7 @@
 
 
 #include <Common/KeyValueMap.h>
+#include <Common/Debug.h>
 
 using namespace LOFAR;
 

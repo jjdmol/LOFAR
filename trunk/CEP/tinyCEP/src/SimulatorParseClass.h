@@ -30,7 +30,7 @@
 #include <Common/lofar_string.h>
 #include <stdexcept>
 
-#include <tinyCEP/ApplicationHolder.h>
+#include <tinyCEP/TinyApplicationHolder.h>
 
 namespace LOFAR
 {
@@ -60,7 +60,7 @@ class SimulatorParse
 {
 public:
   /// Parse and execute the commands to be read from standard input.
-  static void parse (ApplicationHolder&);
+  static void parse (TinyApplicationHolder&);
 
   /// Execute the command given in the value.
   static void execute (const KeyValue&);
@@ -95,7 +95,7 @@ public:
 private:
   static int theirLine;
   static int theirPosition;
-  static ApplicationHolder* theirSimulator;
+  static TinyApplicationHolder* theirSimulator;
 };
 
 

@@ -9,16 +9,15 @@
 #include <Transport/DataHolder.h>
 #include <Transport/TH_Mem.h>
 
-#include <tinyCEP/ApplicationHolder.h>
-#include <tinyCEP/BaseDataManager.h>
-#include <tinyCEP/MiniDataManager.h>
+#include <tinyCEP/TinyApplicationHolder.h>
+#include <tinyCEP/TinyDataManager.h>
 
 #include <DH_Example.h>
 #include <WH_Example.h>
 
 namespace LOFAR
 {
-  class MySecondExample: public ApplicationHolder
+  class MySecondExample: public TinyApplicationHolder
   {
   public:
     MySecondExample(int ninput, int noutput);
@@ -39,7 +38,6 @@ namespace LOFAR
     char** itsArgc;
 
     DataHolder* itsProto;
-    //    MiniDataManager* itsDataManager;
 
     DH_Example* dhptr;
 

@@ -1,4 +1,4 @@
-//#  ApplicationHolder.h: Base class for a user application in tinyCEP
+//#  TinyApplicationHolder.h: Base class for a user application in tinyCEP
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,15 +20,15 @@
 //#
 //#  $Id$
 
-#ifndef TINYCEP_APPLICATIONHOLDER_H
-#define TINYCEP_APPLICATIONHOLDER_H
+#ifndef TINYCEP_TINYAPPLICATIONHOLDER_H
+#define TINYCEP_TINYAPPLICATIONHOLDER_H
 
 #include <lofar_config.h>
 
 //# Includes
 #include <Transport/DataHolder.h>
 #include <Transport/Transporter.h>
-#include <tinyCEP/MiniDataManager.h>
+#include <tinyCEP/TinyDataManager.h>
 
 #include <Common/KeyValueMap.h>
 
@@ -36,41 +36,41 @@ namespace LOFAR
 {
 
   // Description of class.
-  class ApplicationHolder
+  class TinyApplicationHolder
   {
   public:
-    //ApplicationHolder(int ninput, int noutput, DataHolder* dhptr);
+    //TinyApplicationHolder(int ninput, int noutput, DataHolder* dhptr);
     // default constructor does nothing.
-    ApplicationHolder();
-    virtual ~ApplicationHolder();
+    TinyApplicationHolder();
+    virtual ~TinyApplicationHolder();
     
-/*     virtual ApplicationHolder* clone() const = 0; */
+/*     virtual TinyApplicationHolder* clone() const = 0; */
 
     void setarg (int argc, const char* argv[]);
     void getarg (int* argc, const char** argv[]);
  
-    void baseDefine (const KeyValueMap& params = KeyValueMap());
-    void baseCheck();
+    virtual void baseDefine (const KeyValueMap& params = KeyValueMap());
+    virtual void baseCheck();
     
     /// Do a prerun on the simulation.
-    void basePrerun();
+    virtual void basePrerun();
     
     /// Run the simulation by calling the run function.
-    void baseRun (int nsteps = -1);
+    virtual void baseRun (int nsteps = -1);
 
     /// Dump the simulation data by calling the dump function.
-    void baseDump();
+    virtual void baseDump();
     
     /// Set the output file of a data holder.
-    void baseDHFile (const string& dh, const string& name);
+    virtual void baseDHFile (const string& dh, const string& name);
 
     /// Do a postrun on the simulation.
-    void basePostrun();
+    virtual void basePostrun();
     
     /** Quit the simulation.
 	It calls the quit function and closes the transport.
     */
-    void baseQuit();
+    virtual void baseQuit();
     
 
   protected:
@@ -82,23 +82,24 @@ namespace LOFAR
      These virtual functions are called by their base... counterparts.
     */
     virtual void define(const KeyValueMap&) = 0;
+    virtual void check();
     virtual void init();
     virtual void run(int nsteps);
     virtual void run_once();
     virtual void dump() const;
+    virtual void postrun();
     virtual void quit();
 
     // Forbid copy constructor
-    ApplicationHolder (const ApplicationHolder&);
+    TinyApplicationHolder (const TinyApplicationHolder&);
     // Forbid assignment
-    ApplicationHolder& operator= (const ApplicationHolder&);
+    TinyApplicationHolder& operator= (const TinyApplicationHolder&);
 
-    // pointer to the application dataManager
-/*     MiniDataManager* itsDataManager; */
-  private:
+  protected:
     int    itsArgc;
     const char** itsArgv;
 
+  private:
     // DataHolder prototype for the application
     DataHolder* itsProto;
 

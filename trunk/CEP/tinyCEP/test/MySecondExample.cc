@@ -31,12 +31,9 @@ namespace LOFAR
     itsWHs[0] = myWHExamples[0];
     itsWHs[1] = myWHExamples[1];
 
-    myWHExamples[1]->getDataManager().getInHolder(0)->connectTo
-      ( *myWHExamples[0]->getDataManager().getOutHolder(0), 
-	TH_Mem() );
-
-    myWHExamples[0]->getDataManager().getOutHolder(0)->setBlocking(false);
-    myWHExamples[1]->getDataManager().getInHolder(0)->setBlocking(false);
+    myWHExamples[0]->getDataManager().getOutHolder(0)->connectTo
+      ( *myWHExamples[1]->getDataManager().getInHolder(0), 
+	TH_Mem(), false );
 
     itsWHCount = 2;
   }

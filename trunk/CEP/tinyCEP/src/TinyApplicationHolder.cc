@@ -1,4 +1,4 @@
-//#  ApplicationHolder.cc: Base class for a user application in tinyCEP
+///#  TinyApplicationHolder.cc: Base class for a user application in tinyCEP
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,45 +20,38 @@
 //#
 //#  $Id$
 
-#include <tinyCEP/ApplicationHolder.h>
+#include <tinyCEP/TinyApplicationHolder.h>
 
 namespace LOFAR
 {
-//   ApplicationHolder::ApplicationHolder(int ninput, int noutput, DataHolder* dhptr)
+//   TinyApplicationHolder::TinyApplicationHolder(int ninput, int noutput, DataHolder* dhptr)
 //     : itsArgc(0),
 //       itsArgv(0),
 //       itsProto(dhptr),
 //       itsDataManager(0) {
 //       itsNinputs(ninput),
 //       itsNoutputs(noutput){
-    
-//     itsDataManager = new MiniDataManager(ninput, noutput);
-
-//     for (int i=0; i < ninput; i++) {
-//       itsDataManager->addInDataHolder(i, dhptr);
-//     }
-//     for (int i=0; i < noutput; i++){
-//       itsDataManager->addOutDataHolder(i, dhptr);
-//     }
 //   }
 
-  ApplicationHolder::ApplicationHolder()
+  TinyApplicationHolder::TinyApplicationHolder()
+    : itsArgc(0),
+      itsArgv(0),
+      itsProto(0)
     { }
 
-  ApplicationHolder::~ApplicationHolder() {
+  TinyApplicationHolder::~TinyApplicationHolder() {
     // dit segfault op dit moment nog.. FIXME!
     //    delete itsProto;
-    //    delete itsDataManager;
   }
 
-  ApplicationHolder::ApplicationHolder(const ApplicationHolder& that)
+  TinyApplicationHolder::TinyApplicationHolder(const TinyApplicationHolder& that)
     : itsArgc        (that.itsArgc),
       itsArgv        (that.itsArgv),
       itsProto       (that.itsProto) { 
   }
       
     
-  void ApplicationHolder::baseDefine(const KeyValueMap& params) {
+  void TinyApplicationHolder::baseDefine(const KeyValueMap& params) {
     // Initialize MPI environment
     //    TRANSPORTER::init(itsArgc, itsArgv);
 
@@ -66,56 +59,63 @@ namespace LOFAR
     define(params);
   }
 
-  void ApplicationHolder::baseCheck() {
+  void TinyApplicationHolder::baseCheck() {
+    check();
   }
 
-  void ApplicationHolder::basePrerun() {
-    //    itsDataManager->preprocess();
+  void TinyApplicationHolder::basePrerun() {
     init();
   }
 
-  void ApplicationHolder::baseRun(int nsteps) {
+  void TinyApplicationHolder::baseRun(int nsteps) {
     run(nsteps);
   }
 
-  void ApplicationHolder::baseDump() {
+  void TinyApplicationHolder::baseDump() {
     dump();
   }
 
-  void ApplicationHolder::baseDHFile(const string& dh, const string& name) {
+  void TinyApplicationHolder::baseDHFile(const string& dh, const string& name) {
   }
   
-  void ApplicationHolder::basePostrun() {
+  void TinyApplicationHolder::basePostrun() {
+    postrun();
   }
 
-  void ApplicationHolder::baseQuit() {
+  void TinyApplicationHolder::baseQuit() {
   }
 
-  void ApplicationHolder::define(const KeyValueMap& map) {
+  void TinyApplicationHolder::define(const KeyValueMap& map) {
   }
   
-  void ApplicationHolder::init() {
+  void TinyApplicationHolder::check() {
+  }
+
+  void TinyApplicationHolder::init() {
   }
   
-  void ApplicationHolder::run(int nsteps) {
+  void TinyApplicationHolder::run(int nsteps) {
   }
   
-  void ApplicationHolder::run_once() {
+  void TinyApplicationHolder::run_once() {
   }
 
-  void ApplicationHolder::quit() {
+  void TinyApplicationHolder::postrun() {
   }
 
-  void ApplicationHolder::dump() const {
+  void TinyApplicationHolder::quit() {
   }
 
-  void ApplicationHolder::setarg (int argc, const char** argv) {
+  void TinyApplicationHolder::dump() const {
+  }
+
+  void TinyApplicationHolder::setarg (int argc, const char** argv) {
     itsArgc = argc;
     itsArgv = argv;
   }
 
 
-  void ApplicationHolder::getarg (int* argc, const char** argv[]) {
+  void TinyApplicationHolder::getarg (int* argc, const char** argv[]) {
   *argc = itsArgc;
   *argv = itsArgv;
   }

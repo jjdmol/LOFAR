@@ -27,7 +27,6 @@
 #include <tinyCEP/WorkHolder.h>
 #include <Common/Debug.h>
 
-
 namespace LOFAR
 {
 
@@ -54,7 +53,7 @@ WorkHolder::WorkHolder (int inputs, int outputs,
   itsProcessStep      (1)
 {
 //   TRACER2("WorkHolder constructor");
-  itsDataManager = new MiniDataManager(inputs, outputs);
+  itsDataManager = new TinyDataManager(inputs, outputs);
 }
 
 WorkHolder::WorkHolder (const WorkHolder& that)
@@ -79,8 +78,8 @@ WorkHolder& WorkHolder::operator= (const WorkHolder& that)
     itsNoutputs         = that.itsNoutputs;
     itsName             = that.itsName;
     itsType             = that.itsType;
-    itsDataManager      = 0;
     itsFirstProcessCall = that.itsFirstProcessCall;
+    itsDataManager      = 0;
   }
   return *this;
 }
@@ -108,7 +107,6 @@ void WorkHolder::dump()
 void WorkHolder::basePreprocess()
 {
   getDataManager().preprocess();
-//   getParamManager().preprocess();
   preprocess();
 }
 
@@ -186,7 +184,6 @@ void WorkHolder::basePostprocess()
     getDataManager().getOutHolder(output)->basePostprocess();
   }
   getDataManager().postprocess();
-//   getParamManager().postprocess();
 }
 
 void WorkHolder::postprocess()
@@ -267,5 +264,15 @@ int WorkHolder::getMonitorValue (const char*)
 bool WorkHolder::doHandle() {
   return ( itsProcessStep % getDataManager().getProcessRate() == 0 );
 }
+
+void WorkHolder::setDataManager(TinyDataManager* dmptr)
+{
+  if (itsDataManager != 0)
+  {
+    delete itsDataManager;    
+  }  
+  itsDataManager = dmptr;
+}
+
 
 }
