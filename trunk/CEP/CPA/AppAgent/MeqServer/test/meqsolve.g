@@ -441,7 +441,7 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
   {
     # activate input and watch the fur fly  
     global inputrec,outputrec;
-    mqs.init(input=inputrec,output=outputrec); 
+    mqs.init([mandate_regular_grid=T,output_col='PREDICT'],input=inputrec,output=outputrec); 
   }
 }
 
@@ -450,8 +450,8 @@ msname := 'test.ms';
 mepuvw := T;
 filluvw := F;
 
-src_dra  := ([0,128] + 5) * pi/(180*60*60); # perturb positions by # seconds
-src_ddec := ([0,128] + 5) * pi/(180*60*60);
+src_dra  := ([0,128] + 0) * pi/(180*60*60); # perturb positions by # seconds
+src_ddec := ([0,128] + 0) * pi/(180*60*60);
 src_sti  := [1,1]   + 0.1;
 src_names := "a b";
 

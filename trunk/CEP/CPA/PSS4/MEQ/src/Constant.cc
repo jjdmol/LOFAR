@@ -27,7 +27,7 @@
 #include "MeqVocabulary.h"
 #include <Common/Debug.h>
 #include <Common/Lorrays.h>
-#include <aips/Mathematics/Math.h>
+#include <casa/BasicMath/Math.h>
 
 namespace Meq {
 

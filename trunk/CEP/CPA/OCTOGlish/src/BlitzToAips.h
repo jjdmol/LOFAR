@@ -10,7 +10,7 @@
 #endif
     
 #include "Common/Lorrays.h"
-#include <aips/Arrays.h>
+#include <casa/Arrays.h>
 
 #ifndef LORRAYS_USE_BLITZ
 #error Must use Blitz Lorrays

@@ -27,8 +27,8 @@
 #include <MEQ/Function.h>
 #include <MEQ/MeqVocabulary.h>
 #include <MEQ/ParmTable.h>
-#include <aips/Arrays/Matrix.h>
-#include <aips/Arrays/Vector.h>
+#include <casa/Arrays/Matrix.h>
+#include <casa/Arrays/Vector.h>
     
 
 namespace Meq {

@@ -25,12 +25,12 @@
 #include <MEQ/VellSet.h>
 #include <MEQ/Cells.h>
 #include <MEQ/AID-Meq.h>
-#include <aips/Measures/MBaseline.h>
-#include <aips/Measures/MPosition.h>
-#include <aips/Measures/MEpoch.h>
-#include <aips/Measures/MeasConvert.h>
-#include <aips/Measures/MeasTable.h>
-#include <aips/Quanta/MVuvw.h>
+#include <measures/Measures/MBaseline.h>
+#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MeasTable.h>
+#include <casa/Quanta/MVuvw.h>
 
 namespace Meq {
 

@@ -24,9 +24,9 @@
 #define MEQ_PARMTABLE_H
 
 //# Includes
-#include <aips/Tables/Table.h>
-#include <aips/Tables/ColumnsIndex.h>
-#include <aips/Containers/RecordField.h>
+#include <tables/Tables/Table.h>
+#include <tables/Tables/ColumnsIndex.h>
+#include <casa/Containers/RecordField.h>
 #include <MEQ/Polc.h>
 //#include <MEQ/MeqSourceList.h>
 #include <Common/lofar_vector.h>

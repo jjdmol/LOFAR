@@ -4,7 +4,7 @@
 #include <OCTOPUSSY/Octopussy.h>
 #include <OCTOGlish/GlishClientWP.h>
 #include <OctoAgent/EventMultiplexer.h>
-#include <aips/Exceptions/Error.h>
+#include <casa/Exceptions/Error.h>
 
 #include <AppUtils/VisRepeater.h>
 #include <Solver/SolverControlAgent.h>

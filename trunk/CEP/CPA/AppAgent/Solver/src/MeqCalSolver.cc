@@ -40,11 +40,11 @@
 #include <MNS/MeqLofarPoint.h>
 #include <MNS/MeqMatrixComplexArr.h>
 
-#include <aips/Utilities/Regex.h>
-#include <aips/Utilities/GenSort.h>
-#include <aips/OS/Timer.h>
-#include <aips/Measures/MDirection.h>
-#include <aips/Measures/MEpoch.h>
+#include <casa/Utilities/Regex.h>
+#include <casa/Utilities/GenSort.h>
+#include <casa/OS/Timer.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MEpoch.h>
 
 #include <unistd.h>
     

@@ -24,11 +24,11 @@
 #define SOLVER_SRC_MEQCALSOLVER_H_HEADER_INCLUDED_D8FEA530
 
 
-#include <aips/Arrays/Vector.h>
-#include <aips/Arrays/Matrix.h>
-#include <aips/Fitting/FitLSQ.h>
-#include <aips/Quanta/MVBaseline.h>
-#include <aips/Utilities/String.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/Arrays/Matrix.h>
+#include <scimath/Fitting/FitLSQ.h>
+#include <casa/Quanta/MVBaseline.h>
+#include <casa/BasicSL/String.h>
 
 #include <MNS/MeqDomain.h>
 #include <MNS/MeqHist.h>
