@@ -62,7 +62,7 @@ Dispatcher::Dispatcher (AtomicID process, AtomicID host, int hz)
   //## begin Dispatcher::Dispatcher%3C7CD444039C.hasinit preserve=no
   //## end Dispatcher::Dispatcher%3C7CD444039C.hasinit
   //## begin Dispatcher::Dispatcher%3C7CD444039C.initialization preserve=yes
-    : DebugContext("Dsp",PSCFDebugContext::DebugContext),
+    : DebugContext("Dsp",False,&PSCFDebugContext::DebugContext),
       heartbeat_hz(hz),
       config(OctopussyConfig::global())
   //## end Dispatcher::Dispatcher%3C7CD444039C.initialization
@@ -78,7 +78,7 @@ Dispatcher::Dispatcher (int hz)
   //## begin Dispatcher::Dispatcher%3CD012B70209.hasinit preserve=no
   //## end Dispatcher::Dispatcher%3CD012B70209.hasinit
   //## begin Dispatcher::Dispatcher%3CD012B70209.initialization preserve=yes
-    : DebugContext("Dsp",PSCFDebugContext::DebugContext),
+    : DebugContext("Dsp",False,&PSCFDebugContext::DebugContext),
       heartbeat_hz(hz),
       config(OctopussyConfig::global())
   //## end Dispatcher::Dispatcher%3CD012B70209.initialization

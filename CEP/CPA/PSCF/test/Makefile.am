@@ -4,7 +4,8 @@ dmi_dir = $(lofar_sharedir)/../DMI
 
 dmi_lib = $(dmi_dir)/build/src/libdmi.la
 
-INCLUDES		= -I$(dmi_dir)/src -I$(top_srcdir)/src
+INCLUDES		= -I$(dmi_dir)/src -I$(top_srcdir)/src -I$(lofar_sharedir)/../src-links
+
 
 check_PROGRAMS		= test_pscf
 

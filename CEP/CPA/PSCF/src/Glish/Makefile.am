@@ -1,6 +1,7 @@
 dmi_dir = $(lofar_sharedir)/../DMI
 
-INCLUDES = -I$(dmi_dir)/src -I$(top_srcdir)/src
+INCLUDES = -I$(dmi_dir)/src -I$(top_srcdir)/src \
+                -I$(lofar_sharedir)/../src-links
 
 CXXFLAGS += -Wall -Wno-unknown-pragmas 
 
