@@ -26,10 +26,10 @@
 #define CEPFRAME_DH_PL_H
 
 #include <libTransport/DataHolder.h>		// for super-class definition
-#include <libTransport/DH_PL_PO.h>	       
 #include <Common/LofarTypes.h>			// for ulong
 #include <PL/PersistentObject.h>
 
+class DH_PL_PO;
 
 namespace LOFAR {
 
@@ -47,6 +47,8 @@ public:
   // get a reference to the PersistentObject.
   PL::PersistentObject& getPO() const;		       
 
+  // pass the seqnr and get a reference to the PersistentObject.
+  PL::PersistentObject& preparePO(int SeqNo);		       
   
 private:
    
@@ -57,13 +59,9 @@ private:
   int Size;
   string TimeStamp;
 
-  DH_PL_PO *itsDHPLPO
-
+  DH_PL_PO *itsPODHPL;
 };
  
-inline  PL::PersistentObject& DH_PL::getPO() const{
-  return itsDHPLPO->getPO();
-}
  
  
 
