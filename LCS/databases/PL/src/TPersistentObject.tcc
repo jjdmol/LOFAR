@@ -39,14 +39,21 @@ namespace LOFAR
       typedef dtl::DBView< DBRep<T> >  DBViewType;
 
       TPersistentObject<T> tpo;
-      Collection<TPersistentObject<T> > ctpo;
+      Collection< TPersistentObject<T> > ctpo;
 
       DBViewType view(tpo.tableName(), BCA<T>(), query.getSql());
       typename DBViewType::select_iterator iter = view.begin();
 
       for (int nr = 0; iter != view.end() && nr < maxObjects; ++iter, ++nr) {
 	tpo.fromDatabaseRep(*iter);
-        tpo.retrieve();
+        // If the object T is spread among several tables we must call
+        // retrieve() in order to get the data from all the tables. Otherwise,
+        // we will miss the data for the "owned" POs. This really isn't very
+        // efficient! However, currently there is no way to do things
+        // better. We need a way to generate a better select query for this.
+        if (!tpo.ownedPOs().empty()) {
+          tpo.retrieve();
+        }
 	ctpo.add(tpo);
       }
       return ctpo;
@@ -135,7 +142,8 @@ namespace LOFAR
       iter.Params().itsOid = oid.get();
 
       // We should find a match! Otherwise there's some kind of logic error.
-      Assert(iter != view.end());  
+      AssertStr(iter != view.end(), "oid=" << oid.get()
+                << ", isOwnerOid=" << (isOwnerOid ? "true" : "false") );  
       fromDatabaseRep(*iter);
 
     }
