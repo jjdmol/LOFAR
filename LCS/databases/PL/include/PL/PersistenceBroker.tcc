@@ -34,7 +34,7 @@ namespace LOFAR
 
     template<typename T>
     Collection<TPersistentObject<T> >
-    PersistenceBroker::retrieve(const Query& query, int maxObjects)
+    PersistenceBroker::retrieve(const QueryObject& query, int maxObjects)
     {
       TPersistentObject<T> tpo;
       return tpo.retrieve(query, maxObjects);

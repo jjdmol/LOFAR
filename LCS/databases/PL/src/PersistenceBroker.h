@@ -32,7 +32,7 @@ namespace LOFAR
   namespace PL
   {
     //# Forward Declarations
-    class Query;
+    class QueryObject;
     class ObjectId;
     class PersistentObject;
     template<typename T> class TPersistentObject;
@@ -76,7 +76,7 @@ namespace LOFAR
 
       // Erase all persistent objects that match the specified query.
       // \throw LOFAR::PL::DeleteError
-      void erase(const Query& q) const;
+      void erase(const QueryObject& q) const;
 
       // Retrieve a collection of persistent objects, that match a specific
       // query. At most \c maxObjects are returned.
@@ -84,7 +84,7 @@ namespace LOFAR
       // \todo maxObjects should become part of the Query.
       template<typename T> 
       static Collection<TPersistentObject<T> > 
-      retrieve(const Query& q, int maxObjects = INT_MAX);
+      retrieve(const QueryObject& q, int maxObjects = INT_MAX);
 
       // Save the specified persistent object. A new object will be inserted
       // into the database, an existing (already persistent) object will be 
@@ -111,7 +111,7 @@ namespace LOFAR
       // only support collections??
       template<typename T> 
       typename Collection<TPersistentObject<T> >::iterator
-      retrieveIterator(const Query& q) const;
+      retrieveIterator(const QueryObject& q) const;
 
       // Retrieve the object associated with the given object-id.
       // \todo Should we provide this method in PersistenceBroker?? This will
