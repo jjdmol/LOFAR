@@ -48,8 +48,10 @@ void lofarLoggerInitNode(void) {
 
 	// try to resolve the applicationname
 	applNameLen = readlink("/proc/self/exe", applName, MAXLEN-1);
-	applName[applNameLen] = '\0';
-//		strcpy (applName, argv[0]);
+	if (applNameLen >= 0)
+		applName[applNameLen] = '\0';
+	else
+		strcpy (applName, "");
 //	}	
 
 	// construct loggerId and register it.
