@@ -603,7 +603,19 @@ void BeamServerTask::compute_timeout_action(long current_seconds)
   // need complex conjugate of the weights
   // as 16bit signed integer to send to the board
   //
+#if 0
   m_weights16 = convert2complex_int16_t(conj(m_weights));
+#else
+  for (int i = 0; i < COMPUTE_INTERVAL; i++)
+    for (int j = 0; j < N_ELEMENTS; j++)
+      for (int k = 0; k < N_SUBBANDS; k++)
+	for (int l = 0; l < N_POLARIZATIONS; l++)
+	  {
+	    m_weights16(i,j,k,l) = conj(m_weights16(i,j,k,l));
+	    m_weights16(i,j,k,l) = complex<int16_t>(htons((int16_t)round(m_weights(i,j,k,l).real()*SCALE)),
+						    htons((int16_t)round(m_weights(i,j,k,l).imag()*SCALE)));
+	  }
+#endif
 
   //LOG_DEBUG(formatString("m_weights16 contiguous storage? %s", (m_weights16.isStorageContiguous()?"yes":"no")));
   //LOG_DEBUG(formatString("sizeof(m_weights16) = %d", m_weights16.size()*sizeof(int16_t)));
