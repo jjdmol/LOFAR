@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.4  2003/11/28 14:44:12  diepen
+//  %[ER: 38]%
+//  First version of classes to create blobs
+//
 //  Revision 1.3  2003/10/29 13:54:38  smirnov
 //  %[ER: 16]%
 //  Cleaned up debug context definition macros
@@ -113,7 +117,7 @@ int main()
   int i1=1;
   try {
     AssertMsg (i0==i1, "should give exception");
-  } catch (LCS::Exception& x) {
+  } catch (LOFAR::Exception& x) {
     cout << x.what() << endl;
   }
 }

@@ -1,4 +1,4 @@
-//#  Exception.cc: implementation of the LCS Exception class
+//#  Exception.cc: implementation of the LOFAR Exception class
 //#
 //#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,7 +23,7 @@
 #include <Common/Exception.h>
 #include <sstream>
 
-namespace LCS {
+namespace LOFAR {
   
   Exception::Exception(const std::string& text, const std::string& file,
 		       int line, const std::string& func) :
@@ -51,4 +51,4 @@ namespace LCS {
     return itsText.c_str();
   }
 
-} // namespace LCS
+} // namespace LOFAR
