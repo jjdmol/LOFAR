@@ -1,23 +1,3 @@
-//## begin module%1.4%.codegen_version preserve=yes
-//   Read the documentation to learn more about C++ code generator
-//   versioning.
-//## end module%1.4%.codegen_version
-
-//## begin module%3CB562880397.cm preserve=no
-//	  %X% %Q% %Z% %W%
-//## end module%3CB562880397.cm
-
-//## begin module%3CB562880397.cp preserve=no
-//## end module%3CB562880397.cp
-
-//## Module: GlishClientWP%3CB562880397; Package body
-//## Subsystem: OCTOPUSSY::Glish%3CB5A6190195
-//## Source file: F:\lofar8\oms\LOFAR\src-links\OCTOPUSSY\Glish\GlishClientWP.cc
-
-//## begin module%3CB562880397.additionalIncludes preserve=no
-//## end module%3CB562880397.additionalIncludes
-
-//## begin module%3CB562880397.includes preserve=yes
 #include <sys/time.h> 
 #include <sys/types.h> 
 #include <unistd.h> 
@@ -29,53 +9,39 @@
 #include <DMI/DataField.h>
 #include <DMI/DataArray.h>
 #include <DMI/DynamicTypeManager.h>
-//## end module%3CB562880397.includes
+#include <DMI/NCIter.h>
 
 // GlishClientWP
 #include "OCTOPUSSY/Glish/GlishClientWP.h"
-//## begin module%3CB562880397.declarations preserve=no
-//## end module%3CB562880397.declarations
 
-//## begin module%3CB562880397.additionalDeclarations preserve=yes
 static int dum = aidRegistry_Glish();
 //##ModelId=3CB562BB0226
 //##ModelId=3DB9369503DE
 //##ModelId=3DB9369600AA
-//## end module%3CB562880397.additionalDeclarations
 
 
 // Class GlishClientWP 
 
 GlishClientWP::GlishClientWP (GlishSysEventSource *src, bool autostp, AtomicID wpc)
-  //## begin GlishClientWP::GlishClientWP%3CB562BB0226.hasinit preserve=no
-  //## end GlishClientWP::GlishClientWP%3CB562BB0226.hasinit
-  //## begin GlishClientWP::GlishClientWP%3CB562BB0226.initialization preserve=yes
   : WorkProcess(wpc),evsrc(src),autostop_(autostp)
-  //## end GlishClientWP::GlishClientWP%3CB562BB0226.initialization
 {
-  //## begin GlishClientWP::GlishClientWP%3CB562BB0226.body preserve=yes
   connected = evsrc->connected();
   has_events = False;
-  //## end GlishClientWP::GlishClientWP%3CB562BB0226.body
 }
 
 
 //##ModelId=3DB9369201C7
 GlishClientWP::~GlishClientWP()
 {
-  //## begin GlishClientWP::~GlishClientWP%3CB5618B0373_dest.body preserve=yes
   if( evsrc )
     delete evsrc;
-  //## end GlishClientWP::~GlishClientWP%3CB5618B0373_dest.body
 }
 
 
 
 //##ModelId=3CBA97E70232
-//## Other Operations (implementation)
 bool GlishClientWP::start ()
 {
-  //## begin GlishClientWP::start%3CBA97E70232.body preserve=yes
   fd_set fdset;
   FD_ZERO(&fdset);
   if( evsrc->addInputMask(&fdset) )
@@ -95,22 +61,18 @@ bool GlishClientWP::start ()
   addTimeout(2.0,HIID(),EV_CONT);
   
   return False;
-  //## end GlishClientWP::start%3CBA97E70232.body
 }
 
 //##ModelId=3CBABEA10165
 void GlishClientWP::stop ()
 {
-  //## begin GlishClientWP::stop%3CBABEA10165.body preserve=yes
   if( evsrc && connected )
     evsrc->postEvent("exit",GlishValue());
-  //## end GlishClientWP::stop%3CBABEA10165.body
 }
 
 //##ModelId=3CBACB920259
 int GlishClientWP::input (int , int )
 {
-  //## begin GlishClientWP::input%3CBACB920259.body preserve=yes
   if( !evsrc->connected() )
   {
     // got disconnected?
@@ -182,6 +144,7 @@ int GlishClientWP::input (int , int )
               if( to.size() > 3 )  host = to[3];
               MessageRef ref = glishRecToMessage(rec);
               setState(ref->state());
+              dprintf(4)("sending message: %s\n",ref->sdebug(10).c_str());
               send(ref,MsgAddress(to[0],wpi,process,host));
             }
             else if( event.type() == "publish" )
@@ -191,6 +154,7 @@ int GlishClientWP::input (int , int )
               tmp = rec.getAttribute("scope"); tmp.get(scope);
               MessageRef ref = glishRecToMessage(rec);
               setState(ref->state());
+              dprintf(4)("publishing message: %s\n",ref->sdebug(10).c_str());
               publish(ref,scope);
             }
             else if( event.type() == "log" )
@@ -218,22 +182,18 @@ int GlishClientWP::input (int , int )
       } // end of event loop
   }
   return Message::ACCEPT;
-  //## end GlishClientWP::input%3CBACB920259.body
 }
 
 //##ModelId=3CBACFC6013D
 int GlishClientWP::timeout (const HIID &)
 {
-  //## begin GlishClientWP::timeout%3CBACFC6013D.body preserve=yes
   // fake an input all to check for connectedness, etc.
   return input(0,0);
-  //## end GlishClientWP::timeout%3CBACFC6013D.body
 }
 
 //##ModelId=3CB5622B01ED
 int GlishClientWP::receive (MessageRef &mref)
 {
-  //## begin GlishClientWP::receive%3CB5622B01ED.body preserve=yes
   // if no connection, then just ignore it
   if( !evsrc->connected() )
   {
@@ -251,13 +211,11 @@ int GlishClientWP::receive (MessageRef &mref)
     dprintf(1)("unable to convert [%s] to glish record\n",mref->sdebug(1).c_str());
   }
   return Message::ACCEPT;
-  //## end GlishClientWP::receive%3CB5622B01ED.body
 }
 
 //##ModelId=3CB57C8401D6
 MessageRef GlishClientWP::glishRecToMessage (const GlishRecord &glrec)
 {
-  //## begin GlishClientWP::glishRecToMessage%3CB57C8401D6.body preserve=yes
   // get message attributes
   FailWhen( !glrec.attributeExists("id") ||
             !glrec.attributeExists("priority"),"missing 'id' or 'priority' attribute");
@@ -310,13 +268,11 @@ MessageRef GlishClientWP::glishRecToMessage (const GlishRecord &glrec)
     }
   }
   return ref;
-  //## end GlishClientWP::glishRecToMessage%3CB57C8401D6.body
 }
 
 //##ModelId=3CB57CA00280
 bool GlishClientWP::messageToGlishRec (const Message &msg, GlishRecord &glrec)
 {
-  //## begin GlishClientWP::messageToGlishRec%3CB57CA00280.body preserve=yes
   glrec.addAttribute("id",GlishArray(msg.id().toString()));
   glrec.addAttribute("to",GlishArray(msg.id().toString()));
   glrec.addAttribute("from",GlishArray(msg.from().toString()));
@@ -350,12 +306,10 @@ bool GlishClientWP::messageToGlishRec (const Message &msg, GlishRecord &glrec)
   }
   
   return True;
-  //## end GlishClientWP::messageToGlishRec%3CB57CA00280.body
 }
 
 // Additional Declarations
 //##ModelId=3DB9369202CC
-  //## begin GlishClientWP%3CB5618B0373.declarations preserve=yes
 void GlishClientWP::recToGlish (const DataRecord &rec, GlishRecord& glrec)
 {
   DataRecord::Iterator iter = rec.initFieldIter();
@@ -499,20 +453,20 @@ void GlishClientWP::recToGlish (const DataRecord &rec, GlishRecord& glrec)
               glrec.add(name,arr);
               break;
           }
-//string          case Tpstring_int:
-//string          {
-//string            // special case: convert string field to AIPS++ Strings
-//string            Array_string arr = rec[id].as_Array_string();
-//string            IPosition shape = arr.shape();
-//string            int n = shape.product();
-//string            bool del;
-//string            const string *from = arr.getStorage(del);
-//string            String *to = new String[n];
-//string            for( int i=0; i<n; i++ )
-//string              to[i] = from[i];
-//string            glrec.add(name,Array<String>(shape,to,TAKE_OVER));
-//string            arr.freeStorage(from,del);
-//string          }
+//string        case Tpstring_int:
+//string        {
+//string          // special case: convert string field to AIPS++ Strings
+//string          Array_string arr = rec[id].as_Array_string();
+//string          IPosition shape = arr.shape();
+//string          int n = shape.product();
+//string          bool del;
+//string          const string *from = arr.getStorage(del);
+//string          String *to = new String[n];
+//string          for( int i=0; i<n; i++ )
+//string            to[i] = from[i];
+//string          glrec.add(name,Array<String>(shape,to,TAKE_OVER));
+//string          arr.freeStorage(from,del);
+//string        }
           default:
             mapped = False; // non-supported type
         }
@@ -524,12 +478,20 @@ void GlishClientWP::recToGlish (const DataRecord &rec, GlishRecord& glrec)
     } // endif( isArray(type) )
     else if( type == Tpstring )
     {
+      // convert vector of strings into Array of Strings
+      NCConstIter_string iter = rec[id];
+      Array<String> arr(IPosition(1,size));
+      for( int i=0; i<size; i++ )
+        arr(IPosition(1,i)) = iter.next();
+      glrec.add(name,arr);
       // special case: convert string field to AIPS++ Strings
-//string      String *storage = new String[size];
-//string      const string *ptr = &rec[id];
-//string      for( int i=0; i<size; i++ )
-//string        storage[i] = *ptr++;
-//string      glrec.add(name,Array<String>(IPosition(1,size),storage,TAKE_OVER));
+//      String str = rec[id][0].as_string();
+//      glrec.add(name,str);
+//string    String *storage = new String[size];
+//string    const string *ptr = &rec[id];
+//string    for( int i=0; i<size; i++ )
+//string      storage[i] = *ptr++;
+//string    glrec.add(name,Array<String>(IPosition(1,size),storage,TAKE_OVER));
     }
     else
       mapped = False;
@@ -622,15 +584,15 @@ void GlishClientWP::glishToRec (const GlishRecord &glrec, DataRecord& rec)
           case GlishArray::STRING: 
           {
               // special case: convert AIPS++ Strings to strings
-//string              Array<String> array;
-//string              arr.get(array);
-//string              bool del; const String *data = array.getStorage(del);
-//string              fld = new DataField(Tpstring,n);
-//string              string *ptr = &(*fld)[HIID()];
-//string              for( int i=0; i<n; i++ )
-//string                *ptr++ = data[i];
-//string              array.freeStorage(data,del);
-//string              break;
+              Array<String> array;
+              arr.get(array);
+              bool del; const String *data = array.getStorage(del);
+              fld->init(Tpstring,n);
+              NCIter_string iter = (*fld)[HIID()];
+              for( int i=0; i<n; i++ )
+                iter.next(data[i]);
+              array.freeStorage(data,del);
+              break;
           }
           default:
               Throw("unsupported array element type");
@@ -671,17 +633,17 @@ void GlishClientWP::glishToRec (const GlishRecord &glrec, DataRecord& rec)
               break;
           case GlishArray::STRING: 
           {
-//string              // special case: convert AIPS++ Strings to strings
-//string              Array<String> array;
-//string              arr.get(array);
-//string              bool del; const String *from = array.getStorage(del);
-//string              (*fld)[0] <<= new DataArray(Tpstring,arr.shape());
-//string              string * ptr = (*fld)[0].as_string_wp();
-//string              int n = array.shape().product();
-//string              for( int i=0; i<n; i++ )
-//string                *ptr++ = from[i];
-//string              array.freeStorage(from,del);
-//string              break;
+//string            // special case: convert AIPS++ Strings to strings
+//string            Array<String> array;
+//string            arr.get(array);
+//string            bool del; const String *from = array.getStorage(del);
+//string            (*fld)[0] <<= new DataArray(Tpstring,arr.shape());
+//string            string * ptr = (*fld)[0].as_string_wp();
+//string            int n = array.shape().product();
+//string            for( int i=0; i<n; i++ )
+//string              *ptr++ = from[i];
+//string            array.freeStorage(from,del);
+//string            break;
           }
           default:
               Throw("unsupported array element type");
@@ -786,8 +748,6 @@ void GlishClientWP::shutdown ()
   }
 }
 
-  //## end GlishClientWP%3CB5618B0373.declarations
-//## begin module%3CB562880397.epilog preserve=yes
 GlishClientWP * makeGlishClientWP (int argc,const char *argv[] )
 {
   // stupid glish wants non-const argv
@@ -808,35 +768,5 @@ GlishClientWP * makeGlishClientWP (int argc,const char *argv[] )
     wpc = AtomicID(wpcstr);
   return new GlishClientWP(evsrc,wpc);
 }
-//## end module%3CB562880397.epilog
 
 
-// Detached code regions:
-#if 0
-//## begin GlishClientWP::getPollPriority%3CB562250343.body preserve=yes
-  return WorkProcess::getPollPriority(tick);
-  
-//   int pri = WorkProcess::getPollPriority(tick);
-//   // has something come up on the event stream?
-//   if( (connected && !evsrc->connected()) || evsrc->waitingEvent() )
-//   {
-//     int pri2 = Message::PRI_NORMAL;
-//     // nominal priority of Glish events is NORMAL, however,
-//     // the event age is added in
-//     if( has_events )
-//       pri2 +=  tick - evtick;
-//     else
-//     {
-//       has_events = True;
-//       evtick = tick;
-//     }
-//     pri = max(pri,pri2);
-//   }
-//   return pri;
-//## end GlishClientWP::getPollPriority%3CB562250343.body
-
-//## begin GlishClientWP::poll%3CBAA3D701E6.body preserve=yes
-  return False;
-//## end GlishClientWP::poll%3CBAA3D701E6.body
-
-#endif
