@@ -76,7 +76,8 @@ void NavTabInitialize(string datapoint)
   mappingClear(g_subViews);
   mappingClear(g_subViewConfigs);
   g_selectedView = 1;
-  g_selectedViewName = "";
+  g_selectedViewName = navConfigGetSelectedView();
+  LOG_DEBUG("NavTabInitialize: selView",g_selectedViewName);
   
   g_datapoint = datapoint;
   g_configPanelFileName = "";
@@ -86,22 +87,27 @@ void NavTabInitialize(string datapoint)
   string dpNameConfig = navConfigGetViewConfig(g_datapoint);
   
   int selectedSubView;
+  int selectedViewUnused;
   dyn_string views;
   dyn_int  nrOfSubViews;
   dyn_string subViews;
   dyn_string configs;
   
   if(navConfigGetViewConfigElements(dpNameConfig,
-                                    g_selectedView,
+                                    selectedViewUnused,
                                     selectedSubView,
                                     views,
                                     nrOfSubViews,
                                     subViews,
                                     configs))
   {
-    LOG_TRACE("NavTabInitialize:",g_selectedView,selectedSubView,views,nrOfSubViews,subViews,configs);
+    LOG_DEBUG("NavTabInitialize:",g_selectedView,selectedSubView,LOG_DYN(views),LOG_DYN(nrOfSubViews),LOG_DYN(subViews),LOG_DYN(configs));
 
-    g_selectedViewName = navConfigGetViewCaption(views[g_selectedView]);
+    for(int i=1;i<=dynlen(views);i++)
+    {
+      if(navConfigGetViewCaption(views[i]) == g_selectedViewName)
+        g_selectedView = i;
+    }
 
     // create the mapping
     int beginSubViews=1;
@@ -187,7 +193,16 @@ DebugTN("g_datapoint",g_datapoint);
     "$datapoint:" + g_datapoint,
     "$configDatapoint:"+g_subViewConfigs[selectedSubView]);
   LOG_TRACE("configPanel,configParameters: ",g_configPanelFileName,configPanelParameters);
-  viewTabsCtrl.namedRegisterPanel(VIEW_TABS_CONFIG_NAME,g_configPanelFileName,configPanelParameters);
+  
+  // check if the file exists:
+  if(access(getPath(PANELS_REL_PATH)+g_configPanelFileName,F_OK) == 0)
+  {
+    viewTabsCtrl.namedRegisterPanel(VIEW_TABS_CONFIG_NAME,g_configPanelFileName,configPanelParameters);
+  }
+  else
+  {
+    LOG_DEBUG("File does not exist:",g_configPanelFileName);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
