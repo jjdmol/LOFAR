@@ -117,21 +117,18 @@ void WorkHolder::preprocess()
 void WorkHolder::baseProcess ()
 {
   TRACER4("WorkHolder::baseprocess()");
-  if (itsFirstProcessCall)
-  {
+  if (itsFirstProcessCall) {
     getDataManager().initializeInputs();
     itsFirstProcessCall = false;
-  }
-  else     // the getDM::initializeInputs() method also performs 
-           // the first read action.
-   {
-
+  } else {     
+    // the getDM::initializeInputs() method also performs 
+    // the first read action.
+    
     for (int input=0; input<itsNinputs; input++) {
-//       if (getDataManager().getGeneralInHolder(input)->doHandle()) {
-
+      //       if (getDataManager().getGeneralInHolder(input)->doHandle()) {
       // temporary in-rate sollution
       if ( itsProcessStep % getDataManager().getInputRate(input) == 0 ) {
-	LOG_TRACE_COND_STR("WorkHolder" << getName() << " << Allowed input handling;  step = " 
+	LOG_TRACE_COND_STR("WorkHolder " << getName() << " << Allowed input handling;  step = " 
 			   << itsProcessStep << "   rate = " << getDataManager().getInputRate(input));
 	
 	// for selector type handle locking
@@ -139,7 +136,7 @@ void WorkHolder::baseProcess ()
 	  // wait for unlocking if needed
 	  getDataManager().getInHolder(input);
 	}
-
+	
 	if (getDataManager().doAutoTriggerIn(input)) { 
 	  // signal the DM that we're done with the input channel.
 	  // The DM will initiate the read sequence now.
@@ -147,38 +144,38 @@ void WorkHolder::baseProcess ()
 	  
 	}
       } else {
-	LOG_TRACE_COND_STR("WorkHolder" << getName() << " << skipped input handling;  step = " 
+	LOG_TRACE_COND_STR("WorkHolder " << getName() << " << skipped input handling;  step = " 
 			   << itsProcessStep << "   rate = " << getDataManager().getInputRate(input));
       }
       
     }
-   } 
+  } 
   
   // Now we have the input data avialable
   // and it is time to do the real work; call the process()
   if ( (itsProcessStep % getDataManager().getProcessRate()) == 0) {
     process();
   }
-
+  
   for (int output=0; output<itsNoutputs; output++)	{
 
-//     if (getDataManager().getGeneralOutHolder(output)->doHandle()) {
+    //     if (getDataManager().getGeneralOutHolder(output)->doHandle()) {
     if ( itsProcessStep % getDataManager().getOutputRate(output) == 0 ) {
-
+      
       if (getDataManager().hasOutputSelector() == false) {
 	getDataManager().getOutHolder(output);
       }
       if (getDataManager().doAutoTriggerOut(output)) { 
 	getDataManager().readyWithOutHolder(output); // Will cause writing of data
       }
-
+      
     } else {
       LOG_TRACE_COND_STR("WorkHolder" << getName() << " << skipped output handling;  step = " 
 			 << itsProcessStep << "   rate = " << getDataManager().getOutputRate(output));
     }
     
   } 
-
+  
   
   itsProcessStep++;
 }
