@@ -91,7 +91,7 @@ BeamServerTask::BeamServerTask(string name)
   m_pos(0, 0, 0)   = 0.0;
 
   m_pos(0, 1, all) = 0.0;
-  m_pos(0, 1, 0)   = 96.0;
+  m_pos(0, 1, 0)   = 100.0;
 
   // initialize weight matrix
   m_weights   = complex<W_TYPE>(0,0);
@@ -168,9 +168,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
       {
 	  if (&port == &board)
 	  {
-	      // read data to clear F_DATAIN_SIG
-	      char data[ETH_DATA_LEN];
-	      (void)board.recv(data, ETH_DATA_LEN);
+	      process_statistics();
 	  }
       }
       break;
@@ -318,19 +316,10 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 
     case F_DATAIN_SIG:
       {
-	static char data[ETH_DATA_LEN];
-
-	ssize_t length = board.recv(data, ETH_DATA_LEN);
-	unsigned int* seqnr = (unsigned int*)&data[2];
-	unsigned int* statsdata = (unsigned int*)&data[6];
-
-	if (STATS_PACKET_SIZE == length)
-	{
-	    Array<unsigned int, 3> power_sum(statsdata,
-					     shape(N_BEAMLETS / 2, N_POLARIZATIONS, 2),
-					     neverDeleteData);
-	    m_stats.update(power_sum, *seqnr);
-	}
+	  if (&port == &board)
+	  {
+	      process_statistics();
+	  }
       }
       break;
 
@@ -370,6 +359,23 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
     }
 
   return status;
+}
+
+void BeamServerTask::process_statistics()
+{
+    static char data[ETH_DATA_LEN];
+
+    ssize_t length = board.recv(data, ETH_DATA_LEN);
+    unsigned int* seqnr = (unsigned int*)&data[2];
+    unsigned int* statsdata = (unsigned int*)&data[6];
+    
+    if (STATS_PACKET_SIZE == length)
+    {
+	Array<unsigned int, 3> power_sum(statsdata,
+					 shape(N_BEAMLETS / 2, N_POLARIZATIONS, 2),
+					 neverDeleteData);
+	m_stats.update(power_sum, *seqnr);
+    }
 }
 
 void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,

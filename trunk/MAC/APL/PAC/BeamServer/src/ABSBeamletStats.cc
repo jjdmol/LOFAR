@@ -47,7 +47,7 @@ static int snapshot_time = 0;
 
 #define N_TIME 60
 Array<double, 1> time_axis(N_TIME);
-Array<double, 1> power_t(N_TIME);
+Array<double, 2> power_t;
 
 #define PLOT_BIN_NR 10
 #endif
@@ -96,11 +96,13 @@ BeamletStats::BeamletStats(int n_beamlets, int n_integrations) :
   {
       //gnuplot_setstyle(gp_handle_t, "impulses");
       gnuplot_set_xlabel(gp_handle_t, "time");
-      gnuplot_set_ylabel(gp_handle_t, "power_x(10)");
+      gnuplot_set_ylabel(gp_handle_t, "subband");
   }
 
   firstIndex i;
   time_axis = i;
+
+  power_t.resize(n_beamlets, N_TIME);
   power_t = 0.0;
 #endif
 }
@@ -227,22 +229,30 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
 	  gnuplot_plot_xy(gp_handle_y, 
 			  freq.data(), 
 			  power.data(), 
+
 			  m_nbeamlets, 
 			  "Power per beamlet y-polarization");
       }
 
 #if 1
-      power_t(snapshot_time) = m_beamlet_power(PLOT_BIN_NR, 0);
-      snapshot_time = (snapshot_time + 1) % N_TIME;
+
+      // shift the array
+      for (int t = N_TIME - 2; t >= 0 ; t--)
+      {
+	  power_t(Range::all(), t + 1) = power_t(Range::all(), t);
+      }
+
+      power_t(Range::all(), 0) = m_beamlet_power(Range::all(), 0);
+
+      snapshot_time++;
+      snapshot_time %= N_TIME;
 
       if (gp_handle_t)
       {
 	  gnuplot_resetplot(gp_handle_t);
-	  gnuplot_plot_xy(gp_handle_t, 
-			  time_axis.data(), 
-			  power_t.data(), 
-			  N_TIME, 
-			  "Power per beamlet y-polarization");
+	  gnuplot_splot(gp_handle_t, 
+			power_t,
+			"Time-Frequency plane");
       }
 #endif
 

@@ -25,7 +25,8 @@ check_PROGRAMS = \
 	AVTStub \
 	EPAStub \
 	EPATest \
-	SweepTest
+	SweepTest \
+	SetFreq
 
 BeamServerTest_SOURCES = \
 	BeamServerTest.cc
@@ -71,6 +72,15 @@ SweepTest_SOURCES = \
 	ABSSweepTest.cc
 
 SweepTest_LDADD = \
+	$(top_builddir)/src/libabs.la \
+	$(top_builddir)/test/libunittest.la \
+	 -ltm -lgcfcommon
+
+SetFreq_SOURCES = \
+	ABSSetFreq.h \
+	ABSSetFreq.cc
+
+SetFreq_LDADD = \
 	$(top_builddir)/src/libabs.la \
 	$(top_builddir)/test/libunittest.la \
 	 -ltm -lgcfcommon

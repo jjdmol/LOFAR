@@ -74,6 +74,12 @@ namespace ABS
 	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
 
 	// action methods
+
+	/**
+	 * Process a statistics packet form the
+	 * filter board.
+	 */
+	void process_statistics();
 	
 	/**
 	 * allocate a new beam
