@@ -2,10 +2,11 @@
 
 global string  ACTIVEX_TREE_CTRL      = "FlyTreeXCtrl.FlyTreeX";
 global string  ACTIVEX_TREE_CTRL_NAME = "FlyTreeXCtrl1";
-global string  LIST_TREE_CTRL_NAME   = "list";
+global string  LIST_TREE_CTRL_NAME    = "list";
 global string  TAB_VIEWS_CTRL_NAME    = "TabViews";
+global string  NAVIGATOR_TAB_FILENAME = "navigator/navigator_tab.pnl";
 global bool    ACTIVEX_SUPPORTED      = false;
-global int     NR_OF_TABS             = 10;
+global int     NR_OF_VIEWS            = 10;
 global mapping g_itemID2datapoint;
 global mapping g_datapoint2itemID;
 global bool    g_initializing         = true;
@@ -112,124 +113,121 @@ long getSelectedNode()
     dyn_string exceptionInfo;
     unsigned selectedPos;
     fwTreeView_getSelectedPosition(selectedPos,exceptionInfo);
-    if(selectedPos == -1)
-      selectedPos = 0;
+    selectedPos = fwTreeView_view2TreeIndex(selectedPos);
     return selectedPos;
   }
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//Function showTab(string systemName, string datapointPath)
+//Function showView(string datapointPath)
 // 
-// shows the tab identified by the systemname and datapoint
+// shows the tab identified by the datapoint
 ///////////////////////////////////////////////////////////////////////////
-void showTab(string dpTabs, string systemName, string datapointPath)
+void showView(string dpViewConfig, string datapointPath)
 {
   shape tabCtrl = getTabCtrl();
-  string tabsPath = "navigator/tabs/";
-  string dpSelectedDatapointContainer = "__navigator.selectedDatapoint";
-  string dpSelectedDatapoint = systemName + ":" + datapointPath;
-  if(dpExists(dpSelectedDatapointContainer))
+  string viewsPath = "navigator/views/";
+  string dpSelectedElementContainer = "__navigator.selectedElement";
+  string dpSelectedElement = datapointPath;
+  if(dpExists(dpSelectedElementContainer))
   {
-    if(!dpExists(dpSelectedDatapoint))
+    if(!dpExists(dpSelectedElement))
     {
-      dpSelectedDatapoint="";
+      dpSelectedElement="";
     }
-    dpSet(dpSelectedDatapointContainer,dpSelectedDatapoint);
+    dpSet(dpSelectedElementContainer,dpSelectedElement);
   }
   
-  dpGet("__navigator.tabsPath",tabsPath);
+  dpGet("__navigator.viewsPath",viewsPath);
 
-  dyn_string panelParameters = makeDynString("$datapoint:" + datapointPath, "$systemName:" + systemName);
+  dyn_string panelParameters = makeDynString("$datapoint:" + datapointPath);
 
   // get tab properties
-  int selectedTab;
-  dyn_anytype tabs;
+  int selectedView;
+  dyn_anytype views;
   int tabId=1;
   // get the selected tab for this resource type
-  dpGet(dpTabs+".selectedTab",selectedTab);
+  dpGet(dpViewConfig+".selectedView",selectedView);
   
-  // get the tabs references for this resource type
-  dpGet(dpTabs+".tabs",tabs);
+  // get the views references for this resource type
+  dpGet(dpViewConfig+".views",views);
 
-  for(tabId=1;tabId<=dynlen(tabs);tabId++)
+  for(tabId=1;tabId<=dynlen(views);tabId++)
   {
-    if(dpExists(tabs[tabId]))
+    if(dpExists(views[tabId]))
     {
       string caption;
-      string panel;
-      dpGet(tabs[tabId]+".caption",caption,tabs[tabId]+".panel",panel);
-      if(strlen(caption)>0 && strlen(panel)>0)
+      dpGet(views[tabId]+".caption",caption);
+      if(strlen(caption)>0)
       {
-        DebugTN("showTab","making tab visible: ",tabId);
+        DebugTN("showView","making tab visible: ",tabId);
         tabCtrl.namedColumnHeader("tab"+tabId) = caption;
-        tabCtrl.registerPanel(tabId-1,tabsPath+panel,panelParameters);
+        tabCtrl.registerPanel(tabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
         tabCtrl.registerVisible(tabId-1)=TRUE;
       }
       else
       {
-        DebugTN("showTab","empty caption or filename; making tab invisible: ",tabId);
+        DebugTN("showView","empty caption or filename; making tab invisible: ",tabId);
         tabCtrl.registerVisible(tabId-1)=FALSE;
       }
     }
     else
     {
-      DebugTN("showTab","tab reference not found; making tab invisible: ",tabId);
+      DebugTN("showView","tab reference not found; making tab invisible: ",tabId);
       tabCtrl.registerVisible(tabId-1)=FALSE;
     }
   }
-  // make the rest of the tabs invisible
+  // make the rest of the views invisible
   int i;
-  for(i=tabId;i<=NR_OF_TABS;i++)
+  for(i=tabId;i<=NR_OF_VIEWS;i++)
   {
-    DebugTN("showTab","tab undefined; making tab invisible: ",i);
+    DebugTN("showView","tab undefined; making tab invisible: ",i);
     tabCtrl.registerVisible(i-1)=FALSE;
   }
-  if(selectedTab < 1 || selectedTab > dynlen(tabs))
-    selectedTab=1;
-  tabCtrl.activeRegister(selectedTab-1);
+  if(selectedView < 1 || selectedView > dynlen(views))
+    selectedView=1;
+  tabCtrl.activeRegister(selectedView-1);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//Function setSelectedTab(string strTabCtrl, string dpTabs)
+//Function setSelectedView(string strTabCtrl, string dpViewConfig)
 // 
 // sets the selected tab property in the database
 ///////////////////////////////////////////////////////////////////////////
-void setSelectedTab(string dpTabs)
+void setSelectedView(string dpViewConfig)
 {
   shape tabCtrl = getTabCtrl();
   // get tab properties
-  int selectedTab = tabCtrl.activeRegister + 1;
-  // get the selected tab for this resource type
-  DebugTN("setSelectedTab",dpTabs,selectedTab);
-  dpSet(dpTabs+".selectedTab",selectedTab);
+  int selectedView = tabCtrl.activeRegister + 1;
+  // set the selected tab for this resource type
+  DebugTN("setSelectedView",dpViewConfig,selectedView);
+  dpSet(dpViewConfig+".selectedView",selectedView);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//Function getTabsDatapoint
+//Function getViewConfig
 // 
-// returns the tabs datapoint corresponding to the systemname and datapointpath
+// returns the view config datapoint corresponding to the datapointpath
 ///////////////////////////////////////////////////////////////////////////
-string getTabsDatapoint(string systemName, string datapointPath)
+string getViewConfig(string datapointPath)
 {
   string datapointType;
-  string fullPath = systemName + ":" + datapointPath;
-  string dpTabs = "";
+  string dpViewConfig = "";
   
-  if(dpExists(fullPath))
+  if(dpExists(datapointPath))
   {
-    datapointType = dpTypeName(fullPath);
-    // find __navigator_<datapointType>_tabs datapoint
-    dpTabs = "__navigator_"+datapointType+"_tabs";
+    datapointType = dpTypeName(datapointPath);
+    // find __nav_<datapointType>_viewconfig datapoint
+    dpViewConfig = "__nav_"+datapointType+"_viewconfig";
   }
-  if(!dpExists(dpTabs))
+  if(!dpExists(dpViewConfig))
   {
-    DebugTN("getTabsDatapoint","DP does not exist, using default configuration",dpTabs);
-    dpTabs = "__navigator_default_tabs";
+    DebugTN("getViewConfig","DP does not exist, using default configuration",dpViewConfig);
+    dpViewConfig = "__nav_default_viewconfig";
   }
 
-  DebugTN(dpTabs);
-  return dpTabs;
+  DebugTN(dpViewConfig);
+  return dpViewConfig;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -310,7 +308,7 @@ void treeAddDatapoints(dyn_string names)
         if(addingDPpart == systemName)
         {
           addedNode = treeAddNode(-1,0,addingDPpart);
-//          DebugTN("Added root node: ",addedNode,addingDPpart);
+          DebugTN("Added root node: ",addedNode,addingDPpart);
           g_itemID2datapoint[addedNode] = addingDPpart;
           g_datapoint2itemID[addingDPpart] = addedNode;
         }
@@ -373,14 +371,10 @@ void treeAddDatapoints(dyn_string names)
 // 
 // builds a datapoint path from a node in the treeview
 ///////////////////////////////////////////////////////////////////////////
-string buildPathFromNode(long Node, string& systemName, string& datapointPath)
+string buildPathFromNode(long Node, string& datapointPath)
 {
-  DebugTN("buildPathFromNode()",Node, systemName, datapointPath);
-  
-  string datapoint = g_itemID2datapoint[Node];
-  systemName    = strrtrim(dpSubStr(datapoint,DPSUB_SYS),":");
-  datapointPath = dpSubStr(datapoint,DPSUB_DP_EL);
-  DebugTN("~buildPathFromNode()",Node, systemName, datapointPath);
+  datapointPath = g_itemID2datapoint[Node];
+  DebugTN("buildPathFromNode(",Node,") returns ",datapointPath);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -554,20 +548,20 @@ void Navigator_HandleEventInitialize()
   while(g_treeCtrlInitializing) delay(0,200);
   
   // select the last selected datapoint
-  string dpSelectedDatapoint="";
-  string dpSelectedDatapointContainer = "__navigator.selectedDatapoint";
-  if(dpExists(dpSelectedDatapointContainer))
+  string dpSelectedElement="";
+  string dpSelectedElementContainer = "__navigator.selectedElement";
+  if(dpExists(dpSelectedElementContainer))
   {
-    dpGet(dpSelectedDatapointContainer,dpSelectedDatapoint);
+    dpGet(dpSelectedElementContainer,dpSelectedElement);
   }
-  DebugTN("Navigator_HandleEventInitialize: selectedDP=",dpSelectedDatapoint);
+  DebugTN("Navigator_HandleEventInitialize: selectedDP=",dpSelectedElement);
   
   g_initializing = false;
   
-  if(strlen(dpSelectedDatapoint)>0)
+  if(strlen(dpSelectedElement)>0)
   {
     shape treeCtrl = getTreeCtrl();
-    unsigned selectedPos = getNodeFromDatapoint(dpSelectedDatapoint);
+    unsigned selectedPos = getNodeFromDatapoint(dpSelectedElement);
     if(ActiveXSupported())
     {
       treeCtrl.Selected = selectedPos;
@@ -612,7 +606,7 @@ void TabViews_HandleEventInitialize()
     err = getLastError();
     DebugTN("registerVisible",i,setValueResult,err);
     i++;
-  } while(dynlen(err)==0 && i<NR_OF_TABS && setValueResult==0);
+  } while(dynlen(err)==0 && i<NR_OF_VIEWS && setValueResult==0);
   DebugTN("~TabViews_HandleEventInitialize()");
 }
 
@@ -629,13 +623,14 @@ void TabViews_HandleEventSelectionChanged()
     long selectedNode = getSelectedNode();
     if(selectedNode != 0)
     {
-      string datapointPath,systemName;
-      buildPathFromNode(selectedNode, systemName, datapointPath);
-      string dpTabs = getTabsDatapoint(systemName, datapointPath);
-      if(selectedNode!=0 && dpExists(dpTabs))
+      string datapointPath;
+      buildPathFromNode(selectedNode, datapointPath);
+      string dpViewConfig = getViewConfig(datapointPath);
+      if(selectedNode!=0 && dpExists(dpViewConfig))
       {
-        setSelectedTab(dpTabs);
+        setSelectedView(dpViewConfig);
       }
+      showView(dpViewConfig,datapointPath);
     }
   }
 }
@@ -695,11 +690,11 @@ void TreeCtrl_HandleEventOnSelChange(long Node)
     DebugTN("TreeCtrl_HandleEventOnSelChange  ",Node);
     if(Node != 0)
     {
-      string datapointPath,systemName;
-      buildPathFromNode(Node, systemName, datapointPath);
-      string dpTabs = getTabsDatapoint(systemName, datapointPath);
+      string datapointPath;
+      buildPathFromNode(Node, datapointPath);
+      string dpViewConfig = getViewConfig(datapointPath);
 
-      showTab(dpTabs,systemName,datapointPath);
+      showView(dpViewConfig,datapointPath);
     }
   }
 }
@@ -754,24 +749,25 @@ void ButtonMaximize_HandleEventClick()
   long Node = getSelectedNode();
   if(Node != 0)
   {
-    string datapointPath,systemName;
-    buildPathFromNode(Node, systemName, datapointPath);
-    string dpTabs = getTabsDatapoint(systemName, datapointPath);
-    DebugTN("ButtonMaximize_HandleEventClick",Node,dpTabs);
-    if(Node!=0 && dpExists(dpTabs))
+    string datapointPath;
+    buildPathFromNode(Node, datapointPath);
+    string dpViewConfig = getViewConfig(datapointPath);
+    DebugTN("ButtonMaximize_HandleEventClick",Node,dpViewConfig);
+    if(Node!=0 && dpExists(dpViewConfig))
     {
-      // get tab properties
-      int selectedTab = tabCtrl.activeRegister + 1;
+      // get view config properties
+      int selectedView = tabCtrl.activeRegister + 1;
       // get the selected tab for this resource type
-      dyn_string dpTabs;
-      string caption,panel;
-      if(dpGet(dpTabs+".tabs",dpActiveTab) == 0)
+      dyn_string dpViews;
+      string caption;
+      
+      if(dpGet(dpViewConfig+".views",dpViews) == 0)
       {
         // get panel information from database
-        if(dpGet(dpTabs[selectedTab]+".caption",caption)==0 && dpGet(dpTabs[selectedTab]+".panel",panel)==0)
+        if(dpGet(dpViews[selectedView]+".caption",caption)==0)
         {
-          dyn_string panelParameters = makeDynString("$datapoint:" + datapointPath, "$systemName:" + systemName);
-          ModuleOnWithPanel(caption+": "+datapointPath,-1,-1,0,0,1,1,"",panel, caption, panelParameters);
+          dyn_string panelParameters = makeDynString("$datapoint:" + datapointPath);
+          ModuleOnWithPanel(caption+": "+datapointPath,-1,-1,0,0,1,1,"",NAVIGATOR_TAB_FILENAME, caption, panelParameters);
         }
       }
     }

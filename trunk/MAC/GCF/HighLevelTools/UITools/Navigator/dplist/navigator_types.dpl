@@ -2,67 +2,85 @@
 
 # DpType
 TypeName
-TNavigatorTabs.TNavigatorTabs	1#1
-	selectedTab	21#2
-	tab1	27#38
-	tab2	27#39
-	tab3	27#40
-TNavigatorTab.TNavigatorTab	1#1
+GCFNavSubView.GCFNavSubView	1#1
 	caption	25#2
-	panel	25#3
-TNavigator.TNavigator	1#1
-	selectedDatapoint	27#2
+	filename	25#3
+GCFNavigator.GCFNavigator	1#1
+	selectedElement	27#2
+	viewsPath	25#3
+GCFNavView.GCFNavView	1#1
+	caption	25#2
+	configPanel	25#3
+GCFNavSubViewConfigList.GCFNavSubViewConfigList	1#1
+	dummy	21#2
+	dummy2	25#3
+GCFNavViewConfiguration.GCFNavViewConfiguration	1#1
+	selectedView	21#2
+	selectedSubView	21#3
+	views	29#4
+	nrOfSubViews	5#8
+	subViews	29#6
+	configs	29#7
 
 # Datapoint/DpId
 DpName	TypeName	ID
-__navigator_tab_listview	TNavigatorTab	48035
-__navigator_default_tabs	TNavigatorTabs	48044
-__navigator	TNavigator	48046
-__navigator_tab_gnuplot	TNavigatorTab	48051
-__navigator_TLcuPicAlert_tabs	TNavigatorTabs	48052
-__navigator_TLcuPicFPGA_tabs	TNavigatorTabs	48053
-__navigator_TLcuPicBoard_tabs	TNavigatorTabs	48054
-__navigator_TLcuPicMaintenance_tabs	TNavigatorTabs	48055
-__navigator_TLcuPic_tabs	TNavigatorTabs	48056
-__navigator_TLcuPicRack_tabs	TNavigatorTabs	48057
-__navigator_TLcuPicSubRack_tabs	TNavigatorTabs	48058
+__navigator	GCFNavigator	48046
+__nav_subview_list	GCFNavSubView	48072
+__nav_view_list	GCFNavView	48073
+__nav_view_plot	GCFNavView	48074
+__nav_default_config_list	GCFNavSubViewConfigList	48075
+__nav_default_viewconfig	GCFNavViewConfiguration	48077
+__nav_TLcuPicRack_viewconfig	GCFNavViewConfiguration	48078
+__nav_view_test1	GCFNavView	48084
+__nav_view_test2	GCFNavView	48085
+__nav_subview_dummy1	GCFNavSubView	48086
+__nav_subview_dummy2	GCFNavSubView	48087
+__nav_TLcuPicRack_config_dummy1	GCFNavSubViewConfigList	48088
+__nav_TLcuPicRack_config_dummy2	GCFNavSubViewConfigList	48089
+__nav_TLcuPicRack_config_dummy3	GCFNavSubViewConfigList	48090
+__nav_TLcuPicRack_config_dummy4	GCFNavSubViewConfigList	48091
+__nav_subview_NewSubRackList	GCFNavSubView	48112
+__nav_subview_NewSubRackList1	GCFNavSubView	48115
 
 # DpValue
 ElementName	TypeName	_original.._value	_original.._status	_original.._stime
-__navigator_tab_listview.caption	TNavigatorTab	"List view"	0x101	14.10.2004 10:07:05.788
-__navigator_tab_listview.panel	TNavigatorTab	"navigator_tabs/navigator_listview.pnl"	0x101	14.10.2004 10:07:11.536
-__navigator_default_tabs.selectedTab	TNavigatorTabs	1	0x101	18.10.2004 11:55:50.636
-__navigator_default_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	14.10.2004 13:10:31.464
-__navigator_default_tabs.tab2	TNavigatorTabs		0x101	14.10.2004 13:22:24.569
-__navigator_default_tabs.tab3	TNavigatorTabs		0x101	14.10.2004 14:08:27.682
-__navigator.selectedDatapoint	TNavigator	PIC_Rack1_SubRack1_Board1_BP	0x101	18.10.2004 12:00:16.248
-__navigator_tab_gnuplot.caption	TNavigatorTab	"GNU plot"	0x101	15.10.2004 08:28:47.985
-__navigator_tab_gnuplot.panel	TNavigatorTab	"navigator_tabs/navigator_gnuplot.pnl"	0x101	15.10.2004 08:29:00.473
-__navigator_TLcuPicAlert_tabs.selectedTab	TNavigatorTabs	1	0x101	18.10.2004 11:57:16.439
-__navigator_TLcuPicAlert_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:57:16.439
-__navigator_TLcuPicAlert_tabs.tab2	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:57:16.439
-__navigator_TLcuPicAlert_tabs.tab3	TNavigatorTabs	__navigator_tab_gnuplot	0x101	18.10.2004 11:57:16.439
-__navigator_TLcuPicFPGA_tabs.selectedTab	TNavigatorTabs	1	0x101	18.10.2004 12:00:11.100
-__navigator_TLcuPicFPGA_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:58:27.011
-__navigator_TLcuPicFPGA_tabs.tab2	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:58:27.011
-__navigator_TLcuPicFPGA_tabs.tab3	TNavigatorTabs		0x101	18.10.2004 11:58:27.011
-__navigator_TLcuPicBoard_tabs.selectedTab	TNavigatorTabs	2	0x101	18.10.2004 11:58:42.894
-__navigator_TLcuPicBoard_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:58:42.894
-__navigator_TLcuPicBoard_tabs.tab2	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:58:42.894
-__navigator_TLcuPicBoard_tabs.tab3	TNavigatorTabs		0x101	18.10.2004 11:58:42.894
-__navigator_TLcuPicMaintenance_tabs.selectedTab	TNavigatorTabs	1	0x101	18.10.2004 11:59:56.960
-__navigator_TLcuPicMaintenance_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:58:57.665
-__navigator_TLcuPicMaintenance_tabs.tab2	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:58:57.665
-__navigator_TLcuPicMaintenance_tabs.tab3	TNavigatorTabs		0x101	18.10.2004 11:58:57.665
-__navigator_TLcuPic_tabs.selectedTab	TNavigatorTabs	1	0x101	18.10.2004 11:59:12.406
-__navigator_TLcuPic_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:59:12.406
-__navigator_TLcuPic_tabs.tab2	TNavigatorTabs	__navigator_tab_gnuplot	0x101	18.10.2004 11:59:12.406
-__navigator_TLcuPic_tabs.tab3	TNavigatorTabs		0x101	18.10.2004 11:59:12.406
-__navigator_TLcuPicRack_tabs.selectedTab	TNavigatorTabs	2	0x101	18.10.2004 11:59:59.143
-__navigator_TLcuPicRack_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:59:31.944
-__navigator_TLcuPicRack_tabs.tab2	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:59:31.944
-__navigator_TLcuPicRack_tabs.tab3	TNavigatorTabs		0x101	18.10.2004 11:59:31.944
-__navigator_TLcuPicSubRack_tabs.selectedTab	TNavigatorTabs	1	0x101	18.10.2004 11:59:43.681
-__navigator_TLcuPicSubRack_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:59:43.681
-__navigator_TLcuPicSubRack_tabs.tab2	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:59:43.681
-__navigator_TLcuPicSubRack_tabs.tab3	TNavigatorTabs		0x101	18.10.2004 11:59:43.681
+__navigator.selectedElement	GCFNavigator	PIC_Rack1	0x101	04.11.2004 12:46:24.925
+__navigator.viewsPath	GCFNavigator	"navigator/views/"	0x101	01.11.2004 13:48:55.439
+__nav_subview_list.caption	GCFNavSubView	"List"	0x101	29.10.2004 13:25:47.257
+__nav_subview_list.filename	GCFNavSubView	"subview-list.pnl"	0x101	29.10.2004 13:25:58.557
+__nav_view_list.caption	GCFNavView	"List"	0x101	29.10.2004 13:26:46.698
+__nav_view_list.configPanel	GCFNavView	"config-list.pnl"	0x101	03.11.2004 07:35:06.230
+__nav_view_plot.caption	GCFNavView	"Plot"	0x101	29.10.2004 13:26:57.681
+__nav_default_config_list.dummy	GCFNavSubViewConfigList	145	0x101	03.11.2004 13:32:53.879
+__nav_default_config_list.dummy2	GCFNavSubViewConfigList	"Niks"	0x101	03.11.2004 13:32:53.879
+__nav_default_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	04.11.2004 10:58:37.142
+__nav_default_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x101	04.11.2004 12:42:25.354
+__nav_default_viewconfig.views	GCFNavViewConfiguration	__nav_view_list	0x101	29.10.2004 13:30:51.587
+__nav_default_viewconfig.subViews	GCFNavViewConfiguration	__nav_subview_list	0x101	29.10.2004 13:31:12.517
+__nav_default_viewconfig.configs	GCFNavViewConfiguration	__nav_default_config_list	0x101	29.10.2004 13:31:30.581
+__nav_default_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1	0x101	29.10.2004 13:30:59.422
+__nav_TLcuPicRack_viewconfig.selectedView	GCFNavViewConfiguration	3	0x101	04.11.2004 12:46:24.924
+__nav_TLcuPicRack_viewconfig.selectedSubView	GCFNavViewConfiguration	-1	0x101	04.11.2004 12:46:25.067
+__nav_TLcuPicRack_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_test1, __nav_view_test2	0x101	02.11.2004 13:02:02.449
+__nav_TLcuPicRack_viewconfig.subViews	GCFNavViewConfiguration	__nav_subview_list, __nav_subview_dummy1, __nav_subview_dummy2	0x101	04.11.2004 12:45:35.176
+__nav_TLcuPicRack_viewconfig.configs	GCFNavViewConfiguration	__nav_TLcuPicRack_config_dummy1, __nav_TLcuPicRack_config_dummy2, __nav_TLcuPicRack_config_dummy3	0x101	04.11.2004 12:45:35.176
+__nav_TLcuPicRack_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 2, 0	0x101	04.11.2004 12:45:35.176
+__nav_view_test1.caption	GCFNavView	"Test1"	0x101	02.11.2004 12:46:55.990
+__nav_view_test1.configPanel	GCFNavView	"config-list.pnl"	0x101	03.11.2004 07:35:18.771
+__nav_view_test2.caption	GCFNavView	"Test2"	0x101	02.11.2004 12:47:11.781
+__nav_view_test2.configPanel	GCFNavView	"config-list.pnl"	0x101	03.11.2004 07:35:31.090
+__nav_subview_dummy1.caption	GCFNavSubView	"Dummy1"	0x101	02.11.2004 12:48:48.300
+__nav_subview_dummy1.filename	GCFNavSubView	"subview-list.pnl"	0x101	04.11.2004 09:33:04.770
+__nav_subview_dummy2.caption	GCFNavSubView	"Dummy2"	0x101	02.11.2004 12:47:46.790
+__nav_subview_dummy2.filename	GCFNavSubView	"subview-list.pnl"	0x101	04.11.2004 09:33:10.921
+__nav_TLcuPicRack_config_dummy1.dummy	GCFNavSubViewConfigList	111	0x101	03.11.2004 10:29:35.980
+__nav_TLcuPicRack_config_dummy2.dummy	GCFNavSubViewConfigList	2222	0x101	03.11.2004 13:08:57.909
+__nav_TLcuPicRack_config_dummy2.dummy2	GCFNavSubViewConfigList	"Hai hoi hiei"	0x101	03.11.2004 13:08:57.910
+__nav_TLcuPicRack_config_dummy3.dummy	GCFNavSubViewConfigList	3333	0x101	03.11.2004 13:09:08.619
+__nav_TLcuPicRack_config_dummy3.dummy2	GCFNavSubViewConfigList	"heu"	0x101	03.11.2004 13:09:08.619
+__nav_TLcuPicRack_config_dummy4.dummy	GCFNavSubViewConfigList	444	0x101	03.11.2004 13:05:27.239
+__nav_TLcuPicRack_config_dummy4.dummy2	GCFNavSubViewConfigList	"Hallo dit is dummy 2"	0x101	03.11.2004 13:05:27.240
+__nav_subview_NewSubRackList.caption	GCFNavSubView	"NewSubRackList"	0x101	04.11.2004 09:20:17.220
+__nav_subview_NewSubRackList.filename	GCFNavSubView	"subview-list.pnl"	0x101	04.11.2004 09:32:18.570
+__nav_subview_NewSubRackList1.caption	GCFNavSubView	"NewSubRackList1"	0x101	04.11.2004 09:24:58.109
+__nav_subview_NewSubRackList1.filename	GCFNavSubView	"config-list.pnl"	0x101	04.11.2004 09:32:38.342
