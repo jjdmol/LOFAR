@@ -112,7 +112,7 @@ class rawsocket:
   def send(self, iface, data):
     sdto = (iface, ETH_P_ALL)
     self.sock.bind(sdto)
-    self.sock.sendto(str(data), stdto)
+    self.sock.sendto(str(data), sdto)
 
   def recv(self, count):
     pkt, sa_ll = self.sock.recvfrom(count)
@@ -127,9 +127,11 @@ def decode_epa_packet(s):
   return d
 
 def dumphex(s):
-  bytes = map(lambda x: '%.2x' % x, map(ord, s))
-  for i in xrange(0,len(bytes)/16):
-    print '    %s' % string.join(bytes[i*16:(i+1)*16],' ')
+#  bytes = map(lambda x: '%.2x' % x, map(ord, s))
+#  for i in xrange(0,len(bytes)/16):
+#    print '    %s' % string.join(bytes[i*16:(i+1)*16],' ')
+  for i in xrange(len(s)/16):
+    print s[i*16:(i+1)*16]
 
 def print_packet(pktlen, data, timestamp):
   if not data:
@@ -145,27 +147,27 @@ def print_packet(pktlen, data, timestamp):
 
 if __name__=='__main__':
 
-  print dir(socket)
   s = rawsocket("eth0", "ether dst aa:bb:cc:dd:ee:ff")
 
-  while 1:
-    pkt=s.recv(100)
-    if not len(pkt):
-      break
-    print_packet(len(pkt), pkt, 0)
+#   while 1:
+#     pkt=s.recv(1500)
+#     if not len(pkt):
+#       break
+#     print_packet(len(pkt), pkt, 0)
     
 
-  if len(sys.argv) < 3:
-    print 'usage: sniff.py <interface> <expr>'
+  if len(sys.argv) < 2:
+    print 'usage: sniff.py <interface> [<expr>]'
     sys.exit(0)
   p = pcap.pcapObject()
   #dev = pcap.lookupdev()
   dev = sys.argv[1]
   net, mask = pcap.lookupnet(dev)
   # note:  to_ms does nothing on linux
-  p.open_live(dev, 1600, 0, 100)
+  p.open_live(dev, 1600, 0, 0)
   #p.dump_open('dumpfile')
-  p.setfilter(string.join(sys.argv[2:],' '), 0, 0)
+  if len(sys.argv) > 2:
+      p.setfilter(string.join(sys.argv[2:],' '), 0, 0)
 
   # try-except block to catch keyboard interrupt.  Failure to shut
   # down cleanly can result in the interface not being taken out of promisc.
@@ -173,6 +175,7 @@ if __name__=='__main__':
   #p.setnonblock(1)
   #try:
   while 1:
+    s.send('eth0', '112345678911234567891123456789')
     p.dispatch(1, print_packet)
 
     # specify 'None' to dump to dumpfile, assuming you have called
