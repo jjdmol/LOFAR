@@ -91,7 +91,7 @@ WITH_INSTALL=0
 all: build
 
 #
-# Target reached via daily or daily_install
+# Target reached via build_system
 # For all packages do:
 #       - Bootstrap. Bootstrapping is only needed once,
 #       - Configure. Configuration is needed for each variant.
@@ -432,8 +432,7 @@ help:
 	@echo "build:     build all packages for all variants"
 	@echo "check:     build and run all test programs for all variants"
 	@echo ""
-	@echo "daily:     bootstrap, configure, build, and check daily system"
-	@echo "weekly:    bootstrap, configure, build, and check weekly system"
+	@echo "build_system: bootstrap, configure, build, and check system"
 	@echo ""
 	@echo "%.variant_configure: configure all packages for given variant"
 	@echo "%.variant_build:     build all packages for given variant"
