@@ -33,6 +33,7 @@ namespace LOFAR
 {
 //# Forward Declarations
 class Prediffer;
+ class ParmData;
 
   // This workholder class predicts (calculates) visibilities based on current values
   // of the parameters and determines the difference to the measured data for a 
@@ -71,6 +72,11 @@ class WH_Prediff : public LOFAR::WorkHolder
   Prediffer* getPrediffer(int id, 
 			  const KeyValueMap& args, 
 			  const vector<int>& antNrs);
+  // Read the next workorder
+  void readWorkOrder();
+
+  // Read a parameter solution
+  void readSolution(int id, vector<ParmData>& solVec);
 
   int         itsID;         // Identification number
   KeyValueMap itsArgs;       // Arguments

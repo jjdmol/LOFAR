@@ -121,6 +121,9 @@ public:
   bool getCleanUp() const;
   void setCleanUp(bool clean);
 
+  int getSolutionID() const;
+  void setSolutionID(int id);
+
   void setVarData(const KeyValueMap& predArgs,
 		  vector<int>& antNrs,
 		  vector<string>& pNames,
@@ -160,6 +163,7 @@ private:
   unsigned int* itsUseAutoCorr;
   unsigned int* itsLockMappedMem;
   unsigned int* itsCleanUp;                 // Clean up Prediffer object when finished?
+  int*          itsSolutionID;              // (wo)ID of solution in solution table
   
   PO_DH_WOPrediff* itsPODHWO; 
   
@@ -262,6 +266,12 @@ inline bool DH_WOPrediff::getCleanUp() const
 inline void DH_WOPrediff::setCleanUp(bool clean)
 { *itsCleanUp = clean; }
 
+inline int DH_WOPrediff::getSolutionID() const
+{ return *itsSolutionID; }
+ 
+inline void DH_WOPrediff::setSolutionID(int id)
+{ *itsSolutionID = id; }
+
 // Define the class needed to tell PL that there should be
 // extra fields stored in the database table.
 namespace PL {  
@@ -285,6 +295,7 @@ namespace PL {
       double       itsStartTime;
       double       itsTimeLength;
       unsigned int itsCleanUp;
+      int          itsSolutionID;
     };   
                                                       
 } // end namespace PL   

@@ -28,6 +28,7 @@
 #include <BBS3/WH_Prediff.h>
 #include <Common/LofarLogger.h>
 #include <BBS3/DH_WOPrediff.h>
+#include <BBS3/DH_Solution.h>
 #include <BBS3/DH_Prediff.h>
 #include <BBS3/Prediffer.h>
 
@@ -35,18 +36,22 @@ namespace LOFAR
 {
 
 WH_Prediff::WH_Prediff(const string& name, int id)
-  : WorkHolder   (1, 2, name, "WH_Prediff"),
+  : WorkHolder   (2, 3, name, "WH_Prediff"),
     itsID        (id)
 {
   LOG_TRACE_FLOW("WH_Prediff constructor");
-  getDataManager().addInDataHolder(0, new DH_WOPrediff(name+"_in"));
+  getDataManager().addInDataHolder(0, new DH_WOPrediff(name+"_in0"));
   getDataManager().addOutDataHolder(0, new DH_WOPrediff(name+"_out0")); // dummy
-  getDataManager().addOutDataHolder(1, new DH_Prediff(name+"_out1"));
+  getDataManager().addInDataHolder(1, new DH_Solution(name+"_in1"));
+  getDataManager().addOutDataHolder(1, new DH_Solution(name+"_out1")); // dummy
+  getDataManager().addOutDataHolder(2, new DH_Prediff(name+"_out2"));
 
   // switch input and output channel trigger off
   getDataManager().setAutoTriggerIn(0, false);
+  getDataManager().setAutoTriggerIn(1, false);
   getDataManager().setAutoTriggerOut(0, false);
   getDataManager().setAutoTriggerOut(1, false);
+  getDataManager().setAutoTriggerOut(2, false);
 }
 
 WH_Prediff::~WH_Prediff()
@@ -76,32 +81,12 @@ void WH_Prediff::process()
 {
   LOG_TRACE_RTTI("WH_Prediff process()");
 
-  // Read workorder -> KSarguments and antennas
-  // Query the database for a work order
+  // Read next workorder
+  readWorkOrder();
+
   DH_WOPrediff* wo =  dynamic_cast<DH_WOPrediff*>(getDataManager().getInHolder(0));
-  DH_PL* woPtr = dynamic_cast<DH_PL*>(wo);
- 
-  // Wait for workorder
-  bool firstTime = true;
-  while ((woPtr->queryDB("status=0 and (kstype='" + getName()
-                         + "') order by woid asc")) <= 0)
-  {
-    if (firstTime)
-    {
-      cout << "No workorder found by " << getName() << ". Waiting for work order..." << endl;
-      firstTime = false;
-    }
-  }
 
-  cout << "!!!!!! Prediffer read workorder: " << endl;
-  wo->dump();
-  cout << "!!!!!!" << endl;
-
-  // Update workorder status
-  wo->setStatus(DH_WOPrediff::Assigned);
-  woPtr->updateDB();
-
-  DH_Prediff* dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(1));
+  DH_Prediff* dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(2));
   //  dhRes->clearData();
 
   KeyValueMap args;
@@ -111,6 +96,14 @@ void WH_Prediff::process()
   wo->getVarData(args, ant, pNames, peelSrcs);
   int contrID = wo->getStrategyControllerID();
   Prediffer* pred = getPrediffer(contrID, args, ant);
+  int solID = wo->getSolutionID();
+  vector<ParmData> solVec;
+
+  // Read solution
+  if (solID != -1)
+  {
+    readSolution(solID, solVec);
+  }
 
   // Execute workorder
   if (wo->getNewBaselines())
@@ -125,7 +118,14 @@ void WH_Prediff::process()
     pred->clearSolvableParms();
     vector<string> emptyP(0);
     pred->setSolvableParms(pNames, emptyP, true);
-    pred->updateSolvableParms();
+    if (solVec.size() == 0)
+    {
+      pred->updateSolvableParms();
+    }
+    else
+    {
+      pred->updateSolvableParms(solVec);
+    }
 
     vector<uint32> dataShape = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
 					       wo->getStartTime(), wo->getTimeLength());
@@ -144,7 +144,14 @@ void WH_Prediff::process()
     pred->clearSolvableParms();
     vector<string> emptyP(0);
     pred->setSolvableParms(pNames, emptyP, true);
-    pred->updateSolvableParms();
+    if (solVec.size() == 0)
+    {
+      pred->updateSolvableParms();
+    }
+    else
+    {
+      pred->updateSolvableParms(solVec);
+    }
 
     vector<uint32> dataShape = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
 					       wo->getStartTime(), wo->getTimeLength());
@@ -162,24 +169,38 @@ void WH_Prediff::process()
     pred->clearSolvableParms();
     vector<string> emptyP(0);
     pred->setSolvableParms(pNames, emptyP, true);
-    pred->updateSolvableParms();
+    if (solVec.size() == 0)
+    {
+      pred->updateSolvableParms();
+    }
+    else
+    {
+      pred->updateSolvableParms(solVec);
+    }
   }
   else
   {
-    pred->updateSolvableParms();
+    if (solVec.size() == 0)
+    {
+      pred->updateSolvableParms();
+    }
+    else
+    {
+      pred->updateSolvableParms(solVec);
+    }
   }
 
-  // Calculate and put in output dataholder buffer
+  // Calculate, put in output dataholder buffer and send to solver
   bool more=false;
   int nresult = 0;
   do
   {
-    dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(1));
+    dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(2));
     more = pred->getEquations(dhRes->getDataBuffer(), dhRes->getBufferSize(), nresult);
     dhRes->setMoreData(more);
     dhRes->setDataSize(nresult);
     // send result to solver
-    getDataManager().readyWithOutHolder(1);
+    getDataManager().readyWithOutHolder(2);
   }
   while (more);
     
@@ -191,7 +212,7 @@ void WH_Prediff::process()
 
   // Update workorder status
   wo->setStatus(DH_WOPrediff::Executed);
-  woPtr->updateDB();
+  wo->updateDB();
 
   if (wo->getCleanUp())   // If Prediffer (cache) is no longer needed: clean up  
   {
@@ -239,6 +260,48 @@ Prediffer* WH_Prediff::getPrediffer(int id, const KeyValueMap& args,
   }
 }
 
+void WH_Prediff::readWorkOrder()
+{
+  // Query the database for a work order
+  DH_WOPrediff* wo =  dynamic_cast<DH_WOPrediff*>(getDataManager().getInHolder(0));
+ 
+  // Wait for workorder
+  bool firstTime = true;
+  while ((wo->queryDB("status=0 and (kstype='" + getName()
+		      + "') order by woid asc")) <= 0)
+  {
+    if (firstTime)
+    {
+      cout << "No workorder found by " << getName() << ". Waiting for work order..." << endl;
+      firstTime = false;
+    }
+  }
 
+  cout << "!!!!!! Prediffer read workorder: " << endl;
+  wo->dump();
+  cout << "!!!!!!" << endl;
+
+  // Update workorder status
+  wo->setStatus(DH_WOPrediff::Assigned);
+  wo->updateDB();
+}
+
+void WH_Prediff::readSolution(int id, vector<ParmData>& solVec)
+{
+  LOG_TRACE_FLOW("WH_Prediff reading solution");
+
+  DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getInHolder(1));
+
+  // Wait for solution
+  bool firstTime = true;
+  char str[32];
+  sprintf(str, "WOID=%i", id);
+  string query(str);
+
+  ASSERTSTR(sol->queryDB(query) > 0, "No solution with WOID = "  
+	    << id << " found by WH_Prediff" );
+  
+  sol->getSolution(solVec);
+}
 
 } // namespace LOFAR

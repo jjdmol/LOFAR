@@ -72,6 +72,9 @@ bool SC_Simple::execute()
     itsWOPD->setSubtractSources(false);
     itsWOSolve->setNewDomain(false);
 
+    // Use the previous solution (parameter values).
+    itsWOPD->setSolutionID(itsPrevWOID);
+
     // If solution for this interval is good enough, go to next. TBA
     // For now: if number of iterations reached: go to next interval.
     if (fmod(itsCurIter, itsNrIterations) == 0)
