@@ -67,6 +67,8 @@ public:
   BufferType* getBuffer();
   /// Get read access to the Buffer.
   const BufferType* getBuffer() const;
+  /// Get Buffer element.
+  BufferType& getBufferElement(unsigned int element);
 
  private:
   /// Forbid assignment.

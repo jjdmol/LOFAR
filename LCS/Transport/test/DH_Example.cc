@@ -89,4 +89,10 @@ void DH_Example::postprocess()
   itsBuffer = 0;
 }
 
+DH_Example::BufferType& DH_Example::getBufferElement(unsigned int element)
+{
+  ASSERT(element < itsBufSize); 
+  return itsBuffer[element];
+}
+
 } // end namespace
