@@ -14,14 +14,21 @@
 #include <qprogressbar.h>
 #include <qlabel.h>
 
-#include <UVPUVCoverageArea.h>
+//#include <UVPUVCoverageArea.h>
+#include <UVPTimeFrequencyPlot.h>
 
-
+#if(DEBUG_MODE)
+#include <Common/Debug.h>
+#endif
 
 
 class UVPMainWindow:public QMainWindow
 {
   Q_OBJECT                      // to make the signal/slot mechanism work
+
+#if(DEBUG_MODE)
+  LocalDebugContext;            /* Common/Debug.h */
+#endif
 
  public:                        /* Public part */
 
@@ -43,8 +50,9 @@ class UVPMainWindow:public QMainWindow
   QLabel*         itsXPosLabel;
   QLabel*         itsYPosLabel;
 
-  UVPUVCoverageArea* itsCanvas;      /* The drawing canvas */
-  UVPImageCube*   itsCube;
+  UVPTimeFrequencyPlot*  itsCanvas;
+  //  UVPUVCoverageArea* itsCanvas;      /* The drawing canvas */
+  //  UVPImageCube*      itsCube;
 
 
   virtual void resizeEvent(QResizeEvent *event);

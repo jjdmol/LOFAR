@@ -12,7 +12,9 @@ UVPSpectrum::UVPSpectrum(unsigned int numberOfChannels,
                          const double *values)
   : itsNumberOfChannels(numberOfChannels),
     itsRowIndex(rowIndex),
-    itsValues(0)
+    itsValues(0),
+    itsMinValue(0),
+    itsMaxValue(0)
 {
   if(itsNumberOfChannels > 0) {
     itsValues = new double[itsNumberOfChannels];
@@ -93,11 +95,24 @@ void UVPSpectrum::copy(const UVPSpectrum &other)
 
 void UVPSpectrum::copyFast(const double *values)
 {
-  register unsigned int i(0);
   register unsigned int N(itsNumberOfChannels);
-  while( i < N){
-    *itsValues++ = *values++;
-    i++;
+  
+  if(N > 0) {
+    register unsigned int i(0);
+    register double tempMin(*values);
+    register double tempMax(*values);
+    register double temp(0);
+    
+    while( i < N){
+      temp         = *values++;
+      *itsValues++ = temp;
+      tempMin = (temp < tempMin ? temp : tempMin);
+      tempMax = (temp > tempMax ? temp : tempMax);
+      i++;
+    }
+
+    itsMinValue = tempMin;
+    itsMaxValue = tempMax;
   }
 }
 
@@ -131,4 +146,23 @@ unsigned int UVPSpectrum::getNumberOfChannels() const
 const double* UVPSpectrum::getValues() const
 {
   return itsValues;
+}
+
+
+
+//====================>>>  UVPSpectrum::min  <<<====================
+
+double UVPSpectrum::min() const
+{
+  return itsMinValue;
+}
+
+
+
+
+//====================>>>  UVPSpectrum::max  <<<====================
+
+double UVPSpectrum::max() const
+{
+  return itsMaxValue;
 }

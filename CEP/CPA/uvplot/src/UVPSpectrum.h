@@ -16,7 +16,7 @@ class UVPSpectrum
  public:
 
   // Constructor. numberOfChannels must always be defined.
-  UVPSpectrum(unsigned int  numberOfChannels,
+  UVPSpectrum(unsigned int  numberOfChannels=0,
               unsigned int  rowIndex=0,
               const double* values=0);
   
@@ -35,17 +35,25 @@ class UVPSpectrum
   
   const double* getValues() const;
 
+  
+  double max() const;
+  double min() const;
+
   // Values must be at least itsNumberOfChannels large. No checks are
-  // performed. This file only contains a tight loop.
+  // performed. This file only contains a tight loop. Also performs
+  // min/max determination.
   void copyFast(const double *values);
   
  protected:
  private:
 
-  unsigned int itsRowIndex;
   unsigned int itsNumberOfChannels;
+  unsigned int itsRowIndex;
 
   double*        itsValues;
+  
+  double itsMinValue;
+  double itsMaxValue;
 };
 
 
