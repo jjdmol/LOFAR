@@ -29,29 +29,50 @@
 #include <config.h>
 #endif
 
-#ifdef HAVE_MPI_PROFILE
+#if defined(HAVE_MPI_PROFILER) && defined(HAVE_MPICH)
+
+#define MPICH_SKIP_MPICXX
+#include <mpe.h>
+
+#include <stdio.h>
 
 class PerfProfile
 {
 public:
-  PerfProfile(int start, int stop, const char* tag) : m_stop(stop), m_tag(tag)
+  inline PerfProfile(int start, int stop) : m_stop(stop)
   {
-    MPE_Log_event(start, 0, m_tag.c_str());
+    MPE_Start_log();
+    MPE_Log_event(start, start, (char*)0);
   }
-  ~PerfProfile()
+
+  inline ~PerfProfile()
   {
-    MPE_Log_event(m_stop, 0, m_tag.c_str());
+    MPE_Log_event(m_stop, m_stop, (char*)0);
+  }
+
+  static int get_second_event_number(int start, const char* tag)
+  {
+    static int cur_color_index = 0;
+    int stop = MPE_Log_get_event_number();
+    MPE_Describe_state(start, stop, (char*)tag,
+		       (char*)PerfProfile::m_colors[cur_color_index]);
+    cur_color_index = (cur_color_index + 1 ) % PerfProfile::m_nr_colors;
+
+    return stop;
   }
 
 private:
   int m_stop;
   string m_tag;
+
+  static const char* const m_colors[];
+  static int m_nr_colors;
 };
 
 #define PERFPROFILE(tag) \
   static int _mpe_entry_ = MPE_Log_get_event_number(); \
-  static int _mpe_exit_  = MPE_Log_get_event_number(); \
-  PerfProfile _mpe_profile_(_mpe_entry_, _mpe_exit_, tag);
+  static int _mpe_exit_  = PerfProfile::get_second_event_number(_mpe_entry_, tag); \
+  PerfProfile _mpe_profile_(_mpe_entry_, _mpe_exit_);
 
 #else
 #define PERFPROFILE(tag)

@@ -11,8 +11,9 @@ filluvw_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common
 
+# MPE_LOG_FORMAT=SLOG $(lofar_sharedir)/profiletool tWSRT
 profile: tWSRT
-	MPE_LOG_FORMAT=SLOG $(lofar_sharedir)/profiletool tWSRT \
+	MPIBIN=$(MPIBIN) MPE_LOG_FORMAT=CLOG $(lofar_sharedir)/profiletool tWSRT \
 		$(MPIBIN)/mpirun -np 1 ./tWSRT \
-		$(lofar_sharedir)/../data/pss1.demo/pss1.demo
+		$(lofar_sharedir)/../data/pss1.demo/pss1.demo 0 0 predict 5
 
