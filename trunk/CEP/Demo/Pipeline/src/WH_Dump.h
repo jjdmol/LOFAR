@@ -41,7 +41,7 @@
    The TH_File class can be used to write data to file.
  */
 
-class WH_Dump: public WorkHolder
+class WH_Dump: public LOFAR::WorkHolder
 {
 public:
 

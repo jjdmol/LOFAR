@@ -34,19 +34,18 @@
 #include "CEPFrame/Simulator.h"
 #include "CEPFrame/ParamBlock.h"
 
-
 /**
    This is an empty Simulator class   
 */
 
-class EmptyAppl: public Simulator
+class EmptyAppl: public LOFAR::Simulator
 {
 public:
   EmptyAppl();
   virtual ~EmptyAppl();
 
   // overloaded methods from the Simulator base class
-  virtual void define(const ParamBlock& params = ParamBlock());
+  virtual void define(const LOFAR::ParamBlock& params = LOFAR::ParamBlock());
   virtual void run(int);
   virtual void dump() const;
   virtual void quit();

@@ -31,7 +31,7 @@
 
 // Description of class.
 
-class WH_ParamListener: public WorkHolder
+class WH_ParamListener: public LOFAR::WorkHolder
 {
  public:
   enum UpdateMode{Latest, New};

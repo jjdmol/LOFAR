@@ -32,6 +32,8 @@
 
 #include "Pipeline/WH_PreCorrect.h"
 
+using namespace LOFAR;
+
 // Set static variables
 int WH_PreCorrect::theirProcessProfilerState=0; 
 

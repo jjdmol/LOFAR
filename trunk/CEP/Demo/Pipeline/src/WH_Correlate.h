@@ -39,7 +39,7 @@
    The WH_Tranpose
  */
 
-class WH_Correlate: public WorkHolder
+class WH_Correlate: public LOFAR::WorkHolder
 {
 public:
 

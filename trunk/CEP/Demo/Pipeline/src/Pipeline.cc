@@ -44,6 +44,8 @@
 #include "CEPFrame/TH_File.h"
 #include TRANSPORTERINCLUDE
 
+using namespace LOFAR;
+
 string i2string(int i) {
   char str[32];
   sprintf(str, "%i", i);
@@ -65,7 +67,7 @@ Pipeline::~Pipeline()
   undefine();
 }
 
-void Pipeline::define(const ParamBlock& params)
+void Pipeline::define(const LOFAR::ParamBlock& params)
 {
 #ifdef HAVE_MPI
   TH_ShMem::init(0, NULL);

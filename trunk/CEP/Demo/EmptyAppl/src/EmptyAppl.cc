@@ -50,6 +50,8 @@
 #include "CEPFrame/Corba/TH_Corba.h"
 #endif
 
+using namespace LOFAR;
+
 EmptyAppl::EmptyAppl()
 {
 }

@@ -34,6 +34,8 @@
 
 #include "Pipeline/WH_FillTFMatrix.h"
 
+using namespace LOFAR;
+
 // Set static variables
 int WH_FillTFMatrix::theirProcessProfilerState=0; 
 

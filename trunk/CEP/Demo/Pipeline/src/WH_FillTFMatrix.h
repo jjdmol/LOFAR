@@ -40,7 +40,7 @@
    objects as outputs. The process() method fills the dataholder
  */
 
-class WH_FillTFMatrix: public WorkHolder
+class WH_FillTFMatrix: public LOFAR::WorkHolder
 {
 public:
 

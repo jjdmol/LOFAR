@@ -34,6 +34,7 @@
 #include "InOutTest/StopWatch.h"
 #include "InOutTest/InOutTest.h"
 
+using namespace LOFAR;
 
 WH_Source::WH_Source (const string& name, unsigned int nbuffer)
 : WorkHolder    (0, 1, name),

@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.4  2003/12/08 10:39:19  ellen
+//  %[ER: 4]%
+//  Merge of branch ER_4_development
+//
 //  Revision 1.3.2.1  2003/07/11 09:50:39  ellen
 //  Changed Pipeline example in order to work with CEPFrame with DataManager functionality.
 //
@@ -46,6 +50,8 @@
 
 
 #include "Pipeline/DH_Correlations.h"
+
+using namespace LOFAR;
 
 DH_Correlations::DH_Correlations (const string& name,
 				  short stations,

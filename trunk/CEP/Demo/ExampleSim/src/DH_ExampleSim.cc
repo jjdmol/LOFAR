@@ -26,6 +26,7 @@
 
 #include "DH_ExampleSim.h"
 
+using namespace LOFAR;
 
 DH_ExampleSim::DH_ExampleSim (const string& name)
 : DataHolder (name, "DH_ExampleSim")

@@ -31,6 +31,7 @@
 #endif
 
 #include "CEPFrame/Simulator.h"
+
 class WH_FillTFMatrix;
 class WH_Delay;
 class WH_Transpose;
@@ -44,14 +45,14 @@ class ParamBlock ;
    ....
 */
 
-class Pipeline: public Simulator
+class Pipeline: public LOFAR::Simulator
 {
  public:
   Pipeline();
   virtual ~Pipeline();
   
   // overloaded methods from the Simulator base class
-  virtual void define(const ParamBlock& params = ParamBlock());
+  virtual void define(const LOFAR::ParamBlock& params = LOFAR::ParamBlock());
   virtual void run(int);
   virtual void dump() const;
   virtual void quit();
@@ -60,10 +61,10 @@ class Pipeline: public Simulator
   
  private:
   /// Define pointers to the arrays with steps and workholders.
-  Step            **FillSteps;
-  Step            **TransSteps;
-  Step            **PreCSteps;
-  Step            **CorrSteps;
+  LOFAR::Step            **FillSteps;
+  LOFAR::Step            **TransSteps;
+  LOFAR::Step            **PreCSteps;
+  LOFAR::Step            **CorrSteps;
   
     /// Number of source steps
    int itsStations;

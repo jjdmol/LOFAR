@@ -25,6 +25,8 @@
 
 #include "ExampleSim/WH_Source.h"
 
+using namespace LOFAR;
+
 WH_Source::WH_Source (const string& name, unsigned int nout)
   : WorkHolder (0, nout, name,"WH_Source"),
     itsNOutputs(nout),

@@ -49,14 +49,14 @@
    
 */
 
-class AsyncTest: public Simulator
+class AsyncTest: public LOFAR::Simulator
 {
 public:
   AsyncTest();
   virtual ~AsyncTest();
 
   // overloaded methods from the Simulator base class
-  virtual void define(const ParamBlock& params = ParamBlock());
+  virtual void define(const LOFAR::ParamBlock& params = LOFAR::ParamBlock());
   virtual void run(int);
   virtual void dump() const;
   virtual void quit();
@@ -67,8 +67,8 @@ public:
   /// Define pointers to the arrays with steps and workholders.
   WH_Source **Sworkholders;
   WH_Sink **Dworkholders;
-  Step        **Ssteps;
-  Step        **Dsteps;
+  LOFAR::Step        **Ssteps;
+  LOFAR::Step        **Dsteps;
 
   /// Number of source steps
     int itsSourceSteps;

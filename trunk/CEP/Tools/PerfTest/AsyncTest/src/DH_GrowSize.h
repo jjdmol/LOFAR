@@ -40,7 +40,7 @@
    This class is an data holder that increases its size
 */
 
-class DH_GrowSize: public DataHolder
+class DH_GrowSize: public LOFAR::DataHolder
 {
 public:
   typedef int BufferType;

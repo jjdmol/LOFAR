@@ -37,7 +37,7 @@
    (one multiplication of every data word).
  */
 
-class WH_PreCorrect: public WorkHolder
+class WH_PreCorrect: public LOFAR::WorkHolder
 {
 public:
 

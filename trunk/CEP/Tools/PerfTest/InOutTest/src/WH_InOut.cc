@@ -33,11 +33,12 @@
 #include "InOutTest/WH_InOut.h"
 #include "InOutTest/InOutTest.h"
 
+using namespace LOFAR;
 
 WH_InOut::WH_InOut (const string& name, bool IOshared, unsigned int nbuffer)
 : WorkHolder    (1, 1, name),
-  itsIOshared   (IOshared),
-  itsBufLength  (nbuffer)
+  itsBufLength  (nbuffer),
+  itsIOshared   (IOshared)
 {
     getDataManager().addInDataHolder(0, new DH_Example ("DHIn",
 				     nbuffer), true, 
@@ -74,7 +75,7 @@ void WH_InOut::process()
 
   for (int m=0; m<itsBufLength; m++)
   {
-    outbuf[m] = inbuf[m] + 1;
+    outbuf[m] = inbuf[m] + (float)1;
   }
 //    cout << outbuf[0] << ',' << outbuf[itsBufLength-1] << endl;
 }

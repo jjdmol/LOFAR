@@ -51,6 +51,8 @@
 #include "CEPFrame/Corba/TH_Corba.h"
 #endif
 
+using namespace LOFAR;
+
 P2Perf::P2Perf():
   itsSourceSteps(0),
   itsDestSteps(0)

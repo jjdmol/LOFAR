@@ -27,6 +27,8 @@
 
 #include <math.h>
 
+using namespace LOFAR;
+
 WH_ParamPublisher::WH_ParamPublisher(const string& name)
   : WorkHolder(0, 0, name),
     itsIteration(0)
