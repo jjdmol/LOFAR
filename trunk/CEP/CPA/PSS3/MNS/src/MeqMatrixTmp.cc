@@ -37,7 +37,7 @@ MeqMatrixTmp::MeqMatrixTmp (double value, int nx, int ny, bool init)
 
 MeqMatrixTmp::MeqMatrixTmp (complex<double> value, int nx, int ny, bool init)
 {
-    MeqMatrixComplexArr* v = new MeqMatrixComplexArr (nx, ny);
+    MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (nx, ny);
     if (init) {
       v->set (value);
     }

@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <Common/Profiling/PerfProfile.h>
+
 #include <MNS/MeqJonesExpr.h>
 #include <Common/Debug.h>
 
@@ -30,6 +32,7 @@ MeqJonesExpr::~MeqJonesExpr()
 void MeqJonesExpr::multiply (const MeqJonesExpr& left,
 			     const MeqJonesExpr& right)
 {
+  PERFPROFILE(__PRETTY_FUNCTION__);
   const MeqResult& l11 = left.getResult11();
   const MeqResult& l12 = left.getResult12();
   const MeqResult& l21 = left.getResult21();
@@ -173,3 +176,4 @@ void MeqJonesExpr::multiply (const MeqJonesExpr& left,
     }
   }
 }
+

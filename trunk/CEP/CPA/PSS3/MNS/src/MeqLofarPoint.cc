@@ -49,7 +49,7 @@ MeqLofarPoint::~MeqLofarPoint()
 
 void MeqLofarPoint::calcResult (const MeqRequest& request)
 {
-  PERFPROFILE(__PRETTY_FUNCTION__);
+  PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
 
   // We can only calculate for a single time bin.
   const MeqDomain& domain = request.domain();

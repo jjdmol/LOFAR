@@ -96,7 +96,7 @@ MeqMatrixRep* MeqMatrixComplexSca::NAME (MeqMatrixComplexSca& left, \
 MeqMatrixRep* MeqMatrixComplexSca::NAME (MeqMatrixRealArr& left,  \
 					 bool) \
 { \
-  MeqMatrixComplexArr* v = new MeqMatrixComplexArr (left.nx(), left.ny()); \
+  MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (left.nx(), left.ny()); \
   for (int i=0; i<left.nelements(); i++) { \
     v->itsValue[i] = left.itsValue[i] OP2 itsValue; \
   } \

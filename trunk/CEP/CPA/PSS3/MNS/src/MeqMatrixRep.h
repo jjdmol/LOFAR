@@ -41,7 +41,8 @@ class MeqMatrixRep
 public:
   MeqMatrixRep (int nx, int ny, int elemLength)
     : itsCount(0), itsNx(nx), itsNy(ny), itsLength(nx*ny),
-      itsElemLength(elemLength) {nctor++;}
+      itsElemLength(elemLength), itsInPool(false), itsIsMalloced(false)
+    { nctor++; }
 
   virtual ~MeqMatrixRep();
 
@@ -51,7 +52,13 @@ public:
   { itsCount++; return this; }
 
   static void unlink (MeqMatrixRep* rep)
-    { if (rep != 0  &&  --rep->itsCount == 0) delete rep; }
+    {
+      if (rep != 0  &&  --rep->itsCount == 0)
+      {
+	if (rep->inPool() || rep->isMalloced()) rep->poolDelete();
+	else delete rep; 
+      }
+    }
 
   int nx() const
     { return itsNx; }
@@ -64,6 +71,20 @@ public:
 
   int elemLength() const
     { return itsElemLength; }
+
+  bool inPool() const
+    { return itsInPool; }
+
+  void setInPool(bool inPool)
+    { itsInPool = inPool; }
+
+  bool isMalloced() const
+    { return itsIsMalloced; }
+
+  void setIsMalloced(bool isMalloced)
+    { itsIsMalloced = isMalloced; }
+
+  virtual void poolDelete();
 
   virtual void show (ostream& os) const = 0;
 
@@ -131,15 +152,17 @@ public:
   static int ndtor;
 
 protected:
-  int offset (int x, int y) const
+  inline int offset (int x, int y) const
     { return y*itsNx + x; }
 
 private:
-  int itsCount;
-  int itsNx;
-  int itsNy;
-  int itsLength;
-  int itsElemLength;
+  int  itsCount;
+  int  itsNx;
+  int  itsNy;
+  int  itsLength;
+  int  itsElemLength;
+  bool itsInPool;
+  bool itsIsMalloced;
 };
 
 

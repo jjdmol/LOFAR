@@ -27,7 +27,7 @@
 //# Includes
 #include <MNS/MeqMatrixRep.h>
 #include <Common/lofar_complex.h>
-
+#include <Common/lofar_stack.h>
 
 class MeqMatrixComplexArr : public MeqMatrixRep
 {
@@ -51,6 +51,12 @@ public:
     { memcpy (itsValue, values, nelements() * sizeof(complex<double>)); }
 
   virtual void show (ostream& os) const;
+
+  static void poolActivate(int nelements);
+  static MeqMatrixComplexArr* poolNew(int nx, int ny);
+  virtual void poolDelete();
+  static void poolClear();
+  static void poolDeactivate();
 
   virtual MeqMatrixRep* add      (MeqMatrixRep& right, bool rightTmp);
   virtual MeqMatrixRep* subtract (MeqMatrixRep& right, bool rightTmp);
@@ -97,6 +103,10 @@ private:
 
 
   complex<double>* itsValue;
+
+  static deque<MeqMatrixComplexArr*> theirPool;
+  static int theirNElements;
+  static size_t theirHeaderSize;
 };
 
 

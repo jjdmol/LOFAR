@@ -43,7 +43,7 @@ MeqLofarStatSources::~MeqLofarStatSources()
 
 void MeqLofarStatSources::calcResult (const MeqRequest& request)
 {
-  PERFPROFILE(__PRETTY_FUNCTION__);
+  PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
 
   Assert (request.nx() == 1);
   MeqRequest req(request);

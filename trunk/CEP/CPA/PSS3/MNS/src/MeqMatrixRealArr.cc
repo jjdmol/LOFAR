@@ -108,7 +108,6 @@ complex<double> MeqMatrixRealArr::getDComplex (int x, int y) const
   return itsValue[offset(x,y)];
 }
 
-
 #define MNSMATRIXREALARR_OP(NAME, OP, OP2) \
 MeqMatrixRep* MeqMatrixRealArr::NAME (MeqMatrixRealSca& left, \
 				      bool rightTmp) \
@@ -129,7 +128,7 @@ MeqMatrixRep* MeqMatrixRealArr::NAME (MeqMatrixRealSca& left, \
 MeqMatrixRep* MeqMatrixRealArr::NAME (MeqMatrixComplexSca& left, \
 				      bool) \
 { \
-  MeqMatrixComplexArr* v = new MeqMatrixComplexArr (left.nx(), left.ny()); \
+  MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (left.nx(), left.ny()); \
   complex<double>* value = v->itsValue; \
   double* value2 = itsValue; \
   complex<double> lvalue = left.itsValue; \
@@ -211,7 +210,7 @@ MeqMatrixRep* MeqMatrixRealArr::posdiffRep (MeqMatrixRealArr& left)
 
 MeqMatrixRep* MeqMatrixRealArr::tocomplexRep (MeqMatrixRealSca& left)
 {
-  MeqMatrixComplexArr* v = new MeqMatrixComplexArr (nx(), ny());
+  MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (nx(), ny());
   complex<double>* value = v->itsValue;
   double* rvalue = itsValue;
   double  lvalue = left.itsValue;
@@ -224,7 +223,7 @@ MeqMatrixRep* MeqMatrixRealArr::tocomplexRep (MeqMatrixRealSca& left)
 MeqMatrixRep* MeqMatrixRealArr::tocomplexRep (MeqMatrixRealArr& left)
 {
   Assert (nelements() == left.nelements());
-  MeqMatrixComplexArr* v = new MeqMatrixComplexArr (nx(), ny());
+  MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (nx(), ny());
   complex<double>* value = v->itsValue;
   double* rvalue = itsValue;
   double* lvalue = left.itsValue;
