@@ -184,7 +184,8 @@ void	LofarDatabase::useTable	(const char	*tabelname)
 //
 // DATA-ACCESS FUNCTIONS: to be implemented in the derived classes
 //
-void	LofarDatabase::add	(const void	*record)
+int		LofarDatabase::add	(const char	*fields,
+							 const char	*values)
 { 
 }
 
