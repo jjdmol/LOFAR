@@ -26,6 +26,8 @@
 using namespace LOFAR;
 using namespace AVT;
 
+INIT_TRACER_CONTEXT(AVTUtilities,LOFARLOGGER_PACKAGE);
+
 AVTUtilities::AVTUtilities()
 {
 }

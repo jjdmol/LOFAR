@@ -26,6 +26,7 @@
 //# Includes
 //# Common Includes
 #include <time.h>
+#include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 //# GCF Includes
 #include <GCF/TM/GCF_Port.h>
@@ -126,6 +127,8 @@ namespace AVT
       time_t              m_stopTime;
       double              m_frequency;
 
+
+      ALLOC_TRACER_CONTEXT  
   };
   
 };//AVT

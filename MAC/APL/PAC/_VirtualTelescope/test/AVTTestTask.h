@@ -42,8 +42,11 @@
 class GCFEvent;
 class GCFPortInterface;
 
+namespace LOFAR
+{
 namespace AVT
 {
+
   class AVTTestTask : public GCFTask, public Test
   {
     public:
@@ -100,6 +103,7 @@ namespace AVT
       std::list<GCFPortInterface*> m_client_list;  // list of beamserver clients
       
   };
+};
 };
 
 #endif

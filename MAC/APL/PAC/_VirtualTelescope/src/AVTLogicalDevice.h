@@ -25,6 +25,7 @@
 
 //# Includes
 
+#include <Common/LofarLogger.h>
 //# GCF Includes
 #include <GCF/PAL/GCF_MyPropertySet.h>
 #include <GCF/TM/GCF_Port.h>
@@ -188,6 +189,8 @@ namespace AVT
       std::vector<APLInterTaskPort*>  m_clientInterTaskPorts;
       bool                            m_apcLoaded;
       TLogicalDeviceState             m_logicalDeviceState;
+
+      ALLOC_TRACER_CONTEXT  
   };
 };//AVT
 };//LOFAR

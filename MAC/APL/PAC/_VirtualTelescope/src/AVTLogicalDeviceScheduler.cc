@@ -57,6 +57,8 @@ using namespace AVT;
 using namespace std;
 using namespace boost;
 
+INIT_TRACER_CONTEXT(AVTLogicalDeviceScheduler,LOFARLOGGER_PACKAGE);
+
 string AVTLogicalDeviceScheduler::m_schedulerTaskName("LogicalDeviceScheduler");
 string timerPortName("timerPort");
 
@@ -64,8 +66,8 @@ AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler() :
   GCFTask((State)&AVTLogicalDeviceScheduler::initial_state,m_schedulerTaskName),
   AVTPropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
-  m_properties(SCOPE_PAC_LogicalDeviceScheduler,TYPE_LCU_PAC_LogicalDeviceScheduler.c_str(),false,&m_propertySetAnswer),
-  m_propertiesWG(SCOPE_PAC_LogicalDeviceScheduler_WaveFormGenerator,TYPE_LCU_PAC_WaveformGenerator.c_str(),false,&m_propertySetAnswer),
+  m_properties(SCOPE_PAC_LogicalDeviceScheduler,TYPE_LCU_PAC_LogicalDeviceScheduler.c_str(),PS_CAT_PERMANENT,&m_propertySetAnswer),
+  m_propertiesWG(SCOPE_PAC_LogicalDeviceScheduler_WaveFormGenerator,TYPE_LCU_PAC_WaveformGenerator.c_str(),PS_CAT_TEMPORARY,&m_propertySetAnswer),
   m_propsetConfigured(false),
   m_propsetWGConfigured(false),
   m_pBeamServer(0),
@@ -78,8 +80,8 @@ AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler() :
   m_timerPort(*this, timerPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL),
   m_resourceManager(AVTResourceManager::instance())
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
-  LOG_DEBUG(formatString("AVTLogicalDeviceScheduler::%s(%s)",__func__,getName().c_str()));
   m_properties.enable();
   m_propertiesWG.enable();
 }
@@ -87,12 +89,13 @@ AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler() :
 
 AVTLogicalDeviceScheduler::~AVTLogicalDeviceScheduler()
 {
-  LOG_DEBUG(formatString("AVTLogicalDeviceScheduler::%s(%s)",__func__,getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
 shared_ptr<AVTStationReceptor> AVTLogicalDeviceScheduler::addReceptor(string srName,const list<TPropertyInfo>& requiredResources)
 {
-  LOG_DEBUG(formatString("%s(%s)(%s)",__func__,getName().c_str(),srName.c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - %s",getName().c_str(),srName.c_str()).c_str());
+  
   // create receptor logical device
   LogicalDeviceInfoT srInfo;
   string srApcName(APC_SR);
@@ -115,7 +118,7 @@ shared_ptr<AVTStationReceptor> AVTLogicalDeviceScheduler::addReceptor(string srN
 
 void AVTLogicalDeviceScheduler::addReceptorGroup(string srgName,vector<shared_ptr<AVTStationReceptor> >& receptors)
 {
-  LOG_DEBUG(formatString("%s(%s)(%s)",__func__,getName().c_str(),srgName.c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - %s",getName().c_str(),srgName.c_str()).c_str());
   LogicalDeviceInfoT srgInfo;
   string srgApcName(APC_SRG);
   if(ParameterSet::instance()->isDefined(string(PARAM_APC)+srgName))
@@ -155,7 +158,7 @@ bool AVTLogicalDeviceScheduler::isInitialized()
 
 AVTLogicalDeviceScheduler::LogicalDeviceMapIterT AVTLogicalDeviceScheduler::findLogicalDevice(const unsigned long scheduleId)
 {
-  LOG_DEBUG(formatString("%s(%s)(scheduleId=%d)",__func__,getName().c_str(),scheduleId));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - scheduleId=%d",getName().c_str(),scheduleId).c_str());
   LogicalDeviceMapIterT ldIt = m_logicalDeviceMap.end();
   
   // find the schedule
@@ -170,7 +173,7 @@ AVTLogicalDeviceScheduler::LogicalDeviceMapIterT AVTLogicalDeviceScheduler::find
 
 AVTLogicalDeviceScheduler::LogicalDeviceMapIterT AVTLogicalDeviceScheduler::findClientPort(GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("%s(%s)",__func__,getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   LogicalDeviceMapIterT it;
   for(it=m_logicalDeviceMap.begin();it!=m_logicalDeviceMap.end()&&(&port!=it->second.clientPort.get());++it);
   return it;
@@ -178,7 +181,7 @@ AVTLogicalDeviceScheduler::LogicalDeviceMapIterT AVTLogicalDeviceScheduler::find
 
 AVTLogicalDeviceScheduler::LogicalDeviceScheduleIterT AVTLogicalDeviceScheduler::findSchedule(const string& deviceName,LogicalDeviceScheduleIterT beginIt)
 {
-  LOG_DEBUG(formatString("%s(%s)(ld=%s)",__func__,getName().c_str(),deviceName.c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - ld=%s",getName().c_str(),deviceName.c_str()).c_str());
   LogicalDeviceScheduleIterT scheduleIt;
   for(scheduleIt=beginIt;scheduleIt!=m_logicalDeviceSchedule.end()&&(deviceName!=scheduleIt->second.deviceName);++scheduleIt);
   return scheduleIt;
@@ -186,6 +189,7 @@ AVTLogicalDeviceScheduler::LogicalDeviceScheduleIterT AVTLogicalDeviceScheduler:
 
 bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,const string& deviceName, const vector<string> scheduleParameters, boost::shared_ptr<APLInterTaskPort> clientPort)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - deviceName=%s",getName().c_str(),deviceName.c_str()).c_str());
   bool result=false;
 
   int rawStartTime = atoi(scheduleParameters[0].c_str()); // starttime
@@ -310,6 +314,7 @@ bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,co
 
 bool AVTLogicalDeviceScheduler::checkPrepareTimer(const string& deviceName, unsigned long timerId)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - device=%s,timerId=%d",getName().c_str(),deviceName.c_str(),timerId).c_str());
   bool isPrepareTimer=false;
   LogicalDeviceScheduleIterT it = findSchedule(deviceName,m_logicalDeviceSchedule.begin());
   while(!isPrepareTimer && it != m_logicalDeviceSchedule.end())
@@ -336,6 +341,7 @@ bool AVTLogicalDeviceScheduler::checkPrepareTimer(const string& deviceName, unsi
 
 bool AVTLogicalDeviceScheduler::checkStartTimer(const string& deviceName, unsigned long timerId)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - device=%s,timerId=%d",getName().c_str(),deviceName.c_str(),timerId).c_str());
   bool isStartTimer=false;
   LogicalDeviceScheduleIterT it = findSchedule(deviceName,m_logicalDeviceSchedule.begin());
   while(!isStartTimer && it != m_logicalDeviceSchedule.end())
@@ -362,6 +368,7 @@ bool AVTLogicalDeviceScheduler::checkStartTimer(const string& deviceName, unsign
 
 bool AVTLogicalDeviceScheduler::checkStopTimer(const string& deviceName, unsigned long timerId)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - device=%s,timerId=%d",getName().c_str(),deviceName.c_str(),timerId).c_str());
   bool isStopTimer=false;
   LogicalDeviceScheduleIterT it = findSchedule(deviceName,m_logicalDeviceSchedule.begin());
   while(!isStopTimer && it != m_logicalDeviceSchedule.end())
@@ -388,6 +395,7 @@ bool AVTLogicalDeviceScheduler::checkStopTimer(const string& deviceName, unsigne
 
 bool AVTLogicalDeviceScheduler::checkMaintenanceStartTimer(unsigned long timerId, MaintenanceScheduleIterT& scheduleIt)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - timerId=%d",getName().c_str(),timerId).c_str());
   bool isStartTimer=false;
   scheduleIt = m_maintenanceSchedule.begin();
   while(!isStartTimer && scheduleIt != m_maintenanceSchedule.end())
@@ -404,6 +412,7 @@ bool AVTLogicalDeviceScheduler::checkMaintenanceStartTimer(unsigned long timerId
 
 bool AVTLogicalDeviceScheduler::checkMaintenanceStopTimer(unsigned long timerId, MaintenanceScheduleIterT& scheduleIt)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - timerId=%d",getName().c_str(),timerId).c_str());
   bool isStopTimer=false;
   scheduleIt = m_maintenanceSchedule.begin();
   while(!isStopTimer && scheduleIt != m_maintenanceSchedule.end())
@@ -420,7 +429,7 @@ bool AVTLogicalDeviceScheduler::checkMaintenanceStopTimer(unsigned long timerId,
 
 GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("%s(%s) (%s)",__func__,getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%d",getName().c_str(),evtstr(event)).c_str());
 
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -664,7 +673,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
 
 void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
 {
-//  LOG_DEBUG(formatString("%s(%s) (%s)",__func__,getName().c_str(),evtstr(answer)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 
   switch(answer.signal)
   {

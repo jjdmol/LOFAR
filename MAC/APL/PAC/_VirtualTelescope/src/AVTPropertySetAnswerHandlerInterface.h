@@ -25,6 +25,7 @@
 
 //# Includes
 //# Common Includes
+#include <Common/LofarLogger.h>
 //# GCF Includes
 #include <GCF/TM/GCF_Event.h>
 
@@ -58,6 +59,8 @@ namespace AVT
   
     private:
     
+
+      ALLOC_TRACER_CONTEXT  
   };
 };//AVT
 };//LOFAR

@@ -9,7 +9,8 @@ VirtualInstrument_CPPFLAGS= \
 	-DBOOST_DISABLE_THREADS \
   -Wno-deprecated \
 	-fmessage-length=0 \
-	-fdiagnostics-show-location=once
+	-fdiagnostics-show-location=once \
+	-DUSE_TCPPORT_INSTEADOF_PVSSPORT
 
 VirtualInstrument_SOURCES 		= \
 	VirtualInstrument.cc \

@@ -44,6 +44,8 @@ using namespace LOFAR;
 using namespace AVT;
 using namespace std;
 
+INIT_TRACER_CONTEXT(AVTStationBeamformer,LOFARLOGGER_PACKAGE);
+
 AVTStationBeamformer::AVTStationBeamformer(string& taskName,
                                            const string& scope,
                                            const string& APCName,
@@ -62,8 +64,8 @@ AVTStationBeamformer::AVTStationBeamformer(string& taskName,
   m_directionAngle2(0.0),
   m_beamID(-1)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
-  LOG_DEBUG(formatString("AVTStationBeamformer(%s)::%s",getName().c_str(),__func__));
   
   m_beamServer.setRemoteAddr(getName(),beamServerPortName);
 }
@@ -71,7 +73,7 @@ AVTStationBeamformer::AVTStationBeamformer(string& taskName,
 
 AVTStationBeamformer::~AVTStationBeamformer()
 {
-  LOG_DEBUG(formatString("AVTStationBeamformer(%s)::%s",getName().c_str(),__func__));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
 int AVTStationBeamformer::convertDirection(const string type) const
@@ -98,6 +100,7 @@ GCFPort& AVTStationBeamformer::getBeamServerPort()
 
 bool AVTStationBeamformer::isPrepared(vector<string>& parameters)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // compare all parameters with the parameters provided.
   // if all are equal, then the LD is prepared.
   bool isPrepared=true;
@@ -135,7 +138,7 @@ bool AVTStationBeamformer::isPrepared(vector<string>& parameters)
 
 bool AVTStationBeamformer::checkQualityRequirements()
 {
-  LOG_DEBUG(formatString("AVTStationBeamformer(%s)::%s",getName().c_str(),__func__));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   bool requirementsMet=false;
   
   // quality requirements for this BeamFormer:
@@ -154,7 +157,7 @@ bool AVTStationBeamformer::_isBeamServerPort(GCFPortInterface& port)
 
 void AVTStationBeamformer::concreteDisconnected(GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTStationBeamformer(%s)::concreteDisconnected",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // go to initial state only if the connection with the beamformer is lost.
   if(_isBeamServerPort(port))
   {
@@ -165,7 +168,7 @@ void AVTStationBeamformer::concreteDisconnected(GCFPortInterface& port)
 
 GCFEvent::TResult AVTStationBeamformer::concrete_initial_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTStationBeamformer(%s)::concrete_initial_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -184,14 +187,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_initial_state(GCFEvent& event, 
       if(_isBeamServerPort(port))
       {
         m_beamServerConnected=true;
-        if(isAPCLoaded())
-        {
-          TRAN(AVTLogicalDevice::idle_state);
-        }
-        else
-        {
-          m_beamServer.setTimer(2.0); // try again
-        }
+        TRAN(AVTLogicalDevice::idle_state);
       }
       break;
     }
@@ -208,14 +204,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_initial_state(GCFEvent& event, 
       {
         if(m_beamServerConnected)
         {
-          if(isAPCLoaded())
-          {
-            TRAN(AVTLogicalDevice::idle_state);
-          }
-          else
-          {
-            m_beamServer.setTimer(2.0); // try again
-          }
+          TRAN(AVTLogicalDevice::idle_state);
         }
         else
         {
@@ -235,7 +224,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_initial_state(GCFEvent& event, 
 
 GCFEvent::TResult AVTStationBeamformer::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)
 {
-  LOG_DEBUG(formatString("AVTStationBeamformer(%s)::concrete_claiming_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
@@ -255,7 +244,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_claiming_state(GCFEvent& event,
 
 GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event, GCFPortInterface& port, bool& stateFinished, bool& error)
 {
-  LOG_DEBUG(formatString("AVTStationBeamformer(%s)::concrete_preparing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
   stateFinished=true;
   error=false;
@@ -305,13 +294,13 @@ GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event
 
 GCFEvent::TResult AVTStationBeamformer::concrete_active_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG(formatString("AVTStationBeamformer(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   return GCFEvent::NOT_HANDLED;
 }
 
 GCFEvent::TResult AVTStationBeamformer::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)
 {
-  LOG_DEBUG(formatString("AVTStationBeamformer(%s)::concrete_releasing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
@@ -339,6 +328,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_releasing_state(GCFEvent& event
 
 void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   switch(answer.signal)
   {
     case F_MYPS_ENABLED:
@@ -372,7 +362,7 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
       }
       else
       {
-        LOG_ERROR(formatString("%s : apc %s NOT LOADED",getName().c_str(),pConfAnswer->pApcName));
+        LOG_WARN(formatString("%s : apc %s NOT LOADED",getName().c_str(),pConfAnswer->pApcName));
       }
       break;
     }
@@ -491,7 +481,7 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
 
 void AVTStationBeamformer::concreteClaim(GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTStationBeamformer(%s)::concreteClaim",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // claim my own resources
   
   // send claim message to BeamServer
@@ -505,7 +495,7 @@ void AVTStationBeamformer::concreteClaim(GCFPortInterface& port)
 
 void AVTStationBeamformer::concretePrepare(GCFPortInterface& /*port*/,string& parameters)
 {
-  LOG_DEBUG(formatString("AVTStationBeamformer(%s)::concretePrepare",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // prepare my own resources
   vector<string> decodedParameters;
   AVTUtilities::decodeParameters(parameters,decodedParameters);
@@ -560,7 +550,7 @@ void AVTStationBeamformer::concretePrepare(GCFPortInterface& /*port*/,string& pa
 
 void AVTStationBeamformer::concreteResume(GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG(formatString("AVTStationBeamformer(%s)::concreteResume",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // resume my own resources
   
   // send resume message to BeamFormer
@@ -571,7 +561,7 @@ void AVTStationBeamformer::concreteResume(GCFPortInterface& /*port*/)
 
 void AVTStationBeamformer::concreteSuspend(GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG(formatString("AVTStationBeamformer(%s)::concreteSuspend",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // suspend my own resources
   
   // send suspend message to BeamFormer
@@ -581,7 +571,7 @@ void AVTStationBeamformer::concreteSuspend(GCFPortInterface& /*port*/)
 
 void AVTStationBeamformer::concreteRelease(GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG(formatString("AVTStationBeamformer(%s)::concreteRelease",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // release my own resources
   
   // send release message to BeamFormer

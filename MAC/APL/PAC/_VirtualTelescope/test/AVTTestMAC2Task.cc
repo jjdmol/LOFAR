@@ -64,10 +64,12 @@ using namespace std;
     TRAN(AVTTestMAC2Task::test##_test_); \
   }
 
-#define FINISH \
+#define FINISH FINISHIMPL(AVTTestMAC2Task::finished)
+
+#define FINISHIMPL(_target_) \
   { \
     reportSubTest(); \
-    TRAN(AVTTestMAC2Task::finished); \
+    tran(static_cast<GCFFsm::State>(&_target_), __func__, #_target_); \
   }
 
 #define ABORT_TESTS \
@@ -98,14 +100,14 @@ using namespace std;
 
 #define ADDTRANTARGET(_targetvector_,_target_,_num_,_descr_) \
   { \
-    TTranTarget tt={static_cast<State>(&_target_), #_target_,#_num_,_descr_}; \
+    TTranTarget tt={static_cast<AVTTestMAC2Task::State>(&_target_), #_target_,#_num_,_descr_}; \
     _targetvector_.push_back(tt); \
   }
   
 #define TESTTRAN(_trantarget_) \
   { \
     setCurSubTest(_trantarget_->testNum,_trantarget_->description); \
-    tran(static_cast<State>(_trantarget_->target), __func__, _trantarget_->targetName); \
+    tran(static_cast<GCFFsm::State>(_trantarget_->target), __func__, _trantarget_->targetName); \
   }
 
 #define NEXTTEST(_iterator_) \
@@ -114,10 +116,10 @@ using namespace std;
     _iterator_++; \
     TESTTRAN(tempIt); \
   }
-  
+
 typedef struct
 {
-  GCFFsm::State target;
+  AVTTestMAC2Task::State target;
   const char*   targetName;
   const char*   testNum;
   const char*   description;
@@ -130,7 +132,7 @@ string AVTTestMAC2Task::m_taskName("AVTTestMAC2");
 string g_timerPortName("timerPort");
 
 AVTTestMAC2Task::AVTTestMAC2Task() :
-  GCFTask((State)&AVTTestMAC2Task::initial, m_taskName),
+  GCFTask((GCFFsm::State)&AVTTestMAC2Task::initial, m_taskName),
   Test(m_taskName),
   m_answer(),
   m_timerPort(*this, g_timerPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL),

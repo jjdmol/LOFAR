@@ -44,6 +44,8 @@ using namespace AVT;
 using namespace std;
 using namespace boost;
 
+INIT_TRACER_CONTEXT(AVTStationReceptor,LOFARLOGGER_PACKAGE);
+
 AVTStationReceptor::AVTStationReceptor(string& taskName, 
                                          const string& scope,
                                          const string& APCName,
@@ -55,7 +57,7 @@ AVTStationReceptor::AVTStationReceptor(string& taskName,
   m_requiredResources(),
   m_requiredResourcesStatus()
 {
-  LOG_DEBUG(formatString("AVTStationReceptor(%s)::AVTStationReceptor",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
   list<TPropertyInfo>::const_iterator it=requiredResources.begin();
   while(it!=requiredResources.end())
@@ -71,12 +73,12 @@ AVTStationReceptor::AVTStationReceptor(string& taskName,
 
 AVTStationReceptor::~AVTStationReceptor()
 {
-  LOG_DEBUG(formatString("AVTStationReceptor(%s)::~AVTStationReceptor",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
 bool AVTStationReceptor::checkQualityRequirements()
 {
-  LOG_DEBUG(formatString("AVTStationReceptor(%s)::%s",getName().c_str(),__func__));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   bool requirementsMet=true;
   int  unavailableCounter = 0;
   int maxUnavailable = ParameterSet::instance()->getInt(PARAM_MAX_SR_RESOURCES_UNAVAILABLE);
@@ -117,12 +119,12 @@ void AVTStationReceptor::setFrequency(const double frequency)
 
 void AVTStationReceptor::concreteDisconnected(GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG(formatString("AVTStationReceptor(%s)::concreteDisconnected",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
 GCFEvent::TResult AVTStationReceptor::concrete_initial_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG(formatString("AVTStationReceptor(%s)::concrete_initial_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -166,7 +168,7 @@ GCFEvent::TResult AVTStationReceptor::concrete_initial_state(GCFEvent& event, GC
 
 GCFEvent::TResult AVTStationReceptor::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)
 {
-  LOG_DEBUG(formatString("AVTStationReceptor(%s)::concrete_claiming_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
@@ -186,7 +188,7 @@ GCFEvent::TResult AVTStationReceptor::concrete_claiming_state(GCFEvent& event, G
 
 GCFEvent::TResult AVTStationReceptor::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished, bool& error)
 {
-  LOG_DEBUG(formatString("AVTStationReceptor(%s)::concrete_preparing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
   stateFinished=false;
   error=false;
@@ -208,13 +210,13 @@ GCFEvent::TResult AVTStationReceptor::concrete_preparing_state(GCFEvent& event, 
 
 GCFEvent::TResult AVTStationReceptor::concrete_active_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG(formatString("AVTStationReceptor(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   return GCFEvent::NOT_HANDLED;
 }
 
 GCFEvent::TResult AVTStationReceptor::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)
 {
-  LOG_DEBUG(formatString("AVTStationReceptor(%s)::concrete_releasing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
@@ -234,6 +236,7 @@ GCFEvent::TResult AVTStationReceptor::concrete_releasing_state(GCFEvent& event, 
 
 void AVTStationReceptor::handlePropertySetAnswer(GCFEvent& answer)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   switch(answer.signal)
   {
     case F_MYPS_ENABLED:
@@ -261,7 +264,7 @@ void AVTStationReceptor::handlePropertySetAnswer(GCFEvent& answer)
       }
       else
       {
-        LOG_ERROR(formatString("%s : apc %s NOT LOADED",getName().c_str(),pConfAnswer->pApcName));
+        LOG_WARN(formatString("%s : apc %s NOT LOADED",getName().c_str(),pConfAnswer->pApcName));
       }
       break;
     }
@@ -298,7 +301,7 @@ void AVTStationReceptor::handlePropertySetAnswer(GCFEvent& answer)
 
 void AVTStationReceptor::concreteClaim(GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTStationReceptor(%s)::concreteClaim",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // claim my own resources
   AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
   
@@ -314,7 +317,7 @@ void AVTStationReceptor::concreteClaim(GCFPortInterface& port)
 
 void AVTStationReceptor::concretePrepare(GCFPortInterface& port, string& parameters)
 {
-  LOG_DEBUG(formatString("AVTStationReceptor(%s)::concretePrepare",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // prepare my own resources
   vector<string> decodedParameters;
   AVTUtilities::decodeParameters(parameters,decodedParameters);
@@ -329,21 +332,21 @@ void AVTStationReceptor::concretePrepare(GCFPortInterface& port, string& paramet
 
 void AVTStationReceptor::concreteResume(GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG(formatString("AVTStationReceptor(%s)::concreteResume",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // resume my own resources
   
 }
 
 void AVTStationReceptor::concreteSuspend(GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG(formatString("AVTStationReceptor(%s)::concreteSuspend",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // suspend my own resources
   
 }
 
 void AVTStationReceptor::concreteRelease(GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTStationReceptor(%s)::concreteRelease",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // release my own resources
   AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
   

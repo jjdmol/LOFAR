@@ -16,8 +16,8 @@ mac.apl.avt.BEAMSERVERPORT=BeamServer
 mac.apl.avt.MAX_SR_RESOURCES_UNAVAILABLE=0
 # number of station receptors used by a station receptor group that may be unavailable
 mac.apl.avt.MAX_SRG_RESOURCES_UNAVAILABLE=1
-mac.apl.avt.APC_VT1=ApcStationBeamformer_VT1
-mac.apl.avt.APC_BF1=ApcStationBeamformer_BF1
+#mac.apl.avt.APC_VT1=ApcVirtualTelescope_VT1
+#mac.apl.avt.APC_BF1=ApcStationBeamformer_BF1
 
 mac.ns.VT1.VT1_server.type=TCP
 mac.ns.VT2.VT2_server.type=TCP

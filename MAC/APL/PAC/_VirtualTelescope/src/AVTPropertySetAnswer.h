@@ -25,12 +25,14 @@
 
 //# Includes
 //# Common Includes
+#include <Common/LofarLogger.h>
 //# GCF Includes
 #include <GCF/PAL/GCF_Answer.h>
 #include <GCF/TM/GCF_Event.h>
 //# VirtualTelescope Includes
 
 // forward declaration
+class GCFEvent;
 
 namespace LOFAR
 {
@@ -38,7 +40,6 @@ namespace LOFAR
 namespace AVT
 {
 
-  class GCFEvent;
   class AVTPropertySetAnswerHandlerInterface;
   
   class AVTPropertySetAnswer : public GCFAnswer
@@ -58,6 +59,8 @@ namespace AVT
   
     private:    
       AVTPropertySetAnswerHandlerInterface& m_handler;
+
+      ALLOC_TRACER_CONTEXT  
   };
 };//AVT
 };//LOFAR

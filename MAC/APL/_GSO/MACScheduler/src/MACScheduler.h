@@ -41,6 +41,7 @@
 //# Common Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/LofarLogger.h>
 
 //# ACC Includes
 #ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
@@ -114,12 +115,20 @@ namespace GSO
       boost::shared_ptr<GCFMyPropertySet>   m_propertySet;
 
     private:
-      typedef boost::shared_ptr<GCFTCPPort> TTCPPortPtr;
-      typedef vector<TTCPPortPtr>           TTCPPortVector;
-      typedef map<string,string>            TNodeId2PortMap;
-      typedef map<string,TTCPPortPtr>       TStringTCPPortMap;
+
+#ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
+      typedef GCFTCPPort  TRemotePort;
+#else      
+      typedef GCFPVSSPort TRemotePort;
+#endif
+
+      typedef boost::shared_ptr<GCFTCPPort>   TTCPPortPtr;
+      typedef boost::shared_ptr<TRemotePort>  TRemotePortPtr;
+      typedef vector<TTCPPortPtr>             TTCPPortVector;
+      typedef vector<TRemotePortPtr>          TRemotePortVector;
+      typedef map<string,TRemotePortPtr>      TStringRemotePortMap;
       
-      bool _isServerPort(const GCFTCPPort& server, const ::GCFPortInterface& port) const;
+      bool _isServerPort(const ::GCFPortInterface& server, const ::GCFPortInterface& port) const;
       bool _isSASclientPort(const ::GCFPortInterface& port) const;
       bool _isVISDclientPort(const ::GCFPortInterface& port, string& visd) const;
       bool _isVIclientPort(const ::GCFPortInterface& port) const;
@@ -127,15 +136,25 @@ namespace GSO
       string                                m_SASserverPortName;
       GCFTCPPort                            m_SASserverPort;      // SAS-MAC communication
       TTCPPortVector                        m_SASclientPorts;     // connected SAS clients
-      TStringTCPPortMap                     m_VISDclientPorts;    // connected VI StartDaemon clients
+      TStringRemotePortMap                  m_VISDclientPorts;    // connected VI StartDaemon clients
       string                                m_VIparentPortName;
-      GCFTCPPort                            m_VIparentPort;       // parent for VI's
-      TTCPPortVector                        m_VIclientPorts;      // created VI's
-      TNodeId2PortMap                       m_NodeId2PortMap;     // maps node ID's to port names 
+      
+      TRemotePort                           m_VIparentPort;       // parent for VI's
+
+      // the vector and map both contain the child ports. The vector is used
+      // to cache the port at the moment of the accept. However, at that moment, 
+      // the parent does not yet know the ID of that child. The child sends its
+      // ID in the CONNECT event and when that message is received, the port and ID
+      // are stored in the TPortMap. The map is used in all communication with the
+      // childs.
+      TRemotePortVector                     m_VIclientPorts;      // created VI's
+      TStringRemotePortMap                  m_connectedVIclientPorts; // maps node ID's to ports
       
 #ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
       boost::shared_ptr<ACC::ConfigurationMgr> m_configurationManager;
 #endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+
+      ALLOC_TRACER_CONTEXT  
    };
 };//GSO
 };//LOFAR

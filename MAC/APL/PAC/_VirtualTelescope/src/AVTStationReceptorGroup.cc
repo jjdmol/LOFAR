@@ -43,6 +43,8 @@ using namespace AVT;
 using namespace std;
 using namespace boost;
 
+INIT_TRACER_CONTEXT(AVTStationReceptorGroup,LOFARLOGGER_PACKAGE);
+
 AVTStationReceptorGroup::TStationReceptorConnection::TStationReceptorConnection( 
       shared_ptr<AVTStationReceptor> _rcu,
       GCFTask&                       _containerTask, 
@@ -54,7 +56,6 @@ AVTStationReceptorGroup::TStationReceptorConnection::TStationReceptorConnection(
   clientPort(new APLInterTaskPort((GCFTask&)(*_rcu),_containerTask,_name,_type,_protocol)),
   connected(_connected)
 {
-  LOG_DEBUG(formatString("TStationReceptorConnection(0x%x)::TStationReceptorConnection",this));
   rcu->addClientInterTaskPort(clientPort.get());
 }
 
@@ -68,7 +69,7 @@ AVTStationReceptorGroup::AVTStationReceptorGroup(string& taskName,
   m_stopTime(0),
   m_frequency(0.0)
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::AVTStationReceptorGroup",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 
   vector<shared_ptr<AVTStationReceptor> >::iterator rIt;
   for(rIt=rcus.begin();rIt!=rcus.end();++rIt)
@@ -90,7 +91,7 @@ AVTStationReceptorGroup::AVTStationReceptorGroup(string& taskName,
 
 AVTStationReceptorGroup::~AVTStationReceptorGroup()
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::~AVTStationReceptorGroup",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
 bool AVTStationReceptorGroup::isPrepared(vector<string>& parameters)
@@ -106,7 +107,7 @@ bool AVTStationReceptorGroup::isPrepared(vector<string>& parameters)
 
 bool AVTStationReceptorGroup::checkQualityRequirements()
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::%s",getName().c_str(),__func__));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   bool requirementsMet=true;
   int  unavailableCounter = 0;
   int maxUnavailable = ParameterSet::instance()->getInt(PARAM_MAX_SRG_RESOURCES_UNAVAILABLE);
@@ -149,7 +150,7 @@ void AVTStationReceptorGroup::setFrequency(const double frequency)
 
 bool AVTStationReceptorGroup::isStationReceptorClient(GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s,0x%x)::isStationReceptorClient",getName().c_str(),this));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   TStationReceptorVectorIter it = m_stationReceptors.begin();
   bool found=false;
   while(!found && it!=m_stationReceptors.end())
@@ -162,7 +163,7 @@ bool AVTStationReceptorGroup::isStationReceptorClient(GCFPortInterface& port)
 
 bool AVTStationReceptorGroup::setReceptorConnected(GCFPortInterface& port, bool connected)
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s,0x%x)::%s(0x%x,%s)",getName().c_str(),this,__func__,&port,(connected?"true":"false")));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   TStationReceptorVectorIter it = m_stationReceptors.begin();
   bool found=false;
   while(!found && it!=m_stationReceptors.end())
@@ -208,7 +209,7 @@ bool AVTStationReceptorGroup::allReceptorsInState(TLogicalDeviceState state)
 
 void AVTStationReceptorGroup::sendToAllReceptors(GCFEvent& event)
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s,0x%x)::sendToAllReceptors",getName().c_str(),this));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   TStationReceptorVectorIter it;
   for(it=m_stationReceptors.begin();it!=m_stationReceptors.end();++it)
   {
@@ -218,7 +219,7 @@ void AVTStationReceptorGroup::sendToAllReceptors(GCFEvent& event)
 
 void AVTStationReceptorGroup::concreteDisconnected(GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concreteDisconnected",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // go to initial state only if the connection with the receptor is lost.
   if(isStationReceptorClient(port))
   {
@@ -228,7 +229,7 @@ void AVTStationReceptorGroup::concreteDisconnected(GCFPortInterface& port)
 
 GCFEvent::TResult AVTStationReceptorGroup::concrete_initial_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concrete_initial_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -257,14 +258,7 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_initial_state(GCFEvent& even
       {
         if(allReceptorsConnected())
         {
-          if(isAPCLoaded())
-          {
-            TRAN(AVTLogicalDevice::idle_state);
-          }
-          else
-          {
-            port.setTimer(2.0); // try again
-          }
+          TRAN(AVTLogicalDevice::idle_state);
         }
       }
       break;
@@ -285,14 +279,7 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_initial_state(GCFEvent& even
       {
         if(allReceptorsConnected())
         {
-          if(isAPCLoaded())
-          {
-            TRAN(AVTLogicalDevice::idle_state);
-          }
-          else
-          {
-            port.setTimer(2.0); // try again
-          }
+          TRAN(AVTLogicalDevice::idle_state);
         }
       }
       break;
@@ -309,7 +296,7 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_initial_state(GCFEvent& even
 
 GCFEvent::TResult AVTStationReceptorGroup::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concrete_claiming_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
@@ -335,7 +322,7 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_claiming_state(GCFEvent& eve
 
 GCFEvent::TResult AVTStationReceptorGroup::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished, bool& error)
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concrete_preparing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
   stateFinished=false;
   error=false;
@@ -363,13 +350,13 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_preparing_state(GCFEvent& ev
 
 GCFEvent::TResult AVTStationReceptorGroup::concrete_active_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   return GCFEvent::NOT_HANDLED;
 }
 
 GCFEvent::TResult AVTStationReceptorGroup::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concrete_releasing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
@@ -395,6 +382,7 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_releasing_state(GCFEvent& ev
 
 void AVTStationReceptorGroup::handlePropertySetAnswer(GCFEvent& answer)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   switch(answer.signal)
   {
     case F_MYPS_ENABLED:
@@ -422,7 +410,7 @@ void AVTStationReceptorGroup::handlePropertySetAnswer(GCFEvent& answer)
       }
       else
       {
-        LOG_ERROR(formatString("%s : apc %s NOT LOADED",getName().c_str(),pConfAnswer->pApcName));
+        LOG_WARN(formatString("%s : apc %s NOT LOADED",getName().c_str(),pConfAnswer->pApcName));
       }
       break;
     }
@@ -483,7 +471,7 @@ void AVTStationReceptorGroup::handlePropertySetAnswer(GCFEvent& answer)
 
 void AVTStationReceptorGroup::concreteClaim(GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concreteClaim",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // claim my own resources
   AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
   
@@ -500,7 +488,7 @@ void AVTStationReceptorGroup::concreteClaim(GCFPortInterface& /*port*/)
 
 void AVTStationReceptorGroup::concretePrepare(GCFPortInterface& /*port*/,string& parameters)
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concretePrepare",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // prepare my own resources
   vector<string> decodedParameters;
   AVTUtilities::decodeParameters(parameters,decodedParameters);
@@ -518,7 +506,7 @@ void AVTStationReceptorGroup::concretePrepare(GCFPortInterface& /*port*/,string&
 
 void AVTStationReceptorGroup::concreteResume(GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concreteResume",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // resume my own resources
   
   // send resume message to receptors
@@ -528,7 +516,7 @@ void AVTStationReceptorGroup::concreteResume(GCFPortInterface& /*port*/)
 
 void AVTStationReceptorGroup::concreteSuspend(GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concreteSuspend",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // suspend my own resources
   
   // send suspend message to receptors
@@ -538,7 +526,7 @@ void AVTStationReceptorGroup::concreteSuspend(GCFPortInterface& /*port*/)
 
 void AVTStationReceptorGroup::concreteRelease(GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concreteRelease",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   // release my own resources
   AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
   

@@ -25,6 +25,7 @@
 
 //# Includes
 //# Common Includes
+#include <Common/LofarLogger.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 
@@ -59,6 +60,8 @@ class AVTUtilities
     AVTUtilities& operator=(const AVTUtilities&);
 
   private:
+
+      ALLOC_TRACER_CONTEXT  
 };
 
 };//AVT

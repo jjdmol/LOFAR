@@ -34,18 +34,22 @@ include_HEADERS = \
 	$(top_builddir)/src/LogicalDevice_Protocol.ph
 
 BUILT_SOURCES = \
-	LogicalDevice_Protocol.ph
+	LogicalDevice_Protocol.ph \
+	LogicalDeviceServer.conf \
+	LogicalDeviceServer.log_prop
 	
 EXTRA_DIST = \
-  LogicalDevice_Protocol.ph 
-  
+  LogicalDevice_Protocol.ph \
+	LogicalDeviceServer.conf \
+	LogicalDeviceServer.log_prop
+
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
 configfiles_DATA= \
 	LogicalDeviceServer.conf \
-	log4cplus.properties
+	LogicalDeviceServer.log_prop
 	
-%.properties: $(MAC_CONFIG)/%.properties
+%.log_prop: %.log_prop.in
 	cp $< $@
 	
 %.conf: %.conf.in

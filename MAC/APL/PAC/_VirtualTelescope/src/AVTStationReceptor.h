@@ -26,6 +26,7 @@
 //# Includes
 //# Common Includes
 #include <time.h>
+#include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 #include <list>
 #include <map>
@@ -106,6 +107,8 @@ namespace AVT
       double            m_frequency;
       TExtPropertyMap             m_requiredResources;
       std::map<std::string,bool>  m_requiredResourcesStatus;
+
+      ALLOC_TRACER_CONTEXT  
   };
 };//AVT
 };//LOFAR

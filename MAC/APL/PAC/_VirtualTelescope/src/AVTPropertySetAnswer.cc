@@ -20,6 +20,7 @@
 //#
 //#  $Id$
 
+#include <Common/LofarLogger.h>
 #include <APLCommon/APL_Defines.h>
 #include "AVTPropertySetAnswer.h"
 #include "AVTPropertySetAnswerHandlerInterface.h"
@@ -27,16 +28,18 @@
 using namespace LOFAR;
 using namespace AVT;
 
+INIT_TRACER_CONTEXT(AVTPropertySetAnswer,LOFARLOGGER_PACKAGE);
+
 AVTPropertySetAnswer::AVTPropertySetAnswer(AVTPropertySetAnswerHandlerInterface& handler) :
   GCFAnswer(),
   m_handler(handler)
 {
-  LOG_DEBUG(formatString("AVTPropertySetAnswer::AVTPropertySetAnswer"));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,"propertySetAnswer");
 }
 
 AVTPropertySetAnswer::~AVTPropertySetAnswer()
 {
-  LOG_DEBUG(formatString("AVTPropertySetAnswer::~AVTPropertySetAnswer"));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,"propertySetAnswer");
 }
 
 void AVTPropertySetAnswer::handleAnswer(GCFEvent& answer)

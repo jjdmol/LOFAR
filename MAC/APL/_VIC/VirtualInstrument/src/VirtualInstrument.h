@@ -26,6 +26,7 @@
 //# Includes
 
 //# GCF Includes
+#include <GCF/PAL/GCF_ExtPropertySet.h>
 
 //# local includes
 #include <APLCommon/LogicalDevice.h>
@@ -57,26 +58,31 @@ namespace AVI
       // protected assignment operator
       VirtualInstrument& operator=(const VirtualInstrument&);
 
+      virtual void concrete_handlePropertySetAnswer(::GCFEvent& answer);
       /**
       * Initial state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_initial_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE);
+      virtual ::GCFEvent::TResult concrete_initial_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState);
+      /**
+      * Idle state additional behaviour must be implemented in the derived classes. 
+      */
+      virtual ::GCFEvent::TResult concrete_idle_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState);
       /**
       * Claiming state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_claiming_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE);
+      virtual ::GCFEvent::TResult concrete_claiming_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState);
       /**
       * Preparing state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_preparing_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE);
+      virtual ::GCFEvent::TResult concrete_preparing_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState);
       /**
       * active state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_active_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE);
+      virtual ::GCFEvent::TResult concrete_active_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState);
       /**
       * Releasing state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_releasing_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE);
+      virtual ::GCFEvent::TResult concrete_releasing_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState);
 
       /**
       * Implementation of the Claim method is done in the derived classes. 
@@ -110,6 +116,12 @@ namespace AVI
     protected:    
 
     private:
+      typedef boost::shared_ptr<GCFExtPropertySet>        TGCFExtPropertySetPtr;
+      typedef std::map<std::string,TGCFExtPropertySetPtr> TString2PropsetMap;
+      
+      TString2PropsetMap m_vtSchedulerPropertySets;
+
+      ALLOC_TRACER_CONTEXT  
   };
 };//APLCommon
 };//LOFAR
