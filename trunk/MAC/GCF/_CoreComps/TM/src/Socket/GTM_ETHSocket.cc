@@ -32,6 +32,7 @@
 #include <net/if_arp.h>
 #include <sys/ioctl.h>
 #include <stdio.h>
+#include <string.h>
 
 //#required includes according to man packet(7)
 #include <sys/socket.h>
@@ -58,13 +59,13 @@ GTMETHSocket::~GTMETHSocket()
 
 ssize_t GTMETHSocket::send(void* buf, size_t count)
 {
-  ssize_t result;
+  ssize_t result = 0;
   memcpy(_sendPacketData, (char*)buf, count);
   result = sendto(_socketFD, 
                   _sendPacket, 
                   count + sizeof(struct ethhdr), 0,
                  (struct sockaddr*)&_sockaddr,
-                  sizeof(sockaddr));
+                  sizeof(struct sockaddr_ll));
   return result - sizeof(struct ethhdr);
 }
 
@@ -87,7 +88,7 @@ ssize_t GTMETHSocket::recv(void* buf, size_t count)
 }
 
 int GTMETHSocket::open(const char* ifname,
-       const char* destMacStr)
+		       const char* destMacStr)
 {
   if (_socketFD > -1)
     return 0;
@@ -98,15 +99,35 @@ int GTMETHSocket::open(const char* ifname,
     
     // open the raw socket
     socketFD = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
-    if (socketFD < 0) return _socketFD;
-  
-    // find MAC address for specified interface
+    if (socketFD < 0)
+    {
+	LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, ( 
+			    "open(PF_PACKET)"));
+	LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (strerror(errno)));
+	return socketFD;
+    }
+
+    // make large send/recv buffers
+    int val = 262144;
+    if (setsockopt(socketFD, SOL_SOCKET, SO_RCVBUF, &val, sizeof(val)) < 0) 
+    {
+	LOFAR_LOG_WARN(TM_STDOUT_LOGGER, ("setsockopt(SO_RCVBUF)"));
+	LOFAR_LOG_WARN(TM_STDOUT_LOGGER, (strerror(errno)));	
+    }
+    if (setsockopt(socketFD, SOL_SOCKET, SO_SNDBUF, &val, sizeof(val)) < 0) 
+    {
+	LOFAR_LOG_WARN(TM_STDOUT_LOGGER, ("setsockopt(SO_SNDBUF)"));
+	LOFAR_LOG_WARN(TM_STDOUT_LOGGER, (strerror(errno)));	
+    }
+
+   // find MAC address for specified interface
     struct ifreq ifr;
     strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
-    if (ioctl(_socketFD, SIOCGIFHWADDR, &ifr) < 0)
+    if (ioctl(socketFD, SIOCGIFHWADDR, &ifr) < 0)
     {
       LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, ( 
-          "ioctl(SIOCGIFHWADDR)"));
+          "ioctl(SIOCGIFHWADDR) "));
+      LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, (strerror(errno)));
       close();
       return -1;
     }
@@ -169,10 +190,12 @@ int GTMETHSocket::open(const char* ifname,
     _sockaddr.sll_protocol = htons(ETH_P_ALL);
     _sockaddr.sll_ifindex = ifindex;
     _sockaddr.sll_hatype = ARPHRD_ETHER;
-    if (bind(socketFD, (struct sockaddr*)&_sockaddr, sizeof(sockaddr)) < 0)
+    if (bind(socketFD, (struct sockaddr*)&_sockaddr,
+	     sizeof(struct sockaddr_ll)) < 0)
     {
         LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, ( 
             "GCFETHRawPort::open; bind"));
+	LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, (strerror(errno)));
         close();
         return -1;
     }
