@@ -1,6 +1,6 @@
-//# LofarTypedefs.h
+//# DataFormat.h: Get the data format (endian type)
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,32 +20,28 @@
 //#
 //#  $Id$
 
-#ifndef COMMON_LOFARTYPEDEFS_H
-#define COMMON_LOFARTYPEDEFS_H
+#ifndef COMMON_DATAFORMAT_H
+#define COMMON_DATAFORMAT_H
 
-#include <complex>
-#include <unistd.h>
 
-namespace LOFAR {
+#include <config.h>
 
-  // Convenience shortcuts.
-  typedef unsigned char        uchar;
-  typedef unsigned short       ushort;
-  typedef unsigned int         uint;
-  typedef unsigned long        ulong;
-  typedef long long            longlong;
-  typedef unsigned long long   ulonglong;
-  typedef long double          ldouble;
-  typedef std::complex<float>  fcomplex;
-  typedef std::complex<double> dcomplex;
+// This file defines the data format on a machine.
+// Currently only little and big endian is possible with floating point
+// numbers as IEEE and characters in the ASCII representation.
+// It is used in the Blob classes and the DataConvert functions.
 
-  // Fixed data sizes.
-  typedef short               int16;
-  typedef int                 int32;
-  typedef long long           int64;
-  typedef unsigned short     uint16;
-  typedef unsigned int       uint32;
-  typedef unsigned long long uint64;
+namespace LOFAR
+{
+  enum DataFormat {LittleEndian=0, BigEndian=1};
+
+  // Get the endian type on this machine.
+  inline DataFormat dataFormat()
+#if defined(WORDS_BIGENDIAN)
+   {return BigEndian; }
+#else
+   {return LittleEndian; }
+#endif
 }
 
 

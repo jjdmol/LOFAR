@@ -1,8 +1,12 @@
 SUBDIRS	= shmem .
 
-DOCHDRS	=	\
+INSTHDRS = \
+Allocator.h BlobStringType.h BlobString.h \
+BlobHeader.h BlobArrayHeader.h BlobOStream.h BlobIStream.h BlobArray.h \
+BlobIBuffer.h BlobIBufStream.h BlobOBuffer.h BlobOBufStream.h \
+BlobIBufChar.h BlobIBufVector.h BlobOBufChar.h BlobOBufVector.h \
+LofarTypedefs.h LofarTypes.h TypeNames.h DataFormat.h DataConvert.h \
 Debug.h \
-LofarTypes.h \
 Exception.h \
 Net/Socket.h \
 Thread/Thread.h \
@@ -28,9 +32,25 @@ lofar_iosfwd.h					\
 lofar_string.h					\
 Profiling/PerfProfile.h
 
+NOINSTHDRS =
+
+TCCHDRS = \
+BlobHeader.tcc BlobArray.tcc TypeNames.tcc
+
+include_HEADERS = $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS = $(NOINSTHDRS)
+
+DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
+
 lib_LTLIBRARIES 	= libcommon.la
 
-libcommon_la_SOURCES 	= $(DOCHDRS) \
+libcommon_la_SOURCES 	= \
+Allocator.cc BlobStringType.cc BlobString.cc \
+BlobOStream.cc BlobIStream.cc BlobArray.cc \
+BlobIBufStream.cc BlobOBufStream.cc BlobOBufString.cc \
+BlobIBufChar.cc BlobOBufChar.cc \
+TypeNames.cc DataConvert.cc \
 Debug.cc \
 Exception.cc \
 Stopwatch.cc \
