@@ -44,7 +44,7 @@ EchoWP::EchoWP (int pingcount)
   //## begin EchoWP::EchoWP%3C7E49B60327.body preserve=yes
   blocksize = 64;
   pipeline = 1;
-  invert = True;
+  invert = 1;
   fill = 0x07070707;
   msgcount = bytecount = 0;
   timecount = 0;
@@ -67,24 +67,21 @@ void EchoWP::init ()
   //## begin EchoWP::init%3C7F884A007D.body preserve=yes
   WorkProcess::init();
   
-  dsp()->getOption("bs",blocksize);
-  lprintf(0,"setting blocksize = %d KB\n",blocksize);
+  config.get("bs",blocksize);
+  lprintf(0,"blocksize = %d KB\n",blocksize);
   blocksize *= 1024/sizeof(int);
  
-  dsp()->getOption("pc",pcount); 
-  lprintf(0,"setting pingcount = %d\n",pcount);
+  config.get("pc",pcount); 
+  lprintf(0,"pingcount = %d\n",pcount);
 
-  dsp()->getOption("pipe",pipeline);  
-  lprintf(0,"setting pipeline = %d\n",pipeline);
+  config.get("pipe",pipeline);  
+  lprintf(0,"pipeline = %d\n",pipeline);
 
-  dsp()->getOption("fill",fill);  
-  lprintf(0,"setting fill = %d\n",fill);
+  config.get("fill",fill);  
+  lprintf(0,"fill = %d\n",fill);
   
-  int inv;
-  if( dsp()->getOption("invert",inv) )
-    invert = inv;
-  lprintf(0,"setting invert = %d\n",(int)invert);
-  
+  config.get("invert",invert);
+  lprintf(0,"invert = %d\n",(int)invert);
 
   if( !pcount )
     subscribe("Ping");

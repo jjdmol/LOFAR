@@ -19,6 +19,7 @@
 
 //## begin module%3C95AADB0170.includes preserve=yes
 #include "Gateways.h"
+#include "GWServerWP.h"
 //## end module%3C95AADB0170.includes
 
 // GWClientWP
@@ -40,27 +41,56 @@ const Timeval ReconnectTimeout(.2),
 // Class GWClientWP 
 
 GWClientWP::GWClientWP (const string &host, int port, int type)
-  //## begin GWClientWP::GWClientWP%3C95A9410081.hasinit preserve=no
-  //## end GWClientWP::GWClientWP%3C95A9410081.hasinit
-  //## begin GWClientWP::GWClientWP%3C95A9410081.initialization preserve=yes
+  //## begin GWClientWP::GWClientWP%3CD0167B021B.hasinit preserve=no
+  //## end GWClientWP::GWClientWP%3CD0167B021B.hasinit
+  //## begin GWClientWP::GWClientWP%3CD0167B021B.initialization preserve=yes
   : WorkProcess(AidGWClientWP),
     peerref(new DataRecord,DMI::ANONWR),
     peerlist(dynamic_cast<DataRecord&>(peerref.dewr()))
-  //## end GWClientWP::GWClientWP%3C95A9410081.initialization
+  //## end GWClientWP::GWClientWP%3CD0167B021B.initialization
 {
-  //## begin GWClientWP::GWClientWP%3C95A9410081.body preserve=yes
+  //## begin GWClientWP::GWClientWP%3CD0167B021B.body preserve=yes
   // add default connection, if specified
   if( host.length() )
   {
     FailWhen(!port,"both host and port must be specified");
     addConnection(host,port,type);
   }
-  setState(STOPPED);
+  // add connections from config
+  string peers;
+  if( config.get("gwpeer",peers) )
+  {
+    while( peers.length() )
+    {
+      // split into "host1:port1,host2:port2,", etc.
+      string peer;
+      size_t pos = peers.find_first_of(',');
+      if( pos != string::npos )
+      {
+        peer = peers.substr(0,pos);
+        peers = peers.substr(pos+1);
+      }
+      else
+      {
+        peer = peers;
+        peers = "";
+      }
+      pos = peer.find_first_of(':');
+      FailWhen(pos == string::npos || !pos,"malformed 'gwpeer' specification");
+      string host = peer.substr(0,pos);
+      int port = atoi(peer.substr(pos+1).c_str());
+      int type = ( host[0] == '=' || host.find_first_of('/') != string::npos )
+                 ? Socket::UNIX : Socket::TCP;
+      addConnection(host,port,type);
+    }
+  }
+  
   // get the local hostname
   char hname[1024];
   FailWhen(gethostname(hname,sizeof(hname))<0,"gethostname(): "+string(strerror(errno)));
   hostname = hname;
-  //## end GWClientWP::GWClientWP%3C95A9410081.body
+  setState(STOPPED);
+  //## end GWClientWP::GWClientWP%3CD0167B021B.body
 }
 
 
@@ -267,9 +297,9 @@ int GWClientWP::receive (MessageRef& mref)
       int port = msg[AidPort];
       if( removeConnection(host,port) )
         lprintf(2,LogNormal,"removed duplicate connection %s:%d",host.c_str(),port);
-      else
-        lprintf(2,LogWarning,"%s:%d not known, ignoring [%s]",
-            host.c_str(),port,msg.sdebug(1).c_str());
+//      else
+//        lprintf(2,LogWarning,"%s:%d not known, ignoring [%s]",
+//            host.c_str(),port,msg.sdebug(1).c_str());
     }
   }
   // bye message from child? Reopen its gateway then
@@ -420,4 +450,65 @@ void GWClientWP::tryConnect (Connection &cx)
 }
   //## end GWClientWP%3C95A941002E.declarations
 //## begin module%3C95AADB0170.epilog preserve=yes
+void initGateways (Dispatcher &dsp)
+{
+  dsp.attach(new GWServerWP(-1),DMI::ANON);
+  dsp.attach(new GWServerWP("",0),DMI::ANON);
+  dsp.attach(new GWClientWP,DMI::ANON);
+}
+
 //## end module%3C95AADB0170.epilog
+
+
+// Detached code regions:
+#if 0
+//## begin GWClientWP::GWClientWP%3C95A9410081.initialization preserve=yes
+  : WorkProcess(AidGWClientWP),
+    peerref(new DataRecord,DMI::ANONWR),
+    peerlist(dynamic_cast<DataRecord&>(peerref.dewr()))
+//## end GWClientWP::GWClientWP%3C95A9410081.initialization
+
+//## begin GWClientWP::GWClientWP%3C95A9410081.body preserve=yes
+  // add default connection, if specified
+  if( host.length() )
+  {
+    FailWhen(!port,"both host and port must be specified");
+    addConnection(host,port,type);
+  }
+  // add connections from config
+  string peers;
+  if( config.get("gwpeer",peers) )
+  {
+    while( peers.length() )
+    {
+      // split into "host1:port1,host2:port2,", etc.
+      string peer;
+      size_t pos = peers.find_first_of(',');
+      if( pos != string::npos )
+      {
+        peer = peers.substr(0,pos);
+        peers = peers.substr(pos+1);
+      }
+      else
+      {
+        peer = peers;
+        peers = "";
+      }
+      pos = peer.find_first_of(':');
+      FailWhen(pos == string::npos || !pos,"malformed 'gwpeer' specification");
+      string host = peer.substr(0,pos);
+      int port = atoi(peer.substr(pos+1).c_str());
+      int type = ( host[0] == '=' || host.find_first_of('/') != string::npos )
+                 ? Socket::UNIX : Socket::TCP;
+      addConnection(host,port,type);
+    }
+  }
+  
+  // get the local hostname
+  char hname[1024];
+  FailWhen(gethostname(hname,sizeof(hname))<0,"gethostname(): "+string(strerror(errno)));
+  hostname = hname;
+  setState(STOPPED);
+//## end GWClientWP::GWClientWP%3C95A9410081.body
+
+#endif

@@ -21,6 +21,7 @@
 #include <sys/time.h>
 #include <errno.h>
 #include <string.h>
+#include "OctopussyConfig.h"
 //## end module%3C7B7F30004B.includes
 
 // WPInterface
@@ -57,50 +58,40 @@ void Dispatcher::signalHandler (int signum,siginfo_t *,void *)
 
 // Class Dispatcher 
 
-Dispatcher::Dispatcher (AtomicID process, AtomicID host, int argc, const char **argv, int hz)
+Dispatcher::Dispatcher (AtomicID process, AtomicID host, int hz)
   //## begin Dispatcher::Dispatcher%3C7CD444039C.hasinit preserve=no
   //## end Dispatcher::Dispatcher%3C7CD444039C.hasinit
   //## begin Dispatcher::Dispatcher%3C7CD444039C.initialization preserve=yes
     : DebugContext("Dsp",PSCFDebugContext::DebugContext),
-      heartbeat_hz(hz)
+      heartbeat_hz(hz),
+      config(OctopussyConfig::global())
   //## end Dispatcher::Dispatcher%3C7CD444039C.initialization
 {
   //## begin Dispatcher::Dispatcher%3C7CD444039C.body preserve=yes
-  if( dispatcher )
-    Throw("multiple Dispatchers instantiated");
-  
-//  long hostid = gethostid();
-//  printf("host id: %lx\n",hostid);
-  
-  dispatcher = this;
   address = MsgAddress(AidDispatcher,0,process,host);
-  running = in_start = False;
-
-  // store command line
-  DataField *field = new DataField(Tpstring,argc);
-  ObjRef fref(field,DMI::ANONRO);
-  addLocalData(AidArgv,fref);
-  commandLine.resize(argc);
-  for( int i=0; i<argc; i++ ) 
-  {
-    commandLine[i] = argv[i];
-    (*field)[i] = argv[i];
-  }
-  
-  // set the log levels
-  int lev;
-  if( getOption("-lc",lev) || getOption("-l",lev) )
-    WPInterface::setLogLevel(lev);
-  
-  memset(orig_sigaction,0,sizeof(orig_sigaction));
-  
-  sigemptyset(&raisedSignals);
-  sigemptyset(&allSignals);
-  
-  poll_depth = -1;
-  
-  dprintf(1)("created\n");
+  // init everything
+  init();
   //## end Dispatcher::Dispatcher%3C7CD444039C.body
+}
+
+Dispatcher::Dispatcher (int hz)
+  //## begin Dispatcher::Dispatcher%3CD012B70209.hasinit preserve=no
+  //## end Dispatcher::Dispatcher%3CD012B70209.hasinit
+  //## begin Dispatcher::Dispatcher%3CD012B70209.initialization preserve=yes
+    : DebugContext("Dsp",PSCFDebugContext::DebugContext),
+      heartbeat_hz(hz),
+      config(OctopussyConfig::global())
+  //## end Dispatcher::Dispatcher%3CD012B70209.initialization
+{
+  //## begin Dispatcher::Dispatcher%3CD012B70209.body preserve=yes
+  // check that required config items have been found
+  int hostid = 0;
+  if( !config.get("hostid",hostid) )
+    dprintf(0)("warning: hostid not configured, using 1\n");
+  // setup address
+  address = MsgAddress(AidDispatcher,0,getpid(),hostid);
+  init();
+  //## end Dispatcher::Dispatcher%3CD012B70209.body
 }
 
 
@@ -117,12 +108,36 @@ Dispatcher::~Dispatcher()
 
 
 //## Other Operations (implementation)
+void Dispatcher::init ()
+{
+  //## begin Dispatcher::init%3CD014D00180.body preserve=yes
+  if( dispatcher )
+    Throw("multiple Dispatchers initialized");
+  dispatcher = this;
+  // set the log levels
+  int lev;
+  if( config.get("wploglevel",lev) || 
+      config.getOption("lc",lev) || 
+      config.getOption("l",lev) )
+    WPInterface::setLogLevel(lev);
+  // set the frequency
+  config.get("hz",heartbeat_hz);
+  // init internals
+  memset(orig_sigaction,0,sizeof(orig_sigaction));
+  sigemptyset(&raisedSignals);
+  sigemptyset(&allSignals);
+  running = in_start = False;
+  poll_depth = -1;
+  dprintf(1)("created\n");
+  //## end Dispatcher::init%3CD014D00180.body
+}
+
 const MsgAddress & Dispatcher::attach (WPRef &wpref)
 {
   //## begin Dispatcher::attach%3C8CDDFD0361.body preserve=yes
   FailWhen( !wpref.isWritable(),"writable ref required" ); 
   WPInterface & wp = wpref;
-  FailWhen( wp.isAttached(),"wp is already attached" );
+  FailWhen( wp.isAttached() && wp.dsp() != this,"wp is already attached" );
   // assign instance number to this WP
   AtomicID wpclass = wp.address().wpclass();
   int ninst = wp_instances[wpclass]++;
@@ -599,48 +614,6 @@ bool Dispatcher::getWPIter (Dispatcher::WPIter &iter, WPID &wpid, const WPInterf
   //## end Dispatcher::getWPIter%3C98D47B02B9.body
 }
 
-bool Dispatcher::getOption (const string &name, string &out)
-{
-  //## begin Dispatcher::getOption%3CA0329D0045.body preserve=yes
-  string cmp = name,res;
-  if( name[0] != '-' )
-    cmp += "=";
-  for( uint i = 0; i < commandLine.size(); i++ )
-  {
-    if( !commandLine[i].compare(cmp,0,cmp.length()) )
-    {
-      res = commandLine[i].substr(cmp.length());
-      if( res.length() )
-      {
-        out = res;
-        return True;
-      }
-      // for dash-style options, fetch next arg if this one is empty
-      if( name[0] == '-' && i < commandLine.size()-1 )
-      {
-        out = commandLine[i+1];
-        return True;
-      }
-      return False;
-    }
-  }
-  return False;
-  //## end Dispatcher::getOption%3CA0329D0045.body
-}
-
-bool Dispatcher::getOption (const string &name, int &out)
-{
-  //## begin Dispatcher::getOption%3CA0341E03A6.body preserve=yes
-  string ostr;
-  if( getOption(name,ostr) )
-  {
-    out = atoi(ostr.c_str());
-    return True;
-  }
-  return False;
-  //## end Dispatcher::getOption%3CA0341E03A6.body
-}
-
 void Dispatcher::addLocalData (const HIID &id, ObjRef ref)
 {
   //## begin Dispatcher::addLocalData%3CBEDDD8001A.body preserve=yes
@@ -913,13 +886,3 @@ string Dispatcher::sdebug ( int detail,const string &,const char *name ) const
   //## end Dispatcher%3C7B6A3E00A0.declarations
 //## begin module%3C7B7F30004B.epilog preserve=yes
 //## end module%3C7B7F30004B.epilog
-
-
-// Detached code regions:
-#if 0
-//## begin Dispatcher::localData%3CBEDDED01B5.body preserve=yes
-  return localData[id];
-  return localData[id];
-//## end Dispatcher::localData%3CBEDDED01B5.body
-
-#endif

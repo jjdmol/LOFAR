@@ -540,7 +540,12 @@ int GatewayWP::input (int fd, int flags)
             read_bset.clear();
           }
           else
+          {
             processIncoming();     // process the incoming message
+            // if peer is being closed, return immediately
+            if( peerState() == CLOSING )
+              return Message::CANCEL;
+          }
         }
         // expect header next
         readyForHeader(); // sets buffers and read states accordingly
@@ -770,11 +775,11 @@ void GatewayWP::processIncoming()
       // (this really ought not to happen)
       if( (*peerlist)[peerid].exists() )
       {
-        lprintf(1,LogError,"already connected to %s (%s:%s %s), closing gateway",
-            peerid.toString().c_str(),
-            (*peerlist)[peerid][AidHost].as_string().c_str(),
-            (*peerlist)[peerid][AidPort].as_int(),
-            (*peerlist)[peerid][AidTimestamp].as_Timestamp().toString("%T").c_str());
+        lprintf(1,LogError,"already connected to %s (%s:%d %s), closing gateway",
+              peerid.toString().c_str(),
+             (*peerlist)[peerid][AidHost].as_string().c_str(),
+             (*peerlist)[peerid][AidPort].as_int(),
+             (*peerlist)[peerid][AidTimestamp].as_Timestamp().toString("%T").c_str());
         Message *msg1 = new Message(MsgGWRemoteDuplicate|peerid);
         MessageRef mref1; mref1 <<= msg1;
         (*msg1)[AidHost] = sock->host();

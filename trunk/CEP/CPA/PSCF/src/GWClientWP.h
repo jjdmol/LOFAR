@@ -73,8 +73,8 @@ class GWClientWP : public WorkProcess  //## Inherits: <unnamed>%3C95A941009C
 
   public:
     //## Constructors (specified)
-      //## Operation: GWClientWP%3C95A9410081
-      GWClientWP (const string &host = string(), int port = 0, int type = Socket::TCP);
+      //## Operation: GWClientWP%3CD0167B021B
+      GWClientWP (const string &host = "", int port = 0, int type = Socket::TCP);
 
     //## Destructor (generated)
       ~GWClientWP();
@@ -122,8 +122,6 @@ class GWClientWP : public WorkProcess  //## Inherits: <unnamed>%3C95A941009C
       //## end GWClientWP%3C95A941002E.protected
   private:
     //## Constructors (generated)
-      GWClientWP();
-
       GWClientWP(const GWClientWP &right);
 
     //## Assignment Operation (generated)

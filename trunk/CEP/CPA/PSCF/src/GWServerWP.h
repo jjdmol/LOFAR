@@ -61,10 +61,10 @@ class GWServerWP : public WorkProcess  //## Inherits: <unnamed>%3C8F943E01B2
   public:
     //## Constructors (specified)
       //## Operation: GWServerWP%3C8F95710177
-      GWServerWP (int port1);
+      GWServerWP (int port1 = -1);
 
       //## Operation: GWServerWP%3CC95151026E
-      GWServerWP (const string &path, int port1);
+      GWServerWP (const string &path = "", int port1 = -1);
 
     //## Destructor (generated)
       ~GWServerWP();
@@ -102,8 +102,6 @@ class GWServerWP : public WorkProcess  //## Inherits: <unnamed>%3C8F943E01B2
       //## end GWServerWP%3C8F942502BA.protected
   private:
     //## Constructors (generated)
-      GWServerWP();
-
       GWServerWP(const GWServerWP &right);
 
     //## Assignment Operation (generated)

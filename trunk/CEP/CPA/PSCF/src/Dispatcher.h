@@ -29,6 +29,8 @@
 #include <unistd.h>
 #include <stack>
 #include "Timestamp.h"
+#include "ConfigMgr.h"
+#include "OctopussyConfig.h"
 //## end module%3C7B7F300041.includes
 
 // WPInterface
@@ -97,7 +99,10 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
   public:
     //## Constructors (specified)
       //## Operation: Dispatcher%3C7CD444039C
-      Dispatcher (AtomicID process, AtomicID host, int argc = 0, const char **argv = 0, int hz = 100);
+      Dispatcher (AtomicID process, AtomicID host, int hz = 100);
+
+      //## Operation: Dispatcher%3CD012B70209
+      Dispatcher (int hz = 100);
 
     //## Destructor (generated)
       ~Dispatcher();
@@ -178,12 +183,6 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       //	iterator. Returns False when iterator becomes invalid.
       bool getWPIter (Dispatcher::WPIter &iter, WPID &wpid, const WPInterface *&pwp);
 
-      //## Operation: getOption%3CA0329D0045
-      bool getOption (const string &name, string &out);
-
-      //## Operation: getOption%3CA0341E03A6
-      bool getOption (const string &name, int &out);
-
       //## Operation: addLocalData%3CBEDDD8001A
       void addLocalData (const HIID &id, ObjRef ref);
 
@@ -215,7 +214,9 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
 
     // Additional Public Declarations
       //## begin Dispatcher%3C7B6A3E00A0.public preserve=yes
-      
+      // pointer to static dispatcher object
+      static Dispatcher * dispatcher;
+
       // internal data structures
       // EventInfo is a base struct for all system events.
       // Contains pointer to WPI, plus a template for the event message
@@ -289,8 +290,6 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       // when <0, means no poll() calls should be made.
       int poll_depth;
         
-      // pointer to static dispatcher object
-      static Dispatcher * dispatcher;
       // set of raised signals/all handled signals
       static sigset_t raisedSignals,allSignals;
       // original sigactions for all signals
@@ -338,12 +337,15 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       //## end Dispatcher%3C7B6A3E00A0.protected
   private:
     //## Constructors (generated)
-      Dispatcher();
-
       Dispatcher(const Dispatcher &right);
 
     //## Assignment Operation (generated)
       Dispatcher & operator=(const Dispatcher &right);
+
+
+    //## Other Operations (specified)
+      //## Operation: init%3CD014D00180
+      void init ();
 
     // Additional Private Declarations
       //## begin Dispatcher%3C7B6A3E00A0.private preserve=yes
@@ -396,6 +398,8 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       // WPs attached during Dispatcher::start() temporarily go here.
       // This is done to avoid upsetting the iterators.
       stack<WPRef> attached_wps;
+      
+      const OctopussyConfig & config;
       //## end Dispatcher%3C7B6A3E00A0.implementation
 };
 

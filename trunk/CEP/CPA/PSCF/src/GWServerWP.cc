@@ -47,6 +47,9 @@ GWServerWP::GWServerWP (int port1)
   //## end GWServerWP::GWServerWP%3C8F95710177.initialization
 {
   //## begin GWServerWP::GWServerWP%3C8F95710177.body preserve=yes
+  // get port from config if not specified explicitly
+  if( port<0 )
+    config.get("gwport",port,4808);
   // get the local hostname
   char hname[1024];
   FailWhen(gethostname(hname,sizeof(hname))<0,"gethostname(): "+string(strerror(errno)));
@@ -62,7 +65,31 @@ GWServerWP::GWServerWP (const string &path, int port1)
   //## end GWServerWP::GWServerWP%3CC95151026E.initialization
 {
   //## begin GWServerWP::GWServerWP%3CC95151026E.body preserve=yes
+  // get path from config, if not specified explicitly
   hostname = path;
+  if( !hostname.length() )
+  {
+    config.get("gwpath",hostname,"=octopussy-%U");
+    // check if port number is part of pathname --
+    //    find last segment after ":", and check that it is all digits
+    size_t pos0 = hostname.find_last_of(':');
+    if( pos0 != string::npos )
+    {
+      size_t pos = pos0+1;
+      for( ; pos < hostname.length(); pos++ )
+        if( !isdigit(hostname[pos]) )
+          break;
+      if( pos >= hostname.length() )
+      {
+        port = atoi(hostname.substr(pos0+1).c_str());
+        hostname = hostname.substr(0,pos0);
+      }
+    }
+    // if hostname contains a "@U" string, replace with uid
+    string uid = Debug::ssprintf("%d",(int)getuid());
+    while( (pos0 = hostname.find_first_of("%U")) != string::npos )
+      hostname = hostname.substr(0,pos0) + uid + hostname.substr(pos0+2);
+  }
   //## end GWServerWP::GWServerWP%3CC95151026E.body
 }
 

@@ -11,6 +11,7 @@ lib_LTLIBRARIES = liboctopussy.la
 liboctopussy_la_SOURCES = Dispatcher.cc  Message.cc  MsgAddress.cc  \
 	WPInterface.cc WorkProcess.cc Timestamp.cc PSCFDebugContext.cc \
   GWClientWP.cc GWServerWP.cc GatewayWP.cc LoggerWP.cc \
+  OctopussyConfig.cc \
   Socket.cc Subscriptions.cc \
   AID-PSCF-Registry.cc
   
