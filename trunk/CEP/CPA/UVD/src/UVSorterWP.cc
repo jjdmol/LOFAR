@@ -166,10 +166,7 @@ int UVSorterWP::receive (MessageRef &mref)
         acc[FExposure][itime] = rec[FExposure][ifr].as_double();
         acc[FNumIntTimes][itime] = rec[FNumIntTimes][ifr].as_int();
         for( int j=0; j<3; j++ )
-        {
-          double x = rec[FUVW](j,ifr);
-          acc[FUVW](j,itime) = x;
-        }
+          acc[FUVW](j,itime) = rec[FUVW](j,ifr).as_double();
         // use memcpy to transfer Data and NumIntPixels vectors
         dcomplex *pvd = &acc[FData];
         int *pnp = &acc[FNumIntPixels];
