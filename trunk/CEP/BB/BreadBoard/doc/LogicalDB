@@ -1,0 +1,54 @@
+--*-- text --*--
+
+Herein the logical database model is described, as it is to be used by
+the blackboard patern for the SelfCal application of LOFAR. The idea
+is that several analysis threads can exist simultaneously. In each of
+these threads several processes are active. In our blackboard model we
+have the folowing KnowledgeSources
+
++ A SelfCalEngine. Which contains processes at several nodes. There
+  are a solve process and an array of predict processes.
+
++ A SelfCalController starts engines and forks new child-threads if oportune.
+
++ A SelfCalWatcher that monitors threads and decides on what is or is
+not a dead end.
+
+All three have their controlling BB tables.
+
+A SelfcalEngine looks for a set of parameters on part of the data.
+
+A SelfcalEngine writes a record with globally the following structure.
+
+{meta-data}1, {next-action-type}1, {Quality}1, {p-name, p-value, p-delta}1-*
+
+meta-data will contain:
+
+{workload-id}1, {engine-id}1, {controller-id}1, {parent-id}1, {time}1, {frequency}1
+
++ the id for the SelfcalEngine that produced the result.
+
++ the id for the SelfcalController that created the workload.
+
++ the parent id of this workload. This could be a thread-id or the id
+  of another workload.
+
++ the time that the data was captured.
+
++ the frequency-range examined.
+
+A SelfcalController writes records of workloads like the
+SelfcalEngine, except the it does give a quality and it doesn't write
+the SelfcalEngine id. An engine writes its id in a record as it
+accepts it and starts the associated calculation. When it is finished
+it writes the deltas for all parameters and the Quality. 
+
+A SelfcalWatcher has to have access to the records of the engines. It
+has a domain to watch containing several analysis threads.
+
+{watcher-id}1 {controller-id}2-*
+
+A SelfcalController decides what the next step in a anaysis path
+should be.
+
+{controller-id}1, {strategy-description}1, {child-id}0-*
