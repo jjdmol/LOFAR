@@ -62,7 +62,8 @@ public:
 	void	useTable(const char	*tabelname);
 
 	// do work
-	void	add		(const void	*record);
+	int		add		(const char	*fields,
+					 const char *values);
 	int		remove	(const char	*condition);
 	int		find	(const char	*fields, 
 					 const char *condition, 
