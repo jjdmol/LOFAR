@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.8  2003/12/03 12:52:07  diepen
+//  %[ER: 38]%
+//  Fixed typo in documentation
+//
 //  Revision 1.7  2003/12/01 12:48:24  loose
 //  %[ER: 61]%
 //  Moved Exception class from namespace LCS to namespace LOFAR.
@@ -216,16 +220,16 @@ namespace LOFAR
 
 // This macro declares a local debug context within a class or namespace.
 #define LocalDebugContext \
-  private: static ::Debug::Context DebugContext; \
-  public: static inline ::Debug::Context & getDebugContext() \
+  static ::Debug::Context DebugContext; \
+  static inline ::Debug::Context & getDebugContext() \
             { return DebugContext; }
 // This macro declares a local sub-context within a class or namespace
 #define LocalDebugSubContext LocalDebugContext
 // This macro declares that this class uses the same context as declared
 // in another class or namespace.
 #define ImportDebugContext(other) \
-  public: static inline ::Debug::Context & getDebugContext() \
-            { return other::getDebugContext(); }
+  static inline ::Debug::Context & getDebugContext() \
+  { return other::getDebugContext(); }
 // This macro adds necessary implementation of a local debug context. If you
 // declare a local context, then this must be inserted in a .cc file
 // somewhere.
@@ -435,9 +439,9 @@ inline string sdebug (int=0) { return ""; };
 // The ThrowExc macro throws an exception of the specified type, using
 // CodeStatus to add on filename, line, current debugging context, and 
 // possible object debug status. 
-const char exception_message[] = "\n==================================== EXCEPTION ================================\n\n";
-#define ThrowExc(exc,msg)  { cdebug(1)<<exception_message<<CodeStatus(msg)<<endl; throw(exc(CodeStatus_nf(msg),__HERE__)); }
-#define ThrowExc1(exc,msg)  { cdebug1(1)<<exception_message<<CodeStatus1(msg)<<endl; throw(exc(CodeStatus_nf1(msg),__HERE__)); }
+const char exception_message[] = "\n==================================== EXCEPTION ================================\n";
+#define ThrowExc(exc,msg)  { cdebug(1)<<exception_message<<SourceFileLine<<" "<<CodeStatus(msg)<<endl; throw(exc(CodeStatus_nf(msg),__HERE__)); }
+#define ThrowExc1(exc,msg)  { cdebug1(1)<<exception_message<<SourceFileLine<<" "<<CodeStatus1(msg)<<endl; throw(exc(CodeStatus_nf1(msg),__HERE__)); }
 
 // Retain old Throw/Throw1 for compatibility. Throws LOFAR::Exception.
 #define Throw(msg)  ThrowExc(LOFAR::Exception,msg)
