@@ -22,6 +22,12 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2002/11/20 11:05:43  schaaf
+//
+//  %[BugId: 117]%
+//
+//  working initial version for Scali
+//
 //  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
 //  %[BugId: 117]%
 //
@@ -41,6 +47,7 @@
 class WH_FillTFMatrix;
 class WH_Delay;
 class WH_Transpose;
+class WH_PreCorrect;
 class WH_Correlate;
 class ParamBlock ;
 
@@ -66,23 +73,17 @@ class Pipeline: public Simulator
   
  private:
   /// Define pointers to the arrays with steps and workholders.
-    WH_FillTFMatrix **FillWH;
-    WH_Transpose    **TransWH;
-    WH_Correlate    **CorrWH;
-    Step            **FillSteps;
-    Step            **TransSteps;
-    Step            **CorrSteps;
-    
+  Step            **FillSteps;
+  Step            **TransSteps;
+  Step            **PreCSteps;
+  Step            **CorrSteps;
+  
     /// Number of source steps
    int itsSourceSteps;
    
    /// Number of destination steps
    int itsDestSteps;
 
-   /// Frequency Band size
-   int itsFreqs;
-   int itsTimeDim;
-   
    /// To Profile  or not....
    bool itsDoLogProfile;
 };
