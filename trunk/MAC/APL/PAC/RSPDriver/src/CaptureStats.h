@@ -38,7 +38,7 @@ class CaptureStats : public GCFTask, public Test
      * up connection establishment information using the GTMNameService and
      * GTMTopologyService classes.
      */
-    CaptureStats(string name, int type = 0, int device = 0, int n_devices = 1, int duration = 1);
+    CaptureStats(string name, int type = 0, int device = 0, int n_devices = 1, int duration = 1, int integration = 1);
     virtual ~CaptureStats();
 
     // state methods
@@ -57,9 +57,14 @@ class CaptureStats : public GCFTask, public Test
     GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
 
     /**
-     * Save statistics to file
+     * Load and integrate statistics
      */
     void capture_statistics(blitz::Array<double, 2>& stats);
+
+    /**
+     * Write statistics to file
+     */
+    void write_statistics(blitz::Array<double, 2>& stats);
 
     /**
      * Run the tests.
@@ -76,6 +81,10 @@ class CaptureStats : public GCFTask, public Test
     int m_device;
     int m_n_devices;
     int m_duration;
+    int m_integration;
+
+    blitz::Array<double, 2> m_values;
+    int m_nseconds;
 };
      
 #endif /* CAPTURESTATS_H_ */
