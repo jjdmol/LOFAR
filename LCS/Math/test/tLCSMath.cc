@@ -23,8 +23,7 @@
 #include <Math/LCSMath.h>
 #include <Common/Lorrays-Blitz.h>
 #include <Common/Debug.h>
-#include <aips/Utilities/GenSort.h>
-#include <aips/OS/Timer.h>
+#include <Common/Stopwatch.h>
 
 int main()
 {
@@ -34,11 +33,11 @@ int main()
     for (int i=0; i<n; i++) {
       vec(i) = n-i-1;
     }
-    Timer timer;
+    Stopwatch timer;
     for (int j=0; j<100; j++) {
       LCSMath::sort (vec);
     }
-    timer.show ("100x LCSMath 10^4 ");
+    cout << "100x LCSMath 10^4 " << timer.sdelta() << endl;
     for (int i=0; i<n; i++) {
       Assert (vec(i) == double(i));
     }
@@ -49,11 +48,11 @@ int main()
     for (int i=0; i<n; i++) {
       vec(i) = i;
     }
-    Timer timer;
+    Stopwatch timer;
     for (int j=0; j<100; j++) {
       LCSMath::sort (vec);
     }
-    timer.show ("100x LCSMath order");
+    cout << "100x LCSMath order" << timer.sdelta() << endl;
     for (int i=0; i<n; i++) {
       Assert (vec(i) == double(i));
     }
@@ -64,11 +63,11 @@ int main()
     for (int i=0; i<n; i++) {
       vec(i) = n-i-1;
     }
-    Timer timer;
+    Stopwatch timer;
     for (int j=0; j<100; j++) {
       LCSMath::sort (vec);
     }
-    timer.show ("100x LCSMath 10^5 ");
+    cout << "100x LCSMath 10^5 " << timer.sdelta() << endl;
     for (int i=0; i<n; i++) {
       Assert (vec(i) == double(i));
     }
@@ -79,11 +78,11 @@ int main()
     for (int i=0; i<n; i++) {
       vec(i) = n-i-1;
     }
-    Timer timer;
+    Stopwatch timer;
     for (int j=0; j<10; j++) {
       LCSMath::sort (vec);
     }
-    timer.show (" 10x LCSMath 10^6 ");
+    cout << " 10x LCSMath 10^6 " << timer.sdelta() << endl;
     for (int i=0; i<n; i++) {
       Assert (vec(i) == double(i));
     }
@@ -94,11 +93,11 @@ int main()
     for (int i=0; i<n; i++) {
       vec(i) = i;
     }
-    Timer timer;
+    Stopwatch timer;
     for (int j=0; j<10; j++) {
       LCSMath::sort (vec);
     }
-    timer.show (" 10x LCSMath order");
+    cout << " 10x LCSMath order" << timer.sdelta() << endl;
     for (int i=0; i<n; i++) {
       Assert (vec(i) == double(i));
     }
