@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,224 138 954 748 N "_3DFace" 2
+PANEL,281 138 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -165,7 +165,7 @@ CalculateTimeInterval(string dp1, int Days, string dp2, int Hours,
   setValue(\"Trend\" + TrendNumber, \"trendStop\");
   setValue(\"Trend\" + TrendNumber, \"timeInterval\", interval-starttime);
   setValue(\"Trend\" + TrendNumber, \"trendRun\");
-  DebugN(\"Days : \" +Days +\" Hours: \" +Hours+\" Minutes: \" +Minutes+\" Seconds: \" +Seconds);
+//  DebugN(\"Days : \" +Days +\" Hours: \" +Hours+\" Minutes: \" +Minutes+\" Seconds: \" +Seconds);
 }
 
 

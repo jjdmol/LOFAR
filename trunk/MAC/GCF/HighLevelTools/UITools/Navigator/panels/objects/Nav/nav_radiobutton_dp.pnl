@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,438 365 307 48 N "_3DFace" 2
+PANEL,498 733 307 48 N "_3DFace" 2
 "$dp"
 "$label"
 "main()
@@ -65,9 +65,16 @@ LANG:1 0
 E E 
 "main()
 {
-  bool state;
-  dpGet($dp + \":_online.._value\", state);  
-  btn_Active.state(0)=state;
+  if (dpExists($dp))
+  {
+    bool state;
+    dpGet($dp + \":_online.._value\", state);  
+    btn_Active.state(0)=state;
+  }
+  else
+  {
+    btn_Active.enabled = FALSE;
+  }
 }" 0
 "main(int button, bool state)
 {

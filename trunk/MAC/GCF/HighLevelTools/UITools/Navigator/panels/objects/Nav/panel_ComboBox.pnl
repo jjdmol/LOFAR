@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,255 623 227 62 N "_3DFace" 5
+PANEL,459 230 227 62 N "_3DFace" 5
 "$ElementName"
 "$Maximum"
 "$Minimum"
@@ -98,6 +98,10 @@ int fill_combobox()
 	    }
 	  }
 	}
+	else
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+  }
 }" 0
 
 "main()
