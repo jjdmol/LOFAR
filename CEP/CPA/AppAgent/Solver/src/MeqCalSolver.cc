@@ -140,6 +140,13 @@ void MeqCalSolver::endDomain ()
   cdebug(2) << "enddomain: " << itsVisTiles.size() << " tiles read" << endl;
   // Remove all existing expressions and make them for the new data.
   clearDomain();
+  // Find the sources in the sky ParmTable.
+  // Attach sourcenr and phaseref to them.
+  itsSources = itsGSMMEP->getPointSources (Vector<int>(), itsExprDel);
+  for (int i=0; i<itsSources.size(); i++) {
+    itsSources[i].setSourceNr (i);
+    itsSources[i].setPhaseRef (&itsPhaseRef);
+  }
   makeExpr();
   if (!itsCalcUVW) {
     // Fill the UVW coordinates from the MS instead of calculating them.
@@ -530,7 +537,7 @@ void MeqCalSolver::solve (bool useSVD, const DataRecord::Ref& header)
       iter->dewr().changeFormat (tform);
     }
   }
-  ///  output().putHeader (header.copy());
+  ///output().putHeader (header.copy());
 
   int nrpoint = 0;
   Timer timer;
@@ -986,14 +993,6 @@ void MeqCalSolver::processHeader (const DataRecord& initrec,
   itsSolver = FitLSQ(1, LSQBase::REAL);
   itsCalcUVW = initrec[FCalcUVW];
   itsModelType = initrec[FModelType].as<string>();
-  // Find the sources in the sky ParmTable.
-  // Attach sourcenr and phaseref to them.
-  itsSources = itsGSMMEP->getPointSources (Vector<int>());
-  for (int i=0; i<itsSources.size(); i++) {
-    itsSources[i].setSourceNr (i);
-    itsSources[i].setPhaseRef (&itsPhaseRef);
-  }
-
 }
 
 //##ModelId=3EC9F6EC0239
@@ -1077,6 +1076,7 @@ void MeqCalSolver::clearExpr()
   }
   itsStatUVW.resize(0);
   itsBLIndex.assign (itsBLIndex.size(), -1);
+  MeqParm::clearParmList();
 }
 
 //##ModelId=3EC9F6EC0241
@@ -1133,9 +1133,10 @@ void MeqCalSolver::makeExpr()
     for (VisTile::const_iterator iter = visTile.begin();
 	 iter != visTile.end();
 	 iter++) {
-      double time = iter.time();
-      if (time < itsStartTime) itsStartTime = time;
-      if (time > itsEndTime)   itsEndTime = time;
+      double stime = iter.time() - iter.interval()/2;
+      double etime = iter.time() + iter.interval()/2;
+      if (stime < itsStartTime) itsStartTime = stime;
+      if (etime > itsEndTime)   itsEndTime = etime;
     }
   }
   itsExpr.resize (nrbl);

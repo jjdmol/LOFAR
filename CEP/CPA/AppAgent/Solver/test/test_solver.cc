@@ -21,8 +21,8 @@
 //  $Id$
 
 
-#include "../src/BatchAgent.h"
-#include "../src/MeqCalSolver.h"
+#include <Solver/BatchAgent.h>
+#include <Solver/MeqCalSolver.h>
 
 #include <DMI/DataRecord.h>
 #include <DMI/DataArray.h>
@@ -213,7 +213,6 @@ int main (int argc, const char *argv[])
         solveargs[FBatchJobs][0][SolvableFlag] = solvflag;
         solveargs[FBatchJobs][0][PeelNrs] = peelVec;
         solveargs[FBatchJobs][0][PredNrs] = LoVec_int();
-        solveargs[FBatchJobs][0][PredNrs] = vector<int>();
         solveargs[FBatchJobs][0][FWhenConverged] <<= new DataRecord;
         solveargs[FBatchJobs][0][FWhenMaxIter] <<= new DataRecord;
 
