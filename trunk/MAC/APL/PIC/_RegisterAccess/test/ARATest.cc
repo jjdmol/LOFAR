@@ -22,6 +22,15 @@
 
 #include "ARATest.h"
 
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
+using namespace LOFAR;
+using namespace ARA;
+using namespace std;
+
 ARATest::ARATest() :
   Test(string("ARATest")),
   m_testTask(*this)

@@ -1,0 +1,10 @@
+
+[ARA]
+#intentionally left empty: no SAP's
+
+[SS]
+client=PI:server
+
+[PMLlite]
+client=SS:server
+

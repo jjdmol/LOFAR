@@ -26,6 +26,15 @@
 #include "ARATest.h"
 #include <boost/shared_ptr.hpp>
 
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
+using namespace LOFAR;
+using namespace ARA;
+using namespace std;
+
 int main(int argc, char* argv[])
 {
   int retval=-1;

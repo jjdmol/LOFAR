@@ -1,4 +1,5 @@
-//#  ARATestAnswer.h
+//#
+//#  ARAConstants.h: constants related to the BeamServer
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,31 +21,12 @@
 //#
 //#  $Id$
 
-#ifndef ARATESTANSWER_H
-#define ARATESTANSWER_H
-
-#include <GCF/GCF_Answer.h>
-#include <GCF/GCF_Port.h>
-
-class GCFEvent;
-class GCFTask;
+#ifndef ARACONSTANTS_H_
+#define ARACONSTANTS_H_
 
 namespace ARA
 {
-  class ARATestAnswer : public GCFAnswer
-  {
-    public:
-      ARATestAnswer();
-      ~ARATestAnswer();
-  
-      void setTask(GCFTask* t);
-      void handleAnswer(GCFEvent& answer);
-      
-    private:    
-      GCFPort  m_dummyPort;
-      GCFTask* m_task;
-  };
   
 };
-
-#endif
+     
+#endif /* ARACONSTANTS_H_ */

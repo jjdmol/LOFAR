@@ -40,27 +40,32 @@
 #define _avttest(cond) avt_do_test(cond, #cond, __FILE__, __LINE__)
 #define _avtfail(str)  avt_do_fail(str, __FILE__, __LINE__)
 
-class ARATest : public Test
+namespace ARA
 {
-  public:
-    ARATest();
-    virtual ~ARATest();
-
-    virtual void run();
-    
-    void avt_do_test(bool cond, const string& lbl,
-                     const char* fname, long lineno);
-    void avt_do_fail(const string& lbl,
-                     const char* fname, long lineno);
-        
-  protected:
-    // protected copy constructor
-    ARATest(const ARATest&);
-    // protected assignment operator
-    ARATest& operator=(const ARATest&);
-    
-  private: 
-    
-    ARATestTask m_testTask;
+  
+  class ARATest : public Test
+  {
+    public:
+      ARATest();
+      virtual ~ARATest();
+  
+      virtual void run();
+      
+      void avt_do_test(bool cond, const string& lbl,
+                       const char* fname, long lineno);
+      void avt_do_fail(const string& lbl,
+                       const char* fname, long lineno);
+          
+    protected:
+      // protected copy constructor
+      ARATest(const ARATest&);
+      // protected assignment operator
+      ARATest& operator=(const ARATest&);
+      
+    private: 
+      
+      ARA::ARATestTask m_testTask;
+  };
 };
+
 #endif
