@@ -296,3 +296,43 @@ crontab:
 	fi; \
 	crontab $$HOME/crontab-$$pidnr-new; \
 	$(RM) $$HOME/crontab-$$pidnr-new;
+
+#
+# Show the variables
+#
+show:
+	@echo ""
+	@echo "PACKAGES = $(PACKAGES)"
+	@echo "VARIANTS = $(VARIANTS)"
+	@echo "LOFARDIR = $(LOFARDIR)"
+	@echo ""
+	@echo "CRONUSER    = $(CRONUSER)"
+	@echo "CRONMAILTO  = $(CRONMAILTO)"
+	@echo "CRONCVSUSER = $(CRONCVSUSER)"
+	@echo "CRONROOT    = $(CRONROOT)"
+	@echo ""
+
+#
+# Show the possible targets
+#
+help:
+	@echo "Targets in main LOFAR Makefile"
+	@echo "------------------------------"
+	@echo ""
+	@echo "all:       default target; same as build"
+	@echo "bootstrap: bootstrap all packages"
+	@echo "configure: configure all packages for all variants"
+	@echo "build:     build all packages for all variants"
+	@echo "check:     build and run all test programs for all variants"
+	@echo ""
+	@echo "daily:     bootstrap, configure, build, and check daily system"
+	@echo "weekly:    bootstrap, configure, build, and check weekly system"
+	@echo ""
+	@echo "%.variant_configure: configure all packages for given variant"
+	@echo "%.variant_build:     build all packages for given variant"
+	@echo "%.variant:           same as %.variant_build"
+	@echo "%.variant_check:     build and run all test programs for given variant"
+	@echo ""
+	@echo "crontab:   create a cron job for daily and weekly system"
+	@echo "show:      show the important variables"
+	@echo ""
