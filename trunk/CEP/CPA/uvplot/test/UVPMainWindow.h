@@ -38,8 +38,9 @@
 
 
 #if(HAVE_VDM)
-class OctoMultiplexer;
-class VisInputAgent;
+namespace VisAgent{
+class InputAgent;
+};
 #include <DMI/HIID.h>
 
 #pragma aidgroup uvplot
@@ -96,16 +97,16 @@ class UVPMainWindow:public QMainWindow
 
 #if(HAVE_VDM)
   //! VDM input selected by user
-  //  void slot_vdmInput();
+  void slot_vdmInput();
 
   //! Initialize VDM communications. Called from slot_vdmInput().
-  //  void slot_vdmInit(const HIID& header = HIID(""),
-  //		    const HIID& data   = HIID(""));
+  void slot_vdmInit(const HIID& header = HIID(""),
+                    const HIID& data   = HIID(""));
 
   //! Lets the user select an MS filename. Sets itsInputType to "VDM".
-  //  void slot_vdmOpenMS();
+  void slot_vdmOpenMS();
 
-  //  void slot_vdmOpenPipe();
+  void slot_vdmOpenPipe();
 #endif // HAVE_VDM
 
   //! Interrupt current plotting / data input
@@ -160,8 +161,7 @@ class UVPMainWindow:public QMainWindow
   std::string     itsCurrentWorkingDirectory;
 
 #if(HAVE_VDM)
-  VisInputAgent*   itsVisInputAgent;
-  OctoMultiplexer* itsOctoMultiplexer;
+  VisAgent::InputAgent*   itsInputAgent;
 #endif
 
 

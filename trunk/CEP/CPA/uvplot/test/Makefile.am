@@ -16,9 +16,9 @@ uvplot_SOURCES := main.cc \
                   UVPDisplayArea.cc  UVPDisplayArea.moc.cc \
                   UVPGraphSettingsWidget.cc UVPGraphSettingsWidget.moc.cc \
                   UVPTimeFrequencyPlot.cc UVPTimeFrequencyPlot.moc.cc \
-                  UVPUVCoverageArea.cc UVPUVCoverageArea.moc.cc
-#                  UVPOpenVDMDialog.cc
-#                  AID-uvplot-Registry.cc
+                  UVPUVCoverageArea.cc UVPUVCoverageArea.moc.cc\
+                  UVPOpenVDMDialog.cc\
+                  AID-uvplot-Registry.cc
 
 
 uvplot_LDADD        := $(top_builddir)/src/libuvplot.la
@@ -37,7 +37,7 @@ mstouvp_LDADD := $(top_builddir)/src/libuvplot.la
 # Your package's subdirectory
 #mstopvd_DIR := $(top_srcdir)/test
 
-CXXFLAGS += -DDEBUG_MODE=1 -DHAVE_VDM=0 -I$(KARMABASE)/include
+CXXFLAGS += -DDEBUG_MODE=1 -DHAVE_VDM=1 -I$(KARMABASE)/include
 
 
 
