@@ -729,37 +729,34 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
   TSAResult result(SA_NO_ERROR);
   DpElementType elTypeId(DPELEMENT_NOELEMENT);
   *pVar = 0;
-  DpTypeContResult res = Manager::getTypeContainerPtr()->getElementType(dpId, elTypeId);
-  if (res != DpTypeContOK)
+  PVSSboolean res = Manager::getElementType(dpId, elTypeId);
+  if (res == PVSS_FALSE)
   {
-    LOG_FATAL(formatString (
-        "PVSS: Could not get dpeType (res: %d - see DpTypeContainer.hxx:DpTypeContResult)",
-        res));   
-    //return SA_DPTYPE_UNKNOWN;
+    LOG_FATAL("PVSS: Could not get dpeType");   
+    return SA_DPTYPE_UNKNOWN;
   }
-  //fprintf(stderr, "ElTypeId: %d MacValueTypeId: %d\n", elTypeId, macValue.getType());
   switch (macValue.getType())
   {
     case LPT_BOOL:
-      /*if (elTypeId == DPELEMENT_BIT)*/*pVar = new BitVar(((GCFPVBool*)&macValue)->getValue());
+      if (elTypeId == DPELEMENT_BIT)*pVar = new BitVar(((GCFPVBool*)&macValue)->getValue());
       break;
     case LPT_CHAR:
-      /*if (elTypeId == DPELEMENT_CHAR)*/ *pVar = new CharVar(((GCFPVChar*)&macValue)->getValue());
+      if (elTypeId == DPELEMENT_CHAR) *pVar = new CharVar(((GCFPVChar*)&macValue)->getValue());
       break;
     case LPT_UNSIGNED:
-      /*if (elTypeId == DPELEMENT_UINT)*/ *pVar = new UIntegerVar(((GCFPVUnsigned*)&macValue)->getValue());
+      if (elTypeId == DPELEMENT_UINT) *pVar = new UIntegerVar(((GCFPVUnsigned*)&macValue)->getValue());
       break;
     case LPT_INTEGER:
-      /*if (elTypeId == DPELEMENT_INT)*/ *pVar = new IntegerVar(((GCFPVInteger*)&macValue)->getValue());
+      if (elTypeId == DPELEMENT_INT) *pVar = new IntegerVar(((GCFPVInteger*)&macValue)->getValue());
       break;
     case LPT_DOUBLE:
-      /*if (elTypeId == DPELEMENT_FLOAT)*/ *pVar = new FloatVar(((GCFPVDouble*)&macValue)->getValue());
+      if (elTypeId == DPELEMENT_FLOAT) *pVar = new FloatVar(((GCFPVDouble*)&macValue)->getValue());
       break;
     case LPT_STRING:
-      /*if (elTypeId == DPELEMENT_TEXT)*/ *pVar = new TextVar(((GCFPVString*)&macValue)->getValue().c_str());
+      if (elTypeId == DPELEMENT_TEXT) *pVar = new TextVar(((GCFPVString*)&macValue)->getValue().c_str());
       break;
     case LPT_BLOB:
-      //if (elTypeId == DPELEMENT_BLOB || elTypeId == DPELEMENT_RECORD) 
+      if (elTypeId == DPELEMENT_BLOB)
       {
         *pVar = new BlobVar(((GCFPVBlob*)&macValue)->getValue(), ((GCFPVBlob*)&macValue)->getLen(), PVSS_TRUE);
       }

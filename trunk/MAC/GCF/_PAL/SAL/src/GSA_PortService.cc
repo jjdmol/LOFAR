@@ -214,6 +214,7 @@ void GSAPortService::dpeValueChanged(const string& dpName, const GCFPValue& valu
       {
         dpeValueChanged(dpName, gcfEvent);
       }
+      break;
     }
     default:
       assert(_msgBuffer[0]);

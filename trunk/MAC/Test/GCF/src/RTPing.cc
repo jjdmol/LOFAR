@@ -58,11 +58,11 @@ Ping::Ping(string name, string scope, string type, bool isTemporary)
    */
   if (type == "TTypeF")
   {
-    _echoPingPSET.initProperties(propertiesSF1, NR_OF_PROPCONFIGS(propertiesSF1));
+    _echoPingPSET.initProperties(propertiesSF1);
   }
   else
   {
-    _echoPingPSET.initProperties(propertiesSG1, NR_OF_PROPCONFIGS(propertiesSG1));
+    _echoPingPSET.initProperties(propertiesSG1);
   }
   _client.init(*this, "client", GCFPortInterface::SAP, ECHO_PROTOCOL);
 }

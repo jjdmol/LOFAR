@@ -70,19 +70,39 @@ typedef enum TMACValueType {NO_LPT, LPT_BOOL, LPT_CHAR, LPT_UNSIGNED, LPT_INTEGE
                     LPT_DYNBIT32, LPT_DYNBLOB, LPT_DYNREF, LPT_DYNDOUBLE, LPT_DYNDATETIME,
                     LPT_DYNSTRING };
  
-typedef struct
+struct TPropertyConfig
 {
   char*         propName;
   TAccessMode   accessMode;
   char*         defaultValue;
-} TPropertyConfig;
+};
 
-typedef struct
+struct TPropertyInfo
 {
   string         propName;
   TMACValueType  type;
-} TPropertyInfo;
+  TPropertyInfo() : propName(), type(NO_LPT) {};
+  TPropertyInfo(const char* pPropName, TMACValueType atype) : propName(pPropName), type(atype) {};
+  TPropertyInfo(const TPropertyInfo& other)
+  {
+    if (this != &other)
+    {
+      type = other.type;
+      propName.replace(0, string::npos, other.propName);
+    }
+  }; 
+};
 
 
-#define NR_OF_PROPCONFIGS(propSet) (sizeof(propSet)/sizeof(TPropertyConfig))
+#define PROPERTYCONFIGLIST_BEGIN(_name_) \
+const TPropertyConfig _name_[] = \
+{
+
+#define PROPERTYCONFIGLIST_ITEM(_propname_,_flags_,_default_) \
+{_propname_,_flags_,_default_},
+
+#define PROPERTYCONFIGLIST_END \
+{0,0,0} \
+}; 
+
 #endif

@@ -98,8 +98,7 @@ TGCFResult GCFPVBlob::setValue(const string value)
   }
   _value = new unsigned char[_size];
   memcpy(_value, value.c_str(), _size);   
-
-  _value = (unsigned char*) value.c_str(); 
+ 
   _isDataHolder = true;
   
   return result;

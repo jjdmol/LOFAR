@@ -29,6 +29,7 @@
 #include <GCF/TM/GCF_Handler.h>
 #include <GCF/PAL/GCF_PVSSPort.h>
 #include "GPM_Defines.h"
+#include "GPM_Converter.h"
 #include <GPA_Defines.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
@@ -95,6 +96,7 @@ class GPMController : public GCFTask
     } TAction;
     unsigned short registerAction (TAction& action);
     string determineDest(const string& scope) const;
+    bool checkDestination(const string& destAddr) const;
 
   private: // data members        
     GCFPort                       _propertyAgent;
@@ -106,6 +108,7 @@ class GPMController : public GCFTask
     TActionSeqList _actionSeqList;    
     
     GCFPVSSPort _distPropertyAgent;
+    GPMConverter  _converter;
 
   private: // admin members  
 

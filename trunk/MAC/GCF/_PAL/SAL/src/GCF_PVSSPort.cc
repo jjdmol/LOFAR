@@ -54,15 +54,15 @@ GCFPVSSPort::GCFPVSSPort()
 
 GCFPVSSPort::~GCFPVSSPort()
 {
-  releasePortNr(_portId.getValue());
   if (_pPortService)
   {
     if (_acceptedPort)
     {      
-      _pPortService->unregisterPort(_portId.getValue());
+      _pPortService->unregisterPort(_remotePortId);
     }
     else
     {
+      releasePortNr(_portId.getValue());
       _pPortService->stop();
       delete _pPortService;
       _pPortService = 0;    
@@ -132,25 +132,9 @@ void GCFPVSSPort::setService(GSAPortService& service)
 { 
   _pPortService = &service; 
   _acceptedPort = true; 
-  unsigned int pvssPortNr = claimPortNr();
-  if (_type == SAP)
-  {
-    _portAddr.setValue(formatString(
-        "%s:%s-API%d-%d", 
-        GCFPVSSInfo::getLocalSystemName().c_str(),
-        getRealName().c_str(),
-        GCFPVSSInfo::getManNum(), 
-        pvssPortNr));
-  }
-  else
-  {
-    _portAddr.setValue(GCFPVSSInfo::getLocalSystemName() + ":" + getRealName());
-  }
-  _portId.setValue(formatString(
-      "%d:Api:%d:%d:",
-      GCFPVSSInfo::getLocalSystemId(),
-      GCFPVSSInfo::getManNum(),
-      pvssPortNr));
+  _portAddr.setValue(service.getPort().getPortAddr());
+  _portId.setValue(service.getPort().getPortID());
+  _remotePortId = _pPortService->getCurPortId();
 }
 
 ssize_t GCFPVSSPort::send(GCFEvent& e)
@@ -202,13 +186,13 @@ bool GCFPVSSPort::close()
   setState(S_CLOSING);  
   assert(_pPortService);
 
-  releasePortNr(_portId.getValue());
   if (_acceptedPort)
   {
-    _pPortService->unregisterPort(_portId.getValue());
+    _pPortService->unregisterPort(_remotePortId);
   }
   else
   {
+    releasePortNr(_portId.getValue());
     _pPortService->stop();    
   }
   schedule_close();
@@ -227,9 +211,10 @@ bool GCFPVSSPort::accept(GCFPVSSPort& newPort)
 {
   if (MSPP == getType() && SPP == newPort.getType())
   {
+    assert(_pPortService);
     newPort.setService(*_pPortService);
     _pPortService->registerPort(newPort);
-    newPort.setState(S_CONNECTING);        
+    newPort.setState(S_CONNECTING);    
     return true;
   }
   return false;

@@ -32,9 +32,9 @@ Application::Application() :
     // register the protocol for debugging purposes
   registerProtocol(TST_PROTOCOL, TST_PROTOCOL_signalnames); 
   
-  _propertySetC1.initProperties(propertiesSC1, NR_OF_PROPCONFIGS(propertiesSC1));
-  _propertySetD1.initProperties(propertiesSD1, NR_OF_PROPCONFIGS(propertiesSD1));
-  _propertySetB4.initProperties(propertiesSB4, NR_OF_PROPCONFIGS(propertiesSB4)); 
+  _propertySetC1.initProperties(propertiesSC1);
+  _propertySetD1.initProperties(propertiesSD1);
+  _propertySetB4.initProperties(propertiesSB4); 
 }
 
 Application::~Application()
