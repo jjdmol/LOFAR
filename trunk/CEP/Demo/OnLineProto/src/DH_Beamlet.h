@@ -29,6 +29,7 @@
 #include "CEPFrame/DataHolder.h"
 #include <Common/lofar_complex.h>
 #include <Common/Lorrays.h>
+#include <Common/Debug.h>
 
 
 namespace LOFAR
@@ -106,16 +107,21 @@ inline int DH_Beamlet::getNumberOfChannels () const
   { return itsNumberOfChannels; }
 
 inline float DH_Beamlet::getHourangle () const
-  { return itsHourangle; }
+  { DbgAssertStr(itsHourangle >= 0, "itsHourangle not initialised"); 
+    return itsHourangle; 
+  }
 
 inline void DH_Beamlet::setHourangle (float ha)
   {  itsHourangle = ha; }
 
 inline LoVec_float DH_Beamlet::getFrequencies() const
-  { return itsFrequencies; }
+  { //DbgAssertStr(itsFrequencies >= 0, "itsFrequencies not initialised"); 
+    return itsFrequencies; }
 
 inline int DH_Beamlet::getStationID() const
-  { return itsStationID; }
+  { DbgAssertStr(itsStationID >= 0, "itsStationID not initialised"); 
+    return itsStationID; 
+  }
 
 }
 
