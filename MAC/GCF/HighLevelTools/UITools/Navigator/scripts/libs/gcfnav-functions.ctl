@@ -1,17 +1,49 @@
-// global functions. All event handlers are implemented here
+//# gcfnav-functions.ctl
+//#
+//#  Copyright (C) 2002-2004
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
+
+//#
+//# global functions for the Navigator. All event handlers are implemented here
+//#
+
 #uses "gcfnav-pmlinterface.ctl"
+#uses "gcf-util.ctl"
 
 global string   ACTIVEX_TREE_CTRL      = "NOT FlyTreeXCtrl.FlyTreeX";
 global string   ACTIVEX_TREE_CTRL_NAME = "FlyTreeXCtrl1";
 global string   LIST_TREE_CTRL_NAME    = "list";
 global string   TAB_VIEWS_CTRL_NAME    = "TabViews";
 global string   NAVIGATOR_TAB_FILENAME = "navigator/navigator_tab.pnl";
+global string   DPNAME_NAVIGATOR       = "__navigator";
+global string   DPTYPENAME_NAVIGATOR_INSTANCE   = "GCFNavigatorInstance";
 global bool     ACTIVEX_SUPPORTED      = false;
 global int      NR_OF_VIEWS            = 10;
 global mapping  g_itemID2datapoint;
 global mapping  g_datapoint2itemID;
 global bool     g_initializing         = true;
 global int      g_curSelNode = 0;
+global int      g_navigatorID = 0;
+global dyn_string g_ignoreEnabledDPs; // contains datapoints that should always
+                                      // be in the tree, ignoring the existance
+                                      // of the __enabled datapoint.
 
 ///////////////////////////////////////////////////////////////////////////
 //Function ActiveXSupported
@@ -32,18 +64,48 @@ bool ActiveXSupported()
 ///////////////////////////////////////////////////////////////////////////
 void setActiveXSupported() 
 {
-  idispatch activeXctrl = createComObject(ACTIVEX_TREE_CTRL);
+  idispatch activeXctrl = 0;
+  if(isFunctionDefined("createComObject"))
+    activeXctrl = createComObject(ACTIVEX_TREE_CTRL);
   if(activeXctrl==0)
   {
-    DebugTN("I cannot create a COM object!? What the ....?? You must be running Linux or something.",activeXctrl);
+    LOG_TRACE("I cannot create a COM object!? What the ....?? You must be running Linux or something.","");
     ACTIVEX_SUPPORTED = false;
   }
   else
   {
-    DebugTN("I can create a COM object! ",activeXctrl);
+    LOG_TRACE("I can create a COM object! ",activeXctrl);
     releaseComObject(activeXctrl);
     ACTIVEX_SUPPORTED = true;
   }
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function checkEnabled
+//  
+// returns the true if the datapoint is enabled or in the ignore list
+// returns false otherwise
+//
+///////////////////////////////////////////////////////////////////////////
+bool checkEnabled(string datapointName)
+{
+  bool enabled = false;
+  if(dpExists(datapointName + "__enabled"))
+  {
+    enabled = true;
+  }
+  else
+  {
+    for(int i=1;i<=dynlen(g_ignoreEnabledDPs) && !enabled;i++)
+    {
+      int pos = strpos(datapointName,g_ignoreEnabledDPs[i]);
+      if(pos >= 0)
+      {
+        enabled=true;
+      }
+    }
+  }
+  return enabled;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -111,9 +173,9 @@ long getSelectedNode()
   }
   else
   {
-    dyn_string exceptionInfo;
     unsigned selectedPos;
-    fwTreeView_getSelectedPosition(selectedPos,exceptionInfo);
+    fwTreeView_getSelectedPosition(selectedPos);
+    
     selectedPos = fwTreeView_view2TreeIndex(selectedPos);
     return selectedPos;
   }
@@ -128,7 +190,7 @@ void showView(string dpViewConfig, string datapointPath)
 {
   shape tabCtrl = getTabCtrl();
   string viewsPath = "navigator/views/";
-  string dpSelectedElementContainer = "__navigator.selectedElement";
+  string dpSelectedElementContainer = DPNAME_NAVIGATOR+g_navigatorID+".selectedElement";
   string dpSelectedElement = datapointPath;
   if(dpExists(dpSelectedElementContainer))
   {
@@ -139,7 +201,7 @@ void showView(string dpViewConfig, string datapointPath)
     dpSet(dpSelectedElementContainer,dpSelectedElement);
   }
   
-  dpGet("__navigator.viewsPath",viewsPath);
+  dpGet(DPNAME_NAVIGATOR+".viewsPath",viewsPath);
 
   dyn_string panelParameters = makeDynString("$datapoint:" + datapointPath);
 
@@ -161,20 +223,20 @@ void showView(string dpViewConfig, string datapointPath)
       dpGet(views[tabId]+".caption",caption);
       if(strlen(caption)>0)
       {
-        DebugTN("showView","making tab visible: ",tabId);
+        LOG_TRACE("showView","making tab visible: ",tabId);
         tabCtrl.namedColumnHeader("tab"+tabId) = caption;
         tabCtrl.registerPanel(tabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
         tabCtrl.registerVisible(tabId-1)=TRUE;
       }
       else
       {
-        DebugTN("showView","empty caption or filename; making tab invisible: ",tabId);
+        LOG_TRACE("showView","empty caption or filename; making tab invisible: ",tabId);
         tabCtrl.registerVisible(tabId-1)=FALSE;
       }
     }
     else
     {
-      DebugTN("showView","tab reference not found; making tab invisible: ",tabId);
+      LOG_TRACE("showView","tab reference not found; making tab invisible: ",tabId);
       tabCtrl.registerVisible(tabId-1)=FALSE;
     }
   }
@@ -182,7 +244,7 @@ void showView(string dpViewConfig, string datapointPath)
   int i;
   for(i=tabId;i<=NR_OF_VIEWS;i++)
   {
-    DebugTN("showView","tab undefined; making tab invisible: ",i);
+    LOG_TRACE("showView","tab undefined; making tab invisible: ",i);
     tabCtrl.registerVisible(i-1)=FALSE;
   }
   if(selectedView < 1 || selectedView > dynlen(views))
@@ -201,7 +263,7 @@ void setSelectedView(string dpViewConfig)
   // get tab properties
   int selectedView = tabCtrl.activeRegister + 1;
   // set the selected tab for this resource type
-  DebugTN("setSelectedView",dpViewConfig,selectedView);
+  LOG_TRACE("setSelectedView",dpViewConfig,selectedView);
   dpSet(dpViewConfig+".selectedView",selectedView);
 }
 
@@ -223,11 +285,11 @@ string getViewConfig(string datapointPath)
   }
   if(!dpExists(dpViewConfig))
   {
-    DebugTN("getViewConfig","DP does not exist, using default configuration",dpViewConfig);
+    LOG_TRACE("getViewConfig","DP does not exist, using default configuration",dpViewConfig);
     dpViewConfig = "__nav_default_viewconfig";
   }
 
-  DebugTN(dpViewConfig);
+  LOG_TRACE(dpViewConfig);
   return dpViewConfig;
 }
 
@@ -272,63 +334,92 @@ void treeAddDatapoints(dyn_string names)
 {
   shape treeCtrl = getTreeCtrl();
   int namesIndex;
+  dyn_dyn_string elementNames;
+  dyn_dyn_int elementTypes;
   dyn_string addedDatapoints;
-  
-  // go through the list of datapoint names
-  for(namesIndex=1;namesIndex<=dynlen(names);namesIndex++)
+  string systemName;
+  long addedNode=0;
+
+  if(dynlen(names)>0)
   {
-    int pathIndex;
-    dyn_string dpPathElements;
-    string systemName;
-    string datapointName;
-    dyn_dyn_string elementNames;
-    dyn_dyn_int elementTypes;
-    int parentId;
-    long addedNode=0;
-    // get the System part of the datapoint name
-    systemName = strrtrim(dpSubStr(names[namesIndex],DPSUB_SYS),":");
-    datapointName = dpSubStr(names[namesIndex],DPSUB_DP);
+    systemName = strrtrim(dpSubStr(names[1],DPSUB_SYS),":");
+
+	  // Check if the item already exists
+	  if(mappingHasKey(g_datapoint2itemID,systemName))
+	  {
+	    addedNode = g_datapoint2itemID[systemName];
+	  }
+	  else
+	  {
+		  addedNode = treeAddNode(-1,0,systemName);
+		  LOG_DEBUG("Added root node: ",addedNode,systemName);
+		  g_itemID2datapoint[addedNode] = systemName;
+		  g_datapoint2itemID[systemName] = addedNode;
+    }  
     
-    // get the datapoint structure
-    dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
-    
-    // split the datapoint path in elements
-    dpPathElements = strsplit(datapointName,"_");
-    string addingDPpart = systemName;
-    for(pathIndex=0;pathIndex<=dynlen(dpPathElements);pathIndex++)
-    {
-      // Check if the item already exists
-      if(mappingHasKey(g_datapoint2itemID,addingDPpart))
-      {
-        addedNode = g_datapoint2itemID[addingDPpart];
-      }
-      else
-      {
-        // item does not exist
-        dynAppend(addedDatapoints,addingDPpart);
-        if(addingDPpart == systemName)
-        {
-          addedNode = treeAddNode(-1,0,addingDPpart);
-          DebugTN("Added root node: ",addedNode,addingDPpart);
-          g_itemID2datapoint[addedNode] = addingDPpart;
-          g_datapoint2itemID[addingDPpart] = addedNode;
-        }
-        else
-        {
-          addedNode = treeAddNode(parentId,pathIndex,dpPathElements[pathIndex]); 
-//          DebugTN("Added node: ",addedNode,parentId,pathIndex,dpPathElements[pathIndex]);
-          g_itemID2datapoint[addedNode] = addingDPpart;
-          g_datapoint2itemID[addingDPpart] = addedNode;
-          if(dpPathElements[pathIndex] == "Alert")
-          {
-            // subscribe to Alert status
-            DebugTN("subscribing to: ",names[namesIndex]);
-            dpConnect("AlertStatusHandler",TRUE,names[namesIndex] + ".status:_online.._value");
+	  // go through the list of datapoint names
+	  for(namesIndex=1;namesIndex<=dynlen(names);namesIndex++)
+	  {
+	    int pathIndex;
+	    dyn_string dpPathElements;
+	    string datapointName;
+	    int parentId;
+	    // get the System part of the datapoint name
+	    datapointName = dpSubStr(names[namesIndex],DPSUB_DP);
+	    
+	    // only add ENABLED datapoints
+      if(checkEnabled(datapointName))
+	    {
+		    // split the datapoint path in elements
+		    dpPathElements = strsplit(datapointName,"_");
+		    string addingDPpart = systemName;
+		    for(pathIndex=0;pathIndex<=dynlen(dpPathElements);pathIndex++)
+		    {
+		      // Check if the item already exists
+		      if(mappingHasKey(g_datapoint2itemID,addingDPpart))
+		      {
+		        addedNode = g_datapoint2itemID[addingDPpart];
+		      }
+		      else
+		      {
+		        // item does not exist
+		        dynAppend(addedDatapoints,addingDPpart);
+		        if(addingDPpart != systemName)
+		        {
+		          addedNode = treeAddNode(parentId,pathIndex,dpPathElements[pathIndex]); 
+              LOG_DEBUG("Added node: ",addedNode,parentId,pathIndex,dpPathElements[pathIndex]);
+		          g_itemID2datapoint[addedNode] = addingDPpart;
+		          g_datapoint2itemID[addingDPpart] = addedNode;
+		          if(dpPathElements[pathIndex] == "Alert")
+		          {
+		            // subscribe to Alert status
+		            LOG_TRACE("subscribing to: ",names[namesIndex]);
+		            dpConnect("AlertStatusHandler",TRUE,names[namesIndex] + ".status:_online.._value");
+		          }
+		        }
           }
-        }
+		        
+		      parentId = addedNode;
+          if(pathIndex<dynlen(dpPathElements))
+          {
+  		      if(pathIndex==0)
+  		      {
+  		        addingDPpart = addingDPpart + ":" + dpPathElements[pathIndex+1];
+  		      }
+  		      else if(pathIndex<dynlen(dpPathElements))
+  		      {
+  		        addingDPpart = addingDPpart + "_" + dpPathElements[pathIndex+1];
+  		      }
+          }
+		    }
+
+        // get the datapoint structure
+        dynClear(elementNames);
+        dynClear(elementTypes);
+        dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
         
         // add elements of this datapoint, if any, skip system stuff
-        if(addedNode != 0 && addingDPpart != systemName)
+        if(addedNode != 0 && addingDPpart != systemName && dynlen(elementNames) > 1)
         {
           int         elementIndex;
           dyn_int     parentIds;
@@ -342,10 +433,10 @@ void treeAddDatapoints(dyn_string names)
             // file:///opt/pvss/pvss2_v3.0/help/en_US.iso88591/WebHelp/ControlA_D/dpTypeGet.htm
             int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
             string elementName = elementNames[elementIndex][elementLevel+1];
-            
-            addedNode = treeAddNode(parentIds[elementLevel],pathIndex+elementLevel,elementName); 
-//            DebugTN("Added node: ",addedNode,parentIds[elementLevel],pathIndex+elementLevel,elementName);
+           
+            addedNode = treeAddNode(parentIds[elementLevel],pathIndex-1+elementLevel,elementName); 
             string fullDPname = addingDPpart+parentNodes[elementLevel]+"."+elementName;
+            LOG_DEBUG("Added element node: ",addedNode,parentIds[elementLevel],pathIndex-1+elementLevel,fullDPname);
             g_itemID2datapoint[addedNode] = fullDPname;
             g_datapoint2itemID[fullDPname] = addedNode;
             
@@ -353,17 +444,8 @@ void treeAddDatapoints(dyn_string names)
             parentNodes[elementLevel+1] = parentNodes[elementLevel]+"."+elementName;
           }
         }
-      }
-      parentId = addedNode;
-      if(pathIndex==0)
-      {
-        addingDPpart = addingDPpart + ":" + dpPathElements[pathIndex+1];
-      }
-      else if(pathIndex<dynlen(dpPathElements))
-      {
-        addingDPpart = addingDPpart + "_" + dpPathElements[pathIndex+1];
-      }
-    }
+	    }
+	  }
   }
 }
 
@@ -375,7 +457,7 @@ void treeAddDatapoints(dyn_string names)
 string buildPathFromNode(long Node, string& datapointPath)
 {
   datapointPath = g_itemID2datapoint[Node];
-  DebugTN("buildPathFromNode(",Node,") returns ",datapointPath);
+  LOG_TRACE("buildPathFromNode(",Node,") returns ",datapointPath);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -388,12 +470,12 @@ long getNodeFromDatapoint(string dpe)
   long nodeId=0;
   
   string datapointName = dpSubStr(dpe,DPSUB_SYS_DP_EL);
-  DebugTN("getNodeFromDatapoint: searching for: ",dpe,datapointName);
+  LOG_TRACE("getNodeFromDatapoint: searching for: ",dpe,datapointName);
   if(mappingHasKey(g_datapoint2itemID,datapointName))
   {
     nodeId = g_datapoint2itemID[datapointName];
   }
-  DebugTN("found??? nodeId= ",nodeId);
+  LOG_TRACE("found??? nodeId= ",nodeId);
   return nodeId;
 }
 
@@ -406,7 +488,7 @@ void AlertStatusHandler(string dpe, long status)
 {
   if(!g_initializing)
   {
-    DebugTN("AlertStatusHandler()",dpe,status);
+    LOG_TRACE("AlertStatusHandler()",dpe,status);
     // search dpe in tree
     long nodeId = getNodeFromDatapoint(dpe);
     if(nodeId>=0)
@@ -425,9 +507,9 @@ void AlertStatusHandler(string dpe, long status)
         {
           node.Data = "A";
           string nodeText = addColorTags(node.Cells(1),"0x0000ff");
-          DebugTN(nodeText);
+          LOG_TRACE(nodeText);
           node.Text = nodeText;
-          DebugTN(node.Text);
+          LOG_TRACE(node.Text);
         }
         treeCtrl.InvalidateRow(node.GetRow());
       }
@@ -436,7 +518,7 @@ void AlertStatusHandler(string dpe, long status)
   // TODO
       }
     }
-    DebugTN("~AlertStatusHandler()",dpe,status);
+    LOG_TRACE("~AlertStatusHandler()",dpe,status);
   }
 }
 
@@ -447,7 +529,7 @@ void AlertStatusHandler(string dpe, long status)
 ///////////////////////////////////////////////////////////////////////////
 string addColorTags(string text, string fgcolor="" ,string bgcolor = "")
 {
-  DebugTN("COLOR TAGS DISABLED");
+  LOG_TRACE("COLOR TAGS DISABLED");
   string taggedText = text;
 
 /*
@@ -459,7 +541,7 @@ string addColorTags(string text, string fgcolor="" ,string bgcolor = "")
   {
     taggedText = "<bgcolor=" + bgcolor + ">" + taggedText + "</bgcolor>";
   }
-  DebugTN(taggedText);
+  LOG_TRACE(taggedText);
 */
   return taggedText;
 }
@@ -471,7 +553,7 @@ string addColorTags(string text, string fgcolor="" ,string bgcolor = "")
 ///////////////////////////////////////////////////////////////////////////
 string stripColorTags(string text)
 {
-  DebugTN("COLOR TAGS DISABLED");
+  LOG_TRACE("COLOR TAGS DISABLED");
   string untaggedText = text;
 /*
   dyn_string tags=makeDynString("<color=","</color","<bgcolor=","</bgcolor");
@@ -516,19 +598,61 @@ string stripColorTags(string text)
 ///////////////////////////////////////////////////////////////////////////
 void Navigator_HandleEventInitialize()
 {
-  DebugTN("Navigator_HandleEventInitialize()");
+  LOG_TRACE("Navigator_HandleEventInitialize()","");
+  
+  // first thing to do: get a new navigator ID
+  // check the commandline parameter:
+  bool createConfiguration = false;
+  if(isDollarDefined("$ID"))
+  {
+    g_navigatorID = $ID;
+    if(!dpExists(DPNAME_NAVIGATOR + g_navigatorID))
+    {
+      createConfiguration = true;
+    }
+  }
+  else
+  {
+    int id=1;
+    while(id<20 && !createConfiguration) // if no free config found, use config #20
+    {
+      if(!dpExists(DPNAME_NAVIGATOR + id))
+      {
+        g_navigatorID = id;
+        createConfiguration=true;
+      }
+      else
+      {
+        id++;
+      }
+    }
+  }
+  if(createConfiguration)
+  {
+    dpCreate(DPNAME_NAVIGATOR + g_navigatorID, DPTYPENAME_NAVIGATOR_INSTANCE);
+  }
+  
+  // increase usecount
+  int usecount=0;
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + ".useCount",usecount);
+  usecount++;
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".useCount",usecount);
+    
+  LOG_DEBUG("Using Navigator ID:",g_navigatorID);
   
   navPMLinitialize();
   
   mapping empty;
   g_itemID2datapoint = empty;
   g_datapoint2itemID = empty;
-  DebugTN("global stuff lengths:",mappinglen(g_itemID2datapoint),mappinglen(g_datapoint2itemID));
+  LOG_TRACE("global stuff lengths:",mappinglen(g_itemID2datapoint),mappinglen(g_datapoint2itemID));
+  
+  g_ignoreEnabledDPs = makeDynString("PIC_SNMP"); 
   
   g_initializing=true;
   
   setActiveXSupported();
-  DebugTN("ActiveXSupported global variable set to ",ActiveXSupported());
+  LOG_TRACE("ActiveXSupported global variable set to ",ActiveXSupported());
   
   // show the ActiveX tree control if it can be created
   shape treeActiveX = getShape(ACTIVEX_TREE_CTRL_NAME);
@@ -549,47 +673,50 @@ void Navigator_HandleEventInitialize()
   InitializeTabViews();
   InitializeTree();
   
+  delay(1); // wait for the tree control to complete initialization
+  
   g_initializing = false;
 
-/*
-*  // select the last selected datapoint
-*  string dpSelectedElement="";
-*  string dpSelectedElementContainer = "__navigator.selectedElement";
-*  if(dpExists(dpSelectedElementContainer))
-*  {
-*    dpGet(dpSelectedElementContainer,dpSelectedElement);
-*  }
-*  DebugTN("Navigator_HandleEventInitialize: selectedDP=",dpSelectedElement);
-*  
-*  if(strlen(dpSelectedElement)>0)
-*  {
-*    shape treeCtrl = getTreeCtrl();
-*    unsigned selectedPos = getNodeFromDatapoint(dpSelectedElement);
-*    if(ActiveXSupported())
-*    {
-*      treeCtrl.Selected = selectedPos;
-*    }
-*    else
-*    {
-*      treeCtrl.selectedPos(selectedPos); 
-*      TreeCtrl_HandleEventOnSelChange(selectedPos);
-*    }
-*  }
-*/
-
-  DebugTN("~Navigator_HandleEventInitialize()");
+  LOG_DEBUG("~Navigator_HandleEventInitialize()");
 }
 
 ///////////////////////////////////////////////////////////////////////////
 //Function Navigator_HandleEventTerminate()
 //
-// de-initializes the navigator
+// NOTE: it is NOT possible to call dpGet in the terminate handler!
 ///////////////////////////////////////////////////////////////////////////
 void Navigator_HandleEventTerminate()
 {
-  DebugTN("Navigator_HandleEventTerminate()");
+  LOG_DEBUG("Navigator_HandleEventTerminate()");
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function Navigator_HandleEventClose()
+//
+// de-initializes the navigator
+// NOTE: it is NOT possible to call dpGet in the terminate handler!
+///////////////////////////////////////////////////////////////////////////
+void Navigator_HandleEventClose()
+{
+  LOG_DEBUG("Navigator_HandleEventClose()");
 
   navPMLterminate();
+
+  // lower usecount of this navigator
+  int usecount=0;
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + ".useCount",usecount);
+  usecount--;
+  if(usecount > 0)
+  {
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".useCount",usecount);
+  }
+  else
+  {
+    // if usecount == 0, remove datapoint  
+    dpDelete(DPNAME_NAVIGATOR + g_navigatorID);
+  }
+  
+  PanelOff();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -610,7 +737,7 @@ void TabViews_HandleEventInitialize()
 ///////////////////////////////////////////////////////////////////////////
 void InitializeTabViews()
 {
-  DebugTN("InitializeTabViews()");
+  LOG_TRACE("InitializeTabViews()");
   shape tabCtrl = getTabCtrl();
   tabCtrl.visible=FALSE;
   // hide all tabs
@@ -621,10 +748,10 @@ void InitializeTabViews()
   {
     setValueResult = setValue(getTabCtrlName(),"registerVisible",i,FALSE);
     err = getLastError();
-    DebugTN("registerVisible",i,setValueResult,err);
+    LOG_TRACE("registerVisible",i,setValueResult,err);
     i++;
   } while(dynlen(err)==0 && i<NR_OF_VIEWS && setValueResult==0);
-  DebugTN("~InitializeTabViews()");
+  LOG_TRACE("~InitializeTabViews()");
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -636,7 +763,8 @@ void TabViews_HandleEventSelectionChanged()
 {
   if(!g_initializing)
   {
-    DebugTN("TabViews_HandleEventSelectionChanged");
+    LOG_DEBUG("TabViews_HandleEventSelectionChanged");
+
     long selectedNode = getSelectedNode();
     if(selectedNode != 0)
     {
@@ -670,7 +798,7 @@ void TreeCtrl_HandleEventInitialize()
 ///////////////////////////////////////////////////////////////////////////
 void InitializeTree()
 {
-  DebugTN("InitializeTree()");
+  LOG_TRACE("InitializeTree()");
   
   shape treeCtrl = getTreeCtrl();
   idispatch items;
@@ -702,7 +830,7 @@ void InitializeTree()
   }
   
   TabViews.visible=TRUE;
-  DebugTN("~InitializeTree()");
+  LOG_TRACE("~InitializeTree()");
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -719,7 +847,7 @@ void TreeCtrl_HandleEventOnSelChange(long Node)
 	  
 	  if(!g_initializing)
 	  {
-	    DebugTN("TreeCtrl_HandleEventOnSelChange  ",Node);
+	    LOG_TRACE("TreeCtrl_HandleEventOnSelChange  ",Node);
 	    if(Node != 0)
 	    {
 	      string datapointPath;
@@ -774,7 +902,7 @@ void TreeCtrl_HandleEventOnDrawCell(long Col, long Row, float Left, float Top, f
             {
               if(aNode.Data == "A" && (treeCtrl.ImagesWidth < (Right - Left)))
               {
-                DebugTN("data is A and image fits",aNode.Data,treeCtrl.ImagesWidth,Right,Left);
+                LOG_TRACE("data is A and image fits",aNode.Data,treeCtrl.ImagesWidth,Right,Left);
                 int aLeft, aRight;
                 aLeft = Left + (Right - Left - treeCtrl.ImagesWidth) / 2;
                 aRight = aLeft + treeCtrl.ImagesWidth;
@@ -795,7 +923,7 @@ void TreeCtrl_HandleEventOnDrawCell(long Col, long Row, float Left, float Top, f
 ///////////////////////////////////////////////////////////////////////////
 void ButtonMaximize_HandleEventClick()
 {
-  DebugTN("ButtonMaximize_HandleEventClick");
+  LOG_DEBUG("ButtonMaximize_HandleEventClick");
   shape tabCtrl = getTabCtrl();
   long Node = getSelectedNode();
   if(Node != 0)
@@ -803,7 +931,7 @@ void ButtonMaximize_HandleEventClick()
     string datapointPath;
     buildPathFromNode(Node, datapointPath);
     string dpViewConfig = getViewConfig(datapointPath);
-    DebugTN("ButtonMaximize_HandleEventClick",Node,dpViewConfig);
+    LOG_TRACE("ButtonMaximize_HandleEventClick",Node,dpViewConfig);
     if(Node!=0 && dpExists(dpViewConfig))
     {
       // get view config properties
@@ -832,9 +960,12 @@ void ButtonMaximize_HandleEventClick()
 ///////////////////////////////////////////////////////////////////////////
 TreeView_OnCollapse(unsigned pos)
 {
-  DebugTN("TreeView_OnCollapse",pos);
+  LOG_DEBUG("TreeView_OnCollapse",pos);
 	TreeCtrl_EventOnCollapsed(pos);
 
+  // call the default implementation?
+  fwTreeView_defaultCollapse(pos);
+  
   // the last line of code of each fwTreeView event handler MUST be the following:
   id = -1; 
 }
@@ -846,9 +977,12 @@ TreeView_OnCollapse(unsigned pos)
 ///////////////////////////////////////////////////////////////////////////
 TreeView_OnExpand(unsigned pos)
 {
-  DebugTN("TreeView_OnExpand",pos);
+  LOG_DEBUG("TreeView_OnExpand",pos);
 	TreeCtrl_EventOnExpanded(pos);
 
+  // call the default implementation?
+  fwTreeView_defaultExpand(pos);
+  
   // the last line of code of each fwTreeView event handler MUST be the following:
   id = -1; 
 }
@@ -860,7 +994,7 @@ TreeView_OnExpand(unsigned pos)
 ///////////////////////////////////////////////////////////////////////////
 TreeView_OnInit()
 {
-  DebugTN("TreeView_OnInit");
+  LOG_DEBUG("TreeView_OnInit");
 
   TreeCtrl_HandleEventInitialize();  
 
@@ -875,7 +1009,7 @@ TreeView_OnInit()
 ///////////////////////////////////////////////////////////////////////////
 TreeView_OnSelect(unsigned pos)
 {
-  DebugTN("TreeView_OnSelect",pos);
+  LOG_DEBUG("TreeView_OnSelect",pos);
   TreeCtrl_HandleEventOnSelChange(pos);
 
   // the last line of code of each fwTreeView event handler MUST be the following:
@@ -889,7 +1023,7 @@ TreeView_OnSelect(unsigned pos)
 ///////////////////////////////////////////////////////////////////////////
 TreeView_OnRightClick(unsigned pos)
 {
-  DebugTN("TreeView_OnRightClick",pos);
+  LOG_DEBUG("TreeView_OnRightClick",pos);
 
   // the last line of code of each fwTreeView event handler MUST be the following:
   id = -1; 

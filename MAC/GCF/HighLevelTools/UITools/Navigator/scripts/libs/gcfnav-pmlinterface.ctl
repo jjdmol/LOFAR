@@ -26,6 +26,7 @@
 //#
 
 #uses "gcfpa-pml.ctl"
+#uses "gcf-util.ctl"
 
 global unsigned g_PAclientId = 0;  // client ID used during all communication with the PML
 
@@ -37,7 +38,7 @@ global unsigned g_PAclientId = 0;  // client ID used during all communication wi
 ///////////////////////////////////////////////////////////////////////////
 void navPMLinitialize()
 {
-  DebugTN("navPMLinitialize");
+  LOG_TRACE("navPMLinitialize");
 	g_PAclientId = gcfInit("pmlCallback");
 }  
 
@@ -48,7 +49,7 @@ void navPMLinitialize()
 ///////////////////////////////////////////////////////////////////////////
 void navPMLterminate()
 {
-  DebugTN("navPMLterminate");
+  LOG_TRACE("navPMLterminate");
 	gcfLeave(g_PAclientId);
 }  
 
@@ -59,8 +60,15 @@ void navPMLterminate()
 ///////////////////////////////////////////////////////////////////////////
 bool navPMLunloadPropertySet(string datapoint)
 {
-  DebugTN("navPMLunloadPropertySet",datapoint);
-  gcfUnloadPS(g_PAclientId,datapoint);
+  LOG_TRACE("navPMLunloadPropertySet",datapoint);
+  if(dpExists(datapoint))
+  {
+	  gcfUnloadPS(g_PAclientId,datapoint);
+	}
+	else
+	{
+	  LOG_TRACE("navPMLunloadPropertySet -- Datapoint does not exist",datapoint);
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -70,8 +78,15 @@ bool navPMLunloadPropertySet(string datapoint)
 ///////////////////////////////////////////////////////////////////////////
 void navPMLloadPropertySet(string datapoint)
 {
-  DebugTN("navPMLloadPropertySet",datapoint);
-  gcfLoadPS(g_PAclientId,datapoint);
+  LOG_TRACE("navPMLloadPropertySet",datapoint);
+  if(dpExists(datapoint))
+  {
+	  gcfLoadPS(g_PAclientId,datapoint);
+	}
+	else
+	{
+	  LOG_TRACE("navPMLloadPropertySet -- Datapoint does not exist",datapoint);
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -81,7 +96,7 @@ void navPMLloadPropertySet(string datapoint)
 ///////////////////////////////////////////////////////////////////////////
 void navPMLconfigurePropertySet(string psScope, string psApcName)
 {
-  DebugTN("navPMLconfigurePropertySet",psScope,psApcName);
+  LOG_TRACE("navPMLconfigurePropertySet",psScope,psApcName);
   gcfConfigurePS(g_PAclientId,psScope,psApcName);
 }
 
@@ -95,7 +110,7 @@ void navPMLconfigurePropertySet(string psScope, string psApcName)
 ///////////////////////////////////////////////////////////////////////////
 void pmlCallback(dyn_string response)
 {
-  DebugTN("pmlCallback:",response);
+  LOG_TRACE("pmlCallback:",response);
   if(response[1] == "loaded")
   {
     if(response[3] == "OK")
