@@ -39,7 +39,7 @@ public:
   virtual ~Divide();
 
   // Evaluate the value for the given request.
-  virtual Vells evaluate (const Request&,
+  virtual Vells evaluate (const Request&,const LoShape &,
 			  const vector<Vells*>& values);
 };
 

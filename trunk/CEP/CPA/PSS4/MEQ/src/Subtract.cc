@@ -31,7 +31,7 @@ Subtract::Subtract()
 Subtract::~Subtract()
 {}
 
-Vells Subtract::evaluate (const Request&,
+Vells Subtract::evaluate (const Request&,const LoShape &,
 			  const vector<Vells*>& values)
 {
   return *(values[0]) - *(values[1]);

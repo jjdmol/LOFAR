@@ -35,7 +35,7 @@ Divide::Divide()
 Divide::~Divide()
 {}
 
-Vells Divide::evaluate (const Request&,
+Vells Divide::evaluate (const Request&,const LoShape &,
 			const vector<Vells*>& values)
 {
   return *(values[0]) / *(values[1]);

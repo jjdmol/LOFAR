@@ -34,7 +34,7 @@ Exp::Exp()
 Exp::~Exp()
 {}
 
-Vells Exp::evaluate (const Request&,
+Vells Exp::evaluate (const Request&,const LoShape &,
 		     const vector<Vells*>& values)
 {
   return exp(*(values[0]));

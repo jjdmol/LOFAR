@@ -33,7 +33,7 @@ Conj::Conj()
 Conj::~Conj()
 {}
 
-Vells Conj::evaluate (const Request&,
+Vells Conj::evaluate (const Request&,const LoShape &,
 		      const vector<Vells*>& values)
 {
   return conj(*(values[0]));

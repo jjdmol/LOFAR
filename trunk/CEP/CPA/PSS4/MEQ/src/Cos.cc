@@ -34,7 +34,7 @@ Cos::Cos()
 Cos::~Cos()
 {}
 
-Vells Cos::evaluate (const Request&,
+Vells Cos::evaluate (const Request&,const LoShape &,
 		     const vector<Vells*>& values)
 {
   return cos(*(values[0]));

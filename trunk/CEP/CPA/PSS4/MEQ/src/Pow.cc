@@ -35,7 +35,7 @@ Pow::Pow()
 Pow::~Pow()
 {}
 
-Vells Pow::evaluate (const Request&,
+Vells Pow::evaluate (const Request&,const LoShape &,
 		     const vector<Vells*>& values)
 {
   return pow (*(values[0]), *(values[1]));

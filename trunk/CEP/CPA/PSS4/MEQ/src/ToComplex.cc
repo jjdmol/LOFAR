@@ -36,7 +36,7 @@ ToComplex::ToComplex()
 ToComplex::~ToComplex()
 {}
 
-Vells ToComplex::evaluate (const Request&,
+Vells ToComplex::evaluate (const Request&,const LoShape &,
 			   const vector<Vells*>& values)
 {
   return tocomplex(*(values[0]), *(values[1]));
