@@ -247,7 +247,6 @@ long treeAddNode(long parentId,int level,string text)
 ///////////////////////////////////////////////////////////////////////////
 void treeAddDatapoints(dyn_string names)
 {
-  shape treeCtrl = getTreeCtrl();
   int namesIndex;
   dyn_dyn_string elementNames;
   dyn_dyn_int elementTypes;
@@ -684,7 +683,7 @@ void InitializeTree()
   }
   else
   {
-    treeCtrl.visible = false;
+//    treeCtrl.visible = false;
     fwTreeView_watchDog(); // prevent memory leak when closing controlling window
   }
   
