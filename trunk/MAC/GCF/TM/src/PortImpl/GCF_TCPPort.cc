@@ -26,11 +26,9 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/ParameterSet.h>
-#include <Socket/GTM_TCPServerSocket.h>
+#include "GTM_TCPServerSocket.h"
 #include <ServiceBroker/GTM_ServiceBroker.h>
 #include <errno.h>
-
-using namespace GCF;
 
 GCFTCPPort::GCFTCPPort(GCFTask& task, 
                        string name, 
@@ -67,8 +65,7 @@ GCFTCPPort::~GCFTCPPort()
   if (_pSocket)
   {
     delete _pSocket;
-    _pSocket = 0;
-    
+    _pSocket = 0;    
   }
 
   if (_broker)
@@ -79,14 +76,13 @@ GCFTCPPort::~GCFTCPPort()
   }
 }
 
-
 bool GCFTCPPort::open()
 {
-  if (getState() != S_DISCONNECTED)
+  if (isConnected())
   {
     LOG_ERROR(formatString ( 
-        "ERROR: Port %s already open.",
-	      _name.c_str()));
+        "Port %s already open.",
+	      getRealName().c_str()));
     return false;
   }
   else if (!_pSocket)
@@ -94,8 +90,8 @@ bool GCFTCPPort::open()
     if (isSlave())
     {
       LOG_ERROR(formatString ( 
-          "ERROR: Port %s not initialised.",
-          _name.c_str()));
+          "Port %s not initialised.",
+          getRealName().c_str()));
       return false;
     }
     else
@@ -199,7 +195,7 @@ void GCFTCPPort::serviceRegistered(unsigned int result, unsigned int portNumber)
         _pTask->getName().c_str(),
         portNumber));
     _portNumber = portNumber;
-    if (_pSocket->open(portNumber) < 0)
+    if (!_pSocket->open(portNumber))
     {
       schedule_disconnected();
     }
@@ -241,20 +237,20 @@ void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const
         host.c_str(),
         portNumber));
         
-    if (_pSocket->open(portNumber) < 0)
-    {
-      schedule_disconnected();
-    }
-    else
+    if (_pSocket->open(portNumber))
     { 
-      if (_pSocket->connect(portNumber, host) < 0)
-      {
-        schedule_disconnected();
-      }
-      else
+      if (_pSocket->connect(portNumber, host))
       {
         schedule_connected();
       }
+      else
+      {
+        schedule_disconnected();
+      }
+    }
+    else
+    {
+      schedule_disconnected();
     }
   }
 }
@@ -271,8 +267,17 @@ ssize_t GCFTCPPort::send(GCFEvent& e)
 
   assert(_pSocket);
 
+  if (!isConnected()) 
+  {
+    LOG_ERROR(formatString (
+        "Port '%s' on task '%s' not connected! Event not sent!",
+        getRealName().c_str(),
+        getTask()->getName().c_str()));
+    return 0;
+  }
+
   if (MSPP == getType())  
-    return -1; // no messages can be send by this type of port
+    return 0; // no messages can be send by this type of port
 
  
   unsigned int packsize;
@@ -289,7 +294,7 @@ ssize_t GCFTCPPort::send(GCFEvent& e)
     setState(S_DISCONNECTING);     
     schedule_disconnected();
     
-    written = -1;
+    written = 0;
   }
  
   return written;
@@ -328,6 +333,7 @@ void GCFTCPPort::setAddr(const TPeerAddr& addr)
 
 bool GCFTCPPort::accept(GCFTCPPort& port)
 {
+  bool result(false);
   if (MSPP == getType() && SPP == port.getType())
   {
     GTMTCPServerSocket* pProvider = (GTMTCPServerSocket*)_pSocket;
@@ -335,12 +341,12 @@ bool GCFTCPPort::accept(GCFTCPPort& port)
     {
       port._pSocket = new GTMTCPSocket(port);
     }
-    if (pProvider->accept(*port._pSocket) >= 0)
+    if (pProvider->accept(*port._pSocket))
     {
       setState(S_CONNECTING);        
       port.schedule_connected();
+      result = true;
     }
-    return true;
   }
-  return false;
+  return result;
 }

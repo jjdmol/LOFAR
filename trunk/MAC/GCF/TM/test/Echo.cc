@@ -33,7 +33,7 @@ Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 
   // initialize the port
   server.init(*this, "server", GCFPortInterface::SPP, ECHO_PROTOCOL);
-  spidDriver.init(*this, "spid", GCFPortInterface::SPP, 0, true);
+  spidDriver.init(*this, "spid", GCFPortInterface::SAP, 0, true);
 }
 
 GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)

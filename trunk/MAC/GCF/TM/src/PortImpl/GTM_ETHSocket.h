@@ -1,4 +1,4 @@
-//#  GTM_TCPSocket.h: base class for all sockets
+//#  GTM_ETHSocket.h: base class for all sockets
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,54 +20,60 @@
 //#
 //#  $Id$
 
-#ifndef GTM_TCPSOCKET_H
-#define GTM_TCPSOCKET_H
+#ifndef GTM_ETHSOCKET_H
+#define GTM_ETHSOCKET_H
 
 #include <unistd.h>
 #include <GCF/TM/GCF_Event.h>
-#include <Socket/GTM_Socket.h>
-#include <Common/lofar_string.h>
+#include "GTM_File.h"
+
+#include <linux/if_packet.h>
+#include <linux/if_ether.h>
+
 
 // forward declaration
-class GCFTCPPort;
-class GCFPeerAddr;
-class GTMSocketHandler;
-class GTMTCPServerSocket;
+class GCFETHRawPort;
 
 /**
- * This class consists of the basic implementation of a TCP socket. Beside that it 
- * is the base class for the GTMTCPServerSocket class.
+ * This class consists of the basic implementation of a ETH socket. 
  */
 
-class GTMTCPSocket : public GTMSocket
+class GTMETHSocket : public GTMFile
 {
   public:
-    GTMTCPSocket (GCFTCPPort& port);
-    virtual ~GTMTCPSocket ();
+    GTMETHSocket (GCFETHRawPort& port);
+    virtual ~GTMETHSocket ();
   
     /**
-     * open/close functions
+     * @param ethertype argument to set the type
+     * of Ethernet frames being sent.
      */
-    virtual int open (unsigned int portNumber);
-    virtual int connect (unsigned int portNumber, const string& host);
+    virtual int open (const char* ifname,
+                      const char* destMac,
+		                  unsigned short ethertype = 0x0000);
   
     /**
-     * send/recv functions
+     * send/recv methods
      */
     virtual ssize_t send (void* buf, size_t count);
     virtual ssize_t recv (void* buf, size_t count);
 
-  protected:
-    friend class GTMSocketHandler;
-    friend class GTMTCPServerSocket;
-  
   private:
-    GTMTCPSocket ();
-    /**
-     * Don't allow copying of the GTMTCPSocket object.
-     */
-    GTMTCPSocket (const GTMTCPSocket&);
-    GTMTCPSocket& operator= (const GTMTCPSocket&);
+    GTMETHSocket ();
+    /// Don't allow copying of the GTMETHSocket object.
+
+    GTMETHSocket (const GTMETHSocket&);
+    GTMETHSocket& operator= (const GTMETHSocket&);
+
+  private: // helper methods
+    void convertCcp2sllAddr(const char* destMacStr,
+                            char destMac[ETH_ALEN]);
+    
+  private:
+    char  _recvPacket[ETH_FRAME_LEN];   
+    char  _sendPacket[ETH_FRAME_LEN];
+    char* _sendPacketData; // pointer to start of packet payload data
+    struct sockaddr_ll _sockaddr;
 };
 
 #endif

@@ -1,4 +1,4 @@
-//#  GTM_Socket.cc: base class for all sockets
+//#  GTM_File.cc: base class for all sockets
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,71 +20,75 @@
 //#
 //#  $Id$
 
-#include "GTM_Socket.h"
-#include "GTM_SocketHandler.h"
-#include <GCF/TM/GCF_TCPPort.h>
+#include "GTM_File.h"
+#include "GTM_FileHandler.h"
+#include <GCF/TM/GCF_RawPort.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GTM_Defines.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <netdb.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <errno.h>
 
 
-GTMSocket::GTMSocket(GCFRawPort& port) :
-  _socketFD(-1),
-  _port(port),
-  _pHandler(0)
+GTMFile::GTMFile(GCFRawPort& port) :
+  _fd(-1),
+  _pHandler(0),
+  _port(port)
 {
-  _pHandler = GTMSocketHandler::instance();
+  _pHandler = GTMFileHandler::instance();
   assert(_pHandler);
 }
 
-GTMSocket::~GTMSocket()
+GTMFile::~GTMFile()
 {
   close();
-  GTMSocketHandler::release();
+  GTMFileHandler::release();
   _pHandler = 0;
 }
 
-int GTMSocket::close()
+bool GTMFile::close()
 {
-  int result(0);
+  bool result(true);
   
-  if (_socketFD > -1)
+  if (_fd > -1)
   { 
     assert(_pHandler);
-    _pHandler->deregisterSocket(*this);
-    result = ::close(_socketFD);
-    _socketFD = -1;
+    _pHandler->deregisterFile(*this);
+    result = (::close(_fd) == 0);
+    if (!result)
+    {
+      LOG_WARN(formatString (
+              "::close, error: %s",
+              strerror(errno)));
+      close();
+    }
+    
+    _fd = -1;
   }
   return result;
 }
 
-int GTMSocket::setFD(int fd)
+int GTMFile::setFD(int fd)
 {
   if (fd >= 0)
   {
-    if (_socketFD > -1)
+    if (_fd > -1)
     {
       close();
     }
-    _socketFD = fd;
+    _fd = fd;
     assert(_pHandler);
-    _pHandler->registerSocket(*this);
+    _pHandler->registerFile(*this);
   }
   return (fd);    
 }
 
-void GTMSocket::workProc()
+void GTMFile::workProc()
 {
   unsigned long bytesRead = 0;
   
-  if (ioctl(_socketFD, FIONREAD, &bytesRead) > -1)
+  if (ioctl(_fd, FIONREAD, &bytesRead) > -1)
   {
     if (bytesRead == 0)
     {
@@ -104,7 +108,7 @@ void GTMSocket::workProc()
         "%s(%s): Error in 'ioctl' on socket fd %d: %s",
         _port.getTask()->getName().c_str(), 
         _port.getName().c_str(), 
-        _socketFD, 
+        _fd, 
         strerror(errno)));        
   }
 }

@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include "GTM_ETHSocket.h"
-#include "GTM_SocketHandler.h"
+#include "GTM_FileHandler.h"
 #include <GCF/TM/GCF_ETHRawPort.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GTM_Defines.h>
@@ -49,7 +49,7 @@
 
 
 GTMETHSocket::GTMETHSocket(GCFETHRawPort& port) :
-  GTMSocket(port)
+  GTMFile(port)
 {
 }
 
@@ -72,7 +72,7 @@ ssize_t GTMETHSocket::send(void* buf, size_t count)
    */
   if (newcount < ETH_ZLEN - ETH_HLEN) newcount = ETH_ZLEN - ETH_HLEN;
 
-  result = sendto(_socketFD, 
+  result = sendto(_fd, 
                   _sendPacket, 
                   newcount + sizeof(struct ethhdr), 0,
                  (struct sockaddr*)&_sockaddr,
@@ -89,7 +89,7 @@ ssize_t GTMETHSocket::recv(void* buf, size_t count)
 
   struct sockaddr_ll recvSockaddr;
   socklen_t recvSockaddrLen = sizeof(struct sockaddr_ll);
-  result = recvfrom(_socketFD, _recvPacket, ETH_FRAME_LEN,
+  result = recvfrom(_fd, _recvPacket, ETH_FRAME_LEN,
        0, (struct sockaddr*)&recvSockaddr, &recvSockaddrLen);
 
   if (result < 0) return -1;
@@ -116,7 +116,7 @@ int GTMETHSocket::open(const char* ifname,
 
   filter.len = sizeof(mac_filter_insn) / sizeof(struct sock_filter);
 
-  if (_socketFD > -1)
+  if (_fd > -1)
     return 0;
   else
   {
@@ -275,7 +275,7 @@ int GTMETHSocket::open(const char* ifname,
     
     setFD(socketFD);
   
-    return (_socketFD < 0 ? -1 : 0);
+    return (_fd < 0 ? -1 : 0);
   }
 }
 

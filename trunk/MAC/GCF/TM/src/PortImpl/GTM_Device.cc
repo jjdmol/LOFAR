@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include "GTM_Device.h"
-#include "GTM_SocketHandler.h"
+#include "GTM_FileHandler.h"
 #include <GCF/TM/GCF_DevicePort.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GTM_Defines.h>
@@ -31,7 +31,7 @@
 #include <fcntl.h>
 
 GTMDevice::GTMDevice(GCFDevicePort& port) :
-  GTMSocket(port)
+  GTMFile(port)
 {
 }
 
@@ -42,36 +42,34 @@ GTMDevice::~GTMDevice()
 
 ssize_t GTMDevice::send(void* buf, size_t count)
 {
-  if (_socketFD > -1) 
-    return ::write(_socketFD, buf, count);
+  if (_fd > -1) 
+    return ::write(_fd, buf, count);
   else
     return 0;
 }
 
 ssize_t GTMDevice::recv(void* buf, size_t count)
 {
-  if (_socketFD > -1) 
-    return ::read(_socketFD, buf, count);
+  if (_fd > -1) 
+    return ::read(_fd, buf, count);
   else
     return 0;
 }
 
-int GTMDevice::open(const string& deviceName)
+bool GTMDevice::open(const string& deviceName)
 {
-  if (_socketFD > -1)
-    return 0;
-  else
+  if (_fd == -1)
   {
     int socketFD;
     socketFD = ::open(deviceName.c_str(), O_RDWR);
     if (socketFD < 0)
     {
-      LOG_FATAL(formatString (
+      LOG_WARN(formatString (
           "Could not open device '%s' with following reason: %s",
           deviceName.c_str(),
           strerror(errno)));
     }
     setFD(socketFD);
-    return (_socketFD < 0 ? -1 : 0);
   }
+  return (_fd > -1);
 }

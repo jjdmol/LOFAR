@@ -32,7 +32,7 @@
 GTMTCPServerSocket::GTMTCPServerSocket(GCFTCPPort& port, bool isProvider) : 
   GTMTCPSocket(port),
   _isProvider(isProvider),
-  _pTCPServerSocket(0)
+  _pDataSocket(0)
 {
 }
 
@@ -41,10 +41,10 @@ GTMTCPServerSocket::~GTMTCPServerSocket()
   close();  
 }
 
-int GTMTCPServerSocket::open(unsigned int portNumber)
+bool GTMTCPServerSocket::open(unsigned int portNumber)
 {
-  int result(-1);
-  if (_socketFD == -1)
+  bool result(false);
+  if (_fd == -1)
   {
     struct sockaddr_in address;
     int addrLen;
@@ -55,10 +55,20 @@ int GTMTCPServerSocket::open(unsigned int portNumber)
       struct linger lin = { 1,1 };
 
       if (::setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, (char*)&val, sizeof(val)) < 0)
-        return -2;
+      {
+        LOG_WARN(formatString (
+              "Error on setting socket options SO_REUSEADDR: %s",
+              strerror(errno)));
+        return false;
+      }
 
       if (::setsockopt(socketFD, SOL_SOCKET, SO_LINGER, (const char*)&lin, sizeof(lin)) < 0)
-        return -2;
+      {
+        LOG_WARN(formatString (
+              "Error on setting socket options SO_LINGER: %s",
+              strerror(errno)));
+        return false;
+      }
       
       address.sin_family = AF_INET;
       address.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -69,19 +79,37 @@ int GTMTCPServerSocket::open(unsigned int portNumber)
         if (listen(socketFD, 5) > -1)
         {    
           setFD(socketFD);
-          result = (fcntl(socketFD, F_SETFL, FNDELAY) < 0 ? -1 : 0);            
+          result = (fcntl(socketFD, F_SETFL, FNDELAY) == 0);            
+        }
+        else
+        {
+          LOG_WARN(formatString (
+                "::listen, error: %s",
+                strerror(errno)));
         }
       }
-      if (result < 0)
+      else
+      {
+        LOG_WARN(formatString (
+              "::bind, error: %s",
+              strerror(errno)));
+      }
+      if (!result)
         close();
     }    
+    else
+    {
+      LOG_WARN(formatString (
+              "::socket, error: %s",
+              strerror(errno)));
+    }
   }
   else
   {
-    if (_pTCPServerSocket != 0)
+    if (_pDataSocket != 0)
     {
-      _pTCPServerSocket->close();
-      result = 0;
+      _pDataSocket->close();
+      result = true;
     }
   }
     
@@ -93,78 +121,92 @@ void GTMTCPServerSocket::workProc()
   if (_isProvider)
   {
     GCFEvent acceptReqEvent(F_ACCEPT_REQ);
-    _port.dispatch(acceptReqEvent);
+    dispatch(acceptReqEvent);
   }
   else
   {
+    GCFTCPPort* pPort = (GCFTCPPort*)(&_port);
+
+    assert(_pDataSocket == 0);
+    _pDataSocket = new GTMTCPSocket(*pPort);
+    assert (_pDataSocket->getFD() < 0);
+
     struct sockaddr_in clientAddress;
     socklen_t clAddrLen = sizeof(clientAddress);
-    if (_pTCPServerSocket == 0)
-    {
-      GCFTCPPort* pPort = static_cast<GCFTCPPort*>(&_port);
-      assert(pPort);
-      _pTCPServerSocket = new GTMTCPSocket(*pPort);
-    }
-    if (_pTCPServerSocket->getFD() < 0)
-      _pTCPServerSocket->setFD(::accept(_socketFD, 
-                   (struct sockaddr*) &clientAddress, 
-                   &clAddrLen));
+    _pDataSocket->setFD(::accept(_fd, 
+                 (struct sockaddr*) &clientAddress, 
+                 &clAddrLen));
          
-    if (_pTCPServerSocket->getFD() >= 0)
+    if (_pDataSocket->getFD() >= 0)
     {
       GCFEvent connectedEvent(F_CONNECTED);
-      _port.dispatch(connectedEvent);
+      dispatch(connectedEvent);
     }
-    // else ignore further connect requests
+    else
+    {
+      LOG_WARN(formatString (
+          "::accept, error: %s",
+          strerror(errno)));
+    }
+    
+    // because we only accept one connection (SPP), we don't need to listen with
+    // this socket anymore
+    GTMFile::close();
   }
 }
 
-int GTMTCPServerSocket::accept(GTMSocket& newSocket)
+bool GTMTCPServerSocket::accept(GTMFile& newSocket)
 {
-  int result(-2);
-  if (_isProvider && _pTCPServerSocket == 0)
+  bool result(false);
+  if (_isProvider && _pDataSocket == 0)
   {
     struct sockaddr_in clientAddress;
     socklen_t clAddrLen = sizeof(clientAddress);
     int newSocketFD;
-    newSocketFD = ::accept(_socketFD, 
+    newSocketFD = ::accept(_fd, 
                        (struct sockaddr*) &clientAddress, 
                        &clAddrLen);
     
-    result = newSocket.setFD(newSocketFD);
+    result = (newSocket.setFD(newSocketFD) > 0);
+    if (!result)
+    {
+      LOG_WARN(formatString (
+          "::accept, error: %s",
+          strerror(errno)));
+    }
   }
   
   return result;
 }
 
-int GTMTCPServerSocket::close()
+bool GTMTCPServerSocket::close()
 {
-  int result(0);
+  bool result(true);
   
-  if (!_isProvider && _pTCPServerSocket != 0)
+  if (!_isProvider && _pDataSocket != 0)
   {
-    result = _pTCPServerSocket->close();
-    delete _pTCPServerSocket;
-    _pTCPServerSocket = 0;
+    result = _pDataSocket->close();
+    delete _pDataSocket;
+    _pDataSocket = 0;
   }
-  if (result >= 0)
-    result = GTMSocket::close();
+  if (result)
+    result = GTMFile::close();
     
   return result;
 }
 
 ssize_t GTMTCPServerSocket::send(void* buf, size_t count)
 {
-  if (!_isProvider && _pTCPServerSocket != 0) 
-    return _pTCPServerSocket->send(buf, count);
+  if (!_isProvider && _pDataSocket != 0) 
+    return _pDataSocket->send(buf, count);
   else
     return 0;
 }
 
 ssize_t GTMTCPServerSocket::recv(void* buf, size_t count)
 {
-  if (!_isProvider && _pTCPServerSocket != 0) 
-    return _pTCPServerSocket->recv(buf, count);
+  if (!_isProvider && _pDataSocket != 0) 
+    return _pDataSocket->recv(buf, count);
   else
     return 0;
 }

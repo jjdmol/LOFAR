@@ -23,6 +23,7 @@
 #include <GCF/TM/GCF_Fsm.h>
 #include <GTM_Defines.h>
 
+// static data member initialisation
 GCFDummyPort GCFFsm::_gcfPort(0, "GCFFSM", F_FSM_PROTOCOL);
 
 void GCFFsm::initFsm()
@@ -35,7 +36,7 @@ void GCFFsm::initFsm()
   {
     LOG_FATAL(LOFAR::formatString (
         "Fsm::init: initial transition F_SIGNAL(F_FSM_PROTOCOL, F_INIT) not handled."));
-    exit(1); // EXIT
+    exit(1);
   }
 }
 

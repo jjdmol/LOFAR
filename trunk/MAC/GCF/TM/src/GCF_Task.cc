@@ -28,25 +28,23 @@
 
 #include <GCF/TM/GCF_PortInterface.h>
 
-#include <GCF/CmdLine.h>
 #include <GCF/ParameterSet.h>
 
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+// static member initialisation
 bool GCFTask::_doExit = false;
 GCFTask::THandlers GCFTask::_handlers;
 GCFTask::TProtocols GCFTask::_protocols;
 int GCFTask::_argc = 0;
 char** GCFTask::_argv = 0;
 
-using namespace LOFAR;
-using namespace GCF;
-
 GCFTask::GCFTask(State initial, string& name) :
   GCFFsm(initial), _name(name)
 {
+  // framework protocols
   registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_names);
   registerProtocol(F_PORT_PROTOCOL, F_PORT_PROTOCOL_names);
 }
@@ -61,19 +59,11 @@ void GCFTask::init(int argc, char** argv)
   _argc = argc;
   _argv = argv;
   
-  string serviceFilesPrefix("mac");
-  string serviceFilesPath(".");
-  
-  if (serviceFilesPath.rfind("/") != (serviceFilesPath.length() - 1))
-    serviceFilesPath += '/';
-  
-  serviceFilesPrefix = serviceFilesPath + serviceFilesPrefix;
-
   ParameterSet* pParamSet = ParameterSet::instance();
-  
   string configfile(argv[0]);
   pParamSet->adoptFile(configfile + ".conf");
-  INIT_LOGGER(serviceFilesPath + "log4cplus.properties");   
+  
+  INIT_LOGGER("./log4cplus.properties");   
 
   if (_doExit)
     exit(-1);
@@ -85,9 +75,13 @@ void GCFTask::run()
   signal(SIGTERM, GCFTask::signalHandler);
   signal(SIGPIPE, SIG_IGN);
 
+  // THE MAIN LOOP OF THE APPLICATION
+  // can only be interrupted/stopped by calling stop or terminating the application
   while (!_doExit)
   {
-    THandlers tempHandlers(_handlers);
+    // new handlers can add during processing the workProc
+    // thus a temp handler list is made
+    THandlers tempHandlers(_handlers); 
 
     for (THandlers::iterator iter = tempHandlers.begin() ;
           iter != tempHandlers.end() && !_doExit; 
@@ -99,13 +93,11 @@ void GCFTask::run()
   stop();
 }
 
-void GCFTask::start()
-{
-    initFsm();
-}
-
 void GCFTask::stop()
 {
+  // stops the application in 2 steps
+  // first it stops the handlers and secondly it deletes the handler objects if
+  // they are not used anymore by other object followed by deleting the handlers list
   if (_doExit)
   {
     LOG_INFO("Application is stopped! Possible reasons: 'stop' called or terminated");
@@ -115,8 +107,8 @@ void GCFTask::stop()
           ++iter)
     {
       pHandler = (*iter);
-      pHandler->leave();
-      if (pHandler->mayDeleted())
+      pHandler->leave(); // "application" is also a handler user, see registerHandler
+      if (pHandler->mayDeleted()) // no other object uses this handler?
       {
         delete pHandler;
       }

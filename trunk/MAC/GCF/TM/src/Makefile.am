@@ -1,5 +1,6 @@
 SUBDIRS	= . ServiceBroker
 
+INSTALL=/usr/bin/install -C
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: ServiceBroker/%.prot
@@ -25,12 +26,12 @@ DOCHDRS = $(pkginclude_HEADERS) \
   GTM_Defines.h \
   Timer/GTM_Timer.h \
   Timer/GTM_TimerHandler.h \
-  Socket/GTM_Socket.h \
-  Socket/GTM_TCPSocket.h \
-  Socket/GTM_TCPServerSocket.h \
-  Socket/GTM_SocketHandler.h \
-  Socket/GTM_ETHSocket.h \
-  Socket/GTM_Device.h \
+  PortImpl/GTM_File.h \
+  PortImpl/GTM_FileHandler.h \
+  PortImpl/GTM_TCPSocket.h \
+  PortImpl/GTM_TCPServerSocket.h \
+  PortImpl/GTM_ETHSocket.h \
+  PortImpl/GTM_Device.h \
   ServiceBroker/GTM_SBTCPPort.h \
   ServiceBroker/GTM_ServiceBroker.h
     
@@ -41,19 +42,19 @@ libgcftm_la_SOURCES= $(DOCHDRS) \
   GCF_Protocols.cc \
   GCF_Task.cc \
   GCF_Event.cc \
-  PortInterface/GCF_Port.cc \
-  PortInterface/GCF_RawPort.cc \
+  Port/GCF_Port.cc \
+  Port/GCF_RawPort.cc \
   Timer/GTM_Timer.cc \
   Timer/GTM_TimerHandler.cc \
-  Socket/GCF_TCPPort.cc \
-  Socket/GTM_Socket.cc \
-  Socket/GTM_TCPSocket.cc \
-  Socket/GTM_TCPServerSocket.cc \
-  Socket/GTM_SocketHandler.cc \
-  Socket/GTM_ETHSocket.cc \
-  Socket/GCF_ETHRawPort.cc \
-  Socket/GCF_DevicePort.cc \
-  Socket/GTM_Device.cc \
+  PortImpl/GCF_TCPPort.cc \
+  PortImpl/GTM_File.cc \
+  PortImpl/GTM_TCPSocket.cc \
+  PortImpl/GTM_TCPServerSocket.cc \
+  PortImpl/GTM_FileHandler.cc \
+  PortImpl/GTM_ETHSocket.cc \
+  PortImpl/GCF_ETHRawPort.cc \
+  PortImpl/GCF_DevicePort.cc \
+  PortImpl/GTM_Device.cc \
   ServiceBroker/GTM_SBTCPPort.cc \
   ServiceBroker/GTM_ServiceBroker.cc \
 	SB_Protocol.cc
@@ -68,6 +69,6 @@ BUILT_SOURCES = \
 
 EXTRA_DIST = \
 	SB_Protocol.ph
-
+	
 include $(lofar_sharedir)/Makefile.common
 

@@ -52,7 +52,6 @@ void GTMTimerHandler::release()
 GTMTimerHandler::GTMTimerHandler() :
   _running(true)
 {  
-  GCFTask::registerHandler(*this);
 }
 
 GTMTimerHandler::~GTMTimerHandler()

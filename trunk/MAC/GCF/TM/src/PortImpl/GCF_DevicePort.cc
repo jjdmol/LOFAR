@@ -22,24 +22,20 @@
 
 
 #include <GCF/TM/GCF_DevicePort.h>
+#include "GTM_Device.h"
 #include <GTM_Defines.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <Socket/GTM_Device.h>
 #include <GCF/ParameterSet.h>
 #include <errno.h>
 
-using namespace LOFAR;
-using namespace GCF;
-
 GCFDevicePort::GCFDevicePort(GCFTask& task, 
-                       string name, 
-                       TPortType type, 
+                       string name,                        
                        int protocol,
                        const string& deviceName, 
                        bool transportRawData) 
-  : GCFRawPort(task, name, type, protocol, transportRawData),
-    _devNameIsSet(false),
+  : GCFRawPort(task, name, SAP, protocol, transportRawData),
+    _devNameIsSet((deviceName.length() > 0)),
     _pDevice(0),
     _deviceName(deviceName)
 {
@@ -48,7 +44,7 @@ GCFDevicePort::GCFDevicePort(GCFTask& task,
 
 GCFDevicePort::GCFDevicePort(const string& deviceName)
     : GCFRawPort(),
-    _devNameIsSet(false),
+    _devNameIsSet((deviceName.length() > 0)),
     _pDevice(0),
     _deviceName(deviceName)
 {
@@ -73,17 +69,24 @@ bool GCFDevicePort::open()
 {
   if (isConnected())
   {
-    LOG_ERROR(LOFAR::formatString ( 
-        "ERROR: Port %s already open.",
+    LOG_ERROR(formatString ( 
+        "Port %s already open.",
 	      getRealName().c_str()));
+    return false;
+  }
+  else if (SAP != getType())
+  {
+    LOG_ERROR(formatString ( 
+        "Device ports only can act as a SAP (%s).",
+        getRealName().c_str()));
     return false;
   }
   else if (!_pDevice)
   {
     if (isSlave())
     {
-      LOG_ERROR(LOFAR::formatString ( 
-          "ERROR: Port %s not initialised.",
+      LOG_ERROR(formatString ( 
+          "Port %s not initialised.",
           getRealName().c_str()));
       return false;
     }
@@ -95,38 +98,39 @@ bool GCFDevicePort::open()
 
   try
   {
-    setDeviceName(ParameterSet::instance()->getString(formatString(
-      "mac.ns.%s.%s.deviceName",
-      _pTask->getName().c_str(),
-      getRealName().c_str())));    
+    if (!_devNameIsSet)
+    {
+      // retrieve the device name from the parameter set
+      setDeviceName(
+          ParameterSet::instance()->getString(
+              formatString(
+                  "mac.ns.%s.%s.deviceName",
+                  _pTask->getName().c_str(),
+                  getRealName().c_str())
+              )
+          );    
+    }
   }
   catch (...)
   {
     if (!_devNameIsSet)
     {
-      LOG_ERROR(LOFAR::formatString (
+      LOG_ERROR(formatString (
           "Could not get address info for port '%s' of task '%s'",
-         getRealName().c_str(), _pTask->getName().c_str()));
+          getRealName().c_str(), _pTask->getName().c_str()));
       return false;
     }
   }
 
-  if (_pDevice->open(_deviceName) < 0)
-  {
-    setState(S_DISCONNECTING);
-    if (SAP == getType())
-    {
-      schedule_disconnected();
-    }
-    else
-    {
-      return false;
-    }
-  }
-  else
+  if (_pDevice->open(_deviceName))
   { 
     setState(S_CONNECTING);
     schedule_connected();
+  }
+  else
+  {
+    setState(S_DISCONNECTING);
+    schedule_disconnected();
   }
   return true;
 }
@@ -134,13 +138,18 @@ bool GCFDevicePort::open()
 ssize_t GCFDevicePort::send(GCFEvent& e)
 {
   size_t written = 0;
-
+  
+  if (!isConnected()) 
+  {
+    LOG_ERROR(formatString (
+        "Port '%s' on task '%s' not connected! Event not sent!",
+        getRealName().c_str(),
+        getTask()->getName().c_str()));
+    return 0;
+  }
+  
   assert(_pDevice);
 
-  if (MSPP == getType())  
-    return 0; // no messages can be send by this type of port
-
- 
   unsigned int packsize;
   void* buf = e.pack(packsize);
 
@@ -152,7 +161,7 @@ ssize_t GCFDevicePort::send(GCFEvent& e)
 
   if ((written = _pDevice->send(buf, packsize)) != packsize)
   {
-    LOG_DEBUG(LOFAR::formatString (
+    LOG_DEBUG(formatString (
         "truncated send: %s",
         strerror(errno)));
       
@@ -167,6 +176,7 @@ ssize_t GCFDevicePort::send(GCFEvent& e)
 
 ssize_t GCFDevicePort::recv(void* buf, size_t count)
 {
+  if (!isConnected()) return 0;
   assert(_pDevice);
   return _pDevice->recv(buf, count);
 }
@@ -178,7 +188,7 @@ bool GCFDevicePort::close()
   schedule_close();
 
   // return success when port is still connected
-  // scheduled close will only occur later
+  // scheduled close event will occur after the context switch
   return isConnected();
 }
 

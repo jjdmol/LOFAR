@@ -24,11 +24,8 @@
 #include "GTM_SBTCPPort.h"
 #include <GTM_Defines.h>
 #include "GSB_Defines.h"
-#include <Socket/GTM_TCPServerSocket.h>
+#include <PortImpl/GTM_TCPServerSocket.h>
 #include <GCF/ParameterSet.h>
-
-using namespace LOFAR;
-using namespace GCF;
 
 GTMSBTCPPort::GTMSBTCPPort(GCFTask& task, 
                        string name, 
@@ -59,7 +56,7 @@ bool GTMSBTCPPort::open()
   if (isConnected())
   {
     LOG_ERROR(formatString ( 
-        "ERROR: Port %s already open.",
+        "Port %s already open.",
 	      _name.c_str()));
     return false;
   }
@@ -68,7 +65,7 @@ bool GTMSBTCPPort::open()
     if (isSlave())
     {
       LOG_ERROR(formatString ( 
-          "ERROR: Port %s not initialised.",
+          "Port %s not initialised.",
           _name.c_str()));
       return false;
     }
@@ -99,7 +96,28 @@ bool GTMSBTCPPort::open()
     return false;
   }
   
-  if (_pSocket->open(sbPortNumber) < 0)
+  if (_pSocket->open(sbPortNumber))
+  { 
+    if (SAP == getType())
+    {   
+      if (_pSocket->connect(sbPortNumber, sbHost))
+      {
+        setState(S_CONNECTING);        
+        schedule_connected();
+      }
+      else
+      {
+        setState(S_DISCONNECTING);
+        schedule_disconnected();
+      }
+    } 
+    else if (MSPP == getType())
+    {
+      setState(S_CONNECTING);        
+      schedule_connected();
+    }
+  }
+  else
   {
     setState(S_DISCONNECTING);
     if (SAP == getType())
@@ -109,27 +127,6 @@ bool GTMSBTCPPort::open()
     else
     {
       return false;
-    }
-  }
-  else
-  { 
-    if (SAP == getType())
-    {   
-      if (_pSocket->connect(sbPortNumber, sbHost) < 0)
-      {
-        setState(S_DISCONNECTING);
-        schedule_disconnected();
-      }
-      else
-      {
-        setState(S_CONNECTING);        
-        schedule_connected();
-      }
-    } 
-    else if (MSPP == getType())
-    {
-      setState(S_CONNECTING);        
-      schedule_connected();
     }
   }
   return true;
