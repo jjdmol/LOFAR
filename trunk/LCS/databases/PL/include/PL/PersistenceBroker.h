@@ -71,11 +71,20 @@ namespace LOFAR
       // Erase all the objects in the collection. All objects will be deleted
       // from the database.
       // \throw LOFAR::PL::DeleteError
+      // \todo This should all be done within one transaction!  We could then
+      // make the PersistenceBroker responsible for beginning and ending the
+      // transaction, and forward the iteration over the Collection to the
+      // TPersistentObject<T>. TPersistentObject<T> would then need an extra
+      // method like: template<typename T> void
+      // TPersistentObject<T>::erase(const Collection<TPersistentObject<T> >&);
       template<typename T>
       void erase(const Collection<TPersistentObject<T> >& ctpo) const;
 
       // Erase all persistent objects that match the specified query.
       // \throw LOFAR::PL::DeleteError
+      // \todo Not implemented yet. Requires changes to the implementation of
+      // TPersistentObject as well. Currently QueryObjects can only be used
+      // with data retrieval (i.e. read-only) access to the database
       void erase(const QueryObject& q) const;
 
       // Retrieve a collection of persistent objects, that match a specific
@@ -98,6 +107,18 @@ namespace LOFAR
       // Save a collection of persistent objects. New objects will be inserted
       // into the database, existing objects will be updated. By specifying
       // INSERT or UPDATE as SaveMode this default behaviour can be overridden.
+      //
+      // \todo This should all be done within one transaction!  We could then
+      // make the PersistenceBroker responsible for beginning and ending the
+      // transaction. We might choose to forward the iteration over the
+      // Collection to the TPersistentObject<T>. TPersistentObject<T> would
+      // then need extra methods like:
+      // - <tt> template<typename T> void TPersistentObject<T>::save(const
+      // Collection<TPersistentObject<T> >&) <</tt> 
+      // - <tt> template<typename T> void TPersistentObject<T>::insert(const
+      // Collection<TPersistentObject<T> >&) <</tt> 
+      // - <tt> template<typename T> void TPersistentObject<T>::update(const
+      // Collection<TPersistentObject<T> >&) <</tt>
       template<typename T>
       void save(const Collection<TPersistentObject<T> >& ctpo,
 		enum SaveMode sm=AUTOMATIC) const;
