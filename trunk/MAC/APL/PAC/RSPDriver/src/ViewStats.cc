@@ -297,11 +297,11 @@ void ViewStats::plot_statistics(Array<double, 2>& stats)
 
     // add 1 to prevent -inf result
     // 46 bits precision
-    value = 10.0 * log10(value + 1.0); // / (1.0*((uint64)1<<46))) * 10.0;
+    //value = 10.0 * log10(value + 1.0); // / (1.0*((uint64)1<<46))) * 10.0;
 
     // set yrange for power
-    gnuplot_cmd(handle, "set ytics 0,20");
-    gnuplot_cmd(handle, "set yrange [0:120]");
+    //gnuplot_cmd(handle, "set ytics 0,20");
+    gnuplot_cmd(handle, "set yrange [0:2e3]");
     gnuplot_cmd(handle, "set xrange [0:%f]", SAMPLE_FREQUENCY / 2.0);
 
     freq = i * (SAMPLE_FREQUENCY / (n_freqbands * 2.0)); // calculate frequency in MHz
@@ -362,7 +362,9 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
 
-  int n_devices = ((type <= Statistics::SUBBAND_POWER) ? GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) : 1) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
+  int n_devices = ((type <= Statistics::SUBBAND_POWER) ?
+		   GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL :
+		   GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL);
 
   cout << "Which device (RCU's for subband stats, RSP boards for beamlet stats (-1 means all):";
   int device = atoi(fgets(buf, 32, stdin));

@@ -391,7 +391,9 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
 
-  int n_devices = ((type <= Statistics::SUBBAND_POWER) ? GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) : 1) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
+  int n_devices = ((type <= Statistics::SUBBAND_POWER) ?
+		   GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL :
+		   GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL);
   while (1)
   {
     static struct option long_options[] = 
