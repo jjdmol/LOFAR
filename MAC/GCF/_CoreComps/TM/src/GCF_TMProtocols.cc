@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include <GCF_TMProtocols.h>
+#include <GCF/GCF_TMProtocols.h>
 
 /**
  * F_FSM_PROTOCOL signal names

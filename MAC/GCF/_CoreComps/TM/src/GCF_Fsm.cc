@@ -20,10 +20,10 @@
 //#
 //#  $Id$
 
-#include <GCF_Fsm.h>
+#include <GCF/GCF_Fsm.h>
 #include <GTM_Defines.h>
 
-GCFDummyPort GCFFsm::_gcfPort(0, "GCF", F_FSM_PROTOCOL);
+GCFDummyPort GCFFsm::_gcfPort(0, "GCFFSM", F_FSM_PROTOCOL);
 
 void GCFFsm::initFsm()
 {

@@ -21,19 +21,19 @@
 //#  $Id$
 
 
-#include "GCF_PVDynArr.h"
+#include <GCF/GCF_PVDynArr.h>
 
 GCFPVDynArr::GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val) :
-  GCFPValue((TMACValueType) (LPT_DYNARR | itemType))
+  GCFPValue((TMACValueType) (DYNARR_VAL | itemType))
 {
-  assert(itemType != LPT_DYNARR);
+  assert(itemType != DYNARR_VAL);
   setValue(val);
 }
 
 GCFPVDynArr::GCFPVDynArr(TMACValueType itemType) :
-  GCFPValue((TMACValueType) (LPT_DYNARR | itemType))
+  GCFPValue((TMACValueType) (DYNARR_VAL | itemType))
 {
-  assert(itemType != LPT_DYNARR);
+  assert(itemType != DYNARR_VAL);
 }
 
 GCFPVDynArr::~GCFPVDynArr()
@@ -55,7 +55,7 @@ void GCFPVDynArr::setValue(const GCFPValueArray& newVal)
   for (GCFPValueArray::const_iterator iter = newVal.begin();
        iter != newVal.end(); ++iter)
   {
-    if ((*iter)->getType() == (getType() & ~LPT_DYNARR))
+    if ((*iter)->getType() == (getType() & ~DYNARR_VAL))
       _values.push_back((*iter)->clone());
   }
 }

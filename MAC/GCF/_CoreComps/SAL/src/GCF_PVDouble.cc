@@ -21,7 +21,7 @@
 //#  $Id$
 
 
-#include "GCF_PVDouble.h"
+#include <GCF/GCF_PVDouble.h>
 
 /** No descriptions */
 TGCFResult GCFPVDouble::setValue(const string valueData)

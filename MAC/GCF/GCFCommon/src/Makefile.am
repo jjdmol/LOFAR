@@ -1,10 +1,9 @@
-include_HEADERS =	\
-  	GCF_Defines.h 
+include_HEADERS =
 
 DOCHDRS	=	$(include_HEADERS) \
 	CmdLine.h 
       
-lib_LTLIBRARIES 	= libgcfcommon.la
+noinst_LTLIBRARIES 	= libgcfcommon.la
 
 libgcfcommon_la_SOURCES= $(DOCHDRS) \
 	CmdLine.cc

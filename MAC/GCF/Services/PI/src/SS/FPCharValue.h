@@ -28,7 +28,7 @@
 class FPCharValue : public FPValue  
 {
   public:
-  	FPCharValue(char val = 0) : FPValue(LPT_CHAR), value_(val) {;}
+  	FPCharValue(char val = 0) : FPValue(CHAR_VAL), value_(val) {;}
   	virtual ~FPCharValue() {;}
     /** Write property of char value_. */
     inline void setValue( const char newVal) {value_ = newVal;}

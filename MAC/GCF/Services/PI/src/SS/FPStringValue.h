@@ -29,7 +29,7 @@
 class FPStringValue : public FPValue
 {
   public: 
-    FPStringValue(string val = "") : FPValue(LPT_STRING), value_(val) {;}
+    FPStringValue(string val = "") : FPValue(STRING_VAL), value_(val) {;}
     virtual ~FPStringValue() {;}
     
     /** Write property of string value_. */

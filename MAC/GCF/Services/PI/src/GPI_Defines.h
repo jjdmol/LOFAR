@@ -23,8 +23,8 @@
 #ifndef GPI_DEFINES_H
 #define GPI_DEFINES_H
 
-#include <GCFCommon/GCF_Defines.h>
-#include <TM/GCF_TMProtocols.h>
+#include <GCF/GCF_Defines.h>
+#include <GCF/GCF_TMProtocols.h>
 #define CORE_COMPS_PI_LOGGER  (GCF_LOGGER_ROOT + string(".CoreComps.PI"))
 
 #define PI_STDOUT_LOGGER      (CORE_COMPS_PI_LOGGER + string(".Logger"))

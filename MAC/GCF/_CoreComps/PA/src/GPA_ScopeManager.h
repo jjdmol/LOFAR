@@ -46,7 +46,7 @@ class GPAScopeManager
     TPAResult unlinkProperties (list<string>& propList);
     TPAResult registerScope (const string& scope, 
                              GCFPortInterface& port);
-    TPAResult unregisterScope (const string& scope);
+    void unregisterScope (const string& scope);
     void propertiesLinked (const string& scope);
     void propertiesUnlinked (const string& scope);
     void deleteScopesByPort (const GCFPortInterface& requestPort, 

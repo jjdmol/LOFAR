@@ -21,14 +21,14 @@
 //#  $Id$
 
 
-#include "GCF_PValue.h"
-#include "GCF_PVBool.h"
-#include "GCF_PVDouble.h"
-#include "GCF_PVChar.h"
-#include "GCF_PVString.h"
-#include "GCF_PVInteger.h"
-#include "GCF_PVUnsigned.h"
-#include "GCF_PVDynArr.h"
+#include <GCF/GCF_PValue.h>
+#include <GCF/GCF_PVBool.h>
+#include <GCF/GCF_PVDouble.h>
+#include <GCF/GCF_PVChar.h>
+#include <GCF/GCF_PVString.h>
+#include <GCF/GCF_PVInteger.h>
+#include <GCF/GCF_PVUnsigned.h>
+#include <GCF/GCF_PVDynArr.h>
 #include "GSA_Defines.h"
 
 GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
@@ -37,39 +37,39 @@ GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
   
   switch (type)
   {
-    case LPT_BOOL:
+    case BOOL_VAL:
       pResult = new GCFPVBool();
       break;
-    case LPT_CHAR:
+    case CHAR_VAL:
       pResult = new GCFPVChar();
       break;
-    case LPT_UNSIGNED:
+    case UNSIGNED_VAL:
       pResult = new GCFPVUnsigned();
       break;
-    case LPT_INTEGER:
+    case INTEGER_VAL:
       pResult = new GCFPVInteger();
       break;
-    case LPT_DOUBLE:
+    case DOUBLE_VAL:
       pResult = new GCFPVDouble();
       break;
-    case LPT_STRING:
+    case STRING_VAL:
       pResult = new GCFPVString();
       break;
 /*    case BIT32_VAL:
       pResult = new GCFPVBit32();
       break;
-    case LPT_REF:
+    case REF_VAL:
       pResult = new GCFPVRef();
       break;
-    case LPT_BLOB:
+    case BLOB_VAL:
       pResult = new GCFPVBlob();
       break;
-    case LPT_DATETIME:
+    case DATETIME_VAL:
       pResult = new GCFPVDateTime();
       break;*/
     default:
-      if (type > LPT_DYNARR &&
-          type <= LPT_DYNSTRING)
+      if (type > DYNARR_VAL &&
+          type <= DYNSTRING_VAL)
       {
         pResult = new GCFPVDynArr(type);
       }

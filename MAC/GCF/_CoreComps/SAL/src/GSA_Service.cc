@@ -25,13 +25,13 @@
 #include "GSA_Defines.h"
 #include "GSA_SCADAHandler.h"
 
-#include "GCF_PVBool.h"
-#include "GCF_PVChar.h"
-#include "GCF_PVInteger.h"
-#include "GCF_PVUnsigned.h"
-#include "GCF_PVDouble.h"
-#include "GCF_PVString.h"
-#include "GCF_PVDynArr.h"
+#include <GCF/GCF_PVBool.h>
+#include <GCF/GCF_PVChar.h>
+#include <GCF/GCF_PVInteger.h>
+#include <GCF/GCF_PVUnsigned.h>
+#include <GCF/GCF_PVDouble.h>
+#include <GCF/GCF_PVString.h>
+#include <GCF/GCF_PVDynArr.h>
 
 #include <DpMsgAnswer.hxx>            
 #include <DpMsgHotLink.hxx>           
@@ -115,7 +115,6 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
             varPtr = pAnItem->getValuePtr();
             if (varPtr)      // could be NULL !!
             {
-              TSAResult result;
               if (Manager::getTypeName(pAnItem->getDpIdentifier().getDpType(), 
                                         pvssTypeName) == PVSS_FALSE)
               {
@@ -123,12 +122,12 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
                     "PVSS: Could not get dpTypeName '%d'", 
                     pAnItem->getDpIdentifier().getDpType()));   
               }
-              else if ((result = convertPVSSToMAC(*varPtr, pvssTypeName, 
-                                        &pPropertyValue)) != SA_NO_ERROR)
+              else if (convertPVSSToMAC(*varPtr, pvssTypeName, 
+                                        &pPropertyValue) != SA_NO_ERROR)
               {
                 LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
-                    "Could not convert PVSS DP (%s) to MAC property (res=%d)", 
-                    (const char*)pvssTypeName, result));
+                    "Could not convert PVSS DP (%d) to MAC property", 
+                    (const char*)pvssTypeName));   
               }
               else
               {
@@ -212,7 +211,7 @@ void GSAService::handleHotLink(const DpHLGroup& group)
       {
         DPEConfigName = pvssDPEConfigName;
         convDpConfigToProp(DPEConfigName, propName);        
-        LOFAR_LOG_DEBUG(SAL_STDOUT_LOGGER, (
+        LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
             "Value of '%s' has changed", 
             propName.c_str()));   
         propValueChanged(propName, *pPropertyValue);
@@ -233,19 +232,19 @@ TSAResult GSAService::createProp(const string& propName,
   GSAWaitForAnswer *pWFA = new GSAWaitForAnswer(*this);
   CharString pvssTypeName;
 
-  LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+  LOFAR_LOG_INFO(SAL_STDOUT_LOGGER, (
       "Create property '%s'", 
       propName.c_str()));
 
   if ((result = GSASCADAHandler::instance()->isOperational()) == SA_SCADA_NOT_AVAILABLE)
   {
-    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_FATAL(SAL_STDOUT_LOGGER, (
         "Unable to create property: '%s'", 
         propName.c_str()));    
   }
   else if (exists(propName))
   {
-    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_WARN(SAL_STDOUT_LOGGER, (
         "Property: '%s' already exists", 
         propName.c_str()));
     result = SA_PROP_ALREADY_EXIST;    
@@ -253,8 +252,8 @@ TSAResult GSAService::createProp(const string& propName,
   else if (!getPVSSType(macType, pvssTypeName))
   {
     LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
-        "Property: '%s' already exists", 
-        propName.c_str()));
+        "Unknown MACType '%d' could not converted", 
+        macType));
     result = SA_MACTYPE_UNKNOWN;
   }
   else if (Manager::getTypeId(pvssTypeName, dpTypeId) == PVSS_FALSE)
@@ -268,7 +267,7 @@ TSAResult GSAService::createProp(const string& propName,
                     pvssTypeName + 
                     CharString(" missing"));
 
-    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_FATAL(SAL_STDOUT_LOGGER, (
         "PVSS: DatapointType '%s' unknown", 
         (const char*) pvssTypeName));
 
@@ -308,26 +307,26 @@ TSAResult GSAService::deleteProp(const string& propName)
   GSAWaitForAnswer *pWFA = new GSAWaitForAnswer(*this);
   pWFA->setPropName(propName);
 
-  LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+  LOFAR_LOG_INFO(SAL_STDOUT_LOGGER, (
       "Delete property '%s'", 
       propName.c_str()));
   
   if ((result = GSASCADAHandler::instance()->isOperational()) != SA_NO_ERROR)
   {
-    LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_FATAL(SAL_STDOUT_LOGGER, (
         "Unable to delete property: '%s'", 
         propName.c_str()));
   }
   else if (!exists(propName))
   {
-    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_WARN(SAL_STDOUT_LOGGER, (
         "Property: '%s' does not exists", 
         propName.c_str()));    
     result = SA_PROP_DOES_NOT_EXIST;
   }
   else if ((result = getDpId(propName, dpId)) != SA_NO_ERROR)
   {
-    LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
         "Unable to delete property: '%s'", 
         propName.c_str()));
   }
@@ -366,19 +365,19 @@ TSAResult GSAService::subscribe(const string& propName)
 
   convPropToDpConfig(propName, pvssDpName, true);
 
-  LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+  LOFAR_LOG_INFO(SAL_STDOUT_LOGGER, (
       "Subscribe on property '%s'", 
       propName.c_str()));
   
   if ((result = GSASCADAHandler::instance()->isOperational()) != SA_NO_ERROR)
   {
-    LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_FATAL(SAL_STDOUT_LOGGER, (
         "Unable to subscribe on property: '%s'", 
         propName.c_str()));
   }
   else if (!exists(propName))
   {
-    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_WARN(SAL_STDOUT_LOGGER, (
         "Property: '%s' does not exists", 
         propName.c_str()));    
     result = SA_PROP_DOES_NOT_EXIST;      
@@ -414,7 +413,7 @@ TSAResult GSAService::subscribe(const string& propName)
   else
   {
     
-    LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
         "Unable to subscribe on property: '%s'", 
         propName.c_str()));
   }    
@@ -429,19 +428,19 @@ TSAResult GSAService::unsubscribe(const string& propName)
 
   convPropToDpConfig(propName, pvssDpName, true);
 
-  LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+  LOFAR_LOG_INFO(SAL_STDOUT_LOGGER, (
       "Unsubscribe from property '%s'", 
       propName.c_str()));
   
   if ((result = GSASCADAHandler::instance()->isOperational()) != SA_NO_ERROR)
   {
-    LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_FATAL(SAL_STDOUT_LOGGER, (
         "Unable to unsubscribe from property: '%s'", 
         propName.c_str()));
   }
   else if (!exists(propName))
   {
-    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_WARN(SAL_STDOUT_LOGGER, (
         "Property: '%s' does not exists", 
         propName.c_str()));    
     result = SA_PROP_DOES_NOT_EXIST;      
@@ -477,7 +476,7 @@ TSAResult GSAService::unsubscribe(const string& propName)
   }
   else
   {
-    LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
         "Unable to unsubscribe from property: '%s'", 
         propName.c_str()));
   }
@@ -493,26 +492,26 @@ TSAResult GSAService::get(const string& propName)
 
   convPropToDpConfig(propName, pvssDpName, true);
 
-  LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+  LOFAR_LOG_INFO(SAL_STDOUT_LOGGER, (
       "Request value of property '%s'", 
       propName.c_str()));
   
   if ((result = GSASCADAHandler::instance()->isOperational()) != SA_NO_ERROR)
   {
-    LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_FATAL(SAL_STDOUT_LOGGER, (
         "Unable to request of property: '%s'", 
         propName.c_str()));
     result = SA_PROP_DOES_NOT_EXIST;      
   }
   else if (!exists(propName))
   {
-    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_WARN(SAL_STDOUT_LOGGER, (
         "Property: '%s' does not exists", 
         propName.c_str()));    
   }
   else if ((result = getDpId(pvssDpName, dpId)) != SA_NO_ERROR)
   {
-    LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
         "Unable to request value of property: '%s'", 
         propName.c_str()));
   }
@@ -551,32 +550,32 @@ TSAResult GSAService::set(const string& propName, const GCFPValue& value)
 
   convPropToDpConfig(propName, pvssDpName, false);
 
-  LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+  LOFAR_LOG_INFO(SAL_STDOUT_LOGGER, (
       "Set value of property '%s'", 
       propName.c_str()));
   
   if ((result = GSASCADAHandler::instance()->isOperational()) != SA_NO_ERROR)
   {
-    LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_FATAL(SAL_STDOUT_LOGGER, (
         "Unable to set value of property: '%s'", 
         propName.c_str()));
   }
   else if (!exists(propName))
   {
-    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_WARN(SAL_STDOUT_LOGGER, (
         "Property: '%s' does not exists", 
         propName.c_str()));    
     result = SA_PROP_DOES_NOT_EXIST;      
   }
   else if ((result = getDpId(pvssDpName, dpId)) != SA_NO_ERROR)
   {
-    LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
         "Unable to set value of property: '%s'", 
         propName.c_str()));
   }
   else if ((result = convertMACToPVSS(value, &pVar)) != SA_NO_ERROR)
   {
-    LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
         "Unable to set value of property: '%s'", 
         propName.c_str()));
   }
@@ -623,42 +622,42 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
                                   GCFPValue** pMacValue) const
 {
   TSAResult result(SA_NO_ERROR);
-  if (typeName == "LPT_BOOL")
+  if (typeName == "BOOL_VAL")
   {
     if (variable.isA() == BIT_VAR)
       *pMacValue = new GCFPVBool(((BitVar *)&variable)->getValue());
     else
       result = SA_VARIABLE_WRONG_TYPE;
   }
-  else if (typeName == "LPT_CHAR")
+  else if (typeName == "CHAR_VAL")
   {
     if (variable.isA() == CHAR_VAR)
       *pMacValue = new GCFPVChar(((CharVar *)&variable)->getValue());
     else
       result = SA_VARIABLE_WRONG_TYPE;
   }
-  else if (typeName == "LPT_UNSIGNED")
+  else if (typeName == "UNSIGNED_VAL")
   {
     if (variable.isA() == UINTEGER_VAR)
       *pMacValue = new GCFPVUnsigned(((UIntegerVar *)&variable)->getValue());
     else
       result = SA_VARIABLE_WRONG_TYPE;
   }
-  else if (typeName == "LPT_INTEGER")
+  else if (typeName == "INTEGER_VAL")
   {
     if (variable.isA() == INTEGER_VAR)
       *pMacValue = new GCFPVInteger(((IntegerVar *)&variable)->getValue());
     else
       result = SA_VARIABLE_WRONG_TYPE;
   }
-  else if (typeName == "LPT_DOUBLE")
+  else if (typeName == "DOUBLE_VAL")
   {
     if (variable.isA() == FLOAT_VAR)
       *pMacValue = new GCFPVDouble(((FloatVar *)&variable)->getValue());
     else
       result = SA_VARIABLE_WRONG_TYPE;     
   }
-  else if (typeName == "LPT_STRING")
+  else if (typeName == "STRING_VAL")
   {
     if (variable.isA() == TEXT_VAR)
       *pMacValue = new GCFPVString(((TextVar *)&variable)->getValue());
@@ -672,28 +671,28 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
     {
       GCFPValueArray arrayTo;
       GCFPValue* pItemValue(0);
-      GCFPValue::TMACValueType type(GCFPValue::NO_LPT);
+      GCFPValue::TMACValueType type(GCFPValue::NO_VAL);
       // the type for the new FPValue must be determined 
       // separate, because the array could be empty
       switch (DynVar::getItemType(pDynVar->isA()))
       {
         case BIT_VAR:
-          type = GCFPValue::LPT_DYNBOOL;
+          type = GCFPValue::DYNBOOL_VAL;
           break;
         case CHAR_VAR:
-          type = GCFPValue::LPT_DYNCHAR;
+          type = GCFPValue::DYNCHAR_VAL;
           break;
         case INTEGER_VAR:
-          type = GCFPValue::LPT_DYNINTEGER;
+          type = GCFPValue::DYNINTEGER_VAL;
           break;
         case UINTEGER_VAR:
-          type = GCFPValue::LPT_DYNUNSIGNED;
+          type = GCFPValue::DYNUNSIGNED_VAL;
           break;
         case FLOAT_VAR:
-          type = GCFPValue::LPT_DYNDOUBLE;
+          type = GCFPValue::DYNDOUBLE_VAL;
           break;
         case TEXT_VAR:
-          type = GCFPValue::LPT_DYNSTRING;
+          type = GCFPValue::DYNSTRING_VAL;
           break;
       }
       for (Variable* pVar = pDynVar->getFirst();
@@ -729,15 +728,15 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
   {
     *pMacValue = new GCFPVBit32(((Bit32Var *)&variable)->getValue());
   }
-  else if (typeName == "LPT_REF")
+  else if (typeName == "REF_VAL")
   {
     *pMacValue = new GCFPVRef(((TextVar *)&variable)->getValue());
   }
-  else if (typeName == "LPT_BLOB")
+  else if (typeName == "BLOB_VAL")
   {
     *pMacValue = new GCFPVBlob(((BlobVar *)&variable)->getValue());
   }
-  else if (typeName == "LPT_DATETIME")
+  else if (typeName == "DATETIME_VAL")
   {
     *pMacValue = new GCFPVDateTime(((TimeVar *)&variable)->getValue());
   }*/
@@ -754,39 +753,39 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
   TSAResult result(SA_NO_ERROR);
   switch (macValue.getType())
   {
-    case GCFPValue::LPT_BOOL:
+    case GCFPValue::BOOL_VAL:
       *pVar = new BitVar(((GCFPVBool*)&macValue)->getValue());
       break;
-    case GCFPValue::LPT_CHAR:
+    case GCFPValue::CHAR_VAL:
       *pVar = new CharVar(((GCFPVChar*)&macValue)->getValue());
       break;
-    case GCFPValue::LPT_UNSIGNED:
+    case GCFPValue::UNSIGNED_VAL:
       *pVar = new UIntegerVar(((GCFPVUnsigned*)&macValue)->getValue());
       break;
-    case GCFPValue::LPT_INTEGER:
+    case GCFPValue::INTEGER_VAL:
       *pVar = new IntegerVar(((GCFPVInteger*)&macValue)->getValue());
       break;
-    case GCFPValue::LPT_DOUBLE:
+    case GCFPValue::DOUBLE_VAL:
       *pVar = new FloatVar(((GCFPVDouble*)&macValue)->getValue());
       break;
-    case GCFPValue::LPT_STRING:
+    case GCFPValue::STRING_VAL:
       *pVar = new TextVar(((GCFPVString*)&macValue)->getValue().c_str());
       break;
-/*    case GCFPValue::LPT_REF:
+/*    case GCFPValue::REF_VAL:
       *pVar = new TextVar(((GCFPVRef*)&macValue)->getValue());
       break;
-    case GCFPValue::LPT_BLOB:
+    case GCFPValue::BLOB_VAL:
       *pVar = new BlobVar(((GCFPVBlob*)&macValue)->getValue());
       break;
-    case GCFPValue::LPT_DATETIME:
+    case GCFPValue::DATETIME_VAL:
       *pVar = new TimeVar(((GCFPVDateTime*)&macValue)->getValue());
       break;
     case GCFPValue::BIT32_VAL:
       *pVar = new Bit32Var(((GCFPVBit32 *)&macValue)->getValue());
       break;*/
     default:
-      if (macValue.getType() > GCFPValue::LPT_DYNARR && 
-          macValue.getType() <= GCFPValue::LPT_DYNSTRING)
+      if (macValue.getType() > GCFPValue::DYNARR_VAL && 
+          macValue.getType() <= GCFPValue::DYNSTRING_VAL)
       {        
         Variable* pItemValue;
         VariableType type(NOTYPE_VAR);
@@ -794,22 +793,22 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
         // separat, because the array could be empty
         switch (macValue.getType())
         {
-          case GCFPValue::LPT_DYNBOOL:
+          case GCFPValue::DYNBOOL_VAL:
             type = BIT_VAR;
             break;
-          case GCFPValue::LPT_DYNCHAR:
+          case GCFPValue::DYNCHAR_VAL:
             type = CHAR_VAR;
             break;
-          case GCFPValue::LPT_DYNINTEGER:
+          case GCFPValue::DYNINTEGER_VAL:
             type = INTEGER_VAR;
             break;
-          case GCFPValue::LPT_DYNUNSIGNED:
+          case GCFPValue::DYNUNSIGNED_VAL:
             type = UINTEGER_VAR;
             break;
-          case GCFPValue::LPT_DYNDOUBLE:
+          case GCFPValue::DYNDOUBLE_VAL:
             type = FLOAT_VAR;
             break;
-          case GCFPValue::LPT_DYNSTRING:
+          case GCFPValue::DYNSTRING_VAL:
             type = TEXT_VAR;
             break;
         }
@@ -822,22 +821,22 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
           pValue = (*iter);
           switch (pValue->getType())
           {
-            case GCFPValue::LPT_BOOL:
+            case GCFPValue::BOOL_VAL:
               pItemValue  = new BitVar(((GCFPVBool*)pValue)->getValue());
               break;
-            case GCFPValue::LPT_CHAR:
+            case GCFPValue::CHAR_VAL:
               pItemValue  = new CharVar(((GCFPVChar*)pValue)->getValue());
               break;
-            case GCFPValue::LPT_INTEGER:
+            case GCFPValue::INTEGER_VAL:
               pItemValue  = new IntegerVar(((GCFPVInteger*)pValue)->getValue());
               break;
-            case GCFPValue::LPT_UNSIGNED:
+            case GCFPValue::UNSIGNED_VAL:
               pItemValue  = new UIntegerVar(((GCFPVUnsigned*)pValue)->getValue());
               break;
-            case GCFPValue::LPT_DOUBLE:
+            case GCFPValue::DOUBLE_VAL:
               pItemValue  = new FloatVar(((GCFPVDouble*)pValue)->getValue());
               break;
-            case GCFPValue::LPT_STRING:
+            case GCFPValue::STRING_VAL:
               pItemValue  = new TextVar(((GCFPVString*)pValue)->getValue().c_str());
               break;
           }
@@ -858,41 +857,41 @@ bool GSAService::getPVSSType(GCFPValue::TMACValueType macType,
 {
   switch (macType)
   {
-    case GCFPValue::LPT_BOOL:
-      pvssTypeName = "LPT_BOOL";
+    case GCFPValue::BOOL_VAL:
+      pvssTypeName = "BOOL_VAL";
       break;
-    case GCFPValue::LPT_CHAR:
-      pvssTypeName = "LPT_CHAR";
+    case GCFPValue::CHAR_VAL:
+      pvssTypeName = "CHAR_VAL";
       break;
-    case GCFPValue::LPT_UNSIGNED:
-      pvssTypeName = "LPT_UNSIGNED";
+    case GCFPValue::UNSIGNED_VAL:
+      pvssTypeName = "UNSIGNED_VAL";
       break;
-    case GCFPValue::LPT_INTEGER:
-      pvssTypeName = "LPT_INTEGER";
+    case GCFPValue::INTEGER_VAL:
+      pvssTypeName = "INTEGER_VAL";
       break;
-    case GCFPValue::LPT_DOUBLE:
-      pvssTypeName = "LPT_DOUBLE";
+    case GCFPValue::DOUBLE_VAL:
+      pvssTypeName = "DOUBLE_VAL";
       break;
-    case GCFPValue::LPT_STRING:
-      pvssTypeName = "LPT_STRING";
+    case GCFPValue::STRING_VAL:
+      pvssTypeName = "STRING_VAL";
       break;
-    case GCFPValue::LPT_DYNBOOL:
-      pvssTypeName = "LPT_DYNBOOL";
+    case GCFPValue::DYNBOOL_VAL:
+      pvssTypeName = "DYNBOOL_VAL";
       break;
-    case GCFPValue::LPT_DYNCHAR:
-      pvssTypeName = "LPT_DYNCHAR";
+    case GCFPValue::DYNCHAR_VAL:
+      pvssTypeName = "DYNCHAR_VAL";
       break;
-    case GCFPValue::LPT_DYNUNSIGNED:
-      pvssTypeName = "LPT_DYNUNSIGNED";
+    case GCFPValue::DYNUNSIGNED_VAL:
+      pvssTypeName = "DYNUNSIGNED_VAL";
       break;
-    case GCFPValue::LPT_DYNINTEGER:
-      pvssTypeName = "LPT_DYNINTEGER";
+    case GCFPValue::DYNINTEGER_VAL:
+      pvssTypeName = "DYNINTEGER_VAL";
       break;
-    case GCFPValue::LPT_DYNDOUBLE:
-      pvssTypeName = "LPT_DYNDOUBLE";
+    case GCFPValue::DYNDOUBLE_VAL:
+      pvssTypeName = "DYNDOUBLE_VAL";
       break;
-    case GCFPValue::LPT_DYNSTRING:
-      pvssTypeName = "LPT_DYNSTRING";
+    case GCFPValue::DYNSTRING_VAL:
+      pvssTypeName = "DYNSTRING_VAL";
       break;
     default:
       return false;
@@ -919,7 +918,7 @@ TSAResult GSAService::getDpId(const string& dpName, DpIdentifier& dpId) const
                   "getDpId",                      // our function name
                   CharString("Datapoint ") + pvssDpName + CharString(" missing"));
 
-    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
+    LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
             "PVSS: Datapoint '%s' missing", 
             dpName.c_str()));   
 
@@ -982,4 +981,31 @@ void GSAService::convDpConfigToProp(const string& pvssDPEConfigName, string& pro
     }
   }
   propName.assign(pvssDPEConfigName, startPosToCopy, nrOfCharsToCopy); 
+}
+
+bool GSAService::validatePropName(const char* propName)
+{
+  bool result(true);
+  assert(propName);
+  
+  if (propName[0] == '_' || propName[strlen(propName) - 1] == '_' )
+  {
+    result = false;
+  }
+  else if (strstr(propName, "__") != 0)
+  {
+    result = false;
+  }
+  else
+  {
+    for(unsigned short i = 0; i < strlen(propName); i++)
+    {
+      if (!isalnum(propName[i]) && propName[i] != '_')
+      {
+        result = false;
+        break;
+      }
+    }
+  }
+  return result;
 }

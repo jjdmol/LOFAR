@@ -21,7 +21,7 @@
 //#  $Id$
 
 
-#include "GCF_PVInteger.h"
+#include <GCF/GCF_PVInteger.h>
 
 /** No descriptions */
 TGCFResult GCFPVInteger::setValue(const string valueData)

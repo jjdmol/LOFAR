@@ -28,7 +28,7 @@
 class FPDoubleValue : public FPValue
 {
 public: 
-	FPDoubleValue(double val = 0.0) : FPValue(LPT_DOUBLE), value_(val) {;}
+	FPDoubleValue(double val = 0.0) : FPValue(DOUBLE_VAL), value_(val) {;}
 	virtual ~FPDoubleValue() {;}
 
   /** Write property of double value_. */

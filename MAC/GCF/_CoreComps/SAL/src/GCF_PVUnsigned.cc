@@ -21,7 +21,7 @@
 //#  $Id$
 
 
-#include "GCF_PVUnsigned.h"
+#include <GCF/GCF_PVUnsigned.h>
 
 /** No descriptions */
 TGCFResult GCFPVUnsigned::setValue(const string valueData)

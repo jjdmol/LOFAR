@@ -20,17 +20,17 @@
 //#
 //#  $Id$
 
-#include <PortInterface/GCF_Port.h>
-#include <PortInterface/GCF_RawPort.h>
-#include <GCF_Task.h>
-#include <GCF_Event.h>
-#include <GCF_TMProtocols.h>
+#include <GCF/GCF_Port.h>
+#include <GCF/GCF_RawPort.h>
+#include <GCF/GCF_Task.h>
+#include <GCF/GCF_Event.h>
+#include <GCF/GCF_TMProtocols.h>
 #include <PortInterface/GTM_NameService.h>
 #include <PortInterface/GTM_TopologyService.h>
 #include <GTM_Defines.h>
 
 // all possible implementations are included here
-#include <Socket/GCF_TCPPort.h>
+#include <GCF/GCF_TCPPort.h>
 
 /**
  * ::GCFPort constructor

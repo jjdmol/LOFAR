@@ -22,7 +22,7 @@
 //  $Id$
 
 #include "Echo.h"
-#include <SAL/GCF_PVBool.h>
+#include <GCF/GCF_PVBool.h>
 #define DECLARE_SIGNAL_NAMES
 #include "Echo_Protocol.ph"
 
@@ -55,8 +55,8 @@ GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
     {
       GCFPVBool testVal(true);
       TRAN(Echo::connected);
-      service.createProp(propName, GCFPValue::LPT_BOOL);
-      service.createProp(propName + "_test", GCFPValue::LPT_BOOL);
+      service.createProp(propName, GCFPValue::BOOL_VAL);
+      service.createProp(propName + "_test", GCFPValue::BOOL_VAL);
       //service.subscribe(propName);
       service.subscribe(propName + "_test");
       //service.get(propName);

@@ -63,7 +63,7 @@ GCFEvent::TResult GPAController::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_CONNECTED_SIG:
-      TRAN(GPAController::operational);
+      TRAN(GPAController::connected);
       break;
 
     case F_DISCONNECTED_SIG:
@@ -79,7 +79,7 @@ GCFEvent::TResult GPAController::initial(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -153,15 +153,16 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
     {
       PARegisterscopeEvent* pRequest = static_cast<PARegisterscopeEvent*>(&e);
       assert(pRequest);
-      char* scopeData((char*)pRequest + sizeof(PARegisterscopeEvent));
-      unsigned int scopeNameLength(0);
-      sscanf(scopeData, "%03x", &scopeNameLength);
-      string scope(scopeData + 3, scopeNameLength);
-      _curResult =  _scopeManager.registerScope(scope, p);
-      PAScoperegisteredEvent response(pRequest->seqnr, _curResult);
+      string scope;
+      unpackScope((char*)pRequest + sizeof(PARegisterscopeEvent), scope);
+      LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
+          "PML-REQ: Register scope %s",
+          scope.c_str()));
+      PAScoperegisteredEvent response(pRequest->seqnr, PA_NO_ERROR);
+      response.result = _scopeManager.registerScope(scope, p);
       unsigned int scopeDataLength(pRequest->length - sizeof(PARegisterscopeEvent));
       response.length += scopeDataLength;
-      p.send(response, scopeData, scopeDataLength);
+      p.send(response, (char*)pRequest + sizeof(PARegisterscopeEvent), scopeDataLength);
       break;
     }
     case PA_UNREGISTERSCOPE:
@@ -176,6 +177,8 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
     {
       PAPropertieslinkedEvent* pResponse = static_cast<PAPropertieslinkedEvent*>(&e);
       assert(pResponse);
+      if (pResponse->result != PA_NO_ERROR && _curResult == PA_NO_ERROR) 
+        _curResult = pResponse->result;
       propertiesLinked((char*)pResponse + sizeof(PAPropertieslinkedEvent));      
       break;
     }
@@ -183,6 +186,8 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
     {
       PAPropertiesunlinkedEvent* pResponse = static_cast<PAPropertiesunlinkedEvent*>(&e);
       assert(pResponse);
+      if (pResponse->result != PA_NO_ERROR && _curResult == PA_NO_ERROR) 
+        _curResult = pResponse->result;
       propertiesUnlinked((char*)pResponse + sizeof(PAPropertiesunlinkedEvent));      
       break;
     }
@@ -314,8 +319,11 @@ void GPAController::loadAPC(char* actionData)
 {
   const list<TAPCProperty>* propsFromAPC;
   unpackAPCActionData(actionData);
-  _apc.load(_curApcName, _curScope);
-  propsFromAPC = &_apc.getProperties();
+  LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
+      "PML-REQ: Load APC %s with scope %s",
+      _curApcName.c_str(), _curScope.c_str()));
+  _apcFileReader.readFile(_curApcName, _curScope);
+  propsFromAPC = &_apcFileReader.getProperties();
   _usecountManager.incrementUsecount(*propsFromAPC);
   if (!_usecountManager.waitForAsyncResponses())
     apcLoaded(_curResult);
@@ -323,30 +331,34 @@ void GPAController::loadAPC(char* actionData)
 
 void GPAController::apcLoaded(TPAResult result)
 {  
-  const list<TAPCProperty>* propsFromAPC;
-  propsFromAPC = &_apc.getProperties();
+  const list<TAPCProperty>* pPropsFromAPC;
+  pPropsFromAPC = &_apcFileReader.getProperties();
 
-  if (result == PA_NO_ERROR)
-    result = _usecountManager.setDefaults(*propsFromAPC);
-
-  if (result != PA_NO_ERROR && _curResult == PA_NO_ERROR) 
-    _curResult = result;
-  
   GCFEvent* pEvent = _requestManager.getOldestRequest();
   assert(pEvent);
   PALoadapcEvent* pLoadapcE = static_cast<PALoadapcEvent*> (pEvent);
   assert(pLoadapcE);
+
+  if (pLoadapcE->loadDefaults && result == PA_NO_ERROR )
+    result = _usecountManager.setDefaults(*pPropsFromAPC);
+
+  if (result != PA_NO_ERROR && _curResult == PA_NO_ERROR) 
+    _curResult = result;
+  
   PAApcloadedEvent e(pLoadapcE->seqnr, _curResult);
   sendAPCActionResponse(e);
 }  
 
 void GPAController::unloadAPC(char* actionData)
 {
-  const list<TAPCProperty>* propsFromAPC;
+  const list<TAPCProperty>* pPropsFromAPC;
   unpackAPCActionData(actionData);
-  _apc.load(_curApcName, _curScope);
-  propsFromAPC = &_apc.getProperties();
-  _usecountManager.decrementUsecount(*propsFromAPC);
+  LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
+      "PML-REQ: Unload APC %s with scope %s",
+      _curApcName.c_str(), _curScope.c_str()));
+  _apcFileReader.readFile(_curApcName, _curScope);
+  pPropsFromAPC = &_apcFileReader.getProperties();
+  _usecountManager.decrementUsecount(*pPropsFromAPC);
   if (!_usecountManager.waitForAsyncResponses())
     apcUnloaded(_curResult);
 }  
@@ -363,12 +375,15 @@ void GPAController::apcUnloaded(TPAResult result)
 
 void GPAController::reloadAPC(char* actionData)
 {
-  const list<TAPCProperty>* propsFromAPC;
+  const list<TAPCProperty>* pPropsFromAPC;
   unpackAPCActionData(actionData);
-  _apc.load(_curApcName, _curScope);
-  propsFromAPC = &_apc.getProperties();
+  LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
+      "PML-REQ: Reload APC %s with scope %s",
+      _curApcName.c_str(), _curScope.c_str()));
+  _apcFileReader.readFile(_curApcName, _curScope);
+  pPropsFromAPC = &_apcFileReader.getProperties();
 
-  TPAResult result = _usecountManager.setDefaults(*propsFromAPC);
+  TPAResult result = _usecountManager.setDefaults(*pPropsFromAPC);
 
   if (result != PA_NO_ERROR && _curResult == PA_NO_ERROR) 
     _curResult = result;
@@ -381,33 +396,39 @@ void GPAController::reloadAPC(char* actionData)
 
 void GPAController::unregisterScope(char* pScopeData)
 {
-  unsigned int scopeNameLength(0);
-  sscanf(pScopeData, "%03x", &scopeNameLength);
-  string scope(pScopeData + 3, scopeNameLength);
+  string scope;
+  unpackScope(pScopeData, scope);
+
+  LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
+      "PML-REQ: Unregister scope %s",
+      scope.c_str()));
   list<string> subScopes;
   _scopeManager.getSubScopes(scope, subScopes);
   _usecountManager.deletePropertiesByScope(scope, subScopes);
-  TPAResult result = _scopeManager.unregisterScope(scope);
-  if (result != PA_NO_ERROR && _curResult == PA_NO_ERROR) 
-    _curResult = result;
+  _scopeManager.unregisterScope(scope);
   if (!_usecountManager.waitForAsyncResponses())
     allPropertiesDeletedByScope();
 }
 
 void GPAController::propertiesLinked(char* pResponseData)
 {
-  unsigned int scopeNameLength(0);
-  sscanf(pResponseData, "%03x", &scopeNameLength);
-  string scope(pResponseData + 3, scopeNameLength);
-  //TODO: remove props from SCADA DB if returned as not linked
+  string scope;
+  unpackScope(pResponseData, scope);
+  
+  LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
+      "PML-RESP: Properties linked on scope %s",
+      scope.c_str()));
   _scopeManager.propertiesLinked(scope);
 }
 
 void GPAController::propertiesUnlinked(char* pResponseData)
 {
-  unsigned int scopeNameLength(0);
-  sscanf(pResponseData, "%03x", &scopeNameLength);
-  string scope(pResponseData + 3, scopeNameLength);
+  string scope;
+  unpackScope(pResponseData, scope);
+  
+  LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
+      "PML-RESP: Properties unlinked on scope %s",
+      scope.c_str()));
   _scopeManager.propertiesUnlinked(scope);
 }
 
@@ -417,13 +438,7 @@ void GPAController::sendAPCActionResponse(GCFEvent& e)
   {
     if (_curRequestPort->isConnected())
     {
-      unsigned short bufLength(_curApcName.size() + _curScope.size() + 6);
-      char* buffer = new char[bufLength + 1];
-      sprintf(buffer, "%03x%s%03x%s", _curApcName.size(), _curApcName.c_str(), 
-                                      _curScope.size(),   _curScope.c_str()   );
-      e.length += bufLength;
-      _curRequestPort->send(e, buffer, bufLength);
-      delete [] buffer;      
+      _curRequestPort->send(e);
     }
   }
   doNextRequest();
@@ -434,8 +449,12 @@ void GPAController::unpackAPCActionData(char* pActionData)
   unsigned int apcNameLength(0);
   sscanf(pActionData, "%03x", &apcNameLength);
   _curApcName.assign(pActionData + 3, apcNameLength);
-  char* pScopeData = pActionData + 3 + apcNameLength;
+  unpackScope(pActionData + 3 + apcNameLength, _curScope);
+}
+
+void GPAController::unpackScope(char* pScopeData, string& scope)
+{
   unsigned int scopeNameLength(0);
   sscanf(pScopeData, "%03x", &scopeNameLength);
-  _curScope.assign(pScopeData + 3, scopeNameLength);
+  scope.assign(pScopeData + 3, scopeNameLength);
 }

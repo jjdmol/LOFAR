@@ -21,7 +21,7 @@
 //#  $Id$
 
 
-#include "GCF_PVBool.h"
+#include <GCF/GCF_PVBool.h>
 
 /** No descriptions */
 TGCFResult GCFPVBool::setValue(const string valueData)

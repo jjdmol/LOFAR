@@ -28,7 +28,7 @@
 class FPUnsignedValue : public FPValue
 {
   public:
-  	FPUnsignedValue(unsigned int val = 0) : FPValue(LPT_UNSIGNED), value_(val) {;}
+  	FPUnsignedValue(unsigned int val = 0) : FPValue(UNSIGNED_VAL), value_(val) {;}
   	virtual ~FPUnsignedValue() {;}
     /** Write property of unsigned integer value_. */
     virtual inline void setValue( const unsigned int newVal) {value_ = newVal;}

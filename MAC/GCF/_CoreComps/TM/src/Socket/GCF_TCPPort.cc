@@ -21,10 +21,10 @@
 //#  $Id$
 
 
-#include "GCF_TCPPort.h"
-#include "GTM_Defines.h"
-#include <GCF_Task.h>
-#include <GCF_TMProtocols.h>
+#include <GCF/GCF_TCPPort.h>
+#include <GTM_Defines.h>
+#include <GCF/GCF_Task.h>
+#include <GCF/GCF_TMProtocols.h>
 #include <PortInterface/GTM_NameService.h>
 #include <PortInterface/GTM_TopologyService.h>
 #include <Socket/GTM_ServerSocket.h>

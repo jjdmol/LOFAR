@@ -23,7 +23,7 @@
 
 #include "GSA_SCADAHandler.h"
 #include <GSA_Resources.h>
-#include <TM/GCF_Task.h>
+#include <GCF/GCF_Task.h>
 
 GSASCADAHandler* GSASCADAHandler::_pInstance = 0;
 
@@ -60,7 +60,7 @@ void GSASCADAHandler::registerTask(GCFTask& task)
   _registerdTasks.push_back(&task);
 }
  
-void GSASCADAHandler::deregisterTask(GCFTask& task)
+void GSASCADAHandler::unregisterTask(GCFTask& task)
 {
   _registerdTasks.remove(&task);
 }

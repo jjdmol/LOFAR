@@ -23,11 +23,11 @@
 #ifndef GPM_DEFINES_H
 #define GPM_DEFINES_H
 
-#include <GCFCommon/GCF_Defines.h>
+#include <GCF/GCF_Defines.h>
 
 #define CORE_COMPS_PML_LOGGER  (GCF_LOGGER_ROOT + string(".CoreComps.PML"))
 
-#define PML_STDOUT_LOGGER      (CORE_COMPS_SAL_LOGGER + string(".Logger"))
+#define PML_STDOUT_LOGGER      (CORE_COMPS_PML_LOGGER + string(".Logger"))
 
 enum TPMResult {
   PM_NO_ERROR, 

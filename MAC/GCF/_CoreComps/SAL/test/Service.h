@@ -1,4 +1,4 @@
-#include <SAL/GSA_Service.h>
+#include <GSA_Service.h>
 
 class Service : public GSAService
 {

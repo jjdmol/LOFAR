@@ -53,6 +53,10 @@ void GPAUsecountManager::incrementUsecount(const list<TAPCProperty>& propList)
     if (iter != _propList.end())
     {
       iter->second++;
+      LOFAR_LOG_TRACE(PA_STDOUT_LOGGER, ( 
+          "Increment usecount of %s to %d",
+          pAPCProperty->name.c_str(),
+          iter->second));
     }
     else
     {      
@@ -80,6 +84,10 @@ void GPAUsecountManager::decrementUsecount(const list<TAPCProperty>& propList)
     assert(iter != _propList.end());
 
     iter->second--;
+    LOFAR_LOG_TRACE(PA_STDOUT_LOGGER, ( 
+        "Decrement usecount of %s to %d",
+        pAPCProperty->name.c_str(),
+        iter->second));      
     if (iter->second == 0)
     {
       _propList.erase(pAPCProperty->name);
@@ -101,8 +109,13 @@ TPAResult GPAUsecountManager::setDefaults(const list<TAPCProperty>& propList)
        pAPCProperty != propList.end(); ++pAPCProperty)
   {
     iter = _propList.find(pAPCProperty->name);
-    if (iter->first == pAPCProperty->name)
+    LOFAR_LOG_TRACE(PA_STDOUT_LOGGER, ( 
+        "Try to set default of %s (if specified? => %s)",
+        pAPCProperty->name.c_str(),
+        (pAPCProperty->defaultSet && pAPCProperty->pValue != 0 ? "true" : "false")));
+    if (iter != _propList.end())
     {
+      
       if (pAPCProperty->defaultSet && pAPCProperty->pValue != 0)
       {
         if (GSAService::set(pAPCProperty->name, *pAPCProperty->pValue) != SA_NO_ERROR)
@@ -122,20 +135,24 @@ void GPAUsecountManager::deletePropertiesByScope(const string& scope,
   const string* pPropName;
   size_t propNameLength;
   bool belongsToASubScope(false);
-  if (_state == NO_ACTION)
-  {
-    assert(_counter == 0);
-  }
-    
-  for (TPropListIter iter = _propList.begin();
-       iter != _propList.end(); ++iter)
+  
+  if (_state == NO_ACTION) assert(_counter == 0);
+  
+  TPropListIter iter = _propList.begin();  
+  while (iter != _propList.end())
   {
     pPropName = &iter->first;
     propNameLength = pPropName->size();
+    LOFAR_LOG_TRACE(PA_STDOUT_LOGGER, ( 
+        "Prop %s belongs to scope %s?",
+        pPropName->c_str(),
+        scope.c_str()));
+    ++iter;
     if (pPropName->find(scope) < propNameLength)
     {
       belongsToASubScope = false;
-      for (list<string>::iterator pSubScope = subScopes.begin();
+      list<string>::iterator pSubScope;
+      for (pSubScope = subScopes.begin();
            pSubScope != subScopes.end(); ++pSubScope)
       {
         if (pPropName->find(*pSubScope) < propNameLength)
@@ -151,8 +168,15 @@ void GPAUsecountManager::deletePropertiesByScope(const string& scope,
           _state = DELETE_BY_SCOPE;
           _counter++;
         }
+        
         _propList.erase(*pPropName);
-      }      
+      }
+      else
+      {
+        LOFAR_LOG_TRACE(PA_STDOUT_LOGGER, ( 
+            "\tNO: It belongs to the subscope %s",
+            (*pSubScope).c_str()));
+      }            
     }
   }
 }

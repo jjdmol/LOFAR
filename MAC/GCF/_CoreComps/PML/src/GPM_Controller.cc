@@ -20,323 +20,188 @@
 //#
 //#  $Id$
 
-#include "GPM_Controller.h"
-#include "GCF_SupTask.h"
-#include "GPM_PropertySet.h"
-#include <SAL/GSA_SCADAHandler.h>
+#include <GPM_Controller.h>
+#include <GCF/GCF_MyPropertySet.h>
+#include <GCF/GCF_Apc.h>
 #include <stdio.h>
 #define DECLARE_SIGNAL_NAMES
-#include <PA/PA_Protocol.ph>
+#include <PA_Protocol.ph>
 
 static string sPMLTaskName("PML");
+GPMController* GPMController::_pInstance = 0;
 
-GPMController::GPMController(GCFSupervisedTask& supervisedTask) :
-  GCFTask((State)&GPMController::initial, sPMLTaskName),
-  _supervisedTask(supervisedTask),
-  _scadaService(*this),
-  _isBusy(false),
-  _preparing(false)
+extern void logResult(TPAResult result, GCFApc& apc);
+
+GPMController::GPMController() :
+  GCFTask((State)&GPMController::initial, sPMLTaskName)
 {
   // register the protocol for debugging purposes
   registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
 
   // initialize the port
   _propertyAgent.init(*this, "client", GCFPortInterface::SAP, PA_PROTOCOL);
-
-  GSASCADAHandler::instance()->registerTask(*this);
 }
 
 GPMController::~GPMController()
 {
-  GPMPropertySet* pPropertySet;
-  for (TPropertySetIter iter = _propertySets.begin();
-       iter != _propertySets.end(); ++iter)
-  {
-    pPropertySet = iter->second;
-    assert(pPropertySet);
-    delete pPropertySet;
-  }
-  GSASCADAHandler::instance()->deregisterTask(*this);
 }
 
-TPMResult GPMController::loadAPC(const string& apcName, const string& scope)
+GPMController* GPMController::instance()
+{
+  if (0 == _pInstance)
+  {
+    _pInstance = new GPMController();
+    _pInstance->start();
+  }
+
+  return _pInstance;
+}
+
+TPMResult GPMController::loadAPC(GCFApc& apc, bool loadDefaults)
 {
   TPMResult result(PM_NO_ERROR);
   
-  if (!_propertyAgent.isConnected())
-  {
-    result = PM_PA_NOTCONNECTED;
-  }
-  else if (_isBusy)
-  {
-    result = PM_IS_BUSY;
-  }
-  else
-  {
-    PALoadapcEvent e(0);
-    unsigned short bufLength(apcName.size() + scope.size() + 6);
-    char* buffer = new char[bufLength + 1];
-    sprintf(buffer, "%03x%s%03x%s", apcName.size(), apcName.c_str(), 
-                                    scope.size(),   scope.c_str()   );
-    e.length += bufLength;
-    _isBusy = true;
-    _propertyAgent.send(e, buffer, bufLength);
-    delete [] buffer;
-    
-  }
+  unsigned short seqnr = getFreeSeqnrForApcRequest();
+  _apcList[seqnr] = &apc; 
+  
+  PALoadapcEvent e(seqnr, loadDefaults);
+  sendAPCRequest(e, apc);
+
   return result;
 }
 
-TPMResult GPMController::unloadAPC(const string& apcName, const string& scope)
+TPMResult GPMController::unloadAPC(GCFApc& apc)
 {
   TPMResult result(PM_NO_ERROR);
   
-  if (!_propertyAgent.isConnected())
-  {
-    result = PM_PA_NOTCONNECTED;
-  }
-  else if (_isBusy)
-  {
-    result = PM_IS_BUSY;
-  }
-  else
-  {
-    PAUnloadapcEvent e(0);
-    unsigned short bufLength(apcName.size() + scope.size() + 6);
-    char* buffer = new char[bufLength + 1];
-    sprintf(buffer, "%03x%s%03x%s", apcName.size(), apcName.c_str(), 
-                                    scope.size(),   scope.c_str()   );
-    e.length += bufLength;
-    _isBusy = true;
-    _propertyAgent.send(e, buffer, bufLength);
-    delete [] buffer;
-  }
+  unsigned short seqnr = getFreeSeqnrForApcRequest();
+  _apcList[seqnr] = &apc; 
+  
+  PAUnloadapcEvent e(seqnr);
+  sendAPCRequest(e, apc);
+
   return result;
 }
 
-TPMResult GPMController::reloadAPC(const string& apcName, const string& scope)
+TPMResult GPMController::reloadAPC(GCFApc& apc)
 {
   TPMResult result(PM_NO_ERROR);
   
-  if (!_propertyAgent.isConnected())
-  {
-    result = PM_PA_NOTCONNECTED;
-  }
-  else if (_isBusy)
-  {
-    result = PM_IS_BUSY;
-  }
-  else
-  {
-    PAReloadapcEvent e(0);
-    unsigned short bufLength(apcName.size() + scope.size() + 6);
-    char* buffer = new char[bufLength + 1];
-    sprintf(buffer, "%03x%s%03x%s", apcName.size(), apcName.c_str(), 
-                                    scope.size(),   scope.c_str()   );
-    e.length += bufLength;
-    _isBusy = true;
-    _propertyAgent.send(e, buffer, bufLength);
-    delete [] buffer;
-  }
+  unsigned short seqnr = getFreeSeqnrForApcRequest();
+  _apcList[seqnr] = &apc; 
+  
+  PAReloadapcEvent e(seqnr);
+  sendAPCRequest(e, apc);
+
   return result;
 }
 
-TPMResult GPMController::loadMyProperties(const TPropertySet& newSet)
+void GPMController::unregisterAPC (const GCFApc& apc)
+{
+  for (TApcList::iterator iter = _apcList.begin();
+       iter != _apcList.end(); ++iter)
+  {
+    if (iter->second == &apc)
+    {
+      _apcList.erase(iter);
+      break;
+    }
+  }
+}
+
+unsigned short GPMController::getFreeSeqnrForApcRequest() const
+{
+  unsigned short seqnr(0);
+  TApcList::const_iterator iter;
+  do   
+  {
+    seqnr++;
+    iter = _apcList.find(seqnr);
+  } while (iter != _apcList.end());
+
+  return seqnr;
+}
+
+void GPMController::sendAPCRequest(GCFEvent& e, const GCFApc& apc)
+{
+  if (_propertyAgent.isConnected())
+  {
+    unsigned short bufLength(apc.getName().size() + apc.getScope().size() + 6);
+    char* buffer = new char[bufLength + 1];
+    sprintf(buffer, "%03x%s%03x%s", apc.getName().size(), 
+                                    apc.getName().c_str(), 
+                                    apc.getScope().size(),
+                                    apc.getScope().c_str());
+    e.length += bufLength;
+    _propertyAgent.send(e, buffer, bufLength);
+    delete [] buffer;    
+  }
+}
+
+TPMResult GPMController::registerScope(GCFMyPropertySet& propSet)
 {
   TPMResult result(PM_NO_ERROR);
-  string scope = newSet.scope;
-  TPropertySetIter iter = _propertySets.find(scope);
-  if (iter->first == scope)
+  TPropertySets::iterator iter = _propertySets.find(propSet.getScope());
+  if (iter != _propertySets.end())
   {
     result = PM_SCOPE_ALREADY_EXISTS;
   }
   else
   {
-    GPMPropertySet* pNewPropertySet = new GPMPropertySet(*this, newSet);
-    _propertySets[scope] = pNewPropertySet;
-    
-    if (_propertyAgent.isConnected())
-    {
-      _isBusy = true;      
-      registerScope(scope);
-    }
+    _propertySets[propSet.getScope()] = &propSet;
+
+    PARegisterscopeEvent e(0);
+    sendMyPropSetMsg(e, propSet.getScope());
   }
   return result;
 }
 
-TPMResult GPMController::unloadMyProperties(const string& scope)
+TPMResult GPMController::unregisterScope(GCFMyPropertySet& propSet, 
+                                         bool permanent)
 {
   TPMResult result(PM_NO_ERROR);
-  
-  TPropertySetIter iter = _propertySets.find(scope);
-  if (iter->first != scope)
+ 
+  // prop set could be unloaded in case of destruction of the propSet
+  // calls this method
+  if (propSet.isLoaded())
   {
-    result = PM_SCOPE_NOT_EXISTS;
+    PAUnregisterscopeEvent e(0);
+    sendMyPropSetMsg(e, propSet.getScope());
   }
-  else
-  {    
-    GPMPropertySet* pNewPropertySet = iter->second;
-    delete pNewPropertySet;
-    _propertySets.erase(scope);
-        
-    if (_propertyAgent.isConnected())
-    {
-      PAUnregisterscopeEvent e(0);
-      unsigned short bufLength(scope.size() + 3);
-      char* buffer = new char[bufLength + 1];
-      sprintf(buffer, "%03x%s", scope.size(), scope.c_str());
-      e.length += bufLength;
-      _isBusy = true;      
-      _propertyAgent.send(e, buffer, bufLength);
-      delete [] buffer;
-    }
+  if (permanent)
+  {
+    _propertySets.erase(propSet.getScope());
   }
+
   return result;
 }
 
-TPMResult GPMController::set(const string& propName, const GCFPValue& value)
+void GPMController::propertiesLinked(const string& scope, bool missingProps)
 {
-  TPMResult result(PM_NO_ERROR);
-  
-  GPMPropertySet* pNewPropertySet = findPropertySet(propName);
-
-  if (!pNewPropertySet)
-  {
-    result = (_scadaService.set(propName, value) == SA_NO_ERROR ?
-              PM_NO_ERROR : PM_SCADA_ERROR);
-  }
-  else
-  {
-    result = pNewPropertySet->setValue(propName, value);
-  }
-  
-  return result;  
+  _counter--;
+  LOFAR_LOG_DEBUG(PML_STDOUT_LOGGER, ( 
+      "Link request %d counter", _counter));
+  PAPropertieslinkedEvent e(0, (missingProps ? PA_MISSING_PROPS : PA_NO_ERROR));
+  sendMyPropSetMsg(e, scope);
 }
 
-TPMResult GPMController::get(const string& propName)
+void GPMController::propertiesUnlinked(const string& scope)
 {
-  TPMResult result(PM_NO_ERROR);
-  
-  GPMPropertySet* pNewPropertySet = findPropertySet(propName);
-
-  if (!pNewPropertySet)
-  {
-    result = (_scadaService.get(propName) == SA_NO_ERROR ?
-              PM_NO_ERROR : PM_SCADA_ERROR);
-  }
-  else
-  {
-    GCFPValue* pValue;
-    result = pNewPropertySet->getValue(propName, &pValue);
-    if (result == PM_NO_ERROR && pValue != 0)
-    {
-      TGetData* pGetData = new TGetData;
-      pGetData->pValue = pValue;
-      pGetData->propName = propName;
-      _propertyAgent.setTimer(0, 0, 0, 0, pGetData);
-    }
-  }
-  
-  return result;  
+  PAPropertiesunlinkedEvent e(0, PA_NO_ERROR);
+  sendMyPropSetMsg(e, scope);
 }
 
-TPMResult GPMController::getMyOldValue(const string& propName, GCFPValue** pValue)
-{
-  TPMResult result(PM_NO_ERROR);
-  
-  GPMPropertySet* pNewPropertySet = findPropertySet(propName);
-
-  if (!pNewPropertySet)
-  {
-    result = PM_PROP_NOT_EXISTS;
-  }
-  else
-  {
-    result = pNewPropertySet->getOldValue(propName, pValue);
-  }
-  
-  return result;  
-}
-
-void GPMController::valueChanged(const string& propName, const GCFPValue& value)
-{
-  _supervisedTask.valueChanged(propName, value);
-}
-
-void GPMController::valueGet(const string& propName, const GCFPValue& value)
-{
-  _supervisedTask.valueGet(propName, value);
-}
-
-void GPMController::propertiesLinked(const string& scope, list<string>& notLinkedProps)
+void GPMController::sendMyPropSetMsg(GCFEvent& e, const string& scope)
 {
   if (_propertyAgent.isConnected())
   {
-    PAPropertieslinkedEvent e(0, PA_NO_ERROR);
-    string allPropNames;
-    for (list<string>::iterator iter = notLinkedProps.begin(); 
-         iter != notLinkedProps.end(); ++iter)
-    {
-      allPropNames += *iter;
-      allPropNames += '|';
-    }
-    unsigned short bufLength(scope.size() + allPropNames.size() + 6);
+    unsigned short bufLength(scope.size() + 3);
     char* buffer = new char[bufLength + 1];
-    sprintf(buffer, "%03x%s%03x%s", scope.size(), scope.c_str(), 
-                                    allPropNames.size(), allPropNames.c_str());
+    sprintf(buffer, "%03x%s", scope.size(), scope.c_str());
     e.length += bufLength;
     _propertyAgent.send(e, buffer, bufLength);
-    delete [] buffer;
+    delete [] buffer;    
   }
-}
-
-void GPMController::propertiesUnlinked(const string& scope, list<string>& notUnlinkedProps)
-{
-  if (_propertyAgent.isConnected())
-  {
-    PAPropertiesunlinkedEvent e(0, PA_NO_ERROR);
-    string allPropNames;
-    for (list<string>::iterator iter = notUnlinkedProps.begin(); 
-         iter != notUnlinkedProps.end(); ++iter)
-    {
-      allPropNames += *iter;
-      allPropNames += '|';
-    }
-    unsigned short bufLength(scope.size() + allPropNames.size() + 6);
-    char* buffer = new char[bufLength + 1];
-    sprintf(buffer, "%03x%s%03x%s", scope.size(), scope.c_str(), 
-                                    allPropNames.size(), allPropNames.c_str());
-    e.length += bufLength;
-    _propertyAgent.send(e, buffer, bufLength);
-    delete [] buffer;
-  }
-}
-
-GPMPropertySet* GPMController::findPropertySet(const string& propName)
-{
-  GPMPropertySet* pResult(0);
-  string scope(propName);
-  TPropertySetIter iter;
-  size_t lastUSpos;
-  do
-  {
-    lastUSpos = scope.rfind('_');
-    if (lastUSpos < scope.size())
-    {
-      scope.erase(lastUSpos);   
-      iter = _propertySets.find(scope);
-      if (iter != _propertySets.end())
-      {
-        pResult = iter->second;
-      }
-    }
-    else
-    {
-      scope = "";
-    }   
-  } while (scope != "" && pResult == 0);
-  
-  return pResult;
 }
 
 GCFEvent::TResult GPMController::initial(GCFEvent& e, GCFPortInterface& /*p*/)
@@ -377,20 +242,29 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_DISCONNECTED_SIG:
-      cout << "Lost connection to Property Agent" << endl;
+      LOFAR_LOG_WARN(PML_STDOUT_LOGGER, ( 
+          "Connection lost to Property Agent"));
       TRAN(GPMController::initial);
       break;
 
     case F_ENTRY_SIG:
     {
-      _isBusy = true;
-      _preparing = (_propertySets.size() > 0);
-      _counter = 0;
-      for (TPropertySetIter iter = _propertySets.begin();
+      PARegisterscopeEvent rse(0);
+      for (TPropertySets::iterator iter = _propertySets.begin();
            iter != _propertySets.end(); ++iter)
       {
-        registerScope(iter->first);
-        _counter++;
+        sendMyPropSetMsg(rse, iter->first);
+      }
+      PALoadapcEvent lae(0, false);
+      GCFApc* pApc;
+      for (TApcList::iterator iter = _apcList.begin();
+           iter != _apcList.end(); ++iter)
+      {
+        pApc = iter->second;
+        assert(pApc);
+        lae.seqnr = iter->first;
+        lae.loadDefaults = pApc->mustLoadDefaults();
+        sendAPCRequest(lae, *pApc);
       }
       break;
     }  
@@ -402,20 +276,22 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       unsigned int scopeNameLength(0);
       sscanf(pResponseData, "%03x", &scopeNameLength);
       string scope(pResponseData + 3, scopeNameLength);
-      result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPROPSLOAD_ERROR);
-      if (_preparing)
+      if (pResponse->result == PA_SCOPE_ALREADY_REGISTERED)
       {
-        _counter--;
-        if (_counter == 0)
-        {       
-          _isBusy = false;
-          _preparing = false;
-        }
+        LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+            "A property set with scope %s already exists in the system",
+            scope.c_str()));        
       }
-      else
-        _isBusy = false;
-        
-      _supervisedTask.myPropertiesLoaded(scope, result);
+      result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPROPSLOAD_ERROR);      
+      GCFMyPropertySet* pPropertySet = _propertySets[scope];
+      if (result != GCF_NO_ERROR)
+      {
+        _propertySets.erase(scope);        
+      }
+      if (pPropertySet)
+      {
+        pPropertySet->scopeRegistered(result);
+      }
       break;
     }
 
@@ -427,9 +303,13 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       unsigned int scopeNameLength(0);
       sscanf(pResponseData, "%03x", &scopeNameLength);
       string scope(pResponseData + 3, scopeNameLength);
-      result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPROPSUNLOAD_ERROR);      
-      _isBusy = false;
-      _supervisedTask.myPropertiesUnloaded(scope, result);
+      GCFMyPropertySet* pPropertySet = _propertySets[scope];
+      result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPROPSUNLOAD_ERROR);
+      if (pPropertySet)
+      {
+        _propertySets.erase(scope);
+        pPropertySet->scopeUnregistered(result);
+      }
       break;
     }
 
@@ -440,12 +320,31 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       unsigned int scopeNameLength(0);
       sscanf(pScopeData, "%03x", &scopeNameLength);
       string scope(pScopeData + 3, scopeNameLength);
+      string linkListData(pScopeData + 3 + scopeNameLength, 
+        e.length - sizeof(PALinkpropertiesEvent) - 3 - scopeNameLength);
       list<string> propertyList;
+      LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+        "PA-REQ: Link properties %s on scope %s",
+        linkListData.c_str(),
+        scope.c_str()));
       unpackPropertyList(pScopeData + 3 + scopeNameLength, propertyList);
-      GPMPropertySet* pPropertySet = _propertySets[scope];
+      GCFMyPropertySet* pPropertySet = _propertySets[scope];
       if (pPropertySet)
       {
-        pPropertySet->linkProperties(response->seqnr, propertyList);
+        if (_counter == 0)
+        {
+          _propertyAgent.setTimer(0, 0, 0, 0);
+        }
+        _counter++;        
+        pPropertySet->linkProperties(propertyList);
+      }
+      else
+      {
+        LOFAR_LOG_TRACE(PML_STDOUT_LOGGER, ( 
+            "Property set with scope %d was deleted in the meanwhile", 
+            scope.c_str()));
+        PAPropertieslinkedEvent e(0, PA_PROP_SET_GONE);
+        sendMyPropSetMsg(e, scope);
       }
       break;
     }
@@ -456,12 +355,26 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       unsigned int scopeNameLength(0);
       sscanf(pScopeData, "%03x", &scopeNameLength);
       string scope(pScopeData + 3, scopeNameLength);
+      string unlinkListData(pScopeData + 3 + scopeNameLength, 
+        e.length - sizeof(PALinkpropertiesEvent) - 3 - scopeNameLength);
+      LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+        "PA-REQ: Link properties %s on scope %s",
+        unlinkListData.c_str(), 
+        scope.c_str()));
       list<string> propertyList;
       unpackPropertyList(pScopeData + 3 + scopeNameLength, propertyList);
-      GPMPropertySet* pPropertySet = _propertySets[scope];
+      GCFMyPropertySet* pPropertySet = _propertySets[scope];
       if (pPropertySet)
       {
-        pPropertySet->unlinkProperties(response->seqnr, propertyList);
+        pPropertySet->unlinkProperties(propertyList);
+      }
+      else
+      {
+        LOFAR_LOG_TRACE(PML_STDOUT_LOGGER, ( 
+            "Property set with scope %d was deleted in the meanwhile", 
+            scope.c_str()));
+        PAPropertiesunlinkedEvent e(0, PA_PROP_SET_GONE);
+        sendMyPropSetMsg(e, scope);
       }
       break;
     }
@@ -469,71 +382,54 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     {
       PAApcloadedEvent* pResponse = static_cast<PAApcloadedEvent*>(&e);
       assert(pResponse);
-      _isBusy = false;
-      char* pApcData = ((char*)pResponse) + sizeof(PAApcloadedEvent);
-      unsigned int apcNameLength(0);
-      sscanf(pApcData, "%03x", &apcNameLength);
-      string apcName(pApcData + 3, apcNameLength);
-      char* pScopeData = pApcData + 3 + apcNameLength;
-      unsigned int scopeNameLength(0);
-      sscanf(pScopeData, "%03x", &scopeNameLength);
-      string scope(pScopeData + 3, scopeNameLength);
       result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_APCLOAD_ERROR);        
-      _supervisedTask.apcLoaded(apcName, scope, result);
+      GCFApc* pApc = _apcList[pResponse->seqnr];
+      if (pApc)
+      {
+        logResult(pResponse->result, *pApc);
+        _apcList.erase(pResponse->seqnr);
+        pApc->loaded(result);
+      }
       break;
     }
     case PA_APCUNLOADED:
     {
       PAApcunloadedEvent* pResponse = static_cast<PAApcunloadedEvent*>(&e);
       assert(pResponse);
-      _isBusy = false;
-      char* pApcData = ((char*)pResponse) + sizeof(PAApcunloadedEvent);
-      unsigned int apcNameLength(0);
-      sscanf(pApcData, "%03x", &apcNameLength);
-      string apcName(pApcData + 3, apcNameLength);
-      char* pScopeData = pApcData + 3 + apcNameLength;
-      unsigned int scopeNameLength(0);
-      sscanf(pScopeData, "%03x", &scopeNameLength);
-      string scope(pScopeData + 3, scopeNameLength);
       result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_APCUNLOAD_ERROR);      
-      _supervisedTask.apcUnloaded(apcName, scope, result);
+      GCFApc* pApc = _apcList[pResponse->seqnr];
+      if (pApc)
+      {
+        logResult(pResponse->result, *pApc);
+        _apcList.erase(pResponse->seqnr);
+        pApc->unloaded(result);
+      }
       break;
     }
     case PA_APCRELOADED:
     {
       PAApcreloadedEvent* pResponse = static_cast<PAApcreloadedEvent*>(&e);
       assert(pResponse);
-      _isBusy = false;
-      char* pApcData = ((char*)pResponse) + sizeof(PAApcreloadedEvent);
-      unsigned int apcNameLength(0);
-      sscanf(pApcData, "%03x", &apcNameLength);
-      string apcName(pApcData + 3, apcNameLength);
-      char* pScopeData = pApcData + 3 + apcNameLength;
-      unsigned int scopeNameLength(0);
-      sscanf(pScopeData, "%03x", &scopeNameLength);
-      string scope(pScopeData + 3, scopeNameLength);
       result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_APCRELOAD_ERROR);
-      _supervisedTask.apcReloaded(apcName, scope, result);
-      break;
-    }
-    case F_TIMER_SIG:
-    {
-      GCFTimerEvent* pTimer = static_cast<GCFTimerEvent*>(&e);
-      if (pTimer->arg)
+      GCFApc* pApc = _apcList[pResponse->seqnr];
+      if (pApc)
       {
-        const TGetData* pGetData = static_cast<const TGetData*>(pTimer->arg);
-        assert(pGetData);
-        assert(pGetData->pValue);
-        _supervisedTask.valueGet(pGetData->propName, *pGetData->pValue);
-        delete pGetData->pValue;
-      }      
+        logResult(pResponse->result, *pApc);
+        _apcList.erase(pResponse->seqnr);
+        pApc->reloaded(result);
+      }
       break;
     }
     case F_DISPATCHED_SIG:
-      for (TPropertySetIter iter = _propertySets.begin();
+    case F_TIMER_SIG:
+      for (TPropertySets::iterator iter = _propertySets.begin();
            iter != _propertySets.end(); ++iter)
       {
         iter->second->retryLinking();
+      }
+      if (_counter > 0)
+      {
+        _propertyAgent.setTimer(0, 0, 0, 0);
       }
       break;      
     default:
@@ -542,17 +438,6 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
   }
 
   return status;
-}
-
-void GPMController::registerScope(const string& scope)
-{
-  PARegisterscopeEvent e(0);
-  unsigned short bufLength(scope.size() + 3);
-  char* buffer = new char[bufLength + 1];
-  sprintf(buffer, "%03x%s", scope.size(), scope.c_str());
-  e.length += bufLength;
-  _propertyAgent.send(e, buffer, bufLength);
-  delete [] buffer;
 }
 
 void GPMController::unpackPropertyList(char* pListData, list<string>& propertyList)
@@ -573,5 +458,55 @@ void GPMController::unpackPropertyList(char* pListData, list<string>& propertyLi
       dataLength -= (propName.size() + 1);
       propertyList.push_back(propName);
     }
+  }
+}
+
+void logResult(TPAResult result, GCFApc& apc)
+{
+  switch (result)
+  {
+    case PA_NO_ERROR:
+      break;
+    case PA_UNKNOWN_ERROR:
+      LOFAR_LOG_FATAL(PML_STDOUT_LOGGER, ( 
+          "Unknown error"));      
+      break;
+    case PA_PROP_SET_GONE:
+      LOFAR_LOG_ERROR(PML_STDOUT_LOGGER, ( 
+          "One of the property sets are gone while perfom an apc action. (%s:%s)",
+          apc.getName().c_str(), apc.getScope().c_str()));
+      break;
+    case PA_MISSING_PROPS:
+      LOFAR_LOG_ERROR(PML_STDOUT_LOGGER, ( 
+          "One or more loaded properties are not owned by any application. (%s:%s)",
+          apc.getName().c_str(), apc.getScope().c_str()));
+      break;
+    case PA_PROP_NOT_VALID:
+      LOFAR_LOG_ERROR(PML_STDOUT_LOGGER, ( 
+          "One or more loaded properties could not be mapped on a registered scope. (%s:%s)",
+          apc.getName().c_str(), apc.getScope().c_str()));
+      break;
+    case PA_UNABLE_TO_LOAD_APC:
+      LOFAR_LOG_ERROR(PML_STDOUT_LOGGER, ( 
+          "Troubles during loading the APC file. (%s:%s)",
+          apc.getName().c_str(), apc.getScope().c_str()));
+      break;
+    case PA_NO_TYPE_SPECIFIED_IN_APC:
+      LOFAR_LOG_ERROR(PML_STDOUT_LOGGER, ( 
+          "APC file: On one or more of the found properties no type is specified. (%s:%s)",
+          apc.getName().c_str(), apc.getScope().c_str()));
+      break;
+    case PA_SAL_ERROR:
+      LOFAR_LOG_ERROR(PML_STDOUT_LOGGER, ( 
+          "APC file: Error while reading the property value. (%s:%s)",
+          apc.getName().c_str(), apc.getScope().c_str()));
+      break;
+    case PA_MACTYPE_UNKNOWN:
+      LOFAR_LOG_ERROR(PML_STDOUT_LOGGER, ( 
+          "APC file: Unknown property type specified. (%s:%s)",
+          apc.getName().c_str(), apc.getScope().c_str()));
+      break;
+    default:
+      break;
   }
 }

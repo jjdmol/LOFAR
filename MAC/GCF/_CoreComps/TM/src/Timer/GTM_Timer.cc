@@ -21,8 +21,8 @@
 //#  $Id$
 
 #include <Timer/GTM_Timer.h>
-#include <PortInterface/GCF_RawPort.h>
-#include <GCF_TMProtocols.h>
+#include <GCF/GCF_RawPort.h>
+#include <GCF/GCF_TMProtocols.h>
 
 GTMTimer::GTMTimer(GCFRawPort& port, 
                    unsigned long timeVal, 

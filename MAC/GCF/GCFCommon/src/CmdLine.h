@@ -95,21 +95,16 @@
    it uses the STL 'string' type.
 
    If this is an MFC app, you can use the __argc and __argv macros from
-   you CYourWinApp::InitInstance() function in place of the standard argc 
+   you CYourWinApp::InitInstance function in place of the standard argc 
    and argv variables. 
 
 ------------------------------------------------------*/
 #ifndef GCF_CMDLINE_H
 #define GCF_CMDLINE_H
 
-
-// if we're not using MFC, use STL strings
-#define string string
-
 // tell the compiler to shut up
 #pragma warning(disable:4786)
 
-//#include <iostream> // you may need this
 #include <Common/lofar_map.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>

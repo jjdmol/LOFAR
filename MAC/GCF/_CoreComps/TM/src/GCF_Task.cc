@@ -21,16 +21,16 @@
 //#
 //#  $Id$
 
-#include <GCF_Task.h>
+#include <GCF/GCF_Task.h>
 #include <GTM_Defines.h>
-#include <GCF_TMProtocols.h>
-#include <GCF_Handler.h>
+#include <GCF/GCF_TMProtocols.h>
+#include <GCF/GCF_Handler.h>
 
-#include <PortInterface/GCF_PortInterface.h>
+#include <GCF/GCF_PortInterface.h>
 #include <PortInterface/GTM_NameService.h>
 #include <PortInterface/GTM_TopologyService.h>
 
-#include <GCFCommon/CmdLine.h>
+#include <CmdLine.h>
 
 #include <signal.h>
 #include <stdio.h>
@@ -132,21 +132,14 @@ void GCFTask::start()
 
 void GCFTask::stop()
 {
-  if (_doExit)
+  vector<GCFHandler*> tempHandlers(_handlers);
+  
+  for (THandlerIter iter = tempHandlers.begin() ;
+        iter != tempHandlers.end() ; 
+        ++iter)
   {
-    vector<GCFHandler*> tempHandlers(_handlers);
-    
-    for (THandlerIter iter = tempHandlers.begin() ;
-          iter != tempHandlers.end() ; 
-          ++iter)
-    {
-        (*iter)->stop();
-    }  
-  }
-  else
-  {
-    _doExit = true;
-  }
+      (*iter)->stop();
+  }  
 }
 
 void GCFTask::registerHandler(GCFHandler& handler)

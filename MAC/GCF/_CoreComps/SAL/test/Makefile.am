@@ -1,19 +1,33 @@
+cppflags = -I$(top_srcdir)/GCFCommon/src \
+	-I$(top_srcdir)/CoreComps/TM/src \
+	-I$(top_srcdir)/CoreComps/SAL/src
+
 check_PROGRAMS 		= echoapp ping
 
 TESTS			= #echoapp ping
 
 echoapp_SOURCES 		= Echo.cc Service.cc 
-echoapp_LDADD		= ../src/libsal.la
-echoapp_DEPENDENCIES	= ../src/libsal.la $(LOFAR_DEPEND)
+echoapp_LDADD		= ../src/libsal.la \
+	$(top_builddir)/CoreComps/TM/src/libtm.la \
+	$(top_builddir)/GCFCommon/src/libgcfcommon.la
+echoapp_DEPENDENCIES	= ../src/libsal.la $(LOFAR_DEPEND) \
+	$(top_builddir)/GCFCommon/src/libgcfcommon.la \
+	$(top_builddir)/CoreComps/TM/src/libtm.la
+echoapp_CPPFLAGS= $(cppflags)
 
 ping_SOURCES 		= Ping.cc 
-ping_LDADD		= 
-ping_DEPENDENCIES	= $(LOFAR_DEPEND)
+ping_LDADD		=  \
+	$(top_builddir)/CoreComps/TM/src/libtm.la \
+	$(top_builddir)/GCFCommon/src/libgcfcommon.la
+ping_DEPENDENCIES	= $(LOFAR_DEPEND) \
+	$(top_builddir)/GCFCommon/src/libgcfcommon.la \
+	$(top_builddir)/CoreComps/TM/src/libtm.la
+ping_CPPFLAGS= $(cppflags)
 
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../GCFCommon/autogen $< && \
+	$(AUTOGEN) -L $(top_srcdir)/GCFCommon/autogen $< && \
 	chmod a+w $@
 
 BUILT_SOURCES = \
