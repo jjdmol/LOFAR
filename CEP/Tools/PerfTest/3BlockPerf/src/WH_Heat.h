@@ -68,6 +68,7 @@ private:
   DH_FixedSize::valueType itsFactor; // the factor to multiple with
   unsigned int itsNoValues; // number of values in a DataHolder
   unsigned int itsNoMultiplications;
+  DH_FixedSize::valueType* itsBuffer;
 };
 
 }

@@ -9,13 +9,13 @@ set zlabel "bandwidth (Byte/s)"
 set terminal x11
 set title ""
 set logscale x
-set logscale z
-set autoscale
+#set logscale z
+# set autoscale
 set view 80,170,1,1
 set surface
 set contour surface
 set data style linespoints
 
-splot "3BlockPerfAll.out" using 1:2:3
+splot [1000:100000000][0:10][0:250000000] "3BlockPerfAll.out" using 1:2:3
 pause -1
 
