@@ -3,6 +3,16 @@
 
 #ifdef SWIG
 %module TransObject
+%include std_string.i
+%typemap(in) std::string* ($*1_ltype tempstr) {
+	char * temps; int templ;
+	if (PyString_AsStringAndSize($input, &temps, &templ)) return NULL;
+	tempstr = $*1_ltype(temps, templ);
+	$1 = &tempstr;
+}
+%typemap(out) std::string* {
+	$result = PyString_FromStringAndSize($1->data(), $1->length());
+}
 %{
 #include "TransObject.h"
 %}
