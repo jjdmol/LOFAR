@@ -77,31 +77,33 @@ public:
 
 protected:
   // Definition of the DataPacket type.
-  class DataPacket: public DataHolder::DataPacket
-  {
-  public:
-    DataPacket(){};
-    BufferType itsFill;         // to ensure alignment
+/*   class DataPacket: public DataHolder::DataPacket */
+/*   { */
+/*   public: */
+/*     DataPacket(){}; */
+/*     BufferType itsFill;         // to ensure alignment */
 
-    int itsStationID;        // source station ID
-    float itsFrequencyOffset;    // frequency offset for this beamlet
-    float itsElapsedTime;      // the hourangle
-    int itsNumberOfChannels; // number of frequency channels within this beamlet
-    float itsChannelWidth;      // frequency width of each frequency channel
-  };
+/*     int itsStationID;        // source station ID */
+/*     float itsFrequencyOffset;    // frequency offset for this beamlet */
+/*     float itsElapsedTime;      // the hourangle */
+/*     int itsNumberOfChannels; // number of frequency channels within this beamlet */
+/*     float itsChannelWidth;      // frequency width of each frequency channel */
+/*   }; */
 
 private:
   /// Forbid assignment.
     DH_Beamlet& operator= (const DH_Beamlet&);
 
-    DataPacket*  itsDataPacket;    
+    //    DataPacket*  itsDataPacket;    
     BufferType* itsBuffer;     // array containing frequency spectrum.
-    int itsStationID;          // source station ID
-    float itsFrequencyOffset;  // frequency offset for this beamlet
-    float itsChannelWidth;     // frequency width of each frequency channel
-    float itsElapsedTime;      // the hourangle
-    int itsNumberOfChannels;   // number of frequency channels within this beamlet
+    int* itsStationID;          // source station ID
+    float* itsFrequencyOffset;  // frequency offset for this beamlet
+    float* itsChannelWidth;     // frequency width of each frequency channel
+    float* itsElapsedTime;      // the hourangle
+    int* itsNumberOfChannels;   // number of frequency channels within this beamlet
     unsigned int itsBufSize;  
+
+    void fillDataPointers();
 };
 
 inline DH_Beamlet::BufferType* DH_Beamlet::getBuffer()
@@ -114,27 +116,27 @@ inline DH_Beamlet::BufferType* DH_Beamlet::getBufferElement(int freq)
   { return itsBuffer+freq; }
 
 inline int DH_Beamlet::getNumberOfChannels () const
-  { return itsDataPacket->itsNumberOfChannels; }
+  { return *itsNumberOfChannels; }
 
 inline float DH_Beamlet::getElapsedTime () const
-  { DbgAssertStr(itsDataPacket->itsElapsedTime >= 0, "itsElapsedTime not initialised"); 
-    return itsDataPacket->itsElapsedTime; 
+  { DbgAssertStr(*itsElapsedTime >= 0, "itsElapsedTime not initialised");
+    return *itsElapsedTime;
   }
 
 inline void DH_Beamlet::setElapsedTime (float time)
-  {  itsDataPacket->itsElapsedTime = time; }
+  {  *itsElapsedTime = time; }
 
 inline float DH_Beamlet::getFrequencyOffset() const
-  { DbgAssertStr(itsDataPacket->itsFrequencyOffset >= 0, "itsFrequencyOffset not initialised"); 
-    return itsDataPacket->itsFrequencyOffset; }
+  { DbgAssertStr(*itsFrequencyOffset >= 0, "itsFrequencyOffset not initialised");
+    return *itsFrequencyOffset; }
 
-inline float DH_Beamlet::getChannelWidth() const
-  { DbgAssertStr(itsDataPacket->itsChannelWidth >= 0, "itsChannelWidth not initialised"); 
-    return itsDataPacket->itsChannelWidth; }
+inline float DH_Beamlet::getChannelWidth() const 
+  { DbgAssertStr(*itsChannelWidth >= 0, "itsChannelWidth not initialised");
+    return *itsChannelWidth; }
 
 inline int DH_Beamlet::getStationID() const
-  { DbgAssertStr(itsDataPacket->itsStationID >= 0, "itsStationID not initialised"); 
-    return itsDataPacket->itsStationID; 
+  { DbgAssertStr(*itsStationID >= 0, "itsStationID not initialised");
+    return *itsStationID;
   }
 
 }

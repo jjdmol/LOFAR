@@ -65,15 +65,15 @@ public:
 
 protected:
   // Definition of the DataPacket type.
-  class DataPacket: public DataHolder::DataPacket
-  {
-  public:
-    DataPacket(){};
-    BufferType itsFill;         // to ensure alignment
+/*   class DataPacket: public DataHolder::DataPacket */
+/*   { */
+/*   public: */
+/*     DataPacket(){}; */
+/*     BufferType itsFill;         // to ensure alignment */
 
-    int   itsStationID;        // source station ID
-    float itsElapsedTime;      // the hourangle
-  };
+/*     int   itsStationID;        // source station ID */
+/*     float itsElapsedTime;      // the hourangle */
+/*   }; */
 
 private:
   /// Forbid assignment.
@@ -82,6 +82,11 @@ private:
     DataPacket*  itsDataPacket;    
     BufferType*  itsBuffer;     // array containing frequency spectrum.
     unsigned int itsBufSize;  
+
+    float* itsElapsedTime;
+    int*   itsStationID;
+
+    void fillDataPointers();
 };
 
 inline DH_Phase::BufferType* DH_Phase::getBuffer()
@@ -91,16 +96,16 @@ inline const DH_Phase::BufferType* DH_Phase::getBuffer() const
   { return itsBuffer; }
 
 inline float DH_Phase::getElapsedTime () const
-  { DbgAssertStr(itsDataPacket->itsElapsedTime >= 0, "itsElapsedTime not initialised"); 
-    return itsDataPacket->itsElapsedTime; 
+  { DbgAssertStr(*itsElapsedTime >= 0, "itsElapsedTime not initialised"); 
+    return *itsElapsedTime; 
   }
 
 inline void DH_Phase::setElapsedTime (float time)
-  {  itsDataPacket->itsElapsedTime = time; }
+  {  *itsElapsedTime = time; }
 
 inline int DH_Phase::getStationID() const
-  { DbgAssertStr(itsDataPacket->itsStationID >= 0, "itsStationID not initialised"); 
-    return itsDataPacket->itsStationID; 
+  { DbgAssertStr(*itsStationID >= 0, "itsStationID not initialised"); 
+    return *itsStationID; 
   }
 }
 

@@ -33,56 +33,54 @@ namespace LOFAR
   DH_Phase::DH_Phase (const string& name, 
 		      const int StationID)
 : DataHolder            (name, "DH_Phase"),
-  itsDataPacket         (0),
   itsBuffer             (0)
 {
   // First delete possible buffers.
   postprocess();
 
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = sizeof(BufferType);
-  unsigned int size = sizeof(DataPacket) + itsBufSize;
-  char* ptr = new char[size];
-  // Fill in the data packet pointer and initialize the memory.
-  itsDataPacket = (DataPacket*)(ptr);
-  *itsDataPacket = DataPacket();
-  // Fill in the buffer pointer and initialize the buffer.
-  itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
+  itsBufSize = 1;
+//   unsigned int size = sizeof(DataPacket) + itsBufSize;
+//   char* ptr = new char[size];
+//   // Fill in the data packet pointer and initialize the memory.
+//   itsDataPacket = (DataPacket*)(ptr);
+//   *itsDataPacket = DataPacket();
+//   // Fill in the buffer pointer and initialize the buffer.
+//   itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
 
-  // Initialize base class.
-  setDataPacket (itsDataPacket, size);
+//   // Initialize base class.
+//   setDataPacket (itsDataPacket, size);
 
-  itsDataPacket->itsStationID        = StationID;
-  itsDataPacket->itsElapsedTime      = -1;
+  *itsStationID        = StationID;
+  *itsElapsedTime      = -1;
 }
 
 DH_Phase::DH_Phase(const DH_Phase& that)
   : DataHolder     (that),
-    itsDataPacket  (0),
     itsBuffer      (0)
 {
   // First delete possible buffers.
   postprocess();
 
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = sizeof(BufferType);
-  unsigned int size = sizeof(DataPacket) + itsBufSize;
-  char* ptr = new char[size];
-  // Fill in the data packet pointer and initialize the memory.
-  itsDataPacket = (DataPacket*)(ptr);
-  *itsDataPacket = DataPacket();
-  // Fill in the buffer pointer and initialize the buffer.
-  itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
+  itsBufSize = 1;
+//   unsigned int size = sizeof(DataPacket) + itsBufSize;
+//   char* ptr = new char[size];
+//   // Fill in the data packet pointer and initialize the memory.
+//   itsDataPacket = (DataPacket*)(ptr);
+//   *itsDataPacket = DataPacket();
+//   // Fill in the buffer pointer and initialize the buffer.
+//   itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
 
-  // Initialize base class.
-  setDataPacket (itsDataPacket, size);
-  itsDataPacket->itsStationID        = that.getStationID();
-  itsDataPacket->itsElapsedTime      = that.getElapsedTime();
+//   // Initialize base class.
+//   setDataPacket (itsDataPacket, size);
+  *itsStationID        = that.getStationID();
+  *itsElapsedTime      = that.getElapsedTime();
 }
 
 DH_Phase::~DH_Phase()
 {
-  delete [] (char*)(itsDataPacket);
+  
 }
 
 DataHolder* DH_Phase::clone() const
@@ -92,14 +90,27 @@ DataHolder* DH_Phase::clone() const
 
 void DH_Phase::preprocess()
 {
+  addField("Buffer",BlobField<BufferType>(1));
+  addField("StationID",BlobField<int>(1));
+  addField("ElapsedTime",BlobField<float>(1));
+
+  createDataBlock();
+  for (unsigned int i=0; i<itsBufSize; i++) {
+    itsBuffer[i] = 0;
+  }
 }
 
 void DH_Phase::postprocess()
 {
-  delete [] (char*)(itsDataPacket);
-  itsDataPacket = 0;
-  itsBuffer     = 0;
-  setDefaultDataPacket();
+  itsBuffer       = 0;
+  *itsStationID   = -1;
+  *itsElapsedTime = -1;
+}
+
+void DH_Phase::fillDataPointers() {
+  itsBuffer = getData<BufferType> ("Buffer");
+  itsStationID = getData<int> ("StationID");
+  itsElapsedTime = getData<float> ("ElapsedTime");
 }
 
 }

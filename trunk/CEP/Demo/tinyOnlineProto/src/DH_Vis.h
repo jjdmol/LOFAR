@@ -67,28 +67,30 @@ public:
   const int         getFBW() const;
 protected:
   // Definition of the DataPacket type.
-  class DataPacket: public DataHolder::DataPacket
-  {
-  public:
-    DataPacket(){};
+/*   class DataPacket: public DataHolder::DataPacket */
+/*   { */
+/*   public: */
+/*     DataPacket(){}; */
 
-    int itsBeamID;          // beam direction ID
-    int itsStartFrequency;  // frequency offste for this beamlet
-    int itsStartSeqNo;      // sequence number since last timestamp
+/*     int itsBeamID;          // beam direction ID */
+/*     int itsStartFrequency;  // frequency offste for this beamlet */
+/*     int itsStartSeqNo;      // sequence number since last timestamp */
 
-    BufferType itsFill;         // to ensure alignment
-  };
+/*     BufferType itsFill;         // to ensure alignment */
+/*   }; */
 
 private:
   /// Forbid assignment.
   DH_Vis& operator= (const DH_Vis&);
 
 
-  DataPacket*  itsDataPacket;
+/*   DataPacket*  itsDataPacket; */
   BufferType*  itsBuffer;    // array containing frequency spectrum.
   unsigned int itsBufSize;
   
   int          itsFBW; // number of frequency channels within this beamlet
+
+  void fillDataPointers();
 
 };
 
