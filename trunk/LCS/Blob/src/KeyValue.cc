@@ -1025,7 +1025,7 @@ double KeyValue::parse (const string& value, char sep, double factor)
       double v;
       istr >> v;
       // Check if all characters of the part have been read.
-      if (int(istr.tellg()) != int(part.size())) {
+      if (istr.tellg() > 0  &&  int(istr.tellg()) != int(part.size())) {
 	throw Exception("KeyValue: " + value +
 			" is an invalid HMS or DMS value at part " + part);
       }
