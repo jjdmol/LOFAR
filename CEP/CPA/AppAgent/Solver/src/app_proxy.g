@@ -550,6 +550,7 @@ const app_proxy := function (appid,
   }
   const public.kill_gui := function ()
   {
+    wider self;
     if( !is_record(self.gui) )
       return T;
     self.gui.killflag := T;

@@ -30,7 +30,7 @@ img_repeater := function (verbose=1,suspend=F)
   self.parent := self.ws.frame(title='Imaging repeater',side='left');
   self.parent->unmap();
   self.rpt := ref app_proxy('Repeater.A',
-          verbose=verbose,parent_frame=self.parent,widgetset=self.ws);
+          verbose=verbose,parent_frame=self.parent,gui=T,widgetset=self.ws);
 #  self.solv := ref app_proxy('Solver',verbose=verbose,widgetset=self.ws);
   
   if( is_fail(self.rpt) )
