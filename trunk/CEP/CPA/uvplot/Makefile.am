@@ -1,22 +1,7 @@
 SUBDIRS=src test 
 
-include $(lofar_sharedir)/Makefile.common
-
-############### AID stuff #####################
-# script used to generate AID maps
-
-dmi_dir := $(lofar_sharedir)/../DMI
-
-MAPBUILDER := $(dmi_dir)/src/build_aid_maps.pl 
-
-# All .aidlist files below this dir will be scanned
-BASELISTDIR := $(lofar_sharedir)/..
-
-# Your package's subdirectory
-AID_DIR := $(top_srcdir)/test
-
 aids:
-	$(MAPBUILDER) `find $(BASELISTDIR) -name \*.aidlist` $(AID_DIR)/*.h 
+	(cd src && make aids)
+#	(cd test && make aids)
 
-################################################
-
+include $(lofar_sharedir)/Makefile.common
