@@ -79,7 +79,7 @@ void WH_Example::process()
   const fcomplex cp1 = makefcomplex(1,0);
   if (getDataManager().getInputs() == 0) {
     for (int j=0; j<itsBufLength; j++) {
-      buf[j] = cp1 + DH_Example::BufferType (Step::getEventCount());
+      buf[j] = cp1 + DH_Example::BufferType (makedcomplex(Step::getEventCount(),0));
     }
   } else {
     for (int i=0; i<getDataManager().getInputs(); i++) {
