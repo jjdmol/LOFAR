@@ -31,9 +31,10 @@
 #include <Math/LCSMath.h>
 #include <blitz/blitz.h>
 
-WH_WeightDetermination::WH_WeightDetermination(const string& name, unsigned int nin, 
-					       unsigned int nout, unsigned int nant)
-  : WorkHolder (nin, nout, name, "WH_WeightDetermination")
+WH_WeightDetermination::WH_WeightDetermination(const string& name, unsigned int nin, unsigned int nout, unsigned int nant)
+  : WorkHolder (nin, nout, name, "WH_WeightDetermination"),
+    itsOutHolder (0),
+    itsNrcu      (0)
 {
   if (nout > 0) {
     itsOutHolder = new DH_SampleC("out", itsNrcu, 1);
