@@ -73,26 +73,11 @@ void MMap::mapFile(long long startOffset, size_t nrBytes)
   }
 
   int sz = getpagesize();
-  if (fmod(nrBytes, sz) > 0)       // Make itsNrBytes a multiple of pagesize
-  {
-    itsNrBytes = (int)((floor((float)nrBytes/sz) + 1) * sz);
-  }
-  else
-  {
-    itsNrBytes = nrBytes;
-  }
+  // Calculate start of page on which startOffset is located.
+  long long pageStartOffset = (startOffset/sz) * sz;
+  // Add the difference to the nr of bytes to map.
+  itsNrBytes = nrBytes + startOffset-pageStartOffset;
 
-  long long pageStartOffset;       // Start of page on which startOffset is located
-  if (fmod(startOffset, sz) > 0)   // Make pageStartOffset a multiple of pagesize
-  {
-    pageStartOffset = (long long)(floor((float)startOffset/sz) * sz);
-  }
-  else
-  {
-    pageStartOffset = startOffset; 
-  }
-  
-  itsNrBytes = nrBytes;
   int protect;
   switch (itsProtection) {
   case Read:
@@ -110,10 +95,11 @@ void MMap::mapFile(long long startOffset, size_t nrBytes)
   }
     
   // Do mmap
-  itsPageStart = mmap ( 0, itsNrBytes, protect, MAP_SHARED, itsFd, pageStartOffset);
+  itsPageStart = mmap ( 0, itsNrBytes, protect, MAP_SHARED, itsFd,
+			pageStartOffset);
   ASSERTSTR (itsPageStart != MAP_FAILED, "mmap failed: " << strerror(errno) ); 
-  char* reqPtr = (char*)itsPageStart + startOffset - pageStartOffset;   // requested pointer
-  itsPtr = reqPtr;
+  // Get requested pointer
+  itsPtr = (char*)itsPageStart + startOffset-pageStartOffset;
 }
 
 void MMap::unmapFile()
