@@ -5,7 +5,7 @@ AC_INIT(include/GCF/GCF_Defines.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(GCFCommon, 4.0)
+AM_INIT_AUTOMAKE(GCFCommon, 4.2)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
