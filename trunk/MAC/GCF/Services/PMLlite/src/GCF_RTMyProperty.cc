@@ -176,7 +176,8 @@ void GCFRTMyProperty::valueChanged (const GCFPValue& value)
     
     GCFPropValueEvent e(F_VCHANGEMSG_SIG);
     e.pValue = &value;
-    e.pPropName = getFullName().c_str();
+    string fullName(getFullName());
+    e.pPropName = fullName.c_str();
     e.internal = true;
     dispatchAnswer(e);
   }

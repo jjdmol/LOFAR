@@ -23,6 +23,7 @@
 
 #include "Echo.h"
 #include <GCF/GCF_PVBool.h>
+#include <GCF/GCF_PVChar.h>
 #define DECLARE_SIGNAL_NAMES
 #include "Echo_Protocol.ph"
 
@@ -39,7 +40,6 @@ Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  string propName("Test_Prop");
 
   switch (e.signal)
   {
@@ -53,14 +53,7 @@ GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 
     case F_CONNECTED_SIG:
     {
-      GCFPVBool testVal(true);
       TRAN(Echo::connected);
-      service.createProp(propName, GCFPValue::LPT_BOOL);
-      service.createProp(propName + "_test", GCFPValue::LPT_BOOL);
-      //service.subscribe(propName);
-      service.subscribe(propName + "_test");
-      //service.get(propName);
-      service.set(propName + "_test", testVal);
       break;
     }
     case F_DISCONNECTED_SIG:
@@ -82,13 +75,13 @@ GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  string propName("Test_Prop");
+  static string propName("Test_Prop");
 
   switch (e.signal)
   {
     case F_DISCONNECTED_SIG:
-      service.unsubscribe(propName + "_test");
-      //service.deleteProp(propName);
+      service.deleteProp(propName);
+      service.deleteProp(propName + "_test");
       cout << "Lost connection to client" << endl;
       TRAN(Echo::initial);
       break;
@@ -96,6 +89,73 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     case ECHO_PING:
     {
       EchoPingEvent* ping = static_cast<EchoPingEvent*>(&e);
+
+      switch (ping->seqnr % 13)
+      {
+        case 0:
+          service.createProp(propName, GCFPValue::LPT_BOOL);
+          break;
+        case 1:
+          service.createProp(propName + "_test", GCFPValue::LPT_CHAR);
+          break;
+        case 2:
+          service.subscribe(propName);
+          break;
+        case 3:
+          service.subscribe(propName + "_test");
+          break;
+        case 4:
+          service.get(propName);
+          break;
+        case 5:
+        {
+          GCFPVBool wrongTestVal(true);
+          service.set(propName + "_test", wrongTestVal);
+          GCFPVChar goodTestVal('A');
+          service.set(propName + "_test", goodTestVal);
+          break;
+        }
+        case 6:
+          service.unsubscribe(propName + "_test1");
+          service.unsubscribe(propName + "_test");
+          service.unsubscribe(propName);
+          break;
+        case 7:
+        {
+          GCFPVChar testVal('B');
+          service.set(propName + "_test", testVal);
+          break;
+        }
+        case 8:
+        {
+          service.subscribe(propName);
+          service.unsubscribe(propName);
+          GCFPVBool testVal(true);
+          service.set(propName, testVal);
+          break;
+        }
+        case 9:
+          service.subscribe(propName);
+          break;
+        case 10:
+          service.get(propName);
+          service.unsubscribe(propName);
+          break;
+        case 11:
+        {
+          service.subscribe(propName);
+          service.unsubscribe(propName);
+          service.subscribe(propName);
+          GCFPVBool testVal(false);
+          service.set(propName, testVal);
+          break;
+        }
+        case 12:
+          service.deleteProp(propName);
+          service.deleteProp(propName + "_test");
+          break;
+      }
+      
       
       cout << "PING received (seqnr=" << ping->seqnr << ")" << endl;
       

@@ -33,6 +33,7 @@
 #include <sys/ioctl.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 //#required includes according to man packet(7)
 #include <sys/socket.h>
@@ -101,23 +102,25 @@ int GTMETHSocket::open(const char* ifname,
     socketFD = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     if (socketFD < 0)
     {
-	LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, ( 
-			    "open(PF_PACKET)"));
-	LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (strerror(errno)));
-	return socketFD;
+    	LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, ( 
+    			"open(PF_PACKET): %s", 
+          strerror(errno)));
+    	return socketFD;
     }
 
     // make large send/recv buffers
     int val = 262144;
     if (setsockopt(socketFD, SOL_SOCKET, SO_RCVBUF, &val, sizeof(val)) < 0) 
     {
-	LOFAR_LOG_WARN(TM_STDOUT_LOGGER, ("setsockopt(SO_RCVBUF)"));
-	LOFAR_LOG_WARN(TM_STDOUT_LOGGER, (strerror(errno)));	
+      LOFAR_LOG_WARN(TM_STDOUT_LOGGER, (
+          "setsockopt(SO_RCVBUF): %s", 
+          strerror(errno)));	
     }
     if (setsockopt(socketFD, SOL_SOCKET, SO_SNDBUF, &val, sizeof(val)) < 0) 
     {
-	LOFAR_LOG_WARN(TM_STDOUT_LOGGER, ("setsockopt(SO_SNDBUF)"));
-	LOFAR_LOG_WARN(TM_STDOUT_LOGGER, (strerror(errno)));	
+      LOFAR_LOG_WARN(TM_STDOUT_LOGGER, (
+          "setsockopt(SO_SNDBUF): %s", 
+          strerror(errno)));  	
     }
 
    // find MAC address for specified interface
@@ -126,8 +129,8 @@ int GTMETHSocket::open(const char* ifname,
     if (ioctl(socketFD, SIOCGIFHWADDR, &ifr) < 0)
     {
       LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, ( 
-          "ioctl(SIOCGIFHWADDR) "));
-      LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, (strerror(errno)));
+          "ioctl(SIOCGIFHWADDR): %s", 
+          strerror(errno)));
       close();
       return -1;
     }
@@ -194,8 +197,8 @@ int GTMETHSocket::open(const char* ifname,
 	     sizeof(struct sockaddr_ll)) < 0)
     {
         LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, ( 
-            "GCFETHRawPort::open; bind"));
-	LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, (strerror(errno)));
+            "GCFETHRawPort::open; bind : %s",
+            strerror(errno)));
         close();
         return -1;
     }
