@@ -1,4 +1,4 @@
-//# DH_Database.h: Standard database persistent DH_Database
+//# DH_Postgresql.h: Standard database persistent DH_Database
 //#
 //# Copyright (C) 2000, 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,16 +23,26 @@
 #ifndef CEPFRAME_DH_POSTGRESQL_H
 #define CEPFRAME_DH_POSTGRESQL_H
 
+#include <sstream>
 #include <lofar_config.h>
 #include <CEPFrame/DH_Database.h>		// for class definition
 #include <Common/LofarTypes.h>			// for ulong
+
+// DH_Postgresql requires the package postgres-devel to be installed. This
+// package, along with development libraries for Postgresql, contains the
+// include file libpq-fe.h. If the current installation supports the
+// postgresql-devel package (by HAVE_PSQL), then the include file is
+// included. If not, CEPFrame will still compile, but with unpredictable
+// behaviour as soon as DH_Postgresql is used.
+
 #ifdef HAVE_PSQL
 # include <libpq-fe.h>				// for PGconn et al
 #endif
-#include <sstream>
-
 
 namespace LOFAR {
+
+/// The DH_Postgresql class implements a DataHolder communicating over a
+/// Postgresql database engine. 
 
 class DH_Postgresql : public DH_Database {
 
@@ -41,23 +51,27 @@ public:
   explicit DH_Postgresql (const string& name, const string& type);
   virtual ~DH_Postgresql ();
 
+  /// Store message content into Postgresql database table.
   virtual bool StoreInDatabase (int appId, int tag, char * buf, int size);
+
+  /// Retrieve message content from Postgresql database table.
   virtual bool RetrieveFromDatabase (int appId, int tag, char * buf, int size);
 
-  // Connect to the database named DBName, residing at host DBHost, using
-  // database account UserName. The following arguments will work for
-  // testing purposes: DBHost="10.87.2.50", DBName=<YourLogInName>,
-  // UserName="postgres". This method must be called before the DH_Postgresql
-  // constructor. Calling this method before at the beginning of defining your
-  // application is the best place to guarantee this. 
-  // Note: 10.87.2.50 is dop50 the database server.
-  // If you use the hostname dop50, you have to make sure that the
-  // client host is able to resolve dop50; this may not always be the
-  // case. lofar3 is an example of such a case. If this method is not
-  // called, the test database residing on dop49 is used as a default.
+  /// Specify which name, host and account name should be used for the
+  /// connection. The following arguments will work for testing purposes:
+  /// DBHost="10.87.2.50", DBName=<YourLogInName>,
+  /// UserName="postgres". This method must be called before the
+  /// DH_Postgresql constructor. Calling this method at the beginning of
+  /// main () is the best place to guarantee this. Note: 10.87.2.50 is
+  /// dop50 the database server. If you use the hostname dop50, you have
+  /// to make sure that the client host is able to resolve dop50; this may
+  /// not always be the case. lofar3 is an example of such a case. If this
+  /// method is not called, the test database residing on dop49 is used as
+  /// a default.
   static void UseDatabase (char * dbHost, char * dbName, char * userName);
 
 protected:
+  /// Execution methods for Postgresql client initiated SQL queriess:
   bool ExecuteSQLCommand (char * str);
   bool ExecuteSQLCommand (std::ostringstream & q);
 
@@ -68,23 +82,32 @@ protected:
     DataPacket () {}
   };
 
- protected:
+protected:
+
 #ifdef HAVE_PSQL
+  /// Statically shared connection object containing connection
+  /// information to database.
   static PGconn * theirConnection;
 #endif
 
 private:
 
+  /// Connect/disconnect to/from PostgresQL database.
   void ConnectDatabase (void);
   void DisconnectDatabase (void);
 
+  /// Internal counters for synchronizing the read and write queries
   ulong itsReadSeqNo;
   ulong itsWriteSeqNo;
 
+  /// Boolean indicating whether a Postgresql connection is in place or not.
   bool isConnected;
 
+  /// Counter for the number of DH_Postgresql instances. Used to coordinate
+  /// the connection to the database.
   static ulong theirInstanceCount;
 
+  /// Strings containing the name specs describing the Postgresql connection.
   static string theirDBHost;
   static string theirDBName;
   static string theirUserName;
