@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLOBARRAY_H
 #define LOFAR_COMMON_BLOBARRAY_H
 
-// \file BlobArray
+// \file BlobArray.h
 //Blob handling for arrays.
 
 #include <Common/BlobOStream.h>

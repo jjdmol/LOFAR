@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_LOFAR_GLOBAL_SYMBOL_WARNING_H
 #define LOFAR_COMMON_LOFAR_GLOBAL_SYMBOL_WARNING_H
 
-// \file lofar_global_symbol_warning
+// \file lofar_global_symbol_warning.h
 //
 
 // \addtogroup Common

@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_MAP_H
 #define LOFAR_COMMON_MAP_H
 
-// \file lofar_map
+// \file lofar_map.h
 //
 
 #include <map>

@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLOBHEADER_H
 #define LOFAR_COMMON_BLOBHEADER_H
 
-// \file BlobHeader
+// \file BlobHeader.h
 // Standard header for a blob.
 
 #include <Common/LofarTypes.h>

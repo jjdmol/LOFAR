@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_LOFAR_LIST_H
 #define LOFAR_COMMON_LOFAR_LIST_H
 
-// \file lofar_list
+// \file lofar_list.h
 //
 
 #include <list>

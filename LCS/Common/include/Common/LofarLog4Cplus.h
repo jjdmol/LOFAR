@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_LOG4CPLUS_H
 #define LOFAR_COMMON_LOG4CPLUS_H
 
-// \file LofarLog4Cplus
+// \file LofarLog4Cplus.h
 // Interface to the log4cplus logging package
 
 #include <lofar_config.h>

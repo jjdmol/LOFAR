@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_DEBUG_H
 #define LOFAR_COMMON_DEBUG_H
 
-// \file Debug.h
+// \file Debug.h.h
 //
 
 #ifdef __DEPRECATED

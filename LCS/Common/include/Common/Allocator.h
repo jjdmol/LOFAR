@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_ALLOCATOR_H
 #define LOFAR_COMMON_ALLOCATOR_H
 
-// \file Allocator
+// \file Allocator.h
 // Abstract base class for LOFAR memory (de)allocator.
 
 #include <unistd.h>

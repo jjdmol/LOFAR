@@ -23,7 +23,7 @@
 #ifndef LOFAR_LCS_RUNONNODE_H
 #define LOFAR_LCS_RUNONNODE_H
 
-// \file RunOnNode
+// \file RunOnNode.h
 //
 
 #include <lofar_config.h>

@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_TYPENAMES_H
 #define LOFAR_COMMON_TYPENAMES_H
 
-// \file TypeNames
+// \file TypeNames.h
 // Return a string giving the type name to be stored in blobs.
 
 //# Includes

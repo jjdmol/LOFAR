@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_BLOBOBUFSTREAM_H
 #define LOFAR_COMMON_BLOBOBUFSTREAM_H
 
-// \file BlobOBufStream
+// \file BlobOBufStream.h
 // Output buffer for a blob using an ostream.
 
 #include <Common/BlobOBuffer.h>

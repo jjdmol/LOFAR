@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_DATAFORMAT_H
 #define LOFAR_COMMON_DATAFORMAT_H
 
-// \file DataFormat
+// \file DataFormat.h
 // Get the data format (endian type).
 
 #include <lofar_config.h>
