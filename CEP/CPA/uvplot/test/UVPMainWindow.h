@@ -36,6 +36,7 @@
 #include <UVPGraphSettingsWidget.h>
 #include <uvplot/UVPDataSet.h>
 
+#include <VisAgent/VisInputAgent.h>
 
 #if(DEBUG_MODE)
 #include <Common/Debug.h>
@@ -86,15 +87,23 @@ class UVPMainWindow:public QMainWindow
   //! VDM input selected by user
   void slot_vdmInput();
 
+  //! Initialize VDM communications. Called from slot_vdmInput().
+  void slot_vdmInit();
+
+  //! Stop VDM
   void slot_quitPlotting();
 
+  //! Lets the user select an MS filename. Sets itsInputType to "MS".
   void slot_openMS();
-  //  void slot_openPVD();
 
+  //! Lets the user select an MS filename. Sets itsInputType to "VDM".
+  void slot_vdmOpenMS();
+
+  //! Called when "load" button is pressed
   void slot_loadData();
 
+  //! Actually reads data from MS msName.
   void slot_readMeasurementSet(const std::string& msName);
-  //  void slot_readPVD(const std::string& pvdName);
 
  protected:                     /* Protected part */
   
@@ -127,6 +136,8 @@ class UVPMainWindow:public QMainWindow
   InputType       itsInputType;
   std::string     itsInputFilename;
   std::string     itsMSColumnName;
+
+  VisInputAgent*  itsVisInputAgent;
 
   virtual void resizeEvent  (QResizeEvent* event);
   virtual void keyPressEvent(QKeyEvent*    event);
