@@ -20,9 +20,9 @@
 //
 // $Id: 
 
-#include "PSS3/MeqCalibraterImpl.h"
+#include <PSS3/MeqCalibraterImpl.h>
 #include <Common/lofar_iostream.h>
-#include <Calibrator.h>
+#include "PSS3/Calibrator.h"
 
 
 const int DefaultAntennaCount = 21;
@@ -43,9 +43,9 @@ Calibrator::Calibrator () {
 
   itsNrOfIterations = 10;
 
-  itsTblMeasurementSet = "demo.MS";
-  itsTblMeqModel = "demo";
-  itsTblSkyModel = "demo_gsm";
+  itsTblMeasurementSet = "demo.MS";		// AIPS table
+  itsTblMeqModel = "meqmodel";			// PL table (demo.MEP)
+  itsTblSkyModel = "skymodel";			// PL table (demo_gsm.MEP)
 
   itsDDID = 0;
   itsModelType = "LOFAR.RI";
@@ -76,21 +76,23 @@ void Calibrator::Initialize (void) {
   Vector<int> ant1 (itsPrimaryAntennae.size ());
   Vector<int> ant2 (itsSecondaryAntennae.size ());
   unsigned int i;
-
+cout << "Cal.Initialize.1" << endl;
   for (i = 0; i < itsPrimaryAntennae.size (); i ++) 
     ant1 [i] = itsPrimaryAntennae [i];
+cout << "Cal.Initialize.2" << endl;
 
   for (i = 0; i < itsSecondaryAntennae.size (); i ++) 
     ant2 [i] = itsSecondaryAntennae [i];
+cout << "Cal.Initialize.3" << endl;
 
-  if (itsPSS3CalibratorImpl != NULL) {
+  if (itsPSS3CalibratorImpl != NULL)
     delete itsPSS3CalibratorImpl;
-  }
 
   itsPSS3CalibratorImpl = new MeqCalibrater (
 					     itsTblMeasurementSet,
 					     itsTblMeqModel,
 					     itsTblSkyModel,
+					     "postgres", "meijeren", "",
 					     itsDDID,
 					     ant1,
 					     ant2,
@@ -99,8 +101,10 @@ void Calibrator::Initialize (void) {
 					     itsDataColumn,
 					     itsCorrectedDataColumn
   );
+  cout << "Cal.Initialize.4" << endl;
 
   itsPSS3CalibratorImpl -> setTimeInterval (itsTimeInterval);
+  cout << "Cal.Initialize.5" << endl;
 }
 
 
@@ -224,7 +228,7 @@ void Calibrator::ExamplePSS3Run (void) {
 }
 
 
-void Calibrator::ExperimentalOptimizeSource (int src) {
+void Calibrator::ExperimentalOptimizeSource (int) {
   cout << "Next iteration" << endl;
   /*
   Vector <Int> srcList (1);

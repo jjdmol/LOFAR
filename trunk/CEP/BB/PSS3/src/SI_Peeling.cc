@@ -115,8 +115,8 @@ bool SI_Peeling::execute(vector<string>& parmNames,
   itsCal->clearPeelMasks();
   itsCal->commitPeelSourcesAndMasks();
   itsCal->Run();
-  //  itsCal->SubtractOptimizedSources();
-  //  itsCal->CommitOptimizedParameters();
+  itsCal->SubtractOptimizedSources();
+  itsCal->CommitOptimizedParameters();
   sourceNo = itsCurSource;
   return true;
 }

@@ -20,10 +20,9 @@
 //#
 //# $Id$
 
-#ifndef PSS3_MEQCALIBRATER_H
-#define PSS3_MEQCALIBRATER_H
+#ifndef BB_PSS3_MEQCALIBRATER_H
+#define BB_PSS3_MEQCALIBRATER_H
 
-class Solution;
 #include <aips/Arrays/Matrix.h>
 #include <aips/Fitting/FitLSQ.h>
 #include <aips/MeasurementSets/MSMainColumns.h>
@@ -51,7 +50,6 @@ class Solution;
 #include <MNS/MeqLofarStatSources.h>
 #include <MNS/MeqStatUVW.h>
 #include <MNS/ParmTable.h>
-#include <PSS3/Solution.h>
 
 /*!
  * Class to perform self-calibration on a MeasurementSet using the
@@ -66,12 +64,17 @@ public:
    * Create MeqCalibrater object for a specific
    * MeaurementSet, MEQ model (with associated MEP database) and skymodel
    * for the specified data descriptor (i.e. spectral window) and antennas.
+   * The database type (aips or postgres) has to be given.
+   * For postgres the database name has to be given as well.
    * Currently model types WSRT and LOFAR are recognized.
    * The UVW coordinates can be recalculated or taken from the MS.
    */ 
   MeqCalibrater (const String& msName,
 		 const String& meqModel,
 		 const String& skyModel,
+		 const String& dbType,
+		 const String& dbName,
+		 const String& dbPwd,
 		 uInt ddid,
 		 const Vector<Int>& ant1,
 		 const Vector<Int>& ant2,
@@ -118,9 +121,6 @@ public:
    * updates the parameters for which to solve.
    */
   GlishRecord solve (Bool useSVD);
-  
-  //! update the parameters based on the Solution
-  void updateParms();
 
   //! Save solved parameters to the MEP database.
   void saveParms();
@@ -298,9 +298,9 @@ private:
   vector<bool> itsIsParmSolvable;       //# is corresponding parmlist solvable?
   MeqMatrix    itsSolution;             //# Solution as complex numbers
   vector<double> itsFitME;
-  vector<complex<double> > itsDeriv;    //# derivatives of predict
+  vector<complex<double> > itsDeriv;   //# derivatives of predict
   
-  Solution     itsSol;                  //# Solution object for BlackBoard 
+  /*@}*/
 };
 
 /*!

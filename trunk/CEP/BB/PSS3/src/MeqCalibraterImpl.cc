@@ -20,8 +20,7 @@
 //#
 //# $Id$
 
-#include <PSS3/MeqCalibraterImpl.h>
-#include <PSS3/Solution.h>
+#include "PSS3/MeqCalibraterImpl.h"
 
 #include <MNS/MeqJonesNode.h>
 #include <MNS/MeqStatExpr.h>
@@ -429,6 +428,9 @@ void MeqCalibrater::makeLOFARExpr(Bool asAP)
 MeqCalibrater::MeqCalibrater(const String& msName,
 			     const String& meqModel,
 			     const String& skyModel,
+			     const String& dbType,
+			     const String& dbName,
+			     const String& dbPwd,
 			           uInt    ddid,
 			     const Vector<Int>& ant1,
 			     const Vector<Int>& ant2,
@@ -439,25 +441,19 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   :
   itsMS       (msName, Table::Update),
   itsMSCol    (itsMS),
-  itsMEP      (meqModel + ".MEP"),
-  itsGSMMEP   (skyModel + ".MEP"),
+  itsMEP      (dbType, meqModel, dbName, dbPwd),
+  itsGSMMEP   (dbType, skyModel, dbName, dbPwd),
   itsCalcUVW  (calcUVW),
   itsDataColName (dataColName),
   itsResColName  (residualColName),
   itsSolver   (1, LSQBase::REAL)
 {
-  cout << "MeqCalibrater constructor (";
-  cout << "'" << msName   << "', ";
-  cout << "'" << meqModel << "', ";
-  cout << "'" << skyModel << "', ";
-  cout << ddid << ", ";
-  cout << ant1 << ", " << endl;
-  cout << ant2 << ", " << endl;
-  cout << modelType << ", " << endl;
-  cout << itsCalcUVW << ", " << endl;
-  cout << dataColName << ", " << endl;
-  cout << residualColName << ", " << endl;
-
+  cdebug(1) << "MeqCalibrater constructor (";
+  cdebug(1) << "'" << msName   << "', ";
+  cdebug(1) << "'" << meqModel << "', ";
+  cdebug(1) << "'" << skyModel << "', ";
+  cdebug(1) << ddid << ", " << endl;
+  cdebug(1) << itsCalcUVW << ")" << endl;
 
   // Get phase reference (for field 0).
   getPhaseRef();
@@ -508,14 +504,14 @@ MeqCalibrater::MeqCalibrater(const String& msName,
     makeLOFARExpr(True);
   }
 
-  cout << "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
+  cdebug(1) << "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
 	    << ' ' << MeqMatrixRep::nctor + MeqMatrixRep::ndtor << endl;
-  cout << "MeqRes " << MeqResultRep::nctor << ' ' << MeqResultRep::ndtor
+  cdebug(1) << "MeqRes " << MeqResultRep::nctor << ' ' << MeqResultRep::ndtor
 	    << ' ' << MeqResultRep::nctor + MeqResultRep::ndtor << endl;
 
   // Calculate frequency domain.
   getFreq (ddid);
-  cout << "Freq: " << itsStartFreq << ' ' << itsEndFreq << " (" <<
+  cdebug(1) << "Freq: " << itsStartFreq << ' ' << itsEndFreq << " (" <<
     itsEndFreq - itsStartFreq << " Hz) " << itsNrChan << " channels of "
 	    << itsStepFreq << " Hz" << endl;
 
@@ -532,10 +528,9 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   // itsNrChan is the numnber frequency channels
   // 1 is the number of time steps. this code is limited to one timestep only
   MeqMatrixComplexArr::poolActivate(itsNrChan * 1);
-
+  // Unlock the parm tables.
   itsMEP.unlock();
   itsGSMMEP.unlock();
-  itsMS.unlock ();
 }
 
 //----------------------------------------------------------------------
@@ -547,7 +542,7 @@ MeqCalibrater::MeqCalibrater(const String& msName,
 //----------------------------------------------------------------------
 MeqCalibrater::~MeqCalibrater()
 {
-  cout << "MeqCalibrater destructor" << endl;
+  cdebug(1) << "MeqCalibrater destructor" << endl;
   for (vector<MeqJonesExpr*>::iterator iter = itsExpr.begin();
        iter != itsExpr.end();
        iter++) {
@@ -617,6 +612,7 @@ void MeqCalibrater::initParms (const MeqDomain& domain)
     }
     i++;
   }
+
   if (itsNrScid > 0) {
     // Get the initial values of all solvable parms.
     // Resize the solution vector if needed.
@@ -639,6 +635,8 @@ void MeqCalibrater::initParms (const MeqDomain& domain)
   // Unlock the parm tables.
   itsMEP.unlock();
   itsGSMMEP.unlock();
+  // Unlock the MS.
+  itsMS.unlock();
 }
 
 //----------------------------------------------------------------------
@@ -652,7 +650,7 @@ void MeqCalibrater::initParms (const MeqDomain& domain)
 //----------------------------------------------------------------------
 void MeqCalibrater::setTimeInterval (double secInterval)
 {
-  cout << "setTimeInterval = " << secInterval << endl;
+  cdebug(1) << "setTimeInterval = " << secInterval << endl;
   itsTimeInterval = secInterval;
 }
 
@@ -665,7 +663,7 @@ void MeqCalibrater::setTimeInterval (double secInterval)
 //----------------------------------------------------------------------
 void MeqCalibrater::resetIterator()
 {
-  cout << "resetTimeIterator" << endl;
+  cdebug(1) << "resetTimeIterator" << endl;
   itsIter.reset();
 }
 
@@ -679,7 +677,6 @@ void MeqCalibrater::resetIterator()
 //----------------------------------------------------------------------
 bool MeqCalibrater::nextInterval()
 {
-  cout << "Start nextInterval() " << endl;
   itsCurRows.resize(0);
   // Exit when no more chunks.
   if (itsIter.pastEnd()) {
@@ -712,12 +709,8 @@ bool MeqCalibrater::nextInterval()
   itsSolveDomain = MeqDomain(timeStart, timeStart + nrtim*timeStep,
 			     itsStartFreq + itsFirstChan*itsStepFreq,
 			     itsStartFreq + (itsLastChan+1)*itsStepFreq);
-  cout << "Call initParms" << endl;
   initParms (itsSolveDomain);
   itsSolveColName = itsDataColName;
-  cout << "End nextInterval()" << endl;
-
-  itsMS.unlock ();
   return true;
 }
 
@@ -732,7 +725,7 @@ void MeqCalibrater::clearSolvableParms()
 {
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
-  cout << "clearSolvableParms" << endl;
+  cdebug(1) << "clearSolvableParms" << endl;
 
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
@@ -762,11 +755,9 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
 
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
-  cout << "setSolvableParms: "
-       << "isSolvable = " << isSolvable << endl;
-  cout << "parmPatterns = " << parmPatterns << endl;
-  cout << "excludePatterns = " << excludePatterns << endl;
-  
+  cdebug(1) << "setSolvableParms: "
+	    << "isSolvable = " << isSolvable << endl;
+
   // Convert patterns to regexes.
   vector<Regex> parmRegex;
   for (unsigned int i=0; i<parmPatterns.nelements(); i++) {
@@ -807,7 +798,7 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
 	    }
 	  }
 	  if (!parmExc) {
-	    cout << "setSolvable: " << (*iter)->getName() << endl;
+	    cdebug(1) << "setSolvable: " << (*iter)->getName() << endl;
 	    (*iter)->setSolvable(isSolvable);
 	  }
 	  break;
@@ -826,6 +817,7 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
 //----------------------------------------------------------------------
 GlishRecord MeqCalibrater::solve(bool useSVD)
 {
+  cdebug(1) << "solve using column " << itsSolveColName << endl;
   cout << "solve using column " << itsSolveColName << endl;
 
   if (itsSolveRows.nelements() == 0) {
@@ -1136,6 +1128,7 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   double fit;
   double stddev;
   double mu;
+  cdebug(1) << "Solution before: " << itsSolution << endl;
   cout << "Solution before: " << itsSolution << endl;
   // It looks as if LSQ has a bug so that solveLoop and getCovariance
   // interact badly (maybe both doing an invert).
@@ -1156,9 +1149,21 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
     solData[i] = sol[i];
   }
   if (Debug(1)) timer.show("solve");
+  cdebug(1) << "Solution after:  " << itsSolution << endl;
   cout << "Solution after:  " << itsSolution << endl;
- 
-  updateParms();
+  
+  // Update all parameters.
+  const vector<MeqParm*>& parmList = MeqParm::getParmList();
+  int i=0;
+  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+       iter != parmList.end();
+       iter++)
+  {
+    if (itsIsParmSolvable[i]) {
+      (*iter)->update (itsSolution);
+    }
+    i++;
+  }
 
   GlishRecord rec;
   rec.add ("solflag", solFlag);
@@ -1171,33 +1176,8 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   rec.add ("stddev", stddev);
   rec.add ("chi", itsSolver.getChi());
 
-  itsSol.init();
-  itsSol.itsSolFlag = solFlag;
-  itsSol.itsRank = rank;
-  itsSol.itsFit = fit;
-  itsSol.itsMu = mu;
-  itsSol.itsStddev = stddev;
-  itsSol.itsChi = itsSolver.getChi();
-  cout << itsSol << endl;
-
-  itsMS.unlock ();  
-
+  itsMS.unlock();
   return rec;
-}
-
-void MeqCalibrater::updateParms() {
-  // Update all parameters.
-  const vector<MeqParm*>& parmList = MeqParm::getParmList();
-  int i=0;
-  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
-       iter != parmList.end();
-       iter++)
-    {
-      if (itsIsParmSolvable[i]) {
-	(*iter)->update (itsSolution);
-      }
-      i++;
-    }
 }
 
 //----------------------------------------------------------------------
@@ -1211,7 +1191,7 @@ void MeqCalibrater::saveParms()
 {
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
-  cout << "saveParms" << endl;
+  cdebug(1) << "saveParms" << endl;
 
   Assert (!itsSolution.isNull()  &&  itsSolution.nx() == itsNrScid);
   int i=0;
@@ -1239,7 +1219,7 @@ void MeqCalibrater::saveParms()
 //----------------------------------------------------------------------
 void MeqCalibrater::predict (const String& modelDataColName)
 {
-  cout << "predict('" << modelDataColName << "')" << endl;
+  cdebug(1) << "predict('" << modelDataColName << "')" << endl;
 
   if (itsCurRows.nelements() == 0) {
     throw AipsError("nextInterval needs to be done before predict");
@@ -1251,7 +1231,7 @@ void MeqCalibrater::predict (const String& modelDataColName)
   if (! itsMS.tableDesc().isColumn(modelDataColName)) {
     ArrayColumnDesc<Complex> mdcol(modelDataColName);
     itsMS.addColumn (mdcol);
-    cout << "Added column " << modelDataColName << " to the MS" << endl;
+    cdebug(1) << "Added column " << modelDataColName << " to the MS" << endl;
   }
 
   double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
@@ -1310,6 +1290,7 @@ void MeqCalibrater::predict (const String& modelDataColName)
     mdcol.put (rownr, data);
   }
 
+  itsMS.unlock();
   timer.show();
   if (Debug(1)) timer.show();
 }
@@ -1412,11 +1393,10 @@ void MeqCalibrater::saveResidualData()
     rescol.putSlice (rownr, dataSlicer, data);
   }
   itsMS.flush();
+  itsMS.unlock();
   // From now on the residual column name has to be used in the solve.
   itsSolveColName = itsResColName;
-  itsMS.unlock ();
 }
-
 
 //----------------------------------------------------------------------
 //
@@ -1460,7 +1440,7 @@ GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns,
 				    Vector<String>& excludePatterns,
 				    int isSolvable, bool denormalize)
 {
-  cout << "getParms: " << endl;
+  cdebug(1) << "getParms: " << endl;
   if (itsCurRows.nelements() == 0) {
     throw AipsError("nextInterval needs to be done before getParms");
   }
@@ -1543,7 +1523,7 @@ GlishArray MeqCalibrater::getParmNames(Vector<String>& parmPatterns,
 
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
-  cout << "getParmNames: " << endl;
+  cdebug(1) << "getParmNames: " << endl;
 
   // Convert patterns to regexes.
   vector<Regex> parmRegex;
@@ -1642,7 +1622,7 @@ Int MeqCalibrater::select(const String& where, int firstChan, int lastChan)
   } else {
     itsLastChan = lastChan;
   }
-  cout << "select " << where << "  channels=[" << itsFirstChan
+  cdebug(1) << "select " << where << "  channels=[" << itsFirstChan
 	    << ',' << itsLastChan << ']' << endl;
   Assert (itsFirstChan <= itsLastChan);
   if (where.empty()  ||  where == "*") {
@@ -1668,7 +1648,7 @@ Int MeqCalibrater::select(const String& where, int firstChan, int lastChan)
 //----------------------------------------------------------------------
 Int MeqCalibrater::solveselect(const String& where)
 {
-  cout << "solveselect " << where << endl;
+  cdebug(1) << "solveselect " << where << endl;
   if (where.empty()  ||  where == "*") {
     itsSolveRows.reference (itsCurRows);
   } else {
@@ -1678,6 +1658,7 @@ Int MeqCalibrater::solveselect(const String& where)
     Vector<uInt> rownrs (selms.rowNumbers(itsMS));
     itsSolveRows.reference (rownrs);
   }  
+  itsMS.unlock();
   return itsSolveRows.nelements();
 }
 
@@ -1690,7 +1671,7 @@ Int MeqCalibrater::solveselect(const String& where)
 //----------------------------------------------------------------------
 void MeqCalibrater::fillUVW()
 {
-  cout << "get UVW coordinates from MS" << endl;
+  cdebug(1) << "get UVW coordinates from MS" << endl;
   int nant = itsStatUVW.size();
   vector<bool> statFnd (nant);
   vector<bool> statDone (nant);
@@ -1790,7 +1771,7 @@ Bool MeqCalibrater::peel(const Vector<Int>& peelSourceNrs,
     sourceNrs(Slice(peelSourceNrs.nelements(), extraSourceNrs.nelements())) =
       extraSourceNrs;
   }
-  cout << "peel: sources " << peelSourceNrs << " predicting sources "
+  cdebug(1) << "peel: sources " << peelSourceNrs << " predicting sources "
 	    << sourceNrs << endl;
   Assert (peelSourceNrs.nelements() > 0);
   vector<int> src(sourceNrs.nelements());
@@ -1902,6 +1883,7 @@ GlishRecord MeqCalibrater::getResidualData()
       throw AipsError("Number of polarizations should be 1, 2, or 4");
     }
   }
+  itsMS.unlock();
   GlishRecord rec;
   rec.add ("residuals", GlishArray(result));
   rec.add ("ant1", GlishArray(ant1Res));
@@ -1923,7 +1905,7 @@ GlishRecord MeqCalibrater::getStatistics (bool detailed, bool clear)
 {
   GlishRecord rec;
 
-  cout << "getStatistics: " << endl;
+  cdebug(1) << "getStatistics: " << endl;
 
   // Get the total counts.
   rec.add ("timecellstotal", MeqHist::merge (itsCelltHist));
@@ -2229,6 +2211,9 @@ MethodResult MeqCalibraterFactory::make(ApplicationObject*& newObject,
       Parameter<String>   msName(inputRecord, "msname",   ParameterSet::In);
       Parameter<String> meqModel(inputRecord, "meqmodel", ParameterSet::In);
       Parameter<String> skyModel(inputRecord, "skymodel", ParameterSet::In);
+      Parameter<String> dbType  (inputRecord, "dbtype",   ParameterSet::In);
+      Parameter<String> dbName  (inputRecord, "dbname",   ParameterSet::In);
+      Parameter<String> dbPwd   (inputRecord, "dbpwd",    ParameterSet::In);
       Parameter<Int>        ddid(inputRecord, "ddid",     ParameterSet::In);
       Parameter<Vector<Int> > ant1(inputRecord, "ant1",   ParameterSet::In);
       Parameter<Vector<Int> > ant2(inputRecord, "ant2",   ParameterSet::In);
@@ -2241,10 +2226,10 @@ MethodResult MeqCalibraterFactory::make(ApplicationObject*& newObject,
 
       if (runConstructor)
 	{
-	  newObject = new MeqCalibrater(msName(), meqModel(),
-					skyModel(), ddid(),
-					ant1(), ant2(), modelType(),
-					calcUVW(),
+	  newObject = new MeqCalibrater(msName(), meqModel(), skyModel(),
+					dbType(), dbName(), dbPwd(),
+					ddid(), ant1(), ant2(),
+					modelType(), calcUVW(),
 					dataColName(), resColName());
 	}
     }
