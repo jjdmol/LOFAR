@@ -5,7 +5,7 @@ AC_INIT(src/LofarLogger.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(LOFARLOGGER, 0.1)
+AM_INIT_AUTOMAKE(LofarLogger, 0.1)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -55,8 +55,8 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_MPI(0)
-lofar_PACKAGE(LCS/Common)
-lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,log4cplus,)
+lofar_EXTERNAL(common,1,Common/LofarTypes.h,,~/workspace3/LOFAR/installed/gnu_debug)
+lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
 
 dnl
 dnl Output Makefiles

@@ -12,5 +12,4 @@ log4cplus-1.0
 	- ignore compiler erros during compiling the 'test''s
 	- ignore compiler error during installing the 'test's
 
-LOFAR PACKAGES:
 LCS/Common
