@@ -138,7 +138,9 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
                 propValueGet(propName, *pPropertyValue);
               }
               if (pPropertyValue)
+              {
                 delete pPropertyValue; // constructed by convertPVSSToMAC method
+              }
             }
             break;
           }           
@@ -688,7 +690,7 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
         default:
           break;          
       }
-      if (type == GCFPValue::NO_LPT)
+      if (type != GCFPValue::NO_LPT)
       {
         for (Variable* pVar = pDynVar->getFirst();
              pVar; pVar = pDynVar->getNext())
@@ -719,6 +721,11 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
           arrayTo.push_back(pItemValue);
         }
         *pMacValue = new GCFPVDynArr(type, arrayTo);
+        for (GCFPValueArray::iterator iter = arrayTo.begin();
+              iter != arrayTo.end(); ++iter)
+        {
+          delete *iter;  
+        }
       }
     }
   }
@@ -867,7 +874,11 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
               break;              
           }
           if (pItemValue)
-            ((DynVar *)(*pVar))->append(*pItemValue);
+          {
+            ((DynVar *)(*pVar))->append(*pItemValue); // deep copy
+            delete pItemValue;
+            pItemValue = 0;
+          }
         }
       }
       else
