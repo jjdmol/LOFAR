@@ -30,15 +30,18 @@
 //# Includes
 #include <otherpackage/file.h>
 
-//# Forward Declarations
-class forward;
-
-
-// Description of class.
-
-class Class
+namespace LOFAR
 {
-};
 
+  //# Forward Declarations
+  class forward;
+
+
+  // Description of class.
+  class Class
+  {
+  };
+
+} // namespace LOFAR
 
 #endif
