@@ -39,7 +39,9 @@ class myACClientFunctions : public ACClientFunctions
 		{ return ("myACClientFunctions::supplyInfo from ACClient was called"); }
 
 	void	handleAnswerMsg(const string&	answer)
-		{ cout << "myACClientFunctions::handleAnswerMessage from ACClient was called"; }
+		{ cout << "myACClientFunctions::handleAnswerMessage from ACClient was called"; 
+		  cout << "Answer=" << answer << endl;
+	    }
 
 	void	handleAckMsg()
 		{ cout << "myACClientFunctions::handleAckMessage was called\n"; }
