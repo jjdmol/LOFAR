@@ -118,8 +118,8 @@ namespace LOFAR
       toDatabaseRep (rec);
 
       // setup the selection parameters
-//       iter.Params().itsOid = rec.getOid(); // GvD
-      iter.Params().itsOid = rec.itsOid; 
+      iter.Params().itsOid = rec.getOid(); // GvD
+      //      iter.Params().itsOid = rec.itsOid; 
 
       // save this record
       *iter = rec;
