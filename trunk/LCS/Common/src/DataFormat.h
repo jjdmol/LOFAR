@@ -24,6 +24,8 @@
 #define COMMON_DATAFORMAT_H
 
 
+#include <lofar_config.h>
+
 namespace LOFAR
 {
 // This file defines an enum for the possible machine data formats.
