@@ -51,10 +51,10 @@
 
 #if(HAVE_VDM)
 // For VDM stuff
-#include <MSVisAgent/MSVisInputAgent.h>
-#include <OctoAgent/OctoVisInputAgent.h>
-#include <OctoAgent/OctoMultiplexer.h>
+#include <VisAgent/InputAgent.h>
+#include <MSVisAgent/MSInputAgent.h>
 #include <AID-uvplot.h>
+using namespace VisAgent;
 #endif // HAVE_VDM
 
 #include <UVPOpenVDMDialog.h>
@@ -69,8 +69,7 @@ InitDebugContext(UVPMainWindow, "DEBUG_CONTEXT");
 UVPMainWindow::UVPMainWindow()
 #if(HAVE_VDM)
   : QMainWindow(),
-    itsVisInputAgent(0),
-    itsOctoMultiplexer(0)
+    itsInputAgent(0)
 #else
   : QMainWindow()
 #endif
@@ -153,11 +152,8 @@ UVPMainWindow::UVPMainWindow()
 UVPMainWindow::~UVPMainWindow()
 {
 #if(HAVE_VDM)
-  if(itsVisInputAgent != 0) {
-    delete itsVisInputAgent;
-  }
-  if(itsOctoMultiplexer != 0) {
-    delete itsOctoMultiplexer;
+  if(itsInputAgent != 0) {
+    delete itsInputAgent;
   }
 #endif
 }
@@ -624,10 +620,11 @@ void UVPMainWindow::slot_vdmOpenPipe()
 //===============>>>  UVPMainWindow::slot_vdmInit  <<<===============
 
 void UVPMainWindow::slot_vdmInit(const HIID& header,
-				 const HIID& data)
+                                 const HIID& data)
 try
 {
-  using namespace MSVisAgentVocabulary;
+  using namespace MSVisAgent;
+  using namespace VisAgent;
   
   itsMSColumnName = itsGraphSettingsWidget->getSettings().getColumnName();
   int ant1        = int(itsGraphSettingsWidget->getSettings().getAntenna1());
@@ -636,11 +633,11 @@ try
   select_sstream << "ANTENNA1 = " << ant1 << " || ANTENNA2 = " << ant1;
 
   // initialize parameter record
+
   DataRecord::Ref dataref;
-  dataref <<= new DataRecord;
+  DataRecord& rec = dataref <<= new DataRecord;
   
-  DataRecord &args = *new DataRecord;
-  dataref.dewr()[MSVisInputAgent::FParams()] <<= args;
+  DataRecord& args = rec[AidInput] <<= new DataRecord;
 
    
   args[FMSName]         = itsInputFilename;
@@ -668,17 +665,16 @@ try
 
   
   // create agent
-  if(itsVisInputAgent == 0) {
-    itsOctoMultiplexer = new OctoMultiplexer(AidVisualizerWP);
-    itsVisInputAgent   = new OctoVisInputAgent(*itsOctoMultiplexer, HIID(""));//new  MSVisInputAgent;
+  if(itsInputAgent == 0) {
+    itsInputAgent   = new MSInputAgent(AidInput);
   }
   
-  bool res = itsVisInputAgent->init(dataref);
+  bool res = itsInputAgent->init(rec);
 
   if( !res ){
     cout<<"init has failed, exiting...\n";
-    delete itsVisInputAgent;
-    itsVisInputAgent = 0;
+    delete itsInputAgent;
+    itsInputAgent = 0;
     return;
   }
 }
@@ -703,11 +699,11 @@ try
   
   if(!itsBusyPlotting) {
     itsBusyPlotting = true;
-    if(itsVisInputAgent != 0) {
+    if(itsInputAgent != 0) {
       itsDataSet.clear();
     
       DataRecord::Ref header;
-      cout<<"getHeader(): "<<itsVisInputAgent->getHeader(header)<<endl;
+      cout<<"getHeader(): "<<itsInputAgent->getHeader(header)<<endl;
       cout << header.deref() <<endl;
     
       VisTile::Ref tile;
@@ -715,61 +711,58 @@ try
       UVPDataAtomHeader uvp_header;
       int draw_list = 0;
 
-      for(int state = itsVisInputAgent->getNextTile(tile);
-	  state > 0 && itsBusyPlotting;
-	  state = itsVisInputAgent->getNextTile(tile)) {
+      for(int state = itsInputAgent->getNextTile(tile);
+          state > 0 && itsBusyPlotting;
+          state = itsInputAgent->getNextTile(tile)) {
 
-	int ncorr = tile.deref().ncorr();
-	int nfreq = tile.deref().nfreq();
-	int ntime = tile.deref().ntime();
-	int ant1  = tile.deref().antenna1();
-	int ant2  = tile.deref().antenna2();
-
-	if(ncorr > 0 && nfreq > 0 && ntime > 0) {
-	  uvp_header.itsTime             = 0;
-	  uvp_header.itsAntenna1         = ant1;
-	  uvp_header.itsAntenna2         = ant2;
-	  uvp_header.itsExposureTime     = 0;
-	  uvp_header.itsFieldID          = 1;
-	  uvp_header.itsSpectralWindowID = 0;
-
-	  UVPDataAtom atom(nfreq, uvp_header);
-      
-	  for(VisTile::const_iterator iter=tile.deref().begin();
-	      iter != tile.deref().end();
-	      iter.next()) {
-	    uvp_header.itsTime           = iter.time();
-	
-	    for(int corr = 0; corr < ncorr && uvp_header.itsTime != 0;corr++) {
-	      uvp_header.itsCorrelationType = UVPDataAtomHeader::Correlation(corr+1);
-	  
-	      LoVec_fcomplex data(iter.f_data(corr));
-	      LoVec_int      flags(iter.f_flags(corr));
-
-
-	      atom.setHeader(uvp_header);
-	      atom.setData(data);
-	      atom.setFlags(flags);
-
-	      itsDataSet[uvp_header] = atom;
-	    } 
-	  }
-	  if(draw_list % 30 == 0) {
-	    drawDataSet();
-	  }
-	  draw_list++;
-	  qApp->processEvents();
-	}
+        int ncorr = tile.deref().ncorr();
+        int nfreq = tile.deref().nfreq();
+        int ntime = tile.deref().ntime();
+        int ant1  = tile.deref().antenna1();
+        int ant2  = tile.deref().antenna2();
+        
+        if(ncorr > 0 && nfreq > 0 && ntime > 0) {
+          uvp_header.itsTime             = 0;
+          uvp_header.itsAntenna1         = ant1;
+          uvp_header.itsAntenna2         = ant2;
+          uvp_header.itsExposureTime     = 0;
+          uvp_header.itsFieldID          = 1;
+          uvp_header.itsSpectralWindowID = 0;
+          
+          UVPDataAtom atom(nfreq, uvp_header);
+          
+          for(VisTile::const_iterator iter=tile.deref().begin();
+              iter != tile.deref().end();
+              iter.next()) {
+            uvp_header.itsTime           = iter.time();
+            
+            for(int corr = 0; corr < ncorr && uvp_header.itsTime != 0;corr++) {
+              uvp_header.itsCorrelationType = UVPDataAtomHeader::Correlation(corr+1);
+              
+              LoVec_fcomplex data(iter.f_data(corr));
+              LoVec_int      flags(iter.f_flags(corr));
+              
+              
+              atom.setHeader(uvp_header);
+              atom.setData(data);
+              atom.setFlags(flags);
+              
+              itsDataSet[uvp_header] = atom;
+            } 
+          }
+          if(draw_list % 30 == 0) {
+            drawDataSet();
+          }
+          draw_list++;
+          qApp->processEvents();
+        }
       }
-  
-      itsVisInputAgent->close();
+      
+      itsInputAgent->close();
       drawDataSet();
       
-      delete itsVisInputAgent;
-      delete itsOctoMultiplexer;
-      itsVisInputAgent   = 0;
-      itsOctoMultiplexer = 0;
-
+      delete itsInputAgent;
+      itsInputAgent   = 0;
     } else {
       QMessageBox::information(0, "Uvplot", 
 			       "No VisInputAgent. First initialize agent.",
