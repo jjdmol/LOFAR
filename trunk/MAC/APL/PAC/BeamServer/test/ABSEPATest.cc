@@ -177,7 +177,7 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 	{
 	    pointto.time = now + t + 10;
 	    pointto.angle1=0.0;
-	    pointto.angle2=cos(((double)t/600)*M_PI);
+	    pointto.angle2=sin(((double)t/600)*M_PI);
 
 	    _test(sizeof(pointto) == beam_server.send(pointto));
 	}
