@@ -25,7 +25,8 @@
 
 
 #include "PSS3/DH_WorkOrder.h"
-#include "Common/Debug.h"
+#include <Common/Debug.h>
+#include <sstream>
 
 using namespace LOFAR;
 
@@ -91,7 +92,7 @@ bool DH_WorkOrder::StoreInDatabase(int, int, char*, int)
   {
     // First create blob:
     int i;
-    ostringstream ostr;
+    std::ostringstream ostr;
 
     // Put varArgs in blob
     char hexrep [getArgSize()];
@@ -101,8 +102,8 @@ bool DH_WorkOrder::StoreInDatabase(int, int, char*, int)
     }
 
     // Create insertion commands
-    ostringstream q1;
-    ostringstream q2;
+    std::ostringstream q1;
+    std::ostringstream q2;
 
     q1 << "INSERT INTO BBWorkOrders VALUES ("
        << theirWriteCount << ", "
@@ -134,7 +135,7 @@ bool DH_WorkOrder::StoreInDatabase(int, int, char*, int)
   }
   else if (itsType == "KS")
   {
-    ostringstream q1;
+    std::ostringstream q1;
     q1 << "INSERT INTO BBSolutions VALUES ("
        << getID() << ", "
        << "'" << getParam1Name() << "', "
@@ -148,7 +149,7 @@ bool DH_WorkOrder::StoreInDatabase(int, int, char*, int)
 
     cout << "DH_WorkOrder::StoreInDatabase <<< Insert Solution QUERY: " << q1.str () << endl;
 
-    ostringstream q2;
+    std::ostringstream q2;
     q2 << "UPDATE BBWorkOrders SET "
        << "Status = " << getStatus() << " "
        << "WHERE ID = " << getID() << " AND Status = 1 ;";
@@ -177,7 +178,7 @@ bool DH_WorkOrder::RetrieveFromDatabase(int, int, char*, int)
     while (!selectedWorkOrder)   // Do this until a valid (single) workorder is found
     {
       // Construct workorder query in table BBWorkOrders
-      ostringstream q1;
+      std::ostringstream q1;
 
       q1 << "SELECT * FROM BBWorkOrders WHERE "
 	 << "status = 0 AND "
@@ -198,7 +199,7 @@ bool DH_WorkOrder::RetrieveFromDatabase(int, int, char*, int)
       int identifier = atoi(PQgetvalue(resWO, 0, 0));    
 
       // Construct query for parameter names in table BBSolutions
-      ostringstream q2;
+      std::ostringstream q2;
 
       q2 << "SELECT * FROM BBSolutions WHERE "
 	 << "id = " << identifier << ";";
@@ -221,7 +222,7 @@ bool DH_WorkOrder::RetrieveFromDatabase(int, int, char*, int)
 
 
       // Update WorkOrder status in table BBWorkOrders
-      ostringstream q3;
+      std::ostringstream q3;
 
       q3 << "UPDATE BBWorkOrders SET "
 	 << "Status = 1" << " "
@@ -266,7 +267,7 @@ bool DH_WorkOrder::RetrieveFromDatabase(int, int, char*, int)
 
     char token[getArgSize()];
      
-    istringstream istr (PQgetvalue (resWO, 0, 5));
+    std::istringstream istr (PQgetvalue (resWO, 0, 5));
     for (int k = 0; k < getArgSize(); k ++) {
       istr >> token;
       itsDataPacket.itsVarArgs[k] = (char) strtoul (token, NULL, 16);
@@ -289,7 +290,7 @@ bool DH_WorkOrder::RetrieveFromDatabase(int, int, char*, int)
 
   else if (itsType == "Control")
   {
-    ostringstream q1;
+    std::ostringstream q1;
 
     q1 << "SELECT * FROM BBWorkOrders WHERE "
        << "Status = " << 2 << ";";
@@ -318,7 +319,7 @@ bool DH_WorkOrder::RetrieveFromDatabase(int, int, char*, int)
     PQclear (res1);
 
 
-    ostringstream q2;
+    std::ostringstream q2;
 
     q2 << "SELECT * FROM BBSolutions WHERE "
        << "ID = " << getID() << ";";
