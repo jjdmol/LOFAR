@@ -74,6 +74,11 @@ namespace RSP
        * Cancel all commands in any queue for this port.
        */
       void cancel(GCFPortInterface& port);
+
+      /**
+       * Remove commands matching the specified port and handle.
+       */
+      void remove_subscription(GCFPortInterface& port, uint32 handle);
       
       /**
        * Add a synchronization action to be carried out
@@ -106,7 +111,10 @@ namespace RSP
       /**
        * Private helper methods.
        */
-      void pqueue_remove_port(pqueue& p, GCFPortInterface& port);
+      void pqueue_remove_commands(pqueue& p,
+				  GCFPortInterface& port,
+				  bool checkOwner,
+				  uint32 handle = 0);
 
       /**
        * Constants from the config file converted to the correct type.

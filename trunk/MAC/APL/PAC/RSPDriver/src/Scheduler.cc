@@ -48,7 +48,7 @@ Scheduler::~Scheduler()
   while (!m_later_queue.empty())
   {
     Command* c = m_later_queue.top();
-    if (c->isOwner()) delete c;
+    delete c;
     m_later_queue.pop();
   }
   while (!m_now_queue.empty())
@@ -60,7 +60,7 @@ Scheduler::~Scheduler()
   while (!m_periodic_queue.empty())
   {
     Command* c = m_periodic_queue.top();
-    if (c->isOwner()) delete c;
+    delete c;
     m_periodic_queue.pop();
   }
   while (!m_done_queue.empty())
@@ -186,7 +186,10 @@ bool Scheduler::syncHasCompleted()
   return result;
 }
 
-void Scheduler::pqueue_remove_port(pqueue& pq, GCFPortInterface& port)
+void Scheduler::pqueue_remove_commands(pqueue& pq,
+				       GCFPortInterface& port,
+				       bool checkOwner,
+				       uint32 /*handle*/)
 {
   // copy pq
   pqueue tmp = pq;
@@ -201,7 +204,10 @@ void Scheduler::pqueue_remove_port(pqueue& pq, GCFPortInterface& port)
     tmp.pop();
 
     // if port matches, delete c, else push back onto pq
-    if (c->getPort() == &port) { if (c->isOwner()) delete c; }
+    if (c->getPort() == &port)
+    {
+      if (!checkOwner || c->isOwner()) delete c;
+    }
     else pq.push(c);
   }
 }
@@ -211,10 +217,18 @@ void Scheduler::cancel(GCFPortInterface& port)
   // cancel all commands related to this port
   // irrespective of the queue they are in
 
-  pqueue_remove_port(m_later_queue,    port);
-  pqueue_remove_port(m_now_queue,      port);
-  pqueue_remove_port(m_periodic_queue, port);
-  pqueue_remove_port(m_done_queue,     port);
+  pqueue_remove_commands(m_later_queue,    port, false);
+  pqueue_remove_commands(m_now_queue,      port, true);
+  pqueue_remove_commands(m_periodic_queue, port, false);
+  pqueue_remove_commands(m_done_queue,     port, true);
+}
+
+void Scheduler::remove_subscription(GCFPortInterface& port, uint32 handle)
+{
+  pqueue_remove_commands(m_later_queue,    port, false, handle);
+  pqueue_remove_commands(m_now_queue,      port, true,  handle);
+  pqueue_remove_commands(m_periodic_queue, port, false, handle);
+  pqueue_remove_commands(m_done_queue,     port, true,  handle);
 }
 
 void Scheduler::addSyncAction(SyncAction* action)
@@ -301,7 +315,7 @@ void Scheduler::scheduleCommands()
       LOG_WARN("discarding late command");
 
       m_later_queue.pop();
-      if (command->isOwner()) delete command;
+      delete command;
     }
     else if (command->getTimestamp() <= m_current_time + SYNC_INTERVAL_INT)
     {
@@ -319,7 +333,7 @@ void Scheduler::scheduleCommands()
   while (!pq.empty())
   {
     Command* command = pq.top();
-    command->setOwner(false); // the command is not owner of associated classes
+    command->setOwner(false); // the priority queue remains the owner of this Command instance
 
     if (command->getTimestamp() <= m_current_time + SYNC_INTERVAL_INT)
     {
