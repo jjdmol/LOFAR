@@ -73,11 +73,23 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
   // If there is only one coefficient, the polynomial is independent
   // of x and y.
   // So set the value to the coefficient and possibly set the perturbed value.
+  // Make sure it is turned into a scalar value.
   if (itsCoeff.nelements() == 1) {
-    result.setValue (itsCoeff);
-    if (itsMaxNrSpid) {
-      result.setPerturbedValue (itsSpidInx[0], itsCoeff + itsPerturbation);
-    }
+    if (itsCoeff.isDouble()) {
+      result.setValue (MeqMatrix(itsCoeff.getDouble()));
+      if (itsMaxNrSpid) {
+	result.setPerturbedValue (itsSpidInx[0],
+				  MeqMatrix(itsCoeff.getDouble()
+					    + itsPerturbation.getDouble()));
+      }
+    } else { 
+      result.setValue (MeqMatrix(itsCoeff.getDComplex()));
+      if (itsMaxNrSpid) {
+	result.setPerturbedValue (itsSpidInx[0],
+				  MeqMatrix(itsCoeff.getDComplex()
+					    + itsPerturbation.getDComplex()));
+      }
+   }
   } else {
     // The polynomial has multiple coefficients.
     // Get the step and start values in the normalized domain.

@@ -34,11 +34,11 @@ MeqParm::MeqParm (const string& name)
   if (theirParms == 0) {
     theirParms = new vector<MeqParm*>;
   }
-  Assert (theirNparm <= theirParms->size());
   if (theirNparm == theirParms->size()) {
     itsParmId = theirParms->size();
     theirParms->push_back (this);
   } else {
+    Assert (theirNparm < theirParms->size());
     bool found = false;
     int cnt = 0;
     for (vector<MeqParm*>::iterator iter=theirParms->begin();
@@ -61,7 +61,7 @@ MeqParm::MeqParm (const string& name)
 MeqParm::~MeqParm()
 {
   Assert (theirNparm <= theirParms->size());
-  Assert ((*theirParms)[itsParmId] != 0);
+  Assert ((*theirParms)[itsParmId] == this);
   (*theirParms)[itsParmId] = 0;
   theirNparm--;
 }

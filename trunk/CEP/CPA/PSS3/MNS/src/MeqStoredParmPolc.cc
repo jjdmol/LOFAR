@@ -62,6 +62,9 @@ int MeqStoredParmPolc::initDomain (const MeqDomain& domain, int spidIndex)
 	       " has a partially instead of fully matching entry for time "
 		 << domain.startX() << ':' << domain.endX() << " and freq "
 		 << domain.startY() << ':' << domain.endY());
+  } else {
+    // Check if the polc domains cover the entire domain and if they
+    // do not overlap.
   }
   setPolcs (polcs);
   return MeqParmPolc::initDomain (domain, spidIndex);
