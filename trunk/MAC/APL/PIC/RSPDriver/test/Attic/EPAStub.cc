@@ -124,30 +124,49 @@ EPAStub::EPAStub(string name)
 	  case MEPHeader::WG:
 	  case MEPHeader::SS:
 	  case MEPHeader::BF:
-	  case MEPHeader::SST:
 	  case MEPHeader::RCU:
 	  case MEPHeader::CRB:
 	    size *= GET_CONFIG("RS.N_BLPS", i);
 	    break;
+	    
+	  case MEPHeader::SST:
+	    if (MEPHeader::SST_POWER == regid)
+	    {
+	      uint32* pu_32 = (uint32*)m_reg[pid][regid].addr;
+	      for (int blp = 0; blp < GET_CONFIG("RS.N_BLPS", i); blp++)
+	      {
+		{
+		  for (uint32 i = 0; i < size / sizeof(uint32); i++)
+		  {
+		    *pu_32++ = (0 == blp % 2 ? i : ((uint32)-1) - i);
+		  }
+		}
+	      }
+	    }
+	  
+	    break;
 	}
 
-	int16  *i_16 = 0;
-	uint32 *u_32 = 0;
+	if (MEPHeader::SST != pid)
+	{
+	  int16  *pi_16 = 0;
+	  uint32 *pu_32 = 0;
 	  
-	if (MEPHeader::SS == pid || MEPHeader::BF == pid)
-	{
-	  i_16 = (int16*)m_reg[pid][regid].addr;
-	  for (uint32 i = 0; i < size / sizeof(int16); i++) *i_16++ = i;
-	}
-	else if ( (MEPHeader::BST == pid && MEPHeader::BST_POWER == regid)
-		  || (MEPHeader::SST == pid && MEPHeader::SST_POWER == regid))
-	{
-	  u_32 = (uint32*)m_reg[pid][regid].addr;
-	  for (uint32 i = 0; i < size / sizeof(uint32); i++) *u_32++ = i;
-	}
-	else
-	{
-	  for (uint32 i = 0; i < size; i++) m_reg[pid][regid].addr[i] = i;
+	  if (MEPHeader::SS == pid || MEPHeader::BF == pid)
+	  {
+	    pi_16 = (int16*)m_reg[pid][regid].addr;
+	    for (uint32 i = 0; i < size / sizeof(int16); i++) *pi_16++ = i;
+	  }
+	  else if ( (MEPHeader::BST == pid && MEPHeader::BST_POWER == regid)
+		    || (MEPHeader::SST == pid && MEPHeader::SST_POWER == regid))
+	  {
+	    pu_32 = (uint32*)m_reg[pid][regid].addr;
+	    for (uint32 i = 0; i < size / sizeof(uint32); i++) *pu_32++ = i;
+	  }
+	  else
+	  {
+	    for (uint32 i = 0; i < size; i++) m_reg[pid][regid].addr[i] = i;
+	  }
 	}
       }
     }

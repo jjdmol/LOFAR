@@ -290,13 +290,22 @@ void ViewStats::plot_statistics(Array<double, 3>& stats)
     // compute logarithm of values
     value  = stats(0, device, Range::all());
 
+    cout << "value=" << value << endl;
+
+#if 0
     // signal + 1e-6 and +10dB calibrated this to the Marconi signal generator
-    value = log10((value + 1e-6) / (1.0*(1<<16))) * 10.0 + 10.0;
+    //value = log10((value + 1e-6) / (1.0*(1<<16))) * 10.0 + 10.0;
+#endif
+
+    // add 1e-6 to prevent -inf result
+    value = 20.0 * log10(value + 1e-6);
+    
+    cout << "value=" << value << endl;
 
     // set yrange for power
-    gnuplot_cmd(handle, "set ytics -100,20");
-    gnuplot_cmd(handle, "set yrange [-100:20]");
-    gnuplot_cmd(handle, "set xrange [0:%f]", 20.0);
+    //gnuplot_cmd(handle, "set ytics -100,20");
+    //gnuplot_cmd(handle, "set yrange [-100:20]");
+    //gnuplot_cmd(handle, "set xrange [0:%f]", 20.0);
 
     freq = i * (20.0 / n_freqbands); // calculate frequency in MHz
     gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\" 0, 1.5");

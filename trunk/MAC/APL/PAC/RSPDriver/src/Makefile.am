@@ -27,7 +27,8 @@ BUILT_SOURCES = \
 	RemoteStation.conf \
 	RSPDriverPorts.conf \
 	RSPDriver.conf \
-	ViewStats.conf
+	ViewStats.conf \
+	SetWG.conf
 
 clean-local:
 	rm -f \
@@ -44,7 +45,8 @@ sysconf_DATA = \
 	RemoteStation.conf \
 	RSPDriverPorts.conf \
 	RSPDriver.conf \
-	ViewStats.conf
+	ViewStats.conf \
+	SetWG.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
