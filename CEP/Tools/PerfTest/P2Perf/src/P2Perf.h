@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.11  2002/05/08 08:20:04  schaaf
+//  Modified includes for new build env
+//
 //  Revision 1.10  2002/04/18 07:55:03  schaaf
 //  Documentation and code update
 //
@@ -63,8 +66,8 @@
 #endif
 
 #include "BaseSim/Simulator.h"
-#include "P2Perf/WH_GrowSize.h"
 #include "BaseSim/ParamBlock.h"
+#include "P2Perf/WH_GrowSize.h"
 
 // define the maximum data block size used in this simulation
 #define MAX_GROW_SIZE (256*1024) // 256 kWords =^ 1 MB

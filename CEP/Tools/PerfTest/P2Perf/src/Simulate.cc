@@ -1,8 +1,8 @@
-#include "P2Perf/P2Perf.h"
 #include "BaseSim/SimulatorParseClass.h"
-#include <iostream>
-#include "Common/Debug.h"
-
+#include "BaseSim/ShMem/shmem_alloc.h"
+#include <Common/lofar_iostream.h>
+#include <Common/Debug.h>
+#include "P2Perf/P2Perf.h"
 
 #ifdef HAVE_CORBA
 int atexit(void (*function)(void))
@@ -20,8 +20,7 @@ int main (int argc, char** argv)
     P2Perf simulator;
     simulator.setarg (argc, argv);
 
-//#ifndef HAVE_MPI
-#ifdef NOTDEFINED
+#ifndef HAVE_MPI
         cout << endl;
 	cout << "  * Type 'define;' to define the simulation" << endl;
 	cout <<	"  * Type 'run;'    to run the simulation" << endl;
@@ -40,6 +39,7 @@ int main (int argc, char** argv)
 	cout << "It was a pleasure working with you!" << endl << endl;
 
 #else
+	shmem_debug();
 	simulator.baseDefine();
 	simulator.baseRun(3651);
 	simulator.baseDump();

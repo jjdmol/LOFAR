@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.6  2002/05/08 08:20:04  schaaf
+//  Modified includes for new build env
+//
 //  Revision 1.5  2002/04/18 07:55:03  schaaf
 //  Documentation and code update
 //
@@ -51,15 +54,27 @@
     determined by the nbuffer argument.
  */
 DH_GrowSize::DH_GrowSize (const string& name, unsigned int nbuffer)
-: DataHolder (name, "DH_GrowSize")
+  : DataHolder (name, "DH_GrowSize"),
+    itsBufSize(nbuffer),
+    itsDataPacket(0)
 {
+}
+
+DH_GrowSize::~DH_GrowSize()
+{
+}
+
+void DH_GrowSize::preprocess()
+{
+  cout << "DH_GrowSize::preprocess @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
+
   // Create the DataPacket AND its buffer in contiguous memory
 
   // Determine the number of bytes needed for DataPacket and buffer.
   // the size is that of the DataPacket object, plus the size of the Buffer
-  unsigned int size = sizeof(DataPacket) + (nbuffer * sizeof(BufferType));
+  unsigned int size = sizeof(DataPacket) + (itsBufSize * sizeof(BufferType));
   // allocate the memmory
-  char* ptr = new char[size];
+  char* ptr = (char*)allocate(size);
   
   // Fill in the data packet pointer and initialize the memory.
   itsDataPacket = (DataPacket*)(ptr);
@@ -69,7 +84,7 @@ DH_GrowSize::DH_GrowSize (const string& name, unsigned int nbuffer)
   // the buffer starts after the DataPacket object
   itsDataPacket->itsBuffer = (BufferType*)(ptr + sizeof(DataPacket)); 
   // fill with zeroes
-  for (unsigned int i=0; i<nbuffer; i++) {
+  for (unsigned int i=0; i<itsBufSize; i++) {
     itsDataPacket->itsBuffer[i] = 0;
   }
   
@@ -80,9 +95,11 @@ DH_GrowSize::DH_GrowSize (const string& name, unsigned int nbuffer)
   reportedDataPacketSize = (float) sizeof(DataPacket); 
 }
 
-DH_GrowSize::~DH_GrowSize()
+void DH_GrowSize::postprocess()
 {
+  cout << "DH_GrowSize::postprocess @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
+
   // delete the allocated memmory for the DataPacket object, 
   // including the buffer
-  delete [] (char*)(itsDataPacket);
+  deallocate((void*)itsDataPacket);
 }

@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2002/05/08 08:20:04  schaaf
+//  Modified includes for new build env
+//
 //  Revision 1.2  2002/03/08 11:38:42  wierenga
 //  Upgraded from firewalls.h use to Debug.h use. This version was used for performance tests.
 //
@@ -30,9 +33,10 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "P2Perf/WH_Square.h"
 #include "BaseSim/Step.h"
-#include "Common/Debug.h"
+#include "P2Perf/WH_Square.h"
+#include <Common/Debug.h>
+
 #include <stdio.h>             // for sprintf
 
 

@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.16  2002/05/08 08:20:04  schaaf
+//  Modified includes for new build env
+//
 //  Revision 1.15  2002/05/02 12:21:56  schaaf
 //  Produce simple monitoring data in getMonitorValue() method
 //
@@ -74,7 +77,7 @@
 #include <math.h>
 
 #include "BaseSim/Step.h"
-#include "Common/Debug.h"
+#include <Common/Debug.h>
 
 #include "P2Perf/WH_GrowSize.h"
 #include "P2Perf/StopWatch.h"
@@ -145,10 +148,9 @@ WorkHolder* WH_GrowSize::make(const string& name) const
 			 itsIsDestSide);
 }
 
-void WH_GrowSize::preprocess() {
-  return;
-}
-
+//  void WH_GrowSize::preprocess() {
+//    return;
+//  }
 
 void WH_GrowSize::process()
 {  
