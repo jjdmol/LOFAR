@@ -241,8 +241,8 @@ const solver_test := function ()
   mqs.init([output_col="PREDICT"],wait=T);
   
   # create parms and condeq
-  defval1 := array(as_double(1),1,1);
-  defval2 := array(as_double(2),1,1);
+  defval1 := array([1.,2.,1.5,0.2,1.3,0.5],2,3);
+  defval2 := array([2.,10.,2.,10.,2.,10],2,3);
   print mqs.meq('Create.Node',meqparm('parm1',defval1,config_groups='Solvable.Parm'));
   print mqs.meq('Create.Node',meqparm('parm2',defval1,config_groups='Solvable.Parm'));
   print mqs.meq('Create.Node',meqnode('MeqCondeq','condeq1',children=[a='parm1',b='parm2']));
