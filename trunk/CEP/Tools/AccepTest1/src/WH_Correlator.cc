@@ -92,12 +92,6 @@ void WH_Correlator::process() {
 #ifdef DO_TIMING
   starttime = timer();
 #endif
-  
-
-  // This is wrong at the moment. The Correlator assumed that it
-  // received a single frequency band to process. Looping over the
-  // number of frequency bands will create a factor difference between
-  // the real answer and the actual expected answer. -- Chris.
 
   // calculate the correlations and add to output DataHolder.
   DH_Vis::BufferType s1_val, s2_val;
