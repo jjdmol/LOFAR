@@ -64,12 +64,17 @@ public:
    * Create MeqCalibrater object for a specific
    * MeaurementSet, MEQ model (with associated MEP database) and skymodel
    * for the specified data descriptor (i.e. spectral window) and antennas.
+   * The database type (aips or postgres) has to be given.
+   * For postgres the database name has to be given as well.
    * Currently model types WSRT and LOFAR are recognized.
    * The UVW coordinates can be recalculated or taken from the MS.
    */ 
   MeqCalibrater (const String& msName,
 		 const String& meqModel,
 		 const String& skyModel,
+		 const String& dbType,
+		 const String& dbName,
+		 const String& dbPwd,
 		 uInt ddid,
 		 const Vector<Int>& ant1,
 		 const Vector<Int>& ant2,

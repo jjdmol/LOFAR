@@ -272,6 +272,7 @@ const meqcalibrater := function(msname, meqmodel = 'LOFAR', skymodel = 'GSM',
 				modeltype='LOFAR', calcuvw=T, 
 				datacolname='MODEL_DATA',
 				residualcolname='CORRECTED_DATA',
+				dbtype="aips", dbname="", dbpwd="",
 				host='', forcenewserver=F) {
     if (len(ant1) == 0) ant1:=ant;
     if (len(ant2) == 0) ant2:=ant;
@@ -282,6 +283,7 @@ const meqcalibrater := function(msname, meqmodel = 'LOFAR', skymodel = 'GSM',
 				 ant1=ant1, ant2=ant2, modeltype=modeltype,
 				 calcuvw=calcuvw, datacolname=datacolname,
 				 residualcolname=residualcolname]);
+				 dbtype=dbtype, dbname=dbname, dbpwd=dbpwd,
     return ref _define_meqcalibrater(agent, id);
 }
 
