@@ -1,8 +1,0 @@
-define 	freqbandsize=128, 
-	times=1, 
-	stations=5, 
-	correlators=2, 
-	log=0;
-run 50;
-dump;
-quit
