@@ -26,19 +26,17 @@
 //# Includes
 #include <MNS/ParmTable.h>
 #include <MNS/MeqPolc.h>
-#include <MNS/TPOParm.h>
-#include <PL/PersistenceBroker.h>
 #include <Common/lofar_vector.h>
+
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_PL
+# include <PL/PersistenceBroker.h>
+#endif
 
 //# Forward Declarations
 class MeqDomain;
 template<class T> class Vector;
 
-
-typedef LOFAR::PL::TPersistentObject<MeqParmHolder> TPOMParm;
-typedef LOFAR::PL::Collection<TPOMParm> MParmSet;
-typedef LOFAR::PL::TPersistentObject<MeqParmDefHolder> TPOMParmDef;
-typedef LOFAR::PL::Collection<TPOMParmDef> MParmDefSet;
 
 
 class ParmTableDB : public ParmTableRep
@@ -76,13 +74,15 @@ public:
   virtual void unlock();
 
 private:
+#ifdef HAVE_LOFAR_PL
   // Find the table subset containing the parameter values for the
   // requested domain.
-  MParmSet find (const string& parmName, 
-		 int sourceNr, int station,
-		 const MeqDomain& domain);
+  LOFAR::PL::Collection<TPOMParm> find (const string& parmName, 
+					int sourceNr, int station,
+					const MeqDomain& domain);
 
   LOFAR::PL::PersistenceBroker itsBroker;
+#endif
   string                       itsTableName;
 };
 

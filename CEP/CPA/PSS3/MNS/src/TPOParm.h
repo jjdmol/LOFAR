@@ -23,6 +23,9 @@
 #ifndef MNS_TPOPARM_H
 #define MNS_TPOPARM_H
 
+#include <lofar_config.h>
+#ifdef HAVE_DTL
+
 #include <PL/TPersistentObject.h>
 #include <PL/DTLBase.h>
 #include <MNS/MeqParmHolder.h>
@@ -189,5 +192,7 @@ namespace LOFAR {
   } // end namespace PL
 }   // end namespace LOFAR
 
+
+#endif
 
 #endif
