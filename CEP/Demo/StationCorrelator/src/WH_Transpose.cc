@@ -31,7 +31,7 @@
 using namespace LOFAR;
 
 WH_Transpose::WH_Transpose(const string& name, KeyValueMap kvm) 
-  : WorkHolder(kvm.getInt("NoWH_Correlator",7), 1, name, "WH_Transpose"),
+  : WorkHolder(kvm.getInt("NoWH_RSP",2), 1, name, "WH_Transpose"),
     itsKVM (kvm)
 {
   char str[128];
@@ -45,7 +45,7 @@ WH_Transpose::WH_Transpose(const string& name, KeyValueMap kvm)
 
   int bufsize = (itsNbeamletsinpacket / itsNstations) * itsNpolarisations * itsNpacketsinframe;
 
-  itsNinputs = itsKVM.getInt("noWH_Correlator", 7);
+  itsNinputs = itsKVM.getInt("noWH_RSP", 2);
   itsNoutputs = 1; // there is one connection to the corresponding WH_Correlator
 
   for (int i = 0; i < itsNinputs; i++) {

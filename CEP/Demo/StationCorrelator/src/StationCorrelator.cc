@@ -30,6 +30,7 @@
 
 #include <Transport/TH_Mem.h>
 #include <Transport/TH_MPI.h>
+#include <Transport/TH_Ethernet.h>
 
 #include <tinyCEP/WorkHolder.h>
 
@@ -40,6 +41,7 @@
 
 #include <StationCorrelator.h>
 
+#include <WH_RSPBoard.h>
 #include <WH_RSP.h>
 #include <WH_Transpose.h>
 #include <WH_Correlator.h>
@@ -57,7 +59,7 @@ StationCorrelator::StationCorrelator(KeyValueMap kvm)
 {
   itsNrsp = itsKVM.getInt("NoWH_RSP", 2);
   itsNcorrelator = itsKVM.getInt("NoWH_Correlator", 7);
-  itsNdump = itsKVM.getInt("NoWH_Dump", 1);
+  itsNdump = itsKVM.getInt("NoWH_Dump", 2);
 }
 
 StationCorrelator::~StationCorrelator() {
@@ -86,6 +88,10 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
   LOG_TRACE_FLOW_STR("Create the workholders");
   /// Create the WorkHolders 
+  bool useRealRSP = itsKVM.getBool("useRealRSPBoard", false);
+  WH_RSPBoard RSPBoard("WH_RSPBoard", itsKVM);
+  Step StepRSPemulator(RSPBoard, "STEP_RSPBoard");
+  
   Step** itsRSPsteps = new Step*[itsNrsp];
   for (unsigned int i = 0; i < itsNrsp; i++) {
     snprintf(H_name, 128, "RSPNode_%d_of_%d", i, itsNrsp);
@@ -99,6 +105,22 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     }
     itsRSPsteps[i] = new Step(*whRSP, H_name, false);
 
+    if (useRealRSP) {
+      // The constructor for TH_Ethernet also expects etype and dhcheck
+      // There is no error checking. If this fails the program will fail (and that is fine)
+      string iface = itsKVM["interfaces"].getVecString()[i];
+      cout<<"interface: "<<iface<<endl;
+      string oMac  = itsKVM["oMacs"].getVecString()[i];
+      string rMac  = itsKVM["rMacs"].getVecString()[i];
+      // The constructor for TH_Ethernet expects char* instead of const char* or string
+      // That should change. It also should copy the contents of the char*s to its own memory
+      //itsRSPsteps[i]->connect(&StepRSPemulator, 0, i, 1, TH_Ethernet(iface.c_str(), rMac.c_str(), oMac.c_str()), true);
+      StepRSPemulator.runOnNode(-1);
+    } else {
+      // Use the WH_RSPBoard to emulate a real RSP Board
+      itsRSPsteps[i]->connect(&StepRSPemulator, 0, i, 1, TH_Mem(), true); 
+    }
+
     // set the rates of this Step.
     itsRSPsteps[i]->setInRate(fast_rate);
     itsRSPsteps[i]->setProcessRate(fast_rate);
@@ -108,7 +130,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     if (i != 0) {
       // we're a syncSlave. Connect the second input to an appropriate output.
-      itsRSPsteps[i]->connect(itsRSPsteps[0], 1, itsNcorrelator, 1, TH_Mem(), true);
+      itsRSPsteps[i]->connect(itsRSPsteps[0], 1, itsNcorrelator + i - 1, 1, TH_Mem(), true);
     }
   }
 
@@ -156,7 +178,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     LOG_TRACE_LOOP_STR("Create Dump workholder/Step " << H_name);
 
     WH_Dump whDump(H_name, itsKVM);
-    Step dumpstep(whDump);
+    Step dumpstep(whDump, H_name);
     comp.addStep(dumpstep);
     
     for (unsigned int in = 0; in < (itsNcorrelator/itsNdump); in++) {
@@ -200,7 +222,7 @@ int main (int argc, const char** argv) {
   }
   
   try {
-//     kvm.show(cout);
+    //    kvm.show(cout);
 
     StationCorrelator correlator(kvm);
     correlator.setarg(argc, argv);

@@ -24,7 +24,7 @@ using namespace LOFAR;
 
 
 WH_Dump::WH_Dump(const string& name, const KeyValueMap& kvm)
-  : WorkHolder(kvm.getInt("NoWH_Correlator",1)/kvm.getInt("NoWH_Dump", 1), 0, name, "WH_Dump"),
+  : WorkHolder(kvm.getInt("NoWH_Correlator",7)/kvm.getInt("NoWH_Dump", 2), 0, name, "WH_Dump"),
     itsOutputFile(0),
     itsBandwidth(0),
     itsKvm(kvm)
