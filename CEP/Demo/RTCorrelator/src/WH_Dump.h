@@ -39,14 +39,18 @@ public:
   /// The first WorkHolder should have nin=0.
   explicit WH_Dump (const string& name,
 		    unsigned int nin,
-		    unsigned int nout);
+		    unsigned int nout,
+		    const int    elements, 
+		    const int    channels);
 
   virtual ~WH_Dump();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, 
 				unsigned int nin,
-				unsigned int nout);
+				unsigned int nout,
+				const int    elements,
+				const int    channels);
 
   /// Make a fresh copy of the WH object.
   virtual WH_Dump* make (const string& name);
@@ -69,6 +73,10 @@ private:
   //  ofstream itsOutputFile;
   int itsIndex;
   int itsCounter;
+  
+  int itsNelements;
+  int itsNchannels;
+    
 };
 
 }

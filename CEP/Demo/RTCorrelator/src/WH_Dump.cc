@@ -37,17 +37,22 @@ using namespace LOFAR;
 
 WH_Dump::WH_Dump(const string& name,
 		 unsigned int nin, 
-		 unsigned int nout) 
+		 unsigned int nout, 
+		 const int    elements, 
+		 const int    channels) 
   : WorkHolder(nin, nout, name, "WH_Dump"),
-    itsIndex   (0),
-    itsCounter (0)  
+    itsIndex     (0),
+    itsCounter   (0),
+    itsNelements (elements),
+    itsNchannels (channels)
 {
   char str[8];
   for (unsigned int i = 0; i < nin; i++) {
     
     sprintf (str, "%d", i);
-    getDataManager().addInDataHolder(i, new DH_Vis(string("in_") + str));
-
+    getDataManager().addInDataHolder(i, new DH_Vis(string("in_") + str, 
+						   itsNelements, itsNchannels));
+    
   }
   for (unsigned int i = 0; i < nout; i++) {
     
@@ -63,13 +68,15 @@ WH_Dump::~WH_Dump() {
 
 WorkHolder* WH_Dump::construct (const string& name, 
 				unsigned int nin, 
-				unsigned int nout) {
-  return new WH_Dump(name, nin, nout);
+				unsigned int nout, 
+				const int    elements, 
+				const int    channels) {
+  return new WH_Dump(name, nin, nout, elements, channels);
 }
 
 WH_Dump* WH_Dump::make(const string& name) {
 
-  return new WH_Dump(name, getDataManager().getInputs(), getDataManager().getOutputs());
+  return new WH_Dump(name, getDataManager().getInputs(), getDataManager().getOutputs(), itsNelements, itsNchannels);
 }
 
 void WH_Dump::process() {

@@ -30,9 +30,15 @@
 namespace LOFAR
 {
 
-DH_CorrCube::DH_CorrCube (const string& name)
+DH_CorrCube::DH_CorrCube (const string& name, 
+			  const int stations, 
+			  const int samples, 
+			  const int channels)
 : DataHolder    (name, "DH_CorrCube"),
-  itsBuffer     (0)
+  itsBuffer     (0),
+  nstations     (stations),
+  nchannels     (channels),
+  nsamples      (samples)
 {
 
 }

@@ -58,7 +58,10 @@ namespace LOFAR
     for (unsigned int i = 0; i < nout; i++) {
       
       sprintf(str, "%d", i);
-      getDataManager().addOutDataHolder(i, new DH_CorrCube (string("out_") + str));
+      getDataManager().addOutDataHolder(i, new DH_CorrCube (string("out_") + str,
+							    itsNelements, 
+							    itsNsamples, 
+							    itsNchannels));
 
     }
 			

@@ -77,7 +77,9 @@ void RTFrontEnd::define(const KeyValueMap& /*params*/) {
 	  
     itsWHs[0] = new WH_Dump("noname",
 			    1, 
-			    0);
+			    1,
+			    itsNelements, 
+			    itsNchannels);
     myWHCorrelator.getDataManager().getOutHolder(0)->connectTo
       ( *itsWHs[0]->getDataManager().getInHolder(0),
 	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+1, false) );
@@ -166,6 +168,10 @@ int parse_config() {
 int main (int argc, const char** argv) {
 
   bool isFrontEnd = true;
+
+  if (!parse_config()) {
+    cout << "Error reading config file" << endl;
+  }
 
   try {
 

@@ -24,6 +24,7 @@
 #ifndef RTCORRELATOR_WH_CORRELATE_H
 #define RTCORRELATOR_WH_CORRELATE_H
 
+#include <stdlib.h>
 #include <lofar_config.h>
 
 #include <Common/lofar_complex.h>
@@ -72,8 +73,8 @@ class WH_Correlator: public WorkHolder {
 
   int task_id;
   
-  complex<float> *sig_buf;
-  complex<float> *cor_buf;
+  DH_CorrCube::BufferType *sig_buf;
+  DH_Vis::BufferType      *cor_buf;
 
   /// Forbid copy constructor
   WH_Correlator(const WH_Correlator&);
@@ -81,8 +82,8 @@ class WH_Correlator: public WorkHolder {
   WH_Correlator& operator= (const WH_Correlator&);
   
   /// Main correlator routine
-  void correlator_core(complex<float>* sig, complex<float>* cor);
-  
+  void correlator_core(DH_CorrCube::BufferType& sig, 
+		       DH_Vis::BufferType&      cor);  
   /// Master and slave procedures
   void master();
   void slave();
