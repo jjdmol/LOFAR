@@ -71,25 +71,29 @@ BlobOStream& putBlobVector (BlobOStream& bs, const T* data, uint32 size);
 // It returns the offset of the array in the blob.
 // It is useful for allocating a static blob in a dynamic way.
 // It is only possible if the underlying buffer is seekable.
+// It is meant for use with the BlobOBufString buffer. The function
+// getPointer in that class can be used to turn the position into a pointer.
+// Note that BlobOStream::align can be used to ensure proper alignment
+// of the array data.
 // <group>
 template<typename T>
-uint reserveBlobArray1 (BlobOStream& bs, uint32 size0,
-                        bool fortranOrder);
+uint setSpaceBlobArray1 (BlobOStream& bs, uint32 size0,
+			 bool fortranOrder);
 template<typename T>
-uint reserveBlobArray2 (BlobOStream& bs, uint32 size0, uint32 size1,
-                        bool fortranOrder);
+uint setSpaceBlobArray2 (BlobOStream& bs, uint32 size0, uint32 size1,
+			 bool fortranOrder);
 template<typename T>
-uint reserveBlobArray3 (BlobOStream& bs, uint32 size0, uint32 size1,
-		        uint32 size2, bool fortranOrder);
+uint setSpaceBlobArray3 (BlobOStream& bs, uint32 size0, uint32 size1,
+			 uint32 size2, bool fortranOrder);
 template<typename T>
-uint reserveBlobArray4 (BlobOStream& bs, uint32 size0, uint32 size1,
-			uint32 size2, uint32 size3, bool fortranOrder);
+uint setSpaceBlobArray4 (BlobOStream& bs, uint32 size0, uint32 size1,
+			 uint32 size2, uint32 size3, bool fortranOrder);
 template<typename T>
-uint reserveBlobArray (BlobOStream& bs, const std::vector<uint32>& shape,
-		       bool fortranOrder);
+uint setSpaceBlobArray (BlobOStream& bs, const std::vector<uint32>& shape,
+			bool fortranOrder);
 template<typename T>
-uint reserveBlobArray (BlobOStream& bs, uint32* shape, uint16 ndim,
-		       bool fortranOrder);
+uint setSpaceBlobArray (BlobOStream& bs, uint32* shape, uint16 ndim,
+			bool fortranOrder);
 // </group>
 
 
@@ -148,20 +152,22 @@ BlobIStream& getBlobArray (BlobIStream& bs, T*& arr,
 // It returns the offset of the array in the buffer and treats the array
 // as being read (thus skips over the data).
 // It is only possible if the underlying buffer is seekable.
+// It is meant for use with the BlobIBufString buffer. The function
+// getPointer in that class can be used to turn the position into a pointer.
 template<typename T>
-uint findBlobArray (BlobIStream& bs,
-		    std::vector<uint32>& shape,
-		    bool fortranOrder);
+uint getSpaceBlobArray (BlobIStream& bs,
+			std::vector<uint32>& shape,
+			bool fortranOrder);
 
 
 
 
 
 template<typename T>
-inline uint reserveBlobArray1 (BlobOStream& bs, uint32 size0,
-			       bool fortranOrder)
+inline uint setSpaceBlobArray1 (BlobOStream& bs, uint32 size0,
+				bool fortranOrder)
 {
-  return reserveBlobArray<T> (bs, &size0, 1, fortranOrder);
+  return setSpaceBlobArray<T> (bs, &size0, 1, fortranOrder);
 }
 
 template<typename T>
@@ -233,13 +239,13 @@ using LOFAR::operator<<;
 using LOFAR::operator>>;
 using LOFAR::putBlobArray;
 using LOFAR::putBlobVector;
-using LOFAR::reserveBlobArray1;
-using LOFAR::reserveBlobArray2;
-using LOFAR::reserveBlobArray3;
-using LOFAR::reserveBlobArray4;
-using LOFAR::reserveBlobArray;
+using LOFAR::setSpaceBlobArray1;
+using LOFAR::setSpaceBlobArray2;
+using LOFAR::setSpaceBlobArray3;
+using LOFAR::setSpaceBlobArray4;
+using LOFAR::setSpaceBlobArray;
 using LOFAR::getBlobVector;
 using LOFAR::getBlobArray;
-using LOFAR::findBlobArray;
+using LOFAR::getSpaceBlobArray;
 
 #endif

@@ -52,45 +52,45 @@ BlobOStream& putBlobArray (BlobOStream& bs, const T* data, uint16 ndim,
 
 
 template<typename T>
-uint reserveBlobArray2 (BlobOStream& bs, uint32 size0, uint32 size1,
-                        bool fortranOrder)
+uint setSpaceBlobArray2 (BlobOStream& bs, uint32 size0, uint32 size1,
+			 bool fortranOrder)
 {
   uint32 shp[2];
   shp[0] = size0;
   shp[1] = size1;
-  return reserveBlobArray<T> (bs, shp, 2, fortranOrder);
+  return setSpaceBlobArray<T> (bs, shp, 2, fortranOrder);
 }
 template<typename T>
-uint reserveBlobArray3 (BlobOStream& bs, uint32 size0, uint32 size1,
-                        uint32 size2, bool fortranOrder)
+uint setSpaceBlobArray3 (BlobOStream& bs, uint32 size0, uint32 size1,
+			 uint32 size2, bool fortranOrder)
 {
   uint32 shp[3];
   shp[0] = size0;
   shp[1] = size1;
   shp[2] = size2;
-  return reserveBlobArray<T> (bs, shp, 3, fortranOrder);
+  return setSpaceBlobArray<T> (bs, shp, 3, fortranOrder);
 }
 template<typename T>
-uint reserveBlobArray4 (BlobOStream& bs, uint32 size0, uint32 size1,
-                        uint32 size2, uint32 size3, bool fortranOrder)
+uint setSpaceBlobArray4 (BlobOStream& bs, uint32 size0, uint32 size1,
+			 uint32 size2, uint32 size3, bool fortranOrder)
 {
   uint32 shp[4];
   shp[0] = size0;
   shp[1] = size1;
   shp[2] = size2;
   shp[3] = size3;
-  return reserveBlobArray<T> (bs, shp, 4, fortranOrder);
+  return setSpaceBlobArray<T> (bs, shp, 4, fortranOrder);
 }
 template<typename T>
-uint reserveBlobArray (BlobOStream& bs, const std::vector<uint32>& shape,
-                       bool fortranOrder)
+uint setSpaceBlobArray (BlobOStream& bs, const std::vector<uint32>& shape,
+			bool fortranOrder)
 {
-  return reserveBlobArray<T> (bs, &shape[0], shape.size(), fortranOrder);
+  return setSpaceBlobArray<T> (bs, &shape[0], shape.size(), fortranOrder);
 }
 
 template<typename T>
-uint reserveBlobArray (BlobOStream& bs, uint32* shape, uint16 ndim,
-                       bool fortranOrder)
+uint setSpaceBlobArray (BlobOStream& bs, uint32* shape, uint16 ndim,
+			bool fortranOrder)
 {
   bs.putStart (LOFAR::typeName((const T**)0), 1);     // version 1
   bs << fortranOrder << char(0) << ndim;
@@ -102,7 +102,7 @@ uint reserveBlobArray (BlobOStream& bs, uint32* shape, uint16 ndim,
   for (int i=0; i<ndim; i++) {
     n *= shape[i];
   }
-  uint pos = bs.reserve (n*sizeof(T));
+  uint pos = bs.setSpace (n*sizeof(T));
   bs.putEnd();
   return pos;
 }
@@ -214,8 +214,8 @@ BlobIStream& getBlobArray (BlobIStream& bs, T*& arr,
 }
 
 template<typename T>
-uint findBlobArray (BlobIStream& bs,
-	            std::vector<uint32>& shape, bool fortranOrder)
+uint getSpaceBlobArray (BlobIStream& bs,
+			std::vector<uint32>& shape, bool fortranOrder)
 {
   bs.getStart (LOFAR::typeName((const T**)0));
   bool fortranOrder1;
@@ -227,7 +227,7 @@ uint findBlobArray (BlobIStream& bs,
   for (uint i=0; i<ndim; i++) {
     n *= shape[i];
   }
-  uint pos = bs.skip (n*sizeof(T));
+  uint pos = bs.getSpace (n*sizeof(T));
   bs.getEnd();
   return pos;
 }
