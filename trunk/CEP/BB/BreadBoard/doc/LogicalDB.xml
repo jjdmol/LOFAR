@@ -81,7 +81,7 @@
   </para>
   <para>
 
-   {self}1, {parent-id}1, {time}1, {frequency}1, {baselines}1, {objects}1
+   {self}1, {parent-id}1, {range}1
 
    <itemizedlist>
     <listitem>
@@ -98,6 +98,26 @@
 
      </para>
     </listitem>
+    <listitem>
+     <para>
+
+      "range" is the set of values that defines the dataset used for
+      solving parameters.
+
+     </para>
+    </listitem>
+   </itemizedlist>
+
+  </para>
+  <para>
+
+   the range can vary over several dimensions
+
+  </para>
+  <para>
+
+   {time}1, {frequency}1, {interferometers}1, {direction}1
+   <itemizedlist>
     <listitem>
      <para>
 
@@ -118,7 +138,7 @@
     <listitem>
      <para>
 
-      "baselines" is the set of baselines that this BlackBoard is
+      "interferometers" is the set of baselines that this BlackBoard is
       responsible for.
 
      </para>
@@ -126,8 +146,8 @@
     <listitem>
      <para>
 
-      "objects" is a list of objects that are used as a reference
-      model.
+      "directions" is a range of points in the sky that function as
+      field-centers.
 
      </para>
     </listitem>
@@ -144,7 +164,7 @@
   </para>
   <para>
 
-   {child-id}1, {self}1, {time}1, {frequency}1, {baselines}1, {objects}1
+   {child-id}1, {self}1, {range}1
 
   </para>
   <para>
@@ -201,7 +221,7 @@
     <title>SelfcalEngine</title>
     <para>
 
-     A SelfcalEngine looks for a set of parameters on part of the data.
+     A SelfcalEngine solves for a set of parameters based on part of the data.
 
     </para>
     <para>
@@ -212,7 +232,7 @@
     </para>
     <para>
 
-     {meta-data}1, {next-action-type}1, {Quality}1, {p-name, p-value, p-delta}1-*
+     {meta-data}1, {next-action-type}1, {quality}1, {p-name, p-value, p-delta}1-*
 
     </para>
     <para>
@@ -222,7 +242,7 @@
     </para>
     <para>
 
-     {workload-id}1, {engine-id}1, {controller-id}1, {parent-id}1, {time}1, {frequency}1, {field}1, {beams}1
+     {workload-id}1, {engine-id}1, {controller-id}1, {parent-id}1, {range}1
 
      <itemizedlist>
       <listitem>
@@ -276,18 +296,19 @@
      write the SelfcalEngine id. An engine writes its id in a record
      as it accepts it and starts the associated calculation. When it
      is finished it writes the deltas for all parameters and the
-     Quality.
+     quality.
 
     </para>
     <para>
 
      A SelfcalController decides what the next step in a anaysis path
-     should be.
+     should be. The range might be smaller then that of the parent
+     dataset.
 
     </para>
     <para>
 
-     {controller-id}1, {strategy-description}1, {child-id}0-*
+     {controller-id}1, {strategy-description}1, {range}1, {child-id}0-*
 
     </para>
    </section>
