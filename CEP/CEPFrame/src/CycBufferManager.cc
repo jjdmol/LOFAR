@@ -75,11 +75,11 @@ void CycBufferManager::readUnlock(int id)
 void CycBufferManager::preprocess()
 {
   AssertStr(itsDataHolder!=0, "DataHolder has not been set");
-  itsDataHolder->basePreprocess(); 
+  itsDataHolder->init(); 
   for (int i = 0; i < size; i++)   // Fill buffer
   {
     DataHolder* dhPtr = itsDataHolder->clone();
-    dhPtr->basePreprocess();
+    dhPtr->init();
     itsBuf.AddBufferElement(dhPtr);
   }
 }
