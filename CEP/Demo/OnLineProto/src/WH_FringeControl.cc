@@ -27,6 +27,7 @@
 #include <Common/Debug.h>
 
 // CEPFrame general includes
+#include "CEPFrame/DH_Empty.h"
 #include "CEPFrame/Step.h"
 #include <Common/KeyValueMap.h>
 
@@ -35,64 +36,49 @@
 
 namespace LOFAR
 {
-WH_PreProcess::WH_PreProcess (const string& name, const int nbeamlets, MAC mac, 
-			      int StationID)
-  : WorkHolder    (nbeamlets, nbeamlets, name,"WH_PreProcess"),
-    itsMAC (mac),
-    itsStationID (StationID)
+
+WH_PreProcess::WH_PreProcess (const string& name,
+			      unsigned int channels,
+			      const int FBW)
+  : WorkHolder    (channels, channels, name,"WH_PreProcess"),
+    itsFBW(FBW)
 {
   char str[8];
-  LoVec_float FreqSlice = mac.getFrequencies ();
-
   // create the input dataholders
-  for (int i = 0; i < nbeamlets; i++) {
+  for (unsigned int i=0; i<channels; i++) {
     sprintf (str, "%d", i);
-    int bs = mac.getBeamletSize (); 
-    getDataManager().addInDataHolder(i, new DH_Beamlet (string("in_") + str,
-							itsStationID,
-							FreqSlice (blitz::Range(i*bs, i*bs+bs-1)),
-							mac.getStartHourangle (),
-							mac.getBeamletSize ()));
+    getDataManager().addInDataHolder(i, 
+				     new DH_Beamlet (string("out_") + str, itsFBW), 
+				     true);
   }
-
   // create the output dataholders
-  for (int i = 0; i < nbeamlets; i++) {
+  for (unsigned int i=0; i<channels; i++) {
     sprintf (str, "%d", i);
-    int bs = mac.getBeamletSize (); 
-    getDataManager().addOutDataHolder(i, new DH_Beamlet (string("out_") + str,
-							 itsStationID,
-							 FreqSlice (blitz::Range (i*bs, i*bs+bs-1)),
-							 mac.getStartHourangle (),
-							 mac.getBeamletSize ()));
-				      }    
+    getDataManager().addOutDataHolder(i, 
+				      new DH_Beamlet (string("out_") + str, itsFBW), 
+				      true);
+  }
 }
-  
+
 WH_PreProcess::~WH_PreProcess()
 {
 }
 
 WorkHolder* WH_PreProcess::construct (const string& name, 
-				      const int nchan,
-				      MAC mac,
-				      int StationID)
+				      unsigned int channels,
+				      const int FBW)
 {
-  return new WH_PreProcess (name, nchan, mac, StationID);
+  return new WH_PreProcess (name, channels, FBW);
 }
 
 WH_PreProcess* WH_PreProcess::make (const string& name)
 {
-  return new WH_PreProcess (name, getDataManager().getOutputs(), itsMAC, itsStationID);
+  return new WH_PreProcess (name, getDataManager().getOutputs(), itsFBW);
 }
 
 void WH_PreProcess::process()
 {
   TRACER4("WH_PreProcess::Process()");
-  for (int i = 0; i < itsMAC.getNumberOfBeamlets (); i++) {
-    for (int j = 1; j < itsMAC.getBeamletSize (); j++) { 
-      *((DH_Beamlet*)getDataManager().getInHolder(i))->getBufferElement(j) 
-	= *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j);
-    }
-  }
 }
 
 void WH_PreProcess::dump()

@@ -1,4 +1,4 @@
-//# WH_SimStation.h: 
+//# WH_PreProcess.h: 
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,63 +20,57 @@
 //#
 //# $Id$
 
-#ifndef ONLINEPROTO_WH_SIMSTATION_H
-#define ONLINEPROTO_WH_SIMSTATION_H
+#ifndef ONLINEPROTO_WH_PREPROCESS_H
+#define ONLINEPROTO_WH_PREPROCESS_H
 
 #include <lofar_config.h>
 
 #include "CEPFrame/WorkHolder.h"
 #include "OnLineProto/DH_Beamlet.h"
-#include "OnLineProto/MAC.h"
-#include <Common/Lorrays.h>
-#include <Common/lofar_complex.h>
 
 namespace LOFAR
 {
-class WH_SimStation: public WorkHolder
+
+/**
+   TBW
+*/
+
+class WH_PreProcess: public WorkHolder
 {
 public:
   /// Construct the work holder and give it a name.
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  explicit WH_SimStation (const string& name,
-			  const int nout,
-			  const string fileName,
-			  const MAC mac,
-			  const int ID);
+  explicit WH_PreProcess (const string& name,
+			  unsigned int channels,
+			  const int FBW);
 
-  virtual ~WH_SimStation();
+  virtual ~WH_PreProcess();
 
   /// Static function to create an object.
-    static WorkHolder* construct (const string& name, 
-				  const int nout,
-				  const string fileName,
-				  const MAC mac,
-				  const int ID);
+  static WorkHolder* construct (const string& name, 
+				unsigned int channels,
+				const int FBW);
 
-    /// Make a fresh copy of the WH object.
-      virtual WH_SimStation* make (const string& name);
-      
-      /// Do a process step.
-	virtual void process();
-      
-	/// Show the work holder on stdout.
-	  virtual void dump();
-	  
- private:
-   /// Forbid copy constructor.
-   WH_SimStation (const WH_SimStation&);
-   
-   /// Forbid assignment.
-   WH_SimStation& operator= (const WH_SimStation&);
+  /// Make a fresh copy of the WH object.
+  virtual WH_PreProcess* make (const string& name);
 
-   void ReadData (const string filename);
-     
-   string itsFileName;
-   LoMat_dcomplex itsData;
-   MAC itsMac;
-   int itsID;
+  /// Do a process step.
+  virtual void process();
+
+  /// Show the work holder on stdout.
+  virtual void dump();
+
+private:
+  /// Forbid copy constructor.
+  WH_PreProcess (const WH_PreProcess&);
+
+  /// Forbid assignment.
+  WH_PreProcess& operator= (const WH_PreProcess&);
+  
+  int itsFBW; // frequency bandwidth of the DH_Beamlet 
+
 };
 
 }

@@ -30,21 +30,26 @@
 namespace LOFAR
 {
 
-DH_Beamlet::DH_Beamlet (const string& name,
-			const int FBW)
-: DataHolder    (name, "DH_Beamlet"),
-  itsDataPacket (0),
-  itsBuffer     (0),
-  itsFBW(FBW)
+  DH_Beamlet::DH_Beamlet (const string& name, const int StationID, 
+			  LoVec_float freqs, const float Hourangle, const int nchan)
+: DataHolder            (name, "DH_Beamlet"),
+  itsDataPacket         (0),
+  itsBuffer             (0),
+  itsStationID          (StationID),
+  itsFrequencies        (freqs),
+  itsHourangle          (Hourangle),
+  itsNumberOfChannels   (nchan)
 {
-
 }
 
 DH_Beamlet::DH_Beamlet(const DH_Beamlet& that)
-  : DataHolder(that),
-    itsDataPacket(0),
-    itsBuffer(0),
-    itsFBW(that.getFBW())
+  : DataHolder     (that),
+     itsDataPacket  (0),
+     itsBuffer      (0),
+     itsStationID   (that.getStationID()),
+     itsFrequencies (that.getFrequencies()),
+     itsHourangle   (that.getHourangle()),
+     itsNumberOfChannels(that.getNumberOfChannels())
 {
 }
 
@@ -64,7 +69,7 @@ void DH_Beamlet::preprocess()
   postprocess();
 
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = itsFBW * sizeof(BufferType);
+  itsBufSize = itsNumberOfChannels * sizeof(BufferType);
   unsigned int size = sizeof(DataPacket) + itsBufSize;
   char* ptr = new char[size];
   // Fill in the data packet pointer and initialize the memory.

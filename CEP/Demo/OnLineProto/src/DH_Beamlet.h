@@ -28,23 +28,21 @@
 
 #include "CEPFrame/DataHolder.h"
 #include <Common/lofar_complex.h>
-
+#include <Common/Lorrays.h>
 
 
 namespace LOFAR
 {
-
-
-/**
-   TBW
-*/
 class DH_Beamlet: public DataHolder
 {
 public:
   typedef complex<float> BufferType;
 
   explicit DH_Beamlet (const string& name, 
-		       const int FBW);
+		       const int StationID,
+		       LoVec_float Frequencies,
+		       float Hourangle,
+		       int nchan);
 
   DH_Beamlet(const DH_Beamlet&);
 
@@ -64,33 +62,32 @@ public:
   /// Get read access to the Buffer in the DataPacket.
   const BufferType* getBuffer() const;
   BufferType* getBufferElement(int freq);
-  const int         getFBW() const;
+  int getNumberOfChannels () const;
+  float getHourangle () const;
+  void setHourangle (float ha);
+  LoVec_float getFrequencies () const; 
+  int getStationID () const;
+
 protected:
   // Definition of the DataPacket type.
   class DataPacket: public DataHolder::DataPacket
   {
   public:
     DataPacket(){};
-
-    int itsStationID;       // source station ID
-    int itsBeamID;          // beam direction ID
-    int itsStartFrequency;  // frequency offste for this beamlet
-    int itsSeqNo;           // sequence number since last timestamp
-
     BufferType itsFill;         // to ensure alignment
   };
 
 private:
   /// Forbid assignment.
-  DH_Beamlet& operator= (const DH_Beamlet&);
+    DH_Beamlet& operator= (const DH_Beamlet&);
 
-
-  DataPacket*  itsDataPacket;
-  BufferType*  itsBuffer;    // array containing frequency spectrum.
-  unsigned int itsBufSize;
-  
-  int          itsFBW; // number of frequency channels within this beamlet
-
+    DataPacket*  itsDataPacket;    
+    BufferType* itsBuffer;   // array containing frequency spectrum.
+    unsigned int itsBufSize;  
+    int itsStationID;        // source station ID
+    LoVec_float itsFrequencies;    // frequency offset for this beamlet
+    float itsHourangle;      // the hourangle
+    int itsNumberOfChannels; // number of frequency channels within this beamlet
 };
 
 inline DH_Beamlet::BufferType* DH_Beamlet::getBuffer()
@@ -100,12 +97,22 @@ inline const DH_Beamlet::BufferType* DH_Beamlet::getBuffer() const
   { return itsBuffer; }
 
 inline DH_Beamlet::BufferType* DH_Beamlet::getBufferElement(int freq)
-{ 
-  return itsBuffer+freq;
-}
+  { return itsBuffer+freq; }
 
-inline const int DH_Beamlet::getFBW() const
-  { return itsFBW; }
+inline int DH_Beamlet::getNumberOfChannels () const
+  { return itsNumberOfChannels; }
+
+inline float DH_Beamlet::getHourangle () const
+  { return itsHourangle; }
+
+inline void DH_Beamlet::setHourangle (float ha)
+  {  itsHourangle = ha; }
+
+inline LoVec_float DH_Beamlet::getFrequencies() const
+  { return itsFrequencies; }
+
+inline int DH_Beamlet::getStationID() const
+  { return itsStationID; }
 
 }
 
