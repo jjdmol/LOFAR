@@ -1,6 +1,6 @@
 #include "Application1.h"
 #include "Defines.h"
-#include <RTDefines.h>
+#include <RTC/RTDefines.h>
 #include <GCF/GCF_PVInteger.h>
 #include <GCF/GCF_PVChar.h>
 #include <GCF/GCF_PVDouble.h>

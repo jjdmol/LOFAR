@@ -85,7 +85,7 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*p*/)
       break;
 
     case F_CONNECTED:
-      
+    case F_MYPS_ENABLED:
       if (_client.isConnected() && _echoPingPSET.isEnabled())
       {
         TRAN(Ping::connected);
@@ -100,12 +100,6 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*p*/)
       _client.open();
       break;
 
-    case F_MYPS_ENABLED:
-      if (_client.isConnected() && _echoPingPSET.isEnabled())
-      {
-        TRAN(Ping::connected);
-      }
-      break;
 
     case F_VCHANGEMSG:
     {
@@ -129,7 +123,7 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*p*/)
     }
 
     case F_EXIT:
-      _pingTimer = _client.setTimer(1.0, 0.1);
+      _pingTimer = _client.setTimer(1.0, 0.3);
       break;
       
     default:
