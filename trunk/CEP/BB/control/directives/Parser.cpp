@@ -1,17 +1,17 @@
 #include "Parser.h"
 
 //##ModelId=3F4DE363005D
-void Parser::setText(string text)
+void Parser::setText(std::string text)
 {
 }
 
 //##ModelId=3F4DE3900109
-string Parser::getText()
+std::string Parser::getText()
 {
 }
 
 //##ModelId=3F4DE3CF031C
-vector<Directive> *Parser::getNested()
+std::vector<Directive> *Parser::getNested()
 {
 }
 

@@ -4,8 +4,9 @@
 //##ModelId=3F4DC5C401D4
 class scriptSelectClause
 {
+ public:
     //##ModelId=3F4DD269003E
-    string id;
+  string id;
 
 };
 

@@ -1,11 +1,13 @@
 #ifndef DIRECTIVEDATA_H_HEADER_INCLUDED_C0B1CAD2
 #define DIRECTIVEDATA_H_HEADER_INCLUDED_C0B1CAD2
 
+#include <string>
+
 //##ModelId=3F4DC5270157
 class DirectiveData
 {
     //##ModelId=3F4DCB93005D
-    string id;
+    std::string id;
 
     //##ModelId=3F4DCC880271
     //##Documentation
@@ -34,7 +36,7 @@ class DirectiveData
     //## do montecarlo{
     //##  ...
     //## }
-    String text;
+    std::string text;
 
 };
 
