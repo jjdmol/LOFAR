@@ -1,3 +1,6 @@
+#ifndef BLUEGENEDEMO_DEFINITIONS_H
+#define BLUEGENEDEMO_DEFINITIONS_H
+
 #include <mpi.h>
 
 #define SEND_TASK_ID      1
@@ -8,4 +11,4 @@
 
 #define SOMESIZE 100
 
-MPI_Datatype my_complex;
+#endif

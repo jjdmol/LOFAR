@@ -20,59 +20,101 @@
 //#
 //#  $Id$
 
-#include <BlueGeneCorrelator/BlueGeneCorrelator.h>
 
 // Application specific includes
+#include <BlueGeneCorrelator/BlueGeneCorrelator.h>
+#include <BlueGeneCorrelator/definitions.h>
 
 // WorkHolders
 #include <BlueGeneCorrelator/WH_Correlate.h>
+#include <BlueGeneCorrelator/WH_Random.h>
+#include <BlueGeneCorrelator/WH_Dump.h>
 
 // TransportHolders
 #include <Transport/TH_Socket.h>
 
+#include <mpi.h>
+
 using namespace LOFAR;
 
-BlueGeneCorrelator::BlueGeneCorrelator (int rank) :
+BlueGeneCorrelator::BlueGeneCorrelator () :
   itsWHcount (0),
   itsPort    (BASEPORT),
-  itsRank    (rank) 
+  itsRank    (0) 
 {
+
+  int itsRank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &itsRank);
+  
 }
 
 BlueGeneCorrelator::~BlueGeneCorrelator() {
 }
 
 void BlueGeneCorrelator::define(const KeyValueMap& /*params*/) {
-  WH_Correlate myWHCorrelate("noname",
-			     1);
+
+  if (itsRank == 0) {
+    itsWHs[0] = new WH_Correlate("noname",
+				1);
+  } else {
+    itsWHs[0] = new WH_Correlate("noname",
+				 0);
+  }
+
+  // Dummy workholders to connect to
+  WH_Random myWHRandom("noname",
+		       1,
+		       1,
+		       BFBW);
+
+  WH_Dump myWHDump("noname",
+		   1,
+		   1);
+
+  // the Correlator cannot accept connections because of the limitations 
+  // of the current BG/L system software. Therefore all connections must be 
+  // opened from this application and accepted in the frontend application.
+
+  if (itsRank == 0) {
+
+    TH_Socket proto_input (LOCALHOST_IP, LOCALHOST_IP, BASEPORT, true);
+    TH_Socket proto_output(LOCALHOST_IP, FRONTEND_IP, BASEPORT+1, false);
+
+//     myWHRandom.getDataManager().getOutHolder(0)->connectTo
+//       ( *itsWHs[0]->getDataManager().getInHolder(0), 
+// 	proto_input );
+
+    itsWHs[0]->getDataManager().getInHolder(0)->connectTo
+      ( *myWHRandom.getDataManager().getOutHolder(0), 
+	proto_input );
+
+    itsWHs[0]->getDataManager().getOutHolder(0)->connectTo
+      ( *myWHDump.getDataManager().getInHolder(0),
+	proto_output );
+  }
+  
 			     
 }
 
 void BlueGeneCorrelator::init() {
-
+  itsWHs[0]->basePreprocess();
 }
 
 void BlueGeneCorrelator::run (int nsteps) {
   for (int s = 0; s < nsteps; s++) {
-    for (int w = 0; w < itsWHcount; w++) {
     
-      itsWHs[w]->baseProcess();
-
-    }
+    itsWHs[0]->baseProcess();
+    
   }
 }
 
 void BlueGeneCorrelator::dump () const {
 
-  for (int w = 0; w < itsWHcount; w++) {
- 
-    itsWHs[w]->dump();
+  itsWHs[0]->dump();
 
-  }
 }
 
 void BlueGeneCorrelator::quit () {
 
 }
-
 

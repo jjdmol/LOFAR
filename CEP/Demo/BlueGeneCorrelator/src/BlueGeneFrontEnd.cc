@@ -27,6 +27,7 @@
 // WorkHolders
 #include <BlueGeneCorrelator/WH_Random.h>
 #include <BlueGeneCorrelator/WH_Dump.h>
+#include <BlueGeneCorrelator/WH_Correlate.h>
 
 // TransportHolders
 #include <Transport/TH_Mem.h>
@@ -51,27 +52,34 @@ void BlueGeneFrontEnd::define(const KeyValueMap& /*params*/) {
 
     // this is the input application. Create a WH_Random object.
     
-    WH_Random myWHRandom("noname",
-			 0,
-			 1,
-			 NVis*BFBW);
+    itsWHs = new WH_Random("noname",
+			   0,
+			   1, 
+			   NVis*BFBW);
     
-    itsWHs = &myWHRandom;
+    WH_Correlate myWHCorrelate("noname",
+			       1);
+    TH_Socket TH_proto(LOCALHOST_IP, LOCALHOST_IP, itsPort, true);
     
-    TH_Socket TH_proto(FRONTEND_IP, LOCALHOST_IP, itsPort, true);
-
-    
+    itsWHs->getDataManager().getOutHolder(0)->connectTo
+      ( *myWHCorrelate.getDataManager().getInHolder(0),
+	TH_proto );
+        
   } else {
 
     // this is the output application. Create a WH_Dump object.
 
-    WH_Dump myWHDump("noname",
-		     1, 
-		     1);
+    itsWHs = new WH_Dump("noname",
+			 1,
+			 1);
 
-    itsWHs = &myWHDump;
-
+    WH_Correlate myWHCorrelate("noname",
+			       1);
     TH_Socket TH_proto(LOCALHOST_IP, FRONTEND_IP, itsPort+1, false);
+    
+    myWHCorrelate.getDataManager().getOutHolder(0)->connectTo
+      ( *itsWHs->getDataManager().getInHolder(0),
+	TH_proto );
 		     
   } 
 }

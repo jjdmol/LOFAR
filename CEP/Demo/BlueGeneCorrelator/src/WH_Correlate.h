@@ -60,6 +60,9 @@ public:
   /// Make a fresh copy of the WH object.
   virtual WH_Correlate* make (const string& name);
 
+  /// Initialize MPI environment 
+  virtual void preprocess();
+
   /// Do a process step.
   virtual void process();
 
@@ -70,6 +73,8 @@ private:
   static const int itsNelements = NSTATIONS;  // number of stations/inputs
   static const int itsNsamples  = SAMPLES;    // number of time samples to integrate over
   static const int itsNchannels = CHANNELS;   // number of selected freq. channels to correlate
+
+  int myrank;
 
   complex<float> signal[itsNelements][itsNsamples][itsNchannels] ;
   complex<float> corr  [itsNelements][itsNelements][itsNchannels] ;

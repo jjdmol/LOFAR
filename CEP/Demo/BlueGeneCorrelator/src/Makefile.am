@@ -12,9 +12,12 @@ BlueGeneFrontEnd.h				\
 defintions.h
 
 BlueGeneCorrelator_SOURCES = $(DOCHDRS)		\
+DH_Empty.cc					\
 DH_CorrCube.cc					\
 DH_Vis.cc					\
+WH_Random.cc					\
 WH_Correlate.cc					\
+WH_Dump.cc					\
 BlueGeneSimulateBG.cc				\
 BlueGeneCorrelator.cc
 
@@ -23,6 +26,7 @@ DH_Empty.cc					\
 DH_CorrCube.cc					\
 DH_Vis.cc					\
 WH_Random.cc					\
+WH_Correlate.cc					\
 WH_Dump.cc					\
 BlueGeneFrontEnd.cc				\
 BlueGeneSimulateFE.cc		

@@ -27,17 +27,17 @@
 
 //# Includes
 #include <tinyCEP/WorkHolder.h>
-#include <tinyCEP/ApplicationHolder.h>
+#include <tinyCEP/TinyApplicationHolder.h>
 
 //# include definitions for simulation size etc.
 #include <BlueGeneCorrelator/definitions.h>
 
 namespace LOFAR
 {
-  class BlueGeneCorrelator: public LOFAR::ApplicationHolder {
+  class BlueGeneCorrelator: public LOFAR::TinyApplicationHolder {
 
   public:
-    BlueGeneCorrelator(int ncorr);
+    BlueGeneCorrelator();
     virtual ~BlueGeneCorrelator();
 
     // overload methods form the ApplicationHolder base class
