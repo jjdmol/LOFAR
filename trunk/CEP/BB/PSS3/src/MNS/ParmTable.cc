@@ -46,18 +46,6 @@ ParmTable::ParmTable (const string& dbType, const string& tableName,
   } else {
     Assert (dbType=="aips");
   }
-
-  // following statements are for performance measurements only
-  itsPuts = 0;
-  itsGetPolcs = 0;
-  itsGetPSs = 0;
-  itsGetICs = 0;
-  itsPutTime = 0;
-  itsGetPolcsTime = 0;
-  itsGetPSTime = 0;
-  itsGetICTime = 0;
-  itsTableName = tableName;
-  cout<<"making rep for database:"<<dbType<<endl;
 }
 
 MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs)
@@ -69,8 +57,6 @@ MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs)
 MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
 					  vector<MeqExpr*>& exprDel)
 {
-  itsGetPSs++;
-  itsWatch.reset();
   // Get the vector of all parms containing a source name.
   vector<string> nams = itsRep->getSources();
   vector<int> srcs(nams.size());
@@ -135,6 +121,6 @@ MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
 //    cout << "Found source " << name << " (srcnr=" << srcnr << ')' << endl;
     }
   }
-  itsGetPSTime += itsWatch.delta().real(); 
+
   return sources;
 }
