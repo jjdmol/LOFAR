@@ -35,8 +35,6 @@ GCFETHRawPort::GCFETHRawPort(GCFTask& task,
                           	 TPortType type, 
                              bool transportRawData) : 
    GCFRawPort(task, name, type, 0, transportRawData), 
-   _ifname(0), 
-   _destMacStr(0), 
    _pSocket(0)
 {
   assert(MSPP != getType());
@@ -46,8 +44,6 @@ GCFETHRawPort::GCFETHRawPort(GCFTask& task,
 
 GCFETHRawPort::GCFETHRawPort() : 
   GCFRawPort(),       
-  _ifname(0), 
-  _destMacStr(0), 
   _pSocket(0)
 {
   assert(MSPP != getType());
@@ -55,9 +51,8 @@ GCFETHRawPort::GCFETHRawPort() :
 
 GCFETHRawPort::~GCFETHRawPort()
 {
-  if (_ifname) free(_ifname);
-  if (_destMacStr) free(_destMacStr);
   if (_pSocket) delete _pSocket;
+  
 }
 
 int GCFETHRawPort::close()
@@ -83,7 +78,7 @@ int GCFETHRawPort::open()
   }
 
   // check for if name
-  if (0 == _ifname)
+  if (_ifname == "")
   {
     LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, ( 
         "no interface name specified"));
@@ -96,7 +91,7 @@ int GCFETHRawPort::open()
 			  "ERROR: Port %s is not initialised.",
 			  _name.c_str()));
       retval = -1;
-  } else if (_pSocket->open(_ifname, _destMacStr) < 0)
+  } else if (_pSocket->open(_ifname.c_str(), _destMacStr.c_str()) < 0)
   {
     _isConnected = false;
     if (SAP == getType())
@@ -195,9 +190,9 @@ ssize_t GCFETHRawPort::recvv(iovec /*buffers*/[], int /*n*/)
 }
 
 void GCFETHRawPort::setAddr(const char* ifname,
-			  const char* destMac)
+			    const char* destMac)
 {
   // store for use in open
-  _ifname     = strdup(ifname);
-  _destMacStr = strdup(destMac);
+  _ifname     = string(ifname);
+  _destMacStr = string(destMac);
 }

@@ -31,6 +31,8 @@ class GTMETHSocket; // #include "GTM_ETHSocket.h"
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
 
+#include <string>
+
 //#forward declaration
 class GCFTask;
 
@@ -102,8 +104,8 @@ class GCFETHRawPort : public GCFRawPort
 //    friend class GTMETHSocket;
 
   private:    
-    char* _ifname;
-    char* _destMacStr;
+    string _ifname;
+    string _destMacStr;
     GTMETHSocket* _pSocket;
 };
 
