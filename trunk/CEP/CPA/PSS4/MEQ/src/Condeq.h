@@ -64,32 +64,9 @@ protected:
                          const Request &req,bool newreq);
 
   // helper func to compute derivative 
-  static double calcDerivative (Vells &deriv,const VellSet &vs,int index,bool minus=false);
+  double calcDerivative (Vells &deriv,const VellSet &vs,int index,bool minus=false);
 
 };
-
-
-// helper func to compute derivative 
-inline double Condeq::calcDerivative (Vells &deriv,const VellSet &vs,int index,bool minus)
-{
-  double pert;
-  if( vs.numPertSets() == 1 )
-  {
-    pert = vs.getPerturbation(index);
-    deriv = ( minus 
-              ? vs.getValue() - vs.getPerturbedValue(index) 
-              : vs.getPerturbedValue(index) - vs.getValue() );
-  }
-  else
-  {
-    pert = vs.getPerturbation(index,0) - vs.getPerturbation(index,1);
-    deriv = ( minus 
-              ? vs.getPerturbedValue(index,1) - vs.getPerturbedValue(index,0) 
-              : vs.getPerturbedValue(index,0) - vs.getPerturbedValue(index,1) );
-  }
-  deriv /= pert;
-  return pert;
-}
 
 
 

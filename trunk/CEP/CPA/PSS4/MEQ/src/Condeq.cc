@@ -47,6 +47,34 @@ void Condeq::checkChildren()
   Assert (numChildren() == 2);
 }
 
+// helper func to compute derivative 
+inline double Condeq::calcDerivative (Vells &deriv,const VellSet &vs,int index,bool minus)
+{
+  double pert;
+  int npertsets = vs.numPertSets();
+  if( npertsets == 1 )
+  {
+    pert = vs.getPerturbation(index);
+    deriv = ( minus 
+              ? vs.getValue() - vs.getPerturbedValue(index) 
+              : vs.getPerturbedValue(index) - vs.getValue() );
+  }
+  else if( npertsets == 2 )
+  {
+    pert = vs.getPerturbation(index,0) - vs.getPerturbation(index,1);
+    deriv = ( minus 
+              ? vs.getPerturbedValue(index,1) - vs.getPerturbedValue(index,0) 
+              : vs.getPerturbedValue(index,0) - vs.getPerturbedValue(index,1) );
+  }
+  else
+  {
+    NodeThrow1("illegal number of perturbation sets in result");
+  }
+  deriv /= pert;
+  return pert;
+}
+
+
 //##ModelId=400E53050066
 int Condeq::getResult (Result::Ref &resref, 
                        const std::vector<Result::Ref> &child_result,
@@ -59,7 +87,13 @@ int Condeq::getResult (Result::Ref &resref,
   FailWhen(child_result[1]->numVellSets()!=nplanes,
            "mismatch in sizes of child results");
   // Create result object and attach to the ref that was passed in
-  Result & result = resref <<= new Result(nplanes,request);
+  Result & result = resref <<= new Result(nplanes);
+  // Use cells of first child (they all must be the same anyway, we'll verify
+  // at least shapes later on)
+  const Cells &res_cells = child_result[0]->cells();
+  const LoShape &res_shape = res_cells.shape();
+  result.setCells(res_cells);
+  
   vector<const VellSet*> child_res(nrch);
   for( int iplane=0; iplane<nplanes; iplane++ )
   {
@@ -70,18 +104,17 @@ int Condeq::getResult (Result::Ref &resref,
     for( int i=0; i<nrch; i++ )
     {
       child_res[i] = &(child_result[i]->vellSet(iplane));
+      const Vells &val = child_res[i]->getValue();
+      FailWhen(val.isArray() && val.shape() != res_shape,"mismatch in child result shapes");
       values[i] = &(child_res[i]->getValue());
       npertsets = std::max(npertsets,child_res[i]->numPertSets());
     }
-    FailWhen(values[0]->shape() != values[1]->shape(),
-            "shapes of child results do not match");
     // Find all spids from the children.
     vector<int> spids = Function::findSpids(child_res);
     // allocate new result object with given number of spids, add to set
     // note that result always has 1 perturbation set (i.e., double-perts
     // are collapsed into a single pert)
     VellSet &vellset = result.setNewVellSet(iplane,spids.size(),1);
-    vellset.setShape(values[0]->shape());
     // The main value is measured-predicted.
     vellset.setValue(*values[0] - *values[1]);
     // Evaluate all perturbed values.
