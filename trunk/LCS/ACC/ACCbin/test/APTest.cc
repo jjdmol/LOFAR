@@ -109,6 +109,19 @@ int main (int argc, char *argv[]) {
 				itsPCcomm.handleMessage(newMsg);
 			}
 
+			// once in a while report some intermediate results
+			if ((rand()%10) == 0) {
+				ParameterSet	resultSet;
+				string			resultBuffer;
+				resultSet.add(KVpair(itsProcID+".interimresult", 
+									 string("He where is my Apple?"),
+									 true));
+				resultSet.writeBuffer(resultBuffer);
+				itsPCcomm.sendResultParameters(resultBuffer);
+			}
+
+			sleep(1);
+
 			// IMPLEMENT: do other stuff
 
 		}
@@ -122,7 +135,9 @@ int main (int argc, char *argv[]) {
 		// a whole parameterset.
 		ParameterSet	resultSet;
 		string			resultBuffer;
-		resultSet.add(itsProcID+".result", "IMPLEMENT useful information");
+		resultSet.add(KVpair(itsProcID+".result", 
+							 string("IMPLEMENT useful information"),
+							 true));
 		resultSet.writeBuffer(resultBuffer);		// convert to stringbuffer
 		itsPCcomm.unregisterAtAC(resultBuffer);		// send to AC before quiting
 
