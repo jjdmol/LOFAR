@@ -22,6 +22,13 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.19  2002/06/20 06:54:34  wierenga
+//
+//  %[BugId: 33]%
+//
+//  Baseline buffered TH_MPI implementation. This is a single threaded solution
+//  which doesn't improve performance.
+//
 //  Revision 1.18  2002/05/13 12:51:26  schaaf
 //  move Asserts to DbgAssert
 //
@@ -167,6 +174,7 @@ void WH_GrowSize::process()
     if (!itsFirstcall) {
       watch.stop();
 
+#ifdef DO_WORK
       char* pcInData = (char*)getInHolder(0)->getDataPtr();
       char* pcOutData = (char*)getOutHolder(0)->getDataPtr();
       for (int i=0; i < 2; i++)
@@ -176,6 +184,7 @@ void WH_GrowSize::process()
 	  pcOutData[j] = pcInData[j] * 2;
 	}
       }
+#endif
 
       if (itsIteration == 0) {
 	// first measurement; print packet sizes etc.
