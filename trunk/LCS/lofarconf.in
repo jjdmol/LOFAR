@@ -1,4 +1,6 @@
 Common        # Common stuff
+Transport     # Communication stuff
+Math	      # Math stuff
+ACC           # Application Configuration & Control
 CRD	      # Coordinate server stuff
 databases     # Database stuff
-Math	      # Math stuff
