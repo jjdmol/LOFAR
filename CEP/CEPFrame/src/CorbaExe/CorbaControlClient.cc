@@ -20,31 +20,20 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.1  2002/05/07 08:58:42  gvd
-//  Added BUILT_SOURCES to Corba makefile.am to force idl build
-//  Added BaseSim/Corba to includes of .hh files
-//  Move CorbaControlClient from Corba to CorbaExe (for correct build order)
 //
-//  Revision 1.3  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.2  2002/05/02 12:14:17  schaaf
-//  layout
-//
-//
+//////////////////////////////////////////////////////////////////////////
 
 
-#include "BaseSim/BaseSim.h"
+#include "CEPFrame/BaseSim.h"
 #include "Common/Debug.h"
-#include "BaseSim/Corba/BS_Corba.h"
+#include "CEPFrame/Corba/BS_Corba.h"
 #include <unistd.h>
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "BaseSim/Corba/CorbaControl_c.hh"
+#include "CEPFrame/Corba/CorbaControl_c.hh"
 
 main(int argc, char** argv) {
     AssertStr (argc == 3, 

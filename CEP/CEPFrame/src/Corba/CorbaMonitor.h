@@ -20,28 +20,20 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.2  2002/05/07 08:58:42  gvd
-//  Added BUILT_SOURCES to Corba makefile.am to force idl build
-//  Added BaseSim/Corba to includes of .hh files
-//  Move CorbaControlClient from Corba to CorbaExe (for correct build order)
-//
-//  Revision 1.1  2002/05/02 12:10:50  schaaf
-//  new class CorbaMonitor
 //
 //
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_CORBAMONITOR_H
-#define BASESIM_CORBAMONITOR_H
+#ifndef CEPFRAME_CORBAMONITOR_H
+#define CEPFRAME_CORBAMONITOR_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include "corba.h"
-#include "BaseSim/Corba/CorbaControl_s.hh"
+#include "CEPFrame/Corba/CorbaControl_s.hh"
 class WorkHolder;
 
 class CorbaMonitor:public POA_CorbaControl::Monitor

@@ -20,22 +20,12 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.6  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.5  2002/03/08 11:28:54  wierenga
-//  layout
-//
-//  Revision 1.4  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
+//////////////////////////////////////////////////////////////////////////
 
 
-#include "BaseSim/BaseSim.h"
+#include "CEPFrame/BaseSim.h"
 #include "Common/Debug.h"
-#include "BaseSim/Corba/CorbaTransportIn.h"
+#include "CEPFrame/Corba/CorbaTransportIn.h"
 
 CorbaTransportIn::CorbaTransportIn(int aID)
 {   

@@ -20,30 +20,12 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.5  2003/02/11 13:05:42  diepen
-//  %[BugId: 76]%
-//  All argv argument need to be const voor gcc3
-//
-//  Revision 1.4  2002/05/22 11:22:54  wierenga
-//  %[BugId: 4]%
-//
-//  Move shmem_alloc code to Common/shmem.
-//
-//  Revision 1.3  2002/05/08 14:22:02  wierenga
-//  New synchronisation method (not using atomic.h). Cleanup of implementation.
-//
-//  Revision 1.2  2002/04/04 14:20:15  wierenga
-//  using atomic_inc/dec for sync after memcpy from shared memory
-//
-//  Revision 1.1  2002/04/03 07:01:22  wierenga
-//  Initial version of shared memory TransportHolder.
 //
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_TH_SHMEM_H
-#define BASESIM_TH_SHMEM_H
+#ifndef CEPFRAME_TH_SHMEM_H
+#define CEPFRAME_TH_SHMEM_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -51,7 +33,7 @@
 
 #ifdef HAVE_MPI
 
-#include "BaseSim/TransportHolder.h"
+#include "CEPFrame/TransportHolder.h"
 #include "Common/lofar_map.h"
 #include "Common/shmem/shmem_alloc.h"
 

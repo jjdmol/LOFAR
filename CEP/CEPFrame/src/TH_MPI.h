@@ -19,10 +19,11 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
+//
+/////////////////////////////////////////////////////////////////////////
 
-
-#ifndef BASESIM_TH_MPI_H
-#define BASESIM_TH_MPI_H
+#ifndef CEPFRAME_TH_MPI_H
+#define CEPFRAME_TH_MPI_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -32,8 +33,8 @@
 
 #include "Common/lofar_deque.h"
 #include "Common/lofar_list.h"
-#include "BaseSim/TransportHolder.h"
-#include "BaseSim/CyclicBuffer.h"
+#include "CEPFrame/TransportHolder.h"
+#include "CEPFrame/CyclicBuffer.h"
 #include "mpi.h"
 
 #include <pthread.h>

@@ -19,7 +19,8 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
-
+//
+///////////////////////////////////////////////////////////////////
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -31,9 +32,9 @@
 #define THREAD_SAFE
 #endif
 
-#include "BaseSim/TH_MPI.h"
+#include "CEPFrame/TH_MPI.h"
 #include "mpi.h"
-#include "BaseSim/StepRep.h"
+#include "CEPFrame/StepRep.h"
 #include "Common/Debug.h"
 #include "Common/lofar_deque.h"
 #include "Common/lofar_list.h"

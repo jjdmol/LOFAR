@@ -19,47 +19,17 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
-//
-//  $Log$
-//  Revision 1.10  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.9  2002/03/26 09:18:35  schaaf
-//  Removed unused include
-//
-//  Revision 1.8  2002/03/14 14:25:12  wierenga
-//  Adapted to the new TransportHolder interface.
-//
-//  Revision 1.7  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.6  2001/11/02 11:29:48  gvd
-//  Changed TH_Corba for Transport changes
-//
-//  Revision 1.4  2001/10/05 11:50:37  gvd
-//  Added getType function
-//
-//  Revision 1.3  2001/09/05 08:07:26  wierenga
-//  Use getTransport method instead of private itsTransport.
-//  Implement new transport holder interface for prototype pattern.
-//
-//  Revision 1.2  2001/08/13 12:06:36  schaaf
-//  Use BS_Corba for Orb and POA
-//
-//  Revision 1.1  2001/08/09 15:48:48  wierenga
-//  Implemented first version of TH_Corba and test program
-//
+////
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_TH_CORBA_H
-#define BASESIM_TH_CORBA_H
+#ifndef CEPFRAME_TH_CORBA_H
+#define CEPFRAME_TH_CORBA_H
 
 //#include <pthread.h>
-#include "BaseSim/TransportHolder.h"
-#include "BaseSim/Corba/CorbaTransportOut.h"
-#include "BaseSim/Corba/CorbaTransportIn.h"
+#include "CEPFrame/TransportHolder.h"
+#include "CEPFrame/Corba/CorbaTransportOut.h"
+#include "CEPFrame/Corba/CorbaTransportIn.h"
 
 /**
    This class defines the transport mechanism between data holders
