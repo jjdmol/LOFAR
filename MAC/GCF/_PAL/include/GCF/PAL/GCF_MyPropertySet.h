@@ -54,13 +54,15 @@ class GCFMyPropertySet : public GCFPropertySet
      * @param answerObj the call back object for answers on property set actions
      */
     explicit GCFMyPropertySet (const char* name,
-                      const TPropertySet& propSet, 
-                      GCFAnswer* pAnswerObj,
-                      TDefaultUse defaultUse = USE_MY_DEFAULTS);
+                               const char* type, 
+                               bool isTemporary,
+                               GCFAnswer* pAnswerObj,
+                               TDefaultUse defaultUse = USE_MY_DEFAULTS);
                       
     explicit GCFMyPropertySet (const char* name,
-                      const TPropertySet& propSet, 
-                      TDefaultUse defaultUse = USE_MY_DEFAULTS);
+                               const char* type, 
+                               bool isTemporary,
+                               TDefaultUse defaultUse = USE_MY_DEFAULTS);
 
     virtual ~GCFMyPropertySet ();
     
@@ -104,6 +106,12 @@ class GCFMyPropertySet : public GCFPropertySet
     GCFPValue* getValue (const string propName); 
     GCFPValue* getOldValue (const string propName);
     //@}
+
+    bool isTemporary () const 
+      { return _isTemporary; }
+     
+    void setAllAccessModes(TAccessMode mode, bool on);
+    void initProperties(const TPropertyConfig config[], unsigned int nrOfConfigs);
              
   private: // interface methods
     friend class GCFMyProperty;
@@ -118,7 +126,7 @@ class GCFMyPropertySet : public GCFPropertySet
     bool tryLinking ();
 
   private: // helper methods
-    GCFProperty* createPropObject(const TProperty& propInfo);    
+    GCFProperty* createPropObject(const TPropertyInfo& propInfo);    
     void wrongState(const char* request);
     
   private:
@@ -132,8 +140,9 @@ class GCFMyPropertySet : public GCFPropertySet
   private: // attribute members
     typedef enum TSTATE {S_DISABLED, S_DISABLING, S_ENABLING, S_ENABLED, 
                          S_LINKING, S_LINKED, S_DELAYED_DISABLING};
-    TSTATE _state;
-    TDefaultUse _defaultUse;
+    TSTATE        _state;
+    TDefaultUse   _defaultUse;
+    bool          _isTemporary;
     
   private: // administrative members
     unsigned short _counter;

@@ -58,12 +58,12 @@ class GPAController : public GCFTask
     void sendAndNext(GCFEvent& e);
     void doNextRequest();    
     GPAPropertySet* findPropSet(const string& scope) const;
-    void acceptConnectRequest();
+    void acceptConnectRequest(GCFPortInterface& p);
     void clientPortGone(GCFPortInterface& p);
-    void propSetClientGone(const string& c);
+    void propSetClientGone(GCFPortInterface& p);
     void deletePort(GCFPortInterface& p);
     void emptyGarbage();
-    GCFPVSSPort& getDistPmlPort() { return _distPmlPort;}
+    //GCFPVSSPort& getDistPmlPort() { return _distPmlPortProvider;}
     
 	private: // data members
     typedef map<string /*scope*/, GPAPropertySet*> TPropertySets;
@@ -71,12 +71,11 @@ class GPAController : public GCFTask
     list<GPAPropertySet*> _propertySetGarbage;
     
 		GPARequestManager       _requestManager;
-    //GPADistClientManager    _distClientManager;
 
     list<GCFPortInterface*> _pmlPorts;		
     list<GCFPortInterface*> _pmlPortGarbage;
 		GCFTCPPort              _pmlPortProvider;
-    GCFPVSSPort             _distPmlPort;
+    GCFPVSSPort             _distPmlPortProvider;
     
   private: // admin. data members
     bool                _isBusy;

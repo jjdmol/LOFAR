@@ -69,8 +69,9 @@ class GPIPropertySet : public GCFPropertyProxy
     
   private:
     void propSubscribed(const string& propName);
-    inline void propUnsubscribed(const string& /*propName*/) {;}
-    inline void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {;}
+    void propSubscriptionLost(const string& /*propName*/) {;}
+    void propUnsubscribed(const string& /*propName*/) {;}
+    void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {;}
     void propValueChanged(const string& propName, const GCFPValue& value);
   
   private: //helper methods

@@ -64,7 +64,8 @@ class GSAService
     
     virtual void dpCreated (const string& dpName) = 0;
     virtual void dpDeleted (const string& dpName) = 0;
-    virtual void dpeSubscribed (const string& propName) = 0;
+    virtual void dpeSubscribed (const string& propName) = 0;    
+    virtual void dpeSubscriptionLost (const string& propName) = 0;
     virtual void dpeUnsubscribed (const string& propName) = 0;
     virtual void dpeValueGet (const string& propName, 
                                const GCFPValue& value) = 0;

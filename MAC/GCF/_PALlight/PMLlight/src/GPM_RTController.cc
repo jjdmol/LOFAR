@@ -214,7 +214,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
   switch (e.signal)
   {
     case F_DISCONNECTED:
-      LOG_WARN(LOFAR::formatString ( 
+      LOG_WARN(formatString ( 
           "Connection lost to Property Interface"));
       TRAN(GPMRTController::initial);
       break;
@@ -270,7 +270,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
     case PI_LINK_PROP_SET:
     {
       PILinkPropSetEvent request(e);
-      LOG_INFO(LOFAR::formatString ( 
+      LOG_INFO(formatString ( 
         "PA-REQ: Link properties of prop. set '%s'",        
         request.scope.c_str()));
         
@@ -281,7 +281,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
       }
       else
       {
-        LOG_DEBUG(LOFAR::formatString ( 
+        LOG_DEBUG(formatString ( 
             "Property set with scope %s was deleted in the meanwhile", 
             request.scope.c_str()));
         PIPropSetLinkedEvent response;
@@ -293,7 +293,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
     case PI_UNLINK_PROP_SET:
     {
       PIUnlinkPropSetEvent request(e);
-      LOG_INFO(LOFAR::formatString ( 
+      LOG_INFO(formatString ( 
         "PA-REQ: Unlink properties of prop. set '%s'",
         request.scope.c_str()));
       GCFRTMyPropertySet* pPropertySet = _myPropertySets[request.scope];
@@ -303,7 +303,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
       }
       else
       {
-        LOG_DEBUG(LOFAR::formatString ( 
+        LOG_DEBUG(formatString ( 
             "Property set with scope %s was deleted in the meanwhile", 
             request.scope.c_str()));
         PIPropSetUnlinkedEvent response;
@@ -316,7 +316,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
     {
       PIValueChangedEvent indicationIn(e);
 
-      LOG_INFO(LOFAR::formatString ( 
+      LOG_INFO(formatString ( 
           "PI-MSG: Property %s changed", 
           indicationIn.name.c_str()));
       string scope;
@@ -329,7 +329,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
       }
       else
       {
-        LOG_DEBUG(LOFAR::formatString ( 
+        LOG_DEBUG(formatString ( 
             "Property set with scope %s was deleted in the meanwhile", 
             scope.c_str()));
       }
@@ -350,48 +350,47 @@ void logResult(TPIResult result, GCFRTMyPropertySet& propSet)
     case PI_NO_ERROR:
       break;
     case PI_UNKNOWN_ERROR:
-      LOG_FATAL(LOFAR::formatString ( 
-          "Unknown error"));      
+      LOG_FATAL("Unknown error");
       break;
     case PI_PS_GONE:
-      LOG_ERROR(LOFAR::formatString ( 
+      LOG_ERROR(formatString ( 
           "The property set is gone while perfoming an action on it. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PI_MISSING_PROPS:
-      LOG_ERROR(LOFAR::formatString ( 
+      LOG_ERROR(formatString ( 
           "One or more loaded properties are not owned by any application. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PI_WRONG_STATE:
-      LOG_FATAL(LOFAR::formatString ( 
+      LOG_FATAL(formatString ( 
           "The my property set is in a wrong state. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PI_PROP_SET_NOT_EXISTS:
-      LOG_INFO(LOFAR::formatString ( 
+      LOG_INFO(formatString ( 
           "Prop. set does not exists. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PI_PROP_SET_ALLREADY_EXISTS:
-      LOG_INFO(LOFAR::formatString ( 
+      LOG_INFO(formatString ( 
           "Prop. set allready exists. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PI_DPTYPE_UNKNOWN:
-      LOG_INFO(LOFAR::formatString ( 
+      LOG_INFO(formatString ( 
           "Specified type not known. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PI_INTERNAL_ERROR:
-      LOG_FATAL(LOFAR::formatString ( 
+      LOG_FATAL(formatString ( 
           "Internal error in PI. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     case PI_PA_INTERNAL_ERROR:
-      LOG_FATAL(LOFAR::formatString ( 
+      LOG_FATAL(formatString ( 
           "Internal error in PA. (%s:%s)",
-          propSet.getType(), propSet.getScope().c_str()));
+          propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
     default:
       break;

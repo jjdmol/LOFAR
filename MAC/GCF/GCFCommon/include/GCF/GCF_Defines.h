@@ -53,13 +53,16 @@ enum TGCFResult {
   GCF_SCOPE_ALREADY_REG,
   GCF_ALREADY_SUBSCRIBED,
   GCF_NOT_SUBSCRIBED,
-  GCF_WRONG_STATE
+  GCF_WRONG_STATE,
+  GCF_PVSS_ERROR,
 };
 
 typedef unsigned char TAccessMode;
 
 #define GCF_READABLE_PROP 1
 #define GCF_WRITABLE_PROP 2
+#define GCF_READWRITE_PROP (GCF_READABLE_PROP | GCF_WRITABLE_PROP)
+
 typedef enum TMACValueType {NO_LPT, LPT_BOOL, LPT_CHAR, LPT_UNSIGNED, LPT_INTEGER, 
                     LPT_BIT32, LPT_BLOB, LPT_REF, LPT_DOUBLE, LPT_DATETIME,
                     LPT_STRING, LPT_DYNARR = 0x80,
@@ -70,18 +73,16 @@ typedef enum TMACValueType {NO_LPT, LPT_BOOL, LPT_CHAR, LPT_UNSIGNED, LPT_INTEGE
 typedef struct
 {
   char*         propName;
-  TMACValueType  type;
   TAccessMode   accessMode;
   char*         defaultValue;
-}
-TProperty;
+} TPropertyConfig;
 
 typedef struct
 {
-  char*             typeName;
-  bool              isTemporary;
-  unsigned int      nrOfProperties;
-  const TProperty*  properties;  
-}
-TPropertySet;
+  string         propName;
+  TMACValueType  type;
+} TPropertyInfo;
+
+
+#define NR_OF_PROPCONFIGS(propSet) (sizeof(propSet)/sizeof(TPropertyConfig))
 #endif

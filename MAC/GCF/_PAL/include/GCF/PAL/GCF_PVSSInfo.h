@@ -23,9 +23,13 @@
 #ifndef GCF_PVSSINFO_H
 #define GCF_PVSSINFO_H
 
+#include <GCF/GCF_Defines.h>
+
 #include <Common/lofar_string.h>
+#include <Common/lofar_list.h>
 
 class GSAService;
+class GCFPropertySet;
 
 // forward declaration
 
@@ -37,10 +41,12 @@ class GCFPVSSInfo
     static bool propExists (const string& dpeName);
     static bool typeExists (const string& dpTypeName);
     static const string& getLocalSystemName();
+    static unsigned int getLocalSystemId();
     static const string& getProjectName();
     static const string getSystemName(unsigned int sysnr);
     static unsigned int getLastEventSysId();
     static unsigned int getSysId(const string& name);
+    static unsigned int getManNum();
     
   private:
     friend class GSAService;
@@ -58,7 +64,10 @@ class GCFPVSSInfo
      */
     GCFPVSSInfo (const GCFPVSSInfo&);
     GCFPVSSInfo& operator= (const GCFPVSSInfo&);
-    
+
+  public:
+    friend class GCFPropertySet;
+    static TGCFResult getTypeStruct(const string& typeName, list<TPropertyInfo>& propInfo, unsigned int sysNr);    
 };
 
 #endif

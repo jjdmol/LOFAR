@@ -52,17 +52,19 @@ class GCFRTMyPropertySet
      * @param answerObj the call back object for answers on property set actions
      */
     explicit GCFRTMyPropertySet (const char* name,
-                                 const TPropertySet& propSet, 
+                                 const char* type, 
+                                 bool isTemporary,
                                  GCFRTAnswer* pAnswerObj = 0);
     virtual ~GCFRTMyPropertySet ();
 
     const string& getScope () const 
       { return _scope; }
 
-    const char* getType () const 
-      { return _propSetInfo.typeName; }
-    const bool isTemporary () const 
-      { return _propSetInfo.isTemporary; }
+    const string& getType () const 
+      { return _type; }
+      
+    bool isTemporary () const 
+      { return _isTemporary; }
     
     virtual void setAnswer (GCFRTAnswer* pAnswerObj);          
     
@@ -136,6 +138,9 @@ class GCFRTMyPropertySet
     GCFPValue* getOldValue (const string propName);
     //@}
               
+    void setAllAccessModes(TAccessMode mode, bool on);
+    void initProperties(const TPropertyConfig config[], unsigned int nrOfConfigs);
+             
   private: // interface methods
     friend class GCFRTMyProperty;
     void valueSet(const string& propName, const GCFPValue& value) const;
@@ -154,6 +159,7 @@ class GCFRTMyPropertySet
     void clearAllProperties();
     bool cutScope(string& propName) const;
     void wrongState(const char* request);
+    void readTypeFile();
     
   private:
     GCFRTMyPropertySet();
@@ -164,7 +170,9 @@ class GCFRTMyPropertySet
     //@}
 
   private: // attribute members
-    string  _scope;        
+    string  _scope;     
+    string  _type;   
+    bool    _isTemporary;
     typedef map<string /*propName*/, GCFRTMyProperty*> TPropertyList;
     TPropertyList       _properties;
     GCFRTAnswer*        _pAnswerObj;
@@ -173,7 +181,8 @@ class GCFRTMyPropertySet
     typedef enum TSTATE {S_DISABLED, S_DISABLING, S_ENABLING, S_ENABLED, 
                          S_LINKING, S_LINKED, S_DELAYED_DISABLING};
     TSTATE _state;
-    const TPropertySet& _propSetInfo;
+    typedef list<TPropertyInfo> TPropInfoList;
+    TPropInfoList       _propSetInfo;
     GCFRTMyProperty     _dummyProperty;
     unsigned int        _counter;
     unsigned int        _missing;

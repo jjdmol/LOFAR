@@ -25,20 +25,80 @@
 #include <GPM_RTController.h>
 #include <GCF/PALlight/GCF_RTAnswer.h>
 #include <GCF/Utils.h>
+#include <Common/lofar_iostream.h>
+#include <sstream>
+using std::istringstream;
+using std::ostringstream;
+#include <Common/lofar_fstream.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+TMACValueType macValueTypes[] = {
+  NO_LPT,           // <not specified by pvss>      0
+  NO_LPT,           // structure                    1
+  NO_LPT,           // <not specified by pvss>      0
+  LPT_DYNCHAR,      // dyn. character array         3
+  LPT_DYNUNSIGNED,  // dyn. unsigned array          4
+  LPT_DYNINTEGER,   // dyn. integer array           5
+  LPT_DYNDOUBLE,    // dyn. float array             6
+  LPT_DYNBOOL,      // dyn. bit array               7
+  NO_LPT,           // dyn. bit pattern-array       8
+  LPT_DYNSTRING,    // dyn. text array              9
+  NO_LPT,           // dyn. time array              10
+  NO_LPT,           // character structure          11
+  NO_LPT,           // integer structure            12
+  NO_LPT,           // unsigned structure           13
+  NO_LPT,           // float structure              14
+  NO_LPT,           // bit32                        15
+  NO_LPT,           // bit32 structure              16
+  NO_LPT,           // text structure               17
+  NO_LPT,           // time structure               18
+  LPT_CHAR,         // character                    19
+  LPT_UNSIGNED,     // unsigned                     20
+  LPT_INTEGER,      // integer                      21
+  LPT_DOUBLE,       // float                        22
+  LPT_BOOL,         // bit                          23
+  NO_LPT,           // bit pattern                  24
+  LPT_STRING,       // text                         25
+  NO_LPT,           // time                         26
+  NO_LPT,           // identifier                   27
+  NO_LPT,           // dyn. identifier              29
+  NO_LPT,           // <not specified by pvss>      0
+  NO_LPT,           // <not specified by pvss>      0
+  NO_LPT,           // <not specified by pvss>      0
+  NO_LPT,           // <not specified by pvss>      0
+  NO_LPT,           // <not specified by pvss>      0
+  NO_LPT,           // <not specified by pvss>      0
+  NO_LPT,           // <not specified by pvss>      0
+  NO_LPT,           // <not specified by pvss>      0
+  NO_LPT,           // <not specified by pvss>      0
+  NO_LPT,           // identifier array             39
+  NO_LPT,           // <not specified by pvss>      0
+  NO_LPT,           // type reference               41
+  NO_LPT,           // multilingual text            42
+  NO_LPT,           // multilingual text structure  43
+  NO_LPT,           // dyn. description array       44
+  NO_LPT,           // <not specified by pvss>      0
+  LPT_BLOB,         // blob                         46
+  NO_LPT,           // blob structure               47
+  LPT_DYNBLOB,      // dyn. blob array              48
+};
 
 GCFRTMyPropertySet::GCFRTMyPropertySet(const char* name,
-                                       const TPropertySet& typeInfo,
+                                       const char* type,
+                                       bool isTemporary,
                                        GCFRTAnswer* pAnswerObj) : 
   _scope(name),
+  _type(type),
+  _isTemporary(isTemporary),
   _pAnswerObj(pAnswerObj),
   _state(S_DISABLED),
-  _propSetInfo(typeInfo),
   _dummyProperty(*this),
   _counter(0),
   _missing(0)
 {
   GCFRTMyProperty* pProperty;
-  const char* propName;
+  TPropertyInfo* pPropInfo;
   
   if (!Utils::isValidPropName(_scope.c_str()))
   {
@@ -47,20 +107,13 @@ GCFRTMyPropertySet::GCFRTMyPropertySet(const char* name,
         _scope.c_str()));
     _scope = "";
   }
-  for (unsigned int i = 0; i < _propSetInfo.nrOfProperties; i++)
+  readTypeFile();
+  for (TPropInfoList::iterator iter = _propSetInfo.begin();
+       iter != _propSetInfo.end(); ++iter)
   { 
-    propName = _propSetInfo.properties[i].propName;
-    if (Utils::isValidPropName(propName))
-    {
-      pProperty = new GCFRTMyProperty(_propSetInfo.properties[i], *this);
-      addProperty(propName, *pProperty);
-    }
-    else
-    {
-      LOG_WARN(LOFAR::formatString ( 
-          "Property %s meets not the name convention! NOT CREATED",
-          propName));      
-    }
+    pPropInfo = &(*iter);
+    pProperty = new GCFRTMyProperty(*pPropInfo, *this);
+    addProperty(pPropInfo->propName, *pProperty);
   }
   if (_pAnswerObj)
   {
@@ -397,8 +450,6 @@ void GCFRTMyPropertySet::dispatchAnswer(unsigned short sig, TGCFResult result)
 
 void GCFRTMyPropertySet::addProperty(const string& propName, GCFRTMyProperty& prop)
 {
-  assert(propName.length() > 0);
-  
   string shortPropName(propName);
   cutScope(shortPropName);
   
@@ -442,37 +493,166 @@ void GCFRTMyPropertySet::clearAllProperties()
   }
 }
 
+void GCFRTMyPropertySet::setAllAccessModes(TAccessMode mode, bool on)
+{
+  GCFRTMyProperty* pProperty;
+  for(TPropertyList::iterator iter = _properties.begin(); 
+      iter != _properties.end(); ++iter)
+  {
+    pProperty = iter->second;
+    assert(pProperty);
+    pProperty->setAccessMode(mode, on);    
+  }
+}
+
+void GCFRTMyPropertySet::initProperties(const TPropertyConfig config[], unsigned int nrOfConfigs)
+{
+  GCFRTMyProperty* pProperty;
+  for (unsigned int i = 0; i < nrOfConfigs; i++)
+  {
+    pProperty = getProperty(config[i].propName);
+    if (pProperty)
+    {
+      if (config[i].defaultValue)
+      {
+        pProperty->setValue(config[i].defaultValue);
+      }
+      if (~config[i].accessMode & GCF_READABLE_PROP)
+        pProperty->setAccessMode(GCF_READABLE_PROP, false);    
+      if (~config[i].accessMode & GCF_WRITABLE_PROP)
+        pProperty->setAccessMode(GCF_WRITABLE_PROP, false);    
+    }
+  }
+}
+
 void GCFRTMyPropertySet::wrongState(const char* request)
 {
-  char* stateString(0);
-  switch (_state)
+  const char* stateString[] =
   {
-    case S_DISABLED:
-      stateString = "DISABLED";
-      break;
-    case S_DISABLING:
-      stateString = "DISABLING";
-      break;
-    case S_ENABLED:
-      stateString = "ENABLED";
-      break;
-    case S_ENABLING:
-      stateString = "ENABLING";
-      break;
-    case S_LINKING:
-      stateString = "LINKING";
-      break;
-    case S_LINKED:
-      stateString = "LINKED";
-      break;
-    case S_DELAYED_DISABLING:
-      stateString = "DELAYED_DISABLING";
-      break;    
-  }
+    "DISABLED",
+    "DISABLING",
+    "ENABLING",
+    "ENABLED",
+    "LINKING",
+    "LINKED",
+    "DELAYED_DISABLING"
+  };
   LOG_WARN(LOFAR::formatString ( 
         "Could not perform '%s' on property set '%s'. Wrong state: %s",
         request,
         getScope().c_str(),
-        stateString));  
+        stateString[_state]));  
 }
 
+void buildTypeStructTree(const string path, 
+                         ifstream&    pvssAsciiFile, 
+                         char*        curAsciiLine, 
+                         list<TPropertyInfo>& propInfos);
+
+void GCFRTMyPropertySet::readTypeFile()
+{
+  ifstream    pvssAsciiFile;
+
+  char buffer[200];
+  system("chmod 777 genTypeInfo");
+  sprintf(buffer, "genTypeInfo %d %s", getpid(), _type.c_str());
+  system(buffer);
+  //# Try to pen the file
+  sprintf(buffer, "typeInfo_%d.dpl.tmp", getpid());
+  pvssAsciiFile.open(buffer, ifstream::in);
+  
+  char asciiLine[1024];
+  bool typesSectionFound(false);
+  bool typeFound(false);
+
+  //# Read the file line by line and convert it to Key Value pairs.
+  while (pvssAsciiFile.getline (asciiLine, 1024))
+  {
+    if (typesSectionFound)
+    {
+      if (strlen(asciiLine) == 0) // end of typeSection
+      {
+        break;
+      }
+      else if (strncmp(asciiLine, _type.c_str(), _type.length()) == 0)      
+      {
+        typeFound = true;
+      }
+      if (typeFound)
+      {
+        buildTypeStructTree("", pvssAsciiFile, asciiLine, _propSetInfo);
+        break;        
+      }
+    }
+    if (strncmp(asciiLine, "TypeName", 8) == 0)
+    {
+      typesSectionFound = true;
+    }
+  }
+  pvssAsciiFile.close();
+  sprintf(buffer, "rm -f typeInfo_%d.dpl.tmp", getpid());
+  system(buffer);
+}
+
+void buildTypeStructTree(const string path, 
+                         ifstream&    pvssAsciiFile, 
+                         char*        curAsciiLine, 
+                         list<TPropertyInfo>& propInfos)
+{
+  string newPath = path;
+  static char asciiLine[1024];
+  static bool rootElementFound = false;
+  static bool readWithBuild = false;
+  unsigned int elType, elTypeSeq;  
+  
+  char* elName(0);
+  int nrOfScanned = sscanf(curAsciiLine, "%as%d#%d", &elName, &elType, &elTypeSeq);
+  if (elTypeSeq == 1 || nrOfScanned < 3)
+  {
+    if (rootElementFound) 
+    {
+      readWithBuild = true; 
+      return;
+    }
+    rootElementFound = true;
+  }
+  else
+  {
+    if (strcmp(elName, "__internal") == 0)
+    {
+      delete [] elName;
+      return;
+    }
+    if (elType != 41) //type ref
+    {
+      if (newPath.length() > 0) newPath += '.';
+      newPath += elName;  
+    }
+  }
+  if (elName == 0)
+    delete [] elName;
+  if (elType == 1 || elType == 41) // structure or type ref
+  {
+    while (pvssAsciiFile.getline (asciiLine, 1024) && !readWithBuild)
+    {
+      buildTypeStructTree(newPath, pvssAsciiFile, asciiLine, propInfos);
+    }
+  }
+  else
+  {
+    if (macValueTypes[elType] != NO_LPT)
+    {
+      TPropertyInfo propInfo;
+      propInfo.propName += newPath;
+      propInfo.type = macValueTypes[elType];
+      propInfos.push_back(propInfo);
+    }
+    else
+    {
+      LOG_ERROR(formatString(
+          "TypeElement type %d (see DpElementType.hxx) is unknown to GCF (%s). No add!!!",
+          elType, 
+          newPath.c_str()));      
+    }
+  }
+}

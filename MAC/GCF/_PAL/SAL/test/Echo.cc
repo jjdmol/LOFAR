@@ -26,6 +26,7 @@
 #include <GCF/GCF_PVChar.h>
 #include <Common/lofar_iostream.h>
 #include "Echo_Protocol.ph"
+#include <GCF/PAL/GCF_PVSSInfo.h>
 
 Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 {
@@ -97,7 +98,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
     {
       EchoPingEvent ping(e);
 
-      switch (ping.seqnr % 13)
+      switch (ping.seqnr % 14)
       {
         case 0:
           service.dpCreate(propName, "LPT_BOOL");
@@ -161,6 +162,11 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
           service.dpDelete(propName);
           service.dpDelete(propName + "_test");
           break;
+        case 13:
+          list<TPropertyInfo> propertyInfo;
+          GCFPVSSInfo::getTypeStruct("TTypeA", propertyInfo, GCFPVSSInfo::getLocalSystemId());
+          break;
+          
       }
       
       

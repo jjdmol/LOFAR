@@ -24,6 +24,7 @@ libsal_la_SOURCES= $(DOCHDRS) \
 	GCF_PVSSInfo.cc
 
 libsal_la_CPPFLAGS= -I$(top_srcdir)/include
+libsal_la_LDFLAGS= -static
 		
 include $(lofar_sharedir)/Makefile.common
 

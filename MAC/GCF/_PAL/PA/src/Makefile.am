@@ -8,7 +8,6 @@ DOCHDRS	=	\
 	GPA_Controller.h \
 	GPA_PropertySet.h \
 	GPA_RequestManager.h \
-	GPA_DistClientManager.h \
 	GPA_Defines.h
 
 noinst_LTLIBRARIES 	= libpa.la
@@ -17,11 +16,11 @@ libpa_la_SOURCES= $(DOCHDRS) \
 	GPA_Controller.cc \
 	GPA_PropertySet.cc \
 	GPA_RequestManager.cc \
-	GPA_DistClientManager.cc \
 	PA_Protocol.cc
 	
 libpa_la_CPPFLAGS= -I$(top_srcdir)/include \
 	-I$(top_srcdir)/SAL/src
+libpa_la_LDFLAGS= -static
 
 bin_PROGRAMS   		= PropertyAgent
   

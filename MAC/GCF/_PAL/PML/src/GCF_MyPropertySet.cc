@@ -28,12 +28,14 @@
 #include <GCF/GCF_Defines.h>
 
 GCFMyPropertySet::GCFMyPropertySet(const char* name,
-                                   const TPropertySet& typeInfo,                                   
+                                   const char* type, 
+                                   bool isTemporary,
                                    GCFAnswer* pAnswerObj,
                                    TDefaultUse defaultUse) : 
-  GCFPropertySet(name, typeInfo, pAnswerObj),
+  GCFPropertySet(name, type, pAnswerObj),
   _state(S_DISABLED),
-  _defaultUse((!isTemporary() ? defaultUse : USE_MY_DEFAULTS)),
+  _defaultUse((isTemporary ? defaultUse : USE_MY_DEFAULTS)),
+  _isTemporary(isTemporary),
   _counter(0),
   _missing(0)
 {
@@ -41,11 +43,13 @@ GCFMyPropertySet::GCFMyPropertySet(const char* name,
 }
 
 GCFMyPropertySet::GCFMyPropertySet(const char* name,
-                                   const TPropertySet& typeInfo,
+                                   const char* type, 
+                                   bool isTemporary,
                                    TDefaultUse defaultUse) : 
-  GCFPropertySet(name, typeInfo, 0),
+  GCFPropertySet(name, type, 0),
   _state(S_DISABLED),
   _defaultUse(defaultUse),
+  _isTemporary(isTemporary),
   _counter(0),
   _missing(0)
 {
@@ -64,7 +68,7 @@ GCFMyPropertySet::~GCFMyPropertySet ()
   }
 }
 
-GCFProperty* GCFMyPropertySet::createPropObject(const TProperty& propInfo)
+GCFProperty* GCFMyPropertySet::createPropObject(const TPropertyInfo& propInfo)
 {
   return new GCFMyProperty(propInfo, *this);
 }
@@ -375,6 +379,38 @@ void GCFMyPropertySet::unlinkProperties()
       }  
       _pController->propertiesUnlinked(getScope(), PA_NO_ERROR);
       break;
+    }
+  }
+}
+
+void GCFMyPropertySet::setAllAccessModes(TAccessMode mode, bool on)
+{
+  GCFMyProperty* pProperty;
+  for(TPropertyList::iterator iter = _properties.begin(); 
+      iter != _properties.end(); ++iter)
+  {
+    pProperty = (GCFMyProperty*) iter->second;
+    assert(pProperty);
+    pProperty->setAccessMode(mode, on);    
+  }
+}
+
+void GCFMyPropertySet::initProperties(const TPropertyConfig config[], unsigned int nrOfConfigs)
+{
+  GCFMyProperty* pProperty;
+  for (unsigned int i = 0; i < nrOfConfigs; i++)
+  {
+    pProperty = (GCFMyProperty*) getProperty(config[i].propName);
+    if (pProperty)
+    {
+      if (config[i].defaultValue)
+      {
+        pProperty->setValue(config[i].defaultValue);
+      }
+      if (~config[i].accessMode & GCF_READABLE_PROP)
+        pProperty->setAccessMode(GCF_READABLE_PROP, false);    
+      if (~config[i].accessMode & GCF_WRITABLE_PROP)
+        pProperty->setAccessMode(GCF_WRITABLE_PROP, false);    
     }
   }
 }

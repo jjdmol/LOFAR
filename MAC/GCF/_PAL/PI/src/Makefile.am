@@ -28,7 +28,7 @@ libpi_la_SOURCES= $(DOCHDRS) \
 
 libpi_la_CPPFLAGS= -I$(top_srcdir)/include \
 	-I$(top_srcdir)/PA/src
-	
+libpi_la_LDFLAGS= -static	
 bin_PROGRAMS   		= PropertyInterface
   
 PropertyInterface_SOURCES		= GPI_Main.cc

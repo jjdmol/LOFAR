@@ -54,21 +54,25 @@ class GPMPropertyService : public GSAService
     }
     
   protected:
-    inline void dpCreated(const string& /*propName*/) {};
-    inline void dpDeleted(const string& /*propName*/) {};
-    inline void dpeSubscribed(const string& propName)
+    void dpCreated(const string& /*propName*/) {};
+    void dpDeleted(const string& /*propName*/) {};
+    void dpeSubscribed(const string& propName)
     {
       _gcfProperty.propSubscribed(propName);
     }
-    inline void dpeUnsubscribed(const string& propName)
+    void dpeSubscriptionLost (const string& propName)
+    {
+      _gcfProperty.propSubscriptionLost(propName);
+    }     
+    void dpeUnsubscribed(const string& propName)
     {
       _gcfProperty.propUnsubscribed(propName);
     }
-    inline void dpeValueGet(const string& propName, const GCFPValue& value)
+    void dpeValueGet(const string& propName, const GCFPValue& value)
     {
       _gcfProperty.propValueGet(propName, value);
     }
-    inline void dpeValueChanged(const string& propName, const GCFPValue& value)
+    void dpeValueChanged(const string& propName, const GCFPValue& value)
     {
       _gcfProperty.propValueChanged(propName, value);
     }

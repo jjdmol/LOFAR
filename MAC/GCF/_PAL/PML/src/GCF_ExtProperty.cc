@@ -25,28 +25,28 @@
 #include <GCF/Utils.h>
 #include <GPM_Defines.h>
 
-GCFExtProperty::GCFExtProperty (const TProperty& propInfo) :
+GCFExtProperty::GCFExtProperty (const TPropertyInfo& propInfo) :
    GCFProperty(propInfo, 0),
    _isSubscribed(false)
 {
-  if (!Utils::isValidPropName(propInfo.propName))
+  if (!Utils::isValidPropName(propInfo.propName.c_str()))
   {
     LOG_WARN(LOFAR::formatString ( 
         "Property %s meets not the name convention! Set to \"\"",
-        propInfo.propName));
+        propInfo.propName.c_str()));
   }
 }
 
-GCFExtProperty::GCFExtProperty (const TProperty& propInfo, 
+GCFExtProperty::GCFExtProperty (const TPropertyInfo& propInfo, 
                           GCFExtPropertySet& propertySet) :
    GCFProperty(propInfo, &propertySet),
    _isSubscribed(false)
 {
-  if (!Utils::isValidPropName(propInfo.propName))
+  if (!Utils::isValidPropName(propInfo.propName.c_str()))
   {
     LOG_WARN(LOFAR::formatString ( 
         "Property %s meets not the name convention! Set to \"\"",
-        propInfo.propName));
+        propInfo.propName.c_str()));
   }
 }
 
@@ -100,6 +100,12 @@ void GCFExtProperty::subscribed ()
   _isSubscribed = true;
   _isBusy = false;
   GCFProperty::subscribed();
+}
+
+void GCFExtProperty::subscriptionLost () 
+{
+  assert(_isSubscribed);
+  _isSubscribed = false;
 }
 
 bool GCFExtProperty::exists ()

@@ -1,4 +1,5 @@
-cppflags = -I$(top_srcdir)/SAL/src
+cppflags = -I$(top_srcdir)/SAL/src \
+	-I$(top_srcdir)/include
 
 check_PROGRAMS 		= echoapp ping
 

@@ -77,11 +77,21 @@ class GPMController : public GCFTask
     GCFEvent::TResult connected (GCFEvent& e, GCFPortInterface& p);
         
   private: // helper methods
-    typedef struct 
+    typedef struct Action
     {
       GCFPropertySet* pPropSet;
       string apcName;
       unsigned short signal;
+      Action& operator= (const Action& other)
+      {
+        if (this != &other)
+        {
+          pPropSet = other.pPropSet;
+          signal = other.signal;
+          apcName.replace(0, string::npos, other.apcName);
+        }
+        return *this;
+      }      
     } TAction;
     unsigned short registerAction (TAction& action);
     string determineDest(const string& scope) const;

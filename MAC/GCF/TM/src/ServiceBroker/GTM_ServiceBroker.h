@@ -61,11 +61,21 @@ class GTMServiceBroker : public GCFTask
     GCFEvent::TResult operational (GCFEvent& e, GCFPortInterface& p);
         
   private: // helper methods
-    typedef struct 
+    typedef struct Action
     {
       unsigned short action;
       GCFTCPPort* pPort;
       string servicename;
+      Action& operator= (const Action& other)
+      {        
+        if (this != &other)
+        {
+          action = other.action;
+          pPort = other.pPort;
+          servicename.replace(0, string::npos, other.servicename);          
+        }
+        return *this;
+      }      
     } TAction;
     unsigned short registerAction (TAction action);
 

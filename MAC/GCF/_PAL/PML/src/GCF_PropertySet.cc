@@ -24,23 +24,24 @@
 #include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/PAL/GCF_Property.h>
 #include <GCF/PAL/GCF_Answer.h>
+#include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/GCF_PValue.h>
 #include <GCF/Utils.h>
 #include <GPM_Defines.h>
 #include <GPM_Controller.h>
 
-const TProperty dummyPropInfo =
-  {"DUMMY", LPT_BOOL, 0, "FALSE"};
+const TPropertyInfo dummyPropInfo =
+  {"DUMMY", LPT_BOOL};
 
 GCFPropertySet::GCFPropertySet (const char* name,
-                                const TPropertySet& typeInfo,
+                                const char* type,
                                 GCFAnswer* pAnswerObj) : 
   _isBusy(false),
   _pController(0),
   _pAnswerObj(pAnswerObj),
   _scope((name ? name : "")),
-  _dummyProperty(dummyPropInfo, this),
-  _propSetInfo(typeInfo)
+  _type((type ? type : "")),
+  _dummyProperty(dummyPropInfo, this)
 {
   if (!Utils::isValidPropName(_scope.c_str()))
   {
@@ -67,22 +68,16 @@ GCFPropertySet::~GCFPropertySet()
 
 void GCFPropertySet::loadPropSetIntoRam()
 {
+  unsigned int sysNr = GCFPVSSInfo::getSysId(_scope);
+  GCFPVSSInfo::getTypeStruct(_type, _propSetInfo, sysNr);
   GCFProperty* pProperty;
-  const char* propName;
-  for (unsigned int i = 0; i < _propSetInfo.nrOfProperties; i++)
+  TPropertyInfo* pPropInfo;
+  for (TPropInfoList::iterator iter = _propSetInfo.begin();
+       iter != _propSetInfo.end(); ++iter)
   { 
-    propName = _propSetInfo.properties[i].propName;
-    if (Utils::isValidPropName(propName))
-    {
-      pProperty = createPropObject(_propSetInfo.properties[i]);
-      addProperty(propName, *pProperty);
-    }
-    else
-    {
-      LOG_WARN(LOFAR::formatString ( 
-          "Property %s meets not the name convention! NOT CREATED",
-          propName));      
-    }
+    pPropInfo = &(*iter);
+    pProperty = createPropObject(*pPropInfo);
+    addProperty(pPropInfo->propName, *pProperty);
   }
   if (_pAnswerObj)
   {

@@ -25,9 +25,9 @@
 
 #include <GCF/GCF_Defines.h>
 #include <GCF/PAL/GCF_Property.h>
-#include <GCF/PAL/GCF_PVSSInfo.h>
 
 #include <Common/lofar_map.h>
+#include <Common/lofar_list.h>
 
 class GCFAnswer;
 class GCFPValue;
@@ -48,10 +48,8 @@ class GCFPropertySet
       { return _scope; }
     const string getFullScope () const;
     
-    const char* getType () const 
-      { return _propSetInfo.typeName; }
-    const bool isTemporary () const 
-      { return _propSetInfo.isTemporary; }
+    const string& getType () const 
+      { return _type; }
     GCFAnswer* getAnswerObj() const 
       { return _pAnswerObj; }
 
@@ -86,12 +84,12 @@ class GCFPropertySet
     void configure(const string apcName);
 
   protected:
-    GCFPropertySet (const char* name, 
-                    const TPropertySet& typeInfo,
+    GCFPropertySet (const char* name,
+                    const char* type, 
                     GCFAnswer* pAnswerObj);
     
   protected: // helper methods
-    virtual GCFProperty* createPropObject(const TProperty& propInfo) = 0;
+    virtual GCFProperty* createPropObject(const TPropertyInfo& propInfo) = 0;
     void dispatchAnswer (unsigned short sig, TGCFResult result);
     void loadPropSetIntoRam();
     
@@ -120,7 +118,9 @@ class GCFPropertySet
   private:
     GCFAnswer*          _pAnswerObj;
     string              _scope;
+    string              _type;
     GCFProperty         _dummyProperty;
-    const TPropertySet& _propSetInfo;    
+    typedef list<TPropertyInfo> TPropInfoList;
+    TPropInfoList _propSetInfo;
 };
 #endif

@@ -24,10 +24,10 @@
 #include <GCF/PAL/GCF_MyPropertySet.h>
 #include <GCF/PAL/GCF_Answer.h>
 
-GCFMyProperty::GCFMyProperty(const TProperty& propInfo,
+GCFMyProperty::GCFMyProperty(const TPropertyInfo& propInfo,
                              GCFMyPropertySet& propertySet) :
   GCFProperty(propInfo, &propertySet),
-  _accessMode(propInfo.accessMode),
+  _accessMode(GCF_READWRITE_PROP),
   _changingAccessMode(false),
   _pCurValue(0),
   _pOldValue(0),
@@ -38,10 +38,6 @@ GCFMyProperty::GCFMyProperty(const TProperty& propInfo,
   _pCurValue = GCFPValue::createMACTypeObject(propInfo.type);
   assert(_pCurValue);
   _pOldValue = _pCurValue->clone();
-  if (propInfo.defaultValue)
-  {
-    _pCurValue->setValue(propInfo.defaultValue);
-  }
 }
 
 GCFMyProperty::~GCFMyProperty()
@@ -150,8 +146,7 @@ bool GCFMyProperty::link(bool setDefault, TGCFResult& result)
 }
 
 void GCFMyProperty::unlink()
-{
-  assert(_isLinked);
+{  
   assert(!_isBusy);
   if (_accessMode & GCF_WRITABLE_PROP )
   {
@@ -216,6 +211,12 @@ void GCFMyProperty::subscribed ()
     _isLinked = true;
     _propertySet.linked(*this);
   }
+}
+
+void GCFMyProperty::subscriptionLost () 
+{
+  assert(_isLinked);
+  _isLinked = false;
 }
 
 void GCFMyProperty::valueGet (const GCFPValue& value)

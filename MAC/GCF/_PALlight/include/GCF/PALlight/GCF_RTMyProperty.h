@@ -78,7 +78,7 @@ class GCFRTMyProperty
   private:
     friend class GCFRTMyPropertySet;
     
-    GCFRTMyProperty (const TProperty& propertyFields, 
+    GCFRTMyProperty (const TPropertyInfo& propertyFields, 
                      GCFRTMyPropertySet& propertySet);
     GCFRTMyProperty(GCFRTMyPropertySet& propertySet);
     virtual ~GCFRTMyProperty ();

@@ -15,8 +15,8 @@
 
 static string sTaskName = "TA1";
 
-const TProperty propertyAHJP00Def =
-  {"CCU1:A_H.J.P00", LPT_DOUBLE, GCF_READWRITE_PROP, 0};
+const TPropertyInfo propertyAHJP00Def =
+  {REMOTESYS1"A_H.J.P00", LPT_DOUBLE};
 
 Application::Application() :
   GCFTask((State)&Application::initial, sTaskName),
@@ -25,21 +25,27 @@ Application::Application() :
   _supTask2(*this, "ST2"),
   _counter(0),
   _curRemoteTestNr(0),
-  _propertySetA1("A_B",   propertySetA1, &_supTask1.getAnswerObj()),
-  _propertySetE1("A_L",   propertySetE1, &_supTask1.getAnswerObj()),
-  _propertySetXX("A_X",   propertySetE1, &_supTask1.getAnswerObj()),
-  _propertySetB1("A_C",   propertySetB1, &_supTask1.getAnswerObj()),
-  _propertySetB2("A_D",   propertySetB2, &_supTask2.getAnswerObj()),
-  _propertySetB3("A_E",   propertySetB3, &_supTask2.getAnswerObj()),
-  _ePropertySetAC("A_C",  propertySetB1, &_supTask2.getAnswerObj()),   
-  _ePropertySetAD("A_D",  propertySetB2, &_supTask2.getAnswerObj()),   
-  _ePropertySetAH("CCU1:A_H",  propertySetD1, &_supTask2.getAnswerObj()),   
-  _ePropertySetAL("A_L",  propertySetE1, &_supTask2.getAnswerObj()),   
-  _ePropertySetBRD1("B_A_BRD1",  propertySetF1, &_supTask1.getAnswerObj()),
-  _ePropertySetBRD2("B_A_BRD2",  propertySetG1, &_supTask1.getAnswerObj())   
+  _propertySetA1("A_B",         "TTypeA", true, &_supTask1.getAnswerObj()),
+  _propertySetE1("A_L",         "TTypeE", false, &_supTask1.getAnswerObj()),
+  _propertySetXX("A_X",         "TTypeE", false, &_supTask1.getAnswerObj()),
+  _propertySetB1("A_C",         "TTypeB", true, &_supTask1.getAnswerObj()),
+  _propertySetB2("A_D",         "TTypeB", true, &_supTask2.getAnswerObj()),
+  _propertySetB3("A_E",         "TTypeB", true, &_supTask2.getAnswerObj()),
+  _ePropertySetAC("A_C",        "TTypeB", &_supTask2.getAnswerObj()),   
+  _ePropertySetAD("A_D",        "TTypeB", &_supTask2.getAnswerObj()),   
+  _ePropertySetAH(REMOTESYS1"A_H",   "TTypeD", &_supTask2.getAnswerObj()),   
+  _ePropertySetAL("A_L",        "TTypeE", &_supTask2.getAnswerObj()),   
+  _ePropertySetBRD1("B_A_BRD1", "TTypeF", &_supTask1.getAnswerObj()),
+  _ePropertySetBRD2("B_A_BRD2", "TTypeG", &_supTask1.getAnswerObj())   
 {
     // register the protocol for debugging purposes
   registerProtocol(TST_PROTOCOL, TST_PROTOCOL_signalnames);  
+
+  _propertySetA1.initProperties(propertiesSA1, NR_OF_PROPCONFIGS(propertiesSA1));
+  _propertySetE1.initProperties(propertiesSE1, NR_OF_PROPCONFIGS(propertiesSE1));
+  _propertySetB1.initProperties(propertiesSB1, NR_OF_PROPCONFIGS(propertiesSB1));
+  _propertySetB2.initProperties(propertiesSB2, NR_OF_PROPCONFIGS(propertiesSB2));
+  _propertySetB3.initProperties(propertiesSB3, NR_OF_PROPCONFIGS(propertiesSB3));
 }
 
 GCFEvent::TResult Application::initial(GCFEvent& e, GCFPortInterface& /*p*/)
@@ -1084,9 +1090,9 @@ GCFEvent::TResult Application::test6_6(GCFEvent& e, GCFPortInterface& /*p*/)
       assert(pResponse);
       _counter = 0;
       TESTC_ABORT_ON_FAIL(strstr(pResponse->pPropName, "A_C.P1") > 0);
-      cerr << "Send nr " << _counter << " to CCU1:A_K.P1" << endl;
+      cerr << "Send nr " << _counter << " to "REMOTESYS1"A_K.P1" << endl;
       GCFPVInteger iv(_counter);
-      TESTC_ABORT_ON_FAIL(_supTask1.getProxy().setPropValue("CCU1:A_K.P1", iv) == GCF_NO_ERROR);
+      TESTC_ABORT_ON_FAIL(_supTask1.getProxy().setPropValue(REMOTESYS1"A_K.P1", iv) == GCF_NO_ERROR);
       break;
     }
 
@@ -1106,9 +1112,9 @@ GCFEvent::TResult Application::test6_6(GCFEvent& e, GCFPortInterface& /*p*/)
       }
       else
       {
-        cerr << "Send nr " << _counter << " to CCU1:A_K.P1" << endl;
+        cerr << "Send nr " << _counter << " to "REMOTESYS1"A_K.P1" << endl;
         GCFPVInteger iv(_counter);
-        TESTC_ABORT_ON_FAIL(_supTask1.getProxy().setPropValue("CCU1:A_K.P1", iv) == GCF_NO_ERROR);
+        TESTC_ABORT_ON_FAIL(_supTask1.getProxy().setPropValue(REMOTESYS1"A_K.P1", iv) == GCF_NO_ERROR);
       }        
       break;
     }
