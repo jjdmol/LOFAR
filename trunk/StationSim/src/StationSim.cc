@@ -88,6 +88,7 @@ void StationSim::define (const ParamBlock& params)
   const string coeffFileNameSub   = params.getString ("coefffilenamesub", "");
   const string coeffFileNameChan  = params.getString ("coefffilenamechan", "");
   const string datagenFileName    = params.getString ("datagenfilename", "");
+  const string bfDipoleFile       = params.getString ("bffilename","");
   const int fifolength            = params.getInt    ("bf_fifolength", 512);
   const int buflength             = params.getInt    ("bf_bufferlength", 256);
   const int modulationWindowSize  = params.getInt    ("modwindowsize", 32);
@@ -96,14 +97,13 @@ void StationSim::define (const ParamBlock& params)
   const int nbeam                 = params.getInt    ("nbeam", 1);
   const int maxNtarget            = params.getInt    ("maxntarget", 1);
   const int maxNrfi               = params.getInt    ("maxnrfi", 1);
+  const int delayMod              = modulationWindowSize - 1;
+  const int delayPhase            = nfft_phaseshift - 1;
+  const int delaySubFilt          = nrcu * (nsubband - 1);
+  const int delayBeamForm         = 1;
 
   // Read in the configuration for the sources
   DataGenerator* DG_Config = new DataGenerator (datagenFileName);
-
-  const int delayMod              = modulationWindowSize - 1;
-  const int delayPhase            = nfft_phaseshift - 1;
-  const int delaySubFilt          = (delayMod+1 + delayPhase+1) / nsubband + order;
-  const int delayBeamForm         = 1;
 
   // Check
   AssertStr (nrcu == DG_Config->itsArray->size(), "The array configfile doesn't match the simulator input!");
@@ -252,12 +252,13 @@ void StationSim::define (const ParamBlock& params)
   // the Weight Determination Object
   for (int i = 0;i < nsubband; ++i) {
     sprintf (suffix, "%d", i);
-    Step weight_det (WH_WeightDetermination("wd", 0, 1, nrcu), 
-		      string("weight_det_") + suffix, false);
+    Step weight_det (WH_WeightDetermination("wd", 0, 1, nrcu, bfDipoleFile), 
+		     string("weight_det_") + suffix, false);
     
+        
     weight_det.getOutData (0).setWriteDelay (delaySubFilt);
-	weight_det.setRate(nsubband);
-	simul.addStep(weight_det);
+    weight_det.setRate(nsubband);
+    simul.addStep(weight_det);
  }
 	     
   // the projection object
@@ -269,7 +270,7 @@ void StationSim::define (const ParamBlock& params)
     projection.getInData (0).setReadDelay (delaySubFilt);
     projection.getInData (1).setReadDelay (delaySubFilt);
     projection.getOutData (0).setWriteDelay (delaySubFilt);
-	projection.setRate(nsubband);
+    projection.setRate(nsubband);
     simul.addStep(projection); 
   }
 

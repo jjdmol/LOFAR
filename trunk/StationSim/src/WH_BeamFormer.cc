@@ -20,13 +20,8 @@
 //#
 //#  $Id$
 //#
-
-/******************************************************************************/
-/* This Workholder implements the Beamformer. Be aware that that some of this */
-/* code will generate warnings with (at least) gcc 2.95.3 . As far as I'm     */
-/* aware these can be safely ignored.                                         */
-/******************************************************************************/
-
+//#  Chris Broekema, january 2003
+//#  
 
 
 

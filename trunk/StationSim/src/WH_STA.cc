@@ -20,7 +20,6 @@
 //#
 //#  Chris Broekema, january 2003.
 //#
-//#
 
 #include <stdio.h>             // for sprintf
 #include <blitz/blitz.h>
@@ -33,6 +32,7 @@
 #include <Math/LCSMath.h>
 #include <blitz/blitz.h>
 
+
 WH_STA::WH_STA (const string& name, unsigned int nin, unsigned int nout,
 		unsigned int nant, unsigned int maxnrfi, unsigned int buflength)
 : WorkHolder    (nin, nout, name, "WH_STA"),
@@ -40,7 +40,10 @@ WH_STA::WH_STA (const string& name, unsigned int nin, unsigned int nout,
   itsOutHolder  (0),
   itsNrcu       (nant),
   itsMaxRFI     (maxnrfi),
-  itsBufLength  (buflength)
+  itsBufLength  (4),
+  itsBuffer     (0),
+  itsSnapshot   (0),
+  itsCurPos     (0)
 {
   if (nin > 0) {
     itsInHolders = new DH_SampleC* [nin];
@@ -56,15 +59,20 @@ WH_STA::WH_STA (const string& name, unsigned int nin, unsigned int nout,
     // RFI sources. This should be implemented more elegantly.
     itsOutHolder = new DH_SampleC("out", itsNrcu, itsMaxRFI);
   }
+
+  // init the buffer
+  itsBuffer.resize(itsNrcu,0);
+  itsSnapshot.resize(itsNrcu);
+  itsCurPos = 0;
 }
 
 WH_STA::~WH_STA()
-{
+{  
   for (int i=0; i< getInputs(); i++) {
     delete itsInHolders[i];
   }
   delete [] itsInHolders;
-
+  
   delete itsOutHolder;
 }
 
@@ -75,17 +83,35 @@ WH_STA* WH_STA::make (const string& name) const
 
 void WH_STA::preprocess()
 {
+
 }
 
 
 void WH_STA::process()
 {
-  /// REMOVE ME!!
 
-  // Find the snapshot array for the current AWE snapshot
-  itsBuffer.resize(itsNrcu, itsBufLength);
-  itsBuffer = -1;
+  using namespace blitz;
 
+  for (int i = 0; i < itsNrcu; i++) {
+    itsSnapshot(i) = *itsInHolders[i]->getBuffer();
+
+  }
+
+  if (itsBuffer.cols() < itsBufLength) {
+    // buffer is still growing. First resize buffer, then assign current 
+    // snapshot to the last position of the buffer
+    itsBuffer.resizeAndPreserve(itsBuffer.rows(), itsBuffer.cols()+1);
+    
+    itsBuffer(Range::all(), itsBuffer.ubound(secondDim)) = 
+      itsSnapshot(Range::all());
+  } else {
+
+    //    cout << "Before : "<<  itsBuffer << endl;
+    itsBuffer(Range::all(), itsCurPos) = itsSnapshot(Range::all());
+    itsCurPos = (itsCurPos + 1) % itsBuffer.cols();
+    //    cout << "After : " <<itsBuffer << endl;
+
+  }
 
   // This is only a single snapshot.. Make a buffer to really to something 
   // useful
@@ -120,7 +146,7 @@ void WH_STA::process()
 //   LoVec_dcomplex w (itsNrcu) ; // the weight vector
 //   dcomplex *w_ptr = w.data() ;
 
-  LoVec_dcomplex d(itsNrcu);
+//  LoVec_dcomplex d(itsNrcu);
   //  w = getWeights(B, d);
   
   // Now assign the calculated weight vector to the output

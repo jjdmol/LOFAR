@@ -32,17 +32,9 @@
 
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleC.h>
+#include <StationSim/ArrayConfig.h>
 #include <StationSim/DataGenConfig.h>
 #include <Common/Lorrays.h>
-
-/**
-   This workholder contains the main AWE procedure.
-   This includes processing of the snapshot fifo, 
-   selection of the adaptive algorithm and calling 
-   the specified algorithm. Inputs consist of a 
-   snapshot vector and a fifo. Outputs are a weight 
-   vector, and an updated fifo.
-*/
 
 class WH_WeightDetermination: public WorkHolder
 {
@@ -54,7 +46,8 @@ public:
   WH_WeightDetermination (const string& name,
 	  unsigned int nin, 
 	  unsigned int nout,
-	  unsigned int nant);
+	  unsigned int nant, 
+	  string s);
 
   virtual ~WH_WeightDetermination();
 
@@ -65,7 +58,6 @@ public:
   /// Make a fresh copy of the WH object.
   virtual WH_WeightDetermination* make (const string& name) const;
 
-  /// Generate a snapshot matrix from the FIFO
   virtual void preprocess();
 
   /// Do a process step.
@@ -96,14 +88,11 @@ private:
 
   /// Length of buffers.
   unsigned int itsNrcu;
-  DataGenerator* itsConfig;
 
-  LoVec_double px;
-  LoVec_double py; // Array configuration vectors
+  string   itsConfigFile;
 
-  string   itsDipoleName;
-  ifstream itsDipoleFile;
   vector<float> itsDipoleLoc;
+  ArrayConfig *itsArray;
 
 };
 #endif

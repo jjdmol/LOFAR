@@ -31,31 +31,21 @@
 #include <Math/LCSMath.h>
 #include <blitz/blitz.h>
 
-WH_WeightDetermination::WH_WeightDetermination(const string& name, unsigned int nin, unsigned int nout, unsigned int nant)
+WH_WeightDetermination::WH_WeightDetermination(const string& name, unsigned int nin, unsigned int nout, unsigned int nant, string s)
   : WorkHolder (nin, nout, name, "WH_WeightDetermination"),
     itsOutHolder (0),
-    itsNrcu      (0)
+    itsNrcu      (0),
+    itsArray     (0)
 {
   itsNrcu = nant;
+  
+  string s = "/home/chris/DG_input/array-92.txt";
+  itsArray = new ArrayConfig (s);
+
 
   if (nout > 0) {
     itsOutHolder = new DH_SampleC("out", itsNrcu, 1);
   }
-
-  string config_file = "/home/chris/experiment-data/array.txt";
-  ifstream s (config_file.c_str (), ifstream::in);
-
-  int n;
-
-  s >> n;
-  
-  AssertStr (n = itsNrcu, "ArrayConfig file and input size don't match.");
-
-  px.resize(itsNrcu);
-  py.resize(itsNrcu);
-
-  s >> px;
-  s >> py;
 }
 
 WH_WeightDetermination::~WH_WeightDetermination()
@@ -65,7 +55,7 @@ WH_WeightDetermination::~WH_WeightDetermination()
 
 WH_WeightDetermination* WH_WeightDetermination::make (const string& name) const
 {
-  return new WH_WeightDetermination (name, getInputs(), getOutputs(), itsNrcu);
+  return new WH_WeightDetermination (name, getInputs(), getOutputs(), itsNrcu, itsConfigFile);
 }
 
 void WH_WeightDetermination::preprocess()
@@ -80,7 +70,7 @@ void WH_WeightDetermination::process()
 
   
   LoVec_dcomplex d(itsNrcu);
-  d = steerv(phi, theta, px, py); 
+  d = steerv(phi, theta, itsArray->getPointX(), itsArray->getPointY()); 
   
   memcpy(itsOutHolder->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
 }
@@ -105,17 +95,17 @@ DataHolder* WH_WeightDetermination::getInHolder (int channel)
 DH_SampleC* WH_WeightDetermination::getOutHolder (int channel)
 {
   AssertStr (channel < getOutputs(),
- 	     "output channel too high");
-  
+ 	     "output channel too high");  
   return itsOutHolder;
 }
 
 LoVec_dcomplex WH_WeightDetermination::steerv (double phi, double theta, LoVec_double px, LoVec_double py) {
   
   FailWhen1( px.size() != py.size(),"vector size mismatch" );
+
   LoVec_dcomplex res( px.size() );
   dcomplex i = dcomplex (0,1);
 
-  res = i * -2*M_PI*( px*sin(theta)*cos(phi) + py*sin(theta)*sin(phi) );
+  res = exp( i * -2*M_PI*( px*sin(theta)*cos(phi) + py*sin(theta)*sin(phi) ) );
   return res;
 }
