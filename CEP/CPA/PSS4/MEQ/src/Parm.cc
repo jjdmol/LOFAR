@@ -63,6 +63,7 @@ void Parm::init (DataRecord::Ref::Xfer& initrec, Forest* frst)
 int Parm::initDomain (const Domain& domain)
 {
   itsCurrentDomain = domain;
+  wstate()[FDomain].replace() <<= new Domain(domain);
   // Find the polc(s) for the given domain.
   vector<Polc> polcs;
   if (itsTable) {
@@ -111,6 +112,18 @@ int Parm::initDomain (const Domain& domain)
   }
   setPolcs (polcs);
   // Now determine the spids if the parm is solvable.
+  int nr = initSolvable();
+  // Store the polcs found into the state.
+  // OMS: use a DataField instead, since we only need a vector of records
+//  DataRecord & polcrec = wstate()[FPolcs].replace() <<= new DataRecord();
+  DataField & polcrec = wstate()[FPolcs].replace() <<= new DataField(TpDataRecord,itsPolcs.size());
+  for (uint i=0; i<itsPolcs.size(); i++) 
+    itsPolcs[i].fillRecord(polcrec[i] <<= new DataRecord);
+  return nr;
+}
+
+int Parm::initSolvable ()
+{
   int nr = 0;
   if (isSolvable()) {
     // For the time being we allow only one polc if the parameter
@@ -128,16 +141,6 @@ int Parm::initDomain (const Domain& domain)
     for (unsigned int i=0; i<itsPolcs.size(); i++) {
       itsPolcs[i].clearSolvable();
     }
-  }
-  // Store the polcs found into the state.
-  // OMS: use a DataField instead, since we only need a vector of records
-//  DataRecord & polcrec = wstate()[FPolcs].replace() <<= new DataRecord();
-  DataField & polcrec = wstate()[FPolcs].replace() <<= new DataField(TpDataRecord,itsPolcs.size());
-  for (uint i=0; i<itsPolcs.size(); i++) 
-  {
-    DataRecord& rec = polcrec[i] <<= new DataRecord;
-    rec[FDomain] <<= new Domain(itsPolcs[i].domain());
-    rec[FVellSets] <<= &(itsPolcs[i].getCoeff().getDataArray());
   }
   return nr;
 }
@@ -281,38 +284,41 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
     protectStateField(rec,FPolcs);
   }
   Function::setStateImpl(rec,initializing);
-  // Get solvable flag; clear domain if it changes (to force initDomain call).
+  // Get solvable flag; clear domain if it changes (to force 
+  // initDomain call next time 'round)
   bool oldSolvable = itsIsSolvable;
   getStateField(itsIsSolvable,rec,FSolvable);
   if (oldSolvable != itsIsSolvable) {
     itsCurrentDomain = Domain();
   }
-//   // Are polcs directly specified? 
-//   if( rec[FPolcs].exists() )
-//   {
-//     int npolc = rec[FPolcs].size(TpDataRecord);
-//     vector<Polc> polcs(npolc);
-//     for( int i=0; i<npolc; i++ )
-//     {
-//       polcs[i].setCoeff
-//       DataRecord &polcrec = rec[FPolcs][i];
-//       rec[FDomain] <<= new Domain(itsPolcs[i].domain());
-//       rec[FVellSets] <<= &(itsPolcs[i].getCoeff().getDataArray());
-//     }
-//     
-//   }
-  // Is the parm value specified? use it to update polcs
-  if (rec[FValue].exists()) {
-    // Update the polc coefficients with the new values.
-    LoVec_double values = rec[FValue].as<LoVec_double>();
-    ////    vector<double>& values = rec[FValue].as<vector<double> >();
-    uint inx = 0;
-    for (uint i=0; i<itsPolcs.size(); i++) {
-      inx += itsPolcs[i].update (&values(inx), values.size()-inx);
+  // Are polcs directly specified? 
+  if( rec[FPolcs].exists() )
+  {
+    // get current domain from record
+    getStateField(itsCurrentDomain,rec,FDomain);
+    // init polcs from record
+    int npolc = rec[FPolcs].size(TpDataRecord);
+    itsPolcs.resize(npolc);
+    for( int i=0; i<npolc; i++ )
+      itsPolcs[i] = Polc(rec[FPolcs][i]);
+    initSolvable();
+  }
+  else
+  {
+    // Is the parm value specified? use it to update polcs
+    // (ignore when initializing)
+    if (rec[FValue].exists()) {
+      // Update the polc coefficients with the new values.
+      LoVec_double values = rec[FValue].as<LoVec_double>();
+      ////    vector<double>& values = rec[FValue].as<vector<double> >();
+      uint inx = 0;
+      for (uint i=0; i<itsPolcs.size(); i++) {
+        inx += itsPolcs[i].update (&values(inx), values.size()-inx);
+      }
+      Assert (inx == uint(values.size()));
+      // Also save the parms (might need to be changed later).
+      save();
     }
-    Assert (inx == uint(values.size()));
-    // Also save the parms (might need to be changed later).
-    save();
   }
   // Get default value (to be used if no table exists)
   if( rec[FDefault].exists() )

@@ -99,6 +99,9 @@ int Solver::getResult (Result::Ref &resref,
   std::vector<Result::Ref> child_results(nrch);
   // Copy the request and attach the solvable parms to it.
   Request newReq = request;
+  // setup request ID by adding an extra zero to the incoming request
+  HIID rqid = newReq.id();
+  rqid.push_back(0);
   if (state()[FSolvableParm].exists()) {
     if (! newReq[FNodeState].exists()) {
       newReq[FNodeState] <<= new DataRecord();
@@ -108,7 +111,8 @@ int Solver::getResult (Result::Ref &resref,
   }
   // Iterate as many times as needed.
   int step;
-  for (step=0; step<itsNumStep; step++) {
+  for (step=0; step<itsNumStep; step++) 
+  {
     // collect child results, using Node's standard method
     int retcode = Node::pollChildren (child_results, resref, newReq);
     // a fail or a wait is returned immediately
@@ -148,7 +152,7 @@ int Solver::getResult (Result::Ref &resref,
         vector<const double*> perts(nspid, 0);
         for (uint j=0; j<nspid; j++) {
           int inx = chresult.isDefined (spids[j], index);
-	  if (inx >= 0) {
+          if (inx >= 0) {
             Assert (chresult.getPerturbedValue(inx).nelements() == nrval);
             perts[j] = chresult.getPerturbedValue(inx).realStorage();
           }
@@ -164,14 +168,14 @@ int Solver::getResult (Result::Ref &resref,
             }
           }
           itsSolver.makeNorm (&derivReal[0], 1., values+j);
-	  nreq++;
+          nreq++;
         }
       } else {
         const dcomplex* values = chresult.getValue().complexStorage();
         vector<const dcomplex*> perts(nspid, 0);
         for (uint j=0; j<nspid; j++) {
           int inx = chresult.isDefined (spids[j], index);
-	  if (inx >= 0) {
+          if (inx >= 0) {
             Assert (chresult.getPerturbedValue(inx).nelements() == nrval);
             perts[j] = chresult.getPerturbedValue(inx).complexStorage();
           }
@@ -191,22 +195,16 @@ int Solver::getResult (Result::Ref &resref,
           }
           val = values[j].real();
           itsSolver.makeNorm (&derivReal[0], 1., &val);
-	  nreq++;
+          nreq++;
           val = values[j].imag();
           itsSolver.makeNorm (&derivImag[0], 1., &val);
-	  nreq++;
+          nreq++;
         }
-      }
-      // Increment the last part of the request id if possible.
-      HIID rid = newReq.id();
-      if (rid.size() > 0) {
-	rid[rid.size()-1] = rid[rid.size()-1].id() + 1;
-	newReq.setId (rid);
       }
     }
     // Solve the equation.
     AssertStr (nreq >= nspid, "Only " << nreq << " equations for " << nspid
-	       << " solvable parameters in solver " << name());
+               << " solvable parameters in solver " << name());
     // Keep all solutions in a vector.
     // The last part is the current solution.
     allSolutions.resize ((step+1)*nspid, True);
@@ -229,10 +227,15 @@ int Solver::getResult (Result::Ref &resref,
       newReq[FNodeState][FSolvableParm].replace() <<= new DataRecord;
     DataRecord& dr2 = dr1[FByNodeIndex] <<= new DataRecord;
     fillSolution (dr2, spids, solution);
+    
+    // update request ID
+    rqid.back() = AtomicID(step+1);
+    newReq.setId(rqid);
   }
   // Distribute the last solution.
   // Do that in an empty request.
   Request lastReq;
+  lastReq.setId(rqid);
   DataRecord& ldr1 = lastReq[FNodeState] <<= new DataRecord;
   DataRecord& ldr2 = ldr1[FSolvableParm] <<= new DataRecord;
   DataRecord& dr2 = ldr2[FByNodeIndex] <<= new DataRecord;
@@ -245,7 +248,7 @@ int Solver::getResult (Result::Ref &resref,
 }
 
 void Solver::fillSolution (DataRecord& rec, const vector<int> spids,
-			   const Vector<double>& solution)
+                           const Vector<double>& solution)
 {
   // Split the solution into vectors for each parm.
   // Reserve enough space in the vector.

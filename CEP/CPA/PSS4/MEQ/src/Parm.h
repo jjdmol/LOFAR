@@ -101,6 +101,9 @@ public:
 			 const char* name = 0) const;
 
 protected:
+  // initializes polcs based on value of solvable flag
+  int initSolvable ();
+
   // Set the polynomials.
   void setPolcs (const vector<Polc>& polcs)
     { itsPolcs = polcs; }
