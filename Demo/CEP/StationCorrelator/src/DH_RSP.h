@@ -1,4 +1,5 @@
-//# DH_RSP.h: DataHolder storing RSP raw ethernet frames
+//# DH_RSP.h: DataHolder storing RSP raw ethernet frames for 
+//#           StationCorrelator demo
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -68,6 +69,18 @@ public:
 
   /// Get BlockID from first EPA-packet in RSP-frame
   const int getBlockID() const;
+
+  /// Set StationID of first EPA-packet in RSP-frame
+  void setStationID(int);
+
+  /// Set SequenceID of first EPA-packet in RSP-frame
+  void setSeqID(int);
+
+  /// Set BlockID of first EPA-packet in RSP-frame
+  void setBlockID(int); 
+
+  /// Reset the buffer
+  void resetBuffer();
   
  private:
   /// Forbid assignment.
@@ -94,6 +107,19 @@ inline const int DH_RSP::getSeqID() const
 
 inline const int DH_RSP::getBlockID() const
   { return ((int*)&itsBuffer[10])[0]; }
+
+inline void DH_RSP::setStationID(int stationid)
+  { memcpy(&itsBuffer[2], &stationid, sizeof(int)); }
+
+inline void  DH_RSP::setSeqID(int seqid)
+  { memcpy(&itsBuffer[6], &seqid, sizeof(int)); }
+
+inline void  DH_RSP::setBlockID(int blockid)
+  { memcpy(&itsBuffer[10], &blockid, sizeof(int)); }
+
+inline void DH_RSP:: resetBuffer()
+  { memset(itsBuffer, 0, itsBufSize); }
+
 
 }
 
