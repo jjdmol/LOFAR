@@ -12,7 +12,7 @@ class Control
     //##Documentation
     //## usually this method will be called by the parent controller or via
     //## user interaction.
-    virtual addDirective(Directive directive) throw(NullPointerException);
+    virtual void addDirective(Directive directive) throw(NullPointerException);
 
     //##ModelId=3F3B4FFD01E4
     BlackBoard *blackboard;

@@ -8,6 +8,9 @@
 class TopLevelStrategy : public Strategy, public MPIProgramEntry
 {
   public:
+    //##ModelId=3F4225A301D4
+    run();
+
     //##ModelId=3F3A4C8201F4
     IntermediateLevelStrategy intermediateStrategies;
 
