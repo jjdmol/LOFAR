@@ -122,7 +122,7 @@ void WH_Correlator::process() {
   // reset integrator.
   memset(outDH->getBuffer(), 
 	 0,
-	 itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType));
+	 itsNchannels*itsNelements*itsNelements*itsNpolarisations*itsNpolarisations*sizeof(DH_Vis::BufferType));
 
 #ifdef DO_TIMING
   starttime = timer();
