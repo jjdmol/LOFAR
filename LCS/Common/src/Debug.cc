@@ -21,6 +21,12 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2004/01/30 12:37:06  smirnov
+//  %[ER: 16]%
+//  Added option to redirect debug output into a file.
+//  Use the Debug::redirectOutput() function, or "-d:filename" on the
+//  command line.
+//
 //  Revision 1.2  2003/09/30 11:31:10  smirnov
 //  %[ER: 16]%
 //  Tied the debug stream to cerr rather than cout. This necessitated a change
@@ -426,8 +432,10 @@ Context::Context (const string &name, Context *parent_)
       lev = iter->second;
   }
   setLevel(lev);
+#ifndef DISABLE_DEBUG_OUTPUT
   if( newcontext ) 
     cerr<<"Debug: registered context "<<name<<"="<<lev<<"\n";
+#endif
   //## end Debug::Context::Context%3C21B594005B.body
 }
 
