@@ -82,7 +82,7 @@ protected:
 
 private:
     //##ModelId=400E53050085
-  Vells itsValue;
+  Vells::Ref itsValue;
 };
 
 

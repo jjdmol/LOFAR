@@ -82,15 +82,10 @@ int Parm::initDomain (const Domain& domain)
     }
     if (polc.ncoeff() == 0) {
       polc.setCoeff (itsDefault);
-      polc.setNormalize (true);
     }
     AssertMsg (!polc.getCoeff().isNull(), "No value found for parameter "
 	       << itsName);
     polc.setDomain (domain);
-    // If needed, normalize the initial values.
-    if (polc.isNormalized()) {
-      polc.setCoeffOnly (polc.normalize(polc.getCoeff(), domain));
-    }
     polcs.push_back (polc);
   } else if (isSolvable()) {
     AssertMsg (polcs.size() == 1, "Solvable parameter " << itsName <<

@@ -90,29 +90,25 @@ vector<Polc> ParmTable::getPolcs (const string& parmName,
   vector<Polc> result;
   Table sel = find (parmName, domain);
   if (sel.nrow() > 0) {
-    ROScalarColumn<double> stCol (sel, "STARTTIME");
-    ROScalarColumn<double> etCol (sel, "ENDTIME");
     ROScalarColumn<double> sfCol (sel, "STARTFREQ");
     ROScalarColumn<double> efCol (sel, "ENDFREQ");
-    ROArrayColumn<bool> maskCol (sel, "SOLVABLE");
+    ROScalarColumn<double> stCol (sel, "STARTTIME");
+    ROScalarColumn<double> etCol (sel, "ENDTIME");
     ROArrayColumn<double> valCol (sel, "VALUES");
-    ROScalarColumn<double> t0Col (sel, "TIME0");
     ROScalarColumn<double> f0Col (sel, "FREQ0");
-    ROScalarColumn<bool> normCol (sel, "NORMALIZED");
+    ROScalarColumn<double> t0Col (sel, "TIME0");
+    ROScalarColumn<double> fsCol (sel, "FREQSCALE");
+    ROScalarColumn<double> tsCol (sel, "TIMESCALE");
     ROScalarColumn<double> diffCol (sel, "DIFF");
-    ROScalarColumn<bool> drelCol (sel, "DIFF_REL");
     for (unsigned int i=0; i<sel.nrow(); i++) {
       Polc polc;
-      if (maskCol.isDefined(i)) {
-	polc.setCoeff (fromParmMatrix(valCol(i)), maskCol(i));
-      } else {
-	polc.setCoeff (fromParmMatrix(valCol(i)));
-      }
+      polc.setCoeff (fromParmMatrix(valCol(i)));
       polc.setFreq0 (f0Col(i));
       polc.setTime0 (t0Col(i));
-      polc.setNormalize (normCol(i));
+      polc.setFreqScale (fsCol(i));
+      polc.setTimeScale (tsCol(i));
       polc.setDomain (Domain(stCol(i), etCol(i), sfCol(i), efCol(i)));
-      polc.setPerturbation (diffCol(i), drelCol(i));
+      polc.setPerturbation (diffCol(i));
       result.push_back (polc);
     }
   }
@@ -139,20 +135,17 @@ Polc ParmTable::getInitCoeff (const string& parmName)
 	int row = rownrs(0);
 	ROArrayColumn<bool> maskCol (itsInitTable, "SOLVABLE");
 	ROArrayColumn<Double> valCol (itsInitTable, "VALUES");
-	ROScalarColumn<double> t0Col (itsInitTable, "TIME0");
 	ROScalarColumn<double> f0Col (itsInitTable, "FREQ0");
-	ROScalarColumn<bool> normCol (itsInitTable, "NORMALIZED");
+	ROScalarColumn<double> t0Col (itsInitTable, "TIME0");
+	ROScalarColumn<double> fsCol (itsInitTable, "FREQSCALE");
+	ROScalarColumn<double> tsCol (itsInitTable, "TIMESCALE");
 	ROScalarColumn<double> diffCol (itsInitTable, "DIFF");
-	ROScalarColumn<bool> drelCol (itsInitTable, "DIFF_REL");
-	if (maskCol.isDefined(row)) {
-	  result.setCoeff (fromParmMatrix(valCol(row)), maskCol(row));
-	} else {
-	  result.setCoeff (fromParmMatrix(valCol(row)));
-	}
+	result.setCoeff (fromParmMatrix(valCol(row)));
 	result.setFreq0 (f0Col(row));
 	result.setTime0 (t0Col(row));
-	result.setNormalize (normCol(row));
-	result.setPerturbation (diffCol(row), drelCol(row));
+	result.setFreqScale (fsCol(row));
+	result.setTimeScale (tsCol(row));
+	result.setPerturbation (diffCol(row));
 	break;
       }
       string::size_type idx = name.rfind ('.');
@@ -180,10 +173,10 @@ void ParmTable::putCoeff (const string& parmName, const Polc& polc)
 		 << domain.startFreq() << ':' << domain.endFreq()
 	         << " and time "
 		 << domain.startTime() << ':' << domain.endTime());
-    ROScalarColumn<double> stCol (sel, "STARTTIME");
-    ROScalarColumn<double> etCol (sel, "ENDTIME");
     ROScalarColumn<double> sfCol (sel, "STARTFREQ");
     ROScalarColumn<double> efCol (sel, "ENDFREQ");
+    ROScalarColumn<double> stCol (sel, "STARTTIME");
+    ROScalarColumn<double> etCol (sel, "ENDTIME");
     AssertMsg (near(domain.startFreq(), sfCol(0))  &&
 	       near(domain.endFreq(), efCol(0))  &&
 	       near(domain.startTime(), stCol(0))  &&
@@ -199,15 +192,15 @@ void ParmTable::putCoeff (const string& parmName, const Polc& polc)
     uInt rownr = itsTable.nrow();
     itsTable.addRow();
     ScalarColumn<String> namCol (itsTable, "NAME");
-    ScalarColumn<double> stCol (itsTable, "STARTTIME");
-    ScalarColumn<double> etCol (itsTable, "ENDTIME");
     ScalarColumn<double> sfCol (itsTable, "STARTFREQ");
     ScalarColumn<double> efCol (itsTable, "ENDFREQ");
-    ScalarColumn<double> t0Col (itsTable, "TIME0");
+    ScalarColumn<double> stCol (itsTable, "STARTTIME");
+    ScalarColumn<double> etCol (itsTable, "ENDTIME");
     ScalarColumn<double> f0Col (itsTable, "FREQ0");
-    ScalarColumn<bool> normCol (itsTable, "NORMALIZED");
+    ScalarColumn<double> t0Col (itsTable, "TIME0");
+    ScalarColumn<double> fsCol (itsTable, "FREQSCALE");
+    ScalarColumn<double> tsCol (itsTable, "TIMESCALE");
     ScalarColumn<double> diffCol (itsTable, "DIFF");
-    ScalarColumn<bool> drelCol (itsTable, "DIFF_REL");
     namCol.put (rownr, parmName);
     sfCol.put (rownr, domain.startFreq());
     efCol.put (rownr, domain.endFreq());
@@ -217,9 +210,9 @@ void ParmTable::putCoeff (const string& parmName, const Polc& polc)
     valCol.put (rownr, toParmMatrix(values));
     f0Col.put   (rownr, polc.getFreq0());
     t0Col.put   (rownr, polc.getTime0());
-    normCol.put (rownr, polc.isNormalized());
+    fsCol.put   (rownr, polc.getFreqScale());
+    tsCol.put   (rownr, polc.getTimeScale());
     diffCol.put (rownr, polc.getPerturbation());
-    drelCol.put (rownr, polc.isRelativePerturbation());
   }
 }
 
@@ -271,17 +264,16 @@ void ParmTable::createTable (const String& tableName)
 {
   TableDesc tdesc;
   tdesc.addColumn (ScalarColumnDesc<String>("NAME"));
-  tdesc.addColumn (ScalarColumnDesc<Double>("STARTTIME"));
   tdesc.addColumn (ScalarColumnDesc<Double>("ENDTIME"));
-  tdesc.addColumn (ScalarColumnDesc<Double>("STARTFREQ"));
+  tdesc.addColumn (ScalarColumnDesc<Double>("STARTTIME"));
   tdesc.addColumn (ScalarColumnDesc<Double>("ENDFREQ"));
-  tdesc.addColumn (ScalarColumnDesc<Double>("TIME0"));
-  tdesc.addColumn (ScalarColumnDesc<Double>("FREQ0"));
-  tdesc.addColumn (ScalarColumnDesc<Bool>("NORMALIZED"));
+  tdesc.addColumn (ScalarColumnDesc<Double>("STARTFREQ"));
   tdesc.addColumn (ArrayColumnDesc<Double>("VALUES", 2));
-  tdesc.addColumn (ArrayColumnDesc<Bool>("SOLVABLE", 2));
+  tdesc.addColumn (ScalarColumnDesc<Double>("FREQ0"));
+  tdesc.addColumn (ScalarColumnDesc<Double>("TIME0"));
+  tdesc.addColumn (ScalarColumnDesc<Double>("FREQSCALE"));
+  tdesc.addColumn (ScalarColumnDesc<Double>("TIMESCALE"));
   tdesc.addColumn (ScalarColumnDesc<Double>("DIFF"));
-  tdesc.addColumn (ScalarColumnDesc<Bool>("DIFF_REL"));
   SetupNewTable newtab(tableName, tdesc, Table::New);
   Table tab(newtab);
 }

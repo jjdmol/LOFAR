@@ -34,13 +34,13 @@ namespace Meq {
 //##ModelId=400E5305008F
 Constant::Constant (double value)
 : Function (),
-  itsValue (value, false)
+  itsValue (new Vells(value, false),DMI::ANONWR)
 {}
 
 //##ModelId=400E53050094
 Constant::Constant (const dcomplex& value)
-: Function (),
-  itsValue (value, false)
+: Function(),
+  itsValue(new Vells(value, false),DMI::ANONWR)
 {}
 
 //##ModelId=400E53050098
@@ -62,7 +62,7 @@ int Constant::getResult (Result::Ref& resref,
   // Create result object and attach to the ref that was passed in
   Result& result = resref <<= new Result(1,request); // result has one vellset
   VellSet& vs = result.setNewVellSet(0);
-  vs.setValue (itsValue);
+  vs.setValue(itsValue());
   return 0;
 }
 
@@ -73,11 +73,11 @@ void Constant::setStateImpl (DataRecord& rec, bool initializing)
   // Get value.
   if (rec[FValue].exists()) {
     if (rec[FValue].type() == Tpdouble) {
-      itsValue = Vells(rec[FValue].as<double>());
+      itsValue <<= new Vells(rec[FValue].as<double>());
     } else {
-      itsValue = Vells(rec[FValue].as<dcomplex>());
+      itsValue <<= new Vells(rec[FValue].as<dcomplex>());
     }
-    Assert (itsValue.isScalar());
+    Assert (itsValue->isScalar());
   }
 }
 
