@@ -83,7 +83,9 @@ MeqDomain PointSource::load(const Table& table,
 {
   MeqDomain            Domain(AbstractSource::load(table, row));
   std::vector<MeqPolc> Polcs(1);
- 
+
+  std::string ParmName(createParmName());
+
   ROArrayColumn<double> IParms(table, "IPARMS");
   ROArrayColumn<double> QParms(table, "QPARMS");
   ROArrayColumn<double> UParms(table, "UPARMS");
@@ -94,21 +96,25 @@ MeqDomain PointSource::load(const Table& table,
   Polcs[0].setCoeff(coef);
   Polcs[0].setDomain(Domain);
   itsFlux[I]->setPolcs(Polcs);
+  itsFlux[I]->setName(ParmName + itsStokesNames[I]);
 
   QParms.get(row, coef);
   Polcs[0].setCoeff(coef);
   Polcs[0].setDomain(Domain);
   itsFlux[Q]->setPolcs(Polcs);
+  itsFlux[Q]->setName(ParmName + itsStokesNames[Q]);
 
   UParms.get(row, coef);
   Polcs[0].setCoeff(coef);
   Polcs[0].setDomain(Domain);
   itsFlux[U]->setPolcs(Polcs);
+  itsFlux[U]->setName(ParmName + itsStokesNames[U]);
 
   VParms.get(row, coef);
   Polcs[0].setCoeff(coef);
   Polcs[0].setDomain(Domain);
   itsFlux[V]->setPolcs(Polcs);
+  itsFlux[V]->setName(ParmName + itsStokesNames[V]);
   
   return Domain;
 }
