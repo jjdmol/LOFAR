@@ -1,4 +1,4 @@
-//#  ApplControlClient.cc: Implements the service I/F of the Application Controller.
+//#  ApplControlClient.cc: Implements the I/F of the Application Controller.
 //#
 //#  Copyright (C) 2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -36,7 +36,9 @@
 namespace LOFAR {
   namespace ACC {
 
-ApplControlClient::ApplControlClient(const string&	hostID)
+ApplControlClient::ApplControlClient(const string&	hostID,
+									 bool			syncClient) :
+	ApplControl(syncClient)
 {
 	// First setup a connection with the AC master at node 'hostID' and
 	// ask on which node our ACC will be running
@@ -85,7 +87,6 @@ ApplControlClient::ApplControlClient(const string&	hostID)
 	DH_CtrlClient->init();
 
 	itsDataHolder = DH_CtrlClient;
-
 }
 
 // Destructor
@@ -106,82 +107,74 @@ ApplControlClient& 	ApplControlClient::operator=(const ApplControlClient& that)
 
 	return (*this);
 }
-bool	ApplControlClient::useAsyncMode(supplyInfoFunc		infoFunc,
-										handleAnswerFunc	answerFunc,
-										handleAckFunc		ackFunc)
+
+bool	ApplControlClient::boot (const time_t		scheduleTime,
+							  	 const string&		configID) const
 {
-	if (!doRemoteCmd(CmdAsync, 0, "")) {
-		LOG_DEBUG_STR ("Asynchrone communication not possible!");
-		return (false);
-	}
-
-	itsSyncComm 	   = true;
-	itsInfoFunction    = infoFunc;
-	itsAckFunction     = ackFunc;
-	itsAnswerFunction  = answerFunc;
-
-	return (true);
+	return(doRemoteCmd (CmdBoot, scheduleTime, 0, configID));
 }
 
-void	ApplControlClient::ping() const
+bool	ApplControlClient::define(const time_t		scheduleTime) const
 {
-	sendCmd (CmdPing, 0, "");
+	return(doRemoteCmd (CmdDefine, scheduleTime, 0, ""));
 }
 
-bool	ApplControlClient::boot  (const time_t		scheduleTime,
-							  	   const string&	configID) const
+bool	ApplControlClient::init	 (const time_t	scheduleTime) const
 {
-	return(doRemoteCmd (CmdBoot, scheduleTime, configID));
+	return(doRemoteCmd (CmdInit, scheduleTime, 0, ""));
 }
 
-bool	ApplControlClient::define(const time_t		scheduleTime,
-							  	   const string&	configID) const
+bool	ApplControlClient::run 	 (const time_t	scheduleTime) const
 {
-	return(doRemoteCmd (CmdDefine, scheduleTime, configID));
+	return(doRemoteCmd (CmdRun, scheduleTime, 0, ""));
 }
 
-bool	ApplControlClient::init  	 (const time_t	scheduleTime) const
+bool	ApplControlClient::pause (const time_t	scheduleTime,
+								  const time_t	maxWaitTime,
+								  const string&	condition) const
 {
-	return(doRemoteCmd (CmdInit, scheduleTime, ""));
+	return(doRemoteCmd (CmdPause, scheduleTime, maxWaitTime, condition));
 }
 
-bool	ApplControlClient::run  	 (const time_t	scheduleTime) const
+bool	ApplControlClient::quit  (const time_t	scheduleTime) const
 {
-	return(doRemoteCmd (CmdRun, scheduleTime, ""));
+	return(doRemoteCmd (CmdQuit, scheduleTime, 0, ""));
 }
 
-bool	ApplControlClient::pause  	 (const time_t	scheduleTime,
-									  const string&	condition) const
+bool	ApplControlClient::shutdown  (const time_t	scheduleTime) const
 {
-	return(doRemoteCmd (CmdPause, scheduleTime, condition));
-}
-
-bool	ApplControlClient::quit  	 () const
-{
-	return(doRemoteCmd (CmdQuit, 0, ""));
+	return(doRemoteCmd (CmdQuit, scheduleTime, 0, ""));
 }
 
 bool	ApplControlClient::snapshot (const time_t	scheduleTime,
-							  const string&	destination) const
+								  	 const string&	destination) const
 {
-	return(doRemoteCmd (CmdSnapshot, scheduleTime, destination));
+	return(doRemoteCmd (CmdSnapshot, scheduleTime, 0, destination));
 }
 
 bool	ApplControlClient::recover  (const time_t	scheduleTime,
-							  const string&	source) const
+							  		 const string&	source) const
 {
-	return(doRemoteCmd (CmdRecover, scheduleTime, source));
+	return(doRemoteCmd (CmdRecover, scheduleTime, 0, source));
 }
 
 bool	ApplControlClient::reinit(const time_t	scheduleTime,
-							  const string&	configID) const
+							  	  const string&	configID) const
 {
-	return(doRemoteCmd (CmdReinit, scheduleTime, configID));
+	return(doRemoteCmd (CmdReinit, scheduleTime, 0, configID));
+}
+
+bool	ApplControlClient::replace(const time_t	 scheduleTime,
+								   const string& processList,
+								   const string& nodeList,
+							  	   const string& configID) const
+{
+	return(doRemoteCmd (CmdReplace, scheduleTime, 0, configID));
 }
 
 string	ApplControlClient::askInfo(const string&	keyList) const 
 {
-	if (!doRemoteCmd (CmdInfo, 0, keyList))
+	if (!doRemoteCmd (CmdInfo, 0, 0, keyList))
 		return (keyList);
 
 	return(itsDataHolder->getOptions());
@@ -189,56 +182,22 @@ string	ApplControlClient::askInfo(const string&	keyList) const
 
 string	ApplControlClient::supplyInfo(const string&	keyList) const 
 {
-	if (itsInfoFunction) {
-		return (itsInfoFunction (keyList));
-	}
-
 	return ("ERROR: The supplyInfo function is not implemented");
 }
 
 void	ApplControlClient::handleAckMessage() const
 {
-	if (itsAckFunction) {
-		itsAckFunction ();		
-	}
-	else {
-		handleAckMessage();		// use default implementation
-	}
 }
 
 void	ApplControlClient::handleAnswerMessage(const string&	answer) const
 {
-	if (itsAnswerFunction) {
-		itsAnswerFunction (answer);		
-	}
-	else {
-		handleAnswerMessage(answer);	// use default implementation
-	}
 }
-bool	ApplControlClient::processACmsgFromServer()					  const
+
+// Implement the default for the syncClient. The AsyncClient will
+// override this function.
+bool	ApplControlClient::processACmsgFromServer() const
 {
-	if (!itsDataHolder->read()) {
-		return (false);
-	}
-
-	ACCmd	cmdType = itsDataHolder->getCommand();
-	switch (cmdType) {
-	case CmdInfo:		
-		sendCmd(CmdAnswer, 0, supplyInfo(itsDataHolder->getOptions()));
-		break;
-	case CmdAnswer:		
-		handleAnswerMessage(itsDataHolder->getOptions());
-		break;
-	case CmdResult:		
-		handleAckMessage();
-		break;
-	default:
-		//TODO
-		LOG_DEBUG_STR ("Message type " << cmdType << " not supported!\n");
-		break;
-	}
-
-	return (true);
+	return (false);
 }
 
 //# ---------- private ----------

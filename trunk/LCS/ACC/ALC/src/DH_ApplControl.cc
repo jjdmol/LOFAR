@@ -77,6 +77,7 @@ void 	DH_ApplControl::preprocess()
 	addField ("VersionNumber", BlobField<uint16>(1));
 	addField ("Command", 	   BlobField<int16>(1));	// ACCmd
 	addField ("ScheduleTime",  BlobField<int32>(1));	// time_t
+	addField ("WaitTime",  	   BlobField<int32>(1));	// time_t
 	addField ("Result", 	   BlobField<uint16>(1));
 
 	createDataBlock();
@@ -96,6 +97,7 @@ void	DH_ApplControl::fillDataPointers() {
 	itsVersionNumber = getData<uint16>("VersionNumber");
 	itsCommand 		 = getData<int16> ("Command");
 	itsScheduleTime  = &static_cast<time_t>(*(getData<int32> ("ScheduleTime")));
+	itsWaitTime		 = &static_cast<time_t>(*(getData<int32> ("WaitTime")));
 	itsResult 		 = getData<uint16>("Result");
 
 	*itsVersionNumber = 0x0100;		// TODO define a constant WriteVersion
