@@ -31,6 +31,7 @@ int main()
   TR2.connectTo(&TR1, TH_Mem::proto);
     
   //initiate the DataHolders
+  // init is done in the connect method of Transporter
   DH1.preprocess();
   DH2.preprocess();
     
@@ -39,9 +40,9 @@ int main()
   DH2.getBuffer()[0] = 0;
     
   cout << "Before transport : " 
-       << DH1.getBuffer() 
+       << DH1.getBuffer()[0]
        << " -- " 
-       << DH2.getBuffer() 
+       << DH2.getBuffer()[0] 
        << endl;
     
   // do the data transport
