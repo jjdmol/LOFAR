@@ -207,7 +207,9 @@ void StationCorrelator::run(int steps) {
 }
 
 void StationCorrelator::dump() const {
-  LOG_TRACE_FLOW_STR("StationCorrelator::dump() not implemented"  );
+  LOG_TRACE_FLOW_STR("Start StationCorrelator::dump() ");
+  getComposite().dump();
+  LOG_TRACE_FLOW_STR("Finished StationCorrelator::dump() ");
 }
 
 void StationCorrelator::quit() {
