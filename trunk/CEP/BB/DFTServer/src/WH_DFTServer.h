@@ -26,8 +26,8 @@
 #include <lofar_config.h>
 
 #include <tinyCEP/WorkHolder.h>
-#include <PSS3/DH_DFTRequest.h>
-#include <PSS3/DH_DFTResult.h>
+#include <DH_DFTRequest.h>
+#include <DH_DFTResult.h>
 
 namespace LOFAR
 {

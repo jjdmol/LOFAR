@@ -1,7 +1,7 @@
 
 #include <ACC/ParameterSet.h>
-#include <PSS3/DH_DFTRequest.h>
-#include <PSS3/DH_DFTResult.h>
+#include <DH_DFTRequest.h>
+#include <DH_DFTResult.h>
 #include <Transport/TH_Socket.h>
 
 namespace LOFAR { 

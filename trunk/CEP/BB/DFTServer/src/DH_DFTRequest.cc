@@ -21,7 +21,7 @@
 //  $Id$
 
 
-#include <PSS3/DH_DFTRequest.h>
+#include <DH_DFTRequest.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
