@@ -513,7 +513,8 @@ namespace LCSMath
       ACM = (1 - alpha) * ACM + matMult(a(blitz::Range::all(), k), conj(a(blitz::Range::all(), k)));
     }
 
-    return ACM - eye;
+    ACM -= eye;
+    return ACM;
   }
 
 
