@@ -72,6 +72,8 @@ lofar_EXTERNAL(boost_date_time,1,boost/date_time/date.hpp,boost_date_time-gcc,/u
 lofar_EXTERNAL(suite,1,Suite/suite.h,,)
 lofar_EXTERNAL(rsp,1,RSP_Protocol.ph,,)
 lofar_EXTERNAL(aplconfig,1,APLConfig.h,,)
+lofar_EXTERNAL(GCFTM,1,GCF/TM/GCF_Control.h,,)
+lofar_EXTERNAL(GCFCommon,1,GCF/GCF_Defines.h,,)
 
 dnl
 dnl Output Makefiles
