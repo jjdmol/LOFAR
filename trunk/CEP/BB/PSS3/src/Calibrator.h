@@ -48,22 +48,21 @@ public:
 
   // Initialize all Calibrator members to their default values. 
   // Note: This method does not affect the MeqCalImpl object. 
-  Calibrator (const string & MSName, const string & MEPName, 
-    const string & GSMName, const string & DBType, const string & DBName, 
-    const string & DBPasswd);
+  Calibrator (const string & ObservationData, const string & CelestialBodies, 
+    const string & DBName = "test", const string & MEPName = "meqmodel", 
+    const string & DBType = "postgres", const string & DBPasswd = "");
 
   // Destroys the MeqCalImpl object.
   virtual ~Calibrator ();
 
-  // Change the time domain setting (aka time interval). Default is 3600
-  // sec.
-  void setTimeInterval (double secs);
+  // Change the size of the time slot in seconds.
+  void setTimeSlot (double secs);
 
   // Create the MeqCalImpl object.
-  void Initialize (void);
+  void initialize (void);
 
   // Display all the settings for the MeqCalImpl object on cout.
-  void ShowSettings (void);
+  void showSettings (void);
 
   // Clear the Calibrator list of solvable parameters.
   // Note: This method does not affect the MeqCalImpl object. 
@@ -84,7 +83,7 @@ public:
 
   // Resets the time interval iterator in the MeqCalImpl object. This 
   // method must be called prior to looping over all time intervals.
-  void resetTimeIntervalIterator (void);
+  void selectFirstTimeSlot (void);
 
   // Advance the time interval iterator in the MeqCalImpl object by
   // the unit specified in setTimeInterval (). This method returns 
@@ -124,18 +123,18 @@ public:
   // using addPeelMask (), for the current interval as advanced using
   // advanceTimeIntervalIterator (). The Run () method executes the
   // PSS3 algorithm for exactly one iteration.
-  void Run (void);
+  void run (void);
 
-  void Run (vector<string>& resultParmNames, vector<double>& resultParmValues, 
+  void run (vector<string>& resultParmNames, vector<double>& resultParmValues, 
             Quality& resultQuality);
 
   // After optimization, subtracts the calculated sources from the model
   // as optimized during the previous call to Run ().
-  void SubtractOptimizedSources (void);
+  void subtractOptimizedSources (void);
 
   // After optimization (and possibly after source subtraction from the
   // model), commits the parameters to the internal storage of MeqCalImpl.
-  void CommitOptimizedParameters (void);
+  void commitOptimizedParameters (void);
 
 
   void getParmValues (vector<string>& names,
@@ -146,21 +145,24 @@ public:
 private:
   // The Calibrator members contain values which are used to initialize
   // and control the MeqCalImpl object:
-  string itsMSName;
+  string itsObservationData;
+  string itsCelestialSources;
+
   string itsMEPName;
-  string itsGSMName;
   string itsDBType;
   string itsDBName;
   string itsDBPasswd;
+
   string itsModelType;
   uint   itsDDID;
   string itsScenario;
+
   string itsSolvParms;
   int    itsStChan;
   int    itsEndChan;
   string itsSelStr;
   bool   itsCalcUVW;
-  float  itsTimeInterval;
+  float  itsTimeSlot;
   string itsDataColumn;
   string itsCorrectedDataColumn;
 
