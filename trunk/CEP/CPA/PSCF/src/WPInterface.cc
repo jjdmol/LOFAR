@@ -42,7 +42,7 @@ WPInterface::WPInterface (AtomicID wpc)
   //## begin WPInterface::WPInterface%3C7CBB10027A.hasinit preserve=no
   //## end WPInterface::WPInterface%3C7CBB10027A.hasinit
   //## begin WPInterface::WPInterface%3C7CBB10027A.initialization preserve=yes
-  : DebugContext(wpc.toString(),PSCFDebugContext::DebugContext),
+  : DebugContext(wpc.toString(),False,&PSCFDebugContext::DebugContext),
     config(OctopussyConfig::global()),
     address_(wpc),autoCatch_(False),dsp_(0),
     queue_(0),wpid_(wpc)

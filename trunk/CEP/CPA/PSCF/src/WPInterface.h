@@ -79,7 +79,8 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
   //## begin WPInterface%3C7B6A3702E5.initialDeclarations preserve=yes
   public:
       // each WP has its own local debug context (subcontext of PSCFDebugContext)
-      Debug::SubContext DebugContext; 
+      
+      Debug::Context DebugContext; 
       ::Debug::Context & getDebugContext() { return DebugContext; };
       
       typedef struct {  MessageRef mref; 

@@ -89,7 +89,7 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
 {
   //## begin Dispatcher%3C7B6A3E00A0.initialDeclarations preserve=yes
   public:
-      Debug::SubContext DebugContext; 
+      Debug::Context DebugContext; 
       ::Debug::Context & getDebugContext() { return DebugContext; };
       
       // iterator type (for iterate(), below)

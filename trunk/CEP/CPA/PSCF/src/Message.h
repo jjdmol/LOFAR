@@ -47,6 +47,7 @@
 //## begin module%3C7B7F2F0248.additionalDeclarations preserve=yes
 #pragma typegroup PSCF
 #pragma types #Message
+#pragma aid Index
 
 #include "AID-PSCF.h"
 //## end module%3C7B7F2F0248.additionalDeclarations
