@@ -76,7 +76,7 @@ void LOFARSim::define(const ParamBlock&)
 
   // create the main Simul; Steps and Simuls will be added to this one
   // Uses an empty workholder.
-  Simul* simul = new Simul(new WH_Empty(),"LofarSim",0);
+  Simul simul(new WH_Empty(),"LofarSim",0);
   setSimul (simul);
 
   // define the arrays of Simuls and Steps to filled later
@@ -107,7 +107,6 @@ void LOFARSim::define(const ParamBlock&)
 		      "Antenna", 
 		      station);
 	  antenna[station][element]->runOnNode(station);
-	  antenna[station][element]->connectInput(NULL);
 	  theStations[station]->addStep (antenna[station][element]);
         }
       
@@ -174,7 +173,7 @@ void LOFARSim::define(const ParamBlock&)
     // Set station communication parameters
 	    
     theStations[station]->connectOutputToArray(&transb,1);
-    simul->addStep (theStations[station]);      
+    simul.addStep (theStations[station]);      
   } // loop stations
 
   /***************************************************************************/
@@ -183,7 +182,7 @@ void LOFARSim::define(const ParamBlock&)
       cpinput[station] = new Step(new WH_CPInput(1,BEAMS*FREQBANDS),
 				  "CPInput",
 				  STATIONS);
-      simul->addStep(cpinput[station]); 
+      simul.addStep(cpinput[station]); 
       cpinput[station]->connectInput(theStations[station]);
     }
     
@@ -198,7 +197,7 @@ void LOFARSim::define(const ParamBlock&)
 	  new Step (new WH_Corr (STATIONS,1),
 		    correlatorname,
 		    STATIONS+1);
-	simul->addStep (correlator[beam*FREQBANDS+freqband]);
+	simul.addStep (correlator[beam*FREQBANDS+freqband]);
 	correlator[0]->runOnNode(CORRNODE); 
 	
 	// Connect the correlators with the CPInput steps;
@@ -215,7 +214,7 @@ void LOFARSim::define(const ParamBlock&)
     } 
     
     
-    //    simul->addStep(dataprocessor);
+    //    simul.addStep(dataprocessor);
   }
 
 
@@ -245,12 +244,6 @@ void LOFARSim::run (int nsteps)
 
     nsteps = LAGS;
 
-  if (getSimul() == NULL) {
-    cout << "Empty simulator; skip" << endl;
-    return;
-  }
-  
-  
 
   // Produce process output only on node 0
   TRANSPORTER::synchroniseAllProcesses();
@@ -273,7 +266,7 @@ void LOFARSim::run (int nsteps)
     } 
     if (rank != CONTROLLER_NODE) TRANSPORTER::waitForBroadCast();
     TRANSPORTER::synchroniseAllProcesses();
-    getSimul()->process ();
+    getSimul().process ();
     if (i==4)   Profiler::deActivate();
   }
 #ifdef MPI_
@@ -306,12 +299,8 @@ void LOFARSim::run (int nsteps)
 }
 
 void LOFARSim::dump() const {
-  if (getSimul() == NULL) {
-    cout << "Empty simulator; skip" << endl;
-    return;
-  }
   cout << "Dump LOFARSim" << endl;
-  getSimul()->dump();
+  getSimul().dump();
 }
 
 

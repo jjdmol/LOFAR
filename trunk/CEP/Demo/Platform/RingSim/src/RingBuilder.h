@@ -9,7 +9,7 @@ class RingBuilder : public SimulBuilder
 public:
   RingBuilder(int channels);
   ~RingBuilder();
-  void buildSimul(Simul* aSimul);
+  void buildSimul(Simul& aSimul) const;
   
 public:
   int itsChannels;
@@ -35,19 +35,19 @@ inline RingBuilder<DH_T>::RingBuilder(int channels):
 }
 
 template <class DH_T>
-inline RingBuilder<DH_T>::~RingBuilder() {
-  delete getWorker();
-}
+inline RingBuilder<DH_T>::~RingBuilder()
+{}
 
 template <class DH_T>
-inline void RingBuilder<DH_T>::buildSimul(Simul* aSimul) {
+inline void RingBuilder<DH_T>::buildSimul(Simul& aSimul) const
+{
   cout << "Build the RingSimul..." << endl;
 
   // Creates and connects two rings of 5 nodes each 
   // (so a 2x5 torus) 
 
-  aSimul->runOnNode(0);
-  aSimul->setRate(itsChannels+1);
+  aSimul.runOnNode(0);
+  aSimul.setRate(itsChannels+1);
 
   // Define the interior of the ring
   Step *RingStep[itsChannels];
@@ -64,7 +64,7 @@ inline void RingBuilder<DH_T>::buildSimul(Simul* aSimul) {
       RingStep[stepnr]->connect(RingStep[stepnr-1],1,1,1); //fwd loop 
       cout << stepnr << "<--" << stepnr-1 << endl;
     }
-    aSimul->addStep (RingStep[stepnr]);
+    aSimul.addStep (RingStep[stepnr]);
     // Prevent deadlock in first step
     // after the first step, this flag will be set back to normal 
     // (in WH_Ring::process())
@@ -96,7 +96,7 @@ inline void RingBuilder<DH_T>::buildSimul(Simul* aSimul) {
       RingStep[stepnr]->connect(RingStep[stepnr-1],1,1,1); //fwd loop 
       cout << stepnr << "<--" << stepnr-1 << endl;
     }
-    aSimul->addStep (RingStep[stepnr]);
+    aSimul.addStep (RingStep[stepnr]);
   }
   // Prevent deadlock in first step
   // after the first step, this flag will be set back to normal (in WH_Ring::process())
@@ -120,7 +120,7 @@ inline void RingBuilder<DH_T>::buildSimul(Simul* aSimul) {
 
   cout << "Created ring elements" << endl;
 
-  aSimul->connectInputToArray(RingStep,
+  aSimul.connectInputToArray(RingStep,
 			      itsChannels,
 			      2); // only connect the first DataHolder from the ring elements 
   
@@ -133,12 +133,12 @@ inline void RingBuilder<DH_T>::buildSimul(Simul* aSimul) {
     } else {
       RingOutStep[stepnr]->runOnNode(0);
     }
-    aSimul->addStep (RingOutStep[stepnr]);
+    aSimul.addStep (RingOutStep[stepnr]);
     RingOutStep[stepnr]->connect(RingStep[stepnr],0,0,1);
     RingOutStep[stepnr]->setOutRate(itsChannels+1);
   }
 
-    aSimul->connectOutputToArray(RingOutStep,
+    aSimul.connectOutputToArray(RingOutStep,
 				 itsChannels);
   cout << "Finished RingBuilder::build" << endl;
 }
