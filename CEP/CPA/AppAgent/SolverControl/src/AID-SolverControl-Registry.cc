@@ -26,6 +26,7 @@ static AtomicID::Register aid_reg_Convergence(-1143,"Convergence");
 static AtomicID::Register aid_reg_Next(-1150,"Next");
 static AtomicID::Register aid_reg_Step(-1142,"Step");
 static AtomicID::Register aid_reg_Domain(-1144,"Domain");
+static AtomicID::Register aid_reg_Data(-1107,"Data");
 static AtomicID::Register aid_reg_Num(-1140,"Num");
 static AtomicID::Register aid_reg_All(-1151,"All");
 static AtomicID::Register aid_reg_Params(-1135,"Params");

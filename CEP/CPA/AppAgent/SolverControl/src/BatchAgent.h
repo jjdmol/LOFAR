@@ -73,8 +73,8 @@ class BatchAgent : public SolverControlAgent
     //##Documentation
     //## Keeps track of solution status, and compares it against the
     //## initialized criteria. Once a criteria is hit, posts an EndSolveEvent
-    //## to advertise this, calls stopSolution(), and returns False to wind
-    //## things down.
+    //## to advertise this, calls stopSolution(), and returns appropriate
+    //## state (RUNNING, NEXT_SOLUTION, NEXT_DOMAIN, etc.)
     virtual int endIteration(double conv);
     
     //##ModelId=3E009B2E01DF
