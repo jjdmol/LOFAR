@@ -36,5 +36,13 @@ event = {
 		name = "ext2";
 		type = "char";
 	};
+	object = {
+		name = "ext3";
+		type = "string";
+	};
+	object = {
+		name = "obj1";
+		type = "TransObject";
+	};
 };
 

@@ -18,6 +18,7 @@
 [+ DEFINE arg_name +]a[+ (string-capitalize! (get "name")) +][+ ENDDEF +]
 [+ DEFINE event_class_arg +][+ (get "type") +] [+ arg_name +][+ IF (exist? "dim") +][[+ (get "dim") +]][+ ENDIF +][+ ENDDEF +]
 [+ DEFINE event_class_arg_init +][+ IF (exist? "init") +],[+ (get "name") +]([+ (get "init") +])[+ ENDIF +][+ ENDDEF +]
+[+ DEFINE object_name +]p[+ (string-capitalize! (get "name")) +][+ ENDDEF +]
 [+ (out-pop) +]
 //
 //  [+ (base-name) +].h: [+ description +]
@@ -39,7 +40,6 @@
 #include "[+ (base-name) +].ph"
 #include <string.h> // needed for memcpy
 #include <GCF/GCF_TMProtocols.h>
-#include <GCF/GCF_Event.h>
 %}
 #endif
 #include <string.h> // needed for memcpy
@@ -85,52 +85,82 @@ namespace [+ (base-name) +]
       [+ FOR param ";" +]
       [+ event_class_member +][+ ENDFOR +];
   };
-  [+ IF (< 0 (count "sequence")) +]
+  [+ IF (< 0 (sum (count "sequence" ) (count "object"))) +]
   class [+ eventext_class_decl +]
   {
     public:
-      [+ eventext_class_name +]([+ event_class_name +]& be, bool dounpack = false) 
-      : base(be),[+ FOR sequence "," +]
-        [+ (get "name") +]Dim(0),
-        [+ (get "name") +](0)[+ ENDFOR +]
-      {
-        if (dounpack) unpack();
+      [+ eventext_class_name +]([+ event_class_name +]& be, bool doUnpack = false) 
+      : base(be)[+ IF (< 0 (count "sequence")) +],[+ FOR sequence "," +]
+        [+ (get "name") +]Dim(0), [+ (get "name") +](0)[+ ENDFOR +][+ ENDIF +][+ IF (< 0 (count "object")) +],[+ FOR object "," +][+ IF (not (== (get "type") "string")) +]
+        [+ object_name +](0)[+ ELSE +]
+        [+ (get "name") +]()[+ ENDIF +][+ ENDFOR +][+ ENDIF +]
+      {        
+	      if (doUnpack) unpack();
+	      _unpackDone = doUnpack;
       }
       
-      virtual ~[+ eventext_class_name +]() { }
-      [+ FOR sequence ";" +]
+      virtual ~[+ eventext_class_name +]() 
+      {
+      	if (_unpackDone)
+      	{[+ FOR object "" +][+ IF (not (== (get "type") "string")) +]
+		      if ([+ object_name +]) delete [+ object_name +];[+ ENDIF +][+ ENDFOR +]
+      	}
+      }
+#ifdef SWIG
+    private:
+#endif
+      [+ event_class_name +]& base;      
+#ifdef SWIG
+    public:
+#endif
+      GCFEvent& getEvent() { return base; }
+
+      // sequence parameters[+ FOR sequence ";" +]
       [+ eventext_class_member +][+ ENDFOR +];
+      
+      // parameters of userdefined types (incl. string)[+ FOR object "" +][+ IF (not (== (get "type") "string")) +]      
+      GCFTransportable* [+ object_name +];[+ ELSE +]
+      [+ (get "type") +] [+ (get "name") +];[+ ENDIF +][+ ENDFOR +]
       
       void* pack(unsigned int& packsize)
       {
-        unsigned int requiredSize = sizeof([+ FOR sequence "+" +]
-          [+ sizeofeventext_class_member +][+ ENDFOR +]);
+        unsigned int requiredSize = [+ IF (< 0 (count "sequence")) +][+ FOR sequence "+" +]
+          [+ sizeofeventext_class_member +][+ ENDFOR +][+ ELSE +]0[+ ENDIF +];
+        [+ IF (< 0 (count "object")) +][+ FOR object "" +][+ IF (== (get "type") "string") +]
+        requiredSize += [+ (get "name") +].length() + sizeof(unsigned int); // needed bufferspace for string [+ (get "name") +][+ ELSE +]
+        assert([+ object_name +]);
+        requiredSize += [+ object_name +]->getSize();[+ ENDIF +][+ ENDFOR +][+ ENDIF +]
 
         resizeBuf(requiredSize);
-        unsigned int offset = 0;[+ FOR sequence ";" +]
-        offset += packMember([+ (get "name") +], [+ (get "name") +]Dim,  sizeof([+ (get "type") +]), offset)[+ ENDFOR +];
+        unsigned int offset = 0;
+        // pack sequence members[+ FOR sequence "" +]
+        offset += packMember([+ (get "name") +], [+ (get "name") +]Dim,  sizeof([+ (get "type") +]), offset);[+ ENDFOR +]
+        
+        // pack members of user defined types (incl. "string")[+ FOR object "" +][+ IF (== (get "type") "string") +]
+        offset += packMember([+ (get "name") +].c_str(), [+ (get "name") +].length(),  sizeof(char), offset);[+ ELSE +]
+        offset += [+ object_name +]->pack(_buffer + offset);[+ ENDIF +][+ ENDFOR +]
+        
         packsize = offset;
         base.length += offset;
-        return buffer;
+        return _buffer;
       }
 
+	private:
       void unpack()
       {
         unsigned int offset = sizeof([+ event_class_name +]);
         if (offset < base.length)
         {
-          char* data = (char*) &base;[+ FOR sequence ";" +]
-          [+ (get "name") +] = ([+ (get "type") +]*) unpackMember(data, [+ (get "name") +]Dim,  sizeof([+ (get "type") +]), offset)[+ ENDFOR +];
+          char* data = (char*) &base;
+          // unpack sequence members[+ FOR sequence "" +]
+          [+ (get "name") +] = ([+ (get "type") +]*) unpackMember(data, [+ (get "name") +]Dim,  sizeof([+ (get "type") +]), offset);[+ ENDFOR +]
+	        // unpack members of user defined types (incl. "string")[+ FOR object "" +][+ IF (== (get "type") "string") +]
+				  unpackStringMember(data, [+ (get "name") +], offset);[+ ELSE +]          
+	        [+ object_name +] = new [+ (get "type")+]();
+	        offset += [+ object_name +]->unpack(data + offset);[+ ENDIF +][+ ENDFOR +]
         }
       }
-      
-      GCFEvent& getEvent() { return base; }
-
-#ifdef SWIG
-    private:
-#endif
-      [+ event_class_name +]& base;
-      
+            
     private:
       [+ eventext_class_name +]();
   };[+ ENDIF +][+ ENDFOR +]
