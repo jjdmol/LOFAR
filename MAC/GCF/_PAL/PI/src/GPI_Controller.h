@@ -44,9 +44,10 @@ class GPIController : public GCFTask
 	public:
 		GPIController ();
 		virtual ~GPIController ();
+    
     GPIPropertyProxy& getPropertyProxy () {return _propertyProxy;}
     
-    void close (GPIPMLlightServer& ss);
+    void close (GPIPMLlightServer& pls);
 
 	private: // helper methods
     /**
@@ -69,8 +70,6 @@ class GPIController : public GCFTask
     GPIPropertyProxy      _propertyProxy;
     
   private: // admin. data members
-    bool          _isBusy;
-    unsigned int  _counter;
 };
 
 #endif
