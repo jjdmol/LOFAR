@@ -36,6 +36,8 @@ corba.variant.conf		= --with-vbroker
 mpich_corba.variant.conf	= --with-mpich --with-vbroker
 insure.variant.conf		= --with-insure
 insure.variant.make		= QA=insure
+scampi.variant.conf		= --with-scampi
+mpich_prof.variant.conf		= --with-mpich --enable-mpi-profiler
 
 #
 # List of variants that will be built and checked
@@ -45,7 +47,9 @@ VARIANTS = \
 	opt.variant \
 	mpich.variant \
 	corba.variant \
-	mpich_corba.variant
+	mpich_corba.variant \
+	scampi.variant \
+	mpich_prof.variant
 
 #
 # List of packages for which the above variants will be built and checked
