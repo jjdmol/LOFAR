@@ -23,9 +23,15 @@
 #ifndef LOFAR_PL_TPERSISTENTOBJECT_H
 #define LOFAR_PL_TPERSISTENTOBJECT_H
 
+#include <lofar_config.h>
+
+#if !defined(HAVE_DTL)
+#error "DTL library is required"
+#endif
+
 //# Includes
 #include <PL/PersistentObject.h>
-#include <PL/DBRepHolder.h>
+#include <dtl/BoundIO.h>
 #include <climits>
 
 namespace LOFAR 
@@ -34,9 +40,10 @@ namespace LOFAR
   {
     //# Forward Declarations
     class QueryObject;
+    class ObjectId;
     template<typename T> class Collection;
-    template<typename T> class TPersistentObject;
-    template<typename T> class DBRep;
+    template<typename T> struct DBRep;
+    template<typename T> class DBRepHolder;
 
     //
     // This templated class acts as a surrogate container class for instances
@@ -116,9 +123,6 @@ namespace LOFAR
       // \attention This method must be implemented using template
       // specialization.
       void init();
-//       {
-//   	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
-//       }
 
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
@@ -162,18 +166,41 @@ namespace LOFAR
       // class.
       static attribmap_t theirAttribMap;
 
-//       // The DBRep<T> struct needs to have access to our private data members,
-//       // because it will update them when e.g. data is read form the database.
-//       friend struct DBRep<T>;
-
       // Convert the data in our persistent object class to DBRep format,
       // which stores all data members contiguously in memory.
       void toDBRep(DBRepHolder<T>& dest) const;
 
       // Convert the data from DBRep format to our persistent object.
-      void fromDBRep(const DBRepHolder<T>& org);
+      void fromDBRep(const DBRepHolder<T>& src);
+
+      // Must be implemented by the user
+      void bindCols(dtl::BoundIOs& cols, DBRep<T>& rowbuf) const;
+
+      // Must be implemented by the user
+      void toDBRep(DBRep<T>& dest) const;
+
+      // Must be implemented by the user
+      void fromDBRep(const DBRep<T>& src);
 
     };
+
+    template<>
+    void 
+    TPersistentObject<ObjectId>::toDBRep(DBRepHolder<ObjectId>& dest) const;
+
+    template<>
+    void 
+    TPersistentObject<ObjectId>::fromDBRep(const DBRepHolder<ObjectId>& src);
+
+
+//     template<>
+//     void TPersistentObject<ObjectId>::
+//     bindCols(dtl::BoundIOs& cols, DBRep<ObjectId>& rowbuf) const;
+
+
+//     template<>
+//     void TPersistentObject<ObjectId>::
+//     bindCols(dtl::BoundIOs& cols, DBRepHolder<ObjectId>& rowbuf) const;
 
   } // namespace PL
 

@@ -36,6 +36,10 @@ namespace LOFAR
 {
   namespace PL
   {
+
+    //# Forward Declarations
+    struct DBRepMeta;
+
     //
     // PersistentObject is an abstract base class (i.e. interface) for 
     // persistent objects. Persistent objects are uniquely identified by their
@@ -270,11 +274,9 @@ namespace LOFAR
       // properly set in their associated MetaData objects.
       virtual void init() = 0;
 
-//       friend struct DBRepMeta;
+      void toDBRepMeta(DBRepMeta& dest) const;
 
-//       void toDBRepMeta(DBRepMeta& dest) const;
-
-//       void fromDBRepMeta(const DBRepMeta& org);
+      void fromDBRepMeta(const DBRepMeta& org);
 
     private:
 

@@ -27,25 +27,11 @@ namespace LOFAR
   namespace PL
   {
 
-    void DBRepMeta::bindColsMeta(dtl::BoundIOs& cols)
+    void DBRepMeta::bindCols(dtl::BoundIOs& cols)
     {
       cols["ObjId"]     == itsOid;
       cols["Owner"]     == itsOwnerOid;
       cols["VersionNr"] == itsVersionNr;
-    }
-
-    void DBRepMeta::toDBRepMeta(const PersistentObject& po)
-    {
-      itsOid       = po.metaData().oid()->get();
-      itsOwnerOid  = po.metaData().ownerOid()->get();
-      itsVersionNr = po.metaData().versionNr();
-    }
-
-    void DBRepMeta::fromDBRepMeta(PersistentObject& po) const
-    {
-      po.metaData().oid()->set      (itsOid);
-      po.metaData().ownerOid()->set (itsOwnerOid);
-      po.metaData().versionNr()   =  itsVersionNr;
     }
 
   } // namespace PL

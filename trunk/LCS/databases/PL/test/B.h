@@ -18,7 +18,7 @@ public:
   {}
   friend std::ostream& operator<<(std::ostream& os, const B& b);
 private:
-  friend class DBRep<B>;
+  friend class TPersistentObject<B>;
   bool         itsBool;
   short        itsShort;
   float        itsFloat;

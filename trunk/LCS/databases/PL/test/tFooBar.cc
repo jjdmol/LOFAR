@@ -41,13 +41,20 @@ namespace LOFAR {
 
   namespace PL {
 
-    template<> class DBRep<Bar> : public DBRepMeta
+    template<> struct DBRep<Bar>
     {
-    public:
       void bindCols(dtl::BoundIOs& cols) {}
-      void toDBRep(const Bar& src) {}
-      void fromDBRep(Bar& dest) const {}
     };
+
+    template<>
+    void TPersistentObject<Bar>::toDBRep(DBRep<Bar>& dest) const
+    {
+    }
+
+    template<>
+    void TPersistentObject<Bar>::fromDBRep(const DBRep<Bar>& src)
+    {
+    }
 
     template<>
     void TPersistentObject<Bar>::initAttribMap()
@@ -61,14 +68,21 @@ namespace LOFAR {
       tableName("BAR");
     }
 
-    
-    template<> class DBRep<Foo> : public DBRepMeta
+
+    template<> struct DBRep<Foo> 
     {
-    public:
       void bindCols(dtl::BoundIOs& cols) {}
-      void toDBRep(const Foo& src) {}
-      void fromDBRep(Foo& dest) const {}
     };
+
+    template<>
+    void TPersistentObject<Foo>::toDBRep(DBRep<Foo>& dest) const
+    {
+    }
+
+    template<>
+    void TPersistentObject<Foo>::fromDBRep(const DBRep<Foo>& src)
+    {
+    }
 
     template<>
     void TPersistentObject<Foo>::initAttribMap()

@@ -21,30 +21,27 @@ private:
 
 namespace LOFAR
 {
-namespace PL
-{
-
-  template<>
-  class DBRep<X> : public DBRepMeta
+  namespace PL
   {
-  public:
-    void bindCols(dtl::BoundIOs& cols) {}
-    void toDBRep(const X& src) {}
-    void fromDBRep(X& dest) const {}
-  };
 
-  void TPersistentObject<X>::init() {}
+    template<>
+    struct DBRep<X>
+    {
+      void bindCols(dtl::BoundIOs& cols) {}
+    };
 
-  void TPersistentObject<X>::initAttribMap() {}
+    template<> void TPersistentObject<X>::toDBRep(DBRep<X>& dest) const { }
+  
+    template<> void TPersistentObject<X>::fromDBRep(const DBRep<X>& src) { }
 
-} // namespace PL
+    void TPersistentObject<X>::init() {}
+
+    void TPersistentObject<X>::initAttribMap() {}
+
+  } // namespace PL
 
 } // namespace LOFAR
 
-// template<> void TPersistentObject<X>::doErase() const {}
-// template<> void TPersistentObject<X>::doInsert() const {}
-// template<> void TPersistentObject<X>::doUpdate() const {}
-// template<> void TPersistentObject<X>::init() {}
 
 int main()
 {

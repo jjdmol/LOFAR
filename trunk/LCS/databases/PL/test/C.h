@@ -20,7 +20,7 @@ public:
   {}
   friend std::ostream& operator<<(std::ostream& os, const C& c);
 private:
-  friend class DBRep<C>;
+  friend class TPersistentObject<C>;
   blob         itsBlob;
   string       itsString;
 };

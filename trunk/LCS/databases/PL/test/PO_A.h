@@ -19,13 +19,9 @@ namespace LOFAR {
     // The DBRep<A> structure is a contiguous representation of all the fields
     // of the A class that should be stored in the database.
     template<>
-    class DBRep<A> : public DBRepMeta
+    struct DBRep<A>
     {
-    public:
       void bindCols(dtl::BoundIOs& cols);
-      void toDBRep(const A& src);
-      void fromDBRep(A& dest) const;
-    private:
       int              itsInt;
       double           itsDouble;
       std::string      itsString;

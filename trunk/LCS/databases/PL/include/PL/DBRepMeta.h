@@ -30,7 +30,7 @@
 #endif
 
 //# Includes
-#include <PL/PersistentObject.h>
+#include <PL/ObjectId.h>
 #include <dtl/BoundIO.h>
 
 namespace LOFAR
@@ -41,24 +41,12 @@ namespace LOFAR
     // persistent object to/from an internal representation, which is
     // guaranteed to be contigous. DTL and ODBC demand that the data they
     // manipulate is contiguous. 
-    //
-    // DBRepMeta is the base class of the templated class DBRep<T>.
-    class DBRepMeta
+    struct  DBRepMeta
     {
-    public:
       // Define the bindings between the data members in this class and the
       // BoundIOs object of DTL.
-      void bindColsMeta(dtl::BoundIOs& cols);
+      void bindCols(dtl::BoundIOs& cols);
 
-      // Convert the data in the persistent object \c po into the contigous
-      // DBRepMeta format.
-      void toDBRepMeta(const PersistentObject& po);
-
-      // Convert the data from the contigous DBRepMeta format into the
-      // persistent object \c po.
-      void fromDBRepMeta(PersistentObject& po) const;
-
-    private:
       // Object-ID of the persistent object.
       ObjectId::oid_t itsOid;
 

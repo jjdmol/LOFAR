@@ -15,7 +15,7 @@ namespace LOFAR {
 
   namespace PL {
 
-    // The BCA<A> structure 'binds' the database columns
+    // bindCols() 'binds' the database columns represented by \a cols
     // to the members of the DBRep<A> class.
     void DBRep<A>::bindCols(BoundIOs& cols)
     {
@@ -24,28 +24,28 @@ namespace LOFAR {
       cols["ITSSTRING"]  == itsString;
     }
 
-    // toDBRep copies the fields of the A class to the DBRep<A> structure.
-    void DBRep<A>::toDBRep(const A& src)
+    // toDBRep copies the fields from the A class to the DBRep<A> structure.
+    void TPersistentObject<A>::toDBRep(DBRep<A>& dest) const
     {
-      itsInt  = src.itsInt;
-      itsDouble  = src.itsDouble;
-      itsString  = src.itsString;
+      dest.itsInt  = data().itsInt;
+      dest.itsDouble  = data().itsDouble;
+      dest.itsString  = data().itsString;
     }
 
 
-    // fromDBRep copies the fields of the DBRep<A> structure to the A class.
-    void DBRep<A>::fromDBRep(A& dest) const
+    // fromDBRep copies the fields from the DBRep<A> structure to the A class.
+    void TPersistentObject<A>::fromDBRep(const DBRep<A>& src)
     {
-      dest.itsInt  = itsInt;
-      dest.itsDouble  = itsDouble;
-      dest.itsString  = itsString;
+      data().itsInt  = src.itsInt;
+      data().itsDouble  = src.itsDouble;
+      data().itsString  = src.itsString;
     }
 
     // Initialize the internals of TPersistentObject<A>
     void TPersistentObject<A>::init()
     {
       // create new TPersistentObject for B.
-      Pointer p(new TPersistentObject<B>(itsObjectPtr->itsB));
+      Pointer p(new TPersistentObject<B>(data().itsB));
       // associate B's owner object-id with the A's object-id
       p->metaData().ownerOid() = metaData().oid();
       // add newly created TPersistentObject to container of ownedPOs.
