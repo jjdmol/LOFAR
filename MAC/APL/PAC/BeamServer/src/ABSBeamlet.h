@@ -51,7 +51,7 @@ namespace ABS
 	   * that should be created.
 	   * @return 0 on success, < 0 on failure.
 	   */
-	  static int setNInstances(int ninstances);
+	  static int init(int ninstances);
 
       public:
 	  /**

@@ -60,7 +60,9 @@ namespace ABS
 	   * @param ninstances The total number of instances
 	   * that should be created.
 	   */
-	  static int setNInstances(int ninstances);
+	  static int init(int ninstances,
+			  unsigned short update_interval,
+			  unsigned short compute_interval);
 
 	  /**
 	   * Allocate the beam using the specified subband set
@@ -97,7 +99,7 @@ namespace ABS
 	   * and time < time + duration.
 	   * Converted coordinates are put on the m_coordinate_track
 	   * queue.
-	   * @param time First time of pointing to convert, this is typically
+	   * @param fromtime First time of pointing to convert, this is typically
 	   * the last time the method was called. E.g.
 	   * @code
 	   * fromtime=lasttime;
@@ -109,10 +111,9 @@ namespace ABS
 	   *   beam->convertPointings(fromtime, 20);
 	   * }
 	   * @endcode
-	   * @param duration Convert coordinates for this number of seconds
 	   * starting at time.
 	   */
-	  int convertPointings(struct timeval time, unsigned long duration);
+	  int convertPointings(struct timeval fromtime);
 
 	  /**
 	   * Get converted time-stamped coordinates from the queue.
@@ -153,11 +154,11 @@ namespace ABS
 	   * Current coordinate track.
 	   * Two dimensional array for (l,m) coordinates
 	   * The first dimension is always 2 (for the two
-	   * coordinates) the second dimension is N_TIMESTEPS.
+	   * coordinates) the second dimension is m_compute_interval
 	   */
-	  blitz::Array<double,2> m_track;
-	  struct timeval m_track_start;
-	  std::priority_queue<Pointing> m_coord_track;
+	  blitz::Array<double,2> m_azels; // az,el coordinates
+	  blitz::Array<double,2> m_lms;  // l,m coordinates
+	  struct timeval m_track_time;
 
 	  /**
 	   * Set of beamlets belonging to this beam.
@@ -175,8 +176,10 @@ namespace ABS
 
 	  //@{
 	  /** singleton implementation members */
-	  static int   m_ninstances;
-	  static Beam* m_beams; // array of ninstances beams
+	  static int            m_ninstances;
+	  static Beam*          m_beams; // array of ninstances beams
+	  static unsigned short m_update_interval;
+	  static unsigned short m_compute_interval;
 	  //@}
 
       private:

@@ -517,8 +517,8 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
 	beam_handle = ack->handle;
 	LOG_DEBUG(formatString("got beam_handle=%d", beam_handle));
 
-	// let the beamformer compute for 10 seconds
-	timerid = beam_server.setTimer((long)10);
+	// let the beamformer compute for 30 seconds
+	timerid = beam_server.setTimer((long)30);
       }
       break;
 

@@ -66,7 +66,7 @@ Beamlet* Beamlet::getInstance()
   return 0;
 }
 
-int Beamlet::setNInstances(int ninstances)
+int Beamlet::init(int ninstances)
 {
   // if already initialised just return
   // only one initialisation is allowed

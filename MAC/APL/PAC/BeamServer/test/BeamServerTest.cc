@@ -42,6 +42,9 @@ using namespace LOFAR;
 using namespace ABS;
 using namespace std;
 
+#define UPDATE_INTERVAL  1
+#define COMPUTE_INTERVAL 10
+
 class BeamServerTest : public Test
 {
 private:
@@ -60,8 +63,8 @@ public:
 	m_spw(10e6, 256*1e3, 80*(1000/256))
 	{
 	  //cerr << "c";
-	  Beam::setNInstances(N_BEAMS);
-	  Beamlet::setNInstances(N_BEAMLETS);
+	  Beam::init(N_BEAMS, UPDATE_INTERVAL, COMPUTE_INTERVAL);
+	  Beamlet::init(N_BEAMLETS);
 	}
 
     void setUp()
@@ -194,21 +197,32 @@ public:
 	{
 	  allocate();
 
+	  struct timeval lasttime;
+	  struct timeval fromtime;
+	  gettimeofday(&lasttime, 0);
+
 	  // add a few pointings
-	  struct timeval t = {0,0};
+	  struct timeval t = lasttime;
+	  t.tv_sec += 5;
 	  _test(m_beam[0]->addPointing(Pointing(Direction(
 			    0.0, 0.0, Direction::LOFAR_LMN), t)) == 0);
-
-	  static struct timeval lasttime = { 0, 0 };
-	  struct timeval fromtime = lasttime;
-	  gettimeofday(&lasttime, 0);
-	  lasttime.tv_sec += 20;
+	  t.tv_sec += 10;
+	  _test(m_beam[0]->addPointing(Pointing(Direction(
+			    0.0, 0.0, Direction::LOFAR_LMN), t)) == 0);
+	  t.tv_sec += 15;
+	  _test(m_beam[0]->addPointing(Pointing(Direction(
+			    0.0, 0.0, Direction::LOFAR_LMN), t)) == 0);
+	  t.tv_sec += 16;
+	  _test(m_beam[0]->addPointing(Pointing(Direction(
+			    0.0, 0.0, Direction::LOFAR_LMN), t)) == 0);
 
 	  // iterate over all beams
 	  for (int i = 0; i < N_BEAMS; i++)
 	  {
+	      fromtime = lasttime;
+	      lasttime.tv_sec += COMPUTE_INTERVAL;
 	      int ret = 0;
-	      _test(0 == (ret = m_beam[i]->convertPointings(fromtime, 20)));
+	      _test(0 == (ret = m_beam[i]->convertPointings(fromtime)));
 	      if (ret < 0) { deallocate(); return; }
 	  }
 
@@ -220,6 +234,9 @@ public:
 
 int main(int /*argc*/, char** /*argv*/)
 {
+  Pointing p;
+  p = p;
+
   char prop_path[PATH_MAX];
   const char* mac_config = getenv("MAC_CONFIG");
 

@@ -24,14 +24,13 @@
 
 using namespace ABS;
 
-Pointing::Pointing() :
-    m_direction()
+Pointing::Pointing()
 {
   m_time.tv_sec  = 0;
   m_time.tv_usec = 0;
 }
 
-Pointing::Pointing(Direction direction, struct timeval time) :
+Pointing::Pointing(const Direction direction, struct timeval time) :
     m_direction(direction), m_time(time)
 {}
 

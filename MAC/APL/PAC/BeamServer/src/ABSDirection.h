@@ -49,7 +49,7 @@ namespace ABS
 
 	  Direction(double angle1 = 0.0,
 		    double angle2 = 0.0,
-		    Types type = AZEL);
+		    Types type = LOFAR_LMN);
 
 	  virtual ~Direction();
 
