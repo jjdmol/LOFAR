@@ -25,6 +25,14 @@
 //#
 //# $Id$
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifdef HAVE_MPI_PROFILER
+#define MPICH_SKIP_MPICXX
+#include <mpe.h>
+#endif
 
 #include <CAL/MeqCalibraterImpl.h>
 #include <Common/lofar_strstream.h>
@@ -40,6 +48,18 @@ void predict (MeqCalibrater& mc)
 
 int main(int argc, char* argv[])
 {
+#ifdef HAVE_MPI_PROFILER
+  MPI_Init(&argc, &argv);
+
+  int tt_start = MPE_Log_get_event_number();
+  int tt_stop  = MPE_Log_get_event_number();
+
+  MPE_Describe_state(tt_start, tt_stop, "Total runtime", "red");
+
+  MPE_Start_log();
+  MPE_Log_event(tt_start, 0, "start program");
+#endif
+
   try {
     if (argc < 2) {
       cout << "Run as:  tWSRT msname mepname gsmname scenario "
@@ -138,5 +158,12 @@ int main(int argc, char* argv[])
   cout << "MeqRes " << MeqResultRep::nctor << ' ' << MeqResultRep::ndtor
        << ' ' << MeqResultRep::nctor + MeqResultRep::ndtor << endl;
   cout << "OK" << endl;
+
+#ifdef HAVE_MPI_PROFILER
+  MPE_Log_event(tt_stop, 0, "stop program");
+  MPI_Finalize();
+  //MPE_Finish_log("tWSRT");
+#endif
+
   return 0;
 }

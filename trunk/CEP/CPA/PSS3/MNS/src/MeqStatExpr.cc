@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <PerfProfile.h>
+
 #include <MNS/MeqStatExpr.h>
 #include <MNS/MeqExpr.h>
 #include <MNS/MeqRequest.h>
@@ -43,6 +45,8 @@ MeqStatExpr::~MeqStatExpr()
 
 void MeqStatExpr::calcResult (const MeqRequest& request)
 {
+  PERFPROFILE(__PRETTY_FUNCTION__);
+
   // Allocate the result objects.
   // At the end they will be stored in the base class object.
   MeqResult result11(request.nspid());

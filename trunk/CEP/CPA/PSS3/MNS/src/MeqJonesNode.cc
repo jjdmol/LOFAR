@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <PerfProfile.h>
+
 #include <MNS/MeqJonesNode.h>
 #include <MNS/MeqExpr.h>
 
@@ -36,6 +38,8 @@ MeqJonesNode::~MeqJonesNode()
 
 void MeqJonesNode::calcResult (const MeqRequest& request)
 {
+  PERFPROFILE(__PRETTY_FUNCTION__);
+
   setResult11 (itsExpr11->getResult (request));
   setResult12 (itsExpr12->getResult (request));
   setResult21 (itsExpr21->getResult (request));

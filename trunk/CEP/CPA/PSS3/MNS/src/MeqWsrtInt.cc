@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <PerfProfile.h>
+
 #include <MNS/MeqWsrtInt.h>
 #include <MNS/MeqWsrtPoint.h>
 #include <MNS/MeqRequest.h>
@@ -44,6 +46,8 @@ MeqWsrtInt::~MeqWsrtInt()
 
 void MeqWsrtInt::calcResult (const MeqRequest& request)
 {
+  PERFPROFILE(__PRETTY_FUNCTION__);
+
   // We can handle only 1 time at a time (for PSS-1 at least).
   // It makes life much easier.
   Assert (request.nx() == 1);

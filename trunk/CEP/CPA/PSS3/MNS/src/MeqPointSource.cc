@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <PerfProfile.h>
+
 #include <MNS/MeqPointSource.h>
 #include <MNS/MeqPhaseRef.h>
 #include <MNS/MeqRequest.h>
@@ -51,6 +53,8 @@ MeqPointSource::MeqPointSource (MeqExpr* fluxI, MeqExpr* fluxQ,
 
 void MeqPointSource::calculate (const MeqRequest& request)
 {
+  PERFPROFILE(__PRETTY_FUNCTION__);
+
   itsL = MeqResult(request.nspid());
   itsM = MeqResult(request.nspid());
   itsN = MeqResult(request.nspid());

@@ -23,7 +23,6 @@
 #if !defined(MNS_MEQPHASEREF_H)
 #define MNS_MEQPHASEREF_H
 
-
 //# Includes
 #include <aips/Measures/MDirection.h>
 #include <aips/Measures/MPosition.h>
