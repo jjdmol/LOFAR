@@ -1,4 +1,4 @@
-# use_suspend  := T;
+ use_suspend  := T;
 # use_nostart  := T;
 # use_valgrind := T;
 # "--skin=helgrind --logfile=hg.meqserver";
@@ -132,9 +132,9 @@ const state_test_init := function ()
     }
   }
   # set verbose debugging messages
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
-  mqs.setdebug("MeqServ MeqVisHandler",5);
+  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",1);
+  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",1);
+  mqs.setdebug("MeqServ MeqVisHandler",1);
   mqs.setdebug("Glish",5);
   mqs.setdebug("meqserver",1);
   # initialize meqserver
@@ -241,10 +241,10 @@ const solver_test := function ()
   mqs.init([output_col="PREDICT"],wait=T);
   
   # create parms and condeq
-  defval1 := array([1.,2.,1.5,0.2,1.3,0.5],2,3);
-  defval2 := array([2.,10.,2.,10.,2.,10],2,3);
+  defval1 := array([3.,0.5,0.5,0.1],2,2);
+  defval2 := array([2.,10.,2.,10. ],2,2);
   print mqs.meq('Create.Node',meqparm('parm1',defval1,config_groups='Solvable.Parm'));
-  print mqs.meq('Create.Node',meqparm('parm2',defval1,config_groups='Solvable.Parm'));
+  print mqs.meq('Create.Node',meqparm('parm2',defval2,config_groups='Solvable.Parm'));
   print mqs.meq('Create.Node',meqnode('MeqCondeq','condeq1',children=[a='parm1',b='parm2']));
   # create solver
   global rec;
