@@ -64,6 +64,9 @@ public:
 
 
 private:
+  // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
+  virtual void fillDataPointers();
+
   /// Forbid assignment.
     DH_CorrectionMatrix& operator= (const DH_CorrectionMatrix&);
 

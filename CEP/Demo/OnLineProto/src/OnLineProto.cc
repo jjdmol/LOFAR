@@ -122,20 +122,20 @@ void OnLineProto::define(const KeyValueMap& params)
   for (int s=0; s < myPS.getInt("general.nstations"); s++) {
     // ToDo: pass stationID, freq offset etc. to DH
     if (s==0){
-      myWHStations[s] = new WH_SimStation("noname",  // name,
+      myWHStations[s] = new WH_SimStation("mysimstation",  // name,
 					  myPS.getInt("station.nbeamlets"),  // nout
 					  string("/home/gerdes/temp/signal_1.txt"),
 					  myPS,
 					  s);
     } else {
-      myWHStations[s] = new WH_SimStation("noname",  // name,
+      myWHStations[s] = new WH_SimStation("mysimstation",  // name,
 					  myPS.getInt("station.nbeamlets"),  // nout
 					  string("/home/gerdes/temp/signal_2.txt"),
 					  myPS,
 					  s);
     }
 
-    myStationSteps[s] = new Step(myWHStations[s],"noname");
+    myStationSteps[s] = new Step(myWHStations[s],"mystationstep");
     myStationSteps[s]->runOnNode(0,0);
     app.addStep(myStationSteps[s]);
   }
@@ -145,8 +145,8 @@ void OnLineProto::define(const KeyValueMap& params)
   // create the fringe control step
   //
   ////////////////////////////////////////////////////////////////
-  WH_FringeControl myWHFringeControl("noname", myPS.getInt("general.nstations"), myPS);
-  Step myFringeControl(myWHFringeControl, "noname");
+  WH_FringeControl myWHFringeControl("myfringecontrol", myPS.getInt("general.nstations"), myPS);
+  Step myFringeControl(myWHFringeControl, "myfringecontrol_step");
   myFringeControl.runOnNode(0,0);
   app.addStep(myFringeControl);
  
@@ -155,10 +155,10 @@ void OnLineProto::define(const KeyValueMap& params)
   // create the merge step
   //
   ////////////////////////////////////////////////////////////////
-  WH_Merge myWHMerge("noname", 1, myPS.getInt("general.nstations"),
+  WH_Merge myWHMerge("mymerge", 1, myPS.getInt("general.nstations"),
 		     myPS.getInt("general.nstations"), 
 		     myPS.getInt("station.nchannels"));
-  Step myMerge(myWHMerge, "noname");
+  Step myMerge(myWHMerge, "mymergestep");
   myMerge.runOnNode(0,0);
   app.addStep(myMerge);  
 
@@ -175,12 +175,12 @@ void OnLineProto::define(const KeyValueMap& params)
 
   for (int s=0; s < myPS.getInt("general.nstations"); s++) {
     // ToDo: pass stationID, freq offset etc. to DH
-    myWHPreProcess[s] = new WH_PreProcess("noname",  // name,
+    myWHPreProcess[s] = new WH_PreProcess("mypreprocess",  // name,
 					  myPS.getInt("station.nbeamlets"),  // channels
 					  myPS,
 					  s);
 
-    myPreProcessSteps[s] = new Step(myWHPreProcess[s],"noname");
+    myPreProcessSteps[s] = new Step(myWHPreProcess[s],"mypreprocess_step");
     myPreProcessSteps[s]->runOnNode(0,0);
     app.addStep(myPreProcessSteps[s]);
 
@@ -204,14 +204,14 @@ void OnLineProto::define(const KeyValueMap& params)
    // create a Transpose step for each beamlet (raw freq channel)
   for (int b=0; b < myPS.getInt("station.nbeamlets"); b++) {
     // ToDo: pass stationID, freq offset etc. to DH
-    myWHTranspose[b] = new WH_Transpose("noname",  // name,
+    myWHTranspose[b] = new WH_Transpose("mytranspose",  // name,
 					myPS.getInt("general.nstations"),  // nin
 					myPS.getInt("corr.nvis"), //nout
 					myPS
 					);
 
 
-    myTransposeSteps[b] = new Step(myWHTranspose[b],"noname");
+    myTransposeSteps[b] = new Step(myWHTranspose[b],"mytranspose_step");
     myTransposeSteps[b]->runOnNode(0,0);
 
 
@@ -228,11 +228,11 @@ void OnLineProto::define(const KeyValueMap& params)
   ////////////////////////////////////////////////////////////////
   for (int b = 0; b < myPS.getInt("station.nbeamlets"); b++) {
     for (int s = 0; s < myPS.getInt("general.nstations"); s++) {
-      TRACER2("Pipeline; try to connect " << b << "   " << s);    
+      TRACER2("Pipeline!; try to connect " << b << "   " << s);    
       myTransposeSteps[b]->connect(myPreProcessSteps[s],s,b,1, THproto, nonblocking);
     }
   }
-  
+
   ////////////////////////////////////////////////////////////////
   //
   // create the Correlator steps
@@ -241,15 +241,15 @@ void OnLineProto::define(const KeyValueMap& params)
   WH_Correlate*  myWHCorrelators[myPS.getInt("corr.ncorr")];
   Step*          myCorrelatorSteps[myPS.getInt("corr.ncorr")];
 
-  for (int c=0; c < myPS.getInt("corr.ncorr"); c++) {
+  for (int c=0; c <myPS.getInt("station.nbeamlets")* myPS.getInt("corr.ncorr"); c++) {
     // ToDo: pass stationID, freq offset etc. to DH
-    myWHCorrelators[c] = new WH_Correlate("noname",     // name,
+    myWHCorrelators[c] = new WH_Correlate("mycorrelate",     // name,
 					  1,             // channels
 					  myPS
 					  );
     
 
-    myCorrelatorSteps[c] = new Step(myWHCorrelators[c],"noname");
+    myCorrelatorSteps[c] = new Step(myWHCorrelators[c],"mycorrelate_step");
     myCorrelatorSteps[c]->runOnNode(0,0);
     // todo: only output rate?
     myCorrelatorSteps[c]->getWorker()->getDataManager().setOutputRate(myPS.getInt("corr.tsize"));
@@ -284,9 +284,9 @@ void OnLineProto::define(const KeyValueMap& params)
   for (int s=0; s < myPS.getInt("corr.ncorr"); s++) {
     // ToDo: pass stationID, freq offset etc. to DH
 
-    myWHDumps[s] = new WH_Dump("noname",1,myPS,s);
+    myWHDumps[s] = new WH_Dump("mydump",1,myPS,s);
 
-    myDumpSteps[s] = new Step(myWHDumps[s],"noname");
+    myDumpSteps[s] = new Step(myWHDumps[s],"mydump_step");
     myDumpSteps[s]->runOnNode(0,0);
 
     myDumpSteps[s]->getWorker()->getDataManager().setInputRate(myPS.getInt("corr.tsize"));

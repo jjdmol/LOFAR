@@ -31,7 +31,7 @@
 #include <Common/KeyValueMap.h>
 
 // OnLineProto specific include
-#include "OnLineProto/DH_Phase.h"
+#include "OnLineProto/DH_CorrectionMatrix.h"
 #include "OnLineProto/WH_PreProcess.h"
 
 namespace LOFAR
@@ -67,7 +67,7 @@ WH_PreProcess::WH_PreProcess (const string& name,
 							 itsPS.getInt("station.nchannels")));
   }
 
-  getDataManager().addInDataHolder(nbeamlets, new DH_Phase ("in_fringe", itsStationID));  
+  getDataManager().addInDataHolder(nbeamlets, new DH_CorrectionMatrix ("in_fringe", 1, itsPS.getInt("station.nchannels")));  
 }
   
 WH_PreProcess::~WH_PreProcess()
