@@ -60,7 +60,7 @@ class Application : public GCFTask
     SupervisedTask _supTask2;
     unsigned char _passed;
     unsigned char _failed;   
-    unsigned char _counter;
+    unsigned int _counter;
     unsigned int _curRemoteTestNr;
     GCFMyPropertySet _propertySetA1;
     GCFMyPropertySet _propertySetE1;

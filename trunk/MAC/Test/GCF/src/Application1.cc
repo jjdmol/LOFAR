@@ -1519,7 +1519,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& /*p*/)
       if (pResponse->internal) break;
       if ((pResponse->pValue->getType() == GCFPValue::LPT_INTEGER) &&
           (strcmp(pResponse->pPropName, "A_C_P1") == 0) &&
-          (((GCFPVInteger*)pResponse->pValue)->getValue() == _counter))
+          ((unsigned int)((GCFPVInteger*)pResponse->pValue)->getValue() == _counter))
       {   
         nrOfSucceded++;
       }

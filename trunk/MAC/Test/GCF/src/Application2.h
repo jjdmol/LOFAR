@@ -60,7 +60,7 @@ class Application : public GCFTask
     SupervisedTask _supTask3;
     unsigned char _passed;
     unsigned char _failed;
-    unsigned char _counter;
+    unsigned int _counter;
     GCFTCPPort _port;
     unsigned int _curRemoteTestNr;
     GCFTCPPort* _pSTPort1;
