@@ -31,7 +31,6 @@
 #include <Common/BlobHeader.h>
 #include <Common/BlobString.h>
 #include <Common/BlobOBufString.h>
-#include <Common/DataConvert.h>
 #include <Common/lofar_string.h>
 
 namespace LOFAR
@@ -112,11 +111,6 @@ public:
   void copyTimeStamp (const DataHolder* that);
   // Functions to deal with handling the timestamp 
   int compareTimeStamp (const DataHolder& that) const;
-
-  // Define the function to convert timestamp from given format
-  // to local format.
-  friend void dataConvert (DataFormat fmt,
-			   unsigned long* buf, uint nrval);
 
   // Set maximum data size.
   // If used, it should be called before preprocess.
@@ -270,7 +264,6 @@ private:
   // The default implementation does nothing.
   virtual void fillDataPointers();
 
-  unsigned long* itsTimeStampPtr;
 
   BlobFieldSet    itsDataFields;
   BlobString*     itsData;
@@ -283,6 +276,7 @@ private:
   int          itsVersion;
   int          itsReadConvert;   //# data conversion needed after a read?
                                  //# 0=no, 1=yes, else=not known yet
+  uint64*      itsTimeStampPtr;
   DataBlobExtra* itsExtraPtr;
 };
 
@@ -364,17 +358,9 @@ inline const BlobString& DataHolder::getDataBlock() const
   return *itsData;
 }
 
-inline void dataConvert (DataFormat fmt,
-			 unsigned long* buf, uint nrval)
-{
-  for (uint i=0; i<nrval ;i++) {
-    dataConvertDouble (fmt, &buf[i]);
-  }
-}
-
 inline void DataHolder::fillAllDataPointers()
 {
-  itsTimeStampPtr = itsDataFields[0].getData<unsigned long> (*itsDataBlob);
+  itsTimeStampPtr = itsDataFields[0].getData<uint64> (*itsDataBlob);
   fillDataPointers();
 }
 
