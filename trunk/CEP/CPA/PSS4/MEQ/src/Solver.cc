@@ -33,6 +33,8 @@
 
 namespace Meq {
 
+InitDebugContext(Solver,"MeqSolver");
+
 //##ModelId=400E53550260
 Solver::Solver()
 : itsSolver  (1, LSQBase::REAL),
@@ -76,6 +78,22 @@ int Solver::pollChildren (std::vector<Result::Ref> &,
                           Result::Ref &,const Request &)
 {
   return 0; 
+}
+
+// Process rider for the given request
+// (this will be called prior to getResult() on the same request)
+void Solver::processCommands (const DataRecord &rec,const Request &request)
+{
+  Node::processCommands(rec,request); // required
+  // this is just a stub for Ger. These field ought to be assigned to 
+  // data members, or something
+  bool clear  = rec[FClearMatrix].as<bool>(true); // default value is argument to as()
+  bool invert = rec[FInvertMatrix].as<bool>(true);
+  int  niter  = rec[FNumIter].as<int>(1);
+  bool save   = rec[FSavePolcs].as<bool>(false);
+  cdebug(1)<<"Solver rider: "<<clear<<","<<invert<<","<<niter<<","<<save<<endl;
+  // just something to think about: should Epsilon and useSVD be
+  // processed here as well? --OMS
 }
 
 // Get the result for the given request.
