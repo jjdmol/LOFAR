@@ -4,6 +4,10 @@
 //##ModelId=3F3BB0F2031C
 class MPIProgramEntry
 {
+  public:
+    //##ModelId=3F41E52F0138
+    virtual run() = 0;
+
 };
 
 
