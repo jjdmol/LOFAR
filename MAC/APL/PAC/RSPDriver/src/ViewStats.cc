@@ -297,11 +297,11 @@ void ViewStats::plot_statistics(Array<double, 2>& stats)
 
     // add 1 to prevent -inf result
     // 46 bits precision
-    //value = 10.0 * log10(value + 1.0); // / (1.0*((uint64)1<<46))) * 10.0;
+    value = 10.0 * log10(value + 1.0); // / (1.0*((uint64)1<<46))) * 10.0;
 
     // set yrange for power
     //gnuplot_cmd(handle, "set ytics 0,20");
-    gnuplot_cmd(handle, "set yrange [0:2e3]");
+    gnuplot_cmd(handle, "set yrange [0:140]");
     gnuplot_cmd(handle, "set xrange [0:%f]", SAMPLE_FREQUENCY / 2.0);
 
     freq = i * (SAMPLE_FREQUENCY / (n_freqbands * 2.0)); // calculate frequency in MHz

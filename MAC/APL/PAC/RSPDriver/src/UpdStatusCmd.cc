@@ -82,8 +82,7 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
     {
       if (result_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
       {
-	ack.sysstatus.rcu()(result_rcu)
-	  = cache.getSystemStatus().rcu()(cache_rcu);
+	ack.sysstatus.rcu()(result_rcu) = cache.getSystemStatus().rcu()(cache_rcu);
       }
       else
       {
