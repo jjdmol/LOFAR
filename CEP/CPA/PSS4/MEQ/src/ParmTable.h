@@ -72,21 +72,29 @@ public:
   //  MeqSourceList getPointSources (const Vector<int>& sourceNrs,
   //				 vector<MeqExpr*>& exprDel);
 
-  // Open the table if not opened yet. If opened, it is added to the map.
-    //##ModelId=3F95060D033E
-  static ParmTable* openTable (const String& tableName);
-  // Close all tables in the map.
-    //##ModelId=3F95060D0372
-  static void closeTables();
-
   // Get the name of the ParmTable.
     //##ModelId=3F95060D0388
   const string& name() const
     { return itsTable.tableName(); }
 
+  // Unlock the parm table.
+  void unlock()
+    { itsTable.unlock(); }
+
+  // Open the table if not opened yet. If opened, it is added to the map.
+    //##ModelId=3F95060D033E
+  static ParmTable* openTable (const String& tableName);
+
   // Create a new table.
     //##ModelId=400E535402E7
   static void createTable (const String& tableName);
+
+  // Close all tables in the map. All ParmTable objects are deleted.
+    //##ModelId=3F95060D0372
+  static void closeTables();
+
+  // Unlock all tables.
+  static void unlockTables();
 
 private:
   // Find the table subset containing the parameter values for the

@@ -26,6 +26,7 @@
 #include <MEQ/Vells.h>
 #include <MEQ/Function.h>
 #include <MEQ/MeqVocabulary.h>
+#include <MEQ/ParmTable.h>
 #include <aips/Arrays/Matrix.h>
 #include <aips/Arrays/Vector.h>
     
@@ -263,6 +264,8 @@ int Solver::getResult (Result::Ref &resref,
   // result depends on domain, and has -- most likely -- been updated
   double* sol = vellset.setReal(nspid, step).data();
   memcpy (sol, allSolutions.data(), nspid*step*sizeof(double));
+  // Unlock all parm tables used.
+  ParmTable::unlockTables();
   return RES_DEP_DOMAIN|RES_UPDATED;
 }
 
