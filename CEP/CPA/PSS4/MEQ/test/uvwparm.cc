@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#include <MEQ/ParmPolcStored.h>
+#include <MEQ/Parm.h>
 #include <MEQ/Polc.h>
 #include <MEQ/Cells.h>
 #include <MEQ/Vells.h>
@@ -227,9 +227,9 @@ void findUVW (const string& msName, const string& mepName)
   }
   Meq::ParmTable::createTable (mepName);
   Meq::ParmTable ptab(mepName);
-  calcPolc (ptab, statFnd, times, u, "U");
-  calcPolc (ptab, statFnd, times, v, "V");
-  calcPolc (ptab, statFnd, times, w, "W");
+  calcPolc (ptab, statFnd, times, u, "u");
+  calcPolc (ptab, statFnd, times, v, "v");
+  calcPolc (ptab, statFnd, times, w, "w");
 }
 
 
@@ -267,10 +267,10 @@ void checkUVW (const string& msName, const string& mepName)
     Meq::Result::Ref res1;
     Meq::Result::Ref res2;
     {
-      snprintf (parmName, 32, "MeqParm[t=U][s=%d]", ant1);
-      Meq::ParmPolcStored pu1(parmName, &ptab);
-      snprintf (parmName, 32, "MeqParm[t=U][s=%d]", ant2);
-      Meq::ParmPolcStored pu2(parmName, &ptab);
+      snprintf (parmName, 32, "MeqParm[t=u][s=%d]", ant1);
+      Meq::Parm pu1(parmName, &ptab);
+      snprintf (parmName, 32, "MeqParm[t=u][s=%d]", ant2);
+      Meq::Parm pu2(parmName, &ptab);
       pu1.getResultImpl (res1, request, true);
       pu2.getResultImpl (res2, request, true);
       LoMat_double diff(LoMatShape(1,nrtim));
@@ -278,16 +278,16 @@ void checkUVW (const string& msName, const string& mepName)
       Vector<double> vec (IPosition(1,nrtim), diff.data(), SHARE);
       double d = max(abs(vec-uvw.row(0)));
       maxdu = std::max(d, maxdu);
-      if (d > 0.01) {
+      if (d > 0.001) {
 	std::cout << ant1 << '-' << ant2 << " U=" << vec-uvw.row(0)
 		  << std::endl;
       }
     }
     {
-      snprintf (parmName, 32, "MeqParm[t=V][s=%d]", ant1);
-      Meq::ParmPolcStored pu1(parmName, &ptab);
-      snprintf (parmName, 32, "MeqParm[t=V][s=%d]", ant2);
-      Meq::ParmPolcStored pu2(parmName, &ptab);
+      snprintf (parmName, 32, "MeqParm[t=v][s=%d]", ant1);
+      Meq::Parm pu1(parmName, &ptab);
+      snprintf (parmName, 32, "MeqParm[t=v][s=%d]", ant2);
+      Meq::Parm pu2(parmName, &ptab);
       pu1.getResultImpl (res1, request, true);
       pu2.getResultImpl (res2, request, true);
       LoMat_double diff(LoMatShape(1,nrtim));
@@ -295,16 +295,16 @@ void checkUVW (const string& msName, const string& mepName)
       Vector<double> vec (IPosition(1,nrtim), diff.data(), SHARE);
       double d = max(abs(vec-uvw.row(1)));
       maxdv = std::max(d, maxdv);
-      if (d > 0.01) {
+      if (d > 0.001) {
 	std::cout << ant1 << '-' << ant2 << " V=" << vec-uvw.row(1)
 		  << std::endl;
       }
     }
     {
-      snprintf (parmName, 32, "MeqParm[t=W][s=%d]", ant1);
-      Meq::ParmPolcStored pu1(parmName, &ptab);
-      snprintf (parmName, 32, "MeqParm[t=W][s=%d]", ant2);
-      Meq::ParmPolcStored pu2(parmName, &ptab);
+      snprintf (parmName, 32, "MeqParm[t=w][s=%d]", ant1);
+      Meq::Parm pu1(parmName, &ptab);
+      snprintf (parmName, 32, "MeqParm[t=w][s=%d]", ant2);
+      Meq::Parm pu2(parmName, &ptab);
       pu1.getResultImpl (res1, request, true);
       pu2.getResultImpl (res2, request, true);
       LoMat_double diff(LoMatShape(1,nrtim));
@@ -312,7 +312,7 @@ void checkUVW (const string& msName, const string& mepName)
       Vector<double> vec (IPosition(1,nrtim), diff.data(), SHARE);
       double d = max(abs(vec-uvw.row(2)));
       maxdw = std::max(d, maxdw);
-      if (d > 0.01) {
+      if (d > 0.001) {
 	std::cout << ant1 << '-' << ant2 << " W=" << vec-uvw.row(2)
 		  << std::endl;
       }
