@@ -38,9 +38,10 @@ MeqServer::MeqServer()
   command_map["Node.Get.State"] = &MeqServer::nodeGetState;
   command_map["Node.Set.State"] = &MeqServer::nodeSetState;
   command_map["Node.Execute"] = &MeqServer::nodeExecute;
-  
   command_map["Node.Clear.Cache"] = &MeqServer::nodeClearCache;
   command_map["Node.Publish.Results"] = &MeqServer::publishResults;
+  
+  command_map["Disable.Publish.Results"] = &MeqServer::disablePublishResults;
 
   command_map["Save.Forest"] = &MeqServer::saveForest;
   command_map["Load.Forest"] = &MeqServer::loadForest;
@@ -280,7 +281,15 @@ void MeqServer::publishResults (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
     out[AidMessage] = ssprintf("node %d (%s): no longer publishing results",
         node.nodeIndex(),node.name().c_str());
   }
-  
+}
+
+void MeqServer::disablePublishResults (DataRecord::Ref &out,DataRecord::Ref::Xfer &)
+{
+  cdebug(2)<<"disablePublishResults: disabling for all nodes"<<endl;
+  for( int i=0; i<=forest.maxNodeIndex(); i++ )
+    if( forest.valid(i) )
+      forest.get(i).removeResultSubscriber(this);
+  out[AidMessage] = "nodes no longer publishing results";
 }
 
 int MeqServer::receiveEvent (const EventIdentifier &evid,const ObjRef::Xfer &evdata) 
@@ -295,28 +304,48 @@ void MeqServer::run ()
 {
   verifySetup(True);
   DataRecord::Ref initrec;
+  HIID output_event;
+  string doing_what,error_str;
+  bool have_error;
   // keep running as long as start() on the control agent succeeds
   while( control().start(initrec) == AppState::RUNNING )
   {
-    // [re]initialize i/o agents with record returned by control
-    if( (*initrec)[input().initfield()].exists() )
+    have_error = false;
+    try
     {
-      cdebug(1)<<"initializing input agent\n";
-      if( !input().init(*initrec) )
+      // [re]initialize i/o agents with record returned by control
+      if( initrec[input().initfield()].exists() )
       {
-        control().postEvent(InputInitFailed);
-        continue;
+        doing_what = "initializing input agent";
+        output_event = InputInitFailed;
+        cdebug(1)<<doing_what<<endl;
+        if( !input().init(*initrec) )
+          Throw("init failed");
+      }
+      if( initrec[output().initfield()].exists() )
+      {
+        doing_what = "initializing output agent";
+        output_event = OutputInitFailed;
+        cdebug(1)<<doing_what<<endl;
+        if( !output().init(*initrec) )
+          Throw("init failed");
       }
     }
-    if( (*initrec)[output().initfield()].exists() )
+    catch( std::exception &exc )
+    { have_error = true; error_str = exc.what(); }
+    catch( ... )
+    { have_error = true; error_str = "unknown exception"; }
+    // in case of error, generate event and go back to start
+    if( have_error )
     {
-      cdebug(1)<<"initializing output agent\n";
-      if( !output().init(*initrec) )
-      {
-        control().postEvent(OutputInitFailed);
-        continue;
-      }
+      error_str = "error " + doing_what + ": " + error_str;
+      cdebug(1)<<error_str<<", waiting for reinitialization"<<endl;
+      DataRecord::Ref retval(DMI::ANONWR);
+      retval[AidError] = error_str;
+      control().postEvent(output_event,retval);
+      continue;
     }
+    
     // init the data mux
     data_mux.init(*initrec);
     // get params from control record
@@ -342,14 +371,15 @@ void MeqServer::run ()
       int instat = input().getNext(id,ref,0,AppEvent::WAIT);
       if( instat > 0 )
       { 
-        string stage,error_str,output_message;
+        string output_message;
         HIID output_event;
+        have_error = false;
         try
         {
           // process data event
           if( instat == DATA )
           {
-            stage = "processing input DATA event";
+            doing_what = "processing input DATA event";
             VisTile::Ref tileref = ref.ref_cast<VisTile>().copy(DMI::WRITE);
             cdebug(4)<<"received tile "<<tileref->tileId()<<endl;
             if( !reading_data )
@@ -377,6 +407,7 @@ void MeqServer::run ()
           }
           else if( instat == FOOTER )
           {
+            doing_what = "processing input FOOTER event";
             cdebug(2)<<"received footer"<<endl;
             reading_data = False;
             eventrec <<= new DataRecord;
@@ -395,6 +426,7 @@ void MeqServer::run ()
           }
           else if( instat == HEADER )
           {
+            doing_what = "processing input HEADER event";
             cdebug(2)<<"received header"<<endl;
             reading_data = writing_data = False;
             cached_header = ref;
@@ -413,23 +445,20 @@ void MeqServer::run ()
           if( !output_event.empty() )
             postDataEvent(output_event,output_message,eventrec);
         }
-        catch( AipsError &x )
-        {
-          error_str = x.getMesg();
-          cdebug(2)<<"got AipsError while processing input: "<<error_str<<endl;
-        }
         catch( std::exception &exc )
         {
+          have_error = true;
           error_str = exc.what();
-          cdebug(2)<<"got exception while processing input: "<<exc.what()<<endl;
+          cdebug(2)<<"got exception while " + doing_what + ": "<<exc.what()<<endl;
         }
         catch( ... )
         {
+          have_error = true;
           error_str = "unknown exception";
           cdebug(2)<<"unknown exception processing input"<<endl;
         }
         // in case of error, generate event
-        if( error_str.length() )
+        if( have_error )
         {
           DataRecord::Ref retval(DMI::ANONWR);
           retval[AidError] = error_str;
@@ -450,8 +479,8 @@ void MeqServer::run ()
         cmdid = cmdid.subId(AppCommandMask.length()-1);
         cdebug(3)<<"received app command "<<cmdid.toString()<<endl;
         int request_id = 0;
-        string error_str;
         DataRecord::Ref retval(DMI::ANONWR);
+        have_error = false;
         try
         {
           request_id = cmddata[FRequestId].as<int>(0);
@@ -473,14 +502,16 @@ void MeqServer::run ()
         }
         catch( std::exception &exc )
         {
+          have_error = true;
           error_str = exc.what();
         }
         catch( ... )
         {
+          have_error = true;
           error_str = "unknown exception while processing command";
         }
         // in case of error, insert error message into return value
-        if( error_str.length() )
+        if( have_error )
           retval[AidError] = error_str;
         HIID reply_id = CommandResultPrefix|cmdid;
         if( request_id )

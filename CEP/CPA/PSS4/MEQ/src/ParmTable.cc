@@ -228,19 +228,19 @@ Polc::DbId ParmTable::putCoeff (const string & parmName,const Polc & polc,
       {
         AssertMsg(sel.nrow()==1, "Parameter " << parmName <<
                      " has multiple entries for freq "
-                     << domain.startFreq() << ':' << domain.endFreq()
+                     << domain.start(FREQ) << ':' << domain.end(FREQ)
                      << " and time "
-                     << domain.startTime() << ':' << domain.endTime());
+                     << domain.start(TIME) << ':' << domain.end(TIME));
         rownr = sel.rowNumbers(itsTable)(0);
-        AssertMsg (near(domain.startFreq(), sfCol(rownr)) &&
-                   near(domain.endFreq(), efCol(rownr)) &&
-                   near(domain.startTime(), stCol(rownr)) &&
-                   near(domain.endTime(), etCol(rownr)),
+        AssertMsg (near(domain.start(FREQ), sfCol(rownr)) &&
+                   near(domain.end(FREQ), efCol(rownr)) &&
+                   near(domain.start(TIME), stCol(rownr)) &&
+                   near(domain.end(TIME), etCol(rownr)),
                    "Parameter " << parmName <<
                    " has a partially instead of fully matching entry for freq "
-                     << domain.startFreq() << ':' << domain.endFreq()
+                     << domain.start(FREQ) << ':' << domain.end(FREQ)
                      << " and time "
-                     << domain.startTime() << ':' << domain.endTime());
+                     << domain.start(TIME) << ':' << domain.end(TIME));
         ArrayColumn<double> valCol (sel, ColValues);
         valCol.put (0, toParmMatrix(values));
       }
@@ -256,10 +256,10 @@ Polc::DbId ParmTable::putCoeff (const string & parmName,const Polc & polc,
   // At this point, rownr corresponds to a valid row. Write the polc to 
   // that row
   valCol.put  (rownr, toParmMatrix(values));
-  sfCol.put   (rownr, domain.startFreq());
-  efCol.put   (rownr, domain.endFreq());
-  stCol.put   (rownr, domain.startTime());
-  etCol.put   (rownr, domain.endTime());
+  sfCol.put   (rownr, domain.start(FREQ));
+  efCol.put   (rownr, domain.end(FREQ));
+  stCol.put   (rownr, domain.start(TIME));
+  etCol.put   (rownr, domain.end(TIME));
   f0Col.put   (rownr, polc.getFreq0());
   t0Col.put   (rownr, polc.getTime0());
   fsCol.put   (rownr, polc.getFreqScale());
@@ -280,10 +280,10 @@ Table ParmTable::find (const string& parmName,
   if (rownrs.nelements() > 0) {
     Table sel = itsTable(rownrs);
     // Find all rows overlapping the requested domain.
-    Table sel3 = sel(domain.startFreq() < sel.col(ColEndFreq)   &&
-                     domain.endFreq()   > sel.col(ColStartFreq) &&
-                     domain.startTime() < sel.col(ColEndTime)   &&
-                     domain.endTime()   > sel.col(ColStartTime));
+    Table sel3 = sel(domain.start(FREQ) < sel.col(ColEndFreq)   &&
+                     domain.end(FREQ)   > sel.col(ColStartFreq) &&
+                     domain.start(TIME) < sel.col(ColEndTime)   &&
+                     domain.end(TIME)   > sel.col(ColStartTime));
     result = sel3;
   }
   return result;

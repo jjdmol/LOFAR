@@ -78,6 +78,11 @@ const int AidData_int = -1116;
 const AtomicID AidDelete(-1335);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:11
 const int AidDelete_int = -1335;
 #endif
+#ifndef _defined_id_AidDisable
+#define _defined_id_AidDisable 1
+const AtomicID AidDisable(-1420);                 // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:15
+const int AidDisable_int = -1420;
+#endif
 #ifndef _defined_id_AidEnable
 #define _defined_id_AidEnable 1
 const AtomicID AidEnable(-1406);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:15

@@ -50,20 +50,16 @@ int Freq::getResult (Result::Ref &resref,
 {
   // Get cells.
   const Cells& cells = request.cells();
-  int nfreq = cells.nfreq();
-  int ntime = cells.ntime();
+  int nfreq = cells.ncells(FREQ);
+  int ntime = cells.ncells(TIME);
+  const LoVec_double &freq = cells.center(FREQ);
   // Create result object and attach to the ref that was passed in.
   resref <<= new Result(1,request);         // 1 plane
   VellSet& vs = resref().setNewVellSet(0);  
   LoMat_double& arr = vs.setReal (nfreq,ntime);
   // Evaluate the main value.
-  for (int i=0; i<ntime; i++) {
-    double freq = cells.domain().startFreq();
-    for (int j=0; j<nfreq; j++) {
-      arr(j,i) = freq;
-      freq += cells.stepFreq();
-    }
-  }
+  for( int i=0; i<ntime; i++ ) 
+    arr(blitz::Range::all(),i) = freq;
   // result depends on domain; is updated if request is new.
   return RES_DEP_DOMAIN|(newreq?RES_UPDATED:0);
 }

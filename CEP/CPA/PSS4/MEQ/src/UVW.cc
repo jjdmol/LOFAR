@@ -83,8 +83,9 @@ int UVW::getResult (Result::Ref &resref,
   // Get RA and DEC of phase center (as J2000).
   MVDirection phaseRef(vra.as<double>(),vdec.as<double>());
   // Set correct size of values.
-  int nfreq = cells.nfreq();
-  int ntime = cells.ntime();
+  int nfreq = cells.ncells(FREQ);
+  int ntime = cells.ncells(TIME);
+  const LoVec_double & time = cells.center(TIME);
   LoMat_double& matU = result.setNewVellSet(0).setReal(nfreq,ntime);
   LoMat_double& matV = result.setNewVellSet(1).setReal(nfreq,ntime);
   LoMat_double& matW = result.setNewVellSet(2).setReal(nfreq,ntime);
@@ -93,15 +94,15 @@ int UVW::getResult (Result::Ref &resref,
   MVBaseline mvbl(mvpos);
   MBaseline mbl(mvbl, MBaseline::ITRF);
   Quantum<double> qepoch(0, "s");
-  qepoch.setValue (cells.time(0));
+  qepoch.setValue(time(0));
   MEpoch mepoch(qepoch, MEpoch::UTC);
   MeasFrame frame(itsEarthPos);
   frame.set (MDirection(phaseRef, MDirection::J2000));
   frame.set (mepoch);
   mbl.getRefPtr()->set(frame);      // attach frame
   MBaseline::Convert mcvt(mbl, MBaseline::J2000);
-  for (Int i=0; i<cells.ntime(); i++) {
-    qepoch.setValue (cells.time(i));
+  for( int i=0; i<ntime; i++) {
+    qepoch.setValue (time(i));
     mepoch.set (qepoch);
     frame.set (mepoch);
     const MVBaseline& bas2000 = mcvt().getValue();

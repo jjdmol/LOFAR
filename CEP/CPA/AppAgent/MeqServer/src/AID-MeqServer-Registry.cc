@@ -47,6 +47,7 @@ BlockableObject * __construct_MeqSpigot (int n) { return n>0 ? new Meq::Spigot [
         AtomicID::registerId(-1055,"publish")+
         AtomicID::registerId(-1245,"results")+
         AtomicID::registerId(-1406,"enable")+
+        AtomicID::registerId(-1420,"disable")+
         AtomicID::registerId(-1070,"event")+
         AtomicID::registerId(-1087,"id")+
         AtomicID::registerId(-1386,"addstate")+

@@ -1,4 +1,5 @@
 # use_suspend  := T;
+# use_gui := T;
 # use_nostart  := T;
 # use_valgrind := T;
 use_valgrind_opts := [ "",
@@ -19,7 +20,7 @@ default_debuglevels := [  MeqNode       =3,
                           meqserver     =1      ];
 
 # inits a meq.server
-const mqsinit := function (verbose=3,debug=[=],gui=F)
+const mqsinit := function (verbose=3,debug=[=],gui=use_gui)
 {
   global mqs;
   if( !is_record(mqs) )
@@ -43,17 +44,18 @@ const mqsinit := function (verbose=3,debug=[=],gui=F)
 }
 
 
-const meqsink_test := function ()
+const meqsink_test := function (gui=use_gui)
 {
-  if( is_fail(mqsinit(verbose=1,gui=T)) )
+  # remove output column from table
+  tbl := table('test.ms',readonly=F);
+  tbl.removecols('PREDICTED_DATA');
+  tbl.done();
+  
+  if( is_fail(mqsinit(verbose=1,gui=gui)) )
   {
     print mqs;
     fail;
   }
-  # remove output column from table
-  tbl:=table('test.ms',readonly=F);
-  tbl.removecols('PREDICTED_DATA');
-  tbl.done()
 
   # initialize meq.server
   mqs.init([output_col="PREDICT"],
@@ -93,9 +95,9 @@ const meqsink_test := function ()
   mqs.init(input=inputrec); 
 }
 
-const meqsel_test := function ()
+const meqsel_test := function (gui=use_gui)
 {
-  if( is_fail(mqsinit(verbose=4,gui=F)) )
+  if( is_fail(mqsinit(verbose=4,gui=gui)) )
   {
     print mqs;
     fail;
@@ -127,13 +129,13 @@ const meqsel_test := function ()
   print mqs.meq('Resolve.Children',[name='select3']);
   
   global cells,request,res;
-  cells := meq.cells(meq.domain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);
+  cells := meq.cells(meq.domain(0,10,0,10),20,3);
   request := meq.request(cells);
   res := mqs.meq('Node.Execute',[name='select3',request=request],T);
   print res;
 }
 
-const state_test_init := function ()
+const state_test_init := function (gui=use_gui)
 {
   if( is_fail(mqsinit(verbose=4,gui=F)) )
   {
@@ -167,17 +169,18 @@ const state_test_init := function ()
   print mqs.meq('Resolve.Children',[name='compose3']);
 }
 
-const state_test := function ()
+const state_test := function (gui=use_gui)
 {
   if( !is_record(mqs) )
-    state_test_init();
+    state_test_init(gui=gui);
+  mqs.setdebug('Glish',5);
   
   # get indices
   ni_sel1 := mqs.getnodestate('select1').nodeindex;
   ni_sel2 := mqs.getnodestate('select2').nodeindex;
   
   global cells,request,res;
-  cells := meq.cells(meq.domain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);
+  cells := meq.cells(meq.domain(0,10,0,10),20,3);
   request := meq.request(cells);
   
 #  mqs.setdebug("DMI Glish MeqServer glishclientwp meq.server Dsp",5);
@@ -213,20 +216,20 @@ const state_test := function ()
   print 'Expecting 2,1: ',res4,req4;
 }
 
-const freq_test := function ()
+const freq_test := function (gui=use_gui)
 {
   meqsel_test();
   mqs.setverbose(5);
   mqs.setdebug("MeqNode",4);
   dom:=meq.domain(10,20,10,20);
-  cells:=meq.cells(dom,10,[11.0,12,13],[1.,1,1]);
+  cells:=meq.cells(dom,10,3);
   mqs.meq('Create.Node',[class='MeqFreq',name='f']);
   print a:=mqs.meq('Node.Execute',[name='f',request=meq.request(cells)],T);
 }
 
-const solver_test := function ()
+const solver_test := function (gui=use_gui)
 {
-  if( is_fail(mqsinit(verbose=4,gui=T,debug=[MeqNode=3,MeqParm=5])) )
+  if( is_fail(mqsinit(verbose=4,gui=gui,debug=[MeqNode=3,MeqParm=5])) )
   {
     print mqs;
     fail;
@@ -270,9 +273,9 @@ const save_test := function (clear=F)
   print mqs.meq('Save.Forest',[file_name='forest.sav'],T);
 }
 
-const load_test := function ()
+const load_test := function (gui=use_gui)
 {
-  if( is_fail(mqsinit(verbose=4,gui=F)) )
+  if( is_fail(mqsinit(verbose=4,gui=gui)) )
   {
     print mqs;
     fail;
@@ -282,7 +285,7 @@ const load_test := function ()
   print mqs.meq('Get.Node.List',[=],T);
 }
 
-const mep_test := function ()
+const mep_test := function (gui=use_gui)
 {
   tablename := 'test.mep';
   print 'Initializing MEP table ',tablename;
@@ -293,7 +296,7 @@ const mep_test := function ()
   pt.putdef('b');
   pt.done();
   
-  if( is_fail(mqsinit(verbose=4,gui=F)) )
+  if( is_fail(mqsinit(verbose=4,gui=gui)) )
   {
     print mqs;
     fail;
@@ -305,16 +308,16 @@ const mep_test := function ()
   print mqs.meq('Create.Node',defrec);
   
   global cells,request,res;
-  cells := meq.cells(meq.domain(0,1,0,1),num_freq=4,times=[.1,.2,.3,.4],time_steps=[.1,.1,.1,.1]);
+  cells := meq.cells(meq.domain(0,1,0,1),4,4);
   request := meq.request(cells,calc_deriv=0);
   
   res := mqs.meq('Node.Publish.Results',[name='a'],T);
   res := mqs.meq('Node.Execute',[name='a',request=request],T);
 }
 
-const mep_grow_test := function ()
+const mep_grow_test := function (gui=use_gui)
 {
-  if( is_fail(mqsinit(verbose=4,gui=F)) )
+  if( is_fail(mqsinit(verbose=4,gui=gui)) )
   {
     print mqs;
     fail;
@@ -328,18 +331,16 @@ const mep_grow_test := function ()
   mqs.meq('Create.Node',defrec,T);
   
   global cells,request,res1,res2;
-  cells := meq.cells(meq.domain(0,1,0,1),num_freq=4,times=[.1,.2,.3,.4],time_steps=[.1,.1,.1,.1]);
+  cells := meq.cells(meq.domain(0,1,0,1),4,4);
   request := meq.request(cells,calc_deriv=1);
   
   mqs.meq('Node.Publish.Results',[name='a'],T);
   res1 := mqs.meq('Node.Execute',[name='a',request=request],T);
 
-  cells := meq.cells(meq.domain(0,2,0,2),num_freq=4,times=[.2,.4,.6,.8],time_steps=[.1,.1,.1,.1]);
+  cells := meq.cells(meq.domain(0,2,0,2),4,4);
   request := meq.request(cells,calc_deriv=1);
   
   res2 := mqs.meq('Node.Execute',[name='a',request=request],T);
 }
 
-# cells := meq.cells(meq.domain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);
-# request := meq.request(cells,1);
 

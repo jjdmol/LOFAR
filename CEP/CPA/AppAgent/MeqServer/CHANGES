@@ -1,3 +1,23 @@
+  * added error logging to app_proxy objects (e.g. meq.server):
+      mqs.num_error()
+      mqs.get_error_log(clear=T)
+
+  * added Disable.Publish.Results command, to make all nodes shut up
+  
+  * removed meq.get_freq/time_grid() functions (meptools.g), since
+    these are now available as cells.grid.freq and cells.grid.time.
+    
+  * changed meq.domain internals -- should not be referenced as
+    domain[1..4], but rather domain.freq[1,2]; domain.time[1,2].
+    Constructor is the same.
+
+  * changed meq.cells, now has a more regular structure:
+    - the meq.cells(domain,nx,ny) constructor is unchanged;
+    - other constructor forms (with times and steps) need to be modified;
+    - cells.num_freq, cells.times, cells.time_steps: no longer available
+    
+Checked in by 03/03/2004:
+
   * a parm now has a solvable polc and a predict polc, so it can answer
     off-the-wall predict requests w/o disrupting the solve
       
