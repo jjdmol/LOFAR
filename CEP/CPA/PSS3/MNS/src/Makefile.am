@@ -3,6 +3,7 @@ SUBDIRS	= .
 DOCHDRS		 	= 			\
 MeqDomain.h					\
 MeqExpr.h					\
+MeqHist.h					\
 MeqJonesExpr.h					\
 MeqJonesNode.h					\
 MeqMatrix.h					\
@@ -34,6 +35,7 @@ lib_LTLIBRARIES 	= libmns.la
 libmns_la_SOURCES 	= $(DOCHDRS)		\
 MeqDomain.cc					\
 MeqExpr.cc					\
+MeqHist.cc					\
 MeqJonesExpr.cc					\
 MeqJonesNode.cc					\
 MeqMatrix.cc					\

@@ -30,6 +30,7 @@
 
 //# Forward Declarations
 class MeqPointDFT;
+class MeqHist;
 
 
 class MeqWsrtPoint
@@ -37,7 +38,8 @@ class MeqWsrtPoint
 public:
   // The expressions give the coefficients of the 2-dim polynomial.
   // nx and ny give the number of coefficients in x and y.
-  MeqWsrtPoint (const vector<MeqPointSource>& sources, MeqPointDFT* dft);
+  MeqWsrtPoint (const vector<MeqPointSource>& sources, MeqPointDFT* dft,
+		MeqHist* celltHistogram, MeqHist* cellfHistogram);
        
   ~MeqWsrtPoint();
 
@@ -61,6 +63,8 @@ public:
 private:
   vector<MeqPointSource> itsSources;
   MeqPointDFT*           itsDFT;
+  MeqHist*               itsCelltHist;
+  MeqHist*               itsCellfHist;
   vector<int>            itsNcell;
   MeqResult              itsXX;
   MeqResult              itsXY;
