@@ -1,13 +1,4 @@
-common_top_builddir=@common_top_builddir@
-
-CFLAGS += \
-	-DHAVE_MMAP=0 \
-	-DMORECORE=shmbrk \
-	-DMORECORE_CONTIGUOUS=0 \
-	-DMORECORE_CANNOT_TRIM=1 \
-	-DSHMEM_ALLOC
-
-CXXFLAGS += \
+AM_CPPFLAGS = \
 	-DHAVE_MMAP=0 \
 	-DMORECORE=shmbrk \
 	-DMORECORE_CONTIGUOUS=0 \
@@ -34,16 +25,12 @@ ExampleSocketPerf_SOURCES	= ExampleSocketPerf.cc DH_Example.cc StopWatch.cc
 
 TestBidirectional_SOURCES 	= TestBidirectional.cc DH_Example.cc
 
-tTH_Socket_SOURCES 			= tTH_Socket.cc DH_Socket.cc
-tTH_Socket_LDADD 			= ../src/libtransport.la
-tTH_Socket_DEPENDENCIES 	= ../src/libtransport.la $(LOFAR_DEPEND)
+tTH_Socket_SOURCES 		= tTH_Socket.cc DH_Socket.cc
 
 LDADD				= ../src/libtransport.la 
 DEPENDENCIES			= ../src/libtransport.la $(LOFAR_DEPEND)
 
-TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
-				  lofar_sharedir=$(lofar_sharedir) \
-				  common_top_builddir=$(common_top_builddir) \
+TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
 				  MPIBIN=$(MPIBIN)
 
 TESTS	=					\
