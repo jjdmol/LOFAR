@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,299 138 879 398 N "_3DFace" 3
+PANEL,457 497 879 398 N "_3DFace" 3
 "$AreaNr"
 "$configDatapoint"
 "$datapoint"
@@ -296,7 +296,8 @@ E
       	break;
   	case 2:
 				setValue (\"Table1\", \"cellBackCol\", \"white\");
-				ChildPanelOnCentral(\"navigator/views/alert_config_table_cell.pnl\",
+				//ChildPanelOnModal
+        ChildPanelOnCentral(\"navigator/views/alert_config_table_cell.pnl\",
 				                    \"Select DP\", makeDynString(\"$Row:\" + Row,
 				                                               \"$Column:\" + Column,
 				                                               \"$configDatapoint:\" + $configDatapoint,
@@ -329,63 +330,63 @@ LANG:1 0
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
 8 38 832 252
-E E 0 0 1 15 1 "Column0Titles" 0 -1 -1 "s" 1
+E E 0 0 1 15 1 "Column0Titles" 0 -1 0 "s" 1
 LANG:1 1 0
 E1
 LANG:1 0 
- 200 "Column1Titles" 0 1 -1 "s" 1
+ 200 "Column1Titles" 0 1 0 "s" 1
 LANG:1 1 1
 E1
 LANG:1 0 
- 200 "Column2Titles" 0 1 -1 "s" 1
+ 200 "Column2Titles" 0 1 0 "s" 1
 LANG:1 1 2
 E1
 LANG:1 0 
- 200 "Column3Titles" 0 1 -1 "s" 1
+ 200 "Column3Titles" 0 1 0 "s" 1
 LANG:1 1 3
 E1
 LANG:1 0 
- 200 "Column4Titles" 0 1 -1 "s" 1
+ 200 "Column4Titles" 0 1 0 "s" 1
 LANG:1 1 4
 E1
 LANG:1 0 
- 200 "Column5Titles" 0 1 -1 "s" 1
+ 200 "Column5Titles" 0 1 0 "s" 1
 LANG:1 1 5
 E1
 LANG:1 0 
- 200 "Column6Titles" 0 1 -1 "s" 1
+ 200 "Column6Titles" 0 1 0 "s" 1
 LANG:1 1 6
 E1
 LANG:1 0 
- 200 "Column7Titles" 0 1 -1 "s" 1
+ 200 "Column7Titles" 0 1 0 "s" 1
 LANG:1 1 7
 E1
 LANG:1 0 
- 200 "Column8Titles" 0 1 -1 "s" 1
+ 200 "Column8Titles" 0 1 0 "s" 1
 LANG:1 1 8
 E1
 LANG:1 0 
- 200 "Column9Titles" 0 1 -1 "s" 1
+ 200 "Column9Titles" 0 1 0 "s" 1
 LANG:1 1 9
 E1
 LANG:1 0 
- 200 "Column10Titles" 0 1 -1 "s" 1
+ 200 "Column10Titles" 0 1 0 "s" 1
 LANG:1 2 10
 E1
 LANG:1 0 
- 200 "Column11Titles" 0 1 -1 "s" 1
+ 200 "Column11Titles" 0 1 0 "s" 1
 LANG:1 2 11
 E1
 LANG:1 0 
- 200 "Column12Titles" 0 1 -1 "s" 1
+ 200 "Column12Titles" 0 1 0 "s" 1
 LANG:1 2 13
 E1
 LANG:1 0 
- 200 "Column13Titles" 0 1 -1 "s" 1
+ 200 "Column13Titles" 0 1 0 "s" 1
 LANG:1 2 13
 E1
 LANG:1 0 
- 200 "Column14Titles" 0 1 -1 "s" 1
+ 200 "Column14Titles" 0 1 0 "s" 1
 LANG:1 2 14
 E1
 LANG:1 0 
