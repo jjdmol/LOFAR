@@ -24,6 +24,7 @@
 
 #include <MNS/MeqJonesNode.h>
 #include <MNS/MeqMatrixTmp.h>
+#include <MNS/MeqStoredParmPolc.h>
 #include <MNS/MeqParmSingle.h>
 #include <MNS/MeqPointDFT.h>
 #include <MNS/MeqPointSource.h>
@@ -194,18 +195,18 @@ void MeqCalibrater::makeWSRTExpr()
   itsStatExpr.reserve (itsStations.size());
   for (unsigned int i=0; i<itsStations.size(); i++) {
     // Represent the leakage per station by constant parms.
-    MeqExpr* stat11 = new MeqParmSingle ("Leakage." + 
-					 itsStations[i].getName() + ".11",
-					 double(1));
-    MeqExpr* stat12 = new MeqParmSingle ("Leakage." + 
-					 itsStations[i].getName() + ".12",
-					 double(0));
-    MeqExpr* stat21 = new MeqParmSingle ("Leakage." + 
-					 itsStations[i].getName() + ".21",
-					 double(0));
-    MeqExpr* stat22 = new MeqParmSingle ("Leakage." + 
-					 itsStations[i].getName() + ".22",
-					 double(1));
+    MeqExpr* stat11 = new MeqStoredParmPolc ("Leakage.11." + 
+					     itsStations[i].getName(),
+					     &itsMEP);
+    MeqExpr* stat12 = new MeqStoredParmPolc ("Leakage.12." + 
+					     itsStations[i].getName(),
+					     &itsMEP);
+    MeqExpr* stat21 = new MeqStoredParmPolc ("Leakage.21." + 
+					     itsStations[i].getName(),
+					     &itsMEP);
+    MeqExpr* stat22 = new MeqStoredParmPolc ("Leakage.22." + 
+					     itsStations[i].getName(),
+					     &itsMEP);
     itsStatExpr.push_back (new MeqJonesNode (stat11, stat12, stat21, stat22));
   }    
 
@@ -314,7 +315,7 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   itsMEP      (meqModel + ".MEP"),
   itsGSMTable (skyModel + ".GSM"),
   itsGSM      (itsGSMTable),
-  itsSolver   (1, LSQBase::COMPLEX)
+  itsSolver   (1, LSQBase::REAL)
 {
   cout << "MeqCalibrater constructor (";
   cout << "'" << msName   << "', ";
@@ -589,8 +590,9 @@ Double MeqCalibrater::solve (const String& colName)
   ROArrayColumn<Complex> dataCol (itsMS, colName);
   // Complex values are separated in real and imaginary.
   // Loop through all rows in the current solve domain.
-  for (unsigned int i=0; i<itsCurRows.nelements(); i++) {
-    int rownr = itsCurRows(i);
+  for (unsigned int rowinx=0; rowinx<itsCurRows.nelements(); rowinx++) {
+    ///  for (unsigned int rowinx=0; rowinx<1; rowinx++) {
+    int rownr = itsCurRows(rowinx);
     ///    MeqPointDFT::doshow = rownr==44;
     uInt ant1 = itsMSCol.antenna1()(rownr);
     uInt ant2 = itsMSCol.antenna2()(rownr);
@@ -607,138 +609,211 @@ Double MeqCalibrater::solve (const String& colName)
     MeqJonesExpr& expr = *(itsExpr[blindex]);
     expr.calcResult (request);
     // Form the equations for this row.
+    // Make a default derivative vector with values 0.
+    MeqMatrix defaultDeriv (Matrix<DComplex> (1, itsNrChan, DComplex()));
+    const complex<double>* defaultDerivPtr = defaultDeriv.dcomplexStorage();
+    // Get the data of this row.
     Matrix<Complex> data = dataCol(rownr);
     int npol = data.shape()(0);
     Assert (itsNrChan == data.shape()(1));
     // Calculate the derivatives and get pointers to them.
+    // Use the default if no perturbed value defined.
     vector<const complex<double>*> derivs(npol*itsNrScid);
-    for (int i=0; i<itsNrScid; i+=1) {
+    bool foundDeriv = false;
+    for (int scinx=0; scinx<itsNrScid; scinx++) {
       MeqMatrix val;
-      val = expr.getResult11().getPerturbedValue(i);
-      val -= expr.getResult11().getValue();
-      val /= expr.getResult11().getPerturbation(i);
-      derivs[i] = val.dcomplexStorage();
+      if (expr.getResult11().isDefined(scinx)) {
+	val = expr.getResult11().getPerturbedValue(scinx);
+	///	cout << "Pert  " << val << endl;
+	val -= expr.getResult11().getValue();
+	///cout << "Diff  " << val << endl;
+	val /= expr.getResult11().getPerturbation(scinx);
+	///cout << "Deriv " << val << endl;
+	derivs[scinx] = val.dcomplexStorage();
+	foundDeriv = true;
+      } else {
+	derivs[scinx] = defaultDerivPtr;
+      }
       if (npol == 4) {
-	val = expr.getResult12().getPerturbedValue(i);
-	val -= expr.getResult12().getValue();
-	val /= expr.getResult12().getPerturbation(i);
-	derivs[i + itsNrScid] = val.dcomplexStorage();
-	val = expr.getResult21().getPerturbedValue(i);
-	val -= expr.getResult21().getValue();
-	val /= expr.getResult21().getPerturbation(i);
-	derivs[i + 2*itsNrScid] = val.dcomplexStorage();
+	if (expr.getResult12().isDefined(scinx)) {
+	  val = expr.getResult12().getPerturbedValue(scinx);
+	  val -= expr.getResult12().getValue();
+	  val /= expr.getResult12().getPerturbation(scinx);
+	  derivs[scinx + itsNrScid] = val.dcomplexStorage();
+	  foundDeriv = true;
+	} else {
+	  derivs[scinx + itsNrScid] = defaultDerivPtr;
+	}
+	if (expr.getResult21().isDefined(scinx)) {
+	  val = expr.getResult21().getPerturbedValue(scinx);
+	  val -= expr.getResult21().getValue();
+	  val /= expr.getResult21().getPerturbation(scinx);
+	  derivs[scinx + 2*itsNrScid] = val.dcomplexStorage();
+	  foundDeriv = true;
+	} else {
+	  derivs[scinx + 2*itsNrScid] = defaultDerivPtr;
+	}
       }
       if (npol > 1) {
-	val = expr.getResult22().getPerturbedValue(i);
-	val -= expr.getResult22().getValue();
-	val /= expr.getResult22().getPerturbation(i);
-	derivs[i + (npol-1)*itsNrScid] = val.dcomplexStorage();
+	if (expr.getResult22().isDefined(scinx)) {
+	  val = expr.getResult22().getPerturbedValue(scinx);
+	  val -= expr.getResult22().getValue();
+	  val /= expr.getResult22().getPerturbation(scinx);
+	  derivs[scinx + (npol-1)*itsNrScid] = val.dcomplexStorage();
+	  foundDeriv = true;
+	} else {
+	  derivs[scinx + (npol-1)*itsNrScid] = defaultDerivPtr;
+	}
       }
     }
-    // Get pointer to array storage; the data in it is contiguous.
-    Complex* dataPtr = &(data(0,0));
-    vector<complex<double> > derivVec(itsNrScid);
-    // Fill in all equations.
-    if (npol == 1) {
-      const MeqMatrix& xx = expr.getResult11().getValue();
-      for (int i=0; i<itsNrChan; i++) {
-	for (int j=0; j<itsNrScid; j++) {
-	  derivVec[j] = derivs[j][i];
-	}
-	DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
-	diff -= xx.getDComplex(0,i);
-	itsSolver.makeNorm (&derivVec[0], 1., &diff);
-	nrpoint++;
-      }
-    } else if (npol == 2) {
-      {
+    // Only add to solver if at least one derivative was found.
+    // Otherwise these data are not dependent on the solvable parameters.
+    if (foundDeriv) {
+      // Get pointer to array storage; the data in it is contiguous.
+      Complex* dataPtr = &(data(0,0));
+      vector<double> derivReal(itsNrScid);
+      vector<double> derivImag(itsNrScid);
+      // Fill in all equations.
+      if (npol == 1) {
 	const MeqMatrix& xx = expr.getResult11().getValue();
 	for (int i=0; i<itsNrChan; i++) {
 	  for (int j=0; j<itsNrScid; j++) {
-	    derivVec[j] = derivs[j][i];
+	    derivReal[j] = derivs[j][i].real();
+	    derivImag[j] = derivs[j][i].imag();
 	  }
-	  DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
+	  DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
 	  diff -= xx.getDComplex(0,i);
-	  itsSolver.makeNorm (&derivVec[0], 1., &diff);
+	  double val = diff.real();
+	  itsSolver.makeNorm (&(derivReal[0]), 1., &val);
+	  val = diff.imag();
+	  itsSolver.makeNorm (&(derivImag[0]), 1., &val);
 	  nrpoint++;
 	}
-      }
-      {
-	const MeqMatrix& yy = expr.getResult22().getValue();
-	for (int i=0; i<itsNrChan; i++) {
-	  for (int j=0; j<itsNrScid; j++) {
-	    derivVec[j] = derivs[j+itsNrScid][i];
+      } else if (npol == 2) {
+	{
+	  const MeqMatrix& xx = expr.getResult11().getValue();
+	  for (int i=0; i<itsNrChan; i++) {
+	    for (int j=0; j<itsNrScid; j++) {
+	      derivReal[j] = derivs[j][i].real();
+	      derivImag[j] = derivs[j][i].imag();
+	    }
+	    DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
+	    diff -= xx.getDComplex(0,i);
+	    double val = diff.real();
+	    itsSolver.makeNorm (&(derivReal[0]), 1., &val);
+	    val = diff.imag();
+	    itsSolver.makeNorm (&(derivImag[0]), 1., &val);
+	    nrpoint++;
 	  }
-	  DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
-	  diff -= yy.getDComplex(0,i);
-	  itsSolver.makeNorm (&derivVec[0], 1., &diff);
-	  nrpoint++;
 	}
-      }
-    } else if (npol == 4) {
-      {
-	const MeqMatrix& xx = expr.getResult11().getValue();
-	for (int i=0; i<itsNrChan; i++) {
-	  for (int j=0; j<itsNrScid; j++) {
-	    derivVec[j] = derivs[j][i];
+	{
+	  const MeqMatrix& yy = expr.getResult22().getValue();
+	  for (int i=0; i<itsNrChan; i++) {
+	    for (int j=0; j<itsNrScid; j++) {
+	      derivReal[j] = derivs[j+itsNrScid][i].real();
+	      derivImag[j] = derivs[j+itsNrScid][i].imag();
+	    }
+	    DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
+	    diff -= yy.getDComplex(0,i);
+	    double val = diff.real();
+	    itsSolver.makeNorm (&(derivReal[0]), 1., &val);
+	    val = diff.imag();
+	    itsSolver.makeNorm (&(derivImag[0]), 1., &val);
+	    nrpoint++;
 	  }
-	  DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
-	  diff -= xx.getDComplex(0,i);
-	  itsSolver.makeNorm (&derivVec[0], 1., &diff);
-	  nrpoint++;
 	}
-      }
-      {
-	const MeqMatrix& xy = expr.getResult12().getValue();
-	for (int i=0; i<itsNrChan; i++) {
-	  for (int j=0; j<itsNrScid; j++) {
-	    derivVec[j] = derivs[j+itsNrScid][i];
+      } else if (npol == 4) {
+	{
+	  const MeqMatrix& xx = expr.getResult11().getValue();
+	  for (int i=0; i<itsNrChan; i++) {
+	    for (int j=0; j<itsNrScid; j++) {
+	      derivReal[j] = derivs[j][i].real();
+	      derivImag[j] = derivs[j][i].imag();
+	      ///	      cout << derivReal[j] << ' ' << derivImag[j] << ", ";
+	    }
+	    ///	    cout << endl;
+	    DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
+	    ///	    cout << "Value " << diff << ' ' << xx.getDComplex(0,i) << endl;
+	    diff -= xx.getDComplex(0,i);
+	    double val = diff.real();
+	    itsSolver.makeNorm (&(derivReal[0]), 1., &val);
+	    val = diff.imag();
+	    itsSolver.makeNorm (&(derivImag[0]), 1., &val);
+	    nrpoint++;
 	  }
-	  DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
-	  diff -= xy.getDComplex(0,i);
-	  itsSolver.makeNorm (&derivVec[0], 1., &diff);
-	  nrpoint++;
 	}
-      }
-      {
-	const MeqMatrix& yx = expr.getResult21().getValue();
-	for (int i=0; i<itsNrChan; i++) {
-	  for (int j=0; j<itsNrScid; j++) {
-	    derivVec[j] = derivs[j+2*itsNrScid][i];
+	{
+	  const MeqMatrix& xy = expr.getResult12().getValue();
+	  for (int i=0; i<itsNrChan; i++) {
+	    for (int j=0; j<itsNrScid; j++) {
+	      derivReal[j] = derivs[j+itsNrScid][i].real();
+	      derivImag[j] = derivs[j+itsNrScid][i].imag();
+	    }
+	    DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
+	    diff -= xy.getDComplex(0,i);
+	    double val = diff.real();
+	    itsSolver.makeNorm (&(derivReal[0]), 1., &val);
+	    val = diff.imag();
+	    itsSolver.makeNorm (&(derivImag[0]), 1., &val);
+	    nrpoint++;
 	  }
-	  DComplex diff (dataPtr[i*2+2].real(), dataPtr[i*2+2].imag());
-	  diff -= yx.getDComplex(0,i);
-	  itsSolver.makeNorm (&derivVec[0], 1., &diff);
-	  nrpoint++;
 	}
-      }
-      {
-	const MeqMatrix& yy = expr.getResult22().getValue();
-	for (int i=0; i<itsNrChan; i++) {
-	  for (int j=0; j<itsNrScid; j++) {
-	    derivVec[j] = derivs[j+3*itsNrScid][i];
+	{
+	  const MeqMatrix& yx = expr.getResult21().getValue();
+	  for (int i=0; i<itsNrChan; i++) {
+	    for (int j=0; j<itsNrScid; j++) {
+	      derivReal[j] = derivs[j+2*itsNrScid][i].real();
+	      derivImag[j] = derivs[j+2*itsNrScid][i].imag();
+	    }
+	    DComplex diff (dataPtr[i*2+2].real(), dataPtr[i*2+2].imag());
+	    diff -= yx.getDComplex(0,i);
+	    double val = diff.real();
+	    itsSolver.makeNorm (&(derivReal[0]), 1., &val);
+	    val = diff.imag();
+	    itsSolver.makeNorm (&(derivImag[0]), 1., &val);
+	    nrpoint++;
 	  }
-	  DComplex diff (dataPtr[i*2+3].real(), dataPtr[i*2+3].imag());
-	  diff -= yy.getDComplex(0,i);
-	  itsSolver.makeNorm (&derivVec[0], 1., &diff);
-	  nrpoint++;
 	}
+	{
+	  const MeqMatrix& yy = expr.getResult22().getValue();
+	  for (int i=0; i<itsNrChan; i++) {
+	    for (int j=0; j<itsNrScid; j++) {
+	      derivReal[j] = derivs[j+3*itsNrScid][i].real();
+	      derivImag[j] = derivs[j+3*itsNrScid][i].imag();
+	    }
+	    DComplex diff (dataPtr[i*2+3].real(), dataPtr[i*2+3].imag());
+	    diff -= yy.getDComplex(0,i);
+	    double val = diff.real();
+	    itsSolver.makeNorm (&(derivReal[0]), 1., &val);
+	    val = diff.imag();
+	    itsSolver.makeNorm (&(derivImag[0]), 1., &val);
+	    nrpoint++;
+	  }
+	}
+      } else {
+	throw AipsError("Number of polarizations should be 1, 2, or 4");
       }
-    } else {
-      throw AipsError("Number of polarizations should be 1, 2, or 4");
     }
   }
   timer.show("fill ");
-  
+
+  Assert (nrpoint >= itsNrScid);
   // Solve the equation.
   uInt rank;
   double fit;
   vector<double> stddev(2*nrpoint);
   double mu[2];
   cout << "Solution before: " << itsSolution << endl;
-  Assert (itsSolver.solveLoop (fit, rank, itsSolution.dcomplexStorage(),
-			       &(stddev[0]), mu));
+  double sol[200];
+  complex<double>* solData = itsSolution.dcomplexStorage();
+  for (int i=0; i<itsSolution.nelements(); i++) {
+    sol[i] = solData[i].real();
+  }
+  Assert (itsSolver.solveLoop (fit, rank, sol, &(stddev[0]), mu));
   timer.show("solve");
+  for (int i=0; i<itsSolution.nelements(); i++) {
+    solData[i] = complex<double>(sol[i], 0);
+  }
   cout << "Solution after:  " << itsSolution << endl;
   
   // Update all parameters.
