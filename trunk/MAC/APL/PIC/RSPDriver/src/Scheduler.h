@@ -65,7 +65,7 @@ namespace RSP
        * Cancel all commands in any queue for this port.
        */
       void cancel(GCFPortInterface& port);
-
+      
       /**
        * Add a synchronization action to be carried out
        * periodically on the specified board.
@@ -89,6 +89,16 @@ namespace RSP
 
     private:
       /**
+       * Private types.
+       */
+      typedef std::priority_queue<Command*, std::vector<Command*>, RSP::Command_greater> pqueue;
+
+      /**
+       * Private helper methods.
+       */
+      void pqueue_remove_port(pqueue& p, GCFPortInterface& port);
+
+      /**
        * Constants from the config file converted to the correct type.
        */
 
@@ -106,7 +116,6 @@ namespace RSP
       void              completeCommands();
       /*@}*/
 
-      typedef std::priority_queue<Command*, std::vector<Command*>, RSP::Command_greater> pqueue;
       pqueue m_later_queue;
       pqueue m_now_queue;
       pqueue m_periodic_queue;
