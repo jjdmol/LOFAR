@@ -9,7 +9,7 @@
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// but WITHOUT ANY WARRaNTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
@@ -77,11 +77,21 @@ public:
   
   //! Constructor
   /*!
-    \param type indicates the source type, e.g. POINT, GAUSS, etc...
-    \param catNumber is the catalog number of the source.
-    \param name is a canonical source name, like "M31", if available.
+    \param type      Indicates the source type, e.g. POINT, GAUSS, etc...
+    \param startTime Begin of time domain (MJD seconds, inclusive)
+    \param endTime   End of time domain (MJD seconds, exclusive)
+    \param startFreq Begin of frequency domain (Hz, inclusive)
+    \param endFreq   End of frequency domain (Hz, exclusive)
+    \param ra        Right ascension in J2000.0 radians
+    \param dec       Declination in J2000.0 radians
+    \param catNumber The catalog number of the source.
+    \param name      A canonical source name, like "M31", if available.
    */
            AbstractSource(SourceType         type,
+                          double             startTime = 0,
+                          double             endTime   = 1,
+                          double             startFreq = 0,
+                          double             endFreq   = 1,
                           double             ra        = 0,
                           double             dec       = 0,
                           unsigned int       catNumber = 0,
@@ -134,7 +144,7 @@ public:
      * NUMBER    ScalarColumn<int>
      * NAME      ScalarColumn<std::string>
      * TYPE      ScalarColumn<int>
-     * RAPARMS   ArrayColumn<double>
+     * RaPARMS   ArrayColumn<double>
      * DECPARMS  ArrayColumn<double>
      * IPARMS    ArrayColumn<double>
      * QPARMS    ArrayColumn<double>
@@ -143,15 +153,15 @@ public:
 
      
    */
-  virtual void load(const Table& table,
-                    unsigned int row);
+  virtual MeqDomain load(const Table& table,
+                         unsigned int row);
 
   //! Loads state from an Aips++ table.
   /*! Description of the table
       format can be found in the description of \method load.
   */
-  virtual void store(Table&       table,
-                     unsigned int row) const;
+  virtual MeqDomain store(Table&       table,
+                          unsigned int row) const;
 
 
 
@@ -160,17 +170,20 @@ public:
   virtual unsigned int getNumberOfParameters() const;
 
   //! Get pointers to all MeqParm objects. Including the position.
-  /*! first param always is RA, second is dec. Then the rest of the
+  /*! first param always is Ra, second is dec. Then the rest of the
     parameters follows.
   */
   virtual unsigned int  getParameters(std::vector<MeqParm* > &parameters);
+  virtual unsigned int  getParameters(std::vector<const MeqParm* > &parameters) const;
   
   //! Makes deep copy of parameters.
-  /*! First is RA, second is Dec, then the other ones.
+  /*! First is Ra, second is Dec, then the other ones.
    */
   virtual unsigned int setParameters(const std::vector<MeqParm* > &parameters);
 
-  
+
+  //! Construct parmname "GSM.sourcenr."
+  std::string createParmName() const;
 
 
   //! Writes state in machine readable ASCII. May be read back by readAscii.
@@ -182,13 +195,15 @@ public:
   virtual std::ostream&  writeNiceAscii(std::ostream& out)const;
 
 protected:
+  std::vector<std::string> itsStokesNames;
+
 private:
   
   unsigned int itsCatalogNumber;
   std::string  itsName;
   SourceType   itsSourceType;
 
-  MeqParm*     itsRA;
+  MeqParm*     itsRa;
   MeqParm*     itsDec;
 
 };

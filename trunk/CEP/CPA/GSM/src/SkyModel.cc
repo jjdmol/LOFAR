@@ -24,6 +24,9 @@
 
 #include <aips/Tables/Table.h>
 
+#include <MNS/MeqDomain.h>
+
+
 
 using namespace GSM;
 

@@ -32,6 +32,15 @@
 #include <aips/Tables/ScaColDesc.h>
 #include <aips/Tables/ArrColDesc.h>
 
+#include <MNS/MeqDomain.h>
+
+static double StartTime(0);
+static double EndTime  (1);
+
+static double StartFreq(0);
+static double EndFreq  (1);
+
+
 
 //! create an initially empty table.
 void createPointSourceTable(const std::string &tableName)
@@ -47,9 +56,12 @@ void createPointSourceTable(const std::string &tableName)
   description.addColumn(ArrayColumnDesc<double>("UPARMS", "U in Jansky"));
   description.addColumn(ArrayColumnDesc<double>("VPARMS", "V in Jansky"));
 
+  description.addColumn(ArrayColumnDesc<double>("TDOMAIN", "MJD seconds"));
+  description.addColumn(ArrayColumnDesc<double>("FDOMAIN", "Hz"));
+
   SetupNewTable newTable(tableName, description, Table::New);
   
-  //Table table(newTable);
+  Table table(newTable);
   //table.addRow();
   //table.addRow();
   //table.addRow();
@@ -64,7 +76,8 @@ void addPointSource(unsigned int               number,
                     const std::vector<double>& flux,
                     Table&                     table)
 {
-  GSM::PointSource ps(ra, dec, number, name, flux);
+  GSM::PointSource ps(StartTime, EndTime, StartFreq, EndFreq,
+                      ra, dec, number, name, flux);
   table.addRow();
   ps.store(table, table.nrow()-1);
 }
@@ -77,7 +90,7 @@ try
   using std::endl;
 
   if(argc == 2) {
-    //    createPointSourceTable(argv[1]);
+    createPointSourceTable(argv[1]);
     for(int i = 0; i < argc; i++) {
       cout << argv[i] << endl;
     }
@@ -99,7 +112,7 @@ try
     Flux[GSM::U] = 0;
     Flux[GSM::V] = 0;
     
-    addPointSource(1, "8C1435+635-b",
+    addPointSource(2, "8C1435+635-b",
                    (14.0*15+35.0/60)*M_PI/180.0, 63.4*M_PI/180.0, Flux,
                    table);
     
@@ -109,7 +122,7 @@ try
     Flux[GSM::U] = 0;
     Flux[GSM::V] = 0;
     
-    addPointSource(1, "A",
+    addPointSource(3, "A",
                    (14.0*15+39.0/60)*M_PI/180.0, 63.8*M_PI/180.0, Flux,
                    table);
     
@@ -119,7 +132,7 @@ try
     Flux[GSM::U] = 0;
     Flux[GSM::V] = 0;
     
-    addPointSource(1, "B",
+    addPointSource(4, "B",
                    (14.0*15+50.0/60)*M_PI/180.0, 64.0*M_PI/180.0, Flux,
                    table);
   } else {
