@@ -85,7 +85,7 @@ void getPhaseRef (MS& ms, double& ra, double& dec)
   dec = angles.getBaseValue()(1);
 }
 
-void doIt (const string& in, const string& out)
+void doIt (const string& in, const string& out, const string& column)
 {
   // Open the table and make sure it is in the correct order.
   MS ms(in);
@@ -134,7 +134,7 @@ void doIt (const string& in, const string& out)
   int npol,nfreq;
   {
     RegularFileIO fil(RegularFile(out+".dat"), ByteIO::New);
-    ROArrayColumn<Complex> cold(tab,"DATA");
+    ROArrayColumn<Complex> cold(tab,column);
     for (uInt row=0; row<tab.nrow(); row++) {
       Array<Complex> data (cold(row));
       fil.write (data.nelements()*sizeof(Complex), data.data());
@@ -185,10 +185,15 @@ int main(int argc, char** argv)
 {
   try {
     if (argc < 3) {
-      cout << "Run as:  msflat in out" << endl;
+      cout << "Run as:  MSSplit in out [datacolumn]" << endl;
+      cout << "   datacolumn defaults to MODEL_DATA" << endl;
       return 0;
     }
-    doIt (argv[1], argv[2]);
+    string column("MODEL_DATA");
+    if (argc > 3) {
+      column = argv[3];
+    }
+    doIt (argv[1], argv[2], column);
   } catch (exception& x) {
     cout << "Unexpected expection: " << x.what() << endl;
     return 1;
