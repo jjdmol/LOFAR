@@ -84,33 +84,53 @@ const meqrequest := function(cells,reqid=F,calcderiv=F)
 const meqserver_test := function ()
 {
   global mqs;
-  mqs := meqserver(verbose=4,server='./meqserver'); #,suspend=T);
+  # create meqserver object
+  mqs := meqserver(verbose=4,server='./meqserver'); # ,suspend=T);
+  # set verbose debugging messages
   mqs.setdebug('MeqNode',5);
+  # initialize meqserver
   mqs.init([=],[=],[=],wait=T);
-  print mqs.meq('Create.Node',[class='MEQNode',name='test'],T);
-  print mqs.meq('Create.Node',[class='MEQNode',name='child1'],T);
-  print mqs.meq('Create.Node',[class='MEQNode',name='child2'],T);
-  print mqs.meq('Create.Node',[class='MEQNode',name='child4'],T);
   
+  # create some test nodes
+  print mqs.meq('Create.Node',[class='MEQNode',name='x'],T);
+  print mqs.meq('Create.Node',[class='MEQNode',name='y'],T);
+  print mqs.meq('Create.Node',[class='MEQNode',name='z'],T);
+  
+  # test various ways to specify children
+  #   children specified as an array of names
+  #   "w" is a forward reference, child w will be created later on
+  print mqs.meq('Create.Node',[class='MEQNode',name='test1',children="x y z w"],T);
+  #   children specified as an array of node indices
+  print mqs.meq('Create.Node',[class='MEQNode',name='test2',children=[2,3,4]],T);
+  #   children specified as a record. Field name is child name (argument name)
+  children := [ a='x',          # child 'a' specified by name
+                b=2,            # child 'b' specified by node index
+                c='y',          # child 'c' will be created later on
+                d=[ class='MEQNode',name='aa' ] ]; # created on-the-fly
+  print mqs.meq('Create.Node',[class='MEQNode',name='w',children=children],T);
+        
+  # this resolves remaining children of "test1" (specifically, "w")
+  print mqs.meq('Resolve.Children',[name='test1'],T);
+  
+  # get node state, node specified via name
+  print mqs.meq('Get.Node.State',[name='test1'],T);
+  # get node state, node specified via index
+  print mqs.meq('Get.Node.State',[nodeindex=1],T);
+
+  # test creating a sub-tree
   defval1 := array(as_double(1),2,2);
   defval2 := array(as_double(2),1,1);
-  
   cosrec := [ class='MEQCos',name='cosp1',children=[ 
       x=[ class='MEQParmPolcStored',name='p1',default=defval1 ] ] ];
-      
   addrec := [ class='MEQAdd',name='add1_2',children=[
       x=cosrec,
       y=[ class='MEQParmPolcStored',name='p2',default=defval2 ] ] ];
       
   print mqs.meq('Create.Node',addrec,T);
   print mqs.meq('Resolve.Children',[name='add1_2'],T);
-  print mqs.meq('Get.Node.State',[name='test'],T);
-  print mqs.meq('Get.Node.State',[name='add1_2'],T);
-  print mqs.meq('Get.Node.State',[nodeindex=1],T);
   
   cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
   request := meqrequest(cells);
-  
   print mqs.meq('Get.Result',[name='add1_2',request=request],T);
   print mqs.meq('Get.Node.State',[name='add1_2'],T);
 }
