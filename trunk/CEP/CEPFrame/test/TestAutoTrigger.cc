@@ -29,7 +29,7 @@
 #include <TestAutoTrigger.h>
 #include <tinyCEP/SimulatorParseClass.h>
 #include <CEPFrame/Step.h>
-#include <Transport/BaseSim.h>
+#include <Transport/TH_Mem.h>
 #include <CEPFrame/Composite.h>
 #include <CEPFrame/WH_Empty.h>
 #include <CEPFrame/WH_TestAutoTrigger.h>

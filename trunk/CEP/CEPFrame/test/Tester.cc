@@ -26,7 +26,7 @@
 // LOFARSim simulation environment.
 // 
 
-#include <Transport/BaseSim.h>
+#include <Transport/TH_Mem.h>
 #include <CEPFrame/Step.h>
 #include <CEPFrame/Composite.h>
 #include <CEPFrame/DH_Tester.h>

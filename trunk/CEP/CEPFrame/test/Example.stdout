@@ -1,4 +1,3 @@
-CEPFrame Processor -1 of 1 operational  (appl=0)
 
 Start Processing composit Example1
 Call composit.process() 0
@@ -104,8 +103,6 @@ WH_Example Step3 Buffers:
 WH_Example Step4 Buffers:
 (14,0),(14,0)
 
-END OF COMPOSIT on node -1
-
 Start Processing composit Example2
 Call composit.process() 0
 Step1
@@ -155,8 +152,6 @@ WH_Example Step2 Buffers:
 (14,0),(14,0)
 WH_Example Step3 Buffers:
 (45,0),(45,0)
-
-END OF COMPOSIT on node -1
 
 Start Processing composit Example3
 Call composit.process() 0
@@ -217,8 +212,6 @@ WH_Example Step2b Buffers:
 (7,0),(7,0)
 WH_Example Step3 Buffers:
 (16,0),(16,0)
-
-END OF COMPOSIT on node -1
 
 Start Processing composit Example4
 Call composit.process() 0
@@ -328,8 +321,6 @@ WH_Example Step3 Buffers:
 WH_Example Step4 Buffers:
 (14,0),(14,0)
 
-END OF COMPOSIT on node -1
-
 Start Processing composit Example1
 Call composit.process() 0
 Step1
@@ -434,8 +425,6 @@ WH_Example Step3 Buffers:
 WH_Example Step4 Buffers:
 (14,0),(14,0)
 
-END OF COMPOSIT on node -1
-
 Start Processing composit Example2
 Call composit.process() 0
 Step1
@@ -485,8 +474,6 @@ WH_Example Step2 Buffers:
 (14,0),(14,0)
 WH_Example Step3 Buffers:
 (45,0),(45,0)
-
-END OF COMPOSIT on node -1
 
 Start Processing composit Example3
 Call composit.process() 0
@@ -547,8 +534,6 @@ WH_Example Step2b Buffers:
 (7,0),(7,0)
 WH_Example Step3 Buffers:
 (16,0),(16,0)
-
-END OF COMPOSIT on node -1
 
 Start Processing composit Example4
 Call composit.process() 0
@@ -657,5 +642,3 @@ WH_Example Step3 Buffers:
 (13,0),(13,0)
 WH_Example Step4 Buffers:
 (14,0),(14,0)
-
-END OF COMPOSIT on node -1

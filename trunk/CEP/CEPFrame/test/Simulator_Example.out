@@ -4,7 +4,6 @@
   * Type 'dump;'   to dump the simulator data
   * Type 'quit'    to quit
 
-CEPFrame Processor -1 of 1 operational  (appl=0)
 
 Start Process
 Step1
@@ -81,8 +80,6 @@ WH_Example Step2 Buffers:
 (1,0),(1,0)
 WH_Example Step3 Buffers:
 (2,0),(2,0)
-
-END OF SIMUL on node -1
 
 It was a pleasure working with you!
 

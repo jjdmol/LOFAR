@@ -27,7 +27,7 @@
 #include <Simulator_Example.h>
 #include <tinyCEP/SimulatorParseClass.h>
 #include <CEPFrame/Step.h>
-#include <Transport/BaseSim.h>
+#include <Transport/TH_Mem.h>
 #include <CEPFrame/Composite.h>
 #include <CEPFrame/WH_Example.h>
 #include <CEPFrame/Profiler.h>
@@ -43,11 +43,6 @@ Simulator_Example::~Simulator_Example()
 void Simulator_Example::define (const KeyValueMap& params)
 {
   params.show (cout);
-  int rank = TRANSPORTER::getCurrentRank ();
-  unsigned int size = TRANSPORTER::getNumberOfNodes();
-  int appl = Step::getCurAppl ();
-  cout << "CEPFrame Processor " << rank << " of " << size
-       << " operational  (appl=" << appl << ')' << endl;
 
   // define the top-level composite object
   WH_Example exSimul("ExampleSimul");
@@ -82,9 +77,9 @@ void Simulator_Example::define (const KeyValueMap& params)
   comp.addStep(composite2);
 
   // Now define the connections between the Steps and Composite objects:
-  step3.connectInput(&step2,TRANSPORTER(), false);
+  step3.connectInput(&step2,TH_Mem(), false);
   Step* addr2 = &composite2;
-  comp.connectInputToArray(&addr2,1,0,0,TRANSPORTER(),false);
+  comp.connectInputToArray(&addr2,1,0,0,TH_Mem(),false);
 
   //////////////////////////////////////////////////////////////////////
   //
@@ -119,9 +114,6 @@ void Simulator_Example::dump() const
 void Simulator_Example::quit()
 {
 
-  cout << endl << "END OF SIMUL on node " 
-       << TRANSPORTER::getCurrentRank() 
-       << endl;
 }
 
 
