@@ -68,7 +68,7 @@ void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
   double* buffer = new double[nrval];
     
   // Get the ParmData from the Prediffer and send it to the solver.
-  // Optioanlly convert it to and from a blob to see if that works fine.
+  // Optionally convert it to and from a blob to see if that works fine.
   Solver solver;
   solver.initSolvableParmData (1);
   if (toblob) {
