@@ -63,3 +63,9 @@ void MEPData::setBuffer(void* buf, size_t count)
   m_dataptr = buf;
   m_count   = count;
 }
+
+void* MEPData::getBuffer() const
+{
+  return m_dataptr;
+}
+

@@ -178,57 +178,99 @@ void RSPDriver::addAllSyncActions()
       StatusRead* statusread = new StatusRead(m_board[boardid], boardid);
       m_scheduler.addSyncAction(statusread);
     }
+
+    //
+    // Depending on the value of RSPDriver.LOOPBACK_MODE either the 
+    // WRITE is done first or the READ is done first.
+    //
+    // If LOOPBACK_MODE == 0, the WRITE is done first.
+    // In this mode you can check with Ethereal that what was
+    // written is correctly read back from the board. This can
+    // be used to check that the RSP hardware or the EPAStub
+    // function correctly.
+    //
+    // If LOOPBACK_MODE == 1, the READ is done first.
+    // In this mode you can check with Ethereal that what was
+    // read from the EPAStub is written back in the same way.
+    // This is used to check whether the RSPDriver stores the
+    // information at the correct location in its cache.
+    //
+    // This is done in the same way for all read/write registers.
+    //
+    for (int action = 0; action < 2; action++)
+    {
+      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
+      {
+	if (1 == GET_CONFIG("RSPDriver.WRITE_BF", i))
+	{
+	  BWWrite* bwsync = 0;
+
+	  bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_XROUT);
+	  m_scheduler.addSyncAction(bwsync);
+	  bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_XIOUT);
+	  m_scheduler.addSyncAction(bwsync);
+	  bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_YROUT);
+	  m_scheduler.addSyncAction(bwsync);
+	  bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_YIOUT);
+	  m_scheduler.addSyncAction(bwsync);
+	}
+      }
+      else
+      {
+	if (1 == GET_CONFIG("RSPDriver.READ_BF", i))
+	{
+	  BWRead* bwsync = 0;
+
+	  bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_XROUT);
+	  m_scheduler.addSyncAction(bwsync);
+	  bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_XIOUT);
+	  m_scheduler.addSyncAction(bwsync);
+	  bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_YROUT);
+	  m_scheduler.addSyncAction(bwsync);
+	  bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_YIOUT);
+	  m_scheduler.addSyncAction(bwsync);
+	}
+      }
+    }
     
-    if (1 == GET_CONFIG("RSPDriver.WRITE_BF", i))
+    for (int action = 0; action < 2; action++)
     {
-      BWWrite* bwsync = 0;
-
-      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_XROUT);
-      m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_XIOUT);
-      m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_YROUT);
-      m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWWrite(m_board[boardid], boardid, MEPHeader::BF_YIOUT);
-      m_scheduler.addSyncAction(bwsync);
-    }
-
-    if (1 == GET_CONFIG("RSPDriver.READ_BF", i))
-    {
-      BWRead* bwsync = 0;
-
-      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_XROUT);
-      m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_XIOUT);
-      m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_YROUT);
-      m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_YIOUT);
-      m_scheduler.addSyncAction(bwsync);
-    }
-
-    if (1 == GET_CONFIG("RSPDriver.WRITE_SS", i))
-    {
-      SSWrite* sswrite = new SSWrite(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(sswrite);
+      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
+      {
+	if (1 == GET_CONFIG("RSPDriver.WRITE_SS", i))
+	{
+	  SSWrite* sswrite = new SSWrite(m_board[boardid], boardid);
+	  m_scheduler.addSyncAction(sswrite);
+	}
+      }
+      else
+      {
+	if (1 == GET_CONFIG("RSPDriver.READ_SS", i))
+	{
+	  SSRead* ssread = new SSRead(m_board[boardid], boardid);
+	  m_scheduler.addSyncAction(ssread);
+	}
+      }
     }
     
-    if (1 == GET_CONFIG("RSPDriver.READ_SS", i))
+    for (int action = 0; action < 2; action++)
     {
-      SSRead* ssread = new SSRead(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(ssread);
-    }
-
-    if (1 == GET_CONFIG("RSPDriver.WRITE_RCU", i))
-    {
-      RCUWrite* rcuwrite = new RCUWrite(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(rcuwrite);
-    }
-    
-    if (1 == GET_CONFIG("RSPDriver.READ_RCU", i))
-    {
-      RCURead* rcuread = new RCURead(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(rcuread);
+      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
+      {
+	if (1 == GET_CONFIG("RSPDriver.WRITE_RCU", i))
+	{
+	  RCUWrite* rcuwrite = new RCUWrite(m_board[boardid], boardid);
+	  m_scheduler.addSyncAction(rcuwrite);
+	}
+      }
+      else
+      {
+	if (1 == GET_CONFIG("RSPDriver.READ_RCU", i))
+	{
+	  RCURead* rcuread = new RCURead(m_board[boardid], boardid);
+	  m_scheduler.addSyncAction(rcuread);
+	}
+      }
     }
 
     if (1 == GET_CONFIG("RSPDriver.READ_ST", i))
@@ -248,16 +290,24 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(statsread);
     }
 
-    if (1 == GET_CONFIG("RSPDriver.WRITE_WG", i))
+    for (int action = 0; action < 2; action++)
     {
-      WGWrite* wgwrite = new WGWrite(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(wgwrite);
-    }
-
-    if (1 == GET_CONFIG("RSPDriver.READ_WG", i))
-    {
-      WGRead* wgread = new WGRead(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(wgread);
+      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
+      {
+	if (1 == GET_CONFIG("RSPDriver.WRITE_WG", i))
+	{
+	  WGWrite* wgwrite = new WGWrite(m_board[boardid], boardid);
+	  m_scheduler.addSyncAction(wgwrite);
+	}
+      }
+      else
+      {
+	if (1 == GET_CONFIG("RSPDriver.READ_WG", i))
+	{
+	  WGRead* wgread = new WGRead(m_board[boardid], boardid);
+	  m_scheduler.addSyncAction(wgread);
+	}
+      }
     }
 
     if (1 == GET_CONFIG("RSPDriver.READ_VERSION", i))
