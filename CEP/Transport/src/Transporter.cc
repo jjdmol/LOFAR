@@ -39,7 +39,6 @@ Transporter::Transporter (DataHolder* dataHolder)
     itsReadTag         (-1),
     itsWriteTag        (-1),
     itsStatus          (Unknown),
-    itsRate            (1),
     itsIsBlocking      (true)
 {}
 
@@ -51,7 +50,6 @@ Transporter::Transporter(const Transporter& that, DataHolder* dataHolder)
     itsReadTag         (that.itsReadTag),
     itsWriteTag        (that.itsWriteTag),
     itsStatus          (that.itsStatus),
-    itsRate            (that.itsRate),
     itsIsBlocking      (that.itsIsBlocking)
 {
   if (that.itsTransportHolder != 0) {
@@ -89,12 +87,6 @@ bool Transporter::init()
 bool Transporter::connect(Transporter& thatTP,
 			  const TransportHolder& prototype,
 			  bool blockingComm) {
-
-  AssertStr(getRate() == thatTP.getRate(), 
-	    "Transporter::connect; inRate " << 
-	    getRate() << " and outRate " <<
-	    thatTP.getRate() << " not equal!");
-  
   setIsBlocking(blockingComm);
   thatTP.setIsBlocking(blockingComm);
 
