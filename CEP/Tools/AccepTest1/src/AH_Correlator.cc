@@ -22,8 +22,12 @@ AH_Correlator::AH_Correlator(int elements, int samples, int channels, int polari
   itsNpolarisations(polarisations),
   itsIP       (ip),
   itsBaseport (baseport),
-  itsNtargets (targets)
+  itsNtargets (targets),
+  itsRank(0)
 {
+#ifdef HAVE_MPI
+  itsRank = TH_MPI::getCurrentRank();
+#endif
 }  
 
 AH_Correlator::~AH_Correlator() {
@@ -31,9 +35,7 @@ AH_Correlator::~AH_Correlator() {
 
 void AH_Correlator::define(const KeyValueMap& /*params*/) {
 
-#ifdef HAVE_MPI
-  sleep(TH_MPI::getCurrentRank());
-#endif
+  sleep(itsRank);
 
 
   // create the primary WorkHolder to do the actual work
@@ -43,9 +45,7 @@ void AH_Correlator::define(const KeyValueMap& /*params*/) {
 					  itsNchannels, 
 					  itsNpolarisations,
 					  itsNtargets);
-#ifdef HAVE_MPI
-  itsWH->runOnNode(TH_MPI::getCurrentRank());
-#endif  
+  itsWH->runOnNode(itsRank);
 
   // now create two dummy workholders to connect to
   // these will not exist outside the scope of this method
@@ -61,18 +61,18 @@ void AH_Correlator::define(const KeyValueMap& /*params*/) {
 		   itsNpolarisations);
   
   // now connect to the dummy workholders. 
-#ifdef HAVE_MPI
+
   myWHRandom.getDataManager().getOutHolder(0)->connectTo 
     ( *itsWH->getDataManager().getInHolder(0), 
-      TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getCurrentRank(), false, true) );
+      TH_Socket(itsIP, itsIP, itsBaseport+itsRank, false, true) );
 
-//   cout << "reading from port number: " << itsBaseport+TH_MPI::getCurrentRank() << " " << endl;
+//   cout << "reading from port number: " << itsBaseport+itsRank << " " << endl;
 
   itsWH->getDataManager().getOutHolder(0)->connectTo
     ( *myWHDump.getDataManager().getInHolder(0), 
-      TH_Socket(itsIP, itsIP, itsBaseport+itsNtargets+TH_MPI::getCurrentRank(), true, true));
-//   cout << "writing to port number: " << itsBaseport+itsNtargets+TH_MPI::getCurrentRank() << endl;
-#endif
+      TH_Socket(itsIP, itsIP, itsBaseport+itsNtargets+itsRank, true, true));
+//   cout << "writing to port number: " << itsBaseport+itsNtargets+itsRank << endl;
+
 
 }
 
@@ -97,20 +97,20 @@ void AH_Correlator::run(int nsteps) {
 
     itsWH->baseProcess();
     
-#ifdef HAVE_MPI
-    if (TH_MPI::getCurrentRank() == 0) {
+
+    if (itsRank == 0) {
       avg_bandwidth += static_cast<WH_Correlator*>(itsWH)->getAggBandwidth();
       avg_corr_perf += static_cast<WH_Correlator*>(itsWH)->getCorrPerf();
     }
-#endif
+
 
 #ifdef HAVE_MPE
     if (i < nsteps-1) MPE_Log_event(3, i, "transporting");
 #endif
 
   }
-#ifdef HAVE_MPI
-  if (TH_MPI::getCurrentRank() == 0) {
+
+  if (itsRank == 0) {
     
     cout << itsNelements << " " ;
     cout << itsNsamples  << " " ;
@@ -122,7 +122,6 @@ void AH_Correlator::run(int nsteps) {
     cout << (100.0*avg_bandwidth)/(nsteps*1024.0*1024.0*1024.0)<< "%" << " ";
     cout <<  avg_corr_perf/nsteps << " Mcprod/sec" << endl;
   }
-#endif
 }
 
 void AH_Correlator::dump () {
