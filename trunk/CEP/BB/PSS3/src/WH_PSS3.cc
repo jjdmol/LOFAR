@@ -151,6 +151,7 @@ void WH_PSS3::process()
   int count = 0;
   Quality resQuality;
   resQuality.init();
+
   while (strat.execute(pNames, resPNames, resPValues, resQuality, iterNo))
   {
     TRACER1("Executed strategy");
@@ -230,15 +231,12 @@ void WH_PSS3::putSolutionIntoVectors(DH_Solution* dh, vector<string>& pNames,
     {
       char* src;
       sprintf(src, "%d", srcNo);
-      RAname += src;
-      pNames.push_back(RAname);
+      pNames.push_back(RAname+src);
       pValues.push_back(dh->getRAValue(srcNo));
       pSources.push_back(srcNo);
-      DECname += src;
-      pNames.push_back(DECname);
+      pNames.push_back(DECname+src);
       pValues.push_back(dh->getDECValue(srcNo));
-      StokesIname += src;
-      pNames.push_back(StokesIname);
+      pNames.push_back(StokesIname+src);
       pValues.push_back(dh->getStokesIValue(srcNo));
     }
   }
