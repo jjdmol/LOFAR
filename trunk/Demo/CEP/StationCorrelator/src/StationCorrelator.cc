@@ -23,31 +23,35 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#include <Common/KeyParser.h>
 #include <Common/KeyValueMap.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 
+#include <CEPFrame/Step.h>
+#include <CEPFrame/Composite.h>
+#include <CEPFrame/ApplicationHolder.h>
+
 #include <StationCorrelator.h>
 
+#include <WH_RSP.h>
 #include <WH_Transpose.h>
 #include <WH_Correlator.h>
 #include <WH_Dump.h>
 
+#include <DH_RSP.h>
 #include <DH_StationData.h>
 #include <DH_CorrCube.h>
 #include <DH_Vis.h>
 
 using namespace LOFAR;
 
-StationCorrelator::StationCorrelator(unsigned int stations, 
-				     unsigned int transposes,
-				     unsigned int correlators,
-				     unsigned int dumps) 
-  : itsNstation    (stations),
-    itsNtranspose  (transposes),
-    itsNcorrelator (correlators),
-    itsNdump       (dumps){
-
+StationCorrelator::StationCorrelator(KeyValueMap kvm) 
+  : itsKVM(kvm)
+{
+  itsNrsp = itsKVM.getInt("rsps", 2);
+  itsNcorrelator = itsKVM.getInt("correlators", 7);
+  itsNdump = itsKVM.getInt("dumps", 1);
 }
 
 StationCorrelator::~StationCorrelator() {
@@ -62,63 +66,65 @@ void StationCorrelator::undefine() {
   itsWHs.clear();
 }  
 
-void StationCorrelator::define(const KeyValueMap& params) {
+void StationCorrelator::define(const KeyValueMap& itsKVM) {
 
   char H_name[128];
 
+  vector<WH_RSP*>        RSPNodes;
   vector<WH_Transpose*>  TransposeNodes;
   vector<WH_Correlator*> CorrelatorNodes;
   vector<WH_Dump*>       DumpNodes;   
-
+  
+  Composite comp;
+  setComposite(comp);
 
   /// Create the WorkHolders 
-  for (unsigned int i = 0; i < itsNstation; i++) {
-    
-  }
-
-  for (unsigned int i = 0; i < itsNtranspose; i++) {
-    sprintf(H_name, "TransposeNode_%d_of_%d", i, itsNtranspose);
-
-    TransposeNodes.push_back(new WH_Transpose(H_name));
-    itsWHs.push_back(static_cast<WorkHolder*>( TransposeNodes[i] ));
+  for (unsigned int i = 0; i < itsNrsp; i++) {
+    snprintf(H_name, 128, "RSPNode_%d_of_%d", i, itsNrsp);
+    Step step(new WH_RSP(H_name));
+    comp.addStep(step); // gaat dit goed?
   }
 
   for (unsigned int i = 0; i < itsNcorrelator; i++) {
-    sprintf(H_name, "CorrelatorNode_%d_of_%d", i, itsNcorrelator);
+    // we create a transpose workholder for every correlator workholder
+    // to rearrange the data coming from the RSP boards.
+    sprintf(H_name, "TransposeNode_%d_of_%d", i, itsNcorrelator);
 
-    CorrelatorNodes.push_back(new WH_Correlator ( H_name,
-						  0,
-						  0,
-						  0,
-						  0,
-						  0 ));
-    itsWHs.push_back(static_cast<WorkHolder*>( CorrelatorNodes[i] ));
+    Step step(new WH_Transpose(H_name, itsKVM));
+    comp.addStep(step);
+  }
+  for (unsigned int i = 0; i < itsNcorrelator; i++) {
+
+    sprintf(H_name, "CorrelatorNode_%d_of_%d", i, itsNcorrelator);
+    
+    Step step(new WH_Correlator ( H_name,
+				   0,
+				   0,
+				   0,
+				   0,
+				   0 ));
+    comp.addStep(step);
   }
 
   for (unsigned int i = 0; i < itsNdump; i++) {
     sprintf(H_name, "DumpNode_%d_of_%d", i, itsNdump);
-    DumpNodes.push_back(new WH_Dump (H_name, 
-				     0,
-				     0, 
-				     0));
-    itsWHs.push_back(static_cast<WorkHolder*>(DumpNodes[i]));
+    
+    Step step(new WH_Dump (H_name, 
+			   0,
+			   0, 
+			   0));
+    comp.addStep(step);
   }
 
 }
 
 void StationCorrelator::init() {
-  vector<WorkHolder*>::iterator it = itsWHs.begin();
-  for (; it != itsWHs.end(); it++) {
-    (*it)->basePreprocess();
-  }
+  getComposite().preprocess();
 }
     
 void StationCorrelator::run(int steps) {
   for (int i = 0; i < steps; i++) {
-    vector<WorkHolder*>::iterator it = itsWHs.begin();
-    for(; it != itsWHs.end(); it++) {
-      (*it)->baseProcess();
-    }
+    getComposite().process();
   }
 }
 
@@ -133,10 +139,18 @@ void StationCorrelator::quit() {
 int main (int argc, const char** argv) {
 
   INIT_LOGGER("StationCorrelator");
+
+  KeyValueMap kvm;
+  try {
+    kvm = KeyParser::parseFile("TestRange");
+
+  } catch (std::exception& x) {
+    cerr << x.what() << endl;
+  }
   
   try {
-    
-    StationCorrelator correlator(3, 3, 3, 3);
+
+    StationCorrelator correlator(kvm);
     correlator.setarg(argc, argv);
     correlator.baseDefine();
     cout << "defined"<< endl;

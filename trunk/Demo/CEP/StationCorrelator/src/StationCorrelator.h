@@ -30,8 +30,7 @@ namespace LOFAR {
 class StationCorrelator: public LOFAR::ApplicationHolder
 {
  public:
-  StationCorrelator(unsigned int stations, unsigned int transposes,
-		    unsigned int correlators, unsigned int dumps);
+  StationCorrelator(KeyValueMap kvm);
   virtual ~StationCorrelator();
   virtual void undefine();
   virtual void define  (const LOFAR::KeyValueMap&);
@@ -42,11 +41,11 @@ class StationCorrelator: public LOFAR::ApplicationHolder
  private:
   vector<WorkHolder*> itsWHs;
 
-  unsigned int itsNstation;
-  unsigned int itsNtranspose;
+  unsigned int itsNrsp;
   unsigned int itsNcorrelator;
   unsigned int itsNdump;
 
+  KeyValueMap itsKVM;
 };
 }
 #endif
