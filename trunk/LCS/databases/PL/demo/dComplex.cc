@@ -13,7 +13,7 @@ int main()
     b.connect("test", "postgres");
     while (cin) {
       Complex c;
-      cout << "Enter a complex number (CTRL-D to skip) : ";
+      cout << "Enter a complex number (Ctrl-D to skip) : ";
       cin >> c;
       if (cin) b.save(TPersistentObject<Complex>(c));
     }
