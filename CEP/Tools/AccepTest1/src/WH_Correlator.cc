@@ -142,7 +142,7 @@ void WH_Correlator::process() {
   // 
   // This is a uint16 pointer
   DH_CorrCube::BufferPrimitive* in_ptr = (DH_CorrCube::BufferPrimitive*) inDH->getBuffer();
-  // The float pointer is explicit, since DH_Vis is complex<double>
+  // The float pointer is explicit, since DH_Vis is now complex<double>
   float*  in_buffer = new float[2*inDH->getBufSize()];
 
   // consider the input buffer of complex<uint16> to be uint16 of twice that size
@@ -175,6 +175,9 @@ void WH_Correlator::process() {
 	// prefetch station1, both polarisation 0 and 1
 	s1_val_0 = reinterpret_cast<_Complex float*>( in_buffer + s1_addr );
 	s1_val_1 = reinterpret_cast<_Complex float*>( in_buffer + s1_addr + 1 );
+#else 
+	s1_val_0 = reinterpret_cast<complex<float>*>(in_buffer + s1_addr);
+	s1_val_1 = reinterpret_cast<complex<float>*>(in_buffer + s1_addr + 1);
 #endif
 	for (int station2 = 0; station2 <= station1; station2++) {
 	  int s2_addr = sample_addr+itsNpolarisations*station2;
@@ -214,6 +217,8 @@ void WH_Correlator::process() {
  	    *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*) s1_val_1), __lfps(&__imag__ *s2_val_1)) ;
 	    out_ptr++;
 #else 
+	    s2_val_0 = reinterpret_cast<complex<float>*>(in_buffer + s2_addr);
+	    s2_val_1 = reinterpret_cast<complex<float>*>(in_buffer + s2_addr + 1);
 	    // this is purely functional code, very expensive and slow as hell
 	    outDH->addBufferElementVal(station1, station2, fchannel, 0,
 				       *(s1_val_0) * *(s2_val_0));
