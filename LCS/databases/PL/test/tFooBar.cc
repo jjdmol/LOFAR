@@ -1,4 +1,4 @@
-#include <Common/fwd/PL.h>
+#include <PL/PLfwd.h>
 #include <PL/TPersistentObject.h>
 #include <PL/PersistenceBroker.h>
 #include <PL/DBRep.h>

@@ -2,7 +2,7 @@
 #define LOFAR_PL_TEST_A
 
 #include "B.h"
-#include <Common/fwd/PL.h>
+#include <PL/PLfwd.h>
 #include <string>
 #include <complex>
 #include <iostream>

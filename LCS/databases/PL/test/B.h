@@ -1,7 +1,7 @@
 #ifndef LOFAR_PL_TEST_B
 #define LOFAR_PL_TEST_B
 
-#include <Common/fwd/PL.h>
+#include <PL/PLfwd.h>
 #include <string>
 #include <iostream>
 
