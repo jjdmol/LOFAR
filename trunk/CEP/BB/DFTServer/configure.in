@@ -65,5 +65,6 @@ dnl Output Makefiles
 dnl
 AC_OUTPUT(
 src/Makefile
+test/Makefile
 Makefile
 )
