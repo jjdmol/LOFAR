@@ -42,7 +42,7 @@ namespace LOFAR
 // \addtogroup Transport
 // @{
 
-#define MIN_FRAME_LEN 200
+#define MIN_FRAME_LEN 6000
 
 // This class defines the transport mechanism for RAW Ethernet 
 
