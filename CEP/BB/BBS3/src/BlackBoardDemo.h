@@ -24,8 +24,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef PSS3_BLACKBOARDDEMO_H
-#define PSS3_BLACKBOARDDEMO_H
+#ifndef BBS3_BLACKBOARDDEMO_H
+#define BBS3_BLACKBOARDDEMO_H
 
 
 #include <CEPFrame/ApplicationHolder.h>
@@ -56,8 +56,8 @@ public:
   void undefine();
 
 private:
-  LOFAR::Step** itsKSSteps;  // Pointer to array of Knowledge Source steps
-  int itsNumberKS;           // Total number of Knowledge Sources
+  LOFAR::Step** itsPDSteps;  // Pointer to array of Prediffer steps
+  int itsNumberPD;           // Total number of Prediffers
 };
 
 } // end namespace LOFAR

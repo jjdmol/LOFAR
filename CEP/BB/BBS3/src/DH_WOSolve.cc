@@ -1,4 +1,4 @@
-//  DH_WorkOrder.cc:
+//  DH_WOSolve.cc:
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,7 +25,7 @@
 
 #include <lofar_config.h>
 
-#include <BBS3/DH_WorkOrder.h>
+#include <BBS3/DH_WOSolve.h>
 #include <PL/TPersistentObject.h>
 #include <Common/KeyValueMap.h>
 #include <Common/BlobOStream.h>
@@ -37,72 +37,70 @@
 namespace LOFAR
 {
 
-int DH_WorkOrder::theirWriteCount = 0;
-
 const unsigned int MaxKSTypeLength = 8;
 const unsigned int MaxNoStartSols = 16;
 const unsigned int MaxParamNameLength = 16;
 const unsigned int MaxNumberOfParam = 32;
 
-DH_WorkOrder::DH_WorkOrder (const string& name)
-  : DH_PL(name, "DH_WorkOrder", 1),
+DH_WOSolve::DH_WOSolve (const string& name)
+  : DH_PL(name, "DH_WOSolve", 1),
     itsWOID            (0),
     itsStatus          (0),
     itsKSType          (0),
-    itsStrategyNo      (0),
-    itsNoStartSols     (0),
-    itsNumberOfParam   (0),
+    itsInitialize      (0),
+    itsNextInterval    (0),
+    itsUseSVD          (0),
     itsPODHWO          (0)
 {
-  LOG_TRACE_FLOW("DH_WorkOrder constructor");
+  LOG_TRACE_FLOW("DH_WOSolve constructor");
   setExtraBlob("Extra", 1);
 }
 
-DH_WorkOrder::DH_WorkOrder(const DH_WorkOrder& that)
+DH_WOSolve::DH_WOSolve(const DH_WOSolve& that)
   : DH_PL(that),
     itsWOID            (0),
     itsStatus          (0),
     itsKSType          (0),
-    itsStrategyNo      (0),
-    itsNoStartSols     (0),
-    itsNumberOfParam   (0),
+    itsInitialize      (0),
+    itsNextInterval    (0),
+    itsUseSVD          (0),
     itsPODHWO          (0)
 {
-  LOG_TRACE_FLOW("DH_WorkOrder copy constructor");
+  LOG_TRACE_FLOW("DH_WOSolve copy constructor");
   setExtraBlob("Extra", 1);
 }
 
-DH_WorkOrder::~DH_WorkOrder()
+DH_WOSolve::~DH_WOSolve()
 {
-  LOG_TRACE_FLOW("DH_WorkOrder destructor");
+  LOG_TRACE_FLOW("DH_WOSolve destructor");
   delete itsPODHWO;
 }
 
-DataHolder* DH_WorkOrder::clone() const
+DataHolder* DH_WOSolve::clone() const
 {
-  return new DH_WorkOrder(*this);
+  return new DH_WOSolve(*this);
 }
 
-void DH_WorkOrder::initPO (const string& tableName)
+void DH_WOSolve::initPO (const string& tableName)
 {                         
-  itsPODHWO = new PO_DH_WO(*this);
+  itsPODHWO = new PO_DH_WOSOLVE(*this);
   itsPODHWO->tableName (tableName);
 }
 
-PL::PersistentObject& DH_WorkOrder::getPO() const
+PL::PersistentObject& DH_WOSolve::getPO() const
 {
   return *itsPODHWO;
 } 
 
-void DH_WorkOrder::preprocess()
+void DH_WOSolve::preprocess()
 {
   // Add the fields to the data definition.
   addField ("WOID", BlobField<int>(1));
   addField ("Status", BlobField<unsigned int>(1));
   addField ("KSType", BlobField<char>(1, MaxKSTypeLength));
-  addField ("StrategyNo", BlobField<unsigned int>(1));
-  addField ("NoStartSols", BlobField<int>(1));
-  addField ("NumberOfParam", BlobField<unsigned int> (1));
+  addField ("Initialize", BlobField<unsigned int>(1));
+  addField ("NextInterval", BlobField<unsigned int>(1));
+  addField ("UseSVD", BlobField<unsigned int>(1));
 
   // Create the data blob (which calls fillPointers).
   createDataBlock();
@@ -113,40 +111,34 @@ void DH_WorkOrder::preprocess()
   }
 
   *itsWOID = -1;
-  *itsStatus = DH_WorkOrder::New;
-  *itsStrategyNo = 0;
-  *itsNoStartSols = 0;
-  *itsNumberOfParam = 0;
-
-   // By default use the normal data size as current;
-   // only if the user explicitly set another CurDataSize
-   // we will send that length
-   setCurDataSize(getDataSize());
-  
+  *itsStatus = DH_WOSolve::New;
+  *itsInitialize = 0;
+  *itsNextInterval = 0;
+  *itsUseSVD = 0;
 }
 
-void DH_WorkOrder::fillDataPointers()
+void DH_WOSolve::fillDataPointers()
 {
   // Fill in the pointers.
   itsWOID = getData<int> ("WOID");
   itsStatus = getData<unsigned int> ("Status");
   itsKSType = getData<char> ("KSType");
-  itsStrategyNo = getData<unsigned int> ("StrategyNo");
-  itsNoStartSols = getData<int> ("NoStartSols");
-  itsNumberOfParam = getData<unsigned int> ("NumberOfParam");
+  itsInitialize = getData<unsigned int> ("Initialize");
+  itsNextInterval = getData<unsigned int> ("NextInterval");
+  itsUseSVD = getData<unsigned int> ("UseSVD");
 }
 
-void DH_WorkOrder::postprocess()
+void DH_WOSolve::postprocess()
 {
   itsWOID = 0;
   itsStatus = 0;
   itsKSType = 0;
-  itsStrategyNo = 0;
-  itsNoStartSols = 0;
-  itsNumberOfParam = 0;
+  itsInitialize = 0;
+  itsNextInterval = 0;
+  itsUseSVD = 0;
 }
 
-void DH_WorkOrder::setKSType(const string& ksType)
+void DH_WOSolve::setKSType(const string& ksType)
 {
   ASSERTSTR(ksType.size() < MaxKSTypeLength, "KS type name is too long");
   char* ptr;
@@ -154,39 +146,32 @@ void DH_WorkOrder::setKSType(const string& ksType)
   strcpy(ptr, ksType.c_str());
 }
 
-void DH_WorkOrder::setVarData(const KeyValueMap& stratArgs,
-			      vector<string>& pNames, 
-			      vector<int>& startSols)
+void DH_WOSolve::setVarData(const KeyValueMap& msArgs,
+			    int timeInterval,
+			    vector<string>& pNames)
 {
   BlobOStream& bos = createExtraBlob();
   // Put strategy arguments into extra blob
-  bos << stratArgs;
+  bos << msArgs;
+
+  bos << timeInterval;
 
   // Put parameter names into extra blob
   bos.putStart("names", 1);
   vector<string>::const_iterator iter;
   int paramNo = pNames.size();
+  bos << paramNo;             // First write the number of parameters to follow
   for (iter = pNames.begin(); iter != pNames.end(); iter++)
   {
     bos << *iter;
   }
-  setNumberOfParam(paramNo);
-  bos.putEnd();
 
-  // Put start solutions into extra blob
-  bos.putStart("sols", 1);
-  unsigned int noSols = startSols.size();
-  for (unsigned int i = 0; i<noSols; i++)
-  {
-    bos << startSols[i];
-  }
-  setNoStartSolutions(noSols);
   bos.putEnd();
 }
 
-bool DH_WorkOrder::getVarData(KeyValueMap& stratArgs,
-			      vector<string>& pNames,
-			      vector<int>& startSols)
+bool DH_WOSolve::getVarData(KeyValueMap& msArgs,
+			    int& timeInterval,
+			    vector<string>& pNames)
 {
   bool found;
   int version;
@@ -196,54 +181,44 @@ bool DH_WorkOrder::getVarData(KeyValueMap& stratArgs,
   }
   else
   {
-    // Get strategy arguments
-    bis >> stratArgs;
+    // Get ms arguments
+    bis >> msArgs;
+
+    bis >> timeInterval;
 
     // Get parameter names.
     bis.getStart("names");
     pNames.clear();
-    int nr = getNumberOfParam();
+    unsigned int nr;
+    bis >> nr;
     pNames.resize(nr);
-    for (int i=0; i < nr; i++)
+    for (unsigned int i=0; i < nr; i++)
     {
       bis >> pNames[i];
     }
     bis.getEnd();
-    // Get start solutions
-    bis.getStart("sols");
-    startSols.clear();
-    int number = getNoStartSolutions();
-    startSols.resize(number);
-    for (int j=0; j < number; j++)
-    {
-      bis >> startSols[j];
-    }
-    bis.getEnd();
+
     return true;
   }  
 
 }
 
-void DH_WorkOrder::dump()
+void DH_WOSolve::dump()
 {
-  cout << "DH_WorkOrder: " << endl;
+  cout << "DH_WOSolve: " << endl;
   cout << "ID = " << getWorkOrderID() << endl;
   cout << "Status = " << getStatus() << endl;
   cout << "KS Type = " << getKSType() << endl;
-  cout << "Strategy number = " << getStrategyNo() << endl;
-  cout << "Number of start solutions = " << getNoStartSolutions() << endl;
+  cout << "Initialize? = " << getInitialize() << endl;
+  cout << "NextInterval? = " << getNextInterval() << endl;
 
   KeyValueMap sArguments;
+  int timeInterval;
   vector<string> pNames;
-  vector<int> sols;
-  if (getVarData(sArguments, pNames, sols))
+  if (getVarData(sArguments, timeInterval, pNames))
   { 
-    cout << "Start solutions : " << endl;
-    for (unsigned int i = 0; i < sols.size(); i++)
-    {
-      cout << sols[i] << endl;
-    }
-    cout << "Number of parameters = "  << getNumberOfParam() << endl;
+    cout << "Time interval = " << timeInterval << endl;
+    cout << "Number of parameters = "  << pNames.size() << endl;
     
     cout << "Parameter names : " << endl;
     for (unsigned int i = 0; i < pNames.size(); i++)
@@ -253,32 +228,43 @@ void DH_WorkOrder::dump()
   }
 }
 
+void DH_WOSolve::clearData()
+{
+  clearExtraBlob();
+  setWorkOrderID(-1);
+  setStatus(DH_WOSolve::New);
+  setKSType("");
+  setInitialize(true);
+  setNextInterval(true);
+  setUseSVD(false);
+}
+
 namespace PL {
 
-void DBRep<DH_WorkOrder>::bindCols (dtl::BoundIOs& cols)
+void DBRep<DH_WOSolve>::bindCols (dtl::BoundIOs& cols)
 {
   DBRep<DH_PL>::bindCols (cols);
   cols["WOID"] == itsWOID;
   cols["STATUS"] == itsStatus;
   cols["KSTYPE"] == itsKSType;
-  cols["STRATEGYNO"] == itsStrategyNo;
-  cols["NOSTARTSOLS"] == itsNoStartSols;
-  cols["NUMBEROFPARAM"] == itsNumberOfParam;
+  cols["INITIALIZE"] == itsInitialize;
+  cols["NEXTINTERVAL"] == itsNextInterval;
+  cols["USESVD"] == itsUseSVD;
 }
 
-void DBRep<DH_WorkOrder>::toDBRep (const DH_WorkOrder& obj)
+void DBRep<DH_WOSolve>::toDBRep (const DH_WOSolve& obj)
 {
   DBRep<DH_PL>::toDBRep (obj);
   itsWOID = obj.getWorkOrderID();
   itsStatus = obj.getStatus();
   itsKSType = obj.getKSType();
-  itsStrategyNo = obj.getStrategyNo();
-  itsNoStartSols = obj.getNoStartSolutions();
-  itsNumberOfParam = obj.getNumberOfParam();
+  itsInitialize = obj.getInitialize();
+  itsNextInterval = obj.getNextInterval();
+  itsUseSVD = obj.getUseSVD();
 }
 
 //# Force the instantiation of the templates.
-template class TPersistentObject<DH_WorkOrder>;
+template class TPersistentObject<DH_WOSolve>;
 
 }  // end namespace PL
 

@@ -20,8 +20,8 @@
 //#
 //#  $ $
 
-#ifndef PSS3_MMAP_H
-#define PSS3_MMAP_H
+#ifndef BBS3_MMAP_H
+#define BBS3_MMAP_H
 
 #include <Common/lofar_string.h>
 

@@ -47,9 +47,7 @@ string dtos(double dbl) // Convert double to string
 
 DH_Solution::DH_Solution (const string& name)
   : DH_PL           (name, "DH_Solution", 1),
-    itsID           (0),
     itsWOID         (0),
-    itsIteration    (0),
     itsFit          (0),
     itsMu           (0),
     itsStdDev       (0),
@@ -62,9 +60,7 @@ DH_Solution::DH_Solution (const string& name)
 
 DH_Solution::DH_Solution(const DH_Solution& that)
   : DH_PL   (that),
-    itsID           (0),
     itsWOID         (0),
-    itsIteration    (0),
     itsFit          (0),
     itsMu           (0),
     itsStdDev       (0),
@@ -99,9 +95,7 @@ PL::PersistentObject& DH_Solution::getPO() const
 void DH_Solution::preprocess()
 {
   // Add the fields to the data definition.
-  addField ("ID", BlobField<int>(1));
   addField ("WOID", BlobField<int>(1));
-  addField ("Iteration", BlobField<int>(1));
   addField ("Fit", BlobField<double>(1));
   addField ("Mu", BlobField<double>(1));
   addField ("StdDev", BlobField<double>(1));
@@ -111,26 +105,18 @@ void DH_Solution::preprocess()
   // Create the data blob (which calls fillPointers).
   createDataBlock();
 
-  *itsID = -1;
   *itsWOID = -1;
-  *itsIteration = -1;
   *itsFit = 0;
   *itsMu = 0;
   *itsStdDev =0;
   *itsChi = 0;
   *itsNumberOfParam = 0;
-  // By default use the normal data size as current;
-  // only if the user explicitly set another CurDataSize
-  // we will send that length
-  setCurDataSize(getDataSize());
 }
 
 void DH_Solution::fillDataPointers()
 {
  // Fill in the pointers.
-  itsID = getData<int> ("ID");
   itsWOID = getData<int> ("WOID");
-  itsIteration = getData<int> ("Iteration");
   itsFit = getData<double> ("Fit");
   itsMu = getData<double> ("Mu");
   itsStdDev = getData<double> ("StdDev");
@@ -140,9 +126,7 @@ void DH_Solution::fillDataPointers()
 
 void DH_Solution::postprocess()
 {
-  itsID = 0;
   itsWOID = 0;
-  itsIteration = 0;
   itsFit = 0;
   itsMu = 0;
   itsStdDev = 0;
@@ -224,9 +208,7 @@ void DH_Solution::setSolution(vector<string>& names, vector<double>& values)
 
 void DH_Solution::clearData()
 {
-  setID(-1);
   setWorkOrderID(-1);
-  setIterationNo(-1);
   Quality q;
   setQuality(q);
   setNumberOfParam(0);
@@ -235,29 +217,6 @@ void DH_Solution::clearData()
 
 void DH_Solution::dump()
 {
-//   cout <<  "DH_Solution: " << endl;
-//   cout <<  "ID =  " << getID() << endl;
-//   cout <<  "workorder ID =  " << getWorkOrderID() << endl;
-//   cout <<  "iteration  =  " << getIterationNo() << endl;
-//   cout <<  "number of parameters =  " << getNumberOfParam() << endl;
-//   vector<string> pNames;
-//   getParamNames(pNames);
-//   vector<double> pValues;
-//   getParamValues(pValues);
-//   DBGASSERTSTR(pNames.size() == pValues.size(), 
-// 	            "The number of parameters and their values do not match ");
-//   cout <<  "PARAMETERS" << endl;
-
-//   char strVal [20];
-//   for (unsigned int i = 0; i < pNames.size(); i++)
-//   {
-//     cout <<  pNames[i] <<  " = " ;
-//     sprintf(strVal, "%1.10f ", pValues[i]);
-//     cout << strVal << endl;
-//   } 
-//   cout << endl;
-
-
   vector<string> pNames;
   vector<double> pValues;
   getSolution(pNames, pValues);
@@ -277,14 +236,12 @@ void DH_Solution::dump()
       break;
     } 
   }
-  cout << getIterationNo() << " ";
   for (unsigned int i = 0; i < pNames.size(); i++)
   {
     sprintf(strVal, "%1.10f ", pValues[i]);
     cout << strVal << " ";
   }
   cout << endl;
-
 
 }
 
@@ -293,9 +250,7 @@ namespace PL {
 void DBRep<DH_Solution>::bindCols (dtl::BoundIOs& cols)
 {
   DBRep<DH_PL>::bindCols (cols);
-  cols["BBID"] == itsID;
   cols["WOID"] == itsWOID;
-  cols["ITERATION"] == itsIteration;
   cols["FIT"] == itsFit;
   cols["MU"] == itsMu;
   cols["STDDEV"] == itsStdDev;
@@ -306,9 +261,7 @@ void DBRep<DH_Solution>::bindCols (dtl::BoundIOs& cols)
 void DBRep<DH_Solution>::toDBRep (const DH_Solution& obj)
 {
   DBRep<DH_PL>::toDBRep (obj);
-  itsID = obj.getID();
   itsWOID = obj.getWorkOrderID();
-  itsIteration = obj.getIterationNo();
   itsFit = obj.getQuality().itsFit;
   itsMu = obj.getQuality().itsMu;
   itsStdDev = obj.getQuality().itsStddev;

@@ -33,6 +33,8 @@
 namespace LOFAR
 {
 
+class ParmData;
+
 // Solver calculates new parameter values from the equations given by the
 // Prediffer class.
 class Solver
@@ -70,12 +72,12 @@ public:
   // The first value on the spid axis is the difference between measured and
   // predicted data. The other values are the derivatives for each spid.
   // An equation is added to the solver for each freq,time,result.
-  // Note that nrspid has to match the ParmData object given to setEquations
-  // for this prediffer.
+  // Note that nrspid has to match the ParmData object given to
+  // setSolvableParmData for this prediffer.
   // Also note that setEquations cannot be called before setSolvableParmData
   // has been called for all prediffers.
   // After the last setEquations, the solve function can be called.
-  void setEquations (const dcomplex* data, int nresult, nrspid,
+  void setEquations (const dcomplex* data, int nresult, int nrspid,
 		     int nrtime, int nrfreq, int prediffer);
 
   // Solve which returns solved parameter values in a vector and fit value 

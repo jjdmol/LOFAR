@@ -23,8 +23,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef PSS3_DH_SOLUTION_H
-#define PSS3_DH_SOLUTION_H
+#ifndef BBS3_DH_SOLUTION_H
+#define BBS3_DH_SOLUTION_H
 
 #include <Common/lofar_vector.h>
 #include <TransportPL/DH_PL.h>
@@ -62,20 +62,9 @@ public:
   /// Deallocate the buffers.
   virtual void postprocess();
 
-  /// overload the getcursize method;
-  /// reported data size may be altered with setCurDataSize() method
-  int  getCurDataSize() ;
-  void setCurDataSize(const int nbytes) ;
-
   // Data access methods
-  int getID() const;
-  void setID(const int id);
-
   int getWorkOrderID() const;
   void setWorkOrderID(const int id);
-
-  int getIterationNo() const;
-  void setIterationNo(const int no);
 
   void setSolutionID(const int id);  // Set id of solution to retrieve from database
   int getSolutionID() const;
@@ -108,9 +97,7 @@ private:
   // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
   virtual void fillDataPointers();
 
-  int*          itsID;
   int*          itsWOID;
-  int*          itsIteration;
   double*       itsFit;
   double*       itsMu;
   double*       itsStdDev;
@@ -123,35 +110,17 @@ private:
 
 };
 
-inline int DH_Solution::getID() const
-{ return *itsID; }
-
-inline void DH_Solution::setID(const int id)
-{ *itsID = id; }
-
 inline int DH_Solution::getWorkOrderID() const
 { return *itsWOID; }
 
 inline void DH_Solution::setWorkOrderID(const int id)
 { *itsWOID = id; }
 
-inline int DH_Solution::getIterationNo() const
-{ return *itsIteration; }
-
-inline void DH_Solution::setIterationNo(const int no)
-{ *itsIteration = no; }
-
 inline unsigned int DH_Solution::getNumberOfParam() const
 { return *itsNumberOfParam; }
 
 inline void DH_Solution::setNumberOfParam(const unsigned int no)
 { *itsNumberOfParam = no; }
-
-inline int DH_Solution::getCurDataSize() 
-{ return itsCurDataSize; }
-   
-inline void DH_Solution::setCurDataSize(const int nbytes)
-{  itsCurDataSize = nbytes;  }
 
 // Define the class needed to tell PL that there should be
 // extra fields stored in the database table.
@@ -163,9 +132,8 @@ namespace PL {
       void bindCols (dtl::BoundIOs& cols);                      
       void toDBRep (const DH_Solution&);                        
     private: 
-      int itsID;                   // Temporarily stored in separate fields
+                                   // Temporarily stored in separate fields
       int itsWOID;                 // in order to facilitate debugging
-      int itsIteration;
       double itsFit;
       double itsMu;
       double itsStdDev;

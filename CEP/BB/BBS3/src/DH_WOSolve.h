@@ -1,4 +1,4 @@
-//  DH_WorkOrder.h: Example DataHolder
+//  DH_WOSolve.h: DataHolder containing workorder for the solver
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,8 +23,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef PSS3_DH_WORKORDER_H
-#define PSS3_DH_WORKORDER_H
+#ifndef BBS3_DH_WOSOLVE_H
+#define BBS3_DH_WOSOLVE_H
 
 #include <Common/lofar_vector.h>
 
@@ -41,19 +41,19 @@ namespace LOFAR
  //# Forward Declarations
 class KeyValueMap;
 
-class DH_WorkOrder: public DH_PL
+class DH_WOSolve: public DH_PL
 {
 public:
 
   enum woStatus{New,Assigned,Executed};
 
-  typedef PL::TPersistentObject<DH_WorkOrder> PO_DH_WO;
+  typedef PL::TPersistentObject<DH_WOSolve> PO_DH_WOSOLVE;
 
-  explicit DH_WorkOrder (const string& name = "dh_workorder");
+  explicit DH_WOSolve (const string& name = "dh_wosolve");
 
-  DH_WorkOrder(const DH_WorkOrder&);
+  DH_WOSolve(const DH_WOSolve&);
 
-  virtual ~DH_WorkOrder();
+  virtual ~DH_WOSolve();
 
   DataHolder* clone() const;
 
@@ -69,11 +69,6 @@ public:
   /// Deallocate the buffers.
   virtual void postprocess();
 
-  /// overload the getcursize method;
-  /// reported data size may be altered with setCurDataSize() method
-  int  getCurDataSize() ;
-  void setCurDataSize(const int nbytes) ;
-
   /// Data access methods.
   int getWorkOrderID() const;
   void setWorkOrderID(int id);
@@ -86,104 +81,94 @@ public:
   int getKSTypeLength();
   void setKSTypeLength(int length);
 
-  unsigned int getStrategyNo() const;
-  void setStrategyNo(unsigned int no);
+  bool getInitialize() const;
+  void setInitialize(bool doInitialize);
 
-  int getNoStartSolutions() const;
-  void setNoStartSolutions(int no);
+  bool getNextInterval() const;
+  void setNextInterval(bool doNextInterval);
 
-  int getParamNameLength();
-  void setParamNameLength(int length);
-  unsigned int getNumberOfParam() const;
-  void setNumberOfParam(int number);
+  bool getUseSVD() const;
+  void setUseSVD(bool useSVD);
 
-  void setVarData(const KeyValueMap& stratArgs, 
-		  vector<string>& pNames, 
-		  vector<int>& startSols);
-  bool getVarData(KeyValueMap& stratArgs,
-		  vector<string>& pNames,
-		  vector<int>& startSols);
+  void setVarData(const KeyValueMap& msArgs, 
+		  int timeInterval,
+		  vector<string>& pNames);
+  bool getVarData(KeyValueMap& msArgs,
+		  int& timeInterval,
+		  vector<string>& pNames);
 
   void dump();
 
+  void clearData();
+
 private:
   /// Forbid assignment.
-  DH_WorkOrder& operator= (const DH_WorkOrder&);
+  DH_WOSolve& operator= (const DH_WOSolve&);
 
   // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
   virtual void fillDataPointers();
 
-  int*          itsWOID;
-  unsigned int* itsStatus;
-  char*         itsKSType;
-  unsigned int* itsStrategyNo;
-  int*          itsNoStartSols;
-  unsigned int* itsNumberOfParam;
-
-  PO_DH_WO*    itsPODHWO; 
-
-  int itsCurDataSize;
-
-  static int theirWriteCount;
-  static int theirReadCount;
+  int*          itsWOID;                    // Unique workorder id
+  unsigned int* itsStatus;                  // Workorder status
+  char*         itsKSType;                  // Knowledge Source type
+  unsigned int* itsInitialize;              // Do initialization?
+  unsigned int* itsNextInterval;            // Do nextInterval?
+  unsigned int* itsUseSVD;                  // UseSVD in solver?
+ 
+  PO_DH_WOSOLVE*    itsPODHWO; 
 
 };
 
-inline int DH_WorkOrder::getWorkOrderID() const
+inline int DH_WOSolve::getWorkOrderID() const
 { return *itsWOID; }
 
-inline void DH_WorkOrder::setWorkOrderID(int id)
+inline void DH_WOSolve::setWorkOrderID(int id)
 { *itsWOID = id; }
 
-inline unsigned int DH_WorkOrder::getStatus() const
+inline unsigned int DH_WOSolve::getStatus() const
 { return *itsStatus; }
 
-inline void DH_WorkOrder::setStatus(unsigned int status)
+inline void DH_WOSolve::setStatus(unsigned int status)
 { *itsStatus = status; }
 
-inline string DH_WorkOrder::getKSType() const
+inline string DH_WOSolve::getKSType() const
 {  return string(itsKSType); }
 
-inline unsigned int DH_WorkOrder::getStrategyNo() const
-{ return *itsStrategyNo; }
+inline bool DH_WOSolve::getInitialize() const
+{ return ((*itsInitialize==0)?(false):(true)); }
 
-inline void DH_WorkOrder::setStrategyNo(unsigned int no)
-{ *itsStrategyNo = no; }
+inline void DH_WOSolve::setInitialize(bool doInitialize)
+{ *itsInitialize = doInitialize; }
 
-inline int DH_WorkOrder::getNoStartSolutions() const
-{ return *itsNoStartSols; }
+inline bool DH_WOSolve::getNextInterval() const
+{ return ((*itsNextInterval==0)?(false):(true)); }
 
-inline void DH_WorkOrder::setNoStartSolutions(int no)
-{ *itsNoStartSols = no; }
+inline void DH_WOSolve::setNextInterval(bool doNextInterval)
+{ *itsNextInterval = doNextInterval; }
 
-inline unsigned int DH_WorkOrder::getNumberOfParam() const
-{ return *itsNumberOfParam; }
+inline bool DH_WOSolve::getUseSVD() const
+{ return ((*itsUseSVD==0)?(false):(true)); }
 
-inline void DH_WorkOrder::setNumberOfParam(int number)
-{ *itsNumberOfParam = number; }
+inline void DH_WOSolve::setUseSVD(bool useSVD)
+{ *itsUseSVD = useSVD; }
 
-inline int DH_WorkOrder::getCurDataSize() 
-{ return itsCurDataSize; }
-   
-inline void DH_WorkOrder::setCurDataSize(const int nbytes)
-{ itsCurDataSize = nbytes;  }
 
 // Define the class needed to tell PL that there should be
 // extra fields stored in the database table.
 namespace PL {  
   template<>                                                 
-  class DBRep<DH_WorkOrder> : public DBRep<DH_PL>               
+  class DBRep<DH_WOSolve> : public DBRep<DH_PL>               
   {                                                             
     public:                                                     
       void bindCols (dtl::BoundIOs& cols);                      
-      void toDBRep (const DH_WorkOrder&);                        
+      void toDBRep (const DH_WOSolve&);                        
     private:                                                    
       int itsWOID;                    // Temporarily stored in separate fields
       unsigned int itsStatus;         // in order to facilitate debugging
       string itsKSType;
-      unsigned int itsStrategyNo;
-      int itsNoStartSols;
-      unsigned int itsNumberOfParam;
+      unsigned int itsInitialize;
+      unsigned int itsNextInterval;
+      unsigned int itsUseSVD;
     };   
                                                       
 } // end namespace PL   
