@@ -32,8 +32,8 @@
 #include <MSVisAgent/MSInputSink.h>
 #include <MSVisAgent/MSOutputSink.h>
 
-#include <aips/Arrays/ArrayUtil.h>
-#include <aips/Exceptions/Error.h>
+#include <casa/Arrays/ArrayUtil.h>
+#include <casa/Exceptions/Error.h>
 
 #include <stdexcept>
 

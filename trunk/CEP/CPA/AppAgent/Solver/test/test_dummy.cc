@@ -22,7 +22,7 @@
 
 #include <MSVisAgent/MSInputSink.h>
 #include <MSVisAgent/MSOutputSink.h>
-#include <aips/Exceptions/Error.h>
+#include <casa/Exceptions/Error.h>
 #include "../src/BatchAgent.h"
 #include "../src/DummySolver.h"
 #include <DMI/DataField.h>
