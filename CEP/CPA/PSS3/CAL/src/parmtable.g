@@ -208,6 +208,49 @@ parmtable := function (name, create=F)
 	return T;
     }
 
+    public.loadgsm := function(gsmname, where='')
+    {
+	t := table(gsmname);
+	if (is_fail(t)) fail;
+	tab := t.query (where, sortlist='NUMBER');
+	fnd := tab.nrows() > 0;
+	if (fnd) {
+	    for (row in [1:tab.nrows()]) {
+		tdom := tab.getcell ('TDOMAIN', row);
+		fdom := tab.getcell ('FDOMAIN', row);
+		src := tab.getcell ('NUMBER', row);
+		name := spaste('GSM.', tab.getcell('NAME', row), '.');
+		public.put (spaste(name, 'RA'),
+			    src, -1, tdom, fdom,
+			    values=tab.getcell ('RAPARMS', row),
+			    perturbation=1e-7, pertrelative=F);
+		public.put (spaste(name, 'DEC'),
+			    src, -1, tdom, fdom,
+			    values=tab.getcell ('DECPARMS', row),
+			    perturbation=1e-7, pertrelative=F);
+		public.put (spaste(name, 'I'),
+			    src, -1, tdom, fdom,
+			    values=tab.getcell ('IPARMS', row));
+		public.put (spaste(name, 'Q'),
+			    src, -1, tdom, fdom,
+			    values=tab.getcell ('QPARMS', row));
+		public.put (spaste(name, 'U'),
+			    src, -1, tdom, fdom,
+			    values=tab.getcell ('UPARMS', row));
+		public.put (spaste(name, 'V'),
+			    src, -1, tdom, fdom,
+			    values=tab.getcell ('VPARMS', row));
+	    }
+	}
+	print 'Wrote',tab.nrows(),'sources into MEP';
+	tab.done();
+	t.done();
+	if (!fnd) {
+	    fail 'no sources found in the gsm';
+	}
+	return T;
+    }
+
     public.perturb := function (where='',
 				perturbation=1e-6, pertrelative=T,
 				trace=F)
