@@ -48,6 +48,7 @@
 	if (!strstr(filename, ".debug")) { \
 		strcat (longFilename, ".debug"); \
 	} \
+	getDebugContext().setLevel(20); \
 	const char*     myargv[2] =  { "", longFilename }; \
 	Debug::initLevels (2, myargv, true); 
 
