@@ -97,6 +97,9 @@ bool GPAConverter::gcfEventToUIMMsg(GCFPVBlob& gcfEvent, GCFPVBlob& uimMsg)
       bytesRead += portAddr.unpack((char *)_msgBuffer + bytesRead);
       uimMsgItems.push_back(portAddr.getValue());
       
+      _msgBuffer += bytesRead; // move to start of real event
+      _bytesLeft -= bytesRead;
+      
       GCFEvent e;
       // expects and reads signal
       if (recv(&e.signal, sizeof(e.signal)) != sizeof(e.signal)) 

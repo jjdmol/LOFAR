@@ -15,8 +15,7 @@
 
 static string sTaskName = "TA1";
 
-const TPropertyInfo propertyAHJP00Def =
-  {REMOTESYS1"A_H.J.P00", LPT_DOUBLE};
+const TPropertyInfo propertyAHJP00Def(REMOTESYS1"A_H.J.P00", LPT_DOUBLE);
 
 Application::Application() :
   GCFTask((State)&Application::initial, sTaskName),
@@ -41,11 +40,11 @@ Application::Application() :
     // register the protocol for debugging purposes
   registerProtocol(TST_PROTOCOL, TST_PROTOCOL_signalnames);  
 
-  _propertySetA1.initProperties(propertiesSA1, NR_OF_PROPCONFIGS(propertiesSA1));
-  _propertySetE1.initProperties(propertiesSE1, NR_OF_PROPCONFIGS(propertiesSE1));
-  _propertySetB1.initProperties(propertiesSB1, NR_OF_PROPCONFIGS(propertiesSB1));
-  _propertySetB2.initProperties(propertiesSB2, NR_OF_PROPCONFIGS(propertiesSB2));
-  _propertySetB3.initProperties(propertiesSB3, NR_OF_PROPCONFIGS(propertiesSB3));
+  _propertySetA1.initProperties(propertiesSA1);
+  _propertySetE1.initProperties(propertiesSE1);
+  _propertySetB1.initProperties(propertiesSB1);
+  _propertySetB2.initProperties(propertiesSB2);
+  _propertySetB3.initProperties(propertiesSB3);
 }
 
 GCFEvent::TResult Application::initial(GCFEvent& e, GCFPortInterface& /*p*/)

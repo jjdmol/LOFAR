@@ -55,6 +55,8 @@ class GSAPortService : public GSAService
     void unregisterPort(const string& portID);
     void setConverter(GCFPVSSUIMConverter& converter) 
       { _pConverter = &converter;}
+    GCFPVSSPort& getPort() const { return _port;}
+    const string& getCurPortId() const { return _curPeerID.getValue();}
     
   protected:
     void dpCreated(const string& propName);
@@ -70,7 +72,6 @@ class GSAPortService : public GSAService
     
   private: // data members
     GCFPVSSPort& _port;
-    string       _sysName;
     
   private: // admin. data members
     bool _isSubscribed;

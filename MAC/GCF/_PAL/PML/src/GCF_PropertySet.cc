@@ -30,8 +30,7 @@
 #include <GPM_Defines.h>
 #include <GPM_Controller.h>
 
-const TPropertyInfo dummyPropInfo =
-  {"DUMMY", LPT_BOOL};
+const TPropertyInfo dummyPropInfo("DUMMY", LPT_BOOL);
 
 GCFPropertySet::GCFPropertySet (const char* name,
                                 const char* type,

@@ -24,6 +24,7 @@
 #include <GPA_PropertySet.h>
 #include <stdio.h>
 #include <PA_Protocol.ph>
+#include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/ParameterSet.h>
 
 using namespace GCF;
@@ -39,7 +40,8 @@ GPAController::GPAController() :
   _isBusy(false),
   _isRegistered(false),
   _counter(0),
-  _pCurPropSet(0)
+  _pCurPropSet(0),
+  _synchronous(false)
 {
   // register the protocol for debugging purposes
   registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
@@ -94,9 +96,14 @@ GCFEvent::TResult GPAController::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_EXIT:
-      _garbageTimerId = _pmlPortProvider.setTimer(2.0, 2.0);
+    {
+      LOG_INFO("Initialise PVSS DB");
+      system("chmod 777 initPVSSDB");
+      string sysCmd = "initPVSSDB " + GCFPVSSInfo::getProjectName();
+      system(sysCmd.c_str());
+      _garbageTimerId = _distPmlPortProvider.setTimer(2.0, 2.0);
       break;
-      
+    }  
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -253,7 +260,7 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
     case F_TIMER:
     {
       GCFTimerEvent* pTimer = (GCFTimerEvent*)(&e);
-      if (&p == &_pmlPortProvider)
+      if (&p == &_distPmlPortProvider)
       {        
         if (_garbageTimerId == pTimer->id)
         {
@@ -292,7 +299,7 @@ GCFEvent::TResult GPAController::linking(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_DISCONNECTED:      
-      if (&p != &_pmlPortProvider) p.close();
+      if (&p != &_pmlPortProvider && &p != &_distPmlPortProvider) p.close();
       // else //TODO: find out this can realy happend
       break;
     
@@ -333,11 +340,11 @@ GCFEvent::TResult GPAController::linking(GCFEvent& e, GCFPortInterface& p)
     }
     case F_TIMER:
     {
-      assert(&p == &_pmlPortProvider);
-
       GCFTimerEvent* pTimer = (GCFTimerEvent*)(&e);
-      if (_garbageTimerId != pTimer->id)
+      if (&p == &_pmlPortProvider)
+      {
         pPort = (GCFPortInterface*)(pTimer->arg);
+      }
       break;
     }
  
@@ -369,7 +376,7 @@ GCFEvent::TResult GPAController::unlinking(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_DISCONNECTED:      
-      if (&p != &_pmlPortProvider) p.close();
+      if (&p != &_pmlPortProvider && &p != &_distPmlPortProvider) p.close();
       // else //TODO: find out this can realy happend
       break;
     
@@ -410,12 +417,11 @@ GCFEvent::TResult GPAController::unlinking(GCFEvent& e, GCFPortInterface& p)
     }
     case F_TIMER:
     {
-      assert(&p == &_pmlPortProvider);
-
       GCFTimerEvent* pTimer = (GCFTimerEvent*)(&e);
-            
-      if (_garbageTimerId != pTimer->id)
+      if (&p == &_pmlPortProvider)
+      {
         pPort = (GCFPortInterface*)(pTimer->arg);
+      }
       break;
     }
  
@@ -496,8 +502,11 @@ void GPAController::sendAndNext(GCFEvent& e)
         {
           _propertySets.erase(*iter);
         }
-        LOG_INFO("Closing sequence step 1: Involved prop. sets are disabled. Add to garbage.");
-        propSetClientGone(*pPort);
+        LOG_INFO("Closing sequence step 2: Involved prop. sets are disabled. Add to garbage.");
+        if (!_synchronous)
+        {
+          deletePort(*pPort);
+        }
       }
     }
     else if (e.signal == PA_PROP_SET_UNLOADED)
@@ -559,58 +568,82 @@ void GPAController::acceptConnectRequest(GCFPortInterface& p)
 
 void GPAController::clientPortGone(GCFPortInterface& p)
 {
-  // first step of what must be done before the closed port can be deleted too
-  // - search all prop. sets, which are managed by the remote application 
-  //   connected via the closed port (owner)
-  // - pretend that these prop. sets receives an unregister scope event from the
-  //   remote application
+  // there are a number of steps of what must be done before the closed port can 
+  // be deleted too
+  // - since the server MCA communicates with the PA by means of TCP/IP and 
+  //   the client MCA by means of PVSS DP's the closing sequence can be split up
+  //   into 2 parts:
+  //   1) closing conn. with server MCA:
+  //      - pretend that these prop. sets receives an unregister scope event from the
+  //      remote application
+  //      - search all prop. sets, which are managed by the remote application 
+  //      connected via the closed port (server MCA/owner)
+  //   2) closing conn. with client MCA:
+  //      predent that the PA receives an unload request from the remote applictaion
+  //      for all prop. sets which are loaded by this app.
+  //     
   LOG_INFO("----A PA client is gone, so start the closing sequence!");  
-  GPAPropertySet* pPropSet(0);
-  _counter = 0;
-  list<string> propSetsToDelete;
-  for (TPropertySets::iterator iter = _propertySets.begin();
-       iter != _propertySets.end(); ++iter)
+  LOG_INFO("Closing sequence step 1: Server MCA or client MCA?");  
+  if (p.getName() == "tcp-pa-client")
   {
-    pPropSet = iter->second;
-    assert(pPropSet);
-    if (pPropSet->isOwner(p))
+    LOG_INFO("Closing sequence step 1: It is a server MCA!!!");  
+    GPAPropertySet* pPropSet(0);
+    _counter = 0;
+    list<string> propSetsToDelete;
+    for (TPropertySets::iterator iter = _propertySets.begin();
+         iter != _propertySets.end(); ++iter)
     {
-      // these property sets will be deleted after they are unregistered/disabled
-      // correctly
-      _counter++;
-      propSetsToDelete.push_back(iter->first); 
+      pPropSet = iter->second;
+      assert(pPropSet);
+      if (pPropSet->isOwner(p))
+      {
+        // these property sets will be deleted after they are unregistered/disabled
+        // correctly
+        _counter++;
+        propSetsToDelete.push_back(iter->first); 
+      }
+    }
+    PAUnregisterScopeEvent request;  
+    request.seqnr = 0;
+    LOG_INFO("Closing sequence step 2: Start disabling involved prop. sets");  
+    
+    // as long as this member is true the sendAndNext method may not finish the 
+    // the closing sequence with 'deletePort'
+    _synchronous = true;    
+    for (list<string>::iterator iter = propSetsToDelete.begin();
+         iter != propSetsToDelete.end(); ++iter)
+    {
+      pPropSet = findPropSet(*iter);
+      if (pPropSet)
+      {              
+        request.scope = *iter;
+        pPropSet->disable(request);
+        // response will be handled in the sendAndNext method (F_CLOSED event)
+      }   
+    }
+    _synchronous = false;
+    if (_counter == 0)
+    {
+      LOG_INFO("Closing sequence step 2: No (more) prop. sets needed to be disabled!");
+      // no prop. set needed to be disabled
+      // move to last step, which deletes the port
+      deletePort(p);
     }
   }
-  PAUnregisterScopeEvent request;  
-  request.seqnr = 0;
-  LOG_INFO("Closing sequence step 1: Start disabling involved prop. sets");  
-  
-  for (list<string>::iterator iter = propSetsToDelete.begin();
-       iter != propSetsToDelete.end(); ++iter)
+  else
   {
-    pPropSet = findPropSet(*iter);
-    if (pPropSet)
-    {              
-      request.scope = *iter;
-      pPropSet->disable(request);
-      // response will be handled in the sendAndNext method (F_CLOSED event)
-    }   
-  }
-  if (_counter == 0)
-  {
-    LOG_INFO("Closing sequence step 1: Nothing to do. End of this step!");
-    // no prop. set needed to be disabled
-    // move to second step, which deletes the port
+    LOG_INFO("Closing sequence step 1: It is a client MCA!!!");  
     propSetClientGone(p);
   }
 }
 
 void GPAController::propSetClientGone(GCFPortInterface& p)
 {
-  // second step of what must be done before the closed port can be deleted too
+  // in case the port points to a client MCA this is what must be done before 
+  // the closed port can be deleted too
   // - find the first prop. set who knows the client port as prop. set client
   // - delete the client port from prop. set, which results in an unload request
-  //   with sequence 0
+  //   with sequence 0 (see GPA_PropertySet.cc::clientGone)
 
   LOG_INFO("Closing sequence step 2: Find (next) prop. set who knows port as client");
   string nextPropSet("");
@@ -638,18 +671,15 @@ void GPAController::propSetClientGone(GCFPortInterface& p)
   else 
   {
     LOG_INFO("Closing sequence step 2: No more prop. sets needed to be informed.");
-    LOG_INFO("Closing sequence step 3: Delete port");
     // no more prop. set were involved in this action
-    // so the port 'p' can be deleted
-    // this is only possible after a context switch
-    // this can be forced by means of the 0 timer
+    // move to last step, which deletes the port
     deletePort(p);
   }
 }
 
 void GPAController::deletePort(GCFPortInterface& p)
 {
-  LOG_INFO("Closing sequence step 3: Deleting the port");  
+  LOG_INFO("Closing sequence step 3: Add port to garbage");  
   // In this second step the closed port will be moved to the garbage collector
   // and removes all events, which are received from this port and still in the request 
   // manager
@@ -657,7 +687,6 @@ void GPAController::deletePort(GCFPortInterface& p)
   _pmlPortGarbage.push_back(&p);
   _pmlPorts.remove(&p);
   _requestManager.deleteRequestsOfPort(p);
-  LOG_INFO("Closing sequence step 3: Port deleted");
   LOG_INFO("----End of closing sequence");  
 
   GCFPortInterface* pPort = _requestManager.getOldestRequestPort();

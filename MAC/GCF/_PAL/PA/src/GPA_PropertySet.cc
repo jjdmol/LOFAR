@@ -142,7 +142,7 @@ void GPAPropertySet::disable(PAUnregisterScopeEvent& request)
     {
       LOG_INFO("Inform all client MCA's, which has load this prop. set, about disabling it");
       PAPropSetGoneEvent indication;
-      indication.scope = _name;
+      indication.scope = GCFPVSSInfo::getLocalSystemName() + ":" + _name;
       GCFPortInterface* pPSClientPort;
       for (TPSClients::iterator iter = _psClients.begin();
            iter != _psClients.end(); ++iter)

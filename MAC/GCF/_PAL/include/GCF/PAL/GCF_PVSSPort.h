@@ -74,8 +74,9 @@ class GCFPVSSPort : public GCFRawPort
   public: // pvss port specific methods
 
     void setDestAddr (const string& destDpName);
-    const string& getPortID() {return _portId.getValue();}
-    const string& getPortAddr() {return _portAddr.getValue();}
+    const string& getDestAddr() const { return _destDpName;}
+    const string& getPortID() { return _portId.getValue();}
+    const string& getPortAddr() { return _portAddr.getValue();}
     virtual bool accept(GCFPVSSPort& newPort);
 
   private:
@@ -96,6 +97,7 @@ class GCFPVSSPort : public GCFRawPort
     GSAPortService*   _pPortService;
     string            _destDpName;
     GCFPVString       _portId;
+    string            _remotePortId;
     GCFPVString       _portAddr;
     GCFPVSSUIMConverter* _pConverter;
     

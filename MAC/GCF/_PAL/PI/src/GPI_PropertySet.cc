@@ -125,7 +125,7 @@ void GPIPropertySet::enable(PIRegisterScopeEvent& requestIn)
 void GPIPropertySet::retryEnable()
 {
   LOG_INFO(LOFAR::formatString(
-      "Retry enable prop. set '%s', becasue Property Agent was not available until now",
+      "Retry enable prop. set '%s', because Property Agent was not available yet",
       _scope.c_str()));
   switch (_state)
   {

@@ -46,11 +46,13 @@ EXTRA_DIST = \
 configfilesdir=$(bindir)
 configfiles_DATA= \
 	loadAPC \
-	PropertyAgent.conf
+	initPVSSDB \
+	PropertyAgent.conf \
+	LofarPropertyTypes.pvss
 
 MAC_CONFIG = $(top_srcdir)/../../Config
 
-%.properties: $(MAC_CONFIG)/%.properties
+%.pvss: $(MAC_CONFIG)/%.pvss
 	cp $< $@
 	
 %.conf: gcf-pa.conf.in

@@ -79,12 +79,13 @@ class GPAController : public GCFTask
     GCFPVSSPort             _distPmlPortProvider;
     
   private: // admin. data members
-    bool                _isBusy;
-    bool                _isRegistered;
-    unsigned long       _garbageTimerId;
-    unsigned int        _counter;  
-    GPAPropertySet*     _pCurPropSet;
-    GPAConverter        _converter;   
+    bool              _isBusy;
+    bool              _isRegistered;
+    unsigned long     _garbageTimerId;
+    unsigned int      _counter;  
+    GPAPropertySet*   _pCurPropSet;
+    GPAConverter      _converter;   
+    bool              _synchronous;
 };
 
 #endif

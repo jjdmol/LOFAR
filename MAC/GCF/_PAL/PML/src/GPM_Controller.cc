@@ -27,6 +27,7 @@
 #include <PA_Protocol.ph>
 #include <GCF/ParameterSet.h>
 #include <Resources.hxx>
+#include <GCF/PAL/GCF_PVSSInfo.h>
 
 using namespace GCF;
 
@@ -47,6 +48,8 @@ GPMController::GPMController() :
   _propertyAgent.init(*this, "client", GCFPortInterface::SAP, PA_PROTOCOL);
 
   _distPropertyAgent.init(*this, "DPA-client", GCFPortInterface::SAP, PA_PROTOCOL);
+  
+  _distPropertyAgent.setConverter(_converter);
   
   ParameterSet::instance()->adoptFile("gcf-pml.conf");
   ParameterSet::instance()->adoptFile("PropertyAgent.conf");
@@ -83,26 +86,34 @@ void GPMController::release()
 TPMResult GPMController::loadPropSet(GCFExtPropertySet& propSet)
 {
   TPMResult result(PM_NO_ERROR);
-
-  PALoadPropSetEvent request;
-
-  TAction action;
-  action.pPropSet = &propSet;
-  action.signal = request.signal;
   
-  request.seqnr = registerAction(action);
-  
-  if (_distPropertyAgent.isConnected())
+  string destPA = determineDest(propSet.getScope());
+  if (checkDestination(destPA))
   {
-    request.scope = propSet.getScope();
-    string::size_type index = request.scope.find(':');
-    if (index < request.scope.length())
-    {
-      request.scope.erase(0, index + 1);
-    }    
+    PALoadPropSetEvent request;
+  
+    TAction action;
+    action.pPropSet = &propSet;
+    action.signal = request.signal;
+
+    request.seqnr = registerAction(action);
     
-    _distPropertyAgent.setDestAddr(determineDest(propSet.getScope()));
-    _distPropertyAgent.send(request);
+    if (_distPropertyAgent.isConnected())
+    {
+      request.scope += propSet.getScope();
+      string::size_type index = request.scope.find(':');
+      if (index < request.scope.length())
+      {
+        request.scope.erase(0, index + 1);
+      }    
+      
+      _distPropertyAgent.setDestAddr(destPA);
+      _distPropertyAgent.send(request);
+    }
+  }
+  else
+  {
+    result = PM_PA_NOT_REACHABLE;
   }
   return result;
 }
@@ -110,28 +121,37 @@ TPMResult GPMController::loadPropSet(GCFExtPropertySet& propSet)
 TPMResult GPMController::unloadPropSet(GCFExtPropertySet& propSet)
 {
   TPMResult result(PM_NO_ERROR);
-
-  PAUnloadPropSetEvent request;
-
-  TAction action;
-  action.pPropSet = &propSet;
-  action.signal = request.signal;
-  
-  request.seqnr = registerAction(action);
-  
-  if (_distPropertyAgent.isConnected())
+ 
+  string destPA = determineDest(propSet.getScope());
+  if (checkDestination(destPA))
   {
-    request.scope = propSet.getScope();
-    string::size_type index = request.scope.find(':');
-    if (index < request.scope.length())
+    PAUnloadPropSetEvent request;
+  
+    TAction action;
+    action.pPropSet = &propSet;
+    action.signal = request.signal;
+  
+    request.seqnr = registerAction(action);
+  
+  
+    if (_distPropertyAgent.isConnected())
     {
-      request.scope.erase(0, index + 1);
+      request.scope += propSet.getScope();
+      string::size_type index = request.scope.find(':');
+      if (index < request.scope.length())
+      {
+        request.scope.erase(0, index + 1);
+      }
+  
+      _distPropertyAgent.setDestAddr(destPA);
+      _distPropertyAgent.send(request);
+  
+      _extPropertySets.remove(&propSet);
     }
-
-    _distPropertyAgent.setDestAddr(determineDest(propSet.getScope()));
-    _distPropertyAgent.send(request);
-
-    _extPropertySets.remove(&propSet);
+  }
+  else
+  {
+    result = PM_PA_NOT_REACHABLE;
   }
   return result;
 }
@@ -139,28 +159,36 @@ TPMResult GPMController::unloadPropSet(GCFExtPropertySet& propSet)
 TPMResult GPMController::configurePropSet(GCFPropertySet& propSet, const string& apcName)
 {
   TPMResult result(PM_NO_ERROR);
-  
-  PAConfPropSetEvent request;
-  
-  TAction action;
-  action.pPropSet = &propSet;
-  action.signal = request.signal;
-  action.apcName = apcName;
-  
-  request.seqnr = registerAction(action);
-
-  if (_distPropertyAgent.isConnected())
+   
+  string destPA = determineDest(propSet.getScope());
+  if (checkDestination(destPA))
   {
-    request.scope = propSet.getScope();
-    string::size_type index = request.scope.find(':');
-    if (index < request.scope.length())
+    PAConfPropSetEvent request;
+    
+    TAction action;
+    action.pPropSet = &propSet;
+    action.signal = request.signal;
+    action.apcName = apcName;
+    
+    request.seqnr = registerAction(action);
+  
+    if (_distPropertyAgent.isConnected())
     {
-      request.scope.erase(0, index + 1);
+      request.scope += propSet.getScope();
+      string::size_type index = request.scope.find(':');
+      if (index < request.scope.length())
+      {
+        request.scope.erase(0, index + 1);
+      }
+      request.apcName = apcName;
+  
+      _distPropertyAgent.setDestAddr(destPA);
+      _distPropertyAgent.send(request);
     }
-    request.apcName = apcName;
-
-    _distPropertyAgent.setDestAddr(determineDest(propSet.getScope()));
-    _distPropertyAgent.send(request);
+  }
+  else
+  {
+    result = PM_PA_NOT_REACHABLE;
   }
   return result;
 }
@@ -198,9 +226,9 @@ TPMResult GPMController::registerScope(GCFMyPropertySet& propSet)
     
     request.seqnr = registerAction(action);
     
-    _myPropertySets[propSet.getScope()] = &propSet;
     if (_propertyAgent.isConnected())
     {
+      _myPropertySets[propSet.getScope()] = &propSet;
       request.scope = propSet.getScope();
       request.type = propSet.getType();
       request.isTemporary = propSet.isTemporary();
@@ -473,12 +501,19 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     {
       PAPropSetGoneEvent indication(e);
       GCFExtPropertySet* pPropertySet;
+      string fullScope;
       for (TExtPropertySets::iterator iter = _extPropertySets.begin();
            iter != _extPropertySets.end(); ++iter)
       {
         pPropertySet = *iter;
         assert(pPropertySet);
-        if (pPropertySet->getScope() == indication.scope && pPropertySet->isLoaded())
+        fullScope = pPropertySet->getScope();
+        if (fullScope.find(':') >= fullScope.length())
+        {
+          fullScope = GCFPVSSInfo::getLocalSystemName() + ":" + fullScope;
+        }
+        if (fullScope.find(indication.scope) == 0 && 
+            pPropertySet->isLoaded())
         {
           pPropertySet->serverIsGone();
         }
@@ -596,4 +631,29 @@ string GPMController::determineDest(const string& scope) const
     destDP.insert(0, scope.c_str(), index + 1);
   }
   return destDP;
+}
+
+bool GPMController::checkDestination(const string& destAddr) const
+{
+  if (!GCFPVSSInfo::propExists(destAddr))
+  {
+    string destPA = destAddr;
+    string::size_type pos = destPA.find(':');
+    if (pos < destPA.length())
+    {
+      destPA.erase(pos, destPA.length());
+    }
+    else
+    {
+      destPA = GCFPVSSInfo::getLocalSystemName();
+    }
+    LOG_ERROR(formatString(
+        "PA on system %s not reachable!",
+        destPA.c_str()));
+    return false;
+  }
+  else
+  {
+    return true;
+  }
 }

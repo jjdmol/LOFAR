@@ -142,7 +142,7 @@ class GCFProperty
     GCFPropertySet*       _pPropertySet;
     GCFAnswer*            _pAnswerObj;
     GPMPropertyService*   _pPropService;
-    const TPropertyInfo&  _propInfo;
+    TPropertyInfo  _propInfo;
 
   private: // admin. data members
 };
