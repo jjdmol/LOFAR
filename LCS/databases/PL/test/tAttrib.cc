@@ -48,7 +48,8 @@ using namespace std;
 //
 int main(int argc, const char* argv[])
 {
-  Debug::initLevels(argc, argv);
+  // Initialize the logger
+  INIT_LOGGER(argv[0]);
   try {
     cout << endl;
     cout << "attrib<A>(\"s\")         == \"A\" --> " 

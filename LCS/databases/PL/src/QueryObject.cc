@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include <PL/QueryObject.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <sstream>
 
 namespace LOFAR
@@ -37,7 +37,7 @@ namespace LOFAR
 
     std::string QueryObject::getSql() const 
     {
-      TRACER3 (__PRETTY_FUNCTION__ << ": itsUseString = "
+      LOG_TRACE_VAR_STR(__PRETTY_FUNCTION__ << ": itsUseString = "
                << (itsUseString ? "true" : "false"));
       if (isEmpty()) return "";
       if (itsUseString) {
@@ -46,7 +46,8 @@ namespace LOFAR
       else {
         std::ostringstream oss;
         oss << "WHERE " << itsQueryExpr;
-        TRACER2 (__PRETTY_FUNCTION__ << ": return value : " << oss.str());
+        LOG_TRACE_VAR_STR(__PRETTY_FUNCTION__ << ": return value : " 
+                          << oss.str());
         return oss.str();
       }
     }

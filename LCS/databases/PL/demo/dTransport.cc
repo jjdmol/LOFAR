@@ -24,9 +24,9 @@
 #include "PO_Transport.h"
 #include <PL/TPersistentObject.h>
 #include <PL/PersistenceBroker.h>
-#include <PL/Query.h>
+#include <PL/QueryObject.h>
 #include <PL/Attrib.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <iostream>
 
 using namespace std;
@@ -40,7 +40,7 @@ using namespace LOFAR::PL;
 //
 int main (int argc, const char* argv[]) 
 {
-  Debug::initLevels(argc, argv);
+  INIT_LOGGER(argv[0]);
 
   Collection<Tractor> tractors;
   tractors.add(Tractor("Yamaha", true, 3.0));
@@ -207,7 +207,7 @@ int main (int argc, const char* argv[])
     results = broker.retrieve<Tractor> (expr);
 
     cout << "Retrieved " << results.size() << " object(s)." << endl;
-    Assert(results.empty());
+    ASSERT (results.empty());
 
   }
   catch (LOFAR::Exception & e) {

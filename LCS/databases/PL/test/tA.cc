@@ -23,7 +23,7 @@
 #include "A.h"
 #include "PO_A.h"
 #include <PL/PersistenceBroker.h>
-#include <PL/Query.h>
+#include <PL/QueryObject.h>
 #include <PL/Attrib.h>
 #include <Common/Exception.h>
 #include <complex>
@@ -52,8 +52,8 @@ int main(int argc, const char* argv[])
     TPersistentObject<A> tpoa1(a1);
     TPersistentObject<A> tpoa2;
 
-    // Initialize tracer routines.
-    Debug::initLevels(argc, argv);
+    // Initialize the logger
+    INIT_LOGGER(argv[0]);
 
     // Connect to the database
     broker.connect("test","postgres");

@@ -29,7 +29,7 @@
 #include <PL/TPersistentObject.h>
 #include <PL/QueryObject.h>
 #include <PL/Collection.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <dtl/DBView.h>
 #include <dtl/select_iterator.h>
 #include <sstream>
@@ -67,7 +67,7 @@ namespace LOFAR
 
       try {
         DBViewType view(tableName(), BCA<T>(), query.getSql());
-        TRACER1(__PRETTY_FUNCTION__ << "\n  " << query.getSql());
+        LOG_TRACE_VAR_STR (__PRETTY_FUNCTION__ << "\n  " << query.getSql());
         typename DBViewType::select_iterator iter = view.begin();
 
         for (int nr = 0; iter != view.end() && nr < maxObjects; ++iter, ++nr) {
@@ -104,7 +104,7 @@ namespace LOFAR
       typedef dtl::DBView< DBRepHolder<T> >  DBViewType;
       try {
         DBViewType view(tableName(), BCA<T>(), query.getSql());
-        TRACER1(__PRETTY_FUNCTION__ << "\n  " << query.getSql());
+        LOG_TRACE_VAR_STR (__PRETTY_FUNCTION__ << "\n  " << query.getSql());
 	// Only use the first record found.
 	typename DBViewType::select_iterator iter = view.begin();
 	if (iter != view.end()) {
