@@ -220,7 +220,8 @@ namespace APLCommon
 
     protected:    
       PropertySetAnswer                     m_propertySetAnswer;
-      boost::shared_ptr<GCFMyPropertySet>   m_properties;
+      boost::shared_ptr<GCFMyPropertySet>   m_propertySet;
+      boost::shared_ptr<GCFMyPropertySet>   m_referencesPropSet;
 
     private:
       typedef vector<boost::shared_ptr<GCFPVSSPort> > TPVSSPortVector;
