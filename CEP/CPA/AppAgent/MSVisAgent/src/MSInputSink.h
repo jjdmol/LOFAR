@@ -55,7 +55,7 @@ using namespace VisVocabulary;
 //##       +--[FChannelEndIndex]   (int)     ending channel (default: last chan.)
 //##       +--[FSelectionString] (string)    additional TaQL selection applied 
 //##                                           to MS
-class MSInputSink : public MSVisAgentDebugContext, public FileSink
+class MSInputSink : public FileSink
 {
   public:
     //##ModelId=3DF9FECD0219
@@ -70,6 +70,9 @@ class MSInputSink : public MSVisAgentDebugContext, public FileSink
     //##ModelId=3DFDFC060373
       string sdebug ( int detail = 1,const string &prefix = "",
                       const char *name = 0 ) const;
+      
+      ImportDebugContext(MSVisAgentDebugContext);
+      
   protected:
     //##ModelId=3EC252C1000E
     //##Documentation
