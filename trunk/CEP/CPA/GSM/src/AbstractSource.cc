@@ -281,7 +281,7 @@ MeqDomain AbstractSource::store(Table&      table,
   Polcs = dynamic_cast<MeqParmPolc*>(itsDec)->getPolcs();
   DecParms.put(row, Polcs[0].getCoeff().getDoubleMatrix());
 
-  MeqDomain Domain = Polcs[0].getDomain();
+  MeqDomain Domain = Polcs[0].domain();
 
   Vector<double> TVector(2);
   TVector(0) = Domain.startX();
