@@ -99,15 +99,15 @@ class UVSorterWP : public WorkProcess  //## Inherits: <unnamed>%3CD79D5303AF
       Timestamp ts_header;
       int vis_count;
   
-      HIID header_hiid,chunk_hiid,footer_hiid;
+      HIID header_hiid,chunk_hiid,footer_hiid,msfooter_hiid;
       int mypatch,mycorr;
       
       int uvset_id,segment_id,num_ifrs,num_times,num_channels;
       
       ObjRef header_ref;
-      DataRecord::Ref prec_template_ref;
+      ObjRef prec_template_ref;
       vector<DataRecord *> prec;
-      vector<DataRecord::Ref> prec_ref;
+      vector<ObjRef> prec_ref;
       vector<dcomplex *> pdata;
       vector<int *> pnumpoints; 
       

@@ -266,7 +266,7 @@ bool MSFiller::addChunk (const DataRecord &rec)
   ms_.addRow(nadd);
   
   // setup pointers to data and flags
-  const dcomplex *pdata = &rec[FData];
+  const fcomplex *pdata = &rec[FData];
   const int *pflag = rec[FDataFlag].exists() ? rec[FDataFlag].as_int_p() : 0;
   
   Complex data_arr[num_channels];

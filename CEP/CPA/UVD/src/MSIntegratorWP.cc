@@ -139,6 +139,10 @@ int MSIntegratorWP::receive (MessageRef &mref)
         initSegment(vi);
         integrate(vi,vb);
       } // end of loop over chunks
+      // send footer
+      Message::Ref mref; 
+      mref <<= new Message(AidUVData|msid|AidFooter|AidCorr|AidTimeslot); 
+      publish(mref);
     }
     catch( const AipsError &err )
     {
