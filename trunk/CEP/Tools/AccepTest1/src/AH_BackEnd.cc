@@ -60,7 +60,7 @@ void AH_BackEnd::define(const KeyValueMap& /*params*/) {
     
     myWHCorrelator.getDataManager().getOutHolder(0)->connectTo
       ( *itsWHs.back()->getDataManager().getInHolder(0),
-	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+itsNtargets+cn, false) );
+	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+itsNtargets+cn, true) );
   }
 }
 

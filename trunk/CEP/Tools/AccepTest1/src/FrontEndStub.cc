@@ -67,5 +67,6 @@ namespace LOFAR {
     }
   };
 
-} //namespace
 
+
+} //namespace

@@ -10,6 +10,8 @@
 #ifndef BG_CORRELATOR_WH_RANDOM_H
 #define BG_CORRELATOR_WH_RANDOM_H
 
+#include <sys/time.h>
+
 #include <lofar_config.h>
 #include <tinyCEP/WorkHolder.h>
 
@@ -39,6 +41,8 @@ namespace LOFAR
     virtual void process();
     virtual void dump();
    
+    float getBandwidth();
+
   private:
     WH_Random (const WH_Random&);
     WH_Random& operator= (const WH_Random&);
@@ -50,8 +54,15 @@ namespace LOFAR
     const int itsNsamples;
     const int itsNchannels;
     const int itsNpolarisations;
+
+    struct timeval starttime;
+    struct timeval stoptime;
+
+    float bandwidth;   // stores the 'measured' bandwidth in bytes/sec
   };
 
+
+  inline float WH_Random::getBandwidth() { return bandwidth; }
 } // namespace LOFAR
 
 #endif

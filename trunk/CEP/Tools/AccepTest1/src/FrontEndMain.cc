@@ -29,7 +29,7 @@ int main (int argc, const char** argv) {
 	
 	frontend.setarg(argc, argv);
 	frontend.baseDefine();
-	frontend.basePrerun();
+	frontend.basePrerun();	
 	frontend.baseRun(runs);
  	frontend.baseDump();
 	frontend.baseQuit();

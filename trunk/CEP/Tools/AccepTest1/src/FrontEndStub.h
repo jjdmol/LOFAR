@@ -28,7 +28,7 @@ public:
   // Connect the given objects to the stubs.
   void connect (DH_CorrCube&,  // reference to the DH we want to connect
 		int corrNo);   // channel number
-  
+
  private:
   bool           itsFE_side;          // defines at which side of the interface the instance is
   int            itsNoCorr;           // #correlators in this interface
