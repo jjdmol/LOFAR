@@ -76,7 +76,7 @@ namespace RSP_Test
 
     private:
       // ports
-      GCFPort m_server;
+      GCFTCPPort m_server;
   };
 
 };

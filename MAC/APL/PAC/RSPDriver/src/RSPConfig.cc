@@ -34,19 +34,24 @@ using namespace RSP;
 #define GET_VALUE(name, var, conv)		\
 {						\
   const char* valstr = m_config(name);	\
-  if (valstr) var = conv(valstr);		\
+  if (valstr) var = conv(m_config(name)lstr);		\
 }
 
+#if 0
 #define DEFAULT_N_RSPBOARDS   (24)
 #define DEFAULT_N_RCU         (8 * DEFAULT_N_RSPBOARDS)
 #define DEFAULT_SYNC_INTERVAL (1.0)
+#endif
 
 RSPConfig* RSPConfig::m_instance = 0;
 
-RSPConfig::RSPConfig() :
+RSPConfig::RSPConfig()
+#if 0
+ :
   m_n_rspboards(DEFAULT_N_RSPBOARDS),
   m_n_rcu(DEFAULT_N_RCU),
   m_sync_interval(DEFAULT_SYNC_INTERVAL)
+#endif
 {
 }
 
@@ -67,8 +72,9 @@ RSPConfig& RSPConfig::getInstance()
 void RSPConfig::load(const char* filename)
 {
   m_config.init(filename, '=', 1);
-
+#if 0
   GET_VALUE("N_RSPBOARDS",   m_n_rspboards,   atoi);
   GET_VALUE("N_RCU",         m_n_rcu,         atoi);
   GET_VALUE("SYNC_INTERVAL", m_sync_interval, atof);
+#endif
 }

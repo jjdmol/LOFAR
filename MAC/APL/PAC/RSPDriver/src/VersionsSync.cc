@@ -61,8 +61,8 @@ GCFEvent::TResult VersionsSync::handleack(GCFEvent& event, GCFPortInterface& por
 {
   EPAFwversionEvent ack(event);
 
-  LOG_INFO(formatString("Firmware version on board '%s'=%d",
-			port.getName().c_str(), ack.version));
+  LOG_DEBUG(formatString("Firmware version on board '%s'=%d",
+			 port.getName().c_str(), ack.version));
 
   Cache::getInstance().getBack().getVersions()()(getBoardId()) = ack.version;
 

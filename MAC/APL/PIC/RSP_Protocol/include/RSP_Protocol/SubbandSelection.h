@@ -83,16 +83,16 @@ namespace RSP_Protocol
 
     private:
       /**
+       * Number of selected subbands for each RCU.
+       */
+      blitz::Array<uint16, 1> m_nrsubbands;
+
+      /**
        * Subband selection array.
        * dim 1 = n_rcus (== 1 on SETSUBBANDS, == count(rcumask) on GETSUBBANDS_ACK)
        * dim 2 = n_beamlets.
        */
       blitz::Array<uint16, 2> m_subbands;
-
-      /**
-       * Number of selected subbands for each RCU.
-       */
-      blitz::Array<uint16, 1> m_nrsubbands;
   };
 };
      

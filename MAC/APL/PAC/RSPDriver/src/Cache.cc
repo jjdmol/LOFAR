@@ -50,24 +50,24 @@ CacheBuffer::CacheBuffer()
   tv.tv_sec = 0; tv.tv_usec = 0;
   m_timestamp.set(tv);
 
-  m_subbandselection().resize(GET_CONFIG(N_RCU), MAX_N_BEAMLETS);
-  m_subbandselection.nrsubbands().resize(GET_CONFIG(N_RCU));
+  m_subbandselection().resize(GET_CONFIG("N_RCU", i), MAX_N_BEAMLETS);
+  m_subbandselection.nrsubbands().resize(GET_CONFIG("N_RCU", i));
 
   m_subbandselection() = 0;
   m_subbandselection.nrsubbands() = 0;
     
-  m_rcusettings.resize(GET_CONFIG(N_RCU));
-  m_wgsettings.resize(GET_CONFIG(N_RCU));
-  m_statistics.resize(GET_CONFIG(N_RCU));
+  m_rcusettings.resize(GET_CONFIG("N_RCU", i));
+  m_wgsettings.resize(GET_CONFIG("N_RCU", i));
+  m_statistics.resize(GET_CONFIG("N_RCU", i));
 
   m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP,
-			    GET_CONFIG(N_RCU),
+			    GET_CONFIG("N_RCU", i),
 			    MAX_N_BEAMLETS);
 
   m_beamletweights()(Range::all(), Range::all(), Range::all()) = complex<int16>(0,0);
 
-  m_systemstatus.board().resize(GET_CONFIG(N_RSPBOARDS));
-  m_systemstatus.rcu().resize(GET_CONFIG(N_RCU));
+  m_systemstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
+  m_systemstatus.rcu().resize(GET_CONFIG("N_RCU", i));
 
   BoardStatus boardinit;
   RCUStatus   rcuinit;
@@ -78,7 +78,7 @@ CacheBuffer::CacheBuffer()
   m_systemstatus.board() = boardinit;
   m_systemstatus.rcu()   = rcuinit;
 
-  m_versions().resize(GET_CONFIG(N_RSPBOARDS));
+  m_versions().resize(GET_CONFIG("N_RSPBOARDS", i));
   m_versions() = 0;
 }
 

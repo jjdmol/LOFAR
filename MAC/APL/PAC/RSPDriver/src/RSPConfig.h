@@ -29,7 +29,9 @@
 #include "Config.h"
 #include <string>
 
-#define GET_CONFIG(var) (RSP::RSPConfig::getInstance().var())
+#define GET_CONFIG(var, type) \
+(RSP::RSPConfig::getInstance()()(var)? \
+ (ato##type(RSP::RSPConfig::getInstance()()(var))) : ato##type(""))
 
 namespace RSP
 {
@@ -48,24 +50,32 @@ namespace RSP
 
       void load(const char* filename);
 
+      inline Config& operator()() { return m_config; }
+
+#if 0      
       int    N_RSPBOARDS() const;
       int    N_RCU() const;
       double SYNC_INTERVAL() const;
+#endif
       
     private:
       RSPConfig();
 
       static RSPConfig* m_instance;
 
+#if 0
       int     m_n_rspboards;
       int     m_n_rcu;
       double  m_sync_interval;
+#endif
       Config  m_config;
   };
 
+#if 0
   inline int    RSPConfig::N_RCU()         const { return m_n_rcu; }
   inline int    RSPConfig::N_RSPBOARDS()   const { return m_n_rspboards; }
   inline double RSPConfig::SYNC_INTERVAL() const { return m_sync_interval; }
+#endif
   
 };
 
