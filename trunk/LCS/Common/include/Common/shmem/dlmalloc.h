@@ -1,4 +1,7 @@
 /*
+  This is an adaptation of Doug Lea's malloc to be used for shared memory.
+
+
   Default header file for malloc-2.7.0, written by Doug Lea
   and released to the public domain.  Use, modify, and redistribute
   this code without permission or acknowledgement in any way you wish.
