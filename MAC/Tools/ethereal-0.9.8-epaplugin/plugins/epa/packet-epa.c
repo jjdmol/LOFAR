@@ -46,32 +46,38 @@
 #include <epan/packet.h>
 #include "packet-epa.h"
 
+#define FRAGMENT_SIZE_BYTES  1024
+#define SS_SELECT_SIZE_BYTES 512
+
 /**
  * EPA protocol constants and value to string mappings.
  */
 static const value_string type_info_vals[] =
 {
-  { 0x00, "Invalid "  },
-  { 0x01, "READ    "  },
-  { 0x02, "WRITE   "  },
-  { 0x03, "READACK "  },
+  { 0x00, "Invalid " },
+  { 0x01, "READ    " },
+  { 0x02, "WRITE   " },
+  { 0x03, "READACK " },
   { 0x04, "WRITEACK" },
   { 0,     NULL                   },
 };
 
 static const value_string type_vals[] =
 {
-  { 0x00, "Invalid message type        "  },
-  { 0x01, "Read  request     (READ)    "  },
-  { 0x02, "Write command     (WRITE)   "  },
-  { 0x03, "Read  acknowledge (READACK) "  },
-  { 0x04, "Write acknowledge (WRITEACK)"  },
+  { 0x00, "Invalid message type"         },
+  { 0x01, "Read  request     (READ)"     },
+  { 0x02, "Write command     (WRITE)"    },
+  { 0x03, "Read  acknowledge (READACK)"  },
+  { 0x04, "Write acknowledge (WRITEACK)" },
   { 0,     NULL                   },
 };
 
 static const value_string dst_vals[] =
 {
-  { 0x00, "Beamlet processor" },
+  { 0x00, "Beamlet processor 0" },
+  { 0x01, "Beamlet processor 1" },
+  { 0x02, "Beamlet processor 2" },
+  { 0x03, "Beamlet processor 3" },
   { 0x80, "RSP main FPGA"     },
   { 0,     NULL               },  
 };
@@ -229,7 +235,7 @@ static const value_string mep_error_vals[] =
 #include "plugins/plugin_api_defs.h"
 
 #ifndef __ETHEREAL_STATIC__
-G_MODULE_EXPORT const gchar version[] = "1.0";
+G_MODULE_EXPORT const gchar version[] = "3.0";
 G_MODULE_EXPORT void plugin_init(plugin_address_table_t *pat);
 G_MODULE_EXPORT void plugin_reg_handoff(void);
 #endif 
@@ -256,6 +262,10 @@ static int hf_epa_addr_ffi    = -1;
 static int hf_epa_offset      = -1;
 static int hf_epa_size        = -1;
 static int hf_epa_data        = -1;
+static int hf_epa_int16       = -1;
+static int hf_epa_uint16      = -1;
+static int hf_epa_int32       = -1;
+static int hf_epa_uint32      = -1;
 
 /**
  * RSP Status register fields.
@@ -510,6 +520,78 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
       proto_tree_add_item(newtree, df_rcustatus_ap3_rcu   ,tvb, 84, 12,  FALSE);
       proto_tree_add_item(newtree, df_rcustatus_ap4_rcu   ,tvb, 96, 12,  FALSE);
     }
+    else if (0x02 == type && 0x05 == pid)
+    {
+      // WRITE BF_*
+      int i;
+      for (i = 0; i < 16; i++)
+      {
+	proto_tree_add_item(epa_tree, hf_epa_int16, tvb,
+			    12 + (i*sizeof(gint16)),
+			    sizeof(gint16), TRUE);
+      }
+      proto_tree_add_text(epa_tree, tvb, 0, 0, "...");
+      for (i = 0; i < 8; i++)
+      {
+	proto_tree_add_item(epa_tree, hf_epa_int16, tvb,
+			    12 + FRAGMENT_SIZE_BYTES - (8*sizeof(gint16)) + (i*sizeof(gint16)),
+			    sizeof(gint16), TRUE);
+      }
+    }
+    else if (0x02 == type && 0x04 == pid)
+    {
+      // WRITE SS_SELECT
+      int i;
+      for (i = 0; i < 16; i++)
+      {
+	proto_tree_add_item(epa_tree, hf_epa_uint16, tvb,
+			    12 + (i*sizeof(guint16)),
+			    sizeof(guint16), TRUE);
+      }
+      proto_tree_add_text(epa_tree, tvb, 0, 0, "...");
+      for (i = 0; i < 8; i++)
+      {
+	proto_tree_add_item(epa_tree, hf_epa_uint16, tvb,
+			    12 + SS_SELECT_SIZE_BYTES - (8*sizeof(guint16)) + (i*sizeof(guint16)),
+			    sizeof(guint16), TRUE);
+      }
+    }
+    else if ( (0x03 == type) && (0x06 == pid || 0x07 == pid) && (0x00 == reg) )
+    {
+      // READACK [BST|SST]_MEAN
+      int i;
+      for (i = 0; i < 16; i++)
+      {
+	proto_tree_add_item(epa_tree, hf_epa_int32, tvb,
+			    12 + (i*sizeof(gint32)),
+			    sizeof(gint32), TRUE);
+      }
+      proto_tree_add_text(epa_tree, tvb, 0, 0, "...");
+      for (i = 0; i < 8; i++)
+      {
+	proto_tree_add_item(epa_tree, hf_epa_int32, tvb,
+			    12 + FRAGMENT_SIZE_BYTES - (8*sizeof(gint32)) + (i*sizeof(gint32)),
+			    sizeof(gint32), TRUE);
+      }
+    }
+    else if ( (0x03 == type) && (0x06 == pid || 0x07 == pid) && (0x01 == reg) )
+    {
+      // READACK [BST|SST]_MEAN POWER
+      int i;
+      for (i = 0; i < 16; i++)
+      {
+	proto_tree_add_item(epa_tree, hf_epa_uint32, tvb,
+			    12 + (i*sizeof(guint32)),
+			    sizeof(guint32), TRUE);
+      }
+      proto_tree_add_text(epa_tree, tvb, 0, 0, "...");
+      for (i = 0; i < 8; i++)
+      {
+	proto_tree_add_item(epa_tree, hf_epa_uint32, tvb,
+			    12 + FRAGMENT_SIZE_BYTES - (8*sizeof(guint32)) + (i*sizeof(guint32)),
+			    sizeof(guint32), TRUE);
+      }
+    }
     else
     {
       proto_tree_add_item(epa_tree, hf_epa_data,        tvb, 12, -1, FALSE);
@@ -568,6 +650,30 @@ proto_register_epa(void)
 	FT_BYTES, BASE_HEX, NULL, 0x0,          
 	"Userdata", HFILL }
     },
+    {
+      &hf_epa_int16,
+      { "payload_int16", "epa.payload_int16",
+	FT_INT16, BASE_DEC, NULL, 0x0,
+	"int16 payload", HFILL }
+    },
+    {
+      &hf_epa_uint16,
+      { "payload_uint16", "epa.payload_uint16",
+	FT_UINT16, BASE_DEC, NULL, 0x0,
+	"uint16 payload", HFILL }
+    },
+    {
+      &hf_epa_int32,
+      { "payload_int32", "epa.payload_int32",
+	FT_INT32, BASE_DEC, NULL, 0x0,
+	"int32 payload", HFILL }
+    },
+    {
+      &hf_epa_uint32,
+      { "payload_uint32", "epa.payload_uint32",
+	FT_UINT32, BASE_DEC, NULL, 0x0,
+	"uint32 payload", HFILL }
+    }
   };
 
   static hf_register_info addr_fields[] = {
