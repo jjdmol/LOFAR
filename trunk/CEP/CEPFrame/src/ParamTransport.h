@@ -132,12 +132,6 @@ private:
   bool itsLastSend;
 };
 
-inline void ParamTransport::setSourceAddr (ParamHolder* addr)
-  { itsSourceAddr = addr; }
-
-inline void ParamTransport::setTargetAddr (ParamHolder* addr)
-  { itsTargetAddr = addr; }
-
 inline ParamHolder* ParamTransport::getSourceAddr() 
   { return itsSourceAddr; }
 

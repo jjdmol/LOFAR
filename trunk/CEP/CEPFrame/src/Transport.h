@@ -117,12 +117,6 @@ private:
 
 };
 
-inline void Transport::setSourceAddr (DataHolder* addr)
-  { itsSourceAddr = addr; }
-
-inline void Transport::setTargetAddr (DataHolder* addr)
-  { itsTargetAddr = addr; }
-
 inline DataHolder* Transport::getSourceAddr() 
   { return itsSourceAddr; }
 
