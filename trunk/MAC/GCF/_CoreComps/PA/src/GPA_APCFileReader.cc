@@ -260,7 +260,7 @@ TPAResult GPAAPCFileReader::makePropList(DOMNode* pN, string path)
       else
       {
         if (path.length() > 0)
-          path += '_';        
+          path += GCF_PROP_NAME_SEP;        
         path += name;
         XMLString::release(&name);
       }      
@@ -274,7 +274,7 @@ TPAResult GPAAPCFileReader::makePropList(DOMNode* pN, string path)
         assert(propName.length() > 0);
         if (_scope.length() > 0)
         {
-          property.name = _scope + string("_") + propName;
+          property.name = _scope + GCF_PROP_NAME_SEP + propName;
         }
         else
         {

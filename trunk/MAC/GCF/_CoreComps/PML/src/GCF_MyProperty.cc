@@ -28,6 +28,7 @@ GCFMyProperty::GCFMyProperty(const TProperty& propertyFields,
                              GCFMyPropertySet& propertySet) :
   GCFPropertyBase(propertyFields.propName, &propertySet),
   _accessMode(propertyFields.accessMode),
+  _changingAccessMode(false),
   _pCurValue(0),
   _pOldValue(0),
   _isLinked(false),
@@ -37,11 +38,11 @@ GCFMyProperty::GCFMyProperty(const TProperty& propertyFields,
   assert(!exists());
   _pCurValue = GCFPValue::createMACTypeObject((GCFPValue::TMACValueType) propertyFields.type);
   assert(_pCurValue);
+  _pOldValue = _pCurValue->clone();
   if (propertyFields.defaultValue)
   {
     _pCurValue->setValue(propertyFields.defaultValue);
   }
-  _pOldValue = _pCurValue->clone();
 }
 
 GCFMyProperty::~GCFMyProperty()
@@ -127,6 +128,7 @@ bool GCFMyProperty::link()
   }
   if (_accessMode & GCF_WRITABLE_PROP )
   {
+    _changingAccessMode = false;
     result = subscribe();
     assert(result == GCF_NO_ERROR);
     isAsync = true;
@@ -141,7 +143,7 @@ void GCFMyProperty::unlink()
 {
   assert(_isLinked);
   assert(!_isBusy);
-  if (_accessMode | GCF_WRITABLE_PROP )
+  if (_accessMode & GCF_WRITABLE_PROP )
   {
     if (exists()) // can already be deleted by the Property Agent
     {      
@@ -153,10 +155,40 @@ void GCFMyProperty::unlink()
 
 void GCFMyProperty::setAccessMode(TAccessMode mode, bool on)
 {
+  TAccessMode oldAccessMode(_accessMode);
   if (on)
     _accessMode |= mode;
   else
-    _accessMode &= ~mode;        
+    _accessMode &= ~mode;
+  
+  TGCFResult result(GCF_NO_ERROR);
+  if ((_accessMode & GCF_WRITABLE_PROP) && 
+      (~oldAccessMode & GCF_WRITABLE_PROP) &&
+      _isLinked)
+  {
+    assert(!_isBusy);
+    _isBusy = true;
+    _changingAccessMode = true;
+    result = subscribe();
+    assert(result == GCF_NO_ERROR);    
+  }
+  else if ((oldAccessMode & GCF_WRITABLE_PROP) &&
+      (~_accessMode & GCF_WRITABLE_PROP) && 
+      _isLinked)
+  {
+    result = unsubscribe();
+    assert(result == GCF_NO_ERROR);    
+  }
+  
+  if ((~_accessMode & GCF_WRITABLE_PROP) && 
+      (~oldAccessMode & GCF_READABLE_PROP) &&
+      (_accessMode & GCF_READABLE_PROP) &&
+      _isLinked)
+  {
+    assert(_pCurValue);
+    result = GCFPropertyBase::setValue(*_pCurValue);    
+    assert(result == GCF_NO_ERROR);
+  }  
 }
 
 bool GCFMyProperty::testAccessMode(TAccessMode mode) const
@@ -167,11 +199,13 @@ bool GCFMyProperty::testAccessMode(TAccessMode mode) const
 void GCFMyProperty::subscribed ()
 {
   assert(_isBusy);
-  assert(!_isLinked);
-  
-  _isLinked = true;
   _isBusy = false;  
-  _propertySet.linked();
+  if (!_changingAccessMode)
+  {
+    assert(!_isLinked);
+    _isLinked = true;
+    _propertySet.linked();
+  }
 }
 
 void GCFMyProperty::valueGet (const GCFPValue& value)

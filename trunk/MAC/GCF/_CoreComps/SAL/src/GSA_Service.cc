@@ -987,12 +987,12 @@ bool GSAService::validatePropName(const char* propName)
 {
   bool result(true);
   assert(propName);
-  
-  if (propName[0] == '_' || propName[strlen(propName) - 1] == '_' )
+  char doubleSep[] = {GCF_PROP_NAME_SEP, GCF_PROP_NAME_SEP, 0};
+  if (propName[0] == GCF_PROP_NAME_SEP || propName[strlen(propName) - 1] == GCF_PROP_NAME_SEP )
   {
     result = false;
   }
-  else if (strstr(propName, "__") != 0)
+  else if (strstr(propName, doubleSep) != 0)
   {
     result = false;
   }
@@ -1000,7 +1000,7 @@ bool GSAService::validatePropName(const char* propName)
   {
     for(unsigned short i = 0; i < strlen(propName); i++)
     {
-      if (!isalnum(propName[i]) && propName[i] != '_')
+      if (!isalnum(propName[i]) && propName[i] != GCF_PROP_NAME_SEP)
       {
         result = false;
         break;
