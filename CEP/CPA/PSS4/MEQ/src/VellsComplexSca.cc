@@ -58,6 +58,10 @@ VellsRep* VellsComplexSca::divide (VellsRep& right, bool rightTmp)
 {
   return right.divRep (*this, rightTmp);
 }
+VellsRep* VellsComplexSca::pow (VellsRep& right, bool rightTmp)
+{
+  return right.powRep (*this, rightTmp);
+}
 
 complex<double>* VellsComplexSca::complexStorage()
 {
@@ -100,6 +104,36 @@ MEQVELLSCOMPLEXSCA_OP(addRep,+=,+);
 MEQVELLSCOMPLEXSCA_OP(subRep,-=,-);
 MEQVELLSCOMPLEXSCA_OP(mulRep,*=,*);
 MEQVELLSCOMPLEXSCA_OP(divRep,/=,/);
+
+VellsRep* VellsComplexSca::powRep (VellsRealSca& left, bool rightTmp)
+{
+  VellsComplexSca* v = this;
+  if (!rightTmp) {
+    v = new VellsComplexSca (*itsValuePtr);
+  }
+  *v->itsValuePtr = std::pow(*left.itsValuePtr, *v->itsValuePtr);
+  return v;
+}
+VellsRep* VellsComplexSca::powRep (VellsComplexSca& left, bool)
+{
+  *left.itsValuePtr = std::pow(*left.itsValuePtr, *itsValuePtr);
+  return &left;
+}
+VellsRep* VellsComplexSca::powRep (VellsRealArr& left, bool)
+{
+  VellsComplexArr* v = new VellsComplexArr (left.nx(), left.ny());
+  for (int i=0; i<left.nelements(); i++) {
+    v->itsValuePtr[i] = std::pow(left.itsValuePtr[i], *itsValuePtr);
+  }
+  return v;
+}
+VellsRep* VellsComplexSca::powRep (VellsComplexArr& left, bool)
+{
+  for (int i=0; i<left.nelements(); i++) {
+    left.itsValuePtr[i] = std::pow(left.itsValuePtr[i], *itsValuePtr);
+  }
+  return &left;
+}
 
 
 VellsRep* VellsComplexSca::negate()

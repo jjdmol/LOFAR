@@ -97,6 +97,10 @@ VellsRep* MEQ::VellsComplexArr::divide (VellsRep& right, bool rightTmp)
 {
   return right.divRep (*this, rightTmp);
 }
+VellsRep* MEQ::VellsComplexArr::pow (VellsRep& right, bool rightTmp)
+{
+  return right.powRep (*this, rightTmp);
+}
 
 complex<double>* MEQ::VellsComplexArr::complexStorage()
 {
@@ -152,6 +156,49 @@ MEQVELLSCOMPLEXARR_OP(addRep,+=,+);
 MEQVELLSCOMPLEXARR_OP(subRep,-=,-);
 MEQVELLSCOMPLEXARR_OP(mulRep,*=,*);
 MEQVELLSCOMPLEXARR_OP(divRep,/=,/);
+
+VellsRep* MEQ::VellsComplexArr::powRep (VellsRealSca& left, bool rightTmp)
+{
+  VellsComplexArr* v = this;
+  if (!rightTmp) {
+    v = (VellsComplexArr*)clone();
+  }
+  for (int i=0; i<nelements(); i++) {
+    v->itsValuePtr[i] = std::pow(*left.itsValuePtr, v->itsValuePtr[i]);
+  }
+  return v;
+}
+VellsRep* MEQ::VellsComplexArr::powRep (VellsComplexSca& left, bool rightTmp)
+{
+  VellsComplexArr* v = this;
+  if (!rightTmp) {
+    v = (VellsComplexArr*)clone();
+  }
+  for (int i=0; i<nelements(); i++) {
+    v->itsValuePtr[i] = std::pow(*left.itsValuePtr, v->itsValuePtr[i]);
+  }
+  return v;
+}
+VellsRep* MEQ::VellsComplexArr::powRep (VellsRealArr& left, bool rightTmp)
+{
+  Assert (nelements() == left.nelements());
+  VellsComplexArr* v = this;
+  if (!rightTmp) {
+    v = (VellsComplexArr*)clone();
+  }
+  for (int i=0; i<nelements(); i++) {
+    v->itsValuePtr[i] = std::pow(left.itsValuePtr[i], v->itsValuePtr[i]);
+  }
+  return v;
+}
+VellsRep* MEQ::VellsComplexArr::powRep (VellsComplexArr& left, bool)
+{
+  Assert (nelements() == left.nelements());
+  for (int i=0; i<left.nelements(); i++) {
+    left.itsValuePtr[i] = std::pow(left.itsValuePtr[i], itsValuePtr[i]);
+  }
+  return &left;
+}
 
 
 VellsRep* MEQ::VellsComplexArr::negate()
