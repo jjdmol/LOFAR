@@ -29,7 +29,7 @@ include 'viewer.g'
 # Template shapes to start with. This will be converted to World Coordinates.
 #
 marker_template := [color=[value='green'], hashandles=F, drawhandles=F, type='marker', markerstyle=0, center=[x=[value=0, unit='pix'], y=[value=0, unit='pix']], coords='pix', linewidth=[value=1], size=[value=1]]
-text_template := [color=[value='green'], hashandles=F, drawhandles=F, type='text', fontsize=[value=18], text=[value='default'], center=[x=[value=0, unit='pix'], y=[value=0, unit='pix']], coords='pix']
+text_template := [color=[value='green'], hashandles=F, drawhandles=F, type='text', fontsize=[value=14], text=[value='default'], center=[x=[value=0, unit='pix'], y=[value=0, unit='pix']], coords='pix']
 
 const imgannotator := function(fname, type='contour',
       colors="green red blue yellow purple orange")
@@ -56,14 +56,22 @@ const imgannotator := function(fname, type='contour',
 
 	# construction ends here
 
-	public.add_marker := function(index, ra, dec, updatemarker=T)
+	public.add_marker := function(index, ra, dec, updatemarker=T,
+				      addtext=T,
+				      linewidth=1, size=10, style=0)
 	{
 		wider self;
+		local opts;
+
 		a := self.annotator;
+
+		dv.hold();
 
 		# create the shape and lock it to World Coordinates
 		a.newshape(marker_template);
 #DEBUG		print a.getshapeoptions(self.shape_index);
+	
+		self.shape_index := a.whichshape();
 		a.locktowc(self.shape_index);
 	
 		#
@@ -73,23 +81,44 @@ const imgannotator := function(fname, type='contour',
 		opts.color.value:=self.colors[1+(index-1)%len(self.colors)];
 		opts.center.x.value:=ra;
 		opts.center.y.value:=dec;
-		opts.linewidth.value:=2;
-		opts.size.value:=10
+		opts.linewidth.value:=linewidth;
+		opts.size.value:=size;
+		opts.markerstyle:=style;
+		this_shape := self.shape_index;
 		a.setshapeoptions(self.shape_index,opts);
 		a.locktowc(self.shape_index);
 
 		self.shape_index +:= 1;
 
-		public.add_text(index, ra, dec, spaste(self.marker_index));
+		if (addtext) public.add_text(index, ra, dec, spaste(self.marker_index));
 		if (updatemarker) self.marker_index +:= 1;
 
-		return T;
+		dv.release();
+
+		return this_shape;
+	}
+
+	public.change_marker_size := function(shape_index, size=10)
+	{
+		wider self;
+		local opts;
+
+		a := self.annotator;
+		opts := a.getshapeoptions(shape_index);
+		opts.size.value := as_integer(size + 0.5);
+		a.setshapeoptions(shape_index,opts);
+
+		return shape_index;
 	}
 
 	public.add_text := function(index, ra, dec, text='')
 	{
 		wider self;
+		local opts;
+
 		a := self.annotator;
+
+		dv.hold();
 
 		# create the shape and lock it to World Coordinates
 		a.newshape(text_template);
@@ -107,9 +136,12 @@ const imgannotator := function(fname, type='contour',
 		a.setshapeoptions(self.shape_index,opts);
 		a.locktowc(self.shape_index);
 
+		this_shape := self.shape_index;
 		self.shape_index +:= 1;
 
-		return T;
+		dv.release();
+
+		return this_shape;
 	}
 
 	public.done := function()
