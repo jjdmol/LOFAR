@@ -2,8 +2,8 @@
 
 // $ID$
 
-#if !defined(UVPTIMEFREQUENCYPLOT)
-#define UVPTIMEFREQUENCYPLOT
+#if !defined(UVPTIMEFREQUENCYPLOT_H)
+#define UVPTIMEFREQUENCYPLOT_H
 
 #include <UVPDisplayArea.h>
 #include <UVPSpectrumVector.h>
@@ -47,4 +47,4 @@ class UVPTimeFrequencyPlot: public UVPDisplayArea
   UVPAxis            itsValueAxis;
 };
 
-#endif // UVPTIMEFREQUENCYPLOT
+#endif // UVPTIMEFREQUENCYPLOT_H
