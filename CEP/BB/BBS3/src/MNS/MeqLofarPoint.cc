@@ -50,6 +50,40 @@ MeqLofarPoint::MeqLofarPoint (MeqSourceList* sources,
 MeqLofarPoint::~MeqLofarPoint()
 {}
 
+
+// moved this loop out of MeqLofarPoint::calcResult() to circumvent icc
+// compiler bug
+
+static void doCalcResult(
+  double s1, complex<double> s2, complex<double> s3, double s4,
+  const complex<double> *l11, const complex<double> *l12,
+  const complex<double> *l21, const complex<double> *l22,
+  const complex<double> *r11, const complex<double> *r12,
+  const complex<double> *r21, const complex<double> *r22,
+  complex<double> *dxx, complex<double> *dxy,
+  complex<double> *dyx, complex<double> *dyy, Int ncell
+)
+{
+  for (int i=0; i<ncell; i++) {
+    // Possible make bit faster by having conjugate of s2 and s3
+    // and using: sf11 = (conj(s1*r11[i] + s2*r12[i]); etc.
+    // because conj(a*b) = conj(a)*conj(b)
+    complex<double> cr11 = conj(r11[i]);
+    complex<double> cr12 = conj(r12[i]);
+    complex<double> cr21 = conj(r21[i]);
+    complex<double> cr22 = conj(r22[i]);
+    complex<double> sf11 = s1*cr11 + s2*cr12;
+    complex<double> sf12 = s1*cr21 + s2*cr22;
+    complex<double> sf21 = s3*cr11 + s4*cr12;
+    complex<double> sf22 = s3*cr21 + s4*cr22;
+    dxx[i] = l11[i]*sf11 + l12[i]*sf21;
+    dxy[i] = l11[i]*sf12 + l12[i]*sf22;
+    dyx[i] = l21[i]*sf11 + l22[i]*sf21;
+    dyy[i] = l21[i]*sf12 + l22[i]*sf22;
+  }
+}
+
+
 void MeqLofarPoint::calcResult (const MeqRequest& request)
 {
   PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
@@ -146,20 +180,7 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
     const complex<double>* r21 = resr21.getValue().dcomplexStorage();
     const complex<double>* r22 = resr22.getValue().dcomplexStorage();
     // Calculate XX, etc.
-    for (int i=0; i<ncell; i++) {
-      // Possible make bit faster by having conjugate of s2 and s3
-      // and using: sf11 = (conj(s1*r11[i] + s2*r12[i]); etc.
-      // because conj(a*b) = conj(a)*conj(b)
-      complex<double> sf11 = s1*conj(r11[i]) + s2*conj(r12[i]);
-      complex<double> sf12 = s1*conj(r21[i]) + s2*conj(r22[i]);
-      complex<double> sf21 = s3*conj(r11[i]) + s4*conj(r12[i]);
-      complex<double> sf22 = s3*conj(r21[i]) + s4*conj(r22[i]);
-      dxx[i] = l11[i]*sf11 + l12[i]*sf21;
-      dxy[i] = l11[i]*sf12 + l12[i]*sf22;
-      dyx[i] = l21[i]*sf11 + l22[i]*sf21;
-      dyy[i] = l21[i]*sf12 + l22[i]*sf22;
-
-    }
+    doCalcResult(s1,s2,s3,s4,l11,l12,l21,l22,r11,r12,r21,r22,dxx,dxy,dyx,dyy,ncell);
     ///    cout << "MeqLofarPoint " << srcnr << ' ' << resl11.getValue()
     ///	 << resr11.getValue() << xx << endl;
     // Evaluate (if needed) for the perturbed parameter values.
