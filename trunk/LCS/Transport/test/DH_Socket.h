@@ -45,7 +45,7 @@ public:
 
 	virtual ~DH_Socket();
 
-	DataHolder* clone() const;
+	virtual DataHolder* clone() const;
 
 	/// Set the Counter attribute.
 	void setCounter (int32 counter);

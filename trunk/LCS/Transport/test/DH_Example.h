@@ -47,7 +47,7 @@ public:
 
   virtual ~DH_Example();
 
-  DataHolder* clone() const;
+  virtual DataHolder* clone() const;
 
   /// Set the Counter attribute.
   void setCounter (int counter);
