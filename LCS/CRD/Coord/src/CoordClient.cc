@@ -28,7 +28,7 @@
 #include <Common/Debug.h>
 
 
-CoordClient::CoordClient (const string& host, const string& port = "31337")
+CoordClient::CoordClient (const string& host, const string& port)
 : itsNrStart (4),
   itsSocket  ("CoordConv", host, port),
   itsBuffer  (0)
@@ -150,7 +150,7 @@ vector<SkyCoord> CoordClient::j2000ToAzel (const vector<SkyCoord>& radec,
   }
   int nr = 2*radec.size() + 3*pos.size() + 2*time.size();
   int nrval = radec.size()*pos.size()*time.size();
-  int sz = max(nr, 2*nrval);
+  int sz = std::max(nr, 2*nrval);
   if (sz > itsPosBufNr) {
     allocate (sz);
   }

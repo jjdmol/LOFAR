@@ -57,7 +57,7 @@ inline short Endian::swapShort (const void* in)
     short val;
     char buf[2];
   } tmp;
-  const char* inc = static_cast<char*>(in);
+  const char* inc = static_cast<const char*>(in);
   tmp.buf[1] = inc[0];
   tmp.buf[0] = inc[1];
   return tmp.val;
@@ -68,7 +68,7 @@ inline int Endian::swapInt (const void* in)
     int val;
     char buf[4];
   } tmp;
-  const char* inc = static_cast<char*>(in);
+  const char* inc = static_cast<const char*>(in);
   tmp.buf[3] = inc[0];
   tmp.buf[2] = inc[1];
   tmp.buf[1] = inc[2];
@@ -81,7 +81,7 @@ inline float Endian::swapFloat (const void* in)
     float val;
     char buf[4];
   } tmp;
-  const char* inc = static_cast<char*>(in);
+  const char* inc = static_cast<const char*>(in);
   tmp.buf[3] = inc[0];
   tmp.buf[2] = inc[1];
   tmp.buf[1] = inc[2];
@@ -94,7 +94,7 @@ inline double Endian::swapDouble (const void* in)
     double val;
     char buf[8];
   } tmp;
-  const char* inc = static_cast<char*>(in);
+  const char* inc = static_cast<const char*>(in);
   tmp.buf[7] = inc[0];
   tmp.buf[6] = inc[1];
   tmp.buf[5] = inc[2];
