@@ -123,23 +123,23 @@ do
 done
 
 # Check if target file already exist and let the user decide.
-if [ -f "${TARGET}.i" ]; then
+if [ -f "${DESTDIR}/${TARGET}.i" ]; then
 	if [ "${FORCE}" != "true" ]; then
 		ready=false
 		while [ "$ready" == "false" ]
 		do
-			echo -n "Targetfile ${TARGET}.i already exists, remove it (y/n)? "
+			echo -n "Targetfile ${DESTDIR}/${TARGET}.i already exists, remove it (y/n)? "
 			read answer
 			case $answer in
 			y|Y|yes|Yes)	FORCE=true
 							ready=true
 							;;
-			n|N|no|No)		Fail "Target ${TARGET}.i may not be overwritten"
+			n|N|no|No)		Fail "Target ${DESTDIR}/${TARGET}.i may not be overwritten"
 							;;
 			esac
 		done
 	fi
-	rm -f ${TARGET}.i
+	rm -f ${DESTDIR}/${TARGET}.i
 fi
 
 # All arguments seem ok, continue processing
@@ -156,8 +156,7 @@ do
 	echo	"#include \"${File}\""	>>${TMPCCFILE}
 done
 
-# Remember were we are.
-SOURCEDIR=`pwd`
+# Remember the subdirectory we are in.
 LeafDir=$(basename $SOURCEDIR)
 
 # Try to cd to the build directory
@@ -186,7 +185,7 @@ make ${PRECOMPFILE}
 
 mv ${PRECOMPFILE} ${SOURCEDIR}/${DESTDIR}/
 cd ${SOURCEDIR}
-[ -n "${TARGET}" ] && mv ${PRECOMPFILE} ${TARGET}.i
+[ -n "${TARGET}" ] && mv ${DESTDIR}/${PRECOMPFILE} ${DESTDIR}/${TARGET}.i
 echo "Created file ${DESTDIR}/${TARGET}.i"
 
 # Finally cleanup our mess
