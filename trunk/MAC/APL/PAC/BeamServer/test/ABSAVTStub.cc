@@ -133,7 +133,7 @@ GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& port)
 	// start test by sending beam alloc
 	ABSBeamallocEvent alloc;
 	alloc.spectral_window = 0;
-//	alloc.n_subbands = 1;
+	alloc.n_subbands = 1;
 	memset(alloc.subbands, 0, sizeof(alloc.subbands));
 
 	TESTC(beam_server.send(alloc));
@@ -217,7 +217,7 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& port)
 	// start test by sending beam alloc
 	ABSBeamallocEvent alloc;
 	alloc.spectral_window = 0;
-//	alloc.n_subbands = 1;
+	alloc.n_subbands = 1;
 	memset(alloc.subbands, 0, sizeof(alloc.subbands));
 
 	TESTC(beam_server.send(alloc));
@@ -330,7 +330,7 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& port)
 	// start test by sending beam alloc
 	ABSBeamallocEvent alloc;
 	alloc.spectral_window = 0;
-//	alloc.n_subbands = 1;
+	alloc.n_subbands = 1;
 	memset(alloc.subbands, 0, sizeof(alloc.subbands));
 
 	TESTC(beam_server.send(alloc));
@@ -429,7 +429,7 @@ GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& port)
 	// invalid n_subbands in beam alloc
 	ABSBeamallocEvent alloc;
 	alloc.spectral_window = 0;
-//	alloc.n_subbands = N_BEAMLETS+1;
+	alloc.n_subbands = N_BEAMLETS+1;
 	memset(alloc.subbands, 0, sizeof(alloc.subbands));
 
 	TESTC(beam_server.send(alloc));
@@ -446,7 +446,7 @@ GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& port)
 	  // send invalid spectral window index
 	  ABSBeamallocEvent alloc;
 	  alloc.spectral_window = -1;
-//	  alloc.n_subbands = 1;
+	  alloc.n_subbands = 1;
 	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
 
 	  TESTC(beam_server.send(alloc));
@@ -458,7 +458,7 @@ GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& port)
 	  // send invalid n_subbands (-1)
 	  ABSBeamallocEvent alloc;
 	  alloc.spectral_window = 0;
-//	  alloc.n_subbands = -1;
+	  alloc.n_subbands = -1;
 	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
 
 	  TESTC(beam_server.send(alloc));
@@ -470,7 +470,7 @@ GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& port)
 	  // send invalid index in subbands array
 	  ABSBeamallocEvent alloc;
 	  alloc.spectral_window = 0;
-//	  alloc.n_subbands = 1;
+	  alloc.n_subbands = 1;
 	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
 	  alloc.subbands[0] = -1;
 
@@ -537,7 +537,7 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& port)
 	// send beam allocation, select all subbands
 	ABSBeamallocEvent alloc;
 	alloc.spectral_window = 0;
-//	alloc.n_subbands = N_BEAMLETS;
+	alloc.n_subbands = N_BEAMLETS;
 	memset(alloc.subbands, 0, sizeof(alloc.subbands));
 	for (int i = 0; i < N_BEAMLETS; i++)
 	{

@@ -217,7 +217,17 @@ int Beam::convertPointings(time_period period)
 	continue;
       }
 
-      if (pointing.time() < period.end())
+      if (pointing.time() < period.begin())
+      {
+	LOG_WARN(formatString("Deadline missed by %d seconds(%f,%f) @ %s",
+			      (period.begin() - pointing.time()).seconds(),
+			      pointing.direction().angle1(),
+			      pointing.direction().angle2(),
+			      to_simple_string(pointing.time()).c_str()));
+
+	m_pointing_queue.pop(); // discard pointing
+      }
+      else if (pointing.time() < period.end())
       {
 	  m_pointing_queue.pop(); // remove from queue
 
@@ -249,16 +259,7 @@ int Beam::convertPointings(time_period period)
 
 	  m_pointing = pointing; // remember current pointing
       }
-      else if (pointing.time() < period.begin())
-      {
-	LOG_WARN(formatString("Deadline missed (%f,%f) @ %s",
-			      pointing.direction().angle1(),
-			      pointing.direction().angle2(),
-			      to_simple_string(pointing.time()).c_str()));
-
-	m_pointing_queue.pop(); // discard pointing
-      }
-      else if (pointing.time() >= period.end())
+      else
       {
 	// done with this period
 	break;

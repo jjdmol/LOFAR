@@ -133,11 +133,10 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
       {
 	LOG_INFO("running test005");
 
-	// send wgenable
+	// send wgsettings
 	ABSWgsettingsEvent wgs;
 	wgs.frequency=1.5625e6; // 1.5625MHz
 	wgs.amplitude=0x8000;
-
 	TESTC(beam_server.send(wgs));
       }
       break;
@@ -147,11 +146,12 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
 	  // check acknowledgement
 	  ABSWgsettingsAckEvent wgsa(e);
 	  TESTC(ABS_Protocol::SUCCESS == wgsa.status);
-	  
+
+#if 0
 	  // send WGENABLE
 	  ABSWgenableEvent wgenable;
 	  TESTC(beam_server.send(wgenable));
-
+#endif
 
 	  //
 	  // send beam allocation, select a single subband
@@ -159,10 +159,10 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
 	  //
 	  ABSBeamallocEvent alloc;
 	  alloc.spectral_window = 0;
-//	  alloc.n_subbands = 1;
+	  alloc.n_subbands = 1;
 	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
 	  alloc.subbands[0] = m_subband;
-	  
+
 	  TESTC(beam_server.send(alloc));
       }
       break;
@@ -182,7 +182,7 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
 	{
 	  ABSBeamallocEvent alloc;
 	  alloc.spectral_window = 0;
-//	  alloc.n_subbands = 1;
+	  alloc.n_subbands = 1;
 	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
 	  alloc.subbands[0] = m_subband;
 	  
@@ -202,7 +202,7 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
 	    for (int beam = 0; beam < N_BEAMLETS; beam++)
 	    {
 		pointto.handle = beam;
-		pointto.time = now + 2 * 10;
+		pointto.time = now + 20;
 		pointto.angle[0]=0.0;
 		pointto.angle[1]=cos(((double)beam/N_BEAMLETS)*M_PI);
 		

@@ -171,12 +171,21 @@ GCFEvent::TResult SetFreq::setfreq(GCFEvent& e, GCFPortInterface& port)
 	  // this should finish within 1 second
 	  beam_server.setTimer((long)1);
 
-	  // send wgenable
-	  ABSWgsettingsEvent wgs;
-	  wgs.frequency=m_freq;
-	  wgs.amplitude=0x8000;
-
-	  TESTC(beam_server.send(wgs));
+	  if (m_freq > 10e-6)
+	  {
+	    // send wgenable
+	    ABSWgsettingsEvent wgs;
+	    wgs.frequency=m_freq;
+	    wgs.amplitude=0x8000 / 256;
+	    
+	    TESTC(beam_server.send(wgs));
+	  }
+	  else
+	  {
+	    ABSWgdisableEvent wgdisable;
+	    TESTC(beam_server.send(wgdisable));
+	    TRAN(SetFreq::done);
+	  }
       }
       break;
 
