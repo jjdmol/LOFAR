@@ -328,8 +328,8 @@ LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& bs, const MeqMatrix& vec)
       bs << vec.getDComplexMatrix();
     }
   }
-  return bs;
   bs.putEnd();
+  return bs;
 }
 
 LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
