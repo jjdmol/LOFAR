@@ -41,7 +41,8 @@ Transporter::Transporter (BaseDataHolder* dataHolderPtr)
   itsStatus          (Unknown),
   itsSourceAddr      (0),
   itsTargetAddr      (0),
-  itsRate            (1)
+  itsRate            (1),
+  itsIsBlocking      (true)
 {}
 
 Transporter::~Transporter()
@@ -62,7 +63,8 @@ Transporter::Transporter(const Transporter& that)
     itsStatus(that.itsStatus),
     itsSourceAddr(that.itsSourceAddr),
     itsTargetAddr(that.itsTargetAddr),
-    itsRate(that.itsRate)
+    itsRate(that.itsRate),
+    itsIsBlocking(that.itsIsBlocking)
 {
   if (that.itsTransportHolder == 0)
   {
@@ -104,10 +106,20 @@ bool Transporter::read()
   if (getTransportHolder() && getReadTag() >= 0) {
     TRACER3("Transport::read; call recv(" << getDataPtr() << "," 
 	    << getDataPacketSize() << ",....)");
-    result = getTransportHolder()->recv((void*)getDataPtr(),
-					getDataPacketSize(),
-					1, // getNode ()
-					getReadTag());
+    if (isBlocking())
+    {
+      result = getTransportHolder()->recvBlocking((void*)getDataPtr(),
+						  getDataPacketSize(),
+						  1, // getNode ()
+						  getReadTag());
+    }
+    else
+    {
+      result = getTransportHolder()->recvNonBlocking((void*)getDataPtr(),
+						     getDataPacketSize(),
+						     1, // getNode ()
+						     getReadTag());
+    }      
     setStatus(Transporter::Clean);
   }
   else
@@ -123,10 +135,20 @@ void Transporter::write()
 {
   if (getTransportHolder() && getWriteTag() >= 0) {
     TRACER3("Transport::write; call send(" << getDataPtr() << "," << getDataPacketSize() << ",....)");
-    getTransportHolder()->send((void*)getDataPtr(),
-			       getDataPacketSize(),
-			       1, // getNode ()
-			       getWriteTag());
+    if (isBlocking())
+    {
+      getTransportHolder()->sendBlocking((void*)getDataPtr(),
+					 getDataPacketSize(),
+					 1, // getNode ()
+					 getWriteTag());
+    }
+    else
+    {
+      getTransportHolder()->sendNonBlocking((void*)getDataPtr(),
+					    getDataPacketSize(),
+					    1, // getNode ()
+					    getWriteTag());
+    }
     setStatus(Transporter::Dirty);
   }
 }

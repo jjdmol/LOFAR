@@ -1,4 +1,4 @@
-//# TH_Mem.h: In-memory transport mechanism
+//# TH_Mem_Bl.h: Blocking in-memory transport mechanism
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,12 +20,12 @@
 //#
 //# $Id$
 
-#ifndef CEPFRAME_TH_MEM_BL_H
-#define CEPFRAME_TH_MEM_BL_H
+#ifndef LIBTRANSPORT_TH_MEM_BL_H
+#define LIBTRANSPORT_TH_MEM_BL_H
 
 #include <lofar_config.h>
 
-#include "TransportHolder.h"
+#include <TransportHolder.h>
 #include <Common/lofar_map.h>
 #include <pthread.h>
 
@@ -60,25 +60,40 @@ public:
 
   /**
      Receive the data. This call does the actual data transport
-     by memcpy'ing the data from the sender.
+     by memcpy'ing the data from the sender and sending out a
+     received notification.
   */
-  virtual bool recv(void* buf, int nbytes, int source, int tag);
+  virtual bool recvBlocking(void* buf, int nbytes, int source, int tag);
 
   /**
      Send the data.
      It does not really send, because the recv is doing the memcpy.
      This call only records the buf, nbytes, destination and tag
      which can be matched by the recv call.
-     The only thing it does is setting the status.
+     The only things it does are setting the status and waiting for
+     a notification of the receiver.
   */
-  virtual bool send(void* buf, int nbytes, int destination, int tag);
+  virtual bool sendBlocking(void* buf, int nbytes, int destination, int tag);
+
+  /** 
+     Wait for a previous send with the same tag to finish and send the data.
+     It does not really send, because the recv is doing the memcpy.
+     This call only records the buf, nbytes, destination and tag
+     which can be matched by the recv call.
+     The only thing it does is setting the status. 
+  */
+  virtual bool sendNonBlocking(void* buf, int nbytes, int destination, int tag);
+
+  // Wait for a notification that the receiving party has received the data.
+  // (i.e. recv has performed the memcpy)
+  virtual bool waitForSendAcknowledged(void* buf, int nbytes, int destination, int tag);
 
   /// Get the type of transport.
   virtual string getType() const;
 
   virtual bool connectionPossible(int srcRank, int dstRank) const;
 
-  virtual bool isBlocking() const { return true; }
+  bool isBlocking() const { return true; }
 
   /// Declare a TH_Mem prototype variable
   /// that can be used in functions

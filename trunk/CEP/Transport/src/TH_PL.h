@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef CEPFRAME_TH_PL_H
-#define CEPFRAME_TH_PL_H
+#ifndef LIBTRANSPORT_TH_PL_H
+#define LIBTRANSPORT_TH_PL_H
 
 #include <TransportHolder.h>
 #include <DH_PL.h>
@@ -37,8 +37,8 @@ public:
 
   virtual TH_PL* make () const;
 
-  virtual bool recv (void* buf, int nbytes, int source, int tag);
-  virtual bool send (void* buf, int nbytes, int destination, int tag);
+  virtual bool recvBlocking (void* buf, int nbytes, int source, int tag);
+  virtual bool sendBlocking (void* buf, int nbytes, int destination, int tag);
 
   virtual string getType () const;
 
@@ -54,8 +54,6 @@ public:
   static int  getCurrentRank ();
   static int  getNumberOfNodes ();
   static void synchroniseAllProcesses ();
-
-  bool isBlocking() const;
 
 protected:
    static PL::PersistenceBroker theirPersistenceBroker;
@@ -79,9 +77,6 @@ private:
    long itsWriteSeqNo;
    long itsReadSeqNo;
 };
- 
- inline bool TH_PL::isBlocking() const
-   { return true; }
  
 }
 

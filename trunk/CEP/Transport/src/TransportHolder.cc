@@ -23,9 +23,9 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-
 #include <libTransport/TransportHolder.h>
 #include <Common/BlobStringType.h>
+#include <Common/Debug.h>
 
 namespace LOFAR
 {
@@ -36,6 +36,40 @@ TransportHolder::TransportHolder()
 TransportHolder::~TransportHolder()
 {}
 
+bool TransportHolder::recvBlocking (void*, int, int, int)
+{
+  Throw("No blocking receive mehtod implemented in this TransportHolder");
+}
+
+bool TransportHolder::recvNonBlocking (void*, int, int, int)
+{
+  Throw("No non-blocking receive method implemented in this TransportHolder");
+}
+
+bool TransportHolder::waitForReceived(void*, int, int, int)
+{
+  Throw("No waitForReceived() method implemented in this TransportHolder");
+}
+
+bool TransportHolder::sendBlocking (void*, int, int, int)
+{
+  Throw("No blocking send method implemented in this TransportHolder");
+}
+
+bool TransportHolder::sendNonBlocking (void*, int, int, int)
+{
+  Throw("No non-blocking send method  implemented in this TransportHolder");
+}
+
+bool TransportHolder::waitForSent(void*, int, int, int)
+{
+  Throw("No waitForSent() method implemented in this TransportHolder");
+}
+
+bool TransportHolder::waitForSendAcknowledged(void*, int, int, int)
+{
+  Throw("No waitForSendAcknowledged() method implemented in this TransportHolder");
+}
 
 BlobStringType TransportHolder::blobStringType() const
 {

@@ -20,20 +20,21 @@
 //#
 //# $Id$
 
-#ifndef CEPFRAME_TH_MPI_H
-#define CEPFRAME_TH_MPI_H
+#ifndef LIBTRANSPORT_TH_MPI_H
+#define LIBTRANSPORT_TH_MPI_H
 
 #include <lofar_config.h>
 
 #ifdef HAVE_MPI
 
-#include "TransportHolder.h"
-#include "CyclicBuffer.h"
+#include <TransportHolder.h>
 #include <Common/lofar_deque.h>
 #include <Common/lofar_list.h>
 #include <mpi.h>
 
+#ifndef THREAD_SAFE
 #include <pthread.h>
+#endif
 
 namespace LOFAR
 {
@@ -55,21 +56,17 @@ public:
   virtual void* allocate (size_t size);
   virtual void  deallocate (void*& ptr);
 
-  static void* readerThread(void* theObject);
-
   void lock();
   void unlock();
 
   /// Read the data.
-  virtual bool recv(void* buf, int nbytes, int source, int tag);
+  virtual bool recvBlocking(void* buf, int nbytes, int source, int tag);
 
   /// Write the data.
-  virtual bool send(void* buf, int nbytes, int destination, int tag);
+  virtual bool sendBlocking(void* buf, int nbytes, int destination, int tag);
 
   /// Get the type of transport.
   virtual string getType() const;
-
-  virtual bool isBlocking() const { return true; }
 
   static void init (int argc, const char *argv[]);
   static void finalize();
@@ -98,18 +95,13 @@ public:
   };
 
 private:  
-
-  CyclicBuffer<RecvMsg*> itsMsgQueue;
-  bool                   itsFirstCall;
-  MPI_Request            itsRequest;
   int                    itsMaxSize;
-  
-  pthread_t itsReaderThread;
+  int itsSource;
+  int itsTag;
+
 #ifndef THREAD_SAFE
   static pthread_mutex_t theirMPILock;
 #endif
-  int itsSource;
-  int itsTag;
 
   static int  theirReadcnt;
   static int  theirWritecnt;

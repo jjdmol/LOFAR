@@ -20,12 +20,12 @@
 //#
 //# $Id$
 
-#ifndef CEPFRAME_TH_FILE_H
-#define CEPFRAME_TH_FILE_H
+#ifndef LIBTRANSPORT_TH_FILE_H
+#define LIBTRANSPORT_TH_FILE_H
 
 #include <lofar_config.h>
 
-#include "TransportHolder.h"
+#include <TransportHolder.h>
 #include <stdio.h>
 
 namespace LOFAR
@@ -35,7 +35,7 @@ namespace LOFAR
    This class defines the transport mechanism To/From a single dataholder.
    A connection between two dataholders has to be made; Only one of them is 
    active and produces or consumes data from the transport mechanism. The 
-   other dataholder is supposed to do nothinbg at all (probably not added to 
+   other dataholder is supposed to do nothing at all (probably not added to 
    the simul) but is needed to use the Step::connect... methods.
 */
 
@@ -53,8 +53,7 @@ public:
 	aDirection:  Defines whether data is written(onle send() method active)
 	             or read (only recv method active)
   **/
-  TH_File(string    aFileName,
-	  direction aDirection);
+  TH_File(string    aFileName, direction aDirection);
   virtual ~TH_File();
 
   /// method to make a TH_File instance; used for prototype pattern
@@ -64,13 +63,13 @@ public:
      Receive the data. If the Direction is defined as Read, this method reads 
      the next DataHolder from file.
   */
-  virtual bool recv(void* buf, int nbytes, int source, int tag);
+  virtual bool recvBlocking(void* buf, int nbytes, int source, int tag);
 
   /**
      Send the data. If the Direction is defined as Write, this method writes 
      the next DataHolder to file.
   */
-  virtual bool send(void* buf, int nbytes, int destination, int tag);
+  virtual bool sendBlocking(void* buf, int nbytes, int source, int tag);
 
   /// Get the type of transport, i.e. "TH_File"
   virtual string getType() const;
@@ -80,8 +79,6 @@ public:
      would be possible with this TransportHolder specialisation.
   **/
   virtual bool connectionPossible(int srcRank, int dstRank) const;
-
-  bool isBlocking() const { return false; }
 
   /// Declare a TH_File prototype variable
   /// that can be used in functions
