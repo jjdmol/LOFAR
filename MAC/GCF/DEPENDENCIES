@@ -2,7 +2,7 @@ Compiler version:
 Default compiler of RedHat 9 installation (gccc3.x)
 
 EXTERNAL PACKAGES:
-PVSS II 3.0.1
+PVSS II 3.0.1 (lofar_PVSS(1))
 	> export PATH=$PATH:<pvss root>/bin
 	> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<pvss root>/bin:<pvss root>/api/lib.linux_RH90
 	> export API_ROOT=<pvss root>/api
@@ -13,6 +13,7 @@ PVSS II 3.0.1
 	- add all permanent	DP instances by means of the PARA module of PVSSII
 	- now the started project is ready for GCF
 			
-LCS/Common (CVS TAG: Common_v1-0)
-autoconf_share (CVS TAG: autoconf_v1-0)
-log4cplus (see LCS/Common)
+LCS/Common (CVS TAG: LCS-Common-2_0)
+LCS/Transport (CVS TAG: LCS-Transport-1_0)
+autoconf_share (CVS TAG: autoconf_share-2_0)
+log4cplus (lofar_LOG4CPLUS(1))

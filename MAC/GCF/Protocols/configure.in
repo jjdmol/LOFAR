@@ -1,7 +1,7 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(include/GCF/Protocols/DH_PIProtocol.h)
+AC_INIT(src/DH_PIProtocol.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
@@ -54,8 +54,6 @@ lofar_DEBUG_OPTIMIZE
 #lofar_QT
 lofar_QATOOLS
 lofar_DOCXX
-lofar_LOG4CPLUS
-lofar_MPI(0)
 lofar_INTERNAL(LCS/Common, Common, Common-v1_0, 1,Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-4_1alpha, 1,GCF/GCF_Defines.h,,)
 lofar_INTERNAL(LCS/Transport, transport, Common_v1-0, 1, Transport/DataHolder.h,,)

@@ -1,3 +1,4 @@
+INSTALL=/usr/bin/install -C
 pkgincludedir = $(includedir)/GCF/Protocols
 pkginclude_HEADERS = \
 	DH_PIProtocol.h \
