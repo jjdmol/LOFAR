@@ -124,13 +124,13 @@ bool Transporter::read()
     if (isBlocking())
     {
       result = getTransportHolder()->recvBlocking(getDataPtr(),
-						  getDataSize(),
+						  getCurDataSize(),
 						  getReadTag());
     }
     else
     {
       result = getTransportHolder()->recvNonBlocking(getDataPtr(),
-						     getDataSize(),
+						     getCurDataSize(),
 						     getReadTag());
     }      
     setStatus(Transporter::Clean);
@@ -151,13 +151,13 @@ void Transporter::write()
     if (isBlocking())
     {
       getTransportHolder()->sendBlocking(getDataPtr(),
-					 getDataSize(),
+					 getCurDataSize(),
 					 getWriteTag());
     }
     else
     {
       getTransportHolder()->sendNonBlocking(getDataPtr(),
-					    getDataSize(),
+					    getCurDataSize(),
 					    getWriteTag());
     }
     setStatus(Transporter::Dirty);
@@ -177,9 +177,19 @@ void* Transporter::getDataPtr()
   return itsBaseDataHolder->getDataPtr();
 }
 
+int Transporter::getCurDataSize() const
+{
+  return itsBaseDataHolder->getCurDataSize();  
+}
+
 int Transporter::getDataSize() const
 {
-  return itsBaseDataHolder->getDataSize();    //temporarily
+  return itsBaseDataHolder->getDataSize();   
+}
+
+int Transporter::getMaxDataSize() const
+{
+  return itsBaseDataHolder->getMaxDataSize();   
 }
 
 

@@ -97,6 +97,10 @@ class Transporter
 
   /// Get pointer to the data from the BaseDataHolder.
   void* getDataPtr();
+  /// Get the size of the current data in the BaseDataHolder.
+  int getCurDataSize() const;
+  /// Get the maximal size of the data in the BaseDataHolder.
+  int getMaxDataSize() const;
   /// Get the size of the data in the BaseDataHolder.
   int getDataSize() const;
 
