@@ -140,7 +140,12 @@ namespace UVD
     // FSourceIndex already defined
     
     
+    // this lets us end the list above with a comma
     FThisIsTheLastDeclaration = HIID();
+
+    // flag value for missing data
+    const int FlagMissing = 0xFFFFFFFF;
+
 
 // small function for converting antennas to IFR indices    
     inline int ifrNumber ( int ant1,int ant2 ) 
