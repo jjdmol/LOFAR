@@ -1,5 +1,3 @@
-SUBDIRS= \
-#  BeamServer \
-  VirtualTelescope
+SUBDIRS= VirtualTelescope
 
 include $(lofar_sharedir)/Makefile.common
