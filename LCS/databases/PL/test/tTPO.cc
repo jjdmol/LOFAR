@@ -2,6 +2,7 @@
 #include <PL/PersistenceBroker.h>
 #include <PL/Query.h>
 #include <PL/Attrib.h>
+#include <Common/Debug.h>
 #include <iostream>
 #include <pwd.h>
 
@@ -85,8 +86,10 @@ namespace LOFAR {
 using namespace LOFAR::PL;
 using namespace LOFAR;
 
-int main()
+int main(int argc, const char* argv[])
 {
+  Debug::initLevels (argc, argv);
+
   Y y;
   ObjectId oid;
   QueryObject q;
