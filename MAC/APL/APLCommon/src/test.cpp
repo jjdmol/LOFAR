@@ -53,7 +53,7 @@ void Test::do_fail(const std::string& lbl,
     if (m_osptr)
     {
         *m_osptr << m_name
-                             << "failure: (" << lbl << ") , "
+                             << " failure: (" << lbl << ") , "
                                  << fname
                  << " (line " << lineno << ")\n";
     }
