@@ -41,11 +41,11 @@
 //field: factor []
 //  If specified, changes the resolution by a fixed resampling factor. 
 //  Must be a vector of 2 values (frequency axis, time axis), or a single 
-//  value (for both axes). A value >1 corresponds to integrating by factor; a 
-//  value of <-1 corresponds to upsampling by -factor. A value of 1 leaves the 
+//  value (for both axes). A value <-1 corresponds to integrating by -factor; a 
+//  value of >1 corresponds to upsampling by factor. A value of 0/1 leaves the 
 //  resolution along that axis unchanged.
 //  Currently, only integer refactorings are supported, so the node will fail
-//  if factor>1 (i.e. integration) is not an integer factor of the original
+//  if factor<-1 (i.e. integration) is not an integer factor of the original
 //  request's resolution.
 //field: num_cells []
 //  If specified, changes the number of cells along each axis. 

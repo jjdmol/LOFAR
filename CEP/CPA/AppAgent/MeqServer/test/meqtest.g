@@ -562,3 +562,51 @@ const mux_test := function ()
   print res;
 }
 
+const ars_test := function ()
+{
+  if( is_fail(mqsinit(verbose=verbose,gui=gui)) )
+  {
+    print mqs;
+    fail;
+  }
+  # mqs.setdebug('MeqParm',5);
+  global domain,cells,req,cells,res;
+  
+  domain := meq.domain(0,1,0,1);
+  cells := meq.cells(domain,4,4);
+  
+  polc_a := meq.polc(array([1,.5,.5,0],2,2),domain=domain);
+  polc_b := meq.polc(array([1,.5,.5,0],2,2),domain=domain);
+  polc_c := meq.polc(array([1,-.5,-.5,0],2,2),domain=domain);
+  
+  mqs.meq('Create.Node',meq.parm('a',polc_a,groups='Parm'),T);
+  mqs.meq('Create.Node',meq.parm('b',polc_b,groups='Parm'),T);
+  mqs.meq('Create.Node',meq.parm('c',polc_c,groups='Parm'),T);
+  
+  defrec := meq.node('MeqModRes','modres1',children="a");
+  defrec.factor := [-2,-4];
+  mqs.meq('Create.Node',defrec,T);
+  
+  defrec := meq.node('MeqModRes','modres2',children="b");
+  defrec.num_cells := [4,8];
+  mqs.meq('Create.Node',defrec,T);
+  
+  defrec := meq.node('MeqAdd','add1',children="modres1 c");
+  defrec.auto_resample := 1;
+  mqs.meq('Create.Node',defrec,T);
+  
+  defrec := meq.node('MeqAdd','add2',children="modres2 c");
+  defrec.auto_resample := -1;
+  mqs.meq('Create.Node',defrec,T);
+  
+  defrec := meq.node('MeqComposer','compose',children="add1 add2");
+  mqs.meq('Create.Node',defrec,T);
+  
+  print mqs.meq('Resolve.Children',[name='compose'],T);
+  
+  req := meq.request(cells,calc_deriv=0);
+  res := mqs.execute('compose',req);
+  
+  print res;
+}
+

@@ -97,9 +97,12 @@ int Composer::getResult (Result::Ref &resref,
     int ires=0;
     for( int i=0; i<numChildren(); i++ )
     {
-      Result &chres = childres[i]();
+      const Result &chres = *childres[i];
       for( int j=0; j<chres.numVellSets(); j++ )
-        result.setVellSet(ires++,&(chres.vellSetWr(j)));
+      {
+        VellSet::Ref ref = chres.vellSetRef(j);
+        result.setVellSet(ires++,ref);
+      }
     }
   }
   // we do not introduce any dependencies

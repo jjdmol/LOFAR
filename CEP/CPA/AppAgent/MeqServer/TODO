@@ -1,3 +1,8 @@
+    - review ModRes arguments (specifically, factor) for consistency 
+      with auto-resample
+
+    - add ReqSeq node
+
     - change Result constructor to take a Cells argument; change it to do
       copy-or-attach (perhaps move this function to CountedRef?)
       
@@ -24,12 +29,6 @@
       Const: from config   impl
       Parm: from config?   impl
       13/04/04: done
-      
-    - Add automatic resampling to Function node; handle integrated flag
-      14/04/04: done
-      
-    - Add ModRes node
-      14/04/04: done
       
     - Add capability to recalc the dependency mask on the fly -- must 
       remember the dependency masks then.
@@ -104,6 +103,14 @@ MEQ in general:
     01/01/04: done, need to test w/glish (glish not working on my laptop)
     16/01/04: tested with default tests; now need to make some nodes
               with child labels
+              
+        + Add automatic resampling to Function node; handle integrated flag
+          14/04/04: done, at node level
+          13/05/04: tested
+
+        + Add ModRes node
+          14/04/04: done
+          13/05/04: tested
               
         + go through setStateImpl, and clean up usage of getStateField
           31/03/04: done
