@@ -47,24 +47,32 @@ class MeqMatrixComplexArr;
 class MeqMatrixRep
 {
 public:
-  MeqMatrixRep (int nx, int ny, int elemLength)
-    : itsCount(0), itsNx(nx), itsNy(ny), itsLength(nx*ny),
-      itsElemLength(elemLength), itsInPool(false), itsIsMalloced(false)
-    { nctor++; }
+  MeqMatrixRep (int nx, int ny)
+    : itsCount     (0),
+      itsNx        (nx),
+      itsNy        (ny),
+      itsLength    (nx*ny),
+      itsInPool    (false),
+      itsIsMalloced(false)
+    {
+      nctor++;
+    }
 
   virtual ~MeqMatrixRep();
 
   virtual MeqMatrixRep* clone() const = 0;
 
   MeqMatrixRep* link()
-  { itsCount++; return this; }
+    { itsCount++; return this; }
 
   static void unlink (MeqMatrixRep* rep)
     {
-      if (rep != 0  &&  --rep->itsCount == 0)
-      {
-	if (rep->inPool() || rep->isMalloced()) rep->poolDelete();
-	else delete rep; 
+      if (rep != 0  &&  --rep->itsCount == 0) {
+	if (rep->isMalloced()) {
+	  rep->deallocate();
+	} else {
+	  delete rep; 
+	}
       }
     }
 
@@ -77,22 +85,19 @@ public:
   int nelements() const
     { return itsLength; }
 
-  int elemLength() const
-    { return itsElemLength; }
-
   bool inPool() const
     { return itsInPool; }
 
-  void setInPool(bool inPool)
+  void setInPool (bool inPool)
     { itsInPool = inPool; }
 
   bool isMalloced() const
     { return itsIsMalloced; }
 
-  void setIsMalloced(bool isMalloced)
+  void setIsMalloced (bool isMalloced)
     { itsIsMalloced = isMalloced; }
 
-  virtual void poolDelete();
+  virtual void deallocate();
 
   virtual void show (ostream& os) const = 0;
 
@@ -158,6 +163,8 @@ public:
 
   static int nctor;
   static int ndtor;
+  static int nreused;
+  static int ndeleted;
 
 protected:
   inline int offset (int x, int y) const
@@ -168,7 +175,6 @@ private:
   int  itsNx;
   int  itsNy;
   int  itsLength;
-  int  itsElemLength;
   bool itsInPool;
   bool itsIsMalloced;
 };

@@ -166,7 +166,7 @@ MeqMatrixRep* MeqMatrixRealSca::tocomplexRep (MeqMatrixRealSca& left)
 }
 MeqMatrixRep* MeqMatrixRealSca::tocomplexRep (MeqMatrixRealArr& left)
 {
-  MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (left.nx(), left.ny());
+  MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (left.nx(), left.ny());
   dcomplex* value = v->itsValue;
   double  rvalue = itsValue;
   double* lvalue = left.itsValue;

@@ -29,16 +29,18 @@ namespace LOFAR {
 
 int MeqMatrixRep::nctor = 0;
 int MeqMatrixRep::ndtor = 0;
+int MeqMatrixRep::nreused = 0;
+int MeqMatrixRep::ndeleted = 0;
 
 
 MeqMatrixRep::~MeqMatrixRep()
 {
-  ndtor--;
+  ndtor++;
 }
 
-void MeqMatrixRep::poolDelete()
+void MeqMatrixRep::deallocate()
 {
-  throw (AipsError ("MeqMatrixRep::poolDelete()"));
+  throw (AipsError ("MeqMatrixRep::deallocate()"));
 }
 
 bool MeqMatrixRep::isDouble() const
