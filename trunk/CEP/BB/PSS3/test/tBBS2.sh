@@ -211,9 +211,9 @@ time ./prepareBBD -user $usernm >> test13.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.test13 $niter $usernm >& test13.out
 
-# Do test14
+# Do testNoise
 echo ""
-echo "Doing test14"
+echo "Doing testNoise"
 echo "  Generating parm tables ..."
 time ( glish initgsm3.g; glish setgsm3.g; glish initparms.g ) >& test14.log
 rm -f /tmp/$usernm.demo3_gsm-1.MEP
@@ -221,9 +221,9 @@ rm -f /tmp/$usernm.demo3-1.MEP
 ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
 ln -s $cdir/demo.MEP /tmp/$usernm.demo3-1.MEP
 echo "  Preparing BlackBoard ..."
-time ./prepareBBD -user $usernm >> test14.log
+time ./prepareBBD -user $usernm >> testNoise.log
 echo "  Starting solve ..."
-time ./tBBS2 tBBS2.test14 $niter $usernm >& test14.out
+time ./tBBS2 tBBS2.testNoise $niter $usernm >& testNoise.out
 
 # Do testFileMap
 echo ""
