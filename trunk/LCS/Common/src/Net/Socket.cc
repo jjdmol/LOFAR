@@ -685,9 +685,11 @@ int32 Socket::setBlocking (bool block)
 	}
 
 	if (itsSocketID >= 0) {					// we must have a socket ofcourse
+#ifndef HAVE_BGL
 		if (fcntl (itsSocketID, F_SETFL, block ? 0 : O_NONBLOCK) < 0) {
 			return (setErrno(SOCKOPT));
 		}
+#endif
 		itsIsBlocking = block;					// register user wish
 		LOG_TRACE_COND(formatString("Socket(%d):setBlocking(%s)", 
 									itsSocketID, block ? "true" : "false"));
