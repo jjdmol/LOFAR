@@ -87,34 +87,27 @@ WH_PreProcess* WH_PreProcess::make (const string& name)
 
 void WH_PreProcess::process()
 {
-  //dump();
-
-  //std::cout << "its number of beamlets: " << itsMac.getNumberOfBeamlets () << std::endl;
-
   TRACER4("WH_PreProcess::Process()");
+
   for (int i = 0; i < itsMac.getNumberOfBeamlets (); i++) {
     // set elapsed time
-    ((DH_Beamlet*)getDataManager().getInHolder(i))->setElapsedTime(((DH_Beamlet*)getDataManager().getOutHolder(i))->getElapsedTime());
-    //    std::cout << "Elapsed time: " << ((DH_Beamlet*)getDataManager().getOutHolder(i))->getElapsedTime() << std::endl;
-
+    ((DH_Beamlet*)getDataManager().getOutHolder(i))->setElapsedTime(((DH_Beamlet*)getDataManager().getInHolder(i))->getElapsedTime());
     for (int j = 1; j < itsMac.getBeamletSize (); j++) { 
-      *((DH_Beamlet*)getDataManager().getInHolder(i))->getBufferElement(j) 
-	= *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j);
-      //std::cout << *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) << ' ';
+      *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) 
+	= *((DH_Beamlet*)getDataManager().getInHolder(i))->getBufferElement(j);
     }
-    //std::cout << std::endl;
   }
 }
 
 void WH_PreProcess::dump()
 {    
   cout << "WH_PreProcess " << getName () << " Buffers:" << endl;
-  for (int i = 0; i < itsMac.getNumberOfBeamlets(); i++) {
+  //  for (int i = 0; i < itsMac.getNumberOfBeamlets(); i++) {
     for (int j = 0; j < itsMac.getBeamletSize(); j++) {
-      cout << *((DH_Beamlet*)getDataManager().getInHolder(i))->getBufferElement(j) << ' ';
+      cout << *((DH_Beamlet*)getDataManager().getInHolder(0))->getBufferElement(j) << ' ';
     }
     cout << endl;
-  }
+    //}
 }
 
 }// namespace LOFAR

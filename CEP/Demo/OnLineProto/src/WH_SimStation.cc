@@ -99,37 +99,40 @@ namespace LOFAR
     ReadData ();
     
     for (int i = 0; i < itsMac.getNumberOfBeamlets(); ++i) {
-      ((DH_Beamlet*)getDataManager().getOutHolder(i))->setElapsedTime((float)(itsData[i*itsMac.getBeamletSize()].real()));
+      ((DH_Beamlet*)getDataManager().getOutHolder(i))->setElapsedTime((float)(itsData[0].real()));
       for (int j = 0; j < itsMac.getBeamletSize(); j++) { 
 	*((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) 
 	  = itsData[i * itsMac.getBeamletSize() + j + 1];
       }
     }
-    //dump();
   }
   
   void WH_SimStation::dump()
   {
     cout << "WH_SimStation " << getName () << " Buffers:" << endl;
-    for (int i = 0; i < itsMac.getNumberOfBeamlets(); i++) {
+    //   for (int i = 0; i < itsMac.getNumberOfBeamlets(); i++) {
       for (int j = 0; j < itsMac.getBeamletSize(); j++) {
-	cout << *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) << ' ';
+	cout << *((DH_Beamlet*)getDataManager().getOutHolder(0))->getBufferElement(j) << ' ';
       }
       cout << endl;
-    }
+      //}
   }
 
   void WH_SimStation::ReadData ()
-  {    
+  {
+    complex<float> InputData[NINPUT_BEAMLETS*itsMac.getBeamletSize()+1];
+
     // Read the data into the blitz array / matrix
     if (!itsInputFile.eof()) {
-      itsInputFile.read((char*)itsData, 
-		  (itsMac.getNumberOfBeamlets()*itsMac.getBeamletSize()+1)*sizeof(complex<float>));
+      itsInputFile.read((char*)InputData, 
+		  (NINPUT_BEAMLETS*itsMac.getBeamletSize()+1)*sizeof(complex<float>));
     } else {
       // Wrap around
       itsInputFile.seekg(0);
-      itsInputFile.read((char*)itsData,
-		  (itsMac.getNumberOfBeamlets()*itsMac.getBeamletSize()+1)*sizeof(complex<float>));
+      itsInputFile.read((char*)InputData,
+		  (NINPUT_BEAMLETS*itsMac.getBeamletSize()+1)*sizeof(complex<float>));
     }
+
+    memcpy (itsData, InputData, itsMac.getNumberOfBeamlets()*itsMac.getBeamletSize()*sizeof(complex<float>));
   }
 }// namespace LOFAR

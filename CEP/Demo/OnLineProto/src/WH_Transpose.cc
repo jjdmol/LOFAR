@@ -102,7 +102,7 @@ void WH_Transpose::process()
   int OutChannel;
   int OutStation;
   int OutFreqBin;
-  int OutTime = (int)((DH_Beamlet*)getDataManager().getInHolder(0))->getElapsedTime();
+  int OutTime = 1;//(int)((DH_Beamlet*)getDataManager().getInHolder(0))->getElapsedTime();
 
   // loop over all input beamlets and channels therein
   for (int InChannel=0; InChannel< getDataManager().getInputs(); InChannel++) {
