@@ -94,7 +94,7 @@ WH_Connection::~WH_Connection()
 {}
 
 WorkHolder* WH_Connection::construct (const string& name, int, int,
-				  const ParamBlock&)
+				      const KeyValueMap&)
 {
   return new WH_Connection (name, 0, 0, Parms, Parms);
 }

@@ -28,9 +28,7 @@
 
 #include <Common/lofar_complex.h>
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #include "CEPFrame/DataHolder.h"
 

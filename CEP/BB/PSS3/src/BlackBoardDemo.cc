@@ -28,19 +28,14 @@
 #include <stdlib.h>
 #include <Common/lofar_string.h>
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <Common/Debug.h>
 
-#include "CEPFrame/Transport.h"
-#include "CEPFrame/Step.h"
-#include "CEPFrame/Simul.h"
-#include "CEPFrame/WH_Empty.h"
-#include "CEPFrame/Profiler.h"
-#include "CEPFrame/ParamBlock.h"
-#include "CEPFrame/TH_Database.h"
+#include <CEPFrame/Transport.h>
+#include <CEPFrame/Step.h>
+#include <CEPFrame/Simul.h>
+#include <CEPFrame/WH_Empty.h>
+#include <CEPFrame/Profiler.h>
+#include <CEPFrame/TH_Database.h>
 #include "PSS3/BlackBoardDemo.h"
 #include "PSS3/WH_Evaluate.h"
 #include "PSS3/WH_PSS3.h"
@@ -65,7 +60,7 @@ BlackBoardDemo::~BlackBoardDemo()
    Define function for the BlackBoardDemo simulation. It defines the steps that 
    process part of the data.
  */
-void BlackBoardDemo::define(const ParamBlock& params)
+void BlackBoardDemo::define(const KeyValueMap& params)
 {
   // Free any memory previously allocated
   undefine();

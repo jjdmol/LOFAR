@@ -27,7 +27,6 @@
 
 #include "PSS3/WH_Evaluate.h"
 #include "CEPFrame/Step.h"
-#include "CEPFrame/ParamBlock.h"
 #include "Common/Debug.h"
 #include "PSS3/DH_WorkOrder.h"
 #include "PSS3/SI_Peeling.h"
@@ -75,6 +74,7 @@ void WH_Evaluate::process()
     (SI_Peeling::Peeling_data*)outp->getVarArgsPtr();
   data->nIter = 2;
   data->nSources = 2;
+  data->startSource = 2;
   data->timeInterval = 3600.;
   // To be added: Set parameter names
   getDataManager().readyWithOutHolder(0);
@@ -90,6 +90,7 @@ void WH_Evaluate::process()
   data = (SI_Peeling::Peeling_data*)outp->getVarArgsPtr();
   data->nIter = 1;
   data->nSources = 3;
+  data->startSource = 1;
   data->timeInterval = 3600.;
   // To be added: set parameter names
   getDataManager().readyWithOutHolder(0);

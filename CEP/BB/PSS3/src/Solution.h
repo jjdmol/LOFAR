@@ -23,9 +23,7 @@
 #ifndef PSS3_SOLUTION_H
 #define PSS3_SOLUTION_H
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 //# Includes
 #include <Common/lofar_iostream.h>

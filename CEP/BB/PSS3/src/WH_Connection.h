@@ -26,9 +26,7 @@
 #ifndef PSS3_WH_CONNECTION_H
 #define PSS3_WH_CONNECTION_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #include "CEPFrame/WorkHolder.h"
 #include "PSS3/DH_WorkOrder.h"
@@ -53,7 +51,7 @@ public:
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, int ninput, int noutput,
-				const LOFAR::ParamBlock&);
+				const LOFAR::KeyValueMap&);
 
    /// Make a fresh copy of the WH object.
   virtual WH_Connection* make (const string& name);

@@ -23,9 +23,7 @@
 #ifndef PSS3_STRATEGY_H
 #define PSS3_STRATEGY_H
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 //# Includes
 #include <Common/lofar_vector.h>

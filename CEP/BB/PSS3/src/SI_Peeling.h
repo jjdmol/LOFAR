@@ -23,9 +23,7 @@
 #ifndef PSS3_SI_PEELING_H
 #define PSS3_SI_PEELING_H
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 //# Includes
 #include <PSS3/StrategyImpl.h>
@@ -40,10 +38,11 @@ class SI_Peeling : public StrategyImpl
 public:
 
  typedef struct {       // Struct containing data specific for peeling strategy
-     int    nIter;
-     int    nSources;
-     double timeInterval;
-   }Peeling_data;
+   int    nIter;
+   int    nSources;
+   int    startSource;
+   double timeInterval;
+ }Peeling_data;
 
   SI_Peeling(Calibrator* cal, int argSize, char* args);
 
@@ -68,6 +67,7 @@ public:
   int            itsNSources;        // Number of sources for which to solve
   double         itsTimeInterval;    // Time interval for which to solve
   int            itsCurIter;         // The current iteration
+  int            itsStartSource;     // Start source number
   int            itsCurSource;       // The current source
   bool           itsFirstCall;
 };
