@@ -635,6 +635,8 @@ void MeqCalibrater::initParms (const MeqDomain& domain)
   // Unlock the parm tables.
   itsMEP.unlock();
   itsGSMMEP.unlock();
+  // Unlock the MS.
+  itsMS.unlock();
 }
 
 //----------------------------------------------------------------------
@@ -1174,6 +1176,7 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   rec.add ("stddev", stddev);
   rec.add ("chi", itsSolver.getChi());
 
+  itsMS.unlock();
   return rec;
 }
 
@@ -1287,6 +1290,7 @@ void MeqCalibrater::predict (const String& modelDataColName)
     mdcol.put (rownr, data);
   }
 
+  itsMS.unlock();
   timer.show();
   if (Debug(1)) timer.show();
 }
@@ -1389,6 +1393,7 @@ void MeqCalibrater::saveResidualData()
     rescol.putSlice (rownr, dataSlicer, data);
   }
   itsMS.flush();
+  itsMS.unlock();
   // From now on the residual column name has to be used in the solve.
   itsSolveColName = itsResColName;
 }
@@ -1653,6 +1658,7 @@ Int MeqCalibrater::solveselect(const String& where)
     Vector<uInt> rownrs (selms.rowNumbers(itsMS));
     itsSolveRows.reference (rownrs);
   }  
+  itsMS.unlock();
   return itsSolveRows.nelements();
 }
 
@@ -1877,6 +1883,7 @@ GlishRecord MeqCalibrater::getResidualData()
       throw AipsError("Number of polarizations should be 1, 2, or 4");
     }
   }
+  itsMS.unlock();
   GlishRecord rec;
   rec.add ("residuals", GlishArray(result));
   rec.add ("ant1", GlishArray(ant1Res));
