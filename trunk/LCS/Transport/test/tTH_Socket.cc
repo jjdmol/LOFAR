@@ -87,7 +87,7 @@ void showSocketInfo(DH_Socket	&DH)
 
 }
 
-int32 doTest() 
+int32 doTest(int32	testnr) 
 {
 	DH_Socket		DH_Source ("dhSource", 1);
 	DH_Socket		DH_Dest   ("dhDest", 1);
@@ -96,14 +96,14 @@ int32 doTest()
 	DH_Dest.setID(2);
 
 	if (!bidirectional) {
-		TH_Socket	TCPproto1("localhost", "localhost", 3850, 
+		TH_Socket	TCPproto1("localhost", "localhost", 3850+testnr, 
 													listenerAtDest, blocking);
 		DH_Source.connectTo (DH_Dest, TCPproto1, blocking);
 	}
 	else {
-		TH_Socket	TCPproto1("localhost", "localhost", 3850, 
+		TH_Socket	TCPproto1("localhost", "localhost", 3850+testnr, 
 													!listenerAtDest, blocking);
-		TH_Socket	TCPproto2("localhost", "localhost", 3850, 
+		TH_Socket	TCPproto2("localhost", "localhost", 3850+testnr, 
 													listenerAtDest, blocking);
 		DH_Source.connectBidirectional(DH_Dest, TCPproto1, TCPproto2, blocking);
 	}
@@ -184,7 +184,7 @@ int main (int32 argc, char*	argv[]) {
 			bidirectional ? "bi" : "uni"));
 	
 		sleep(2);
-		result += doTest();
+		result += doTest(testnr);
 	}
 
 	return (result);
