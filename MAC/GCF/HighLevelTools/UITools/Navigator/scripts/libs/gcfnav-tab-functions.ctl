@@ -25,6 +25,7 @@
 //#
 
 #uses "gcf-util.ctl"
+#uses "gcfnav-configuration-functions.ctl"
 
 global string  VIEW_COMBOBOX_CTRL      = "ComboBoxViews";
 global string  VIEW_TABS_CTRL          = "TabViews";
@@ -79,57 +80,27 @@ void NavTabInitialize(string datapoint)
   g_datapoint = datapoint;
   g_configPanelFileName = "";
   
-  string viewsPath = "navigator/views/";
-  dpGet("__navigator.viewsPath",viewsPath);
-  err = getLastError(); //test whether no errors
-  if(dynlen(err) > 0)
-  {
-    errorDialog(err);
-    // open dialog box with errors
-    throwError(err); // write errors to stderr
-  }
+  string viewsPath = navConfigGetViewsPath();
   
-  string dpNameConfig = "__nav_default_viewconfig";
-  if(dpExists(g_datapoint))
-  {
-    // get configuration from the database
-    string datapointTypeName = dpTypeName(g_datapoint);
-    string dpTempNameConfig = "__nav_" + datapointTypeName + "_viewconfig";
-    if(dpExists(dpTempNameConfig))
-    {
-      dpNameConfig = dpTempNameConfig;
-    }
-  }
+  string dpNameConfig = navConfigGetViewConfig(g_datapoint);
   
   int selectedSubView;
   dyn_string views;
   dyn_int  nrOfSubViews;
   dyn_string subViews;
   dyn_string configs;
-  dpGet(dpNameConfig+".selectedView",g_selectedView,
-        dpNameConfig+".selectedSubView",selectedSubView,
-        dpNameConfig+".views",views,
-        dpNameConfig+".nrOfSubViews",nrOfSubViews,
-        dpNameConfig+".subViews",subViews,
-        dpNameConfig+".configs",configs);
   
-  err = getLastError(); //test whether no errors
-  if(dynlen(err) > 0)
+  if(navConfigGetViewConfigElements(dpNameConfig,
+                                    g_selectedView,
+                                    selectedSubView,
+                                    views,
+                                    nrOfSubViews,
+                                    subViews,
+                                    configs))
   {
-    errorDialog(err);
-    // open dialog box with errors
-    throwError(err); // write errors to stderr
-  }
-  else
-  {
-    LOG_TRACE("dpGet:",g_selectedView,selectedSubView,views,nrOfSubViews,subViews,configs);
+    LOG_TRACE("NavTabInitialize:",g_selectedView,selectedSubView,views,nrOfSubViews,subViews,configs);
 
-    dpGet(views[g_selectedView] + ".caption",g_selectedViewName);
-    err = getLastError(); //test whether no errors
-    if(dynlen(err) > 0)
-    {
-      g_selectedViewName = "";
-    }
+    g_selectedViewName = navConfigGetViewCaption(views[g_selectedView]);
 
     // create the mapping
     int beginSubViews=1;
@@ -148,16 +119,7 @@ void NavTabInitialize(string datapoint)
       // get subviews config
       string subViewCaption;
       string subViewFileName;
-      dpGet(subViews[i] + ".caption",subViewCaption,
-            subViews[i] + ".filename",subViewFileName);
-      err = getLastError(); //test whether no errors
-      if(dynlen(err) > 0)
-      {
-        errorDialog(err);
-        // open dialog box with errors
-        throwError(err); // write errors to stderr
-      }
-      else
+      if(navConfigGetSubViewConfigElements(subViews[i],subViewCaption,subViewFileName))
       {
         LOG_DEBUG("subviewcaption,subviewfilename:",subViewCaption,viewsPath+subViewFileName);
         g_subViews[subViewCaption] = viewsPath+subViewFileName;
@@ -174,20 +136,8 @@ void NavTabInitialize(string datapoint)
     }
 
     // get the config panel filename    
-    dpGet(views[g_selectedView]+".configPanel",g_configPanelFileName);
-    err = getLastError(); //test whether no errors
-    if(dynlen(err) > 0)
-    {
-      errorDialog(err);
-      // open dialog box with errors
-      throwError(err); // write errors to stderr
-      
-      g_configPanelFileName = "";
-    }
-    else
-    {
-      g_configPanelFileName = viewsPath + g_configPanelFileName;
-    }  
+    g_configPanelFileName = navConfigGetViewConfigPanel(views[g_selectedView]);
+    g_configPanelFileName = viewsPath + g_configPanelFileName;
     
     viewsComboBoxCtrl.selectedPos(selectedSubView);
     ComboBoxViewsSelectionChanged();
@@ -210,18 +160,7 @@ void ComboBoxViewsSelectionChanged()
   
   // store the selected subview:
   int selectedSubViewIndex = viewsComboBoxCtrl.selectedPos();
-  string dpNameConfig = "__nav_default_viewconfig";
-  if(dpExists(g_datapoint))
-  {
-    // get configuration from the database
-    string datapointTypeName = dpTypeName(g_datapoint);
-    string dpTempNameConfig = "__nav_" + datapointTypeName + "_viewconfig";
-    if(dpExists(dpTempNameConfig))
-    {
-      dpNameConfig = dpTempNameConfig;
-    }
-  }
-  dpSet(dpNameConfig+".selectedSubView",selectedSubViewIndex);
+  navConfigSetSelectedSubView(g_datapoint,selectedSubViewIndex);
   
   // if config tab is selected, some more actions may be required
   
