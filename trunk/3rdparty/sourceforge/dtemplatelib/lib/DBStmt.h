@@ -259,7 +259,7 @@ class DBStmt : public ValidatedObject
 	// set stmt. attribute immediately ... lost upon reinitialization of stmt.
 	void OverrideStmtAttr(SQLINTEGER Attribute, SDWORD Value, SQLINTEGER StringLength)
 	{
-	   RETCODE rc = SQLSetStmtAttr(hstmt, Attribute, (SQLPOINTER) (Value), StringLength);
+	   RETCODE rc = SQLSetStmtAttr(hstmt, Attribute, reinterpret_cast<SQLPOINTER>(Value), StringLength);
 
 	   if (!RC_SUCCESS(rc))
 		   DTL_THROW DBException(_TEXT("DBStmt::SetStmtAttr()"),

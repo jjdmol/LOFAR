@@ -108,7 +108,8 @@ DTL_MEMBERCOPY(jtime_c);
 DTL_MEMBERCOPY(bool);
 DTL_MEMBERCOPY(TCHAR);
 DTL_MEMBERCOPY(tstring);
-DTL_MEMBERCOPY(ODBCINT64);
+DTL_MEMBERCOPY(long long);
+//DTL_MEMBERCOPY(ODBCINT64);
 
 // proxies needed so that char arrays get passed properly to MakeActualCopyOfMember() 
 
@@ -188,7 +189,7 @@ private:
 public:
 	CharStarProxyConst(const DataField &r) : ref(r) { }
 
-	const DataField * const ptr_from_proxy() const
+	const DataField * ptr_from_proxy() const
 	{
 		return &ref;
 	}
@@ -201,7 +202,7 @@ private:
 public:
 	CharStarProxyConst(const TCHAR * const p) : ptr(p) { }
 
-	const TCHAR * const ptr_from_proxy() const
+	const TCHAR * ptr_from_proxy() const
 	{
 		return ptr;
 	}
@@ -214,7 +215,7 @@ private:
 public:
 	CharStarProxyConst(const TCHAR * const p) : ptr(p) { }
 
-	const TCHAR * const ptr_from_proxy() const
+	const TCHAR * ptr_from_proxy() const
 	{
 		return ptr;
 	}
@@ -626,7 +627,9 @@ private:
 	DTL_GENERIC_BIND_PRIMITIVE(struct tagTIMESTAMP_STRUCT);
 	DTL_GENERIC_BIND_PRIMITIVE(jtime_c);
 
-	DTL_GENERIC_BIND_PRIMITIVE(ODBCINT64);
+	DTL_GENERIC_BIND_PRIMITIVE(long long);
+	DTL_GENERIC_BIND_PRIMITIVE(unsigned long long);
+	//DTL_GENERIC_BIND_PRIMITIVE(ODBCINT64);
 
 	void TypeTranslationFieldBind(TypeTranslationField &ttf);
 

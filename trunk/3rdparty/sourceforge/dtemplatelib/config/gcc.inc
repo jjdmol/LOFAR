@@ -10,7 +10,7 @@ ifneq (,$(findstring release,$(BUILD)))
 # Optimize for size.  See various Internet discussions about why this
 # can give better performance than -O3, mostly having to do with CPU
 # cache.
-CFLAGS += -Os -g0 -fomit-frame-pointer
+CFLAGS += -O2 -g # -fomit-frame-pointer
 else
 ifneq (,$(findstring debug,$(BUILD)))
 CFLAGS += -O0 -g3

@@ -213,7 +213,8 @@ dtl_variant_t &dtl_variant_t::operator=(const dtl_variant_t &other)
 		return numeric_cast(int());
 	}
 	
-	dtl_variant_t::operator ODBCINT64 () const {
+	//dtl_variant_t::operator ODBCINT64 () const {
+	dtl_variant_t::operator long long () const {
 		ODBCINT64 tmp(0); // gcc 3.2 workaround "long long int()" fails below
 		return numeric_cast(tmp);
 	}

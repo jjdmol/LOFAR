@@ -18,7 +18,7 @@ set_platform() {
 	case "$platform" in
 	    CYGWIN* ) PLATFORM=cygwin-i686-gcc ;;
 	    HP-UX ) PLATFORM=hpux-hppa-aCC ;;
-	    Linux ) PLATFORM=linux-i686-gcc ;;
+	    Linux ) PLATFORM=linux-`uname -m`-gcc ;;
 	    SunOS ) PLATFORM=solaris-sparc-CC ;;
 	    * ) echo ZNCompile Error: unknown platform $platform >&2 ; exit 1 ;;
 	esac

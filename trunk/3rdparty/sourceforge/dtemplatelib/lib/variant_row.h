@@ -483,7 +483,12 @@ int main()
 
 	operator int () const;
 	
-	operator ODBCINT64 () const;
+// <sql.h> totally screws up the definitions of SIZEOF_LONG and ODBCINT64.
+// Declarations of "operator ODBCINT64 () const;" cause portability problems.
+// Instead, declare "operator long () const;" and "operator long long () const;"
+// separately.
+	operator long long () const;
+	//operator ODBCINT64 () const;
 	
 	operator float () const;
 
@@ -732,7 +737,7 @@ public:
 	STD_::vector<TypeTranslation> GetTypes() const;
 
 	// return type information for the columns in the row
-	const variant_row_fields &variant_row::GetVariantRowFields() const;
+	const variant_row_fields &GetVariantRowFields() const;
 
 	// used for debugging to print out contents of variant row as a tstring
 	STD_::string Stringify() const;
@@ -848,7 +853,7 @@ public:
 
 	TypeTranslationField _string();
 
-	TypeTranslationField variant_row::_tchar_star();
+	TypeTranslationField _tchar_star();
 
 #ifndef DTL_NO_UNICODE
 	TypeTranslationField _wstring();
@@ -918,7 +923,8 @@ public:
 
 	operator int () const;
 
-	operator ODBCINT64 () const;
+	//operator ODBCINT64 () const;
+	operator long long () const;
 
 	operator float () const;
 
