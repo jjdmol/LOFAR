@@ -119,6 +119,19 @@ CacheBuffer::CacheBuffer()
   m_versions.bp() = 0;
   m_versions.ap().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
   m_versions.ap() = 0;
+
+  // print sizes of the cache
+  LOG_DEBUG_STR("m_beamletweights().size()     =" << m_beamletweights().size()     * sizeof(complex<int16>));
+  LOG_DEBUG_STR("m_subbandselection().size()   =" << m_subbandselection().size()   * sizeof(uint16));
+  LOG_DEBUG_STR("m_rcusettings().size()        =" << m_rcusettings().size()        * sizeof(uint8));
+  LOG_DEBUG_STR("m_wgsettings().size()         =" << m_wgsettings().size()         * sizeof(WGSettings::WGRegisterType));
+  LOG_DEBUG_STR("m_subbandstats().size()       =" << m_subbandstats().size()       * sizeof(uint16));
+  LOG_DEBUG_STR("m_beamletstats().size()       =" << m_beamletstats().size()       * sizeof(double));
+  LOG_DEBUG_STR("m_systemstatus.board().size() =" << m_systemstatus.board().size() * sizeof(EPA_Protocol::BoardStatus));
+  LOG_DEBUG_STR("m_systemstatus.rcu().size()   =" << m_systemstatus.rcu().size()   * sizeof(EPA_Protocol::RCUStatus));
+  LOG_DEBUG_STR("m_versions.rsp().size()       =" << m_versions.rsp().size()       * sizeof(uint8));
+  LOG_DEBUG_STR("m_versions.bp().size()        =" << m_versions.bp().size()        * sizeof(uint8));
+  LOG_DEBUG_STR("m_versions.ap().size()        =" << m_versions.ap().size()        * sizeof(uint8));
 }
 
 CacheBuffer::~CacheBuffer()
