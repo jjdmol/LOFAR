@@ -27,6 +27,10 @@
 #include <cstring>
 #include <iostream>
 
+#if defined __ia64__ && defined __INTEL_COMPILER
+#include <ia64regs.h>
+#endif
+
 
 namespace LOFAR {
 
@@ -87,7 +91,7 @@ namespace LOFAR {
 
   inline void NSTimer::start()
   {
-#if (defined __GNUC__ || defined __INTEL_COMPILER) && (defined __i386 || defined __x86_64)
+#if (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
     asm volatile
     (
 	"rdtsc\n\t"
@@ -100,13 +104,19 @@ namespace LOFAR {
     :
 	"eax", "edx"
     );
+#elif defined __ia64__ && defined __INTEL_COMPILER
+    total_time -= __getReg(_IA64_REG_AR_ITC);
+#elif defined __ia64__ && defined __GNUC__
+    long long time;
+    __asm__ __volatile__("mov %0=ar.itc" : "=r" (time));
+    total_time -= time;
 #endif
   }
 
 
   inline void NSTimer::stop()
   {
-#if (defined __GNUC__ || defined __INTEL_COMPILER) && (defined __i386 || defined __x86_64)
+#if (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
     asm volatile
     (
 	"rdtsc\n\t"
@@ -119,6 +129,12 @@ namespace LOFAR {
     :
 	"eax", "edx"
     );
+#elif defined __ia64__ && defined __INTEL_COMPILER
+    total_time += __getReg(_IA64_REG_AR_ITC);
+#elif defined __ia64__ && defined __GNUC__
+    long long time;
+    __asm__ __volatile__("mov %0=ar.itc" : "=r" (time));
+    total_time += time;
 #endif
 
     ++ count;
