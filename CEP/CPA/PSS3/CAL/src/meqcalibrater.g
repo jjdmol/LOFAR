@@ -147,12 +147,12 @@ const _define_meqcalibrater := function(ref agent, id) {
     }
     
     self.solveRec := [_method='solve', _sequence=self.id._sequence]
-    public.solve := function(realsol=T) {
+    public.solve := function(useSVD=F) {
     
         wider self;
 
         # argument assignment
-        self.solveRec.realsol  := realsol
+        self.solveRec.realsol := useSVD;
 
         # return
         return defaultservers.run(self.agent, self.solveRec);
@@ -191,14 +191,20 @@ const _define_meqcalibrater := function(ref agent, id) {
     }
     
     self.getparmsRec := [_method='getparms', _sequence=self.id._sequence]
-    public.getparms := function(parmpatterns, excludepatterns='') {
+    public.getparms := function(parmpatterns, excludepatterns='',
+				issolvable=unset, denormalize=F) {
     
         wider self;
         
         # argument assignment
         self.getparmsRec.parmpatterns    := parmpatterns
 	self.getparmsRec.excludepatterns := excludepatterns
-        
+	self.getparmsRec.issolvable := -1;
+	if (is_boolean(issolvable)) {
+	    self.getparmsRec.issolvable := 0;
+	    if (issolvable) self.getparmsRec.issolvable := 1;
+	}
+	self.getparmsRec.denormalize := denormalize;
         # return
         return defaultservers.run(self.agent, self.getparmsRec);
     }
