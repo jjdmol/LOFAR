@@ -84,15 +84,15 @@ void MeqStatUVW::calculate (const MeqRequest& request)
   MeqResult posx = itsStation->getPosX()->getResult (request);
   MeqResult posy = itsStation->getPosY()->getResult (request);
   MeqResult posz = itsStation->getPosZ()->getResult (request);
-  LOG_TRACE_FLOW ("posx" << posx.getValue());
-  LOG_TRACE_FLOW ("posy" << posy.getValue());
-  LOG_TRACE_FLOW ("posz" << posz.getValue());
+  LOG_TRACE_FLOW_STR ("posx" << posx.getValue());
+  LOG_TRACE_FLOW_STR ("posy" << posy.getValue());
+  LOG_TRACE_FLOW_STR ("posz" << posz.getValue());
   MVPosition mvpos(posx.getValue().getDouble(),
 		   posy.getValue().getDouble(),
 		   posz.getValue().getDouble());
   MVBaseline mvbl(mvpos);
   MBaseline mbl(mvbl, MBaseline::ITRF);
-  LOG_TRACE_FLOW ("mbl " << mbl);
+  LOG_TRACE_FLOW_STR ("mbl " << mbl);
   Quantum<double> qepoch(0, "s");
   qepoch.setValue (time);
   MEpoch mepoch(qepoch, MEpoch::UTC);
@@ -101,13 +101,13 @@ void MeqStatUVW::calculate (const MeqRequest& request)
   MBaseline::Convert mcvt(mbl, MBaseline::J2000);
   for (Int i=0; i<request.nx(); i++) {
     itsFrame.set (mepoch);
-    LOG_TRACE_FLOW ("frame " << mbl.getRefPtr()->getFrame());
+    LOG_TRACE_FLOW_STR ("frame " << mbl.getRefPtr()->getFrame());
     const MVBaseline& bas2000 = mcvt().getValue();
-    LOG_TRACE_FLOW (bas2000);
-    LOG_TRACE_FLOW (itsPhaseRef->direction().getValue());
+    LOG_TRACE_FLOW_STR (bas2000);
+    LOG_TRACE_FLOW_STR (itsPhaseRef->direction().getValue());
     MVuvw uvw2000 (bas2000, itsPhaseRef->direction().getValue());
     const Vector<double>& xyz = uvw2000.getValue();
-    LOG_TRACE_FLOW (xyz(0) << ' ' << xyz(1) << ' ' << xyz(2));
+    LOG_TRACE_FLOW_STR (xyz(0) << ' ' << xyz(1) << ' ' << xyz(2));
     *uptr++ = xyz(0);
     *vptr++ = xyz(1);
     *wptr++ = xyz(2);
@@ -148,9 +148,9 @@ void MeqStatUVW::calculate (const MeqRequest& request)
 //   itsW.setValue (cosdec * posx.getValue() * cosha - 
 // 		 cosdec * posy.getValue() * sinha +
 // 		 sindec * posz.getValue());
-  LOG_TRACE_FLOW ('U' << itsU.getValue());
-  LOG_TRACE_FLOW ('V' << itsV.getValue());
-  LOG_TRACE_FLOW ('W' << itsW.getValue());
+  LOG_TRACE_FLOW_STR ('U' << itsU.getValue());
+  LOG_TRACE_FLOW_STR ('V' << itsV.getValue());
+  LOG_TRACE_FLOW_STR ('W' << itsW.getValue());
 
   // Evaluate (if needed) for the perturbed parameter values.
   // Only station positions can be perturbed.
