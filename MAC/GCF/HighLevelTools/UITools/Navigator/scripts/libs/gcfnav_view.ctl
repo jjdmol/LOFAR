@@ -5,17 +5,18 @@
 ///////////////////////////////////////////////////////////////////////////////////
 void jump2StationSubrack()
 {
-  if ("LOFAR Navigator" == myPanelName())
+  if(dpExists($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr))
   {
-    navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr);
-  }
-  else
-  {  
-    RootPanelOn("navigator/views/Station_Subrack.pnl",
-                "Station - Subrack",
-                makeDynString("$datapoint:" + $datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr));
-//				"$RackNr:" + RackNr,
-//				"$SubrackNr:" + SubrackNr));
+    if ("LOFAR Navigator" == myPanelName())
+    {
+      navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr);
+    }
+    else
+    {  
+      RootPanelOn("navigator/views/Station_Subrack.pnl",
+                  "Station - Subrack",
+                  makeDynString("$datapoint:" + $datapoint + "_Rack" + $RackNr + "_SubRack" + $SubrackNr));
+    }
   }
 }
 
@@ -27,15 +28,19 @@ void jump2StationSubrack()
 ///////////////////////////////////////////////////////////////////////////////////
 void jump2StationSubrackRCU()
 {
-  if ("LOFAR Navigator" == myPanelName())
+
+  if(dpExists($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr))
   {
-    navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr);
-  }
-  else
-  {  
-    RootPanelOn("navigator/views/Station_Subrack_RCU.pnl",
-                "Station - Subrack - RCU",
-                makeDynString("$datapoint:" + $datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr));
+    if ("LOFAR Navigator" == myPanelName())
+    {
+      navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr);
+    }
+    else
+    {  
+      RootPanelOn("navigator/views/Station_Subrack_RCU.pnl",
+                  "Station - Subrack - RCU",
+                  makeDynString("$datapoint:" + $datapoint + "_Board1_AP" + $APNr + "_RCU"+$RCUNr));
+    }
   }
 }
 
