@@ -36,10 +36,11 @@ class UVPAxis
   //! Calculates scale and offset of the transfer function from the
   //! provided world- and axis-ranges.
 
-  /*! \param axisMin and \paramn axisMax may be pixel coordinates on a
-      screen. This method calculates itsScale and itsOffset from the
-      provided ranges. worldMin may not be equal to worldMax. axisMin
-      may not be equal to axisMax.*/
+  /*! calcTransferFunction calculates itsScale and itsOffset fromn the
+    world and axis ranges that are provided by the caller.  \param
+    axisMin and \param axisMax may be pixel coordinates on a
+    screen. axisMin may not be equal to axisMax. \param worldMin may
+    not be equal to \param worldMax. */
   void        calcTransferFunction(double worldMin, 
                                    double worldMax,
                                    double axisMin,
