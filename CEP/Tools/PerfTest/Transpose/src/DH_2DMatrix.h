@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.6  2002/05/24 08:41:23  schaaf
+//  %[BugId: 11]%
+//  removed ^M characters
+//
 //  Revision 1.5  2002/05/23 15:36:59  schaaf
 //
 //  %[BugId: 11]%
@@ -67,6 +71,9 @@ public:
 
   virtual ~DH_2DMatrix();
 
+  /// Allocate the buffers.
+  virtual void preprocess();
+  
   int* getBuffer(int x, int y);
   const int* getBuffer(int x, int y) const;
   
