@@ -58,6 +58,9 @@ class VisDataMux
     std::vector<string>  out_colnames_;
     //##ModelId=3FAA52A6018C
     VisTile::Format::Ref out_format_;
+    
+    double minfreq;
+    double maxfreq;
 };
 
 } // namespace Meq

@@ -149,6 +149,10 @@ void Meq::VisDataMux::deliverHeader (const DataRecord &header)
     cdebug(2)<<"no NumStations parameter in header, assuming 30\n";
   }
   handlers_.resize(VisVocabulary::ifrNumber(nstations,nstations)+1);
+  // get frequencies 
+  LoVec_double freq = header[VisVocabulary::FChannelFreq];
+  minfreq = min(freq);
+  maxfreq = max(freq);
   // init output tile format
   out_format_.attach(header[FTileFormat].as_p<VisTile::Format>(),DMI::READONLY);
   for( uint i=0; i<out_columns_.size(); i++ )
@@ -187,7 +191,7 @@ int Meq::VisDataMux::deliverTile (VisTile::Ref::Copy &tileref)
   {
     cdebug(3)<<"have handlers for did "<<did<<", got tile "<<tileref->sdebug(DebugLevel-1)<<endl;
     // For now, generate the request right here.
-    Request req(VisHandlerNode::makeCells(*tileref),False);
+    Request req(VisHandlerNode::makeCells(*tileref,minfreq,maxfreq),False);
     forest_.assignRequestId(req);
     cdebug(3)<<"have handler, generated request id="<<req.id()<<endl;
     // deliver to all known handlers
