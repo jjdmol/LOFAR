@@ -5,20 +5,20 @@
 \include{definitions} %local definitions
 
 %\usepackage{amsmath,amsthm, amsfonts, amssymb, amsxtra,amsopn}
-\usepackage{graphicx}
+%\usepackage{graphicx}
 \usepackage{float}
-\usepackage{times}
+%\usepackage{times}
 \usepackage{fancybox}
 %\usepackage{algorithmic}
 \usepackage[dvips]{hyperref}
-\usepackage{theorem}
+%\usepackage{theorem}
 \DeclareGraphicsExtensions{.eps}
-% ------------------------  End of Preamble.
-\newcounter{reqnum}
-\newcounter{assnum}
-\newtheorem{requirement}[reqnum]{Requirement}
-\newtheorem{assumption}[assnum]{Assumption}
 
+\newfloat{assumption}{ht}{ass}[section]
+%\newfloat{prerequisite}{ht}{pre}[section]
+\newfloat{requirement}{ht}{req}[section]
+
+% ------------------------  End of Preamble.
 \begin{document}
 
   \maketitle
@@ -71,7 +71,7 @@
     \begin{assumption}
       It is assumed that the quality of a preliminary result can be
       measured.
-      \label{ass:quality}
+      \caption{ quality of a preliminary result\label{ass:quality}}
     \end{assumption}
 
     When paralleling the algorithm, it becomes very important that
@@ -85,7 +85,7 @@
       it is assumed that the self-calibration algorithm can be
       partitioned over the dimensions of the dataset, or at least that
       parameters can be solved for independently.
-      \label{ass:partitionable}
+      \caption{data partitioning\label{ass:partitionable}}
     \end{assumption}
 
   \section{LOFAR requirements on the selfcal control system}
@@ -103,18 +103,18 @@
 
     \begin{requirement}
       It must be possible to add new knowledge sources to the system.
-      \label{req:knowledge-sources}
+      \caption{new knowledge sources\label{req:knowledge-sources}}
     \end{requirement}
 
     \begin{requirement}
       It must be possible to configure controllers for the way they
       react to certain states of the system.
-      \label{req:configure-controllers}
+      \caption{configuring controllers\label{req:configure-controllers}}
     \end{requirement}
 
     \begin{requirement}
       It should be possible to reconfigure controllers on runtime.
-      \label{req:reconfigure-controllers}
+      \caption{reconfiguring controllers\label{req:reconfigure-controllers}}
     \end{requirement}
 
     The Blackboard system to be build is going to allow the programmer
@@ -138,7 +138,7 @@
       It would be nice to have a library of strategies that
       would include "conditions" and "actions to
       take".
-      \label{req:strategies}
+      \caption{library of strategies\label{req:strategies}}
     \end{requirement}
 
     The blackboard architectural pattern facilitates this tweaking of
@@ -508,34 +508,20 @@
 
 \newcommand{\dbappendix}[1]{\section{#1}}
 \appendix
+
   \dbappendix{assumptions}
   \label{app:assumptions}\hypertarget{app:assumptions}{}
-    \begin{itemize}
-      \item [\ref{ass:quality}]It must be possible to measure the
-        quality of intermediate results.
-      \item [\ref{ass:partitionable}]It is required for the Blackboard
-        to be useful in the self-calibration context that the
-        self-calibration algorithm can be partitioned over the
-        dimensions of the dataset.
-    \end{itemize}
+
+    \listof{assumption}{}
 
   \dbappendix{requirements list}
   \label{app:requirements-list}\hypertarget{app:requirements-list}{}
-    \begin{itemize}
-      \item [\ref{req:knowledge-sources}]It must be possible to add
-        new knowledge sources to the system.
-      \item [\ref{req:configure-controllers}]It must be possible to
-        configure controllers for the way they react to certain states
-        of the system.
-      \item [\ref{req:reconfigure-controllers}]It should be possible
-        to reconfigure controllers on runtime.
-      \item [\ref{req:strategies}]It would be nice to have a library
-        of strategies that would include "conditions" and "actions to
-        take".
-    \end{itemize}
+
+    \listof{requirement}{}
 
   \dbappendix{strategy}
   \label{app:start-script}\hypertarget{app:start-script}{}
+
 \begin{Verbatim}[]
 #!/usr/bin/env python
 
@@ -779,7 +765,7 @@ void SelfcalEngineStub::dump() {
       xix-xxix.
       \label{bib:nii}
 
-    \bibitem[COR89]{Design Alternatives}
+    \bibitem[COR89]{Design-Alternatives}
       \emph{Design Alternatives for Paralel and Distributed Blackboard Systems} ,
       Daniel Corkill.
       \label{bib:Design-Alternatives}
