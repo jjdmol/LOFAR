@@ -31,6 +31,7 @@
 
 #include "suite.h"
 #include <Common/lofar_iostream.h>
+#include <assert.h>
 
 void Suite::addTest(Test* t)
 {
