@@ -25,6 +25,7 @@
 
 #include <GPA_Defines.h>
 #include <GPA_RequestManager.h>
+#include <GPA_Converter.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/PAL/GCF_PVSSPort.h>
@@ -83,6 +84,7 @@ class GPAController : public GCFTask
     unsigned long       _garbageTimerId;
     unsigned int        _counter;  
     GPAPropertySet*     _pCurPropSet;
+    GPAConverter        _converter;   
 };
 
 #endif

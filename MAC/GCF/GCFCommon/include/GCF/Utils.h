@@ -11,10 +11,10 @@ class Utils
     Utils();
     ~Utils();
        
-    static void getPropertyListString(string& propListString, 
-                                      const list<string>& propertyList);
-    static void getPropertyListFromString(list<string>& propertyList, 
-                                          const string& propListString);
+    static void convListToString(string& listString, 
+                                      const list<string>& stringList);
+    static void convStringToList(list<string>& stringList, 
+                                          const string& listString);
     static bool isValidPropName(const char* propName);    
 };
 

@@ -8,36 +8,36 @@ Utils::Utils()
 Utils::~Utils()
 {}
 
-void Utils::getPropertyListString(string& propListString, 
-                                  const list<string>& propertyList)
+void Utils::convListToString(string& listString, 
+                                  const list<string>& stringList)
 {
-  propListString.clear();
-  for (list<string>::const_iterator iter = propertyList.begin(); 
-       iter != propertyList.end(); ++iter)
+  listString.clear();
+  for (list<string>::const_iterator iter = stringList.begin(); 
+       iter != stringList.end(); ++iter)
   {
-    propListString += *iter;
-    propListString += '|';
+    listString += *iter;
+    listString += '|';
   }
 }
 
-void Utils::getPropertyListFromString(list<string>& propertyList, 
-                                      const string& propListString)
+void Utils::convStringToList(list<string>& stringList, 
+                                      const string& listString)
 {
-  unsigned int dataLength = propListString.length();
-  char propertyData[dataLength + 1];
-  memcpy(propertyData, propListString.c_str(), dataLength);
-  propertyData[dataLength] = 0;
-  propertyList.clear();
+  unsigned int dataLength = listString.length();
+  char data[dataLength + 1];
+  memcpy(data, listString.c_str(), dataLength);
+  data[dataLength] = 0;
+  stringList.clear();
   if (dataLength > 0)
   {
-    string propName;
-    char* pPropName = strtok(propertyData, "|");
-    while (pPropName && dataLength > 0)
+    string stringListItem;
+    char* pStringListItem = strtok(data, "|");
+    while (pStringListItem && dataLength > 0)
     {
-      propName = pPropName;      
-      pPropName = strtok(NULL, "|");
-      dataLength -= (propName.size() + 1);
-      propertyList.push_back(propName);
+      stringListItem = pStringListItem;      
+      pStringListItem = strtok(NULL, "|");
+      dataLength -= (stringListItem.size() + 1);
+      stringList.push_back(stringListItem);
     }
   }
 }

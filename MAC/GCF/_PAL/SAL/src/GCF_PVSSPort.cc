@@ -92,12 +92,26 @@ bool GCFPVSSPort::open()
     else
     {
       _pPortService = new GSAPortService(*this);
-      _portAddr.setValue(GCFPVSSInfo::getLocalSystemName() + ":" + getRealName());
+      _pPortService->setConverter(*_pConverter);
+      unsigned int pvssPortNr = claimPortNr();
+      if (_type == SAP)
+      {
+        _portAddr.setValue(formatString(
+            "%s:%s-API%d-%d", 
+            GCFPVSSInfo::getLocalSystemName().c_str(),
+            getRealName().c_str(),
+            GCFPVSSInfo::getManNum(), 
+            pvssPortNr));
+      }
+      else
+      {
+        _portAddr.setValue(GCFPVSSInfo::getLocalSystemName() + ":" + getRealName());
+      }
       _portId.setValue(formatString(
-          "%d:API:%d:%d",
+          "%d:Api:%d:%d:",
           GCFPVSSInfo::getLocalSystemId(),
           GCFPVSSInfo::getManNum(),
-          claimPortNr()));
+          pvssPortNr));
     }
   }
   
@@ -118,12 +132,25 @@ void GCFPVSSPort::setService(GSAPortService& service)
 { 
   _pPortService = &service; 
   _acceptedPort = true; 
-  _portAddr.setValue(GCFPVSSInfo::getLocalSystemName() + ":" + getRealName());
+  unsigned int pvssPortNr = claimPortNr();
+  if (_type == SAP)
+  {
+    _portAddr.setValue(formatString(
+        "%s:%s-API%d-%d", 
+        GCFPVSSInfo::getLocalSystemName().c_str(),
+        getRealName().c_str(),
+        GCFPVSSInfo::getManNum(), 
+        pvssPortNr));
+  }
+  else
+  {
+    _portAddr.setValue(GCFPVSSInfo::getLocalSystemName() + ":" + getRealName());
+  }
   _portId.setValue(formatString(
-      "%d:API:%d:%d",
+      "%d:Api:%d:%d:",
       GCFPVSSInfo::getLocalSystemId(),
       GCFPVSSInfo::getManNum(),
-      claimPortNr()));
+      pvssPortNr));
 }
 
 ssize_t GCFPVSSPort::send(GCFEvent& e)
@@ -135,7 +162,6 @@ ssize_t GCFPVSSPort::send(GCFEvent& e)
   if (MSPP == getType())  
     return -1; // no messages can be send by this type of port
 
- 
   unsigned int packsize;
   void* buf = e.pack(packsize);
 
@@ -179,7 +205,6 @@ bool GCFPVSSPort::close()
   releasePortNr(_portId.getValue());
   if (_acceptedPort)
   {
-    releasePortNr(_portId.getValue());
     _pPortService->unregisterPort(_portId.getValue());
   }
   else
@@ -204,8 +229,7 @@ bool GCFPVSSPort::accept(GCFPVSSPort& newPort)
   {
     newPort.setService(*_pPortService);
     _pPortService->registerPort(newPort);
-    setState(S_CONNECTING);        
-    newPort.schedule_connected();
+    newPort.setState(S_CONNECTING);        
     return true;
   }
   return false;
@@ -234,4 +258,10 @@ void GCFPVSSPort::releasePortNr(const string& portId)
     unsigned int portNr = atoi(portId.c_str() + pos + 1);
     _pvssPortNrs.erase(portNr);
   }
+}
+
+void GCFPVSSPort::setConverter(GCFPVSSUIMConverter& converter) 
+{ 
+  _pConverter = &converter; 
+  if (_pPortService) _pPortService->setConverter(converter);
 }

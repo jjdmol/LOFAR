@@ -33,7 +33,7 @@ class GSAPvssApi : public Manager
   private:
     friend class GSASCADAHandler;
 	  GSAPvssApi();
-    virtual ~GSAPvssApi() {long sec(0), usec(1); dispatch(sec, usec);};
+    virtual ~GSAPvssApi() {};
 
     void workProc();
     void stop();

@@ -31,11 +31,11 @@
 class GCFPVBlob : public GCFPValue
 {
   public:
-  	explicit GCFPVBlob(unsigned char* val = 0, unsigned int size = 0) : GCFPValue(LPT_BLOB), _value(val), _size(size) {;}
-  	virtual ~GCFPVBlob() {;}
+  	explicit GCFPVBlob(unsigned char* val = 0, unsigned int size = 0, bool clone = false);
+  	virtual ~GCFPVBlob() {if (_isDataHolder) delete [] _value;}
     
     /** Changes the value of this object */
-    virtual TGCFResult setValue(unsigned char* value, unsigned int size);
+    virtual TGCFResult setValue(unsigned char* value, unsigned int size, bool clone = false);
     virtual TGCFResult setValue(const string value);
 
     /** Returns the value of this object*/
@@ -58,5 +58,6 @@ class GCFPVBlob : public GCFPValue
     /** The value*/
     unsigned char* _value;
     unsigned int _size;
+    bool  _isDataHolder;
 };
 #endif

@@ -215,7 +215,6 @@ void GCFMyProperty::subscribed ()
 
 void GCFMyProperty::subscriptionLost () 
 {
-  assert(_isLinked);
   _isLinked = false;
 }
 

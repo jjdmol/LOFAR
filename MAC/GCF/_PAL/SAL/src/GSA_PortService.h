@@ -36,6 +36,7 @@
 */
 
 class GCFPVSSPort;
+class GCFPVSSUIMConverter;
 
 class GSAPortService : public GSAService
 {
@@ -52,6 +53,8 @@ class GSAPortService : public GSAService
     virtual ssize_t recv (void* buf, size_t count);
     bool registerPort(GCFPVSSPort& p);
     void unregisterPort(const string& portID);
+    void setConverter(GCFPVSSUIMConverter& converter) 
+      { _pConverter = &converter;}
     
   protected:
     void dpCreated(const string& propName);
@@ -78,5 +81,6 @@ class GSAPortService : public GSAService
     
     GCFPVString _curPeerID;
     GCFPVString _curPeerAddr;
+    GCFPVSSUIMConverter* _pConverter;
 };
 #endif

@@ -23,6 +23,16 @@
 
 #include <GCF/GCF_PVBlob.h>
 
+GCFPVBlob::GCFPVBlob(unsigned char* val, unsigned int size, bool clone) 
+  : GCFPValue(LPT_BLOB), _value(val), _size(size), _isDataHolder(clone)
+{
+  if (clone)
+  {
+    _value = new unsigned char[size];
+    memcpy(_value, val, size);
+  }
+}
+
 unsigned int GCFPVBlob::unpack(const char* valBuf)
 {
   unsigned int result(0);
@@ -32,7 +42,12 @@ unsigned int GCFPVBlob::unpack(const char* valBuf)
     memcpy((void *) &_size, valBuf + unpackedBytes, sizeof(_size));
     unpackedBytes += sizeof(_size);
     
-    _value = (unsigned char*) valBuf + unpackedBytes;
+    if (_isDataHolder)
+    {
+      delete [] _value;
+    }
+    _value = new unsigned char[_size];
+    memcpy(_value, (unsigned char*) valBuf + unpackedBytes, _size);   
     result = unpackedBytes + _size;
   }
   return result;
@@ -51,11 +66,24 @@ unsigned int GCFPVBlob::pack(char* valBuf) const
   return result;
 }
 
-TGCFResult GCFPVBlob::setValue(unsigned char* value, unsigned int size)
+TGCFResult GCFPVBlob::setValue(unsigned char* value, unsigned int size, bool clone)
 { 
   TGCFResult result(GCF_NO_ERROR);
-  _value = value; 
   _size = size; 
+  if (_isDataHolder)
+  {
+    delete [] _value;
+  }
+  if (clone)
+  {
+    _value = new unsigned char[_size];
+    memcpy(_value, value, _size);   
+  }
+  else
+  {
+    _value = value; 
+  }
+  _isDataHolder = clone;
   return result;
 }
  
@@ -63,15 +91,23 @@ TGCFResult GCFPVBlob::setValue(const string value)
 {
   TGCFResult result(GCF_NO_ERROR);
 
-  _value = (unsigned char*) value.c_str();
   _size = value.length();
+  if (_isDataHolder)
+  {
+    delete [] _value;
+  }
+  _value = new unsigned char[_size];
+  memcpy(_value, value.c_str(), _size);   
+
+  _value = (unsigned char*) value.c_str(); 
+  _isDataHolder = true;
   
   return result;
 }
 
 GCFPValue* GCFPVBlob::clone() const
 {
-  GCFPValue* pNewValue = new GCFPVBlob(_value, _size);
+  GCFPValue* pNewValue = new GCFPVBlob(_value, _size, true);
   return pNewValue;
 }
 
@@ -81,8 +117,13 @@ TGCFResult GCFPVBlob::copy(const GCFPValue& newVal)
 
   if (newVal.getType() == getType())
   {
-    _value = ((GCFPVBlob *)&newVal)->getValue();
+    if (_isDataHolder)
+    {
+      delete [] _value;
+    }
     _size = ((GCFPVBlob *)&newVal)->getSize();
+    _value = new unsigned char[_size];
+    memcpy(_value, ((GCFPVBlob *)&newVal)->getValue(), _size);   
   }
   else
     result = GCF_DIFFERENT_TYPES;

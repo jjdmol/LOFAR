@@ -33,6 +33,8 @@ using namespace std;
 class GCFTask;
 class GCFEvent;
 class GSAPortService;
+class GCFPVBlob;
+class GCFPVSSUIMConverter;
 
 /**
  * This is the class, which implements the special port with the PVSS message 
@@ -55,6 +57,7 @@ class GCFPVSSPort : public GCFRawPort
   
   public:
 
+    void setConverter(GCFPVSSUIMConverter& converter);
     /**
      * open/close functions
      */
@@ -71,6 +74,8 @@ class GCFPVSSPort : public GCFRawPort
   public: // pvss port specific methods
 
     void setDestAddr (const string& destDpName);
+    const string& getPortID() {return _portId.getValue();}
+    const string& getPortAddr() {return _portAddr.getValue();}
     virtual bool accept(GCFPVSSPort& newPort);
 
   private:
@@ -82,22 +87,29 @@ class GCFPVSSPort : public GCFRawPort
     
     friend class GSAPortService;
     void serviceStarted(bool successfull);
-    const string& getPortID() {return _portId.getValue();}
     void setService(GSAPortService& service);
             
     static unsigned int claimPortNr();
     static void releasePortNr(const string& portId);
+    
   private:
     GSAPortService*   _pPortService;
     string            _destDpName;
     GCFPVString       _portId;
     GCFPVString       _portAddr;
+    GCFPVSSUIMConverter* _pConverter;
     
     bool _acceptedPort;
     
     typedef set<unsigned int> TPVSSPortNrs;
-    static TPVSSPortNrs _pvssPortNrs;
-    
+    static TPVSSPortNrs _pvssPortNrs;        
+};
+
+class GCFPVSSUIMConverter
+{
+  public:
+    virtual bool uimMsgToGCFEvent(unsigned char* buf, unsigned int length, GCFPVBlob& gcfEvent) = 0;
+    virtual bool gcfEventToUIMMsg(GCFPVBlob& gcfEvent, GCFPVBlob& uimMsg) = 0;
 };
 
 #endif
