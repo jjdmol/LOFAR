@@ -92,7 +92,6 @@ void StationSim::define (const ParamBlock& params)
   const int fifolength            = params.getInt    ("bf_fifolength", 512);
   const int buflength             = params.getInt    ("bf_bufferlength", 100);
   const int modulationWindowSize  = params.getInt    ("modwindowsize", 32);
-  const int nfft_phaseshift       = params.getInt    ("nfftphaseshift", 128);
   const int aweRate               = params.getInt    ("awerate", 1);
   const int nbeam                 = params.getInt    ("nbeam", 1);
   const int maxNtarget            = params.getInt    ("maxntarget", 1);
@@ -100,10 +99,8 @@ void StationSim::define (const ParamBlock& params)
   const int STArate               = params.getInt    ("starate", 100);
   const int WDrate                = params.getInt    ("wdrate", 100);
   const int PROJrate              = params.getInt    ("projrate", 100);
+  const string beamtrajectfile    = params.getString ("beamtrajectfile", "");
 
-//   const int delayMod              = modulationWindowSize - 1;
-//   const int delayPhase            = nfft_phaseshift - 1;
-//   const int delaySubFilt          = nrcu * (nsubband - 1);
   const int delayBeamForm         = 1;
 
   const int EVD                   = 0;
@@ -143,14 +140,13 @@ void StationSim::define (const ParamBlock& params)
 								  1,
 								  DG_Config->itsSources[i]->itsSignals[j]->itsModulationType,
 								  DG_Config->itsSources[i]->itsSignals[j]->itsCarrierFreq,
-								  DG_Config->itsSources[i]->itsSignals[j]->itsSamplingFreq,
+								  DG_Config->itsSamplingFreq,
 								  DG_Config->itsSources[i]->itsSignals[j]->itsOpt,
 								  DG_Config->itsSources[i]->itsSignals[j]->itsAmplitude, 
 								  modulationWindowSize),
 					 string ("modulate_") + suffix, 
 					 false);
       
-//       modulate.getOutData (0).setWriteDelay (delayMod);
       simul.addStep (modulate);
     }
 
@@ -162,10 +158,6 @@ void StationSim::define (const ParamBlock& params)
 						string ("create_source_") + suffix, 
 						false);
     
-//     for (int j = 0; j < DG_Config->itsSources[i]->itsNumberOfSignals; ++j) {
-//       create_source.getInData (j).setReadDelay (delayMod);
-// 	}
-//     create_source.getOutData (0).setWriteDelay (delayMod);
     simul.addStep (create_source);
 
 	// Create the phase shifters
@@ -173,14 +165,12 @@ void StationSim::define (const ParamBlock& params)
 									 1,
 									 nrcu,
 									 DG_Config,
-									 nfft_phaseshift,
+									 DG_Config->itsNumberOfFFT,
 									 i,
 									 modulationWindowSize),
 					  string ("phase_shift_") + suffix, 
 					  false);
     
-//     phase_shift.getInData (0).setReadDelay (delayMod);
-//     phase_shift.getOutData (0).setWriteDelay (delayMod + delayPhase);
     simul.addStep (phase_shift);
   }
 
@@ -191,25 +181,9 @@ void StationSim::define (const ParamBlock& params)
 								   nrcu), 
 					"add_signals", 
 					false); 
-//   for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
-//     add_signals.getInData (i).setReadDelay (delayMod + delayPhase);
-//   }
-//   for (int i = 0; i < nrcu; ++i) {
-//     add_signals.getOutData (i).setWriteDelay (delayMod + delayPhase);
-//   }
+
   simul.addStep (add_signals);
 
-// //   // Create the NoEMI data readers
-// //   for (int i = 0; i < nrcu; ++i) { 
-// // 	sprintf (suffix, "%d", i);
-	  
-// // 	Step data_reader (WH_DataReader(suffix,
-// // 									1,
-// // 									"/dop32_0/alex/files_data/ajb_data/f113ch1.dat"),
-// // 					  string ("data_reader_") + suffix,
-// // 					  false);
-// // 	simul.addStep (data_reader);	
-// //   }
 
   // Create the subband filterbank
   int nout = 2;
@@ -219,10 +193,7 @@ void StationSim::define (const ParamBlock& params)
 	Step subband_filter (WH_BandSep(suffix,	nsubband, coeffFileNameSub, nout),
 			     string ("subband_filter_") + suffix,
 			     false);
-// 	subband_filter.getInData (0).setReadDelay (delayMod + delayPhase);
-// 	for (int j = 0; j < nsubband * nout; ++j) {
-// 	  subband_filter.getOutData (j).setWriteDelay (delaySubFilt);
-// 	}
+
 	subband_filter.setOutRate(nsubband);
 	simul.addStep (subband_filter);	
   }
@@ -235,15 +206,8 @@ void StationSim::define (const ParamBlock& params)
 	Step beam (WH_BeamFormer(suffix, nrcu + 1, 1, nrcu, nbeam, maxNtarget, maxNrfi, 
 							 STArate), 
 			   string("beam_former_") + suffix, false);
-//     for (int j = 0; j < nrcu; ++j) { 
-//       beam.getInData (j).setReadDelay (delaySubFilt); 
-//     }
-// 	for (int j = 0; j < 1; ++j) { 
-// 	  beam.getOutData (j).setWriteDelay (delaySubFilt + delayBeamForm);
-// 	}   
-// 	beam.getInData (nrcu).setReadDelay (delaySubFilt + delayBeamForm);
-	beam.getInData (nrcu).setReadDelay (delayBeamForm);
 
+	beam.getInData (nrcu).setReadDelay (delayBeamForm);
 	beam.setRate(nsubband);
 	beam.setInRate (PROJrate * nsubband, nrcu);	
     simul.addStep (beam);
@@ -253,22 +217,15 @@ void StationSim::define (const ParamBlock& params)
     Step sta (WH_STA(suffix, nrcu, 2, nrcu, maxNrfi, buflength, SVD), 
 			  string ("sta_") + suffix, false);
 
-//     for (int j = 0; j < nrcu; ++j) {
-//       sta.getInData (j).setReadDelay (delaySubFilt);
-//     }
-//     for (int j = 0; j < 2; ++j) {                // the 1 + 1 is for the #rfi connection
-// 	  sta.getOutData (j).setWriteDelay (delaySubFilt);
-// 	}
 	sta.setRate(nsubband);
 	sta.setOutRate(nsubband * STArate);
     simul.addStep (sta);
 
 	
 	// the Weight Determination Object
-    Step weight_det (WH_WeightDetermination(suffix, 0, 1, nrcu, bfDipoleFile, 0.3, 0.3), 
+    Step weight_det (WH_WeightDetermination(suffix, 0, 1, nrcu, bfDipoleFile, beamtrajectfile),
 					 string("weight_det_") + suffix, false);   
         
-//     weight_det.getOutData (0).setWriteDelay (delaySubFilt);
     weight_det.setRate(nsubband * WDrate);
     simul.addStep(weight_det);
 
@@ -281,27 +238,12 @@ void StationSim::define (const ParamBlock& params)
 //     det_null.setRate(nsubband + STArate);
 //     simul.addStep(det_null);
 
-
-//     // add a another deterministic null
-// 	Step det_null_2 (WH_WeightDetermination(suffix, 0, 1, nrcu, bfDipoleFile, -2.9709, 0.7128),
-// 					 string("det_null2_") + suffix, false);
-
-//     det_null_2.getOutData (0).setWriteDelay (delaySubFilt);
-//     det_null_2.setRate(nsubband + STArate);
-//     simul.addStep(det_null_2);
-
 	
 	// the projection object
 	int ninProj = 3;
     Step projection (WH_Projection(suffix, ninProj, 1, nrcu, maxNrfi), 
 					 string("projection_") + suffix, false);
 
-//     for (int j = 0; j < ninProj; ++j) {    // One input + two det null + mdl + eigvectors
-//       projection.getInData (j).setReadDelay (delaySubFilt);
-//     }
-//     for (int j = 0; j < 1; ++j) {                
-// 	  projection.getOutData (j).setWriteDelay (delaySubFilt);
-// 	}
 	for (int i = 0; i < ninProj - 2; ++i) {
 	  projection.setInRate (nsubband * WDrate, i);
 	}
@@ -314,6 +256,7 @@ void StationSim::define (const ParamBlock& params)
   }
 
  
+
   // Connect the steps.
   for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
     sprintf (suffix2, "%d", i);
@@ -388,19 +331,7 @@ void StationSim::define (const ParamBlock& params)
 // 	simul.connect (string ("det_null_") + suffix2 + string (".out_0"),
 // 				   string ("projection_") + suffix2 + string(".in_1"));
 
-// 	// connect the deterministic null to the projection
-// 	simul.connect (string ("det_null2_") + suffix2 + string (".out_0"),
-// 				   string ("projection_") + suffix2 + string(".in_2"));
-
   }
-
-//   // Connect the data_reader to the subband filterbank  
-
-//   for (int i = 0; i < nrcu; ++i) { 
-// 	sprintf (suffix, "%d", i);
-// 	simul.connect (string ("data_reader_") + suffix + string (".out_0"), 
-// 				   string ("subband_filter_") + suffix + string (".in"));
-//   }
 
 
   // end of dataprocessor definition

@@ -31,13 +31,12 @@
 #include <blitz/blitz.h>
 
 WH_WeightDetermination::WH_WeightDetermination(const string& name, unsigned int nin, unsigned int nout, 
-											   unsigned int nant, string s, double phi, double theta)
-  : WorkHolder    (nin, nout, name, "WH_WeightDetermination"),
-    itsOutHolders (0),
-    itsNrcu       (nant),
-    itsArray      (s),
-	itsPhi        (phi),
-	itsTheta      (theta)
+											   unsigned int nant, string s, string beamtrajectoryfile)
+  : WorkHolder     (nin, nout, name, "WH_WeightDetermination"),
+    itsOutHolders  (0),
+    itsNrcu        (nant),
+    itsArray       (s),
+	itsBeamTraject (beamtrajectoryfile)
 {
   char str[8];
   if (nout > 0) {
@@ -56,7 +55,7 @@ WH_WeightDetermination::~WH_WeightDetermination()
 
 WH_WeightDetermination* WH_WeightDetermination::make (const string& name) const
 {
-  return new WH_WeightDetermination (name, getInputs(), getOutputs(), itsNrcu, itsArray.conf_file, itsPhi, itsTheta);
+  return new WH_WeightDetermination (name, getInputs(), getOutputs(), itsNrcu, itsArray.conf_file, itsBeamTraject.conf_file);
 }
 
 void WH_WeightDetermination::preprocess()
@@ -67,7 +66,9 @@ void WH_WeightDetermination::preprocess()
 void WH_WeightDetermination::process()
 {
   if (getOutputs() > 0) {
-	LoVec_dcomplex d = steerv(itsPhi, itsTheta, itsArray.getPointX(), itsArray.getPointY());
+	LoVec_dcomplex d = steerv(itsBeamTraject.getPhi (itsOutHolders [0]->getTimeStamp ()), 
+							  itsBeamTraject.getTheta (itsOutHolders [0]->getTimeStamp ()), 
+							  itsArray.getPointX (), itsArray.getPointY ());
 	
 	for (int i = 0; i < getOutputs(); i++) {
 	  memcpy(itsOutHolders[i]->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));

@@ -40,12 +40,9 @@ class Source
 {
 public:
 
-  Source (string config_file);
+  Source (string config_file, string trajectory_file);
 
   Trajectory* itsTraject;
-  double      itsLength;
-  long        itsCentreFrequency;
-  long        itsSamplingFreq;
   int         itsNumberOfSignals;
   Signal*     itsSignals[MAX_SIGNALS];
 };

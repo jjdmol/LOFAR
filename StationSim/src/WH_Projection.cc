@@ -117,7 +117,7 @@ void WH_Projection::process()
 	  itsA = steerv;
 	}
 
-	if (itsRFISources.doHandle () || itsInHolders[0]->doHandle ()) {  
+	if (itsOutHolders[0]->doHandle ()) {  
 	  // Calculate the weights using the eigenvectors and the steering vector
 	  if (itsDetectedRFIs == 1) {
 		LoVec_dcomplex Vvec = itsV(blitz::Range::all(), itsV.lbound(secondDim));

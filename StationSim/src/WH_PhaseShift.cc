@@ -71,8 +71,8 @@ WH_PhaseShift::WH_PhaseShift (int nin,
   itsOutputBuffer.resize (itsNrcu, 
 						  itsNfft);
   itsFreqShift = 
-	PhaseShift::getFreqShift (itsConfig->itsSources[itsSource]->itsSamplingFreq,
-							  itsConfig->itsSources[itsSource]->itsCentreFrequency, 
+	PhaseShift::getFreqShift (itsConfig->itsSamplingFreq,
+							  (itsConfig->itsSamplingFreq) / 2, 
 							  itsNfft);
 }
 

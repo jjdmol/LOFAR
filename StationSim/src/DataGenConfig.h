@@ -42,9 +42,16 @@ public:
 
   DataGenerator (string config_file);
 
-  ArrayConfig *itsArray;
   int itsNumberOfSources;
-  Source *itsSources[MAX_SOURCES];
+  int itsSnapToGrid;
+  int itsNullGrid;
+  int itsNumberOfFFT;
+  int itsNumberOfAntennas;
+  int itsSamplingFreq;
+  double itsTimeLength;
+
+  Source* itsSources[MAX_SOURCES];
+  ArrayConfig* itsArray;
 };
 
 #endif

@@ -44,8 +44,6 @@ public:
   double itsOpt;
   string itsModulationType;
   string itsInputFileName;
-  double itsLength;
-  long   itsSamplingFreq;
 };
 
 #endif

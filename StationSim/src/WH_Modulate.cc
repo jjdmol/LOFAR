@@ -44,6 +44,9 @@ WH_Modulate::WH_Modulate (int nin,
   itsp           (0),
   itsModType     (mod_type)
 {
+  AssertStr (itsTc > 0, 
+			 "The sampling frequency is smaller than the carrier frequency, cannot modulate!");
+  
   // Allocate blocks to hold pointers to input and output DH-s.
   if (nin > 0) {
     itsInHolders = new DH_SampleR* [nin];

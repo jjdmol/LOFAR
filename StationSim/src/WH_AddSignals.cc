@@ -59,7 +59,7 @@ WH_AddSignals::WH_AddSignals (const string& name,
   }
 
   // DEBUG
-//   itsCount = 0;
+  itsCount = 0;
 //   itsFileOutReal.open ("/home/alex/data/add_real.txt");
 //   itsFileOutComplex.open ("/home/alex/data/add_complex.txt");
 //   itsFileOutReal.precision(20);
@@ -114,7 +114,7 @@ void WH_AddSignals::process ()
 //     itsFileOutReal << endl;
 //     itsFileOutComplex << endl;
 
-	//cout << itsCount++ << endl;
+// 	cout << itsCount++ << endl;
   }
 }
 
