@@ -52,15 +52,11 @@ public:
   // Destructor
   ~Solver();
 
-  // Set the time interval for which to solve.
-  void setTimeInterval (double intervalInSeconds);
-
-  // Reset the iterator.
-  void resetIterator();
-
-  // Advance the iterator.
-  // \returns false if at end of iteration.
-  bool nextInterval (bool callReadPolcs = true);
+  // Start another time interval.
+  // Hereafter getSolvableParmData can be called.
+  // It returns false if the start value is outside the observation domain.
+  // Length is trimmed if beyond end of observation.
+  bool nextInterval (double start, double length, bool callReadPolcs = true);
 
   // Set the solvable parm data for a given prediffer.
   void setSolvableParmData (const ParmData&, int prediffer);
@@ -113,7 +109,12 @@ private:
   Quality itsSol;                       //# Solution quality
   casa::Vector<casa::String> itsSolvableParms;     // Solvable parameters
 
-  double  itsTimeInterval;
+  std::vector<double> itsTimes;     // All times in MS
+  std::vector<double> itsIntervals; // All intervals in MS
+  unsigned int   itsTimeIndex;      // The index of the current time
+  unsigned int   itsNrTimes;        // The number of times in the time interval
+  double itsStartFreq;
+  double itsEndFreq;
 };
 
 } // namespace LOFAR

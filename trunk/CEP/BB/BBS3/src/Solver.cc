@@ -90,91 +90,47 @@ Solver::~Solver()
 
 //----------------------------------------------------------------------
 //
-// ~setTimeInterval
-//
-// Set the time domain (interval) for which the solver will solve.
-// The predict could be on a smaller domain (but not larger) than
-// this domain.
-//
-//----------------------------------------------------------------------
-void Solver::setTimeInterval (double secInterval)
-{
-  LOG_INFO_STR("setTimeInterval = " << secInterval);
-  itsTimeInterval = secInterval;
-}
-
-//----------------------------------------------------------------------
-//
-// ~resetIterator
-//
-// Start iteration over time domains from the beginning.
-//
-//----------------------------------------------------------------------
-void Solver::resetIterator()
-{
-  LOG_TRACE_FLOW( "resetTimeIterator" );
-  //  itsTimeIndex = 0;
-}
-
-//----------------------------------------------------------------------
-//
 // ~nextInterval
 //
 // Move to the next interval (domain).
 // Set the request belonging to that.
 //
 //----------------------------------------------------------------------
-bool Solver::nextInterval(bool callReadPolcs)
+bool Solver::nextInterval(double start, double length, bool callReadPolcs)
 {
   cout << "BBSTest: EndOfInterval" << endl;
 
-//   // Exit when no more chunks.
-//   if (itsTimeIndex >= itsTimes.nelements()) {
-//     return false;
-//   }
-//   cout << "BBSTest: BeginOfInterval" << endl;
+  // Normally the times are in sequential order, so we can continue searching.
+  // Otherwise start the search at the start.
+  if (start < itsTimes[itsTimeIndex]) {
+    itsTimeIndex = 0;
+  }
+  // Find the time matching the start time.
+  while (itsTimeIndex < itsTimes.size()
+	 && start < itsTimes[itsTimeIndex] - itsIntervals[itsTimeIndex]/2) {
+    ++itsTimeIndex;
+  }
+  // Exit when no more chunks.
+  if (itsTimeIndex >= itsTimes.size()) {
+    return false;
+  }
   
-//   double timeSize = 0;
-//   double timeStart = 0;
-//   double timeStep = 0;
-//   itsNrTimes = 0;
-//   // Get the next chunk until the time interval size is exceeded.
-//   while (timeSize < itsTimeInterval  &&  itsTimeIndex < itsTimes.nelements())
-//   {
-//       // If first time, calculate interval and start time.
-//     if (timeStart == 0) {
-//       timeStep  = itsIntervals[itsTimeIndex];
-//       timeStart = itsTimes[itsTimeIndex] - timeStep/2;
-//     }
-//     timeSize += timeStep;
-//     itsNrTimes++;
-//     itsTimeIndex++;
-//   }
+  cout << "BBSTest: BeginOfInterval" << endl;
+
+  // Find the end of the interval.
+  double startTime = itsTimes[itsTimeIndex] - itsIntervals[itsTimeIndex]/2;
+  double endTime = start + length;
+  itsNrTimes = 0;
+  while (itsTimeIndex < itsTimes.size()
+	 && endTime <= itsTimes[itsTimeIndex] + itsIntervals[itsTimeIndex]/2) {
+    ++itsTimeIndex;
+    ++itsNrTimes;
+  }
+  endTime = itsTimes[itsTimeIndex-1] + itsIntervals[itsTimeIndex-1]/2;
   
-//   // Map the correct data subset (this time interval)
-//   long long startOffset = (itsTimeIndex-itsNrTimes)*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
-//   size_t nrBytes = itsNrTimes*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
-//   // Map this time interval
-//   itsDataMap->mapFile(startOffset, nrBytes); 
-//   if (itsLockMappedMem)
-//   {                                             // Make sure mapped data is resident in RAM
-//     itsDataMap->lockMappedMemory();
-//   }
-
-//   mapTimer.stop();
-//   cout << "BBSTest: file-mapping " << mapTimer << endl;
-
-//   NSTimer parmTimer;
-//   parmTimer.start();
-//   itsSolveDomain = MeqDomain(timeStart, timeStart + itsNrTimes*timeStep,
-// 			     itsStartFreq + itsFirstChan*itsStepFreq,
-// 			     itsStartFreq + (itsLastChan+1)*itsStepFreq);
-//   initParms (itsSolveDomain, callReadPolcs);
-//   parmTimer.stop();
-//   cout << "BBSTest: initparms    " << parmTimer << endl;
-
-// //   itsSolveColName = itsDataColName;
-//   return true;
+  itsSolveDomain = MeqDomain(startTime, endTime,
+			     itsStartFreq, itsEndFreq);
+  return true;
 }
 
 
