@@ -200,18 +200,22 @@ namespace LOFAR
     // constant: the null thread id
     const ThrID ThrID_null;
 
-  } // namespace Thread
-
 #else
+
   typedef int ThrID;
   class Attributes {};
-} // namespace Thread
+
 #endif
 
+  } // namespace Thread
+  
 } // namespace LOFAR
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
-using LOFAR::Thread;
+namespace Thread
+{
+  using namespace LOFAR::Thread;
+}
 #endif
 
 #endif
