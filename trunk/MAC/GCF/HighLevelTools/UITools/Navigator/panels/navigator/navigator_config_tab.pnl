@@ -1,22 +1,41 @@
 V 10
 1
 LANG:1 9 ConfigTab
-PANEL,284 171 946 43 N "_3DFace" 8
+PANEL,284 171 946 43 N "_3DFace" 4
 "$configDatapoint"
-"$controlAttributes"
-"$controlNames"
-"$datapoint"
-"$elementNames"
 "$selectedElementDpType"
 "$selectedView"
 "$viewName"
 "main()
 {
-//  DebugTN(\"ConfigTab: $selectedView,$configDatapoint,$selectedElementDpType,$controlNames,$controlAttributes,$elementNames:\",$selectedView,$configDatapoint,$selectedElementDpType,$controlNames,$controlAttributes,$elementNames);
+  // disable remove button if only one subview exists
+  string viewConfigDpName = \"__nav_\" + $selectedElementDpType + \"_viewconfig\";
+  
+  dyn_int nrOfSubViews;
+  if(dpExists(viewConfigDpName))
+  {
+    dpGet(viewConfigDpName + \".nrOfSubViews\",nrOfSubViews);
+
+    dyn_errClass err;
+    err = getLastError();
+    if(dynlen(err) > 0)
+    {
+      throwError(err); // write errors to stderr
+    }
+    else
+    {
+      if(nrOfSubViews[$selectedView] <= 1)
+      {
+        btnRemove.enabled = false;
+      }
+    }
+  }
 }" 0
-EE E E 1 -1 -1 0  20 40
-"" 0 1
-EE 2
+ E E E E 1 -1 -1 0  20 40
+""0  1
+E "#uses \"gcfnav-tab-functions.ctl\"
+" 0
+ 2
 "CBRef""1"
 "EClose"E
 ""
@@ -30,10 +49,11 @@ LANG:1 6 Layer1
 1 1 39 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 67 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
 E E 0 2 1 0 1 E  1 39 938 39
@@ -43,30 +63,30 @@ E E 0 2 1 0 1 E  1 39 938 39
 1 4 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 62 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
-0 ""
-4 4 100 31
+0
+""  4 4 100 31
+
 T 
 1
 LANG:1 14 New subview...
 "main()
 {
-  ChildPanelOnCentralModal(
-    \"navigator/navigator_newsubview.pnl\",
-    \"Add Sub-view\",
-    makeDynString(\"$addView:TRUE\", 
-                  \"$viewName:\" + $viewName,
-                  \"$selectedView:\" + $selectedView, 
-                  \"$selectedElementDpType:\" + $selectedElementDpType, 
-                  \"$configDatapoint:\" + $configDatapoint));
-
-  // TODO: refresh the Views or SubViews controls, to make the new subview available
+  int nrOfSubviews;
+  if(ConfigTabAddSubViewClicked($viewName,$selectedView,$selectedElementDpType,$configDatapoint,nrOfSubviews))
+  {
+    if(nrOfSubviews > 1)
+    {
+      btnRemove.enabled = true;
+    }
+  }
 }" 0
  E E E
 13 55
@@ -75,97 +95,32 @@ LANG:1 14 New subview...
 1 104 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 64 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
-0 ""
-104 4 200 31
+0
+""  104 4 200 31
+
 T 
 1
 LANG:1 14 Remove subview
 "main()
 {
-  ChildPanelOnCentralModal(
-    \"navigator/navigator_newsubview.pnl\",
-    \"Remove Sub-view\",
-    makeDynString(\"$addView:FALSE\", 
-                  \"$viewName:\" + $viewName,
-                  \"$selectedView:\" + $selectedView, 
-                  \"$selectedElementDpType:\" + $selectedElementDpType, 
-                  \"$configDatapoint:\" + $configDatapoint));
-
-  // TODO: refresh the Views or SubViews controls, to remove the subview from the combobox
-
-}" 0
- E E E
-13 56
-"btnApply"
-""
-1 204 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-66 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
-0 ""
-204 4 300 31
-T 
-1
-LANG:1 13 Apply changes
-"main()
-{
-/*
-  if(isDollarDefined(\"$configDatapoint\") && 
-     isDollarDefined(\"$controlNames\") && 
-     isDollarDefined(\"$controlAttributes\") && 
-     isDollarDefined(\"$elementNames\"))
+  int nrOfSubviews;
+  if(ConfigTabRemoveSubViewClicked($viewName,$selectedView,$selectedElementDpType,$configDatapoint,nrOfSubviews))
   {
-    dyn_string dynControlNames = strsplit($controlNames,\"|\");
-    dyn_string dynControlAttributes = strsplit($controlAttributes,\"|\");
-    dyn_string dynElementNames = strsplit($elementNames,\"|\");
-    for(int i=1; i<=dynlen(dynControlNames);i++)
+    if(nrOfSubviews <= 1)
     {
-      anytype value;
-      getValue(dynControlNames[i],dynControlAttributes[i],value);
-      DebugTN(\"Storing control value:\",dynControlNames[i],dynControlAttributes[i],value,$configDatapoint,dynElementNames[i]);
-
-      dpSet($configDatapoint + \".\" + dynElementNames[i],value);
+      btnRemove.enabled = false;
     }
   }
-*/
 }" 0
  E E E
-14 58
-"TextField1"
-""
-1 50 80 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-67 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-48 78 522 105
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
- setValue(\"\", \"text\", $datapoint);
-}" 0
-
-E
 0
 LAYER, 1 
 1

@@ -163,11 +163,8 @@ LANG:1 6 Layer8
 0
 3 0 "PANEL_REF0"
 "navigator/navigator_config_tab.pnl" 20 41 T 62 U 
-7
+4
 "$configDatapoint""$configDatapoint"
-"$controlAttributes""text|text"
-"$controlNames""textFieldDummy|textFieldDummy2"
-"$elementNames""dummy|dummy2"
 "$selectedElementDpType""$selectedElementDpType"
 "$selectedView""$selectedView"
 "$viewName""$viewName"

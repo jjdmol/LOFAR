@@ -6,13 +6,13 @@ PANEL,328 229 1260 960 N "_3DFace" 0
 {
 	Navigator_HandleEventInitialize();
 }" 0
-"main()
+ "main()
 {
 	Navigator_HandleEventTerminate();
 }" 0
-E E E 1 -1 -1 0  10 570
-"" 0 1
-E"// global functions. All event handlers are implemented here
+ E E E 1 -1 -1 0  10 570
+""0  1
+E "// global functions. All event handlers are implemented here
 
 #uses \"gcfnav-functions.ctl\"
 
@@ -36,17 +36,18 @@ LANG:1 6 Layer1
 1 -107 130 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
 9 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  1 E 4 -106 130
 -106 160
 -120 140
 -106 120
-0
+ 0
 1 1 3 "" 2
 0
 1 10 7 "" 78
@@ -81,10 +82,11 @@ E E 0 1 1 0 1 E U  1 E 4 -106 130
 1 0 30 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 4 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "selchangedcb" "main()
 {
@@ -92,10 +94,9 @@ LANG:1 0
 }"
 1
 LANG:1 98 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-288 38 1252 852
-E10
-"tab1" 1
+0
+""  288 38 1252 852
+E10 "tab1" 1
 LANG:1 4 tab1
 0
 "tab2" 1
@@ -125,21 +126,24 @@ LANG:1 4 tab9
 "tab10" 1
 LANG:1 5 tab10
 0
+
 13 3
 "ButtonMaximize"
 ""
 1 290 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 10 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 9 Undock...
+
 0
 1
 LANG:1 102 -adobe-courier-medium-r-normal-*-*-80-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,49,Courier New
-0 ""
-288 8 312 32
+0
+""  288 8 312 32
+
 P 
 13434828
 "pictures/maximize.bmp"
@@ -156,131 +160,244 @@ LANG:1 0
 1 -10 -10 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
 17 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
-0
 
-10 40 270 600
+0
+ 10 40 270 600
 21 FlyTreeXCtrl.FlyTreeX
 57
-1 "OnMouseEnter" "()"
+1
+"OnMouseEnter"
+"()"
 ""
-2 "OnMouseLeave" "()"
+2
+"OnMouseLeave"
+"()"
 ""
-3 "OnStateChanging" "(long NodeId, bool AllowChange)"
+3
+"OnStateChanging"
+"(long NodeId, bool AllowChange)"
 ""
-4 "OnStateChange" "(long NodeId, long Oldindex)"
+4
+"OnStateChange"
+"(long NodeId, long Oldindex)"
 ""
-5 "OnRefreshState" "(long NodeId, long Mode, bool AllowRefresh)"
+5
+"OnRefreshState"
+"(long NodeId, long Mode, bool AllowRefresh)"
 ""
-6 "OnGetNodeData" "(long NodeId, long Column, string aData, bool PwdChar, long MaxLength)"
+6
+"OnGetNodeData"
+"(long NodeId, long Column, string aData, bool PwdChar, long MaxLength)"
 ""
-7 "OnColumnClick" "(long Col, long Row, bool Down)"
+7
+"OnColumnClick"
+"(long Col, long Row, bool Down)"
 ""
-8 "OnValidateNodeData" "(long NodeId, long Column, string aData, anytype Cancel)"
+8
+"OnValidateNodeData"
+"(long NodeId, long Column, string aData, anytype Cancel)"
 ""
-9 "OnEditButtonClick" "(long NodeId, long Column)"
+9
+"OnEditButtonClick"
+"(long NodeId, long Column)"
 ""
-10 "OnIsReadOnlyNode" "(long NodeId, long Column, anytype aReadOnly)"
+10
+"OnIsReadOnlyNode"
+"(long NodeId, long Column, anytype aReadOnly)"
 ""
-11 "OnGetPicklist" "(long NodeId, long Column, anytype aPickList)"
+11
+"OnGetPicklist"
+"(long NodeId, long Column, anytype aPickList)"
 ""
-12 "OnGetEditStyle" "(long NodeId, long Column, anytype aEditStyle)"
+12
+"OnGetEditStyle"
+"(long NodeId, long Column, anytype aEditStyle)"
 ""
-37 "OnGetNodeAttributes" "(long NodeId, long Col, idispatch Font, anytype ForeColor, anytype BkColor, anytype Alignment)"
+37
+"OnGetNodeAttributes"
+"(long NodeId, long Col, idispatch Font, anytype ForeColor, anytype BkColor, anytype Alignment)"
 ""
-18 "OnBeforeCustomize" "()"
+18
+"OnBeforeCustomize"
+"()"
 ""
-19 "OnAfterCustomize" "()"
+19
+"OnAfterCustomize"
+"()"
 ""
-20 "OnBeforeApply" "()"
+20
+"OnBeforeApply"
+"()"
 ""
-21 "OnAfterApply" "()"
+21
+"OnAfterApply"
+"()"
 ""
--600 "Click" "()"
+-600
+"Click"
+"()"
 ""
--603 "KeyPress" "(int Key)"
+-603
+"KeyPress"
+"(int Key)"
 ""
-48 "OnColumnMoved" "(long FromIndex, long ToIndex)"
+48
+"OnColumnMoved"
+"(long FromIndex, long ToIndex)"
 ""
-50 "OnGetEditMask" "(long aCol, long aRow, string Value)"
+50
+"OnGetEditMask"
+"(long aCol, long aRow, string Value)"
 ""
-51 "OnGetEditText" "(long aCol, long aRow, string Value)"
+51
+"OnGetEditText"
+"(long aCol, long aRow, string Value)"
 ""
-52 "OnRowMoved" "(long FromIndex, long ToIndex)"
+52
+"OnRowMoved"
+"(long FromIndex, long ToIndex)"
 ""
-53 "OnSelectCell" "(long aCol, long aRow, anytype CanSelect)"
+53
+"OnSelectCell"
+"(long aCol, long aRow, anytype CanSelect)"
 ""
-54 "OnSetEditText" "(long aCol, long aRow, string Value)"
+54
+"OnSetEditText"
+"(long aCol, long aRow, string Value)"
 ""
-55 "OnTopLeftChanged" "()"
+55
+"OnTopLeftChanged"
+"()"
 ""
--605 "MouseDown" "(int Button, int Shift, float X, float Y)"
+-605
+"MouseDown"
+"(int Button, int Shift, float X, float Y)"
 ""
--607 "MouseUp" "(int Button, int Shift, float X, float Y)"
+-607
+"MouseUp"
+"(int Button, int Shift, float X, float Y)"
 ""
--602 "KeyDown" "(int KeyCode, int Shift)"
+-602
+"KeyDown"
+"(int KeyCode, int Shift)"
 ""
--604 "KeyUp" "(int KeyCode, int Shift)"
+-604
+"KeyUp"
+"(int KeyCode, int Shift)"
 ""
--606 "MouseMove" "(int Button, int Shift, float X, float Y)"
+-606
+"MouseMove"
+"(int Button, int Shift, float X, float Y)"
 ""
--601 "DblClick" "()"
+-601
+"DblClick"
+"()"
 ""
-14 "OnCompare" "(long NodeId1, long NodeId2, anytype Compare)"
+14
+"OnCompare"
+"(long NodeId1, long NodeId2, anytype Compare)"
 ""
-15 "OnDrawCell" "(long Col, long Row, float Left, float Top, float Right, float Bottom)"
+15
+"OnDrawCell"
+"(long Col, long Row, float Left, float Top, float Right, float Bottom)"
 "	TreeCtrl_HandleEventOnDrawCell(Col, Row, Left, Top, Right, Bottom);"
-16 "OnStartDrag" "()"
+16
+"OnStartDrag"
+"()"
 ""
-17 "OnDragOver" "(long SourceId, float X, float Y, long DragState, bool Accept)"
+17
+"OnDragOver"
+"(long SourceId, float X, float Y, long DragState, bool Accept)"
 ""
-22 "OnDragDrop" "(long SourceId, float X, float Y)"
+22
+"OnDragDrop"
+"(long SourceId, float X, float Y)"
 ""
-23 "OnEndDrag" "(long TargetId, float X, float Y)"
+23
+"OnEndDrag"
+"(long TargetId, float X, float Y)"
 ""
-24 "OnColumnWidthChanging" "(long Col, anytype NewWidth)"
+24
+"OnColumnWidthChanging"
+"(long Col, anytype NewWidth)"
 ""
-25 "OnColumnWidthChange" "(long Col, long NewWidth)"
+25
+"OnColumnWidthChange"
+"(long Col, long NewWidth)"
 ""
-26 "OnRowHeightChanging" "(long Row, anytype NewHeight)"
+26
+"OnRowHeightChanging"
+"(long Row, anytype NewHeight)"
 ""
-27 "OnRowHeightChange" "(long Row, long NewHeight)"
+27
+"OnRowHeightChange"
+"(long Row, long NewHeight)"
 ""
-28 "OnSelChange" "(long Node)"
+28
+"OnSelChange"
+"(long Node)"
 "	TreeCtrl_HandleEventOnSelChange(Node);"
-30 "OnSelChanging" "(long NewNode, anytype AllowChange)"
+30
+"OnSelChanging"
+"(long NewNode, anytype AllowChange)"
 ""
-31 "OnEditing" "(long NodeId, anytype AllowEdit)"
+31
+"OnEditing"
+"(long NodeId, anytype AllowEdit)"
 ""
-32 "OnEdited" "(long NodeId, string S)"
+32
+"OnEdited"
+"(long NodeId, string S)"
 ""
-33 "OnExpanding" "(long NodeId, anytype AllowExpansion)"
+33
+"OnExpanding"
+"(long NodeId, anytype AllowExpansion)"
 ""
-34 "OnExpanded" "(long NodeId)"
+34
+"OnExpanded"
+"(long NodeId)"
 ""
-35 "OnCollapsing" "(long NodeId, anytype AllowCollapse)"
+35
+"OnCollapsing"
+"(long NodeId, anytype AllowCollapse)"
 ""
-36 "OnCollapsed" "(long NodeId)"
+36
+"OnCollapsed"
+"(long NodeId)"
 ""
-13 "OnDeletion" "(long NodeId)"
+13
+"OnDeletion"
+"(long NodeId)"
 ""
-29 "OLEDragOver" "(idispatch Data, long Effect, int Button, int Shift, float X, float Y, int State)"
+29
+"OLEDragOver"
+"(idispatch Data, long Effect, int Button, int Shift, float X, float Y, int State)"
 ""
-38 "OLEDragDrop" "(idispatch Data, long Effect, int Button, int Shift, float X, float Y)"
+38
+"OLEDragDrop"
+"(idispatch Data, long Effect, int Button, int Shift, float X, float Y)"
 ""
-39 "OLEGiveFeedback" "(long Effect, bool DefaultCursors)"
+39
+"OLEGiveFeedback"
+"(long Effect, bool DefaultCursors)"
 ""
-40 "OLEStartDrag" "(idispatch Data, long AllowedEffects)"
+40
+"OLEStartDrag"
+"(idispatch Data, long AllowedEffects)"
 ""
-41 "OLESetData" "(idispatch Data, int DataFormat)"
+41
+"OLESetData"
+"(idispatch Data, int DataFormat)"
 ""
-42 "OLECompleteDrag" "(long Effect)"
+42
+"OLECompleteDrag"
+"(long Effect)"
 ""
-E
-1 5 3 "" 0
+E1 5 3 "" 0
 0
 1 23 7 "16" 0
 0
@@ -342,7 +459,7 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 3 "TreeView1"
-"fwTreeView\\fwTreeView.pnl" 30 30 T 17 1 0 1.441281138790036  -17 1.085409252669037  
+"fwTreeView\\fwTreeView.pnl" 30 30 T 17 1 0 1.441281138790036 -17 1.085409252669037
 5
 "$sOnCollapse"""
 "$sOnExpand""TreeView_OnExpand"
@@ -350,6 +467,6 @@ LANG:1 6 Layer8
 "$sOnRightClick"""
 "$sOnSelect""TreeView_OnSelect"
 3 7 "PANEL_REF2"
-"navigator/navigator_infoPanel_3_1.pnl" 360 920 T 20 U  
+"navigator/navigator_infoPanel_3_1.pnl" 360 920 T 20 U 
 0
 0

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 18 Add Remove subview
-PANEL,40 57 460 133 N "_3DFace" 5
+PANEL,40 57 544 122 N "_3DFace" 5
 "$addView"
 "$configDatapoint"
 "$selectedElementDpType"
@@ -11,20 +11,56 @@ PANEL,40 57 460 133 N "_3DFace" 5
 {
   DebugTN(\"New SubView: $addView,$viewName,$selectedView,$configDatapoint,$selectedElementDpType:\",$addView,$viewName,$selectedView,$configDatapoint,$selectedElementDpType);
 
-  if($addView)
-  {
-    btnOK.text = \"Add\";
-  }
-  else
-  {
-    int selectedSubView;
-    dyn_int nrOfSubViews;
-    dyn_string subViews;
-    string viewConfigDpName = \"__nav_\" + $selectedElementDpType + \"_viewconfig\";
+  int selectedSubView;
+  dyn_int nrOfSubViews;
+  dyn_string subViews;
+  string viewConfigDpName = \"__nav_\" + $selectedElementDpType + \"_viewconfig\";
 
+  if(dpExists(viewConfigDpName))
+  {
     dpGet(viewConfigDpName + \".selectedSubView\",selectedSubView,
           viewConfigDpName + \".nrOfSubViews\",nrOfSubViews,
           viewConfigDpName + \".subViews\",subViews);
+  }
+  if($addView)
+  {
+    addGlobal(\"g_subViewPanels\",DYN_STRING_VAR);
+    
+    btnOK.text = \"Add\";
+    int tempNrOfSubViews = 1;
+    if(dynlen(nrOfSubViews) >= $selectedView)
+      tempNrOfSubViews = nrOfSubViews[$selectedView]+1;
+    textFieldCaption.text = $viewName + \"_\" + tempNrOfSubViews;
+    
+    subViews = dpNames(\"__nav_subview_\" + $viewName + \"_*\", \"GCFNavSubView\");
+    for(int i=1;i<=dynlen(subViews);i++)
+    {
+      string subViewCaption,subViewPanel;
+      dpGet(subViews[i]+\".caption\",subViewCaption,subViews[i]+\".filename\",subViewPanel);
+
+      // only add subviews that are not configured yet
+      string configDpName = \"__nav_\" + $selectedElementDpType + \"_config_\" + $viewName + \"_\" + subViewCaption;
+      if(!dpExists(configDpName))
+      {
+        comboCaption.appendItem(subViewCaption);
+        dynAppend(g_subViewPanels,subViewPanel);
+      }
+    }
+    textFieldCaption.visible = false;
+    textFieldFileName.editable(FALSE);
+    textFieldFileName.backCol = \"_3DFace\";
+
+    comboCaption.selectedPos = 1;
+    textFieldFileName.text = g_subViewPanels[1];
+
+    comboCaption.visible = true;
+  }
+  else
+  {
+    textFieldCaption.visible = true;
+    comboCaption.visible = false;
+    radioBoxExisting.visible = false;
+
     int subviewIndex=0;
     for(int i=1;i<$selectedView;i++)
       subviewIndex += nrOfSubViews[i];
@@ -39,6 +75,8 @@ PANEL,40 57 460 133 N "_3DFace" 5
     textFieldFileName.text = filename;
     textFieldCaption.editable(FALSE);
     textFieldFileName.editable(FALSE);
+    textFieldCaption.backCol = \"_3DFace\";
+    textFieldFileName.backCol = \"_3DFace\";
     btnBrowse.visible = FALSE;
     btnOK.text = \"Remove\";
   }
@@ -53,10 +91,36 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 0 
-2 0
+22 0
+"comboCaption"
+""
+1 196 8 E E E 1 E 1 E N {0,0,0} E N "_Window" E E
+ E E
+15 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
+0
+""  196 8 489 37
+0
+
+E
+"main()
+{
+  textFieldFileName.text = g_subViewPanels[comboCaption.selectedPos];
+}" 0
+
+E
+ 0 0
+2 1
 "PRIMITIVE_TEXT1"
 ""
-1 50 21 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+1 142 -15 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
  E E
 0 0 0 0 0 0
 E E E
@@ -66,17 +130,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 0 0 0 1 E U  0 E 20 20 50 32
-0 2 2 "s" 0 0 0 192 0 0  20 20 1
+E E 0 0 0 0 1 E U  0 E 112 18 142 30
+0 2 2 "s" 0 0 0 192 0 0  112 18 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
 0
 "" 1
 LANG:1 7 Caption
-14 1
+14 2
 "textFieldCaption"
 ""
-1 100 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 192 8 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 1 0 0 0 0 0
 E E E
@@ -88,12 +152,12 @@ LANG:1 0
 1
 LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
 0
-""  100 10 400 39
+""  192 8 464 37
 3 "s" 0 0 0 0 0 -1  E E E
-2 2
+2 3
 "PRIMITIVE_TEXT1"
 ""
-1 38 11 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+1 130 -25 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
  E E
 3 0 0 0 0 0
 E E E
@@ -103,17 +167,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 0 0 0 1 E U  0 E 20 50 50 62
-0 2 2 "s" 0 0 0 192 0 0  20 50 1
+E E 0 0 0 0 1 E U  0 E 112 48 142 60
+0 2 2 "s" 0 0 0 192 0 0  112 48 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
 0
 "" 1
 LANG:1 14 Panel filename
-14 3
+14 4
 "textFieldFileName"
 ""
-1 100 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 192 38 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 5 0 0 0 0 0
 E E E
@@ -125,12 +189,12 @@ LANG:1 0
 1
 LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
 0
-""  100 40 400 69
+""  192 38 492 67
 3 "s" 0 0 0 0 0 -1  E E E
-13 6
+13 5
 "btnOK"
 ""
-1 20 100 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 113 82 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 10 0 0 0 0 0
 E E E
@@ -142,7 +206,7 @@ LANG:1 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
 0
-""  20 100 120 127
+""  113 82 213 109
 
 T 
 1
@@ -150,9 +214,32 @@ LANG:1 2 OK
 "main()
 {
   dyn_errClass err;
+  dyn_float dfReturn;  // return fields: [1] = success/failure, [2] = new nr of subviews
+  dyn_string dsReturn; // not used
+  dfReturn[1] = 0; // 0 = failure, 1 = success
+  dfReturn[2] = 0; // new nr of subviews
 
-  string subViewName = $viewName + \"_\" + textFieldCaption.text;
-  strreplace(subViewName,\" \",\"-\");
+  string subViewName;
+  if(comboCaption.visible == true) // adding existing subview
+    subViewName = comboCaption.selectedText;
+  else
+    subViewName = textFieldCaption.text;
+  
+  string cleanedText;  
+  for(int i=0;i<strlen(subViewName);i++)
+  {
+    if(! ( (subViewName[i] >= 'a' && subViewName[i] <= 'z') || 
+           (subViewName[i] >= 'A' && subViewName[i] <= 'Z') || 
+           (subViewName[i] >= '0' && subViewName[i] <= '9') ) )
+    {
+      cleanedText += \"-\";
+    }
+    else
+    {
+      cleanedText += subViewName[i];
+    }
+  }
+  subViewName = $viewName + \"_\" + cleanedText;
 
   string subViewDpName = \"__nav_subview_\" + subViewName;
   string configDpTypeName = dpTypeName($configDatapoint);
@@ -161,8 +248,24 @@ LANG:1 2 OK
   
   if($addView)
   {
-    // create new GCFNavSubView instance
-    dpCreate(subViewDpName,\"GCFNavSubView\");
+    if(comboCaption.visible == false) // adding new subview
+    {
+      // create new GCFNavSubView instance
+      dpCreate(subViewDpName,\"GCFNavSubView\");
+
+      err = getLastError();
+      if(dynlen(err) > 0)
+      {
+        errorDialog(err);
+        // open dialog box with errors
+        throwError(err); // write errors to stderr
+      }
+      else
+      {
+        dpSet(subViewDpName+\".caption\",textFieldCaption.text,
+              subViewDpName+\".filename\",textFieldFileName.text);
+      }
+    }      
     err = getLastError();
     if(dynlen(err) > 0)
     {
@@ -172,9 +275,6 @@ LANG:1 2 OK
     }
     else
     {
-      dpSet(subViewDpName+\".caption\",textFieldCaption.text,
-            subViewDpName+\".filename\",textFieldFileName.text);
-
       // create new config datapoint
 DebugTN(\"creating DP:\",configDpName,configDpTypeName);
       dpCreate(configDpName,configDpTypeName);
@@ -223,12 +323,26 @@ DebugTN(\"creating DP:\",configDpName,configDpTypeName);
           int insertIndex = 1;
           for(int i=1;i<=$selectedView;i++)
             insertIndex += nrOfSubViews[i];
+          dfReturn[2] = nrOfSubViews[$selectedView];
           nrOfSubViews[$selectedView] = nrOfSubViews[$selectedView]+1;
           dynInsertAt(subViews,subViewDpName,insertIndex);
           dynInsertAt(configs,configDpName,insertIndex);
           dpSet(viewConfigDpName + \".nrOfSubViews\",nrOfSubViews,
                 viewConfigDpName + \".subViews\",subViews,
                 viewConfigDpName + \".configs\",configs);
+
+          err = getLastError();
+          if(dynlen(err) > 0)
+          {
+            errorDialog(err);
+            // open dialog box with errors
+            throwError(err); // write errors to stderr
+          }
+          else
+          {
+            dfReturn[1] = 1; // 0 = failure, 1 = success
+            dfReturn[2] = nrOfSubViews[$selectedView];
+          }
         }
       }
     }
@@ -262,30 +376,43 @@ DebugTN(\"creating DP:\",configDpName,configDpTypeName);
           removeIndex += nrOfSubViews[i];
         removeIndex += selectedSubView;
 
-DebugTN(\"removeIndex:\",removeIndex);
-DebugTN(\"nrOfSubViews,subViews,configs:\",nrOfSubViews,subViews,configs);
-
+        dfReturn[2] = nrOfSubViews[$selectedView];
         nrOfSubViews[$selectedView] = nrOfSubViews[$selectedView]-1;
         dynRemove(subViews,removeIndex);
         dynRemove(configs,removeIndex);
 
-DebugTN(\"nrOfSubViews,subViews,configs:\",nrOfSubViews,subViews,configs);
-
         dpSet(viewConfigDpName + \".nrOfSubViews\",nrOfSubViews,
               viewConfigDpName + \".subViews\",subViews,
               viewConfigDpName + \".configs\",configs);
+
+        err = getLastError();
+        if(dynlen(err) > 0)
+        {
+          errorDialog(err);
+          // open dialog box with errors
+          throwError(err); // write errors to stderr
+        }
+        else
+        {
+          dfReturn[1] = 1; // 0 = failure, 1 = success
+          dfReturn[2] = nrOfSubViews[$selectedView];
+        }
       }
     }
     dpDelete(configDpName); 
   }
-  
+
+  // write return parameters to the database
+  dpSet(\"_Ui_\" + myManNum() + \".ReturnValue.Float:_original.._value\",dfReturn);
+  dpSet(\"_Ui_\" + myManNum() + \".ReturnValue.Text:_original.._value\",dsReturn);
+
   PanelOff();
 }" 0
  E E E
-13 7
+13 6
 "btnCancel"
 ""
-1 140 101 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 235 83 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 12 0 0 0 0 0
 E E E
@@ -297,20 +424,27 @@ LANG:1 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
 0
-""  140 101 240 128
+""  235 83 335 110
 
 T 
 1
 LANG:1 6 Cancel
 "main()
 {
+  dyn_float dfReturn;  // return fields: [1] = success/failure, [2] = new nr of subviews
+  dyn_string dsReturn; // not used
+  dfReturn[1] = 0; // 0 = failure, 1 = success
+  // write return parameters to the database
+  dpSet(\"_Ui_\" + myManNum() + \".ReturnValue.Float:_original.._value\",dfReturn);
+  dpSet(\"_Ui_\" + myManNum() + \".ReturnValue.Text:_original.._value\",dsReturn);
+
   PanelOff();
 }" 0
  E E E
-13 8
+13 7
 "btnBrowse"
 ""
-1 410 39 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 502 37 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 13 0 0 0 0 0
 E E E
@@ -322,7 +456,7 @@ LANG:1 0
 1
 LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
 0
-""  410 39 440 66
+""  502 37 532 64
 
 T 
 1
@@ -341,6 +475,57 @@ LANG:1 3 ...
   textFieldFileName.text = fileName;
 }" 0
  E E E
+19 8
+"radioBoxExisting"
+""
+1 22 16 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
+0
+""  22 16 84 64
+2
+T 
+1
+LANG:1 8 Existing
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 3 New
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+E "main(int button)
+{
+  if(button == 0)
+  {
+    textFieldCaption.visible = false;
+    textFieldFileName.enabled = false;
+    comboCaption.visible = true;
+  }
+  else
+  {
+    textFieldCaption.visible = true;
+    textFieldFileName.enabled = true;
+    comboCaption.visible = false;
+  }
+}" 0
 0
 LAYER, 1 
 1

@@ -159,6 +159,30 @@ long getSelectedNode()
 }
 
 ///////////////////////////////////////////////////////////////////////////
+//Function refreshNavigator()
+// 
+// refreshes the views of the navigator
+///////////////////////////////////////////////////////////////////////////
+void refreshNavigator()
+{
+  if(!g_initializing)
+  {
+    LOG_TRACE("refreshNavigator  ",g_curSelNode);
+    if(g_curSelNode != 0)
+    {
+      string datapointPath = buildPathFromNode(g_curSelNode);
+      string dpViewConfig = navConfigGetViewConfig(datapointPath);
+
+      showView(dpViewConfig,datapointPath);
+    }
+  }
+  else
+  {
+    LOG_DEBUG("refreshNavigator suppressed while initializing ");
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
 //Function showView(string datapointPath)
 // 
 // shows the tab identified by the datapoint
@@ -582,6 +606,13 @@ void Navigator_HandleEventInitialize()
 {
   LOG_TRACE("Navigator_HandleEventInitialize()","");
   
+  // before the first thing, we check the sanity of the configuration
+  string sanityMessage;
+  if(!navConfigSanityCheck(sanityMessage))
+  {
+    gcfUtilMessageWarning("Sanity check failed",sanityMessage);
+  }
+  
   // first thing to do: get a new navigator ID
   // check the commandline parameter:
   int navID=0;
@@ -589,6 +620,7 @@ void Navigator_HandleEventInitialize()
     navID=$ID;
   navConfigSetNavigatorID(navID);
   navConfigIncreaseUseCount();
+  navConfigSubscribeUpdateTrigger("Navigator_HandleUpdateTrigger");
   
   navPMLinitialize();
   
@@ -649,6 +681,16 @@ void Navigator_HandleEventClose()
   navConfigDecreaseUseCount();
     
   PanelOff();
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function Navigator_HandleUpdateTrigger()
+//
+// refreshes the navigator
+///////////////////////////////////////////////////////////////////////////
+void Navigator_HandleUpdateTrigger(string dpe,int trigger)
+{
+  refreshNavigator();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -783,22 +825,7 @@ void TreeCtrl_HandleEventOnSelChange(long Node)
   if(g_curSelNode != Node)
   {
     g_curSelNode = Node;
-   
-    if(!g_initializing)
-    {
-      LOG_TRACE("TreeCtrl_HandleEventOnSelChange  ",Node);
-      if(Node != 0)
-      {
-        string datapointPath = buildPathFromNode(Node);
-        string dpViewConfig = navConfigGetViewConfig(datapointPath);
- 
-        showView(dpViewConfig,datapointPath);
-      }
-    }
-    else
-    {
-      LOG_DEBUG("TreeCtrl_HandleEventOnSelChange suppressed while initializing ");
-    }
+    refreshNavigator();   
   }
 }
 
