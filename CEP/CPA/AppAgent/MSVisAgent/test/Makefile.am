@@ -2,13 +2,14 @@ dmi_dir = $(lofar_sharedir)/../DMI
 
 CXXFLAGS += -D_GNU_SOURCE 
 
-check_PROGRAMS		= test_input
+check_PROGRAMS		= 
+# test_input
 
 bin_PROGRAMS   		= 
 
-test_input_SOURCES		    = test_input.cc
-test_input_LDADD		      = ../src/libmsvisagent.la
-test_input_DEPENDENCIES	  = ../src/libmsvisagent.la $(LOFAR_DEPEND)
+# test_input_SOURCES		    = test_input.cc
+# test_input_LDADD		      = ../src/libmsvisagent.la
+# test_input_DEPENDENCIES	  = ../src/libmsvisagent.la $(LOFAR_DEPEND)
 
 TESTS				=  
 

@@ -29,7 +29,7 @@
 #include <MSVisAgent/AID-MSVisAgent.h>
    
 #pragma aidgroup MSVisAgent
-#pragma aid MS MSVisInputAgent MSVisOutputAgent
+#pragma aid MS 
 
 #pragma aid DDID VDSID Selection Tile String Column Size Format 
 #pragma aid Vis Input Output Params Start End Write Flags Flag Mask
@@ -43,9 +43,6 @@ namespace MSVisAgent
   using namespace VisVocabulary;
   
   const HIID 
-      
-       FMSInputParams       = AidMS|AidVis|AidInput|AidParams,
-       FMSOutputParams      = AidMS|AidVis|AidOutput|AidParams,
       
        FDDID              = AidDDID|AidIndex,
        FSelection         = AidSelection,

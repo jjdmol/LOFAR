@@ -21,11 +21,14 @@
 //  $Id$
 
 
-#include <MSVisAgent/MSInputAgent.h>
-#include <MSVisAgent/MSOutputAgent.h>
-#include <Solver/BatchAgent.h>
-#include <Solver/DummySolver.h>
+#include "../src/BatchAgent.h"
+#include "../src/MeqCalSolver.h"
+
+#include <DMI/DataRecord.h>
 #include <DMI/DataArray.h>
+
+#include <MSVisAgent/MSInputSink.h>
+#include <MSVisAgent/MSOutputSink.h>
 
 #include <aips/Arrays/ArrayUtil.h>
 #include <aips/Exceptions/Error.h>
@@ -191,7 +194,7 @@ int main (int argc, const char *argv[])
         select[FDDID] = 0;
         select[FFieldIndex] = 0;
         if (stchan >= 0) select[FChannelStartIndex] = stchan;
-	if (endchan >= 0) select[FChannelEndIndex] = endchan;
+	      if (endchan >= 0) select[FChannelEndIndex] = endchan;
         select[FSelectionString] = selstr;
     // setup output agent parameters 
     DataRecord &outpargs = rec[AidOutput] <<= new DataRecord;    
@@ -204,33 +207,34 @@ int main (int argc, const char *argv[])
       solveargs[FAutoExit] = True;
       solveargs[FStopWhenEnd] = True;
       solveargs[FBatchJobs] <<= new DataField(TpDataRecord,1);
-        solveargs[FBatchJobs][0][FConvergence] = 0;
-        solveargs[FBatchJobs][0][Niter] = loopcnt;
+        solveargs[FBatchJobs][0][FConvergence] = -1;
+        solveargs[FBatchJobs][0][FMaxIter] = loopcnt;
         solveargs[FBatchJobs][0][SolvableParm] = solvvec;
         solveargs[FBatchJobs][0][SolvableFlag] = solvflag;
         solveargs[FBatchJobs][0][PeelNrs] = peelVec;
         solveargs[FBatchJobs][0][PredNrs] = LoVec_int();
         solveargs[FBatchJobs][0][PredNrs] = vector<int>();
+        solveargs[FBatchJobs][0][FWhenConverged] <<= new DataRecord;
+        solveargs[FBatchJobs][0][FWhenMaxIter] <<= new DataRecord;
 
     cout<<"=================== creating agents ===========================\n";
-    AppAgent::Ref inref,outref,ctrlref;
-    MSVisAgent::MSInputAgent &in = *new MSVisAgent::MSInputAgent(AidInput);
-    inref <<= &in;
-    MSVisAgent::MSOutputAgent &out = *new MSVisAgent::MSOutputAgent(AidOutput);
-    outref <<= &out;
-    SolverControl::BatchAgent &control = *new SolverControl::BatchAgent(AidControl);
-    ctrlref <<= &control;
+    VisAgent::InputAgent::Ref inagent(
+        new VisAgent::InputAgent(new MSVisAgent::MSInputSink,DMI::ANONWR),DMI::ANONWR);
+    VisAgent::OutputAgent::Ref outagent(
+        new VisAgent::OutputAgent(new MSVisAgent::MSOutputSink,DMI::ANONWR),DMI::ANONWR);
+    SolverControl::SolverControlAgent::Ref control( 
+        new SolverControl::BatchAgent(AidControl),DMI::ANONWR);
     AppEventFlag::Ref evflag(DMI::ANONWR);
-    in.attach(evflag);
-    out.attach(evflag);
-    control.attach(evflag);
+    inagent().attach(evflag());
+    outagent().attach(evflag());
+    control().attach(evflag());
     cout<<"=================== creating solver ===========================\n";
-    DummySolver solver;
-    solver<<&in<<&out<<&control;
+    ApplicationBase::Ref solver(new MeqCalSolver,DMI::ANONWR);
+    solver()<<inagent<<outagent<<control;
     cout<<"=================== initializing solver =======================\n";
-    control.preinit(recref);
+    control().preinit(recref);
     cout<<"=================== running solver ============================\n";
-    solver.run();
+    solver().run();
     cout<<"=================== exiting ===================================\n";
   }
   catch ( std::exception &exc ) 

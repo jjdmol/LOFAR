@@ -6,6 +6,7 @@ libsolver_la_SOURCES = \
   AID-Solver-Registry.cc \
   BaseSolver.cc \
   DummySolver.cc \
+  MeqCalSolver.cc \
   SolverControlAgent.cc \
   BatchAgent.cc
 

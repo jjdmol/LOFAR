@@ -108,6 +108,7 @@ const HIID
     // Solution parameter record fields
     //    Max number of iterations
     FMaxIterations      = AidMax|AidIter,
+    FMaxIter            = FMaxIterations,
     //    Desired convergence
     FConvergence        = AidConvergence,
     //    Enable iteration stepping mode (i.e. will pause after this many

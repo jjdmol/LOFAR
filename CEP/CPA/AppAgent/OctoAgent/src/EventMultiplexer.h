@@ -90,6 +90,7 @@ class EventMultiplexer : public WorkProcess
     int assigned_sink;
     //##ModelId=3E3FC3A6004B
     HIID assigned_event;
+    //##ModelId=3EB242ED00AA
     HIID assigned_source;
     //##ModelId=3E50E2D3025D
     ObjRef assigned_data;
