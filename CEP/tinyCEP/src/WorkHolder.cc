@@ -131,6 +131,8 @@ void WorkHolder::baseProcess ()
 
       // temporary in-rate sollution
       if ( itsProcessStep % getDataManager().getInputRate(input) == 0 ) {
+	LOG_TRACE_COND_STR("WorkHolder" << getName() << " << Allowed input handling;  step = " 
+			   << itsProcessStep << "   rate = " << getDataManager().getInputRate(input));
 	
 	// for selector type handle locking
 	if (getDataManager().hasInputSelector() == false) {
@@ -144,10 +146,14 @@ void WorkHolder::baseProcess ()
 	  getDataManager().readyWithInHolder(input); 
 	  
 	}
+      } else {
+	LOG_TRACE_COND_STR("WorkHolder" << getName() << " << skipped input handling;  step = " 
+			   << itsProcessStep << "   rate = " << getDataManager().getInputRate(input));
       }
+      
     }
-  } 
-
+   } 
+  
   // Now we have the input data avialable
   // and it is time to do the real work; call the process()
   if ( (itsProcessStep % getDataManager().getProcessRate()) == 0) {
@@ -166,7 +172,11 @@ void WorkHolder::baseProcess ()
 	getDataManager().readyWithOutHolder(output); // Will cause writing of data
       }
 
+    } else {
+      LOG_TRACE_COND_STR("WorkHolder" << getName() << " << skipped output handling;  step = " 
+			 << itsProcessStep << "   rate = " << getDataManager().getOutputRate(output));
     }
+    
   } 
 
   

@@ -165,6 +165,7 @@ namespace LOFAR
   }
 
   void TinyDataManager::initializeInputs() {
+    // todo: why empty??
   }
 
   DataHolder* TinyDataManager::getGeneralInHolder(int channel) {
@@ -274,6 +275,7 @@ void TinyDataManager::setInputRate(int rate, int dhIndex)
   DbgAssertStr(dhIndex < getInputs(), "DataHolder index is greater than number of inputs");
   if (dhIndex == -1)
   {
+    // no dhIndex specified, so set for all indexes
     for (int i=0; i<getInputs(); i++)
     {
       itsInputRates[i] = rate;
