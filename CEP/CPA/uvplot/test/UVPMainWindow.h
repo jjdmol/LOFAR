@@ -157,6 +157,7 @@ class UVPMainWindow:public QMainWindow
   InputType       itsInputType;
   std::string     itsInputFilename;
   std::string     itsMSColumnName;
+  std::string     itsCurrentWorkingDirectory;
 
 #if(HAVE_VDM)
   VisInputAgent*   itsVisInputAgent;
