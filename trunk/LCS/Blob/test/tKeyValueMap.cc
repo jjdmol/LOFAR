@@ -183,6 +183,19 @@ void doItParse()
   cout << KeyParser::parse ("key1=1, key2='abc'") << endl;
   cout << KeyParser::parse ("key1=[1,1.3], key2='abc'") << endl;
   cout << KeyParser::parse ("key1=[a=1,b=2], key2='abc'") << endl;
+  cout << KeyParser::parse ("key1=12:34:56.78, key2=-12.34.56.78") << endl;
+  cout << KeyParser::parse ("key1=12::.78, key2=-12..0.78") << endl;
+  cout << KeyParser::parse ("key1=12::, key2=-12..") << endl;
+  try {
+    KeyParser::parse ("key1=12a:34:56.78");
+  } catch (std::exception& x) {
+    cout << x.what() << endl;
+  }
+  try {
+    KeyValue::parsePos ("12a:34:56.78", KeyValue::HMS);
+  } catch (std::exception& x) {
+    cout << x.what() << endl;
+  }
 }
 
 int main()
