@@ -238,7 +238,7 @@ solveej := function(fname='demo', ant=4*[0:20],
     mc.settimeinterval(3600); # calibrate per 3600 seconds
     mc.clearsolvableparms();
 #    mc.setsolvableparms(parmpatterns="EJ11.phase.*", excludepatterns="EJ11.phase.SR1.CP1");
-#    mc.setsolvableparms(parmpatterns="EJ11.phase.SR23.CP1");
+    mc.setsolvableparms(parmpatterns="EJ11.phase.SR23.CP1");
 
 #    mc.setsolvableparms("EJ11.SR{1,5,9,13,17,21,25,29,33,37}.*");
 #    print mc.getparmnames();
