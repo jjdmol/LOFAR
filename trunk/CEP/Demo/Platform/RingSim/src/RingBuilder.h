@@ -6,13 +6,12 @@
 template <class DH_T>
 class RingBuilder : public SimulBuilder
 {
- public:
+public:
   RingBuilder(int channels);
   ~RingBuilder();
   void buildSimul(Simul* aSimul);
-  WorkHolder* getWorker();
   
- public:
+public:
   int itsChannels;
 };
 
@@ -32,20 +31,12 @@ inline RingBuilder<DH_T>::RingBuilder(int channels):
   itsChannels(channels)
 {
   cout << "RingBuilder C'tor" << endl; 
+  setWorker (new WH_RingSimul<DH_T>(itsChannels));
 }
 
 template <class DH_T>
 inline RingBuilder<DH_T>::~RingBuilder() {
-}
-
-template <class DH_T>
-inline WorkHolder* RingBuilder<DH_T>::getWorker() {
-  if (itsWorker==NULL){
-    return new WH_RingSimul<DH_T>(itsChannels);
-  } else {
-    return itsWorker;
-  }
-  
+  delete getWorker();
 }
 
 template <class DH_T>
