@@ -73,7 +73,7 @@ public:
     { return itsIsSolvable; }
 
   // Get the result for the given request.
-  virtual int getResult (Result::Ref &resref, const Request&) = 0;
+  virtual int getResultImpl (Result::Ref &resref, const Request&, bool) = 0;
 
   // Get the current values of the solvable parameter and store them
   // at their correct position in the argument.

@@ -70,7 +70,7 @@ public:
   virtual int initDomain (const Domain&, int spidIndex);
 
   // Get the requested result of the parameter.
-  virtual int getResult (Result::Ref&, const Request&);
+  virtual int getResultImpl (Result::Ref&, const Request&, bool newReq);
 
   // Get the current values of the solvable parameter and store them
   // in the argument.
