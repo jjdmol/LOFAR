@@ -23,7 +23,7 @@
 #include "GCF_RTAnswer.h"
 
 /**
- * F_PVSS_PROTOCOL signal names
+ * F_PML_PROTOCOL signal names (lite)
  */
 const char* F_PML_PROTOCOL_signalnames[] =
 {

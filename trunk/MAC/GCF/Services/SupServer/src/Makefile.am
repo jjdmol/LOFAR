@@ -1,3 +1,9 @@
+AUTOGEN = autogen
+SUFFIXES = .ph
+%.ph: $(top_srcdir)/Services/PI/src/%.prot
+	$(AUTOGEN) -L $(top_srcdir)/GCFCommon/autogen $< && \
+	chmod a+w $@
+
 DOCHDRS	=	\
   GSS_Defines.h \
   GSS_Controller.h
@@ -10,8 +16,7 @@ libsupserver_la_SOURCES= $(DOCHDRS) \
 libsupserver_la_CPPFLAGS= -I$(top_srcdir)/GCFCommon/src \
 	-I$(top_srcdir)/CoreComps/TM/src \
 	-I$(top_srcdir)/CoreComps/SAL/src \
-	-I$(top_srcdir)/Services/PI/src \
-	-I$(top_builddir)/Services/PI/src
+	-I$(top_srcdir)/Services/PI/src
 
 bin_PROGRAMS   		= SupervisoryServer
   
@@ -28,11 +33,13 @@ SupervisoryServer_DEPENDENCIES	= libsupserver.la \
 	$(LOFAR_DEPEND) 
 
 BUILT_SOURCES = \
+	PI_Protocol.ph \
 	mac.ns \
 	mac.top \
 	log4cplus.properties
 
 EXTRA_DIST = \
+	PI_Protocol.ph \
 	mac.ns \
 	mac.top \
 	log4cplus.properties

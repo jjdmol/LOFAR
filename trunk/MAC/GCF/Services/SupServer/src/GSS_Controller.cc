@@ -172,7 +172,7 @@ GCFEvent::TResult GSSController::operational_state(GCFEvent& e, GCFPortInterface
         {
           for (unsigned int i = 0; i < MAX_NR_OF_CLIENTS; i++)
           {
-            if (_supClientPorts[i] == &p) 
+            if (_supClientPorts[i] == pPort) 
             {
               delete _supClientPorts[i];
               _supClientPorts[i] = 0;
@@ -360,7 +360,7 @@ bool GSSController::forwardMsgToPMLlite(GCFEvent& e, char* pData, string& scope,
   else
   {
     LOFAR_LOG_TRACE(SS_STDOUT_LOGGER, ( 
-        "Property set with scope %d was deleted in the meanwhile", 
+        "Property set with scope %s was deleted in the meanwhile", 
         scope.c_str()));
   }
   return result;

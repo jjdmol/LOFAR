@@ -25,7 +25,7 @@
 
 #include <GCF/GCF_Defines.h>
 
-#define CORE_COMPS_SS_LOGGER  (GCF_LOGGER_ROOT + string(".Service.SS"))
+#define CORE_COMPS_SS_LOGGER  (GCF_LOGGER_ROOT + string(".Services.SS"))
 
 #define SS_STDOUT_LOGGER      (CORE_COMPS_SS_LOGGER + string(".Logger"))
 

@@ -1,17 +1,13 @@
-AUTOGEN = autogen
-SUFFIXES = .ph
-%.ph: SS/%.prot
-	$(AUTOGEN) -L $(top_srcdir)/GCFCommon/autogen $< && \
-	chmod a+w $@
-
-DOCHDRS	=	\
-  GCF_RTAnswer.h \
-  GCF_RTMyProperty.h \
-  GCF_RTMyPropertySet.h \
+pkginclude_HEADERS = \
+  GCF/GCF_RTAnswer.h \
+  GCF/GCF_RTMyProperty.h \
+  GCF/GCF_RTMyPropertySet.h
+	
+DOCHDRS	=	$(pkginclude_HEADERS) \
   GPM_RTController.h \
   GPM_RTDefines.h
     
-lib_LTLIBRARIES 	= libpmllite.la
+noinst_LTLIBRARIES 	= libpmllite.la
 
 libpmllite_la_SOURCES= $(DOCHDRS) \
   GCF_RTAnswer.cc \
@@ -23,7 +19,8 @@ libpmllite_la_CPPFLAGS= -I$(top_srcdir)/GCFCommon/src \
 	-I$(top_srcdir)/CoreComps/TM/src \
 	-I$(top_srcdir)/CoreComps/SAL/src \
 	-I$(top_srcdir)/Services/PI/src \
-	-I$(top_builddir)/Services/PI/src
+	-I$(top_builddir)/Services/SupServer/src \
+	-I$(top_srcdir)/Services/PMLlite/src/GCF
 
 include $(lofar_sharedir)/Makefile.common
 

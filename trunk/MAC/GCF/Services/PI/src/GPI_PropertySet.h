@@ -46,13 +46,14 @@ class GPIPropertySet : public GCFPropertyProxy
       _ss(ss), 
       _scope(scope),
       _state(REGISTERING),
+      _counter(0),
       _tmpPIResult(PI_NO_ERROR) {}
     virtual ~GPIPropertySet() {assert(_state == UNREGISTERING);}
 
-    void registerScope(GCFEvent e);
+    void registerScope(GCFEvent& e);
     void registerCompleted(TPAResult result);
     
-    void unregisterScope(GCFEvent e);
+    void unregisterScope(GCFEvent& e);
     void unregisterCompleted(TPAResult result);
     
     void linkProperties(PALinkpropertiesEvent& request);

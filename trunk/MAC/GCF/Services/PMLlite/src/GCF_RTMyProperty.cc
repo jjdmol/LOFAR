@@ -20,9 +20,9 @@
 //#
 //#  $Id$
 
-#include <GCF_RTMyProperty.h>
-#include <GCF_RTMyPropertySet.h>
-#include <GCF_RTAnswer.h>
+#include "GCF_RTMyProperty.h"
+#include "GCF_RTMyPropertySet.h"
+#include "GCF_RTAnswer.h"
 
 GCFRTMyProperty::GCFRTMyProperty(const TProperty& propertyFields,
                              GCFRTMyPropertySet& propertySet) :
@@ -77,7 +77,7 @@ TGCFResult GCFRTMyProperty::setValue(const string value)
     result = GCF_PROP_WRONG_TYPE;
   else result = _pCurValue->setValue(value);
 
-  if ((_accessMode & GCF_READABLE_PROP))
+  if ((_accessMode & GCF_READABLE_PROP) && _isLinked)
   {
     assert(_pCurValue);
     _propertySet.valueSet(getFullName(), *_pCurValue);
@@ -96,7 +96,7 @@ TGCFResult GCFRTMyProperty::setValue(const GCFPValue& value)
   else if (_pCurValue->copy(value) != GCF_NO_ERROR)
     result = GCF_PROP_WRONG_TYPE;
 
-  if ((_accessMode & GCF_READABLE_PROP))
+  if ((_accessMode & GCF_READABLE_PROP) && _isLinked)
   {
     assert(_pCurValue);
     _propertySet.valueSet(getFullName(), *_pCurValue);

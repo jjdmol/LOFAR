@@ -87,6 +87,7 @@ class GCFTask : public GCFFsm
     inline void setName (string& name) {_name = name;}
     static int _argc;
     static char** _argv;
+    const char* evtstr(const GCFEvent& e) const;
    
   protected:
 		GCFTask (State initial, 
@@ -103,7 +104,6 @@ class GCFTask : public GCFFsm
   private:
     friend class GCFPort;
     friend class GCFRawPort;
-    const char* evtstr(const GCFEvent& e) const;
 		/// Is private to avoid initialising a task without giving an inital state and the task name
     GCFTask();
     string _name;
