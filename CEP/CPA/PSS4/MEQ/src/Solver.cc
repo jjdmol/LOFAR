@@ -247,6 +247,8 @@ int Solver::getResult (Result::Ref &resref,
       newReq[FNodeState][FSolvableParm].replace() <<= new DataRecord;
     DataRecord& dr2 = dr1[FByNodeIndex] <<= new DataRecord;
     fillSolution (dr2, spids, solution);
+    // Lock all parm tables used.
+    ParmTable::lockTables();
     // update request ID
     newReq.setId(nextIterationId(rqid));
     // Unlock all parm tables used.
@@ -262,12 +264,15 @@ int Solver::getResult (Result::Ref &resref,
   DataRecord& ldr2 = ldr1[FSolvableParm] <<= new DataRecord;
   DataRecord& dr2 = ldr2[FByNodeIndex] <<= new DataRecord;
   fillSolution (dr2, spids, solution);
+  // Lock all parm tables used.
+  ParmTable::lockTables();
+  // Update the parms.
   Node::pollChildren (child_results, resref, lastReq);
+  // Unlock all parm tables used.
+  ParmTable::unlockTables();
   // result depends on domain, and has -- most likely -- been updated
   double* sol = vellset.setReal(nspid, step).data();
   memcpy (sol, allSolutions.data(), nspid*step*sizeof(double));
-  // Unlock all parm tables used.
-  ParmTable::unlockTables();
   return RES_DEP_DOMAIN|RES_UPDATED;
 }
 

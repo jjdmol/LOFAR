@@ -23,6 +23,7 @@
 #include <MEQ/ParmTable.h>
 #include <MEQ/Domain.h>
 #include <Common/Debug.h>
+#include <aips/Tables/TableLocker.h>
 #include <aips/Tables/TableDesc.h>
 #include <aips/Tables/ScaColDesc.h>
 #include <aips/Tables/ArrColDesc.h>
@@ -43,19 +44,19 @@
 namespace Meq {
 
 // define some column names
-const char * ColName          = "NAME";
-const char * ColStartFreq     = "STARTFREQ";
-const char * ColEndFreq       = "ENDFREQ";
-const char * ColStartTime     = "STARTTIME";
-const char * ColEndTime       = "ENDTIME";
-const char * ColValues        = "VALUES";
-const char * ColFreq0         = "FREQ0";
-const char * ColTime0         = "TIME0";
-const char * ColFreqScale     = "FREQSCALE";
-const char * ColTimeScale     = "TIMESCALE";
-const char * ColPerturbation  = "PERT";
+const String ColName          = "NAME";
+const String ColStartFreq     = "STARTFREQ";
+const String ColEndFreq       = "ENDFREQ";
+const String ColStartTime     = "STARTTIME";
+const String ColEndTime       = "ENDTIME";
+const String ColValues        = "VALUES";
+const String ColFreq0         = "FREQ0";
+const String ColTime0         = "TIME0";
+const String ColFreqScale     = "FREQSCALE";
+const String ColTimeScale     = "TIMESCALE";
+const String ColPerturbation  = "PERT";
 
-const char * KeywordDefValues = "DEFAULTVALUES";
+const String KeywordDefValues = "DEFAULTVALUES";
 
 //##ModelId=3F95060D031A
 std::map<string, ParmTable*> ParmTable::theirTables;
@@ -79,7 +80,7 @@ Vells fromParmMatrix (const Array<double>& values)
 
 //##ModelId=3F86886F02B7
 ParmTable::ParmTable (const string& tableName)
-: itsTable       (tableName),
+: itsTable       (tableName, TableLock(TableLock::UserLocking)),
   itsIndex       (itsTable, ColName),
   itsIndexName   (itsIndex.accessKey(), ColName),
   itsInitIndex   (0)
@@ -102,6 +103,7 @@ ParmTable::~ParmTable()
 int ParmTable::getPolcs (vector<Polc::Ref> &polcs,
                          const string& parmName,const Domain& domain)
 {
+  TableLocker locker(itsTable, FileLocker::Read);
   Table sel = find (parmName, domain);
   polcs.resize(sel.nrow());
   if( sel.nrow() > 0 ) 
@@ -152,6 +154,7 @@ int ParmTable::getInitCoeff (Polc::Ref &polcref,const string& parmName)
         Assert( rownrs.nelements() == 1 );
         Polc &result = polcref <<= new Polc;
         int row = rownrs(0);
+	TableLocker locker(itsInitTable, FileLocker::Read);
         ROArrayColumn<Double> valCol (itsInitTable, ColValues);
         ROScalarColumn<double> f0Col (itsInitTable, ColFreq0);
         ROScalarColumn<double> t0Col (itsInitTable, ColTime0);
@@ -181,6 +184,7 @@ int ParmTable::getInitCoeff (Polc::Ref &polcref,const string& parmName)
 void ParmTable::putCoeff (const string& parmName, const Polc& polc)
 {
   itsTable.reopenRW();
+  TableLocker locker(itsTable, FileLocker::Write);
   const Domain& domain = polc.domain();
   const Vells& values = polc.getCoeff();
   Table sel = find (parmName, domain);
@@ -293,6 +297,28 @@ void ParmTable::createTable (const String& tableName)
   tdesc.addColumn (ScalarColumnDesc<Double>(ColPerturbation));
   SetupNewTable newtab(tableName, tdesc, Table::New);
   Table tab(newtab);
+}
+
+void ParmTable::unlock()
+{
+  itsTable.unlock();
+  if (! itsInitTable.isNull()) {
+    itsInitTable.unlock();
+  }
+}
+
+void ParmTable::lock()
+{
+  itsTable.lock();
+}
+
+void ParmTable::lockTables()
+{
+  for (std::map<string,ParmTable*>::const_iterator iter = theirTables.begin();
+       iter != theirTables.end();
+       ++iter) {
+    iter->second->lock();
+  }
 }
 
 void ParmTable::unlockTables()
