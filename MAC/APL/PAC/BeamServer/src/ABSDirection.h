@@ -37,7 +37,7 @@ namespace ABS
 	   * A direction can have one of these three types.
 	   */
 	  enum Types {
-	      J2000,
+	      J2000 = 1,
 	      AZEL,
 
 	      /**

@@ -60,6 +60,8 @@ using namespace boost::gregorian;
 
 #define SCALE (1<<(16-2))
 
+#define BEAMLETSTATS_INTEGRATION_COUNT 100
+
 static Array<std::complex<int16_t>, 4> zero_weights;
 
 BeamServerTask::BeamServerTask(string name)
@@ -67,7 +69,7 @@ BeamServerTask::BeamServerTask(string name)
       m_pos(N_ELEMENTS, N_POLARIZATIONS, 3),
       m_weights(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS),
       m_weights16(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS),
-      m_stats(N_BEAMLETS, 100),
+      m_stats(N_BEAMLETS, BEAMLETSTATS_INTEGRATION_COUNT),
       board(*this, "board", GCFPortInterface::SAP, true)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
@@ -174,6 +176,8 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
   static unsigned long update_timer = (unsigned long)-1;
 //  static unsigned long compute_timer = (unsigned long)-1;
   static int period = 0;
+
+  static unsigned int stats_seqnr = 0;
   
   switch (e.signal)
     {
@@ -212,6 +216,20 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	    period = 0;
 	    // compute new weights after sending weights
 	    compute_timeout_action(timer->sec);
+
+#if 1
+	    Array<unsigned int, 3> power_sum(N_BEAMLETS, N_POLARIZATIONS, 2);
+
+	    power_sum = 0;
+	    power_sum(64, 0, 0) = stats_seqnr+1;
+	    power_sum(64, 0, 1) = stats_seqnr+1;
+	    power_sum(64, 1, 0) = stats_seqnr/2;
+	    power_sum(64, 1, 1) = stats_seqnr/2;
+	    for (int i = 0; i < BEAMLETSTATS_INTEGRATION_COUNT; i++)
+	    {
+	      m_stats.update(power_sum, stats_seqnr++);
+	    }
+#endif
 	}
 
 	send_weights(period);
@@ -302,7 +320,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	    Array<unsigned int, 3> power_sum(statsdata,
 					     shape(N_BEAMLETS, N_POLARIZATIONS, 2),
 					     neverDeleteData);
-	    m_stats.update(power_sum, *seqnr);
+	    //m_stats.update(power_sum, *seqnr);
 	}
       }
       break;
@@ -417,6 +435,9 @@ void BeamServerTask::beampointto_action(ABSBeampointtoEvent* pt,
   if (beam)
   {
       time_t pointto_time = pt->time;
+
+      LOG_DEBUG(formatString("received new coordinates: %f, %f",
+			     pt->angle1, pt->angle2));
 
       //
       // If the time is not set, then activate the command

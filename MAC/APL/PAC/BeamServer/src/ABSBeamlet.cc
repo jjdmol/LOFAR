@@ -162,7 +162,7 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 3>&          pos,
 	      continue;
 	  }
 
-	  //LOG_DEBUG_STR("lmn(t=0)=" << (*lmn)(0,all));
+	  LOG_DEBUG_STR("lmn(t=0)=" << (*lmn)(0,all));
 
 	  if (compute_interval != lmn->extent(firstDim))
 	  {
