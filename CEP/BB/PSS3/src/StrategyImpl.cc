@@ -1,4 +1,4 @@
-//#  Solution.cc: 
+//#  StrategyImpl.cc:  A base class for all calibration strategies
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,35 +20,11 @@
 //#
 //#  $Id$
 
-#include <PSS3/Solution.h>
+#include <PSS3/StrategyImpl.h>
 
+StrategyImpl::StrategyImpl()
+{}
 
-Solution::Solution():
-  itsSolFlag(false),
-  itsRank(0),
-    itsFit(0.),
-  itsMu(0.),
-  itsStddev(0.),
-  itsChi(0.) {
-}
+StrategyImpl::~StrategyImpl()
+{}
 
-Solution::~Solution() {
-}
-
-void Solution::init() {
-  itsSolFlag = false;
-  itsRank = 0;
-  itsFit = 0.;
-  itsMu = 0.;
-  itsStddev = 0.;
-  itsChi = 0.;
-}
-
-void Solution::show(ostream& os) const {
-  os << "itsSolFlag: " <<  itsSolFlag << endl;
-  os << "itsRank   : " <<  itsRank    << endl;
-  os << "itsFit    : " <<  itsFit     << endl;
-  os << "itsMu     : " <<  itsMu      << endl;
-  os << "itsStddev : " <<  itsStddev  << endl;
-  os << "itsChi    : " <<  itsChi     << endl;
-}

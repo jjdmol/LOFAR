@@ -1,4 +1,4 @@
-//#  Solution.cc: 
+//#  Strategy.h: A base class for all calibration strategies
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,35 +20,41 @@
 //#
 //#  $Id$
 
+#ifndef PSS3_STRATEGY_H
+#define PSS3_STRATEGY_H
+
+#if defined(HAVE_CONFIG_H)
+#include <config.h>
+#endif
+
+//# Includes
+#include <aips/Arrays/Vector.h>
 #include <PSS3/Solution.h>
 
+//# Forward Declarations
+class Calibrator;
+class StrategyImpl;
 
-Solution::Solution():
-  itsSolFlag(false),
-  itsRank(0),
-    itsFit(0.),
-  itsMu(0.),
-  itsStddev(0.),
-  itsChi(0.) {
-}
+// This class defines the interface to calibration strategies. It creates
+// and contains a reference to a concrete calibration strategy implementation 
+// (StrategyImpl class). (Bridge pattern)
 
-Solution::~Solution() {
-}
 
-void Solution::init() {
-  itsSolFlag = false;
-  itsRank = 0;
-  itsFit = 0.;
-  itsMu = 0.;
-  itsStddev = 0.;
-  itsChi = 0.;
-}
+class Strategy
+{
+public:
+  Strategy(int strategyNo, Calibrator* cal, int varArgSize, char* varArgs);
 
-void Solution::show(ostream& os) const {
-  os << "itsSolFlag: " <<  itsSolFlag << endl;
-  os << "itsRank   : " <<  itsRank    << endl;
-  os << "itsFit    : " <<  itsFit     << endl;
-  os << "itsMu     : " <<  itsMu      << endl;
-  os << "itsStddev : " <<  itsStddev  << endl;
-  os << "itsChi    : " <<  itsChi     << endl;
-}
+  virtual ~Strategy();
+
+  /// Execute the strategy
+  bool execute(Vector<String>& paramNames,       // Parameters for which to solve                
+	       Vector<float>& paramValues,       // Parameter values
+	       Solution& solutionQuality);       // Solution quality
+
+ private:
+  StrategyImpl* itsImpl;      // The strategy implementation
+};
+
+
+#endif

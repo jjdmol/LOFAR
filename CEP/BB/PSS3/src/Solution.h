@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef CAL_SOLUTION_H
-#define CAL_SOLUTION_H
+#ifndef PSS3_SOLUTION_H
+#define PSS3_SOLUTION_H
 
 #if defined(HAVE_CONFIG_H)
 #include <config.h>
