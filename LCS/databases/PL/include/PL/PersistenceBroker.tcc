@@ -33,6 +33,22 @@ namespace LOFAR
   {
 
     template<typename T>
+    void 
+    PersistenceBroker::erase(const Collection<TPersistentObject<T> >& ctpo) const
+    {
+      // \todo This should all be done within one transaction!  We could then
+      // make the PersistenceBroker responsible for beginning and ending the
+      // transaction, and forward the iteration over the Collection to the
+      // TPersistentObject<T>. TPersistentObject<T> would then need an extra
+      // method like: template<typename T> void
+      // TPersistentObject<T>::erase(const Collection<TPersistentObject<T> >&);
+      typename Collection<TPersistentObject<T> >::const_iterator it;
+      for(it = ctpo.begin(); it != ctpo.end(); ++it) {
+        it->erase();
+      }
+    }
+
+    template<typename T>
     Collection<TPersistentObject<T> >
     PersistenceBroker::retrieve(const QueryObject& query, int maxObjects)
     {
