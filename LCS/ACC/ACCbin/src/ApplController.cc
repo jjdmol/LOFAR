@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/hexdump.h>			// TODO: remove in final version
 #include <ACC/ApplController.h>
+#include <ACC/ACRequest.h>			// for size of ping message
 #include <ACC/ItemList.h>			// @@
 
 namespace LOFAR {
@@ -43,9 +44,10 @@ ApplController::ApplController(const string&	configID) :
 	itsNodeList      (0),
 	itsACCmdImpl     (new ACCmdImpl),
 	itsCmdStack      (new CmdStack),
+	itsProcListener  (0),
     itsAPAPool       (0),
 	itsServerStub	 (0),
-	itsProcListener  (0),
+	itsDaemonSocket	 (0),
 	itsCurTime       (0),
 	itsIsRunning     (false),
 	itsStateEngine   (new StateEngine),
@@ -71,8 +73,9 @@ ApplController::~ApplController()
 	LOG_TRACE_OBJ ("ApplController destructor");
 
 	// Save results from the processes to a file.
-	if (itsResultParamSet && itsObsParamSet) { 
-		itsResultParamSet->writeFile(itsObsParamSet->getString("AC.resultfile"));
+	if (itsResultParamSet && itsObsParamSet && 
+							 itsObsParamSet->isDefined("AC.resultfile")) {
+	   itsResultParamSet->writeFile(itsObsParamSet->getString("AC.resultfile"));
 	}
 
 	if (itsBootParamSet)   { delete itsBootParamSet;   }
@@ -82,9 +85,10 @@ ApplController::~ApplController()
 	if (itsNodeList)       { delete itsNodeList;       }
 	if (itsACCmdImpl)      { delete itsACCmdImpl;      }
 	if (itsCmdStack)       { delete itsCmdStack;       }
+	if (itsProcListener)   { delete itsProcListener;   }
     if (itsAPAPool)        { delete itsAPAPool;        }
 	if (itsServerStub)     { delete itsServerStub;     }
-	if (itsProcListener)   { delete itsProcListener;   }
+	if (itsDaemonSocket)   { delete itsDaemonSocket;   }
 	if (itsCurACMsg)	   { delete itsCurACMsg; 	   }
 	if (itsStateEngine)	   { delete itsStateEngine;    }
 
@@ -111,6 +115,14 @@ void ApplController::startupNetwork()
 							 itsBootParamSet->getInt("AC.backlog"));
 	ASSERTSTR(itsProcListener->ok(), 
 						"Can't start listener for application processes");
+
+	// Setup ping socket with ACDaemon (UDP)
+	itsDaemonSocket = new Socket("DaemonPing",
+							 itsBootParamSet->getString("AC.pinghost"),
+							 itsBootParamSet->getString("AC.pingportnr"),
+							 Socket::UDP);
+	ASSERTSTR(itsDaemonSocket->ok(), 
+						"Can't open ping socket with AC daemon");
 
 	itsIsRunning = true;
 }
@@ -444,8 +456,16 @@ void ApplController::acceptOrRefuseACMsg(DH_ApplControl*	anACMsg,
 //
 void ApplController::doEventLoop()
 {
-	const uint16		loopDiff = 5;
-	uint16				loopCounter = loopDiff;
+	// Loop optimalisation when not waiting for ACK's
+	const uint16	loopDiff = 5;			// poll AP 5 times less than AM
+	uint16			loopCounter = loopDiff;
+
+	// prepare ping information for ACDaemon
+	time_t		nextPing     = 0;
+	int32		pingInterval = itsBootParamSet->getTime("AC.pinginterval");
+	char		pingID[ACREQUESTNAMESIZE];
+	strncpy (pingID, itsBootParamSet->getString("AC.pingID").c_str(), 
+			 ACREQUESTNAMESIZE-1);
 
 	while (itsIsRunning) {
 		checkForACCommands();
@@ -460,6 +480,15 @@ void ApplController::doEventLoop()
 		checkCmdStack();
 		checkStateEngine();
 
+		// Should daemon be tickled?
+		if (nextPing < time(0)) {
+			int32 wrRes = itsDaemonSocket->write(pingID, ACREQUESTNAMESIZE);
+			if (wrRes != ACREQUESTNAMESIZE) {
+				LOG_DEBUG("Ping message to ACD could not be written!");
+			}
+			nextPing = time(0) + pingInterval;
+		}
+
 		if (loopCounter == 0) {
 			loopCounter = loopDiff;
 		}
@@ -469,6 +498,7 @@ void ApplController::doEventLoop()
 
 		cout << *itsAPAPool; 		// temp debug info
 		cout << *itsStateEngine;
+		cout << "Ping at: " << timeString(nextPing) << endl;
 
 		// Only sleep when idle
 		if (itsCurState == StateNone) {

@@ -18,18 +18,25 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_APPLCONTROLCOMM_H
-#define ACC_APPLCONTROLCOMM_H
+#ifndef LOFAR_ACC_APPLCONTROLCOMM_H
+#define LOFAR_ACC_APPLCONTROLCOMM_H
 
-#include <lofar_config.h>
+// \file ApplControlComm.h
+// Implements the communication of Application Control commands, used by the
+// ApplControlClient and ApplControlServer.
 
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <ACC/DH_ApplControl.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 // The result field that is passed from the Application Controller to the 
 // ACuser is a bitmask that represents the result of the command. See
@@ -119,6 +126,7 @@ inline void ApplControlComm::setDataHolder(DH_ApplControl*	aDHPtr)
 	itsDataHolder = aDHPtr;
 }
 
+// @} addgroup
 } // namespace ACC
 } // namespace LOFAR
 

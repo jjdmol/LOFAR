@@ -18,23 +18,24 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Abstract:
-//#
-//#	 Defines a class the should contain fully filled ParamaterCollections
-//#  to be used in runtime to feed the applications with information.
+//#  Note: This source is best read with tabstop 4.
 //#
 //#  $Id$
 
-#ifndef ACC_PARAMETERUNION_H
-#define ACC_PARAMETERUNION_H
+#ifndef LOFAR_ACC_PARAMETERUNION_H
+#define LOFAR_ACC_PARAMETERUNION_H
 
-#include <lofar_config.h>
+// \file ParameterUnion.h
+// All parameters of a module with default values and ranges
 
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <ACC/ParameterCollection.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 
 //# Description of class.
@@ -68,6 +69,7 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const ParameterCollection &thePS);
 };
 
+// @} addgroup
 } // namespace ACC
 } // namespace LOFAR
 

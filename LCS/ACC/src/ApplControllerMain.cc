@@ -25,6 +25,7 @@
 
 //# Includes
 #include <signal.h>
+#include <libgen.h>
 #include <Common/lofar_string.h>
 #include <Common/LofarLogger.h>
 #include <ACC/ApplController.h>
@@ -54,6 +55,11 @@ int main (int	argc, char*	argv[]) {
 
 	try {
 		signal (SIGPIPE, SIG_IGN);		// ignore write errors on sockets
+		// close filedescriptors from our launcher
+		for (int f = dup(2); f > 2; --f) {
+			LOG_INFO_STR("CLOSING FILEDESC: " << f);
+			close(f);
+		}
 
 		ApplController		theAC(argv[1]);
 

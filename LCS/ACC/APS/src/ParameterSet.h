@@ -23,18 +23,24 @@
 //#	 Defines a class the should contain fully filled ParamaterCollections
 //#  to be used in runtime to feed the applications with information.
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_PARAMETERSET_H
-#define ACC_PARAMETERSET_H
+#ifndef LOFAR_ACC_PARAMETERSET_H
+#define LOFAR_ACC_PARAMETERSET_H
 
-#include <lofar_config.h>
+// \file ParameterSet.h
+// ParameterCollection filled with runtime values.
 
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <ACC/ParameterCollection.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 
 //# Description of the class.
@@ -75,6 +81,7 @@ public:
 private:
 };
 
+// @} addgroup
 } // namespace ACC
 } // namespace LOFAR
 

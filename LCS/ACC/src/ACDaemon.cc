@@ -26,6 +26,7 @@
 //# Includes
 #include <arpa/inet.h>			// inet_ntoa
 #include <Common/LofarLogger.h>
+#include <Common/hexdump.h>		// TEMP!!!
 #include <ACC/ACDaemon.h>
 #include <ACC/ACRequest.h>
 
@@ -36,7 +37,7 @@ ACDaemon::ACDaemon(string	aParamFile) :
 	itsListener   (0),
 	itsPingSocket (0),
 	itsParamSet   (new ParameterSet),
-	itsACPool     (new ACRequestPool)
+	itsACPool     (0)
 {
 	// Read in the parameterfile with network parameters.
 	itsParamSet->adoptFile(aParamFile);		// May throw
@@ -52,6 +53,8 @@ ACDaemon::ACDaemon(string	aParamFile) :
 							 Socket::UDP);
 
 	// Try to read in an old administration if it is available.
+	itsACPool = new ACRequestPool(itsParamSet->getInt("ACDaemon.ACpoolport"),
+								  itsParamSet->getInt("ACDaemon.ACpoolsize"));
 	itsACPool->load(itsParamSet->getString("ACDaemon.adminfile"));
 
 }
@@ -66,63 +69,155 @@ ACDaemon::~ACDaemon()
 
 void ACDaemon::doWork() throw (Exception)
 {
-	ACRequest 	aRequest;
-	uint16		reqSize    = sizeof (ACRequest);
-	Socket*		dataSocket = 0;
-	string		sysCommand = itsParamSet->getString("ACDaemon.command");
+	// Setup some values we need in the main loop
+	int32	cleanTime = itsParamSet->getTime("ACDaemon.alivetimeout");
+	int32	warnTime  = cleanTime / 2;
+
+	// Prepare a fd_set for select
+	fd_set		socketSet;
+	int32		highestSocket = 1 + MAX(itsListener->getSid(), 
+									    itsPingSocket->getSid());
+	FD_ZERO(&socketSet);
+	FD_SET (itsListener->getSid(),   &socketSet);
+	FD_SET (itsPingSocket->getSid(), &socketSet);
+
+	LOG_DEBUG ("ACDaemon: entering main loop");
 
 	while (true) {
-		// clean up previous mess
-		if (dataSocket) {
-			sleep (1);
-			delete dataSocket;
+		// wait for request or ping
+		fd_set	readSet = socketSet;
+		struct timeval	tv;					// prepare select-timer
+		tv.tv_sec       = 60;				// this must be IN the while loop
+		tv.tv_usec      = 0;				// because select will change tv
+		int32 selResult = select(highestSocket, &readSet, 0, 0, &tv);
+
+		// -1 may be an interrupt or a program-error.
+		if ((selResult == -1) && (errno != EINTR)) {
+			THROW(Exception, "ACDaemon: 'select' returned serious error: " << 
+							  errno << ":" << strerror(errno));
 		}
 
-		// wait for new connection.
-		dataSocket = itsListener->accept(-1);
-		ASSERTSTR(dataSocket,
-				  "Serious problems on listener socket, exiting! : " <<
-				  itsListener->errstr());
-
-		// read request
-		dataSocket->setBlocking(true);
-		uint32 btsRead = dataSocket->read(static_cast<void*>(&aRequest), reqSize);
-		if (btsRead != reqSize) {
-			LOG_WARN_STR ("ILLEGAL REQUEST SIZE (" << btsRead << 
-									" iso " << reqSize << "), IGNORING REQUEST");
+		if (selResult == -1) {		// EINTR: ignore
 			continue;
 		}
 
-		// TODO: do some clever assignment of node and portnr
-
-		aRequest.itsRequester[ACREQUESTNAMESIZE-1] = '\0'; // be save
-#if defined (__APPLE__)
-		aRequest.itsAddr = htonl(0xA9FE3264);
-#else
-		aRequest.itsAddr = htonl(0xC0A80175);
-#endif
-		aRequest.itsPort = htons(itsParamSet->getInt("ACDaemon.poolport"));
-
-		uint32 btsWritten = dataSocket->write(static_cast<void*>(&aRequest), 
-																	reqSize);
-		if (btsWritten != reqSize) {
-			LOG_WARN_STR ("REQUEST FOR " << aRequest.itsRequester << 
-						  "COULD NOT BE WRITTEN (" << btsWritten << " iso "  <<
-						  reqSize << ")");
-			continue;
+		// Ping from an AC?
+		if (FD_ISSET(itsPingSocket->getSid(), &readSet)) {
+			handlePingMessage();
 		}
-	
-		in_addr		IPaddr;
-		IPaddr.s_addr = aRequest.itsAddr;
 
-		LOG_DEBUG_STR (aRequest.itsRequester << "gets " << 
-				     inet_ntoa(IPaddr) << ", " << aRequest.itsPort);
+		// Request for new AC?
+		if (FD_ISSET(itsListener->getSid(), &readSet)) {
+			handleACRequest();
+		}
 
+		// cleanup AC's that did not respond for 5 minutes.
+		if (itsACPool->cleanup(warnTime, cleanTime)) {
+			itsACPool->save(itsParamSet->getString("ACDaemon.adminfile"));
+		}
+
+	} // while
+}
+
+//
+// handlePingMessage
+//
+void ACDaemon::handlePingMessage()
+{
+	LOG_TRACE_FLOW("Ping???");
+
+	// Read name of AC from ping message
+	char	buffer[ACREQUESTNAMESIZE];
+	int32 btsRead = itsPingSocket->read(static_cast<void*>(&buffer), 
+								  		ACREQUESTNAMESIZE);
+	if (btsRead != ACREQUESTNAMESIZE) {
+		LOG_TRACE_STAT_STR("Read on ping port retured: " << btsRead <<
+					   	   " iso " << ACREQUESTNAMESIZE);
+		return;
+	}
+
+	// search name in pool
+	ACRequest*	ACRPtr = itsACPool->search(buffer);
+	if (!ACRPtr) {
+		LOG_TRACE_RTTI_STR ("Received ping from unknown applicationcontroller: " 
+					  << buffer << " (ignoring)");
+		return;
+	}
+
+	// remember ping time, update state.
+	LOG_TRACE_COND_STR("AC " << ACRPtr->itsRequester << " is alive");
+	ACRPtr->itsPingtime = time(0);
+	ACRPtr->itsState    = ACRok;
+}
+
+//
+// handleACRequest()
+//
+void ACDaemon::handleACRequest()
+{
+	// Accept the new connection
+	Socket*	dataSocket = itsListener->accept(-1);
+	ASSERTSTR(dataSocket,
+			  "Serious problems on listener socket, exiting! : " <<
+			  itsListener->errstr());
+
+	// read request which should come very soon.
+	ACRequest 	aRequest;
+	uint16		reqSize    = sizeof (ACRequest);
+	dataSocket->setBlocking(true);
+	uint32 btsRead = dataSocket->read(static_cast<void*>(&aRequest), reqSize);
+	if (btsRead != reqSize) {
+		LOG_INFO_STR ("ILLEGAL REQUEST SIZE (" << btsRead << 
+								" iso " << reqSize << "), IGNORING REQUEST");
+		return;
+	}
+	aRequest.itsRequester[ACREQUESTNAMESIZE-1] = '\0'; // be save
+
+	// is ACuser already known? Its a reconnect, don't start the AC
+	ACRequest*	existingACR;
+	bool		startAC = true;
+	if ((existingACR = itsACPool->search(aRequest.itsRequester))) {
+		LOG_TRACE_VAR_STR("Reconnect of " << aRequest.itsRequester);
+		aRequest = *existingACR;			// copy old info
+		existingACR->itsState    = ACRnew;	// reset ping state and time
+		existingACR->itsPingtime = time(0);	// to prevent early removal
+	}
+	else {
+		// Its an unknown ACuser, add it to the pool
+		// assignment of node and portnr based on request params
+		if (!itsACPool->assignNewPort(&aRequest)) {
+			aRequest.itsAddr = 0;			// return failure to user
+			aRequest.itsPort = 0;
+			startAC          = false;
+			LOG_ERROR("No more ports available for application controllers");
+		}
+		else {
+			// Register new AC in the pool and save the pool
+			aRequest.itsPingtime = time(0);
+			aRequest.itsState    = ACRnew;
+			itsACPool->add(aRequest);
+			itsACPool->save(itsParamSet->getString("ACDaemon.adminfile"));
+		}
+	}
+
+	if (startAC) {
+		// Always construct try to launch the AC, if it is already running the
+		// new one will fail and the user will reconnect on the old one.
 		constructACFile(&aRequest, "AC.param");
-
+		string	sysCommand = itsParamSet->getString("ACDaemon.command");
 		int32 result = system(sysCommand.c_str());
 		LOG_DEBUG_STR ("result=" << result << ", errno=" << errno <<
 															strerror(errno));
+	}
+
+	// return the answer to the ACuser
+	uint32 btsWritten = dataSocket->write(static_cast<void*>(&aRequest), 
+																	reqSize);
+	if (btsWritten != reqSize) {
+		LOG_WARN_STR ("REQUEST FOR " << aRequest.itsRequester << 
+					  " COULD NOT BE WRITTEN (" << btsWritten << " iso "  <<
+					  reqSize << ")");
+		return;
 	}
 }
 
@@ -136,12 +231,19 @@ void ACDaemon::constructACFile(const ACRequest*		anACR,
 	uint16	backlog = anACR->itsNrProcs / 10;
 	backlog = MAX (5, MIN (backlog, 100));
 	
-	// TODO: Calculate userportnr and processportnr
+	// TODO: Calculate processportnr
 
 	ACPS.add(KVpair("AC.backlog",       backlog));
-	ACPS.add(KVpair("AC.userportnr",    3820));
+	ACPS.add(KVpair("AC.userportnr",    ntohs(anACR->itsPort)));
 	ACPS.add(KVpair("AC.processportnr", 3900));
+
+	char	myHostname[1024];
+	gethostname(myHostname, 1023);
+	ACPS.add("AC.pinghost",   myHostname);
 	ACPS.add("AC.pingportnr", itsParamSet->getString("ACDaemon.pingportnr"));
+	ACPS.add("AC.pinginterval", 
+							itsParamSet->getString("ACDaemon.aliveinterval"));
+	ACPS.add("AC.pingID", anACR->itsRequester);
 	
 	ACPS.writeFile (aFilename);
 }

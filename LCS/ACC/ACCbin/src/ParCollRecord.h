@@ -18,25 +18,30 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_PARCOLLRECORD_H
-#define ACC_PARCOLLRECORD_H
+#ifndef LOFAR_ACC_PARCOLLRECORD_H
+#define LOFAR_ACC_PARCOLLRECORD_H
 
-#include <lofar_config.h>
+// \file ParCollRecord.h
+// Structure how PC's are stored in the DB
+
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+//# Includes
 #include <Common/lofar_string.h>
 #include <PL/TPersistentObject.h>
 #include <dtl/dtl_config.h>
 
 using dtl::blob;
 
+namespace LOFAR {
+  namespace ACC {
+// \addtogroup ACC
+// @{
 
-//# Includes
-
-namespace LOFAR
-{
-
-// Description of class.
+// Structure how PC's are stored in the DB
 class ParCollRecord
 {
 public:
@@ -58,6 +63,8 @@ private:
 	string		itsCollection;
 };
 
+// @} addgroup
+} // namespace ACC
 } // namespace LOFAR
 
 #endif

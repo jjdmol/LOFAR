@@ -18,19 +18,26 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_APADMIN_H
-#define ACC_APADMIN_H
+#ifndef LOFAR_ACC_APADMIN_H
+#define LOFAR_ACC_APADMIN_H
+
+// \file APAdmin.h
+// Internal information of an Application Process used by the
+// Application Controller.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 //# Includes
 #include <Common/Net/Socket.h>
 #include <ACC/DH_ProcControl.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 // The APAdmin class uses a internal variable to register the state of the
 // Socket.
@@ -149,6 +156,7 @@ inline string	APAdmin::getName() const
 	return (itsName);
 }
 
+// @} addgroup
   } // namespace ACC
 } // namespace LOFAR
 #endif

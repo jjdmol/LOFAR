@@ -18,23 +18,25 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Abstract:
-//#	 This class implements the client API for using an Application 
-//#  Controller. 
+//#  Note: This source is best read with tabstop 4.
 //#
 //#  $Id$
 
-#ifndef ACC_APPLCONTROLCLIENT_H
-#define ACC_APPLCONTROLCLIENT_H
+#ifndef LOFAR_ACC_APPLCONTROLCLIENT_H
+#define LOFAR_ACC_APPLCONTROLCLIENT_H
 
-#include <lofar_config.h>
+// \file ApplControlClient.h
+// Client stub of the interface to the Application Controller.
 
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <ACC/ApplControl.h>
 #include <ACC/ApplControlComm.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 //# Forward Declarations
 //#class forward;
@@ -160,6 +162,7 @@ private:
 };
 
 
+// @} addgroup
 } // namespace ACC
 } // namespace LOFAR
 

@@ -18,18 +18,24 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_PROCCONTROLCOMM_H
-#define ACC_PROCCONTROLCOMM_H
+#ifndef LOFAR_ACC_PROCCONTROLCOMM_H
+#define LOFAR_ACC_PROCCONTROLCOMM_H
 
-#include <lofar_config.h>
+// \file ProcControlComm.h
+// Implements the communication of Application processes.
 
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <ACC/DH_ProcControl.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 // The result field that is passed from an application process is a bitmask
 // representing the result of the command.<br>
@@ -114,6 +120,7 @@ inline void ProcControlComm::setDataHolder(DH_ProcControl*	aDHPtr)
 	itsDataHolder = aDHPtr;
 }
 
+// @} addgroup
 } // namespace ACC
 } // namespace LOFAR
 

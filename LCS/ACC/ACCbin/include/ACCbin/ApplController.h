@@ -18,13 +18,20 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_APPLCONTROLLER_H
-#define ACC_APPLCONTROLLER_H
+#ifndef LOFAR_ACC_APPLCONTROLLER_H
+#define LOFAR_ACC_APPLCONTROLLER_H
+
+// \file ApplController.h
+// This is the main 'engine' of the Application Controller. It manages
+// the communication with the ACuser, the Application Processes and the
+// ACDaemon. It guards the execution time of the commands and collects
+// messages, results and acknowledgements fromthe AP's.
 
 //# Never *include <config.h> or #include <lofar_config.h> in a header file!
-
 //# Includes
 #include <Common/Net/Socket.h>
 #include <Transport/TH_Socket.h>
@@ -40,7 +47,13 @@
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
+// This is the main 'engine' of the Application Controller. It manages
+// the communication with the ACuser, the Application Processes and the
+// ACDaemon. It guards the execution time of the commands and collects
+// messages, results and acknowledgements fromthe AP's.
 class ApplController
 {
 public:
@@ -69,18 +82,19 @@ private:
 	void checkStateEngine();
 
 	// Datamembers
-	ParameterSet*		itsBootParamSet;	// own PS, passed during birth
+	ParameterSet*		itsBootParamSet;	// Own PS, passed during birth
 	ParameterSet*		itsObsParamSet;	    // PS of observation, given by AM
 	ParameterSet*		itsResultParamSet;	// PS for collecting proc. results.
-	ItemList*			itsProcList;		// All AP's according to ApplParSet
-	ItemList*			itsNodeList;		// All Nodes acc. to ApplParSet
+	ItemList*			itsProcList;		// All AP's according to ObsParSet
+	ItemList*			itsNodeList;		// All Nodes acc. to ObsParSet
 	ACCmdImpl*			itsACCmdImpl;		// The command implementation
-	CmdStack*			itsCmdStack;		// future commands
-	APAdminPool*		itsAPAPool;			// communication with all AP's
-	ApplControlServer*	itsServerStub;		// communication with AM
-	Socket*				itsProcListener;	// for AP's to connect to
+	CmdStack*			itsCmdStack;		// Future commands stack
+	Socket*				itsProcListener;	// For AP's to connect to
+	APAdminPool*		itsAPAPool;			// Communication with all AP's
+	ApplControlServer*	itsServerStub;		// Communication with AM
+	Socket*				itsDaemonSocket;	// Communication with ACDaemon
 	time_t				itsCurTime;			// Current timestamp
-	bool				itsIsRunning;		// alive or not
+	bool				itsIsRunning;		// Alive or not
 
 	StateEngine*		itsStateEngine;		// State machine of the controller
 	ACState				itsCurState;		// State currently executing
@@ -89,6 +103,7 @@ private:
 	ProcRuler			itsProcRuler;		// Starts/stops all AP's
 };
 
+// @} addgroup
   } // namespace ACC
 } // namespace LOFAR
 

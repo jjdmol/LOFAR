@@ -18,18 +18,24 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_PROCRULE_H
-#define ACC_PROCRULE_H
+#ifndef LOFAR_ACC_PROCRULE_H
+#define LOFAR_ACC_PROCRULE_H
+
+// \file ProcRule.h
+// Information how to rule a process.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 //# Includes
 #include <Common/lofar_iostream.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 // The ProcRule class contains all information to (over)rule a process.
 // Its known how to start and stop a process and knows its current state.
@@ -85,6 +91,7 @@ inline void	ProcRule::markAsStopped()
 	itsIsStarted = false;
 }
 
+// @} addgroup
   } // namespace ACC
 } // namespace LOFAR
 

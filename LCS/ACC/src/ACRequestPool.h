@@ -22,17 +22,22 @@
 //#
 //#  $Id$
 
-#ifndef ACC_ACREQUESTPOOL_H
-#define ACC_ACREQUESTPOOL_H
+#ifndef LOFAR_ACC_ACREQUESTPOOL_H
+#define LOFAR_ACC_ACREQUESTPOOL_H
+
+// \file ACRequestPool.h
+// Administrative pool of ACrequests used by the ACDaemon for managing the
+// Application Controllers.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 //# Includes
 #include <Common/lofar_list.h>
 #include <ACC/ACRequest.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 // The ACRequestPool is internally used by the ACDeamon to manage the
 // resources he owns.
@@ -42,27 +47,42 @@ public:
 	typedef list<ACRequest*>::iterator			iterator;
 	typedef list<ACRequest*>::const_iterator	const_iterator;
 
-	ACRequestPool();
+	ACRequestPool(uint16	firstPortnr, uint16	nrOfPorts);
 	~ACRequestPool();
 
 	// Element maintenance
-	void	add    (const ACRequest&		anACR);
-	void	remove (const ACRequest&		anACR);
+	void add    (const ACRequest&	anACR);
+	void remove (const string&		anACRName);
 
-	ACRequest*	find (const string&		anACRName);
+	// Search for an ACRequest with the given name. If found a pointer to this
+	// ACRequest is returned, otherwise 0 is returned.
+	ACRequest*	search (const string&		anACRName);
 
-	// Store and retrieve whole pool to/from a file.
-	bool	save (const string&		filename);
-	bool	load (const string&		filename);
-	
+	// Store and retrieve whole pool to/from a file for own use.
+	bool save (const string&		aFilename);
+	bool load (const string&		aFilename);
+
+	bool assignNewPort (ACRequest*	anACR);
+	bool cleanup (int32	warnTime, int32	cleanTime);
+
 private:
+	// Not default constructable, need portnumbers.
+	ACRequestPool();
+
 	// Copying is not allowed
 	ACRequestPool(const ACRequestPool&	that);
+
+	// Copying is not allowed
 	ACRequestPool& operator=(const ACRequestPool& that);
 	
-	list<ACRequest*>		itsPool;
+	list<ACRequest*>	itsPool;
+	uint16				itsFirstPort;
+	uint16				itsLastPort;
+	uint16				itsNextPort;
 };
 
+
+// @} addgroup
   } // namespace ACC
 } // namespace LOFAR
 

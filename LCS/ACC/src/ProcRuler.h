@@ -1,4 +1,4 @@
-//#  ProcRuler.h: one line description
+//#  ProcRuler.h: Controller to start/stop processes.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,25 +18,31 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_PROCRULER_H
-#define ACC_PROCRULER_H
+#ifndef LOFAR_ACC_PROCRULER_H
+#define LOFAR_ACC_PROCRULER_H
+
+// \file ProcRuler.h
+// Controller to start/stop processes.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 //# Includes
 #include <Common/lofar_map.h>
 #include <ACC/ProcRule.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 //# Forward Declarations
 //class forward;
 
 
-// Description of class.
+// Controller to start/stop processes.
 class ProcRuler
 {
 public:
@@ -73,6 +79,7 @@ inline uint16 ProcRuler::size()
 	return (itsProcPool.size());
 }
 
+// @} addgroup
   } // namespace ACC
 } // namespace LOFAR
 

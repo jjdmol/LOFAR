@@ -18,20 +18,27 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_ACREQUEST_H
-#define ACC_ACREQUEST_H
+#ifndef LOFAR_ACC_ACREQUEST_H
+#define LOFAR_ACC_ACREQUEST_H
+
+// \file ACRequest.h
+// Small structure used for communication with the ACDaemon
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 //# Includes
-//#include <otherpackage/file.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 #define	ACREQUESTNAMESIZE 80
+#define ACREQUEST_VERSION 0x0100
+enum	ACRstate { ACRloaded = 0, ACRnew, ACRok, ACRlosing };
 
 // The ACRequest structure is exchanged with the ACDaemon to request an
 // Application Controller.
@@ -40,6 +47,9 @@ struct ACRequest
 	// \name Request
 	// The following fields are send by the requester.
 	// @{
+
+	// Versionnumber of this structure, is always ACREQUEST_VERSION
+	uint16	itsVersion;
 
 	// Uniq request information sent by the client
 	char	itsRequester [ACREQUESTNAMESIZE];
@@ -69,8 +79,19 @@ struct ACRequest
 	uint16	itsPort;			// in_port_t
 	// @}
 
+	// \name Internal information
+	// @{
+	
+	// Time last ping message was received.
+	time_t	itsPingtime;
+
+	// Internal state administration
+	uint16	itsState;		// loaded, new, ok, losing
+
+	// @}
 };
 
+// @} addgroup
   } // namespace ACC
 } // namespace LOFAR
 

@@ -18,13 +18,18 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_CMDSTACK_H
-#define ACC_CMDSTACK_H
+#ifndef LOFAR_ACC_CMDSTACK_H
+#define LOFAR_ACC_CMDSTACK_H
+
+// \file CmdStack.h
+// Time-ordered stack of DH_ApplControl structures used by the Application
+// Controller to hold future commands for a while.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 //# Includes
 #include <time.h>
 #include <ACC/DH_ApplControl.h>
@@ -32,6 +37,8 @@
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 // Time-ordered stack of DH_ApplControl structure pointers.
 class CmdStack
@@ -65,6 +72,7 @@ private:
 	DHACStack		itsStack;
 };
 
+// @} addgroup
   } // namespace ACC
 } // namespace LOFAR
 
