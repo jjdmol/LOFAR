@@ -4,7 +4,7 @@ bin_PROGRAMS			= tParameterSet tACClient tACMaster tPCClient
 
 ### tParameterSet ###
 tParameterSet_SOURCES 		= tParameterSet.cc
-tParameterSet_DEPENDENCIES	= $(LOFAR_DEPEND)
+tParameterSet_DEPENDENCIES	= $(LOFAR_DEPEND) ../src/libacc.la
 tParameterSet_LDADD			= ../src/libacc.la
 
 ### tACClient ###
