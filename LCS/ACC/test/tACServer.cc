@@ -77,11 +77,13 @@ int main (int argc, char *argv[]) {
 	try {
 		uint16	portNr = atoi(argv[1]);
 		myACImpl				ACImpl;
-		ApplControlServer		ServerStub(portNr, &ACImpl);
+		ApplControlServer		serverStub(portNr, &ACImpl);
 
 		LOG_INFO("Entering main 'while' loop");
-		while (ServerStub.processACmsgFromClient()) {
-			;
+		DH_ApplControl*		activeDH;
+		while (serverStub.pollForMessage()) {
+			activeDH = serverStub.getDataHolder();
+			serverStub.handleMessage(activeDH);
 		}
 		LOG_INFO("Connection with client was closed");
 
