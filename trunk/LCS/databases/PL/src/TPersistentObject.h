@@ -33,7 +33,7 @@ namespace LOFAR
   namespace PL
   {
     //# Forward Declarations
-    class Query;
+    class QueryObject;
     template<typename T> class Collection;
     template<typename T> class TPersistentObject;
     template<typename T> class DBRep;
@@ -93,7 +93,13 @@ namespace LOFAR
       // TPersistentObject<T> anyway, because we can only add instances of
       // TPersistentObject<T> to our Collection.
       Collection< TPersistentObject<T> > 
-      retrieve(const Query& query, int maxObjects=INT_MAX);
+      retrieve(const QueryObject& query, int maxObjects=INT_MAX);
+
+      // Return the attribute map for this TPersistentObject.
+      const attribmap_t& attribMap() const;
+
+      // Initialize the attribute map for this TPersistentObject.
+      static void initAttribMap();
 
     private:
       
@@ -146,6 +152,15 @@ namespace LOFAR
       // boost::shared_ptr when \e we are the creator/owner of the object that
       // itsObjectPtr points to.
       boost::shared_ptr<T> itsObjectSharedPtr;
+
+      // This map describes the mapping of the attributes of \c T to the
+      // columns in the database table. If an attribute of class \c T is of a
+      // non-primitive type then the column name is a surrogate that refers to
+      // the class type of that attribute prepended by a "@" character. The
+      // lookup for the correct column name should then be done in the \c
+      // attribMap of the TPersistentObject that is associated with that
+      // class.
+      static attribmap_t theirAttribMap;
 
       // The DBRep<T> struct needs to have access to our private data members,
       // because it will update them when e.g. data is read form the database.
