@@ -41,9 +41,6 @@
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
-
   //# Make the type names defined in LofarTypedefs.h available in the
   //# namespace LOFAR. 
 
@@ -69,7 +66,6 @@ namespace LOFAR
   using TYPES::uint16;
   using TYPES::uint32;
   using TYPES::uint64;
-  // @}
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL

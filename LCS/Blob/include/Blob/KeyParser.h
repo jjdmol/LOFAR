@@ -37,45 +37,46 @@ extern "C" {
 }
 
 namespace LOFAR {
+
   // \addtogroup Common
   // @{
+
   //# Forward Declarations
   class KeyValue;
   class KeyValueMap;
   
-  /**
-     KeyParser is the class for parsing a key=value command.
-     Its main function is the static function parse. This function
-     reads, scans, and parses the key=value pairs.
-  */
-  
+  // KeyParser is the class for parsing a key=value command.
+  // Its main function is the static function parse. This function
+  // reads, scans, and parses the key=value pairs.
+
   class KeyParser
     {
     public:
-      /// Parse the command in the given string and return the resulting map.
+      // Parse the command in the given string and return the resulting map.
       static KeyValueMap parse (const std::string& command);
       
-      /// Parse the command in the given file and return the resulting map.
+      // \name Parse the command in the given file.
+      // Parse the command in the given file and return the resulting map.
       // Lines starting with # are comments and ignored.
       // <group>
       static KeyValueMap parseFile (const std::string& fileName);
       static KeyValueMap parseFile (const char* fileName);
       // </group>
       
-      /// Give the next chunk of input for the scanner.
+      // Give the next chunk of input for the scanner.
       static int input (char* buf, int max_size);
       
-      /// Give the current position (for read or update).
+      // Give the current position (for read or update).
       static int& position()
 	{ return theirPosition; }
       
-      /// A function to remove escaped characters.
+      // A function to remove escaped characters.
       static string removeEscapes (const string& in);
       
-      /// A function to remove quotes from a quoted string.
+      // A function to remove quotes from a quoted string.
       static string removeQuotes (const string& in);
       
-      /// Let the parser set the final KeyValueMap.
+      // Let the parser set the final KeyValueMap.
       static void setMap (KeyValueMap* map)
 	{ theirKeyMap = map; }
       
@@ -87,30 +88,29 @@ namespace LOFAR {
   
   
   
-  /**
-     KeyParserError is used in case of parser errors.
-     An exception with this class is thrown. The object contains
-     the actual error message.
-     
-     One can put a try/catch block around KeyParser::parse to
-     catch this error object and, for example, to output a message.
-  */
+  // KeyParserError is used in case of parser errors.
+  // An exception with this class is thrown. The object contains
+  // the actual error message.
+  // 
+  // One can put a try/catch block around KeyParser::parse to
+  // catch this error object and, for example, to output a message.
   
   class KeyParserError: public std::runtime_error
     {
     public:
-      /// Construct the error object with the given message.
+      // Construct the error object with the given message.
       KeyParserError (const string& message);
     };
   
   
   
-  /** The global yyerror function for the parser.
-      It throws an exception with the current token.
-  */
+  // The global yyerror function for the parser.
+  // It throws an exception with the current token.
+
   void KeyParseerror (char*);
   
   // @}
+
 } // end namespace
 
 #endif

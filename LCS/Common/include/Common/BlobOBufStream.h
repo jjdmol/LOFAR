@@ -24,13 +24,15 @@
 #define LOFAR_COMMON_BLOBOBUFSTREAM_H
 
 // \file BlobOBufStream.h
-// Output buffer for a blob using an ostream.
+// Output buffer for a blob using an ostream
 
 #include <Common/BlobOBuffer.h>
 #include <iosfwd>
 
 namespace LOFAR {
-  // \addtogroup Common
+
+// \ingroup Common
+// \addtogroup Blob
   // @{
 
   // This class is the BlobOBuffer that makes use of an ostream object.
@@ -59,7 +61,9 @@ namespace LOFAR {
     private:
       std::streambuf* itsStream;
     };
+
   // @}
+
 } // end namespace
 
 #endif

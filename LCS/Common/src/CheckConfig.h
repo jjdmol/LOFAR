@@ -52,8 +52,4 @@
 // Check Common/Thread.h and Common/Thread/Thread.cc for examples of how this 
 // works.
 
-// \addtogroup Common
-// @{
-// @}
-
 #endif

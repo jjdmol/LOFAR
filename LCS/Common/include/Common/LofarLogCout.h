@@ -24,7 +24,7 @@
 //# by LofarLogger.h (and by LofarLogCout.cc).
 
 // \file LofarLogCout.h
-//  Macro interface to the cout/cerr logging implementation
+// Macro interface to the cout/cerr logging implementation.
 
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_sstream.h>
@@ -35,6 +35,8 @@
 #ifdef ENABLE_LATENCY_STATS
 #include <sys/time.h>
 #endif
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 //# -------------------- Initialisation of the logger module -------------------
 //#
@@ -238,9 +240,6 @@ namespace LOFAR
 {
   namespace LFDebug
   {
-    // \addtogroup Common
-    // @{
-
     extern std::ostream * dbg_stream_p;
   
     inline std::ostream & getDebugStream () { return *dbg_stream_p; }
@@ -358,7 +357,6 @@ namespace LOFAR
     extern Context DebugContext;
     inline Context & getLFDebugContext ()  { return DebugContext; }
 
-    // @}
   } // namespace LFDebug
 
 
@@ -366,3 +364,5 @@ namespace LOFAR
   using LFDebug::getLFDebugContext;
 
 } // namespace LOFAR
+
+#endif // DOXYGEN_SHOULD_SKIP_THIS

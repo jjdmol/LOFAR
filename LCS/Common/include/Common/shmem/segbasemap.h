@@ -21,6 +21,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.1  2003/08/21 11:20:33  diepen
+ * Moved Common to LCS
+ *
  * Revision 1.2  2002/05/22 13:32:55  wierenga
  * %[BugId: 4]%
  * Fix errors and warnings found by KAI compiler.
@@ -39,6 +42,9 @@
 
 #ifndef _SEGBASEMAP_H
 #define _SEGBASEMAP_H
+
+/** \file segbasemap.h
+ */
 
 #ifdef __cplusplus
 extern "C" {

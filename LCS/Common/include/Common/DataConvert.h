@@ -24,7 +24,9 @@
 #define LOFAR_COMMON_DATACONVERT_H
 
 // \file DataConvert.h
-// Global functions to convert data values.
+// Global functions to convert data values
+
+// Global functions to convert data values
 
 #include <Common/LofarTypes.h>
 #include <Common/DataFormat.h>
@@ -32,9 +34,9 @@
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
-
+// \ingroup Common
+// \addtogroup DataConvert Data conversion functions
+//
   // This file declares functions to convert data from one representation to
   // another, in particular from little endian to big endian (or vice-versa).
   //
@@ -45,10 +47,9 @@ namespace LOFAR
   //
   // Furthermore it contains a function to convert bool values to bits
   // and vice-versa.
-  // \defgroup DataConvert global conversion functions
   // <group>
   
-  // Convert the possible native types.
+  // \name Convert the possible native types.
   // These functions can be used in templates.
   // <group>
   void dataConvert (DataFormat, char* inout, uint nrval);
@@ -64,16 +65,16 @@ namespace LOFAR
   void dataConvert (DataFormat, std::complex<uint16>* inout, uint nrval);
   void dataConvert (DataFormat, fcomplex* inout, uint nrval);
   void dataConvert (DataFormat, dcomplex* inout, uint nrval);
-  // <group>
+  // </group>
 
-  // A convert of a char or uchar.
+  // \name Convert char or uchar.
   // Currently it simply returns the input.
   // <group>
   char dataConvert (DataFormat, char in);
   unsigned char dataConvert (DataFormat, unsigned char in);
   // </group>
 
-  // Convert 16 bit integers.
+  // \name Convert 16 bit integers.
   // <group>
   int16 dataConvert (DataFormat, int16 in);
   uint16 dataConvert (DataFormat, uint16 in);
@@ -83,7 +84,7 @@ namespace LOFAR
   void dataConvert16 (DataFormat, void* inout, uint nrval);
   // </group>
 
-  // Convert 32 bit integers.
+  // \name Convert 32 bit integers.
   // <group>
   int32 dataConvert (DataFormat, int32 in);
   uint32 dataConvert (DataFormat, uint32 in);
@@ -93,7 +94,7 @@ namespace LOFAR
   void dataConvert32 (DataFormat, void* inout, uint nrval);
   // </group>
 
-  // Convert 64 bit integers.
+  // \name Convert 64 bit integers.
   // <group>
   int64 dataConvert (DataFormat, int64 in);
   uint64 dataConvert (DataFormat, uint64 in);
@@ -103,7 +104,7 @@ namespace LOFAR
   void dataConvert64 (DataFormat, void* inout, uint nrval);
   // </group>
 
-  // Convert 32 bit floats.
+  // \name Convert 32 bit floats.
   // <group>
   void dataConvertFloat (DataFormat, void* out, const void* in);
   void dataConvertFloat (DataFormat, void* inout);
@@ -111,7 +112,7 @@ namespace LOFAR
   void dataConvertFloat (DataFormat, void* inout, uint nrval);
   // </group>
 
-  // Convert 64 bit floats.
+  // \name Convert 64 bit floats.
   // <group>
   void dataConvertDouble (DataFormat, void* out, const void* in);
   void dataConvertDouble (DataFormat, void* inout);
@@ -119,7 +120,7 @@ namespace LOFAR
   void dataConvertDouble (DataFormat, void* inout, uint nrval);
   // </group>
 
-  // Swap bytes in 16 bit values.
+  // \name Swap bytes in 16 bit values.
   // <group>
   int16 byteSwap (int16 in);
   uint16 byteSwap (uint16 in);
@@ -129,7 +130,7 @@ namespace LOFAR
   void byteSwap16 (void* inout, uint nrval);
   // </group>
 
-  // Swap bytes in 32 bit values.
+  // \name Swap bytes in 32 bit values.
   // <group>
   int32 byteSwap (int32 in);
   uint32 byteSwap (uint32 in);
@@ -139,7 +140,7 @@ namespace LOFAR
   void byteSwap32 (void* inout, uint nrval);
   // </group>
 
-  // Swap bytes in 64 bit values.
+  // \name Swap bytes in 64 bit values.
   // <group>
   int64 byteSwap (int64 in);
   uint64 byteSwap (uint64 in);
@@ -158,14 +159,12 @@ namespace LOFAR
   uint bitToBool (void* to, const void* from, uint nvalues);
 
   // </group>
-  //@}
+
 } // end namespace LOFAR
 
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
   inline void dataConvert (DataFormat, char*, uint)
     {}
   inline void dataConvert (DataFormat, uchar*, uint)
@@ -359,7 +358,6 @@ namespace LOFAR
     ((char*)(inout))[7] = v0;
   }
 
-  // @}
 } // end namespace LOFAR
 
 

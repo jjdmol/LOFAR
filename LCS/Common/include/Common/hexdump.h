@@ -24,7 +24,7 @@
 #define LOFAR_COMMON_HEXDUMP_H
 
 // \file hexdump.h
-// create hexdump of given datablock.
+// Create hexdump of given datablock
 
 #include <lofar_config.h>
 #include <Common/LofarTypes.h>
@@ -33,14 +33,12 @@
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
+
   void hexdump (						 	 const void* buf, int32	nrBytes);
   void hexdump (FILE*				aFile, 	 const void* buf, int32	nrBytes);
   void hexdump (char*				aChrPtr, const void* buf, int32	nrBytes);
   void hexdump (string&			aString, const void* buf, int32	nrBytes);
   
-  // @}
 } // namespace LOFAR
 
 #endif

@@ -24,14 +24,15 @@
 #define LOFAR_COMMON_BLOBIBUFVECTOR_H
 
 // \file BlobIBufVector.h
-// Input buffer for a blob using a vector.
+// Input buffer for a blob using a vector
 
 #include <Common/BlobIBufChar.h>
 #include <vector>
 
 namespace LOFAR {
 
-  // \addtogroup Common
+// \ingroup Common
+// \addtogroup Blob
   // @{
 
   // This class can be used to read a blob from a vector of characters
@@ -50,7 +51,9 @@ namespace LOFAR {
       virtual ~BlobIBufVector()
 	{}
     };
+
   // @}
+
 } // end namespace
 
 #endif

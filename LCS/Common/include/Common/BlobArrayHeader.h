@@ -24,14 +24,16 @@
 #define LOFAR_COMMON_BLOBARRAYHEADER_H
 
 // \file BlobArrayHeader.h
-// Standard array header for a blob.
+// Standard array header for a blob
 
 #include <Common/BlobHeader.h>
 #include <Common/TypeNames.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR {
-  // \addtogroup Common
+
+// \ingroup Common
+// \addtogroup Blob
   // @{
   
   // An array is a special blob, so it has an array header following
@@ -49,7 +51,9 @@ namespace LOFAR {
       uint16 itsNdim;
       uint32 itsSize[NDIM];   // shape
     };
+
   // @}
+
 } // end namespace
 
 #endif

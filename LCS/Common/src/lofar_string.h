@@ -24,15 +24,12 @@
 #define LOFAR_COMMON_STRING_H
 
 // \file lofar_string.h
-//
+
 #include <string>
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
   using std::string;
-  // @}
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL

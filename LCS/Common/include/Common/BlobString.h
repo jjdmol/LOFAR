@@ -24,7 +24,7 @@
 #define LOFAR_COMMON_BLOBSTRING_H
 
 // \file BlobString.h
-//Blob buffer that can be a string<uchar> or char.
+// Blob buffer that can be a string<uchar> or char
 
 #include <Common/LofarTypes.h>
 #include <Common/BlobStringType.h>
@@ -33,8 +33,9 @@
 
 namespace LOFAR {
 
-  // \addtogroup Common
-  // @{
+// \ingroup Common
+// \addtogroup Blob
+// <group>
 
   // A BlobString object can hold a blob (binary large object).
   // Blobs are created by the BlobOStream class and read back by BlobIStream.
@@ -125,13 +126,13 @@ namespace LOFAR {
       std::basic_string<uchar> itsString;
     };
   
+// </group>
   
   inline const std::basic_string<uchar>& BlobString::getString() const
     {
       return const_cast<BlobString*>(this)->getString();
     }
   
-  // @}
 } // end namespace
 
 #endif

@@ -24,14 +24,15 @@
 #define LOFAR_COMMON_BLOBIBUFSTREAM_H
 
 // \file BlobIBufStream.h
-// Input buffer for a blob using an istream.
+// Input buffer for a blob using an istream
 
 #include <Common/BlobIBuffer.h>
 #include <iosfwd>
 
 namespace LOFAR {
 
-  // \addtogroup Common
+// \ingroup Common
+// \addtogroup Blob
   // @{
   
   // This class is the BlobIBuffer that makes use of an istream object.
@@ -61,7 +62,9 @@ namespace LOFAR {
     private:
       std::streambuf* itsStream;
     };
+
   // @}
+
 } // end namespace
 
 #endif

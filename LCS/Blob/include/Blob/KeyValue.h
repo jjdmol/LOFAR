@@ -35,25 +35,25 @@
 #include <Common/LofarTypes.h>
 
 namespace LOFAR {
+
   // \addtogroup Common
   // @{
+
   //# Forward Declarations
   class KeyValueMap;
   class BlobOStream;
   class BlobIStream;
   
   // <summary> Class to hold a general value </summary>
-  
-  /**
-     The KeyValue and KeyValueMap act as a map of heterogeneous values.
-     A KeyValue object can contain a value from a set of data types.
-     The data types supported are all standard types (including string and
-     complex) and a std::vector of these types.
-     Furthermore the data type can be a KeyValueMap making it possible to have
-     nested structs.
-     Finally it can be a std::vector of KeyValue making it possible to have 
-     a vector of heterogeneous values.
-  */
+  //
+  // The KeyValue and KeyValueMap act as a map of heterogeneous values.
+  // A KeyValue object can contain a value from a set of data types.
+  // The data types supported are all standard types (including string and
+  // complex) and a std::vector of these types.
+  // Furthermore the data type can be a KeyValueMap making it possible to have
+  // nested structs.
+  // Finally it can be a std::vector of KeyValue making it possible to have 
+  // a vector of heterogeneous values.
   
   class KeyValue
     {
@@ -68,9 +68,9 @@ namespace LOFAR {
       //#  enum AngleType {DMS, HMS, TIME};
       enum AngleType {DMS, HMS};
       
-      /** \name Constructors
-	  Construct value with given type. Default is empty vector<KeyValue>.
-      */
+      // \name Constructors
+      // Construct value with given type. Default is empty vector<KeyValue>.
+      // <group>
       KeyValue();
       KeyValue (bool);
       KeyValue (int32);
@@ -89,6 +89,7 @@ namespace LOFAR {
       KeyValue (const vector<string>&);
       KeyValue (const vector<KeyValue>&);
       KeyValue (const KeyValueMap&);
+      // </group>
       
       // Construct from a string representing a time or angle resulting in
       // a double value.
@@ -97,32 +98,32 @@ namespace LOFAR {
       //# <br>TIME has to look as YYYY/MM/DD/HH:MM:SS.S and is converted to MJD.
       KeyValue (const string&, AngleType);
       
-      /// Copy constructor (copy semantics).
+      // Copy constructor (copy semantics).
       KeyValue (const KeyValue&);
       
-      /// Assignment (copy semantics).
+      // Assignment (copy semantics).
       KeyValue& operator= (const KeyValue&);
       
       ~KeyValue();
       
-      /// Get the data type of the value.
+      // Get the data type of the value.
       DataType dataType() const
 	{ return itsExtDT; }
       
-      /// Is the value a vector?
+      // Is the value a vector?
       bool isVector() const
 	{ return itsDataType >= DTValueVector; }
       
-      /// Is the value a value map?
+      // Is the value a value map?
       bool isValueMap() const
 	{ return itsDataType == DTValueMap; }
       
-      /// Return the size of a vector (1 is returned for a scalar).
+      // Return the size of a vector (1 is returned for a scalar).
       unsigned int size() const;
       
-      /** \name Get functions
-	  Get the value with the given type.
-      */
+      // \name Get functions
+      // Get the value with the given type.
+      // <group>
       bool getBool() const;
       int getInt() const;
       float getFloat() const;
@@ -139,10 +140,11 @@ namespace LOFAR {
       vector<string> getVecString() const;
       const vector<KeyValue>& getVector() const;
       const KeyValueMap& getValueMap() const;
+      // </group>
 
-      /** \name Get functions for templated purposes
-	  Get the value with the given type.
-      */
+      // \name Get functions for templated purposes
+      // Get the value with the given type.
+      // <group>
       void get (bool& value) const
 	{ value = getBool(); }
       void get (int& value) const
@@ -174,12 +176,14 @@ namespace LOFAR {
       void get (vector<KeyValue>& value) const
 	{ value = getVector(); }
       void get (KeyValueMap& value) const;
+      // </group>
 
       friend ostream& operator<< (ostream&, const KeyValue&);
       
       friend BlobOStream& operator<< (BlobOStream&, const KeyValue&);
       friend BlobIStream& operator>> (BlobIStream&, KeyValue&);
       
+      // \name Parse a position value.
       // Parse a position value and return the value in radians.
       // <group>
       static double KeyValue::parsePos (const string& value,
@@ -188,17 +192,19 @@ namespace LOFAR {
       // </group>
       
     private:
-      /// Remove the value.
+      // Remove the value.
       void clear();
       
-      /// Copy the value from another one.
+      // Copy the value from another one.
       void copyValue (const KeyValue& that);
       
       DataType itsDataType;
       DataType itsExtDT;
       void*    itsValuePtr;
     };
+
   //@}
+
 } // end namespace
 
 #endif 

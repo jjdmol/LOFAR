@@ -24,17 +24,13 @@
 #define LOFAR_COMMON_SSTREAM_H
 
 // \file lofar_sstream.h
-//
 
 #include <sstream>
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
   using std::istringstream;
   using std::ostringstream;
-  // @}
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL

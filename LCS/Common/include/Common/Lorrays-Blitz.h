@@ -26,7 +26,7 @@
 // \file Lorrays-Blitz.h
 // Define Blitz array types
 
-// other code can use this symbol to check for blitz arrays
+// Other code can use this symbol to check for blitz arrays
 #define LORRAYS_USE_BLITZ 1
 #define LORRAYS_DEFINE_STRING 1
         
@@ -118,7 +118,6 @@ const uint MaxLorrayRank = 5;
   Do(1,arg), Do(2,arg), Do(3,arg), Do(4,arg), Do(5,arg) 
 //  Do(6,arg), Do(7,arg), Do(8,arg), Do(9,arg), Do(10,arg), Do(11,arg)
   
-
 //
 // Array shapes are expressed via the shape types:
 //
@@ -383,9 +382,5 @@ typedef LoStrDomain3 LoCubeStrDomain;
 typedef blitz::StridedDomain<4> LoStrDomain4;
 typedef blitz::StridedDomain<5> LoStrDomain5;
 #define LoStrDomain(rank) LoStrDomain##rank
-
-// \addtogroup Common
-// @{
-// @}
 
 #endif

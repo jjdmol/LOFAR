@@ -24,16 +24,12 @@
 #define LOFAR_COMMON_VECTOR_H
 
 // \file lofar_vector.h
-//
 
 #include <vector>
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
   using std::vector;
-  // @}
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL

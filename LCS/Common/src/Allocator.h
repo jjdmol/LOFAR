@@ -24,11 +24,12 @@
 #define LOFAR_COMMON_ALLOCATOR_H
 
 // \file Allocator.h
-// Abstract base class for LOFAR memory (de)allocator.
+// Abstract base class for %LOFAR memory (de)allocator
 
 #include <unistd.h>
 
 namespace LOFAR {
+
   // \addtogroup Common
   // @{
 
@@ -83,6 +84,7 @@ namespace LOFAR {
     };
   
   // @}
+
 } // end namespace LOFAR
 
 #endif

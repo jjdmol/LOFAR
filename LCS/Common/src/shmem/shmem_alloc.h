@@ -21,8 +21,11 @@
  * $Id$
  */
 
-#ifndef COMMON_SHMEM_ALLOC_H_
-#define COMMON_SHMEM_ALLOC_H_
+#ifndef LOFAR_COMMON_SHMEM_ALLOC_H_
+#define LOFAR_COMMON_SHMEM_ALLOC_H_
+
+/** \file shmem_alloc.h
+ */
 
 #include <lofar_config.h>
 
@@ -42,6 +45,12 @@
 #include <unistd.h>
 
 #endif
+
+/**
+  \ingroup Common
+  \addtogroup shmem
+  @{
+*/
 
 #define shmem_calloc               dlcalloc
 #define shmem_free                 dlfree
@@ -64,14 +73,16 @@ extern "C"
 {
 #endif
 
-/* shared memory operations */
+/** \name Shared memory operations */
+/** @{ */
 void   shmem_init(void);
 int    shmem_id(void* address);
 size_t shmem_offset(void* address);
 void*  shmem_connect(int shmid, size_t offset);
 void   shmem_disconnect(void* segment, size_t offset);
+/** @} */
 
-/* semaphore typedef */
+/** Semaphore typedef */
 #ifdef HAVE_ATOMIC_H
 typedef atomic_t shmem_cond_t;
 #else
@@ -84,10 +95,14 @@ typedef struct
 } shmem_cond_t;
 #endif
 
-/* semaphore operations */
+/** \name Semaphore operations */
+/** @{ */
 void shmem_cond_init(volatile shmem_cond_t* condition);
 void shmem_cond_signal(volatile shmem_cond_t* condition);
 void shmem_cond_wait(volatile shmem_cond_t* condition);
+/** @} */
+
+/** @} */ /* end doxygen group shmem */
 
 #ifdef __cplusplus
 }

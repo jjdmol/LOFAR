@@ -24,14 +24,15 @@
 #define LOFAR_COMMON_BLOBOBUFCHAR_H
 
 // \file BlobOBufChar.h
-// Output buffer for a blob using a plain pointer.
+// Output buffer for a blob using a plain pointer
 
 #include <Common/BlobOBuffer.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
-  // \addtogroup Common
+// \ingroup Common
+// \addtogroup Blob
   // @{
 
   // This class is the BlobOBuffer that makes use of a character buffer,
@@ -130,6 +131,7 @@ namespace LOFAR {
       bool   itsIsOwner;
     };
   
+// @}
   
   inline const uchar* BlobOBufChar::getBuffer() const
     {
@@ -164,7 +166,7 @@ namespace LOFAR {
       return (U*)(itsBuffer + position);
     }
   
-  // @}
+
 } // end namespace
 
 #endif

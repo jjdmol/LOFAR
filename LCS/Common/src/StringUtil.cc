@@ -28,10 +28,7 @@
 namespace LOFAR
 {
   
-  using std::string;
-  using std::vector;
-
-  std::vector<std::string> StringUtil::split(const std::string& s, char c)
+  vector<string> StringUtil::split(const string& s, char c)
   {
     vector<string> v;
     string::size_type i, j;
@@ -51,7 +48,7 @@ namespace LOFAR
 // Define a global function the accepts printf like arguments and returns 
 // a string.
 //
-const std::string formatString(const	char* format, ...) {
+const string formatString(const	char* format, ...) {
 	char		tmp_cstring[10240];
 	va_list		ap;
 
@@ -59,7 +56,7 @@ const std::string formatString(const	char* format, ...) {
 	vsnprintf(tmp_cstring, sizeof(tmp_cstring), format, ap);
 	va_end   (ap);
 
-	return   std::string(tmp_cstring);
+	return   string(tmp_cstring);
 }
 
 //
@@ -68,7 +65,7 @@ const std::string formatString(const	char* format, ...) {
 // Define a global function that convert a timestamp into a humanreadable 
 // format.
 //
-const std::string timeString(time_t		aTime, 
+const string timeString(time_t		aTime, 
 							 bool		gmt,
 							 char* 		format)
 {

@@ -20,8 +20,11 @@
 //#
 //# $Id$
 
-#if !defined(COMMON_SOCKET_H)
-#define COMMON_SOCKET_H
+#ifndef LOFAR_COMMON_SOCKET_H
+#define LOFAR_COMMON_SOCKET_H
+
+// \file Net/Socket.h
+// Class for connections over TCP/IP or UDP
 
 #include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
@@ -40,6 +43,9 @@ typedef	int	socklen_t;
 
 namespace LOFAR
 {
+// \ingroup Common
+// \addtogroup Socket
+// @{
 
 // The Socket class gives you a service access point for communication on
 // TCP/IP or UDP sockets.
@@ -63,6 +69,7 @@ public:
 
 	~Socket();
 
+	// \name Bind and connect
 	// Routines for binding and connecting the socket object to the TCP/UDP
 	// stack.
 	// <group>
@@ -139,16 +146,16 @@ public:
 	//			PEERCLOSED	Other sid has closed the connection.
 	int32 write(const void*	buf, int32	nrBytes);
 
-    // Does a blocking read INDEPENDANT of the current mode.
+	// Does a blocking read \e independent of the current mode.
 	// Returnvalues and errors are identical to read().
 	int32 readBlocking(void*	buf, int32	nrBytes);
 
-	// Does a blocking write INDEPENDANT of the current mode.
+	// Does a blocking write \e independent of the current mode.
 	// Returnvalues and errors are identical to write().
 	//# Is this uberhaupt possible in TCP/IP ????
 	int32 writeBlocking(const void*	buf, int32	nrBytes);
 
-	// --------------- Miscellaneous functions ---------------
+	//# --------------- Miscellaneous functions ---------------
 	// Points socket at SIGPIPE counter.
 	// When a read or write is done on the Socket the value of the sigpipe-
 	// Counter is checked for value-changes. When the value was changed
@@ -156,65 +163,82 @@ public:
 	// will not process the data.
 	// Such it is possible to implement a sigpipe-handler as long as this 
 	// handler increments the sigpipeCounter everytime it handles some data.
-	inline void setSigpipeCounter(const volatile int*	counter);
+	inline void setSigpipeCounter(const volatile int32*	counter);
       
-	// Datamember access functions
-	// <group>  
-	// Get/set name of socket
+	//# \name Datamember access functions
+	//# <group>  
+
+	// Get name of socket
 	inline const string& getName() const;
+	// Set name of socket
 	inline void setName(const string& value);
 
 	// Get human readable reason for failure.
 	string errstr() const;
 
-	inline int32			errcode() 		const;	// Socket errorcode
-	inline int32			errnoSys()		const;	// System errorcode
-	inline int32			getSid()		const;	// Socket ID (filedesc.)
-	inline int16			getType()		const;	// Protocoltype
-	inline bool				isServer()		const;	// Socket role
-	inline bool				isConnected()	const;	// Connected to other side
-	inline bool				isBlocking()	const;	// in blocking mode or not
-	inline const string&	host()			const;	// Host connected to
-	inline const string&	port()			const;	// Port connected to
-	inline bool				ok()			const;	// Connected and no errors
-	// <\group>
+	// Socket errorcode
+	inline int32			errcode() 		const;
+	// System errorcode
+	inline int32			errnoSys()		const;
+	// Socket ID (filedesc.)
+	inline int32			getSid()		const;
+	// Protocoltype
+	inline int16			getType()		const;
+	// Socket role
+	inline bool				isServer()		const;
+	// Connected to other side
+	inline bool				isConnected()	const;
+	// in blocking mode or not
+	inline bool				isBlocking()	const;
+	// Host connected to
+	inline const string&	host()			const;
+	// Port connected to
+	inline const string&	port()			const;
+	// Connected and no errors
+	inline bool				ok()			const;
+	//# </group>
 	
-    // Additional Public Declarations
+	//# Additional Public Declarations
+	// Socket types. 
 	typedef enum { 
-		UDP,					// UDP datagram socket
-		TCP,					// TCP(stream) socket over network
-		UNIX,					// unix socket(local)
+		UDP,			///< UDP datagram socket
+		TCP,			///< TCP(stream) socket over network
+		UNIX,			///< unix socket(local)
 		LOCAL=UNIX 
 	} SocketTypes;
+
+	// Error codes
 	typedef enum {
-		SK_OK         =  0,		// Ok
-		SOCKET        = -1,		// Can't create socket
-		BIND          = -2,		// Can't bind local address
-		CONNECT       = -3,		// Can't connect to server
-		ACCEPT        = -4,		// Can't accept client socket
-		BADHOST       = -5,		// Bad server host name given
-		BADADDRTYPE   = -6,		// Bad address type
-		READERR       = -7,		// Read error
-		WRITERR       = -8,		// Write error
-		PEERCLOSED    = -9,		// Remote client closed connection
-		INCOMPLETE    = -10,	// Couldn't read/write whole message
-		INVOP         = -11,	// Invalid operation
-		SOCKOPT       = -12,	// sockopt() failure
-		PORT          = -13,	// wrong port/service specified
-		PROTOCOL      = -14,	// invalid protocol
-		LISTEN        = -15,	// listen() error
-		TIMEOUT       = -16,	// timeout
-		INPROGRESS    = -17,	// connect() in progress
-		NOMORECLI     = -18,	// No more clients
-		SHUTDOWN      = -19,	// shutdown() failure
-		NOINIT        = -20		// uninitialized socket
+		SK_OK         =  0,	///< Ok
+		SOCKET        = -1,	///< Can't create socket
+		BIND          = -2,	///< Can't bind local address
+		CONNECT       = -3,	///< Can't connect to server
+		ACCEPT        = -4,	///< Can't accept client socket
+		BADHOST       = -5,	///< Bad server host name given
+		BADADDRTYPE   = -6,	///< Bad address type
+		READERR       = -7,	///< Read error
+		WRITERR       = -8,	///< Write error
+		PEERCLOSED    = -9,	///< Remote client closed connection
+		INCOMPLETE    = -10,	///< Couldn't read/write whole message
+		INVOP         = -11,	///< Invalid operation
+		SOCKOPT       = -12,	///< sockopt() failure
+		PORT          = -13,	///< wrong port/service specified
+		PROTOCOL      = -14,	///< invalid protocol
+		LISTEN        = -15,	///< listen() error
+		TIMEOUT       = -16,	///< timeout
+		INPROGRESS    = -17,	///< connect() in progress
+		NOMORECLI     = -18,	///< No more clients
+		SHUTDOWN      = -19,	///< shutdown() failure
+		NOINIT        = -20	///< uninitialized socket
 	} ErrorCodes;
 
 protected:
 	// Constructs a generic socket for an incoming connection on a server
 	// socket.
+	// @{
 	Socket(int32 id, struct sockaddr_in &sa);
 	Socket(int32 id, struct sockaddr_un &sa);
+	// @}
 
 	// Sets default socket options like reuse address, linger, etc.
 	int32 setDefaults();
@@ -224,35 +248,56 @@ protected:
 
 	// Tries to init the socket by resolving all parameters and allocating
 	// the real socket.
+	// @{
 	int32 initUnixSocket(bool	asServer);
 	int32 initTCPSocket (bool	asServer);
+	// @}
 
 private:
-	//# ---------- Copying is not allowed ----------
+	// Copying is not allowed
+	// @{
 	Socket(const Socket&	that);
 	Socket&	operator=(const Socket&	that);
+	// @}
 
 	//# ---------- Data Members ----------
-	string				itsSocketname;		//# name of socket given by user
-	int32				itsErrno;			//# own error number
-	int32				itsSysErrno;		//# system error number
-	int32				itsSocketID;		//# filedescriptor of the socket
-	int16				itsType;			//# SocketType
-	bool				itsIsServer;		//# Server or Client Socket
-	bool				itsIsConnected;		//# Connected or not
-	string				itsHost;			//#	Name of host at other side
-	string				itsPort;			//# Portnr of server
-	bool				itsAllowIntr;		//# Interrupt read/writeblock call
-	bool				itsIsInitialized;	//# Socket is initialized
-	bool				itsIsBlocking;		//# Blocking mode or not
-	struct sockaddr_in	itsTCPAddr;			//# Connected client address(TCP)
-	struct sockaddr_un	itsUnixAddr;		//# Connected client address(UNIX)
 
-	//# ---------- Support for sigpipes ----------
+	// Name of socket given by user
+	string				itsSocketname;
+	// Own error number
+	int32				itsErrno;
+	// System error number
+	int32				itsSysErrno;
+	// File descriptor of the socket
+	int32				itsSocketID;
+	// Socket type
+	int16				itsType;
+	// Server or Client Socket
+	bool				itsIsServer;
+	// Connected or not
+	bool				itsIsConnected;
+	// Name of host at other side
+	string				itsHost;
+	// Portnr of server
+	string				itsPort;
+	// Interrupt read/write block call
+	bool				itsAllowIntr;
+	// Socket is initialized
+	bool				itsIsInitialized;
+	// Blocking mode or not
+	bool				itsIsBlocking;
+	// Connected client address(TCP)
+	struct sockaddr_in		itsTCPAddr;
+	// Connected client address(UNIX)
+	struct sockaddr_un		itsUnixAddr;
+
+	//# Support for sigpipes
 	const volatile int32*	sigpipeCounter;
 	static int32			defaultSigpipeCounter;
 
 };
+
+// @}
 
 //# --------------- Inline implementations ---------------
 

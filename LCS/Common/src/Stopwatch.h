@@ -23,8 +23,8 @@
 #ifndef LOFAR_COMMON_STOPWATCH_H
 #define LOFAR_COMMON_STOPWATCH_H
 
-// \file StopWatch.h
-// timer class
+// \file Stopwatch.h
+// Timer class
 
 //# Includes
 #include <sys/times.h>
@@ -32,9 +32,6 @@
 
 namespace LOFAR
 {
-
-  // \addtogroup Common
-  // @{
 
   // This class functions as a timer.
   // It can give the user, system and elapsed time spent.
@@ -124,8 +121,6 @@ namespace LOFAR
     //##ModelId=3DB954640327
     bool fired () const { return times(&dummy_tms) >= last_tick; };
   };
-
-  // @}
 
 } // namespace LOFAR
 

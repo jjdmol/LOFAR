@@ -24,14 +24,15 @@
 #define LOFAR_COMMON_BLOBIBUFCHAR_H
 
 // \file BlobIBufChar.h
-// Input buffer for a blob using a plain pointer.
+// Input buffer for a blob using a plain pointer
 
 #include <Common/BlobIBuffer.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
-  // \addtogroup Common
+// \ingroup Common
+// \addtogroup Blob
   // @{
 
   // This class is the BlobIBuffer that makes use of a character buffer,
@@ -91,6 +92,7 @@ namespace LOFAR {
     }
   
   // @}
+
 } // end namespace
 
 #endif

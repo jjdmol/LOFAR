@@ -33,10 +33,9 @@
 
 
 namespace LOFAR {
-  // \addtogroup Common
-  // @{
+
   EXCEPTION_CLASS (BlobException, Exception);
-  // @}
+
 }
 
 #endif

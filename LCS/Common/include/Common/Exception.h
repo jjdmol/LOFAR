@@ -27,18 +27,17 @@
 // LCS Exception base class.
 
 //# Includes
-#ifdef HAVE_CONFIG_H
 #include <lofar_config.h>
-#endif
-
 #include <exception>
 #include <string>
 #include <sstream>
 
 
 namespace LOFAR {
+
   // \addtogroup Common
   // @{
+
   //
   // This is the base class for all LCS related exceptions.
   //
@@ -99,11 +98,12 @@ namespace LOFAR {
   }
 
   // @}
+
 } // namespace LOFAR
 
 
 //
-//  @name Useful macros for lazy people
+// \name Useful macros for lazy people
 //@{
 
 //

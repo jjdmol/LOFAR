@@ -24,18 +24,20 @@
 #define LOFAR_COMMON_BLOBHEADER_H
 
 // \file BlobHeader.h
-// Standard header for a blob.
+// Standard header for a blob
 
 #include <Common/LofarTypes.h>
 #include <Common/DataConvert.h>
 #include <string.h>
 
 namespace LOFAR {
-  // \addtogroup Common
+
+// \ingroup Common
+// \addtogroup Blob
   // @{
   
   // Blob stands for binary large object.
-  // The LOFAR Common software provides classes to serialize one or more
+// The %LOFAR Common software provides classes to serialize one or more
   // objects into a blob and to de-serialize the blob to objects.
   // To be sure that a blob is interpreted in the correct way, each object
   // in it will be preceeded by a header. The header contains the
@@ -151,6 +153,7 @@ namespace LOFAR {
     };
   
   // @}
+
 } // end namespace
 
 

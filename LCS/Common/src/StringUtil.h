@@ -24,11 +24,8 @@
 #define LOFAR_COMMON_STRINGUTIL_H
 
 // \fileStringUtil.h
+// 
 
-
-//#include <lofar_config.h>
-//#include <string>
-//#include <vector>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -36,8 +33,6 @@
 namespace LOFAR
 {
 
-  // \addtogroup Common
-  // @{
   // This class contains useful string manipulation methods.
   class StringUtil
   {
@@ -59,14 +54,14 @@ namespace LOFAR
     //   res[3] = "dd"
     //   res[4] = ""
     // \endverbatim
-    static std::vector<std::string> split(const std::string& str, char c);
+    static vector<string> split(const string& str, char c);
   };
 
 //
 // formatString(format, ...) --> string
 //
 // The function formatString accepts printf-like arguments and returns a
-// formatted std::string. It can be used e.g. in cout constructions:
+// formatted string. It can be used e.g. in cout constructions:
 // cout << formatString("Opening connection with host %%s", hostName);
 //# In real life this must be %s ofcourse but doxygen need a double %%.
 const string formatString(const	char* format, ...);
@@ -119,8 +114,6 @@ inline void ltrim(string&		aString, const string&	whiteSpace = " 	")
 	aString = aString.erase(0, aString.find_first_not_of(whiteSpace));
 }
 
-
-// @}
 
 } // namespace LOFAR
 

@@ -20,18 +20,15 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_COMMON_LOFAR_COMPLEX_H
-#define LOFAR_COMMON_LOFAR_COMPLEX_H
+#ifndef LOFAR_COMMON_COMPLEX_H
+#define LOFAR_COMMON_COMPLEX_H
 
 // \file lofar_complex.h
-//
 
 #include <complex>
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
   using std::complex;
   using std::sin;
   using std::cos;
@@ -39,7 +36,6 @@ namespace LOFAR
   using std::exp;
   using std::sqrt;
 //   using std::conj;
-// @}
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL

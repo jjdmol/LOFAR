@@ -24,18 +24,14 @@
 #define LOFAR_COMMON_MAP_H
 
 // \file lofar_map.h
-//
 
 #include <map>
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
   using std::map;
   using std::multimap;
   using std::pair;
-  // @}
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL

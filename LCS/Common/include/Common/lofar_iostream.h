@@ -20,19 +20,16 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_COMMON_LOFAR_IOSTREAM_H
-#define LOFAR_COMMON_LOFAR_IOSTREAM_H
+#ifndef LOFAR_COMMON_IOSTREAM_H
+#define LOFAR_COMMON_IOSTREAM_H
 
 // \file lofar_iostream.h
-//
 
 #include <Common/lofar_iosfwd.h>
 #include <iostream>
 
 namespace LOFAR
 {
-  // \addtogroup Common
-  // @{
   using std::istream;
   using std::ostream;
   using std::iostream;
@@ -42,7 +39,6 @@ namespace LOFAR
   using std::endl;
   using std::ends;
   using std::flush;
-  // @}
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL

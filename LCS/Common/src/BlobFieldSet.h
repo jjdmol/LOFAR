@@ -24,7 +24,7 @@
 #define LOFAR_COMMON_BLOBFIELDSET_H
 
 // \file BlobFieldSet.h
-// Definition all fields in a blob.
+// Definition all fields in a blob
 
 #include <Common/BlobField.h>
 #include <Common/BlobIBufChar.h>
@@ -34,13 +34,14 @@
 #include <map>
 
 namespace LOFAR {
-  // \addtogroup Common
-  // @{
+
+  // \ingroup Common
+  // \addtogroup Blob
+  // <group>
 
   //# Forward Declarations.
   class BlobOStream;
   class BlobIStream;
-  
   
   // The class BlobFieldSet defines a set of fields in a blob. The blob can
   // be created and thereafter a pointer to the various fields in the blob
@@ -188,7 +189,9 @@ namespace LOFAR {
       NameMap                     itsNameMap;
       ALLOC_TRACER_CONTEXT;
     };
-  // @}
+
+// </group>
+
 } // end namespace
 
 #endif

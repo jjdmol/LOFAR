@@ -23,6 +23,9 @@
 #ifndef LOFAR_COMMON_THREAD_SMARTLOCK_H
 #define LOFAR_COMMON_THREAD_SMARTLOCK_H
 
+// \file Thread/SmartLock.h
+// Threads SmartLock class.
+
 //# Includes
 #include <Common/Thread/Condition.h>
 
@@ -30,6 +33,10 @@ namespace LOFAR
 {
   namespace Thread 
   {
+
+    // \ingroup Common
+    // \addtogroup Thread
+    // @{
 
 #ifdef USE_THREADS
 
@@ -651,6 +658,8 @@ namespace LOFAR
     };
 
 #endif
+
+    // @}
 
   } // namespace Thread
 
