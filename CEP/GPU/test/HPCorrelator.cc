@@ -1,4 +1,3 @@
-//#  Correlator.cc: Testcorrelator on CPU and GPU
 //#
 //#  Copyright (C) 2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -31,12 +30,11 @@ using namespace std;
 
 #define	NR_RUNS				1		// default number of integration runs
 
-#define	TEXTURE_SIZE		512
+#define	TEXTURE_SIZE		1024
 #define	TEXTURE_SQUARE		(TEXTURE_SIZE * TEXTURE_SIZE)
 #define	SIGNAL_DEPTH		2
 #define	NR_CORRS_IN_MAT		(TEXTURE_SIZE * (TEXTURE_SIZE - 1) / 2)
 
-float4			signalArr    [TEXTURE_SIZE];		// signal samples
 float4			inputArr  [TEXTURE_SQUARE];		// precalculated matrix
 float4			resultArr [TEXTURE_SQUARE];		// result matrix
 float4			refArr    [TEXTURE_SQUARE];		// reference matrix
@@ -87,7 +85,7 @@ void compare_square (float4	*s1, float4	*s2) {
 	for (i = 0; i < TEXTURE_SQUARE; i++) {
 		if (!comp_float4(s1[i],s2[i])) {
 			if (nr_errors < 10) {
-				printf ("%2d: %10.1f %10.1f %10.1f %10.1f <--> %10.1f %10.1f %10.1f %10.1f\n", i, s1[i].r, s1[i].g, s1[i].b, s1[i].a, s2[i].r, s2[i].g, s2[i].b, s2[i].a);
+				printf ("%9d: %10.1f %10.1f <--> %10.1f %10.1f\n", i, s1[i].r, s1[i].g, s2[i].r, s2[i].g);
 			}
 			nr_errors++;
 		}
@@ -108,31 +106,42 @@ void compare_square (float4	*s1, float4	*s2) {
 //
 // Calculate the correlationmatrix in C, to use it as a reference.
 //
-void calcReferenceMatrix (int		nrRuns) {
-	int		i, x, y, r;
-
-	for (r = 0; r < (nrRuns * 4 * SIGNAL_DEPTH); r++) {
-		for (x = 0; x < TEXTURE_SIZE; x++) {
-			for (y = 0; y < TEXTURE_SIZE; y++) {
-				i = y*TEXTURE_SIZE + x;
-				if (x >= y) {
-					refArr[i].r = refArr[i].r +
-								 (signalArr[x].r*signalArr[y].r) - 
-								 (signalArr[x].g*signalArr[y].g);   
-					refArr[i].g = refArr[i].g +
-								 (signalArr[x].r*signalArr[y].g) + 
-								 (signalArr[x].g*signalArr[y].r);   
-//					refArr[i].b = 0;
-//					refArr[i].a = 0;
-//					refArr[i].b = refArr[i].b +
-//								 (signalArr[x].b*signalArr[y].b) - 
-//								 (signalArr[x].a*signalArr[y].a);   
-//					refArr[i].a = refArr[i].a +
-//								 (signalArr[x].b*signalArr[y].a) + 
-//								 (signalArr[x].a*signalArr[y].b);   
-				}
-			} // y
-		} // x
+void calcReferenceMatrix (int		nrRuns)
+{
+	for (int r = 0; r < nrRuns; r++) {
+		for (int s = 0; s < SIGNAL_DEPTH; s++) {
+			for (int x = 0; x < TEXTURE_SIZE; x++) {
+				for (int y = 0; y < TEXTURE_SIZE; y++) {
+					int i = y*TEXTURE_SIZE + x;
+					int Ia = s * TEXTURE_SIZE + x;
+					int Xa = Ia / SIGNAL_DEPTH;
+					int Ya = Ia % SIGNAL_DEPTH;
+					int Ib = s * TEXTURE_SIZE + y;
+					int Xb = Ib / SIGNAL_DEPTH;
+					int Yb = Ib % SIGNAL_DEPTH;
+					if (x >= y) {
+						refArr[i].r = refArr[i].r +
+									 (real[Xa][Ya].r * real[Xb][Yb].r) - 
+									 (imag[Xa][Ya].r * imag[Xb][Yb].r) +
+									 (real[Xa][Ya].g * real[Xb][Yb].g) - 
+									 (imag[Xa][Ya].g * imag[Xb][Yb].g) +
+									 (real[Xa][Ya].b * real[Xb][Yb].b) - 
+									 (imag[Xa][Ya].b * imag[Xb][Yb].b) +
+									 (real[Xa][Ya].a * real[Xb][Yb].a) - 
+									 (imag[Xa][Ya].a * imag[Xb][Yb].a);   
+						refArr[i].g = refArr[i].g +
+									 (real[Xa][Ya].r * imag[Xb][Yb].r) + 
+									 (imag[Xa][Ya].r * real[Xb][Yb].r) +
+									 (real[Xa][Ya].g * imag[Xb][Yb].g) + 
+									 (imag[Xa][Ya].g * real[Xb][Yb].g) +
+									 (real[Xa][Ya].b * imag[Xb][Yb].b) + 
+									 (imag[Xa][Ya].b * real[Xb][Yb].b) +
+									 (real[Xa][Ya].a * imag[Xb][Yb].a) + 
+									 (imag[Xa][Ya].a * real[Xb][Yb].a);
+					}
+				} // y
+			} // x
+		} // s
 	} // r
 }
 
@@ -142,11 +151,10 @@ void calcReferenceMatrix (int		nrRuns) {
 // Clears and initializes the input Arrays
 //
 void initInputArrays () {
-	int		i, x, y;
 
-	for (x = 0; x < TEXTURE_SIZE; x++) {
-		for (y = 0; y < TEXTURE_SIZE; y++) {
-			i = y*TEXTURE_SIZE + x;
+	for (int x = 0; x < TEXTURE_SIZE; x++) {
+		for (int y = 0; y < TEXTURE_SIZE; y++) {
+			int i = y*TEXTURE_SIZE + x;
 			inputArr[i].r = 0;   
 			inputArr[i].g = 0;   
 			inputArr[i].b = 0;
@@ -160,11 +168,22 @@ void initInputArrays () {
 			refArr[i].b = 0;
 			refArr[i].a = 0;   
 		}
-		signalArr[x].r = (rand())%128;   
-		signalArr[x].g = (rand())%128;
-		signalArr[x].b = (x+1)%128;   
-		signalArr[x].a = (TEXTURE_SIZE-x+1)%128;
 	}
+
+	for (int i = 0; i < TEXTURE_SIZE * SIGNAL_DEPTH; ++i) {
+		// convert to C coordinates
+		int Xc = i / SIGNAL_DEPTH;
+		int Yc = i % SIGNAL_DEPTH;
+		real[Xc][Yc].r = (rand()) % 128;
+		real[Xc][Yc].g = (rand()) % 128;
+		real[Xc][Yc].b = (rand()) % 128;
+		real[Xc][Yc].a = (rand()) % 128;
+		imag[Xc][Yc].r = (rand()) % 128;
+		imag[Xc][Yc].g = (rand()) % 128;
+		imag[Xc][Yc].b = (rand()) % 128;
+		imag[Xc][Yc].a = (rand()) % 128;
+	}
+
 }
 
 //
@@ -172,7 +191,6 @@ void initInputArrays () {
 //
 int main (int	argc, char *argv[]) {
 
-	int				i,x,y;
 	double			gpuTimer, cpuTimer;
 	struct timeval	tstart, tstop;
 	int				nrRuns = NR_RUNS;
@@ -199,7 +217,7 @@ int main (int	argc, char *argv[]) {
 	GPUEnv.info();
 
 	nrRuns = atoi(argv[1]);
-	loop_corr_factor = (1024 / TEXTURE_SIZE) * (1024 / TEXTURE_SIZE) * 2;
+	loop_corr_factor = (1024 / TEXTURE_SIZE) * (1024 / TEXTURE_SIZE);
 	printf ("Number of runs        : %d\n", nrRuns);
 	printf ("Depth of signaltexture: %d\n", SIGNAL_DEPTH);
 	printf ("Number of samples     : %d\n", TEXTURE_SIZE);
@@ -209,23 +227,6 @@ int main (int	argc, char *argv[]) {
 
 	// setup testdata and clear result
 	initInputArrays();
-
-	i = 0;
-	for (x = 0; x < TEXTURE_SIZE; ++x) {
-		for (y =0; y < SIGNAL_DEPTH; ++y) {
-			// Note the strange order of filling them!!!
-			real[x][y].r = signalArr[i].r;
-			real[x][y].g = signalArr[i].r;
-			real[x][y].b = signalArr[i].r;
-			real[x][y].a = signalArr[i].r;
-			imag[x][y].r = signalArr[i].g;
-			imag[x][y].g = signalArr[i].g;
-			imag[x][y].b = signalArr[i].g;
-			imag[x][y].a = signalArr[i].g;
-			i = (i + 1) % TEXTURE_SIZE;
-		}
-	}
-	
 
 	// start timer
 	gettimeofday(&tstart, NULL);
