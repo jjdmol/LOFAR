@@ -58,9 +58,6 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_PACKAGE(LCS/databases/TransportPL)
 lofar_PACKAGE(CEP/CEPFrame)
-lofar_EXTERNAL(psql,1,libpq-fe.h,pq)
-lofar_EXTERNAL(mysql,1,mysql/mysql.h,"z mysqlclient")
-lofar_EXTERNAL(MonetDB,1,MonetDB/C/Mapi.h,"Mapi")
 lofar_EXTERNAL(bdb,1,db_cxx.h,"db_cxx-4.2",/usr/local/BerkeleyDB.4.2)
 
 dnl
