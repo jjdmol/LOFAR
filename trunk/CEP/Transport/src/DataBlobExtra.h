@@ -99,11 +99,11 @@ public:
   void clearOut()
     { itsCreateDone = false; }
 
-  // Get read access to the blob just created.
+  // Get read access to the blob used last (i.e. the blob opened or created).
   // The first version assures that there is a blob.
   // <group>
-  BlobIStream& getCreatedBlock();
-  BlobIStream& getCreatedBlock (bool& found, int& version);
+  BlobIStream& getBlock();
+  BlobIStream& getBlock (bool& found, int& version);
   // <group>
 
 private:
@@ -116,12 +116,13 @@ private:
 
   BlobOStream* itsOut;
   BlobIStream* itsIn;
-  BlobOBufChar itsBufOut;     //# output buffer for extra blob data
-  BlobIBufChar itsBufIn;      //# input buffer for extra blob data
+  BlobOBufChar itsBufOut;     //# write buffer for extra blob data
+  BlobIBufChar itsBufIn;      //# read buffer for extra blob data
   std::string  itsName;       //# blob type name for extra data
   int          itsVersion;    //# blob version for extra data
   char*        itsDataPtr;    //# pointer to extra block in the main block
   bool         itsCreateDone; //# true = createBlock has been done
+  int          itsLastDone;   //# 0=nothing, 1=create, 2=open done as last
   DataHolder*  itsDH;
 };
 

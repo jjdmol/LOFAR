@@ -41,6 +41,7 @@ DataBlobExtra::DataBlobExtra(const string& name, int version, DataHolder* DH)
    itsName       (name),
    itsVersion    (version),
    itsCreateDone (false),
+   itsLastDone   (0),
    itsDH         (DH)
 {}
 
@@ -76,6 +77,7 @@ BlobOStream& DataBlobExtra::createBlock()
   itsBufOut.clear();
   itsOut->putStart (itsName, itsVersion);
   itsCreateDone = true;
+  itsLastDone   = 1;
   return *itsOut;
 }
 
@@ -100,30 +102,38 @@ BlobIStream& DataBlobExtra::openBlock (bool& found, int& version,
     version = itsIn->getStart (itsName);
     found   = true;
   }
+  itsLastDone = 2;
   return *itsIn;
 }
 
-BlobIStream& DataBlobExtra::getCreatedBlock (bool& found, int& version)
+BlobIStream& DataBlobExtra::getBlock (bool& found, int& version)
 {
-  if (itsBufOut.size() == 0) {
-    found = false;
-  } else {
-    found = true;
-    itsBufIn = BlobIBufChar (itsBufOut.getBuffer(), itsBufOut.size());
-    if (itsIn == 0) {
-      itsIn = new BlobIStream(itsBufIn);
+  found = false;
+  if (itsLastDone > 0) {
+    if (itsLastDone == 1) {
+      // A create is done as the last operation; make an input buffer of it.
+      found = true;
+      itsBufIn = BlobIBufChar (itsBufOut.getBuffer(), itsBufOut.size());
+      if (itsIn == 0) {
+        itsIn = new BlobIStream(itsBufIn);
+      }
     }
-    itsIn->clear();
-    version = itsIn->getStart (itsName);
+    if (itsBufIn.size() > 0) {
+      // Make sure the input buffer is positioned at the beginning.
+      found = true;
+      itsBufIn.setPos (0);
+      itsIn->clear();
+      version = itsIn->getStart (itsName);
+    }
   }
   return *itsIn;
 }
 
-BlobIStream& DataBlobExtra::getCreatedBlock()
+BlobIStream& DataBlobExtra::getBlock()
 {
   bool found;
   int version;
-  BlobIStream& bis = getCreatedBlock (found, version);
+  BlobIStream& bis = getBlock (found, version);
   Assert (found);
   return bis;
 }
