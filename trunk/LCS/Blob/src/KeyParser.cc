@@ -132,11 +132,12 @@ void KeyParseerror (char*)
 			    string(KeyTokenizetext) + "')");
 }
 
+} // end namespace
+
+
 // Define the yywrap function for flex.
 // Note it is not declared in the .h file, but by flex.
 int KeyTokenizewrap()
 {
     return 1;
 }
-
-} // end namespace
