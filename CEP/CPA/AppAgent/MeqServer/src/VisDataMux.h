@@ -15,18 +15,21 @@ class VisDataMux
     //##ModelId=3F9FF71B006A
     VisDataMux (MEQ::Forest &frst);
       
-    //##ModelId=3F98DAE6024A
-    void init (const DataRecord &header);
-      
+    //##ModelId=3FA1016000B0
+    void init (const DataRecord &rec);
+    
     //##ModelId=3F98DAE6024C
     void addNode (Node &node);
   
     //##ModelId=3F98DAE6024F
     void removeNode (Node &node);
     
+    //##ModelId=3F98DAE6024A
+    void deliverHeader (const DataRecord &header);
+      
     //##ModelId=3F98DAE60251
     //##Documentation
-    int deliver (VisTile::Ref::Copy &tileref);
+    int deliverTile (VisTile::Ref::Copy &tileref);
 
     //##ModelId=3F98DAE60246
     ImportDebugContext(VisHandlerNode);
@@ -47,8 +50,11 @@ class VisDataMux
     
     //##ModelId=3F9FF71B004E
     MEQ::Forest & forest_;
-    
-    VisTile::Format::Ref output_format_;
+ 
+    //  list of columns to be added to output tiles
+    std::vector<int>     out_columns_;
+    std::vector<string>  out_colnames_;
+    VisTile::Format::Ref out_format_;
 };
 
 } // namespace MEQ

@@ -167,6 +167,7 @@ int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref,
             Throw("output column format is not known");
           }
         }
+        cdebug(3)<<"adding output column to tile"<<endl;
         ptile->changeFormat(outformat);
         pformat = outformat.deref_p();
       }
