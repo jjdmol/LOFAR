@@ -29,9 +29,6 @@
 
 //# GCF Includes
 
-//# VirtualTelescope Includes
-#include "AVTTestTask.h"
-
 // forward declaration
 
 
@@ -40,12 +37,13 @@
 #define _avttest(cond) avt_do_test(cond, #cond, __FILE__, __LINE__)
 #define _avtfail(str)  avt_do_fail(str, __FILE__, __LINE__)
 
+template<class T>
 class AVTTest : public Test
 {
   public:
-    AVTTest();
+    AVTTest(const string& name);
     virtual ~AVTTest();
-
+    
     virtual void run();
     
     void avt_do_test(bool cond, const string& lbl,
@@ -61,6 +59,8 @@ class AVTTest : public Test
     
   private: 
     
-    AVTTestTask m_testTask;
+    T m_testTask;
 };
+
+#include "AVTTest.cc" // include template class implementation
 #endif

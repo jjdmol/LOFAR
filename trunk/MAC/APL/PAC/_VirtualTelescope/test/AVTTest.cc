@@ -19,33 +19,37 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+#include "GCF/GCF_Task.h"
 
-#include "AVTTest.h"
-
-AVTTest::AVTTest() :
-  Test(string("AVTTest")),
+template<class T>
+AVTTest<T>::AVTTest<T>(const string& name) :
+  Test(name),
   m_testTask(*this)
 {
 }
 
-AVTTest::~AVTTest()
+template<class T>
+AVTTest<T>::~AVTTest<T>()
 {
 }
 
-void AVTTest::run()
-{  
+template<class T>
+void AVTTest<T>::run()
+{ 
   m_testTask.start();
   
   GCFTask::run();
 }
 
-void AVTTest::avt_do_test(bool cond, const string& lbl,
+template<class T>
+void AVTTest<T>::avt_do_test(bool cond, const string& lbl,
                           const char* fname, long lineno)
 {
   do_test(cond,lbl,fname,lineno);
 }
 
-void AVTTest::avt_do_fail(const string& lbl,
+template<class T>
+void AVTTest<T>::avt_do_fail(const string& lbl,
                           const char* fname, long lineno)
 {
   do_fail(lbl,fname,lineno);

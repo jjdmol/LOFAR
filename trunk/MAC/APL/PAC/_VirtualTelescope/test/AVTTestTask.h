@@ -33,71 +33,74 @@
 #include <GCF/GCF_MyPropertySet.h>
 #include <boost/shared_ptr.hpp>
 
+#include "AVTTest.h"
 #include "AVTTestAnswer.h"
 
 // forward declaration
 class GCFEvent;
 class GCFPortInterface;
-class AVTTest;
 
-class AVTTestTask : public GCFTask
+namespace AVT
 {
-  public:
-    AVTTestTask(AVTTest& tester);
-    virtual ~AVTTestTask();
-
-    static bool   m_sBeamServerOnly;
-
-  protected:
-    // protected copy constructor
-    AVTTestTask(const AVTTestTask&);
-    // protected assignment operator
-    AVTTestTask& operator=(const AVTTestTask&);
-    
-  private: 
-    GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult propertiesLoaded(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test1(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test2(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test3(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test4(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test5(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test6(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test7(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test8(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult test9(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult handleBeamServerEvents(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult beamServer(GCFEvent& e, GCFPortInterface& p);
-    
-    
-    static string m_taskName;
-    
-    AVTTest&        m_tester;
-    AVTTestAnswer   m_answer;
-    GCFPort         m_beamserver;
-
-    GCFProperty     m_propertyLDScommand;
-    GCFProperty     m_propertyLDSstatus;
-    GCFProperty     m_propertyLDSWGFrequency;
-    GCFProperty     m_propertyLDSWGAmplitude;
-    GCFProperty     m_propertyLDSWGSamplePeriod;
-    GCFProperty     m_propertySBFdirectionType;
-    GCFProperty     m_propertySBFdirectionAngle1;
-    GCFProperty     m_propertySBFdirectionAngle2;
-    GCFProperty     m_propertySBFstatus;
-
-    GCFMyPropertySet      m_beamServerProperties;
-    bool m_BEAMALLOC_received;
-    bool m_BEAMFREE_received;
-    bool m_BEAMPOINTTO_received;
-    bool m_WGSETTINGS_received;
-    bool m_WGENABLE_received;
-    bool m_WGDISABLE_received;
-    unsigned long m_statisticsTimerID;
-    double m_beamAngle1;
-    double m_beamAngle2;
-    unsigned int m_seqnr;
+  class AVTTestTask : public GCFTask
+  {
+    public:
+      AVTTestTask(AVTTest<AVTTestTask>& tester);
+      virtual ~AVTTestTask();
+  
+      static bool   m_sBeamServerOnly;
+  
+    protected:
+      // protected copy constructor
+      AVTTestTask(const AVTTestTask&);
+      // protected assignment operator
+      AVTTestTask& operator=(const AVTTestTask&);
+      
+    private: 
+      GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult propertiesLoaded(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test1(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test2(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test3(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test4(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test5(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test6(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test7(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test8(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult test9(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult handleBeamServerEvents(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult beamServer(GCFEvent& e, GCFPortInterface& p);
+      
+      
+      static string m_taskName;
+      
+      AVTTest<AVTTestTask>& m_tester;
+      AVTTestAnswer         m_answer;
+      GCFPort               m_beamserver;
+  
+      GCFProperty     m_propertyLDScommand;
+      GCFProperty     m_propertyLDSstatus;
+      GCFProperty     m_propertyLDSWGFrequency;
+      GCFProperty     m_propertyLDSWGAmplitude;
+      GCFProperty     m_propertyLDSWGSamplePeriod;
+      GCFProperty     m_propertySBFdirectionType;
+      GCFProperty     m_propertySBFdirectionAngle1;
+      GCFProperty     m_propertySBFdirectionAngle2;
+      GCFProperty     m_propertySBFstatus;
+  
+      GCFMyPropertySet      m_beamServerProperties;
+      bool m_BEAMALLOC_received;
+      bool m_BEAMFREE_received;
+      bool m_BEAMPOINTTO_received;
+      bool m_WGSETTINGS_received;
+      bool m_WGENABLE_received;
+      bool m_WGDISABLE_received;
+      unsigned long m_statisticsTimerID;
+      double m_beamAngle1;
+      double m_beamAngle2;
+      unsigned int m_seqnr;
+  };
 };
 
 #endif

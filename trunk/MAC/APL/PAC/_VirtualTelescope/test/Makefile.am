@@ -14,8 +14,8 @@ avttest_CPPFLAGS= \
 
 avttest_SOURCES 		= \
 	AVTTestAnswer.cc \
-	AVTTest.cc \
 	AVTTestTask.cc \
+	AVTTestMAC2Task.cc \
 	AVTTestMain.cc \
 	../src/LogicalDevice_Protocol.cc \
 	ABS_Protocol.cc

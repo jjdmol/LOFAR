@@ -23,14 +23,20 @@
 #include <CmdLine.h>
 #include <GCF/GCF_Task.h>
 #include "../../../APLCommon/src/suite.h"
-#include "AVTTest.h"
+#include "AVTTestTask.h"
+#include "AVTTestMAC2Task.h"
 #include <boost/shared_ptr.hpp>
+
+using namespace AVT;
 
 int main(int argc, char* argv[])
 {
   int retval=-1;
   
   {
+    bool mac1Test=false;
+    bool mac2Test=false;
+    
     GCFTask::init(argc, argv);
 
     CCmdLine cmdLine;
@@ -39,14 +45,33 @@ int main(int argc, char* argv[])
     if (cmdLine.SplitLine(argc, argv) > 0)
     {
       AVTTestTask::m_sBeamServerOnly=cmdLine.HasSwitch("-b");
+      mac1Test = cmdLine.HasSwitch("-mac1");
+      mac2Test = cmdLine.HasSwitch("-mac2");
     }
     
-    Suite s("MAC.APL.PAC VirtualTelescope Test",&std::cout);
-  
-    boost::shared_ptr<AVTTest> avtTest(new AVTTest);
-    s.addTest(avtTest.get());
-    s.run();
-    retval=s.report();
+    if(!mac1Test && !mac2Test)
+    {
+      printf("Please use the commandline parameters '-mac1' or '-mac2' or both to\nexecute MAC1 or MAC2 testcases\n");
+    }
+    else
+    {
+      Suite s("MAC.APL.PAC VirtualTelescope Test",&std::cout);
+    
+      boost::shared_ptr<AVTTest<AVTTestTask> >      avtTestMac1;
+      boost::shared_ptr<AVTTest<AVTTestMAC2Task> >  avtTestMac2;
+      if(mac1Test)
+      {
+        avtTestMac1 = boost::shared_ptr<AVTTest<AVTTestTask> >(new AVTTest<AVTTestTask>(string("AVTTestMAC1")));
+        s.addTest(avtTestMac1.get());
+      }
+      if(mac2Test)
+      {
+        avtTestMac2 = boost::shared_ptr<AVTTest<AVTTestMAC2Task> >(new AVTTest<AVTTestMAC2Task>(string("AVTTestMAC2")));
+        s.addTest(avtTestMac2.get());
+      }
+      s.run();
+      retval=s.report();
+    }
   }
   return retval;
 }
