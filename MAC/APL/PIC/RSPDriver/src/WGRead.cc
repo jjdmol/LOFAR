@@ -36,9 +36,10 @@ using namespace RSP;
 using namespace LOFAR;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
+using namespace blitz;
 
 WGRead::WGRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL * 2)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -50,23 +51,48 @@ WGRead::~WGRead()
 
 void WGRead::sendrequest()
 {
-  EPAReadEvent wgsettingsread;
-
-  if (0 == getCurrentBLP() % MEPHeader::N_POL)
+  if (getCurrentBLP() < GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
   {
-    wgsettingsread.hdr.set(MEPHeader::WG_XSETTINGS_HDR,
-			   getCurrentBLP() / 2,
-			   MEPHeader::READ);
+    EPAReadEvent wgsettingsread;
+
+    if (0 == getCurrentBLP() % MEPHeader::N_POL)
+    {
+      wgsettingsread.hdr.set(MEPHeader::WG_XSETTINGS_HDR,
+			     getCurrentBLP() / 2,
+			     MEPHeader::READ);
+    }
+    else
+    {
+      wgsettingsread.hdr.set(MEPHeader::WG_YSETTINGS_HDR,
+			     getCurrentBLP() / 2,
+			     MEPHeader::READ);
+    }
+
+    m_hdr = wgsettingsread.hdr;
+    getBoardPort().send(wgsettingsread);
   }
   else
   {
-    wgsettingsread.hdr.set(MEPHeader::WG_YSETTINGS_HDR,
-			   getCurrentBLP() / 2,
-			   MEPHeader::READ);
-  }
+    int current_blp = getCurrentBLP() - GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
 
-  m_hdr = wgsettingsread.hdr;
-  getBoardPort().send(wgsettingsread);
+    EPAReadEvent wgwaveread;
+
+    if (0 == current_blp % MEPHeader::N_POL)
+    {
+      wgwaveread.hdr.set(MEPHeader::WG_XWAVE_HDR,
+			 current_blp / 2,
+			 MEPHeader::READ);
+    }
+    else
+    {
+      wgwaveread.hdr.set(MEPHeader::WG_YWAVE_HDR,
+			 current_blp / 2,
+			 MEPHeader::READ);
+    }
+
+    m_hdr = wgwaveread.hdr;
+    getBoardPort().send(wgwaveread);
+  }
 }
 
 void WGRead::sendrequest_status()
@@ -76,39 +102,73 @@ void WGRead::sendrequest_status()
 
 GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_WG_SETTINGS != event.signal)
+  if (getCurrentBLP() < GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
   {
-    LOG_WARN("WGRead::handleack: unexpected ack");
-    return GCFEvent::NOT_HANDLED;
-  }
-  
-  EPAWgSettingsEvent wgsettings(event);
-
-  if (!wgsettings.hdr.isValidAck(m_hdr))
-  {
-    LOG_ERROR("WGRead::handleack: invalid ack");
-    return GCFEvent::NOT_HANDLED;
-  }
-
-  uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
-
-  WGSettings& w = Cache::getInstance().getBack().getWGSettings();
-
-  if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
-  {
-    if (w()(global_rcu).freq != wgsettings.freq
-	|| w()(global_rcu).phase != wgsettings.phase
-	|| w()(global_rcu).ampl != wgsettings.ampl
-	|| w()(global_rcu).nof_samples != wgsettings.nof_samples
-	|| w()(global_rcu).mode != wgsettings.mode)
+    if (EPA_WG_SETTINGS != event.signal)
     {
-      LOG_WARN(formatString("LOOPBACK CHECK FAILED: WGRead mismatch (rcu=%d)", global_rcu));
+      LOG_WARN("WGRead::handleack: unexpected ack");
+      return GCFEvent::NOT_HANDLED;
+    }
+  
+    EPAWgSettingsEvent wgsettings(event);
+
+    if (!wgsettings.hdr.isValidAck(m_hdr))
+    {
+      LOG_ERROR("WGRead::handleack: invalid ack");
+      return GCFEvent::NOT_HANDLED;
+    }
+
+    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
+
+    WGSettings& w = Cache::getInstance().getBack().getWGSettings();
+
+    if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
+    {
+      if (w()(global_rcu).freq != wgsettings.freq
+	  || w()(global_rcu).phase != wgsettings.phase
+	  || w()(global_rcu).ampl != wgsettings.ampl
+	  || w()(global_rcu).nof_samples != wgsettings.nof_samples
+	  || w()(global_rcu).mode != wgsettings.mode)
+      {
+	LOG_WARN(formatString("LOOPBACK CHECK FAILED: WGRead mismatch (rcu=%d)", global_rcu));
+      }
+    }
+    else
+    {
+      w()(global_rcu).freq        = wgsettings.freq;
+      w()(global_rcu).phase       = wgsettings.phase;
+      w()(global_rcu).ampl        = wgsettings.ampl;
+      w()(global_rcu).nof_samples = wgsettings.nof_samples;
+      w()(global_rcu).mode        = wgsettings.mode;
     }
   }
   else
   {
-    memcpy(&(w()(global_rcu)), &wgsettings.freq, sizeof(WGSettings::WGRegisterType));
-  }
+    int current_blp = getCurrentBLP() - GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+    
+    if (EPA_WG_WAVE != event.signal)
+    {
+      LOG_WARN("WGRead::handleack: unexpected ack");
+      return GCFEvent::NOT_HANDLED;
+    }
+  
+    EPAWgWaveEvent wgwave(event);
 
+    if (!wgwave.hdr.isValidAck(m_hdr))
+    {
+      LOG_ERROR("WGRead::handleack: invalid ack");
+      return GCFEvent::NOT_HANDLED;
+    }
+
+    uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + current_blp;
+
+    WGSettings& w = Cache::getInstance().getBack().getWGSettings();
+
+    Array<int16, 1> wave((int16*)&wgwave.samples,
+			 shape(N_WAVE_SAMPLES),
+			 neverDeleteData);
+    w.waveforms()(global_rcu, Range::all()) = wave;
+  }
+  
   return GCFEvent::HANDLED;
 }

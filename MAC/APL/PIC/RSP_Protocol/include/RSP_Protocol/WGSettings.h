@@ -46,13 +46,19 @@ namespace RSP_Protocol
 	  uint8  ampl;
 	  uint16 nof_samples;
 	  uint8  mode;
-	  uint8 _pad;
+	  uint8  preset; // one of PRESET_SINE, PRESET_SQUARE, PRESET_TRIANGLE or PRESET_RAMP
       };
 
       static const int MODE_OFF    = 0x0;
       static const int MODE_CALC   = 0x1;
       static const int MODE_SINGLE = 0x3;
       static const int MODE_REPEAT = 0x5;
+
+      static const int PRESET_SINE        = 0;
+      static const int PRESET_SQUARE      = 1;
+      static const int PRESET_TRIANGLE    = 2;
+      static const int PRESET_RAMP        = 3;
+      static const int N_WAVEFORM_PRESETS = PRESET_RAMP + 1;
 
       /**
        * Constructors for a WGSettings object.
@@ -64,6 +70,13 @@ namespace RSP_Protocol
 
       /* get reference to wg settings array */
       blitz::Array<WGRegisterType, 1>& operator()();
+      
+      /* get reference to the wave array */
+      blitz::Array<int16, 2>& waveforms();
+
+      /* preset waveform methods */
+      static void initWaveformPresets();
+      static blitz::Array<int16, 1> preset(int index);
 
       /**
        * Access methods.
@@ -84,11 +97,14 @@ namespace RSP_Protocol
 
     private:
       blitz::Array<WGRegisterType, 1> m_registers;
+      blitz::Array<int16, 2>          m_waveforms;
       bool                            m_modified; // has the value been modified?
+
+      static blitz::Array<int16, 2>   m_presets;
   };
 
   inline blitz::Array<WGSettings::WGRegisterType, 1>& WGSettings::operator()() { return m_registers; }
-
+  inline blitz::Array<int16, 2>& WGSettings::waveforms() { return m_waveforms; }
 };
      
 #endif /* WGSETTINGS_H_ */
