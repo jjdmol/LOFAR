@@ -19,36 +19,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
-//
-//  $Log$
-//  Revision 1.8  2002/07/18 09:35:57  schaaf
-//  %[BugId: 11]%
-//  Modified time handling
-//
-//  Revision 1.7  2002/06/10 09:07:13  schaaf
-//  %[BugId: 11]%
-//  Removed ^M characters
-//
-//  Revision 1.6  2002/06/07 11:35:20  schaaf
-//  %[BugId: 11]%
-//  modified process() inner loop; make use of contiguousness of the data
-//
-//  Revision 1.5  2002/05/16 15:00:34  schaaf
-//
-//  overall update, added profiler states, removed command line processing, setZ/XOffset and Yoffset
-//
-//  Revision 1.3  2002/05/07 14:59:16  schaaf
-//  optimised performance of process()
-//
-//  Revision 1.2  2002/05/07 11:15:12  schaaf
-//  minor
-//
-//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
-//  initial version
-//
-//
-//
-//////////////////////////////////////////////////////////////////////
+
 
 #include <stdio.h>             // for sprintf
 #include <unistd.h>
@@ -183,7 +154,7 @@ void WH_Transpose::process()
 void WH_Transpose::dump() const
 {
   cout << "WH_Transpose " << getName() << " ::dump()" << endl;
-  for (int outch=0; outch<min(10,getOutputs()); outch++) {
+  for (int outch=0; outch<std::min(10,getOutputs()); outch++) {
     cout << "Output " << outch << "   "
 	 << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getZName() << " "
 	 << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getZ() << "   "
@@ -192,13 +163,13 @@ void WH_Transpose::dump() const
 	 << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getYName() << "Offset = "  
 	 << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getYOffset() ;
     for (int x=0; 
-	 x < min(10,(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getXSize());
+	 x < std::min(10,(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getXSize());
 		 x++) {
 	   cout << endl 
 		<< (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getXName()
 		<< x << "   ";
       for (int y=0; 
-	   y < min(10,(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getYSize());
+	   y < std::min(10,(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getYSize());
 	   y++) {
 	cout << *(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getBuffer(x,y) << " ";
       }

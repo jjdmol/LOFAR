@@ -1,5 +1,4 @@
-
-//  WH_FillTFMatrix: WorkHolder class filling DH_TFMatrix
+//  WH_FillTFMatrix.cc: WorkHolder class filling DH_TFMatrix
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,42 +19,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
-//
-//  $Log$
-//  Revision 1.9  2002/11/12 14:24:20  schaaf
-//
-//  %[BugId: 11]%
-//  ongoing development
-//
-//  Revision 1.8  2002/08/19 20:36:59  schaaf
-//  %[BugId: 11]%
-//  Layout
-//  little performance enhancement
-//
-//  Revision 1.7  2002/06/07 11:37:41  schaaf
-//  %[BugId: 11]%
-//  Removed unnessesary Assert in C'tor
-//  Improved performance of process() inner loop
-//
-//  Revision 1.6  2002/05/24 10:47:52  schaaf
-//  %[BugId: 11]%
-//  Removed ^M characters
-//
-//  Revision 1.5  2002/05/16 15:05:40  schaaf
-//  Added profiler state for process() method
-//
-//  Revision 1.3  2002/05/07 14:59:16  schaaf
-//  optimised performance of process()
-//
-//  Revision 1.2  2002/05/07 11:15:38  schaaf
-//  minor
-//
-//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
-//  initial version
-//
-//
-//
-//////////////////////////////////////////////////////////////////////
+
 
 #include <stdio.h>             // for sprintf
 #include <math.h>
@@ -191,7 +155,7 @@ void WH_FillTFMatrix::process()
 void WH_FillTFMatrix::dump() const
 {
   cout << "WH_FillTFMatrix " << getName() << " ::dump()" << endl;
-  for (int outch=0; outch<min(10,getOutputs()); outch++) {
+  for (int outch=0; outch<std::min(10,getOutputs()); outch++) {
     cout << "Output " << outch << "   "
 	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getZName() << " "
 	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getZ() << "   "
@@ -200,13 +164,13 @@ void WH_FillTFMatrix::dump() const
 	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getYName() << "Offset = "  
 	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getYOffset() ;
     for (int x=0; 
-	 x < min(10,(const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getXSize());
+	 x < std::min(10,(const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getXSize());
 		 x++) {
 	   cout << endl 
 		<< (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getXName()
 		<< x << "   ";
       for (int y=0; 
-	   y < min(10,(const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getYSize());
+	   y < std::min(10,(const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getYSize());
 	   y++) {
 	cout << *(const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getBuffer(x,y) << " ";
       }
