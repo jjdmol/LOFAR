@@ -25,7 +25,7 @@
 
 
 
-#include <uvplot/UVPDisplayArea.h>
+#include <UVPDisplayArea.h>
 #include <uvplot/UVPImageCube.h>
 
 #include <qimage.h>

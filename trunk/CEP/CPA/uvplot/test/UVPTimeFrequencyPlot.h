@@ -23,7 +23,7 @@
 
 // $Id$
 
-#include <uvplot/UVPDisplayArea.h>
+#include <UVPDisplayArea.h>
 #include <uvplot/UVPSpectrumVector.h>
 #include <uvplot/UVPDataAtomVector.h>
 

@@ -32,8 +32,8 @@
 #include <qlabel.h>
 #include <qscrollview.h>
 
-#include <uvplot/UVPTimeFrequencyPlot.h>
-#include <uvplot/UVPGraphSettingsWidget.h>
+#include <UVPTimeFrequencyPlot.h>
+#include <UVPGraphSettingsWidget.h>
 #include <uvplot/UVPDataSet.h>
 
 

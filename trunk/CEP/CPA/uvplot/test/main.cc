@@ -23,7 +23,7 @@
 
 #include <aips/Exceptions.h>
 
-#include <uvplot/UVPMainWindow.h>
+#include <UVPMainWindow.h>
 
 #include <Common/Debug.h>
 
