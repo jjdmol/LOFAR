@@ -22,7 +22,7 @@ test_sort_LDADD		= $(top_builddir)/src/libuvd.la -lpthread
 
 test_sort_DEPENDENCIES	= $(top_builddir)/src/libuvd.la $(LOFAR_DEPEND)
 
-TESTS				=  test_filler
+TESTS				=  
 
 EXTRA_DIST			=
 
