@@ -30,8 +30,10 @@ namespace LOFAR
     namespace Query
     {
 
-      ColumnExprNode::ColumnExprNode(const std::string& col) :
-        itsColumn(col)
+      ColumnExprNode::ColumnExprNode(const std::string& column,
+                                     const std::string& constraint) :
+        itsColumn(column),
+        itsConstraint(constraint)
       {
       }
 
@@ -39,7 +41,7 @@ namespace LOFAR
       {
       }
 
-      void ColumnExprNode::print(std::ostream& os)
+      void ColumnExprNode::print(std::ostream& os) const
       {
         os << itsColumn;
       }

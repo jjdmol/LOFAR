@@ -31,6 +31,20 @@ namespace LOFAR
   {
     namespace Query
     {
+
+      NullExprNode::NullExprNode() 
+      {
+      }
+
+      NullExprNode::~NullExprNode()
+      {
+      }
+
+      void NullExprNode::print(std::ostream&) const
+      {
+      }
+
+
       IntExprNode::IntExprNode(int i) : 
         itsOperand(i)
       {
@@ -40,7 +54,7 @@ namespace LOFAR
       {
       }
       
-      void IntExprNode::print(std::ostream& os)
+      void IntExprNode::print(std::ostream& os) const
       {
         os << itsOperand; 
       }
@@ -54,7 +68,7 @@ namespace LOFAR
       {
       }
       
-      void DoubleExprNode::print(std::ostream& os)
+      void DoubleExprNode::print(std::ostream& os) const
       {
         os << itsOperand;
       }
@@ -64,16 +78,11 @@ namespace LOFAR
       {
       }
 
-//       StringExprNode::StringExprNode(const char* const cp) : 
-//         itsOperand(std::string(cp))
-//       {
-//       }
-
       StringExprNode::~StringExprNode()
       {
       }
       
-      void StringExprNode::print(std::ostream& os)
+      void StringExprNode::print(std::ostream& os) const
       {
         // If the string contains one or more single quote (') characters
         // we will need to escape them by duplicating them.

@@ -35,19 +35,21 @@ namespace LOFAR
   {
     namespace Query
     {
+
       ///////////////////////////////////////////////////////////////////
       //                         Constructors                          //
       ///////////////////////////////////////////////////////////////////
 
-      Expr::Expr()
+      Expr::Expr() :
+        itsNode(new NullExprNode())
       {
       }
-
+      
       Expr::Expr(int value) : 
         itsNode(new IntExprNode(value))
       {
       }
-
+      
       Expr::Expr(double value) : 
         itsNode(new DoubleExprNode(value))
       {

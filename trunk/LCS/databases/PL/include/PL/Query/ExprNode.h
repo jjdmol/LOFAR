@@ -33,9 +33,6 @@ namespace LOFAR
   {
     namespace Query
     {
-      //# Forward Declarations
-      class Expr;
-
       // @defgroup ExprNode Expression Nodes
       //
       // ExprNode is an abstract base class that represents the node of an
@@ -49,7 +46,7 @@ namespace LOFAR
         virtual ~ExprNode() {}
 
         // Print the expression node into an output stream.
-        virtual void print(std::ostream& os) = 0;
+        virtual void print(std::ostream& os) const = 0;
       };
 
     } // namespace Query
