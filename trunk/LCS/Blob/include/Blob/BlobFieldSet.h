@@ -130,9 +130,9 @@ public:
   // <br>It always checks the magic value.
   // <br>If the object type is given (no null pointer), the object type and the
   // version are checked.
-  // Version>=0 means that its value has to match exactly.
-  // Version<0 means that its absolute value has to be >= the version in
-  // the blob (indicating the up to abs(version) is supported).
+  // Version<0 means that its absolute value has to match exactly.
+  // Version>=0 means that its value has to be >= the version in
+  // the blob (indicating that up to version is supported).
   // <br>Size is checked if given as > 0.
   // It returns if it is needed to convert the data.
   static bool checkHeader (BlobIBufChar& buf, const char* objectType,
