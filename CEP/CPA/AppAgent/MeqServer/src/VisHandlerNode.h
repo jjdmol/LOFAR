@@ -40,18 +40,33 @@ class VisHandlerNode : public Node
     //##ModelId=3F98DAE60336
     void setDataId (int id);
     
+    //##Documentation
+    //## Alerts node that a vistile stream is starting.
+    //## The desired output format (with any extra columns added in) is
+    //## is passed in here.
+    virtual int deliverHeader (const VisTile::Format &) { return 0; };
+
     //##ModelId=3F98DAE60344
     //##Documentation
     //## Delivers a VisTile to the node.
     //## req is the request generated from this VisTile
-    //## tileref is a ref to the tile
+    //## tileref is a ref to the tile (will be detached)
     //## Returns result state (see Node::RES_xxx constants), which can be
     //## Node::RES_FAIL for failure, or a combination of the following
     //## bit flags:
     //##    RES_WAIT    result not yet available, must wait
-    //##    RES_UPDATED result available and tile was updated
-    virtual int deliver (const Request &req,VisTile::Ref::Copy &tileref,
-                         VisTile::Format::Ref &outformat) =0;
+    //##    RES_UPDATED result available and tile was updated, output tile is
+    //##                attached to tileref
+    virtual int deliverTile   (const Request &,VisTile::Ref &) { return 0; }
+                         
+    //##Documentation
+    //## Alerts node that a visdata stream is finished.
+    //## Returns result state (see Node::RES_xxx constants), which can be
+    //## Node::RES_FAIL for failure, or a combination of the following
+    //## bit flags:
+    //##    RES_WAIT    must wait (please call again)
+    //##    RES_UPDATED last tile was updated, output tile is attached to tileref
+    virtual int deliverFooter (VisTile::Ref &) { return 0; };
     
     // returns Meq::Cells object corresponding to a VisTile
     //##ModelId=3F9FF6970269
@@ -66,7 +81,8 @@ class VisHandlerNode : public Node
     
     //##ModelId=400E5B6E01FA
     virtual void setStateImpl (DataRecord &rec,bool initializing);
-    
+
+        
   private:
     //##ModelId=3F98DAE602F6
     int data_id;

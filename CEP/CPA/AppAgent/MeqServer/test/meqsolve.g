@@ -128,6 +128,7 @@ const make_solve_tree := function (st1,st2,msname='test.ms')
   sinkname := fq_name('sink',st1,st2);
   predtree := ifr_predict_tree(st1,st2);
   predname := predtree.name;
+  mqs.createnode(predtree);
   spigname := fq_name('spigot',st1,st2);
   mqs.createnode(meq.node('MeqSpigot',spigname,[ 
             station_1_index=st1,
@@ -195,6 +196,8 @@ const get_ms_info := function (msname='test.ms')
   return T;
 }
 
+use_initcol := T;       # initialize output column with zeroes
+
 # subtract=T: subtract tree only
 # solve=T:    solve+subtract trees
 #   both false: predict tree only
@@ -203,84 +206,98 @@ const get_ms_info := function (msname='test.ms')
 const do_test := function (predict=F,subtract=F,solve=F,run=T,
     msname='test.ms',
     outcol='PREDICTED_DATA',
-    st1set=[1],st2set=[2,3,4],publish=T,
-    verbose=default_verbosity,gui=use_gui)
+    st1set=[1],st2set=[2,3,4],
+    load='',save='',
+    publish=3)
 {
   # remove output column from table
-  print 'Clearing',outcol,'column, please ignore error messages'
-  tbl := table(msname,readonly=F);
-  desc := tbl.getcoldesc(outcol);
-  if( is_fail(desc) )
-    desc := [=];
-  # insert column anew, if no shape
-  if( has_field(desc,'shape') )
-    cellshape := desc.shape;
-  else
+  if( use_initcol )
   {
-    if( len(desc) )
-      tbl.removecols(outcol);
-    cellshape := tbl.getcell('DATA',1)::shape;
-    desc := tablecreatearraycoldesc(outcol,complex(0),2,shp);
-    tbl.addcols(desc);
+    print 'Clearing',outcol,'column, please ignore error messages'
+    tbl := table(msname,readonly=F);
+    desc := tbl.getcoldesc(outcol);
+    if( is_fail(desc) )
+      desc := [=];
+    # insert column anew, if no shape
+    if( has_field(desc,'shape') )
+      cellshape := desc.shape;
+    else
+    {
+      if( len(desc) )
+        tbl.removecols(outcol);
+      cellshape := tbl.getcell('DATA',1)::shape;
+      desc := tablecreatearraycoldesc(outcol,complex(0),2,shp);
+      tbl.addcols(desc);
+    }
+    # insert zeroes
+    tbl.putcol(outcol,array(complex(0),cellshape[1],cellshape[2],tbl.nrows()));
+    tbl.done();
   }
-  # insert zeroes
-  tbl.putcol(outcol,array(complex(0),cellshape[1],cellshape[2],tbl.nrows()));
-  tbl.done();
   
   get_ms_info(msname);
   
-  if( is_fail(mqsinit(verbose=verbose,gui=gui)) )
+  if( is_fail(mqsinit()) )
   {
     print mqs;
     fail;
   }
-  
-  # create common nodes (source parms and such)
-  make_shared_nodes();
-  
-  # make a solver node (since it's only one)
-  if( solve )
-  {
-    condeqs := [];
+
+  if( load )
+    mqs.meq('Load.Forest',[file_name=load])
+  else
+  {  
+    # create common nodes (source parms and such)
+    make_shared_nodes();
+
+    # make a solver node (since it's only one)
+    if( solve )
+    {
+      condeqs := [];
+      for( st1 in st1set )
+        for( st2 in st2set )
+          if( st1 < st2 )
+            condeqs := [condeqs,fq_name('ce',st1,st2)];
+      # note that child names will be resolved later
+      rec := meq.node('MeqSolver','solver',[
+          parm_group = hiid('a'),
+          default    = [ num_iter = 3 ],
+          solvable   = meq.solvable_list("stokes_i") ],
+        children=condeqs);
+      mqs.createnode(rec);
+    }
+
+    rootnodes := [];
+    # make predict/condeq trees
     for( st1 in st1set )
       for( st2 in st2set )
-        condeqs := [condeqs,fq_name('ce',st1,st2)];
-    # note that child names will be resolved later
-    rec := meq.node('MeqSolver','solver',[
-        parm_group = hiid('a'),
-        default    = [ num_iter = 3 ],
-        solvable   = meq.solvable_list("stokes_i") ],
-      children=condeqs);
-    mqs.createnode(rec);
-    if( publish )
-      mqs.meq('Node.Publish.Results',[name='solver']);
+        if( st1 < st2 )
+        {
+          if( solve )
+          {
+            rootnodes := [rootnodes,make_solve_tree(st1,st2,msname)];
+            if( publish>1 )
+              mqs.meq('Node.Publish.Results',[name=fq_name('ce',st1,st2)]);
+          }
+          else if( subtract )
+            rootnodes := [rootnodes,make_subtract_tree(st1,st2,msname)];
+          else
+            rootnodes := [rootnodes,make_predict_tree(st1,st2,msname)];
+          if( publish>2 )
+            mqs.meq('Node.Publish.Results',[name=fq_name('predict',st1,st2)]);
+        }
+    # resolve children on all root nodes
+    print 'Root nodes are: ',rootnodes;
+    for( r in rootnodes )
+      mqs.meq('Resolve.Children',[name=r]);
   }
-  
-  rootnodes := [];
-  # make predict/condeq trees
-  for( st1 in st1set )
-    for( st2 in st2set )
-    {
-      if( solve )
-      {
-        rootnodes := [rootnodes,make_solve_tree(st1,st2,msname)];
-        if( publish )
-          mqs.meq('Node.Publish.Results',[name=fq_name('ce',st1,st2)]);
-      }
-      else if( subtract )
-        rootnodes := [rootnodes,make_subtract_tree(st1,st2,msname)];
-      else
-        rootnodes := [rootnodes,make_predict_tree(st1,st2,msname)];
-      if( publish )
-        mqs.meq('Node.Publish.Results',[name=fq_name('predict',st1,st2)]);
-    }
-  # resolve children on all root nodes
-  print 'Root nodes are: ',rootnodes;
-  for( r in rootnodes )
-    mqs.meq('Resolve.Children',[name=r]);
+  if( save )
+    mqs.meq('Save.Forest',[file_name=save]);
   
   nodelist := mqs.getnodelist();
-  print 'Created nodes: ',nodelist.name;
+  print 'Nodes: ',nodelist.name;
+  
+  if( solve && publish>0 )
+    mqs.meq('Node.Publish.Results',[name='solver']);
 
   if( run )
   {
@@ -294,4 +311,7 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
 }
 
 
-do_test(subtract=T,run=T);
+# do_test(solve=T,run=T,st1set=1:10,st2set=1:10,publish=1,save='solve.forest');
+do_test(solve=T,run=T,publish=1,load='solve.forest');
+
+print 'errors reported:',mqs.num_errors();

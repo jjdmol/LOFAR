@@ -39,9 +39,11 @@ class Sink : public VisHandlerNode
   public:
     Sink ();  
 
+    virtual int deliverHeader (const VisTile::Format &outformat);
     //##ModelId=3F98DAE6021E
-    virtual int deliver (const Request &req,VisTile::Ref::Copy &tileref,
-                         VisTile::Format::Ref &outformat);
+    virtual int deliverTile   (const Request &req,VisTile::Ref &tileref);
+    
+    virtual int deliverFooter (VisTile::Ref &tileref);
     
     //##ModelId=3F98DAE60222
     virtual TypeId objectType() const
@@ -57,8 +59,16 @@ class Sink : public VisHandlerNode
     virtual void setStateImpl (DataRecord &rec,bool initializing);
 
   private:
-//    //##ModelId=3F98DD7400A9
-//    void assignOutputColumn (int ichild,string colname);
+    // pending tile stored here
+    struct {
+      Request::Ref         request;
+      VisTile::Ref         tile;
+    } pending;
+    
+    VisTile::Format::Ref output_format;
+      
+    // processes pending tile, if any
+    int procPendingTile (VisTile::Ref &tileref);
   
     // maps plane to output correlation
     //##ModelId=400E5B6D0048

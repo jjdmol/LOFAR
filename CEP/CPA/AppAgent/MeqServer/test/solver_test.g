@@ -109,7 +109,7 @@ const solver_test := function (stage=0,gui=use_gui,debug=[=],verbose=default_ver
     # execute request on x and y parms to load polcs and get original values
     global cells,request,res;
     cells := meq.cells(meq.domain(0,1,0,1),num_freq=4,num_time=4);
-    request := meq.request(cells,'',calc_deriv=0);
+    request := meq.request(cells,rqid=meq.rqid(),calc_deriv=0);
     res := mqs.meq('Node.Execute',[name='x',request=request],T);
     res := mqs.meq('Node.Execute',[name='y',request=request],T);
    

@@ -87,17 +87,29 @@ void Sink::fillTileColumn (T *coldata,const LoShape &colshape,
     Throw("shape of child result does not match output column")
   }
 }
-  
-//##ModelId=3F98DAE6021E
-int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref,
-                   VisTile::Format::Ref &outformat)
+
+int Sink::deliverHeader (const VisTile::Format &outformat)
 {
-  cdebug(3)<<"deliver: processing tile "<<tileref->tileId()<<" of "
+  output_format.attach(outformat);
+  cdebug(3)<<"deliverHeader: got format "<<outformat.sdebug(2)<<endl;
+  pending.tile.detach();
+  return 0;
+}
+
+
+int Sink::procPendingTile (VisTile::Ref &tileref)
+{
+  if( !pending.tile.valid() ) // no tile pending?
+    return 0;
+  // this will invalidate the pending refs
+  tileref = pending.tile;
+  Request::Ref reqref  = pending.request;
+  cdebug(3)<<"procPendingTile: processing tile "<<tileref->tileId()<<" of "
             <<tileref->ntime()<<" timeslots"<<endl;
   // get results from all child nodes 
   Result::Ref resref;
   cdebug(5)<<"calling execute() on child "<<endl;
-  int resflag = getChild(0).execute(resref,req);
+  int resflag = getChild(0).execute(resref,*reqref);
   FailWhen(resflag&RES_WAIT,"Meq::Sink can't cope with a WAIT result code yet");
   if( resflag == RES_FAIL )
   {
@@ -143,25 +155,11 @@ int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref,
         // add output column to tile as needed
         if( !pformat->defined(output_col) )
         {
-          // if column is not present in default output format, add it
-          if( !outformat.valid() )
-            outformat.copy(tileref->formatRef(),DMI::PRESERVE_RW);
-          if( !outformat->defined(output_col) )
-          {
-            if( output_col == VisTile::PREDICT || output_col == VisTile::RESIDUALS )
-            {
-              outformat.privatize(DMI::WRITE|DMI::DEEP);
-              outformat().add(output_col,
-                  outformat->type(VisTile::DATA),outformat->shape(VisTile::DATA));
-            }
-            else
-            {
-              Throw("output column format is not known");
-            }
-          }
+          pformat = output_format.deref_p();
+          FailWhen(!pformat->defined(output_col),"sink output column not defined "
+                  "in common tile output format.");
           cdebug(3)<<"adding output column to tile"<<endl;
-          ptile->changeFormat(outformat);
-          pformat = outformat.deref_p();
+          ptile->changeFormat(output_format);
         }
         coldata  = ptile->wcolumn(output_col);
         coltype  = pformat->type(output_col);
@@ -186,7 +184,28 @@ int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref,
   return resflag;
 }
 
+//##ModelId=3F98DAE6021E
+int Sink::deliverTile (const Request &req,VisTile::Ref &tileref)
+{
+  // grab a copy of the ref (since procPendingTile may overwrite tileref)
+  VisTile::Ref ref(tileref,DMI::COPYREF);
+  // process any pending tiles from previous deliver() call
+  int resflag = procPendingTile(tileref);  
+  // if no asked to wait, make this tile pending
+  if( !(resflag&RES_WAIT) )
+  {
+    // make this tile & request pending
+    pending.request.attach(req);
+    pending.tile = ref;
+  }
+  return resflag;
+}
 
+int Sink::deliverFooter (VisTile::Ref &tileref)
+{
+  // process any pending tiles from previous deliver() call
+  return procPendingTile(tileref);  
+}
 
 
 }
