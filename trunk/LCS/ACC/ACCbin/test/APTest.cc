@@ -25,6 +25,7 @@
 
 //# Includes
 #include <time.h>
+#include <libgen.h>
 #include <stdlib.h>						/// srand
 #include <Common/LofarLogger.h>
 #include <ACC/ProcControlServer.h>
