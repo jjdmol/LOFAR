@@ -21,7 +21,7 @@
 ### $Id$
 
 # pragma include once
-print 'include parmtable.g   d01apr2003';
+print 'include parmtable.g   d28jan2004';
 
 include 'table.g'
 
@@ -38,16 +38,14 @@ parmtable := function (name, create=F)
 	d6 := tablecreatescalarcoldesc ('STARTFREQ', as_double(0));
 	d7 := tablecreatescalarcoldesc ('ENDFREQ', as_double(0));
 	d8 := tablecreatearraycoldesc  ('VALUES', as_double(0));
-	d9 := tablecreatearraycoldesc  ('SIM_VALUES', as_double(0));
-	d10:= tablecreatearraycoldesc  ('SIM_PERT', as_double(0));
 	d11:= tablecreatescalarcoldesc ('TIME0', as_double(0));
 	d12:= tablecreatescalarcoldesc ('FREQ0', as_double(0));
 	d13:= tablecreatescalarcoldesc ('NORMALIZED', T);
 	d14:= tablecreatearraycoldesc  ('SOLVABLE', T);
 	d15:= tablecreatescalarcoldesc ('DIFF', as_double(0));
 	d16:= tablecreatescalarcoldesc ('DIFF_REL', T);
-	td := tablecreatedesc (d1, d4, d5, d6, d7, d8, d9, d10, d11,
-			       d12, d13, d14, d15, d16);
+	td := tablecreatedesc (d1, d4, d5, d6, d7, d8,
+			       d11, d12, d13, d14, d15, d16);
 	self.tab := table (name, td);
 	if (is_fail(self.tab)) {
 	    fail;
@@ -57,21 +55,20 @@ parmtable := function (name, create=F)
 	self.tab.putinfo (info);
 	self.tab.addreadmeline ('PSS ME parameter values');
 	
-	# Create the table with initial values.
-	itabname := spaste(name,'/DEFAULTVALUES');
-	td := tablecreatedesc (d1, d8, d9, d10, d11,
-			       d12, d13, d14, d15, d16);
-	self.itab := table (itabname, td);
-	if (is_fail(self.itab)) {
+	# Create the table with default values.
+	dtabname := spaste(name,'/DEFAULTVALUES');
+	td := tablecreatedesc (d1, d8, d11, d12, d13, d14, d15, d16);
+	self.dtab := table (dtabname, td);
+	if (is_fail(self.dtab)) {
 	    fail;
 	}
-	info := self.itab.info();
-	info.type := 'MEPinit';
-	self.itab.putinfo (info);
-	self.itab.addreadmeline ('Initial PSS ME parameter values');
+	info := self.dtab.info();
+	info.type := 'MEPdef';
+	self.dtab.putinfo (info);
+	self.dtab.addreadmeline ('Default PSS ME parameter values');
 	
 	# Make it a subtable of the main table.
-	self.tab.putkeyword ('DEFAULTVALUES', spaste('Table: ',itabname));
+	self.tab.putkeyword ('DEFAULTVALUES', spaste('Table: ',dtabname));
     } else {
 	self.tab := table (name, readonly=F);
 	if (is_fail(self.tab)) {
@@ -79,12 +76,12 @@ parmtable := function (name, create=F)
 	}
 	kws := self.tab.getkeywords();
 	if (has_field (kws, 'DEFAULTVALUES')) {
-	    self.itab := table (kws.DEFAULTVALUES, readonly=F);
-	    if (is_fail(self.itab)) {
+	    self.dtab := table (kws.DEFAULTVALUES, readonly=F);
+	    if (is_fail(self.dtab)) {
 		fail;
 	    }
 	} else {
-	    self.itab := F;
+	    self.dtab := F;
 	}
     }
 
@@ -92,33 +89,33 @@ parmtable := function (name, create=F)
     {
 	wider self, public;
 	self.tab.close();
-	if (is_record(self.itab)) self.itab.close();
+	if (is_record(self.dtab)) self.dtab.close();
 	val self := F;
 	val public := F;
 	return T;
     }
 
-    public.putinit := function (parmname='parmXXX',
-				values=0, solvable=unset, normalize=unset,
-                                diff=1e-6, diffrelative=T,
-				time0=0., freq0=0., trace=T)
+    public.putdef := function (parmname='parmXXX',
+			       values=0, solvable=unset, normalize=unset,
+			       diff=1e-6, diffrelative=T,
+			       time0=0., freq0=0., trace=T)
     {
 	#----------------------------------------------------------------
-	funcname := paste('** parmtable.putinit(',parmname,'):');
+	funcname := paste('** parmtable.putdef(',parmname,'):');
 	input := [parmname=parmname, values=values, solvable=solvable,
 		  diff=diff, diffrelative=diffrelative,
 		  time0=time0, freq0=freq0];
 	if (trace) print funcname,' input=',input;
 	#----------------------------------------------------------------
 
-	if (!is_record(self.itab)) {
+	if (!is_record(self.dtab)) {
 	    fail "No DEFAULTVALUES subtable";
 	}
-	t1 := self.itab.query (spaste('NAME=="',parmname,'"'));
+	t1 := self.dtab.query (spaste('NAME=="',parmname,'"'));
 	nr := t1.nrows();
 	t1.close();
 	if (nr != 0) {
-	    fail paste('Parameter',parmname,'already has an initial value');
+	    fail paste('Parameter',parmname,'already has a default value');
 	}
 	# Turn a scalar into a matrix.
 	if (length(shape(values)) == 1  &&  length(values) == 1) {
@@ -135,27 +132,24 @@ parmtable := function (name, create=F)
 	    fail paste('solvable should be unset or a 2-dim boolean array');
           }
 	}
-	self.itab.addrows(1);
-	rownr := self.itab.nrows();
-	self.itab.putcell ('NAME', rownr, parmname);
+	self.dtab.addrows(1);
+	rownr := self.dtab.nrows();
+	self.dtab.putcell ('NAME', rownr, parmname);
 	nm := T;
 	if (is_boolean(solvable)) {
-	    self.itab.putcell ('SOLVABLE', rownr, solvable);
+	    self.dtab.putcell ('SOLVABLE', rownr, solvable);
 	    nm := all(solvable);
 	}
 	if (is_boolean(normalize)) {
 	    nm := normalize;
 	}
-	self.itab.putcell ('TIME0', rownr, time0)
-	self.itab.putcell ('FREQ0', rownr, freq0)
-	self.itab.putcell ('NORMALIZED', rownr, nm);
+	self.dtab.putcell ('TIME0', rownr, time0)
+	self.dtab.putcell ('FREQ0', rownr, freq0)
+	self.dtab.putcell ('NORMALIZED', rownr, nm);
 	vals := as_double(values);
-	self.itab.putcell ('VALUES', rownr, vals);
-	self.itab.putcell ('SIM_VALUES', rownr, vals);
-	vals[,] := as_double(0);
-	self.itab.putcell ('SIM_PERT', rownr, vals);
-	self.itab.putcell ('DIFF', rownr, diff);
-	self.itab.putcell ('DIFF_REL', rownr, diffrelative);
+	self.dtab.putcell ('VALUES', rownr, vals);
+	self.dtab.putcell ('DIFF', rownr, diff);
+	self.dtab.putcell ('DIFF_REL', rownr, diffrelative);
 	return T;
     }
 
@@ -192,6 +186,10 @@ parmtable := function (name, create=F)
 	    fail paste('Parameter',parmname,
                        'already defined for given domain');
 	}
+	# Turn a scalar into a matrix.
+	if (length(shape(values)) == 1  &&  length(values) == 1) {
+	    values := array (values, 1, 1);
+	}
 	if (length(shape(values)) != 2  ||  !is_numeric(values)) {
 	    fail paste('values should be a 2-dim numerical array');
 	}
@@ -218,9 +216,6 @@ parmtable := function (name, create=F)
 	self.tab.putcell ('NORMALIZED', rownr, nm);
 	vals := as_double(values);
 	self.tab.putcell ('VALUES', rownr, vals);
-	self.tab.putcell ('SIM_VALUES', rownr, vals);
-	vals[,] := as_double(0);
-	self.tab.putcell ('SIM_PERT', rownr, vals);
 	self.tab.putcell ('DIFF', rownr, diff);
 	self.tab.putcell ('DIFF_REL', rownr, diffrelative);
 	return T;
@@ -236,32 +231,26 @@ parmtable := function (name, create=F)
 	    for (row in [1:tab.nrows()]) {
 		src := tab.getcell ('NUMBER', row);
 		name := tab.getcell('NAME', row);
-		public.putinit (spaste('RA.', name),
-				src, -1,
-				values=tab.getcell ('RAPARMS', row),
-				diff=1e-7, diffrelative=F,
-				time0=time0, freq0=freq0);
-		public.putinit (spaste('DEC.', name),
-				src, -1,
-				values=tab.getcell ('DECPARMS', row),
-				diff=1e-7, diffrelative=F,
-				time0=time0, freq0=freq0);
-		public.putinit (spaste('StokesI.', name),
-				src, -1,
-				values=tab.getcell ('IPARMS', row),
-				time0=time0, freq0=freq0);
-		public.putinit (spaste('StokesQ.', name),
-				src, -1,
-				values=tab.getcell ('QPARMS', row),
-				time0=time0, freq0=freq0);
-		public.putinit (spaste('StokesU.', name),
-				src, -1,
-				values=tab.getcell ('UPARMS', row),
-				time0=time0, freq0=freq0);
-		public.putinit (spaste('StokesV.', name),
-				src, -1,
-				values=tab.getcell ('VPARMS', row),
-				time0=time0, freq0=freq0);
+		public.putdef (spaste('RA.', name),
+			       values=tab.getcell ('RAPARMS', row),
+			       diff=1e-7, diffrelative=F,
+			       time0=time0, freq0=freq0);
+		public.putdef (spaste('DEC.', name),
+			       values=tab.getcell ('DECPARMS', row),
+			       diff=1e-7, diffrelative=F,
+			       time0=time0, freq0=freq0);
+		public.putdef (spaste('StokesI.', name),
+			       values=tab.getcell ('IPARMS', row),
+			       time0=time0, freq0=freq0);
+		public.putdef (spaste('StokesQ.', name),
+			       values=tab.getcell ('QPARMS', row),
+			       time0=time0, freq0=freq0);
+		public.putdef (spaste('StokesU.', name),
+			       values=tab.getcell ('UPARMS', row),
+			       time0=time0, freq0=freq0);
+		public.putdef (spaste('StokesV.', name),
+			       values=tab.getcell ('VPARMS', row),
+			       time0=time0, freq0=freq0);
 	    }
 	}
 	print 'Wrote',tab.nrows(),'sources into MEP';
@@ -282,7 +271,7 @@ parmtable := function (name, create=F)
 	if (is_fail(t1)) fail;
 	if (t1.nrows() > 0) {
 	    for (row in [1:t1.nrows()]) {
-		vals := t1.getcell ('SIM_VALUES', row);
+		vals := t1.getcell ('VALUES', row);
 		if (pertrelative) {
 		    valp := vals * perturbation;
 		    valp[abs(vals)<1e-10] := vals + perturbation;
@@ -290,7 +279,6 @@ parmtable := function (name, create=F)
 		    valp := vals + perturbation;
 		}
 		t1.putcell ('VALUES', row, valp);
-		t1.putcell ('SIM_PERT', row, valp-vals);
 	    }
 	}
 	if (where != '') {
@@ -310,8 +298,8 @@ parmtable := function (name, create=F)
 	if (trace) print funcname,' input=',input;
 	#----------------------------------------------------------------
 
-	if (is_record(self.itab)) {
-	    self.perturb(self.itab, where, perturbation, pertrelative);
+	if (is_record(self.dtab)) {
+	    self.perturb(self.dtab, where, perturbation, pertrelative);
 	}
 	self.perturb(self.tab, where, perturbation, pertrelative);
 	return T;
@@ -322,9 +310,9 @@ parmtable := function (name, create=F)
 	return ref self.tab;
     }
 
-    public.inittable := function()
+    public.deftable := function()
     {
-	return ref self.itab;
+	return ref self.dtab;
     }
 
     return ref public;

@@ -96,8 +96,6 @@ vector<Polc> ParmTable::getPolcs (const string& parmName,
     ROScalarColumn<double> efCol (sel, "ENDFREQ");
     ROArrayColumn<bool> maskCol (sel, "SOLVABLE");
     ROArrayColumn<double> valCol (sel, "VALUES");
-    ROArrayColumn<double> simvalCol (sel, "SIM_VALUES");
-    ROArrayColumn<double> simpertCol (sel, "SIM_PERT");
     ROScalarColumn<double> t0Col (sel, "TIME0");
     ROScalarColumn<double> f0Col (sel, "FREQ0");
     ROScalarColumn<bool> normCol (sel, "NORMALIZED");
@@ -113,8 +111,6 @@ vector<Polc> ParmTable::getPolcs (const string& parmName,
       polc.setFreq0 (f0Col(i));
       polc.setTime0 (t0Col(i));
       polc.setNormalize (normCol(i));
-      polc.setSimCoeff (fromParmMatrix(simvalCol(i)));
-      polc.setPertSimCoeff (fromParmMatrix(simpertCol(i)));
       polc.setDomain (Domain(stCol(i), etCol(i), sfCol(i), efCol(i)));
       polc.setPerturbation (diffCol(i), drelCol(i));
       result.push_back (polc);
@@ -148,8 +144,6 @@ Polc ParmTable::getInitCoeff (const string& parmName)
 	ROScalarColumn<bool> normCol (itsInitTable, "NORMALIZED");
 	ROScalarColumn<double> diffCol (itsInitTable, "DIFF");
 	ROScalarColumn<bool> drelCol (itsInitTable, "DIFF_REL");
-	ROArrayColumn<double> simvalCol (itsInitTable, "SIM_VALUES");
-	ROArrayColumn<double> simpertCol (itsInitTable, "SIM_PERT");
 	if (maskCol.isDefined(row)) {
 	  result.setCoeff (fromParmMatrix(valCol(row)), maskCol(row));
 	} else {
@@ -159,8 +153,6 @@ Polc ParmTable::getInitCoeff (const string& parmName)
 	result.setTime0 (t0Col(row));
 	result.setNormalize (normCol(row));
 	result.setPerturbation (diffCol(row), drelCol(row));
-	result.setSimCoeff (fromParmMatrix(simvalCol(row)));
-	result.setPertSimCoeff (fromParmMatrix(simpertCol(row)));
 	break;
       }
       string::size_type idx = name.rfind ('.');
@@ -181,8 +173,6 @@ void ParmTable::putCoeff (const string& parmName, const Polc& polc)
   itsTable.reopenRW();
   const Domain& domain = polc.domain();
   const Vells& values = polc.getCoeff();
-  const Vells& simvalues = polc.getSimCoeff();
-  const Vells& pertsimvalues = polc.getPertSimCoeff();
   Table sel = find (parmName, domain);
   if (sel.nrow() > 0) {
     AssertMsg (sel.nrow()==1, "Parameter " << parmName <<
@@ -204,8 +194,6 @@ void ParmTable::putCoeff (const string& parmName, const Polc& polc)
 	         << " and time "
 		 << domain.startTime() << ':' << domain.endTime());
     ArrayColumn<double> valCol (sel, "VALUES");
-    ArrayColumn<double> simvalCol (sel, "SIM_VALUES");
-    ArrayColumn<double> simpertCol (sel, "SIM_PERT");
     valCol.put (0, toParmMatrix(values));
   } else {
     uInt rownr = itsTable.nrow();
@@ -226,11 +214,7 @@ void ParmTable::putCoeff (const string& parmName, const Polc& polc)
     stCol.put (rownr, domain.startTime());
     etCol.put (rownr, domain.endTime());
     ArrayColumn<double> valCol (itsTable, "VALUES");
-    ArrayColumn<double> simvalCol (itsTable, "SIM_VALUES");
-    ArrayColumn<double> simpertCol (itsTable, "SIM_PERT");
     valCol.put (rownr, toParmMatrix(values));
-    simvalCol.put (rownr, toParmMatrix(simvalues));
-    simpertCol.put (rownr, toParmMatrix(pertsimvalues));
     f0Col.put   (rownr, polc.getFreq0());
     t0Col.put   (rownr, polc.getTime0());
     normCol.put (rownr, polc.isNormalized());
@@ -295,8 +279,6 @@ void ParmTable::createTable (const String& tableName)
   tdesc.addColumn (ScalarColumnDesc<Double>("FREQ0"));
   tdesc.addColumn (ScalarColumnDesc<Bool>("NORMALIZED"));
   tdesc.addColumn (ArrayColumnDesc<Double>("VALUES", 2));
-  tdesc.addColumn (ArrayColumnDesc<Double>("SIM_VALUES", 2));
-  tdesc.addColumn (ArrayColumnDesc<Double>("SIM_PERT", 2));
   tdesc.addColumn (ArrayColumnDesc<Bool>("SOLVABLE", 2));
   tdesc.addColumn (ScalarColumnDesc<Double>("DIFF"));
   tdesc.addColumn (ScalarColumnDesc<Bool>("DIFF_REL"));
