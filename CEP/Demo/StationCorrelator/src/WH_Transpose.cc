@@ -89,7 +89,7 @@ void WH_Transpose::process() {
   for (int i = 0; i < itsNinputs; i++) {
     // first check if the blockID's of the Input dataHolders match (this should not fail)
     inDH = static_cast<DH_StationData*>(getDataManager().getInHolder(i));
-    if ( first_block_id != inDH->getBlockID()) {
+    if ( first_block_id != inDH->getBlockID() ) {
       // block_ids don't match
       
       }
@@ -115,7 +115,7 @@ void WH_Transpose::process() {
 	 
 	} 
 	offset++;
-	itsCurrentSample %= itsNsamples;
+	itsCurrentSample = (itsCurrentSample+1) % itsNsamples;
       }
     }
   }
