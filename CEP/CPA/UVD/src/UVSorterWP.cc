@@ -22,6 +22,7 @@
 #include "UVD/UVD.h"
 #include "DMI/DataRecord.h"
 #include "DMI/DataArray.h"
+#include "DMI/AIPSPP-Hooks.h"
 //## end module%3CD79DB900E7.includes
 
 // UVSorterWP
@@ -116,7 +117,7 @@ int UVSorterWP::receive (MessageRef &mref)
     rec[FExposure] <<= new DataField(Tpdouble,num_times);
     rec[FNumIntTimes] <<= new DataField(Tpint,num_times);
     rec[FUVW] <<= new DataArray(Tpdouble,IPosition(2,3,num_times));
-    rec[FData] <<= new DataArray(Tpdcomplex,IPosition(2,num_channels,num_times));
+    rec[FData] <<= new DataArray(Tpfcomplex,IPosition(2,num_channels,num_times));
     rec[FNumIntPixels] <<= new DataArray(Tpint,IPosition(2,num_channels,num_times));
     
     dprintf(1)("got header for %d:%d (spw %d, field %s): %d IFRs, %d channels, %d times\n",
@@ -155,13 +156,13 @@ int UVSorterWP::receive (MessageRef &mref)
       lprintf(1,LogWarning,"ignoring %s: patch # or correlation type mismatch",msg.id().toString().c_str());
       return Message::ACCEPT;
     }
-    IPosition visshape = rec[FData].as_Array_dcomplex().shape();
+    IPosition visshape = rec[FData].as_Array_fcomplex().shape();
     FailWhen(visshape(0) != num_channels,"mismatch in number of channels");
     FailWhen(visshape(1) != num_ifrs,"mismatch in number of baselines");
 
     // direct pointers into the visibility and numpoints planes of the
     // source data, iterated over by the loop
-    const dcomplex *pvd0 = &rec[FData];     
+    const fcomplex *pvd0 = &rec[FData];     
     const int *pnp0 = &rec[FNumIntPixels];          
     int itime = rec[FTimeSlotIndex];
     double timeval = rec[FTime];
@@ -195,7 +196,7 @@ int UVSorterWP::receive (MessageRef &mref)
         for( int j=0; j<3; j++ )
           acc[FUVW](j,itime) = rec[FUVW](j,ifr).as_double();
         // use memcpy to transfer Data and NumIntPixels vectors
-        dcomplex *pvd = &acc[FData];
+        fcomplex *pvd = &acc[FData];
         int *pnp = &acc[FNumIntPixels];
         memcpy(pvd+itime*num_channels,pvd0,sizeof(*pvd)*num_channels);
         memcpy(pnp+itime*num_channels,pnp0,sizeof(*pnp)*num_channels);
