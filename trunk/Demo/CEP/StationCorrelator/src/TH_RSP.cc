@@ -45,7 +45,6 @@
 
 #include <stdio.h>
 
-//#define DH_HEADERSIZE 44
 #define DH_HEADERSIZE 40
 #define DH_TAILSIZE 4
 
@@ -67,7 +66,6 @@ TH_RSP::TH_RSP(const string &ifname,
   
   itsSocketFD = -1;
   itsInitDone = false;
-
 }
 
 TH_RSP::~TH_RSP()
@@ -288,7 +286,6 @@ void TH_RSP::Init()
   }
   
   char ownMac[ETH_ALEN];
-  //if (strcmp(itsOwnMac,"" )== 0) {
   if (itsOwnMac == "") {
     // Find ownMAC address for specified interface
     // Mac address will be stored ownMac
@@ -306,7 +303,9 @@ void TH_RSP::Init()
     unsigned int ohx[ETH_ALEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     sscanf(itsOwnMac.c_str(), "%x:%x:%x:%x:%x:%x", 
      &ohx[0],&ohx[1],&ohx[2],&ohx[3],&ohx[4],&ohx[5]);
-    for (int32 i=0;i<ETH_ALEN;i++) ownMac[i]=(char)ohx[i];
+    for (int32 i=0;i<ETH_ALEN;i++) {
+      ownMac[i]=(char)ohx[i];
+    }
   }
   
   // Convert _remoteMac HWADDR string to sll_addr
@@ -314,7 +313,9 @@ void TH_RSP::Init()
   uint32 rhx[ETH_ALEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   sscanf(itsRemoteMac.c_str(), "%x:%x:%x:%x:%x:%x", 
      &rhx[0],&rhx[1],&rhx[2],&rhx[3],&rhx[4],&rhx[5]);
-  for (int32 i=0;i<ETH_ALEN;i++) remoteMac[i]=(char)rhx[i];
+  for (int32 i=0;i<ETH_ALEN;i++) {
+    remoteMac[i]=(char)rhx[i];
+  }
   
   // Store the MAC addresses in the incoming packet filter, so
   // only packets from remoteMAC (source) to ownMAC (destination) 
@@ -380,7 +381,7 @@ void TH_RSP::Init()
   {
     LOG_ERROR_STR("TH_RSP: PROMISCUOUS mode failed.");
     close(itsSocketFD);
-   return;
+    return;
   }
 
   // fill in _sockaddr to be used in sendto calls

@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef TRANSPORT_TH_ETHERNET_H
-#define TRANSPORT_TH_ETHERNET_H
+#ifndef TRANSPORT_TH_RSP_H
+#define TRANSPORT_TH_RSP_H
 
 // \file TH_RSP.h
 // Transport mechanism for Ethernet 
