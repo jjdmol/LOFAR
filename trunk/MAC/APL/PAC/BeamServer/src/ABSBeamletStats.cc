@@ -145,24 +145,30 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
        * Got a complete result, add it to the total power
        */
 
-      // first m_nbeamlets/2 beamlets
-      for (int i = 0; i < m_nbeamlets / 2; i++)
+      //
+      // only count the first of m_nintegrations updates
+      //
+      if (m_count + 1 == m_nintegrgations)
       {
-	// x-polarization
-	m_beamlet_power(i, 0) += m_power_sum(i, 0, 0) + m_power_sum(i, 0, 1);
+	// first m_nbeamlets/2 beamlets
+	for (int i = 0; i < m_nbeamlets / 2; i++)
+	{
+	  // x-polarization
+	  m_beamlet_power(i, 0) += m_power_sum(i, 0, 0) + m_power_sum(i, 0, 1);
+	  
+	  // y-polarization
+	  m_beamlet_power(i, 1) += m_power_sum(i, 1, 0) + m_power_sum(i, 1, 1);
+	}
 	
-	// y-polarization
-	m_beamlet_power(i, 1) += m_power_sum(i, 1, 0) + m_power_sum(i, 1, 1);
-      }
-
-      // next m_nbeamlets/2 beamlets
-      for (int i = 0; i < m_nbeamlets / 2; i++)
-      {
-	// x-polarization
-	m_beamlet_power(i + m_nbeamlets / 2, 0) += power_sum(i, 0, 0) + power_sum(i, 0, 1);
-	
-	// y-polarization
-	m_beamlet_power(i + m_nbeamlets / 2, 1) += power_sum(i, 1, 0) + power_sum(i, 1, 1);
+	// next m_nbeamlets/2 beamlets
+	for (int i = 0; i < m_nbeamlets / 2; i++)
+	{
+	  // x-polarization
+	  m_beamlet_power(i + m_nbeamlets / 2, 0) += power_sum(i, 0, 0) + power_sum(i, 0, 1);
+	  
+	  // y-polarization
+	  m_beamlet_power(i + m_nbeamlets / 2, 1) += power_sum(i, 1, 0) + power_sum(i, 1, 1);
+	}
       }
 
       m_count++;

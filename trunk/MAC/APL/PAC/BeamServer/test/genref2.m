@@ -27,7 +27,8 @@ pos=[ 0 0 0; 100 0 0; ]
 % 2 vector
 %
 freq=[0:0];
-freq *= 256e3;
+%freq *= 256e3;
+%freq += 1.5625e6
 freq += 1.5e6
 
 %
