@@ -5,7 +5,7 @@ $Id$
 
 """
 
-__all__ = ["pgdate"];
+__all__ = ["pgdate", "pglist"];
 
 
 Version_info = (0,0,1);

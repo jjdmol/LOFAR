@@ -11,6 +11,7 @@ import pg;
 db = pg.DB(dbname="bb");
 
 import util.pgdate;
+import util.pglist;
 
 import BlackBoardController;
 
@@ -22,11 +23,13 @@ class BlackBoard:
     self.workload = {};
     self.knowledgeSources = {};
     self.controller =  BlackBoardController.BlackBoardController(self);
-    if copy == None:
-      self.id = db.query("INSERT INTO blackboards DEFAULT VALUES");
-    else:
-      rc = db.insert("blackboards",copy.record);
-      self.id = rc["oid_blackboards"];
+    self.id = db.query("INSERT INTO blackboards DEFAULT VALUES");
+    self.refresh_data();
+    if copy != None:
+      self.parent(copy.record["parent"]);
+      """ do not copy children """
+      self.time(copy.record["starttime"], copy.record["endtime"]);
+      self.frequency(copy.record["low"], copy.record["high"]);
     self.refresh_data();
 
   def refresh_data(self):
@@ -40,31 +43,52 @@ class BlackBoard:
 
 ##  def split_over_time(self, early, late):
     
-  def split_over_time(self):
-    early = BlackBoard(self);
-    late = BlackBoard(self);
+  def split_over_time(self,num_of_parts):
     start = util.pgdate.string2date(self.record["starttime"]);
     end = util.pgdate.string2date(self.record["endtime"]);
-    early.time(start, start + (end - start) /2);
-    late.time(start + (end - start) /2, end);
-    lst = {};
-    lst["early"] = early;
-    lst["late"] = late;
+    step = ( end - start ) / num_of_parts;
+    i = 0;
+    lst = [];
+    while ( i < num_of_parts ):
+      sub = self.controller.fork();
+      sub.time(start + i * step, start + ( i + 1 ) * step);
+      lst.append(sub);
+      i = i+1;
     return lst;
 
-  def split_frequency(self):
-    low = controller.fork();
-    high = controller.fork();
-    middel = (self.record["low"] + self.record["high"])/2;
-    low.frequency(self.record["low"], middel);
-    high.frequency(middel, self.record["high"]);
-    lst = {};
-    lst["early"] = early;
-    lst["late"] = late;
+  def split_frequency(self,num_of_parts):
+    lower = self.record["low"];
+    higher = self.record["high"];
+    step = ( higher - lower ) / num_of_parts;
+    i = 0;
+    lst = [];
+    while ( i < num_of_parts ):
+      sub = self.controller.fork();
+      sub.frequency(lower + i * step, lower + ( i + 1 ) * step);
+      lst.append(sub);
+      i = i+1;
     return lst;
 
   def parent(self, parent_id):
-    db.query("UPDATE blackboards SET parent_id = " + str(parent_id) + " WHERE oid = " + str(self.id) );
+    if(parent_id == None):
+      parent_id = self.id;
+    db.query("UPDATE blackboards SET parent = " + str(parent_id) + " WHERE oid = " + str(self.id) );
+
+  def add_child(self, child_id):
+    print  "children: " + self.record["children"];
+    s = self.record["children"];
+    s = s[1:(len(s)-1)];
+    if (len(s) == 0):
+      chldlst = [];
+    else:
+      chldlst = util.pglist.pgArray2list(s);
+    print "child list: " + str(chldlst);
+    if(child_id not in chldlst):
+      chldlst.append(child_id);
+      print "child list: " + str(chldlst);
+      self.record["children"] = util.pglist.list2pgArray(chldlst);
+      print "children: " + str(self.record["children"]);
+      db.query("UPDATE blackboards SET children = '" + self.record["children"] + "' WHERE oid = " + str(self.id) );
 
   def frequency(self, low, high):
     db.query("UPDATE blackboards set low = '"+ str(low) +"' , high = '" + str(high) + "' WHERE oid = " + str(self.id) );
