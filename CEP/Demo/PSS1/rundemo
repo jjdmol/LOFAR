@@ -1,10 +1,17 @@
 #!/bin/sh
+AIPSROOT=%AIPSROOT%
+if test "$AIPSROOT" = "%AIPSROOT%"; then
+	AIPSROOT=/aips++/weekly
+fi
 MEQ_PATH=../../CPA/CAL/build/gnu_opt/src
-if test ! -x $MEQ_PATH/meqcalibrater; then
+PATH=$PATH:$MEQ_PATH:.
+echo -n Using:
+which meqcalibrater
+if test ! $?; then
 	echo "Please compile LOFAR/CEP/CPA/CAL to produce LOFAR/CEP/CPA/CAL/build/gnu_opt/src/meqcalibrater"
 	exit
 fi
 tar zxvf pss1.demo.tgz && \
 ln -sf ../../CPA/CAL/src/*.g . && \
-. /aips++/weekly/aipsinit.sh && \
-PATH=$MEQ_PATH:$PATH glish -l rundemo.glish
+. $AIPSROOT/aipsinit.sh && \
+glish -l rundemo.glish
