@@ -40,6 +40,9 @@
 //# VirtualTelescope Includes
 #include "AVTLogicalDevice.h"
 
+namespace LOFAR
+{
+  
 namespace AVT
 {
   class AVTStationReceptor : public AVTLogicalDevice
@@ -104,6 +107,7 @@ namespace AVT
       TExtPropertyMap             m_requiredResources;
       std::map<std::string,bool>  m_requiredResourcesStatus;
   };
-};
+};//AVT
+};//LOFAR
 
 #endif

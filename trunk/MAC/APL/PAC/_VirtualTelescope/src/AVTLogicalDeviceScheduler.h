@@ -44,6 +44,9 @@
 
 // forward declaration
 
+namespace LOFAR
+{
+  
 namespace AVT
 {
   class AVTStationReceptor;
@@ -199,5 +202,6 @@ namespace AVT
       
       AVTResourceManagerPtr   m_resourceManager;
   };
-};
+};//AVT
+};//LOFAR
 #endif

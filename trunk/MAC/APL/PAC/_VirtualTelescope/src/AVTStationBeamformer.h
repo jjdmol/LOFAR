@@ -35,6 +35,9 @@
 #include "AVTLogicalDevice.h"
 
 // forward declaration
+namespace LOFAR
+{
+  
 namespace AVT
 {
   class AVTStationBeamformer : public AVTLogicalDevice
@@ -112,5 +115,6 @@ namespace AVT
       double          m_directionAngle2;
       int             m_beamID;
   };
-};
+};//AVT
+};//LOFAR
 #endif

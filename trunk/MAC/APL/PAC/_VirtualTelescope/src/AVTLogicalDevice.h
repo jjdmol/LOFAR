@@ -41,7 +41,11 @@
 #include <vector>
 
 // forward declaration
+#include <GCF/TM/GCF_Event.h>
 
+namespace LOFAR
+{
+  
 namespace AVT
 {
 
@@ -71,36 +75,36 @@ namespace AVT
       * @param p The port interface (see @a GCFPortInterface) on which the event
       * was received.
       */
-      GCFEvent::TResult initial_state(GCFEvent& e, GCFPortInterface& p);
+      ::GCFEvent::TResult initial_state(GCFEvent& e, GCFPortInterface& p);
 
       /**
       * The idle state handler. 
       */
-      GCFEvent::TResult idle_state(GCFEvent& e, GCFPortInterface& p);
+      ::GCFEvent::TResult idle_state(GCFEvent& e, GCFPortInterface& p);
       /**
       * The claiming state handler. 
       */
-      GCFEvent::TResult claiming_state(GCFEvent& e, GCFPortInterface& p);
+      ::GCFEvent::TResult claiming_state(GCFEvent& e, GCFPortInterface& p);
       /**
       * The claimed state handler. 
       */
-      GCFEvent::TResult claimed_state(GCFEvent& e, GCFPortInterface& p);
+      ::GCFEvent::TResult claimed_state(GCFEvent& e, GCFPortInterface& p);
       /**
       * The preparing state handler. 
       */
-      GCFEvent::TResult preparing_state(GCFEvent& e, GCFPortInterface& p);
+      ::GCFEvent::TResult preparing_state(GCFEvent& e, GCFPortInterface& p);
       /**
       * The suspended state handler. 
       */
-      GCFEvent::TResult suspended_state(GCFEvent& e, GCFPortInterface& p);
+      ::GCFEvent::TResult suspended_state(GCFEvent& e, GCFPortInterface& p);
       /**
       * The active state handler. 
       */
-      GCFEvent::TResult active_state(GCFEvent& e, GCFPortInterface& p);
+      ::GCFEvent::TResult active_state(GCFEvent& e, GCFPortInterface& p);
       /**
       * The releasing state handler. 
       */
-      GCFEvent::TResult releasing_state(GCFEvent& e, GCFPortInterface& p);
+      ::GCFEvent::TResult releasing_state(GCFEvent& e, GCFPortInterface& p);
 
     protected:
       // protected default constructor
@@ -121,23 +125,23 @@ namespace AVT
       /**
       * Initial state additional behaviour must be implemented in the derived classes. 
       */
-      virtual GCFEvent::TResult concrete_initial_state(GCFEvent& e, GCFPortInterface& p)=0;
+      virtual ::GCFEvent::TResult concrete_initial_state(GCFEvent& e, GCFPortInterface& p)=0;
       /**
       * Claiming state additional behaviour must be implemented in the derived classes. 
       */
-      virtual GCFEvent::TResult concrete_claiming_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished)=0;
+      virtual ::GCFEvent::TResult concrete_claiming_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished)=0;
       /**
       * Preparing state additional behaviour must be implemented in the derived classes. 
       */
-      virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error)=0;
+      virtual ::GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error)=0;
       /**
       * active state additional behaviour must be implemented in the derived classes. 
       */
-      virtual GCFEvent::TResult concrete_active_state(GCFEvent& e, GCFPortInterface& p)=0;
+      virtual ::GCFEvent::TResult concrete_active_state(GCFEvent& e, GCFPortInterface& p)=0;
       /**
       * Releasing state additional behaviour must be implemented in the derived classes. 
       */
-      virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished)=0;
+      virtual ::GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished)=0;
       /**
       * Implementation of the Claim method is done in the derived classes. 
       */
@@ -185,5 +189,6 @@ namespace AVT
       bool                            m_apcLoaded;
       TLogicalDeviceState             m_logicalDeviceState;
   };
-};
+};//AVT
+};//LOFAR
 #endif

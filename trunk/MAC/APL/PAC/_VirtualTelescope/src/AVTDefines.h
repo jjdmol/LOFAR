@@ -23,6 +23,9 @@
 #ifndef AVTDefines_H
 #define AVTDefines_H
 
+namespace LOFAR
+{
+  
 namespace AVT
 {
   
@@ -69,5 +72,6 @@ const char LD_STATE_STRING_ACTIVE[]     = "Active";
 const char LD_STATE_STRING_RELEASING[]  = "Releasing";
 const char LD_STATE_STRING_RELEASED[]   = "Released";
 
-};
+};//AVT
+};//LOFAR
 #endif

@@ -24,6 +24,9 @@
 #include "AVTPropertySetAnswer.h"
 #include "AVTPropertySetAnswerHandlerInterface.h"
 
+using namespace LOFAR;
+using namespace AVT;
+
 AVTPropertySetAnswer::AVTPropertySetAnswer(AVTPropertySetAnswerHandlerInterface& handler) :
   GCFAnswer(),
   m_handler(handler)

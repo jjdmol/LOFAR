@@ -34,6 +34,12 @@
 
 // forward declaration
 
+namespace LOFAR
+{
+  
+namespace AVT
+{
+
 class AVTUtilities
 {
   public:
@@ -54,4 +60,7 @@ class AVTUtilities
 
   private:
 };
+
+};//AVT
+};//LOFAR
 #endif

@@ -23,6 +23,9 @@
 #include "AVTUtilities.h"
 #include "AVTDefines.h"
 
+using namespace LOFAR;
+using namespace AVT;
+
 AVTUtilities::AVTUtilities()
 {
 }
