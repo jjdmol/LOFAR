@@ -20,6 +20,21 @@
 # SPP port 'server' of task 'ECHO'
 #
 
+[PML]
+client=PA:server
+
+[SS]
+client=PA:server
+
+[ST1]
+client=ST3:server
+
+[ST2]
+client=ST3:server
+
+[PA]
+# has no SAP's
+
 [AVTTest]
 client=AVTTestVT1:server
 
