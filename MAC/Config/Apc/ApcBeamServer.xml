@@ -6,262 +6,389 @@
        Power level for beamlet 0 for the x- and y-polarization
     -->
 
-<power000x><MACType>MACDouble</MACType></power000x>
-<power000y><MACType>MACDouble</MACType></power000y>
-<power001x><MACType>MACDouble</MACType></power001x>
-<power001y><MACType>MACDouble</MACType></power001y>
-<power002x><MACType>MACDouble</MACType></power002x>
-<power002y><MACType>MACDouble</MACType></power002y>
-<power003x><MACType>MACDouble</MACType></power003x>
-<power003y><MACType>MACDouble</MACType></power003y>
-<power004x><MACType>MACDouble</MACType></power004x>
-<power004y><MACType>MACDouble</MACType></power004y>
-<power005x><MACType>MACDouble</MACType></power005x>
-<power005y><MACType>MACDouble</MACType></power005y>
-<power006x><MACType>MACDouble</MACType></power006x>
-<power006y><MACType>MACDouble</MACType></power006y>
-<power007x><MACType>MACDouble</MACType></power007x>
-<power007y><MACType>MACDouble</MACType></power007y>
-<power008x><MACType>MACDouble</MACType></power008x>
-<power008y><MACType>MACDouble</MACType></power008y>
-<power009x><MACType>MACDouble</MACType></power009x>
-<power009y><MACType>MACDouble</MACType></power009y>
-<power010x><MACType>MACDouble</MACType></power010x>
-<power010y><MACType>MACDouble</MACType></power010y>
-<power011x><MACType>MACDouble</MACType></power011x>
-<power011y><MACType>MACDouble</MACType></power011y>
-<power012x><MACType>MACDouble</MACType></power012x>
-<power012y><MACType>MACDouble</MACType></power012y>
-<power013x><MACType>MACDouble</MACType></power013x>
-<power013y><MACType>MACDouble</MACType></power013y>
-<power014x><MACType>MACDouble</MACType></power014x>
-<power014y><MACType>MACDouble</MACType></power014y>
-<power015x><MACType>MACDouble</MACType></power015x>
-<power015y><MACType>MACDouble</MACType></power015y>
-<power016x><MACType>MACDouble</MACType></power016x>
-<power016y><MACType>MACDouble</MACType></power016y>
-<power017x><MACType>MACDouble</MACType></power017x>
-<power017y><MACType>MACDouble</MACType></power017y>
-<power018x><MACType>MACDouble</MACType></power018x>
-<power018y><MACType>MACDouble</MACType></power018y>
-<power019x><MACType>MACDouble</MACType></power019x>
-<power019y><MACType>MACDouble</MACType></power019y>
-<power020x><MACType>MACDouble</MACType></power020x>
-<power020y><MACType>MACDouble</MACType></power020y>
-<power021x><MACType>MACDouble</MACType></power021x>
-<power021y><MACType>MACDouble</MACType></power021y>
-<power022x><MACType>MACDouble</MACType></power022x>
-<power022y><MACType>MACDouble</MACType></power022y>
-<power023x><MACType>MACDouble</MACType></power023x>
-<power023y><MACType>MACDouble</MACType></power023y>
-<power024x><MACType>MACDouble</MACType></power024x>
-<power024y><MACType>MACDouble</MACType></power024y>
-<power025x><MACType>MACDouble</MACType></power025x>
-<power025y><MACType>MACDouble</MACType></power025y>
-<power026x><MACType>MACDouble</MACType></power026x>
-<power026y><MACType>MACDouble</MACType></power026y>
-<power027x><MACType>MACDouble</MACType></power027x>
-<power027y><MACType>MACDouble</MACType></power027y>
-<power028x><MACType>MACDouble</MACType></power028x>
-<power028y><MACType>MACDouble</MACType></power028y>
-<power029x><MACType>MACDouble</MACType></power029x>
-<power029y><MACType>MACDouble</MACType></power029y>
-<power030x><MACType>MACDouble</MACType></power030x>
-<power030y><MACType>MACDouble</MACType></power030y>
-<power031x><MACType>MACDouble</MACType></power031x>
-<power031y><MACType>MACDouble</MACType></power031y>
-<power032x><MACType>MACDouble</MACType></power032x>
-<power032y><MACType>MACDouble</MACType></power032y>
-<power033x><MACType>MACDouble</MACType></power033x>
-<power033y><MACType>MACDouble</MACType></power033y>
-<power034x><MACType>MACDouble</MACType></power034x>
-<power034y><MACType>MACDouble</MACType></power034y>
-<power035x><MACType>MACDouble</MACType></power035x>
-<power035y><MACType>MACDouble</MACType></power035y>
-<power036x><MACType>MACDouble</MACType></power036x>
-<power036y><MACType>MACDouble</MACType></power036y>
-<power037x><MACType>MACDouble</MACType></power037x>
-<power037y><MACType>MACDouble</MACType></power037y>
-<power038x><MACType>MACDouble</MACType></power038x>
-<power038y><MACType>MACDouble</MACType></power038y>
-<power039x><MACType>MACDouble</MACType></power039x>
-<power039y><MACType>MACDouble</MACType></power039y>
-<power040x><MACType>MACDouble</MACType></power040x>
-<power040y><MACType>MACDouble</MACType></power040y>
-<power041x><MACType>MACDouble</MACType></power041x>
-<power041y><MACType>MACDouble</MACType></power041y>
-<power042x><MACType>MACDouble</MACType></power042x>
-<power042y><MACType>MACDouble</MACType></power042y>
-<power043x><MACType>MACDouble</MACType></power043x>
-<power043y><MACType>MACDouble</MACType></power043y>
-<power044x><MACType>MACDouble</MACType></power044x>
-<power044y><MACType>MACDouble</MACType></power044y>
-<power045x><MACType>MACDouble</MACType></power045x>
-<power045y><MACType>MACDouble</MACType></power045y>
-<power046x><MACType>MACDouble</MACType></power046x>
-<power046y><MACType>MACDouble</MACType></power046y>
-<power047x><MACType>MACDouble</MACType></power047x>
-<power047y><MACType>MACDouble</MACType></power047y>
-<power048x><MACType>MACDouble</MACType></power048x>
-<power048y><MACType>MACDouble</MACType></power048y>
-<power049x><MACType>MACDouble</MACType></power049x>
-<power049y><MACType>MACDouble</MACType></power049y>
-<power050x><MACType>MACDouble</MACType></power050x>
-<power050y><MACType>MACDouble</MACType></power050y>
-<power051x><MACType>MACDouble</MACType></power051x>
-<power051y><MACType>MACDouble</MACType></power051y>
-<power052x><MACType>MACDouble</MACType></power052x>
-<power052y><MACType>MACDouble</MACType></power052y>
-<power053x><MACType>MACDouble</MACType></power053x>
-<power053y><MACType>MACDouble</MACType></power053y>
-<power054x><MACType>MACDouble</MACType></power054x>
-<power054y><MACType>MACDouble</MACType></power054y>
-<power055x><MACType>MACDouble</MACType></power055x>
-<power055y><MACType>MACDouble</MACType></power055y>
-<power056x><MACType>MACDouble</MACType></power056x>
-<power056y><MACType>MACDouble</MACType></power056y>
-<power057x><MACType>MACDouble</MACType></power057x>
-<power057y><MACType>MACDouble</MACType></power057y>
-<power058x><MACType>MACDouble</MACType></power058x>
-<power058y><MACType>MACDouble</MACType></power058y>
-<power059x><MACType>MACDouble</MACType></power059x>
-<power059y><MACType>MACDouble</MACType></power059y>
-<power060x><MACType>MACDouble</MACType></power060x>
-<power060y><MACType>MACDouble</MACType></power060y>
-<power061x><MACType>MACDouble</MACType></power061x>
-<power061y><MACType>MACDouble</MACType></power061y>
-<power062x><MACType>MACDouble</MACType></power062x>
-<power062y><MACType>MACDouble</MACType></power062y>
-<power063x><MACType>MACDouble</MACType></power063x>
-<power063y><MACType>MACDouble</MACType></power063y>
-<power064x><MACType>MACDouble</MACType></power064x>
-<power064y><MACType>MACDouble</MACType></power064y>
-<power065x><MACType>MACDouble</MACType></power065x>
-<power065y><MACType>MACDouble</MACType></power065y>
-<power066x><MACType>MACDouble</MACType></power066x>
-<power066y><MACType>MACDouble</MACType></power066y>
-<power067x><MACType>MACDouble</MACType></power067x>
-<power067y><MACType>MACDouble</MACType></power067y>
-<power068x><MACType>MACDouble</MACType></power068x>
-<power068y><MACType>MACDouble</MACType></power068y>
-<power069x><MACType>MACDouble</MACType></power069x>
-<power069y><MACType>MACDouble</MACType></power069y>
-<power070x><MACType>MACDouble</MACType></power070x>
-<power070y><MACType>MACDouble</MACType></power070y>
-<power071x><MACType>MACDouble</MACType></power071x>
-<power071y><MACType>MACDouble</MACType></power071y>
-<power072x><MACType>MACDouble</MACType></power072x>
-<power072y><MACType>MACDouble</MACType></power072y>
-<power073x><MACType>MACDouble</MACType></power073x>
-<power073y><MACType>MACDouble</MACType></power073y>
-<power074x><MACType>MACDouble</MACType></power074x>
-<power074y><MACType>MACDouble</MACType></power074y>
-<power075x><MACType>MACDouble</MACType></power075x>
-<power075y><MACType>MACDouble</MACType></power075y>
-<power076x><MACType>MACDouble</MACType></power076x>
-<power076y><MACType>MACDouble</MACType></power076y>
-<power077x><MACType>MACDouble</MACType></power077x>
-<power077y><MACType>MACDouble</MACType></power077y>
-<power078x><MACType>MACDouble</MACType></power078x>
-<power078y><MACType>MACDouble</MACType></power078y>
-<power079x><MACType>MACDouble</MACType></power079x>
-<power079y><MACType>MACDouble</MACType></power079y>
-<power080x><MACType>MACDouble</MACType></power080x>
-<power080y><MACType>MACDouble</MACType></power080y>
-<power081x><MACType>MACDouble</MACType></power081x>
-<power081y><MACType>MACDouble</MACType></power081y>
-<power082x><MACType>MACDouble</MACType></power082x>
-<power082y><MACType>MACDouble</MACType></power082y>
-<power083x><MACType>MACDouble</MACType></power083x>
-<power083y><MACType>MACDouble</MACType></power083y>
-<power084x><MACType>MACDouble</MACType></power084x>
-<power084y><MACType>MACDouble</MACType></power084y>
-<power085x><MACType>MACDouble</MACType></power085x>
-<power085y><MACType>MACDouble</MACType></power085y>
-<power086x><MACType>MACDouble</MACType></power086x>
-<power086y><MACType>MACDouble</MACType></power086y>
-<power087x><MACType>MACDouble</MACType></power087x>
-<power087y><MACType>MACDouble</MACType></power087y>
-<power088x><MACType>MACDouble</MACType></power088x>
-<power088y><MACType>MACDouble</MACType></power088y>
-<power089x><MACType>MACDouble</MACType></power089x>
-<power089y><MACType>MACDouble</MACType></power089y>
-<power090x><MACType>MACDouble</MACType></power090x>
-<power090y><MACType>MACDouble</MACType></power090y>
-<power091x><MACType>MACDouble</MACType></power091x>
-<power091y><MACType>MACDouble</MACType></power091y>
-<power092x><MACType>MACDouble</MACType></power092x>
-<power092y><MACType>MACDouble</MACType></power092y>
-<power093x><MACType>MACDouble</MACType></power093x>
-<power093y><MACType>MACDouble</MACType></power093y>
-<power094x><MACType>MACDouble</MACType></power094x>
-<power094y><MACType>MACDouble</MACType></power094y>
-<power095x><MACType>MACDouble</MACType></power095x>
-<power095y><MACType>MACDouble</MACType></power095y>
-<power096x><MACType>MACDouble</MACType></power096x>
-<power096y><MACType>MACDouble</MACType></power096y>
-<power097x><MACType>MACDouble</MACType></power097x>
-<power097y><MACType>MACDouble</MACType></power097y>
-<power098x><MACType>MACDouble</MACType></power098x>
-<power098y><MACType>MACDouble</MACType></power098y>
-<power099x><MACType>MACDouble</MACType></power099x>
-<power099y><MACType>MACDouble</MACType></power099y>
-<power100x><MACType>MACDouble</MACType></power100x>
-<power100y><MACType>MACDouble</MACType></power100y>
-<power101x><MACType>MACDouble</MACType></power101x>
-<power101y><MACType>MACDouble</MACType></power101y>
-<power102x><MACType>MACDouble</MACType></power102x>
-<power102y><MACType>MACDouble</MACType></power102y>
-<power103x><MACType>MACDouble</MACType></power103x>
-<power103y><MACType>MACDouble</MACType></power103y>
-<power104x><MACType>MACDouble</MACType></power104x>
-<power104y><MACType>MACDouble</MACType></power104y>
-<power105x><MACType>MACDouble</MACType></power105x>
-<power105y><MACType>MACDouble</MACType></power105y>
-<power106x><MACType>MACDouble</MACType></power106x>
-<power106y><MACType>MACDouble</MACType></power106y>
-<power107x><MACType>MACDouble</MACType></power107x>
-<power107y><MACType>MACDouble</MACType></power107y>
-<power108x><MACType>MACDouble</MACType></power108x>
-<power108y><MACType>MACDouble</MACType></power108y>
-<power109x><MACType>MACDouble</MACType></power109x>
-<power109y><MACType>MACDouble</MACType></power109y>
-<power110x><MACType>MACDouble</MACType></power110x>
-<power110y><MACType>MACDouble</MACType></power110y>
-<power111x><MACType>MACDouble</MACType></power111x>
-<power111y><MACType>MACDouble</MACType></power111y>
-<power112x><MACType>MACDouble</MACType></power112x>
-<power112y><MACType>MACDouble</MACType></power112y>
-<power113x><MACType>MACDouble</MACType></power113x>
-<power113y><MACType>MACDouble</MACType></power113y>
-<power114x><MACType>MACDouble</MACType></power114x>
-<power114y><MACType>MACDouble</MACType></power114y>
-<power115x><MACType>MACDouble</MACType></power115x>
-<power115y><MACType>MACDouble</MACType></power115y>
-<power116x><MACType>MACDouble</MACType></power116x>
-<power116y><MACType>MACDouble</MACType></power116y>
-<power117x><MACType>MACDouble</MACType></power117x>
-<power117y><MACType>MACDouble</MACType></power117y>
-<power118x><MACType>MACDouble</MACType></power118x>
-<power118y><MACType>MACDouble</MACType></power118y>
-<power119x><MACType>MACDouble</MACType></power119x>
-<power119y><MACType>MACDouble</MACType></power119y>
-<power120x><MACType>MACDouble</MACType></power120x>
-<power120y><MACType>MACDouble</MACType></power120y>
-<power121x><MACType>MACDouble</MACType></power121x>
-<power121y><MACType>MACDouble</MACType></power121y>
-<power122x><MACType>MACDouble</MACType></power122x>
-<power122y><MACType>MACDouble</MACType></power122y>
-<power123x><MACType>MACDouble</MACType></power123x>
-<power123y><MACType>MACDouble</MACType></power123y>
-<power124x><MACType>MACDouble</MACType></power124x>
-<power124y><MACType>MACDouble</MACType></power124y>
-<power125x><MACType>MACDouble</MACType></power125x>
-<power125y><MACType>MACDouble</MACType></power125y>
-<power126x><MACType>MACDouble</MACType></power126x>
-<power126y><MACType>MACDouble</MACType></power126y>
-<power127x><MACType>MACDouble</MACType></power127x>
-<power127y><MACType>MACDouble</MACType></power127y>
+<power000>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power000>
+<power001>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power001>
+<power002>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power002>
+<power003>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power003>
+<power004>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power004>
+<power005>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power005>
+<power006>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power006>
+<power007>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power007>
+<power008>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power008>
+<power009>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power009>
+<power010>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power010>
+<power011>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power011>
+<power012>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power012>
+<power013>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power013>
+<power014>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power014>
+<power015>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power015>
+<power016>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power016>
+<power017>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power017>
+<power018>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power018>
+<power019>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power019>
+<power020>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power020>
+<power021>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power021>
+<power022>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power022>
+<power023>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power023>
+<power024>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power024>
+<power025>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power025>
+<power026>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power026>
+<power027>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power027>
+<power028>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power028>
+<power029>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power029>
+<power030>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power030>
+<power031>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power031>
+<power032>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power032>
+<power033>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power033>
+<power034>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power034>
+<power035>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power035>
+<power036>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power036>
+<power037>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power037>
+<power038>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power038>
+<power039>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power039>
+<power040>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power040>
+<power041>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power041>
+<power042>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power042>
+<power043>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power043>
+<power044>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power044>
+<power045>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power045>
+<power046>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power046>
+<power047>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power047>
+<power048>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power048>
+<power049>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power049>
+<power050>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power050>
+<power051>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power051>
+<power052>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power052>
+<power053>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power053>
+<power054>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power054>
+<power055>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power055>
+<power056>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power056>
+<power057>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power057>
+<power058>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power058>
+<power059>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power059>
+<power060>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power060>
+<power061>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power061>
+<power062>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power062>
+<power063>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power063>
+<power064>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power064>
+<power065>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power065>
+<power066>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power066>
+<power067>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power067>
+<power068>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power068>
+<power069>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power069>
+<power070>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power070>
+<power071>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power071>
+<power072>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power072>
+<power073>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power073>
+<power074>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power074>
+<power075>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power075>
+<power076>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power076>
+<power077>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power077>
+<power078>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power078>
+<power079>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power079>
+<power080>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power080>
+<power081>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power081>
+<power082>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power082>
+<power083>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power083>
+<power084>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power084>
+<power085>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power085>
+<power086>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power086>
+<power087>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power087>
+<power088>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power088>
+<power089>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power089>
+<power090>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power090>
+<power091>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power091>
+<power092>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power092>
+<power093>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power093>
+<power094>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power094>
+<power095>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power095>
+<power096>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power096>
+<power097>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power097>
+<power098>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power098>
+<power099>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power099>
+<power100>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power100>
+<power101>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power101>
+<power102>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power102>
+<power103>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power103>
+<power104>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power104>
+<power105>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power105>
+<power106>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power106>
+<power107>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power107>
+<power108>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power108>
+<power109>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power109>
+<power110>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power110>
+<power111>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power111>
+<power112>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power112>
+<power113>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power113>
+<power114>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power114>
+<power115>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power115>
+<power116>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power116>
+<power117>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power117>
+<power118>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power118>
+<power119>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power119>
+<power120>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power120>
+<power121>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power121>
+<power122>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power122>
+<power123>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power123>
+<power124>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power124>
+<power125>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power125>
+<power126>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power126>
+<power127>
+	<x><MACType>MACDouble</MACType></x>
 
   <!-- "BeamServer_seqnr" is the sequence number of the last
        block from the FPGA whose statistics are included
