@@ -29,8 +29,17 @@ namespace LOFAR
   namespace PL
   {
 
+    bool QueryObject::empty() const
+    {
+      if (itsUseString) return itsSqlString.empty();
+      else return itsQueryExpr.isNull();
+    }
+
     std::string QueryObject::getSql() const 
     {
+      TRACER3 (__PRETTY_FUNCTION__ << ": itsUseString = "
+               << (itsUseString ? "true" : "false"));
+      if (empty()) return "";
       if (itsUseString) {
         return "WHERE " + itsSqlString;
       }
