@@ -13,4 +13,4 @@ gsmfiles := $(addprefix $(gsmtable)/,$(aipspp_tablefiles))
 #	  glish -l $(srcdir)/4c2gsm.g
 
 gsmdir = $(datadir)/GSM/$(gsmtable)
-gsm_DATA = $(gsmfiles)
+dist_gsm_DATA = $(gsmfiles)
