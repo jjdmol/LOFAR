@@ -1,4 +1,5 @@
-Common
-CRD
-databases
-MATH
+Common        # Common stuff
+CRD	      # Coordinate server stuff
+databases     # Database stuff
+Math	      # Math stuff
+PL	      # Persistence Layer stuff
