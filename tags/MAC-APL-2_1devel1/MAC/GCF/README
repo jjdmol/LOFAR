@@ -1,0 +1,22 @@
+Using: PropertyAgent -num 1 -proj <projname>
+	'projname' => name of a running, for GCF prepared, PVSS project
+Using: PropertyInterface -num 2 -proj <projname>
+	'projname' => name of a running, for GCF prepared, PVSS project
+
+Precondition:
+- a PVSS project is running which is configured for GCF (see DEPENDENCIES)
+- >export MAC_CONFIG=<lofarhome>/MAC/Config
+
+These are continuous applications, which not end by itself. This can be done by CTRL-C.
+
+If the containing packages must be build for the first time they must be build separate in the following order:
+GCFCommon
+TM
+PAL
+PALlight
+
+Each package should be build with the following commands:
+> bootstrap
+> cd build/gnu_debug
+> ../../lofarconf
+> make install check

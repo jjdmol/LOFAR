@@ -1,0 +1,13 @@
+[ARA]
+#ARAtestRSPserver=ARATest:ARAtestRSPserver
+ARAtestRSPserver=RSP:acceptor
+
+[ARATest]
+#intentionally left empty: no SAP's
+
+[ARATestDriver]
+#intentionally left empty: no SAP's
+
+[PML]
+client=PA:server
+

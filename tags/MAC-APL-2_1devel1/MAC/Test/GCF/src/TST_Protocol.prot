@@ -1,0 +1,45 @@
+//
+// Protocol definition for the TEST server
+//
+autogen definitions protocol;
+
+description = "Protocol for the TEST server";
+prefix = "TST"; // for the signal names
+id = "0x3f";
+
+// specify extra include files
+// e.g.
+include = '<sys/time.h>';
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+event = {
+	signal = TESTREADY;
+	dir = INOUT;
+	param = {
+		name = "testnr";
+		type = "unsigned int";
+	};
+};
+
+event = {
+	signal = TESTREQ;
+	dir = IN;
+	param = {
+		name = "testnr";
+		type = "unsigned int";
+	};
+};
+
+event = {
+	signal = TESTRESP;
+	dir = OUT;
+	param = {
+		name = "testnr";
+		type = "unsigned int";
+	};
+};
