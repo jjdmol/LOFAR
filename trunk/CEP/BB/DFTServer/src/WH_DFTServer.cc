@@ -52,10 +52,19 @@ WH_DFTServer* WH_DFTServer::make (const string& name)
 
 void WH_DFTServer::process()
 {
+  LOG_TRACE_FLOW_STR("WH_DFTServer::process " << getName());
+
+  DH_DFTRequest *myRequest = (DH_DFTRequest*)getDataManager().getInHolder(1);
+  DH_DFTResult  *myResult  = (DH_DFTResult*)getDataManager().getOutHolder(1);
+  
+  cout << "Request for L = " << myRequest->getL() << endl;
+
+  
 }
 
 void WH_DFTServer::dump()
 {
+ LOG_TRACE_FLOW_STR("WH_DFTServer::process " << getName());
 //   cout << "WH_DFTServer" << endl;
 //   cout << "Timestamp " << 0 << " = "
 //        << getDataManager().getOutHolder(0)->getTimeStamp() << endl;
