@@ -69,19 +69,29 @@ namespace LOFAR
       typename DBViewType::select_iterator iter = view.begin();
 
       for (int nr = 0; iter != view.end() && nr < maxObjects; ++iter, ++nr) {
-	TPersistentObject<T> tpo;
-	tpo.tableName (tableName());
-	tpo.fromDBRep(*iter);
-        // If the object T is spread among several tables we must call
-        // retrieve() in order to get the data from all the tables. If we
-        // don't, we will miss the data for the "owned" POs. This really isn't
-        // very efficient! However, currently there is no way to do things
-        // better. We need a way to generate a better select query for this.
-        if (!tpo.ownedPOs().empty()) {
-          tpo.retrieve();
+        TPersistentObject<T> tpo;
+        tpo.tableName (tableName());
+
+        // Retrieve this record
+        try {
+          tpo.fromDBRep(*iter);
+          // If the object T is spread among several tables we must call
+          // retrieve() in order to get the data from all the tables. If we
+          // don't, we will miss the data for the "owned" POs. This really
+          // isn't very efficient! However, currently there is no way to do
+          // things better. We need a way to generate a better select query
+          // for this.
+          if (!tpo.ownedPOs().empty()) {
+            tpo.retrieve();
+          }
         }
-	ctpo.add(tpo);
+        catch(dtl::DBException& e) {
+          THROW (RetrieveError, "Retrieve failed.\n" << e.what());
+        }
+
+        ctpo.add(tpo);
       }
+      
       return ctpo;
     }
 
@@ -96,10 +106,14 @@ namespace LOFAR
       // setup the selection parameters
       DBRepHolder<ObjectId> rec;
       rec.rep().itsOid = metaData().oid()->get();
-//       toDBRep(rec);
 
-      // delete this record
-      *iter = rec;
+      // Delete this record
+      try {
+        *iter = rec;
+      }
+      catch (dtl::DBException& e) {
+        THROW (EraseError, "Erase failed.\n" << e.what());
+      }
 
       // Once we've reached here, the update was successful.
       // Reset the meta data structure.
@@ -119,8 +133,13 @@ namespace LOFAR
       DBRepHolder<T>    rec;
       toDBRep (rec);
 
-      // save this record
-      *iter = rec;
+      // Save this record
+      try {
+        *iter = rec;
+      }
+      catch(dtl::DBException& e) {
+        THROW (InsertError, "Insert failed.\n" << e.what());
+      }
 
       // Once we've reached here, the insert was successful.
       // Increment the version number.
@@ -141,10 +160,21 @@ namespace LOFAR
       DBViewType view(tableName(), BCA<T>(), whereClause.str());
       typename DBViewType::select_iterator iter = view.begin();
 
-      // We should find a match! Otherwise there's some kind of logic error.
-      AssertStr(iter != view.end(), "oid=" << oid.get()
-                << ", isOwnerOid=" << (isOwnerOid ? "true" : "false") );  
-      fromDBRep(*iter);
+      // We should find a match! Otherwise, the database record was probably
+      // deleted by another thread or process.
+      if (iter == view.end()) {
+        THROW (RetrieveError, 
+               "Retrieve failed. Matching record could not be found;\n "
+               "it may have been deleted by another thread or process");
+      }
+
+      // Retrieve this record
+      try {
+        fromDBRep(*iter);
+      }
+      catch(dtl::DBException& e) {
+        THROW (RetrieveError, "Retrieve failed.\n" << e.what());
+      }
 
     }
 
@@ -163,9 +193,14 @@ namespace LOFAR
       // copy info of the T to the DBRepHolder<T> class
       DBRepHolder<T>    rec;
       toDBRep (rec);
-
-      // save this record
-      *iter = rec;
+      
+      // Save this record
+      try {
+        *iter = rec;
+      }
+      catch (dtl::DBException& e) {
+        THROW (UpdateError, "Update failed.\n" << e.what());
+      }
 
       // Once we've reached here, the update was successful.
       // Increment the version number.
@@ -184,20 +219,6 @@ namespace LOFAR
     void TPersistentObject<T>::fromDBRep(const DBRepHolder<T>& src)
     {
       fromDBRepMeta(src.repMeta());
-      fromDBRep(src.rep());
-    }
-
-    template<>
-    inline void 
-    TPersistentObject<ObjectId>::toDBRep(DBRepHolder<ObjectId>& dest) const
-    {
-      toDBRep(dest.rep());
-    }
-
-    template<>
-    inline void
-    TPersistentObject<ObjectId>::fromDBRep(const DBRepHolder<ObjectId>& src)
-    {
       fromDBRep(src.rep());
     }
 
