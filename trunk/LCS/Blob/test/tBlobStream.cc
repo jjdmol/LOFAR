@@ -57,7 +57,7 @@ int doOut (BlobOBuffer& bb, bool header8=false)
   uint len = 0;
   BlobOStream bos(bb);
   ASSERT (bos.putStart ("test", 1) == 1);
-  uint ln = 18;
+  uint ln = 16;
   if (header8) doAlign(bos,ln);
   bos << true;
   bos << "abc";
@@ -69,14 +69,14 @@ int doOut (BlobOBuffer& bb, bool header8=false)
 
   if (header8) doAlign(bos,len);
   ASSERT (bos.putStart ("test1", 1) == 1);
-  ln = 19;
+  ln = 17;
   if (header8) doAlign(bos,ln);
   bos << int16(2);
   bos << fcomplex(1,2);
   ln += 10;
   if (header8) doAlign(bos,ln);
   ASSERT (bos.putStart ("test1a", 3) == 2);
-  uint ln2 = 20;
+  uint ln2 = 18;
   if (header8) doAlign(bos,ln2);
   bos << std::string("defg");
   ln2 += 12;
@@ -87,7 +87,7 @@ int doOut (BlobOBuffer& bb, bool header8=false)
 
   if (header8) doAlign(bos,len);
   ASSERT (bos.putStart ("test2", -1) == 1);
-  ln = 19;
+  ln = 17;
   if (header8) doAlign(bos,ln);
   bos << int64(100);
   bos << dcomplex(5,6);
@@ -97,7 +97,7 @@ int doOut (BlobOBuffer& bb, bool header8=false)
 
   if (header8) doAlign(bos,len);
   bos.putStart ("testall", 1);
-  ln = 21;
+  ln = 19;
   if (header8) doAlign(bos,ln);
   bool valbl[2];
   char valsc[2];
@@ -202,7 +202,7 @@ void doIn (BlobIBuffer& bb, bool header8=false)
 
   BlobIStream bis(bb);
   ASSERT (bis.getStart ("test") == 1);
-  uint ln = 18;
+  uint ln = 16;
   if (header8) doAlign(bis,ln);
   bis >> valb;
   ASSERT (valb == true);
@@ -215,7 +215,7 @@ void doIn (BlobIBuffer& bb, bool header8=false)
 
   if (header8) doAlign(bis,dumlen);
   ASSERT (bis.getStart ("test1") == 1);
-  ln = 19;
+  ln = 17;
   if (header8) doAlign(bis,ln);
   bis >> val16;
   ASSERT (val16 == 2);
@@ -224,7 +224,7 @@ void doIn (BlobIBuffer& bb, bool header8=false)
   ln += 10;
   if (header8) doAlign(bis,ln);
   ASSERT (bis.getStart ("test1a") == 3);
-  uint ln2 = 20;
+  uint ln2 = 18;
   if (header8) doAlign(bis,ln2);
   bis >> vals;
   ASSERT (vals.size() == 4  &&  vals == "defg");
@@ -235,7 +235,7 @@ void doIn (BlobIBuffer& bb, bool header8=false)
 
   if (header8) doAlign(bis,dumlen);
   ASSERT (bis.getStart ("test2") == -1);
-  ln = 19;
+  ln = 17;
   if (header8) doAlign(bis,ln);
   bis >> val64;
   ASSERT (val64 == 100);
@@ -246,7 +246,7 @@ void doIn (BlobIBuffer& bb, bool header8=false)
 
   if (header8) doAlign(bis,dumlen);
   bis.getStart ("testall");
-  ln = 21;
+  ln = 19;
   if (header8) doAlign(bis,ln);
   bool valbl[2], valblc[2];
   char valsc[2], valscc[2];
