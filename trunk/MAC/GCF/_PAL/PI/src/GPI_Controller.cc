@@ -21,21 +21,22 @@
 //#  $Id$
 
 #include "GPI_Controller.h"
-#include "GPI_PMLlightServer.h"
+#include "GPI_CEPServer.h"
+#include "GPI_RTCServer.h"
 #include "PI_Protocol.ph"
 #include <GCF/ParameterSet.h>
 
 static string sPITaskName("GCF-PI");
 
 GPIController::GPIController() : 
-  GCFTask((State)&GPIController::initial, sPITaskName),
-  _isBusy(false)
+  GCFTask((State)&GPIController::initial, sPITaskName)
 {
   // register the protocol for debugging purposes
   registerProtocol(PI_PROTOCOL, PI_PROTOCOL_signalnames);
 
   // initialize the port provider
-  _rtcClientPortProvider.init(*this, "provider", GCFPortInterface::MSPP, PI_PROTOCOL);
+  _rtcClientPortProvider.init(*this, "rtc-provider", GCFPortInterface::MSPP, PI_PROTOCOL);
+  _cepClientPortProvider.init(*this, "cep-provider", GCFPortInterface::MSPP, PI_PROTOCOL);
   ParameterSet::instance()->adoptFile("PropertyAgent.conf");  
 }
 
@@ -55,16 +56,28 @@ GCFEvent::TResult GPIController::initial(GCFEvent& e, GCFPortInterface& p)
 
     case F_ENTRY:
     case F_TIMER:
-      _rtcClientPortProvider.open();
+      if (!_rtcClientPortProvider.isConnected())
+      {
+        _rtcClientPortProvider.open();
+      }
+      if (!_cepClientPortProvider.isConnected())
+      {
+        _cepClientPortProvider.open();
+      }
       break;
 
     case F_CONNECTED:
-      TRAN(GPIController::connected);
+      if (_cepClientPortProvider.isConnected() && _rtcClientPortProvider.isConnected())
+      {
+        TRAN(GPIController::connected);
+      }
       break;
 
     case F_DISCONNECTED:
       if (&p == &_rtcClientPortProvider)
         _rtcClientPortProvider.setTimer(1.0); // try again after 1 second
+      if (&p == &_cepClientPortProvider)
+        _cepClientPortProvider.setTimer(1.0); // try again after 1 second
       break;
 
     default:
@@ -82,7 +95,7 @@ GCFEvent::TResult GPIController::connected(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_DISCONNECTED:      
-      if (&p == &_rtcClientPortProvider)
+      if (&p == &_rtcClientPortProvider || &p == &_cepClientPortProvider)
       {
         // TODO: find out this implies problems for the concrete ports too or not
       }
@@ -90,10 +103,19 @@ GCFEvent::TResult GPIController::connected(GCFEvent& e, GCFPortInterface& p)
 
     case F_ACCEPT_REQ:
     {
-      GPIPMLlightServer* pNewSS = new GPIPMLlightServer(*this);
-      _rtcClientPortProvider.accept(pNewSS->getPort());
-      pNewSS->start();
-      _pmlLightServers.push_back(pNewSS);
+      GPIPMLlightServer* pNewPLS;
+      if (&p == &_rtcClientPortProvider)
+      {
+        pNewPLS = new GPIRTCServer(*this);
+        _rtcClientPortProvider.accept(pNewPLS->getClientPort());
+      }
+      else
+      {
+        pNewPLS = new GPICEPServer(*this);
+        _cepClientPortProvider.accept(pNewPLS->getClientPort());
+      }
+      pNewPLS->start();
+      _pmlLightServers.push_back(pNewPLS);
       break;
     }
      
@@ -102,16 +124,16 @@ GCFEvent::TResult GPIController::connected(GCFEvent& e, GCFPortInterface& p)
       GCFTimerEvent* pTimer = (GCFTimerEvent*)(&e);
       if (pTimer->arg)
       {
-        GPIPMLlightServer* pSS = (GPIPMLlightServer*)(pTimer->arg);
-        if (pSS)
+        GPIPMLlightServer* pPLS = (GPIPMLlightServer*)(pTimer->arg);
+        if (pPLS)
         {
           for (TPMLlightServers::iterator iter = _pmlLightServers.begin();
                iter != _pmlLightServers.end(); ++iter)
           {
-            if ((*iter) == pSS)
+            if ((*iter) == pPLS)
             {
               _pmlLightServers.erase(iter);
-              delete pSS;
+              delete pPLS;
               break;
             }
           }
@@ -128,7 +150,7 @@ GCFEvent::TResult GPIController::connected(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-void GPIController::close(GPIPMLlightServer& ss)
+void GPIController::close(GPIPMLlightServer& pls)
 {
-  _rtcClientPortProvider.setTimer(0, 0, 0, 0, (void*)&ss);
+  _rtcClientPortProvider.setTimer(0, 0, 0, 0, (void*)&pls);
 }

@@ -26,21 +26,17 @@
 #include <GCF/Utils.h>
 #include <GPI_PValue.h>
 
-#include <PI_Protocol.ph>
-#include <PA_Protocol.ph>
-
-static string sPLSTaskName("GCF-PI");
-
-GPIPMLlightServer::GPIPMLlightServer(GPIController& controller) : 
-  GCFTask((State)&GPIPMLlightServer::initial, sPLSTaskName),
-  _controller(controller)
+GPIPMLlightServer::GPIPMLlightServer(GPIController& controller, const string& name, bool transportRawData) : 
+  GCFTask((State)&GPIPMLlightServer::initial, name),
+  _controller(controller),
+  _timerID(-1)
 {
   // register the protocols for debugging purposes only
   registerProtocol(PI_PROTOCOL, PI_PROTOCOL_signalnames);
   registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
 
-  // initialize the port to the real RTC 
-  _plsPort.init(*this, "server", GCFPortInterface::SPP, PI_PROTOCOL);
+  // initialize the port to the real Client 
+  _plsPort.init(*this, "server", GCFPortInterface::SPP, PI_PROTOCOL, transportRawData);
   // initialize the port to the the Property Agent (acts as a PML)
   _propertyAgent.init(*this, "client", GCFPortInterface::SAP, PA_PROTOCOL);
 }
@@ -85,11 +81,148 @@ GCFEvent::TResult GPIPMLlightServer::initial(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
+void GPIPMLlightServer::registerPropSet(const PIRegisterScopeEvent& requestIn)
+{
+  if (!findPropertySet(requestIn.scope))
+  {
+    GPIPropertySet* pPropertySet = new GPIPropertySet(*this);
+    
+    _propSetRegister[requestIn.scope] = pPropertySet;
+    _actionSeqList[requestIn.seqnr] = pPropertySet;
+    pPropertySet->enable(requestIn);
+  }
+  else
+  {
+    PIScopeRegisteredEvent responseOut;
+    responseOut.result = PI_PROP_SET_ALLREADY_EXISTS;
+    responseOut.seqnr = requestIn.seqnr;
+    sendMsgToClient(responseOut);
+  }      
+
+  LOG_INFO(formatString ( 
+      "PL-REQ: Register scope %s",
+      requestIn.scope.c_str()));  
+}
+
+void GPIPMLlightServer::propSetRegistered(const PAScopeRegisteredEvent& responseIn)
+{
+  GPIPropertySet* pPropertySet = findPropertySet(responseIn.seqnr);
+
+  LOG_INFO(formatString ( 
+      "PA-RESP: Scope %s is registered", 
+      pPropertySet->getScope().c_str()));
+
+  assert(pPropertySet);
+  _actionSeqList.erase(responseIn.seqnr);
+  pPropertySet->enabled(responseIn.result);
+}
+
+void GPIPMLlightServer::unregisterPropSet(const PIUnregisterScopeEvent& requestIn)
+{
+  GPIPropertySet* pPropertySet = findPropertySet(requestIn.scope);
+
+  LOG_INFO(formatString ( 
+      "PL-REQ: Unregister scope %s",
+      requestIn.scope.c_str()));
+
+  assert(pPropertySet);
+  pPropertySet->disable(requestIn);
+}
+
+void GPIPMLlightServer::propSetUnregistered(const PAScopeUnregisteredEvent& responseIn)
+{
+  GPIPropertySet* pPropertySet = findPropertySet(responseIn.seqnr);
+
+  LOG_INFO(formatString ( 
+      "PA-RESP: Scope %s is unregistered", 
+      pPropertySet->getScope().c_str()));
+      
+  assert(pPropertySet);
+
+  pPropertySet->disabled(responseIn.result);
+  _actionSeqList.erase(responseIn.seqnr);
+  _propSetRegister.erase(pPropertySet->getScope());
+  delete pPropertySet;
+}
+
+void GPIPMLlightServer::linkPropSet(const PALinkPropSetEvent& requestIn)
+{
+  GPIPropertySet* pPropertySet = findPropertySet(requestIn.scope);
+  LOG_INFO(formatString ( 
+      "PA-REQ: Link properties on scope %s", 
+      requestIn.scope.c_str()));
+  if (pPropertySet)
+  {
+    pPropertySet->linkPropSet(requestIn);
+  }
+  else
+  {
+    PAPropSetLinkedEvent responseOut;
+    responseOut.result = PA_PS_GONE;
+    responseOut.scope = requestIn.scope;
+    sendMsgToPA(responseOut);
+    LOG_DEBUG(formatString ( 
+        "Property set with scope %d was deleted in the meanwhile", 
+        responseOut.scope.c_str()));
+  }
+}
+
+void GPIPMLlightServer::propSetLinked(const PIPropSetLinkedEvent& responseIn)
+{
+  GPIPropertySet* pPropertySet = findPropertySet(responseIn.scope);
+  if (pPropertySet)
+  {
+    bool mustRetry = !pPropertySet->propSetLinkedInClient(responseIn);
+    if (mustRetry && _timerID == -1)
+    {
+      _timerID = _plsPort.setTimer(0.0);
+    }        
+  }
+}
+
+void GPIPMLlightServer::unlinkPropSet(const PAUnlinkPropSetEvent& requestIn)
+{
+  GPIPropertySet* pPropertySet = findPropertySet(requestIn.scope);
+  LOG_INFO(formatString ( 
+      "PA-REQ: Unlink properties on scope %s", 
+      requestIn.scope.c_str()));
+  if (pPropertySet)
+  {
+    pPropertySet->unlinkPropSet(requestIn);
+  }
+  else
+  {
+    PAPropSetUnlinkedEvent responseOut;
+    responseOut.result = PA_PS_GONE;
+    responseOut.scope = requestIn.scope;
+    sendMsgToPA(responseOut);
+    LOG_DEBUG(formatString ( 
+        "Property set with scope %d was deleted in the meanwhile", 
+        responseOut.scope.c_str()));
+  }
+}
+
+void GPIPMLlightServer::propSetUnlinked(const PIPropSetUnlinkedEvent& responseIn)
+{
+  GPIPropertySet* pPropertySet = findPropertySet(responseIn.scope);
+  if (pPropertySet)
+  {
+    pPropertySet->propSetUnlinkedInClient(responseIn); 
+  }
+}
+void GPIPMLlightServer::valueSet(const PIValueSetEvent& indication)
+{
+  const GCFPValue* pValue = indication.value._pValue;
+  if (pValue)
+  {
+    _controller.getPropertyProxy().setPropValue(indication.name, *pValue);
+  }
+}
+
 GCFEvent::TResult GPIPMLlightServer::operational(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  static GPIPropertySet* pPropertySet = 0;
-  static int timerID = -1;
+  
   static int propertyAgentConnected = false;
 
   switch (e.signal)
@@ -135,163 +268,62 @@ GCFEvent::TResult GPIPMLlightServer::operational(GCFEvent& e, GCFPortInterface& 
           }
         }
         if (retryAgain) _plsPort.setTimer(0.0);
-        else            timerID = -1;
+        else            _timerID = -1;
       }
       break;
      
     case PI_REGISTER_SCOPE:
     {
       PIRegisterScopeEvent requestIn(e);
-      if (!findPropertySet(requestIn.scope))
-      {
-        pPropertySet = new GPIPropertySet(*this);
-        
-        _propSetRegister[requestIn.scope] = pPropertySet;
-        _actionSeqList[requestIn.seqnr] = pPropertySet;
-        pPropertySet->enable(requestIn);
-      }
-      else
-      {
-        PIScopeRegisteredEvent responseOut;
-        responseOut.result = PI_PROP_SET_ALLREADY_EXISTS;
-        responseOut.seqnr = requestIn.seqnr;
-        _plsPort.send(responseOut);
-      }      
-
-      LOG_INFO(formatString ( 
-          "SS-REQ: Register scope %s",
-          requestIn.scope.c_str()));
+      registerPropSet(requestIn);
       break;
     }  
     case PA_SCOPE_REGISTERED:
     {      
       PAScopeRegisteredEvent responseIn(e);
-
-      pPropertySet = findPropertySet(responseIn.seqnr);
-
-      LOG_INFO(formatString ( 
-          "PA-RESP: Scope %s is registered", 
-          pPropertySet->getScope().c_str()));
-
-      assert(pPropertySet);
-      _actionSeqList.erase(responseIn.seqnr);
-      pPropertySet->enabled(responseIn.result);
+      propSetRegistered(responseIn);
       break;
     }
-
     case PI_UNREGISTER_SCOPE:
     {
       PIUnregisterScopeEvent requestIn(e);
-      pPropertySet = findPropertySet(requestIn.scope);
-
-      LOG_INFO(formatString ( 
-          "SS-REQ: Unregister scope %s",
-          requestIn.scope.c_str()));
-
-      assert(pPropertySet);
-      pPropertySet->disable(requestIn);
+      unregisterPropSet(requestIn);
       break;
-    }  
-
+    }
     case PA_SCOPE_UNREGISTERED:
     {
       PAScopeUnregisteredEvent responseIn(e);
-      pPropertySet = findPropertySet(responseIn.seqnr);
-
-      LOG_INFO(formatString ( 
-          "PA-RESP: Scope %s is unregistered", 
-          pPropertySet->getScope().c_str()));
-          
-      assert(pPropertySet);
-
-      pPropertySet->disabled(responseIn.result);
-      _actionSeqList.erase(responseIn.seqnr);
-      _propSetRegister.erase(pPropertySet->getScope());
-      delete pPropertySet;
-
+      propSetUnregistered(responseIn);
       break;
     }
-
     case PA_LINK_PROP_SET:
     {
       PALinkPropSetEvent requestIn(e);
-      pPropertySet = findPropertySet(requestIn.scope);
-      LOG_INFO(formatString ( 
-          "PA-REQ: Link properties on scope %s", 
-          requestIn.scope.c_str()));
-      if (pPropertySet)
-      {
-        pPropertySet->linkPropSet(requestIn);
-      }
-      else
-      {
-        PAPropSetLinkedEvent responseOut;
-        responseOut.result = PA_PS_GONE;
-        responseOut.scope = requestIn.scope;
-        replyMsgToPA(responseOut);
-        LOG_DEBUG(formatString ( 
-            "Property set with scope %d was deleted in the meanwhile", 
-            responseOut.scope.c_str()));
-      }
+      linkPropSet(requestIn);
       break;
     }
     case PI_PROP_SET_LINKED:
     {
       PIPropSetLinkedEvent responseIn(e);
-      pPropertySet = findPropertySet(responseIn.scope);
-      if (pPropertySet)
-      {
-        bool mustRetry = !pPropertySet->propSetLinkedInRTC(responseIn);
-        if (mustRetry && timerID == -1)
-        {
-          timerID = _plsPort.setTimer(0.0);
-        }        
-      }
+      propSetLinked(responseIn);
       break;
     }
     case PA_UNLINK_PROP_SET:
     {
       PAUnlinkPropSetEvent requestIn(e);
-      pPropertySet = findPropertySet(requestIn.scope);
-      LOG_INFO(formatString ( 
-          "PA-REQ: Unlink properties on scope %s", 
-          requestIn.scope.c_str()));
-      if (pPropertySet)
-      {
-        pPropertySet->unlinkPropSet(requestIn);
-      }
-      else
-      {
-        PAPropSetUnlinkedEvent responseOut;
-        responseOut.result = PA_PS_GONE;
-        responseOut.scope = requestIn.scope;
-        replyMsgToPA(responseOut);
-        LOG_DEBUG(formatString ( 
-            "Property set with scope %d was deleted in the meanwhile", 
-            responseOut.scope.c_str()));
-      }
+      unlinkPropSet(requestIn);
       break;
     }
-
     case PI_PROP_SET_UNLINKED:
     {
       PIPropSetUnlinkedEvent responseIn(e);
-      pPropertySet = findPropertySet(responseIn.scope);
-      if (pPropertySet)
-      {
-        pPropertySet->propSetUnlinkedInRTC(responseIn); 
-      }
+      propSetUnlinked(responseIn);
       break;
-    }
-    
+    }    
     case PI_VALUE_SET:
     {
-      PIValueSetEvent requestIn(e);
-      const GCFPValue* pValue = requestIn.value._pValue;
-      if (pValue)
-      {
-        _controller.getPropertyProxy().setPropValue(requestIn.name, *pValue);
-      }
+      PIValueSetEvent indication(e);
+      valueSet(indication);
       break;                                          
     }
 
@@ -328,22 +360,30 @@ GCFEvent::TResult GPIPMLlightServer::closing(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GPIPropertySet* GPIPMLlightServer::findPropertySet(string& scope)
+GPIPropertySet* GPIPMLlightServer::findPropertySet(const string& scope) const
 {
-  TPropSetRegister::iterator iter = _propSetRegister.find(scope);  
-  return (iter != _propSetRegister.end() ? iter->second : 0);
+  TPropSetRegister::const_iterator citer = _propSetRegister.find(scope);  
+  return (citer != _propSetRegister.end() ? citer->second : 0);
 }
 
-GPIPropertySet* GPIPMLlightServer::findPropertySet(unsigned int seqnr)
+GPIPropertySet* GPIPMLlightServer::findPropertySet(unsigned int seqnr) const
 {
-  TActionSeqList::iterator iter = _actionSeqList.find(seqnr);  
-  return (iter != _actionSeqList.end() ? iter->second : 0);
+  TActionSeqList::const_iterator citer = _actionSeqList.find(seqnr);  
+  return (citer != _actionSeqList.end() ? citer->second : 0);
 }
 
-void GPIPMLlightServer::replyMsgToPA(GCFEvent& e)
+void GPIPMLlightServer::sendMsgToPA(GCFEvent& e)
 {
   if (_propertyAgent.isConnected())
   {    
     _propertyAgent.send(e);
+  }
+}
+
+void GPIPMLlightServer::sendMsgToClient(GCFEvent& msg)
+{
+  if (_plsPort.isConnected())
+  {    
+    _plsPort.send(msg);
   }
 }

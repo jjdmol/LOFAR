@@ -84,10 +84,10 @@ void GPIPropertySet::propValueChanged(const string& propName, const GCFPValue& v
     indicationOut.name.erase(0, indicationOut.name.find(':') + 1); 
   }
   indicationOut.value._pValue = &value;
-  sendMsgToRTC(indicationOut);
+  sendMsgToClient(indicationOut);
 }
 
-void GPIPropertySet::enable(PIRegisterScopeEvent& requestIn)
+void GPIPropertySet::enable(const PIRegisterScopeEvent& requestIn)
 {
   LOG_INFO(formatString(
       "Request to enable prop. set '%s' of type '%s'",
@@ -116,7 +116,7 @@ void GPIPropertySet::enable(PIRegisterScopeEvent& requestIn)
       PAScopeRegisteredEvent response;
       response.seqnr = requestIn.seqnr;
       response.result = PA_WRONG_STATE;
-      sendMsgToRTC(response);     
+      sendMsgToClient(response);     
       break;
     }
   }
@@ -145,7 +145,7 @@ void GPIPropertySet::retryEnable()
       PAScopeRegisteredEvent response;
       response.seqnr = _savedSeqnr;
       response.result = PA_WRONG_STATE;
-      sendMsgToRTC(response);     
+      sendMsgToClient(response);     
       break;
     }
   }
@@ -177,10 +177,10 @@ void GPIPropertySet::enabled(TPAResult result)
       break;
     }
   }
-  sendMsgToRTC(responseOut);
+  sendMsgToClient(responseOut);
 }
 
-void GPIPropertySet::disable(PIUnregisterScopeEvent& requestIn)
+void GPIPropertySet::disable(const PIUnregisterScopeEvent& requestIn)
 {
   LOG_INFO(formatString(
       "Request to disable prop. set '%s' of type '%s'",
@@ -223,7 +223,7 @@ void GPIPropertySet::disable(PIUnregisterScopeEvent& requestIn)
       PIScopeUnregisteredEvent erResponse;
       erResponse.seqnr = _savedSeqnr;
       erResponse.result = PI_WRONG_STATE;
-      sendMsgToRTC(erResponse);     
+      sendMsgToClient(erResponse);     
       break;
     }
   }
@@ -248,10 +248,10 @@ void GPIPropertySet::disabled(TPAResult result)
       break;
     }
   }
-  sendMsgToRTC(responseOut);
+  sendMsgToClient(responseOut);
 }
 
-void GPIPropertySet::linkPropSet(PALinkPropSetEvent& requestIn)
+void GPIPropertySet::linkPropSet(const PALinkPropSetEvent& requestIn)
 {
   PAPropSetLinkedEvent erResponse;
   erResponse.scope = _scope;
@@ -262,7 +262,7 @@ void GPIPropertySet::linkPropSet(PALinkPropSetEvent& requestIn)
       PILinkPropSetEvent requestOut;
       requestOut.scope = requestIn.scope;
       _state = S_LINKING;
-      sendMsgToRTC(requestOut);
+      sendMsgToClient(requestOut);
       break;
     }
     case S_DISABLED:
@@ -283,7 +283,7 @@ void GPIPropertySet::linkPropSet(PALinkPropSetEvent& requestIn)
   }
 }
 
-bool GPIPropertySet::propSetLinkedInRTC(PIPropSetLinkedEvent& responseIn)
+bool GPIPropertySet::propSetLinkedInClient(const PIPropSetLinkedEvent& responseIn)
 {
   if (_state == S_LINKING)
   {    
@@ -390,7 +390,7 @@ bool GPIPropertySet::trySubscribing()
   return successful;
 }
 
-void GPIPropertySet::unlinkPropSet(PAUnlinkPropSetEvent& requestIn)
+void GPIPropertySet::unlinkPropSet(const PAUnlinkPropSetEvent& requestIn)
 {
   switch (_state)
   {
@@ -425,7 +425,7 @@ void GPIPropertySet::unlinkPropSet(PAUnlinkPropSetEvent& requestIn)
   
         assert(_counter == 0);
   
-        sendMsgToRTC(requestOut);
+        sendMsgToClient(requestOut);
       }
       else
       {
@@ -447,7 +447,7 @@ void GPIPropertySet::unlinkPropSet(PAUnlinkPropSetEvent& requestIn)
   }
 }
 
-void GPIPropertySet::propSetUnlinkedInRTC(PIPropSetUnlinkedEvent& responseIn)
+void GPIPropertySet::propSetUnlinkedInClient(const PIPropSetUnlinkedEvent& responseIn)
 {
   if (_state == S_UNLINKING)
   {
@@ -470,22 +470,6 @@ void GPIPropertySet::propSetUnlinkedInPI(TPAResult result)
   response.scope = _scope;
   response.result = result;
   sendMsgToPA(response);
-}
-
-void GPIPropertySet::sendMsgToPA(GCFEvent& msg)
-{
-  if (_pls.getPAPort().isConnected())
-  {
-    _pls.getPAPort().send(msg);
-  }
-}
-
-void GPIPropertySet::sendMsgToRTC(GCFEvent& msg)
-{
-  if (_pls.getPort().isConnected())
-  {
-    _pls.getPort().send(msg);
-  }
 }
 
 void GPIPropertySet::wrongState(const char* request)

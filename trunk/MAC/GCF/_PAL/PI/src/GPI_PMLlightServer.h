@@ -28,6 +28,9 @@
 #include <GCF/TM/GCF_TCPPort.h>
 #include <Common/lofar_list.h>
 
+#include <PI_Protocol.ph>
+#include <PA_Protocol.ph>
+
 class GCFEvent;
 class GPIController;
 class GCFPValue;
@@ -41,22 +44,35 @@ class GPIPropertySet;
 class GPIPMLlightServer : public GCFTask
 {
 	public:
-		GPIPMLlightServer (GPIController& controller);
+		GPIPMLlightServer (GPIController& controller, const string& name, bool transportRawData);
 		virtual ~GPIPMLlightServer ();
-    GCFTCPPort& getPort()    {return _plsPort;}
-    GCFTCPPort& getPAPort()  {return _propertyAgent;}
-      
-	private: // helper methods
-    GPIPropertySet* findPropertySet(string& scope);
-    GPIPropertySet* findPropertySet(unsigned int seqnr);
-    void replyMsgToPA(GCFEvent& e);
-        
-	private: // state methods
-		GCFEvent::TResult initial     (GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult operational (GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult closing     (GCFEvent& e, GCFPortInterface& p);
     
-  private: // helper methods
+    GCFTCPPort& getClientPort()    {return _plsPort;}
+    //GCFTCPPort& getPAPort()  {return _propertyAgent;}      
+    virtual void sendMsgToClient(GCFEvent& msg);
+    void sendMsgToPA(GCFEvent& msg);
+      
+  protected: // event handle methods
+    void registerPropSet(const PIRegisterScopeEvent& requestIn);
+    void propSetRegistered(const PAScopeRegisteredEvent& responseIn);
+    void unregisterPropSet(const PIUnregisterScopeEvent& requestIn);
+    void propSetUnregistered(const PAScopeUnregisteredEvent& responseIn);
+    void linkPropSet(const PALinkPropSetEvent& requestIn);
+    void propSetLinked(const PIPropSetLinkedEvent& responseIn);
+    void unlinkPropSet(const PAUnlinkPropSetEvent& requestIn);
+    void propSetUnlinked(const PIPropSetUnlinkedEvent& responseIn);
+    void valueSet(const PIValueSetEvent& indication);        
+     
+	private: // helper methods
+    GPIPropertySet* findPropertySet(const string& scope) const;
+    GPIPropertySet* findPropertySet(unsigned int seqnr) const;
+        
+	protected: // state methods
+		        GCFEvent::TResult initial     (GCFEvent& e, GCFPortInterface& p);
+    virtual GCFEvent::TResult operational (GCFEvent& e, GCFPortInterface& p);
+            GCFEvent::TResult closing     (GCFEvent& e, GCFPortInterface& p);
+    
+  private: // (copy)constructors
     GPIPMLlightServer();
     /**
      * Don't allow copying of this object.
@@ -71,11 +87,10 @@ class GPIPMLlightServer : public GCFTask
     typedef map<string /*scope*/, GPIPropertySet*> TPropSetRegister;
     TPropSetRegister    _propSetRegister;
 
+  private: // admin. data members
     typedef map<unsigned short /*seqnr*/, GPIPropertySet*>  TActionSeqList;
     TActionSeqList _actionSeqList;    
-
-    
-  private: // admin. data members
+    int _timerID;
 };
 
 #endif

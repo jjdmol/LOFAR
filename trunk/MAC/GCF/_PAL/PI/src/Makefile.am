@@ -14,15 +14,23 @@ DOCHDRS	=	\
   GPI_Controller.h \
   GPI_PMLlightServer.h \
   GPI_PropertyProxy.h \
-  GPI_PropertySet.h
+  GPI_PropertySet.h \
+  GPI_CEPServer.h \
+  GPI_RTCServer.h \
+  GPI_TH_Port.h \
+  DH_PIProtocol.h
     
 noinst_LTLIBRARIES 	= libpi.la
 
 libpi_la_SOURCES= $(DOCHDRS) \
   GPI_Controller.cc \
   GPI_PMLlightServer.cc \
+  GPI_CEPServer.cc \
+  GPI_RTCServer.cc \
   GPI_PropertyProxy.cc \
   GPI_PropertySet.cc \
+  GPI_TH_Port.cc \
+  DH_PIProtocol.cc \
   PI_Protocol.cc \
   PA_Protocol.cc
 

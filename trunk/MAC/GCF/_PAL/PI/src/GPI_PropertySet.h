@@ -51,19 +51,19 @@ class GPIPropertySet : public GCFPropertyProxy
       _tmpPIResult(PI_NO_ERROR) {}
     virtual ~GPIPropertySet() {assert(_state == S_DISABLED);}
 
-    void enable(PIRegisterScopeEvent& requestIn);
+    void enable(const PIRegisterScopeEvent& requestIn);
     void retryEnable();
     void enabled(TPAResult result);
     
-    void disable(PIUnregisterScopeEvent& requestIn);
+    void disable(const PIUnregisterScopeEvent& requestIn);
     void disabled(TPAResult result);
 
-    void linkPropSet(PALinkPropSetEvent& requestIn);
-    bool propSetLinkedInRTC(PIPropSetLinkedEvent& responseIn);
+    void linkPropSet(const PALinkPropSetEvent& requestIn);
+    bool propSetLinkedInClient(const PIPropSetLinkedEvent& responseIn);
     bool trySubscribing();
 
-    void unlinkPropSet(PAUnlinkPropSetEvent& requestIn);
-    void propSetUnlinkedInRTC(PIPropSetUnlinkedEvent& responseIn);
+    void unlinkPropSet(const PAUnlinkPropSetEvent& requestIn);
+    void propSetUnlinkedInClient(const PIPropSetUnlinkedEvent& responseIn);
     
     const string& getScope() const {return _scope;}
     
@@ -76,11 +76,12 @@ class GPIPropertySet : public GCFPropertyProxy
   
   private: //helper methods
     void sendMsgToPA(GCFEvent& msg);
-    void sendMsgToRTC(GCFEvent& msg);
+    void sendMsgToClient(GCFEvent& msg);
     void wrongState(const char* request);
     
     void propSetLinkedInPI(TPAResult result);
     void propSetUnlinkedInPI(TPAResult result);
+  
   private:
     GPIPropertySet();
     /**
@@ -108,4 +109,12 @@ class GPIPropertySet : public GCFPropertyProxy
     list<string>  _propsSubscribed;
     
 };    
+
+#include "GPI_PMLlightServer.h"
+
+inline void GPIPropertySet::sendMsgToPA(GCFEvent& msg) 
+  { _pls.sendMsgToPA(msg); }
+inline void GPIPropertySet::sendMsgToClient(GCFEvent& msg)  
+  { _pls.sendMsgToClient(msg); }
+
 #endif
