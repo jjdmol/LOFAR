@@ -55,6 +55,9 @@ public:
   // Clear the map of UVW coordinates and reset the last request id.
   void clear();
 
+  // Set the UVW coordinate for the given time.
+  void set (double time, double u, double v, double w);
+
 private:
   struct MeqTime
   {

@@ -265,14 +265,14 @@ Table ParmTable::find (const string& parmName,
 }
 
 
-vector<MeqPointSource> ParmTable::getPointSources (const Vector<int>& sources)
+MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs)
 {
   // Get all parm rows containing RA in the name.
   TableExprNode expr(itsTable.col("NAME") ==
                                       Regex(Regex::fromPattern("GSM.*.RA")));
-  if (sources.nelements() > 0) {
-    expr = expr  &&  itsTable.col("NAME").in
-                               (TableExprNodeSet(sources));
+  if (srcnrs.nelements() > 0) {
+    expr = expr  &&  itsTable.col("SRCNR").in
+                               (TableExprNodeSet(srcnrs));
   }
   Table sel = itsTable(expr);
   // Sort them uniquely on sourcenr.
@@ -280,7 +280,7 @@ vector<MeqPointSource> ParmTable::getPointSources (const Vector<int>& sources)
 		       Sort::QuickSort | Sort::NoDuplicates);
   AssertMsg (sel.nrow() == sor.nrow(),
 	     "Only constant GSM parameters are supported");
-  vector<MeqPointSource> vec;
+  MeqSourceList sources;
   ROScalarColumn<int> srcCol(sor, "SRCNR");
   ROScalarColumn<String> nameCol(sor, "NAME");
   for (unsigned int row=0; row<sor.nrow(); row++) {
@@ -297,7 +297,8 @@ vector<MeqPointSource> ParmTable::getPointSources (const Vector<int>& sources)
     MeqStoredParmPolc* mq = new MeqStoredParmPolc(name+".Q", srcnr, -1, this);
     MeqStoredParmPolc* mu = new MeqStoredParmPolc(name+".U", srcnr, -1, this);
     MeqStoredParmPolc* mv = new MeqStoredParmPolc(name+".V", srcnr, -1, this);
-    vec.push_back (MeqPointSource(mi, mq, mu, mv, mr, md));
+    sources.add (MeqPointSource(mi, mq, mu, mv, mr, md));
+    cout << "Found source " << name << " (srcnr=" << srcnr << ')' << endl;
   }
-  return vec;
+  return sources;
 }

@@ -23,7 +23,6 @@
 #include <Common/Profiling/PerfProfile.h>
 
 #include <MNS/MeqStatSources.h>
-#include <MNS/MeqPointSource.h>
 #include <MNS/MeqStatUVW.h>
 #include <MNS/MeqPhaseRef.h>
 #include <MNS/MeqRequest.h>
@@ -34,7 +33,7 @@
 
 
 MeqStatSources::MeqStatSources (MeqStatUVW* statUVW,
-				vector<MeqPointSource>* sources)
+				MeqSourceList* sources)
 : itsUVW       (statUVW),
   itsSources   (sources),
   itsLastReqId (InitMeqRequestId)
@@ -70,10 +69,9 @@ void MeqStatSources::calculate (const MeqRequest& request)
   // Calculate the DFT contribution for this station for all sources.
   vector<MeqResult>::iterator iterRes = itsResults.begin();
   vector<MeqResult>::iterator iterDelta = itsDeltas.begin();
-  for (vector<MeqPointSource>::iterator iter=itsSources->begin();
-       iter != itsSources->end();
-       ++iter) {
-    MeqPointSource& src = *iter;
+  int nrsrc = itsSources->size();
+  for (int srcnr=0; srcnr<nrsrc; srcnr++) {
+    MeqPointSource& src = (*itsSources)[srcnr];
     const MeqResult& lrk  = src.getL(request);
     const MeqResult& mrk  = src.getM(request);
     const MeqResult& nrk  = src.getN(request);

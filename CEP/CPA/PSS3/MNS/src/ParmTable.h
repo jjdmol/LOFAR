@@ -28,7 +28,7 @@
 #include <aips/Tables/ColumnsIndex.h>
 #include <aips/Containers/RecordField.h>
 #include <MNS/MeqPolc.h>
-#include <MNS/MeqPointSource.h>
+#include <MNS/MeqSourceList.h>
 #include <Common/lofar_vector.h>
 
 //# Forward Declarations
@@ -60,7 +60,7 @@ public:
 
   // Return point sources for the given source numbers.
   // An empty sourceNr vector means all sources.
-  vector<MeqPointSource> getPointSources (const Vector<int>& sourceNrs);
+  MeqSourceList getPointSources (const Vector<int>& sourceNrs);
 
 private:
   // Find the table subset containing the parameter values for the

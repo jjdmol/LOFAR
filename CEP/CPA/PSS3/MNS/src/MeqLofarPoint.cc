@@ -33,7 +33,7 @@
 #include <aips/Arrays/Matrix.h>
 
 
-MeqLofarPoint::MeqLofarPoint (vector<MeqPointSource>* sources,
+MeqLofarPoint::MeqLofarPoint (MeqSourceList* sources,
 			      MeqLofarStatSources* left,
 			      MeqLofarStatSources* right,
 			      MeqHist* celltHistogram, MeqHist* cellfHistogram)
@@ -98,16 +98,15 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
   complex<double>* dyy = yy.setDComplex (ncellt, ncellf);
 
   // Step through all sources and calculate the contribution for each of them.
-  int srcnr = 0;
-  for (vector<MeqPointSource>::iterator iter = itsSources->begin();
-       iter != itsSources->end();
-       iter++) {
-    dftReq.setSourceNr (srcnr++);
+  int nrsrc = itsSources->size();
+  for (int srcnr=0; srcnr<nrsrc; srcnr++) {
+    dftReq.setSourceNr (srcnr);
+    MeqPointSource& src = (*itsSources)[srcnr];
     // Calculate the source fluxes.
-    MeqResult ik = iter->getI()->getResult (dftReq);
-    MeqResult qk = iter->getQ()->getResult (dftReq);
-    MeqResult uk = iter->getU()->getResult (dftReq);
-    MeqResult vk = iter->getV()->getResult (dftReq);
+    MeqResult ik = src.getI()->getResult (dftReq);
+    MeqResult qk = src.getQ()->getResult (dftReq);
+    MeqResult uk = src.getU()->getResult (dftReq);
+    MeqResult vk = src.getV()->getResult (dftReq);
     // Calculate the left and right station Jones matrix elements.
     const MeqResult& resl11  = itsLeft->getResult11 (dftReq);
     const MeqResult& resl12  = itsLeft->getResult12 (dftReq);

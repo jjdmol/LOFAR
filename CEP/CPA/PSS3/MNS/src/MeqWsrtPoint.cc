@@ -33,7 +33,7 @@
 #include <aips/Arrays/Matrix.h>
 
 
-MeqWsrtPoint::MeqWsrtPoint (const vector<MeqPointSource>& sources,
+MeqWsrtPoint::MeqWsrtPoint (MeqSourceList* sources,
 			    MeqPointDFT* dft,
 			    MeqHist* celltHistogram, MeqHist* cellfHistogram)
 : itsSources   (sources),
@@ -53,9 +53,10 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
   const MeqDomain& domain = request.domain();
   Assert (request.nx() == 1);
   // Find the maximum nr of cells needed.
-  int ncellt = 0;
-  int ncellf = 0;
-  for (unsigned int i=0; i<itsSources.size(); i++) {
+  int ncellt = 1;
+  int ncellf = 1;
+  int nrsrc = itsSources->size();
+  for (int i=0; i<nrsrc; i++) {
     vector<int> ncell = itsDFT->ncells (i, request);
     if (ncell[0] > ncellt) {
       ncellt = ncell[0];
@@ -89,16 +90,14 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
   resYX.setValue (MeqMatrix (value));
   resXY.setValue (MeqMatrix (value));
   resYY.setValue (MeqMatrix (value));
-  int srcnr = 0;
   
-  for (vector<MeqPointSource>::iterator iter = itsSources.begin();
-       iter != itsSources.end();
-       iter++) {
+  for (int srcnr=0; srcnr<nrsrc; srcnr++) {
     dftReq.setSourceNr (srcnr++);
-    MeqResult ik = iter->getI()->getResult (dftReq);
-    MeqResult qk = iter->getQ()->getResult (dftReq);
-    MeqResult uk = iter->getU()->getResult (dftReq);
-    MeqResult vk = iter->getV()->getResult (dftReq);
+    MeqPointSource& src = (*itsSources)[srcnr];
+    MeqResult ik = src.getI()->getResult (dftReq);
+    MeqResult qk = src.getQ()->getResult (dftReq);
+    MeqResult uk = src.getU()->getResult (dftReq);
+    MeqResult vk = src.getV()->getResult (dftReq);
     MeqResult dft = itsDFT->getResult (dftReq);
     MeqMatrix vki = tocomplex(0., vk.getValue());
     if (MeqPointDFT::doshow) {
@@ -106,15 +105,14 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
 	   << qk.getValue() << ' ' << uk.getValue() << ' ' << vk.getValue()
 	   << ' ' << vki << ' ' << dft.getValue() << endl;
     }
-    // Calculate XX, etc. Note that the values should be divided by 2.
-    // That is done later in MeqWsrtInt, because that is less expensive.
-    MeqMatrix xx = (ik.getValue() + qk.getValue()) * dft.getValue();
+    // Calculate XX, etc.
+    MeqMatrix xx = (ik.getValue() + qk.getValue()) / 2. * dft.getValue();
     if (MeqPointDFT::doshow) {
       cout << "MeqWsrtPoint abs(xx) " << abs(xx.getDComplex(0,0)) << endl;
     }
-    MeqMatrix yx = (uk.getValue() - vki) * dft.getValue();
-    MeqMatrix xy = (uk.getValue() + vki) * dft.getValue();
-    MeqMatrix yy = (ik.getValue() - qk.getValue()) * dft.getValue();
+    MeqMatrix yx = (uk.getValue() - vki) / 2. * dft.getValue();
+    MeqMatrix xy = (uk.getValue() + vki) / 2. * dft.getValue();
+    MeqMatrix yy = (ik.getValue() - qk.getValue()) / 2. * dft.getValue();
     if (MeqPointDFT::doshow) {
       cout << "MeqWsrtPoint XX: " << xx << endl << resXX.getValue() << endl;
     }
@@ -154,8 +152,8 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
 	if (evaliq) {
 	  const MeqMatrix& ikp = ik.getPerturbedValue(spinx);
 	  const MeqMatrix& qkp = qk.getPerturbedValue(spinx);
-	  MeqMatrix xxp = (ikp + qkp) * dkp;
-	  MeqMatrix yyp = (ikp - qkp) * dkp;
+	  MeqMatrix xxp = (ikp + qkp) / 2. * dkp;
+	  MeqMatrix yyp = (ikp - qkp) / 2. * dkp;
 	  // If not calculated before, initialize to unperturbed sum.
 	  if (! resXX.isDefined(spinx)) {
 	    resXX.setPerturbedValue (spinx, resXX.getValue().clone());
@@ -170,8 +168,8 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
 	}
 	if (evaluv) {
 	  const MeqMatrix& ukp = uk.getPerturbedValue(spinx);
-	  MeqMatrix xyp = (ukp - vkip) * dkp;
-	  MeqMatrix yxp = (ukp + vkip) * dkp;
+	  MeqMatrix xyp = (ukp - vkip) / 2. * dkp;
+	  MeqMatrix yxp = (ukp + vkip) / 2. * dkp;
 	  if (! resXY.isDefined(spinx)) {
 	    resXY.setPerturbedValue (spinx, resXY.getValue().clone());
 	    resXY.setPerturbation (spinx, perturbation);

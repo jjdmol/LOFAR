@@ -81,9 +81,6 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
   // dividing by the number of subcells used to predict a single cell.
   // The nr of subcells is the same for each cell.
   double nsubc = xx.getValue().nelements() / request.ny();
-  // The values also have to be divided by 2. That is not
-  // done in MeqWsrtPoint because it is cheaper to do it here.
-  // If no subcells were used, we can simply divide by 2.
   if (MeqPointDFT::doshow) {
     cout << "Int: " << xx.getValue() << ' ' << xy.getValue() << ' '
 	 << yx.getValue() << ' ' << yy.getValue() << endl;
@@ -92,13 +89,13 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
   MeqMatrix xyres;
   MeqMatrix yxres;
   MeqMatrix yyres;
+  double fact = 1./nsubc;
   if (nsubc == request.ny()) {
-    xxres = xx.getValue() * .5;
-    xyres = xy.getValue() * .5;
-    yxres = yx.getValue() * .5;
-    yyres = yy.getValue() * .5;
+    xxres = xx.getValue();
+    xyres = xy.getValue();
+    yxres = yx.getValue();
+    yyres = yy.getValue();
   } else {
-    double fact = 1. / (2.*nsubc);
     const complex<double>* xxc = xx.getValue().dcomplexStorage();
     const complex<double>* xyc = xy.getValue().dcomplexStorage();
     const complex<double>* yxc = yx.getValue().dcomplexStorage();
@@ -296,9 +293,8 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
       MeqMatrix pconj22 = conj22;
       if (xx.isDefined(spinx)) {
 	if (nsubc == request.ny()) {
-	  pxxres = xx.getPerturbedValue(spinx) * .5;
+	  pxxres = xx.getPerturbedValue(spinx);
 	} else {
-	  double fact = 1. / (2.*nsubc);
 	  const complex<double>* dc =
 	    xx.getPerturbedValue(spinx).dcomplexStorage();
 	  pxxres = MeqMatrix(complex<double>(), 1, request.ny(), false);
@@ -314,9 +310,8 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
       }
       if (xy.isDefined(spinx)) {
 	if (nsubc == request.ny()) {
-	  pxxres = xy.getPerturbedValue(spinx) * .5;
+	  pxxres = xy.getPerturbedValue(spinx);
 	} else {
-	  double fact = 1. / (2.*nsubc);
 	  const complex<double>* dc =
 	    xy.getPerturbedValue(spinx).dcomplexStorage();
 	  pxyres = MeqMatrix(complex<double>(), 1, request.ny(), false);
@@ -332,9 +327,8 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
       }
       if (yx.isDefined(spinx)) {
 	if (nsubc == request.ny()) {
-	  pxxres = yx.getPerturbedValue(spinx) * .5;
+	  pxxres = yx.getPerturbedValue(spinx);
 	} else {
-	  double fact = 1. / (2.*nsubc);
 	  const complex<double>* dc =
 	    yx.getPerturbedValue(spinx).dcomplexStorage();
 	  pyxres = MeqMatrix(complex<double>(), 1, request.ny(), false);
@@ -350,9 +344,8 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
       }
       if (yy.isDefined(spinx)) {
 	if (nsubc == request.ny()) {
-	  pxxres = yy.getPerturbedValue(spinx) * .5;
+	  pxxres = yy.getPerturbedValue(spinx);
 	} else {
-	  double fact = 1. / (2.*nsubc);
 	  const complex<double>* dc =
 	    yy.getPerturbedValue(spinx).dcomplexStorage();
 	  pyyres = MeqMatrix(complex<double>(), 1, request.ny(), false);
