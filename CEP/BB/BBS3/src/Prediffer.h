@@ -241,6 +241,9 @@ private:
   int    itsNrChan;                   //# nr of channels in observation
   int    itsFirstChan;                //# first channel of selected domain
   int    itsLastChan;                 //# last channel of selected domain
+  bool   itsReverseChan;              //# Channels are in reversed order
+  int    itsDataFirstChan;            //# First channel to use in data
+                                      //# (can be different if reversed order)
 
   string itsSolveFileName;            //# Data file used (.dat or .res)
 

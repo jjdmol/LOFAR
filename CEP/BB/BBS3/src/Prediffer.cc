@@ -257,6 +257,13 @@ void Prediffer::readDescriptiveData(const string& fileName)
   ASSERT (itsAnt1.size() == itsAnt2.size());
   itsNrBl = itsAnt1.size();
   getPhaseRef(ra, dec, itsTimes[0]);
+  itsReverseChan = itsStartFreq > itsEndFreq;
+  if (itsReverseChan) {
+    double  tmp  = itsEndFreq;
+    itsEndFreq   = itsStartFreq;
+    itsStartFreq = tmp;
+    itsStepFreq  = std::abs(itsStepFreq);
+  }
 }
 
 //----------------------------------------------------------------------
@@ -654,6 +661,12 @@ vector<uint32> Prediffer::setDomain (double fstart, double flength,
   }
   itsLastChan--;
   ASSERT (itsFirstChan <= itsLastChan);
+  // Determine the first data channel to be mapped in.
+  if (itsReverseChan) {
+    itsDataFirstChan = itsNrChan - 1 - itsLastChan;
+  } else {
+    itsDataFirstChan = itsFirstChan;
+  }
 
   // Map the part of the file matching the given times.
   NSTimer mapTimer;
@@ -844,7 +857,7 @@ bool Prediffer::getEquations (double* result, char* flagResult,
 	  && shape[0] == uint(2*nrchan));
   double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
   double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
-  unsigned int freqOffset = itsFirstChan*itsNCorr;
+  unsigned int freqOffset = itsDataFirstChan*itsNCorr;
 
   // Get the pointer to the mapped data.
   fcomplex* dataStart = (fcomplex*)itsDataMap->getStart();
@@ -952,14 +965,28 @@ void Prediffer::getEquation (double* result, char* flagResult,
       if (showd) {
 	cout << "corr=" << corr << ' ' << val << endl;
       }
-      for (int ch=0; ch<nrchan; ++ch) {
-	*result++ = real(data[corr+ch*itsNCorr]) - vals[2*ch];
-	*result++ = imag(data[corr+ch*itsNCorr]) - vals[2*ch+1];
-	if (showd) cout << *(result-2) << ' ' << *(result-1) << ' ';
-	// Use same flag for real and imaginary part.
-	flagResult[0] = (flags[corr+ch*itsNCorr] ? 1:0);
-	flagResult[1] = flagResult[0];
-	flagResult += 2;
+      if (itsReverseChan) {
+	int dch = nrchan;
+	for (int ch=0; ch<nrchan; ++ch) {
+	  --dch;
+	  *result++ = real(data[corr+dch*itsNCorr]) - vals[2*ch];
+	  *result++ = imag(data[corr+dch*itsNCorr]) - vals[2*ch+1];
+	  if (showd) cout << *(result-2) << ' ' << *(result-1) << ' ';
+	  // Use same flag for real and imaginary part.
+	  flagResult[0] = (flags[corr+dch*itsNCorr] ? 1:0);
+	  flagResult[1] = flagResult[0];
+	  flagResult += 2;
+	}
+      } else {
+	for (int ch=0; ch<nrchan; ++ch) {
+	  *result++ = real(data[corr+ch*itsNCorr]) - vals[2*ch];
+	  *result++ = imag(data[corr+ch*itsNCorr]) - vals[2*ch+1];
+	  if (showd) cout << *(result-2) << ' ' << *(result-1) << ' ';
+	  // Use same flag for real and imaginary part.
+	  flagResult[0] = (flags[corr+ch*itsNCorr] ? 1:0);
+	  flagResult[1] = flagResult[0];
+	  flagResult += 2;
+	}
       }
       if (showd) cout << endl;
       // Get the derivative for all solvable parameters.
@@ -1473,8 +1500,14 @@ void Prediffer::showSettings() const
   cout << "  mepname:   " << itsMEPName << endl;
   cout << "  gsmname:   " << itsGSMMEPName << endl;
   cout << "  solvparms: " << itsParmData << endl;
-  cout << "  stchan:    " << itsFirstChan << endl;
-  cout << "  endchan:   " << itsLastChan << endl;
+  if (itsReverseChan) {
+    cout << "  stchan:    " << itsNrChan - 1 - itsFirstChan << endl;
+    cout << "  endchan:   " << itsNrChan - 1 - itsLastChan << endl;
+    cout << "    Note: channels are in reversed order" << endl;
+  } else {
+    cout << "  stchan:    " << itsFirstChan << endl;
+    cout << "  endchan:   " << itsLastChan << endl;
+  }
   cout << "  calcuvw  : " << itsCalcUVW << endl;
   cout << endl;
 }

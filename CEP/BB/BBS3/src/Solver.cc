@@ -99,6 +99,7 @@ void Solver::solve (bool useSVD,
   LOG_INFO_STR( "Nr of used data points:    " << itsNUsed);
   LOG_INFO_STR( "Nr of flagged data points: " << itsNFlag);
   LOG_INFO_STR( "Solution before: " << itsSolvableValues);
+  rank = 0;
   bool solFlag = itsSolver.solveLoop (fit, rank, &(itsSolvableValues[0]),
 				      useSVD);
   LOG_INFO_STR( "Solution after:  " << itsSolvableValues);
