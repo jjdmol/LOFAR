@@ -61,6 +61,17 @@ class UVPDataAtom
   void            setData(const std::vector<ComplexType>& data);
 
 
+  //! Assigns a complete array of visibilities to itsData
+  /*! setData overwrites the contents of itsData with the contents of
+    data. This is the fastest of all setData routines.
+
+       \param data is the list of visibilities that are to be assigned
+       to itsData. It must have the exact same size as the current
+       number of channels.
+   */
+  void            setData(const ComplexType* data);
+
+
   //! \returns the number of channels.
   unsigned int getNumberOfChannels() const;
 
