@@ -42,13 +42,8 @@ event = {
 	    type = "int";
       };
       param = {
-	    name = "n_subbands";
-	    type = "int";
-      };
-      param = {
 	    name = "subbands";
-	    type = "int";
-	    dim = "ABS::N_BEAMLETS";
+	    type = "int[ABS::N_BEAMLETS]";
       };
 };
 
@@ -105,12 +100,8 @@ event = {
 	    type = "int";
       };
       param = {
-	    name = "angle1";
-	    type = "double";
-      };
-      param = {
-	    name = "angle2";
-	    type = "double";
+	    name = "angle";
+	    type = "double[2]";
       };
 };
 
@@ -163,6 +154,10 @@ event = {
       //
       signal = WGENABLE;
       dir = IN;
+      param = {
+	  name = "dummy";
+	  type = "int";
+      };
 };
 
 event = {
@@ -171,4 +166,8 @@ event = {
       //
       signal = WGDISABLE;
       dir = IN;
+      param = {
+	  name = "dummy";
+	  type = "int";
+      };
 };
