@@ -1,1 +1,2 @@
-aipspp.var: --with-aipspp=/data/aips++/linux
+aipspp.var: 
+#aipspp.var: --with-aipspp=/data/aips++/linux
