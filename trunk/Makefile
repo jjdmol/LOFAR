@@ -36,17 +36,16 @@ PACKAGE = \
          LCS \
          DMI \
          BaseSim \
-         LOFARSim \
-         StationSim \
 	 CEP/CEPFrame \
          CEP/Tools/PerfTest/P2Perf \
          CEP/CPA/OCTOPUSSY \
          CEP/CPA/OCTOGlish \
          CEP/CPA/VisCube \
          CEP/CPA/GSM \
-         CEP/CPA/AppAgent \
          CEP/CPA/PSS3/MNS \
-	 CEP/CPA/PSS4
+         CEP/CPA/PSS3/CAL \
+	 CEP/CPA/PSS4 \
+         CEP/CPA/AppAgent 
 PACKAGES = $(PACKAGE)
 #
 
