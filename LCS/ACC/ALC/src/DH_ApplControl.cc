@@ -28,11 +28,11 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <DH_ApplControl.h>
+#include <ACC/DH_ApplControl.h>
 
 
-namespace LOFAR
-{
+namespace LOFAR {
+  namespace ACC {
 
 // Constructor
 DH_ApplControl::DH_ApplControl() :
@@ -102,5 +102,6 @@ void	DH_ApplControl::fillDataPointers() {
 }
 
 
+} // namespace ACC
 } // namespace LOFAR
 

@@ -38,8 +38,8 @@
 #include <Common/BlobOStream.h>
 #include <Transport/DataHolder.h>
 
-namespace LOFAR
-{
+namespace LOFAR {
+  namespace ACC {
 
 //# Forward Declarations
 //class forward;
@@ -164,6 +164,7 @@ inline uint16	DH_ApplControl::getResult		() const
 }
 
 
+} // namespace ACC
 } // namespace LOFAR
 
 #endif

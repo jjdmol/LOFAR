@@ -35,8 +35,8 @@
 #include <rpc/types.h>
 #include <Transport/DataHolder.h>
 
-namespace LOFAR
-{
+namespace LOFAR {
+  namespace ACC {
 
 //# Forward Declarations
 //class forward;
@@ -134,6 +134,7 @@ inline in_port_t	DH_AC_Connect::getServerPort() const
 }
 
 
+} // namespace ACC
 } // namespace LOFAR
 
 #endif

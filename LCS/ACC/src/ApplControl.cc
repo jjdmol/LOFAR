@@ -27,13 +27,13 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <DH_ApplControl.h>
-#include <DH_AC_Connect.h>
 #include <Transport/TH_Socket.h>
-#include <ApplControl.h>
+#include <ACC/DH_ApplControl.h>
+#include <ACC/DH_AC_Connect.h>
+#include <ACC/ApplControl.h>
 
-namespace LOFAR
-{
+namespace LOFAR {
+  namespace ACC {
 
 
 ApplControl::ApplControl() :
@@ -96,6 +96,8 @@ string ApplControl::supplyInfo(const string&	keyList)  const
 {
 	cout << "*** ApplControl:supplyInfo not implemented!!! ***\n";
 	cout << "This should be implemented when doing asynchrone communication\n";
+	
+	return("");
 }
 
 //# ---------- protected ----------
@@ -137,5 +139,6 @@ bool	ApplControl::doRemoteCmd(const ACCmd		theCmd,
 }
 
 
+} // namespace ACC
 } // namespace LOFAR
 

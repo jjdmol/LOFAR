@@ -27,45 +27,11 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <ApplControlServer.h>
+#include <ACC/ApplControlServer.h>
 #include <Transport/TH_Socket.h>
 
-namespace LOFAR
-{
-
-void hexdump (void	*dataptr, long	size)
-{
-#define BTS_P_LINE		16
-	long	left, index;
-	char	c;
-	char	*memblock;
-
-	memblock = static_cast<char *>(dataptr);
-
-	for (left = 0; left < size; left += BTS_P_LINE) {
-		printf ("%04lX: ", left);
-		for (index = 0; index < BTS_P_LINE; index ++) {
-			if (index == BTS_P_LINE / 2)			/* add extra space in	*/
-				printf (" ");					/* the middle o.t. line	*/
-
-			if (left + index < size)
-				printf ("%02X ", (unsigned char) memblock [left + index]);
-			else
-				printf ("   ");
-		}
-
-		for (index = 0; index < BTS_P_LINE; index ++) {	/* print char if	*/
-			if (left + index < size) {					/* printable char	*/
-				c = memblock [left + index];
-				if (c < 0x20 || c > 0x7e)
-					printf (".");
-				else
-					printf ("%c", c);
-			}
-		}
-		printf ("\n");
-	}
-}
+namespace LOFAR {
+  namespace ACC {
 
 ApplControlServer::ApplControlServer(const uint16				portnr,
 									 const ApplCtrlFunctions&	ACF) :
@@ -75,10 +41,9 @@ ApplControlServer::ApplControlServer(const uint16				portnr,
 	DH_ApplControl*	DH_AC_Server = new DH_ApplControl;
 	DH_AC_Client.setID(1);
 	DH_AC_Server->setID(2);
-	TH_Socket	TCPConnection("localhost", "obsolete", portnr, false);
+	TH_Socket	TCPConnection("localhost", portnr, true);
 	DH_AC_Client.connectTo(*DH_AC_Server, TCPConnection, false);
 	DH_AC_Server->connectTo(DH_AC_Client, TCPConnection, false);
-	DH_AC_Client.init(); 	// ???
 	DH_AC_Server->init();
 
 //	DH_AC_Server->read();	// accept during first read!!!!!!!!!!
@@ -96,6 +61,7 @@ ApplControlServer::~ApplControlServer()
 
 // Copying is allowed.
 ApplControlServer::ApplControlServer(const ApplControlServer& that) :
+	ApplControl(that),
 	itsACF(that.itsACF)
 { }
 
@@ -242,5 +208,6 @@ void	ApplControlServer::handleAckMessage(void)
 }
 
 
+} // namespace ACC
 } // namespace LOFAR
 

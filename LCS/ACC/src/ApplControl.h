@@ -30,10 +30,10 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <DH_ApplControl.h>
+#include <ACC/DH_ApplControl.h>
 
-namespace LOFAR
-{
+namespace LOFAR {
+  namespace ACC {
 
 //# Forward Declarations
 //class forward;
@@ -152,6 +152,7 @@ inline DH_ApplControl*	ApplControl::getDataHolder() const
 	return itsDataHolder;
 }
 
+} // namespace ACC
 } // namespace LOFAR
 
 #endif

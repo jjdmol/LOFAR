@@ -31,8 +31,8 @@
 
 //# Includes
 
-namespace LOFAR
-{
+namespace LOFAR {
+  namespace ACC {
 
 //# Forward Declarations
 //class forward;
@@ -114,6 +114,7 @@ inline ApplCtrlFunctions::ApplCtrlFunctions(Par2Func	theBootFunc,
 {
 }
 
+} // namespace ACC
 } // namespace LOFAR
 
 #endif

@@ -28,11 +28,11 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <DH_AC_Connect.h>
+#include <ACC/DH_AC_Connect.h>
 
 
-namespace LOFAR
-{
+namespace LOFAR {
+  namespace ACC {
 
 // Constructor
 DH_AC_Connect::DH_AC_Connect(const string&	hostID) :
@@ -100,5 +100,6 @@ void	DH_AC_Connect::fillDataPointers() {
 }
 
 
+} // namespace ACC
 } // namespace LOFAR
 
