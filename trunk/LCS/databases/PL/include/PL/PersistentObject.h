@@ -66,7 +66,8 @@ namespace LOFAR
         MetaData() : 
           itsOid(new ObjectId()), 
           itsOwnerOid(theirNullOid),
-          itsVersionNr(new uint(0))
+          itsVersionNr(new uint(0)),
+          itsTableName(new std::string())
         {}
 
         // Clone the MetaData, i.e. make a deep copy.
@@ -77,15 +78,24 @@ namespace LOFAR
         // Reset the attributes to their initial values.
         void reset() const;
 
-        // Return the shared pointer to the object-id of this PersistentObject.
+        // Return the shared pointer to the object-id of this
+        // PersistentObject.
+        // \note We return a pointer here, because we must be able to attach
+        // our ObjectId pointer to an instance of a shared ObjectId object.
         boost::shared_ptr<ObjectId>& oid() { return itsOid; }
 
         // Return the shared pointer to the object-id of the owner of this
         // PersistentObject.
+        // \note We return a pointer here, because we must be able to attach
+        // our ObjectId pointer to an instance of a shared ObjectId object.
         boost::shared_ptr<ObjectId>& ownerOid() { return itsOwnerOid; }
 
         // Return a reference to the version number of this PersistentObject.
         uint& versionNr() const { return *itsVersionNr; }
+
+        // Return a reference to the string holding the database table name
+        // for this PersistentObject.
+        std::string& tableName() { return *itsTableName; }
 
         // Return a shared pointer to the "global" null object-id.
         static const boost::shared_ptr<ObjectId>& nullOid() { 
@@ -139,6 +149,12 @@ namespace LOFAR
         // continue with an update, because then we would overwrite modified
         // data.
         boost::shared_ptr<uint> itsVersionNr;
+
+        // This is the name of the database table where (part of) our object
+        // will be stored. It can be set by the user, although it will usually
+        // be derived from the name in the map-file that is used by the genDB
+        // tools.
+        boost::shared_ptr<std::string> itsTableName;
 
         //@}
 
@@ -212,13 +228,19 @@ namespace LOFAR
       // Return a reference to the container of "owned" PersistentObjects.
       POContainer& ownedPOs() { return itsOwnedPOs; }
 
-      // Get the name of the database table that is associated with this
+      // Get the database table name that is associated with this
       // PersistentObject.
-      const std::string& tableName() const { return itsTableName; }
+      // \note This method is only provided as a convenience as you can also
+      // get the table name directly using the meta data.
+      const std::string& tableName() const { return metaData().tableName(); }
 
-      // Set the name of the database table that is associated with this
+      // Set the database table name that is associated with this
       // PersistentObject.
-      void tableName(const std::string& aName) { itsTableName = aName; }
+      // \note This method is only provided as a convenience as you can also
+      // set the table name directly using the meta data.
+      void tableName(const std::string& aName) {
+        metaData().tableName() = aName; 
+      }
 
     private:
 
