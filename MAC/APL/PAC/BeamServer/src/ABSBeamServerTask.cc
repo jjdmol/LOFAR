@@ -31,6 +31,17 @@
 #include "ABSBeam.h"
 #include "ABSBeamlet.h"
 
+#if 0
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+#else
+#define LOG_DEBUG(a)
+#define LOG_FATAL(a)
+#define LOG_ERR(a)
+#define LOG_INFO(a)
+#define INIT_LOGGER(a)
+#endif
+
 #include <iostream>
 #include <sys/time.h>
 #include <string.h>
@@ -58,14 +69,12 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  cout << "initial received event on port " << port.getName() << endl;
+  LOG_DEBUG(formatString("initial state received event on port %s", port.getName().c_str()));
 
   switch(e.signal)
   {
       case F_INIT_SIG:
       {
-	  cout << "Hello, world!" << endl;
-
 	  // create a spectral window from 0MHz to 20MHz
 	  // steps of 256kHz
 	  SpectralWindow* spw = new SpectralWindow(0e6, 20e6/128, 128);
@@ -86,7 +95,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 	  
 	  if (beam->allocate(*m_spws[0], subbands) < 0)
 	  {
-	      cerr << "failed to allocate beam 0" << endl;
+	      LOG_ERR("failed to allocate beam 0");
 	  }
 	  else
 	  {
@@ -109,7 +118,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 
 	  if (beam->allocate(*m_spws[0], subbands) < 0)
 	  {
-	      cerr << "failed to allocate beam 1" << endl;
+	      LOG_ERR("failed to allocate beam 1");
 	  }
 	  else
 	  {
@@ -120,7 +129,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 	  m_beams.insert(2);
 	  if (beam->allocate(*m_spws[0], subbands) < 0)
 	  {
-	      cerr << "failed to allocate beam 2" << endl;
+	      LOG_ERR("failed to allocate beam 2");
 	  }
 	  else
 	  {
@@ -133,8 +142,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 	  for (map<int,int>::iterator sel = m_sbsel.begin();
 	       sel != m_sbsel.end(); ++sel)
 	  {
-	      cout << "(" << sel->first
-		   << "," << sel->second << ")" << endl;
+	      LOG_DEBUG(formatString("(%d,%d)", sel->first, sel->second));
 	  }
 
 	  beam->deallocate();
@@ -151,14 +159,14 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 
       case F_CONNECTED_SIG:
       {
-	  cout << "port connected: " << port.getName() << endl;
+	  LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
 	  TRAN(BeamServerTask::enabled);
       }
       break;
 
       case F_DISCONNECTED_SIG:
       {
-	  cout << "port disconnected: " << port.getName() << endl;
+	  LOG_FATAL(formatString("port '%s' disconnected", port.getName().c_str()));
 	  exit(EXIT_FAILURE);
       }
       break;
@@ -174,8 +182,6 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-  //cout << "enabled event on port " << port.getName() << endl;
   
   switch (e.signal)
   {
@@ -198,9 +204,8 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
       {
 	  struct timeval now;
 	  gettimeofday(&now, 0);
-	  cout << "time=("
-	       << now.tv_sec  << ","
-	       << now.tv_usec << ")" << endl;
+
+	  LOG_DEBUG(formatString("time=(%d,%d)", now.tv_sec, now.tv_usec));
 
 	  compute_timeout_action();
 
@@ -246,11 +251,10 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 
       case F_DATAIN_SIG:
 	  // ignore DATAIN
-	  //cout << "datain" << endl;
 	  break;
 
       case F_DATAOUT_SIG:
-	  cout << "dataout" << endl;
+	  LOG_DEBUG("dataout");
 	  break;
 
       default:
@@ -331,10 +335,10 @@ void BeamServerTask::beampointto_action(ABSBeampointtoEvent* pt,
 					       (Direction::Types)pt->type),
 				     pt->time)) < 0)
       {
-	  cerr << "beam not allocated" << endl;
+	  LOG_ERR("beam not allocated");
       }
   }
-  else cerr << "invalid beam_index in BEAMPOINTTO" << endl;
+  else LOG_ERR("invalid beam_index in BEAMPOINTTO");
 }
 
 void BeamServerTask::wgenable_action(ABSWgenableEvent* we)
@@ -448,17 +452,16 @@ void BeamServerTask::send_sbselection()
       for (map<int,int>::iterator sel = m_sbsel.begin();
 	   sel != m_sbsel.end(); ++sel, ++i)
       {
-	  cout << "(" << sel->first
-	       << "," << sel->second << ")" << endl;
+	  LOG_DEBUG(formatString("(%d,%d)", sel->first, sel->second));
 
 	  if (i != sel->first)
 	  {
-	      cerr << "invalid src index" << sel->first << endl;
+	      LOG_ERR(formatString("invalid src index %d", sel->first));
 	      continue;
 	  }
 	  if (sel->second > 254)
 	  {
-	      cerr << "invalid tgt index" << sel->first << endl;
+	      LOG_ERR(formatString("invalid tgt index", sel->first));
 	      continue;
 	  }
 
@@ -473,6 +476,10 @@ void BeamServerTask::send_sbselection()
 
 int main(int argc, char** argv)
 {
+  INIT_LOGGER("log4cplus.properties");
+
+  LOG_INFO(formatString("Program %s has started", argv[0]));
+
   GCFTask::init(argc, argv);
 
   BeamServerTask abs("ABS");
@@ -480,6 +487,8 @@ int main(int argc, char** argv)
   abs.start(); // make initial transition
 
   GCFTask::run();
+
+  LOG_INFO("Normal termination of program");
 
   return 0;
 }

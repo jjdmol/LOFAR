@@ -1,0 +1,10 @@
+
+[AVTStub]
+beam_server=ABS:client
+
+[ABS]
+board=EPAStub:client
+
+[EPAStub]
+#intenionally left empty
+
