@@ -69,6 +69,10 @@ class UVSorterWP : public WorkProcess  //## Inherits: <unnamed>%3CD79D5303AF
 
     // Additional Public Declarations
       //## begin UVSorterWP%3CD79D3D0227.public preserve=yes
+      typedef enum {
+        IDLE = 0,
+        SORTING = 1
+      } State;
       //## end UVSorterWP%3CD79D3D0227.public
 
   protected:
@@ -97,17 +101,12 @@ class UVSorterWP : public WorkProcess  //## Inherits: <unnamed>%3CD79D5303AF
       
       int uvset_id,segment_id,num_ifrs,num_times,num_channels;
       
+      ObjRef header_ref;
       DataRecord::Ref prec_template_ref;
       vector<DataRecord *> prec;
       vector<DataRecord::Ref> prec_ref;
       vector<dcomplex *> pdata;
       vector<int *> pnumpoints; 
-      
-      
-      
-      
-  
-  
       
       //## end UVSorterWP%3CD79D3D0227.implementation
 

@@ -70,6 +70,8 @@ void UVSorterWP::init ()
   subscribe(header_hiid);
   subscribe(chunk_hiid);
   subscribe(footer_hiid);
+  
+  uvset_id = segment_id = -1;
   //## end UVSorterWP::init%3CD79D680391.body
 }
 
@@ -88,29 +90,36 @@ int UVSorterWP::receive (MessageRef &mref)
       lprintf(1,"ignoring %s: patch # or correlation type mismatch",msg.id().toString().c_str());
       return Message::ACCEPT;
     }
-    uvset_id = msg[FUVSetIndex];
-    segment_id = msg[FSegmentIndex];
-    num_ifrs = msg[FNumBaselines];
-    num_times = msg[FNumTimeslots];
-    num_channels = msg[FNumChannels];
-    dprintf(1)("got header for %d:%d, %d baselines, %d channels, %d times\n",
-        uvset_id,segment_id,num_ifrs,num_channels,num_times);
+    header_ref = msg.payload();
+    const DataRecord &hdr = 
+        dynamic_cast<const DataRecord&>(header_ref.deref());
+    uvset_id = hdr[FUVSetIndex];
+    segment_id = hdr[FSegmentIndex];
+    num_ifrs = hdr[FNumBaselines];
+    num_times = hdr[FNumTimeslots];
+    num_channels = hdr[FNumChannels];
+    
     // init record for per-IFR accumulators
     DataRecord &rec = prec_template_ref <<= new DataRecord;
     rec[FTimeSlotIndex] <<= new DataField(Tpint,num_times);
     rec[FTime] <<= new DataField(Tpdouble,num_times);
     
     rec[FCorr] = mycorr;
-    rec[FSPWIndex] = msg[FSPWIndex].as_int();
-    rec[FFieldIndex] = msg[FFieldIndex].as_int();
-    rec[FFieldName] = msg[FFieldName].as_string();
-    
+    rec[FSPWIndex] = hdr[FSPWIndex].as_int();
+    rec[FFieldIndex] = hdr[FFieldIndex].as_int();
+    rec[FFieldName] = hdr[FFieldName].as_string();
+
     rec[FExposure] <<= new DataField(Tpdouble,num_times);
     rec[FNumIntTimes] <<= new DataField(Tpint,num_times);
     rec[FUVW] <<= new DataArray(Tpdouble,IPosition(2,3,num_times));
     rec[FData] <<= new DataArray(Tpdcomplex,IPosition(2,num_channels,num_times));
     rec[FNumIntPixels] <<= new DataArray(Tpint,IPosition(2,num_channels,num_times));
-    // init accumulators (initially empty, until data for
+    
+    dprintf(1)("got header for %d:%d (spw %d, field %s): %d IFRs, %d channels, %d times\n",
+        uvset_id,segment_id,rec[FSPWIndex].as_int(),rec[FFieldName].as_string().c_str(),
+        num_ifrs,num_channels,num_times);
+    
+    // init accumulators (empty & unattached, until data for
     // that IFR actually gets there)
     prec.resize(num_ifrs);
     prec_ref.resize(num_ifrs);
@@ -121,6 +130,17 @@ int UVSorterWP::receive (MessageRef &mref)
   }
   else if( msg.id().matches(chunk_hiid) )
   {
+    if( uvset_id<0 )
+    {
+      dprintf(1)("no header yet, ignoring data chunk\n");
+      return Message::ACCEPT;
+    }
+    // check for matching data id
+    if( msg[FUVSetIndex].as_int() != uvset_id || msg[FSegmentIndex].as_int() != segment_id )
+    {
+      dprintf(1)("mismatch in uvset or segment id, ignoring data chunk\n");
+      return Message::ACCEPT;
+    }
     // process a data chunk
     const DataRecord &rec = dynamic_cast<const DataRecord &>(msg.payload().deref());
     if( rec[FPatchIndex].as_int() != mypatch || rec[FCorr].as_int() != mycorr )
@@ -138,7 +158,7 @@ int UVSorterWP::receive (MessageRef &mref)
     const int *pnp0 = &rec[FNumIntPixels];          
     int itime = rec[FTimeSlotIndex];
     double timeval = rec[FTime];
-    dprintf(1)("got chunk for time slot %d\n",itime);
+    dprintf(1)("got data chunk for time slot %d\n",itime);
     // loop over all baselines in this chunk
     for( int ifr = 0; ifr < num_ifrs; ifr++,pvd0+=num_channels,pnp0+=num_channels )
     {
@@ -173,27 +193,48 @@ int UVSorterWP::receive (MessageRef &mref)
         memcpy(pvd+itime*num_channels,pvd0,sizeof(*pvd)*num_channels);
         memcpy(pnp+itime*num_channels,pnp0,sizeof(*pnp)*num_channels);
       }
-      // have we now completely filled in this baseline?
-      if( itime == num_times-1 )
+    } // end of loop over baselines in chunk
+  } // end if received chunk
+  else if( msg.id().matches(footer_hiid) )
+  {
+    if( uvset_id<0 )
+      dprintf(1)("no header yet, ignoring footer\n");
+    else if( msg[FUVSetIndex].as_int() != uvset_id || msg[FSegmentIndex].as_int() != segment_id )
+      dprintf(1)("mismatch in uvset or segment id, ignoring footer\n");
+    else
+    {
+      dprintf(1)("got footer for %d:%d\n",uvset_id,segment_id);
+      // publish header
+      MessageRef mref;
+      mref <<= new Message(
+        AidUVData|uvset_id|segment_id|AidPatch|mypatch|AidHeader|AidCorr|AidIFR,
+        header_ref.copy());
+      publish(mref);
+      // publish accumulated chunks
+      int num_pub=0;
+      for( int ifr = 0; ifr < num_ifrs; ifr ++ )
       {
         if( prec_ref[ifr].valid() )
         {
           lprintf(1,"publishing data for patch %d, corr %d, baseline %d",
               mypatch,mycorr,ifr);
-          MessageRef mref;
-          Message &msg = mref <<= new Message(
-            AidUVData|uvset_id|segment_id|AidPatch|mypatch|AidCorr|AidIFR|mycorr|ifr);
-          msg <<= prec_ref[ifr];
+          mref <<= new Message(
+            AidUVData|uvset_id|segment_id|AidPatch|mypatch|AidData|AidCorr|AidIFR|mycorr|ifr);
+          mref.dewr() <<= prec_ref[ifr];
           publish(mref);
-        }
-        else
-        {
-          lprintf(1,"no data accumulated for patch %d, corr %d, baseline %d",
-              mypatch,mycorr,ifr);
+          num_pub++;
         }
       }
-    } // end of loop over baselines in chunk
-  } // end if received chunk
+      lprintf(1,"published data for %d of %d baselines",num_pub,num_ifrs);
+      // publish footer
+      mref <<= new Message(
+        AidUVData|uvset_id|segment_id|AidPatch|mypatch|AidFooter|AidCorr|AidIFR,
+        header_ref);
+      publish(mref);
+      // clear status
+      uvset_id = segment_id = -1;
+    }
+  }
   return Message::ACCEPT;
   //## end UVSorterWP::receive%3CD79D7301B7.body
 }
