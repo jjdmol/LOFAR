@@ -104,6 +104,7 @@ bool Transporter::connectTo (Transporter* that,
 			     TransportHolder& prototype)
 {
   bool result = itsConnection->connectTo(this, that, prototype); 
+  // Init should not be done in the connection but seperate.
   //  result |= init();
   return result;
 }
@@ -178,9 +179,19 @@ void Transporter::dump() const
   
 }
 
-inline TransportHolder* Transporter::getTransportHolder()
-  { 
-    return itsTransportHolder; 
-  }
+TransportHolder* Transporter::getTransportHolder()
+{ 
+  return itsTransportHolder; 
+}
+
+void* Transporter::getDataPtr()
+{
+  return itsBaseDataHolder->getDataPtr();
+}
+
+int Transporter::getDataPacketSize() const
+{
+  return itsBaseDataHolder->getDataPacketSize(); //temporarily
+}
 
 } // end namespace

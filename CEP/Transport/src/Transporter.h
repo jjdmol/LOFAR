@@ -115,12 +115,14 @@ class Transporter
   /// Get the rate for this Transport (thus for its BaseDataHolder).
   int getRate() const;
 
+  bool isBlocking() const ; 
+  void setIsBlocking(bool);
+
   /** Determine if the current event has to be handled (true) or
       skipped (false) based on the Rate setting
   */
   //  bool doHandle() const;
-  
-  bool isBlocking() const ;
+
 
 
 protected:
@@ -215,16 +217,6 @@ inline BaseDataHolder* Transporter::getBaseDataHolder()
 inline void Transporter::setBaseDataHolder(BaseDataHolder* dh)
   {  itsBaseDataHolder = dh; }
 
-inline int Transporter::getDataPacketSize() const
-  {// return itsBaseDataHolder->getDataPacketSize(); //temporarily
-    return -1;
- } 
-
-inline void* Transporter::getDataPtr()
-  {// return itsBaseDataHolder->getDataPtr();
-    return 0;
- }
-
 inline void Transporter::setRate (int aRate)
   { itsRate = aRate; }
 
@@ -233,6 +225,9 @@ inline int Transporter::getRate() const
 
 inline bool Transporter::isBlocking() const
   { return itsIsBlocking; }
+
+inline void Transporter::setIsBlocking(bool block)
+  { itsIsBlocking = block; }
 
 inline void Transporter::setReadTag (int tag)
   { itsReadTag = tag; }
@@ -245,6 +240,7 @@ inline void Transporter::setSourceAddr (BaseDataHolder* addr)
 
 inline void Transporter::setTargetAddr (BaseDataHolder* addr)
   { itsTargetAddr = addr; }
+
 
 
 } // end namespace
