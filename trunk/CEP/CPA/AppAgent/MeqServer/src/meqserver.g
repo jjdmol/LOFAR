@@ -68,7 +68,7 @@ const _meqserver_binary :=
   
 
 const meqserver := function (appid='MeqServer',
-    server=_meqserver_binary,options="-d0 -meq:M:M:MeqServer",
+    server=_meqserver_binary,options="-nogw -d0 -meq:M:M:MeqServer",
     verbose=1,gui=F,ref parent_frame=F,ref widgetset=dws,
     ref self=[=],ref public=[=])
 {

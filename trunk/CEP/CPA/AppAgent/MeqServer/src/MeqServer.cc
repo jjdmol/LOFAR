@@ -220,13 +220,14 @@ void MeqServer::run ()
       int instat = input().getNext(id,ref,0,AppEvent::WAIT);
       if( instat > 0 )
       { 
-        string error_str,output_message;
+        string stage,error_str,output_message;
         HIID output_event;
         try
         {
           // process data event
           if( instat == DATA )
           {
+            stage = "processing input DATA event";
             VisTile::Ref tileref = ref.ref_cast<VisTile>().copy(DMI::WRITE);
             cdebug(4)<<"received tile "<<tileref->tileId()<<endl;
             if( !reading_data )
@@ -286,6 +287,14 @@ void MeqServer::run ()
             control().setStatus(StVDSID,vdsid = id);
             control().setStatus(FDataType,datatype);
           }
+          // generate output event if one was queued up
+          if( !output_event.empty() )
+            postDataEvent(output_event,output_message,eventrec);
+        }
+        catch( AipsError &x )
+        {
+          error_str = x.what();
+          cdebug(2)<<"got AipsError while processing input: "<<x.what()<<endl;
         }
         catch( std::exception &exc )
         {
@@ -297,9 +306,6 @@ void MeqServer::run ()
           error_str = "unknown exception";
           cdebug(2)<<"unknown exception processing input"<<endl;
         }
-        // generate output event if one was queued up
-        if( !output_event.empty() )
-          postDataEvent(output_event,output_message,eventrec);
         // in case of error, generate event
         if( error_str.length() )
         {
