@@ -16,8 +16,21 @@ class Dataclass:
   tablename = None;
   id = None;
 
-  def __init__(self):
+  def mkConnection(self):
     self.db = pg.DB(dbname="bb");
+    
+
+  def __init__(self):
+    connectionCreated = False;
+    debug = True;
+    while not connectionCreated:
+      try:
+        self.mkConnection();
+        connectionCreated = True;
+      except:
+        if debug:
+          print "connection creation failed: " , self.id;
+      #try again
 
     if(self.tablename):
       if(self.id == None):

@@ -1,9 +1,27 @@
 -*- text -*-
 $Id$
 
-This module is for prototyping a blackboard system for use by selfcal engines.
+This module is for prototyping a blackboard system for use by selfcal
+engines.
+
+The Directory doc contains xml-docbook documents containing some
+descriptions of the subject.
+
+The directory src contains the prototype.
+
+Notes:
+
+* postgresql is picky on user connections. this leads to problems
+  sometimes. A single connection or a smart connection pool might give
+  relief.
+
+* Knowledge source candidates are SelfcalEngine, CentreShifter,
+  ThreadController, ThreadWatcher, DataColector, DataIntegrator.
 
 $Log$
+Revision 1.2  2003/04/29 16:22:47  daan
+databaas gestart
+
 Revision 1.1  2003/04/14 12:26:54  daan
 %[ER 5]%
 Wat gaan we hier doen?
