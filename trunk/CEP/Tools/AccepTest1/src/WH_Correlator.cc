@@ -79,41 +79,56 @@ void WH_Correlator::process() {
   int x, y, z;
   double starttime, stoptime, cmults;
 
-  DH_CorrCube::BufferType*  signal;
-  DH_Vis::BufferType*       corr;
 
-  // try to access the DataHolder buffer directly to prevent extra memcpy's
-  signal = ((DH_CorrCube*)getDataManager().getInHolder(0))->getBuffer();
-  corr   = ((DH_Vis*)getDataManager().getOutHolder(0))->getBuffer();
+  DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
+  DH_Vis      *outDH = (DH_Vis*)(getDataManager().getOutHolder(0));
 
-  for (int i = 0; i<itsNelements; i++) {
-    for (int j = 0; j<itsNelements; j++) {
-
-      *(corr + i*itsNelements + j) = DH_Vis::BufferType (0,0);
+  // reset integrator.
+  // todo: speed up by creating 0-filled array in C'tor and memcpy in one stroke.
+  DH_Vis::BufferType *zero = new DH_Vis::BufferType(0,0);
+    for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
+      for (int   station1 = 0; station1 < itsNelements; station1++) {
+	for (int station2 = 0; station2 <= station1;    station2++) {
+	  outDH->setBufferElement(station1, station2, fchannel,zero);
+	}
+      }
     }
-  }
 
 #define DO_TIMING
-#if DO_TIMING
+#ifdef DO_TIMING
   starttime = timer();
 #endif
+  
+  // calculate the correlations and add to output DataHolder.
+  DH_Vis::BufferType s1_val, s2_val;
+  for (int sample = 0; sample < itsNsamples; sample++) {
+    for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
+      for (int   station1 = 0; station1 < itsNelements; station1++) {
+	for (int station2 = 0; station2 <= station1;    station2++) {
+	  // todo: use copy-free multiplication
+	  // todo: remove inner loop getBufferElement calls; consecutive adressing
+	  // todo: do short-> float conversion only once
+	  
+	  // convert complex<short> to complex<float>
+	  s1_val = DH_Vis::BufferType((inDH->getBufferElement(sample, fchannel, station1))->real(),
+				      (inDH->getBufferElement(sample, fchannel, station1)->imag()));
+	  s2_val = DH_Vis::BufferType((inDH->getBufferElement(sample, fchannel, station2))->real(),
+				      (inDH->getBufferElement(sample, fchannel, station2)->imag()));
 
-  for (x = 0; x < itsNsamples; x++) {
-    for (y = 0; y < itsNelements; y++) {
-      for (z = 0; z <= y; z++) {
+	  outDH->addBufferElementVal(station1, station2, fchannel, 
+				     s1_val * s2_val
+				     );
 
- 	*(corr+y*itsNelements+z) += 
-	  *(signal+x*itsNelements+y) * *(signal+x*itsNelements+z);
-
+	}
       }
     }
   }
   
-#if DO_TIMING
+#ifdef DO_TIMING
   stoptime = timer();
 #endif
 
-#if DO_TIMING
+#ifdef DO_TIMING
   cmults = itsNsamples * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
   cout << "Performance: " << 10e-6*cmults/(stoptime-starttime) << " Mcprod/sec" << endl;
   cout << itsNsamples << " " << itsNelements << " " << 10e-6*cmults/(stoptime-starttime) << endl;
