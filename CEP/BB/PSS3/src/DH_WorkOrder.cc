@@ -145,7 +145,7 @@ bool DH_WorkOrder::RetrieveFromDatabase(int, int, char*, int)
     // Block until a packet appears in the table
     while (PQntuples (resWO) == 0)
     {
-      cout << ".";
+      //     cout << ".";
       //     usleep(1000);
       resWO = PQexec (DH_Postgresql::theirConnection, (q1.str ()).c_str ());
       AssertStr (PQresultStatus (resWO) == PGRES_TUPLES_OK,

@@ -63,9 +63,6 @@ CalibratorOld::CalibratorOld (const string & MSName, const string & MEPName,
   itsCorrectedDataColumn = "CORRECTED_DATA";
 
   itsPSS3CalibratorImpl  = NULL;
-
-  std::cout << "***************" << itsMSName << "-" << itsMEPName << "-" << itsGSMName
-	    << "-" << DBType << "=" << itsDBType << "-" << itsDBName << "-" << itsDBPasswd << endl;
 }
 
 
