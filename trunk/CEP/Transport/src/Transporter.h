@@ -26,9 +26,9 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <TransportHolder.h>
-#include <Connection.h>
-#include <BaseSim.h>
+#include <libTransport/TransportHolder.h>
+#include <libTransport/Connection.h>
+#include <libTransport/BaseSim.h>
 
 namespace LOFAR
 {
@@ -69,6 +69,14 @@ class Transporter
 
   /// Get the TransportHolder for this object.
   TransportHolder* getTransportHolder();
+
+  
+  /// interface to the Connection class
+  /// after setting the connection, the init() methods on both the
+  /// TransportHolder and DataHolder are called.
+  bool connectTo(Transporter* that, TransportHolder& prototype);
+  bool connectFrom(Transporter* that, TransportHolder& prototype);
+  bool init();
 
   /// Set/get the ID.
   void setItsID (int aID);
@@ -115,8 +123,6 @@ class Transporter
   */
   //  bool doHandle() const;
   
-  bool connectTo(Transporter* that);
-  bool connectFrom(Transporter* that);
   bool isBlocking() const ;
 
 
