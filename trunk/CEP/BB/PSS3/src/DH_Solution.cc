@@ -240,3 +240,18 @@ bool DH_Solution::RetrieveFromDatabase(int, int, char*, int)
 
   return true;
 }
+
+
+void DH_Solution::clearData()
+{
+  setID(-1);
+  setWorkOrderID(-1);
+  setIterationNo(-1);
+  for (int i = 0; i < 10; i++)
+  {
+    setRAValue(i, 0);
+    setDECValue(i, 0);
+    setStokesIValue(i, 0);
+    getQuality()->init();
+  }
+}

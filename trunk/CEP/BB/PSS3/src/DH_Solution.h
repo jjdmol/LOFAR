@@ -75,6 +75,9 @@ public:
 
   void setSolutionID(int id);  // Set id of solution to retrieve from database
   int getSolutionID();
+
+  // Resets (clears) the contents of its DataPacket 
+  void clearData();
   
 protected:
   // Definition of the DataPacket type.

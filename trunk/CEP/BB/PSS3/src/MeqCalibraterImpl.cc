@@ -545,6 +545,9 @@ MeqCalibrater::MeqCalibrater(const String& msName,
 MeqCalibrater::~MeqCalibrater()
 {
   cdebug(1) << "MeqCalibrater destructor" << endl;
+
+  MeqParm::clearParmList();     // Clear static parameter data
+
   for (vector<MeqJonesExpr*>::iterator iter = itsExpr.begin();
        iter != itsExpr.end();
        iter++) {
