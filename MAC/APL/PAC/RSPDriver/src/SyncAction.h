@@ -45,10 +45,10 @@ namespace RSP
 	   */
 	  void setPriority(int priority);
 
+	  /*@{*/
 	  /**
 	   * Has the state machine reached its final state?
 	   */
-	  /*@{*/
 	  void setFinal(bool final);
 	  bool isFinal() const;
 	  /*@}*/

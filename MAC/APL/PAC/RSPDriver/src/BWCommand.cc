@@ -34,10 +34,11 @@ using namespace RSP_Protocol;
 
 BWCommand::BWCommand(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  RSPSetweightsEvent* m_event = new RSPSetweightsEvent(event);
+  m_event = new RSPSetweightsEvent(event);
 
   setOperation(oper);
   setPeriod(0);
+  setPort(port);
 }
 
 BWCommand::~BWCommand()
@@ -45,7 +46,11 @@ BWCommand::~BWCommand()
   delete m_event;
 }
 
-void BWCommand::apply()
+void BWCommand::apply(CacheBuffer& cache)
+{
+}
+
+void BWCommand::complete(CacheBuffer& cache)
 {
 }
 
@@ -54,3 +59,7 @@ const Timestamp& BWCommand::getTimestamp()
   return m_event->timestamp;
 }
 
+void BWCommand::setTimestamp(const Timestamp& timestamp)
+{
+  m_event->timestamp = timestamp;
+}

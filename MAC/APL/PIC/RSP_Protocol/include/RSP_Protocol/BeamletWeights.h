@@ -47,10 +47,10 @@ namespace RSP_Protocol
 	  blitz::Array<std::complex<double>, NDIM>& weights();
 
       public:
+	  /*@{*/
 	  /**
 	   * marshalling methods
 	   */
-	  /*@{*/
 	  unsigned int getSize();
 	  unsigned int pack  (void* buffer);
 	  unsigned int unpack(void *buffer);

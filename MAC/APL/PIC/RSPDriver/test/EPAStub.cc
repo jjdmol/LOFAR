@@ -26,21 +26,30 @@
 
 #include "EPA_Protocol.ph"
 
+#include "RSPTestSuite.h"
 #include "EPAStub.h"
+
+#include "BeamletWeights.h"
 
 #include <iostream>
 #include <sys/time.h>
 #include <string.h>
 
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 using namespace RSP_Test;
 using namespace std;
+using namespace LOFAR;
 
 EPAStub::EPAStub(string name)
-    : GCFTask((State)&EPAStub::initial, name)
+    : GCFTask((State)&EPAStub::initial, name), Test(name)
 {
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
-  m_client.init(*this, "client", GCFPortInterface::SPP, EPA_PROTOCOL);
+  m_server.init(*this, "client", GCFPortInterface::SPP, EPA_PROTOCOL);
 }
 
 EPAStub::~EPAStub()
@@ -49,8 +58,6 @@ EPAStub::~EPAStub()
 GCFEvent::TResult EPAStub::initial(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  cout << "initial received event on port " << port.getName() << endl;
 
   switch(e.signal)
   {
@@ -61,20 +68,18 @@ GCFEvent::TResult EPAStub::initial(GCFEvent& e, GCFPortInterface& port)
 
       case F_ENTRY:
       {
-	  m_client.open();
+	  m_server.open();
       }
       break;
 
       case F_CONNECTED:
       {
-	  cout << "port connected: " << port.getName() << endl;
-	  TRAN(EPAStub::enabled);
+	  TRAN(EPAStub::connected);
       }
       break;
 
       case F_DISCONNECTED:
       {
-	  cout << "port disconnected: " << port.getName() << endl;
 	  port.setTimer((long)1);
 	  port.close();
       }
@@ -83,7 +88,7 @@ GCFEvent::TResult EPAStub::initial(GCFEvent& e, GCFPortInterface& port)
       case F_TIMER:
       {
 	  // try again
-	  m_client.open();
+	  m_server.open();
       }
       break;
 
@@ -95,7 +100,7 @@ GCFEvent::TResult EPAStub::initial(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult EPAStub::enabled(GCFEvent& e, GCFPortInterface& /*port*/)
+GCFEvent::TResult EPAStub::connected(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -103,6 +108,21 @@ GCFEvent::TResult EPAStub::enabled(GCFEvent& e, GCFPortInterface& /*port*/)
   {
       case F_ENTRY:
       {
+	  START_TEST("connected", "The connected state of the EPAStub");
+      }
+      break;
+
+      case F_DISCONNECTED:
+      {
+	  port.close();
+
+	  TRAN(EPAStub::initial);
+      }
+      break;
+
+      case F_EXIT:
+      {
+	  STOP_TEST();
       }
       break;
 
@@ -114,15 +134,46 @@ GCFEvent::TResult EPAStub::enabled(GCFEvent& e, GCFPortInterface& /*port*/)
   return status;
 }
 
+GCFEvent::TResult EPAStub::final(GCFEvent& e, GCFPortInterface& /*port*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch(e.signal)
+  {
+      case F_ENTRY:
+	  GCFTask::stop();
+	  break;
+      
+      case F_EXIT:
+	  break;
+
+      default:
+	  status = GCFEvent::NOT_HANDLED;
+	  break;
+  }
+
+  return status;
+}
+
+void EPAStub::run()
+{
+  start(); // make initial transition
+  GCFTask::run();
+}
+
 int main(int argc, char** argv)
 {
   GCFTask::init(argc, argv);
 
-  EPAStub epastub("EPAStub");
+  LOG_INFO(formatString("Program %s has started", argv[0]));
 
-  epastub.start(); // make initial transition
+  Suite s("EPA Firmware Stub", &cerr);
+  s.addTest(new EPAStub("EPAStub"));
+  s.run();
+  long nFail = s.report();
+  s.free();
 
-  GCFTask::run();
+  LOG_INFO("Normal termination of program");
 
-  return 0;
+  return nFail;
 }

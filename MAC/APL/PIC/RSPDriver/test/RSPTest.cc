@@ -123,9 +123,14 @@ GCFEvent::TResult RSPTest::test001(GCFEvent& e, GCFPortInterface& port)
 
       case RSP_SETWEIGHTSACK:
       {
-	  RSPSetweightsackEvent swack(e);
+	  RSPSetweightsackEvent ack(e);
 
-	  TESTC_ABORT(swack.status != SUCCESS, RSPTest::final);
+	  TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+
+	  TRAN(RSPTest::final);
+
+	  // close must be after transition to make sure we get the one final event
+	  port.close();
       }
       break;
 

@@ -44,10 +44,10 @@ namespace RSP_Protocol
 	  virtual ~Versions() {}
 
       public:
+	  /*@{*/
 	  /**
 	   * marshalling methods
 	   */
-	  /*@{*/
 	  unsigned int getSize();
 	  unsigned int pack  (void* buffer);
 	  unsigned int unpack(void *buffer);

@@ -28,6 +28,7 @@
 #include "Command.h"
 #include "SyncAction.h"
 #include "Timestamp.h"
+#include "Cache.h"
 
 namespace RSP
 {
@@ -47,13 +48,12 @@ namespace RSP
 	  /**
 	   * Run the scheduler in response to a timer event.
 	   */
-	  void run(const GCFEvent& event, GCFPortInterface& port);
-
+	  void run(GCFEvent& event, GCFPortInterface& port);
 	  /**
 	   * Dispatch an event from the RSP board to the appropriate
 	   * synchronization action.
 	   */
-	  void dispatch(const GCFEvent& event, GCFPortInterface& port);
+	  void dispatch(GCFEvent& event, GCFPortInterface& port);
 
 	  /**
 	   * Add a synchronization action to be carried out
@@ -68,7 +68,21 @@ namespace RSP
 	   */
 	  RSP_Protocol::Timestamp enter(Command* command);
 
+	  /**
+	   * Set the current time (from the update triggering timeout event).
+	   */
+	  void setCurrentTime(long sec, long usec);
+
       private:
+	  /*@{*/
+	  /**
+	   * Helper methods for the Scheduler::run method.
+	   */
+	  void scheduleCommands();
+	  void processCommands();
+	  void syncCache(GCFEvent& event, GCFPortInterface& port);
+	  void completeCommands();
+
 	  std::priority_queue<Command*> m_later_queue;
 	  std::priority_queue<Command*> m_now_queue;
 	  std::priority_queue<Command*> m_periodic_queue;
@@ -77,6 +91,8 @@ namespace RSP
 	  std::priority_queue<SyncAction*> m_syncactions;
 
 	  RSP_Protocol::Timestamp m_current_time;
+
+	  Cache m_cache;
       };
 };
      

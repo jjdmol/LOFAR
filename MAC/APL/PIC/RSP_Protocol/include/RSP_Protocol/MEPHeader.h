@@ -45,28 +45,28 @@ namespace RSP_Protocol
 	   */
 	  static const unsigned int SIZE = 12;
 
+	  /*@{*/
 	  /**
 	   * Message types.
 	   */
-	  /*@{*/
 	  static const uint8 READ    = 0x01;
 	  static const uint8 WRITE   = 0x02;
 	  static const uint8 READRES = 0x03;
 	  /*@}*/
 
+	  /*@{*/
 	  /**
 	   * Address constants
 	   * Destination ID
 	   */
-	  /*@{*/
 	  static const uint8 DST_BLP_BASE = 0x00; /* BLP's are addressed starting from 0x00 */
 	  static const uint8 DST_RSP      = 0xFF; /* Board entity */
 	  /*@}*/
 
+	  /*@{*/
 	  /**
 	   * Process IDs
 	   */
-	  /*@{*/
 	  static const uint8 STATUS  = 0x00; /* FPGA status overview */
 	  static const uint8 TST     = 0x01; /* Selftest functionality */
 	  static const uint8 CFG     = 0x02; /* FPGA configuration and reset */
@@ -77,19 +77,19 @@ namespace RSP_Protocol
 	  static const uint8 RCU     = 0x07; /* RCU control */
 	  /*@}*/
 
+	  /*@{*/
 	  /**
 	   * Page IDs
 	   */
-	  /*@{*/
 	  static const uint8 PAGE_INACTIVE = 0x00; /* Write page for LCU */
 	  static const uint8 PAGE_ACTIVE   = 0x01; /* Read page for FPGA */
 	  /*@}*/
 
       public:
+	  /*@{*/
 	  /**
 	   * marshalling methods
 	   */
-	  /*@{*/
 	  unsigned int getSize();
 	  unsigned int pack  (void* buffer);
 	  unsigned int unpack(void *buffer);

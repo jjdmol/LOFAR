@@ -43,10 +43,10 @@ namespace RSP_Protocol
 	  virtual ~SubbandSelection() {}
 
       public:
+	  /*@{*/
 	  /**
 	   * marshalling methods
 	   */
-	  /*@{*/
 	  unsigned int getSize();
 	  unsigned int pack  (void* buffer);
 	  unsigned int unpack(void *buffer);

@@ -31,49 +31,55 @@ using namespace RSP;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 
+
 /**
  * CacheBuffer implementation
  */
 
 CacheBuffer::CacheBuffer()
 {
+  struct timeval tv;
+  tv.tv_sec = 0; tv.tv_usec = 0;
+  m_timestamp.set(tv);
+
+  m_beamletweights.weights().resize(1 /* 1 timestep */, N_RCUBITS, N_BEAMLETS);
 }
 
 CacheBuffer::~CacheBuffer()
 {
 }
 
-const BeamletWeights&   CacheBuffer::getBeamletWeights()   const
+BeamletWeights&   CacheBuffer::getBeamletWeights()
 {
   return m_beamletweights;
 }
 
-const SubbandSelection& CacheBuffer::getSubbandSelection() const
+SubbandSelection& CacheBuffer::getSubbandSelection()
 {
   return m_subbandselection;
 }
 
-const RCUSettings&      CacheBuffer::getRCUSettings()      const
+RCUSettings&      CacheBuffer::getRCUSettings()
 {
   return m_rcusettings;
 }
 
-const WGSettings&       CacheBuffer::getWGSettings()       const
+WGSettings&       CacheBuffer::getWGSettings()
 {
   return m_wgsettings;
 }
 
-const SystemStatus&     CacheBuffer::getSystemStatus()     const
+SystemStatus&     CacheBuffer::getSystemStatus()
 {
   return m_systemstatus;
 }
 
-const Statistics&       CacheBuffer::getStatistics()       const
+Statistics&       CacheBuffer::getStatistics()
 {
   return m_statistics;
 }
 
-const Versions&         CacheBuffer::getVersions()         const
+Versions&         CacheBuffer::getVersions()
 {
   return m_versions;
 }
@@ -82,14 +88,33 @@ const Versions&         CacheBuffer::getVersions()         const
  * Cache implementation
  */
 
-Cache::Cache()
+Cache::Cache() : m_front(0), m_back(0)
 {
+  m_front = new CacheBuffer();
+  m_back = new CacheBuffer();
 }
 
 Cache::~Cache()
 {
+  if (m_front) delete m_front;
+  if (m_back) delete m_back;
 }
 
 void Cache::swapBuffers()
 {
+  CacheBuffer *tmp = m_front;
+  m_front = m_back;
+  m_back  = tmp;
 }
+
+CacheBuffer& Cache::getFront()
+{
+  return *m_front;
+}
+
+CacheBuffer& Cache::getBack()
+{
+  return *m_back;
+}
+
+

@@ -39,8 +39,8 @@ namespace RSP
 {
 
   class CacheBuffer
-    {
-    public:
+      {
+      public:
 	  /**
 	   * Constructors for a Cache object.
 	   */
@@ -49,20 +49,20 @@ namespace RSP
 	  /* Destructor for Cache. */
 	  virtual ~CacheBuffer();
 
+	  /*@{*/
 	  /**
 	   * Data access methods.
 	   */
-	  /*@{*/
-	  const RSP_Protocol::BeamletWeights&   getBeamletWeights()   const;
-	  const RSP_Protocol::SubbandSelection& getSubbandSelection() const;
-	  const RSP_Protocol::RCUSettings&      getRCUSettings()      const;
-	  const RSP_Protocol::WGSettings&       getWGSettings()       const;
-	  const RSP_Protocol::SystemStatus&     getSystemStatus()     const;
-	  const RSP_Protocol::Statistics&       getStatistics()       const;
-	  const RSP_Protocol::Versions&         getVersions()         const;
+	  RSP_Protocol::BeamletWeights&   getBeamletWeights();
+	  RSP_Protocol::SubbandSelection& getSubbandSelection();
+	  RSP_Protocol::RCUSettings&      getRCUSettings();
+	  RSP_Protocol::WGSettings&       getWGSettings();
+	  RSP_Protocol::SystemStatus&     getSystemStatus();
+	  RSP_Protocol::Statistics&       getStatistics();
+	  RSP_Protocol::Versions&         getVersions();
 	  /*@}*/
 
-    private:
+      private:
 	  RSP_Protocol::Timestamp        m_timestamp;
 
 	  RSP_Protocol::BeamletWeights   m_beamletweights;
@@ -72,7 +72,7 @@ namespace RSP
 	  RSP_Protocol::SystemStatus     m_systemstatus;
 	  RSP_Protocol::Statistics       m_statistics;
 	  RSP_Protocol::Versions         m_versions;
-    };
+      };
 
   /**
    * Singleton class containing the data caches.
@@ -80,29 +80,31 @@ namespace RSP
   class Cache
       {
       public:
-	/**
-	 * Get single instance of this singleton class.
-	 */
-	static Cache& getInstance();
-	  
-	  /**
-	   * Swap front and back buffers
-	   */
-	  void swapBuffers();
-
-      private:
+	  /*@{*/
 	  /**
 	   * Constructor/destructor
 	   */
-	  /*@{*/
 	  Cache();
 	  virtual ~Cache();
 	  /*@}*/
 
 	  /**
+	   * Swap front and back buffers
+	   */
+	  void swapBuffers();
+
+	  /**
+	   * Get front/back buffers.
+	   */
+	  CacheBuffer& getFront();
+	  CacheBuffer& getBack();
+
+      private:
+
+	  /*@{*/
+	  /**
 	   * Front and back buffers.
 	   */
-	  /*@{*/
 	  CacheBuffer* m_front;
 	  CacheBuffer* m_back;
 	  /*@}*/

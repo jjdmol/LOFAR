@@ -38,12 +38,13 @@ namespace RSP_Protocol
 	   */
 	  Timestamp() { m_tv.tv_sec = 0; m_tv.tv_usec = 0; }
 	  explicit Timestamp(struct timeval tv) : m_tv(tv) { m_tv.tv_usec = 0; }
+	  Timestamp(long seconds, long useconds) { m_tv.tv_sec = seconds; m_tv.tv_usec = useconds; }
 
 	  /**
 	   * Copy constructor.
 	   */
 	  Timestamp(const Timestamp& copy) { m_tv = copy.m_tv; m_tv.tv_usec = 0; }
-	  
+
 	  /* Destructor for Timestamp. */
 	  virtual ~Timestamp() {}
 
@@ -55,11 +56,11 @@ namespace RSP_Protocol
 	   */
 	  void set(const struct timeval& tv);
 	  
+	  /*@{*/
 	  /**
 	   * Set the timestamp value to the current time (now)
 	   * plus an optional delay.
 	   */
-	  /*@{*/
 	  void setNow(double delay = 0.0);
 	  /*@}*/
 
@@ -69,27 +70,29 @@ namespace RSP_Protocol
 	   */
 	  void get(struct timeval* tv);
 
+	  /*@{*/
 	  /**
 	   * Overloaded operators.
 	   */
-	  /*@{*/
 	  Timestamp& operator=(const Timestamp& rhs);
-	  Timestamp& Timestamp::operator+(long delay);
+	  Timestamp  operator+(long delay) const;
+	  bool       operator>(const Timestamp& rhs) const;
+	  bool       operator==(const Timestamp& rhs) const;
 	  /*@}*/
 
+	  /*@{*/
 	  /**
 	   * Return parts.
 	   */
-	  /*@{*/
 	  long sec();
 	  long usec();
 	  /*@}*/
 
       public:
+	  /*@{*/
 	  /**
 	   * marshalling methods
 	   */
-	  /*@{*/
 	  unsigned int getSize();
 	  unsigned int pack  (void* buffer);
 	  unsigned int unpack(void *buffer);
@@ -110,9 +113,14 @@ namespace RSP_Protocol
   inline unsigned int Timestamp::pack  (void* buffer) { memcpy(buffer, &m_tv, sizeof(struct timeval)); return sizeof(struct timeval); }
   inline unsigned int Timestamp::unpack(void *buffer) { memcpy(&m_tv, buffer, sizeof(struct timeval)); return sizeof(struct timeval); }
   inline Timestamp& Timestamp::operator=(const Timestamp& rhs) { m_tv = rhs.m_tv; m_tv.tv_usec = 0; return *this; }
-  inline Timestamp& Timestamp::operator+(long delay) { m_tv.tv_sec += delay; return *this; }
+  inline Timestamp Timestamp::operator+(long delay) const { Timestamp ts(m_tv); ts.m_tv.tv_sec += delay; return ts; }
+  inline bool Timestamp::operator>(const Timestamp& rhs) const { return (m_tv.tv_sec == rhs.m_tv.tv_sec ? m_tv.tv_usec > rhs.m_tv.tv_usec : (m_tv.tv_usec > rhs.m_tv.tv_usec ? true : false)); }
+  inline bool Timestamp::operator==(const Timestamp& rhs) const { return (m_tv.tv_sec == rhs.m_tv.tv_sec && m_tv.tv_usec == rhs.m_tv.tv_usec); }
   inline long Timestamp::sec()  { return m_tv.tv_sec;  }
   inline long Timestamp::usec() { return m_tv.tv_usec; }
 };
+
+#define SECONDS(s)  Timestamp((s),0)
+#define USECONDS(u) Timestamp(0,(u))
      
 #endif /* TIMESTAMP_H_ */
