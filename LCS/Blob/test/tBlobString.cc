@@ -36,22 +36,37 @@ void doIt (const BlobStringType& type)
   uint cap = str.capacity();
   ASSERT (str.capacity() >= 10);
   ASSERT (str.size() == 0);
+  if (type.useString()) {
+    ASSERT (str.data() == (char*)(str.getString().data()));
+  }
   // Size the object.
   str.resize (8);
   ASSERT (str.capacity() == cap);
   ASSERT (str.size() == 8);
+  if (type.useString()) {
+    ASSERT (str.data() == (char*)(str.getString().data()));
+  }
   // This reserve should not do anything.
   str.reserve (10);
   ASSERT (str.capacity() == cap);
   ASSERT (str.size() == 8);
+  if (type.useString()) {
+    ASSERT (str.data() == (char*)(str.getString().data()));
+  }
   // Make the size a bit more.
   str.resize (11);
   ASSERT (str.capacity() >= 11);
   ASSERT (str.size() == 11);
+  if (type.useString()) {
+    ASSERT (str.data() == (char*)(str.getString().data()));
+  }
   // Make the size a bit less.
   str.resize (7);
   ASSERT (str.capacity() >= 7);
   ASSERT (str.size() == 7);
+  if (type.useString()) {
+    ASSERT (str.data() == (char*)(str.getString().data()));
+  }
   // Get the string from the object and a pointer to its first byte.
   // That can only succeed if it uses a string.
   bool exc = false;

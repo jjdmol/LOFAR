@@ -84,6 +84,7 @@ void BlobString::resize (size_t newSize)
     }
     if (itsAllocator.useString()) {
       itsString.resize (newSize);
+      itsChars = const_cast<uchar*>(itsString.data());
     }
     itsSize = newSize;
   }

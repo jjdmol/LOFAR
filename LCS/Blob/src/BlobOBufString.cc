@@ -41,9 +41,12 @@ void BlobOBufString::doExpand (uint newReservedSize, uint newSize)
 {
   if (newReservedSize > itsString->capacity()) {
     itsString->reserve (newReservedSize);
-    setBuffer (itsString->data());
   }
   itsString->resize (newSize);
+  // Note that the std::string class might uses reference counting.
+  // Therefore a resize may need to make a copy, so it can change the
+  // buffer pointer. 
+  setBuffer (itsString->data());
 }
 
 } // end namespace
