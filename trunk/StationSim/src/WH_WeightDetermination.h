@@ -44,10 +44,12 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   WH_WeightDetermination (const string& name,
-	  unsigned int nin, 
-	  unsigned int nout,
-	  unsigned int nant, 
-	  string s);
+						  unsigned int nin, 
+						  unsigned int nout,
+						  unsigned int nant, 
+						  string s,
+						  double phi,
+						  double theta);
 
   virtual ~WH_WeightDetermination();
 
@@ -72,8 +74,6 @@ public:
   /// Get a pointer to the i-th output DataHolder.
   virtual DH_SampleC* getOutHolder (int channel);
 
-  LoVec_dcomplex steerv (double u, double v, LoVec_double px, LoVec_double py) ;
-
 private:
   /// Forbid copy constructor.
   WH_WeightDetermination (const WH_WeightDetermination&);
@@ -81,18 +81,14 @@ private:
   /// Forbid assignment.
   WH_WeightDetermination& operator= (const WH_WeightDetermination&);
 
-  /// Calculate a steer vector
+  LoVec_dcomplex steerv (double u, double v, LoVec_double px, LoVec_double py) ;
 
-  /// In- and OutHolders
-  DH_SampleC* itsOutHolder; 
+  // OutHolders
+  DH_SampleC** itsOutHolders; 
 
-  /// Length of buffers.
   unsigned int itsNrcu;
-
-  string   itsConfigFile;
-
-  vector<float> itsDipoleLoc;
-  ArrayConfig *itsArray;
-  string itsArrayFile;
+  ArrayConfig itsArray;
+  double itsPhi;
+  double itsTheta;
 };
 #endif

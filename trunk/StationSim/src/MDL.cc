@@ -19,9 +19,6 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 
-// Chris Broekema, november 2002.
-
-
 
 /**************************************************************************/
 /* This file implements the Minimun Description Length algorithm. This is */
@@ -31,84 +28,52 @@
 
 #include <MDL.h>
 
-/* TODO: Check if the cast to real needs to be done earlier */
 
-using namespace blitz;
+//using namespace blitz;
 
-unsigned int mdl (LoMat_double d_mat, unsigned int nantl, unsigned int nsnsh)
+int mdl (const LoVec_double& input, int M, int N)
 {
-  double nom;
-  double denom;
-  double mdlmin;
-  int nnsnsh=-nsnsh;
-  unsigned int kmin = 0;
-  LoVec_double d;
-  LoVec_double MDL(d_mat.cols());
+  double      nom;
+  double      denom;
+  double      mdlmin;
+  int         min = 0;
 
-  nsnsh=1;
+  LoVec_double MDL (input.size ());
+  LoVec_double d = input.copy();
+  //d = LCSMath::sort (d);
+  d.reverseSelf (blitz::firstDim);
 
-  if (d_mat.cols() == d_mat.rows()) {
-    d.resize(d_mat.cols());
+  for (int Ns = 0; Ns < M; Ns++) 
+	{
+	  denom = 0;
+	  for (int i = Ns; i < M; i++) {
+		denom += d (i);
+	  }
+	  denom *= (1 / (double) (M - Ns));
+	  denom = pow (denom, (double) (M - Ns));
 
-    d = LCSMath::diag( d_mat );
-    d = LCSMath::sort( d );
-    d.reverseSelf(firstDim);
-    for ( int k = d.lbound(firstDim); k < d.ubound(firstDim); k++ ) {
+	  //	  cout << denom << endl;
 
-      denom = (1 /(double)(d.ubound(firstDim)-k)) * 
-	sum(d( Range( k+1, d.ubound(firstDim) ) ) ) ;
-      nom = product(d(Range(k+1,d.ubound(firstDim)))) ;
-      MDL(k) = nnsnsh * log(nom/(pow(denom,(1/(nantl-(k+1)))))) + 
-	(k+1)/2 * (2*nantl-(k+1)) * log(nsnsh);
-      if ( k == 0 ) {
-	// init
-	kmin = k+1;
-	mdlmin = MDL(k);
-      } else {
-	if (MDL(k) < mdlmin ) {
-	  kmin = k+1;
-	  mdlmin = MDL(k);
+	  nom = 1;
+	  for (int i = Ns; i < M; i++) {
+		nom *= d (i);
+	  }
+
+	  //	  cout << nom << endl;
+
+	  MDL (Ns) = -1 * N * log (nom / denom) + Ns / 2 * (2 * M - Ns) * log (N); 
+
+	  cout << MDL (Ns) << endl;
+
+	  if (Ns == 0) {
+		  mdlmin = MDL(Ns);
+	  } else {
+		if (MDL (Ns) < mdlmin) {
+		  min = Ns;
+		  mdlmin = MDL (Ns);
+		}
+	  }
 	}
-      }
-    }
-  } else {
-    cout << "MDL encountered non-square matrix" << endl;
-  }
-  return kmin;
-}
-
-unsigned int mdl (LoVec_double d_mat, unsigned int nantl, unsigned int nsnsh)
-{
-  double nom;
-  double denom;
-  double mdlmin;
-  unsigned int kmin = 0;
-  LoVec_double d;
-  LoVec_double MDL(d_mat.size());
-
-  d.resize(d_mat.size());
-  d = LCSMath::sort(d_mat);
-  d.reverseSelf(firstDim);
-  nsnsh=1;
-
-  int nnsnsh=-nsnsh;
-  for ( int k = d.lbound(firstDim); k < d.ubound(firstDim); k++ ) {
-
-    denom = (1 /(double)(d.ubound(firstDim)-k)) * 
-      sum(d( Range( k+1, d.ubound(firstDim) ) ) ) ;
-    nom = product(d(Range(k+1,d.ubound(firstDim)))) ;
-    MDL(k) = nnsnsh * log(nom/(pow(denom,(1/(nantl-(k+1)))))) + 
-      (k+1)/2 * (2*nantl-(k+1)) * log(nsnsh);
-    if ( k == 0 ) {
-      // init
-      kmin = k+1;
-      mdlmin = MDL(k);
-    } else {
-      if (MDL(k) < mdlmin ) {
-	kmin = k+1;
-	mdlmin = MDL(k);
-      }
-    }
-  }
-  return kmin;
+  //  cout << MDL << endl;
+  return min;
 }

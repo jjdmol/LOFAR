@@ -20,7 +20,6 @@
 //#
 //#  $Id$
 //#
-//#  Chris Broekema, january 2003
 //#  
 
 
@@ -39,7 +38,9 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
 							  unsigned int nout,
 							  unsigned int nrcu,
 							  unsigned int nbeam,
-							  unsigned int maxNtarget, unsigned int maxNrfi)
+							  unsigned int maxNtarget, 
+							  unsigned int maxNrfi,
+							  int delay)
   : WorkHolder    (nin, nout, name,"WH_BeamFormer"),  // Check number of inputs and outputs
 	itsInHolders  (0),
 	itsOutHolders (0),
@@ -69,11 +70,13 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
   }
 
   //DEBUG
-//   itsFileOutReal.open ((string ("/home/alex/gerdes/BF_real_") + name + string (".txt")).c_str ());
-//   itsFileOutComplex.open ((string ("/home/alex/gerdes/BF_complex_") + name + string (".txt")).c_str ());
-//   itsFileInput.open ("/home/alex/gerdes/testvector.txt");
-//   itsTestVector.resize (itsNrcu);
+  itsFileOutReal.open ((string ("/home/alex/gerdes/BF_real_") + name + string (".txt")).c_str ());
+  itsFileOutComplex.open ((string ("/home/alex/gerdes/BF_complex_") + name + string (".txt")).c_str ());
+//   itsFileInput.open ("/home/alex/temp/test_vectorEssai.txt");
+  itsPos = 0;
+//   itsTestVector.resize(itsNrcu, 25445);
 //   itsFileInput >> itsTestVector;
+  itsDelay = delay;
 }
 
 
@@ -87,9 +90,10 @@ WH_BeamFormer::~WH_BeamFormer()
     delete itsOutHolders[i];
   }
   delete [] itsOutHolders;
-//   // DEBUG
-//   itsFileOutReal.close ();
-//   itsFileOutComplex.close ();
+
+  // DEBUG
+  itsFileOutReal.close ();
+  itsFileOutComplex.close ();
 //   itsFileInput.close ();
 }
 
@@ -101,23 +105,28 @@ WorkHolder* WH_BeamFormer::construct (const string& name,
 							params.getInt ("nrcu", 10),
 							params.getInt ("nbeam", 10),
 							params.getInt ("maxntarget", 10),
-							params.getInt ("maxnrfi", 10));
+							params.getInt ("maxnrfi", 10),
+							10);
 }
 
 WH_BeamFormer* WH_BeamFormer::make (const string& name) const
 {
   return new WH_BeamFormer (name, getInputs(), getOutputs(),
-							itsNrcu, itsNbeam, itsMaxNtarget, itsMaxNrfi);
+							itsNrcu, itsNbeam, itsMaxNtarget, itsMaxNrfi, itsDelay);
 }
 
 
 void WH_BeamFormer::process()
 {
   if (getOutputs () > 0) {
+	dcomplex temp;
 	for (int i = 0; i < itsNrcu; i++) {
 	  sample(i) = (dcomplex)itsInHolders[i]->getBuffer()[0]; 
+
+// 	  //DEBUG
+// 	  sample(i) = itsTestVector(i, itsPos);
 	}
-	LoVec_dcomplex weight(itsWeight.getBuffer(), itsNrcu, duplicateData);    
+	LoVec_dcomplex weight(itsWeight.getBuffer(), itsNrcu, duplicateData);   
 	
 	dcomplex output = 0; 
 	for (int i = 0; i < itsNrcu; i++) {
@@ -129,11 +138,16 @@ void WH_BeamFormer::process()
       itsOutHolders[j]->getBuffer ()[0] = output;
     }
 
-	//  // DEBUG
-	//	cout << sample << " " << real(sample(0)) << " " << imag(sample(0)) << endl;
-	// 	itsFileOutReal << real(sample) << endl;
-	// 	itsFileOutComplex << imag (sample) << " " << endl;
-	//  cout << sample << endl;	
+	// DEBUG
+// 	if (itsDelay == 0) {
+ 	  itsPos++;
+// 	  itsPos %= itsTestVector.cols();
+	  itsFileOutReal << real(output) << endl;
+	  itsFileOutComplex << imag (output) << endl;
+// 	} else {
+// 	  itsDelay--;
+// 	}
+	cout << itsPos << endl;
   }
 }
 

@@ -18,7 +18,6 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Chris Broekema, januari 2003.
 //#
 
 
@@ -31,18 +30,22 @@
 #include <Math/LCSMath.h>
 #include <blitz/blitz.h>
 
-WH_WeightDetermination::WH_WeightDetermination(const string& name, unsigned int nin, unsigned int nout, unsigned int nant, string s)
-  : WorkHolder (nin, nout, name, "WH_WeightDetermination"),
-    itsOutHolder (0),
-    itsNrcu      (0),
-    itsArray     (0),
-    itsArrayFile (s)
+WH_WeightDetermination::WH_WeightDetermination(const string& name, unsigned int nin, unsigned int nout, 
+											   unsigned int nant, string s, double phi, double theta)
+  : WorkHolder    (nin, nout, name, "WH_WeightDetermination"),
+    itsOutHolders (0),
+    itsNrcu       (nant),
+    itsArray      (s),
+	itsPhi        (phi),
+	itsTheta      (theta)
 {
-  itsNrcu = nant;
-  itsArray = new ArrayConfig (s);
-
+  char str[8];
   if (nout > 0) {
-    itsOutHolder = new DH_SampleC("out", itsNrcu, 1);
+    itsOutHolders = new DH_SampleC* [nout];
+  }
+  for (unsigned int i = 0; i < nout; i++) {
+    sprintf (str, "%d", i);
+    itsOutHolders[i] = new DH_SampleC (string("out_") + str, itsNrcu, 1);
   }
 }
 
@@ -53,7 +56,7 @@ WH_WeightDetermination::~WH_WeightDetermination()
 
 WH_WeightDetermination* WH_WeightDetermination::make (const string& name) const
 {
-  return new WH_WeightDetermination (name, getInputs(), getOutputs(), itsNrcu, itsArrayFile);
+  return new WH_WeightDetermination (name, getInputs(), getOutputs(), itsNrcu, itsArray.conf_file, itsPhi, itsTheta);
 }
 
 void WH_WeightDetermination::preprocess()
@@ -63,24 +66,23 @@ void WH_WeightDetermination::preprocess()
 
 void WH_WeightDetermination::process()
 {
-  double phi = 0.1;
-  double theta = -0.2;
-
-  
-  LoVec_dcomplex d(itsNrcu);
-  d = steerv(phi, theta, itsArray->getPointX(), itsArray->getPointY());
-
-  memcpy(itsOutHolder->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
+  if (getOutputs() > 0) {
+	LoVec_dcomplex d = steerv(itsPhi, itsTheta, itsArray.getPointX(), itsArray.getPointY());
+	
+	for (int i = 0; i < getOutputs(); i++) {
+	  memcpy(itsOutHolders[i]->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
+	}
+  }
 }
 
 void WH_WeightDetermination::dump() const
 {
   using namespace blitz;
 
-  LoVec_dcomplex weight(itsOutHolder->getBuffer(), itsNrcu, duplicateData);    
+  LoVec_dcomplex weight(itsOutHolders[0]->getBuffer(), itsNrcu, duplicateData);    
 
-  cout << "Weight vector Buffer: " << endl;
-  cout << weight<< endl;
+  //  cout << "Weight vector Buffer: " << endl;
+  //  cout << weight<< endl;
 }
 
 
@@ -92,9 +94,8 @@ DataHolder* WH_WeightDetermination::getInHolder (int channel)
 
 DH_SampleC* WH_WeightDetermination::getOutHolder (int channel)
 {
-  AssertStr (channel < getOutputs(),
- 	     "output channel too high");  
-  return itsOutHolder;
+  AssertStr (channel < getOutputs(), "output channel too high");  
+  return itsOutHolders[channel];
 }
 
 LoVec_dcomplex WH_WeightDetermination::steerv (double phi, double theta, LoVec_double px, LoVec_double py) {

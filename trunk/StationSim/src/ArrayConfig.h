@@ -36,6 +36,7 @@ class ArrayConfig
 public:
 
   ArrayConfig (string config_file);
+  string conf_file;
 
   // returns the coordinates
   const LoVec_double& getPointX () const

@@ -25,6 +25,8 @@
 ArrayConfig::ArrayConfig (string config_file)
 {
   ifstream s (config_file.c_str (), ifstream::in);
+  
+  conf_file = config_file;
 
   int n;
 

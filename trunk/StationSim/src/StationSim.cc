@@ -97,6 +97,8 @@ void StationSim::define (const ParamBlock& params)
   const int nbeam                 = params.getInt    ("nbeam", 1);
   const int maxNtarget            = params.getInt    ("maxntarget", 1);
   const int maxNrfi               = params.getInt    ("maxnrfi", 1);
+  const int STArate               = params.getInt    ("starate", 100);
+  const int WDrate                = params.getInt    ("wdrate", 10000);
   const int delayMod              = modulationWindowSize - 1;
   const int delayPhase            = nfft_phaseshift - 1;
   const int delaySubFilt          = nrcu * (nsubband - 1);
@@ -191,7 +193,7 @@ void StationSim::define (const ParamBlock& params)
   }
   simul.addStep (add_signals);
 
-  // Create the NoEMI data readers
+//   // Create the NoEMI data readers
 //   for (int i = 0; i < nrcu; ++i) { 
 // 	sprintf (suffix, "%d", i);
 	  
@@ -224,7 +226,8 @@ void StationSim::define (const ParamBlock& params)
     sprintf (suffix, "%d", i);
 
 	// The beamformer object    
-	Step beam (WH_BeamFormer(suffix, nrcu + 1, 1, nrcu, nbeam, maxNtarget, maxNrfi), 
+	Step beam (WH_BeamFormer(suffix, nrcu + 1, 1, nrcu, nbeam, maxNtarget, maxNrfi, 
+							 STArate), 
 			   string("beam_former_") + suffix, false);
     for (int j = 0; j < nrcu; ++j) { 
       beam.getInData (j).setReadDelay (delaySubFilt); 
@@ -234,6 +237,11 @@ void StationSim::define (const ParamBlock& params)
 	}   
 	beam.getInData (nrcu).setReadDelay (delaySubFilt + delayBeamForm);
 	beam.setRate(nsubband);
+	if (STArate <= WDrate) {
+	  beam.setInRate (STArate, nrcu);
+	} else {
+	  beam.setInRate (WDrate, nrcu);
+	}
     simul.addStep (beam);
 
 	
@@ -248,30 +256,60 @@ void StationSim::define (const ParamBlock& params)
 	  sta.getOutData (j).setWriteDelay (delaySubFilt);
 	}
 	sta.setRate(nsubband);
+	sta.setOutRate(nsubband + STArate);
     simul.addStep (sta);
 
 	
 	// the Weight Determination Object
-    Step weight_det (WH_WeightDetermination(suffix, 0, 1, nrcu, bfDipoleFile), 
+    Step weight_det (WH_WeightDetermination(suffix, 0, 1, nrcu, bfDipoleFile, 0.3, 0.3), 
 					 string("weight_det_") + suffix, false);   
         
     weight_det.getOutData (0).setWriteDelay (delaySubFilt);
-    weight_det.setRate(nsubband);
+    weight_det.setRate(nsubband + WDrate);
     simul.addStep(weight_det);
-    
+
+// 	// Deterministic nulls should have the same rate as STA !!!!!!!
+//     // add a deterministic null
+// 	Step det_null (WH_WeightDetermination(suffix, 0, 1, nrcu, bfDipoleFile, 2.583, 0.8238),
+// 				   string("det_null_") + suffix, false);
+
+//     det_null.getOutData (0).setWriteDelay (delaySubFilt);
+//     det_null.setRate(nsubband + STArate);
+//     simul.addStep(det_null);
+
+
+//     // add a another deterministic null
+// 	Step det_null_2 (WH_WeightDetermination(suffix, 0, 1, nrcu, bfDipoleFile, -2.9709, 0.7128),
+// 					 string("det_null2_") + suffix, false);
+
+//     det_null_2.getOutData (0).setWriteDelay (delaySubFilt);
+//     det_null_2.setRate(nsubband + STArate);
+//     simul.addStep(det_null_2);
+
 	
 	// the projection object
-    Step projection (WH_Projection(suffix, 3, 1, nrcu, maxNrfi), 
+	int noutProj = 3;
+    Step projection (WH_Projection(suffix, noutProj, 1, nrcu, maxNrfi), 
 					 string("projection_") + suffix, false);
 
-    for (int j = 0; j < 3; ++j) {                       // One input + mdl + eigvectors
+    for (int j = 0; j < noutProj; ++j) {    // One input + two det null + mdl + eigvectors
       projection.getInData (j).setReadDelay (delaySubFilt);
     }
     for (int j = 0; j < 1; ++j) {                
 	  projection.getOutData (j).setWriteDelay (delaySubFilt);
 	}
- 
     projection.setRate(nsubband);
+	for (int i = 0; i < noutProj - 2; ++i) {
+	  projection.setInRate (nsubband + WDrate);
+	}
+	for (int i = noutProj - 2; i < noutProj; ++i) {
+	  projection.setInRate(nsubband + STArate, i);
+	}
+	if (STArate <= WDrate) {
+	  projection.setOutRate (STArate);
+	} else {
+	  projection.setOutRate (WDrate);
+	}
     simul.addStep(projection); 
   }
 
@@ -343,11 +381,20 @@ void StationSim::define (const ParamBlock& params)
 				   string ("projection_") + suffix2 + string (".in_mdl"));
   
     // connect the Weight determinator to Projection
-    simul.connect (string ("weight_det_") + suffix2 + string (".out"),
+    simul.connect (string ("weight_det_") + suffix2 + string (".out_0"),
 				   string ("projection_") + suffix2 + string (".in_0"));
+
+// 	// connect the deterministic null to the projection
+// 	simul.connect (string ("det_null_") + suffix2 + string (".out_0"),
+// 				   string ("projection_") + suffix2 + string(".in_1"));
+
+// 	// connect the deterministic null to the projection
+// 	simul.connect (string ("det_null2_") + suffix2 + string (".out_0"),
+// 				   string ("projection_") + suffix2 + string(".in_2"));
+
   }
 
-  // Connect the data_reader to the subband filterbank  
+//   // Connect the data_reader to the subband filterbank  
 
 //   for (int i = 0; i < nrcu; ++i) { 
 // 	sprintf (suffix, "%d", i);

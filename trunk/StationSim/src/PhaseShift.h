@@ -74,7 +74,8 @@ namespace PhaseShift
   LoVec_double DOA (const LoVec_double& px, 
 					const LoVec_double& py,
 					double theta, 
-					double phi);
+					double phi,
+					int nfft);
 
 }; // namespace PhaseShift
 

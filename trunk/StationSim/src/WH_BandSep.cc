@@ -56,9 +56,9 @@ WH_BandSep::WH_BandSep (const string& name, unsigned int nsubband,
   }
 
   // DEBUG
-  handle = gnuplot_init();
-  itsFileOutReal.open ((string ("/home/alex/gerdes/subband_real_") + name + string (".txt")).c_str ());
-  itsFileOutComplex.open ((string ("/home/alex/gerdes/subband_complex_") + name + string (".txt")).c_str ());
+//   handle = gnuplot_init();
+//   itsFileOutReal.open ((string ("/home/alex/gerdes/subband_real_") + name + string (".txt")).c_str ());
+//   itsFileOutComplex.open ((string ("/home/alex/gerdes/subband_complex_") + name + string (".txt")).c_str ());
 }
 
 WH_BandSep::~WH_BandSep()
@@ -70,9 +70,9 @@ WH_BandSep::~WH_BandSep()
   delete [] itsOutHolders;
 
   // DEBUG
-  gnuplot_close (handle);
-  itsFileOutReal.close ();
-  itsFileOutComplex.close ();
+//   gnuplot_close (handle);
+//   itsFileOutReal.close ();
+//   itsFileOutComplex.close ();
 }
 
 WorkHolder* WH_BandSep::construct(const string& name, int ninput, int noutput, const ParamBlock& params)
@@ -120,12 +120,12 @@ void WH_BandSep::process()
 	  }
 	  	  
 	  // DEBUG
-	  for (int i = 0; i < itsNsubband; i++) {
-		itsFileOutReal << real (itsOutHolders[i]->getBuffer ()[0]) << " ";
-		itsFileOutComplex << imag (itsOutHolders[i]->getBuffer ()[0]) << " ";
-	  }
-	  itsFileOutReal << endl;	
-	  itsFileOutComplex << endl;	
+// 	  for (int i = 0; i < itsNsubband; i++) {
+// 		itsFileOutReal << real (itsOutHolders[i]->getBuffer ()[0]) << " ";
+// 		itsFileOutComplex << imag (itsOutHolders[i]->getBuffer ()[0]) << " ";
+// 	  }
+// 	  itsFileOutReal << endl;	
+// 	  itsFileOutComplex << endl;	
 	}
   }
 }

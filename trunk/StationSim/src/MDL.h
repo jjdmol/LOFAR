@@ -25,7 +25,8 @@
 #define STATIONSIM_MDL_H
 #include <Math/LCSMath.h>
 #include <Common/Lorrays.h>
+#include <cmath>
 
-unsigned int mdl (LoMat_double d, unsigned int nantl, unsigned int nsnsh) ;
-unsigned int mdl (LoVec_double d, unsigned int nantl, unsigned int nsnsh) ;
+int mdl (const LoVec_double& d,  int M, int N) ;
+
 #endif

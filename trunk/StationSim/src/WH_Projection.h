@@ -58,7 +58,7 @@ public:
 
   /// Make a fresh copy of the WH object.
   virtual WH_Projection* make (const string& name) const;
-
+  
   /// Do a process step.
   virtual void process();
 
@@ -89,7 +89,10 @@ private:
   /// Length of buffers.
   unsigned int itsNrcu;
   unsigned int itsMaxRFI;
+  int itsDetectedRFIs;
   LoVec_dcomplex itsWeight;
+  LoMat_dcomplex itsV;
+  LoVec_dcomplex itsA;
 
   LoVec_dcomplex WH_Projection::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) ;
   LoVec_dcomplex WH_Projection::getWeights (LoMat_dcomplex V, LoVec_dcomplex a) ;
