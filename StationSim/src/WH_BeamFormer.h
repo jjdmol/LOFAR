@@ -46,7 +46,8 @@ public:
   /// The first WorkHolder should have nin=0.
   WH_BeamFormer (const string& name,
 				 unsigned int nin, unsigned int nout, unsigned int nrcu,
-				 unsigned int nbeam, unsigned int maxNtarget, unsigned int maxNrfi);
+				 unsigned int nbeam, unsigned int maxNtarget, unsigned int maxNrfi,
+				 int delay);
 		 
 
   virtual ~WH_BeamFormer();
@@ -91,10 +92,12 @@ private:
   LoVec_dcomplex sample; // current sample in Blitz format
 
   //DEBUG
+  int itsPos;
   ofstream itsFileOutReal;
   ofstream itsFileOutComplex;
   ifstream itsFileInput;
-  LoVec_double itsTestVector;
+  LoMat_dcomplex itsTestVector;
+  int itsDelay;
 };
 
 #endif

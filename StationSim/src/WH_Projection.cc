@@ -18,7 +18,6 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Chris Broekema, january 2003
 //#
 //#  $Id$
 //#
@@ -44,7 +43,11 @@ WH_Projection::WH_Projection (const string& name, unsigned int nin, unsigned int
   itsRFISources    ("in_rfi", nant, maxnrfi),
   itsNrcu          (nant),
   itsMaxRFI        (maxnrfi),
-  itsWeight        (itsNrcu)
+  itsDetectedRFIs  (nin - 3),
+  itsWeight        (itsNrcu),
+  itsV             (0,0),
+  itsA             (itsNrcu)
+
 {
   char str[8];
   // nin is the number of steering vectors that will be used as an input (at least one
@@ -83,44 +86,47 @@ WH_Projection* WH_Projection::make (const string& name) const
   return new WH_Projection (name, getInputs(), getOutputs(), itsNrcu, itsMaxRFI);
 }
 
+
 void WH_Projection::process()
 {
   if (getOutputs() > 0) {
-	// Get the number of detected RFI sources from the STA comp. (internally calc. by MDL)
-	int detectedRFIs = (int)(itsNumberOfRFIs.getBuffer()[0]);
-	detectedRFIs = 2;
+	if (itsRFISources.doHandle ()) {  
+	  // Get the number of detected RFI sources from the STA comp. (internally calc. by MDL)
+	  int NumberOfEigenVectors = (int)(itsNumberOfRFIs.getBuffer()[0]);
+	  itsDetectedRFIs = NumberOfEigenVectors + getInputs() - 3;
+	  
+	  // Read in the eigenvectors from the STA component. They are the detected rfi sources and
+	  // should be nulled. The deterministic nulls should be put in this matrix.
+	  LoMat_dcomplex V (itsRFISources.getBuffer(), shape(NumberOfEigenVectors, itsNrcu), duplicateData);
+	  itsV.resize(V.shape());
+	  itsV = V;
+	  itsV.transposeSelf(secondDim, firstDim);
 
-	// Read in the eigenvectors from the STA component. They are the detected rfi sources and
-	// should be nulled.
-	//  LoMat_dcomplex V (itsInHolders[0]->getBuffer(), shape(itsNrcu, itsMaxRFI), duplicateData);
-	LoMat_dcomplex V (itsRFISources.getBuffer(), shape(itsNrcu, detectedRFIs), duplicateData);
-	
-	// Get the steering vector form the weight determination comp. assume that only one will be put in.
-	LoVec_dcomplex a (itsInHolders[0]->getBuffer(), itsNrcu, duplicateData);
+	  // Merge the deterministic nulls in the eigenvectors matrix
+	  itsV.resizeAndPreserve(itsNrcu, itsDetectedRFIs); // Add number of deterministic nulls
+	  for (int i = 1; i < getInputs() - 2; i++) {
+		LoVec_dcomplex det_rfi (itsInHolders[i]->getBuffer(), itsNrcu, duplicateData);	
+		itsV(blitz::Range::all(), itsDetectedRFIs - i) = det_rfi;
+	  }	  
+	}
 
-	// Calculate the weights using the eigenvectors and the steering vector
-	itsWeight = getWeights(V, a);
-  
-	// DEBUG matrix inverse 
-// 	int N = 3; 
-// 	LoMat_dcomplex Orig(N,N); 
-// 	LoMat_dcomplex A(N, N);
-// 	LoVec_dcomplex Vec(N);
+	if (itsInHolders[0]->doHandle ()) {
+	  // Get the steering vector form the weight determination comp. assume that only one will be put in.
+	  LoVec_dcomplex steerv (itsInHolders[0]->getBuffer(), itsNrcu, duplicateData);
+	  itsA = steerv;
+	}
 
-// 	Vec = 1, 1, 1;
-// 	Orig = 1,2,3,
-// 	  4,5,6,
-// 	  7,8,9;
-// 	Orig(0,0)=dcomplex(0,1);
-
-// 	cout << Orig << endl;
-// 	A = LCSMath::invert(Orig);
-// 	cout << A << endl;
-	
-// 	cout << LCSMath::matMult(A, Orig) << endl;
-
-// 	cout << Orig << endl << Vec << endl << vm_mult(Vec,Orig) << endl;
-	// END DEBUG matrix inverse
+	if (itsRFISources.doHandle () || itsInHolders[0]->doHandle ()) {  
+	  // Calculate the weights using the eigenvectors and the steering vector
+	  if (itsDetectedRFIs == 1) {
+		LoVec_dcomplex Vvec = itsV(blitz::Range::all(), itsV.lbound(secondDim));
+		itsWeight = getWeights(Vvec, itsA);
+	  } else if (itsDetectedRFIs > 1) {		
+		itsWeight = getWeights(itsV, itsA);
+	  } else {
+		itsWeight = itsA;
+	  }
+	}
 
 	// Copy output to the next step
 	for (int i = 0; i < getOutputs(); i++) {
@@ -178,22 +184,15 @@ LoVec_dcomplex WH_Projection::getWeights (LoMat_dcomplex V, LoVec_dcomplex a)
 
   LoVec_dcomplex w (V.rows());
   w = 1;
-  LoMat_dcomplex Pv (V.shape());  
   LoMat_dcomplex I = LCSMath::diag(w);        // Create Identity matrix
 
-  //cout << w << endl << Pv << endl << I << endl << V << endl << a << endl;
-
   LoMat_dcomplex temp = LCSMath::matMult(LCSMath::hermitianTranspose(V), V);
-  //  cout << temp << endl;
-  Pv = LCSMath::invert(temp); // (VHV)^-1
-  //  cout << Pv << endl;
-  Pv = LCSMath::matMult(V, LCSMath::matMult(Pv, LCSMath::hermitianTranspose(V))); // VPvVH
-  //  cout << Pv << endl;
+  temp = LCSMath::invert(temp); // (VHV)^-1
+  LoMat_dcomplex temp2 = LCSMath::matMult(temp, LCSMath::hermitianTranspose(V));
+  LoMat_dcomplex Pv = LCSMath::matMult(V, temp2); // VPvVH
   Pv = I - Pv;
-  //  cout << Pv << endl;
 
   w = mv_mult(Pv, a); // w = Pv a;
-  //  cout << w << endl;  
 
   return w;
 }

@@ -105,7 +105,7 @@ namespace PhaseShift
     dprintf1 (1) ("foward fft done\n");
 
     // compute vector of doas (per each antenna)
-    LoVec_double doa = DOA (antennas.getPointX (), antennas.getPointY (), theta, phi);
+    LoVec_double doa = DOA (antennas.getPointX (), antennas.getPointY (), theta, phi, nfft);
 
     // this is the output matrix: one column of signal per each antenna
     LoMat_dcomplex phased_signal (antennas.size (), siglen);
@@ -140,13 +140,13 @@ namespace PhaseShift
     return fs;
   }
 
-  LoVec_double DOA (const LoVec_double& px, const LoVec_double& py, double theta, double phi) 
+  LoVec_double DOA (const LoVec_double& px, const LoVec_double& py, double theta, double phi, int nfft) 
   {
     FailWhen1 (px.size () != py.size (), "vector size mismatch");
     LoVec_double res (px.size ());
 
     res = -2 * M_PI * (px * sin (theta) * cos (phi) + py * sin (theta) * sin (phi));
 	
-    return res;
+    return res / nfft;
   }
 };				// namespace PhaseShift

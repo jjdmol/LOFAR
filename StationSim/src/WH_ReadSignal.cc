@@ -84,7 +84,14 @@ void WH_ReadSignal::process ()
   if (!itsFile.eof ()) {
     itsFile >> sample;
   } else {
-    sample = 0;
+	char s[256];
+	itsFile.close();
+	itsFile.open(itsFileName.c_str());
+
+	while (strncmp (s, "Data :", 6) != 0)
+	  itsFile.getline (s, 256);
+  
+    itsFile >> sample;
   }
 
   for (int i = 0; i < getOutputs (); i++) {

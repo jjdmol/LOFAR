@@ -18,7 +18,6 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Chris Broekema, january 2003.
 //#
 
 #include <stdio.h>             // for sprintf
@@ -33,18 +32,20 @@
 #include <blitz/blitz.h>
 
 
-WH_STA::WH_STA (const string& name, unsigned int nin, unsigned int nout,
-				unsigned int nant, unsigned int maxnrfi, unsigned int buflength)
+WH_STA::WH_STA (const string& name,  int nin,  int nout,
+				 int nant,  int maxnrfi,  int buflength)
 : WorkHolder      (nin, nout, name, "WH_STA"),
   itsInHolders    (0),
   itsOutHolders   (0),
   itsNumberOfRFIs ("out_mdl", 1, 1),
   itsNrcu         (nant),
   itsMaxRFI       (maxnrfi),
-  itsBufLength    (4),
-  itsBuffer       (itsNrcu, itsBufLength),
-  itsSnapshot     (itsNrcu),
-  itsCurPos       (0)
+  itsBufLength    (buflength),
+  itsBuffer       (nant, buflength),
+  itsPos          (0),
+  itsEvectors     (nant,nant),
+  itsEvalues      (nant),
+  itsAcm          (nant, nant)
 {
   char str[8];
   if (nant > 0) {
@@ -63,6 +64,12 @@ WH_STA::WH_STA (const string& name, unsigned int nin, unsigned int nout,
     // RFI sources. This should be implemented more elegantly.
     itsOutHolders[i] = new DH_SampleC (string("out_") + str, itsNrcu, itsMaxRFI);    
   }
+  //DEBUG
+//   delay = 3;
+  itsTestVector.resize(itsNrcu, 300);
+  itsFileInput.open ("/home/alex/gerdes/test_vectorSTA_sin.txt");
+  itsFileInput >> itsTestVector;
+  itsCount = 0;
 }
 
 WH_STA::~WH_STA()
@@ -93,75 +100,73 @@ void WH_STA::process()
 {
   using namespace blitz;
 
+  // Place the next incoming sample vector in the snapshot buffer 
+  // Keep a cylic buffer for the input snapshots
   for (int i = 0; i < itsNrcu; i++) {
-    itsSnapshot(i) = *itsInHolders[i]->getBuffer();
+	//itsBuffer(i, itsPos) = itsInHolders[i]->getBuffer()[0];
+	itsBuffer(i, itsPos) = itsTestVector(i, itsCount);
   }
-
-  unsigned int ub = itsBuffer.ubound(secondDim);
-  unsigned int lb = itsBuffer.lbound(secondDim);
-
-  itsBuffer(Range::all(), Range(lb, ub-1)) = 
-    itsBuffer(Range::all(), Range(lb+1,ub));
-  itsBuffer(Range::all(), ub) = itsSnapshot;
-
-
-  // This is only a single snapshot.. Make a buffer to really to something 
-  // useful
-//   DH_SampleC::BufferType* bufin = itsInHolders->getBuffer();
-
-//   itsBuffer = *bufin;
+  itsPos = (itsPos + 1) % itsBuffer.cols();
+  itsCount = (itsCount + 1) % itsTestVector.cols();
 
 //   // Select the appropriate algorithm
 //   // See if the PASTd algorithm need updating
 //   // Use either EVD or SVD for updating
 
-  //DEBUG AG: put in a testvector into the ACM calc.
-  LoMat_dcomplex testVector(itsNrcu, itsNrcu);
-  testVector = 0;
-  testVector(0,Range::all()) = 1;
+  if (getOutHolder(0)->doHandle ()) {
+	// Create contigeous buffer
+	itsBuffer = CreateContigeousBuffer (itsBuffer, itsPos);
+	itsPos = 0; // Set cyclic buffer pointer to the first entry because it is ordered now
 
-  // EVD - first calculate the ACM
-  LoMat_dcomplex itsAcm (itsNrcu, itsNrcu) ;
-//   itsAcm = LCSMath::acm(itsBuffer);
-  itsAcm = LCSMath::acm(testVector);
-  //  cout << itsAcm << endl;
-  
-//   // EVD - using the ACM, calculate eigen vectors and values.
-//   LoMat_dcomplex itsEvectors;
-//   LoVec_double   itsEvalues;
-//   LCSMath::eig(itsAcm, itsEvectors, itsEvalues);
+	// calculate the ACM
+ 	itsAcm = LCSMath::acm (itsBuffer);
 
-//   // EVD - Determine the number of sources in the signal
-//   // TODO: fit MDL into Common library.
-//   unsigned int RFI = mdl(itsEvalues, itsNrcu, itsBufLength);
-  
-//   // EVD - Find the appropriate Eigen vectors
-//   // Assume the most powerfull sources are in front. This may not be true!!
-//   // TODO check if this is a good assumption -- possible overflow
-//   LoMat_dcomplex B(itsNrcu, RFI);
-// //   B = itsEvectors(Range::all(), Range(itsEvectors.lbound(firstDim), 
-// // 				     itsEvectors.lbound(firstDim) + RFI - 1));
+	// using the ACM, calculate eigen vectors and values.
+	LCSMath::eig (itsAcm, itsEvectors, itsEvalues);
 
-//   LoVec_dcomplex w (itsNrcu) ; // the weight vector
-//   dcomplex *w_ptr = w.data() ;
+	// Determine the number of sources in the signal
 
-//  LoVec_dcomplex d(itsNrcu);
-  //  w = getWeights(B, d);
-  
-  // Now assign the calculated weight vector to the output
-  
+	// put in a vector with two large eigen values and see what MDL finds
+	itsEvalues = -1;
+//  	itsEvalues(itsNrcu-1) = 200000000.0;
+//    	itsEvalues(itsNrcu-2) = 100000000.0;
+//  	itsEvalues(itsNrcu-3) = 10000.0;
+	//	itsEvalues(itsNrcu-4) = 1000.0;
 
-//   memcpy(itsOutHolders[0]->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
-//   memcpy(itsOutHolders[1]->getBuffer(), mdl, sizeof(DH_SampleC::BufferType));
+	double RFI = (double) mdl (itsEvalues, itsNrcu, itsBufLength);
+	// 	cout << RFI << endl;
+	if (RFI > itsMaxRFI) RFI = itsMaxRFI;
 
-  
-//   cout << itsBuffer << endl;
-//   cout << itsAcm << endl;
+	// DEBUG
+//  	RFI = 1;
+
+// 	// DEBUG
+// 	for (int i = 0; i < itsNrcu; i++) {
+// 	  cout << itsEvalues(i) << endl;
+// 	  if (itsEvalues(i) > 10) {
+// 		for (int j = 0; j < itsNrcu; j++) {
+// 		  cout << itsEvectors(i, j) << endl;
+// 		}
+// 	  }
+// 	}
+	
+	// Find the appropriate Eigen vectors
+	LoMat_dcomplex B = itsEvectors(Range(itsEvectors.ubound(secondDim) - RFI + 1,
+										 itsEvectors.ubound(secondDim)), Range::all());
+
+	// 	cout << B << endl;
+	//	cout << itsEvalues << endl;
+	
+	// Now assign the Eigen vectors to the output
+	for (int i = 0; i < getOutputs() - 1; i++) {
+	  memcpy(itsOutHolders[i]->getBuffer(), B.data(), itsNrcu * (int)RFI * sizeof(DH_SampleC::BufferType));
+	}
+	memcpy(itsNumberOfRFIs.getBuffer(), &RFI, sizeof(DH_SampleR::BufferType));	
+  }
 
   // SVD 
 
-  // PASTd
- 
+  // PASTd 
 }
 
 void WH_STA::dump() const
@@ -183,3 +188,19 @@ DataHolder* WH_STA::getOutHolder (int channel)
 	return &itsNumberOfRFIs;  
 }
 
+LoMat_dcomplex WH_STA::CreateContigeousBuffer (const LoMat_dcomplex& aBuffer, int pos)
+{
+  using namespace blitz;
+  AssertStr (pos <= aBuffer.ubound(secondDim), "Can't create contigeous buffer, pos too high!");
+  Range all = Range::all();
+  LoMat_dcomplex output (aBuffer.shape());
+
+  int p = 0;
+  for (int i = pos - 1; i >= 0; i--) {
+	output (all, p++) = aBuffer(all, i);
+  }
+  for (int i = aBuffer.ubound(secondDim); i >= pos; i--) {
+	output (all, p++) = aBuffer(all, i);
+  }
+  return output;
+}

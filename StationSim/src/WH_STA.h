@@ -42,11 +42,11 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   WH_STA (const string& name,
-	  unsigned int nin, 
-	  unsigned int nout,
-	  unsigned int nant,
-	  unsigned int maxnrfi,
-	  unsigned int buflength
+		  int nin, 
+		  int nout,
+		  int nant,
+		  int maxnrfi,
+		  int buflength
 	  );
   virtual ~WH_STA();
 
@@ -80,7 +80,7 @@ private:
   /// Forbid assignment.
   WH_STA& operator= (const WH_STA&);
 
-  /// Calculate a steer vector
+  LoMat_dcomplex CreateContigeousBuffer (const LoMat_dcomplex& aBuffer, int pos);
 
   /// In- and OutHolders
   DH_SampleC** itsInHolders;
@@ -88,12 +88,18 @@ private:
   DH_SampleR   itsNumberOfRFIs;
 
   /// Length of buffers.
-  unsigned int itsNrcu;
-  unsigned int itsMaxRFI;
-  unsigned int itsBufLength;
-
+  int itsNrcu;
+  int itsMaxRFI;
+  int itsBufLength;
+	
   LoMat_dcomplex itsBuffer;
-  LoVec_dcomplex itsSnapshot;
-  unsigned int itsCurPos;
+  int itsPos;
+  LoMat_dcomplex itsEvectors;
+  LoVec_double   itsEvalues;
+  LoMat_dcomplex itsAcm;
+  int delay;
+  ifstream itsFileInput;
+  LoMat_dcomplex itsTestVector;
+  int itsCount;
 };
 #endif
