@@ -510,7 +510,7 @@ namespace LCSMath
 
     // CB: merk op dat ik geen transpose doe aangezien dat (volgens mij) niet nodig is.
     for (int k = lb; k <= ub; k++) {
-      ACM = (1 - alpha) * ACM + matMult(a(blitz::Range::all(), k), a(blitz::Range::all(), k));
+      ACM = (1 - alpha) * ACM + matMult(a(blitz::Range::all(), k), conj(a(blitz::Range::all(), k)));
     }
 
     return ACM - eye;
@@ -548,7 +548,7 @@ namespace LCSMath
     out = 0;
     for (int k = A.lbound(blitz::firstDim); k <= A.ubound(blitz::firstDim); k++) {
       for (int l = B.lbound(blitz::firstDim); l <= B.ubound(blitz::firstDim); l++) {
-	out(k,l) = conj(A(k)) * B(l);
+	out(k,l) = A(k) * B(l);
       }
     }
     return out;
