@@ -132,7 +132,7 @@ BlobIStream& operator>> (BlobIStream& bs, blitz::Array<T,NDIM>& arr)
   uint16 ndim;
   uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
   ASSERT (ndim == NDIM);
-  TinyVector<NDIM>(uint32,NDIM) shape;
+  blitz::TinyVector<uint32,NDIM> shape;
   getBlobArrayShape (bs, shape.data(), NDIM, fortranOrder!=arr.isMinorRank(),
 		     nalign);
   arr.resize (shape);
