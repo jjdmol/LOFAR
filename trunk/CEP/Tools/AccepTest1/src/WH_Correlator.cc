@@ -140,11 +140,11 @@ void WH_Correlator::process() {
     *(in_buffer+i) = static_cast<_Complex float> ( *(in_ptr+i) ); 
   }
 #else
-  DH_CorrCube::BufferPrimitive* in_ptr = (DH_CorrCube::BufferPrimitive*) inDH->getBuffer();
+  DH_CorrCube::BufferType* in_ptr = (DH_CorrCube::BufferType*) inDH->getBuffer();
   // The float pointer is explicit, since DH_Vis is now complex<double>
-  complex<float>*  in_buffer = new complex<float>[2*inDH->getBufSize()];
+  complex<float>*  in_buffer = new complex<float>[inDH->getBufSize()];
   for ( unsigned int i = 0; i < inDH->getBufSize(); i++ ) {
-    *(in_buffer+i) = static_cast<complex<float> > ( *(in_ptr+i) ); 
+    *(in_buffer+i) = *(in_ptr+i); 
   }
 #endif 
 
@@ -180,31 +180,28 @@ void WH_Correlator::process() {
 #pragma unroll(10)
 	for (int sample = 0; sample < itsNsamples; sample++) {
 #if 0
-	  *out_ptr   += *(in_buffer+s1_addr) * *(in_buffer+s2_addr);     // XX
+	  *out_ptr   += *(in_buffer+s1_addr+sample) * *(in_buffer+s2_addr+sample);     // XX
  	  out_ptr++;
-	  *out_ptr   += *(in_buffer+s1_addr) * *(in_buffer+s2_addr+1);   // XY
+	  *out_ptr   += *(in_buffer+s1_addr+sample) * *(in_buffer+s2_addr+sample+1);   // XY
  	  out_ptr++;
-	  *out_ptr   += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr);   // YX
- 	  *out_ptr++;
-	  *out_ptr   += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr+1); // YY
+	  *out_ptr   += *(in_buffer+s1_addr+sample+1) * *(in_buffer+s2_addr+sample);   // YX
+ 	  out_ptr++;
+	  *out_ptr   += *(in_buffer+s1_addr+sample+1) * *(in_buffer+s2_addr+sample+1); // YY
 #endif 
 
 #if 1
 	  // XX
-	  *out_ptr = __fxcpmadd( *out_ptr, *(in_buffer+s1_addr), __real__ *(in_buffer+s2_addr) );
-	  *out_ptr = __fxcxnpma( *out_ptr, *(in_buffer+s1_addr), __imag__ *(in_buffer+s2_addr) );
-	  out_ptr++;
+	  *out_ptr = __fxcpmadd( *out_ptr, *(in_buffer+s1_addr+sample), __real__ *(in_buffer+s2_addr+sample) );
+	  *out_ptr = __fxcxnpma( *out_ptr, *(in_buffer+s1_addr+sample), __imag__ *(in_buffer+s2_addr+sample) );
 	  // XY
-	  *out_ptr = __fxcpmadd( *out_ptr, *(in_buffer+s1_addr), __real__ *(in_buffer+s2_addr+1) );
-	  *out_ptr = __fxcxnpma( *out_ptr, *(in_buffer+s1_addr), __imag__ *(in_buffer+s2_addr+1) );
-	  out_ptr++;
+	  *(out_ptr+1) = __fxcpmadd( *(out_ptr+1), *(in_buffer+s1_addr+sample), __real__ *(in_buffer+s2_addr+sample+1) );
+	  *(out_ptr+1) = __fxcxnpma( *(out_ptr+1), *(in_buffer+s1_addr+sample), __imag__ *(in_buffer+s2_addr+sample+1) );
 	  // YX
-	  *out_ptr = __fxcpmadd( *out_ptr, *(in_buffer+s1_addr+1), __real__ *(in_buffer+s2_addr) );
-	  *out_ptr = __fxcxnpma( *out_ptr, *(in_buffer+s1_addr+1), __imag__ *(in_buffer+s2_addr) );
-	  out_ptr++;
+	  *(out_ptr+2) = __fxcpmadd( *(out_ptr+2), *(in_buffer+s1_addr+sample+1), __real__ *(in_buffer+s2_addr+sample) );
+	  *(out_ptr+2) = __fxcxnpma( *(out_ptr+2), *(in_buffer+s1_addr+sample+1), __imag__ *(in_buffer+s2_addr+sample) );
 	  // YY
-	  *out_ptr = __fxcpmadd( *out_ptr, *(in_buffer+s1_addr+1), __real__ *(in_buffer+s2_addr+1) );
-	  *out_ptr = __fxcxnpma( *out_ptr, *(in_buffer+s1_addr+1), __imag__ *(in_buffer+s2_addr+1) );
+	  *(out_ptr+3) = __fxcpmadd( *(out_ptr+3), *(in_buffer+s1_addr+sample+1), __real__ *(in_buffer+s2_addr+sample+1) );
+	  *(out_ptr+3) = __fxcxnpma( *(out_ptr+3), *(in_buffer+s1_addr+sample+1), __imag__ *(in_buffer+s2_addr+sample+1) );
 #endif 
 
 	} // sample
@@ -223,15 +220,10 @@ void WH_Correlator::process() {
 	int s2_addr = c_addr+itsNsamples*itsNpolarisations*station2;
 	DH_Vis::BufferType* out_ptr = outDH->getBufferElement(station1, station2, fchannel, 0);
 	for (int sample = 0; sample < itsNsamples; sample++) {
-
-	  *out_ptr   += *(in_buffer+s1_addr) * *(in_buffer+s2_addr);     // XX
-	  out_ptr++;
-	  *out_ptr   += *(in_buffer+s1_addr) * *(in_buffer+s2_addr+1);   // XY
-	  out_ptr++;
-	  *out_ptr   += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr);   // YX
-	  *out_ptr++;
-	  *out_ptr   += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr+1); // YY
-
+	  *out_ptr     += *(in_buffer+s1_addr+sample) * *(in_buffer+s2_addr+sample);     // XX
+	  *(out_ptr+1) += *(in_buffer+s1_addr+sample) * *(in_buffer+s2_addr+sample+1);   // XY
+	  *(out_ptr+2) += *(in_buffer+s1_addr+sample+1) * *(in_buffer+s2_addr+sample);   // YX
+	  *(out_ptr+3) += *(in_buffer+s1_addr+sample+1) * *(in_buffer+s2_addr+sample+1); // YY
 	} // sample
       } // station2
     } // station1
