@@ -48,19 +48,41 @@ public:
   // Set the position in the buffer and return the new position.
   virtual int64 setPos (int64 pos);
 
+  // Get the buffer containing the data.
+  // <br>The size of the data in the buffer can be obtained using the
+  // size() function.
+  const uchar* getBuffer() const;
+
+  // Get the size of the data in the buffer.
+  uint size() const;
+
   // Get a typed pointer to an area in the buffer.
   // It is meant to be used in combination with BlobIStream::getSpace.
-  template<typename U> const U* getPointer (uint position) const
-    {
-      DbgAssert(position < itsSize);
-      return (const U*)(itsBuffer + position);
-    }
+  template<typename U> const U* getPointer (uint position) const;
 
 private:
   const uchar* itsBuffer;
   uint         itsSize;
   uint         itsPos;
 };
+
+
+inline const uchar* BlobIBufChar::getBuffer() const
+{
+  return itsBuffer;
+}
+inline uint BlobIBufChar::size() const
+{
+  return itsSize;
+}
+
+template<typename U>
+inline const U* BlobIBufChar::getPointer (uint position) const
+{
+  DbgAssert(position < itsSize);
+  return (const U*)(itsBuffer + position);
+}
+
 
 } // end namespace
 
