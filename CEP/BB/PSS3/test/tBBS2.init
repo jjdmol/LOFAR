@@ -8,7 +8,8 @@ ln -s ../../../../test/*.g .
 ln -s ../../../../test/tBBS2.test*[0-9] .
 ln -s ../../../../src/prepareBBD2 prepareBBD
 ln -s ../../../../src/clearBB .
-ln -s ../tBBS2 .
+ln -s ../tBBS2 . 
+ln -s ../../../../test/generalinfo.sh .
 
 rm -f demo{3,3p,10}-1.MS.{dat,des,uvw}
 ln -s /data/PSS3/diepen/BBS2/demo3/demo.dat demo3-1.MS.dat
@@ -17,6 +18,9 @@ ln -s /data/PSS3/diepen/BBS2/demo3/demo.uvw demo3-1.MS.uvw
 ln -s /data/PSS3/diepen/BBS2/demo3p/demo.dat demo3p-1.MS.dat
 ln -s /data/PSS3/diepen/BBS2/demo3p/demo.des demo3p-1.MS.des
 ln -s /data/PSS3/diepen/BBS2/demo3p/demo.uvw demo3p-1.MS.uvw
+ln -s /data/PSS3/diepen/BBS2/demo3n/demo.dat demo3n-1.MS.dat
+ln -s /data/PSS3/diepen/BBS2/demo3n/demo.des demo3n-1.MS.des
+ln -s /data/PSS3/diepen/BBS2/demo3n/demo.uvw demo3n-1.MS.uvw
 ln -s /data/PSS3/diepen/BBS2/demo10/demo.dat demo10-1.MS.dat
 ln -s /data/PSS3/diepen/BBS2/demo10/demo.des demo10-1.MS.des
 ln -s /data/PSS3/diepen/BBS2/demo10/demo.uvw demo10-1.MS.uvw
