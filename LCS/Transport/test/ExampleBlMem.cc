@@ -29,6 +29,8 @@
 
 using namespace LOFAR;
 
+#ifdef USE_THREADS
+
 void* startWriterThread(void* thread_arg)
 {
   DH_Example* dh = (DH_Example*)thread_arg;
@@ -204,8 +206,12 @@ void* startVarReaderThread(void* thread_arg)
   pthread_exit(result);
 }
 
+#endif
+
+
 bool test1()
 {
+#ifdef USE_THREADS
   DH_Example DH1("dh1", 1);
   DH_Example DH2("dh2", 1);
     
@@ -249,10 +255,14 @@ bool test1()
 
   cout << "test1 result: " << result << endl;
   return result;
+#else
+  return true;
+#endif
 }
 
 bool test2()
 {
+#ifdef USE_THREADS
   DH_Example DH1("dh1", 1);
   DH_Example DH2("dh2", 1);
     
@@ -293,10 +303,14 @@ bool test2()
   
   cout << "Test2 result: " << *result << endl;
   return (*result);
+#else
+  return true;
+#endif
  }
 
 bool testVar1()
 {
+#ifdef USE_THREADS
   DH_Example DH1("dh1", 1, true);
   DH_Example DH2("dh2", 1, true);
     
@@ -409,10 +423,14 @@ bool testVar1()
 
   cout << "testVar1 result: " << result << endl;
   return result;
+#else
+  return true;
+#endif
 }
 
 bool testVar2()
 {
+#ifdef USE_THREADS
   DH_Example DH1("dh1", 1, true);
   DH_Example DH2("dh2", 1, true);
     
@@ -488,6 +506,9 @@ bool testVar2()
   
   cout << "TestVar2 result: " << *result << endl;
   return (*result);
+#else
+  return true;
+#endif
 }
 
 
