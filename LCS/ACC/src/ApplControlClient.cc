@@ -81,8 +81,8 @@ ApplControlClient::ApplControlClient(const string&	hostID,
 	DH_CtrlServer.setID(4);
 
 	DH_CtrlClient->connectBidirectional(DH_CtrlServer, 
-							 			TH_Socket(host, "", port, false),
-							 			TH_Socket("", host, port, true),
+							 			TH_Socket(host, "", port, false, syncClient),
+							 			TH_Socket("", host, port, true,  syncClient),
 										true);	// blocking
 	DH_CtrlClient->init();
 

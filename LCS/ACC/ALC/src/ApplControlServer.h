@@ -61,13 +61,9 @@ public:
 	// Destructor;
 	~ApplControlServer();
 
-	// Copying is allowed.
-	ApplControlServer(const ApplControlServer& that);
-	ApplControlServer& 	operator=(const ApplControlServer& that);
 
 	// Define a generic way to exchange info between client and server.
 	string	askInfo   (const string& 	keylist) const;
-	string	supplyInfo(const string& 	keylist) const;
 
 	// Called in Async comm. to handle the (delayed) result of the command.
 	void	handleAckMessage();
@@ -76,13 +72,17 @@ public:
 	bool	pollForMessage() const;
 	bool 	handleMessage(DH_ApplControl*	theMsg);
 	bool 	handleMessage(ACCommand*		theCmd);
-	void	sendResult(uint16	aResult);
+	void	sendResult(uint16	aResult, const string&	someOptions = "");
 
 	inline DH_ApplControl*	getDataHolder() const;
 
 private:
 	// NOT default constructable;
 	ApplControlServer() {};
+
+	// Copying is allowed.
+	ApplControlServer(const ApplControlServer& that);
+	ApplControlServer& 	operator=(const ApplControlServer& that);
 
 	const ApplControl*		itsACImpl;
 	ApplControlComm*		itsCommChan;

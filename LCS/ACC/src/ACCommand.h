@@ -50,7 +50,7 @@ public:
 	time_t		itsScheduleTime;
 	time_t		itsWaitTime;
 	string		itsOptions;
-	string		itsProcessList;
+	string		itsProcList;
 	string		itsNodeList;
 };
 

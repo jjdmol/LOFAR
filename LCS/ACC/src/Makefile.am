@@ -23,13 +23,16 @@ libacc_la_SOURCES = \
 					TemplateUnion.cc \
 					ParameterUnion.cc \
 					ParameterSet.cc \
+					DH_ApplControl.cc \
+					DH_AC_Connect.cc  \
 					ApplControlComm.cc \
 					ApplControlClient.cc \
 					ACSyncClient.cc  \
 					ACAsyncClient.cc \
-					DH_ApplControl.cc \
-					DH_AC_Connect.cc  \
-					ApplControlServer.cc 
+					ApplControlServer.cc \
+					DH_ProcControl.cc \
+					ProcControlComm.cc  \
+					ProcControlServer.cc 
 #					ParCollRecord.cc 
 #					ConfigurationMgr.cc 
 
@@ -37,13 +40,15 @@ bin_PROGRAMS = ApplController
 
 ### ApplController ###
 ApplController_SOURCES      = ACCmdImpl.cc \
-							  DataHolderSelector.cc \
 							  ACCommand.cc \
 							  CmdStack.cc \
-							  DH_ProcessControl.cc  \
+							  APAdmin.cc \
+							  APAdminPool.cc \
 							  ApplController.cc
 # ApplProcess.cc 
 # ApplProcessPool.cc 
+# DataHolderSelector.cc 
+# CmdTimer.cc
 
 ApplController_DEPENDENCIES = $(LOFAR_DEPEND) libacc.la
 ApplController_LDADD        = libacc.la

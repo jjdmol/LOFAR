@@ -84,8 +84,8 @@ protected:
 	// Not default constructable
 	ApplControl() {};
 	// Copying is also not allowed
-	ApplControl(const ApplControl& that) { operator= (that); };
-	ApplControl& 	operator=(const ApplControl& that) { return (*this); };
+	ApplControl(const ApplControl& that);
+	ApplControl& 	operator=(const ApplControl& that);
 };
 
 

@@ -38,7 +38,7 @@ namespace LOFAR {
 
 ACAsyncClient::ACAsyncClient(ACClientFunctions*	ACClntFuncts,
 				  			 const string&		hostID) :
-	ApplControlClient(hostID, true),
+	ApplControlClient(hostID, false),
 	itsClientFuncts(ACClntFuncts)
 {
 }
@@ -67,12 +67,14 @@ bool	ACAsyncClient::processACmsgFromServer()	const
 	case CmdAnswer:		
 		handleAnswerMessage(DHPtr->getOptions());
 		break;
-	case CmdResult:		
-		handleAckMessage();
-		break;
 	default:
-		//TODO
-		LOG_DEBUG_STR ("Message type " << cmdType << " not supported!\n");
+		if (cmdType & CmdResult) {
+			handleAckMessage();
+		}
+		else {
+			//TODO
+			LOG_DEBUG_STR ("Message type " << cmdType << " not supported!\n");
+		}
 		break;
 	}
 

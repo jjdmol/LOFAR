@@ -40,10 +40,10 @@ ACCommand::ACCommand   (int16			aCommand,
 	itsScheduleTime(aScheduleTime),
 	itsWaitTime    (aWaitTime),
 	itsOptions     (aOptions),
-	itsProcessList (aProcessList),
+	itsProcList    (aProcessList),
 	itsNodeList    (aNodeList)
 {
-	LOG_TRACE_RTTI("Hallo\n");
+	LOG_TRACE_RTTI("Create ACCommand object");
 };
 
 

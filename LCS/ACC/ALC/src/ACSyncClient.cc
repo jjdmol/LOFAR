@@ -37,7 +37,7 @@ namespace LOFAR {
   namespace ACC {
 
 ACSyncClient::ACSyncClient(const string&	hostID) :
-	ApplControlClient(hostID, false)
+	ApplControlClient(hostID, true)
 {
 }
 

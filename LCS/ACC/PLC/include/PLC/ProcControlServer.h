@@ -1,4 +1,4 @@
-//#  ApplControlServer.h: Server stub of the I/F to the Application Controller.
+//#  ProcControlServer.h: Server stub of the I/F to the Application Controller.
 //#
 //#  Copyright (C) 2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,14 +24,14 @@
 //#
 //#  $Id$
 
-#ifndef ACC_APPLCONTROLSERVER_H
-#define ACC_APPLCONTROLSERVER_H
+#ifndef ACC_PROCCONTROLSERVER_H
+#define ACC_PROCCONTROLSERVER_H
 
 #include <lofar_config.h>
 
 //# Includes
-#include <ACC/ApplControl.h>
-#include <ACC/ApplControlComm.h>
+#include <ACC/ProcessControl.h>
+#include <ACC/ProcControlComm.h>
 #include <ACC/ACCommand.h>
 
 namespace LOFAR {
@@ -42,24 +42,18 @@ namespace LOFAR {
 
 
 //# Description of class.
-// The ApplControl class implements the service the Application Controller
+// The ProcControl class implements the service the Application Processes
 // will support.
 //
-class ApplControlServer
+class ProcControlServer
 {
 public:
 	// Note: default constructor is private
-	// With this call an ApplController is created. It is most likely the
-	// AC is created on the machine you passed as an argument but this is not
-	// guaranteed. The AC server who handles the request (and does run on this
-	// machine) may decide that the AC should run on another node.
-	// The returned AC object knows who its AC is and is already connected to 
-	// it. Call serverInfo if you are interested in this information.
-	ApplControlServer(uint16				portNr,
-					  const ApplControl*	ACimpl);
+	ProcControlServer(uint16				portNr,
+					  const ProcessControl*	PCimpl);
 
 	// Destructor;
-	~ApplControlServer();
+	~ProcControlServer();
 
 
 	// Define a generic way to exchange info between client and server.
@@ -70,25 +64,25 @@ public:
 
 	// Function to read a message an call the corresponding function.
 	bool	pollForMessage() const;
-	bool 	handleMessage(DH_ApplControl*	theMsg);
+	bool 	handleMessage(DH_ProcControl*	theMsg);
 	bool 	handleMessage(ACCommand*		theCmd);
 	void	sendResult(uint16	aResult, const string&	someOptions = "");
 
-	inline DH_ApplControl*	getDataHolder() const;
+	inline DH_ProcControl*	getDataHolder() const;
 
 private:
 	// NOT default constructable;
-	ApplControlServer() {};
+	ProcControlServer() {};
 
 	// Copying is allowed.
-	ApplControlServer(const ApplControlServer& that);
-	ApplControlServer& 	operator=(const ApplControlServer& that);
+	ProcControlServer(const ProcControlServer& that);
+	ProcControlServer& 	operator=(const ProcControlServer& that);
 
-	const ApplControl*		itsACImpl;
-	ApplControlComm*		itsCommChan;
+	const ProcessControl*		itsPCImpl;
+	ProcControlComm*			itsCommChan;
 };
 
-inline	DH_ApplControl*	ApplControlServer::getDataHolder() const {
+inline	DH_ProcControl*	ProcControlServer::getDataHolder() const {
 	return (itsCommChan->getDataHolder());
 }
 

@@ -43,12 +43,7 @@ typedef enum { AcCmdMaskOk 	 	  = 0x0001,
 class ApplControlComm 
 {
 public:
-	// With this call an ApplControlCommler is created. It is most likely the
-	// AC is created on the machine you passed as an argument but this is not
-	// guaranteed. The AC server who handles the request (and does run on this
-	// machine) may decide that the AC should run on another node.
-	// The returned AC object knows who its AC is and is already connected to 
-	// it. Call serverInfo if you are interested in this information.
+	// The only constructor
 	explicit ApplControlComm(bool	syncComm);
 
 	// Destructor;
