@@ -34,6 +34,17 @@
 #pragma aid Tablename Default
 #pragma types #Meq::Parm
 
+// The comments below are used to automatically generate a default
+// init-record for the class 
+
+//defrec begin MeqParm
+//  default parameter value - must be double or complex double, scalar or
+//  2D array
+//field: default 0.0  
+//  MEP table name. If empty, then the default parameter value is used
+//field: tablename '' 
+//defrec end
+
 namespace Meq {
 
 // This class contains the coefficients of a 2-dim polynomial.
