@@ -16,6 +16,7 @@
 // Reviewed: 11/12/2000 - CJ
 // Edited: 11/20/2000 - MG
 // Edited: 12/19/2000 - MG - added namespaces
+// Edited: 03/24/2004 - Alexander Motzkau, TypeTranslationField remembers variant_row index
 
 #include "bind_basics.h"
 #include "variant_row.h"
@@ -23,7 +24,10 @@
 #include "DBStmt.h"
 #include "clib_fwd.h"
 #include "DBException.h"
+#include "BoundIO.h"
 #include "string_util.h"
+
+#include "std_warn_off.h"
 
 #ifdef  WIN32
 #ifdef WIN32
@@ -38,7 +42,6 @@
 #include <sql.h>
 #include <sqlext.h>
 
-#include "std_warn_off.h"
 #include <algorithm>
 #include <numeric>
 
@@ -49,6 +52,32 @@
 #endif
 
 #include "std_warn_on.h"
+
+// #define DTL_VARIANT_USE_FIXED_LEN_STRING
+//
+// Some ODBC drivers may not support SQLGetData extensions in that this function
+// can only be called on the last columns in a SELECT statement.
+// Usually this is not a problem since DynamicDBView::select_iterator
+// arranges things so that string columns are the last columns.
+// However, in the case of DynamicDBView::sql_iterator we "trust the programmer"
+// and run the sql statement as given.  This can cause an error if the columns
+// are not arranged the way the Oracle ODBC driver requires.  For this reason
+// we offer the above #define which makes DynamicDBView use a fixed length string
+// for holding VARCHAR type columns.  This makes the column order not matter, but
+// some long strings may be truncated.
+// For details on the SQLGetData restriction see
+// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/odbc/htm/odch10pr_11.asp
+/*
+There are a number of restrictions on using SQLGetData. In general, columns accessed with SQLGetData: 
+
+Must be accessed in order of increasing column number (because of the way the columns of a result set are read from the data source). For example, it is an error to call SQLGetData for column 5 and then call it for column 4. 
+Cannot be bound. 
+
+Must have a higher column number than the last bound column. For example, if the last bound column is column 3, it is an error to call SQLGetData for column 2. For this reason, applications should be careful to place long data columns at the end of the select list. 
+Cannot be used if SQLFetch or SQLFetchScroll was called to retrieve more than one row. For more information, see Using Block Cursors. 
+
+*/
+
 
 BEGIN_DTL_NAMESPACE
 
@@ -132,11 +161,11 @@ ETIException::ETIException(const tstring &meth, const tstring &msg) :
   RootException(meth, msg, _TEXT("ETIException")) { }
 
 // ************* Implementation code for TypeTranslation **********
-TypeTranslation::TypeTranslation() : typeNm(""), typeId(0), sqlType(0), cType(0), complexity(TYPE_INVALID), size(0) { }
+TypeTranslation::TypeTranslation() : typeNm(""), typeId(0), sqlType(0), cType(0), complexity(TYPE_INVALID), size(0), bParam(false) { }
 
 TypeTranslation::TypeTranslation(const STD_::string &nm, char id, SDWORD sql, SDWORD c,
 				 TypeTranslation::TypeComplexity comp, size_t s) : typeNm(nm), typeId(id), sqlType(sql), cType(c),
-										   complexity(comp), size(s) { }
+										   complexity(comp), size(s), bParam(false) { }
 
 // exception-safe swap()
 void TypeTranslation::swap(TypeTranslation &other)
@@ -147,6 +176,7 @@ void TypeTranslation::swap(TypeTranslation &other)
   STD_::swap(cType, other.cType);
   STD_::swap(complexity, other.complexity);
   STD_::swap(size, other.size);
+  STD_::swap(bParam, other.bParam);
 }
 
 // exception-safe assignment
@@ -163,6 +193,8 @@ TypeTranslation &TypeTranslation::operator=(const TypeTranslation &other)
 
 // is this a primitive type
 bool TypeTranslation::IsPrimitive() const { return complexity == TYPE_PRIMITIVE; }
+bool TypeTranslation::IsParam() const { return bParam;};
+void TypeTranslation::SetParam(bool p) {bParam = p;}
 
 bool operator==(const TypeTranslation &tt1, const TypeTranslation &tt2)
 {
@@ -240,14 +272,17 @@ void ETI_Map::build()
     TypeTranslation(typeid(long).name(), C_LONG, SQL_INTEGER, SQL_C_SLONG, TypeTranslation::TYPE_PRIMITIVE, sizeof(long));
   (*this)[typeid(unsigned long).name()] =
     TypeTranslation(typeid(unsigned long).name(), C_ULONG, SQL_INTEGER, SQL_C_ULONG, TypeTranslation::TYPE_PRIMITIVE, sizeof(unsigned long));
+  (*this)[typeid(ODBCINT64).name()] =
+	  TypeTranslation(typeid(ODBCINT64).name(), C_INT64, SQL_BIGINT, SQL_C_SBIGINT, TypeTranslation::TYPE_PRIMITIVE, sizeof(ODBCINT64));
   (*this)[typeid(double).name()] =
     TypeTranslation(typeid(double).name(), C_DOUBLE, SQL_DOUBLE, SQL_C_DOUBLE, TypeTranslation::TYPE_PRIMITIVE, sizeof(double));
   (*this)[typeid(float).name()] = TypeTranslation(typeid(float).name(), C_FLOAT, SQL_REAL, SQL_C_FLOAT, TypeTranslation::TYPE_PRIMITIVE, sizeof(float));
 
   (*this)[typeid(struct tagTIMESTAMP_STRUCT).name()] =
     TypeTranslation(typeid(struct tagTIMESTAMP_STRUCT).name(), C_TIMESTAMP, SQL_TIMESTAMP, SQL_C_TIMESTAMP, TypeTranslation::TYPE_PRIMITIVE, sizeof(struct tagTIMESTAMP_STRUCT));
+  
   (*this)[typeid(char *).name()] =
-    TypeTranslation(typeid(char *).name(), C_CHAR_STAR, SQL_VARCHAR, SQL_C_CHAR, TypeTranslation::TYPE_PRIMITIVE, sizeof(TCHAR *));
+    TypeTranslation(typeid(char *).name(), C_CHAR_STAR, SQL_VARCHAR, SQL_C_CHAR, TypeTranslation::TYPE_PRIMITIVE, BoundIO::MINSTRBUFLEN * sizeof(TCHAR));
 
 #ifndef DTL_NO_UNICODE
   (*this)[typeid(wchar_t *).name()] =
@@ -255,13 +290,8 @@ void ETI_Map::build()
 		    SQL_WVARCHAR, SQL_C_WCHAR, TypeTranslation::TYPE_PRIMITIVE, sizeof(wchar_t *));
 #endif
 
-#if 1
   (*this)[typeid(STD_::string).name()] =
     TypeTranslation(typeid(STD_::string).name(), C_STRING, SQL_VARCHAR, SQL_C_CHAR, TypeTranslation::TYPE_COMPLEX, sizeof(STD_::string));
-#else
-  (*this)[typeid(STD_::string).name()] =
-    TypeTranslation(typeid(STD_::string).name(), C_STRING, SQL_LONGVARCHAR, SQL_C_CHAR, TypeTranslation::TYPE_COMPLEX, sizeof(STD_::string));
-#endif
 
 #ifdef POSTGRES_BLOB_PATCH
   (*this)[typeid(blob).name()] =
@@ -302,9 +332,6 @@ void ETI_Map::build()
 #endif
 
 
-  (*this)[typeid(ODBCINT64).name()] =
-	  TypeTranslation(typeid(ODBCINT64).name(), C_INT64, SQL_BIGINT, SQL_C_SBIGINT, TypeTranslation::TYPE_PRIMITIVE, 0);
-
 
 }
 
@@ -334,23 +361,36 @@ TypeTranslation Map_SQL_types_to_C(SWORD sql_type) {
   ETI_Map &SQL_types_to_C = GetSQL_types_to_C();
   switch (sql_type) {
   case SQL_CHAR: case SQL_VARCHAR: case SQL_LONGVARCHAR:
-    return SQL_types_to_C[typeid(tstring).name()];
+// ASTRON changed ifdef into ifndef
+#ifndef DTL_NO_UNICODE
+  case SQL_WCHAR: case SQL_WVARCHAR: case SQL_WLONGVARCHAR: // cast wide strings to narrow strings	
+#endif
+# ifdef DTL_VARIANT_USE_FIXED_LEN_STRING
+	  return SQL_types_to_C[typeid(char *).name()];
+#else
+      return SQL_types_to_C[typeid(tstring).name()];
+#endif
+
 #ifndef DTL_NO_UNICODE
   case SQL_WCHAR: case SQL_WVARCHAR: case SQL_WLONGVARCHAR:
-    return SQL_types_to_C[typeid(STD_::wstring).name()];
+  # ifdef DTL_VARIANT_USE_FIXED_LEN_STRING
+	  return SQL_types_to_C[typeid(char *).name()]; // cast wide strings to fixed length ASCII string
+  #else
+	  return SQL_types_to_C[typeid(STD_::wstring).name()];
+  #endif
 #endif
 
   case SQL_DECIMAL: return SQL_types_to_C[typeid(double).name()];
   case SQL_NUMERIC: return SQL_types_to_C[typeid(double).name()];
   case SQL_BIT: return SQL_types_to_C[typeid(short).name()];
   case SQL_TINYINT: return SQL_types_to_C[typeid(short).name()];
+
   case SQL_SMALLINT: return SQL_types_to_C[typeid(int).name()];
   case SQL_INTEGER: return SQL_types_to_C[typeid(long).name()];
-  case SQL_BIGINT: return SQL_types_to_C[typeid(long).name()];
+  case SQL_BIGINT: return SQL_types_to_C[typeid(ODBCINT64).name()];
   case SQL_REAL: return SQL_types_to_C[typeid(float).name()];
   case SQL_FLOAT: case SQL_DOUBLE: return SQL_types_to_C[typeid(double).name()];
-  case SQL_BINARY: return SQL_types_to_C[typeid(tstring).name()];
-  case SQL_VARBINARY: case SQL_LONGVARBINARY: return SQL_types_to_C[typeid(blob).name()];
+  case SQL_BINARY: case SQL_VARBINARY: case SQL_LONGVARBINARY: return SQL_types_to_C[typeid(blob).name()];
   case SQL_GUID: return SQL_types_to_C[typeid(tstring).name()];
   case SQL_DATE: case SQL_TIME: case SQL_TIMESTAMP: 
   case SQL_TYPE_DATE:
@@ -360,15 +400,22 @@ TypeTranslation Map_SQL_types_to_C(SWORD sql_type) {
     tstring errmsg;
     errmsg.reserve(512);
     errmsg += _TEXT("Unknown SQL column type ");
+	tostringstream tstr;
+	tstr << sql_type;
+	errmsg += tstr.str();
     errmsg += _TEXT(" encountered in Map_SQL_types_to_C()!");
-    throw ETIException(_TEXT("Map_SQL_types_to_C()"), errmsg);
+    DTL_THROW ETIException(_TEXT("Map_SQL_types_to_C()"), errmsg);
+
+# ifdef DTL_VARIANT_USE_FIXED_LEN_STRING
+	  return SQL_types_to_C[typeid(char *).name()];
+#else
+      return SQL_types_to_C[typeid(tstring).name()];
+#endif
   }
   }
 }
 
-static
-STD_::vector<tstring>
-parse_function_list (const tstring& s, const tstring& q = _TEXT ("\""))
+static STD_::vector<tstring> parse_function_list (const tstring& s, const tstring& q = _TEXT ("\""))
 {
   STD_::vector<tstring> r;
   tstring::size_type pos = 0, lp = 0, rp = 0, x = s.size ( );
@@ -381,14 +428,14 @@ parse_function_list (const tstring& s, const tstring& q = _TEXT ("\""))
 
     if (s.find (q, i) == i) {
       do {
-	if ((i = s.find (q, ++i)) == tstring::npos)
-	  throw RootException
-	    (_TEXT ("parse_function_list (const tstring&)"),
-	     _TEXT ("no ending quote mark"));
-      } while (s[i - 1] == '\\');
+		if ((i = s.find (q, ++i)) == tstring::npos)
+		  DTL_THROW RootException
+			(_TEXT ("parse_function_list (const tstring&)"),
+			 _TEXT ("no ending quote mark"));
+	  } while (s[i - 1] == '\\');
 
-      continue;
-    }
+	  continue;
+	}
 
     switch (s[i]) {
     case tstring::value_type (','):
@@ -404,7 +451,7 @@ parse_function_list (const tstring& s, const tstring& q = _TEXT ("\""))
   }
 
   if (lp != rp)
-    throw RootException
+    DTL_THROW RootException
       (_TEXT ("parse_function_list (const tstring&)"),
        _TEXT ("mismatched function parentheses"));
 
@@ -415,18 +462,96 @@ parse_function_list (const tstring& s, const tstring& q = _TEXT ("\""))
   return r;
 }
 
-// Analyze a given table and fields to get information about the types
-// of the fields in the table Return
-variant_row_fields
-GetFieldInfo (const tstring& TableName, tstring& TableFields,
-	      const tstring& Postfix, tstring& UniqueFields,
-	      STD_::vector<tstring>& AppendedFields, 
-	      KeyMode keyMode, DBConnection& conn)
+// Pre-pend table names if there are duplicate field names
+// This is primarily to resolve the problem of obtaining
+// unqualified field names from the expansion of *.
+// So, e.g. 
+// select t1.*, t2.* from t1, t2 
+// may give duplicate field names
+void resolve_duplicates (DBConnection& conn, DBStmt &stmt, STD_::vector<tstring> &fields)
+{
+	STD_::vector<tstring> sorted_fields(fields);
+	STD_::sort(sorted_fields.begin(), sorted_fields.end());
+	bool b_duplicate = false;
+	STD_::vector<tstring>::iterator it = sorted_fields.begin();
+	++it;
+	for (; it != sorted_fields.end(); ++it)
+	{
+		if (*it == *(it-1))
+		{
+			b_duplicate = true;
+			break;
+		}
+	}
+
+	if (!b_duplicate)
+		return;
+
+	
+	// Pre-pend table names if there are duplicate field names
+	const int MAX_COLNAME = 50;
+	RETCODE rc;
+	TCHAR szTableName[MAX_COLNAME + 1];
+	SQLSMALLINT cbTableName, dummy;
+	HSTMT hstmt = GetHSTMT(stmt);
+	int i;
+	tstring tmp, dot = _TEXT (".");
+	for (it = fields.begin(), i = 1; it != fields.end(); ++it, ++i)
+	{
+		if (it->find (dot, 0) != tstring::npos)
+			continue; // field already has a table qualifier
+
+		rc = SQLColAttribute (hstmt, i, SQL_DESC_TABLE_NAME,
+			(SQLTCHAR *)szTableName, MAX_COLNAME, &cbTableName,
+			 &dummy);
+		if (!RC_SUCCESS (rc))
+		DTL_THROW DBException (tstring (_TEXT ("resolve_duplicates()")),
+		   tstring (_TEXT ("Have duplicate field names. Unable to get table name associated with field to resolve ambiguity.")),
+		   &conn, &stmt);
+		if (szTableName[0] != 0) 
+		{
+			tmp = szTableName;
+			*it = tmp + _TEXT(".") + *it;
+		}
+	}
+
+	// We may still have duplicate columns that have the same table and field name
+	// In this case, alias these columns with _column_number to make them distinct
+	sorted_fields = fields;
+	STD_::sort(sorted_fields.begin(), sorted_fields.end());
+	it = sorted_fields.begin();
+	++it;
+	for (;it != sorted_fields.end(); ++it)
+	{
+		if (*it == *(it-1))
+		{
+			STD_::vector<tstring>::iterator target;
+			while ((target = STD_::find(fields.begin(), fields.end(), *it)) != fields.end())
+			{
+				tostringstream colname;
+				colname << _TEXT("_") << (target - fields.begin()) + 1; 
+				tstring::size_type dot_pos = target->find(dot, 0);
+				tstring field_name;
+				if (dot_pos != tstring::npos)
+					field_name = tstring(*target, dot_pos+1, tstring::npos);
+				else
+					field_name = *target;
+				field_name = *target + tstring(_TEXT(" AS ")) + field_name + tstring(colname.str());
+				*target = field_name;
+			}
+		}
+	}
+
+	
+
+}
+
+void DescColsOrParams(DBConnection& conn, DBStmt &stmt, STD_::vector<TypeTranslation> &vtt, 
+					  tstring& TableFields, STD_::vector<tstring> &fields, 
+					  STD_::vector<tstring> &columns, bool get_cols, HSTMT *p_have_stmt = NULL)
 {
   const int MAX_COLNAME = 50;
-
-  HSTMT hstmt;
-  SWORD cCols;
+  SWORD cCols = 0;
   TCHAR szColName[MAX_COLNAME + 1];
   SQLSMALLINT cbColName;
   SQLSMALLINT fSQLType;
@@ -434,6 +559,123 @@ GetFieldInfo (const tstring& TableName, tstring& TableFields,
   SQLSMALLINT cbScale;
   SQLSMALLINT fNullable;
   RETCODE rc;
+  TypeTranslation tt;
+  HSTMT hstmt;
+  if (p_have_stmt == NULL)
+	  hstmt = GetHSTMT(stmt);
+  else
+	  hstmt = *p_have_stmt;
+
+  if (get_cols)
+	rc = SQLNumResultCols (hstmt, &cCols);
+  else
+	rc = SQLNumParams(hstmt, &cCols);
+
+  if (!RC_SUCCESS (rc))
+    DTL_THROW DBException (tstring (_TEXT ("DescColsOrParams()")),
+		       tstring (_TEXT ("Unable to get number of fields or parameters")),
+		       &conn, &stmt);
+
+  for (int i = 1; i <= cCols; ++i) {
+
+	fSQLType = 0;
+	szColName[0] = 0;
+	if (get_cols) 
+	{
+		rc = SQLDescribeCol (hstmt, i, (SQLTCHAR *)szColName, MAX_COLNAME, &cbColName,
+			 &fSQLType, &cbPrec, &cbScale, &fNullable);
+
+	}
+	else
+		rc = SQLDescribeParam (hstmt, i, &fSQLType, &cbPrec, &cbScale, &fNullable);
+	
+    if (!RC_SUCCESS (rc))
+	  if (!get_cols)
+		  // Driver won't tell us parameter type
+		  // Bind paramater type as string.  ODBC should convert to target data type on execution.
+		  fSQLType = SQL_VARCHAR;  
+	  else
+		  DTL_THROW DBException (tstring (_TEXT ("DescColsOrParams()")),
+			 tstring (_TEXT ("Unable to get field metadata")),
+			 &conn, &stmt);
+
+    tt = Map_SQL_types_to_C(fSQLType);
+
+	if (!get_cols)
+		tt.SetParam(true);
+
+    vtt.push_back (tt);
+
+	if (get_cols)
+	{
+		// N.B. we need to let the SQL parser determine the field names
+		// here since complex parsing may be involved to parse functions
+		// such as TO_DATE('DD-MM-YYYY', field_name) to a single field
+		// name
+
+		// Use what the user passed in, not with ODBC thinks.
+
+		// if user passes in '*' for first field name, get field names from DB
+		// otherwise use the field list from user
+		if (TableFields.size() == columns.size() &&
+		TableFields.size() > 0 && TableFields[0] != _TEXT('*'))
+			fields.push_back (columns[i - 1]);
+		else
+		{
+			if (szColName[0] == 0) 
+			{
+			  // Even if the driver does not give us a column name we may still be able
+			  // to execute in the case of sql_iterator
+			  if (TableFields.empty ( )) 
+			  {
+				  tostringstream colname;
+				  colname << _TEXT("?") << i;  // name column "?i"
+				  fields.push_back (colname.str());
+			  }
+			  else
+			  {
+				  tostringstream errstr;
+
+				  errstr << _TEXT ("Unable to get description for column ") << i
+					 << _TEXT (". If you are using a SQL expression such as count(*), sum(...), max(...), 1,  etc. in your ")
+					 << _TEXT ("DynamicDBView then you may need to use a sql_iterator with this statement as select, insert and update ")
+					 << _TEXT ("may give an error since ODBC does not return a meaningful column name here.");
+ 
+				  tstring errstring = errstr.str();
+
+				  DTL_THROW RootException (tstring (_TEXT ("GetFieldInfo()")), errstring);
+			  }
+
+			}
+			else
+			{
+				fields.push_back (tstring ((TCHAR*) szColName));
+			}
+
+		}
+	}
+	else
+	{
+		// field name is stringified column number
+		tostringstream colstr;
+		colstr << i-1;
+		fields.push_back(colstr.str());
+	}
+  }
+
+  if (cCols > 0)
+	resolve_duplicates (conn, stmt, fields);
+}
+
+// Analyze a given table and fields to get information about the types
+// of the fields in the table Return
+variant_row_fields
+GetFieldInfo (const tstring& TableName, tstring& TableFields,
+	      const tstring& Postfix, tstring& UniqueFields,
+	      STD_::vector<tstring>& AppendedFields, 
+	      KeyMode keyMode, DBConnection& conn, HSTMT *p_have_stmt = NULL)
+{
+  SQLSMALLINT fSQLType;
   tstring szSQL;
 
   typedef STD_::vector<tstring> tslist_t;
@@ -461,77 +703,25 @@ GetFieldInfo (const tstring& TableName, tstring& TableFields,
   tslist_t fields;
 
   // only need to prepare the statement to get types, no need to
-  // execute this gives best performance since we don't go through the
+  // execute. this gives best performance since we don't go through the
   // overhead of actually fetching the data
-  DBStmt stmt (szSQL, conn, true);
-  stmt.Initialize ( ); 
 
-#if 0
-  // Assume old MySQL database driver bug with SQLPrepare is resolved
-  DBStmt stmt (szSQL, conn);
-
-  // Allocate and initialize SQL statement
-  if (conn.GetDBMSEnum ( ) == DBConnection::DB_MYSQL)
-    stmt.Execute ( );
-  else
-    // Only need to prepare the statement to get types, no need to
-    // execute this gives best performance since we don't go through
-    // the overhead of actually fetching the data.
-    stmt.Initialize ( ); 
-#endif
-
-  // Have prepared SQL statement, now get information about columns
-  // Eventually we will likely make this a method of the DBstmt class
-  // itself.
-  hstmt = GetHSTMT (stmt);
-
-  rc = SQLNumResultCols (hstmt, &cCols);
-
-  if (! RC_SUCCESS (rc))
-    throw DBException (tstring (_TEXT ("GetFieldInfo()")),
-		       tstring (_TEXT ("Unable to get number of fields")),
-		       &conn, &stmt);
-
-  for (int i = 1; i <= cCols; ++i) {
-    rc = SQLDescribeCol (hstmt, i, (SQLTCHAR *)szColName, MAX_COLNAME, &cbColName,
-			 &fSQLType, &cbPrec, &cbScale, &fNullable);
-
-    if (! RC_SUCCESS (rc))
-      throw DBException (tstring (_TEXT ("GetFieldInfo()")),
-			 tstring (_TEXT ("Unable to get field metadata")),
-			 &conn, &stmt);
-
-    if (szColName[0] == 0) {
-      tostringstream errstr;
-
-      errstr << _TEXT ("Unable to get description for column number ") << i
-	     << _TEXT (". If you are using a SQL function such as count(*), sum(...), max(...) etc. in your ")
-	     << _TEXT ("DynamicDBView then you can only use a sql_iterator with this statement as select, insert and update ")
-	     << _TEXT ("iterators are not supported since ODBC may not return a meaningful column name in this case.");
- 
-      tstring errstring = errstr.str ( );
-
-      throw RootException (tstring (_TEXT ("GetFieldInfo()")), errstring);
-    }
-
-    tt = Map_SQL_types_to_C (fSQLType);
-
-    vtt.push_back (tt);
-    // N.B. we need to let the SQL parser determine the field names
-    // here since complex parsing may be involved to parse functions
-    // such as TO_DATE('DD-MM-YYYY', field_name) to a single field
-    // name
-
-    // Use what the user passed in, not with ODBC thinks.
-
-	// if user passes in '*' for field names, get field names from DB
-	// otherwise use the field list from user
-    if (TableFields[0] != _TEXT('*'))
-		fields.push_back (columns[i - 1]);
-    else
-		fields.push_back (tstring ((TCHAR*) szColName));
+  DBStmt stmt (szSQL, conn, true,  !TableFields.empty());
+  stmt.ClearStmtAttrs();
+  if (p_have_stmt == NULL)
+  {
+	stmt.Initialize ( ); 
   }
 
+  // Have prepared SQL statement, now get information about columns
+   
+  // Get column list
+  DescColsOrParams(conn, stmt, vtt, TableFields, fields, columns, true, p_have_stmt);
+
+  // Get parameter list
+  DescColsOrParams(conn, stmt, vtt, TableFields, fields, columns, false, p_have_stmt);
+
+  
   if (keyMode == USE_AUTO_KEY) {
     if (ParseCommaDelimitedList(TableName).size() == 1) {
       // Now call SQLSpecialColumns() to get any key fields, return as
@@ -542,12 +732,12 @@ GetFieldInfo (const tstring& TableName, tstring& TableFields,
 
       // get structures we can work with
       STD_::vector<tstring> table_fields_vec =
-	ParseCommaDelimitedList (TableFields);
+		ParseCommaDelimitedList (TableFields);
       STD_::vector<tstring> unique_fields_vec =
-	ParseCommaDelimitedList (UniqueFields);
+		ParseCommaDelimitedList (UniqueFields);
 
       tstring tableNmNarrow = 
-	tstring_cast ((tstring*) NULL, TableName); // Table to display
+		tstring_cast ((tstring*) NULL, TableName); // Table to display
       TCHAR* szTable;
 
       // Unused.  XXX
@@ -562,7 +752,7 @@ GetFieldInfo (const tstring& TableName, tstring& TableFields,
       SQLRETURN retcode = SQLAllocStmt (conn.GetHDBC ( ), &spec_hstmt);
 
       if (! RC_SUCCESS (retcode))
-	return variant_row_fields (vtt, fields);
+		return variant_row_fields (vtt, fields);
 
       // Find the column names that can best give a unique identifier
       // for the row
@@ -574,19 +764,19 @@ GetFieldInfo (const tstring& TableName, tstring& TableFields,
 			    &cbPkCol);
 #endif
 	
-      if (!RC_SUCCESS(retcode)) {
-	SQLFreeHandle (SQL_HANDLE_STMT, spec_hstmt);
-
-	return variant_row_fields (vtt, fields);
+      if (!RC_SUCCESS(retcode)) 
+	  {
+		SQLFreeHandle (SQL_HANDLE_STMT, spec_hstmt);
+		return variant_row_fields (vtt, fields);
       }
 
       retcode = SQLBindCol (spec_hstmt, 3, SQL_C_SSHORT, &fSQLType,
 			    sizeof (fSQLType), &cbSQLType);
 
       if (! RC_SUCCESS (retcode)) {
-	SQLFreeHandle (SQL_HANDLE_STMT, spec_hstmt);
+		SQLFreeHandle (SQL_HANDLE_STMT, spec_hstmt);
 
-	return variant_row_fields (vtt, fields);
+		return variant_row_fields (vtt, fields);
       }
 
       szTable = (TCHAR*) tableNmNarrow.c_str ( );
@@ -598,71 +788,72 @@ GetFieldInfo (const tstring& TableName, tstring& TableFields,
       // *cannot* depend on this rowid staying valid when move to
       // another row.  Also note that key fields may hold NULL values
       retcode = SQLSpecialColumns
-	(spec_hstmt, SQL_BEST_ROWID, NULL, 0, // Catalog name
-	 NULL, 0, // Schema name
-	 (SQLTCHAR *)szTable, SQL_NTS, SQL_SCOPE_CURROW, SQL_NULLABLE); // Table name
+		(spec_hstmt, SQL_BEST_ROWID, NULL, 0, // Catalog name
+		NULL, 0, // Schema name
+		(SQLTCHAR *)szTable, SQL_NTS, SQL_SCOPE_CURROW, SQL_NULLABLE); // Table name
 
-      if (!RC_SUCCESS(retcode)) {
-	SQLFreeHandle (SQL_HANDLE_STMT, spec_hstmt);
-
-	return variant_row_fields (vtt, fields);
+      if (!RC_SUCCESS(retcode)) 
+	  {
+		SQLFreeHandle (SQL_HANDLE_STMT, spec_hstmt);
+		return variant_row_fields (vtt, fields);
       }
 
       try {
-	retcode = SQLFetch (spec_hstmt);
+		  retcode = SQLFetch (spec_hstmt);
 
-	// loop through the keys and push back onto keys and fields
-	// lists
+		  // loop through the keys and push back onto keys and fields
+		  // lists
 
-	while (RC_SUCCESS(retcode)) {				
-	  tstring keyNm = (const TCHAR*) szPkCol;
-	  tstring finalKeyNm (tstring_cast ((tstring*) NULL, keyNm));
+		  while (RC_SUCCESS(retcode)) {				
+			tstring keyNm = (const TCHAR*) szPkCol;
+			tstring finalKeyNm (tstring_cast ((tstring*) NULL, keyNm));
 
-	  // see which lists finalKeyNm is in:
-	  // We must do two things here:
-	  // 1.  if not in unique keys list, add the key to the list
-	  // 2.  if not in table fields list, add the key to that list
+			  // see which lists finalKeyNm is in:
+			  // We must do two things here:
+			  // 1.  if not in unique keys list, add the key to the list
+			  // 2.  if not in table fields list, add the key to that list
 
-	  if (STD_::find (unique_fields_vec.begin ( ),
-			  unique_fields_vec.end ( ), finalKeyNm)
-	      == unique_fields_vec.end ( ))
-	    unique_fields_vec.push_back(finalKeyNm);
-			
-	  if (STD_::find (table_fields_vec.begin ( ),
-			  table_fields_vec.end ( ), finalKeyNm)
-	      == table_fields_vec.end ( )) {
-	    table_fields_vec.push_back (finalKeyNm);
-	    AppendedFields.push_back (finalKeyNm);
+			  if (STD_::find (unique_fields_vec.begin ( ),
+					  unique_fields_vec.end ( ), finalKeyNm)
+				  == unique_fields_vec.end ( ))
+				unique_fields_vec.push_back(finalKeyNm);
+					
+			  if (STD_::find (table_fields_vec.begin ( ),
+					  table_fields_vec.end ( ), finalKeyNm)
+				  == table_fields_vec.end ( )) {
+				table_fields_vec.push_back (finalKeyNm);
+				AppendedFields.push_back (finalKeyNm);
+			  }
+
+			  else { 
+				retcode = SQLFetch (spec_hstmt);
+
+				// nothing to do for this field as already in table fields list
+				continue;
+			  }
+
+			  // Fetch and display the result set. This will be a list of
+			  // the columns in the primary key of the table.
+
+			  tt = Map_SQL_types_to_C (fSQLType);
+			  vtt.push_back(tt);
+
+			  // N.B. we need to let the SQL parser determine the field
+			  // names here since complex parsing may be involved to parse
+			  // functions such as TO_DATE('DD-MM-YYYY', field_name) to a
+			  // single field name
+			  fields.push_back (finalKeyNm);
+			  retcode = SQLFetch (spec_hstmt);
+		  }
+	  
+		  // Close the cursor (the hstmt is still allocated).
+	      SQLFreeHandle (SQL_HANDLE_STMT, spec_hstmt);
+	  
 	  }
-
-	  else { 
-	    retcode = SQLFetch (spec_hstmt);
-
-	    // nothing to do for this field as already in table fields list
-	    continue;
-	  }
-
-	  // Fetch and display the result set. This will be a list of
-	  // the columns in the primary key of the table.
-
-	  tt = Map_SQL_types_to_C (fSQLType);
-	  vtt.push_back(tt);
-
-	  // N.B. we need to let the SQL parser determine the field
-	  // names here since complex parsing may be involved to parse
-	  // functions such as TO_DATE('DD-MM-YYYY', field_name) to a
-	  // single field name
-	  fields.push_back (finalKeyNm);
-	  retcode = SQLFetch (spec_hstmt);
-	}
-
-	// Close the cursor (the hstmt is still allocated).
-	SQLFreeHandle (SQL_HANDLE_STMT, spec_hstmt);
-      }
 
       catch (...) {
-	SQLFreeHandle (SQL_HANDLE_STMT, spec_hstmt);
-	throw;
+		SQLFreeHandle (SQL_HANDLE_STMT, spec_hstmt);
+		throw;
       }
 
       // return new unique fields list and table fields list
@@ -864,7 +1055,8 @@ int GenericCmp(void *pMember1, void *pMember2, int typeId)
   }
 
   default:
-    throw ETIException(_TEXT("GenericCmp()"), _TEXT("Unable to compare objects of this type!"));
+    DTL_THROW ETIException(_TEXT("GenericCmp()"), _TEXT("Unable to compare objects of this type!"));
+	return 0;
   }
 }
 
@@ -997,13 +1189,14 @@ size_t GenericHash(void *pMember1, int typeId)
   }
 
   default:
-    throw ETIException(_TEXT("GenericHash()"), _TEXT("Unable to hash objects of this type!"));
+    DTL_THROW ETIException(_TEXT("GenericHash()"), _TEXT("Unable to hash objects of this type!"));
+	return 0;
   }
 }
 
 // ******************* Implementation code for TypeTranslationField ********************
-TypeTranslationField::TypeTranslationField(TypeTranslation &t, void *f, void *ba, size_t bs, tstring &fn) :
-  tt(t), field(f), base_addr(ba), base_size(bs), field_name(fn) {}
+TypeTranslationField::TypeTranslationField(TypeTranslation &t, void *f, void *ba, size_t bs, tstring &fn, int fi) :
+  tt(t), field(f), base_addr(ba), base_size(bs), field_name(fn), field_nr(fi) {}
 
 
 END_DTL_NAMESPACE

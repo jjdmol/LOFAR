@@ -13,12 +13,15 @@ It is provided "as is" without express or implied warranty.
 #define DTL_DBCONNECTION_H
 
 // @@@ ASTRON @@
-#ifndef SQLTCHAR
-#define	SQLTCHAR	SQLCHAR
-#endif
+//#ifndef SQLTCHAR
+//#define SQLTCHAR	SQLCHAR
+//#endif
 
 #include "DB_Base.h"
 #include "validate.h"
+#include "string_util.h"
+
+#include "std_warn_off.h"
 
 #ifdef  WIN32
 #ifdef WIN32
@@ -31,11 +34,28 @@ It is provided "as is" without express or implied warranty.
 
 #endif
 #include <sql.h>
+#include <list>
+#include <set>
+
+#include "std_warn_on.h"
 
 // Revised: 11/12/2000 - CJ - cleaned up Connect() function
 // Revised: 12/19/2000 - MG - added namespace support
 
 BEGIN_DTL_NAMESPACE
+
+// *** this should really be in string_util.h, but MSVC barfs ***
+// performs comparison on values referred to by iterators/pointers
+template<class Iterator> class DereferenceLt: 
+	public STD_::binary_function<Iterator, Iterator, bool>
+{
+public:
+	bool operator()(Iterator it1, Iterator it2) const
+	{
+		return (*it1 < *it2);
+	}
+
+};
 
 class DBEnvironment {
 protected:
@@ -48,7 +68,7 @@ public:
 	~DBEnvironment();
 	void Release();
 	void Share(HENV new_henv);
-	void init(); 
+	void init(bool bPool = true); 
 	HENV GetHENV() const;
 	HENV GetHENV_NoThrow() const
 	{
@@ -90,11 +110,40 @@ private:
 
   // not responsible for allocating hdbc and dbe.henv,
   // that is done by the public version of Connect()
-  void InternalConnect (const TCHAR *szConnStrIn);
+  void InternalConnect (const TCHAR *szConnStrIn, bool bPrompt = false, bool auto_commit_setting = false);
+
 
   void ComputeDBType();
 
+  // **** stmt. logging stuff ****
+
+  // stmts. stored in execution order
+  typedef STD_::list<tstring> RawStmtLog;
+  RawStmtLog stmt_log;
+
+  // stmts. stored in alphabetical order ... iterators/pointers refer to the
+  // actual statements in the raw statement log
+  typedef tstring * RawStmtIter;
+  typedef STD_::set<RawStmtIter, DereferenceLt<RawStmtIter> > SortedStmtLog;
+
+  SortedStmtLog sorted_stmt_log;
+
+  bool bStmtLogEnabled;
+
+  void AddToLog(const tstring &sqlQuery);
+
 public:
+
+  void ClearLog();
+  void PrintLog(tostream &o) const;
+  void PrintSortedLog(tostream &o) const;
+  void EnableLog();
+  void DisableLog();
+
+  bool IsLogEnabled() const;
+
+  // **** end stmt. logging stuff ****
+
   // connect to DB using the passed in DSN
   // and set the dbe.henv and hdbc members
   // throws exception if unable to connect!
@@ -112,7 +161,7 @@ public:
   void Connect();
 
   // cleanup issues here if exception is thrown!!!!
-  void Connect(const tstring &DSN);
+  void Connect(const tstring &DSN, bool bPrompt = false, bool auto_commit_setting = false);
 
   // functions to commit or rollback all transactions that have occurred between last 
   // commit or rollback on this connection
@@ -120,7 +169,7 @@ public:
   // turn autocommit on or off
   void SetAutoCommit(bool commit);
 
-  bool GetAutoCommit();
+  bool GetAutoCommit() const;
 
   // only one mutating operation done, so should be exception-safe
   void CommitAll();
@@ -141,6 +190,10 @@ public:
 
   static DBConnection &GetDefaultConnection();
   static DBEnvironment &GetDefaultEnvironment();
+
+  // return list of ODBC DSNs
+  static STD_::vector<STD_::pair<tstring, tstring> > GetDataSources(SQLUSMALLINT SourceType = SQL_FETCH_FIRST);
+
 
   // are we connected?
   bool IsConnected();

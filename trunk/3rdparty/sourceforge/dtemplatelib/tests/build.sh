@@ -3,7 +3,7 @@
 # this file should be located under ZA/dtl
 
 TARGET=tests # what to build with make
-BUILD=debug # default
+BUILD=release # default
 
 MSVC_PROFILE=""
 RUN_ARGS=""
