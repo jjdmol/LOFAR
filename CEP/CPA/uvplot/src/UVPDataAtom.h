@@ -84,15 +84,28 @@ class UVPDataAtom
    */
   void            setData(const ComplexType* data);
 
+  //! Sets the flags.
+  /*! \param flags must have length equal to the number of channels in
+  the data.
+  */
+  void            setFlags(const std::vector<bool>& flags);
+
 
   //! \returns the number of channels.
-  unsigned int getNumberOfChannels() const;
+  unsigned int    getNumberOfChannels() const;
 
   //! \returns a pointer to a specific visibilty.
   /*!
       \param channel is a zero based channel index. 
    */
-  const ComplexType *getData(unsigned int channel) const;
+  const ComplexType* getData(unsigned int channel) const;
+
+
+  //! \returns the value of a specific flag.
+  /*! 
+      \param channel is a zero based channel index. 
+   */
+  const bool         getFlag(unsigned int channel) const;
 
 
   //! \returns const ref to itsHeader.
@@ -103,6 +116,9 @@ class UVPDataAtom
 
   UVPDataAtomHeader        itsHeader;
   std::vector<ComplexType> itsData;
+
+  //! True if corresponding datapoint is flagged.
+  std::vector<bool>        itsFlags;
 };
 
 #endif // UVPDATAATOM_H

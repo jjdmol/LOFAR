@@ -11,7 +11,8 @@
 //====================>>>  UVPDataAtom::UVPDataAtom  <<<====================
 
 UVPDataAtom::UVPDataAtom()
-  : itsData(0)
+  : itsData(0),
+    itsFlags(0)
 {
 }
 
@@ -24,7 +25,8 @@ UVPDataAtom::UVPDataAtom()
 UVPDataAtom::UVPDataAtom(unsigned int               numberOfChannels,
                          const UVPDataAtomHeader &  header)
   : itsHeader(header),
-    itsData(numberOfChannels)
+    itsData(numberOfChannels),
+    itsFlags(numberOfChannels)
 {
 }
 
@@ -35,10 +37,12 @@ UVPDataAtom::UVPDataAtom(unsigned int               numberOfChannels,
 //====================>>>  UVPDataAtom::UVPDataAtom  <<<====================
 
 UVPDataAtom::UVPDataAtom(const UVPDataAtom & other)
-  :itsData(other.itsData.size())
+  :itsData(other.itsData.size()),
+   itsFlags(other.itsFlags.size())
 {
   itsHeader = other.itsHeader;
   setData(&(other.itsData.front()));
+  setFlags( other.itsFlags );
 }
 
 
@@ -49,7 +53,8 @@ UVPDataAtom::UVPDataAtom(const UVPDataAtom & other)
 
 void UVPDataAtom::setChannels(unsigned int numberOfChannels)
 {
-  itsData = std::vector<ComplexType>(numberOfChannels);
+  itsData  = std::vector<ComplexType>(numberOfChannels);
+  itsFlags = std::vector<bool>(numberOfChannels);
 }
 
 
@@ -113,6 +118,19 @@ void UVPDataAtom::setData(const ComplexType* data)
 
 
 
+//====================>>>  UVPDataAtom::setFlags  <<<====================
+
+void UVPDataAtom::setFlags(const std::vector<bool>& flags)
+{
+  itsFlags = flags;
+}
+
+
+
+
+
+
+
 //=================>>>  UVPDataAtom::getNumberOfChannels  <<<=================
 
 unsigned int  UVPDataAtom::getNumberOfChannels() const
@@ -132,6 +150,19 @@ const UVPDataAtom::ComplexType * UVPDataAtom::getData(unsigned int channel) cons
   assert(channel < itsData.size());
 #endif
   return &(itsData[channel]);
+}
+
+
+
+
+//====================>>>  UVPDataAtom::getFlag  <<<====================
+
+const bool UVPDataAtom::getFlag(unsigned int channel) const
+{
+#if(DEBUG_MODE)
+  assert(channel < itsFlags.size());
+#endif
+  return itsFlags[channel];
 }
 
 
