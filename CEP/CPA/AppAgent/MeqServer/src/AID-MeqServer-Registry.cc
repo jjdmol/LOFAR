@@ -27,6 +27,7 @@ BlockableObject * __construct_MeqSpigot (int n) { return n>0 ? new Meq::Spigot [
         AtomicID::registerId(-1331,"resolve")+
         AtomicID::registerId(-1226,"child")+
         AtomicID::registerId(-1220,"children")+
+        AtomicID::registerId(-1046,"list")+
         AtomicID::registerId(-1089,"app")+
         AtomicID::registerId(-1277,"command")+
         AtomicID::registerId(-1328,"args")+

@@ -8,7 +8,7 @@
 
 #pragma aidgroup MeqServer    
 #pragma aid Node Name NodeIndex MeqServer
-#pragma aid Create Delete Get Set State Request Resolve Child Children
+#pragma aid Create Delete Get Set State Request Resolve Child Children List
 #pragma aid App Command Args Result Data Processing Error Message Code
     
 namespace Meq
@@ -37,6 +37,8 @@ class MeqServer : public VisRepeater
     //##ModelId=3F98D91A03B9
     void resolveChildren (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=3F98D91B0064
+    void getNodeList (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    
     void getNodeResult (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
       
     //##ModelId=3F5F195E0156
