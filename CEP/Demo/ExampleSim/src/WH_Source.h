@@ -48,7 +48,7 @@ public:
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, int ninput, int noutput,
-				const LOFAR::ParamBlock&);
+				const LOFAR::KeyValueMap&);
 
    /// Make a fresh copy of the WH object.
   virtual WH_Source* make (const string& name);
