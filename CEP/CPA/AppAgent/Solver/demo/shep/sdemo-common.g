@@ -64,10 +64,10 @@ demo := function (dosolve=F,verbose=1,suspend=F,rpt=T)
   parent := dws.frame(title='Solver demo',side='left');
   parent->unmap();
   
-  solv := solver('Solver',verbose=verbose,parent_frame=parent);
+  solv := solver('Solver',verbose=verbose,parent_frame=parent,gui=T);
   if( is_fail(solv) )
     fail;
-  rpt := app_proxy('Repeater',verbose=verbose,parent_frame=parent);
+  rpt := app_proxy('Repeater',verbose=verbose,parent_frame=parent,gui=T);
   if( is_fail(rpt) )
     fail;
   
