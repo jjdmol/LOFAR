@@ -44,7 +44,8 @@ WH_Modulate::WH_Modulate (int nin,
   itsP           (0),
   itsp           (0),
   itsModType     (mod_type),
-  itsName        (name)
+  itsName        (name),
+  itsPrevCumsum  (0)
 {
   AssertStr (itsTc > 0, 
 			 "The sampling frequency is smaller than the carrier frequency, cannot modulate!");
@@ -110,7 +111,7 @@ void WH_Modulate::process ()
   if (itsPos == 0) {
     // find out what modulationscheme has to be applied to the signal
     // modulate the signal
-    if (itsModType == "amdsb") {
+    if (itsModType == "amdsb" || itsModType == "am") {
       itsOutputBuffer = modulate::amdsb (itsInputBuffer, 
 										 itsCarrierFreq,
 										 itsSampFreq, 
@@ -131,7 +132,8 @@ void WH_Modulate::process ()
 									  itsCarrierFreq, 
 									  itsSampFreq,
 									  itsOpt, 
-									  itsPhi) * itsAmp;
+									  itsPhi,
+									  &itsPrevCumsum) * itsAmp;
 	} else if (itsModType == "pm") {
       itsOutputBuffer = modulate::pm (itsInputBuffer, 
 									  itsCarrierFreq, 
@@ -148,7 +150,7 @@ void WH_Modulate::process ()
     itsp = itsTc - (itsP - itsWindowSize);
     itsPhi = itsp / itsSampFreq;
   }
-
+  
   if (getOutputs () > 0) {
     for (int i = 0; i < getOutputs (); i++) {
       getOutHolder (i)->getBuffer ()[0] = itsOutputBuffer (itsPos);

@@ -146,7 +146,7 @@ namespace PhaseShift
     LoVec_double res (px.size ());
 
     res = -2 * M_PI * (px * sin (theta) * cos (phi) + py * sin (theta) * sin (phi));
-	
+
     return res / nfft;
   }
 };				// namespace PhaseShift

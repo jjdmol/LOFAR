@@ -73,6 +73,7 @@ private:
   double        itsp;
   string        itsModType;
   string        itsName;
+  double        itsPrevCumsum;
   LoVec_double  itsInputBuffer;
   LoVec_double  itsOutputBuffer;
 };

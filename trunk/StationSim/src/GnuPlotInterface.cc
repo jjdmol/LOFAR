@@ -721,3 +721,66 @@ void gnuplot_plot_equation(
 }
 
 
+void gnuplot_splot(
+    gnuplot_ctrl    *   h,
+    Array<double, 2>    matrix,
+    char            *   title
+)
+{
+    ofstream outfile;
+    outfile.open ("/tmp/temp.dat", ofstream::out);
+    for (int x = 0; x < matrix.rows(); ++x)
+    {
+        for (int y = 0; y < matrix.cols(); ++y)
+        {
+            outfile << matrix(x, y) << ' ';
+        }
+        outfile << endl;
+    }
+    outfile.close();
+
+    gnuplot_cmd(h, "set pm3d at bs");
+//     gnuplot_cmd(h, "set pm3d at s scansforward");
+//     gnuplot_cmd(h, "set key below");
+//     gnuplot_cmd(h, "set border 4095");
+	gnuplot_cmd(h, "unset surface");
+//     gnuplot_cmd(h, "set samples 25");
+//     gnuplot_cmd(h, "set isosamples 20");
+//     gnuplot_cmd(h, "set ticslevel 0");
+	gnuplot_cmd(h, "set title '%s'", title);
+	gnuplot_cmd(h, "set view 61,338");
+    gnuplot_cmd(h, "splot '/tmp/temp.dat' matrix") ;
+}
+
+void gnuplot_contour_plot(
+    gnuplot_ctrl    *   h,
+    Array<double, 2>    matrix,
+    char            *   title
+)
+{
+    ofstream outfile;
+    outfile.open ("/tmp/temp.dat", ofstream::out);
+    for (int x = 0; x < matrix.rows(); ++x)
+    {
+        for (int y = 0; y < matrix.cols(); ++y)
+        {
+            outfile << matrix(x, y) << ' ';
+        }
+        outfile << endl;
+    }
+    outfile.close();
+
+    gnuplot_cmd(h, "set pm3d");
+//     gnuplot_cmd(h, "set pm3d at s scansforward");
+//     gnuplot_cmd(h, "set key below");
+//     gnuplot_cmd(h, "set border 4095");
+ 	gnuplot_cmd(h, "unset surface");
+ 	gnuplot_cmd(h, "set contour surface");
+//     gnuplot_cmd(h, "set samples 25");
+//     gnuplot_cmd(h, "set isosamples 20");
+//     gnuplot_cmd(h, "set ticslevel 0");
+	gnuplot_cmd(h, "set title '%s'", title);
+	gnuplot_cmd(h, "set view 0,0");
+    gnuplot_cmd(h, "splot '/tmp/temp.dat' matrix") ;
+}
+

@@ -81,6 +81,10 @@ private:
   /// Forbid assignment.
   WH_BeamFormer& operator= (const WH_BeamFormer&);
 
+  void beamplot (gnuplot_ctrl* handle, const LoVec_dcomplex& w, 
+				 const LoMat_dcomplex& skyScan, const int nrcu, 
+				 const int seconds);
+
   DH_SampleC** itsInHolders;
   DH_SampleC** itsOutHolders;
   DH_SampleC   itsWeight; 
@@ -97,6 +101,7 @@ private:
   ifstream itsFileInput;
   LoMat_dcomplex itsTestVector;
   gnuplot_ctrl* handle;
+  int iCount;
 };
 
 #endif

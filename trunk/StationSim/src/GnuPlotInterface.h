@@ -421,4 +421,5 @@ void gnuplot_plot_equation(gnuplot_ctrl * h, char * equation, char * title) ;
 /*--------------------------------------------------------------------------*/
 void gnuplot_splot(gnuplot_ctrl * h, Array<double, 2> matrix, char * title) ;
 
+void gnuplot_contour_plot(gnuplot_ctrl * h, Array<double, 2> matrix, char * title) ;
 #endif
