@@ -9,7 +9,7 @@ include 'mkimg.g';
 # Demo function showing the predict functionality and creating an image of it.
 #
 predict := function(fname='demo', ant=4*[0:20],
-                    modeltype='LOFAR', calcuvw=F, trace=T)
+                    modeltype='LOFAR.RI', calcuvw=F, trace=T)
 {
 
     local mc := meqcalibrater(spaste(fname,'.MS'), 
@@ -46,8 +46,8 @@ predict := function(fname='demo', ant=4*[0:20],
     return T;
 }
 
-solve := function(fname='demo', ant=4*[0:20],
-                  modeltype='LOFAR', calcuvw=F, 
+solve := function(fname='demo', ant=4*[0:1],
+                  modeltype='LOFAR.RI', calcuvw=F, 
                   niter=1, sleep=F, sleeptime=2, wait=F)
 {
     annotator := imgannotator(spaste(fname, '.img'), 'raster');
@@ -182,7 +182,7 @@ solve := function(fname='demo', ant=4*[0:20],
 }
 
 solveej := function(fname='demo', ant=4*[0:20],
-                    modeltype='LOFAR', calcuvw=F, 
+                    modeltype='LOFAR.RI', calcuvw=F, 
                     niter=1, sleep=F, sleeptime=2, wait=F)
 {
     #
@@ -266,7 +266,7 @@ solveej := function(fname='demo', ant=4*[0:20],
 
 peel := function(fname='demo', src=1, predsrc=[], ant=4*[0:20],
                  datacol='MODEL_DATA', mapnr='',
-                 modeltype='LOFAR', calcuvw=F, 
+                 modeltype='LOFAR.RI', calcuvw=F, 
                  niter=1, sleep=F, sleeptime=2, wait=F)
 {
     annotator := imgannotator(spaste(fname, '.img', mapnr), 'raster');
@@ -399,7 +399,7 @@ peel := function(fname='demo', src=1, predsrc=[], ant=4*[0:20],
 
 peelej := function(fname='demo', src=1, predsrc=[], ant=4*[0:20],
                    datacol='MODEL_DATA', mapnr='',
-                   modeltype='LOFAR', calcuvw=F, 
+                   modeltype='LOFAR.RI', calcuvw=F, 
                    niter=1, sleep=F, sleeptime=2, wait=F)
 {
     #
