@@ -643,16 +643,18 @@ Socket* Socket::accept(int32	waitMs)
 
 int32 Socket::close()
 {
-  if (itsSocketID < 0) {
-    return itsErrno = NOINIT;
-  }
-  if (itsIsConnected) {
-    LOG_TRACE_FLOW(formatString("close(%d)", itsSocketID));
-    if (::close(itsSocketID) < 0) {
-      return setErrno(CLOSE);
-    }
-  }
-  return itsErrno = SK_OK;
+	if (itsSocketID < 0) {
+		return itsErrno = NOINIT;
+	}
+
+	LOG_TRACE_FLOW(formatString("close(%d)", itsSocketID));
+	if (::close(itsSocketID) < 0) {
+		return setErrno(CLOSE);
+	}
+
+	itsSocketID    = -1;
+	itsIsConnected = false;
+	return itsErrno = SK_OK;
 }
 
 //
@@ -679,11 +681,9 @@ int32 Socket::shutdown (bool receive, bool send)
 		}
 	}
 
-	if (send && receive) {				// update administration
-		::close(itsSocketID);
-		itsSocketID    = -1;
+ 	if (send && receive) {				// update administration
 		itsIsConnected = false;
-	}
+ 	}
 
 	return (itsErrno);
 }
