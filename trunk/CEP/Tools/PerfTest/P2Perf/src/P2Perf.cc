@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.24  2002/05/08 14:39:50  schaaf
+//  modified command line argument handling and MPI node distribution
+//
 //  Revision 1.23  2002/05/08 14:28:37  wierenga
 //  DataHolder allocation moved from constructor to preprocess to be able to
 //  use TransportHolder::allocate.
@@ -97,9 +100,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
-#include <iostream.h>
+#include <Common/lofar_iostream.h>
 #include <stdlib.h>
-#include <string>
+#include <Common/lofar_string.h>
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

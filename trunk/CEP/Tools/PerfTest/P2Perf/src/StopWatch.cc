@@ -1,4 +1,4 @@
-#include <iostream.h>
+#include <Common/lofar_iostream.h>
 #include <string.h>
 
 #include "P2Perf/StopWatch.h"
