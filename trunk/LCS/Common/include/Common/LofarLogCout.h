@@ -62,17 +62,17 @@
 //# LOG_WARN_(STR)  (message|stream)
 //# LOG_INFO_(STR)  (message|stream)
 //#
-#define LOG_FATAL(message)			clog(1, "FATAL", message)
-#define LOG_FATAL_STR(stream) 		clogstr(1, "FATAL", stream)
+#define LOG_FATAL(message)			cLog(1, "FATAL", message)
+#define LOG_FATAL_STR(stream) 		cLogstr(1, "FATAL", stream)
 
-#define LOG_ERROR(message) 			clog(2, "ERROR", message)
-#define LOG_ERROR_STR(stream) 		clogstr(2, "ERROR", stream)
+#define LOG_ERROR(message) 			cLog(2, "ERROR", message)
+#define LOG_ERROR_STR(stream) 		cLogstr(2, "ERROR", stream)
 
-#define LOG_WARN(message) 			clog(3, "WARN", message)
-#define LOG_WARN_STR(stream)		clogstr(3, "WARN", stream)
+#define LOG_WARN(message) 			cLog(3, "WARN", message)
+#define LOG_WARN_STR(stream)		cLogstr(3, "WARN", stream)
 
-#define LOG_INFO(message) 			clog(4, "INFO", message)
-#define LOG_INFO_STR(stream) 		clogstr(4, "INFO", stream)
+#define LOG_INFO(message) 			cLog(4, "INFO", message)
+#define LOG_INFO_STR(stream) 		cLogstr(4, "INFO", stream)
 
 //# -------------------- Log Levels for the Integrator -----------------
 //#
@@ -82,8 +82,8 @@
 #define LOG_DEBUG(message)
 #define LOG_DEBUG_STR(stream)
 #else
-#define LOG_DEBUG(message) 			cdebug(5, "DEBUG", message)
-#define LOG_DEBUG_STR(stream) 		cdebugstr(5, "DEBUG", stream)
+#define LOG_DEBUG(message) 			cDebug(5, "DEBUG", message)
+#define LOG_DEBUG_STR(stream) 		cDebugstr(5, "DEBUG", stream)
 #endif	// DISABLE_DEBUG_OUTPUT
 
 //# -------------------- Trace Levels for the Programmer -----------------
@@ -107,22 +107,22 @@ public:	\
   static inline Debug::Context & getDebugContext() \
   { return other::getDebugContext(); }
 
-#define LOG_TRACE_LOOP(message)		ctrace(TRACE_LEVEL_LOOP, message)
-#define LOG_TRACE_VAR(message)		ctrace(TRACE_LEVEL_VAR, message)
-#define LOG_TRACE_CALC(message)		ctrace(TRACE_LEVEL_CALC, message)
-#define LOG_TRACE_COND(message)		ctrace(TRACE_LEVEL_COND, message)
-#define LOG_TRACE_STAT(message)		ctrace(TRACE_LEVEL_STAT, message)
-#define LOG_TRACE_OBJ(message)		ctrace(TRACE_LEVEL_OBJ, message)
-#define LOG_TRACE_RTTI(message)		ctrace(TRACE_LEVEL_RTTI, message)
-#define LOG_TRACE_FLOW(message)		ctrace(TRACE_LEVEL_FLOW, message)
-#define LOG_TRACE_LOOP_STR(stream)	ctracestr(TRACE_LEVEL_LOOP, stream)
-#define LOG_TRACE_VAR_STR(stream)	ctracestr(TRACE_LEVEL_VAR, stream)
-#define LOG_TRACE_CALC_STR(stream)	ctracestr(TRACE_LEVEL_CALC, stream)
-#define LOG_TRACE_COND_STR(stream)	ctracestr(TRACE_LEVEL_COND, stream)
-#define LOG_TRACE_STAT_STR(stream)	ctracestr(TRACE_LEVEL_STAT, stream)
-#define LOG_TRACE_OBJ_STR(stream)	ctracestr(TRACE_LEVEL_OBJ, stream)
-#define LOG_TRACE_RTTI_STR(stream)	ctracestr(TRACE_LEVEL_RTTI, stream)
-#define LOG_TRACE_FLOW_STR(stream)	ctracestr(TRACE_LEVEL_FLOW, stream)
+#define LOG_TRACE_LOOP(message)		cTrace(TRACE_LEVEL_LOOP, message)
+#define LOG_TRACE_VAR(message)		cTrace(TRACE_LEVEL_VAR, message)
+#define LOG_TRACE_CALC(message)		cTrace(TRACE_LEVEL_CALC, message)
+#define LOG_TRACE_COND(message)		cTrace(TRACE_LEVEL_COND, message)
+#define LOG_TRACE_STAT(message)		cTrace(TRACE_LEVEL_STAT, message)
+#define LOG_TRACE_OBJ(message)		cTrace(TRACE_LEVEL_OBJ, message)
+#define LOG_TRACE_RTTI(message)		cTrace(TRACE_LEVEL_RTTI, message)
+#define LOG_TRACE_FLOW(message)		cTrace(TRACE_LEVEL_FLOW, message)
+#define LOG_TRACE_LOOP_STR(stream)	cTracestr(TRACE_LEVEL_LOOP, stream)
+#define LOG_TRACE_VAR_STR(stream)	cTracestr(TRACE_LEVEL_VAR, stream)
+#define LOG_TRACE_CALC_STR(stream)	cTracestr(TRACE_LEVEL_CALC, stream)
+#define LOG_TRACE_COND_STR(stream)	cTracestr(TRACE_LEVEL_COND, stream)
+#define LOG_TRACE_STAT_STR(stream)	cTracestr(TRACE_LEVEL_STAT, stream)
+#define LOG_TRACE_OBJ_STR(stream)	cTracestr(TRACE_LEVEL_OBJ, stream)
+#define LOG_TRACE_RTTI_STR(stream)	cTracestr(TRACE_LEVEL_RTTI, stream)
+#define LOG_TRACE_FLOW_STR(stream)	cTracestr(TRACE_LEVEL_FLOW, stream)
 #define TRACE_LEVEL_LOOP			18
 #define TRACE_LEVEL_VAR				17
 #define TRACE_LEVEL_CALC			16
@@ -146,8 +146,8 @@ public:	\
 	LOG_TRACE_LIFETIME_STR(level, message)
 
 //# ---------- implementation details tracer part ----------
-#define ctrace(level, message)		cdebug(level, "TRACE" << level, message)
-#define ctracestr(level,stream) 	cdebugstr(level, "TRACE" << level, stream)
+#define cTrace(level, message)		cDebug(level, "TRACE" << level, message)
+#define cTracestr(level,stream) 	cDebugstr(level, "TRACE" << level, stream)
 
 #else	// ENABLE_TRACER
 //# define dummies if tracing is disabled
@@ -198,7 +198,7 @@ public:	\
 // possible object debug status. 
 #define THROW(exc,msg)  { \
 	constructStream(msg) \
-	clog(1, "EXCEPTION", oss.str()); \
+	cLog(1, "EXCEPTION", oss.str()); \
 	throw(exc(oss.str(), __HERE__)); \
 	}
 
@@ -212,24 +212,24 @@ public:	\
 	std::ostringstream	oss; \
 	oss << stream;
 
-#define	clog(level,levelname,message) \
+#define	cLog(level,levelname,message) \
 	DebugTestAndLog(level) << levelname << "-[" << LOFARLOGGER_PACKAGE << "] " << \
 								  message << endl;
 
-#define clogstr(level,levelname,stream) { \
+#define cLogstr(level,levelname,stream) { \
 		constructStream(stream) \
-		clog(level,levelname,oss.str().c_str()) \
+		cLog(level,levelname,oss.str().c_str()) \
 	}
 
-#define	cdebug(level,levelname,message) \
+#define	cDebug(level,levelname,message) \
 	DebugTestAndLog(level) << levelname << "-[" << LOFARLOGGER_PACKAGE << "] " << \
 								  message << \
 								  ", File:" << __FILE__ << \
 								  ", Line:" << __LINE__ << endl;
 
-#define cdebugstr(level,levelname,stream)  { \
+#define cDebugstr(level,levelname,stream)  { \
 		constructStream(stream) \
-		cdebug(level,levelname,oss.str().c_str()) \
+		cDebug(level,levelname,oss.str().c_str()) \
 	}
 
 
