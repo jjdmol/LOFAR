@@ -217,7 +217,7 @@ void UVPDisplayArea::mousePressEvent(QMouseEvent *event)
 void UVPDisplayArea::mouseMoveEvent(QMouseEvent *event)
 {
   if(event->state() & LeftButton) {
-    double slope  = (50.0*event->pos().y())/height();
+    double slope  = (255.0*event->pos().y())/height();
     double center = (255.0*event->pos().x())/width();
     
     initColormap(slope, center);
