@@ -74,13 +74,13 @@ void UpdStatsCmd::complete(CacheBuffer& cache)
 
   if (m_event->type <= Statistics::SUBBAND_POWER)
   {
-    ack.stats().resize(1, m_event->rcumask.count(),
-		       cache.getSubbandStats()().extent(thirdDim));
+    ack.stats().resize(m_event->rcumask.count(),
+		       cache.getSubbandStats()().extent(secondDim));
   }
   else
   {
-    ack.stats().resize(1, m_event->rcumask.count(),
-		       cache.getBeamletStats()().extent(thirdDim));
+    ack.stats().resize(m_event->rcumask.count(),
+		       cache.getBeamletStats()().extent(secondDim));
   }
   
   int result_device = 0;
@@ -88,10 +88,23 @@ void UpdStatsCmd::complete(CacheBuffer& cache)
   {
     if (m_event->rcumask[cache_device])
     {
-      ack.stats()(0, result_device, Range::all())
-	= cache.getSubbandStats()()(m_event->type,
-				    cache_device, Range::all());
+      switch (m_event->type)
+      {
+	case Statistics::SUBBAND_POWER:
+	  ack.stats()(result_device, Range::all())
+	    = cache.getSubbandStats()()(cache_device, Range::all());
+	  break;
 
+	case Statistics::BEAMLET_POWER:
+	  ack.stats()(result_device, Range::all())
+	    = cache.getBeamletStats()()(cache_device, Range::all());
+	  break;
+	  
+	default:
+	  LOG_ERROR("invalid statistics type");
+	  break;
+      }
+      
       result_device++;
     }
   }

@@ -121,13 +121,13 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 			       MEPHeader::N_POL),
 			 neverDeleteData);
 
-  Array<double, 3>& cache(Cache::getInstance().getBack().getSubbandStats()());
+  Array<double, 2>& cache(Cache::getInstance().getBack().getSubbandStats()());
 
   // x-pol subband statistics: copy and convert to double
-  cache(0, global_blp * 2,     fragment_range) = convert_uint32_to_double(stats(Range::all(), 0));
+  cache(global_blp * 2,     fragment_range) = convert_uint32_to_double(stats(Range::all(), 0));
 
   // y-pol subband statistics: copy and convert to double
-  cache(0, global_blp * 2 + 1, fragment_range) = convert_uint32_to_double(stats(Range::all(), 1));
+  cache(global_blp * 2 + 1, fragment_range) = convert_uint32_to_double(stats(Range::all(), 1));
   
   return GCFEvent::HANDLED;
 }

@@ -59,7 +59,7 @@ class ViewStats : public GCFTask, public Test
     /**
      * Use gnuplot to plot the statistics.
      */
-    void plot_statistics(blitz::Array<double, 3>& stats);
+    void plot_statistics(blitz::Array<double, 2>& stats);
 
     /**
      * Run the tests.
