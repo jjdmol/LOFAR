@@ -35,17 +35,20 @@
 
 InitDebugContext(Calibrator,"Calibrator");
 
-Calibrator::Calibrator () {
+Calibrator::Calibrator (const string & MSName, const string & MEPName, 
+    const string & GSMName, const string & DBType, const string & DBName, 
+    const string & DBPasswd);
+) {
   // Initialize default values for the PSS3 Calibrater object.
   // These values are committed to itsMeqCalImpl when the Calibrator
   // ::Initialize () is called.
 
-  itsMSName              = "demo";		// MS  (glish table)
-  itsMEPName             = "meqmodel";		// MEQ (PL table)
-  itsGSMName             = "skymodel";		// GSM (PL table)
-  itsDBType              = "postgres";		// Database type
-  itsDBName              = "tanaka";		// Database account
-  itsDBPasswd            = "";
+  itsMSName              = MSName;		// MS  (glish table)
+  itsMEPName             = MEPName;		// MEQ (PL table)
+  itsGSMName             = GSMName;		// GSM (PL table)
+  itsDBType              = DBType;		// Database type
+  itsDBName              = DBName;		// Database account
+  itsDBPasswd            = DBPasswd;
   itsModelType           = "LOFAR.RI";
   itsDDID                = 0; // TODO: GvD What is this?
   itsScenario            = "solve";
