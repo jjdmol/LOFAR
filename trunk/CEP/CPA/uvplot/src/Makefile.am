@@ -11,6 +11,7 @@ libuvplot_la_SOURCES := UVPGraphSettings.cc    \
                         UVPDataCacheElement.cc \
                         UVPDataTransferWP.cc   \
 	                     UVPMessagesToFileWP.cc \
+                        UVPPVDInput.cc         \
                         AID-uvplot-Registry.cc
 #                       UVPCorrelationDataCache.cc \
 #                       UVPBaselineDataCache.cc 
@@ -23,6 +24,8 @@ uvplot_SOURCES := main.cc \
                   UVPGraphSettingsWidget.cc UVPGraphSettingsWidget.moc.cc \
                   UVPTimeFrequencyPlot.cc UVPTimeFrequencyPlot.moc.cc \
                   UVPUVCoverageArea.cc UVPUVCoverageArea.moc.cc
+
+LDADD				:= ../src/libuvplot.la
 
 
 # Your package's subdirectory
