@@ -261,7 +261,7 @@ bool CyclicOWBuffer<TYPE>::CheckConsistency(int max)
   // check internal consistency of CyclicOWBuffer
   // all locks should be released
 
-  for (i=0; i< MIN(max, (int)itsBuffer.size()); i++)
+  for (i=0; i< CEPF_MIN(max, (int)itsBuffer.size()); i++)
   {
     cerr << "elem("  << i << "): readers_reading=" << 
       itsBuffer[i].itsRWLock.GetReadersReading() <<
