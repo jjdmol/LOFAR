@@ -46,6 +46,8 @@ Query: e.s=0 || C::A::s=0
    found 96 matches
 Query: e.d.s=1 || C::b.A::s=0
    found 96 matches
+Query: C::b.s=e.d.s || C::s=C::b.A::s
+   found 96 matches
 
 Testing BETWEEN: 
 Query: C::b.A::s-e.s between -3 and 5

@@ -97,6 +97,62 @@ int orRes(bool res[128], int value1, int ax1, int value2, int ax2)
   return nrf;
 }
 
+int or2Res(bool res[128], int ax1, int ax2, int ax3, int ax4)
+{
+  int nrf=0;
+  int inx=0;
+  clearRes(res);
+  int i[7];
+  for (i[0]=0; i[0]<2; i[0]++) {
+    for (i[1]=0; i[1]<2; i[1]++) {
+      for (i[2]=0; i[2]<2; i[2]++) {
+	for (i[3]=0; i[3]<2; i[3]++) {
+	  for (i[4]=0; i[4]<2; i[4]++) {
+	    for (i[5]=0; i[5]<2; i[5]++) {
+	      for (i[6]=0; i[6]<2; i[6]++) {
+		if (i[ax1] == i[ax2]  ||  i[ax3] == i[ax4]) {
+		  res[inx] = true;
+		  nrf++;
+		}
+		inx++;
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
+  return nrf;
+}
+
+int or3Res(bool res[128], int ax1, int ax2, int ax3, int ax4, int ax5, int ax6)
+{
+  int nrf=0;
+  int inx=0;
+  clearRes(res);
+  int i[7];
+  for (i[0]=0; i[0]<2; i[0]++) {
+    for (i[1]=0; i[1]<2; i[1]++) {
+      for (i[2]=0; i[2]<2; i[2]++) {
+	for (i[3]=0; i[3]<2; i[3]++) {
+	  for (i[4]=0; i[4]<2; i[4]++) {
+	    for (i[5]=0; i[5]<2; i[5]++) {
+	      for (i[6]=0; i[6]<2; i[6]++) {
+		if (i[ax1]==i[ax2] || i[ax3]==i[ax4] || i[ax5]==i[ax6]) {
+		  res[inx] = true;
+		  nrf++;
+		}
+		inx++;
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
+  return nrf;
+}
+
 int andRes(bool res[128], int value1, int ax1, int value2, int ax2)
 {
   int nrf=0;
@@ -185,11 +241,6 @@ int betweenRes(bool res[128], int value1, int ax1, int value2, int ax2)
 {
   int nrf=0;
   int inx=0;
-  if (value1 > value2) {
-    int val=value1;
-    value1=value2;
-    value2=val;
-  }
   clearRes(res);
   int i[7];
   for (i[0]=0; i[0]<2; i[0]++) {
@@ -200,7 +251,7 @@ int betweenRes(bool res[128], int value1, int ax1, int value2, int ax2)
 	    for (i[5]=0; i[5]<2; i[5]++) {
 	      for (i[6]=0; i[6]<2; i[6]++) {
 		if (value1 <= (i[ax1] - i[ax2]) &&
-		    (i[ax1]-i[ax2]) <= value2) {
+		    (i[ax1] - i[ax2]) <= value2) {
 		  res[inx] = true;
 		  nrf++;
 		}
@@ -219,11 +270,6 @@ int notBetweenRes(bool res[128], int value1, int ax1, int value2, int ax2)
 {
   int nrf=0;
   int inx=0;
-  if (value1 > value2) {
-    int val=value1;
-    value1=value2;
-    value2=val;
-  }
   clearRes(res);
   int i[7];
   for (i[0]=0; i[0]<2; i[0]++) {
@@ -254,7 +300,6 @@ int inRes(bool res[128], int ax1, int ax2, int value1,
 {
   int nrf=0;
   int inx=0;
-
   clearRes(res);
   int i[7];
   for (i[0]=0; i[0]<2; i[0]++) {
@@ -286,7 +331,6 @@ int notInRes(bool res[128], int ax1, int ax2, int value1,
 {
   int nrf=0;
   int inx=0;
-
   clearRes(res);
   int i[7];
   for (i[0]=0; i[0]<2; i[0]++) {
@@ -378,6 +422,48 @@ bool queryOr (PersistenceBroker& pb, int value1, int ax1,
   return checkRes(exp, nrexp, set);
 }
 
+bool queryOr2 (PersistenceBroker& pb, int ax1, int ax2,
+	       int ax3, int ax4)
+{
+  cout << "Query: " << theirAttr[ax1] << '=' << theirAttr[ax2] << " || "
+       << theirAttr[ax3] << '=' << theirAttr[ax4] << endl;
+  // Do the query and check the result.
+  TPersistentObject<F> tpof;
+  Collection<TPersistentObject <F> > set =
+    pb.retrieve<F>(attrib(tpof, theirAttr[ax1]) ==
+		   attrib(tpof, theirAttr[ax2]) ||
+		   attrib(tpof, theirAttr[ax3]) ==
+		   attrib(tpof, theirAttr[ax4]));
+  // Set the expected result.
+  bool exp[128];
+  clearRes(exp);
+  int nrexp = or2Res (exp, ax1, ax2, ax3, ax4);
+  // Check the result.
+  return checkRes(exp, nrexp, set);
+}
+
+bool queryOr3 (PersistenceBroker& pb, int ax1, int ax2,
+	       int ax3, int ax4, int ax5, int ax6)
+{
+  cout << "Query: " << theirAttr[ax1] << '=' << theirAttr[ax2] << " || "
+       << theirAttr[ax3] << '=' << theirAttr[ax4] << endl;
+  // Do the query and check the result.
+  TPersistentObject<F> tpof;
+  Collection<TPersistentObject <F> > set =
+    pb.retrieve<F>(attrib(tpof, theirAttr[ax1]) ==
+		   attrib(tpof, theirAttr[ax2]) ||
+		   attrib(tpof, theirAttr[ax3]) ==
+		   attrib(tpof, theirAttr[ax4]) ||
+		   attrib(tpof, theirAttr[ax5]) ==
+		   attrib(tpof, theirAttr[ax6]));
+  // Set the expected result.
+  bool exp[128];
+  clearRes(exp);
+  int nrexp = or3Res (exp, ax1, ax2, ax3, ax4, ax5, ax6);
+  // Check the result.
+  return checkRes(exp, nrexp, set);
+}
+
 // Do a query with an and of two attributes.
 bool queryAnd (PersistenceBroker& pb, int value1, int ax1,
 	       int value2, int ax2)
@@ -432,12 +518,12 @@ bool queryPlus2 (PersistenceBroker& pb, int ax1, int ax2, int ax3)
 bool queryBetween (PersistenceBroker& pb, int value1, int ax1, 
 		   int value2, int ax2)
 {
+  // Swap values if needed.
   if (value1 > value2) {
-    int val=value1;
-    value1=value2;
-    value2=val;
+    int val = value1;
+    value1 = value2;
+    value2 = val;
   }
-
   cout << "Query: " << theirAttr[ax1] << "-"
        << theirAttr[ax2] << " between " << value1  
        << " and " << value2 << endl;
@@ -457,10 +543,11 @@ bool queryBetween (PersistenceBroker& pb, int value1, int ax1,
 bool queryNotBetween (PersistenceBroker& pb, int value1, int ax1, 
 		      int value2, int ax2)
 {
+  // Swap values if needed.
   if (value1 > value2) {
-    int val=value1;
-    value1=value2;
-    value2=val;
+    int val = value1;
+    value1 = value2;
+    value2 = val;
   }
   cout << "Query: " << theirAttr[ax1] << "-"
        << theirAttr[ax2] << " not between " << value1  
@@ -481,13 +568,10 @@ bool queryNotBetween (PersistenceBroker& pb, int value1, int ax1,
 bool queryIn (PersistenceBroker& pb, int ax1, int ax2, int value1, 
 	      int value2, int value3)
 {
-
   Collection<Query::Expr> c;
-  c.add(value1);
-  c.add(value2);
-  c.add(value3);
-
-
+  c.add (value1);
+  c.add (value2);
+  c.add (value3);
   cout << "Query: " << theirAttr[ax1] << "-"
        << theirAttr[ax2] << " in (" << value1 << ", " 
        << value2 << ", " << value3 << ")" << endl;
@@ -507,13 +591,10 @@ bool queryIn (PersistenceBroker& pb, int ax1, int ax2, int value1,
 bool queryNotIn (PersistenceBroker& pb, int ax1, int ax2, 
 		 int value1, int value2, int value3)
 {
-
   Collection<Query::Expr> c;
-  c.add(value1);
-  c.add(value2);
-  c.add(value3);
-
-
+  c.add (value1);
+  c.add (value2);
+  c.add (value3);
   cout << "Query: " << theirAttr[ax1] << "-"
        << theirAttr[ax2] << " not in (" << value1 << ", " 
        << value2 << ", " << value3 << ")" << endl;
@@ -555,7 +636,7 @@ int main(int argc, const char* argv[])
     // Open the connection.
     PersistenceBroker pb;
     pb.connect("test","postgres","");
-    // Skip filldb (which takes some time) if indicated.
+    // If indicated, skip filldb (which takes quite some time).
     if (argc > 1  &&  std::string(argv[1]) == "1") {
       filldb (pb);
     }
@@ -587,6 +668,8 @@ int main(int argc, const char* argv[])
     flag &= queryOr (pb, 0, ATTR6, 0, ATTR5);
     flag &= queryOr (pb, 0, ATTR5, 0, ATTR1);
     flag &= queryOr (pb, 1, ATTR4, 0, ATTR0);
+    flag &= queryOr2 (pb, ATTR2, ATTR4, ATTR3, ATTR0);
+    /// flag &= queryOr3 (pb, ATTR2, ATTR4, ATTR3, ATTR0, ATTR5, ATTR2);
 
     cout << endl << "Testing BETWEEN: " << endl;
     flag &= queryBetween (pb, -3, ATTR0, 5, ATTR5); // 128
