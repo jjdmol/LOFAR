@@ -21,10 +21,10 @@
 //#  $Id$
 
 
-#include <GCF/GCF_DevicePort.h>
+#include <GCF/TM/GCF_DevicePort.h>
 #include <GTM_Defines.h>
-#include <GCF/GCF_Task.h>
-#include <GCF/GCF_TMProtocols.h>
+#include <GCF/TM/GCF_Task.h>
+#include <GCF/TM/GCF_Protocols.h>
 #include <PortInterface/GTM_NameService.h>
 #include <PortInterface/GTM_TopologyService.h>
 #include <Socket/GTM_Device.h>
@@ -63,14 +63,14 @@ int GCFDevicePort::open()
 
   if (isConnected())
   {
-    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, ( 
+    LOG_ERROR(LOFAR::formatString ( 
         "ERROR: Port %s already open.",
 	      _name.c_str()));
     result = 0;
   }
   else if (!_pDevice && isSlave())
   {
-    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, ( 
+    LOG_ERROR(LOFAR::formatString ( 
         "ERROR: Port %s not initialised.",
         _name.c_str()));
     result = 0;
@@ -85,7 +85,7 @@ int GCFDevicePort::open()
     }
     else
     {
-      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+      LOG_ERROR(LOFAR::formatString (
           "Could not get address info for port '%s' of task '%s'",
 		      _name.c_str(), _pTask->getName().c_str()));
       result = 0;
@@ -127,7 +127,7 @@ ssize_t GCFDevicePort::send(GCFEvent& e)
 
   if (!isSlave())
   {
-    LOFAR_LOG_TRACE(TM_STDOUT_LOGGER, (
+    LOG_DEBUG(LOFAR::formatString (
       "Sending event '%s' for task %s on port '%s'",
       getTask()->evtstr(e),
       getTask()->getName().c_str(), 
@@ -135,7 +135,7 @@ ssize_t GCFDevicePort::send(GCFEvent& e)
   }
   if ((written = _pDevice->send(buf, packsize)) != packsize)
   {
-    LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
+    LOG_DEBUG(LOFAR::formatString (
         "truncated send: %s",
         strerror(errno)));
         

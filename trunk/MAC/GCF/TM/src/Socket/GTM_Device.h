@@ -24,7 +24,7 @@
 #define GTM_DEVICE_H
 
 #include <unistd.h>
-#include <GCF/GCF_Event.h>
+#include <GCF/TM/GCF_Event.h>
 #include <Socket/GTM_Socket.h>
 
 // forward declaration

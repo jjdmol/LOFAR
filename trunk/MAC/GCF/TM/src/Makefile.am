@@ -12,7 +12,7 @@ pkginclude_HEADERS = \
 	../include/GCF/TM/GCF_Handler.h \
 	../include/GCF/TM/GCF_Fsm.h \
 	../include/GCF/TM/GCF_Control.h \
-	../include/GCF/TM/GCF_DevicePort.h \
+	../include/GCF/TM/GCF_DevicePort.h
  
 DOCHDRS = $(pkginclude_HEADERS) \
   GTM_Defines.h \
