@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.5  2002/05/16 15:00:34  schaaf
+//
+//  overall update, added profiler states, removed command line processing, setZ/XOffset and Yoffset
+//
 //  Revision 1.3  2002/05/07 14:59:16  schaaf
 //  optimised performance of process()
 //
@@ -141,19 +145,10 @@ void WH_Transpose::process()
       Ysize_bytes = Ysize*sizeof(int);
       for (int station=0; station < Xsize; station++) {
 	InDHptr = getInHolder (station);
-#ifndef noncontiguous
 	// DH_2DMatrix::getBuffer(x,y) contiguous for fixed x.
 	memcpy(OutDHptr->getBuffer(station,0),
 	       InDHptr->getBuffer(time,0),
 	       Ysize_bytes   );
-#else
-	for (int freq=0; freq < Ysize; freq++) {
-	  *( OutDHptr->getBuffer(station,freq)) = 
-	    *(InDHptr->getBuffer(time,   freq));
-	  //if (freq < 10 ) cout << *( OutDHptr->getBuffer(station,freq)) << " " << endl;
-	}
-	//cout << endl;
-#endif
 	OutDHptr->setXOffset(getInHolder(0)->getZ());   //set station offset
 	OutDHptr->setYOffset(InDHptr->getYOffset());   // set freq offset
 	OutDHptr->setZ(InDHptr->getXOffset()); 	    // set time
