@@ -32,7 +32,7 @@ OctoVisInputAgent::OctoVisInputAgent(const HIID &mapfield)
   suspend_posted = False;
 }
 
-//##ModelId=3E27CEC50344
+//##ModelId=3E0AAB2200CB
 OctoVisInputAgent::OctoVisInputAgent(OctoMultiplexer &pxy,const HIID &mapfield)
     : OctoAgent(pxy,mapfield)
 {
@@ -47,20 +47,20 @@ bool OctoVisInputAgent::init (const DataRecord::Ref &data)
 }
 
 //##ModelId=3E0AAB7D00C3
-int OctoVisInputAgent::getHeader (DataRecord::Ref &hdr, bool wait)
+int OctoVisInputAgent::getHeader (DataRecord::Ref &hdr, int wait)
 {
   HIID dum;
-  return getEvent(dum,hdr,FHeaderEvent,wait);
+  return AppAgent::getEvent(dum,hdr,FHeaderEvent,wait);
 }
 
 //##ModelId=3E0AAB810240
-int OctoVisInputAgent::getNextTile (VisTile::Ref &tile, bool wait)
+int OctoVisInputAgent::getNextTile (VisTile::Ref &tile, int wait)
 {
   for(;;)
   {
     HIID dum;
     ObjRef ref;
-    int result = getEvent(dum,ref,FTileEvent,wait);
+    int result = OctoAgent::getEvent(dum,ref,FTileEvent,wait);
     // return if unsuccessful
     if( result != SUCCESS )
       return result;
@@ -89,13 +89,13 @@ int OctoVisInputAgent::getNextTile (VisTile::Ref &tile, bool wait)
 //##ModelId=3E0AAB8602A8
 int OctoVisInputAgent::hasHeader ()
 {
-  return hasEvent(FHeaderEvent);
+  return OctoAgent::hasEvent(FHeaderEvent);
 }
 
 //##ModelId=3E0AAB8B01A0
 int OctoVisInputAgent::hasTile ()
 {
-  return hasEvent(FTileEvent);
+  return OctoAgent::hasEvent(FTileEvent);
 }
 
 //##ModelId=3E0AAB920304
@@ -103,7 +103,7 @@ void OctoVisInputAgent::suspend ()
 {
   if( !suspend_posted )
   {
-    postEvent(FSuspendEvent);
+    OctoAgent::postEvent(FSuspendEvent);
     suspend_posted = True; 
   }
 }
@@ -111,7 +111,7 @@ void OctoVisInputAgent::suspend ()
 //##ModelId=3E0AAB98032A
 void OctoVisInputAgent::resume ()
 {
-  postEvent(FResumeEvent);
+  OctoAgent::postEvent(FResumeEvent);
   suspend_posted = False;
 }
 

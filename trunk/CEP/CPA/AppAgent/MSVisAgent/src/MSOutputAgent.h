@@ -23,29 +23,34 @@
 #ifndef MSVISAGENT_SRC_MSVISOUTPUTAGENT_H_HEADER_INCLUDED_F5146265
 #define MSVISAGENT_SRC_MSVISOUTPUTAGENT_H_HEADER_INCLUDED_F5146265
     
-#include <VisAgent/VisFileOutputAgent.h>
-#include <VisCube/VisVocabulary.h>
+#include <VisAgent/FileOutputAgent.h>
 #include <MSVisAgent/MSVisAgentDebugContext.h>
 #include <MSVisAgent/MSVisAgentVocabulary.h>
+#include <VisCube/VisVocabulary.h>
 
 #include <aips/MeasurementSets/MeasurementSet.h>
 #include <aips/Arrays/Slicer.h>
 #include <aips/Tables/ArrayColumn.h>
 #include <aips/Tables/ScalarColumn.h>
 
+namespace MSVisAgent
+{
+  
+using namespace VisVocabulary;
+
 //##ModelId=3E02FF340070
-class MSVisOutputAgent : public VisFileOutputAgent
+class MSOutputAgent : public VisAgent::FileOutputAgent, public MSVisAgentDebugContext
 {
   public:
     //##ModelId=3E2831C7010D
-    MSVisOutputAgent();
+    MSOutputAgent (const HIID &initf = MSVisAgent::FMSOutputParams);
 
     //##ModelId=3E28315F0001
     //##Documentation
     //## Agent initialization method. Called by the application to initialize
     //## or reinitializean agent. Agent parameters are supplied via a
     //## DataRecord.
-    virtual bool init(const DataRecord::Ref &data);
+    virtual bool init(const DataRecord &data);
 
     //##ModelId=3E283161032B
     //##Documentation
@@ -72,10 +77,6 @@ class MSVisOutputAgent : public VisFileOutputAgent
     //##          CLOSED    stream closed
     virtual int putNextTile(VisTile::Ref &tile);
     
-    //##ModelId=3E2D73EB0084
-    //##Documentation
-    //## Field name for parameter record.
-    static const HIID & FParams () { return MSVisAgentVocabulary::FMSVisOutputAgentParams; }
 
     //##ModelId=3E283172001B
     string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;
@@ -91,13 +92,14 @@ class MSVisOutputAgent : public VisFileOutputAgent
     Column;
     
     //##ModelId=3E2831C7011D
-    MSVisOutputAgent(const MSVisOutputAgent& right);
+    MSOutputAgent(const MSOutputAgent& right);
 
     //##ModelId=3E2831C70155
-    MSVisOutputAgent& operator=(const MSVisOutputAgent& right);
+    MSOutputAgent& operator=(const MSOutputAgent& right);
     
     //##ModelId=3E2D73EB00CE
     bool setupDataColumn (Column &col);
+
     
     //##ModelId=3E2D6130030C
     string msname_;
@@ -121,11 +123,11 @@ class MSVisOutputAgent : public VisFileOutputAgent
     //##ModelId=3E2D5FF60119
     Slicer column_slicer_;
     
-    //##ModelId=3E2ED32A0050
+    //##ModelId=3E42745300A8
     Column datacol_;
-    //##ModelId=3E2ED32A00A1
+    //##ModelId=3E42745300C2
     Column predictcol_;
-    //##ModelId=3E2ED32A00C2
+    //##ModelId=3E42745300DA
     Column rescol_;
     
     //##ModelId=3E2ED50E0113
@@ -135,5 +137,6 @@ class MSVisOutputAgent : public VisFileOutputAgent
 };
 
 
+} // namespace MSVisAgent
 
 #endif /* MSVISAGENT_SRC_MSVISOUTPUTAGENT_H_HEADER_INCLUDED_F5146265 */

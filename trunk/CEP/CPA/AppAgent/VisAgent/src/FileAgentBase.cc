@@ -1,7 +1,10 @@
-#include "VisFileAgentBase.h"
+#include "FileAgentBase.h"
 
+namespace VisAgent 
+{
+    
 //##ModelId=3DFDFC07004C
-string VisFileAgentBase::fileStateString() const
+string FileAgentBase::fileStateString() const
 {
   switch( state_ )
   {
@@ -15,8 +18,10 @@ string VisFileAgentBase::fileStateString() const
 }
 
 //##ModelId=3DF9FECE01CA
-void VisFileAgentBase::setErrorState(const string &msg)
+void FileAgentBase::setErrorState(const string &msg)
 {
   state_ = FILEERROR;
   errmsg_ = msg;
+}
+
 }

@@ -12,15 +12,15 @@ int _dum2 = aidRegistry_OctoAgent();
     
 //##ModelId=3E26DA36005C
 OctoAgent::OctoAgent(const HIID &mapfield)
-    : proxy(0),map_field_name(mapfield)
+    : multiplexer(0),map_field_name(mapfield),my_multiplex_id(-1)
 {
 }
 
-//##ModelId=3E091DDB02F2
-OctoAgent::OctoAgent (OctoMultiplexer &pxy,const HIID &mapfield)
-    : proxy(0),map_field_name(mapfield)
+//##ModelId=3E26DA3602F4
+OctoAgent::OctoAgent (OctoMultiplexer &mux,const HIID &mapfield)
+    : multiplexer(0),map_field_name(mapfield),my_multiplex_id(-1)
 {
-  attach(pxy,mapfield);
+  attach(mux,mapfield);
 }
 
 //##ModelId=3E26DA370170
@@ -29,12 +29,13 @@ OctoAgent::~OctoAgent()
 }
   
 //##ModelId=3E091DDD02B8
-void OctoAgent::attach (OctoMultiplexer &pxy,const HIID &mapfield)
+void OctoAgent::attach (OctoMultiplexer &mux,const HIID &mapfield)
 {
-  FailWhen(proxy,"already attached to multiplexer");
-  cdebug(2)<<"attaching to multiplexer "<<proxy->sdebug(1)<<endl;
-  proxy = &pxy;
+  FailWhen(multiplexer,"already attached to multiplexer");
+  cdebug(2)<<"attaching to multiplexer "<<mux.sdebug(1)<<endl;
+  multiplexer = &mux;
   map_field_name = mapfield;
+  mux.addAgent(this);
 }
 
 
@@ -51,7 +52,6 @@ bool OctoAgent::init (const DataRecord::Ref &dataref)
   }
   return True;
 }
-
 
 //##ModelId=3E26CAE001BA
 bool OctoAgent::mapReceiveEvent(HIID &out, const HIID &in) const
@@ -76,85 +76,23 @@ bool OctoAgent::mapPostEvent(HIID &out, const HIID &in) const
 }
 
 //##ModelId=3E096F2103B3
-int OctoAgent::getEvent(HIID &id, ObjRef &data, const HIID &mask, bool wait)
+int OctoAgent::getEvent (HIID &id,ObjRef &data, const HIID &mask, int wait)
 {
-  if( !pending_event )
-  {
-    // no event pending? Try polling the multiplexer
-    int res = proxy->pollEvents(wait);
-    // not successful? Return the code
-    if( res != SUCCESS )
-      return res;
-    // successful? Check that it got an event for us and not someone else...
-    else if( !pending_event )
-      return OUTOFSEQ;
-  }
-  // does it match the mask? 
-  if( mask.empty() || mask.matches(pending_event_id) )
-  {
-    // tell the proxy that we've got the event
-    pending_event = False;
-    proxy->claimEvent();
-    // return the event
-    id = pending_event_id;
-    data = pending_event_data;
-    cdebug(2)<<"getEvent(): "<<id<<", "<<data->sdebug(2,"  ")<<endl;
-    return SUCCESS;
-  }
-  else
-  // no, does not match the mask: retrun OUTOFSEQ then
-    return OUTOFSEQ;
-}
-
-//##ModelId=3E0918BF0299
-int OctoAgent::getEvent (HIID &id,DataRecord::Ref &data, const HIID &mask, bool wait)
-{
-  ObjRef objref;
-  data.detach();
-  // call generic getEvent() for all payload types
-  if( getEvent(id,objref,mask,wait) )
-  {
-    // if payload is DataRecord, attach it to data ref, else discard
-    if( objref.valid() )
-    {
-      if( objref->objectType() == TpDataRecord )
-        data = objref.ref_cast<DataRecord>();
-      else
-      {
-        cdebug(3)<<"discarded unsupported event payload ("<<objref->objectType()<<")\n";
-      }
-    }
-    return True;
-  }
-  else
-    return False;
+  FailWhen(!multiplexer,"no mux attached");
+  return multiplexer->getEvent(id,data,mask,wait,my_multiplex_id);
 }
 
 //##ModelId=3E0918BF02F0
-int OctoAgent::hasEvent (const HIID &mask,bool)
+int OctoAgent::hasEvent (const HIID &mask)
 {
-  if( !pending_event )
-  {
-    // no event pending? Try polling the multiplexer
-    int res = proxy->pollEvents(False);
-    // not successful? Return the code
-    if( res != SUCCESS )
-      return res;
-    // successful? Check that it got an event for us and not someone else...
-    else if( !pending_event )
-      return OUTOFSEQ;
-  }
-  // does it not match the mask? If not, return OUTOFSEQ code
-  if( mask.empty() || mask.matches(pending_event_id) )
-    return SUCCESS;
-  else
-    return OUTOFSEQ;
+  FailWhen(!multiplexer,"no mux attached");
+  return multiplexer->hasEvent(mask,my_multiplex_id);
 }
 
 //##ModelId=3E2FD67D0246
-void OctoAgent::postEvent(const HIID &id, const ObjRef &data)
+void OctoAgent::postEvent (const HIID &id,const ObjRef &data)
 {
-cdebug(3)<<"postEvent("<<id<<")\n";
+  cdebug(3)<<"postEvent("<<id<<")\n";
   // find event in output map
   EMCI iter = post_map.find(id);
   MessageRef mref;
@@ -184,13 +122,7 @@ cdebug(3)<<"postEvent("<<id<<")\n";
   // attach payload to message
   mref() <<= data.copy();
   cdebug(3)<<"publishing as "<<mref->sdebug(2)<<", scope "<<scope<<endl;
-  proxy->publish(mref,scope);
-}
-
-//##ModelId=3E0918BF034D
-void OctoAgent::postEvent (const HIID &id,const DataRecord::Ref &data)
-{
-  postEvent(id,data.ref_cast<BlockableObject>());
+  multiplexer->publish(mref,scope);
 }
 
 //##ModelId=3E0A34E7020E
@@ -293,7 +225,7 @@ void OctoAgent::setReceiveMap (const DataRecord &map)
   receive_map.clear();
   // interpret Default.Scope argument
   int defscope = getDefaultScope(map);
-  // translate map, and subscribe proxy to all input events
+  // translate map, and subscribe multiplexer to all input events
   DataRecord::Iterator iter = map.initFieldIter();
   HIID id; TypeId type; int size;
   int nevents = 0;
@@ -309,7 +241,7 @@ void OctoAgent::setReceiveMap (const DataRecord &map)
     // add to event map and subscribe
     EventMapEntry &ee = receive_map[id];
     ee.id = event; ee.scope = scope; 
-    proxy->subscribe(id,scope);
+    multiplexer->subscribe(id,scope);
     nevents++;
     cdebug(2)<<"subscribing to "<<id<<" (scope "<<scope<<") for event "<<event<<endl;
   }
@@ -365,20 +297,6 @@ void OctoAgent::setPostMap (const DataRecord &map)
   dprintf(1)("mapped %d output events\n",nevents);
 }
 
-
-//##ModelId=3E26D4A80155
-void OctoAgent::cacheEvent (const HIID &id, const ObjRef &data)
-{
-  FailWhen(pending_event,"can't cache event while an older event is pending");
-  pending_event_id = id;
-  if( data.valid() )
-    pending_event_data.copy(data,DMI::PRESERVE_RW);
-  else
-    pending_event_data.detach();
-  pending_event = True;  
-}
-
-
 string OctoAgent::sdebug (int detail, const string &prefix, const char *name) const
 {
   using Debug::append;
@@ -392,14 +310,7 @@ string OctoAgent::sdebug (int detail, const string &prefix, const char *name) co
   }
   if( detail >= 1 || detail == -1 )
   {
-    if( pending_event )
-      appendf(out,"ev:%s (%s)",pending_event_id.toString().c_str(),
-          pending_event_data.valid() 
-          ? pending_event_data->debug(1) : "-" );
-  }
-  if( detail >= 2 || detail == -2 )
-  {
-    appendf(out,"proxy:%s",proxy->debug(abs(detail)-1,prefix));
+    appendf(out,"mux:%s",multiplexer->debug(abs(detail)-1,prefix));
   }
   return out;
 }

@@ -20,7 +20,7 @@
 //
 //  $Id$
 
-#include "MSVisOutputAgent.h"
+#include "MSOutputAgent.h"
 
 #include <Common/BlitzToAips.h>
 
@@ -28,41 +28,59 @@
 #include <aips/Tables/ArrayColumn.h>
 #include <aips/Tables/ScalarColumn.h>
 
-using namespace MSVisAgentVocabulary;
-
+namespace MSVisAgent
+{
+using namespace VisAgent;
+  
 static int dum = aidRegistry_MSVisAgent();
 
 //##ModelId=3E2831C7010D
-MSVisOutputAgent::MSVisOutputAgent ()
+MSOutputAgent::MSOutputAgent (const HIID &initf)
+    : FileOutputAgent(initf),msname_("(none)")
 {
   setFileState(FILECLOSED);
-  msname_ = "(none)";
 }
+
 
 //##ModelId=3E28315F0001
-bool MSVisOutputAgent::init (const DataRecord::Ref &data)
+bool MSOutputAgent::init (const DataRecord &data)
 {
-  ms_ = MeasurementSet();
-  msname_ = "(none)";
-  setFileState(FILECLOSED);
-  // get default parameters from init record, if any
-  if( (*data)[FMSVisOutputAgentParams].exists() )
-    params_ = (*data)[FMSVisOutputAgentParams].as_DataRecord();
-  else
-    params_ = DataRecord();
-  cdebug(1)<<"initialized with "<<params_.sdebug(3)<<endl;
-  return True;
+  bool rethrow = data[FThrowError].as_bool(False);
+  try
+  {
+    FailWhen( !FileOutputAgent::init(data),"FileInputAgent init failed" );
+    
+    if( data[initfield()].exists() )
+      params_ = data[initfield()];
+    else
+      params_ = DataRecord();
+    
+    ms_ = MeasurementSet();
+    msname_ = "(none)";
+    setFileState(FILECLOSED);
+    cdebug(1)<<"initialized with "<<params_.sdebug(3)<<endl;
+    return True;
+  }
+  catch( std::exception &exc )
+  {
+    // throw it on, if requested
+    if( rethrow )
+      throw(exc);
+    setErrorState(exc.what());
+    return False;
+  }
 }
 
-void MSVisOutputAgent::close ()
+void MSOutputAgent::close ()
 {
+  FileOutputAgent::close();
   ms_ = MeasurementSet();
   msname_ = "(none)";
   setFileState(FILECLOSED);
   cdebug(1)<<"closed\n";
 }
 
-bool MSVisOutputAgent::setupDataColumn (Column &col)
+bool MSOutputAgent::setupDataColumn (Column &col)
 {
   // if name is not set, then column is ignored
   if( !col.name.length() )
@@ -80,7 +98,7 @@ bool MSVisOutputAgent::setupDataColumn (Column &col)
 
 
 //##ModelId=3E28316403E4
-int MSVisOutputAgent::putHeader (DataRecord::Ref &hdr)
+int MSOutputAgent::putHeader (DataRecord::Ref &hdr)
 {
   try
   {
@@ -102,9 +120,9 @@ int MSVisOutputAgent::putHeader (DataRecord::Ref &hdr)
     predictcol_.name   = params_[FPredictColumn].as_string("");
     rescol_.name       = params_[FResidualsColumn].as_string("");
     // and override them from the header
-    if( header[FMSVisOutputAgentParams].exists() )
+    if( header[FOutputParams].exists() )
     {
-      const DataRecord &hparm = header[FMSVisOutputAgentParams].as_DataRecord();
+      const DataRecord &hparm = header[FOutputParams].as_DataRecord();
       write_flags_       = hparm[FWriteFlags].as_bool(write_flags_);
       flagmask_          = hparm[FFlagMask].as_int(flagmask_);
       datacol_.name      = hparm[FDataColumn].as_string(datacol_.name);
@@ -146,10 +164,12 @@ int MSVisOutputAgent::putHeader (DataRecord::Ref &hdr)
 }
 
 //##ModelId=3E28316B012D
-int MSVisOutputAgent::putNextTile (VisTile::Ref &tileref)
+int MSOutputAgent::putNextTile (VisTile::Ref &tileref)
 {
+  if( fileState() == FILECLOSED )
+    return OUTOFSEQ;
   if( fileState() != DATA && fileState() != HEADER  )
-    return AppAgent::ERROR;
+    return ERROR;
   
   try
   {
@@ -204,7 +224,7 @@ int MSVisOutputAgent::putNextTile (VisTile::Ref &tileref)
   return SUCCESS;
 }
 
-string MSVisOutputAgent::sdebug (int detail,const string &prefix,const char *name) const
+string MSOutputAgent::sdebug (int detail,const string &prefix,const char *name) const
 {
   using Debug::append;
   using Debug::appendf;
@@ -225,3 +245,5 @@ string MSVisOutputAgent::sdebug (int detail,const string &prefix,const char *nam
   }
   return out;
 }
+
+} // namespace MSVisAgent

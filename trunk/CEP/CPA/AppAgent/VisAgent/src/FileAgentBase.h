@@ -1,12 +1,14 @@
-#ifndef VISAGENT_SRC_VISFILEAGENTBASE_H_HEADER_INCLUDED_E39B3406
-#define VISAGENT_SRC_VISFILEAGENTBASE_H_HEADER_INCLUDED_E39B3406
+#ifndef VISAGENT_SRC_FILEAGENTBASE_H_HEADER_INCLUDED_E39B3406
+#define VISAGENT_SRC_FILEAGENTBASE_H_HEADER_INCLUDED_E39B3406
 
 #include <string>
     
 using std::string;
     
+namespace VisAgent {
+
 //##ModelId=3E282C030062
-class VisFileAgentBase
+class FileAgentBase
 {
   protected:
     //##ModelId=3DF9FECD015F
@@ -19,7 +21,7 @@ class VisFileAgentBase
       } FileState;
         
     //##ModelId=3E282C9703C9
-    VisFileAgentBase();
+    FileAgentBase();
         
     //##ModelId=3DF9FECE012A
     FileState fileState() const;
@@ -46,21 +48,23 @@ class VisFileAgentBase
 };
 
 //##ModelId=3E282C9703C9
-inline VisFileAgentBase::VisFileAgentBase()
+inline FileAgentBase::FileAgentBase ()
     : state_(FILECLOSED)
 {}
 
 //##ModelId=3DF9FECE012A
-inline VisFileAgentBase::FileState VisFileAgentBase::fileState() const
+inline FileAgentBase::FileState FileAgentBase::fileState() const
 { return state_; }
 
 //##ModelId=3DF9FECE0154
-inline void VisFileAgentBase::setFileState(FileState state)
+inline void FileAgentBase::setFileState(FileState state)
 { state_ = state; }
 
 //##ModelId=3E282AE200E0
-inline string VisFileAgentBase::errorString() const
+inline string FileAgentBase::errorString() const
 { return errmsg_; }
 
+
+} // namespace VisAgent
 
 #endif /* VISAGENT_SRC_VISFILEAGENTBASE_H_HEADER_INCLUDED_E39B3406 */

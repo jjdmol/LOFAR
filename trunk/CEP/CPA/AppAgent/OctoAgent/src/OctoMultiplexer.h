@@ -23,11 +23,13 @@ class OctoMultiplexer
     OctoMultiplexer& operator=(const OctoMultiplexer& right);
   
     //##ModelId=3E26BE760036
-    void  addAgent (OctoAgent* agent);
+    OctoMultiplexer&  addAgent (OctoAgent* agent);
+    
     //##ModelId=3E26D2D6021D
-    int   pollEvents (bool wait);
-    //##ModelId=3E26D2D602E5
-    void  claimEvent ();
+    int   getEvent (HIID& id,ObjRef& data,const HIID& mask,int wait,int agent_id);
+    //##ModelId=3E3FC3A601B0
+    int   hasEvent (const HIID& mask,int agent_id);
+    
     //##ModelId=3E26D91A02E3
     bool  subscribe (const HIID &id, int scope = Message::GLOBAL);
     //##ModelId=3E26D7CA01DA
@@ -42,16 +44,27 @@ class OctoMultiplexer
     { return Debug::staticBuffer(sdebug(detail,prefix,name)); }
 
   private:
-    //##ModelId=3E26BBC200FA
-    Octoproxy::Identity proxy;
-    
-    //##ModelId=3E26D2D60013
-    typedef std::vector<OctoAgent*> AgentList;
+      
+    //##ModelId=3E3FC3A7000B
+    int checkQueue (const HIID& mask,int wait,int agent_id);
+      
     //##ModelId=3E26BD6B026E
-    AgentList agents;
+    std::vector<OctoAgent*> agents;
+    
+    //##ModelId=3E3FC3A50362
+    std::vector<bool> event_assignment;
+    //##ModelId=3E3FC3A6004B
+    std::vector<HIID> event_id;
     
     //##ModelId=3E26E56A0311
-    int nevents;
+    int nassign;
+    
+    //##ModelId=3E3FC84E023C
+    Message::Ref headmsg;
+    
+    //##ModelId=3E26BBC200FA
+    Octoproxy::Identity proxy;
+
     
 };
 

@@ -48,12 +48,15 @@ class BatchAgent : public SolverControlAgent
 {
   public:
     //##ModelId=3DFF2CCD01A1
-    BatchAgent();
+    BatchAgent(const HIID &initf = SolverControl::FSolverControlParams);
+  
+    //##ModelId=3E42792B02D8
+    BatchAgent(AppEventSink &sink, const HIID &initf = SolverControl::FSolverControlParams);
 
     //##ModelId=3E005A8403E5
     //##Documentation
     //## Initializes solution criteria.
-    virtual bool init (const DataRecord::Ref &data);
+    virtual bool init (const DataRecord &data);
     
     //##ModelId=3E01FA8D02FF
     //##Documentation
@@ -84,13 +87,15 @@ class BatchAgent : public SolverControlAgent
                     const char *name = 0 ) const;
 
 
-  private:
-    //##ModelId=3DFF2CCD01B4
-    BatchAgent (const BatchAgent& right);
 
+
+  private:
+    //##ModelId=3E42781C03A6
+    BatchAgent (const BatchAgent& right);
     //##ModelId=3DFF2CCD021E
     BatchAgent& operator=(const BatchAgent& right);
-    
+
+
     //##ModelId=3E0060D20249
     //##Documentation
     //## Criterion: maximum number of solve iterations

@@ -36,4 +36,6 @@ static AtomicID::Register aid_reg_Predict(-1256,"Predict");
 static AtomicID::Register aid_reg_Residuals(-1257,"Residuals");
 static AtomicID::Register aid_reg_Name(-1163,"Name");
 static AtomicID::Register aid_reg_Message(-1067,"Message");
+static AtomicID::Register aid_reg_Throw(-1305,"Throw");
+static AtomicID::Register aid_reg_Error(-1071,"Error");
 

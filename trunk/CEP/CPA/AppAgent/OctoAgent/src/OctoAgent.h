@@ -40,13 +40,13 @@ class OctoAgent : virtual public AppAgent
       
     //##ModelId=3E26DA36005C
     OctoAgent (const HIID &mapfield = OctoAgentVocabulary::FDefaultMapField);
-    //##ModelId=3E091DDB02F2
-    OctoAgent (OctoMultiplexer &pxy,const HIID &mapfield = OctoAgentVocabulary::FDefaultMapField);
+    //##ModelId=3E26DA3602F4
+    OctoAgent (OctoMultiplexer &mux,const HIID &mapfield = OctoAgentVocabulary::FDefaultMapField);
     //##ModelId=3E26DA370170
     virtual ~OctoAgent();
 
     //##ModelId=3E091DDD02B8
-    void attach (OctoMultiplexer &pxy,const HIID &mapfield = OctoAgentVocabulary::FDefaultMapField);
+    void attach (OctoMultiplexer &mux,const HIID &mapfield = OctoAgentVocabulary::FDefaultMapField);
     
     //##ModelId=3E27F30B019B
     //##Documentation
@@ -59,7 +59,6 @@ class OctoAgent : virtual public AppAgent
     //##Documentation
     //## Sets up a mapping of input events to message IDs
     void setReceiveMap (const DataRecord &map);
-
     //##ModelId=3E0A296A02C8
     //##Documentation
     //## Sets up a mapping of output events to message IDs
@@ -67,38 +66,28 @@ class OctoAgent : virtual public AppAgent
 
     //##ModelId=3E26CBBC03E4
     bool mapReceiveEvent  (HIID &out, const HIID &in) const;
-    
     //##ModelId=3E2FEAD10188
     bool mapPostEvent     (HIID &out, const HIID &in) const;
     
-    //##ModelId=3E0918BF0299
-    //##Documentation
-    //## Gets next event from proxy's message queue. 
-    virtual int getEvent (HIID &id, DataRecord::Ref &data, const HIID &mask, bool wait = False);
     //##ModelId=3E096F2103B3
     //##Documentation
     //## Gets next event from proxy's message queue. This version will return
     //## any type of payload, not just DataRecords, hence the ObjRef data
     //## argument.
-    virtual int getEvent (HIID &id, ObjRef &data, const HIID &mask, bool wait = False);
+    virtual int getEvent (HIID &id, ObjRef &data, const HIID &mask, int wait = AppAgent::WAIT);
     
     //##ModelId=3E0918BF02F0
     //##Documentation
     //## Checks for event in proxy WP's message queue.
-    virtual int hasEvent (const HIID &mask = HIID(), bool outOfSeq = False);
+    virtual int hasEvent (const HIID &mask = HIID());
 
-    //##ModelId=3E0918BF034D
-    //##Documentation
-    //## Publishes an event as a message on behalf of the proxy
-    virtual void postEvent (const HIID &id, const DataRecord::Ref &data = DataRecord::Ref());
     //##ModelId=3E2FD67D0246
     //##Documentation
-    //## Publishes an event as a message on behalf of the proxy. This
-    //## version will publish any type of payload
-    virtual void postEvent(const HIID &id, const ObjRef &data);
+    //## Publishes an event as a message on behalf of the proxy. 
+    virtual void postEvent (const HIID &id, const ObjRef &data = ObjRef());
     
-    //##ModelId=3E26D4A80155
-    void cacheEvent (const HIID &id, const ObjRef &data);
+    //##ModelId=3E3FC3E00194
+    void setMultiplexId (int id);
     
     //##ModelId=3E26E2F901E3
     virtual string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;
@@ -119,16 +108,16 @@ class OctoAgent : virtual public AppAgent
     int resolvePriority    (HIID &id,int priority);
 
   private:
-    //##ModelId=3E26DA3602F4
+    //##ModelId=3E42745302E3
     OctoAgent(const OctoAgent& right);
     //##ModelId=3E26DA370287
     OctoAgent& operator=(const OctoAgent& right);
     
-    //##ModelId=3E0A34E60005
+    //##ModelId=3E4274530119
     typedef struct { HIID id; int scope,priority; } EventMapEntry;
-    //##ModelId=3E0A34E600D8
+    //##ModelId=3E427453014D
     typedef std::map<HIID,EventMapEntry> EventMap;
-    //##ModelId=3E0A3D2501EE
+    //##ModelId=3E4274530181
     typedef EventMap::const_iterator EMCI;
     
     //##ModelId=3E0A3578009A
@@ -151,18 +140,21 @@ class OctoAgent : virtual public AppAgent
     //##ModelId=3E0A4C7A0008
     int unmapped_priority;
     
-    //##ModelId=3E26CA060164
-    bool pending_event;
-    //##ModelId=3E26CA0601E1
-    ObjRef pending_event_data;
-    //##ModelId=3E26D53202A3
-    HIID pending_event_id;
-    
     //##ModelId=3E26BD6B029C
-    OctoMultiplexer *proxy;
+    OctoMultiplexer *multiplexer;
     
     //##ModelId=3E27F5E502C0
     HIID map_field_name;
+    
+    //##ModelId=3E3FC3DF031A
+    int my_multiplex_id;
 };
+
+//##ModelId=3E3FC3E00194
+void OctoAgent::setMultiplexId (int id)
+{
+  my_multiplex_id = id;
+}
+
 
 #endif /* OCTOAGENT_SRC_OCTOAGENT_H_HEADER_INCLUDED_833D2E92 */

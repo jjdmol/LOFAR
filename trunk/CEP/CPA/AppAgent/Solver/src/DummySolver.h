@@ -8,7 +8,7 @@ class DummySolver : public BaseSolver
 {
   public:
     //##ModelId=3E00ACF002AB
-    DummySolver(VisInputAgent &in, VisOutputAgent &out, SolverControlAgent &control);
+    DummySolver(VisAgent::InputAgent &in, VisAgent::OutputAgent &out, SolverControlAgent &control);
 
     //##ModelId=3E00ACED00BB
     virtual void run();

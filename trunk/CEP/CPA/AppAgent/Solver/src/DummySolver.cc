@@ -1,7 +1,7 @@
 #include "DummySolver.h"
 
 //##ModelId=3E00ACF002AB
-DummySolver::DummySolver(VisInputAgent &in, VisOutputAgent &out, SolverControlAgent &control)
+DummySolver::DummySolver(VisAgent::InputAgent &in, VisAgent::OutputAgent &out, SolverControlAgent &control)
     : BaseSolver(in,out,control)
 {
 }
@@ -25,7 +25,7 @@ void DummySolver::run ()
     // second loop over solve jobs. Each call to startSoltion
     // returns a different set of params and the code RUNNING; once all sets 
     // have been run through, the return code is NEXT_DOMAIN.
-    while( control().startSolution(params) == RUNNING )
+    while( control().startSolution(params) == AppControlAgent::RUNNING )
     {
       cdebug(1)<< "startSolution: "<<params->sdebug(3)<<endl;
       cdebug(3)<< sdebug(3) <<endl;
@@ -38,7 +38,7 @@ void DummySolver::run ()
         converge /= 10;
         niter++;
       }
-      while( control().endIteration(converge) == RUNNING );
+      while( control().endIteration(converge) == AppControlAgent::RUNNING );
       // endIteration() will return RUNNING as long as you still need
       // to iterate. Once the solution has converged (or the max iter count is
       // exceeded), it returns NEXT_SOLUTION (if more jobs are scheduled)

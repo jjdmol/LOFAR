@@ -23,13 +23,18 @@
 #ifndef _MSVISAGENT_MSVISINPUTAGENT_H
 #define _MSVISAGENT_MSVISINPUTAGENT_H 1
     
-#include <VisAgent/VisFileInputAgent.h>
-#include <VisCube/VisVocabulary.h>
+#include <VisAgent/FileInputAgent.h>
 #include <MSVisAgent/MSVisAgentDebugContext.h>
 #include <MSVisAgent/MSVisAgentVocabulary.h>
+#include <VisCube/VisVocabulary.h>
 
 #include <aips/MeasurementSets/MeasurementSet.h>
 #include <aips/Tables/TableIter.h>
+
+namespace MSVisAgent
+{
+  
+using namespace VisVocabulary;
 
 //##ModelId=3DF9FECD013C
 //##Documentation
@@ -49,39 +54,31 @@
 //##       +--[FChannelEndIndex]   (int)     ending channel (default: last chan.)
 //##       +--[FSelectionString] (string)    additional TaQL selection applied 
 //##                                           to MS
-class MSVisInputAgent : public VisFileInputAgent
+class MSInputAgent : public VisAgent::FileInputAgent, public MSVisAgentDebugContext
 {
   public:
     //##ModelId=3DF9FECD0219
-      MSVisInputAgent ();
+      MSInputAgent (const HIID &initf = MSVisAgent::FMSInputParams);
       
     //##ModelId=3DF9FECD0235
-      virtual bool init (const DataRecord::Ref &data);
+      virtual bool init (const DataRecord &data);
       
     //##ModelId=3DF9FECD0244
       virtual void close ();
       
     //##ModelId=3DF9FECD021B
-      virtual int getNextTile (VisTile::Ref &tile,int wait = AppAgent::WAIT);
-      
-    //##ModelId=3DF9FECD0246
-    //##Documentation
-    //## Field name for parameter record.
-      static const HIID & FParams () { return MSVisAgentVocabulary::FMSVisInputAgentParams; }
-      
+      virtual int getNextTile (VisTile::Ref &tile,int wait = WAIT);
       
     //##ModelId=3DFDFC060373
       string sdebug ( int detail = 1,const string &prefix = "",
                       const char *name = 0 ) const;
-      
    
       
   private:
-      // forbid copy and assigment for now
     //##ModelId=3DF9FECD0248
-      MSVisInputAgent (const MSVisInputAgent &);
+      MSInputAgent(const MSInputAgent &right);
     //##ModelId=3DF9FECD0253
-      MSVisInputAgent & operator = (const MSVisInputAgent &);
+      MSInputAgent& operator = (const MSInputAgent &right);
       
       // prepares MS for reading
     //##ModelId=3DF9FECD025E
@@ -89,6 +86,7 @@ class MSVisInputAgent : public VisFileInputAgent
       // fills headers from subtables
     //##ModelId=3DF9FECD0285
       void fillHeader (DataRecord &hdr,const DataRecord &selection);
+
   
     //##ModelId=3DFDFC06033A
       string msname_;  
@@ -145,5 +143,7 @@ class MSVisInputAgent : public VisFileInputAgent
       TileCache::iterator tileiter_;
       
 };
+
+} // namespace MSVisAgent
     
 #endif

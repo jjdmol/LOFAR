@@ -20,45 +20,18 @@
 //
 //  $Id$
 
-#include "../src/MSVisInputAgent.h"
-#include "../src/MSVisOutputAgent.h"
+#include "../src/MSInputAgent.h"
+#include "../src/MSOutputAgent.h"
 #include <DMI/DataArray.h>
 
 #include <AppAgent/AppControlAgent.h>
 
-// this function checks the agent for any events and prints them out
-void checkEvents (AppAgent &agent)
-{
-  if( !agent.hasEvent() )
-  {
-    cout<<"No events pending.\n";
-    return;
-  }
-  int count = 0;
-  while( agent.hasEvent() )
-  {
-    FailWhen1( count++ > 100, "Too many events. I bet the agent is not flushing them." );
-    HIID name;
-    DataRecord::Ref data;
-    bool res = agent.getEvent(name,data);
-    FailWhen1( !res,"Oops, hasEvents() is True but getEvent() has failed. Debug your agent." );
-    cout<<"getEvent: "<<name.toString()<<" data: "<<data.sdebug(10)<<endl;
-    if( data.valid() )
-    {
-      // if event has data, check for a message field and print that
-      string msg = (*data)[AidMessage].as_string("");
-      if( msg != "" )
-        cout<<"Event message: "<<msg<<endl;
-    }
-  }
-}
-    
 int main (int argc,const char *argv[])
 {
-//  MeasurementSet ms1("test.ms",Table::Old);
+  MeasurementSet ms1("test.ms",Table::Old);
   MeasurementSet ms2("test.ms",Table::Update);
     
-  using namespace MSVisAgentVocabulary;
+  using namespace MSVisAgent;
   
   try 
   {
@@ -66,18 +39,15 @@ int main (int argc,const char *argv[])
     Debug::initLevels(argc,argv);
 
       // initialize parameter record
-    DataRecord::Ref dataref(DMI::ANONWR);
-
-    DataRecord &args = *new DataRecord;
-    dataref()[MSVisInputAgent::FParams()] <<= args;
+    DataRecord params;
+    DataRecord &args = params[FMSInputParams] <<= new DataRecord;
     
       args[FMSName] = "test.ms";
       args[FDataColumnName] = "DATA";
       args[FTileSize] = 10;
 
       // setup selection
-      DataRecord &select = *new DataRecord;
-      args[FSelection] <<= select;
+      DataRecord &select = args[FSelection] <<= new DataRecord;
 
         select[FDDID] = 0;
         select[FFieldIndex] = 1;
@@ -85,8 +55,7 @@ int main (int argc,const char *argv[])
         select[FChannelEndIndex]   = 20;
         select[FSelectionString] = "ANTENNA1=1 && ANTENNA2=2";
         
-    DataRecord &outargs = *new DataRecord;
-    dataref()[MSVisOutputAgent::FParams()] <<= outargs;
+    DataRecord &outargs = params[FMSOutputParams] <<= new DataRecord;
     
       outargs[FWriteFlags]  = True;
       outargs[FFlagMask]    = 0xFF;
@@ -97,18 +66,15 @@ int main (int argc,const char *argv[])
 
     cout<<"=================== creating input agent ======================\n";
     // create agent
-    MSVisInputAgent agent;
-    checkEvents(agent);
+    MSInputAgent agent;
   
     cout<<"=================== creating output agent ======================\n";
     // create agent
-    MSVisOutputAgent outagent;
-    checkEvents(outagent);
+    MSOutputAgent outagent;
 
     cout<<"=================== initializing input agent ==================\n";
-    bool res = agent.init(dataref);
+    bool res = agent.init(params);
     cout<<"init(): "<<res<<endl;
-    checkEvents(agent);
     cout<<"hasHeader(): "<<agent.hasHeader()<<endl;
     cout<<"hasTile(): "<<agent.hasTile()<<endl;
 
@@ -122,9 +88,8 @@ int main (int argc,const char *argv[])
     
     cout<<"=================== initializing output agent ================\n";
     // initialize parameter record
-    res = outagent.init(dataref);
+    res = outagent.init(params);
     cout<<"init(): "<<res<<endl;
-    checkEvents(outagent);
 
     if( !res )
     {
@@ -136,11 +101,9 @@ int main (int argc,const char *argv[])
     DataRecord::Ref header;
     cout<<"getHeader(): "<<agent.getHeader(header)<<endl;
     cout<<header->sdebug(10)<<endl;
-    checkEvents(agent);
 
     cout<<"=================== putting header ============================\n";
     cout<<"putHeader(): "<<outagent.putHeader(header)<<endl;
-    checkEvents(outagent);
        
     cout<<"=================== copying tiles =============================\n";
     int state = 1;
@@ -148,7 +111,6 @@ int main (int argc,const char *argv[])
     {
       VisTile::Ref tile;
       cout<<"getNextTile(): "<<(state=agent.getNextTile(tile))<<endl;
-      checkEvents(agent);
       if( state > 0 )
       {
         cout<<tile->sdebug(10)<<endl;
@@ -163,15 +125,12 @@ int main (int argc,const char *argv[])
         tile().wresiduals() = conj(tile->data());
 
         cout<<"putNextTile(): "<<outagent.putNextTile(tile)<<endl;
-        checkEvents(outagent);
       }
     }
 
     cout<<"=================== end of run ================================\n";
     cout<<"hasHeader(): "<<agent.hasHeader()<<endl;
     cout<<"hasTile(): "<<agent.hasTile()<<endl;
-    checkEvents(agent);
-    checkEvents(outagent);
 
     agent.close();
     outagent.close();

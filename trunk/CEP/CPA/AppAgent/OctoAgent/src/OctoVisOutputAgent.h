@@ -36,7 +36,7 @@ class OctoVisOutputAgent : public VisOutputAgent, public OctoAgent
     //##ModelId=3E2FC9EA02DC
     OctoVisOutputAgent(const HIID &mapfield = OctoAgentVocabulary::FDefaultMapField);
 
-    //##ModelId=3E2FC9ED0378
+    //##ModelId=3E2FCA9002D8
     OctoVisOutputAgent(OctoMultiplexer &pxy, const HIID &mapfield = OctoAgentVocabulary::FDefaultMapField);
 
     //##ModelId=3E2FCA040044
@@ -54,7 +54,7 @@ class OctoVisOutputAgent : public VisOutputAgent, public OctoAgent
     //## Returns: SUCCESS   on success
     //##          WAIT      stream has been suspended from other end
     //##          CLOSED    stream closed
-    virtual int putHeader(DataRecord::Ref &hdr, bool wait = True);
+    virtual int putHeader(DataRecord::Ref &hdr);
 
     //##ModelId=3E2FC9CA01E6
     //##Documentation
@@ -65,32 +65,19 @@ class OctoVisOutputAgent : public VisOutputAgent, public OctoAgent
     //##          WAIT      stream has been suspended from other end    //##
     //## Gets next available tile from input stream. If wait=True, blocks until
     //##          CLOSED    stream closed
-    virtual int putNextTile(VisTile::Ref &tile, bool wait = True);
+    virtual int putNextTile(VisTile::Ref &tile);
 
-    //##ModelId=3E2FC9D0008D
-    //##Documentation
-    //## True if stream has been suspended
-    virtual bool isSuspended();
 
-    //##ModelId=3E2FC9D201E1
-    //##Documentation
-    //## Blocks until stream has been resumed. If stream is not
-    //## suspended, returns SUCCESS immediately.
-    //## Returns: SUCCESS   on success
-    //##          CLOSED    stream closed
-    virtual int waitForResume();
 
     //##ModelId=3E2FC9F902FE
     virtual string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;
 
   private:
-    //##ModelId=3E2FCA9002D8
+    //##ModelId=3E427454028A
     OctoVisOutputAgent(const OctoVisOutputAgent& right);
 
     //##ModelId=3E2FCA900327
     OctoVisOutputAgent& operator=(const OctoVisOutputAgent& right);
-    //##ModelId=3E2FD66000FA
-    bool suspended;
 
 
     //##ModelId=3E2FD6650332

@@ -1,7 +1,10 @@
-#include "VisFileOutputAgent.h"
+#include "FileOutputAgent.h"
 
+namespace VisAgent
+{
+    
 //##ModelId=3E2C29B00086
-int VisFileOutputAgent::state() const
+int FileOutputAgent::state() const
 {
   return fileState() != FILEERROR 
           ? SUCCESS 
@@ -9,10 +12,11 @@ int VisFileOutputAgent::state() const
 }
 
 //##ModelId=3E2C29B40120
-string VisFileOutputAgent::stateString() const
+string FileOutputAgent::stateString() const
 {
   return fileState() == FILEERROR 
          ? "ERROR " + errorString()
          :  "OK (" + fileStateString() + ")";
 }
 
+} // namespace VisAgent

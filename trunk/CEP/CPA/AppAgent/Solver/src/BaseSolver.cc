@@ -4,13 +4,13 @@ InitDebugContext(BaseSolver,"Solver");
 
 static int dum = aidRegistry_Solver();
         
-BaseSolver::BaseSolver (VisInputAgent &in,VisOutputAgent &out,
+BaseSolver::BaseSolver (VisAgent::InputAgent &in,VisAgent::OutputAgent &out,
                         SolverControlAgent &control)
     : inputAgent(in),outputAgent(out),controlAgent(control)
 {
 }
 
-bool BaseSolver::init (const DataRecord::Ref &data)
+bool BaseSolver::init (const DataRecord &data)
 {
   return  inputAgent.init(data) && 
           outputAgent.init(data) && 

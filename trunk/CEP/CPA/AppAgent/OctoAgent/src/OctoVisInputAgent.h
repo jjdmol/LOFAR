@@ -36,7 +36,7 @@ class OctoVisInputAgent : public VisInputAgent, public OctoAgent
     //##ModelId=3E0AAB220065
     OctoVisInputAgent (const HIID &mapfield = OctoAgentVocabulary::FDefaultMapField);
   
-    //##ModelId=3E27CEC50344
+    //##ModelId=3E0AAB2200CB
     OctoVisInputAgent (OctoMultiplexer &pxy,const HIID &mapfield = OctoAgentVocabulary::FDefaultMapField);
 
     //##ModelId=3E0AAB7601A7
@@ -55,7 +55,7 @@ class OctoVisInputAgent : public VisInputAgent, public OctoAgent
     //##          CLOSED    stream closed
     //##          OUTOFSEQ  next object in stream is not a header (i.e. a tile)
     //## 
-    virtual int getHeader(DataRecord::Ref &hdr, bool wait = True);
+    virtual int getHeader(DataRecord::Ref &hdr, int wait = AppAgent::WAIT);
 
     //##ModelId=3E0AAB810240
     //##Documentation
@@ -65,7 +65,7 @@ class OctoVisInputAgent : public VisInputAgent, public OctoAgent
     //##          WAIT      a tile has not yet arrived (only for wait=False)
     //##          CLOSED    stream closed
     //##          OUTOFSEQ  next object in stream is not a tile (i.e. a header)
-    virtual int getNextTile(VisTile::Ref &tile, bool wait = True);
+    virtual int getNextTile(VisTile::Ref &tile, int wait = AppAgent::WAIT);
 
     //##ModelId=3E0AAB8602A8
     //##Documentation
@@ -97,7 +97,7 @@ class OctoVisInputAgent : public VisInputAgent, public OctoAgent
     { return OctoAgent::sdebug(detail,prefix,name?name:"OctoVisInputAgent"); }
 
   private:
-    //##ModelId=3E0AAB2200CB
+    //##ModelId=3E4274540208
     OctoVisInputAgent(const OctoVisInputAgent& right);
 
     //##ModelId=3E0AAB22024F

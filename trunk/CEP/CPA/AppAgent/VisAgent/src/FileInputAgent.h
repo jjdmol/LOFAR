@@ -23,70 +23,47 @@
 #ifndef _VISAGENT_VISFILEINPUTAGENT_H
 #define _VISAGENT_VISFILEINPUTAGENT_H 1
 
-#include <VisAgent/VisInputAgent.h>
-#include <VisAgent/VisFileAgentBase.h>
+#include <VisAgent/InputAgent.h>
+#include <VisAgent/FileAgentBase.h>
+
+namespace VisAgent {
 
 //##ModelId=3DF9FECD0159
 //##Documentation
 //## VisFileInputAgent implements some common features & services for agents
 //## that get their input from a static data file (e.g., AIPS++ MSs, BOIO
 //## files).
-class VisFileInputAgent : public VisInputAgent, public VisFileAgentBase
+class FileInputAgent : public InputAgent, public FileAgentBase
 {
-  protected:
-      
   private:
     //##ModelId=3DF9FECE0055
       DataRecord::Ref  header_;
-    //##ModelId=3E281884006E
-      bool suspended_;
+
       
   protected:
-      
-    //##ModelId=3DF9FECE00FC
-      VisFileInputAgent ()
-          : suspended_(False)
-          {}
-  
-      // returns header by reference
+    //##ModelId=3E42458601D7
+      FileInputAgent(const HIID &initf)
+        : InputAgent(initf) {}
+ 
+    // returns header by reference
     //##ModelId=3DF9FECE0384
       DataRecord &  header     ()
       { return header_.dewr(); }
 
-      // initializes an empty header
+    // initializes an empty header
     //##ModelId=3DF9FECE03AB
       DataRecord &  initHeader ();
-      
-    //##ModelId=3E2819650278
-      bool suspended () const
-      { return suspended_; }
-          
+ 
   public:
       
     //##ModelId=3DF9FECE03D1
-      virtual int getHeader (DataRecord::Ref &hdr,int wait = AppAgent::WAIT);
+      virtual int getHeader (DataRecord::Ref &hdr,int wait = WAIT);
   
     //##ModelId=3DF9FECF009D
       virtual int hasHeader ();
       
     //##ModelId=3DF9FECF00BF
       virtual int hasTile   ();
-      
-      //##ModelId=3E281894014E
-    //##Documentation
-    //## Tells the agent to suspend the input stream. Agents are not obliged to
-    //## implement this. An application can use suspend() to "advise" the input
-    //## agent that it is not keeping up with the input data rate; the agent
-    //## can use this to determine it queuing or load balancing strategy.
-      virtual void suspend()
-      { suspended_ = True; }
-
-      //##ModelId=3E28189901DD
-      //##Documentation
-      //## Resumes a stream after a suspend(). 
-      virtual void resume()
-      { suspended_ = False; }
-      
       
       //##ModelId=3E2C299201D6
       //##Documentation
@@ -97,8 +74,24 @@ class VisFileInputAgent : public VisInputAgent, public VisFileAgentBase
       //##Documentation
       //## Reports current state as a string
       virtual string stateString() const;
+      
+
+      
+  private:
+    //##ModelId=3DF9FECE00FC
+    FileInputAgent ();
+    //##ModelId=3E42407D0044
+    FileInputAgent (const FileInputAgent& right);
+    //##ModelId=3E42407D02D4
+    FileInputAgent& operator= (const FileInputAgent& right);
 
 };
+
+
+
+
+} // namespace VisAgent
+
 
 
 #endif

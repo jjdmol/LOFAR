@@ -11,16 +11,12 @@
     }
 
 static AtomicID::Register aid_reg_Vis(-1116,"Vis");
-static AtomicID::Register aid_reg_VisAgent(-1113,"VisAgent");
-static AtomicID::Register aid_reg_VisInputAgent(-1115,"VisInputAgent");
-static AtomicID::Register aid_reg_VisOutputAgent(-1114,"VisOutputAgent");
 static AtomicID::Register aid_reg_Input(-1075,"Input");
 static AtomicID::Register aid_reg_Output(-1130,"Output");
-static AtomicID::Register aid_reg_Event(-1060,"Event");
-static AtomicID::Register aid_reg_Have(-1132,"Have");
-static AtomicID::Register aid_reg_Data(-1107,"Data");
+static AtomicID::Register aid_reg_Agent(-1249,"Agent");
+static AtomicID::Register aid_reg_Parameters(-1282,"Parameters");
 static AtomicID::Register aid_reg_Header(-1133,"Header");
-static AtomicID::Register aid_reg_End(-1131,"End");
-static AtomicID::Register aid_reg_Message(-1067,"Message");
-static AtomicID::Register aid_reg_Error(-1071,"Error");
+static AtomicID::Register aid_reg_Tile(-1123,"Tile");
+static AtomicID::Register aid_reg_Suspend(-1252,"Suspend");
+static AtomicID::Register aid_reg_Resume(-1251,"Resume");
 

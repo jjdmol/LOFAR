@@ -21,7 +21,7 @@
 //  $Id$
 
 #define AIPSPP_HOOKS
-#include "MSVisInputAgent.h"
+#include "MSInputAgent.h"
 #include <Common/BlitzToAips.h>
 #include <DMI/AIPSPP-Hooks.h>
 
@@ -46,19 +46,21 @@
 #include <aips/Tables/SetupNewTab.h>
 #include <aips/Tables/TableParse.h>
 
-using namespace MSVisAgentVocabulary;
+namespace MSVisAgent
+{
+using namespace VisAgent;
 
 static int dum = aidRegistry_MSVisAgent();
 
 //##ModelId=3DF9FECD0219
-//##ModelId=3DF9FECD0248
-MSVisInputAgent::MSVisInputAgent ()
-    : obsid_(0)
+MSInputAgent::MSInputAgent (const HIID &initf)
+    : FileInputAgent(initf),obsid_(0)
 {
 }
+
     
 //##ModelId=3DF9FECD0285
-void MSVisInputAgent::fillHeader (DataRecord &hdr,const DataRecord &select)
+void MSInputAgent::fillHeader (DataRecord &hdr,const DataRecord &select)
 {
   // get relevant selection parameters
   int ddid = select[FDDID].as_int(0);        
@@ -109,7 +111,7 @@ void MSVisInputAgent::fillHeader (DataRecord &hdr,const DataRecord &select)
 }
  
 //##ModelId=3DF9FECD025E
-void MSVisInputAgent::openMS (DataRecord &header,const DataRecord &select)
+void MSInputAgent::openMS (DataRecord &header,const DataRecord &select)
 {
   // open MS
   ms_ = MeasurementSet(msname_,Table::Old);
@@ -158,15 +160,15 @@ void MSVisInputAgent::openMS (DataRecord &header,const DataRecord &select)
 }
 
 //##ModelId=3DF9FECD0235
-bool MSVisInputAgent::init (const DataRecord::Ref &data)
+bool MSInputAgent::init (const DataRecord &data)
 {
+  bool rethrow = data[FThrowError].as_bool(False);
   try
   {
-    // make sure resume flag is cleared
-    resume();
+    FailWhen( !FileInputAgent::init(data),"FileInputAgent init failed" );
     
-    const DataRecord &params = (*data)[FParams()];
-
+    const DataRecord &params = data[initfield()];
+        
     DataRecord &header = initHeader();
     
     msname_ = params[FMSName].as_string();
@@ -190,24 +192,30 @@ bool MSVisInputAgent::init (const DataRecord::Ref &data)
     tileiter_ = tiles_.end();
 
     setFileState(HEADER);
+    return True;
   }
-//  catch( std::exception &exc )
-//  {
-//    setErrorState(exc.what());
-//    return False;
-//  }
-  catch( AipsError &err )
+  catch( std::exception &exc )
   {
-    Throw("AIPS++ error: "+string(err.getMesg()));
-//    setErrorState("AIPS++ error: "+err.getMesg());
+    // throw it on, if requested
+    if( rethrow )
+      throw(exc);
+    setErrorState(exc.what());
     return False;
   }
-  return True;
-} 
+  catch( AipsError &err )
+  {
+    // throw it on, if requested
+    if( rethrow )
+      throw(err);
+    setErrorState("AIPS++ error: "+err.getMesg());
+    return False;
+  }
+}
 
 //##ModelId=3DF9FECD0244
-void MSVisInputAgent::close ()
+void MSInputAgent::close ()
 {
+  FileInputAgent::close();
   // close & detach from everything
   initHeader();  // empties the header
   selms_ = MeasurementSet();
@@ -218,14 +226,14 @@ void MSVisInputAgent::close ()
 }
 
 //##ModelId=3DF9FECD021B
-int MSVisInputAgent::getNextTile (VisTile::Ref &tileref,int wait)
+int MSInputAgent::getNextTile (VisTile::Ref &tileref,int wait)
 {
   try
   {
     int res = hasTile();
     if( res != SUCCESS )
     {
-      FailWhen( res == WAIT && wait != AppAgent::NOWAIT,
+      FailWhen( res == WAIT && wait != NOWAIT,
           "can't wait here: would block indefinitely" );
       return res;
     }
@@ -329,9 +337,8 @@ int MSVisInputAgent::getNextTile (VisTile::Ref &tileref,int wait)
   }
 }
 
-
 //##ModelId=3DFDFC060373
-string MSVisInputAgent::sdebug ( int detail,const string &prefix,const char *name ) const
+string MSInputAgent::sdebug ( int detail,const string &prefix,const char *name ) const
 {
   using Debug::append;
   using Debug::appendf;
@@ -353,3 +360,6 @@ string MSVisInputAgent::sdebug ( int detail,const string &prefix,const char *nam
   }
   return out;
 }
+
+
+} // namespace MSVisAgent
