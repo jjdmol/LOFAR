@@ -22,14 +22,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+
+#include <libTransport/ShMem/TH_ShMem.h>
+
 #ifdef HAVE_MPI
 
-#include <ShMem/TH_ShMem.h>
+#include <libTransport/BaseSim.h>
 #include <Common/Debug.h>
 #include <Common/shmem/shmem_alloc.h>
-#include <BaseSim.h>
-
-#include <mpi.h>
 
 #include <stdio.h>
 #include <unistd.h>
@@ -89,7 +89,17 @@ string TH_ShMem::getType() const
     return "TH_ShMem";
 }
 
-void* TH_ShMem::allocate(size_t size)
+BlobStringType blobStringType()
+{
+  return BlobStringType (false, ShMemAllocator());
+}
+
+TH_ShMem::ShMemAllocator* TH_ShMem::ShMemAllocator::clone() const
+{
+  return new TH_ShMem::ShMemAllocator();
+}
+
+void* TH_ShMem::ShMemAllocator::allocate(size_t size)
 {
     ShMemBuf* buf = 0;
 
@@ -103,11 +113,12 @@ void* TH_ShMem::allocate(size_t size)
     return buf->getDataAddress();
 }
 
-void TH_ShMem::deallocate(void*& ptr)
+void TH_ShMem::ShMemAllocator::deallocate(void*& ptr)
 {
     shmem_free((void*)TH_ShMem::ShMemBuf::toBuf(ptr));
     ptr = 0;
 }
+
 
 bool TH_ShMem::connectionPossible(int srcRank, int dstRank) const
 {
