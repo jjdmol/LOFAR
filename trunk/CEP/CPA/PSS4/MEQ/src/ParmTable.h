@@ -53,12 +53,14 @@ public:
   // The matchDomain argument is set telling if the found parameter
   // matches the domain exactly.
   // Note that the requested domain may contain multiple polcs.
+  // Returns # of polcs in vector
     //##ModelId=3F86886F02BD
-  vector<Polc> getPolcs (const string& parmName, const Domain& domain);
+  int getPolcs (vector<Polc::Ref> &polcs,const string& parmName, const Domain& domain);
 
   // Get the initial polynomial coefficients for the given parameter.
+  // Returns the # of coefficients (0 for none)
     //##ModelId=3F86886F02C3
-  Polc getInitCoeff (const string& parmName);
+  int getInitCoeff (Polc::Ref &polc,const string& parmName);
 
   // Put the polynomial coefficient for the given parameter and domain.
     //##ModelId=3F86886F02C8

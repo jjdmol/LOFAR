@@ -41,7 +41,7 @@ Parm::Parm()
 
 //##ModelId=3F86886F0242
 Parm::Parm (const string& name, ParmTable* table,
-	    const Vells& defaultValue)
+	    const Polc::Ref::Xfer & defaultValue)
 : Function      (),
   itsParmId     (0),
   itsIsSolvable (false),
@@ -70,52 +70,63 @@ int Parm::initDomain (const Domain& domain)
   itsCurrentDomain = domain;
   wstate()[FDomain].replace() <<= new Domain(domain);
   // Find the polc(s) for the given domain.
-  vector<Polc> polcs;
-  if (itsTable) {
-    polcs = itsTable->getPolcs (itsName, domain);
+  cdebug(2)<<"initializing for domain "<<domain<<endl;
+  vector<Polc::Ref> polcs;
+  if( itsTable ) 
+  {
+    int n = itsTable->getPolcs(polcs,itsName,domain);
+    cdebug(3)<<n<<" polcs found in MEP table"<<endl;
+  }
+  else
+  {
+    cdebug(3)<<"no MEP table assigned"<<endl;
   }
   // If none found, try to get a default value.
-  if (polcs.size() == 0) {
-    Polc polc;
-    if (itsTable) {
-      polc = itsTable->getInitCoeff (itsName);
+  if( polcs.size() == 0 ) 
+  {
+    Polc::Ref polc;
+    if( itsTable )
+    {
+      int n = itsTable->getInitCoeff(polc,itsName);
+      cdebug(3)<<"looking for polcs in defaults subtable: "<<n<<endl;
     }
-    if (polc.ncoeff() == 0) {
-      polc.setCoeff (itsDefault);
+    if( !polc.valid() )
+    {
+      FailWhen(!itsDefault.valid(),"no polcs found and no default specified");
+      cdebug(3)<<"no polcs found, using default value from state record"<<endl;
+      polc.copy(itsDefault).privatize(DMI::WRITE|DMI::DEEP);
     }
-    AssertMsg (!polc.getCoeff().isNull(), "No value found for parameter "
-	       << itsName);
-    polc.setDomain (domain);
-    polcs.push_back (polc);
-  } else if (isSolvable()) {
-    AssertMsg (polcs.size() == 1, "Solvable parameter " << itsName <<
-	       " has multiple matching domains for freq "
-	       << domain.startFreq() << ':' << domain.endFreq()
-	       << " and time "
-	       << domain.startTime() << ':' << domain.endTime());
-    const Domain& polDom = polcs[0].domain();
-    AssertMsg (near(domain.startFreq(), polDom.startFreq())  &&
-	       near(domain.endFreq(), polDom.endFreq())  &&
-	       near(domain.startTime(), polDom.startTime())  &&
-	       near(domain.endTime(), polDom.endTime()),
-	       "Solvable parameter " << itsName <<
-	       " has a partially instead of fully matching entry for freq "
-	       << domain.startFreq() << ':' << domain.endFreq()
-	       << " and time "
-	       << domain.startTime() << ':' << domain.endTime());
-  } else {
+    FailWhen(polc->getCoeff().isNull(),"no polcs found");
+    polc().setDomain(domain);
+    polcs.push_back(polc);
+  }
+  else if( isSolvable() )
+  {
+    if( polcs.size()>1 )
+    {
+      cdebug(3)<<"multiple polcs found for solvable parm, using first polc"<<endl;
+      polcs.resize(1);
+    }
+    cdebug(3)<<"original domain: "<<polcs[0]->domain()<<endl;
+    polcs[0]().setDomain(domain);
+  } 
+  else 
+  {
     // Check if the polc domains cover the entire domain and if they
     // do not overlap.
   }
-  setPolcs (polcs);
+  itsPolcs = polcs;
   // Now determine the spids if the parm is solvable.
   int nr = initSolvable();
-  // Store the polcs found into the state.
-  // OMS: use a DataField instead, since we only need a vector of records
-//  DataRecord & polcrec = wstate()[FPolcs].replace() <<= new DataRecord();
-  DataField & polcrec = wstate()[FPolcs].replace() <<= new DataField(TpDataRecord,itsPolcs.size());
-  for (uint i=0; i<itsPolcs.size(); i++) 
-    itsPolcs[i].fillRecord(polcrec[i] <<= new DataRecord);
+  // Store a ref to the polcs into the state record
+  if( itsPolcs.size() == 1 )
+    wstate()[FPolcs] <<= itsPolcs[0].copy();
+  else
+  {
+    DataField & polcrec = wstate()[FPolcs].replace() <<= new DataField(TpMeqPolc,itsPolcs.size());
+    for (uint i=0; i<itsPolcs.size(); i++) 
+      polcrec[i] <<= itsPolcs[i].copy();
+  }
   return nr;
 }
 
@@ -123,22 +134,18 @@ int Parm::initDomain (const Domain& domain)
 int Parm::initSolvable ()
 {
   int nr = 0;
-  if (isSolvable()) {
+  if( isSolvable() ) 
+  {
     // For the time being we allow only one polc if the parameter
     // has to be solved.
-    AssertStr (itsPolcs.size() == 1,
-	       "Multiple polcs used in the solve domain for parameter "
-	       << itsName);
+    FailWhen( itsPolcs.size() != 1,"multiple polcs in solvable Parm");
     int spidIndex = 256*nodeIndex();
-    for (unsigned int i=0; i<itsPolcs.size(); i++) {
-      int nrs = itsPolcs[i].makeSolvable (spidIndex);
-      nr += nrs;
-      spidIndex += nrs;
-    }
-  } else {
-    for (unsigned int i=0; i<itsPolcs.size(); i++) {
-      itsPolcs[i].clearSolvable();
-    }
+    nr += itsPolcs[0]().makeSolvable(spidIndex);
+  } 
+  else 
+  {
+    for( uint i=0; i<itsPolcs.size(); i++) 
+      itsPolcs[i]().clearSolvable();
   }
   return nr;
 }
@@ -164,7 +171,7 @@ int Parm::getResult (Result::Ref &resref,
   // A single polc can be evaluated immediately.
   if( itsPolcs.size() == 1 ) 
   {
-    itsPolcs[0].evaluate (vs, request);
+    itsPolcs[0]->evaluate(vs,request);
     // no further dependencies (specifically, not on domain)
     return retcode;
   }
@@ -185,9 +192,9 @@ int Parm::getResult (Result::Ref &resref,
   vs.setReal (ndFreq, ndTime);
   // Iterate over all polynomials.
   // Evaluate one if its domain overlaps the request domain.
-  for (unsigned int i=0; i<itsPolcs.size(); i++) 
+  for( uint i=0; i<itsPolcs.size(); i++ ) 
   {
-    Polc& polc = itsPolcs[i];
+    const Polc& polc = *(itsPolcs[i]);
     const Domain& polDom = polc.domain();
     if (firstMidFreq < polDom.endFreq() && lastMidFreq > polDom.startFreq()
         &&  firstMidTime < polDom.endTime() && lastMidTime > polDom.startTime()) 
@@ -272,11 +279,10 @@ int Parm::getResult (Result::Ref &resref,
 //##ModelId=3F86886F023C
 void Parm::save()
 {
-  const vector<Polc>& polcs = getPolcs();
-  for (uint i=0; i<polcs.size(); i++) {
-    if (itsTable) {
-      itsTable->putCoeff (itsName, polcs[i]);
-    }
+  if( itsTable ) 
+  {
+    for( uint i=0; i<itsPolcs.size(); i++) 
+      itsTable->putCoeff(itsName,*itsPolcs[i]);
   }
 }
 
@@ -297,38 +303,39 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
     itsCurrentDomain = Domain();
   }
   getStateField(itsCurrentDomainId,rec,FDomainId);
-  // Are polcs directly specified? 
-  if( rec[FPolcs].exists() )
+  // Are polcs specified? 
+  int npolcs = rec[FPolcs].size(TpMeqPolc);
+  if( npolcs )
   {
-    // get current domain from record
-    getStateField(itsCurrentDomain,rec,FDomain);
-    // init polcs from record
-    int npolc = rec[FPolcs].size(TpDataRecord);
-    itsPolcs.resize(npolc);
-    for( int i=0; i<npolc; i++ )
-      itsPolcs[i] = Polc(rec[FPolcs][i].as_wr<DataRecord>());
+    itsPolcs.resize(npolcs);
+    if( npolcs == 1 )
+      itsPolcs[0] <<= rec[FPolcs].as_wp<Polc>();
+    else
+      for( int i=0; i<npolcs; i++ )
+        itsPolcs[i] <<= rec[FPolcs][i].as_wp<Polc>();
     initSolvable();
   }
   else
   {
     // Is the parm value specified? use it to update polcs
     // (ignore when initializing)
-    if (rec[FValue].exists()) {
+    if( rec[FValue].exists() ) 
+    {
       // Update the polc coefficients with the new values.
       LoVec_double values = rec[FValue].as<LoVec_double>();
       ////    vector<double>& values = rec[FValue].as<vector<double> >();
       uint inx = 0;
       for (uint i=0; i<itsPolcs.size(); i++) {
-        inx += itsPolcs[i].update (&values(inx), values.size()-inx);
+        inx += itsPolcs[i]().update(&values(inx), values.size()-inx);
       }
       Assert (inx == uint(values.size()));
       // Also save the parms (might need to be changed later).
       save();
     }
   }
-  // Get default value (to be used if no table exists)
+  // Get default polc (to be used if no table exists)
   if( rec[FDefault].exists() )
-    itsDefault = Vells(rec[FDefault].as_wp<DataArray>());
+    itsDefault <<= rec[FDefault].as_p<Polc>();
   // Get ParmTable name 
   if( rec[FTableName].exists() )
   {

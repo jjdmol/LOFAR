@@ -72,7 +72,7 @@ public:
   // The ParmTable can be null meaning that the parameter is temporary.
     //##ModelId=3F86886F0242
   Parm (const string& name, ParmTable* table,
-	const Vells& defaultValue = Vells(0.));
+	      const Polc::Ref::Xfer & defaultValue = Polc::Ref() );
 
     //##ModelId=3F86886F021E
   virtual ~Parm();
@@ -119,13 +119,19 @@ protected:
 
   // Set the polynomials.
     //##ModelId=400E535301F7
-  void setPolcs (const vector<Polc>& polcs)
-    { itsPolcs = polcs; }
+  void setPolc (Polc *polc,int flags=DMI::ANONWR)
+  { 
+    itsPolcs.resize(1);
+    itsPolcs[0].attach(polc,flags); 
+  }
+  
+  void setPolc (Polc &polc)
+  { setPolc(&polc,DMI::EXTERNAL|DMI::WRITE); }
 
-  // Get the polynomials.
+   // Get the polynomials.
     //##ModelId=400E535302DB
-  const vector<Polc>& getPolcs() const
-    { return itsPolcs; }
+  const Polc & getPolc(int i=0) const
+  { return *(itsPolcs[i]); }
   
 //  virtual void checkInitState (DataRecord &rec);
     //##ModelId=400E5353033A
@@ -141,9 +147,9 @@ private:
     //##ModelId=400E535000A3
   ParmTable*   itsTable;
     //##ModelId=400E535000B2
-  Vells        itsDefault;
+  Polc::Ref    itsDefault;
     //##ModelId=400E535000C1
-  vector<Polc> itsPolcs;
+  vector<Polc::Ref> itsPolcs;
   
     //##ModelId=400E535100D0
   Domain       itsCurrentDomain;
