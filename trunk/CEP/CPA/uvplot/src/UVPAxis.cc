@@ -18,6 +18,7 @@ UVPAxis::UVPAxis(double             scale,
                  const std::string& type,
                  const std::string& unit)
   : itsScale(scale),
+    itsInverseScale(1.0/scale),
     itsOffset(offset),
     itsType(type),
     itsUnit(unit)
@@ -40,8 +41,9 @@ void UVPAxis::setTransferFunction(double scale,
   assert(scale != 0.0);
   #endif
 
-  itsScale  = scale;
-  itsOffset = offset;
+  itsScale        = scale;
+  itsInverseScale = 1.0/scale;
+  itsOffset       = offset;
 }
 
 
@@ -60,8 +62,9 @@ void UVPAxis::calcTransferFunction(double worldMin,
   assert(worldMin != worldMax);
   #endif
 
-  itsScale  = (worldMax-worldMin)/(axisMax-axisMin);
-  itsOffset = worldMax - itsScale*axisMax;
+  itsScale        = (worldMax-worldMin)/(axisMax-axisMin);
+  itsInverseScale = 1.0/itsScale;
+  itsOffset       = worldMax - itsScale*axisMax;
 }
 
 
