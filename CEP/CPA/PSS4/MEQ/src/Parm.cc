@@ -82,8 +82,6 @@ int Parm::initDomain (const Domain& domain)
     }
     if (polc.ncoeff() == 0) {
       polc.setCoeff (itsDefault);
-      polc.setSimCoeff (itsDefault);
-      polc.setPertSimCoeff (Vells(0.));
       polc.setNormalize (true);
     }
     AssertMsg (!polc.getCoeff().isNull(), "No value found for parameter "
@@ -92,7 +90,6 @@ int Parm::initDomain (const Domain& domain)
     // If needed, normalize the initial values.
     if (polc.isNormalized()) {
       polc.setCoeffOnly (polc.normalize(polc.getCoeff(), domain));
-      polc.setSimCoeff  (polc.normalize(polc.getSimCoeff(), domain));
     }
     polcs.push_back (polc);
   } else if (isSolvable()) {
