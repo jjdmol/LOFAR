@@ -44,7 +44,7 @@ using namespace EPA_Protocol;
 using namespace blitz;
 
 BWRead::BWRead(GCFPortInterface& board_port, int board_id, int regid)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i)),
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * BF_N_FRAGMENTS),
     m_regid(regid)
 {
 }
@@ -55,7 +55,9 @@ BWRead::~BWRead()
 
 void BWRead::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / BF_N_FRAGMENTS);
+
+  uint16 offset = ((getCurrentBLP() % BF_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE) / sizeof(int16);
 
   if (m_regid < MEPHeader::BF_XROUT || m_regid > MEPHeader::BF_YIOUT)
   {
@@ -69,30 +71,29 @@ void BWRead::sendrequest()
 			 m_regid));
   
   // send next BF configure message
-  EPABfCoefsEvent bfcoefsread;
+  EPAReadEvent bfcoefs;
       
   switch (m_regid)
   {
     case MEPHeader::BF_XROUT:
-      bfcoefsread.hdr.m_fields = MEPHeader::BF_XROUT_HDR;
+      bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+		      MEPHeader::READ, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
     case MEPHeader::BF_XIOUT:
-      bfcoefsread.hdr.m_fields = MEPHeader::BF_XIOUT_HDR;
+      bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+		      MEPHeader::READ, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
     case MEPHeader::BF_YROUT:
-      bfcoefsread.hdr.m_fields = MEPHeader::BF_YROUT_HDR;
+      bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+		      MEPHeader::READ, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
     case MEPHeader::BF_YIOUT:
-      bfcoefsread.hdr.m_fields = MEPHeader::BF_YIOUT_HDR;
+      bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS,
+		      MEPHeader::READ, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
   }
   
-  // set dstid
-  bfcoefsread.hdr.m_fields.addr.dstid = getCurrentBLP();
-  bfcoefsread.hdr.m_fields.type = MEPHeader::READ;
-
-  getBoardPort().send(bfcoefsread);
-
+  getBoardPort().send(bfcoefs);
 }
 
 void BWRead::sendrequest_status()
@@ -102,27 +103,23 @@ void BWRead::sendrequest_status()
 
 GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
+  uint16 offset = ((getCurrentBLP() % BF_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE) / sizeof(int16);
+
   if (event.signal != EPA_BF_COEFS) return GCFEvent::HANDLED;
 
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / BF_N_FRAGMENTS);
 
   EPABfCoefsEvent bfcoefs(event);
   
   // copy weights from the message to the cache
-  Array<int16, 1> weights((int16*)&bfcoefs.coef,
-			  shape(MEPHeader::N_BEAMLETS),
-			  neverDeleteData);
+  Array<complex<int16>, 2> weights((complex<int16>*)&bfcoefs.coef,
+				   shape(N_COEF / MEPHeader::N_PHASEPOL, MEPHeader::N_POL),
+				   neverDeleteData);
 
-  if (0 == (m_regid % 2))
-  {
-    real(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all())) =
-      weights;
-  }
-  else
-  {
-    imag(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all())) =
-      weights;
-  }
+  Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp,
+						       Range(offset / MEPHeader::N_PHASEPOL,
+							     (offset / MEPHeader::N_PHASEPOL) + (N_COEF / MEPHeader::N_PHASEPOL) - 1),
+						       Range::all()) = weights;
   
   return GCFEvent::HANDLED;
 }

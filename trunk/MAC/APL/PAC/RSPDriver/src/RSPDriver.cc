@@ -193,18 +193,44 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(bwsync);
     }
 
+    if (1 == GET_CONFIG("RSPDriver.READ_BF", i))
+    {
+      BWRead* bwsync = 0;
+
+      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_XROUT);
+      m_scheduler.addSyncAction(bwsync);
+      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_XIOUT);
+      m_scheduler.addSyncAction(bwsync);
+      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_YROUT);
+      m_scheduler.addSyncAction(bwsync);
+      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_YIOUT);
+      m_scheduler.addSyncAction(bwsync);
+    }
+
     if (1 == GET_CONFIG("RSPDriver.WRITE_SS", i))
     {
       SSWrite* sswrite = new SSWrite(m_board[boardid], boardid);
       m_scheduler.addSyncAction(sswrite);
     }
     
+    if (1 == GET_CONFIG("RSPDriver.READ_SS", i))
+    {
+      SSRead* ssread = new SSRead(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(ssread);
+    }
+
     if (1 == GET_CONFIG("RSPDriver.WRITE_RCU", i))
     {
       RCUWrite* rcuwrite = new RCUWrite(m_board[boardid], boardid);
       m_scheduler.addSyncAction(rcuwrite);
     }
     
+    if (1 == GET_CONFIG("RSPDriver.READ_RCU", i))
+    {
+      RCURead* rcuread = new RCURead(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(rcuread);
+    }
+
     if (1 == GET_CONFIG("RSPDriver.READ_ST", i))
     {
       StatsRead* statsread = 0;
@@ -228,41 +254,16 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(wgwrite);
     }
 
-    if (1 == GET_CONFIG("RSPDriver.READ_VERSION", i))
-    {
-      VersionsRead* versionread = new VersionsRead(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(versionread);
-    }
-
-    if (1 == GET_CONFIG("RSPDriver.READ_BF", i))
-    {
-      BWRead* bwsync = 0;
-
-      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_XROUT);
-      m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_XIOUT);
-      m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_YROUT);
-      m_scheduler.addSyncAction(bwsync);
-      bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BF_YIOUT);
-      m_scheduler.addSyncAction(bwsync);
-    }
-
-    if (1 == GET_CONFIG("RSPDriver.READ_SS", i))
-    {
-      SSRead* ssread = new SSRead(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(ssread);
-    }
-
-    if (1 == GET_CONFIG("RSPDriver.READ_RCU", i))
-    {
-      RCURead* rcuread = new RCURead(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(rcuread);
-    }
     if (1 == GET_CONFIG("RSPDriver.READ_WG", i))
     {
       WGRead* wgread = new WGRead(m_board[boardid], boardid);
       m_scheduler.addSyncAction(wgread);
+    }
+
+    if (1 == GET_CONFIG("RSPDriver.READ_VERSION", i))
+    {
+      VersionsRead* versionread = new VersionsRead(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(versionread);
     }
   }
 
