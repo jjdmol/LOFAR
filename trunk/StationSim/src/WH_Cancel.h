@@ -1,4 +1,4 @@
-//#  WH_Selector.h:
+//#  WH_Cancel.h:
 //#
 //#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,8 +21,8 @@
 //#  $Id$
 //#
 
-#ifndef STATIONSIM_WH_SELECTOR_H
-#define STATIONSIM_WH_SELECTOR_H
+#ifndef STATIONSIM_WH_CANCEL_H
+#define STATIONSIM_WH_CANCEL_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -31,35 +31,28 @@
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleC.h>
 #include <StationSim/DH_SampleR.h>
-#include <StationSim/DH_SubBandSel.h>
+#include <aips/Arrays/Matrix.h>
 
 
-/**
-   This is an example of a WorkHolder class.
-   It has one input and one output DH_RCU object as DataHolders.
-
-   It shows which functions have to be implemented
-*/
-
-class WH_Selector: public WorkHolder
+class WH_Cancel: public WorkHolder
 {
 public:
   /// Construct the work holder and give it a name.
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  WH_Selector (const string& name,
+  WH_Cancel (const string& name,
 	       unsigned int nout, unsigned int nrcu,
-	       unsigned int nsubbandin, unsigned int nsubbandout);
+	       unsigned int nsub1);
 
-  virtual ~WH_Selector();
+  virtual ~WH_Cancel();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, int ninput, int noutput,
 				const ParamBlock&);
 
   /// Make a fresh copy of the WH object.
-  virtual WH_Selector* make (const string& name) const;
+  virtual WH_Cancel* make (const string& name) const;
 
   /// Do a process step.
   virtual void process();
@@ -77,20 +70,19 @@ public:
 
 private:
   /// Forbid copy constructor.
-  WH_Selector (const WH_Selector&);
+  WH_Cancel (const WH_Cancel&);
 
   /// Forbid assignment.
-  WH_Selector& operator= (const WH_Selector&);
+  WH_Cancel& operator= (const WH_Cancel&);
 
   DH_SampleC itsInHolder;
-  DH_SubBandSel itsInSel;
    /// Pointer to the array of output DataHolders.
   DH_SampleC** itsOutHolders;
 
   /// Length of buffers.
   int itsNrcu;
-  int itsNbandin;
-  int itsNbandout;
+  int itsNsub1;
+  DH_SampleR itsFlags;
 };
 
 

@@ -117,12 +117,14 @@ void WH_BeamFormer::process()
     DH_SampleC::BufferType* bufin = itsInHolder.getBuffer();
     const DH_Weight::BufferType* weight = itsWeight.getBuffer();
     DH_SampleC::BufferType* bufout = itsOutHolders[0]->getBuffer();
+
     // As a test copy the data of the first RCU to all beams.
     for (int i=0; i<itsNbeam; i++) {
       for (int j=0; j<itsNsubband; j++) {
 	*bufout++ = weight[i] * bufin[j*itsNrcu];
       }
     }
+
     // Copy the output if multiple outputs are used.
     for (int i=1; i<getOutputs(); i++) {
       memcpy (itsOutHolders[i]->getBuffer(), bufout,

@@ -1,4 +1,4 @@
-//#  WH_Selector.h:
+//#  WH_VerifyRFI.h:
 //#
 //#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,8 +21,8 @@
 //#  $Id$
 //#
 
-#ifndef STATIONSIM_WH_SELECTOR_H
-#define STATIONSIM_WH_SELECTOR_H
+#ifndef STATIONSIM_WH_VERIFYRFI_H
+#define STATIONSIM_WH_BVERIFYRFI_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -31,35 +31,30 @@
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleC.h>
 #include <StationSim/DH_SampleR.h>
-#include <StationSim/DH_SubBandSel.h>
+#include <aips/Arrays/Matrix.h>
 
-
-/**
-   This is an example of a WorkHolder class.
-   It has one input and one output DH_RCU object as DataHolders.
-
-   It shows which functions have to be implemented
-*/
-
-class WH_Selector: public WorkHolder
+class WH_VerifyRFI: public WorkHolder
 {
 public:
   /// Construct the work holder and give it a name.
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  WH_Selector (const string& name,
+  WH_VerifyRFI (const string& name,
 	       unsigned int nout, unsigned int nrcu,
-	       unsigned int nsubbandin, unsigned int nsubbandout);
+	       unsigned int nsub1);
 
-  virtual ~WH_Selector();
+  virtual ~WH_VerifyRFI();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, int ninput, int noutput,
 				const ParamBlock&);
 
   /// Make a fresh copy of the WH object.
-  virtual WH_Selector* make (const string& name) const;
+  virtual WH_VerifyRFI* make (const string& name) const;
+
+  /// Preprocess (open file).
+  virtual void preprocess();
 
   /// Do a process step.
   virtual void process();
@@ -77,20 +72,22 @@ public:
 
 private:
   /// Forbid copy constructor.
-  WH_Selector (const WH_Selector&);
+  WH_VerifyRFI (const WH_VerifyRFI&);
 
   /// Forbid assignment.
-  WH_Selector& operator= (const WH_Selector&);
+  WH_VerifyRFI& operator= (const WH_VerifyRFI&);
 
   DH_SampleC itsInHolder;
-  DH_SubBandSel itsInSel;
    /// Pointer to the array of output DataHolders.
   DH_SampleC** itsOutHolders;
 
   /// Length of buffers.
+  ofstream osVerficationOutput;
   int itsNrcu;
-  int itsNbandin;
-  int itsNbandout;
+  int itsNsub1;
+  int itsVerifyCount;
+  int itsCount;
+  Matrix<double> MatrixVerifySamples;
 };
 
 

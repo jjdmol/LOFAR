@@ -36,6 +36,10 @@
 #include <StationSim/WH_SubBandSel.h>
 #include <StationSim/WH_TargetTrack.h>
 #include <StationSim/WH_RFITrack.h>
+#include <StationSim/WH_Detection.h>
+#include <StationSim/WH_Calibration.h>
+#include <StationSim/WH_Cancel.h>
+#include <StationSim/WH_VerifyRFI.h>
 
 #include <BaseSim/Step.h>
 #include <BaseSim/WH_Empty.h>
@@ -92,6 +96,10 @@ void StationSim::define (const ParamBlock& params)
   bool rcumultifile = rcuName.find('*') != string::npos;
   cout << "multifile=" << rcumultifile << endl;
 
+  // Set detection and calibration rate
+//   int detectionRate = 2;
+//   int calibrationRate = 3;
+
   // Create the overall simul object.
   WH_Empty wh;
   Simul simul(wh, "StationSim");
@@ -129,10 +137,28 @@ void StationSim::define (const ParamBlock& params)
   subsel.setRate (nsub1);
   simul.addStep (subsel);
 
-  Step select (WH_Selector ("", 1, nrcu, nsub1, nsel),
+  Step select (WH_Selector ("", 3, nrcu, nsub1, nsel), // Added two output for the rfimit
 	       "select", false);
   select.setRate (nsub1);
-  simul.addStep (select);
+   simul.addStep (select);
+
+  // Make instances of the Detection and Calibration workholder and connect them to 
+  // each other
+  Step Calibration(WH_Calibration ("", 1, nrcu, nsub1), "calibration", false);
+  Calibration.setRate(nsub1); 
+  simul.addStep(Calibration);
+
+  Step Detection(WH_Detection ("", 1, nrcu, nsub1), "detection", false);
+  Detection.setRate(nsub1);
+  simul.addStep(Detection);
+  
+  Step Cancel(WH_Cancel ("", 2, nrcu, nsub1), "cancel", false);
+  Cancel.setRate(nsub1);
+  simul.addStep(Cancel);
+
+  Step VerifyRFI(WH_VerifyRFI("", 0, nrcu, nsub1), "verifyrfi", false);
+  VerifyRFI.setRate(nsub1);
+  simul.addStep(VerifyRFI);
 
   Step target (WH_TargetTrack ("", maxNtarget, targetName),
 	       "targettrack", false);
@@ -175,7 +201,14 @@ void StationSim::define (const ParamBlock& params)
     simul.connect ("rcuall.out_0", "select.in");
   }
   simul.connect ("subseldef.out", "select.sel");
-  simul.connect ("select.out_0", "beamformer.in");
+  //  simul.connect ("select.out_0", "beamformer.in");
+
+  simul.connect ("select.out_0", "cancel.in");
+  simul.connect ("cancel.out_1", "verifyrfi.in");
+  simul.connect ("cancel.out_0", "beamformer.in");
+  //  simul.connect ("verifyrfi.out_0", "beamformer.in");
+  simul.connect ("cancel.out_0", "beamformer.in");
+
   simul.connect ("targettrack.out", "beamformer.target");
   simul.connect ("rfitrack.out", "beamformer.rfi");
   simul.connect ("beamformer.out_1", "awe.in");
@@ -183,6 +216,12 @@ void StationSim::define (const ParamBlock& params)
   if (nsub2 > 0) {
     simul.connect ("beamformer.out_0", "chansep.in");
   }
+
+  simul.connect ("select.out_1", "detection.in");
+  simul.connect ("select.out_2", "calibration.in");
+  simul.connect ("detection.out_0", "cancel.flag");
+  simul.connect ("calibration.out_0", "detection.threshold"); 
+
   // end of dataprocessor definition
   simul.checkConnections();
 
