@@ -109,12 +109,6 @@ long getSelectedNode()
   }
   else
   {
-/* old tree    
-    int selectedPos = treeCtrl.selectedPos;
-    if(selectedPos == -1)
-      selectedPos = 0;
-    return selectedPos;
-*/
     dyn_string exceptionInfo;
     unsigned selectedPos;
     fwTreeView_getSelectedPosition(selectedPos,exceptionInfo);
@@ -132,6 +126,7 @@ long getSelectedNode()
 void showTab(string dpTabs, string systemName, string datapointPath)
 {
   shape tabCtrl = getTabCtrl();
+  string tabsPath = "navigator/tabs/";
   string dpSelectedDatapointContainer = "__navigator.selectedDatapoint";
   string dpSelectedDatapoint = systemName + ":" + datapointPath;
   if(dpExists(dpSelectedDatapointContainer))
@@ -142,28 +137,20 @@ void showTab(string dpTabs, string systemName, string datapointPath)
     }
     dpSet(dpSelectedDatapointContainer,dpSelectedDatapoint);
   }
+  
+  dpGet("__navigator.tabsPath",tabsPath);
 
   dyn_string panelParameters = makeDynString("$datapoint:" + datapointPath, "$systemName:" + systemName);
 
   // get tab properties
   int selectedTab;
   dyn_anytype tabs;
-  dyn_string arDpTabs;
-  string dpTabString;
   int tabId=1;
-  dpTabString = dpTabs+".tab"+tabId;
-  while(dpExists(dpTabString))
-  {
-    dynAppend(arDpTabs,dpTabString);
-    tabId++;
-    dpTabString = dpTabs+".tab"+tabId;
-  }
-  DebugTN("showTab","arDpTabs: ",arDpTabs);
   // get the selected tab for this resource type
   dpGet(dpTabs+".selectedTab",selectedTab);
   
   // get the tabs references for this resource type
-  dpGet(arDpTabs,tabs);
+  dpGet(dpTabs+".tabs",tabs);
 
   for(tabId=1;tabId<=dynlen(tabs);tabId++)
   {
@@ -176,7 +163,7 @@ void showTab(string dpTabs, string systemName, string datapointPath)
       {
         DebugTN("showTab","making tab visible: ",tabId);
         tabCtrl.namedColumnHeader("tab"+tabId) = caption;
-        tabCtrl.registerPanel(tabId-1,panel,panelParameters);
+        tabCtrl.registerPanel(tabId-1,tabsPath+panel,panelParameters);
         tabCtrl.registerVisible(tabId-1)=TRUE;
       }
       else
@@ -271,15 +258,8 @@ long treeAddNode(long parentId,int level,string text)
   }
   else
   {
-/* old tree
-    string tempText = getLevelledString(text,level);
-    treeCtrl.appendItem(tempText);  
-    nodeId = treeCtrl.itemCount();
-*/
-  
     fwTreeView_appendNode(text,"",0,level);
     nodeId = fwTreeView_getNodeCount();
-
   }
   return nodeId;
 }
@@ -389,38 +369,6 @@ void treeAddDatapoints(dyn_string names)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//Function getHierarchyLevel
-// 
-// returns     the level in the hierarchy of the supplied string
-///////////////////////////////////////////////////////////////////////////
-int getHierarchyLevel(string text)
-{
-  int spaces=0;
-  while(spaces<strlen(text)&&text[spaces]==' ')
-  {
-    spaces++;
-  }
-  return spaces;
-}
-
-///////////////////////////////////////////////////////////////////////////
-//Function getLevelledString
-// 
-// returns the supplied string prepended with spaces that indicate its level
-///////////////////////////////////////////////////////////////////////////
-string getLevelledString(string node, int level)
-{
-  string tempNode = "";
-  int i;
-  for(i=2;i<=level;i++)
-  {
-    tempNode = tempNode + " ";
-  }
-  tempNode = tempNode + node;
-  return tempNode;
-}
-
-///////////////////////////////////////////////////////////////////////////
 //Function buildPathFromNode()
 // 
 // builds a datapoint path from a node in the treeview
@@ -442,12 +390,14 @@ string buildPathFromNode(long Node, string& systemName, string& datapointPath)
 ///////////////////////////////////////////////////////////////////////////
 long getNodeFromDatapoint(string dpe)
 {
-  long nodeId;
+  long nodeId=0;
   
   string datapointName = dpSubStr(dpe,DPSUB_SYS_DP_EL);
   DebugTN("getNodeFromDatapoint: searching for: ",dpe,datapointName);
-  nodeId = g_datapoint2itemID[datapointName];
-
+  if(mappingHasKey(g_datapoint2itemID,datapointName))
+  {
+    nodeId = g_datapoint2itemID[datapointName];
+  }
   DebugTN("found??? nodeId= ",nodeId);
   return nodeId;
 }
@@ -617,20 +567,15 @@ void Navigator_HandleEventInitialize()
   if(strlen(dpSelectedDatapoint)>0)
   {
     shape treeCtrl = getTreeCtrl();
+    unsigned selectedPos = getNodeFromDatapoint(dpSelectedDatapoint);
     if(ActiveXSupported())
     {
-      treeCtrl.Selected = getNodeFromDatapoint(dpSelectedDatapoint);
+      treeCtrl.Selected = selectedPos;
     }
     else
     {
-/* old tree      
-      treeCtrl.selectedPos(getNodeFromDatapoint(dpSelectedDatapoint)); 
-      TreeCtrl_HandleEventOnSelChange(treeCtrl.selectedPos());
-*/
-
-// todo      treeCtrl.selectedPos(getNodeFromDatapoint(dpSelectedDatapoint)); 
-// todo      TreeCtrl_HandleEventOnSelChange(treeCtrl.selectedPos());
-      
+      treeCtrl.selectedPos(selectedPos); 
+      TreeCtrl_HandleEventOnSelChange(selectedPos);
     }
   }
 
@@ -715,14 +660,8 @@ void TreeCtrl_HandleEventInitialize()
   }
   else
   {
-/* old tree
-    treeCtrl.visible = false;
-    treeCtrl.deleteAllItems();
-*/
-
     treeCtrl.visible = false;
     fwTreeView_watchDog(); // prevent memory leak when closing controlling window
-    
   }
   
   dyn_string names;
@@ -736,9 +675,6 @@ void TreeCtrl_HandleEventInitialize()
   }
   else
   {
-/* old tree
-    treeCtrl.visible = true;
-*/
     treeCtrl.visible = true;
   }
   
@@ -827,12 +763,12 @@ void ButtonMaximize_HandleEventClick()
       // get tab properties
       int selectedTab = tabCtrl.activeRegister + 1;
       // get the selected tab for this resource type
-      string propTab = ".tab" + selectedTab;
-      string dpActiveTab,caption,panel;
-      if(dpGet(dpTabs+propTab,dpActiveTab) == 0)
+      dyn_string dpTabs;
+      string caption,panel;
+      if(dpGet(dpTabs+".tabs",dpActiveTab) == 0)
       {
         // get panel information from database
-        if(dpGet(dpActiveTab+".caption",caption)==0 && dpGet(dpActiveTab+".panel",panel)==0)
+        if(dpGet(dpTabs[selectedTab]+".caption",caption)==0 && dpGet(dpTabs[selectedTab]+".panel",panel)==0)
         {
           dyn_string panelParameters = makeDynString("$datapoint:" + datapointPath, "$systemName:" + systemName);
           ModuleOnWithPanel(caption+": "+datapointPath,-1,-1,0,0,1,1,"",panel, caption, panelParameters);
@@ -852,7 +788,7 @@ TreeView_OnCollapse(unsigned pos)
   DebugTN("TreeView_OnCollapse",pos);
 
   // the last line of code of each fwTreeView event handler MUST be the following:
-	id = -1; 
+  id = -1; 
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -865,7 +801,7 @@ TreeView_OnExpand(unsigned pos)
   DebugTN("TreeView_OnExpand",pos);
 
   // the last line of code of each fwTreeView event handler MUST be the following:
-	id = -1; 
+  id = -1; 
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -881,7 +817,7 @@ TreeView_OnInit()
   g_treeCtrlInitializing = false;
 
   // the last line of code of each fwTreeView event handler MUST be the following:
-	id = -1; 
+  id = -1; 
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -895,7 +831,7 @@ TreeView_OnSelect(unsigned pos)
   TreeCtrl_HandleEventOnSelChange(pos);
 
   // the last line of code of each fwTreeView event handler MUST be the following:
-	id = -1; 
+  id = -1; 
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -908,6 +844,6 @@ TreeView_OnRightClick(unsigned pos)
   DebugTN("TreeView_OnRightClick",pos);
 
   // the last line of code of each fwTreeView event handler MUST be the following:
-	id = -1; 
+  id = -1; 
 }
 
