@@ -82,26 +82,17 @@ namespace LCS
       // runtime. We could use Loki's STATIC_CHECK macro instead.
       //@{
 
-      // Implements PersistentObject::insert(PersistenceBroker*)
+      // Implements PersistentObject::erase(PersistenceBroker*)
       // \throw NotImplemented
-      virtual void insert(const PersistenceBroker* const b);//  {
-//  	THROW(NotImplemented, 
-// 	      "Method should be implemented using template specialization"); 
-//   	STATIC_CHECK(0,
-//  		     Method_Must_Be_Implemented_Using_Template_Specialization);
-//       }
-
-      // Implements PersistentObject::update(PersistenceBroker*)
-      // \throw NotImplemented
-      virtual void update(const PersistenceBroker* const b) {
+      virtual void erase(const PersistenceBroker* const b)  {
  	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
 //   	STATIC_CHECK(0,
 //  		     Method_Must_Be_Implemented_Using_Template_Specialization);
       }
 
-      // Implements PersistentObject::save(PersistenceBroker*)
-      virtual void save(const PersistenceBroker* const b);
+      // Implements PersistentObject::insert(PersistenceBroker*)
+      virtual void insert(const PersistenceBroker* const b);
 
       // Implements PersistentObject::retrieve(PersistenceBroker*)
       // \throw NotImplemented
@@ -112,17 +103,20 @@ namespace LCS
 //  		     Method_Must_Be_Implemented_Using_Template_Specialization);
       }
 
-      // Implements PersistentObject::erase(PersistenceBroker*)
-      // \throw NotImplemented
-      virtual void erase(const PersistenceBroker* const b)  {
- 	THROW(NotImplemented, 
-	      "Method should be implemented using template specialization"); 
-//   	STATIC_CHECK(0,
-//  		     Method_Must_Be_Implemented_Using_Template_Specialization);
-      }
+      // Implements PersistentObject::save(PersistenceBroker*)
+      virtual void save(const PersistenceBroker* const b);
+
+      // Implements PersistentObject::update(PersistenceBroker*)
+      virtual void update(const PersistenceBroker* const b);
 
       //@}
 
+      // Return a reference to the contained PersistentObject.
+      // \note This is a \e non-const reference, because we want to allow
+      // modification of *itsObject.
+      T& value() { return *itsObject; }
+
+    private:
       // @name Public methods that should have been private
       // In cases where the persistent object \c T contains non-primitive
       // members, or is a derived class, the save() method needs to
@@ -145,9 +139,17 @@ namespace LCS
       //@{
  
       // This method is responsible for actually erasing the \e primitive
-      // data member of \c T.
+      // data members of \c T.
       // \throw NotImplemented
       virtual void erase(const ObjectId& poid) {
+ 	THROW(NotImplemented, 
+	      "Method should be implemented using template specialization"); 
+      }
+
+      // This method is responsible for actually inserting the \e primitive
+      // data members of \c T.
+      // \throw NotImplemented
+      virtual void insert(const ObjectId& poid) {
  	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
       }
@@ -160,20 +162,15 @@ namespace LCS
 	      "Method should be implemented using template specialization"); 
       }
 
-      // This method is responsible for actually saving the \e primitive
+      // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
       // \throw NotImplemented
-      virtual void save(const ObjectId& poid) { 
-	THROW(NotImplemented, 
+      virtual void update(const ObjectId& poid) {
+ 	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
       }
 
       //@}
-
-      // Return a reference to the contained PersistentObject.
-      // \note This is a \e non-const reference, because we want to allow
-      // modification of *itsObject.
-      T& value() { return *itsObject; }
 
     private:
 
