@@ -30,60 +30,77 @@ using namespace VellsMath;
 const HIID child_labels[] = { AidLMN,AidUVW };
 const int num_children = sizeof(child_labels)/sizeof(child_labels[0]);
 
+const HIID FDomain = AidDomain;
 
 StatPointSourceDFT::StatPointSourceDFT()
-: Function(num_children,child_labels)
-{}
+: CompoundFunction(num_children,child_labels)
+{
+  // dependence on frequency 
+  const HIID symdeps[] = { FDomain,FResolution };
+  setActiveSymDeps(symdeps,2);
+}
 
 StatPointSourceDFT::~StatPointSourceDFT()
 {}
+
+void StatPointSourceDFT::evalResult (std::vector<Vells> &res,
+                            const std::vector<const Vells*> &values,
+                            const Cells &cells)
+{
+  // Get L,M,N and U,V,W.
+  #define vl (*(values[0]))
+  #define vm (*(values[1]))
+  #define vn (*(values[2]))
+  #define vu (*(values[3]))
+  #define vv (*(values[4]))
+  #define vw (*(values[5]))
+  
+  // For the time being we only support scalars for LMN
+  Assert (vl.isScalar() && vm.isScalar() && vn.isScalar());
+  
+  // Loop over all frequency segments, and generate an F0/DF pair for each
+  int iout = 0;
+  for( int iseg = 0; iseg < cells.numSegments(FREQ); iseg++ )
+  {
+    int seg0 = cells.segmentStart(FREQ)(iseg);
+    // Calculate 2pi/wavelength, where wavelength=c/freq.
+    // Calculate it for the frequency step if needed.
+    double f0 = cells.center(FREQ)(seg0);
+    double df = cells.cellSize(FREQ)(seg0);
+    double wavel0 = C::_2pi * f0 / C::c;
+    double dwavel = df / f0;
+    Vells r1 = (vu*vl + vv*vm + vw*vn) * wavel0;
+    r1.makeNonTemp();
+    res[iout]  = tocomplex(cos(r1), sin(r1));
+    res[iout++].makeNonTemp();
+    r1 *= dwavel;
+    res[iout]  = tocomplex(cos(r1), sin(r1));
+    res[iout++].makeNonTemp();
+  }
+}
+
 
 int StatPointSourceDFT::getResult (Result::Ref &resref, 
 				   const std::vector<Result::Ref> &childres,
 				   const Request &request, bool newreq)
 {
-  // Check that child results are all OK (no fails, 3 vellsets per child)
-  string fails;
-  for( int i=0; i<num_children; i++ )
-  {
-    int nvs = childres[i]->numVellSets();
-    if( nvs != 3 )
-      Debug::appendf(fails,"child %s: expecting 3 VellsSets, got %d;",
-          child_labels[i].toString().c_str(),nvs);
-    if( childres[i]->hasFails() )
-      Debug::appendf(fails,"child %s: has fails",child_labels[i].toString().c_str());
-  }
-  if( !fails.empty() )
-    NodeThrow1(fails);
-  // Get L,M,N and U,V,W.
-  const Vells& vl = childres[0]->vellSet(0).getValue();
-  const Vells& vm = childres[0]->vellSet(1).getValue();
-  const Vells& vn = childres[0]->vellSet(2).getValue();
-  const Vells& vu = childres[1]->vellSet(0).getValue();
-  const Vells& vv = childres[1]->vellSet(1).getValue();
-  const Vells& vw = childres[1]->vellSet(2).getValue();
-  // For the time being we only support scalars
-  Assert (vl.isScalar() && vm.isScalar() && vn.isScalar());
-  // For the time being we only support 1 frequency range.
-  const Cells& cells = request.cells();
-  Assert (cells.numSegments(FREQ) == 1);
-  // Allocate a 2-plane result for F0, dF (one such pair per frequency range).
-  // It is assumed that UVW is in meters and is frequency independent.
-  Result &result = resref <<= new Result(2,request);
-  // create a vellset for each plane
-  VellSet &f0vellset = result.setNewVellSet(0,0,0);
-  VellSet &dfvellset = result.setNewVellSet(1,0,0);
-  // Calculate 2pi/wavelength, where wavelength=c/freq.
-  // Calculate it for the frequency step if needed.
-  double f0 = cells.center(FREQ)(0);
-  double df = cells.cellSize(FREQ)(0);
-  double wavel0 = C::_2pi * f0 / C::c;
-  double dwavel = df / f0;
-  Vells r1 = (vu*vl + vv*vm + vw*vn) * wavel0;
-  r1.makeNonTemp();  // for now, until Vells problem is fixed
-  f0vellset.setValue (tocomplex(cos(r1), sin(r1)));
-  r1 *= dwavel;
-  dfvellset.setValue (tocomplex(cos(r1), sin(r1)));
+  const int expect_nvs[]        = {3,3};
+  const int expect_integrated[] = {-1,-1};
+  Assert(int(childres.size()) == num_children);
+
+  // Check that child results are all OK (no fails, expected # of vellsets per child)
+  vector<const VellSet *> child_vs(6);
+  if( checkChildResults(resref,child_vs,childres,expect_nvs,
+        expect_integrated) == RES_FAIL )
+    return RES_FAIL;
+  
+  // allocate proper output result (integrated=false??)
+  const Cells &cells = childres[0]->cells();
+  Result &result = resref <<= new Result(cells.numSegments(FREQ)*2,false);
+  result.setCells(cells);
+  // fill it
+  computeValues(result,child_vs);
+  
   return 0;
 }
 

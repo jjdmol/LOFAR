@@ -24,7 +24,7 @@
 #define MEQ_STATPOINTSOURCEDFT_H
 
 //# Includes
-#include <MEQ/Function.h>
+#include <MEQ/CompoundFunction.h>
 
 #pragma aidgroup Meq
 #pragma types #Meq::StatPointSourceDFT
@@ -32,7 +32,7 @@
 
 namespace Meq {    
 
-class StatPointSourceDFT: public Function
+class StatPointSourceDFT: public CompoundFunction
 {
 public:
   // The default constructor.
@@ -48,7 +48,10 @@ public:
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);
 
-private:
+protected:
+  virtual void evalResult (std::vector<Vells> &res,
+          const std::vector<const Vells*> &values,
+          const Cells &);
 };
 
 } // namespace Meq

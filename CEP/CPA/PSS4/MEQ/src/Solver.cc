@@ -222,7 +222,8 @@ int Solver::getResult (Result::Ref &resref,
           }
         }
       }
-    spids = Function::findSpids (chvellsets);
+    int npertsets;
+    spids = Function::findSpids (npertsets,chvellsets);
     nspid = spids.size();
     // It first time, initialize the solver.
     // Otherwise check if spids are still the same and initialize
