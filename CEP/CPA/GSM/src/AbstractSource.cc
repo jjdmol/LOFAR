@@ -21,8 +21,10 @@
 
 #include <GSM/AbstractSource.h>
 
-#include <MNS/MesParmSingle.h>
+#include <MNS/MesParmPolc.h>
+#include <MNS/MnsMatrix.h>
 
+#include <aips/aips.h>
 #include <aips/Measures.h>
 #include <aips/Measures/MDirection.h>
 
@@ -56,14 +58,19 @@ static const char* SourceTypeNames[MaxSourceTypeName+1] =
 //================>>>  AbstractSource::AbstractSource  <<<================
 
 AbstractSource::AbstractSource(SourceType          type,
+                               double              ra,
+                               double              dec,
                                unsigned int        catNumber,
                                const std::string&  name)
   : itsCatalogNumber(catNumber),
     itsName(name),
     itsSourceType(type)
 {
-  itsRA  = new MesParmSingle(0);
-  itsDec = new MesParmSingle(0);
+  MnsMatrix RaMatrix(ra);
+  MnsMatrix DecMatrix(dec);
+
+  itsRA  = new MesParmPolc("Ra", RaMatrix);
+  itsDec = new MesParmPolc("Dec", DecMatrix);
 }
 
 
@@ -194,8 +201,9 @@ void AbstractSource::getPositionExpressions(MesExpr* ra,
 void AbstractSource::store(Table&      table,
                            unsigned int row) const
 {
+  writeNiceAscii(std::cout);
   ScalarColumn<int>         Number  (table, "NUMBER");
-  ScalarColumn<std::string> Name    (table, "NAME");
+  ScalarColumn<String>      Name    (table, "NAME");
   ScalarColumn<int>         Type    (table, "TYPE");
   ArrayColumn<double>       RAParms (table, "RAPARMS");
   ArrayColumn<double>       DecParms(table, "DECPARMS");
@@ -215,17 +223,20 @@ void AbstractSource::store(Table&      table,
 void AbstractSource::load(Table&      table,
                            unsigned int row)
 {
-  ROScalarColumn<int>         Number  (table, "NUMBER");
-  ROScalarColumn<std::string> Name    (table, "NAME");
-  ROScalarColumn<int>         Type    (table, "TYPE");
-  ROArrayColumn<double>       RAParms (table, "RAPARMS");
-  ROArrayColumn<double>       DecParms(table, "DECPARMS");
+  ROScalarColumn<int>    Number  (table, "NUMBER");
+  ROScalarColumn<String> Name    (table, "NAME");
+  ROScalarColumn<int>    Type    (table, "TYPE");
+  ROArrayColumn<double>  RAParms (table, "RAPARMS");
+  ROArrayColumn<double>  DecParms(table, "DECPARMS");
 
   int temp;
   Number.get(row, temp);
   itsCatalogNumber = (unsigned int)temp;
 
-  Name.get  (row, itsName);
+  String    NameStr;
+  Name.get  (row, NameStr);
+  itsName = NameStr;
+
   Type.get  (row, temp);
   itsSourceType = SourceType(temp);
 
@@ -253,7 +264,10 @@ std::ostream& AbstractSource::writeNiceAscii(std::ostream& out) const
 
   out << "Type: " << (int(itsSourceType) > MaxSourceTypeName? "Unknown" : SourceTypeNames[itsSourceType]) << endl;
 
-  Matrix<double> coef(itsRA->getCoeff().getDoubleMatrix());
+  out << "itsRA: " << itsRA << endl;
+  MnsMatrix mat(itsRA->getCoeff());
+  
+  Matrix<double> coef(mat.getDoubleMatrix());
   out << "RA  : " << endl;
   for(unsigned int t = 0; t < coef.nrow(); t++) {
     for(unsigned int f = 0; f < coef.ncolumn(); f++) {

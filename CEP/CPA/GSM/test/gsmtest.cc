@@ -19,11 +19,13 @@
 //
 
 #include <iostream>
+#include <string>
 
 #include <GSM/PointSource.h>
 #include <GSM/SkyModel.h>
 
 #include <aips/aips.h>
+#include <aips/Exceptions.h>
 #include <aips/Tables/Table.h>
 #include <aips/Tables/SetupNewTab.h>
 #include <aips/Tables/TableDesc.h>
@@ -47,24 +49,89 @@ void createPointSourceTable(const std::string &tableName)
 
   SetupNewTable newTable(tableName, description, Table::New);
   
-  Table table(newTable);
-  table.addRow();
-  table.addRow();
-  table.addRow();
+  //Table table(newTable);
+  //table.addRow();
+  //table.addRow();
+  //table.addRow();
 }
 
 
 
+void addPointSource(unsigned int               number, 
+                    const std::string&         name,
+                    double                     ra,
+                    double                     dec,
+                    const std::vector<double>& flux,
+                    Table&                     table)
+{
+  GSM::PointSource ps(ra, dec, number, name, flux);
+  table.addRow();
+  ps.store(table, table.nrow()-1);
+}
+
 
 int main(int argc, char* argv[])
+try
 {
   using std::cout;
   using std::endl;
 
   if(argc == 2) {
-    createPointSourceTable(argv[1]);
+    //    createPointSourceTable(argv[1]);
+    for(int i = 0; i < argc; i++) {
+      cout << argv[i] << endl;
+    }
+
+    Table table(argv[1],Table::Update);
+    std::vector<double> Flux(4);
+
+    Flux[GSM::I] = 2.2;
+    Flux[GSM::Q] = 0;
+    Flux[GSM::U] = 0;
+    Flux[GSM::V] = 0;
+    
+    addPointSource(1, "8C1435+635-a",
+                   (14.0*15+35.0/60)*M_PI/180.0, 63.5*M_PI/180.0, Flux,
+                   table);
+    
+    Flux[GSM::I] = 1.8;
+    Flux[GSM::Q] = 0;
+    Flux[GSM::U] = 0;
+    Flux[GSM::V] = 0;
+    
+    addPointSource(1, "8C1435+635-b",
+                   (14.0*15+35.0/60)*M_PI/180.0, 63.4*M_PI/180.0, Flux,
+                   table);
+    
+    
+    Flux[GSM::I] = 1;
+    Flux[GSM::Q] = 0;
+    Flux[GSM::U] = 0;
+    Flux[GSM::V] = 0;
+    
+    addPointSource(1, "A",
+                   (14.0*15+39.0/60)*M_PI/180.0, 63.8*M_PI/180.0, Flux,
+                   table);
+    
+    
+    Flux[GSM::I] = 0.5;
+    Flux[GSM::Q] = 0;
+    Flux[GSM::U] = 0;
+    Flux[GSM::V] = 0;
+    
+    addPointSource(1, "B",
+                   (14.0*15+50.0/60)*M_PI/180.0, 64.0*M_PI/180.0, Flux,
+                   table);
   } else {
     cout << "gsmtest <tablename>" <<endl;
   }
   return 0;
+}
+catch(AipsError& error)
+{
+  cout << error.getMesg() << endl;
+}
+catch(...)
+{
+  cout << "Unhandled exception caught" << endl;
 }

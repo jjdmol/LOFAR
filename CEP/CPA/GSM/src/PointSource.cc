@@ -21,7 +21,8 @@
 
 #include <GSM/PointSource.h>
 
-#include <MNS/MesParmSingle.h>
+#include <MNS/MesParmPolc.h>
+#include <MNS/MnsMatrix.h>
 
 #include <aips/aips.h>
 #include <aips/Tables/ScalarColumn.h>
@@ -30,15 +31,20 @@
 
 using namespace GSM;
 
+static const char* STOKES_NAMES[4]={"I","Q","U","V"};
 
 //====================>>>  PointSource::PointSource  <<<====================
 
-PointSource::PointSource(unsigned int       catNumber,
-                         const std::string& name)
-  : AbstractSource(POINT, catNumber, name)
+PointSource::PointSource(double                     ra,
+                         double                     dec,
+                         unsigned int               catNumber,
+                         const std::string&         name,
+                         const std::vector<double>& flux)
+  : AbstractSource(POINT, ra, dec, catNumber, name)
 {
   for(unsigned int i = 0; i < NUMBER_OF_POLARIZATIONS;i++) {
-    itsFlux[i] =  new MesParmSingle(0);
+    MnsMatrix   matrix(flux[i]);
+    itsFlux[i] =  new MesParmPolc(STOKES_NAMES[i],matrix);
   }
 }
 
