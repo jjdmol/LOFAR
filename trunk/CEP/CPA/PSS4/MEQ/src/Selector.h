@@ -28,6 +28,16 @@
 #pragma aidgroup Meq
 #pragma types #Meq::Selector
 
+// The comments below are used to automatically generate a default
+// init-record for the class 
+
+//defrec begin MeqSelector
+//  A MeqSelector selects one or more results from the result set of its child.
+//  Must have exactly one child.
+//field: index []
+//  Indices (1-based) of results to select. At least one must be specified.
+//defrec end
+
 namespace Meq {    
 
 

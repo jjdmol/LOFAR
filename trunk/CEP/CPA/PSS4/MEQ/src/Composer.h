@@ -28,6 +28,14 @@
 #pragma aidgroup Meq
 #pragma types #Meq::Composer
 
+// The comments below are used to automatically generate a default
+// init-record for the class 
+
+//defrec begin MeqComposer
+//  A MeqComposer concatenates the result sets of all its children into
+//  a single result set.
+//defrec end
+
 namespace Meq {    
 
 

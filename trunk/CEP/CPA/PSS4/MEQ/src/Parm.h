@@ -38,11 +38,14 @@
 // init-record for the class 
 
 //defrec begin MeqParm
-//  default parameter value - must be double or complex double, scalar or
-//  2D array
+//  Represents a parameter, either created on-the-fly (a default
+//  value must then be supplied), or read from a MEP database.
+//  A MeqParm cannot have any children.
 //field: default 0.0  
-//  MEP table name. If empty, then the default parameter value is used
+//  default parameter value - expected double/complex double, scalar or
+//  2D array
 //field: tablename '' 
+//  MEP table name. If empty, then the default parameter value is used
 //defrec end
 
 namespace Meq {
