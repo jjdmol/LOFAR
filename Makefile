@@ -33,9 +33,7 @@
 # Note that PACKAGE and PACKAGES are synonyms.
 #
 PACKAGE = \
-         LCS/Common \
-	 LCS/CRD/Coord \
-	 LCS/CRD/CoordServer \
+         LCS \
          DMI \
          BaseSim \
          LOFARSim \
@@ -45,15 +43,10 @@ PACKAGE = \
          CEP/CPA/OCTOPUSSY \
          CEP/CPA/OCTOGlish \
          CEP/CPA/VisCube \
-         CEP/CPA/MNS \
          CEP/CPA/GSM \
-         CEP/CPA/AppAgent/AppAgent \
-         CEP/CPA/AppAgent/SolverControl \
-         CEP/CPA/AppAgent/Solver \
-         CEP/CPA/AppAgent/VisAgent \
-         CEP/CPA/AppAgent/MSVisAgent \
-         CEP/CPA/AppAgent/OctoAgent \
-         CEP/CPA/CAL
+         CEP/CPA/AppAgent \
+         CEP/CPA/PSS3/MNS \
+	 CEP/CPA/PSS4
 PACKAGES = $(PACKAGE)
 #
 
