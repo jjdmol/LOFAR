@@ -1,5 +1,4 @@
-//#  RTCorrelator.h: Round robin correlator based on the premise that 
-//#  BlueGene is a hard real-time system.
+//#  RTFrontEnd.h:
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,66 +20,61 @@
 //#
 //#  $Id$
 
-#ifndef RTCORRELATOR_RTCORRELATOR_H
-#define RTCORRELATOR_RTCORRELATOR_H
+#ifndef RT_FRONTEND_H
+#define RT_FRONTEND_H
 
-
-#include <fstream>
-#include <stdlib.h>
-#include <string.h>
 
 #include <lofar_config.h>
 
-#include <Common/lofar_iostream.h>
-#include <Common/LofarLogger.h>
-
-#include <Transport/TH_MPI.h>
-#include <Transport/TH_Socket.h>
-
-#include <tinyCEP/SimulatorParseClass.h>
+//# includes
 #include <tinyCEP/WorkHolder.h>
 #include <tinyCEP/TinyApplicationHolder.h>
 
-#include <WH_Correlator.h>
-#include <WH_Random.h>
-#include <WH_Dump.h>
+#include <RTCorrelator/WH_Random.h>
+#include <RTCorrelator/WH_Correlator.h>
+#include <RTCorrelator/WH_Dump.h>
 
 #include <Config.h>
 
-using namespace std;
-
 ifstream config_file;
-
 char config_buffer[1024*10]; // 10 kb
+
 char* frontend_ip;
+int   nchannels;
+int   nelements;
+int   nsamples;
+int   nruns;
+int   baseport;
 
-int nchannels;
-int nelements;
-int nsamples;
-int nruns;
-int baseport;
-
-int parse_config();
-
-namespace LOFAR 
+namespace LOFAR
 {
-  class RTCorrelator: public LOFAR::TinyApplicationHolder {
+
+  class RTFrontEnd: public LOFAR::TinyApplicationHolder {
 
   public:
-    RTCorrelator();
-    virtual ~RTCorrelator();
-    
+    RTFrontEnd(bool frontend, int port, int elements, 
+	       int samples, int channels, int runs);
+    virtual ~RTFrontEnd();
+
     // overload methods form the ApplicationHolder base class
-    virtual void define (const KeyValueMap& params = KeyValueMap());
+    virtual void define(const KeyValueMap& params = KeyValueMap());
     virtual void init();
     virtual void run(int nsteps);
-    virtual void dump();
-    virtual void postrun();
+    virtual void dump() const;
     virtual void quit();
 
   private:
-    WorkHolder* itsWH;
+    WorkHolder* itsWHs[2];
+    int         itsWHcount;
+    bool        isFrontEnd;
+    int         itsPort;
+    int         itsNelements;
+    int         itsNsamples;
+    int         itsNchannels;
+    int         itsNruns;
   };
 
-} // namespace LOFAR
+} // namespace
+
+
 #endif
