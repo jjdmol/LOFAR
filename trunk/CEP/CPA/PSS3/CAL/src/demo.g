@@ -642,8 +642,25 @@ initparms := function(fname='demo')
 }
 
 
-
-
+initparms10 := function(fname='demo10')
+{
+    pt := parmtable(spaste(fname,'.MEP'), T);
+    if (is_fail(pt)) fail;
+    pt.putinit ('frot', values=0);
+    pt.putinit ('drot', values=0);
+    pt.putinit ('dell', values=0);
+    pt.putinit ('gain.11', values=1);
+    pt.putinit ('gain.22', values=1);
+    pt.putinit ('EJ11.real', values=1);
+    pt.putinit ('EJ12.real', values=0);
+    pt.putinit ('EJ21.real', values=0);
+    pt.putinit ('EJ22.real', values=1);
+    pt.putinit ('EJ11.imag', values=1);
+    pt.putinit ('EJ12.imag', values=0);
+    pt.putinit ('EJ21.imag', values=0);
+    pt.putinit ('EJ22.imag', values=1);
+    pt.done();
+}
 
 
 setparms := function(fname='demo')
@@ -681,6 +698,37 @@ initgsm := function(fname='demo')
                        2.73402, 0.45369, 0.5, 0, 0, 0);
     tg.addpointsource ('CP3', [0,1e20], [0,1e20],
                        2.73398, 0.45375, 0.3, 0, 0, 0);
+    tg.done()
+        pt := parmtable(spaste(fname,'_gsm.MEP'), T);
+    pt.loadgsm (spaste(fname,'.GSM'));
+    pt.done();
+}
+
+
+initgsm10 := function(fname='demo10')
+{
+    tg := gsm(spaste(fname,'.GSM'), T);
+    if (is_fail(tg)) fail;
+    tg.addpointsource ('CP1', [0,1e20], [0,1e20],
+                       fromhms(10,26,35.2), fromdms(26,0,0.87), 1.5, 0, 0, 0);
+    tg.addpointsource ('CP2', [0,1e20], [0,1e20],
+                       fromhms(10,26,35.2), fromdms(26,0,22.0), 1.0, 0, 0, 0);
+    tg.addpointsource ('CP3', [0,1e20], [0,1e20],
+                       fromhms(10,26,37.2), fromdms(25,59,50.), 0.7, 0, 0, 0);
+    tg.addpointsource ('CP4', [0,1e20], [0,1e20],
+                       fromhms(10,26,35.0), fromdms(25,59,40.), 0.5, 0, 0, 0);
+    tg.addpointsource ('CP5', [0,1e20], [0,1e20],
+                       fromhms(10,26,36.1), fromdms(26,0,10.0), 0.3, 0, 0, 0);
+    tg.addpointsource ('CP6', [0,1e20], [0,1e20],
+                       fromhms(10,26,36.0), fromdms(26,0,0.00), 0.3, 0, 0, 0);
+    tg.addpointsource ('CP7', [0,1e20], [0,1e20],
+                       fromhms(10,26,37.5), fromdms(25,59,55.), 0.2, 0, 0, 0);
+    tg.addpointsource ('CP8', [0,1e20], [0,1e20],
+                       fromhms(10,26,34.7), fromdms(25,59,50.), 0.1, 0, 0, 0);
+    tg.addpointsource ('CP9', [0,1e20], [0,1e20],
+                       fromhms(10,26,37.0), fromdms(26,0,15.0), 0.1, 0, 0, 0);
+    tg.addpointsource ('CP10', [0,1e20], [0,1e20],
+                       fromhms(10,26,35.7), fromdms(26,0,0.80), 0.08, 0, 0, 0);
     tg.done()
         pt := parmtable(spaste(fname,'_gsm.MEP'), T);
     pt.loadgsm (spaste(fname,'.GSM'));
