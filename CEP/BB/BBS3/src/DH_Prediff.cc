@@ -40,10 +40,6 @@ namespace LOFAR
 
 DH_Prediff::DH_Prediff (const string& name)
   : DataHolder    (name, "DH_Prediff", 1),
-    itsNResults   (0),
-    itsNspids     (0),
-    itsNTimes     (0),
-    itsNFreq      (0),
     itsDataPtr    (0)
 {
   LOG_TRACE_FLOW("DH_Prediff constructor");
@@ -52,10 +48,6 @@ DH_Prediff::DH_Prediff (const string& name)
 
 DH_Prediff::DH_Prediff(const DH_Prediff& that)
   : DataHolder    (that),
-    itsNResults   (0),
-    itsNspids     (0),
-    itsNTimes     (0),
-    itsNFreq      (0),
     itsDataPtr    (0)
 {
   LOG_TRACE_FLOW("DH_Prediff copy constructor");
@@ -76,28 +68,15 @@ void DH_Prediff::preprocess()
 {
   LOG_TRACE_FLOW("DH_Prediff preprocess");
   // Add the fields to the data definition.
-  addField ("NResults", BlobField<int>(1));
-  addField ("NTimes", BlobField<int>(1));
-  addField ("NFreq", BlobField<int>(1));
-  addField ("Nspids", BlobField<int>(1));
-  addField ("DataBuf", BlobField<dcomplex>(1, 0));
+  addField ("DataBuf", BlobField<dcomplex>(1, 0, 0, 0, false));
 
   // Create the data blob (which calls fillPointers).
   createDataBlock();
-
-  *itsNResults = 0;
-  *itsNspids = 0;
-  *itsNTimes = 0;
-  *itsNFreq = 0;
 }
 
 void DH_Prediff::fillDataPointers()
 {
   // Fill in the pointers.
-  itsNResults = getData<int> ("NResults");
-  itsNspids = getData<int> ("Nspids");
-  itsNTimes = getData<int> ("NTimes");
-  itsNFreq = getData<int> ("NFreq");
   itsDataPtr = getData<dcomplex> ("DataBuf");
 }
 
@@ -105,11 +84,6 @@ void DH_Prediff::fillDataPointers()
 void DH_Prediff::postprocess()
 {
   LOG_TRACE_FLOW("DH_Prediff postprocess");
-  itsNResults = 0;
-  itsNspids = 0;
-  itsNTimes = 0;
-  itsNFreq = 0;
-  itsDataPtr = 0;
 }
 
 bool DH_Prediff::getParmData(vector<ParmData>& pdata)
@@ -149,26 +123,27 @@ void DH_Prediff::setParmData(const vector<ParmData>& pdata)
   }
 }
 
-void DH_Prediff::setData(dcomplex* dataPtr, int size)
+void DH_Prediff::setDataSize(const vector<uint32>& shape)
 {
-  vector<uint> sizeVec(1);
-  sizeVec[0] = size;
-  getDataField("DataBuf").setShape(sizeVec);
+  getDataField("DataBuf").setShape(shape);
   createDataBlock();
-  for (int i=0; i<size; i++)
-  {
-    itsDataPtr[i] = dataPtr[i];     // TBA: Remove this data copy 
-  }
+}
+
+const vector<uint32>& DH_Prediff::getDataSize()
+{
+  return getDataField("DataBuf").getShape();
 }
 
 void DH_Prediff::dump()
 {
   cout << "DH_Prediff: " << endl;
-  cout << "Number of results = " << getNResults() << endl;
-  cout << "Number of spids = " << getNspids() << endl;
-  cout << "Number of times = " << getNTimes() << endl;
-  cout << "Number of frequencies = " << getNFreq() << endl;
-
+  cout << "Parm data : " << endl;
+  vector<ParmData> pData;
+  getParmData(pData);
+  for (int i=0; i<pData.size(); i++)
+  {
+    cout << pData[i] << endl;
+  }
 }
 
 void DH_Prediff::clearData()

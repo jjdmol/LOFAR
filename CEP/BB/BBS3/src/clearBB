@@ -99,6 +99,5 @@ echo "create table bbs3solutions (
       FIT DOUBLE PRECISION, 
       MU DOUBLE PRECISION, 
       STDDEV DOUBLE PRECISION, 
-      CHI DOUBLE PRECISION, 
-      NUMBEROFPARAM INTEGER);" >> sql_create
+      CHI DOUBLE PRECISION);" >> sql_create
 $SQLCLIENT < sql_create

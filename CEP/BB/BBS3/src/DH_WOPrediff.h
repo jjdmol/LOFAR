@@ -106,9 +106,6 @@ public:
   double getTimeLength() const;
   void setTimeLength(double time);
 
-  int getDDID() const;
-  void setDDID(int ddid);
-
   string getModelType() const;
   void setModelType(const string& type);
 
@@ -155,7 +152,6 @@ private:
   double*       itsFreqLength;              // Frequency interval size
   double*       itsStartTime;               // Start time of time interval
   double*       itsTimeLength;              // Time interval size (s)
-  int*          itsDDID;
   char*         itsModelType;
   unsigned int* itsCalcUVW;
   unsigned int* itsLockMappedMem;
@@ -237,12 +233,6 @@ inline double DH_WOPrediff::getTimeLength() const
 
 inline void DH_WOPrediff::setTimeLength(double time)
 { *itsTimeLength = time; }
-
-inline int DH_WOPrediff::getDDID() const
-{ return *itsDDID; }
-
-inline void DH_WOPrediff::setDDID(int ddid)
-{ *itsDDID = ddid; }
 
 inline bool DH_WOPrediff::getCalcUVW() const
 { return ((*itsCalcUVW==0)?(false):(true)); }

@@ -54,7 +54,6 @@ DH_WOPrediff::DH_WOPrediff (const string& name)
     itsFreqLength      (0),
     itsStartTime       (0),
     itsTimeLength      (0),
-    itsDDID            (0),
     itsModelType       (0),
     itsCalcUVW         (0),
     itsLockMappedMem   (0),
@@ -79,7 +78,6 @@ DH_WOPrediff::DH_WOPrediff(const DH_WOPrediff& that)
     itsFreqLength      (0),
     itsStartTime       (0),
     itsTimeLength      (0),
-    itsDDID            (0),
     itsModelType       (0),
     itsCalcUVW         (0),
     itsLockMappedMem   (0),
@@ -127,7 +125,6 @@ void DH_WOPrediff::preprocess()
   addField ("FreqLength", BlobField<double>(1));
   addField ("StartTime", BlobField<double>(1));
   addField ("TimeLength", BlobField<double>(1));
-  addField ("DDID", BlobField<int>(1));
   addField ("ModelType", BlobField<char>(1, MaxModelTypeLength));
   addField ("CalcUVW", BlobField<unsigned int>(1));
   addField ("LockMappedMem", BlobField<unsigned int>(1));
@@ -157,7 +154,6 @@ void DH_WOPrediff::preprocess()
   *itsFreqLength = 0;
   *itsStartTime = 0;
   *itsTimeLength = 0;
-  *itsDDID = 0;
   *itsCalcUVW = 0;
   *itsLockMappedMem = 0;
   *itsCleanUp = 0;
@@ -178,7 +174,6 @@ void DH_WOPrediff::fillDataPointers()
   itsFreqLength = getData<double> ("FreqLength");
   itsStartTime = getData<double> ("StartTime");
   itsTimeLength = getData<double> ("TimeLength");
-  itsDDID = getData<int> ("DDID");
   itsModelType = getData<char> ("ModelType");
   itsCalcUVW = getData<unsigned int> ("CalcUVW");
   itsLockMappedMem = getData<unsigned int> ("LockMappedMem");
@@ -199,7 +194,6 @@ void DH_WOPrediff::postprocess()
   itsFreqLength = 0;
   itsStartTime = 0;
   itsTimeLength = 0;
-  itsDDID = 0;
   itsModelType = 0;
   itsCalcUVW = 0;
   itsLockMappedMem = 0;
@@ -342,7 +336,6 @@ void DH_WOPrediff::dump()
   cout << "Frequency length = " << getFreqLength() << endl;
   cout << "Start time = " << getStartTime() << endl;
   cout << "Time length = " << getTimeLength() << endl;
-  cout << "DDID = " << getDDID() << endl;
   cout << "Model type = " << getModelType() << endl;
   cout << "Calc UVW = " << getCalcUVW() << endl;
   cout << "Lock mapped memory = " << getLockMappedMemory() << endl;
@@ -406,7 +399,6 @@ void DH_WOPrediff::clearData()
   setFreqLength(0);
   setStartTime(0);
   setTimeLength(0);
-  setDDID(0);
   setModelType("");
   setCalcUVW(false);
   setLockMappedMemory(false);

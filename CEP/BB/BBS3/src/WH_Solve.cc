@@ -113,20 +113,18 @@ void WH_Solve::process()
   wo->setStatus(DH_WOSolve::Assigned);
   woPtr->updateDB();
 
-  Quality resultQuality;
-
   int contrID = wo->getStrategyControllerID();
   Solver* solver = getSolver(contrID);
   DBGASSERTSTR(solver!=0, "The solver has not been created and initialized.");
 
   if (wo->getNewDomain())         // New domain
   {
-    readInputsAndSetParmData(solver);
+    setParmData(solver);
   }
-  else
-  {
-    readInputs(solver);
-  }
+
+  readInputs(solver);
+
+  Quality resultQuality;
   // Do the solve
   solver->solve(wo->getUseSVD(), resultQuality);
 
@@ -135,7 +133,7 @@ void WH_Solve::process()
   DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getOutHolder(1));
   sol->clearData();
   DH_PL* solPtr = dynamic_cast<DH_PL*>(sol);
-  sol->setSolution(resultParmNames, solver->getSolvableValues());
+  sol->setSolution(solver->getSolvableParmData());
   sol->setQuality(resultQuality);
   sol->setWorkOrderID(wo->getWorkOrderID());
   wo->setStatus(DH_WOSolve::Executed);
@@ -175,33 +173,28 @@ Solver* WH_Solve::getSolver(int id)
 void WH_Solve::readInputs(Solver* solver)
 {
   LOG_TRACE_FLOW("WH_Solve::readInputs");
-//   for (int i=1; i<=itsNPrediffers; i++)
-//   {
-//     DH_Prediff* dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i));
-
-//     solver->setEquations(dh->getDataPtr(), dh->getNResults(), dh->getNspids(),
-//                             dh->getNTimes(), dh->getNFreq(), i);     // id = i or from prediffer?
-//   }
+  for (int i=1; i<=itsNPrediffers; i++)
+  {
+    DH_Prediff* dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i));
+    vector<uint32> shape = dh->getDataSize();
+    solver->setEquations(dh->getDataPtr(), shape[0],
+                         shape[1], shape[2], i);     // id = i or from prediffer?
+  }
 }
 
-void WH_Solve::readInputsAndSetParmData(Solver* solver)
+void WH_Solve::setParmData(Solver* solver)
 {
   LOG_TRACE_FLOW("WH_Solve::readInputsAndSetParmData");
-//   for (int i=1; i<=itsNPrediffers; i++)
-//   {
-//     DH_Prediff* dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i));
-//     vector<ParmData> pData;
-//     dh->getParmData(pData);
-//     vector<ParmData>::iterator iter;
-//     for (iter=pData.begin(); iter!=pData.end(); iter++)
-//     {
-//       solver->setSolvableParmData(*iter, i);           // id = i or from prediffer?
-//     }
 
-//     solver->setEquations(dh->getDataPtr(), dh->getNResults(), dh->getNspids(),
-//                             dh->getNTimes(), dh->getNFreq(), i);    // id = i or from prediffer?
-//   }
+  solver->initSolvableParmData(itsNPrediffers);
 
+  for (int i=1; i<=itsNPrediffers; i++)
+  {
+    DH_Prediff* dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i));
+    vector<ParmData> pData;
+    dh->getParmData(pData);
+    solver->setSolvableParmData(pData, i);           // id = i or from prediffer?
+  }
 }
 
 } // namespace LOFAR
