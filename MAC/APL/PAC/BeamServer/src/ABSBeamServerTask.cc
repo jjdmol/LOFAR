@@ -544,7 +544,7 @@ void BeamServerTask::send_weights(int period)
   bc.command = 4; // 4 == beamformer configure
   bc.seqnr   = 0;
   bc.pktsize = sizeof(EPABfconfigureEvent)-sizeof(GCFEvent);
-  bc.pktsize = 1030;
+  bc.pktsize = htons(1030);
 
   Array<complex<int16_t>, 2> weights((complex<int16_t>*)&bc.coeff,
 				     shape(N_SUBBANDS, N_POLARIZATIONS),
@@ -575,7 +575,7 @@ void BeamServerTask::send_weights(int period)
 	  }
 
 	  bc.phasepol = pol;
-	  board.send(GCFEvent(F_RAW_SIG), &bc.command, bc.pktsize);
+	  board.send(GCFEvent(F_RAW_SIG), &bc.command, 1030);
       }
   }
 
@@ -586,7 +586,7 @@ void BeamServerTask::send_weights(int period)
   be.pktsize = htons(12);
   memset(&be.reserved1, 0, 8);
 
-  board.send(GCFEvent(F_RAW_SIG), &be.command, be.pktsize);
+  board.send(GCFEvent(F_RAW_SIG), &be.command, 12);
 }
 
 void BeamServerTask::update_sbselection()
