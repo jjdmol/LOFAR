@@ -24,6 +24,7 @@
 #define MEQ_UVW_H
     
 #include <MEQ/Function.h>
+#include <aips/Measures/MPosition.h>
 
 #pragma aidgroup Meq
 #pragma types #Meq::UVW
@@ -50,6 +51,8 @@ public:
   // Check and convert the children.
   void checkChildren();
 
+private:
+  MPosition itsEarthPos;
 };
 
 } // namespace Meq
