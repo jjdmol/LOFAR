@@ -13,6 +13,7 @@ StrategyImpl.h                                  \
 SI_Peeling.h                                    \
 SI_Simple.h                                     \
 SI_WaterCal.h                                   \
+SI_Randomized.h 								\
 MeqCalibraterImpl.h                             \
 CalibratorOld.h                                 
 
@@ -29,7 +30,8 @@ Strategy.cc                                             \
 StrategyImpl.cc                                         \
 SI_Peeling.cc                                           \
 SI_Simple.cc                                            \
-SI_WaterCal.cc                                             \
+SI_WaterCal.cc                                          \
+SI_Randomized.cc										\
 MeqCalibraterImpl.cc                                    \
 CalibratorOld.cc                                                
 
