@@ -81,7 +81,7 @@ GCFEvent::TResult RSPTest::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_CONNECTED:
     {
-      TRAN(RSPTest::test010);
+      TRAN(RSPTest::test001);
     }
     break;
 
@@ -725,7 +725,7 @@ GCFEvent::TResult RSPTest::test010(GCFEvent& e, GCFPortInterface& port)
       if (updcount++ > 20)
       {
 	RSPUnsubstatusEvent unsub;
-	unsub.handle = 0;
+	unsub.handle = upd.handle; // remove subscription with this handle
 
 	TESTC_ABORT(m_server.send(unsub) > 0, RSPTest::final);
       }

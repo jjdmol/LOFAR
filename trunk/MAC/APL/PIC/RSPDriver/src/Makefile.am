@@ -82,6 +82,7 @@ libepa_la_SOURCES = \
 bin_PROGRAMS = RSPDriver
 
 RSPDriver_SOURCES = \
+	RefCount.h \
 	Config.h \
 	Config.cc \
 	RSPConfig.h \

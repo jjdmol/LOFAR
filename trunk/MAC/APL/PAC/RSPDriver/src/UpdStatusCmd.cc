@@ -66,7 +66,7 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
 
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
-  ack.handle = 1; // should be greater than 0!
+  ack.handle = (uint32)this; // opaque pointer returned in unsubscribe
 
   ack.sysstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
   ack.sysstatus.board() = cache.getSystemStatus().board();
