@@ -33,7 +33,7 @@ Sel_Linked::Sel_Linked(Selector* selector, unsigned int noOptions)
   :  Selector(noOptions),
      itsLink(selector)
 {
-  AssertStr(itsNOptions == itsLink->getNumberOfOptions(), 
+  ASSERTSTR(itsNOptions == itsLink->getNumberOfOptions(), 
 	    "Selector does not have the same number of selection options as the selector it is linked to");
 }
 

@@ -23,8 +23,8 @@
 #ifndef TINYDEP_TINYDATAMANAGER_H
 #define TINYDEP_TINYDATAMANAGER_H
 
-#include <Common/Debug.h>
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 #include <Transport/DataHolder.h>
 
 namespace LOFAR
