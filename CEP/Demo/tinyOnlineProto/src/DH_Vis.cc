@@ -32,7 +32,6 @@ namespace LOFAR
 
 DH_Vis::DH_Vis (const string& name)
 : DataHolder    (name, "DH_Vis"),
-  itsDataPacket (0),
   itsBuffer     (0)
 {
 
@@ -40,14 +39,12 @@ DH_Vis::DH_Vis (const string& name)
 
 DH_Vis::DH_Vis(const DH_Vis& that)
   : DataHolder(that),
-    itsDataPacket(0),
     itsBuffer(0)
 {
 }
 
 DH_Vis::~DH_Vis()
 {
-  delete [] (char*)(itsDataPacket);
 }
 
 DataHolder* DH_Vis::clone() const
@@ -61,25 +58,32 @@ void DH_Vis::preprocess()
   postprocess();
 
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = NSTATIONS * NSTATIONS * sizeof(BufferType);
-  unsigned int size = sizeof(DataPacket) + itsBufSize;
-  char* ptr = new char[size];
-  // Fill in the data packet pointer and initialize the memory.
-  itsDataPacket = (DataPacket*)(ptr);
-  *itsDataPacket = DataPacket();
-  // Fill in the buffer pointer and initialize the buffer.
-  itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
+  itsBufSize = NSTATIONS * NSTATIONS; // * sizeof(BufferType);
+//   unsigned int size = sizeof(DataPacket) + itsBufSize;
+//   char* ptr = new char[size];
+//   // Fill in the data packet pointer and initialize the memory.
+//   itsDataPacket = (DataPacket*)(ptr);
+//   *itsDataPacket = DataPacket();
+//   // Fill in the buffer pointer and initialize the buffer.
+//   itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
 
-  // Initialize base class.
-  setDataPacket (itsDataPacket, size);
+//   // Initialize base class.
+//   setDataPacket (itsDataPacket, size);
+  addField("Buffer", BlobField<BufferType>(1, itsBufSize));
+  createDataBlock();
+  for (unsigned int i=0; i<itsBufSize; i++) {
+    itsBuffer[i] = 0;
+  }
 }
 
 void DH_Vis::postprocess()
 {
-  delete [] (char*)(itsDataPacket);
-  itsDataPacket = 0;
   itsBuffer     = 0;
-  setDefaultDataPacket();
+}
+
+void DH_Vis::fillDataPointers() {
+  itsBuffer = getData<BufferType> ("Buffer");
+
 }
 
 }

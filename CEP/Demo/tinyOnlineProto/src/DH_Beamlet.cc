@@ -37,92 +37,87 @@ namespace LOFAR
 			  const float ElapsedTime, 
 			  const int nchan)
 : DataHolder            (name, "DH_Beamlet"),
-  itsDataPacket         (0),
   itsBuffer             (0)
 {
-  // ToDo: move allocation to preprocess
-
   // First delete possible buffers.
   postprocess();
 
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = nchan * sizeof(BufferType);
-  unsigned int size = sizeof(DataPacket) + itsBufSize;
-  char* ptr = new char[size];
-  // Fill in the data packet pointer and initialize the memory.
-  itsDataPacket = (DataPacket*)(ptr);
-  *itsDataPacket = DataPacket();
-  // Fill in the buffer pointer and initialize the buffer.
-  itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
+  itsBufSize = nchan ;// * sizeof(BufferType);
+//   unsigned int size = sizeof(DataPacket) + itsBufSize;
+//   char* ptr = new char[size];
+//   // Fill in the data packet pointer and initialize the memory.
+//   itsDataPacket = (DataPacket*)(ptr);
+//   *itsDataPacket = DataPacket();
+//   // Fill in the buffer pointer and initialize the buffer.
+//   itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
 
-  // Initialize base class.
-  setDataPacket (itsDataPacket, size);
+//   // Initialize base class.
+//   setDataPacket (itsDataPacket, size);
 
-  itsDataPacket->itsStationID        = StationID;
-  itsDataPacket->itsFrequencyOffset  = FreqOff;
-  itsDataPacket->itsChannelWidth     = channelWidth;
-  itsDataPacket->itsElapsedTime      = ElapsedTime;
-  itsDataPacket->itsNumberOfChannels = nchan;
+  *itsStationID        = StationID;
+  *itsFrequencyOffset  = FreqOff;
+  *itsChannelWidth     = channelWidth;
+  *itsElapsedTime      = ElapsedTime;
+  *itsNumberOfChannels = nchan;
 }
 
   DH_Beamlet::DH_Beamlet (const string& name, 
 			  const int nchan)
 : DataHolder            (name, "DH_Beamlet"),
-  itsDataPacket         (0),
   itsBuffer             (0)
 {
   // First delete possible buffers.
   postprocess();
 
-  // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = nchan * sizeof(BufferType);
-  unsigned int size = sizeof(DataPacket) + itsBufSize;
-  char* ptr = new char[size];
-  // Fill in the data packet pointer and initialize the memory.
-  itsDataPacket = (DataPacket*)(ptr);
-  *itsDataPacket = DataPacket();
-  // Fill in the buffer pointer and initialize the buffer.
-  itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
+//   // Determine the number of bytes needed for DataPacket and buffer.
+  itsBufSize = nchan ;//* sizeof(BufferType);
+//   unsigned int size = sizeof(DataPacket) + itsBufSize;
+//   char* ptr = new char[size];
+//   // Fill in the data packet pointer and initialize the memory.
+//   itsDataPacket = (DataPacket*)(ptr);
+//   *itsDataPacket = DataPacket();
+//   // Fill in the buffer pointer and initialize the buffer.
+//   itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
 
-  // Initialize base class.
-  setDataPacket (itsDataPacket, size);
-  itsDataPacket->itsStationID        = -1;
-  itsDataPacket->itsFrequencyOffset  = -1;
-  itsDataPacket->itsChannelWidth     = -1;
-  itsDataPacket->itsElapsedTime      = -1;
-  itsDataPacket->itsNumberOfChannels = nchan;
+//   // Initialize base class.
+//   setDataPacket (itsDataPacket, size);
+  *itsStationID        = -1;
+  *itsFrequencyOffset  = -1;
+  *itsChannelWidth     = -1;
+  *itsElapsedTime      = -1;
+  *itsNumberOfChannels = nchan;
 }
 
 DH_Beamlet::DH_Beamlet(const DH_Beamlet& that)
   : DataHolder     (that),
-    itsDataPacket  (0),
     itsBuffer      (0)
 {
   // First delete possible buffers.
   postprocess();
 
-  // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = that.getNumberOfChannels() * sizeof(BufferType);
-  unsigned int size = sizeof(DataPacket) + itsBufSize;
-  char* ptr = new char[size];
-  // Fill in the data packet pointer and initialize the memory.
-  itsDataPacket = (DataPacket*)(ptr);
-  *itsDataPacket = DataPacket();
-  // Fill in the buffer pointer and initialize the buffer.
-  itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
+//   // Determine the number of bytes needed for DataPacket and buffer.
+  itsBufSize = that.getNumberOfChannels() ;//* sizeof(BufferType);
+//   unsigned int size = sizeof(DataPacket) + itsBufSize;
+//   char* ptr = new char[size];
+//   // Fill in the data packet pointer and initialize the memory.
+//   itsDataPacket = (DataPacket*)(ptr);
+//   *itsDataPacket = DataPacket();
+//   // Fill in the buffer pointer and initialize the buffer.
+//   itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
 
-  // Initialize base class.
-  setDataPacket (itsDataPacket, size);
-  itsDataPacket->itsStationID        = that.getStationID();
-  itsDataPacket->itsFrequencyOffset  = that.getFrequencyOffset();
-  itsDataPacket->itsChannelWidth     = that.getChannelWidth();
-  itsDataPacket->itsElapsedTime      = that.getElapsedTime();
-  itsDataPacket->itsNumberOfChannels = that.getNumberOfChannels();
+//   // Initialize base class.
+//   setDataPacket (itsDataPacket, size);
+  *itsStationID        = that.getStationID();
+  *itsFrequencyOffset  = that.getFrequencyOffset();
+  *itsChannelWidth     = that.getChannelWidth();
+  *itsElapsedTime      = that.getElapsedTime();
+  *itsNumberOfChannels = that.getNumberOfChannels();
 }
 
 DH_Beamlet::~DH_Beamlet()
 {
-  delete [] (char*)(itsDataPacket);
+  //  delete [] (char*)(itsDataPacket);
 }
 
 DataHolder* DH_Beamlet::clone() const
@@ -132,14 +127,36 @@ DataHolder* DH_Beamlet::clone() const
 
 void DH_Beamlet::preprocess()
 {
+  addField("Buffer", BlobField<BufferType>(1,*itsNumberOfChannels));
+  addField("StationiD", BlobField<int>(1));
+  addField("FrequencyOffset", BlobField<float>(1));
+  addField("ChannelWidth", BlobField<float>(1));
+  addField("ElapsedTime", BlobField<float>(1));
+  addField("NumberOfChannels", BlobField<int>(1));
+	   
+
+  createDataBlock();
+  for (unsigned int i=0; i<itsBufSize; i++){ 
+    itsBuffer[i] = 0;
+  }
 }
 
 void DH_Beamlet::postprocess()
 {
-  delete [] (char*)(itsDataPacket);
-  itsDataPacket = 0;
-  itsBuffer     = 0;
-  setDefaultDataPacket();
+  itsBuffer            = 0;
+  *itsStationID        = -1;
+  *itsFrequencyOffset  = -1;
+  *itsChannelWidth     = -1;
+  *itsElapsedTime      = -1;
+}
+
+void DH_Beamlet::fillDataPointers() {
+  itsBuffer           = getData<BufferType> ("Buffer");
+  itsStationID        = getData<int> ("StationID");
+  itsFrequencyOffset  = getData<float> ("FrequencyOffset");
+  itsChannelWidth     = getData<float> ("ChannelWidth");
+  itsElapsedTime      = getData<float> ("ElapsedTime");
+  itsNumberOfChannels = getData<int>   ("NumberOfChannels"); 
 }
 
 }
