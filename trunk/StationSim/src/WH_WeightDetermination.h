@@ -48,14 +48,13 @@ public:
 						  unsigned int nout,
 						  unsigned int nant, 
 						  string s,
-						  double phi,
-						  double theta);
+						  string beamtrajectoryfile);
 
   virtual ~WH_WeightDetermination();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, int ninput, int noutput,
-				const ParamBlock&);
+								const ParamBlock&);
 
   /// Make a fresh copy of the WH object.
   virtual WH_WeightDetermination* make (const string& name) const;
@@ -88,7 +87,6 @@ private:
 
   unsigned int itsNrcu;
   ArrayConfig itsArray;
-  double itsPhi;
-  double itsTheta;
+  Trajectory itsBeamTraject;
 };
 #endif

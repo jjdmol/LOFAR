@@ -22,45 +22,29 @@
 
 #include <StationSim/Source.h>
 
-Source::Source (string config_file)
+Source::Source (string config_file, string trajectory_file)
 {
   ifstream configfile (config_file.c_str (), ifstream::in);
+  string path = config_file.substr (0, config_file.rfind ('/') + 1);
   string s;
   string filename;
   int i = 0;
+  itsTraject = new Trajectory (trajectory_file);
 
-  while (!configfile.eof () && configfile.is_open ()) {
+  AssertStr (configfile.is_open (), "Couldn't open source file!");
+
+  while (!configfile.eof ()) {
     s = "";
     configfile >> s;
-    if (s == "length") {
+    if (s == "nsignals") {
       configfile >> s;
       if (s == ":") {
-	configfile >> itsLength;
-      }
-    } else if (s == "fs") {
-      configfile >> s;
-      if (s == ":") {
-	configfile >> itsSamplingFreq;
-      }
-    } else if (s == "nsignals") {
-      configfile >> s;
-      if (s == ":") {
-	configfile >> itsNumberOfSignals;
+		configfile >> itsNumberOfSignals;
       }
     } else if (s == "SignalFilename") {
       configfile >> s;
       if (s == ":") {
-	configfile >> filename;
-      }
-    } else if (s == "TrajectoryFilename") {
-      configfile >> s;
-      if (s == ":")
-	configfile >> s;
-      itsTraject = new Trajectory (s, itsSamplingFreq, itsLength);
-    } else if (s == "f_centre") {
-      configfile >> s;
-      if (s == ":") {
-	configfile >> itsCentreFrequency;
+		configfile >> filename;
       }
     } else if (s.substr (0, 2) == "AM" || s == "FM" || s == "PM") {
       double cf;
@@ -71,8 +55,8 @@ Source::Source (string config_file)
       configfile >> cf;
       configfile >> amp;
       configfile >> opt;
-
-      itsSignals[i++] = new Signal (filename, mod, cf, amp, opt);
+	  
+      itsSignals[i++] = new Signal (path + filename, mod, cf, amp, opt);
     }
   }
 }

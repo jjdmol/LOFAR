@@ -22,104 +22,38 @@
 #include <StationSim/Trajectory.h>
 
 
-Trajectory::Trajectory (string config_file, int fs, double length)
-: itsFs     (fs),
-  itsLength (length)
+Trajectory::Trajectory (string config_file)
 {
+  conf_file = config_file;
   ifstream configfile (config_file.c_str (), ifstream::in);
+  int x; 
   string s;
-
-  while (!configfile.eof () && configfile.is_open ()) {
-    s = "";
-    configfile >> s;
-    if (s == "type") {
-      configfile >> s;
-      if (s == ":")
-	configfile >> itsType;
-    } else if (s == "npoints") {
-      configfile >> s;
-      if (s == ":")
-	configfile >> itsNpoints;
-    } else if (s == "points") {
-      configfile >> s;    
-	  if (s == ":") {
-		itsPhi.resize (itsNpoints);
-		itsTheta.resize (itsNpoints);
-		itsTime.resize (itsNpoints);
-		for (int i = 0; i < itsNpoints; ++i) {
-		  configfile >> itsPhi (i);
-		  configfile >> itsTheta (i);
-		  configfile >> itsTime (i);
-		}
-      }
-    }
-  }
-
-  //DEBUG
-  itsFileOut.open("/home/alex/trajectory.txt");
+  int y;
+  
+  AssertStr (configfile.is_open (), "Couldn't open trajectory file!");
+ 
+  configfile >> x;
+  configfile >> s;
+  configfile >> y;
+  
+  configfile.seekg (0); // place file pointer back to the begining of the file
+  itsPhiAndTheta.resize (x, y);
+  
+  configfile >> itsPhiAndTheta;
 }
 
 Trajectory::~Trajectory ()
 {
-  itsFileOut.close ();
 }
 
 double Trajectory::getPhi (int index)
 {
-  Assert (index < itsFs * itsLength);
-  if (itsType == "steady") 
-	{
-	  return itsPhi (0);
-	} 
-  else if (itsType == "variable") 
-	{ 
-	  int i;
-	  // Get the good time points
-	  for (i = 0; itsTime(i) * itsFs * itsLength <= index; ++i)
-		;
-
-	  int dY = (int) ((itsTime(i) - itsTime(i-1)) * itsFs * itsLength);
-	  double dX =  itsPhi(i) - itsPhi(i-1);
-	  
-	  // DEBUG
-	  itsFileOut << itsPhi(i-1) + (dX / dY) * (index - (itsTime(i-1) * itsFs * itsLength)) 
-				 << "\t";
-
-	  return itsPhi(i-1) + (dX / dY) * (index - (itsTime(i-1) * itsFs * itsLength));
-	} 
-  else if (itsType == "cyclic") 
-	{
-	  return itsPhi (index); //DEBUG
-	}
-  else return 0;
+  AssertStr (index < itsPhiAndTheta.rows (), "Trajectory size too small!");
+  return itsPhiAndTheta (index, 0);
 }
 
 double Trajectory::getTheta (int index)
 {
-  Assert (index < itsFs * itsLength);
-  if (itsType == "steady") 
-	{
-	  return itsTheta (0);
-	} 
-  else if (itsType == "variable") 
-	{
-	  int i;
-	  // Get the good time points
-	  for (i = 0; itsTime(i) * itsFs * itsLength <= index; ++i)
-		;
-
-	  int dY = (int) ((itsTime(i) - itsTime(i-1)) * itsFs * itsLength);
-	  double dX = itsTheta(i) - itsTheta(i-1);
-	  
-	  // DEBUG
-	  itsFileOut << itsTheta(i-1) + (dX / dY) * (index - (itsTime(i-1) * itsFs * itsLength)) 
-				 << "\t" << index << endl;
-
-	  return itsTheta(i-1) + (dX / dY) * (index - (itsTime(i-1) * itsFs * itsLength));
-	} 
-  else if (itsType == "cyclic") 
-	{
-	  return itsTheta (index); //DEBUG
-	}
-  else return 0;
+  AssertStr (index < itsPhiAndTheta.rows (), "Trajectory size too small!");
+  return itsPhiAndTheta (index, 1);
 }

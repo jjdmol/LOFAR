@@ -27,27 +27,62 @@ DataGenerator::DataGenerator (string config_file)
   ifstream configfile (config_file.c_str (), ifstream::in);
   string s;
   int i = 0;
+  string path = config_file.substr (0, config_file.rfind ('/') + 1);
 
-  while (!configfile.eof () && configfile.is_open ()) {
-    s = "";
-    configfile >> s;
+  AssertStr (configfile.is_open (), "Couldn't open datagenerator file!");
+
+  while (!configfile.eof ()) {	  
+	s = "";
+	configfile >> s;
 	if (s == "nsources") {
-      configfile >> s;
-      if (s == ":") {
+	  configfile >> s;
+	  if (s == ":") {
 		configfile >> itsNumberOfSources;
 	  }
-    } else if (s == "SignalFilename") {
-      configfile >> s;
-      if (s == ":") {
+	} else if (s == "nfft") {
+	  configfile >> s;
+	  if (s == ":") {
+		configfile >> itsNumberOfFFT;
+	  }
+	} else if (s == "fs") {
+	  configfile >> s;
+	  if (s == ":") {
+		configfile >> itsSamplingFreq;
+	  }
+	} else if (s == "time") {
+	  configfile >> s;
+	  if (s == ":") {
+		configfile >> itsTimeLength;
+	  }
+	} else if (s == "nant") {
+	  configfile >> s;
+	  if (s == ":") {
+		configfile >> itsNumberOfAntennas;
+	  }
+	} else if (s == "snaptogrid") {
+	  configfile >> s;
+	  if (s == ":") {
+		configfile >> itsSnapToGrid;
+	  }
+	} else if (s == "nullgrid") {
+	  configfile >> s;
+	  if (s == ":") {
+		configfile >> itsNullGrid;
+	  }
+	} else if (s == "arrayfile") {
+	  configfile >> s;
+	  if (s == ":") {
 		configfile >> s;
 	  }
-      itsSources[i++] = new Source (s);
-    } else if (s == "ArrayFilename") {
-      configfile >> s;
-      if (s == ":") {
+	  itsArray = new ArrayConfig (path + s);
+	} else if (s == "Source") {
+	  string t;
+	  configfile >> s;
+	  if (s == ":") {
 		configfile >> s;
-	  }
-      itsArray = new ArrayConfig (s);
-    }
+		configfile >> t;
+	  }		  
+	  itsSources[i++] = new Source (path + s, path + t);
+	}
   }
 }
