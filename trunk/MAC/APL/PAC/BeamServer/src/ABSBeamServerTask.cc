@@ -45,6 +45,9 @@
 #include <Common/LofarLogger.h>
 using namespace LOFAR;
 
+#include <blitz/array.h>
+using namespace blitz;
+
 using namespace ABS;
 using namespace std;
 using namespace boost::posix_time;
@@ -53,9 +56,12 @@ using namespace boost::gregorian;
 #define MAX_N_SPECTRAL_WINDOWS 1
 #define COMPUTE_INTERVAL 10
 #define UPDATE_INTERVAL  1
+#define N_SIGNALS (N_ANTENNAS * N_PHASEPOL)
 
 BeamServerTask::BeamServerTask(string name)
     : GCFTask((State)&BeamServerTask::initial, name),
+      m_pos(N_SIGNALS, 3),
+      m_weights(COMPUTE_INTERVAL, N_SIGNALS, N_SUBBANDS),
       board(*this, "board", GCFPortInterface::SAP, true)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
@@ -71,6 +77,11 @@ BeamServerTask::BeamServerTask(string name)
   m_wgsetting.amplitude     = 128;
   m_wgsetting.sample_period = 2;
   m_wgsetting.enabled       = false;
+
+  // initialize antenna positions
+  m_pos(Range::all(), 0) = 1.0;
+  m_pos(Range::all(), 1) = 2.0;
+  m_pos(Range::all(), 2) = 0.0;
 }
 
 BeamServerTask::~BeamServerTask()
@@ -129,8 +140,6 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 	      ssize_t length = board.recv(data, ETH_DATA_LEN);
 	      
 	      length=length; // keep compiler happy
-
-	      LOG_DEBUG(".");
 	  }
       }
       break;
@@ -178,19 +187,19 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
       {
 	GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
 
-	LOG_INFO(formatString("timer=(%d,%d)", timer->sec, timer->usec));
+	LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
 	if (timer->id == update_timer)
 	  {
-	    LOG_INFO(formatString("update_timer=(%d,%d)", timer->sec, timer->usec));
+	    LOG_DEBUG(formatString("update_timer=(%d,%d)", timer->sec, timer->usec));
 	  }
 	else if (timer->id == compute_timer)
 	  {
-	    LOG_INFO(formatString("compute_timer=(%d,%d)", timer->sec, timer->usec));
+	    LOG_DEBUG(formatString("compute_timer=(%d,%d)", timer->sec, timer->usec));
 	    compute_timeout_action(timer->sec);
 	  }
 	else
 	  {
-	    LOG_INFO(formatString("unknown timer %d", timer->id));
+	    LOG_DEBUG(formatString("unknown timer %d", timer->id));
 	  }
       }
       break;
@@ -322,6 +331,7 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,
       || (spwindex >= MAX_N_SPECTRAL_WINDOWS)
       || !(ba->n_subbands > 0 && ba->n_subbands <= N_BEAMLETS))
   {
+      LOG_ERROR("argument range error");
       ack.status = ERR_RANGE;
       port.send(ack);
       return;                         // RETURN
@@ -334,6 +344,7 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,
 
   if (0 == (beam = Beam::allocate(*m_spws[spwindex], subbands)))
   {
+      LOG_ERROR("Beam::allocate failed");
       ack.status = ERR_BEAMALLOC;
       port.send(ack);
   }
@@ -363,7 +374,7 @@ void BeamServerTask::beamfree_action(ABSBeamfreeEvent* bf,
 
   if (beam->deallocate() < 0)
   {
-      LOG_ERROR("beam->deallocate() failed");
+      LOG_ERROR("beam->deallocate failed");
       ack.status = ERR_BEAMFREE;
       port.send(ack);
       return;                     // RETURN
@@ -406,6 +417,7 @@ void BeamServerTask::wgsettings_action(ABSWgsettingsEvent* wgs,
   }
   else
   {
+      LOG_ERROR("argument range error");
       sa.status = ERR_RANGE;
   }
 
@@ -433,7 +445,7 @@ void BeamServerTask::wgenable_action()
 
   board.send(GCFEvent(F_RAW_SIG), &ee.command, 12);
   
-  cerr << "SENT WGENABLE" << endl;
+  LOG_DEBUG("SENT WGENABLE");
 }
 
 void BeamServerTask::wgdisable_action()
@@ -450,7 +462,7 @@ void BeamServerTask::wgdisable_action()
 
   board.send(GCFEvent(F_RAW_SIG), &de.command, 12);
 
-  cerr << "SENT WGDISABLE" << endl;
+  LOG_DEBUG("SENT WGDISABLE");
 }
 
 /**
@@ -472,19 +484,23 @@ void BeamServerTask::compute_timeout_action(long current_seconds)
     (*bi)->convertPointings(compute_period);
   }
 
-  calculate_weights();
+  Beamlet::calculate_weights(m_pos, m_weights);
   send_weights();
-}
-
-void BeamServerTask::calculate_weights()
-{
-  // iterate over all beamlets
-  Beamlet::calculate_weights();
 }
 
 void BeamServerTask::send_weights()
 {
   EPABfconfigureEvent bc;
+
+#if 0
+  static Array<short, 3> weights16_real(COMPUTE_INTERVAL, N_SIGNALS, N_SUBBANDS);
+  static Array<short, 3> weights16_imag(COMPUTE_INTERVAL, N_SIGNALS, N_SUBBANDS);
+
+  weights16_real = real(m_weights);
+  weights16_imag = imag(m_weights);
+
+  LOG_DEBUG(formatString("weights16_real contiguous storage? %s", (weights16_real.isStorageContiguous()?"yes":"no")));
+#endif
 
   bc.command = 4; // 4 == beamformer configure
   bc.seqnr = 0;
@@ -501,9 +517,8 @@ void BeamServerTask::send_weights()
       for (int php = 0; php < N_PHASEPOL; php++)
       {
 	  bc.phasepol = php;
+	  board.send(GCFEvent(F_RAW_SIG), &bc.command, bc.pktsize);
       }
-
-      board.send(GCFEvent(F_RAW_SIG), &bc.command, bc.pktsize);
   }
 
   EPABfenableEvent be;

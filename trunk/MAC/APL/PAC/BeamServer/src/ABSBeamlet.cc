@@ -29,6 +29,10 @@
 #include <blitz/array.h>
 using namespace blitz;
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+using namespace boost::gregorian;
+using namespace boost::posix_time;
+
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
@@ -40,6 +44,9 @@ using namespace std;
 
 int      Beamlet::m_ninstances = 0;
 Beamlet* Beamlet::m_beamlets   = 0;
+
+const W_TYPE SPEED_OF_LIGHT_MS = 299792458.0; // speed of light in meters/sec
+const complex<W_TYPE> I_COMPLEX = complex<W_TYPE>(0.0,1.0);
 
 Beamlet::Beamlet() :
     m_spw(0), m_subband(0), m_index(-1), m_beam(0)
@@ -117,29 +124,74 @@ const Beam* Beamlet::getBeam() const
   return m_beam;
 }
 
-void Beamlet::calculate_weights()
+void Beamlet::calculate_weights(const Array<W_TYPE, 2>&          pos,
+				      Array<complex<W_TYPE>, 3>& weights)
 {
-  priority_queue<Pointing> coords;
-  const Array<double,2>* track = 0;
+  const Array<W_TYPE,2>* lmn = 0;
+  int compute_interval = weights.extent(firstDim);
+  int nsignals         = weights.extent(secondDim);
 
-  for (int i = 0; i < m_ninstances; i++)
+  if ((weights.extent(thirdDim) != m_ninstances)
+      || (pos.extent(firstDim) != nsignals))
   {
-      Beamlet* beamlet = &m_beamlets[i];
+      LOG_ERROR("mismatching pos and weight array shapes");
+      return;
+  }
+
+  for (int bi = 0; bi < m_ninstances; bi++)
+  {
+      Beamlet* beamlet = &m_beamlets[bi];
       if (beamlet->allocated())
       {
 	  const Beam* beam = beamlet->getBeam();
 
 	  // get coordinates from beam
-	  if (beam) track = &beam->getCoordinates();
+	  if (!beam)
+	  {
+	      LOG_ERROR(formatString("no beam for beamlet %d?", beamlet->m_index));
+	      continue;
+	  }
+	  lmn = &beam->getLMNCoordinates();
+
+	  if (!lmn)
+	  {
+	      LOG_ERROR(formatString("invalid (l,m,n) vector for beamlet %d", beamlet->m_index));
+	      continue;
+	  }
+
+	  if (compute_interval != lmn->extent(firstDim))
+	  {
+	      LOG_ERROR(formatString("lmn vector length (%d) != compute_interval (%d)",
+				     lmn->extent(firstDim), compute_interval));
+	      continue;
+	  }
+
+	  W_TYPE freq = 0.0;
+	  if (beamlet->spw())
+	  {
+	      freq = beamlet->spw()->getFrequency(beamlet->subband());
+	  }
+
+  	  for (int si = 0; si < nsignals; si++)
+	  {
+	      //
+	      // calculate (xm - yl -zn)
+	      //
+	      weights(Range::all(), si, bi) =
+		  (pos(si, 0) * (*lmn)(Range::all(), 1))
+		  - (pos(si, 1) * (*lmn)(Range::all(), 0))
+		  - (pos(si, 2) * (*lmn)(Range::all(), 2));
+	  }
+
+	  weights(Range::all(), Range::all(), bi) *= exp((I_COMPLEX * ((W_TYPE)2.0) * ((W_TYPE)M_PI) * freq)
+							 / SPEED_OF_LIGHT_MS);
+
+	  //LOG_TRACE(formatString("calculating weights for frequency %f",
+	  //freq));
       }
   }
 
-  // calculating weights for the following coordinates
-  LOG_INFO(formatString("Calculating weights for %d beamlets: %d coordinates.",
-			m_ninstances, coords.size()));
-  if (track)
-      LOG_INFO(formatString("Storing in Array<double,2> track(%d,%d)",
-			    track->extent(firstDim),
-			    track->extent(secondDim)));
+  LOG_DEBUG(formatString("sizeof weights() = %d bytes", weights.size()*sizeof(complex<W_TYPE>)));
+  LOG_DEBUG(formatString("contiguous storage? %s", (weights.isStorageContiguous()?"yes":"no")));
 }
 

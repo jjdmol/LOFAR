@@ -122,7 +122,7 @@ namespace ABS
 	   * queue of coordinates.
 	   * @return array with the coordinates for the next period.
 	   */
-	  const blitz::Array<double,2>& getCoordinates() const;
+	  const blitz::Array<W_TYPE,2>& getLMNCoordinates() const;
 
 	  /**
 	   * Get the mapping from input subbands to
@@ -152,14 +152,13 @@ namespace ABS
 	  std::priority_queue<Pointing> m_pointing_queue;
 
 	  /**
-	   * Current coordinate track.
-	   * Two dimensional array for (l,m) coordinates
-	   * The first dimension is always 2 (for the two
+	   * Current coordinate track in station local coordinates.
+	   * Two dimensional array for (l,m,n) coordinates
+	   * The first dimension is always 3 (for the three
 	   * coordinates) the second dimension is m_compute_interval
 	   */
-	  blitz::Array<double,2> m_azels; // az,el coordinates
-	  blitz::Array<double,2> m_lms;  // l,m coordinates
-	  boost::posix_time::ptime m_track_time;
+	  blitz::Array<W_TYPE,2> m_azels; // az,el coordinates
+	  blitz::Array<W_TYPE,2> m_lmns;  // l,m,n coordinates
 
 	  /**
 	   * Set of beamlets belonging to this beam.

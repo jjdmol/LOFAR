@@ -79,7 +79,7 @@ GCFEvent::TResult AVTStub::initial(GCFEvent& e, GCFPortInterface& port)
 
       case F_CONNECTED_SIG:
       {
-	  LOG_INFO(formatString("port %s connected", port.getName().c_str()));
+	  LOG_DEBUG(formatString("port %s connected", port.getName().c_str()));
 	  TRAN(AVTStub::test001);
       }
       break;
@@ -457,7 +457,7 @@ GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& /*port*/)
 	    TRAN(AVTStub::test005);
 	}
 
-	LOG_INFO(formatString("loop=%d", loop));
+	LOG_DEBUG(formatString("loop=%d", loop));
       }
       break;
 
@@ -520,6 +520,23 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
 
 	beam_handle = ack->handle;
 	LOG_DEBUG(formatString("got beam_handle=%d", beam_handle));
+
+	// send pointto command
+	ABSBeampointtoEvent pointto;
+	pointto.handle = ack->handle;
+	pointto.time = from_time_t(time(0)) + seconds(27);
+	pointto.type=(int)Direction::LOFAR_LMN;
+	pointto.angle1=-1.0;
+	pointto.angle2=-1.0;
+
+	_test(sizeof(pointto) == beam_server.send(pointto));
+
+	// send pointto command
+	pointto.time = from_time_t(time(0)) + seconds(37);
+	pointto.angle1=0.3;
+	pointto.angle2=0.2;
+
+	_test(sizeof(pointto) == beam_server.send(pointto));
 
 	// let the beamformer compute for 30 seconds
 	timerid = beam_server.setTimer((long)30);
