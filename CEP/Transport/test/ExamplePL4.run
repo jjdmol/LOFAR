@@ -14,7 +14,12 @@ _EOF_
 
 # Run the test program if no first argument is given.
 if [ "$1" = "" ]; then
+#  ~/bin/valgrind --tool=memcheck --num-callers=50 --workaround-gcc296-bugs=yes --leak-check=yes --track-fds=yes ./ExamplePL4
   ./ExamplePL4
+  STATUS=$?
+  if [ $STATUS != 0 ]; then
+    exit $STATUS
+  fi
 fi
 
 # Show the contents of the database.
