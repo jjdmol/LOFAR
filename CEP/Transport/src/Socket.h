@@ -70,7 +70,8 @@ public:
 	// Returns the new socket to continue with, the user should check the
 	// connectionstate of the returned socket because it is set to not-conn.
 	// when a serious error occured.
-	Socket	accept			();
+	Socket	accept			(int   buffersize=4096,      // specify receive buffer size
+					 char* bufferptr =NULL);     // address of exteral receive buffer
 
 	// Closes the connection in a nice way and releases the memory of the
 	// connection.
@@ -81,29 +82,31 @@ public:
 	void	freeBuffer	();
 
 	//# ---------------- Data exchange routines -------------------
-	int32	send(const char*	message, const int32 messageLength);
-	int32	poll(char 			**message, 
-				 int32*			messageLength, 
-				 const int32	timeout);
+	int32	send(const char* message, 
+		     const int32 messageLength);
+	int32	recv(char* buf=NULL,
+		     const int   len=0);
+	int32	poll(char **message, 
+		     int32*  messageLength, 
+		     const int32 timeout);
 
 	//# ---------------- Accessor functions -----------------------
-	inline int16	socketID() 	  const	{ return (itsSocketID);  	}
-	inline bool		isConnected() const	{ return (itsConnected); 	}
+	inline int16	socketID()    const	{ return (itsSocketID);  	}
+	inline bool	isConnected() const	{ return (itsConnected); 	}
 	inline int16	bufferSize()  const	{ return (itsBufferSize);	}
 
 private:
-	string		itsHostname;
-	int16		itsPortnr;
-	int16		itsSocketID;
-	int32		itsBufferSize;
-	int32		itsRptr;
-	int32		itsWptr;
-	char*		itsData;
-	bool		itsConnected;
-
-	// move any data from the TCP/IP layer to our own buffers.
-	int32	read();
-
+   string		itsHostname;
+   int16		itsPortnr;
+   int16		itsSocketID;
+   int32		itsBufferSize;
+   int32		itsRptr;
+   int32		itsWptr;
+   char*		itsData;
+   bool		        itsConnected;
+   bool                 itsIsMyBuffer;
+   bool                 itsIsAllocated;
+   
 	friend std::ostream& operator<<(std::ostream& os, const Socket &theSocket);
 };
 
