@@ -175,7 +175,7 @@ TPMResult GPMController::unloadMyProperties(const string& scope)
       sprintf(buffer, "%03x%s", scope.size(), scope.c_str());
       e.length += bufLength;
       _isBusy = true;      
-      _propertyAgent.send(e, buffer, bufLength);s
+      _propertyAgent.send(e, buffer, bufLength);
       delete [] buffer;
     }
   }
@@ -506,10 +506,10 @@ int GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       GCFTimerEvent* pTimer = static_cast<GCFTimerEvent*>(&e);
       if (pTimer->arg)
       {
-        TGetData* pGetData = static_cast<TGetData*>pTimer->arg;
+        const TGetData* pGetData = static_cast<const TGetData*>(pTimer->arg);
         if (pGetData)
         {
-          _supervisoryTask.valueGet(*pGetData->pPropName, *pGetData->pValue);
+          _supervisedTask.valueGet(*pGetData->pPropName, *pGetData->pValue);
           delete pGetData->pPropName;
           delete pGetData->pValue;
         }
