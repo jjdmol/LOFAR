@@ -113,7 +113,7 @@ void WH_Correlate::process()
 
 //  corr = complex<float> (0,0);
 
-  //WH_Correlate::correlator_core(signal, corr);
+  WH_Correlate::correlator_core(signal, corr);
   WH_Correlate::correlator_core_unrolled(signal, corr);
   
   // signal
@@ -371,6 +371,7 @@ void WH_Correlate::correlator_core_unrolled(complex<float> s[itsNelements][itsNi
 		   s[x+4][time].real() * s[y+4][time].real() - s[x+4][time].imag() * s[y+4][time].imag(),
 		   s[x+4][time].real() * s[y+4][time].imag() + s[x+4][time].imag() * s[y+4][time].real()
 		   );
+    
     
     }
   }
