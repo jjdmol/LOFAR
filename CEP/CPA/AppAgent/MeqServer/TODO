@@ -1,14 +1,8 @@
 MEQ in general:
 
-  * CRITICAL BUG: If spigot is created implicitly (via nested init-records), 
-    it does not get added to the data mux!!! Same goes for loading a forest.
-    Time to rethink this whole I/O business -- tie it to forest.
-    
-  * BUG: Initial Resolve.Children too inefficient in the case of a large set of
-    interlinked solve trees (the singular solver causes everything to be 
-    repeated over and over again). If cache would apply itself properly to 
-    command results, that would solve the whole problem. Think this through.
-    And what about symdep propagation? Same thing, really.
+  * BUG:(?) WSRT MSs may have channels laid out by decreasing freq.
+    This screws up Domain/Cells -- somebody has to either reverse the freq axis,
+    or Domain/Cells need to be reimplemented to support reversed domains.
 
   * BUG: assigning requestIDs in VisDataMux: should be consistent with symdeps
     Add knowledge of symdeps to MeqServer itself
@@ -16,9 +10,22 @@ MEQ in general:
   * BUG: Sink does not handle a fail-result gracefully. Or does it?
     Actually, we need to regularize this whole fail business.
   
-  * Better ways to check for a running meqserver?
-    Check esp. when the pipe exists and a debugger is running --
-    I think -nostart, if given, should override everything
+      + CRITICAL BUG: If spigot is created implicitly (via nested init-records), 
+        it does not get added to the data mux!!! Same goes for loading a forest.
+        Time to rethink this whole I/O business -- tie it to forest.
+        12/08/04: done
+
+      + BUG: Initial Resolve.Children too inefficient in the case of a large set of
+        interlinked solve trees (the singular solver causes everything to be 
+        repeated over and over again). If cache would apply itself properly to 
+        command results, that would solve the whole problem. Think this through.
+        And what about symdep propagation? Same thing, really.
+        12/08/04: done
+        
+      + Better ways to check for a running meqserver?
+        Check esp. when the pipe exists and a debugger is running --
+        I think -nostart, if given, should override everything
+        12/08/04: all done
   
       + BUG: RES_UPDATED gets propagated, should it?
         11/07/04: no, fixed, cleared from cached code
