@@ -75,7 +75,7 @@ void MeqPolc::setCoeffOnly (const MeqMatrix& values)
 MeqResult MeqPolc::getResult (const MeqRequest& request)
 {
   PERFPROFILE(__PRETTY_FUNCTION__);
-
+  Bool makeDiff = itsMaxNrSpid > 0  &&  request.nspid() > 0;
   // It is not checked if the domain is valid.
   // In that way any value can be used for the default domain [-1,1].
   // Because the values are calculated for the center of each cell,
@@ -95,7 +95,7 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
   // Make sure it is turned into a scalar value.
   if (itsCoeff.nelements() == 1) {
     result.setValue (MeqMatrix(itsCoeff.getDouble()));
-    if (itsMaxNrSpid) {
+    if (makeDiff) {
       result.setPerturbedValue (itsSpidInx[0],
 				MeqMatrix(itsCoeff.getDouble()
 					  + itsPerturbation.getDouble()));
@@ -120,7 +120,7 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
     const double* coeffData = itsCoeff.doubleStorage();
     const double* pertData = 0;
     double* pertValPtr[100];
-    if (itsMaxNrSpid) {
+    if (makeDiff) {
       pertData = itsPerturbation.doubleStorage();
       // Create the matrix for each perturbed value.
       // Keep a pointer to the internal matrix data.
@@ -152,7 +152,7 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
 	    total *= valy;
 	    total += coeff[iy];
 	  }
-	  if (itsMaxNrSpid) {
+	  if (makeDiff) {
 	    double powy = 1;
 	    for (int iy=0; iy<ncy; iy++) {
 	      if (pertValPtr[iy]) {
@@ -174,7 +174,7 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
 	    powy *= valy;
 	    coeff += ncx;
 	  }
-	  if (itsMaxNrSpid) {
+	  if (makeDiff) {
 	    double powersx[10];
 	    double powx = 1;
 	    for (int ix=0; ix<ncx; ix++) {
@@ -201,7 +201,7 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
       valy += stepy;
     }
     // Set the perturbations.
-    if (itsMaxNrSpid) {
+    if (makeDiff) {
       const double* pert  = itsPerturbation.doubleStorage();
       for (unsigned int i=0; i<itsSpidInx.size(); i++) {
 	if (itsSpidInx[i] >= 0) {
