@@ -1,7 +1,8 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 108 222 182 N "_3DFace" 1
+PANEL,235 463 222 182 N "_3DFace" 2
+"$APNr"
 "$datapoint"
 "main()
 {
@@ -153,6 +154,26 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 164 17 204 57
+2 11
+"Text2"
+""
+1 34 55 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 36 57 74 73
+0 2 0 "s" 0 0 0 192 0 0  36 57
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 7 details
 14 7
 "output_packetsError"
 ""
@@ -168,7 +189,7 @@ LANG:1 0
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 128 102 202 127
-3 "s" 0 0 0 0 0 0 
+3 "s" 0 0 0 2 0 0 
 E
 E
 E
@@ -187,7 +208,7 @@ LANG:1 0
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 128 126 202 151
-3 "s" 0 0 0 0 0 0 
+3 "s" 0 0 0 2 0 0 
 E
 E
 E
@@ -206,7 +227,7 @@ LANG:1 0
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 128 78 202 103
-3 "s" 0 0 0 0 0 0 
+3 "s" 0 0 0 2 0 0 
 E
 E
 E
@@ -224,11 +245,11 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-15 34 138 58
+15 34 142 62
 1
 T 
 1
-LANG:1 16 Ethernet details
+LANG:1 16 Control ethernet
  0
 1
 LANG:1 0 
@@ -245,13 +266,32 @@ E"main(int button, bool state)
       setValue(\"output_packetsReceived\", \"visible\", state);
       setValue(\"output_packetsError\"   , \"visible\", state);
       setValue(\"output_lastError\"      , \"visible\", state);
+      
+      setValue(\"output_packetsReceived\", \"editable\", FALSE);
+      setValue(\"output_packetsError\"   , \"editable\", FALSE);
+      setValue(\"output_lastError\"      , \"editable\", FALSE);
 
-     
+    
     if (state == TRUE)        // if checkbox is checked, show details and connect textbox to the datapoints
     {
-      dpConnect(\"BoardETHDetails\", $datapoint + \"_Board1_ETH.packetsReceived:_online.._value\",
-                                   $datapoint + \"_Board1_ETH.packetsError:_online.._value\",
-                                   $datapoint + \"_Board1_ETH.lastError:_online.._value\");
+      if(!dpExists($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.sampleCount:_online.._value\") ||
+         !dpExists($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.syncCount:_online.._value\") ||
+         !dpExists($datapoint + \"_Board1_AP\"+ $APNr + \"_SYNCStatus.errorCount:_online.._value\"))
+      {
+        setValue(\"output_packetsReceived\", \"backCol\", \"_dpdoesnotexist\");
+        setValue(\"output_packetsError\", \"backCol\", \"_dpdoesnotexist\");
+        setValue(\"output_lastError\", \"backCol\", \"_dpdoesnotexist\");
+        return;
+      }
+      else
+      {
+        setValue(\"output_packetsReceived\", \"backCol\", \"white\");
+        setValue(\"output_packetsError\", \"backCol\", \"white\");
+        setValue(\"output_lastError\", \"backCol\", \"white\");
+        dpConnect(\"BoardETHDetails\", $datapoint + \"_Board1_ETH.packetsReceived:_online.._value\",
+                                     $datapoint + \"_Board1_ETH.packetsError:_online.._value\",
+                                     $datapoint + \"_Board1_ETH.lastError:_online.._value\");
+      }
     }
     else if (state == FALSE)  // if checkbox is NOT checked, show details and connect textbox to the datapoints
     {
@@ -268,13 +308,9 @@ BoardETHDetails(string dp1, int packetsReceived,
                 string dp2, int packetsError,
                 string dp3, int lastError)
 {
-time t = getCurrentTime();
-
-
   setValue(\"output_packetsReceived\", \"text\", packetsReceived);
   setValue(\"output_packetsError\"   , \"text\", packetsError);
   setValue(\"output_lastError\"      , \"text\", lastError);
-
 }" 0
 0
 LAYER, 1 

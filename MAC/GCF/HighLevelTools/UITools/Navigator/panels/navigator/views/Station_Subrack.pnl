@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 7 Subrack
-PANEL,330 119 986 776 N "_3DFace" 1
+PANEL,250 138 986 776 N "_3DFace" 1
 "$datapoint"
 EEE E E 1 -1 -1 0  120 205
 "" 0 1
@@ -46,7 +46,7 @@ E E 0 1 1 0 1 E U  1 E 10 180 810 740
 4 101
 "Line2"
 ""
-1 260 320 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 260 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 102 0 0 0 0 0
 EE E
@@ -55,11 +55,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  260 360 260 320
+E E 0 1 1 0 1 E  260 310 260 270
 4 102
 "Line3"
 ""
-1 360 320 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 360 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 103 0 0 0 0 0
 EE E
@@ -68,11 +68,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  360 360 360 320
+E E 0 1 1 0 1 E  360 310 360 270
 4 103
 "Line7"
 ""
-1 460 320 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 460 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 104 0 0 0 0 0
 EE E
@@ -81,11 +81,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  460 360 460 320
+E E 0 1 1 0 1 E  460 310 460 270
 4 104
 "Line8"
 ""
-1 560 320 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 560 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 105 0 0 0 0 0
 EE E
@@ -94,11 +94,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  560 360 560 320
+E E 0 1 1 0 1 E  560 310 560 270
 4 105
 "Line9"
 ""
-1 660 320 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 660 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 106 0 0 0 0 0
 EE E
@@ -107,11 +107,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  660 360 660 320
+E E 0 1 1 0 1 E  660 310 660 270
 4 106
 "Line10"
 ""
-1 760 320 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 760 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 107 0 0 0 0 0
 EE E
@@ -120,11 +120,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  760 360 760 320
+E E 0 1 1 0 1 E  760 310 760 270
 4 107
 "Line11"
 ""
-1 60 320 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 60 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 108 0 0 0 0 0
 EE E
@@ -133,11 +133,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  60 360 60 320
+E E 0 1 1 0 1 E  60 310 60 270
 4 108
 "Line12"
 ""
-1 160 320 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 160 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 109 0 0 0 0 0
 EE E
@@ -146,7 +146,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  160 360 160 320
+E E 0 1 1 0 1 E  160 310 160 270
 4 113
 "Line16"
 ""
@@ -186,140 +186,10 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E  710 550 530 550
-4 121
-"Line42"
-""
-1 1090 400 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-122 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  1090 400 820 400
-4 122
-"Line43"
-""
-1 1088 450 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-123 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  1090 450 820 450
-4 153
-"Line44"
-""
-1 60 248 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-126 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  60 250 60 200
-4 244
-"Line45"
-""
-1 160 248 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-133 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  160 250 160 200
-4 245
-"Line46"
-""
-1 260 248 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-134 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  260 250 260 200
-4 246
-"Line47"
-""
-1 360 248 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-135 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  360 250 360 200
-4 247
-"Line48"
-""
-1 460 248 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-136 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  460 250 460 200
-4 248
-"Line49"
-""
-1 560 248 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-137 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  560 250 560 200
-4 249
-"Line50"
-""
-1 660 248 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-138 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  660 250 660 200
-4 250
-"Line51"
-""
-1 760 248 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-139 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  760 250 760 200
 2 272
 "Text12"
 ""
-1 61 219 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 54 179 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 147 0 0 0 0 0
 EE E
@@ -328,8 +198,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 63 221 71 237
-0 2 0 "s" 0 0 0 192 0 0  63 221
+E E 0 1 1 0 1 E U  0 E 56 181 64 197
+0 2 0 "s" 0 0 0 192 0 0  56 181
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -339,7 +209,7 @@ LANG:1 1 x
 2 273
 "Text13"
 ""
-1 161 219 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 155 178 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 148 0 0 0 0 0
 EE E
@@ -348,8 +218,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 163 221 170 237
-0 2 0 "s" 0 0 0 192 0 0  163 221
+E E 0 1 1 0 1 E U  0 E 157 180 164 196
+0 2 0 "s" 0 0 0 192 0 0  157 180
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -359,7 +229,7 @@ LANG:1 1 y
 2 274
 "Text14"
 ""
-1 261 219 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 254 179 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 149 0 0 0 0 0
 EE E
@@ -368,8 +238,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 263 221 271 237
-0 2 0 "s" 0 0 0 192 0 0  263 221
+E E 0 1 1 0 1 E U  0 E 256 181 264 197
+0 2 0 "s" 0 0 0 192 0 0  256 181
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -379,7 +249,7 @@ LANG:1 1 x
 2 275
 "Text15"
 ""
-1 361 219 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 355 179 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 150 0 0 0 0 0
 EE E
@@ -388,8 +258,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 363 221 370 237
-0 2 0 "s" 0 0 0 192 0 0  363 221
+E E 0 1 1 0 1 E U  0 E 357 181 364 197
+0 2 0 "s" 0 0 0 192 0 0  357 181
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -399,7 +269,7 @@ LANG:1 1 y
 2 276
 "Text16"
 ""
-1 461 219 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 455 179 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 151 0 0 0 0 0
 EE E
@@ -408,8 +278,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 463 221 471 237
-0 2 0 "s" 0 0 0 192 0 0  463 221
+E E 0 1 1 0 1 E U  0 E 457 181 465 197
+0 2 0 "s" 0 0 0 192 0 0  457 181
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -419,7 +289,7 @@ LANG:1 1 x
 2 277
 "Text17"
 ""
-1 561 219 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 555 179 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 152 0 0 0 0 0
 EE E
@@ -428,8 +298,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 563 221 570 237
-0 2 0 "s" 0 0 0 192 0 0  563 221
+E E 0 1 1 0 1 E U  0 E 557 181 564 197
+0 2 0 "s" 0 0 0 192 0 0  557 181
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -439,7 +309,7 @@ LANG:1 1 y
 2 278
 "Text18"
 ""
-1 661 219 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 655 179 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 153 0 0 0 0 0
 EE E
@@ -448,8 +318,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 663 221 671 237
-0 2 0 "s" 0 0 0 192 0 0  663 221
+E E 0 1 1 0 1 E U  0 E 657 181 665 197
+0 2 0 "s" 0 0 0 192 0 0  657 181
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -459,7 +329,7 @@ LANG:1 1 x
 2 279
 "Text19"
 ""
-1 761 219 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 755 179 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 154 0 0 0 0 0
 EE E
@@ -468,8 +338,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 763 221 770 237
-0 2 0 "s" 0 0 0 192 0 0  763 221
+E E 0 1 1 0 1 E U  0 E 757 181 764 197
+0 2 0 "s" 0 0 0 192 0 0  757 181
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -588,398 +458,6 @@ LANG:1 1 y
 0
 1 445 27 "" 5
 0
-4 394
-"Line1"
-""
-1 839 390 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-190 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  820 400 840 390
-4 395
-"Line4"
-""
-1 839 409 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-191 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  840 410 820 400
-4 396
-"Line5"
-""
-1 849 279 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-192 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  850 280 830 270
-4 397
-"Line6"
-""
-1 849 281 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-193 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  830 290 850 280
-4 398
-"Line13"
-""
-1 869 419 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-194 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  870 420 850 410
-4 399
-"Line14"
-""
-1 869 421 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-195 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  850 430 870 420
-4 400
-"Line15"
-""
-1 839 440 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-196 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  820 450 840 440
-4 401
-"Line24"
-""
-1 839 459 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-197 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 3 1 0 1 E  840 460 820 450
-1 408 29 "" 13
-0
-1 409 29 "" 20
-0
-1 411 29 "" 23
-0
-1 412 29 "" 24
-0
-1 413 29 "" 25
-0
-1 414 29 "" 26
-0
-1 415 29 "" 27
-0
-1 416 29 "" 28
-0
-1 417 29 "" 29
-0
-1 418 29 "" 30
-0
-1 419 29 "" 31
-0
-1 420 29 "" 32
-0
-1 421 29 "" 33
-0
-1 422 29 "" 34
-0
-1 423 29 "" 35
-0
-1 424 29 "" 36
-0
-1 425 29 "" 37
-0
-1 426 29 "" 38
-0
-1 425 30 "" 13
-0
-1 426 30 "" 20
-0
-1 428 30 "" 23
-0
-1 429 30 "" 24
-0
-1 430 30 "" 25
-0
-1 431 30 "" 26
-0
-1 432 30 "" 27
-0
-1 433 30 "" 28
-0
-1 434 30 "" 29
-0
-1 435 30 "" 30
-0
-1 436 30 "" 31
-0
-1 437 30 "" 32
-0
-1 438 30 "" 33
-0
-1 439 30 "" 34
-0
-1 440 30 "" 35
-0
-1 441 30 "" 36
-0
-1 442 30 "" 37
-0
-1 443 30 "" 38
-0
-1 441 31 "" 13
-0
-1 442 31 "" 20
-0
-1 444 31 "" 23
-0
-1 445 31 "" 24
-0
-1 446 31 "" 25
-0
-1 447 31 "" 26
-0
-1 448 31 "" 27
-0
-1 449 31 "" 28
-0
-1 450 31 "" 29
-0
-1 451 31 "" 30
-0
-1 452 31 "" 31
-0
-1 453 31 "" 32
-0
-1 454 31 "" 33
-0
-1 455 31 "" 34
-0
-1 456 31 "" 35
-0
-1 457 31 "" 36
-0
-1 458 31 "" 37
-0
-1 459 31 "" 38
-0
-1 457 32 "" 13
-0
-1 458 32 "" 20
-0
-1 460 32 "" 23
-0
-1 461 32 "" 24
-0
-1 462 32 "" 25
-0
-1 463 32 "" 26
-0
-1 464 32 "" 27
-0
-1 465 32 "" 28
-0
-1 466 32 "" 29
-0
-1 467 32 "" 30
-0
-1 468 32 "" 31
-0
-1 469 32 "" 32
-0
-1 470 32 "" 33
-0
-1 471 32 "" 34
-0
-1 472 32 "" 35
-0
-1 473 32 "" 36
-0
-1 474 32 "" 37
-0
-1 475 32 "" 38
-0
-1 473 33 "" 13
-0
-1 474 33 "" 20
-0
-1 476 33 "" 23
-0
-1 477 33 "" 24
-0
-1 478 33 "" 25
-0
-1 479 33 "" 26
-0
-1 480 33 "" 27
-0
-1 481 33 "" 28
-0
-1 482 33 "" 29
-0
-1 483 33 "" 30
-0
-1 484 33 "" 31
-0
-1 485 33 "" 32
-0
-1 486 33 "" 33
-0
-1 487 33 "" 34
-0
-1 488 33 "" 35
-0
-1 489 33 "" 36
-0
-1 490 33 "" 37
-0
-1 491 33 "" 38
-0
-1 489 34 "" 13
-0
-1 490 34 "" 20
-0
-1 492 34 "" 23
-0
-1 493 34 "" 24
-0
-1 494 34 "" 25
-0
-1 495 34 "" 26
-0
-1 496 34 "" 27
-0
-1 497 34 "" 28
-0
-1 498 34 "" 29
-0
-1 499 34 "" 30
-0
-1 500 34 "" 31
-0
-1 501 34 "" 32
-0
-1 502 34 "" 33
-0
-1 503 34 "" 34
-0
-1 504 34 "" 35
-0
-1 505 34 "" 36
-0
-1 506 34 "" 37
-0
-1 507 34 "" 38
-0
-1 505 35 "" 13
-0
-1 506 35 "" 20
-0
-1 508 35 "" 23
-0
-1 509 35 "" 24
-0
-1 510 35 "" 25
-0
-1 511 35 "" 26
-0
-1 512 35 "" 27
-0
-1 513 35 "" 28
-0
-1 514 35 "" 29
-0
-1 515 35 "" 30
-0
-1 516 35 "" 31
-0
-1 517 35 "" 32
-0
-1 518 35 "" 33
-0
-1 519 35 "" 34
-0
-1 520 35 "" 35
-0
-1 521 35 "" 36
-0
-1 522 35 "" 37
-0
-1 523 35 "" 38
-0
-1 521 36 "" 13
-0
-1 522 36 "" 20
-0
-1 524 36 "" 23
-0
-1 525 36 "" 24
-0
-1 526 36 "" 25
-0
-1 527 36 "" 26
-0
-1 528 36 "" 27
-0
-1 529 36 "" 28
-0
-1 530 36 "" 29
-0
-1 531 36 "" 30
-0
-1 532 36 "" 31
-0
-1 533 36 "" 32
-0
-1 534 36 "" 33
-0
-1 535 36 "" 34
-0
-1 536 36 "" 35
-0
-1 537 36 "" 36
-0
-1 538 36 "" 37
-0
-1 539 36 "" 38
-0
 2 538
 "Text9"
 ""
@@ -1004,114 +482,10 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 2 XX
-6 541
-"Border1"
-""
-1 35 205 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
- E E
-214 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 35 190 85 205
-6 542
-"Border4"
-""
-1 136 205 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
- E E
-215 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 136 190 186 205
-6 543
-"Border5"
-""
-1 234 205 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
- E E
-216 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 234 190 284 205
-6 544
-"Border7"
-""
-1 335 205 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
- E E
-217 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 335 190 385 205
-6 545
-"Border8"
-""
-1 435 205 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
- E E
-218 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 435 190 485 205
-6 546
-"Border9"
-""
-1 536 205 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
- E E
-219 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 536 190 586 205
-6 547
-"Border10"
-""
-1 634 205 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
- E E
-220 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 634 190 684 205
-6 548
-"Border11"
-""
-1 735 205 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
- E E
-221 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 735 190 785 205
 4 549
 "Line25"
 ""
-1 140 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 140 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 222 0 0 0 0 0
 EE E
@@ -1120,11 +494,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  140 190 140 150
+E E 0 1 1 0 1 E  140 200 140 150
 4 550
 "Line26"
 ""
-1 180 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 180 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 223 0 0 0 0 0
 EE E
@@ -1133,11 +507,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  180 190 180 150
+E E 0 1 1 0 1 E  180 200 180 150
 4 551
 "Line27"
 ""
-1 240 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 240 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 224 0 0 0 0 0
 EE E
@@ -1146,11 +520,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  240 190 240 150
+E E 0 1 1 0 1 E  240 200 240 150
 4 552
 "Line28"
 ""
-1 280 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 280 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 225 0 0 0 0 0
 EE E
@@ -1159,11 +533,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  280 190 280 150
+E E 0 1 1 0 1 E  280 200 280 150
 4 553
 "Line29"
 ""
-1 340 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 340 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 226 0 0 0 0 0
 EE E
@@ -1172,11 +546,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  340 190 340 150
+E E 0 1 1 0 1 E  340 200 340 150
 4 554
 "Line30"
 ""
-1 380 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 380 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 227 0 0 0 0 0
 EE E
@@ -1185,11 +559,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  380 190 380 150
+E E 0 1 1 0 1 E  380 200 380 150
 4 555
 "Line31"
 ""
-1 440 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 440 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 228 0 0 0 0 0
 EE E
@@ -1198,11 +572,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  440 190 440 150
+E E 0 1 1 0 1 E  440 200 440 150
 4 556
 "Line32"
 ""
-1 480 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 480 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 229 0 0 0 0 0
 EE E
@@ -1211,11 +585,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  480 190 480 150
+E E 0 1 1 0 1 E  480 200 480 150
 4 557
 "Line33"
 ""
-1 540 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 540 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 230 0 0 0 0 0
 EE E
@@ -1224,11 +598,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  540 190 540 150
+E E 0 1 1 0 1 E  540 200 540 150
 4 558
 "Line34"
 ""
-1 580 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 580 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 231 0 0 0 0 0
 EE E
@@ -1237,11 +611,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  580 190 580 150
+E E 0 1 1 0 1 E  580 200 580 150
 4 559
 "Line35"
 ""
-1 640 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 640 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 232 0 0 0 0 0
 EE E
@@ -1250,11 +624,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  640 190 640 150
+E E 0 1 1 0 1 E  640 200 640 150
 4 560
 "Line36"
 ""
-1 680 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 680 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 233 0 0 0 0 0
 EE E
@@ -1263,11 +637,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  680 190 680 150
+E E 0 1 1 0 1 E  680 200 680 150
 4 561
 "Line37"
 ""
-1 740 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 740 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 234 0 0 0 0 0
 EE E
@@ -1276,11 +650,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  740 190 740 150
+E E 0 1 1 0 1 E  740 200 740 150
 4 562
 "Line38"
 ""
-1 780 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 780 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 235 0 0 0 0 0
 EE E
@@ -1289,11 +663,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  780 190 780 150
+E E 0 1 1 0 1 E  780 200 780 150
 4 563
 "Line39"
 ""
-1 80 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 80 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 236 0 0 0 0 0
 EE E
@@ -1302,11 +676,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  80 190 80 150
+E E 0 1 1 0 1 E  80 200 80 150
 4 564
 "Line40"
 ""
-1 40 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 40 200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 237 0 0 0 0 0
 EE E
@@ -1315,293 +689,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  40 190 40 150
-2 587
-"Text20"
-""
-1 820 90 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-259 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 865 92 908 106
-0 2 0 "s" 0 0 0 194 0 0  865 92
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 ver: 0.12
-6 591
-"Border3"
-""
-1 820 350 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-263 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 820 190 960 350
-2 595
-"Text24"
-""
-1 826 202 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-267 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 828 204 853 220
-0 2 0 "s" 0 0 0 192 0 0  828 204
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 3 AP1
-2 596
-"txt_version"
-""
-1 913 334 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-268 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 958 336 1001 350
-0 2 0 "s" 0 0 0 194 0 0  958 336
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 ver: 0.12
-2 603
-"Text26"
-""
-1 940 201 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-275 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 942 203 956 219
-0 2 0 "s" 0 0 0 192 0 0  942 203
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 2 °C
-2 576
-"txt_11"
-""
-1 837 263 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-248 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 839 265 872 281
-0 2 0 "s" 0 0 0 66 0 0  839 265
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 6 Error:
-2 577
-"txt_21"
-""
-1 820 287 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-249 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 822 289 872 308
-0 2 0 "s" 0 0 0 66 0 0  822 289
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 7 Sample:
-2 578
-"txt_31"
-""
-1 837 311 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-250 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 839 313 872 329
-0 2 0 "s" 0 0 0 66 0 0  839 313
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 5 Sync:
-6 607
-"icon_maintenance"
-""
-1 830 89 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
- "main()
-{
-  BPContextMenu();
-}" 0
- E
-279 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 830 50 870 90
-6 613
-"Border18"
-""
-1 820 180 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
- E E
-285 0 0 0 0 0
-EE E
-0
-1
-LANG:1 9 ver: 0.12
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 820 110 880 180
-2 614
-"Text29"
-""
-1 44 189 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-286 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 46 191 53 206
-0 2 0 "s" 0 0 0 192 0 0  46 191
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 1 L
-2 615
-"Text30"
-""
-1 66 189 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-287 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 68 191 77 206
-0 2 0 "s" 0 0 0 192 0 0  68 191
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 1 H
-2 617
-"Text32"
-""
-1 832 110 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-289 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 834 112 868 128
-0 2 0 "s" 0 0 0 192 0 0  834 112
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 4 RCU2
-6 618
-"Border19"
-""
-1 830 166 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
- "main()
-{
-  BPContextMenu();
-}" 0
- E
-290 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/icon_maintenance.gif" 16777215 E 830 127 870 167
-4 637
-"Line41"
-""
-1 350 520 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-309 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  350 640 350 520
-4 638
-"Line52"
-""
-1 470 520 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-310 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  470 640 470 520
+E E 0 1 1 0 1 E  40 200 40 150
 4 643
 "Line53"
 ""
@@ -1644,7 +732,7 @@ E E 0 1 1 0 1 E  110 550 110 520
 4 647
 "Line56"
 ""
-1 410 680 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 490 680 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 319 0 0 0 0 0
 EE E
@@ -1653,11 +741,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  410 730 410 680
+E E 0 1 1 0 1 E  490 730 490 680
 4 649
 "Line57"
 ""
-1 410 730 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 490 730 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 321 0 0 0 0 0
 EE E
@@ -1666,11 +754,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  410 730 400 720
+E E 0 1 1 0 1 E  490 730 480 720
 4 650
 "Line58"
 ""
-1 410 730 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 490 730 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 322 0 0 0 0 0
 EE E
@@ -1679,7 +767,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  410 730 420 720
+E E 0 1 1 0 1 E  490 730 500 720
 1 654 37 "" 0
 0
 1 655 37 "" 1
@@ -1694,7 +782,634 @@ E E 0 1 1 0 1 E  410 730 420 720
 0
 1 660 37 "" 6
 0
-1 413 11 "" 11
+1 661 37 "" 11
+0
+4 665
+"Line1"
+""
+1 180 420 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+324 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  180 420 240 420
+4 666
+"Line4"
+""
+1 380 420 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+325 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  380 420 440 420
+4 667
+"Line5"
+""
+1 580 420 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+326 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  580 420 640 420
+4 668
+"Line6"
+""
+1 120 530 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+327 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  120 530 110 520
+4 669
+"Line13"
+""
+1 100 530 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+328 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  100 530 110 520
+4 670
+"Line14"
+""
+1 240 420 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+329 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  240 420 230 410
+4 671
+"Line15"
+""
+1 230 430 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+330 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  230 430 240 420
+4 672
+"Line17"
+""
+1 440 420 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+331 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  440 420 430 410
+4 673
+"Line19"
+""
+1 430 430 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+332 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  430 430 440 420
+4 674
+"Line21"
+""
+1 640 420 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+333 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  640 420 630 410
+4 675
+"Line22"
+""
+1 630 430 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+334 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  630 430 640 420
+4 676
+"Line23"
+""
+1 530 640 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+335 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  530 640 520 630
+4 677
+"Line24"
+""
+1 530 640 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+336 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  530 640 540 630
+4 678
+"Line41"
+""
+1 330 680 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+337 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  330 730 330 680
+4 679
+"Line42"
+""
+1 330 730 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+338 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  330 730 320 720
+4 680
+"Line43"
+""
+1 330 730 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+339 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  330 730 340 720
+4 681
+"Line52"
+""
+1 340 690 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+340 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  340 690 330 680
+4 682
+"Line59"
+""
+1 320 690 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+341 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  320 690 330 680
+2 683
+"Text1"
+""
+1 333 695 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+342 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 335 697 437 713
+0 2 0 "s" 0 0 0 192 0 0  335 697
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 18 Control (Ethernet)
+2 684
+"Text2"
+""
+1 493 695 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+343 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 495 697 623 713
+0 2 0 "s" 0 0 0 192 0 0  495 697
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 22 Data output (Ethernet)
+4 685
+"Line60"
+""
+1 50 310 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+344 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  770 310 50 310
+4 686
+"Line61"
+""
+1 310 310 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+345 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  310 360 310 310
+4 687
+"Line62"
+""
+1 510 310 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+346 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  510 360 510 310
+4 688
+"Line63"
+""
+1 710 310 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+347 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  710 360 710 310
+4 689
+"Line64"
+""
+1 110 310 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+348 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  110 360 110 310
+1 690 38 "" 13
+0
+1 691 38 "" 23
+0
+1 692 38 "" 24
+0
+1 693 38 "" 25
+0
+1 694 38 "" 35
+0
+1 695 38 "" 36
+0
+1 696 38 "" 38
+0
+1 697 39 "" 13
+0
+1 698 39 "" 23
+0
+1 699 39 "" 24
+0
+1 700 39 "" 25
+0
+1 701 39 "" 35
+0
+1 702 39 "" 36
+0
+1 703 39 "" 38
+0
+1 704 40 "" 13
+0
+1 705 40 "" 23
+0
+1 706 40 "" 24
+0
+1 707 40 "" 25
+0
+1 708 40 "" 35
+0
+1 709 40 "" 36
+0
+1 710 40 "" 38
+0
+1 711 41 "" 13
+0
+1 712 41 "" 23
+0
+1 713 41 "" 24
+0
+1 714 41 "" 25
+0
+1 715 41 "" 35
+0
+1 716 41 "" 36
+0
+1 717 41 "" 38
+0
+1 718 42 "" 13
+0
+1 719 42 "" 23
+0
+1 720 42 "" 24
+0
+1 721 42 "" 25
+0
+1 722 42 "" 35
+0
+1 723 42 "" 36
+0
+1 724 42 "" 38
+0
+1 725 43 "" 13
+0
+1 726 43 "" 23
+0
+1 727 43 "" 24
+0
+1 728 43 "" 25
+0
+1 729 43 "" 35
+0
+1 730 43 "" 36
+0
+1 731 43 "" 38
+0
+1 732 44 "" 13
+0
+1 733 44 "" 23
+0
+1 734 44 "" 24
+0
+1 735 44 "" 25
+0
+1 736 44 "" 35
+0
+1 737 44 "" 36
+0
+1 738 44 "" 38
+0
+1 739 45 "" 13
+0
+1 740 45 "" 23
+0
+1 741 45 "" 24
+0
+1 742 45 "" 25
+0
+1 743 45 "" 35
+0
+1 744 45 "" 36
+0
+1 745 45 "" 38
+0
+1 746 46 "" 20
+0
+1 747 46 "" 26
+0
+1 748 46 "" 27
+0
+1 749 46 "" 28
+0
+1 750 46 "" 29
+0
+1 751 46 "" 30
+0
+1 752 46 "" 31
+0
+1 753 46 "" 32
+0
+1 754 46 "" 33
+0
+1 755 46 "" 34
+0
+1 756 46 "" 37
+0
+1 757 47 "" 20
+0
+1 758 47 "" 26
+0
+1 759 47 "" 27
+0
+1 760 47 "" 28
+0
+1 761 47 "" 29
+0
+1 762 47 "" 30
+0
+1 763 47 "" 31
+0
+1 764 47 "" 32
+0
+1 765 47 "" 33
+0
+1 766 47 "" 34
+0
+1 767 47 "" 37
+0
+1 768 48 "" 20
+0
+1 769 48 "" 26
+0
+1 770 48 "" 27
+0
+1 771 48 "" 28
+0
+1 772 48 "" 29
+0
+1 773 48 "" 30
+0
+1 774 48 "" 31
+0
+1 775 48 "" 32
+0
+1 776 48 "" 33
+0
+1 777 48 "" 34
+0
+1 778 48 "" 37
+0
+1 779 49 "" 20
+0
+1 780 49 "" 26
+0
+1 781 49 "" 27
+0
+1 782 49 "" 28
+0
+1 783 49 "" 29
+0
+1 784 49 "" 30
+0
+1 785 49 "" 31
+0
+1 786 49 "" 32
+0
+1 787 49 "" 33
+0
+1 788 49 "" 34
+0
+1 789 49 "" 37
+0
+1 790 50 "" 20
+0
+1 791 50 "" 26
+0
+1 792 50 "" 27
+0
+1 793 50 "" 28
+0
+1 794 50 "" 29
+0
+1 795 50 "" 30
+0
+1 796 50 "" 31
+0
+1 797 50 "" 32
+0
+1 798 50 "" 33
+0
+1 799 50 "" 34
+0
+1 800 50 "" 37
+0
+1 801 51 "" 20
+0
+1 802 51 "" 26
+0
+1 803 51 "" 27
+0
+1 804 51 "" 28
+0
+1 805 51 "" 29
+0
+1 806 51 "" 30
+0
+1 807 51 "" 31
+0
+1 808 51 "" 32
+0
+1 809 51 "" 33
+0
+1 810 51 "" 34
+0
+1 811 51 "" 37
+0
+1 812 52 "" 20
+0
+1 813 52 "" 26
+0
+1 814 52 "" 27
+0
+1 815 52 "" 28
+0
+1 816 52 "" 29
+0
+1 817 52 "" 30
+0
+1 818 52 "" 31
+0
+1 819 52 "" 32
+0
+1 820 52 "" 33
+0
+1 821 52 "" 34
+0
+1 822 52 "" 37
+0
+1 823 53 "" 20
+0
+1 824 53 "" 26
+0
+1 825 53 "" 27
+0
+1 826 53 "" 28
+0
+1 827 53 "" 29
+0
+1 828 53 "" 30
+0
+1 829 53 "" 31
+0
+1 830 53 "" 32
+0
+1 831 53 "" 33
+0
+1 832 53 "" 34
+0
+1 833 53 "" 37
 0
 1 414 11 "" 12
 0
@@ -1704,7 +1419,7 @@ E E 0 1 1 0 1 E  410 730 420 720
 0
 1 417 11 "" 10
 0
-1 422 12 "" 11
+1 661 11 "" 15
 0
 1 423 12 "" 12
 0
@@ -1714,7 +1429,7 @@ E E 0 1 1 0 1 E  410 730 420 720
 0
 1 426 12 "" 10
 0
-1 431 13 "" 11
+1 662 12 "" 15
 0
 1 432 13 "" 12
 0
@@ -1724,7 +1439,7 @@ E E 0 1 1 0 1 E  410 730 420 720
 0
 1 435 13 "" 10
 0
-1 440 14 "" 11
+1 663 13 "" 15
 0
 1 441 14 "" 12
 0
@@ -1734,220 +1449,8 @@ E E 0 1 1 0 1 E  410 730 420 720
 0
 1 444 14 "" 10
 0
-14 579
-"txt_temp"
-""
-1 850 360 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-251 0 0 0 0 0
-EE E
+1 664 14 "" 15
 0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-848 358 922 385
-3 "s" 0 0 0 2 0 0 
-E
-E
-E
-20 590
-"CheckButton1"
-""
-1 885 225 E E E 1 E 1 E N "_3DText" E N "Lofar_device_active" E E
- E E
-262 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-883 223 947 247
-1
-T 
-1
-LANG:1 7 Details
- 0
-1
-LANG:1 0 
- E  E  0 0 0 0 0
-1
-E E 
-E"main(int button, bool state)
-{
-
-
-  if (button == 0)
-  {
-    setValue(\"txt_11\", \"visible\", state);
-    setValue(\"txt_12\", \"visible\", state);
-    setValue(\"txt_21\", \"visible\", state);
-    setValue(\"txt_22\", \"visible\", state);
-    setValue(\"txt_31\", \"visible\", state);
-    setValue(\"txt_32\", \"visible\", state);
-    setValue(\"txt_32\", \"text\", \"01:12:23\");
-    setValue(\"txt_12\", \"text\", \"9631\");
-    setValue(\"txt_22\", \"text\", \"357367\");
-    setValue(\"txt_temp\", \"text\", \"235.4 °C\");
-    setValue(\"txt_temp2\", \"text\", \"235.4\");
-    
-    if (state == TRUE)
-      setValue(\"btn_details\", \"text\", \"Details on \");
-    else
-      setValue(\"btn_details\", \"text\", \"Details off \");
-   }
-}" 0
-14 597
-"txt_temp2"
-""
-1 887 200 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-269 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-885 198 935 225
-3 "s" 0 0 0 2 0 0 
-E
-E
-E
-14 582
-"txt_12"
-""
-1 880 261 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
- E E
-254 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-878 259 952 284
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
-14 584
-"txt_22"
-""
-1 880 285 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
- E E
-256 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-878 283 952 308
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
-14 585
-"txt_32"
-""
-1 880 309 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
- E E
-257 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-878 307 952 332
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
-13 651
-"Button1"
-""
-1 820 500 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-323 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-818 498 872 532
-T 
-1
-LANG:1 7 Button1
-"main()
-{
-  time t1;
-  t1=makeTime(1999,0 ,0 ,0, 0, 0);
-  setValue(\"txt_tijd\", \"text\", t1);
-  DebugN(t1);
- 
-
-}" 0
- E E E
-14 652
-"txt_tijd"
-""
-1 820 470 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-324 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-818 468 1012 495
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
-14 653
-"TextField1"
-""
-1 10 150 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-324 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-8 148 282 175
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-setValue(\"\", \"text\", $datapoint);
-}" 0
-
-E
 1 661 37 "" 7
 0
 1 662 37 "" 8
@@ -2006,49 +1509,49 @@ LANG:1 6 Layer8
 "$APNr""4"
 "$datapoint""$datapoint"
 3 15 "AP1_RCU1"
-"objects\\PIC\\STS_Subrack_RCU.pnl" 62 153 T 161 1 0 1  -52 197  
+"objects\\PIC\\STS_Subrack_RCU.pnl" 62 153 T 161 1 0 1  -52 147  
 3
 "$APNr""1"
 "$RCUNr""1"
 "$datapoint""$datapoint"
 3 16 ""
-"objects\\PIC\\STS_Subrack_RCU.pnl" 79 262 T 161 1 0 1  31 88  
+"objects\\PIC\\STS_Subrack_RCU.pnl" 79 262 T 161 1 0 1  31 38  
 3
 "$APNr""1"
 "$RCUNr""2"
 "$datapoint""$datapoint"
 3 17 "Group16"
-"objects\\PIC\\STS_Subrack_RCU.pnl" 270 210 T 162 1 0 1  -60 140  
+"objects\\PIC\\STS_Subrack_RCU.pnl" 270 210 T 162 1 0 1  -60 90  
 3
 "$APNr""2"
 "$RCUNr""1"
 "$datapoint""$datapoint"
 3 18 "Group18"
-"objects\\PIC\\STS_Subrack_RCU.pnl" 370 210 T 163 1 0 1  -60 140  
+"objects\\PIC\\STS_Subrack_RCU.pnl" 370 210 T 163 1 0 1  -60 90  
 3
 "$APNr""2"
 "$RCUNr""2"
 "$datapoint""$datapoint"
 3 19 "Group20"
-"objects\\PIC\\STS_Subrack_RCU.pnl" 470 210 T 164 1 0 1  -60 140  
+"objects\\PIC\\STS_Subrack_RCU.pnl" 470 210 T 164 1 0 1  -60 90  
 3
 "$APNr""3"
 "$RCUNr""1"
 "$datapoint""$datapoint"
 3 21 "Group24"
-"objects\\PIC\\STS_Subrack_RCU.pnl" 570 210 T 166 1 0 1  -60 140  
+"objects\\PIC\\STS_Subrack_RCU.pnl" 570 210 T 166 1 0 1  -60 90  
 3
 "$APNr""3"
 "$RCUNr""2"
 "$datapoint""$datapoint"
 3 22 "Group26"
-"objects\\PIC\\STS_Subrack_RCU.pnl" 670 210 T 167 1 0 1  -60 140  
+"objects\\PIC\\STS_Subrack_RCU.pnl" 670 210 T 167 1 0 1  -60 90  
 3
 "$APNr""4"
 "$RCUNr""1"
 "$datapoint""$datapoint"
 3 23 "Group28"
-"objects\\PIC\\STS_Subrack_RCU.pnl" 770 210 T 168 1 0 1  -60 140  
+"objects\\PIC\\STS_Subrack_RCU.pnl" 770 210 T 168 1 0 1  -60 90  
 3
 "$APNr""4"
 "$RCUNr""2"
@@ -2057,56 +1560,104 @@ LANG:1 6 Layer8
 "objects\\PIC\\STS_Subrack_BP.pnl" 200 294 T 178 1 0 1  70 386  
 1
 "$datapoint""$datapoint"
-3 29 ""
-"objects\\PIC\\STS_Subrack_Antenna.pnl" 233 134 T 202 1 0 1  -195 -30  
-3
-"$APNr""1"
-"$RCUNr""1"
-"$datapoint""$datapoint"
-3 30 ""
-"objects\\PIC\\STS_Subrack_Antenna.pnl" 355 82 T 203 1 0 1  -217 22  
-3
-"$APNr""1"
-"$RCUNr""2"
-"$datapoint""$datapoint"
-3 31 "Group18"
-"objects\\PIC\\STS_Subrack_Antenna.pnl" 271 35 T 204 1 0 1  -33 69  
-3
-"$APNr""2"
-"$RCUNr""1"
-"$datapoint""$datapoint"
-3 32 "Group20"
-"objects\\PIC\\STS_Subrack_Antenna.pnl" 369 35 T 205 1 0 1  -31 69  
-3
-"$APNr""2"
-"$RCUNr""2"
-"$datapoint""$datapoint"
-3 33 "Group25"
-"objects\\PIC\\STS_Subrack_Antenna.pnl" 170 35 T 206 1 0 1  268 69  
-3
-"$APNr""3"
-"$RCUNr""1"
-"$datapoint""$datapoint"
-3 34 "Group26"
-"objects\\PIC\\STS_Subrack_Antenna.pnl" 271 35 T 207 1 0 1  267 69  
-3
-"$APNr""3"
-"$RCUNr""2"
-"$datapoint""$datapoint"
-3 35 "Group27"
-"objects\\PIC\\STS_Subrack_Antenna.pnl" 369 35 T 208 1 0 1  269 69  
-3
-"$APNr""4"
-"$RCUNr""1"
-"$datapoint""$datapoint"
-3 36 "Group28"
-"objects\\PIC\\STS_Subrack_Antenna.pnl" 470 35 T 209 1 0 1  268 69  
-3
-"$APNr""4"
-"$RCUNr""2"
-"$datapoint""$datapoint"
 3 37 ""
 "objects\\PIC\\STS_Subrack_Board.pnl" 100 605 T 324 1 0 1  -80 125  
 1
+"$datapoint""$datapoint"
+3 38 ""
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 41 52 T 349 1 0 1  -3 49  
+3
+"$APNr""1"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 39 "Group25"
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 20 82 T 350 1 0 1  118 19  
+3
+"$APNr""1"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 40 "Group27"
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 120 82 T 351 1 0 1  118 19  
+3
+"$APNr""2"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 41 "Group29"
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 220 82 T 352 1 0 1  118 19  
+3
+"$APNr""2"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 42 "Group31"
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 320 82 T 353 1 0 1  118 19  
+3
+"$APNr""3"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 43 "Group33"
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 420 82 T 354 1 0 1  118 19  
+3
+"$APNr""3"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 44 "Group35"
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 520 82 T 355 1 0 1  118 19  
+3
+"$APNr""4"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 45 "Group37"
+"objects\\PIC\\STS_Subrack_Antenna_LFA.pnl" 620 82 T 356 1 0 1  118 19  
+3
+"$APNr""4"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 46 ""
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 90 60 T 357 1 0 1  -15 39  
+3
+"$APNr""1"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 47 "Group40"
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 57 30 T 358 1 0 1  118 69  
+3
+"$APNr""1"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 48 "Group42"
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 157 30 T 359 1 0 1  118 69  
+3
+"$APNr""2"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 49 "Group44"
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 257 30 T 360 1 0 1  118 69  
+3
+"$APNr""2"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 50 "Group46"
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 357 30 T 361 1 0 1  118 69  
+3
+"$APNr""3"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 51 "Group48"
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 457 30 T 362 1 0 1  118 69  
+3
+"$APNr""3"
+"$RCUNr""2"
+"$datapoint""$datapoint"
+3 52 "Group50"
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 557 30 T 363 1 0 1  118 69  
+3
+"$APNr""4"
+"$RCUNr""1"
+"$datapoint""$datapoint"
+3 53 "Group52"
+"objects\\PIC\\STS_Subrack_Antenna_HFA.pnl" 657 30 T 364 1 0 1  118 69  
+3
+"$APNr""4"
+"$RCUNr""2"
 "$datapoint""$datapoint"
 0
