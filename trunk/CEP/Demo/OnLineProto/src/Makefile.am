@@ -10,7 +10,9 @@ WH_PreProcess.h					\
 WH_Transpose.h					\
 WH_Correlate.h					\
 WH_Dump.h					\
-Correlator_test.h
+Correlator_test.h				\
+MAC.h						\
+Station.h					
 
 
 OnLineProto_SOURCES  	= $(DOCHDRS)		\
@@ -23,7 +25,9 @@ WH_SimStation.cc				\
 WH_PreProcess.cc				\
 WH_Transpose.cc					\
 WH_Correlate.cc					\
-WH_Dump.cc
+WH_Dump.cc					\
+MAC.h						\
+Station.h					
 
 OnLineProto_DEPENDENCIES = $(LOFAR_DEPEND)
 

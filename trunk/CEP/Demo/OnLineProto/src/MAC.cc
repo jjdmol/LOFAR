@@ -34,7 +34,7 @@ namespace LOFAR
 	itsDeclination = 0;
 	itsStartHourangle = 0;
 	itsChannelBandwidth = 1000;       
-	itsFrequencies.resize (itsBeamletSize * itsNumberOfBeamlets);
+	itsFrequencies.resize (itsNumberOfBeamlets);
 	itsFrequencies = tensor::i;
 	itsBeamletSize = 256;
 	itsTotalBandwidth = 32768000;
