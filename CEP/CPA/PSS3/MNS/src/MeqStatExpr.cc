@@ -59,7 +59,7 @@ void MeqStatExpr::calcResult (const MeqRequest& request)
   // They might also be reused in calculating the perturbed values,
   // so do not use a MeqMatrixTmp for them.
   MeqMatrix sinfrot = sin(frot.getValue());
-  MeqMatrix cosfrot = sin(frot.getValue());
+  MeqMatrix cosfrot = cos(frot.getValue());
   MeqMatrix sindrot = sin(drot.getValue());
   MeqMatrix cosdrot = cos(drot.getValue());
   MeqMatrix sindell = sin(dell.getValue());
