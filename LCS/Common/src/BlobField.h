@@ -142,10 +142,12 @@ public:
 
 protected:
   // Helper functions for derived classes.
-  void setOffset (int64 offset)
-    { itsOffset = offset; }
+  void setOffset (int64 offset, int64 arrayOffset)
+    { itsOffset = offset; itsArrayOffset = arrayOffset; }
   int64 getOffset() const
     { return itsOffset; }
+  int64 getArrayOffset() const
+    { return itsArrayOffset; }
   bool& fortranOrder()
     { return itsFortranOrder; }
   // </group>
@@ -165,6 +167,7 @@ private:
   // </group>
 
   int64               itsOffset;
+  int64               itsArrayOffset;     // offset of array header
   uint                itsVersion;
   uint                itsNelem;
   std::vector<uint32> itsShape;

@@ -126,6 +126,10 @@ public:
   uint lengthOffset() const
     { return sizeof(uint32); }
 
+  // Get the reserved name length.
+  uint getHeaderLength() const
+    { return plainSize() + itsReservedLength; }
+
 protected:
   uint32 itsMagicValue;
   uint32 itsLength;
