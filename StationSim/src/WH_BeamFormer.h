@@ -31,9 +31,6 @@
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleC.h>
 #include <StationSim/DH_Weight.h>
-#include <StationSim/DH_TargetTrack.h>
-#include <StationSim/DH_RFITrack.h>
-#include <StationSim/DH_Fifo.h>
 #include <Common/lofar_vector.h>
 #include <Common/Lorrays.h>
 

@@ -24,7 +24,6 @@
 #include <StationSim/StationSim.h>
 #include <BaseSim/SimulatorParseClass.h>
 #include <Common/lofar_iostream.h>
-#include <aips/Exceptions/Error.h>
 
 
 int main (int argc, char** argv)
@@ -64,8 +63,6 @@ int main (int argc, char** argv)
 	cout << "Good Bye!" << endl;
 	simulator.baseQuit();
 #endif
-  } catch (AipsError& x) {
-    cout << "Unexpected exception: " << x.getMesg() << endl;
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
   } catch (...) {

@@ -25,16 +25,9 @@
 // StationSim simulation environment.
 // 
 
-#include <StationSim/StationSim.h>
-#include <StationSim/WH_AWE.h>
-#include <StationSim/WH_BeamFormer.h>
-#include <StationSim/WH_BandSep.h>
-#include <StationSim/WH_Selector.h>
-#include <StationSim/WH_SubBandSel.h>
-#include <StationSim/WH_Detection.h>
-#include <StationSim/WH_Calibration.h>
-#include <StationSim/WH_Cancel.h>
 
+#include <Common/Debug.h>
+#include <Common/lofar_iostream.h>
 #include <BaseSim/Step.h>
 #include <BaseSim/WH_Empty.h>
 #include <BaseSim/ParamBlock.h>
@@ -45,10 +38,21 @@
 # include <BaseSim/Corba/BS_Corba.h>
 #endif
 #include <BaseSim/Simul2XML.h>
+#include <StationSim/StationSim.h>
+#include <StationSim/WH_AWE.h>
+#include <StationSim/WH_BeamFormer.h>
+#include <StationSim/DataGenConfig.h>
+#include <StationSim/WH_AddSignals.h>
+#include <StationSim/WH_CreateSource.h>
+#include <StationSim/WH_Modulate.h>
+#include <StationSim/WH_PhaseShift.h>
+#include <StationSim/WH_ReadSignal.h>
 
-#include <Common/Debug.h>
-#include <Common/lofar_iostream.h>
-
+#define MODULATION_WINDOW_SIZE  32	// this window size in the modulation
+#define DELAY_MOD               MODULATION_WINDOW_SIZE-1
+#define NFFT                    128
+#define NRCU                    2
+#define DELAY_PHASE             NFFT-1
 
 StationSim::StationSim()
 {}
@@ -78,7 +82,6 @@ void StationSim::define (const ParamBlock& params)
   int nbeam = params.getInt ("nbeam", 1);
   int maxNtarget = params.getInt ("maxntarget", 1);
   int maxNrfi = params.getInt ("maxnrfi", 1);
-  int aweRate = params.getInt ("awerate", 16);
   string rcuName = params.getString ("rcufilename", "");
   string selName = params.getString ("selfilename", "");
   string coeffName1 = params.getString ("coefffilename1", "");
@@ -86,135 +89,167 @@ void StationSim::define (const ParamBlock& params)
   string dipoleName = params.getString ("dipolefilename", "");
   string targetName = params.getString ("targettrackfilename", "");
   string rfiName = params.getString ("rfitrackfilename", "");
+  int fifolength    = params.getInt ("bf_fifolength", 512);
+  int buflength     = params.getInt ("bf_bufferlength", 256);
+
+  /* The AWE parameters */
+  int aweRate       = params.getInt ("awerate", 1);
+
   // Multiple files are used if rcu file name does not contain an *.
   bool rcumultifile = rcuName.find('*') != string::npos;
   cout << "multifile=" << rcumultifile << endl;
 
-  // Set detection and calibration rate
-//   int detectionRate = 2;
-//   int calibrationRate = 3;
+  char suffix[8];
+  char suffix2[8];
+  char suffix3[8];
+
+  // Read in the configuration for the sources
+  DataGenerator* DG_Config = new DataGenerator ("/home/alex/gerdes/DG_Input/datagenerator.txt");
 
   // Create the overall simul object.
   WH_Empty wh;
   Simul simul(wh, "StationSim");
   setSimul (simul);
 
-  // Create all the steps.
-  // Set the rate of the steps.
-  // Add the steps to the Simul.
+  // Create the workholders
+  for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
+    // Create for every signal a read_signal step/workholder
+    // The signals are named as follows: signal_ + source number + _ + signal number (e.g. signal_1_3 )
+    for (int j = 0; j < DG_Config->itsSources[i]->itsNumberOfSignals; ++j) {
+      // create suffix for name
+      sprintf (suffix, "%d_%d", i, j);
 
-  // The RCU data is read from a file.
-  // It can be done from one (ASCII) file by WH_RCU or WH_RCUAll
-  // or from multiple binary files by WH_RCUAll.
-//   if (splitrcu) {
-//     Step rcu (WH_RCU ("", nrcu, rcuName),
-// 	      "rcu", false);
-//     simul.addStep (rcu);
-//     Step merge (WH_Merge ("", nrcu, 1),
-// 		"rcuall", false);
-//     simul.addStep (merge);
-//   } else {
-//     Step rcu (WH_RCUAll ("", 1, nrcu, rcuName, rcumultifile),
-// 	      "rcuall", false);
-//     simul.addStep (rcu);
-//   }
+      // create the read signal steps
+      Step signal (WH_ReadSignal ("",
+								  1,
+								  DG_Config->itsSources[i]->itsSignals[j]->itsInputFileName),
+				   string ("signal_") + suffix, 
+				   false);
+	  
+      simul.addStep (signal);
+	  
+      // Create the modulation steps
+      Step modulate (WH_Modulate (1,
+								  1,
+								  DG_Config->itsSources[i]->itsSignals[j]->itsModulationType,
+								  DG_Config->itsSources[i]->itsSignals[j]->itsCarrierFreq,
+								  DG_Config->itsSources[i]->itsSignals[j]->itsSamplingFreq,
+								  DG_Config->itsSources[i]->itsSignals[j]->itsOpt,
+								  DG_Config->itsSources[i]->itsSignals[j]->itsAmplitude, 
+								  MODULATION_WINDOW_SIZE),
+					 string ("modulate_") + suffix, 
+					 false);
 
-//   if (nsub1 > 0) {
-//     Step bandsep (WH_BandSep ("", 1, nrcu, nsub1, coeffName1),
-// 		  "bandsep", false);
-//     bandsep.setOutRate (nsub1, 0);
-//     simul.addStep (bandsep);
-//   }
+      modulate.getOutData (0).setWriteDelay (DELAY_MOD);
+      simul.addStep (modulate);
+    }
 
-//   Step subsel (WH_SubBandSel ("", nsub1, selName),
-// 	       "subseldef", false);
-//   subsel.setRate (nsub1);
-//   simul.addStep (subsel);
+    sprintf (suffix, "%d", i);
+    Step create_source (WH_CreateSource ("",
+										 DG_Config->itsSources[i]->itsNumberOfSignals, 
+										 1),
+						string ("create_source_") + suffix, 
+						false);
 
-//   Step select (WH_Selector ("", 3, nrcu, nsub1, nsel), // Added two output for the rfimit
-// 	       "select", false);
-//   select.setRate (nsub1);
-//    simul.addStep (select);
+    for (int j = 0; j < DG_Config->itsSources[i]->itsNumberOfSignals; ++j) {
+      create_source.getInData (j).setReadDelay (DELAY_MOD);
+	}
+    create_source.getOutData (0).setWriteDelay (DELAY_MOD);
+    simul.addStep (create_source);
 
-  // Make instances of the Detection and Calibration workholder and connect them to 
-  // each other
-//   Step Calibration(WH_Calibration ("", 1, nrcu, nsub1), "calibration", false);
-//   Calibration.setRate(nsub1); 
-//   simul.addStep(Calibration);
+    Step phase_shift (WH_PhaseShift (1,
+									 1,
+									 NRCU,
+									 DG_Config,
+									 NFFT,
+									 i,
+									 MODULATION_WINDOW_SIZE),
+					  string ("phase_shift_") + suffix, 
+					  false);
 
-//   Step Detection(WH_Detection ("", 1, nrcu, nsub1), "detection", false);
-//   Detection.setRate(nsub1);
-//   simul.addStep(Detection);
-  
-//   Step Cancel(WH_Cancel ("", 2, nrcu, nsub1), "cancel", false);
-//   Cancel.setRate(nsub1);
-//   simul.addStep(Cancel);
+    phase_shift.getInData (0).setReadDelay (DELAY_MOD);
+    phase_shift.getOutData (0).setWriteDelay (DELAY_MOD + DELAY_PHASE);
+    simul.addStep (phase_shift);
+  }
 
-//   Step VerifyRFI(WH_VerifyRFI("", 0, nrcu, nsub1), "verifyrfi", false);
-//   VerifyRFI.setRate(nsub1);
-//   simul.addStep(VerifyRFI);
+  Step add_signals (WH_AddSignals ("",
+								   DG_Config->itsNumberOfSources,
+								   NRCU, 
+								   NRCU), 
+					"add_signals", 
+					false);
 
-//   Step target (WH_TargetTrack ("", maxNtarget, targetName),
-// 	       "targettrack", false);
-//   target.setRate (nsub1);
-//   simul.addStep (target);
+  for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
+    add_signals.getInData (i).setReadDelay (DELAY_MOD + DELAY_PHASE);
+  }
+  for (int i = 0; i < NRCU; ++i) {
+    add_signals.getOutData (i).setWriteDelay (DELAY_MOD + DELAY_PHASE);
+  }
+  simul.addStep (add_signals);
 
-//   Step rfi (WH_RFITrack ("", maxNtarget, rfiName),
-// 	    "rfitrack", false);
-//   rfi.setRate (nsub1);
-//   simul.addStep (rfi);
+  /*******************************/
+  /* Create the individual steps */
+  /* Set the rate of the steps   */
+  /*******************************/
 
-//   Step beam (WH_BeamFormer("", 2, nrcu, nsel, nbeam, maxNtarget, maxNrfi,
-// 			   dipoleName),
-// 	     "beamformer", false);
+  // The beamformer object
+  Step beam (WH_BeamFormer("", nrcu+1, nrcu+1, nrcu, nsel, nbeam, maxNtarget, maxNrfi,
+			   fifolength, buflength), "beamformer", false);
 //   beam.setRate (nsub1);
 //   beam.setInRate (nsub1*aweRate, 1);
-//   simul.addStep (beam);
+  for (int j = 0; j < nrcu+1; ++j) {
+	beam.getInData (j).setReadDelay (DELAY_MOD + DELAY_PHASE);
+	beam.getOutData (j).setWriteDelay (DELAY_MOD + DELAY_PHASE);
+  }
+  simul.addStep (beam);
 
-//   Step awe (WH_AWE("", 1, nsel, nbeam),
-// 	    "awe", false);
+  // The AWE object
+  Step awe (WH_AWE("", 1, 1, nrcu, buflength),"awe", false);
 //   awe.setRate (nsub1);
 //   awe.setOutRate (nsub1*aweRate);
-//   simul.addStep (awe);
+  awe.getInData (0).setReadDelay (DELAY_MOD + DELAY_PHASE);
+  awe.getOutData (0).setWriteDelay (DELAY_MOD + DELAY_PHASE);
+  simul.addStep (awe);
 
-//   if (nsub2 > 0) {
-//     Step chanfsep (WH_BandSep ("", 1, nsel*nbeam, nsub2, coeffName2),
-// 		  "chanfsep", false);
-//     chanfsep.setOutRate (nsub1*nsub2, 1);
-//     simul.addStep (chanfsep);
-//   }
+  // workholders are created
 
-//   // Connect the steps.
-//   if (splitrcu  &&  !rcumultifile) {
-//     simul.connect ("rcu", "rcuall");
-//   }
-//   if (nsub1 > 0) {
-//     simul.connect ("rcuall.out_0", "bandsep.in");
-//     simul.connect ("bandsep.out_0", "select.in");
-//   } else {
-//     simul.connect ("rcuall.out_0", "select.in");
-//   }
-//   simul.connect ("subseldef.out", "select.sel");
-//   //  simul.connect ("select.out_0", "beamformer.in");
 
-//   simul.connect ("select.out_0", "cancel.in");
-//   simul.connect ("cancel.out_1", "verifyrfi.in");
-//   simul.connect ("cancel.out_0", "beamformer.in");
-//   //  simul.connect ("verifyrfi.out_0", "beamformer.in");
-//   simul.connect ("cancel.out_0", "beamformer.in");
+  // Connect the steps.
+  for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
+    sprintf (suffix2, "%d", i);
 
-//   simul.connect ("targettrack.out", "beamformer.target");
-//   simul.connect ("rfitrack.out", "beamformer.rfi");
-//   simul.connect ("beamformer.out_1", "awe.in");
-//   simul.connect ("awe.out_0", "beamformer.weight");
-//   if (nsub2 > 0) {
-//     simul.connect ("beamformer.out_0", "chansep.in");
-//   }
+    // Connect the signals to the modulators
+    for (int j = 0; j < DG_Config->itsSources[i]->itsNumberOfSignals; ++j) {
+      sprintf (suffix, "%d_%d", i, j);
+      sprintf (suffix3, "%d", j);
+      simul.connect (string ("signal_") + suffix + string (".out_0"),
+					 string ("modulate_") + suffix + string (".in_0"));
+    }
 
-//   simul.connect ("select.out_1", "detection.in");
-//   simul.connect ("select.out_2", "calibration.in");
-//   simul.connect ("detection.out_0", "cancel.flag");
-//   simul.connect ("calibration.out_0", "detection.threshold"); 
+    // Connect the modulators to a create_source
+    for (int j = 0; j < DG_Config->itsSources[i]->itsNumberOfSignals; ++j) {
+      sprintf (suffix, "%d_%d", i, j);
+      sprintf (suffix3, "%d", j);
+      simul.connect (string ("modulate_") + suffix + string (".out_0"),
+					 string ("create_source_") + suffix2 +
+					 string (".in_") + suffix3);
+    }
+
+    // Connect the create_sources to the phase_shifters
+    simul.connect (string ("create_source_") + suffix2 + string (".out_0"),
+				   string ("phase_shift_") + suffix2 + string (".in_0"));
+  }
+
+  for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
+    sprintf (suffix, "%d", i);
+    simul.connect (string ("phase_shift_") + suffix + string (".out_0"),
+				   string ("add_signals.in_") + suffix);
+  }
+
+
+
+
+
 
   // end of dataprocessor definition
   simul.checkConnections();
