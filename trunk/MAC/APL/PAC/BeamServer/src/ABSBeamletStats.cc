@@ -184,8 +184,10 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
   if ( m_count && ((m_count % m_nintegrations) == 0) )
   {
       // divide by number of samples = m_count * EPA_SCALING_FACTOR
-      
-      //m_beamlet_power /= m_nintegrations * EPA_SCALING_FACTOR;
+
+      //      m_beamlet_power /= m_nintegrations * EPA_SCALING_FACTOR;
+      // only count first of m_nintegrations
+      m_beamlet_power /= EPA_SCALING_FACTOR;
 
       LOG_DEBUG(formatString("Updating statistics properties: totalpower = %f",
 			     sum(m_beamlet_power)));
