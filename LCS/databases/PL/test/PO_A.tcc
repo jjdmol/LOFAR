@@ -9,15 +9,13 @@
 #include "PO_B.h"
 #include <PL/TPersistentObject.h>
 
-using namespace dtl;
-
 namespace LOFAR {
 
   namespace PL {
 
     // bindCols() 'binds' the database columns represented by \a cols
     // to the members of the DBRep<A> class.
-    void DBRep<A>::bindCols(BoundIOs& cols)
+    void DBRep<A>::bindCols(dtl::BoundIOs& cols)
     {
       cols["ITSINT"]  == itsInt;
       cols["ITSDOUBLE"]  == itsDouble;

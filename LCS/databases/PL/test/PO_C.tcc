@@ -9,15 +9,13 @@
 #include "PO_C.h"
 #include <PL/TPersistentObject.h>
 
-using namespace dtl;
-
 namespace LOFAR {
 
   namespace PL {
 
     // bindCols() 'binds' the database columns represented by \a cols
     // to the members of the DBRep<A> class.
-    void DBRep<C>::bindCols(BoundIOs& cols)
+    void DBRep<C>::bindCols(dtl::BoundIOs& cols)
     {
       cols["ITSBLOB"]  == itsBlob;
       cols["ITSSTRING"]  == itsString;
@@ -42,7 +40,7 @@ namespace LOFAR {
     void TPersistentObject<C>::init()
     {
       // create new TPersistentObject for A.
-      Pointer p(new TPersistentObject<A>(*itsObjectPtr));
+      Pointer p(new TPersistentObject<A>(data()));
       // associate A's owner object-id with C's object-id
       p->metaData().ownerOid() = metaData().oid();
       // add newly created TPersistentObject to container of ownedPOs.
