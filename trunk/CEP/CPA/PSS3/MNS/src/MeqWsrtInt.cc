@@ -111,6 +111,7 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
     complex<double>* xyr = xyres.dcomplexStorage();
     complex<double>* yxr = yxres.dcomplexStorage();
     complex<double>* yyr = yyres.dcomplexStorage();
+#if 0
     for (int i=0; i<request.ny(); i++) {
       complex<double> sumxx;
       complex<double> sumxy;
@@ -130,6 +131,37 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
 	cout << "MeqWsrtInt abs(sum): " << abs(sumxx) << ' ' << abs(sumxy) << ' ' << abs(sumyx) << ' ' << abs(sumyy) << endl;
       }
     }
+#else
+    int i,j;
+    for (i=0; i<request.ny(); i++) {
+      complex<double> sumxx;
+      for (j=0; j<nsubc; j++) {
+	sumxx += *xxc++;
+      }
+      xxr[i] = sumxx * fact;
+    }
+    for (i=0; i<request.ny(); i++) {
+      complex<double> sumxy;
+      for (j=0; j<nsubc; j++) {
+	sumxy += *xyc++;
+      }
+      xyr[i] = sumxy * fact;
+    }
+    for (i=0; i<request.ny(); i++) {
+      complex<double> sumyx;
+      for (j=0; j<nsubc; j++) {
+	sumyx += *yxc++;
+      }
+      yxr[i] = sumyx * fact;
+    }
+    for (i=0; i<request.ny(); i++) {
+      complex<double> sumyy;
+      for (j=0; j<nsubc; j++) {
+	sumyy += *yyc++;
+      }
+      yyr[i] = sumyy * fact;
+    }
+#endif
   }
   // Now combine with the stations jones.
   MeqMatrix s11 = itsStat1->getResult11().getValue();
