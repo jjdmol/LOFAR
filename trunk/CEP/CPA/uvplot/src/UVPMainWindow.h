@@ -70,6 +70,9 @@ class UVPMainWindow:public QMainWindow
   //! Draws data set considering all current settings
   void drawDataSet();
 
+  //! Sets window caption.
+  void updateCaption();
+
   public slots:
   
   //! Only calls drawDataSet
