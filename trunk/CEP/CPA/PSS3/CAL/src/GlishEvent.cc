@@ -13,7 +13,7 @@ void timer_expired(int)
 
 Bool eventhandler(GlishSysEvent &evt)
 {
-  GlishValue &val = evt.val();
+  //GlishValue &val = evt.val();
   GlishSysEventSource *s = (GlishSysEventSource *) evt.source();
   
   expire_s = s;

@@ -23,12 +23,14 @@
 #ifndef CAL_MEQCALIBRATER_H
 #define CAL_MEQCALIBRATER_H
 
-#include <aips/aips.h>
-#include <trial/Tasking/ApplicationObject.h>
-#include <aips/Utilities/String.h>
 #include <aips/MeasurementSets/MeasurementSet.h>
-#include <trial/MeasurementEquations/VisibilityIterator.h>
+#include <aips/Tables/Table.h>
+#include <aips/Tables/TableIter.h>
+#include <aips/Utilities/String.h>
+#include <aips/aips.h>
 #include <trial/MeasurementEquations/VisBuffer.h>
+#include <trial/MeasurementEquations/VisibilityIterator.h>
+#include <trial/Tasking/ApplicationObject.h>
 
 #include <MNS/ParmTable.h>
 #include <MNS/MeqDomain.h>
@@ -36,7 +38,9 @@
 #include <MNS/MeqStoredParmPolc.h>
 #include <MNS/MeqMatrix.h>
 #include <MNS/MeqRequest.h>
+#include <MNS/MeqStation.h>
 #include <MNS/MeqJonesExpr.h>
+#include <MNS/MeqUVW.h>
 #include <MNS/MeqUVWPolc.h>
 #include <GSM/SkyModel.h>
 
@@ -68,7 +72,7 @@ class MeqCalibrater : public ApplicationObject
   void resetTimeIterator();
 
   // advance the time interval iterator
-  Bool nextTimeInterval();
+  void nextTimeInterval();
 
   // make all parameters non-solvable
   void clearSolvableParms();
@@ -88,7 +92,7 @@ class MeqCalibrater : public ApplicationObject
   void saveParms();
 
   // Save the predicted data to the named column of the MeasurementSet.
-  void saveData(const String& dataColName);
+  void savePredictedData(const String& dataColName);
 
   // Save residual data in the named column (residualColName) by substracting
   // data in the first named column (colAName) from data in the second named
@@ -106,6 +110,9 @@ class MeqCalibrater : public ApplicationObject
   // after each call to nextTimeIteration.
   GlishRecord getSolveDomain();
 
+  // Return True if iterator over time intervals is past the end
+  Bool timeIteratorPastEnd();
+
   // standard DO methods
   virtual String         className() const;
   virtual Vector<String> methods() const;
@@ -117,6 +124,8 @@ class MeqCalibrater : public ApplicationObject
 
  private:
 
+  // calculate the UVW polcs for all frequency domains per hour wide time domain
+  void calcUVWPolc();
   MeqCalibrater(const MeqCalibrater& other);            // no copy constructor
   MeqCalibrater& operator=(const MeqCalibrater& other); // no assignment operator
 
@@ -126,20 +135,33 @@ class MeqCalibrater : public ApplicationObject
   //
   // variables
   //
-  MeasurementSet itsMS;
-  VisibilityIterator itsIter;
-  VisBuffer      itsVisBuf;
-  ParmTable      itsMEP;
-  Table          itsGSMTable;
-  GSM::SkyModel  itsGSM;
-  MeqDomain      itsDomain;
-  MeqJonesExpr*  itsTree;
-  MeqUVWPolc     itsUVW;
-  Bool           itsIterInit;
+  MeasurementSet     itsMS;
+  ParmTable          itsMEP;
+  Table              itsGSMTable;
+  GSM::SkyModel      itsGSM;
+
+  TableIterator      itsIter;
+
+  MeqDomain          itsDomain;
+  MeqRequest         itsRequest;
+
+  vector<MVBaseline> itsBaselines;
+  vector<MeqStation> itsStations;
+  MeqUVWPolc         itsUVWPolc;
+  MeqJonesExpr*      itsExprTree;
+
+  double itsStartTime;
+
+  double itsStartFreq, itsEndFreq;
+  int    itsNrChan;
+
+  Bool itsDataRead;
+
+  Matrix<DComplex> its_xx, its_xy, its_yx, its_yy;
+
   //
   // variables used in the dummy implementation
   //
-  Double itsTimeIteration;
   Double itsFitValue;
 };
 

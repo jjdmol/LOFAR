@@ -1,5 +1,9 @@
 
-CXXFLAGS 		+= -Wall -Wno-unknown-pragmas -Wno-deprecated -D_GNU_SOURCE
+CXXFLAGS 		+= -Wall \
+			   -Wno-unknown-pragmas \
+			   -Wno-deprecated \
+			   -Wno-non-template-friend \
+			   -D_GNU_SOURCE
 
 lib_LTLIBRARIES 	= libmeqcalibrater.la
 
