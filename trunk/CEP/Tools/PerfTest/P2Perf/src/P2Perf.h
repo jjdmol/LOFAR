@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1  2001/08/09 15:48:48  wierenga
+//  Implemented first version of TH_Corba and test program
+//
 //
 //////////////////////////////////////////////////////////////////////////
 
@@ -28,7 +31,7 @@
 #define RINGSIM_H
 
 #include "Simulator.h"
-#include "WH_Square.h"
+#include "WH_GrowSize.h"
 
 /**
    This class is an example of a concrete Simulator.
@@ -48,8 +51,8 @@ public:
   void undefine();
 
  private:
-  WH_Square **workholders;
-  Step      **steps;
+  WH_GrowSize **workholders;
+  Step        **steps;
 };
 
 

@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2001/08/13 12:22:56  schaaf
+//  Use BS_Corba class
+//
 //  Revision 1.1  2001/08/09 15:48:48  wierenga
 //  Implemented first version of TH_Corba and test program
 //
@@ -33,6 +36,7 @@
 #include "Simul.h"
 #include "Profiler.h"
 #include "WH_Empty.h"
+#include "WH_GrowSize.h"
 #include TRANSPORTERINCLUDE
 
 #ifdef CORBA_
@@ -44,7 +48,7 @@
 #include <stdlib.h>
 #include <string>
 
-#define NR_OF_STEPS 4
+#define NR_OF_STEPS 2
 
 /**
    This class is an example of a concrete Simulator.
@@ -105,13 +109,13 @@ void RingSim::define()
   setSimul(simul);
   simul->runOnNode(0);
 
-  workholders = new (WH_Square*)[NR_OF_STEPS];
+  workholders = new (WH_GrowSize*)[NR_OF_STEPS];
   steps       = new (Step*)[NR_OF_STEPS];
 
   for (int iStep = 0; iStep < NR_OF_STEPS; iStep++)
   {
-    workholders[iStep] = new WH_Square("Square", (iStep==0?true:false), 1, 1, 20);
-    steps[iStep] = new Step(workholders[iStep], "SquareStep", iStep);
+    workholders[iStep] = new WH_GrowSize("GrowSize", (iStep==0?true:false), 1, 1, 1024*1024*10);
+    steps[iStep] = new Step(workholders[iStep], "GrowSizeStep", iStep);
 
     steps[iStep]->runOnNode(iStep);
 
@@ -167,7 +171,7 @@ void RingSim::run()
     return;
   }
 
-  doIt(getSimul(), "RingSimulator", 1);
+  doIt(getSimul(), "RingSimulator", 23);
 }
 
 void RingSim::dump() const
