@@ -36,9 +36,14 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace blitz;
 
-SetWeightsCmd::SetWeightsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+SetWeightsCmd::SetWeightsCmd(RSPSetweightsEvent& sw_event, GCFPortInterface& port,
+			     Operation oper, int timestep)
 {
-  m_event = new RSPSetweightsEvent(event);
+  RSPSetweightsEvent* event = new RSPSetweightsEvent();
+  m_event = event;
+  
+  event->timestamp = sw_event.timestamp + timestep;
+  event->rcumask   = sw_event.rcumask;
 
   setOperation(oper);
   setPeriod(0);
@@ -48,6 +53,15 @@ SetWeightsCmd::SetWeightsCmd(GCFEvent& event, GCFPortInterface& port, Operation 
 SetWeightsCmd::~SetWeightsCmd()
 {
   delete m_event;
+}
+
+void SetWeightsCmd::setWeights(Array<complex<int16>, BeamletWeights::NDIM> weights)
+{
+  RSPSetweightsEvent* event = static_cast<RSPSetweightsEvent*>(m_event);
+  
+  event->weights.weights().resize(BeamletWeights::SINGLE_TIMESTEP,
+				  event->rcumask.count(), N_BEAMLETS);
+  event->weights.weights() = weights;
 }
 
 void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
@@ -67,8 +81,16 @@ void SetWeightsCmd::apply(CacheBuffer& cache)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      cache.getBeamletWeights().weights()(cache_rcu, Range::all())
-	= m_event->weights.weights()(input_rcu, Range::all());
+      if (cache_rcu < RSPDriverTask::N_RCU)
+      {
+	cache.getBeamletWeights().weights()(0, cache_rcu, Range::all())
+	  = m_event->weights.weights()(0, input_rcu, Range::all());
+      }
+      else
+      {
+	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
+			      cache_rcu, RSPDriverTask::N_RCU));
+      }
 
       input_rcu++;
     }
@@ -89,3 +111,10 @@ void SetWeightsCmd::setTimestamp(const Timestamp& timestamp)
 {
   m_event->timestamp = timestamp;
 }
+
+bool SetWeightsCmd::validate() const
+{
+  // validation is done in the caller (RSPDriverTask)
+  return true;
+}
+

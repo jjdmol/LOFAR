@@ -44,6 +44,11 @@ namespace RSP_Protocol
 	  /* Destructor for SubbandSelection. */
 	  virtual ~SubbandSelection() {}
 
+	  /**
+	   * Return the array.
+	   */
+	  blitz::Array<uint16, 2>& operator()();
+
       public:
 	  /*@{*/
 	  /**
@@ -60,7 +65,7 @@ namespace RSP_Protocol
 	   * dim 1 = n_settings (== 1 on SETSUBBANDS, == count(rcumask) on GETSUBBANDS_ACK)
 	   * dim 2 = n_beamlets
 	   */
-	  blitz::Array<int16, 2> m_subbands;
+	  blitz::Array<uint16, 2> m_subbands;
       };
 };
      

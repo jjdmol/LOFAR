@@ -39,10 +39,15 @@ namespace RSP
       /**
        * Constructors for a SetWeightsCmd object.
        */
-      SetWeightsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper);
+      SetWeightsCmd(RSPSetweightsEvent& event, GCFPortInterface& port, Operation oper, int timestep);
 	  
       /* Destructor for SetWeightsCmd. */
       virtual ~SetWeightsCmd();
+
+      /**
+       * Set the actual weights for this command.
+       */
+      void setWeights(blitz::Array<std::complex<int16>, RSP_Protocol::BeamletWeights::NDIM> weights);
 
       /**
        * Acknowledge the command by sending the appropriate
@@ -69,6 +74,11 @@ namespace RSP
       virtual const Timestamp& getTimestamp() const;
       virtual void setTimestamp(const Timestamp& timestamp);
       /*@}*/
+
+      /**
+       * Validate the command.
+       */
+      bool validate() const;
 
     private:
       SetWeightsCmd();

@@ -21,8 +21,6 @@
 //#
 //#  $Id$
 
-// this include needs to be first!
-#define DECLARE_SIGNAL_NAMES
 #include "RSP_Protocol.ph"
 #include "EPA_Protocol.ph"
 
@@ -30,7 +28,10 @@
 #include "Command.h"
 #include "SetWeightsCmd.h"
 #include "GetWeightsCmd.h"
+#include "SetSubbandsCmd.h"
 #include "BWSync.h"
+#include "SSSync.h"
+#include <blitz/array.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -40,6 +41,7 @@
 using namespace RSP;
 using namespace std;
 using namespace LOFAR;
+using namespace blitz;
 
 RSPDriverTask::RSPDriverTask(string name)
   : GCFTask((State)&RSPDriverTask::initial, name), m_scheduler()
@@ -110,10 +112,10 @@ void RSPDriverTask::addAllSyncActions()
     bwsync = new BWSync(m_board[boardid], boardid, MEPHeader::BFYIM);
     m_scheduler.addSyncAction(bwsync);
 
-#if 0
     SSSync* sssync = new SSSync(m_board[boardid], boardid);
     m_scheduler.addSyncAction(sssync);
 
+#if 0
     RCUSync* rcusync = new RCUSync(m_board[boardid], boardid);
     m_scheduler.addSyncAction(rcusync);
 
@@ -204,6 +206,13 @@ GCFEvent::TResult RSPDriverTask::initial(GCFEvent& event, GCFPortInterface& port
 
 void RSPDriverTask::collect_garbage()
 {
+  for (list<GCFPortInterface*>::iterator it = m_garbage_list.begin();
+       it != m_garbage_list.end();
+       it++)
+  {
+    delete (*it);
+  }
+  m_garbage_list.clear();
 }
 
 GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port)
@@ -240,34 +249,60 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
     break;
 
     case RSP_SETWEIGHTS:
-    {
-      /**
-       * Create the command for this event.
-       * Enter it in the scheduler queue.
-       * Acknowledge the command.
-       */
-      SetWeightsCmd* command = new SetWeightsCmd(event, port, Command::WRITE);
-      (void)m_scheduler.enter(command);
-      command->ack(Cache::getInstance().getFront());
-    }
-    break;
+      rsp_setweights(event, port);
+      break;
 
     case RSP_GETWEIGHTS:
-    {
-      GetWeightsCmd* command = new GetWeightsCmd(event, port, Command::READ);
+      rsp_getweights(event, port);
+      break;
 
-      // if null timestamp get value from the cache and acknowledge immediately
-      if (Timestamp(0,0) == command->getTimestamp())
-      {
-	command->setTimestamp(m_scheduler.getCurrentTime() + -1);
-	command->ack(Cache::getInstance().getFront());
-      }
-      else
-      {
-	(void)m_scheduler.enter(command);
-      }
-    }
-    break;
+    case RSP_SETSUBBANDS:
+      rsp_setsubbands(event, port);
+      break;
+
+    case RSP_SETRCU:
+      rsp_setrcu(event, port);
+      break;
+
+    case RSP_GETRCU:
+      rsp_getrcu(event, port);
+      break;
+      
+    case RSP_SETWG:
+      rsp_setwg(event, port);
+      break;
+      
+    case RSP_GETWG:
+      rsp_getwg(event, port);
+      break;
+      
+    case RSP_SUBSTATUS:
+      rsp_substatus(event, port);
+      break;
+      
+    case RSP_UNSUBSTATUS:
+      rsp_unsubstatus(event, port);
+      break;
+
+    case RSP_GETSTATUS:
+      rsp_getstatus(event, port);
+      break;
+      
+    case RSP_SUBSTATS:
+      rsp_substats(event, port);
+      break;
+      
+    case RSP_UNSUBSTATS:
+      rsp_unsubstats(event, port);
+      break;
+      
+    case RSP_GETSTATS:
+      rsp_getstats(event, port);
+      break;
+
+    case RSP_GETVERSION:
+      rsp_getversions(event, port);
+      break;
 
     case F_TIMER:
     {
@@ -323,6 +358,157 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
   }
 
   return status;
+}
+
+
+void RSPDriverTask::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
+{
+  /**
+   * Create a separate command for each timestep for which
+   * weights are contained in the event.
+   */
+
+  /* unpack the event */
+  RSPSetweightsEvent* sw_event = new RSPSetweightsEvent(event);
+
+  /* range check on parameters */
+  if ((sw_event->weights.weights().dimensions() != BeamletWeights::NDIM)
+      || (sw_event->weights.weights().extent(thirdDim) != N_BEAMLETS)
+      || (sw_event->weights.weights().extent(secondDim) > N_RCU))
+  {
+    delete sw_event;
+    
+    RSPSetweightsackEvent ack;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = FAILURE;
+    port.send(ack);
+    return;
+  }
+
+  for (int timestep = 0; timestep < sw_event->weights.weights().extent(firstDim); timestep++)
+  {
+    SetWeightsCmd* command = new SetWeightsCmd(*sw_event, port, Command::WRITE, timestep);
+
+    if (0 == timestep)
+    {
+      command->ack(Cache::getInstance().getFront());
+    }
+	
+    command->setWeights(sw_event->weights.weights()(Range(timestep, timestep),
+						    Range::all(),
+						    Range::all()));
+	
+    (void)m_scheduler.enter(command);
+  }
+
+  /* cleanup the event */
+  delete sw_event;
+}
+
+void RSPDriverTask::rsp_getweights(GCFEvent& event, GCFPortInterface& port)
+{
+  GetWeightsCmd* command = new GetWeightsCmd(event, port, Command::READ);
+
+  if (!command->validate())
+  {
+    delete command;
+    
+    RSPGetweightsackEvent ack;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = FAILURE;
+    port.send(ack);
+    return;
+  }
+
+  // if null timestamp get value from the cache and acknowledge immediately
+  if (Timestamp(0,0) == command->getTimestamp())
+  {
+    command->setTimestamp(m_scheduler.getCurrentTime() + -1);
+    command->ack(Cache::getInstance().getFront());
+  }
+  else
+  {
+    (void)m_scheduler.enter(command);
+  }
+}
+
+
+void RSPDriverTask::rsp_setsubbands(GCFEvent& event, GCFPortInterface& port)
+{
+  SetSubbandsCmd* command = new SetSubbandsCmd(event, port, Command::WRITE);
+
+  if (!command->validate())
+  {
+    delete command;
+    
+    RSPSetsubbandsackEvent ack;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = FAILURE;
+    port.send(ack);
+    return;
+  }
+
+  (void)m_scheduler.enter(command);
+  command->ack(Cache::getInstance().getFront());
+}
+
+void RSPDriverTask::rsp_getsubbands(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+{
+}
+
+void RSPDriverTask::rsp_setrcu(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+{
+  /* not implemented yet, ignore event */
+}
+
+void RSPDriverTask::rsp_getrcu(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+{
+  /* not implemented yet, ignore event */
+}
+
+void RSPDriverTask::rsp_setwg(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+{
+  /* not implemented yet, ignore event */
+}
+
+void RSPDriverTask::rsp_getwg(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+{
+  /* not implemented yet, ignore event */
+}
+
+void RSPDriverTask::rsp_substatus(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+{
+  /* not implemented yet, ignore event */
+}
+
+void RSPDriverTask::rsp_unsubstatus(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+{
+  /* not implemented yet, ignore event */
+}
+
+void RSPDriverTask::rsp_getstatus(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+{
+  /* not implemented yet, ignore event */
+}
+
+void RSPDriverTask::rsp_substats(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+{
+  /* not implemented yet, ignore event */
+}
+
+void RSPDriverTask::rsp_unsubstats(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+{
+  /* not implemented yet, ignore event */
+}
+
+void RSPDriverTask::rsp_getstats(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+{
+  /* not implemented yet, ignore event */
+}
+
+void RSPDriverTask::rsp_getversions(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+{
+  /* not implemented yet, ignore event */
 }
 
 int main(int argc, char** argv)

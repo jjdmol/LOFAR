@@ -21,8 +21,7 @@
 //#
 //#  $Id$
 
-// this include needs to be first!
-#define DECLARE_SIGNAL_NAMES
+#define EARLY_REPLY
 
 #include "EPA_Protocol.ph"
 
@@ -114,6 +113,8 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
 
 
     case EPA_BFCOEFS:
+    case EPA_NRSUBBANDS:
+    case EPA_SUBBANDSELECT:
     {
       EPARspstatusEvent rspstatus;
       
@@ -124,8 +125,10 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
       memset(&rspstatus.blp[0], 0, N_BLP*sizeof(uint16));
       rspstatus.eth = 0;
 
+#ifdef EARLY_REPLY
       // early reply of status
       port.send(rspstatus);
+#endif
     }
     break;
 
@@ -183,7 +186,7 @@ GCFEvent::TResult EPAStub::rspstatus(GCFEvent& event, GCFPortInterface& /*port*/
   // set the correct header info
   MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READRES);
 
-#if 0
+#ifndef EARLY_REPLY
   // simply echo the status event
   port.send(rspstatus);
 #endif

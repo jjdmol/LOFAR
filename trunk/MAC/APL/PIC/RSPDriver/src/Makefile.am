@@ -80,6 +80,8 @@ RSPDriver_SOURCES = \
 	SetWeightsCmd.cc \
 	GetWeightsCmd.h \
 	GetWeightsCmd.cc \
+	SetSubbandsCmd.h \
+	SetSubbandsCmd.cc \
 	Cache.h \
 	Cache.cc \
 	SyncAction.h \

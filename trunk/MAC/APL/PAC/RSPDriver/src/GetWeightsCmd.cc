@@ -68,15 +68,25 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.weights.weights().resize(m_event->rcumask.count(), N_BEAMLETS);
+  ack.weights.weights().resize(BeamletWeights::SINGLE_TIMESTEP,
+			       m_event->rcumask.count(), N_BEAMLETS);
 
   int result_rcu = 0;
   for (int cache_rcu = 0; cache_rcu < RSPDriverTask::N_RCU; cache_rcu++)
   {
     if (m_event->rcumask[result_rcu])
     {
-      ack.weights.weights()(result_rcu, Range::all()) = 
-	cache.getBeamletWeights().weights()(cache_rcu, Range::all());
+      if (result_rcu < RSPDriverTask::N_RCU)
+      {
+	ack.weights.weights()(0, result_rcu, Range::all())
+	  = cache.getBeamletWeights().weights()(0, cache_rcu, Range::all());
+      }
+      else
+      {
+	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
+			      result_rcu, RSPDriverTask::N_RCU));
+      }
+      
       result_rcu++;
     }
   }
@@ -103,3 +113,9 @@ void GetWeightsCmd::setTimestamp(const Timestamp& timestamp)
 {
   m_event->timestamp = timestamp;
 }
+
+bool GetWeightsCmd::validate() const
+{
+  return (m_event->rcumask.count() <= (unsigned int)RSPDriverTask::N_RCU);
+}
+

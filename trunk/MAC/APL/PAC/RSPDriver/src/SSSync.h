@@ -26,27 +26,44 @@
 #define SSSYNC_H_
 
 #include "SyncAction.h"
+#include <Common/LofarTypes.h>
 
 namespace RSP
 {
   class SSSync : public SyncAction
-      {
-      public:
-	  /**
-	   * Constructors for a SSSync object.
-	   */
-	  SSSync(GCFPortInterface& board_port, int board_id);
+  {
+    public:
+      /**
+       * Constructors for a SSSync object.
+       */
+      SSSync(GCFPortInterface& board_port, int board_id);
 	  
-	  /* Destructor for SSSync. */
-	  virtual ~SSSync();
+      /* Destructor for SSSync. */
+      virtual ~SSSync();
 
-	  /**
-	   * Initial state handler.
-	   */
-	  GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+      /*@{*/
+      /**
+       * The states of the statemachine.
+       */
+      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+      GCFEvent::TResult writedata_state(GCFEvent& event, GCFPortInterface& port);
+      GCFEvent::TResult readstatus_state(GCFEvent& event, GCFPortInterface& port);
+      /*@}*/
 
-      private:
-      };
+      /**
+       * Write subband selection info.
+       */
+      void writedata(uint8 blp);
+
+      /**
+       * Read the board status.
+       */
+      void readstatus();
+
+    private:
+      int m_current_blp;
+      int m_retries;
+  };
 };
      
 #endif /* SSSYNC_H_ */

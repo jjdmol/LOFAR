@@ -54,14 +54,14 @@ namespace RSP
        * The states of the statemachine.
        */
       GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
-      GCFEvent::TResult senddata_state(GCFEvent& event, GCFPortInterface& port);
-      GCFEvent::TResult waitstatus_state(GCFEvent& event, GCFPortInterface& port);
+      GCFEvent::TResult writedata_state(GCFEvent& event, GCFPortInterface& port);
+      GCFEvent::TResult readstatus_state(GCFEvent& event, GCFPortInterface& port);
       /*@}*/
 
       /**
        * Write beamformer coefficients for blp to the RSP board.
        */
-      void writecoef(uint8 blp);
+      void writedata(uint8 blp);
 
       /**
        * Read the board status.
