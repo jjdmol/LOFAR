@@ -178,7 +178,7 @@ void MSInputSink::openMS (DataRecord &header,const DataRecord &select)
   }
   else
   {
-    selms_ = tableCommand ("select from $1 where " + where, selms_);
+    selms_ = tableCommand ("select from $1 where " + where, selms_).table();
     FailWhen( !selms_.nrow(),"selection yields empty table" );
     tableiter_  = TableIterator(selms_, "TIME");
   } 
