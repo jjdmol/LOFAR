@@ -1,4 +1,4 @@
-//# Parm.h: The base class for a parameter
+//# Parm.h: Parameter with polynomial coefficients
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,92 +25,84 @@
 
 //# Includes
 #include <MEQ/Function.h>
-#include <MEQ/Result.h>
-#include <Common/lofar_string.h>
+#include <MEQ/ParmTable.h>
+#include <MEQ/Polc.h>
+#include <MEQ/Vells.h>
 #include <Common/lofar_vector.h>
 
+#pragma aidgroup Meq
+#pragma aid Tablename Default
+#pragma types #Meq::Parm
 
 namespace Meq {
 
-//# Forward declarations
-class Domain;
+// This class contains the coefficients of a 2-dim polynomial.
+// The order in time and frequency must be given.
+// The nr of coefficients is (1+order(time)) * (1+order(freq)).
+// The coefficients are numbered 0..N with the time as the most rapidly
+// varying axis.
 
-
-// This class is the (abstract) base class for parameters.
-// The constructor assigns a unique id to the parameter and adds
-// it to a map to find the id from the name.
-
-class Parm : public Function
+class Parm: public Function
 {
 public:
-  // Create a parameter with the given name.
-  // Assign a parameter id (a sequence number) to it.
-  explicit Parm (const string& name);
+  // The default constructor.
+  // The object should be filled by the init method.
+  Parm();
+
+  // Create a parameter with the given name and default value.
+  // The default value is used if no suitable value can be found.
+  // The ParmTable can be null meaning that the parameter is temporary.
+  Parm (const string& name, ParmTable* table,
+	const Vells& defaultValue = Vells(0.));
 
   virtual ~Parm();
-
-  // Get the parameter name.
-  const string& getName() const
-    { return itsName; }
-  // Set the parameter name.
-  void setName (const string& name)
-    { itsName = name; }
 
   // Get the parameter id.
   unsigned int getParmId() const
     { return itsParmId; }
 
-  // Initialize the parameter for the given domain.
-  virtual int initDomain (const Domain&, int spidIndex) = 0;
-
-  // Make parameter solvable, thus perturbed values have to be calculated.
-  // spidIndex is the index of the first spid of this parm.
-  // It returns the number of spids in this parm.
-  void setSolvable (bool solvable)
-    { itsIsSolvable = solvable; }
-
   bool isSolvable() const
     { return itsIsSolvable; }
 
-  // Get the result for the given request.
-  virtual int getResultImpl (Result::Ref &resref, const Request&, bool) = 0;
+  // Get the requested result of the parameter.
+  virtual int getResultImpl (Result::Ref&, const Request&, bool newReq);
 
-  // Get the current values of the solvable parameter and store them
-  // at their correct position in the argument.
-  virtual void getInitial (Vells& values) const = 0;
+  // Initialize the parameter for the given domain.
+  virtual int initDomain (const Domain&, int spidIndex);
 
-  // Get the current values of the solvable parameter and store
-  // them in the argument.
-  // If needed, polynomial coefficients are denormalized.
-  virtual void getCurrentValue(Vells& value, bool denormalize) const = 0;
-
-  // Update the parameter with the new values.
-  virtual void update (const Vells& value) = 0;
+  // Update the solvable parameters with the new values.
+  virtual void update (const Vells& value);
 
   // Make the new value persistent (for the given domain).
-  virtual void save() = 0;
+  virtual void save();
 
-  // Get the list of all Parm objects.
-  static const vector<Parm*>& getParmList();
+  virtual void init (DataRecord::Ref::Xfer& initrec, Forest* frst);
 
-  // Clear the list of all Parm objects.
-  static void clearParmList();
+  virtual void setState (const DataRecord& rec);
+
+  //## Standard debug info method
+  virtual string sdebug (int detail = 1, const string& prefix = "",
+			 const char* name = 0) const;
+
+protected:
+  // Set the polynomials.
+  void setPolcs (const vector<Polc>& polcs)
+    { itsPolcs = polcs; }
+
+  // Get the polynomials.
+  const vector<Polc>& getPolcs() const
+    { return itsPolcs; }
 
 private:
-  // A parm cannot be copied, otherwise problems arise with theirParms.
-  Parm (const Parm&);
-  Parm& operator= (const Parm&);
-
-  string       itsName;
   unsigned int itsParmId;
   bool         itsIsSolvable;
-
-  // A static vector of pointers to parms.
-  static unsigned int   theirNparm;
-  static vector<Parm*>* theirParms;
+  string       itsName;
+  ParmTable*   itsTable;
+  Vells        itsDefault;
+  vector<Polc> itsPolcs;
 };
 
 
-} //namespace Meq
+} // namespace Meq
 
 #endif
