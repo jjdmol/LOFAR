@@ -40,8 +40,6 @@ namespace LOFAR {
 //# Forward Declarations
 class MeqDomain;
 
-typedef vector<MeqParmHolder> VMParm;
-
 class ParmTableMySQL : public ParmTableRep, public ParmTableFiller
 {
 public:
@@ -87,7 +85,7 @@ private:
 
   MYSQL itsDB;
 
-  VMParm find (const string& parmName, 
+  vector<MeqParmHolder> find (const string& parmName, 
 		 const MeqDomain& domain);
 
   string itsTableName;

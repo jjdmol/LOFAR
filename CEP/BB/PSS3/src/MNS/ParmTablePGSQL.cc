@@ -57,6 +57,7 @@ vector<MeqPolc> ParmTablePGSQL::getPolcs (const string& parmName,
 				       int, int,
 				       const MeqDomain& domain)
 {
+#if 0
   vector<MeqPolc> result;
 
   string query = "SELECT " + getPolcNoDomainColumns() + ", " + getDomainColumns() + " FROM " + itsTableName + " WHERE name = '" + parmName +"'";
@@ -72,7 +73,13 @@ vector<MeqPolc> ParmTablePGSQL::getPolcs (const string& parmName,
   }
 
   PQclear (queryResult);
-
+#else
+  vector<MeqParmHolder> MPH = find(parmName, domain);
+  vector<MeqPolc> result;
+  for (int i=0; i<MPH.size(); i++) {
+    result.push_back(MPH[i].getPolc());
+  }
+#endif
   return result;
 }
 
@@ -364,7 +371,7 @@ inline string ParmTablePGSQL::getDefInsertQuery(MeqParmHolder MPH)
 {
   std::ostringstream qs;
   qs.precision(PRECISION);
-  qs << "INSERT INTO " << itsTableName << " ("
+  qs << "INSERT INTO " << itsTableName << "def ("
      << " Coeff, SimCoeff, PertSimCoeff, pertvalue, isrelpert, t0, f0, normalized, name, srcnr, statnr"
      << ") VALUES ('"
      << MeqMat2string(MPH.getPolc().getCoeff()) << "', '"

@@ -35,7 +35,7 @@ ParmTableMySQL::ParmTableMySQL (const string& hostName, const string& userName, 
 {
   mysql_init(&itsDB);
   //MYSQL *mysql_real_connect(MYSQL *mysql, const char *host, const char *user, const char *passwd, const char *db, unsigned int port, const char *unix_socket, unsigned long client_flag) 
-  if (mysql_real_connect(           &itsDB,  hostname.c_str(),          "mysql",               NULL, userName.c_str(),               0,                    NULL,                         0)==NULL)
+  if (mysql_real_connect(           &itsDB, hostName.c_str(),          "mysql",               NULL, userName.c_str(),               0,                    NULL,                         0)==NULL)
   {
     ASSERTSTR(false, "no connection to database");
   }
@@ -52,6 +52,7 @@ vector<MeqPolc> ParmTableMySQL::getPolcs (const string& parmName,
 				       const MeqDomain& domain)
 {
   LOG_TRACE_STAT("retreiving polynomial coefficients");
+#if 0
   string query = ParmTableSQLHelper::getGetPolcsQuery(parmName, domain, itsTableName);
   LOG_TRACE_VAR_STR("query: "<<query);
   vector<MeqPolc> result;
@@ -70,6 +71,14 @@ vector<MeqPolc> ParmTableMySQL::getPolcs (const string& parmName,
     }
     mysql_free_result(queryResult);
   }
+#else
+  vector<MeqParmHolder> MPH = find(parmName, domain);
+  vector<MeqPolc> result;
+  for (int i=0; i<MPH.size(); i++) {
+    result.push_back(MPH[i].getPolc());
+  }
+  
+#endif
 
   LOG_TRACE_STAT_STR("finished retreiving polc: "<<result.size()<<" polcs found.");
   return result;
@@ -137,7 +146,7 @@ void ParmTableMySQL::putCoeff (const string& parmName,
 			    const MeqPolc& polc)
 {
   const MeqDomain& domain = polc.domain();
-  VMParm set = find (parmName, domain);
+  vector<MeqParmHolder> set = find (parmName, domain);
   if (! set.empty()) {
     ASSERTSTR (set.size()==1, "Parameter " << parmName <<
 		 " has multiple entries for time "
@@ -152,8 +161,10 @@ void ParmTableMySQL::putCoeff (const string& parmName,
 	       near(domain.endY(), pdomain.endY()),
 	       "Parameter " << parmName <<
 	       " has a partially instead of fully matching entry for time "
-		 << domain.startX() << ':' << domain.endX() << " and freq "
-		 << domain.startY() << ':' << domain.endY());
+	       << domain.startX() << ':' << domain.endX() << " and freq "
+	       << domain.startY() << ':' << domain.endY() << endl
+	       << "(" << pdomain.startX() << ":" << pdomain.endX()
+	       << ", " << pdomain.startY() << ":" << pdomain.endY()) ;
     MeqPolc newPolc = parm.getPolc();
     newPolc.setCoeff (polc.getCoeff());
     parm.setPolc (newPolc);
@@ -182,11 +193,11 @@ void ParmTableMySQL::putNewDefCoeff (const string& parmName,
   mysql_query(&itsDB, query.c_str());
 }
 
-VMParm ParmTableMySQL::find (const string& parmName,
+vector<MeqParmHolder> ParmTableMySQL::find (const string& parmName,
 			    const MeqDomain& domain)
 {
   LOG_TRACE_STAT("searching for MParms");
-  VMParm set;
+  vector<MeqParmHolder> set;
 
   string query;
   query = ParmTableSQLHelper::getFindQuery(parmName, domain, itsTableName);

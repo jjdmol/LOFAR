@@ -62,6 +62,7 @@ vector<MeqPolc> ParmTableMonet::getPolcs (const string& parmName,
 				       const MeqDomain& domain)
 {
   LOG_TRACE_STAT_STR("retreiving polynomial coefficients "<<parmName<<" from "<<itsTableName);
+#if 0
   string query = ParmTableSQLHelper::getGetPolcsQuery(parmName, domain, itsTableName);
   LOG_TRACE_VAR_STR("query: "<<query);
   vector<MeqPolc> result;
@@ -81,6 +82,13 @@ vector<MeqPolc> ParmTableMonet::getPolcs (const string& parmName,
     }
     mapi_close_handle(hdl);
   }
+#else
+  vector<MeqParmHolder> MPH = find(parmName, domain);
+  vector<MeqPolc> result;
+  for (int i=0; i<MPH.size(); i++) {
+    result.push_back(MPH[i].getPolc());
+  }
+#endif
 
   LOG_TRACE_STAT_STR("finished retreiving polc: "<<result.size()<<" polcs found.");
   return result;
