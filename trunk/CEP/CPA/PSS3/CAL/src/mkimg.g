@@ -3,7 +3,8 @@ include 'image.g'
 include 'table.g'
 
 mkimg := function (msname, imgname, type='model', npix=500, nchan=0,
-		   start=1, step=1, msselect='')
+		   start=1, step=1, msselect='',
+		   cellx='0.1arcsec', celly='0.1arcsec')
 {
   t:=table(msname, readonly=F);
   a:=t.getcell('DATA',1);
@@ -19,7 +20,7 @@ mkimg := function (msname, imgname, type='model', npix=500, nchan=0,
   {
     imgr.setdata(mode='channel', nchan=nchan, start=start, step=1, fieldid=1,
                  msselect=msselect);
-    imgr.setimage(nx=npix, ny=npix, cellx='0.1arcsec', celly='0.1arcsec',
+    imgr.setimage(nx=npix, ny=npix, cellx=cellx, celly=celly,
                   mode='mfs',  facets=1);
     imgr.weight('uniform');
     imgr.makeimage(type=type, image=imgname);

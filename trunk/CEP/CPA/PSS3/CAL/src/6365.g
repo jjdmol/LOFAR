@@ -8,7 +8,7 @@ include 'mkimg.g'
 #
 # Demo function showing the predict functionality and creating an image of it.
 #
-predict := function(fname='michiel.demo', ant=4*[0:20],
+predict := function(fname='10206365', ant=[],
 		    modeltype='LOFAR', calcuvw=T, trace=T)
 {
 
@@ -31,6 +31,7 @@ predict := function(fname='michiel.demo', ant=4*[0:20],
         
         mc.predict('MODEL_DATA');
     }
+    print mc.getstatistics();
 
     mc.done();
 
@@ -45,7 +46,7 @@ predict := function(fname='michiel.demo', ant=4*[0:20],
     return T;
 }
 
-solve := function(fname='michiel.demo', ant=4*[0:20],
+solve := function(fname='10206365', ant=[],
 		  modeltype='LOFAR', calcuvw=T, 
 		  niter=1, sleep=F, sleeptime=2, wait=F)
 {
@@ -152,7 +153,7 @@ solve := function(fname='michiel.demo', ant=4*[0:20],
 #    return ref annotator;
 }
 
-solvepos := function(fname='michiel.demo', ant=4*[0:20], niter=1)
+solvepos := function(fname='10206365', ant=[], niter=1)
 {
     annotator := imgannotator(spaste(fname, '.img'), 'raster');
 	
@@ -218,7 +219,7 @@ solvepos := function(fname='michiel.demo', ant=4*[0:20], niter=1)
     return ref annotator;
 }
 
-solvegain := function(fname='michiel.demo', ant=4*[0:20], niter=1)
+solvegain := function(fname='10206365', ant=[], niter=1)
 {
     mc := meqcalibrater(spaste(fname,'.MS'), fname, fname, ant=ant);
     if (is_fail(mc)) {
@@ -274,7 +275,24 @@ solvegain := function(fname='michiel.demo', ant=4*[0:20], niter=1)
     mc.done();
 }
 
-initparms := function(fname='michiel.demo')
+initparms := function(fname='10206365')
+{
+  pt := parmtable(spaste(fname,'.MEP'), T);
+  if (is_fail(pt)) fail;
+  pt.putinit ('frot', values=0);
+  pt.putinit ('drot', values=0);
+  pt.putinit ('dell', values=0);
+  pt.putinit ('gain.11', values=1);
+  pt.putinit ('gain.22', values=0);
+  pt.putinit ('gc.11', values=1);
+  pt.putinit ('gc.12', values=0);
+  pt.putinit ('gc.21', values=0);
+  pt.putinit ('gc.22', values=1);
+  pt.done();
+  return T;
+}
+
+setparms := function(fname='10206365')
 {
   pt := parmtable(spaste(fname,'.MEP'), T);
   if (is_fail(pt)) fail;
@@ -288,41 +306,44 @@ initparms := function(fname='michiel.demo')
   pt.putinit ('gc.21', values=0);
   pt.putinit ('gc.22', values=1);
   pt.done();
+  return T;
 }
 
-setparms := function(fname='michiel.demo')
-{
-  pt := parmtable(spaste(fname,'.MEP'), T);
-  if (is_fail(pt)) fail;
-  pt.putinit ('frot', 0);
-  pt.putinit ('drot', 0);
-  pt.putinit ('dell', 0);
-  pt.putinit ('gain.11', 1);
-  pt.putinit ('gain.22', 0);
-  pt.putinit ('gc.11', values=1);
-  pt.putinit ('gc.12', values=0);
-  pt.putinit ('gc.21', values=0);
-  pt.putinit ('gc.22', values=1);
-  pt.done();
-}
-
-initgsm := function(fname='michiel.demo')
+initgsm := function(fname='10206365')
 {
   tg := gsm(spaste(fname,'.GSM'), T);
   if (is_fail(tg)) fail;
   tg.addpointsource ('src0', [0,1e20], [0,1e20],
-		     2.734, 0.45379, 1, 0, 0, 0);
-  tg.addpointsource ('src1', [0,1e20], [0,1e20],
-		     2.73402, 0.45369, 0.5, 0, 0, 0);
-  tg.addpointsource ('src2', [0,1e20], [0,1e20],
-		     2.73398, 0.45375, 0.3, 0, 0, 0);
-  tg.done()
+		     -2.74382, 0.53240, 1, 0, 0, 0);
+#  tg.addpointsource ('src1', [0,1e20], [0,1e20],
+#		     -2.74382, 0.53240, 1, 0, 0, 0);
+#  tg.addpointsource ('src2', [0,1e20], [0,1e20],
+#		     -2.74382, 0.53240, 1, 0, 0, 0);
+#  tg.addpointsource ('src3', [0,1e20], [0,1e20],
+#		     -2.74382, 0.53240, 1, 0, 0, 0);
+#  tg.addpointsource ('src4', [0,1e20], [0,1e20],
+#		     -2.74382, 0.53240, 1, 0, 0, 0);
+#  tg.addpointsource ('src5', [0,1e20], [0,1e20],
+#		     -2.74382, 0.53240, 1, 0, 0, 0);
+#  tg.addpointsource ('src6', [0,1e20], [0,1e20],
+#		     -2.74382, 0.53240, 1, 0, 0, 0);
+#  tg.addpointsource ('src7', [0,1e20], [0,1e20],
+#		     -2.74382, 0.53240, 1, 0, 0, 0);
+#  tg.addpointsource ('src8', [0,1e20], [0,1e20],
+#		     -2.74382, 0.53240, 1, 0, 0, 0);
+#  tg.addpointsource ('src9', [0,1e20], [0,1e20],
+#		     -2.74382, 0.53240, 1, 0, 0, 0);
+#  tg.addpointsource ('src1', [0,1e20], [0,1e20],
+#		     -2.74390, 0.532488, 0.5, 0, 0, 0);
+#  tg.addpointsource ('src2', [0,1e20], [0,1e20],
+#		     -2.74396, 0.532490, 0.3, 0, 0, 0);
+  tg.done();
   pt := parmtable(spaste(fname,'_gsm.MEP'), T);
   pt.loadgsm (spaste(fname,'.GSM'));
   pt.done();
 }
 
-setgsm := function(fname='michiel.demo')
+setgsm := function(fname='10206365')
 {
   tg := gsm(spaste(fname,'.GSM'), T);
   if (is_fail(tg)) fail;
@@ -338,30 +359,14 @@ setgsm := function(fname='michiel.demo')
   pt.done();
 }
 
-initchan := function(fname='michiel.demo')
+init := function(fname='10206365')
 {
-  t := table(spaste(fname, '.MS/SPECTRAL_WINDOW'),readonly=F)
-  if (is_fail(t)) fail;
-  t.putcell ('CHAN_WIDTH', 1, array(1e7,1));
-  t.close()
-}
-
-setchan := function(fname='michiel.demo')
-{
-  t := table(spaste(fname, '.MS/SPECTRAL_WINDOW'),readonly=F)
-  if (is_fail(t)) fail;
-  t.putcell ('CHAN_WIDTH', 1, array(1e6,1));
-  t.close()
-}
-
-init := function(fname='michiel.demo')
-{
-	initparms(fname=fname);
 	initgsm(fname=fname);
+	initparms(fname=fname);
 	predict(fname=fname);
 }
 
-demo := function(solver=0,niter=10,fname='michiel.demo',sleep=F,sleeptime=2,wait=F)
+demo := function(solver=0,niter=10,fname='10206365',sleep=F,sleeptime=2,wait=F)
 {
 	global annotator;
 
@@ -378,7 +383,7 @@ demo := function(solver=0,niter=10,fname='michiel.demo',sleep=F,sleeptime=2,wait
 	}
 }
 
-demogain := function(niter=10,fname='michiel.demo')
+demogain := function(niter=10,fname='10206365')
 {
 	setparms(fname);
 	initgsm(fname);

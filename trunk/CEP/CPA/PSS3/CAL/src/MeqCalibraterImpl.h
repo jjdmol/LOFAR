@@ -43,7 +43,7 @@
 #include <MNS/MeqMatrix.h>
 #include <MNS/MeqParm.h>
 #include <MNS/MeqPhaseRef.h>
-#include <MNS/MeqPointSource.h>
+#include <MNS/MeqSourceList.h>
 #include <MNS/MeqRequest.h>
 #include <MNS/MeqStation.h>
 #include <MNS/MeqStatSources.h>
@@ -65,14 +65,16 @@ public:
    * MeaurementSet, MEQ model (with associated MEP database) and skymodel
    * for the specified data descriptor (i.e. spectral window) and antennas.
    * Currently model types WSRT and LOFAR are recognized.
+   * The UVW coordinates can be recalculated or taken from the MS.
    */ 
-  MeqCalibrater(const String& msName,
-		const String& meqModel,
-		const String& skyModel,
-		uInt ddid,
-		const Vector<Int>& ant1,
-		const Vector<Int>& ant2,
-		const String& modelType);
+  MeqCalibrater (const String& msName,
+		 const String& meqModel,
+		 const String& skyModel,
+		 uInt ddid,
+		 const Vector<Int>& ant1,
+		 const Vector<Int>& ant2,
+		 const String& modelType,
+		 Bool calcUVW);
 
   //! Destructor
   ~MeqCalibrater();
@@ -117,12 +119,14 @@ public:
   void saveParms();
 
   /*!
-   * Save residual data in the named column (residualColName) by substracting
-   * data in the first named column (colAName) from data in the second named
-   * column (colBName).
+   * Save residual data in the named column (residualColName).
    */
-  void saveResidualData (const String& colAName, const String& colBName,
-			 const String& residualColName);
+  void saveResidualData (const String& colName, const String& residualColName);
+
+  /*!
+   * Get the residual data.
+   */
+  GlishArray getResidualData();
 
   /*!
    * Get info about the parameters whose name matches one of the parameter
@@ -145,6 +149,11 @@ public:
    * after each call to nextTimeIteration.
    */
   GlishRecord getSolveDomain();
+
+  /*!
+   * Set the source numbers to use in this peel step.
+   */
+  Bool peel (const Vector<int>& sourceNrs);
 
   /*!
    * Make a selection of the MS to be used in the solve.
@@ -218,7 +227,9 @@ private:
   MeasurementSet        itsMS;          //# MS as given
   ROMSMainColumns       itsMSCol;
   Table                 itsSelMS;       //# Selected rows from MS
-  ParmTable             itsMEP;
+  ParmTable             itsMEP;         //# Common parmtable
+  ParmTable             itsGSMMEP;      //# parmtable for GSM parameters
+  bool                  itsCalcUVW;
 
   Vector<uInt>          itsCurRows;     //# Rows in the current iter step
   TableIterator         itsIter;        //# Iterator on selected part of MS
@@ -229,7 +240,7 @@ private:
   MeqDomain             itsSolveDomain;
 
   Matrix<int>           itsBLIndex;     //# baseline index of antenna pair
-  vector<MeqPointSource> itsSources;
+  MeqSourceList         itsSources;
   vector<MeqStation*>   itsStations;
   vector<MeqStatUVW*>   itsStatUVW;
   vector<MeqStatSources*> itsStatSrc;

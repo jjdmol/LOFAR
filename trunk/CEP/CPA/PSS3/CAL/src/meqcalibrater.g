@@ -121,6 +121,18 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.selectRec);
     }
     
+    self.peelRec := [_method="peel", _sequence=self.id._sequence]
+    public.peel := function (sourcenrs) {
+    
+        wider self;
+        
+        # argument assignment
+        self.solveRec.sourcenrs := sourcenrs
+
+        # return
+        return defaultservers.run(self.agent, self.solveRec);
+    }
+    
     self.solveRec := [_method="solve", _sequence=self.id._sequence]
     public.solve := function (datacolname = "DATA") {
     
@@ -142,18 +154,26 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.saveparmsRec);
     }
     
-    self.saveresidualdataRec := [_method="saveresidualdata", _sequence=self.id._sequence]
-    public.saveresidualdata := function(colaname, colbname, residualcolname) {
+    self.saveresidualdataRec := [_method="saveresidualdata",
+				 _sequence=self.id._sequence]
+    public.saveresidualdata := function(residualcolname='CORRECTED_DATA') {
     
         wider self;
         
         # argument assignment
-        self.saveresidualdataRec.colaname := colaname
-        self.saveresidualdataRec.colbname := colbname
         self.saveresidualdataRec.residualcolname := residualcolname
         
         # return
         return defaultservers.run(self.agent, self.saveresidualdataRec);
+    }
+    
+    self.getresidualdataRec := [_method="getresidualdata",
+				_sequence=self.id._sequence]
+    public.getresidualdata := function() {
+    
+        wider self;
+        # return
+        return defaultservers.run(self.agent, self.getresidualdataRec);
     }
     
     self.getparmsRec := [_method="getparms", _sequence=self.id._sequence]
@@ -228,7 +248,7 @@ const _define_meqcalibrater := function(ref agent, id) {
 #
 const meqcalibrater := function(msname, meqmodel = 'LOFAR', skymodel = 'GSM',
                                 ddid = 0, ant=[], ant1=[], ant2=[], 
-				modeltype='WSRT', 
+				modeltype='LOFAR', calcuvw=T, 
 				host='', forcenewserver=F) {
     if (len(ant1) == 0) ant1:=ant;
     if (len(ant2) == 0) ant2:=ant;
@@ -236,7 +256,8 @@ const meqcalibrater := function(msname, meqmodel = 'LOFAR', skymodel = 'GSM',
     id := defaultservers.create(agent, 'meqcalibrater', 'meqcalibrater',
                                 [msname=msname, meqmodel=meqmodel,
 				 skymodel=skymodel, ddid=ddid,
-				 ant1=ant1, ant2=ant2, modeltype=modeltype]);
+				 ant1=ant1, ant2=ant2, modeltype=modeltype,
+				 calcuvw=calcuvw]);
     return ref _define_meqcalibrater(agent, id);
 }
 
