@@ -50,7 +50,7 @@ using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
-#define SYSTEM_CLOCK 120.0e6
+#define SAMPLE_FREQUENCY 120.0e6
 
 #define START_TEST(_test_, _descr_) \
   setCurSubTest(#_test_, _descr_)
@@ -166,9 +166,9 @@ GCFEvent::TResult SetWG::enabled(GCFEvent& e, GCFPortInterface& port)
 	
       wg.settings().resize(1);
 
-      if (m_freq > 10e-6)
+      if (m_freq > 1e-6 && m_freq < SAMPLE_FREQUENCY / 2.0) // within range?
       {
-	wg.settings()(0).freq = (uint16)(((m_freq * (1 << 16)) / SYSTEM_CLOCK) + 0.5);
+	wg.settings()(0).freq = (uint16)(((m_freq * (1 << 16)) / SAMPLE_FREQUENCY) + 0.5);
 	wg.settings()(0).phase = m_phase;
 	wg.settings()(0).ampl = m_ampl;
 	wg.settings()(0).nof_samples = 512;
@@ -304,11 +304,11 @@ int main(int argc, char** argv)
   //
   // Read frequency
   //
-  cout << "Frequency (in MHz, e.g. 10e6):";
+  cout << "Frequency (in MHz, [0:" << SAMPLE_FREQUENCY / 2.0 << "]):";
   double freq = atof(fgets(buf, 32, stdin));
-  if (freq < 0 || freq > 20e6)
+  if (freq < 0 || freq > SAMPLE_FREQUENCY / 2.0)
   {
-    LOG_FATAL(formatString("Invalid frequency, should be betwee 0 and 20e6"));
+    LOG_FATAL(formatString("Invalid frequency, should be in range [0:%d]", SAMPLE_FREQUENCY / 2.0));
     exit(EXIT_FAILURE);
   }
 

@@ -77,8 +77,8 @@ inline double convert_uint32_to_double(uint32 val)
   uint64 val64 = val;
   
   // check if bit 31 is set
-  //if ((1<<31) & val64) val64 = val64 << 25;
-  
+  if ((1<<31) & val64) val64 = (val64 & ((1<<31)-1)) << 25;
+
   return (double)val64;
 }
 

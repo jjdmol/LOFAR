@@ -49,6 +49,8 @@ using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
+#define SAMPLE_FREQUENCY 120.0 // MHz
+
 #define START_TEST(_test_, _descr_) \
   setCurSubTest(#_test_, _descr_)
 
@@ -290,25 +292,21 @@ void ViewStats::plot_statistics(Array<double, 2>& stats)
     // compute logarithm of values
     value  = stats(device, Range::all());
 
-    //cout << "value=" << value << endl;
-
 #if 0
     // signal + 1e-6 and +10dB calibrated this to the Marconi signal generator
     //value = log10((value + 1e-6) / (1.0*(1<<16))) * 10.0 + 10.0;
 #endif
 
     // add 1e-6 to prevent -inf result
-#if 1
-    value = 20.0 * log10(value + 1e-6);
-    //cout << "value=" << value << endl;
-#endif
+    // 46 bits precision
+    value = 10.0 * log10(value + 1e-6); // / (1.0*((uint64)1<<46))) * 10.0;
 
     // set yrange for power
-    //gnuplot_cmd(handle, "set ytics -100,20");
-    //gnuplot_cmd(handle, "set yrange [-100:20]");
-    //gnuplot_cmd(handle, "set xrange [0:%f]", 20.0);
+    gnuplot_cmd(handle, "set ytics 0,20");
+    gnuplot_cmd(handle, "set yrange [-0:120]");
+    gnuplot_cmd(handle, "set xrange [0:%f]", SAMPLE_FREQUENCY / 2.0);
 
-    freq = i * (20.0 / n_freqbands); // calculate frequency in MHz
+    freq = i * (SAMPLE_FREQUENCY / (n_freqbands * 2.0)); // calculate frequency in MHz
     gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\" 0, 1.5");
 
     gnuplot_resetplot(handle);
@@ -317,10 +315,10 @@ void ViewStats::plot_statistics(Array<double, 2>& stats)
     switch (m_type)
     {
       case Statistics::SUBBAND_POWER:
-	snprintf(title, 128, "Subband Power (RCU=%d)", device);
+	snprintf(title, 128, "Subband Power (RCU=%d)", (m_device < 0 ? device : m_device));
 	break;
       case Statistics::BEAMLET_POWER:
-	snprintf(title, 128, "Beamlet Power (RSP board=%d)", device);
+	snprintf(title, 128, "Beamlet Power (RSP board=%d)", (m_device < 0 ? device : m_device));
 	break;
       default:
 	snprintf(title, 128, "ERROR: Invalid m_type");
