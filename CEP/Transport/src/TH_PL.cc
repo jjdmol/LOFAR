@@ -53,14 +53,20 @@ TH_PL TH_PL::proto;
 TH_PL::TH_PL (const string& tableName)
   : itsTableName  (tableName),
     itsWriteSeqNo (0),
-    itsReadSeqNo  (0)
-{}
+    itsReadSeqNo  (0),
+    itsInitCalled (false)
+{
+}
 
 TH_PL::~TH_PL()
 {
-  // If this was the last instance of DH_PL, disconnect from the database. 
-  if (--TH_PL::theirInstanceCount == 0L) {
-    disconnectDatabase ();
+  if (itsInitCalled)           // Count only initialized instances
+  {
+    TH_PL::theirInstanceCount--;
+    // If this was the last instance of DH_PL, disconnect from the database. 
+    if (TH_PL::theirInstanceCount == 0L) {
+      disconnectDatabase ();
+    }
   }
 }
 
@@ -86,6 +92,7 @@ bool TH_PL::init()
     connectDatabase ();
   }
   TH_PL::theirInstanceCount++;
+  itsInitCalled = true;
   return true;
 }
 
@@ -105,6 +112,7 @@ void TH_PL::connectDatabase()
 	 << "for more details. Continuing execution... " << endl;
   }
   theirPersistenceBroker.connect (TH_PL::theirDSN, TH_PL::theirUserName);
+  cout << "Connected to database" << endl;
 }
 
 
@@ -139,7 +147,7 @@ int TH_PL::queryDB (const string& queryString,
   // Get a reference to the DHPL's TPO object.  
   PL::PersistentObject& aPO = itsDHPL->getPO();  
   int result = aPO.retrieveInPlace(PL::QueryObject(queryString));  
-  Assert (result > 0);  
+  Assert (result >= 0);  
   DbgAssertStr(int(itsDHPL->getDataBlock().size()) == nbytes,  
 	       "TH_PL::queryDB - non matching size; found "  
 	       << itsDHPL->getDataBlock().size() << ", expected " << nbytes);  
