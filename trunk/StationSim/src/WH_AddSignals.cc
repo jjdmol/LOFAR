@@ -59,7 +59,10 @@ WH_AddSignals::WH_AddSignals (const string& name,
   }
   // DEBUG
   itsCount = 0;
-  itsFileOut.open ("/home/alex/gerdes/add.txt");
+  itsFileOutReal.open ("/home/alex/gerdes/add_real.txt");
+  itsFileOutComplex.open ("/home/alex/gerdes/add_complex.txt");
+  itsFileOutReal.precision(20);
+  itsFileOutComplex.precision(20);
 }
 
 WH_AddSignals::~WH_AddSignals ()
@@ -72,7 +75,8 @@ WH_AddSignals::~WH_AddSignals ()
     delete itsOutHolders[i];
   }
   delete[]itsOutHolders;
-  itsFileOut.close ();
+  itsFileOutReal.close ();
+  itsFileOutComplex.close ();
 }
 
 WorkHolder* WH_AddSignals::construct (const string& name, 
@@ -102,11 +106,12 @@ void WH_AddSignals::process ()
     }
 	
 	// DEBUG
-    for (int i = 0; i < itsNrcu; i++) {
-      itsFileOut << real (itsOutHolders[i]->getBuffer ()[0]) << " " 
-				 << imag (itsOutHolders[i]->getBuffer ()[0]) << " ";
+    for (int i = 0; i < itsNrcu && real (itsOutHolders[i]->getBuffer ()[0]) != 0; i++) {
+      itsFileOutReal << real (itsOutHolders[i]->getBuffer ()[0]) << " ";
+	  itsFileOutComplex << imag (itsOutHolders[i]->getBuffer ()[0]) << " ";
 	}
-    itsFileOut << endl;
+    itsFileOutReal << endl;
+    itsFileOutComplex << endl;
   }
 }
 

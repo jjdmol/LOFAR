@@ -85,7 +85,7 @@ Trajectory::Trajectory (string config_file, int fs, double length)
 		  itsTheta (b+j) = (pointTheta(i) - pointTheta(i-1)) / e * j + pointTheta(i-1);
 		  
 		  // DEBUG
-		  // itsFileOut << b+j << "\t" << itsPhi(b+j) << "\t" << itsTheta(b+j) << "\t" << endl;
+		  itsFileOut << b+j << "\t" << itsPhi(b+j) << "\t" << itsTheta(b+j) << "\t" << endl;
 		}
 	  }
   } else if (itsType == "cyclic") {

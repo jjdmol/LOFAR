@@ -27,6 +27,7 @@
 #include <Common/Lorrays.h>
 #include <StationSim/FFTW.h>
 #include <StationSim/DataGenConfig.h>
+#include <Math/LCSMath.h>
 
 
 namespace PhaseShift 

@@ -22,6 +22,7 @@
 
 #include <StationSim/PhaseShift.h>
 
+
 namespace PhaseShift 
 {
   using namespace blitz;
@@ -44,7 +45,8 @@ namespace PhaseShift
     // compute the freq shift vector for this antenna
     LoVec_dcomplex fs (nfft);
 	fs = exp (dcomplex (0, 1) * freq_shift * doa);
-    
+	LoVec_dcomplex temp(nfft / 2);
+
 	// make copy of input signal
     LoVec_dcomplex result = input_signal.copy ();
     
@@ -55,10 +57,16 @@ namespace PhaseShift
 
 	dprintf1 (2) ("inverse fft length %d bins %d\n", nfft, nbins);
 
+	// Do a ifftshift, put the DC component in the middle of the band
+	temp = result (Range (nfft / 2, nfft - 1));
+	result (Range (nfft / 2, nfft - 1)) = result (Range (0, nfft / 2 - 1));
+	result (Range (0, nfft / 2 - 1)) = temp;
+
     // do inverse fft
 	FFTW::inverse_fft (result, nfft, nbins, invplan);
-	
-	return result;
+
+
+ 	return result;
   }
 
   // Phase-shifts a source for the given array configuration
@@ -79,6 +87,7 @@ namespace PhaseShift
     // truncate input signal data to a multiple of nfft (nbins*nfft)
     int siglen = source.size ();
     int nbins = siglen / nfft;	// number of fft bins
+	LoVec_dcomplex temp(nfft / 2);
 
     siglen = nbins * nfft;
     LoVec_double datavec = source (Range (0, siglen - 1));
@@ -87,6 +96,11 @@ namespace PhaseShift
 
     // do forward fft of source
     LoVec_dcomplex cdata = FFTW::forward_fft (source (Range (0, siglen - 1)), nfft, nbins, fwdplan);
+
+	// Do a fftshift, put the DC component in the middle of the band
+	temp = cdata (Range (nfft / 2, nfft - 1));
+	cdata (Range (nfft / 2, nfft - 1)) = cdata (Range (0, nfft / 2 - 1));
+	cdata (Range (0, nfft / 2 - 1)) = temp;
 
     dprintf1 (1) ("foward fft done\n");
 
@@ -120,7 +134,9 @@ namespace PhaseShift
   {
     LoVec_double fs (nfft);
 
-    fs = ((tensor::i - nfft / 2.0 + 1) * (bandwidth / nfft) + center_freq) / center_freq;
+	// JD/AG: look at the phased array book
+    fs = ((tensor::i - (nfft / 2.0 + 1.0) + 1) * (bandwidth / nfft) + center_freq) / center_freq;
+	//    fs = ((tensor::i - nfft / 2.0 + 1) * (bandwidth / nfft) + center_freq) / center_freq;  Oleg's original code
     return fs;
   }
 
