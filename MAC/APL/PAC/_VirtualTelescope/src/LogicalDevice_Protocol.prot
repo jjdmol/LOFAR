@@ -23,15 +23,15 @@ autogen definitions protocol;
 
 description = "Protocol for LogicalDevice servers";
 prefix = "LOGICALDEVICE"; // for the signal names
+id = "(F_APL_PROTOCOL+1)";
 
 // specify extra include files
 // e.g.
 include = '<sys/time.h>';
 
 prelude = << PRELUDE_END
-enum {
-	LOGICALDEVICE_PROTOCOL = (F_APL_PROTOCOL+1)
-};
+// define namespace and enumerations here
+
 PRELUDE_END;
 
 //
@@ -45,8 +45,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "name";
-		type = "char";
-		dim = "50";
+		type = "string";
 	};
 };
 
@@ -70,8 +69,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "parameters";
-		type = "char";
-		dim = "700";
+		type = "string";
 	};
 };
 
@@ -83,14 +81,6 @@ event = {
 event = {
 	signal = RESUME;
 	dir = IN;
-//	param = {
-//		name = "seqnr";
-//		type = "unsigned int";
-//	};
-//	param = {
-//		name = "ping_time";
-//		type = "timeval";
-//	};
 };
 
 event = {
@@ -101,14 +91,6 @@ event = {
 event = {
 	signal = SUSPEND;
 	dir = IN;
-//	param = {
-//		name = "seqnr";
-//		type = "unsigned int";
-//	};
-//	param = {
-//		name = "ping_time";
-//		type = "timeval";
-//	};
 };
 
 event = {
@@ -119,14 +101,6 @@ event = {
 event = {
 	signal = RELEASE;
 	dir = IN;
-//	param = {
-//		name = "seqnr";
-//		type = "unsigned int";
-//	};
-//	param = {
-//		name = "ping_time";
-//		type = "timeval";
-//	};
 };
 
 event = {

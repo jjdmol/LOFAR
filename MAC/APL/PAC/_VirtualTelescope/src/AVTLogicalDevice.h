@@ -137,7 +137,7 @@ class AVTLogicalDevice : public GCFTask,
 /*******************************************
  * 
  * Remove the following abstract methods. Combine their implementations with the
- * F_INIT_SIG handling in their concrete_...ing_state methods that are entered
+ * F_INIT handling in their concrete_...ing_state methods that are entered
  * just before calling them
  * 
  * ********************************************/

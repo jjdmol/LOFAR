@@ -98,14 +98,14 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
   
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
 //      m_beamServer.open();
       break;
 
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
       break;
     
     case LOGICALDEVICE_INITIALIZED:
@@ -130,10 +130,11 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       if(findClientPort(port,clientName))
       {
         // send prepare message:
-        char prepareParameters[700];
-        AVTUtilities::encodeParameters(m_logicalDeviceMap[clientName].parameters,prepareParameters,700);
+        string prepareParameters;
+        AVTUtilities::encodeParameters(m_logicalDeviceMap[clientName].parameters,prepareParameters);
         
-        LOGICALDEVICEPrepareEvent prepareEvent(prepareParameters);
+        LOGICALDEVICEPrepareEvent prepareEvent;
+        prepareEvent.parameters=prepareParameters;
         // send prepare to Virtual Telescope. VT will send prepare to SBF and SRG
         port.send(prepareEvent);
 
@@ -201,7 +202,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       break;
     }
         
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
     {
 /*      if(&port==&m_beamServer)
       {
@@ -219,7 +220,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       break;
     }
     
-    case F_TIMER_SIG:
+    case F_TIMER:
     {
 /*
       if(&port==&m_beamServer)
@@ -252,20 +253,20 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
 
   switch(answer.signal)
   {
-    case F_MYPLOADED_SIG:
+    case F_MYPLOADED:
     {
       // property set loaded, now load apc
       m_apcLDS.load(false);
       break;
     }
     
-    case F_APCLOADED_SIG:
+    case F_APCLOADED:
     {
       m_initialized=true;
       break;
     }
     
-    case F_VCHANGEMSG_SIG:
+    case F_VCHANGEMSG:
     {
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&answer);
@@ -305,10 +306,11 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
               ldIt->second.parameters.push_back(parameters[9]); // angle2
 
               // send prepare message:
-              char prepareParameters[700];
-              AVTUtilities::encodeParameters(ldIt->second.parameters,prepareParameters,700);
+              string prepareParameters;
+              AVTUtilities::encodeParameters(ldIt->second.parameters,prepareParameters);
               
-              LOGICALDEVICEPrepareEvent prepareEvent(prepareParameters);
+              LOGICALDEVICEPrepareEvent prepareEvent;
+              prepareEvent.parameters=prepareParameters;
               // send prepare to Virtual Telescope. VT will send prepare to SBF and SRG
               ldIt->second.clientPort->send(prepareEvent);
             }
@@ -384,13 +386,7 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
         if(frequency!=m_WGfrequency)
         {
           m_WGfrequency = frequency;
-          // send new settings
-          ABSWgsettingsEvent wgSettingsEvent(m_WGfrequency,static_cast<unsigned char>(m_WGamplitude),static_cast<unsigned char>(m_WGsamplePeriod));
-//          m_beamServer.send(wgSettingsEvent);
-          if(m_pBeamServer!=0)
-          {
-            m_pBeamServer->send(wgSettingsEvent);
-          }
+          sendWGsettings();
         }
       }      
       else if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_UNSIGNED) &&
@@ -401,13 +397,7 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
         if(amplitude!=m_WGamplitude)
         {
           m_WGamplitude = amplitude;
-          // send new settings
-          ABSWgsettingsEvent wgSettingsEvent(m_WGfrequency,static_cast<unsigned char>(m_WGamplitude),static_cast<unsigned char>(m_WGsamplePeriod));
-//          m_beamServer.send(wgSettingsEvent);
-          if(m_pBeamServer!=0)
-          {
-            m_pBeamServer->send(wgSettingsEvent);
-          }
+          sendWGsettings();
         }
       }      
       else if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_UNSIGNED) &&
@@ -418,13 +408,7 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
         if(samplePeriod!=m_WGsamplePeriod)
         {
           m_WGsamplePeriod = samplePeriod;
-          // send new settings
-          ABSWgsettingsEvent wgSettingsEvent(m_WGfrequency,static_cast<unsigned char>(m_WGamplitude),static_cast<unsigned char>(m_WGsamplePeriod));
-//          m_beamServer.send(wgSettingsEvent);
-          if(m_pBeamServer!=0)
-          {
-            m_pBeamServer->send(wgSettingsEvent);
-          }
+          sendWGsettings();
         }
       }      
       break;
@@ -434,3 +418,16 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
   }  
 }
 
+void AVTLogicalDeviceScheduler::sendWGsettings()
+{
+  ABSWgsettingsEvent wgSettingsEvent;
+  wgSettingsEvent.frequency = m_WGfrequency;
+  wgSettingsEvent.amplitude = static_cast<unsigned char>(m_WGamplitude);
+  wgSettingsEvent.sample_period = static_cast<unsigned char>(m_WGsamplePeriod);
+  
+// m_beamServer.send(wgSettingsEvent);
+  if(m_pBeamServer!=0)
+  {
+    m_pBeamServer->send(wgSettingsEvent);
+  }
+}

@@ -78,6 +78,8 @@ class AVTLogicalDeviceScheduler : public GCFTask,
     AVTLogicalDeviceScheduler& operator=(const AVTLogicalDeviceScheduler&);
 
   private:
+    void sendWGsettings();
+
     static string m_schedulerTaskName;
     
 

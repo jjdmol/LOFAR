@@ -93,16 +93,16 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_initial_state(GCFEvent& event, G
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       m_stationBeamformer.start();
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       // open all ports
       m_beamFormerClient.open();
       break;
 
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
     {
       // go to operational only if there is a connection with the beam former.
       if(_isBeamFormerClient(port))
@@ -120,14 +120,14 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_initial_state(GCFEvent& event, G
       break;
     }
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       if(_isBeamFormerClient(port))
       {
         m_beamFormerClient.setTimer(2.0); // try again
       }
       break;
 
-    case F_TIMER_SIG:
+    case F_TIMER:
       if(_isBeamFormerClient(port))
       {
         if(m_beamFormerConnected)
@@ -235,14 +235,14 @@ void AVTVirtualTelescope::handlePropertySetAnswer(GCFEvent& answer)
 {
   switch(answer.signal)
   {
-    case F_MYPLOADED_SIG:
+    case F_MYPLOADED:
     {
       // property set loaded, now load apc
       m_APC.load(false);
       break;
     }
     
-    case F_VCHANGEMSG_SIG:
+    case F_VCHANGEMSG:
     {
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&answer);
@@ -262,12 +262,13 @@ void AVTVirtualTelescope::handlePropertySetAnswer(GCFEvent& answer)
           if(parameters.size()==7)
           {
             // send prepare message:
-            char prepareParameters[700];
-            AVTUtilities::encodeParameters(parameters,prepareParameters,700);
+            string prepareParameters;
+            AVTUtilities::encodeParameters(parameters,prepareParameters);
             
             // send message to myself using a dummyport. VT will send it to SBF and SRG
             GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
-            LOGICALDEVICEPrepareEvent prepareEvent(prepareParameters);
+            LOGICALDEVICEPrepareEvent prepareEvent;
+            prepareEvent.parameters = prepareParameters;
             dispatch(prepareEvent,dummyPort);
           }
         }
@@ -300,7 +301,7 @@ void AVTVirtualTelescope::handleAPCAnswer(GCFEvent& answer)
 {
   switch(answer.signal)
   {
-    case F_APCLOADED_SIG:
+    case F_APCLOADED:
     {
       apcLoaded();
       break;
@@ -334,9 +335,8 @@ void AVTVirtualTelescope::concretePrepare(GCFPortInterface& /*port*/,string& par
   
   // send prepare message to BeamFormer
   // all parameters are forwarded to the beamformer
-  char prepareParameters[700];
-  strncpy(prepareParameters,parameters.c_str(),700);
-  LOGICALDEVICEPrepareEvent prepareEvent(prepareParameters);
+  LOGICALDEVICEPrepareEvent prepareEvent;
+  prepareEvent.parameters = parameters;
   m_beamFormerClient.send(prepareEvent);
 }
 

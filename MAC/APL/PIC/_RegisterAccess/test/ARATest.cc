@@ -1,4 +1,4 @@
-//#  AVTUtilities.h: Utility functions
+//#  ARATest.cc: Implementation of the RegisterAccess test
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,38 +20,33 @@
 //#
 //#  $Id$
 
-#ifndef AVTUtilities_H
-#define AVTUtilities_H
+#include "ARATest.h"
 
-//# Includes
-//# Common Includes
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
-
-//# GCF Includes
-
-//# local includes
-
-// forward declaration
-
-class AVTUtilities
+ARATest::ARATest() :
+  Test(string("ARATest")),
+  m_testTask(*this)
 {
-  public:
+}
 
-    AVTUtilities(); 
-    virtual ~AVTUtilities();
+ARATest::~ARATest()
+{
+}
 
-    static void decodeCommand(const string& commandString, string& command, vector<string>& parameters);
-    static void decodeParameters(const string& parametersString, vector<string>& parameters); 
-    static void decodeSubbandsParameter(const string& subbandsString, vector<int>& subbands);
-    static void encodeParameters(const vector<string>& parameters,string& parameters);
-    
-  protected:
-    // protected copy constructor
-    AVTUtilities(const AVTUtilities&);
-    // protected assignment operator
-    AVTUtilities& operator=(const AVTUtilities&);
+void ARATest::run()
+{  
+  m_testTask.start();
+  
+  GCFTask::run();
+}
 
-  private:
-};
-#endif
+void ARATest::avt_do_test(bool cond, const string& lbl,
+                          const char* fname, long lineno)
+{
+  do_test(cond,lbl,fname,lineno);
+}
+
+void ARATest::avt_do_fail(const string& lbl,
+                          const char* fname, long lineno)
+{
+  do_fail(lbl,fname,lineno);
+}

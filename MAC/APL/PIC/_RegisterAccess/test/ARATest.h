@@ -1,4 +1,4 @@
-//#  AVTUtilities.h: Utility functions
+//#  ARATest.h: Automatic test of the RegisterAccess application
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,38 +20,47 @@
 //#
 //#  $Id$
 
-#ifndef AVTUtilities_H
-#define AVTUtilities_H
+#ifndef ARATest_H
+#define ARATest_H
 
 //# Includes
 //# Common Includes
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
+#include "../../../APLCommon/src/test.h"
 
 //# GCF Includes
 
-//# local includes
+//# RegisterAccess Includes
+#include "ARATestTask.h"
 
 // forward declaration
 
-class AVTUtilities
+
+// redefine the _test and _fail macros to get the correct file and linenumbers
+// in the output.
+#define _avttest(cond) avt_do_test(cond, #cond, __FILE__, __LINE__)
+#define _avtfail(str)  avt_do_fail(str, __FILE__, __LINE__)
+
+class ARATest : public Test
 {
   public:
+    ARATest();
+    virtual ~ARATest();
 
-    AVTUtilities(); 
-    virtual ~AVTUtilities();
-
-    static void decodeCommand(const string& commandString, string& command, vector<string>& parameters);
-    static void decodeParameters(const string& parametersString, vector<string>& parameters); 
-    static void decodeSubbandsParameter(const string& subbandsString, vector<int>& subbands);
-    static void encodeParameters(const vector<string>& parameters,string& parameters);
+    virtual void run();
     
+    void avt_do_test(bool cond, const string& lbl,
+                     const char* fname, long lineno);
+    void avt_do_fail(const string& lbl,
+                     const char* fname, long lineno);
+        
   protected:
     // protected copy constructor
-    AVTUtilities(const AVTUtilities&);
+    ARATest(const ARATest&);
     // protected assignment operator
-    AVTUtilities& operator=(const AVTUtilities&);
-
-  private:
+    ARATest& operator=(const ARATest&);
+    
+  private: 
+    
+    ARATestTask m_testTask;
 };
 #endif

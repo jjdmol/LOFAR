@@ -41,7 +41,7 @@ const double pi(asin(1)*2.0);
 double generateWave(int subband,double angle1,double angle2)
 {
   const double amplitude(subband==10?2e4:2e1);
-  return (amplitude*( (1+cos(angle1*pi))^2) * (1+cos(angle2*pi))^2 );
+  return (amplitude * pow(1.0+cos(angle1*pi),2.0) * pow(1.0+cos(angle2*pi),2.0) );
 }
 
 string AVTTestTask::m_taskName("AVTTest");
@@ -69,7 +69,7 @@ AVTTestTask::AVTTestTask(AVTTest& tester) :
   m_WGSETTINGS_received(false),
   m_WGENABLE_received(false),
   m_WGDISABLE_received(false),
-  m_statisticsTimerID(-1),
+  m_statisticsTimerID(0xffffffff),
   m_beamAngle1(0.0),
   m_beamAngle2(0.0),
   m_seqnr(0)
@@ -100,15 +100,15 @@ GCFEvent::TResult AVTTestTask::initial(GCFEvent& event, GCFPortInterface& /*p*/)
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       m_beamServerProperties.load();
       m_beamserver.open(); // start listening
       break;
     
-    case F_MYPLOADED_SIG:
+    case F_MYPLOADED:
       if(m_sBeamServerOnly)
       {
         TRAN(AVTTestTask::beamServer);
@@ -135,11 +135,11 @@ GCFEvent::TResult AVTTestTask::propertiesLoaded(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
       
-    case F_TIMER_SIG: // intentional fall through
-    case F_ENTRY_SIG:
+    case F_TIMER: // intentional fall through
+    case F_ENTRY:
       if(GCF_PML_ERROR==m_propertyLDSstatus.subscribe())
       {
         LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s): unable to subscribe to LogicalDeviceProperties",getName().c_str()));
@@ -170,10 +170,10 @@ GCFEvent::TResult AVTTestTask::test1(GCFEvent& event, GCFPortInterface& /*p*/)
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       // ignore during first increments
       m_tester._avttest(true);
       TRAN(AVTTestTask::test2);
@@ -202,10 +202,10 @@ GCFEvent::TResult AVTTestTask::test2(GCFEvent& event, GCFPortInterface& p)
     status = GCFEvent::HANDLED;
     switch (event.signal)
     {
-      case F_INIT_SIG:
+      case F_INIT:
         break;
 
-      case F_ENTRY_SIG:
+      case F_ENTRY:
       {
         // SCHEDULE <vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
         //          <frequency>,<subbands>,<direction>
@@ -224,7 +224,7 @@ GCFEvent::TResult AVTTestTask::test2(GCFEvent& event, GCFPortInterface& p)
         break;
       }
       
-      case F_VCHANGEMSG_SIG:
+      case F_VCHANGEMSG:
       {
         GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&event);
         assert(pResponse);
@@ -248,7 +248,7 @@ GCFEvent::TResult AVTTestTask::test2(GCFEvent& event, GCFPortInterface& p)
         break;
       }
       
-      case F_DISCONNECTED_SIG:
+      case F_DISCONNECTED:
       {
         m_tester._avttest(false);
         TRAN(AVTTestTask::test4);
@@ -278,10 +278,10 @@ GCFEvent::TResult AVTTestTask::test3(GCFEvent& event, GCFPortInterface& p)
     status=GCFEvent::HANDLED;
     switch (event.signal)
     {
-      case F_INIT_SIG:
+      case F_INIT:
         break;
   
-      case F_ENTRY_SIG:
+      case F_ENTRY:
       {
         m_WGSETTINGS_received=false;
         GCFPVDouble frequency(1000000.0);
@@ -302,7 +302,7 @@ GCFEvent::TResult AVTTestTask::test3(GCFEvent& event, GCFPortInterface& p)
         break;
       }
 
-      case F_TIMER_SIG:
+      case F_TIMER:
       {
         if(m_WGSETTINGS_received==true)
         {
@@ -317,7 +317,7 @@ GCFEvent::TResult AVTTestTask::test3(GCFEvent& event, GCFPortInterface& p)
         break;
       }
       
-      case F_DISCONNECTED_SIG:
+      case F_DISCONNECTED:
       {
         m_tester._avttest(false);
         TRAN(AVTTestTask::test4);
@@ -343,10 +343,10 @@ GCFEvent::TResult AVTTestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
     {
 //      GCFPVString command(string("0"));
 //      if (m_propertySBFsubbandSelection.setValue(command) != GCF_NO_ERROR)
@@ -357,7 +357,7 @@ GCFEvent::TResult AVTTestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
       break;
     }
     
-    case F_VCHANGEMSG_SIG:
+    case F_VCHANGEMSG:
     {
       GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&event);
       assert(pResponse);
@@ -377,7 +377,7 @@ GCFEvent::TResult AVTTestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
       break;
     }
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
     {
       m_tester._avttest(false);
       TRAN(AVTTestTask::test5);
@@ -403,15 +403,15 @@ GCFEvent::TResult AVTTestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       m_tester._avttest(true);
       TRAN(AVTTestTask::test6);
       break;
 
-      case F_DISCONNECTED_SIG:
+      case F_DISCONNECTED:
       {
         m_tester._avttest(false);
         TRAN(AVTTestTask::test6);
@@ -441,10 +441,10 @@ GCFEvent::TResult AVTTestTask::test6(GCFEvent& event, GCFPortInterface& p)
     status=GCFEvent::HANDLED;
     switch (event.signal)
     {
-      case F_INIT_SIG:
+      case F_INIT:
         break;
   
-      case F_ENTRY_SIG:
+      case F_ENTRY:
       {
         m_BEAMPOINTTO_received=false;
         GCFPVString directionType(string("AZEL"));
@@ -465,7 +465,7 @@ GCFEvent::TResult AVTTestTask::test6(GCFEvent& event, GCFPortInterface& p)
         break;
       }
 
-      case F_TIMER_SIG:
+      case F_TIMER:
       {
         if(m_BEAMPOINTTO_received==true)
         {
@@ -476,7 +476,7 @@ GCFEvent::TResult AVTTestTask::test6(GCFEvent& event, GCFPortInterface& p)
         break;
       }
       
-      case F_DISCONNECTED_SIG:
+      case F_DISCONNECTED:
       {
         m_tester._avttest(false);
         TRAN(AVTTestTask::test7);
@@ -502,15 +502,15 @@ GCFEvent::TResult AVTTestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       m_tester._avttest(true);
       TRAN(AVTTestTask::test8);
       break;
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
     {
       m_tester._avttest(false);
       TRAN(AVTTestTask::test8);
@@ -536,15 +536,15 @@ GCFEvent::TResult AVTTestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       m_tester._avttest(true);
       TRAN(AVTTestTask::test9);
       break;
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
     {
       m_tester._avttest(false);
       TRAN(AVTTestTask::test9);
@@ -574,10 +574,10 @@ GCFEvent::TResult AVTTestTask::test9(GCFEvent& event, GCFPortInterface& p)
     status = GCFEvent::HANDLED;
     switch (event.signal)
     {
-      case F_INIT_SIG:
+      case F_INIT:
         break;
   
-      case F_ENTRY_SIG:
+      case F_ENTRY:
       {
         string cmd("RELEASE ");
         string devices(string(VTNAME));
@@ -590,7 +590,7 @@ GCFEvent::TResult AVTTestTask::test9(GCFEvent& event, GCFPortInterface& p)
         break;
       }
       
-      case F_VCHANGEMSG_SIG:
+      case F_VCHANGEMSG:
       {
         GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&event);
         assert(pResponse);
@@ -608,7 +608,7 @@ GCFEvent::TResult AVTTestTask::test9(GCFEvent& event, GCFPortInterface& p)
         break;
       }
 
-      case F_DISCONNECTED_SIG:
+      case F_DISCONNECTED:
       {
         m_tester._avttest(false);
         TRAN(AVTTestTask::finished);
@@ -635,10 +635,10 @@ GCFEvent::TResult AVTTestTask::finished(GCFEvent& event, GCFPortInterface& /*p*/
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       m_propertyLDSstatus.unsubscribe();
       GCFTask::stop();
       break;
@@ -661,7 +661,9 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
   {
     case ABS_BEAMALLOC:
     {
-      ABSBeamalloc_AckEvent ack(0, SUCCESS);
+      ABSBeamallocAckEvent ack;
+      ack.handle=0;
+      ack.status=SUCCESS;
       p.send(ack);
       m_BEAMALLOC_received=true;
       break;
@@ -669,7 +671,9 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
      
     case ABS_BEAMFREE:
     {
-      ABSBeamfree_AckEvent ack(0, SUCCESS);
+      ABSBeamfreeAckEvent ack;
+      ack.handle=0;
+      ack.status=SUCCESS;
       p.send(ack);
       m_BEAMFREE_received=true;
       break;
@@ -690,7 +694,8 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
      
     case ABS_WGSETTINGS:
     {
-      ABSWgsettings_AckEvent ack(SUCCESS);
+      ABSWgsettingsAckEvent ack;
+      ack.status=SUCCESS;
       p.send(ack);
       m_WGSETTINGS_received=true;
       break;
@@ -704,7 +709,7 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
       m_WGDISABLE_received=true;
       break;
 
-    case F_TIMER_SIG:
+    case F_TIMER:
     {
       GCFTimerEvent *pTimerEvent=static_cast<GCFTimerEvent*>(&event);
       if(pTimerEvent!=0)
@@ -753,17 +758,17 @@ GCFEvent::TResult AVTTestTask::beamServer(GCFEvent& event, GCFPortInterface& p)
     status = GCFEvent::HANDLED;
     switch (event.signal)
     {
-      case F_INIT_SIG:
+      case F_INIT:
         break;
 
-      case F_ENTRY_SIG:
+      case F_ENTRY:
         m_statisticsTimerID=m_beamserver.setTimer(3.0); // statistics update
         break;
       
-      case F_CONNECTED_SIG:
+      case F_CONNECTED:
         break;
               
-      case F_DISCONNECTED_SIG:
+      case F_DISCONNECTED:
         p.close();
         break;
               

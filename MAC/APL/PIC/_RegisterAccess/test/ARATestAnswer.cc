@@ -1,4 +1,4 @@
-//#  AVTUtilities.h: Utility functions
+//#  ARATestAnswer.cc: Implementation of the ARATestAnswer object
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,38 +20,26 @@
 //#
 //#  $Id$
 
-#ifndef AVTUtilities_H
-#define AVTUtilities_H
+#include "ARATestAnswer.h"
+#include <GCF/GCF_Task.h>
 
-//# Includes
-//# Common Includes
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
-
-//# GCF Includes
-
-//# local includes
-
-// forward declaration
-
-class AVTUtilities
+ARATestAnswer::ARATestAnswer() : 
+  m_dummyPort(),
+  m_task(0)
 {
-  public:
+}
 
-    AVTUtilities(); 
-    virtual ~AVTUtilities();
+ARATestAnswer::~ARATestAnswer()
+{
+}
 
-    static void decodeCommand(const string& commandString, string& command, vector<string>& parameters);
-    static void decodeParameters(const string& parametersString, vector<string>& parameters); 
-    static void decodeSubbandsParameter(const string& subbandsString, vector<int>& subbands);
-    static void encodeParameters(const vector<string>& parameters,string& parameters);
-    
-  protected:
-    // protected copy constructor
-    AVTUtilities(const AVTUtilities&);
-    // protected assignment operator
-    AVTUtilities& operator=(const AVTUtilities&);
+void ARATestAnswer::setTask(GCFTask* pTask)
+{
+  m_task=pTask;
+}
 
-  private:
-};
-#endif
+void ARATestAnswer::handleAnswer(GCFEvent& answer)
+{
+  if(m_task!=0)
+    m_task->dispatch(answer,m_dummyPort);
+}

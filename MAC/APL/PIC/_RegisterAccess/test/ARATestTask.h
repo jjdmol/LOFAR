@@ -1,4 +1,4 @@
-//#  AVTTestTask.h: Automatic test of the Virtual Telescope logical device
+//#  ARATestTask.h: Automatic test of the RegisterAccess application
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,43 +20,37 @@
 //#
 //#  $Id$
 
-#ifndef AVTTestTask_H
-#define AVTTestTask_H
+#ifndef ARATestTask_H
+#define ARATestTask_H
 
 //# Includes
 //# Common Includes
 
 //# GCF Includes
 #include <GCF/GCF_Task.h>
-#include <GCF/GCF_Port.h>
-#include <GCF/GCF_Property.h>
-#include <GCF/GCF_MyPropertySet.h>
+#include <GCF/GCF_PropertySet.h>
 #include <boost/shared_ptr.hpp>
 
-#include "AVTTestAnswer.h"
+#include "ARATestAnswer.h"
 
 // forward declaration
 class GCFEvent;
-class GCFPortInterface;
-class AVTTest;
+class ARATest;
 
-class AVTTestTask : public GCFTask
+class ARATestTask : public GCFTask
 {
   public:
-    AVTTestTask(AVTTest& tester);
-    virtual ~AVTTestTask();
-
-    static bool   m_sBeamServerOnly;
+    ARATestTask(ARATest& tester);
+    virtual ~ARATestTask();
 
   protected:
     // protected copy constructor
-    AVTTestTask(const AVTTestTask&);
+    ARATestTask(const ARATestTask&);
     // protected assignment operator
-    AVTTestTask& operator=(const AVTTestTask&);
+    ARATestTask& operator=(const ARATestTask&);
     
   private: 
     GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult propertiesLoaded(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test1(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test2(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test3(GCFEvent& e, GCFPortInterface& p);
@@ -66,38 +60,24 @@ class AVTTestTask : public GCFTask
     GCFEvent::TResult test7(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test8(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test9(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult test10(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult handleBeamServerEvents(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult beamServer(GCFEvent& e, GCFPortInterface& p);
     
     
     static string m_taskName;
     
-    AVTTest&        m_tester;
-    AVTTestAnswer   m_answer;
-    GCFPort         m_beamserver;
-
-    GCFProperty     m_propertyLDScommand;
-    GCFProperty     m_propertyLDSstatus;
-    GCFProperty     m_propertyLDSWGFrequency;
-    GCFProperty     m_propertyLDSWGAmplitude;
-    GCFProperty     m_propertyLDSWGSamplePeriod;
-    GCFProperty     m_propertySBFdirectionType;
-    GCFProperty     m_propertySBFdirectionAngle1;
-    GCFProperty     m_propertySBFdirectionAngle2;
-    GCFProperty     m_propertySBFstatus;
-
-    GCFMyPropertySet      m_beamServerProperties;
-    bool m_BEAMALLOC_received;
-    bool m_BEAMFREE_received;
-    bool m_BEAMPOINTTO_received;
-    bool m_WGSETTINGS_received;
-    bool m_WGENABLE_received;
-    bool m_WGDISABLE_received;
-    unsigned long m_statisticsTimerID;
-    double m_beamAngle1;
-    double m_beamAngle2;
-    unsigned int m_seqnr;
+    ARATest&        m_tester;
+    ARATestAnswer   m_answer;
+    
+    int             m_test_passCounter;
+    
+    GCFPropertySet m_psBP;
+    GCFPropertySet m_psRCUmaintenance;
+    GCFPropertySet m_psStationMaintenance;
+    GCFPropertySet m_psLDScommand;
+    GCFPropertySet m_psBoard1Alert;
+    GCFPropertySet m_psBoard1;
+    
 };
 
 #endif

@@ -67,7 +67,7 @@ int APLInterTaskPort::close()
 /**
  * ::send
  */
-ssize_t APLInterTaskPort::send(const GCFEvent& e, void* /*buf*/, size_t /*count*/)
+ssize_t APLInterTaskPort::send(GCFEvent& e)
 {
   ssize_t returnValue(0);
   
@@ -114,57 +114,9 @@ ssize_t APLInterTaskPort::send(const GCFEvent& e, void* /*buf*/, size_t /*count*
 }
 
 /**
- * ::sendv
- */
-ssize_t APLInterTaskPort::sendv(const GCFEvent& e, const iovec /*buffers*/[], int /*n*/)
-{
-  ssize_t returnValue(0);
-  
-  if (SPP == getType())
-  {
-    if (F_EVT_INOUT(e) & F_IN)
-    {
-      LOFAR_LOG_ERROR(APL_LOGGER_ROOT, (
-          "Trying to send IN event on SPP "
-          "port '%s'; discarding this event.",
-         _name.c_str()));
-      returnValue=-1;
-    }
-  }
-  else if (SAP == getType())
-  {
-    if (F_EVT_INOUT(e) & F_OUT)
-    {
-      LOFAR_LOG_ERROR(APL_LOGGER_ROOT, (
-          "Trying to send OUT event on SAP "
-          "port '%s'; discarding this event.",
-         _name.c_str()));
-      returnValue=-1;
-    }
-  }
-  else if (MSPP == _type)
-  {
-     LOFAR_LOG_ERROR(APL_LOGGER_ROOT, (
-        "Trying to send event by means of the portprovider: %s (MSPP). "
-        "Not supported yet",
-         _name.c_str()));
-      returnValue=-1;
-  }
-
-  if(returnValue!=-1)
-  {
-    // send event using a timer event to exit the sending tasks event loop
-    m_toClientBuffer.reset(new unsigned char[e.length]); // reset deletes current contents, if any
-    memcpy(m_toClientBuffer.get(),(void*)&e,e.length);
-    returnValue=setTimer(0, 0, 0, 0, (void*)m_toClientBuffer.get());
-  }
-  return returnValue;
-}
-
-/**
  * ::sendBack
  */
-ssize_t APLInterTaskPort::sendBack(const GCFEvent& e, void* /*buf*/, size_t /*count*/)
+ssize_t APLInterTaskPort::sendBack(const GCFEvent& e)
 {
   ssize_t returnValue(0);
   
@@ -184,18 +136,10 @@ ssize_t APLInterTaskPort::recv(void* /*buf*/, size_t /*count*/)
   return 0;
 }
 
-/**
- * ::recvv
- */
-ssize_t APLInterTaskPort::recvv(iovec /*buffers*/[], int /*n*/)
-{
-  return 0;
-}
-
 GCFEvent::TResult APLInterTaskPort::dispatch(GCFEvent& event)
 {
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-  if(event.signal == F_TIMER_SIG)
+  if(event.signal == F_TIMER)
   {
     GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
     if(m_toClientBuffer.get()!=0)

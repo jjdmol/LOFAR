@@ -1,7 +1,7 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(PAC/VirtualTelescope/src/AVTLogicalDevice.h)
+AC_INIT(APLCommon/src/APL_Defines.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
@@ -73,5 +73,8 @@ PAC/VirtualTelescope/src/Makefile
 PAC/VirtualTelescope/test/Makefile
 PAC/VirtualTelescope/Makefile
 PAC/Makefile
+PIC/RegisterAccess/test/Makefile
+PIC/RegisterAccess/Makefile
+PIC/Makefile
 Makefile
 )

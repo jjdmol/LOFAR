@@ -87,17 +87,17 @@ void AVTUtilities::decodeSubbandsParameter(const string& subbandsString, vector<
   } while(delim<subbandsStringLen);
 }
 
-void AVTUtilities::encodeParameters(const vector<string>& parameters,char *encodedParameters,unsigned int maxSize)
+void AVTUtilities::encodeParameters(const vector<string>& parameters,string& encodedParameters)
 {
-  memset(encodedParameters,0,maxSize);
+  encodedParameters="";
   vector<string>::const_iterator parameterIt=parameters.begin();
   while(parameterIt!=parameters.end())
   {
     if(parameterIt!=parameters.begin())
     {
-      strncat(encodedParameters,",",maxSize-strlen(encodedParameters));
+      encodedParameters += ",";
     }
-    strncat(encodedParameters,parameterIt->c_str(),maxSize-strlen(encodedParameters));
+    encodedParameters += (*parameterIt);
     
     ++parameterIt;
   }
