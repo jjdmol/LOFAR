@@ -59,6 +59,8 @@ int main (int argc, const char** argv) {
   const int runs = kvm.getInt("runs", 10);
   const int targets = kvm.getInt("targets", 8);
   const int targetgroups = kvm.getInt("targetgroups", 1);
+  const bool blocking = kvm.getBool("blocking", true);
+
 
 //   const std::string frontend_ip = kvm.getString("frontend_ip");
 //   const std::string backend_ip = kvm.getString("backend_ip");
@@ -92,7 +94,8 @@ int main (int argc, const char** argv) {
 				     polarisations, 
 				     runs, 
 				     targets, 
-				     targetgroups);
+				     targetgroups,
+				     blocking);
 	} else {
 	  frontend = new AH_FrontEnd((port+2*targets) + (targets/targetgroups)*fe_rank, 
 				     elements, 
@@ -101,7 +104,8 @@ int main (int argc, const char** argv) {
 				     polarisations, 
 				     runs, 
 				     targets, 
-				     targetgroups);
+				     targetgroups,
+				     blocking);
 	}
 	
 

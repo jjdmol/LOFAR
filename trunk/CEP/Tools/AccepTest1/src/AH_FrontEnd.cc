@@ -27,7 +27,7 @@ using namespace LOFAR;
 
 AH_FrontEnd::AH_FrontEnd (int port, int elements, 
 			  int samples, int channels, int polarisations, 
-			  int runs, int targets, int targetgroups):
+			  int runs, int targets, int targetgroups, bool blocking):
   itsPort     (port),
   itsNelements(elements),
   itsNsamples (samples),
@@ -35,7 +35,8 @@ AH_FrontEnd::AH_FrontEnd (int port, int elements,
   itsNpolarisations(polarisations),
   itsNruns    (runs),
   itsNtargets (targets),
-  itsNtgroups (targetgroups)
+  itsNtgroups (targetgroups),
+  itsBlocking (blocking)
 {
 
   starttime.tv_sec = 0;
@@ -77,8 +78,7 @@ void AH_FrontEnd::define(const KeyValueMap& /*params*/) {
     
     itsWHs.back()->getDataManager().getOutHolder(0)->connectTo
       ( *myWHCorrelator.getDataManager().getInHolder(0),
-	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+cn, false, true) );
-    
+	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+cn, false, itsBlocking) );
   }
 }
 
@@ -95,6 +95,7 @@ void AH_FrontEnd::init() {
   int cn = 0;
   for (; it != itsWHs.end(); it++) {
     cout << "init FE WH " << (*it)->getName() << " listening on port " << itsPort+cn << endl;
+    if (!itsBlocking) (*it)->getDataManager().getOutHolder(0)->getTransporter().setIsBlocking(itsBlocking);
     (*it)->basePreprocess();
     cn++;
   }
