@@ -1,9 +1,9 @@
-/LogDebug                        625        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
-/LogError                        628        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
-/LogFatal                        629        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
-/LogNormal                       630        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
-/LogWarning                      627        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
-/MsgLog                          626        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
+/LogDebug                        724        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
+/LogError                        727        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
+/LogFatal                        728        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
+/LogNormal                       729        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
+/LogWarning                      726        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
+/MsgLog                          725        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
 Add                              616        ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:7
 Argv                             574        ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:8
 Bind                             583        ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:9
@@ -51,7 +51,7 @@ State                            600        ; from /home/oms/LOFAR/autoconf_shar
 Subscribe                        623        ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:51
 Subscriptions                    571        ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:52
 Timeout                          617        ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:53
-Timestamp                        85         ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/test/Testing.aidlist:8
-Type                             477        ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:54
-Up                               610        ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:55
-WP                               620        ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:56
+Timestamp                        85         ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:54
+Type                             477        ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:55
+Up                               610        ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:56
+WP                               620        ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:57
