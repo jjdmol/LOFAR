@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Copy the .param file.
-cp $1/../src/DFTServer.param .
+cp $LOFAR_PKGSRCDIR/../src/DFTServer.param .
 sed -e 's/tDFT/DFT/' tDFTServer.log_prop > DFTServer.log_prop
 
 # Start the DFTServer.
@@ -14,4 +14,6 @@ else
   ../src/DFTServer > tDFTServer_tmp.outs1 &
 fi
 ./tDFTServer > tDFTServer_tmp.outc1
+STATUS=$?
 cat tDFTServer_tmp.outs1 tDFTServer_tmp.outc1
+exit $STATUS

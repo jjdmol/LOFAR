@@ -11,7 +11,8 @@ tDFTServer_SOURCES		= tDFTServer.cc
 tDFTServer_LDADD		= ../src/libdftserver.la
 tDFTServer_DEPENDENCIES		= ../src/libdftserver.la $(LOFAR_DEPEND)
 
-TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir)
+TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
+				  MPIBIN=$(MPIBIN)
 
 
 include $(lofar_sharedir)/Makefile.common
