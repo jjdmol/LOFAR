@@ -1,5 +1,5 @@
 #!/bin/sh
-psql -h dop50 -U postgres test <<_EOF_ > tC_tmp.psql_out 2>&1
+psql -h dop50.astron.nl -U postgres test <<_EOF_ > tC_tmp.psql_out 2>&1
 \i ../../../test/ABC.sql
 \q
 _EOF_

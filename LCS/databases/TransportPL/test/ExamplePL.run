@@ -7,7 +7,7 @@
 # making it possible to run the test program separately (e.g. to debug it).
 
 # Create the database table.
-psql -h dop50 -U postgres test << _EOF_ > ExamplePL_tmp.psql_out 2>&1
+psql -h dop50.astron.nl -U postgres test << _EOF_ > ExamplePL_tmp.psql_out 2>&1
 \i ../../../test/ExamplePL.sql
 \q
 _EOF_
@@ -23,7 +23,7 @@ if [ $STATUS != 0 ]; then
 fi
 
 # Do the second test (with variable length) as well.
-psql -h dop50 -U postgres test << _EOF_ > ExamplePL_tmp.psql_out 2>&1
+psql -h dop50.astron.nl -U postgres test << _EOF_ > ExamplePL_tmp.psql_out 2>&1
 \i ../../../test/ExamplePL.sql
 \q
 _EOF_
