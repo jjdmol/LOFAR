@@ -175,12 +175,22 @@ GCFEvent::TResult APLInterTaskPort::dispatch(GCFEvent& event)
         if(clientIt != m_toClientTimerId.end())
         {
           status = m_slaveTask.dispatch(*pActualEvent, *this);
-          m_toClientTimerId.erase(timerEvent.id);
+          // extra check to see if it still exists:
+          clientIt = m_toClientTimerId.find(timerEvent.id);
+          if(clientIt != m_toClientTimerId.end())
+          {
+            m_toClientTimerId.erase(clientIt);
+          }
         }
         else if(serverIt != m_toServerTimerId.end())
         {
           status = _pTask->dispatch(*pActualEvent, *this);
-          m_toServerTimerId.erase(timerEvent.id);
+          // extra check to see if it still exists:
+          serverIt = m_toServerTimerId.find(timerEvent.id);
+          if(serverIt != m_toServerTimerId.end())
+          {
+            m_toServerTimerId.erase(serverIt);
+          }
         }        
         delete[] pEventObject;
         delete[] packedBuffer;
