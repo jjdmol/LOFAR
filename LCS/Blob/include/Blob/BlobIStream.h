@@ -145,9 +145,22 @@ public:
   // It returns -1 if the stream is not seekable.
   int64 tellPos() const;
 
+  // Tell if conversion is needed and return the format of the data.
+  // This can be done after a getStart.
+  // <group>
+  bool mustConvert() const;
+  LOFAR::DataFormat dataFormat() const;
+  // </group>
+
 private:
   // Read the buffer, increment itsCurLength, and check if everything read.
   void getBuf (void* buf, uint sz);
+
+  // Throw an exception if a get cannot be done.
+  // <group>
+  void checkGet() const;
+  void throwGet() const;
+  // </group>
 
 
   bool   itsSeekable;
@@ -175,6 +188,12 @@ inline int BlobIStream::getStart (const char* objectType)
 inline int64 BlobIStream::tellPos() const
   { return itsStream->tellPos(); }
 
+inline bool BlobIStream::mustConvert() const
+  { return itsMustConvert; }
+
+inline LOFAR::DataFormat BlobIStream::dataFormat() const
+  { return itsDataFormat; }
+
 template<typename T>
 inline void BlobIStream::get (std::vector<T>& vec)
 {
@@ -183,6 +202,12 @@ inline void BlobIStream::get (std::vector<T>& vec)
   vec.resize (sz);
   get (&vec[0], sz);
 }
+
+inline void BlobIStream::checkGet() const
+{
+  if (itsLevel == 0) throwGet();
+}
+
 
 } // end namespace
 

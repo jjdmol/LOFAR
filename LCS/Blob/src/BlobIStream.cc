@@ -100,6 +100,10 @@ int BlobIStream::getStart (const std::string& type)
 uint BlobIStream::getEnd()
 {
   Assert (itsLevel > 0);
+  uint32 eob;
+  *this >> eob;
+  AssertMsg (eob == BlobHeaderBase::eobMagicValue(),
+	     "BlobIStream::getEnd - no end-of-blob value found");
   uint32 toRead = itsObjTLN.top();
   uint32 len    = itsCurLength;
   itsCurLength  = itsObjLen.top();
@@ -117,6 +121,7 @@ uint BlobIStream::getEnd()
 
 void BlobIStream::getBuf (void* buf, uint sz)
 {
+  checkGet();
   uint sz1 = itsStream->get (static_cast<char*>(buf), sz);
   AssertMsg (sz1 == sz,
 	     "BlobIStream::getBuf - " << sz << " bytes asked, but only "
@@ -349,6 +354,7 @@ void BlobIStream::get (std::vector<bool>& values)
 
 int64 BlobIStream::getSpace (uint nbytes)
 {
+  checkGet();
   int64 pos = tellPos();
   AssertMsg (pos != -1, "BlobIStream::getSpace cannot be done; "
 	     "its BlobIBuffer is not seekable");
@@ -366,11 +372,24 @@ uint BlobIStream::align (uint n)
       nfill = pos % n;
     }
   }
-  char fill;
-  for (uint i=0; i<nfill; i++) {
-    *this >> fill;
+  if (nfill > 0) {
+    char fill;
+    nfill = n-nfill;
+    for (uint i=0; i<nfill; i++) {
+      uint sz1 = itsStream->get (&fill, 1);
+      AssertMsg (sz1 == 1,
+		 "BlobIStream::align - could not read fill (pos="
+		 << tellPos() << ")");
+      itsCurLength++;
+    }
   }
   return nfill;
 }
+
+void BlobIStream::throwGet() const
+{
+  throw Exception("BlobIStream: getStart should be done first");
+}
+
 
 } // end namespace
