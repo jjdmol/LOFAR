@@ -1065,17 +1065,9 @@ void RSPDriver::rsp_getversions(GCFEvent& event, GCFPortInterface& port)
   }
 }
 
-int main(int /*argc*/, char** argv)
+int main(int argc, char** argv)
 {
-#if 0
-  char prop_path[PATH_MAX];
-  const char* mac_config = getenv("MAC_CONFIG");
-
-  snprintf(prop_path, PATH_MAX-1,
-	   "%s/%s", (mac_config?mac_config:"."),
-	   "log4cplus.properties");
-  INIT_LOGGER(prop_path);
-#endif
+  GCFTask::init(argc, argv);
   
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
@@ -1094,7 +1086,6 @@ int main(int /*argc*/, char** argv)
   RSPDriver rsp("RSPDriver");
 
   rsp.start(); // make initial transition
-
 
   try
   {

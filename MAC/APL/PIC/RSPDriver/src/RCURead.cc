@@ -64,13 +64,12 @@ GCFEvent::TResult RCURead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 {
   if (event.signal != EPA_RCU_SETTINGS) return GCFEvent::HANDLED;
   
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
-    + (getCurrentBLP() * MEPHeader::N_POL);
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
   EPARcuSettingsEvent rcusettings(event);
 
-  RCUSettings::RCURegisterType& x = Cache::getInstance().getBack().getRCUSettings()()(global_blp);
-  RCUSettings::RCURegisterType& y = Cache::getInstance().getBack().getRCUSettings()()(global_blp + 1);
+  RCUSettings::RCURegisterType& x = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2));
+  RCUSettings::RCURegisterType& y = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2) + 1);
 
   memcpy(&x, &rcusettings.x, sizeof(uint8));
   memcpy(&y, &rcusettings.y, sizeof(uint8));

@@ -78,10 +78,10 @@ CacheBuffer::CacheBuffer()
     m_subbandselection()(Range::all(), Range::all()) = i;
   }
 
-  m_rcusettings().resize(GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL);
+  m_rcusettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
   m_rcusettings() = RCUSettings::RCURegisterType();
 
-  m_wgsettings().resize(GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL);
+  m_wgsettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
   
   WGSettings::WGRegisterType init;
   init.freq        = 0;

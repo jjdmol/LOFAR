@@ -48,19 +48,13 @@ RCUWrite::~RCUWrite()
 
 void RCUWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
-    + (getCurrentBLP() * MEPHeader::N_POL);
-
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
   EPARcuSettingsEvent rcusettings;
+
   rcusettings.hdr.set(MEPHeader::RCU_SETTINGS_HDR, getCurrentBLP());
 
-  RCUSettings::RCURegisterType& x = Cache::getInstance().getBack().getRCUSettings()()(global_blp);
-  RCUSettings::RCURegisterType& y = Cache::getInstance().getBack().getRCUSettings()()(global_blp + 1);
-
-#ifdef TOGGLE_LEDS
-  x.lba_enable = Cache::getInstance().ledstatus();
-  x.hba_enable = !Cache::getInstance().ledstatus();
-#endif
+  RCUSettings::RCURegisterType& x = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2));
+  RCUSettings::RCURegisterType& y = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2) + 1);
 
   memcpy(&rcusettings.x, &x, sizeof(uint8));
   memcpy(&rcusettings.y, &y, sizeof(uint8));
