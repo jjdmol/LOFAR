@@ -33,56 +33,40 @@ namespace LOFAR
   Connection::~Connection() {
   }
 
-  bool Connection::connectTo(Transporter& sourceTP,
-			     Transporter& targetTP,
-			     const TransportHolder& prototype)
-  {
-    return connectData (&sourceTP, &targetTP, prototype);
-  }
+  bool Connection::connect(Transporter& sourceTP,
+			   Transporter& targetTP,
+			   const TransportHolder& prototype) {
 
-
-  bool Connection::connectFrom(Transporter& sourceTP,
-			       Transporter& targetTP,
-			       const TransportHolder& prototype)
-  {
-    return connectData (&sourceTP, &targetTP, prototype);
-  }
-
-
-  bool Connection::connectData(Transporter* sourceTP,
-			       Transporter* targetTP,
-			       const TransportHolder& prototype) {
-
-    AssertStr(sourceTP->getRate() == targetTP->getRate(), 
+    AssertStr(sourceTP.getRate() == targetTP.getRate(), 
 	      "Connection::connectData; inRate " << 
-	      sourceTP->getRate() << " and outRate " <<
-	      targetTP->getRate() << " not equal!");
+	      sourceTP.getRate() << " and outRate " <<
+	      targetTP.getRate() << " not equal!");
 
     // Make a new TransportHolder for both the target and 
     // the source Transporter.
-    sourceTP->makeTransportHolder (prototype);
-    targetTP->makeTransportHolder (prototype);
+    sourceTP.makeTransportHolder (prototype);
+    targetTP.makeTransportHolder (prototype);
 
-    AssertStr(sourceTP->getTransportHolder()->getType() == 
-	      targetTP->getTransportHolder()->getType(),
+    AssertStr(sourceTP.getTransportHolder()->getType() == 
+	      targetTP.getTransportHolder()->getType(),
  	      "Connection::connectData; inType " <<
- 	      sourceTP->getTransportHolder()->getType() << 
+ 	      sourceTP.getTransportHolder()->getType() << 
 	      " and outType " <<
- 	      targetTP->getTransportHolder()->getType() << 
+ 	      targetTP.getTransportHolder()->getType() << 
 	      " not equal!");
     
-    DbgAssert (sourceTP->getItsID() >= 0);
+    DbgAssert (sourceTP.getItsID() >= 0);
 
     // Use the source ID as the tag for MPI send/receive.
-    sourceTP->setWriteTag (sourceTP->getItsID());
-    targetTP->setReadTag (sourceTP->getItsID());
+    sourceTP.setWriteTag (sourceTP.getItsID());
+    targetTP.setReadTag (sourceTP.getItsID());
     // And the other way around
-    sourceTP->setReadTag (targetTP->getItsID());
-    targetTP->setWriteTag (targetTP->getItsID());
+    sourceTP.setReadTag (targetTP.getItsID());
+    targetTP.setWriteTag (targetTP.getItsID());
 
     // Set the source and target DataHolder 
-    targetTP->setSourceAddr(sourceTP->getBaseDataHolder());
-    sourceTP->setTargetAddr(targetTP->getBaseDataHolder());
+    targetTP.setSourceAddr(sourceTP.getBaseDataHolder());
+    sourceTP.setTargetAddr(targetTP.getBaseDataHolder());
     
     return true;
   }

@@ -93,7 +93,6 @@ public:
   // The default implementation does nothing.
   void basePreprocess();
   virtual void preprocess();
-  virtual void init();
 
   // The postprocess method is called after process is done.
   // It can be used to clean up the DataHolder.
@@ -116,6 +115,13 @@ public:
   //#// bool doHandle() const;
 
   bool isValid() const;
+
+  /// Connect to another BaseDataHolder (data flows from this object to thatDH)
+  bool connectTo(BaseDataHolder& thatDH, TransportHolder& prototype);
+  /// Connect another BaseDataHolder to this object. (data flows from thatDH to this object)
+  bool connectFrom(BaseDataHolder& thatDH, TransportHolder& prototype);
+  /// Initialization must be called after connect.
+  void init();   
 
   void setTimeStamp (unsigned long aTimeStamp);
   unsigned long getTimeStamp() const;
@@ -157,6 +163,14 @@ public:
 
   // Get the node the BaseDataHolder runs on.
   int getNode() const;
+
+  // Set/get the ID
+  void setID(int aID);
+  int getID() const;
+
+  // Set/get communication type
+  void setBlocking(bool);  
+  bool isBlocking();
 
   // Get the type of the BaseDataHolder.
   const string& getType() const;
@@ -316,10 +330,22 @@ inline void BaseDataHolder::setType(const string& type)
   { itsType = type; }
 
 inline void BaseDataHolder::runOnNode(int aNode)
-{ itsNode = aNode; }
+  { itsNode = aNode; }
 
 inline int BaseDataHolder::getNode() const
   { return itsNode; } 
+
+inline void BaseDataHolder::setID(int aID)
+  { itsTransporter.setItsID(aID); }
+
+inline int BaseDataHolder::getID() const
+  { return itsTransporter.getItsID(); }
+
+inline void BaseDataHolder::setBlocking(bool block)
+  { itsTransporter.setIsBlocking(block); }
+
+inline bool BaseDataHolder::isBlocking()
+  { return itsTransporter.isBlocking(); }
 
 inline BlobFieldBase& BaseDataHolder::getDataField (uint fieldIndex)
 {

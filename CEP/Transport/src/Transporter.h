@@ -70,10 +70,9 @@ class Transporter
   TransportHolder* getTransportHolder();
 
   /// interface to the Connection class
-  bool connectTo(Transporter& that, const TransportHolder& prototype);
-  bool connectFrom(Transporter& that, const TransportHolder& prototype);
-
-  // Initialize the BasaeDataHolder and the TransportHolder.
+  /// after setting the connection, the init() method must be called
+  bool connectTo(Transporter& thatTP, TransportHolder& prototype);
+  bool connectFrom(Transporter& thatTP, TransportHolder& prototype);
   bool init();
 
   /// Set/get the ID.

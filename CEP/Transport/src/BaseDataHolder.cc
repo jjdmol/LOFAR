@@ -85,6 +85,7 @@ BaseDataHolder::~BaseDataHolder()
 }
 
 void BaseDataHolder::init() {
+  itsTransporter.init();
   basePreprocess();
 }
 
@@ -179,6 +180,15 @@ void BaseDataHolder::write()
   }
 }
 
+bool BaseDataHolder::connectTo(BaseDataHolder& thatDH, TransportHolder& prototype)
+{
+  return itsTransporter.connectTo(thatDH.getTransporter(), prototype);
+}
+
+bool BaseDataHolder::connectFrom(BaseDataHolder& thatDH, TransportHolder& prototype)
+{
+  return itsTransporter.connectFrom(thatDH.getTransporter(), prototype);
+}
 
 int BaseDataHolder::DataPacket::compareTimeStamp (const DataPacket& that) const
 {

@@ -20,7 +20,6 @@
 //#
 //# $Id$
 
-#include <Transport/Transporter.h>
 #include <Transport/TH_PL.h>
 #include <DH_Example2.h>
 #include <iostream>
@@ -37,21 +36,19 @@ int main()
 
     DH_Example2 DH1("dh1", 1);
     DH_Example2 DH2("dh2", 1);
-    Transporter& TR1 = DH1.getTransporter();
-    Transporter& TR2 = DH2.getTransporter();
     
-    // Assign an ID for each transporter by hand for now
+    // Assign an ID for each dataholder by hand for now
     // This will be done by the framework later on
-    TR1.setItsID(1);
-    TR2.setItsID(2);
+    DH1.setID(1);
+    DH2.setID(2);
  
     // connect DH1 to DH2
     TH_PL TH1("ExamplePL2");
-    TR1.connectTo(TR2, TH1);
+    DH1.connectTo(DH2, TH1);
     
-    // initialize the TransportHolders and DataHolders
-    TR1.init();
-    TR2.init();
+    // initialize the DataHolders
+    DH1.init();
+    DH2.init();
     
     // fill the DataHolders with some initial data
     DH1.getBuffer()[0] = fcomplex(17,-3.5);

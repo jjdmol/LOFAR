@@ -27,7 +27,7 @@
 #include <PL/TPersistentObject.h>
 #include <PL/DBRepHolder.h>    // needed to see ObjectId specialization
 #include <PL/Collection.h>
-#include <PL/Query.h>
+#include <PL/QueryObject.h>
 #include <Common/lofar_iostream.h>
 #include <sstream>
 
