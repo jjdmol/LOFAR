@@ -43,7 +43,6 @@ int main (int argc, const char* argv[])
     ASSERT (pos.height() == 3);
     cout << pos << endl;
     EarthCoord dwl(0.111646531, 0.921760253, 25);
-    cout << TimeCoord::getUTCDiff() << endl;
     TimeCoord time(10.5);
     ASSERT (time.mjd() == 10.5);
     TimeCoord someTime(2004, 11, 19, 15, 22);
@@ -52,6 +51,7 @@ int main (int argc, const char* argv[])
     TimeCoord someTime2 (someTime.mjd(), 1./24);
     cout << someTime2 << endl;
     TimeCoord someTime3 (someTime.mjd(), 1.);
+    cout << someTime3 << endl;
 
     // Only make a connection if an argument is given.
     if (argc < 2) {
