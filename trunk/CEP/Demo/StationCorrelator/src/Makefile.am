@@ -10,7 +10,8 @@ DH_Vis.h						\
 WH_RSP.h                                                \
 WH_Transpose.h						\
 WH_Correlator.h						\
-WH_Dump.h
+WH_Dump.h						\
+SyncStamp.h
 
 StationCorrelator_SOURCES 	=	$(DOCHDRS)	\
 DH_RSP.cc						\
@@ -23,6 +24,7 @@ WH_RSP.cc                                               \
 WH_Transpose.cc						\
 WH_Correlator.cc					\
 WH_Dump.cc						\
-StationCorrelator.cc					
+StationCorrelator.cc					\
+SyncStamp.cc
 
 include $(lofar_sharedir)/Makefile.common
