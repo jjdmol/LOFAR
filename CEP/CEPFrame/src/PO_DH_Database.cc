@@ -25,6 +25,9 @@
 #include <PO_DH_Database.h>
 #include <Common/lofar_iostream.h>
 
+#include <sstream>
+using namespace std;
+
 // ==========================================
 // [>] Database implementation
 
@@ -41,12 +44,12 @@ int	      ReservedData2     [TH_ARRAY_SIZE];
 int	      ReservedData3     [TH_ARRAY_SIZE];
 int	      ReservedData4     [TH_ARRAY_SIZE];
 int           MessageSize       [TH_ARRAY_SIZE];
-void *        MessageContent    [TH_ARRAY_SIZE];
+//void *        MessageContent    [TH_ARRAY_SIZE];
 unsigned long TimeStamp         [TH_ARRAY_SIZE];
 string        MessageType       [TH_ARRAY_SIZE];
 string        MessageName       [TH_ARRAY_SIZE];
 string        HumanReadableForm [TH_ARRAY_SIZE];
-
+string        PseudoBlob        [TH_ARRAY_SIZE];
 
 // ==========================================
 // [>] DatabaseRecord
@@ -77,20 +80,28 @@ bool PO_DH_Database::Store () {
   ReservedData3  [NrOfMessages] = getReservedData3 ();
   ReservedData4  [NrOfMessages] = getReservedData4 ();
   MessageSize    [NrOfMessages] = getByteStringLength ();
-  MessageContent [NrOfMessages] = malloc (getByteStringLength ());
 
-  if (MessageContent [NrOfMessages] == 0) {
-    cout << "Fatal error in TH_Database::send (). Could not allocate " 
-	 << getByteStringLength () << " memory." << endl;
-    return false;
-  }
+  //  MessageContent [NrOfMessages] = malloc (getByteStringLength ());
 
-  memcpy(MessageContent [NrOfMessages], getByteString (),
-    getByteStringLength ()); 
+  // if (MessageContent [NrOfMessages] == 0) {
+  //   cout << "Fatal error in TH_Database::send (). Could not allocate " 
+  //   << getByteStringLength () << " memory." << endl;
+  //   return false;
+  // }
 
   TimeStamp   [NrOfMessages] = getTimeStamp ();
   MessageType [NrOfMessages] = getType ();
   MessageName [NrOfMessages] = getName ();
+
+  int i;
+  ostringstream ostr;
+
+  for (i = 0; i < getByteStringLength (); i ++) {  
+    ostr << (unsigned int) (getByteString ()) [i] << ' ';
+  }
+  ostr << "-1";
+
+  PseudoBlob [NrOfMessages] = ostr.str ();
 
   NrOfMessages ++;
 
@@ -122,13 +133,23 @@ bool PO_DH_Database::Retrieve () {
   setReservedData4    (ReservedData4  [i]);
   setByteStringLength (MessageSize    [i]);
 
-  memcpy (getByteString (), MessageContent [i], getByteStringLength ());
-
   setTimeStamp (TimeStamp   [i]);
   setType      (MessageType [i]);
   setName      (MessageName [i]);
 
   MessageStatus [i] = msgDiscarded;
+
+  cout << "PseudoBlob(Receive): " << PseudoBlob [i] << endl;
+
+  int j, idx=0;
+  istringstream istr (PseudoBlob[i]);
+
+  istr >> j;
+  while (j != -1) {
+    * (getByteString () + idx) = (char) j;
+    idx ++;
+    istr >> j;
+  }
 
   NrOfMessages ++;
 
