@@ -640,10 +640,10 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
   
   rcuStatus = m_systemStatus.rcu()(rcuNumber-1).status;
   
-  // layout rcu status: 
-  // 7        6       5       4       3 2 1 0
-  // overflow rcu_pwr hba_pwr lba_pwr filter
-  if(propName.find(string(PROPNAME_OVERFLOW),0) != string::npos)
+  // layout rcu status (for both statusX and statusY): 
+  // 7         6         5         4        3        2       1          0
+  // VDDVCCEN VHENABLE VLENABLE FILSELB FILSELA BANDSEL HBAENABLE LBAENABLE
+  if(propName.find(string(PROPNAME_VDDVCCEN),0) != string::npos)
   {
     uint8 tempStatus = rcuStatus & 0x7f; // reset bits
     tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<7);
@@ -652,7 +652,7 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
     }
   }
-  else if(propName.find(string(PROPNAME_RCUPWR),0) != string::npos)
+  else if(propName.find(string(PROPNAME_VHENABLE),0) != string::npos)
   {
     uint8 tempStatus = rcuStatus & 0xbf; // reset bits
     tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<6);
@@ -661,7 +661,7 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
     }
   }
-  else if(propName.find(string(PROPNAME_HBAPWR),0) != string::npos)
+  else if(propName.find(string(PROPNAME_VLENABLE),0) != string::npos)
   {
     uint8 tempStatus = rcuStatus & 0xdf; // reset bits
     tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<5);
@@ -670,7 +670,7 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
     }
   }
-  else if(propName.find(string(PROPNAME_LBAPWR),0) != string::npos)
+  else if(propName.find(string(PROPNAME_FILSELB),0) != string::npos)
   {
     uint8 tempStatus = rcuStatus & 0xef; // reset bits
     tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<4);
@@ -679,10 +679,37 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
     }
   }
-  else if(propName.find(string(PROPNAME_FILTER),0) != string::npos)
+  else if(propName.find(string(PROPNAME_FILSELA),0) != string::npos)
   {
-    uint8 tempStatus = rcuStatus & 0xf0; // reset bits
-    tempStatus = tempStatus | ((uint8 )(pvUnsigned.getValue()) & 0x0f);
+    uint8 tempStatus = rcuStatus & 0xf7; // reset bits
+    tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<3);
+    if(rcuStatus != tempStatus)
+    {
+      m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
+    }
+  }
+  else if(propName.find(string(PROPNAME_BANDSEL),0) != string::npos)
+  {
+    uint8 tempStatus = rcuStatus & 0xfb; // reset bits
+    tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<2);
+    if(rcuStatus != tempStatus)
+    {
+      m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
+    }
+  }
+  else if(propName.find(string(PROPNAME_HBAENABLE),0) != string::npos)
+  {
+    uint8 tempStatus = rcuStatus & 0xd; // reset bits
+    tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<1);
+    if(rcuStatus != tempStatus)
+    {
+      m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
+    }
+  }
+  else if(propName.find(string(PROPNAME_LBAENABLE),0) != string::npos)
+  {
+    uint8 tempStatus = rcuStatus & 0xfe; // reset bits
+    tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<0);
     if(rcuStatus != tempStatus)
     {
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;

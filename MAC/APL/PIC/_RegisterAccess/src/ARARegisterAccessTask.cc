@@ -892,6 +892,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,4);
       updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count);  
 
+      int apNr=1;
       uint8     boardRCUstatusStatusX       = boardStatus(boardNr).ap1_rcu.statusx;
       uint8     boardRCUstatusStatusY       = boardStatus(boardNr).ap1_rcu.statusy;
       uint8     boardRCUstatusFFI0          = boardStatus(boardNr).ap1_rcu.ffi0;
@@ -899,9 +900,16 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       uint32    boardRCUstatusNofOverflowX  = boardStatus(boardNr).ap1_rcu.nof_overflowx;
       uint32    boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap1_rcu.nof_overflowy;
       LOG_INFO(formatString("BoardRCUStatus ap1:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
-      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,1);
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
       updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY);
+      int rcuNr=1;
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
+      updateRCUproperties(scopeString,boardRCUstatusStatusX);
+      rcuNr++;
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
+      updateRCUproperties(scopeString,boardRCUstatusStatusY);
 
+      apNr++;
       boardRCUstatusStatusX       = boardStatus(boardNr).ap2_rcu.statusx;
       boardRCUstatusStatusY       = boardStatus(boardNr).ap2_rcu.statusy;
       boardRCUstatusFFI0          = boardStatus(boardNr).ap2_rcu.ffi0;
@@ -909,9 +917,16 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       boardRCUstatusNofOverflowX  = boardStatus(boardNr).ap2_rcu.nof_overflowx;
       boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap2_rcu.nof_overflowy;
       LOG_INFO(formatString("BoardRCUStatus ap2:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
-      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,2);
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
       updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY);
+      rcuNr=1;
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
+      updateRCUproperties(scopeString,boardRCUstatusStatusX);
+      rcuNr++;
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
+      updateRCUproperties(scopeString,boardRCUstatusStatusY);
 
+      apNr++;
       boardRCUstatusStatusX       = boardStatus(boardNr).ap3_rcu.statusx;
       boardRCUstatusStatusY       = boardStatus(boardNr).ap3_rcu.statusy;
       boardRCUstatusFFI0          = boardStatus(boardNr).ap3_rcu.ffi0;
@@ -919,9 +934,16 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       boardRCUstatusNofOverflowX  = boardStatus(boardNr).ap3_rcu.nof_overflowx;
       boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap3_rcu.nof_overflowy;
       LOG_INFO(formatString("BoardRCUStatus ap3:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
-      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,3);
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
       updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY);
+      rcuNr=1;
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
+      updateRCUproperties(scopeString,boardRCUstatusStatusX);
+      rcuNr++;
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
+      updateRCUproperties(scopeString,boardRCUstatusStatusY);
 
+      apNr++;
       boardRCUstatusStatusX       = boardStatus(boardNr).ap4_rcu.statusx;
       boardRCUstatusStatusY       = boardStatus(boardNr).ap4_rcu.statusy;
       boardRCUstatusFFI0          = boardStatus(boardNr).ap4_rcu.ffi0;
@@ -929,10 +951,17 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       boardRCUstatusNofOverflowX  = boardStatus(boardNr).ap4_rcu.nof_overflowx;
       boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap4_rcu.nof_overflowy;
       LOG_INFO(formatString("BoardRCUStatus ap4:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
-      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,4);
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,apNr);
       updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY);
+      rcuNr=1;
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
+      updateRCUproperties(scopeString,boardRCUstatusStatusX);
+      rcuNr++;
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
+      updateRCUproperties(scopeString,boardRCUstatusStatusY);
     }
 
+/*
     for(int rcuNr=rcuStatus.lbound(blitz::firstDim); rcuNr <= rcuStatus.ubound(blitz::firstDim); ++rcuNr)
     {
       uint8   rcuStatusBits = rcuStatus(rcuNr).status;
@@ -945,6 +974,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       LOG_DEBUG(formatString("RCU[%d]= %s",rcuNr,scopeString));
       updateRCUproperties(scopeString,rcuStatusBits);
     }
+*/
   }
   
   return status;
@@ -962,56 +992,51 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
         updStatsEvent.status,
         updStatsEvent.handle));
 
-    blitz::Array<double, 3>& statistics = updStatsEvent.stats();
-    int maxRCUs     = statistics.ubound(blitz::secondDim) - statistics.lbound(blitz::secondDim) + 1;
-    int maxBeamlets = statistics.ubound(blitz::thirdDim) - statistics.lbound(blitz::thirdDim) + 1;
+    blitz::Array<double, 2>& statistics = updStatsEvent.stats();
+    int maxRCUs     = statistics.ubound(blitz::firstDim) - statistics.lbound(blitz::firstDim) + 1;
+    int maxSubbands = statistics.ubound(blitz::secondDim) - statistics.lbound(blitz::secondDim) + 1;
 
-    int type,rcu,beamlet;
-    // type will always be 0. The subscription determines if the received array contains
-    // beamlet or subband power statistics
-    for(type=statistics.lbound(blitz::firstDim);type<=statistics.ubound(blitz::firstDim);type++)
+    int rcu,subband;
+    GCFPValueArray valuePointerVector;
+    
+    // first elements indicate the length of the array
+    valuePointerVector.push_back(new GCFPVDouble(maxRCUs));
+    valuePointerVector.push_back(new GCFPVDouble(maxSubbands));
+    
+    // then for each rcu, the statistics of the beamlets or subbands
+    for(rcu=statistics.lbound(blitz::firstDim);rcu<=statistics.ubound(blitz::firstDim);rcu++)
     {
-      GCFPValueArray valuePointerVector;
-      
-      // first elements indicate the length of the array
-      valuePointerVector.push_back(new GCFPVDouble(maxRCUs));
-      valuePointerVector.push_back(new GCFPVDouble(maxBeamlets));
-      
-      // then for each rcu, the statistics of the beamlets or subbands
-      for(rcu=statistics.lbound(blitz::secondDim);rcu<=statistics.ubound(blitz::secondDim);rcu++)
+      for(subband=statistics.lbound(blitz::secondDim);subband<=statistics.ubound(blitz::secondDim);subband++)
       {
-        for(beamlet=statistics.lbound(blitz::thirdDim);beamlet<=statistics.ubound(blitz::thirdDim);beamlet++)
-        {
-          double stat = statistics(type,rcu,beamlet);
-          valuePointerVector.push_back(new GCFPVDouble(stat));
-        }
+        double stat = statistics(rcu,subband);
+        valuePointerVector.push_back(new GCFPVDouble(stat));
       }
+    }
 
-      // convert the vector of unsigned values to a dynamic array
-      GCFPVDynArr dynamicArray(LPT_DOUBLE,valuePointerVector);
-      
-      // set the property
-      TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(string(SCOPE_PIC));
-      if(propSetIt != m_myPropertySetMap.end())
+    // convert the vector of unsigned values to a dynamic array
+    GCFPVDynArr dynamicArray(LPT_DOUBLE,valuePointerVector);
+    
+    // set the property
+    TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(string(SCOPE_PIC));
+    if(propSetIt != m_myPropertySetMap.end())
+    {
+      if(updStatsEvent.handle == m_subStatsHandleSubbandPower)
       {
-        if(updStatsEvent.handle == m_subStatsHandleSubbandPower)
-        {
-          propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),dynamicArray);
-        }
-        else if(updStatsEvent.handle == m_subStatsHandleBeamletPower)
-        {
-          propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),dynamicArray);
-        }
+        propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),dynamicArray);
       }
-      
-      // cleanup
-      GCFPValueArray::iterator it=valuePointerVector.begin();
-      while(it!=valuePointerVector.end())
+      else if(updStatsEvent.handle == m_subStatsHandleBeamletPower)
       {
-        delete *it;
-        valuePointerVector.erase(it);
-        it=valuePointerVector.begin();
+        propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),dynamicArray);
       }
+    }
+    
+    // cleanup
+    GCFPValueArray::iterator it=valuePointerVector.begin();
+    while(it!=valuePointerVector.end())
+    {
+      delete *it;
+      valuePointerVector.erase(it);
+      it=valuePointerVector.begin();
     }
   }
   
@@ -1199,9 +1224,10 @@ void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8  statusX,
 
 void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
 {
-  // layout rcu status: 
-  // 7        6       5       4       3 2 1 0
-  // overflow rcu_pwr hba_pwr lba_pwr filter
+  // layout rcu status (for both statusX and statusY): 
+  // 7         6         5         4        3        2       1          0
+  // VDDVCCEN VHENABLE VLENABLE FILSELB FILSELA BANDSEL HBAENABLE LBAENABLE
+    
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
   {
@@ -1210,29 +1236,45 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
   else
   {
     unsigned int tempStatus = (status >> 7 ) & 0x01;
-    GCFPVBool pvBoolOverflow(tempStatus);
-    it->second->setValue(string(PROPNAME_OVERFLOW),pvBoolOverflow);
+    GCFPVBool pvBoolVddVccEn(tempStatus);
+    it->second->setValue(string(PROPNAME_VDDVCCEN),pvBoolVddVccEn);
     
     tempStatus = (status >> 6) & 0x01;
-    GCFPVBool pvBoolRcuPwr(tempStatus);
-    it->second->setValue(string(PROPNAME_RCUPWR),pvBoolRcuPwr);
+    GCFPVBool pvBoolVhEnable(tempStatus);
+    it->second->setValue(string(PROPNAME_VHENABLE),pvBoolVhEnable);
 
     tempStatus = (status >> 5) & 0x01;
-    GCFPVBool pvBoolHbaPwr(tempStatus);
-    it->second->setValue(string(PROPNAME_HBAPWR),pvBoolHbaPwr);
+    GCFPVBool pvBoolVlEnable(tempStatus);
+    it->second->setValue(string(PROPNAME_VLENABLE),pvBoolVlEnable);
 
     tempStatus = (status >> 4) & 0x01;
-    GCFPVBool pvBoolLbaPwr(tempStatus);
-    it->second->setValue(string(PROPNAME_LBAPWR),pvBoolLbaPwr);
+    GCFPVBool pvBoolFilSelB(tempStatus);
+    it->second->setValue(string(PROPNAME_FILSELB),pvBoolFilSelB);
 
-    tempStatus = (status >> 0) & 0x0F;
-    GCFPVUnsigned pvFilter(tempStatus);
-    it->second->setValue(string(PROPNAME_FILTER),pvFilter);
+    tempStatus = (status >> 3) & 0x01;
+    GCFPVBool pvBoolFilSelA(tempStatus);
+    it->second->setValue(string(PROPNAME_FILSELA),pvBoolFilSelA);
+
+    tempStatus = (status >> 2) & 0x01;
+    GCFPVBool pvBoolBandSel(tempStatus);
+    it->second->setValue(string(PROPNAME_BANDSEL),pvBoolBandSel);
+
+    tempStatus = (status >> 1) & 0x01;
+    GCFPVBool pvBoolHBAEnable(tempStatus);
+    it->second->setValue(string(PROPNAME_HBAENABLE),pvBoolHBAEnable);
+
+    tempStatus = (status >> 0) & 0x01;
+    GCFPVBool pvBoolLBAEnable(tempStatus);
+    it->second->setValue(string(PROPNAME_LBAENABLE),pvBoolLBAEnable);
     
-    if(pvBoolOverflow.getValue() ||
-       pvBoolRcuPwr.getValue() ||
-       pvBoolHbaPwr.getValue() ||
-       pvBoolLbaPwr.getValue())
+    if(pvBoolVddVccEn.getValue() ||
+       pvBoolVhEnable.getValue() ||
+       pvBoolVlEnable.getValue() ||
+       pvBoolFilSelB.getValue() ||
+       pvBoolFilSelA.getValue() ||
+       pvBoolBandSel.getValue() ||
+       pvBoolHBAEnable.getValue() ||
+       pvBoolLBAEnable.getValue())
     {
       GCFPVUnsigned pvUnsignedStatus(STATUS_ERROR);
       it->second->setValue(string(PROPNAME_STATUS),pvUnsignedStatus);
