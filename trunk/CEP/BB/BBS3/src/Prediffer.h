@@ -85,6 +85,7 @@ public:
 	     const string& dbPwd,
 	     const vector<int>& ant,
 	     const string& modelType,
+	     const vector<vector<int> >& sourceGroups,
 	     bool calcUVW,
 	     bool lockMappedMem);
 
@@ -193,12 +194,18 @@ private:
   // Fill all UVW coordinates if they are not calculated.
   void fillUVW();
 
+  // Get all sources from the sky model table.
+  // Also check the source groups.
+  void getSources();
+
   // Create the WSRT expressions for each baseline.
   void makeWSRTExpr();
 
   // Create the LOFAR expressions for each baseline.
-  // The EJones can be expressed as real/imag or ampl/phase.
-  void makeLOFARExpr (bool asAP);
+  // The EJones (per source/station) can be expressed as real/imag
+  // or ampl/phase.
+  // The station parameters are optionally taken into account.
+  void makeLOFARExpr (bool asAP, bool useStatParm);
 
   // Get equations for a single time and baseline.
   void getEquation (double* result, char* flagResult,
@@ -221,6 +228,8 @@ private:
   MeqPhaseRef           itsPhaseRef;    //# Phase reference position in J2000
 
   MeqSourceList         itsSources;
+  vector<int>           itsSrcGrpNr;    //# groupnr of each source (-1 = none)
+  vector<vector<int> >  itsSrcGrp;      //# sources in each group
   casa::Vector<int>     itsPeelSourceNrs;
   vector<MeqStation*>   itsStations;
   vector<MeqStatUVW*>   itsStatUVW;

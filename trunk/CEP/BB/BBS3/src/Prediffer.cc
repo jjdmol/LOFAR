@@ -87,6 +87,7 @@ Prediffer::Prediffer(const string& msName,
 		     const string& dbPwd,
 		     const vector<int>& ant,
 		     const string& modelType,
+		     const vector<vector<int> >& sourceGroups,
 		     bool    calcUVW,
 		     bool    lockMappedMem)
   :
@@ -96,6 +97,7 @@ Prediffer::Prediffer(const string& msName,
   itsGSMMEPName   (skyModel),
   itsGSMMEP       (dbType, skyModel, dbName, dbPwd, dbHost),
   itsCalcUVW      (calcUVW),
+  itsSrcGrp       (sourceGroups),
   itsNCorr        (0),
   itsNrBl         (0),
   itsTimeIndex    (0),
@@ -123,13 +125,24 @@ Prediffer::Prediffer(const string& msName,
   itsDataMap  = new MMap(msName + "/vis.dat", MMap::Read);
   itsFlagsMap = new FlagsMap(msName + "/vis.flg", MMap::Read);
 
+  // Get all sources from the GSM and check the source groups.
+  getSources();
+
   // Set up the expression tree for all baselines.
   if (modelType == "WSRT") {
     makeWSRTExpr();
-  } else if (modelType == "LOFAR.RI") {
-    makeLOFARExpr(False);
   } else {
-    makeLOFARExpr(True);
+    bool asAP = true;
+    bool useStatParm = false;
+    vector<string> types = StringUtil::split(modelType, '.');
+    for (uint i=0; i<types.size(); ++i) {
+      if (types[i] == "RI") {
+	asAP = false;
+      } else if (types[i] == "USESP") {
+	useStatParm = true;
+      }
+    }
+    makeLOFARExpr(asAP, useStatParm);
   }
 
   LOG_INFO_STR( "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
@@ -148,7 +161,7 @@ Prediffer::Prediffer(const string& msName,
  }
 
   // initialize the ComplexArr pool with the most frequently used size
-  // itsNrChan is the numnber frequency channels
+  // itsNrChan is the number of frequency channels
   // 1 is the number of time steps. This code is limited to one timestep only
   MeqMatrixComplexArr::poolActivate(itsNrChan * 1);
   // Unlock the parm tables.
@@ -235,8 +248,8 @@ void Prediffer::readDescriptiveData(const string& fileName)
 {
   // Get meta data from description file.
   string name(fileName+"/vis.des");
-  cout << name << endl;
   std::ifstream istr(name.c_str());
+  ASSERTSTR (istr, "File " << fileName << "/vis.des could not be opened");
   BlobIBufStream bbs(istr);
   BlobIStream bis(bbs);
   bis.getStart("ms.des");
@@ -395,6 +408,51 @@ void Prediffer::countBaseCorr()
 
 //----------------------------------------------------------------------
 //
+// ~getSources
+//
+// Get all sources from the GSM table.
+//
+//----------------------------------------------------------------------
+void Prediffer::getSources()
+{
+  // Get the sources from the ParmTable.
+  itsSources = itsGSMMEP.getPointSources (&itsParmGroup, Vector<int>());
+  int nrsrc = itsSources.size();
+  for (int i=0; i<nrsrc; ++i) {
+    itsSources[i].setSourceNr (i);
+    itsSources[i].setPhaseRef (&itsPhaseRef);
+  }
+  // Determine for each group in which source it belongs.
+  itsSrcGrpNr.resize (nrsrc);
+  if (itsSrcGrp.size() == 0) {
+    // Set groups if nothing given.
+    itsSrcGrp.resize (nrsrc);
+    vector<int> vec(1);
+    for (int i=0; i<nrsrc; ++i) {
+      itsSrcGrpNr[i] = i;      // group nrs are 0-relative
+      vec[0] = i+1;            // source nrs are 1-relative
+      itsSrcGrp[i] = vec;
+    }
+  } else {
+    for (int i=0; i<nrsrc; ++i) {
+      itsSrcGrpNr[i] = -1;
+    }
+    for (uint j=0; j<itsSrcGrp.size(); ++j) {
+      vector<int> srcs = itsSrcGrp[j];
+      ASSERTSTR (srcs.size() > 0, "Sourcegroup " << j << " is empty");
+      for (uint i=0; i<srcs.size(); ++i) {
+	ASSERTSTR (srcs[i] > 0  &&  srcs[i] <= nrsrc,
+		   "Sourcenr must be > 0 and <= #sources (=" << nrsrc << ')');
+	ASSERTSTR (itsSrcGrpNr[srcs[i]-1] == -1,
+		   "Sourcenr " << srcs[i] << " multiply used in groups");
+	itsSrcGrpNr[srcs[i]-1] = j;
+      }
+    }
+  }
+}
+
+//----------------------------------------------------------------------
+//
 // ~makeWSRTExpr
 //
 // Make the expression tree per baseline for the WSRT.
@@ -402,13 +460,6 @@ void Prediffer::countBaseCorr()
 //----------------------------------------------------------------------
 void Prediffer::makeWSRTExpr()
 {
-  // Get the sources from the ParmTable.
-  itsSources = itsGSMMEP.getPointSources (&itsParmGroup, Vector<int>());
-  for (int i=0; i<itsSources.size(); i++) {
-    itsSources[i].setSourceNr (i);
-    itsSources[i].setPhaseRef (&itsPhaseRef);
-  }
-
   // Make expressions for each station.
   itsStatUVW  = vector<MeqStatUVW*>     (itsStations.size(),
 					 (MeqStatUVW*)0);
@@ -478,15 +529,8 @@ void Prediffer::makeWSRTExpr()
 // Make the expression tree per baseline for the WSRT.
 //
 //----------------------------------------------------------------------
-void Prediffer::makeLOFARExpr(bool asAP)
+void Prediffer::makeLOFARExpr(bool asAP, bool useStatParm)
 {
-  // Get the sources from the ParmTable.
-  itsSources = itsGSMMEP.getPointSources (&itsParmGroup, Vector<int>());
-  for (int i=0; i<itsSources.size(); i++) {
-    itsSources[i].setSourceNr (i);
-    itsSources[i].setPhaseRef (&itsPhaseRef);
-  }
-
   // Make expressions for each station.
   itsStatUVW  = vector<MeqStatUVW*>          (itsStations.size(),
 					      (MeqStatUVW*)0);
@@ -509,26 +553,37 @@ void Prediffer::makeLOFARExpr(bool asAP)
       // Expression to calculate contribution per station per source.
       itsStatSrc[i] = new MeqStatSources (itsStatUVW[i], &itsSources);
       // Expression representing station parameters.
-      MeqExpr* frot = new MeqStoredParmPolc ("frot." +
-					     itsStations[i]->getName(),
-					     &itsParmGroup, &itsMEP);
-      MeqExpr* drot = new MeqStoredParmPolc ("drot." +
-					     itsStations[i]->getName(),
-					     &itsParmGroup, &itsMEP);
-      MeqExpr* dell = new MeqStoredParmPolc ("dell." +
-					     itsStations[i]->getName(),
-					     &itsParmGroup, &itsMEP);
-      MeqExpr* gain11 = new MeqStoredParmPolc ("gain.11." +
+      if (useStatParm) {
+	MeqExpr* frot = new MeqStoredParmPolc ("frot." +
 					       itsStations[i]->getName(),
 					       &itsParmGroup, &itsMEP);
-      MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
+	MeqExpr* drot = new MeqStoredParmPolc ("drot." +
 					       itsStations[i]->getName(),
 					       &itsParmGroup, &itsMEP);
-      itsStatExpr[i] = new MeqStatExpr (frot, drot, dell, gain11, gain22);
-      // Make an expression for all source parameters for this station.
-      vector<MeqJonesExpr*> vec;
-      for (int j=0; j<itsSources.size(); j++) {
-	string nm = itsStations[i]->getName() + '.' +  itsSources[j].getName();
+	MeqExpr* dell = new MeqStoredParmPolc ("dell." +
+					       itsStations[i]->getName(),
+					       &itsParmGroup, &itsMEP);
+	MeqExpr* gain11 = new MeqStoredParmPolc ("gain.11." +
+						 itsStations[i]->getName(),
+						 &itsParmGroup, &itsMEP);
+	MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
+						 itsStations[i]->getName(),
+						 &itsParmGroup, &itsMEP);
+	itsStatExpr[i] = new MeqStatExpr (frot, drot, dell, gain11, gain22);
+      }
+      // Make a complex gain expression per station per source group.
+      MeqExpr* ej11;
+      MeqExpr* ej12;
+      MeqExpr* ej21;
+      MeqExpr* ej22;
+      vector<MeqExpr*> vej11;
+      vector<MeqExpr*> vej12;
+      vector<MeqExpr*> vej21;
+      vector<MeqExpr*> vej22;
+      for (uint j=0; j<itsSrcGrp.size(); j++) {
+	ostringstream ostr;
+	ostr << j+1;
+	string nm = itsStations[i]->getName() + ".SG" + ostr.str();
 	MeqExpr* ej11r = new MeqStoredParmPolc ("EJ11." + ejname1 + nm,
 						&itsParmGroup, &itsMEP);
 	MeqExpr* ej11i = new MeqStoredParmPolc ("EJ11." + ejname2 + nm,
@@ -545,7 +600,6 @@ void Prediffer::makeLOFARExpr(bool asAP)
 						&itsParmGroup, &itsMEP);
 	MeqExpr* ej22i = new MeqStoredParmPolc ("EJ22." + ejname2 + nm,
 						&itsParmGroup, &itsMEP);
-	MeqExpr *ej11, *ej12, *ej21, *ej22;
 	if (asAP) {
 	  ej11 = new MeqExprAPToComplex (ej11r, ej11i);
 	  ej12 = new MeqExprAPToComplex (ej12r, ej12i);
@@ -557,21 +611,36 @@ void Prediffer::makeLOFARExpr(bool asAP)
 	  ej21 = new MeqExprToComplex (ej21r, ej21i);
 	  ej22 = new MeqExprToComplex (ej22r, ej22i);
 	}
+	vej11.push_back (ej11);
+	vej12.push_back (ej12);
+	vej21.push_back (ej21);
+	vej22.push_back (ej22);
 	itsComplexConv.push_back (ej11);
 	itsComplexConv.push_back (ej12);
 	itsComplexConv.push_back (ej21);
 	itsComplexConv.push_back (ej22);
-	MeqJonesNode* jonesNode = new MeqJonesNode (ej11, ej12, ej21, ej22);
+      }
+      // Make the Jones nodes for each source.
+      vector<MeqJonesExpr*> vec;
+      for (int j=0; j<itsSources.size(); j++) {
+	int grpnr = itsSrcGrpNr[j];
+	MeqJonesNode* jonesNode = new MeqJonesNode (vej11[grpnr],
+						    vej12[grpnr],
+						    vej21[grpnr],
+						    vej22[grpnr]);
 	itsJonesNodes.push_back (jonesNode);
 	vec.push_back (jonesNode);
       }
+      // Make an expression per station per source.
       itsLSSExpr[i] = new MeqLofarStatSources (vec, itsStatSrc[i]);
     }
   }    
 
   // Make an expression for each baseline.
   itsExpr.resize (itsBaselines.size());
-  itsResExpr.resize (itsBaselines.size());
+  if (useStatParm) {
+    itsResExpr.resize (itsBaselines.size());
+  }
   // Create the histogram object for couting of used #cells in time and freq
   itsCelltHist.resize (itsBaselines.size());
   itsCellfHist.resize (itsBaselines.size());
@@ -581,14 +650,19 @@ void Prediffer::makeLOFARExpr(bool asAP)
       int blindex = itsBLIndex(ant1,ant2);
       if (blindex >= 0) {
 	// Create the DFT kernel.
-	itsResExpr[blindex] = new MeqLofarPoint (&itsSources,
-						 itsLSSExpr[ant1],
-						 itsLSSExpr[ant2],
-						 &itsCelltHist[blindex],
-						 &itsCellfHist[blindex]);
-	itsExpr[blindex] = new MeqWsrtInt (itsResExpr[blindex],
-					   itsStatExpr[ant1],
-					   itsStatExpr[ant2]);
+	MeqJonesExpr* expr = new MeqLofarPoint (&itsSources,
+						itsLSSExpr[ant1],
+						itsLSSExpr[ant2],
+						&itsCelltHist[blindex],
+						&itsCellfHist[blindex]);
+	if (useStatParm) {
+	  itsResExpr[blindex] = expr;
+	  itsExpr[blindex] = new MeqWsrtInt (itsResExpr[blindex],
+					     itsStatExpr[ant1],
+					     itsStatExpr[ant2]);
+	} else {
+	  itsExpr[blindex] = expr;
+	}
       }
     }
   }
@@ -1415,7 +1489,7 @@ bool Prediffer::setPeelSources (const vector<int>& peelSources,
   }
   itsSources.setSelected (src);
   itsPeelSourceNrs.reference (tmpPeel);
-  return True;
+  return true;
 }
 
 void Prediffer::updateSolvableParms (const vector<double>& values)
