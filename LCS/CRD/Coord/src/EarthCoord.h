@@ -20,40 +20,43 @@
 //#
 //# $Id$
 
-#if !defined(COORD_EARTHCOORD_H)
+#ifndef COORD_EARTHCOORD_H
 #define COORD_EARTHCOORD_H
 
-//# Forward Declarations.
+//# Includes
 #include <Common/lofar_iosfwd.h>
 
-class EarthCoord
+namespace LOFAR
 {
-public:
-  // Default constructor uses 0 for the values.
-  EarthCoord()
-    : itsLong(0), itsLat(0), itsHeight(0) {}
+  class EarthCoord
+  {
+  public:
+    // Default constructor uses 0 for the values.
+    EarthCoord()
+      : itsLong(0), itsLat(0), itsHeight(0) {}
 
-  // Create a earth coordinate by giving the longitude and latitude in radians
-  // and the height in meters.
-  EarthCoord (double longitude, double latitude, double height=0)
-    : itsLong(longitude), itsLat(latitude), itsHeight(height) {}
+    // Create a earth coordinate by giving the longitude and latitude in
+    // radians and the height in meters.
+    EarthCoord (double longitude, double latitude, double height=0)
+      : itsLong(longitude), itsLat(latitude), itsHeight(height) {}
 
-  // Get the values out.
-  double longitude() const
+    // Get the values out.
+    double longitude() const
     { return itsLong; }
-  double latitude() const
+    double latitude() const
     { return itsLat; }
-  double height() const
+    double height() const
     { return itsHeight; }
 
-  // Output in ASCII.
-  friend ostream& operator<< (ostream&, const EarthCoord&);
+    // Output in ASCII.
+    friend ostream& operator<< (ostream&, const EarthCoord&);
 
-private:
-  double itsLong;
-  double itsLat;
-  double itsHeight;
-};
+  private:
+    double itsLong;
+    double itsLat;
+    double itsHeight;
+  };
 
+} // namespace LOFAR
 
 #endif

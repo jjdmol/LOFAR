@@ -23,36 +23,39 @@
 #if !defined(COORD_SKYCOORD_H)
 #define COORD_SKYCOORD_H
 
-//# Forward Declarations.
+//# Includes
 #include <Common/lofar_iosfwd.h>
 
-class SkyCoord
+namespace LOFAR
 {
-public:
-  // Default constructor uses 0 for the angles.
-  SkyCoord()
-    : itsAngle1(0), itsAngle2(0) {}
+  class SkyCoord
+  {
+  public:
+    // Default constructor uses 0 for the angles.
+    SkyCoord()
+      : itsAngle1(0), itsAngle2(0) {}
 
-  // Create a sky coordinate by giving the longitude and latitude in radians.
-  // The context where the object is used defines the coordinate system and
-  // frame, so the class can be used for any pair of sky coordinates
-  // (like RA/DEC and AZ/ELEV).
-  SkyCoord (double angle1, double angle2)
-    : itsAngle1(angle1), itsAngle2(angle2) {}
+    // Create a sky coordinate by giving the longitude and latitude in radians.
+    // The context where the object is used defines the coordinate system and
+    // frame, so the class can be used for any pair of sky coordinates
+    // (like RA/DEC and AZ/ELEV).
+    SkyCoord (double angle1, double angle2)
+      : itsAngle1(angle1), itsAngle2(angle2) {}
 
-  // Get the values out.
-  double angle1() const
+    // Get the values out.
+    double angle1() const
     { return itsAngle1; }
-  double angle2() const
+    double angle2() const
     { return itsAngle2; }
 
-  // Output in ASCII.
-  friend ostream& operator<< (ostream&, const SkyCoord&);
+    // Output in ASCII.
+    friend ostream& operator<< (ostream&, const SkyCoord&);
 
-private:
-  double itsAngle1;
-  double itsAngle2;
-};
+  private:
+    double itsAngle1;
+    double itsAngle2;
+  };
 
+} // namespace LOFAR
 
 #endif

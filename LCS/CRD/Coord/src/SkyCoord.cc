@@ -23,8 +23,13 @@
 #include <Coord/SkyCoord.h>
 #include <Common/lofar_iostream.h>
 
-ostream& operator<< (ostream& os, const SkyCoord& sky)
+namespace LOFAR
 {
-  os << '[' << sky.angle1() << ", " << sky.angle2() << ']';
-  return os;
-}
+
+  ostream& operator<< (ostream& os, const SkyCoord& sky)
+  {
+    os << '[' << sky.angle1() << ", " << sky.angle2() << ']';
+    return os;
+  }
+
+} // namespace LOFAR

@@ -14,7 +14,6 @@ Endian.cc \
 SkyCoord.cc \
 TimeCoord.cc 
 
-AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL
 
 include $(lofar_sharedir)/Makefile.common
 
