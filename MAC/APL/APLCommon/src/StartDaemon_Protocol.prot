@@ -46,8 +46,10 @@ enum TLogicalDeviceTypes
 enum TSDResult
 {
   SD_RESULT_NO_ERROR = 0, 
+  SD_RESULT_UNSPECIFIED_ERROR, 
   SD_RESULT_UNSUPPORTED_LD, 
   SD_RESULT_FILENOTFOUND,
+  SD_RESULT_PARAMETERNOTFOUND,
   SD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS,
   SD_RESULT_UNKNOWN_COMMAND,
 };
@@ -78,11 +80,16 @@ event = {
 };
 
 event = {
-	signal = SCHEDULED;
-	dir = OUT;
-	param = {
-		name = "result";
-		type = "TSDResult";
-	};
+  signal = SCHEDULED;
+  dir = OUT;
+  param = {
+    name = "result";
+    type = "TSDResult";
+  };
+};
+
+event = {
+  signal = STOP;
+  dir = IN;
 };
 

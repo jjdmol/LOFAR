@@ -47,7 +47,7 @@ namespace APLCommon
       LogicalDeviceFactory() {}; 
       virtual ~LogicalDeviceFactory() {};
       
-      virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, const string& parameterFile) throw(APLCommon::ParameterFileNotFoundException)=0;
+      virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, const string& parameterFile)=0;
 
     protected:
       // protected copy constructor

@@ -62,6 +62,7 @@ namespace APLCommon
       static const string SD_PROPNAME_COMMAND;
       static const string SD_PROPNAME_STATUS;
       static const string SD_COMMAND_SCHEDULE;
+      static const string SD_COMMAND_STOP;
 
       StartDaemon(const string& name); 
       virtual ~StartDaemon();
