@@ -26,7 +26,11 @@ namespace EPA_Protocol
 	static const int SBSELECT_PACKET_HDR_SIZE = 5;
 	static const int WGENABLE_PACKET_SIZE     = 12;
 	static const int WGDISABLE_PACKET_SIZE    = 12;
-	static const int BFCONFIGURE_PACKET_SIZE  = 1030;
+	//
+	// CAUTION! THIS SHOULD CHANGE TO 1030 IN THE
+	// NEXT VERSION OF THE EPA FIRMWARE
+	//
+	static const int BFCONFIGURE_PACKET_SIZE  = 1029;
 	static const int BFENABLE_PACKET_SIZE     = 12;
 	static const int STATS_PACKET_SIZE        = 1030;
 };
@@ -167,10 +171,10 @@ event = {
 	    name = "pktsize"; // value is 1030
 	    type = "unsigned short";
       };
-      param = {
-	    name = "antenna"; // antenna number
-	    type = "char";
-      };
+//      param = {
+//	    name = "antenna"; // antenna number
+//	    type = "char";
+//      };
       param = {
 	    name = "phasepol"; // 0=Xre, 1=Xim, 2=Yre, 3=Yim
 	    type = "char";

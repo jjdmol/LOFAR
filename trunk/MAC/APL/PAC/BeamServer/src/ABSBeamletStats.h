@@ -50,8 +50,8 @@ namespace ABS
 	  virtual ~BeamletStats();
 
 	  /**
-	   * Update statistics from a raw ethernet
-	   * frame.
+	   * Update statistics from a raw ethernet frame.
+	   * power_sum has dimensions: N_BEAMLETS / 2, N_POLARIZATIONS, 2
 	   */
 	  void update(blitz::Array<unsigned int, 3>& power_sum, unsigned int seqnr);
 
@@ -112,6 +112,12 @@ namespace ABS
 	   * second = 2 -- x and y polarization.
 	   */
 	  blitz::Array<double, 2>               m_beamlet_power;
+
+	  /**
+	   * Array holding power_sum data from last packet
+	   * received.
+	   */
+	  blitz::Array<unsigned int, 3>         m_power_sum;
 
 	  /**
 	   * The property set.

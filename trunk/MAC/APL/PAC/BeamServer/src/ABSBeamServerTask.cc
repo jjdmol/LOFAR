@@ -55,7 +55,7 @@ using namespace boost::posix_time;
 using namespace boost::gregorian;
 
 #define MAX_N_SPECTRAL_WINDOWS 1
-#define COMPUTE_INTERVAL 1
+#define COMPUTE_INTERVAL 10
 #define UPDATE_INTERVAL  1
 
 #define SCALE (1<<(16-2))
@@ -80,7 +80,7 @@ BeamServerTask::BeamServerTask(string name)
 		   UPDATE_INTERVAL, COMPUTE_INTERVAL);
   (void)Beamlet::init(ABS::N_SUBBANDS);
 
-  m_wgsetting.frequency     = 1e6; // 1MHz
+  m_wgsetting.frequency     = 1.5e6; // 1MHz
   m_wgsetting.amplitude     = 128;
   m_wgsetting.sample_period = 2; // 80 MHz / 40 MHz == 2
   m_wgsetting.enabled       = false;
@@ -88,14 +88,21 @@ BeamServerTask::BeamServerTask(string name)
   // initialize antenna positions
   Range all = Range::all();
   m_pos(0, 0, all) = 0.0;
-  m_pos(0, 0, 0)   = -50.0;
+  m_pos(0, 0, 0)   = 0.0;
 
   m_pos(0, 1, all) = 0.0;
-  m_pos(0, 1, 0)   = 50.0;
+  m_pos(0, 1, 0)   = 100.0;
 
   // initialize weight matrix
   m_weights   = complex<W_TYPE>(0,0);
   m_weights16 = complex<int16_t>(0,0);
+
+#ifdef EPA_Y_POL_IMAG_FIX
+  LOG_INFO("This code contains the EPA_Y_POL_IMAG_FIX.");
+#endif
+#ifdef WEIGHTS_IN_NETWORK_ORDER
+  LOG_INFO("Send beamformer weights in big-endian network order.");
+#endif
 }
 
 BeamServerTask::~BeamServerTask()
@@ -116,7 +123,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
       {
 	  // create a default spectral window from 0MHz to 20MHz
 	  // steps of 256kHz
-	  SpectralWindow* spw = new SpectralWindow(1e6, 20e6/ABS::N_BEAMLETS,
+	  SpectralWindow* spw = new SpectralWindow(1.5e6, 20e6/ABS::N_BEAMLETS,
 						   ABS::N_BEAMLETS);
 	  m_spws[0] = spw;
       }
@@ -169,6 +176,13 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
+    case F_EXIT_SIG:
+      {
+	// cancel timers
+	board.cancelAllTimers();
+      }
+      break;
+
       default:
 	  status = GCFEvent::NOT_HANDLED;
 	  break;
@@ -185,8 +199,6 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 //  static unsigned long compute_timer = (unsigned long)-1;
   static int period = 0;
 
-  static unsigned int stats_seqnr = 0;
-  
   switch (e.signal)
     {
 #if 0
@@ -224,20 +236,6 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	    period = 0;
 	    // compute new weights after sending weights
 	    compute_timeout_action(timer->sec);
-
-#if 0
-	    Array<unsigned int, 3> power_sum(N_BEAMLETS, N_POLARIZATIONS, 2);
-
-	    power_sum = 0;
-	    power_sum(64, 0, 0) = stats_seqnr+1;
-	    power_sum(64, 0, 1) = stats_seqnr+1;
-	    power_sum(64, 1, 0) = stats_seqnr/2;
-	    power_sum(64, 1, 1) = stats_seqnr/2;
-	    for (int i = 0; i < BEAMLETSTATS_INTEGRATION_COUNT; i++)
-	    {
-	      m_stats.update(power_sum, stats_seqnr++);
-	    }
-#endif
 	}
 
 	send_weights(period);
@@ -554,12 +552,22 @@ BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
  */
 inline complex<int16_t> convert2complex_int16_t(complex<W_TYPE> cd)
 {
+#ifdef WEIGHTS_IN_NETWORK_ORDER
 #ifdef W_TYPE_DOUBLE
   return complex<int16_t>(htons((int16_t)(round(cd.real()*SCALE))),
 			  htons((int16_t)(round(cd.imag()*SCALE))));
 #else
   return complex<int16_t>(htons((int16_t)(roundf(cd.real()*SCALE))),
 			  htons((int16_t)(roundf(cd.imag()*SCALE))));
+#endif
+#else
+#ifdef W_TYPE_DOUBLE
+  return complex<int16_t>((int16_t)(round(cd.real()*SCALE)),
+			  (int16_t)(round(cd.imag()*SCALE)));
+#else
+  return complex<int16_t>((int16_t)(roundf(cd.real()*SCALE)),
+			  (int16_t)(roundf(cd.imag()*SCALE)));
+#endif
 #endif
 }
 
@@ -608,20 +616,41 @@ void BeamServerTask::send_weights(int period)
 
   bc.command = 4; // 4 == beamformer configure
   bc.seqnr   = 0;
-  bc.pktsize = sizeof(EPABfconfigureEvent)-sizeof(GCFEvent);
+  
+  //
+  // -1 to not count padding byte in the EPABfconfigureEvent struct
+  //
   bc.pktsize = htons(BFCONFIGURE_PACKET_SIZE);
 
-  Array<complex<int16_t>, 2> weights((complex<int16_t>*)&bc.coeff,
+  //
+  // Take address 1 byte before bc.coeff field to account for the
+  // padding byte in the EPABfconfigureEvent struct.
+  //
+  char* coeff = (char*)bc.coeff;
+  coeff -= 1;
+
+  Array<complex<int16_t>, 2> weights((complex<int16_t>*)coeff,
 				     shape(N_SUBBANDS, N_POLARIZATIONS),
 				     neverDeleteData);
 
   for (int ant = 0; ant < N_ELEMENTS; ant++)
   {
-      bc.antenna = ant;
+      //bc.antenna = ant;
       
       for (int pol = 0; pol < N_POLARIZATIONS * 2; pol++)
       {
 	  weights = m_weights16(period, ant, all, all);
+
+#ifdef EPA_Y_POL_IMAG_FIX
+	  //
+	  // There is a bug in the EPA firmware which can be
+	  // circumvented by negating the imaginary part
+	  // of the weights for the y-polarization.
+	  // Ask Wessel Lubberhuizen (lubberhuizen@astron.nl)
+	  // for details.
+	  //
+	  imag(weights(all, 1)) *= -1;
+#endif
 
 	  if (pol == 0) {
 	    // weights for x-real part
