@@ -41,7 +41,8 @@ WPInterface::WPInterface (AtomicID wpc)
   //## begin WPInterface::WPInterface%3C7CBB10027A.hasinit preserve=no
   //## end WPInterface::WPInterface%3C7CBB10027A.hasinit
   //## begin WPInterface::WPInterface%3C7CBB10027A.initialization preserve=yes
-    : address_(wpc),dsp_(0),queue_(0),wpid_(wpc)
+    : DebugContext(wpc.toString(),PSCFDebugContext::DebugContext),
+    address_(wpc),autoCatch_(False),dsp_(0),queue_(0),wpid_(wpc)
   //## end WPInterface::WPInterface%3C7CBB10027A.initialization
 {
   //## begin WPInterface::WPInterface%3C7CBB10027A.body preserve=yes
@@ -71,7 +72,18 @@ void WPInterface::do_init ()
   //## begin WPInterface::do_init%3C99B0070017.body preserve=yes
   setNeedRepoll(False);
   full_lock = receive_lock = started = False;
-  init();
+  if( autoCatch() )
+  {
+    try { 
+      init(); 
+    }
+    catch(std::exception &exc) {
+      lprintf(0,LogFatal,"caught exception in init(): %s; shutting down",exc.what());
+      dsp()->detach(this,True);
+    }
+  }
+  else  
+    init();
   //## end WPInterface::do_init%3C99B0070017.body
 }
 
@@ -79,9 +91,20 @@ bool WPInterface::do_start ()
 {
   //## begin WPInterface::do_start%3C99B00B00D1.body preserve=yes
   log("starting up",2);
-  MessageRef ref(new Message(AidHello|address(),Message::PRI_EVENT),DMI::ANON|DMI::WRITE);
+  MessageRef ref(new Message(MsgHello|address()),DMI::ANON|DMI::WRITE);
   publish(ref);
-  setNeedRepoll( start() );
+  if( autoCatch() )
+  {
+    try { 
+      raiseNeedRepoll( start() );
+    }
+    catch(std::exception &exc) {
+      lprintf(0,LogFatal,"caught exception in start(): %s; shutting down",exc.what());
+      dsp()->detach(this,True);
+    }
+  }
+  else  
+    raiseNeedRepoll( start() );
   // publish subscriptions (even if empty)
   started = True;
   publishSubscriptions();
@@ -93,9 +116,19 @@ void WPInterface::do_stop ()
 {
   //## begin WPInterface::do_stop%3C99B00F0254.body preserve=yes
   log("stopping",2);
-  MessageRef ref(new Message(AidBye|address(),Message::PRI_EVENT),DMI::ANON|DMI::WRITE);
+  MessageRef ref(new Message(MsgBye|address()),DMI::ANON|DMI::WRITE);
   publish(ref);
-  stop();
+  if( autoCatch() )
+  {
+    try { 
+      stop();
+    }
+    catch(std::exception &exc) {
+      lprintf(0,LogError,"caught exception in stop(): %s; ignoring",exc.what());
+    }
+  }
+  else  
+    stop();
   //## end WPInterface::do_stop%3C99B00F0254.body
 }
 
@@ -144,14 +177,24 @@ bool WPInterface::do_poll (ulong tick)
   //## begin WPInterface::do_poll%3C8F13B903E4.body preserve=yes
   // Call the virtual poll method, and set needRepoll according to what
   // it has returned.
-  setNeedRepoll( poll(tick) );
+  if( autoCatch() )
+  {
+    try { 
+      setNeedRepoll( poll(tick) );
+    }
+    catch(std::exception &exc) {
+      lprintf(2,LogError,"caught exception in poll(): %s; ignoring",exc.what());
+    }
+  }
+  else  
+    setNeedRepoll( poll(tick) );
   // return if queue is empty
   if( !queue().size() )
     return needRepoll();  
   int res = Message::ACCEPT;
   // remove message from queue
-  QueueEntry qe = queue().back();
-  queue().pop_back();
+  QueueEntry qe = queue().front();
+  queue().pop_front();
   
   const Message &msg = qe.mref.deref();
   const HIID &id = msg.id();
@@ -166,7 +209,18 @@ bool WPInterface::do_poll (ulong tick)
     {
       FailWhen( id.size() < 2,"malformed "+id.toString()+" message" );
       HIID to_id = id.subId(2);
-      res = timeout(to_id);
+      res = Message::ACCEPT;
+      if( autoCatch() )
+      {
+        try { 
+          res = timeout(to_id);
+        }
+        catch(std::exception &exc) {
+          lprintf(2,LogError,"caught exception in timeout(): %s; ignoring",exc.what());
+        }
+      }
+      else  
+        res = timeout(to_id);
       if( res == Message::CANCEL )
         dsp()->removeTimeout(this,to_id);
       res = Message::ACCEPT;
@@ -177,7 +231,18 @@ bool WPInterface::do_poll (ulong tick)
       int fd=id[2],flags=msg.state();
       if( flags )  // no flags? Means the input has been already removed. Ignore
       {
-        res = input(fd,flags);
+        res = Message::ACCEPT;
+        if( autoCatch() )
+        {
+          try { 
+            res = input(fd,flags);
+          }
+          catch(std::exception &exc) {
+            lprintf(2,LogError,"caught exception in input(): %s; ignoring",exc.what());
+          }
+        }
+        else  
+          res = input(fd,flags);
         if( res == Message::CANCEL )
           dsp()->removeInput(this,fd,flags);
         res = Message::ACCEPT;
@@ -187,7 +252,18 @@ bool WPInterface::do_poll (ulong tick)
     {
       FailWhen( id.size() != 3,"malformed "+id.toString()+" message" );
       int signum = id[2];
-      res = signal(signum);
+      res = Message::ACCEPT;
+      if( autoCatch() )
+      {
+        try { 
+          res = signal(signum);
+        }
+        catch(std::exception &exc) {
+          lprintf(2,LogError,"caught exception in signal(): %s; ignoring",exc.what());
+        }
+      }
+      else  
+        res = signal(signum);
       if( res == Message::CANCEL )
         dsp()->removeSignal(this,signum);
       res = Message::ACCEPT;
@@ -207,7 +283,18 @@ bool WPInterface::do_poll (ulong tick)
       return False;
     // lock 
     receive_lock = True;
-    res = receive(qe.mref);
+    res = Message::ACCEPT;
+    if( autoCatch() )
+    {
+      try { 
+        res = receive(qe.mref);
+      }
+      catch(std::exception &exc) {
+        lprintf(2,LogError,"caught exception in receive(): %s; ignoring message",exc.what());
+      }
+    }
+    else  
+      res = receive(qe.mref);
     receive_lock = False;
   }
   // dispence of queue() accordingly
@@ -221,13 +308,14 @@ bool WPInterface::do_poll (ulong tick)
     if( res == Message::HOLD )
     {
       dprintf(3)("result code: HOLD, leaving at head of queue\n");
-      queue().push_back(qe);
+      queue().push_front(qe);
+      return needRepoll();
     }
     else if( res == Message::REQUEUE )
     {
       dprintf(3)("result code: REQUEUE\n");
       // requeue - re-insert into queue() according to priority
-      enqueue(qe.mref,tick);  // rhis sets repoll if head of queue has changed
+      enqueue(qe.mref,tick);  // this sets repoll if head of queue has changed
     }
   }
   // ask for repoll if head of queue has changed
@@ -235,8 +323,8 @@ bool WPInterface::do_poll (ulong tick)
   {
     // this resets the age at the head of the queue. Effectively, this means
     // we have a "queue age" rather than a message age.
-    queue().back().tick = tick;
-    if( queue().back().mref != qe.mref )
+    queue().front().tick = tick;
+    if( queue().front().mref != qe.mref )
       return setNeedRepoll(True);
   }
 
@@ -255,19 +343,19 @@ bool WPInterface::enqueue (const MessageRef &msg, ulong tick)
 {
   //## begin WPInterface::enqueue%3C8F204A01EF.body preserve=yes
   int pri = msg->priority();
-  // iterate from end of queue() as long as msg priority is lower
+  // iterate from end of queue() as long as msg priority is higher
   MQI iter = queue().begin();
-  int count = queue().size();
-  while( iter != queue().end() && iter->priority < pri )
-    iter++,count--;
+  int count = 0;
+  while( iter != queue().end() && iter->priority >= pri )
+    iter++,count++;
   // if inserting at head of queue (which is end), then raise the repoll flag
-  if( iter == queue().end() )
+  if( !count )
   {
     dprintf(3)("queueing [%s] at head of queue\n",msg->debug(1));
     setNeedRepoll(True);
   }
   else
-    dprintf(3)("queueing [%s] at H-%d\n",msg->debug(1),count);
+    dprintf(3)("queueing [%s] at h+%d\n",msg->debug(1),count);
   QueueEntry qe = { msg,pri,tick };
   queue().insert(iter,qe);
   return needRepoll();
@@ -278,23 +366,23 @@ bool WPInterface::dequeue (const HIID &id, MessageRef *ref)
 {
   //## begin WPInterface::dequeue%3C8F204D0370.body preserve=yes
   bool erased_head = True;
-  for( MQRI iter = queue().rbegin(); iter != queue().rend(); )
+  for( MQI iter = queue().begin(); iter != queue().end(); )
   {
     if( id.matches( iter->mref->id() ) )
     {
       // is this the head of the queue? 
-      erased_head |= ( iter == queue().rbegin() );
+      erased_head |= ( iter == queue().begin() );
       if( ref )
         *ref = iter->mref; // xfer the reference
-      queue().erase((iter++).base());
+      queue().erase(iter++);
       // we're done if a ref was asked for
       if( ref )
         break;
     }
     else
-      iter++;  
+      iter++;
   }
-  return setNeedRepoll( erased_head && queue().size() );
+  return raiseNeedRepoll( erased_head && queue().size() );
   //## end WPInterface::dequeue%3C8F204D0370.body
 }
 
@@ -302,14 +390,14 @@ bool WPInterface::dequeue (int pos, MessageRef *ref)
 {
   //## begin WPInterface::dequeue%3C8F205103D0.body preserve=yes
   FailWhen( (uint)pos >= queue().size(),"dequeue: illegal position" );
-  setNeedRepoll( !pos && queue().size()>1 );
+  raiseNeedRepoll( !pos && queue().size()>1 );
   // iterate to the req. position
-  MQRI iter = queue().rbegin();
+  MQI iter = queue().begin();
   while( pos-- )
     iter++;
   if( ref )
     *ref = iter->mref;
-  queue().erase(iter.base());
+  queue().erase(iter);
   return needRepoll();
   //## end WPInterface::dequeue%3C8F205103D0.body
 }
@@ -319,11 +407,11 @@ int WPInterface::searchQueue (const HIID &id, int pos, MessageRef *ref)
   //## begin WPInterface::searchQueue%3C8F205601EC.body preserve=yes
   FailWhen( (uint)pos >= queue().size(),"dequeue: illegal position" );
   // iterate to the req. position
-  MQRI iter = queue().rbegin();
+  MQI iter = queue().begin();
   for( int i=0; i<pos; i++ )
     iter++;
   // start searching
-  for( ; iter != queue().rend(); iter++,pos++ )
+  for( ; iter != queue().end(); iter++,pos++ )
     if( id.matches( iter->mref->id() ) )
     {
       if( ref )
@@ -339,7 +427,7 @@ const WPInterface::QueueEntry * WPInterface::topOfQueue () const
 {
   //## begin WPInterface::topOfQueue%3C8F206C0071.body preserve=yes
   return queue().size() 
-    ? &queue().back() 
+    ? &queue().front() 
     : 0;
   //## end WPInterface::topOfQueue%3C8F206C0071.body
 }
@@ -349,10 +437,10 @@ bool WPInterface::queueLocked () const
   //## begin WPInterface::queueLocked%3C8F207902AB.body preserve=yes
   if( full_lock )
     return True;
-  if( receive_lock && queue().size() )
+  if( receive_lock )
   {
-    const HIID &id = queue().back().mref->id();
-    if( id[0] != AidEvent )
+    const QueueEntry * qe = topOfQueue();
+    if( qe && qe->mref->id()[0] != AidEvent )
       return True;
   }
   return False;
@@ -428,6 +516,7 @@ int WPInterface::send (MessageRef msg, MsgAddress to)
   // if not writable, privatize for writing (but not deeply)
   if( !msg.isWritable() )
     msg.privatize(DMI::WRITE);
+  msg().setHops(0);
   msg().setFrom(address());
   msg().setState(state());
   dprintf(2)("send [%s] to %s\n",msg->sdebug(1).c_str(),to.toString().c_str());
@@ -440,6 +529,14 @@ int WPInterface::send (MessageRef msg, MsgAddress to)
   //## end WPInterface::send%3C7CB9E802CF.body
 }
 
+int WPInterface::send (const HIID &id, MsgAddress to, int priority)
+{
+  //## begin WPInterface::send%3CBDAD020297.body preserve=yes
+  MessageRef msg( new Message(id,priority),DMI::ANON|DMI::WRITE );
+  send(msg,to);
+  //## end WPInterface::send%3CBDAD020297.body
+}
+
 int WPInterface::publish (MessageRef msg, int scope)
 {
   //## begin WPInterface::publish%3C7CB9EB01CF.body preserve=yes
@@ -449,11 +546,32 @@ int WPInterface::publish (MessageRef msg, int scope)
     msg.privatize(DMI::WRITE);
   msg().setFrom(address());
   msg().setState(state());
+  msg().setHops(0);
   dprintf(2)("publish [%s] scope %d\n",msg->sdebug(1).c_str(),scope);
   AtomicID host = (scope < Message::GLOBAL) ? address().host() : AidAny;
   AtomicID process = (scope < Message::HOST) ? address().process() : AidAny;
   return dsp()->send(msg,MsgAddress(AidPublish,AidPublish,process,host));
   //## end WPInterface::publish%3C7CB9EB01CF.body
+}
+
+int WPInterface::publish (const HIID &id, int scope, int priority)
+{
+  //## begin WPInterface::publish%3CBDACCC028F.body preserve=yes
+  MessageRef msg( new Message(id,priority),DMI::ANON|DMI::WRITE );
+  return publish(msg,scope);
+  //## end WPInterface::publish%3CBDACCC028F.body
+}
+
+void WPInterface::setState (int newstate, bool delay_publish)
+{
+  //## begin WPInterface::setState%3CBED9EF0197.body preserve=yes
+  if( state_ != newstate )
+  {
+    state_ = newstate;
+    if( started && !delay_publish )
+      publish(MsgWPState);
+  }
+  //## end WPInterface::setState%3CBED9EF0197.body
 }
 
 void WPInterface::log (string str, int level, AtomicID type)
@@ -462,8 +580,8 @@ void WPInterface::log (string str, int level, AtomicID type)
   if( level > logLevel() )
     return;
   // see if type override was specified in the string
-  const char * stypes[] = { "warning:", "error:", "debug:", "normal:" };
-  const AtomicID types[] = { LogWarning,LogError,LogDebug,LogNormal };
+  const char * stypes[] = { "warning:", "error:", "fatal:", "debug:", "normal:" };
+  const AtomicID types[] = { LogWarning,LogError,LogFatal,LogDebug,LogNormal };
   for( int i=0; i<4; i++ )
   {
     uint len = strlen(stypes[i]);
@@ -477,7 +595,7 @@ void WPInterface::log (string str, int level, AtomicID type)
       break;
     }
   }
-  // duplicate to stderr if appropriate debug level is set
+  // duplicate to stdout if appropriate debug level is set
   if( level <= DebugLevel )
   {
     const char *tps = "";
@@ -485,9 +603,9 @@ void WPInterface::log (string str, int level, AtomicID type)
       tps = stypes[0];
     else if( type == LogError )
       tps = stypes[1];
-    cerr<<sdebug(1)<<":"<<tps<<" "<<str;
+    Debug::dbg_stream<<sdebug(1)<<":"<<tps<<" "<<str;
     if( str[str.length()-1] != '\n' )
-      cerr<<endl;
+      Debug::dbg_stream<<endl;
   }
   // publish as MsgLog
   SmartBlock *bl = new SmartBlock(str.length());
@@ -497,6 +615,35 @@ void WPInterface::log (string str, int level, AtomicID type)
       DMI::ANON|DMI::WRITE);
   publish(mref);
   //## end WPInterface::log%3CA0457F01BD.body
+}
+
+void WPInterface::lprintf (int level, int type, const char *format, ... )
+{
+  //## begin WPInterface::lprintf%3CA0738D007F.body preserve=yes
+  if( level > logLevel() )
+    return;
+  // create the string
+  char str[1024];
+  va_list(ap);
+  va_start(ap,format);
+  vsnprintf(str,sizeof(str),format,ap);
+  va_end(ap);
+  log(str,level,type);
+  //## end WPInterface::lprintf%3CA0738D007F.body
+}
+
+void WPInterface::lprintf (int level, const char *format, ... )
+{
+  //## begin WPInterface::lprintf%3CA0739F0247.body preserve=yes
+  if( level > logLevel() )
+    return;
+  char str[1024];
+  va_list(ap);
+  va_start(ap,format);
+  vsnprintf(str,sizeof(str),format,ap);
+  va_end(ap);
+  log(str,level,LogNormal);
+  //## end WPInterface::lprintf%3CA0739F0247.body
 }
 
 // Additional Declarations
@@ -509,10 +656,9 @@ void WPInterface::publishSubscriptions ()
   BlockRef bref(new SmartBlock(sz),DMI::ANON|DMI::WRITE);
   subscriptions.pack(bref().data(),sz);
   // publish it
-  MessageRef ref( new Message(AidSubscribe|address(),
-                              bref,0,
-                              Message::PRI_EVENT),
-                  DMI::ANON|DMI::WRITE);
+  MessageRef ref( new Message(MsgSubscribe|address(),
+                              bref,0),
+                  DMI::ANONWR);
   publish(ref);
 }
 
@@ -525,8 +671,7 @@ string WPInterface::sdebug ( int detail,const string &,const char *nm ) const
     if( nm )
       out = string(nm) + "/";
     out += address().toString();
-    if( detail>3 )
-      out += Debug::ssprintf("/%08x",this);
+    out += Debug::ssprintf("/%08x",this);
     Debug::appendf(out,"Q:%d",queue().size());
   }
   if( detail >= 1 || detail == -1 )   // normal detail

@@ -25,14 +25,12 @@
 //## begin module%3C95AADB0101.includes preserve=yes
 //## end module%3C95AADB0101.includes
 
-// Socket
-#include "Socket.h"
-// GWClientWP
-#include "GWClientWP.h"
 // GatewayWP
 #include "GatewayWP.h"
 // WorkProcess
 #include "WorkProcess.h"
+// Socket
+#include "Socket.h"
 //## begin module%3C95AADB0101.declarations preserve=no
 //## end module%3C95AADB0101.declarations
 
@@ -54,7 +52,6 @@
 
 
 //## Uses: <unnamed>%3C90BEFA02E4;GatewayWP { -> }
-//## Uses: <unnamed>%3C95A9DA0327;GWClientWP { -> }
 
 class GWServerWP : public WorkProcess  //## Inherits: <unnamed>%3C8F943E01B2
 {
@@ -64,13 +61,19 @@ class GWServerWP : public WorkProcess  //## Inherits: <unnamed>%3C8F943E01B2
   public:
     //## Constructors (specified)
       //## Operation: GWServerWP%3C8F95710177
-      GWServerWP (const string &port1);
+      GWServerWP (int port1);
+
+      //## Operation: GWServerWP%3CC95151026E
+      GWServerWP (const string &path, int port1);
 
     //## Destructor (generated)
       ~GWServerWP();
 
 
     //## Other Operations (specified)
+      //## Operation: init%3CC951680113
+      virtual void init ();
+
       //## Operation: start%3C90BE4A029B
       virtual bool start ();
 
@@ -83,15 +86,14 @@ class GWServerWP : public WorkProcess  //## Inherits: <unnamed>%3C8F943E01B2
       //## Operation: input%3C95B4DC031C
       virtual int input (int , int );
 
-    //## Get and Set Operations for Class Attributes (generated)
-
-      //## Attribute: port%3C90BE3503C7
-      const string& getPort () const;
+      //## Operation: receive%3CC951890246
+      virtual int receive (MessageRef &mref);
 
     // Additional Public Declarations
       //## begin GWServerWP%3C8F942502BA.public preserve=yes
+      void advertiseServer();
+      
       //## end GWServerWP%3C8F942502BA.public
-
   protected:
     // Additional Protected Declarations
       //## begin GWServerWP%3C8F942502BA.protected preserve=yes
@@ -114,9 +116,15 @@ class GWServerWP : public WorkProcess  //## Inherits: <unnamed>%3C8F943E01B2
   private: //## implementation
     // Data Members for Class Attributes
 
-      //## begin GWServerWP::port%3C90BE3503C7.attr preserve=no  public: string {U} 
-      string port;
+      //## Attribute: port%3C90BE3503C7
+      //## begin GWServerWP::port%3C90BE3503C7.attr preserve=no  public: int {U} 
+      int port;
       //## end GWServerWP::port%3C90BE3503C7.attr
+
+      //## Attribute: hostname%3CC951EA0214
+      //## begin GWServerWP::hostname%3CC951EA0214.attr preserve=no  private: string {U} 
+      string hostname;
+      //## end GWServerWP::hostname%3CC951EA0214.attr
 
     // Data Members for Associations
 
@@ -128,6 +136,8 @@ class GWServerWP : public WorkProcess  //## Inherits: <unnamed>%3C8F943E01B2
 
     // Additional Implementation Declarations
       //## begin GWServerWP%3C8F942502BA.implementation preserve=yes
+      int type;  // Socket::TCP or Socket::UNIX
+      MessageRef advertisement;
       int open_retries;
       //## end GWServerWP%3C8F942502BA.implementation
 };
@@ -136,15 +146,6 @@ class GWServerWP : public WorkProcess  //## Inherits: <unnamed>%3C8F943E01B2
 //## end GWServerWP%3C8F942502BA.postscript
 
 // Class GWServerWP 
-
-//## Get and Set Operations for Class Attributes (inline)
-
-inline const string& GWServerWP::getPort () const
-{
-  //## begin GWServerWP::getPort%3C90BE3503C7.get preserve=no
-  return port;
-  //## end GWServerWP::getPort%3C90BE3503C7.get
-}
 
 //## begin module%3C95AADB0101.epilog preserve=yes
 //## end module%3C95AADB0101.epilog

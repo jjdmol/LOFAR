@@ -4,7 +4,7 @@ SUBDIRS = . Glish
 
 INCLUDES = -I$(dmi_dir)/src
 
-CXXFLAGS += -Wall -Wno-unknown-pragmas 
+CXXFLAGS += -Wall -Wno-unknown-pragmas -pg
 
 lib_LTLIBRARIES = liboctopussy.la
 

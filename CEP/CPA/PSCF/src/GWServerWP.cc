@@ -18,6 +18,7 @@
 //## end module%3C95AADB010A.additionalIncludes
 
 //## begin module%3C95AADB010A.includes preserve=yes
+#include "Gateways.h"
 //## end module%3C95AADB010A.includes
 
 // GWServerWP
@@ -27,23 +28,42 @@
 
 //## begin module%3C95AADB010A.additionalDeclarations preserve=yes
 // timeout value for a retry of bind, in seconds
-const Timeval Timeout_Retry(10.0);
+const Timeval Timeout_Retry(10.0),
+// re-advertise timeout, in seconds
+      Timeout_Advertise(10.0);
 // max retries
 const int MaxOpenRetries = 10;
+
 //## end module%3C95AADB010A.additionalDeclarations
 
 
 // Class GWServerWP 
 
-GWServerWP::GWServerWP (const string &port1)
+GWServerWP::GWServerWP (int port1)
   //## begin GWServerWP::GWServerWP%3C8F95710177.hasinit preserve=no
   //## end GWServerWP::GWServerWP%3C8F95710177.hasinit
   //## begin GWServerWP::GWServerWP%3C8F95710177.initialization preserve=yes
-  : WorkProcess(AidGWServerWP),port(port1),sock(0)
+  : WorkProcess(AidGWServerWP),port(port1),sock(0),type(Socket::TCP)
   //## end GWServerWP::GWServerWP%3C8F95710177.initialization
 {
   //## begin GWServerWP::GWServerWP%3C8F95710177.body preserve=yes
+  // get the local hostname
+  char hname[1024];
+  FailWhen(gethostname(hname,sizeof(hname))<0,"gethostname(): "+string(strerror(errno)));
+  hostname = hname;
   //## end GWServerWP::GWServerWP%3C8F95710177.body
+}
+
+GWServerWP::GWServerWP (const string &path, int port1)
+  //## begin GWServerWP::GWServerWP%3CC95151026E.hasinit preserve=no
+  //## end GWServerWP::GWServerWP%3CC95151026E.hasinit
+  //## begin GWServerWP::GWServerWP%3CC95151026E.initialization preserve=yes
+  : WorkProcess(AidGWServerWP),port(port1),sock(0),type(Socket::UNIX)
+  //## end GWServerWP::GWServerWP%3CC95151026E.initialization
+{
+  //## begin GWServerWP::GWServerWP%3CC95151026E.body preserve=yes
+  hostname = path;
+  //## end GWServerWP::GWServerWP%3CC95151026E.body
 }
 
 
@@ -58,6 +78,24 @@ GWServerWP::~GWServerWP()
 
 
 //## Other Operations (implementation)
+void GWServerWP::init ()
+{
+  //## begin GWServerWP::init%3CC951680113.body preserve=yes
+  subscribe(MsgGWRemoteUp|AidWildcard,Message::GLOBAL);
+  // add local server port as -1 to indicate no active server
+  if( type == Socket::TCP )
+  {
+    if( !dsp()->hasLocalData(GWNetworkServer) )
+      dsp()->localData(GWNetworkServer) = -1;
+  }
+  else
+  {
+    if( !dsp()->hasLocalData(GWLocalServer) )
+      dsp()->localData(GWLocalServer) = "";
+  }
+  //## end GWServerWP::init%3CC951680113.body
+}
+
 bool GWServerWP::start ()
 {
   //## begin GWServerWP::start%3C90BE4A029B.body preserve=yes
@@ -81,8 +119,12 @@ void GWServerWP::stop ()
 int GWServerWP::timeout (const HIID &)
 {
   //## begin GWServerWP::timeout%3C90BE8E000E.body preserve=yes
-  // (since we only have one active timeout, we don't need no arguments)
-  tryOpen();
+  if( !sock || !sock->ok() )
+    tryOpen();
+#if ADVERTISE_SERVERS
+  else
+    advertiseServer();
+#endif
   return Message::ACCEPT;
   //## end GWServerWP::timeout%3C90BE8E000E.body
 }
@@ -106,6 +148,10 @@ int GWServerWP::input (int , int )
   { 
     lprintf(1,"error: accept(): %s.\nClosing and retrying\n",sock->errstr().c_str());
     // just to be anal, close the socket and retry binding it
+    if( type == Socket::TCP )
+      dsp()->localData(GWNetworkServer)[0] = -1;
+    else
+      dsp()->localData(GWLocalServer)[0] = "";
     open_retries = 0;
     tryOpen();
     return Message::CANCEL;
@@ -113,45 +159,109 @@ int GWServerWP::input (int , int )
   //## end GWServerWP::input%3C95B4DC031C.body
 }
 
+int GWServerWP::receive (MessageRef &mref)
+{
+  //## begin GWServerWP::receive%3CC951890246.body preserve=yes
+  if( mref->id().matches(MsgGWRemoteUp|AidWildcard) && sock && sock->ok() )
+    advertiseServer();
+  return Message::ACCEPT;
+  //## end GWServerWP::receive%3CC951890246.body
+}
+
 // Additional Declarations
   //## begin GWServerWP%3C8F942502BA.declarations preserve=yes
+
+void GWServerWP::advertiseServer ()
+{
+  if( !advertisement.valid() )
+  {
+    Message *msg = new Message( type == Socket::UNIX 
+                                ? MsgGWServerOpenLocal
+                                : MsgGWServerOpenNetwork );
+    advertisement <<= msg;
+    (*msg)[AidHost] = hostname;
+    (*msg)[AidPort] = port;
+    (*msg)[AidType] = type;
+  }
+  lprintf(4,"advertising server on %s:%d",hostname.c_str(),port);
+  publish(advertisement.copy(),
+      type == Socket::UNIX ? Message::HOST : Message::GLOBAL );
+}
+
 void GWServerWP::tryOpen ()
 {
   // Try to start a server socket
-  if( sock )
-    delete sock;
-  sock = new Socket("sock/"+wpname(),port,Socket::TCP,10);
-  lprintf(1,"opening server socket: result %d\n",sock->errcode());
-  if( !sock->ok() )
+  for( ;; )
   {
-    if( sock->errcode() == Socket::BIND )
+    if( sock )
+      delete sock;
+    string sockport = num2str(port);
+    if( type == Socket::UNIX )
+      sockport = hostname + ":" + sockport;
+    sock = new Socket("sock/"+wpname(),sockport,type,10);
+    if( !sock->ok() )
     {
-      // if bind error, assume another process already has it open,
-      // so launch a GWClientWP to attach to it, and commit harakiri
-      lprintf(1,"socket bind error, launching client mode\n");
-      vector<string> connlist(1,"localhost:"+port); 
-      attachWP(new GWClientWP(connlist),DMI::ANON);
-      detachMyself();
-    }
-    else // some other error
-    {
-      lprintf(1,"error: %s\n",sock->errstr().c_str());
-      delete sock; sock=0;
-      if( open_retries++ > MaxOpenRetries )
+      if( sock->errcode() == Socket::BIND )
       {
-        lprintf(1,"too many retries, giving up\n");
-        detachMyself();
+        // if bind error, assume another process already has it open,
+        // so launch a GWClientWP to attach to it, and commit harakiri
+        lprintf(1,"server socket %s:%d already bound\n",
+                   hostname.c_str(),port);
+        MessageRef mref(new Message(MsgGWServerBindError),DMI::ANON|DMI::WRITE);
+        Message &msg = mref;
+        msg[AidHost] = hostname;
+        msg[AidPort] = port;
+        msg[AidType] = type;
+        publish(mref,Message::LOCAL);
+        // try the next port
+        port++;
+        continue;
       }
-      else // retry later - schedule a timeout
+      else // some other error
       {
-        lprintf(1,"will retry later\n");
-        addTimeout(Timeout_Retry,0,EV_ONESHOT);
+        string err = sock->errstr();
+        lprintf(1,LogError,"fatal error (%s) on server socket %s:%d\n",
+                   err.c_str(),hostname.c_str(),port);
+        delete sock; sock=0;
+        if( open_retries++ > MaxOpenRetries )
+        {
+          lprintf(1,LogError,"fatal error (%s) on server socket %s:%d, giving up\n",
+                     err.c_str(),hostname.c_str(),port);
+          MessageRef mref(new Message(MsgGWServerFatalError),DMI::ANON|DMI::WRITE);
+          Message &msg = mref;
+          msg[AidHost] = hostname;
+          msg[AidPort] = port;
+          msg[AidType] = type;
+          msg[AidError] = sock->errstr();
+          publish(mref,Message::LOCAL);
+          detachMyself();
+        }
+        else // retry later - schedule a timeout
+        {
+          lprintf(1,LogError,"fatal error (%s) on server socket %s:%d, will retry later\n",
+                     err.c_str(),hostname.c_str(),port);
+          addTimeout(Timeout_Retry,0,EV_ONESHOT);
+        }
+        return;
       }
     }
+    // since we got here, the socket is OK
+    // shout about it
+    lprintf(1,"opened server socket %s:%d\n",hostname.c_str(),port);
+    advertiseServer();
+    if( type == Socket::TCP )
+      dsp()->localData(GWNetworkServer)[0] = port;
+    else
+      dsp()->localData(GWLocalServer)[0] = hostname + ":" + port;
+    // add an input on the socket
+    addInput(sock->getSid(),EV_FDREAD);
+#if ADVERTISE_SERVERS
+    // add a continuous re-advertise timeout so that open servers
+    // are re-broadcast across the system (in case someone loses a connection)
+    addTimeout(Timeout_Advertise,0,EV_CONT);
+#endif
     return;
   }
-  // since we got here, the socket is OK. Add an input on it
-  addInput(sock->getSid(),EV_FDREAD);
 }
   //## end GWServerWP%3C8F942502BA.declarations
 //## begin module%3C95AADB010A.epilog preserve=yes

@@ -61,22 +61,35 @@ Dispatcher::Dispatcher (AtomicID process, AtomicID host, int argc, const char **
   //## begin Dispatcher::Dispatcher%3C7CD444039C.hasinit preserve=no
   //## end Dispatcher::Dispatcher%3C7CD444039C.hasinit
   //## begin Dispatcher::Dispatcher%3C7CD444039C.initialization preserve=yes
-    : heartbeat_hz(hz)
+    : DebugContext("Dsp",PSCFDebugContext::DebugContext),
+      heartbeat_hz(hz)
   //## end Dispatcher::Dispatcher%3C7CD444039C.initialization
 {
   //## begin Dispatcher::Dispatcher%3C7CD444039C.body preserve=yes
   if( dispatcher )
     Throw("multiple Dispatchers instantiated");
+  
+//  long hostid = gethostid();
+//  printf("host id: %lx\n",hostid);
+  
   dispatcher = this;
   address = MsgAddress(AidDispatcher,0,process,host);
   running = in_start = False;
-  
+
+  // store command line
+  DataField *field = new DataField(Tpstring,argc);
+  ObjRef fref(field,DMI::ANONRO);
+  addLocalData(AidArgv,fref);
   commandLine.resize(argc);
   for( int i=0; i<argc; i++ ) 
+  {
     commandLine[i] = argv[i];
+    (*field)[i] = argv[i];
+  }
   
+  // set the log levels
   int lev;
-  if( getOption("-l",lev) )
+  if( getOption("-lc",lev) || getOption("-l",lev) )
     WPInterface::setLogLevel(lev);
   
   memset(orig_sigaction,0,sizeof(orig_sigaction));
@@ -330,6 +343,15 @@ int Dispatcher::send (MessageRef &mref, const MsgAddress &to)
 void Dispatcher::poll ()
 {
   //## begin Dispatcher::poll%3C7B888E01CF.body preserve=yes
+  if( Debug(11) )
+  {
+    static Timestamp last_poll;
+    Timestamp now;
+    Timestamp elapsed = now - last_poll;
+    dprintf(11)("entering poll() after %ld.%03ld ms\n",
+                elapsed.sec()*1000+elapsed.usec()/1000,elapsed.usec()%1000);
+    last_poll = now;
+  }
   FailWhen(!running,"not running");
   // destroy all delay-detached WPs
   if( !++poll_depth )
@@ -408,12 +430,6 @@ void Dispatcher::stopPolling ()
   //## end Dispatcher::stopPolling%3CA09EB503C1.body
 }
 
-void Dispatcher::setWPPolling (WPInterface* pwp, bool enable)
-{
-  //## begin Dispatcher::setWPPolling%3CB55CE00220.body preserve=yes
-  //## end Dispatcher::setWPPolling%3CB55CE00220.body
-}
-
 void Dispatcher::addTimeout (WPInterface* pwp, const Timestamp &period, const HIID &id, int flags, int priority)
 {
   //## begin Dispatcher::addTimeout%3C7D28C30061.body preserve=yes
@@ -439,12 +455,15 @@ void Dispatcher::addInput (WPInterface* pwp, int fd, int flags, int priority)
   // check if perhaps this fd is already being watched, then we only need to 
   // add to the flags
   for( IILI iter = inputs.begin(); iter != inputs.end(); iter++ )
+  {
     if( iter->pwp == pwp && iter->fd == fd )
     {
       iter->flags = flags | (iter->flags&EV_FDALL);
       iter->msg().setPriority(priority);
+      rebuildInputs();
       return;
     }
+  }
   // else setup a new input structure
   InputInfo ii(pwp,AtomicID(fd),priority);
   ii.fd = fd;
@@ -507,10 +526,8 @@ bool Dispatcher::removeInput (WPInterface* pwp, int fd, int flags)
     flags = ~0;
   for( IILI iter = inputs.begin(); iter != inputs.end(); iter++ )
   {
-    MessageRef & ref = iter->last_msg;
     // is an input message sitting intill undelivered?
     // (WPInterface::poll() will reset its state to 0 when delivered)
-    if( ref.valid() && ref->state() != 0 )
     // input messages are dequeued/modified inside WorkProcess::removeInput.
     if( iter->pwp == pwp && (fd<0 || iter->fd == fd) ) 
     {   
@@ -521,6 +538,7 @@ bool Dispatcher::removeInput (WPInterface* pwp, int fd, int flags)
       // clear flags of input
       if( ( iter->flags &= ~flags ) == 0 ) // removed all modes? 
         inputs.erase(iter);
+      rebuildInputs();
       return True;
     }
   }
@@ -621,6 +639,38 @@ bool Dispatcher::getOption (const string &name, int &out)
   }
   return False;
   //## end Dispatcher::getOption%3CA0341E03A6.body
+}
+
+void Dispatcher::addLocalData (const HIID &id, ObjRef ref)
+{
+  //## begin Dispatcher::addLocalData%3CBEDDD8001A.body preserve=yes
+  FailWhen( localData_[id].exists(),id.toString()+" is already defined in local data");
+  localData_[id] <<= ref;
+  //## end Dispatcher::addLocalData%3CBEDDD8001A.body
+}
+
+DataField & Dispatcher::addLocalData (const HIID &id)
+{
+  //## begin Dispatcher::addLocalData%3CBEE41702F4.body preserve=yes
+  FailWhen( localData_[id].exists(),id.toString()+" is already defined in local data");
+  DataField *field = new DataField;
+  localData_[id] <<= field;
+  return *field;
+  //## end Dispatcher::addLocalData%3CBEE41702F4.body
+}
+
+NestableContainer::Hook Dispatcher::localData (const HIID &id)
+{
+  //## begin Dispatcher::localData%3CC405480057.body preserve=yes
+  return localData_[id];
+  //## end Dispatcher::localData%3CC405480057.body
+}
+
+bool Dispatcher::hasLocalData (const HIID &id)
+{
+  //## begin Dispatcher::hasLocalData%3CC00549020D.body preserve=yes
+  return localData_[id].exists();
+  //## end Dispatcher::hasLocalData%3CC00549020D.body
 }
 
 // Additional Declarations
@@ -863,3 +913,13 @@ string Dispatcher::sdebug ( int detail,const string &,const char *name ) const
   //## end Dispatcher%3C7B6A3E00A0.declarations
 //## begin module%3C7B7F30004B.epilog preserve=yes
 //## end module%3C7B7F30004B.epilog
+
+
+// Detached code regions:
+#if 0
+//## begin Dispatcher::localData%3CBEDDED01B5.body preserve=yes
+  return localData[id];
+  return localData[id];
+//## end Dispatcher::localData%3CBEDDED01B5.body
+
+#endif

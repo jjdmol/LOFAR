@@ -45,9 +45,16 @@ class Dispatcher;
 //## begin module%3C8F268F00DE.additionalDeclarations preserve=yes
 #pragma aidgroup PSCF
 // standard event messages
-#pragma aid Event Timeout Input Signal Subscribe
-// hello/bye messages for WPs
-#pragma aid Hello Bye
+#pragma aid WP Event Timeout Input Signal Subscribe
+// hello/bye/state messages for WPs
+#pragma aid Hello Bye State
+
+// some service messages
+const HIID 
+  MsgHello(AidWP|AidHello),
+  MsgBye(AidWP|AidBye),
+  MsgWPState(AidWP|AidState),
+  MsgSubscribe(AidWP|AidSubscribe);
 
 //## end module%3C8F268F00DE.additionalDeclarations
 
@@ -70,10 +77,15 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
 {
   //## begin WPInterface%3C7B6A3702E5.initialDeclarations preserve=yes
   public:
+      // each WP has its own local debug context (subcontext of PSCFDebugContext)
+      Debug::SubContext DebugContext; 
+      ::Debug::Context & getDebugContext() { return DebugContext; };
+      
       typedef struct {  MessageRef mref; 
                         int priority; 
                         ulong tick; 
-                      } QueueEntry;
+                     }  QueueEntry;
+                     
       typedef list<QueueEntry> MessageQueue;
   //## end WPInterface%3C7B6A3702E5.initialDeclarations
 
@@ -194,6 +206,9 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
       //	for more details.
       int send (MessageRef msg, MsgAddress to);
 
+      //## Operation: send%3CBDAD020297
+      int send (const HIID &id, MsgAddress to, int priority = Message::PRI_NORMAL);
+
       //## Operation: publish%3C7CB9EB01CF
       //	Publishes message with the specified scope. Note that the ref is
       //	taken over by this call, then privatized for writing. This method is
@@ -201,8 +216,20 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
       //	address, as determined by scope).
       int publish (MessageRef msg, int scope = Message::GLOBAL);
 
+      //## Operation: publish%3CBDACCC028F
+      int publish (const HIID &id, int scope = Message::GLOBAL, int priority = Message::PRI_NORMAL);
+
+      //## Operation: setState%3CBED9EF0197
+      void setState (int newstate, bool delay_publish = False);
+
       //## Operation: log%3CA0457F01BD
       void log (string str, int level = 0, AtomicID type = LogNormal);
+
+      //## Operation: lprintf%3CA0738D007F
+      void lprintf (int level, int type, const char *format, ... );
+
+      //## Operation: lprintf%3CA0739F0247
+      void lprintf (int level, const char *format, ... );
 
     //## Get and Set Operations for Class Attributes (generated)
 
@@ -215,7 +242,6 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
 
       //## Attribute: state%3C8F256E024B
       int state () const;
-      void setState (int value);
 
       //## Attribute: logLevel%3CA07E5F00D8
       static int logLevel ();
@@ -233,11 +259,26 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
 
     // Additional Public Declarations
       //## begin WPInterface%3C7B6A3702E5.public preserve=yes
+      bool isLocal (const MsgAddress &addr)
+      { return addr.peerid() == address().peerid(); };
+      bool isLocal (const Message &msg)
+      { return isLocal(msg.from()); }
+      bool isLocal (const MessageRef &mref)
+      { return isLocal(mref->from()); }
+      
 
       Declare_sdebug(virtual);
       Declare_debug( );
       //## end WPInterface%3C7B6A3702E5.public
   protected:
+    //## Get and Set Operations for Class Attributes (generated)
+
+      //## Attribute: autoCatch%3CBED3720012
+      //	If set, then all exceptions inside the WP's callbacks will be caught
+      //	and ignored.
+      bool autoCatch () const;
+      void setAutoCatch (bool value);
+
     //## Get and Set Operations for Associations (generated)
 
       //## Association: OCTOPUSSY::<unnamed>%3CA1A1AB0346
@@ -285,6 +326,10 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
       int state_;
       //## end WPInterface::state%3C8F256E024B.attr
 
+      //## begin WPInterface::autoCatch%3CBED3720012.attr preserve=no  protected: bool {U} 
+      bool autoCatch_;
+      //## end WPInterface::autoCatch%3CBED3720012.attr
+
       //## begin WPInterface::logLevel%3CA07E5F00D8.attr preserve=no  public: static int {U} 2
       static int logLevel_;
       //## end WPInterface::logLevel%3CA07E5F00D8.attr
@@ -308,6 +353,9 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
 
     // Additional Implementation Declarations
       //## begin WPInterface%3C7B6A3702E5.implementation preserve=yes
+      bool raiseNeedRepoll (bool value)
+      { return needRepoll_ |= value; }
+      
       bool started;
       
       WPID wpid_;
@@ -366,10 +414,13 @@ inline bool WPInterface::willForward (const Message &) const
 inline bool WPInterface::subscribe (const HIID &id, int scope)
 {
   //## begin WPInterface::subscribe%3C7CB9B70120.body preserve=yes
-  return subscribe(id,MsgAddress(
-      AidAny,AidAny,
-      scope < Message::PROCESS ? address().process() : AidAny,
-      scope < Message::GLOBAL ?  address().host() : AidAny));
+  return subscribe(
+           id,MsgAddress(
+                AidAny,AidAny,
+                scope <= Message::PROCESS ? address().process() : AidAny,
+                scope <= Message::HOST    ? address().host() : AidAny 
+              ) 
+         );
   //## end WPInterface::subscribe%3C7CB9B70120.body
 }
 
@@ -404,11 +455,18 @@ inline int WPInterface::state () const
   //## end WPInterface::state%3C8F256E024B.get
 }
 
-inline void WPInterface::setState (int value)
+inline bool WPInterface::autoCatch () const
 {
-  //## begin WPInterface::setState%3C8F256E024B.set preserve=no
-  state_ = value;
-  //## end WPInterface::setState%3C8F256E024B.set
+  //## begin WPInterface::autoCatch%3CBED3720012.get preserve=no
+  return autoCatch_;
+  //## end WPInterface::autoCatch%3CBED3720012.get
+}
+
+inline void WPInterface::setAutoCatch (bool value)
+{
+  //## begin WPInterface::setAutoCatch%3CBED3720012.set preserve=no
+  autoCatch_ = value;
+  //## end WPInterface::setAutoCatch%3CBED3720012.set
 }
 
 inline int WPInterface::logLevel ()

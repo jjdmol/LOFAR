@@ -36,6 +36,7 @@ Message::Message()
   //## begin Message::Message%3C7B6A2D01F0_const.hasinit preserve=no
   //## end Message::Message%3C7B6A2D01F0_const.hasinit
   //## begin Message::Message%3C7B6A2D01F0_const.initialization preserve=yes
+  : hops_(0)
   //## end Message::Message%3C7B6A2D01F0_const.initialization
 {
   //## begin Message::Message%3C7B6A2D01F0_const.body preserve=yes
@@ -58,7 +59,7 @@ Message::Message (const HIID &id1, BlockableObject *pload, int flags, int pri)
   //## begin Message::Message%3C7B9C490384.hasinit preserve=no
   //## end Message::Message%3C7B9C490384.hasinit
   //## begin Message::Message%3C7B9C490384.initialization preserve=yes
-   : priority_(pri),state_(0),id_(id1)
+   : priority_(pri),state_(0),hops_(0),id_(id1)
   //## end Message::Message%3C7B9C490384.initialization
 {
   //## begin Message::Message%3C7B9C490384.body preserve=yes
@@ -70,7 +71,7 @@ Message::Message (const HIID &id1, ObjRef &pload, int flags, int pri)
   //## begin Message::Message%3C7B9D0A01FB.hasinit preserve=no
   //## end Message::Message%3C7B9D0A01FB.hasinit
   //## begin Message::Message%3C7B9D0A01FB.initialization preserve=yes
-   : priority_(pri),state_(0),id_(id1)
+   : priority_(pri),state_(0),hops_(0),id_(id1)
   //## end Message::Message%3C7B9D0A01FB.initialization
 {
   //## begin Message::Message%3C7B9D0A01FB.body preserve=yes
@@ -85,7 +86,7 @@ Message::Message (const HIID &id1, SmartBlock *bl, int flags, int pri)
   //## begin Message::Message%3C7B9D3B02C3.hasinit preserve=no
   //## end Message::Message%3C7B9D3B02C3.hasinit
   //## begin Message::Message%3C7B9D3B02C3.initialization preserve=yes
-   : priority_(pri),state_(0),id_(id1)
+   : priority_(pri),state_(0),hops_(0),id_(id1)
   //## end Message::Message%3C7B9D3B02C3.initialization
 {
   //## begin Message::Message%3C7B9D3B02C3.body preserve=yes
@@ -97,7 +98,7 @@ Message::Message (const HIID &id1, BlockRef &bl, int flags, int pri)
   //## begin Message::Message%3C7B9D59014A.hasinit preserve=no
   //## end Message::Message%3C7B9D59014A.hasinit
   //## begin Message::Message%3C7B9D59014A.initialization preserve=yes
-   : priority_(pri),state_(0),id_(id1)
+   : priority_(pri),state_(0),hops_(0),id_(id1)
   //## end Message::Message%3C7B9D59014A.initialization
 {
   //## begin Message::Message%3C7B9D59014A.body preserve=yes
@@ -112,7 +113,7 @@ Message::Message (const HIID &id1, const char *data, size_t sz, int pri)
   //## begin Message::Message%3C7BB3BD0266.hasinit preserve=no
   //## end Message::Message%3C7BB3BD0266.hasinit
   //## begin Message::Message%3C7BB3BD0266.initialization preserve=yes
-   : priority_(pri),state_(0),id_(id1)
+   : priority_(pri),state_(0),hops_(0),id_(id1)
   //## end Message::Message%3C7BB3BD0266.initialization
 {
   //## begin Message::Message%3C7BB3BD0266.body preserve=yes
@@ -233,6 +234,7 @@ int Message::fromBlock (BlockSet& set)
            hdr.idsize + hdr.fromsize + hdr.tosize,"corrupt header block");
   priority_ = hdr.priority;
   state_    = hdr.state;
+  hops_     = hdr.hops;
   const char *buf = static_cast<const char*>(href->data()) + sizeof(HeaderBlock);
   id_.unpack(buf,hdr.idsize);     buf += hdr.idsize;
   from_.unpack(buf,hdr.fromsize); buf += hdr.fromsize;
@@ -272,6 +274,7 @@ int Message::toBlock (BlockSet &set) const
   HeaderBlock & hdr = *static_cast<HeaderBlock*>(hdrblock->data());
   hdr.priority  = priority_;
   hdr.state     = state_;
+  hdr.hops      = hops_;
   hdr.idsize    = idsize;
   hdr.fromsize  = fromsize;
   hdr.tosize    = tosize;
@@ -310,8 +313,10 @@ string Message::sdebug ( int detail,const string &prefix,const char *name ) cons
   }
   if( detail >= 1 || detail == -1 )   // normal detail
   {
-    Debug::appendf(out,"%s->%s p/%d s/%x",
+    Debug::appendf(out,"%s->%s p:%d s:%x",
         from_.toString().c_str(),to_.toString().c_str(),priority_,state_);
+    if( hops_ )
+      Debug::appendf(out,"hc:%d",(int)hops_);
     if( detail == 1 )
     {
       Debug::appendf(out,payload_.valid() ? "w/payload" : "",

@@ -129,6 +129,10 @@ octopussy := function (wpclass="",server="gloctopussy",options="",autoexit=T)
       tp := "LogError";
     else if( tp == "debug" )
       tp := "LogDebug";
+    else if( tp == "fatal" )
+      tp := "LogFatal";
+    else
+      fail paste('unknown log message type: ',type);
     # send the event
     if( self.opClient->log([msg=msg,level=level,type=tp]) )
       return T;
