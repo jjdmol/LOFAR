@@ -36,63 +36,59 @@ APCmdImpl::APCmdImpl()
 APCmdImpl::~APCmdImpl()
 {}
 
-bool	APCmdImpl::define 	 (const time_t		scheduleTime) const
+bool	APCmdImpl::define 	 () const
 {
 	LOG_DEBUG("define");
 	return (true);
 }
 
-bool	APCmdImpl::init 	 (const time_t		scheduleTime) const
+bool	APCmdImpl::init 	 () const
 {
 	LOG_DEBUG("init");
 	return (true);
 }
 
-bool	APCmdImpl::run 	 (const time_t		scheduleTime) const
+bool	APCmdImpl::run 	 () const
 {
 	LOG_DEBUG("run");
 	return (true);
 }
 
-bool	APCmdImpl::pause  	 (const time_t		scheduleTime,
-							  const	string&		condition) 	  const
+bool	APCmdImpl::pause  	 (const	string&		condition) 	  const
 {
-	LOG_DEBUG("pause");
+	LOG_DEBUG_STR("pause: " << condition);
 	return (true);
 }
 
-bool	APCmdImpl::quit  	 (const time_t		scheduleTime) const
+bool	APCmdImpl::quit  	 () const
 {
 	LOG_DEBUG("quit");
 	return (true);
 }
 
-bool	APCmdImpl::snapshot (const time_t		scheduleTime,
-							  const string&		destination)  const
+bool	APCmdImpl::snapshot (const string&		destination)  const
 {
-	LOG_DEBUG("snapshot");
+	LOG_DEBUG_STR("snapshot: " << destination);
 	return (true);
 }
 
-bool	APCmdImpl::recover  (const time_t		scheduleTime,
-							  const string&		source) 	  const
+bool	APCmdImpl::recover  (const string&		source) 	  const
 {
-	LOG_DEBUG("recover");
+	LOG_DEBUG_STR("recover: " << source);
 	return (true);
 }
 
 
-bool	APCmdImpl::reinit	 (const time_t		scheduleTime,
-							  const string&		configID)	  const
+bool	APCmdImpl::reinit	 (const string&		configID)	  const
 {
-	LOG_DEBUG("reinit");
+	LOG_DEBUG_STR("reinit: " << configID);
 	return (true);
 }
 
 // Define a generic way to exchange info between client and server.
 string	APCmdImpl::askInfo   (const string& 	keylist) const
 {
-	LOG_DEBUG("askinfo");
+	LOG_DEBUG_STR("askinfo: " << keylist);
 	return ("APCmdImpl: askInfo not yet implemented");
 }
 

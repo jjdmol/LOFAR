@@ -89,8 +89,10 @@ int main (int argc, char *argv[]) {
 			if (itsPCcomm.pollForMessage()) {
 				// get pointer to received data
 				DH_ProcControl* newMsg = itsPCcomm.getDataHolder();
+
 				// we can update our runstate here if we like
 				itsIsRunning = (newMsg->getCommand() != PCCmdQuit);
+
 				// [D] let PCcomm dispatch and handle the message
 				itsPCcomm.handleMessage(newMsg);
 			}
@@ -103,7 +105,17 @@ int main (int argc, char *argv[]) {
 
 		LOG_INFO_STR("Shutting down: " << argv[0]);
 
-		// IMPLEMENT: do neccesary shutdown actions.
+		// [E] unregister at AC and send last results
+		// As an example only 1 KV pair is returned but it is allowed to pass
+		// a whole parameterset.
+		ParameterSet	resultSet;
+		string			resultBuffer;
+		resultSet.add(itsProcID+".result", "IMPLEMENT useful information");
+		resultSet.writeBuffer(resultBuffer);		// convert to stringbuffer
+LOG_TRACE_VAR_STR("=====" << resultBuffer << "======");
+		itsPCcomm.unregisterAtAC(resultBuffer);		// send to AC before quiting
+
+		// IMPLEMENT: do other neccesary shutdown actions.
 
 		// TEST: simulate we are busy.
 		sleep (3);
@@ -116,7 +128,7 @@ int main (int argc, char *argv[]) {
 		return(1);
 	}
 
-	// [E] unregister at AC is automatically done when PCcomm it deleted.
+
 	LOG_INFO_STR(argv[0] << " terminated normally")
 	return (0);
 }

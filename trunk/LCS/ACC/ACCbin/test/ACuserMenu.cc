@@ -53,11 +53,11 @@ void doConnect()
 	cin >> comType;
 	
 	if (comType == 's' || comType == 'S') {
-		ACClient = new ACSyncClient("localhost");
+		ACClient = new ACSyncClient("myUniqName", 10, 100, 1, 0);
 		IsSync = true;
 	}
 	else {
-		ACClient = new ACAsyncClient(&myACF, "localhost");
+		ACClient = new ACAsyncClient(&myACF, "myUniqName", 10, 100, 1, 0);
 		IsSync = false;
 	}
 

@@ -42,19 +42,14 @@ public:
 	virtual ~APCmdImpl();
 
 	// Command to control the application processes.
-	virtual bool	define 	 (const time_t		scheduleTime) const;
-	virtual bool	init 	 (const time_t		scheduleTime) const;
-	virtual bool	run 	 (const time_t		scheduleTime) const;
-	virtual bool	pause  	 (const time_t		scheduleTime,
-							  const	string&		condition) 	  const;
-	virtual bool	quit  	 (const time_t		scheduleTime) const;
-	virtual bool	snapshot (const time_t		scheduleTime,
-							  const string&		destination)  const;
-	virtual bool	recover  (const time_t		scheduleTime,
-							  const string&		source) 	  const;
-
-	virtual bool	reinit	 (const time_t		scheduleTime,
-							  const string&		configID)	  const;
+	virtual bool	define 	 () 							  const;
+	virtual bool	init 	 () 							  const;
+	virtual bool	run 	 () 							  const;
+	virtual bool	pause  	 (const	string&		condition) 	  const;
+	virtual bool	quit  	 () 							  const;
+	virtual bool	snapshot (const string&		destination)  const;
+	virtual bool	recover  (const string&		source) 	  const;
+	virtual bool	reinit	 (const string&		configID)	  const;
 
 	// Define a generic way to exchange info between client and server.
 	string	askInfo   (const string& 	keylist) const;
