@@ -43,24 +43,21 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
 			      unsigned int nin,
 			      unsigned int nout,
 			      unsigned int nrcu,
-			      unsigned int nsubband, unsigned int nbeam,
-			      unsigned int maxNtarget, unsigned int maxNrfi,
-			      unsigned int fifoLength, unsigned int bufLength)
+			      unsigned int nbeam,
+			      unsigned int maxNtarget, unsigned int maxNrfi)
 : WorkHolder    (nin, nout, name,"WH_BeamFormer"),  // Check number of inputs and outputs
   itsInHolders  (0),
-  itsWeight     ("weight"),
+//   itsWeight     (0),
   itsOutHolders (0),
-  itsSnapFifo   ("fifo", nrcu, bufLength), // this completes the number of inputs and outputs
   itsNrcu       (nrcu),
-  itsNsubband   (nsubband),
   itsNbeam      (nbeam),
   itsMaxNtarget (maxNtarget),
-  itsMaxNrfi    (maxNrfi),
-  itsFifoLength (fifoLength),
-  itsBufferLength (bufLength)
+  itsMaxNrfi    (maxNrfi)
 {
   // The first time the weights should not be read.
-  itsWeight.setReadDelay (1);
+//   itsWeight = new DH_SampleC("weights", nrcu, 1);
+//   itsWeight->setReadDelay (1);
+
   // the number of inputs is equal to the number of reveiving elements
   if (nin > 0) {
     itsInHolders = new DH_SampleC* [nin];
@@ -79,9 +76,6 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
     itsOutHolders[i] = new DH_SampleC (string("out_") + str, 1, 1);
   }
   sample.resize(itsNrcu);
-  
-  itsFifo.resize(itsNrcu, itsFifoLength);
-  itsFifo = -1; // initialise the fifo to some value.. Primarily for debugging.
 }
 
 
@@ -99,79 +93,35 @@ WH_BeamFormer::~WH_BeamFormer()
 
 
 WorkHolder* WH_BeamFormer::construct (const string& name,
-				      int ninput, int noutput,int readpos, int writepos,
-				      const ParamBlock& params)
+									  int ninput, int noutput, const ParamBlock& params)
 {
   Assert (ninput == 4);
   return new WH_BeamFormer (name, ninput, noutput,
-			    params.getInt ("nrcu", 10),
-			    params.getInt ("nsubband", 10),
-			    params.getInt ("nbeam", 10),
-			    params.getInt ("maxntarget", 10),
-			    params.getInt ("maxnrfi", 10),
-			    params.getInt ("bf_fifolength", 512),
-			    params.getInt ("bf_bufferlength", 256));
+							params.getInt ("nrcu", 10),
+							params.getInt ("nbeam", 10),
+							params.getInt ("maxntarget", 10),
+							params.getInt ("maxnrfi", 10));
 }
 
 WH_BeamFormer* WH_BeamFormer::make (const string& name) const
 {
   return new WH_BeamFormer (name, getInputs(), getOutputs(),
-			    itsNrcu, itsNsubband, itsNbeam,
-			    itsMaxNtarget, itsMaxNrfi, itsFifoLength, 
-                            itsBufferLength);
+							itsNrcu, itsNbeam, itsMaxNtarget, itsMaxNrfi);
 }
 
-void WH_BeamFormer::preprocess()
-{
-
-  // I/O operation for reading array configuration from file
-
-  // Add the current snapshot to the input Fifo
-  // Assume the fifo is currently at least partially filled
-  // so the last (itsBufferLength) elements are usefull data
-
-//   for (int i = 0; i < itsNrcu; i++) {
-//     sample(i) = *itsInHolders[i]->getBuffer();
-//   }
-//   itsOutFifo.resize(itsNrcu, itsBufferLength) ;
-//   // place current sample at position (itsWritePos)
-//   itsOutFifo(Range::all(), itsWritePos) = sample;
-//   // update the rest of the fifo
-//   itsOutFifo(Range::all(), Range(itsWritePos+1, toEnd)) = 
-//      itsFifo(Range::all(), Range(itsWritePos, itsFifo.ubound(secondDim) - 1));
-//   itsOutFifo(Range::all(), Range(itsOutFifo.lbound(secondDim), itsWritePos - 1)) =
-//      itsFifo(Range::all(), Range(itsFifo.lbound(secondDim) + 1, itsWritePos));
-// //   // Now update (itsWritePos) 
-//   itsWritePos = (itsWritePos + 1) % itsFifoLength;
-
-
-//   // Now assign the values in the outFifo to the outputs for the AWE
-//   memcpy(itsSnapFifo.getBuffer(), itsOutFifo.data(), itsNrcu*itsBufferLength);
-}
 
 void WH_BeamFormer::process()
 {
-  // the weights are calculated in WH_AWE
+  for (int i = 0; i < itsNrcu; i++) {
+    sample(i) = *itsInHolders[i]->getBuffer();
+  }
 
+  // the weights are calculated in WH_AWE
   if (getOutputs() > 0) {
 
-//     DH_SampleC::BufferType* bufin  = itsInHolders[0]->getBuffer();
-//     const DH_Weight::BufferType* weight = itsWeight.getBuffer();
-//     DH_SampleC::BufferType* bufout = itsOutHolders[0]->getBuffer();
+//     LoVec_dcomplex weight(itsWeight->getBuffer(), itsNrcu, duplicateData);
+// 	sample *= weight;
 
-//     // element wise multiply the input with the weights
-//     if (sample.size() == itsWeight.getBuffer()->size()) {
-//       sample = sample * *itsWeight.getBuffer();
-//      } else {
-//        cout << "Someone screwed up.. Sample size and weight size differ" << endl;
-//     }
-    // assign resulting snapshot to outHolders
-    for (int i = 0; i < 1; i++) {
-      // FIXME -- this is probably wrong - sample.data() is too large
-      // Try to prevent overflow by using only one iteration
-      //memcpy(itsOutHolders[i]->getBuffer(), sample.data(), 1);
-      memcpy(itsOutHolders[i]->getBuffer(), itsInHolders[i]->getBuffer(),sizeof(DH_SampleC::BufferType));
-    }
   }
 }
 
@@ -200,7 +150,7 @@ DataHolder* WH_BeamFormer::getInHolder (int channel)
   if (channel >= 0) {
     return itsInHolders[channel];
   } else {
-    return &itsWeight;
+//     return itsWeight;
   }
 }
 
