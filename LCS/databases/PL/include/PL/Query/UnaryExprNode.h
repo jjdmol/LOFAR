@@ -50,7 +50,7 @@ namespace LOFAR
 
         virtual ~UnaryExprNode();
 
-        virtual void print(std::ostream& os);
+        virtual void print(std::ostream& os) const;
 
       private:
 

@@ -47,7 +47,7 @@ namespace LOFAR
       {
       }
 
-      void BetweenExprNode::print(std::ostream& os)
+      void BetweenExprNode::print(std::ostream& os) const
       {
         os << "(" << itsValue << itsOperation 
            << itsLower << " AND " << itsUpper << ")";
@@ -65,7 +65,7 @@ namespace LOFAR
       {
       }
 
-      void InExprNode::print(std::ostream& os)
+      void InExprNode::print(std::ostream& os) const
       {
         os << "(" << itsLeft;
         if (!itsRight.empty()) {
@@ -93,7 +93,7 @@ namespace LOFAR
       {
       }
 
-      void LikeExprNode::print(std::ostream& os)
+      void LikeExprNode::print(std::ostream& os) const
       {
         ostringstream oss;
         oss << itsRight;

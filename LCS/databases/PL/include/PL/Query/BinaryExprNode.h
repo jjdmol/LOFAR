@@ -49,7 +49,7 @@ namespace LOFAR
 
         virtual ~BinaryExprNode();
 
-        virtual void print(std::ostream& os);
+        virtual void print(std::ostream& os) const;
 
       private:
 

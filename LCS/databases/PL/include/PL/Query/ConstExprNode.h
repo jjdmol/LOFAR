@@ -45,13 +45,21 @@ namespace LOFAR
 
       //@{
 
+      class NullExprNode : public ExprNode
+      {
+      public:
+        NullExprNode();
+        virtual ~NullExprNode();
+        virtual void print(std::ostream&) const;
+      };
+      
       // Expression node class for an int.
       class IntExprNode : public ExprNode
       {
       public:
         IntExprNode(int i);
         virtual ~IntExprNode();
-        virtual void print(std::ostream& os);
+        virtual void print(std::ostream& os) const;
       private:
         const int itsOperand;
       };
@@ -62,7 +70,7 @@ namespace LOFAR
       public:
         DoubleExprNode(double d);
         virtual ~DoubleExprNode();
-        virtual void print(std::ostream& os);
+        virtual void print(std::ostream& os) const;
       private:
         const double itsOperand;
       };
@@ -72,9 +80,8 @@ namespace LOFAR
       {
       public:
         StringExprNode(const std::string& s);
-//         StringExprNode(const char* const cp);
         virtual ~StringExprNode();
-        virtual void print(std::ostream& os);
+        virtual void print(std::ostream& os) const;
       private:
         const std::string itsOperand;
       };

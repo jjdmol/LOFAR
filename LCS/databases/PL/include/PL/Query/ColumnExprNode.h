@@ -42,15 +42,17 @@ namespace LOFAR
       public:
 
         // Construct a column expression node.
-        ColumnExprNode(const std::string& col);
+        ColumnExprNode(const std::string& column,
+                       const std::string& constraint = "");
 
         virtual ~ColumnExprNode();
 
-        virtual void print(std::ostream& os);
+        virtual void print(std::ostream& os) const;
 
       private:
 
         std::string itsColumn;
+        std::string itsConstraint;
 
       };
 

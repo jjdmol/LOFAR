@@ -40,7 +40,7 @@ namespace LOFAR
       {
       }
 
-      void UnaryExprNode::print(std::ostream& os) 
+      void UnaryExprNode::print(std::ostream& os) const
       {
         os << "(" << itsOperation << itsOperand << ")";
       }

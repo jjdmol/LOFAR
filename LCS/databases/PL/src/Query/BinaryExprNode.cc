@@ -41,7 +41,7 @@ namespace LOFAR
       {
       }
 
-      void BinaryExprNode::print(std::ostream& os) 
+      void BinaryExprNode::print(std::ostream& os) const
       {
         os << "(" << itsLeft << itsOperation << itsRight << ")"; 
       }

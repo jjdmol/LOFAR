@@ -59,7 +59,7 @@ namespace LOFAR
 
         virtual ~BetweenExprNode();
 
-        virtual void print(std::ostream& os);
+        virtual void print(std::ostream& os) const;
 
       private:
 
@@ -91,7 +91,7 @@ namespace LOFAR
 
         virtual ~InExprNode();
 
-        virtual void print(std::ostream& os);
+        virtual void print(std::ostream& os) const;
  
      private:
  
@@ -139,7 +139,7 @@ namespace LOFAR
 
         virtual ~LikeExprNode();
         
-        virtual void print(std::ostream& os);
+        virtual void print(std::ostream& os) const;
 
      private:
  
