@@ -1,15 +1,20 @@
 MEQ in general:
 
+  * reconsider order or events in execute(): should cache be checked
+    only after node_state and rider have been processed? Note that for
+    repeated requests, this step is skipped, regardless. 
+
   * Specify child labels in node constructor; check them in init().
     Process named children properly.
   
   * Delete.All.Nodes command
   
-  * Document the two types of node_state lookups
-  
-  * Document pollChildren()
-  
   * Persistent nodes
+  
+        + Document the two types of node_state lookups
+        + Document pollChildren()
+        12/12/03
+  
         + re-work execute(). Make it possible to send up "empty" (command or
           state-only) requests.  
         + cache failed Results too (along with result_code and such)
@@ -34,23 +39,30 @@ MEQ in general:
 
 Result:
 
-  * Check for USE_THREADS when playing with mutexes
+  * Check for USE_THREADS when playing with mutexes (or improve the definition
+    of mutexes for when not using threads)
 
 Spigot:
 
   * Allow string specification for correlations
   
   * In deliver, just stick the result in the cache and let the caching code
-    take over.
+    take care of everything else. 
 
 Parm:
 
-  * Figure out how to specify default values
+  * Figure out how to specify default values (with, e.g., an infinite domain)
 
 Request: 
 
+
+  * Figure out why state_test() (meqtest.g) causes Requests to be fail to
+    unpack upon the first invocation. Possibly related to problem below.
+    See details in report 1 below.
+    
   * when Jan supplied an illegal request (wrong fields, unmatched IDs), the 
     error message was not exactly descriptive
+
 
 Vells:
 
@@ -72,10 +84,6 @@ General:
     processing child specs.
     
   * Ditto for zero-length arrays ('[]'), i.e., uninitialized domain, etc.
-
-  * Figure out why state_test() (meqtest.g) causes Requests to be fail to
-    unpack upon the first invocation. Possibly related to problem below.
-    See report 1 below.
     
   * Figure out why the hell it freezes on a single-CPU machine sometimes. A
     race condition somewhere? NB: a sure way to do it (on zeppelin) seems to
