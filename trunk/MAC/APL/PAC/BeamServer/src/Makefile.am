@@ -16,23 +16,15 @@ SUFFIXES = .ph
 BUILT_SOURCES = \
 	log4cplus.properties \
 	ABS_Protocol.ph \
-	abs.ns \
-	abs.top \
-	pac.ns \
-	pac.top \
 	beamserver.conf \
 	BeamServerPorts.conf \
 	BeamServer.conf
 
 EXTRA_DIST = \
-	ABS_Protocol.ph \
-	abs.ns \
-	abs.top
+	ABS_Protocol.ph
 
 sysconf_DATA = \
 	log4cplus.properties \
-	pac.ns \
-	pac.top \
 	beamserver.conf \
 	BeamServerPorts.conf \
 	BeamServer.conf
