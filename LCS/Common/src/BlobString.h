@@ -32,6 +32,9 @@
 class BlobString
 {
 public:
+  // Create a buffer as a char* or string<uchar> (string is default).
+  explicit BlobString (bool useString=true, size_t capacity=0);
+
   // Create a data buffer with the given size.
   // The buffer is a char* or a string<uchar> depending on the allocator
   // object.
@@ -63,7 +66,10 @@ public:
 
   // Get the data as a string of uchar.
   // It throws an exception if not allocated that way.
+  // <group>
+  std::basic_string<uchar>& getString();
   const std::basic_string<uchar>& getString() const;
+  // </group>
 
 private:
   // Forbid copy constructor and assignment.
@@ -79,6 +85,12 @@ private:
   void*                    itsChars;
   std::basic_string<uchar> itsString;
 };
+
+
+inline const std::basic_string<uchar>& BlobString::getString() const
+{
+  return const_cast<BlobString*>(this)->getString();
+}
 
 
 #endif
