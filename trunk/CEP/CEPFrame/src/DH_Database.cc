@@ -27,9 +27,6 @@
 #include <Common/lofar_iostream.h>
 
 bool DH_Database::StoreInDatabase (int, int tag, char * buf, int size) {
-
-  cout << ">>> DH_Database: StoreInDatabase () called." << endl; 
-
   PO_DH_Database po_dh_db;
 
   po_dh_db.setMessageTag (tag);
@@ -38,7 +35,9 @@ bool DH_Database::StoreInDatabase (int, int tag, char * buf, int size) {
   po_dh_db.setReservedData3 (3333);
   po_dh_db.setReservedData4 (4444);
 
-  po_dh_db.setByteStringLength (getDataPacketSize ());
+  //  po_dh_db.setByteStringLength (getDataPacketSize ());
+  po_dh_db.setByteStringLength (size);
+
   po_dh_db.CopyToByteString (buf, size);
 
   po_dh_db.setTimeStamp (5555);
@@ -57,9 +56,6 @@ bool DH_Database::StoreInDatabase (int, int tag, char * buf, int size) {
 
 
 bool DH_Database::RetrieveFromDatabase (int, int tag, char * buf, int size) { 
-
-  cout << "<<< DH_Database: RetrieveFromDatabase () called." << endl; 
-
   PO_DH_Database po_dh_db;
 
   po_dh_db.setMessageTag (tag);
