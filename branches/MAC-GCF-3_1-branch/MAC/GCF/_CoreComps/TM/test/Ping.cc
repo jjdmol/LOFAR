@@ -70,7 +70,7 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*port*/)
       // start ping_timer
       // - after 1 second
       // - every 2 seconds
-      ping_timer = client.setTimer(1.0, 2.0);
+      ping_timer = client.setTimer(1.0, 0.5);
 
       TRAN(Ping::connected);
       break;

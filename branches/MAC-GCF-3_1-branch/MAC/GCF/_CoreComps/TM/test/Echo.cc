@@ -33,6 +33,7 @@ Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 
   // initialize the port
   server.init(*this, "server", GCFPortInterface::SPP, ECHO_PROTOCOL);
+  spidDriver.init(*this, "spid", GCFPortInterface::SPP, 0, true);
 }
 
 GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
@@ -45,20 +46,27 @@ GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
       break;
 
     case F_ENTRY:
-      server.open();
+    case F_TIMER:
+      if (!server.isConnected())
+        server.open();
+      if (!spidDriver.isConnected())
+        spidDriver.open();
       break;
 
     case F_CONNECTED:
-      TRAN(Echo::connected);
+      if (server.isConnected() && spidDriver.isConnected())
+      {
+        TRAN(Echo::connected);
+      }
       break;
 
     case F_DISCONNECTED:
-      server.setTimer(1.0); // try again after 1 second
+      if (!server.isConnected())
+        server.setTimer(1.0); // try again after 1 second
+      else
+        spidDriver.setTimer(1.0);
       break;
 
-    case F_TIMER:
-      server.open(); // try again
-      break;
 
     default:
       status = GCFEvent::NOT_HANDLED;
@@ -68,7 +76,7 @@ GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
-GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -81,9 +89,13 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 
     case ECHO_PING:
     {
-
       EchoPingEvent ping(e);
-      
+      // for instance these 3 lines can force an interrupt on the parallele port if
+      // the pin 9 and 10 are connected together. The interrupt can be seen by means of
+      // the F_DATAIN signal (see below)
+      EchoClockEvent c;
+      c.clockpulse = 0xFF;
+      //spidDriver.send(c);
       cout << "PING received (seqnr=" << ping.seqnr << ")" << endl;
       
       timeval echo_time;
@@ -98,7 +110,19 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       cout << "ECHO sent" << endl;
       break;
     }
-
+    
+    case F_DATAIN:
+    {
+      cout << "Clock pulse: ";
+      // always the recv has to be invoked. Otherwise this F_DATAIN keeps comming 
+      // on each select
+      char pulse[4096]; // size never mind
+      p.recv(pulse, 4096); // will always return 1 if an interrupt was occured and 0 if not
+      pulse[1] = 0; // if interrupt occured the first char is filled with a 'p' by the driver
+      cout << pulse << endl;
+      break;
+    }
+      
     default:
       status = GCFEvent::NOT_HANDLED;
       break;

@@ -1,6 +1,10 @@
-check_PROGRAMS 		= echoapp ping
+check_PROGRAMS 		= echoapp ping clocksim spidreset
 
 TESTS			= #echoapp ping
+
+clocksim_SOURCES = ClockSim.c
+
+spidreset_SOURCES = SPIDreset.c
 
 echoapp_SOURCES 		= Echo.cc Echo_Protocol.cc
 echoapp_LDADD		= ../src/libtm.la \
