@@ -1,4 +1,4 @@
-//#  StrategyImpl.cc:  A base class for all calibration strategies
+//#  SC_Simple.h: A simple calibration strategy
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,26 +20,47 @@
 //#
 //#  $Id$
 
-#include <lofar_config.h>
+#ifndef BBS3_SC_SIMPLE_H
+#define BBS3_SC_SIMPLE_H
 
-#include <BBS3/StrategyImpl.h>
-#include <Common/LofarLogger.h>
+
+//# Includes
+#include <BBS3/StrategyController.h>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
 
-StrategyImpl::StrategyImpl()
-{}
+//# Forward Declarations
+class KeyValueMap;
 
-StrategyImpl::~StrategyImpl()
-{}
-
-bool StrategyImpl::useParms(const vector<string>&,
-			    const vector<double>&,
-			    const vector<int>&)
+class SC_Simple : public StrategyController
 {
-  LOG_WARN("This strategy does not support the useParms() method");
-  return false;
-}
+public:
+  SC_Simple(int id, DH_Solution* inDH, DH_WOPrediff* woPD, 
+	    DH_WOSolve* woSolve, const KeyValueMap& args);
+
+  virtual ~SC_Simple();
+
+  /// Execute the strategy
+  virtual bool execute();
+    
+  /// Get strategy type
+  virtual string getType() const;
+
+ private:
+  SC_Simple(const SC_Simple&);
+  SC_Simple& operator=(const SC_Simple&);
+
+  void readSolution();
+
+  bool itsFirstCall;
+  int  itsWOID;
+};
+
+inline string SC_Simple::getType() const
+{ return "Simple"; }
 
 } // namespace LOFAR
+
+#endif

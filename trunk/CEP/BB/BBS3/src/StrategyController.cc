@@ -1,4 +1,4 @@
-//#  Quality.h: 
+//#  StrategyController.cc:  A base class for all calibration strategy controllers
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,47 +20,30 @@
 //#
 //#  $Id$
 
-#ifndef BBS3_QUALITY_H
-#define BBS3_QUALITY_H
+#include <lofar_config.h>
 
-//# Includes
-#include <Common/lofar_iostream.h>
+#include <BBS3/StrategyController.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
 
-//# Forward Declarations
-
-
-
-// Description of class.
-class Quality {
-    
- public:
-  Quality();
-  ~Quality();
-  
-  //! reset all attributed to zero
-  void init();
-
-  //  ostream& operator<<(ostream& os, const Quality& solution);
-
-  void show(ostream& os) const;
-  
-  bool   itsSolFlag;
-  int    itsRank;
-  double itsFit;
-  double itsMu;
-  double itsStddev;
-  double itsChi;
-};
-
-inline ostream& operator<< (ostream& os, const Quality& qual) {
-  qual.show(os); 
-  return os; 
+StrategyController::StrategyController(int id,
+				       DH_Solution* inDH, 
+				       DH_WOPrediff* outWOPD, 
+				       DH_WOSolve* outWOSolve)
+  : itsInDH   (inDH),
+    itsWOPD   (outWOPD),
+    itsWOSolve(outWOSolve),
+    itsID     (id)
+{
+  LOG_TRACE_FLOW("StrategyController constructor");
 }
 
+StrategyController::~StrategyController()
+{
+  LOG_TRACE_FLOW("StrategyController destructor");
+}
+
+
 } // namespace LOFAR
-
-#endif
-

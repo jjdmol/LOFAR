@@ -1,4 +1,4 @@
-//  WH_Evaluate.h: This class implements the controller of the blackboard.
+//  WH_Control.h: This class implements the controller of the blackboard.
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,38 +23,45 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef PSS3_WH_EVALUATE_H
-#define PSS3_WH_EVALUATE_H
+#ifndef BBS3_WH_CONTROL_H
+#define BBS3_WH_CONTROL_H
 
 #include <Common/lofar_vector.h>
 #include <tinyCEP/WorkHolder.h>
 #include <Common/KeyValueMap.h>
 
+#include <Common/lofar_list.h>
 namespace LOFAR
 {
+
+class StrategyController;
 
 /**
  This class implements the controller of the blackboard
 */
 
-class WH_Evaluate: public LOFAR::WorkHolder
+class WH_Control: public LOFAR::WorkHolder
 {
+
 public:
   /// Construct the work holder and give it a name.
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  explicit WH_Evaluate (const string& name,
+  explicit WH_Control (const string& name,
 			const KeyValueMap& args);
 
-  virtual ~WH_Evaluate();
+  virtual ~WH_Control();
 
   /// Make a fresh copy of the WH object.
-  virtual WH_Evaluate* make (const string& name);
+  virtual WH_Control* make (const string& name);
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, 
 				const KeyValueMap& args);
+
+  /// Preprocess
+  virtual void preprocess();
 
   /// Do a process step.
   virtual void process();
@@ -67,13 +74,10 @@ public:
 
 private:
   /// Forbid copy constructor.
-  WH_Evaluate (const WH_Evaluate&);
-
-  void readSolutions();
-  string createQuery(vector<int>& ) const;
+  WH_Control (const WH_Control&);
 
   /// Forbid assignment.
-  WH_Evaluate& operator= (const WH_Evaluate&);
+  WH_Control& operator= (const WH_Control&);
 
   int itsNrKS;        // number of KS available
   int itsCurrentRun;
@@ -86,6 +90,8 @@ private:
   static int theirNextWorkOrderID;
 
   KeyValueMap itsArgs;
+
+  list<StrategyController*> itsControllers;
 
 };
 

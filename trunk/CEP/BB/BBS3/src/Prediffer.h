@@ -116,7 +116,7 @@ public:
 			 bool isSolvable);
 
   // Get the equations for all selected baselines.
-  std::list<MeqResult> getEquations (const MeqRequest& request);
+  std::list<MeqResult> getEquations ();
 
   // Save residual data in the itsResColName column.
   // It does a predict for the sources to be peeled off and subtracts

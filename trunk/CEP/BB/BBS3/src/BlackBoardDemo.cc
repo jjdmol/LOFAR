@@ -32,11 +32,12 @@
 
 #include <CEPFrame/Step.h>
 #include <CEPFrame/WH_Empty.h>
-#include <CEPFrame/Profiler.h>
+#include <tinyCEP/Profiler.h>
 #include <TransportPL/TH_PL.h>
 #include <BBS3/BlackBoardDemo.h>
-#include <BBS3/WH_Evaluate.h>
-#include <BBS3/WH_PSS3.h>
+#include <BBS3/WH_Control.h>
+#include <BBS3/WH_Prediff.h>
+#include <BBS3/WH_Solve.h>
 #include TRANSPORTERINCLUDE
 
 namespace LOFAR
@@ -49,8 +50,8 @@ string i2string(int i) {
 }
 
 BlackBoardDemo::BlackBoardDemo()
-  : itsKSSteps(0),
-    itsNumberKS(0)
+  : itsPDSteps(0),
+    itsNumberPD(0)
 {
   LOG_TRACE_FLOW(">>>>>>>> BlackBoardDemo constructor <<<<<<<<<<");
 }
@@ -82,38 +83,34 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   topComposite.runOnNode(0,0);
   topComposite.setCurAppl(0);
 
-
-  // Get Knowledge Source properties
-  KeyValueMap ksParams = (const_cast<KeyValueMap&>(params))["KSparams"].getValueMap();
-
   // Get control properties
   KeyValueMap ctrlParams = (const_cast<KeyValueMap&>(params))["CTRLparams"].getValueMap();
 
-  int itsNumberKS = params.getInt("nrKS", 1);
+  int itsNumberPD = params.getInt("nrPrediffers", 1);
   string bbDBName = params.getString("BBDBname", "test");
 
   TH_PL::useDatabase(bbDBName); 
 
   // Create the controller WorkHolder and Step
-  WH_Evaluate controlWH("control", ctrlParams);
+  WH_Control controlWH("control", ctrlParams);
   Step controlStep(controlWH, "controlStep");
   controlStep.runOnNode(0,0);
   topComposite.addStep(controlStep);
 
-  // Create the Knowledge Sources
-  itsKSSteps = new Step*[itsNumberKS];
-  string ksID;
-  for (int ksNo=1; ksNo<=itsNumberKS; ksNo++)
+  // Create the Prediffers
+  itsPDSteps = new Step*[itsNumberPD];
+  string pdID;
+  for (int pdNo=1; pdNo<=itsNumberPD; pdNo++)
   { 
-    // Create the PSS3 Workholders and Steps
-    ksID = i2string(ksNo);
+    // Create the Workholders and Steps
+    pdID = i2string(pdNo);
 
-    WH_PSS3 ksWH("KS"+ksID, ksID, ksNo*10000, ksParams);
+    WH_Prediff predWH("Pred"+pdID, pdNo);
 
-    int index = ksNo - 1;
-    itsKSSteps[index] = new Step(ksWH, "knowledgeSource"+ksID);
-    itsKSSteps[index]->runOnNode(ksNo,0);
-    topComposite.addStep(itsKSSteps[index]);
+    int index = pdNo - 1;
+    itsPDSteps[index] = new Step(predWH, "prediffer"+pdID);
+    itsPDSteps[index]->runOnNode(pdNo,0);
+    topComposite.addStep(itsPDSteps[index]);
   }
 
   // Share input and output DataHolders of Controller
@@ -124,15 +121,15 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   controlStep.connect(&controlStep, 0, 0, 1, TH_PL("BBWorkOrders"));
   controlStep.connect(&controlStep, 1, 1, 1, TH_PL("BBSolutions"));
 
-  for (int index = 0; index < itsNumberKS; index++)
+  for (int index = 0; index < itsNumberPD; index++)
   {
     // Share input and output DataHolders of Knowledge Sources
-    itsKSSteps[index]->setInBufferingProperties(0, true, false);
-    itsKSSteps[index]->setInBufferingProperties(1, true, false);
+    itsPDSteps[index]->setInBufferingProperties(0, true, false);
+    itsPDSteps[index]->setInBufferingProperties(1, true, false);
 
     // Create the connections to the database.
-    itsKSSteps[index]->connect(itsKSSteps[index], 0, 0, 1, TH_PL("BBWorkOrders"));
-    itsKSSteps[index]->connect(itsKSSteps[index], 1, 1, 1, TH_PL("BBSolutions"));
+    itsPDSteps[index]->connect(itsPDSteps[index], 0, 0, 1, TH_PL("BBWorkOrders"));
+    itsPDSteps[index]->connect(itsPDSteps[index], 1, 1, 1, TH_PL("BBSolutions"));
   }
 
 }  
@@ -170,10 +167,10 @@ void BlackBoardDemo::quit() {
 
 void BlackBoardDemo::undefine() {
   LOG_TRACE_FLOW("Enter BlackBoardDemo::undefine");
-  if (itsKSSteps) 
-    for (int iStep = 0; iStep < itsNumberKS; iStep++) 
-      delete itsKSSteps[iStep];
-  delete [] itsKSSteps;
+  if (itsPDSteps) 
+    for (int iStep = 0; iStep < itsNumberPD; iStep++) 
+      delete itsPDSteps[iStep];
+  delete [] itsPDSteps;
 
   LOG_TRACE_FLOW("Leaving BlackBoardDemo::undefine");
 }
