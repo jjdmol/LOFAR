@@ -75,7 +75,7 @@ vector<MeqStation> fillStations (const MeasurementSet& ms)
     MeqParmSingle* px = new MeqParmSingle ("AntPosX_"+String(str), antpos(0));
     MeqParmSingle* py = new MeqParmSingle ("AntPosY_"+String(str), antpos(1));
     MeqParmSingle* pz = new MeqParmSingle ("AntPosZ_"+String(str), antpos(2));
-    stations.push_back (MeqStation(px, py, pz));
+    stations.push_back (MeqStation(px, py, pz, mssubc.name()(i)));
   }
   return stations;
 }
@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
       ROScalarColumn<double> timcol(tab, "TIME");
       Vector<double> dt = timcol.getColumn() - timcol(0);
       Matrix<double> uvws = uvwcol.getColumn();
-      uvwpolc.calcCoeff (dt, uvws);
+      uvwpolc.calcCoeff (dt, uvws, false);
       double step = dt(1) - dt(0);
       MeqDomain domain (dt(0)-step/2, dt(dt.nelements()-1)+step/2, -1., 1.);
       MeqRequest request(domain, dt.nelements(), 1);
@@ -166,9 +166,7 @@ int main(int argc, char* argv[])
       v = uvws(IPosition(2,1,0), IPosition(2,1,dt.nelements()-1));
       Matrix<double> v1 = v.reform(IPosition(2,dt.nelements(),1));
       w = uvws(IPosition(2,2,0), IPosition(2,2,dt.nelements()-1));
-
       Matrix<double> w1 = w.reform(IPosition(2,dt.nelements(),1));
-      cout << u << endl;
       diffu.push_back
 	(max(abs((u1 - uvwpolc.getU().getValue().getDoubleMatrix()) / u1)));
       diffv.push_back
