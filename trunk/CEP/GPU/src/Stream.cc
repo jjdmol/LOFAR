@@ -25,6 +25,7 @@
 
 int				gNrStreamsInUse;
 streamCoord 	gStreamStack[STREAM_STACK_SIZE];
+int				maxWidth, maxHeight;
 
 //
 // Constructor
@@ -45,8 +46,6 @@ Stream::Stream(const int			width,
 	glTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, 34955, itsWidth, itsHeight, 0, itsType, GL_FLOAT, NULL);
 
 	checkGL();										// check for errors
-
-	// NOTE GL_RGBA SHOULD DEPEND ON TYPE!!!
 }
 	
 Stream::~Stream()
@@ -59,8 +58,6 @@ void Stream::writeData()
 	glTexSubImage2D(GL_TEXTURE_RECTANGLE_NV, 0, 0, 0, itsWidth, itsHeight, itsType, GL_FLOAT, itsBuffer);
 
 	checkGL();										// check for errors
-
-	// NOTE GL_RGBA SHOULD DEPEND ON TYPE!!!
 }
 
 void Stream::readData() {
@@ -69,8 +66,6 @@ void Stream::readData() {
 	glGetTexImage(GL_TEXTURE_RECTANGLE_NV, 0, itsType, GL_FLOAT, itsBuffer);
 
 	checkGL();										// check for errors
-
-	// NOTE GL_RGBA SHOULD DEPEND ON TYPE!!!
 }
 
 void Stream::readScreen() {
@@ -79,8 +74,6 @@ void Stream::readScreen() {
 	glReadPixels(0, 0, itsWidth, itsHeight, itsType, GL_FLOAT, itsBuffer);
 
 	checkGL();										// check for errors
-
-	// NOTE GL_RGBA SHOULD DEPEND ON TYPE!!!
 }
 
 void Stream::copyScreen() {
@@ -115,10 +108,14 @@ void Stream::use() {
 		gStreamStack[gNrStreamsInUse].top   = itsHeight - 0.5 + (2*halfPixel);
 	}
 	gNrStreamsInUse++;
+	maxWidth =  (itsWidth >  maxWidth)  ? itsWidth  : maxWidth;
+	maxHeight = (itsHeight > maxHeight) ? itsHeight : maxHeight;
 }
 
 void clearStreamStack() {
 	gNrStreamsInUse = 0;
+	maxWidth 		= 0;
+	maxHeight 		= 0;
 }
 
 int streamStackSize() {

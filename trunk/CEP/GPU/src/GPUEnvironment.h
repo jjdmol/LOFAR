@@ -51,13 +51,15 @@ public:
 	CGcontext	CgContext() 	{ return itsCGContext; };
 	int			WorkspaceSize()	{ return itsWorkspaceSize; };
 
-	void info();
+	void info(void) const;
 	CGprogram	compileProgram  (const int			programType,
 								 const std::string	fileName,
 								 const std::string	mainRoutine);
 	void useProgram				(const CGprogram	theProgram) const;
-	void executeFragmentTriangle(const int	width, const int	height);
-	void executeFragmentSquare  (const int	width, const int	height);
+	void executeFragmentTriangle(const int	width, const int	height) const;
+	void executeFragmentSquare  (const int	width, const int	height) const;
+	void executeFragmentVLine   (const int	hpos) const;
+	void executeFragmentHLine   (const int	vpos) const;
 
 private:
 	CGcontext		itsCGContext;
@@ -65,6 +67,8 @@ private:
 	CGprofile		itsFragmentProfile;
 	PixelBuffer		itsPixelBuffer;
 	int				itsWorkspaceSize;
+
+	CGenum	getProgramType	(const std::string	fileName) const;
 };
 
 void checkGL();
