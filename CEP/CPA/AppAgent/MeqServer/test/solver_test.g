@@ -1,22 +1,13 @@
-# use_suspend := T;
-# use_nostart  := T;
-# use_valgrind := T;
-# "--skin=helgrind --logfile=hg.meqserver";
-use_valgrind_opts := [ "",
-#  "--gdb-attach=yes",          # use either this...
-  "--logfile=vg.meqserver",       # ...or this, not both
-#  "--gdb-path=/home/oms/bin/valddd", 
-  ""];
-  
 if( any(argv == '-runtest' ) ) {
-  meq_path := '.'
+  root_path := './'
+  meq_path  := './'
+  app_path  := './'
 } else {
-  meq_path := 'meq'
+  root_path := ''
+  meq_path  := 'meq/'
+  app_path  := 'appagent/'
 }
   
-include spaste(meq_path,'/meqserver.g')
-include spaste(meq_path,'/meptable.g')
-
 default_debuglevels := [  MeqNode       =2,
                           MeqForest     =2,
                           MeqSink       =2,
@@ -24,9 +15,16 @@ default_debuglevels := [  MeqNode       =2,
                           MeqVisHandler =2,
                           MeqServer     =2,
                           meqserver     =1 ];
+                          
+include spaste(app_path,'/app_defaults.g')
+include spaste(root_path,'dmitypes.g')
+include spaste(root_path,'octopussy.g')
+include spaste(app_path,'/app_proxy.g')
+include spaste(meq_path,'/meqserver.g')
+include spaste(meq_path,'/meptable.g')
                       
 # inits a meqserver
-const mqsinit := function (verbose=3,debug=[=],gui=F)
+const mqsinit := function (verbose=default_verbosity,debug=[=],gui=use_gui)
 {
   global mqs;
   if( !is_record(mqs) )
@@ -46,7 +44,7 @@ const mqsinit := function (verbose=3,debug=[=],gui=F)
   }
 }
 
-const solver_test := function (stage=0,gui=F,debug=[=],verbose=1)
+const solver_test := function (stage=0,gui=use_gui,debug=[=],verbose=default_verbosity)
 {
   global mqs;
   mqsinit(debug=debug,verbose=verbose,gui=gui)
@@ -58,8 +56,8 @@ const solver_test := function (stage=0,gui=F,debug=[=],verbose=1)
   if( stage == 0 )
   {
     # use default record for parms
-    print mqs.meq('Create.Node',meq.parm('x',meq.polc(0),groups='Parm'));
-    print mqs.meq('Create.Node',meq.parm('y',meq.polc(0),groups='Parm'));
+    mqs.meq('Create.Node',meq.parm('x',meq.polc(0),groups='Parm'));
+    mqs.meq('Create.Node',meq.parm('y',meq.polc(0),groups='Parm'));
   }
   else if( stage == 1 )
   {
@@ -73,8 +71,8 @@ const solver_test := function (stage=0,gui=F,debug=[=],verbose=1)
     x.table_name := tablename;
     y := meq.parm('y',groups='Parm');
     y.table_name := tablename;
-    print mqs.meq('Create.Node',x);
-    print mqs.meq('Create.Node',y);
+    mqs.meq('Create.Node',x);
+    mqs.meq('Create.Node',y);
   }
   
   # stages 0 and 1: create forest
@@ -84,34 +82,34 @@ const solver_test := function (stage=0,gui=F,debug=[=],verbose=1)
     cc.c1 := cc.a1*x0 + cc.b1*y0;
     cc.c2 := cc.a2*x0 + cc.b2*y0;
     for( f in field_names(cc) )
-      print mqs.meq('Create.Node',meq.parm(f,array(as_double(cc[f]),1,1)));
-    print mqs.meq('Create.Node',meq.node('MeqMultiply','a1x',children="a1 x"));
-    print mqs.meq('Create.Node',meq.node('MeqMultiply','a2x',children="a2 x"));
-    print mqs.meq('Create.Node',meq.node('MeqMultiply','b1y',children="b1 y"));
-    print mqs.meq('Create.Node',meq.node('MeqMultiply','b2y',children="b2 y"));
-    print mqs.meq('Create.Node',meq.node('MeqAdd','lhs1',children="a1x b1y"));
-    print mqs.meq('Create.Node',meq.node('MeqAdd','lhs2',children="a2x b2y"));
-    print mqs.meq('Create.Node',meq.node('MeqCondeq','eq1',children="lhs1 c1"));
-    print mqs.meq('Create.Node',meq.node('MeqCondeq','eq2',children="lhs2 c2"));
+      mqs.meq('Create.Node',meq.parm(f,array(as_double(cc[f]),1,1)));
+    mqs.meq('Create.Node',meq.node('MeqMultiply','a1x',children="a1 x"));
+    mqs.meq('Create.Node',meq.node('MeqMultiply','a2x',children="a2 x"));
+    mqs.meq('Create.Node',meq.node('MeqMultiply','b1y',children="b1 y"));
+    mqs.meq('Create.Node',meq.node('MeqMultiply','b2y',children="b2 y"));
+    mqs.meq('Create.Node',meq.node('MeqAdd','lhs1',children="a1x b1y"));
+    mqs.meq('Create.Node',meq.node('MeqAdd','lhs2',children="a2x b2y"));
+    mqs.meq('Create.Node',meq.node('MeqCondeq','eq1',children="lhs1 c1"));
+    mqs.meq('Create.Node',meq.node('MeqCondeq','eq2',children="lhs2 c2"));
     # create solver
     global rec;
     rec := meq.node('MeqSolver','solver',children="eq1 eq2");
     rec.default := [ num_iter = 3 ];
     rec.parm_group := hiid('Parm');
     rec.solvable := meq.solvable_list("x y");
-    print mqs.meq('Create.Node',rec);
+    mqs.meq('Create.Node',rec);
 
     # resolve children
-    print mqs.meq('Resolve.Children',[name='solver']);
+    mqs.meq('Resolve.Children',[name='solver']);
 
 #    for( n in "eq1 lhs1 c1 a1x x" )
     for( n in "x eq1 eq2" )
-      print mqs.meq('Node.Publish.Results',[name=n]);
+      mqs.meq('Node.Publish.Results',[name=n]);
 
     # execute request on x and y parms to load polcs and get original values
     global cells,request,res;
     cells := meq.cells(meq.domain(0,1,0,1),num_freq=4,num_time=4);
-    request := meq.request(cells,calc_deriv=0);
+    request := meq.request(cells,'',calc_deriv=0);
     res := mqs.meq('Node.Execute',[name='x',request=request],T);
     res := mqs.meq('Node.Execute',[name='y',request=request],T);
    
@@ -120,9 +118,9 @@ const solver_test := function (stage=0,gui=F,debug=[=],verbose=1)
   else # stage 2: simply load the forest
   {
     res := mqs.meq('Load.Forest',[file_name='solver_test.forest.save']);
-    print mqs.meq('Node.Clear.Cache',[name='solver',recursive=T]);
-    print mqs.meq('Node.Publish.Results',[name='x']);
-    print mqs.meq('Node.Publish.Results',[name='y']);
+    mqs.meq('Node.Clear.Cache',[name='solver',recursive=T]);
+    mqs.meq('Node.Publish.Results',[name='x']);
+    mqs.meq('Node.Publish.Results',[name='y']);
   }
   global stx0,stx1,sty0,sty1,xs,ys;
   

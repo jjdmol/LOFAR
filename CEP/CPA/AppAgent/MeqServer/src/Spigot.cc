@@ -66,8 +66,7 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
     // pointers
     void *coldata = const_cast<void*>(tile.column(icolumn));
     int nplanes = colshape.size() == 3 ? colshape[0] : 1;
-    Result::Ref resref;
-    Result & next_res = resref <<= new Result(nplanes,true);
+    Result & result = next_res <<= new Result(nplanes,true);
     // get array 
     if( coltype == Tpdouble )
     {
@@ -75,13 +74,13 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
       {
         LoCube_double cube(static_cast<double*>(coldata),colshape,blitz::neverDeleteData);
         for( int i=0; i<nplanes; i++ )
-          next_res.setNewVellSet(i).setReal(colshape[1],colshape[2]) = 
+          result.setNewVellSet(i).setReal(colshape[1],colshape[2]) = 
               cube(i,LoRange::all(),LoRange::all());
       }
       else if( colshape.size() == 2 )
       {
         LoMat_double mat(static_cast<double*>(coldata),colshape,blitz::neverDeleteData);
-        next_res.setNewVellSet(0).setReal(colshape[0],colshape[1]) = mat;
+        result.setNewVellSet(0).setReal(colshape[0],colshape[1]) = mat;
       }
       else
         Throw("bad input column shape");
@@ -92,13 +91,13 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
       {
         LoCube_fcomplex cube(static_cast<fcomplex*>(coldata),colshape,blitz::neverDeleteData);
         for( int i=0; i<nplanes; i++ )
-          next_res.setNewVellSet(i).setComplex(colshape[1],colshape[2]) = 
+          result.setNewVellSet(i).setComplex(colshape[1],colshape[2]) = 
               blitz::cast<dcomplex>(cube(i,LoRange::all(),LoRange::all()));
       }
       else if( colshape.size() == 2 )
       {
         LoMat_fcomplex mat(static_cast<fcomplex*>(coldata),colshape,blitz::neverDeleteData);
-        next_res.setNewVellSet(0).setComplex(colshape[0],colshape[1]) = 
+        result.setNewVellSet(0).setComplex(colshape[0],colshape[1]) = 
             blitz::cast<dcomplex>(mat);
       }
       else
@@ -116,11 +115,11 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
       {
         // get flag columns
         const LoCube_int & flags   = tile.flags();
-        cout<<"Tile flags: "<<flags<<endl;
+//        cout<<"Tile flags: "<<flags<<endl;
         const LoVec_int  & rowflag = tile.rowflag();
         for( int i=0; i<nplanes; i++ )
         {
-          VellSet::FlagArrayType & fl = next_res.vellSetWr(i).
+          VellSet::FlagArrayType & fl = result.vellSetWr(i).
                   initOptCol<VellSet::FLAGS>();
           // apply flags with mask
           if( flag_mask )
@@ -139,7 +138,7 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
     }
       
     wstate()[FNext].replace() = next_rqid = rqid;
-    next_res.setCells(req.cells());
+    result.setCells(req.cells());
 // 02/04/04: commented out, since it screws up (somewhat) the RES_UPDATED flag
 // going back to old scheme
 //    // cache the result for this request. This will be picked up and 

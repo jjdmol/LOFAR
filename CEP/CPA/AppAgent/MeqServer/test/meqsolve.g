@@ -1,14 +1,3 @@
-# use_suspend  := T;
-# use_gui := T;
-# use_nostart  := T;
-# use_valgrind := T;
- use_valgrind_opts := [ "",
-#  "--gdb-attach=yes",          # use either this...
-  "--logfile=vg.meqserver",       # ...or this, not both
-# "--skin=helgrind --logfile=hg.meqserver";
-#  "--gdb-path=/home/oms/bin/valddd", 
-  ""];
-  
 include 'mqsinit_test.g'
 include 'table.g'
 include 'measures.g'
@@ -22,15 +11,13 @@ include 'quanta.g'
 #   'lmn','n':          LMN coordinates
 const create_source_subtrees := function (sti,ra,dec,ra0,dec0)
 {
-  mqs.createnode(meq.parm('stokes_i',sti));
+  mqs.createnode(meq.parm('stokes_i',sti,groups=hiid("a")));
   mqs.createnode(meq.node('MeqLMN','lmn',children=[
                   ra_0  =meq.parm('ra0',ra0),
                   dec_0 =meq.parm('dec0',dec0),
-                  ra    =meq.parm('ra',ra),
-                  dec   =meq.parm('dec',dec)    ]));
-  rec := meq.node('MeqSelector','n',children="lmn");
-  rec.index := 3;
-  mqs.createnode(rec);
+                  ra    =meq.parm('ra',ra,groups=hiid("a")),
+                  dec   =meq.parm('dec',dec,groups=hiid("a")) ]));
+  mqs.createnode(meq.node('MeqSelector','n',[index=3],children="lmn"));
 }
 
 # creates fully-qualified node name, by pasting suffixes after a dot
@@ -42,16 +29,15 @@ const fq_name := function (name,...)
 const sta_dft_tree := function (st,x,y,z)
 {
   # dft-sN node
-  rec := meq.node('MeqStatPointSourceDFT',fq_name('dft',st),children=[
-          lmn = 'lmn',
-          uvw = meq.node('MeqUVW',fq_name('uvw',st),children=[
-                           x = meq.parm(fq_name('x',st),x),
-                           y = meq.parm(fq_name('y',st),y),
-                           z = meq.parm(fq_name('z',st),z),
-                           ra = 'ra0',dec = 'dec0',
-                           x_0='x0',y_0='y0',z_0='z0' ]) ]);
-  rec.link_or_create := T;                          
-  return rec;
+  return meq.node('MeqStatPointSourceDFT',fq_name('dft',st),[link_or_create=T],
+           children=[
+              lmn = 'lmn',
+              uvw = meq.node('MeqUVW',fq_name('uvw',st),children=[
+                               x = meq.parm(fq_name('x',st),x),
+                               y = meq.parm(fq_name('y',st),y),
+                               z = meq.parm(fq_name('z',st),z),
+                               ra = 'ra0',dec = 'dec0',
+                               x_0='x0',y_0='y0',z_0='z0' ]) ]);
 }
 
 const ifr_predict_tree := function (st1,st2)
@@ -59,13 +45,119 @@ const ifr_predict_tree := function (st1,st2)
   global ms_antpos;
   pos1 := ms_antpos[st1];
   pos2 := ms_antpos[st2];
-  rec := meq.node('MeqMultiply',fq_name('predict',st1,st2),children=[
-      a = 'stokes_i',
-      b = meq.node('MeqPointSourceDFT',fq_name('dft',st1,st2),children=[
-            st_dft_1 = sta_dft_tree(st1,pos1.x,pos1.y,pos1.z),
-            st_dft_2 = sta_dft_tree(st2,pos2.x,pos2.y,pos2.z),
-            n = 'n' ] ) ]);
-  return rec;
+  return meq.node('MeqMultiply',fq_name('predict',st1,st2),children=meq.list(
+      'stokes_i',
+      meq.node('MeqPointSourceDFT',fq_name('dft',st1,st2),children=[
+               st_dft_1 = sta_dft_tree(st1,pos1.x,pos1.y,pos1.z),
+               st_dft_2 = sta_dft_tree(st2,pos2.x,pos2.y,pos2.z),
+               n = 'n' ] ) ));
+}
+
+
+const make_shared_nodes := function (sti=1,dra=0,ddec=0)
+{
+  global ms_phasedir;
+  ra0  := ms_phasedir[1];  # phase center
+  dec0 := ms_phasedir[2];
+  # setup source parameters and subtrees
+  sti  := 1;
+  ra   := ra0 + dra;
+  dec  := dec0 + ddec;
+  create_source_subtrees(sti,ra,dec,ra0,dec0);
+  # setup zero position
+  global ms_antpos;
+  names := "x0 y0 z0";
+  for( i in 1:3 )
+    mqs.createnode(meq.node('MeqConstant',names[i],[value=ms_antpos[1][i]]));
+}
+
+const make_predict_tree := function (st1,st2,msname='test.ms')
+{
+  global ms_phasedir,ms_antpos;
+
+  sinkname := fq_name('sink',st1,st2);
+  
+  # create predict sub-tree
+  pred_tree := ifr_predict_tree(st1,st2);
+  
+  # create a sink
+  mqs.createnode(meq.node('MeqSink',sinkname,
+                         [ output_col      = 'PREDICT',
+                           station_1_index = st1,
+                           station_2_index = st2,
+                           corr_index      = [1] ],
+                         children=meq.list(pred_tree)));
+  
+  return sinkname;
+}
+
+const make_subtract_tree := function (st1,st2,msname='test.ms')
+{
+  global ms_phasedir,ms_antpos;
+
+  sinkname := fq_name('sink',st1,st2);
+  spigname := fq_name('spigot',st1,st2);
+  mqs.createnode(meq.node('MeqSpigot',spigname,[ 
+            station_1_index=st1,
+            station_2_index=st2,
+            input_column='DATA']));
+  
+  
+  # create a sink
+  mqs.createnode(
+    meq.node('MeqSink',sinkname,
+                         [ output_col      = 'PREDICT',
+                           station_1_index = st1,
+                           station_2_index = st2,
+                           corr_index      = [1] ],
+                         children=meq.list(
+      meq.node('MeqSubtract',fq_name('sub',st1,st2),children=meq.list(
+        meq.node('MeqSelector',fq_name('xx',st1,st2),[index=1],children=spigname),
+        ifr_predict_tree(st1,st2)
+      ))
+    ))
+  );
+  return sinkname;
+}
+
+
+const make_solve_tree := function (st1,st2,msname='test.ms')
+{
+  global ms_phasedir,ms_antpos;
+
+  sinkname := fq_name('sink',st1,st2);
+  predtree := ifr_predict_tree(st1,st2);
+  predname := predtree.name;
+  spigname := fq_name('spigot',st1,st2);
+  mqs.createnode(meq.node('MeqSpigot',spigname,[ 
+            station_1_index=st1,
+            station_2_index=st2,
+            input_column='DATA']));
+  
+  # create condeq tree (solver will plug into this)
+  mqs.createnode(
+    meq.node('MeqCondeq',fq_name('ce',st1,st2),children=meq.list(
+      predname,
+      meq.node('MeqSelector',fq_name('xx',st1,st2),[index=1],children=spigname)
+    ))
+  );
+  # create subtract sub-tree
+  mqs.createnode(meq.node('MeqSubtract',fq_name('sub',st1,st2),
+                    children=[fq_name('xx',st1,st2),predname]));
+  
+  
+  # create root tree (plugs into solver & subtract)     
+  mqs.createnode(
+    meq.node('MeqSink',sinkname,[ output_col      = 'PREDICT',
+                                  station_1_index = st1,
+                                  station_2_index = st2,
+                                  corr_index      = [1] ],children=meq.list(
+      meq.node('MeqReqSeq',fq_name('seq',st1,st2),[result_index=2],
+        children=['solver',fq_name('sub',st1,st2)])
+   ))
+ );
+
+  return sinkname;
 }
 
 
@@ -103,52 +195,13 @@ const get_ms_info := function (msname='test.ms')
   return T;
 }
 
-const make_shared_nodes := function (sti=1,dra=0,ddec=0)
-{
-  global ms_phasedir;
-  ra0  := ms_phasedir[1];  # phase center
-  dec0 := ms_phasedir[2];
-  # setup source parameters and subtrees
-  sti  := 1;
-  ra   := ra0 + dra;
-  dec  := dec0 + ddec;
-  create_source_subtrees(sti,ra,dec,ra0,dec0);
-  # setup zero position
-  global ms_antpos;
-  names := "x0 y0 z0";
-  for( i in 1:3 )
-  {
-    rec := meq.node('MeqConstant',names[i]);
-    rec.value := ms_antpos[1][i];
-    mqs.createnode(rec);
-  }
-}
-
-const make_predict_tree := function (st1,st2,msname='test.ms')
-{
-  global ms_phasedir,ms_antpos;
-
-  sinkname := fq_name('sink',st1,st2);
-  
-  # create predict sub-tree
-  pred_tree := ifr_predict_tree(st1,st2);
-  
-  # create a sink
-  sinkrec := meq.node('MeqSink',sinkname,children=[a=pred_tree]);
-  sinkrec.output_col := 'PREDICT'; 
-  sinkrec.station_1_index := st1;
-  sinkrec.station_2_index := st2;
-  sinkrec.corr_index := [1];      # get first correlation only
-  print mqs.createnode(sinkrec);
-  
-  # resolve its children
-  print mqs.meq('Resolve.Children',[name=sinkname],F);
-  
-  return sinkname;
-}
-
-
-const predict_test := function (msname='test.ms',
+# subtract=T: subtract tree only
+# solve=T:    solve+subtract trees
+#   both false: predict tree only
+#
+# run=F: build trees only, run=T: run sinks
+const do_test := function (predict=F,subtract=F,solve=F,run=T,
+    msname='test.ms',
     outcol='PREDICTED_DATA',
     st1set=[1],st2set=[2,3,4],publish=T,
     verbose=default_verbosity,gui=use_gui)
@@ -181,27 +234,64 @@ const predict_test := function (msname='test.ms',
     print mqs;
     fail;
   }
-
+  
+  # create common nodes (source parms and such)
   make_shared_nodes();
   
+  # make a solver node (since it's only one)
+  if( solve )
+  {
+    condeqs := [];
+    for( st1 in st1set )
+      for( st2 in st2set )
+        condeqs := [condeqs,fq_name('ce',st1,st2)];
+    # note that child names will be resolved later
+    rec := meq.node('MeqSolver','solver',[
+        parm_group = hiid('a'),
+        default    = [ num_iter = 3 ],
+        solvable   = meq.solvable_list("stokes_i") ],
+      children=condeqs);
+    mqs.createnode(rec);
+    if( publish )
+      mqs.meq('Node.Publish.Results',[name='solver']);
+  }
+  
+  rootnodes := [];
+  # make predict/condeq trees
   for( st1 in st1set )
     for( st2 in st2set )
     {
-      make_predict_tree(st1,st2,msname);
+      if( solve )
+      {
+        rootnodes := [rootnodes,make_solve_tree(st1,st2,msname)];
+        if( publish )
+          mqs.meq('Node.Publish.Results',[name=fq_name('ce',st1,st2)]);
+      }
+      else if( subtract )
+        rootnodes := [rootnodes,make_subtract_tree(st1,st2,msname)];
+      else
+        rootnodes := [rootnodes,make_predict_tree(st1,st2,msname)];
       if( publish )
         mqs.meq('Node.Publish.Results',[name=fq_name('predict',st1,st2)]);
     }
+  # resolve children on all root nodes
+  print 'Root nodes are: ',rootnodes;
+  for( r in rootnodes )
+    mqs.meq('Resolve.Children',[name=r]);
   
   nodelist := mqs.getnodelist();
   print 'Created nodes: ',nodelist.name;
 
-  # activate input and watch the fur fly  
-  global inputrec,outputrec;
-  inputrec := [ ms_name = msname,data_column_name = 'DATA',tile_size=5,
-                selection = [=]  ];
-  outputrec := [ write_flags=F,predict_column=outcol ]; 
-  mqs.init(input=inputrec,output=outputrec); 
+  if( run )
+  {
+    # activate input and watch the fur fly  
+    global inputrec,outputrec;
+    inputrec := [ ms_name = msname,data_column_name = 'DATA',tile_size=5,
+                  selection = [=]  ];
+    outputrec := [ write_flags=F,predict_column=outcol ]; 
+    mqs.init(input=inputrec,output=outputrec); 
+  }
 }
 
 
-predict_test();
+do_test(subtract=T,run=T);
