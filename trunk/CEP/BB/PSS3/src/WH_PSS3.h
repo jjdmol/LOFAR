@@ -79,10 +79,10 @@ private:
   string itsMSName;
   string itsMeqModel;
   string itsSkyModel;
-  unsigned int itsDDID;
   string itsDbType;
   string itsDbName;
   string itsDbPwd;
+  unsigned int itsDDID;
   vector<int> itsAnt1;        // Aips vector type for antenna numbers
   vector<int> itsAnt2;        // Aips vector type for antenna numbers
   string itsModelType;

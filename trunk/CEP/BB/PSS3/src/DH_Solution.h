@@ -1,4 +1,4 @@
-//  DH_Solution.h: Example DataHolder
+//  DH_Solution.h: DataHolder for BlackBoard solutions
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -34,16 +34,15 @@
 #include <PSS3/Quality.h>
 
 /**
-   This class is an example DataHolder which is only used in the
-   Example programs.
+   This class is a DataHolder which holds the parameters solved by
+   a pSS3 knowledge source.
 */
 
 class DH_Solution: public LOFAR::DH_Postgresql
 {
 public:
 
-  explicit DH_Solution (const string& name, const string& type,
-			int DBid=0);
+  explicit DH_Solution (const string& name, const string& type);
 
   virtual ~DH_Solution();
 
@@ -74,6 +73,9 @@ public:
   void setIterationNo(int no);
   Quality* getQuality();
 
+  void setSolutionID(int id);  // Set id of solution to retrieve from database
+  int getSolutionID();
+  
 protected:
   // Definition of the DataPacket type.
   class DataPacket: public DH_Database::DataPacket
@@ -143,5 +145,11 @@ inline void DH_Solution::setIterationNo(int no)
 
 inline Quality* DH_Solution::getQuality()
 { return &itsDataPacket.itsQuality; }
+
+inline void DH_Solution::setSolutionID(int id)
+{ itsDBid = id; }
+
+inline int DH_Solution::getSolutionID()
+{ return itsDBid; }
 
 #endif 

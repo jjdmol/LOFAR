@@ -30,6 +30,7 @@
 #include <aips/Exceptions/Error.h>
 #include "Calibrator.h"
 
+#include <iostream>
 
 // RMME: const int DefaultAntennaCount = 21;
 
@@ -37,8 +38,8 @@ InitDebugContext(Calibrator,"Calibrator");
 
 Calibrator::Calibrator (const string & MSName, const string & MEPName, 
     const string & GSMName, const string & DBType, const string & DBName, 
-    const string & DBPasswd);
-) {
+    const string & DBPasswd)
+{
   // Initialize default values for the PSS3 Calibrater object.
   // These values are committed to itsMeqCalImpl when the Calibrator
   // ::Initialize () is called.
@@ -62,6 +63,9 @@ Calibrator::Calibrator (const string & MSName, const string & MEPName,
   itsCorrectedDataColumn = "CORRECTED_DATA";
 
   itsPSS3CalibratorImpl  = NULL;
+
+  std::cout << "***************" << itsMSName << "-" << itsMEPName << "-" << itsGSMName
+	    << "-" << DBType << "=" << itsDBType << "-" << itsDBName << "-" << itsDBPasswd << endl;
 }
 
 
@@ -268,6 +272,13 @@ void Calibrator::commitPeelSourcesAndMasks (void) {
 
 void Calibrator::Run (void) {
   itsPSS3CalibratorImpl -> solve (true);
+}
+
+void Calibrator::Run (vector<string>& resultParmNames,
+                      vector<double>& resultParmValues,
+                      Quality& resultQuality) {
+  itsPSS3CalibratorImpl -> solve (false, resultParmNames, resultParmValues, 
+                                  resultQuality);
 }
 
 void Calibrator::SubtractOptimizedSources (void) {

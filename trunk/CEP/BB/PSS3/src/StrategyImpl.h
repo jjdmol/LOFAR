@@ -54,8 +54,6 @@ public:
   virtual string getType() const = 0;
 
  private:
-
 };
-
 
 #endif
