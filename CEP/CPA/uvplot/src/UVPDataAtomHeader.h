@@ -44,14 +44,18 @@ class UVPDataAtomHeader
  public:
 
   enum Correlation{None=0,
-                   XX=1,
-                   XY=2,
-                   YX=3,
-                   YY=4,
+                   I=1,
+                   Q=2,
+                   U=3,
+                   V=4,
                    RR=5,
                    RL=6,
                    LR=7,
-                   LL=8};
+                   LL=8,
+                   XX=9,
+                   XY=10,
+                   YX=11,
+                   YY=12};
   
   enum DataType{Raw = 0,
                 Corrected,
