@@ -28,7 +28,11 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 
+#include <Transport/TH_Mem.h>
+#include <Transport/TH_MPI.h>
+
 #include <CEPFrame/Step.h>
+#include <CEPFrame/WH_Empty.h>
 #include <CEPFrame/Composite.h>
 #include <CEPFrame/ApplicationHolder.h>
 
@@ -66,7 +70,7 @@ void StationCorrelator::undefine() {
   itsWHs.clear();
 }  
 
-void StationCorrelator::define(const KeyValueMap& itsKVM) {
+void StationCorrelator::define(const KeyValueMap& kvm) {
 
   char H_name[128];
 
@@ -75,14 +79,18 @@ void StationCorrelator::define(const KeyValueMap& itsKVM) {
   vector<WH_Correlator*> CorrelatorNodes;
   vector<WH_Dump*>       DumpNodes;   
   
-  Composite comp;
+  WH_Empty empty;
+  Composite comp(empty);
   setComposite(comp);
+  comp.runOnNode(0);
 
   /// Create the WorkHolders 
   for (unsigned int i = 0; i < itsNrsp; i++) {
     snprintf(H_name, 128, "RSPNode_%d_of_%d", i, itsNrsp);
-    Step step(new WH_RSP(H_name, itsKVM));
-    comp.addStep(step); // gaat dit goed?
+    
+    WH_RSP whRSP(H_name, itsKVM);
+    Step step(whRSP);
+    comp.addStep(step); 
   }
 
   for (unsigned int i = 0; i < itsNcorrelator; i++) {
@@ -90,29 +98,25 @@ void StationCorrelator::define(const KeyValueMap& itsKVM) {
     // to rearrange the data coming from the RSP boards.
     sprintf(H_name, "TransposeNode_%d_of_%d", i, itsNcorrelator);
 
-    Step step(new WH_Transpose(H_name, itsKVM));
-    comp.addStep(step);
-  }
-  for (unsigned int i = 0; i < itsNcorrelator; i++) {
+    itsKVM.show(cout);
+    WH_Transpose whTranspose(H_name, itsKVM);
+    Step step1(whTranspose);
+    comp.addStep(step1);
 
     sprintf(H_name, "CorrelatorNode_%d_of_%d", i, itsNcorrelator);
-    
-    Step step(new WH_Correlator ( H_name,
-				   0,
-				   0,
-				   0,
-				   0,
-				   0 ));
-    comp.addStep(step);
+
+    WH_Correlator whCorrelator(H_name, 1, 0, 0, 0, 0);
+    Step step2(whCorrelator);
+    comp.addStep(step2);
+
+    step2.connectInput(&step1, TH_Mem());
   }
 
   for (unsigned int i = 0; i < itsNdump; i++) {
     sprintf(H_name, "DumpNode_%d_of_%d", i, itsNdump);
-    
-    Step step(new WH_Dump (H_name, 
-			   0,
-			   0, 
-			   0));
+
+    WH_Dump whDump(H_name, 0, 0, 0);
+    Step step(whDump);
     comp.addStep(step);
   }
 
@@ -140,7 +144,6 @@ int main (int argc, const char** argv) {
 
   INIT_LOGGER("StationCorrelator");
 
-  KeyValueMap kvm;
   try {
     kvm = KeyParser::parseFile("TestRange");
 
@@ -149,10 +152,11 @@ int main (int argc, const char** argv) {
   }
   
   try {
+//     kvm.show(cout);
 
     StationCorrelator correlator(kvm);
     correlator.setarg(argc, argv);
-    correlator.baseDefine();
+    correlator.baseDefine(kvm);
     cout << "defined"<< endl;
     correlator.basePrerun();
     cout << "initialized" << endl;
