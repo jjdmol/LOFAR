@@ -31,9 +31,7 @@ DH_RSP::DH_RSP (const string& name,
 : DataHolder (name, "DH_RSP"),
   itsBuffer  (0),
   itsBufSize (bufsize)
-{
-
-}
+{}
 
 DH_RSP::DH_RSP(const DH_RSP& that)
 : DataHolder (that),

@@ -34,13 +34,15 @@ DH_StationData::DH_StationData (const string& name,
     itsBuffer      (0)
 { }
 
-DH_StationData::~DH_StationData() {
+DH_StationData::~DH_StationData() 
+{
   itsBuffer = 0;
 }
 
 DH_StationData::DH_StationData(const DH_StationData& that)
   : DataHolder(that),
-    itsBuffer(0)
+    itsBuffer(0),
+    itsBufsize(that.itsBufsize)
 { }
 
 DataHolder* DH_StationData:: clone() const {
