@@ -17,7 +17,7 @@
 #include "WH_Empty.h"
 #include "Profiler.h"
 
-main (int argc, char *argv[])
+int main (int argc, char *argv[])
 {
 
   // initialise MPI environment
