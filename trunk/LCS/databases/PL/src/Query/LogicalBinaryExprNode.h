@@ -39,11 +39,12 @@ namespace LOFAR
       //
       // This class represents a logcial binary expression node. A logical
       // binary expression is a binary expression that represents a binary
-      // logcial operator (e.g. && and ||). The main difference between an
-      // ordinary BinaryExprNode and a LogicalBinaryExprNode is that the
-      // latter does not have an associated constraint. The reason for this is
-      // that a constraint can only be associated with a \e branch of a
-      // logical expression node.
+      // logcial operator (e.g. \c operator&& and \c operator||). The main
+      // difference between an ordinary BinaryExprNode and a
+      // LogicalBinaryExprNode is that the latter does not have an associated
+      // constraint. The reason for this is that a constraint can only be
+      // associated with the \e branch emanating from a logical expression
+      // node, not with the node itself.
       //
       // \note We do not need to override the method getConstraint(), because
       // there is no constraint associated with a logical binary expression

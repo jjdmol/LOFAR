@@ -34,7 +34,7 @@ namespace LOFAR
 {
   namespace PL
   {
-    // This class combines the representation of the meta data of a persistent
+    // This class combines the representation of the metadata of a persistent
     // object (DBRepMeta) and the representation of the data in the
     // user-defined class \c T (DBRep<T>).
     template <typename T>
@@ -58,7 +58,7 @@ namespace LOFAR
       //@}
 
       // This method 'binds' the database columns to the members of the
-      // user-defined class \c T and the meta data of the accompanying
+      // user-defined class \c T and the metadata of the accompanying
       // TPersistentObject<T>. DTL's BoundIOs class and the DBRepHolder<T>
       // class are the glue.
       void bindCols(dtl::BoundIOs& cols)
@@ -69,7 +69,7 @@ namespace LOFAR
 
     private:
 
-      // Internal representation of the meta data of a persistent object.
+      // Internal representation of the metadata of a persistent object.
       DBRepMeta itsRepMeta;
 
       // Internal representation of the data of a user-defined class \c T.
@@ -80,7 +80,7 @@ namespace LOFAR
     // @name Full class template specializations.
     //@{
 
-    // ObjectId is part of the meta data of a persistent object. Hence, we
+    // ObjectId is part of the metadata of a persistent object. Hence, we
     // must define a specialization.
     template <>
     struct DBRepHolder<ObjectId>

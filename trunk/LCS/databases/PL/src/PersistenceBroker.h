@@ -75,8 +75,11 @@ namespace LOFAR
       // make the PersistenceBroker responsible for beginning and ending the
       // transaction, and forward the iteration over the Collection to the
       // TPersistentObject<T>. TPersistentObject<T> would then need an extra
-      // method like: template<typename T> void
-      // TPersistentObject<T>::erase(const Collection<TPersistentObject<T> >&);
+      // method like:
+      // <ul>
+      // <li> <tt> template<typename T> void TPersistentObject<T>::erase(const
+      // Collection<TPersistentObject<T> >&); </tt>
+      // </ul>
       template<typename T>
       void erase(const Collection<TPersistentObject<T> >& ctpo) const;
 
@@ -113,12 +116,16 @@ namespace LOFAR
       // transaction. We might choose to forward the iteration over the
       // Collection to the TPersistentObject<T>. TPersistentObject<T> would
       // then need extra methods like:
-      // - <tt> template<typename T> void TPersistentObject<T>::save(const
-      // Collection<TPersistentObject<T> >&) <</tt> 
-      // - <tt> template<typename T> void TPersistentObject<T>::insert(const
-      // Collection<TPersistentObject<T> >&) <</tt> 
-      // - <tt> template<typename T> void TPersistentObject<T>::update(const
-      // Collection<TPersistentObject<T> >&) <</tt>
+      // <ul>
+      // <li> <tt> template<typename T> void TPersistentObject<T>::save(const
+      // Collection<TPersistentObject<T> >&) </tt>
+      // <li> <tt> template<typename T> void
+      // TPersistentObject<T>::insert(const Collection<TPersistentObject<T>
+      // >&) </tt>
+      // <li> <tt> template<typename T> void
+      // TPersistentObject<T>::update(const Collection<TPersistentObject<T>
+      // >&) </tt>
+      // </ul>
       template<typename T>
       void save(const Collection<TPersistentObject<T> >& ctpo,
 		enum SaveMode sm=AUTOMATIC) const;

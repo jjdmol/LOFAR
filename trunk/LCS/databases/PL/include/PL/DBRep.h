@@ -38,9 +38,9 @@ namespace LOFAR
     // guaranteed to be contiguous. DTL and ODBC demand that the data they
     // manipulate is contiguous. Hence this adapter class.
     //
-    // \note This class must be reimplemented using full class template
+    // \note This class \e must be reimplemented using full class template
     // specialization, because the Persistence Layer cannot know the exact
-    // layout of the user-defined class that must be transformed. 
+    // layout of the user-defined class that must be transformed.
     template <typename T> struct DBRep
     {
       // This method defines the bindings between the data members in the
@@ -58,7 +58,7 @@ namespace LOFAR
     // @name Full class template specializations.
     //@{
 
-    // ObjectId is part of the meta data of a persistent object. Hence, we
+    // ObjectId is part of the metadata of a persistent object. Hence, we
     // must define a specialization.
     template<> 
     struct DBRep<ObjectId>

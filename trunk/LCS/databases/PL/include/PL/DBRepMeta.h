@@ -37,10 +37,10 @@ namespace LOFAR
 {
   namespace PL
   {
-    // This class is an adapter class that transforms the meta data of a
-    // persistent object to/from an internal representation, which is
+    // This class is an adapter class that transforms the \e metadata
+    // of a persistent object to/from an internal representation, which is
     // guaranteed to be contigous. DTL and ODBC demand that the data they
-    // manipulate is contiguous. 
+    // manipulate is contiguous.
     struct  DBRepMeta
     {
       // Define the bindings between the data members in this class and the
