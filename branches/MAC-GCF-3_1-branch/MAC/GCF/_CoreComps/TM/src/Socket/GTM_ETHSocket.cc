@@ -60,9 +60,8 @@ GTMETHSocket::~GTMETHSocket()
 
 ssize_t GTMETHSocket::send(void* buf, size_t count)
 {
-  ssize_t result   = 0;
-  ssize_t newcount = count;
-  memcpy(_sendPacketData, (char*)buf, count);
+  ssize_t result     = 0;
+  ssize_t validcount = count;
 
   /**
    * Make sure the Ethernet packet is at
@@ -70,16 +69,25 @@ ssize_t GTMETHSocket::send(void* buf, size_t count)
    * by making the payload at least 46 bytes long.
    * ETH_ZLEN - EHT_HLEN = 60 - 14 = 46
    */
-  if (newcount < ETH_ZLEN - ETH_HLEN) newcount = ETH_ZLEN - ETH_HLEN;
+  if (count < ETH_ZLEN - ETH_HLEN)
+  {
+    validcount = ETH_ZLEN - ETH_HLEN;
+
+    /* make sure the tail is initialized to 0 */
+    memset(_sendPacketData, 0, validcount);
+  }
+
+  /* copy the data in */
+  memcpy(_sendPacketData, (char*)buf, count);
 
   result = sendto(_socketFD, 
                   _sendPacket, 
-                  newcount + sizeof(struct ethhdr), 0,
+                  validcount + sizeof(struct ethhdr), 0,
                  (struct sockaddr*)&_sockaddr,
                   sizeof(struct sockaddr_ll));
 
 
-  return result - sizeof(struct ethhdr) - (newcount - count);
+  return result - sizeof(struct ethhdr) - (validcount - count);
 }
 
 ssize_t GTMETHSocket::recv(void* buf, size_t count)
@@ -115,6 +123,7 @@ int GTMETHSocket::open(const char* ifname,
       { 0x6,  0, 0, 0x00000000 },
     };
 
+  memset(&filter, 0, sizeof(sock_fprog));
   filter.len = sizeof(mac_filter_insn) / sizeof(struct sock_filter);
 
   if (_socketFD > -1)
