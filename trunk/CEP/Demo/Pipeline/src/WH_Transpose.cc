@@ -21,6 +21,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
+//  %[BugId: 117]%
+//
+//  Initial working version
+//
 //  Revision 1.9  2002/08/19 20:35:26  schaaf
 //  %[BugId: 11]%
 //  Layout
@@ -72,12 +77,14 @@ WH_Transpose::WH_Transpose (const string& name,
 			    unsigned int nin, 
 			    unsigned int nout,
 			    int timeDim,
-			    int freqDim)
+			    int freqDim,
+			    int pols)
 : WorkHolder    (nin, nout, name),
   itsInHolders  (0),
   itsOutHolders (0),
   itsTimeDim    (timeDim),
-  itsFreqDim    (freqDim)
+  itsFreqDim    (freqDim),
+  itsPols(pols)
 {
   AssertStr (nin > 0,     "0 input for WH_Transpose is not possible");
   AssertStr (nout > 0,    "0 output for WH_Transpose is not possible");
@@ -92,7 +99,8 @@ WH_Transpose::WH_Transpose (const string& name,
     itsInHolders[i] = new DH_2DMatrix (std::string("in_") + str,
 				       timeDim, std::string("Time"),
 				       freqDim, std::string("Frequency"),
-				       std::string("Station"));
+				       std::string("Station"),
+				       2); //pols
   }
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
@@ -100,7 +108,8 @@ WH_Transpose::WH_Transpose (const string& name,
     itsOutHolders[i] = new DH_2DMatrix (std::string("out_") + str,
 				       nin, std::string("Station"),
 				       freqDim, std::string("Frequency"),
-				       std::string("Time"));
+				       std::string("Time"),
+					2); //pols
   }
 
   if (theirProcessProfilerState == 0) {
@@ -127,7 +136,8 @@ WorkHolder* WH_Transpose::make(const string& name) const
 			  getInputs(), 
 			  getOutputs(),
 			  itsTimeDim,
-			  itsFreqDim);
+			  itsFreqDim,
+			  itsPols);
 }
 
 void WH_Transpose::preprocess() {
@@ -161,21 +171,23 @@ void WH_Transpose::process()
   //   so we can obtain them outside the loop
   int Xsize = getOutHolder(0)->getXSize();
   int Ysize = getOutHolder(0)->getYSize();
-  int Ysize_bytes = Ysize*sizeof(int); // OK; hard coded data type==int
+  int Ysize_bytes = Ysize*sizeof(DH_2DMatrix::DataType); 
   int StationOffset = getInHolder(0)->getZ();
   
   for (int time=0; time<getOutputs(); time++) {
-    OutDHptr = getOutHolder(time); 
-    OutDHptr->setTimeStamp(localtime);
-    for (int station=0; station < Xsize; station++) {
-      InDHptr = getInHolder (station);
-      // DH_2DMatrix::getBuffer(x,y) contiguous for fixed x.
-      memcpy(OutDHptr->getBuffer(station,0),
-             InDHptr->getBuffer(time,0),
-             Ysize_bytes   );
-      OutDHptr->setXOffset(StationOffset);  // set station offset
-      OutDHptr->setYOffset(InDHptr->getYOffset());   // set freq offset
-      OutDHptr->setZ(InDHptr->getXOffset()); 	       // set time
+    for (int pol=0; pol < itsPols; pol++) {
+      OutDHptr = getOutHolder(time); 
+      OutDHptr->setTimeStamp(localtime);
+      for (int station=0; station < Xsize; station++) {
+	InDHptr = getInHolder (station);
+	// DH_2DMatrix::getBuffer(x,y) contiguous for fixed x.
+	memcpy(OutDHptr->getBuffer(station,0,pol),
+	       InDHptr->getBuffer(time,0,pol),
+	       Ysize_bytes   );
+	OutDHptr->setXOffset(StationOffset);  // set station offset
+	OutDHptr->setYOffset(InDHptr->getYOffset());   // set freq offset
+	OutDHptr->setZ(InDHptr->getXOffset()); 	       // set time
+      }
     }
   }
   
@@ -195,16 +207,19 @@ void WH_Transpose::dump() const
 	 << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getXOffset() << "    "
 	 << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getYName() << "Offset = "  
 	 << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getYOffset() ;
-    for (int x=0; 
-	 x < min(10,(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getXSize());
-		 x++) {
-	   cout << endl 
-		<< (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getXName()
-		<< x << "   ";
-      for (int y=0; 
-	   y < min(10,(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getYSize());
-	   y++) {
-	cout << *(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getBuffer(x,y) << " ";
+    for (int pol=0; pol<itsPols; pol++) {
+      cout << endl << "Polarisation: " << pol ;
+      for (int x=0; 
+	   x < min(10,(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getXSize());
+	   x++) {
+	cout << endl 
+	     << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getXName()
+	     << x << "   ";
+	for (int y=0; 
+	     y < min(10,(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getYSize());
+	     y++) {
+	  cout << *(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getBuffer(x,y,pol) << " ";
+	}
       }
     }
     cout << endl;

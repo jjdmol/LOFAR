@@ -21,6 +21,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
+//  %[BugId: 117]%
+//
+//  Initial working version
+//
 //  Revision 1.3  2002/05/16 15:05:40  schaaf
 //  Added profiler state for process() method
 //
@@ -58,7 +63,8 @@ public:
 		  unsigned int nin,      // nr of input channels
 		  unsigned int nout,     // nr of output channels
 		  int timeDim,
-		  int freqDim);
+		  int freqDim,
+		  int polariastions);
   
   virtual ~WH_FillTFMatrix();
 
@@ -99,6 +105,8 @@ private:
       will be set in the C'tor
   */
   int itsSourceID; 
+  int itsPols;
+
   /// Profiling States
   static int          theirProcessProfilerState; 
 };

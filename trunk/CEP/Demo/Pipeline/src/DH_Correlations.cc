@@ -21,11 +21,18 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
+//  %[BugId: 117]%
+//
+//  Initial working version
+//
 //
 //////////////////////////////////////////////////////////////////////
 
 
 #include "Pipeline/DH_Correlations.h"
+
+
 
 DH_Correlations::DH_Correlations (const string& name,
 				  short stations,
@@ -69,7 +76,7 @@ void DH_Correlations::reset() {
   TRACER4("Entering Reset");
   for (int stationA=0; stationA < itsStations; stationA++) {
     for (int stationB=0; stationB <= stationA; stationB++) {
-      *getBuffer(stationA,stationB) = DataType(0); 
+      *getBuffer(stationA,stationB) = 0; 
     }
   }
   TRACER4("Reset completed");

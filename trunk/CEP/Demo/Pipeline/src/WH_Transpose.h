@@ -21,6 +21,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
+//  %[BugId: 117]%
+//
+//  Initial working version
+//
 //  Revision 1.6  2002/11/08 13:48:22  schaaf
 //
 //  %[BugId: 11]%
@@ -70,7 +75,8 @@ public:
 	       unsigned int nin,      // nr of input channels
 	       unsigned int nout,      // nr of output channels
 	       int timeDim,
-	       int freqDim);
+	       int freqDim,
+	       int pols);
   
   virtual ~WH_Transpose();
 
@@ -105,6 +111,7 @@ private:
 
   int itsTimeDim;
   int itsFreqDim;
+  int itsPols;
 
   /// Profiling States
   static int          theirProcessProfilerState; 

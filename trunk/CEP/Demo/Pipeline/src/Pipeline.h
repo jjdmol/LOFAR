@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
+//  %[BugId: 117]%
+//
+//  Initial working version
+//
 //
 //////////////////////////////////////////////////////////////////////////
 
@@ -61,14 +66,12 @@ class Pipeline: public Simulator
   
  private:
   /// Define pointers to the arrays with steps and workholders.
-    WH_FillTFMatrix **Sworkholders;
-    WH_Delay        **Iworkholders;
-    WH_Transpose    **Dworkholders;
-    WH_Correlate    **Cworkholders;
-    Step            **Ssteps;
-    Step            **Isteps;
-    Step            **Dsteps;
-    Step            **Csteps;
+    WH_FillTFMatrix **FillWH;
+    WH_Transpose    **TransWH;
+    WH_Correlate    **CorrWH;
+    Step            **FillSteps;
+    Step            **TransSteps;
+    Step            **CorrSteps;
     
     /// Number of source steps
    int itsSourceSteps;

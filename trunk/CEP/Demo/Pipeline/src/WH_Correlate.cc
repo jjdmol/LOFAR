@@ -21,6 +21,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
+//  %[BugId: 117]%
+//
+//  Initial working version
+//
 //  Revision 1.3  2002/08/19 20:42:14  schaaf
 //  %[BugId: 11]%
 //  Removed dump() call
@@ -68,13 +73,16 @@ WH_Correlate::WH_Correlate (const string& name,
 			    unsigned int nin, 
 			    unsigned int nout,
 			    int stationDim,
-			    int freqDim)
+			    int freqDim,
+			    int pols)  // input side
 : WorkHolder    (nin, nout, name),
   itsInHolders  (0),
   itsOutHolders (0),
   itsTime       (0),  
   itsStationDim (stationDim),
   itsFreqDim    (freqDim),
+  itsInPols     (pols),
+  itsOutPols    (pols*pols),
   itsReset      (true)
 {
   TRACER4("WH_Correlate C'tor");
@@ -83,21 +91,22 @@ WH_Correlate::WH_Correlate (const string& name,
   itsInHolders  = new DH_2DMatrix* [nin];
   itsOutHolders = new DH_Correlations* [nout];
   char str[8];
-  for (unsigned int i=0; i<getInputs(); i++) {
+  for (int i=0; i<getInputs(); i++) {
     sprintf (str, "%d", i);
     TRACER3("Create WH_Correlate InhHolder[" << i << "]");
     itsInHolders[i] = new DH_2DMatrix (std::string("in_") + str,
 				       itsStationDim, std::string("Station"),
 				       itsFreqDim, std::string("Frequency"),
-				       std::string("Time"));
+				       std::string("Time"),
+				       itsInPols); // pols input side
   }
-  for (unsigned int i=0; i<getOutputs(); i++) {
+  for (int i=0; i<getOutputs(); i++) {
     sprintf (str, "%d", i);
     TRACER3("Create WH_Correlate OutHolder[" << i << "]");
     itsOutHolders[i] = new DH_Correlations(getName(),
 					   stationDim,
 					   1,   // integrate complete input into 1 output channel
-					   4);  // polarisations
+					   itsOutPols);  // polarisations
    
 }
 
@@ -128,7 +137,8 @@ WorkHolder* WH_Correlate::make(const string& name) const
 			  getInputs(), 
 			  getOutputs(),
 			  itsStationDim,
-			  itsFreqDim);
+			  itsFreqDim,
+			  itsInPols);
 }
 
 void WH_Correlate::preprocess() {
@@ -142,17 +152,16 @@ void WH_Correlate::process()
   Profiler::enterState (theirProcessProfilerState);
   
   if (itsReset) {
+    // after write of the data to the next step, the outputholder should be reset to contain only 0 values.
     itsReset = false;
     getOutHolder(0)->reset();
+    // now start filling the housekeeping data
     getOutHolder(0)->setStartTime(getInHolder(0)->getZ());
     getOutHolder(0)->setStartChannel(getInHolder(0)->getYOffset());
     getOutHolder(0)->setEndChannel(getInHolder(0)->getYOffset() + getInHolder(0)->getYSize() -1);
   }
 
    int Stations,Frequencies;
-   int vis;
-   int *RowStartptrA, *RowStartptrB;
-   DH_Correlations::DataType *Outputstartptr;
    DH_Correlations *OutDHptr;
    DH_2DMatrix     *InDHptr;
 
@@ -162,27 +171,33 @@ void WH_Correlate::process()
       Stations = InDHptr->getXSize();
       Frequencies = InDHptr->getYSize();
       for (short stationA = 0; stationA < Stations; stationA++) {
-	 for (short stationB = 0; stationB <= stationA; stationB++) {
-	    RowStartptrA = InDHptr->getBuffer(stationA,0);
-	    RowStartptrB = InDHptr->getBuffer(stationB,0);
-	    Outputstartptr = OutDHptr->getBuffer(stationA,stationB); // window=1
-	    // loop over all input frequencies effectively integrating those inputs.
-	    for (short freq=0; freq < Frequencies; freq++) {
-	      DH_Correlations::DataType val = (*InDHptr->getBuffer(stationA,freq) * *InDHptr->getBuffer(stationB,freq));
-	      *OutDHptr->getBuffer(stationA,stationB) += val;
-		//(*(RowStartptrA+freq*sizeof(DH_Correlations::DataType))) * (*(RowStartptrB+freq*sizeof(DH_Correlations::DataType))); // one polarisation
-
-	    }
-	 }
+	for (short stationB = 0; stationB <= stationA; stationB++) {
+	  // loop over all input frequencies effectively integrating those inputs.
+	  for (short freq=0; freq < Frequencies; freq++) {
+	    DbgAssertStr((itsInPols == 2 && itsOutPols == 4),"polarisations incorrect");
+	    // XX
+	    OutDHptr->getBuffer(stationA,stationB,0)->cmac(*InDHptr->getBuffer(stationA,freq,0),
+							   *InDHptr->getBuffer(stationB,freq,0)); 	       
+	    // XY
+	    OutDHptr->getBuffer(stationA,stationB,1)->cmac(*InDHptr->getBuffer(stationA,freq,0),
+							   *InDHptr->getBuffer(stationB,freq,1) ); 			
+	    // YX	     
+	    OutDHptr->getBuffer(stationA,stationB,2)->cmac(*InDHptr->getBuffer(stationA,freq,1),
+							   *InDHptr->getBuffer(stationB,freq,0) ); 		
+	    // YY	     
+	    OutDHptr->getBuffer(stationA,stationB,3)->cmac(*InDHptr->getBuffer(stationA,freq,1),
+							   *InDHptr->getBuffer(stationB,freq,1) ); 							        
+	  }
+	}
       }
-   }
-   Profiler::leaveState (theirProcessProfilerState);
-   DbgAssertStr(getOutputs() == 1,"reset only works for times=1");
-   if (getOutHolder(0)->doHandle()) {
-     //output data will be read; so clear the registers in next call.
-     itsReset = true;
-     getOutHolder(0)->setEndTime(getInHolder(0)->getZ());
-   }
+     }
+     Profiler::leaveState (theirProcessProfilerState);
+     DbgAssertStr(getOutputs() == 1,"reset only works for times=1");
+     if (getOutHolder(0)->doHandle()) {
+       //output data will be read; so clear the registers in next call.
+       itsReset = true;
+       getOutHolder(0)->setEndTime(getInHolder(0)->getZ());
+     }
 }
 
 void WH_Correlate::dump() const
@@ -194,15 +209,18 @@ void WH_Correlate::dump() const
   cout << "Frequency: " <<  (const_cast<WH_Correlate*>(this))->getOutHolder(0)->getStartChannel() 
        << " - " << (const_cast<WH_Correlate*>(this))->getOutHolder(0)->getEndChannel()
        << endl;
-  int Stations = (const_cast<WH_Correlate*>(this))->getInHolder(0)->getXSize();
-  for (short stationA = 0; stationA < Stations; stationA++) {
-    cout << stationA << ":  ";
-    for (short stationB = 0; stationB <= stationA; stationB++) {
-      DH_Correlations::DataType val = *(const_cast<WH_Correlate*>(this))->getOutHolder(0)->getBuffer(stationA,stationB);
-      cout << val
-	   << " " ;
+  for (int pol=0; pol<itsOutPols; pol++) {
+    cout << "Polarisation: " << pol << endl ;
+    int Stations = (const_cast<WH_Correlate*>(this))->getInHolder(0)->getXSize();
+    for (short stationA = 0; stationA < Stations; stationA++) {
+      cout << stationA << ":  ";
+      for (short stationB = 0; stationB <= stationA; stationB++) {
+	DH_Correlations::DataType val = *(const_cast<WH_Correlate*>(this))->getOutHolder(0)->getBuffer(stationA,stationB,pol);
+	cout << val
+	     << " " ;
+      }
+      cout << endl;
     }
-    cout << endl;
   }
 }
 

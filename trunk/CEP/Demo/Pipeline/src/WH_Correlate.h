@@ -21,6 +21,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
+//  %[BugId: 117]%
+//
+//  Initial working version
+//
 //  Revision 1.1  2002/05/23 15:40:44  schaaf
 //
 //  %[BugId: 11]%
@@ -54,7 +59,8 @@ public:
 	       unsigned int nin,       // nr of input channels
 	       unsigned int nout,      // nr of output channels
 	       int stationDim,
-	       int freqDim);
+	       int freqDim,
+	       int pol);
   
   virtual ~WH_Correlate();
 
@@ -90,6 +96,8 @@ private:
   int itsTime;
   int itsStationDim;
   int itsFreqDim;
+  int itsInPols;
+  int itsOutPols;
   bool itsReset;
 
   int *itsVisibilities;
