@@ -76,7 +76,7 @@ void UVPTimeFrequencyPlot::slot_addSpectrum(const UVPSpectrum &spectrum)
 
 void UVPTimeFrequencyPlot::slot_addDataAtom(const UVPDataAtom* atom)
 {
-  itsComplexSpectrum.add(atom);
+  itsComplexSpectrum.add(atom, true); // honour flags
 
   if(itsComplexSpectrum.min() != itsComplexSpectrum.max()) {
     double absmin = fabs(itsComplexSpectrum.min());
@@ -135,25 +135,36 @@ void UVPTimeFrequencyPlot::drawView()
   */
   const unsigned int N(itsComplexSpectrum.size());
   unsigned int Nch(0);
+  QColor Blue(0,0,255);
+
   if(N>0) {
     Nch = itsComplexSpectrum[0]->getNumberOfChannels();
   }
+
+
+  BufferPainter.eraseRect(0,0,width(), height());
 
   if(itsComplexSpectrum.min() != itsComplexSpectrum.max()) {
     for(unsigned int i = 0; i < N; i++) {
       
       const UVPDataAtom::ComplexType*  spectrum(itsComplexSpectrum[i]->getData(0));
+      UVPDataAtom::FlagIterator        flag = itsComplexSpectrum[i]->getFlagBegin();
       unsigned int                     j(0);
       
       while(j < Nch ) {
-        int colre = int(itsValueAxis.worldToAxis(spectrum->real()));
-        int colim = int(itsValueAxis.worldToAxis(spectrum->imag()));
+        if(*flag) {
+          BufferPainter.setPen(Blue);
+        } else {
+          int colre = int(itsValueAxis.worldToAxis(spectrum->real()));
+          int colim = int(itsValueAxis.worldToAxis(spectrum->imag()));
+          BufferPainter.setPen(itsComplexColormap[itsRealIndex[colre]+itsImagIndex[colim]]);
+        }
         spectrum++;
-        BufferPainter.setPen(itsComplexColormap[itsRealIndex[colre]+itsImagIndex[colim]]);
+        flag++;
         BufferPainter.drawPoint(j, i);
         j++;
       }
-    }
+    } // for...
   }
   
   
