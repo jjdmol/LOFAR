@@ -64,7 +64,6 @@ dnl  Makefile outputs
 dnl
 AC_OUTPUT(
 src/Makefile
-test/Makefile 
 data/Makefile 
 Makefile
 )
