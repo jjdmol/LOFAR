@@ -37,17 +37,30 @@ const sta_dft_tree := function (st)
 {
   global ms_antpos; # station positions from MS
   pos := ms_antpos[st];
+  # this node computes UVWs
+  uvw := meq.node('MeqUVW',fq_name('uvw',st),children=[
+                         x = meq.parm(fq_name('x',st),pos.x),
+                         y = meq.parm(fq_name('y',st),pos.y),
+                         z = meq.parm(fq_name('z',st),pos.z),
+                         ra = 'ra0',dec = 'dec0',
+                         x_0='x0',y_0='y0',z_0='z0' ]);
+  # or are we reading them straight from a MS? Compute them anyway,
+  # but put in a sequencer so that the const values are used
+  if( !is_boolean(ms_antuvw) )
+  {
+    uvw := meq.node('MeqReqSeq',fq_name('uvw.seq',st),[result_index=2],children=meq.list(
+      uvw,
+      meq.node('MeqComposer',fq_name('ms.uvw',st),children=meq.list(
+        meq.node('MeqConstant',fq_name('u',st),[value=ms_antuvw[1,st]]),
+        meq.node('MeqConstant',fq_name('v',st),[value=ms_antuvw[2,st]]),
+        meq.node('MeqConstant',fq_name('w',st),[value=ms_antuvw[3,st]])
+      ))
+    ));
+  }
   # builds an init-rec for a node called 'dft.N' with two children: 
   # lmn and uvw.N
-  return meq.node('MeqStatPointSourceDFT',fq_name('dft',st),[link_or_create=T],
-           children=[
-              lmn = 'lmn',
-              uvw = meq.node('MeqUVW',fq_name('uvw',st),children=[
-                               x = meq.parm(fq_name('x',st),pos.x),
-                               y = meq.parm(fq_name('y',st),pos.y),
-                               z = meq.parm(fq_name('z',st),pos.z),
-                               ra = 'ra0',dec = 'dec0',
-                               x_0='x0',y_0='y0',z_0='z0' ]) ]);
+  return meq.node('MeqStatPointSourceDFT',fq_name('dft',st),[link_or_create=T],children=[
+              lmn = 'lmn',uvw = uvw ]);
 }
 
 # builds an init-record for a "dft" tree for two stations (st1,st2)
@@ -167,13 +180,14 @@ const make_solve_tree := function (st1,st2)
 
 # reads antenna positions and phase center from MS,
 # puts them into global variables
-const get_ms_info := function (msname='test.ms')
+const get_ms_info := function (msname='test.ms',uvw=T)
 {
   global ms_phasedir,ms_antpos;
   
   ms := table(msname);
   msant := table(ms.getkeyword('ANTENNA'));
   pos := msant.getcol('POSITION');
+  num_ant := msant.nrows();
   msant.done();
   
   time0 := ms.getcell('TIME',1);
@@ -186,6 +200,30 @@ const get_ms_info := function (msname='test.ms')
   msfld := table(ms.getkeyword('FIELD'));
   ms_phasedir := msfld.getcol('PHASE_DIR');
   msfld.done();
+  
+  if( uvw )
+  {
+    global ms_antuvw;
+    ms_antuvw := array(0.,3,num_ant);
+    # get UVW coordinates from ms
+    ant1 := ms.getcol('ANTENNA1');
+    ant2 := ms.getcol('ANTENNA2');
+    uvw  := ms.getcol('UVW');
+    mask1 := ant1 == 0;
+    uvw0 := uvw[,mask1];
+    ant2 := ant2[mask1];
+    for( a2 in 2:num_ant )
+    {
+      t := uvw0[,ant2==(a2-1)];
+      if( len(t) != 3 )
+      {
+        print 'cannot use UVWs from MS if more than one time slot';
+        fail 'cannot use UVWs from MS if more than one time slot';
+      }
+      ms_antuvw[,a2] := t;
+    }
+    print 'Antenna UVWs:',ms_antuvw;
+  }
   
   # get some UVWs, just for shits and giggles
   a0 := ms_antpos[1];
@@ -231,7 +269,8 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
     msname='test.ms',
     outcol='PREDICTED_DATA',        # output column of MS
     st1set=[1],st2set=[2,3,4],      # stations for which to make trees
-    load='',                        # load forest from file (doesn't work yet)
+    msuvw=F,                        # use UVW values from MS
+    load='',                        # load forest from file 
     save='',                        # save forest to file
     publish=3)    # node publish: higher means more detail
 {
@@ -261,7 +300,7 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
   }
 
   # read antenna positions, etc.  
-  get_ms_info(msname);
+  get_ms_info(msname,uvw=msuvw);
   
   # initialize meqserver (see mqsinit_test.g)
   if( is_fail(mqsinit()) )
@@ -346,7 +385,7 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
 
 #do_test(predict=T,run=T,st1set=1,st2set=2,publish=2);
 # do_test(solve=T,run=T,st1set=1,st2set=1,publish=2);
-do_test(solve=T,run=T,st1set=1:3,st2set=1:3,publish=3);
+do_test(solve=T,run=T,st1set=1:3,st2set=1:3,publish=3,msuvw=T);
 #do_test(solve=T,run=T,publish=2,load='solve-100.forest');
 
 print 'errors reported:',mqs.num_errors();
