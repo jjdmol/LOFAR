@@ -20,30 +20,17 @@
 //#
 //# $Id$
 
-
-/* WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
-   WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
-
-   Using DH_Database requires that the package postgresql-devel be
-   installed on the machine. For lofar17 and lofar3, the package has
-   been installed correctly. However, some dop* hosts may not have
-   this package installed. In order to prevent that CEPFrame will not
-   build on such machines, the DH_Database.cc and DH_Postgresql.cc HAVE
-   NOT BEEN INCLUDED IN Makefile.am. YOU HAVE TO ADD THEM YOURSELF
-   FOR THE TIME BEING.
-
-   WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
-   WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING */
-
 #ifndef CEPFRAME_DH_POSTGRESQL_H
 #define CEPFRAME_DH_POSTGRESQL_H
 
+#include <lofar_config.h>
 #include <CEPFrame/DH_Database.h>		// for class definition
 #include <Common/LofarTypes.h>			// for ulong
-#include <libpq-fe.h>				// for PGconn et al
+#ifdef HAVE_PSQL
+# include <libpq-fe.h>				// for PGconn et al
+#endif
 #include <sstream>
 
-using namespace std;
 
 namespace LOFAR {
 
@@ -72,7 +59,7 @@ public:
 
 protected:
   bool ExecuteSQLCommand (char * str);
-  bool ExecuteSQLCommand (ostringstream & q);
+  bool ExecuteSQLCommand (std::ostringstream & q);
 
   class DataPacket:
     public DH_Database::DataPacket
@@ -82,7 +69,9 @@ protected:
   };
 
  protected:
+#ifdef HAVE_PSQL
   static PGconn * theirConnection;
+#endif
 
 private:
 
@@ -105,6 +94,3 @@ private:
 }
 
 #endif
-
-
-

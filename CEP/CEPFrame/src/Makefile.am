@@ -10,6 +10,8 @@ SimulatorParseClass.h				\
 DH_Empty.h					\
 DH_Example.h					\
 DH_Tester.h					\
+DH_Postgresql.h					\
+DH_Database.h					\
 DataHolder.h					\
 Transportable.h					\
 PHEX_Antenna.h					\
@@ -64,6 +66,8 @@ SimulatorParseClass.cc				\
 DH_Empty.cc					\
 DH_Example.cc					\
 DH_Tester.cc					\
+DH_Postgresql.cc				\
+DH_Database.cc					\
 DataHolder.cc					\
 Transportable.cc				\
 PHEX_Antenna.cc					\
