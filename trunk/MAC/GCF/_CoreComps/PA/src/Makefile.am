@@ -33,7 +33,11 @@ PropertyAgent_LDADD		     			= libpa.la \
 	$(top_builddir)/CoreComps/TM/src/libtm.la \
 	$(top_builddir)/GCFCommon/src/libgcfcommon.la
 	
-PropertyAgent_DEPENDENCIES	= libpa.la $(LOFAR_DEPEND)
+PropertyAgent_DEPENDENCIES	= libpa.la $(LOFAR_DEPEND) \
+	$(top_builddir)/CoreComps/SAL/src/libsal.la \
+	$(top_builddir)/CoreComps/TM/src/libtm.la \
+	$(top_builddir)/GCFCommon/src/libgcfcommon.la
+	
 PropertyAgent_CPPFLAGS= -I$(top_srcdir)/GCFCommon/src \
 	-I$(top_srcdir)/CoreComps/TM/src \
 	-I$(top_srcdir)/CoreComps/SAL/src

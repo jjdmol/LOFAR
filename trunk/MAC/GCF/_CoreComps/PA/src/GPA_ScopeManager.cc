@@ -244,14 +244,14 @@ void GPAScopeManager::sendUnLinkEvents(GCFEvent& e)
         {
           LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
             "REQ: Link properties %s on scope %s",
-            pPropListStart,
+            pPropListStart + Utils::SLEN_FIELD_SIZE,
             pScope->c_str()));
         }
         else
         {
           LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
             "REQ: Unlink properties %s on scope %s",
-            pPropListStart,
+            pPropListStart + Utils::SLEN_FIELD_SIZE,
             pScope->c_str()));
         }
         e.length = oldEventLength + dataLength;

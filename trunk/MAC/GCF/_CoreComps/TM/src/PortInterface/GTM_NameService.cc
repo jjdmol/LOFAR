@@ -46,10 +46,11 @@ GTMNameService* GTMNameService::instance()
   return _pInstance;
 }
 
-int GTMNameService::init(const char *ns_config_file)
+int GTMNameService::init(const char* nsConfigFile)
 {
-  char fname[strlen(ns_config_file)+strlen(".ns")+1];
-  strcpy(fname, ns_config_file);
+  unsigned int length = strlen(nsConfigFile) + strlen(".ns") + 1;
+  char fname[length];
+  strcpy(fname, nsConfigFile);
   strcat(fname, ".ns");
 
   if (_pConfig) delete _pConfig;

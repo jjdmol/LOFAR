@@ -71,7 +71,7 @@ void GPARequestManager::deleteOldestRequest()
   {
     TRequest* pRequest = &_requests.front();
     if (pRequest->pEvent)
-      delete pRequest->pEvent;
+      delete [] pRequest->pEvent;
   }
   
   _requests.pop_front();
@@ -89,7 +89,7 @@ void GPARequestManager::deleteRequestsOfPort(const GCFPortInterface& requestPort
       if (pRequest->pRPort == &requestPort)
       {
         if (pRequest->pEvent)
-          delete pRequest->pEvent;
+          delete [] pRequest->pEvent;
         iter = _requests.erase(iter);
         --iter;
       }
@@ -103,7 +103,7 @@ void GPARequestManager::deleteAllRequests()
        pRequest != _requests.end(); ++pRequest)
   {
     if (pRequest->pEvent)
-      delete pRequest->pEvent;
+      delete [] pRequest->pEvent;
   }
   _requests.clear();
 }

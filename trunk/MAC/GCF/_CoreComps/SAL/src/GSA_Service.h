@@ -95,7 +95,7 @@ class GSAService
                        DpIdentifier& dpId) const;
     void convPropToDpConfig (const string& propName, 
                              string& pvssDpName, 
-                             bool read);
+                             bool willReadValue);
     void convDpConfigToProp (const string& pvssDPEConfigName, 
                              string& propName);    
     

@@ -451,7 +451,7 @@ TSAResult GSAService::unsubscribe(const string& propName)
 
     dpIdList.append(dpId);
 
-    if (Manager::dpDisconnect(dpIdList, _pWFA) == PVSS_FALSE)
+    if (Manager::dpDisconnect(dpIdList) == PVSS_FALSE)
     {
       ErrHdl::error(ErrClass::PRIO_SEVERE,      // It is a severe error
                     ErrClass::ERR_PARAM,        // wrong name: blame others
@@ -928,19 +928,19 @@ TSAResult GSAService::getDpId(const string& dpName, DpIdentifier& dpId) const
   return result;
 }
 
-void GSAService::convPropToDpConfig(const string& propName, string& pvssDpName, bool read)
+void GSAService::convPropToDpConfig(const string& propName, string& pvssDpName, bool willReadValue)
 {
   pvssDpName = propName.c_str();
   if (propName.find('.') < propName.size())
   {
-    if (read) 
+    if (willReadValue) 
       pvssDpName += ":_online.._value";
     else
       pvssDpName += ":_original.._value";
   }
   else
   {
-    if (read) 
+    if (willReadValue) 
       pvssDpName += ".:_online.._value";
     else
       pvssDpName += ".:_original.._value";
