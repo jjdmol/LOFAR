@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 14 ConfigListView
-PANEL,286 70 810 490 N "_3DFace" 3
+PANEL,416 116 810 490 N "_3DFace" 3
 "$configDatapoint"
 "$selectedElementDpType"
 "$selectedView"
