@@ -31,6 +31,7 @@
 #include <Common/KeyValueMap.h>
 
 // OnLineProto specific include
+#include "OnLineProto/DH_Phase.h"
 #include "OnLineProto/WH_PreProcess.h"
 
 namespace LOFAR
@@ -50,7 +51,7 @@ WH_PreProcess::WH_PreProcess (const string& name,
     sprintf (str, "%d", i);
 
     // create the input dataholders
-    getDataManager().addInDataHolder(i, new DH_Beamlet (string("in_") + str,
+    getDataManager().addInDataHolder(i, new DH_Beamlet (string("PP_in_") + str,
 							itsStationID,
 							itsPS.getFloat(string("station.beamlet.") + str),
 							itsPS.getFloat("station.chan_bw"),
@@ -58,7 +59,7 @@ WH_PreProcess::WH_PreProcess (const string& name,
 							itsPS.getInt("station.nchannels")));
 
     // create the output dataholders
-    getDataManager().addOutDataHolder(i, new DH_Beamlet (string("out_") + str,
+    getDataManager().addOutDataHolder(i, new DH_Beamlet (string("PP_out_") + str,
 							 itsStationID,
 							 itsPS.getFloat(string("station.beamlet.") + str),
 							 itsPS.getFloat("station.chan_bw"),
@@ -66,7 +67,6 @@ WH_PreProcess::WH_PreProcess (const string& name,
 							 itsPS.getInt("station.nchannels")));
   }
 
-  // connect to fringe control
   getDataManager().addInDataHolder(nbeamlets, new DH_Phase ("in_fringe", itsStationID));  
 }
   

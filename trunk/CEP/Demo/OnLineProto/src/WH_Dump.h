@@ -25,7 +25,7 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/WorkHolder.h"
+#include "tinyCEP/WorkHolder.h"
 #include <ACC/ParameterSet.h>
 
 #include <blitz/blitz.h>

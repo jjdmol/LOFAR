@@ -51,14 +51,14 @@ namespace LOFAR
 
     // create the dummy input dataholder
     sprintf (str, "%d", 1);
-    getDataManager().addInDataHolder(0, new DH_Empty (string("in_") + str), true);
+    getDataManager().addInDataHolder(0, new DH_Empty (string("SimS_in_") + str));
     int bs = itsPS.getInt("station.nbeamlets"); 
     
     // create the output dataholders
     for (int i = 0; i < bs; i++) {
       sprintf (str, "%d", i);
       getDataManager().addOutDataHolder (i, 
-					 new DH_Beamlet (string("out_") + str,
+					 new DH_Beamlet (string("SimS_out_") + str,
 							 ID,
 							 itsPS.getFloat(string("station.beamlet.") + str),
 							 itsPS.getFloat("station.chan_bw"),

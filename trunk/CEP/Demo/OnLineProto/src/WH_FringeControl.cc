@@ -27,12 +27,13 @@
 #include <Common/Debug.h>
 
 // CEPFrame general includes
-#include "CEPFrame/DH_Empty.h"
-#include "CEPFrame/Step.h"
+#include <CEPFrame/DH_Empty.h>
+#include <CEPFrame/Step.h>
 #include <Common/KeyValueMap.h>
 
 // OnLineProto specific include
-#include "OnLineProto/WH_FringeControl.h"
+#include <OnLineProto/WH_FringeControl.h>
+#include <OnLineProto/DH_Phase.h>
 
 namespace LOFAR
 {
@@ -47,14 +48,12 @@ WH_FringeControl::WH_FringeControl (const string& name,
 
   // create Dummy input holder
   sprintf (str, "%d", 0);
-  getDataManager().addInDataHolder(0, new DH_Empty (string("in_") + str), true);
+  getDataManager().addInDataHolder(0, new DH_Empty (string("FringeCtrlin_") + str));
 
   // create the output dataholders
   for (int i = 0; i < nout; i++) {
     sprintf (str, "%d", i);
-    getDataManager().addOutDataHolder(i, 
-				      new DH_Phase (string("out_") + str, i), 
-				      true);
+    getDataManager().addOutDataHolder(i,new DH_Phase (string("FringeCtrlout_") + str, i));
   }
 }
 
@@ -79,7 +78,7 @@ void WH_FringeControl::process()
   TRACER4("WH_FringeControl::Process()");
    
    for (int s = 0; s < getDataManager().getOutputs(); s++) {
-      *((DH_Phase*)getDataManager().getOutHolder(s))->getBuffer() = 1.0;
+      ((DH_Phase*)getDataManager().getOutHolder(s))->setPhaseAngle(0.0);
    }
 }
 

@@ -36,9 +36,8 @@
 #endif
 
 //CEPFrame basics
-#include <CEPFrame/Transport.h>
 #include <CEPFrame/Step.h>
-#include <CEPFrame/Simul.h>
+#include <CEPFrame/Composite.h>
 #include <CEPFrame/WH_Empty.h>
 #include <CEPFrame/Profiler.h>
 #include <OnLineProto/OnLineProto.h>
@@ -50,20 +49,21 @@
 #include <OnLineProto/WH_Correlate.h>
 #include <OnLineProto/WH_Dump.h>
 #include <OnLineProto/WH_FringeControl.h>
+#include <OnLineProto/WH_Merge.h>
 
 //DataHolders:
 #include <OnLineProto/DH_Beamlet.h>
 #include <OnLineProto/DH_CorrCube.h>
 #include <OnLineProto/DH_Vis.h>
-#include <OnLineProto/DH_Phase.h>
+#include <OnLineProto/DH_CorrectionMatrix.h>
 
 //TransportHolders
-#include <CEPFrame/ShMem/TH_ShMem.h>
-#include <CEPFrame/TH_Mem.h>
+#include <Transport/TH_ShMem.h>
+#include <Transport/TH_Mem.h>
 
 
 #include TRANSPORTERINCLUDE
-
+#define nonblocking false
 
 using namespace LOFAR;
 
@@ -83,6 +83,9 @@ OnLineProto::~OnLineProto()
 void OnLineProto::define(const KeyValueMap& params)
 {
 
+  // the default transportholder
+  TH_Mem THproto;
+
 #ifdef HAVE_MPI
   // TH_ShMem only works in combination with MPI
   TH_ShMem::init(0, NULL);
@@ -91,15 +94,15 @@ void OnLineProto::define(const KeyValueMap& params)
   // Free any memory previously allocated
   undefine();
 
-  // Create the top-level Simul
-  Simul app(new WH_Empty(), 
+  // Create the top-level Composite
+  Composite app(new WH_Empty(), 
 	    "OnLineProto",
 	    true, 
 	    true,  // controllable	      
 	    true); // monitor
-  setSimul(app);
+  setComposite(app);
 
-  // Set node and application number of Simul
+  // Set node and application number of Composite
   app.runOnNode(0,0);
   app.setCurAppl(0);
 
@@ -146,7 +149,22 @@ void OnLineProto::define(const KeyValueMap& params)
   Step myFringeControl(myWHFringeControl, "noname");
   myFringeControl.runOnNode(0,0);
   app.addStep(myFringeControl);
-  
+ 
+  ////////////////////////////////////////////////////////////////
+  //
+  // create the merge step
+  //
+  ////////////////////////////////////////////////////////////////
+  WH_Merge myWHMerge("noname", 1, myPS.getInt("general.nstations"),
+		     myPS.getInt("general.nstations"), 
+		     myPS.getInt("station.nchannels"));
+  Step myMerge(myWHMerge, "noname");
+  myMerge.runOnNode(0,0);
+  app.addStep(myMerge);  
+
+  // connect the fringe control step to the merge step
+  myMerge.connectInput(&myFringeControl,THproto,nonblocking);
+
   ////////////////////////////////////////////////////////////////
   //
   // create the preproces steps
@@ -168,11 +186,11 @@ void OnLineProto::define(const KeyValueMap& params)
 
     // connect the preprocess step to the station step
     for (int b = 0; b < myPS.getInt("station.nbeamlets"); b++) {
-      myPreProcessSteps[s]->connect(myStationSteps[s], b, b, 1);
+      myPreProcessSteps[s]->connect(myStationSteps[s], b, b, 1, THproto, nonblocking);
     }
      
     // connect the preprocess steps to the fringecontrol step
-    myPreProcessSteps[s]->connect(&myFringeControl, myPS.getInt("station.nbeamlets"), s, 1);
+    myPreProcessSteps[s]->connect(&myMerge, myPS.getInt("station.nbeamlets"), s, 1, THproto, nonblocking);
   }
    
   ////////////////////////////////////////////////////////////////
@@ -211,7 +229,7 @@ void OnLineProto::define(const KeyValueMap& params)
   for (int b = 0; b < myPS.getInt("station.nbeamlets"); b++) {
     for (int s = 0; s < myPS.getInt("general.nstations"); s++) {
       TRACER2("Pipeline; try to connect " << b << "   " << s);    
-      myTransposeSteps[b]->connect(myPreProcessSteps[s],s,b,1);
+      myTransposeSteps[b]->connect(myPreProcessSteps[s],s,b,1, THproto, nonblocking);
     }
   }
   
@@ -233,7 +251,8 @@ void OnLineProto::define(const KeyValueMap& params)
 
     myCorrelatorSteps[c] = new Step(myWHCorrelators[c],"noname");
     myCorrelatorSteps[c]->runOnNode(0,0);
-    myCorrelatorSteps[c]->setRate(myPS.getInt("corr.tsize"));
+    // todo: only output rate?
+    myCorrelatorSteps[c]->getWorker()->getDataManager().setOutputRate(myPS.getInt("corr.tsize"));
     app.addStep(myCorrelatorSteps[c]);
   }
 
@@ -245,7 +264,7 @@ void OnLineProto::define(const KeyValueMap& params)
   int correlator=0;
   for (int b=0; b<myPS.getInt("station.nbeamlets"); b++) { //NBeamlets
     for (int f=0; f< /*BFBW*/ myPS.getInt("corr.ncorr"); f++) {
-      myCorrelatorSteps[correlator]->connect(myTransposeSteps[b],0,f,1);
+      myCorrelatorSteps[correlator]->connect(myTransposeSteps[b],0,f,1, THproto, nonblocking);
       correlator++;
     }
   }
@@ -269,10 +288,13 @@ void OnLineProto::define(const KeyValueMap& params)
 
     myDumpSteps[s] = new Step(myWHDumps[s],"noname");
     myDumpSteps[s]->runOnNode(0,0);
-    myDumpSteps[s]->setRate(myPS.getInt("corr.tsize"));
+
+    myDumpSteps[s]->getWorker()->getDataManager().setInputRate(myPS.getInt("corr.tsize"));
+    myDumpSteps[s]->getWorker()->getDataManager().setProcessRate(myPS.getInt("corr.tsize"));
+    myDumpSteps[s]->getWorker()->getDataManager().setOutputRate(myPS.getInt("corr.tsize"));
     app.addStep(myDumpSteps[s]);
     // connect the preprocess step to the station step
-    myDumpSteps[s]->connectInput(myCorrelatorSteps[s]);
+    myDumpSteps[s]->connectInput(myCorrelatorSteps[s], THproto, nonblocking);
   }
 }
   
@@ -286,7 +308,7 @@ void OnLineProto::run(int nSteps) {
   for (int i=0; i<nSteps; i++) {
     if (i==2) Profiler::activate();
     TRACER2("Call app.process() ");
-    getSimul().process();
+    getComposite().process();
     if (i==5) Profiler::deActivate();
   }
 
@@ -300,7 +322,7 @@ void OnLineProto::run(int nSteps) {
 }
 
 void OnLineProto::dump() const {
-  getSimul().dump();
+  getComposite().dump();
 }
 
 void OnLineProto::quit() {  

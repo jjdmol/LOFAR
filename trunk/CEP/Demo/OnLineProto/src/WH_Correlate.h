@@ -25,7 +25,7 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/WorkHolder.h"
+#include "tinyCEP/WorkHolder.h"
 #include "OnLineProto/DH_CorrCube.h"
 #include "OnLineProto/DH_Vis.h"
 #include <ACC/ParameterSet.h>

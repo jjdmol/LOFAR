@@ -1,4 +1,4 @@
-//# DH_Vis.h: Vis DataHolder
+//# DH_Vis.h: Visibilities DataHolder
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,7 +26,7 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/DataHolder.h"
+#include "Transport/DataHolder.h"
 #include <Common/lofar_complex.h>
 #include <ACC/ParameterSet.h>
 
@@ -35,7 +35,6 @@
 
 namespace LOFAR
 {
-
 
 /**
    TBW
@@ -66,46 +65,39 @@ public:
   const BufferType* getBuffer() const;
   BufferType* getBufferElement(int station1, int station2);
   const int         getFBW() const;
-protected:
-  // Definition of the DataPacket type.
-  class DataPacket: public DataHolder::DataPacket
-  {
-  public:
-    DataPacket(){};
-
-    int itsBeamID;          // beam direction ID
-    int itsStartFrequency;  // frequency offste for this beamlet
-    int itsStartSeqNo;      // sequence number since last timestamp
-
-    BufferType itsFill;         // to ensure alignment
-  };
 
 private:
+  // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
+  virtual void fillDataPointers();
+
   /// Forbid assignment.
   DH_Vis& operator= (const DH_Vis&);
 
+  /// ptrs to data in the blob; used for accessors
+  int* itsBeamIDptr;          // beam direction ID
+  int* itsStartFrequencyptr;  // frequency offste for this beamlet
+  int* itsStartSeqNoptr;      // sequence number since last timestamp
+  int* itsFBWptr; // number of frequency channels within this beamlet
+  complex<float>*  itsBufferptr;    // array containing frequency spectrum.
 
-  DataPacket*  itsDataPacket;
-  BufferType*  itsBuffer;    // array containing frequency spectrum.
+
   unsigned int itsBufSize;
-  
-  int          itsFBW; // number of frequency channels within this beamlet
   const ParameterSet itsPS;
 };
 
 inline DH_Vis::BufferType* DH_Vis::getBuffer()
-  { return itsBuffer; }
+  { return itsBufferptr; }
 
 inline const DH_Vis::BufferType* DH_Vis::getBuffer() const
-  { return itsBuffer; }
+  { return itsBufferptr; }
 
 inline DH_Vis::BufferType* DH_Vis::getBufferElement(int s1, int s2)
 { 
-  return itsBuffer+s1*itsPS.getInt("general.nstations")+s2;
+  return itsBufferptr+s1*itsPS.getInt("general.nstations")+s2;
 }
 
 inline const int DH_Vis::getFBW() const
-  { return itsFBW; }
+  { return *itsFBWptr; }
 
 }
 

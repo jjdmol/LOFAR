@@ -24,7 +24,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-#include "DH_Phase.h"
+#include <DH_Phase.h>
 #include <Common/KeyValueMap.h>
 
 namespace LOFAR
@@ -32,57 +32,22 @@ namespace LOFAR
 
   DH_Phase::DH_Phase (const string& name, 
 		      const int StationID)
-: DataHolder            (name, "DH_Phase"),
-  itsDataPacket         (0),
-  itsBuffer             (0)
+: DataHolder            (name, "DH_Phase")
 {
-  // First delete possible buffers.
-  postprocess();
-
-  // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = sizeof(BufferType);
-  unsigned int size = sizeof(DataPacket) + itsBufSize;
-  char* ptr = new char[size];
-  // Fill in the data packet pointer and initialize the memory.
-  itsDataPacket = (DataPacket*)(ptr);
-  *itsDataPacket = DataPacket();
-  // Fill in the buffer pointer and initialize the buffer.
-  itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
-
-  // Initialize base class.
-  setDataPacket (itsDataPacket, size);
-
-  itsDataPacket->itsStationID        = StationID;
-  itsDataPacket->itsElapsedTime      = -1;
+  itsStationID        = StationID;
+  itsElapsedTime      = -1;
 }
 
 DH_Phase::DH_Phase(const DH_Phase& that)
-  : DataHolder     (that),
-    itsDataPacket  (0),
-    itsBuffer      (0)
+  : DataHolder     (that)
 {
-  // First delete possible buffers.
-  postprocess();
-
-  // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = sizeof(BufferType);
-  unsigned int size = sizeof(DataPacket) + itsBufSize;
-  char* ptr = new char[size];
-  // Fill in the data packet pointer and initialize the memory.
-  itsDataPacket = (DataPacket*)(ptr);
-  *itsDataPacket = DataPacket();
-  // Fill in the buffer pointer and initialize the buffer.
-  itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
-
-  // Initialize base class.
-  setDataPacket (itsDataPacket, size);
-  itsDataPacket->itsStationID        = that.getStationID();
-  itsDataPacket->itsElapsedTime      = that.getElapsedTime();
+  // todo: do we want to copy the blob avlues here or the temp. values from the DH?
+  itsStationID        = that.itsStationID;
+  itsElapsedTime      = that.itsElapsedTime;
 }
 
 DH_Phase::~DH_Phase()
 {
-  delete [] (char*)(itsDataPacket);
 }
 
 DataHolder* DH_Phase::clone() const
@@ -92,14 +57,33 @@ DataHolder* DH_Phase::clone() const
 
 void DH_Phase::preprocess()
 {
+  // Add the fields to the data definition.
+  addField("ElapsedTime",BlobField< float >(1,1));
+  addField("StationID",BlobField< int >(1,1));
+  addField("Phase",BlobField< float >(1,1));
+  addField("Buffer",BlobField< complex<float> >(1,1));
+  
+
+  // Create the data blob (which calls fillPointers).
+  createDataBlock();
+
+  // initialise the blob field with values from C'tor
+  *itsStationIDptr        = itsStationID;
+  *itsElapsedTimeptr      = itsElapsedTime;
+  
+}
+
+void DH_Phase::fillDataPointers()
+{
+  // Fill in the buffer pointer.
+  itsPhaseptr          = getData<float> ("Phase");
+  itsElapsedTimeptr    = getData<float> ("ElapsedTime");
+  itsStationIDptr      = getData<int> ("StationID");
+  itsBufferptr         = getData<complex<float> > ("Buffer");
 }
 
 void DH_Phase::postprocess()
 {
-  delete [] (char*)(itsDataPacket);
-  itsDataPacket = 0;
-  itsBuffer     = 0;
-  setDefaultDataPacket();
 }
 
 }

@@ -29,14 +29,14 @@
 
 #include <lofar_config.h>
 
-#include <CEPFrame/Simulator.h>
+#include <CEPFrame/ApplicationHolder.h>
 #include <Common/KeyValueMap.h>
 
 /**
    This is an empty Simulator class   
 */
 
-class OnLineProto: public LOFAR::Simulator
+class OnLineProto: public LOFAR::ApplicationHolder
 {
 public:
   OnLineProto();
