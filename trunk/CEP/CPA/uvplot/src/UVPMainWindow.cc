@@ -6,6 +6,7 @@
 
 #include <UVPMainWindow.h>
 #include <UVPDataTransferWP.h>    // Communications class
+#include <UVPPVDInput.h>
 
 
 #include <qapplication.h>       // qApp
@@ -38,7 +39,8 @@ UVPMainWindow::UVPMainWindow()
   //  itsDataSet = new UVPDataSet;
 
   itsFileMenu = new QPopupMenu;
-  itsFileMenu->insertItem("&Open", this, SLOT(slot_openFile()));
+  itsFileMenu->insertItem("&Open MS", this, SLOT(slot_openMS()));
+  itsFileMenu->insertItem("&Open PVD", this, SLOT(slot_openPVD()));
   itsFileMenu->insertItem("&Quit", qApp, SLOT(quit()));
 
   itsPlotMenu = new QPopupMenu;
@@ -314,16 +316,35 @@ void UVPMainWindow::slot_quitPlotting()
 
 
 
-//==================>>>  UVPMainWindow::slot_openFile  <<<==================
+//==================>>>  UVPMainWindow::slot_openMS  <<<==================
 
-void UVPMainWindow::slot_openFile()
+void UVPMainWindow::slot_openMS()
 {
   QString filename = QFileDialog::getExistingDirectory(".",
                                                        this, 
                                                        "", 
                                                        "Open Measurement Set");
   if(!filename.isNull()) {
+    
     slot_readMeasurementSet(filename.latin1());
+  }
+}
+
+
+
+
+//==================>>>  UVPMainWindow::slot_openPVD  <<<==================
+
+void UVPMainWindow::slot_openPVD()
+{
+  QString filename = QFileDialog::getOpenFileName(".",
+                                                  "*.pvd *.PVD",
+                                                  this, 
+                                                  "", 
+                                                  "Open Patch Visibility Database");
+  if(!filename.isNull()) {
+    
+    slot_readPVD(filename.latin1());
   }
 }
 
@@ -414,38 +435,109 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
   TRACER1("NumTimeslots: " << NumTimeslots << std::flush);
 #endif
 
-  /*  slot_setProgressTotalSteps(NumRows);
-  unsigned int progress = 0;
-  //  Just the first 30 Baselines for now...
-  itsTestMS = std::vector<std::vector<UVPDataAtom> >(30);
-  for(Iterator.originChunks(); Iterator.moreChunks() && Continue; Iterator.nextChunk()) {
-    qApp->processEvents();
-    for(Iterator.origin(); Iterator.more(); Iterator++, progress++) { 
-      Vector<Int>    Ant1(VisibilityBuffer.antenna1());
-      Vector<Int>    Ant2(VisibilityBuffer.antenna2());
-      unsigned int   NRows(VisibilityBuffer.nRow());
-      Vector<Double> Time(VisibilityBuffer.time());
-      
-      for(unsigned int i = 0; i < NRows; i++, progress++) {
-        if(progress%3000 == 0) {
-          slot_setProgress(progress);
-        }
-        unsigned int A1       = Ant1[i];
-        unsigned int A2       = Ant2[i];
-        unsigned int Baseline = A2 + NumAntennae*A1 - A1*(A1+1)/2;
-        if(Baseline < itsTestMS.size() ) {
-          UVPDataAtom  Atom(NumChannels, Time[i], std::vector<double>(3, 0));
-          
-          itsTestMS[Baseline].push_back(Atom);
-        } else {
-          //0          Continue = false;
-        }
+}
 
-      }
 
-     }
-  }
-  std::cout << "Number of Timeslots: " << itsTestMS[6].size() <<std::endl;
-  */
+
+
+
+
+
+//==================>>>  UVPMainWindow::slot_readPVD  <<<==================
+
+void UVPMainWindow::slot_readPVD(const std::string& pvdName)
+{
+  UVPPVDInput pvd(pvdName);
+
+#if(DEBUG_MODE)
+  TRACER1("Num Ant : " << pvd.numberOfAntennae());
+  TRACER1("Num Chan: " << pvd.numberOfChannels());
+#endif
+
+  itsNumberOfChannels  = pvd.numberOfChannels();
+
+  itsCanvas->setChannels(itsNumberOfChannels);
+  itsCanvas->setGeometry(0, 0, itsNumberOfChannels, 1500);
+  itsScrollView->removeChild(itsCanvas);
+  itsScrollView->addChild(itsCanvas);
+  resizeEvent(0);
+
+
+  std::vector<UVPDataAtom> DataSlice;
+
+  unsigned int ant1 = itsGraphSettingsWidget->getSettings().getAntenna1();
+  unsigned int ant2 = itsGraphSettingsWidget->getSettings().getAntenna2();
+
+  UVPDataAtomHeader FromHeader;
+  UVPDataAtomHeader ToHeader;
   
+  FromHeader.itsAntenna1 = std::min(ant1, ant2);
+  FromHeader.itsAntenna2 = std::max(ant1, ant2);
+
+  ant1 = FromHeader.itsAntenna1;
+  ant2 = FromHeader.itsAntenna2;
+  
+  ToHeader.itsAntenna1 = FromHeader.itsAntenna1;
+  ToHeader.itsAntenna2 = FromHeader.itsAntenna2 + 1;
+  
+  unsigned int pass(0);
+
+  while(pvd.getDataAtoms(&itsDataSet, ant1, ant2)) {
+    if(pass % 5 == 0) {
+#if(DEBUG_MODE)
+      TRACER1( "itsDataSet.size(): " << itsDataSet.size());
+      TRACER1( "itsDataSet.begin(): " << itsDataSet.begin()->first.itsAntenna1 << "-" <<
+               itsDataSet.begin()->first.itsAntenna2);
+      TRACER1( "itsDataSet.end(): " << (itsDataSet.end()-- )->first.itsAntenna1 << "-" <<
+               (itsDataSet.end()--)->first.itsAntenna2);
+      TRACER1( "ant1-ant2: " << ant1 << "-" << ant2);
+      TRACER1("Start of sequence: " << itsDataSet.upper_bound(FromHeader)->first.itsAntenna1 << "-" <<
+              itsDataSet.upper_bound(FromHeader)->first.itsAntenna2);
+      TRACER1("End of sequence: " << itsDataSet.upper_bound(ToHeader)->first.itsAntenna1 << "-" <<
+              itsDataSet.upper_bound(ToHeader)->first.itsAntenna2);
+      
+      TRACER1("------------------------------------------------------");
+      for(UVPDataSet::iterator p = itsDataSet.begin();
+          p != itsDataSet.end();
+          p++) {
+        TRACER1(p->first.itsAntenna1 << "-" << p->first.itsAntenna2);
+      }
+      TRACER1("------------------------------------------------------");
+#endif
+      
+      itsCanvas->setChannels(itsNumberOfChannels); // Number of channels. Clears buffer.
+      unsigned int spectraAdded = 0;
+      for(UVPDataSet::iterator p = itsDataSet.upper_bound(FromHeader);
+          p != itsDataSet.upper_bound(ToHeader) && p != itsDataSet.end();
+          p++) {
+        const   UVPDataAtom *dataAtom = &(p->second);
+#if(DEBUG_MODE)
+        TRACER1( "Ant1: " <<  dataAtom->getHeader().itsAntenna1);
+        TRACER1( "Ant2: " <<  dataAtom->getHeader().itsAntenna2);
+        cout.precision(10);
+        TRACER1( "Time: " <<  dataAtom->getHeader().itsTime); 
+        cout.precision(6);
+        TRACER1( "Corr: " <<  dataAtom->getHeader().itsCorrelationType);
+#endif
+        double *Values = new double[dataAtom->getNumberOfChannels()];
+        for(unsigned int j = 0; j < dataAtom->getNumberOfChannels(); j++) {
+          Values[j] = std::abs(*dataAtom->getData(j));
+        }
+        UVPSpectrum   Spectrum(dataAtom->getNumberOfChannels(), spectraAdded, Values);
+        if(dataAtom->getHeader().itsCorrelationType == UVPDataAtomHeader::RR) {
+          itsCanvas->slot_addSpectrum(Spectrum);
+          spectraAdded++;
+        }
+        delete[] Values;
+      }
+      itsNumberOfTimeslots = spectraAdded;
+      //        itsScrollView->removeChild(itsCanvas);
+      //      itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
+      //        itsScrollView->addChild(itsCanvas);
+      itsCanvas->drawView();
+    }
+    pass++;
+    qApp->processEvents();
+    
+  } // while 
 }

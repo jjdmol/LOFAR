@@ -57,9 +57,11 @@ class UVPMainWindow:public QMainWindow
 
   void slot_quitPlotting();
 
-  void slot_openFile();
+  void slot_openMS();
+  void slot_openPVD();
 
   void slot_readMeasurementSet(const std::string& msName);
+  void slot_readPVD(const std::string& pvdName);
 
  protected:                     /* Protected part */
   
