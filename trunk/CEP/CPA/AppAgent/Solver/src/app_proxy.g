@@ -23,7 +23,7 @@ const start_octopussy := function(server,options="",suspend=F)
 }
 
 const define_app_proxy := function (ref self,ref public,
-        appid,server,options,suspend,verbose)
+        appid,server,options,suspend,verbose,gui,parent_frame)
 {
   self.octo := start_octopussy(server,options,suspend);
   if( is_fail(self.octo) )
@@ -39,7 +39,20 @@ const define_app_proxy := function (ref self,ref public,
   self.verbose_events := T;
   self.rqid := 1;
   self.waiting_init := F;
-  
+
+  # setup fail/exit handlers
+  whenever self.agentref->["fail done exit"] do 
+  {
+    public.dprint(1,"exit event: ",$name,$value);
+    if( $name == 'fail' )
+      msg := paste('client process has died unexpectedly: ',$name,$value);
+    else
+      msg := paste('client process has exited: ',$name,$value);
+    self.relay->app_notify_state([state=-2,state_string=to_upper($name),text=msg]);
+    self.octo := F;
+    self.agentref := F;
+  }
+    
   # define standard debug methods
   define_debug_methods(self,public,verbose);
   
@@ -192,6 +205,123 @@ const define_app_proxy := function (ref self,ref public,
     return $value.value;
   }
   
+  const public.make_gui_frame := function (parent=F)
+  {
+    wider self;
+    wider public;
+    if( !is_record(dws) ) fail 'dws not loaded -- include widgetserver.g first';
+    if( is_record(self.gui) ) fail 'gui frame already constructed';
+    self.gui := [=];
+    # create frame
+    self.gui.topframe := dws.frame(parent=parent,title=self.appid,relief='groove');
+    self.gui.topframe->unmap();
+    # set 'killed' handler
+    whenever self.gui.topframe->killed do 
+      self.gui := F;
+    # create state window
+    self.gui.stateframe := dws.frame(parent=self.gui.topframe,side='left',expand='none');
+    self.gui.state_lbl := dws.label(self.gui.stateframe,spaste(self.appid,': '));
+    self.gui.state := dws.entry(self.gui.stateframe,width=30,
+                               relief='sunken',disabled=T);
+    # create command buttons
+    self.gui.cmd_frame := dws.frame(parent=self.gui.topframe,side='left',expand='none');
+    self.gui.pause := dws.button(self.gui.cmd_frame,'PAUSE');
+    self.gui.resume := dws.button(self.gui.cmd_frame,'RESUME');
+    self.gui.updstatus := dws.button(self.gui.cmd_frame,'Update status');
+    self.gui.resume_pad := dws.frame(self.gui.cmd_frame,expand='none',width=20,height=5);
+    self.gui.stop := dws.button(self.gui.cmd_frame,'STOP');
+    self.gui.stop_pad := dws.frame(self.gui.cmd_frame,expand='none',width=20,height=5);
+    self.gui.halt := dws.button(self.gui.cmd_frame,'HALT');
+    # register event handlers for command buttons
+    whenever self.gui.pause->press do public.pause();
+    whenever self.gui.resume->press do public.resume();
+    whenever self.gui.stop->press do public.stop();
+    whenever self.gui.halt->press do public.halt();
+    whenever self.gui.updstatus->press do public.reqstatus();
+    # create event logger
+    self.gui.eventlog_tf := dws.frame(self.gui.topframe,side='left',borderwidth=0);
+    self.gui.eventlog := dws.text(self.gui.eventlog_tf,disabled=T,
+          relief='sunken',width=60,height=20,wrap='none');
+    self.gui.eventlog->config('event',foreground="#808080");
+    self.gui.eventlog->config('text',foreground="black");
+    self.gui.eventlog->config('error',foreground="red");
+    self.gui.eventlog_vsb := dws.scrollbar(self.gui.eventlog_tf);
+    self.gui.eventlog_bf := dws.frame(self.gui.topframe,side='right',borderwidth=0,expand='x');
+    self.gui.eventlog_pad := dws.frame(self.gui.eventlog_bf,
+                expand='none',width=23,height=23,relief='groove');
+    self.gui.eventlog_hsb := dws.scrollbar(self.gui.eventlog_bf,orient='horizontal');
+    whenever self.gui.eventlog_vsb->scroll, self.gui.eventlog_hsb->scroll do
+        self.gui.eventlog->view($value);
+    whenever self.gui.eventlog->yscroll do
+        self.gui.eventlog_vsb->view($value);
+    whenever self.gui.eventlog->xscroll do
+        self.gui.eventlog_hsb->view($value);
+    # create status record panel
+    self.gui.statusbrowser := dws.recordbrowser(self.gui.topframe,[status='none']);
+#    self.gui.statusrec_tf := dws.frame(self.gui.topframe,borderwidth=0);
+#    self.gui.statusrec_f1 := dws.frame(self.gui.statusrec_tf,borderwidth=0);
+#    self.gui.statusrec_f2 := dws.frame(self.gui.statusrec_tf,borderwidth=0);
+    self.gui.statusrec := [=];
+    whenever self.relay->* do
+    {
+      report := T;
+      # update state
+      if( $name == 'app_notify_state' ) 
+      {
+        self.gui.state->delete('0','end');
+        self.gui.state->insert($value.state_string);
+      }
+      # update status record
+      name := $name;
+      if( name =~ s/^app_update_status_// )
+      {
+        name := split(name,'/');
+        if( len(name) == 1 )
+        {
+          self.gui.statusrec[name] := [=];
+          for( f in field_names($value) )
+            self.gui.statusrec[f] := $value[f];
+        }
+        else
+        {
+          if( !has_field(self.gui.statusrec,name[1]) ||
+              !is_record(self.gui.statusrec[name[1]]) )
+            self.gui.statusrec[name[1]] := [=];
+          for( f in field_names($value[name[1]]) )
+            self.gui.statusrec[name[1]][f] := $value[name[1]][f];
+        }
+        self.gui.statusbrowser->newrecord(self.gui.statusrec);
+        report := F;
+      }
+      if( name ~ m/^app_status/ )
+      {
+        self.gui.statusrec := $value;
+        self.gui.statusbrowser->newrecord(self.gui.statusrec);
+        report := F;
+      }
+      # update event log
+      if( report )
+      {
+        self.gui.eventlog->append(spaste($name,': ',$value,'\n'),'event');
+        if( has_field($value,'text') )
+        {
+          tag := 'text';
+          if( has_field($value,'error') )
+            tag := 'error';
+          self.gui.eventlog->append(spaste($value.text,'\n'),tag);
+        }
+      }
+    }
+    self.gui.topframe->map();
+    return ref self.gui.topframe;
+  }
+  const public.kill_gui_frame := function ()
+  {
+    wider self;
+    self.gui := F;
+  }
+  
+  
   # register global event handler for this app -- all "our" events are
   # relayed to the relay agent
   whenever self.agentref->* do
@@ -228,14 +358,23 @@ const define_app_proxy := function (ref self,ref public,
     }
   }
   
+  # create gui if asked to do so
+  if( gui || !is_boolean(parent_frame) )
+  {
+    public.make_gui_frame(parent_frame);
+  }
+  
   return T;
 }
 
-const app_proxy := function(appid,server=F,options=F,suspend=F,verbose=1)
+const app_proxy := function(appid,
+        server=F,options=F,suspend=F,verbose=1,
+        gui=F,parent_frame=F)
 {
   self := [=];
   public := [=];
-  ret := define_app_proxy(self,public,appid,server,options,suspend,verbose);
+  ret := define_app_proxy(self,public,appid,server,options,suspend,verbose,
+                          gui,parent_frame);
   if( is_fail(ret) )
     fail;
   return ref public;

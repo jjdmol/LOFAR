@@ -31,6 +31,7 @@ static int __dum = aidRegistry_Solver();
 
 InitDebugContext(SolverControlAgent,"SolverControl");
 
+using Debug::ssprintf;
 
 //##ModelId=3E01FD1D03DB
 bool SolverControlAgent::init (const DataRecord &data)
@@ -69,7 +70,14 @@ int SolverControlAgent::startDomain  (const DataRecord::Ref::Xfer &data)
   setStatus(StDomainNumber,++domainNum_);
   nextDomain_ = False;
   dprintf(1)("starting domain %d\n",domainNum_);
-  postEvent(StartDomainEvent,data);
+  DataRecord::Ref ref = data;
+  if( !ref.valid() )
+  {
+    ref <<= new DataRecord;
+    ref()[AidText] = ssprintf("start of domain %d",domainNum_+1);
+    ref()[StDomainNumber] = domainNum_;
+  }
+  postEvent(StartDomainEvent,ref);
   return state();
 }
 
@@ -78,7 +86,14 @@ int SolverControlAgent::endDomain (const DataRecord::Ref::Xfer &data)
 {
   FailWhen(domainNum()<0,"illegal domain number -- perhaps startDomain() not called?");
   dprintf(1)("end of domain %d\n",domainNum_);
-  postEvent(EndDomainEvent,data);
+  DataRecord::Ref ref = data;
+  if( !ref.valid() )
+  {
+    ref <<= new DataRecord;
+    ref()[AidText] = ssprintf("end of domain %d",domainNum_+1);
+    ref()[StDomainNumber] = domainNum_;
+  }
+  postEvent(EndDomainEvent,ref);
   return checkState();
 }
 
@@ -86,7 +101,7 @@ int SolverControlAgent::endDomain (const DataRecord::Ref::Xfer &data)
 int SolverControlAgent::endData (const HIID &event)
 {
   dprintf(1)("end of data\n");
-  postEvent(event);
+  postEvent(event,"end of input data");
   setStatus(StEndData,endOfData_ = True);
   if( solve_queue_.empty() && stop_on_end_ )
   {
@@ -149,6 +164,7 @@ int SolverControlAgent::endIteration (double conv)
   DataRecord::Ref ref(new DataRecord,DMI::ANONWR);
   ref()[FIterationNumber] = iter_count_;
   ref()[FConvergence] = convergence_;
+  ref()[AidText] = ssprintf("end of iteration %d",iter_count_);
   postEvent(EndIterationEvent,ref);
   // check if state has been changed for us
   if( checkState() != RUNNING )
@@ -200,7 +216,7 @@ int SolverControlAgent::endSolution  (DataRecord::Ref &endrec)
   setStatus(StSolverControl,DataRecord::Ref(DMI::ANONWR));
   setStatus(StSolutionParams,DataRecord::Ref(DMI::ANONWR));
   // post end event
-  postEvent(EndSolutionEvent);
+  postEvent(EndSolutionEvent,"solution complete");
   return setEndSolutionState();
 }
 
@@ -289,7 +305,7 @@ void SolverControlAgent::initSolution (const DataRecord::Ref &params)
   setState(RUNNING);
   setStatus(StSolutionParams,params.copy().privatize(DMI::WRITE|DMI::DEEP));
   setStatus(StDomainNumber,domainNum());
-  postEvent(StartSolutionEvent);
+  postEvent(StartSolutionEvent,"starting solution");
 }
 
 //##ModelId=3EB242F400B5

@@ -1,3 +1,4 @@
+include 'widgetserver.g'
 include 'glishsolver.g'
 include 'mkimg.g'
 
@@ -15,13 +16,22 @@ solverec := [ iter_step=1,max_iter=5,
 mtest := function (dosolve=F,verbose=1,suspend=F)
 {
   print "Creating solver and output repeater";
-  start_octopussy('./applauncher',"-dSolver=4 -meq:M:O:Solver -rpt:O:M:Repeater",
+  start_octopussy('./applauncher',"-d0 -meq:M:O:Solver -rpt:O:M:Repeater",
                   suspend=suspend);
   global solv;
   global rpt;
   
-  solv := solver('Solver',verbose=verbose);
-  rpt := app_proxy('Repeater',verbose=verbose);
+  parent := dws.frame(title='Solver demo',side='left');
+  parent->unmap();
+  
+  solv := solver('Solver',verbose=verbose,parent_frame=parent);
+  if( is_fail(solv) )
+    fail;
+  rpt := app_proxy('Repeater',verbose=verbose,parent_frame=parent);
+  if( is_fail(rpt) )
+    fail;
+  
+  parent->map();
   
   print "Starting solver";
   inputrec := [ ms_name = msname,data_column_name = 'MODEL_DATA',
@@ -77,3 +87,6 @@ img := function ()
 {
   mkimg('demo.MS','demo.imgs',msselect=mssel, type='corrected');
 }
+
+
+mtest(verbose=3)
