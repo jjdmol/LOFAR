@@ -124,15 +124,15 @@ int main (int argc,const char *argv[])
     // parse various options
     bool glish = std::find(args.begin(),args.end(),string("-noglish")) == args.end();
     
-    Debug::setLevel("VisRepeater",2);
-    Debug::setLevel("MSVisAgent",2);
-    Debug::setLevel("VisAgent",2);
-    Debug::setLevel("OctoEventMux",2);
-    Debug::setLevel("OctoEventSink",2);
-    Debug::setLevel("BOIOSink",2);
-    Debug::setLevel("AppControl",2);
-    Debug::setLevel("Dsp",1);
-    Debug::setLevel("Solver",3);
+//     Debug::setLevel("VisRepeater",2);
+//     Debug::setLevel("MSVisAgent",2);
+//     Debug::setLevel("VisAgent",2);
+//     Debug::setLevel("OctoEventMux",2);
+//     Debug::setLevel("OctoEventSink",2);
+//     Debug::setLevel("BOIOSink",2);
+//     Debug::setLevel("AppControl",2);
+//     Debug::setLevel("Dsp",1);
+//     Debug::setLevel("Solver",3);
     Debug::initLevels(argc,argv);
     
     cout<<"=================== initializing OCTOPUSSY =====================\n";

@@ -50,11 +50,16 @@ const meqserver := function (appid='MeqServer',
 const meqnode := function (class,name,children=F,default=[=] )
 {
   defrec := [ class=class,name=name ];
-  if( is_record(children) )
+  if( !is_boolean(children) )
     defrec.children := children;
   if( !is_record(default) || len(default) )
     defrec.default := default;
   return defrec;
+}
+
+const meqparm := function (name,default=[=] )
+{
+  return meqnode('MEQParmPolcStored',name,default=default);
 }
 
 const meqdomain := function (startfreq,endfreq,starttime,endtime)
@@ -133,4 +138,52 @@ const meqserver_test := function ()
   request := meqrequest(cells);
   print mqs.meq('Get.Result',[name='add1_2',request=request],T);
   print mqs.meq('Get.Node.State',[name='add1_2'],T);
+}
+
+const meqsink_test := function ()
+{
+  global mqs;
+  # create meqserver object
+  mqs := meqserver(verbose=4,server='./meqserver',
+                    options="-d0 -meq:M:O:MeqServer",suspend=F);
+  # set verbose debugging messages
+  for( context in "MeqNode MeqForest MeqSink MeqSpigot MeqNode MeqVisHandler MeqServ" )
+    mqs.setdebug(context,5);
+  for( context in "MeqServ MeqVisHandler" )
+    mqs.setdebug(context,3);
+  mqs.setdebug('MeqServer',1);
+  # initialize meqserver
+  mqs.init([=],wait=T);
+  
+  # create a small subtree
+  defval1 := array(as_double(1),2,2);
+  defval2 := array(as_double(2),1,1);
+  addrec := meqnode('MEQAdd','add1_2',
+              children=[  x=meqparm('p1',default=defval1), 
+                          y=meqparm('p2',default=defval2),
+                          z='spigot1' ]);
+  print mqs.meq('Create.Node',addrec);
+  # create spigot (note! for now, a spigot MUST be created first)
+  spigrec := meqnode('MEQSpigot','spigot1');
+  spigrec.input_col := 'DATA';
+  spigrec.corr_index := 1;
+  spigrec.station_1_index := 1;
+  spigrec.station_2_index := 2;
+  print mqs.meq('Create.Node',spigrec);
+  
+  # create sink
+  sinkrec := meqnode('MEQSink','sink1',children="spigot1");
+  sinkrec.output_col := 'DATA'; # no output for now
+  sinkrec.corr_index := 1;
+  sinkrec.station_1_index := 1;
+  sinkrec.station_2_index := 2;
+  print mqs.meq('Create.Node',sinkrec);
+  
+  # resolve its children
+  print mqs.meq('Resolve.Children',[name='sink1'],T);
+  
+  # activate input agent and watch the fireworks
+  inputrec := [ ms_name = 'test.ms',data_column_name = 'DATA',tile_size=10,
+                selection = [=]  ];
+  mqs.init(input=inputrec); 
 }

@@ -4,7 +4,10 @@ lib_LTLIBRARIES = libmeqserver.la
 
 libmeqserver_la_SOURCES = \
   AID-MeqServer-Registry.cc \
-  MeqServer.cc 
+  MeqServer.cc \
+  VisDataMux.cc \
+  VisHandlerNode.cc \
+  Sink.cc Spigot.cc
   
 bin_PROGRAMS   		= meqserver
   
