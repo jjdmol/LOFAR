@@ -35,6 +35,9 @@
 #include <Common/lofar_string.h>
 #include <stdexcept>
 
+namespace LOFAR
+{
+
 extern "C" {
   int SimulatorTokenizewrap();
 }
@@ -123,5 +126,6 @@ public:
 */
 void SimulatorParseerror (char*);
 
+}
 
 #endif

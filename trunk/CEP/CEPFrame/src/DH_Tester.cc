@@ -26,6 +26,8 @@
 
 #include "DH_Tester.h"
 
+namespace LOFAR
+{
 
 DH_Tester::DH_Tester (const string& name)
 : DataHolder (name, "DH_Tester")
@@ -46,4 +48,6 @@ DH_Tester::~DH_Tester()
 DataHolder* DH_Tester::clone() const
 {
   return new DH_Tester(*this);
+}
+
 }

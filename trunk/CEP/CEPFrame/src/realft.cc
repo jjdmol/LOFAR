@@ -26,6 +26,9 @@
 #include "CEPFrame/four1.h"
 #include "CEPFrame/realft.h"
 
+namespace LOFAR
+{
+
 void realft(float data[], unsigned long n, int isign)
 {
 	unsigned long i,i1,i2,i3,i4,np3;
@@ -67,4 +70,6 @@ void realft(float data[], unsigned long n, int isign)
 		data[2]=c1*(h1r-data[2]);
 		four1(data,n>>1,-1);
 	}
+}
+
 }

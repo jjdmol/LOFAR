@@ -32,6 +32,9 @@
 #include "CEPFrame/Step.h"
 #include "Common/Debug.h"
 
+namespace LOFAR
+{
+
 BaseTransport::BaseTransport()
 : itsTransportHolder (0),
   itsID              (-1),
@@ -88,3 +91,4 @@ void BaseTransport::setWriteTag (int tag)
     itsWriteTag = tag; 
 }
 
+}

@@ -33,6 +33,9 @@
 #include "CEPFrame/Step.h"
 #include "CEPFrame/SimulRep.h"
 
+namespace LOFAR
+{
+
 class SimulBuilder;
 class CorbaController;
 
@@ -209,5 +212,6 @@ private:
   SimulRep* itsSimul;
 };
 
+}
   
 #endif

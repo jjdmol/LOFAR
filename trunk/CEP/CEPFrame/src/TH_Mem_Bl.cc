@@ -26,6 +26,9 @@
 #include "Common/Debug.h"
 #include <unistd.h>
 
+namespace LOFAR
+{
+
 /**
  * Declare messages map which keeps track of all sent messages
  * until they have been received. This map is indexed with
@@ -188,3 +191,5 @@ TH_Mem_Bl::Msg::Msg()
 TH_Mem_Bl::Msg::Msg(void* buf, int nbytes, int tag) :
     itsBuf(buf), itsNBytes(nbytes), itsTag(tag)
 {}
+
+}

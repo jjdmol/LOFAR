@@ -42,6 +42,9 @@ bool Profiler::theirIsActive=false;    // start in de-activate state
 #include "/opt/scali/contrib/mpe/include/mpe.h"
 #endif
 
+namespace LOFAR
+{
+
 void Profiler::init() {
   MPE_Init_log();
   MPI_Pcontrol(0);        // switch off MPI build-in profiling
@@ -93,5 +96,6 @@ void Profiler::deActivate()
   theirIsActive = false;
 }
 
+}
 
 #endif

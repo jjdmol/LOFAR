@@ -27,6 +27,8 @@
 #include "CEPFrame/StepRep.h"
 #include "Common/Debug.h"
 
+namespace LOFAR
+{
 
 /**
  * Prototype variable declaration. Can be
@@ -191,3 +193,4 @@ void TH_File::finalize()
 void TH_File::synchroniseAllProcesses()
 {}
 
+}

@@ -34,6 +34,9 @@
 #include <Common/lofar_map.h>
 #include "CEPFrame/CyclicOWBuffer.h"
 
+namespace LOFAR
+{
+
 /**
   Class ParamManager controls access to a WorkHolders ParamHolders.
 */
@@ -92,6 +95,7 @@ private:
 
 };
 
+}
 
 #endif
 

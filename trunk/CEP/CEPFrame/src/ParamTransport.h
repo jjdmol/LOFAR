@@ -34,6 +34,9 @@
 #include "CEPFrame/BaseTransport.h"
 #include "CEPFrame/ParamHolder.h"
 
+namespace LOFAR
+{
+
 //# Forward Declarations
 class StepRep;
 
@@ -173,5 +176,7 @@ inline bool ParamTransport::hasReceivedLast()
 
 inline bool ParamTransport::hasSentLast()
   { return itsLastSend; }
+
+}
 
 #endif 

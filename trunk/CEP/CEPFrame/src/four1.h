@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2003/02/21 11:14:36  schaaf
+//  copy from BaseSim tag "CEPFRAME"
+//
 //  Revision 1.5  2001/10/26 10:06:28  wierenga
 //  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
 //
@@ -39,6 +42,9 @@
 #include <config.h>
 #endif
 
+namespace LOFAR
+{
+
 /** Fast Fourier Transform (FFT).
 	Replaces #data[1..2*nn]# by its discrete Fourier transform, if
 	#isign# is input as 1; or replaces #data[1..2*nn] by #nn# times
@@ -48,5 +54,7 @@
 	of 2 (this is not checked for!).
 */
 void four1 (float data[], unsigned long nn, int isign);
+
+}
 
 #endif

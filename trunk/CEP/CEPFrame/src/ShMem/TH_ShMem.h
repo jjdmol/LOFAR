@@ -37,6 +37,9 @@
 #include "Common/lofar_map.h"
 #include "Common/shmem/shmem_alloc.h"
 
+namespace LOFAR
+{
+
 /**
    This class defines the transport mechanism between data holders
    that have been connected using the TH_Mem::proto prototype. This can
@@ -177,6 +180,7 @@ public:
   static char* hostNames;
 };
 
+}
 
 #endif
 #endif

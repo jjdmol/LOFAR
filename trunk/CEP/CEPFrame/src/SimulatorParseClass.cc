@@ -42,12 +42,15 @@ extern char *SimulatorTokenizetext;
 #include <sstream>
 using namespace std;
 
+extern void SimulatorParseparse();
+
+namespace LOFAR
+{
+
 // Initialize statics.
 int SimulatorParse::theirLine = 0;
 int SimulatorParse::theirPosition = 0;
 Simulator* SimulatorParse::theirSimulator = 0;
-
-extern void SimulatorParseparse();
 
 void SimulatorParse::parse (Simulator& simulator)
 {
@@ -180,4 +183,7 @@ void SimulatorParseerror (char*)
 int SimulatorTokenizewrap()
 {
     return 1;
+}
+
+
 }

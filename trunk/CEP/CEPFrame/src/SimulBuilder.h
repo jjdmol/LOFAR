@@ -32,6 +32,8 @@
 
 #include "CEPFrame/Simul.h"
 
+namespace LOFAR
+{
 
 /**
    The SimulBuilder is part of the implementation of a Builder pattern
@@ -97,5 +99,6 @@ inline WorkHolder& SimulBuilder::getWorker()
 inline void SimulBuilder::setWorker (WorkHolder& worker)
 { itsWorker = worker.baseMake(); }
 
+}
 
 #endif

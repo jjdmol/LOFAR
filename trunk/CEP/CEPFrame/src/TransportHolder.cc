@@ -27,6 +27,8 @@
 #include "CEPFrame/TransportHolder.h"
 #include <stdlib.h>
 
+namespace LOFAR
+{
 
 TransportHolder::TransportHolder()
 {}
@@ -49,4 +51,6 @@ void TransportHolder::deallocate (void*& ptr)
 bool TransportHolder::connectionPossible (int, int) const
 {
   return false;
+}
+
 }

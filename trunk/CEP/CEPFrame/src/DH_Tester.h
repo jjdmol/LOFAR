@@ -34,6 +34,9 @@
 #include "CEPFrame/DataHolder.h"
 #include "CEPFrame/BaseSim.h"
 
+namespace LOFAR
+{
+
 /**
    This class is a simple DataHolder test class for the program Tester.
 */
@@ -85,5 +88,6 @@ inline DH_Tester::DataBufferType* DH_Tester::getBuffer()
 inline const DH_Tester::DataBufferType* DH_Tester::getBuffer() const
   { return itsDataPacket.itsBuffer; }
 
+}
 
 #endif 

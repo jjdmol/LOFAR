@@ -23,6 +23,9 @@
 
 #include "CEPFrame/PH_Int.h"
 
+namespace LOFAR
+{
+
 PH_Int::PH_Int(const string& name)
   : ParamHolder(name, "PH_Int"),
     itsParamPacket(0)
@@ -57,4 +60,6 @@ void PH_Int::preprocess()
   itsParamPacket->itsValue = 0;
   // Initialize base class.
   setParamPacket(itsParamPacket, size);
+}
+
 }

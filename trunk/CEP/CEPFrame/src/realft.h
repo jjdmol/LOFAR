@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2003/02/21 11:14:36  schaaf
+//  copy from BaseSim tag "CEPFRAME"
+//
 //  Revision 1.4  2002/05/08 14:21:20  wierenga
 //  Only comments are allowed after #endif
 //
@@ -42,6 +45,9 @@
 #include <config.h>
 #endif
 
+namespace LOFAR
+{
+
 /** FFT of Single Real Function. 
 	Calculates the Fourier Transform of a set of #n# real-valued data
 	points. Replaces this data (which is stored in array #data[1..n]#)
@@ -56,5 +62,6 @@
 
 void realft(float data[], unsigned long n, int isign);
 
+}
 
 #endif /*BASESIM_REALFT_H*/

@@ -32,6 +32,9 @@
 #include <Common/lofar_stack.h>
 #include "CEPFrame/Lock.h"
 
+namespace LOFAR
+{
+
 #define PARAM_FINAL_MSG_MAGIC_NO 555
 
 //# Forward Declarations
@@ -129,5 +132,7 @@ inline void ParamTransportManager::setInputBuffer(CyclicOWBuffer<ParamHolder*>* 
 
 inline ParamTransport* ParamTransportManager::getSourceTransport()
 { return itsSourceTransport; }
+
+}
 
 #endif

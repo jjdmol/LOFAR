@@ -28,6 +28,9 @@
 #include "ParamBlock.h"
 #include <Common/lofar_iostream.h>
 
+namespace LOFAR
+{
+
 ParamBlock::ParamBlock()
 {}
 
@@ -124,4 +127,6 @@ ostream& operator<< (ostream& os, const ParamBlock& param)
     os << iter->first << '=' << iter->second;
   }
   return os;
+}
+
 }

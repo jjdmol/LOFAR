@@ -30,6 +30,9 @@
 #include "CEPFrame/ParamBlock.h"
 #include "Common/Debug.h"
 
+namespace LOFAR
+{
+
 WH_Example::WH_Example (const string& name,
 			unsigned int nin, unsigned int nout,
 			unsigned int nbuffer)
@@ -107,3 +110,4 @@ void WH_Example::dump()
   }
 }
 
+}

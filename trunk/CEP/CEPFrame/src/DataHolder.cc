@@ -32,6 +32,9 @@
 #include "CEPFrame/StepRep.h"
 #include "Common/Debug.h"
 
+namespace LOFAR
+{
+
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -279,4 +282,6 @@ void DataHolder::setWriteDelay (int delay)
 {
   itsWriteDelay = delay;
   itsWriteDelayCount = delay;
+}
+
 }

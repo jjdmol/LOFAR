@@ -32,6 +32,9 @@
 #include "CEPFrame/StepRep.h"
 #include "CEPFrame/Step.h"
 
+namespace LOFAR
+{
+
 Transport::Transport (DataHolder* dataHolderPtr)
 : BaseTransport(),
   itsDataHolder      (dataHolderPtr),
@@ -134,4 +137,6 @@ void Transport::setTargetAddr (DataHolder* addr)
   itsTargetAddr = addr;
   setTargetTransportable(addr);//Set Transportable in base class BaseTransport
   
+}
+
 }

@@ -36,6 +36,9 @@
 
 using namespace std;
 
+namespace LOFAR
+{
+
 // Internal Functions
 
 bool LogEntry (char *);
@@ -405,4 +408,4 @@ bool ExecuteCommand (ostringstream & q) {
   return true;
 }
 
-
+}

@@ -32,6 +32,9 @@
 #include "CEPFrame/TransportHolder.h"
 #include "Common/lofar_map.h"
 
+namespace LOFAR
+{
+
 /**
    This class defines the transport mechanism between data holders
    that have been connected using the TH_Mem::proto prototype. This can
@@ -148,5 +151,6 @@ public:
 
 };
 
+}
 
 #endif

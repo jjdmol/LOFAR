@@ -28,6 +28,9 @@
 
 #include <CEPFrame/DataHolder.h>
 
+namespace LOFAR
+{
+
 class DH_Database : public DataHolder
 {
 public:
@@ -50,4 +53,5 @@ private:
 
 };
 
+}
 #endif

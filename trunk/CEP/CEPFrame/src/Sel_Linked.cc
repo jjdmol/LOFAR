@@ -26,6 +26,8 @@
 
 #include "CEPFrame/Sel_Linked.h"
 
+namespace LOFAR
+{
 
 Sel_Linked::Sel_Linked(Selector* selector, unsigned int noOptions)
   :  Selector(noOptions),
@@ -41,4 +43,6 @@ Sel_Linked::~Sel_Linked()
 unsigned int Sel_Linked::getNext()
 {
   return itsLink->getCurrentSelection();
+}
+
 }

@@ -26,8 +26,10 @@
 //# Includes
 #include "CEPFrame/ParamHolder.h"
 
-//# Forward Declarations
+namespace LOFAR
+{
 
+//# Forward Declarations
 
 // Description of class.
 
@@ -71,6 +73,8 @@ inline const int PH_Int::getValue() const
 inline void PH_Int::setValue(int newvalue)
 {
   itsParamPacket->itsValue = newvalue;
+}
+
 }
 
 #endif

@@ -32,6 +32,9 @@
 
 #include "CEPFrame/DataHolder.h"
 
+namespace LOFAR
+{
+
 typedef struct 
 {
   DataHolder* currentDH;
@@ -120,5 +123,6 @@ inline int DataManager::getInputs() const
 inline int DataManager::getOutputs() const
   { return itsNoutputs; }
 
+}
 
 #endif

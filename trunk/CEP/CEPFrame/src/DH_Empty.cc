@@ -26,6 +26,8 @@
 
 #include "DH_Empty.h"
 
+namespace LOFAR
+{
 
 DH_Empty::DH_Empty (const string& name)
 : DataHolder (name, "DH_Empty")
@@ -44,4 +46,7 @@ DH_Empty::~DH_Empty()
 DataHolder* DH_Empty::clone() const
 {
   return new DH_Empty(*this);
+}
+
+
 }

@@ -33,6 +33,8 @@
 #include "CEPFrame/Simul.h"
 #include "CEPFrame/ParamBlock.h"
 
+namespace LOFAR
+{
 
 /**
    Simulator is the abstract base class for simulation application programs.
@@ -144,6 +146,8 @@ inline Simul& Simulator::getSimul()
 inline const Simul& Simulator::getSimul() const
   { return itsSimul; }
 
+
+}
 
 
 #endif

@@ -33,6 +33,9 @@
 
 #include "Common/lofar_string.h"
 
+namespace LOFAR
+{
+
 /**
    This class defines the base class for transport mechanism classes
    to transport data between connected DataHolders.
@@ -86,7 +89,7 @@ private:
   BaseTransport * itsBaseTransport;
 };
 
-
+}
 
 
 #endif

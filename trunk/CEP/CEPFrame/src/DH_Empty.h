@@ -33,6 +33,9 @@
 #include "CEPFrame/DataHolder.h"
 #include "CEPFrame/BaseSim.h"
 
+namespace LOFAR
+{
+
 /**
    This class represents an empty DataHolder.
    This is a DataHolder that does not do anything.
@@ -48,5 +51,6 @@ public:
   virtual DataHolder* clone() const;
 };
 
+}
 
 #endif 

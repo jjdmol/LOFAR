@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2003/02/21 11:14:36  schaaf
+//  copy from BaseSim tag "CEPFRAME"
+//
 //  Revision 1.2  2002/05/03 11:21:31  gvd
 //  Changed for new build environment (mostly added package name to include)
 //
@@ -55,6 +58,9 @@
 #include "BaseSim/WorkHolder.h"
 #include "BaseSim/Simul.h"
 #include "BaseSim/Step.h"
+
+namespace LOFAR
+{
 
 /** The SAXHandler class handles events from a SAX2 parser and builds a
     LOFAR simulation.
@@ -174,6 +180,7 @@ inline ostream& operator<<(ostream& target, const SAXLocalStr& toDump)
   return target;
 }
 
+}
 
 #endif
 

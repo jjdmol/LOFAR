@@ -26,6 +26,9 @@
 #include "CEPFrame/Simul.h"
 #include <Common/lofar_fstream.h>
 
+namespace LOFAR
+{
+
 /** The Simul2XML class outputs a Simul to an XML file */
 
 class Simul2XML
@@ -55,5 +58,6 @@ private:
   int itsNextID;
 };
 
+}
 
 #endif

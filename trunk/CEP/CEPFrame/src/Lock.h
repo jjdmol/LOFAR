@@ -23,6 +23,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2003/02/21 11:14:36  schaaf
+//  copy from BaseSim tag "CEPFRAME"
+//
 //  Revision 1.4  2002/06/07 06:57:14  wierenga
 //  %[BugId:2]%
 //  Add missing include for AssertStr routine.
@@ -77,6 +80,9 @@
 
 #include <Common/Debug.h>
 #include <pthread.h>
+
+namespace LOFAR
+{
 
 #define THREAD_SAFE_MTX  ThreadMutex __pthread_mutex
 #define THREAD_SAFE_LOCK ThreadLock  __pthread_lock(__pthread_mutex)
@@ -232,5 +238,7 @@ class ThreadRWLock
     int             writer_writing;
     int             max_readers;
 };
+
+}
 
 #endif

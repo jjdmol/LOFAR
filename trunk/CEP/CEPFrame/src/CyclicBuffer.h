@@ -37,6 +37,9 @@
 //#include <Common/lofar_deque.h>
 #include <Common/lofar_vector.h>
 
+namespace LOFAR
+{
+
 #define MIN(a,b) ((a)<(b)?(a):(b))
 
 // an element of the CyclicBuffer
@@ -342,6 +345,8 @@ template<class TYPE>
 int CyclicBuffer<TYPE>::GetCount(void)
 {
   return itsCount;
+}
+
 }
 
 #endif

@@ -34,6 +34,9 @@
 #include "CEPFrame/StepRep.h"
 #include TRANSPORTERINCLUDE
 
+namespace LOFAR
+{
+
 //# Forward Declarations
 class Simul;
 
@@ -295,5 +298,6 @@ protected:
 
 };
 
+}
 
 #endif

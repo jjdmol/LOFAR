@@ -42,6 +42,9 @@
 #include <sstream>
 using namespace std;
 
+namespace LOFAR
+{
+
 // this will give all instances of Step the same event in the Profiling output
 int          StepRep::theirProcessProfilerState=0;
 unsigned int StepRep::theirNextID=0;
@@ -567,4 +570,6 @@ bool StepRep::setOutRate (int rate, int dhIndex)
     }
   }
   return false;
+}
+
 }

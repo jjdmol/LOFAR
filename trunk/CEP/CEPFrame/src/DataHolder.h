@@ -38,6 +38,9 @@
 #include <CEPFrame/TransportHolder.h>
 #include <CEPFrame/Transportable.h>
 
+namespace LOFAR
+{
+
 //# Forward Declarations
 class Transport;
 class StepRep;
@@ -371,5 +374,6 @@ inline const string& DataHolder::getType () const
 inline void DataHolder::setType(const string& type)
   { itsType = type; }
 
+}
 
 #endif

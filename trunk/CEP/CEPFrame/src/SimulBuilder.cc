@@ -25,8 +25,12 @@
 
 #include "SimulBuilder.h"
 
+namespace LOFAR
+{
 
 SimulBuilder::~SimulBuilder()
 {
   delete itsWorker;
+}
+
 }

@@ -29,6 +29,9 @@
 #include <config.h>
 #endif
 
+namespace LOFAR
+{
+
 /* This class holds all method which are required by both DataHolders and
    PramHolders. */ 
 
@@ -46,6 +49,6 @@ public:
 
 };
 
-
+}
 
 #endif

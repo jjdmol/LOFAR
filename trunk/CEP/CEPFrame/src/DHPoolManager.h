@@ -32,13 +32,14 @@
 
 #include "CEPFrame/DataHolder.h"
 
+namespace LOFAR
+{
+
 /**
  The main purpose of this class is to control access to a DataHolder
  (in a pool with size = 1). It offers a common interface for all access to
  DataHolders and is a base class for the CycBufferManager class.
 */
-
-
 class DHPoolManager
 {
 public:
@@ -92,4 +93,7 @@ inline bool DHPoolManager::getSharing()
 {
   return itsShared;
 }
+
+}
+
 #endif

@@ -26,6 +26,8 @@
 #include "CEPFrame/Step.h"
 #include "CEPFrame/Simul.h"
 
+namespace LOFAR
+{
 
 Step::Step (WorkHolder& worker, 
 	    const string& aName,
@@ -90,4 +92,6 @@ Step* Step::clone() const
 Simul Step::getParent() const
 {
   return Simul(itsRep->getParent());
+}
+
 }

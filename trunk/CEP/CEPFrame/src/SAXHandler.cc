@@ -41,6 +41,8 @@
 #include "CEPFrame/SAXSimulParser.h"
 #include "Common/Debug.h"
 
+namespace LOFAR
+{
 
 // ---------------------------------------------------------------------------
 //  Local const data
@@ -462,5 +464,7 @@ void SAXHandler::fatalError (const SAXParseException &exception)
 
 void SAXHandler::resetErrors()
 {}
+
+}
 
 #endif

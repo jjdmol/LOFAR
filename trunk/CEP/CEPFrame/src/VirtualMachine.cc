@@ -25,6 +25,9 @@
 #include "CEPFrame/VirtualMachine.h"
 #include "Common/Debug.h"
 
+namespace LOFAR
+{
+
 VirtualMachine::VirtualMachine():
   itsState(running),
   itsStatus(unknown)
@@ -166,4 +169,6 @@ string VirtualMachine::asString (VirtualMachine::Status aStatus) const
   default:
     return "unknown";
   }
+}
+
 }

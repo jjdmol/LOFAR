@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2003/02/21 12:25:24  schaaf
+//  Replaced all BaseSim includes with CEPFRame includes; removed $ fields
+//
 //  Revision 1.1.1.1  2003/02/21 11:14:36  schaaf
 //  copy from BaseSim tag "CEPFRAME"
 //
@@ -44,14 +47,15 @@
 %{
 #include "CEPFrame/SimulatorParseClass.h"
 #include "CEPFrame/ParamBlock.h"
+using namespace LOFAR;
 %}
 
 %pure_parser                /* make parser re-entrant */
 
 %union {
-ParamValue* val;
-ParamBlock* block;
-vector<ParamValue>* vec;
+LOFAR::ParamValue* val;
+LOFAR::ParamBlock* block;
+vector<LOFAR::ParamValue>* vec;
 }
 
 %{

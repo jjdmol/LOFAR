@@ -32,6 +32,9 @@
 #include "CEPFrame/ParamHolder.h"
 #include <math.h>
 
+namespace LOFAR
+{
+
 /**
    This is the ParameterHolder for the example Antenna class; each antenna
    will get an instance of the class. 
@@ -86,5 +89,6 @@ inline float PHEX_Antenna::getRadius() const
 inline float PHEX_Antenna::getAngle() const
 { return atan2(itsDataPacket.Ypos, itsDataPacket.Xpos); }
 
+}
 
 #endif 

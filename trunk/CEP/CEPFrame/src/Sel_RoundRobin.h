@@ -33,6 +33,9 @@
 
 #include "CEPFrame/Selector.h"
 
+namespace LOFAR
+{
+
 /**
    This class implements a Round Robin selection mechanism.
 */
@@ -50,5 +53,6 @@ private:
 
 };
 
+}
 
 #endif

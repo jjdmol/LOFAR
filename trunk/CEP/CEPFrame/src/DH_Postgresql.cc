@@ -35,7 +35,11 @@
 #include <unistd.h>				// for gethostname ()
 #include <stdlib.h>				// for strtoul
 
+
 using namespace std;
+
+namespace LOFAR
+{
 
 
 // TODO: Convert all couts to debug trace statements
@@ -417,3 +421,4 @@ bool LogEntry (ostringstream & q) {
 
 */
 
+}
