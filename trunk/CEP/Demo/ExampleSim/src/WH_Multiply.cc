@@ -46,7 +46,7 @@ WH_Multiply::~WH_Multiply()
 {}
 
 WorkHolder* WH_Multiply::construct (const string& name, int ninput, int,
-				  const ParamBlock&)
+				    const KeyValueMap&)
 {
   return new WH_Multiply (name, ninput);
 }

@@ -45,7 +45,7 @@ WH_Source::~WH_Source()
 {}
 
 WorkHolder* WH_Source::construct (const string& name, int, int noutput,
-				  const ParamBlock&)
+				  const KeyValueMap&)
 {
   return new WH_Source (name, noutput);
 }

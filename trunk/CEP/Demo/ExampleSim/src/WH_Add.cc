@@ -40,7 +40,7 @@ WH_Add::~WH_Add()
 {}
 
 WorkHolder* WH_Add::construct (const string& name, int, int,
-				  const ParamBlock&)
+			       const KeyValueMap&)
 {
   return new WH_Add (name);
 }

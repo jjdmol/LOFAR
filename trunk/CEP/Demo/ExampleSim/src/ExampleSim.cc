@@ -59,7 +59,7 @@ ExampleSim::~ExampleSim()
    Define function for the ExampleSim simulation. It defines the steps that 
    process part of the data.
  */
-void ExampleSim::define(const ParamBlock& params)
+void ExampleSim::define(const KeyValueMap& params)
 {
   // Free any memory previously allocated
   undefine();
