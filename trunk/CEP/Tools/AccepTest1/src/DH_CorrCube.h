@@ -52,8 +52,8 @@ public:
   /// Get access to the Buffer in the DataPacket.
   const BufferType* getBuffer() const;
 
-  BufferType* getBufferElement(int sample, int channel, int station, int polarisation);
-  void setBufferElement(int sample, int channel, int station, int polarisation, BufferType* value); 
+  BufferType* getBufferElement(int channel, int sample, int station, int polarisation);
+  void setBufferElement(int channel, int sample, int station, int polarisation, BufferType* value); 
 
   const int         getFBW() const;
 
@@ -80,27 +80,27 @@ inline DH_CorrCube::BufferType* DH_CorrCube::getBuffer()
 inline const DH_CorrCube::BufferType* DH_CorrCube::getBuffer() const
   { return itsBuffer; }
 
-inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int sample, 
-							      int channel,
+inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int channel, 
+							      int sample,
 							      int station,
 							      int polarisation							     
 							      ) 
   {
     return itsBuffer + 
-      npolarisations*nstations*nchannels*sample + 
-      npolarisations*nstations*channel + 
+      npolarisations*nstations*nsamples*channel + 
+      npolarisations*nstations*sample + 
       npolarisations*station + 
       polarisation;
   }
  
- inline void DH_CorrCube::setBufferElement(int sample, 
-					   int channel, 
+ inline void DH_CorrCube::setBufferElement(int channel, 
+					   int sample, 
 					   int station, 
 					   int polarisation,
 					   DH_CorrCube::BufferType* valueptr) {
    *(itsBuffer + 
-     npolarisations*nstations*nchannels*sample + 
-     npolarisations*nstations*channel + 
+     npolarisations*nstations*nsamples*channel + 
+     npolarisations*nstations*sample + 
      npolarisations*station + 
      polarisation) = *valueptr;
  }

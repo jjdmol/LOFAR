@@ -112,10 +112,10 @@ void WH_Correlator::process() {
 	  // todo: do short-> float conversion only once
 	  
 	  // convert complex<short> to complex<float>
-	    s1_val = DH_Vis::BufferType((inDH->getBufferElement(sample, fchannel, station1, polarisation))->real(),
-					(inDH->getBufferElement(sample, fchannel, station1, polarisation)->imag()));
-	    s2_val = DH_Vis::BufferType((inDH->getBufferElement(sample, fchannel, station2, polarisation))->real(),
-					(inDH->getBufferElement(sample, fchannel, station2, polarisation)->imag()));
+	    s1_val = DH_Vis::BufferType((inDH->getBufferElement(fchannel, sample, station1, polarisation))->real(),
+					(inDH->getBufferElement(fchannel, sample, station1, polarisation)->imag()));
+	    s2_val = DH_Vis::BufferType((inDH->getBufferElement(fchannel, sample, station2, polarisation))->real(),
+					(inDH->getBufferElement(fchannel, sample, station2, polarisation)->imag()));
 	    
 	    outDH->addBufferElementVal(station1, station2, fchannel, polarisation,
 				       s1_val * s2_val
