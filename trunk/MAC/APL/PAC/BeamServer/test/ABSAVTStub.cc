@@ -56,6 +56,7 @@ AVTStub::~AVTStub()
 GCFEvent::TResult AVTStub::initial(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
+  static int disconnect_count = 0;
 
   LOG_DEBUG(formatString("initial received event on port %s", port.getName().c_str()));
 
@@ -81,6 +82,12 @@ GCFEvent::TResult AVTStub::initial(GCFEvent& e, GCFPortInterface& port)
 
       case F_DISCONNECTED_SIG:
       {
+	  // only do 5 reconnects
+	  if (disconnect_count++ > 5)
+	  {
+	      _fail("timeout");
+	      TRAN(AVTStub::done);
+	  }
 	  port.setTimer((long)2);
       }
       break;
@@ -429,6 +436,18 @@ GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& /*port*/)
 	  alloc.spectral_window = 0;
 	  alloc.n_subbands = -1;
 	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
+
+	  _test(sizeof(alloc) == beam_server.send(alloc));
+	}
+	else if (loop++ == 4)
+	{
+	  // send invalid index in subbands array
+	  ABSBeamallocEvent alloc;
+	  alloc.beam_index = 0;
+	  alloc.spectral_window = 0;
+	  alloc.n_subbands = 1;
+	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
+	  alloc.subbands[0] = -1;
 
 	  _test(sizeof(alloc) == beam_server.send(alloc));
 	}

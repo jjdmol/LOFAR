@@ -21,8 +21,16 @@
 //#  $Id$
 
 #include <ABSBeamlet.h>
+#include <ABSBeam.h>
 
 #include <iostream>
+#include <queue>
+
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+using namespace LOFAR;
 
 using namespace ABS;
 using namespace std;
@@ -31,7 +39,7 @@ int      Beamlet::m_ninstances = 0;
 Beamlet* Beamlet::m_beamlets   = 0;
 
 Beamlet::Beamlet() :
-    m_allocated(false), m_spw(0), m_subband(0)
+    m_spw(0), m_subband(0), m_index(-1), m_beam(0)
 {}
 
 Beamlet::~Beamlet()
@@ -73,29 +81,56 @@ int Beamlet::setNInstances(int ninstances)
   return (m_beamlets ? 0 : -1);
 }
 
-int Beamlet::allocate(SpectralWindow const& spw, int subband)
+int Beamlet::allocate(const Beam& beam, SpectralWindow const& spw, int subband)
 {
   // don't allow second allocation
-  if (m_allocated) return -1;
+  if (m_beam) return -1;
 
   // check that the subband is within the spectral window
   if (subband >= spw.nsubbands()) return -1;
 
   m_spw     = &spw;
   m_subband = subband;
-  m_allocated = true;
+  m_beam = &beam;
+  //m_beam_index = beam_index;
 
   return 0;
 }
 
 int Beamlet::deallocate()
 {
-  if (!m_allocated) return -1;
+  if (!m_beam) return -1;
 
   m_spw     = 0;
   m_subband = -1;
-  m_allocated = false;
+  m_beam    = 0;
 
   return 0;
+}
+
+const Beam* Beamlet::getBeam() const
+{
+  return m_beam;
+}
+
+void Beamlet::calculate_weights()
+{
+  priority_queue<Pointing> coords;
+
+  for (int i = 0; i < m_ninstances; i++)
+  {
+      Beamlet* beamlet = &m_beamlets[i];
+      if (beamlet->allocated())
+      {
+	  const Beam* beam = beamlet->getBeam();
+
+	  // get coordinates from beam
+	  beam->getCoordinates(coords);
+      }
+  }
+
+  // calculating weights for the following coordinates
+  LOG_INFO(formatString("Calculating weights for %d beamlets: %d coordinates.",
+			m_ninstances, coords.size()));
 }
 
