@@ -1,4 +1,4 @@
-bin_PROGRAMS = Correlator FrontEnd BackEnd
+bin_PROGRAMS = Correlator FrontEnd BackEnd BasicFE BasicCorr BasicBE
 
 DOCHDRS			=				\
 Config.h						\
@@ -30,6 +30,15 @@ AH_FrontEnd.cc
 BackEnd_SOURCES 	=	$(SHAREDSRCS)		\
 BackEndMain.cc						\
 AH_BackEnd.cc
+
+BasicFE_SOURCES 	=                     	        \
+BasicFE.cc						
+
+BasicCorr_SOURCES 	=	          		\
+BasicCorrelator.cc       
+
+BasicBE_SOURCES 	=	          		\
+BasicBE.cc						
 
 Correlator_LDADD = # /bgl/broekema/traceback/traceback.o
 Correlator_DEPENDENCIES = $(LOFAR_DEPEND)
