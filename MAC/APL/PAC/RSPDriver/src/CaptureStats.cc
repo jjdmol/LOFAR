@@ -253,6 +253,8 @@ GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
 
 void CaptureStats::capture_statistics(Array<double, 2>& stats)
 {
+  cerr << ".";
+  
   if (0 == m_nseconds)
   {
     // initialize values array
@@ -283,6 +285,7 @@ void CaptureStats::capture_statistics(Array<double, 2>& stats)
   // check if duration has been reached
   if (m_nseconds >= m_duration)
   {
+    cerr << endl;
     exit(EXIT_SUCCESS);
   }
 }
@@ -312,7 +315,7 @@ void CaptureStats::write_statistics(Array<double, 2>& stats)
 		 (m_device < 0 ? device : m_device));
 	break;
       case Statistics::BEAMLET_POWER:
-	snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_bst_rcu%02d.dat",
+	snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_bst_pol%02d.dat",
 		 t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
 		 t->tm_hour, t->tm_min, t->tm_sec,
 		 (m_device < 0 ? device : m_device));
@@ -396,14 +399,14 @@ int main(int argc, char** argv)
         { "rcu",          required_argument, 0, 'r' },
 	{ "duration",     required_argument, 0, 'd' },
 	{ "integration",  optional_argument, 0, 'i' },
-	{ "statstype",    required_argument, 0, 't' },
+	{ "statstype",    required_argument, 0, 's' },
 	{ "help",         no_argument,       0, 'h' },
 	{ 0, 0, 0, 0 },
       };
 
     int option_index = 0;
     int c = getopt_long_only(argc, argv,
-			     "r:d:i::t:h", long_options, &option_index);
+			     "r:d:i::s:h", long_options, &option_index);
     
     if (c == -1) break;
     
