@@ -56,7 +56,7 @@ class WPQueue;
 //## end Message%3C7B6A2D01F0.preface
 
 //## Class: Message%3C7B6A2D01F0
-//## Category: PSCF%3BCEC935032A
+//## Category: OCTOPUSSY%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
 //## Cardinality/Multiplicity: n
@@ -143,6 +143,9 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
       //## Operation: operator []%3C7F56D90197
       NestableContainer::ConstHook operator [] (int n) const;
 
+      //## Operation: setBranch%3CB42D0201B4
+      NestableContainer::Hook setBranch (const HIID &id, int flags = DMI::WRITE);
+
       //## Operation: data%3C7E443A016A
       void * data ();
 
@@ -179,26 +182,26 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
 
     //## Get and Set Operations for Associations (generated)
 
-      //## Association: PSCF::<unnamed>%3C7B70FF033D
+      //## Association: OCTOPUSSY::<unnamed>%3C7B70FF033D
       //## Role: Message::to%3C7B7100015E
       const MsgAddress& to () const;
       void setTo (const MsgAddress& value);
 
-      //## Association: PSCF::<unnamed>%3C7B71050151
+      //## Association: OCTOPUSSY::<unnamed>%3C7B71050151
       //## Role: Message::from%3C7B7106029D
       const MsgAddress& from () const;
       void setFrom (const MsgAddress& value);
 
-      //## Association: PSCF::<unnamed>%3C7B71820219
+      //## Association: OCTOPUSSY::<unnamed>%3C7B71820219
       //## Role: Message::id%3C7B718500FB
       const HIID& id () const;
       void setId (const HIID& value);
 
-      //## Association: PSCF::<unnamed>%3C7B9796024D
+      //## Association: OCTOPUSSY::<unnamed>%3C7B9796024D
       //## Role: Message::payload%3C7B97970096
       const ObjRef& payload () const;
 
-      //## Association: PSCF::<unnamed>%3C7B9799014D
+      //## Association: OCTOPUSSY::<unnamed>%3C7B9799014D
       //## Role: Message::block%3C7B97990388
       const BlockRef& block () const;
 
@@ -218,13 +221,14 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
       { return (*this)[HIID(id1)]; }
       
       // some predefined priority levels
-      static const int PRI_NORMAL  = 0,
-                       PRI_HIGH    = 10,
-                       PRI_HIGHER  = 20,
-                       PRI_EVENT   = 25,
-                       PRI_LOW     = -10,
-                       PRI_LOWER   = -20,
-                       PRI_LOWEST  = -30;
+      // a priority<0 is considered "none"
+      static const int PRI_LOWEST  = 0,
+                       PRI_LOWER   = 0x10,
+                       PRI_LOW     = 0x20,
+                       PRI_NORMAL  = 0x100,
+                       PRI_HIGH    = 0x200,
+                       PRI_HIGHER  = 0x400,
+                       PRI_EVENT   = 0x800;
       
       typedef CountedRef<Message> Ref;
       
@@ -275,16 +279,6 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
       } MessageBlock;
       //## end Message%3C7B6A2D01F0.protected
   private:
-    //## Get and Set Operations for Class Attributes (generated)
-
-      //## Attribute: tmQueued%3CA1A00402E4
-      ulong tmQueued () const;
-      void setTmQueued (ulong value);
-
-      //## Attribute: tmSent%3CA1A03F0221
-      ulong tmSent () const;
-      void setTmSent (ulong value);
-
     // Additional Private Declarations
       //## begin Message%3C7B6A2D01F0.private preserve=yes
       //## end Message%3C7B6A2D01F0.private
@@ -300,37 +294,29 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
       int state_;
       //## end Message::state%3C7E33F40330.attr
 
-      //## begin Message::tmQueued%3CA1A00402E4.attr preserve=no  private: ulong {U} 
-      ulong tmQueued_;
-      //## end Message::tmQueued%3CA1A00402E4.attr
-
-      //## begin Message::tmSent%3CA1A03F0221.attr preserve=no  private: ulong {U} 
-      ulong tmSent_;
-      //## end Message::tmSent%3CA1A03F0221.attr
-
     // Data Members for Associations
 
-      //## Association: PSCF::<unnamed>%3C7B70FF033D
+      //## Association: OCTOPUSSY::<unnamed>%3C7B70FF033D
       //## begin Message::to%3C7B7100015E.role preserve=no  public: MsgAddress { -> 1VHgN}
       MsgAddress to_;
       //## end Message::to%3C7B7100015E.role
 
-      //## Association: PSCF::<unnamed>%3C7B71050151
+      //## Association: OCTOPUSSY::<unnamed>%3C7B71050151
       //## begin Message::from%3C7B7106029D.role preserve=no  public: MsgAddress { -> 1VHgN}
       MsgAddress from_;
       //## end Message::from%3C7B7106029D.role
 
-      //## Association: PSCF::<unnamed>%3C7B71820219
+      //## Association: OCTOPUSSY::<unnamed>%3C7B71820219
       //## begin Message::id%3C7B718500FB.role preserve=no  public: HIID { -> 1VHgN}
       HIID id_;
       //## end Message::id%3C7B718500FB.role
 
-      //## Association: PSCF::<unnamed>%3C7B9796024D
+      //## Association: OCTOPUSSY::<unnamed>%3C7B9796024D
       //## begin Message::payload%3C7B97970096.role preserve=no  public: BlockableObject { -> 0..1RHgN}
       ObjRef payload_;
       //## end Message::payload%3C7B97970096.role
 
-      //## Association: PSCF::<unnamed>%3C7B9799014D
+      //## Association: OCTOPUSSY::<unnamed>%3C7B9799014D
       //## begin Message::block%3C7B97990388.role preserve=no  public: SmartBlock { -> 0..1RHgN}
       BlockRef block_;
       //## end Message::block%3C7B97990388.role
@@ -351,7 +337,7 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
 //## end MessageRef%3C7B722600DE.preface
 
 //## Class: MessageRef%3C7B722600DE
-//## Category: PSCF%3BCEC935032A
+//## Category: OCTOPUSSY%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
 //## Cardinality/Multiplicity: n
@@ -471,34 +457,6 @@ inline void Message::setState (int value)
   //## begin Message::setState%3C7E33F40330.set preserve=no
   state_ = value;
   //## end Message::setState%3C7E33F40330.set
-}
-
-inline ulong Message::tmQueued () const
-{
-  //## begin Message::tmQueued%3CA1A00402E4.get preserve=no
-  return tmQueued_;
-  //## end Message::tmQueued%3CA1A00402E4.get
-}
-
-inline void Message::setTmQueued (ulong value)
-{
-  //## begin Message::setTmQueued%3CA1A00402E4.set preserve=no
-  tmQueued_ = value;
-  //## end Message::setTmQueued%3CA1A00402E4.set
-}
-
-inline ulong Message::tmSent () const
-{
-  //## begin Message::tmSent%3CA1A03F0221.get preserve=no
-  return tmSent_;
-  //## end Message::tmSent%3CA1A03F0221.get
-}
-
-inline void Message::setTmSent (ulong value)
-{
-  //## begin Message::setTmSent%3CA1A03F0221.set preserve=no
-  tmSent_ = value;
-  //## end Message::setTmSent%3CA1A03F0221.set
 }
 
 //## Get and Set Operations for Associations (inline)

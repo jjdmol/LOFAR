@@ -33,7 +33,7 @@
 //## end module%3C7B7F3000C3.declarations
 
 //## begin module%3C7B7F3000C3.additionalDeclarations preserve=yes
-#pragma aid -MsgLog -LogNormal -LogWarning -LogError -LogDebug
+#pragma aid /MsgLog /LogNormal /LogWarning /LogError /LogDebug
 //## end module%3C7B7F3000C3.additionalDeclarations
 
 
@@ -41,7 +41,7 @@
 //## end WorkProcess%3C8F25430087.preface
 
 //## Class: WorkProcess%3C8F25430087; Abstract
-//## Category: PSCF%3BCEC935032A
+//## Category: OCTOPUSSY%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
 //## Cardinality/Multiplicity: n
@@ -62,6 +62,9 @@ class WorkProcess : public WPInterface  //## Inherits: <unnamed>%3C8F263A00E6
 
 
     //## Other Operations (specified)
+      //## Operation: setPolling%3CB55CC301A7
+      void setPolling (bool enabled);
+
       //## Operation: addTimeout%3C7D285803B0
       void addTimeout (const Timestamp &period, const HIID &id = HIID(), int flags = 0, int priority = Message::PRI_EVENT);
 

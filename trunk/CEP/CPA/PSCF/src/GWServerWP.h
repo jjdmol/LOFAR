@@ -46,7 +46,7 @@
 //## end GWServerWP%3C8F942502BA.preface
 
 //## Class: GWServerWP%3C8F942502BA
-//## Category: PSCF%3BCEC935032A
+//## Category: OCTOPUSSY%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
 //## Cardinality/Multiplicity: n
@@ -72,7 +72,7 @@ class GWServerWP : public WorkProcess  //## Inherits: <unnamed>%3C8F943E01B2
 
     //## Other Operations (specified)
       //## Operation: start%3C90BE4A029B
-      virtual void start ();
+      virtual bool start ();
 
       //## Operation: stop%3C90BE880037
       virtual void stop ();
@@ -120,7 +120,7 @@ class GWServerWP : public WorkProcess  //## Inherits: <unnamed>%3C8F943E01B2
 
     // Data Members for Associations
 
-      //## Association: PSCF::<unnamed>%3C922571000B
+      //## Association: OCTOPUSSY::<unnamed>%3C922571000B
       //## Role: GWServerWP::sock%3C92257101CE
       //## begin GWServerWP::sock%3C92257101CE.role preserve=no  private: Socket { -> 0..1RHgN}
       Socket *sock;

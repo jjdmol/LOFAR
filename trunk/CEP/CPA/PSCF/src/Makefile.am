@@ -1,12 +1,14 @@
 dmi_dir = $(lofar_sharedir)/../DMI
 
+SUBDIRS = . Glish
+
 INCLUDES = -I$(dmi_dir)/src
 
-CXXFLAGS += -Wno-unknown-pragmas 
+CXXFLAGS += -Wall -Wno-unknown-pragmas 
 
-lib_LTLIBRARIES = libpscf.la
+lib_LTLIBRARIES = liboctopussy.la
 
-libpscf_la_SOURCES = Dispatcher.cc  Message.cc  MsgAddress.cc  \
+liboctopussy_la_SOURCES = Dispatcher.cc  Message.cc  MsgAddress.cc  \
 	WPInterface.cc WorkProcess.cc Timestamp.cc PSCFDebugContext.cc \
   GWClientWP.cc GWServerWP.cc GatewayWP.cc LoggerWP.cc \
   Socket.cc Subscriptions.cc \
@@ -22,7 +24,7 @@ BASELISTDIR = $(lofar_sharedir)/..
 AID_DIR = $(top_srcdir)/src
 
 aids:
-	$(MAPBUILDER) `find $(BASELISTDIR) -name \*.aidlist` $(AID_DIR)/*.h
+	$(MAPBUILDER) `find $(BASELISTDIR) -name \*.aidlist` $(AID_DIR)/*.h $(AID_DIR)/Glish/*.h 
  
 
 include $(lofar_sharedir)/Makefile.common

@@ -205,6 +205,21 @@ void Message::privatize (int flags, int depth)
   //## end Message::privatize%3C7E32C1022B.body
 }
 
+NestableContainer::Hook Message::setBranch (const HIID &id, int flags)
+{
+  //## begin Message::setBranch%3CB42D0201B4.body preserve=yes
+  FailWhen( !payload_.valid() || !payload_->isNestable(),"payload is not a container" ); 
+  // privatize payload if required (or if not writable)
+  if( flags&DMI::PRIVATIZE ||
+      !payload_.isWritable() || 
+      dynamic_cast<NestableContainer&>(payload_.dewr()).isWritable() )
+    payload_.privatize(DMI::WRITE,0);
+  NestableContainer *nc = dynamic_cast<NestableContainer*>(payload_.dewr_p());
+  Assert(nc);
+  return nc->setBranch(id,flags);
+  //## end Message::setBranch%3CB42D0201B4.body
+}
+
 int Message::fromBlock (BlockSet& set)
 {
   //## begin Message::fromBlock%3C960F1B0373.body preserve=yes
@@ -248,10 +263,11 @@ int Message::toBlock (BlockSet &set) const
 {
   //## begin Message::toBlock%3C960F20037A.body preserve=yes
   // create a header block
-  int idsize = id_.packSize(),
-      tosize = to_.packSize(),
-      fromsize = from_.packSize();
-  SmartBlock *hdrblock = new SmartBlock(sizeof(HeaderBlock)+idsize+tosize+fromsize);
+  size_t idsize = id_.packSize(),
+         tosize = to_.packSize(),
+         fromsize = from_.packSize(),
+         hsize = idsize+tosize+fromsize;
+  SmartBlock *hdrblock = new SmartBlock(sizeof(HeaderBlock)+hsize);
   BlockRef bref(hdrblock,DMI::ANON|DMI::WRITE); 
   HeaderBlock & hdr = *static_cast<HeaderBlock*>(hdrblock->data());
   hdr.priority  = priority_;
@@ -262,9 +278,9 @@ int Message::toBlock (BlockSet &set) const
   hdr.has_block = block_.valid(); 
   hdr.payload_type = payload_.valid() ? payload_->objectType() : NullType;
   char *buf = static_cast<char*>(hdrblock->data()) + sizeof(HeaderBlock);
-  buf += id_.pack(buf);      
-  buf += from_.pack(buf);    
-  to_.pack(buf);      
+  buf += id_.pack(buf,hsize);      
+  buf += from_.pack(buf,hsize);    
+  to_.pack(buf,hsize);      
   
   // attach to set
   set.push(bref);
@@ -273,7 +289,7 @@ int Message::toBlock (BlockSet &set) const
   {
     set.pushNew().copy(block_,DMI::PRESERVE_RW);
     blockcount++;
-  }
+  } 
   if( payload_.valid() )
     blockcount += payload_->toBlock(set);
   return blockcount;

@@ -75,16 +75,17 @@ void WPInterface::do_init ()
   //## end WPInterface::do_init%3C99B0070017.body
 }
 
-void WPInterface::do_start ()
+bool WPInterface::do_start ()
 {
   //## begin WPInterface::do_start%3C99B00B00D1.body preserve=yes
   log("starting up",2);
   MessageRef ref(new Message(AidHello|address(),Message::PRI_EVENT),DMI::ANON|DMI::WRITE);
   publish(ref);
-  start();
+  setNeedRepoll( start() );
   // publish subscriptions (even if empty)
   started = True;
   publishSubscriptions();
+  return needRepoll();
   //## end WPInterface::do_start%3C99B00B00D1.body
 }
 
@@ -104,9 +105,10 @@ void WPInterface::init ()
   //## end WPInterface::init%3C7F882B00E6.body
 }
 
-void WPInterface::start ()
+bool WPInterface::start ()
 {
   //## begin WPInterface::start%3C7E4A99016B.body preserve=yes
+  return False;
   //## end WPInterface::start%3C7E4A99016B.body
 }
 
@@ -116,11 +118,36 @@ void WPInterface::stop ()
   //## end WPInterface::stop%3C7E4A9C0133.body
 }
 
-bool WPInterface::poll (ulong tick)
+int WPInterface::getPollPriority (ulong tick)
 {
-  //## begin WPInterface::poll%3C8F13B903E4.body preserve=yes
+  //## begin WPInterface::getPollPriority%3CB55EEA032F.body preserve=yes
+  // return queue priority, provided a repoll is required
+  // note that we add the message age (tick - QueueEntry.tick) to its
+  // priority. Thus, messages that have been sitting undelivered for a while
+  // (perhaps because the system is saturated with higher-priority messages)
+  // will eventually get bumped up and become favoured.
+  if( needRepoll() && !queueLocked() )
+  {
+    const QueueEntry * qe = topOfQueue();
+    if( qe )
+    {
+      return max(qe->priority,Message::PRI_LOWEST)
+             + static_cast<int>(tick - qe->tick);
+    }
+  }
+  return -1;
+  //## end WPInterface::getPollPriority%3CB55EEA032F.body
+}
+
+bool WPInterface::do_poll (ulong tick)
+{
+  //## begin WPInterface::do_poll%3C8F13B903E4.body preserve=yes
+  // Call the virtual poll method, and set needRepoll according to what
+  // it has returned.
+  setNeedRepoll( poll(tick) );
+  // return if queue is empty
   if( !queue().size() )
-    return setNeedRepoll(False);
+    return needRepoll();  
   int res = Message::ACCEPT;
   // remove message from queue
   QueueEntry qe = queue().back();
@@ -195,14 +222,12 @@ bool WPInterface::poll (ulong tick)
     {
       dprintf(3)("result code: HOLD, leaving at head of queue\n");
       queue().push_back(qe);
-      setNeedRepoll(False);
     }
     else if( res == Message::REQUEUE )
     {
       dprintf(3)("result code: REQUEUE\n");
       // requeue - re-insert into queue() according to priority
-      enqueue(qe.mref,tick);
-      // repoll if head of queue has changed
+      enqueue(qe.mref,tick);  // rhis sets repoll if head of queue has changed
     }
   }
   // ask for repoll if head of queue has changed
@@ -211,11 +236,19 @@ bool WPInterface::poll (ulong tick)
     // this resets the age at the head of the queue. Effectively, this means
     // we have a "queue age" rather than a message age.
     queue().back().tick = tick;
-    return setNeedRepoll(queue().back().mref != qe.mref );
+    if( queue().back().mref != qe.mref )
+      return setNeedRepoll(True);
   }
-  else
-    return setNeedRepoll(False);
-  //## end WPInterface::poll%3C8F13B903E4.body
+
+  return needRepoll();
+  //## end WPInterface::do_poll%3C8F13B903E4.body
+}
+
+bool WPInterface::poll (ulong )
+{
+  //## begin WPInterface::poll%3CB55D0E01C2.body preserve=yes
+  return False;
+  //## end WPInterface::poll%3CB55D0E01C2.body
 }
 
 bool WPInterface::enqueue (const MessageRef &msg, ulong tick)
@@ -472,8 +505,9 @@ void WPInterface::log (string str, int level, AtomicID type)
 void WPInterface::publishSubscriptions ()
 {
   // pack subscriptions into a block
-  BlockRef bref(new SmartBlock(subscriptions.packSize()),DMI::ANON|DMI::WRITE);
-  subscriptions.pack(bref().data());
+  size_t sz = subscriptions.packSize();
+  BlockRef bref(new SmartBlock(sz),DMI::ANON|DMI::WRITE);
+  subscriptions.pack(bref().data(),sz);
   // publish it
   MessageRef ref( new Message(AidSubscribe|address(),
                               bref,0,

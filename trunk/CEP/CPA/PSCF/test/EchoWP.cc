@@ -91,7 +91,7 @@ void EchoWP::init ()
   //## end EchoWP::init%3C7F884A007D.body
 }
 
-void EchoWP::start ()
+bool EchoWP::start ()
 {
   //## begin EchoWP::start%3C7E4AC70261.body preserve=yes
   WorkProcess::start();
@@ -115,8 +115,7 @@ int EchoWP::receive (MessageRef& mref)
     // invert the data block if it's there
     if( msg["Invert"].as_bool() )
     {
-      msg["Data"].privatize(DMI::WRITE);
-      int *data = &msg["Data"];
+      int *data = &(msg.setBranch("Data",DMI::WRITE|DMI::PRIVATIZE));
       lprintf(4,"inverting %d ints at %x\n",sz,(int)data);
       for( int i=0; i<sz; i++,data++ )
         *data = ~*data;

@@ -56,7 +56,7 @@ class Dispatcher;
 //## end WPInterface%3C7B6A3702E5.preface
 
 //## Class: WPInterface%3C7B6A3702E5; Abstract
-//## Category: PSCF%3BCEC935032A
+//## Category: OCTOPUSSY%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
 //## Cardinality/Multiplicity: n
@@ -106,7 +106,7 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
       void do_init ();
 
       //## Operation: do_start%3C99B00B00D1
-      void do_start ();
+      bool do_start ();
 
       //## Operation: do_stop%3C99B00F0254
       void do_stop ();
@@ -115,13 +115,24 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
       virtual void init ();
 
       //## Operation: start%3C7E4A99016B
-      virtual void start ();
+      virtual bool start ();
 
       //## Operation: stop%3C7E4A9C0133
       virtual void stop ();
 
-      //## Operation: poll%3C8F13B903E4
-      bool poll (ulong tick);
+      //## Operation: getPollPriority%3CB55EEA032F
+      //	Rreturns a polling priority for this WP. Normally, this is just the
+      //	priority of the top message in the queue (plus the queue age), or <0
+      //	for no poll required. However, subclasses may choose to redefine
+      //	this if they employ a some custom polling scheme.
+      //	This method is called once per WP per polling loop.
+      virtual int getPollPriority (ulong tick);
+
+      //## Operation: do_poll%3C8F13B903E4
+      bool do_poll (ulong tick);
+
+      //## Operation: poll%3CB55D0E01C2
+      virtual bool poll (ulong );
 
       //## Operation: enqueue%3C8F204A01EF
       //	Places ref into the receive queue. Note that the ref is transferred.
@@ -212,11 +223,11 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
 
     //## Get and Set Operations for Associations (generated)
 
-      //## Association: PSCF::<unnamed>%3C7E14150352
+      //## Association: OCTOPUSSY::<unnamed>%3C7E14150352
       //## Role: WPInterface::dsp%3C7E1416017C
       Dispatcher * dsp () const;
 
-      //## Association: PSCF::<unnamed>%3C999CBF01D6
+      //## Association: OCTOPUSSY::<unnamed>%3C999CBF01D6
       //## Role: WPInterface::subscriptions%3C999CC00015
       const Subscriptions& getSubscriptions () const;
 
@@ -229,7 +240,7 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
   protected:
     //## Get and Set Operations for Associations (generated)
 
-      //## Association: PSCF::<unnamed>%3CA1A1AB0346
+      //## Association: OCTOPUSSY::<unnamed>%3CA1A1AB0346
       //## Role: WPInterface::queue%3CA1A1AC01AD
       const WPInterface::MessageQueue& queue () const;
 
@@ -280,17 +291,17 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
 
     // Data Members for Associations
 
-      //## Association: PSCF::<unnamed>%3C7E14150352
+      //## Association: OCTOPUSSY::<unnamed>%3C7E14150352
       //## begin WPInterface::dsp%3C7E1416017C.role preserve=no  public: Dispatcher {0..* -> 1RFHN}
       Dispatcher *dsp_;
       //## end WPInterface::dsp%3C7E1416017C.role
 
-      //## Association: PSCF::<unnamed>%3C999CBF01D6
+      //## Association: OCTOPUSSY::<unnamed>%3C999CBF01D6
       //## begin WPInterface::subscriptions%3C999CC00015.role preserve=no  public: Subscriptions { -> 1VHgN}
       Subscriptions subscriptions;
       //## end WPInterface::subscriptions%3C999CC00015.role
 
-      //## Association: PSCF::<unnamed>%3CA1A1AB0346
+      //## Association: OCTOPUSSY::<unnamed>%3CA1A1AB0346
       //## begin WPInterface::queue%3CA1A1AC01AD.role preserve=no  protected: MessageRef { -> 0..*VHgN}
       WPInterface::MessageQueue queue_;
       //## end WPInterface::queue%3CA1A1AC01AD.role

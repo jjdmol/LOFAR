@@ -58,12 +58,13 @@ GWServerWP::~GWServerWP()
 
 
 //## Other Operations (implementation)
-void GWServerWP::start ()
+bool GWServerWP::start ()
 {
   //## begin GWServerWP::start%3C90BE4A029B.body preserve=yes
   WorkProcess::start();
   open_retries = 0;
   tryOpen();
+  return False;
   //## end GWServerWP::start%3C90BE4A029B.body
 }
 
