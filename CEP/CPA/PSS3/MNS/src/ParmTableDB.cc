@@ -24,6 +24,7 @@
 #include <MNS/MeqDomain.h>
 #include <MNS/TPOParm.h>
 #include <PL/Query.h>
+#include <PL/Attrib.h>
 #include <PL/Collection.h>
 #include <Common/Debug.h>
 #include <aips/Mathematics/Math.h>
@@ -48,7 +49,7 @@ vector<MeqPolc> ParmTableDB::getPolcs (const string& parmName,
   vector<MeqPolc> result;
   TPOMParm tpoparm;
   tpoparm.tableName (itsTableName);
-  MParmSet set = tpoparm.retrieve (Query("WHERE NAME = '"+parmName+"'"));
+  MParmSet set = tpoparm.retrieve (attrib(tpoparm,"name") == parmName);
   MParmSet::const_iterator iter = set.begin();
   for (; iter!=set.end(); iter++) {
     result.push_back (iter->data().getPolc());
@@ -70,7 +71,7 @@ MeqPolc ParmTableDB::getInitCoeff (const string& parmName,
   while (true) {
     TPOMParmDef tpoparm;
     tpoparm.tableName (itsTableName+"Def");
-    MParmDefSet set = tpoparm.retrieve (Query("WHERE NAME = '"+parmName+"'"));
+    MParmDefSet set = tpoparm.retrieve (attrib(tpoparm,"name") == parmName);
     if (! set.empty()) {
       Assert (set.size() == 1);
       MParmDefSet::const_iterator iter = set.begin();
@@ -128,7 +129,7 @@ MParmSet ParmTableDB::find (const string& parmName,
   // First see if the parameter name exists at all.
   TPOMParm tpoparm;
   tpoparm.tableName (itsTableName);
-  MParmSet set = tpoparm.retrieve (Query("WHERE NAME = '"+parmName+"'"));
+  MParmSet set = tpoparm.retrieve (attrib(tpoparm,"name") == parmName);
   if (set.empty()) {
     return set;
   }
@@ -153,10 +154,11 @@ void ParmTableDB::getSources (vector<string>& nams, vector<int>& srcs)
   // Use both tables.
   TPOMParm tpoparm;
   tpoparm.tableName (itsTableName);
-  MParmSet set = tpoparm.retrieve (Query("WHERE NAME LIKE 'RA.%'"));
+  MParmSet set = tpoparm.retrieve (attrib(tpoparm,"name").like ("RA.*"));
   TPOMParmDef tpoparmdef;
   tpoparmdef.tableName (itsTableName+"Def");
-  MParmDefSet dset = tpoparmdef.retrieve (Query("WHERE NAME LIKE 'RA.%'"));
+  MParmDefSet dset = tpoparmdef.retrieve
+    (attrib(tpoparmdef,"name").like ("RA.*"));
   nams.resize(0);
   srcs.resize(0);
   nams.reserve (set.size() + dset.size());

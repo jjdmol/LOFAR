@@ -151,6 +151,9 @@ namespace LOFAR {
     template<>
     void TPersistentObject<MeqParmDefHolder>::init();
 
+    // Initialize the attribute map of TPersistentObject<MeqParmDefHolder>
+    template<>
+    void TPersistentObject<MeqParmDefHolder>::initAttribMap();
 
     // The BCA<MeqParmHolder> structure 'binds' the database columns
     // to the members of the DBRep<MeqParmHolder> class.
@@ -178,6 +181,10 @@ namespace LOFAR {
     // Initialize the internals of TPersistentObject<MeqParmHolder>
     template<>
     void TPersistentObject<MeqParmHolder>::init();
+
+    // Initialize the attribute map of TPersistentObject<MeqParmHolder>
+    template<>
+    void TPersistentObject<MeqParmHolder>::initAttribMap();
 
   } // end namespace PL
 }   // end namespace LOFAR

@@ -35,6 +35,7 @@
 #include <MNS/TPOParm.h>
 #include <PL/PersistenceBroker.h>
 #include <PL/Query.h>
+#include <PL/Attrib.h>
 #include <PL/Collection.h>
 #include <Common/KeyValueMap.h>
 #include <Common/KeyParser.h>
@@ -43,6 +44,7 @@
 #include <string>
 #include <pwd.h>
 
+using namespace LOFAR;
 using namespace LOFAR::PL;
 using std::cout;
 using std::cin;
@@ -87,12 +89,12 @@ void showHelp()
   cerr << " connect db='username' dbtype='postgres' tablename='meqparm'" << endl;
   cerr << " quit  (or exit or stop)" << endl;
   cerr << endl;
-  cerr << " show [parmname/pattern]     (default is % (all))" << endl;
+  cerr << " show [parmname/pattern]     (default is * (all))" << endl;
   cerr << " add parmname valuespec" << endl;
   cerr << " update parmname/pattern valuespec" << endl;
   cerr << " remove parmname/pattern" << endl;
   cerr << endl;
-  cerr << " showdef [parmname/pattern]     (default is % (all))" << endl;
+  cerr << " showdef [parmname/pattern]     (default is * (all))" << endl;
   cerr << " adddef parmname valuespec" << endl;
   cerr << " updatedef parmname/pattern valuespec" << endl;
   cerr << " removedef parmname/pattern" << endl;
@@ -204,7 +206,7 @@ MParmSet getParms (const std::string& tableName, const std::string& parmName)
 {
   TPOMParm tpo;
   tpo.tableName (tableName);
-  return tpo.retrieve (Query("WHERE NAME LIKE '"+parmName+"'"));
+  return tpo.retrieve (attrib(tpo,"name").like (parmName));
 }
 
 MParmDefSet getParmsDef (const std::string& tableName,
@@ -212,7 +214,7 @@ MParmDefSet getParmsDef (const std::string& tableName,
 {
   TPOMParmDef tpo;
   tpo.tableName (tableName+"Def");
-  return tpo.retrieve (Query("WHERE NAME LIKE '"+parmName+"'"));
+  return tpo.retrieve (attrib(tpo,"name").like (parmName));
 }
 
 void showParm (const MParm& parm)
@@ -468,7 +470,7 @@ void doIt()
 	  parmName = getParmName (cstr);
 	  if (parmName.empty()) {
 	    AssertMsg (command%10==1, "No parameter name given");
-	    parmName = "%";           // default for show is all parms
+	    parmName = "*";           // default for show is all parms
 	  }
 	  KeyValueMap kvmap = KeyParser::parse (cstr);
 	  if (command < 10) {
