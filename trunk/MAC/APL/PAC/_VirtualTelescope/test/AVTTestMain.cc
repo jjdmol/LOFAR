@@ -1,4 +1,4 @@
-//#  AVTAPCAnswer.h: forwards property set answers to the specified task.
+//#  AVTTestMain.cc: Main entry for the Virtual Telescope test
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,37 +20,17 @@
 //#
 //#  $Id$
 
-#ifndef AVTAPCAnswer_H
-#define AVTAPCAnswer_H
+#include <GCF/GCF_Task.h>
+#include "AVTTest.h"
 
-//# Includes
-//# Common Includes
-//# GCF Includes
-#include <GCF/GCF_Answer.h>
-//# VirtualTelescope Includes
-
-// forward declaration
-
-class GCFEvent;
-class AVTLogicalDevice;
-
-class AVTAPCAnswer : public GCFAnswer
+int main(int argc, char* argv[])
 {
-  public:
-    explicit Answer(AVTLogicalDevice& ld);
-    virtual ~Answer();
+  GCFTask::init(argc, argv);
+  
+  Suite s("MAC.APL.PAC VirtualTelescope Test");
 
-    virtual void handleAnswer(GCFEvent& answer);
-    
-  protected:
-    // protected default constructor
-    AVTAPCAnswer();
-    // protected copy constructor
-    AVTAPCAnswer(const AVTAPCAnswer&);
-    // protected assignment operator
-    AVTAPCAnswer& operator=(const AVTAPCAnswer&);
+  s.addTest(new AVTTest);
+  s.run();
+  return s.report();
+}
 
-  private:    
-    AVTLogicalDevice& m_logicalDevice;
-};
-#endif

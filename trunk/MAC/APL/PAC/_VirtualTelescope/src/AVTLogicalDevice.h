@@ -39,11 +39,6 @@
 
 // forward declaration
 
-/**
- * This is the main task of the VirtualTelescope process. 
- * @todo 
- */
-
 class AVTLogicalDevice : public GCFTask
 {
   public:

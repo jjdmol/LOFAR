@@ -1,4 +1,4 @@
-//#  AVTAPCAnswer.h: forwards property set answers to the specified task.
+//#  AVTTest.cc: Implementation of the Virtual Telescope test
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,37 +20,31 @@
 //#
 //#  $Id$
 
-#ifndef AVTAPCAnswer_H
-#define AVTAPCAnswer_H
+#include "AVTTest.h"
 
-//# Includes
-//# Common Includes
-//# GCF Includes
-#include <GCF/GCF_Answer.h>
-//# VirtualTelescope Includes
-
-// forward declaration
-
-class GCFEvent;
-class AVTLogicalDevice;
-
-class AVTAPCAnswer : public GCFAnswer
+AVTTest::AVTTest() :
+  Test(),
+  m_testTask()
 {
-  public:
-    explicit Answer(AVTLogicalDevice& ld);
-    virtual ~Answer();
+  m_testTask.setTester(*this);
+}
 
-    virtual void handleAnswer(GCFEvent& answer);
-    
-  protected:
-    // protected default constructor
-    AVTAPCAnswer();
-    // protected copy constructor
-    AVTAPCAnswer(const AVTAPCAnswer&);
-    // protected assignment operator
-    AVTAPCAnswer& operator=(const AVTAPCAnswer&);
+void AVTTest::run()
+{  
+  m_testTask.start();
+  
+  GCFTask::run();
+}
 
-  private:    
-    AVTLogicalDevice& m_logicalDevice;
-};
-#endif
+void AVTTest::avt_do_test(bool cond, const string& lbl,
+                          const char* fname, long lineno)
+{
+  _do_test(cond,lbl,fname,lineno);
+}
+
+void AVTTest::avt_do_fail(const string& lbl,
+                          const char* fname, long lineno)
+{
+  _do_fail(lbl,fname,lineno);
+}
+                          
