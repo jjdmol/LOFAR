@@ -24,9 +24,6 @@
 #include <lofar_config.h>
 
 //# Includes
-#if defined(__APPLE__)
-# include <libgen.h>				//# basename
-#endif
 #include <signal.h>
 #include <Common/lofar_string.h>
 #include <Common/LofarLogger.h>

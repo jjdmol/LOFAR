@@ -280,8 +280,10 @@ void ApplController::createParSubsets()
 		procPS.remove(procName+".startstoptype");
 
 		// [C] Add AC parameters of any interest to process
-		// TODO add some more?
+		// TODO add some more like hostname and others?
 		procPS.add("process.name", procName);
+		procPS.add(procName+".ACport", 
+								 itsParamSet->getString("AC.process.APportnr"));
 
 		// Finally write process paramset to a file.
 		procPS.writeFile(fileName);

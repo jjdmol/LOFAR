@@ -27,8 +27,9 @@
 #include <lofar_config.h>
 
 //# Includes
+#include <arpa/inet.h>
 #include <ACC/ApplControlClient.h>
-#include <ACC/DH_AC_Connect.h>
+#include <ACC/ACRequest.h>
 #include <ACC/DH_ApplControl.h>
 #include <Transport/TH_Socket.h>
 #include <Common/hexdump.h>
@@ -42,37 +43,29 @@ ApplControlClient::ApplControlClient(const string&	hostID,
 {
 	// First setup a connection with the AC master at node 'hostID' and
 	// ask on which node our ACC will be running
-	DH_AC_Connect	DH_AC_Client("dummy");
-	DH_AC_Connect	DH_AC_Server(hostID);
-	DH_AC_Client.setID(1);
-	DH_AC_Server.setID(2);
-	TH_Socket		TCPto  (hostID, "", 3800, false);
-	TH_Socket		TCPfrom("", hostID, 3800, true);
+	ACRequest	aRequest;
+	uint16		reqSize = sizeof (ACRequest);
 
-	//TODO define constant for 3800
-	
-	// try to make a connection with the generic AC master at the host.
-	LOG_DEBUG_STR("Trying to connect to master at " << hostID << ", " << 3800);
-	DH_AC_Client.connectBidirectional(DH_AC_Server, TCPto, TCPfrom, true);
-	DH_AC_Client.init();
+	//TODO define constant for 3800 and hostname
+	// Connect to ACdaemon
+	Socket		reqSocket("ACClient", hostID, "3800");
+	reqSocket.setBlocking(true);
+	reqSocket.connect(-1);
 
-	// send request for new AC to AC master
-	char	myHostname [256];
-	if (gethostname(myHostname, 256) < 0) {
-		strcpy (myHostname, "Unknown host");
+	if (gethostname(aRequest.itsRequester, ACREQUESTNAMESIZE-1) < 0) {
+		strcpy (aRequest.itsRequester, "Unknown host");
 	}
-	DH_AC_Client.setHostname(myHostname);
-	LOG_DEBUG_STR("Send request for ACserver (" << myHostname << ")");
-	DH_AC_Client.write();
+	reqSocket.write(static_cast<void*>(&aRequest), reqSize);
 
 	// wait for reply
-	if (!DH_AC_Client.read()) {
-		LOG_DEBUG("Answer from master return false");
-	}
-	
+	reqSocket.read(static_cast<void*>(&aRequest), reqSize);
+	reqSocket.shutdown();
+
 	// Now build the connection to our own dedicated AC
-	string		host = DH_AC_Client.getServerIPStr();
-	int16		port = DH_AC_Client.getServerPort();
+	in_addr		IPaddr;
+	IPaddr.s_addr = aRequest.itsAddr;
+	string	host = inet_ntoa(IPaddr);
+	uint16	port = ntohs(aRequest.itsPort);
 	LOG_DEBUG(formatString("Private ACserver is at %s:%d, trying to connect", 
 															host.c_str(), port));
 	DH_ApplControl*		DH_CtrlClient = new DH_ApplControl;

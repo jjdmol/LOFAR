@@ -1,0 +1,7 @@
+#
+# Parameter file for ACDaemon
+#
+ACDaemon.portnr	  = 3800
+ACDaemon.poolport = 3820
+ACDaemon.poolsize = 30
+ACDaemon.command  = ./Applcontroller AC.param
