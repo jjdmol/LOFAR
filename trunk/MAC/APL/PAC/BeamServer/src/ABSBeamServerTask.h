@@ -26,7 +26,6 @@
 #include "ABSSpectralWindow.h"
 #include "ABS_Protocol.ph"
 #include "ABSBeamlet.h"
-#include "ABSBeamletStats.h"
 
 #include <GCF/GCF_Control.h>
 #include <GCF/GCF_ETHRawPort.h>
