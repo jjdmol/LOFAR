@@ -29,6 +29,8 @@
 #include <Common/Debug.h>
 
 
+namespace LOFAR {
+
 MeqPointSource::MeqPointSource()
 : itsSourceNr (0),
   itsI        (0),
@@ -112,4 +114,6 @@ void MeqPointSource::calculate (const MeqRequest& request)
     }
   }
   itsLastReqId = request.getId();
+}
+
 }

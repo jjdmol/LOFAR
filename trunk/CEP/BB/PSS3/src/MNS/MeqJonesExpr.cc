@@ -25,9 +25,10 @@
 #include <PSS3/MNS/MeqJonesExpr.h>
 #include <Common/Debug.h>
 
+namespace LOFAR {
+
 MeqJonesExpr::~MeqJonesExpr()
 {}
-
 
 void MeqJonesExpr::multiply (const MeqJonesExpr& left,
 			     const MeqJonesExpr& right)
@@ -177,3 +178,4 @@ void MeqJonesExpr::multiply (const MeqJonesExpr& left,
   }
 }
 
+}

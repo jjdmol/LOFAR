@@ -26,6 +26,8 @@
 //# Includes
 #include <PSS3/MNS/MeqJonesExpr.h>
 
+namespace LOFAR {
+
 //# Forward declarations
 class MeqWsrtPoint;
 
@@ -50,5 +52,6 @@ private:
   MeqJonesExpr* itsStat2;
 };
 
+}
 
 #endif

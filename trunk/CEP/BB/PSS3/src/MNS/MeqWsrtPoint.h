@@ -29,6 +29,8 @@
 #include <PSS3/MNS/MeqResult.h>
 #include <Common/lofar_vector.h>
 
+namespace LOFAR {
+
 //# Forward Declarations
 class MeqPointDFT;
 class MeqHist;
@@ -59,5 +61,6 @@ private:
   vector<int>    itsNcell;
 };
 
+}
 
 #endif

@@ -30,6 +30,8 @@
 #include <casa/Arrays/Matrix.h>
 
 
+namespace LOFAR {
+
 double MeqPolc::theirPascal[10][10];
 bool   MeqPolc::theirPascalFilled = false;
 
@@ -377,4 +379,6 @@ MeqMatrix MeqPolc::normDouble (const MeqMatrix& coeff, double sx,
     }
   }
   return newc;
+}
+
 }

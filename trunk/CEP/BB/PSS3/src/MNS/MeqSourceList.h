@@ -28,6 +28,8 @@
 #include <Common/lofar_vector.h>
 
 
+namespace LOFAR {
+
 class MeqSourceList
 {
 public:
@@ -59,5 +61,6 @@ private:
   vector<int>            itsSelected;
 };
 
+}
 
 #endif

@@ -20,20 +20,21 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQVECTOR_H)
-#define MNS_MEQVECTOR_H
+#if !defined(MNS_MEQMATRIX_H)
+#define MNS_MEQMATRIX_H
 
 
 //# Includes
 #include <PSS3/MNS/MeqMatrixRep.h>
 
-//# Forward Declarations
-namespace LOFAR {
-  class BlobOStream;
-  class BlobIStream;
-}
-class MeqMatrixTmp;
 template<class T> class Matrix;
+
+namespace LOFAR {
+
+//# Forward Declarations
+class BlobOStream;
+class BlobIStream;
+class MeqMatrixTmp;
 
 
 class MeqMatrix
@@ -209,5 +210,6 @@ LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& os, const MeqMatrix& vec);
 
 LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& os, MeqMatrix& vec);
 
+}
 
 #endif

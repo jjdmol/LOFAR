@@ -33,6 +33,8 @@
 #include <casa/BasicSL/Constants.h>
 
 
+namespace LOFAR {
+
 MeqPhaseRef::MeqPhaseRef (const MDirection& phaseRef, double startTime)
 : itsStartTime (startTime)
 {
@@ -88,4 +90,6 @@ MeqPhaseRef::MeqPhaseRef (const MDirection& phaseRef, double startTime)
   MEpoch ep3 = MEpoch::Convert (ep2, MEpoch::GAST)();
 
 //  cout << "ep3 " << ep3 << endl;
+}
+
 }

@@ -25,6 +25,8 @@
 #include <Common/Debug.h>
 #include <casa/Arrays/Matrix.h>
 
+namespace LOFAR {
+
 MeqParmPolc::MeqParmPolc (const string& name)
 : MeqParm (name)
 {}
@@ -176,3 +178,5 @@ void MeqParmPolc::update (const MeqMatrix& value)
 
 void MeqParmPolc::save()
 {}
+
+}

@@ -28,9 +28,12 @@
 #include <PSS3/MNS/MeqSourceList.h>
 #include <Common/lofar_vector.h>
 
+template<class T> class Vector;
+
+namespace LOFAR {
+
 //# Forward Declarations
 class MeqDomain;
-template<class T> class Vector;
 
 class ParmTableRep
 {
@@ -123,6 +126,6 @@ private:
   ParmTableRep* itsRep;
 };
 
-
+}
 
 #endif

@@ -29,6 +29,8 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 
+namespace LOFAR {
+
 //# Forward declarations
 class MeqDomain;
 
@@ -110,5 +112,6 @@ private:
   static vector<MeqParm*>* theirParms;
 };
 
+}
 
 #endif

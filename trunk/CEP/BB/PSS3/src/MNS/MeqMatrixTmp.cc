@@ -26,6 +26,8 @@
 #include <PSS3/MNS/MeqMatrixComplexArr.h>
 
 
+namespace LOFAR {
+
 MeqMatrixTmp::MeqMatrixTmp (double value, int nx, int ny, bool init)
 {
     MeqMatrixRealArr* v = new MeqMatrixRealArr (nx, ny);
@@ -117,4 +119,6 @@ MeqMatrixTmp mean (const MeqMatrixTmp& arg)
 MeqMatrixTmp sum (const MeqMatrixTmp& arg)
 {
   return arg.itsRep->sum();
+}
+
 }

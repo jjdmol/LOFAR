@@ -36,6 +36,8 @@
 #include <casa/Quanta/MVuvw.h>
 
 
+namespace LOFAR {
+
 MeqStatUVW::MeqStatUVW (MeqStation* station,
 			const MeqPhaseRef* phaseRef)
 : itsStation   (station),
@@ -194,4 +196,6 @@ void MeqStatUVW::calculate (const MeqRequest& request)
 void MeqStatUVW::set (double time, double u, double v, double w)
 {
   itsUVW[MeqTime(time)] = MeqUVW(u,v,w);
+}
+
 }

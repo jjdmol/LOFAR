@@ -24,6 +24,8 @@
 #include <PSS3/MNS/MeqResult.h>
 #include <PSS3/MNS/MeqMatrixTmp.h>
 
+namespace LOFAR {
+
 int MeqResultRep::nctor = 0;
 int MeqResultRep::ndtor = 0;
 
@@ -99,4 +101,6 @@ MeqResult& MeqResult::operator= (const MeqResult& that)
     itsRep->link();
   }
   return *this;
+}
+
 }

@@ -34,7 +34,7 @@
 #include <Common/BlobOStream.h>
 #include <Common/BlobString.h>
 
-using namespace LOFAR;
+namespace LOFAR {
 
 #define PRECISION 20
 
@@ -178,7 +178,7 @@ VMParm ParmTablePGSQL::find (const string& parmName,
 {
   VMParm set;
 
-  stringstream query;
+  std::ostringstream query;
   query.precision(PRECISION);
   query << "SELECT " << getMeqParmNoPolcColumns() << ", " << getPolcNoDomainColumns() << ", " << getDomainColumns() <<
                  " FROM " << itsTableName << " WHERE name = '" << parmName << "' AND tb < " << domain.endX() <<
@@ -205,7 +205,7 @@ VMParm ParmTablePGSQL::find (const string& parmName,
 vector<string> ParmTablePGSQL::getSources()
 {
   vector<string> nams;
-  stringstream qs;
+  std::ostringstream qs;
   qs.precision(PRECISION);
   qs << "SELECT name FROM " << itsTableName << " WHERE name LIKE 'RA.%' " <<
     "UNION SELECT name FROM " << itsTableName << "Def WHERE name LIKE 'RA.%'";
@@ -298,7 +298,7 @@ inline MeqDomain ParmTablePGSQL::getDomain(PGresult* queryResult, int row, int c
 // Coeff, SimCoeff, PertSimCoeff, pertvalue, isrelpert, t0, f0, normalized, tb, te, fb, fe, name, srcnr, statnr
 inline string ParmTablePGSQL::getUpdateQuery(MeqParmHolder MPH)
 {
-  stringstream qs;
+  std::ostringstream qs;
   qs.precision(PRECISION);
   qs << "UPDATE " << itsTableName 
      << " Coeff = '" << MeqMat2string(MPH.getPolc().getCoeff())
@@ -331,7 +331,7 @@ inline string ParmTablePGSQL::getUpdateQuery(MeqParmHolder MPH)
 // Coeff, SimCoeff, PertSimCoeff, pertvalue, isrelpert, t0, f0, normalized, tb, te, fb, fe, name, srcnr, statnr
 inline string ParmTablePGSQL::getInsertQuery(MeqParmHolder MPH)
 {
-  stringstream qs;
+  std::ostringstream qs;
   qs.precision(PRECISION);
   qs << "INSERT INTO " << itsTableName << " ("
      << " Coeff, SimCoeff, PertSimCoeff, pertvalue, isrelpert, t0, f0, normalized, tb, te, fb, fe, name, srcnr, statnr"
@@ -362,7 +362,7 @@ inline string ParmTablePGSQL::getInsertQuery(MeqParmHolder MPH)
 // Coeff, SimCoeff, PertSimCoeff, pertvalue, isrelpert, t0, f0, normalized, tb, te, fb, fe, name, srcnr, statnr
 inline string ParmTablePGSQL::getDefInsertQuery(MeqParmHolder MPH)
 {
-  stringstream qs;
+  std::ostringstream qs;
   qs.precision(PRECISION);
   qs << "INSERT INTO " << itsTableName << " ("
      << " Coeff, SimCoeff, PertSimCoeff, pertvalue, isrelpert, t0, f0, normalized, name, srcnr, statnr"
@@ -507,5 +507,4 @@ int ParmTablePGSQL::decode (char* c, char* b, int length)
   return bi;
 }
   
-
-
+}

@@ -27,6 +27,8 @@
 #include <casa/Utilities/BinarySearch.h>
 
 
+namespace LOFAR {
+
 MeqParmSingle::MeqParmSingle (const string& name, double value)
 : MeqParm         (name),
   itsInitialValue (value),
@@ -105,4 +107,6 @@ void MeqParmSingle::update (const MeqMatrix& value)
 void MeqParmSingle::save()
 {
   itsInitialValue = itsCurValue;
+}
+
 }

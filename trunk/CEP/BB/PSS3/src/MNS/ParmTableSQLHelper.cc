@@ -12,6 +12,8 @@
 #include <sstream>
 #include <Common/lofar_vector.h>
 
+namespace LOFAR {
+
 #define PRECISION 20
 
 string ParmTableSQLHelper::getGetPolcsQuery(const string& parmName, const MeqDomain& domain, string tableName)
@@ -28,7 +30,7 @@ string ParmTableSQLHelper::getGetInitCoeffQuery(const string& parmName, string t
 }
 string ParmTableSQLHelper::getFindQuery(const string& parmName, const MeqDomain& domain, string tableName)
 {
-  stringstream s;
+  std::ostringstream s;
   s.precision(PRECISION);
   s << "SELECT " << getMeqParmNoPolcColumns() << ", " << getPolcNoDomainColumns() << ", " << getDomainColumns() <<
                  " FROM " << tableName << " WHERE name = '" << parmName << "' AND tb < " << domain.endX() <<
@@ -37,7 +39,7 @@ string ParmTableSQLHelper::getFindQuery(const string& parmName, const MeqDomain&
 }
 string ParmTableSQLHelper::getSourcesQuery(string tableName)
 {
-  stringstream qs;
+  std::ostringstream qs;
   qs << "SELECT name FROM " << tableName << " WHERE name LIKE 'RA.%' " <<
         "UNION SELECT name FROM " << tableName << "def WHERE name LIKE 'RA.%';";
   return qs.str();
@@ -122,7 +124,7 @@ MeqMatrix ParmTableSQLHelper::getMeqMatrix(char** resRow, int column)
 // Coeff, SimCoeff, PertSimCoeff, pertvalue, isrelpert, t0, f0, normalized, tb, te, fb, fe, name, srcnr, statnr
  string ParmTableSQLHelper::getUpdateQuery(MeqParmHolder MPH, string tableName)
 {
-  stringstream qs;
+  std::ostringstream qs;
   qs.precision(PRECISION);
   qs << "UPDATE " << tableName 
      << " Coeff = '" << MeqMat2string(MPH.getPolc().getCoeff())
@@ -154,7 +156,7 @@ MeqMatrix ParmTableSQLHelper::getMeqMatrix(char** resRow, int column)
 // Coeff, SimCoeff, PertSimCoeff, pertvalue, isrelpert, t0, f0, normalized, tb, te, fb, fe, name, srcnr, statnr
  string ParmTableSQLHelper::getInsertQuery(MeqParmHolder MPH, string tableName)
 {
-  stringstream qs;
+  std::ostringstream qs;
   qs.precision(PRECISION);
   qs << "INSERT INTO " << tableName << " ("
      << " Coeff, SimCoeff, PertSimCoeff, pertvalue, isrelpert, t0, f0, normalized, tb, te, fb, fe, name, srcnr, statnr"
@@ -184,7 +186,7 @@ MeqMatrix ParmTableSQLHelper::getMeqMatrix(char** resRow, int column)
 // Coeff, SimCoeff, PertSimCoeff, pertvalue, isrelpert, t0, f0, normalized, tb, te, fb, fe, name, srcnr, statnr
  string ParmTableSQLHelper::getDefInsertQuery(MeqParmHolder MPH, string tableName)
 {
-  stringstream qs;
+  std::ostringstream qs;
   qs.precision(PRECISION);
   qs << "INSERT INTO " << tableName << " ("
      << " Coeff, SimCoeff, PertSimCoeff, pertvalue, isrelpert, t0, f0, normalized, name, srcnr, statnr"
@@ -412,3 +414,4 @@ int ParmTableSQLHelper::seven2eightbits (unsigned char* dest, unsigned char* src
 #endif
 }
 
+}

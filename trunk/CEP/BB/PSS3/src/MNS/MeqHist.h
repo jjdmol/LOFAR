@@ -28,6 +28,8 @@
 #include <casa/Arrays/Vector.h>
 
 
+namespace LOFAR {
+
 // This class holds a histogram in a vector.
 // The histogram is extended as needed.
 
@@ -56,5 +58,6 @@ private:
   Vector<int> itsVec;
 };
 
+}
 
 #endif

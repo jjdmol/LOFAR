@@ -28,6 +28,8 @@
 #include <PSS3/MNS/MeqRequest.h>
 
 
+namespace LOFAR {
+
 // This class is the (abstract) base class for an expression.
 
 class MeqJonesExpr
@@ -116,5 +118,6 @@ private:
   MeqRequestId itsLastReqId;
 };
 
+}
 
 #endif

@@ -24,6 +24,8 @@
 #include <Common/Debug.h>
 
 
+namespace LOFAR {
+
 unsigned int MeqParm::theirNparm = 0;
 vector<MeqParm*>* MeqParm::theirParms = 0;
 
@@ -80,4 +82,6 @@ void MeqParm::clearParmList()
   delete theirParms;
   theirParms = 0;
   theirNparm = 0;
+}
+
 }

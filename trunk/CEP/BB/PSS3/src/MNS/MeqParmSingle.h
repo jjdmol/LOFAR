@@ -27,6 +27,8 @@
 #include <PSS3/MNS/MeqParm.h>
 
 
+namespace LOFAR {
+
 // This class is the (abstract) base class for parameters.
 // The constructor assigns a unique id to the parameter and adds
 // it to a map to find the id from the name.
@@ -74,5 +76,6 @@ private:
   int     itsSolveIndex;
 };
 
+}
 
 #endif

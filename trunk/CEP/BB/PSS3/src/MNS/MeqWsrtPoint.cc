@@ -33,6 +33,8 @@
 #include <casa/Arrays/Matrix.h>
 
 
+namespace LOFAR {
+
 MeqWsrtPoint::MeqWsrtPoint (MeqSourceList* sources,
 			    MeqPointDFT* dft,
 			    MeqHist* celltHistogram, MeqHist* cellfHistogram)
@@ -207,4 +209,6 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
     resYX.getValueRW() += yx;
     resYY.getValueRW() += yy;
   }
+}
+
 }

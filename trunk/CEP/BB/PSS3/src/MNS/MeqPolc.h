@@ -28,6 +28,8 @@
 #include <PSS3/MNS/MeqMatrix.h>
 #include <Common/lofar_vector.h>
 
+namespace LOFAR {
+
 //# Forward declarations
 class MeqRequest;
 class MeqResult;
@@ -174,5 +176,6 @@ private:
   static bool   theirPascalFilled;
 };
 
+}
 
 #endif

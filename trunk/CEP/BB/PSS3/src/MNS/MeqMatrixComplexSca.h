@@ -29,6 +29,8 @@
 #include <Common/lofar_complex.h>
 
 
+namespace LOFAR {
+
 class MeqMatrixComplexSca : public MeqMatrixRep
 {
 friend class MeqMatrixRealSca;
@@ -92,5 +94,6 @@ private:
   complex<double> itsValue;
 };
 
+}
 
 #endif

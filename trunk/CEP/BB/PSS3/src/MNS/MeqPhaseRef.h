@@ -30,6 +30,8 @@
 //# Forward Declarations
 class MDirection;
 
+namespace LOFAR {
+
 
 class MeqPhaseRef
 {
@@ -71,5 +73,6 @@ private:
   MPosition  itsEarthPos;
 };
 
+}
 
 #endif

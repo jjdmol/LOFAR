@@ -24,8 +24,11 @@
 #define MNS_MEQREQUESTID_H
 
 
-typedef int MeqRequestId;
-const MeqRequestId InitMeqRequestId = -1;
+namespace LOFAR {
 
+  typedef int MeqRequestId;
+  const MeqRequestId InitMeqRequestId = -1;
+
+}
 
 #endif

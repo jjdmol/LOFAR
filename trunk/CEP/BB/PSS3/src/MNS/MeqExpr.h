@@ -26,6 +26,8 @@
 //# Includes
 #include <Common/lofar_vector.h>
 
+namespace LOFAR {
+
 //# Forward declarations
 class MeqRequest;
 class MeqResult;
@@ -83,5 +85,6 @@ private:
   MeqExpr* itsPhase;
 };
 
+}
 
 #endif

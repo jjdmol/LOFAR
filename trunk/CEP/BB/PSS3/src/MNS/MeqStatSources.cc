@@ -32,6 +32,8 @@
 #include <casa/BasicSL/Constants.h>
 
 
+namespace LOFAR {
+
 MeqStatSources::MeqStatSources (MeqStatUVW* statUVW,
 				MeqSourceList* sources)
 : itsUVW       (statUVW),
@@ -149,4 +151,6 @@ double MeqStatSources::getExponent (int sourceNr,
   double mk = src.getL(request).getValue().getDouble();
   double nk = src.getL(request).getValue().getDouble();
   return (u*lk + v*mk + w*nk);
+}
+
 }

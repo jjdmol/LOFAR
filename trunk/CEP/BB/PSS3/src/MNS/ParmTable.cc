@@ -31,6 +31,8 @@
 #include <casa/Utilities/GenSort.h>
 
 
+namespace LOFAR {
+
 ParmTable::ParmTable (const string& dbType, const string& tableName,
 		      const string& userName, const string& passwd, const string& hostName)
 : itsRep (0)
@@ -123,4 +125,6 @@ MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
   }
 
   return sources;
+}
+
 }

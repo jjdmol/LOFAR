@@ -31,6 +31,8 @@
 #include <PSS3/MNS/MeqMatrixComplexSca.h>
 
 
+namespace LOFAR {
+
 class MeqMatrixTmp
 {
 public:
@@ -167,5 +169,6 @@ private:
 inline ostream& operator<< (ostream& os, const MeqMatrixTmp& vec)
   { vec.show (os); return os; }
 
+}
 
 #endif

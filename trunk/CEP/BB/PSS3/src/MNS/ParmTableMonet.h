@@ -29,16 +29,17 @@
 #include <MNS/MeqParmHolder.h>
 #include <MNS/MeqPolc.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_string.h>
 
 #include <lofar_config.h>
-
 #include <MonetDB/C/Mapi.h>
+
+template<class T> class Vector;
+
+namespace LOFAR {
 
 //# Forward Declarations
 class MeqDomain;
-template<class T> class Vector;
-
-using namespace std;
 
 class ParmTableMonet : public ParmTableRep, public ParmTableFiller
 {
@@ -90,5 +91,7 @@ private:
   string itsTableName;
 
 };
+
+}
 
 #endif

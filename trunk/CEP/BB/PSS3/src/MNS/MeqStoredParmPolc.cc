@@ -25,6 +25,8 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/BasicMath/Math.h>
 
+namespace LOFAR {
+
 MeqStoredParmPolc::MeqStoredParmPolc (const string& name, int srcnr,
 				      int statnr, ParmTable* table)
 : MeqParmPolc (name),
@@ -95,4 +97,6 @@ void MeqStoredParmPolc::save()
     itsTable->putCoeff (getName(), getSourceNr(), getStation(), polcs[i]);
   }
   MeqParmPolc::save();
+}
+
 }

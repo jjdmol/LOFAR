@@ -25,6 +25,8 @@
 
 #include <PSS3/MNS/MeqPointDFT.h>
 
+namespace LOFAR {
+
 MeqUVWPolc::MeqUVWPolc()
 : itsPoly   (3),
   itsUCoeff ("u"),
@@ -85,4 +87,6 @@ void MeqUVWPolc::setName(const string& name)
   itsUCoeff.setName("u" + name);
   itsVCoeff.setName("v" + name);
   itsWCoeff.setName("w" + name);
+}
+
 }

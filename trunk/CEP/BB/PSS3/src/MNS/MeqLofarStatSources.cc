@@ -28,6 +28,8 @@
 #include <PSS3/MNS/MeqMatrixTmp.h>
 #include <Common/Debug.h>
 
+namespace LOFAR {
+
 MeqLofarStatSources::MeqLofarStatSources (const vector<MeqJonesExpr*>& stat,
 					  MeqStatSources* sources)
 : itsStat (stat),
@@ -207,4 +209,6 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
 //     cout << endl;
   }
   itsLastReqId = request.getId();
+}
+
 }

@@ -35,6 +35,8 @@
 #include <casa/BasicMath/Math.h>
 
 
+namespace LOFAR {
+
 ParmTableAIPS::ParmTableAIPS (const string& tableName)
 : itsTable       (tableName+".MEP"),
   itsIndex       (itsTable, stringToVector("SRCNR,STATNR,NAME")),
@@ -286,4 +288,6 @@ vector<string> ParmTableAIPS::getSources()
 void ParmTableAIPS::unlock()
 {
   itsTable.unlock();
+}
+
 }

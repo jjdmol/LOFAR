@@ -28,6 +28,8 @@
 #include <PSS3/MNS/MeqMatrix.h>
 #include <PSS3/MNS/MeqMatrixTmp.h>
 
+namespace LOFAR {
+
 MeqStatExpr::MeqStatExpr (MeqExpr* faradayRotation,
 			  MeqExpr* dipoleRotation,
 			  MeqExpr* dipoleEllipticity,
@@ -179,4 +181,6 @@ void MeqStatExpr::calcResult (const MeqRequest& request)
   setResult12 (result12);
   setResult21 (result21);
   setResult22 (result22);
+}
+
 }

@@ -24,23 +24,23 @@
 #define MNS_PARMTABLEPGSQL_H
 
 //# Includes
+#include <lofar_config.h>
 #include <MNS/ParmTable.h>
 #include <MNS/ParmTableFiller.h>
 #include <MNS/MeqParmHolder.h>
 #include <MNS/MeqPolc.h>
 #include <Common/lofar_vector.h>
-
-#include <lofar_config.h>
-
+#include <Common/lofar_string.h>
 #include <libpq-fe.h>
 
-typedef vector<MeqParmHolder> VMParm;
+template<class T> class Vector;
+
+namespace LOFAR {
 
 //# Forward Declarations
 class MeqDomain;
-template<class T> class Vector;
 
-using namespace std;
+typedef vector<MeqParmHolder> VMParm;
 
 class ParmTablePGSQL : public ParmTableRep, public ParmTableFiller
 {
@@ -48,7 +48,8 @@ public:
   // Create the ParmTable object.
   // The dbType argument gives the database type.
   // It can be postgres.
-  ParmTablePGSQL (const string& hostName, const string& userName, const string& tableName);
+  ParmTablePGSQL (const string& hostName, const string& userName,
+		  const string& tableName);
 
   virtual ~ParmTablePGSQL();
 
@@ -124,5 +125,7 @@ private:
   inline string encode(char* b, int length);
   inline int decode(char* c, char* b, int length);
 };
+
+}
 
 #endif

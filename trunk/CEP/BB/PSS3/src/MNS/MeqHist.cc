@@ -24,6 +24,8 @@
 #include <casa/Arrays/Slice.h>
 #include <casa/Arrays/ArrayMath.h>
 
+namespace LOFAR {
+
 void MeqHist::update (unsigned int bucket)
 {
   if (bucket >= itsVec.nelements()) {
@@ -56,4 +58,6 @@ Vector<int> MeqHist::merge (const vector<MeqHist>& hists)
     tmp += vec;
   }
   return result;
+}
+
 }

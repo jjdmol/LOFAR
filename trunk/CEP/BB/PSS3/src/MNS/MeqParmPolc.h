@@ -28,6 +28,8 @@
 #include <PSS3/MNS/MeqPolc.h>
 #include <Common/lofar_vector.h>
 
+namespace LOFAR {
+
 //# Forward declarations
 class MeqDomain;
 class MeqResult;
@@ -90,5 +92,6 @@ private:
   vector<MeqPolc> itsPolcs;
 };
 
+}
 
 #endif

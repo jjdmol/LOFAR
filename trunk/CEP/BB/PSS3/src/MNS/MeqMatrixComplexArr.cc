@@ -29,6 +29,8 @@
 #include <Common/Debug.h>
 #include <iomanip>
 
+namespace LOFAR {
+
 std::deque<MeqMatrixComplexArr*> MeqMatrixComplexArr::theirPool;
 
 // allocation will be done from the pool for matrices of theirNElements
@@ -264,7 +266,7 @@ MeqMatrixRep* MeqMatrixComplexArr::sin()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
-    itsValue[i] = ::sin(itsValue[i]);
+    itsValue[i] = std::sin(itsValue[i]);
   }
   return this;
 }
@@ -273,7 +275,7 @@ MeqMatrixRep* MeqMatrixComplexArr::cos()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
-    itsValue[i] = ::cos(itsValue[i]);
+    itsValue[i] = std::cos(itsValue[i]);
   }
   return this;
 }
@@ -282,7 +284,7 @@ MeqMatrixRep* MeqMatrixComplexArr::exp()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
-    itsValue[i] = ::exp(itsValue[i]);
+    itsValue[i] = std::exp(itsValue[i]);
   }
   return this;
 }
@@ -300,7 +302,7 @@ MeqMatrixRep* MeqMatrixComplexArr::sqrt()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
-    itsValue[i] = ::sqrt(itsValue[i]);
+    itsValue[i] = std::sqrt(itsValue[i]);
   }
   return this;
 }
@@ -309,7 +311,7 @@ MeqMatrixRep* MeqMatrixComplexArr::conj()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
-    itsValue[i] = ::conj(itsValue[i]);
+    itsValue[i] = std::conj(itsValue[i]);
   }
   return this;
 }
@@ -365,4 +367,6 @@ MeqMatrixRep* MeqMatrixComplexArr::sum()
     sum += itsValue[i];
   }
   return new MeqMatrixComplexSca (sum);
+}
+
 }

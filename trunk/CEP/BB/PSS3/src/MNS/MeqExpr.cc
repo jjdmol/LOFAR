@@ -25,6 +25,8 @@
 #include <PSS3/MNS/MeqMatrixTmp.h>
 #include <PSS3/MNS/MeqRequest.h>
 
+namespace LOFAR {
+
 MeqExpr::~MeqExpr()
 {}
 
@@ -84,4 +86,6 @@ MeqResult MeqExprAPToComplex::getResult (const MeqRequest& request)
   }
   result.setValue (res * ampl.getValue());
   return result;
+}
+
 }
