@@ -47,79 +47,11 @@ GPAController::GPAController() :
   registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
 
   // initialize the port
-  _pmlPortProvider.init(*this, "pa", GCFPortInterface::MSPP, PA_PROTOCOL);
+  _pmlPortProvider.init(*this, "server", GCFPortInterface::MSPP, PA_PROTOCOL);
 }
 
 GPAController::~GPAController()
 {
-}
-
-void GPAController::propertiesCreated(list<string>& propList)
-{
-  _scopeManager.linkProperties(propList);
-}
-
-void GPAController::propertiesDeleted(list<string>& propList)
-{
-  _scopeManager.unlinkProperties(propList);
-}
-
-void GPAController::allPropertiesDeletedByScope()
-{
-  GCFPortInterface* pPort = _requestManager.getOldestRequestPort();
-  GCFEvent* pEvent = _requestManager.getOldestRequest();
-    
-  if (pPort)
-  {
-    if (pEvent->signal == F_DISCONNECTED_SIG)
-    {
-      _counter--;
-      if (_counter == 0)
-      {
-        _requestManager.deleteRequestsOfPort(*pPort);
-        _pmlPortProvider.setTimer(0, 0, 0, 0, (void*) pPort);
-        pPort = _requestManager.getOldestRequestPort();
-        pEvent = _requestManager.getOldestRequest();
-        _isBusy = false;
-        if (pPort) // new action available?
-        {
-          dispatch(*pEvent, *pPort);
-        }
-      }        
-    }
-    else if (pEvent->signal == PA_UNREGISTERSCOPE)
-    {      
-      if (pPort->isConnected())
-      {
-        PAUnregisterscopeEvent* request = static_cast<PAUnregisterscopeEvent*>(pEvent);
-        
-        PAScopeunregisteredEvent response(request->seqnr, 0);
-        // reuse the request data (scope) for the response
-        unsigned short bufLength(request->length - sizeof(PAUnregisterscopeEvent));
-        char* buffer = ((char*) request) + sizeof(PAUnregisterscopeEvent);
-        _isBusy = true;      
-        pPort->send(response, buffer, bufLength);     
-      }
-    }
-  }
-  doNextRequest();
-}
-
-void GPAController::allPropertiesDeleted()
-{
-  TRAN(&GPAController::initial);
-}
-
-void GPAController::doNextRequest()
-{
-  _requestManager.deleteOldestRequest();
-  GCFPortInterface* pPort = _requestManager.getOldestRequestPort();
-  GCFEvent* pEvent = _requestManager.getOldestRequest();
-  _isBusy = false;
-  if (pPort) // new action available ?
-  {
-    dispatch(*pEvent, *pPort);
-  }
 }
 
 int GPAController::initial(GCFEvent& e, GCFPortInterface& p)
@@ -281,36 +213,115 @@ int GPAController::connected(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
+void GPAController::propertiesCreated(list<string>& propList)
+{
+  TPAResult result = _scopeManager.linkProperties(propList);
+  if (!_scopeManager.waitForAsyncResponses())
+    apcLoaded(result);
+}
+
+void GPAController::propertiesDeleted(list<string>& propList)
+{
+  TPAResult result = _scopeManager.unlinkProperties(propList);
+  if (!_scopeManager.waitForAsyncResponses())
+    apcUnloaded(result);
+}
+
+void GPAController::allPropertiesDeletedByScope()
+{
+  GCFPortInterface* pPort = _requestManager.getOldestRequestPort();
+  GCFEvent* pEvent = _requestManager.getOldestRequest();
+    
+  if (pPort)
+  {
+    if (pEvent->signal == F_DISCONNECTED_SIG)
+    {
+      _counter--;
+      if (_counter == 0)
+      {
+        _requestManager.deleteRequestsOfPort(*pPort);
+        _pmlPortProvider.setTimer(0, 0, 0, 0, (void*) pPort);
+        pPort = _requestManager.getOldestRequestPort();
+        pEvent = _requestManager.getOldestRequest();
+        _isBusy = false;
+        if (pPort) // new action available?
+        {
+          dispatch(*pEvent, *pPort);
+        }
+      }        
+    }
+    else if (pEvent->signal == PA_UNREGISTERSCOPE)
+    {      
+      if (pPort->isConnected())
+      {
+        PAUnregisterscopeEvent* request = static_cast<PAUnregisterscopeEvent*>(pEvent);
+        
+        PAScopeunregisteredEvent response(request->seqnr, 0);
+        // reuse the request data (scope) for the response
+        unsigned short bufLength(request->length - sizeof(PAUnregisterscopeEvent));
+        char* buffer = ((char*) request) + sizeof(PAUnregisterscopeEvent);
+        _isBusy = true;      
+        pPort->send(response, buffer, bufLength);     
+      }
+    }
+  }
+  doNextRequest();
+}
+
+void GPAController::allPropertiesDeleted()
+{
+  TRAN(&GPAController::initial);
+}
+
+void GPAController::doNextRequest()
+{
+  _requestManager.deleteOldestRequest();
+  GCFPortInterface* pPort = _requestManager.getOldestRequestPort();
+  GCFEvent* pEvent = _requestManager.getOldestRequest();
+  _isBusy = false;
+  if (pPort) // new action available ?
+  {
+    dispatch(*pEvent, *pPort);
+  }
+}
+
 void GPAController::loadAPC(char* actionData)
 {
-  list<string> propsFromAPC;
+  const list<TAPCProperty>* propsFromAPC;
   unpackAPCActionData(actionData);
-  //_apc.load(_curApcName, _curScope);
-  //_apc.getProps(propsFromAPC);
-  _usecountManager.incrementUsecount(propsFromAPC);    
+  _apc.load(_curApcName, _curScope);
+  propsFromAPC = &_apc.getProperties();
+  TPAResult result = _usecountManager.incrementUsecount(*propsFromAPC);
+  if (!_usecountManager.waitForAsyncResponses())
+    apcLoaded(result);
 }  
 
 void GPAController::apcLoaded(TPAResult result)
 {  
-  map<string, GCFPValue*> defaults;
-  //_apc.getDefaultValues(defaults);
+  const list<TAPCProperty>* propsFromAPC;
+  propsFromAPC = &_apc.getProperties();
+
   if (result == PA_NO_ERROR)
   {
-    result = setDefaults(defaults);
-  }  
+    result = _usecountManager.setDefaults(*propsFromAPC);
+  } 
+#ifdef PML
   GCFEvent* pEvent = _requestManager.getOldestRequest();
   PALoadapcEvent* pLoadapcE = static_cast<PALoadapcEvent*> (pEvent);
   PAApcloadedEvent e(pLoadapcE->seqnr, result);
   sendAPCActionResponse(e);
+#endif
 }  
 
 void GPAController::unloadAPC(char* actionData)
 {
-  list<string> propsFromAPC;
+  const list<TAPCProperty>* propsFromAPC;
   unpackAPCActionData(actionData);
-  //_apc.load(_curApcName, _curScope);
-  //_apc.getProps(propsFromAPC);
-  _usecountManager.decrementUsecount(propsFromAPC);    
+  _apc.load(_curApcName, _curScope);
+  propsFromAPC = &_apc.getProperties();
+  TPAResult result = _usecountManager.decrementUsecount(*propsFromAPC);    
+  if (!_usecountManager.waitForAsyncResponses())
+    apcUnloaded(result);
 }  
 
 void GPAController::apcUnloaded(TPAResult result)
@@ -323,11 +334,12 @@ void GPAController::apcUnloaded(TPAResult result)
 
 void GPAController::reloadAPC(char* actionData)
 {
-  map<string, GCFPValue*> defaults;
+  const list<TAPCProperty>* propsFromAPC;
   unpackAPCActionData(actionData);
-  //_apc.load(_curApcName, _curScope);
-  //_apc.getDefaultValues(defaults);
-  TPAResult result = setDefaults(defaults);
+  _apc.load(_curApcName, _curScope);
+  propsFromAPC = &_apc.getProperties();
+
+  TPAResult result = _usecountManager.setDefaults(*propsFromAPC);
 
   GCFEvent* pEvent = _requestManager.getOldestRequest();
   PAReloadapcEvent* pReloadapcE = static_cast<PAReloadapcEvent*> (pEvent);
@@ -418,11 +430,12 @@ void GPAController::unpackAPCActionData(char* pActionData)
   _curScope.assign(pScopeData + 3, scopeNameLength);
 }
 
-TPAResult GPAController::setDefaults(map<string, GCFPValue*>& defaults)
+void GPAController::loadAPCTest()
 {
-  TPAResult result(PA_NO_ERROR);
-  
-  
-  
-  return result;
+  const list<TAPCProperty>* propsFromAPC;
+  _apc.load("/home/mueller/workspace/LOFAR/MAC/GCF/CoreComps/PA/src/apc1.xml", "receptor1");
+  propsFromAPC = &_apc.getProperties();
+  TPAResult result = _usecountManager.incrementUsecount(*propsFromAPC);
+  if (!_usecountManager.waitForAsyncResponses())
+    result = _usecountManager.setDefaults(*propsFromAPC);
 }
