@@ -60,7 +60,7 @@ lofar_EXTERNAL(common,1,Common/LofarTypes.h,,~/workspace/LOFAR/installed/gnu_deb
 lofar_EXTERNAL(lofarlogger,1,LofarLogger/LofarLogger.h,,~/workspace/LOFAR/installed/gnu_debug)
 lofar_EXTERNAL(xercesc,1,xercesc/sax2/SAX2XMLReader.hpp,xerces-c,)
 lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
-lofar_EXTERNAL(gcf,1,GCF/GCF_Task.h,,)
+lofar_EXTERNAL(gcf,1,GCF/GCF_Task.h,,~/workspace/LOFAR/installed/gnu_debug)
 
 dnl
 dnl Output Makefiles

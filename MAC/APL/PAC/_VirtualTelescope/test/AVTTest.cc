@@ -23,7 +23,7 @@
 #include "AVTTest.h"
 
 AVTTest::AVTTest() :
-  Test(),
+  Test(string("AVTTest")),
   m_testTask()
 {
   m_testTask.setTester(*this);

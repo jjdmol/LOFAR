@@ -31,7 +31,7 @@
 #include <GCF/GCF_Port.h>
 #include <GCF/GCF_Task.h>
 #include <GCF/GCF_MyPropertySet.h>
-#include <GCF/GCF_APC.h>
+#include <GCF/GCF_Apc.h>
 
 //# local includes
 #include "AVTPropertySetAnswer.h"
@@ -43,8 +43,8 @@ class AVTLogicalDevice : public GCFTask
 {
   public:
 
-    explicit AVTLogicalDevice(const string& taskName, 
-                              const TPropertySet& primaryPropertySet
+    explicit AVTLogicalDevice(string& taskName, 
+                              const TPropertySet& primaryPropertySet,
                               const string& APCName,
                               const string& APCScope); 
     virtual ~AVTLogicalDevice();
@@ -76,7 +76,7 @@ class AVTLogicalDevice : public GCFTask
     /**
      * The prepairing state handler. 
      */
-    GCFEvent::TResult prepairing_state(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult preparing_state(GCFEvent& e, GCFPortInterface& p);
     /**
      * The suspended state handler. 
      */
@@ -154,13 +154,13 @@ class AVTLogicalDevice : public GCFTask
     virtual void concreteDisconnected(GCFPortInterface& port)=0;
     
   private:
-    AVTPropertySetAnswer m_propertySetAnswer;
-    AVTAPCAnswer         m_APCAnswer;
-    GCFMyPropertySet     m_properties;
-    GCFApc               m_APC;
-    const string         m_serverPortName;
+    AVTPropertySetAnswer  m_propertySetAnswer;
+    AVTAPCAnswer          m_APCAnswer;
+    GCFMyPropertySet      m_properties;
+    GCFApc                m_APC;
+    string                m_serverPortName;
     // LogicalDevice SPP
-    GCFPort m_logicalDeviceServerPort;
+    GCFPort               m_logicalDeviceServerPort;
     
 };
 #endif

@@ -4,6 +4,10 @@
 //#          Chuck Allison - The Simplest Automated Unit Test Framework That Could Possibly Work
 //#          Article: http://www.cuj.com/documents/s=8035/cuj0009allison1/
 //#          code:    ftp://ftp.cuj.com/pub/2000/cujsep2000.zip
+//# 
+//#  Modifications for LOFAR:
+//#  - removed TestSuiteError exception
+//#  - removed runtime type information
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,11 +32,8 @@
 #ifndef TEST_H
 #define TEST_H
 
-#include <string>
-#include <iosfwd>
-
-using std::string;
-using std::ostream;
+#include <Common/lofar_string.h>
+#include <Common/lofar_iosfwd.h>
 
 // The following have underscores because they are macros
 // (and it's impolite to usurp other users' functions!).
@@ -43,7 +44,7 @@ using std::ostream;
 class Test
 {
 public:
-    Test(ostream* osptr = 0);
+    Test(const string& name,ostream* osptr = 0);
     virtual ~Test(){}
     virtual void run() = 0;
 
@@ -66,6 +67,7 @@ private:
     ostream* m_osptr;
     long m_nPass;
     long m_nFail;
+    string m_name;
 
     // Disallowed:
     Test(const Test&);
@@ -73,10 +75,11 @@ private:
 };
 
 inline
-Test::Test(ostream* osptr)
+Test::Test(const string& name,ostream* osptr)
 {
     m_osptr = osptr;
     m_nPass = m_nFail = 0;
+    m_name = name;
 }
 
 inline

@@ -4,6 +4,10 @@
 //#          Chuck Allison - The Simplest Automated Unit Test Framework That Could Possibly Work
 //#          Article: http://www.cuj.com/documents/s=8035/cuj0009allison1/
 //#          code:    ftp://ftp.cuj.com/pub/2000/cujsep2000.zip
+//# 
+//#  Modifications for LOFAR:
+//#  - removed TestSuiteError exception
+//#  - removed runtime type information
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,32 +30,26 @@
 //#  $Id$
 
 #include "suite.h"
-#include <iostream>
+#include <Common/lofar_iostream.h>
 #include <stdexcept>
 #include <cassert>
 using namespace std;
 
-class TestSuiteError : public logic_error
-{
-public:
-    TestSuiteError(const string& s = "")
-        : logic_error(s)
-    {}
-};
-
-void Suite::addTest(Test* t) throw(TestSuiteError)
+void Suite::addTest(Test* t)
 {
     // Make sure test has a stream:
-    if (t == 0)
-        throw TestSuiteError("Null test in Suite::addTest");
-    else if (m_osptr != 0 && t->getStream() == 0)
+    if (t != 0)
+    {
+      if (m_osptr != 0 && t->getStream() == 0)
+      {
         t->setStream(m_osptr);
-
-    m_tests.push_back(t);
-    t->reset();
+      }
+      m_tests.push_back(t);
+      t->reset();
+    }
 }
 
-void Suite::addSuite(const Suite& s) throw(TestSuiteError)
+void Suite::addSuite(const Suite& s)
 {
     for (size_t i = 0; i < s.m_tests.size(); ++i)
         addTest(s.m_tests[i]);

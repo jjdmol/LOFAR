@@ -37,8 +37,8 @@ class AVTLogicalDevice;
 class AVTAPCAnswer : public GCFAnswer
 {
   public:
-    explicit Answer(AVTLogicalDevice& ld);
-    virtual ~Answer();
+    explicit AVTAPCAnswer(AVTLogicalDevice& ld);
+    virtual ~AVTAPCAnswer();
 
     virtual void handleAnswer(GCFEvent& answer);
     

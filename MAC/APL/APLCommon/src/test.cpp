@@ -4,6 +4,10 @@
 //#          Chuck Allison - The Simplest Automated Unit Test Framework That Could Possibly Work
 //#          Article: http://www.cuj.com/documents/s=8035/cuj0009allison1/
 //#          code:    ftp://ftp.cuj.com/pub/2000/cujsep2000.zip
+//# 
+//#  Modifications for LOFAR:
+//#  - removed TestSuiteError exception
+//#  - removed runtime type information
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,8 +30,7 @@
 //#  $Id$
 
 #include "test.h"
-#include <iostream>
-#include <typeinfo>     // Visual Studio requires /GR""
+#include <Common/lofar_iostream.h>
 
 #ifdef _MSC_VER
 //Allow return-less mains:
@@ -51,7 +54,7 @@ void Test::do_fail(const std::string& lbl,
     ++m_nFail;
     if (m_osptr)
     {
-        *m_osptr << typeid(*this).name()
+        *m_osptr << m_name
                              << "failure: (" << lbl << ") , "
                                  << fname
                  << " (line " << lineno << ")\n";
@@ -63,7 +66,7 @@ long Test::report() const
     if (m_osptr)
         {
             *m_osptr << "Test \"" 
-                         << typeid(*this).name() << "\":\n"
+                         << m_name << "\":\n"
                      << "\tPassed: " << m_nPass
                      << "\tFailed: " << m_nFail
                      << endl;

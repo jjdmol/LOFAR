@@ -4,6 +4,10 @@
 //#          Chuck Allison - The Simplest Automated Unit Test Framework That Could Possibly Work
 //#          Article: http://www.cuj.com/documents/s=8035/cuj0009allison1/
 //#          code:    ftp://ftp.cuj.com/pub/2000/cujsep2000.zip
+//# 
+//#  Modifications for LOFAR:
+//#  - removed TestSuiteError exception
+//#  - removed runtime type information
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -30,12 +34,7 @@
 #define SUITE_H
 
 #include "test.h"   // includes <string>, <iosfwd>
-#include <vector>
-using std::string;
-using std::ostream;
-using std::vector;
-
-class TestSuiteError;
+#include <Common/lofar_vector.h>
 
 class Suite
 {
@@ -48,8 +47,8 @@ public:
     const ostream* getStream() const;
     void setStream(ostream* osptr);
     
-    void addTest(Test* t) throw (TestSuiteError);
-    void addSuite(const Suite&) throw(TestSuiteError);
+    void addTest(Test* t);
+    void addSuite(const Suite&);
     void run();     // Calls Test::run() repeatedly
     long report() const;
     void free();    // deletes tests
