@@ -13,11 +13,10 @@ int main (int argc,const char *argv[])
   try 
   {
     Dispatcher *dsp = new Dispatcher(1,1);
-    dsp->attach( new EchoWP(1) );
-    dsp->attach( new EchoWP(2,5) );
+    dsp->attach( new EchoWP,DMI::ANON );
+    dsp->attach( new EchoWP(5),DMI::ANON );
     dsp->start();
-    while( pause() )
-      dsp->poll();
+    dsp->pollLoop();
   }
   catch( Debug::Error err ) 
   {

@@ -12,7 +12,7 @@
 
 //## Module: MsgAddress%3C7B7F2F0380; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: f:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\MsgAddress.cc
+//## Source file: F:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\MsgAddress.cc
 
 //## begin module%3C7B7F2F0380.additionalIncludes preserve=no
 //## end module%3C7B7F2F0380.additionalIncludes
@@ -31,47 +31,15 @@
 
 // Class MsgAddress 
 
-MsgAddress::MsgAddress()
-  //## begin MsgAddress::MsgAddress%3C7B6F790197_const.hasinit preserve=no
-  //## end MsgAddress::MsgAddress%3C7B6F790197_const.hasinit
-  //## begin MsgAddress::MsgAddress%3C7B6F790197_const.initialization preserve=yes
-  //## end MsgAddress::MsgAddress%3C7B6F790197_const.initialization
-{
-  //## begin MsgAddress::MsgAddress%3C7B6F790197_const.body preserve=yes
-  //## end MsgAddress::MsgAddress%3C7B6F790197_const.body
-}
-
-MsgAddress::MsgAddress(const MsgAddress &right)
-  //## begin MsgAddress::MsgAddress%3C7B6F790197_copy.hasinit preserve=no
-  //## end MsgAddress::MsgAddress%3C7B6F790197_copy.hasinit
-  //## begin MsgAddress::MsgAddress%3C7B6F790197_copy.initialization preserve=yes
-    : HIID(right)
-  //## end MsgAddress::MsgAddress%3C7B6F790197_copy.initialization
-{
-  //## begin MsgAddress::MsgAddress%3C7B6F790197_copy.body preserve=yes
-  //## end MsgAddress::MsgAddress%3C7B6F790197_copy.body
-}
-
-
-MsgAddress::~MsgAddress()
-{
-  //## begin MsgAddress::~MsgAddress%3C7B6F790197_dest.body preserve=yes
-  //## end MsgAddress::~MsgAddress%3C7B6F790197_dest.body
-}
-
-
-MsgAddress & MsgAddress::operator=(const MsgAddress &right)
-{
-  //## begin MsgAddress::operator=%3C7B6F790197_assign.body preserve=yes
-  *static_cast<HIID*>(this) = static_cast<const HIID&>(right);
-  return *this;
-  //## end MsgAddress::operator=%3C7B6F790197_assign.body
-}
-
-
 // Additional Declarations
   //## begin MsgAddress%3C7B6F790197.declarations preserve=yes
   //## end MsgAddress%3C7B6F790197.declarations
+
+// Class WPID 
+
+// Additional Declarations
+  //## begin WPID%3C8F9A340206.declarations preserve=yes
+  //## end WPID%3C8F9A340206.declarations
 
 //## begin module%3C7B7F2F0380.epilog preserve=yes
 //## end module%3C7B7F2F0380.epilog
@@ -79,6 +47,15 @@ MsgAddress & MsgAddress::operator=(const MsgAddress &right)
 
 // Detached code regions:
 #if 0
+//## begin MsgAddress::MsgAddress%3C7B6F790197_copy.initialization preserve=yes
+    : HIID(right)
+//## end MsgAddress::MsgAddress%3C7B6F790197_copy.initialization
+
+//## begin MsgAddress::operator=%3C7B6F790197_assign.body preserve=yes
+  *static_cast<HIID*>(this) = static_cast<const HIID&>(right);
+  return *this;
+//## end MsgAddress::operator=%3C7B6F790197_assign.body
+
 //## begin MsgAddress::MsgAddress%3C7B6FAE00FD.initialization preserve=yes
     : HIID(3)
 //## end MsgAddress::MsgAddress%3C7B6FAE00FD.initialization

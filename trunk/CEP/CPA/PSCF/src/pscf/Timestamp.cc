@@ -12,7 +12,7 @@
 
 //## Module: Timestamp%3C7F3B77034D; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: f:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\Timestamp.cc
+//## Source file: F:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\Timestamp.cc
 
 //## begin module%3C7F3B77034D.additionalIncludes preserve=no
 //## end module%3C7F3B77034D.additionalIncludes
@@ -31,23 +31,23 @@
 
 // Class Timestamp 
 
-Timestamp::Timestamp()
-  //## begin Timestamp::Timestamp%3C7F3B1D025E_const.hasinit preserve=no
-  //## end Timestamp::Timestamp%3C7F3B1D025E_const.hasinit
-  //## begin Timestamp::Timestamp%3C7F3B1D025E_const.initialization preserve=yes
-  //## end Timestamp::Timestamp%3C7F3B1D025E_const.initialization
-{
-  //## begin Timestamp::Timestamp%3C7F3B1D025E_const.body preserve=yes
-  struct timeval tm;
-  gettimeofday(&tm,0);
-  sec_ = tm.tv_sec;
-  usec_ = tm.tv_usec;
-  //## end Timestamp::Timestamp%3C7F3B1D025E_const.body
-}
-
+//## begin Timestamp::tsnow%3C8F68EA004C.attr preserve=no  private: static Timestamp {U} 
+Timestamp Timestamp::tsnow;
+//## end Timestamp::tsnow%3C8F68EA004C.attr
 
 
 //## Other Operations (implementation)
+const Timestamp & Timestamp::now (Timestamp *pts)
+{
+  //## begin Timestamp::now%3C8F67DD00BD.body preserve=yes
+  static struct timeval tm;
+  gettimeofday(&tm,0);
+  pts->sec_ = tm.tv_sec;
+  pts->usec_ = tm.tv_usec;
+  return *pts;
+  //## end Timestamp::now%3C8F67DD00BD.body
+}
+
 Timestamp & Timestamp::operator += (const Timestamp &other)
 {
   //## begin Timestamp::operator +=%3C7F3D500287.body preserve=yes
@@ -92,3 +92,13 @@ void Timestamp::normalize ()
 //## end module%3C7F3B77034D.epilog
 
 
+// Detached code regions:
+#if 0
+//## begin Timestamp::Timestamp%3C7F3B1D025E_const.body preserve=yes
+  struct timeval tm;
+  gettimeofday(&tm,0);
+  sec_ = tm.tv_sec;
+  usec_ = tm.tv_usec;
+//## end Timestamp::Timestamp%3C7F3B1D025E_const.body
+
+#endif

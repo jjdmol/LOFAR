@@ -8,22 +8,22 @@
 
 #ifndef _defined_AtomicID
 #define _defined_AtomicID 1
-const TypeId TpAtomicID(-83);
+const TypeId TpAtomicID(-99);
 class AtomicID;
 #endif
 #ifndef _defined_DataField
 #define _defined_DataField 1
-const TypeId TpDataField(-84);
+const TypeId TpDataField(-103);
 class DataField;
 #endif
 #ifndef _defined_DataRecord
 #define _defined_DataRecord 1
-const TypeId TpDataRecord(-85);
+const TypeId TpDataRecord(-105);
 class DataRecord;
 #endif
 #ifndef _defined_ObjRef
 #define _defined_ObjRef 1
-const TypeId TpObjRef(-87);
+const TypeId TpObjRef(-102);
 #endif
 #ifndef _defined_bool
 #define _defined_bool 1

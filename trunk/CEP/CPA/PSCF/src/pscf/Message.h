@@ -12,7 +12,7 @@
 
 //## Module: Message%3C7B7F2F0248; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: f:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\Message.h
+//## Source file: F:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\Message.h
 
 #ifndef Message_h
 #define Message_h 1
@@ -25,6 +25,10 @@
 //## begin module%3C7B7F2F0248.includes preserve=yes
 //## end module%3C7B7F2F0248.includes
 
+// PSCFDebugContext
+#include "PSCFDebugContext.h"
+// MsgAddress
+#include "MsgAddress.h"
 // CountedRef
 #include "CountedRef.h"
 // CountedRefTarget
@@ -37,16 +41,15 @@
 #include "HIID.h"
 // BlockableObject
 #include "BlockableObject.h"
-// PSCFDebugContext
-#include "PSCFDebugContext.h"
-// MsgAddress
-#include "MsgAddress.h"
 //## begin module%3C7B7F2F0248.declarations preserve=no
 //## end module%3C7B7F2F0248.declarations
 
 //## begin module%3C7B7F2F0248.additionalDeclarations preserve=yes
 #pragma aidgroup PSCF
+// standard event messages
 #pragma aid MsgEvent MsgTimeout MsgInput MsgSignal
+// hello/bye messages for WPs
+#pragma aid MsgHello MsgBye
 
 #include "AID-PSCF.h"
 //## end module%3C7B7F2F0248.additionalDeclarations
@@ -81,6 +84,9 @@ class Message : public CountedRefTarget, //## Inherits: <unnamed>%3C7B903501C5
       Message(const Message &right);
 
     //## Constructors (specified)
+      //## Operation: Message%3C8CB2CE00DC
+      Message (const HIID &id1, short pri = 0);
+
       //## Operation: Message%3C7B9C490384
       Message (const HIID &id1, BlockableObject *pload = 0, int flags = 0, int pri = 0);
 
@@ -123,14 +129,14 @@ class Message : public CountedRefTarget, //## Inherits: <unnamed>%3C7B903501C5
       //	Abstract method for cloning an object. Should return pointer to new
       //	object. Flags: DMI::WRITE if writable clone is required, DMI::DEEP
       //	for deep cloning (i.e. contents of object will be cloned as well).
-      virtual CountedRefTarget* clone (int flags = 0) const;
+      virtual CountedRefTarget* clone (int flags = 0, int depth = 0) const;
 
       //## Operation: privatize%3C7E32C1022B
       //	Virtual method for privatization of an object. If the object
       //	contains other refs, they should be privatized by this method. The
       //	DMI::DEEP flag should be passed on to child refs, for deep
       //	privatization.
-      virtual void privatize (int flags = 0);
+      virtual void privatize (int flags = 0, int depth = 0);
 
       //## Operation: operator []%3C7F56ED007D
       NestableContainer::Hook operator [] (const HIID &id);
@@ -157,6 +163,7 @@ class Message : public CountedRefTarget, //## Inherits: <unnamed>%3C7B903501C5
 
       //## Attribute: priority%3C7B94970023
       int priority () const;
+      void setPriority (int value);
 
       //## Attribute: state%3C7E33F40330
       int state () const;
@@ -202,12 +209,19 @@ class Message : public CountedRefTarget, //## Inherits: <unnamed>%3C7B903501C5
       NestableContainer::Hook operator [] (const char *id1) 
       { return (*this)[HIID(id1)]; }
       
-      static const int MIN_PRIORITY = 0x80000000;
+      // some predefined priority levels
+      static const int PRI_NORMAL  = 0,
+                       PRI_HIGH    = 10,
+                       PRI_HIGHER  = 20,
+                       PRI_EVENT   = 25,
+                       PRI_LOW     = -10,
+                       PRI_LOWER   = -20,
+                       PRI_LOWEST  = -30;
       
       typedef CountedRef<Message> Ref;
       
       typedef enum {  
-        MSG_OK   = 0, // message processed, OK to remove from queue
+        ACCEPT   = 0, // message processed, OK to remove from queue
         HOLD     = 1, // hold the message (and block queue) until something else happens
         REQUEUE  = 2, // requeue the message and try next one
 
@@ -216,9 +230,9 @@ class Message : public CountedRefTarget, //## Inherits: <unnamed>%3C7B903501C5
       } MessageResults;
       
       typedef enum {
-           GLOBAL        = 0,
-           LOCALPROCESS  = 1,
-           LOCALHOST     = 2
+           GLOBAL        = 2,
+           HOST          = 1,
+           PROCESS       = 0
       } PublicationScope;
            
       typedef struct {
@@ -323,13 +337,26 @@ typedef Message::Ref MessageRef;
 
 // Class Message 
 
+inline Message::Message (const HIID &id1, short pri)
+  //## begin Message::Message%3C8CB2CE00DC.hasinit preserve=no
+  //## end Message::Message%3C8CB2CE00DC.hasinit
+  //## begin Message::Message%3C8CB2CE00DC.initialization preserve=yes
+   : priority_(pri),state_(0),id_(id1)
+  //## end Message::Message%3C8CB2CE00DC.initialization
+{
+  //## begin Message::Message%3C8CB2CE00DC.body preserve=yes
+  //## end Message::Message%3C8CB2CE00DC.body
+}
+
+
 
 //## Other Operations (inline)
 inline NestableContainer::Hook Message::operator [] (const HIID &id)
 {
   //## begin Message::operator []%3C7F56ED007D.body preserve=yes
   FailWhen( !payload_.valid() || !payload_->isNestable(),"payload is not a container" ); 
-  return (*static_cast<NestableContainer*>(&payload_.dewr()))[id];
+  return (*static_cast<NestableContainer*>(
+      const_cast<BlockableObject*>(&payload_.deref())))[id];
   //## end Message::operator []%3C7F56ED007D.body
 }
 
@@ -337,7 +364,8 @@ inline NestableContainer::Hook Message::operator [] (int n)
 {
   //## begin Message::operator []%3C7E4C310348.body preserve=yes
   FailWhen( !payload_.valid() || !payload_->isNestable(),"payload is not a container" ); 
-  return (*static_cast<NestableContainer*>(&payload_.dewr()))[n];
+  return (*static_cast<NestableContainer*>(
+      const_cast<BlockableObject*>(&payload_.deref())))[n];
   //## end Message::operator []%3C7E4C310348.body
 }
 
@@ -385,6 +413,13 @@ inline int Message::priority () const
   //## begin Message::priority%3C7B94970023.get preserve=no
   return priority_;
   //## end Message::priority%3C7B94970023.get
+}
+
+inline void Message::setPriority (int value)
+{
+  //## begin Message::setPriority%3C7B94970023.set preserve=no
+  priority_ = value;
+  //## end Message::setPriority%3C7B94970023.set
 }
 
 inline int Message::state () const

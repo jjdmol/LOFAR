@@ -12,7 +12,7 @@
 
 //## Module: EchoWP%3C7E49E90390; Package specification
 //## Subsystem: Testing%3C7E494F0184
-//## Source file: f:\lofar8\oms\LOFAR\cep\cpa\pscf\test\EchoWP.h
+//## Source file: F:\lofar8\oms\LOFAR\cep\cpa\pscf\test\EchoWP.h
 
 #ifndef EchoWP_h
 #define EchoWP_h 1
@@ -42,14 +42,14 @@
 //## end EchoWP%3C7E498E00D1.preface
 
 //## Class: EchoWP%3C7E498E00D1
-//## Category: PSCF::Testing%3C7E49840235
+//## Category: Testing%3C7E49840235
 //## Subsystem: Testing%3C7E494F0184
 //## Persistence: Transient
 //## Cardinality/Multiplicity: n
 
 
 
-class EchoWP : public WorkProcess  //## Inherits: <unnamed>%3C7E499F0392
+class EchoWP : public WorkProcess  //## Inherits: <unnamed>%3C8F26580162
 {
   //## begin EchoWP%3C7E498E00D1.initialDeclarations preserve=yes
   //## end EchoWP%3C7E498E00D1.initialDeclarations
@@ -57,15 +57,15 @@ class EchoWP : public WorkProcess  //## Inherits: <unnamed>%3C7E499F0392
   public:
     //## Constructors (specified)
       //## Operation: EchoWP%3C7E49B60327
-      EchoWP (AtomicID wpid, int pingcount = 0);
+      EchoWP (int pingcount = 0);
 
     //## Destructor (generated)
       ~EchoWP();
 
 
     //## Other Operations (specified)
-      //## Operation: name%3C83546A03DC
-      virtual const char * name () const;
+      //## Operation: opname%3C9094FF03D4
+      void opname ();
 
       //## Operation: init%3C7F884A007D
       virtual void init ();
@@ -89,8 +89,6 @@ class EchoWP : public WorkProcess  //## Inherits: <unnamed>%3C7E499F0392
       //## end EchoWP%3C7E498E00D1.protected
   private:
     //## Constructors (generated)
-      EchoWP();
-
       EchoWP(const EchoWP &right);
 
     //## Assignment Operation (generated)
@@ -112,17 +110,17 @@ class EchoWP : public WorkProcess  //## Inherits: <unnamed>%3C7E499F0392
 
 // Class EchoWP 
 
-
-//## Other Operations (inline)
-inline const char * EchoWP::name () const
-{
-  //## begin EchoWP::name%3C83546A03DC.body preserve=yes
-  return "EchoWP";
-  //## end EchoWP::name%3C83546A03DC.body
-}
-
 //## begin module%3C7E49E90390.epilog preserve=yes
 //## end module%3C7E49E90390.epilog
 
+
+#endif
+
+
+// Detached code regions:
+#if 0
+//## begin EchoWP::name%3C83546A03DC.body preserve=yes
+  return "EchoWP";
+//## end EchoWP::name%3C83546A03DC.body
 
 #endif
