@@ -20,37 +20,47 @@ int main (int argc, char *argv[]) {
 	sleep (5);
 	LOG_DEBUG (formatString("Command boot went %s!!!", 
 				ACClient->boot(time(0L), "configID") ? "OK" : "WRONG"));
+	ACClient->processACmsgFromServer();
 
 	LOG_DEBUG (formatString("Command define went %s!!!", 
 				ACClient->define(0x22334455) ? "OK" : "WRONG"));
+	ACClient->processACmsgFromServer();
 
 	LOG_DEBUG (formatString("Command init went %s!!!", 
 				ACClient->init(time(0)+30) ? "OK" : "WRONG"));
+	ACClient->processACmsgFromServer();
 
 	LOG_DEBUG (formatString("Command pause went %s!!!", 
 				ACClient->pause(time(0)+40, 0, "pause??") ? "OK" : "WRONG"));
+	ACClient->processACmsgFromServer();
 
 	LOG_DEBUG (formatString("Command run went %s!!!", 
 				ACClient->run(0x32547698) ? "OK" : "WRONG"));
+	ACClient->processACmsgFromServer();
 
 	LOG_DEBUG (formatString("Command pause went %s!!!", 
 				ACClient->pause(0x00110101, 0x00001234, "pause condition") ? "OK" : "WRONG"));
+	ACClient->processACmsgFromServer();
 
 	LOG_DEBUG (formatString("Command snapshot went %s!!!", 
 				ACClient->snapshot(0x4321, "destination for snapshot") ? "OK" : "WRONG"));
 
 	LOG_DEBUG (formatString("Command recover went %s!!!", 
 				ACClient->recover(0x12345678, "recover source") ? "OK" : "WRONG"));
+	ACClient->processACmsgFromServer();
 
 	LOG_DEBUG (formatString("Command reinit went %s!!!", 
 				ACClient->boot(0x25525775, "reinit configID") ? "OK" : "WRONG"));
+	ACClient->processACmsgFromServer();
 
 	LOG_DEBUG (formatString("Command quit went %s!!!", 
 				ACClient->quit(0x01020304) ? "OK" : "WRONG"));
+	ACClient->processACmsgFromServer();
 
 
 	LOG_DEBUG (formatString("Command askInfo returned \n[%s]", 
 				ACClient->askInfo("Mag ik van jouw ....").c_str()));
+	ACClient->processACmsgFromServer();
 
 	sleep (5);
 

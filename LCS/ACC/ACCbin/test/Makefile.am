@@ -1,5 +1,5 @@
 
-bin_PROGRAMS			= tParameterSet tACClient tACMaster 
+bin_PROGRAMS			= tParameterSet tACClient tACMaster tPCClient
 #tACServer
 
 ### tParameterSet ###
@@ -17,10 +17,10 @@ tACMaster_SOURCES 		= tACMaster.cc
 tACMaster_DEPENDENCIES	= $(LOFAR_DEPEND) ../src/libacc.la
 tACMaster_LDADD			= ../src/libacc.la
 
-### tACServer ###
-#tACServer_SOURCES 		= tACServer.cc
-#tACServer_DEPENDENCIES	= $(LOFAR_DEPEND) ../src/libacc.la
-#tACServer_LDADD			= ../src/libacc.la
+### tPCClient ###
+tPCClient_SOURCES 		= tPCClient.cc
+tPCClient_DEPENDENCIES	= $(LOFAR_DEPEND) ../src/libacc.la
+tPCClient_LDADD			= ../src/libacc.la
 
 include $(lofar_sharedir)/Makefile.common
 
