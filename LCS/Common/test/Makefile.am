@@ -1,7 +1,7 @@
 check_PROGRAMS	      =	tDebug testLogger tBlobString \
 			tBlobStream tBlobArray tBlobField \
 			tDataConvert tKeyValueMap tStringUtil tHexdump \
-			tLorrays
+			tLorrays testSocket
 
 # programs to run through supplied checktools
 CHECKTOOLPROGS 	      =	tDebug testLogger tBlobString \
@@ -25,6 +25,10 @@ TESTS	= tDebug_test.sh \
 tDebug_SOURCES			= tDebug.cc
 tDebug_LDADD			= ../src/libcommon.la
 tDebug_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
+
+testSocket_SOURCES		= testSocket.cc
+testSocket_LDADD		= ../src/libcommon.la	
+testSocket_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 testLogger_SOURCES		= testLogger.cc
 testLogger_LDADD		= ../src/libcommon.la	
