@@ -1,6 +1,7 @@
 bin_PROGRAMS    = BlackBoardDemo
 
 DOCHDRS         =                                \
+DH_InDFT.h DH_OutDFT.h \
 DH_Solution.h                                   \
 DH_WorkOrder.h                                  \
 WH_Evaluate.h                                   \
@@ -20,6 +21,7 @@ TryOut.h
 
 
 BlackBoardDemo_SOURCES          = $(DOCHDRS)                \
+DH_InDFT.cc DH_OutDFT.cc \
 Simulate.cc                                             \
 DH_Solution.cc                                          \
 DH_WorkOrder.cc                                         \
