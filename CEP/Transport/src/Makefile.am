@@ -12,6 +12,7 @@ BaseDataHolder.cc		\
 ParamHolder.cc			\
 DataHolder.cc			\
 TransportHolder.cc		\
+Connection.cc			\
 TH_File.cc			\
 TH_Mem.cc			\
 TH_MPI.cc			\
