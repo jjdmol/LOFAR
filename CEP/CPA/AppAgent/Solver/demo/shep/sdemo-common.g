@@ -146,4 +146,4 @@ make_image := function (number=0,data=F,predict=F,residual=F,redo=F)
   return ref img;
 }
 
-img0 := make_image(0,data=T,redo=F);
+# img0 := make_image(0,data=T,redo=F);
