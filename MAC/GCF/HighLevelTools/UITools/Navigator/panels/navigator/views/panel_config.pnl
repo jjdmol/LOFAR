@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,268 166 941 694 N "_3DFace" 8
+PANEL,224 138 941 694 N "_3DFace" 8
 "$configDatapoint"
 "$controlAttributes"
 "$controlNames"
@@ -241,6 +241,29 @@ LANG:1 4 Load
 0
 1 12 0 "" 56
 0
+14 14
+"TextField1"
+""
+1 200 110 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+198 108 642 135
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+ setValue(\"\", \"text\", $configDatapoint);
+}" 0
+
+E
 0
 LAYER, 1 
 1

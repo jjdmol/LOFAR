@@ -1,11 +1,10 @@
 V 10
 1
 LANG:1 5 panel
-PANEL,599 130 1006 750 N "_3DFace" 1
+PANEL,233 122 1006 750 N "_3DFace" 1
 "$configDatapoint"
 "main()
 {
-
   dpConnect(\"ArrangeTable\", $configDatapoint + \".1.nrOfRows:_online.._value\",
                             $configDatapoint + \".1.nrOfColumns:_online.._value\",
                             $configDatapoint + \".1.Title:_online.._value\",
@@ -21,6 +20,10 @@ PANEL,599 130 1006 750 N "_3DFace" 1
                             $configDatapoint + \".3.Title:_online.._value\",
                             $configDatapoint + \".3.Active:_online.._value\");
 
+
+  dpConnect(\"ArrangeAlertList\", $configDatapoint + \".nrOfRowsList:_online.._value\",
+                                $configDatapoint + \".ListActive:_online.._value\");
+
   dpConnect(\"PostitionObjects\",  $configDatapoint + \".1.Active:_online.._value\",
                                  $configDatapoint + \".2.Active:_online.._value\",
                                  $configDatapoint + \".3.Active:_online.._value\",
@@ -30,6 +33,27 @@ PANEL,599 130 1006 750 N "_3DFace" 1
                                  $configDatapoint + \".3.nrOfRows:_online.._value\");
 
 }
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: ArrangeAlertList
+// Function    : Resize the Alert list
+// 
+///////////////////////////////////////////////////////////////////////////////////
+ArrangeAlertList(string dp1, float nrOfRowsList,
+                 string dp2, bool ListActive)
+{
+int x, y;
+
+ setValue(\"AlertList\", \"scale\", 1, (nrOfRowsList+1)/28 );
+getValue(\"AlertList\", \"size\", x, y );
+DebugN(\"x: \" + x);
+DebugN(\"y: \" + y);
+
+}
+
+
+
 
 //////////////////////////////////////////////////////////////////////////////////
 //
@@ -153,9 +177,9 @@ ArrangeTable(string dp1, float nrOfRows,
              string dp4, bool Active)
 {
   int x,y, i, j, k, TableNumber;
-  int TableWidth=800;
   int MaximumColumns = 15;
-
+  int MaximumRows = 15;
+ 
   getTableNumber(dp1, TableNumber);
   setValue(\"Table\"+TableNumber+\"_title\", \"text\", Title);
   setValue(\"Table\"+TableNumber, \"deleteAllLines\");
@@ -170,11 +194,11 @@ ArrangeTable(string dp1, float nrOfRows,
                                                            \"Column11Titles\", \"\", \"Column12Titles\", \"\", \"Column13Titles\", \"\", \"Column14Titles\", \"\");
   }
 
-  setValue(\"Table\"+TableNumber, \"scale\", 1, nrOfRows/MaximumColumns);
+  setValue(\"Table\"+TableNumber, \"scale\", 1, nrOfRows/MaximumRows);
   setValue(\"Table\"+TableNumber, \"lineVisible\", 0);  // Both functions needed, otherwise it doesn't work
   setValue(\"Table\"+TableNumber, \"lineVisible\", 0);
 
-  if (Active==TRUE)
+  if (Active==TRUE)  // If table is active, set column width and amount
   {
     setColumnConfig(TableNumber, nrOfColumns, MaximumColumns, \"\");
   }
@@ -357,19 +381,6 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-160-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 9 exceeded!
-6 117
-"red"
-""
-1 820 190 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
- E E
-109 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 820 160 850 190
 25 94
 "Table2_dpNames"
 ""
@@ -537,7 +548,7 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 25 2
 "AlertList"
 "AlertRow"
-1 0 430 E E E 1 E 0 E N "STD_text" E N "_3DFace" E "// SimpleCtrlScriptStart {valid}
+1 0 0 E E E 1 E 0 E N "STD_text" E N "_3DFace" E "// SimpleCtrlScriptStart {valid}
 // SimpleCtrlScript {alertConfirm}
 // dp {dpid}
 // time {time}
@@ -596,7 +607,7 @@ LANG:0 0
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 LANG:0 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
--2 428 802 552
+-2 -2 882 730
 "dyn_bool g_colVis;           // holds the flag wheter an optional column is visible or not
 string   g_connectId;        // holds id of current query
 dyn_int  g_counterConnectId; // holds numbers of Id's
@@ -624,7 +635,7 @@ main()
   as_init();
 }
 " 0
- E 1 0 1 22 3 "_abbr" 0 1 -1 "s" 1
+ E 1 0 1 22 3 "_abbr" 0 1 0 "s" 1
 LANG:1 5 Abbr.
 "main(int row, string col)
 {
@@ -632,7 +643,7 @@ LANG:1 5 Abbr.
 }" 0
 1
 LANG:1 0 
- 34 "_prior" 0 1 -1 "s" 1
+ 34 "_prior" 0 1 0 "s" 1
 LANG:1 8 Priority
 "main(int row, string col)
 {
@@ -640,7 +651,7 @@ LANG:1 8 Priority
 }" 0
 1
 LANG:1 0 
- 24 "timeStr" 0 1 0 "s" 1
+ 30 "timeStr" 0 1 0 "s" 1
 LANG:1 4 Time
 "main(int row, string col)
 {
@@ -648,7 +659,7 @@ LANG:1 4 Time
 }" 0
 1
 LANG:1 0 
- 130 "dpElement" 0 0 0 "s" 1
+ 145 "dpElement" 0 0 0 "s" 1
 LANG:1 10 DP element
 "main(int row, string col)
 {
@@ -656,7 +667,7 @@ LANG:1 10 DP element
 }" 0
 1
 LANG:1 0 
- 200 "dpComment" 0 1 -1 "s" 1
+ 200 "dpComment" 0 1 0 "s" 1
 LANG:1 9 Datapoint
 "main(int row, string col)
 {
@@ -786,12 +797,12 @@ LANG:1 2 #3
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 LANG:0 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
-0 0 0 3 0
+0 1 0 3 0
 1 0
 13 45
 "Button1"
 ""
-1 850 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 840 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 40 0 0 0 0 0
 EE E
@@ -802,7 +813,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-848 -2 872 22
+838 -2 862 22
 T 
 1
 LANG:1 2 11
@@ -830,7 +841,7 @@ bool bo;
 13 46
 "Button2"
 ""
-1 850 20 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 860 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 41 0 0 0 0 0
 EE E
@@ -841,7 +852,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-848 18 872 42
+858 -2 882 22
 T 
 1
 LANG:1 2 12
@@ -869,7 +880,7 @@ bool bo;
 13 47
 "Button3"
 ""
-1 850 40 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 880 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 42 0 0 0 0 0
 EE E
@@ -880,7 +891,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-848 38 872 62
+878 -2 902 22
 T 
 1
 LANG:1 2 21
@@ -908,7 +919,7 @@ bool bo;
 13 48
 "Button4"
 ""
-1 850 60 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 900 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 43 0 0 0 0 0
 EE E
@@ -919,7 +930,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-848 58 872 82
+898 -2 922 22
 T 
 1
 LANG:1 2 22
@@ -958,64 +969,64 @@ LANG:1 0
 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
--2 -2 802 393
-E E 0 0 1 15 1 "Column0Titles" 0 -1 -1 "s" 1
+-2 -2 932 393
+E E 0 0 1 15 1 "Column0Titles" 0 -1 0 "s" 1
 LANG:1 1 0
 E1
 LANG:1 0 
- 200 "Column1Titles" 0 1 -1 "s" 1
+ 200 "Column1Titles" 0 1 0 "s" 1
 LANG:1 1 1
 E1
 LANG:1 0 
- 200 "Column2Titles" 0 1 -1 "s" 1
+ 200 "Column2Titles" 0 1 0 "s" 1
 LANG:1 1 2
 E1
 LANG:1 0 
- 200 "Column3Titles" 0 1 -1 "s" 1
+ 200 "Column3Titles" 0 1 0 "s" 1
 LANG:1 1 3
 E1
 LANG:1 0 
- 200 "Column4Titles" 0 1 -1 "s" 1
+ 200 "Column4Titles" 0 1 0 "s" 1
 LANG:1 1 4
 E1
 LANG:1 0 
- 200 "Column5Titles" 0 1 -1 "s" 1
+ 200 "Column5Titles" 0 1 0 "s" 1
 LANG:1 1 5
 E1
 LANG:1 0 
- 200 "Column6Titles" 0 1 -1 "s" 1
+ 200 "Column6Titles" 0 1 0 "s" 1
 LANG:1 1 6
 E1
 LANG:1 0 
- 200 "Column7Titles" 0 1 -1 "s" 1
+ 200 "Column7Titles" 0 1 0 "s" 1
 LANG:1 1 7
 E1
 LANG:1 0 
- 200 "Column8Titles" 0 1 -1 "s" 1
+ 200 "Column8Titles" 0 1 0 "s" 1
 LANG:1 1 8
 E1
 LANG:1 0 
- 200 "Column9Titles" 0 1 -1 "s" 1
+ 200 "Column9Titles" 0 1 0 "s" 1
 LANG:1 1 9
 E1
 LANG:1 0 
- 200 "Column10Titles" 0 1 -1 "s" 1
+ 200 "Column10Titles" 0 1 0 "s" 1
 LANG:1 2 10
 E1
 LANG:1 0 
- 200 "Column11Titles" 0 1 -1 "s" 1
+ 200 "Column11Titles" 0 1 0 "s" 1
 LANG:1 2 11
 E1
 LANG:1 0 
- 200 "Column12Titles" 0 1 -1 "s" 1
+ 200 "Column12Titles" 0 1 0 "s" 1
 LANG:1 2 13
 E1
 LANG:1 0 
- 200 "Column13Titles" 0 1 -1 "s" 1
+ 200 "Column13Titles" 0 1 0 "s" 1
 LANG:1 2 13
 E1
 LANG:1 0 
- 200 "Column14Titles" 0 1 -1 "s" 1
+ 200 "Column14Titles" 0 1 0 "s" 1
 LANG:1 2 14
 E1
 LANG:1 0 
@@ -1040,64 +1051,64 @@ LANG:1 0
 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
--2 -2 802 393
-E E 0 0 1 15 1 "Column0Titles" 0 -1 -1 "s" 1
+-2 -2 932 393
+E E 0 0 1 15 1 "Column0Titles" 0 -1 0 "s" 1
 LANG:1 1 0
 E1
 LANG:1 0 
- 200 "Column1Titles" 0 1 -1 "s" 1
+ 200 "Column1Titles" 0 1 0 "s" 1
 LANG:1 1 1
 E1
 LANG:1 0 
- 200 "Column2Titles" 0 1 -1 "s" 1
+ 200 "Column2Titles" 0 1 0 "s" 1
 LANG:1 1 2
 E1
 LANG:1 0 
- 200 "Column3Titles" 0 1 -1 "s" 1
+ 200 "Column3Titles" 0 1 0 "s" 1
 LANG:1 1 3
 E1
 LANG:1 0 
- 200 "Column4Titles" 0 1 -1 "s" 1
+ 200 "Column4Titles" 0 1 0 "s" 1
 LANG:1 1 4
 E1
 LANG:1 0 
- 200 "Column5Titles" 0 1 -1 "s" 1
+ 200 "Column5Titles" 0 1 0 "s" 1
 LANG:1 1 5
 E1
 LANG:1 0 
- 200 "Column6Titles" 0 1 -1 "s" 1
+ 200 "Column6Titles" 0 1 0 "s" 1
 LANG:1 1 6
 E1
 LANG:1 0 
- 200 "Column7Titles" 0 1 -1 "s" 1
+ 200 "Column7Titles" 0 1 0 "s" 1
 LANG:1 1 7
 E1
 LANG:1 0 
- 200 "Column8Titles" 0 1 -1 "s" 1
+ 200 "Column8Titles" 0 1 0 "s" 1
 LANG:1 1 8
 E1
 LANG:1 0 
- 200 "Column9Titles" 0 1 -1 "s" 1
+ 200 "Column9Titles" 0 1 0 "s" 1
 LANG:1 1 9
 E1
 LANG:1 0 
- 200 "Column10Titles" 0 1 -1 "s" 1
+ 200 "Column10Titles" 0 1 0 "s" 1
 LANG:1 2 10
 E1
 LANG:1 0 
- 200 "Column11Titles" 0 1 -1 "s" 1
+ 200 "Column11Titles" 0 1 0 "s" 1
 LANG:1 2 11
 E1
 LANG:1 0 
- 200 "Column12Titles" 0 1 -1 "s" 1
+ 200 "Column12Titles" 0 1 0 "s" 1
 LANG:1 2 13
 E1
 LANG:1 0 
- 200 "Column13Titles" 0 1 -1 "s" 1
+ 200 "Column13Titles" 0 1 0 "s" 1
 LANG:1 2 13
 E1
 LANG:1 0 
- 200 "Column14Titles" 0 1 -1 "s" 1
+ 200 "Column14Titles" 0 1 0 "s" 1
 LANG:1 2 14
 E1
 LANG:1 0 
@@ -1122,64 +1133,64 @@ LANG:1 0
 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
--2 -2 802 393
-E E 0 0 1 15 1 "Column0Titles" 0 -1 -1 "s" 1
+-2 -2 932 393
+E E 0 0 1 15 1 "Column0Titles" 0 -1 0 "s" 1
 LANG:1 1 0
 E1
 LANG:1 0 
- 200 "Column1Titles" 0 1 -1 "s" 1
+ 200 "Column1Titles" 0 1 0 "s" 1
 LANG:1 1 1
 E1
 LANG:1 0 
- 200 "Column2Titles" 0 1 -1 "s" 1
+ 200 "Column2Titles" 0 1 0 "s" 1
 LANG:1 1 2
 E1
 LANG:1 0 
- 200 "Column3Titles" 0 1 -1 "s" 1
+ 200 "Column3Titles" 0 1 0 "s" 1
 LANG:1 1 3
 E1
 LANG:1 0 
- 200 "Column4Titles" 0 1 -1 "s" 1
+ 200 "Column4Titles" 0 1 0 "s" 1
 LANG:1 1 4
 E1
 LANG:1 0 
- 200 "Column5Titles" 0 1 -1 "s" 1
+ 200 "Column5Titles" 0 1 0 "s" 1
 LANG:1 1 5
 E1
 LANG:1 0 
- 200 "Column6Titles" 0 1 -1 "s" 1
+ 200 "Column6Titles" 0 1 0 "s" 1
 LANG:1 1 6
 E1
 LANG:1 0 
- 200 "Column7Titles" 0 1 -1 "s" 1
+ 200 "Column7Titles" 0 1 0 "s" 1
 LANG:1 1 7
 E1
 LANG:1 0 
- 200 "Column8Titles" 0 1 -1 "s" 1
+ 200 "Column8Titles" 0 1 0 "s" 1
 LANG:1 1 8
 E1
 LANG:1 0 
- 200 "Column9Titles" 0 1 -1 "s" 1
+ 200 "Column9Titles" 0 1 0 "s" 1
 LANG:1 1 9
 E1
 LANG:1 0 
- 200 "Column10Titles" 0 1 -1 "s" 1
+ 200 "Column10Titles" 0 1 0 "s" 1
 LANG:1 2 10
 E1
 LANG:1 0 
- 200 "Column11Titles" 0 1 -1 "s" 1
+ 200 "Column11Titles" 0 1 0 "s" 1
 LANG:1 2 11
 E1
 LANG:1 0 
- 200 "Column12Titles" 0 1 -1 "s" 1
+ 200 "Column12Titles" 0 1 0 "s" 1
 LANG:1 2 13
 E1
 LANG:1 0 
- 200 "Column13Titles" 0 1 -1 "s" 1
+ 200 "Column13Titles" 0 1 0 "s" 1
 LANG:1 2 13
 E1
 LANG:1 0 
- 200 "Column14Titles" 0 1 -1 "s" 1
+ 200 "Column14Titles" 0 1 0 "s" 1
 LANG:1 2 14
 E1
 LANG:1 0 
@@ -1272,31 +1283,6 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 0 0 0 3 0
 1 0
-14 116
-"TextField1"
-""
-1 830 110 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-108 0 0 0 0 0
-E"main()
-{
-//setValue(\"red\", \"backCol\", \"red\");
-red.backCol=\"red\";
-DebugN(\"Lost focus function started\");
-}" 0
- E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-828 108 862 135
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
 0
 LAYER, 1 
 1

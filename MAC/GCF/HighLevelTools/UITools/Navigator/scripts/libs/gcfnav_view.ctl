@@ -7,6 +7,73 @@
 ///////////////////////////////////////////////////////////////////////////////////
 void setColumnConfig(int TableNumber, int nrOfColumns, int MaximumColumns, string Addition)
 {
+
+  int k, table_x, table_y;
+
+  getValue("Table"+TableNumber, "size", table_x, table_y);
+  for (k=0; k<nrOfColumns ; k++)
+  {
+    dpConnect("Arrange" + Addition + "TableContent", $configDatapoint + "."+TableNumber+".Column" + k + "Titles:_online.._value",
+                                     $configDatapoint + "."+TableNumber+".Column" + k + "dpNames:_online.._value");
+    setValue("Table"+TableNumber, "columnVisibility", k, TRUE);
+    setValue("Table"+TableNumber, "columnWidth", k, (table_x/nrOfColumns));
+  }
+  for (k=nrOfColumns ; k <= MaximumColumns ; k++)
+  {
+    setValue("Table"+TableNumber, "columnVisibility", k, FALSE);
+  }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: ConvIndex
+// Function    : Hoog de index op 1 op.
+//////////////////////////////////////////////////////////////////////////////////
+int ConvIndex(int i)
+{
+  return i+1;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: getTableNumber
+// Function    : Retrieve the number of the current table
+// Output: 
+///////////////////////////////////////////////////////////////////////////////////
+void getTableNumber(string dpName, int &TableNumber)
+{
+  dyn_string resultaat;
+  string test;
+  resultaat = strsplit(dpName, ".");
+  TableNumber = resultaat[2];
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: getColumnTitle
+// Function    : Retrieve the Name of the current column
+// Output: 
+///////////////////////////////////////////////////////////////////////////////////
+void getColumnTitle(string dpName, string &ColumnTitle)
+{
+  dyn_string resultaat;
+  string test = "System1:__nav_TLcuPicRack_config_Alert_Alert-1.1.Column1dpNames:_online.._value";
+  resultaat = strsplit(dpName, ".");
+  ColumnTitle = strrtrim(resultaat[3], "dpNames:_online");
+}
+
+
+=======
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: setColumnConfig
+//
+// Function    : Set the width of the configured amount of columns,
+//               otherwise they will be set to invisible
+///////////////////////////////////////////////////////////////////////////////////
+void setColumnConfig(int TableNumber, int nrOfColumns, int MaximumColumns, string Addition)
+{
   int k;
   for (k=0; k<nrOfColumns ; k++)
   {
@@ -61,6 +128,7 @@ void getColumnTitle(string dpName, string &ColumnTitle)
 }
 
 
+>>>>>>> 1.3
 /////////////////////////////////////////////////////////////////////
 // Funtion: dpGetElementName for trend
 //
