@@ -25,7 +25,7 @@
 
 //# Includes
 #include <PL/PersistentObject.h>
-#include <loki/SmartPtr.h>
+#include <boost/shared_ptr.hpp>
 
 namespace LCS 
 {
@@ -40,20 +40,20 @@ namespace LCS
     class TPersistentObjectBase : public PersistentObject
     {
     public:
-      // Implements PersistentObject::erase(PersistenceBroker*)
-      virtual void erase(const PersistenceBroker* const b);
+      // Implements PersistentObject::erase()
+      virtual void erase() const;
 
-      // Implements PersistentObject::insert(PersistenceBroker*)
-      virtual void insert(const PersistenceBroker* const b);
+      // Implements PersistentObject::insert()
+      virtual void insert() const;
 
-      // Implements PersistentObject::retrieve(PersistenceBroker*)
-      virtual void retrieve(const PersistenceBroker* const b);
+      // Implements PersistentObject::retrieve()
+      virtual void retrieve() const;
 
-      // Implements PersistentObject::save(PersistenceBroker*)
-      virtual void save(const PersistenceBroker* const b);
+      // Implements PersistentObject::save()
+      virtual void save() const;
 
-      // Implements PersistentObject::update(PersistenceBroker*)
-      virtual void update(const PersistenceBroker* const b);
+      // Implements PersistentObject::update()
+      virtual void update() const;
 
       // Return a reference to the contained persistent object.
       // \note This is a \e non-const reference, because we want to allow
@@ -61,7 +61,14 @@ namespace LCS
       T& value() { return *itsObjectPtr; }
 
     protected:
-  
+
+      // The default constructor will create in instance of \c T on the
+      // free store. It is automatically deleted when \c *this is destroyed.
+      TPersistentObjectBase() : 
+        itsObjectPtr(new T()), itsObjectSharedPtr(itsObjectPtr)
+      {
+      }
+
       // \c T is passed by refererence, not const reference, because it
       // explicitly shows that \c t can be easily changed, using the value()
       // method, which also returns a reference, instead of a const reference.
@@ -70,7 +77,6 @@ namespace LCS
       explicit TPersistentObjectBase(T& t) : 
 	itsObjectPtr(&t)
       {
-        itsOwnerOid.set(ObjectId::NullId);
       }
 
       virtual ~TPersistentObjectBase() 
@@ -81,35 +87,35 @@ namespace LCS
 
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
-      virtual void doErase(const ObjectId& poid) = 0;
+      virtual void doErase(MetaData& md) const = 0;
 
       // This method is responsible for actually inserting the \e primitive
       // data members of \c T.
-      virtual void doInsert(const ObjectId& poid) = 0;
+      virtual void doInsert(MetaData& md) const = 0;
 
       // This method is responsible for actually retrieving the \e primitive
       // data members of \c T.
-      virtual void doRetrieve(const ObjectId& poid) = 0;
+      virtual void doRetrieve(MetaData& md) const = 0;
 
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
-      virtual void doUpdate(const ObjectId& poid) = 0;
+      virtual void doUpdate(MetaData& md) const = 0;
 
       // Here we keep a pointer to the instance of T.
       T* itsObjectPtr;
 
-      // The Loki::SmartPtr will be used to keep track of instances of T
+      // The boost::shared_ptr will be used to keep track of instances of T
       // that we've created ourselves. Because copying a TPersistentObject 
       // implies copying the pointer to the instance of T, we must somehow
       // keep track of the number of pointers pointing to this object. When
-      // the count drops to zero, Loki::SmartPtr will delete the object.
+      // the count drops to zero, boost::shared_ptr will delete the object.
       // Obviously, we do not want this behaviour for instances of T that we
       // did not create ourselves. If we're not the creator, then we're not
       // the owner, hence we should never ever delete the object! Therefore,
-      // we will only transfer ownership of itsObjectPtr to the Loki::SmartPtr
-      // when \e we are the creator/owner of the object that itsObjectPtr
-      // points to.
-      Loki::SmartPtr<T> itsObjectSharedPtr;
+      // we will only transfer ownership of itsObjectPtr to the
+      // boost::shared_ptr when \e we are the creator/owner of the object
+      // that itsObjectPtr points to.
+      boost::shared_ptr<T> itsObjectSharedPtr;
 
     };
 
