@@ -77,20 +77,22 @@ bool BatchAgent::init (const DataRecord &data)
 int BatchAgent::endIteration (double conv)
 {
   // call parent's endIteration
-  int st = SolverControlAgent::endIteration(conv);
-  if( st != RUNNING )
-    return st;
-  
-  // do we have another job queued up?
-  st = current_job_ >= jobs_.size() ? NEXT_DOMAIN : NEXT_SOLUTION;
-  
+  int endstate = SolverControlAgent::endIteration(conv);
+  if( endstate != RUNNING )
+    return endstate;
+  // setup endstate depending on what's happening
+  if( current_job_ < jobs_.size() )
+    endstate = NEXT_SOLUTION;
+  else if( endOfData() )
+    endstate = STOPPED;
+  else
+    endstate = NEXT_DOMAIN;
   // check for max iteration count -- interrupt if reached
   if( iterationNum() >= max_iterations_ )
-    endSolution("Iteration count exceeded",st);
-  
+    endSolution("Iteration count exceeded",endstate);
   // check for convergence -- end if reached
   if( convergence() <= conv_threshold_ )
-    endSolution("Converged",st);
+    endSolution("Converged",endstate);
   
   return state();
 }
@@ -98,37 +100,40 @@ int BatchAgent::endIteration (double conv)
 //##ModelId=3E01FA8D02FF
 int BatchAgent::startDomain (const DataRecord::Ref &data)
 {
-  SolverControlAgent::startDomain();
-  current_job_ = 0;
-  sink().raiseEventFlag(); // start solution should be called
-  setState(RUNNING);
+  if( SolverControlAgent::startDomain() == NEXT_SOLUTION )
+  {
+    current_job_ = 0;
+    sink().raiseEventFlag(); // start solution should be called
+  }
   return state();
 }
 
 //##ModelId=3E0098E90136
 int BatchAgent::startSolution (DataRecord::Ref &params)
 {
-  if( current_job_ >= jobs_.size() )
+  if( checkState() > 0 )
   {
-    setState(NEXT_DOMAIN);
-    return state();
+    // if in NEXT_DOMAIN state, return immediately
+    if( state() == NEXT_DOMAIN )
+      return state();
+    if( current_job_ >= jobs_.size() )
+      return setState(NEXT_DOMAIN);
+    // get next set of solution parameters from job queue
+    params = jobs_[current_job_].copy();
+    // advance pointer to next solve job
+    current_job_++;  
+    // get solve criteria
+    conv_threshold_ = (*params)[FConvergence].as_double(DefaultConvergence);
+    max_iterations_ = (*params)[FMaxIterations].as_int(DefaultMaxIterations);
+
+    dprintf(1)("starting solution, niter=%d, convergence=%f\n",
+                max_iterations_,conv_threshold_);
+
+    // init the solution
+    initSolution(params);
+
+    setState(RUNNING);
   }
-  
-  // get next set of solution parameters from job queue
-  params = jobs_[current_job_].copy();
-  // advance pointer to next solve job
-  current_job_++;  
-  // get solve criteria
-  conv_threshold_ = (*params)[FConvergence].as_double(DefaultConvergence);
-  max_iterations_ = (*params)[FMaxIterations].as_int(DefaultMaxIterations);
-  
-  dprintf(1)("starting solution, niter=%d, convergence=%f\n",
-              max_iterations_,conv_threshold_);
-  
-  // init the solution
-  initSolution(params);
-  
-  setState(RUNNING);
   return state();
 }
 

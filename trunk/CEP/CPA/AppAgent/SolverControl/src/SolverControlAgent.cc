@@ -37,7 +37,10 @@ bool SolverControlAgent::init (const DataRecord &data)
 {
   if( !AppControlAgent::init(data) )
     return False;
+  status_ <<= new DataRecord;
+  status_()[FEndData] = endOfData_ = False;
   domainNum_ = -1;
+  setState(NEXT_DOMAIN);
   return True;
 }
 
@@ -45,10 +48,16 @@ bool SolverControlAgent::init (const DataRecord &data)
 //##ModelId=3DFF2D300027
 int SolverControlAgent::startDomain  (const DataRecord::Ref &data)
 {
+  // in terminal state? Return immediately
+  if( checkState() <= 0 )
+    return state(); 
+  // else must be in NEXT_DOMAIN state
+  FailWhen(state()!=NEXT_DOMAIN,"unexpected state, must be NEXT_DOMAIN");
+  status_()[FEndData] = endOfData_ = False;
   domainNum_++;
   dprintf(1)("starting solution for domain %d\n",domainNum_);
   postEvent(StartDomainEvent,data);
-  return setState(RUNNING);
+  return setState(NEXT_SOLUTION);
 }
 
 //##ModelId=3E01F9A302C5
@@ -57,17 +66,46 @@ int SolverControlAgent::endDomain (const DataRecord::Ref &data)
   FailWhen(domainNum()<0,"illegal domain number -- perhaps startDomain() not called?");
   dprintf(1)("end of domain %d\n",domainNum_);
   postEvent(EndDomainEvent,data);
+  return checkState();
+}
+
+//##ModelId=3E4BA06802E9
+int SolverControlAgent::endData (const HIID &event)
+{
+  postEvent(event);
+  status_()[FEndData] = endOfData_ = True;
+  return checkState();
+}
+
+//##ModelId=3E01F9A203A4
+int SolverControlAgent::startSolution (DataRecord::Ref &)
+{
+  // in terminal state? Return immediately
+  if( checkState() > 0 )
+  {
+    // if in NEXT_DOMAIN state, return immediately
+    if( state() == NEXT_DOMAIN )
+      return state();
+    // else must be in NEXT_SOLUTION state
+    FailWhen(state()!=NEXT_SOLUTION,"unexpected state, must be NEXT_SOLUTION");
+    // default version does not drive any solutions; asks for next domain immediately
+    return setState(NEXT_DOMAIN);
+  }
   return state();
 }
 
 //##ModelId=3E005C9C0382
 int SolverControlAgent::endIteration (double conv)
 {
-  DataRecord & stat = status();
-  stat[FIterationNumber] = ++iterationNum_;
-  stat[FConvergence] = convergence_ = conv;
-  dprintf(2)("end iteration %d, conv=%f\n",iterationNum_,convergence_);
-  postEvent(EndIterationEvent,status_);
+  // in terminal state? Return immediately
+  if( checkState() > 0 )
+  {
+    DataRecord & stat = status();
+    stat[FIterationNumber] = ++iterationNum_;
+    stat[FConvergence] = convergence_ = conv;
+    dprintf(2)("end iteration %d, conv=%f\n",iterationNum_,convergence_);
+    postEvent(EndIterationEvent,status_);
+  }
   return state();
 }
 
@@ -98,6 +136,7 @@ void SolverControlAgent::stopSolution (const string &msg,int newstate,const HIID
 //##ModelId=3E0095CB0143
 void SolverControlAgent::initSolution (const DataRecord::Ref &params)
 {
+  FailWhen(state() != NEXT_SOLUTION,"unexpected state, must be NEXT_SOLUTION");
   FailWhen(domainNum()<0,"illegal domain number -- perhaps startDomain() not called?");
   convergence_ = 1e+1000; // hmm, definitely unconverged
   iterationNum_ = 0;
@@ -109,6 +148,53 @@ void SolverControlAgent::initSolution (const DataRecord::Ref &params)
   postEvent(StartSolutionEvent,status_);
   sink().clearEventFlag(); // no events until solution converges
 }
+
+//##ModelId=3E4BB7C203B7
+int SolverControlAgent::checkState (int wait)
+{
+  int res = getCommand(last_command_id_,last_command_data_,wait);
+  if( res == AppEvent::NEWSTATE && state() == INIT )
+    initrec_.copy(last_command_data_,DMI::PRESERVE_RW);
+  return state();
+}
+
+//##ModelId=3E4BCA3300AA
+bool SolverControlAgent::getLastCommand (HIID& id, DataRecord::Ref &data, bool flush)
+{
+  if( last_command_id_.empty() )
+    return False;
+  id = last_command_id_;
+  if( flush )
+  {
+    data.xfer(last_command_data_);
+    last_command_id_ = HIID();
+  }
+  else
+    data.copy(last_command_data_,DMI::PRESERVE_RW);
+  return True;
+}
+
+//##ModelId=3E4BCA7003CA
+int SolverControlAgent::getInitRecord (DataRecord::Ref &initrec)
+{
+  // halted? return immediately
+  if( state() == HALTED )
+    return HALTED;
+  // else wait for init or halt
+  if( state() != INIT )
+  {
+    setState(STOPPED);
+    // sit there checking (and ignoring) commands until an init/halt
+    while( state() != INIT && state() != HALTED )
+      checkState(AppEvent::BLOCK);
+  }
+  // return init record
+  if( state() == INIT )
+    initrec = initrec_;
+  
+  return state();
+}
+
 
 //##ModelId=3E00C8540129
 string SolverControlAgent::sdebug ( int detail,const string &prefix,
