@@ -98,7 +98,12 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
       LOG_DEBUG(formatString("Updating statistics properties: totalpower = %f",
 			     sum(m_beamlet_power)));
 
-      LOG_DEBUG_STR("m_beamlet_power=" << m_beamlet_power);
+      cout << "m_beamlet_power = ";
+      for (int i = 0; i < m_nbeamlets; i++)
+      {
+	  cout << m_beamlet_power(i, 0) << ";";
+      }
+      cout << endl;
 
       char propnamex[64];
       char propnamey[64];
