@@ -48,7 +48,7 @@ class GCFPropertySet : public GCFPropertySetBase
     GCFPropertySet (string apcName, 
                     string scope, 
                     GCFAnswer* pAnswerObj = 0);
-    virtual ~GCFPropertySet ();
+    virtual ~GCFPropertySet () {;}
 
     /**
      * Asynchronous request (results in a response via the GCFAnswer object)
