@@ -24,7 +24,7 @@
 #define MEQ_UVW_H
     
 #include <MEQ/Function.h>
-#include <aips/Measures/MPosition.h>
+#include <measures/Measures/MPosition.h>
 
 #pragma aidgroup Meq
 #pragma types #Meq::UVW

@@ -24,9 +24,9 @@
 
 #include <Common/BlitzToAips.h>
 
-#include <aips/Tables/ArrColDesc.h>
-#include <aips/Tables/ArrayColumn.h>
-#include <aips/Tables/ScalarColumn.h>
+#include <tables/Tables/ArrColDesc.h>
+#include <tables/Tables/ArrayColumn.h>
+#include <tables/Tables/ScalarColumn.h>
 
 namespace MSVisAgent
 {

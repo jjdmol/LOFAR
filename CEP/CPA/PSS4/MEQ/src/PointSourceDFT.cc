@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <MEQ/PointSourceDFT.h>
-#include <aips/Mathematics/Constants.h>
+#include <casa/BasicSL/Constants.h>
 
 namespace Meq {    
 

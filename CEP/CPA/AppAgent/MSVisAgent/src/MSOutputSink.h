@@ -29,11 +29,11 @@
 #include <VisCube/VisVocabulary.h>
 #include <VisCube/VisTile.h>
 
-#include <aips/MeasurementSets/MeasurementSet.h>
-#include <aips/Arrays/Slicer.h>
-#include <aips/Arrays/Array.h>
-#include <aips/Tables/ArrayColumn.h>
-#include <aips/Tables/ScalarColumn.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
+#include <casa/Arrays/Slicer.h>
+#include <casa/Arrays/Array.h>
+#include <tables/Tables/ArrayColumn.h>
+#include <tables/Tables/ScalarColumn.h>
 
 namespace MSVisAgent
 {

@@ -183,6 +183,9 @@ void Meq::VisDataMux::fillCells (Cells &cells,LoRange &range,const VisTile &tile
   cells.setCells(FREQ,channel_freqs,channel_widths);
   cells.setCells(TIME,time1,interval1);
   cells.recomputeDomain();
+  cells.recomputeSegments(FREQ);
+  cells.recomputeSegments(TIME);
+  cells.recomputeDomain();
   cdebug1(5)<<"cells: "<<cells;
   if( force_regular_grid )
   {

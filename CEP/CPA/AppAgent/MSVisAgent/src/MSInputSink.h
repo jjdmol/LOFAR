@@ -28,8 +28,8 @@
 #include <VisCube/VisVocabulary.h>
 #include <VisCube/VisTile.h>
 
-#include <aips/MeasurementSets/MeasurementSet.h>
-#include <aips/Tables/TableIter.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
+#include <tables/Tables/TableIter.h>
 #include <AppAgent/FileSink.h>
 
 namespace MSVisAgent

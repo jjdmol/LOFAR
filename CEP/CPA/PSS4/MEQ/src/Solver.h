@@ -25,7 +25,7 @@
     
 #include <MEQ/Node.h>
 #include <MEQ/VellSet.h>
-#include <aips/Fitting/FitLSQ.h>
+#include <scimath/Fitting/FitLSQ.h>
 
 #pragma types #Meq::Solver
 
