@@ -23,6 +23,8 @@
 
 #include "AntennaArray.h"
 
+#include <blitz/array.h>
+
 using namespace CAL;
 using namespace std;
 using namespace blitz;
@@ -49,3 +51,12 @@ AntennaArray::~AntennaArray()
 {
 }
 
+AntennaArray* AntennaArrayLoader::loadFromBlitzString(std::string name, std::string array)
+{
+  Array<double, 3> positions;
+  istringstream arraystream(array);
+
+  arraystream >> positions;
+
+  return new AntennaArray(name, positions);
+}

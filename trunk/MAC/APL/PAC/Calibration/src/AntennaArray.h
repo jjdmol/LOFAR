@@ -66,8 +66,17 @@ namespace CAL
     std::string             m_name;     // name of this antenna array
 
   protected:
+
+    friend class AntennaArrayLoader;
+
     blitz::Array<double, 3> m_pos;      // three dimensions, Nantennas, Npol, Ncoordinates (x,y,z)
     blitz::Array<int, 2>    m_rcuindex; // the index of the rcu to which a dipole is connected
+  };
+
+  class AntennaArrayLoader
+  {
+  public:
+    static AntennaArray* loadFromBlitzString(std::string name, std::string array);
   };
 };
 

@@ -1,5 +1,5 @@
 //#  -*- mode: c++ -*-
-//#  AntennaArray.cc: implementation of the AntennaArray class.
+//#  DipoleModel.cc: implementation of the DipoleModel class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,42 +21,33 @@
 //#
 //#  $Id$
 
-#include "AntennaArray.h"
-
 #include <blitz/array.h>
+#include <sstream>
+
+#include "DipoleModel.h"
 
 using namespace CAL;
-using namespace std;
 using namespace blitz;
+using namespace std;
 
-AntennaArray::AntennaArray(string                  name,
-			   const Array<double, 3>& pos,
-			   const Array<int, 2>*    rcuindex) 
-  : m_name(name), m_pos(pos), m_rcuindex(0)
+DipoleModel::DipoleModel(string name) : m_name(name)
 {
-  m_rcuindex.resize(m_pos.extent(firstDim), m_pos.extent(secondDim));
+}
 
-  if (rcuindex)
+DipoleModel::~DipoleModel()
+{
+}
+
+/*const*/ DipoleModel* DipoleModelLoader::loadFromBlitzString(string name, string array)
+{
+  DipoleModel* model = new DipoleModel(name);
+
+  if (model)
     {
-      m_rcuindex = *rcuindex;
+      istringstream arraystream(array);
+      arraystream >> model->m_sens;
     }
-  else
-    {
-      firstIndex i;
-      m_rcuindex = i;
-    }
+
+  return model;
 }
 
-AntennaArray::~AntennaArray()
-{
-}
-
-AntennaArray* AntennaArrayLoader::loadFromBlitzString(std::string name, std::string array)
-{
-  Array<double, 3> positions;
-  istringstream arraystream(array);
-
-  arraystream >> positions;
-
-  return new AntennaArray(name, positions);
-}

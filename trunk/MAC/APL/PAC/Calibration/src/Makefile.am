@@ -14,16 +14,20 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
 
 BUILT_SOURCES = \
-	CalServer.conf \
 	CAL_Protocol.ph \
-	SpectralWindow.conf
+	CalServer.conf \
+	SpectralWindow.conf \
+	DipoleModel.conf \
+	ACC.conf
 
 EXTRA_DIST = \
 	CAL_Protocol.ph
 
 sysconf_DATA = \
 	CalServer.conf \
-	SpectralWindow.conf
+	SpectralWindow.conf \
+	DipoleModel.conf \
+	ACC.conf
 
 include_HEADERS = \
 	$(top_builddir)/src/CAL_Protocol.ph
@@ -44,6 +48,8 @@ libcal_la_SOURCES = \
 	Source.cc \
 	SourceCatalog.h \
 	SourceCatalog.cc \
+	DipoleModel.h \
+	DipoleModel.cc \
 	SpectralWindow.h \
 	SpectralWindow.cc \
 	AntennaArray.h \

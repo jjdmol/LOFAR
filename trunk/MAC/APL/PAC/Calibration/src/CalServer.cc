@@ -50,10 +50,13 @@ using namespace CAL_Protocol;
 CalServer::CalServer(string name)
     : GCFTask((State)&CalServer::initial, name)
 {
+#if 0
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
 
   m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, CAL_PROTOCOL);
   //m_acmserver.init(*this, "acmserver", GCFPortInterface::SAP, ACM_PROTOCOL);
+#endif
+
 }
 
 CalServer::~CalServer()
@@ -199,32 +202,72 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
+void CalServer::calibrate()
+{
+  //
+  // Load configuration files.
+  //
+  try 
+    {
+      ParameterSet ps(string(CAL_SYSCONF) + "/" + string("SpectralWindow.conf"));
+
+      //
+      // load the spectral window configurations
+      //
+      m_spws = SPWLoader::loadFromBlitzStrings(ps["SpectralWindow.params"],
+					       ps["SpectralWindow.names"]);
+
+      //
+      // load the dipole model
+      //
+      ps = ParameterSet(string(CAL_SYSCONF) + "/" + string("DipoleModel.conf"));
+      m_dipolemodel = DipoleModelLoader::loadFromBlitzString("Primary DipoleModel", ps["DipoleModel.sens"]);
+
+      cout << "Dipole model=" << m_dipolemodel->getModel() << endl;
+
+      //
+      // Load antenna arrays
+      //
+      ps = ParameterSet(string(CAL_SYSCONF) + "/" + string("RemoteStation.conf"));
+      AntennaArray* lba = AntennaArrayLoader::loadFromBlitzString("LBA", ps["RS.LBA_POSITIONS"]);
+      m_arrays.push_back(*lba);
+      AntennaArray* hba = AntennaArrayLoader::loadFromBlitzString("HBA", ps["RS.HBA_POSITIONS"]);
+      m_arrays.push_back(*hba);
+
+      //
+      // load the ACC
+      //
+      m_acc = ACCLoader::loadFromFile(string(CAL_SYSCONF) + "/" + string("ACC.conf"));
+
+      if (!m_acc)
+	{
+	  LOG_ERROR("Failed to load ACC matrix.");
+	  exit(EXIT_FAILURE);
+	}
+
+      cout << "sizeof(ACC)=" << m_acc->getSize() * sizeof(complex<double>) << endl;
+    }
+  catch (Exception e) 
+    {
+      cout << "Failed to load configuration files: " << e << endl;
+      exit(EXIT_FAILURE);
+    }
+
+  for (unsigned int i = 0; i < m_spws.size(); i++)
+    {
+      cout << "SPW[" << i << "]=" << m_spws[i].getName() << endl;
+    }
+
+  //
+  // Call the calibration routine.
+  //
+}
+
 int main(int argc, char** argv)
 {
   GCFTask::init(argc, argv);
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
-
-  vector<SpectralWindow> spws;
-  
-  try 
-  {
-    ParameterSet spw_ps(string(CAL_SYSCONF) + "/" + string("SpectralWindow.conf"));
-
-    spws = SPWLoader::loadFromBlitzStrings(spw_ps[string("SpectralWindow.params")],
-					   spw_ps[string("SpectralWindow.names")]);
-  }
-  catch (Exception e) 
-  {
-    cout << "Failed to load SpectralWindow.conf: " << e << endl;
-    exit(EXIT_FAILURE);
-  }
-
-  for (unsigned int i = 0; i < spws.size(); i++)
-  {
-    cout << "SPW[" << i << "]=" << spws[i].getName() << endl;
-  }
-  
 
   try 
   {
@@ -238,6 +281,9 @@ int main(int argc, char** argv)
 
   CalServer cal("CalServer");
 
+  cal.calibrate(); // temporary entry point for standalone CalServer
+
+#if 0
   cal.start(); // make initial transition
 
   try
@@ -249,6 +295,7 @@ int main(int argc, char** argv)
     cerr << "Exception: " << e.text() << endl;
     exit(EXIT_FAILURE);
   }
+#endif
 
   LOG_INFO("Normal termination of program");
 

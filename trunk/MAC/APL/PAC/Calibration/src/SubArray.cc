@@ -58,12 +58,11 @@ SubArray::SubArray(string                 name,
 SubArray::~SubArray()
 {}
 
-void SubArray::startCalibration(CalibrationInterface* cal
-				/*, const ACC& acc*/)
+void SubArray::startCalibration(CalibrationInterface* cal, const ACC& acc)
 {
   if (!cal) return;
 
-  cal->calibrate(*this, *m_result[BACK]);
+  cal->calibrate(*this, acc, *m_result[BACK]);
 }
 
 bool SubArray::getCalibration(const CalibrationResult* cal, int buffer)

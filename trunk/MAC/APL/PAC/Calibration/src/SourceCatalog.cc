@@ -27,7 +27,7 @@ using namespace CAL;
 using namespace std;
 using namespace blitz;
 
-SourceCatalog::SourceCatalog(string name, int numsources) : m_name(name), m_sources(numsources)
+SourceCatalog::SourceCatalog(string name) : m_name(name)
 {
 }
 
@@ -35,24 +35,27 @@ SourceCatalog::~SourceCatalog()
 {
 }
 
-const Array<double, 2>& SourceCatalog::getSourcePositions() const
+const Array<double, 2> SourceCatalog::getSourcePositions() const
 {
   Array<double, 2> pos(m_sources.size(), 2);
 
-  vector<Source>::iterator it(m_sources);
+  vector<Source>::const_iterator it;
 
-  for (int i = 0, vector<Source>::iterator source = it.begin(); source < it.end(); it++, i++)
+  int i = 0;
+  for (it = m_sources.begin(); it < m_sources.end(); it++, i++)
     {
-      pos(i, 0) = (*source).getRA();
-      pos(i, 1) = (*source).getDEC();
+      pos(i, 0) = (*it).getRA();
+      pos(i, 1) = (*it).getDEC();
       i++;
     }
 
-  return pos;
+  return pos.copy();
 }
 
-static const SourceCatalog* SourceCatalogLoader::loadFromFile(string filename)
+const SourceCatalog* SourceCatalogLoader::loadFromFile(string filename)
 {
-  SourceCatalog* catalog = new SourceCatalog();
+  SourceCatalog* catalog = new SourceCatalog(string("Cambridge Catalog(") + filename + string(")"));
+
+  return catalog;
 }
 

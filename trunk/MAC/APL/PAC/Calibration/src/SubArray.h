@@ -29,6 +29,7 @@
 
 #include "SpectralWindow.h"
 #include "AntennaArray.h"
+#include "ACC.h"
 #include "CalibrationResult.h"
 
 namespace CAL
@@ -58,8 +59,7 @@ namespace CAL
      * @param cal The calibration algorithm to use.
      * @param acc The Array Correlation Cube on which to calibrate.
      */
-    void startCalibration(CalibrationInterface* cal
-			  /*, const ACC& acc*/);
+    void startCalibration(CalibrationInterface* cal, const ACC& acc);
 
     /**
      * Get calibration result (if available).

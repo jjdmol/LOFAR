@@ -33,7 +33,7 @@ namespace CAL
   class ACC
   {
   public:
-    ACC(int numantennas, int numsubbands);
+    ACC(blitz::Array<std::complex<double>, 5>& acc);
     virtual ~ACC();
 
     /**
@@ -45,10 +45,19 @@ namespace CAL
      * subband is specified an empty array is returned.
      */
     const blitz::Array<std::complex<double>, 4> getACM(int subband, RSP_Protocol::Timestamp& timestamp);
+
+    /**
+     * Get the size of the array.
+     */
+    int getSize() const { return m_acc.size(); }
     
   private:
+
+    friend class ACCLoader;
+
     /**
-     * ACC is a five dimensional array of nantennas x nantennas x nsubbands x npol x npol.
+     * ACC is a five dimensional array of complex numbers with dimensions
+     * nantennas x nantennas x nsubbands x npol x npol.
      */
     blitz::Array<std::complex<double>, 5>    m_acc;
 
@@ -56,6 +65,13 @@ namespace CAL
      * m_time is a 1 dimensional array with a timestamp for each subband.
      */
     blitz::Array<RSP_Protocol::Timestamp, 1> m_time;
+  };
+
+
+  class ACCLoader
+  {
+  public:
+    static const ACC* loadFromFile(std::string filename);
   };
 
 };
