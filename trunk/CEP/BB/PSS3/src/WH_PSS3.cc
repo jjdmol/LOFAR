@@ -244,7 +244,11 @@ void WH_PSS3::process()
     woPtr->updateDB();
   }
 
+  NSTimer caldestTimer;
+  caldestTimer.start();
   delete itsCal;
+  caldestTimer.stop();
+  cout<<"BBSTest: calibrator-destruction " << caldestTimer <<endl;
   totTimer.stop();
   cout << "BBSTest: total-execute " << totTimer << endl;
 }
