@@ -117,7 +117,6 @@ AVTTestTask::AVTTestTask() :
   
   m_extPropsetLDS.load();
   m_extPropsetLDSWG.load();
-  m_extPropsetSBF1.load();
 }
 
 AVTTestTask::~AVTTestTask()
@@ -157,12 +156,8 @@ GCFEvent::TResult AVTTestTask::initial(GCFEvent& event, GCFPortInterface& /*p*/)
         {
           m_propsetLDloaded = true;
         }
-        else if(strstr(pPropAnswer->pScope, "PAC_VT1_BF1") != 0)
-        {
-          m_propsetSBFloaded = true;
-        }
       }
-      if(m_propsetLDloaded && m_propsetLDWGloaded && m_propsetSBFloaded)
+      if(m_propsetLDloaded && m_propsetLDWGloaded)
       {
         if(m_sBeamServerOnly)
         {
@@ -289,8 +284,8 @@ GCFEvent::TResult AVTTestTask::test2(GCFEvent& event, GCFPortInterface& p)
           LOG_DEBUG(formatString("AVTTestTask(%s)::test3 status changed (%s)",getName().c_str(),statusValue.c_str()));
           if(statusValue == string("Resumed"))
           {
-            TESTC(true);
-            NEXT_TEST(3,"initialize EPA waveform generator");
+          	// subscribe to PAC_VT1_BF1
+        	  m_extPropsetSBF1.load();
           }
           else if(statusValue != string("Claimed") &&
                   statusValue != string("Prepared"))
@@ -302,6 +297,25 @@ GCFEvent::TResult AVTTestTask::test2(GCFEvent& event, GCFPortInterface& p)
         break;
       }
       
+	    case F_EXTPS_LOADED:
+	    {
+	      GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&event);
+	      if(pPropAnswer->result == GCF_NO_ERROR)
+	      {
+	        if(strstr(pPropAnswer->pScope, "PAC_VT1_BF1") != 0)
+	        {
+	          m_propsetSBFloaded = true;
+            TESTC(true);
+            NEXT_TEST(3,"initialize EPA waveform generator");
+	        }
+	      }
+	      else
+        {
+          TESTC(false);
+          NEXT_TEST(3,"initialize EPA waveform generator");
+        }
+	      break;
+	    }
       case F_DISCONNECTED:
       {
         TESTC(false);

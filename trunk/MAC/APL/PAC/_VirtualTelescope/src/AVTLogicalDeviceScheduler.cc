@@ -219,12 +219,13 @@ bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,co
   {
     stopTime = curUTCtime + stopDelay;
   }
-  LOG_DEBUG(formatString("(%s)\ncurrent time:          %sscheduled preparetime: %s\nscheduled starttime:   %s\nscheduled stoptime:    %s\n",__func__,posix_time::to_simple_string(curUTCtime).c_str(),posix_time::to_simple_string(prepareTime).c_str(),posix_time::to_simple_string(startTime).c_str(),posix_time::to_simple_string(stopTime).c_str()));
+  LOG_DEBUG(formatString("(%s)\ncurrent time:          %s\nscheduled preparetime: %s\nscheduled starttime:   %s\nscheduled stoptime:    %s\n",__func__,posix_time::to_simple_string(curUTCtime).c_str(),posix_time::to_simple_string(prepareTime).c_str(),posix_time::to_simple_string(startTime).c_str(),posix_time::to_simple_string(stopTime).c_str()));
 
   // check if the schedule already exists
   LogicalDeviceScheduleIterT schIt = m_logicalDeviceSchedule.find(scheduleId);
   if(schIt != m_logicalDeviceSchedule.end())
   {
+	  LOG_DEBUG(formatString("(%s) Schedule %d already exists. Changing parameters",__func__,scheduleId));
     // it exists.
     if(prepareTime < curUTCtime)
     {
@@ -236,10 +237,12 @@ bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,co
       schIt->second.parameters = scheduleParameters;
       // cancel current prepare timer and create a new one
       clientPort->cancelTimer(schIt->second.prepareTimerId);
+		  LOG_DEBUG(formatString("(%s) PrepareTimer %d cancelled",__func__,schIt->second.prepareTimerId));
       
       boost::posix_time::time_duration delay;
       delay = prepareTime - curUTCtime; 
       schIt->second.prepareTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the prepareTimer
+		  LOG_DEBUG(formatString("(%s) PrepareTimer %d created",__func__,schIt->second.prepareTimerId));
     }
     if(startTime < curUTCtime)
     {
@@ -250,10 +253,12 @@ bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,co
       schIt->second.startTime = rawStartTime;
       // cancel current start timer and create a new one
       clientPort->cancelTimer(schIt->second.startTimerId);
+		  LOG_DEBUG(formatString("(%s) StartTimer %d cancelled",__func__,schIt->second.startTimerId));
       
       boost::posix_time::time_duration delay;
       delay = startTime - curUTCtime; 
       schIt->second.startTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the startTimer
+		  LOG_DEBUG(formatString("(%s) StartTimer %d created",__func__,schIt->second.startTimerId));
     }
     if(stopTime < curUTCtime)
     {
@@ -264,14 +269,17 @@ bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,co
       schIt->second.stopTime = rawStopTime;
       // cancel current stop timer and create a new one
       clientPort->cancelTimer(schIt->second.stopTimerId);
+		  LOG_DEBUG(formatString("(%s) StopTimer %d cancelled",__func__,schIt->second.stopTimerId));
       
       boost::posix_time::time_duration delay;
       delay = stopTime - curUTCtime; 
       schIt->second.stopTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the stopTimer
+		  LOG_DEBUG(formatString("(%s) StopTimer %d created",__func__,schIt->second.stopTimerId));
     }
   }
   else
   {
+	  LOG_DEBUG(formatString("(%s) Creating Schedule %d",__func__,scheduleId));
     // create the schedule entry
     LogicalDeviceScheduleInfoT vtSchedule;
     
@@ -284,12 +292,15 @@ bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,co
     boost::posix_time::time_duration delay;
     delay = prepareTime - curUTCtime; 
     vtSchedule.prepareTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the prepareTimer
+    LOG_DEBUG(formatString("(%s) PrepareTimer %d created",__func__,vtSchedule.prepareTimerId));
 
     delay = startTime - curUTCtime; 
     vtSchedule.startTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the startTimer
+    LOG_DEBUG(formatString("(%s) StartTimer %d created",__func__,vtSchedule.startTimerId));
 
     delay = stopTime - curUTCtime; 
     vtSchedule.stopTimerId = clientPort->setTimer(static_cast<long int>(delay.total_seconds())); // set the stopTimer
+    LOG_DEBUG(formatString("(%s) StopTimer %d created",__func__,vtSchedule.stopTimerId));
   
     m_logicalDeviceSchedule[scheduleId] = vtSchedule;
   }  
@@ -431,21 +442,21 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       
       list<TPropertyInfo> requiredResources;
       getRequiredResources(requiredResources,1,1,1,1,1);
-      receptors.push_back(addReceptor(string("RCU1"),requiredResources));
+      receptors.push_back(addReceptor(string("SR1"),requiredResources));
       getRequiredResources(requiredResources,1,1,1,1,2);
-      receptors.push_back(addReceptor(string("RCU2"),requiredResources));
-      getRequiredResources(requiredResources,1,1,1,2,1);
-      receptors.push_back(addReceptor(string("RCU3"),requiredResources));
-      getRequiredResources(requiredResources,1,1,1,2,2);
-      receptors.push_back(addReceptor(string("RCU4"),requiredResources));
-      getRequiredResources(requiredResources,1,1,1,3,1);
-      receptors.push_back(addReceptor(string("RCU5"),requiredResources));
-      getRequiredResources(requiredResources,1,1,1,3,2);
-      receptors.push_back(addReceptor(string("RCU6"),requiredResources));
-      getRequiredResources(requiredResources,1,1,1,4,1);
-      receptors.push_back(addReceptor(string("RCU7"),requiredResources));
-      getRequiredResources(requiredResources,1,1,1,4,2);
-      receptors.push_back(addReceptor(string("RCU8"),requiredResources));
+      receptors.push_back(addReceptor(string("SR2"),requiredResources));
+      getRequiredResources(requiredResources,2,1,1,1,1);
+      receptors.push_back(addReceptor(string("SR3"),requiredResources));
+      getRequiredResources(requiredResources,2,1,1,1,2);
+      receptors.push_back(addReceptor(string("SR4"),requiredResources));
+      getRequiredResources(requiredResources,3,1,1,1,1);
+      receptors.push_back(addReceptor(string("SR5"),requiredResources));
+      getRequiredResources(requiredResources,3,1,1,1,2);
+      receptors.push_back(addReceptor(string("SR6"),requiredResources));
+      getRequiredResources(requiredResources,4,1,1,1,1);
+      receptors.push_back(addReceptor(string("SR7"),requiredResources));
+      getRequiredResources(requiredResources,4,1,1,1,2);
+      receptors.push_back(addReceptor(string("SR8"),requiredResources));
 
       // create receptor groups
       vector<shared_ptr<AVTStationReceptor> > receptorsSRG1;
@@ -545,6 +556,17 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       LogicalDeviceMapIterT it = findClientPort(port);
       if(it!=m_logicalDeviceMap.end())
       {
+        // get the corresponding schedule:
+        LogicalDeviceScheduleIterT scheduleIt = m_logicalDeviceSchedule.find(it->second.currentSchedule);
+        // cancel current timers of this LD
+        if(scheduleIt != m_logicalDeviceSchedule.end())
+        {
+          it->second.clientPort->cancelTimer(scheduleIt->second.prepareTimerId);
+          it->second.clientPort->cancelTimer(scheduleIt->second.startTimerId);
+          it->second.clientPort->cancelTimer(scheduleIt->second.stopTimerId);
+          LOG_DEBUG(formatString("(%s) Schedule %d cancelled. timers %d, %d and %d also cancelled.",__func__,scheduleIt->first,scheduleIt->second.prepareTimerId,scheduleIt->second.startTimerId,scheduleIt->second.stopTimerId));
+          m_logicalDeviceSchedule.erase(scheduleIt);
+        }
         // check if the LD can be deleted if no more schedules exist
         if(!it->second.permanent)
         {
@@ -580,6 +602,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
         if(checkPrepareTimer(it->first,timerEvent.id))
         {
           port.cancelTimer(timerEvent.id);
+          LOG_DEBUG(formatString("(%s) PrepareTimer %d triggered and cancelled",__func__,timerEvent.id));
           // this is a prepare timer for the schedule of a logical device. claim the device
           LOGICALDEVICEClaimEvent claimEvent;
           port.send(claimEvent);
@@ -589,6 +612,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
         else if(checkStartTimer(it->first,timerEvent.id))
         {
           port.cancelTimer(timerEvent.id);
+          LOG_DEBUG(formatString("(%s) StartTimer %d triggered and cancelled",__func__,timerEvent.id));
           // this is a start timer for the schedule of a logical device. resume the device
           LOGICALDEVICEResumeEvent resumeEvent;
           port.send(resumeEvent);
@@ -596,6 +620,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
         else if(checkStopTimer(it->first,timerEvent.id))
         {
           port.cancelTimer(timerEvent.id);
+          LOG_DEBUG(formatString("(%s) StopTimer %d triggered and cancelled",__func__,timerEvent.id));
           // this is a stop timer for the schedule of a logical device. suspend the device
           LOGICALDEVICESuspendEvent suspendEvent;
           port.send(suspendEvent);
@@ -885,6 +910,7 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
                   ldIt->second.clientPort->cancelTimer(scheduleIt->second.prepareTimerId);
                   ldIt->second.clientPort->cancelTimer(scheduleIt->second.startTimerId);
                   ldIt->second.clientPort->cancelTimer(scheduleIt->second.stopTimerId);
+                  LOG_DEBUG(formatString("(%s) Schedule %d cancelled. timers %d, %d and %d also cancelled.",__func__,scheduleId,scheduleIt->second.prepareTimerId,scheduleIt->second.startTimerId,scheduleIt->second.stopTimerId));
                   m_logicalDeviceSchedule.erase(scheduleIt);
                 }
                 else
@@ -929,6 +955,7 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
               // schedule exists already. cancel timers, remove from schedule
               m_timerPort.cancelTimer(it->second.startTimerId);
               m_timerPort.cancelTimer(it->second.stopTimerId);
+              LOG_DEBUG(formatString("(%s) Maintenance schedule %d cancelled. timers %d and %d also cancelled.",__func__,scheduleId,it->second.startTimerId,it->second.stopTimerId));
               it->second.pMaintenanceProperty.reset();
               m_maintenanceSchedule.erase(it);
             }
@@ -953,8 +980,10 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
             boost::posix_time::time_duration delay;
             delay = startTime - curUTCtime; 
             scheduleInfo.startTimerId = m_timerPort.setTimer(static_cast<long int>(delay.total_seconds())); // set the startTimer
+            LOG_DEBUG(formatString("(%s) MaintenanceStartTimer %d created",__func__,scheduleInfo.startTimerId));
             delay = stopTime - curUTCtime; 
             scheduleInfo.stopTimerId = m_timerPort.setTimer(static_cast<long int>(delay.total_seconds())); // set the startTimer
+            LOG_DEBUG(formatString("(%s) MaintenanceStopTimer %d created",__func__,scheduleInfo.stopTimerId));
 
             m_maintenanceSchedule[scheduleId] = scheduleInfo;
           } 

@@ -93,14 +93,13 @@ ARATestDriverTask::ARATestDriverTask() :
   m_systemStatus.board().resize(n_boards_per_subrack);
   m_systemStatus.rcu().resize(n_rcus);
 
-  for (int board = m_systemStatus.board().lbound(blitz::firstDim); board < m_systemStatus.board().ubound(blitz::firstDim); board++)
-  {
-    memset(&m_systemStatus.board()(board),0,sizeof(m_systemStatus.board()(board)));
-  }
-  for (int rcu = m_systemStatus.rcu().lbound(blitz::firstDim); rcu < m_systemStatus.rcu().ubound(blitz::firstDim); rcu++)
-  {
-    memset(&m_systemStatus.rcu()(rcu),0,sizeof(m_systemStatus.rcu()(rcu)));
-  }
+	EPA_Protocol::BoardStatus boardStatus;
+	memset(&boardStatus,0,sizeof(boardStatus));
+  m_systemStatus.board()(blitz::Range::all()) = boardStatus;
+
+	EPA_Protocol::RCUStatus rcuStatus;
+	memset(&rcuStatus,0,sizeof(rcuStatus));
+  m_systemStatus.rcu()(blitz::Range::all()) = rcuStatus;
   
   m_stats().resize(1,n_rcus,RSP_Protocol::MAX_N_BLPS);
   
@@ -623,7 +622,7 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
   int rcuNumber = rcu + n_rcus_per_ap*(ap-1) + n_rcus_per_ap*n_aps_per_board*(board-1);
   
   uint8 rcuStatus;
-  rcuStatus = m_systemStatus.rcu()(rcuNumber).status;
+  
   rcuStatus = m_systemStatus.rcu()(rcuNumber-1).status;
   
   // layout rcu status: 
@@ -982,7 +981,6 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      LOG_INFO(formatString("property changed: %s", pPropAnswer->pPropName));
       GCFPVUnsigned pvUnsigned;
       GCFPVDouble   pvDouble;
       GCFPVBool     pvBool;
@@ -991,19 +989,19 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       {
         case LPT_BOOL:
           pvBool.copy(*pPropAnswer->pValue);
-          LOG_INFO(formatString("property value: %d", pvBool.getValue()));
+          LOG_INFO(formatString("property changed: %s=%d", pPropAnswer->pPropName, pvBool.getValue()));
           break;
         case LPT_UNSIGNED:
           pvUnsigned.copy(*pPropAnswer->pValue);
-          LOG_INFO(formatString("property changed: %d", pvUnsigned.getValue()));
+          LOG_INFO(formatString("property changed: %s=%d", pPropAnswer->pPropName, pvUnsigned.getValue()));
           break;
         case LPT_DOUBLE:
           pvDouble.copy(*pPropAnswer->pValue);
-          LOG_INFO(formatString("property changed: %f", pvDouble.getValue()));
+          LOG_INFO(formatString("property changed: %s=%f", pPropAnswer->pPropName, pvDouble.getValue()));
           break;
         case LPT_STRING:
           pvString.copy(*pPropAnswer->pValue);
-          LOG_INFO(formatString("property changed: %s", pvString.getValue().c_str()));
+          LOG_INFO(formatString("property changed: %s=%s", pPropAnswer->pPropName, pvString.getValue().c_str()));
           break;
         case NO_LPT:
         case LPT_CHAR:
@@ -1030,13 +1028,13 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       // ETH status or RCU status;
       string propName(pPropAnswer->pPropName);
 
-      if(propName.find(string("_Maintenance_"),0) == string::npos)
+      if(propName.find(string("_Maintenance"),0) == string::npos)
       {
-        if(propName.find(string("_ETH_"),0) != string::npos)
+        if(propName.find(string("_ETH"),0) != string::npos)
         {
           updateETHstatus(propName,pPropAnswer->pValue);
         }
-        else if(propName.find(string("_BP_"),0) != string::npos)
+        else if(propName.find(string("_BP"),0) != string::npos)
         {
           updateBPstatus(propName,pPropAnswer->pValue);
         }

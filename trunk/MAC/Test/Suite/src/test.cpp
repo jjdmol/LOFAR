@@ -57,7 +57,7 @@ void Test::do_fail(const std::string& lbl,
   ++m_nFail;
   m_subTests[m_curSubTest].failed++;
   string failure;
-  failure += "Test: ";
+  failure += "Test: (" + m_curSubTest +") ";
   if (descr) failure += descr;    
   if (lbl.length() > 0) failure += " (" + lbl + ")";
   failure += LOFAR::formatString(" => FAILED!!! [%s:%d]", (strrchr(fname, '/') + 1), lineno);

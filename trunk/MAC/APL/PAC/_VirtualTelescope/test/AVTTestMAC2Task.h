@@ -36,14 +36,6 @@
 
 #include "AVTTestAnswer.h"
 
-typedef struct
-{
-  GCFFsm::State target;
-  const char*   targetName;
-  const char*   testNum;
-  const char*   description;
-} TTranTarget;
-
 // forward declaration
 class GCFEvent;
 namespace AVT
@@ -85,8 +77,6 @@ namespace AVT
       
       static string m_taskName;
       
-      std::vector<TTranTarget>            m_testSequence;
-      std::vector<TTranTarget>::iterator  m_testSequenceIt;
       AVTTestAnswer                       m_answer;
       GCFPort                             m_timerPort;
       
@@ -102,6 +92,9 @@ namespace AVT
       GCFExtPropertySet     m_propertysetVT3;
       int                   m_maintenanceChangedCounter;
       int                   m_suspendedCounter;
+      int 									m_propsetLoadedCounter;
+		  int 									m_nrOfPropsets;
+      
   };  
 };
 
