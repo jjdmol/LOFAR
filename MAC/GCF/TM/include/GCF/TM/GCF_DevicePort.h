@@ -32,52 +32,67 @@ class GCFEvent;
 class GTMDevice;
 
 /**
- * This is the class, which implements the special port with the TCP message 
- * transport protocol. It uses socket pattern to do this. Is can act as MSPP 
- * (port provider), SPP (server) and SAP (client).
+ * This is the class, which implements the special port for opening and work with 
+ * a file or device. It uses the 'file' pattern to do this. It can only act as a SAP (client).
  */
 class GCFDevicePort : public GCFRawPort
 {
- public:
+  public: // constructors && destructors
 
-    /// Construction methods
-    /** @param protocol NOT USED */    
+    /// params see constructor of GCFPortInterface  
+    /// type is always SAP  
     explicit GCFDevicePort (GCFTask& task,
           	    string name,
-          	    TPortType type,
                 int protocol, 
                 const string& deviceName,
                 bool transportRawData = false);
+
+    /** @param deviceName name of the file/device to open
+     * GCFPortInterface params are:
+     * pTask => 0
+     * name => ""
+     * type => SAP
+     * protocol => 0
+     * transportRawData => false
+     */ 
     explicit GCFDevicePort (const string& deviceName);
-    explicit GCFDevicePort ();
-  
+    /** default constructor
+     * GCFPortInterface params are:
+     * pTask => 0
+     * name => ""
+     * type => SAP
+     * protocol => 0
+     * transportRawData => false
+     */ 
+    GCFDevicePort ();
+
+    /// destructor
     virtual ~GCFDevicePort ();
   
-  public:
+  private:
+    /// Don't allow copying this object.
+    GCFDevicePort (const GCFDevicePort&);
+    GCFDevicePort& operator= (const GCFDevicePort&);
 
-    /**
-     * open/close functions
+  public: // GCFPortInterface overloaded/defined methods
+    
+   /**
+     * open/close methods
      */
     virtual bool open ();
     virtual bool close ();
   
     /**
-     * send/recv functions
+     * send/recv methods
      */
     virtual ssize_t send (GCFEvent& event);
     virtual ssize_t recv (void* buf,
                           size_t count);
-  public:
-    void setDeviceName (const string& deviceName);
 
-  private:
-    /**
-     * Don't allow copying this object.
-     */
-    GCFDevicePort (const GCFDevicePort&);
-    GCFDevicePort& operator= (const GCFDevicePort&);
+  public: // GCFDevicePort specific methods
+    void setDeviceName (const string& deviceName);
     
-  private:
+  private: // data members
     bool                _devNameIsSet;
     GTMDevice*          _pDevice;
     string              _deviceName;

@@ -1,13 +1,14 @@
 V 10
 1
 LANG:1 18 GCF PropSet loader
-PANEL,40 57 321 243 N "_3DFace" 1
+PANEL,40 57 321 349 N "_3DFace" 1
 "$loadernr"
 "#uses \"gcfpa-pml.ctl\"
 
 main()
 {	
 	pID = gcfInit(\"gcfTestCallBack\");
+	dpConnect(\"followPSState\", FALSE, \"__pa_PSIndication.\");
 }" 0
  "main()
 {
@@ -76,6 +77,22 @@ bool deletePS(string& scope, bool deleteAll)
 		bConfigure.enabled = FALSE;
 		tApcname.enabled = FALSE;
 		bUnload.enabled = FALSE;
+	}
+}
+
+void followPSState(string dp, string m)
+{	
+	DebugN(dp + \" \" + m);
+	dyn_string sm = strsplit(m, '|');
+	if (sm[1] == \"e\")
+	{
+		lbEnabledPS.appendItem(sm[2]);
+	}
+	else if (sm[1] == \"d\")
+	{
+		dyn_string ps = lbEnabledPS.items;
+		int psPos = dynContains(ps, sm[2]);
+		lbEnabledPS.deletePos(psPos);
 	}
 }" 0
  2
@@ -182,7 +199,7 @@ LANG:1 61 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1
 14 7
 "tStatus"
 ""
-1 20 160 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 70.00000000000001 150 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 6 0 0 0 0 0
 E E E
@@ -194,12 +211,12 @@ LANG:1 0
 1
 LANG:1 61 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1
 0
-""  20 160 300 186
+""  70.00000000000001 150 300 176
 3 "s" 0 0 0 0 0 -1  E E E
 13 8
 "bClose"
 ""
-1 20 210 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 20 320 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -211,7 +228,7 @@ LANG:1 0
 1
 LANG:1 61 -adobe-helvetica-medium-r-normal-*-*-80-100-100-*-*-iso8859-1
 0
-""  20 210 100 234
+""  20 320 100 344
 
 T 
 1
@@ -287,6 +304,69 @@ LANG:1 6 Unload
 	tStatus.text = \"\";
 }" 0
  E E E
+17 12
+"lbEnabledPS"
+""
+1 20 210 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  20 210 300 310
+0
+
+E
+E
+E
+
+3 1
+2 13
+"PRIMITIVE_TEXT1"
+""
+1 25 177 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 0 0 1 E U  1 E 20 190 20 190
+1 2 2 "s" 0 0 0 192 0 0  20 190 1
+1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+"" 1
+LANG:1 22 Enabled property sets:
+2 14
+"PRIMITIVE_TEXT2"
+""
+1 200 162 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 0 0 1 E U  1 E 20 155 20 155
+1 2 2 "s" 0 0 0 192 0 0  20 155 1
+1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+"" 1
+LANG:1 7 Result:
 0
 LAYER, 1 
 1

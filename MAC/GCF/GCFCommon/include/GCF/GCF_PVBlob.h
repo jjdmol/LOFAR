@@ -31,16 +31,29 @@
 class GCFPVBlob : public GCFPValue
 {
   public:
+    /** 
+     * @param value a not 0 terminated buffer
+     * @param length length of the buffer
+     * @param clone buffer must be cloned 
+     */
   	explicit GCFPVBlob(unsigned char* val = 0, unsigned int size = 0, bool clone = false);
+    explicit GCFPVBlob(const GCFPVBlob& val) 
+      : GCFPValue(LPT_BLOB), _value(0), _length(0), _isDataHolder(false) 
+      { copy(val);}
+
   	virtual ~GCFPVBlob() {if (_isDataHolder) delete [] _value;}
     
-    /** Changes the value of this object */
-    virtual TGCFResult setValue(unsigned char* value, unsigned int size, bool clone = false);
+    /** Changes the value of this object 
+     * @param value a not 0 terminated buffer
+     * @param length length of the buffer
+     * @param clone buffer must be cloned 
+     */
+    virtual TGCFResult setValue(unsigned char* value, unsigned int length, bool clone = false);
     virtual TGCFResult setValue(const string value);
 
     /** Returns the value of this object*/
     virtual unsigned char* getValue() const {return _value;}
-    virtual unsigned int getLen() const {return _size;}
+    virtual unsigned int getLen() const {return _length;}
 
     /** @see GCFPValue::clone() */
     virtual GCFPValue* clone() const;
@@ -48,16 +61,27 @@ class GCFPVBlob : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy(const GCFPValue& value);
  
-    virtual unsigned int unpack(const char* valBuf);
+    /// @see GCFPValue::unpack()
+    virtual unsigned int unpackConcrete(const char* valBuf);
 
-    virtual unsigned int pack(char* valBuf) const;
+    /// @see GCFPValue::pack()
+    virtual unsigned int packConcrete(char* valBuf) const;
 
-    virtual unsigned int getSize() const { return sizeof(_size) + _size + getBaseSize(); }
+    /// @see GCFPValue::getSize()
+    virtual unsigned int getConcreteSize() const { return sizeof(_length) + _length; }
     
   private: // Private attributes
-    /** The value*/
+    /// The value (buffer)
     unsigned char* _value;
-    unsigned int _size;
+    /// length of the buffer
+    unsigned int _length;
+    /**
+     * This boolean indicates wether the buffer space for value is newed in this
+     * class or not. The "caller" of the constructor or the first of the setValue 
+     * methods can specify wether the data must be cloned (newed and copied) or 
+     * only the pointer needed to be copied.
+     * The clone() and the second setValue methods clones always.
+     */ 
     bool  _isDataHolder;
 };
 #endif

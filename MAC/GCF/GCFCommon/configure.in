@@ -54,9 +54,9 @@ lofar_DEBUG_OPTIMIZE
 #lofar_QT
 lofar_QATOOLS
 lofar_DOCXX
+lofar_LOG4CPLUS
 lofar_MPI(0)
-lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
-lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
+lofar_INTERNAL(LCS/Common, Common, Common-v1_0, 1,Common/LofarTypes.h,,)
 
 dnl
 dnl Output Makefiles

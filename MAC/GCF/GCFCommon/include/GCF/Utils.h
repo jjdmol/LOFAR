@@ -16,6 +16,7 @@ class Utils
     static void convStringToList(list<string>& stringList, 
                                           const string& listString);
     static bool isValidPropName(const char* propName);    
+    static bool isValidScope(const char* scopeName);
 };
 
 #endif // UTILS_H

@@ -27,8 +27,6 @@
 #include <PI_Protocol.ph>
 #include <GCF/ParameterSet.h>
 
-using namespace GCF;
-
 static string sPMLTaskName("GCF-PMLlight");
 GPMRTHandler* GPMRTHandler::_pInstance = 0;
 

@@ -19,20 +19,16 @@ unsigned gcfInit(string callBackFuncName)
 	
 	DebugN("GCF: ID " + ID + " is claimed for unique communication with PA of GCF.");
 	dyn_string newItem;
-	string callBackDP = "DPA_client_UIM" + myManNum() +"_" + ID;
+	string callBackDP = "__gcf_DPA_client_UIM" + myManNum() +"_" + ID;
 	if (!dpExists(callBackDP))
 	{
-		dpCreate(callBackDP, "LPT_BLOB");
+		dpCreate(callBackDP, "GCFDistPort");
 	}
 	DebugN("GCF: " + callBackDP + " will be used for communication with PA.");
 	dpConnect("gcfMainCallBack", FALSE, callBackDP + ".");			
 	newItem = makeDynString(callBackFuncName, ID, myManNum());
 	gCallBackList[dynlen(gCallBackList) + 1] = newItem;
-	if (!dpExists("DPA_WDGoneSys"))
- 	{
- 		dpCreate("DPA_WDGoneSys", "LPT_UNSIGNED");
- 	}		
- 	dpConnect("gcfWDGoneSys", FALSE, "DPA_WDGoneSys.");
+ 	dpConnect("gcfWDGoneSys", FALSE, "__gcf_WDGoneSys.");
 	return ID;
 }
 
@@ -255,7 +251,7 @@ string buildPortId(unsigned ID)
 
 string buildCallBackDP(unsigned ID)
 {
- return getSystemName() + "DPA_client_UIM" + myManNum() +"_" + ID;		
+ return getSystemName() + "__gcf_DPA_client_UIM" + myManNum() +"_" + ID;		
 }
 
 void callUserDefinedFunction(string& callBackFunc, dyn_string& response)
@@ -317,7 +313,7 @@ string getDPNameOnly(string& psScope)
 
 bool isPAOnline(string sysName)
 {
-	bool paOnline = dpExists(sysName + "DPA_server");
+	bool paOnline = dpExists(sysName + "__gcf_DPA_server");
 	
 	if (!paOnline) DebugN("GCF ERROR: PA on system " + sysName + " not reachable!");
 	return paOnline;

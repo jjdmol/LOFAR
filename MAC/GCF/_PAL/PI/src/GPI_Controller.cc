@@ -25,8 +25,6 @@
 #include "PI_Protocol.ph"
 #include <GCF/ParameterSet.h>
 
-using namespace GCF;
-
 static string sPITaskName("GCF-PI");
 
 GPIController::GPIController() : 
@@ -37,7 +35,7 @@ GPIController::GPIController() :
   registerProtocol(PI_PROTOCOL, PI_PROTOCOL_signalnames);
 
   // initialize the port provider
-  _ssPortProvider.init(*this, "provider", GCFPortInterface::MSPP, PI_PROTOCOL);
+  _rtcClientPortProvider.init(*this, "provider", GCFPortInterface::MSPP, PI_PROTOCOL);
   ParameterSet::instance()->adoptFile("PropertyAgent.conf");  
 }
 
@@ -57,7 +55,7 @@ GCFEvent::TResult GPIController::initial(GCFEvent& e, GCFPortInterface& p)
 
     case F_ENTRY:
     case F_TIMER:
-      _ssPortProvider.open();
+      _rtcClientPortProvider.open();
       break;
 
     case F_CONNECTED:
@@ -65,8 +63,8 @@ GCFEvent::TResult GPIController::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_DISCONNECTED:
-      if (&p == &_ssPortProvider)
-        _ssPortProvider.setTimer(1.0); // try again after 1 second
+      if (&p == &_rtcClientPortProvider)
+        _rtcClientPortProvider.setTimer(1.0); // try again after 1 second
       break;
 
     default:
@@ -84,7 +82,7 @@ GCFEvent::TResult GPIController::connected(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_DISCONNECTED:      
-      if (&p == &_ssPortProvider)
+      if (&p == &_rtcClientPortProvider)
       {
         // TODO: find out this implies problems for the concrete ports too or not
       }
@@ -93,6 +91,7 @@ GCFEvent::TResult GPIController::connected(GCFEvent& e, GCFPortInterface& p)
     case F_ACCEPT_REQ:
     {
       GPIPMLlightServer* pNewSS = new GPIPMLlightServer(*this);
+      _rtcClientPortProvider.accept(pNewSS->getPort());
       pNewSS->start();
       _pmlLightServers.push_back(pNewSS);
       break;
@@ -131,5 +130,5 @@ GCFEvent::TResult GPIController::connected(GCFEvent& e, GCFPortInterface& p)
 
 void GPIController::close(GPIPMLlightServer& ss)
 {
-  _ssPortProvider.setTimer(0, 0, 0, 0, (void*)&ss);
+  _rtcClientPortProvider.setTimer(0, 0, 0, 0, (void*)&ss);
 }

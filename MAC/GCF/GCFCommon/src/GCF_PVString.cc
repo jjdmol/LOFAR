@@ -23,33 +23,24 @@
 
 #include <GCF/GCF_PVString.h>
 
-unsigned int GCFPVString::unpack(const char* valBuf)
+unsigned int GCFPVString::unpackConcrete(const char* valBuf)
 {
-  unsigned int result(0);
-  unsigned int unpackedBytes = unpackBase(valBuf);
-  if (unpackedBytes > 0)
-  {
-    unsigned int stringLength(0);
-    memcpy((void *) &stringLength, valBuf + unpackedBytes, sizeof(unsigned int));
-    unpackedBytes += sizeof(unsigned int);
-    _value.assign(valBuf + unpackedBytes, stringLength); 
-    result = unpackedBytes + stringLength;
-  }
-  return result;
+  unsigned int unpackedBytes(0);
+  unsigned int stringLength(0);
+  memcpy((void *) &stringLength, valBuf, sizeof(unsigned int));
+  _value.assign(valBuf + sizeof(unsigned int), stringLength); 
+  unpackedBytes += sizeof(unsigned int) + stringLength;
+  return unpackedBytes;
 }
 
-unsigned int GCFPVString::pack(char* valBuf) const
+unsigned int GCFPVString::packConcrete(char* valBuf) const
 {
-  unsigned int result(0);
-  unsigned int packedBytes = packBase(valBuf);
-  if (packedBytes > 0)
-  {    
-    unsigned int stringLength(_value.length());
-    memcpy(valBuf + packedBytes, (void *) &stringLength, sizeof(unsigned int));
-    memcpy(valBuf + packedBytes + sizeof(unsigned int), (void *) _value.c_str(), stringLength);
-    result = sizeof(unsigned int) + packedBytes + stringLength;
-  }
-  return result;
+  unsigned int packedBytes(0);
+  unsigned int stringLength(_value.length());
+  memcpy(valBuf, (void *) &stringLength, sizeof(unsigned int));
+  memcpy(valBuf + sizeof(unsigned int), (void *) _value.c_str(), stringLength);
+  packedBytes += sizeof(unsigned int) + stringLength;
+  return packedBytes;
 }
 
 TGCFResult GCFPVString::setValue(const string value)

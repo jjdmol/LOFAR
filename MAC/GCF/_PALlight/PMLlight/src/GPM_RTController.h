@@ -99,8 +99,7 @@ class GPMRTHandler : public GCFHandler
     
   private:
     friend class GPMRTController;
-    GPMRTHandler()
-    { GCFTask::registerHandler(*this);}
+    GPMRTHandler() {;}
 
     static GPMRTHandler* _pInstance;
     GPMRTController _controller;

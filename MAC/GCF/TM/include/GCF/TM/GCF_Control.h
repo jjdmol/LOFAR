@@ -21,22 +21,18 @@
 //#
 //#  $Id$
 
-//
-// Each file is guarded with the multiple inclusion guard as
-// used in the files. The guards in this file prevent opening and
-// reading the file when it has already been included.
-// This speeds up compilation.
-//
-
 #ifndef GCF_CONTROL_H
 #define GCF_CONTROL_H
 
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_PortInterface.h>
 #include <GCF/TM/GCF_TCPPort.h>
+#include <GCF/TM/GCF_ETHRawPort.h>
+#include <GCF/TM/GCF_DevicePort.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Fsm.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/TM/GCF_Event.h>
+#include <GCF/TM/GCF_Handler.h>
 
 #endif /* GCF_CONTROL_H */

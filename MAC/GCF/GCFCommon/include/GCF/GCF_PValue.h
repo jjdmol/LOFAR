@@ -25,6 +25,8 @@
 
 #include <GCF/GCF_Defines.h>
 
+class GCFPVDynArr;
+
 /**
    This is the abstract value type class, which will be used to transport values 
    through a whole MAC application in a generic way. Instances of 
@@ -36,17 +38,6 @@
 class GCFPValue
 {
   public:
-    /**
-     * The enumeration of possible MAC property types
-     * In case a dynamic array will be used the type ID enumeration starts on 
-     * 0x80.
-     */
-   /**
-     * The constructor
-     * Sets the type ID for each subclassed property value type class
-     * @param type MAC property type ID
-     */
-    explicit GCFPValue (TMACValueType type) : _type(type) {};
     
     /**
      * The destructor
@@ -74,6 +65,11 @@ class GCFPValue
      * <b>this</b> object. Otherwise GCF_NO_ERROR.
      */
     virtual TGCFResult copy (const GCFPValue& value) = 0;
+ 
+    /**
+     * Assignment of value object does the same as <b>this</b> copy
+     */
+    GCFPValue& operator= (const GCFPValue& value) { copy(value); return *this; }
     
     /** 
      * Pure virtual method
@@ -87,28 +83,87 @@ class GCFPValue
 
     /** 
      * Static method
-     * Creates a property value object of MAC type <b>type<b>
+     * Creates a property value object of MAC type <b>type</b>
      * @param type property type to created
      * @return pointer to created property value type object
      * <b>IMPORTANT: must be deleted by "user" of this method</b>
      */
     static GCFPValue* createMACTypeObject (TMACValueType type);
 
+    /** 
+     * Static method
+     * Creates a property value object of MAC type <b>type</b> based on the data
+     * passed in the parameter <b>valBuf</b>
+     * @param valBuf buffer data containing a MAC value, which is packet with <b>pack</b>
+     * @return pointer to created property value type object
+     * <b>IMPORTANT: must be deleted by "caller" of this method</b>
+     */
     static GCFPValue* unpackValue (const char* valBuf);
 
-    virtual unsigned int unpack(const char* valBuf) = 0;
+    /** 
+     * unpacks (copies) the data of the value into the object data space
+     * for now it only unpacks the type; later it also can unpack a timestamp or else
+     * calls the unpackConcrete method to unpack the concrete data to the specific 
+     * value type object data space
+     * @param valBuf buffer with the data 
+     * @return number of unpacked bytes 
+     */
+    virtual unsigned int unpack(const char* valBuf);
 
-    virtual unsigned int pack(char* valBuf) const = 0;
+    /**
+     * packs (copies) the data of the value object into a buffer
+     * for now it only packs the type; later it also can pack a timestamp or else
+     * calls the packConcrete method to pack the concrete data of a specific 
+     * value type object
+     * @param valBuf buffer space in which the data can be stored
+     * @return number of packed bytes
+     */
+    virtual unsigned int pack(char* valBuf) const;
     
-    virtual unsigned int getSize() const = 0;
+    /**
+     * size of value object if it would be packed
+     * calls the getConcreteSize method, which returns the concrete size of the
+     * specific value object data
+     * @return size of the object
+     */
+    virtual unsigned int getSize() const { return 1 + getConcreteSize();}
    
   protected:
-    unsigned int unpackBase(const char* valBuf);
+    friend class GCFPVDynArr;
+    /**
+     * The constructor
+     * Sets the type ID for each subclassed property value type class
+     * @param type MAC property type ID
+     */
+    explicit GCFPValue (TMACValueType type) : _type(type) {};
+  
+    /**
+     * Pure virtual method
+     * the concrete unpack method of the concrete value object
+     * @see unpack
+     */
+    virtual unsigned int unpackConcrete(const char* valBuf) = 0;
  
-    unsigned int packBase(char* valBuf) const;
+    /**
+     * Pure virtual method
+     * the concrete pack method of the concrete value object
+     * @see pack
+     */
+    virtual unsigned int packConcrete(char* valBuf) const = 0;
     
-    unsigned int getBaseSize() const { return 1; }
+    /**
+     * Pure virtual method
+     * the concrete getSize method of the concrete value object
+     * @see getSize
+     */
+    virtual unsigned int getConcreteSize() const = 0;
  
+  private: // private constructors
+    /// Don't allow copying this object.
+    GCFPValue (const GCFPValue&);
+
+    GCFPValue();
+    
   private: // private data members
     /** Holds MAC property value type ID*/
     TMACValueType _type;

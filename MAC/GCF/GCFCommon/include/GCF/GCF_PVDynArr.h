@@ -38,6 +38,9 @@ class GCFPVDynArr : public GCFPValue
   public:
   	explicit GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val);
     explicit GCFPVDynArr(TMACValueType itemType);
+    explicit GCFPVDynArr (const GCFPVDynArr& valArray) : GCFPValue(valArray.getType())
+      { setValue(valArray.getValue()); }
+
   	virtual ~GCFPVDynArr();
 
     /** Changes the value of this object */
@@ -60,11 +63,14 @@ class GCFPVDynArr : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy(const GCFPValue& value);
   
-    virtual unsigned int unpack(const char* valBuf);
+    /// @see GCFPValue::unpack()
+    virtual unsigned int unpackConcrete(const char* valBuf);
 
-    virtual unsigned int pack(char* valBuf) const;
+    /// @see GCFPValue::pack()
+    virtual unsigned int packConcrete(char* valBuf) const;
 
-    virtual unsigned int getSize() const;
+    /// @see GCFPValue::getSize()
+    virtual unsigned int getConcreteSize() const;
     
   private: // help members
     /** cleanup the array item objects */

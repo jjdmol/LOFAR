@@ -23,38 +23,27 @@
 
 #include <GCF/GCF_PVChar.h>
 
-unsigned int GCFPVChar::unpack(const char* valBuf)
+unsigned int GCFPVChar::unpackConcrete(const char* valBuf)
 {
-  unsigned int result(0);
-  unsigned int unpackedBytes = unpackBase(valBuf);
-  if (unpackedBytes > 0)
-  {
-    _value = valBuf[unpackedBytes];
-    result = unpackedBytes + 1;
-  }
-  return result;
+  _value = valBuf[0];
+  return 1;
 }
 
 /** No descriptions */
-unsigned int GCFPVChar::pack(char* valBuf) const
+unsigned int GCFPVChar::packConcrete(char* valBuf) const
 {
-  unsigned int result(0);
-  unsigned int packedBytes = packBase(valBuf);
-  if (packedBytes > 0)
-  {
-    valBuf[packedBytes] = _value;
-    result = packedBytes + 1;
-  }
-  return result;
+  valBuf[0] = _value;
+  return 1;
 }
 
 TGCFResult GCFPVChar::setValue(const string valueData)
 {
-  TGCFResult result(GCF_NO_ERROR);
+  TGCFResult result(GCF_VALUESTRING_NOT_VALID);
   
   if (valueData.length() == 1)
   {
     _value = valueData[0];
+    result = GCF_NO_ERROR;
   }
   else if (valueData.length() > 0)
   {
@@ -63,15 +52,12 @@ TGCFResult GCFPVChar::setValue(const string valueData)
     if (*validPos == '\0')
     {
       if (value <= 0xFF || value >= -127)
+      {
         _value = value;
-      else
-        result = GCF_VALUESTRING_NOT_VALID;      
+        result = GCF_NO_ERROR;
+      }
     }
-    else
-      result = GCF_VALUESTRING_NOT_VALID;
   }
-  else
-    result = GCF_VALUESTRING_NOT_VALID;
   
   return result;
 }

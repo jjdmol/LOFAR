@@ -21,10 +21,12 @@
 //#  $Id$
 
 #include <GCF/ParameterSet.h>
-#include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 
 using namespace LOFAR;
+
+INIT_TRACER_CONTEXT(GCF::ParameterSet, "ParameterSet");
+
 namespace GCF
 {
 

@@ -29,8 +29,6 @@
 #include <Resources.hxx>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 
-using namespace GCF;
-
 #include <stdio.h>
 
 static string sPMLTaskName("GCF-PML");
@@ -47,7 +45,7 @@ GPMController::GPMController() :
   // initialize the port
   _propertyAgent.init(*this, "client", GCFPortInterface::SAP, PA_PROTOCOL);
 
-  _distPropertyAgent.init(*this, "DPA_client", GCFPortInterface::SAP, PA_PROTOCOL);
+  _distPropertyAgent.init(*this, "__gcf_DPA_client", GCFPortInterface::SAP, PA_PROTOCOL);
   
   _distPropertyAgent.setConverter(_converter);
   
@@ -625,7 +623,7 @@ void logResult(TPAResult result, GCFPropertySet& propSet)
 string GPMController::determineDest(const string& scope) const
 {
   string::size_type index = scope.find(':');
-  string destDP("DPA_server");
+  string destDP("__gcf_DPA_server");
   if (index < scope.length())
   {
     destDP.insert(0, scope.c_str(), index + 1);

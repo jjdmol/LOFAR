@@ -1,3 +1,4 @@
+INSTALL=/usr/bin/install -C
 pkginclude_HEADERS = \
 	../../include/GCF/PAL/GCF_PVSSPort.h \
 	../../include/GCF/PAL/GCF_PVSSInfo.h
@@ -24,7 +25,6 @@ libsal_la_SOURCES= $(DOCHDRS) \
 	GCF_PVSSInfo.cc
 
 libsal_la_CPPFLAGS= -I$(top_srcdir)/include
-libsal_la_LDFLAGS= -static
 		
 include $(lofar_sharedir)/Makefile.common
 

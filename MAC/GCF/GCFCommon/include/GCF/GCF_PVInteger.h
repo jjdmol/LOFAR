@@ -33,6 +33,8 @@ class GCFPVInteger : public GCFPValue
 {
   public:
   	explicit GCFPVInteger (int val = 0) : GCFPValue(LPT_INTEGER), _value(val) {;}
+    explicit GCFPVInteger(const GCFPVInteger& val) : GCFPValue(LPT_INTEGER), _value(val.getValue()) {;}
+
   	virtual ~GCFPVInteger () {;}
     
     /** Changes the value of this object */
@@ -54,11 +56,14 @@ class GCFPVInteger : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy (const GCFPValue& value);
  
-    virtual unsigned int unpack(const char* valBuf);
+    /// @see GCFPValue::unpack()
+    virtual unsigned int unpackConcrete(const char* valBuf);
 
-    virtual unsigned int pack(char* valBuf) const;
+    /// @see GCFPValue::pack()
+    virtual unsigned int packConcrete(char* valBuf) const;
 
-    virtual unsigned int getSize() const { return sizeof(int) + getBaseSize(); }
+    /// @see GCFPValue::getSize()
+    virtual unsigned int getConcreteSize() const { return sizeof(int); }
     
   private: // Private attributes
     /** The value */

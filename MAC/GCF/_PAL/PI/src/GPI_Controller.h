@@ -44,8 +44,7 @@ class GPIController : public GCFTask
 	public:
 		GPIController ();
 		virtual ~GPIController ();
-    inline GCFTCPPort& getPortProvider () {return _ssPortProvider;}
-    inline GPIPropertyProxy& getPropertyProxy () {return _propertyProxy;}
+    GPIPropertyProxy& getPropertyProxy () {return _propertyProxy;}
     
     void close (GPIPMLlightServer& ss);
 
@@ -65,7 +64,8 @@ class GPIController : public GCFTask
     typedef list<GPIPMLlightServer*> TPMLlightServers;
     TPMLlightServers      _pmlLightServers;
 
-		GCFTCPPort            _ssPortProvider;
+		GCFTCPPort            _rtcClientPortProvider;
+    GCFTCPPort            _cepClientPortProvider;
     GPIPropertyProxy      _propertyProxy;
     
   private: // admin. data members

@@ -43,51 +43,51 @@ class GTMETHSocket;
  * guaranteed however is that the message sent with the send() method is
  * either received completely, or not received at all.
  *
- * @bug Using the GCFETHRawPort for protocol messages (as slave of the GCFPort)
- * currently doesn't work due to a problem with combining sendv ("gather-write")
- * with multiple regular recv's.`
  */
 class GCFETHRawPort : public GCFRawPort
 {
-  public:
+   public: // constructors && destructors
 
-    /// Construction methods
-    /** @param protocol NOT USED */    
+    /// params see constructor of GCFPortInterface    
     explicit GCFETHRawPort (GCFTask& task,
                    string name,
                    TPortType type, 
                    bool transportRawData = false);
-    explicit GCFETHRawPort();
+    
+    /** default constructor
+     * GCFPortInterface params are:
+     * pTask => 0
+     * name => ""
+     * type => SAP
+     * protocol => 0
+     * transportRawData => false
+     */ 
+    GCFETHRawPort();
 
+    /// destructor
     virtual ~GCFETHRawPort();
 
-    // GCFPortInterface methods
+  private:
+    /// Don't allow copying of the FPort object.
+    GCFETHRawPort(const GCFETHRawPort&);
+    GCFETHRawPort& operator=(const GCFETHRawPort&);
 
-  public:
+  public: // GCFPortInterface overloaded/defined methods
 
     /**
-     * open/close functions
+     * open/close methods
      */
     virtual bool open();
     virtual bool close();
   
     /**
-     * send/recv functions
+     * send/recv methods
      */
     virtual ssize_t send(GCFEvent& event);
     virtual ssize_t recv(void* buf, size_t count);
   
-    // EOF GCFPortInterface methods
 
-  private:
-
-    /**
-     * Don't allow copying of the FPort object.
-     */
-    GCFETHRawPort(const GCFETHRawPort&);
-    GCFETHRawPort& operator=(const GCFETHRawPort&);
-
-  public:
+  public: // GCFETHRawPort specific methods
 
     // addr is local address if getType == SPP
     // addr is remote addres if getType == SAP
@@ -102,11 +102,7 @@ class GCFETHRawPort : public GCFRawPort
      */
     void setEtherType(unsigned short type);
   
-  protected:
-//    friend class GTMSocket;
-//    friend class GTMETHSocket;
-
-  private:    
+  private: // data members
     string _ifname;
     string _destMacStr;
     GTMETHSocket* _pSocket;

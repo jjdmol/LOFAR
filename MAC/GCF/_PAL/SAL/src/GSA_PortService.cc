@@ -49,7 +49,7 @@ void GSAPortService::start ()
   {
     string portAddr = _port.getPortAddr();
     portAddr.erase(0, GCFPVSSInfo::getLocalSystemName().length() + 1);
-    if (dpCreate(portAddr, "LPT_BLOB") != SA_NO_ERROR) _port.serviceStarted(false);
+    if (dpCreate(portAddr, "GCFDistPort") != SA_NO_ERROR) _port.serviceStarted(false);
   }
 }
 

@@ -45,36 +45,52 @@ typedef struct
  * TCP, shared memory). A concrete raw port can be a slave of the GCFPort class 
  * or a master of itself. If it is a slave than the GCFPort has created the 
  * concrete raw port to hide the transport mechanism. Otherwise the concrete raw 
- * port is deliberate instantiated by a concrete task.
+ * port is deliberate instantiated by a concrete task. Its main responsibilities are:
+ * - makes the timer functionality available
+ * - convert incomming data to GCFEvent format (if transportRawData is false) and
+ *   dispatches the event to the adapted task
+ * - dispatches framework events (like F_CONNECTED)
  */
 class GCFRawPort : public GCFPortInterface
 {
-  public:
-    /** @param protocol NOT USED */
+  protected: // consturctors && destructors
+    /// params see constructor of GCFPortInterface
     explicit GCFRawPort (GCFTask& task, 
                 string& name, 
                 TPortType type, 
                 int protocol, 
                 bool transportRawData = false);
-  
-    explicit GCFRawPort ();
-  
+
+    /** default constructor 
+     * GCFPortInterface params are:
+     * pTask => 0
+     * name => ""
+     * type => SAP
+     * protocol => 0
+     * transportRawData => false
+     */ 
+    GCFRawPort();
+    
+  private:  
+    /// copying is not allowed.
+    GCFRawPort (const GCFRawPort&);
+    GCFRawPort& operator= (const GCFRawPort&);
+
+  public:
+    /// desctructor
     virtual ~GCFRawPort ();
   
-    /** @param protocol NOT USED */
+  public: // GCFPortInterface overloaded/defined methods
+    
+    /// params see constructor of GCFPortInterface
     void init (GCFTask& task, 
                string name, 
                TPortType type, 
                int protocol, 
                bool transportRawData = false); 
   
-    /// GCFPortInterface methods
-  
-     /**
-     * Timer functions.
-     * Upon expiration of a timer a F_TIMER_SIG will be
-     * received on the port.
-     */
+    /// these methods implements the final connection with the timer handler 
+    /// to realize the timer functionality
     virtual long setTimer (long  delay_sec,
                            long  delay_usec    = 0,
                            long  interval_sec  = 0,
@@ -90,40 +106,34 @@ class GCFRawPort : public GCFPortInterface
   
     virtual int  cancelAllTimers ();
   
-    virtual int  resetTimerInterval (long timerid,
-                          				   long sec,
-                          				   long usec = 0);
 
-
-  protected:
+  protected: // helper methods
     friend class GCFPort; // to access the setMaster method
     friend class GTMTimer;
-    friend class GTMSocket;
-    friend class GTMTCPServerSocket;
+    friend class GTMFile;
 
     void schedule_disconnected();
     void schedule_close();
     void schedule_connected();
 
   
-    inline bool                 isSlave () const {return _pMaster != 0;}
-    virtual void                setMaster (GCFPort* pMaster);
+    bool                        isSlave () const {return _pMaster != 0;}
+    virtual void                setMaster (GCFPort* pMaster) {_pMaster = pMaster;}
+
     virtual GCFEvent::TResult   dispatch (GCFEvent& event);
+    GCFEvent::TResult           recvEvent();
+
     bool                        findAddr (TPeerAddr& addr);
+    
+    /// returns the original name of the port (given by the user). 
+    /// in case it is a slave port an extension is append to the original name 
     const string&               getRealName() const;  
-
-  private:
-
-    /**
-    * Don't allow copying this object.
-    */   
-    GCFRawPort (const GCFRawPort&);
-    GCFRawPort& operator= (const GCFRawPort&);
-
+  
+  private: // data member
     GCFPort* _pMaster;
 
-    GCFEvent::TResult recvEvent();
-    GTMTimerHandler*  _pTimerHandler;
+  private: // admin. data member
+    GTMTimerHandler*            _pTimerHandler;
 };
 
 #endif

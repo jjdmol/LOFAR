@@ -64,8 +64,6 @@ GCFEvent::TResult GPIPMLlightServer::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_ENTRY:
-      _controller.getPortProvider().accept(_plsPort);
-      // intential fall through
     case F_TIMER:
       _propertyAgent.open();
       break;
@@ -103,8 +101,7 @@ GCFEvent::TResult GPIPMLlightServer::operational(GCFEvent& e, GCFPortInterface& 
     case F_CONNECTED:
       if (&p == &_propertyAgent)
       {
-        propertyAgentConnected = true;
-        PARegisterScopeEvent requestOut;
+        propertyAgentConnected = true;        
         for (TPropSetRegister::iterator iter = _propSetRegister.begin();
                iter != _propSetRegister.end(); ++iter)
         {
@@ -114,20 +111,15 @@ GCFEvent::TResult GPIPMLlightServer::operational(GCFEvent& e, GCFPortInterface& 
       break;
 
     case F_DISCONNECTED:
-      if (&_propertyAgent == &p)
+      if (&_propertyAgent != &p)
       {
-        assert(!propertyAgentConnected);
-        p.setTimer(1.0); // try again after 1 second        
+        p.close(); // to avoid more DISCONNECTED signals for this port        
       }
-      else
-      {
-        p.close(); // to avoid more DISCONNECTED signals for this port
-        TRAN(GPIPMLlightServer::closing);
-      }
+      TRAN(GPIPMLlightServer::closing);
       break;
 
     case F_TIMER:
-      if (&_propertyAgent == &p)
+      if (&_propertyAgent != &p)
       {          
         p.open(); // try again
       }
@@ -166,7 +158,7 @@ GCFEvent::TResult GPIPMLlightServer::operational(GCFEvent& e, GCFPortInterface& 
         _plsPort.send(responseOut);
       }      
 
-      LOG_INFO(LOFAR::formatString ( 
+      LOG_INFO(formatString ( 
           "SS-REQ: Register scope %s",
           requestIn.scope.c_str()));
       break;
@@ -177,7 +169,7 @@ GCFEvent::TResult GPIPMLlightServer::operational(GCFEvent& e, GCFPortInterface& 
 
       pPropertySet = findPropertySet(responseIn.seqnr);
 
-      LOG_INFO(LOFAR::formatString ( 
+      LOG_INFO(formatString ( 
           "PA-RESP: Scope %s is registered", 
           pPropertySet->getScope().c_str()));
 
@@ -192,7 +184,7 @@ GCFEvent::TResult GPIPMLlightServer::operational(GCFEvent& e, GCFPortInterface& 
       PIUnregisterScopeEvent requestIn(e);
       pPropertySet = findPropertySet(requestIn.scope);
 
-      LOG_INFO(LOFAR::formatString ( 
+      LOG_INFO(formatString ( 
           "SS-REQ: Unregister scope %s",
           requestIn.scope.c_str()));
 
@@ -206,7 +198,7 @@ GCFEvent::TResult GPIPMLlightServer::operational(GCFEvent& e, GCFPortInterface& 
       PAScopeUnregisteredEvent responseIn(e);
       pPropertySet = findPropertySet(responseIn.seqnr);
 
-      LOG_INFO(LOFAR::formatString ( 
+      LOG_INFO(formatString ( 
           "PA-RESP: Scope %s is unregistered", 
           pPropertySet->getScope().c_str()));
           
@@ -224,7 +216,7 @@ GCFEvent::TResult GPIPMLlightServer::operational(GCFEvent& e, GCFPortInterface& 
     {
       PALinkPropSetEvent requestIn(e);
       pPropertySet = findPropertySet(requestIn.scope);
-      LOG_INFO(LOFAR::formatString ( 
+      LOG_INFO(formatString ( 
           "PA-REQ: Link properties on scope %s", 
           requestIn.scope.c_str()));
       if (pPropertySet)
@@ -237,7 +229,7 @@ GCFEvent::TResult GPIPMLlightServer::operational(GCFEvent& e, GCFPortInterface& 
         responseOut.result = PA_PS_GONE;
         responseOut.scope = requestIn.scope;
         replyMsgToPA(responseOut);
-        LOG_DEBUG(LOFAR::formatString ( 
+        LOG_DEBUG(formatString ( 
             "Property set with scope %d was deleted in the meanwhile", 
             responseOut.scope.c_str()));
       }
@@ -261,7 +253,7 @@ GCFEvent::TResult GPIPMLlightServer::operational(GCFEvent& e, GCFPortInterface& 
     {
       PAUnlinkPropSetEvent requestIn(e);
       pPropertySet = findPropertySet(requestIn.scope);
-      LOG_INFO(LOFAR::formatString ( 
+      LOG_INFO(formatString ( 
           "PA-REQ: Unlink properties on scope %s", 
           requestIn.scope.c_str()));
       if (pPropertySet)
@@ -274,7 +266,7 @@ GCFEvent::TResult GPIPMLlightServer::operational(GCFEvent& e, GCFPortInterface& 
         responseOut.result = PA_PS_GONE;
         responseOut.scope = requestIn.scope;
         replyMsgToPA(responseOut);
-        LOG_DEBUG(LOFAR::formatString ( 
+        LOG_DEBUG(formatString ( 
             "Property set with scope %d was deleted in the meanwhile", 
             responseOut.scope.c_str()));
       }

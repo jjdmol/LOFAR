@@ -27,8 +27,6 @@
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/ParameterSet.h>
 
-using namespace GCF;
-
 #define QUEUE_REQUEST(p, e)  \
   if (!mayContinue(e, p)) break;
 
@@ -50,7 +48,7 @@ GPAController::GPAController() :
   _pmlPortProvider.init(*this, "provider", GCFPortInterface::MSPP, PA_PROTOCOL);
   // initialize the PVSS port for distributed communication between CCU and LCU
   _distPmlPortProvider.setConverter(_converter);
-  _distPmlPortProvider.init(*this, "DPA_server", GCFPortInterface::MSPP, PA_PROTOCOL);
+  _distPmlPortProvider.init(*this, "__gcf_DPA_server", GCFPortInterface::MSPP, PA_PROTOCOL);
 }
 
 GPAController::~GPAController()
@@ -544,6 +542,7 @@ void GPAController::acceptConnectRequest(GCFPortInterface& p)
 {
   if (&p == &_pmlPortProvider)
   {
+    LOG_INFO("New server MCA accepted!");
     GCFTCPPort* pNewPMLPort = new GCFTCPPort();
     assert(pNewPMLPort);
     pNewPMLPort->init(*this, "tcp-pa-client", GCFPortInterface::SPP, PA_PROTOCOL);
@@ -551,6 +550,7 @@ void GPAController::acceptConnectRequest(GCFPortInterface& p)
   }
   else
   {
+    LOG_INFO("New client MCA accepted!");
     GCFPVSSPort* pNewPVSSClientPort = new GCFPVSSPort();
     assert(pNewPVSSClientPort);
     pNewPVSSClientPort->init(*this, "pvss-pa-client", GCFPortInterface::SPP, PA_PROTOCOL);

@@ -29,6 +29,7 @@
 #include <GCF/GCF_PVInteger.h>
 #include <GCF/GCF_PVUnsigned.h>
 #include <GCF/GCF_PVDynArr.h>
+#include <GCF/GCF_PVBlob.h>
 #include "GCO_Defines.h"
 
 GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
@@ -55,21 +56,21 @@ GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
     case LPT_STRING:
       pResult = new GCFPVString();
       break;
+    case LPT_BLOB:
+      pResult = new GCFPVBlob();
+      break;      
 /*    case LPT_REF:
       pResult = new GCFPVRef();
       break;
     case LPT_BIT32:
       pResult = new GCFPVBit32();
-      break;
-    case LPT_BLOB:
-      pResult = new GCFPVBlob();
-      break;
+      break;    
     case LPT_DATETIME:
       pResult = new GCFPVDateTime();
       break;*/
     default:
       if (type > LPT_DYNARR &&
-          type <= LPT_DYNSTRING)
+          type < END_DYNLPT)
       {
         pResult = new GCFPVDynArr(type);
       }
@@ -91,7 +92,7 @@ GCFPValue* GCFPValue::unpackValue(const char* valBuf)
   if (pValue)
   {
     unsigned int readLength = pValue->unpack(valBuf);
-    if (readLength == 0)
+    if (readLength != pValue->getSize())
     {
       delete pValue;
       pValue = 0;
@@ -100,19 +101,19 @@ GCFPValue* GCFPValue::unpackValue(const char* valBuf)
   return pValue;
 }
 
-unsigned int GCFPValue::unpackBase(const char* valBuf)
+unsigned int GCFPValue::unpack(const char* valBuf)
 {
   assert(_type == (TMACValueType) *valBuf);
   // the type was already set, because it was set on construction of this class
   // at this moment only the type will be unpacked, later maybe a timestamp can 
   // be assigned to a value.
-  return 1;
+  return 1 + unpackConcrete(valBuf + 1);
 }
 
-unsigned int GCFPValue::packBase(char* valBuf) const
+unsigned int GCFPValue::pack(char* valBuf) const
 {
   valBuf[0] = _type;
   // at this moment only the type will be packed, later maybe a timestamp can 
   // be assigned to a value.
-  return 1;
+  return 1 + packConcrete(valBuf + 1);
 }

@@ -1,6 +1,6 @@
 void sendEventToPA(string msg, string destSysName)
 {
-	sendEvent(destSysName + "DPA_server.", msg);
+	sendEvent(destSysName + "__gcf_DPA_server.", msg);
 }
 
 void sendEvent(string dest, string msg)

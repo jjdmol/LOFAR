@@ -39,26 +39,37 @@ class GCFRawPort;
  */
 class GCFPort : public GCFPortInterface
 {
-  public:
+  public: // constructor && destructor
 
-    /**
-    * constructors
-    * @param protocol NOT USED
-    */
+    /// params see constructor of GCFPortInterface
     explicit GCFPort (GCFTask& containertask, 
              string& name, 
              TPortType type, 
              int protocol, 
              bool transportRawData = false);
     
-    explicit GCFPort ();
+    /** default constructor 
+     * GCFPortInterface params are:
+     * pTask => 0
+     * name => ""
+     * type => SAP
+     * protocol => 0
+     * transportRawData => false
+     */ 
+    GCFPort ();
     
-    /**
-    * destructor
-    */
+    /// destructor
     virtual ~GCFPort ();
+  
+  private:
+
+    /// Don't allow copying this object.
+    GCFPort (const GCFPort&);
+    GCFPort& operator= (const GCFPort&);
+
+  public: // GCFPortInterface overloaded/defined methods
     
-    /** initialize function, to follow-up default constructor */
+    /// params see constructor of GCFPortInterface
     void init (GCFTask& containertask, 
                string name, 
                TPortType type, 
@@ -66,23 +77,20 @@ class GCFPort : public GCFPortInterface
                bool transportRawData = false);
     
     /**
-    * open/close functions
+    * open/close methods
     */
     virtual bool open ();
     virtual bool close ();
     
-    virtual bool setRemoteAddr(const string& remotetask, const string& remoteport);
     /**
-    * send/recv functions
+    * send/recv methods
     */
     virtual ssize_t send (GCFEvent& event);
     virtual ssize_t recv (void* buf, 
                           size_t count);
     
     /**
-    * Timer functions.
-    * Upon expiration of a timer a F_TIMER_SIG will be
-    * received on the port.
+     * these methods forwards the timer functionality requests to the special port classes
     */    
     virtual long setTimer (long  delay_sec,         long  delay_usec    = 0,
                            long  interval_sec  = 0, long  interval_usec = 0,
@@ -97,26 +105,16 @@ class GCFPort : public GCFPortInterface
     
     virtual int  cancelAllTimers ();
     
-    /**
-     * THIS METHOD IS NOT IMPLEMENTED YET
-     */
-    virtual int  resetTimerInterval (long timerid,
-                                     long sec,
-                                     long usec = 0);
+  public: // GCFPort specific interface methods
+    /// sets the remote address of a port 
+    virtual bool setRemoteAddr(const string& remotetask, const string& remoteport);
 
-  private:
-
-    /**
-    * Don't allow copying this object.
-    */
-    GCFPort (const GCFPort&);
-    GCFPort& operator= (const GCFPort&);
-
-    friend class GCFRawPort;
  
-  private:
+  private: // data members
     string _remotetask;
     string _remoteport;
     GCFPortInterface* _pSlave;
+
+    friend class GCFRawPort; // to access the setState method of the base class
 };
 #endif
