@@ -349,7 +349,9 @@ namespace LOFAR
       {
       public:
         Lock () {}
+#ifndef HAVE_BGL
         Lock (pthread_mutex_t &, int = 0) {};
+#endif
         Lock (const Thread::Mutex &, int = 0) {};
 
         bool locked () const { return false; };
