@@ -169,5 +169,10 @@ parmtable := function (name, create=F)
 	self.tab.putcell ('PERT_REL', rownr, pertrelative);
     }
 
+    public.table := function()
+    {
+	return ref self.tab;
+    }
+
     return ref public;
 }

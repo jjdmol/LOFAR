@@ -149,5 +149,10 @@ gsm := function (name, create=F)
 	self.tab.putcell ('VPARMS', rownr, as_double(vparms));
     }
 
+    public.table := function()
+    {
+	return ref self.tab;
+    }
+
     return ref public;
 }

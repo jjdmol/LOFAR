@@ -86,7 +86,7 @@ const imgannotator := function(fname, type='contour',
 		return T;
 	}
 
-	public.add_text := function(index, ra, dec, text='emtpy')
+	public.add_text := function(index, ra, dec, text='')
 	{
 		wider self;
 		a := self.annotator;
