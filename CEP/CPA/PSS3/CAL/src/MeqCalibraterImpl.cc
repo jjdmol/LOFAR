@@ -446,7 +446,7 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   itsCalcUVW  (calcUVW),
   itsDataColName (dataColName),
   itsResColName  (residualColName),
-  itsSolver   (1, LSQBase::REAL)
+  itsSolver   (1)
 {
   cdebug(1) << "MeqCalibrater constructor (";
   cdebug(1) << "'" << msName   << "', ";
@@ -631,7 +631,7 @@ void MeqCalibrater::initParms (const MeqDomain& domain)
       i++;
     }
     // Initialize the solver.
-    itsSolver.set (itsNrScid, 1, 0);
+    itsSolver.set (itsNrScid);
   }
   // Unlock the parm tables.
   itsMEP.unlock();
@@ -847,6 +847,7 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
     ///    MeqPointDFT::doshow = rownr==44;
     uInt ant1 = itsMSCol.antenna1()(rownr);
     uInt ant2 = itsMSCol.antenna2()(rownr);
+    bool showdd = (ant1==0 && ant2==4);
     Assert (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow()
 	    &&  itsBLIndex(ant1,ant2) >= 0);
     int blindex = itsBLIndex(ant1,ant2);
@@ -875,6 +876,10 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
       cout << "xy val " << expr.getResult12().getValue() << endl;;
       cout << "yx val " << expr.getResult21().getValue() << endl;;
       cout << "yy val " << expr.getResult22().getValue() << endl;;
+    }
+    if (showdd) {
+      cout << "rownr " << rowinx << ' ' << rownr << endl;
+      cout << "first data value " << data(0,0) << endl;
     }
     for (int scinx=0; scinx<itsNrScid; scinx++) {
       MeqMatrix val;
@@ -962,6 +967,9 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
     if (foundDeriv) {
       // Get pointer to array storage; the data in it is contiguous.
       Complex* dataPtr = &(data(0,0));
+      if (showdd) {
+	cout << "first dataptr value " << *dataPtr << endl;
+      }
       vector<double> derivVec(2*itsNrScid);
       double* derivReal = &(derivVec[0]);
       double* derivImag = &(derivVec[itsNrScid]);
@@ -977,9 +985,9 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
 	    DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
 	    diff -= xx.getDComplex(0,i);
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -994,9 +1002,9 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
 	    DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
 	    diff -= xx.getDComplex(0,i);
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1010,9 +1018,9 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
 	    DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
 	    diff -= yy.getDComplex(0,i);
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1038,9 +1046,9 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
  		   << diff.real() << ' ' << diff.imag() << endl;
  	    }
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1062,9 +1070,9 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
  		   << diff.real() << ' ' << diff.imag() << endl;
  	    }
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1086,9 +1094,9 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
  		   << diff.real() << ' ' << diff.imag() << endl;
  	    }
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1110,9 +1118,9 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
  		   << diff.real() << ' ' << diff.imag() << endl;
  	    }
 	    double val = diff.real();
-	    itsSolver.makeNorm (derivReal, 1., &val);
+	    itsSolver.makeNorm (derivReal, 1., val);
 	    val = diff.imag();
-	    itsSolver.makeNorm (derivImag, 1., &val);
+	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
 	}
@@ -1127,8 +1135,6 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   // Solve the equation.
   uInt rank;
   double fit;
-  double stddev;
-  double mu;
   cdebug(1) << "Solution before: " << itsSolution << endl;
   cout << "Solution before: " << itsSolution << endl;
   // It looks as if LSQ has a bug so that solveLoop and getCovariance
@@ -1136,7 +1142,7 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   // So make a copy to separate them.
   Matrix<double> covar;
   Vector<double> errors;
-  FitLSQ tmpSolver = itsSolver;
+  LSQaips tmpSolver = itsSolver;
   tmpSolver.getCovariance (covar);
   tmpSolver.getErrors (errors);
   int nrs = itsSolution.nelements();
@@ -1145,7 +1151,7 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   for (int i=0; i<itsSolution.nelements(); i++) {
     sol[i] = solData[i];
   }
-  bool solFlag = itsSolver.solveLoop (fit, rank, sol, stddev, mu, useSVD);
+  bool solFlag = itsSolver.solveLoop (fit, rank, sol, useSVD);
   for (int i=0; i<itsSolution.nelements(); i++) {
     solData[i] = sol[i];
   }
@@ -1173,8 +1179,8 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   rec.add ("fit", fit);
   rec.add ("diag", GlishArray(errors));
   rec.add ("covar", GlishArray(covar));
-  rec.add ("mu", mu);
-  rec.add ("stddev", stddev);
+  rec.add ("mu", itsSolver.getWeightedSD());
+  rec.add ("stddev", itsSolver.getSD());
   rec.add ("chi", itsSolver.getChi());
 
   itsMS.unlock();

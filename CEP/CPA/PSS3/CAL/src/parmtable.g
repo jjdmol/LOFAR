@@ -242,7 +242,7 @@ parmtable := function (name, create=F)
 	fnd := tab.nrows() > 0;
 	if (fnd) {
 	    for (row in [1:tab.nrows()]) {
-		src := tab.getcell ('NUMBER', row);
+		src := tab.getcell ('NUMBER', row) - 1;
 		name := tab.getcell('NAME', row);
 		public.putinit (spaste('RA.', name),
 				src, -1,

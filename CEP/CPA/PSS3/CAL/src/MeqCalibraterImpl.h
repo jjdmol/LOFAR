@@ -24,7 +24,7 @@
 #define CAL_MEQCALIBRATER_H
 
 #include <casa/Arrays/Matrix.h>
-#include <scimath/Fitting/FitLSQ.h>
+#include <scimath/Fitting/LSQaips.h>
 #include <ms/MeasurementSets/MSMainColumns.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Quanta/MVBaseline.h>
@@ -293,7 +293,7 @@ private:
   String itsSolveColName;               //# column to be used in solve
                                         //# (is dataColName or resColName)
 
-  FitLSQ       itsSolver;
+  LSQaips      itsSolver;
   int          itsNrScid;               //# Nr of solvable parameter coeff.
   vector<bool> itsIsParmSolvable;       //# is corresponding parmlist solvable?
   MeqMatrix    itsSolution;             //# Solution as complex numbers

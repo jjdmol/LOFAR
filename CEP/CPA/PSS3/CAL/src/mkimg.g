@@ -20,7 +20,14 @@ todms := function (rad)
     print spaste(rad,' rad = ',as_integer(dd),':',as_integer(mm),':',ss);
 }
 
-
+fromhms := function(hh,mm,ss)
+{
+    return (hh + mm/60. + ss/3600.)*pi*15/180;
+}
+fromdms := function(dd,mm,ss)
+{
+    return (dd + mm/60. + ss/3600.)*pi/180;
+}
 
 
 mkimg := function (msname, imgname, type='model', npix=500, nchan=0,
