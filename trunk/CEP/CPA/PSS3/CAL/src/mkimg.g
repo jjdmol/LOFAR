@@ -24,8 +24,8 @@ todms := function (rad)
 
 
 mkimg := function (msname, imgname, type='model', npix=500, nchan=0,
-		   start=1, step=1, msselect='', mode='mfs',
-		   cellx='0.1arcsec', celly='0.1arcsec')
+                   start=1, step=1, msselect='', mode='mfs',
+                   cellx='0.1arcsec', celly='0.1arcsec')
 {
   if (nchan == 0) {
       t:=table(msname, readonly=F);

@@ -12,7 +12,7 @@ include 'mkimg.g';
 #
 # Demo function showing the predict functionality and creating an image of it.
 #
-predict := function(fname='demo', ant=4*[0:20],
+predict := function(fname='demo', ant=5*[0:19],
                     modeltype='LOFAR', calcuvw=F, trace=T)
 {
 
@@ -45,7 +45,8 @@ predict := function(fname='demo', ant=4*[0:20],
         mssel := spaste('all([ANTENNA1,ANTENNA2] in ',substitutevar(ant), ')');
     }
     print mssel;
-    mkimg(spaste(fname, '.MS'), spaste(fname, '.img'), msselect=mssel);
+    mkimg(spaste(fname, '.MS'), spaste(fname, '.img'), msselect=mssel,
+          cellx='0.25arcsec', celly='0.25arcsec', npix=1000, type='model');
 
     return T;
 }
@@ -667,18 +668,18 @@ initparms := function(fname='demo')
     pt.putinit ('dell', values=0);
     pt.putinit ('gain.11', values=1);
     pt.putinit ('gain.22', values=1);
-    pt.putinit ('EJ11.real.SR1.CP1', values=1);
-    pt.putinit ('EJ11.real.SR1.CP2', values=1);
-    pt.putinit ('EJ11.real.SR1.CP3', values=1);
-    pt.putinit ('EJ11.real.SR2.CP1', values=1);
-    pt.putinit ('EJ11.real.SR2.CP2', values=1);
-    pt.putinit ('EJ11.real.SR2.CP3', values=1);
-    pt.putinit ('EJ11.real.SR5.CP1', values=1);
-    pt.putinit ('EJ11.real.SR5.CP2', values=1);
-    pt.putinit ('EJ11.real.SR5.CP3', values=1);
-    pt.putinit ('EJ11.real.SR9.CP1', values=1);
-    pt.putinit ('EJ11.real.SR9.CP2', values=1);
-    pt.putinit ('EJ11.real.SR9.CP3', values=1);
+#    pt.putinit ('EJ11.real.SR1.CP1', values=1);
+#    pt.putinit ('EJ11.real.SR1.CP2', values=1);
+#    pt.putinit ('EJ11.real.SR1.CP3', values=1);
+#    pt.putinit ('EJ11.real.SR2.CP1', values=1);
+#    pt.putinit ('EJ11.real.SR2.CP2', values=1);
+#    pt.putinit ('EJ11.real.SR2.CP3', values=1);
+#    pt.putinit ('EJ11.real.SR5.CP1', values=1);
+#    pt.putinit ('EJ11.real.SR5.CP2', values=1);
+#    pt.putinit ('EJ11.real.SR5.CP3', values=1);
+#    pt.putinit ('EJ11.real.SR9.CP1', values=1);
+#    pt.putinit ('EJ11.real.SR9.CP2', values=1);
+#    pt.putinit ('EJ11.real.SR9.CP3', values=1);
     pt.putinit ('EJ11.real', values=1);
     pt.putinit ('EJ12.real', values=0);
     pt.putinit ('EJ21.real', values=0);
@@ -763,36 +764,43 @@ initgsm := function(fname='demo')
     arcsec_per_radian := 180.0*3600.0/pi;
     alpha0 := (10.0+26.0/60 + 36.3/3600)*15.0*pi/180;
     delta0 := 26.0*pi/180.0;
+    print 'alpha0 = ', alpha0;
 
-    l   := -117.42/arcsec_per_radian;
+    l   := 117.42/arcsec_per_radian;
     m   := 28.38/arcsec_per_radian;
-    pos := lm_from_alpha_delta(l,m, apha0, delta0);    
+    pos := lm_to_alpha_delta(l,m, alpha0, delta0);    
     tg.addpointsource ('CP1', [0,1e20], [0,1e20],
                        pos[1], pos[2], 1, 0, 0, 0);
+    print pos;
 
-    l   := 34.74/arcsec_per_radian;
+
+    l   := -34.74/arcsec_per_radian;
     m   := -30.33/arcsec_per_radian;
-    pos := lm_from_alpha_delta(l,m, apha0, delta0);    
+    pos := lm_to_alpha_delta(l,m, alpha0, delta0);    
     tg.addpointsource ('CP2', [0,1e20], [0,1e20],
                        pos[1], pos[2], 1, 0, 0, 0);
+    print pos;
 
-    l   := 65.56/arcsec_per_radian;
+    l   := -65.56/arcsec_per_radian;
     m   := 66.54/arcsec_per_radian;
-    pos := lm_from_alpha_delta(l,m, apha0, delta0);    
+    pos := lm_to_alpha_delta(l,m, alpha0, delta0);    
     tg.addpointsource ('CP3', [0,1e20], [0,1e20],
                        pos[1], pos[2], 1, 0, 0, 0);
+    print pos;
 
-    l   := 93.44/arcsec_per_radian;
+    l   := -93.44/arcsec_per_radian;
     m   := 65.07/arcsec_per_radian;
-    pos := lm_from_alpha_delta(l,m, apha0, delta0);    
+    pos := lm_to_alpha_delta(l,m, alpha0, delta0);    
     tg.addpointsource ('CP4', [0,1e20], [0,1e20],
                        pos[1], pos[2], 1, 0, 0, 0);
+    print pos;
 
-    l   := -8.81/arcsec_per_radian;
+    l   := 8.81/arcsec_per_radian;
     m   := -56.26/arcsec_per_radian;
-    pos := lm_from_alpha_delta(l,m, apha0, delta0);    
+    pos := lm_to_alpha_delta(l,m, alpha0, delta0);    
     tg.addpointsource ('CP5', [0,1e20], [0,1e20],
                        pos[1], pos[2], 1, 0, 0, 0);
+    print pos;
 
 
 
@@ -830,7 +838,7 @@ setej := function(fname='demo', mode=1, fact=1)
 
 setgsm := function(fname='demo')
 {
-    initgsm();
+    initgsm(fname);
     
 #    pt := parmtable(spaste(fname,'_gsm.MEP'));
 #    pt.perturb ('NAME=="RA.CP1"', 0.00003, F);
