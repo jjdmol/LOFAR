@@ -207,6 +207,20 @@ namespace LOFAR
         return metaData().ownerOid() != MetaData::nullOid();
       }
 
+      // Get the database table name that is associated with this
+      // PersistentObject.
+      // \note This method is only provided as a convenience as you can also
+      // get the table name directly using the meta data.
+      const std::string& tableName() const { return metaData().tableName(); }
+
+      // Set the database table name that is associated with this
+      // PersistentObject.
+      // \note This method is only provided as a convenience as you can also
+      // set the table name directly using the meta data.
+      void tableName(const std::string& aName) {
+        metaData().tableName() = aName; 
+      }
+
     protected:
 
       // Default constructor.
@@ -227,20 +241,6 @@ namespace LOFAR
 
       // Return a reference to the container of "owned" PersistentObjects.
       POContainer& ownedPOs() { return itsOwnedPOs; }
-
-      // Get the database table name that is associated with this
-      // PersistentObject.
-      // \note This method is only provided as a convenience as you can also
-      // get the table name directly using the meta data.
-      const std::string& tableName() const { return metaData().tableName(); }
-
-      // Set the database table name that is associated with this
-      // PersistentObject.
-      // \note This method is only provided as a convenience as you can also
-      // set the table name directly using the meta data.
-      void tableName(const std::string& aName) {
-        metaData().tableName() = aName; 
-      }
 
     private:
 
