@@ -62,7 +62,6 @@ class GTMSocketHandler : public GCFHandler
     fd_set _readFDs;
     fd_set _writeFDs;
     fd_set _errotFDs;
-    struct timeval _timeout;
     bool _running;
     
 };

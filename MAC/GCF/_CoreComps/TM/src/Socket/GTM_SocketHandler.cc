@@ -38,8 +38,6 @@ GTMSocketHandler* GTMSocketHandler::instance()
 
 GTMSocketHandler::GTMSocketHandler() : _running(true)
 {
-  _timeout.tv_sec = 0;
-  _timeout.tv_usec = 10000;
   FD_ZERO(&_readFDs);  
   GCFTask::registerHandler(*this);
 }
@@ -61,12 +59,22 @@ void GTMSocketHandler::workProc()
   int result;
   int fd;
   map<int, GTMSocket*> testSockets;
+
+  struct timeval select_timeout;
+
+  //
+  // because select call changes the timeout value to
+  // contain the remaining time we need to set it to 10ms
+  // on every call to workProc
+  // 
+  select_timeout.tv_sec  = 0;
+  select_timeout.tv_usec = 10000;
     
   _running = true;
   fd_set testFDs;
   testFDs = _readFDs;
   testSockets.insert(_sockets.begin(), _sockets.end());
-  result = ::select(FD_SETSIZE, &testFDs, (fd_set *) 0, (fd_set *) 0, &_timeout);
+  result = ::select(FD_SETSIZE, &testFDs, (fd_set *) 0, (fd_set *) 0, &select_timeout);
 
   if (_sockets.empty()) return;
   
