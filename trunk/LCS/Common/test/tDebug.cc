@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.5  2003/12/01 12:48:25  loose
+//  %[ER: 61]%
+//  Moved Exception class from namespace LCS to namespace LOFAR.
+//
 //  Revision 1.4  2003/11/28 14:44:12  diepen
 //  %[ER: 38]%
 //  First version of classes to create blobs
@@ -118,6 +122,15 @@ int main()
   try {
     AssertMsg (i0==i1, "should give exception");
   } catch (LOFAR::Exception& x) {
+    cout << "caught LOFAR::Exception" <<endl;
     cout << x.what() << endl;
-  }
+  } catch (std::exception& x) {
+    cout << "caught unexpected std::exception" <<endl;
+    cout << x.what() << endl;
+    return 1;
+  } catch (...) {
+    cout << "caught unknown exception" <<endl;
+    return 1;
+  }  
+  return 0;
 }

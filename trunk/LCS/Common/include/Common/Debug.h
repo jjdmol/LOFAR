@@ -151,7 +151,7 @@ namespace LOFAR
 //          cdebug(1)<<"event X, value is "<<value<<endl;
 //    The normal cdebug() version precedes the message with whatever is
 //    returned by a call to sdebug(0). There is a global sdebug() function 
-//    (defined in  this file) which simply returns an empty string.
+//    (defined in  this file) which simply returns the current debug contex name.
 //    The idea here is that classes can redefine sdebug() to generate a 
 //    short string identifying the current class and/or object and/or state, 
 //    this can make it easier to identify the source of a debugging message
@@ -232,7 +232,7 @@ namespace Debug
 #define TRACERF1(stream) TRACERF(1,stream)
 #define TRACERF2(stream) TRACERF(2,stream)
 #define TRACERF3(stream) TRACERF(3,stream)
-#define TRACERF4(stream) TRACERF(3,stream)
+#define TRACERF4(stream) TRACERF(4,stream)
 
 // This macro creates a Tracer object, so you get an automatic trace
 // message at the end of a scope.
@@ -297,8 +297,8 @@ namespace Debug
 #define CodeStatus(msg) ("["+string(sdebug())+"] "+CodeStatus1(msg))
 
 // This inserts declarations of the sdebug() and debug() methods into your class.
-// Use DeclareDebugInfo(virtual) to declare a virtual sdebug().
-// Else use DeclareDebugInfo().
+// Use Declare_sdebug(virtual) to declare a virtual sdebug().
+// Else use Declare_sdebug().
 // The following method declarations are inserted:
 //    [qualifiers] string sdebug ( int detail = 1,const string &prefix = "",
 //              const char *name = 0 ) const;
@@ -308,10 +308,6 @@ namespace Debug
 //
 #define Declare_sdebug(qualifiers) qualifiers string sdebug ( int detail = 1,const string &prefix = "",const char *name = 0 ) const; 
 #define Declare_debug(qualifiers) qualifiers const char * debug ( int detail = 1,const string &prefix = "",const char *name = 0 ) const { return Debug::staticBuffer(sdebug(detail,prefix,name)); }
-
-// this global definition of sdebug allows the use of cdebug/dprintf macros 
-// everywhere
-inline string sdebug (int=0) { return ""; };
 
 // The ThrowExc macro throws an exception of the specified type, using
 // CodeStatus to add on filename, line, current debugging context, and 
@@ -541,12 +537,19 @@ namespace Debug {
 // Default DebugContext is the one in Debug.
 using Debug::getDebugContext;
 
+// this global definition of sdebug allows the use of cdebug/dprintf macros 
+// everywhere
+inline string sdebug (int=0) 
+{ 
+  return getDebugContext().name(); 
+}
 
 // inline functions for converting scalars to strings
 inline string num2str (int x)
 {
   return Debug::ssprintf("%d",x);
 }
+
 inline string num2str (double x)
 {
   return Debug::ssprintf("%f",x);
