@@ -9,8 +9,8 @@
         
 
 #define DoForAllDynamicTypes_MeqServer(Do,arg,separator) \
-        Do(MeqSink,arg) separator \
-        Do(MeqSpigot,arg)
+        Do(Meq::Sink,arg) separator \
+        Do(Meq::Spigot,arg)
 
 #define DoForAllNumericTypes_MeqServer(Do,arg,separator) \
         

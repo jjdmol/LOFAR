@@ -21,7 +21,7 @@ static int dum =  aidRegistry_MeqServer() +
 
 const HIID DataProcessingError = AidData|AidProcessing|AidError;
   
-InitDebugContext(MeqServer,"MeqServ");
+InitDebugContext(MeqServer,"MeqServer");
   
 //##ModelId=3F5F195E0140
 MeqServer::MeqServer()
@@ -119,6 +119,11 @@ void MeqServer::getNodeResult (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   int flags = node.getResult(res,req);
   cdebug(2)<<"  getResult returns flags "<<flags<<" with result"<<endl;
   cdebug(3)<<"    result is "<<res.sdebug(DebugLevel-1,"    ")<<endl;
+  if( DebugLevel>3 )
+  {
+    for( int i=0; i<res->numResults(); i++ )
+      cdebug(4)<<"  plane "<<i<<": "<<res->resultConst(i).getValue()<<endl;
+  }
   out <<= new DataRecord;
   out()[AidResult|AidCode] = flags;
   if( res.valid() )

@@ -21,7 +21,6 @@
 //# $Id$
 
 #include <MEQ/Function1.h>
-#include <MEQ/VellsTmp.h>
 
 namespace Meq {    
 

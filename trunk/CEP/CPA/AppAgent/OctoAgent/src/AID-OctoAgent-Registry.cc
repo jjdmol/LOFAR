@@ -10,26 +10,26 @@
     {
       static int res = 
 
-        AtomicID::registerId(-1278,"Agent")+
-        AtomicID::registerId(-1275,"Map")+
-        AtomicID::registerId(-1274,"Receive")+
-        AtomicID::registerId(-1282,"Post")+
-        AtomicID::registerId(-1267,"In")+
-        AtomicID::registerId(-1269,"Out")+
-        AtomicID::registerId(-1283,"Default")+
-        AtomicID::registerId(-1101,"Scope")+
-        AtomicID::registerId(-1271,"Unmapped")+
-        AtomicID::registerId(-1281,"Prefix")+
-        AtomicID::registerId(-1051,"Local")+
-        AtomicID::registerId(-1082,"Host")+
-        AtomicID::registerId(-1268,"Global")+
-        AtomicID::registerId(-1272,"Priority")+
-        AtomicID::registerId(-1276,"Lowest")+
-        AtomicID::registerId(-1277,"Lower")+
-        AtomicID::registerId(-1270,"Low")+
-        AtomicID::registerId(-1279,"Normal")+
-        AtomicID::registerId(-1280,"High")+
-        AtomicID::registerId(-1273,"Higher")+
+        AtomicID::registerId(-1279,"agent")+
+        AtomicID::registerId(-1309,"map")+
+        AtomicID::registerId(-1311,"receive")+
+        AtomicID::registerId(-1303,"post")+
+        AtomicID::registerId(-1302,"in")+
+        AtomicID::registerId(-1307,"out")+
+        AtomicID::registerId(-1231,"default")+
+        AtomicID::registerId(-1042,"scope")+
+        AtomicID::registerId(-1313,"unmapped")+
+        AtomicID::registerId(-1305,"prefix")+
+        AtomicID::registerId(-1069,"local")+
+        AtomicID::registerId(-1079,"host")+
+        AtomicID::registerId(-1306,"global")+
+        AtomicID::registerId(-1314,"priority")+
+        AtomicID::registerId(-1312,"lowest")+
+        AtomicID::registerId(-1300,"lower")+
+        AtomicID::registerId(-1308,"low")+
+        AtomicID::registerId(-1304,"normal")+
+        AtomicID::registerId(-1301,"high")+
+        AtomicID::registerId(-1310,"higher")+
     0;
     return res;
   }

@@ -1,4 +1,4 @@
- use_suspend  := T;
+# use_suspend  := T;
 # use_nostart  := T;
 # use_valgrind := T;
 use_valgrind_opts := [ "",
@@ -116,7 +116,7 @@ const meqsel_test := function ()
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
   mqs.setdebug("MeqServ MeqVisHandler",5);
-  mqs.setdebug("MeqServer",1);
+  mqs.setdebug("meqserver",1);
   # initialize meqserver
   mqs.init([output_col="PREDICT"],wait=T);
   

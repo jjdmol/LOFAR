@@ -10,8 +10,8 @@
 
 #ifndef _defined_id_TpMeqSink
 #define _defined_id_TpMeqSink 1
-const TypeId TpMeqSink(-1256);                    // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/Sink.h:9
-const int TpMeqSink_int = -1256;
+const TypeId TpMeqSink(-1326);                    // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/Sink.h:9
+const int TpMeqSink_int = -1326;
 namespace Meq { class Sink; };
             template<>
             class DMIBaseTypeTraits<Meq::Sink> : public TypeTraits<Meq::Sink>
@@ -27,8 +27,8 @@ namespace Meq { class Sink; };
 #endif
 #ifndef _defined_id_TpMeqSpigot
 #define _defined_id_TpMeqSpigot 1
-const TypeId TpMeqSpigot(-1257);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/Spigot.h:9
-const int TpMeqSpigot_int = -1257;
+const TypeId TpMeqSpigot(-1330);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/Spigot.h:9
+const int TpMeqSpigot_int = -1330;
 namespace Meq { class Spigot; };
             template<>
             class DMIBaseTypeTraits<Meq::Spigot> : public TypeTraits<Meq::Spigot>
