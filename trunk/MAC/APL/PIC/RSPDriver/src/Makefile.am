@@ -3,6 +3,7 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	-DTOGGLE_LEDS \
 	-DWRITE_ACK_VERREAD
+INSTALL=install -C
 
 AUTOGEN = autogen
 SUFFIXES = .ph
