@@ -42,8 +42,10 @@ void AH_Correlator::define(const KeyValueMap& /*params*/) {
 					  itsNsamples,
 					  itsNchannels, 
 					  itsNtargets);
+#ifdef HAVE_MPI
   itsWH->runOnNode(TH_MPI::getCurrentRank());
-  
+#endif  
+
   // now create two dummy workholders to connect to
   // these will not exist outside the scope of this method
   WH_Random myWHRandom("noname",
