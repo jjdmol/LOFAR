@@ -84,9 +84,9 @@ void MeqStatUVW::calculate (const MeqRequest& request)
   TRACER1 ("posx" << posx.getValue());
   TRACER1 ("posy" << posy.getValue());
   TRACER1 ("posz" << posz.getValue());
-  MVPosition (mvpos(posx.getValue().getDouble(),
-		    posy.getValue().getDouble(),
-		    posz.getValue().getDouble()));
+  MVPosition mvpos(posx.getValue().getDouble(),
+		   posy.getValue().getDouble(),
+		   posz.getValue().getDouble());
   MVBaseline mvbl(mvpos);
   MBaseline mbl(mvbl, MBaseline::ITRF);
   TRACER1 ("mbl " << mbl);
