@@ -46,6 +46,7 @@ class DataBlobExtra;
   in the CEPFrame environment. Its main purpose is to offer a common interface
   to a class like WorkHolder. Apart from that it also offers some common
   functionality to the classes derived from it.
+  The data (defined in derived classes) is stored in a blob.
 
   Prove \code list<table> \endcode or \<table\>.
   \code
@@ -61,11 +62,12 @@ class DataHolder
 friend class DataBlobExtra;
 
 public:
-  // Construct a DataHolder with a default name.
+  // Construct a DataHolder with a default name, type and version.
   DataHolder (const string& name="aDataHolder",
 	      const string& type="DH",
 	      int version=0);
 
+  // Destructor
   virtual ~DataHolder();
 
   // Make a copy
@@ -88,23 +90,31 @@ public:
   // The default implementation does nothing.
   virtual void dump() const;
 
-  /// Read the packet data.
+  // Read the packet data.
   bool read();
 
-  /// Write the packet data.
+  // Write the packet data.
   void write();
 
-  /// Is the Transporter of this DataHolder valid?
+  // Is the Transporter of this DataHolder valid?
   bool isValid() const;
 
-  /// Connect to another DataHolder.
-  // (data flows from this object to thatDH).
+  // Connect to another DataHolder.
+  // The data will flow from this object to thatDH.
   bool connectTo(DataHolder& thatDH, const TransportHolder& prototype,
 		 bool blockingComm = true);
 
-  /// Initialization must be called after connect.
+  // Connect to another DataHolder.
+  // The data flow is bidirectional.
+  bool connectBidirectional(DataHolder& thatDH, 
+			    const TransportHolder& thisTH,
+			    const TransportHolder& thatTH,
+			    bool blockingComm = true);
+
+  // Initialization (must be called after connect).
   void init();   
 
+  // Getting, setting and comparing of a timestamp.
   void setTimeStamp (unsigned long aTimeStamp);
   unsigned long getTimeStamp() const;
   void copyTimeStamp (const DataHolder& that);
@@ -154,11 +164,11 @@ public:
   // Set the name of the DataHolder.
   void setName (const string& name);
 
-  // Get the Transport object used to send the data
+  // Get the Transporter object used to send the data
   // to/from the DataHolder connected to this one.
   Transporter& getTransporter();
 
-   // Initialize the extra output blob holding arbitrary fields.
+  // Initialize the extra output blob holding arbitrary fields.
   // The return reference can be used to store the fields in.
   // It is meant for DataHolders writing data.
   BlobOStream& createExtraBlob();
@@ -190,6 +200,7 @@ public:
   void resizeBuffer (uint newSize);
 
 protected:
+  // Copy constructor
   DataHolder(const DataHolder&);
 
   // Add a field to the data block definition.

@@ -24,55 +24,60 @@
 #include <Transport/TransportHolder.h>
 #include <Transport/DataHolder.h>
 #include <Common/BlobStringType.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
 
 TransportHolder::TransportHolder()
-{}
+{
+  LOG_TRACE_FLOW("TransportHolder constructor");
+}
 
 TransportHolder::~TransportHolder()
-{}
+{
+  LOG_TRACE_FLOW("TransportHolder destructor");
+}
 
 bool TransportHolder::init()
 {
+  LOG_TRACE_RTTI("TransportHolder init()");
   return true;
 }
 
 bool TransportHolder::recvBlocking (void*, int, int)
 {
-  Throw("No recvBlocking method implemented in this TransportHolder: " 
+  THROW(LOFAR::Exception, "No recvBlocking method implemented in this TransportHolder: " 
 	+ getType());
 }
 
 bool TransportHolder::recvVarBlocking (int tag)
 {
-  Throw("No recvVarBlocking method implemented in this TransportHolder: " 
+  THROW(LOFAR::Exception, "No recvVarBlocking method implemented in this TransportHolder: " 
 	+ getType());
 }
 
 bool TransportHolder::recvNonBlocking (void*, int, int)
 {
-  Throw("No recvNonBlocking receive method implemented in this TransportHolder: "
+  THROW(LOFAR::Exception, "No recvNonBlocking receive method implemented in this TransportHolder: "
 	+ getType());
 }
 
 bool TransportHolder::recvVarNonBlocking (int tag)
 {
-  Throw("No recvVarNonBlocking method implemented in this TransportHolder: " 
+  THROW(LOFAR::Exception, "No recvVarNonBlocking method implemented in this TransportHolder: " 
 	+ getType());
 }
 
 bool TransportHolder::waitForReceived(void*, int, int)
 {
-  Throw("No waitForReceived method implemented in this TransportHolder: "
+  THROW(LOFAR::Exception, "No waitForReceived method implemented in this TransportHolder: "
 	+ getType());
 }
 
 bool TransportHolder::sendBlocking (void*, int, int)
 {
-  Throw("No sendBlocking method implemented in this TransportHolder: "
+  THROW(LOFAR::Exception, "No sendBlocking method implemented in this TransportHolder: "
 	+ getType());
 }
 
@@ -83,7 +88,7 @@ bool TransportHolder::sendVarBlocking (void* buf, int nbytes, int tag)
 
 bool TransportHolder::sendNonBlocking (void*, int, int)
 {
-  Throw("No sendNonBlocking method implemented in this TransportHolder: "
+  THROW(LOFAR::Exception, "No sendNonBlocking method implemented in this TransportHolder: "
 	+ getType());
 }
 
@@ -94,13 +99,13 @@ bool TransportHolder::sendVarNonBlocking (void* buf, int nbytes, int tag)
 
 bool TransportHolder::waitForSent(void*, int, int)
 {
-  Throw("No waitForSent method implemented in this TransportHolder: "
+  THROW(LOFAR::Exception, "No waitForSent method implemented in this TransportHolder: "
 	+ getType());
 }
 
 bool TransportHolder::waitForRecvAck(void*, int, int)
 {
-  Throw("No waitForRecvAck method implemented in this TransportHolder: "
+  THROW(LOFAR::Exception, "No waitForRecvAck method implemented in this TransportHolder: "
 	+ getType());
 }
 
@@ -116,6 +121,11 @@ bool TransportHolder::canDataGrow() const
 }
 
 bool TransportHolder::connectionPossible (int, int) const
+{
+  return false;
+}
+
+bool TransportHolder::isBidirectional () const
 {
   return false;
 }

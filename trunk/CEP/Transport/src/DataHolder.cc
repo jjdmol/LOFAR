@@ -28,7 +28,7 @@
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 #include <Common/BlobIBufString.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -47,6 +47,7 @@ DataHolder::DataHolder(const string& name, const string& type, int version)
     itsTimeStampPtr   (0),
     itsExtraPtr       (0)
 {
+  LOG_TRACE_FLOW("DataHolder constructor");
   initDataFields();
 }
 
@@ -64,6 +65,7 @@ DataHolder::DataHolder(const DataHolder& that)
     itsTimeStampPtr   (0),
     itsExtraPtr       (0)
 {
+  LOG_TRACE_FLOW("DataHolder copy constructor");
   initDataFields();
   if (that.itsExtraPtr != 0) {
     itsExtraPtr = new DataBlobExtra (that.itsExtraPtr->getName(),
@@ -74,17 +76,12 @@ DataHolder::DataHolder(const DataHolder& that)
   // no need to copy the data buffers.
   // Note that also the copy constructors of all derived DH classes
   // don't copy data.
-  ///  if (that.itsData != 0) {
-  ///  itsData = new BlobString(blobStringType());
-  ///  itsDataBlob = new BlobOBufString(*itsData);
-  ///  itsData->resize (that.itsData->size());
-  ///  memcpy (itsData->data(), that.itsData->data(), that.itsData->size());
-  ///  }
 }
   
 
 DataHolder::~DataHolder()
 {
+  LOG_TRACE_FLOW("DataHolder destructor");
   delete itsData;
   delete itsDataBlob;
   delete itsExtraPtr;
@@ -98,20 +95,25 @@ void DataHolder::setExtraBlob (const string& name, int version)
 }
 
 void DataHolder::init() {
+  LOG_TRACE_RTTI("DataHolder init");
   basePreprocess();
 }
 
 void DataHolder::basePreprocess()
 {
+  LOG_TRACE_RTTI("DataHolder basePreprocess()");
   itsTransporter.init();
   preprocess();
 }
 
 void DataHolder::preprocess()
-{}
+{
+  LOG_TRACE_RTTI("DataHolder preprocess()");
+}
 
 void DataHolder::basePostprocess()
 {
+  LOG_TRACE_RTTI("DataHolder basePostprocess()");
   postprocess();
   // Delete the memory.
   delete itsData;
@@ -125,16 +127,19 @@ void DataHolder::basePostprocess()
 }
 
 void DataHolder::postprocess()
-{}
+{
+  LOG_TRACE_RTTI("DataHolder postprocess()");
+}
 
 
 void DataHolder::dump() const
 {
-  TRACER2("DataHolder dump: " << itsType << ' ' << itsName);
+  LOG_TRACE_FLOW_STR("DataHolder dump: " << itsType << ' ' << itsName);
 }
 
 bool DataHolder::read()
 {
+  LOG_TRACE_FLOW("DataHolder read()");
   bool result = false;
   // If the data block is fixed shape and has version 1, we can simply read.
   bool fixedSized = itsDataFields.hasFixedShape()  &&
@@ -151,6 +156,7 @@ bool DataHolder::read()
 
 void DataHolder::handleDataRead()
 {
+  LOG_TRACE_RTTI("DataHolder handleDataRead()");
   // Check the data header in debug mode.
 #ifdef ENABLE_DBGASSERT
   BlobIBufChar bibc(itsData->data(), itsData->size());
@@ -188,6 +194,7 @@ void DataHolder::handleDataRead()
 
 void DataHolder::write()
 {
+  LOG_TRACE_FLOW("DataHolder write()");
   // If there might be extra data, we have to write it.
   writeExtra();
   // Let the transporter write all data.
@@ -202,15 +209,38 @@ bool DataHolder::connectTo (DataHolder& thatDH,
 			    const TransportHolder& prototype,
 			    bool blockingComm)
 {
-  AssertStr(itsType == thatDH.itsType, 
+  LOG_TRACE_RTTI("DataHolder connectTo()");
+  ASSERTSTR(itsType == thatDH.itsType, 
 	    "Connected DataHolders must be of the same type. Connection between "
 	    << itsType << " and " << thatDH.itsType << " is not possible.");
-  AssertStr(itsVersion == thatDH.itsVersion, 
+  ASSERTSTR(itsVersion == thatDH.itsVersion, 
 	    "DataHolders cannot be connected, their versions " 
 	    << itsVersion << " and " << thatDH.itsVersion 
 	    << " are not the same.");
   return itsTransporter.connect (thatDH.getTransporter(), 
 				 prototype, blockingComm);
+}
+
+bool DataHolder::connectBidirectional(DataHolder& thatDH, 
+				      const TransportHolder& thisTH,
+				      const TransportHolder& thatTH,
+				      bool blockingComm)
+{
+  LOG_TRACE_RTTI("DataHolder connectBidirectional()");
+  ASSERTSTR(itsType == thatDH.itsType, 
+	    "Connected DataHolders must be of the same type. Connection between "
+	    << itsType << " and " << thatDH.itsType << " is not possible.");
+  ASSERTSTR(itsVersion == thatDH.itsVersion, 
+	    "DataHolders cannot be connected, their versions " 
+	    << itsVersion << " and " << thatDH.itsVersion 
+	    << " are not the same.");
+  ASSERTSTR(thisTH.isBidirectional(), "TransportHolder " << thisTH.getType() 
+	    << " cannot be used in a bidirectional connect.");
+  ASSERTSTR(thatTH.isBidirectional(), "TransportHolder " << thatTH.getType() 
+	    << " cannot be used in a bidirectional connect.");
+ 
+  return itsTransporter.connectBidirectional(thatDH.getTransporter(),
+					     thisTH, thatTH, blockingComm);
 }
 
 
@@ -251,8 +281,8 @@ uint DataHolder::addField (const std::string& fieldName,
 BlobStringType DataHolder::blobStringType()
 {
   if (getTransporter().getTransportHolder()) {
-    cdebug(3) << "blobStringType "
-	      << getTransporter().getTransportHolder()->getType() << endl;
+    LofarLogTraceStr(2, "blobStringType "
+	      << getTransporter().getTransportHolder()->getType()) ;
     return getTransporter().getTransportHolder()->blobStringType();
   }
   return BlobStringType(false);
@@ -290,7 +320,7 @@ void DataHolder::createDataBlock()
 
 void DataHolder::openDataBlock()
 {
-  Assert (itsData);
+  ASSERT (itsData);
   BlobIBufString bis(*itsData);
   itsDataFields.openBlob (bis);
   fillAllDataPointers();
@@ -307,25 +337,25 @@ void DataHolder::resizeBuffer (uint newSize)
 
 BlobOStream& DataHolder::createExtraBlob()
 {
-  Assert (itsExtraPtr != 0);
+  ASSERT (itsExtraPtr != 0);
   return itsExtraPtr->createBlock();
 }
 
 void DataHolder::clearExtraBlob()
 {
-  Assert (itsExtraPtr != 0);
+  ASSERT (itsExtraPtr != 0);
   return itsExtraPtr->clearBlock();
 }
 
 BlobIStream& DataHolder::getExtraBlob()
 {
-  Assert (itsExtraPtr != 0);
+  ASSERT (itsExtraPtr != 0);
   return itsExtraPtr->getBlock();
 }
 
 BlobIStream& DataHolder::getExtraBlob (bool& found, int& version)
 {
-  Assert (itsExtraPtr != 0);
+  ASSERT (itsExtraPtr != 0);
   return itsExtraPtr->getBlock (found, version);
 }
 

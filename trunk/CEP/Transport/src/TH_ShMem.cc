@@ -29,7 +29,7 @@
 #include <Transport/Transporter.h>
 #include <Transport/DataHolder.h>
 #include <Common/BlobStringType.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <Common/shmem/shmem_alloc.h>
 #include <mpi.h>
 #include <stdio.h>
@@ -68,17 +68,19 @@ TH_ShMem::TH_ShMem(int sourceNode, int targetNode)
     itsSendBuf   (0),
     itsRecvBuf   (0)
 {
+  LOG_TRACE_FLOW("TH_ShMem constructor");
 }
 
 TH_ShMem::~TH_ShMem()
 {
+  LOG_TRACE_FLOW("TH_ShMem destructor");
   // Disconnect if itsSendBuf was created using connect in recv,
   // which is the case if there is also a itsRecvBuf.
   if (itsSendBuf && itsRecvBuf)
   {
     // disconnect from shared memory
-    TRACER2 ("shmem disconnect " << itsSendBuf << ' '
-	     << itsRecvContext.handle.getOffset());
+    LOG_TRACE_STAT_STR( "shmem disconnect " << itsSendBuf << ' '
+			<< itsRecvContext.handle.getOffset());
     shmem_disconnect(itsSendBuf,
 		     itsRecvContext.handle.getOffset());
   }
@@ -119,14 +121,14 @@ void* TH_ShMem::ShMemAllocator::allocate(size_t size)
   // allocate buffer header plus data space
   buf = (TH_ShMem::ShMemBuf*)shmem_malloc(sizeof(TH_ShMem::ShMemBuf) + size);
 
-  TRACER2 (TH_ShMem::getCurrentRank() << " alloc " << (void*)buf
+  LOG_TRACE_STAT_STR( TH_ShMem::getCurrentRank() << " alloc " << (void*)buf
 	   << ' ' << size);
   // initialize header
   buf->init();
 
   // return address of first buffer element
   void* ptr = buf->getDataAddress();
-  TRACER2 (TH_ShMem::getCurrentRank() << " alloc ptr " << ptr);
+  LOG_TRACE_STAT_STR (TH_ShMem::getCurrentRank() << " alloc ptr " << ptr);
   return buf->getDataAddress();
 }
 
@@ -134,7 +136,7 @@ void TH_ShMem::ShMemAllocator::deallocate(void* ptr)
 {
   if (ptr) {
     void* buf = TH_ShMem::ShMemBuf::toBuf(ptr);
-    TRACER2 ("shmem dealloc " << ptr << ' ' << buf);
+    LOG_TRACE_STAT_STR("shmem dealloc " << ptr << ' ' << buf);
     shmem_free(buf);
   }
 }
@@ -142,16 +144,16 @@ void TH_ShMem::ShMemAllocator::deallocate(void* ptr)
 
 bool TH_ShMem::connectionPossible(int srcRank, int dstRank) const
 {
-  cdebug(3) << "TH_ShMem::connectionPossible between " 
-	    << srcRank << " and " 
-	    << dstRank << "?" << endl;
+  LOG_TRACE_RTTI_STR( "TH_ShMem::connectionPossible between " 
+		      << srcRank << " and " 
+		      << dstRank << "?" );
 
-  AssertStr(   srcRank >= 0
+  ASSERTSTR(   srcRank >= 0
 	    && dstRank >= 0
 	    && srcRank < getNumberOfNodes()
 	    && dstRank < getNumberOfNodes(), "srcRank or dstRank invalid");
 
-  AssertStr(0 != hostNames, "required call to TH_ShMem::init missing");
+  ASSERTSTR(0 != hostNames, "required call to TH_ShMem::init missing");
 
   // return true when hostname for srcRank and dstRank are the same
   // indicating that source and destination are on the same host
@@ -166,53 +168,54 @@ void TH_ShMem::initRecv(void* buf, int tag)
   itsRecvContext.setArgs(buf, itsSourceNode, tag);
     
   // only do this if buffer was allocated with shmem_malloc
-  Assert (itsRecvBuf->matchMagicCookie());
+  ASSERT (itsRecvBuf->matchMagicCookie());
 
   int        result;
   MPI_Status status;
     
   // recv info about message
-  TRACER2 ("recvinit mpi from " << itsRecvContext.remote
-	   << ' ' << itsRecvContext.tag);
+  LOG_TRACE_STAT_STR( "recvinit mpi from " << itsRecvContext.remote
+		      << ' ' << itsRecvContext.tag);
   result = MPI_Recv(&(itsRecvContext.handle), sizeof(ShMemHandle), MPI_BYTE,
 		    itsRecvContext.remote, itsRecvContext.tag,
 		    MPI_COMM_WORLD, &status);
-  TRACER2 ("recvinit mpi done " << result);
+  LOG_TRACE_STAT_STR ("recvinit mpi done " << result);
   int cnt;
   MPI_Get_count(&status, MPI_BYTE, &cnt);
-  TRACER2 ("count " << cnt << ' '<<itsRecvContext.handle.getShmid()
-	   <<' ' <<itsRecvContext.handle.getOffset());
+  LOG_TRACE_STAT_STR ("count " << cnt << ' '<<itsRecvContext.handle.getShmid()
+		      <<' ' <<itsRecvContext.handle.getOffset());
 	
-  DbgAssertStr(status.MPI_SOURCE == itsSourceNode
+  DBGASSERTSTR(status.MPI_SOURCE == itsSourceNode
 	       && status.MPI_TAG == tag,
 	       "incorrect status");
-  DbgAssertStr(MPI_SUCCESS == result, "MPI_Recv failed");
+  DBGASSERTSTR(MPI_SUCCESS == result, "MPI_Recv failed");
   
   itsSendBuf = (ShMemBuf*)shmem_connect(itsRecvContext.handle.getShmid(),
 					itsRecvContext.handle.getOffset());
-  TRACER2 ("shmem connected " << itsSendBuf << ' '
-	   << itsRecvContext.handle.getOffset());
+  LOG_TRACE_STAT_STR ("shmem connected " << itsSendBuf << ' '
+		      << itsRecvContext.handle.getOffset());
 	    
-  Assert (itsSendBuf != 0);
-  TRACER2 ("recvinit mpi fully done");
+  ASSERT (itsSendBuf != 0);
+  LOG_TRACE_STAT( "recvinit mpi fully done" );
 }
 
 bool TH_ShMem::recvBlocking(void* buf, int nbytes, int tag)
 { 
+  LOG_TRACE_RTTI("TH_ShMem recvBlocking()");
   if (itsFirstCall)
   {
-    TRACER2 (TH_ShMem::getCurrentRank() << " recv firstCall");
+    LOG_TRACE_STAT_STR (TH_ShMem::getCurrentRank() << " recv firstCall");
     itsFirstCall = false;
     initRecv(buf, tag);
     /* initRecv sets itsSendBuf (remote, connected) and itsRecvBuf (local) */
   }
 
   // all calls must have the same arguments except for nbytes
-  DbgAssertStr(itsRecvContext.matchArgs(buf, itsSourceNode, tag),
+  DBGASSERTSTR(itsRecvContext.matchArgs(buf, itsSourceNode, tag),
 	       "Arguments don't match");
 
   // check whether allocated with TH_ShMem::allocate
-  Assert (itsRecvBuf->matchMagicCookie());
+  ASSERT(itsRecvBuf->matchMagicCookie()==true);
 
 #ifdef SEM_SYNC
   // wait until sender is in send routine
@@ -230,11 +233,11 @@ bool TH_ShMem::recvBlocking(void* buf, int nbytes, int tag)
 
   int mpi_result = MPI_Recv(&sendReady, 1, MPI_INT, itsSourceNode, tag,
 			    MPI_COMM_WORLD, &mpi_status);
-  DbgAssertStr(MPI_SUCCESS == mpi_result, "MPI_Recv(sync) failed");
-  DbgAssertStr(mpi_status.MPI_SOURCE == itsSourceNode &&
+  DBGASSERTSTR(MPI_SUCCESS == mpi_result, "MPI_Recv(sync) failed");
+  DBGASSERTSTR(mpi_status.MPI_SOURCE == itsSourceNode &&
 	       mpi_status.MPI_TAG == tag,
 	       "incorrect status");
-  DbgAssertStr(TH_SHMEM_SENDREADY_MAGIC == sendReady,
+  DBGASSERTSTR(TH_SHMEM_SENDREADY_MAGIC == sendReady,
 	       "sendReady mismatch");
 
   // do the memcpy
@@ -242,7 +245,7 @@ bool TH_ShMem::recvBlocking(void* buf, int nbytes, int tag)
 	 nbytes);
   mpi_result = MPI_Rsend(&ack, 1, MPI_INT, itsSourceNode, tag,
 			 MPI_COMM_WORLD);
-  DbgAssertStr(MPI_SUCCESS == mpi_result, "MPI_Send(sync) failed");	
+  DBGASSERTSTR(MPI_SUCCESS == mpi_result, "MPI_Send(sync) failed");	
 #endif
 
   return true;
@@ -250,22 +253,23 @@ bool TH_ShMem::recvBlocking(void* buf, int nbytes, int tag)
 
 bool TH_ShMem::recvVarBlocking(int tag)
 { 
+  LOG_TRACE_RTTI("TH_ShMem recvVarBlocking()");
   if (itsFirstCall)
   {
-    TRACER2 (TH_ShMem::getCurrentRank() << " recv firstCall");
+    LOG_TRACE_STAT_STR( TH_ShMem::getCurrentRank() << " recv firstCall");
     itsFirstCall = false;
     initRecv(getTransporter()->getDataHolder()->getDataPtr(), tag);
     /* initRecv sets itsSendBuf (remote, connected) and itsRecvBuf (local) */
   }
 
   // all calls must have the same arguments except for nbytes
-  DbgAssertStr(itsRecvContext.matchArgs
+  DBGASSERTSTR(itsRecvContext.matchArgs
 	       (getTransporter()->getDataHolder()->getDataPtr(),
 		itsSourceNode, tag),
 	       "Arguments don't match");
 
   // check whether allocated with TH_ShMem::allocate
-  Assert (itsRecvBuf->matchMagicCookie());
+  ASSERT (itsRecvBuf->matchMagicCookie());
 
 #ifdef SEM_SYNC
   // wait until sender is in send routine
@@ -274,7 +278,7 @@ bool TH_ShMem::recvVarBlocking(int tag)
   // Get the size of the data and resize the buffer.
   int size = DataHolder::getDataLength (itsSendBuf->getDataAddress());
   getTransporter()->getDataHolder()->resizeBuffer (size);
-  DbgAssert (getTransporter()->getDataHolder()->getDataPtr() ==
+  DBGASSERT (getTransporter()->getDataHolder()->getDataPtr() ==
 	     itsRecvBuf->getDataAddress());
   // do the memcpy
   memcpy(itsRecvBuf->getDataAddress(), itsSendBuf->getDataAddress(), size);
@@ -289,23 +293,23 @@ bool TH_ShMem::recvVarBlocking(int tag)
 
   int mpi_result = MPI_Recv(&sendReady, 1, MPI_INT, itsSourceNode, tag,
 			    MPI_COMM_WORLD, &mpi_status);
-  DbgAssertStr(MPI_SUCCESS == mpi_result, "MPI_Recv(sync) failed");
-  DbgAssertStr(mpi_status.MPI_SOURCE == itsSourceNode &&
+  DBGASSERTSTR(MPI_SUCCESS == mpi_result, "MPI_Recv(sync) failed");
+  DBGASSERTSTR(mpi_status.MPI_SOURCE == itsSourceNode &&
 	       mpi_status.MPI_TAG == tag,
 	       "incorrect status");
-  DbgAssertStr(TH_SHMEM_SENDREADY_MAGIC == sendReady,
+  DBGASSERTSTR(TH_SHMEM_SENDREADY_MAGIC == sendReady,
 	       "sendReady mismatch");
 
   // Get the size of the data and resize the buffer.
   int size = DataHolder::getDataLength (itsSendBuf->getDataAddress());
   getTransporter()->getDataHolder()->resizeBuffer (size);
-  DbgAssert (getTransporter()->getDataHolder()->getDataPtr() ==
+  DBGASSERT (getTransporter()->getDataHolder()->getDataPtr() ==
 	     itsRecvBuf->getDataAddress());
   // do the memcpy
   memcpy(itsRecvBuf->getDataAddress(), itsSendBuf->getDataAddress(), size);
   mpi_result = MPI_Rsend(&ack, 1, MPI_INT, itsSourceNode, tag,
 			 MPI_COMM_WORLD);
-  DbgAssertStr(MPI_SUCCESS == mpi_result, "MPI_Send(sync) failed");	
+  DBGASSERTSTR(MPI_SUCCESS == mpi_result, "MPI_Send(sync) failed");	
 #endif
 
   return true;
@@ -313,20 +317,19 @@ bool TH_ShMem::recvVarBlocking(int tag)
 
 bool TH_ShMem::recvNonBlocking(void* buf, int nbytes, int tag)
 {
-  cerr << "**Warning** TH_ShMem::recvNonBlocking() is not implemented. " 
-       << "recvBlocking() is used instead." << endl;    
+  LOG_WARN( "TH_ShMem::recvNonBlocking() is not implemented. recvBlocking() is used instead.");    
   return recvBlocking(buf, nbytes, tag);
 } 
 
 bool TH_ShMem::recvVarNonBlocking(int tag)
 {
-  cerr << "**Warning** TH_ShMem::recvVarNonBlocking() is not implemented. " 
-       << "recvVarBlocking() is used instead." << endl;    
+  LOG_WARN( "TH_ShMem::recvVarNonBlocking() is not implemented. recvVarBlocking() is used instead." );    
   return recvVarBlocking(tag);
 } 
 
 bool TH_ShMem::waitForReceived(void*, int, int)
 {
+  LOG_TRACE_RTTI("TH_ShMem waitForReceived");
   return true;
 }
 
@@ -338,7 +341,7 @@ void TH_ShMem::initSend(void* buf, int tag)
   sendBufPtr = (void*)itsSendBuf;
   itsSendContext.setArgs(buf, itsTargetNode, tag);
 
-  Assert (itsSendBuf->matchMagicCookie());
+  ASSERT (itsSendBuf->matchMagicCookie());
 
   int         result;
 
@@ -346,46 +349,48 @@ void TH_ShMem::initSend(void* buf, int tag)
 			    shmem_offset(sendBufPtr));
 
   // send info about buffer
-  TRACER2 ("sendinit mpi to " << itsTargetNode << ' ' << tag);
+  LOG_TRACE_STAT_STR ("sendinit mpi to " << itsTargetNode << ' ' << tag);
   result = MPI_Send(&(itsSendContext.handle),
 		    sizeof(ShMemHandle), MPI_BYTE, itsTargetNode, tag,
 		    MPI_COMM_WORLD);
-  DbgAssertStr(MPI_SUCCESS == result, "MPI_Send failed");
-  TRACER2 ("sendinit mpi done");
-  TRACER2 ("handle " <<itsSendContext.handle.getShmid()
-	   <<' '<<itsSendContext.handle.getOffset());
+  DBGASSERTSTR(MPI_SUCCESS == result, "MPI_Send failed");
+  LOG_TRACE_STAT ("sendinit mpi done");
+  LOG_TRACE_STAT_STR ("handle " <<itsSendContext.handle.getShmid()
+		      <<' '<<itsSendContext.handle.getOffset());
 }
 
 bool TH_ShMem::sendBlocking(void* buf, int nbytes, int tag)
 {
-  DbgAssert (nbytes == getTransporter()->getDataHolder()->getDataSize()
+  LOG_TRACE_RTTI("TH_ShMem sendBlocking");
+  DBGASSERT (nbytes == getTransporter()->getDataHolder()->getDataSize()
 	     && buf == getTransporter()->getDataHolder()->getDataPtr());
   return sendVarBlocking (tag);
 }
 
 bool TH_ShMem::sendVarBlocking(int tag)
 {
+  LOG_TRACE_RTTI("TH_ShMem sendVarBlocking");
   if (itsFirstCall)
   {
-    TRACER2 (TH_ShMem::getCurrentRank() << " send firstcall");
+    LOG_TRACE_COND_STR (TH_ShMem::getCurrentRank() << " send firstcall");
     itsFirstCall = false;
 
     initSend(getTransporter()->getDataHolder()->getDataPtr(), tag);
     /* sets itsSendContext, itsSendBuf (local); itsRecvBuf == 0 */
 
-    DbgAssertStr(0 == itsRecvBuf, "itsRecvBuf not 0");
+    DBGASSERTSTR(0 == itsRecvBuf, "itsRecvBuf not 0");
   }
 
   // all calls must have the same arguments except for nbytes
-  DbgAssertStr(itsSendContext.matchArgs
+  DBGASSERTSTR(itsSendContext.matchArgs
 	       (getTransporter()->getDataHolder()->getDataPtr(),
 		itsTargetNode, tag),
 	       "arguments don't match");
 
-  Assert (itsSendBuf->matchMagicCookie());
+  ASSERT (itsSendBuf->matchMagicCookie());
 
 #ifdef SEM_SYNC
-  TRACER2 (TH_ShMem::getCurrentRank() << " send matchcookie sem");
+  LOG_TRACE_STAT_STR (TH_ShMem::getCurrentRank() << " send matchcookie sem");
 
   // signal that the send is ready
   shmem_cond_signal(itsSendBuf->getSendReadyCondition());
@@ -394,7 +399,7 @@ bool TH_ShMem::sendVarBlocking(int tag)
   shmem_cond_wait(itsSendBuf->getRecvCompleteCondition());
 
 #else
-  TRACER2 (TH_ShMem::getCurrentRank() << " send matchcookie mpi");
+  LOG_TRACE_STAT_STR (TH_ShMem::getCurrentRank() << " send matchcookie mpi");
 	
   int         sendReady = TH_SHMEM_SENDREADY_MAGIC;
   int         ack;
@@ -404,63 +409,63 @@ bool TH_ShMem::sendVarBlocking(int tag)
   // post the receive
   int mpi_result = MPI_Irecv(&ack, 1, MPI_INT,
 			     itsTargetNode, tag, MPI_COMM_WORLD, &mpi_request);
-  DbgAssertStr(MPI_SUCCESS == mpi_result, "MPI_Irecv failed");
+  DBGASSERTSTR(MPI_SUCCESS == mpi_result, "MPI_Irecv failed");
 
   mpi_result = MPI_Send (&sendReady, 1, MPI_INT,
 			 itsTargetNode, tag, MPI_COMM_WORLD);
-  DbgAssertStr(MPI_SUCCESS == mpi_result, "MPI_Send failed");
+  DBGASSERTSTR(MPI_SUCCESS == mpi_result, "MPI_Send failed");
 
   mpi_result = MPI_Wait (&mpi_request, &mpi_status);
-  DbgAssertStr(MPI_SUCCESS == mpi_result, "MPI_Wait failed");
-  DbgAssertStr(TH_SHMEM_ACK_MAGIC == ack, "ack mismatch");
-  DbgAssertStr(mpi_status.MPI_SOURCE == itsTargetNode
+  DBGASSERTSTR(MPI_SUCCESS == mpi_result, "MPI_Wait failed");
+  DBGASSERTSTR(TH_SHMEM_ACK_MAGIC == ack, "ack mismatch");
+  DBGASSERTSTR(mpi_status.MPI_SOURCE == itsTargetNode
 	       && mpi_status.MPI_TAG == tag,
 	       "incorrect status");
 #endif
 
-  TRACER2 (TH_ShMem::getCurrentRank() << " sendVarBlocking done");
+  LOG_TRACE_STAT_STR (TH_ShMem::getCurrentRank() << " sendVarBlocking done");
   return true;
 }
 
 bool TH_ShMem::sendNonBlocking(void* buf, int nbytes, int tag)
 {
-  cerr << "**Warning** TH_ShMem::sendNonBlocking() is not implemented. " 
-       << "The sendBlocking() method is used instead." << endl;    
+  LOG_WARN( "TH_ShMem::sendNonBlocking() is not implemented. The sendBlocking() method is used instead." );    
   return sendBlocking(buf, nbytes, tag);
 }
 
 bool TH_ShMem::sendVarNonBlocking(int tag)
 {
-  cerr << "**Warning** TH_ShMem::sendVarNonBlocking() is not implemented. " 
-       << "The sendVarBlocking() method is used instead." << endl;    
+  LOG_WARN( "TH_ShMem::sendVarNonBlocking() is not implemented. The sendVarBlocking() method is used instead." );    
   return sendVarBlocking(tag);
 }
 
 bool TH_ShMem::waitForSent(void*, int, int)
 {
+  LOG_TRACE_RTTI("TH_ShMem waitForSent()");
   return true;
 }
 
 void TH_ShMem::waitForBroadCast()
 {
 #ifdef HAVE_MPI
+  LOG_TRACE_RTTI("TH_ShMem waitForBroadCast()");
   /// Wait for a broadcast message with MPI
   unsigned long timeStamp;
   MPI_Bcast(&timeStamp, 1, MPI_UNSIGNED_LONG,
 	    CONTROLLER_NODE, MPI_COMM_WORLD);
-  TRACER2 ("Broadcast received timestamp " <<timeStamp
-	   << " rank=  " << getCurrentRank());
+  LOG_TRACE_STAT_STR ("Broadcast received timestamp " <<timeStamp
+		      << " rank=  " << getCurrentRank());
 #endif
 }
 
 void TH_ShMem::waitForBroadCast(unsigned long& aVar)
 {
 #ifdef HAVE_MPI
-  TRACER2 ("wait for broadcast");
+  LOG_TRACE_RTTI("TH_ShMem waitForBroadCast(..)");
   /// Wait for a broadcast message with MPI
-    MPI_Bcast(&aVar, 1, MPI_UNSIGNED_LONG, CONTROLLER_NODE, MPI_COMM_WORLD);
-    TRACER2 ("Broadcast received timestamp " << aVar
-	     << " rank=" << getCurrentRank());
+  MPI_Bcast(&aVar, 1, MPI_UNSIGNED_LONG, CONTROLLER_NODE, MPI_COMM_WORLD);
+  LOG_TRACE_STAT_STR ("Broadcast received timestamp " << aVar
+		      << " rank=" << getCurrentRank());
 #endif
 }
 
@@ -468,16 +473,17 @@ void TH_ShMem::waitForBroadCast(unsigned long& aVar)
 void TH_ShMem::sendBroadCast(unsigned long timeStamp)
 {
 #ifdef HAVE_MPI
-  TRACER2 ("send broadcast");
+  LOG_TRACE_RTTI( "TH_ShMem sendBroadCast()" );
   /// Send a broadcast timestamp
   MPI_Bcast(&timeStamp, 1, MPI_UNSIGNED_LONG, CONTROLLER_NODE, MPI_COMM_WORLD);
-  TRACER2 ("Broadcast sent timestamp " <<timeStamp); 
+  LOG_TRACE_STAT_STR ("Broadcast sent timestamp " <<timeStamp); 
 #endif
 }
 
 int TH_ShMem::getCurrentRank()
 {
 #ifdef HAVE_MPI
+  LOG_TRACE_RTTI( "TH_ShMem getCurrentRank()" );
   int rank;
 
   ///  Get the current node 
@@ -492,6 +498,7 @@ int TH_ShMem::getCurrentRank()
 int TH_ShMem::getNumberOfNodes()
 {
 #ifdef HAVE_MPI
+  LOG_TRACE_RTTI( "TH_MPI getNumberOfNodes()" );
   int size;
 
   /// get the Number of nodes
@@ -506,6 +513,7 @@ int TH_ShMem::getNumberOfNodes()
 #ifdef HAVE_MPI
 void TH_ShMem::init(int argc, const char* argv[])
 {
+  LOG_TRACE_RTTI( "TH_ShMem init()" );
   int initialized = 0;
   char myHostName[TH_SHMEM_MAX_HOSTNAME_SIZE];
     
@@ -523,7 +531,7 @@ void TH_ShMem::init(int argc, const char* argv[])
   // get hostname of this host
   if (gethostname(myHostName, TH_SHMEM_MAX_HOSTNAME_SIZE) < 0)
   {
-    perror("gethostname");
+    LOG_WARN("gethostname call failed in TH_ShMem::init(). Setting hostname equal to rank");
 
     // set hostname equal to rank (backup method)
     snprintf(myHostName, TH_SHMEM_MAX_HOSTNAME_SIZE,
@@ -545,6 +553,7 @@ void TH_ShMem::init(int, const char* [])
 void TH_ShMem::finalize()
 {
 #ifdef HAVE_MPI
+  LOG_TRACE_RTTI( "TH_ShMem finalize()" );
   free(hostNames);
   /// finalize the MPI communication
   MPI_Finalize();
@@ -554,17 +563,17 @@ void TH_ShMem::finalize()
 void TH_ShMem::synchroniseAllProcesses()
 {
 #ifdef HAVE_MPI
-  TRACER2 ("Synchronise all");
+  LOG_TRACE_RTTI( "TH_ShMem synchroniseAllProcesses()");
   MPI_Barrier(MPI_COMM_WORLD);
-  TRACER2 ("Synchronised...");
+  LOG_TRACE_STAT( "Synchronised..." );
 #endif
 }
 
 string TH_ShMem::getHostName(int rank)
 {
-  DbgAssertStr(rank >= 0 && rank < getNumberOfNodes(),
+  DBGASSERTSTR(rank >= 0 && rank < getNumberOfNodes(),
 	       "invalid rank");
-  DbgAssertStr(0 != hostNames, "hostNames == 0");
+  DBGASSERTSTR(0 != hostNames, "hostNames == 0");
 
   return string(&hostNames[rank*TH_SHMEM_MAX_HOSTNAME_SIZE]);
 }

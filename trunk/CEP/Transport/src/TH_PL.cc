@@ -28,8 +28,6 @@
 #include <PL/DBRepHolder.h>    // needed to see ObjectId specialization
 #include <PL/Collection.h>
 #include <PL/QueryObject.h>
-#include <Common/lofar_iostream.h>
-#include <sstream>
 
 namespace LOFAR
 {
@@ -45,21 +43,18 @@ int TH_PL::theirInstanceCount=0;
 // PersistenceBroker is used to optimally use resources.
 PL::PersistenceBroker TH_PL::theirPersistenceBroker;
 
-// The prototype TH_PL object.
-// It uses table defaultTable in the database.
-TH_PL TH_PL::proto;
-
-
 TH_PL::TH_PL (const string& tableName)
   : itsTableName  (tableName),
     itsWriteSeqNo (0),
     itsReadSeqNo  (0),
     itsInitCalled (false)
 {
+  LOG_TRACE_FLOW( "TH_PL constructor" );
 }
 
 TH_PL::~TH_PL()
 {
+  LOG_TRACE_FLOW( "TH_PL destructor" );  
   if (itsInitCalled)           // Count only initialized instances
   {
     TH_PL::theirInstanceCount--;
@@ -105,14 +100,14 @@ void TH_PL::useDatabase (const string& dbDSN, const string& userName)
 void TH_PL::connectDatabase()
 {
   if (TH_PL::theirDSN == "_XXX_") {
-    cerr << "***WARNING***: TH_PL::ConnectDatabase (); TH_PL "
-	 << "is trying to connect to a test database residing on "
-	 << "dop50. You probably have forgotten to call the TH_PL "
-	 << "method UseDatabase (). See the comments in TH_PL.h " 
-	 << "for more details. Continuing execution... " << endl;
+    LOG_WARN_STR("***WARNING***: TH_PL::ConnectDatabase (); TH_PL "
+		 << "is trying to connect to a test database residing on "
+		 << "dop50. You probably have forgotten to call the TH_PL "
+		 << "method UseDatabase (). See the comments in TH_PL.h " 
+		 << "for more details. Continuing execution... " );
   }
   theirPersistenceBroker.connect (TH_PL::theirDSN, TH_PL::theirUserName);
-  cout << "Connected to database" << endl;
+  LOG_INFO( "Connected to database" );
 }
 
 
@@ -146,13 +141,14 @@ int TH_PL::queryDB (const string& queryString, int tag)
   // Get a reference to the DHPL's TPO object.  
   PL::PersistentObject& aPO = itsDHPL->getPO();  
   int result = aPO.retrieveInPlace(PL::QueryObject(queryString));  
-  Assert (result >= 0);  
+  ASSERT (result >= 0);  
   itsReadSeqNo++;  
   return result;  
 }  
 
 bool TH_PL::sendBlocking(void*, int, int tag)
 {
+  LOG_TRACE_RTTI( "TH_PL sendBlocking()" );
   PL::PersistentObject& aPO = itsDHPL->preparePO (tag, itsWriteSeqNo++);
   theirPersistenceBroker.save(aPO, PL::PersistenceBroker::INSERT);
   return true;
@@ -160,21 +156,22 @@ bool TH_PL::sendBlocking(void*, int, int tag)
 
 bool TH_PL::sendNonBlocking(void* buf, int nbytes, int tag)
 {
-  cerr << "**Warning** TH_PL::sendNonBlocking() is not implemented. " 
-       << "The sendBlocking() method is used instead." << endl;    
+  LOG_WARN( "TH_PL::sendNonBlocking() is not implemented. The sendBlocking() method is used instead.");
   return sendBlocking(buf, nbytes, tag);
 }
 
 bool TH_PL::waitForSent(void*, int, int)
 {
+  LOG_TRACE_RTTI( "TH_PL waitForSent()" );
   return true;
 }
 
 bool TH_PL::recvBlocking(void*, int nbytes, int tag)
 {
+  LOG_TRACE_RTTI( "TH_PL recvBlocking()" );
   bool result = recvVarBlocking (tag);
   if (result) {
-    DbgAssertStr(int(itsDHPL->getDataBlock().size()) == nbytes,
+    DBGASSERTSTR(int(itsDHPL->getDataBlock().size()) == nbytes,
 		 "TH_PL::recv - non matching size; found "
 		 << itsDHPL->getDataBlock().size() << ", expected " << nbytes);
   }
@@ -183,6 +180,7 @@ bool TH_PL::recvBlocking(void*, int nbytes, int tag)
 
 bool TH_PL::recvVarBlocking(int tag)
 {
+  LOG_TRACE_RTTI( "TH_PL recvVarBlocking()" );
   // Get a reference to the DHPL's TPO object.
   PL::PersistentObject& aPO = itsDHPL->getPO();
   // PL is based on query objects to identify records in database
@@ -192,27 +190,26 @@ bool TH_PL::recvVarBlocking(int tag)
   q << "tag=" << tag << " AND seqnr=" << itsReadSeqNo;
   itsReadSeqNo++;
   int result = aPO.retrieveInPlace(PL::QueryObject(q.str()));
-  Assert (result == 1);
-  // ToDo: DbgAssertStr(itsReadSeqnNo == ... ,"");
+  ASSERT (result == 1);
+  // ToDo: DBGASSERTSTR(itsReadSeqnNo == ... ,"");
   return true;
 }
 
 bool TH_PL::recvNonBlocking(void* buf, int nbytes, int tag)
 { 
-  cerr << "**Warning** TH_PL::recvNonBlocking() is not implemented. " 
-       << "recvBlocking() is used instead." << endl;    
+  LOG_WARN( "TH_PL::recvNonBlocking() is not implemented. recvBlocking() is used instead." );    
   return recvBlocking (buf, nbytes, tag);
 }
 
 bool TH_PL::recvVarNonBlocking(int tag)
 { 
-  cerr << "**Warning** TH_PL::recvVarNonBlocking() is not implemented. " 
-       << "recvBlocking() is used instead." << endl;    
+  LOG_WARN( "recvVarNonBlocking() is not implemented. recvBlocking() is used instead.");
   return recvVarBlocking (tag);
 }
 
 bool TH_PL::waitForReceived(void*, int, int)
 {
+  LOG_TRACE_RTTI( "TH_PL waitForReceived()" );
   return true;
 }
 

@@ -23,17 +23,14 @@
 #include <iostream>
 
 #include <Transport/TH_Mem.h>
+#include <Transport/TH_PL.h>
+#include <Transport/TH_File.h>
 #include <DH_Example.h>
-#include <Common/Debug.h>
 
 using namespace LOFAR;
 
-int main(int argc, const char** argv)
+bool testMem()
 {
-    
-  Debug::initLevels (argc, argv);
-  cout << "Bidirectional transport test program" << endl;
-    
   DH_Example DH1("dh1", 1);
   DH_Example DH2("dh2", 1);
     
@@ -44,7 +41,7 @@ int main(int argc, const char** argv)
 
   // connect DH1 to DH2, TH_Mem doesn't implement a blocking send, so we select nonblocking
   DH1.connectTo(DH2, TH_Mem(), false);
-  // and everse
+  // and reverse
   DH2.connectTo(DH1, TH_Mem(), false);
     
   // initialize
@@ -63,11 +60,11 @@ int main(int argc, const char** argv)
        << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
        << endl;
     
-  // do the "foreward" data transport
+  // do the "forward" data transport
   DH1.write();
   DH2.read();
   
-  cout << "After foreward transport  : " 
+  cout << "After forward transport  : " 
        << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
        << " -- " 
        << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
@@ -76,7 +73,7 @@ int main(int argc, const char** argv)
   if (DH1.getBuffer()[0] != DH2.getBuffer()[0]
   ||  DH1.getCounter() != DH2.getCounter()) {
     cout << "Data in receiving DataHolder is incorrect" << endl;
-    return 1;
+    return false;
   }
 
   // now we change the data somewhat and do the "backwards" transport
@@ -95,8 +92,107 @@ int main(int argc, const char** argv)
   if (DH1.getBuffer()[0] != DH2.getBuffer()[0]
   ||  DH1.getCounter() != DH2.getCounter()) {
     cout << "Data in receiving DataHolder is incorrect after backwards transport" << endl;
-    return 1;
+    return false;
+  }
+  else {
+    return true;
+  }
+}
+
+bool testPL()
+{
+  TH_PL::useDatabase ("test");
+
+  DH_Example DH1("dh1", 1);
+  DH_Example DH2("dh2", 1);
+    
+  // Assign an ID for each dataholder by hand for now
+  // This will be done by the framework later on
+  DH1.setID(1);
+  DH2.setID(2);
+
+  // connect DH1 to DH2, TH_Mem doesn't implement a blocking send, so we select nonblocking
+  DH1.connectTo(DH2, TH_PL("TestBidirectional"));
+  // and reverse
+  DH2.connectTo(DH1, TH_PL("TestBidirectional"));
+    
+  // initialize
+  DH1.init();
+  DH2.init();
+    
+  // fill the DataHolders with some initial data
+  DH1.getBuffer()[0] = fcomplex(17,-3.5);
+  DH2.getBuffer()[0] = 0;
+  DH1.setCounter(2);
+  DH2.setCounter(0);
+    
+  cout << "Before transport : " 
+       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
+       << " -- " 
+       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
+       << endl;
+    
+  // do the "forward" data transport
+  DH1.write();
+  DH2.read();
+  
+  cout << "After forward transport  : " 
+       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
+       << " -- " 
+       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
+       << endl;
+
+  if (DH1.getBuffer()[0] != DH2.getBuffer()[0]
+  ||  DH1.getCounter() != DH2.getCounter()) {
+    cout << "Data in receiving DataHolder is incorrect" << endl;
+    return false;
   }
 
-  return 0;
+  // now we change the data somewhat and do the "backwards" transport
+  DH2.getBuffer()[0] += fcomplex(1,1);
+  DH2.setCounter(3);
+  DH2.write();
+  DH1.read();
+  // 
+  
+  cout << "After backwards transport  : " 
+       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
+       << " -- " 
+       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
+       << endl;
+
+  if (DH1.getBuffer()[0] != DH2.getBuffer()[0]
+  ||  DH1.getCounter() != DH2.getCounter()) {
+    cout << "Data in receiving DataHolder is incorrect after backwards transport" << endl;
+    return false;
+  }
+  else {
+    return true;
+  }
+}
+
+
+int main(int argc, const char** argv)
+{
+  INIT_LOGGER("TestBidirectional.log_prop");
+
+  cout << "Bidirectional transport test program" << endl;
+  
+  bool resultMem = true;
+  cout << "Testing TH_Mem..." << endl;
+  resultMem = testMem();
+  
+  bool resultPL = true;
+  cout << "Testing TH_PL..." << endl;
+  resultPL = testPL();
+
+  // Bidirectional communication with TH_File is not possible, because TH_File 
+  // is either read-only or write-only.
+
+  // Check if all tests succeeded
+  if (resultMem && resultPL) {
+    return 0;
+  } else {
+    return 1;
+  }
 }

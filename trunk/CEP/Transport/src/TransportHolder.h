@@ -58,7 +58,6 @@ public:
   // Make an instance of the derived TransportHolder.
   virtual TransportHolder* make() const = 0;
 
-
   // Initialise the Transport; this may for instance open a file,
   // port or dbms connection
   virtual bool init();
@@ -116,6 +115,9 @@ public:
 
   /// Check if a connection is possible between two processes.
   virtual bool connectionPossible (int srcRank, int dstRank) const;
+
+  // Check if this TransportHolder can handle bidirectional transport.
+  virtual bool isBidirectional () const;
 
   /// Accessor method for its Transporter.
   // <group>

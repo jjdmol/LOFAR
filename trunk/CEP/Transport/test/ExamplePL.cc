@@ -24,7 +24,6 @@
 #include <Transport/TH_PL.h>
 #include <Transport/TH_Mem.h>
 #include <Common/BlobOStream.h>
-#include <Common/Debug.h>
 #include <iostream>
 
 using namespace LOFAR;
@@ -70,11 +69,11 @@ void receiveData (DH_Example& receiver, DH_Example& result)
   result.read();
   receiver.read();
   cout << "Received " << receiver.getDataSize() << " bytes" << endl;
-  Assert (receiver.getDataSize() == result.getDataSize());
+  ASSERT (receiver.getDataSize() == result.getDataSize());
   const char* d1 = static_cast<char*>(result.getDataPtr());
   const char* d2 = static_cast<char*>(receiver.getDataPtr());
   for (int i=0; i<result.getDataSize(); i++) {
-    Assert (d1[i] == d2[i]);
+    ASSERT (d1[i] == d2[i]);
   }
 }
 
@@ -145,7 +144,7 @@ void test2()
 
 int main (int argc, const char** argv)
 {
-  Debug::initLevels (argc, argv);
+  INIT_LOGGER("ExamplePL.log_prop");
 
   cout << "Transport ExamplePL test program" << endl;
   int test=1;

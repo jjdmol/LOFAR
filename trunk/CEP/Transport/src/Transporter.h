@@ -70,6 +70,13 @@ class Transporter
   /// Connect two transporters
   bool connect(Transporter& targetTP, const TransportHolder& prototype, 
 	       bool blockingComm);
+
+  /// Connect two transporters bidirectionally
+  bool connectBidirectional(Transporter& targetTP, 
+			    const TransportHolder& thisTH,
+			    const TransportHolder& targetTH,
+			    bool blockingComm);
+
   /// After setting the connection, the init() method must be called
   bool init();
 

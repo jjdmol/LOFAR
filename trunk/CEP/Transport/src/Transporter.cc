@@ -23,8 +23,7 @@
 
 #include <Transport/Transporter.h>
 #include <Transport/DataHolder.h>
-#include <Common/Debug.h>
-#include <Common/lofar_iostream.h>
+#include <Common/LofarLogger.h>
 #include <stdlib.h>
 #include <memory.h>
 
@@ -40,7 +39,9 @@ Transporter::Transporter (DataHolder* dataHolder)
     itsWriteTag        (-1),
     itsStatus          (Unknown),
     itsIsBlocking      (true)
-{}
+{
+  LOG_TRACE_FLOW("Transporter constructor");
+}
 
 Transporter::Transporter(const Transporter& that, DataHolder* dataHolder)
   : itsDataHolder      (dataHolder),
@@ -52,6 +53,7 @@ Transporter::Transporter(const Transporter& that, DataHolder* dataHolder)
     itsStatus          (that.itsStatus),
     itsIsBlocking      (that.itsIsBlocking)
 {
+  LOG_TRACE_FLOW("Tranporter copy constructor");
   if (that.itsTransportHolder != 0) {
     itsTransportHolder = that.itsTransportHolder->make();
     itsTransportHolder->setTransporter(this);
@@ -60,6 +62,7 @@ Transporter::Transporter(const Transporter& that, DataHolder* dataHolder)
 
 Transporter::~Transporter()
 {
+  LOG_TRACE_FLOW("Transporter destructor");
   delete itsTransportHolder;
 }
 
@@ -75,6 +78,7 @@ void Transporter::makeTransportHolder (const TransportHolder& prototype)
 
 bool Transporter::init()
 {
+  LOG_TRACE_RTTI("Transporter init()");
   if (itsTransportHolder == 0)
   { return false; }
   else
@@ -87,6 +91,7 @@ bool Transporter::init()
 bool Transporter::connect(Transporter& thatTP,
 			  const TransportHolder& prototype,
 			  bool blockingComm) {
+  LOG_TRACE_RTTI("Transporter connect()");
   setIsBlocking(blockingComm);
   thatTP.setIsBlocking(blockingComm);
 
@@ -95,7 +100,7 @@ bool Transporter::connect(Transporter& thatTP,
   makeTransportHolder (prototype);
   thatTP.makeTransportHolder (prototype);
 
-  AssertStr(getTransportHolder()->getType() == 
+  ASSERTSTR(getTransportHolder()->getType() == 
 	    thatTP.getTransportHolder()->getType(),
 	    "Transporter::connect; inType " <<
 	    getTransportHolder()->getType() << 
@@ -104,7 +109,7 @@ bool Transporter::connect(Transporter& thatTP,
 	    " not equal!");
   
 
-  DbgAssert (getItsID() >= 0);
+  DBGASSERT (getItsID() >= 0);
   
   // Use the source ID as the tag for MPI send/receive.
   setWriteTag (getItsID());
@@ -115,14 +120,52 @@ bool Transporter::connect(Transporter& thatTP,
   return true;
 }
 
+bool Transporter::connectBidirectional(Transporter& thatTP,
+				       const TransportHolder& thisTH,
+				       const TransportHolder& thatTH,
+				       bool blockingComm) {
+  LOG_TRACE_RTTI("Transporter connectBidirectional()");
+  setIsBlocking(blockingComm);
+  thatTP.setIsBlocking(blockingComm);
+
+  // Make a new TransportHolder for both the target and 
+  // the source Transporter.
+  makeTransportHolder (thisTH);
+  thatTP.makeTransportHolder (thatTH);
+
+  ASSERTSTR(getTransportHolder()->getType() == 
+	    thatTP.getTransportHolder()->getType(),
+	    "Transporter::connect; inType " <<
+	    getTransportHolder()->getType() << 
+	    " and outType " <<
+	    thatTP.getTransportHolder()->getType() << 
+	    " not equal!");
+
+  int thisID = getItsID();
+  int thatID = thatTP.getItsID();
+  DBGASSERT ((thisID >= 0) && (thatID >= 0));
+  
+  // Use the source ID as the tag for MPI send/receive.
+  setWriteTag (thisID);
+  thatTP.setReadTag (thisID);
+
+  thatTP.setWriteTag (thatID);
+  setReadTag (thatID);
+  
+  setSourceDataHolder(thatTP.getDataHolder());
+  thatTP.setSourceDataHolder(getDataHolder());
+ 
+  return true;
+}
 
 bool Transporter::read (bool fixedSized)
 {
+  LOG_TRACE_FLOW("Transporter read()");
   bool result = false;
 
   if (getTransportHolder() && getReadTag() >= 0) {
-    TRACER3("Transport::read; call recv(" << getDataPtr() << "," 
-	    << getDataSize() << ",....)");
+    LOG_TRACE_COND_STR("Transport::read; call recv(" << getDataPtr() << "," 
+		       << getDataSize() << ",....)");
     if (isBlocking()) {
       if (fixedSized) {
 	result = getTransportHolder()->recvBlocking(getDataPtr(),
@@ -146,7 +189,7 @@ bool Transporter::read (bool fixedSized)
   }
   else
   {
-    TRACER2("Skip Transport::read itsTransportHolder or getReadTag <= 0");
+    LOG_TRACE_COND("Skip Transport::read itsTransportHolder or getReadTag <= 0");
   }
   return result;
 
@@ -154,8 +197,10 @@ bool Transporter::read (bool fixedSized)
 
 void Transporter::write (bool fixedSized)
 {
+  LOG_TRACE_FLOW("Transporter write()");
   if (getTransportHolder() && getWriteTag() >= 0) {
-    TRACER3("Transport::write; call send(" << getDataPtr() << "," << getDataSize() << ",....)");
+    LOG_TRACE_COND_STR("Transport::write; call send(" << getDataPtr() 
+		       << "," << getDataSize() << ",....)");
     if (fixedSized) {
       if (isBlocking()) {
 	getTransportHolder()->sendBlocking(getDataPtr(),
@@ -183,6 +228,7 @@ void Transporter::write (bool fixedSized)
 
 void Transporter::dump() const 
 {
+  LOG_TRACE_FLOW("Transporter dump()");
   cout <<  "Transport: ID = " << getItsID();
   cout << " ReadTag = " << getReadTag() << endl;
   cout << " WriteTag = " << getWriteTag() << endl;
