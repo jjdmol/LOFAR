@@ -24,7 +24,7 @@
 #include <GCF/GCF_MyProperty.h>
 #include <GPM_Controller.h>
 #include <GCF/GCF_Answer.h>
-#include <GSA_Service.h>
+#include <Utils.h>
 
 GCFMyPropertySet::GCFMyPropertySet(const TPropertySet& propSet,
                                    GCFAnswer* pAnswerObj) : 
@@ -40,7 +40,7 @@ GCFMyPropertySet::GCFMyPropertySet(const TPropertySet& propSet,
   for (unsigned int i = 0; i < _propSet.nrOfProperties; i++)
   { 
     propName = _propSet.properties[i].propName;
-    if (GSAService::validatePropName(propName))
+    if (Utils::isValidPropName(propName))
     {
       pProperty = new GCFMyProperty(_propSet.properties[i], *this);
       addProperty(propName, *pProperty);

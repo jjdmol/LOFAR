@@ -22,7 +22,7 @@
 
 #include <GCF/GCF_Property.h>
 #include <GCF/GCF_PropertySet.h>
-#include <GSA_Service.h>
+#include <Utils.h>
 #include <GPM_Defines.h>
 
 GCFProperty::GCFProperty (string propName) :
@@ -30,7 +30,7 @@ GCFProperty::GCFProperty (string propName) :
    _isSubscribed(false),
    _isBusy(false)
 {
-  if (!GSAService::validatePropName(propName.c_str()))
+  if (!Utils::isValidPropName(propName.c_str()))
   {
     LOFAR_LOG_WARN(PML_STDOUT_LOGGER, ( 
         "Property %s meets not the name convention! Set to \"\"",
@@ -44,7 +44,7 @@ GCFProperty::GCFProperty (string propName,
    _isSubscribed(false),
    _isBusy(false)
 {
-  if (!GSAService::validatePropName(propName.c_str()))
+  if (!Utils::isValidPropName(propName.c_str()))
   {
     LOFAR_LOG_WARN(PML_STDOUT_LOGGER, ( 
         "Property %s meets not the name convention! Set to \"\"",

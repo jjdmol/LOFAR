@@ -148,6 +148,12 @@ ssize_t GCFTCPPort::send(const GCFEvent& e, void* buf, size_t count)
   iovec* newbufs(0);
   if (F_RAW_SIG != e.signal)
   { 
+    LOFAR_LOG_TRACE(TM_STDOUT_LOGGER, (
+      "Sending event '%s' for task %s on port %s",
+      getTask()->evtstr(e),
+      getTask()->getName().c_str(), 
+      getName().c_str()));
+
     iovec buffers[2];
     buffers[0].iov_base = (void*)&e;
     buffers[0].iov_len = e.length - count;
@@ -175,8 +181,14 @@ ssize_t GCFTCPPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
   if (MSPP == getType())  
     return 0; // no messages can be send by this type of port
   
+
   if (F_RAW_SIG != e.signal)
   { 
+    LOFAR_LOG_TRACE(TM_STDOUT_LOGGER, (
+      "Sending event '%s' for task %s on port %s",
+      getTask()->evtstr(e),
+      getTask()->getName().c_str(), 
+      getName().c_str()));
     count = e.length;
     if ((written = _pSocket->send((void*)&e, e.length)) != count)
     {

@@ -1,8 +1,8 @@
-include_HEADERS =
-
-DOCHDRS	=	$(include_HEADERS) \
+pkginclude_HEADERS = \
 	CmdLine.h \
 	Utils.h
+
+DOCHDRS	=	$(pkginclude_HEADERS)
       
 noinst_LTLIBRARIES 	= libgcfcommon.la
 
