@@ -91,6 +91,7 @@ void WH_Correlator::process() {
        t_start.tv_sec + 1.0e-6*t_start.tv_usec);
 
 #ifdef HAVE_MPI
+    // collect partial bandwidths from all nodes
     MPI_Reduce(&bandwidth, &agg_bandwidth, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
 //    cout << "(" << TH_MPI::getCurrentRank() <<") " << bandwidth/(1024.0*1024.0) << " Mbit/sec" << endl;
@@ -101,8 +102,8 @@ void WH_Correlator::process() {
       cout << itsNpolarisations << " " ;
       cout << ((itsNchannels*itsNelements*itsNsamples*itsNpolarisations*sizeof(DH_CorrCube::BufferType)) + 
 	(itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType)))/ (1024.0*1024.0) << " ";
-      cout << agg_bandwidth/(1024.0*1024.0) << " Mbit/sec  " ;
-      cout << (100.0*agg_bandwidth)/(1024.0*1024.0*1024.0)<< "% of theoretical peak (Gbit/sec)" << endl;
+      cout << agg_bandwidth/(1024.0*1024.0) << " Mbps " ;
+      cout << (100.0*agg_bandwidth)/(1024.0*1024.0*1024.0)<< "%" << " ";
     }
 #endif
   }
@@ -141,11 +142,11 @@ void WH_Correlator::process() {
 	for (int station2 = 0; station2 <= station1;    station2++) {
 
 	  for (int polarisation = 0; polarisation < itsNpolarisations; polarisation++) {
-	  // todo: use copy-free multiplication
-	  // todo: remove inner loop getBufferElement calls; consecutive adressing
-	  // todo: do short-> float conversion only once
+	    // todo: use copy-free multiplication
+	    // todo: remove inner loop getBufferElement calls; consecutive adressing
+	    // todo: do short-> float conversion only once
 	  
-	  // convert complex<short> to complex<float>
+	    // convert complex<short> to complex<float>
 	    s1_val = DH_Vis::BufferType((inDH->getBufferElement(fchannel, sample, station1, polarisation))->real(),
 					(inDH->getBufferElement(fchannel, sample, station1, polarisation)->imag()));
 	    s2_val = DH_Vis::BufferType((inDH->getBufferElement(fchannel, sample, station2, polarisation))->real(),
@@ -169,11 +170,25 @@ void WH_Correlator::process() {
 #endif
 
 #ifdef DO_TIMING
-  cmults = itsNsamples * itsNchannels * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
-//   cout << "Performance: " << 10e-6*cmults/(stoptime-starttime) << " Mcprod/sec" << endl;
-//   cout << itsNsamples << " " << itsNelements << " " << 10e-6*cmults/(stoptime-starttime) << endl;
+#ifdef HAVE_MPI
+  double max_cmults;
 
+  // we're selecting the highest performance figure of the nodes. Since BG/L is a hard real-time 
+  // system, we expect these to be the same for each node. While debugging we're not interrested in 
+  // transient effects on the nodes, so the maximum performance is a reasonable estimate of the real 
+  // performance of the application.
+  cmults = itsNsamples * itsNchannels * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
+  MPI_Reduce(&cmults, &max_cmults, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+  
+  if (TH_MPI::getCurrentRank() == 0) {
+    
+    cout << 10e-6*max_cmults/(stoptime-starttime) << " Mcprod/sec" << endl;
+    //   cout << itsNsamples << " " << itsNelements << " " << 10e-6*cmults/(stoptime-starttime) << endl;
+  }
+
+#endif
   gettimeofday(&t_start, NULL);
+
 #endif
 }				     
 
