@@ -160,7 +160,7 @@ namespace LOFAR
 //    If for whatever reason you don't want to call sdebug() here, use the
 //    cdebug1() macro.
 // 
-#define cdebug1(level)  if( Debug(level) && Debug::stream_time() ) ::Debug::dbg_stream
+#define cdebug1(level)  if( Debug(level) && Debug::stream_time() ) ::Debug::getDebugStream()
 #define cdebug(level)  cdebug1(level)<<sdebug(0)<<": "
 
 //
@@ -180,7 +180,10 @@ namespace LOFAR
 
 namespace Debug
 {
-  extern ostream & dbg_stream;
+  extern ostream * dbg_stream_p;
+  
+  inline ostream & getDebugStream ()
+  { return *dbg_stream_p; }
 
 #ifdef ENABLE_LATENCY_STATS
   extern struct timeval tv_init;
@@ -193,7 +196,7 @@ namespace Debug
   inline int stream_time ()
   {
     struct timeval tv; gettimeofday(&tv,0);
-    dbg_stream<<tv.tv_sec-tv_init.tv_sec<<"."<<tv.tv_usec;
+    getDebugStream()<<tv.tv_sec-tv_init.tv_sec<<"."<<tv.tv_usec;
     return 1;
   }
 #else
@@ -384,7 +387,7 @@ const char exception_message[] = "\n==================================== EXCEPTI
  { if( !(cond) ) { \
      std::ostringstream oss; \
      oss << stream; \
-     ::Debug::dbg_stream << oss.str() << std::endl; \
+     ::Debug::getDebugStream()<<oss.str()<<std::endl; \
      throw LOFAR::AssertError(oss.str()); \
  }}
 
@@ -407,6 +410,8 @@ namespace Debug
   bool saveLevels ( string fname = "" );
   // loads debug levels from file (default: progname.debug) 
   void loadLevels ( string fname = "" );
+  // redirects debug output to file
+  int redirectOutput (const string &fname);
 
   // copies string into static buffer. Thread-safe (i.e. each thread
   // has its own buffer)
@@ -419,8 +424,8 @@ namespace Debug
   // sprintfs to a string, with append & insertion of spaces
   int appendf( string &str,const char *format,... );
   
-  // helper functions and declarations
-  int dbg_printf( const char *format,... );
+//  // helper functions and declarations
+//  int dbg_printf( const char *format,... );
 
 
 //##ModelId=3C21B55E02FC
