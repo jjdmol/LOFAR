@@ -76,14 +76,11 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
   {
       if (seqnr != m_seqnr + 1)
       {
+	  LOG_ERROR(formatString("missed %d packets?", seqnr - m_seqnr - 1));
 	  m_seqnr = seqnr;
 	  return; // skip loose packet
       }
       beamlet_offset = m_nbeamlets / 2;
-  }
-  else // even packet
-  {
-      m_count++;
   }
 
   for (int i = 0; i < m_nbeamlets / 2; i++)
@@ -96,8 +93,9 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
   }
 
   m_seqnr = seqnr;
+  m_count++;
 
-  if ( (m_count % m_nintegrations) == 0)
+  if ( (m_count % (2 * m_nintegrations)) == 0)
   {
       // divide by number of samples = m_count * EPA_SCALING_FACTOR
       m_beamlet_power /= m_nintegrations * EPA_SCALING_FACTOR;
