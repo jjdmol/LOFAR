@@ -20,7 +20,7 @@ int main (int argc,const char *argv[])
     Dispatcher dsp;
     dsp.attach(new LoggerWP(10,Message::LOCAL),DMI::ANON);
     dsp.attach(new MSIntegratorWP, DMI::ANON);
-    //    dsp.attach(new UVSorterWP(0,5),DMI::ANON);
+    dsp.attach(new UVSorterWP(0,5),DMI::ANON);
     
     /*    MSFillerWP *fwp = new MSFillerWP;
     fwp->setHeader("UVData.?.Header");

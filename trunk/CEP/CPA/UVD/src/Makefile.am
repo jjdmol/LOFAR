@@ -1,6 +1,6 @@
 dmi_dir = $(lofar_sharedir)/../DMI
 
-CXXFLAGS += -DAIPSPP_HOOKS -D_GNU_SOURCE
+CXXFLAGS += -DAIPSPP_HOOKS -D_GNU_SOURCE 
 
 lib_LTLIBRARIES = libuvd.la
 

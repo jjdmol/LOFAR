@@ -29,6 +29,7 @@
 
 #include "DMI/DataRecord.h"
 #include "DMI/DataArray.h"
+#include "DMI/AIPSPP-Hooks.h"
 
 #include "UVD/MSReader.h"
 //## end module%3CD133DD02E0.includes
