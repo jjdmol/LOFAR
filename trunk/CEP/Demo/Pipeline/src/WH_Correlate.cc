@@ -20,40 +20,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
-//  %[BugId: 117]%
-//
-//  Initial working version
-//
-//  Revision 1.3  2002/08/19 20:42:14  schaaf
-//  %[BugId: 11]%
-//  Removed dump() call
-//
-//  Revision 1.2  2002/06/07 11:42:43  schaaf
-//  %[BugId: 11]%
-//  Removed Asserts in C'tor
-//
-//  Revision 1.1  2002/05/23 15:40:44  schaaf
-//
-//  %[BugId: 11]%
-//  Added WH_Correlate
-//
-//  Revision 1.5  2002/05/16 15:00:34  schaaf
-//
-//  overall update, added profiler states, removed command line processing, setZ/XOffset and Yoffset
-//
-//  Revision 1.3  2002/05/07 14:59:16  schaaf
-//  optimised performance of process()
-//
-//  Revision 1.2  2002/05/07 11:15:12  schaaf
-//  minor
-//
-//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
-//  initial version
-//
-//
-//
 //////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>             // for sprintf
@@ -225,17 +191,3 @@ void WH_Correlate::dump() const
 }
 
 
-DH_2DMatrix* WH_Correlate::getInHolder (int channel)
-{
-  DbgAssertStr (channel >= 0,          "input channel too low");
-  DbgAssertStr (channel < getInputs(), "input channel too high");
-  TRACER4("channel = " << channel);
-  return itsInHolders[channel];
-}
-
-DH_Correlations* WH_Correlate::getOutHolder (int channel)
-{
-  DbgAssertStr (channel >= 0,           "output channel too low");
-  DbgAssertStr (channel < getOutputs(), "output channel too high");
-  return itsOutHolders[channel];
-}
