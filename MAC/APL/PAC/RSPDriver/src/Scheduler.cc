@@ -73,14 +73,14 @@ GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& /*port*/)
 
     if (!syncHasCompleted())
     {
-      LOG_WARN("previous sync has not yet completed!, skipping sync");
+      LOG_ERROR("previous sync has not yet completed!, skipping sync");
       for (map< GCFPortInterface*, bool >::iterator it = m_sync_completed.begin();
 	   it != m_sync_completed.end();
 	   it++)
       {
 	if (!(*it).second)
 	{
-	  LOG_INFO(formatString("port %s has not yet completed sync, trying to continue...",
+	  LOG_WARN(formatString("port %s has not yet completed sync, trying to continue...",
 				(*it).first->getName().c_str()));
 	}
 
