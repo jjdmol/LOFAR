@@ -37,8 +37,8 @@ namespace LOFAR
     class ObjectId
     {
     public:
-      // We will be using a 64-bit integer for our unique key
-      typedef long oid_t; // (GML)
+      // We will be using a 64-bit integer for our unique key.
+      typedef int64 oid_t;
 
       // Default constructor. If \c doGenerate is true, \c itsOid will be
       // lazily initialized when get() is called, else \c itsOid will be 
