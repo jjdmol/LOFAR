@@ -8,6 +8,8 @@ AppControllerParse.yy		\
 AppControllerTokenize.ll 	\
 AppControllerParseClass.cc 	\
 BaseTransport.cc		\
+BaseDataHolder.cc		\
+ParamHolder.cc			\
 DataHolder.cc			\
 Transport.cc			\
 Transportable.cc		\
