@@ -25,13 +25,13 @@ class UVPTimeFrequencyPlot: public UVPDisplayArea
     
  public:
   
-                 UVPTimeFrequencyPlot(QWidget *parent,
-                                      int numberOfChannels);
+                 UVPTimeFrequencyPlot(QWidget *parent);
   
 
   virtual void drawView();
   
-  
+  void         setChannels(unsigned int numberOfChannels);
+
  public slots:
   
   // Add a spectrum to itsSpectrum.
