@@ -45,6 +45,7 @@ namespace LOFAR
       typedef typename container_t::const_iterator const_iterator;
       typedef typename container_t::iterator       iterator;
       typedef typename container_t::value_type     value_type;
+      typedef typename container_t::size_type      size_type;
 
       iterator begin() { return itsContainer.begin(); }
       const_iterator begin() const { return itsContainer.begin(); }
@@ -58,8 +59,11 @@ namespace LOFAR
       // Remove \e all elements from the collection that are equal to \c t.
       void remove(const T& t) { return itsContainer.remove(t); }
       
-      // Remove all elements from our container
+      // Remove all elements from our container.
       void clear() { itsContainer.clear(); }
+
+      // Return the number of elements in our container.
+      size_type size() { return itsContainer.size(); }
 
     private:
 
