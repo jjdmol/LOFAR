@@ -136,45 +136,45 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
       }
     }
       
+    wstate()[FNext].replace() = next_rqid = rqid;
     next_res.setCells(req.cells());
-    // cache the result for this request. This will be picked up and 
-    // returned by Node::execute() later
-    setCurrentRequest(req);
-    cacheResult(resref,RES_DEP_DOMAIN|RES_UPDATED);
+// 02/04/04: commented out, since it screws up (somewhat) the RES_UPDATED flag
+// going back to old scheme
+//    // cache the result for this request. This will be picked up and 
+//    // returned by Node::execute() later
+//    setCurrentRequest(req);
+//    cacheResult(resref,dependRES_UPDATED);
   }
   return 0;
 }
 
 //##ModelId=3F9FF6AA0300
-int Spigot::getResult (Result::Ref &, 
+int Spigot::getResult (Result::Ref &resref, 
                        const std::vector<Result::Ref> &,
-                       const Request &,bool)
+                       const Request &req,bool)
 {
-// if we get here, this means there was no result placed into the
-// cache by deliver(). In this case, simply return RES_WAIT  
-  return RES_WAIT;
-//   // have we got a cached result?
-//   if( next_res.valid() )
-//   {
-//     // return fail if unable to satisfy this request
-//     if( req.id() != next_rqid )
-//     {
-//       resref <<= new Result(1,req);
-//       VellSet &vs = resref().setNewVellSet(0);
-//       MakeFailVellSet(vs,"spigot: got request id "+
-//                         req.id().toString()+", expecting "+next_rqid.toString());
-//       return RES_FAIL;
-//     }
-//     // return result and clear cache
-//     resref = next_res;
-//     next_rqid.clear();
-//     wstate()[FNext].remove();
-//     return RES_DEP_DOMAIN|RES_UPDATED;
-//   }
-//   else // no result at all, return WAIT
-//   {
-//     return RES_WAIT;
-//   }
+  // have we got a cached result?
+  if( next_res.valid() )
+  {
+    // return fail if unable to satisfy this request
+    if( req.id() != next_rqid )
+    {
+      resref <<= new Result(1,req);
+      VellSet &vs = resref().setNewVellSet(0);
+      MakeFailVellSet(vs,"spigot: got request id "+
+                        req.id().toString()+", expecting "+next_rqid.toString());
+      return RES_FAIL;
+    }
+    // return result and clear cache
+    resref.xfer(next_res);
+    next_rqid.clear();
+    wstate()[FNext].remove();
+    return 0;
+  }
+  else // no result at all, return WAIT
+  {
+    return RES_WAIT;
+  }
 }
 
 }

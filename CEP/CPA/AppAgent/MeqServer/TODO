@@ -1,10 +1,17 @@
+  * Align glish request_id with new C++ structure
+  
+  * Add a test
+
+  * Look for const_cast in Solver and figure out why it's there!
+
 MEQ in general:
 
-  * Think throguh some more RequestId issues:
-    1) user-defined dependencies ("config" would fall into this category)
-    2) dependency on resolution (same domain, different sampling), and
-       how this affects caching issues in a muti-res tree
-
+    * Think through some more RequestId issues:
+      1) user-defined dependencies ("config" would fall into this category)
+      3) dependency on resolution (same domain, different sampling), and
+         how this affects caching issues in a multi-res tree
+      4) document this!
+    
   * Update documentation! (never goes away, does it?)
     Specifically, a Node construction checklist
   

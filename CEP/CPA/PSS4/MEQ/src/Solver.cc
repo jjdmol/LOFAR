@@ -45,7 +45,8 @@ Solver::Solver()
   itsDefClearMatrix  (true),
   itsDefInvertMatrix (true),
   itsDefSavePolcs    (true),
-  itsParmGroup       (AidParm)
+  itsParmGroup       (AidParm),
+  itsSolveDependMask (RQIDM_VALUE)
 {
   resetCur();
   // Set this flag, so setCurState will be called in first getResult.
@@ -152,9 +153,9 @@ int Solver::getResult (Result::Ref &resref,
   Vector<double> solution;
   Vector<double> allSolutions;
   std::vector<Result::Ref> child_results(numChildren());
-  // normalize the request ID to make sure iteration counters, etc,
-  // are part of it
-  HIID rqid = makeNormalRequestId(request.id());
+  // get the request ID -- we're going to be incrementing the 
+  // itsSolveDependMask part of it
+  HIID rqid = request.id();
   // Copy the request and attach the solvable parm specification if needed.
   Request::Ref reqref;
   Request & newReq = reqref <<= new Request(request.cells(),calcDeriv,rqid);
@@ -297,7 +298,9 @@ int Solver::getResult (Result::Ref &resref,
     DataRecord& solRec = metricsRec[step] <<= new DataRecord;
     solve (solution, newReq, solRec, resref, child_results,
            false, step==itsCurNumIter-1);
-    newReq.setId(nextIterationId(rqid));
+    // increment the solce-dependent parts of the request ID
+    incrSubId(rqid,itsSolveDependMask);
+    newReq.setId(rqid);
     // Unlock all parm tables used.
     ParmTable::unlockTables();
   }
@@ -307,7 +310,7 @@ int Solver::getResult (Result::Ref &resref,
   // result depends on domain, and has -- most likely -- been updated
   double* sol = vellset.setReal(nspid, step).data();
   memcpy (sol, allSolutions.data(), nspid*step*sizeof(double));
-  return RES_DEP_DOMAIN|RES_UPDATED;
+  return 0;
 }
 
 void Solver::solve (Vector<double>& solution, const Request& request,
@@ -328,7 +331,7 @@ void Solver::solve (Vector<double>& solution, const Request& request,
     // Do the last solve via an empty request.
     Request & lastReq = reqref <<= new Request;
     req = &lastReq;
-    lastReq.setId(request.id());
+    lastReq.setId(incrSubId(request.id(),itsSolveDependMask));
     lastReq[FRider] <<= new DataRecord;
   }
   // It looks as if in LSQ solveLoop and getCovariance
@@ -411,6 +414,9 @@ void Solver::setStateImpl (DataRecord& newst,bool initializing)
   Node::setStateImpl(newst,initializing);
   newst[FParmGroup].get(itsParmGroup,initializing);
   DataRecord *pdef = newst[FDefault].as_wpo<DataRecord>();
+  
+  newst[FSolveDependMask].get(itsSolveDependMask,initializing);
+  
   // if no default record at init time, create a new one
   if( !pdef && initializing )
     newst[FDefault] <<= pdef = new DataRecord; 

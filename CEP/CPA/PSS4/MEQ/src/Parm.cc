@@ -38,8 +38,11 @@ Parm::Parm()
 : Node  (0), // no children allowed
   solvable_ (false),
   auto_save_(false),
-  parmtable_(0)
-{}
+  parmtable_(0),
+  domain_depend_mask_(RQIDM_CELLS),
+  solve_depend_mask_(RQIDM_VALUE)
+{
+}
 
 //##ModelId=3F86886F0242
 Parm::Parm (const string& name, ParmTable* table,
@@ -49,8 +52,11 @@ Parm::Parm (const string& name, ParmTable* table,
   auto_save_ (false),
   name_      (name),
   parmtable_ (table),
-  default_polc_(defaultValue)
-{}
+  default_polc_(defaultValue),
+  domain_depend_mask_(RQIDM_CELLS),
+  solve_depend_mask_(RQIDM_VALUE)
+{
+}
 
 //##ModelId=3F86886F021E
 Parm::~Parm()
@@ -249,8 +255,9 @@ int Parm::getResult (Result::Ref &resref,
                      const Request &request,bool newreq)
 {
   const Domain &domain = request.cells().domain();
-  HIID domain_id = getDomainId(request.id()); 
+  HIID domain_id = maskSubId(request.id(),domain_depend_mask_); 
   cdebug(2)<<"evaluating parm for domain "<<domain<<endl;
+  int depend = 0;
   
   // Figure out which set of polcs to use for this request.
   // ppolcs will point to either polcs_ or solve_polcs_, depending on
@@ -270,10 +277,14 @@ int Parm::getResult (Result::Ref &resref,
       wstate()[FSolveDomainId] = solve_domain_id_ = domain_id;
     }
     ppolcs = &solve_polcs_;
+    depend |= solve_depend_mask_;
   }
   // Predict only, matches the solve domain? Just use solve_polcs_
   else if( match_solve_domain )
+  {
     ppolcs = &solve_polcs_;
+    depend |= solve_depend_mask_;
+  }
   // predict only, matches the predict domain? Use polcs_
   else if( !domain_id.empty() && domain_id == domain_id_ )
     ppolcs = &polcs_;
@@ -292,21 +303,22 @@ int Parm::getResult (Result::Ref &resref,
   Result &result = resref <<= new Result(1,request); // result has one vellset
   VellSet & vs = result.setNewVellSet(0,0,request.calcDeriv());
   vs.setShape(request.cells().shape());
-  // return depencies: depends on domain, plus parm value, if solvable
-  // NB: should set UPDATED here if we've received a new parm value
-  int retcode = RES_DEP_DOMAIN | (solvable_ ? RES_DEP_ITER : 0);
+  
+  // add dependency on domain, unless we have a single c00 polc
+  if( ppolcs->size()>1 || ppolcs->front()->ncoeff() )
+    depend |= domain_depend_mask_;
+  
+  setDependMask(depend);
   
   // A single polc can be evaluated immediately.
-  if( ppolcs->size() == 1 ) 
+  if( ppolcs->size() == 1 )
   {
     cdebug(3)<<"evaluating and returning single polc"<<endl;
     ppolcs->front()->evaluate(vs,request);
-    // no further dependencies (specifically, not on domain)
-    return retcode;
+    // no further dependencies 
+    return 0;
   }
-  // value now depends on domain and has probably been updated
-  // NB: we need to compare domains above, and adjust UPDATED accordingly
-  retcode |= RES_DEP_DOMAIN | (newreq?RES_UPDATED:0);
+  
   // Get the domain, etc.
   const Cells &cells = request.cells();
   double* datar = 0;
@@ -356,7 +368,7 @@ int Parm::getResult (Result::Ref &resref,
           itime0 == 0 && itime1 == ndTime-1 )
       {
         polc.evaluate(vs,request);
-        return retcode;
+        return 0;
       }
       // Evaluate polc over overlapping part of grid
       VellSet partRes;
@@ -396,7 +408,7 @@ int Parm::getResult (Result::Ref &resref,
       }
     }
   }
-  return retcode;
+  return 0;
 }
 
 //##ModelId=3F86886F023C
@@ -425,6 +437,8 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
   rec[FAutoSave].get(auto_save_,initializing);
   rec[FParmName].get(name_,initializing);
   rec[FSolvable].get(solvable_,initializing);
+  rec[FDomainDependMask].get(domain_depend_mask_,initializing);
+  rec[FSolveDependMask].get(solve_depend_mask_,initializing);
   
   // Are polcs specified? 
   int npolcs = rec[FPolcs].size(TpMeqPolc);
@@ -493,7 +507,7 @@ void Parm::processCommands (const DataRecord &rec,const Request &req)
   DataRecord::Hook hset(rec,FUpdateValues);
   if( hset.exists() )
   {
-    HIID req_domain_id = getDomainId(req.id());
+    HIID req_domain_id = maskSubId(req.id(),domain_depend_mask_);
     if( req_domain_id == solve_domain_id_ )
     {
       cdebug(4)<<"got "<<FUpdateValues<<" command"<<endl;
