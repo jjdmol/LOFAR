@@ -245,9 +245,11 @@ void OnLineProto::define(const KeyValueMap& params)
   WH_Dump*  myWHDumps[NCorr];
   Step*          myDumpSteps[NCorr];
 
+
   for (int s=0; s < NCorr; s++) {
     // ToDo: pass stationID, freq offset etc. to DH
-    myWHDumps[s] = new WH_Dump("noname",1);    
+
+    myWHDumps[s] = new WH_Dump("noname",1,s);
 
     myDumpSteps[s] = new Step(myWHDumps[s],"noname");
     myDumpSteps[s]->runOnNode(0,0);
