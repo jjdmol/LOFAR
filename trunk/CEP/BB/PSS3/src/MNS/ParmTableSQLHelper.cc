@@ -343,7 +343,7 @@ int ParmTableSQLHelper::eight2sevenbits (unsigned char* dest, unsigned char* src
   // but that can be done later
   // right now this is implemented by dividing the value of the
   // char by 2, which is very inefficient but also very easy to implement
-#define USE_BIT_SHIFT
+  //#define USE_BIT_SHIFT
 #if defined USE_BIT_SHIFT
   int bitshift = 0;
   unsigned char* srci = src;
