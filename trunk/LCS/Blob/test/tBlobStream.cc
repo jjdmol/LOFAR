@@ -70,6 +70,92 @@ int doOut (BlobOBuffer* bb, bool header8=false)
   if (header8) ln = 48;
   Assert (bos.putEnd() == ln);
   len += ln;
+
+  bos.putStart ("testall", 1);
+  bool valbl[2];
+  char valsc[2];
+  uchar valuc[2];
+  short valss[2];
+  ushort valus[2];
+  int valsi[2];
+  uint valui[2];
+  float valsf[2];
+  double valsd[2];
+  fcomplex valfc[2];
+  dcomplex valdc[2];
+  string valst[2];
+  bool valb2[] = {false,false,true,true,true,false,true,false,true};
+  valbl[0] = true;
+  valbl[1] = false;
+  valsc[0] = char(2);
+  valsc[1] = char(-20);
+  valuc[0] = uchar(1);
+  valuc[1] = uchar(3);
+  valss[0] = short(22);
+  valss[1] = short(-220);
+  valus[0] = ushort(21);
+  valus[1] = ushort(23);
+  valsi[0] = int(222);
+  valsi[1] = int(-2220);
+  valui[0] = uint(221);
+  valui[1] = uint(223);
+  valsf[0] = float(7.3);
+  valsf[1] = float(-2.4);
+  valsd[0] = double(47.3);
+  valsd[1] = double(-32.4);
+  valdc[0] = fcomplex(-3.4,8.7);
+  valdc[1] = fcomplex(3.4,-8.7);
+  valdc[0] = dcomplex(-43.4,58.7);
+  valdc[1] = dcomplex(33.4,-68.7);
+  valst[0] = string("0123456789");
+  valst[1] = "abcdefghijklmnopqrstuvwxyz";
+  bos << valbl[0];
+  bos << valsc[0];
+  bos << valuc[0];
+  bos << valss[0];
+  bos << valus[0];
+  bos << valsi[0];
+  bos << valui[0];
+  bos << valsf[0];
+  bos << valsd[0];
+  bos << valfc[0];
+  bos << valdc[0];
+  bos << valst[0];
+  bos.put (valb2, sizeof(valb2));
+  bos.put (valbl, 2);
+  bos.put (valsc, 2);
+  bos.put (valuc, 2);
+  bos.put (valss, 2);
+  bos.put (valus, 2);
+  bos.put (valsi, 2);
+  bos.put (valui, 2);
+  bos.put (valsf, 2);
+  bos.put (valsd, 2);
+  bos.put (valfc, 2);
+  bos.put (valdc, 2);
+  bos.put (valst, 2);
+  ln = 233;
+  if (header8) ln += 3;
+  {
+    std::vector<uint> veci(600);
+    std::vector<bool> vecb(veci.size());
+    for (uint i=0; i<veci.size(); i++) {
+      veci[i] = i;
+      vecb[i] = bool(i%3);
+    }
+    bos.put (veci);
+    bos.put (vecb);
+    ln += 4 + 4*veci.size() + 4 + (vecb.size()+7)/8;
+    bool bufb[2007];
+    for (uint i=0; i<2007; i++) {
+      bufb[i] = bool(i%7);
+    }
+    bos.put (bufb, 2007);
+    ln += (2007+7)/8;
+  }
+  Assert (bos.putEnd() == ln);
+  len += ln;
+
   return len;
 }
 
@@ -78,8 +164,8 @@ void doIn (BlobIBuffer* bb, bool header8=false)
   bool  valb;
   int16 val16;
   int64 val64;
-  fcomplex     valfc;
-  dcomplex     valdc;
+  fcomplex     valfcx;
+  dcomplex     valdcx;
   std::string  vals;
 
   BlobIStream bis(bb);
@@ -97,8 +183,8 @@ void doIn (BlobIBuffer* bb, bool header8=false)
   Assert (bis.getStart ("test1") == 1);
   bis >> val16;
   Assert (val16 == 2);
-  bis >> valfc;
-  Assert (valfc == fcomplex(1,2));
+  bis >> valfcx;
+  Assert (valfcx == fcomplex(1,2));
   Assert (bis.getStart ("test1a") == 3);
   bis >> vals;
   Assert (vals.size() == 4  &&  vals == "defg");
@@ -112,11 +198,123 @@ void doIn (BlobIBuffer* bb, bool header8=false)
   Assert (bis.getStart ("test2") == -1);
   bis >> val64;
   Assert (val64 == 100);
-  bis >> valdc;
-  Assert (valdc == dcomplex(5,6));
+  bis >> valdcx;
+  Assert (valdcx == dcomplex(5,6));
   ln = 43;
   if (header8) ln = 48;
   Assert (bis.getEnd() == ln);
+
+  bis.getStart ("testall");
+  bool valbl[2], valblc[2];
+  char valsc[2], valscc[2];
+  uchar valuc[2], valucc[2];
+  short valss[2], valssc[2];
+  ushort valus[2], valusc[2];
+  int valsi[2], valsic[2];
+  uint valui[2], valuic[2];
+  float valsf[2], valsfc[2];
+  double valsd[2], valsdc[2];
+  fcomplex valfc[2], valfcc[2];
+  dcomplex valdc[2], valdcc[2];
+  string valst[2], valstc[2];
+  bool valb2[] = {false,false,true,true,true,false,true,false,true};
+  bool valb2c[sizeof(valb2)];
+  valbl[0] = true;
+  valbl[1] = false;
+  valsc[0] = char(2);
+  valsc[1] = char(-20);
+  valuc[0] = uchar(1);
+  valuc[1] = uchar(3);
+  valss[0] = short(22);
+  valss[1] = short(-220);
+  valus[0] = ushort(21);
+  valus[1] = ushort(23);
+  valsi[0] = int(222);
+  valsi[1] = int(-2220);
+  valui[0] = uint(221);
+  valui[1] = uint(223);
+  valsf[0] = float(7.3);
+  valsf[1] = float(-2.4);
+  valsd[0] = double(47.3);
+  valsd[1] = double(-32.4);
+  valdc[0] = fcomplex(-3.4,8.7);
+  valdc[1] = fcomplex(3.4,-8.7);
+  valdc[0] = dcomplex(-43.4,58.7);
+  valdc[1] = dcomplex(33.4,-68.7);
+  valst[0] = string("0123456789");
+  valst[1] = "abcdefghijklmnopqrstuvwxyz";
+  bis >> valblc[0];
+  Assert (valbl[0] == valblc[0]);
+  bis >> valscc[0];
+  Assert (valsc[0] == valscc[0]);
+  bis >> valucc[0];
+  Assert (valuc[0] == valucc[0]);
+  bis >> valssc[0];
+  Assert (valss[0] == valssc[0]);
+  bis >> valusc[0];
+  Assert (valus[0] == valusc[0]);
+  bis >> valsic[0];
+  Assert (valsi[0] == valsic[0]);
+  bis >> valuic[0];
+  Assert (valui[0] == valuic[0]);
+  bis >> valsfc[0];
+  Assert (valsf[0] == valsfc[0]);
+  bis >> valsdc[0];
+  Assert (valsd[0] == valsdc[0]);
+  bis >> valfcc[0];
+  Assert (valfc[0] == valfcc[0]);
+  bis >> valdcc[0];
+  Assert (valdc[0] == valdcc[0]);
+  bis >> valstc[0];
+  Assert (valst[0] == valstc[0]);
+  bis.get (valb2c, sizeof(valb2c));
+  bis.get (valblc, 2);
+  bis.get (valscc, 2);
+  bis.get (valucc, 2);
+  bis.get (valssc, 2);
+  bis.get (valusc, 2);
+  bis.get (valsic, 2);
+  bis.get (valuic, 2);
+  bis.get (valsfc, 2);
+  bis.get (valsdc, 2);
+  bis.get (valfcc, 2);
+  bis.get (valdcc, 2);
+  bis.get (valstc, 2);
+  for (uint i=0; i<2; i++) {
+    Assert (valbl[i] == valblc[i]);
+    Assert (valsc[i] == valscc[i]);
+    Assert (valuc[i] == valucc[i]);
+    Assert (valss[i] == valssc[i]);
+    Assert (valus[i] == valusc[i]);
+    Assert (valsi[i] == valsic[i]);
+    Assert (valui[i] == valuic[i]);
+    Assert (valsf[i] == valsfc[i]);
+    Assert (valsd[i] == valsdc[i]);
+    Assert (valfc[i] == valfcc[i]);
+    Assert (valdc[i] == valdcc[i]);
+    Assert (valst[i] == valstc[i]);
+  }
+  for (uint i=0; i<sizeof(valb2); i++) {
+    Assert (valb2[i] == valb2c[i]);
+  }
+  {
+    std::vector<uint> veci;
+    std::vector<bool> vecb;
+    bis.get (veci);
+    bis.get (vecb);
+    Assert (veci.size() == 600);
+    Assert (veci.size() == vecb.size());
+    for (uint i=0; i<veci.size(); i++) {
+      AssertStr (veci[i] == i, i);
+      AssertStr (vecb[i] == bool(i%3), i);
+    }
+    bool bufb[2007];
+    bis.get (bufb, 2007);
+    for (uint i=0; i<2007; i++) {
+      Assert (bufb[i] == bool(i%7));
+    }
+  }
+  bis.getEnd();
 }
 
 
@@ -135,6 +333,20 @@ int main()
       {
 	// Use the file as input.
 	std::ifstream is ("tBlobStream_tmp.dat");
+	BlobIBufStream bib(is);
+	doIn (&bib);
+	Assert (int(is.tellg()) == len);
+      }
+      {
+	// Use a standard little-endian file as input.
+	std::ifstream is ("tBlobStream.in_le");
+	BlobIBufStream bib(is);
+	doIn (&bib);
+	Assert (int(is.tellg()) == len);
+      }
+      {
+	// Use a standard big-endian file as input.
+	std::ifstream is ("tBlobStream.in_be");
 	BlobIBufStream bib(is);
 	doIn (&bib);
 	Assert (int(is.tellg()) == len);
@@ -187,8 +399,8 @@ int main()
     }
     {
       // Use an unexpandable preallocated char buffer.
-      uchar buf[200];
-      BlobOBufChar bob(buf,200);
+      uchar buf[3500];
+      BlobOBufChar bob(buf,3500);
       doOut (&bob);
       Assert (bob.getBuffer() == buf);
       BlobIBufChar bib(bob.getBuffer(), bob.size());
