@@ -22,6 +22,12 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.21  2002/07/19 13:52:44  wierenga
+//
+//  %[BugId: 73]%
+//
+//  Add fixedsize parameter to allow fixed message size transfers tests.
+//
 //  Revision 1.20  2002/06/20 07:53:07  wierenga
 //  %[BugId: 33]%
 //
@@ -135,7 +141,6 @@ WH_GrowSize::WH_GrowSize (const string& name,
     sprintf (str, "%d", i);
     itsInHolders[i] = new DH_GrowSize (std::string("in_") + str, nbuffer,
 				       itsSizeFixed);
-    cout << "WH itsSizeFixed = " << itsSizeFixed << endl;
     if (itsSizeFixed)
     {
       itsInHolders[i]->setInitialDataPacketSize(nbuffer);

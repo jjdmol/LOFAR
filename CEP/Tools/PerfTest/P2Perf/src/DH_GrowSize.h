@@ -22,6 +22,12 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.10  2002/07/19 13:52:44  wierenga
+//
+//  %[BugId: 73]%
+//
+//  Add fixedsize parameter to allow fixed message size transfers tests.
+//
 //  Revision 1.9  2002/05/08 14:28:37  wierenga
 //  DataHolder allocation moved from constructor to preprocess to be able to
 //  use TransportHolder::allocate.
@@ -163,7 +169,6 @@ inline int DH_GrowSize::getMaxDataPacketSize(void)
 { return DataHolder::getDataPacketSize(); }
 
 inline bool DH_GrowSize::setInitialDataPacketSize(int initialSize){
-    cout << "initialSize = " << initialSize << endl;
 //  if (initialSize <= this->DataHolder::getMaxDataPacketSize()) {
     if (1) {
     reportedDataPacketSize = initialSize;

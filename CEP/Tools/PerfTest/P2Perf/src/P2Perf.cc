@@ -22,6 +22,12 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.30  2002/07/19 13:52:44  wierenga
+//
+//  %[BugId: 73]%
+//
+//  Add fixedsize parameter to allow fixed message size transfers tests.
+//
 //  Revision 1.29  2002/06/19 10:49:11  wierenga
 //  %[BugId: 33]%
 //
@@ -207,8 +213,6 @@ void P2Perf::define(const ParamBlock& params)
   itsSourceSteps = params.getInt("sources",1);  
   itsDestSteps   = params.getInt("destinations",1);
   itsFixedSize   = params.getInt("fixedsize",0);
-
-  cout << "itsFixedSize = " << itsFixedSize << endl;
 
   bool  WithMPI=false;
 
