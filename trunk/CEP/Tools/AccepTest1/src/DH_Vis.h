@@ -4,20 +4,6 @@
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
-//# This program is free software; you can redistribute it and/or modify
-//# it under the terms of the GNU General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or
-//# (at your option) any later version.
-//#
-//# This program is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License
-//# along with this program; if not, write to the Free Software
-//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
 //# $Id$
 
 #ifndef ONLINEPROTO_DH_VIS_H
@@ -55,7 +41,9 @@ public:
   BufferType* getBuffer();
   /// Get read access to the Buffer in the DataPacket.
   const BufferType* getBuffer() const;
-  BufferType* getBufferElement(int station1, int station2, int channel);
+  BufferType*       getBufferElement(int station1, int station2, int channel);
+  void              addBufferElementVal(int station1, int station2, int channel, BufferType value);
+  void              setBufferElement(int station1, int station2, int channel, BufferType* valueptr);
   const int         getFBW() const;
 
 
@@ -78,6 +66,22 @@ inline DH_Vis::BufferType* DH_Vis::getBuffer()
 
 inline const DH_Vis::BufferType* DH_Vis::getBuffer() const
   { return itsBuffer; }
+
+
+inline DH_Vis::BufferType* DH_Vis::getBufferElement(int station1, int station2, int channel)
+  { 
+    return itsBuffer+station1*nstations*nchannels+station2*nchannels+channel;
+  }
+ 
+inline void DH_Vis::setBufferElement(int station1, int station2, int channel, BufferType* valueptr)
+{
+  *(itsBuffer+station1*nstations*nchannels+station2*nchannels+channel) = *valueptr;
+};
+
+inline void DH_Vis::addBufferElementVal(int station1, int station2, int channel, BufferType value)
+{
+  *(itsBuffer+station1*nstations*nchannels+station2*nchannels+channel) += value;
+};
 
 inline const int DH_Vis::getFBW() const
   { return itsFBW; }
