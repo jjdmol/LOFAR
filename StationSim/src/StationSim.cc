@@ -83,7 +83,8 @@ void StationSim::define (const ParamBlock& params)
   int aweRate = params.getInt ("awerate", 16);
   string rcuName = params.getString ("rcufilename", "");
   string selName = params.getString ("selfilename", "");
-  string coeffName = params.getString ("coefffilename", "");
+  string coeffName1 = params.getString ("coefffilename1", "");
+  string coeffName2 = params.getString ("coefffilename2", "");
   string dipoleName = params.getString ("dipolefilename", "");
   string targetName = params.getString ("targettrackfilename", "");
   string rfiName = params.getString ("rfitrackfilename", "");
@@ -110,7 +111,7 @@ void StationSim::define (const ParamBlock& params)
   }
 
   if (nsub1 > 0) {
-    Step bandsep (WH_BandSep ("", 1, nrcu, nsub1, coeffName),
+    Step bandsep (WH_BandSep ("", 1, nrcu, nsub1, coeffName1),
 		  "bandsep", false);
     bandsep.setOutRate (nsub1, 0);
     simul.addStep (bandsep);
@@ -150,7 +151,7 @@ void StationSim::define (const ParamBlock& params)
   simul.addStep (awe);
 
   if (nsub2 > 0) {
-    Step chanfsep (WH_BandSep ("", 1, nsel*nbeam, nsub2, coeffName),
+    Step chanfsep (WH_BandSep ("", 1, nsel*nbeam, nsub2, coeffName2),
 		  "chanfsep", false);
     chanfsep.setOutRate (nsub1*nsub2, 1);
     simul.addStep (chanfsep);
