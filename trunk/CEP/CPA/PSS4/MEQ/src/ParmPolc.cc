@@ -62,6 +62,10 @@ int ParmPolc::getResult (Result::Ref& result, const Request& request)
 {
   int spidIndex=0;
   initDomain (request.cells().domain(), spidIndex);
+  // Create result object and attach to datarecord in the Node object.
+  Result* resp = new Result();
+  result <<= resp;
+  wstate()[AidResult] <<= static_cast<DataRecord*>(resp);
   // A single polc can be evaluated immediately.
   if (itsPolcs.size() == 1) {
     itsPolcs[0].getResult (result, request);

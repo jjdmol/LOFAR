@@ -57,11 +57,10 @@ int main()
     Add add(&ncos, &p2);
     Domain domain(1,4, -2,3);
     Request req(Cells(domain, 4, 4));
-    Result res;
-    Result::Ref refres(res, DMI::WRITE||DMI::EXTERNAL);;
+    Result::Ref refres;
     int flag = add.getResult (refres, req);
     cout << flag << endl;
-    cout << res.getValue() << endl;
+    cout << refres->getValue() << endl;
   } catch (std::exception& x) {
     cout << "Caught exception: " << x.what() << endl;
     return 1;
