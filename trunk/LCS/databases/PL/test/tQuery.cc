@@ -20,9 +20,9 @@
 //#
 //#  $Id$
 
-#include <PL/Query.h>
+#include <PL/QueryObject.h>
 #include <PL/Query/Expr.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <string>
 #include <iostream>
 
@@ -32,7 +32,8 @@ using namespace LOFAR::PL;
 
 int main(int argc, const char* argv[])
 {
-  Debug::initLevels(argc, argv);
+  // Initialize the logger.
+  INIT_LOGGER(argv[0]);
 
   string      s("string");
   const char* c("const char *");

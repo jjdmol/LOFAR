@@ -22,7 +22,7 @@
 
 #include <PL/TPersistentObject.h>
 #include <PL/Query/ColumnExprNode.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <iostream>
 
 namespace LOFAR
@@ -44,19 +44,19 @@ namespace LOFAR
     {
       PersistentObject::Pointer p;
       if (nm.empty()) return p;
-      AssertStr(nm[0] == '@', "Expected class type specifier in " << nm);
+      ASSERTSTR (nm[0] == '@', "Expected class type specifier in " << nm);
       string cls(nm.substr(1));
-      TRACER2 ("Searching \"" << cls << "\" among ownedPOs ...");
+      LOG_TRACE_COND_STR ("Searching \"" << cls << "\" among ownedPOs ...");
       if (cls.empty()) return p;
       PersistentObject::POContainer::const_iterator it;
       for (it = po.ownedPOs().begin(); it != po.ownedPOs().end(); ++it) {
-        TRACER3 (typeid(**it).name() << " : match?  ");
+        LOG_TRACE_CALC_STR (typeid(**it).name() << " : match?  ");
         if (typeid(**it).name() == cls) {
           p = *it;
-          TRACER3 (" yes");
+          LOG_TRACE_CALC_STR (" yes");
           break;
         }
-        else TRACER3 (" no");
+        else LOG_TRACE_CALC_STR (" no");
       }
       return p;
     }
@@ -68,10 +68,10 @@ namespace LOFAR
       const PersistentObject::attribmap_t& attrMap = po.attribMap();
       PersistentObject::attribmap_t::const_iterator it;
       
-      TRACER2 ("Searching for \"" << nm << "\"");
-      TRACER3 ("Showing contents of attrMap: ");
+      LOG_TRACE_COND_STR ("Searching for \"" << nm << "\"");
+      LOG_TRACE_CALC_STR ("Showing contents of attrMap: ");
       for (it = attrMap.begin(); it != attrMap.end(); ++it) {
-        TRACER3 (" " << it->first << " = " << it->second);
+        LOG_TRACE_CALC_STR (" " << it->first << " = " << it->second);
       }
 
       // Let's do some sanity checks before we start to parse the string: it
@@ -90,10 +90,10 @@ namespace LOFAR
       // PersistentObject po. Hence we don't need to generate a join
       // expression for the ColumnExprNode.
       if ((it = attrMap.find(nm)) != attrMap.end()) {
-        TRACER2 ("Found a match:  " << nm << " --> " << it->second);
+        LOG_TRACE_CALC_STR ("Found a match:  " << nm << " --> " << it->second);
         return new Query::ColumnExprNode(po.tableName(), it->second);
       }
-      TRACER2 ("No match for \"" << nm << "\"");
+      LOG_TRACE_CALC_STR ("No match for \"" << nm << "\"");
 
       // Now we need to search for a match using only part of the string \a
       // nm.  We will start at the end of the string and move towards the
@@ -125,18 +125,18 @@ namespace LOFAR
           rhs = nm.substr(idx+2);
         }
         if ((it = attrMap.find(lhs)) == attrMap.end()) {
-          TRACER2 ("No match for \"" << lhs << "\"");
+          LOG_TRACE_CALC_STR ("No match for \"" << lhs << "\"");
           continue;
         }
-        TRACER2 ("Found a match: " << lhs << " --> " << it->second);
-        TRACER2 ("Trying to resolve class type for \"" << it->second << "\"");
+        LOG_TRACE_CALC_STR ("Found a match: " << lhs << " --> " << it->second);
+        LOG_TRACE_COND_STR ("Trying to resolve class type for \"" << it->second << "\"");
         PersistentObject::Pointer p = resolveClassType(po,it->second);
         if (p)
         {
           Query::Expr left(new Query::ColumnExprNode(po.tableName(),"OBJID"));
           Query::Expr right(new Query::ColumnExprNode(p->tableName(),"OWNER"));
           Query::Expr join(left==right);
-          TRACER3 ("About to call makeAttrib using \"" << rhs 
+          LOG_TRACE_COND_STR ("About to call makeAttrib using \"" << rhs 
                    << "\" as second argument");
           Query::ColumnExprNode* exprNode = makeAttrib(*p, rhs);
           exprNode->addConstraint(join);

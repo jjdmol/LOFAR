@@ -36,8 +36,8 @@ using namespace LOFAR::PL;    // All classes of PL reside in this namespace.
 
 int main(int argc, const char* argv[])
 {
-  // Initialize the tracer.
-  Debug::initLevels(argc, argv);
+  // Initialize the logger
+  INIT_LOGGER(argv[0]);
 
   // Create a vector of Person objects and add some objects.
   vector<Person> vp;

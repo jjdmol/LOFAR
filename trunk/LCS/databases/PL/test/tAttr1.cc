@@ -440,7 +440,8 @@ int main(int argc, const char* argv[])
 {
   bool flag=true;
   try {
-    Debug::initLevels(argc, argv);
+    // Initialize the logger
+    INIT_LOGGER(argv[0]);
 
     // Define the attribute names (in this order).
     theirAttr.push_back ("C::b.A::s");
