@@ -33,16 +33,21 @@ parmtable := function (name, create=F)
     if (create) {
 	# Create the main table.
 	d1 := tablecreatescalarcoldesc ('NAME', '');
-	d3 := tablecreatescalarcoldesc ('STARTTIME', as_double(0));
-	d4 := tablecreatescalarcoldesc ('ENDTIME', as_double(0));
-	d5 := tablecreatescalarcoldesc ('STARTFREQ', as_double(0));
-	d6 := tablecreatescalarcoldesc ('ENDFREQ', as_double(0));
-	d7 := tablecreatearraycoldesc  ('RVALUES', as_double(0));
-	d8 := tablecreatearraycoldesc  ('CVALUES', as_dcomplex(0));
-	d9 := tablecreatearraycoldesc  ('MASK', T);
-	d10:= tablecreatescalarcoldesc ('PERTURBATION', as_double(0));
-	d11:= tablecreatescalarcoldesc ('PERT_REL', T);
-	td := tablecreatedesc (d1, d3, d4, d5, d6, d7, d8, d9, d10, d11);
+	d2 := tablecreatescalarcoldesc ('SRCNR', as_integer(0));
+	d3 := tablecreatescalarcoldesc ('STATNR', as_integer(0));
+	d4 := tablecreatescalarcoldesc ('STARTTIME', as_double(0));
+	d5 := tablecreatescalarcoldesc ('ENDTIME', as_double(0));
+	d6 := tablecreatescalarcoldesc ('STARTFREQ', as_double(0));
+	d7 := tablecreatescalarcoldesc ('ENDFREQ', as_double(0));
+	d8 := tablecreatearraycoldesc  ('RVALUES', as_double(0));
+	d9 := tablecreatearraycoldesc  ('ORIG_RVALUES', as_double(0));
+	d10:= tablecreatearraycoldesc  ('CVALUES', as_dcomplex(0));
+	d11:= tablecreatearraycoldesc  ('ORIG_CVALUES', as_dcomplex(0));
+	d12:= tablecreatearraycoldesc  ('MASK', T);
+	d13:= tablecreatescalarcoldesc ('PERTURBATION', as_double(0));
+	d14:= tablecreatescalarcoldesc ('PERT_REL', T);
+	td := tablecreatedesc (d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11,
+			       d12, d13, d14);
 	self.tab := table (name, td);
 	if (is_fail(self.tab)) {
 	    fail;
@@ -54,7 +59,7 @@ parmtable := function (name, create=F)
 	
 	# Create the table with initial values.
 	itabname := spaste(name,'/INITIALVALUES');
-	td := tablecreatedesc (d1, d7, d8, d9, d10, d11);
+	td := tablecreatedesc (d1, d2, d3, d8, d9, d10, d11, d12, d13, d14);
 	self.itab := table (itabname, td);
 	if (is_fail(self.itab)) {
 	    fail;
@@ -87,7 +92,8 @@ parmtable := function (name, create=F)
 	return T;
     }
 
-    public.putinit := function (parmname='parmXXX', values=0, mask=unset,
+    public.putinit := function (parmname='parmXXX', srcnr=-1, statnr=-1,
+				values=0, mask=unset,
                                 perturbation=1e-6, pertrelative=T, trace=T)
     {
 	#----------------------------------------------------------------
@@ -121,22 +127,24 @@ parmtable := function (name, create=F)
 	self.itab.addrows(1);
 	rownr := self.itab.nrows();
 	self.itab.putcell ('NAME', rownr, parmname);
+	self.itab.putcell ('SRCNR', rownr, srcnr);
+	self.itab.putcell ('STATNR', rownr, statnr);
 	if (! is_unset(mask)) {
 	    self.itab.putcell ('MASK', rownr, mask);
 	}
 	if (is_dcomplex(values) || is_complex(values)) {
 	    self.itab.putcell ('CVALUES', rownr, as_dcomplex(values));
+	    self.itab.putcell ('ORIG_CVALUES', rownr, as_dcomplex(values));
 	} else {
 	    self.itab.putcell ('RVALUES', rownr, as_double(values));
+	    self.itab.putcell ('ORIG_RVALUES', rownr, as_double(values));
 	}
 	self.itab.putcell ('PERTURBATION', rownr, perturbation);
 	self.itab.putcell ('PERT_REL', rownr, pertrelative);
 	return T;
     }
 
-
-
-    public.put := function (parmname='parmYYY', 
+    public.put := function (parmname='parmYYY', srcnr=-1, statnr=-1,
 			    timerange=[1,1e20], freqrange=[1,1e20], 
 			    values=0, mask=unset,
                             perturbation=1e-6, pertrelative=T,
@@ -158,6 +166,8 @@ parmtable := function (name, create=F)
 	    fail 'freqrange should be a vector of 2 elements (start,end)';
 	}
 	t1 := self.tab.query (spaste('NAME=="',parmname,'" ',
+				     '&& SRCNR==',srcnr,
+				     '&& STATNR==',statnr,
 				     '&& near(STARTTIME,', timerange[1],') ',
 				     '&& near(ENDTIME,'  , timerange[2],') ',
 				     '&& near(STARTFREQ,', freqrange[1],') ',
@@ -165,7 +175,8 @@ parmtable := function (name, create=F)
 	nr := t1.nrows();
 	t1.close();
 	if (nr != 0) {
-	    fail paste('Parameter',parmname,'already defined for given domain');
+	    fail paste('Parameter',parmname,'srcnr',srcnr,'statnr',statnr,
+                       'already defined for given domain');
 	}
 	if (length(shape(values)) != 2  ||  !is_numeric(values)) {
 	    fail paste('values should be a 2-dim numerical array');
@@ -176,6 +187,8 @@ parmtable := function (name, create=F)
 	self.tab.addrows(1);
 	rownr := self.tab.nrows();
 	self.tab.putcell ('NAME', rownr, parmname);
+	self.tab.putcell ('SRCNR', rownr, srcnr);
+	self.tab.putcell ('STATNR', rownr, statnr);
 	self.tab.putcell ('STARTTIME', rownr, timerange[1]);
 	self.tab.putcell ('ENDTIME', rownr, timerange[2]);
 	self.tab.putcell ('STARTFREQ', rownr, freqrange[1]);
@@ -185,17 +198,76 @@ parmtable := function (name, create=F)
 	}
 	if (is_dcomplex(values) || is_complex(values)) {
 	    self.tab.putcell ('CVALUES', rownr, as_dcomplex(values));
+	    self.tab.putcell ('ORIG_CVALUES', rownr, as_dcomplex(values));
 	} else {
 	    self.tab.putcell ('RVALUES', rownr, as_double(values));
+	    self.tab.putcell ('ORIG_RVALUES', rownr, as_double(values));
 	}
 	self.tab.putcell ('PERTURBATION', rownr, perturbation);
 	self.tab.putcell ('PERT_REL', rownr, pertrelative);
 	return T;
     }
 
+    public.perturb := function (where='',
+				perturbation=1e-6, pertrelative=T,
+				trace=F)
+    {
+	#----------------------------------------------------------------
+	funcname := paste('** pamtable.perturb(',where,'):');
+	input := [where=where,
+		  perturbation=perturbation, pertrelative=pertrelative];
+	if (trace) print funcname,' input=',input;
+	#----------------------------------------------------------------
+
+	for (i in [1,2]) {
+	    t1 := ref self.itab;
+	    if (i==1) {
+		if (where != '') {
+		    t1 := self.itab.query (where);
+		}
+	    } else {
+		if (where != '') {
+		    t1 := self.tab.query (where);
+		} else {
+		    t1 := ref self.tab;
+		}
+	    }
+	    if (t1.nrows() > 0) {
+		for (row in [1:t1.nrows()]) {
+		    if (t1.iscelldefined ('RVALUES',row)) {
+			a := t1.getcell ('RVALUES', row);
+			if (pertrelative) {
+			    a *:= perturbation;
+			} else {
+			    a +:= perturbation;
+			}
+			t1.putcell ('RVALUES', row, a);
+		    } else {
+			a := t1.getcell ('CVALUES', row);
+			if (pertrelative) {
+			    a *:= perturbation;
+			} else {
+			    a +:= perturbation;
+			}
+			t1.putcell ('CVALUES', row, a);
+		    }
+		}
+	    }
+	}
+	if (where != '') {
+	    t1.close();
+	}
+	return T;
+    }
+
     public.table := function()
     {
 	return ref self.tab;
+    }
+
+    public.inittable := function()
+    {
+	return ref self.itab;
     }
 
     return ref public;

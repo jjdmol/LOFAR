@@ -47,9 +47,9 @@
 #include <MNS/MeqRequest.h>
 #include <MNS/MeqStation.h>
 #include <MNS/MeqStatSources.h>
+#include <MNS/MeqLofarStatSources.h>
 #include <MNS/MeqStatUVW.h>
 #include <MNS/ParmTable.h>
-#include <GSM/SkyModel.h>
 
 /*!
  * Class to perform self-calibration on a MeasurementSet using the
@@ -64,13 +64,15 @@ public:
    * Create MeqCalibrater object for a specific
    * MeaurementSet, MEQ model (with associated MEP database) and skymodel
    * for the specified data descriptor (i.e. spectral window) and antennas.
+   * Currently model types WSRT and LOFAR are recognized.
    */ 
   MeqCalibrater(const String& msName,
 		const String& meqModel,
 		const String& skyModel,
 		uInt ddid,
 		const Vector<Int>& ant1,
-		const Vector<Int>& ant2);
+		const Vector<Int>& ant2,
+		const String& modelType);
 
   //! Destructor
   ~MeqCalibrater();
@@ -200,8 +202,11 @@ private:
   //! Get all baseline info.
   void fillBaselines(const Vector<int>& ant1, const Vector<int>& ant2);
 
-  //! Create the expressions for each baseline.
+  //! Create the WSRT expressions for each baseline.
   void makeWSRTExpr ();
+
+  //! Create the LOFAR expressions for each baseline.
+  void makeLOFARExpr ();
 
   //! Append the current value of the parameters (as MeqMatrix) to rec
   void MeqCalibrater::addParm(const MeqParm& parm, GlishRecord& rec);
@@ -214,8 +219,6 @@ private:
   ROMSMainColumns       itsMSCol;
   Table                 itsSelMS;       //# Selected rows from MS
   ParmTable             itsMEP;
-  Table                 itsGSMTable;
-  GSM::SkyModel         itsGSM;
 
   Vector<uInt>          itsCurRows;     //# Rows in the current iter step
   TableIterator         itsIter;        //# Iterator on selected part of MS
@@ -230,6 +233,7 @@ private:
   vector<MeqStation*>   itsStations;
   vector<MeqStatUVW*>   itsStatUVW;
   vector<MeqStatSources*> itsStatSrc;
+  vector<MeqLofarStatSources*> itsLSSExpr; //# Lofar sources per station
   vector<MeqJonesExpr*> itsStatExpr;    //# Expression per station
   vector<MVBaseline>    itsBaselines;
   vector<MeqHist>       itsCelltHist;   //# Histogram of #cells in time
