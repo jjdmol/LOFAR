@@ -86,7 +86,7 @@ GCFEvent::TResult SweepTest::initial(GCFEvent& e, GCFPortInterface& port)
       case F_CONNECTED:
       {
 	  LOG_DEBUG(formatString("port %s connected", port.getName().c_str()));
-	  TRAN(SweepTest::test001);
+	  TRAN(SweepTest::enabled);
       }
       break;
 
@@ -119,7 +119,7 @@ GCFEvent::TResult SweepTest::initial(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static int timerid = 0;
@@ -131,28 +131,6 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
   {
       case F_ENTRY:
       {
-	LOG_INFO("running test005");
-
-	// send wgsettings
-	ABSWgsettingsEvent wgs;
-	wgs.frequency=1.5625e6; // 1.5625MHz
-	wgs.amplitude=0x8000;
-	TESTC(beam_server.send(wgs));
-      }
-      break;
-      
-      case ABS_WGSETTINGS_ACK:
-      {
-	  // check acknowledgement
-	  ABSWgsettingsAckEvent wgsa(e);
-	  TESTC(ABS_Protocol::SUCCESS == wgsa.status);
-
-#if 0
-	  // send WGENABLE
-	  ABSWgenableEvent wgenable;
-	  TESTC(beam_server.send(wgenable));
-#endif
-
 	  //
 	  // send beam allocation, select a single subband
 	  // this creates the first beam of N_BEAMLETS beams
@@ -166,11 +144,16 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
 	  TESTC(beam_server.send(alloc));
       }
       break;
-
+      
       case ABS_BEAMALLOC_ACK:
       {
 	ABSBeamallocAckEvent ack(e);
 	TESTC(ABS_Protocol::SUCCESS == ack.status);
+	if (ABS_Protocol::SUCCESS != ack.status)
+	{
+	  LOG_FATAL("Failed to allocate beam.");
+	  exit(EXIT_FAILURE);
+	}
 
 	beam_handle = ack.handle;
 	LOG_DEBUG(formatString("got beam_handle=%d", beam_handle));
