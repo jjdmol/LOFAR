@@ -1,4 +1,4 @@
-check_PROGRAMS		= dPerson \
+noinst_PROGRAMS		= dPerson \
 			  dTransport \
 			  dComplex
 
