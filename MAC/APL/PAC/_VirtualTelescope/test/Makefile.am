@@ -28,15 +28,11 @@ avttest_DEPENDENCIES	= \
 BUILT_SOURCES = \
     $(top_builddir)/PAC/BeamServer/src/ABS_Protocol.ph \
     $(top_builddir)/PAC/VirtualTelescope/src/LogicalDevice_Protocol.ph \
-	avttest.ns \
-	avttest.top \
 	log4cplus.properties	
 
 EXTRA_DIST = \
     $(top_builddir)/PAC/BeamServer/src/ABS_Protocol.ph \
     $(top_builddir)/PAC/VirtualTelescope/src/LogicalDevice_Protocol.ph \
-	avttest.ns \
-	avttest.top \
 	log4cplus.properties
 	
 %.properties: $(MAC_CONFIG)/%.properties

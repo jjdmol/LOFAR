@@ -59,6 +59,7 @@ namespace AVT
 
       string& getServerPortName();
       void setClientInterTaskPort(APLInterTaskPort* clientPort);
+      virtual bool isPrepared(vector<string>& parameters);
 
       /**
       * The initial state handler. This handler is passed to the GCFTask constructor

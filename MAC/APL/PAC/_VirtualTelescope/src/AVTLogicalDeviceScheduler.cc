@@ -53,6 +53,7 @@
 using namespace LOFAR;
 using namespace AVT;
 using namespace std;
+using namespace boost;
 
 string AVTLogicalDeviceScheduler::m_schedulerTaskName(LDSNAME);
 string g_bsName(BSNAME);
@@ -63,65 +64,19 @@ AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler() :
   AVTPropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
   m_properties(propertySetLDS,&m_propertySetAnswer),
-  m_apcLDS("ApcLogicalDeviceScheduler", "LogicalDeviceScheduler", &m_propertySetAnswer),
+  m_apcLDS("ApcLogicalDeviceScheduler", "PAC_LogicalDeviceScheduler", &m_propertySetAnswer),
   m_initialized(false),
   m_pBeamServer(0),
   m_WGfrequency(0.0),
   m_WGamplitude(0),
   m_WGsamplePeriod(0),
   m_logicalDeviceMap(),
-  m_logicalDeviceSchedule()
+  m_logicalDeviceSchedule(),
+  m_resourceManager(AVTResourceManager::instance())
 {
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler(%s)",getName().c_str()));
   m_properties.load();
-  
-  /*
-   *  Receptor and ReceptorGroup configuration
-   *  GCF4.0 allows permanent database items, so the RCU's and SRG's can be configured
-   *  in the database at that time.
-   */
-   
-  // create receptors
-  addReceptor(string("RCU1"),propertySetSR1);
-  addReceptor(string("RCU2"),propertySetSR2);
-  addReceptor(string("RCU3"),propertySetSR3);
-  addReceptor(string("RCU4"),propertySetSR4);
-  addReceptor(string("RCU5"),propertySetSR5);
-  addReceptor(string("RCU6"),propertySetSR6);
-  addReceptor(string("RCU7"),propertySetSR7);
-  addReceptor(string("RCU8"),propertySetSR8);
-  
-  // create receptor groups
-  vector<string> receptors;
-  receptors.push_back(string("RCU1"));
-  receptors.push_back(string("RCU2"));
-  receptors.push_back(string("RCU3"));
-  receptors.push_back(string("RCU4"));
-  receptors.push_back(string("RCU5"));
-  receptors.push_back(string("RCU6"));
-  receptors.push_back(string("RCU7"));
-  receptors.push_back(string("RCU8"));
-  addReceptorGroup(string("SRG1"),propertySetSRG1,receptors);
-  receptors.clear();
-  receptors.push_back(string("RCU1"));
-  receptors.push_back(string("RCU2"));
-  receptors.push_back(string("RCU3"));
-  receptors.push_back(string("RCU4"));
-  addReceptorGroup(string("SRG2"),propertySetSRG2,receptors);
-  receptors.clear();
-  receptors.push_back(string("RCU2"));
-  receptors.push_back(string("RCU4"));
-  receptors.push_back(string("RCU6"));
-  receptors.push_back(string("RCU8"));
-  addReceptorGroup(string("SRG3"),propertySetSRG3,receptors);
-  receptors.clear();
-  receptors.push_back(string("RCU5"));
-  receptors.push_back(string("RCU6"));
-  receptors.push_back(string("RCU7"));
-  receptors.push_back(string("RCU8"));
-  addReceptorGroup(string("SRG4"),propertySetSRG4,receptors);
-  
 }
 
 
@@ -131,45 +86,46 @@ AVTLogicalDeviceScheduler::~AVTLogicalDeviceScheduler()
   m_apcLDS.unload();
 }
 
-void AVTLogicalDeviceScheduler::addReceptor(string srName,const TPropertySet& propertySet)
+shared_ptr<AVTStationReceptor> AVTLogicalDeviceScheduler::addReceptor(string srName,const TPropertySet& propertySet)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s)(%s)",getName().c_str(),srName.c_str()));
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s)(%s)",__func__,getName().c_str(),srName.c_str()));
   // create receptor logical device
   LogicalDeviceInfoT      srInfo;
   string srApcName(SRAPCNAME);
-  boost::shared_ptr<AVTStationReceptor> sr(new AVTStationReceptor(srName,propertySet,srApcName,string("PAC_")+srName));
+  shared_ptr<AVTStationReceptor> sr(new AVTStationReceptor(srName,propertySet,srApcName,string("PAC_")+srName));
   srInfo.logicalDevice = sr;
-  srInfo.clientPort.reset(new APLInterTaskPort(*sr.get(),*this, sr->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
+  srInfo.clientPort.reset(new APLInterTaskPort(*sr,*this, sr->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
   sr->setClientInterTaskPort(srInfo.clientPort.get());
   
   m_logicalDeviceMap[srName]=srInfo;
   sr->start();
   srInfo.clientPort->open();
+  
+  return sr;
 }
 
-void AVTLogicalDeviceScheduler::addReceptorGroup(string srgName,const TPropertySet& propertySet, vector<string> receptors)
+void AVTLogicalDeviceScheduler::addReceptorGroup(string srgName,const TPropertySet& propertySet, vector<shared_ptr<AVTStationReceptor> >& receptors)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s)(%s)",getName().c_str(),srgName.c_str()));
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s)(%s)",__func__,getName().c_str(),srgName.c_str()));
   LogicalDeviceInfoT srgInfo;
   string srgApcName(SRGAPCNAME);
-  vector<boost::shared_ptr<AVTStationReceptor> > rcus;
   
   // search receptor logical devices
-  vector<string>::iterator rIt;
+  vector<shared_ptr<AVTStationReceptor> >::iterator rIt;
   for(rIt=receptors.begin();rIt!=receptors.end();++rIt)
   {
-    LogicalDeviceMapIterT ldIt=m_logicalDeviceMap.find(*rIt);
-    if(ldIt!=m_logicalDeviceMap.end())
+    string ldName = (*rIt)->getName();
+    LogicalDeviceMapIterT ldMapIt = m_logicalDeviceMap.find(ldName);
+    if(ldMapIt != m_logicalDeviceMap.end())
     {
-      rcus.push_back(boost::dynamic_pointer_cast<AVTStationReceptor>(ldIt->second.logicalDevice));
-      srgInfo.children[*rIt]=ldIt->second;
+      srgInfo.children[ldName]=ldMapIt->second;
     }
   }
   
   // create receptor group logical device
-  boost::shared_ptr<AVTStationReceptorGroup> srg(new AVTStationReceptorGroup(srgName,propertySet,srgApcName,string("PAC_")+srgName,rcus));
-  srgInfo.logicalDevice=srg;
-  srgInfo.clientPort.reset(new APLInterTaskPort(*srg.get(),*this, srg->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
+  shared_ptr<AVTStationReceptorGroup> srg(new AVTStationReceptorGroup(srgName,propertySet,srgApcName,string("PAC_")+srgName,receptors));
+  srgInfo.logicalDevice = srg;
+  srgInfo.clientPort.reset(new APLInterTaskPort(*srg,*this, srg->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
   srg->setClientInterTaskPort(srgInfo.clientPort.get());
 
   m_logicalDeviceMap[srgName]=srgInfo;
@@ -184,7 +140,7 @@ bool AVTLogicalDeviceScheduler::isInitialized()
 
 AVTLogicalDeviceScheduler::LogicalDeviceMapIterT AVTLogicalDeviceScheduler::findLogicalDevice(const unsigned long scheduleId)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s)(scheduleId=%d)",getName().c_str(),scheduleId));
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s)(scheduleId=%d)",__func__,getName().c_str(),scheduleId));
   LogicalDeviceMapIterT ldIt = m_logicalDeviceMap.end();
   
   // find the schedule
@@ -199,15 +155,15 @@ AVTLogicalDeviceScheduler::LogicalDeviceMapIterT AVTLogicalDeviceScheduler::find
 
 AVTLogicalDeviceScheduler::LogicalDeviceMapIterT AVTLogicalDeviceScheduler::findClientPort(GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s)",getName().c_str()));
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s)",__func__,getName().c_str()));
   LogicalDeviceMapIterT it;
-  for(it=m_logicalDeviceMap.end();it!=m_logicalDeviceMap.end()&&(&port!=it->second.clientPort.get());++it);
+  for(it=m_logicalDeviceMap.begin();it!=m_logicalDeviceMap.end()&&(&port!=it->second.clientPort.get());++it);
   return it;
 }
 
 AVTLogicalDeviceScheduler::LogicalDeviceScheduleIterT AVTLogicalDeviceScheduler::findSchedule(const string& deviceName,LogicalDeviceScheduleIterT beginIt)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s)(ld=%s)",getName().c_str(),deviceName.c_str()));
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s)(ld=%s)",__func__,getName().c_str(),deviceName.c_str()));
   LogicalDeviceScheduleIterT scheduleIt;
   for(scheduleIt=beginIt;scheduleIt!=m_logicalDeviceSchedule.end()&&(deviceName!=scheduleIt->second.deviceName);++scheduleIt);
   return scheduleIt;
@@ -378,7 +334,7 @@ bool AVTLogicalDeviceScheduler::checkStopTimer(const string& deviceName, unsigne
 
 GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s) (%s)",getName().c_str(),evtstr(event)));
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s) (%s)",__func__,getName().c_str(),evtstr(event)));
 
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -388,8 +344,51 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       break;
 
     case F_ENTRY:
-      break;
+    {
+      /*
+      *  Receptor and ReceptorGroup configuration
+      *  GCF4.0 allows permanent database items, so the RCU's and SRG's can be configured
+      *  in the database at that time.
+      */
 
+      // create receptors
+      vector<shared_ptr<AVTStationReceptor> > receptors;
+
+      receptors.push_back(addReceptor(string("RCU1"),propertySetSR1));
+      receptors.push_back(addReceptor(string("RCU2"),propertySetSR2));
+      receptors.push_back(addReceptor(string("RCU3"),propertySetSR3));
+      receptors.push_back(addReceptor(string("RCU4"),propertySetSR4));
+      receptors.push_back(addReceptor(string("RCU5"),propertySetSR5));
+      receptors.push_back(addReceptor(string("RCU6"),propertySetSR6));
+      receptors.push_back(addReceptor(string("RCU7"),propertySetSR7));
+      receptors.push_back(addReceptor(string("RCU8"),propertySetSR8));
+
+      // create receptor groups
+      vector<shared_ptr<AVTStationReceptor> > receptorsSRG1;
+      receptorsSRG1.push_back(receptors[0]);
+      receptorsSRG1.push_back(receptors[1]);
+      receptorsSRG1.push_back(receptors[2]);
+      receptorsSRG1.push_back(receptors[3]);
+      receptorsSRG1.push_back(receptors[4]);
+      receptorsSRG1.push_back(receptors[5]);
+      receptorsSRG1.push_back(receptors[6]);
+      receptorsSRG1.push_back(receptors[7]);
+      vector<shared_ptr<AVTStationReceptor> > receptorsSRG2(receptors.begin(),receptors.begin()+4);
+      vector<shared_ptr<AVTStationReceptor> > receptorsSRG3;
+      vector<shared_ptr<AVTStationReceptor> > receptorsSRG4(receptors.begin()+5,receptors.begin()+8);
+      receptorsSRG3.push_back(receptors[1]);
+      receptorsSRG3.push_back(receptors[3]);
+      receptorsSRG3.push_back(receptors[5]);
+      receptorsSRG3.push_back(receptors[7]);
+
+      addReceptorGroup(string("SRG1"),propertySetSRG1,receptorsSRG1);
+      addReceptorGroup(string("SRG2"),propertySetSRG2,receptorsSRG2);
+      addReceptorGroup(string("SRG3"),propertySetSRG3,receptorsSRG3);
+      addReceptorGroup(string("SRG4"),propertySetSRG4,receptorsSRG4);
+
+      break;
+    }
+    
     case F_CONNECTED:
       break;
     
@@ -439,7 +438,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
         if(scheduleIt != m_logicalDeviceSchedule.end())
         {
           // send release message because no more schedules exist for this logical device
-          GCFEvent releaseEvent(LOGICALDEVICE_RELEASE);
+          LOGICALDEVICEReleaseEvent releaseEvent;
           port.send(releaseEvent);
         }
       }
@@ -471,7 +470,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
     
     case F_TIMER:
     {
-      GCFTimerEvent& timerEvent=dynamic_cast<GCFTimerEvent&>(event);
+      GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
       
       LogicalDeviceMapIterT it = findClientPort(port);
       if(it!=m_logicalDeviceMap.end())
@@ -479,7 +478,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
         if(checkPrepareTimer(it->first,timerEvent.id))
         {
           // this is a prepare timer for the schedule of a logical device. claim the device
-          GCFEvent claimEvent(LOGICALDEVICE_CLAIM);
+          LOGICALDEVICEClaimEvent claimEvent;
           port.send(claimEvent);
           // when the device (and all it's children) is claimed, the prepare message is sent
           // automatically
@@ -487,13 +486,13 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
         else if(checkStartTimer(it->first,timerEvent.id))
         {
           // this is a start timer for the schedule of a logical device. resume the device
-          GCFEvent resumeEvent(LOGICALDEVICE_RESUME);
+          LOGICALDEVICEResumeEvent resumeEvent;
           port.send(resumeEvent);
         }
         else if(checkStopTimer(it->first,timerEvent.id))
         {
           // this is a stop timer for the schedule of a logical device. suspend the device
-          GCFEvent suspendEvent(LOGICALDEVICE_SUSPEND);
+          LOGICALDEVICESuspendEvent suspendEvent;
           port.send(suspendEvent);
         }
         else if(!port.isConnected())
@@ -506,7 +505,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s), default",getName().c_str()));
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s), default",__func__,getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -515,7 +514,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
 
 void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
 {
-//  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("__func__(%s) (%s)",getName().c_str(),evtstr(answer)));
+//  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s) (%s)",__func__,getName().c_str(),evtstr(answer)));
 
   switch(answer.signal)
   {
@@ -599,7 +598,7 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
                   if(ldIt!=m_logicalDeviceMap.end())
                   {
                     srgInfo.logicalDevice = ldIt->second.logicalDevice;
-                    srg=boost::dynamic_pointer_cast<AVTStationReceptorGroup>(srgInfo.logicalDevice);
+                    srg=boost::static_pointer_cast<AVTStationReceptorGroup>(srgInfo.logicalDevice);
 
                     // create SBF
                     string sbfApcName(SBFAPCNAME);

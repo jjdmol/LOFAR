@@ -34,6 +34,7 @@
 #include "AVTStationReceptorGroup.h"
 #include "LogicalDevice_Protocol.ph"
 #include "AVTUtilities.h"
+#include "AVTResourceManager.h"
 
 using namespace LOFAR;
 using namespace AVT;
@@ -327,16 +328,16 @@ void AVTVirtualTelescope::handlePropertySetAnswer(GCFEvent& answer)
         {
           // send message to myself using a dummyport. VT will send it to SBF and SRG
           GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
-          GCFEvent e(LOGICALDEVICE_SUSPEND);
-          dispatch(e,dummyPort); 
+          LOGICALDEVICESuspendEvent suspendEvent;
+          dispatch(suspendEvent,dummyPort); 
         }
         // RESUME
         else if(command==string("RESUME"))
         {
           // send message to myself using a dummyport. VT will send it to SBF and SRG
           GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
-          GCFEvent e(LOGICALDEVICE_RESUME);
-          dispatch(e,dummyPort);
+          LOGICALDEVICEResumeEvent resumeEvent;
+          dispatch(resumeEvent,dummyPort);
         }
       }
       break;
@@ -366,34 +367,73 @@ void AVTVirtualTelescope::concreteClaim(GCFPortInterface& /*port*/)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope(%s)::concreteClaim",getName().c_str()));
   // claim my own resources
+  AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
+  resourceManager->requestResource(getName(),m_stationBeamformer.getName());
+  resourceManager->requestResource(getName(),m_stationReceptorGroup.getName());
   
   // send claim message to BeamFormer and SRG
-  GCFEvent event(LOGICALDEVICE_CLAIM);
-  m_beamFormerClient.send(event);
-  m_stationReceptorGroupClient.send(event);
+  LOGICALDEVICEClaimEvent claimEvent;
+  m_beamFormerClient.send(claimEvent);
+  m_stationReceptorGroupClient.send(claimEvent);
 }
 
 void AVTVirtualTelescope::concretePrepare(GCFPortInterface& /*port*/,string& parameters)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope(%s)::concretePrepare",getName().c_str()));
-  // prepare my own resources
+  
+  bool unableToPrepare = false;
+  AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
+  LOGICALDEVICEPrepareEvent prepareEvent;
   vector<string> decodedParameters;
   AVTUtilities::decodeParameters(parameters,decodedParameters);
-  // parameters: start time,stop time,frequency,subbands,direction type,angle1,angle2
-  setStartTime(atoi(decodedParameters[0].c_str()));
-  setStopTime(atoi(decodedParameters[1].c_str()));
-  setFrequency(atof(decodedParameters[2].c_str()));
-  
-  // send prepare message to BeamFormer
-  // all parameters are forwarded to the beamformer
-  LOGICALDEVICEPrepareEvent prepareEvent;
-  prepareEvent.parameters = parameters;
-  m_beamFormerClient.send(prepareEvent);
-  
-  // send prepare message to StationReceptorGroup
-  // all parameters are forwarded to the SRG
-  prepareEvent.parameters = parameters;
-  m_stationReceptorGroupClient.send(prepareEvent);
+  // if the prepare parameters are already applied, then we don't have to send the prepare msg
+  // if they do not match, then we send the prepare msg if we are master. Otherwise, error
+  if(!m_stationBeamformer.isPrepared(decodedParameters))
+  {  
+    if(resourceManager->isMaster(getName(),m_stationBeamformer.getName()))
+    {
+      // send prepare message to BeamFormer
+      // all parameters are forwarded to the beamformer
+      prepareEvent.parameters = parameters;
+      m_beamFormerClient.send(prepareEvent);
+    }
+    else
+    {
+      LOFAR_LOG_ERROR(VT_STDOUT_LOGGER,("Virtual Telescope %s is not master of %s",getName().c_str(),m_stationBeamformer.getName().c_str()));
+      unableToPrepare = true;
+    }
+  }  
+  if(!unableToPrepare)
+  {
+    if(!m_stationReceptorGroup.isPrepared(decodedParameters))
+    {  
+      if(resourceManager->isMaster(getName(),m_stationReceptorGroup.getName()))
+      {
+        // send prepare message to StationReceptorGroup
+        // all parameters are forwarded to the SRG
+        prepareEvent.parameters = parameters;
+        m_stationReceptorGroupClient.send(prepareEvent);
+      }
+      else
+      {
+        LOFAR_LOG_ERROR(VT_STDOUT_LOGGER,("Virtual Telescope %s is not master of %s",getName().c_str(),m_stationReceptorGroup.getName().c_str()));
+        unableToPrepare = true;
+      }
+    }  
+  }
+  if(!unableToPrepare)
+  {
+    // prepare my own resources
+    // parameters: start time,stop time,frequency,subbands,direction type,angle1,angle2
+    setStartTime(atoi(decodedParameters[0].c_str()));
+    setStopTime(atoi(decodedParameters[1].c_str()));
+    setFrequency(atof(decodedParameters[2].c_str()));
+  }
+  else
+  {
+    LOFAR_LOG_ERROR(VT_STDOUT_LOGGER,("Unable to prepare Virtual Telescope %s",getName().c_str()));
+    TRAN(AVTLogicalDevice::claimed_state);
+  }
 }
 
 void AVTVirtualTelescope::concreteResume(GCFPortInterface& /*port*/)
@@ -402,9 +442,9 @@ void AVTVirtualTelescope::concreteResume(GCFPortInterface& /*port*/)
   // resume my own resources
   
   // send resume message to BeamFormer and SRGT
-  GCFEvent event(LOGICALDEVICE_RESUME);
-  m_beamFormerClient.send(event);
-  m_stationReceptorGroupClient.send(event);
+  LOGICALDEVICEResumeEvent resumeEvent;
+  m_beamFormerClient.send(resumeEvent);
+  m_stationReceptorGroupClient.send(resumeEvent);
 }
 
 void AVTVirtualTelescope::concreteSuspend(GCFPortInterface& /*port*/)
@@ -413,9 +453,9 @@ void AVTVirtualTelescope::concreteSuspend(GCFPortInterface& /*port*/)
   // suspend my own resources
   
   // send suspend message to BeamFormer and SRG
-  GCFEvent event(LOGICALDEVICE_SUSPEND);
-  m_beamFormerClient.send(event);
-  m_stationReceptorGroupClient.send(event);
+  LOGICALDEVICESuspendEvent suspendEvent;
+  m_beamFormerClient.send(suspendEvent);
+  m_stationReceptorGroupClient.send(suspendEvent);
 }
 
 void AVTVirtualTelescope::concreteRelease(GCFPortInterface& /*port*/)
@@ -424,8 +464,8 @@ void AVTVirtualTelescope::concreteRelease(GCFPortInterface& /*port*/)
   // release my own resources
   
   // send release message to BeamFormer and SRG
-  GCFEvent event(LOGICALDEVICE_RELEASE);
-  m_beamFormerClient.send(event);
-  m_stationReceptorGroupClient.send(event);
+  LOGICALDEVICEReleaseEvent releaseEvent;
+  m_beamFormerClient.send(releaseEvent);
+  m_stationReceptorGroupClient.send(releaseEvent);
 }
 

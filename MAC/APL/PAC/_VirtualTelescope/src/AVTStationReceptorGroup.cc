@@ -33,6 +33,7 @@
 #include "AVTStationReceptor.h"
 #include "LogicalDevice_Protocol.ph"
 #include "AVTUtilities.h"
+#include "AVTResourceManager.h"
 
 using namespace LOFAR;
 using namespace AVT;
@@ -59,7 +60,7 @@ AVTStationReceptorGroup::AVTStationReceptorGroup(string& taskName,
                                                  const TPropertySet& primaryPropertySet,
                                                  const string& APCName,
                                                  const string& APCScope,
-                                                 vector<shared_ptr<AVTStationReceptor> > rcus) :
+                                                 vector<shared_ptr<AVTStationReceptor> >& rcus) :
   AVTLogicalDevice(taskName,primaryPropertySet,APCName,APCScope),
   m_stationReceptors(),
   m_startTime(0),
@@ -68,16 +69,21 @@ AVTStationReceptorGroup::AVTStationReceptorGroup(string& taskName,
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::AVTStationReceptorGroup",getName().c_str()));
 
-  vector<shared_ptr<AVTStationReceptor> >::iterator it;
-  for(it=rcus.begin();it!=rcus.end();++it);
+  vector<shared_ptr<AVTStationReceptor> >::iterator rIt;
+  for(rIt=rcus.begin();rIt!=rcus.end();++rIt)
   {
-    TStationReceptorConnection src( *it,
+    shared_ptr<AVTStationReceptor> ptr = *rIt;
+    
+    string portName(ptr->getServerPortName());
+    
+    TStationReceptorConnection src( ptr,
                                     *this,
-                                    (*it)->getServerPortName(), 
+                                    portName, 
                                     GCFPortInterface::SAP,
                                     LOGICALDEVICE_PROTOCOL,
                                     false,
                                     LOGICALDEVICE_STATE_IDLE);
+                                    
     m_stationReceptors.push_back(src);
   }
 }
@@ -123,12 +129,15 @@ bool AVTStationReceptorGroup::setReceptorConnected(GCFPortInterface& port, bool 
   bool found=false;
   while(!found && it!=m_stationReceptors.end())
   {
-    found = (it->clientPort.get() == &port); // comparing two pointers. yuck?
-    it++;
-  }
-  if(found)
-  {
-    it->connected = connected;
+    if(it->clientPort.get() == &port) // comparing two pointers. yuck?
+    {
+      found = true;
+      it->connected = connected;
+    }
+    else
+    {
+      it++;
+    }
   }
   return found;
 }
@@ -433,10 +442,17 @@ void AVTStationReceptorGroup::concreteClaim(GCFPortInterface& /*port*/)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::concreteClaim",getName().c_str()));
   // claim my own resources
+  AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
+  
+  TStationReceptorVectorIter rIt;
+  for(rIt = m_stationReceptors.begin();rIt != m_stationReceptors.end(); ++rIt)
+  {
+    resourceManager->requestResource(getName(),rIt->rcu->getName());
+  }
   
   // send claim message to all receptors
-  GCFEvent event(LOGICALDEVICE_CLAIM);
-  sendToAllReceptors(event);
+  LOGICALDEVICEClaimEvent claimEvent;
+  sendToAllReceptors(claimEvent);
 }
 
 void AVTStationReceptorGroup::concretePrepare(GCFPortInterface& /*port*/,string& parameters)
@@ -463,8 +479,8 @@ void AVTStationReceptorGroup::concreteResume(GCFPortInterface& /*port*/)
   // resume my own resources
   
   // send resume message to BeamFormer
-  GCFEvent event(LOGICALDEVICE_RESUME);
-  sendToAllReceptors(event);
+  LOGICALDEVICEResumeEvent resumeEvent;
+  sendToAllReceptors(resumeEvent);
 }
 
 void AVTStationReceptorGroup::concreteSuspend(GCFPortInterface& /*port*/)
@@ -473,8 +489,8 @@ void AVTStationReceptorGroup::concreteSuspend(GCFPortInterface& /*port*/)
   // suspend my own resources
   
   // send suspend message to BeamFormer
-  GCFEvent event(LOGICALDEVICE_SUSPEND);
-  sendToAllReceptors(event);
+  LOGICALDEVICESuspendEvent suspendEvent;
+  sendToAllReceptors(suspendEvent);
 }
 
 void AVTStationReceptorGroup::concreteRelease(GCFPortInterface& /*port*/)
@@ -483,7 +499,7 @@ void AVTStationReceptorGroup::concreteRelease(GCFPortInterface& /*port*/)
   // release my own resources
   
   // send release message to BeamFormer
-  GCFEvent event(LOGICALDEVICE_RELEASE);
-  sendToAllReceptors(event);
+  LOGICALDEVICEReleaseEvent releaseEvent;
+  sendToAllReceptors(releaseEvent);
 }
 

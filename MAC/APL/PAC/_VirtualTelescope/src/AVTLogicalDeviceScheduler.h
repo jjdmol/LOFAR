@@ -40,11 +40,14 @@
 #include "AVTPropertySetAnswer.h"
 #include "AVTLogicalDevice.h"
 #include "APLInterTaskPort.h"
+#include "AVTResourceManager.h"
 
 // forward declaration
 
 namespace AVT
 {
+  class AVTStationReceptor;
+  
   class AVTLogicalDeviceScheduler : public GCFTask,
                                           AVTPropertySetAnswerHandlerInterface
   {
@@ -117,8 +120,8 @@ namespace AVT
       typedef map<unsigned long,LogicalDeviceScheduleInfoT>   LogicalDeviceScheduleT;
       typedef LogicalDeviceScheduleT::iterator                LogicalDeviceScheduleIterT;
 
-      void addReceptor(string srName,const TPropertySet& propertySet);
-      void addReceptorGroup(string srName,const TPropertySet& propertySet, vector<string> receptors);
+      boost::shared_ptr<AVTStationReceptor> addReceptor(string srName,const TPropertySet& propertySet);
+      void addReceptorGroup(string srName,const TPropertySet& propertySet, vector<boost::shared_ptr<AVTStationReceptor> >& receptors);
       LogicalDeviceMapIterT findLogicalDevice(const unsigned long scheduleId);
       LogicalDeviceMapIterT findClientPort(GCFPortInterface& port);
       LogicalDeviceScheduleIterT findSchedule(const string& deviceName,LogicalDeviceScheduleIterT beginIt);
@@ -157,6 +160,7 @@ namespace AVT
 
       LogicalDeviceMapT       m_logicalDeviceMap;
       LogicalDeviceScheduleT  m_logicalDeviceSchedule;
+      AVTResourceManagerPtr   m_resourceManager;
   };
 };
 #endif

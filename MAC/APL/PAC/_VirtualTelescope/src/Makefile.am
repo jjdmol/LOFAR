@@ -8,6 +8,7 @@ SUFFIXES = .ph
 AVTLogicalDeviceServer_CPPFLAGS= \
 	-I$(top_srcdir)/APLCommon/src \
 	-I$(top_srcdir)/PAC/BeamServer/src \
+	-DBOOST_DISABLE_THREADS \
 	-fmessage-length=0 \
 	-fdiagnostics-show-location=once
 
@@ -16,6 +17,7 @@ AVTLogicalDeviceServer_SOURCES 		= \
 	AVTAPCAnswer.cc \
 	AVTLogicalDevice.cc \
 	AVTLogicalDeviceScheduler.cc \
+	AVTResourceManager.cc \
 	AVTPropertySetAnswer.cc \
 	AVTStationBeamformer.cc \
 	AVTVirtualTelescope.cc \

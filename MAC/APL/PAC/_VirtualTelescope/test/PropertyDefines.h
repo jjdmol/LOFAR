@@ -35,18 +35,18 @@
 #define LDSNAME           "LogicalDeviceScheduler"
 
 
-#define PROPERTY_LDS_COMMAND          "LogicalDeviceScheduler_command"
-#define PROPERTY_LDS_STATUS           "LogicalDeviceScheduler_status"
-#define PROPERTY_LDS_WG_FREQUENCY     "LogicalDeviceScheduler_WaveFormGenerator_frequency"
-#define PROPERTY_LDS_WG_AMPLITUDE     "LogicalDeviceScheduler_WaveFormGenerator_amplitude"
-#define PROPERTY_LDS_WG_SAMPLEPERIOD  "LogicalDeviceScheduler_WaveFormGenerator_samplePeriod"
-#define PROPERTY_VT_COMMAND           "VT1_command"
-#define PROPERTY_VT_STATUS            "VT1_status"
-#define PROPERTY_SBF_COMMAND          "VT1_BF1_command"
-#define PROPERTY_SBF_STATUS           "VT1_BF1_status"
-#define PROPERTY_SBF_DIRECTIONTYPE    "VT1_BF1_directionType"
-#define PROPERTY_SBF_DIRECTIONANGLE1  "VT1_BF1_directionAngle1"
-#define PROPERTY_SBF_DIRECTIONANGLE2  "VT1_BF1_directionAngle2"
+#define PROPERTY_LDS_COMMAND          "PAC_LogicalDeviceScheduler_command"
+#define PROPERTY_LDS_STATUS           "PAC_LogicalDeviceScheduler_status"
+#define PROPERTY_LDS_WG_FREQUENCY     "PAC_LogicalDeviceScheduler_WaveFormGenerator_frequency"
+#define PROPERTY_LDS_WG_AMPLITUDE     "PAC_LogicalDeviceScheduler_WaveFormGenerator_amplitude"
+#define PROPERTY_LDS_WG_SAMPLEPERIOD  "PAC_LogicalDeviceScheduler_WaveFormGenerator_samplePeriod"
+#define PROPERTY_VT_COMMAND           "PAC_VT1_command"
+#define PROPERTY_VT_STATUS            "PAC_VT1_status"
+#define PROPERTY_SBF_COMMAND          "PAC_VT1_BF1_command"
+#define PROPERTY_SBF_STATUS           "PAC_VT1_BF1_status"
+#define PROPERTY_SBF_DIRECTIONTYPE    "PAC_VT1_BF1_directionType"
+#define PROPERTY_SBF_DIRECTIONANGLE1  "PAC_VT1_BF1_directionAngle1"
+#define PROPERTY_SBF_DIRECTIONANGLE2  "PAC_VT1_BF1_directionAngle2"
 
 #define GCF_READWRITE_PROP (GCF_READABLE_PROP | GCF_WRITABLE_PROP)
 
@@ -61,7 +61,7 @@ const TProperty propertiesLDS[] =
 
 const TPropertySet propertySetLDS = 
 {
-  5, "LogicalDeviceScheduler", propertiesLDS
+  5, "PAC_LogicalDeviceScheduler", propertiesLDS
 };
 
 const TProperty primaryPropertiesVT[] =
@@ -74,7 +74,7 @@ const TProperty primaryPropertiesVT[] =
 
 const TPropertySet primaryPropertySetVT = 
 {
-  4, "VT1", primaryPropertiesVT
+  4, "PAC_VT1", primaryPropertiesVT
 };
 
 const TProperty propertiesSR[] =
@@ -90,42 +90,42 @@ const TProperty propertiesSR[] =
 
 const TPropertySet propertySetSR1 = 
 {
-  7, "RCU1", propertiesSR
+  7, "PAC_RCU1", propertiesSR
 };
 
 const TPropertySet propertySetSR2 = 
 {
-  7, "RCU2", propertiesSR
+  7, "PAC_RCU2", propertiesSR
 };
 
 const TPropertySet propertySetSR3 = 
 {
-  7, "RCU3", propertiesSR
+  7, "PAC_RCU3", propertiesSR
 };
 
 const TPropertySet propertySetSR4 = 
 {
-  7, "RCU4", propertiesSR
+  7, "PAC_RCU4", propertiesSR
 };
 
 const TPropertySet propertySetSR5 = 
 {
-  7, "RCU5", propertiesSR
+  7, "PAC_RCU5", propertiesSR
 };
 
 const TPropertySet propertySetSR6 = 
 {
-  7, "RCU6", propertiesSR
+  7, "PAC_RCU6", propertiesSR
 };
 
 const TPropertySet propertySetSR7 = 
 {
-  7, "RCU7", propertiesSR
+  7, "PAC_RCU7", propertiesSR
 };
 
 const TPropertySet propertySetSR8 = 
 {
-  7, "RCU8", propertiesSR
+  7, "PAC_RCU8", propertiesSR
 };
 
 const TProperty propertiesSRG[] =
@@ -141,22 +141,22 @@ const TProperty propertiesSRG[] =
 
 const TPropertySet propertySetSRG1 = 
 {
-  7, "SRG1", propertiesSRG
+  7, "PAC_SRG1", propertiesSRG
 };
 
 const TPropertySet propertySetSRG2 = 
 {
-  7, "SRG2", propertiesSRG
+  7, "PAC_SRG2", propertiesSRG
 };
 
 const TPropertySet propertySetSRG3 = 
 {
-  7, "SRG3", propertiesSRG
+  7, "PAC_SRG3", propertiesSRG
 };
 
 const TPropertySet propertySetSRG4 = 
 {
-  7, "SRG4", propertiesSRG
+  7, "PAC_SRG4", propertiesSRG
 };
 
 const TProperty primaryPropertiesSBF[] =
@@ -170,7 +170,7 @@ const TProperty primaryPropertiesSBF[] =
 
 const TPropertySet primaryPropertySetSBF = 
 {
-  5, "VT1_BF1", primaryPropertiesSBF
+  5, "PAC_VT1_BF1", primaryPropertiesSBF
 };
 
 const TProperty propertiesBeamServer[] =
@@ -449,7 +449,7 @@ const TProperty propertiesBeamServer[] =
 
 const TPropertySet propertySetBeamServer = 
 {
-  257, "BeamServer", propertiesBeamServer
+  257, "PAC_BeamServer", propertiesBeamServer
 };
 
 

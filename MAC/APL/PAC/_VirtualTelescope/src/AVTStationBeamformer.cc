@@ -97,6 +97,43 @@ GCFPort& AVTStationBeamformer::getBeamServerPort()
   return m_beamServer;
 }
 
+bool AVTStationBeamformer::isPrepared(vector<string>& parameters)
+{
+  // compare all parameters with the parameters provided.
+  // if all are equal, then the LD is prepared.
+  bool isPrepared=true;
+  double frequency=atof(parameters[2].c_str());
+  isPrepared = (frequency == m_frequency);
+  if(isPrepared)
+  {
+    vector<int> subbandsVector;
+    AVTUtilities::decodeSubbandsParameter(parameters[3],subbandsVector);
+
+    vector<int>::iterator vectorIterator=subbandsVector.begin();
+    while(isPrepared && vectorIterator!=subbandsVector.end())
+    {
+      isPrepared = (m_subbands.find(*vectorIterator) != m_subbands.end());
+      ++vectorIterator;
+    }
+  }
+  if(isPrepared)
+  {
+    int directionType=convertDirection(parameters[4]);
+    isPrepared = (directionType == m_directionType);
+  }
+  if(isPrepared)
+  {
+    double directionAngle1=atof(parameters[5].c_str());
+    isPrepared = (directionAngle1 == m_directionAngle1);
+  }
+  if(isPrepared)
+  {
+    double directionAngle2=atof(parameters[6].c_str());
+    isPrepared = (directionAngle2 == m_directionAngle2);
+  }
+  return isPrepared;
+}
+
 bool AVTStationBeamformer::_isBeamServerPort(GCFPortInterface& port)
 {
   return (&port == &m_beamServer); // comparing two pointers. yuck?
@@ -335,16 +372,16 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
         {
           // send prepare to myself using a dummyport
           GCFDummyPort dummyPort(this,string("BF_command_dummy"),LOGICALDEVICE_PROTOCOL);
-          GCFEvent e(LOGICALDEVICE_SUSPEND);
-          dispatch(e,dummyPort); // dummyport
+          LOGICALDEVICESuspendEvent suspendEvent;
+          dispatch(suspendEvent,dummyPort); // dummyport
         }
         // RESUME
         else if(command==string(LD_COMMAND_RESUME))
         {
           // send prepare to myself using a dummyport
           GCFDummyPort dummyPort(this,string("BF_command_dummy"),LOGICALDEVICE_PROTOCOL);
-          GCFEvent e(LOGICALDEVICE_RESUME);
-          dispatch(e,dummyPort); // dummyport
+          LOGICALDEVICEResumeEvent resumeEvent;
+          dispatch(resumeEvent,dummyPort); // dummyport
         }
       }
       else if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_STRING) &&
@@ -444,8 +481,8 @@ void AVTStationBeamformer::concreteClaim(GCFPortInterface& port)
   // if claiming is an async process, then the end of the claiming state
   // is determined in the concrete_claiming_state() method
   // Otherwise, it is done here by calling dispatch
-  GCFEvent event(LOGICALDEVICE_CLAIMED);
-  dispatch(event,port);
+  LOGICALDEVICEClaimEvent claimEvent;
+  dispatch(claimEvent,port);
 }
 
 void AVTStationBeamformer::concretePrepare(GCFPortInterface& /*port*/,string& parameters)

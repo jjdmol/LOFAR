@@ -49,6 +49,7 @@ namespace AVT
       virtual ~AVTStationBeamformer();
 
       GCFPort& getBeamServerPort(); // increment 1 only!!!
+      virtual bool isPrepared(vector<string>& parameters);
 
     protected:
       // protected default constructor
