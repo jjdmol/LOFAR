@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.7  2001/11/28 16:15:40  schaaf
+//  .
+//
 //  Revision 1.6  2001/11/05 17:01:07  schaaf
 //  Output of multiple measurement on one line
 //
@@ -52,6 +55,9 @@
 #include "StopWatch.h"
 #include "P2Perf.h"
 
+int  WH_GrowSize::itsMeasurements = 3;
+bool WH_GrowSize::itsFirstcall = true;
+
 WH_GrowSize::WH_GrowSize (const string& name, bool first,
 			unsigned int nin, unsigned int nout,
 			unsigned int nbuffer)
@@ -59,7 +65,9 @@ WH_GrowSize::WH_GrowSize (const string& name, bool first,
   itsInHolders  (0),
   itsOutHolders (0),
   itsBufLength  (nbuffer),
-  itsFirst      (first)
+  itsFirst      (first),
+  itsIteration(itsMeasurements),
+  itsTime(0)
 {
   Firewall::Assert (nin > 0,
 		    __HERE__,
@@ -82,7 +90,15 @@ WH_GrowSize::WH_GrowSize (const string& name, bool first,
     itsOutHolders[i] = new DH_GrowSize (std::string("out_") + str, nbuffer);
   }
 
-  iteration = 0;
+  for (int i=0; i<getInputs(); i++)
+    {
+      (void)itsInHolders[i]->increaseSize(1.0);
+      (void)itsOutHolders[i]->increaseSize(1.0);
+    }
+
+  if (!strncmp("GrowSize[1]", name.c_str(), 11)) {
+    itsIteration --;
+  }
 }
 
 
@@ -105,33 +121,41 @@ WorkHolder* WH_GrowSize::make(const string& name) const
 
 void WH_GrowSize::process()
 {
-  const short Measurements=3;
+
+  itsOutHolders[0]->setTimeStamp(itsTime++);
+#if 0
+  cout << "WH_Growsize::process: Timestamp in= " 
+       << itsInHolders[0]->getTimeStamp()
+       << "   out = " 
+       << itsOutHolders[0]->getTimeStamp()
+       << endl;
+#endif
   if (!strncmp("GrowSize[1]", getName().c_str(), 11))
   {
-    if (iteration > 0)
+    if (!itsFirstcall)
       {
 	watch.stop();
-	if (iteration % Measurements == 1) {
+	if (itsIteration == 0)
+	{
 	  // first measurement; print packet sizes etc.
-	  cout << endl;
-	  cout << itsInHolders[0]->getDataPacketSize() << " "
-	       << log10(itsInHolders[0]->getDataPacketSize()) << " ";
+	  // cout << endl;
+	  //cout << itsInHolders[0]->getDataPacketSize() << " "
+	  //    << log10(itsInHolders[0]->getDataPacketSize()) << " ";
 	}
-	cout << (itsInHolders[0]->getDataPacketSize() / (1024. * 1024.) / watch.elapsed()) 
-	     << "  "
-	     << watch.elapsed()
-	     << "  "
+	//cout << (itsInHolders[0]->getDataPacketSize() / (1024. * 1024.) / watch.elapsed()) 
+	//     << "  "
+	//     << watch.elapsed()
+	//     << "  "
 ;
       }
     watch.start();
   }
-
-  if (!strncmp("GrowSize[1]", getName().c_str(), 11)
-      || (iteration > 0))
+  itsFirstcall = false;
   {
     // perform every measurement Measurements times
-    if (iteration % Measurements == 0)
+    if (itsIteration-- == 0 )
     {
+      itsIteration = itsMeasurements;
       for (int i=0; i<getInputs(); i++)
       {
 	(void)itsInHolders[i]->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
@@ -139,8 +163,6 @@ void WH_GrowSize::process()
       }
     }
   }
-
-  iteration++;
 }
 
 void WH_GrowSize::dump() const
