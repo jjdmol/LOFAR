@@ -83,6 +83,9 @@ namespace LCSMath
   LoMat_dcomplex matMult (const LoVec_dcomplex& A, const LoVec_dcomplex& B);
   LoMat_double   matMult (const LoMat_double& A, const LoMat_double& B);
   LoMat_double   matMult (const LoVec_double& A, const LoVec_double& B);
+
+  // Invert a matrix
+  LoMat_dcomplex  invert (dcomplex det, const LoMat_dcomplex& in);
 };
 
 

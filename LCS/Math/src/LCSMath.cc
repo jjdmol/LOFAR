@@ -37,6 +37,8 @@
 #ifdef HAVE_LAPACK
 #define zheev zheev_
 #define zgesvd zgesvd_
+#define zgetrf zgetrf_
+#define zgetri zgetri_
 extern "C"
 {
   int zheev (const char*, const char*, const int&,
@@ -48,8 +50,22 @@ extern "C"
 	      double*, dcomplex*, const int&,
 	      dcomplex*, const int&, dcomplex*,
 	      const int&, double*, int&);
+
+  int zgetrf (int *m, int *n, dcomplex *a, int *lda, 
+	      int *ipiv, int *info);
+
+  int zgetri (int *n, dcomplex *a, int *lda, int *ipiv, 
+	      dcomplex *work, int *lwork, int *info);
 }
 #endif
+
+// /* Subroutine */ int zgetrf_(integer *m, integer *n, doublecomplex *a, 
+// 	integer *lda, integer *ipiv, integer *info);
+ 
+// /* Subroutine */ int zgetri_(integer *n, doublecomplex *a, integer *lda, 
+// 	integer *ipiv, doublecomplex *work, integer *lwork, integer *info);
+ 
+
 
 // Define some macros for quicksort.
 #define SWAPVALUES(a,b) temp=(a);(a)=(b);(b)=temp;
@@ -462,8 +478,8 @@ namespace LCSMath
 			  a(blitz::Range::all(), k).
 			      transpose(blitz::firstDim, blitz::secondDim)) ;
     }
-    ACM = ACM / double(nsh);
-    ACM = ACM - eye;
+    ACM = ACM/nsh;
+//    ACM = ACM-eye;
     return ACM;
   }
 
@@ -542,6 +558,41 @@ namespace LCSMath
     return out;
   }
 
+  LoMat_dcomplex invert (dcomplex det, const LoMat_dcomplex& in)
+  {
+#ifdef HAVE_LAPACK
+      AssertStr(in.rows() == in.cols(), "The input must be a square matrix!");
+      
+      int m = in.rows();
+      int lda = m; int n = m;               // m, n, lda
+      
+      LoMat_dcomplex out(in.shape());
+      out = in;
+  
+      LoVec_int ipiv(m);                    // ipiv
+      int info;                             // info
+      
+      zgetrf(&m, &n, out.data(), &lda, ipiv.data(), &info);
+      
+      if (info == 0) { // LU decomposition worked! 
+	  // Calculate the determinate
+	  // It is just the product of the diagonal elements
+	  det = out(0,0);
+	  for (int i = 0; i < n; i++)
+	      det *= out(i,i);
+	  
+	  // Calculate the inverse using back substitution
+	  int lwork = 32 * n; // Lazy - we should really get this from ilaenv
+	  LoVec_dcomplex work(lwork);
+	  zgetri(&m, out.data(), &lda, ipiv.data(), work.data(), &lwork, &info);
+      }
+      AssertStr(info >= 0, "Illegal argument to getri or getrf");
+
+      return out;
+#else
+    AssertStr (0, "LCSMath::invert: LAPACK is needed but not configured");
+#endif
+  }   
 
   // Explicit instantiations
   template blitz::Array<dcomplex,1> diag(const blitz::Array<dcomplex,2>&, int);
