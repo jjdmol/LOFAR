@@ -1,6 +1,6 @@
 dmi_dir = $(lofar_sharedir)/../DMI
 
-CXXFLAGS += -Wall -Wno-unknown-pragmas -Wno-deprecated -DUSE_THREADS -D_GNU_SOURCE -pthread
+CXXFLAGS += -Wall -Wno-unknown-pragmas -Wno-deprecated -D_GNU_SOURCE
 
 lib_LTLIBRARIES = liboctopussy-glish.la
 
