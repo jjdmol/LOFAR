@@ -135,14 +135,14 @@ ESCNAME   ([A-Za-z0-9._~$]|(\\.))+
             LOFAR::SimulatorParse::position() += yyleng;
             double value;
 	    sscanf (SimulatorTokenizetext, "%lf%*c", &value);
-            lvalp->val = new LOFAR::KeyValue (complex<double> (0, value));
+            lvalp->val = new LOFAR::KeyValue (LOFAR::makedcomplex (0, value));
 	    return LITERAL;
 	  }
 {COMPLEX} {
             LOFAR::SimulatorParse::position() += yyleng;
             float value;
 	    sscanf (SimulatorTokenizetext, "%f%*c", &value);
-            lvalp->val = new LOFAR::KeyValue (complex<float> (0, value));
+            lvalp->val = new LOFAR::KeyValue (LOFAR::makefcomplex (0, value));
 	    return LITERAL;
 	  }
 {DOUBLE}  {

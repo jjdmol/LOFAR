@@ -39,7 +39,7 @@ namespace LOFAR
 class DH_Example: public DataHolder
 {
 public:
-  typedef complex<float> BufferType;
+  typedef fcomplex BufferType;
 
   explicit DH_Example (const string& name, unsigned int nbuffer = 10);
 

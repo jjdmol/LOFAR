@@ -56,13 +56,13 @@ void DH_Example::preprocess()
 {
   // Add the fields to the data definition.
   addField("Counter", BlobField<int>(1));
-  addField("Buffer", BlobField<BufferType>(1, //version
+  addField("Buffer", BlobField<BufferType>(1,            //version
 					   itsBufSize)); //no_elements
   // Create the data blob (which calls fillPointers).
   createDataBlock();
   // Initialize the buffer.
   for (unsigned int i=0; i<itsBufSize; i++) {
-    itsBuffer[i] = 0;
+    itsBuffer[i] = makefcomplex(0,0);
   }
    // By default use the normal data size as current;
    // only if the user explicitly set another CurDataSize

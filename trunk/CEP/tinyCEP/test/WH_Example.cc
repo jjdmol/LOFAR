@@ -75,8 +75,8 @@ namespace LOFAR
 	InDHptr = (DH_Example*)getDataManager().getInHolder(i);
 	OutDHptr = (DH_Example*)getDataManager().getOutHolder(i);
 
-	InDHptr->getBuffer()[0] = complex<float> (0, 0);
-	OutDHptr->getBuffer()[0] = complex<float> (0, 0);
+	InDHptr->getBuffer()[0]  = makefcomplex(0, 0);
+	OutDHptr->getBuffer()[0] = makefcomplex(0, 0);
 	
 // 	memcpy(InDHptr->getBuffer(), 
 // 	       &inval,
@@ -87,8 +87,8 @@ namespace LOFAR
 // 	       sizeof(DH_Example::BufferType));
 
 
-// 	InDHptr->getBuffer() = complex<float> (5,3);
-// 	OutDHptr->getBuffer() = complex<float> (0,0);
+// 	InDHptr->getBuffer()  = makefcomplex(5,3);
+// 	OutDHptr->getBuffer() = makefcomplex(0,0);
       }
     }	
   }

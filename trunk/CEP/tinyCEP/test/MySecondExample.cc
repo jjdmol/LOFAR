@@ -41,7 +41,7 @@ namespace LOFAR
     itsWHs[0]->basePreprocess();
     itsWHs[1]->basePreprocess();
     
-    ((DH_Example*)itsWHs[0]->getDataManager().getInHolder(0))->getBuffer()[0] = complex<float> (4,3);
+    ((DH_Example*)itsWHs[0]->getDataManager().getInHolder(0))->getBuffer()[0] = makefcomplex(4,3);
   }
 
   void MySecondExample::run(int nsteps) {
