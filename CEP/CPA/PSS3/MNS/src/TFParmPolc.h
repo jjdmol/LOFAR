@@ -52,8 +52,10 @@ public:
   TFParmPolc (unsigned int type, const Matrix<double>& values,
 	      const Matrix<bool>& mask);
 
+  virtual ~TFParmPolc();
+
   // Get the nr of coefficients.
-  unsigned int nrCoeff() const
+  unsigned int ncoeff() const
     { return itsCurCoeff.size(); }
 
   // Initialize the parameter for the given domain.
@@ -64,8 +66,11 @@ public:
   // It returns the number of spids in this parm.
   virtual int setSolvable (int spidIndex);
 
+  // Make the parameter non-solvable.
+  virtual void clearSolvable();
+
   // Get the requested range of the parameter.
-  TFRange getRange (const TFRequest&);
+  virtual TFRange getRange (const TFRequest&);
 
   // Update the solvable parameter with the new value.
   virtual void update (const MnsMatrix& value);
@@ -78,7 +83,6 @@ private:
   int            itsNy;
   vector<double> itsInitialCoeff;
   vector<double> itsCurCoeff;
-  vector<double> itsPerturbedCoeff;
   vector<bool>   itsMask;
   vector<int>    itsSpidInx;     //# -1 is not solvable
 };

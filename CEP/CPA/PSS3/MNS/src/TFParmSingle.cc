@@ -22,6 +22,7 @@
 
 #include <MNS/TFParmSingle.h>
 #include <MNS/TFRequest.h>
+#include <Common/Debug.h>
 #include <aips/Utilities/BinarySearch.h>
 
 TFParmSingle::TFParmSingle (unsigned int type, double value)
@@ -31,13 +32,22 @@ TFParmSingle::TFParmSingle (unsigned int type, double value)
   itsSolveIndex   (-1)
 {}
 
+TFParmSingle::~TFParmSingle()
+{}
+
 void TFParmSingle::init (const TFDomain&)
 {}
 
 int TFParmSingle::setSolvable (int spidIndex)
 {
+  Assert (itsSolveIndex == -1);
   itsSolveIndex = spidIndex;
   return 1;
+}
+
+void TFParmSingle::clearSolvable()
+{
+  itsSolveIndex = -1;
 }
 
 TFRange TFParmSingle::getRange (const TFRequest& request)

@@ -48,7 +48,6 @@ TFRange TFExprPoly::getRange (const TFRequest& request)
   // Evaluate the coefficients.
   for (int i=0; i<itsNx*itsNy; i++) {
     coeffRange[i] = itsCoeff[i]->getRange(request);
-    cout << coeffRange[i];
     coeff[i] = coeffRange[i].getValue().getDouble();
   }
   // Evaluate the expression.

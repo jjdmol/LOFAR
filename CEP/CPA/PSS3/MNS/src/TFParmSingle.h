@@ -37,6 +37,8 @@ public:
   // Create a parameter with the given name.
   explicit TFParmSingle (unsigned int type, double initValue = 1);
 
+  ~TFParmSingle();
+
   // Initialize the parameter for the given domain.
   void init (const TFDomain&);
 
@@ -44,6 +46,9 @@ public:
   // spidIndex is index the first spid of this parm.
   // It returns the number of spids in this parm.
   virtual int setSolvable (int spidIndex);
+
+  // Make the parameter non-solvable.
+  virtual void clearSolvable();
 
   // Get the range of the parameter for the given domain.
   virtual TFRange getRange (const TFRequest&);

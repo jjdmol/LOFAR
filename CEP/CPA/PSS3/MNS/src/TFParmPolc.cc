@@ -46,7 +46,7 @@ TFParmPolc::TFParmPolc (unsigned int type, const Matrix<double>& values)
   bool deleteD;
   const double* vdata = values.getStorage(deleteD);
   for (unsigned int i=0; i<values.nelements(); i++) {
-    itsCurCoeff[i] = vdata[i];
+    itsCurCoeff.push_back (vdata[i]);
   }
   values.freeStorage (vdata, deleteD);
   itsInitialCoeff = itsCurCoeff;
@@ -65,19 +65,24 @@ TFParmPolc::TFParmPolc (unsigned int type, const Matrix<double>& values,
   const double* vdata = values.getStorage(deleteD);
   const bool* mdata = mask.getStorage(deleteM);
   for (unsigned int i=0; i<values.nelements(); i++) {
-    itsCurCoeff[i] = vdata[i];
-    itsMask[i]         = mdata[i];
+    itsCurCoeff.push_back (vdata[i]);
+    itsMask.push_back (mdata[i]);
   }
   values.freeStorage (vdata, deleteD);
   mask.freeStorage (mdata, deleteM);
   itsInitialCoeff = itsCurCoeff;
 }
 
+TFParmPolc::~TFParmPolc()
+{}
+
+void TFParmPolc::init (const TFDomain&)
+{}
 
 int TFParmPolc::setSolvable (int spidIndex)
 {
-  itsPerturbedCoeff = itsCurCoeff;
-  itsSpidInx.reserve (itsCurCoeff.size());
+  Assert (itsSpidInx.size() == 0);
+  itsSpidInx.resize (itsCurCoeff.size());
   int nr=0;
   for (unsigned int i=0; i<itsCurCoeff.size(); i++) {
     if (itsMask[i]) {
@@ -90,30 +95,32 @@ int TFParmPolc::setSolvable (int spidIndex)
   return nr;
 }
 
+void TFParmPolc::clearSolvable()
+{
+  itsSpidInx.clear();
+}
+
 
 TFRange TFParmPolc::getRange (const TFRequest& request)
 {
   const TFDomain& domain = request.domain();
   int ndx = domain.nx();
   int ndy = domain.ny();
-  vector<TFRange> coeffRange(itsNx*itsNy);
   // Evaluate the expression.
   TFRange range(request.nspid());
   Matrix<double> result(ndx, ndy);
   for (int j=0; j<ndy; j++) {
     for (int i=0; i<ndx; i++) {
       double tmp = 0;
-      const MnsMatrix& xterm = request.getCrossTerms (i, j);
-      int inx = 0;
-      for (int cy=0; cy<itsNy; cy++) {
-	for (int cx=0; cx<itsNx; cx++) {
-	  tmp += itsCurCoeff[inx++] * xterm.getDouble(cx,cy);
-	}
+      const double* xterm = request.getCrossTerms(i,j).doubleStorage();
+      for (int k=0; k<itsNx*itsNy; k++) {
+	tmp += itsCurCoeff[k] * xterm[k];
       }
       result(i,j) = tmp;
     }
   }
-  range.setValue (result);
+  MnsMatrix mnsres(result);
+  range.setValue (mnsres);
   // Evaluate (if needed) for the perturbed parameter values.
   vector<MnsMatrix*> valptr(itsCurCoeff.size());
   for (unsigned int spinx=0; spinx<itsSpidInx.size(); spinx++) {
@@ -122,23 +129,16 @@ TFRange TFParmPolc::getRange (const TFRequest& request)
       if (abs(itsCurCoeff[spinx]) > 1e-10) {
 	perturbation = itsCurCoeff[spinx] * 1e-6;
       }
-      itsPerturbedCoeff[spinx] = itsCurCoeff[spinx] + perturbation;
+      MnsMatrix pres(result);
+      double* presData = pres.doubleStorage();
       for (int j=0; j<ndy; j++) {
 	for (int i=0; i<ndx; i++) {
-	  double tmp = 0;
-	  const MnsMatrix& xterm = request.getCrossTerms (i, j);
-	  int inx = 0;
-	  for (int cy=0; cy<itsNy; cy++) {
-	    for (int cx=0; cx<itsNx; cx++) {
-	      tmp += itsPerturbedCoeff[inx++] * xterm.getDouble(cx,cy);
-	    }
-	  }
-	  result(i,j) = tmp;
+	  const double* xterm = request.getCrossTerms(i,j).doubleStorage();
+	  *presData++ += perturbation * xterm[spinx];
 	}
       }
-      range.setPerturbedValue (spinx, result);
+      range.setPerturbedValue (spinx, pres);
       range.setPerturbation (spinx, perturbation);
-      itsPerturbedCoeff[spinx] = itsCurCoeff[spinx];
     }
   }
   return range;
@@ -148,7 +148,7 @@ void TFParmPolc::update (const MnsMatrix& value)
 {
   for (unsigned int i=0; i<itsSpidInx.size(); i++) {
     if (itsSpidInx[i] >= 0) {
-      itsCurCoeff[i] = value.getDouble (itsSpidInx[i], 1);
+      itsCurCoeff[i] = value.getDouble (itsSpidInx[i], 0);
     }
   }
 }

@@ -22,6 +22,7 @@
 
 //# Includes
 #include <MNS/TFRange.h>
+#include <MNS/MnsMatrixTmp.h>
 
 TFRangeRep::TFRangeRep (int nspid)
 : itsCount           (0),
@@ -61,8 +62,9 @@ void TFRangeRep::show (ostream& os) const
   os << "Value: " << itsValue << endl;
   for (unsigned int i=0; i<itsPerturbedValues.size(); i++) {
     if (isDefined(i)) {
-      os << "Perturbed parm " << i << " with " << itsPerturbation[i] << endl;
-      os << "   " << *(itsPerturbedValues[i]) << endl;
+      os << "deriv parm " << i << " with " << itsPerturbation[i] << endl;
+      os << "   " << (*(itsPerturbedValues[i]) - itsValue) /
+	 MnsMatrix(itsPerturbation[i]) << endl;
     }
   }
 }

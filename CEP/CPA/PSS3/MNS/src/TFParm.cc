@@ -36,6 +36,8 @@ TFParm::TFParm (unsigned int type)
   theirParms->push_back (this);
 }
 
+TFParm::~TFParm()
+{}
 
 const vector<TFParm*>& TFParm::getParmList()
 {
