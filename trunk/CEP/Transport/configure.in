@@ -5,7 +5,7 @@ AC_INIT(src/BaseSim.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(tinyCF, 0.1)
+AM_INIT_AUTOMAKE(libTransport, 0.1)
 
 dnl
 dnl Initialize for LOFAR (may set compilers)
@@ -55,6 +55,8 @@ dnl
 lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
+lofar_MPI
+lofar_CORBA
 lofar_PACKAGE(LCS/Common)
 lofar_PACKAGE(LCS/databases/PL)
 
@@ -63,6 +65,8 @@ dnl Output Makefiles
 dnl
 AC_OUTPUT(
 src/Makefile
+src/ShMem/Makefile
+src/Corba/Makefile
 test/Makefile
 Makefile
 )
