@@ -29,7 +29,6 @@
 #include <AMCBase/SkyCoord.h>
 #include <AMCBase/EarthCoord.h>
 #include <AMCBase/TimeCoord.h>
-#include <Common/macros.h>
 
 namespace LOFAR
 {
@@ -37,14 +36,10 @@ namespace LOFAR
   {
 
     
-    ConverterClient::ConverterClient(const string& server, uint16 port)
+    ConverterClient::ConverterClient(const string& /*server*/, uint16 /*port*/)
     {
       // \todo A lot of code that handles setting up the connection with the
       // server, using the Transport library, in particular TH_Socket.
-
-      // Just a temporary hack to avoid the "unused parameter" warning.
-      UNUSED_ARG(server);
-      UNUSED_ARG(port);
     }
 
 

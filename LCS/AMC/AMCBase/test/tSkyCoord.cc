@@ -26,16 +26,14 @@
 //# Includes
 #include <AMCBase/SkyCoord.h>
 #include <Common/LofarLogger.h>
-#include <Common/macros.h>
 #include <iostream>
 
 using namespace LOFAR::AMC;
 using namespace LOFAR;
 using namespace std;
 
-int main(int argc, const char* argv[])
+int main(int /*argc*/, const char* argv[])
 {
-  UNUSED_ARG(argc);
   INIT_LOGGER(argv[0]);
   try {
     SkyCoord sc0;
