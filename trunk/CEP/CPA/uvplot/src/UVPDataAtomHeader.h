@@ -7,8 +7,11 @@
 
 //! Simple class with public(!) members for managing data regarding the
 //! location in the measurement set of UVPDataAtom objects.
-/*!
-  The datamembers are all zero based row indices in the corresponding tables.
+/*!  Its primary purpose is to make looking up and storing UVPDataAtom
+     objects faster by minimizing the number of parameters in function
+     calls.  Pass objects of this class as a reference.  The
+     datamembers are all zero based row indices in the corresponding
+     tables.
  */
 
 class UVPDataAtomHeader
