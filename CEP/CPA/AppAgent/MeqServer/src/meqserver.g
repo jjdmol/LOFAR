@@ -89,6 +89,7 @@ const meqserver := function (appid='MeqServer',
       replyname := to_lower(cmd_name ~ s/\./_/g);
       replyname := public.eventname('out_app_result',replyname,rqid);
       self.dprint(3,'sending command ',cmd_name);
+      self.dprint(5,'arguments are ',args);
       res := public.command(reqname,[request_id=rqid,args=args]);
       if( is_fail(res) )
       {
@@ -102,6 +103,7 @@ const meqserver := function (appid='MeqServer',
     else
     {
       self.dprint(3,'sending command ',cmd_name,' with no wait');
+      self.dprint(5,'arguments are ',args);
       return public.command(spaste('Command.',cmd_name),[args=args]);
     }
   }
