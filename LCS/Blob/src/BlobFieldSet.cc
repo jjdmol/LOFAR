@@ -31,8 +31,10 @@
 
 namespace LOFAR {
 
+#ifdef ENABLE_TRACER
   INIT_TRACER_CONTEXT(BlobFieldSet, "BlobFieldSet");
-  
+#endif  
+
   BlobFieldSet::BlobFieldSet (const std::string& name)
     : itsName          (name),
       itsVersion       (0),
