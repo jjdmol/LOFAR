@@ -32,33 +32,46 @@ namespace RSP
 {
   class BWSync : public SyncAction
   {
+      enum SyncMode
+      {
+	SYNC_XRE = 1,
+	SYNC_XIM,
+	SYNC_YRE,
+	SYNC_YIM,
+      };
+
     public:
       /**
        * Constructors for a BWSync object.
        */
-      explicit BWSync(GCFPortInterface& board_port, int board_id);
+      explicit BWSync(GCFPortInterface& board_port, int board_id, int regid);
 	  
       /* Destructor for BWSync. */
       virtual ~BWSync();
 
+      /*@{*/
       /**
-       * The main event handler
+       * The states of the statemachine.
        */
-      GCFEvent::TResult handler(GCFEvent& event, GCFPortInterface& port);
+      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+      GCFEvent::TResult senddata_state(GCFEvent& event, GCFPortInterface& port);
+      GCFEvent::TResult waitstatus_state(GCFEvent& event, GCFPortInterface& port);
+      /*@}*/
 
       /**
        * Write beamformer coefficients for blp to the RSP board.
        */
-      void writecoef(GCFPortInterface& port, uint8 blp);
+      void writecoef(uint8 blp);
 
       /**
        * Read the board status.
        */
-      void readstatus(GCFPortInterface& port);
+      void readstatus();
 
     private:
-      uint8 m_current_blp;
-      int   m_retries;
+      int m_current_blp;
+      int m_retries;
+      int m_regid;
   };
 };
      

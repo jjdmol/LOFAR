@@ -32,7 +32,7 @@ using namespace RSP;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 
-Scheduler::Scheduler()
+Scheduler::Scheduler() : m_sync_done(false)
 {
 }
 
@@ -63,17 +63,22 @@ Scheduler::~Scheduler()
     delete c;
     m_done_queue.pop();
   }
-  while (!m_syncactions.empty())
+
+  for (map< GCFPortInterface*, vector<SyncAction*> >::iterator port = m_syncactions.begin();
+       port != m_syncactions.end();
+       port++)
   {
-    SyncAction* sa = m_syncactions.top();
-    delete sa;
-    m_syncactions.pop();
+    for (vector<SyncAction*>::iterator sa = (*port).second.begin();
+	 sa != (*port).second.end();
+	 sa++)
+    {
+      delete (*sa);
+    }
   }
 }
 
-GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
   const GCFTimerEvent* timeout = static_cast<const GCFTimerEvent*>(&event);
   
   if (F_TIMER == event.signal)
@@ -84,26 +89,55 @@ GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& port)
 
     scheduleCommands();
     processCommands();
-    status = syncCache(event, port);
-    m_cache.swapBuffers();
-    completeCommands();
+
+    initiateSync(event); // matched by completeSync
   }
   else
   {
     LOG_ERROR("received invalid event != F_TIMER");
   }
 
-  return status;
+  return GCFEvent::HANDLED;
 }
 
 GCFEvent::TResult Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
 {
-  return syncCache(event, port);
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFTimerEvent timer;
+  GCFEvent* current_event = &event;
+  
+  /**
+   * Dispatch the event to the first SyncAction that
+   * has not yet reached its 'final' state.
+   */
+  for (vector<SyncAction*>::iterator sa = m_syncactions[&port].begin();
+       sa != m_syncactions[&port].end();
+       sa++)
+  {
+    if (!(*sa)->hasCompleted())
+    {
+      status = (*sa)->dispatch(*current_event, (*sa)->getBoardPort());
+
+      //
+      // if the syncaction has not yet been completed, break the loop
+      // it will receive another event to continue
+      //
+      if (!(*sa)->hasCompleted()) break;
+      else current_event = &timer;
+    }
+  }
+
+  if (m_sync_done)
+  {
+    completeSync();
+  }
+
+  return status;
 }
 
 void Scheduler::addSyncAction(SyncAction* action)
 {
-  m_syncactions.push(action);
+  m_syncactions[&(action->getBoardPort())].push_back(action);
 }
 
 Timestamp Scheduler::enter(Command* command)
@@ -190,24 +224,68 @@ void Scheduler::processCommands()
   }
 }
 
-GCFEvent::TResult Scheduler::syncCache(GCFEvent& event, GCFPortInterface& port)
+void Scheduler::initiateSync(GCFEvent& event)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  /* copy the m_syncactions queue */
-  std::priority_queue<SyncAction*> runqueue = m_syncactions;
-
-  if (!runqueue.empty())
+  /**
+   * Send the first syncaction for each board the timer
+   * event to set of the data communication to each board.
+   */
+  for (map< GCFPortInterface*, vector<SyncAction*> >::iterator port = m_syncactions.begin();
+       port != m_syncactions.end();
+       port++)
   {
-    SyncAction* action = runqueue.top();
-
-    status = action->dispatch(event, port);
-
-    if (action->isFinal()) runqueue.pop();
+    for (vector<SyncAction*>::iterator sa = (*port).second.begin();
+	 sa != (*port).second.end();
+	 sa++)
+    {
+      (*sa)->setCompleted(false);
+    }
+    
+    // send F_TIMER event to first syncactions for each board
+    if (!(*port).second.empty())
+    {
+      (*port).second[0]->dispatch(event, (*port).second[0]->getBoardPort());
+    }
   }
-
-  return status;
 }
+
+void Scheduler::completeSync()
+{
+  m_cache.swapBuffers();
+  completeCommands();
+}
+
+// GCFEvent::TResult Scheduler::syncCache(GCFEvent& event, GCFPortInterface& port)
+// {
+//   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+//   bool done = true;
+
+//   if (m_current_priority < 0)
+//   {
+//     LOG_WARN("unhandled event, m_syncactions already completed");
+//     return GCFEvent::NOT_HANDLED;
+//   }
+  
+//   for (vector<SyncAction*>::iterator it = m_syncactions[m_current_priority].begin();
+//        it != m_syncactions[m_current_priority].end();
+//        it++)
+//   {
+//     if (!(*it)->isFinal())
+//     {
+//       status = (*it)->dispatch(event, port);
+//       if (GCFEvent::NOT_HANDLED == status)
+//       {
+// 	LOG_WARN("unhandled event");
+//       }
+//     }
+
+//     if (!(*it)->isFinal()) done = false;
+//   }
+
+//   if (done) m_current_priority--;
+  
+//   return GCFEvent::HANDLED;
+// }
 
 void Scheduler::completeCommands()
 {

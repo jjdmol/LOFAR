@@ -41,33 +41,30 @@ namespace RSP
       virtual ~SyncAction();
 
       /**
-       * Set the priority. The priority determines when
-       * a synaction is carried out relative to other
-       * sync actions.
-       */
-      void setPriority(int priority);
-
-      /**
        * Get the board id for this sync action.
        */
       int getBoardId();
+
+      /**
+       * Get a reference to the port for SyncAction.
+       */
+      GCFPortInterface& getBoardPort();
 
       /*@{*/
       /**
        * Has the state machine reached its final state?
        */
-      void setFinal(bool final);
-      bool isFinal() const;
+      void setCompleted(bool final);
+      bool hasCompleted() const;
       /*@}*/
 
     private:
       SyncAction();
 
     private:
-      int               m_priority;
       GCFPortInterface& m_board_port;
       int               m_board_id;
-      bool              m_final; /** indicates whether the state machine has reached its final state */
+      bool              m_completed; /** indicates whether the state machine has reached its final state */
   };
 };
      
