@@ -1,4 +1,4 @@
-//# TH_Ethernet.h: Transport mechanism for Ethernet 
+//# TH_Ethernet.h: Transport mechanism for Raw Ethernet 
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -35,16 +35,15 @@ namespace LOFAR
 {
 
 /**
-   This class defines the transport mechanism for RAW Ethernet 
-   communication between dataholders.
+   This class defines the transport mechanism for RAW Ethernet communication
 */
+
+#define MIN_FRAME_LEN 200
 
 class TH_Ethernet: public TransportHolder
 {
 public:
-  TH_Ethernet(const char* ifname, 
-              const char* remoteMac, 
-              unsigned short ethertype = 0x0000);
+  TH_Ethernet(char* ifname, char* rMac, char* oMac, unsigned short etype = 0x0000, bool dhcheck = true);
   
   virtual ~TH_Ethernet();
 
@@ -76,12 +75,19 @@ public:
   
  private:  
   int _socketFD;
-  bool _initDone;
-  char _ifname[IFNAMSIZ];
-  char _remoteMac[ETH_ALEN];
-  char _recvPacket[ETH_FRAME_LEN];
-  char _sendPacket[ETH_FRAME_LEN];
+  int _maxdatasize;
+  int _maxframesize;
+  
+  char* _ifname;
+  char* _remoteMac;
+  char* _ownMac;
+  char* _recvPacket; 
+  char* _sendPacket; 
   char* _sendPacketData;
+  
+  bool _dhcheck;
+  bool _initDone;
+  
   unsigned short _ethertype;
   struct sockaddr_ll _sockaddr;
 
