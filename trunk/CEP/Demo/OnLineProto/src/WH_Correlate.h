@@ -30,8 +30,7 @@
 #include "OnLineProto/DH_Vis.h"
 
 #include <blitz/blitz.h>
-#include <Common/Lorrays.h>
-
+#include <blitz/array.h>
 
 namespace LOFAR
 {
@@ -75,6 +74,10 @@ private:
   // main correlator routine
   void correlator_core(blitz::Array<complex<float>, 2>& signal,
 		       blitz::Array<complex<float>, 2>& corr);
+
+  // correlator core (unrolled)
+  void correlator_core_unrolled(blitz::Array<complex<float>, 2>& s,
+				blitz::Array<complex<float>, 2>& c);
     
   int itsFBW; // frequency bandwidth of the DH_Beamlet 
 
@@ -86,7 +89,6 @@ private:
 
   static const int itsNelements = 100;  // number of stations/inputs
   static const int itsNitems    = 1000; // number of frequency channels * number of time samples
-
 
 };
 
