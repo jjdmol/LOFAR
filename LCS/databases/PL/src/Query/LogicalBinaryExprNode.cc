@@ -1,6 +1,6 @@
-//#  UnaryExprNode.h: one line description
+//#  LogicalBinaryExprNode.cc: one line description
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,14 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_PL_QUERY_UNARYEXPRNODE_H
-#define LOFAR_PL_QUERY_UNARYEXPRNODE_H
-
-//# Includes
-#include <lofar_config.h>
-#include <PL/Query/Expr.h>
-#include <PL/Query/ExprNode.h>
-#include <string>
+#include <PL/Query/LogicalBinaryExprNode.h>
+#include <iostream>
 
 namespace LOFAR
 {
@@ -35,39 +29,28 @@ namespace LOFAR
   {
     namespace Query
     {
-      // @defgroup UnaryExprNode Unary Expression Nodes
-      // @ingroup ExprNode
 
-      // @ingroup UnaryExprNode
-      // This class represents a unary expression node. A unary expression is
-      // an expression that takes one operator and one operand.
-      class UnaryExprNode : public ExprNode
+      LogicalBinaryExprNode::LogicalBinaryExprNode(const std::string& oper, 
+                                                   const Expr& lhs, 
+                                                   const Expr& rhs) :
+        itsOperation(oper), 
+        itsLeft(lhs), itsRight(rhs)
       {
-      public:
-        // Construct a unary expression node.
-        UnaryExprNode(const std::string& oper, 
-                      const Expr& value);
+      }
 
-        virtual ~UnaryExprNode();
-
-        virtual void print(std::ostream& os) const;
-
-        virtual Expr getConstraint() const;
-
-      private:
-
-        // The operation
-        const std::string itsOperation;
-
-        // The operand
-        const Expr        itsOperand;
-
-      };
+      void LogicalBinaryExprNode::print(std::ostream& os) const
+      {
+        Expr lhs(itsLeft.getConstraint());
+        Expr rhs(itsRight.getConstraint());
+        os << "(";
+        if (!lhs.isNull()) os << lhs << " AND ";
+        os << itsLeft << itsOperation << itsRight; 
+        if (!rhs.isNull()) os << " AND " << rhs;
+        os << ")";
+      }
 
     } // namespace Query
 
   } // namespace PL
 
 } // namespace LOFAR
-
-#endif

@@ -45,6 +45,11 @@ namespace LOFAR
         os << "(" << itsOperation << itsOperand << ")";
       }
 
+      Expr UnaryExprNode::getConstraint() const
+      {
+        return itsOperand.getConstraint();
+      }
+
     } // namespace Query
 
   } // namespace PL

@@ -25,6 +25,7 @@
 
 //# Includes
 #include <lofar_config.h>
+#include <PL/Query/Expr.h>
 #include <PL/Query/ExprNode.h>
 #include <string>
 
@@ -34,25 +35,46 @@ namespace LOFAR
   {
     namespace Query
     {
-      //# Forward Declarations
-
-      // Description of class.
+      // @ingroup ExprNode
+      //
+      // This class represents a column expression node. A column expression
+      // is an expression that takes two operands, a table name and a column
+      // name. A column expression node provides the glue between the class
+      // attribute in the object-oriented world and the table name and column
+      // name in the relational database world.
+      //
+      // The key role in this class is reserved for the attribute \c
+      // itsConstraint. This attribute stores the constraints that must be
+      // applied when more than one class is involved in an expression. In
+      // "SQL speak" we would say that the constraints represent the joins
+      // that must be made when composing the SQL expression.
+      //
+      // Example: [TBW]
+      //
       class ColumnExprNode : public ExprNode
       {
       public:
 
         // Construct a column expression node.
-        ColumnExprNode(const std::string& column,
-                       const std::string& constraint = "");
+        ColumnExprNode(const std::string& tableName,
+                       const std::string& columnName);
 
         virtual ~ColumnExprNode();
-
+        
+        // Print the expression node into an output stream.
         virtual void print(std::ostream& os) const;
+        
+        // Return the constraint associated with this expression node.
+        virtual Expr getConstraint() const;
+
+        // Add a constraint to this expression node.
+        void addConstraint(const Expr& expr);
 
       private:
 
-        std::string itsColumn;
-        std::string itsConstraint;
+        const std::string itsTableName;
+        const std::string itsColumnName;
+        Expr              itsConstraint;
 
       };
 

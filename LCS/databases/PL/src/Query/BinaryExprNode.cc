@@ -46,6 +46,11 @@ namespace LOFAR
         os << "(" << itsLeft << itsOperation << itsRight << ")"; 
       }
 
+      Expr BinaryExprNode::getConstraint() const
+      {
+        return itsLeft.getConstraint() && itsRight.getConstraint();
+      }
+
     } // namespace Query
 
   } // namespace PL

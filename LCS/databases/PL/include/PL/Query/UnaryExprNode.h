@@ -35,7 +35,10 @@ namespace LOFAR
   {
     namespace Query
     {
+      // @defgroup UnaryExprNode Unary Expression Nodes
+      // @ingroup ExprNode
 
+      // @ingroup UnaryExprNode
       // This class represents a unary expression node. A unary expression is
       // an expression that takes one operator and one operand.
       class UnaryExprNode : public ExprNode
@@ -45,12 +48,11 @@ namespace LOFAR
         UnaryExprNode(const std::string& oper, 
                       const Expr& value);
 
-//         UnaryExprNode(const std::string& oper,
-//                       const ExprNodeSet& set);
-
         virtual ~UnaryExprNode();
 
         virtual void print(std::ostream& os) const;
+
+        virtual Expr getConstraint() const;
 
       private:
 

@@ -58,6 +58,16 @@ namespace LOFAR
         // in through \p node and store it in a reference counted pointer.
         Expr(ExprNode* const node);
 
+        // Print the expression into an output stream. Printing an expression
+        // implies printing the expression node and its associated constraint.
+        void print(std::ostream& os) const;
+
+        // Test whether this expression is a null expression.
+        bool isNull() const;
+
+        // Return the constraints associated with this expression.
+        Expr getConstraint() const;
+
         // @name Unary operators
         //@{
         Expr operator+ () const;

@@ -1,6 +1,6 @@
-//#  BinaryExprNode.h: one line description
+//#  LogicalBinaryExprNode.h: one line description
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_PL_QUERY_BINARYEXPRNODE_H
-#define LOFAR_PL_QUERY_BINARYEXPRNODE_H
+#ifndef LOFAR_PL_QUERY_LOGICALBINARYEXPRNODE_H
+#define LOFAR_PL_QUERY_LOGICALBINARYEXPRNODE_H
 
 //# Includes
 #include <lofar_config.h>
@@ -35,24 +35,29 @@ namespace LOFAR
   {
     namespace Query
     {
-      // @defgroup BinaryExprNode Binary Expression Nodes
-      // @ingroup ExprNode
-
       // @ingroup BinaryExprNode
-      // This class represents a binary expression node. A binary expression
-      // is an expression that takes one operator and two operands, one
-      // left-hand-side operand and one right-hand-side operand.
-      class BinaryExprNode : public ExprNode
+      //
+      // This class represents a logcial binary expression node. A logical
+      // binary expression is a binary expression that represents a binary
+      // logcial operator (e.g. && and ||). The main difference between an
+      // ordinary BinaryExprNode and a LogicalBinaryExprNode is that the
+      // latter does not have an associated constraint. The reason for this is
+      // that a constraint can only be associated with a \e branch of a
+      // logical expression node.
+      //
+      // \note We do not need to override the method getConstraint(), because
+      // there is no constraint associated with a logical binary expression
+      // node. Hence, we can use the default implementation in ExprNode.
+      class LogicalBinaryExprNode : public ExprNode
       {
       public:
-        BinaryExprNode(const std::string& oper, 
-                       const Expr& lhs, const Expr& rhs);
+        // Construct a binary expression node. 
+        LogicalBinaryExprNode(const std::string& oper, 
+                              const Expr& lhs, const Expr& rhs);
 
-        virtual ~BinaryExprNode();
+        virtual ~LogicalBinaryExprNode() {}
 
         virtual void print(std::ostream& os) const;
-
-        virtual Expr getConstraint() const;
 
       private:
 
