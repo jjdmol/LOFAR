@@ -20,7 +20,7 @@
 //
 // $Id: 
 
-#include <CAL/MeqCalibraterImpl.h>
+#include "PSS3/MeqCalibraterImpl.h"
 #include <Common/lofar_iostream.h>
 #include <Calibrator.h>
 
@@ -83,11 +83,14 @@ void Calibrator::Initialize (void) {
   for (i = 0; i < itsSecondaryAntennae.size (); i ++) 
     ant2 [i] = itsSecondaryAntennae [i];
 
+  if (itsPSS3CalibratorImpl != NULL) {
+    delete itsPSS3CalibratorImpl;
+  }
+
   itsPSS3CalibratorImpl = new MeqCalibrater (
 					     itsTblMeasurementSet,
 					     itsTblMeqModel,
 					     itsTblSkyModel,
-					     "postgres", "tanaka", "",
 					     itsDDID,
 					     ant1,
 					     ant2,
