@@ -123,16 +123,23 @@ public:
   template<typename T> void get (std::vector<T>& values);
   // </group>
 
-  // Skip the given number of bytes.
+  // Skip the given amount of space (the opposite of BlobOStream::setSpace).
   // This is useful when reading a static blob in a dynamic way.
   // It returns the position of the skipped space in the stream.
-  int64 skip (uint nbytes);
+  // It is meant for use with the BlobIBufString buffer. The function
+  // getPointer in that class can be used to turn the position into a pointer.
+  int64 getSpace (uint nbytes);
+
+  // Read filler bytes as needed to make total length a multiple of n.
+  // In this way the next data are aligned.
+  // It returns the number of filler bytes used.
+  // It is only useful for seekable buffers.
+  uint align (uint n);
 
   // Get the current stream position.
   int64 tellPos() const;
 
 private:
-  bool   itsCanGet;
   bool   itsSeekable;
   bool   itsMustConvert;
   bool   itsHasCachedType;

@@ -25,8 +25,7 @@
 
 
 BlobIStream::BlobIStream (BlobIBuffer* bb)
-: itsCanGet        (false),
-  itsMustConvert   (false),
+: itsMustConvert   (false),
   itsHasCachedType (false),
   itsCurLength     (0),
   itsLevel         (0),
@@ -92,7 +91,6 @@ int BlobIStream::getStart (const std::string& type)
   AssertMsg (type == getNextType(),
 	     "BlobIStream::getStart: found object type " <<
 	     getNextType() << ", expected " << type);
-  itsCanGet = true;                      // getting is possible now
   itsHasCachedType = false;               // type is not cached anymore
   return itsVersion;
 }
@@ -109,9 +107,7 @@ uint BlobIStream::getEnd()
     AssertMsg (len == toRead  ||  toRead == 0,
 	       "BlobIStream::getEnd: part of object not read");
   }
-  if (--itsLevel == 0) {
-    itsCanGet = 0;                   // reading not possible anymore
-  } else {
+  if (--itsLevel > 0) {
     itsCurLength += len;
   }
   return len;
@@ -119,7 +115,6 @@ uint BlobIStream::getEnd()
 
 BlobIStream& BlobIStream::operator>> (bool& var)
 {
-  Assert (itsCanGet);
   char v;
   itsStream->get (&v, 1);
   var = v;
@@ -128,21 +123,18 @@ BlobIStream& BlobIStream::operator>> (bool& var)
 }
 BlobIStream& BlobIStream::operator>> (char& var)
 {
-  Assert (itsCanGet);
   itsStream->get (&var, 1);
   itsCurLength++;
   return *this;
 }
 BlobIStream& BlobIStream::operator>> (uchar& var)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)(&var), 1);
   itsCurLength++;
   return *this;
 }
 BlobIStream& BlobIStream::operator>> (int16& var)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvert (itsDataFormat, var);
@@ -152,7 +144,6 @@ BlobIStream& BlobIStream::operator>> (int16& var)
 }
 BlobIStream& BlobIStream::operator>> (uint16& var)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvert (itsDataFormat, var);
@@ -162,7 +153,6 @@ BlobIStream& BlobIStream::operator>> (uint16& var)
 }
 BlobIStream& BlobIStream::operator>> (int32& var)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvert (itsDataFormat, var);
@@ -172,7 +162,6 @@ BlobIStream& BlobIStream::operator>> (int32& var)
 }
 BlobIStream& BlobIStream::operator>> (uint32& var)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvert (itsDataFormat, var);
@@ -182,7 +171,6 @@ BlobIStream& BlobIStream::operator>> (uint32& var)
 }
 BlobIStream& BlobIStream::operator>> (int64& var)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvert (itsDataFormat, var);
@@ -192,7 +180,6 @@ BlobIStream& BlobIStream::operator>> (int64& var)
 }
 BlobIStream& BlobIStream::operator>> (uint64& var)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvert (itsDataFormat, var);
@@ -202,7 +189,6 @@ BlobIStream& BlobIStream::operator>> (uint64& var)
 }
 BlobIStream& BlobIStream::operator>> (float& var)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvertFloat (itsDataFormat, &var);
@@ -212,7 +198,6 @@ BlobIStream& BlobIStream::operator>> (float& var)
 }
 BlobIStream& BlobIStream::operator>> (double& var)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvertDouble (itsDataFormat, &var);
@@ -222,7 +207,6 @@ BlobIStream& BlobIStream::operator>> (double& var)
 }
 BlobIStream& BlobIStream::operator>> (fcomplex& var)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvertFloat (itsDataFormat, &var, 2);
@@ -232,7 +216,6 @@ BlobIStream& BlobIStream::operator>> (fcomplex& var)
 }
 BlobIStream& BlobIStream::operator>> (dcomplex& var)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)(&var), sizeof(var));
   if (itsMustConvert) {
     LOFAR::dataConvertDouble (itsDataFormat, &var, 2);
@@ -242,7 +225,6 @@ BlobIStream& BlobIStream::operator>> (dcomplex& var)
 }
 BlobIStream& BlobIStream::operator>> (std::string& var)
 {
-  Assert (itsCanGet);
   int32 len;
   operator>> (len);
   var.resize (len);              // resize storage
@@ -254,7 +236,6 @@ BlobIStream& BlobIStream::operator>> (std::string& var)
 
 void BlobIStream::get (bool* values, uint nrval)
 {
-  Assert (itsCanGet);
   // Get as chars and convert to bools.
   std::vector<char> val(nrval);
   get (&val[0], nrval);
@@ -264,19 +245,16 @@ void BlobIStream::get (bool* values, uint nrval)
 }
 void BlobIStream::get (char* values, uint nrval)
 {
-  Assert (itsCanGet);
   itsStream->get (values, nrval);
   itsCurLength += nrval;
 }
 void BlobIStream::get (uchar* values, uint nrval)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)values, nrval);
   itsCurLength += nrval;
 }
 void BlobIStream::get (int16* values, uint nrval)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)values, nrval*sizeof(int16));
   if (itsMustConvert) {
     LOFAR::dataConvert16 (itsDataFormat, values, nrval);
@@ -285,7 +263,6 @@ void BlobIStream::get (int16* values, uint nrval)
 }
 void BlobIStream::get (uint16* values, uint nrval)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)values, nrval*sizeof(uint16));
   if (itsMustConvert) {
     LOFAR::dataConvert16 (itsDataFormat, values, nrval);
@@ -294,7 +271,6 @@ void BlobIStream::get (uint16* values, uint nrval)
 }
 void BlobIStream::get (int32* values, uint nrval)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)values, nrval*sizeof(int32));
   if (itsMustConvert) {
     LOFAR::dataConvert32 (itsDataFormat, values, nrval);
@@ -303,7 +279,6 @@ void BlobIStream::get (int32* values, uint nrval)
 }
 void BlobIStream::get (uint32* values, uint nrval)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)values, nrval*sizeof(uint32));
   if (itsMustConvert) {
     LOFAR::dataConvert32 (itsDataFormat, values, nrval);
@@ -312,7 +287,6 @@ void BlobIStream::get (uint32* values, uint nrval)
 }
 void BlobIStream::get (int64* values, uint nrval)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)values, nrval*sizeof(int64));
   if (itsMustConvert) {
     LOFAR::dataConvert64 (itsDataFormat, values, nrval);
@@ -321,7 +295,6 @@ void BlobIStream::get (int64* values, uint nrval)
 }
 void BlobIStream::get (uint64* values, uint nrval)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)values, nrval*sizeof(uint64));
   if (itsMustConvert) {
     LOFAR::dataConvert64 (itsDataFormat, values, nrval);
@@ -330,7 +303,6 @@ void BlobIStream::get (uint64* values, uint nrval)
 }
 void BlobIStream::get (float* values, uint nrval)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)values, nrval*sizeof(float));
   if (itsMustConvert) {
     LOFAR::dataConvertFloat (itsDataFormat, values, nrval);
@@ -339,7 +311,6 @@ void BlobIStream::get (float* values, uint nrval)
 }
 void BlobIStream::get (double* values, uint nrval)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)values, nrval*sizeof(double));
   if (itsMustConvert) {
     LOFAR::dataConvertDouble (itsDataFormat, values, nrval);
@@ -348,7 +319,6 @@ void BlobIStream::get (double* values, uint nrval)
 }
 void BlobIStream::get (fcomplex* values, uint nrval)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)values, nrval*sizeof(fcomplex));
   if (itsMustConvert) {
     LOFAR::dataConvertFloat (itsDataFormat, values, 2*nrval);
@@ -357,7 +327,6 @@ void BlobIStream::get (fcomplex* values, uint nrval)
 }
 void BlobIStream::get (dcomplex* values, uint nrval)
 {
-  Assert (itsCanGet);
   itsStream->get ((char*)values, nrval*sizeof(dcomplex));
   if (itsMustConvert) {
     LOFAR::dataConvertDouble (itsDataFormat, values, 2*nrval);
@@ -366,7 +335,6 @@ void BlobIStream::get (dcomplex* values, uint nrval)
 }
 void BlobIStream::get (string* values, uint nrval)
 {
-  Assert (itsCanGet);
   for (uint i=0; i<nrval; i++) {
     *this >> values[i];
   }
@@ -383,13 +351,28 @@ void BlobIStream::get (std::vector<bool>& values)
   }
 }
 
-int64 BlobIStream::skip (uint nbytes)
+int64 BlobIStream::getSpace (uint nbytes)
 {
-  Assert (itsCanGet);
   int64 pos = tellPos();
-  AssertMsg (pos != -1, "BlobIStream::skip cannot be done; "
+  AssertMsg (pos != -1, "BlobIStream::getSpace cannot be done; "
 	     "its BlobIBuffer is not seekable");
   itsStream->setPos (pos+nbytes);
   itsCurLength += nbytes;
   return pos;
+}
+
+uint BlobIStream::align (uint n)
+{
+  uint nfill = 0;
+  if (n > 1) {
+    int64 pos = tellPos();
+    if (pos > 0) {
+      nfill = pos % n;
+    }
+  }
+  char fill;
+  for (uint i=0; i<nfill; i++) {
+    *this >> fill;
+  }
+  return nfill;
 }

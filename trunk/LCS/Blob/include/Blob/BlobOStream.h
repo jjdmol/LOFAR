@@ -116,10 +116,23 @@ public:
   template<typename T> void put (const std::vector<T>& values);
   // </group>
 
+  // Reserve the given amount of space (the opposite of BlobIStream::getSpace).
+  // This is useful when reading a static blob in a dynamic way.
+  // It returns the position of the skipped space in the stream.
+  // It is meant for use with the BlobOBufString buffer. The function
+  // getPointer in that class can be used to turn the position into a pointer.
+  int64 setSpace (uint nbytes);
+
   // Reserve the given number of bytes.
   // This is useful when forming a static blob in a dynamic way.
   // It returns the position of the reserved space in the stream.
   int64 reserve (uint nbytes);
+
+  // Add filler bytes as needed to make total length a multiple of n.
+  // In this way the next data are aligned.
+  // It returns the number of filler bytes used.
+  // It is only useful for seekable buffers.
+  uint align (uint n);
 
   // Get the current stream position.
   int64 tellPos() const;
@@ -128,7 +141,6 @@ private:
   uint doPutStart (const char* objectType, uint nrc, int objectVersion);
 
   bool   itsHeader8;
-  bool   itsCanPut;
   bool   itsSeekable;
   uint32 itsCurLength;
   uint   itsLevel;
