@@ -8,14 +8,14 @@ $Id$
 """
 from bb.BlackBoard import BlackBoard;
 from bb.Workload import Workload;
-import bb.Thread;
+from bb.Thread import Thread;
 
 #import bb;
 
 
 blb = BlackBoard();
+thr = Thread();
 wl = Workload();
 blb.register(wl);
 blb.time("2003/09/05T00:00:00","2003/09/05T06:00:00");
-blb.say(blb.workload_count);
-print repr(bb);
+print repr(blb);
