@@ -28,7 +28,7 @@
 #include "CEPFrame/Simulator.h"
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iostream.h>
-#include <Common/lofar_strstream.h>
+#include <sstream>
 
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
@@ -165,10 +165,10 @@ SimulatorParseError::SimulatorParseError (const string& message)
 
 void SimulatorParseerror (char*)
 {
-  ostringstream os1;
-  os1 << SimulatorParse::line() + 1 << ends;
-  ostringstream os2;
-  os2 << SimulatorParse::position() << ends;
+  std::ostringstream os1;
+  os1 << SimulatorParse::line() + 1;
+  std::ostringstream os2;
+  os2 << SimulatorParse::position();
 
   throw SimulatorParseError("parse error at line " + os1.str() + ", position "
 			    + os2.str() + " (at or near '" +
