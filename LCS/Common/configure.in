@@ -59,6 +59,14 @@ lofar_DOCXX
 lofar_MPI(0)
 
 dnl
+dnl log4cplus is optional (0), if it is found on your system
+dnl then LofarLogger will be included in the lcscommon library
+dnl If you really don't want LofarLogger then you should configure
+dnl with --without-log4cplus
+dnl
+lofar_EXTERNAL(log4cplus,0,log4cplus/logger.h,,)
+
+dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
