@@ -14,7 +14,7 @@ int atexit(void (*function)(void))
 int main (int argc, const char** argv)
 {
 #ifdef HAVE_MPI
-  MPI_Init(&argc,&argv);
+  MPI_Init(&argc,(char***)&argv);
 #endif
   // Set trace level.
   Debug::initLevels (argc,argv);
