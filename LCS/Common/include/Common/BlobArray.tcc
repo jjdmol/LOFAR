@@ -158,7 +158,11 @@ BlobOStream& operator<< (BlobOStream& bs, const Array<T>& arr)
 {
   bool deleteIt;
   const T* data = arr.getStorage(deleteIt);
-  putBlobArray (bs, data, arr.ndim(), arr.shape().data(), true);
+  vector<uint32> shp(arr.ndim());
+  for (uint i=0; i<arr.ndim(); i++) {
+    shp[i] = arr.shape()[i];
+  }
+  putBlobArray (bs, data, arr.ndim(), &shp[0], true);
   arr.freeStorage (data, deleteIt);
   return bs;
 }
@@ -170,8 +174,12 @@ BlobIStream& operator>> (BlobIStream& bs, Array<T>& arr)
   bool fortranOrder;
   uint16 ndim;
   getBlobArrayStart (bs, fortranOrder, ndim);
+  vector<uint32> shp(ndim);
+  getBlobArrayShape (bs, &shp[0], ndim, !fortranOrder);
   IPosition shape(ndim);
-  getBlobArrayShape (bs, shape.data(), ndim, !fortranOrder);
+  for (uint i=0; i<arr.ndim(); i++) {
+    shape[i] = shp[i];
+  }
   arr.resize (shape);
   bool deleteIt;
   T* data = arr.getStorage(deleteIt);
