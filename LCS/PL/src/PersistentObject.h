@@ -26,6 +26,7 @@
 //# Includes
 #include <PL/ObjectId.h>
 #include <boost/shared_ptr.hpp>
+#include <climits>
 
 namespace LCS
 {
@@ -96,18 +97,19 @@ namespace LCS
 
 public:
 
+      // Remove this instance of PersistentObject from the database.
+      virtual void erase() const = 0;
+
       // Insert the PersistentObject into the database.
       // \note insert() will \e always create a new stored object. This is
       // contrary to the behaviour of save() which will only create a \e new
       // stored object if it did not already exist in the database.
       virtual void insert() const = 0;
 
-      // Update the PersistentObject into the database.
-      // \note update() will \e always modify an existing stored object. 
-      // Therefore, calling update() on a PersistentObject that is not
-      // already present in the database is an error.
-      // \throw LCS::PL::Exception
-      virtual void update() const = 0;
+//       // This method will typically be used to refresh an instance of 
+//       // PersistentObject that already resides in memory. We will need it if
+//       // another process or thread changed the data in the database.
+//       virtual void retrieve() = 0;
 
       // Store the PersistentObject into the database. This method will
       // typically be called by the PersistenceBroker, because at this level 
@@ -117,13 +119,12 @@ public:
       // present in the database and thus needs to be \e updated.
       virtual void save() const = 0;
 
-      // This method will typically be used to refresh an instance of 
-      // PersistentObject that already resides in memory. We will need it if
-      // another process or thread changed the data in the database.
-      virtual void retrieve() const = 0;
-
-      // Remove this instance of PersistentObject from the database.
-      virtual void erase() const = 0;
+      // Update the PersistentObject into the database.
+      // \note update() will \e always modify an existing stored object. 
+      // Therefore, calling update() on a PersistentObject that is not
+      // already present in the database is an error.
+      // \throw LCS::PL::Exception
+      virtual void update() const = 0;
 
       // Return a non-const reference to the meta data. Hey, we want to be
       // able to modify these data, while inserting, updating, etc.
@@ -132,22 +133,23 @@ public:
       // Return whether this PersistentObject is in the database.
       bool isPersistent() const { return metaData().itsVersionNr != 0; }
 
-      // Compare two instances of PersistentObject. PersistentObjects
-      // are considered equal when their ObjectIds (which are stored in
-      // the struct MetaData) are equal.
-      friend bool operator==(const PersistentObject& lhs, 
-                             const PersistentObject& rhs)
-      {
-        return lhs.metaData().itsOid == rhs.metaData().itsOid;
-      }
-
 private:
 
       // Shared pointer to the MetaData. We do not want different copies
       // of PersistentObject to have different meta data.
       boost::shared_ptr<MetaData> itsMetaData;
-
     };
+
+
+    // Compare two instances of PersistentObject. PersistentObjects
+    // are considered equal when their ObjectIds (which are stored in
+    // the struct MetaData) are equal.
+    inline bool operator==(const PersistentObject& lhs, 
+                           const PersistentObject& rhs)
+    {
+      return lhs.metaData().itsOid == rhs.metaData().itsOid;
+    }
+
 
   } // namespace PL
 
