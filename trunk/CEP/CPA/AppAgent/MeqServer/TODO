@@ -98,14 +98,16 @@ Spigot:
 
 Parm:
 
-  * for grow_domain: use the envelope domain, rather than checking for 
-    strict supersets.
-    
-  * rework parm so that predict-only requests may be satisfied without dropping
-    the solvable polc (i.e. keep the solvable polc and the per-domain cached
-    polcs separate)
-
   * develop different strategies for handling multiple polcs
+  
+        + for grow_domain: use the envelope domain, rather than checking for 
+          strict supersets.
+          01/03/04: done
+
+        + rework parm so that predict-only requests may be satisfied without dropping
+          the solvable polc (i.e. keep the solvable polc and the per-domain cached
+          polcs separate)
+          01/03/04: done
   
         + move the update-via-FValue mechanism to the request rider; it doesn't
           really belong in state proper. (The rider needs to be reworked, see 
@@ -185,6 +187,9 @@ DMI & Debug:
 
 OCTOPUSSY:
 
+  * Bug? test_octopussy crashes with the NPTL libraries (rh9 system with 2.6 
+    kernel, using /lib/tls/ instead of /lib/i686/: try e.g. lofar17).
+ 
   * Bug: valgrind reports thread deadlock on the Dispatcher::startup_cond
     and Dispatcher::repoll_cond condition vars. How is this even possible?
     Perhaps related to problem below?

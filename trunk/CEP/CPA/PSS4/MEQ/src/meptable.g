@@ -267,9 +267,9 @@ const meq.meptable := function (name,create=F)
       if( has_field(polc,'domain') )
         dom := polc.domain;
       else
-        dom := [0,1,0,1];
+        dom := meq.domain(0,1,0,1);
       return public.put(parmname,
-                  freqrange=dom[1:2],timerange=dom[3:4],
+                  freqrange=dom.freq,timerange=dom.time,
                   values=polc.coeff, perturbation=polc.pert,
                   weight=polc.weight,
                   freq0=polc.freq_0,time0=polc.time_0,
