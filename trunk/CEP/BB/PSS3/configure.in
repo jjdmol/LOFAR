@@ -59,8 +59,7 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_PACKAGE(CEP/CPA/PSS3/MNS)
 lofar_PACKAGE(CEP/CEPFrame)
-
-lofar_EXTERNAL(pq,1,libpq-fe.h)
+lofar_EXTERNAL(psql,0,libpq-fe.h,pq)
 
 dnl
 dnl Output Makefiles
