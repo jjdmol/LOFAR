@@ -28,38 +28,40 @@
 // IEEE Transactions on signal processing Vol. 43, pages 95-107,
 // January 1995.
 
+#ifndef STATIONSIM_PASTD_H
 #include <PASTd.h>
+#endif
+
+// #define DEBUG_PASTD
 
 using namespace blitz;
 
 
-void pastd_step (LoVec_dcomplex x, LoMat_dcomplex W, LoVec_double d_tmp, int nmax, double Beta) {
+void pastd_step (LoVec_dcomplex& x, LoMat_dcomplex& W, LoVec_double& d_tmp, 
+		 const int nmax, const double Beta) {
   // This is the actual algorithm
   int nr = x.size();
   LoVec_dcomplex y; y.resize(nr);
   LoVec_dcomplex e; e.resize(nr);
-  
-  for (int n = 0; n < nr; n++) {
-    
-    y(n) = sum( W(Range::all(), n) * x );
 
-    d_tmp(n) = (double)Beta * d_tmp(n) + abs(y(n)*y(n));
+  for (int n = 0; n < nmax; n++) { 
+    y(n) = sum( LCSMath::conj(W(Range::all(), n)) * x ); 
 
-    e = x - (W(Range::all(), n) * y(n));
+    d_tmp(n) = Beta * d_tmp(n) + abs( pow2(y(n)) ) ; 
 
-    W(Range::all(), n) = W(Range::all(), n) + (e * (conj(y(n)/d_tmp(n)))) ;
+    e = x - (W(Range::all(), n) * y(n)); 
 
-    x = x - (W(Range::all(), n) * y(n));
+    W(Range::all(), n) = W(Range::all(), n) + (e * (conj(y(n)/d_tmp(n)))) ; 
+
+    x = x - W(Range::all(), n) * y(n); 
   }
 }
-
-
 
 
 int pastd (LoMat_dcomplex fifo, int numsnaps, int interval, double beta,
 	   LoVec_double Evalue, LoMat_dcomplex Evector)
 {
-  
+ 
   int nantl = Evalue.ubound(firstDim) - Evalue.lbound(firstDim) + 1;
 
   LoMat_double d(nantl,numsnaps+1);  
@@ -69,48 +71,55 @@ int pastd (LoMat_dcomplex fifo, int numsnaps, int interval, double beta,
   LoVec_dcomplex x;
   LoVec_double d_tmp(nantl);
 
+  d = (double) 0;
   // initialise using previous values (given as arguments),
   // or the real Eigen values and vectors using either EVD or SVD
+
+  // Optional initialisation values of 1 and I are implemented, but used 
+  // only for debugging purposes.
   for (int i = 0; i < nantl; i++) {
     d(i,i) = Evalue(i);
+#ifdef DEGUG_PASTD    
+    d(i,i) = (double) 1;
+#endif
   }
-  //  d = Evalue;
+  // d = Evalue;
   W = Evector;
+#ifdef DEBUG_PASTD
+  W = dcomplex (1,0);
+#endif
 
   int nc = fifo.cols(); // fifo is row-major ordered
   int nr = fifo.rows();
   int snapcnt = -1;
-  int epochs;
+
+  // Check if the number of snapshots is larger than the number of snapshots in buffer
+  if (numsnaps > nc) {
+    numsnaps = nc;
+  }
 
   xq.resize(nr, numsnaps);
   x.resize(nr);
   
-  // this algorithm only used the last #numsnaps snapshots of the fifo 
-  xq = fifo(Range::all(), Range(fifo.ubound(secondDim) - numsnaps + 1, toEnd));
+  // this algorithm only used the first #numsnaps snapshots of the fifo 
+  xq = fifo(Range::all(), Range(0, numsnaps-1));
+  // we need to have the oldest snapshots first
+  //  xq.reverseSelf(secondDim);
 
   for (int snapidx = 0; snapidx < numsnaps; snapidx = snapidx + interval) {
-
     x = xq(Range::all(), snapidx);
     snapcnt++;
 
     d_tmp = d(Range::all(),snapcnt);
-    pastd_step(x, W, d_tmp, nc, beta);
+    pastd_step(x, W, d_tmp, nr, beta);
     d(Range::all(), snapcnt+1) = d_tmp;
+    
   }
-
   // PASTd produces the conjugate of the EVD
-  W = LCSMath::conj(W);
+  //    W = LCSMath::conj(W);
 
-  // DEBUG
-  // W should be equal to Evector
-  double error = 0;
-  //  cout << Evector << endl;
-  for (int i = 0; i < nantl; i++) {
-    error = error + abs(W(0,i) - Evector(0,i)) ;
-  }
-  // Return the new values for Eigen vectors and values.
   Evector = W;
-  Evalue  = LCSMath::diag(d);
-
+  // Don't return the eigen values, since they are useless at this point
+  //  Evalue  = LCSMath::diag(d);
   return 0;  
 }
