@@ -738,6 +738,7 @@ try
 {
   using namespace std;
   
+  std::string ColumnName = itsGraphSettingsWidget->getSettings().getColumnName();
   if(!itsBusyPlotting) {
     itsBusyPlotting = true;
     if(itsInputAgent != 0) {
@@ -757,9 +758,10 @@ try
         HIID   id;
         ObjRef ref;
         
-	
-        intype = itsInputAgent->getNext(id, ref, 0, AppEvent::NOWAIT);
-
+        ColumnName = itsGraphSettingsWidget->getSettings().getColumnName();	
+        intype     = itsInputAgent->getNext(id, ref, 0, AppEvent::NOWAIT);
+        std::cout << ColumnName<<std::endl;
+        
         if(intype < 0) {
           std::cout << "intype: " << intype << std::endl;
         } else {
@@ -773,17 +775,24 @@ try
 
           case DATA:
             {
-	      tile = ref;
+              std::cout << "Receiving DATA " << id.toString() << std::endl;
+              tile = ref;
               int ncorr = tile.deref().ncorr();
               int nfreq = tile.deref().nfreq();
               int ntime = tile.deref().ntime();
               int ant1  = tile.deref().antenna1();
               int ant2  = tile.deref().antenna2();
         
+              std::cout << "Baseline "<< ant1 << "-" << ant2 << std::endl;
+
               if(nfreq > itsNumberOfChannels) {
                 itsNumberOfChannels = nfreq;
               }
 
+              std::cout << "nfreq " << nfreq << std::endl;
+              std::cout << "ncorr " << ncorr << std::endl;
+              std::cout << "ntime " << ntime << std::endl;
+              
               if(ncorr > 0 && nfreq > 0 && ntime > 0) {
                 uvp_header.itsTime             = 0;
                 uvp_header.itsAntenna1         = ant1;
@@ -802,9 +811,16 @@ try
                   for(int corr = 0; corr < ncorr && uvp_header.itsTime != 0;corr++) {
                     uvp_header.itsCorrelationType = UVPDataAtomHeader::Correlation(corr+1);
               
-                    LoVec_fcomplex data(iter.f_data(corr));
                     LoVec_int      flags(iter.f_flags(corr));
-              
+                    
+                    LoVec_fcomplex data;
+                    if(ColumnName == "DATA") {
+                      data = iter.f_data(corr);
+                    } else if(ColumnName == "MODEL_DATA") {
+                      data = iter.f_predict(corr);
+                    } else if(ColumnName == "RESIDUAL_DATA"){
+                      //data = iter.residuals(corr);
+                    }
               
                     atom.setHeader(uvp_header);
                     atom.setData(data);
