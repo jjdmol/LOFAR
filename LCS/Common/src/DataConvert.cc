@@ -82,52 +82,78 @@ void LOFAR::byteSwap64 (void* out, const void* in, uint nrval)
   }
 }
 
-uint LOFAR::boolToBit (void* to, const void* from, uint nvalues)
+uint LOFAR::boolToBit (void* to, const void* from, uint nvalues, uint startbit)
 {
-    const bool* data = (const bool*)from;
-    unsigned char* bits = (unsigned char*)to;
-    //# Fill as many bytes as needed.
-    uint nbytes = (nvalues + 7) / 8;
-    uint i,j;
-    uint index = 0;
-    for (i=0; i<nbytes; i++) {
-	unsigned char& ch = bits[i];
-	ch = 0;
-	unsigned char mask = 128;
-	//# Take care of correct number of bits in last byte.
-	uint nbits = (nvalues-index < 8  ?  nvalues-index : 8);
-	for (j=0; j<nbits; j++) {
-	    if (data[index++]) {
-		ch |= mask;
-	    }
-	    mask >>= 1;
-	}
+  if (nvalues == 0) {
+    return 0;
+  }
+  const bool* data = (const bool*)from;
+  unsigned char* bits = (unsigned char*)to + startbit/8;
+  startbit %= 8;
+  //# Fill as many bytes as needed.
+  uint nbytes = (nvalues + startbit + 7) / 8;
+  uint i,j;
+  uint index = 0;
+  {
+    unsigned char mask = 128;
+    mask >>= startbit;
+    unsigned char& ch = bits[0];
+    //# Take care of correct number of bits in first byte.
+    uint nbits = (nvalues-index < 8-startbit  ?  nvalues-index : 8-startbit);
+    for (j=0; j<nbits; j++) {
+      if (data[index++]) {
+	ch |= mask;
+      } else {
+	ch &= ~mask;
+      }
+      mask >>= 1;
     }
-    return nbytes;
+  }
+  for (i=1; i<nbytes; ++i) {
+    unsigned char mask = 128;
+    unsigned char& ch = bits[i];
+    ch = 0;
+    //# Take care of correct number of bits in last byte.
+    uint nbits = (nvalues-index < 8  ?  nvalues-index : 8);
+    for (j=0; j<nbits; j++) {
+      if (data[index++]) {
+	ch |= mask;
+      }
+      mask >>= 1;
+    }
+  }
+  return nbytes;
 }
 
-uint LOFAR::bitToBool (void* to, const void* from, uint nvalues)
+uint LOFAR::bitToBool (void* to, const void* from, uint nvalues, uint startbit)
 {
-    bool* data = (bool*)to;
-    const unsigned char* bits = (const unsigned char*)from;
-    //# Fill as many bytes as needed.
-    uint nbytes = (nvalues + 7) / 8;
-    uint i,j;
-    uint index = 0;
-    for (i=0; i<nbytes; i++) {
-	const uchar ch = bits[i];
-	uchar mask = 128;
-	//# Take care of correct number of bits in last byte.
-	uint nbits = (nvalues-index < 8  ?  nvalues-index : 8);
-	for (j=0; j<nbits; j++) {
-	    if (ch & mask) {
-		data[index] = true;
-	    }else{
-		data[index] = false;
-	    }
-	    mask >>= 1;
-	    index++;
-	}
+  bool* data = (bool*)to;
+  const unsigned char* bits = (const unsigned char*)from + startbit/8;
+  startbit %= 8;
+  //# Fill as many bytes as needed.
+  uint nbytes = (nvalues + startbit + 7) / 8;
+  uint i,j;
+  uint index = 0;
+  {
+    unsigned char mask = 128;
+    mask >>= startbit;
+    const unsigned char ch = bits[0];
+    //# Take care of correct number of bits in first byte.
+    uint nbits = (nvalues-index < 8-startbit  ?  nvalues-index : 8-startbit);
+    for (j=0; j<nbits; j++) {
+      data[index++] = ((ch & mask) != 0);
+      mask >>= 1;
     }
-    return nbytes;
+  }
+  for (i=1; i<nbytes; ++i) {
+    unsigned char mask = 128;
+    const unsigned char ch = bits[i];
+    //# Take care of correct number of bits in last byte.
+    uint nbits = (nvalues-index < 8  ?  nvalues-index : 8);
+    for (j=0; j<nbits; j++) {
+      data[index++] = ((ch & mask) != 0);
+      mask >>= 1;
+    }
+  }
+  return nbytes;
 }

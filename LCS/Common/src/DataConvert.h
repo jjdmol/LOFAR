@@ -151,12 +151,14 @@ namespace LOFAR
   // </group>
 
   // Convert bools to bits.
+  // startbit gives to first bit to use in the to buffer.
   // It returns the number of bytes used.
-  uint boolToBit (void* to, const void* from, uint nvalues);
+  uint boolToBit (void* to, const void* from, uint nvalues, uint startbit=0);
 
   // Convert bits to bools.
+  // startbit gives to first bit to use in the from buffer.
   // It returns the number of bytes used.
-  uint bitToBool (void* to, const void* from, uint nvalues);
+  uint bitToBool (void* to, const void* from, uint nvalues, uint startbit=0);
 
   // </group>
 
