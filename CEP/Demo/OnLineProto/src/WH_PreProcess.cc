@@ -37,7 +37,7 @@ namespace LOFAR
 {
 WH_PreProcess::WH_PreProcess (const string& name, const int nbeamlets, MAC mac, 
 			      int StationID)
-  : WorkHolder    (nbeamlets, nbeamlets, name,"WH_PreProcess"),
+  : WorkHolder    (nbeamlets+1, nbeamlets, name,"WH_PreProcess"),
     itsMac (mac),
     itsStationID (StationID)
 {
@@ -55,6 +55,9 @@ WH_PreProcess::WH_PreProcess (const string& name, const int nbeamlets, MAC mac,
 							mac.getBeamletSize()));
   }
 
+  // connect to fringe control
+  getDataManager().addInDataHolder(nbeamlets, new DH_Phase ("in_fringe", itsStationID));  
+
   // create the output dataholders
   for (int i = 0; i < nbeamlets; i++) {
     sprintf (str, "%d", i);
@@ -65,7 +68,7 @@ WH_PreProcess::WH_PreProcess (const string& name, const int nbeamlets, MAC mac,
 							 mac.getChannelBandwidth(),
 							 mac.getStartHourangle(),
 							 mac.getBeamletSize()));
-				      }    
+				      }
 }
   
 WH_PreProcess::~WH_PreProcess()
@@ -89,13 +92,27 @@ void WH_PreProcess::process()
 {
   TRACER4("WH_PreProcess::Process()");
 
-  for (int i = 0; i < itsMac.getNumberOfBeamlets (); i++) {
+  int b =  itsMac.getNumberOfBeamlets();
+  for (int i = 0; i < b; i++) {
     // set elapsed time
     ((DH_Beamlet*)getDataManager().getOutHolder(i))->setElapsedTime(((DH_Beamlet*)getDataManager().getInHolder(i))->getElapsedTime());
     // cout << "WH_PreProcess : " << ((DH_Beamlet*)getDataManager().getOutHolder(i))->getElapsedTime() << endl;
-    for (int j = 1; j < itsMac.getBeamletSize (); j++) { 
-      *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) 
-	= *((DH_Beamlet*)getDataManager().getInHolder(i))->getBufferElement(j);
+    for (int j = 1; j < itsMac.getBeamletSize (); j++) {
+       if (ENABLE_FS == 1) {
+	  Station* station = itsMac.getStations();
+//	  float t_i = station[StationID].getY * sin(
+	  complex<float> phase = 1.0;
+	    
+	    
+	    
+	    
+	    //*((DH_Phase*)getDataManager().getInHolder(b))->getBuffer();
+	  *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) 
+	    = phase * *((DH_Beamlet*)getDataManager().getInHolder(i))->getBufferElement(j);
+       } else {
+	  *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j)
+	    = *((DH_Beamlet*)getDataManager().getInHolder(i))->getBufferElement(j);
+       }
     }
   }
 }

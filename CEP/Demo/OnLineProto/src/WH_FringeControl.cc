@@ -77,6 +77,10 @@ WH_FringeControl* WH_FringeControl::make (const string& name)
 void WH_FringeControl::process()
 {
   TRACER4("WH_FringeControl::Process()");
+   
+   for (int s = 0; s < getDataManager().getOutputs(); s++) {
+      *((DH_Phase*)getDataManager().getOutHolder(s))->getBuffer() = 1.0;
+   }
 }
 
 void WH_FringeControl::dump()

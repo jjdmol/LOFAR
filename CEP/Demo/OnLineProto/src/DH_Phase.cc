@@ -36,8 +36,6 @@ namespace LOFAR
   itsDataPacket         (0),
   itsBuffer             (0)
 {
-  // ToDo: move allocation to preprocess
-
   // First delete possible buffers.
   postprocess();
 

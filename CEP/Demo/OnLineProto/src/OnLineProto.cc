@@ -49,11 +49,13 @@
 #include <OnLineProto/WH_Transpose.h>
 #include <OnLineProto/WH_Correlate.h>
 #include <OnLineProto/WH_Dump.h>
+#include <OnLineProto/WH_FringeControl.h>
 
 //DataHolders:
 #include <OnLineProto/DH_Beamlet.h>
 #include <OnLineProto/DH_CorrCube.h>
 #include <OnLineProto/DH_Vis.h>
+#include <OnLineProto/DH_Phase.h>
 
 //TransportHolders
 #include <CEPFrame/ShMem/TH_ShMem.h>
@@ -146,6 +148,17 @@ void OnLineProto::define(const KeyValueMap& params)
     myStationSteps[s]->runOnNode(0,0);
     app.addStep(myStationSteps[s]);
   }
+
+  ////////////////////////////////////////////////////////////////
+  //
+  // create the fringe control step
+  //
+  ////////////////////////////////////////////////////////////////
+  WH_FringeControl myWHFringeControl("noname", NStations, myMac);
+  Step myFringeControl(myWHFringeControl, "noname");
+  myFringeControl.runOnNode(0,0);
+  app.addStep(myFringeControl);
+  
   ////////////////////////////////////////////////////////////////
   //
   // create the preproces steps
@@ -161,14 +174,19 @@ void OnLineProto::define(const KeyValueMap& params)
 					  myMac,
 					  s);
 
-
     myPreProcessSteps[s] = new Step(myWHPreProcess[s],"noname");
     myPreProcessSteps[s]->runOnNode(0,0);
     app.addStep(myPreProcessSteps[s]);
+
     // connect the preprocess step to the station step
-    myPreProcessSteps[s]->connectInput(myStationSteps[s]);
+    for (int b = 0; b < myMac.getNumberOfBeamlets(); b++) {
+      myPreProcessSteps[s]->connect(myStationSteps[s], b, b, 1);
+    }
+     
+    // connect the preprocess steps to the fringecontrol step
+    myPreProcessSteps[s]->connect(&myFringeControl, myMac.getNumberOfBeamlets(), s, 1);
   }
-  
+   
   ////////////////////////////////////////////////////////////////
   //
   // create the Transpose steps
@@ -189,6 +207,8 @@ void OnLineProto::define(const KeyValueMap& params)
 
     myTransposeSteps[b] = new Step(myWHTranspose[b],"noname");
     myTransposeSteps[b]->runOnNode(0,0);
+
+
     myTransposeSteps[b]->setOutRate(TSIZE);
     app.addStep(myTransposeSteps[b]);
   }
