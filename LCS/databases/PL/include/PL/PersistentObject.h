@@ -28,6 +28,7 @@
 #include <Common/LofarTypes.h>
 #include <boost/shared_ptr.hpp>
 #include <vector>
+#include <string>
 
 namespace LOFAR
 {
@@ -210,7 +211,15 @@ namespace LOFAR
 
       // Return a reference to the container of "owned" PersistentObjects.
       POContainer& ownedPOs() { return itsOwnedPOs; }
-      
+
+      // Get the name of the database table that is associated with this
+      // PersistentObject.
+      const std::string& tableName() const { return itsTableName; }
+
+      // Set the name of the database table that is associated with this
+      // PersistentObject.
+      void tableName(const std::string& aName) { itsTableName = aName; }
+
     private:
 
       // This method is responsible for actually erasing the \e primitive
@@ -243,6 +252,11 @@ namespace LOFAR
       // This is what we call "ownership", as the "contained"
       // PersistentObjects will come and go with this PersistentObject.
       POContainer itsOwnedPOs;
+
+      // This is the name of the database table that is associated with this
+      // PersistentObject.
+      std::string itsTableName;
+
     };
 
 
