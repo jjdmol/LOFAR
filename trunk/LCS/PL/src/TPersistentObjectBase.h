@@ -46,8 +46,8 @@ namespace LCS
       // Implements PersistentObject::insert()
       virtual void insert() const;
 
-      // Implements PersistentObject::retrieve()
-      virtual void retrieve() const;
+//       // Implements PersistentObject::retrieve()
+//       virtual void retrieve();
 
       // Implements PersistentObject::save()
       virtual void save() const;
@@ -93,9 +93,9 @@ namespace LCS
       // data members of \c T.
       virtual void doInsert(MetaData& md) const = 0;
 
-      // This method is responsible for actually retrieving the \e primitive
-      // data members of \c T.
-      virtual void doRetrieve(MetaData& md) const = 0;
+//       // This method is responsible for actually retrieving the \e primitive
+//       // data members of \c T.
+//       virtual void doRetrieve(MetaData& md) const = 0;
 
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.

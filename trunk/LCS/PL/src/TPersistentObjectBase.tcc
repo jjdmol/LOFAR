@@ -32,7 +32,7 @@ namespace LCS
     void 
     TPersistentObjectBase<T>::erase() const
     {
-      THROW(NotImplemented, "Method is not yet implemented");
+      doErase(metaData());
     }
 
     template<typename T>
@@ -43,22 +43,22 @@ namespace LCS
       doInsert(metaData());
     }
 
-    template<typename T>
-    void
-    TPersistentObjectBase<T>::retrieve() const
-    {
-      THROW(NotImplemented, "Method is not yet implemented");
-    }
+//     template<typename T>
+//     void
+//     TPersistentObjectBase<T>::retrieve()
+//     {
+//       doRetrieve(metaData());
+//     }
 
     template<typename T>
     void
     TPersistentObjectBase<T>::save() const
     {
       if (isPersistent()) {
-        doUpdate(metaData());
-      }
+        update();
+      } 
       else {
-        doInsert(metaData());
+        insert();
       }
     }
 
