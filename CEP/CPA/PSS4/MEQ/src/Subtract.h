@@ -25,10 +25,10 @@
     
 #include <MEQ/Function2.h>
 
-#pragma aidgroup MEQ
-#pragma types #MEQ::Subtract
+#pragma aidgroup Meq
+#pragma types #Meq::Subtract
 
-namespace MEQ {    
+namespace Meq {    
 
 
 class Subtract : public Function2
@@ -44,6 +44,6 @@ public:
 };
 
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif

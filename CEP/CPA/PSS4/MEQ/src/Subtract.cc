@@ -23,7 +23,7 @@
 #include <MEQ/Subtract.h>
 #include <MEQ/VellsTmp.h>
 
-namespace MEQ {    
+namespace Meq {    
 
 
 Subtract::Subtract()
@@ -39,4 +39,4 @@ Vells Subtract::evaluate (const Request&,
 }
 
 
-} // namespace MEQ
+} // namespace Meq

@@ -30,7 +30,7 @@
 #include <MEQ/VellsRealSca.h>
 #include <MEQ/VellsComplexSca.h>
 
-namespace MEQ {
+namespace Meq {
 
 class VellsTmp
 {
@@ -153,6 +153,6 @@ inline std::ostream& operator<< (std::ostream& os, const VellsTmp& vec)
   { vec.show (os); return os; }
 
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif

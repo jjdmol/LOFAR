@@ -29,29 +29,29 @@
 #include <Common/Debug.h>
 #include <iomanip>
 
-namespace MEQ {
+namespace Meq {
 
-MEQ::VellsComplexArr::VellsComplexArr (int nx, int ny)
+Meq::VellsComplexArr::VellsComplexArr (int nx, int ny)
 : VellsRep    (nx, ny),
   itsIsOwner  (true)
 {
   itsValuePtr = new complex<double>[nelements()];
 }
 
-MEQ::VellsComplexArr::VellsComplexArr (complex<double>* value, int nx, int ny)
+Meq::VellsComplexArr::VellsComplexArr (complex<double>* value, int nx, int ny)
 : VellsRep    (nx, ny),
   itsValuePtr (value),
   itsIsOwner  (false)
 {}
 
-MEQ::VellsComplexArr::~VellsComplexArr()
+Meq::VellsComplexArr::~VellsComplexArr()
 {
   if (itsIsOwner) {
     delete [] itsValuePtr;
   }
 }
 
-VellsRep* MEQ::VellsComplexArr::clone() const
+VellsRep* Meq::VellsComplexArr::clone() const
 {
   PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
 
@@ -60,14 +60,14 @@ VellsRep* MEQ::VellsComplexArr::clone() const
   return v;
 }
 
-void MEQ::VellsComplexArr::set (complex<double> value)
+void Meq::VellsComplexArr::set (complex<double> value)
 {
   for (int i=0; i<nelements(); i++) {
     itsValuePtr[i] = value;
   }
 }
 
-void MEQ::VellsComplexArr::show (std::ostream& os) const
+void Meq::VellsComplexArr::show (std::ostream& os) const
 {
   os << '[';
   for (int i=0; i<nelements(); i++) {
@@ -81,35 +81,35 @@ void MEQ::VellsComplexArr::show (std::ostream& os) const
 }
 
 
-VellsRep* MEQ::VellsComplexArr::add (VellsRep& right, bool rightTmp)
+VellsRep* Meq::VellsComplexArr::add (VellsRep& right, bool rightTmp)
 {
   return right.addRep (*this, rightTmp);
 }
-VellsRep* MEQ::VellsComplexArr::subtract (VellsRep& right, bool rightTmp)
+VellsRep* Meq::VellsComplexArr::subtract (VellsRep& right, bool rightTmp)
 {
   return right.subRep (*this, rightTmp);
 }
-VellsRep* MEQ::VellsComplexArr::multiply (VellsRep& right, bool rightTmp)
+VellsRep* Meq::VellsComplexArr::multiply (VellsRep& right, bool rightTmp)
 {
   return right.mulRep (*this, rightTmp);
 }
-VellsRep* MEQ::VellsComplexArr::divide (VellsRep& right, bool rightTmp)
+VellsRep* Meq::VellsComplexArr::divide (VellsRep& right, bool rightTmp)
 {
   return right.divRep (*this, rightTmp);
 }
-VellsRep* MEQ::VellsComplexArr::pow (VellsRep& right, bool rightTmp)
+VellsRep* Meq::VellsComplexArr::pow (VellsRep& right, bool rightTmp)
 {
   return right.powRep (*this, rightTmp);
 }
 
-complex<double>* MEQ::VellsComplexArr::complexStorage()
+complex<double>* Meq::VellsComplexArr::complexStorage()
 {
   return itsValuePtr;
 }
 
 
-#define MEQVELLSCOMPLEXARR_OP(NAME, OP, OP2) \
-VellsRep* MEQ::VellsComplexArr::NAME (VellsRealSca& left, bool rightTmp) \
+#define MeqVELLSCOMPLEXARR_OP(NAME, OP, OP2) \
+VellsRep* Meq::VellsComplexArr::NAME (VellsRealSca& left, bool rightTmp) \
 { \
   VellsComplexArr* v = this; \
   if (!rightTmp) { \
@@ -120,7 +120,7 @@ VellsRep* MEQ::VellsComplexArr::NAME (VellsRealSca& left, bool rightTmp) \
   } \
   return v; \
 } \
-VellsRep* MEQ::VellsComplexArr::NAME (VellsComplexSca& left, bool rightTmp) \
+VellsRep* Meq::VellsComplexArr::NAME (VellsComplexSca& left, bool rightTmp) \
 { \
   VellsComplexArr* v = this; \
   if (!rightTmp) { \
@@ -131,7 +131,7 @@ VellsRep* MEQ::VellsComplexArr::NAME (VellsComplexSca& left, bool rightTmp) \
   } \
   return v; \
 } \
-VellsRep* MEQ::VellsComplexArr::NAME (VellsRealArr& left, bool rightTmp) \
+VellsRep* Meq::VellsComplexArr::NAME (VellsRealArr& left, bool rightTmp) \
 { \
   Assert (nelements() == left.nelements()); \
   VellsComplexArr* v = this; \
@@ -143,7 +143,7 @@ VellsRep* MEQ::VellsComplexArr::NAME (VellsRealArr& left, bool rightTmp) \
   } \
   return v; \
 } \
-VellsRep* MEQ::VellsComplexArr::NAME (VellsComplexArr& left, bool) \
+VellsRep* Meq::VellsComplexArr::NAME (VellsComplexArr& left, bool) \
 { \
   Assert (nelements() == left.nelements()); \
   for (int i=0; i<left.nelements(); i++) { \
@@ -152,12 +152,12 @@ VellsRep* MEQ::VellsComplexArr::NAME (VellsComplexArr& left, bool) \
   return &left; \
 }
 
-MEQVELLSCOMPLEXARR_OP(addRep,+=,+);
-MEQVELLSCOMPLEXARR_OP(subRep,-=,-);
-MEQVELLSCOMPLEXARR_OP(mulRep,*=,*);
-MEQVELLSCOMPLEXARR_OP(divRep,/=,/);
+MeqVELLSCOMPLEXARR_OP(addRep,+=,+);
+MeqVELLSCOMPLEXARR_OP(subRep,-=,-);
+MeqVELLSCOMPLEXARR_OP(mulRep,*=,*);
+MeqVELLSCOMPLEXARR_OP(divRep,/=,/);
 
-VellsRep* MEQ::VellsComplexArr::powRep (VellsRealSca& left, bool rightTmp)
+VellsRep* Meq::VellsComplexArr::powRep (VellsRealSca& left, bool rightTmp)
 {
   VellsComplexArr* v = this;
   if (!rightTmp) {
@@ -168,7 +168,7 @@ VellsRep* MEQ::VellsComplexArr::powRep (VellsRealSca& left, bool rightTmp)
   }
   return v;
 }
-VellsRep* MEQ::VellsComplexArr::powRep (VellsComplexSca& left, bool rightTmp)
+VellsRep* Meq::VellsComplexArr::powRep (VellsComplexSca& left, bool rightTmp)
 {
   VellsComplexArr* v = this;
   if (!rightTmp) {
@@ -179,7 +179,7 @@ VellsRep* MEQ::VellsComplexArr::powRep (VellsComplexSca& left, bool rightTmp)
   }
   return v;
 }
-VellsRep* MEQ::VellsComplexArr::powRep (VellsRealArr& left, bool rightTmp)
+VellsRep* Meq::VellsComplexArr::powRep (VellsRealArr& left, bool rightTmp)
 {
   Assert (nelements() == left.nelements());
   VellsComplexArr* v = this;
@@ -191,7 +191,7 @@ VellsRep* MEQ::VellsComplexArr::powRep (VellsRealArr& left, bool rightTmp)
   }
   return v;
 }
-VellsRep* MEQ::VellsComplexArr::powRep (VellsComplexArr& left, bool)
+VellsRep* Meq::VellsComplexArr::powRep (VellsComplexArr& left, bool)
 {
   Assert (nelements() == left.nelements());
   for (int i=0; i<left.nelements(); i++) {
@@ -201,7 +201,7 @@ VellsRep* MEQ::VellsComplexArr::powRep (VellsComplexArr& left, bool)
 }
 
 
-VellsRep* MEQ::VellsComplexArr::negate()
+VellsRep* Meq::VellsComplexArr::negate()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
@@ -210,7 +210,7 @@ VellsRep* MEQ::VellsComplexArr::negate()
   return this;
 }
 
-VellsRep* MEQ::VellsComplexArr::sin()
+VellsRep* Meq::VellsComplexArr::sin()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
@@ -219,7 +219,7 @@ VellsRep* MEQ::VellsComplexArr::sin()
   return this;
 }
 
-VellsRep* MEQ::VellsComplexArr::cos()
+VellsRep* Meq::VellsComplexArr::cos()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
@@ -228,7 +228,7 @@ VellsRep* MEQ::VellsComplexArr::cos()
   return this;
 }
 
-VellsRep* MEQ::VellsComplexArr::exp()
+VellsRep* Meq::VellsComplexArr::exp()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
@@ -237,7 +237,7 @@ VellsRep* MEQ::VellsComplexArr::exp()
   return this;
 }
 
-VellsRep* MEQ::VellsComplexArr::sqr()
+VellsRep* Meq::VellsComplexArr::sqr()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
@@ -246,7 +246,7 @@ VellsRep* MEQ::VellsComplexArr::sqr()
   return this;
 }
 
-VellsRep* MEQ::VellsComplexArr::sqrt()
+VellsRep* Meq::VellsComplexArr::sqrt()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
@@ -255,7 +255,7 @@ VellsRep* MEQ::VellsComplexArr::sqrt()
   return this;
 }
 
-VellsRep* MEQ::VellsComplexArr::conj()
+VellsRep* Meq::VellsComplexArr::conj()
 {
   int n = nelements();
   for (int i=0; i<n; i++) {
@@ -264,7 +264,7 @@ VellsRep* MEQ::VellsComplexArr::conj()
   return this;
 }
 
-VellsRep* MEQ::VellsComplexArr::min()
+VellsRep* Meq::VellsComplexArr::min()
 {
   complex<double> val = 0;
   int n = nelements();
@@ -281,7 +281,7 @@ VellsRep* MEQ::VellsComplexArr::min()
   }
   return new VellsComplexSca (val);
 }
-VellsRep* MEQ::VellsComplexArr::max()
+VellsRep* Meq::VellsComplexArr::max()
 {
   complex<double> val = 0;
   int n = nelements();
@@ -298,7 +298,7 @@ VellsRep* MEQ::VellsComplexArr::max()
   }
   return new VellsComplexSca (val);
 }
-VellsRep* MEQ::VellsComplexArr::mean()
+VellsRep* Meq::VellsComplexArr::mean()
 {
   complex<double> sum = 0;
   int n = nelements();
@@ -307,7 +307,7 @@ VellsRep* MEQ::VellsComplexArr::mean()
   }
   return new VellsComplexSca (sum/double(n));
 }
-VellsRep* MEQ::VellsComplexArr::sum()
+VellsRep* Meq::VellsComplexArr::sum()
 {
   complex<double> sum = 0;
   int n = nelements();
@@ -317,4 +317,4 @@ VellsRep* MEQ::VellsComplexArr::sum()
   return new VellsComplexSca (sum);
 }
 
-} // namespace MEQ
+} // namespace Meq

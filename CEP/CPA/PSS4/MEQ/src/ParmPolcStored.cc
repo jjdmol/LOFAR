@@ -25,7 +25,7 @@
 #include <Common/Lorrays.h>
 #include <aips/Mathematics/Math.h>
 
-namespace MEQ {
+namespace Meq {
 
 ParmPolcStored::ParmPolcStored()
 : ParmPolc (""),
@@ -143,11 +143,11 @@ string ParmPolcStored::sdebug (int detail, const string& prefix,
 			       const char* nm) const
 {
   string out;
-  Debug::appendf(out,"%s(%s)", nm?nm:"MEQ::Parm", getName().c_str());
+  Debug::appendf(out,"%s(%s)", nm?nm:"Meq::Parm", getName().c_str());
   if (itsTable) {
     Debug::appendf(out,"  parmtable=%s", itsTable->name().c_str());
   }
   return out;
 }
 
-} // namespace MEQ
+} // namespace Meq

@@ -23,7 +23,7 @@
 #include <MEQ/Sin.h>
 #include <MEQ/VellsTmp.h>
 
-namespace MEQ {    
+namespace Meq {    
 
 Sin::Sin()
 {}
@@ -37,4 +37,4 @@ Vells Sin::evaluate (const Request&,
   return sin(*(values[0]));
 }
 
-} // namespace MEQ
+} // namespace Meq

@@ -25,10 +25,10 @@
     
 #include <MEQ/Function2.h>
 
-#pragma aidgroup MEQ
-#pragma types #MEQ::Pow
+#pragma aidgroup Meq
+#pragma types #Meq::Pow
 
-namespace MEQ {    
+namespace Meq {    
 
 
 class Pow : public Function2
@@ -44,6 +44,6 @@ public:
 };
 
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif

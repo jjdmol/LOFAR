@@ -30,7 +30,7 @@
 #include <Common/lofar_stack.h>
 
 
-namespace MEQ {
+namespace Meq {
 
 class VellsComplexArr : public VellsRep
 {
@@ -103,6 +103,6 @@ private:
   bool             itsIsOwner;
 };
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif

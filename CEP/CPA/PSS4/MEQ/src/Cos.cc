@@ -23,7 +23,7 @@
 #include <MEQ/Cos.h>
 #include <MEQ/VellsTmp.h>
 
-namespace MEQ {    
+namespace Meq {    
 
 Cos::Cos()
 {}
@@ -45,4 +45,4 @@ Vells Cos::evaluate (const Request&,
 ///    result.getComplexArray() = cos(values[0]->getComplexArray());
 ///  }
 
-} // namespace MEQ
+} // namespace Meq

@@ -25,10 +25,10 @@
     
 #include <MEQ/Function1.h>
 
-#pragma aidgroup MEQ
-#pragma types #MEQ::Conj
+#pragma aidgroup Meq
+#pragma types #Meq::Conj
 
-namespace MEQ {    
+namespace Meq {    
 
 
 class Conj : public Function1
@@ -44,6 +44,6 @@ public:
 };
 
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif

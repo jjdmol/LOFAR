@@ -6,65 +6,65 @@
     #include <DMI/Packer.h>
     
 #include "Add.h"
-BlockableObject * __construct_MEQAdd (int n) { return n>0 ? new MEQ::Add [n] : new MEQ::Add; }
+BlockableObject * __construct_MeqAdd (int n) { return n>0 ? new Meq::Add [n] : new Meq::Add; }
 #include "Conj.h"
-BlockableObject * __construct_MEQConj (int n) { return n>0 ? new MEQ::Conj [n] : new MEQ::Conj; }
+BlockableObject * __construct_MeqConj (int n) { return n>0 ? new Meq::Conj [n] : new Meq::Conj; }
 #include "Cos.h"
-BlockableObject * __construct_MEQCos (int n) { return n>0 ? new MEQ::Cos [n] : new MEQ::Cos; }
+BlockableObject * __construct_MeqCos (int n) { return n>0 ? new Meq::Cos [n] : new Meq::Cos; }
 #include "Divide.h"
-BlockableObject * __construct_MEQDivide (int n) { return n>0 ? new MEQ::Divide [n] : new MEQ::Divide; }
+BlockableObject * __construct_MeqDivide (int n) { return n>0 ? new Meq::Divide [n] : new Meq::Divide; }
 #include "Exp.h"
-BlockableObject * __construct_MEQExp (int n) { return n>0 ? new MEQ::Exp [n] : new MEQ::Exp; }
+BlockableObject * __construct_MeqExp (int n) { return n>0 ? new Meq::Exp [n] : new Meq::Exp; }
 #include "Function.h"
-BlockableObject * __construct_MEQFunction (int n) { return n>0 ? new MEQ::Function [n] : new MEQ::Function; }
+BlockableObject * __construct_MeqFunction (int n) { return n>0 ? new Meq::Function [n] : new Meq::Function; }
 #include "Multiply.h"
-BlockableObject * __construct_MEQMultiply (int n) { return n>0 ? new MEQ::Multiply [n] : new MEQ::Multiply; }
+BlockableObject * __construct_MeqMultiply (int n) { return n>0 ? new Meq::Multiply [n] : new Meq::Multiply; }
 #include "Node.h"
-BlockableObject * __construct_MEQNode (int n) { return n>0 ? new MEQ::Node [n] : new MEQ::Node; }
+BlockableObject * __construct_MeqNode (int n) { return n>0 ? new Meq::Node [n] : new Meq::Node; }
 #include "ParmPolcStored.h"
-BlockableObject * __construct_MEQParmPolcStored (int n) { return n>0 ? new MEQ::ParmPolcStored [n] : new MEQ::ParmPolcStored; }
+BlockableObject * __construct_MeqParmPolcStored (int n) { return n>0 ? new Meq::ParmPolcStored [n] : new Meq::ParmPolcStored; }
 #include "Pow.h"
-BlockableObject * __construct_MEQPow (int n) { return n>0 ? new MEQ::Pow [n] : new MEQ::Pow; }
+BlockableObject * __construct_MeqPow (int n) { return n>0 ? new Meq::Pow [n] : new Meq::Pow; }
 #include "Sin.h"
-BlockableObject * __construct_MEQSin (int n) { return n>0 ? new MEQ::Sin [n] : new MEQ::Sin; }
+BlockableObject * __construct_MeqSin (int n) { return n>0 ? new Meq::Sin [n] : new Meq::Sin; }
 #include "Sqr.h"
-BlockableObject * __construct_MEQSqr (int n) { return n>0 ? new MEQ::Sqr [n] : new MEQ::Sqr; }
+BlockableObject * __construct_MeqSqr (int n) { return n>0 ? new Meq::Sqr [n] : new Meq::Sqr; }
 #include "Sqrt.h"
-BlockableObject * __construct_MEQSqrt (int n) { return n>0 ? new MEQ::Sqrt [n] : new MEQ::Sqrt; }
+BlockableObject * __construct_MeqSqrt (int n) { return n>0 ? new Meq::Sqrt [n] : new Meq::Sqrt; }
 #include "Subtract.h"
-BlockableObject * __construct_MEQSubtract (int n) { return n>0 ? new MEQ::Subtract [n] : new MEQ::Subtract; }
+BlockableObject * __construct_MeqSubtract (int n) { return n>0 ? new Meq::Subtract [n] : new Meq::Subtract; }
 #include "ToComplex.h"
-BlockableObject * __construct_MEQToComplex (int n) { return n>0 ? new MEQ::ToComplex [n] : new MEQ::ToComplex; }
+BlockableObject * __construct_MeqToComplex (int n) { return n>0 ? new Meq::ToComplex [n] : new Meq::ToComplex; }
   
-    int aidRegistry_MEQ ()
+    int aidRegistry_Meq ()
     {
       static int res = 
 
-        AtomicID::registerId(-1472,"MEQAdd")+
+        AtomicID::registerId(-1472,"MeqAdd")+
         TypeInfoReg::addToRegistry(-1472,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1472,__construct_MEQAdd)+
+        DynamicTypeManager::addToRegistry(-1472,__construct_MeqAdd)+
         AtomicID::registerId(-1144,"Domain")+
         AtomicID::registerId(-1484,"Nfreq")+
         AtomicID::registerId(-1483,"Times")+
         AtomicID::registerId(-1485,"TimeSteps")+
-        AtomicID::registerId(-1487,"MEQConj")+
+        AtomicID::registerId(-1487,"MeqConj")+
         TypeInfoReg::addToRegistry(-1487,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1487,__construct_MEQConj)+
-        AtomicID::registerId(-1476,"MEQCos")+
+        DynamicTypeManager::addToRegistry(-1487,__construct_MeqConj)+
+        AtomicID::registerId(-1476,"MeqCos")+
         TypeInfoReg::addToRegistry(-1476,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1476,__construct_MEQCos)+
-        AtomicID::registerId(-1474,"MEQDivide")+
+        DynamicTypeManager::addToRegistry(-1476,__construct_MeqCos)+
+        AtomicID::registerId(-1474,"MeqDivide")+
         TypeInfoReg::addToRegistry(-1474,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1474,__construct_MEQDivide)+
-        AtomicID::registerId(-1475,"MEQExp")+
+        DynamicTypeManager::addToRegistry(-1474,__construct_MeqDivide)+
+        AtomicID::registerId(-1475,"MeqExp")+
         TypeInfoReg::addToRegistry(-1475,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1475,__construct_MEQExp)+
-        AtomicID::registerId(-1491,"MEQFunction")+
+        DynamicTypeManager::addToRegistry(-1475,__construct_MeqExp)+
+        AtomicID::registerId(-1491,"MeqFunction")+
         TypeInfoReg::addToRegistry(-1491,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1491,__construct_MEQFunction)+
-        AtomicID::registerId(-1466,"MEQMultiply")+
+        DynamicTypeManager::addToRegistry(-1491,__construct_MeqFunction)+
+        AtomicID::registerId(-1466,"MeqMultiply")+
         TypeInfoReg::addToRegistry(-1466,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1466,__construct_MEQMultiply)+
+        DynamicTypeManager::addToRegistry(-1466,__construct_MeqMultiply)+
         AtomicID::registerId(-1427,"Node")+
         AtomicID::registerId(-1481,"Class")+
         AtomicID::registerId(-1163,"Name")+
@@ -75,17 +75,17 @@ BlockableObject * __construct_MEQToComplex (int n) { return n>0 ? new MEQ::ToCom
         AtomicID::registerId(-1421,"Result")+
         AtomicID::registerId(-1482,"Rider")+
         AtomicID::registerId(-1457,"Id")+
-        AtomicID::registerId(-1470,"MEQNode")+
+        AtomicID::registerId(-1470,"MeqNode")+
         TypeInfoReg::addToRegistry(-1470,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1470,__construct_MEQNode)+
+        DynamicTypeManager::addToRegistry(-1470,__construct_MeqNode)+
         AtomicID::registerId(-1488,"Tablename")+
         AtomicID::registerId(-1327,"Default")+
-        AtomicID::registerId(-1471,"MEQParmPolcStored")+
+        AtomicID::registerId(-1471,"MeqParmPolcStored")+
         TypeInfoReg::addToRegistry(-1471,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1471,__construct_MEQParmPolcStored)+
-        AtomicID::registerId(-1465,"MEQPow")+
+        DynamicTypeManager::addToRegistry(-1471,__construct_MeqParmPolcStored)+
+        AtomicID::registerId(-1465,"MeqPow")+
         TypeInfoReg::addToRegistry(-1465,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1465,__construct_MEQPow)+
+        DynamicTypeManager::addToRegistry(-1465,__construct_MeqPow)+
         AtomicID::registerId(-1478,"Cells")+
         AtomicID::registerId(-1486,"ReqId")+
         AtomicID::registerId(-1480,"CalcDeriv")+
@@ -93,24 +93,24 @@ BlockableObject * __construct_MEQToComplex (int n) { return n>0 ? new MEQ::ToCom
         AtomicID::registerId(-1479,"ParmValues")+
         AtomicID::registerId(-1490,"Spids")+
         AtomicID::registerId(-1473,"Perturbations")+
-        AtomicID::registerId(-1469,"MEQSin")+
+        AtomicID::registerId(-1469,"MeqSin")+
         TypeInfoReg::addToRegistry(-1469,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1469,__construct_MEQSin)+
-        AtomicID::registerId(-1489,"MEQSqr")+
+        DynamicTypeManager::addToRegistry(-1469,__construct_MeqSin)+
+        AtomicID::registerId(-1489,"MeqSqr")+
         TypeInfoReg::addToRegistry(-1489,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1489,__construct_MEQSqr)+
-        AtomicID::registerId(-1477,"MEQSqrt")+
+        DynamicTypeManager::addToRegistry(-1489,__construct_MeqSqr)+
+        AtomicID::registerId(-1477,"MeqSqrt")+
         TypeInfoReg::addToRegistry(-1477,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1477,__construct_MEQSqrt)+
-        AtomicID::registerId(-1467,"MEQSubtract")+
+        DynamicTypeManager::addToRegistry(-1477,__construct_MeqSqrt)+
+        AtomicID::registerId(-1467,"MeqSubtract")+
         TypeInfoReg::addToRegistry(-1467,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1467,__construct_MEQSubtract)+
-        AtomicID::registerId(-1468,"MEQToComplex")+
+        DynamicTypeManager::addToRegistry(-1467,__construct_MeqSubtract)+
+        AtomicID::registerId(-1468,"MeqToComplex")+
         TypeInfoReg::addToRegistry(-1468,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1468,__construct_MEQToComplex)+
+        DynamicTypeManager::addToRegistry(-1468,__construct_MeqToComplex)+
     0;
     return res;
   }
   
-  int __dum_call_registries_for_MEQ = aidRegistry_MEQ();
+  int __dum_call_registries_for_Meq = aidRegistry_Meq();
 

@@ -23,7 +23,7 @@
 #include <MEQ/Divide.h>
 #include <MEQ/VellsTmp.h>
 
-namespace MEQ {    
+namespace Meq {    
 
 
 Divide::Divide()
@@ -39,4 +39,4 @@ Vells Divide::evaluate (const Request&,
 }
 
 
-} // namespace MEQ
+} // namespace Meq

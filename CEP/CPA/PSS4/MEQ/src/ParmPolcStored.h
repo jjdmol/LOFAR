@@ -28,11 +28,11 @@
 #include <MEQ/ParmTable.h>
 #include <MEQ/Vells.h>
 
-#pragma aidgroup MEQ
+#pragma aidgroup Meq
 #pragma aid Tablename Default
-#pragma types #MEQ::ParmPolcStored
+#pragma types #Meq::ParmPolcStored
 
-namespace MEQ {
+namespace Meq {
 
 // This class contains the coefficients of a 2-dim polynomial.
 // The order in time and frequency must be given.
@@ -78,6 +78,6 @@ private:
 };
 
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif

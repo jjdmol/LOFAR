@@ -25,10 +25,10 @@
     
 #include <MEQ/Function2.h>
 
-#pragma aidgroup MEQ
-#pragma types #MEQ::Divide
+#pragma aidgroup Meq
+#pragma types #Meq::Divide
 
-namespace MEQ {    
+namespace Meq {    
 
 
 class Divide : public Function2
@@ -44,6 +44,6 @@ public:
 };
 
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif

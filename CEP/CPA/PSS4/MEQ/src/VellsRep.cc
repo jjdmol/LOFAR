@@ -23,7 +23,7 @@
 #include <MEQ/VellsRep.h>
 #include <aips/Exceptions/Error.h>
 
-namespace MEQ {
+namespace Meq {
 
 int VellsRep::nctor = 0;
 int VellsRep::ndtor = 0;
@@ -41,37 +41,37 @@ bool VellsRep::isReal() const
 
 double* VellsRep::realStorage()
 {
-  throw (AipsError ("MEQ::VellsRep::realStorage()"));
+  throw (AipsError ("Meq::VellsRep::realStorage()"));
 }
 
 complex<double>* VellsRep::complexStorage()
 {
-  throw (AipsError ("MEQ::VellsRep::complexStorage()"));
+  throw (AipsError ("Meq::VellsRep::complexStorage()"));
 }
 
 VellsRep* VellsRep::posdiff (VellsRep&)
 {
-  throw (AipsError ("MEQ::VellsRep::posdiff requires real arguments"));
+  throw (AipsError ("Meq::VellsRep::posdiff requires real arguments"));
 }
 VellsRep* VellsRep::posdiffRep (VellsRealSca&)
 {
-  throw (AipsError ("MEQ::VellsRep::posdiff requires real arguments"));
+  throw (AipsError ("Meq::VellsRep::posdiff requires real arguments"));
 }
 VellsRep* VellsRep::posdiffRep (VellsRealArr&)
 {
-  throw (AipsError ("MEQ::VellsRep::posdiff requires real arguments"));
+  throw (AipsError ("Meq::VellsRep::posdiff requires real arguments"));
 }
 VellsRep* VellsRep::tocomplex (VellsRep&)
 {
-  throw (AipsError ("MEQ::VellsRep::tocomplex requires real arguments"));
+  throw (AipsError ("Meq::VellsRep::tocomplex requires real arguments"));
 }
 VellsRep* VellsRep::tocomplexRep (VellsRealSca&)
 {
-  throw (AipsError ("MEQ::VellsRep::tocomplex requires real arguments"));
+  throw (AipsError ("Meq::VellsRep::tocomplex requires real arguments"));
 }
 VellsRep* VellsRep::tocomplexRep (VellsRealArr&)
 {
-  throw (AipsError ("MEQ::VellsRep::tocomplex requires real arguments"));
+  throw (AipsError ("Meq::VellsRep::tocomplex requires real arguments"));
 }
 
-} // namespace MEQ
+} // namespace Meq

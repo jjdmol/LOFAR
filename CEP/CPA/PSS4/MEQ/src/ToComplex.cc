@@ -23,7 +23,7 @@
 #include <MEQ/ToComplex.h>
 #include <MEQ/VellsTmp.h>
 
-namespace MEQ {    
+namespace Meq {    
 
 ToComplex::ToComplex()
 {}
@@ -37,4 +37,4 @@ Vells ToComplex::evaluate (const Request&,
   return tocomplex(*(values[0]), *(values[1]));
 }
 
-} // namespace MEQ
+} // namespace Meq

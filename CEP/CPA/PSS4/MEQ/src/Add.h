@@ -25,10 +25,10 @@
     
 #include <MEQ/Function.h>
 
-#pragma aidgroup MEQ
-#pragma types #MEQ::Add
+#pragma aidgroup Meq
+#pragma types #Meq::Add
 
-namespace MEQ {    
+namespace Meq {    
 
 
 class Add : public Function
@@ -44,6 +44,6 @@ public:
 };
 
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif

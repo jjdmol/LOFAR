@@ -30,7 +30,7 @@
 #include <Common/lofar_vector.h>
 
 
-namespace MEQ {
+namespace Meq {
 
 //# Forward declarations
 class Domain;
@@ -91,7 +91,7 @@ private:
 };
 
 
-} // namespace MEQ
+} // namespace Meq
 
 
 #endif

@@ -28,7 +28,7 @@
 #include <Common/lofar_complex.h>
 #include <iostream>
 
-namespace MEQ {
+namespace Meq {
 
 //# Forward Declarations
 class VellsRealSca;
@@ -144,6 +144,6 @@ private:
 };
 
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif

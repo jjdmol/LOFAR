@@ -27,7 +27,7 @@
 //# Includes
 #include <MEQ/VellsRep.h>
 
-namespace MEQ {
+namespace Meq {
 
 class VellsRealArr : public VellsRep
 {
@@ -110,7 +110,7 @@ private:
   bool    itsIsOwner;
 };
 
-} // namespace MEQ
+} // namespace Meq
 
 
 

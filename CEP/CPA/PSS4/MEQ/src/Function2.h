@@ -26,7 +26,7 @@
 #include <MEQ/Function.h>
 
 
-namespace MEQ {    
+namespace Meq {    
 
 
 class Function2 : public Function
@@ -41,6 +41,6 @@ public:
 };
 
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif

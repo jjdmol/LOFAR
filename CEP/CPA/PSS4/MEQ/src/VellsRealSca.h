@@ -27,7 +27,7 @@
 //# Includes
 #include <MEQ/VellsRep.h>
 
-namespace MEQ {
+namespace Meq {
 
 class VellsRealSca : public VellsRep
 {
@@ -115,6 +115,6 @@ private:
   double* itsValuePtr;
 };
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif

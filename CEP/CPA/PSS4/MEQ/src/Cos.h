@@ -25,10 +25,10 @@
     
 #include <MEQ/Function1.h>
 
-#pragma aidgroup MEQ
-#pragma types #MEQ::Cos
+#pragma aidgroup Meq
+#pragma types #Meq::Cos
 
-namespace MEQ {    
+namespace Meq {    
 
 
 class Cos : public Function1
@@ -45,6 +45,6 @@ public:
 };
 
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif
