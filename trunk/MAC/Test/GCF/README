@@ -1,11 +1,6 @@
-Using: Application<1|2> -num <num> -sfp test -proj <proj>
-	'num' => unique number of application, which uses the PVSS system (starting with 3) 
-	'proj' => name of PVSS project, which has to be used for these tests
-Precondition:
-- The PropertAgent of GCF is running (see README in GCF)
-- be sure log4cplus.properties, test.top and test.ns are in the same path as the test Applications
+Using: Application<1|2>
 
 Precondition:
-- The PropertAgent and PropertyInterface of GCF are running (see README in GCF)
-- be sure log4cplus.properties, test.top and test.ns are in the same path as the test applications
+- The ServiceBroker, PropertAgent and PropertyInterface of GCF are running (see README in GCF)
+- be sure log4cplus.properties, Application1.conf, Application2.conf, RTPing, RTEcho, RTPing.conf and RTEcho.conf are in the same path as the test applications
 - Load DPType's and DP's before starting the test apps by: PVSS00api -in src/gcftesttypes.dpl -proj <proj>
