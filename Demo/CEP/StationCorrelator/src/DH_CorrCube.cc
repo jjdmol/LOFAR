@@ -80,7 +80,6 @@ void DH_CorrCube::postprocess()
 }
 
 void DH_CorrCube::fillDataPointers() {
-  itsBlockIDptr = getData<int> ("BlockID");
   itsFlagptr = getData<int> ("Flag");
   itsBuffer = getData<BufferType> ("Buffer");
 }
