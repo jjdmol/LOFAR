@@ -193,8 +193,8 @@ void [+ event_class_name +]::unpack()
     memcpy([+ (get "name") +], (data + offset), sizeof([+ (get "name") +]));
     offset += sizeof([+ (get "name") +]);
     [+ ENDIF +][+ ENDFOR +]
-  }[+ ENDIF +]
-}[+ ENDFOR +]
+  }
+}[+ ENDIF +][+ ENDFOR +]
 [+ IF (= (suffix) "ph") +]
 } // namespace [+ (base-name) +]
 
