@@ -154,7 +154,7 @@ UVPMainWindow::UVPMainWindow(const std::string& hiidPrefix,
     itsInputType     = VDM;
     slot_vdmInit(itsHIIDPrefix);
     updateCaption();
-    slot_vdmInput();
+    //    slot_vdmInput();
   }
 #endif
 }
@@ -701,7 +701,7 @@ try
   // create agent
   if(itsInputAgent == 0) {
 #if(DEBUG_MODE)
-    std::cout << "itsInputAgent   = new MSInputAgent(AidInput);"<<std::endl;
+    std::cout << "itsInputAgent   = new InputAgent(itsEventMultiplexer->newSink());"<<std::endl;
 #endif
     itsInputAgent   = new VisAgent::InputAgent(itsEventMultiplexer->newSink());
   }
@@ -752,12 +752,12 @@ try
       UVPDataAtomHeader uvp_header;
       int draw_list = 0;
 
-      int intype = 0;
+      int intype = 1;
       while( intype > 0 && itsBusyPlotting) {
         HIID   id;
         ObjRef ref;
         
-        intype = itsInputAgent->hasNext();
+        intype = itsInputAgent->getNext(id, ref, 0, AppEvent::WAIT);
 
         if(intype <= 0) {
           std::cout << "intype: " << intype << std::endl;
@@ -767,13 +767,12 @@ try
           case HEADER:
             {
               std::cout << "Ignoring HEADER " << id.toString() << std::endl;
-              itsInputAgent->getHeader(header);
             }
             break;
 
           case DATA:
             {
-              itsInputAgent->getNextTile(tile);
+	      tile = ref;
               int ncorr = tile.deref().ncorr();
               int nfreq = tile.deref().nfreq();
               int ntime = tile.deref().ntime();
@@ -825,7 +824,6 @@ try
           case FOOTER:
             {
               std::cout << "Ignoring FOOTER " << id.toString() << std::endl;
-              itsInputAgent->getFooter(footer);
             }
             break;
             
@@ -840,11 +838,7 @@ try
         
       }//while state > 0...
       
-      itsInputAgent->close();
       drawDataSet();
-      
-      delete itsInputAgent;
-      itsInputAgent   = 0;
     } else {
       QMessageBox::information(0, "Uvplot", 
                                "No VisInputAgent. First initialize agent.",
