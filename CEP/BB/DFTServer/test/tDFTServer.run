@@ -2,10 +2,16 @@
 
 # Copy the .param file.
 cp $1/../src/DFTServer.param .
+sed -e 's/tDFT/DFT/' tDFTServer.log_prop > DFTServer.log_prop
 
 # Start the DFTServer.
 # Thereafter the test program.
 
-../src/DFTServer > tDFTServer_tmp.outs1 &
+if [ -f $MPIBIN/mpirun ]; then
+  echo "localhost" > tDFTServer_tmp.machinefile
+  $MPIBIN/mpirun -np 2 -machinefile tDFTServer_tmp.machinefile ../src/DFTServer > tDFTServer_tmp.outs1 &
+else
+  ../src/DFTServer > tDFTServer_tmp.outs1 &
+fi
 ./tDFTServer > tDFTServer_tmp.outc1
 cat tDFTServer_tmp.outs1 tDFTServer_tmp.outc1

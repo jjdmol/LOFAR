@@ -1,6 +1,6 @@
 //  WH_DFTServer.cc:
 //
-//  Copyright (C) 2000, 2001
+//  Copyright (C) 2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
 //  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
@@ -23,7 +23,9 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "DFTServer/WH_DFTServer.h"
+#include <DFTServer/WH_DFTServer.h>
+#include <DFTServer/mpidft.h>
+
 
 namespace LOFAR
 {
@@ -60,11 +62,33 @@ void WH_DFTServer::process()
   int nTime = myRequest->getNTime();
   int nBaseline = myRequest->getNBaseline();
   myResult->set (nFreq, nTime, nBaseline);
-  double* val = myResult->accessValues();
-  for (int i=0; i<2*nFreq*nTime*nBaseline; i++) {
-    val[i] = i;
-  }
-  cout << "Request for L = " << myRequest->getL() << endl;
+  cout << "Request for nant=" << myRequest->getNAnt()
+       << " ntime=" << nTime << " nfreq=" << nFreq
+       << " startfreq=" << myRequest->getStartFreq()
+       << " stepfreq=" << myRequest->getStepFreq()
+       << " L=" << myRequest->getL()
+       << " M=" << myRequest->getM()
+       << " N=" << myRequest->getN()
+       << " nbasel=" << myRequest->getNBaseline()
+       << endl;
+
+  doDFTmaster (myRequest->getNAnt(), myRequest->getAnt(), nTime, nFreq, 1, 1, 
+	       myRequest->getStartFreq(), myRequest->getStepFreq(),
+	       myRequest->getL(), myRequest->getM(), myRequest->getN(),
+	       myRequest->getUVW(),
+	       myRequest->getNBaseline(), 
+	       myRequest->getAnt1(), myRequest->getAnt2(),
+	       myResult->accessValues());
+
+  cout << "Request done for nant=" << myRequest->getNAnt()
+       << " ntime=" << nTime << " nfreq=" << nFreq
+       << " startfreq=" << myRequest->getStartFreq()
+       << " stepfreq=" << myRequest->getStepFreq()
+       << " L=" << myRequest->getL()
+       << " M=" << myRequest->getM()
+       << " N=" << myRequest->getN()
+       << " nbasel=" << myRequest->getNBaseline()
+       << endl;
 }
 
 void WH_DFTServer::dump()

@@ -1,7 +1,7 @@
 //# DFTServer.cc: DFT server application for use in combination with 
 //#               BBS2 application.
 //#
-//# Copyright (C) 2000-2002
+//# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -47,7 +47,7 @@ void DFTServer::define (const KeyValueMap& params)
   LOG_TRACE_FLOW_STR("start definition");
   // create and initialise the parameter object.
   const ParameterSet myPS("DFTServer.param");
-  //  WH_SimStation* myWHStations[myPS.getInt("general.nstations")];
+  
 
   LOG_TRACE_FLOW_STR("define the top-level composite object");
   // this is the holder for the actual DFTServer Step.
