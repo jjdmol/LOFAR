@@ -5,7 +5,8 @@ uvplot_SOURCES := main.cc \
                   UVPPixel.cc     \
                   UVPAxis.cc      \
                   UVPImageCube.cc \
-                  UVPUVCoverageArea.cc
+                  UVPSpectrum.cc  \
+                  UVPUVCoverageArea.cc UVPUVCoverageArea.moc.cc
 
 
 # Your package's subdirectory
@@ -17,7 +18,7 @@ UVPLOT_DIR := $(top_srcdir)/src
 #%.moc.cc: %.h
 #	$(MOC) $< -o $@
 
-CXXFLAGS += -pg  #-I$(QT_DIR)/include -L$(QT_DIR)/lib -lqt
+CXXFLAGS += -pg #-I$(QT_DIR)/include -L$(QT_DIR)/lib -lqt
 
 
 include $(lofar_sharedir)/Makefile.common

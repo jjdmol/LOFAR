@@ -16,14 +16,23 @@
 UVPDisplayArea::UVPDisplayArea(QWidget *parent,
                                int      numColors)
   : QWidget(parent),
-    itsColormap(numColors)
+    itsColormap(numColors),
+    itsXAxis(1, 0, "X", "arbitrary"),
+    itsYAxis(1, 0, "Y", "arbitrary")
 {
   // Uncomment: Don't blank window before repainting
   setBackgroundMode(NoBackground);
   
   setMouseTracking(true);
-  
+
+  itsBuffer.resize(10, 10);
+
+  for(unsigned int i = 0; i < itsColormap.size(); i++)
+    {
+      itsColormap[i] = QColor(qRgb(i, i, i), i);
+    }
   initColormap(1.0, 128.0);
+  
 }
 
 
@@ -57,8 +66,13 @@ void UVPDisplayArea::initColormap(double slope,
       col = max_color;
     }
     
-    itsColormap[i].setRgb(int(col+0.5), int(col+0.5), int(col+0.5));
+    col = int(col +0.5);
+
+    itsColormap[i].setRgb(col, col, col); 
+
   }
+
+  emit signal_paletteChanged();
 }
 
 
@@ -74,16 +88,53 @@ unsigned int UVPDisplayArea::getNumberOfColors() const
 
 
 
-//====================>>>  UVPDisplayArea::getColor  <<<====================
 
-const QColor *UVPDisplayArea::getColor(unsigned int color) const
+
+
+//====================>>>  UVPDisplayArea::getXAxis  <<<====================
+
+const UVPAxis *UVPDisplayArea::getXAxis() const
 {
-#if(DEBUG_MODE)
-  assert(color >= 0 && color < itsColormap.size());
-#endif(DEBUG_MODE)
-  
-  return &(itsColormap[color]);
+  return &itsXAxis;
 }
+
+
+
+
+
+
+//====================>>>  UVPDisplayArea::getYAxis  <<<====================
+
+const UVPAxis *UVPDisplayArea::getYAxis() const
+{
+  return &itsYAxis;
+}
+
+
+
+
+//====================>>>  UVPDisplayArea::setXAxis  <<<====================
+
+void UVPDisplayArea::setXAxis(const UVPAxis &axis)
+{
+  itsXAxis = axis;
+}
+
+
+
+
+
+
+//====================>>>  UVPDisplayArea::setYAxis  <<<====================
+
+void UVPDisplayArea::setYAxis(const UVPAxis &axis)
+{
+  itsYAxis = axis;
+}
+
+
+
+
 
 
 
@@ -136,8 +187,9 @@ void UVPDisplayArea::mouseMoveEvent(QMouseEvent *event)
     initColormap(slope, center);
     drawView();
   }else{
-    emit signal_mouse_world_pos_changed(event->pos().x(), event->pos().y());
   }
+  emit signal_mouseWorldPosChanged(itsXAxis.axisToWorld(event->pos().x()),
+                                   itsYAxis.axisToWorld(event->pos().y()));
 }
 
 
