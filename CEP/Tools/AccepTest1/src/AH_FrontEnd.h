@@ -21,6 +21,8 @@
 #include <WH_Correlator.h>
 #include <WH_Dump.h>
 
+#include <sys/time.h>
+
 namespace LOFAR
 {
 

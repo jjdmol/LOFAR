@@ -47,6 +47,7 @@ AH_BackEnd::AH_BackEnd (int port, int elements,
 
   bandwidth = 0.0;
 
+  gettimeofday (&starttime, NULL);
 }
 
 
@@ -88,10 +89,14 @@ void AH_BackEnd::undefine() {
 }
 
 void AH_BackEnd::init() {
+  struct timeval timestamp;
   vector<WorkHolder*>::iterator it = itsWHs.begin();
   for (; it != itsWHs.end(); it++) {
+    cout << "init BE WH " << (*it)->getName() << " listening ... ";
     if (!itsBlocking) (*it)->getDataManager().getInHolder(0)->getTransporter().setIsBlocking(itsBlocking);
     (*it)->basePreprocess();
+    gettimeofday (&timestamp, NULL);
+    cout << " connected on timestamp : "<< 1.0 * (timestamp.tv_sec - starttime.tv_sec) + 1.0 * (timestamp.tv_usec - starttime.tv_usec) / 1000000 << "sec"<<endl;
   }
 }
 

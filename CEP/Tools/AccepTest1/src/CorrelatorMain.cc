@@ -46,7 +46,7 @@ int main (int argc, const char** argv) {
 
   if (targetgroups > MAX_TARGETGROUPS) targetgroups=MAX_TARGETGROUPS;
 
-  INIT_LOGGER(loggerfile);
+  INIT_LOGGER(loggerfile.c_str());
 
   //ASSERTSTR(targetgroups == NRFE,"Code not unrolled for other than 4 target groups yet..." );
   std::string FE_ip[MAX_TARGETGROUPS];
