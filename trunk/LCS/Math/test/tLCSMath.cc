@@ -22,12 +22,13 @@
 
 #include <Math/LCSMath.h>
 #include <Common/Lorrays-Blitz.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <Common/Stopwatch.h>
 
 int main()
 {
   try {
+    INIT_LOGGER("tLCSMath.log_prop");
     {
       const int n = 10000;
       LoVec_double vec(n);
@@ -40,7 +41,7 @@ int main()
       }
       cout << "100x LCSMath 10^4 " << timer.sdelta() << endl;
       for (int i=0; i<n; i++) {
-	Assert (vec(i) == double(i));
+	ASSERT (vec(i) == double(i));
       }
     }
     {
@@ -55,7 +56,7 @@ int main()
       }
       cout << "100x LCSMath order" << timer.sdelta() << endl;
       for (int i=0; i<n; i++) {
-	Assert (vec(i) == double(i));
+	ASSERT (vec(i) == double(i));
       }
     }
     {
@@ -70,7 +71,7 @@ int main()
       }
       cout << "100x LCSMath equal" << timer.sdelta() << endl;
       for (int i=0; i<n; i++) {
-	Assert (vec(i) == double(0));
+	ASSERT (vec(i) == double(0));
       }
     }
     {
@@ -85,7 +86,7 @@ int main()
       }
       cout << "100x LCSMath 10^5 " << timer.sdelta() << endl;
       for (int i=0; i<n; i++) {
-	Assert (vec(i) == double(i));
+	ASSERT (vec(i) == double(i));
       }
     }
     {
@@ -100,7 +101,7 @@ int main()
       }
       cout << " 10x LCSMath 10^6 " << timer.sdelta() << endl;
       for (int i=0; i<n; i++) {
-	Assert (vec(i) == double(i));
+	ASSERT (vec(i) == double(i));
       }
     }
     {
@@ -115,7 +116,7 @@ int main()
       }
       cout << " 10x LCSMath order" << timer.sdelta() << endl;
       for (int i=0; i<n; i++) {
-	Assert (vec(i) == double(i));
+	ASSERT (vec(i) == double(i));
       }
     }
 
@@ -124,8 +125,8 @@ int main()
       const int n2=3;
       const int n3=4;
       LoMat_double mat1(n1,n2);
-      Assert (mat1.rows() == n1);
-      Assert (mat1.cols() == n2);
+      ASSERT (mat1.rows() == n1);
+      ASSERT (mat1.cols() == n2);
       LoMat_double mat2(n2,n3);
       int k = 0;
       for (int j=0; j<n2; j++) {
@@ -141,13 +142,13 @@ int main()
       mat4 = sum(mat1(blitz::tensor::i, blitz::tensor::k) *
 		 mat2(blitz::tensor::k, blitz::tensor::j),
 		 blitz::tensor::k);
-      Assert (mat3.extent(0) == n1);
-      Assert (mat3.extent(1) == n3);
-      Assert (mat4.extent(0) == n1);
-      Assert (mat4.extent(1) == n3);
+      ASSERT (mat3.extent(0) == n1);
+      ASSERT (mat3.extent(1) == n3);
+      ASSERT (mat4.extent(0) == n1);
+      ASSERT (mat4.extent(1) == n3);
       for (int i=0; i<n3; i++) {
 	for (int j=0; j<n1; j++) {
-	  Assert (mat3(j,i) == mat4(j,i));
+	  ASSERT (mat3(j,i) == mat4(j,i));
 	}
       }
     }
@@ -200,5 +201,6 @@ int main()
     cout << "Unexpected exception" << endl;
     return 1;
   }
+  std::cout << "OK" << std::endl;
   return 0;
 }
