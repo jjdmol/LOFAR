@@ -7,14 +7,12 @@ BlackBoardDemo.h                                \
 Quality.h                                       \
 Strategy.h                                      \
 StrategyImpl.h                                  \
-SI_Peeling.h                                    \
 SI_Simple.h                                     \
+SI_Peeling.h                                    \
 SI_WaterCal.h                                   \
 SI_Randomized.h 				\
+MMap.h						\
 MeqCalibraterImpl.h                             \
-CalibratorOld.h                                 \
-Calibrator.h					\
-TryOut.h \
 MNS/MeqDomain.h \
 MNS/MeqExpr.h \
 MNS/MeqHist.h \
@@ -76,17 +74,16 @@ DH_Solution.cc                                          \
 DH_WorkOrder.cc                                         \
 WH_Evaluate.cc                                          \
 WH_PSS3.cc                                              \
+BlackBoardDemo.cc                                       \
 Quality.cc                                              \
 Strategy.cc                                             \
 StrategyImpl.cc                                         \
-SI_Peeling.cc                                           \
 SI_Simple.cc                                            \
+SI_Peeling.cc                                           \
 SI_WaterCal.cc                                          \
 SI_Randomized.cc					\
+MMap.cc							\
 MeqCalibraterImpl.cc                                    \
-CalibratorOld.cc 	                                \
-Calibrator.cc						\
-TryOut.cc \
 MNS/MeqDomain.cc \
 MNS/MeqExpr.cc \
 MNS/MeqHist.cc \
@@ -124,20 +121,22 @@ MNS/ParmTableMySQL.cc \
 MNS/ParmTableMonet.cc \
 MNS/ParmTableBDB.cc \
 MNS/ParmTablePGSQL.cc \
+MNS/ParmTableBDB.cc\
 MNS/ParmTableSQLHelper.cc \
 MNS/ParmTable.cc
 
 
 
-bin_PROGRAMS = BlackBoardDemo fillsqldb
+#bin_PROGRAMS = BlackBoardDemo fillsqldb
+bin_PROGRAMS = fillsqldb
 
 fillsqldb_SOURCES = MNS/fillsqldb.cc
 fillsqldb_LDADD = libpss3.la
 fillsqldb_DEPENDENCIES = libpss3.la $(LOFAR_DEPEND)
 
-BlackBoardDemo_SOURCES = BlackBoardDemo.cc
-BlackBoardDemo_LDADD = libpss3.la
-BlackBoardDemo_DEPENDENCIES = libpss3.la $(LOFAR_DEPEND)
+# BlackBoardDemo_SOURCES = BlackBoardDemo.cc
+# BlackBoardDemo_LDADD = libpss3.la
+# BlackBoardDemo_DEPENDENCIES = libpss3.la $(LOFAR_DEPEND)
 
 
 include $(lofar_sharedir)/Makefile.common

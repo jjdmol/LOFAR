@@ -20,28 +20,41 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <PSS3/SI_Simple.h>
 #include <Common/Debug.h>
-#include <PSS3/CalibratorOld.h>
+#include <Common/KeyValueMap.h>
+#include <PSS3/MeqCalibraterImpl.h>
 
 namespace LOFAR
 {
 
-SI_Simple::SI_Simple(CalibratorOld* cal, int argSize, char* args)
+SI_Simple::SI_Simple(MeqCalibrater* cal, const KeyValueMap& args)
   : StrategyImpl(),
     itsCal(cal),
     itsCurIter(-1),
     itsFirstCall(true)
 {
-  AssertStr(argSize == sizeof(Simple_data), "Incorrect argument list");
-  SI_Simple::Simple_data* sData = (SI_Simple::Simple_data*)args;
-  itsNIter = sData->nIter;
-  itsNSources = sData->nSources;
-  itsTimeInterval = sData->timeInterval;
+  itsNIter = args.getInt("nrIterations", 1);
+  itsTimeInterval = args.getFloat("timeInterval", 10.0);
+  itsStartChan = args.getInt("startChan", 0);
+  itsEndChan = args.getInt("endChan", 0);
+  itsAnt = (const_cast<KeyValueMap&>(args))["antennas"].getVecInt();
+  itsSources = (const_cast<KeyValueMap&>(args))["sources"].getVecInt();
+  itsNSources = itsSources.size();
+  itsUseSVD = args.getBool("useSVD", false);
+  itsSaveAllIter = args.getBool("saveAllIter", false);
+
   TRACER1("Creating Simple strategy implementation with " 
 	  << "number of iterations = " << itsNIter << ", "
 	  << "number of sources = " << itsNSources << ", "
-	  << " time interval = " << itsTimeInterval);
+	  << "time interval = " << itsTimeInterval << ", "
+	  << "start channel = " << itsStartChan << ", "
+	  << "end channel = " << itsEndChan << ", "
+	  << "number of antennas = " << itsAnt.size() << ", "
+	  << "use SVD = " << itsUseSVD << ", "
+	  << "save parms at all iterations = " << itsSaveAllIter);
 
 }
 
@@ -59,52 +72,59 @@ bool SI_Simple::execute(vector<string>& parmNames,
 
   if (itsFirstCall)
   {
-    itsCal->Initialize();
-    itsCal->ShowSettings();
+    itsCal->select(itsAnt, itsAnt, itsStartChan, itsEndChan);
+    itsCal->setTimeInterval(itsTimeInterval);
+    itsCal->clearSolvableParms();
 
-    for (unsigned int i=0; i < parmNames.size(); i++)      // Add all parms
-    { 
-      itsCal->addSolvableParm(parmNames[i]);
-      TRACER1("Adding Parameter " << parmNames[i] );
-    }
-    itsCal->commitSolvableParms();
+    vector<string> emptyP(0);
+    itsCal->setSolvableParms(parmNames, emptyP, true);
 
-    itsCal->clearPeelSources();
-    for (int srcNo = 1; srcNo <= itsNSources; srcNo++)
-    {
-      itsCal->addPeelSource(srcNo);
-      TRACER1("Adding peel (predict) source no: " << srcNo);
-    }
-    itsCal->commitPeelSourcesAndMasks();
+    vector<int> emptyS(0);
+    itsCal->peel(itsSources, emptyS);           // add peel sources
 
-    itsCal->resetTimeIntervalIterator();
-    itsCal->advanceTimeIntervalIterator();
+    itsCal->showSettings();
+    itsCal->resetIterator();
+    itsCal->nextInterval();
     TRACER1("Next interval");
-   
+
+    itsCal->showParmValues();
     itsFirstCall = false;
   }
 
   TRACER1("Next iteration: " << itsCurIter+1);
   if (++itsCurIter >= itsNIter)          // Next iteration
   {                                      // Finished with all iterations
-    //  itsCal->SubtractOptimizedSources();
-    itsCal->CommitOptimizedParameters(); // Write to parmTable
+    itsCal->saveParms(); // Write to parmTable
 
     TRACER1("Next interval");
-    if (itsCal->advanceTimeIntervalIterator() == false) // Next time interval
+    if (itsCal->nextInterval() == false) // Next time interval
     {                                    // Finished with all time intervals
       itsCurIter = -1;
       itsFirstCall = true;
       return false;       
     }
+    cout << "BBSTest: BeginOfIteration " << itsCurIter << endl;
     itsCurIter = 0;                      // Reset iterator
+  }
+  else
+  {
+    cout << "BBSTest: BeginOfIteration " << itsCurIter << endl;
   }
 
   // The actual solve
   TRACER1("Solve for " << itsNSources <<" sources, " 
        << " iteration = " << itsCurIter << " of " << itsNIter);
  
-  itsCal->Run(resultParmNames, resultParmValues, resultQuality);
+  itsCal->solve(itsUseSVD, resultParmNames, resultParmValues, resultQuality);
+
+  itsCal->showParmValues();
+
+  if (itsSaveAllIter)
+  {
+    itsCal->saveParms();
+  }
+  
+  cout << "BBSTest: EndOfIteration " << itsCurIter << endl;
 
   resultIterNo = itsCurIter;
   return true;

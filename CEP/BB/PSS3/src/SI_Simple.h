@@ -23,7 +23,6 @@
 #ifndef PSS3_SI_SIMPLE_H
 #define PSS3_SI_SIMPLE_H
 
-#include <lofar_config.h>
 
 //# Includes
 #include <PSS3/StrategyImpl.h>
@@ -33,22 +32,24 @@ namespace LOFAR
 {
 
 //# Forward Declarations
+class KeyValueMap;
 
 // This is a class which implements a simple calibration strategy.
 // This strategy solves for all parameters of a number of sources at the same
 // time.
+// Arguments for the SI_Simple class:
+//   A KeyValueMap containing the following keys:
+//    - nrIterations    integer
+//    - timeInterval    float
+//    - startChan       integer
+//    - endChan         integer
+//    - antennas        vector<int>
+//    - sources         vector<int>
 
 class SI_Simple : public StrategyImpl
 {
 public:
-
- typedef struct {       // Struct containing data specific for simple strategy
-   int    nIter;         // Number of iterations
-   int    nSources;      // Number of sources
-   double timeInterval;  // Time interval
- }Simple_data;
-
-  SI_Simple(CalibratorOld* cal, int argSize, char* args);
+  SI_Simple(MeqCalibrater* cal, const KeyValueMap& args);
 
   virtual ~SI_Simple();
 
@@ -67,10 +68,16 @@ public:
   SI_Simple(const SI_Simple&);
   SI_Simple& operator=(const SI_Simple&);
 
-  CalibratorOld*    itsCal;             // The calibrator
+  MeqCalibrater* itsCal;             // The calibrator
   int            itsNIter;           // Number of iterations
   int            itsNSources;        // Number of sources for which to solve
   double         itsTimeInterval;    // Time interval for which to solve
+  int            itsStartChan;
+  int            itsEndChan;
+  vector<int>    itsAnt;
+  vector<int>    itsSources;
+  bool           itsUseSVD;          // Flag for solver
+  bool           itsSaveAllIter;     // Call saveParms() after every iteration? 
   int            itsCurIter;         // The current iteration
   bool           itsFirstCall;
 };

@@ -23,14 +23,18 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.h>
+
 #include <stdio.h>             // for sprintf
 
 #include <PSS3/WH_PSS3.h>
 #include <CEPFrame/Step.h>
 #include <Common/Debug.h>
+#include <Common/Timer.h>
+#include <Common/KeyValueMap.h>
 #include <PSS3/DH_WorkOrder.h>
 #include <PSS3/DH_Solution.h>
-#include <PSS3/CalibratorOld.h>
+#include <PSS3/MeqCalibraterImpl.h>
 #include <PSS3/Strategy.h>
 
 namespace LOFAR
@@ -40,32 +44,17 @@ const int DefaultAntennaCount = 21;
 
 const int MaxNumberOfParms = 30;
 
-WH_PSS3::WH_PSS3 (const string& name, const string & msName, 
-		  const string& meqModel, const string& skyModel,
-		  const string& dbType, const string& dbName,
-		  const string& dbHost,
-		  const string& dbPwd, unsigned int ddid, 
-		  const string& modelType, bool calcUVW, 
-		  const string& dataColName, 
-		  const string& residualColName, bool outputAllIter, 
-		  int number)
+WH_PSS3::WH_PSS3 (const string& name, string nr, int id , 
+		  const KeyValueMap& args)
   : WorkHolder        (2, 2, name, "WH_PSS3"),
     itsCal            (0),
-    itsMSName         (msName),
-    itsMeqModel       (meqModel),
-    itsSkyModel       (skyModel),
-    itsDbType         (dbType),
-    itsDbName         (dbName),
-    itsDbHost         (dbHost),
-    itsDbPwd          (dbPwd),
-    itsDDID           (ddid),
-    itsModelType      (modelType),
-    itsCalcUVW        (calcUVW),
-    itsDataColName    (dataColName),
-    itsResidualColName(residualColName),
-    itsOutputAllIter  (outputAllIter),
-    itsNumber         (number)
-
+    itsDDID           (0),
+    itsModelType      ("LOFAR.RI"),
+    itsDataColName    ("CORRECTED_DATA"),
+    itsResidualColName("CORRECTED_DATA"),
+    itsNr             (nr),
+    itsIden           (id),
+    itsArgs           (args)
 {
   TRACER4("WH_PSS3 construction");
   getDataManager().addInDataHolder(0, new DH_WorkOrder(name+"_in"));
@@ -77,12 +66,6 @@ WH_PSS3::WH_PSS3 (const string& name, const string & msName,
   getDataManager().setAutoTriggerIn(1, false);
   getDataManager().setAutoTriggerOut(0, false);
   getDataManager().setAutoTriggerOut(1, false);
-
-  for (int i = 0; i < DefaultAntennaCount; i ++)
-  {
-    itsAnt1.push_back (4 * i);
-    itsAnt2.push_back (4 * i);
-  }
 }
 
 WH_PSS3::~WH_PSS3()
@@ -97,10 +80,7 @@ WH_PSS3::~WH_PSS3()
 
 WH_PSS3* WH_PSS3::make (const string& name)
 {
-  return new WH_PSS3 (name, itsMSName, itsMeqModel, itsSkyModel, itsDbType,
-		      itsDbName, itsDbHost, itsDbPwd,  itsDDID, itsModelType, 
-		      itsCalcUVW, itsDataColName, itsResidualColName, 
-		      itsOutputAllIter, itsNumber);
+  return new WH_PSS3 (name, itsNr, itsIden, itsArgs);
 }
 
 void WH_PSS3::preprocess()
@@ -110,11 +90,9 @@ void WH_PSS3::preprocess()
 
 void WH_PSS3::process()
 {
-  // Create a Calibrator object
+  NSTimer totTimer;
+  totTimer.start();
   TRACER4("WH_PSS3 process()");
-  itsCal = new CalibratorOld(itsMSName, itsMeqModel, itsSkyModel, itsDbType, 
-			     itsDbName, itsDbHost, itsDbPwd);
-
   // Query the database for a work order
   DH_WorkOrder* wo =  dynamic_cast<DH_WorkOrder*>(getDataManager().getInHolder(0));
   AssertStr(wo !=  0, "Dataholder is not a work order");
@@ -137,17 +115,34 @@ void WH_PSS3::process()
   wo->setStatus(DH_WorkOrder::Assigned);
   woPtr->updateDB();
 
-  wo->dump();
-  
-  int argsSize = wo->getArgsSize();
-  char data[argsSize];
+  //  wo->dump();
+
+  // Read workorder
+  KeyValueMap stratArgs;
   vector<string> pNames;    // Parameter names
   vector<int> solNumbers;   // Solution IDs
-  wo->getVarData(data, pNames, solNumbers);
+  wo->getVarData(stratArgs, pNames, solNumbers);
+
+  // Create a MeqCalibrater object
+  string msName = itsArgs.getString("MSName", "empty") + itsNr + ".MS";
+  string meqModel = itsArgs.getString("meqTableName", "meqmodel") + itsNr;
+  string skyModel = itsArgs.getString("skyTableName", "skymodel") + itsNr;
+  string dbType = itsArgs.getString("DBType", "postgres");
+  string dbName = itsArgs.getString("DBName", "test");
+  string dbHost = itsArgs.getString("DBHost", "dop50");
+  string dbPwd = itsArgs.getString("DBPwd", "");
+  vector<int> antennas =                                   // Should this be a KS parameter?
+    (const_cast<KeyValueMap&>(stratArgs))["antennas"].getVecInt();
+  bool calcUVW = itsArgs.getBool("calcUVW", false);
+
+  bool outputAllIter = itsArgs.getBool("writeAllSols", true);
+  itsCal = new MeqCalibrater(msName, meqModel, skyModel, dbType, 
+			     dbName, dbHost, dbPwd, itsDDID,
+			     antennas, itsModelType, calcUVW);
   
   // Create a strategy object
   TRACER1("Strategy number: " << wo->getStrategyNo());
-  Strategy strat(wo->getStrategyNo(), itsCal, argsSize, data);
+  Strategy strat(wo->getStrategyNo(), itsCal, stratArgs);
   
   // Get solution dataholder DH_Solution* sol;
   DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getInHolder(1));
@@ -208,33 +203,37 @@ void WH_PSS3::process()
   
   // Execute the strategy until finished with all iterations, intervals 
   // and sources.
+  NSTimer exTimer;
+  exTimer.start();
   while (strat.execute(pNames, resPNames, resPValues, resQuality, iterNo))
   {
     TRACER1("Executed strategy");
-    if (itsOutputAllIter)   // Write every found solution in DH_Solution
+    if (outputAllIter)   // Write every found solution in DH_Solution
     {    
       sol->setSolution(resPNames, resPValues);
       sol->setIterationNo(iterNo);
       sol->setQuality(resQuality);
-      sol->setID(itsNumber++);
+      sol->setID(itsIden++);
       sol->setWorkOrderID(wo->getWorkOrderID());
       wo->setStatus(DH_WorkOrder::Executed);
       // Add solution to database and update work order
       solPtr->insertDB();
       woPtr->updateDB();
       // Dump to screen
-      sol->dump();
+      //      sol->dump();
     }
     count++;
     
   }
+  exTimer.stop();
+  cout << "BBSTest: loop-execute " << exTimer << endl;
 
-  if (!itsOutputAllIter) // Write only the resulting output
+  if (!outputAllIter) // Write only the resulting output
   {  
     sol->setSolution(resPNames, resPValues);
     sol->setIterationNo(iterNo);
     sol->setQuality(resQuality);
-    sol->setID(itsNumber++);
+    sol->setID(itsIden++);
     sol->setWorkOrderID(wo->getWorkOrderID());
     wo->setStatus(DH_WorkOrder::Executed);
     // Add solution to database and update work order
@@ -243,6 +242,8 @@ void WH_PSS3::process()
   }
 
   delete itsCal;
+  totTimer.stop();
+  cout << "BBSTest: total-execute " << totTimer << endl;
 }
 
 void WH_PSS3::dump()

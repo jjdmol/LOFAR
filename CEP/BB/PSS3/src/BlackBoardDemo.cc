@@ -23,6 +23,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <lofar_config.h>
+
 #include <stdio.h>
 #include <Common/lofar_iostream.h>
 #include <stdlib.h>
@@ -82,38 +84,33 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   topComposite.runOnNode(0,0);
   topComposite.setCurAppl(0);
 
-  // Optional: Get any extra params from input
 
-  int itsNumberKS = 4;       // The total number of Knowledge Sources
-  char databaseName[10] = "meijeren";   // !!!! Change to own database !!!!
+  // Get Knowledge Source properties
+  KeyValueMap ksParams = (const_cast<KeyValueMap&>(params))["KSparams"].getValueMap();
 
-  TH_PL::useDatabase(databaseName); 
+  // Get control properties
+  KeyValueMap ctrlParams = (const_cast<KeyValueMap&>(params))["CTRLparams"].getValueMap();
 
-  string meqModel = "meqmodel";
-  string skyModel = "skymodel";
-  string modelType = "LOFAR.RI";
-  string dataColName = "CORRECTED_DATA";
-  string residualColName = "CORRECTED_DATA";
-  unsigned int ddID = 0;
-  bool calcUVW = false;
- 
+  int itsNumberKS = params.getInt("nrKS", 1);
+  string bbDBName = params.getString("BBDBname", "test");
+
+  TH_PL::useDatabase(bbDBName); 
+
   // Create the controller WorkHolder and Step
-  WH_Evaluate controlWH("control", itsNumberKS);
+  WH_Evaluate controlWH("control", ctrlParams);
   Step controlStep(controlWH, "controlStep");
   controlStep.runOnNode(0,0);
   topComposite.addStep(controlStep);
 
   // Create the Knowledge Sources
-  itsKSSteps = new (Step*)[itsNumberKS];
+  itsKSSteps = new Step*[itsNumberKS];
   string ksID;
   for (int ksNo=1; ksNo<=itsNumberKS; ksNo++)
   { 
     // Create the PSS3 Workholders and Steps
     ksID = i2string(ksNo);
 
-    WH_PSS3 ksWH("KS"+ksID, "data/10Sources/demo10-"+ksID, meqModel+ksID, skyModel+ksID, 
-		 "postgres",  databaseName, "dop50", "", ddID, modelType, calcUVW, 
-		 dataColName, residualColName, true, ksNo*10000);
+    WH_PSS3 ksWH("KS"+ksID, ksID, ksNo*10000, ksParams);
 
     int index = ksNo - 1;
     itsKSSteps[index] = new Step(ksWH, "knowledgeSource"+ksID);

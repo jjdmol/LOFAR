@@ -23,7 +23,6 @@
 #ifndef PSS3_STRATEGY_H
 #define PSS3_STRATEGY_H
 
-#include <lofar_config.h>
 
 //# Includes
 #include <Common/lofar_vector.h>
@@ -35,7 +34,8 @@ namespace LOFAR
 {
 
 //# Forward Declarations
-class CalibratorOld;
+class MeqCalibrater;
+ class KeyValueMap;
 
 // This class defines an interface to calibration strategies. It creates
 // and contains a reference to a concrete calibration strategy implementation 
@@ -45,7 +45,7 @@ class CalibratorOld;
 class Strategy
 {
 public:
-  Strategy(int strategyNo, CalibratorOld* cal, int varArgSize, char* varArgs);
+  Strategy(int strategyNo, MeqCalibrater* cal, const KeyValueMap& args);
 
   virtual ~Strategy();
 

@@ -26,7 +26,6 @@
 #ifndef PSS3_DH_SOLUTION_H
 #define PSS3_DH_SOLUTION_H
 
-#include <lofar_config.h>
 #include <Common/lofar_vector.h>
 #include <TransportPL/DH_PL.h>
 #include <TransportPL/PO_DH_PL.h>
@@ -156,7 +155,8 @@ inline void DH_Solution::setCurDataSize(const int nbytes)
 
 // Define the class needed to tell PL that there should be
 // extra fields stored in the database table.
-namespace PL {                                                  
+namespace PL {  
+  template<>                                               
   class DBRep<DH_Solution> : public DBRep<DH_PL>               
   {                                                             
     public:                                                     

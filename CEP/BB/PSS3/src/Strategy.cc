@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <PSS3/Strategy.h>
 #include <Common/Debug.h>
 #include <PSS3/SI_Peeling.h>
@@ -30,27 +32,27 @@
 namespace LOFAR
 {
 
-Strategy::Strategy(int strategyNo, CalibratorOld* cal, 
-		   int varArgSize, char* varArgs)
+Strategy::Strategy(int strategyNo, MeqCalibrater* cal, 
+		   const KeyValueMap& args)
 {
   AssertStr(cal!=0, "Calibrator pointer is 0");
   switch (strategyNo) 
   {
   case 1:                                        // Simple
     TRACER3("Creating simple strategyImpl");
-    itsImpl = new SI_Simple(cal, varArgSize, varArgs);
+    itsImpl = new SI_Simple(cal, args);
     break;    
   case 2:                                        // Peeling
     TRACER3("Creating peeling strategyImpl");
-    itsImpl = new SI_Peeling(cal, varArgSize, varArgs);
+    itsImpl = new SI_Peeling(cal, args);
     break;
   case 3:                                        // WaterCal
     TRACER3("Creating WaterCal strategyImpl");
-    itsImpl = new SI_WaterCal(cal, varArgSize, varArgs);
+    itsImpl = new SI_WaterCal(cal, args);
     break;
   case 4:                                        // Randomized
     TRACER3("Creating Randomized strategyImpl");
-    itsImpl = new SI_Randomized(cal, varArgSize, varArgs);
+    itsImpl = new SI_Randomized(cal, args);
     break;
   default:
     itsImpl = 0;

@@ -20,30 +20,38 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <PSS3/SI_Peeling.h>
 #include <Common/Debug.h>
-#include <PSS3/CalibratorOld.h>
+#include <Common/KeyValueMap.h>
+#include <PSS3/MeqCalibraterImpl.h>
 
 namespace LOFAR
 {
 
-SI_Peeling::SI_Peeling(CalibratorOld* cal, int argSize, char* args)
+SI_Peeling::SI_Peeling(MeqCalibrater* cal, const KeyValueMap& args)
   : StrategyImpl(),
     itsCal(cal),
     itsCurIter(-1),
     itsFirstCall(true)
 {
-  AssertStr(argSize == sizeof(Peeling_data), "Incorrect argument list");
-  SI_Peeling::Peeling_data* pData = (SI_Peeling::Peeling_data*)args;
-  itsNIter = pData->nIter;
-  itsNSources = pData->nSources;
-  itsStartSource = pData->startSource;
+  itsNIter = args.getInt("nrIterations", 0);
+  itsNSources = args.getInt("nrSources", 1);
+  itsStartSource = args.getInt("startSource", 1);
   itsCurSource = itsStartSource;
-  itsTimeInterval = pData->timeInterval;
+  itsTimeInterval = args.getFloat("timeInterval", 10.0);
+  itsStartChan = args.getInt("startChan", 0);
+  itsEndChan = args.getInt("endChan", 0);
+  itsAnt = (const_cast<KeyValueMap&>(args))["antennas"].getVecInt();
+ 
   TRACER1("Creating Peeling strategy implementation with " 
 	  << "number of iterations = " << itsNIter << ", "
 	  << "number of sources = " << itsNSources << ", "
-	  << " time interval = " << itsTimeInterval);
+	  << " time interval = " << itsTimeInterval<< ", "
+          << "start channel = " << itsStartChan << ", "
+          << "end channel = " << itsEndChan << ", "
+          << "number of antennas = " << itsAnt.size());
 
 }
 
@@ -66,24 +74,28 @@ bool SI_Peeling::execute(vector<string>& parmNames,
 
   if (itsFirstCall)
   {
-    itsCal->Initialize();
-    itsCal->ShowSettings();
+    itsCal->select(itsAnt, itsAnt, itsStartChan, itsEndChan);
+    itsCal->setTimeInterval(itsTimeInterval);
+    itsCal->clearSolvableParms();
+    itsCal->showSettings();
+
+    vector<string> emptyP;
+    vector<string> params(genParams);
     for (unsigned int i=0; i < srcParams.size(); i++)      // Add source specific
     {                                                      // parameters
-      itsCal->addSolvableParm(srcParams[i], itsCurSource);
+      ostringstream parm;
+      parm << srcParams[i] << ".CP" << itsCurSource;
+      params.push_back(parm.str());
     }
-    for (unsigned int j=0; j < genParams.size(); j++)      // Add all other parameters
-    { 
-      itsCal->addSolvableParm(genParams[j]);
-    }
-    itsCal->commitSolvableParms();
+    itsCal->setSolvableParms(params, emptyP, true); 
 
-    itsCal->clearPeelSources();
-    itsCal->addPeelSource(itsCurSource);
-    itsCal->commitPeelSourcesAndMasks();
+    vector<int> emptyS;
+    vector<int> sources(1);
+    sources[1] = itsCurSource;
+    itsCal->peel(sources, emptyS);
 
-    itsCal->resetTimeIntervalIterator();
-    itsCal->advanceTimeIntervalIterator();
+    itsCal->resetIterator();
+    itsCal->nextInterval();
     TRACER1("Next interval");
    
     itsFirstCall = false;
@@ -93,7 +105,7 @@ bool SI_Peeling::execute(vector<string>& parmNames,
   if (++itsCurIter >= itsNIter)          // Next iteration
   {                                      // Finished with all iterations
     TRACER1("Next interval");
-    if (itsCal->advanceTimeIntervalIterator() == false) // Next time interval
+    if (itsCal->nextInterval() == false) // Next time interval
     {                                    // Finished with all time intervals
       TRACER1("Next source: " << itsCurSource+1);
      if (++itsCurSource >= itsStartSource+itsNSources)  // Next source
@@ -106,21 +118,24 @@ bool SI_Peeling::execute(vector<string>& parmNames,
       else
       {
 	itsCal->clearSolvableParms();
-	for (unsigned int i=0; i < srcParams.size(); i++)    // Add source specific
-	{                                                    // parameters
-	  itsCal->addSolvableParm(srcParams[i], itsCurSource);
-	}
-	for (unsigned int j=0; j < genParams.size(); j++)   // Add all other parameters
-	{ 
-	  itsCal->addSolvableParm(genParams[j]);
-	}
-	itsCal->commitSolvableParms();
-	//itsCal->clearPeelSources(); ///Temporary!!!!
-	itsCal->addPeelSource(itsCurSource);
-	itsCal->commitPeelSourcesAndMasks();
 
-	itsCal->resetTimeIntervalIterator();
-	itsCal->advanceTimeIntervalIterator();
+	vector<string> emptyP;
+	vector<string> params(genParams);
+	for (unsigned int i=0; i < srcParams.size(); i++)      // Add source specific
+	{                                                      // parameters
+	  ostringstream parm;
+	  parm << srcParams[i] << ".CP" << itsCurSource;
+	  params.push_back(parm.str());
+	}
+	itsCal->setSolvableParms(params, emptyP, true); 
+
+	vector<int> emptyS;
+	vector<int> sources(1);
+	sources[1] = itsCurSource;
+	itsCal->peel(sources, emptyS);
+
+	itsCal->resetIterator();
+	itsCal->nextInterval();
 	TRACER1("Next interval");
       }
     }
@@ -131,10 +146,11 @@ bool SI_Peeling::execute(vector<string>& parmNames,
   TRACER1("Solve for source = " << itsCurSource << " of " << itsNSources 
        << " iteration = " << itsCurIter << " of " << itsNIter);
  
-  itsCal->Run(resultParmNames, resultParmValues, resultQuality);
+  itsCal->solve(false, resultParmNames, resultParmValues, resultQuality);
 
-  // itsCal->SubtractOptimizedSources();  // N.B. This affects the state of the MS
-  itsCal->CommitOptimizedParameters(); // Write to parmTable
+  // itsCal->saveResidualData();  // N.B. This affects the state of the MS
+
+  itsCal->saveParms(); // Write to parmTable
   resultIterNo = itsCurIter;
   return true;
 }

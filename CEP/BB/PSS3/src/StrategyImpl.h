@@ -23,8 +23,6 @@
 #ifndef PSS3_STRATEGYIMPL_H
 #define PSS3_STRATEGYIMPL_H
 
-#include <lofar_config.h>
-
 //# Includes
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
@@ -34,7 +32,7 @@ namespace LOFAR
 {
 
 //# Forward Declarations
-class CalibratorOld;
+class MeqCalibrater;
 
 /* This is an abstract base class for all calibration strategies.
 */

@@ -89,7 +89,6 @@ int MeqStoredParmPolc::initDomain (const MeqDomain& domain, int spidIndex)
 		 << "(" << polDom.startX() << ":" << polDom.endX()
 		 << ", " << polDom.startY() << ":" << polDom.endY()) ;
 
-
   }
   return MeqParmPolc::initDomain (domain, spidIndex);
 }

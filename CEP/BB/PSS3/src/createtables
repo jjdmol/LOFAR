@@ -293,7 +293,6 @@ echo " CREATE TABLE bbworkorders (
        KSTYPE TEXT, 
        STRATEGYNO INTEGER, 
        NOSTARTSOLS INTEGER, 
-       ARGSSIZE INTEGER, 
        NUMBEROFPARAM INTEGER);" >> sql_create
 echo "create table bbsolutions (
       ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 

@@ -253,7 +253,6 @@ namespace LOFAR {
     return MPH;
   };
 
-
   string ParmTableSQLHelper::MeqMat2string(const MeqMatrix &MM)
   {
     char str[512];
