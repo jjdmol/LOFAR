@@ -23,7 +23,7 @@
 #ifndef GTM_SOCKET_H
 #define GTM_SOCKET_H
 
-#include "unistd.h"
+#include <unistd.h>
 #include <GCF_Event.h>
 
 // forward declaration
@@ -32,46 +32,50 @@ class GCFPeerAddr;
 class GTMSocketHandler;
 class GTMServerSocket;
 
+/**
+ * This class consists of the basic implementation of a socket. Beside that it 
+ * is the base class for the GTMServerSocket class.
+ */
 
 class GTMSocket
 {
   public:
-    GTMSocket(GCFTCPPort& port);
-    virtual ~GTMSocket();
+    GTMSocket (GCFTCPPort& port);
+    virtual ~GTMSocket ();
   
     /**
      * open/close functions
      */
-    virtual int open(GCFPeerAddr& addr);
-    virtual int close();
-    virtual int connect(GCFPeerAddr& addr);
+    virtual int open (GCFPeerAddr& addr);
+    virtual int close ();
+    virtual int connect (GCFPeerAddr& addr);
   
     /**
      * send/recv functions
      */
-    virtual ssize_t send(void* buf, size_t count);
-    virtual ssize_t recv(void* buf, size_t count);
+    virtual ssize_t send (void* buf, size_t count);
+    virtual ssize_t recv (void* buf, size_t count);
 
-    virtual inline int getFD() const {return _socketFD;}
+    virtual inline int getFD () const {return _socketFD;}
     
   protected:
-
-    virtual int setFD(int fd);
-    virtual void workProc();
     friend class GTMSocketHandler;
     friend class GTMServerSocket;
+
+    virtual int setFD (int fd);
+    virtual void workProc ();
 
     GCFTCPPort&   _port;
     int           _socketFD;
   
   private:
-    GTMSocket();
+    GTMSocket ();
     /**
      * Don't allow copying of the GTMSocket object.
      */
-    GTMSocket(const GTMSocket&);
-    GTMSocket& operator=(const GTMSocket&);
-    GCFEvent::TResult eventReceived(const GCFEvent& e);
+    GTMSocket (const GTMSocket&);
+    GTMSocket& operator= (const GTMSocket&);
+    GCFEvent::TResult eventReceived (const GCFEvent& e);
 };
 
 #endif

@@ -52,12 +52,12 @@ class Echo : public GCFTask
    * @param p The port interface (see @a FPortInterface) on which the event
    * was received.
    */
-  int initial  (GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult initial  (GCFEvent& e, GCFPortInterface& p);
 
   /**
    * The "connected" state is reached when a Ping client is connected.
    */
-  int connected(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface& p);
 
  private:
 

@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <GCF_Fsm.h>
+#include <GTM_Defines.h>
 
 GCFDummyPort GCFFsm::_gcfPort(0, "GCF", F_FSM_PROTOCOL);
 
@@ -37,8 +38,13 @@ void GCFFsm::initFsm()
   }
 }
 
-void GCFFsm::tran(State target)
+void GCFFsm::tran(State target, const char* from, const char* to)
 {
+  LOFAR_LOG_TRACE(TM_STDOUT_LOGGER, (
+      "State transition to %s <<== %s",
+      to,
+      from));
+
   GCFEvent e;
   e.signal = F_EXIT_SIG;
   (void)(this->*_state)(e, _gcfPort); // exit signal

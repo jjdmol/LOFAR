@@ -1,4 +1,4 @@
-//#  GCF_PVChar.h: 
+//#  GCF_PVChar.h: MAC char property type 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,26 +23,44 @@
 #ifndef GCF_PVCHAR_H
 #define GCF_PVCHAR_H
 
-#include "GCF_PValue.h"
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_SAL
+#include <SAL/GCF_PValue.h>
+#else
+#include <GCF_PValue.h>
+#endif
+
+/**
+   By means of this property type a character (0...255) value can be used.
+*/
 
 class GCFPVChar : public GCFPValue  
 {
   public:
-  	GCFPVChar(char val = 0) : GCFPValue(CHAR_VAL), _value(val) {;}
-  	virtual ~GCFPVChar() {;}
-    /** Write property of char value. */
-    inline void setValue( const char newVal) {_value = newVal;}
-    /** No descriptions */
-    virtual TSAResult setValue(const string value);
-    /** Read property of char value. */
-    inline char getValue() const {return _value;}
-    /** No descriptions */
-    virtual GCFPValue* clone() const;
-    /** No descriptions */
-    virtual TSAResult copy(const GCFPValue& value);
+  	GCFPVChar (char val = 0) : GCFPValue(LPT_CHAR), _value(val) {;}
+  	virtual ~GCFPVChar () {;}
+
+    /** Changes the value of this object */
+    inline void setValue (const char newVal) {_value = newVal;}
+
+    /** 
+     * Changes the value of this object by means of a stringbuffer, 
+     * which will be translated.
+     * @see GCFPValue::setValue(const string value)
+     */
+    virtual TGCFResult setValue (const string value);
+
+    /** Returns the value of this object*/
+    inline char getValue () const {return _value;}
+
+    /** @see GCFPValue::clone() */
+    virtual GCFPValue* clone () const;
+
+    /** @see GCFPValue::copy() */
+    virtual TGCFResult copy (const GCFPValue& value);
   
   private: // Private attributes
-    /**  */
+    /** The value */
     char _value;
 };
 

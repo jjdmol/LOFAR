@@ -17,7 +17,10 @@ SUFFIXES = .ph
 	chmod a+w $@
 
 BUILT_SOURCES = \
-	Echo_Protocol.ph
+	Echo_Protocol.ph \
+	tutorial.ns \
+	tutorial.top \
+	log4cplus.properties	
 
 EXTRA_DIST = \
 	Echo_Protocol.ph \
@@ -25,11 +28,6 @@ EXTRA_DIST = \
 	tutorial.top \
 	log4cplus.properties
 	
-pkgdata_DATA = \
-	tutorial.ns \
-	tutorial.top \
-	log4cplus.properties
-
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 	

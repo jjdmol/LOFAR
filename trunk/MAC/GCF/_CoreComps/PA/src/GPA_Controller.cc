@@ -20,10 +20,10 @@
 //#
 //#  $Id$
 
-#include "GPA_Controller.h"
+#include <GPA_Controller.h>
 #include <stdio.h>
 #define DECLARE_SIGNAL_NAMES
-#include "PA_Protocol.ph"
+#include <PA_Protocol.ph>
 
 #define CHECK_REQUEST(p, e)  \
   if (!mayContinue(e, p)) break;
@@ -63,7 +63,7 @@ GCFEvent::TResult GPAController::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_CONNECTED_SIG:
-      TRAN(GPAController::connected);
+      TRAN(GPAController::operational);
       break;
 
     case F_DISCONNECTED_SIG:
@@ -79,7 +79,7 @@ GCFEvent::TResult GPAController::initial(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -92,7 +92,9 @@ GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
         _requestManager.deleteAllRequests();
         _usecountManager.deleteAllProperties();
         if (!_usecountManager.waitForAsyncResponses())
+        {
           TRAN(GPAController::initial);
+        }
         //TODO: all SPP's has to be closed to
         //TODO: don't try to reconnect before the _scopeManager 
         //      and the _usecountManager busy
@@ -410,24 +412,6 @@ void GPAController::propertiesUnlinked(char* pResponseData)
 }
 
 void GPAController::sendAPCActionResponse(GCFEvent& e)
-{
-  if (_curRequestPort)
-  {
-    if (_curRequestPort->isConnected())
-    {
-      unsigned short bufLength(_curApcName.size() + _curScope.size() + 6);
-      char* buffer = new char[bufLength + 1];
-      sprintf(buffer, "%03x%s%03x%s", _curApcName.size(), _curApcName.c_str(), 
-                                      _curScope.size(),   _curScope.c_str()   );
-      e.length += bufLength;
-      _curRequestPort->send(e, buffer, bufLength);
-      delete [] buffer;      
-    }
-  }
-  doNextRequest();
-}
-
-void GPAController::sendUnLinkActionResponse(GCFEvent& e)
 {
   if (_curRequestPort)
   {

@@ -50,13 +50,13 @@ class Ping : public GCFTask
    * @return FEvent::HANDLED or FEvent::NOT_HANDLED to indicate whether the
    * event has been handled or not.
    */
-  int initial      (GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult initial      (GCFEvent& e, GCFPortInterface& p);
 
   /**
    * The "connected" state is reached when the Ping client has made a 
    * connection with the Echo server.
    */
-  int connected    (GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult connected    (GCFEvent& e, GCFPortInterface& p);
 
   /**
    * The "awaiting_echo" state is reached when an ECHO_PING event has
@@ -64,7 +64,7 @@ class Ping : public GCFTask
    * When the ECHO_ECHO event has been received a transition to the
    * "connected" state is made.
    */
-  int awaiting_echo(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult awaiting_echo(GCFEvent& e, GCFPortInterface& p);
 
  private:
 

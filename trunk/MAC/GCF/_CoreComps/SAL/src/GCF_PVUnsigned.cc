@@ -24,9 +24,9 @@
 #include "GCF_PVUnsigned.h"
 
 /** No descriptions */
-TSAResult GCFPVUnsigned::setValue(const string valueData)
+TGCFResult GCFPVUnsigned::setValue(const string valueData)
 {
-  TSAResult result(SA_VALUESTRING_NOT_VALID);
+  TGCFResult result(GCF_VALUESTRING_NOT_VALID);
   
   if (valueData.length() > 0)
   {
@@ -37,7 +37,7 @@ TSAResult GCFPVUnsigned::setValue(const string valueData)
       if (value >= 0)
       {
         _value = value;
-        result = SA_NO_ERROR;
+        result = GCF_NO_ERROR;
       }
     }
   }
@@ -53,14 +53,14 @@ GCFPValue* GCFPVUnsigned::clone() const
 }
 
 /** No descriptions */
-TSAResult GCFPVUnsigned::copy(const GCFPValue& newVal)
+TGCFResult GCFPVUnsigned::copy(const GCFPValue& newVal)
 {
-  TSAResult result(SA_NO_ERROR);
+  TGCFResult result(GCF_NO_ERROR);
 
   if (newVal.getType() == getType())
     _value = ((GCFPVUnsigned *)&newVal)->getValue();
   else
-    result = SA_DIFFERENT_TYPES;
+    result = GCF_DIFFERENT_TYPES;
   
   return result;
 }

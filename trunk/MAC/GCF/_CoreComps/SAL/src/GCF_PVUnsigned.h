@@ -1,4 +1,4 @@
-//#  GCF_PVUnsigned.h: 
+//#  GCF_PVUnsigned.h: MAC unsigned integer property type
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,26 +23,44 @@
 #ifndef GCF_PVUNSIGNED_H
 #define GCF_PVUNSIGNED_H
 
-#include "GCF_PValue.h"
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_SAL
+#include <SAL/GCF_PValue.h>
+#else
+#include <GCF_PValue.h>
+#endif
 
+/**
+ * By means of this property type a unsigned integer (0 to 4,294,967,295) value 
+ * can be used.
+ */
 class GCFPVUnsigned : public GCFPValue
 {
   public:
-  	GCFPVUnsigned(unsigned int val = 0) : GCFPValue(UNSIGNED_VAL), _value(val) {;}
+  	GCFPVUnsigned(unsigned int val = 0) : GCFPValue(LPT_UNSIGNED), _value(val) {;}
   	virtual ~GCFPVUnsigned() {;}
-    /** Write property of unsigned value. */
-    virtual inline void setValue( const unsigned int newVal) {_value = newVal;}
-    /** No descriptions */
-    virtual TSAResult setValue(const string value);
-    /** Read property of unsigned value. */
+    
+    /** Changes the value of this object */
+     virtual inline void setValue( const unsigned int newVal) {_value = newVal;}
+
+    /** 
+     * Changes the value of this object by means of a stringbuffer, 
+     * which will be translated.
+     * @see GCFPValue::setValue(const string value)
+     */
+    virtual TGCFResult setValue(const string value);
+
+    /** Returns the value of this object*/
     virtual inline unsigned int getValue() const {return _value;}
-    /** No descriptions */
+
+    /** @see GCFPValue::clone() */
     virtual GCFPValue* clone() const;
-    /** No descriptions */
-    virtual TSAResult copy(const GCFPValue& value);
+
+    /** @see GCFPValue::copy() */
+    virtual TGCFResult copy(const GCFPValue& value);
  
   private: // Private attributes
-    /**  */
+    /** The value */
     unsigned int _value;
 };
 #endif

@@ -86,5 +86,6 @@ void GSAPvssApi::workProc()
 
 void GSAPvssApi::stop()
 {
-  Manager::exit(1);
+  // TODO: find out this is realy necessary
+  // Manager::exit(1);
 }

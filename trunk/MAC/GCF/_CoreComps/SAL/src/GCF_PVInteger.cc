@@ -24,9 +24,9 @@
 #include "GCF_PVInteger.h"
 
 /** No descriptions */
-TSAResult GCFPVInteger::setValue(const string valueData)
+TGCFResult GCFPVInteger::setValue(const string valueData)
 {
-  TSAResult result(SA_VALUESTRING_NOT_VALID);
+  TGCFResult result(GCF_VALUESTRING_NOT_VALID);
   
   if (valueData.length() > 0)
   {
@@ -35,7 +35,7 @@ TSAResult GCFPVInteger::setValue(const string valueData)
     if (*validPos == '\0')
     {
       _value = value;
-      result = SA_NO_ERROR;
+      result = GCF_NO_ERROR;
     }
   }
   
@@ -50,14 +50,14 @@ GCFPValue* GCFPVInteger::clone() const
 }
 
 /** No descriptions */
-TSAResult GCFPVInteger::copy(const GCFPValue& newVal)
+TGCFResult GCFPVInteger::copy(const GCFPValue& newVal)
 {
-  TSAResult result(SA_NO_ERROR);
+  TGCFResult result(GCF_NO_ERROR);
 
   if (newVal.getType() == getType())
     _value = ((GCFPVInteger *)&newVal)->getValue();
   else
-    result = SA_DIFFERENT_TYPES;
+    result = GCF_DIFFERENT_TYPES;
   
   return result;
 }

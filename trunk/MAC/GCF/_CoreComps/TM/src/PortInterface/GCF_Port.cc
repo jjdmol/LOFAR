@@ -20,14 +20,14 @@
 //#
 //#  $Id$
 
-#include "GCF_Port.h"
-#include "GCF_RawPort.h"
+#include <PortInterface/GCF_Port.h>
+#include <PortInterface/GCF_RawPort.h>
 #include <GCF_Task.h>
 #include <GCF_Event.h>
 #include <GCF_TMProtocols.h>
-#include "GTM_NameService.h"
-#include "GTM_TopologyService.h"
-#include "GTM_Defines.h"
+#include <PortInterface/GTM_NameService.h>
+#include <PortInterface/GTM_TopologyService.h>
+#include <GTM_Defines.h>
 
 // all possible implementations are included here
 #include <Socket/GCF_TCPPort.h>
@@ -358,39 +358,4 @@ int GCFPort::resetTimerInterval(long timerid,
   return _pSlave->resetTimerInterval(timerid,
 				    interval_sec,
 				    interval_usec);
-}
-
-/**
- * ::debug_signal
- */
-void GCFPort::debug_signal(const GCFEvent& e)
-{
-  LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
-      "[%s:%s] %s %s",
-	    _pTask->getName().c_str(), _name.c_str(),
-	    ((F_EVT_INOUT(e) & F_IN) ? "<-" : "->"), _pTask->evtstr(e)));
-}
-
-/**
- * ::debug_send
- */
-void GCFPort::debug_send(const GCFEvent& e)
-{
-  if (SAP == _type)
-  {      
-    LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
-        "%s: port=%s event=%s ====> [%s:%s]",
-	      _pTask->getName().c_str(), _name.c_str(),
-	      _pTask->evtstr(e),
-	      _remoteAddr.getTaskname().c_str(),
-	      _remoteAddr.getPortname().c_str()
-	      ));
-  }
-  else
-  {
-    LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
-        "%s: port=%s event=%s ====>",
-        _pTask->getName().c_str(), getName().c_str(),
-        _pTask->evtstr(e)));
-  }
 }

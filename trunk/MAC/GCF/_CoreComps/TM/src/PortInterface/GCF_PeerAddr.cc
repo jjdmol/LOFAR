@@ -21,7 +21,7 @@
 //#
 //#  $Id$
 
-#include "GCF_PeerAddr.h"
+#include <PortInterface/GCF_PeerAddr.h>
 
 GCFPeerAddr::GCFPeerAddr()
 {

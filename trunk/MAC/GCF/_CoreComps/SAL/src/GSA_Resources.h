@@ -1,4 +1,5 @@
-//#  GSA_Resources.h: describes the API with the PVSS system
+//#  GSA_Resources.h: specialisation of the resources class of the PVSS API 
+//#                   (helper class)
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,16 +26,16 @@
 
 #include  <Resources.hxx>
 
-class  GSAResources : public Resources
+class GSAResources : public Resources
 {
   public:
     // These functions initializes the manager
-    static  void  init(int &argc, char *argv[]);  
+    static void init (int &argc, char *argv[]);  
 
     // Read the config section
-    static  PVSSboolean  readSection();        
+    static PVSSboolean readSection ();        
 
-    static void setProjectName(const char *projName);
+    static void setProjectName (const char *projName);
 };
 
 #endif

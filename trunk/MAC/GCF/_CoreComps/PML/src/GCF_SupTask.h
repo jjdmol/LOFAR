@@ -23,9 +23,17 @@
 #ifndef GCF_SUBTASK_H
 #define GCF_SUBTASK_H
 
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_PML
 #include <TM/GCF_Task.h>
 #include <SAL/GCF_PValue.h>
 #include <GCFCommon/GCF_Defines.h>
+#else
+#include <GCF_Task.h>
+#include <GCF_PValue.h>
+#include <GCF_Defines.h>
+#endif
+
 
 class GPMController;
 

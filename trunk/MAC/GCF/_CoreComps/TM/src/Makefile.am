@@ -1,5 +1,5 @@
-DOCHDRS	=	\
-  GCF_Defines.h \
+include_HEADERS =	\
+  GCF_Control.h \
   GCF_Event.h \
   GCF_Fsm.h \
   GCF_TMProtocols.h \
@@ -9,19 +9,22 @@ DOCHDRS	=	\
   PortInterface/GCF_Port.h \
   PortInterface/GCF_RawPort.h \
   PortInterface/GCF_PeerAddr.h \
+  Socket/GCF_TCPPort.h
+ 
+DOCHDRS = $(include_HEADERS) \
+  GTM_Defines.h \
   PortInterface/GTM_Config.h \
   PortInterface/GTM_NameService.h \
   PortInterface/GTM_TopologyService.h \
   Timer/GTM_Timer.h \
   Timer/GTM_TimerHandler.h \
-  Socket/GCF_TCPPort.h \
   Socket/GTM_Socket.h \
   Socket/GTM_ServerSocket.h \
-  Socket/GTM_HandlerSocket.h
+  Socket/GTM_SocketHandler.h
     
 lib_LTLIBRARIES 	= libtm.la
 
-libtm_la_SOURCES= $(DOCHDRS) \
+libtm_la_SOURCES=  \
   GCF_Fsm.cc \
   GCF_TMProtocols.cc \
   GCF_Task.cc \

@@ -1,4 +1,4 @@
-//#  GPI_PropertyProxy.h: 
+//#  GPI_PropertyProxy.h: the concrete property proxy for the Property Interface 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -29,6 +29,13 @@
 class GCFPValue;
 class GPISupervisoryServer;
 
+/**
+ * This class provides for the GPISupervisoryServer class the possibility to 
+ * (un)subscribe on/from properties, which requested from the Property Agent to 
+ * (un)link to a property of the ERTC domain. Furthermore it forwards property 
+ * value changes, detected by the SCADA system, to the right 
+ * GPISupervisoryServer instance.
+ */
 class GPIPropertyProxy : public GCFPropertyProxy
 {
   public:
@@ -41,6 +48,13 @@ class GPIPropertyProxy : public GCFPropertyProxy
     void propValueChanged(const string& propName, const GCFPValue& value);
   
   private:
+    GPIPropertyProxy();
+    /**
+     * Don't allow copying of this object.
+     */
+    GPIPropertyProxy (const GPIPropertyProxy&);
+    GPIPropertyProxy& operator= (const GPIPropertyProxy&);
+  
     GPISupervisoryServer& _ss;
 };    
 #endif

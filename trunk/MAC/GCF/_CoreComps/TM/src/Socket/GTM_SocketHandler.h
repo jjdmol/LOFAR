@@ -30,30 +30,34 @@
 // forward declaration
 class GTMSocket;
 
+/**
+ * This singleton class implements the main loop part of message exchange 
+ * handling, which uses the socket pattern. It calls one select for all file 
+ * descriptors of the registered sockets.
+ */
 class GTMSocketHandler : public GCFHandler
 {
   public:
-    static GTMSocketHandler* instance();
-    virtual ~GTMSocketHandler() {};
+    static GTMSocketHandler* instance ();
+    virtual ~GTMSocketHandler () {};
   
-    void workProc();
-    void stop();
+    void workProc ();
+    void stop ();
+    void registerSocket (GTMSocket& timer);
+    void deregisterSocket (GTMSocket& timer); 
 
   private:
-    GTMSocketHandler();
+    GTMSocketHandler ();
     /**
      * Don't allow copying of the GTMTimerHandler object.
      */
-    GTMSocketHandler(const GTMSocketHandler&);
-    GTMSocketHandler& operator=(const GTMSocketHandler&);
+    GTMSocketHandler (const GTMSocketHandler&);
+    GTMSocketHandler& operator= (const GTMSocketHandler&);
     static GTMSocketHandler* _pInstance;
     
     map<int, GTMSocket*> _sockets;
     typedef map<int, GTMSocket*>::iterator TSocketIter;
 
-    friend class GTMSocket;
-    void registerSocket(GTMSocket& timer);
-    void deregisterSocket(GTMSocket& timer); 
     
     fd_set _readFDs;
     fd_set _writeFDs;

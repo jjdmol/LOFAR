@@ -1,4 +1,4 @@
-//#  GPA_UsecountManager.h: 
+//#  GPA_UsecountManager.h: manages the properties with its use count
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,6 +27,11 @@
 #include <SAL/GSA_Service.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
+
+/**
+   This class manages the properties with its use count, which are created 
+   (resp. deleted) by means of the base class GSAService.
+*/
 
 class GPAController;
 

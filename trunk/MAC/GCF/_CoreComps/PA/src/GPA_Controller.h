@@ -1,4 +1,4 @@
-//#  GPA_Controller.h: 
+//#  GPA_Controller.h: main class of the Property Agent
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -31,6 +31,12 @@
 #include <TM/GCF_Task.h>
 #include <TM/Socket/GCF_TCPPort.h>
 
+/**
+   This is the main class of the Property Agent. It uses a number of helper 
+   classes to manage PML requests, registered scopes and use counts of created 
+   properties. The assigned port provider supports the possibility to accept 
+   more than one connect request from different clients (PML).
+*/
 
 class GCFEvent;
 class GCFPortInterface; 
@@ -61,12 +67,11 @@ class GPAController : public GCFTask
     void propertiesLinked(char* pResponseData);
     void propertiesUnlinked(char* pResponseData);
     void sendAPCActionResponse(GCFEvent& e);
-    void sendUnLinkActionResponse(GCFEvent& e);
     void unpackAPCActionData(char* pActionData);
     
 	private: // state methods
 		GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-		GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface& p);
+		GCFEvent::TResult operational(GCFEvent& e, GCFPortInterface& p);
 
 	private: // data members
 		GPAUsecountManager 	_usecountManager;
@@ -77,14 +82,14 @@ class GPAController : public GCFTask
 		GCFTCPPort					_pmlPortProvider;
     
   private: // admin. data members
-    string _curApcName;
-    string _curScope;
-    GCFPortInterface* _curRequestPort;
-    TPAResult _curResult;
-    bool _isBusy;
-    bool _isRegistered;
-    unsigned int _counter;
-    GPAAPC _apc;
+    string              _curApcName;
+    string              _curScope;
+    GCFPortInterface*   _curRequestPort;
+    TPAResult           _curResult;
+    bool                _isBusy;
+    bool                _isRegistered;
+    unsigned int        _counter;
+    GPAAPC              _apc;
 };
 
 #endif

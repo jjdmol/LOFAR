@@ -6,7 +6,8 @@ class Service : public GSAService
     Service() {};
     virtual ~Service() {};
 
-    virtual TSAResult createProp(const string& macType, const string& propName);
+    virtual TSAResult createProp(const string& propName, 
+                                 GCFPValue::TMACValueType macType);
     virtual TSAResult deleteProp(const string& propName);
     virtual TSAResult subscribe(const string& propName);
     virtual TSAResult unsubscribe(const string& propName);
@@ -15,12 +16,12 @@ class Service : public GSAService
     virtual bool exists(const string& propName);
     
   protected:
-    virtual void propCreated(string& propName);
-    virtual void propDeleted(string& propName);
-    virtual void propSubscribed(string& propName);
-    virtual void propUnsubscribed(string& propName);
-    virtual void propValueGet(string& propName, GCFPValue& value);
-    virtual void propValueChanged(string& propName, GCFPValue& value);
+    virtual void propCreated(const string& propName);
+    virtual void propDeleted(const string& propName);
+    virtual void propSubscribed(const string& propName);
+    virtual void propUnsubscribed(const string& propName);
+    virtual void propValueGet(const string& propName, const GCFPValue& value);
+    virtual void propValueChanged(const string& propName, const GCFPValue& value);
   
   private:
 };

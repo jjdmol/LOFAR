@@ -374,53 +374,53 @@ void GPISupervisoryServer::propValueChanged(const string& propName, const GCFPVa
   
   switch (value.getType())
   {
-    case GCFPValue::BOOL_VAL:
+    case GCFPValue::LPT_BOOL:
       pVal = new FPBoolValue(((GCFPVBool*)&value)->getValue());
       break;
-    case GCFPValue::CHAR_VAL:
+    case GCFPValue::LPT_CHAR:
       pVal = new FPCharValue(((GCFPVChar*)&value)->getValue());
       break;
-    case GCFPValue::INTEGER_VAL:
+    case GCFPValue::LPT_INTEGER:
       pVal = new FPIntegerValue(((GCFPVInteger*)&value)->getValue());
       break;
-    case GCFPValue::UNSIGNED_VAL:
+    case GCFPValue::LPT_UNSIGNED:
       pVal = new FPUnsignedValue(((GCFPVUnsigned*)&value)->getValue());
       break;
-    case GCFPValue::DOUBLE_VAL:
+    case GCFPValue::LPT_DOUBLE:
       pVal = new FPDoubleValue(((GCFPVDouble*)&value)->getValue());
       break;
-    case GCFPValue::STRING_VAL:
+    case GCFPValue::LPT_STRING:
       pVal = new FPStringValue(((GCFPVString*)&value)->getValue());
       break;
 
     default: 
-      if (value.getType() > GCFPValue::DYNARR_VAL && 
-          value.getType() <= (GCFPValue::DYNARR_VAL & GCFPValue::STRING_VAL))
+      if (value.getType() > GCFPValue::LPT_DYNARR && 
+          value.getType() <= (GCFPValue::LPT_DYNARR & GCFPValue::LPT_STRING))
       {
         FPValueArray arrayTo;
         FPValue* pItemValue;
-        FPValue::ValueType type(FPValue::NO_VAL);
+        FPValue::ValueType type(FPValue::NO_LPT);
         // the type for the new FPValue must be determined 
         // separat, because the array could be empty
         switch (value.getType())
         {
-          case GCFPValue::DYNBOOL_VAL:
-            type = FPValue::DYNBOOL_VAL;
+          case GCFPValue::LPT_DYNBOOL:
+            type = FPValue::LPT_DYNBOOL;
             break;
-          case GCFPValue::DYNCHAR_VAL:
-            type = FPValue::DYNCHAR_VAL;
+          case GCFPValue::LPT_DYNCHAR:
+            type = FPValue::LPT_DYNCHAR;
             break;
-          case GCFPValue::DYNINTEGER_VAL:
-            type = FPValue::DYNINTEGER_VAL;
+          case GCFPValue::LPT_DYNINTEGER:
+            type = FPValue::LPT_DYNINTEGER;
             break;
-          case GCFPValue::DYNUNSIGNED_VAL:
-            type = FPValue::DYNUNSIGNED_VAL;
+          case GCFPValue::LPT_DYNUNSIGNED:
+            type = FPValue::LPT_DYNUNSIGNED;
             break;
-          case GCFPValue::DYNDOUBLE_VAL:
-            type = FPValue::DYNDOUBLE_VAL;
+          case GCFPValue::LPT_DYNDOUBLE:
+            type = FPValue::LPT_DYNDOUBLE;
             break;
-          case GCFPValue::DYNSTRING_VAL:
-            type = FPValue::DYNSTRING_VAL;
+          case GCFPValue::LPT_DYNSTRING:
+            type = FPValue::LPT_DYNSTRING;
             break;
         }
         GCFPValue* pValue;
@@ -431,22 +431,22 @@ void GPISupervisoryServer::propValueChanged(const string& propName, const GCFPVa
           pValue = (*iter);
           switch (pValue->getType())
           {
-            case GCFPValue::BOOL_VAL:
+            case GCFPValue::LPT_BOOL:
               pItemValue  = new FPBoolValue(((GCFPVBool*)pValue)->getValue());
               break;
-            case GCFPValue::CHAR_VAL:
+            case GCFPValue::LPT_CHAR:
               pItemValue  = new FPCharValue(((GCFPVChar*)pValue)->getValue());
               break;
-            case GCFPValue::INTEGER_VAL:
+            case GCFPValue::LPT_INTEGER:
               pItemValue  = new FPIntegerValue(((GCFPVInteger*)pValue)->getValue());
               break;
-            case GCFPValue::UNSIGNED_VAL:
+            case GCFPValue::LPT_UNSIGNED:
               pItemValue  = new FPUnsignedValue(((GCFPVUnsigned*)pValue)->getValue());
               break;
-            case GCFPValue::DOUBLE_VAL:
+            case GCFPValue::LPT_DOUBLE:
               pItemValue  = new FPDoubleValue(((GCFPVDouble*)pValue)->getValue());
               break;
-            case GCFPValue::STRING_VAL:
+            case GCFPValue::LPT_STRING:
               pItemValue  = new FPStringValue(((GCFPVString*)pValue)->getValue());
               break;
           }
@@ -501,52 +501,52 @@ void GPISupervisoryServer::localValueChanged(GCFEvent& e)
    
   switch (pVal->getType())
   {
-    case FPValue::BOOL_VAL:
+    case FPValue::LPT_BOOL:
       pGCFVal = new GCFPVBool(((FPBoolValue*)pVal)->getValue());
       break;
-    case FPValue::INTEGER_VAL:
+    case FPValue::LPT_INTEGER:
       pGCFVal = new GCFPVInteger(((FPIntegerValue*)pVal)->getValue());
       break;
-    case FPValue::UNSIGNED_VAL:
+    case FPValue::LPT_UNSIGNED:
       pGCFVal = new GCFPVUnsigned(((FPUnsignedValue*)pVal)->getValue());
       break;
-    case FPValue::DOUBLE_VAL:
+    case FPValue::LPT_DOUBLE:
       pGCFVal = new GCFPVDouble(((FPDoubleValue*)pVal)->getValue());
       break;
-    case FPValue::STRING_VAL:
+    case FPValue::LPT_STRING:
       pGCFVal = new GCFPVString(((FPStringValue*)pVal)->getValue());
       break;
-    case FPValue::CHAR_VAL:
+    case FPValue::LPT_CHAR:
       pGCFVal = new GCFPVChar(((FPCharValue*)pVal)->getValue());
       break;
     default:
-      if (pVal->getType() > FPValue::DYNARR_VAL && 
-          pVal->getType() <= FPValue::DYNDATETIME_VAL)
+      if (pVal->getType() > FPValue::LPT_DYNARR && 
+          pVal->getType() <= FPValue::LPT_DYNDATETIME)
       {
         GCFPValueArray arrayTo;
         GCFPValue* pItemValue(0);
-        GCFPValue::TMACValueType type(GCFPValue::DYNARR_VAL);
+        GCFPValue::TMACValueType type(GCFPValue::LPT_DYNARR);
         // the type for the new FPValue must be determined 
         // separat, because the array could be empty
         switch (pVal->getType())
         {
-          case FPValue::DYNBOOL_VAL:
-            type = GCFPValue::DYNBOOL_VAL;
+          case FPValue::LPT_DYNBOOL:
+            type = GCFPValue::LPT_DYNBOOL;
             break;
-          case FPValue::DYNCHAR_VAL:
-            type = GCFPValue::DYNCHAR_VAL;
+          case FPValue::LPT_DYNCHAR:
+            type = GCFPValue::LPT_DYNCHAR;
             break;
-          case FPValue::DYNINTEGER_VAL:
-            type = GCFPValue::DYNINTEGER_VAL;
+          case FPValue::LPT_DYNINTEGER:
+            type = GCFPValue::LPT_DYNINTEGER;
             break;
-          case FPValue::DYNUNSIGNED_VAL:
-            type = GCFPValue::DYNUNSIGNED_VAL;
+          case FPValue::LPT_DYNUNSIGNED:
+            type = GCFPValue::LPT_DYNUNSIGNED;
             break;
-          case FPValue::DYNDOUBLE_VAL:
-            type = GCFPValue::DYNDOUBLE_VAL;
+          case FPValue::LPT_DYNDOUBLE:
+            type = GCFPValue::LPT_DYNDOUBLE;
             break;
-          case FPValue::DYNSTRING_VAL:
-            type = GCFPValue::DYNSTRING_VAL;
+          case FPValue::LPT_DYNSTRING:
+            type = GCFPValue::LPT_DYNSTRING;
             break;
         }
         FPValue* pValue(0);
@@ -557,22 +557,22 @@ void GPISupervisoryServer::localValueChanged(GCFEvent& e)
           pValue = (*iter);
           switch (pValue->getType())
           {
-            case FPValue::BOOL_VAL:
+            case FPValue::LPT_BOOL:
               pItemValue  = new GCFPVBool(((FPBoolValue*)pValue)->getValue());
               break;
-            case FPValue::CHAR_VAL:
+            case FPValue::LPT_CHAR:
               pItemValue  = new GCFPVChar(((FPCharValue*)pValue)->getValue());
               break;
-            case FPValue::INTEGER_VAL:
+            case FPValue::LPT_INTEGER:
               pItemValue  = new GCFPVInteger(((FPIntegerValue*)pValue)->getValue());
               break;
-            case FPValue::UNSIGNED_VAL:
+            case FPValue::LPT_UNSIGNED:
               pItemValue  = new GCFPVUnsigned(((FPUnsignedValue*)pValue)->getValue());
               break;
-            case FPValue::DOUBLE_VAL:
+            case FPValue::LPT_DOUBLE:
               pItemValue  = new GCFPVDouble(((FPDoubleValue*)pValue)->getValue());
               break;
-            case FPValue::STRING_VAL:
+            case FPValue::LPT_STRING:
               pItemValue  = new GCFPVString(((FPStringValue*)pValue)->getValue());
               break;
           }

@@ -26,31 +26,43 @@
 class GCFRawPort;
 class GTMTimerHandler;
 
+/**
+ * This class represents an initialised timer on user request. It supports 
+ * single and interval timers. On each timer an object can be attached. A timer 
+ * can only be initialised by means of a certain port via the timer handler.
+ */
 class GTMTimer
 {
   private:
     friend class GTMTimerHandler;
     
-    GTMTimer(GCFRawPort& port, unsigned long timeVal, 
-             unsigned long intervalTime = 0, const void* arg = 0);
-    virtual ~GTMTimer() {};
-    inline unsigned long getTime() const {return _time;}
-    inline const void* getTimerArg() const {return _arg;}
-    inline bool hasInterval() const { return _intervalTime > 0;}
-    inline GCFRawPort& getPort() const {return _port;}
-    inline bool isElapsed() const {return _elapsed;}
-    inline bool isCanceled() const {return _canceled;}
-    inline void cancel() {_canceled = true;}
+    GTMTimer (GCFRawPort& port, 
+              unsigned long timeVal, 
+              unsigned long intervalTime = 0, 
+              const void* arg = 0);
+    virtual ~GTMTimer () {};
+    inline unsigned long getTime () const {return _time;}
+    inline const void* getTimerArg () const {return _arg;}
+    inline bool hasInterval () const { return _intervalTime > 0;}
+    inline GCFRawPort& getPort () const {return _port;}
+    inline bool isElapsed () const {return _elapsed;}
+    inline bool isCanceled () const {return _canceled;}
+    inline void cancel () {_canceled = true;}
     
+    /**
+     * Decreases the time of this timer 
+     * It will be called by workProc method of the GTMTimerHandler, which 
+     * determines the elapsed time to the previous workProc invocation for all 
+     * registered timers once.
+     */
+    void decreaseTime (unsigned long microSec);
 
-    void decreaseTime(unsigned long microSec);
-
-    GCFRawPort& _port;
-    unsigned long _time;
-    unsigned long _timeLeft;
-    unsigned long _intervalTime;
-    const void* _arg;
-    bool _elapsed;
-    bool _canceled;
+    GCFRawPort&     _port;
+    unsigned long   _time;
+    unsigned long   _timeLeft;
+    unsigned long   _intervalTime;
+    const void*     _arg;
+    bool  _elapsed;
+    bool  _canceled;
 };
 #endif

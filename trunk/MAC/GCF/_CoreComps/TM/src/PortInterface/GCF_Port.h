@@ -1,4 +1,4 @@
-//#  GCF_Port.h: connection to a remote process
+//#  GCF_Port.h: represents a protocol port to a remote process
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,20 +23,26 @@
 #ifndef GCF_PORT_H
 #define GCF_PORT_H
 
-#include "GCF_PortInterface.h"
-#include "GCF_PeerAddr.h"
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_TM
+#include <TM/PortInterface/GCF_PortInterface.h>
+#include <TM/PortInterface/GCF_PeerAddr.h>
+#else
+#include <GCF_PortInterface.h>
+#include <GCF_PeerAddr.h>
+#endif
 
 // forward declaration
 class GCFTask;
 class GCFRawPort;
 
 /**
- *
- * The GCFPort class implements the GCFFPortInterface abstraction in a way that allows the 
- * underlying implementation in terms of transport to vary. In this way a protocol
- * can be defined and be communicated over TCP or Serial Port or dedicated interface
- * to an FPGA without changing the code!
- * 
+ * This class represents a protocol port that is used to exchange events defined 
+ * in a protocol independent from the transport mechanism. On initialisation of 
+ * the port it creates a concrete raw port class (with the transport mechanism). 
+ * It is possible to init GCFPort's with complete information or the information 
+ * can be received from a name service. This port is always the master of raw 
+ * ports.
  */
 class GCFPort : public GCFPortInterface
 {
@@ -44,74 +50,79 @@ class GCFPort : public GCFPortInterface
 
     /**
     * constructors
+    * @param protocol NOT USED
     */
-    GCFPort(GCFTask& containertask, string& name, TPortType type, int protocol);
+    GCFPort (GCFTask& containertask, 
+             string& name, 
+             TPortType type, 
+             int protocol);
     
-    GCFPort();
+    GCFPort ();
     
     /**
     * destructor
     */
-    virtual ~GCFPort();
+    virtual ~GCFPort ();
     
-    /* initialize function, to follow-up default constructor */
-    void init(GCFTask& containertask, string name, TPortType type, int protocol);
+    /** initialize function, to follow-up default constructor */
+    void init (GCFTask& containertask, 
+               string name, 
+               TPortType type, 
+               int protocol);
     
     /**
     * open/close functions
     */
-    virtual int open();
-    virtual int close();
+    virtual int open ();
+    virtual int close ();
     
     /**
     * send/recv functions
     */
-    virtual ssize_t send(const GCFEvent& event, 
-                         void* buf = 0, size_t count = 0);
-    virtual ssize_t sendv(const GCFEvent& event,
-                          const iovec buffers[], int n);
-    virtual ssize_t recv(void* buf, size_t count);
-    virtual ssize_t recvv(iovec buffers[], int n);
+    virtual ssize_t send (const GCFEvent& event, 
+                          void* buf = 0, 
+                          size_t count = 0);                          
+    virtual ssize_t sendv (const GCFEvent& event,
+                           const iovec buffers[], 
+                           int n);
+    virtual ssize_t recv (void* buf, 
+                          size_t count);
+    virtual ssize_t recvv (iovec buffers[], 
+                           int n);
     
     /**
     * Timer functions.
     * Upon expiration of a timer a F_TIMER_SIG will be
     * received on the port.
-    */
+    */    
+    virtual long setTimer (long  delay_sec,         long  delay_usec    = 0,
+                           long  interval_sec  = 0, long  interval_usec = 0,
+                           const void* arg     = 0);
     
-    virtual long setTimer(long  delay_sec,         long  delay_usec    = 0,
-                          long  interval_sec  = 0, long  interval_usec = 0,
-                          const void* arg     = 0);
+    virtual long setTimer (double delay_seconds, 
+                           double interval_seconds = 0.0,
+                           const void*  arg        = 0);
     
-    virtual long setTimer(double delay_seconds, 
-                          double interval_seconds = 0.0,
-                          const void*  arg        = 0);
+    virtual int  cancelTimer (long  timerid,
+                              const void** arg = 0);
     
-    virtual int  cancelTimer(long  timerid,
-                             const void** arg = 0);
+    virtual int  cancelAllTimers ();
     
-    /*
-    * @note This function is suspect of hanging machines. It
-    * relies directly on the ACE implementation and there is
-    * a possible bug in the ACE implementation.
-    * DO NOT USE THIS FUNCTION.
-    */
-    virtual int  cancelAllTimers();
-    
-    virtual int  resetTimerInterval(long timerid,
-                                    long sec,
-                                    long usec = 0);
+    /**
+     * THIS METHOD IS NOT IMPLEMENTED YET
+     */
+    virtual int  resetTimerInterval (long timerid,
+                                     long sec,
+                                     long usec = 0);
 
   private:
 
     /**
-    * Don't allow copying of the FPort object.
+    * Don't allow copying this object.
     */
-    GCFPort(const GCFPort&);
-    GCFPort& operator=(const GCFPort&);
-    /// print debug string of event
-    void debug_signal(const GCFEvent& e);
-    void debug_send(const GCFEvent& e);
+    GCFPort (const GCFPort&);
+    GCFPort& operator= (const GCFPort&);
+
     friend class GCFRawPort;
  
   private:

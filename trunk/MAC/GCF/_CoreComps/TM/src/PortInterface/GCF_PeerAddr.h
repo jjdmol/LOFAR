@@ -1,5 +1,5 @@
-//#  GCF_PeerAddr.h: describes components of an application and how they
-//#                   are connected together.
+//#  GCF_PeerAddr.h: This class holds information about port host and the port 
+//#                  number. This will be used to hold the remote and local address.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,39 +26,40 @@
 
 #include <Common/lofar_string.h>
 
+/**
+ * This class holds information about port host and the port number. This will 
+ * be used to hold the remote and local address.
+ */
 class GCFPeerAddr
 {
- public:
+  public:
 
-  GCFPeerAddr();
-  GCFPeerAddr(string& taskname,
-        	    string& host,
-        	    string& portname,
-        	    string& porttype,
-        	    int portnumber = 0);
-  virtual ~GCFPeerAddr();
+    GCFPeerAddr ();
+    GCFPeerAddr (string& taskname,
+          	     string& host,
+          	     string& portname,
+          	     string& porttype,
+          	     int portnumber = 0);
+    virtual ~GCFPeerAddr ();
+    
+    const string& getTaskname () const;
+    const string& getHost () const;
+    int   getPortnumber () const;
+    const string& getPortname () const;
+    const string& getPorttype () const;
+    
+    void setTaskname (const string& taskname);
+    void setHost (const string& host);
+    void setPortname (const string& portname);
+    void setPorttype (const string& porttype);
+    void setPortnumber (int portnumber);
 
-  const string& getTaskname() const;
-  const string& getHost() const;
-  int     getPortnumber() const;
-  const string& getPortname() const;
-  const string& getPorttype() const;
-
-  void setTaskname(const string& taskname);
-  void setHost(const string& host);
-  void setPortname(const string& portname);
-  void setPorttype(const string& porttype);
-  void setPortnumber(int portnumber);
-
- protected:
-
- private:
-
-  string _taskname;
-  string _host;
-  string _portname;
-  string _porttype;
-  int  _portnumber;
+  private:
+    string _taskname;
+    string _host;
+    string _portname;
+    string _porttype;
+    int  _portnumber;
 };
 
 #endif

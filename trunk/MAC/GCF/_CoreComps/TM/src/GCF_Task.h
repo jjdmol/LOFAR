@@ -24,7 +24,12 @@
 #define GCF_TASK_H
 
 //# Includes
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_TM
 #include <TM/GCF_Fsm.h>
+#else
+#include <GCF_Fsm.h>
+#endif
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_map.h>
@@ -34,10 +39,15 @@ class GCFPort;
 class GCFHandler;
 
 /**
- * Base class of all application tasks. This class inherits from GCFFsm through
- * which behaviour of the task in terms of states, events and transitions is
- * defined.
- *
+ * This is the base class for all tasks in an application. Different 
+ * specialisations of this class results in a number of concurrent finite state 
+ * machines with own ports to other tasks (in other processes). 
+ * Note: This is not a representation of a 'thread' related to the 
+ * multithreading concept.
+ * @todo Don't register protocol in static task context but in port interface. 
+ *       Because the protocol parameter of the port (interface) is not used the 
+ *       protocol string can be passed to the port (interface) instead of the 
+ *       protocol ID.
  */
 
 class GCFTask : public GCFFsm
@@ -70,24 +80,25 @@ class GCFTask : public GCFFsm
     * 
     * @endcode
     */
-    void start();
-    static void init(int argc, char** argv);
-    static void run();
-    static void registerHandler(GCFHandler& handler);
-    static void stop();
+    void start ();
+    static void init (int argc, char** argv);
+    static void run ();
+    static void registerHandler (GCFHandler& handler);
+    static void stop ();
  
     // Get the name of the task.
-    inline const string& getName() const {return _name;}
+    inline const string& getName () const {return _name;}
     /// Set the name of the task.
-    inline void setName(string& name) {_name = name;}
+    inline void setName (string& name) {_name = name;}
     static int _argc;
     static char** _argv;
    
   protected:
-		GCFTask(State initial, string& name); 
+		GCFTask (State initial, 
+             string& name); 
 		virtual ~GCFTask();
     /**
-    * Register the protocol. This is used for debugging. The name of each event
+    * Register the protocol. This is used for logging. The name of each event
     * that is part of the protocol is specified. Index 0 should not be used for
     * a signal. Signal numbers should start at 1.
     */

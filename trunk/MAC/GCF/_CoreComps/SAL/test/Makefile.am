@@ -17,15 +17,13 @@ SUFFIXES = .ph
 	chmod a+w $@
 
 BUILT_SOURCES = \
-	Echo_Protocol.ph
-
-EXTRA_DIST = \
 	Echo_Protocol.ph \
 	tutorial.ns \
 	tutorial.top \
-	log4cplus.properties
-	
-pkgdata_DATA = \
+	log4cplus.properties	
+
+EXTRA_DIST = \
+	Echo_Protocol.ph \
 	tutorial.ns \
 	tutorial.top \
 	log4cplus.properties

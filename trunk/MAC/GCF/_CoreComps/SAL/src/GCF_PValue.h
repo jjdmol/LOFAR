@@ -1,4 +1,4 @@
-//#  GCF_PValue.h: 
+//#  GCF_PValue.h: abstract class for all MAC types
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,33 +23,90 @@
 #ifndef GCF_PVALUE_H
 #define GCF_PVALUE_H
 
-#include <SAL/GSA_Defines.h>
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_SAL
+#include <GCFCommon/GCF_Defines.h>
+#else
+#include <GCF_Defines.h>
+#endif
+
+/**
+   This is the abstract value type class, which will be used to transport values 
+   through a whole MAC application in a generic way. Instances of 
+   specialisations of this class will normally used to hold values in local 
+   properties or transport property values from PVSS to the MAC application or 
+   visa versa.
+*/
 
 class GCFPValue
 {
   public:
-    enum TMACValueType {NO_VAL, BOOL_VAL, CHAR_VAL, UNSIGNED_VAL, INTEGER_VAL, 
-                    BIT32_VAL, BLOB_VAL, REF_VAL, DOUBLE_VAL, DATETIME_VAL,
-                    STRING_VAL, DYNARR_VAL = 0x80,
-                    DYNBOOL_VAL, DYNCHAR_VAL, DYNUNSIGNED_VAL, DYNINTEGER_VAL, 
-                    DYNBIT32_VAL, DYNBLOB_VAL, DYNREF_VAL, DYNDOUBLE_VAL, DYNDATETIME_VAL,
-                    DYNSTRING_VAL };
-   
-    GCFPValue(TMACValueType type) : _type(type) {};
-    virtual ~GCFPValue() {};
-    /** Read property of ValueType _type. */
-    inline const TMACValueType& getType() const {return _type;}
-    /** No descriptions */
-    virtual GCFPValue* clone() const = 0;
-    /** No descriptions */
-    virtual TSAResult copy(const GCFPValue& value) = 0;
+    /**
+     * The enumeration of possible MAC property types
+     * In case a dynamic array will be used the type ID enumeration starts on 
+     * 0x80.
+     */
+    enum TMACValueType {NO_LPT, LPT_BOOL, LPT_CHAR, LPT_UNSIGNED, LPT_INTEGER, 
+                    BIT32_VAL, LPT_BLOB, LPT_REF, LPT_DOUBLE, LPT_DATETIME,
+                    LPT_STRING, LPT_DYNARR = 0x80,
+                    LPT_DYNBOOL, LPT_DYNCHAR, LPT_DYNUNSIGNED, LPT_DYNINTEGER, 
+                    DYNBIT32_VAL, LPT_DYNBLOB, LPT_DYNREF, LPT_DYNDOUBLE, LPT_DYNDATETIME,
+                    LPT_DYNSTRING };
+    /**
+     * The constructor
+     * Sets the type ID for each subclassed property value type class
+     * @param type MAC property type ID
+     */
+    GCFPValue (TMACValueType type) : _type(type) {};
     
-    virtual TSAResult setValue(const string value) = 0;
+    /**
+     * The destructor
+     */
+    virtual ~GCFPValue () {};
 
-    static GCFPValue* createMACTypeObject(TMACValueType type);
+    /** 
+     * Returns MAC type ID.
+     * @return MAC type ID 
+     */
+    inline const TMACValueType& getType () const {return _type;}
+
+    /** 
+     * Pure virtual method
+     * @return a hard copy of this object 
+     * <b>IMPORTANT: must be deleted by "user" of this method</b>
+     */
+    virtual GCFPValue* clone () const = 0;
+
+    /** 
+     * Pure virtual method
+     * Copys the arguments value to the affected object
+     * @param value value to be copied into <b>this</b> object 
+     * @return GCF_DIFFERENT_TYPES if type of <b>value<b> is different to 
+     * <b>this</b> object. Otherwise GCF_NO_ERROR.
+     */
+    virtual TGCFResult copy (const GCFPValue& value) = 0;
+    
+    /** 
+     * Pure virtual method
+     * Sets a value to the affected object by means of a string buffer. 
+     * This value will be translated by the concrete subclassed value type class.
+     * @param value value to be translated to value of <b>this</b> object 
+     * @return GCF_VALUESTRING_NOT_VALID if <b>value<b> could not be translated 
+     * to the value of <b>this</b> object. Otherwise GCF_NO_ERROR.
+     */
+    virtual TGCFResult setValue (const string value) = 0;
+
+    /** 
+     * Static method
+     * Creates a property value object of MAC type <b>type<b>
+     * @param type property type to created
+     * @return pointer to created property value type object
+     * <b>IMPORTANT: must be deleted by "user" of this method</b>
+     */
+    static GCFPValue* createMACTypeObject (TMACValueType type);
    
-  protected: // Protected attributes
-    /**  */
+  private: // private data members
+    /** Holds MAC property value type ID*/
     TMACValueType _type;
 };
 

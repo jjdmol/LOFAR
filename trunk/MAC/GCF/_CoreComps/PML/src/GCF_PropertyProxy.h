@@ -1,4 +1,6 @@
-//#  GCF_PropertyProxy.h: 
+//#  GCF_PropertyProxy.h: abstract class provides the possibility to 
+//#                       (un)subscribe from/on, set or get property (values)  
+//#                       in the SCADA DB and handle their responses. 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,31 +25,55 @@
 #ifndef GCF_PROPERTYPROXY_H
 #define GCF_PROPERTYPROXY_H
 
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_PML
 #include <GCFCommon/GCF_Defines.h>
+#else
+#include <GCF_Defines.h>
+#endif
 
+/** 
+  This abstract class provides the possibility to (un)subscribe from/on, set or 
+  get property (values) in the SCADA DB and handle their responses. Opposite to 
+  classes based on the GCFPropertyBase class this class has no knowledge about 
+  the property itself but only which actions on properties are possible. So it 
+  could happen that APL can perform multiple subscriptions on a certain property 
+  by means of the same proxy. Then multiple value-changed indications on one 
+  value change in the SCADA DB will be received. In most of the cases this is 
+  not wanted. Always use this class with cautions.
+*/
 class GPMPropertyProxy;
 class GCFPValue;
 
 class GCFPropertyProxy
 {
   public:
-    GCFPropertyProxy();
-    virtual ~GCFPropertyProxy();
+    GCFPropertyProxy ();
+    virtual ~GCFPropertyProxy ();
 
-    TGCFResult subscribe(const string& propName);
-    TGCFResult unsubscribe(const string& propName);
-    TGCFResult get(const string& propName);
-    TGCFResult set(const string& propName, const GCFPValue& value);
-    bool exists(const string& propName);
+    TGCFResult subscribe (const string& propName);
+    TGCFResult unsubscribe (const string& propName);
+    TGCFResult get (const string& propName);
+    TGCFResult set (const string& propName, 
+                    const GCFPValue& value);
+    bool exists (const string& propName);
 
   protected:
     friend class GPMPropertyProxy;
-    virtual void propSubscribed(const string& propName) = 0;
-    virtual void propUnsubscribed(const string& propName) = 0;
-    virtual void propValueGet(const string& propName, const GCFPValue& value) = 0;
-    virtual void propValueChanged(const string& propName, const GCFPValue& value) = 0;
+    virtual void propSubscribed (const string& propName) = 0;
+    virtual void propUnsubscribed (const string& propName) = 0;
+    virtual void propValueGet (const string& propName, 
+                               const GCFPValue& value) = 0;
+    virtual void propValueChanged (const string& propName, 
+                                   const GCFPValue& value) = 0;
   
   private:
+    /**
+    * Don't allow copying this object.
+    */
+    GCFPropertyProxy (const GCFPropertyProxy&);
+    GCFPropertyProxy& operator= (const GCFPropertyProxy&);
+  
     GPMPropertyProxy* _pPMProxy;
 };
 #endif

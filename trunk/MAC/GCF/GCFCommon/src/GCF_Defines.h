@@ -26,6 +26,7 @@
 #include <LofarLogger/LofarLogger.h>
 
 #define GCF_LOGGER_ROOT       (MAC_LOGGER_ROOT + string(".GCF"))
+#define GCF_STDOUT_LOGGER     (GCF_LOGGER_ROOT + string(".Logger"))
 
 enum TGCFResult {
   GCF_NO_ERROR, 
@@ -36,24 +37,26 @@ enum TGCFResult {
   GCF_APCUNLOAD_ERROR,
   GCF_MYPROPSLOAD_ERROR,
   GCF_MYPROPSUNLOAD_ERROR,
+  GCF_VALUESTRING_NOT_VALID,
+  GCF_DIFFERENT_TYPES
 };
 
 typedef unsigned char TAccessMode;
 
 typedef struct
 {
-  char          *propName;
+  char*         propName;
   unsigned int  type;
   TAccessMode   accessMode;
-  char          *defaultValue;
+  char*         defaultValue;
 }
 TProperty;
 
 typedef struct
 {
-  unsigned int  nrOfProperties;
-  char          *scope;
-  const TProperty*    properties;
+  unsigned int      nrOfProperties;
+  char*             scope;
+  const TProperty*  properties;
 }
 TPropertySet;
 #endif

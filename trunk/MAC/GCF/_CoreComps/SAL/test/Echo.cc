@@ -36,9 +36,9 @@ Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
   server.init(*this, "server", GCFPortInterface::SPP, ECHO_PROTOCOL);
 }
 
-int Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
   string propName("Test_Prop");
 
   switch (e.signal)
@@ -54,10 +54,9 @@ int Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
     case F_CONNECTED_SIG:
     {
       GCFPVBool testVal(true);
-      string propType("BOOL_VAL");
-      TRAN(&Echo::connected);
-      service.createProp(propType, propName);
-      service.createProp(propType, propName + "_test");
+      TRAN(Echo::connected);
+      service.createProp(propName, GCFPValue::LPT_BOOL);
+      service.createProp(propName + "_test", GCFPValue::LPT_BOOL);
       //service.subscribe(propName);
       service.subscribe(propName + "_test");
       //service.get(propName);
@@ -80,9 +79,9 @@ int Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
-int Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
   string propName("Test_Prop");
 
   switch (e.signal)
@@ -91,7 +90,7 @@ int Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       service.unsubscribe(propName + "_test");
       //service.deleteProp(propName);
       cout << "Lost connection to client" << endl;
-      TRAN(&Echo::initial);
+      TRAN(Echo::initial);
       break;
 
     case ECHO_PING:

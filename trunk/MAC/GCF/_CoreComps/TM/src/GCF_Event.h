@@ -24,7 +24,25 @@
 #define GCF_EVENT_H
 
 #include <sys/types.h>
-
+/**
+ * This struct is the base event data container to exchange messages between two 
+ * tasks. 
+ * Application tasks will have to define their own protocol by specifying the 
+ * contents of events that are exchanged between tasks. Creating sub class from 
+ * GCFEvent creates application (tasks) specific events. All GCFEvent sub 
+ * classes are generally the same except for the parameters that make the event 
+ * unique. A protocol is a collection of events where each event has a specific 
+ * direction (IN/OUT). To create a new protocol a protocol specification file 
+ * must be created (with extension '.prot'). The autogen utility is then used to 
+ * convert this specification file into a header file containing GCFEvent sub 
+ * class definitions. 
+ * The protocol specification consists of a list of the possible events in the 
+ * protocol each with its own parameters (or no parameters) and with the 
+ * direction in which the event can be sent. The autogen utility is used to 
+ * generate a header file from this definition using a template for the header 
+ * file and the nested key-value pairs from the specification file. This header 
+ * file contains definitions of GCFEvent sub classes, one for each event. 
+ */
 struct GCFEvent
 {
     GCFEvent() :

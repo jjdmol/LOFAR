@@ -1,4 +1,4 @@
-//#  GCF_TCPPort.h: connection to a remote process
+//#  GCF_TCPPort.h: TCP connection to a remote process
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,8 +23,13 @@
 #ifndef GCF_TCPPORT_H
 #define GCF_TCPPORT_H
 
+#include <lofar_config.h>
+#ifdef HAVE_LOFAR_TM
 #include <TM/PortInterface/GCF_RawPort.h>
-#include <TM/PortInterface/GCF_PeerAddr.h>
+#else
+#include <GCF_RawPort.h>
+#endif
+
 #include <Common/lofar_string.h>
 
 // forward declaration
@@ -32,61 +37,64 @@ class GCFTask;
 class GTMSocket;
 class GCFEvent;
 
+/**
+ * This is the class, which implements the special port with the TCP message 
+ * transport protocol. It uses socket pattern to do this. Is can act as MSPP 
+ * (port provider), SPP (server) and SAP (client).
+ */
 class GCFTCPPort : public GCFRawPort
 {
  public:
 
-    ////////////////////// Construction methods
-    GCFTCPPort(GCFTask& task,
-  	    string name,
-  	    TPortType type,
-        int protocol = 0);
-    GCFTCPPort();
+    /// Construction methods
+    /** @param protocol NOT USED */    
+    GCFTCPPort (GCFTask& task,
+          	    string name,
+          	    TPortType type,
+                int protocol = 0);
+    GCFTCPPort ();
   
-    virtual ~GCFTCPPort();
+    virtual ~GCFTCPPort ();
   
-    ////////////////////// GCFPortInterface methods
-
   public:
 
     /**
      * open/close functions
      */
-    virtual int open();
-    virtual int close();
+    virtual int open ();
+    virtual int close ();
   
-    virtual int accept(GCFTCPPort& port);
+    virtual int accept (GCFTCPPort& port);
     /**
      * send/recv functions
      */
-    virtual ssize_t send(const GCFEvent& event,
-  		       void* buf = 0, size_t count = 0);
-    virtual ssize_t sendv(const GCFEvent& e,
-  			const iovec buffers[], int n);
-    virtual ssize_t recv(void* buf,     size_t count);
-    virtual ssize_t recvv(iovec buffers[], int n);
+    virtual ssize_t send (const GCFEvent& event,
+  		                    void* buf = 0, 
+                          size_t count = 0);
+    virtual ssize_t sendv (const GCFEvent& e,
+  			                   const iovec buffers[], 
+                           int n);
+    virtual ssize_t recv (void* buf,
+                          size_t count);
+    virtual ssize_t recvv (iovec buffers[], 
+                           int n);
+  public:
 
-  ////////////////////// EOF GCFPortInterface methods
+    // addr is local address if getType == (M)SPP
+    // addr is remote addres if getType == SAP
+    void setAddr (const GCFPeerAddr& addr);
+
   protected:
     friend class GTMSocket;
     friend class GTMServerSocket;
   
   private:
-
     /**
-     * Don't allow copying of the FPort object.
+     * Don't allow copying this object.
      */
-    GCFTCPPort(const GCFTCPPort&);
-    GCFTCPPort& operator=(const GCFTCPPort&);
-
-  public:
-
-    // addr is local address if getType == (M)SPP
-    // addr is remote addres if getType == SAP
-    void setAddr(const GCFPeerAddr& addr);
+    GCFTCPPort (const GCFTCPPort&);
+    GCFTCPPort& operator= (const GCFTCPPort&);
     
-    string _remotePortname;
-  
   private:
     bool                _addrIsSet;
     GTMSocket*          _pSocket;

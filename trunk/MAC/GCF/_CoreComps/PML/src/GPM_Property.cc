@@ -62,9 +62,9 @@ TPMResult GPMProperty::setValue(const GCFPValue& value)
   TPMResult result(PM_NO_ERROR);
   if (!_pOldValue || !_pCurValue) 
     result = PM_PROP_NOT_VALID;
-  else if (_pOldValue->copy(*_pCurValue) != SA_NO_ERROR)
+  else if (_pOldValue->copy(*_pCurValue) != GCF_NO_ERROR)
     result = PM_PROP_WRONG_TYPE;
-  else if (_pCurValue->copy(value) != SA_NO_ERROR)
+  else if (_pCurValue->copy(value) != GCF_NO_ERROR)
     result = PM_PROP_WRONG_TYPE;
   
   return result;
@@ -75,12 +75,12 @@ TPMResult GPMProperty::getValue(GCFPValue& value, bool curValue) const
   TPMResult result(PM_NO_ERROR);
   if (curValue && _pCurValue) 
   {
-    if (value.copy(*_pCurValue) != SA_NO_ERROR)
+    if (value.copy(*_pCurValue) != GCF_NO_ERROR)
       result = PM_PROP_WRONG_TYPE;
   }
   else if (!curValue && _pOldValue)
   {
-    if (value.copy(*_pOldValue) != SA_NO_ERROR)
+    if (value.copy(*_pOldValue) != GCF_NO_ERROR)
       result = PM_PROP_WRONG_TYPE;
   }
   else
