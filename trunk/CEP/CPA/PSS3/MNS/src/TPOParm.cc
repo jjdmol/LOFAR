@@ -211,11 +211,11 @@ void TPersistentObject<MeqParmHolder>::initAttribMap()
 
 
 
-//# Force the instantiation of the templates.
+//# Force the instantiation of the TPersistent templates.
+//# The instantiation of the DBRep templates is not necessary, because
+//# they are full specializations, thus already compiled.
 template class TPersistentObject<MeqParmDefHolder>;
 template class TPersistentObject<MeqParmHolder>;
-template class DBRep<MeqParmDefHolder>;
-template class DBRep<MeqParmHolder>;
 
 
   }  // end namespace PL
