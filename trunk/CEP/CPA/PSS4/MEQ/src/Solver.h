@@ -27,9 +27,7 @@
 #include <MEQ/VellSet.h>
 #include <aips/Fitting/FitLSQ.h>
 
-
 #pragma types #Meq::Solver
-
 
 // The comments below are used to automatically generate a default
 // init-record for the class 
@@ -48,7 +46,7 @@
 //  Use singular value decomposition in solver?
 //field: parm_group hiid('parm')
 //  HIID of the parameter group to use. 
-//field: solvable
+//field: solvable [=]
 //  Command record which is sent up in the rider of the first request
 //  (as req.rider.<parm_group>). This is meant to set parms to solvable. 
 //  The simplest way to create this is by using meq.solvable_list("names"), 
