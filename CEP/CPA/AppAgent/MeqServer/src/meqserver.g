@@ -30,6 +30,7 @@ if( has_field(lofar_software,'print_versions') &&
 
 include 'appagent/app_proxy.g'
 include 'meq/meqtypes.g'
+include 'recutil.g'
 
 # These can be uncommented (or set elsewhre prior to include) for debugging
 #
@@ -67,25 +68,6 @@ const _meqserver_binary :=
                       valgrind=use_valgrind,valgrind_opts=use_valgrind_opts,
                       nostart=use_nostart,suspend=use_suspend);
   
-
-
-# Prints its arguments formatted between left and right margin
-# sep is the separator to use between arguments, default is space
-const margin_print := function (...,left=2,right=78,sep=' ')
-{
-  width := right-left;
-  prefix := spaste(rep(' ',left));
-  strs := split(paste(...,sep=sep),'');
-  length := len(strs);
-  i:=0;
-  while( i<length )
-  {
-    i1 := min(i+width,length);
-    print spaste(prefix,spaste(strs[(i+1):i1]));
-    i := i1;
-  }
-}
-
 const meq.server := function (appid='MeqServer',
     server=_meqserver_binary,options="-nogw -d0 -meq:M:M:MeqServer",
     verbose=1,gui=F,ref parent_frame=F,ref widgetset=dws,
@@ -143,26 +125,33 @@ const meq.server := function (appid='MeqServer',
   }
 
   # define shortcuts for common methods
-  # createnode()
+  # ------ createnode()
+  
   const public.createnode := function (initrec,wait_reply=F)
   {
     wider public;
     return public.meq('Create.Node',initrec,wait_reply=wait_reply);
   }
-  # getnodestate()
+  
+  # ------ getnodestate()
+  
   const public.getnodestate := function (node)
   {
     wider self,public;
     rec := self.makenodespec(node);
     return public.meq('Node.Get.State',rec,wait_reply=T);
   }
-  # getnodelist()
+  
+  # ------ getnodelist()
+  
   const public.getnodelist := function ()
   {
     wider self,public;
     return public.meq('Get.Node.List',[=],wait_reply=T);
   }
-  # execute()
+  
+  # ------ execute()
+  
   const public.execute := function (node,req)
   {
     wider self,public;
@@ -171,7 +160,11 @@ const meq.server := function (appid='MeqServer',
     return public.meq('Node.Execute',rec,wait_reply=T);
   }
   
-  # enables or disables printing of node_result events
+  # ------ track_results()
+  # enables or disables automatic printing of node_result events
+  # note that if a meqserver is constructed with verbose>0, tracking
+  # will be enabled by default
+  
   const public.track_results := function (enable=T)
   {
     wider self,public;
@@ -186,7 +179,9 @@ const meq.server := function (appid='MeqServer',
         whenever self.relay->node_result do
         {
           print '============= result for node: ',$value.name;
-          margin_print($value);
+#          margin_print($value);
+          for( s in rec2lines($value,76) )
+            print sprintf('  %-76.76s',s);
         }
         # store id of this wheever
         self.weid_print_results := last_whenever_executed();

@@ -1,3 +1,5 @@
+  * aded mqs.track_results() function
+
   * added error logging to app_proxy objects (e.g. meq.server):
       mqs.num_error()
       mqs.get_error_log(clear=T)
@@ -19,7 +21,14 @@
 Checked in by 03/03/2004:
 
   * a parm now has a solvable polc and a predict polc, so it can answer
-    off-the-wall predict requests w/o disrupting the solve
+    off-the-wall predict requests w/o disrupting the solve.
+    parm state record fields are now:
+      polcs             # always a vector, so use polcs[1] for single polc
+      solve_polcs       # always a vector, so use solve_polcs[1] for single polc
+      domain_id         # current domain IDs
+      solve_domain_id
+      domain            # current domains
+    
       
   * added a Clear.Polcs command to MeqParm; renamed Save.Polc to
     Save.Polcs

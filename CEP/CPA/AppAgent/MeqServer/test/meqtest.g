@@ -36,10 +36,13 @@ const mqsinit := function (verbose=3,debug=[=],gui=use_gui)
     r.b::dmi_ignore := T;
     mqs.meq('a',r);
     mqs.init([output_col="PREDICT"],wait=T);
-    for( lev in field_names(default_debuglevels) )
-      mqs.setdebug(lev,default_debuglevels[lev]);
-    for( lev in field_names(debug) )
-      mqs.setdebug(lev,debug[lev]);
+    if( is_record(debug) )
+    {
+      for( lev in field_names(default_debuglevels) )
+        mqs.setdebug(lev,default_debuglevels[lev]);
+      for( lev in field_names(debug) )
+        mqs.setdebug(lev,debug[lev]);
+    }
   }
 }
 
@@ -227,16 +230,18 @@ const freq_test := function (gui=use_gui)
   print a:=mqs.meq('Node.Execute',[name='f',request=meq.request(cells)],T);
 }
 
-const solver_test := function (gui=use_gui)
+const solver_test := function (gui=use_gui,verbose=4,publish=T)
 {
-  if( is_fail(mqsinit(verbose=4,gui=gui,debug=[MeqNode=3,MeqParm=5])) )
+  if( is_fail(mqsinit(verbose=verbose,gui=gui,debug=F)) )
   {
     print mqs;
     fail;
   }
   # create parms and condeq
-  defval1 := array([3.,0.5,0.5,0.1],2,2);
-  defval2 := array([2.,10.,2.,10. ],2,2);
+#  defval1 := array([3.,0.5,0.5,0.1],2,2);
+#  defval2 := array([2.,10.,2.,10. ],2,2);
+  defval1 := 1;
+  defval2 := 0;
   print mqs.meq('Create.Node',meq.parm('a',defval1,groups='Parm'));
   print mqs.meq('Create.Node',meq.parm('b',defval2,groups='Parm'));
   print mqs.meq('Create.Node',meq.node('MeqCondeq','condeq1',children="a b"));
@@ -247,6 +252,9 @@ const solver_test := function (gui=use_gui)
   rec.solvable := meq.solvable_list("a");
   rec.parm_group := hiid('Parm');
   print mqs.meq('Create.Node',rec);
+  
+  for( n in "a condeq1" )
+    print mqs.meq('Node.Publish.Results',[name=n,enable=T]);
   
   global cells,cells2,request,request2,res,res2,st1,st2,st3;
   
@@ -262,9 +270,11 @@ const solver_test := function (gui=use_gui)
   res := mqs.meq('Node.Execute',[name='solver1',request=request],T);
   print res;
   st2 := mqs.getnodestate('a');
+  print st2.solve_polcs;
   res2 := mqs.meq('Node.Execute',[name='a',request=request2],T);
   print res2;
   st3 := mqs.getnodestate('a');
+  print st3.solve_polcs;
 }
 
 const save_test := function (clear=F)
