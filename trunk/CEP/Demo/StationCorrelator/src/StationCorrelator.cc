@@ -211,7 +211,6 @@ void StationCorrelator::run(int steps) {
     LOG_TRACE_LOOP_STR("processing run " << i );
     getComposite().process();
   }
-  cout<<"ready with run on node "<<TH_MPI::getCurrentRank()<<endl;
   LOG_TRACE_FLOW_STR("Finished StationCorrelator::run() "  );
 }
 
@@ -249,18 +248,7 @@ int main (int argc, const char** argv) {
 
   try {
     kvm = KeyParser::parseFile("/home/zwart/TestRange");
-    //    kvm.show(cout);
-  } catch(std::exception& x){
-  }
-  try {
 
-    if(kvm.getInt("runsteps", -1) == -1) {
-      int length;
-      char name[100];
-
-      MPI_Get_processor_name(name, &length);
-      cout<<"COULD NOT READ TESTRANGE FILE on "<<name<<endl;
-    }
     StationCorrelator correlator(kvm);
     correlator.setarg(argc, argv);
     correlator.baseDefine(kvm);
