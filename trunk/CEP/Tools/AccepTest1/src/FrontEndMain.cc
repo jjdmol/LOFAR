@@ -10,6 +10,8 @@
 // TransportHolders
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
+#include <Common/KeyValueMap.h>
+#include <Common/KeyParser.h>
 #include <tinyCEP/SimulatorParseClass.h>
 
 #include <AH_FrontEnd.h>
@@ -23,7 +25,7 @@ using namespace LOFAR;
 
 int main (int argc, const char** argv) {
 
-  // INIT_LOGGER("CorrelatorLogger.prop");
+  INIT_LOGGER("CorrelatorLogger.prop");
 #ifdef HAVE_MPI
   TH_MPI::init(argc, argv);
 #endif
@@ -32,14 +34,26 @@ int main (int argc, const char** argv) {
     for (int elements = min_elements; elements <= max_elements; elements=elements+stp_elements) {
      
       try {		
-	AH_FrontEnd frontend(port, elements, samples,channels, polarisations, runs, targets);
+	AH_FrontEnd* frontend;
+
+
+	if ((samples+elements) % 2 == 0) {
+	  cout << "A" <<endl;
+	  frontend = new AH_FrontEnd(port, elements, samples,channels, polarisations, runs, targets);
+	} else {
+	  cout << "B" << endl;
+	  frontend = new AH_FrontEnd(port+2*targets, elements, samples, channels, polarisations, runs, targets);
+	}
 	
-	frontend.setarg(argc, argv);
-	frontend.baseDefine();
-	frontend.basePrerun();	
-	frontend.baseRun(runs);
- 	frontend.baseDump();
-	frontend.baseQuit();
+
+	frontend->setarg(argc, argv);
+	frontend->baseDefine();
+	frontend->basePrerun();	
+	frontend->baseRun(runs);
+ 	frontend->baseDump();
+	frontend->baseQuit();
+
+	delete frontend;
 
 // 	sleep(1);
 

@@ -13,7 +13,8 @@
 using namespace LOFAR;
 int main (int argc, const char** argv) {
 
-  //  INIT_LOGGER("Correlator.log_prop");
+  INIT_LOGGER("CorrelatorLogger.prop");
+
 #ifdef HAVE_MPI
   TH_MPI::init(argc, argv);
 
@@ -34,19 +35,26 @@ int main (int argc, const char** argv) {
 	
 	try {
 	  
-	  AH_Correlator correlator(elements, samples, channels, polarisations, frontend_ip, backend_ip, port, targets);
-	  correlator.setarg(argc, argv);
+	  AH_Correlator* correlator;
+
+	  if ((samples+elements) % 2 == 0) {
+	    correlator = new AH_Correlator(elements, samples, channels, polarisations, frontend_ip, backend_ip, port, targets);
+	  } else {
+	    correlator = new AH_Correlator(elements, samples, channels, polarisations, frontend_ip, backend_ip, port+2*targets, targets);
+	  }
 	  
 	  /* Automatic run of the correlator */
 	  
-	  correlator.baseDefine();
-	  correlator.basePrerun();
+	  correlator->baseDefine();
+	  correlator->basePrerun();
 	  
-	  correlator.baseRun(runs);
+	  correlator->baseRun(runs);
 	  
-	  correlator.basePostrun();
+	  correlator->basePostrun();
 	  // 	correlator.baseDump();
-	  correlator.baseQuit();
+	  correlator->baseQuit();
+
+	  delete correlator;
 
 	  sleep(4);
 
