@@ -173,6 +173,16 @@ const int AidVis_int = -1116;
 const AtomicID AidWrite(-1253);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:33
 const int AidWrite_int = -1253;
 #endif
+#ifndef _defined_id_Aidstart
+#define _defined_id_Aidstart 1
+const AtomicID Aidstart(-1043);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOGlish/src/OCTOGlish.aidlist:6
+const int Aidstart_int = -1043;
+#endif
+#ifndef _defined_id_Aidstring
+#define _defined_id_Aidstring 1
+const AtomicID Aidstring(-48);                    // from /home/oms/LOFAR/autoconf_share/../DMI/src/DMI.aidlist:45
+const int Aidstring_int = -48;
+#endif
 
 
 #endif

@@ -34,7 +34,7 @@
 #pragma aid DDID VDSID Selection Tile String Column Size Format 
 #pragma aid Vis Input Output Params Start End Write Flags Flag Mask
 #pragma aid Time Data Predict Residuals Column Name Message Type
-#pragma aid Throw Error Domain
+#pragma aid Throw Error Domain start string 
 
 #pragma aid MS Raw Non Calibrated Predict Residuals Iteration
 
@@ -53,9 +53,9 @@ namespace MSVisAgent
        FPhaseRef          = AidPhase|AidRef,
        FAntennaPos        = AidAntenna|AidPos,
        FMSName            = AidMS|AidName,
-       FChannelStartIndex = AidChannel|AidStart|AidIndex,
+       FChannelStartIndex = AidChannel|Aidstart|AidIndex,
        FChannelEndIndex   = AidChannel|AidEnd|AidIndex,
-       FSelectionString   = AidSelection|AidString,
+       FSelectionString   = AidSelection|Aidstring,
        FDataColumnName    = AidData|AidColumn|AidName,
        FTileSize          = AidTile|AidSize,
        FTileFormat        = AidTile|AidFormat,

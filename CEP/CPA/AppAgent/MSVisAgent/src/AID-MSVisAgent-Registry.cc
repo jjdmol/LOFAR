@@ -39,6 +39,8 @@ static AtomicID::Register aid_reg_Type(-1098,"Type");
 static AtomicID::Register aid_reg_Throw(-1305,"Throw");
 static AtomicID::Register aid_reg_Error(-1071,"Error");
 static AtomicID::Register aid_reg_Domain(-1144,"Domain");
+static AtomicID::Register aid_reg_start(-1043,"start");
+static AtomicID::Register aid_reg_string(-48,"string");
 static AtomicID::Register aid_reg_Raw(-1159,"Raw");
 static AtomicID::Register aid_reg_Non(-1380,"Non");
 static AtomicID::Register aid_reg_Calibrated(-1379,"Calibrated");

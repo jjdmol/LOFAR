@@ -5,7 +5,7 @@ include 'mkimg.g'
 mtest := function (dosolve=F,verbose=1,suspend=F)
 {
   print "Creating solver and output repeater";
-  start_octopussy('./applauncher',"-d0 -meq:M:O:Solver -rpt:O:M:Repeater",
+  start_octopussy('./applauncher',"-d0 -dMSVisAgent=4 -meq:M:O:Solver -rpt:O:M:Repeater",
                   suspend=suspend);
   global solv;
   global rpt;
