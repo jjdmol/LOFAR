@@ -29,7 +29,9 @@
 
 
 MeqPolc::MeqPolc()
-: itsMaxNrSpid(0)
+: itsMaxNrSpid (0),
+  itsPertValue (1e-6),
+  itsIsRelPert (true)
 {}
 
 void MeqPolc::setCoeff (const MeqMatrix& values)
@@ -79,9 +81,10 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
       result.setValue (MeqMatrix(itsCoeff.getDouble()));
       if (itsMaxNrSpid) {
 	result.setPerturbedValue (itsSpidInx[0],
+				  ///				  MeqMatrix(itsCoeff.getDouble()));
 				  MeqMatrix(itsCoeff.getDouble()
 					    + itsPerturbation.getDouble()));
-	result.setPerturbation (itsSpidInx[0], itsPerturbation);
+	result.setPerturbation (itsSpidInx[0], itsPerturbation.getDouble());
       }
     } else { 
       result.setValue (MeqMatrix(itsCoeff.getDComplex()));
@@ -89,7 +92,7 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
 	result.setPerturbedValue (itsSpidInx[0],
 				  MeqMatrix(itsCoeff.getDComplex()
 					    + itsPerturbation.getDComplex()));
-	result.setPerturbation (itsSpidInx[0], itsPerturbation);
+	result.setPerturbation (itsSpidInx[0], itsPerturbation.getDComplex());
       }
     }
   } else {
@@ -312,16 +315,16 @@ int MeqPolc::makeSolvable (int spidIndex)
     }
   }
   // Precalculate the perturbed coefficients.
-  // The perbation is 10^-6 of the coefficient.
-  // If the coefficient is too small, just take 10^-6.
+  // The perturbation is absolute or a factor of the coefficient.
+  // If the coefficient is too small, take absolute.
   if (nr > 0) {
     itsPerturbation = itsCoeff.clone();
     if (itsCoeff.isDouble()) {
       const double* coeff = itsCoeff.doubleStorage();
       double* pert  = itsPerturbation.doubleStorage();
       for (int i=0; i<itsCoeff.nelements(); i++) {
-	double perturbation = 1e-6;
-	if (abs(coeff[i]) > 1e-10) {
+	double perturbation = itsPertValue;
+	if (itsIsRelPert  &&  abs(coeff[i]) > 1e-10) {
 	  perturbation *= coeff[i];
 	}
 	pert[i] = perturbation;
@@ -330,13 +333,15 @@ int MeqPolc::makeSolvable (int spidIndex)
       const complex<double>* coeff = itsCoeff.dcomplexStorage();
       complex<double>* pert  = itsPerturbation.dcomplexStorage();
       for (int i=0; i<itsCoeff.nelements(); i++) {
-	double realpert = 1e-6;
-	double imagpert = 1e-6;
-	if (abs(coeff[i].real()) > 1e-10) {
-	  realpert *= coeff[i].real();
-	}
-	if (abs(coeff[i].imag()) > 1e-10) {
-	  imagpert *= coeff[i].imag();
+	double realpert = itsPertValue;
+	double imagpert = itsPertValue;
+	if (itsIsRelPert) {
+	  if (abs(coeff[i].real()) > 1e-10) {
+	    realpert *= coeff[i].real();
+	  }
+	  if (abs(coeff[i].imag()) > 1e-10) {
+	    imagpert *= coeff[i].imag();
+	  }
 	}
 	pert[i] = complex<double>(realpert, imagpert);
       }

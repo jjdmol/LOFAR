@@ -45,6 +45,7 @@ class MeqPolc
 {
 public:
   // Create an empty 2-dim polynomial.
+  // By default a relative perturbation of 10^-6 is used.
   MeqPolc();
 
   // Calculate the value and possible perturbations.
@@ -75,6 +76,10 @@ public:
   void setDomain (const MeqDomain& domain)
     { itsDomain = domain; }
 
+  void setPerturbation (double perturbation = 1e-6,
+			bool isRelativePerturbation = true)
+    { itsPertValue = perturbation; itsIsRelPert = isRelativePerturbation; }
+
   // Make the polynomial non-solvable.
   void clearSolvable();
 
@@ -101,6 +106,8 @@ private:
   vector<bool> itsMask;
   vector<int>  itsSpidInx;     //# -1 is not solvable
   int          itsMaxNrSpid;
+  double       itsPertValue;
+  bool         itsIsRelPert;   //# true = perturbation is relative
 };
 
 

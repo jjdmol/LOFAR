@@ -136,17 +136,22 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
     if (rak.isDefined(spinx)) {
       eval = true;
       perturbation = rak.getPerturbation(spinx);
-    }  else if (deck.isDefined(spinx)) {
+      radiff = rak.getPerturbedValue(spinx) - itsRefRa;
+    } else if (deck.isDefined(spinx)) {
       eval = true;
       perturbation = deck.getPerturbation(spinx);
+      cosdec = cos(deck.getPerturbedValue(spinx));
     }
     if (eval) {
-      MeqMatrix lkp = cos(deck.getPerturbedValue(spinx)) *
-	              sin(rak.getPerturbedValue(spinx) - itsRefRa);
-      MeqMatrix mkp = sin(deck.getPerturbedValue(spinx))*cos(itsRefDec) -
-	              sin(itsRefDec)*lkp;
-      nk = sqrt(1 - sqr(lkp)- sqr(mkp));
-      tmp = u*lkp + v*mkp + w*nk;
+      lk = cosdec * sin(radiff);
+      mk = sin(deck.getPerturbedValue(spinx))*itsCosRefDec -
+	   cosdec*itsSinRefDec*cos(radiff);
+      MeqMatrixTmp nks = MeqMatrixTmp(1.) - sqr(lk) - sqr(mk);
+      AssertStr (min(nks).getDouble() > 0, "source " << request.getSourceNr()
+	     << " too far from phaseref " << itsRefRa << ", " << itsRefDec);
+      nk = sqrt(nks);
+      tmp = u*lk + v*mk + w*nk;
+      tmpdata = tmp.doubleStorage();
       resdata = res.dcomplexStorage();
       double freq = domain.startY();
       for (int j=0; j<request.ny(); j++) {
@@ -158,7 +163,7 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
 	}
 	freq += request.stepY();
       }
-      result.setPerturbedValue (spinx, exp(res) / nk);
+      result.setPerturbedValue (spinx, res/nk);
       result.setPerturbation (spinx, perturbation);
     }
   }

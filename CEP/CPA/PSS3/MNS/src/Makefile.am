@@ -21,6 +21,7 @@ MeqPolc.h					\
 MeqRequest.h					\
 MeqRequestId.h					\
 MeqResult.h					\
+MeqStatExpr.h					\
 MeqStation.h					\
 MeqStoredParmPolc.h				\
 MeqUVWPolc.h					\
@@ -50,6 +51,7 @@ MeqPointSource.cc				\
 MeqPolc.cc					\
 MeqRequest.cc					\
 MeqResult.cc					\
+MeqStatExpr.cc					\
 MeqStation.cc					\
 MeqStoredParmPolc.cc				\
 MeqUVWPolc.cc					\

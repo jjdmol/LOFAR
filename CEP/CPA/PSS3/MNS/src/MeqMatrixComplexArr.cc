@@ -26,6 +26,7 @@
 #include <MNS/MeqMatrixComplexSca.h>
 #include <MNS/MeqMatrixComplexArr.h>
 #include <Common/Debug.h>
+#include <iomanip>
 
 
 MeqMatrixComplexArr::MeqMatrixComplexArr (int nx, int ny)
@@ -60,7 +61,8 @@ void MeqMatrixComplexArr::show (ostream& os) const
     if (i > 0) {
       os << ", ";
     }
-    os << itsValue[i];
+    os << '(' << setprecision(12) << itsValue[i].real()
+       << ',' << setprecision(12) << itsValue[i].imag() << ')';
   }
   os << ']';
 }

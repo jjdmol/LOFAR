@@ -43,6 +43,8 @@ int MeqParmSingle::initDomain (const MeqDomain&, int spidIndex)
   if (itsIsSolvable) {
     itsSolveIndex = spidIndex;
     return 1;
+  } else {
+    itsSolveIndex = -1;
   }
   return 0;
 }
