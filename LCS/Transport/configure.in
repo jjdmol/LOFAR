@@ -58,7 +58,6 @@ lofar_DOCXX
 lofar_MPI
 lofar_CORBA
 lofar_PACKAGE(LCS/Common)
-lofar_PACKAGE(LCS/databases/PL)
 
 dnl
 dnl Output Makefiles
