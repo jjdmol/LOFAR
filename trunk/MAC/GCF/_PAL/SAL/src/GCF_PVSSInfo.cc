@@ -30,7 +30,8 @@ string GCFPVSSInfo::_sysName = "";
 string GCFPVSSInfo::_projName = "";
 unsigned int GCFPVSSInfo::_lastSysNr = 0;
 
-TMACValueType macValueTypes[] = {
+TMACValueType macValueTypes[] = 
+{
   NO_LPT,           // DPELEMENT_NOELEMENT,
   NO_LPT,           // DPELEMENT_RECORD,
   NO_LPT,           // DPELEMENT_ARRAY,

@@ -114,6 +114,8 @@ int GTMETHSocket::open(const char* ifname,
       { 0x6,  0, 0, 0x00000000 },
     };
 
+  memset(&filter, 0, sizeof(struct sock_fprog));
+  
   filter.len = sizeof(mac_filter_insn) / sizeof(struct sock_filter);
 
   if (_fd > -1)
