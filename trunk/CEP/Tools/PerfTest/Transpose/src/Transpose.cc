@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
+//  initial version
+//
 //
 //
 //////////////////////////////////////////////////////////////////////////
@@ -157,8 +160,8 @@ void Transpose::define(const ParamBlock& params)
   // should be made later...
 
   // Create the Source Steps
-  int timeDim = 3;
-  int freqDim = 7;
+  int timeDim = 1;
+  int freqDim = 4096;
   for (int iStep = 0; iStep < itsSourceSteps; iStep++) {
     
     // Create the Source Step
