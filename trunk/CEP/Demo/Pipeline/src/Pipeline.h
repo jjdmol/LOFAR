@@ -66,10 +66,10 @@ class Pipeline: public Simulator
   Step            **CorrSteps;
   
     /// Number of source steps
-   int itsSourceSteps;
+   int itsStations;
    
    /// Number of destination steps
-   int itsDestSteps;
+   int itsCorrelators;
 
    /// To Profile  or not....
    bool itsDoLogProfile;
