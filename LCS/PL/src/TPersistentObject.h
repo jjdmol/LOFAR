@@ -25,13 +25,10 @@
 
 //# Includes
 #include <PL/PersistentObject.h>
+#include <PL/Exception.h>
+// #include <boost/shared_ptr.h>
+#include <loki/SmartPtr.h>
 #include <iostream>
-
-// #if defined(__GNUC__) && (__GNUC__ < 3)
-// #else
-// //# Only include this file if this is not GCC version prior to 3.
-// #include <loki/TypeTraits.h>
-// #endif
 
 namespace LCS 
 {
@@ -39,73 +36,149 @@ namespace LCS
   {
 
     //
-    // This templated class acts as a container class for instances of T.
-    // The container provides the functionality to make instances of T
+    // This templated class acts as a surrogate container class for instances
+    // of T. The container provides the functionality to make instances of T
     // persistent. 
+    // \note We use the term surrogate container, because TPersistentObject
+    // does not act as a real STL-like container. TPersistentObject stores
+    // a \e pointer to the instance of T instead of storing a \e copy, which
+    // is what STL-like containers do.
     //
     template<typename T>
     class TPersistentObject : public PersistentObject
     {
     public:
   
-      typedef T            value_type;
-      typedef value_type&  reference;
-      typedef value_type*  pointer;
-
-//       // We need the default constructor, because the static create() method
-//       // must be able to create such objects.
-//       TPersistentObject() : 
-// 	itsObject(0), isOwner(false) 
-//       {}
-
-      // \c T is passed by refererence, but internally we keep a pointer
-      // to the instance of T. We need a pointer because pointer can have
-      // a null value, whereas references cannot.
-      explicit TPersistentObject(reference t) : 
-	itsObject(&t), isOwner(false) 
+      // \c T is passed by refererence, not const reference, because this
+      // documents more explicitly that \c t can be easily changed, using
+      // the valu() method, which also returns a reference, instead of a 
+      // const reference. Internally we keep a pointer to the instance of T;
+      // we need a pointer because pointer can have a null value, whereas 
+      // a reference cannot.
+      explicit TPersistentObject(T& t) : 
+	itsObjectPtr(&t)
       { }
 
-      // If TPersistentObject is the owner of \c itsObject then it will be
-      // deleted when TPersistentObject is destroyed.
-      // \warning itsObject must be a heap object, because it will be deleted.
       ~TPersistentObject() 
       { 
-	if (isOwner) delete itsObject; 
       }
       
       // Dynamically create a new TPersistentObject. It will contain an 
       // instance of a default constructed object T.
-      static TPersistentObject<T>* create()
+//       static TPersistentObject<T>* create()
+      static TPersistentObject<T>& create()
       { 
 	T* anObject(new T());
 	TPersistentObject<T>* aTPO(new TPersistentObject<T>(*anObject));
-	aTPO->isOwner = true;
-	return aTPO;
+	aTPO->itsObjectSharedPtr(anObject);
+// 	return aTPO;
+ 	return *aTPO;
       }
 
-      virtual void insert() {}
-      virtual void update() {}
-      virtual void save() {}
-      virtual void retrieve() {}
-      virtual void erase() {}
+      // @name Methods that must be implemented using template specialization
+      // The implementation of the following methods will depend on the
+      // class type \c T. Therefore, there is no default implementation 
+      // available. 
+      // \todo Maybe we shouldn't used exceptions here, cause that will 
+      // unnecessarily delay detection of the programming error until
+      // runtime. We could use Loki's STATIC_CHECK macro instead.
+      //@{
+
+      // Implements PersistentObject::insert(PersistenceBroker*)
+      // \throw NotImplemented
+      virtual void insert(PersistenceBroker*) {
+ 	THROW(NotImplemented, 
+	      "Method should be implemented using template specialization"); 
+      }
+
+      // Implements PersistentObject::update(PersistenceBroker*)
+      // \throw NotImplemented
+      virtual void update(PersistenceBroker*) {
+ 	THROW(NotImplemented, 
+	      "Method should be implemented using template specialization"); 
+      }
+
+      // Implements PersistentObject::save(PersistenceBroker*)
+      // \throw NotImplemented
+      virtual void save(PersistenceBroker*) {
+ 	THROW(NotImplemented, 
+	      "Method should be implemented using template specialization"); 
+      }
+
+      // Implements PersistentObject::retrieve(PersistenceBroker*)
+      // \throw NotImplemented
+      virtual void retrieve(PersistenceBroker*) {
+ 	THROW(NotImplemented, 
+	      "Method should be implemented using template specialization"); 
+      }
+
+      // Implements PersistentObject::erase(PersistenceBroker*)
+      // \throw NotImplemented
+      virtual void erase(PersistenceBroker*)  {
+ 	THROW(NotImplemented, 
+	      "Method should be implemented using template specialization"); 
+      }
+
+      //@}
+
+      // @name Public methods that should have been private
+      // In cases where the persistent object \c T contains non-primitive
+      // members, or is a derived class, the save() method needs to
+      // recursively save all objects that are "contained" in \c T. These
+      // contained objects must have a (table) reference to their "parent".
+      //
+      // \note "Parent" should not be interpreted as "being derived from".
+      // From the data point-of-view containment of one class instance by
+      // another is also considered a parent-child relation. 
+      //
+      // \warning Programmers should not call any of these methods. In an
+      // ideal world we could have declared them private.
+      //
+      // \todo Do we also want to pass the TimeStamp as an argument when
+      // saving the "child" classes? We might do this, because we may decide
+      // that a cascading save really saves one and only one object. The fact
+      // that this object is constructed from multiple "subobjects" is not 
+      // really relevant.
+
+      //@{
+ 
+      // This method is responsible for actually saving the \e primitive
+      // data members of \c T.
+      virtual void save(const ObjectId& poid) { 
+	THROW(NotImplemented, 
+	      "Method should be implemented using template specialization"); 
+      }
+
+      // This method is responsible for actually erasing the \e primitive
+      // data member of \c T.
+      virtual void erase(const ObjectId& poid) {
+ 	THROW(NotImplemented, 
+	      "Method should be implemented using template specialization"); 
+      }
+
+      //@}
 
       // Return a reference to the contained PersistentObject.
       // \note This is a \e non-const reference, because we want to allow
       // modification of *itsObject.
-      reference value() { return *itsObject; }
+      T& value() { return *itsObject; }
 
     private:
-      // For now, let's forbid copying and assignment.
-      TPersistentObject(const TPersistentObject<T>&);
-      TPersistentObject<T>& operator=(const TPersistentObject<T>&);
 
       // Here we keep a pointer to the instance of T.
-      pointer itsObject;
+      T* itsObjectPtr;
 
-      // Keep track of ownership of the the instance of T. If we created it
-      // dynamically (using the static create() method), we must also delete
-      // it.
-      bool isOwner;
+      // The Loki::SmartPtr will be used to keep track of instances of T
+      // that we've created ourselves. Because copying a TPersistentObject 
+      // implies copying the pointer to the instance of T, we must somehow
+      // keep track of the number of pointers pointing to this object. When
+      // the count drops to zero, Loki::SmartPtr will delete the object.
+      // Obviously, we do not want this behaviour for instances of T that we
+      // did not create ourselves. If we're not the creator, then we're not
+      // the owner, hence we should never ever delete the object! Therefore,
+      // we will only transfer ownership of itsObjectPtr if we are the
+      // creator/owner of the object that itsObjectPtr points to.
+      Loki::SmartPtr<T> itsObjectSharedPtr;
 
     };
 

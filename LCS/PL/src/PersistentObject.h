@@ -31,6 +31,9 @@ namespace LCS
 {
   namespace PL
   {
+    //# Forward Declarations
+    class PersistenceBroker;
+
     //
     // PersistentObject is an abstract base class (i.e. interface) for 
     // persistent objects. Persistent objects are uniquely identified by their
@@ -51,14 +54,14 @@ namespace LCS
       // \note insert() will \e always create a new stored object. This is
       // contrary to the behaviour of save() which will only create a \e new
       // stored object if it did not already exist in the database.
-      virtual void insert() = 0;
+      virtual void insert(PersistenceBroker*) = 0;
 
       // Update the PersistentObject into the database.
       // \note update() will \e always modify an existing stored object. 
       // Therefore, calling update() on a PersistentObject that is not
       // already present in the database is an error.
       // \throw LCS::PL::Exception
-      virtual void update() = 0;
+      virtual void update(PersistenceBroker*) = 0;
 
       // Store the PersistentObject into the database. This method will
       // typically be called by the PersistenceBroker, because at this level 
@@ -66,17 +69,17 @@ namespace LCS
       // save() will automatically figure out whether the PersistentObject is
       // new and thus needs to be \e inserted into the database, or is already
       // present in the database and thus needs to be \e updated.
-      virtual void save() = 0;
+      virtual void save(PersistenceBroker*) = 0;
 
       // This method will typically be used to refresh an instance of 
       // PersistentObject that already resides in memory. We will need it if
       // another process or thread changed the data in the database.
-      virtual void retrieve() = 0;
+      virtual void retrieve(PersistenceBroker*) = 0;
 
       // Remove this instance of PersistentObject from the database.
-      virtual void erase() = 0;
+      virtual void erase(PersistenceBroker*) = 0;
 
-    private:
+    protected:
       // ObjectId is used to uniquely identify every instance of a
       // PersistentObject.
       ObjectId itsOid;
@@ -88,6 +91,7 @@ namespace LCS
       // Flag indicating whether this PersistentObject is already present in
       // the database or not.
       bool isPersistent;
+
     };
 
   } // namespace PL

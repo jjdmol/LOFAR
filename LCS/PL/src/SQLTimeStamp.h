@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef PL_SQLTIMESTAMP_H
-#define PL_SQLTIMESTAMP_H
+#ifndef LCS_PL_SQLTIMESTAMP_H
+#define LCS_PL_SQLTIMESTAMP_H
 
 #if defined(HAVE_CONFIG_H)
 #include <config.h>
