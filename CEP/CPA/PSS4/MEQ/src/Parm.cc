@@ -1,4 +1,4 @@
-//# Parm.cc: The base class for a parameter
+//# Parm.cc: Stored parameter with polynomial coefficients
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,66 +21,262 @@
 //# $Id$
 
 #include <MEQ/Parm.h>
+#include <MEQ/Request.h>
+#include <MEQ/Result.h>
+#include <MEQ/Cells.h>
 #include <Common/Debug.h>
+#include <Common/Lorrays.h>
+#include <aips/Mathematics/Math.h>
 
 namespace Meq {
 
-unsigned int Parm::theirNparm = 0;
-vector<Parm*>* Parm::theirParms = 0;
+Parm::Parm()
+: Function      (),
+  itsParmId     (0),
+  itsIsSolvable (false),
+  itsTable      (0)
+{}
 
-
-Parm::Parm (const string& name)
-: itsName       (name),
-  itsIsSolvable (false)
-{
-  if (theirParms == 0) {
-    theirParms = new vector<Parm*>;
-  }
-  if (theirNparm == theirParms->size()) {
-    itsParmId = theirParms->size();
-    theirParms->push_back (this);
-  } else {
-    Assert (theirNparm < theirParms->size());
-    bool found = false;
-    int cnt = 0;
-    for (vector<Parm*>::iterator iter=theirParms->begin();
-	 iter != theirParms->end();
-	 iter++, cnt++) {
-      if (*iter == 0) {
-	itsParmId = cnt;
-	*iter = this;
-	found = true;
-	break;
-      }
-    }
-    Assert (found);
-  }
-  theirNparm++;
-  Assert (theirNparm <= theirParms->size());
-  Assert ((*theirParms)[itsParmId] == this);
-}
+Parm::Parm (const string& name, ParmTable* table,
+	    const Vells& defaultValue)
+: Function      (),
+  itsParmId     (0),
+  itsIsSolvable (false),
+  itsName       (name),
+  itsTable      (table),
+  itsDefault    (defaultValue)
+{}
 
 Parm::~Parm()
-{
-  Assert (theirNparm <= theirParms->size());
-  Assert ((*theirParms)[itsParmId] == this);
-  (*theirParms)[itsParmId] = 0;
-  theirNparm--;
-}
+{}
 
-const vector<Parm*>& Parm::getParmList()
+void Parm::init (DataRecord::Ref::Xfer& initrec, Forest* frst)
 {
-  if (theirParms == 0) {
-    theirParms = new vector<Parm*>;
+  Node::init (initrec, frst);
+  // Get default value.
+  if (state()[AidDefault].exists()) {
+    LoMat_double& val = wstate()[AidDefault].as_wr<LoMat_double>();
+    itsDefault = Vells(&val);
   }
-  return *theirParms;
+  // Get possible ParmTable name and open it.
+  string tableName;
+  if (state()[AidTablename].exists()) {
+    tableName = state()[AidTablename].as<string>();
+  }
+  if (! tableName.empty()) {
+    itsTable = ParmTable::openTable(tableName);
+  }
+  itsName = name();
 }
 
-void Parm::clearParmList()
+int Parm::initDomain (const Domain& domain, int spidIndex)
 {
-  delete theirParms;
-  theirParms = 0;
-  theirNparm = 0;
+  // Find the polc(s) for the given domain.
+  vector<Polc> polcs;
+  if (itsTable) {
+    polcs = itsTable->getPolcs (itsName, domain);
+  }
+  // If none found, try to get a default value.
+  if (polcs.size() == 0) {
+    Polc polc;
+    if (itsTable) {
+      polc = itsTable->getInitCoeff (itsName);
+    } else {
+      polc.setCoeff (itsDefault);
+      polc.setSimCoeff (itsDefault);
+      polc.setPertSimCoeff (Vells(0.));
+      polc.setNormalize (true);
+    }
+    AssertMsg (!polc.getCoeff().isNull(), "No value found for parameter "
+	       << itsName);
+    polc.setDomain (domain);
+    // If needed, normalize the initial values.
+    if (polc.isNormalized()) {
+      polc.setCoeffOnly (polc.normalize(polc.getCoeff(), domain));
+      polc.setSimCoeff  (polc.normalize(polc.getSimCoeff(), domain));
+    }
+    polcs.push_back (polc);
+  } else if (isSolvable()) {
+    AssertMsg (polcs.size() == 1, "Solvable parameter " << itsName <<
+	       " has multiple matching domains for freq "
+	       << domain.startFreq() << ':' << domain.endFreq()
+	       << " and time "
+	       << domain.startTime() << ':' << domain.endTime());
+    const Domain& polDom = polcs[0].domain();
+    AssertMsg (near(domain.startFreq(), polDom.startFreq())  &&
+	       near(domain.endFreq(), polDom.endFreq())  &&
+	       near(domain.startTime(), polDom.startTime())  &&
+	       near(domain.endTime(), polDom.endTime()),
+	       "Solvable parameter " << itsName <<
+	       " has a partially instead of fully matching entry for freq "
+	       << domain.startFreq() << ':' << domain.endFreq()
+	       << " and time "
+	       << domain.startTime() << ':' << domain.endTime());
+  } else {
+    // Check if the polc domains cover the entire domain and if they
+    // do not overlap.
+  }
+  setPolcs (polcs);
+  // Now determine the spids if the parm is solvable.
+  int nr = 0;
+  if (isSolvable()) {
+    // For the time being we allow only one polc if the parameter
+    // has to be solved.
+    AssertStr (itsPolcs.size() == 1,
+	       "Multiple polcs used in the solve domain for parameter "
+	       << itsName);
+    for (unsigned int i=0; i<itsPolcs.size(); i++) {
+      int nrs = itsPolcs[i].makeSolvable (spidIndex);
+      nr += nrs;
+      spidIndex += nrs;
+    }
+  } else {
+    for (unsigned int i=0; i<itsPolcs.size(); i++) {
+      itsPolcs[i].clearSolvable();
+    }
+  }    
+  return nr;
+}
+
+int Parm::getResultImpl (Result::Ref& result, const Request& request, bool)
+{
+  int spidIndex=0;
+  initDomain (request.cells().domain(), spidIndex);
+  // Create result object and attach to the ref that was passed in
+  Result & res = result <<= new Result();
+  // A single polc can be evaluated immediately.
+  if (itsPolcs.size() == 1) {
+    itsPolcs[0].getResult (result, request);
+    return 0;
+  }
+  // Get the domain, etc.
+  const Cells& cells = request.cells();
+  const Domain& domain = cells.domain();
+  int ndFreq = cells.nfreq();
+  int ndTime = cells.ntime();
+  double* datar = 0;
+  double stepFreq = cells.stepFreq();
+  double halfStepFreq = stepFreq * .5;
+  double firstMidFreq = domain.startFreq() + halfStepFreq;
+  double lastMidFreq  = firstMidFreq + (ndFreq-1) * stepFreq;
+  double firstMidTime = cells.time(0);
+  double lastMidTime  = cells.time(ndTime-1);
+  res.setReal (ndFreq, ndTime);
+  // Iterate over all polynomials.
+  // Evaluate one if its domain overlaps the request domain.
+  for (unsigned int i=0; i<itsPolcs.size(); i++) {
+    Polc& polc = itsPolcs[i];
+    const Domain& polDom = polc.domain();
+    if (firstMidFreq < polDom.endFreq() && lastMidFreq > polDom.startFreq()
+    &&  firstMidTime < polDom.endTime() && lastMidTime > polDom.startTime()) {
+      // Determine which part of the request domain is covered by the
+      // polynomial.
+      int stFreq = 0;
+      if (firstMidFreq < polDom.startFreq()) {
+	stFreq = 1 + int((polDom.startFreq() - firstMidFreq) / stepFreq);
+      }
+      int nrFreq = ndFreq - stFreq;
+      if (lastMidFreq > polDom.endFreq()) {
+	int remFreq = 1 + int((lastMidFreq - polDom.endFreq()) / stepFreq);
+	nrFreq -= remFreq;
+      }
+      int stTime = 0;
+      while (cells.time(stTime) < polDom.startTime()) {
+	stTime++;
+      }
+      int lastTime = ndTime-1;
+      while (cells.time(lastTime) > polDom.endTime()) {
+	lastTime--;
+      }
+      int nrTime = lastTime - stTime + 1;
+      // If the overlap is full, only this polynomial needs to be evaluated.
+      if (stFreq == 0  &&  nrFreq == ndFreq
+      &&  stTime == 0  &&  nrTime == ndTime) {
+	polc.getResult (result, request);
+	return 0;
+      }
+      // Form the domain and request for the overlapping part
+      // and evaluate the polynomial.
+      double startFreq = domain.startFreq() + stFreq*stepFreq;
+      double startTime = cells.time(stTime) - cells.stepTime(stTime) / 2;
+      double endTime   = cells.time(lastTime) + cells.stepTime(lastTime) / 2;
+      Domain partDom(startFreq, startFreq + nrFreq*stepFreq,
+		     startTime, endTime);
+      LoVec_double partStartTime(nrTime);
+      LoVec_double partEndTime(nrTime);
+      for (int j=0; j<nrTime; j++) {
+	partStartTime(j) = cells.time(stTime+j) - cells.stepTime(stTime+j);
+	partEndTime(j)   = cells.time(stTime+j) + cells.stepTime(stTime+j);
+      }
+      Cells partCells (partDom, nrFreq, partStartTime, partEndTime);
+      Request partReq(partCells);
+      Result partRes;
+      Result::Ref partResRef (partRes, DMI::WRITE||DMI::EXTERNAL);
+      polc.getResult (partResRef, partReq);
+      // Create the result matrix if it is the first Time.
+      // Now it is initialized with zeroes (to see possible errors).
+      // In the future the outcommnented statement can be used
+      // which saves the initialization Time. It requires that the
+      // request domain is entirely covered by the polcs.
+      if (datar == 0) {
+	LoMat_double& mat = res.setReal (ndFreq, ndTime);
+	datar = mat.data();
+      }
+      // Move the values to the correct place in the output result.
+      // Note that in principle a polynomial could be a single coefficient
+      // in which case it returns a single value.
+      const double* from = partRes.getValue().realStorage();
+      double* to = datar + stFreq + stTime*ndFreq;
+      if (partRes.getValue().nelements() == 1) {
+	for (int iTime=0; iTime<nrTime; iTime++) {
+	  for (int iFreq=0; iFreq<nrFreq; iFreq++) {
+	    to[iFreq] = *from;
+	  }
+	  to += ndFreq;
+	}
+      } else {
+	for (int iTime=0; iTime<nrTime; iTime++) {
+	  for (int iFreq=0; iFreq<nrFreq; iFreq++) {
+	    to[iFreq] = *from++;
+	  }
+	  to += ndFreq;
+	}
+      }
+    }
+  }
+  return 0;
+}
+
+void Parm::update (const Vells& value)
+{
+  for (unsigned int i=0; i<itsPolcs.size(); i++) {
+    itsPolcs[i].update (value);
+  }
+}
+
+void Parm::save()
+{
+  const vector<Polc>& polcs = getPolcs();
+  for (unsigned int i=0; i<polcs.size(); i++) {
+    if (itsTable) {
+      itsTable->putCoeff (itsName, polcs[i]);
+    }
+  }
+}
+
+void Parm::setState (const DataRecord& rec)
+{
+}
+
+string Parm::sdebug (int detail, const string& prefix,
+		     const char* nm) const
+{
+  string out;
+  Debug::appendf(out,"%s(%s)", nm?nm:"Meq::Parm", itsName.c_str());
+  if (itsTable) {
+    Debug::appendf(out,"  parmtable=%s", itsTable->name().c_str());
+  }
+  return out;
 }
 
 } // namespace Meq
