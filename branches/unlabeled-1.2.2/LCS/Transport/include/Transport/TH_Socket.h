@@ -80,8 +80,12 @@ public:
 	bool		init();
 
 private:
-    bool		connectToServer();
-    bool		connectToClient();
+	bool		connectToServer();
+	bool		connectToClient();
+
+	// Shutdown and destroy the socket \a aSocket.
+	// \post aSocket == 0
+	void		shutdown(Socket* aSocket);
 
 	typedef enum {
 		CmdNone = 0,
