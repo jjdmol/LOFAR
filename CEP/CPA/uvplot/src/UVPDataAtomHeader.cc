@@ -22,9 +22,11 @@ UVPDataAtomHeader::UVPDataAtomHeader(unsigned int antenna1,
     itsExposureTime(exposureTime),
     itsCorrelationType(correlationType),
     itsFieldID(fieldID),
-    itsUVW(uvw),
     itsDataType(dataType)
 {
+    itsUVW[0] = uvw[0];
+    itsUVW[1] = uvw[1];
+    itsUVW[2] = uvw[2];
 }
 
 
