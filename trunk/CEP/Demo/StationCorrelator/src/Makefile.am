@@ -1,6 +1,7 @@
 bin_PROGRAMS = StationCorrelator
 
 DOCHDRS =						\
+DH_RSP.h						\
 DH_Empty.h						\
 DH_StationData.h					\
 DH_CorrCube.h						\
@@ -10,6 +11,7 @@ WH_Correlator.h						\
 WH_Dump.h
 
 StationCorrelator_SOURCES 	=	$(DOCHDRS)	\
+DH_RSP.cc						\
 DH_Empty.cc						\
 DH_StationData.cc					\
 DH_CorrCube.cc						\
