@@ -2,7 +2,7 @@ V 10
 2
 LANG:1 9 infoPanel
 LANG:0 9 InfoPanel
-PANEL,311 107 994 100 N "_3DFace" 0
+PANEL,145 67 994 100 N "_3DFace" 0
 "main()
 {
 }" 0
@@ -192,8 +192,6 @@ LANG:0 107 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-
 "" 2
 LANG:1 1 /
 LANG:0 1 /
-1 101 20 "" 0
-0
 1 58 16 "" 0
 0
 1 59 16 "" 1
@@ -579,6 +577,8 @@ LANG:0 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0
 "" 0 0 0 3 0
 1 0
+1 102 21 "" 0
+0
 0
 LAYER, 1 
 1
@@ -614,7 +614,7 @@ LANG:1 6 Layer8
 3 17 ""
 "objects\\STD_INFOS\\sys_info_bars_txt_as.pnl" 357 115 T 41 1.00625 0 1 621.74375 -37
 0
-3 20 ""
-"astron_logo.pnl" 10 10 T 48 1 0 1 10 100
+3 21 "PANEL_REF0"
+"para/PanelTopology/PT_logo.pnl" 20 110 T 48 1 0 1 -10 0
 0
 0
