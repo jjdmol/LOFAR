@@ -67,6 +67,7 @@ bool ConnectDatabase (char * hostname) {
   ostringstream ConnInfo;
 
   ConnInfo << "host=" << hostname << " dbname=TransportHolder";
+  cout << "Database: " << ConnInfo.str () << endl;
 
   nStore = 0;
   nStoredBytes = 0;
@@ -78,14 +79,16 @@ bool ConnectDatabase (char * hostname) {
   dtQuery = 0;
   dtUpdate = 0;
 
+  cout << "Begin connect." << endl;
   pgconn = PQconnectdb (ConnInfo.str (). c_str ());
+  cout << "End connect." << endl;
   if (PQstatus (pgconn) != CONNECTION_OK) {
     cout << "CEPFrame::PO_DH_Database.cc::ConnectDatabase ():" << endl;
     cout << "Failed to connect to postgress database." << endl;
     cout << PQerrorMessage (pgconn);
     return false;
   }
-
+  /*
   // Delete all previous message from message table
   ExecuteCommand ("DROP TABLE message;");
   // TODO: error recovery
@@ -98,12 +101,14 @@ bool ConnectDatabase (char * hostname) {
 
   ExecuteCommand ("CREATE TABLE log (Time text, Entry text);");
   // foutafhandeling
-
+  */
   ostringstream ostr;
   char curhostname [80];
   gethostname (curhostname, 80);
   ostr << "Connected from " << curhostname << " to " << hostname;
   LogEntry (ostr);
+
+  cout << curhostname << " connecting to database." << endl;
 
   LogEntry ("  (Dropped message table).");
   LogEntry ("  (Re-created message table.)");
@@ -194,7 +199,7 @@ bool PO_DH_Database::Store (unsigned long wrseqno) {
   int i;
   ostringstream ostr;
 
-  cout << "{S}" << endl;
+  cout << "{S} ";
 
   char hexrep [40];
   for (i = 0; i < getByteStringLength (); i ++) {  
@@ -251,9 +256,7 @@ bool PO_DH_Database::Retrieve (unsigned long rdseqno) {
   i = 0;
   Stopwatch RetrieveTime;
 
-  cout << "{R}";
-
-  cout << "Read seq no: " << rdseqno << endl;
+  cout << "{R} ";
 
   // Construct query
   ostringstream q;
@@ -278,18 +281,21 @@ bool PO_DH_Database::Retrieve (unsigned long rdseqno) {
 
   PGresult * res;
 
-  Stopwatch QueryTime;
-  res = PQexec (pgconn, (q.str ()).c_str ());
-  dtQuery += QueryTime.delta ().real ();
-
-  if (PQresultStatus (res) != PGRES_TUPLES_OK) {
-    cout << "ERROR: Select query failed." << endl;
-    return false;
-  }
+  do {
+    cout << '.';
+    Stopwatch QueryTime;
+    res = PQexec (pgconn, (q.str ()).c_str ());
+    dtQuery += QueryTime.delta ().real ();
+  
+    if (PQresultStatus (res) != PGRES_TUPLES_OK) {
+      cout << "ERROR: Select query failed." << endl;
+      return false;
+    }
+  } while (PQntuples (res) == 0);
 
   int nRows;
   nRows = PQntuples (res);
-  if (nRows != 1) {
+  if (nRows > 1) {
     cout << "ERROR: Found less or more than 1 message in database (" 
 	 << nRows << ")." << endl;
     return false;
