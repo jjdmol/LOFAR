@@ -25,6 +25,7 @@
 
 //# Includes
 #include <MNS/MeqExpr.h>
+#include <Common/lofar_string.h>
 
 // Class to hold the station position in meters in ITRF coordinates.
 
@@ -32,11 +33,9 @@ class MeqStation
 {
 public:
   // The default constructor.
-  MeqStation()
-    : itsX(0), itsY(0), itsZ(0) {}
+  MeqStation();
 
-  MeqStation (MeqExpr* posX, MeqExpr* posY, MeqExpr* posZ)
-    : itsX(posX), itsY(posY), itsZ(posZ) {}
+  MeqStation (MeqExpr* posX, MeqExpr* posY, MeqExpr* posZ, const string& name);
 
   MeqExpr* getPosX() const
     { return itsX; }
@@ -45,10 +44,14 @@ public:
   MeqExpr* getPosZ() const
     { return itsZ; }
 
+  const string& getName() const
+    { return itsName; }
+
 private:
   MeqExpr* itsX;
   MeqExpr* itsY;
   MeqExpr* itsZ;
+  string   itsName;
 };
 
 

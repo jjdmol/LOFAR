@@ -31,6 +31,10 @@ ParmTable.h
 lib_LTLIBRARIES 	= libmns.la
 
 libmns_la_SOURCES 	= $(DOCHDRS)		\
+MeqDomain.cc					\
+MeqExpr.cc					\
+MeqJonesExpr.cc					\
+MeqJonesNode.cc					\
 MeqMatrix.cc					\
 MeqMatrixComplexArr.cc				\
 MeqMatrixComplexSca.cc				\
@@ -38,24 +42,20 @@ MeqMatrixRealArr.cc				\
 MeqMatrixRealSca.cc				\
 MeqMatrixRep.cc					\
 MeqMatrixTmp.cc					\
-ParmTable.cc					\
 MeqParm.cc					\
-MeqParmSingle.cc				\
 MeqParmPolc.cc					\
-MeqStoredParmPolc.cc				\
-MeqDomain.cc					\
+MeqParmSingle.cc				\
+MeqPointDFT.cc					\
+MeqPointSource.cc				\
+MeqPolc.cc					\
 MeqRequest.cc					\
 MeqResult.cc					\
-MeqPolc.cc					\
-MeqExpr.cc					\
-MeqJonesExpr.cc					\
-MeqJonesNode.cc					\
+MeqStation.cc					\
+MeqStoredParmPolc.cc				\
 MeqUVWPolc.cc					\
-MeqPointSource.cc				\
-MeqWsrtPoint.cc					\
 MeqWsrtInt.cc					\
-MeqPointDFT.cc					\
-MeqStation.xcc					
+MeqWsrtPoint.cc					\
+ParmTable.cc					
 
 #EXTRA_DIST		=			\
 #Beam.m						\

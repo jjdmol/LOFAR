@@ -23,13 +23,15 @@
 #include <MNS/MeqStation.h>
 
 MeqStation::MeqStation()
-: itsX(0),
-  itsY(0),
-  itsZ(0)
+: itsX (0),
+  itsY (0),
+  itsZ (0)
 {}
 
-MeqStation::MeqStation (TFExpr* posX, TFExpr* posY, TFExpr* posZ)
-: itsX(posX),
-  itsY(posY),
-  itsZ(posZ)
+MeqStation::MeqStation (MeqExpr* posX, MeqExpr* posY, MeqExpr* posZ,
+			const string& name)
+: itsX    (posX),
+  itsY    (posY),
+  itsZ    (posZ),
+  itsName (name)
 {}

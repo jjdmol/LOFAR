@@ -64,9 +64,9 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
   itsNcell.resize (2);
   itsNcell[0] = ncellt;
   itsNcell[1] = ncellf;
-  if (ncellf > 10) {
-    cout << "ncellf=" << ncellf << endl;
-  }
+  ///  if (ncellf > 10) {
+    ///    cout << "ncellf=" << ncellf << endl;
+    ///  }
   
   // The domain is divided into the required number of cells.
   MeqRequest dftReq (domain, ncellt, ncellf, request.nspid());

@@ -73,6 +73,10 @@ public:
   static const vector<MeqParm*>& getParmList();
 
 private:
+  // A parm cannot be copied, otherwise problems arise with theirParms.
+  MeqParm (const MeqParm&);
+  MeqParm& operator= (const MeqParm&);
+
   string       itsName;
   unsigned int itsParmId;
 
