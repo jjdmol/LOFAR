@@ -24,8 +24,8 @@
 //////////////////////////////////////////////////////////////////////
 
 
-#include "TransportHolder.h"
-#include <stdlib.h>
+#include <libTransport/TransportHolder.h>
+#include <Common/BlobStringType.h>
 
 namespace LOFAR
 {
@@ -37,15 +37,10 @@ TransportHolder::~TransportHolder()
 {}
 
 
-void* TransportHolder::allocate (size_t size)
+BlobStringType TransportHolder::blobStringType() const
 {
-  return malloc(size);
-}
-
-void TransportHolder::deallocate (void*& ptr)
-{
-  free(ptr);
-  ptr = 0;
+  // Use a char* buffer on the heap.
+  return BlobStringType(false);
 }
 
 bool TransportHolder::connectionPossible (int, int) const

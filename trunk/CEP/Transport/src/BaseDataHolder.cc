@@ -1,6 +1,6 @@
-//#  BaseDataHolder.cc: A parent class for DataHolder and Paramholder
+//#  BaseDataHolder.cc:
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2000
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -19,63 +19,70 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+//#
+//#
+//#////////////////////////////////////////////////////////////////////
 
-#include <BaseDataHolder.h>
+#include <Common/lofar_iostream.h>
+#include <stdexcept>
+
+#include <libTransport/BaseDataHolder.h>
+#include <Common/BlobField.h>
+#include <Common/BlobStringType.h>
+#include <Common/BlobIBufString.h>
 #include <Common/Debug.h>
+
 
 namespace LOFAR
 {
 
+//////////////////////////////////////////////////////////////////////
+// Construction/Destruction
+//////////////////////////////////////////////////////////////////////
 BaseDataHolder::BaseDataHolder(const string& name, const string& type)
-  : itsTransporter      (),
-    itsName             (name),
-    itsType             (type),
-    itsReadDelay        (0),
-    itsWriteDelay       (0),
-    itsReadDelayCount   (0),
-    itsWriteDelayCount  (0)
+  : itsDataFields     (type),
+    itsData           (0),
+    itsDataBlob       (0),
+    itsTransporter    (0),
+    itsName           (name),
+    itsType           (type),
+    itsReadDelay      (0),
+    itsWriteDelay     (0),
+    itsReadDelayCount (0),
+    itsWriteDelayCount(0)
 {
-  setDefaultDataPacket();
+  initDataFields();
 }
 
 BaseDataHolder::BaseDataHolder(const BaseDataHolder& that)
-  : itsDataPacketSize     (that.itsDataPacketSize),
-    itsName               (that.itsName),
-    itsType               (that.itsType),
-    itsReadDelay          (that.itsReadDelay),
-    itsWriteDelay         (that.itsWriteDelay),
-    itsReadDelayCount     (that.itsReadDelayCount),
-    itsWriteDelayCount    (that.itsWriteDelayCount)
-{}
-    
-BaseDataHolder::~BaseDataHolder() 
+  : itsDataFields     (that.itsDataFields),
+    itsData           (0),
+    itsDataBlob       (0),
+    itsTransporter    (0),
+    itsName           (that.itsName),
+    itsType           (that.itsType),
+    itsReadDelay      (that.itsReadDelay),
+    itsWriteDelay     (that.itsWriteDelay),
+    itsReadDelayCount (that.itsReadDelayCount),
+    itsWriteDelayCount(that.itsWriteDelayCount)
 {
+  // Copying is always done before preprocess is called, so there is
+  // no need to copy the data buffers.
+  // Note that also the copy constructors of all derived DH classes
+  // don't copy data.
+  ///  if (that.itsData != 0) {
+  ///  itsData = new BlobString(blobStringType());
+  ///  itsDataBlob = new BlobOBufString(*itsData);
+  ///  itsData->resize (that.itsData->size());
+  ///  memcpy (itsData->data(), that.itsData->data(), that.itsData->size());
+  ///  }
 }
+  
 
-void* BaseDataHolder::allocate(size_t size)
+BaseDataHolder::~BaseDataHolder()
 {
-  void* mem = 0;
-  if (!getTransporter().getTransportHolder()) {
-    mem = malloc(size);
-  } else {
-    cdebug(3) << "allocate "
-	      << getTransporter().getTransportHolder()->getType() << endl;
-    mem = getTransporter().getTransportHolder()->allocate(size);
-  }
-  return mem;
-}
-
-void BaseDataHolder::deallocate(void*& ptr)
-{
-  if (ptr) {
-    if (!getTransporter().getTransportHolder()) {
-      free(ptr);
-    } else {
-      cdebug(3) << "deallocate " << getTransporter().getTransportHolder()->getType() << endl;
-      getTransporter().getTransportHolder()->deallocate(ptr);
-    }
-  }
-  ptr = 0;
+  delete itsData;
+  delete itsDataBlob;
 }
 
 void BaseDataHolder::basePreprocess()
@@ -99,6 +106,16 @@ void BaseDataHolder::basePostprocess()
     itsTransporter->write();
   }
   postprocess();
+  // Delete the memory.
+  delete itsData;
+  itsData = 0;
+  delete itsDataBlob;
+  itsDataBlob = 0;
+  initDataFields();
+  // Make sure only the DataPacket is part of the data fields.
+  BlobFieldSet fset(itsType);
+  fset.add (BlobField<DataPacket>(1));
+  itsDataFields = fset;
 }
 
 void BaseDataHolder::postprocess()
@@ -130,6 +147,7 @@ void BaseDataHolder::write()
   }
 }
 
+
 int BaseDataHolder::DataPacket::compareTimeStamp (const DataPacket& that) const
 {
   if (itsTimeStamp == that.itsTimeStamp) {
@@ -139,6 +157,7 @@ int BaseDataHolder::DataPacket::compareTimeStamp (const DataPacket& that) const
   }
   return 1;
 }
+
 
 bool BaseDataHolder::isValid() const
 {
@@ -162,4 +181,60 @@ void BaseDataHolder::setWriteDelay (int delay)
   itsWriteDelayCount = delay;
 }
 
+
+
+void BaseDataHolder::initDataFields()
+{
+  // Make sure only the DataPacket (version 1) is part of the data fields.
+  BlobFieldSet fset(itsType);
+  fset.add (BlobField<DataPacket>(1));
+  itsDataFields = fset;
+}
+
+uint BaseDataHolder::addField (const BlobFieldBase& field)
+{
+  return itsDataFields.add (field);
+}
+
+uint BaseDataHolder::addField (const std::string& fieldName,
+			   const BlobFieldBase& field)
+{
+  return itsDataFields.add (fieldName, field);
+}
+
+BlobStringType BaseDataHolder::blobStringType()
+{
+  if (getTransporter().getTransportHolder()) {
+    cdebug(3) << "blobStringType "
+	      << getTransporter().getTransportHolder()->getType() << endl;
+    return getTransporter().getTransportHolder()->blobStringType();
+  }
+  return BlobStringType(false);
+}
+
+void BaseDataHolder::createDataBlock()
+{
+  if (itsData) {
+    itsData->resize(0);
+  } else {
+    itsData = new BlobString (blobStringType());
+    itsDataBlob = new BlobOBufString (*itsData);
+  }
+  itsDataFields.createBlob (*itsDataBlob);
+  itsDataPacketPtr = itsDataFields[0].getData<DataPacket> (*itsDataBlob);
+}
+
+void BaseDataHolder::openDataBlock()
+{
+  Assert (itsData);
+  BlobIBufString bis(*itsData);
+  itsDataFields.openBlob (bis);
+  itsDataPacketPtr = itsDataFields[0].getData<DataPacket> (*itsDataBlob);
+}
+
 } // namespace LOFAR
+
+
+// Instantiate the template.
+#include <Common/BlobField.cc>
+template class LOFAR::BlobField<LOFAR::BaseDataHolder::DataPacket>;

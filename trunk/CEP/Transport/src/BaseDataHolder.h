@@ -1,7 +1,6 @@
+//# BaseDataHolder.h: Abstract base class for DataHolder and ParamHolder
 //#
-//# BaseDataHolder.h: A parent class for DataHolder and ParamHolder
-//#
-//# Copyright (C) 2000, 2001
+//# Copyright (C) 2000
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -21,84 +20,88 @@
 //#
 //# $Id$
 
-#ifndef LIBTRANSPORT_BASE_DATAHOLDER_H
-#define LIBTRANSPORT_BASE_DATAHOLDER_H
+#ifndef LIBTRANSPORT_BASEDATAHOLDER_H
+#define LIBTRANSPORT_BASEDATAHOLDER_H
 
+//# Includes
 #include <lofar_config.h>
-
+#include <libTransport/Transporter.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_fstream.h>
-
-#include <libTransport/Transporter.h>
+#include <Common/BlobFieldSet.h>
+#include <Common/BlobString.h>
+#include <Common/BlobOBufString.h>
+#include <Common/DataConvert.h>
 
 namespace LOFAR
 {
 
-//# Forward declarations
-class DataHolder;
-class ParamHolder;
+// Class BaseDataHolder is the abstract base class for classes holding
+// data, in particular for DataHolder and ParamHolder.
+//
+// It offers some common data items and functionality.
+// <ul>
+// <li> Handling of a timestamp for the data to be sent or received.
+// <li> A blob holding all the data and functions to form the blob.
+//      It makes use of the BlobFieldSet class.
 
 class BaseDataHolder
 {
-protected:
+public:
+  // Standard data containing a timestamp.
   struct DataPacket
   {
   public:
-    DataPacket ();
+    DataPacket();
 
-    /// Set the timestamp
+    // Set the timestamp.
     void setTimeStamp (unsigned long aTimeStamp);
-    /// Get the timestamp
+
+    // Get the timestamp.
     unsigned long getTimeStamp() const;
-    /// Copy the timestamp from another DataPacket into this one
+
+    // Copy the timestamp from another DataPacket to this one.
     void copyTimeStamp (const DataPacket& that);
-    /** Compare the timestamp of this and that DataPacket. 
-	It returns -1, 0 or 1 (for <, ==, >).
-     */
-    int compareTimeStamp(const DataPacket& that) const;
+
+    // Compare the timestamp of this and that DataPacket.
+    //    It returns -1, 0, or 1 (for <,==,>).
+    int compareTimeStamp (const DataPacket& that) const;
+
+    // Define the function to convert DataPacket from given format
+    // to local format.
+    friend void dataConvert (DataFormat fmt,
+			     BaseDataHolder::DataPacket* buf, uint nrval);
 
   private:
     unsigned long itsTimeStamp;
   };
 
+
 public:
-  /// Construct a BaseDataHolder with a default name
-  BaseDataHolder (const string& name="aBaseDataHolder",
-		  const string& type="BDH");
-  
+  // Construct a DataHolder with a default name.
+  BaseDataHolder (const string& name="aDataHolder",
+		  const string& type="DH");
+
   virtual ~BaseDataHolder();
+
   // Make a copy
   virtual BaseDataHolder* clone() const = 0;
 
-  /** The allocate/deallocate methods are used to manage memory for a
-      BaseDataHolder. This memory is used to send from/receive into. To
-      optimize communication the malloc and free routines of the
-      specified transportholder are used.
-      The allocate and deallocate methods are called when a
-      BaseDataHolder is connected to another BaseDataHolder for
-      communication.
-  */
-  void* allocate  (size_t size);
-  void  deallocate(void*& ptr);
-
-  /** The preprocess method is called before process is done, thus
-      before any read or write is done.
-      It can be used to initialize the BaseDataHolder.
-      The default implementation does nothing.
-  */
+  // The preprocess method is called before process is done, thus
+  // before any read or write is done.
+  // It can be used to initialize the DataHolder.
+  // The default implementation does nothing.
   void basePreprocess();
   virtual void preprocess();
 
-  /** The postprocess method is called after process is done.
-      It can be used to clean up the BaseDataHolder.
-      The default implementation does nothing.
-  */
+  // The postprocess method is called after process is done.
+  // It can be used to clean up the DataHolder.
+  // The default implementation does nothing.
   void basePostprocess();
   virtual void postprocess();
 
-  /** Dump the BaseDataHolder contents to cout.
-      The default implementation does nothing.
-  */
+  // Dump the DataHolder contents to cout.
+  // The default implementation does nothing.
   virtual void dump() const;
 
   /// Read the packet data.
@@ -107,10 +110,9 @@ public:
   /// Write the packet data.
   void write();
 
-  /** Does the data has to be handled? 
-      It returns true if the 
-  */
-  //  bool doHandle() const;
+  // Does the data has to be handled? 
+  // It returns true if the 
+  //#// bool doHandle() const;
 
   bool isValid() const;
 
@@ -118,16 +120,15 @@ public:
   unsigned long getTimeStamp() const;
   void copyTimeStamp (const BaseDataHolder& that);
   void copyTimeStamp (const BaseDataHolder* that);
-  /// Functions to deal with handling the time stamp 
+  // Functions to deal with handling the timestamp 
   int compareTimeStamp (const BaseDataHolder& that) const;
 
-  /** 
-      Get Data Packet size (in bytes);
-      See also getCurDataPacketSize() and getMaxDataPacketSize 
-      for operation with variable datapackets
-  */
-  virtual int getDataPacketSize();
+  // Get Data Packet size (in bytes);
+  // See also getCurDataPacketSize() and getMaxDataPacketSize 
+  // for operation with variable datapackets
+  int getDataPacketSize();
 
+#ifdef abc_0
   /** 
       Get the size of the CURRENT data packet (in bytes)
       For non-flexible datapackets, this is the same as 
@@ -142,73 +143,103 @@ public:
   */
   virtual int getMaxDataPacketSize();
 
-  /// Get the data packet
+#endif
+
+  // Get the data packet
   const DataPacket& getDataPacket() const;
+
+  // Get a pointer to the data (in the blob).
   void* getDataPtr();
-  
-  /** Get the node the BaseDataHolder runs on.
-      -1 is returned if the BaseDataHolder is not used in a Step.
-  */
+
+  // Get the node the BaseDataHolder runs on.
+  // -1 is returned if the BaseDataHolder is not used in a Step.
   int getNode() const;
 
-  /// Get the type of the BaseDataHolder.
+  // Get the type of the BaseDataHolder.
   const string& getType() const;
 
-  /// Set the type of the BaseDataHolder.
+  // Set the type of the BaseDataHolder.
   void setType (const string& type);
 
-  /// Get the name of the BaseDataHolder.
+  // Get the name of the BaseDataHolder.
   const string& getName() const;
 
-  /// Set the name of the BaseDataHolder.
+  // Set the name of the BaseDataHolder.
   void setName (const string& name);
 
-  /** Set the read delay for the BaseDataHolder.
-      Only after 'delay' times an actual read is done.
-  */
+  // Set the read delay for the BaseDataHolder.
+  // Only after 'delay' times an actual read is done.
   void setReadDelay (int delay);
   void setWriteDelay (int delay);
 
-  /** Get a pointer to the Transport object used to send the data
-      to/from the BaseDataHolder connected to this one.
-  */
+  // Get a pointer to the Transport object used to send the data
+  // to/from the BaseDataHolder connected to this one.
   Transporter& getTransporter();
   void setTransporter(Transporter& aTransporter);
 
 protected:
-  /** Set the pointer to the data packet and set the packet's size.
-      This function has to be called by the constructor of derived
-      BaseDataHolder classes.
-  */
-  void setDataPacket (DataPacket* ptr, int size);
-
-  /// Set the data packet to the default data packet..
-  void setDefaultDataPacket();
-
   BaseDataHolder(const BaseDataHolder&);
 
-  DataPacket   itsDefaultPacket;
-  DataPacket*  itsDataPacketPtr;
+  // Add a field to the data block definition.
+  // Optionally a (unique) name can be given to the field.
+  // It returns the index of the field.
+  // Note that the DataPacket (timestamp) is always the first
+  // field of the block.
+  // <group>
+  uint addField (const BlobFieldBase&);
+  uint addField (const std::string& fieldName, const BlobFieldBase&);
+  // </group>
+
+  // Setup the data block.
+  // This function needs to be called only once (in preprocess) if
+  // all data fields have a fixed shape.
+  // It fields have a variable shape, the function has to be called again
+  // (in process) when a shape changes.
+  void createDataBlock();
+  void openDataBlock();
+  // 
+
+  // Get access to the BlobField.
+  // It makes it possible to get the shape of a variable shaped input array
+  // or to set the shape of a variable shaped output array.
+  // <group>
+  BlobFieldBase& getDataField (uint fieldIndex);
+  BlobFieldBase& getDataField (const std::string& fieldName);
+  // </group>
+
+  // Get a pointer to a data field in the blob (by index or by name)
+  // <group>
+  template<typename T> T* getData (uint fieldIndex);
+  template<typename T> T* getData (const std::string& fieldName);
+  // </group>
 
 private:
+  // Get the type of BlobString needed from the transport holder.
+  virtual BlobStringType blobStringType();
 
-  int          itsDataPacketSize; // (Max) size in bytes
+  // Initialize the data field set.
+  void initDataFields();
+
+  BlobFieldSet    itsDataFields;
+  BlobString*     itsData;
+  BlobOBufString* itsDataBlob;
+  DataPacket*  itsDataPacketPtr;
   Transporter* itsTransporter;
   string       itsName;
   string       itsType;
 
-  /// The read delay for a BaseDataHolder.
-  int         itsReadDelay;
-  int         itsWriteDelay;
-  int         itsReadDelayCount;
-  int         itsWriteDelayCount;
-
-   
+  // The read delay for a BaseDataHolder.
+  int itsReadDelay;
+  int itsWriteDelay;
+  int itsReadDelayCount;
+  int itsWriteDelayCount;
 };
 
-inline int BaseDataHolder::getDataPacketSize()
-  { return itsDataPacketSize; }
 
+inline int BaseDataHolder::getDataPacketSize()
+  { return itsData->size(); }
+
+#ifdef abc_0
 inline int BaseDataHolder::getCurDataPacketSize(){
   // overload in flexible datapackets
   return getDataPacketSize(); 
@@ -218,16 +249,17 @@ inline int BaseDataHolder::getMaxDataPacketSize(){
   // overload in flexible datapackets
   return getDataPacketSize(); 
 }
+#endif
 
-inline Transporter& BaseDataHolder::getTransporter()
-{ return *itsTransporter; }
 
 inline const BaseDataHolder::DataPacket& BaseDataHolder::getDataPacket() const
-{ return *itsDataPacketPtr; }
+  { return *itsDataPacketPtr; }
 
 inline void* BaseDataHolder::getDataPtr()
-{ return itsDataPacketPtr; }
+  { return itsData->data(); }
 
+inline Transporter& BaseDataHolder::getTransporter()
+  { return *itsTransporter; }
 
 inline void BaseDataHolder::setTimeStamp (unsigned long aTimeStamp)
   { itsDataPacketPtr->setTimeStamp (aTimeStamp); }
@@ -258,17 +290,6 @@ inline unsigned long BaseDataHolder::DataPacket::getTimeStamp() const
 inline void BaseDataHolder::DataPacket::copyTimeStamp (const DataPacket& that)
   { itsTimeStamp = that.itsTimeStamp; }
 
-inline void BaseDataHolder::setDefaultDataPacket()
-{
-  setDataPacket (&itsDefaultPacket, sizeof(DataPacket));
-}
-
-inline void BaseDataHolder::setDataPacket (DataPacket* ptr, int size)
-{
-  itsDataPacketPtr = ptr;
-  itsDataPacketSize = size;
-}
-
 inline const string& BaseDataHolder::getName() const
   { return itsName; }
 
@@ -281,9 +302,43 @@ inline const string& BaseDataHolder::getType () const
 inline void BaseDataHolder::setType(const string& type)
   { itsType = type; }
 
-inline void BaseDataHolder::setTransporter(Transporter& aTransporter)
-{ itsTransporter = &aTransporter; }
-
+inline BlobFieldBase& BaseDataHolder::getDataField (uint fieldIndex)
+{
+  return itsDataFields[fieldIndex];
+}
+inline BlobFieldBase& BaseDataHolder::getDataField (const std::string& fieldName)
+{
+  return itsDataFields[fieldName];
 }
 
-#endif 
+template<typename T>
+inline T* BaseDataHolder::getData (uint fieldIndex)
+{
+  return itsDataFields[fieldIndex].getData<T> (*itsDataBlob);
+}
+template<typename T>
+inline T* BaseDataHolder::getData (const std::string& fieldName)
+{
+  return itsDataFields[fieldName].getData<T> (*itsDataBlob);
+}
+
+
+inline void dataConvert (DataFormat fmt,
+			 BaseDataHolder::DataPacket* buf, uint nrval)
+{
+  for (uint i=0; i<nrval ;i++) {
+    dataConvertDouble (fmt, &(buf[i].itsTimeStamp));
+  }
+}
+
+inline void BaseDataHolder::setTransporter(Transporter& aTransporter)
+{
+  itsTransporter = &aTransporter;
+}
+
+
+} // end namespace
+
+
+
+#endif

@@ -29,6 +29,7 @@
 
 namespace LOFAR
 {
+class BlobStringType;
 
 /**
    This class defines the base class for transport mechanism classes
@@ -66,14 +67,14 @@ public:
   /// Get the type of transport as a string.
   virtual string getType() const = 0;
 
-  // Allocate/deallocate memory for use in communication.
-  virtual void* allocate (size_t size);
-  virtual void deallocate (void*& ptr);
+  // Get the type of BlobString needed for the DataHolder.
+  virtual BlobStringType blobStringType() const;
 
   virtual bool connectionPossible (int srcRank, int dstRank) const;
 
-  Transporter* getTransporter(){ return itsTransporter; }
-  void setTransporter(Transporter* tp)
+  Transporter* getTransporter()
+    { return itsTransporter; }
+  void setTransporter (Transporter* tp)
     { itsTransporter = tp; }
 
   virtual bool isBlocking() const = 0;
