@@ -37,12 +37,12 @@ namespace LOFAR
 {
   namespace PL
   {
+    template<typename T> class Collection;
+
     namespace Query
     {
 
-      //# Forward Declarations
-
-      // An Expr represents the WHERE clause of a query. 
+      // This class represents the WHERE clause of a query. 
       class Expr
       {
       public:
@@ -53,6 +53,7 @@ namespace LOFAR
         Expr(int value);
         Expr(double value);
         Expr(const std::string& value);
+        Expr(const char* const value);
         //@}
 
         // Construct an Expr from an ExprNode pointer.
@@ -65,6 +66,27 @@ namespace LOFAR
         Expr operator+ () const;
         Expr operator- () const;
         Expr operator! () const;
+        //@}
+
+        //@{
+        // The BETWEEN operator is used to test if a value is within an
+        // interval.
+        Expr between(const Expr& lhs, const Expr& rhs) const;
+        Expr notBetween(const Expr& lhs, const Expr& rhs) const;
+        //@}
+
+        //@{
+        // The IN operator is used to test if an expression is contained in a
+        // set of expressions.
+        Expr in (const Collection<Expr>& set) const;
+        Expr notIn(const Collection<Expr>& set) const;
+        //@}
+
+        //@{
+        // The LIKE operator is used to test if a value has a match with a
+        // pattern expression.
+        Expr like(const Expr& exp) const;
+        Expr notLike(const Expr& exp) const;
         //@}
 
       private:

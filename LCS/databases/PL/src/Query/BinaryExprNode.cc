@@ -32,16 +32,18 @@ namespace LOFAR
 
       BinaryExprNode::BinaryExprNode(const std::string& oper, 
                                      const Expr& lhs, const Expr& rhs) :
-        itsOperand(oper), 
+        itsOperation(oper), 
         itsLeft(lhs), itsRight(rhs)
       {
       }
 
-      BinaryExprNode::~BinaryExprNode() {}
+      BinaryExprNode::~BinaryExprNode()
+      {
+      }
 
       void BinaryExprNode::print(std::ostream& os) 
       {
-        os << "(" << itsLeft << itsOperand << itsRight << ")"; 
+        os << "(" << itsLeft << itsOperation << itsRight << ")"; 
       }
 
     } // namespace Query

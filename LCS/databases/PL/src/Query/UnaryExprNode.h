@@ -48,6 +48,9 @@ namespace LOFAR
         UnaryExprNode(const std::string& oper, 
                       const Expr& value);
 
+//         UnaryExprNode(const std::string& oper,
+//                       const ExprNodeSet& set);
+
         virtual ~UnaryExprNode();
 
         virtual void print(std::ostream& os);
