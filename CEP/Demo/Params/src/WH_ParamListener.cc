@@ -25,6 +25,7 @@
 #include "CEPFrame/PH_Int.h"
 #include "Common/Debug.h"
 
+using namespace LOFAR;
 
 WH_ParamListener::WH_ParamListener(const string& name, UpdateMode uMode)
   : WorkHolder(0, 0, name),

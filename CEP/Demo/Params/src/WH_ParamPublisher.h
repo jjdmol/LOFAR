@@ -31,7 +31,7 @@
 
 // Description of class.
 
-class WH_ParamPublisher: public WorkHolder
+class WH_ParamPublisher: public LOFAR::WorkHolder
 {
  public:
   WH_ParamPublisher(const string& name);

@@ -38,7 +38,7 @@
    The WH_Tranpose
  */
 
-class WH_Transpose: public WorkHolder
+class WH_Transpose: public LOFAR::WorkHolder
 {
 public:
 

@@ -41,7 +41,7 @@
    DataPacket buffer.
 */
 
-class DH_2DMatrix: public DataHolder
+class DH_2DMatrix: public LOFAR::DataHolder
 {
 public:
 

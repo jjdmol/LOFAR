@@ -47,9 +47,9 @@ int main (int argc, const char** argv)
     // Set trace level.
     Debug::initLevels (argc, argv);
     try {
-      SimulatorParse::parse (simulator);
+      LOFAR::SimulatorParse::parse (simulator);
     }
-    catch (SimulatorParseError x) {
+    catch (LOFAR::SimulatorParseError x) {
 	    
       cout << x.what() << endl;       
     }

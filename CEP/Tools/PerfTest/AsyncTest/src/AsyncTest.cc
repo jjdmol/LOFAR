@@ -54,6 +54,8 @@
 #include "CEPFrame/Corba/TH_Corba.h"
 #endif
 
+using namespace LOFAR;
+
 AsyncTest::AsyncTest():
   itsSourceSteps(0),
   itsDestSteps(0),

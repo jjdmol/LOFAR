@@ -38,7 +38,7 @@
    This WorkHolder multiplies all inputs.
 */
 
-class WH_Multiply: public WorkHolder
+class WH_Multiply: public LOFAR::WorkHolder
 {
 public:
   /// Construct the work holder.
@@ -48,7 +48,7 @@ public:
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, int ninput, int noutput,
-				const ParamBlock&);
+				const LOFAR::ParamBlock&);
 
    /// Make a fresh copy of the WH object.
   virtual WH_Multiply* make (const string& name);

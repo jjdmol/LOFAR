@@ -34,6 +34,8 @@
 #include "InOutTest/StopWatch.h"
 #include "InOutTest/InOutTest.h"
 
+using namespace LOFAR;
+
 bool WH_Sink::itsFirstcall = true;
 
 WH_Sink::WH_Sink (const string& name, 

@@ -32,6 +32,7 @@
 
 #include "Pipeline/WH_Dump.h"
 
+using namespace LOFAR;
 
 // Set static variables
 int WH_Dump::theirProcessProfilerState=0; 

@@ -49,14 +49,14 @@
    
 */
 
-class InOutTest: public Simulator
+class InOutTest: public LOFAR::Simulator
 {
 public:
   InOutTest();
   virtual ~InOutTest();
 
   // overloaded methods from the Simulator base class
-  virtual void define(const ParamBlock& params = ParamBlock());
+  virtual void define(const LOFAR::ParamBlock& params = LOFAR::ParamBlock());
   virtual void run(int);
   virtual void dump() const;
   virtual void quit();

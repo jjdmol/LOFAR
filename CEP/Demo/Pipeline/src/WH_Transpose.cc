@@ -32,6 +32,7 @@
 
 #include "Pipeline/WH_Transpose.h"
 
+using namespace LOFAR;
 
 // Set static variables
 int WH_Transpose::theirProcessProfilerState=0; 

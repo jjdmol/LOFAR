@@ -28,6 +28,8 @@
 #include "AsyncTest/DH_GrowSize.h"
 #include "Common/Debug.h"
 
+using namespace LOFAR;
+
 /** 
     In the DH_Growsize constructor memory is allocated for the maximum 
     allowed buffer size. the CurDataPacketSize is set to a default

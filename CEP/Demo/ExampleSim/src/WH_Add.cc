@@ -25,6 +25,7 @@
 
 #include "ExampleSim/WH_Add.h"
 
+using namespace LOFAR;
 
 WH_Add::WH_Add (const string& name, int factor)
   : WorkHolder (1, 1, name,"WH_Add"),

@@ -43,7 +43,7 @@
    indication for the data transport bandwidth of the output DataHolders. 
  */
 
-class WH_Source: public WorkHolder
+class WH_Source: public LOFAR::WorkHolder
 {
 public:
 

@@ -25,6 +25,7 @@
 
 #include "ExampleSim/WH_Multiply.h"
 
+using namespace LOFAR;
 
 WH_Multiply::WH_Multiply (const string& name, int nin)
   : WorkHolder (nin, 1, name,"WH_Multiply"),

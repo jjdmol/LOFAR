@@ -44,6 +44,7 @@
 
 #include TRANSPORTERINCLUDE
 
+using namespace LOFAR;
 
 ExampleSim::ExampleSim()
 {

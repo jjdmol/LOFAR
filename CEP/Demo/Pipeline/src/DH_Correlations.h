@@ -37,7 +37,7 @@
    This class is a DataHolder containing correlator outputs
 */
 
-class DH_Correlations: public DataHolder
+class DH_Correlations: public LOFAR::DataHolder
 {
 public:
   typedef myComplex32 DataType;

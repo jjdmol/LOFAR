@@ -34,6 +34,8 @@
 #include "AsyncTest/StopWatch.h"
 #include "AsyncTest/AsyncTest.h"
 
+using namespace LOFAR;
+
 int  WH_Sink::itsMeasurements = 1000;
 bool WH_Sink::itsFirstcall = true;
 

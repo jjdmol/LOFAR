@@ -42,7 +42,7 @@
    indication for the data transport bandwidth of the output DataHolders. 
  */
 
-class WH_Sink: public WorkHolder
+class WH_Sink: public LOFAR::WorkHolder
 {
 public:
 

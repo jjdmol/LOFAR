@@ -34,6 +34,8 @@
 #include "P2Perf/StopWatch.h"
 #include "P2Perf/P2Perf.h"
 
+using namespace LOFAR;
+
 int  WH_GrowSize::itsMeasurements = 3;
 bool WH_GrowSize::itsFirstcall = true;
 

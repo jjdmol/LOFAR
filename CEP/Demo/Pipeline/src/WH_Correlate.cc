@@ -32,6 +32,8 @@
 
 #include "Pipeline/WH_Correlate.h"
 
+using namespace LOFAR;
+
 // Set static variables
 int WH_Correlate::theirProcessProfilerState=0; 
 

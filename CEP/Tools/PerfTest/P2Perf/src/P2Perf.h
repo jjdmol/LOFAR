@@ -48,14 +48,14 @@
    
 */
 
-class P2Perf: public Simulator
+class P2Perf: public LOFAR::Simulator
 {
 public:
   P2Perf();
   virtual ~P2Perf();
 
   // overloaded methods from the Simulator base class
-  virtual void define(const ParamBlock& params = ParamBlock());
+  virtual void define(const LOFAR::ParamBlock& params = LOFAR::ParamBlock());
   virtual void run(int);
   virtual void dump() const;
   virtual void quit();
@@ -66,8 +66,8 @@ public:
   /// Define pointers to the arrays with steps and workholders.
   WH_GrowSize **Sworkholders;
   WH_GrowSize **Dworkholders;
-  Step        **Ssteps;
-  Step        **Dsteps;
+  LOFAR::Step        **Ssteps;
+  LOFAR::Step        **Dsteps;
 
   /// Number of source steps
     int itsSourceSteps;

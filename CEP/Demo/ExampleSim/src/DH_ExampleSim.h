@@ -38,7 +38,7 @@
    This class is a DataHolder example class used in ExampleSim.
 */
 
-class DH_ExampleSim: public DataHolder
+class DH_ExampleSim: public LOFAR::DataHolder
 {
 public:
   

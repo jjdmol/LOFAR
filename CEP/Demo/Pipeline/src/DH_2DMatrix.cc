@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2003/12/08 10:39:19  ellen
+//  %[ER: 4]%
+//  Merge of branch ER_4_development
+//
 //  Revision 1.2.2.1  2003/07/11 09:50:39  ellen
 //  Changed Pipeline example in order to work with CEPFrame with DataManager functionality.
 //
@@ -57,6 +61,8 @@
 
 
 #include "Pipeline/DH_2DMatrix.h"
+
+using namespace LOFAR;
 
 DH_2DMatrix::DataPacket::DataPacket() {
 }
