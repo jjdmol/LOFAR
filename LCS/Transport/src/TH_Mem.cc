@@ -116,7 +116,7 @@ bool TH_Mem::recvNonBlocking(void* buf, int nbytes, int tag)
    The send function must now add its DataHolder to the map
    containing theSources.
  */
-bool TH_Mem::sendNonBlocking(void* buf, int nbytes, int tag)
+bool TH_Mem::sendNonBlocking(void* /*buf*/, int nbytes, int tag)
 {
   LOG_TRACE_RTTI("TH_Mem sendNonBlocking()"); 
   if (itsFirstSendCall) {
@@ -191,7 +191,7 @@ bool TH_Mem::recvBlocking(void* buf, int nbytes, int tag)
 /**
    The send function must now add its DataHolder to the map containing theSources.
  */
-bool TH_Mem::sendBlocking(void* buf, int nbytes, int tag)
+bool TH_Mem::sendBlocking(void* /*buf*/, int nbytes, int tag)
 {
 #ifndef USE_THREADS
   LOG_ERROR("sendBlocking not available without USE_THREADS");
