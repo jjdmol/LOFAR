@@ -1,0 +1,8 @@
+a debug: Global
+YY debug: XXD
+XX debug: XXD
+ZZ debug: ZZD
+YY debug: XXD
+f debug: Global
+should give exception
+should give exception
