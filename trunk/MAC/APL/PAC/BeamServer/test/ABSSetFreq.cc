@@ -176,7 +176,7 @@ GCFEvent::TResult SetFreq::setfreq(GCFEvent& e, GCFPortInterface& port)
 	    // send wgenable
 	    ABSWgsettingsEvent wgs;
 	    wgs.frequency=m_freq;
-	    wgs.amplitude=0x8000 / 256;
+	    wgs.amplitude=0x4000;
 	    
 	    TESTC(beam_server.send(wgs));
 	  }
