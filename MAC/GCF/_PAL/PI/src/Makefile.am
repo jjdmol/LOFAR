@@ -1,14 +1,3 @@
-AUTOGEN = autogen
-SUFFIXES = .ph
-
-PA_Protocol.ph: $(top_srcdir)/PA/src/PA_Protocol.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../MACCommon/autogen $< && \
-	chmod a+w $@
-
-PI_Protocol.ph: PI_Protocol.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../MACCommon/autogen $< && \
-	chmod a+w $@
-
 DOCHDRS	=	\
   GPI_Defines.h \
   GPI_Controller.h \
@@ -17,8 +6,7 @@ DOCHDRS	=	\
   GPI_PropertySet.h \
   GPI_CEPServer.h \
   GPI_RTCServer.h \
-  GPI_TH_Port.h \
-  DH_PIProtocol.h
+  GPI_TH_Port.h
     
 noinst_LTLIBRARIES 	= libpi.la
 
@@ -29,13 +17,10 @@ libpi_la_SOURCES= $(DOCHDRS) \
   GPI_RTCServer.cc \
   GPI_PropertyProxy.cc \
   GPI_PropertySet.cc \
-  GPI_TH_Port.cc \
-  DH_PIProtocol.cc \
-  PI_Protocol.cc \
-  PA_Protocol.cc
+  GPI_TH_Port.cc
 
-libpi_la_CPPFLAGS= -I$(top_srcdir)/include \
-	-I$(top_srcdir)/PA/src
+libpi_la_CPPFLAGS= -I$(top_srcdir)/include
+	
 bin_PROGRAMS   		= PropertyInterface
   
 PropertyInterface_SOURCES		= GPI_Main.cc
@@ -48,14 +33,6 @@ PropertyInterface_DEPENDENCIES	= libpi.la \
 	$(top_builddir)/PML/src/libpml.la \
 	$(top_builddir)/SAL/src/libsal.la \
 	$(LOFAR_DEPEND) 
-
-BUILT_SOURCES = \
-	PI_Protocol.ph \
-	PA_Protocol.ph
-
-EXTRA_DIST = \
-	PI_Protocol.ph \
-	PA_Protocol.ph
 
 configfilesdir=$(bindir)
 configfiles_DATA= \

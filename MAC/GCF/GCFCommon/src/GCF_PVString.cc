@@ -22,28 +22,34 @@
 
 
 #include <GCF/GCF_PVString.h>
+#include <Common/DataConvert.h>
+#include <Common/LofarTypes.h>
+
+using LOFAR::TYPES::uint16;
+
 
 unsigned int GCFPVString::unpackConcrete(const char* valBuf)
 {
   unsigned int unpackedBytes(0);
-  unsigned int stringLength(0);
-  memcpy((void *) &stringLength, valBuf, sizeof(unsigned int));
-  _value.assign(valBuf + sizeof(unsigned int), stringLength); 
-  unpackedBytes += sizeof(unsigned int) + stringLength;
+  uint16 stringLength(0);
+  memcpy((void *) &stringLength, valBuf, sizeof(uint16));
+  if (mustConvert()) LOFAR::dataConvert(LOFAR::dataFormat(), &stringLength, 1);
+  _value.assign(valBuf + sizeof(uint16), stringLength); 
+  unpackedBytes += sizeof(uint16) + stringLength;
   return unpackedBytes;
 }
 
 unsigned int GCFPVString::packConcrete(char* valBuf) const
 {
   unsigned int packedBytes(0);
-  unsigned int stringLength(_value.length());
-  memcpy(valBuf, (void *) &stringLength, sizeof(unsigned int));
-  memcpy(valBuf + sizeof(unsigned int), (void *) _value.c_str(), stringLength);
-  packedBytes += sizeof(unsigned int) + stringLength;
+  uint16 stringLength(_value.length());
+  memcpy(valBuf, (void *) &stringLength, sizeof(uint16));
+  memcpy(valBuf + sizeof(uint16), (void *) _value.c_str(), stringLength);
+  packedBytes += sizeof(uint16) + stringLength;
   return packedBytes;
 }
 
-TGCFResult GCFPVString::setValue(const string value)
+TGCFResult GCFPVString::setValue(const string& value)
 {
   TGCFResult result(GCF_NO_ERROR);
 

@@ -24,7 +24,6 @@
 #include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/PAL/GCF_MyPropertySet.h>
 #include <GCF/Utils.h>
-#include <PA_Protocol.ph>
 #include <GCF/ParameterSet.h>
 #include <Resources.hxx>
 #include <GCF/PAL/GCF_PVSSInfo.h>
@@ -34,7 +33,7 @@
 static string sPMLTaskName("GCF-PML");
 GPMHandler* GPMHandler::_pInstance = 0;
 
-extern void logResult(TPAResult result, GCFPropertySet& propSet);
+void logResult(TPAResult result, GCFPropertySet& propSet);
 
 GPMController::GPMController() :
   GCFTask((State)&GPMController::initial, sPMLTaskName)

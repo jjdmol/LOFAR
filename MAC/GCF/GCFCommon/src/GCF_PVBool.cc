@@ -35,7 +35,7 @@ unsigned int GCFPVBool::packConcrete(char* valBuf) const
   return 1;
 }
 
-TGCFResult GCFPVBool::setValue(const string valueData)
+TGCFResult GCFPVBool::setValue(const string& valueData)
 {
   TGCFResult result(GCF_NO_ERROR);
 

@@ -24,6 +24,9 @@
 #define GCF_PVBLOB_H
 
 #include <GCF/GCF_PValue.h>
+#include <Common/LofarTypes.h>
+
+using LOFAR::TYPES::uint16;
 
 /**
  * By means of this property type bulk of data with a specified size can be used.
@@ -36,7 +39,7 @@ class GCFPVBlob : public GCFPValue
      * @param length length of the buffer
      * @param clone buffer must be cloned 
      */
-  	explicit GCFPVBlob(unsigned char* val = 0, unsigned int size = 0, bool clone = false);
+  	explicit GCFPVBlob(unsigned char* val = 0, uint16 length = 0, bool clone = false);
     explicit GCFPVBlob(const GCFPVBlob& val) 
       : GCFPValue(LPT_BLOB), _value(0), _length(0), _isDataHolder(false) 
       { copy(val);}
@@ -48,12 +51,12 @@ class GCFPVBlob : public GCFPValue
      * @param length length of the buffer
      * @param clone buffer must be cloned 
      */
-    virtual TGCFResult setValue(unsigned char* value, unsigned int length, bool clone = false);
-    virtual TGCFResult setValue(const string value);
+    virtual TGCFResult setValue(unsigned char* value, uint16 length, bool clone = false);
+    virtual TGCFResult setValue(const string& value);
 
     /** Returns the value of this object*/
     virtual unsigned char* getValue() const {return _value;}
-    virtual unsigned int getLen() const {return _length;}
+    virtual uint16 getLen() const {return _length;}
 
     /** @see GCFPValue::clone() */
     virtual GCFPValue* clone() const;
@@ -61,20 +64,21 @@ class GCFPVBlob : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy(const GCFPValue& value);
  
+  private:
     /// @see GCFPValue::unpack()
-    virtual unsigned int unpackConcrete(const char* valBuf);
+    unsigned int unpackConcrete(const char* valBuf);
 
     /// @see GCFPValue::pack()
-    virtual unsigned int packConcrete(char* valBuf) const;
+    unsigned int packConcrete(char* valBuf) const;
 
     /// @see GCFPValue::getSize()
-    virtual unsigned int getConcreteSize() const { return sizeof(_length) + _length; }
+    unsigned int getConcreteSize() const { return sizeof(_length) + _length; }
     
   private: // Private attributes
     /// The value (buffer)
     unsigned char* _value;
     /// length of the buffer
-    unsigned int _length;
+    uint16 _length;
     /**
      * This boolean indicates wether the buffer space for value is newed in this
      * class or not. The "caller" of the constructor or the first of the setValue 

@@ -25,7 +25,16 @@
 
 #include <Common/LofarLogger.h>
 
-using namespace LOFAR;
+//using namespace LOFAR;
+#include <Common/lofar_list.h>
+#include <Common/lofar_map.h>
+#include <Common/lofar_vector.h>
+
+using std::string;
+using std::list;
+using std::map;
+using std::vector;
+using LOFAR::formatString;
 
 #include <assert.h>
 
@@ -37,7 +46,8 @@ using namespace LOFAR;
 #define GCF_SCOPE_NAME_SEP     '_' // separates the levels in structure of property sets
 
 // possible results of GCF api class member calls.
-enum TGCFResult {
+enum TGCFResult 
+{
   GCF_NO_ERROR, 
   GCF_UNKNOWN_ERROR,
   GCF_PML_ERROR, 

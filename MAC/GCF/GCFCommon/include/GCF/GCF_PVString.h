@@ -38,7 +38,7 @@ class GCFPVString : public GCFPValue
   	virtual ~GCFPVString() {;}
     
     /** Changes the value of this object */
-    virtual TGCFResult setValue(const string value);
+    virtual TGCFResult setValue(const string& value);
 
     /** Returns the value of this object*/
     virtual inline const string& getValue() const {return _value;}
@@ -49,14 +49,15 @@ class GCFPVString : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy(const GCFPValue& value);
  
+  private:
     /// @see GCFPValue::unpack()
-    virtual unsigned int unpackConcrete(const char* valBuf);
+    unsigned int unpackConcrete(const char* valBuf);
 
     /// @see GCFPValue::pack()
-    virtual unsigned int packConcrete(char* valBuf) const;
+    unsigned int packConcrete(char* valBuf) const;
 
     /// @see GCFPValue::getSize()
-    virtual unsigned int getConcreteSize() const { return sizeof(unsigned int) + _value.length(); }
+    unsigned int getConcreteSize() const { return sizeof(unsigned int) + _value.length(); }
     
   private: // Private attributes
     /** The value*/

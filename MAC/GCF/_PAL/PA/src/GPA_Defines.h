@@ -27,29 +27,6 @@
 
 #include <GCF/GCF_Defines.h>
 
-class GCFPValue;
-
-enum TPAResult {
-  PA_NO_ERROR, 
-  PA_UNKNOWN_ERROR,
-  PA_WRONG_STATE,
-  PA_PS_GONE,
-  PA_MISSING_PROPS,
-  PA_PROP_SET_NOT_EXISTS,
-  PA_PROP_SET_ALLREADY_EXISTS,
-  PA_DPTYPE_UNKNOWN,
-  PA_INTERNAL_ERROR,
-  PA_PI_INTERNAL_ERROR,
-  PA_APC_NOT_EXISTS,
-  PA_LINK_TIME_OUT,
-  PA_SERVER_GONE,
-};
-
-typedef struct
-{
-  string name;
-  GCFPValue* pValue;
-  bool  defaultSet;
-} TAPCProperty;
+const string PA_TASK_NAME("GCF-PA");
 
 #endif

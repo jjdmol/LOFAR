@@ -36,7 +36,7 @@ unsigned int GCFPVChar::packConcrete(char* valBuf) const
   return 1;
 }
 
-TGCFResult GCFPVChar::setValue(const string valueData)
+TGCFResult GCFPVChar::setValue(const string& valueData)
 {
   TGCFResult result(GCF_VALUESTRING_NOT_VALID);
   

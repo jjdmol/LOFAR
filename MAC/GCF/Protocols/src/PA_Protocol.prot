@@ -7,9 +7,26 @@ description = "Protocol for the PA server";
 prefix = "PA"; // for the signal names
 id = "(F_GCF_PROTOCOL + 2)";
 
-// specify extra include files
-include = '<GPA_Defines.h>';
 
+prelude = << PRELUDE_END
+
+enum TPAResult 
+{
+  PA_NO_ERROR, 
+  PA_UNKNOWN_ERROR,
+  PA_WRONG_STATE,
+  PA_PS_GONE,
+  PA_MISSING_PROPS,
+  PA_PROP_SET_NOT_EXISTS,
+  PA_PROP_SET_ALLREADY_EXISTS,
+  PA_DPTYPE_UNKNOWN,
+  PA_INTERNAL_ERROR,
+  PA_PI_INTERNAL_ERROR,
+  PA_APC_NOT_EXISTS,
+  PA_LINK_TIME_OUT,
+  PA_SERVER_GONE,
+};
+PRELUDE_END;
 //
 // An "event" has a "signal" and a "dir" (direction)
 // and zero or more "param"s.

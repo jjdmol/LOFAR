@@ -1,7 +1,7 @@
 // Ctrl extension for TCP communication
 
 #include "GPA_Converter.h"
-#include <PA_Protocol.ph>
+#include <GCF/Protocols/PA_Protocol.ph>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVBlob.h>
 #include <GCF/Utils.h>

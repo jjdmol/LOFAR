@@ -22,13 +22,12 @@
 
 #include <GCF/ParameterSet.h>
 #include <Common/lofar_fstream.h>
+#include <Common/lofar_sstream.h>
+using std::istringstream;
+using std::ifstream;
 
-using namespace LOFAR;
-
-INIT_TRACER_CONTEXT(GCF::ParameterSet, "ParameterSet");
-
-namespace GCF
-{
+namespace LOFAR {
+ namespace GCF {
 
 ParameterSet* ParameterSet::_pInstance = 0;
 
@@ -333,5 +332,5 @@ void ParameterSet::writeFile(const string&	theFilename) const
 
 	paramFile.close();
 }
-
+ } // namespace GCF
 } // namespace LOFAR

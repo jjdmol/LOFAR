@@ -46,7 +46,7 @@ class GCFPVDouble : public GCFPValue
      * which will be translated.
      * @see GCFPValue::setValue(const string value)
      */
-    virtual TGCFResult setValue (const string value);
+    virtual TGCFResult setValue (const string& value);
 
     /** Returns the value of this object*/
     inline double getValue () const {return _value;};
@@ -57,17 +57,18 @@ class GCFPVDouble : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy (const GCFPValue& value);
       
+  private:
     /// @see GCFPValue::unpack()
-    virtual unsigned int unpackConcrete(const char* valBuf);
+    unsigned int unpackConcrete(const char* valBuf);
 
     /// @see GCFPValue::pack()
-    virtual unsigned int packConcrete(char* valBuf) const;
+    unsigned int packConcrete(char* valBuf) const;
 
     /// @see GCFPValue::getSize()
-    virtual unsigned int getConcreteSize() const { return sizeof(double); }
+    unsigned int getConcreteSize() const { return sizeof(double); }
     
   private: // Private attributes
     ///  The value 
-    volatile double _value;
+    double _value;
 };
 #endif

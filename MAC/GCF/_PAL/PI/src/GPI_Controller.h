@@ -32,13 +32,12 @@
 class GCFEvent;
 class GPIPMLlightServer;
 
-/**
- * This is the main class of the Property Interface class. It has the 
- * responsibility to enable PMLlightServers (ERTC part) to connect to the 
- * Property Interface. On the connect request an instance of the 
- * GPIPMLlightServer class will be created, which handles further requests 
- * from the Supervisory Server or the Property Agent.
- */
+// This is the main class of the Property Interface class. It has the 
+// responsibility to enable PIA’s to connect to the Property Interface and thus 
+// virtually to the PA too. On the connect request an instance of one of the 
+// specialized GPIPMLlightServer classes will be created, which handles the 
+// protocol messages from the PIA or the Property Agent.
+
 class GPIController : public GCFTask
 {
 	public:
@@ -50,16 +49,15 @@ class GPIController : public GCFTask
     void close (GPIPMLlightServer& pls);
 
 	private: // helper methods
-    /**
-     * Don't allow copying of this object.
-     */
+    // Don't allow copying of this object.
+    // <group>
     GPIController (const GPIController&);
     GPIController& operator= (const GPIController&);
+    // </group>
     
 	private: // state methods
 		GCFEvent::TResult initial   (GCFEvent& e, GCFPortInterface& p);
-		GCFEvent::TResult connected (GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult closing   (GCFEvent& e, GCFPortInterface& p);
+		GCFEvent::TResult operational (GCFEvent& e, GCFPortInterface& p);
 
 	private: // data members
     typedef list<GPIPMLlightServer*> TPMLlightServers;

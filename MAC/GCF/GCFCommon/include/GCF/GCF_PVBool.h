@@ -39,17 +39,17 @@ class GCFPVBool : public GCFPValue
   	virtual ~GCFPVBool () {;}
     
     /** Changes the value of this object */
-    inline void setValue (const bool newVal) {_value = newVal;};
+    void setValue (const bool newVal) {_value = newVal;}
 
     /** 
      * Changes the value of this object by means of a stringbuffer, 
      * which will be translated.
      * @see GCFPValue::setValue(const string value)
      */
-    virtual TGCFResult setValue (const string value);
+    virtual TGCFResult setValue (const string& value);
 
     /** Returns the value of this object*/
-    inline bool getValue () const {return _value;};
+    bool getValue () const {return _value;};
 
     /** @see GCFPValue::clone() */
     virtual GCFPValue* clone () const;
@@ -57,14 +57,15 @@ class GCFPVBool : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy (const GCFPValue& value);
     
+  private:
     /// @see GCFPValue::unpack()
-    virtual unsigned int unpackConcrete(const char* valBuf);
+    unsigned int unpackConcrete(const char* valBuf);
 
     /// @see GCFPValue::pack()
-    virtual unsigned int packConcrete(char* valBuf) const;
+    unsigned int packConcrete(char* valBuf) const;
 
     /// @see GCFPValue::getSize()
-    virtual unsigned int getConcreteSize() const { return 1; }
+    unsigned int getConcreteSize() const { return 1; }
     
   private: // Private attributes
     /** The value */

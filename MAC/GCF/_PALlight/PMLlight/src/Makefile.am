@@ -1,10 +1,4 @@
 INSTALL=/usr/bin/install -C
-AUTOGEN = autogen
-SUFFIXES = .ph
-%.ph: $(top_srcdir)/../PAL/PI/src/%.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../MACCommon/autogen $< && \
-	chmod a+w $@
-
 pkgincludedir = $(includedir)/GCF/PALlight
 pkginclude_HEADERS = \
 	../../include/GCF/PALlight/GCF_RTMyProperty.h \
@@ -21,12 +15,9 @@ libpmllight_la_SOURCES= $(DOCHDRS) \
   GCF_RTAnswer.cc \
   GCF_RTMyProperty.cc \
   GCF_RTMyPropertySet.cc \
-  GPM_RTController.cc \
-  PI_Protocol.cc
+  GPM_RTController.cc
   
-libpmllight_la_CPPFLAGS= -I$(top_srcdir)/include \
-	-I$(top_srcdir)/../PAL/PI/src
-
+libpmllight_la_CPPFLAGS= -I$(top_srcdir)/include
 
 lib_LTLIBRARIES 	= libgcfpallight.la
 
@@ -35,12 +26,6 @@ libgcfpallight_la_LIBADD= libpmllight.la
 
 libgcfpallight_la_DEPENDENCIES= libpmllight.la $(LOFAR_DEPEND)
 
-BUILT_SOURCES = \
-	PI_Protocol.ph
-	
-EXTRA_DIST = \
-	PI_Protocol.ph
-	
 configfilesdir=$(bindir)
 configfiles_DATA= \
 	gcf-pmllight.conf \

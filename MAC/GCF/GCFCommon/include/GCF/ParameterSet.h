@@ -32,17 +32,10 @@
 //# Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
-#include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
-//#include <Common/lofar_strstream.h> // provides the wrong istringstream version
-#include <sstream>
-using std::istringstream;
-using std::ostringstream;
 
-using namespace LOFAR;
-
-namespace GCF
-{
+namespace LOFAR {
+ namespace GCF {
 
 //# Description of class.
 // The ParameterSet class is an implementation of a map <string, string>. This
@@ -99,9 +92,9 @@ private:
 	void	addStream  (istream&	inputStream, const	bool merge);
  
   static ParameterSet* _pInstance;
-  ALLOC_TRACER_CONTEXT;
 };
+ } // namespace GCF 
+} // namespace LOFAR
+using namespace LOFAR::GCF;
 
-} // namespace GCF
-using namespace GCF;
 #endif

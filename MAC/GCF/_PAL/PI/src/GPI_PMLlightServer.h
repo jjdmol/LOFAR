@@ -28,27 +28,25 @@
 #include <GCF/TM/GCF_TCPPort.h>
 #include <Common/lofar_list.h>
 
-#include <PI_Protocol.ph>
-#include <PA_Protocol.ph>
+#include <GCF/Protocols/PI_Protocol.ph>
+#include <GCF/Protocols/PA_Protocol.ph>
 
 class GCFEvent;
 class GPIController;
 class GCFPValue;
 class GPIPropertySet;
 
-/**
- * This class represents and manages the connection with a Supervisory Server 
- * (part of ERTC framework). It acts as a PML with no owned properties. The 
- * properties and scopes are 'managed' by the SS and its connected ERTC tasks.
- */
+// This class represents and manages the connection with a PIA and the PA. It 
+// acts as a PML with no owned properties w.r.t. the PA and as PA w.r.t. the 
+// PIA. It manages a list of all registered property sets of one connected PIA.
+
 class GPIPMLlightServer : public GCFTask
 {
 	public:
 		GPIPMLlightServer (GPIController& controller, const string& name, bool transportRawData);
 		virtual ~GPIPMLlightServer ();
     
-    GCFTCPPort& getClientPort()    {return _plsPort;}
-    //GCFTCPPort& getPAPort()  {return _propertyAgent;}      
+    GCFTCPPort& getClientPort();
     virtual void sendMsgToClient(GCFEvent& msg);
     void sendMsgToPA(GCFEvent& msg);
       
@@ -74,18 +72,20 @@ class GPIPMLlightServer : public GCFTask
     
   private: // (copy)constructors
     GPIPMLlightServer();
-    /**
-     * Don't allow copying of this object.
-     */
+    // Don't allow copying of this object.
+    // <group>
     GPIPMLlightServer (const GPIPMLlightServer&);
     GPIPMLlightServer& operator= (const GPIPMLlightServer&);
+    // </group>
 
 	private: // data members
-		GCFTCPPort        _plsPort;
+    // the PMLlight server port
+		GCFTCPPort        _clientPort;
     GCFTCPPort        _propertyAgent;
+    // PI centre
     GPIController&    _controller;
-    typedef map<string /*scope*/, GPIPropertySet*> TPropSetRegister;
-    TPropSetRegister    _propSetRegister;
+    typedef map<string /*scope*/, GPIPropertySet*> TPropertySets;
+    TPropertySets     _propertySets;
 
   private: // admin. data members
     typedef map<unsigned short /*seqnr*/, GPIPropertySet*>  TActionSeqList;
@@ -93,4 +93,7 @@ class GPIPMLlightServer : public GCFTask
     int _timerID;
 };
 
+inline GCFTCPPort& GPIPMLlightServer::getClientPort()    
+  { return _clientPort; }
+  
 #endif

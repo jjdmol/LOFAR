@@ -26,6 +26,9 @@
 #include "Echo_Protocol.ph"
 #include <Common/lofar_iostream.h>
 
+using std::cout;
+using std::endl;
+
 /**
  * Function to calculate the elapsed time between two tiemval's.
  */

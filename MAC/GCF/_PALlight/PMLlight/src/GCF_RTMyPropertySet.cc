@@ -35,7 +35,8 @@ using std::ifstream;
 #include <sys/types.h>
 #include <unistd.h>
 
-TMACValueType macValueTypes[] = {
+TMACValueType macValueTypes[] = 
+{
   NO_LPT,           // <not specified by pvss>      0
   NO_LPT,           // structure                    1
   NO_LPT,           // <not specified by pvss>      0
@@ -179,10 +180,6 @@ TGCFResult GCFRTMyPropertySet::disable ()
       getScope().c_str()));
   switch (_state)
   {
-    case S_LINKING:
-      assert(_counter > 0);
-      _state = S_DELAYED_DISABLING;
-      break;
     case S_LINKED:
       GCFRTMyProperty* pProperty;
       for (TPropertyList::iterator iter = _properties.begin();
@@ -254,7 +251,6 @@ void GCFRTMyPropertySet::linkProperties()
   {
     case S_ENABLING:
     case S_LINKED:
-    case S_LINKING:
       wrongState("linkProperties");
       _pController->propertiesLinked(getScope(), propsToSubscribe, PI_WRONG_STATE);
       break;
@@ -264,8 +260,6 @@ void GCFRTMyPropertySet::linkProperties()
 
       assert(_counter == 0);
       _missing = 0;
-      _state = S_LINKING;
-
       for(TPropertyList::iterator iter = _properties.begin(); 
           iter != _properties.end(); ++iter)
       {
@@ -274,6 +268,9 @@ void GCFRTMyPropertySet::linkProperties()
         pProperty->link();
         if (pProperty->testAccessMode(GCF_WRITABLE_PROP))
         {
+          LOG_DEBUG(formatString(
+              "Property '%s' must be subscribed in PI. Add to list.",
+              pProperty->getName().c_str()));
           propsToSubscribe.push_back(pProperty->getName());
         }     
       }      
@@ -300,7 +297,6 @@ void GCFRTMyPropertySet::unlinkProperties()
   switch (_state)
   {
     case S_ENABLING:
-    case S_LINKING:
     case S_ENABLED:
     case S_DELAYED_DISABLING:
       wrongState("unlinkProperties");
@@ -537,7 +533,6 @@ void GCFRTMyPropertySet::wrongState(const char* request)
     "DISABLING",
     "ENABLING",
     "ENABLED",
-    "LINKING",
     "LINKED",
     "DELAYED_DISABLING"
   };

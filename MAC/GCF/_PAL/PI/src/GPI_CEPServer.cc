@@ -28,18 +28,20 @@ using LOFAR::BlobIStream;
 using LOFAR::BlobOStream;
 using LOFAR::TYPES::uint16;
 
-static string sPLSTaskName("GCF-PI-CEP");
-
 GPICEPServer::GPICEPServer(GPIController& controller) : 
-  GPIPMLlightServer(controller, sPLSTaskName, true),
+  GPIPMLlightServer(controller, PI_CEPPLS_TASK_NAME, true),
   _thPort(getClientPort()),
   _dhProto(),
   _valueBuf(0),
   _upperboundValueBuf(0)
 {
   _dhProto.setID(1);
-  DH_PIProtocol dummy("dummy"); // placeholder for the remote port (TH_Socket) in the CEP application
+  // placeholder for the remote port (TH_Socket) in the PIClient (CEP application)
+  DH_PIProtocol dummy("dummy"); 
   dummy.setID(2);
+  // NOTE: normally here a init of the dataholder is necessary. But in this case 
+  // init will do nothing. So only a "symbolic" connect is necessary. The 
+  // connection is already established in the baseclass (_plsPort).
   _dhProto.connectTo(dummy, _thPort, false);
 }
 
@@ -62,15 +64,20 @@ GCFEvent::TResult GPICEPServer::operational(GCFEvent& e, GCFPortInterface& p)
     case PA_SCOPE_UNREGISTERED:
     case PA_LINK_PROP_SET:
     case PA_UNLINK_PROP_SET:
+      // these message can be still done by the baseclass
       GPIPMLlightServer::operational(e, p);
       break;
      
     case F_DATAIN:
     {
-      // read data from port via dataholder and transportholder
+      // this indicates that there is data received from the CEP-PMLlight port
+      // so read the data from the "port" via dataholder and transportholder
       _dhProto.read();
       BlobIStream& blob = _dhProto.getExtraBlob();
+      // the CEP application can not know on which PVSS system the PI is connected
+      // so this must be done here yet
       string sysScope = GCFPVSSInfo::getLocalSystemName() + ":";
+      // The conversion from Blob to the GCFEvent concept!!!
       switch (_dhProto.getEventID())
       {
         case DH_PIProtocol::REGISTER_SCOPE:
@@ -124,6 +131,7 @@ GCFEvent::TResult GPICEPServer::operational(GCFEvent& e, GCFPortInterface& p)
             if (_valueBuf) delete [] _valueBuf;
             _valueBuf = new char[valueSize];
           }
+          // reuses the valueBuffer for storing value data
           blob.get(_valueBuf, valueSize);
           if (indication.value.unpack(_valueBuf) != valueSize)
           {
@@ -148,7 +156,7 @@ GCFEvent::TResult GPICEPServer::operational(GCFEvent& e, GCFPortInterface& p)
 
 void GPICEPServer::sendMsgToClient(GCFEvent& msg)
 {
-  // conversion of the GCFEvent to blobs for the dataholder
+  // The conversion of the GCFEvent concept to Blobs for the dataholder
   bool converted(true);
   BlobOStream& blob = _dhProto.createExtraBlob();
   string localScope;
@@ -191,6 +199,7 @@ void GPICEPServer::sendMsgToClient(GCFEvent& msg)
       break;
     }
     default:
+      // no other messages should be expected here to forward them to CEP-PMLlight
       converted = false;
       break;
   }

@@ -109,6 +109,10 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 
+using std::string;
+using std::vector;
+using std::map;
+
 // handy little container for our argument vector
 struct CCmdParam
 {

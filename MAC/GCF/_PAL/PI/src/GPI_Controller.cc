@@ -23,13 +23,11 @@
 #include "GPI_Controller.h"
 #include "GPI_CEPServer.h"
 #include "GPI_RTCServer.h"
-#include "PI_Protocol.ph"
+#include <GCF/Protocols/PI_Protocol.ph>
 #include <GCF/ParameterSet.h>
 
-static string sPITaskName("GCF-PI");
-
 GPIController::GPIController() : 
-  GCFTask((State)&GPIController::initial, sPITaskName)
+  GCFTask((State)&GPIController::initial, PI_TASK_NAME)
 {
   // register the protocol for debugging purposes
   registerProtocol(PI_PROTOCOL, PI_PROTOCOL_signalnames);
@@ -69,7 +67,7 @@ GCFEvent::TResult GPIController::initial(GCFEvent& e, GCFPortInterface& p)
     case F_CONNECTED:
       if (_cepClientPortProvider.isConnected() && _rtcClientPortProvider.isConnected())
       {
-        TRAN(GPIController::connected);
+        TRAN(GPIController::operational);
       }
       break;
 
@@ -88,7 +86,7 @@ GCFEvent::TResult GPIController::initial(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult GPIController::connected(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult GPIController::operational(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -97,23 +95,28 @@ GCFEvent::TResult GPIController::connected(GCFEvent& e, GCFPortInterface& p)
     case F_DISCONNECTED:      
       if (&p == &_rtcClientPortProvider || &p == &_cepClientPortProvider)
       {
-        // TODO: find out this implies problems for the concrete ports too or not
+        // TODO: find out this is possible and then implies problems for the 
+        //       concrete ports too or not
       }
       break;
 
     case F_ACCEPT_REQ:
     {
+      // connect request of an application (PIA) with a PMLlight component
       GPIPMLlightServer* pNewPLS;
       if (&p == &_rtcClientPortProvider)
       {
+        // a RTC application
         pNewPLS = new GPIRTCServer(*this);
         _rtcClientPortProvider.accept(pNewPLS->getClientPort());
       }
       else
       {
+        // a CEP application
         pNewPLS = new GPICEPServer(*this);
         _cepClientPortProvider.accept(pNewPLS->getClientPort());
       }
+      // starts the state machine of the PMLlight server
       pNewPLS->start();
       _pmlLightServers.push_back(pNewPLS);
       break;
@@ -152,5 +155,6 @@ GCFEvent::TResult GPIController::connected(GCFEvent& e, GCFPortInterface& p)
 
 void GPIController::close(GPIPMLlightServer& pls)
 {
+  // starts a null timer to force a context switch
   _rtcClientPortProvider.setTimer(0, 0, 0, 0, (void*)&pls);
 }

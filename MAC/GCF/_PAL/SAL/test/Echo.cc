@@ -28,6 +28,9 @@
 #include "Echo_Protocol.ph"
 #include <GCF/PAL/GCF_PVSSInfo.h>
 
+using std::cout;
+using std::endl;
+
 Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 {
   // register the protocol for debugging purposes

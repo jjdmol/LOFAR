@@ -22,10 +22,14 @@
 
 
 #include <GCF/GCF_PVDouble.h>
+#include <Common/DataConvert.h>
 
 unsigned int GCFPVDouble::unpackConcrete(const char* valBuf)
 {
   memcpy((void *) &_value, valBuf, sizeof(double));
+  
+  if (mustConvert()) LOFAR::dataConvert(LOFAR::dataFormat(), &_value, 1);
+  
   return sizeof(double);
 }
 
@@ -35,7 +39,7 @@ unsigned int GCFPVDouble::packConcrete(char* valBuf) const
   return sizeof(double);
 }
 
-TGCFResult GCFPVDouble::setValue(const string valueData)
+TGCFResult GCFPVDouble::setValue(const string& valueData)
 {
   TGCFResult result(GCF_VALUESTRING_NOT_VALID);
 

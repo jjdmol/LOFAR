@@ -28,30 +28,28 @@
 
 class GCFPValue;
 
-/**
- * This class provides for the GPISupervisoryServer class the possibility to 
- * (un)subscribe on/from properties, which requested from the Property Agent to 
- * (un)link to a property of the ERTC domain. Furthermore it forwards property 
- * value changes, detected by the SCADA system, to the right 
- * GPISupervisoryServer instance.
- */
+// This specialized property proxy class provides for all in the controller 
+// registered PMLlight servers (objects of classes, which derives from the 
+// GPIPMLlightServer) the possibility to forward property value changes received 
+// from a PIA to the PVSS system in a very fast, short and simple way.
+
 class GPIPropertyProxy : public GCFPropertyProxy
 {
   public:
-    GPIPropertyProxy() {;}
-    virtual ~GPIPropertyProxy() {;}
+    GPIPropertyProxy() {}
+    virtual ~GPIPropertyProxy() {}
   
   private:
-    void propSubscribed(const string& /*propName*/) {;}
-    void propSubscriptionLost(const string& /*propName*/) {;}
-    void propUnsubscribed(const string& /*propName*/) {;}
-    void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {};
-    void propValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {;}
+    void propSubscribed(const string& /*propName*/) {}
+    void propSubscriptionLost(const string& /*propName*/) {}
+    void propUnsubscribed(const string& /*propName*/) {}
+    void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {}
+    void propValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {}
 
-    /**
-     * Don't allow copying of this object.
-     */
+    // Don't allow copying of this object.
+    // <group>
     GPIPropertyProxy (const GPIPropertyProxy&);
     GPIPropertyProxy& operator= (const GPIPropertyProxy&);
+    // </group>
 };    
 #endif

@@ -24,6 +24,9 @@
 #define GCF_PVINTEGER_H
 
 #include <GCF/GCF_PValue.h>
+#include <Common/LofarTypes.h>
+
+using LOFAR::TYPES::int32;
 
 /**
  * By means of this property type a integer (-2,147,483,648 to 2,147,483,647) 
@@ -32,23 +35,23 @@
 class GCFPVInteger : public GCFPValue
 {
   public:
-  	explicit GCFPVInteger (int val = 0) : GCFPValue(LPT_INTEGER), _value(val) {;}
+  	explicit GCFPVInteger (int32 val = 0) : GCFPValue(LPT_INTEGER), _value(val) {;}
     explicit GCFPVInteger(const GCFPVInteger& val) : GCFPValue(LPT_INTEGER), _value(val.getValue()) {;}
 
   	virtual ~GCFPVInteger () {;}
     
     /** Changes the value of this object */
-    virtual inline void setValue (const int newVal) {_value = newVal;}
+    virtual inline void setValue (const int32 newVal) {_value = newVal;}
 
     /** 
      * Changes the value of this object by means of a stringbuffer, 
      * which will be translated.
      * @see GCFPValue::setValue(const string value)
      */
-    virtual TGCFResult setValue (const string value);
+    virtual TGCFResult setValue (const string& value);
 
     /** Returns the value of this object*/
-    virtual inline int getValue () const {return _value;}
+    virtual int32 getValue () const {return _value;}
 
     /** @see GCFPValue::clone() */
     virtual GCFPValue* clone () const;
@@ -56,17 +59,18 @@ class GCFPVInteger : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy (const GCFPValue& value);
  
+  private:
     /// @see GCFPValue::unpack()
-    virtual unsigned int unpackConcrete(const char* valBuf);
+    unsigned int unpackConcrete(const char* valBuf);
 
     /// @see GCFPValue::pack()
-    virtual unsigned int packConcrete(char* valBuf) const;
+    unsigned int packConcrete(char* valBuf) const;
 
     /// @see GCFPValue::getSize()
-    virtual unsigned int getConcreteSize() const { return sizeof(int); }
+    unsigned int getConcreteSize() const { return sizeof(int32); }
     
   private: // Private attributes
     /** The value */
-    int _value;
+    int32 _value;
 };
 #endif

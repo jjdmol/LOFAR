@@ -228,7 +228,8 @@ void PIClient::valueSet(const string& propName, const GCFPValue& value)
   _dhProto.setEventID(DH_PIProtocol::VALUE_SET);
   BlobOStream& blob = _dhProto.createExtraBlob();
   blob << propName;
-  unsigned int valSize(value.getSize());
+  uint16 valSize(value.getSize());
+  blob << valSize;
   if (_upperboundValueBuf < valSize)
   {
     // enlarge the value buffer

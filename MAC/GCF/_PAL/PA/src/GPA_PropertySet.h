@@ -25,7 +25,7 @@
 
 #include <GPA_Defines.h>
 #include <GSA_Service.h>
-#include <PA_Protocol.ph>
+#include <GCF/Protocols/PA_Protocol.ph>
 #include <Common/lofar_list.h>
 
 /**

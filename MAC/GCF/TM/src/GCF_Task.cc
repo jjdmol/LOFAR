@@ -41,7 +41,7 @@ GCFTask::TProtocols GCFTask::_protocols;
 int GCFTask::_argc = 0;
 char** GCFTask::_argv = 0;
 
-GCFTask::GCFTask(State initial, string& name) :
+GCFTask::GCFTask(State initial, const string& name) :
   GCFFsm(initial), _name(name)
 {
   // framework protocols
@@ -63,7 +63,7 @@ void GCFTask::init(int argc, char** argv)
   string configfile(argv[0]);
   pParamSet->adoptFile(configfile + ".conf");
   
-  INIT_LOGGER("./log4cplus.properties");   
+  INIT_LOGGER("./mac.log_prop");   
 
   if (_doExit)
     exit(-1);

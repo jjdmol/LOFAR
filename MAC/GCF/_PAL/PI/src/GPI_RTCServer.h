@@ -25,8 +25,8 @@
 
 #include <GPI_PMLlightServer.h>
 
-/**
- */
+// This special PMLlight server class handles all messages from and to a RTC-PIA 
+// and all messages from the PA determined for a RTC -PIA. For this purpose it reuses almost the whole functionality of its baseclass. It only has to activate unpacking of all just received (and packed) messages from RTC-PIA or PA.
  
 class GPIRTCServer : public GPIPMLlightServer
 {

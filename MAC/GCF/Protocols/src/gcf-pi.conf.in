@@ -1,2 +1,6 @@
-mac.top.GCF-PI.client.remoteservice=GCF-PA:provider
-mac.ns.GCF-PI.provider.type=TCP
+mac.top.GCF-PI-RTC.client.remoteservice=GCF-PA:provider
+mac.top.GCF-PI-CEP.client.remoteservice=GCF-PA:provider
+mac.ns.GCF-PI.rtc-provider.type=TCP
+mac.ns.GCF-PI.cep-provider.type=TCP
+mac.ns.GCF-PI.cep-provider.host=sun
+mac.ns.GCF-PI.cep-provider.port=23002

@@ -1,9 +1,4 @@
 INSTALL=/usr/bin/install -C
-AUTOGEN = autogen
-SUFFIXES = .ph
-%.ph: $(top_srcdir)/PA/src/%.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../MACCommon/autogen $< && \
-	chmod a+w $@
 
 pkgincludedir = $(includedir)/GCF/PAL
 pkginclude_HEADERS = \
@@ -26,11 +21,11 @@ DOCHDRS	=	$(pkginclude_HEADERS) \
 lib_LTLIBRARIES 	= libgcfpal.la
 
 libgcfpal_la_SOURCES=
-libgcfpal_la_LIBADD= libpml.la\
+libgcfpal_la_LIBADD= libpml.la \
 	$(top_builddir)/SAL/src/libsal.la
+	
 libgcfpal_la_DEPENDENCIES= libpml.la $(LOFAR_DEPEND) \
 	$(top_builddir)/SAL/src/libsal.la
-
 
 noinst_LTLIBRARIES 	= libpml.la
 
@@ -45,19 +40,11 @@ libpml_la_SOURCES= $(DOCHDRS) \
 	GPM_Controller.cc \
 	GPM_Converter.cc \
 	GPM_PropertyService.cc \
-	GCF_PropertyProxy.cc \
-	PA_Protocol.cc
+	GCF_PropertyProxy.cc
 
 libpml_la_CPPFLAGS= -I$(top_srcdir)/include \
-	-I$(top_srcdir)/SAL/src \
-	-I$(top_srcdir)/PA/src
+	-I$(top_srcdir)/SAL/src
 	
-BUILT_SOURCES = \
-	PA_Protocol.ph
-	
-EXTRA_DIST = \
-	PA_Protocol.ph
-
 configfilesdir=$(bindir)
 configfiles_DATA= \
 	gcf-pml.conf

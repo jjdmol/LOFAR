@@ -1,6 +1,4 @@
 INSTALL=/usr/bin/install -C
-AUTOGEN = autogen
-SUFFIXES = .ph
 
 pkgincludedir = $(includedir)/GCF/PALlight
 pkginclude_HEADERS = \
@@ -16,12 +14,9 @@ noinst_LTLIBRARIES 	= libceppmllight.la
 libceppmllight_la_SOURCES= $(DOCHDRS) \
   CEPProperty.cc \
   CEPPropertySet.cc \
-  PIClient.cc \
-  $(top_srcdir)/../PAL/PI/src/DH_PIProtocol.cc
+  PIClient.cc
   
-libceppmllight_la_CPPFLAGS= -I$(top_srcdir)/include \
-	-I$(top_srcdir)/../PAL/PI/src
-
+libceppmllight_la_CPPFLAGS= -I$(top_srcdir)/include
 
 lib_LTLIBRARIES 	= libgcfceppallight.la
 
