@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#if !defined(COMMON_LOFAR_LOGGER_H)
-#define COMMON_LOFAR_LOGGER_H
+#ifndef COMMON_LOFARLOGGER_H
+#define COMMON_LOFARLOGGER_H
 
 #include <lofar_config.h>
 #include <Common/StringUtil.h>
@@ -29,10 +29,11 @@
 //# Dependent of the availability of the log4Cplus package one set of macro's
 //# or the other set of macro's is included.
 #ifdef HAVE_LOG4CPLUS
-#include <Common/LofarLog4Cplus.h>
+# include <Common/LofarLog4Cplus.h>
 #else
-#include <Common/LofarLogCout.h>
+# include <Common/LofarLogCout.h>
 #endif //HAVE_LOG4CPLUS
+
 
 namespace LOFAR 
 {
