@@ -10,65 +10,6 @@ use_valgrind_opts := [ "",
   
 include 'meq/meqserver.g'
 
-const meqserver_test := function ()
-{
-  global mqs;
-  # create meqserver object
-  mqs := meqserver(verbose=4);
-  if( is_fail(mqs) )
-  {
-    print mqs;
-    fail;
-  }
-  # set verbose debugging messages
-  mqs.setdebug('MeqNode',5);
-  # initialize meqserver
-  mqs.init([=],[=],[=],wait=T);
-  
-  # create some test nodes
-  print mqs.meq('Create.Node',[class='MeqNode',name='x'],T);
-  print mqs.meq('Create.Node',[class='MeqNode',name='y'],T);
-  print mqs.meq('Create.Node',[class='MeqNode',name='z'],T);
-  
-  # test various ways to specify children
-  #   children specified as an array of names
-  #   "w" is a forward reference, child w will be created later on
-  print mqs.meq('Create.Node',[class='MeqNode',name='test1',children="x y z w"],T);
-  #   children specified as an array of node indices
-  print mqs.meq('Create.Node',[class='MeqNode',name='test2',children=[2,3,4]],T);
-  #   children specified as a record. Field name is child name (argument name)
-  children := [ a='x',          # child 'a' specified by name
-                b=2,            # child 'b' specified by node index
-                c='y',          # child 'c' will be created later on
-                d=[ class='MeqNode',name='aa' ] ]; # created on-the-fly
-  print mqs.meq('Create.Node',[class='MeqNode',name='w',children=children],T);
-        
-  # this resolves remaining children of "test1" (specifically, "w")
-  print mqs.meq('Resolve.Children',[name='test1'],T);
-  
-  # get node state, node specified via name
-  print mqs.meq('Node.Get.State',[name='test1'],T);
-  # get node state, node specified via index
-  print mqs.meq('Node.Get.State',[nodeindex=1],T);
-
-  # test creating a sub-tree
-  defval1 := array(as_double(1),2,2);
-  defval2 := array(as_double(2),1,1);
-  cosrec := [ class='MeqCos',name='cosp1',children=[ 
-      x=[ class='MeqParmPolcStored',name='p1',default=defval1 ] ] ];
-  addrec := [ class='MeqAdd',name='add1_2',children=[
-      x=cosrec,
-      y=[ class='MeqParmPolcStored',name='p2',default=defval2 ] ] ];
-      
-  print mqs.meq('Create.Node',addrec,F);
-  print mqs.meq('Resolve.Children',[name='add1_2'],F);
-  
-  cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
-  request := meqrequest(cells);
-  print mqs.meq('Node.Execute',[name='add1_2',request=request],T);
-  print mqs.meq('Node.Get.State',[name='add1_2'],T);
-}
-
 const meqsink_test := function ()
 {
   global mqs;
@@ -83,7 +24,7 @@ const meqsink_test := function ()
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot MeqNode",2);
   mqs.setdebug("MeqServer MeqVisHandler",3);
   mqs.setdebug("meqserver",1);
-  mqs.setdebug("MeqNode",3);
+  mqs.setdebug("MeqNode",5);
   mqs.setdebug("MSVisAgent",10);
   # remove output column from table
   tbl:=table('test.ms',readonly=F);
@@ -131,7 +72,7 @@ const meqsink_test := function ()
 const meqsel_test := function ()
 {
   global mqs;
-  mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer",gui=F);
+  mqs := meqserver(verbose=4,options="-d0 -nogw -meq:M:O:MeqServer",gui=F);
   if( is_fail(mqs) )
   {
     print mqs;
@@ -183,7 +124,7 @@ const state_test_init := function ()
   global mqs;
   if( !is_record(mqs) )
   {
-    mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer",gui=F);
+    mqs := meqserver(verbose=4,options="-d0 -nogw -meq:M:O:MeqServer",gui=F);
     if( is_fail(mqs) )
     {
       print mqs;
@@ -269,10 +210,6 @@ const state_test := function ()
   print 'Expecting 2,1: ',res4,req4;
 }
 
-
-cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
-request := meqrequest(cells,1);
-
 const freq_test := function ()
 {
   meqsel_test();
@@ -283,3 +220,52 @@ const freq_test := function ()
   mqs.meq('Create.Node',[class='MeqFreq',name='f']);
   print a:=mqs.meq('Node.Execute',[name='f',request=meqrequest(cells)],T);
 }
+
+const solver_test := function ()
+{
+  global mqs;
+  mqs := meqserver(verbose=4,options="-d0 -nogw -meq:M:O:MeqServer",gui=F);
+  if( is_fail(mqs) )
+  {
+    print mqs;
+    fail;
+  }
+  # set verbose debugging messages
+  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",3);
+  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",3);
+  mqs.setdebug("MeqServ MeqVisHandler",3);
+  mqs.setdebug("MeqNode",5);
+  mqs.setdebug("Glish",10);
+  mqs.setdebug("meqserver",1);
+  # initialize meqserver
+  mqs.init([output_col="PREDICT"],wait=T);
+  
+  # create parms and condeq
+  defval1 := array(as_double(1),1,1);
+  defval2 := array(as_double(2),1,1);
+  print mqs.meq('Create.Node',meqparm('parm1',defval1,config_groups='Solvable.Parm'));
+  print mqs.meq('Create.Node',meqparm('parm2',defval1,config_groups='Solvable.Parm'));
+  print mqs.meq('Create.Node',meqnode('MeqCondeq','condeq1',children=[a='parm1',b='parm2']));
+  # create solver
+  global rec;
+  rec := meqnode('MeqSolver','solver1',children="condeq1");
+  rec.num_steps := 3;
+  rec.solvable_parm := [ by_list=meqinitstatelist() ];
+  meqaddstatelist(rec.solvable_parm.by_list,"parm2",[solvable=T]); 
+  meqaddstatelist(rec.solvable_parm.by_list,"*",[solvable=F]); 
+  print mqs.meq('Create.Node',rec);
+  
+  # resolve children
+  print mqs.meq('Resolve.Children',[name='solver1']);
+  
+  global cells,request,res;
+  cells := meqcells(meqdomain(1,4,-2,3),nfreq=4,times=[0.,1.,2.,3.],timesteps=[1.,1.,1.,1.]);
+  request := meqrequest(cells,calc_deriv=T);
+  res := mqs.meq('Node.Execute',[name='solver1',request=request],T);
+  print res;
+}
+
+
+# cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
+# request := meqrequest(cells,1);
+

@@ -108,6 +108,11 @@ const meqserver := function (appid='MeqServer',
     }
   }
   # define shortcuts for common methods
+  const public.createnode := function (initrec,wait_reply=F)
+  {
+    wider public;
+    return public.meq('Create.Node',initrec,wait_reply=wait_reply);
+  }
   const public.getnodestate := function (node)
   {
     wider self,public;
@@ -129,19 +134,21 @@ const meqserver := function (appid='MeqServer',
   return ref public;
 }
 
-const meqnode := function (class,name,children=F,default=[=] )
+const meqnode := function (class,name,children=F,default=[=],config_groups="")
 {
   defrec := [ class=class,name=name ];
   if( !is_boolean(children) )
     defrec.children := children;
   if( !is_record(default) || len(default) )
     defrec.default := default;
+  if( len(config_groups) )
+    defrec.config_groups := hiid(config_groups);
   return defrec;
 }
 
-const meqparm := function (name,default=[=] )
+const meqparm := function (name,default=[=],config_groups="")
 {
-  return meqnode('MeqParm',name,default=default);
+  return meqnode('MeqParm',name,default=default,config_groups=config_groups);
 }
 
 const meqdomain := function (startfreq,endfreq,starttime,endtime)
@@ -159,6 +166,24 @@ const meqcells := function (domain,nfreq,times,timesteps )
            time_steps=as_double(timesteps) ];
   rec::dmi_actual_type := 'MeqCells';
   return rec;
+}
+
+const meqinitstatelist := function ()
+{
+  rec := [=];
+  rec::dmi_datafield_content_type := 'DataRecord';
+  return rec;
+}
+
+const meqaddstatelist := function (ref rec,node,state)
+{
+  if( is_integer(node) )
+    rec[spaste('#',len(rec)+1)] := [ nodeindex=node,state=state ];
+  else if( is_string(node) )
+    rec[spaste('#',len(rec)+1)] := [ name=node,state=state ];
+  else 
+    fail 'node must be specified by index or name';
+  return ref rec;
 }
 
 const meqrequest := function (cells,reqid=F,calc_deriv=F)
@@ -192,21 +217,15 @@ const meqrequest := function (cells,reqid=F,calc_deriv=F)
       else # multiple indices: add to by_list map
       {
         if( !has_field(ns,'by_list') )
-        {
-          ns.by_list := [=];
-          ns.by_list::dmi_datafield_content_type := 'DataRecord';
-        }
-        ns.by_list[spaste('#',len(ns.by_list)+1)] := [ nodeindex=node,state=state ];
+          ns.by_list := meqinitstatelist();
+        meqaddstatelist(ns.by_list,node,state);
       }
     }
     else if( is_string(node) ) # string nodes: add to by_list map
     {
       if( !has_field(ns,'by_list') )
-      {
-        ns.by_list := [=];
-        ns.by_list::dmi_datafield_content_type := 'DataRecord';
-      }
-      ns.by_list[spaste('#',len(ns.by_list)+1)] := [ name=node,state=state ];
+        ns.by_list := meqinitstatelist();
+      meqaddstatelist(ns.by_list,node,state);
     }
     else
       fail 'meqrequest.addstate(): node must be specified by index or name(s)';
