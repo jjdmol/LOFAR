@@ -684,10 +684,8 @@ int main(int argc, const char* argv[])
 
     cout << endl << "Testing a=b OR x=y: " << endl;
     flag &= queryOr2 (pb, ATTR2, ATTR4, ATTR3, ATTR0);
-
     cout << endl << "Testing a=b OR k=l OR x=y: " << endl;
-    flag &= queryOr3 (pb, ATTR2, ATTR4, ATTR3, ATTR0, ATTR5, ATTR1); 
-    // see Known Bugs for the 1st query
+    flag &= queryOr3 (pb, ATTR2, ATTR4, ATTR3, ATTR0, ATTR5, ATTR2);
     flag &= queryOr3 (pb, ATTR1, ATTR5, ATTR4, ATTR1, ATTR5, ATTR6);
 
     cout << endl << "Testing  x-y BETWEEN val1,val2: " << endl;
