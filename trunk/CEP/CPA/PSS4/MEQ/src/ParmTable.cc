@@ -22,7 +22,6 @@
 
 #include <MEQ/ParmTable.h>
 #include <MEQ/Domain.h>
-#include <MEQ/ParmPolcStored.h>
 #include <Common/Debug.h>
 #include <aips/Tables/TableDesc.h>
 #include <aips/Tables/ScaColDesc.h>
