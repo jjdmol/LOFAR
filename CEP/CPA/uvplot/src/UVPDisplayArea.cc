@@ -18,8 +18,6 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 
-// $ID$
-
 #include <uvplot/UVPDisplayArea.h>
 #include <qpainter.h>
 #include <cmath>
@@ -113,6 +111,10 @@ void UVPDisplayArea::initColormap(double slope,
       green = max_color;
     }
     int Green = int(green + 0.5);
+    int Blueim  = 0;
+    if( i < numColors>>1) {
+      Blueim = Green>>1;
+    }
 
     for(unsigned int r = 0; r < numColors; r++) {
       double red  = fabs(min_color + slope*(double(r)-numColors/2));
@@ -123,7 +125,12 @@ void UVPDisplayArea::initColormap(double slope,
         red = max_color;
       }
       int Red = int(red + 0.5);
-      itsComplexColormap[itsRealIndex[r]+itsImagIndex[i]].setRgb(Red, Green, 0);
+
+      int Bluere  = 0;
+      if( r < numColors>>1) {
+        Bluere = Red>>1;
+      }
+      itsComplexColormap[itsRealIndex[r]+itsImagIndex[i]].setRgb(Red, Green, Blueim+Bluere);
     }
   }
 
