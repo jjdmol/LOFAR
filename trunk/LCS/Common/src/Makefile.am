@@ -32,6 +32,7 @@ INSTHDRS = \
         DataFormat.h \
         Debug.h \
         Exception.h \
+	Net/FdSet.h \
         hexdump.h \
         KeyParser.h \
         KeyValue.h \
@@ -109,6 +110,7 @@ libcommon_la_SOURCES 	= \
         DataConvert.cc \
         Debug.cc \
         Exception.cc \
+	Net/FdSet.cc \
         hexdump.cc \
         KeyParse.yy \
         KeyTokenize.ll \
