@@ -132,12 +132,12 @@ void WH_BandSep::process()
 
 void WH_BandSep::dump() const
 {
-  cout << "WH_BandSep " << getName() << " Buffer:" << endl;
+//   cout << "WH_BandSep " << getName() << " Buffer:" << endl;
 
-  if (getOutputs() > 0) {
-    cout << itsOutHolders[0]->getBuffer()[0] << ','
-		 << itsOutHolders[0]->getBuffer()[itsNsubband - 1] << endl;
-  }
+//   if (getOutputs() > 0) {
+//     cout << itsOutHolders[0]->getBuffer()[0] << ','
+// 		 << itsOutHolders[0]->getBuffer()[itsNsubband - 1] << endl;
+//   }
 }
 
 

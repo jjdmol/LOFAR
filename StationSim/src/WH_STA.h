@@ -1,4 +1,4 @@
-//#  WH_AWE.h:
+//#  WH_STA.h:
 //#
 //#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,13 +18,11 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Chris Broekema, november 2002.
-//#
-//#  $Id$
+//#  Chris Broekema, january 2003.
 //#
 
-#ifndef STATIONSIM_WH_AWE_H
-#define STATIONSIM_WH_AWE_H
+#ifndef STATIONSIM_WH_STA_H
+#define STATIONSIM_WH_STA_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -32,7 +30,6 @@
 
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleC.h>
-#include <StationSim/DataGenConfig.h>
 #include <Common/Lorrays.h>
 
 /**
@@ -44,28 +41,28 @@
    vector, and an updated fifo.
 */
 
-class WH_AWE: public WorkHolder
+class WH_STA: public WorkHolder
 {
 public:
   /// Construct the work holder and give it a name.
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  WH_AWE (const string& name,
+  WH_STA (const string& name,
 	  unsigned int nin, 
 	  unsigned int nout,
 	  unsigned int nant,
-	  unsigned int buflength,
-          DataGenerator * dg_config) ;
-
-  virtual ~WH_AWE();
+	  unsigned int maxnrfi,
+	  unsigned int buflength
+	  );
+  virtual ~WH_STA();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, int ninput, int noutput,
 				const ParamBlock&);
 
   /// Make a fresh copy of the WH object.
-  virtual WH_AWE* make (const string& name) const;
+  virtual WH_STA* make (const string& name) const;
 
   /// Generate a snapshot matrix from the FIFO
   virtual void preprocess();
@@ -86,10 +83,10 @@ public:
 
 private:
   /// Forbid copy constructor.
-  WH_AWE (const WH_AWE&);
+  WH_STA (const WH_STA&);
 
   /// Forbid assignment.
-  WH_AWE& operator= (const WH_AWE&);
+  WH_STA& operator= (const WH_STA&);
 
   /// Calculate a steer vector
 
@@ -99,19 +96,11 @@ private:
 
   /// Length of buffers.
   unsigned int itsNrcu;
+  unsigned int itsMaxRFI;
   unsigned int itsBufLength;
-  DataGenerator* itsConfig;
 
-  LoVec_double px;
-  LoVec_double py; // Array configuration vectors
   LoMat_dcomplex itsBuffer;
 
-  string   itsDipoleName;
-  ifstream itsDipoleFile;
-  vector<float> itsDipoleLoc;
 
-  LoVec_dcomplex WH_AWE::steerv (double u, double v, LoVec_double px, LoVec_double py) ;
-  LoVec_dcomplex WH_AWE::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) ;
-  LoVec_dcomplex WH_AWE::getWeights (LoMat_dcomplex B, LoVec_dcomplex d) ;
 };
 #endif
