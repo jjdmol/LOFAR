@@ -1,4 +1,4 @@
-//#  Correlator.cc: Round robin correlator based on the premise that 
+//#  AH_Correlator.cc: Round robin correlator based on the premise that 
 //#  BlueGene is a hard real-time system.
 //#
 //#  Copyright (C) 2002-2004
@@ -21,13 +21,13 @@
 //#
 //#  $Id$
 
-#include <Correlator.h>
+#include <AH_Correlator.h>
 
 extern "C" void traceback (void);
 
 using namespace LOFAR;
 
-Correlator::Correlator(int elements, int samples, int channels, 
+AH_Correlator::AH_Correlator(int elements, int samples, int channels, 
 		       char* ip, int baseport, int targets):
   itsNelements(elements),
   itsNsamples (samples),
@@ -38,10 +38,10 @@ Correlator::Correlator(int elements, int samples, int channels,
 {
 }  
 
-Correlator::~Correlator() {
+AH_Correlator::~AH_Correlator() {
 }
 
-void Correlator::define(const KeyValueMap& /*params*/) {
+void AH_Correlator::define(const KeyValueMap& /*params*/) {
 
 #ifdef HAVE_MPI
   sleep(TH_MPI::getCurrentRank());
@@ -84,83 +84,28 @@ void Correlator::define(const KeyValueMap& /*params*/) {
 
 }
 
-void Correlator::undefine() {
+void AH_Correlator::undefine() {
   delete itsWH;
 }
 
 
-void Correlator::init() {
+void AH_Correlator::init() {
   itsWH->basePreprocess();
 }
 
-void Correlator::run(int nsteps) {
+void AH_Correlator::run(int nsteps) {
   for (int i = 0; i < nsteps; i++) {
     itsWH->baseProcess();
   }
 }
 
-void Correlator::dump () {
+void AH_Correlator::dump () {
   itsWH->dump();
 }
 
-void Correlator::postrun() {
+void AH_Correlator::postrun() {
   itsWH->basePostprocess();
 }
 
-void Correlator::quit() {
-}
-
-int main (int argc, const char** argv) {
-
-  //INIT_LOGGER("CorrelatorLogger.prop");
-#ifdef HAVE_MPI
-  TH_MPI::init(argc, argv);
-
-  if (TH_MPI::getCurrentRank() < targets) {
-#else 
-  if (true) {
-#endif
-
-    for (int samples = min_samples; samples <= max_samples; samples++) {
-      for (int elements = min_elements; elements <= max_elements; elements++) {
-	
-	// init the MPI environment.
-	
-	try {
-	  
-	  Correlator correlator(elements, samples, channels, frontend_ip, port, targets);
-	  correlator.setarg(argc, argv);
-	  
-	  /* Automatic run of the correlator */
-	  
-	  correlator.baseDefine();
-	  correlator.basePrerun();
-	  
-	  correlator.baseRun(runs);
-	  
-	  correlator.basePostrun();
-	  // 	correlator.baseDump();
-	  correlator.baseQuit();
-	  
-	} catch (LOFAR::Exception ex) {
-	  // catch known exceptions
-	  cout << "Caught a known exception" << endl;
-	  cout << ex.what() << endl;
-	  
-	} catch (...) {
-	  
-	  cout << "Unexpected exception" << endl;
-	  
-	}
-	
-      }
-    }
-  }
-
-#ifdef HAVE_MPI
-  // finalize the MPI environment
-  TH_MPI::finalize();
-#endif
-
-  return 0;
+void AH_Correlator::quit() {
 }

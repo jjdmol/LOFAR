@@ -1,4 +1,4 @@
-//#  Correlator.h: Round robin correlator based on the premise that 
+//#  AH_Correlator.h: Round robin correlator based on the premise that 
 //#  BlueGene is a hard real-time system.
 //#
 //#  Copyright (C) 2002-2004
@@ -49,23 +49,15 @@
 #include <WH_Random.h>
 #include <WH_Dump.h>
 
-#include <TestRange.h>
-
 using namespace std;
-
-int nchannels;
-int nelements;
-int nsamples;
-int nruns;
-int baseport;
 
 namespace LOFAR 
 {
-  class Correlator: public LOFAR::TinyApplicationHolder {
+  class AH_Correlator: public LOFAR::TinyApplicationHolder {
 
   public:
-    Correlator(int elements, int samples, int channels, char* frontend_ip, int baseport, int targets);
-    virtual ~Correlator();
+    AH_Correlator(int elements, int samples, int channels, char* frontend_ip, int baseport, int targets);
+    virtual ~AH_Correlator();
     
     // overload methods form the ApplicationHolder base class
     virtual void define (const KeyValueMap& params = KeyValueMap());

@@ -1,4 +1,4 @@
-//#  FrontEnd.h:
+//#  AH_FrontEnd.h:
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef RT_FRONTEND_H
-#define RT_FRONTEND_H
+#ifndef AH_FRONTEND_H
+#define AH_FRONTEND_H
 
 
 #include <lofar_config.h>
@@ -34,23 +34,15 @@
 #include <WH_Correlator.h>
 #include <WH_Dump.h>
 
-#include <TestRange.h>
-
-int   nchannels;
-int   nelements;
-int   nsamples;
-int   nruns;
-int   baseport;
-
 namespace LOFAR
 {
 
-  class FrontEnd: public LOFAR::TinyApplicationHolder {
+  class AH_FrontEnd: public LOFAR::TinyApplicationHolder {
 
   public:
-    FrontEnd(bool frontend, int port, int elements, int samples, 
+    AH_FrontEnd(int port, int elements, int samples, 
 	     int channels, int runs, int targets);
-    virtual ~FrontEnd();
+    virtual ~AH_FrontEnd();
 
     // overload methods form the ApplicationHolder base class
     virtual void define(const KeyValueMap& params = KeyValueMap());
@@ -65,7 +57,6 @@ namespace LOFAR
     vector<WorkHolder*> itsWHs;
 
     int         itsWHcount;
-    bool        isFrontEnd;
     int         itsPort;
     int         itsNelements;
     int         itsNsamples;

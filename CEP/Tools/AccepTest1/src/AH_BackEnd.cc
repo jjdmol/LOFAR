@@ -1,4 +1,4 @@
-//#  FrontEnd.cc:
+//#  AH_BackEnd.cc:
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,16 +28,15 @@
 #include <Transport/TH_Socket.h>
 #include <tinyCEP/SimulatorParseClass.h>
 
-#include <FrontEnd.h>
+#include <AH_BackEnd.h>
 
 #define LOCALHOST_IP "127.0.0.1"
 
 
 using namespace LOFAR;
 
-FrontEnd::FrontEnd (bool frontend, int port, int elements, 
-		    int samples, int channels, int runs, int targets):
-  isFrontEnd  (frontend),
+AH_BackEnd::AH_BackEnd (int port, int elements, 
+		  int samples, int channels, int runs, int targets):
   itsPort     (port),
   itsNelements(elements),
   itsNsamples (samples),
@@ -48,11 +47,11 @@ FrontEnd::FrontEnd (bool frontend, int port, int elements,
 }
 
 
-FrontEnd::~FrontEnd() {
+AH_BackEnd::~AH_BackEnd() {
   this->undefine();
 }
 
-void FrontEnd::define(const KeyValueMap& /*params*/) {
+void AH_BackEnd::define(const KeyValueMap& /*params*/) {
 
   undefine();
 
@@ -63,40 +62,19 @@ void FrontEnd::define(const KeyValueMap& /*params*/) {
 			       itsNtargets
 			       );
 
-  if (isFrontEnd) {
-
-    for (int cn = 0; cn < itsNtargets; cn++) {
-
-      itsWHs.push_back((WorkHolder*) 
-		       new WH_Random("noname",
-				     itsNelements,
-				     itsNsamples,
-				     itsNchannels));
-      
-      itsWHs.back()->getDataManager().getOutHolder(0)->connectTo
-	( *myWHCorrelator.getDataManager().getInHolder(0),
-	  TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+cn, true) );
-      
-    }
-   
-  } else {
-
-    for (int cn = 0; cn < itsNtargets; cn++) {
-  
-      itsWHs.push_back((WorkHolder*)
-		       new WH_Dump("noname",
-				   itsNelements, 
-				   itsNchannels));
+  for (int cn = 0; cn < itsNtargets; cn++) {
+    itsWHs.push_back((WorkHolder*)
+		     new WH_Dump("noname",
+				 itsNelements, 
+				 itsNchannels));
     
-      myWHCorrelator.getDataManager().getOutHolder(0)->connectTo
-	( *itsWHs.back()->getDataManager().getInHolder(0),
-	  TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+itsNtargets+cn, false) );
-    }
-    
-  } 
+    myWHCorrelator.getDataManager().getOutHolder(0)->connectTo
+      ( *itsWHs.back()->getDataManager().getInHolder(0),
+	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+itsNtargets+cn, false) );
+  }
 }
 
-void FrontEnd::undefine() {
+void AH_BackEnd::undefine() {
   vector<WorkHolder*>::iterator it = itsWHs.begin();
   for (; it!=itsWHs.end(); it++) {
     delete *it;
@@ -104,14 +82,14 @@ void FrontEnd::undefine() {
   itsWHs.clear();
 }
 
-void FrontEnd::init() {
+void AH_BackEnd::init() {
   vector<WorkHolder*>::iterator it = itsWHs.begin();
   for (; it != itsWHs.end(); it++) {
     (*it)->basePreprocess();
   }
 }
 
-void FrontEnd::run(int nsteps) {
+void AH_BackEnd::run(int nsteps) {
   vector<WorkHolder*>::iterator it;
 
   for (int s = 0; s < nsteps; s++) {
@@ -122,54 +100,13 @@ void FrontEnd::run(int nsteps) {
 
 }
 
-void FrontEnd::dump() const {
+void AH_BackEnd::dump() const {
 //   vector<WorkHolder*>::iterator it = itsWHs.begin();
 //   for (; it != itsWHs.end(); it++) {
 //     (*it)->dump();
 //   }
 }
 
-void FrontEnd::quit() {
+void AH_BackEnd::quit() {
   this->undefine();
-}
-
-int main (int argc, const char** argv) {
-
-  bool isFrontEnd = true;
-
-  // INIT_LOGGER("CorrelatorLogger.prop");
-
-  if (argc >= 2 && !strcmp(argv[1], "-b")) {
-    
-    isFrontEnd = false;
-    
-  }
-
-  for (int samples = min_samples; samples <= max_samples; samples++) {
-    for (int elements = min_elements; elements <= max_elements; elements++) {
-      
-      try {
-		
-	FrontEnd simulator(isFrontEnd, port, elements, samples,channels, runs, targets);
-	
-	simulator.setarg(argc, argv);
-	simulator.baseDefine();
-	simulator.basePrerun();
-	simulator.baseRun(runs);
- 	simulator.baseDump();
-	simulator.baseQuit();
-
-      } catch (LOFAR::Exception ex) {
-	cout << "Caught a known exception" << endl;
-	cout << ex.what() << endl;
-
-      } catch (...) {
-	cout << "Unexpected exception" << endl;
-      }
-
-    }
-  }
-
-  return 0;
-
 }
