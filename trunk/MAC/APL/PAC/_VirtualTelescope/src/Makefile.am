@@ -38,27 +38,23 @@ LogicalDeviceServer_DEPENDENCIES	= \
 
 BUILT_SOURCES = \
 	LogicalDevice_Protocol.ph \
-	avt.ns \
-	avt.top \
 	log4cplus.properties	
 
 EXTRA_DIST = \
   LogicalDevice_Protocol.ph \
-	avt.ns \
-	avt.top \
 	log4cplus.properties
 
-sysconf_DATA = \
-	avt.ns \
-	avt.top
+#in case of make install these files will be copied to the bindir beside the test apps
+configfilesdir=$(bindir)
+configfiles_DATA= \
+	LogicalDeviceScheduler.conf \
+	log4cplus.properties
 	
-%.properties: %.properties.in
+MAC_CONFIG = $(top_srcdir)/../../Config
+%.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 	
-%.ns: %.ns.in
-	cp $< $@
-
-%.top: %.top.in
+%.conf: %.conf.in
 	cp $< $@
 
 include $(lofar_sharedir)/Makefile.common

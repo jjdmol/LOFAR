@@ -28,31 +28,22 @@ RegisterAccess_DEPENDENCIES	= \
 	$(top_builddir)/APLCommon/src/libaplcommon.la
 
 BUILT_SOURCES = \
-    ara.ns \
-    ara.top \
-    log4cplus.properties	\
-    registeraccess.conf
-
-EXTRA_DIST = \
-    ara.ns \
-    ara.top \
     log4cplus.properties
 
-sysconf_DATA = \
-	ara.ns \
-	ara.top \
-	registeraccess.conf
+EXTRA_DIST = \
+    log4cplus.properties
+
+#in case of make install these files will be copied to the bindir beside the test apps
+configfilesdir=$(bindir)
+configfiles_DATA= \
+	LogicalDeviceScheduler.conf \
+	log4cplus.properties
 	
-%.properties: %.properties.in
+MAC_CONFIG = $(top_srcdir)/../../Config
+%.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 	
 %.conf: %.conf.in
-	cp $< $@
-
-%.ns: %.ns.in
-	cp $< $@
-
-%.top: %.top.in
 	cp $< $@
 
 include $(lofar_sharedir)/Makefile.common
