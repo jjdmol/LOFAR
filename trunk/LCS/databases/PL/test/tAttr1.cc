@@ -106,19 +106,19 @@ int or2Res(bool res[128], int ax1, int ax2, int ax3, int ax4)
   for (i[0]=0; i[0]<2; i[0]++) {
     for (i[1]=0; i[1]<2; i[1]++) {
       for (i[2]=0; i[2]<2; i[2]++) {
-	for (i[3]=0; i[3]<2; i[3]++) {
-	  for (i[4]=0; i[4]<2; i[4]++) {
-	    for (i[5]=0; i[5]<2; i[5]++) {
-	      for (i[6]=0; i[6]<2; i[6]++) {
-		if (i[ax1] == i[ax2]  ||  i[ax3] == i[ax4]) {
-		  res[inx] = true;
-		  nrf++;
-		}
-		inx++;
-	      }
-	    }
-	  }
-	}
+        for (i[3]=0; i[3]<2; i[3]++) {
+          for (i[4]=0; i[4]<2; i[4]++) {
+            for (i[5]=0; i[5]<2; i[5]++) {
+              for (i[6]=0; i[6]<2; i[6]++) {
+                if (i[ax1] == i[ax2]  ||  i[ax3] == i[ax4]) {
+                  res[inx] = true;
+                  nrf++;
+                }
+                inx++;
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -134,19 +134,19 @@ int or3Res(bool res[128], int ax1, int ax2, int ax3, int ax4, int ax5, int ax6)
   for (i[0]=0; i[0]<2; i[0]++) {
     for (i[1]=0; i[1]<2; i[1]++) {
       for (i[2]=0; i[2]<2; i[2]++) {
-	for (i[3]=0; i[3]<2; i[3]++) {
-	  for (i[4]=0; i[4]<2; i[4]++) {
-	    for (i[5]=0; i[5]<2; i[5]++) {
-	      for (i[6]=0; i[6]<2; i[6]++) {
-		if (i[ax1]==i[ax2] || i[ax3]==i[ax4] || i[ax5]==i[ax6]) {
-		  res[inx] = true;
-		  nrf++;
-		}
-		inx++;
-	      }
-	    }
-	  }
-	}
+        for (i[3]=0; i[3]<2; i[3]++) {
+          for (i[4]=0; i[4]<2; i[4]++) {
+            for (i[5]=0; i[5]<2; i[5]++) {
+              for (i[6]=0; i[6]<2; i[6]++) {
+                if (i[ax1]==i[ax2] || i[ax3]==i[ax4] || i[ax5]==i[ax6]) {
+                  res[inx] = true;
+                  nrf++;
+                }
+                inx++;
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -422,8 +422,9 @@ bool queryOr (PersistenceBroker& pb, int value1, int ax1,
   return checkRes(exp, nrexp, set);
 }
 
+// Do a query with a + of two attributes.
 bool queryOr2 (PersistenceBroker& pb, int ax1, int ax2,
-	       int ax3, int ax4)
+               int ax3, int ax4)
 {
   cout << "Query: " << theirAttr[ax1] << '=' << theirAttr[ax2] << " || "
        << theirAttr[ax3] << '=' << theirAttr[ax4] << endl;
@@ -431,9 +432,9 @@ bool queryOr2 (PersistenceBroker& pb, int ax1, int ax2,
   TPersistentObject<F> tpof;
   Collection<TPersistentObject <F> > set =
     pb.retrieve<F>(attrib(tpof, theirAttr[ax1]) ==
-		   attrib(tpof, theirAttr[ax2]) ||
-		   attrib(tpof, theirAttr[ax3]) ==
-		   attrib(tpof, theirAttr[ax4]));
+                   attrib(tpof, theirAttr[ax2]) ||
+                   attrib(tpof, theirAttr[ax3]) ==
+                   attrib(tpof, theirAttr[ax4]));
   // Set the expected result.
   bool exp[128];
   clearRes(exp);
@@ -442,11 +443,13 @@ bool queryOr2 (PersistenceBroker& pb, int ax1, int ax2,
   return checkRes(exp, nrexp, set);
 }
 
+// Do a query with two OR's  and three attributes.
 bool queryOr3 (PersistenceBroker& pb, int ax1, int ax2,
 	       int ax3, int ax4, int ax5, int ax6)
 {
   cout << "Query: " << theirAttr[ax1] << '=' << theirAttr[ax2] << " || "
-       << theirAttr[ax3] << '=' << theirAttr[ax4] << endl;
+       << theirAttr[ax3] << '=' << theirAttr[ax4] << " || "
+       << theirAttr[ax5] << '=' << theirAttr[ax6] << endl;
   // Do the query and check the result.
   TPersistentObject<F> tpof;
   Collection<TPersistentObject <F> > set =
@@ -482,6 +485,7 @@ bool queryAnd (PersistenceBroker& pb, int value1, int ax1,
   return checkRes(exp, nrexp, set);
 }
 
+// Do a query with a + of two attributes.
 bool queryPlus (PersistenceBroker& pb, int value, int ax1, int ax2)
 {
   cout << "Query: " << theirAttr[ax1] << '+'
@@ -498,6 +502,7 @@ bool queryPlus (PersistenceBroker& pb, int value, int ax1, int ax2)
   return checkRes(exp, nrexp, set);
 }
 
+// Do a query with a + of two attributes and compare it to the 3th.
 bool queryPlus2 (PersistenceBroker& pb, int ax1, int ax2, int ax3)
 {
   cout << "Query: " << theirAttr[ax1] << '+'
@@ -515,6 +520,8 @@ bool queryPlus2 (PersistenceBroker& pb, int ax1, int ax2, int ax3)
   return checkRes(exp, nrexp, set);
 }
 
+// Do a query with two attributes, and look if the result is 
+// between two values
 bool queryBetween (PersistenceBroker& pb, int value1, int ax1, 
 		   int value2, int ax2)
 {
@@ -540,6 +547,8 @@ bool queryBetween (PersistenceBroker& pb, int value1, int ax1,
   return checkRes(exp, nrexp, set);
 }
 
+// Do a query with two attributes, and look if the result is 
+// NOT between two values
 bool queryNotBetween (PersistenceBroker& pb, int value1, int ax1, 
 		      int value2, int ax2)
 {
@@ -565,6 +574,8 @@ bool queryNotBetween (PersistenceBroker& pb, int value1, int ax1,
   return checkRes(exp, nrexp, set);
 }
 
+// Do a query with two attributes, and look if the result is 
+// within an array of values
 bool queryIn (PersistenceBroker& pb, int ax1, int ax2, int value1, 
 	      int value2, int value3)
 {
@@ -588,6 +599,8 @@ bool queryIn (PersistenceBroker& pb, int ax1, int ax2, int value1,
   return checkRes(exp, nrexp, set);
 }
 
+// Do a query with two attributes, and look if the result is 
+// NOT within an array of values
 bool queryNotIn (PersistenceBroker& pb, int ax1, int ax2, 
 		 int value1, int value2, int value3)
 {
@@ -640,7 +653,7 @@ int main(int argc, const char* argv[])
     if (argc > 1  &&  std::string(argv[1]) == "1") {
       filldb (pb);
     }
-    cout << endl << "Testing single Query: " << endl;
+    cout << endl << "Testing x=val: " << endl;
     flag &= querySingle (pb, 0, ATTR6);
     flag &= querySingle (pb, 0, ATTR5);
     flag &= querySingle (pb, 1, ATTR4);
@@ -650,50 +663,56 @@ int main(int argc, const char* argv[])
     flag &= querySingle (pb, 0, ATTR0);
     flag &= querySingle (pb, 2, ATTR0);
 
-    cout << endl << "Testing AND: " << endl;
+    cout << endl << "Testing x=val AND y=val: " << endl;
     flag &= queryAnd (pb, 0, ATTR3, 1, ATTR5);
     flag &= queryAnd (pb, 0, ATTR0, 1, ATTR4);
 
-    cout << endl << "Testing +: " << endl;
+    cout << endl << "Testing x+y=val: " << endl;
     flag &= queryPlus (pb, 1, ATTR0, ATTR5);
     flag &= queryPlus (pb, 2, ATTR1, ATTR3);
 
-    cout << endl << "Testing +2: " << endl;
+    cout << endl << "Testing x+y=z: " << endl;
     flag &= queryPlus2 (pb, ATTR2, ATTR1, ATTR3);
 
-    cout << endl << "Testing OR: " << endl;
+    cout << endl << "Testing x=val OR y=val: " << endl;
     flag &= queryOr (pb, 0, ATTR6, 1, ATTR6);
     flag &= queryOr (pb, 0, ATTR5, 1, ATTR5);
     flag &= queryOr (pb, 0, ATTR0, 1, ATTR0);
     flag &= queryOr (pb, 0, ATTR6, 0, ATTR5);
     flag &= queryOr (pb, 0, ATTR5, 0, ATTR1);
     flag &= queryOr (pb, 1, ATTR4, 0, ATTR0);
+
+    cout << endl << "Testing a=b OR x=y: " << endl;
     flag &= queryOr2 (pb, ATTR2, ATTR4, ATTR3, ATTR0);
-    /// flag &= queryOr3 (pb, ATTR2, ATTR4, ATTR3, ATTR0, ATTR5, ATTR2);
 
-    cout << endl << "Testing BETWEEN: " << endl;
-    flag &= queryBetween (pb, -3, ATTR0, 5, ATTR5); // 128
-    flag &= queryBetween (pb, 0, ATTR2, 0, ATTR1);  // 64
-    flag &= queryBetween (pb, 1, ATTR1, 2 , ATTR3); // 32
-    flag &= queryBetween (pb, 4, ATTR3, 8 , ATTR6); // 0
+    cout << endl << "Testing a=b OR k=l OR x=y: " << endl;
+    flag &= queryOr3 (pb, ATTR2, ATTR4, ATTR3, ATTR0, ATTR5, ATTR1); 
+    // see Known Bugs for the 1st query
+    flag &= queryOr3 (pb, ATTR1, ATTR5, ATTR4, ATTR1, ATTR5, ATTR6);
 
-    cout << endl << "Testing NOT BETWEEN: " << endl;
-    flag &= queryNotBetween (pb, 3, ATTR6, 8, ATTR1);   // 128
-    flag &= queryNotBetween (pb, 1, ATTR2, 16 , ATTR5); // 96 
-    flag &= queryNotBetween (pb, -8, ATTR4, 0, ATTR1);  // 32
-    flag &= queryNotBetween (pb, -1, ATTR1, 1, ATTR6);  // 0
+    cout << endl << "Testing  x-y BETWEEN val1,val2: " << endl;
+    flag &= queryBetween (pb, -3, ATTR0, 5, ATTR5);
+    flag &= queryBetween (pb, 0, ATTR2, 0, ATTR1);
+    flag &= queryBetween (pb, 1, ATTR1, 2 , ATTR3);
+    flag &= queryBetween (pb, 4, ATTR3, 8 , ATTR6);
 
-    cout << endl << "Testing IN: " << endl;
-    flag &= queryIn (pb, ATTR5, ATTR0, -1,0,1);      // 128
-    flag &= queryIn (pb, ATTR5, ATTR4, 1  ,-1 ,-5);  // 64
-    flag &= queryIn (pb, ATTR1, ATTR6,-1 ,-7 ,13);   // 32
-    flag &= queryIn (pb, ATTR2, ATTR3,-9 ,-123 ,13); // 0
+    cout << endl << "Testing x-y NOT BETWEEN: val1,val2" << endl;
+    flag &= queryNotBetween (pb, 3, ATTR6, 8, ATTR1);
+    flag &= queryNotBetween (pb, 1, ATTR2, 16 , ATTR5);
+    flag &= queryNotBetween (pb, -8, ATTR4, 0, ATTR1);
+    flag &= queryNotBetween (pb, -1, ATTR1, 1, ATTR6);
 
-    cout << endl << "Testing NOT IN: " << endl;
-    flag &= queryNotIn (pb, ATTR2, ATTR2, 4 ,6 ,11); //128
-    flag &= queryNotIn (pb, ATTR5, ATTR0, -3,0,6);   // 64
-    flag &= queryNotIn (pb, ATTR5, ATTR0, 1,0,6);   // 32
-    flag &= queryNotIn (pb, ATTR5, ATTR1,-1 ,0 ,1);  // 0
+    cout << endl << "Testing x-y IN (val1,val2,val3): " << endl;
+    flag &= queryIn (pb, ATTR5, ATTR0, -1,0,1);
+    flag &= queryIn (pb, ATTR5, ATTR4, 1  ,-1 ,-5);
+    flag &= queryIn (pb, ATTR1, ATTR6,-1 ,-7 ,13);
+    flag &= queryIn (pb, ATTR2, ATTR3,-9 ,-123 ,13);
+
+    cout << endl << "Testing x-y NOT IN (val1,val2,val3): " << endl;
+    flag &= queryNotIn (pb, ATTR2, ATTR2, 4 ,6 ,11);
+    flag &= queryNotIn (pb, ATTR5, ATTR0, -3,0,6);
+    flag &= queryNotIn (pb, ATTR5, ATTR0, 1,0,6);
+    flag &= queryNotIn (pb, ATTR5, ATTR1,-1 ,0 ,1);
 
   } catch (std::exception& e) {
     cerr << e.what() << endl;
