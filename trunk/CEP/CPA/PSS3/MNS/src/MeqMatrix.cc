@@ -311,7 +311,7 @@ MeqMatrixTmp sum(const MeqMatrix& arg)
 }
 
 
-BlobOStream& operator<< (BlobOStream& bs, const MeqMatrix& vec)
+LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& bs, const MeqMatrix& vec)
 {
   bs.putStart ("MeqMatrix", 1);
   bs << vec.isDouble() << (vec.nelements()==1);
@@ -332,7 +332,7 @@ BlobOStream& operator<< (BlobOStream& bs, const MeqMatrix& vec)
   bs.putEnd();
 }
 
-BlobIStream& operator>> (BlobIStream& bs, MeqMatrix& vec)
+LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
 {
   bs.getStart ("MeqMatrix");
   bool isDouble, isScalar;
