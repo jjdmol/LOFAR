@@ -85,7 +85,7 @@ private:
 
 	// Shutdown and destroy the socket \a aSocket.
 	// \post aSocket == 0
-	void		shutdown(Socket* aSocket);
+	void		shutdown(Socket*& aSocket);
 
 	typedef enum {
 		CmdNone = 0,
