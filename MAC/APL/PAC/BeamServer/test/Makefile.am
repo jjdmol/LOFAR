@@ -7,9 +7,9 @@ AM_CXXFLAGS = \
 
 TESTS = \
 	BeamServerTest \
+	CheckWeightsTest \
 	avtstub.sh
 
-#	CheckWeightsTest
 
 noinst_LTLIBRARIES = libunittest.la
 
@@ -17,9 +17,9 @@ libunittest_la_SOURCES = \
 	$(top_srcdir)/../../APLCommon/src/test.cpp \
 	$(top_srcdir)/../../APLCommon/src/suite.cpp
 
-#	CheckWeightsTest
 check_PROGRAMS = \
 	BeamServerTest \
+	CheckWeightsTest \
 	AVTStub \
 	EPAStub \
 	EPATest
@@ -31,12 +31,12 @@ BeamServerTest_LDADD = \
 	$(top_builddir)/src/libabs.la \
 	$(top_builddir)/test/libunittest.la
 
-# CheckWeightsTest_SOURCES = \
-# 	CheckWeightsTest.cc
+CheckWeightsTest_SOURCES = \
+	CheckWeightsTest.cc
 
-# CheckWeightsTest_LDADD = \
-# 	$(top_builddir)/src/libabs.la \
-# 	$(top_builddir)/test/libunittest.la
+CheckWeightsTest_LDADD = \
+	$(top_builddir)/src/libabs.la \
+	$(top_builddir)/test/libunittest.la
 
 AVTStub_SOURCES = \
 	ABSAVTStub.h \
