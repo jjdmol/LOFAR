@@ -1,3 +1,5 @@
+SUBDIRS	= . Glish
+
 DOCHDRS		 	= 			\
 MnsMatrix.h					\
 MnsMatrixComplexArr.h				\
