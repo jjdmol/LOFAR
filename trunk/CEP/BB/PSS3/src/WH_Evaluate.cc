@@ -420,7 +420,7 @@ int nrOfSources = 6;
   AssertStr(woPtr != 0, "OutHolder cannot be cast to a DH_PL");
   woPtr->insertDB();
 
-  wo->dump();
+  //  wo->dump();
 
 }
 
