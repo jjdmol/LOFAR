@@ -78,6 +78,16 @@ class GPISupervisoryServer : public GCFTask
     GPIController&    _controller;
     GPIPropertyProxy  _propProxy;
     string            _name;
+    typedef enum
+    {
+      SST_REGISTERING,
+      SST_REGISERED,
+      SST_UNREGISTERING,
+      SST_LINKING,
+      SST_UNLINKING
+    } TScopeState;
+    typedef map<string /*scope*/, TScopeState> TScopeRegister;
+    TScopeRegister    _scopeRegister;
     
   private: // admin. data members
     bool          _isBusy;

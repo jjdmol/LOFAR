@@ -1,4 +1,4 @@
-//#  GPI_Defines.h: preprocessor definitions of various constants
+//#  GSS_Defines.h: preprocessor definitions of various constants
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,29 +20,14 @@
 //#
 //#  $Id$
 
-#ifndef GPI_DEFINES_H
-#define GPI_DEFINES_H
+#ifndef GSS_DEFINES_H
+#define GSS_DEFINES_H
 
 #include <GCF/GCF_Defines.h>
-#include <GCF/GCF_TMProtocols.h>
-#define CORE_COMPS_PI_LOGGER  (GCF_LOGGER_ROOT + string(".CoreComps.PI"))
 
-#define PI_STDOUT_LOGGER      (CORE_COMPS_PI_LOGGER + string(".Logger"))
+#define CORE_COMPS_SS_LOGGER  (GCF_LOGGER_ROOT + string(".Service.SS"))
 
-enum TPIResult 
-{
-  PI_NO_ERROR, 
-  PI_UNKNOWN_ERROR,
-  PI_PA_NOTCONNECTED,
-  PI_IS_BUSY,
-  PI_SCADA_ERROR,
-  PI_SS_BUSY
-  PI_SCOPE_ALREADY_REGISTERED,
-  PI_PROP_SET_GONE,
-  PI_MISSING_PROPS,
-  PI_PROP_NOT_VALID,
-  PI_EMPTY_SCOPE,
-  PI_MACTYPE_UNKNOWN,  
-};
+#define SS_STDOUT_LOGGER      (CORE_COMPS_SS_LOGGER + string(".Logger"))
+
 
 #endif
