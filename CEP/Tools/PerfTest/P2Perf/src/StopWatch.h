@@ -10,7 +10,6 @@
 #include <unistd.h>
 
 /// StopWatch class
-
 class StopWatch
 {
  public:
