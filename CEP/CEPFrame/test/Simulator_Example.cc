@@ -38,6 +38,7 @@
 #include "Common/Debug.h"
 #include <Common/lofar_iostream.h>
 
+using namespace LOFAR;
 
 Simulator_Example::~Simulator_Example()
 {}

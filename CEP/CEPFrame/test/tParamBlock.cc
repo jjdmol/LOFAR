@@ -28,6 +28,7 @@
 #include "CEPFrame/ParamBlock.h"
 #include <Common/lofar_iostream.h>
 
+using namespace LOFAR;
 
 void doIt()
 {
