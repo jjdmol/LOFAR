@@ -14,7 +14,7 @@
 
 
 nrKS=1,           // Number of Knowledge Sources
-BBDBname="test",  // BlackBoard database name (must be a postgres database on dop50)
+///BBDBname="test",  // BlackBoard database name (must be a postgres database on dop50)
 
 CTRLparams=[
   strategy="Simple",
@@ -26,6 +26,7 @@ CTRLparams=[
     startChan=0,           // Start (frequency) channel
     endChan=49,            // End (frequency) channel
     sources=[0,1,2],       // Solvable source numbers (0 based)
+/// nrIterations=1,
     useSVD=F,              // Use Singular Value Decomposition in solve?
     saveAllIter=F          // Save parameters in parameter database every iteration?
   ]
@@ -35,7 +36,7 @@ KSparams=[
   MSName="demo3-",         // Name of the Measurement Set
   DBHost="dop50",          // Parameter database host name
   DBType="aips",           // Parameter database type
-  DBName="test",           // Parameter database name
+///  DBName="test",           // Parameter database name
   DBPwd="",                // Parameter database password
   meqTableName="demo3-",   // Meq model table name *       
   skyTableName="demo3_gsm-", // Sky model table name *
