@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2002/05/23 15:38:57  schaaf
+//
+//  %[BugId: 11]%
+//  Add correlator steps
+//
 //  Revision 1.2  2002/05/14 11:39:41  gvd
 //  Changed for new build environment
 //
@@ -75,10 +80,13 @@ class Transpose: public Simulator
     Step            **Csteps;
     
     /// Number of source steps
-      int itsSourceSteps;
-      
-      /// Number of destination steps
-	int itsDestSteps;
+   int itsSourceSteps;
+   
+   /// Number of destination steps
+   int itsDestSteps;
+   
+   /// To Profile  or not....
+   bool itsDoLogProfile;
 };
 
 #endif
