@@ -66,6 +66,13 @@ namespace EPA_Protocol
       uint8  error;
       uint8  ffi;
   };
+  
+  typedef struct SYNCStatus
+  {
+      uint32 clock_count;
+      uint32 count;
+      uint32 errors;
+  };
 
   typedef struct RCUStatus
   {
@@ -80,6 +87,7 @@ namespace EPA_Protocol
       ETHStatus  eth;
       MEPStatus  read;
       MEPStatus  write;
+      SYNCStatus sync;
   };
 
   /*@{*/
@@ -108,6 +116,9 @@ namespace EPA_Protocol
 	     << "read_error =" << int(stat.read.error)     << ", " << std::endl
 	     << "write_seqnr=" << stat.write.seqnr         << ", " << std::endl
 	     << "write_error=" << int(stat.write.error)    << ", " << std::endl
+	     << "clock_count=" << stat.sync.clock_count    << ", " << std::endl
+	     << "sync_count="  << stat.sync.count          << ", " << std::endl
+	     << "sync_errors"  << stat.sync.errors         << ", " << std::endl
 	     << "]" << std::endl;
   }
   
@@ -159,18 +170,6 @@ event = {
   param = {
     name = "rcu";
     type = "RCUStatus[EPA_Protocol::N_BLP]";
-  };
-  param = 
-  {
-    // wraps every ~17 seconds (at 250Mhz)
-    name = "sample_seqnr";
-    type = "uint32";
-  };
-  param = 
-  {
-    // wraps every ~180 years
-    name = "sync_seqnr";
-    type = "uint32";
   };
 };
 

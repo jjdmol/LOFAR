@@ -810,7 +810,7 @@ void RSPDriver::rsp_substatus(GCFEvent& event, GCFPortInterface& port)
   // if null timestamp get value from the cache and acknowledge immediately
   if (Timestamp(0,0) == command->getTimestamp())
   {
-    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
+    //command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
     command->ack(Cache::getInstance().getFront());
 
     // don't delete the command, it will be entered into the period queue
@@ -819,9 +819,11 @@ void RSPDriver::rsp_substatus(GCFEvent& event, GCFPortInterface& port)
   (void)m_scheduler.enter(command, Scheduler::PERIODIC);
 }
 
-void RSPDriver::rsp_unsubstatus(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+void RSPDriver::rsp_unsubstatus(GCFEvent& event, GCFPortInterface& port)
 {
-  /* not implemented yet, ignore event */
+  RSPUnsubstatusEvent unsub(event);
+  
+  (void)m_scheduler.remove_subscription(port, unsub.handle);
 }
 
 void RSPDriver::rsp_getstatus(GCFEvent& event, GCFPortInterface& port)

@@ -82,20 +82,23 @@ void BWWrite::sendrequest()
 
   // copy weights from the cache to the message
   Array<int16, 1> weights((int16*)&bfcoefs.coef,
-			  shape(RSP_Protocol::MAX_N_BEAMLETS),
+			  shape(RSP_Protocol::MAX_N_BEAMLETS *
+			    RSP_Protocol::N_POL * RSP_Protocol::N_POL),
 			  neverDeleteData);
   
   //
   // TODO
   // Make sure we're actually sending the correct weights.
   //
+  weights = 0;
   if (0 == (m_regid % 2))
   {
-    weights = real(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all()));
+    weights(Range(0, RSP_Protocol::MAX_N_BEAMLETS - 1)) = real(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all()));
   }
   else
   {
-    weights = imag(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all()));
+    
+    weights(Range(0, RSP_Protocol::MAX_N_BEAMLETS - 1)) = imag(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all()));
   }
 
   getBoardPort().send(bfcoefs);

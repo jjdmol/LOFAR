@@ -130,9 +130,7 @@ namespace EPA_Protocol
       /**
        * Read/write sizes in octets (= bytes)
        */
-      
-      // RSSTATUS_SIZE was 44, now includes sample sequence number (32 bits) and pps sequence number (32bits)
-      static const uint16 RSPSTATUS_SIZE     = 52;
+      static const uint16 RSPSTATUS_SIZE     = 56;
       static const uint16 FWVERSION_SIZE     = 6; // used to be 2
 
       static const uint16 SELFTEST_SIZE      = 1;
@@ -147,7 +145,8 @@ namespace EPA_Protocol
       static const uint16 NRSUBBANDS_SIZE    = 2;
       static const uint16 SUBBANDSELECT_SIZE = 512;
 
-      static const uint16 BFCOEFS_SIZE       = 512; // doc says 1024, but that is wrong I think
+      // for 128 beamlets (2 bytes per weight * 4 for xre, xim, yre, yim)
+      static const uint16 BFCOEFS_SIZE       = 1024;
 
       static const uint16 STSTATS_SIZE       = 1024;
 

@@ -28,9 +28,10 @@ prelude = << PRELUDE_END
 
 namespace RSP_Protocol
 {
+  static const int N_POL          = 2;   // number of polarizations
   static const int MAX_N_RCUS     = 256;
-  static const int MAX_N_BEAMLETS = 256;
-  static const int MAX_N_SUBBANDS = 512;
+  static const int MAX_N_BEAMLETS = 128; // final version should be 256;
+  static const int MAX_N_SUBBANDS = 256; // final version should be 512;
   static const int SUCCESS = 1;
   static const int FAILURE = 0;
 };
