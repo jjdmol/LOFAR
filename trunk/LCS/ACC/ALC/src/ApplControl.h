@@ -35,11 +35,6 @@
 namespace LOFAR {
   namespace ACC {
 
-typedef enum { AcCmdMaskOk 	 	  = 0x0001,
-			   AcCmdMaskScheduled = 0x0002,
-			   AcCmdMaskOverruled = 0x0004,
-			   AcCmdMaskCommError = 0x8000 } CmdResultMask;
-
 //# Description of class.
 // The ApplControl class implements the interface the Application Controller
 // will support.
@@ -53,14 +48,14 @@ public:
 	// machine) may decide that the AC should run on another node.
 	// The returned AC object knows who its AC is and is already connected to 
 	// it. Call serverInfo if you are interested in this information.
-	explicit ApplControl(bool	syncComm);
+	explicit ApplControl(bool	syncComm) { };
 
 	// Destructor;
-	virtual ~ApplControl();
+	virtual ~ApplControl() { };
 
 	// Copying is not allowed since sockets are involved.
-	ApplControl(const ApplControl& that);
-	ApplControl& 	operator=(const ApplControl& that);
+	ApplControl(const ApplControl& that) { };
+	ApplControl& 	operator=(const ApplControl& that) { return (*this); };
 
 	// Commands to control the application
 	// The scheduleTime parameter used in all commands may be set to 0 to 
@@ -102,53 +97,11 @@ public:
 	// Define a generic way to exchange info between client and server.
 	virtual string	askInfo   (const string& 	keylist) const = 0;
 
-	// Returns the Service Access Point of the communication (being a file-
-	// descriptor). The value may be used in a 'select' function when the
-	// software does not use libTransport.
-	int16		getServiceAccessPoint() const;
-
-	// CommandInfo returns extra information about the conditions that were met
-	// during the execution/scheduling of the last command.
-	// The returned value is a bitMask with the following bits:
-	// AcCmdMaskOk		 : reflects the bool value returned by the commandcall
-	// AcCmdMskScheduled : command was scheduled iso executed immediately
-	// AcCmdMskOverruled : the command overruled another scheduled command
-	// AcCmdMskCommError : a communication error with the AC server occured
-	uint16	resultInfo	(void) const;
-
 protected:
-	// Constructs a command and sends it to the other side.
-	void	sendCmd(const ACCmd			theCmd,
-				 	const time_t		theTime,
-				 	const time_t		theWaitTime,
-					const string&		theOptions) const;
-
-	// Is called after a message is sent to the server. Returns true in async
-	// comm, does a read on the socket in sync comm. and returns the analysed
-	// result.
-	bool	waitForResponse() const;
-
-	// Executes the given command: fills a dataholder, send it to the sender,
-	// and do a 'waitForResponse'.
-	bool	doRemoteCmd(const ACCmd			theCmd,
-					    const time_t		theTime,
-					    const time_t		theWaitTime,
-					    const string&		theOptions) const;
-
-	DH_ApplControl*		getDataHolder() const;
-
-	//# datamembers
-	DH_ApplControl*		itsDataHolder;
-	bool				itsSyncComm;
-
 	// Not default constructable
 	ApplControl() {}
 };
 
-inline DH_ApplControl*	ApplControl::getDataHolder() const
-{
-	return itsDataHolder;
-}
 
 } // namespace ACC
 } // namespace LOFAR

@@ -33,9 +33,9 @@
 namespace LOFAR {
   namespace ACC {
 
-ApplControlServer::ApplControlServer(const uint16				portnr,
-									 const ApplCtrlFunctions&	ACF) :
-	itsACF(ACF)
+ApplControlServer::ApplControlServer(const uint16			portnr,
+									 const ApplControl*		ACImpl) :
+	itsACImpl(ACImpl)
 {
 	DH_ApplControl	DH_AC_Client;
 	DH_ApplControl*	DH_AC_Server = new DH_ApplControl;
@@ -48,30 +48,30 @@ ApplControlServer::ApplControlServer(const uint16				portnr,
 										true);	// blocking
 	DH_AC_Server->init();
 
-	itsDataHolder = DH_AC_Server;
+	itsCommChan = new ApplControlComm;
+	itsCommChan->setDataHolder(DH_AC_Server);
 }
 
 // Destructor
 ApplControlServer::~ApplControlServer() 
 {
-//	if (itsDataHolder) {
-//		delete itsDataHolder;
-//	}
+	if (itsCommChan) {
+		delete itsCommChan;
+	}
 }
 
 // Copying is allowed.
 ApplControlServer::ApplControlServer(const ApplControlServer& that) :
-	ApplControl(that),
-	itsACF(that.itsACF)
+	itsACImpl(that.itsACImpl),
+	itsCommChan(that.itsCommChan)
 { }
 
 ApplControlServer& 	ApplControlServer::operator=(const ApplControlServer& that)
 {
 	if (this != &that) {
 		// TODO check this code!
-		itsSyncComm  = that.itsSyncComm;
-		itsACF  	 = that.itsACF;
-
+		itsACImpl  	 = that.itsACImpl;
+		itsCommChan	 = new ApplControlComm(that.itsACImpl);
 	}
 
 	return (*this);
@@ -81,23 +81,29 @@ ApplControlServer& 	ApplControlServer::operator=(const ApplControlServer& that)
 // Application controller the class is connected to.
 string		ApplControlServer::askInfo(const string&	keylist) const
 {
-	if (!doRemoteCmd (CmdInfo, 0, keylist))
+	if (!itsCommChan->doRemoteCmd (CmdInfo, 0, 0, keylist))
 		return (keylist);
 
-	return (getDataHolder()->getOptions());
+	return (itsCommChan->getDataHolder()->getOptions());
 }
 
 bool ApplControlServer::processACmsgFromClient()
 {
-	if (!getDataHolder()->read()) {
+	LOG_TRACE_FLOW("ApplControlServer:processACmsgFromClient");
+
+	DH_ApplControl*		DHPtr = itsCommChan->getDataHolder();
+
+	if (!DHPtr->read()) {
 		return (false);
 	}
 
-	ACCmd	cmdType 	 = getDataHolder()->getCommand();
-	time_t	scheduleTime = getDataHolder()->getScheduleTime();
-	string	options		 = getDataHolder()->getOptions();
-	LOG_DEBUG_STR("cmd=" << cmdType << ", " << "time=" << scheduleTime 
-				  << ", " << "options=[" << options << "]" << endl);
+	ACCmd	cmdType 	 = DHPtr->getCommand();
+	time_t	scheduleTime = DHPtr->getScheduleTime();
+	time_t	waitTime     = DHPtr->getWaitTime();
+	string	options		 = DHPtr->getOptions();
+	LOG_DEBUG_STR("cmd=" << cmdType << ", time=" << scheduleTime 
+						 << ", waittime=" << waitTime 
+				  		 << ", options=[" << options << "]" << endl);
 
 	bool	sendAnswer = true;
 	bool	result 	   = false;
@@ -108,22 +114,17 @@ bool ApplControlServer::processACmsgFromClient()
 						result = true; 								break;
 	case CmdAnswer:		sendAnswer = false;
 						//TODO ???							
-															break;
-	case CmdBoot:		result = boot	 (scheduleTime, options);	break;
-	case CmdDefine:		result = define	 (scheduleTime, options);	break;
-	case CmdInit:		result = init	 (scheduleTime);			break;
-	case CmdRun:		result = run	 (scheduleTime);			break;
-	case CmdPause:		result = pause	 (scheduleTime, options);	break;
-	case CmdQuit:		quit	 ();								
+																	break;
+	case CmdBoot:		result = itsACImpl->boot	 (scheduleTime, options);	break;
+	case CmdDefine:		result = itsACImpl->define	 (scheduleTime);			break;
+	case CmdInit:		result = itsACImpl->init	 (scheduleTime);			break;
+	case CmdRun:		result = itsACImpl->run	 (scheduleTime);			break;
+	case CmdPause:		result = itsACImpl->pause	 (scheduleTime, waitTime, options);	break;
+	case CmdQuit:		itsACImpl->quit	 (scheduleTime);								
 						result = true;								break;
-	case CmdSnapshot:	result = snapshot(scheduleTime, options);	break;
-	case CmdRecover:	result = recover (scheduleTime, options);	break;
-	case CmdReinit:		result = reinit	 (scheduleTime, options);	break;
-	case CmdPing:		ping	 ();						
-						sendAnswer = false;							break;
-	case CmdAsync:		itsSyncComm = false;
-						LOG_DEBUG("Async mode activated");
-						result = true; 								break;
+	case CmdSnapshot:	result = itsACImpl->snapshot(scheduleTime, options);	break;
+	case CmdRecover:	result = itsACImpl->recover (scheduleTime, options);	break;
+	case CmdReinit:		result = itsACImpl->reinit	 (scheduleTime, options);	break;
 	case CmdResult:		handleAckMessage();
 						sendAnswer = false;							break;
 	default:
@@ -133,78 +134,23 @@ bool ApplControlServer::processACmsgFromClient()
 	}
 
 	if (sendAnswer) {
-		getDataHolder()->setResult(result ? AcCmdMaskOk : 0);
-		sendCmd (CmdAnswer, 0, newOptions);
+		DHPtr->setResult(result ? AcCmdMaskOk : 0);
+		itsCommChan->sendCmd (CmdAnswer, 0, 0, newOptions);
 	}
 
 	return (true);
 }
 
 
-void	ApplControlServer::ping () const
-{
-	itsACF.ping();
-}
-
-bool	ApplControlServer::boot	 (const time_t		scheduleTime,
-							  	  const string&		configID) const
-{
-	return(itsACF.boot(scheduleTime, configID));
-}
-
-bool	ApplControlServer::define(const time_t		scheduleTime,
-							  	  const string&		configID) const
-{
-	return(itsACF.define(scheduleTime, configID));
-}
-
-bool	ApplControlServer::init  	 (const time_t	scheduleTime) const
-{
-	return(itsACF.init(scheduleTime));
-}
-
-bool	ApplControlServer::run  	 (const time_t	scheduleTime) const
-{
-	return(itsACF.run(scheduleTime));
-}
-
-bool	ApplControlServer::pause  	 (const time_t	scheduleTime,
-									  const string&	condition) const
-{
-	return(itsACF.pause(scheduleTime, condition));
-}
-
-bool	ApplControlServer::quit  	 () const
-{
-	return(itsACF.quit());
-}
-
-bool	ApplControlServer::snapshot (const time_t	scheduleTime,
-							  const string&	destination) const
-{
-	return(itsACF.snapshot(scheduleTime, destination));
-}
-
-bool	ApplControlServer::recover  (const time_t	scheduleTime,
-							  const string&	source) const
-{
-	return(itsACF.recover(scheduleTime, source));
-}
-
-bool	ApplControlServer::reinit(const time_t	scheduleTime,
-							  const string&	configFile) const
-{
-	return(itsACF.reinit(scheduleTime, configFile));
-}
-
 string	ApplControlServer::supplyInfo(const string& 	keyList) const
 {
-	return(itsACF.supplyInfo(keyList));
+	return("Not yet implemented");
+//	return(supplyInfo(keyList));
 }
 
 void	ApplControlServer::handleAckMessage(void)
 {
-	itsACF.handleAckMessage();
+//	handleAckMessage();
 }
 
 

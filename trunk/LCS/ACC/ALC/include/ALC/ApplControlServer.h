@@ -31,7 +31,7 @@
 
 //# Includes
 #include <ACC/ApplControl.h>
-#include <ACC/ApplCtrlFunctions.h>
+#include <ACC/ApplControlComm.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -44,7 +44,7 @@ namespace LOFAR {
 // The ApplControl class implements the service the Application Controller
 // will support.
 //
-class ApplControlServer : public ApplControl 
+class ApplControlServer
 {
 public:
 	// Note: default constructor is private
@@ -54,11 +54,11 @@ public:
 	// machine) may decide that the AC should run on another node.
 	// The returned AC object knows who its AC is and is already connected to 
 	// it. Call serverInfo if you are interested in this information.
-	ApplControlServer(const uint16				portNr,
-					  const	ApplCtrlFunctions&	ACF);
+	ApplControlServer(uint16				portNr,
+					  const ApplControl*	ACimpl);
 
 	// Destructor;
-	virtual ~ApplControlServer();
+	~ApplControlServer();
 
 	// Copying is allowed.
 	ApplControlServer(const ApplControlServer& that);
@@ -69,7 +69,7 @@ public:
 	string	supplyInfo(const string& 	keylist) const;
 
 	// Called in Async comm. to handle the (delayed) result of the command.
-	virtual void	handleAckMessage();
+	void	handleAckMessage();
 
 	// Function to read a message an call the corresponding function.
 	bool	processACmsgFromClient();
@@ -78,37 +78,8 @@ private:
 	// NOT default constructable;
 	ApplControlServer() {};
 
-	// Commands to control the application
-	// The scheduleTime parameter used in all commands may be set to 0 to 
-	// indicate immediate execution. Note that the AC does NOT have a command
-	// stack so it is not possible to send a series of command in advance. 
-	// The AC only handles the last sent command.
-	// Return values for immediate commands: 
-	//		True  - Command executed succesfully
-	//		False - Command could not be executed
-	// Return values for delayed commands:
-	//		True  - Command is scheduled succesfully
-	//		False - Command could not be scheduled, there is no scheduled 
-	//				command anymore.
-	// Call commandInfo to obtain extra info about the command condition.
-	bool	boot 	 (const time_t		scheduleTime,
-					  const string&		configID) 	  const;
-	bool	define 	 (const time_t		scheduleTime,
-					  const string&		configID) 	  const;
-	bool	init  	 (const time_t		scheduleTime) const;
-	bool	run  	 (const time_t		scheduleTime) const;
-	bool	pause  	 (const time_t		scheduleTime,
-					  const string&		condition)	  const;
-	bool	quit  	 () 							  const;
-	bool	snapshot (const time_t		scheduleTime,
-					  const string&		destination)  const;
-	bool	recover  (const time_t		scheduleTime,
-					  const string&		source)		  const;
-	bool	reinit	 (const time_t		scheduleTime,
-					  const string&		configFile)	  const;
-	void	ping  	 () 							  const;
-
-	ApplCtrlFunctions		itsACF;
+	const ApplControl*		itsACImpl;
+	ApplControlComm*		itsCommChan;
 };
 
 
