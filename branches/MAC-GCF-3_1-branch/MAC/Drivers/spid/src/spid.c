@@ -55,7 +55,6 @@
 #include <asm/io.h>       /* send/receive data of port or memory */
 #include <asm/uaccess.h>  /* copy between userspace and kernelspace V.V. */
 
-
 #ifdef MODULE
 MODULE_AUTHOR("Tilman Muller");
 MODULE_DESCRIPTION("Simple Parallel (Port) Interrupt Driver for MAC");
@@ -70,7 +69,7 @@ int spid_base = 0x3bc;   /* Port address Parallel Port */
 int spid_base = 0x378;   /* Port address Parallel Port */
 #endif
 
-int spid_interrupt = 0;
+unsigned int spid_interrupt = 0;
 int spid_irq = -1;
 
 int spid_open (struct inode *inode, struct file *filp);
@@ -227,14 +226,9 @@ void spid_isr(int irq, void* dev_id, struct pt_regs* regs)
 {
   int value;
   value = inb(spid_base);
-  if (value & 0x80)
-  {  
-    outb(value & 0x7F, spid_base);
-    printk(KERN_INFO "spid: Interrupt\n");
-    if (MOD_IN_USE) spid_interrupt = 1;
-  }
-  else
-    printk(KERN_INFO "spid: No spid Interrupt\n");  
+  outb(value & 0x7F, spid_base);
+  printk(KERN_INFO "spid: Interrupt\n");
+  if (MOD_IN_USE) spid_interrupt++;
 }
 
 // Closing a Device because device is treated like a normal file.
@@ -265,17 +259,16 @@ int spid_release (struct inode* inode, struct file* filp)
 
 ssize_t spid_read (struct file* filp, char* buf, size_t count, loff_t* f_pos)
 {
-  int retval = 1;
   if (spid_interrupt == 0) return 0; // no interrupt 
-  else spid_interrupt = 0; // reset interrupt indication
+    
+  if (count > 0)
+  {
+    char interruptCount[] = { '0' + spid_interrupt, 0};
+    copy_to_user(buf, interruptCount, 1);
+  }
+  spid_interrupt = 0; // reset interrupt indication
   
-  // retval == count == number of bytes read 
-  if (retval > 0)
-    // copy from kernelspace to userspace 
-    copy_to_user(buf, "p", 1);
-  
-  // return number of bytes read
-  return retval;
+  return 1;
 }
 
 // spid_write( filepointer to struct with fileparameters b.v. f_count & f_pos,
@@ -289,56 +282,39 @@ ssize_t spid_write (struct file* filp, const char* buf, size_t count, loff_t* f_
 
   printk(KERN_INFO "spid: write %d bytes\n", count);
 
-  // get spid_base + Minor_Number(low nibble) = 0x378 + 0 for spid0.
-  unsigned port = spid_base + (MINOR(filp->f_dentry->d_inode->i_rdev)&0x0f);
-
+  if (buf[0] == 's' || buf[0] == 'S')
+  {
+    printk(KERN_INFO "spid: starts with 'S|s'; it simulates an interrupt\n");
+    spid_interrupt = 1;
+    return count;
+  }
+  
   // get Minor_Type(high nibble) = 0 for spid0; 1 for spid0p and
   // 2 for spid0s.
   int mode = (MINOR(filp->f_dentry->d_inode->i_rdev)&0x70) >> 4;
   
-  if (count == 1)  
-  { 
-    if (buf[0] == 's')
-    {
-      spid_interrupt = 1;
-      return 1;
-    }
-  }
-  // allocate a buffer in kernelspace.
-  unsigned char *kbuf=kmalloc(count, GFP_KERNEL), *ptr;
-
-  // if kbuf=0 it was not possible to allocate memory.
-  // then return a errorcode -ENOMEM for generating a errormessage
-  if (!kbuf) return -ENOMEM;
+  unsigned char toggelVal = 0xFF;
   
-  // copy from userspace to kernelspace
-  copy_from_user(kbuf, buf, count);
-
-  // provide ptr with the value of kbuf
-  ptr=kbuf;
-
   retval = count;
   // switch mode depend on what type I/O is selected
   // afterthat call the right routine for that I/O type
   switch(mode) 
   {
     case SPID_PAUSE:
-      while (count--)
-        outb_p(*(ptr++), port);
-      printk(KERN_INFO "spid: write returns: %d (PAUSE)\n", retval);
+      outb_p(toggelVal, spid_base);
+      printk(KERN_INFO "spid: toggle pin 9 (PAUSE)\n");
       break;
 
     case SPID_STRING:
 #ifndef __alpha__  /* Alpha doesn't export insb: fall through  */
-      outsb(port, ptr, count);
-      printk(KERN_INFO "spid: write returns: %d (STRING)\n", retval);
+      outsb(spid_base, &toggelVal, 1);
+      printk(KERN_INFO "spid: toggle pin 9 (STRING)\n");
       break;
 #endif
 
     case SPID_DEFAULT:
-      while (count--)
-        outb(*(ptr++), port);
-      printk(KERN_INFO "spid: write returns: %d (DEFAULT)\n", retval);        
+      outb(toggelVal, spid_base);
+      printk(KERN_INFO "spid: toggle pin 9 (DEFAULT)\n");        
       break;
 
     default: /* no more modes defined by now */
@@ -346,8 +322,6 @@ ssize_t spid_write (struct file* filp, const char* buf, size_t count, loff_t* f_
       printk(KERN_INFO "spid: write returns: -EINVAL\n");
       break;
   }
-  // free buffer in kernelspace
-  kfree(kbuf);
   return retval;
 }
 
@@ -357,7 +331,7 @@ unsigned int spid_poll(struct file* filp, poll_table* wait)
   unsigned int mask = 0;
   
   printk(KERN_DEBUG "spid: poll\n");
-  if (spid_interrupt == 1) mask |= POLLIN | POLLRDNORM; // readable
+  if (spid_interrupt > 0) mask |= POLLIN | POLLRDNORM; // readable
   return mask;
 }
 
@@ -371,7 +345,7 @@ int spid_ioctl(struct inode* inode, struct file* filp, unsigned int cmd, unsigne
     {
       printk(KERN_DEBUG "spid: ioctl\n");
       unsigned int* bytesToRead = (unsigned int* ) arg;
-      *bytesToRead = spid_interrupt;
+      *bytesToRead = (spid_interrupt > 0 ? 1 : 0);
       return spid_interrupt;
     }
     case SPID_IOCHARDREST:

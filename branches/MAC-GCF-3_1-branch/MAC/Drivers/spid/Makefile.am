@@ -1,5 +1,4 @@
 EXTRA_DIST = \
-	bootstrap \
 	mac-spid.spec
 
 SUBDIRS = \

@@ -1,5 +1,5 @@
 //
-//  Clock.c: 
+//  ClockSim.c: 
 //
 //  Copyright (C) 2003
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,6 +20,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -40,18 +41,11 @@ int main(int argc, char* argv[])
     printf("Error while oppening /dev/spid0: %s\n", strerror(errno));
     return -1;
   }
-  
+  printf("Can be stopped by CTRL-C\n");
   while (!_doExit) 
   {
     printf("Write pulse\n");
-    char toggleUp[] = {0x80};
-    char toggleDown[] = {0x00};
-    int result = write(fd,toggleUp , 1);
-    if (result < 1)
-    {
-      printf("Error during write to /dev/spid0: %s(%d))\n", strerror(errno), result);
-    }
-    //result = write(fd,toggleDown , 1);
+    int result = write(fd, "Simulate", 8);
     if (result < 1)
     {
       printf("Error during write to /dev/spid0: %s(%d))\n", strerror(errno), result);

@@ -93,8 +93,11 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
       // for instance these 3 lines can force an interrupt on the parallele port if
       // the pin 9 and 10 are connected together. The interrupt can be seen by means of
       // the F_DATAIN signal (see below)
+      // Send a string, which starts with a 'S'|'s' means simulate an clock pulse interrupt 
+      // (in the case below only one character is even valid)
+      // otherwise an interrupt will be forced by means of setting the pin 9.
       EchoClockEvent c;
-      c.clockpulse = 0xFF;
+      c.clockpulse = 'S';
       //spidDriver.send(c);
       cout << "PING received (seqnr=" << ping.seqnr << ")" << endl;
       
@@ -116,9 +119,10 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
       cout << "Clock pulse: ";
       // always the recv has to be invoked. Otherwise this F_DATAIN keeps comming 
       // on each select
-      char pulse[4096]; // size never mind
+      char pulse[4096]; // size >= 1
       p.recv(pulse, 4096); // will always return 1 if an interrupt was occured and 0 if not
-      pulse[1] = 0; // if interrupt occured the first char is filled with a 'p' by the driver
+      pulse[1] = 0; // if interrupt occured the first char is filled with a '0' + number of occured interrupts 
+                    // in the driver sinds the last recv
       cout << pulse << endl;
       break;
     }
