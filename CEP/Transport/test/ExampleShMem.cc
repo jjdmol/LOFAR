@@ -52,8 +52,7 @@ int main(int argc, const char* argv[])
     DH2.setBlocking(false);
 
     // connect DH1 to DH2
-    TH_ShMem th;
-    DH1.connectTo(DH2, th);
+    DH1.connectTo(DH2, TH_ShMem());
     
     // initialize the DataHolders
     DH1.init();
