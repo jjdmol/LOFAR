@@ -81,6 +81,8 @@ EPAStub::EPAStub(string name)
   m_reg[MEPHeader::WG] [MEPHeader::WG_XWAVE].size      = MEPHeader::WG_XWAVE_SIZE;
   m_reg[MEPHeader::WG] [MEPHeader::WG_YWAVE].addr      = new char[MEPHeader::WG_YWAVE_SIZE      * GET_CONFIG("RS.N_BLPS", i)];
   m_reg[MEPHeader::WG] [MEPHeader::WG_YWAVE].size      = MEPHeader::WG_YWAVE_SIZE;
+  m_reg[MEPHeader::SS] [MEPHeader::SS_SELECT].addr     = new char[MEPHeader::SS_SELECT_SIZE     * GET_CONFIG("RS.N_BLPS", i)];
+  m_reg[MEPHeader::SS] [MEPHeader::SS_SELECT].size     = MEPHeader::SS_SELECT_SIZE;
   m_reg[MEPHeader::BF] [MEPHeader::BF_XROUT].addr      = new char[MEPHeader::BF_XROUT_SIZE      * GET_CONFIG("RS.N_BLPS", i)];
   m_reg[MEPHeader::BF] [MEPHeader::BF_XROUT].size      = MEPHeader::BF_XROUT_SIZE;
   m_reg[MEPHeader::BF] [MEPHeader::BF_XIOUT].addr      = new char[MEPHeader::BF_XIOUT_SIZE      * GET_CONFIG("RS.N_BLPS", i)];
