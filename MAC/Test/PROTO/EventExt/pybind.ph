@@ -36,6 +36,7 @@
 %module pybind
 %include GCF/GCF_Event.h
 %include carrays.i
+%include std_string.i
 %include TransObject.h
 %array_class(int, int_array)
 %array_class(char, char_array)
