@@ -34,13 +34,13 @@ namespace LOFAR
 	itsDeclination = 0;
 	itsStartHourangle = 0;
 	itsChannelBandwidth = 1000;       
-	itsFrequencies.resize (itsNumberOfBeamlets);
-	itsFrequencies = blitz::tensor::i;
+	itsNumberOfBeamlets = 128;
 	itsBeamletSize = 256;
 	itsTotalBandwidth = 32768000;
-	itsLOfrequency = 20000000;
+	itsLOfrequency = 224000000;
 	itsNumberOfStations = nstations;
-	itsNumberOfBeamlets = 128;
+	itsFrequencies.resize (itsNumberOfBeamlets);
+	itsFrequencies = blitz::tensor::i *itsBeamletSize*itsChannelBandwidth+itsLOfrequency;
 
 	for (int i = 0; i < itsNumberOfStations; i++) {
 	  itsStations[i] = (Station*)new Station (i, 0.0, 0.0, 0.0);
@@ -56,13 +56,14 @@ namespace LOFAR
 	itsIntegrationTime = m.itsIntegrationTime;           
 	itsDeclination = m.itsDeclination;
 	itsStartHourangle = m.itsStartHourangle;
-	itsChannelBandwidth = m.itsChannelBandwidth;       
-	itsFrequencies = m.itsFrequencies;
+	itsChannelBandwidth = m.itsChannelBandwidth; 
 	itsBeamletSize = m.itsBeamletSize;
 	itsTotalBandwidth = m.itsTotalBandwidth;
 	itsLOfrequency = m.itsLOfrequency;
 	itsNumberOfStations = m.itsNumberOfStations;
 	itsNumberOfBeamlets = m.itsNumberOfBeamlets;
+	itsFrequencies.resize(itsNumberOfBeamlets);
+	itsFrequencies = m.itsFrequencies.copy();
 
 	for (int i = 0; i < itsNumberOfStations; i++) {
 	  itsStations[i] = m.itsStations[i];

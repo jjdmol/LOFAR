@@ -48,7 +48,6 @@ namespace LOFAR
       itsID        (ID)
   {
     char str[8];
-    LoVec_float freqs = mac.getFrequencies ();
 
     // create the dummy input dataholder
     sprintf (str, "%d", 1);
@@ -61,10 +60,10 @@ namespace LOFAR
       getDataManager().addOutDataHolder (i, 
 					 new DH_Beamlet (string("out_") + str,
 							 ID,
-							 freqs (i),
-							 mac.getChannelBandwidth (),
-							 mac.getStartHourangle (),
-							 mac.getBeamletSize ()));
+							 mac.getFrequency(i),
+							 mac.getChannelBandwidth(),
+							 mac.getStartHourangle(),
+							 mac.getBeamletSize()));
     }
 
     // Allocate buffer data, the add one is for the elapsed time

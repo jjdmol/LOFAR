@@ -28,6 +28,7 @@
 #include <lofar_config.h>
 #include <Common/Lorrays.h>
 #include "OnLineProto/Station.h"
+//#include <iostream>
 
 namespace LOFAR
 {
@@ -49,8 +50,7 @@ public:
    void setStartHourangle (float ha); 
    float getChannelBandwidth ();       
    void setChannelBandwidth (float cbw);       
-   LoVec_float getFrequencies ();
-   void setFrequencies (LoVec_float freqs);
+   float getFrequency (int offset);
    int getBeamletSize ();
    void setBeamletSize (int bs);
    float getTotalBandwidth ();
@@ -116,11 +116,8 @@ inline float MAC::getChannelBandwidth ()
 inline void MAC::setChannelBandwidth (float cbw)
   { itsChannelBandwidth = cbw; }
 
-inline LoVec_float MAC::getFrequencies ()
-  { return itsFrequencies; }
-
-inline void MAC::setFrequencies (LoVec_float freqs)
-  { itsFrequencies = freqs; }
+inline float MAC::getFrequency (int offset)
+  { return itsFrequencies(offset); }
 
 inline int MAC::getBeamletSize ()
   { return itsBeamletSize; }

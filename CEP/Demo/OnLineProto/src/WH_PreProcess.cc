@@ -42,7 +42,6 @@ WH_PreProcess::WH_PreProcess (const string& name, const int nbeamlets, MAC mac,
     itsStationID (StationID)
 {
   char str[8];
-  LoVec_float freqs = mac.getFrequencies ();
 
   // create the input dataholders
   for (int i = 0; i < nbeamlets; i++) {
@@ -50,10 +49,10 @@ WH_PreProcess::WH_PreProcess (const string& name, const int nbeamlets, MAC mac,
     int bs = mac.getBeamletSize (); 
     getDataManager().addInDataHolder(i, new DH_Beamlet (string("in_") + str,
 							itsStationID,
-							freqs (i),
-							mac.getChannelBandwidth (),
-							mac.getStartHourangle (),
-							mac.getBeamletSize ()));
+							mac.getFrequency(i),
+							mac.getChannelBandwidth(),
+							mac.getStartHourangle(),
+							mac.getBeamletSize()));
   }
 
   // create the output dataholders
@@ -62,10 +61,10 @@ WH_PreProcess::WH_PreProcess (const string& name, const int nbeamlets, MAC mac,
     int bs = mac.getBeamletSize (); 
     getDataManager().addOutDataHolder(i, new DH_Beamlet (string("out_") + str,
 							 itsStationID,
-							 freqs (i),
-							 mac.getChannelBandwidth (),
-							 mac.getStartHourangle (),
-							 mac.getBeamletSize ()));
+							 mac.getFrequency(i),
+							 mac.getChannelBandwidth(),
+							 mac.getStartHourangle(),
+							 mac.getBeamletSize()));
 				      }    
 }
   
