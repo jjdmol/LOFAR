@@ -23,6 +23,8 @@
 #ifndef _CYCLIC_BUFFER_H_
 #define _CYCLIC_BUFFER_H_
 
+#ifdef USE_THREADS
+
 #include <lofar_config.h>
 
 #include <Lock.h>
@@ -340,5 +342,5 @@ int CyclicBuffer<TYPE>::GetCount(void)
 }
 
 }
-
+#endif // USE_THREADS
 #endif
