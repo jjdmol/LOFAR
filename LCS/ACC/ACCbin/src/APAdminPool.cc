@@ -139,6 +139,7 @@ void APAdminPool::writeToAll(PCCmd			command,
 	iterator	iter    = itsAPAPool.begin();
 	while (iter != itsAPAPool.end()) {				// search dataholder
 		if (FD_ISSET((*iter)->getSocketID(), &itsOnlineMask)) {
+			// TODO: should we do something with the return value???
 			(*iter)->write(aBuffer, aSize);
 		}
 		++iter;

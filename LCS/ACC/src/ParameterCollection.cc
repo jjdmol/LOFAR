@@ -178,7 +178,7 @@ void ParameterCollection::addStream(istream&	inputStream, bool	merge)
 	char*	separator;
 	//# Read the file line by line and convert it to Key Value pairs.
 	while (inputStream.getline (paramLine, 1024)) {
-		LOG_TRACE_VAR(formatString("data:>%s<", paramLine));
+		LOG_TRACE_LOOP(formatString("data:>%s<", paramLine));
 	
 		if (!paramLine[0] || paramLine[0] == '#') {		//# skip empty lines
 			continue;									//# and comment lines
@@ -193,14 +193,17 @@ void ParameterCollection::addStream(istream&	inputStream, bool	merge)
 		*separator= '\0';					//# terminate key string
 		++separator;						//# place on 1st char of value-part
 
+		// TODO: cut of any comment from value part
+		// TODO: left+right trim key- and value part
+
 		//# check for quoted strings, cutoff quotes
 		int valueLen = strlen(separator)-1;
 		if ((valueLen > 0) && (*separator == '"' || *separator == '\'') &&
-			(*separator == separator[valueLen])) {
+									(*separator == separator[valueLen])) {
 			separator[valueLen] = '\0';
 			++separator;
 		}
-
+	
 		LOG_TRACE_VAR(formatString("pair:[%s][%s]", paramLine, separator));
 
 		//# remove any existed value and insert this value

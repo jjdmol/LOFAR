@@ -58,6 +58,7 @@ DH_ApplControl::DH_ApplControl(const DH_ApplControl& that) :
 	itsScheduleTime(that.itsScheduleTime),
 	itsResult(that.itsResult)
 {
+	setExtraBlob ("Extra", 1);
 }
 
 DH_ApplControl*		DH_ApplControl::clone() const
@@ -65,6 +66,21 @@ DH_ApplControl*		DH_ApplControl::clone() const
 	return new DH_ApplControl(*this);
 }
 
+DH_ApplControl*		DH_ApplControl::makeDataCopy(DH_ApplControl& that)
+{
+	DH_ApplControl*		newDHAC = new DH_ApplControl;
+	newDHAC->init();
+	newDHAC->setCommand     (that.getCommand());
+	newDHAC->setScheduleTime(that.getScheduleTime());
+	newDHAC->setWaitTime    (that.getWaitTime());
+	newDHAC->setOptions     (that.getOptions());
+	newDHAC->setProcList    (that.getProcList());
+	newDHAC->setNodeList    (that.getNodeList());
+	newDHAC->setResult      (that.getResult());
+	newDHAC->pack();
+
+	return (newDHAC);
+}	
 
 // Redefines the preprocess function.
 void 	DH_ApplControl::preprocess()
@@ -110,7 +126,7 @@ bool	DH_ApplControl::read()
 
 	return (true);
 }
-	
+
 
 //# ---------- private ----------
 

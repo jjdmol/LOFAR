@@ -74,6 +74,7 @@ bool APAdmin::read()
 	LOG_TRACE_RTTI ("APAdmin:read");
 
 	if (itsState == APSdiscon || itsState == APSfail) {
+		LOG_TRACE_RTTI ("APAdmin:read:Socket disconnected or in fail state");
 		return(false);
 	}
 
@@ -85,6 +86,7 @@ bool APAdmin::read()
 
 	if (newBytes < 0) {
 		if (newBytes != Socket::INCOMPLETE) { 	// serious error
+			LOG_TRACE_RTTI ("APAdmin:read:Setting socket in fail state");
 			itsState = APSfail;
 		}
 		return (false);
@@ -126,12 +128,14 @@ bool APAdmin::write(void*		aBuffer,
 	LOG_TRACE_RTTI ("APAdmin:write");
 
 	if (itsState == APSdiscon || itsState == APSfail) {		// check current state
+		LOG_TRACE_RTTI ("APAdmin:write:Socket disconnected or in fail state");
 		return(false);
 	}
 
 	int32 result = itsSocket->write(aBuffer, aSize);		// do write
 
 	if ((result < 0 ) && (result != Socket::INCOMPLETE)) {	// serious error?
+		LOG_TRACE_RTTI ("APAdmin:write:Setting socket in fail state");
 		itsState = APSfail;									// set failure
 		return (false);
 	}

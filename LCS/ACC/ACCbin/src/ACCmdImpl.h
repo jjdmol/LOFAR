@@ -27,6 +27,7 @@
 
 //# Includes
 #include <ACC/ApplControl.h>
+#include <ACC/ParameterSet.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -36,43 +37,74 @@ class ACCmdImpl : public ApplControl
 {
 public:
 	// Default constructable
-	ACCmdImpl();
+	ACCmdImpl(ParameterSet*		aPS);
 
 	// Destructor
 	virtual ~ACCmdImpl();
 
 	// Commands to control the application
 	virtual bool	boot 	 (const time_t		scheduleTime,
-							  const string&		configID) const;
-	virtual bool	define 	 (const time_t		scheduleTime) const;
-	virtual bool	init 	 (const time_t		scheduleTime) const;
-	virtual bool	run 	 (const time_t		scheduleTime) const;
+							  const string&		configID);
+	virtual bool	define 	 (const time_t		scheduleTime);
+	virtual bool	init 	 (const time_t		scheduleTime);
+	virtual bool	run 	 (const time_t		scheduleTime);
 	virtual bool	pause  	 (const time_t		scheduleTime,
 							  const time_t		waitTime,
-							  const	string&		condition) const;
-	virtual bool	quit  	 (const time_t		scheduleTime) const;
-	virtual bool	shutdown (const time_t		scheduleTime) const;
+							  const	string&		condition);
+	virtual bool	quit  	 (const time_t		scheduleTime);
+	virtual bool	shutdown (const time_t		scheduleTime);
 	virtual bool	snapshot (const time_t		scheduleTime,
-							  const string&		destination) const;
+							  const string&		destination);
 	virtual bool	recover  (const time_t		scheduleTime,
-							  const string&		source) const;
+							  const string&		source);
 
 	virtual bool	reinit	 (const time_t		scheduleTime,
-							  const string&		configID) const;
+							  const string&		configID);
 	virtual bool	replace	 (const time_t		scheduleTime,
 							  const string&		processList,
 							  const string&		nodeList,
-							  const string&		configID) const;
+							  const string&		configID);
 
 	// Define a generic way to exchange info between client and server.
 	string	askInfo   (const string& 	keylist) const;
 
+	// Command for handling the Cmd expire timer.
+	void setCmdLifeTime  (time_t		aInterval);
+	void resetCmdExpireTime();
+	bool IsCmdExpired      ();
+
 private:
 	// Copying is not allowed
-	ACCmdImpl(const ACCmdImpl& that) : ApplControl(*this) { operator= (that); };
-	ACCmdImpl& 	operator=(const ACCmdImpl& that) { return (*this); };
+	ACCmdImpl();
+	ACCmdImpl(const ACCmdImpl& that);
+	ACCmdImpl& 	operator=(const ACCmdImpl& that);
 
+	time_t		itsCmdExpireTime;
+
+	mutable time_t		itsDefineLifeTime;
+	time_t		itsInitLifeTime;
+	time_t		itsRunLifeTime;
+	time_t		itsPauseLifeTime;
+	time_t		itsQuitLifeTime;
+	time_t		itsSnapshotLifeTime;
+	time_t		itsRecoverLifeTime;
+	time_t		itsReinitLifeTime;
 };
+
+inline void ACCmdImpl::setCmdLifeTime  (time_t		anInterval)
+{
+	itsCmdExpireTime = time(0) + anInterval;
+}
+
+inline void ACCmdImpl::resetCmdExpireTime()
+{
+	itsCmdExpireTime = 0;
+}
+
+inline bool ACCmdImpl::IsCmdExpired      ()
+{
+	return (itsCmdExpireTime && (itsCmdExpireTime < time(0)));
+}
 
   } // namespace ACC
 } // namespace LOFAR

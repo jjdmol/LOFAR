@@ -42,9 +42,11 @@ bin_PROGRAMS = ApplController
 ApplController_SOURCES      = ACCmdImpl.cc \
 							  ACCommand.cc \
 							  CmdStack.cc \
+							  StateEngine.cc \
 							  APAdmin.cc \
 							  APAdminPool.cc \
-							  ApplController.cc
+							  ApplController.cc \
+							  ApplControllerMain.cc
 # ApplProcess.cc 
 # ApplProcessPool.cc 
 # DataHolderSelector.cc 
