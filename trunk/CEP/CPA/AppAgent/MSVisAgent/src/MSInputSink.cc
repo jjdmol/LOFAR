@@ -102,12 +102,27 @@ void MSInputSink::fillHeader (DataRecord &hdr,const DataRecord &select)
     if( channels_[0]<0 )
       channels_[0] = 0; 
     if( channels_[1]<0 )
-      channels_[1] = num_channels_; 
+      channels_[1] = num_channels_-1; 
     FailWhen(channels_[1] < channels_[0] || channels_[1]>=num_channels_,
           "illegal channel selection");
-    hdr[FChannelFreq]  = ch_freq(IPosition(1,channels_[0]),IPosition(1,channels_[1]));
-    hdr[FChannelWidth] = ch_width(IPosition(1,channels_[0]),IPosition(1,channels_[1]));
-        
+    IPosition ip0(1,channels_[0]),ip1(1,channels_[1]);
+    ch_freq = ch_freq(ip0,ip1);
+    ch_width = ch_width(ip0,ip1);
+    // if frequencies are in decreasing order, freq axis needs to be flipped
+    if( ch_freq(IPosition(1,0)) > ch_freq(IPosition(1,channels_[1]-channels_[0])) )
+    {
+      dprintf(2)("reversing frequency channel\n");
+      flip_freq_ = True;
+      hdr[FChannelFreq] = refAipsToBlitz<double,1>(ch_freq).reverse(blitz::firstDim);
+      hdr[FChannelWidth] = refAipsToBlitz<double,1>(ch_width).reverse(blitz::firstDim);
+    }
+    else
+    {
+      dprintf(2)("frequency channel is in normal order\n");
+      flip_freq_ = False;
+      hdr[FChannelFreq]  = ch_freq;
+      hdr[FChannelWidth] = ch_width;
+    }
     // now get the correlations & their types
     int polzn = mssub1c.polarizationId()(ddid);
     MSPolarization mssub2(ms_.polarization());
@@ -143,7 +158,7 @@ void MSInputSink::openMS (DataRecord &header,const DataRecord &select)
   int fieldid = select[FFieldIndex].as<int>(0);        
   // Get range of channels (default values: all channles)
   channels_[0] = select[FChannelStartIndex].as<int>(0);
-  channels_[1] = select[FChannelStartIndex].as<int>(-1);
+  channels_[1] = select[FChannelEndIndex].as<int>(-1);
   
   // fill header from MS
   fillHeader(header,select);
@@ -284,14 +299,17 @@ int MSInputSink::refillStream ()
         ROScalarColumn<Bool> rowflagCol(table,"FLAG_ROW");
         // get array columns as Lorrays
         Matrix<Double> uvwmat1 = ROArrayColumn<Double>(table, "UVW").getColumn();
-  //      cdebug(5)"UVWMAT1: "<<uvwmat1<<endl;
         LoMat_double uvwmat = refAipsToBlitz<double,2>(uvwmat1);
-  //      cdebug(5)"UVWMAT: "<<uvwmat<<endl;
         Cube<Complex> datacube1 = ROArrayColumn<Complex>(table, dataColName_).getColumn();
         LoCube_fcomplex datacube = refAipsToBlitz<fcomplex,3>(datacube1);
         Cube<Bool> flagcube1 = ROArrayColumn<Bool>(table,"FLAG").getColumn();
         LoCube_bool flagcube = refAipsToBlitz<bool,3>(flagcube1);
-  //      cdebug(5)"DATACUBE: "<<datacube<<endl;
+        // flip along frequency axis, if asked to
+        if( flip_freq_ )
+        {
+          datacube.reverseSelf(blitz::secondDim);
+          flagcube.reverseSelf(blitz::secondDim);
+        }
         // get vector of row numbers 
         Vector<uInt> rownums = table.rowNumbers(ms_);
     // now process rows one by one
