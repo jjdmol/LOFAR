@@ -35,7 +35,6 @@
 #include <aips/Glish/GlishArray.h>
 #include <aips/Glish/GlishRecord.h>
 #include <aips/Glish/GlishValue.h>
-#include <trial/Tasking/ApplicationObject.h>
 
 #include <MNS/MeqDomain.h>
 #include <MNS/MeqHist.h>
@@ -56,7 +55,7 @@
  * Class to perform self-calibration on a MeasurementSet using the
  * MeqTree approach.
  */
-class MeqCalibrater : public ApplicationObject
+class MeqCalibrater
 {
 
 public:
@@ -199,18 +198,25 @@ public:
    */
   GlishRecord getStatistics (bool detailed, bool clear);
 
-  /**
-   * \defgroup DOStandard Standard Distributed Object methods.
-   */
-  //@{
-  virtual String         className() const;
-  virtual Vector<String> methods() const;
-  virtual Vector<String> noTraceMethods() const;
+  // Set the names and values of all solvable parms for the current domain.
+  // The double version can only be used if all parms are 0th-order
+  // polynomials.
+  // <group>
+  void getParmValues (vector<string>& names,
+		      vector<double>& values);
+  void getParmValues (vector<string>& names,
+		      vector<MeqMatrix>& values);
+  // </group>
 
-  virtual MethodResult runMethod(uInt which,
-				 ParameterSet& inputRecord,
-				 Bool runMethod);
-  //@}
+  // Set the given values (for the current domain) of parms matching
+  // the corresponding name.
+  // Values with a name matching no parm, are ignored.
+  // <group>
+  void setParmValues (const vector<string>& names,
+		      const vector<double>& values);
+  void setParmValues (const vector<string>& names,
+		      const vector<MeqMatrix>& values);
+  // </group>
 
   /*!
    * Get nr of channels.
@@ -233,7 +239,7 @@ private:
   //! Get the phase reference position of the first field.
   void getPhaseRef  ();
 
-  //! Get the frequncy info of the given data desc (spectral window).
+  //! Get the frequency info of the given data desc (spectral window).
   void getFreq      (int ddid);
 
   //! Get the station info (position and name).
@@ -314,16 +320,5 @@ private:
   /*@}*/
 };
 
-/*!
- * Factory class to instantiate the MeqCalibrater object
- */
-class MeqCalibraterFactory : public ApplicationObjectFactory
-{
-  //! instantiate MqCalibrater object (subclassed from ApplicationObject)
-  virtual MethodResult make(ApplicationObject*& newObject,
-			    const String& whichConstructor,
-			    ParameterSet& inputRecord,
-			    Bool runConstructor);
-};
 
 #endif

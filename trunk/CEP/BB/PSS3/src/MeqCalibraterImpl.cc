@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#include "PSS3/MeqCalibraterImpl.h"
+#include <PSS3/MeqCalibraterImpl.h>
 
 #include <MNS/MeqJonesNode.h>
 #include <MNS/MeqStatExpr.h>
@@ -2328,306 +2328,85 @@ GlishRecord MeqCalibrater::getStatistics (bool detailed, bool clear)
   return rec;
 }
 
-//----------------------------------------------------------------------
-//
-// ~className
-//
-// Return the name of this DO class.
-//
-//----------------------------------------------------------------------
-String MeqCalibrater::className() const
+
+void MeqCalibrater::getParmValues (vector<string>& names,
+				   vector<double>& values)
 {
-  return "meqcalibrater";
-}
-
-//----------------------------------------------------------------------
-//
-// ~methods
-//
-// Return a vector of method names for the DO.
-//
-//----------------------------------------------------------------------
-Vector<String> MeqCalibrater::methods() const
-{
-  Vector<String> method(17);
-
-  method(0)  = "settimeinterval";
-  method(1)  = "resetiterator";
-  method(2)  = "nextinterval";
-  method(3)  = "clearsolvableparms";
-  method(4)  = "setsolvableparms";
-  method(5)  = "predict";
-  method(6)  = "solve";
-  method(7)  = "saveparms";
-  method(8)  = "saveresidualdata";
-  method(9)  = "getparms";
-  method(10) = "getsolvedomain";
-  method(11) = "select";
-  method(12) = "solveselect";
-  method(13) = "peel";
-  method(14) = "getresidualdata";
-  method(15) = "getstatistics";
-  method(16) = "getparmnames";
-
-  return method;
-}
-
-//----------------------------------------------------------------------
-//
-// ~noTraceMethods
-//
-// ?
-//
-//----------------------------------------------------------------------
-Vector<String> MeqCalibrater::noTraceMethods() const
-{
-  return methods();
-}
-
-//----------------------------------------------------------------------
-//
-// ~runMethod
-//
-// Call a method from glish.
-//
-//----------------------------------------------------------------------
-MethodResult MeqCalibrater::runMethod(uInt which,
-				      ParameterSet& inputRecord,
-				      Bool runMethod)
-{
-  switch (which) 
-  {
-  case 0: // settimeinterval
-    {
-      Parameter<Int> secondsInterval(inputRecord, "secondsinterval",
-				     ParameterSet::In);
-
-      if (runMethod) setTimeInterval(secondsInterval());
-    }
-    break;
-
-  case 1: // resetiterator
-    {
-      if (runMethod) resetIterator();
-    }
-    break;
-
-  case 2: // nextinterval
-    {
-      Parameter<Bool> returnval(inputRecord, "returnval",
-				ParameterSet::Out);
-      if (runMethod) returnval() = nextInterval();
-    }
-    break;
-
-  case 3: // clearsolvableparms
-    {
-      if (runMethod) clearSolvableParms();
-    }
-    break;
-
-  case 4: // setsolvableparms
-    {
-      Parameter<Vector<String> > parmPatterns(inputRecord, "parmpatterns",
-					     ParameterSet::In);
-      Parameter<Vector<String> > excludePatterns(inputRecord, "excludepatterns",
-						 ParameterSet::In);
-      Parameter<Bool> isSolvable(inputRecord, "issolvable",
-				 ParameterSet::In);
-
-      if (runMethod) setSolvableParms(parmPatterns(), excludePatterns(), isSolvable());
-    }
-    break;
-
-  case 5: // predict
-    {
-      Parameter<String> modelDataColName(inputRecord, "modeldatacolname",
-					 ParameterSet::In);
-
-      if (runMethod) predict(modelDataColName());
-    }
-    break;
-
-  case 6: // solve
-    {
-      Parameter<Bool> realsol(inputRecord, "realsol",
-			      ParameterSet::In);
-      Parameter<GlishRecord> returnval(inputRecord, "returnval",
-				       ParameterSet::Out);
-
-      if (runMethod) returnval() = solve (realsol());
-    }
-    break;
-
-  case 7: // saveparms
-    {
-      if (runMethod) saveParms();
-    }
-    break;
-
-  case 8: // saveresidualdata
-    {
-      if (runMethod) saveResidualData();
-    }
-    break;
-
-  case 9: // getparms
-    {
-      Parameter<Vector<String> > parmPatterns(inputRecord, "parmpatterns",
-					      ParameterSet::In);
-      Parameter<Vector<String> > excludePatterns(inputRecord, "excludepatterns",
-						 ParameterSet::In);
-      Parameter<int> isSolvable(inputRecord, "issolvable",
-				ParameterSet::In);
-      Parameter<bool> denormalize(inputRecord, "denormalize",
-				  ParameterSet::In);
-      Parameter<GlishRecord> returnval(inputRecord, "returnval",
-				       ParameterSet::Out);
-
-      if (runMethod) returnval() = getParms(parmPatterns(), excludePatterns(),
-					    isSolvable(), denormalize());
-    }
-    break;
-
-  case 10: // getsolvedomain
-    {
-      Parameter<GlishRecord> returnval(inputRecord, "returnval",
-				       ParameterSet::Out);
-
-      if (runMethod) returnval() = getSolveDomain();
-    }
-    break;
-
-  case 11: // select
-    {
-      Parameter<String> where(inputRecord, "where",
-			      ParameterSet::In);
-      Parameter<Int> firstChan(inputRecord, "firstchan",
-			       ParameterSet::In);
-      Parameter<Int> lastChan(inputRecord, "lastchan",
-			      ParameterSet::In);
-      Parameter<Int> returnval(inputRecord, "returnval",
-			       ParameterSet::Out);
-
-      if (runMethod) returnval() = select(where(), firstChan(), lastChan());
-    }
-    break;
-
-  case 12: // solveselect
-    {
-      Parameter<String> where(inputRecord, "where",
-			      ParameterSet::In);
-      Parameter<Int> returnval(inputRecord, "returnval",
-			       ParameterSet::Out);
-
-      if (runMethod) returnval() = solveselect(where());
-    }
-    break;
-
-  case 13: // peel
-    {
-      Parameter<Vector<Int> > peelSourceNrs(inputRecord, "peelsourcenrs",
-					    ParameterSet::In);
-      Parameter<Vector<Int> > extraSourceNrs(inputRecord, "extrasourcenrs",
-					     ParameterSet::In);
-
-      if (runMethod) peel(peelSourceNrs(), extraSourceNrs());
-    }
-    break;
-
-  case 14: // getresidualdata
-    {
-      Parameter<GlishRecord> returnval(inputRecord, "returnval",
-				       ParameterSet::Out);
-
-      if (runMethod) returnval() = getResidualData ();
-    }
-    break;
-
-  case 15: // getstatistics
-    {
-      Parameter<Bool> detailed(inputRecord, "detailed",
-			       ParameterSet::In);
-      Parameter<Bool> clear(inputRecord, "clear",
-			    ParameterSet::In);
-      Parameter<GlishRecord> returnval(inputRecord, "returnval",
-				       ParameterSet::Out);
-
-      if (runMethod) returnval() = getStatistics (detailed(), clear());
-    }
-    break;
-
-  case 16: // getparmnames
-    {
-      Parameter<Vector<String> > parmPatterns(inputRecord, "parmpatterns",
-					      ParameterSet::In);
-      Parameter<Vector<String> > excludePatterns(inputRecord, "excludepatterns",
-						 ParameterSet::In);
-      Parameter<GlishArray> returnval(inputRecord, "returnval",
-				      ParameterSet::Out);
-
-      if (runMethod) returnval() = getParmNames(parmPatterns(), excludePatterns());
-    }
-    break;
-
-  default:
-    return error("No such method");
+  vector<MeqMatrix> vals;
+  getParmValues (names, vals);
+  values.resize (0);
+  values.reserve (vals.size());
+  for (vector<MeqMatrix>::const_iterator iter = vals.begin();
+       iter != vals.end();
+       iter++) {
+    Assert (iter->nelements() == 1);
+    values.push_back (iter->getDouble());
   }
-
-  return ok();
 }
 
-//----------------------------------------------------------------------
-//
-// ~make
-//
-// Create an instance of the MeqCalibrater class.
-//
-//----------------------------------------------------------------------
-MethodResult MeqCalibraterFactory::make(ApplicationObject*& newObject,
-					const String& whichConstructor,
-					ParameterSet& inputRecord,
-					Bool runConstructor)
+void MeqCalibrater::getParmValues (vector<string>& names,
+				   vector<MeqMatrix>& values)
 {
-  MethodResult retval;
-  newObject = 0;
-
-  if (whichConstructor == "meqcalibrater")
-    {
-      Parameter<String>   msName(inputRecord, "msname",   ParameterSet::In);
-      Parameter<String> meqModel(inputRecord, "meqmodel", ParameterSet::In);
-      Parameter<String> skyModel(inputRecord, "skymodel", ParameterSet::In);
-      Parameter<String> dbType  (inputRecord, "dbtype",   ParameterSet::In);
-      Parameter<String> dbName  (inputRecord, "dbname",   ParameterSet::In);
-      Parameter<String> dbPwd   (inputRecord, "dbpwd",    ParameterSet::In);
-      Parameter<Int>        ddid(inputRecord, "ddid",     ParameterSet::In);
-      Parameter<Vector<Int> > ant1(inputRecord, "ant1",   ParameterSet::In);
-      Parameter<Vector<Int> > ant2(inputRecord, "ant2",   ParameterSet::In);
-      Parameter<String> modelType(inputRecord, "modeltype", ParameterSet::In);
-      Parameter<Bool>     calcUVW(inputRecord, "calcuvw", ParameterSet::In);
-      Parameter<String> dataColName(inputRecord, "datacolname",
-				    ParameterSet::In);
-      Parameter<String> resColName(inputRecord, "residualcolname",
-				    ParameterSet::In);
-
-      if (runConstructor)
-	{
-	  newObject = new MeqCalibrater(msName(), meqModel(), skyModel(),
-					dbType(), dbName(), dbPwd(),
-					ddid(), ant1(), ant2(),
-					modelType(), calcUVW(),
-					dataColName(), resColName());
-	}
+  MeqMatrix val;
+  names.resize (0);
+  values.resize (0);
+  // Iterate through all parms and get solvable ones.
+  const vector<MeqParm*>& parmList = MeqParm::getParmList();
+  int i=0;
+  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+       iter != parmList.end();
+       iter++)
+  {
+    if (itsIsParmSolvable[i]) {
+      names.push_back ((*iter)->getName());
+      (*iter)->getCurrentValue (val, false);
+      values.push_back (val);
     }
-  else
-    {
-      retval = String("Unknown constructor") + whichConstructor;
-    }
+    i++;
+  }
+}
 
-  if (retval.ok() && runConstructor && !newObject)
-    {
-      retval = "Memory allocation error";
-    }
+void MeqCalibrater::setParmValues (const vector<string>& names,
+				   const vector<double>& values)
+{
+  vector<MeqMatrix> vals;
+  vals.reserve (values.size());
+  for (vector<double>::const_iterator iter = values.begin();
+       iter != values.end();
+       iter++) {
+    vals.push_back (MeqMatrix (*iter));
+  }
+  setParmValues (names, vals);
+}
 
-  return retval;
+void MeqCalibrater::setParmValues (const vector<string>& names,
+				   const vector<MeqMatrix>& values)
+{
+  Assert (names.size() == values.size());
+  // Iterate through all parms and get solvable ones.
+  const vector<MeqParm*>& parmList = MeqParm::getParmList();
+  int i=0;
+  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+       iter != parmList.end();
+       iter++)
+  {
+    const string& pname = (*iter)->getName();
+    for (vector<string>::const_iterator itern = names.begin();
+	 itern != names.end();
+	 itern++) {
+      if (*itern == pname) {
+	const MeqParmPolc* ppc = dynamic_cast<const MeqParmPolc*>(*iter);
+	Assert (ppc);
+	MeqParmPolc* pp = const_cast<MeqParmPolc*>(ppc);
+	const vector<MeqPolc>& polcs = pp->getPolcs();
+	Assert (polcs.size() == 1);
+	MeqPolc polc = polcs[0];
+	polc.setCoeffOnly (values[i]);
+	pp->setPolcs (vector<MeqPolc>(1,polc));
+	break;
+      }
+      // A non-matching name is ignored; no warning is given.
+    }
+    i++;
+  }
 }
