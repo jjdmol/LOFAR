@@ -1,0 +1,14 @@
+attrib<Z>("s")       = Z.STR_Z
+attrib<Y>("s")       = Y.STR_Y
+attrib<Y>("z.s")     = Z.STR_Z AND (Y.OBJID=Z.OWNER)
+attrib<X>("s")       = X.STR_X
+attrib<A>("s")       = A.STR_A
+attrib<B>("s")       = B.STR_B
+attrib<B>("x.s")     = X.STR_X AND (B.OBJID=X.OWNER)
+attrib<B>("A::s")    = A.STR_A AND (B.OBJID=A.OWNER)
+attrib<C>("s")       = C.STR_C
+attrib<C>("y.s")     = Y.STR_Y AND (C.OBJID=Y.OWNER)
+attrib<C>("y.z.s")   = Z.STR_Z AND ((Y.OBJID=Z.OWNER) AND (C.OBJID=Y.OWNER))
+attrib<C>("B::s")    = B.STR_B AND (C.OBJID=B.OWNER)
+attrib<C>("B::x.s")  = X.STR_X AND ((B.OBJID=X.OWNER) AND (C.OBJID=B.OWNER))
+attrib<C>("B::A::s") = A.STR_A AND ((B.OBJID=A.OWNER) AND (C.OBJID=B.OWNER))
