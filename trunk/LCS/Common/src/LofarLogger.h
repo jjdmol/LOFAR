@@ -36,6 +36,12 @@
 #include <log4cplus/configurator.h>
 #endif //HAVE_LOG4CPLUS
 
+//# Make sure that LOFARLOGGER_PACKAGE is defined.
+#ifndef LOFARLOGGER_PACKAGE
+# define LOFARLOGGER_PACKAGE "Unknown_package"
+#endif
+
+
 namespace LOFAR {
 // The function formatString accepts printf-like arguments and returns a
 // formatted std::string. It can be used e.g. in the LOG_<level> macros:
