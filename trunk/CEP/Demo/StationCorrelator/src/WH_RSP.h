@@ -49,6 +49,9 @@ namespace LOFAR
 
     /// set delay of this WorkHolder
     void setDelay(const DH_RSPSync::syncStamp_t newDelay);
+    
+    /// Show the work holder on stdout.
+    virtual void dump();
 
   private:
     /// forbid copy constructor

@@ -219,6 +219,14 @@ void WH_RSP::process()
           memcpy( &outDHp->getBuffer()[i * complex_uint16_blocksize], 
 		  &inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)],
 		  char_blocksize );
+#define DUMP_NOT_DEFINED
+#ifdef DUMP
+	  cout<<"packet: "<<i<<"  input: "<<j<<"   ";
+	  for (int c=0; c<char_blocksize/sizeof(complex<uint16>); c++) {
+	    cout<<((complex<uint16>*)&inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)])[c]<<" ";
+	  }
+	  cout<<endl;
+#endif
 	}
       }      
       
@@ -229,3 +237,26 @@ void WH_RSP::process()
     } 
   }
 }
+
+void WH_RSP::dump() {
+  cout<<"DUMP OF WH_RSP: "<<getName()<<endl;
+  DH_RSP* inDHp;
+  DH_StationData* outDHp;
+  inDHp = (DH_RSP*)getDataManager().getInHolder(0);
+      
+  // determine blocksizes of char-based InHolder and complex<uint16-based> OutHolder
+  int char_blocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<uint16>); 
+  int complex_uint16_blocksize = itsNbeamlets * itsPolarisations;
+      
+  for (int i=0;i<itsNpackets;i++) {
+    for (int j=0;j<itsNCorrOutputs;j++) {
+      outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
+      cout<<"packet: "<<i<<"  input: "<<j<<"   ";
+      for (int c=0; c<char_blocksize/sizeof(complex<uint16>); c++) {
+	cout<<((complex<uint16>*)&inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)])[c]<<" ";
+      }
+      cout<<endl;
+    }
+  }      
+} 
+  
