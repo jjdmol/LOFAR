@@ -2,8 +2,8 @@ mac.ns.ARATest.ARAtestRSPserver.type=TCP
 mac.ns.ARATestDriver.ARAtestRSPserver.type=TCP
 mac.ns.RSP.acceptor.type=TCP
 
-#mac.top.ARA.ARAtestRSPserver.remoteservice=ARATestDriver:ARAtestRSPserver
-mac.top.ARA.ARAtestRSPserver.remoteservice=ARATest:ARAtestRSPserver
+mac.top.ARA.ARAtestRSPserver.remoteservice=ARATestDriver:ARAtestRSPserver
+#mac.top.ARA.ARAtestRSPserver.remoteservice=ARATest:ARAtestRSPserver
 #mac.top.ARA.ARAtestRSPserver.remoteservice=RSP:acceptor
 
 mac.apl.ara.N_RACKS=3

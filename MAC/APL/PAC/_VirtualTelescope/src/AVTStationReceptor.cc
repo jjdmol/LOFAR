@@ -273,12 +273,20 @@ void AVTStationReceptor::handlePropertySetAnswer(GCFEvent& answer)
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
       
       // is it a required resource status?
-      map<string,bool>::iterator it=m_requiredResourcesStatus.find(string(pPropAnswer->pPropName));
-      if(it != m_requiredResourcesStatus.end())
+      string propName(pPropAnswer->pPropName);
+      bool found=false;
+      map<string,bool>::iterator it=m_requiredResourcesStatus.begin();
+      while(!found && it != m_requiredResourcesStatus.end())
       {
-        GCFPVUnsigned unsignedValue;
-        unsignedValue.copy(*pPropAnswer->pValue);
-        it->second = (unsignedValue.getValue() == 0); // true if status is OK
+        string resName(it->first);
+        found = (string::npos != propName.find(resName));// propName may include something like System1:
+        if(found)
+        {
+          GCFPVUnsigned unsignedValue;
+          unsignedValue.copy(*pPropAnswer->pValue);
+          it->second = (unsignedValue.getValue() == 0); // true if status is OK
+        }
+        ++it;
       }
       break;
     }  

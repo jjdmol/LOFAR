@@ -354,7 +354,7 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_active_state(GCFEvent& event, GC
     }
         
     default:
-      LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::concrete_preparing_state, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::concrete_active_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }

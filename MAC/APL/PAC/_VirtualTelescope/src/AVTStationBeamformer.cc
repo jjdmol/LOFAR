@@ -65,6 +65,7 @@ AVTStationBeamformer::AVTStationBeamformer(string& taskName,
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
   LOG_DEBUG(formatString("AVTStationBeamformer(%s)::%s",getName().c_str(),__func__));
   
+  m_beamServer.setRemoteAddr(getName(),beamServerPortName);
 }
 
 

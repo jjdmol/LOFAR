@@ -1,5 +1,4 @@
 mac.ns.AVTTest.BeamServer.type=TCP
-mac.ns.AVTTestMAC2timerPort.type=TCP
-
+mac.ns.AVTTestMAC2.timerPort.type=TCP
 
 mac.avttest.pvss.cmdline=-proj MAC
