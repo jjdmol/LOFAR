@@ -1,4 +1,4 @@
-// Test2 with:
+// Test6 with:
 //   demo3.MS (no noise)
 //   nrsrc=3
 //   nrstat=100
@@ -6,20 +6,18 @@
 //   nrfreq=50
 //   nrpol=4
 //   gain-polc is 0th order
-//   solve source parameters
+//   solve source 1 parameters        to measure diff with solving 3 sources
 //   pert=1e-6
-//   calcUVW=false
-//   useSVD=saveAllIter=true     // to measure difference with false
+//   useSVD=calcUVW=saveAllIter=false
 //   model=LOFAR.RI
 //   time domain is all times
 
 
 nrKS=1,           // Number of Knowledge Sources
-BBDBname="test",  // BlackBoard database name (must be a postgres database on dop50)
 
 CTRLparams=[
   strategy="Simple",
-  solvableParams=["StokesI.CP1","RA.CP1","DEC.CP1","StokesI.CP2","RA.CP2","DEC.CP2","StokesI.CP3","RA.CP3","DEC.CP3"],
+  solvableParams=["StokesI.CP1","RA.CP1","DEC.CP1"],
 
   STRATparams=[
     timeInterval=10.0e0,   // Time interval (float)
@@ -27,16 +25,15 @@ CTRLparams=[
     startChan=0,           // Start (frequency) channel
     endChan=49,            // End (frequency) channel
     sources=[0,1,2],       // Solvable source numbers (0 based)
-    useSVD=T,              // Use Singular Value Decomposition in solve?
-    saveAllIter=T          // Save parameters in parameter database every iteration?
+    useSVD=F,              // Use Singular Value Decomposition in solve?
+    saveAllIter=F          // Save parameters in parameter database every iteration?
   ]
 ],
 
 KSparams=[
   MSName="demo3-",         // Name of the Measurement Set
-  DBHost="dop50",          // Parameter database host name
+  DBHost="dop50.astron.nl",          // Parameter database host name
   DBType="aips",           // Parameter database type
-  DBName="test",           // Parameter database name
   DBPwd="",                // Parameter database password
   meqTableName="demo3-",   // Meq model table name *       
   skyTableName="demo3_gsm-", // Sky model table name *
