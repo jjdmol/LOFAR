@@ -23,9 +23,7 @@
 #include <PL/Query/Expr.h>
 #include <PL/Query/ConstExprNode.h>
 #include <PL/Query/UnaryExprNode.h>
-#include <PL/Query/LogicalUnaryExprNode.h>
 #include <PL/Query/BinaryExprNode.h>
-#include <PL/Query/LogicalBinaryExprNode.h>
 #include <PL/Query/SQLExprNode.h>
 #include <iostream>
 
