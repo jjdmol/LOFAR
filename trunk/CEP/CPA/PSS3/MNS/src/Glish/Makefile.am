@@ -1,7 +1,7 @@
 
 CXXFLAGS 		+= -Wall -Wno-unknown-pragmas -Wno-deprecated -D_GNU_SOURCE
 
-lib_LTLIBRARIES 	= libmns-glish.la libmeqcalibrater.la
+lib_LTLIBRARIES 	= libmeqcalibrater.la
 
 libmeqcalibrater_la_SOURCES = MeqCalibraterImpl.cc MeqCalibraterImpl.h
 

@@ -1,4 +1,6 @@
-bin_PROGRAMS   		= tPoly tMeqMatrix tuvw
+check_PROGRAMS 		= tPoly tMeqMatrix tuvw
+
+TESTS			= tPoly tMeqMatrix tuvw
 
 tPoly_SOURCES 		= tPoly.cc 
 tPoly_LDADD		= ../src/libmns.la 
