@@ -51,7 +51,7 @@ namespace AVT
                                        const TPropertySet& primaryPropertySet,
                                        const string& APCName,
                                        const string& APCScope,
-                                       std::vector<boost::shared_ptr<AVTStationReceptor> > rcus); 
+                                       std::vector<boost::shared_ptr<AVTStationReceptor> >& rcus); 
       virtual ~AVTStationReceptorGroup();
 
       void setStartTime(const time_t startTime);
@@ -94,7 +94,7 @@ namespace AVT
       virtual void concreteDisconnected(GCFPortInterface& port);
 
     private:
-      typedef struct TStationReceptorConnection
+      struct TStationReceptorConnection
       {
         // constructor
         TStationReceptorConnection( boost::shared_ptr<AVTStationReceptor> _rcu,
@@ -104,13 +104,14 @@ namespace AVT
                                     int                                   _protocol,
                                     bool                                  _connected,
                                     TLogicalDeviceState                   _ldState);
-        
+
         boost::shared_ptr<AVTStationReceptor>   rcu;
         boost::shared_ptr<APLInterTaskPort>     clientPort;
         bool                                    connected;
         TLogicalDeviceState                     ldState;
       };
       typedef std::vector<TStationReceptorConnection> TStationReceptorVector;
+      typedef TStationReceptorVector::iterator        TStationReceptorVectorIter;
       
       bool isStationReceptorClient(GCFPortInterface& port);
       bool setReceptorConnected(GCFPortInterface& port, bool connected);

@@ -732,13 +732,13 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
             GCFPVDouble wavePower(generateWave(i,m_beamAngle1,m_beamAngle2));
             char strPropertyPowerX[100];
             char strPropertyPowerY[100];
-            sprintf(strPropertyPowerX,"BeamServer_power%03d_x",i);
-            sprintf(strPropertyPowerY,"BeamServer_power%03d_y",i);
+            sprintf(strPropertyPowerX,"PAC_BeamServer_power%03d_x",i);
+            sprintf(strPropertyPowerY,"PAC_BeamServer_power%03d_y",i);
             m_beamServerProperties.setValue(string(strPropertyPowerX),wavePower);
             m_beamServerProperties.setValue(string(strPropertyPowerY),wavePower);
           }
           GCFPVUnsigned seqnr(m_seqnr++);
-          m_beamServerProperties.setValue(string("BeamServer_seqnr"),seqnr);
+          m_beamServerProperties.setValue(string("PAC_BeamServer_seqnr"),seqnr);
           m_statisticsTimerID=m_beamserver.setTimer(3.0); // statistics timer
         }
       }

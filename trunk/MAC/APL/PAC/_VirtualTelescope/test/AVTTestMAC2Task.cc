@@ -23,7 +23,8 @@
 #ifdef GCF4
 // datapoint structs are supported in gcf4
 #define PROPERTY_BOARD1_MAINTENANCE_STATUS      "PIC_Rack1_SubRack1_Board1_Maintenance.status"
-#define PROPERTY_AP1_MAINTENANCE_STATUS         "PIC_Rack1_SubRack1_Board1_AP1_Maintenance.status"
+#define PROPERTY_AP1_RCU1_MAINTENANCE_STATUS    "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance.status"
+#define PROPERTY_AP1_RCU2_MAINTENANCE_STATUS    "PIC_Rack1_SubRack1_Board1_AP1_RCU2_Maintenance.status"
 #define PROPERTY_SRG1_FREQUENCY                 "PAC_SRG1.frequency"
 #define PROPERTY_AP1_RCU1_STATUS                "PIC_Rack1_SubRack1_Board1_AP1_RCU1.status"
 #define PROPERTY_AP2_RCU1_STATUS                "PIC_Rack1_SubRack1_Board1_AP2_RCU1.status"
@@ -32,7 +33,8 @@
 #define PROPERTY_VT2_STATUS                     "PAC_VT2.status"
 #else
 #define PROPERTY_BOARD1_MAINTENANCE_STATUS      "PIC_Rack1_SubRack1_Board1_Maintenance_status"
-#define PROPERTY_AP1_MAINTENANCE_STATUS         "PIC_Rack1_SubRack1_Board1_AP1_Maintenance_status"
+#define PROPERTY_AP1_RCU1_MAINTENANCE_STATUS    "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance_status"
+#define PROPERTY_AP1_RCU2_MAINTENANCE_STATUS    "PIC_Rack1_SubRack1_Board1_AP1_RCU2_Maintenance_status"
 #define PROPERTY_SRG1_FREQUENCY                 "PAC_SRG1_frequency"
 #define PROPERTY_AP1_RCU1_STATUS                "PIC_Rack1_SubRack1_Board1_AP1_RCU1_status"
 #define PROPERTY_AP2_RCU1_STATUS                "PIC_Rack1_SubRack1_Board1_AP2_RCU1_status"
@@ -79,7 +81,8 @@ AVTTestMAC2Task::AVTTestMAC2Task(AVTTest<AVTTestMAC2Task>& tester) :
   m_propertyLDScommand(string(PROPERTY_LDS_COMMAND)),
   m_propertyLDSstatus(string(PROPERTY_LDS_STATUS)),
   m_propBoard1MaintenanceStatus(string(PROPERTY_BOARD1_MAINTENANCE_STATUS)),
-  m_propAP1MaintenanceStatus(string(PROPERTY_AP1_MAINTENANCE_STATUS)),
+  m_propAP1RCU1MaintenanceStatus(string(PROPERTY_AP1_RCU1_MAINTENANCE_STATUS)),
+  m_propAP1RCU2MaintenanceStatus(string(PROPERTY_AP1_RCU2_MAINTENANCE_STATUS)),
   m_propSRG1Frequency(string(PROPERTY_SRG1_FREQUENCY)),
   m_propAP1RCU1Status(string(PROPERTY_AP1_RCU1_STATUS)),
   m_propAP2RCU1Status(string(PROPERTY_AP2_RCU1_STATUS)),
@@ -114,7 +117,8 @@ AVTTestMAC2Task::AVTTestMAC2Task(AVTTest<AVTTestMAC2Task>& tester) :
   m_propertyLDScommand.setAnswer(&m_answer);
   m_propertyLDSstatus.setAnswer(&m_answer);
   m_propBoard1MaintenanceStatus.setAnswer(&m_answer);
-  m_propAP1MaintenanceStatus.setAnswer(&m_answer);
+  m_propAP1RCU1MaintenanceStatus.setAnswer(&m_answer);
+  m_propAP1RCU2MaintenanceStatus.setAnswer(&m_answer);
   m_propAP1RCU1Status.setAnswer(&m_answer);
   m_propAP2RCU1Status.setAnswer(&m_answer);
   m_propAP2RCU2Status.setAnswer(&m_answer);
@@ -159,6 +163,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_1(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_4_1: Start VT, all antennas in maintenance");
@@ -250,14 +257,19 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_2(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_4_2: 7 antennas required, 2 in maintenance, so only 6 available");
       
       // put AP1 in maintenance.
-      m_propAP1MaintenanceStatus.subscribe();
+      m_propAP1RCU1MaintenanceStatus.subscribe();
+      m_propAP1RCU2MaintenanceStatus.subscribe();
       GCFPVUnsigned inMaintenance(1);
-      bool testOk = (GCF_NO_ERROR==m_propAP1MaintenanceStatus.setValue(inMaintenance));
+      bool testOk = (GCF_NO_ERROR==m_propAP1RCU1MaintenanceStatus.setValue(inMaintenance) &&
+                     GCF_NO_ERROR==m_propAP1RCU2MaintenanceStatus.setValue(inMaintenance));
       m_tester._avttest(testOk);
       if(!testOk)
       {
@@ -318,7 +330,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_2(GCFEvent& event, GCFPortInterfac
     
     case F_EXIT:
     {
-      m_propAP1MaintenanceStatus.unsubscribe();
+      m_propAP1RCU1MaintenanceStatus.unsubscribe();
+      m_propAP1RCU2MaintenanceStatus.unsubscribe();
       m_propertyLDSstatus.unsubscribe();
       break;
     }
@@ -341,6 +354,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_3(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_4_3: Start VT, no antennas in maintenance");
@@ -348,7 +364,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_3(GCFEvent& event, GCFPortInterfac
       GCFPVUnsigned outMaintenance(0);
       bool testOk1 = (GCF_NO_ERROR==m_propBoard1MaintenanceStatus.setValue(outMaintenance));
       m_tester._avttest(testOk1);
-      bool testOk2 = (GCF_NO_ERROR==m_propAP1MaintenanceStatus.setValue(outMaintenance));
+      bool testOk2 = (GCF_NO_ERROR==m_propAP1RCU1MaintenanceStatus.setValue(outMaintenance) &&
+                      GCF_NO_ERROR==m_propAP1RCU2MaintenanceStatus.setValue(outMaintenance));
       m_tester._avttest(testOk2);
       if(!testOk1 || !testOk2)
       {
@@ -441,6 +458,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_4(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_4_4: Start another VT, sharing resources with the first");
@@ -528,6 +548,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_5(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_4_5: Change antenna parameter using the first VT");
@@ -602,6 +625,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_6(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_4_6: Change antenna parameter using the second VT");
@@ -676,6 +702,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_7(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_4_7: Abort the first VT");
@@ -737,6 +766,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_8(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_4_8: Change antenna parameter using the second VT");
@@ -817,6 +849,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_1(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_5_1: Schedule VT");
@@ -897,6 +932,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_2(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_5_2: Schedule the same VT at non-overlapping timespans");
@@ -977,6 +1015,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_3(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_5_3: Schedule the same VT at overlapping timespans");
@@ -1056,6 +1097,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_4(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_5_4: Cancel a VT Schedule");
@@ -1120,6 +1164,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_5(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_5_5: Schedule two VT's at the same time");
@@ -1206,6 +1253,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_6_1(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_6_1: Display subband statistics of a running VT");
@@ -1231,6 +1281,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_7_1: Antenna defect, no VT uses this antenna");
@@ -1334,6 +1387,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_2(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_7_2: 1 antenna defect, VT keeps on running");
@@ -1421,6 +1477,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_3(GCFEvent& event, GCFPortInterfac
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_7_3: more antennas defect, VT stops");
@@ -1480,6 +1539,9 @@ GCFEvent::TResult AVTTestMAC2Task::finished(GCFEvent& event, GCFPortInterface& /
 
   switch (event.signal)
   {
+    case F_INIT:
+      break;
+
     case F_ENTRY:
       GCFTask::stop();
       break;

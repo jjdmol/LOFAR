@@ -107,7 +107,8 @@ namespace AVT
       GCFProperty     m_propertyLDScommand;
       GCFProperty     m_propertyLDSstatus;
       GCFProperty     m_propBoard1MaintenanceStatus;
-      GCFProperty     m_propAP1MaintenanceStatus;
+      GCFProperty     m_propAP1RCU1MaintenanceStatus;
+      GCFProperty     m_propAP1RCU2MaintenanceStatus;
       GCFProperty     m_propSRG1Frequency;
       GCFProperty     m_propAP1RCU1Status;
       GCFProperty     m_propAP2RCU1Status;

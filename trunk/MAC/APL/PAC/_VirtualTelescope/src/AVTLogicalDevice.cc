@@ -77,6 +77,11 @@ void AVTLogicalDevice::setClientInterTaskPort(APLInterTaskPort* clientPort)
   m_clientInterTaskPort=clientPort;
 }
 
+bool AVTLogicalDevice::isPrepared(vector<string>& /*parameters*/)
+{
+  return false;
+}
+
 bool AVTLogicalDevice::_isLogicalDeviceServerPort(GCFPortInterface& /*port*/)
 {
   return true; //(&port == &m_logicalDeviceServerPort); // comparing two pointers. yuck?
@@ -159,10 +164,11 @@ GCFEvent::TResult AVTLogicalDevice::idle_state(GCFEvent& event, GCFPortInterface
     {
       // open the server port to allow clients to connect
       m_logicalDeviceServerPort.open();
-//      m_logicalDeviceServerPort.send(LOGICALDEVICE_INITIALIZED);
+      LOGICALDEVICEInitializedEvent initializedEvent;
+//      m_logicalDeviceServerPort.send(initializedEvent);
       if(m_clientInterTaskPort!=0)
       {
-        m_clientInterTaskPort->sendBack(LOGICALDEVICE_INITIALIZED);
+        m_clientInterTaskPort->sendBack(initializedEvent);
       }
       
       GCFPVString status("Idle");
@@ -247,10 +253,11 @@ GCFEvent::TResult AVTLogicalDevice::claimed_state(GCFEvent& event, GCFPortInterf
       m_properties.setValue("status",status);
 
       // send claimed message to all my clients.
-//      m_logicalDeviceServerPort.send(LOGICALDEVICE_CLAIMED);
+      LOGICALDEVICEClaimedEvent claimedEvent;
+//      m_logicalDeviceServerPort.send(claimedEvent);
       if(m_clientInterTaskPort!=0)
       {
-        m_clientInterTaskPort->sendBack(LOGICALDEVICE_CLAIMED);
+        m_clientInterTaskPort->sendBack(claimedEvent);
       }
       break;
     }
@@ -333,10 +340,11 @@ GCFEvent::TResult AVTLogicalDevice::preparing_state(GCFEvent& event, GCFPortInte
         if(stateFinished)
         {
           TRAN(AVTLogicalDevice::suspended_state);
-//          m_logicalDeviceServerPort.send(LOGICALDEVICE_PREPARED);
+          LOGICALDEVICEPreparedEvent preparedEvent;
+//          m_logicalDeviceServerPort.send(preparedEvent);
           if(m_clientInterTaskPort!=0)
           {
-            m_clientInterTaskPort->sendBack(LOGICALDEVICE_PREPARED);
+            m_clientInterTaskPort->sendBack(preparedEvent);
           }
         }
       }
@@ -361,7 +369,8 @@ GCFEvent::TResult AVTLogicalDevice::suspended_state(GCFEvent& event, GCFPortInte
       m_properties.setValue("status",status);
       if(m_clientInterTaskPort!=0)
       {
-        m_clientInterTaskPort->sendBack(LOGICALDEVICE_SUSPENDED);
+        LOGICALDEVICESuspendedEvent suspendedEvent;
+        m_clientInterTaskPort->sendBack(suspendedEvent);
       }
       break;
     }
@@ -417,10 +426,11 @@ GCFEvent::TResult AVTLogicalDevice::active_state(GCFEvent& event, GCFPortInterfa
       m_properties.setValue("status",status);
 
       // send resumed message to all my clients.
-//      m_logicalDeviceServerPort.send(LOGICALDEVICE_RESUMED);
+      LOGICALDEVICEResumedEvent resumedEvent;
+//      m_logicalDeviceServerPort.send(resumedEvent);
       if(m_clientInterTaskPort!=0)
       {
-        m_clientInterTaskPort->sendBack(LOGICALDEVICE_RESUMED);
+        m_clientInterTaskPort->sendBack(resumedEvent);
       }
       break;
     }
@@ -484,10 +494,11 @@ GCFEvent::TResult AVTLogicalDevice::releasing_state(GCFEvent& event, GCFPortInte
       if(stateFinished)
       {
         TRAN(AVTLogicalDevice::idle_state);
-//        m_logicalDeviceServerPort.send(LOGICALDEVICE_RELEASED);
+        LOGICALDEVICEReleasedEvent releasedEvent;
+//        m_logicalDeviceServerPort.send(releasedEvent);
         if(m_clientInterTaskPort!=0)
         {
-          m_clientInterTaskPort->sendBack(LOGICALDEVICE_RELEASED);
+          m_clientInterTaskPort->sendBack(releasedEvent);
         }
       }
       break;

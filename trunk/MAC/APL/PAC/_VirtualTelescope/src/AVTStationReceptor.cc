@@ -220,16 +220,16 @@ void AVTStationReceptor::handlePropertySetAnswer(GCFEvent& answer)
         {
           // send message to myself using a dummyport. VT will send it to SBF and SRG
           GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
-          GCFEvent e(LOGICALDEVICE_SUSPEND);
-          dispatch(e,dummyPort); 
+          LOGICALDEVICESuspendEvent suspendEvent;
+          dispatch(suspendEvent,dummyPort); 
         }
         // RESUME
         else if(command==string("RESUME"))
         {
           // send message to myself using a dummyport. VT will send it to SBF and SRG
           GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
-          GCFEvent e(LOGICALDEVICE_RESUME);
-          dispatch(e,dummyPort);
+          LOGICALDEVICEResumeEvent resumeEvent;
+          dispatch(resumeEvent,dummyPort);
         }
       }
 */
