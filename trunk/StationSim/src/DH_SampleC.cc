@@ -24,6 +24,7 @@
 
 #include <StationSim/DH_SampleC.h>
 #include <BaseSim/Step.h>
+#include <iomanip.h>
 
 
 DH_SampleC::DH_SampleC (const string& name, unsigned int nx,

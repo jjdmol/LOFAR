@@ -100,6 +100,8 @@ void WH_BandSep::preprocess()
     Matrix<double> filter(IPosition(2, itsFilterLength, itsNsubband),
 			  &coeff[0], SHARE);
     filter /= max(filter);
+    cout << "Filter coefficients: " << endl;
+    cout << filter << endl;
     // Create for each subband the filter vector from the matrix.
     itsFilters.resize (itsNsubband);
     for (int i=0; i<itsNsubband; i++) {
@@ -148,14 +150,16 @@ void WH_BandSep::process()
 	  conv = 0;
 	  int fp = 0;
 	  int pos = j*itsFilterLength + itsFiltPos;
-	  for (int k=pos; k<(j+1)*itsFilterLength; k++) {
+	  // Go from end to begin through the data.
+	  for (int k=pos; k>=j*itsFilterLength; k--) {
 	    conv += itsFilters[j][fp++] * itsBuffers[i][k];
 	  }
-	  for (int k=j*itsFilterLength; k<pos; k++) {
+	  for (int k=(j+1)*itsFilterLength-1; k>pos; k--) {
 	    conv += itsFilters[j][fp++] * itsBuffers[i][k];
 	  }
 	  conv /= itsFilterLength;
 	}
+	cout << "***" << endl;
 	itsFFTserver.fft0 (itsFFTBuf, itsConv, False);
 	itsFFTBuf *= DH_SampleC::BufferType(1./itsNsubband);
 	// The FFT output has (n+2)/2 points, where first point is the
