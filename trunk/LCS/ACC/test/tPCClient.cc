@@ -15,8 +15,15 @@ using namespace LOFAR::ACC;
 int main (int argc, char *argv[]) {
 
 	INIT_LOGGER(basename(argv[0]));
-//	INIT_LOGGER("tPCClient");
 	LOG_INFO_STR("Starting up: " << argv[0]);
+
+	if (argc < 2) {
+		LOG_FATAL_STR("Syntax: " << argv[0] << " parameterfile");
+		return (1);
+	}
+
+	ParameterSet	myPS(argv[1]);
+	string			procID = myPS.getString("process.name");
 
 	DH_ProcControl		DH_Client;
 	DH_ProcControl		DH_Server;
@@ -29,10 +36,15 @@ int main (int argc, char *argv[]) {
 	DH_Client.connectBidirectional(DH_Server, TCPto, TCPfrom, true);
 	DH_Client.init();
 
-	ParameterSet	myPS(argv[1]);
-	string			procID = myPS.getString("process.name");
+	// init random generator with some value for testing
+	uint32 seed = 0;
+	for (uint16 i = 0; i < procID.length(); ++i) {
+		seed += procID.data()[i];
+	}
+	cout << "seed=" << seed << endl;
+	srand(seed);
 
-	sleep(2);			// simulate we are busy
+	sleep(rand() % 5);			// simulate we are busy
 	DH_Client.setCommand (PCCmdStart);		// ready to receive data
 	DH_Client.setOptions (procID);			// tell AC who we are.
 	DH_Client.write();
@@ -49,7 +61,7 @@ int main (int argc, char *argv[]) {
 						<< waitTime << " and options: " << options);
 
 		// tell after a while we are ready with this command
-		sleep (3);
+		sleep (rand()%10);
 		DH_Client.setCommand(static_cast<PCCmd>(DH_Client.getCommand() ^ PCCmdResult));
 		DH_Client.setResult (PcCmdMaskOk);
 		DH_Client.write();
@@ -58,6 +70,7 @@ int main (int argc, char *argv[]) {
 
 	LOG_DEBUG("Disconnecting");
 
+	return (0);
 }
 
 
