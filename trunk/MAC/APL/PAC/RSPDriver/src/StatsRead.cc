@@ -89,6 +89,8 @@ GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port
 
   if (m_type <= Statistics::SUBBAND_POWER)
   {
+    if (event.signal != EPA_STSUBSTATS) return GCFEvent::HANDLED;
+
     EPAStsubstatsEvent ack(event);
 
     Array<complex<uint16>, 2> stats((complex<uint16>*)&ack.stat,
@@ -107,6 +109,8 @@ GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port
   }
   else
   {
+    if (event.signal != EPA_STSTATS) return GCFEvent::HANDLED;
+
     EPAStstatsEvent ack(event);
 
     Array<complex<uint16>, 2> stats((complex<uint16>*)&ack.stat,

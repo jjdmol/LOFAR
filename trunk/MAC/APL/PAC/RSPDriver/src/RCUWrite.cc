@@ -48,7 +48,7 @@ RCUWrite::~RCUWrite()
 
 void RCUWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + getCurrentBLP() * 2;
+  uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + getCurrentBLP();
 
   EPARcusettingsEvent rcusettings;
   MEP_RCUSETTINGS(rcusettings.hdr, MEPHeader::WRITE, getCurrentBLP());
@@ -57,26 +57,8 @@ void RCUWrite::sendrequest()
   RCUSettings::RCURegisterType& y = Cache::getInstance().getBack().getRCUSettings()()(global_blp + 1);
 
 #ifdef TOGGLE_LEDS
-  if (x.filter_0)
-  {
-    x.filter_0 = 0;
-    x.filter_1 = 1;
-  }
-  else
-  {
-    x.filter_0 = 1;
-    x.filter_1 = 0;
-  }
-
-  RCUSettings::RCURegisterType& x1 = Cache::getInstance().getFront().getRCUSettings()()(global_blp);
-//  RCUSettings::RCURegisterType& y1 = Cache::getInstance().getFront().getRCUSettings()()(global_blp + 1);
-
-  // only set filter_0 and filter_1 bits, leave other bits, most notable the overflw bit alone!
-  x1.filter_0 = x.filter_0;
-  x1.filter_1 = x.filter_1;
-
-  // y-pol has no led connected
-  //y1=y;
+  x.filter_0 = Cache::getInstance().ledstatus();
+  x.filter_1 = !Cache::getInstance().ledstatus();
 #endif
 
   memcpy(&rcusettings.x, &x, sizeof(uint8));

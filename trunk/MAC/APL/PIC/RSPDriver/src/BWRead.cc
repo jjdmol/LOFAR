@@ -84,6 +84,8 @@ void BWRead::sendrequest_status()
 
 GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
+  if (event.signal != EPA_BFCOEFS) return GCFEvent::HANDLED;
+
   uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + getCurrentBLP();
 
   EPABfcoefsEvent bfcoefs(event);

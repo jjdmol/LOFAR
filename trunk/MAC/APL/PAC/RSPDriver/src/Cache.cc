@@ -39,6 +39,7 @@ using namespace blitz;
  * Instance pointer for the Cache singleton class.
  */
 Cache* Cache::m_instance = 0;
+bool   Cache::m_ledstatus = 0;
 
 /**
  * CacheBuffer implementation
@@ -223,22 +224,15 @@ CacheBuffer& Cache::getBack()
   return *m_back;
 }
 
-void Cache::update_status(EPARspstatusEvent& ack, int boardid)
+#ifdef TOGGLE_LEDS
+bool Cache::ledstatus()
 {
-  SystemStatus& status = Cache::getInstance().getBack().getSystemStatus();
-
-  // copy board status
-  memcpy(&status.board()(boardid),
-	 &ack.board,
-	 sizeof(BoardStatus));
-
-  // copy rcu status
-  for (int blp = 0; blp < GET_CONFIG("N_BLPS", i); blp++)
-  {
-    memcpy(&status.rcu()((boardid * GET_CONFIG("N_BLPS", i)) + blp),
-	   &ack.rcu[blp],
-	   sizeof(RCUStatus));
-  }
+  return m_ledstatus;
 }
 
+void Cache::ledflip()
+{
+  m_ledstatus = !m_ledstatus;
+}
+#endif
 
