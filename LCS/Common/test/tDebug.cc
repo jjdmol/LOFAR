@@ -21,6 +21,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2003/09/29 15:44:09  smirnov
+//  %[ER: 16]%
+//  Based Debug (and Assert) errors off of LCS::Exception.
+//  Cleaned up Assert macros.
+//
 //  Revision 1.1  2003/08/21 11:20:33  diepen
 //  Moved Common to LCS
 //
@@ -69,13 +74,12 @@ class YY
 {
 public:
   YY() {cout << "YY debug: " << getDebugContext().name() << endl;}
-  LocalDebugAlias (XX);
+  ImportDebugContext(XX);
 };
 
 #ifdef getDebugContext
 #undef getDebugContext
 #endif
-//#define getDebugContext() XX::getDebugContext()
 
 void f()
 {

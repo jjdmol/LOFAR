@@ -21,6 +21,12 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.5  2003/09/30 11:31:10  smirnov
+//  %[ER: 16]%
+//  Tied the debug stream to cerr rather than cout. This necessitated a change
+//  to the dprintf() macro.
+//  Throw() now dumps the exception message to the debug stream at level 1.
+//
 //  Revision 1.4  2003/09/30 10:38:47  loose
 //  %[ER: 19]%
 //  Forgot to modify one instance of HAVE___FUNCTION__. Did it now.
@@ -149,72 +155,139 @@ namespace LCS
   EXCEPTION_CLASS(AssertError,Exception)  
 }
 
-// The system supports multiple debugging contexts, implemented as
-// namespaces. A context has independent debug message levels.
-// You can define the debugging context by
-// nesting it inside your package namespace (or even in a class declaration).
-// The following macros, when placed in the header _inside_ your class,
-// will declare the required Debug context.
+//      =====[ Declaring and implementing debugging contexts ]=====
+//      ===========================================================
+//
+// The system supports multiple debugging contexts. Each context has 
+// its own debug message level, which may be initialized from the
+// command line and changed at run time. Debug messages (see below)
+// are generated only if the level of the message is <= the current
+// level of the current debug context.
+// 
+// A debugging context is identified by a name, and implemented via a 
+// Debug::Context object. All debugging macros call the getDebugContext()
+// function to determine the current Debug::Context object. Thus, judicious 
+// use of namespaces allows these macros to pick the right context depending
+// on current program scope.
+// 
+// You can define a debugging context by placing the appropriate
+// magic invocationas in a namespace or a class declaration.
+// The following macro, when placed in a header _inside_ your class or
+// namespace declarations (.h file), will declare a local debug context:
 //
 //    LocalDebugContext;
 //
-// Then, the .cc file must define an implementation of the context.
-// To do so, insert this macro
+// Alternatively, use
 //
-//    InitDebugContext(class,contextname);
+//    ImportDebugContext(other_class_or_namespace);
 //
-// This will add the code required to implement the context.
+// to use the same context as that of another class or namespace.
 //
-// It is possible to declare in a class that the context of another class
-// should be used. This can be done by inserting in the class
+// If you declare a local context, your .cc file must define an 
+// implementation. To do so, insert this macro:
 //
-//    LocalDebugAlias(otherclass)
+//    InitDebugContext(scope,"contextname");
 //
-// If a specific debug context has to be used in a .cc file, one can do
-// so by defining the macro getDebugContext() like:
+// where "scope" is the class or namespace. This will add the functions 
+// and data objects required to implement the context.
 //
-//    #ifdef getDebugContext
-//    #undef getDebugContext
-//    #endif
-//    #define getDebugContext() XX::getDebugContext()
+// In addition, you can declare debug subcontexts. A subcontext has 
+// a parent context; debug messages are generated if the level of the 
+// message is <= the subcontext debug level _OR_ <= the parent's debug 
+// level. Subcontexts may be nested to any depth. This allows for more
+// fine-grained debug levels within class hierarchies.
+//
+// A subcontext is declared in an .h file (inside class or namespace):
+//
+//    LocalDebugSubContext;
+//
+// and implementations are inserted ina  .cc file via:
+//
+//    InitDebugSubContext(scope,parent_scope,"contextname");
+// 
 
-
-
-// This macro declares a local debug context within a class. Use public
-// or protected access to have subclasses inherit the context, else use
-// private.
+// This macro declares a local debug context within a class or namespace.
 #define LocalDebugContext \
   private: static ::Debug::Context DebugContext; \
   public: static inline ::Debug::Context & getDebugContext() \
             { return DebugContext; }
-#define LocalDebugSubContext LocalDebugContext;
-// This macro declares a debug context within this class that is aliased
-// from some other class's local context. Use public or protected access to 
-// have subclasses inherit the context, else use private.
-#define LocalDebugAlias(other) \
+// This macro declares a local sub-context within a class or namespace
+#define LocalDebugSubContext LocalDebugContext
+// This macro declares that this class uses the same context as declared
+// in another class or namespace.
+#define ImportDebugContext(other) \
   public: static inline ::Debug::Context & getDebugContext() \
             { return other::getDebugContext(); }
-
 // This macro adds necessary implementation of a local debug context. If you
-// declare a local context, then it must be present in your class's .cc file. 
+// declare a local context, then this must be inserted in a .cc file
+// somewhere.
 #define InitDebugContext(scope,name) \
   ::Debug::Context scope::DebugContext(name)
-#define InitDebugSubContext(scope,parent,name) ::Debug::Context scope::DebugContext(name,&(parent::getDebugContext()));
+// This macro adds necessary implementation of a local debug subcontext
+#define InitDebugSubContext(scope,parent_scope,name) \
+  ::Debug::Context scope::DebugContext(name,&(parent_scope::getDebugContext()))
 
-// This macro adds necessary implementation of an aliased debug context. If you
-// declare a local context, then it must be present in your class's .cc file. 
-#define InitDebugAlias(scope,otherscope) ::Debug::Context & scope##::DebugContext(otherscope::getDebugContext());
-
-// use this to check a numeric debug level
+//
+//      =====[ Checking state of debugging contexts ]=====
+//      ==================================================
+//
+// DebugName expands to the name of current context (a const std::string &)
+// DebugLevel expands to the debugging level of current context (an int)
+//
+#define DebugName       (getDebugContext().name())
+#define DebugLevel      (getDebugContext().level())
+//
+// Debug(level) is True if the debugging level of the current context
+// is >= the specified level.
+//
 #ifdef DISABLE_DEBUG_OUTPUT
-#define Debug(level) (0)
+#define Debug(level) (false)
 #else
 #define Debug(level) getDebugContext().check(level)
 #endif
 
-// use this to get the name of the current context
-#define DebugName       (getDebugContext().name())
-#define DebugLevel      (getDebugContext().level())
+//      =====[ Generating debugging messages ]=====
+//      ===========================================
+//
+// NB: the macros below make use of some synctatic trickery -- if you use
+// them in the body of an if/else statement, make sure you enclose the body
+// within {...} to avoid problems.
+//
+// cdebug(level) 
+// cdebug1(level)
+//
+//    These macros conditionally produce a debugging message on the debugging
+//    stream (i.e., stream  only if the current level is >= specified level).
+//    Use, e.g.: 
+//          cdebug(1)<<"event X, value is "<<value<<endl;
+//    The normal cdebug() version precedes the message with whatever is
+//    returned by a call to sdebug(0). There is a global sdebug() function 
+//    (defined in  this file) which simply returns an empty string.
+//    The idea here is that classes can redefine sdebug() to generate a 
+//    short string identifying the current class and/or object and/or state, 
+//    this can make it easier to identify the source of a debugging message
+//    (see, e.g., the DMI package for examples of use).
+//
+//    If for whatever reason you don't want to call sdebug() here, use the
+//    cdebug1() macro.
+// 
+#define cdebug1(level)  if( Debug(level) && Debug::stream_time() ) ::Debug::dbg_stream
+#define cdebug(level)  cdebug1(level)<<sdebug(0)<<": "
+
+//
+// dprintf(level) 
+// dprintf1(level) 
+//
+//      These macros conditionally printf a debugging message.
+//      Use, e.g.: 
+//            dprintf(1)("event X, value is %d",value);
+//
+//      The difference between dprintf/dprintf1 is just like cdebug/cdebug1.
+//
+#define dprintf1(level) cdebug1(level)<<Debug::ssprintf
+#define dprintf(level) cdebug(level)<<Debug::ssprintf
+
+
 
 namespace Debug
 {
@@ -239,15 +312,6 @@ namespace Debug
   inline int stream_time () { return 1; };
 #endif
 };
-
-// Use this macro to conditionally stream a debugging message.
-//    cdebug(1)<<whatever
-#define cdebug1(level)  if( Debug(level) && Debug::stream_time() ) ::Debug::dbg_stream
-#define cdebug(level)  cdebug1(level)<<sdebug(0)<<": "
-// Use this macro to conditionally printf a debugging message.
-//    dprintf(1)(format,whatever)
-#define dprintf1(level) cdebug1(level)<<Debug::ssprintf
-#define dprintf(level) cdebug(level)<<Debug::ssprintf
 
 // Use this macro to write trace output.
 // Similar as dprintf, but uses iostream instead of printf.
@@ -356,7 +420,8 @@ namespace Debug
 #define Declare_sdebug(qualifiers) qualifiers string sdebug ( int detail = 1,const string &prefix = "",const char *name = 0 ) const; 
 #define Declare_debug(qualifiers) qualifiers const char * debug ( int detail = 1,const string &prefix = "",const char *name = 0 ) const { return Debug::staticBuffer(sdebug(detail,prefix,name)); }
 
-// this global definition of sdebug allows the use of "non-1" macros everywhere
+// this global definition of sdebug allows the use of cdebug/dprintf macros 
+// everywhere
 inline string sdebug (int=0) { return ""; };
 
 // The ThrowExc macro throws an exception of the specified type, using
