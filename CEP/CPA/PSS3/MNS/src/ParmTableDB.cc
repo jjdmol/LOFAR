@@ -163,8 +163,9 @@ MParmSet ParmTableDB::find (const string& parmName,
 }
 #endif
 
-void ParmTableDB::getSources (vector<string>& nams, vector<int>& srcs)
+vector<string> ParmTableDB::getSources()
 {
+  vector<string> nams;
 #ifdef HAVE_LOFAR_PL
   // Get all parm rows containing RA in the name.
   // Use both tables.
@@ -175,21 +176,18 @@ void ParmTableDB::getSources (vector<string>& nams, vector<int>& srcs)
   tpoparmdef.tableName (itsTableName+"Def");
   MParmDefSet dset = tpoparmdef.retrieve
     (attrib(tpoparmdef,"name").like ("RA.*"));
-  nams.resize(0);
-  srcs.resize(0);
+  vector<string> nams;
   nams.reserve (set.size() + dset.size());
-  srcs.reserve (set.size() + dset.size());
   MParmSet::iterator iter = set.begin();
   for (; iter!=set.end(); iter++) {
     nams.push_back (iter->data().getName());
-    srcs.push_back (iter->data().getSourceNr());
   }
   MParmDefSet::iterator diter = dset.begin();
   for (; diter!=dset.end(); diter++) {
     nams.push_back (diter->data().getName());
-    srcs.push_back (diter->data().getSourceNr());
   }
 #endif
+  return nams;
 }
 
 void ParmTableDB::unlock()

@@ -50,14 +50,30 @@ MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
 					  vector<MeqExpr*>& exprDel)
 {
   // Get the vector of all parms containing a source name.
-  vector<string> nams;
-  vector<int> srcs;
-  itsRep->getSources (nams, srcs);
+  vector<string> nams = itsRep->getSources();
+  vector<int> srcs(nams.size());
+  // Extract the sourcenrs from the names.
+  for (uint i=0; i<nams.size(); i++) {
+    string name = nams[i];
+    // Remove first part from the name which looks like RA.CPn..
+    string::size_type idx = name.rfind ('.');
+    Assert (idx != string::npos);
+    // Remove first part (RA or so).
+    name = name.substr (idx+1);
+    nams[i] = name;
+    int srcnr = -1;
+    // Get sourcenr from name which looks like CPn.
+    if (name.substr(0,2) == "CP") {
+      istringstream istr(name.substr(2));
+      istr >> srcnr;
+      srcs.push_back (srcnr);
+    }
+  }
   // Sort the srcnrs uniquely.
   Vector<uInt> index;
-  int nr = GenSortIndirect<Int>::sort (index, &srcs[0], srcs.size(),
+  int nr = GenSortIndirect<int>::sort (index, &srcs[0], srcs.size(),
 				       Sort::Ascending,
-				       Sort::QuickSort | Sort::NoDuplicates);
+				       Sort::QuickSort|Sort::NoDuplicates);
   MeqSourceList sources;
   for (int i=0; i<nr; i++) {
     int inx = index(i);
@@ -75,10 +91,6 @@ MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
     }
     if (fnd) {
       string name = nams[inx];
-      string::size_type idx = name.rfind ('.');
-      Assert (idx != string::npos);
-      // Remove first part (RA).
-      name = name.substr (idx+1);
       MeqStoredParmPolc* mr = new MeqStoredParmPolc("RA."+name,
 						    srcnr, -1, this);
       exprDel.push_back (mr);

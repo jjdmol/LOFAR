@@ -253,8 +253,7 @@ Table ParmTableAIPS::find (const string& parmName,
   return result;
 }
 
-void ParmTableAIPS::getSources (vector<string>& nams,
-				vector<int>& srcs)
+vector<string> ParmTableAIPS::getSources()
 {
   // Get all parm rows containing RA in the name.
   // Use the DEFAULTTABLE only if available.
@@ -264,8 +263,7 @@ void ParmTableAIPS::getSources (vector<string>& nams,
     tab = itsTable;
     st = 1;
   }
-  srcs.resize (0);
-  nams.resize (0);
+  vector<string> nams;
   for (int i=st; i<2; i++) {
     TableExprNode expr(tab.col("NAME") == Regex(Regex::fromPattern("RA.*")));
     Table sel = tab(expr);
@@ -273,19 +271,16 @@ void ParmTableAIPS::getSources (vector<string>& nams,
       // Sort them uniquely on sourcenr.
       Table sor = sel.sort("SRCNR", Sort::Ascending,
 			   Sort::QuickSort | Sort::NoDuplicates);
-      ROScalarColumn<int> srcCol(sor, "SRCNR");
       ROScalarColumn<String> namCol(sor, "NAME");
       Vector<String> names = namCol.getColumn();
-      Vector<Int> srcnrs = srcCol.getColumn();
       nams.reserve (nams.size() + sor.nrow());
-      srcs.reserve (nams.size() + sor.nrow());
       for (unsigned int i=0; i<names.nelements(); i++) {
 	nams.push_back (names(i));
-	srcs.push_back (srcnrs(i));
       }
     }
     tab = itsTable;
   }
+  return nams;
 }
 
 void ParmTableAIPS::unlock()
