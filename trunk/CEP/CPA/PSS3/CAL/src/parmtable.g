@@ -21,7 +21,7 @@
 ### $Id$
 
 # pragma include once
-print 'include parmtable.g   d11nov2002';
+print 'include parmtable.g   d01apr2003';
 
 include 'table.g'
 
@@ -39,17 +39,15 @@ parmtable := function (name, create=F)
 	d5 := tablecreatescalarcoldesc ('ENDTIME', as_double(0));
 	d6 := tablecreatescalarcoldesc ('STARTFREQ', as_double(0));
 	d7 := tablecreatescalarcoldesc ('ENDFREQ', as_double(0));
-	d8 := tablecreatearraycoldesc  ('RVALUES', as_double(0));
-	d9 := tablecreatearraycoldesc  ('SIM_RVALUES', as_double(0));
-	d10:= tablecreatearraycoldesc  ('SIM_RPERT', as_double(0));
-	d11:= tablecreatearraycoldesc  ('CVALUES', as_dcomplex(0));
-	d12:= tablecreatearraycoldesc  ('SIM_CVALUES', as_dcomplex(0));
-	d13:= tablecreatearraycoldesc  ('SIM_CPERT', as_dcomplex(0));
-	d14:= tablecreatearraycoldesc  ('MASK', T);
-	d15:= tablecreatescalarcoldesc ('DIFF', as_double(0));
-	d16:= tablecreatescalarcoldesc ('DIFF_REL', T);
+	d8 := tablecreatearraycoldesc  ('VALUES', as_double(0));
+	d9 := tablecreatearraycoldesc  ('SIM_VALUES', as_double(0));
+	d10:= tablecreatearraycoldesc  ('SIM_PERT', as_double(0));
+	d11:= tablecreatescalarcoldesc ('NORMALIZED', T);
+	d12:= tablecreatearraycoldesc  ('SOLVABLE', T);
+	d13:= tablecreatescalarcoldesc ('DIFF', as_double(0));
+	d14:= tablecreatescalarcoldesc ('DIFF_REL', T);
 	td := tablecreatedesc (d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11,
-			       d12, d13, d14, d15, d16);
+			       d12, d13, d14);
 	self.tab := table (name, td);
 	if (is_fail(self.tab)) {
 	    fail;
@@ -61,8 +59,7 @@ parmtable := function (name, create=F)
 	
 	# Create the table with initial values.
 	itabname := spaste(name,'/DEFAULTVALUES');
-	td := tablecreatedesc (d1, d2, d3, d8, d9, d10, d11, d12, d13, d14,
-			       d15, d16);
+	td := tablecreatedesc (d1, d2, d3, d8, d9, d10, d11, d12, d13, d14);
 	self.itab := table (itabname, td);
 	if (is_fail(self.itab)) {
 	    fail;
@@ -101,12 +98,12 @@ parmtable := function (name, create=F)
     }
 
     public.putinit := function (parmname='parmXXX', srcnr=-1, statnr=-1,
-				values=0, mask=unset,
+				values=0, solvable=unset, normalize=unset,
                                 diff=1e-6, diffrelative=T, trace=T)
     {
 	#----------------------------------------------------------------
 	funcname := paste('** parmtable.putinit(',parmname,'):');
-	input := [parmname=parmname, values=values, mask=mask,
+	input := [parmname=parmname, values=values, solvable=solvable,
 		  diff=diff, diffrelative=diffrelative];
 	if (trace) print funcname,' input=',input;
 	#----------------------------------------------------------------
@@ -127,12 +124,12 @@ parmtable := function (name, create=F)
 	if (length(shape(values)) != 2  ||  !is_numeric(values)) {
 	    fail paste('values should be a 2-dim numerical array');
 	}
-	if (!is_unset(mask)) {
-  	  if (length(shape(mask)) == 1  &&  length(mask) == 1) {
-	    mask := array (mask, 1, 1);
+	if (!is_unset(solvable)) {
+  	  if (length(shape(solvable)) == 1  &&  length(solvable) == 1) {
+	    solvable := array (solvable, 1, 1);
 	  }
-          if (!is_boolean(mask) || length(shape(mask)) != 2) {
-	    fail paste('mask should be unset or a 2-dim boolean array');
+          if (!is_boolean(solvable) || length(shape(solvable)) != 2) {
+	    fail paste('solvable should be unset or a 2-dim boolean array');
           }
 	}
 	self.itab.addrows(1);
@@ -140,22 +137,20 @@ parmtable := function (name, create=F)
 	self.itab.putcell ('NAME', rownr, parmname);
 	self.itab.putcell ('SRCNR', rownr, srcnr);
 	self.itab.putcell ('STATNR', rownr, statnr);
-	if (! is_unset(mask)) {
-	    self.itab.putcell ('MASK', rownr, mask);
+	nm := T;
+	if (is_boolean(solvable)) {
+	    self.itab.putcell ('SOLVABLE', rownr, solvable);
+	    nm := all(solvable);
 	}
-	if (is_dcomplex(values) || is_complex(values)) {
-	    vals := as_dcomplex(values);
-	    self.itab.putcell ('CVALUES', rownr, vals);
-	    self.itab.putcell ('SIM_CVALUES', rownr, vals);
-	    vals[,] := as_dcomplex(0);
-	    self.itab.putcell ('SIM_CPERT', rownr, vals);
-	} else {
-	    vals := as_double(values);
-	    self.itab.putcell ('RVALUES', rownr, vals);
-	    self.itab.putcell ('SIM_RVALUES', rownr, vals);
-	    vals[,] := as_double(0);
-	    self.itab.putcell ('SIM_RPERT', rownr, vals);
+	if (is_boolean(normalize)) {
+	    nm := normalize;
 	}
+	self.itab.putcell ('NORMALIZED', rownr, nm);
+	vals := as_double(values);
+	self.itab.putcell ('VALUES', rownr, vals);
+	self.itab.putcell ('SIM_VALUES', rownr, vals);
+	vals[,] := as_double(0);
+	self.itab.putcell ('SIM_PERT', rownr, vals);
 	self.itab.putcell ('DIFF', rownr, diff);
 	self.itab.putcell ('DIFF_REL', rownr, diffrelative);
 	return T;
@@ -163,13 +158,13 @@ parmtable := function (name, create=F)
 
     public.put := function (parmname='parmYYY', srcnr=-1, statnr=-1,
 			    timerange=[1,1e20], freqrange=[1,1e20], 
-			    values=0, mask=unset,
+			    values=0, solvable=unset, normalize=unset,
                             diff=1e-6, diffrelative=T,
 			    trace=F)
     {
 	#----------------------------------------------------------------
 	funcname := paste('** parmtable.put(',parmname,'):');
-	input := [parmname=parmname, values=values, mask=mask,
+	input := [parmname=parmname, values=values, solvable=solvable,
 		  timerange=timerange, freqrange=freqrange,
 		  diff=diff, diffrelative=diffrelative];
 	if (trace) print funcname,' input=',input;
@@ -198,8 +193,8 @@ parmtable := function (name, create=F)
 	if (length(shape(values)) != 2  ||  !is_numeric(values)) {
 	    fail paste('values should be a 2-dim numerical array');
 	}
-	if (!is_unset(mask)  &&  (!is_boolean(mask) || length(shape(mask)) != 2)) {
-	    fail paste('mask should be unset or a 2-dim boolean array');
+	if (!is_unset(solvable)  &&  (!is_boolean(solvable) || length(shape(solvable)) != 2)) {
+	    fail paste('solvable should be unset or a 2-dim boolean array');
 	}
 	self.tab.addrows(1);
 	rownr := self.tab.nrows();
@@ -210,22 +205,20 @@ parmtable := function (name, create=F)
 	self.tab.putcell ('ENDTIME', rownr, timerange[2]);
 	self.tab.putcell ('STARTFREQ', rownr, freqrange[1]);
 	self.tab.putcell ('ENDFREQ', rownr, freqrange[2]);
-	if (! is_unset(mask)) {
-	    self.tab.putcell ('MASK', rownr, mask);
+	nm := T;
+	if (is_boolean(solvable)) {
+	    self.itab.putcell ('SOLVABLE', rownr, solvable);
+	    nm := all(solvable);
 	}
-	if (is_dcomplex(values) || is_complex(values)) {
-	    vals := as_dcomplex(values);
-	    self.tab.putcell ('CVALUES', rownr, vals);
-	    self.tab.putcell ('SIM_CVALUES', rownr, vals);
-	    vals[,] := as_dcomplex(0);
-	    self.tab.putcell ('SIM_CPERT', rownr, vals);
-	} else {
-	    vals := as_double(values);
-	    self.tab.putcell ('RVALUES', rownr, vals);
-	    self.tab.putcell ('SIM_RVALUES', rownr, vals);
-	    vals[,] := as_double(0);
-	    self.tab.putcell ('SIM_RPERT', rownr, vals);
+	if (is_boolean(normalize)) {
+	    nm := normalize;
 	}
+	self.itab.putcell ('NORMALIZED', rownr, nm);
+	vals := as_double(values);
+	self.itab.putcell ('VALUES', rownr, vals);
+	self.itab.putcell ('SIM_VALUES', rownr, vals);
+	vals[,] := as_double(0);
+	self.itab.putcell ('SIM_PERT', rownr, vals);
 	self.tab.putcell ('DIFF', rownr, diff);
 	self.tab.putcell ('DIFF_REL', rownr, diffrelative);
 	return T;
@@ -243,12 +236,12 @@ parmtable := function (name, create=F)
 		name := tab.getcell('NAME', row);
 		public.putinit (spaste('RA.', name),
 				src, -1,
-				values=tab.getcell ('RAPARMS', row));
-#				diff=1e-7, diffrelative=F);
+				values=tab.getcell ('RAPARMS', row),
+				diff=1e-7, diffrelative=F);
 		public.putinit (spaste('DEC.', name),
 				src, -1,
-				values=tab.getcell ('DECPARMS', row));
-#				diff=1e-7, diffrelative=F);
+				values=tab.getcell ('DECPARMS', row),
+				diff=1e-7, diffrelative=F);
 		public.putinit (spaste('StokesI.', name),
 				src, -1,
 				values=tab.getcell ('IPARMS', row));
@@ -281,25 +274,15 @@ parmtable := function (name, create=F)
 	if (is_fail(t1)) fail;
 	if (t1.nrows() > 0) {
 	    for (row in [1:t1.nrows()]) {
-		if (t1.iscelldefined ('RVALUES',row)) {
-		    vals := t1.getcell ('SIM_RVALUES', row);
-		    if (pertrelative) {
-			valp := vals * perturbation;
-		    } else {
-			valp := vals + perturbation;
-		    }
-		    t1.putcell ('RVALUES', row, valp);
-		    t1.putcell ('SIM_RPERT', row, valp-vals);
+		vals := t1.getcell ('SIM_VALUES', row);
+		if (pertrelative) {
+		    valp := vals * perturbation;
+		    valp[abs(vals)<1e-10] := vals + perturbation;
 		} else {
-		    vals := t1.getcell ('SIM_CVALUES', row);
-		    if (pertrelative) {
-			valp := vals * perturbation;
-		    } else {
-			valp := vals + perturbation;
-		    }
-		    t1.putcell ('CVALUES', row, valp);
-		    t1.putcell ('SIM_CPERT', row, valp-vals);
+		    valp := vals + perturbation;
 		}
+		t1.putcell ('VALUES', row, valp);
+		t1.putcell ('SIM_PERT', row, valp-vals);
 	    }
 	}
 	if (where != '') {
