@@ -102,7 +102,7 @@ void OnLineProto::define(const KeyValueMap& params)
   app.setCurAppl(0);
 
   // Get any extra params from input
-  int NStations = params.getInt("stations",2);
+  int NStations = params.getInt("stations",NSTATIONS);
   //  int NBeamlets = params.getInt("beamlets",32);
   int NBeamlets = (NBEAMLETS);
   //  int myFBW     = params.getInt("beamlet_FBW",256);
@@ -245,7 +245,7 @@ void OnLineProto::define(const KeyValueMap& params)
     myWHDumps[s] = new WH_Dump("noname",1);    
 
     myDumpSteps[s] = new Step(myWHDumps[s],"noname");
-    myDumpSteps[s]->runOnNode(0,0);
+    myDumpSteps[s]->runOnNode(NCorr,0);
     myDumpSteps[s]->setRate(TSIZE);
     app.addStep(myDumpSteps[s]);
     // connect the preprocess step to the station step
