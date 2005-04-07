@@ -69,6 +69,11 @@ class EchoTest : public GCFTask
   GCFEvent::TResult test11(GCFEvent& e, GCFPortInterface& p);
   GCFEvent::TResult test12(GCFEvent& e, GCFPortInterface& p);
   GCFEvent::TResult test13(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult test14(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult test15(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult test16(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult test17(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult test18(GCFEvent& e, GCFPortInterface& p);
   GCFEvent::TResult final(GCFEvent& e, GCFPortInterface& p);
 
 private:

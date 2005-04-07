@@ -221,3 +221,82 @@ event = {
     type = "unsigned int";
   };
 };
+
+event = {
+  signal = PING_INT_ARRAY;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "intArrayParam";
+    type = "int[10]";
+  };
+};
+
+event = {
+  signal = ECHO_INT_ARRAY;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "intArrayParam";
+    type = "int[10]";
+  };
+};
+
+event = {
+  signal = PING_INT_ARRAY_20;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "intArrayParam";
+    type = "int[20]";
+  };
+};
+
+event = {
+  signal = ECHO_INT_ARRAY_20;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "intArrayParam";
+    type = "int[20]";
+  };
+};
+
+event = {
+  signal = PING_INT_ARRAY_61;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "intArrayParam";
+    type = "int[61]";
+  };
+};
+
+event = {
+  signal = ECHO_INT_ARRAY_61;
+  dir = IN;
+  param = {
+    name = "seqnr";
+    type = "unsigned int";
+  };
+  param = {
+    name = "intArrayParam";
+    type = "int[61]";
+  };
+};
+

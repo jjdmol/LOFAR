@@ -225,6 +225,71 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
       break;
     }
 
+    case THECHO_PING_INT_ARRAY:
+    {
+      LOG_TRACE_FLOW("Echo::connected(THECHO_PING_INT_ARRAY)");
+      THEchoPingIntArrayEvent ping(e);
+      LOG_INFO(formatString("PING_INT_ARRAY received on port %s (seqnr=%d, intArrayParam=[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d])",p.getName().c_str(),ping.seqnr,ping.intArrayParam[0],ping.intArrayParam[1],ping.intArrayParam[2],ping.intArrayParam[3],ping.intArrayParam[4],ping.intArrayParam[5],ping.intArrayParam[6],ping.intArrayParam[7],ping.intArrayParam[8],ping.intArrayParam[9]));
+      THEchoEchoIntArrayEvent echo;
+      echo.seqnr = ping.seqnr;
+      for(int i=0;i<10;i++)
+        echo.intArrayParam[i] = ping.intArrayParam[i];
+      _reply(echo,p);
+      break;
+    }
+
+    case THECHO_PING_INT_ARRAY_20:
+    {
+      LOG_TRACE_FLOW("Echo::connected(THECHO_PING_INT_ARRAY_20)");
+      THEchoPingIntArray20Event ping(e);
+
+      int numInts=20;
+      int i;
+      char strTemp[50];
+      string paramDump("[");
+      for(i=0;i<numInts-1;i++)
+      {
+        sprintf(strTemp,"%d,",ping.intArrayParam[i]);
+        paramDump += string(strTemp);
+      }
+      sprintf(strTemp,"%d]",ping.intArrayParam[i]);
+      paramDump += string(strTemp);
+      LOG_INFO(formatString("PING_INT_ARRAY_20 received on port %s (seqnr=%d, intArrayParam=%s)",p.getName().c_str(),ping.seqnr,paramDump.c_str()));
+
+      THEchoEchoIntArray20Event echo;
+      echo.seqnr = ping.seqnr;
+      for(i=0;i<numInts;i++)
+        echo.intArrayParam[i] = ping.intArrayParam[i];
+      _reply(echo,p);
+      break;
+    }
+
+    case THECHO_PING_INT_ARRAY_61:
+    {
+      LOG_TRACE_FLOW("Echo::connected(THECHO_PING_INT_ARRAY_61)");
+      THEchoPingIntArray61Event ping(e);
+
+      int numInts=61;
+      int i;
+      char strTemp[50];
+      string paramDump("[");
+      for(i=0;i<numInts-1;i++)
+      {
+        sprintf(strTemp,"%d,",ping.intArrayParam[i]);
+        paramDump += string(strTemp);
+      }
+      sprintf(strTemp,"%d]",ping.intArrayParam[i]);
+      paramDump += string(strTemp);
+      LOG_INFO(formatString("PING_INT_ARRAY_61 received on port %s (seqnr=%d, intArrayParam=%s)",p.getName().c_str(),ping.seqnr,paramDump.c_str()));
+
+      THEchoEchoIntArray61Event echo;
+      echo.seqnr = ping.seqnr;
+      for(i=0;i<numInts;i++)
+        echo.intArrayParam[i] = ping.intArrayParam[i];
+      _reply(echo,p);
+      break;
+    }
+
     case THECHOROUTING_PING_UINT:
     {
       LOG_TRACE_FLOW("Echo::connected(THECHOROUTING_PING_UINT)");
@@ -305,6 +370,72 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
       stop();      
       break;
     }
+
+    case THECHOROUTING_PING_INT_ARRAY:
+    {
+      LOG_TRACE_FLOW("Echo::connected(THECHOROUTING_PING_INT_ARRAY)");
+      THEchoRoutingPingIntArrayEvent ping(e);
+      LOG_INFO(formatString("PING_INT_ARRAY received on port %s (seqnr=%d, intArrayParam=[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d])",p.getName().c_str(),ping.seqnr,ping.intArrayParam[0],ping.intArrayParam[1],ping.intArrayParam[2],ping.intArrayParam[3],ping.intArrayParam[4],ping.intArrayParam[5],ping.intArrayParam[6],ping.intArrayParam[7],ping.intArrayParam[8],ping.intArrayParam[9]));
+      THEchoRoutingEchoIntArrayEvent echo;
+      echo.seqnr = ping.seqnr;
+      for(int i=0;i<10;i++)
+        echo.intArrayParam[i] = ping.intArrayParam[i];
+      _reply(echo,p);
+      break;
+    }
+
+    case THECHOROUTING_PING_INT_ARRAY_20:
+    {
+      LOG_TRACE_FLOW("Echo::connected(THECHOROUTING_PING_INT_ARRAY_20)");
+      THEchoRoutingPingIntArray20Event ping(e);
+      
+      int numInts=20;
+      int i;
+      char strTemp[50];
+      string paramDump("[");
+      for(i=0;i<numInts-1;i++)
+      {
+        sprintf(strTemp,"%d,",ping.intArrayParam[i]);
+        paramDump += string(strTemp);
+      }
+      sprintf(strTemp,"%d]",ping.intArrayParam[i]);
+      paramDump += string(strTemp);
+      LOG_INFO(formatString("PING_INT_ARRAY_20 received on port %s (seqnr=%d, intArrayParam=%s)",p.getName().c_str(),ping.seqnr,paramDump.c_str()));
+
+      THEchoRoutingEchoIntArray20Event echo;
+      echo.seqnr = ping.seqnr;
+      for(int i=0;i<numInts;i++)
+        echo.intArrayParam[i] = ping.intArrayParam[i];
+      _reply(echo,p);
+      break;
+    }
+
+    case THECHOROUTING_PING_INT_ARRAY_61:
+    {
+      LOG_TRACE_FLOW("Echo::connected(THECHOROUTING_PING_INT_ARRAY_61)");
+      THEchoRoutingPingIntArray61Event ping(e);
+      
+      int numInts=61;
+      int i;
+      char strTemp[50];
+      string paramDump("[");
+      for(i=0;i<numInts-1;i++)
+      {
+        sprintf(strTemp,"%d,",ping.intArrayParam[i]);
+        paramDump += string(strTemp);
+      }
+      sprintf(strTemp,"%d]",ping.intArrayParam[i]);
+      paramDump += string(strTemp);
+      LOG_INFO(formatString("PING_INT_ARRAY_61 received on port %s (seqnr=%d, intArrayParam=%s)",p.getName().c_str(),ping.seqnr,paramDump.c_str()));
+
+      THEchoRoutingEchoIntArray61Event echo;
+      echo.seqnr = ping.seqnr;
+      for(int i=0;i<numInts;i++)
+        echo.intArrayParam[i] = ping.intArrayParam[i];
+      _reply(echo,p);
+      break;
+    }
+
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
