@@ -173,17 +173,24 @@ GCFEvent::TResult EchoTest::test1(GCFEvent& e, GCFPortInterface& p)
       break;
     }
 
+//    case THECHO_ECHO_UINT:
     case THECHO_ECHO_INT:
     case THECHO_ECHO_LONG:
     case THECHO_ECHO_ENUM:
     case THECHO_ECHO_DOUBLE:
     case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
     case THECHOROUTING_ECHO_UINT:
     case THECHOROUTING_ECHO_INT:
     case THECHOROUTING_ECHO_LONG:
     case THECHOROUTING_ECHO_ENUM:
     case THECHOROUTING_ECHO_DOUBLE:
     case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
       LOG_FATAL("wrong echo received!!");
       stop();
       break;
@@ -245,16 +252,23 @@ GCFEvent::TResult EchoTest::test2(GCFEvent& e, GCFPortInterface& p)
     }
 
     case THECHO_ECHO_UINT:
+//    case THECHO_ECHO_INT:
     case THECHO_ECHO_LONG:
     case THECHO_ECHO_ENUM:
     case THECHO_ECHO_DOUBLE:
     case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
     case THECHOROUTING_ECHO_UINT:
     case THECHOROUTING_ECHO_INT:
     case THECHOROUTING_ECHO_LONG:
     case THECHOROUTING_ECHO_ENUM:
     case THECHOROUTING_ECHO_DOUBLE:
     case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
       LOG_FATAL("wrong echo received!!");
       stop();
       break;
@@ -317,15 +331,22 @@ GCFEvent::TResult EchoTest::test3(GCFEvent& e, GCFPortInterface& p)
 
     case THECHO_ECHO_UINT:
     case THECHO_ECHO_INT:
+//    case THECHO_ECHO_LONG:
     case THECHO_ECHO_ENUM:
     case THECHO_ECHO_DOUBLE:
     case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
     case THECHOROUTING_ECHO_UINT:
     case THECHOROUTING_ECHO_INT:
     case THECHOROUTING_ECHO_LONG:
     case THECHOROUTING_ECHO_ENUM:
     case THECHOROUTING_ECHO_DOUBLE:
     case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
       LOG_FATAL("wrong echo received!!");
       stop();
       break;
@@ -390,14 +411,21 @@ GCFEvent::TResult EchoTest::test4(GCFEvent& e, GCFPortInterface& p)
     case THECHO_ECHO_UINT:
     case THECHO_ECHO_INT:
     case THECHO_ECHO_LONG:
+//    case THECHO_ECHO_ENUM:
     case THECHO_ECHO_DOUBLE:
     case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
     case THECHOROUTING_ECHO_UINT:
     case THECHOROUTING_ECHO_INT:
     case THECHOROUTING_ECHO_LONG:
     case THECHOROUTING_ECHO_ENUM:
     case THECHOROUTING_ECHO_DOUBLE:
     case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
       LOG_FATAL("wrong echo received!!");
       stop();
       break;
@@ -463,13 +491,20 @@ GCFEvent::TResult EchoTest::test5(GCFEvent& e, GCFPortInterface& p)
     case THECHO_ECHO_INT:
     case THECHO_ECHO_LONG:
     case THECHO_ECHO_ENUM:
+//    case THECHO_ECHO_DOUBLE:
     case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
     case THECHOROUTING_ECHO_UINT:
     case THECHOROUTING_ECHO_INT:
     case THECHOROUTING_ECHO_LONG:
     case THECHOROUTING_ECHO_ENUM:
     case THECHOROUTING_ECHO_DOUBLE:
     case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
       LOG_FATAL("wrong echo received!!");
       stop();
       break;
@@ -535,12 +570,19 @@ GCFEvent::TResult EchoTest::test6(GCFEvent& e, GCFPortInterface& p)
     case THECHO_ECHO_LONG:
     case THECHO_ECHO_ENUM:
     case THECHO_ECHO_DOUBLE:
+//    case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
     case THECHOROUTING_ECHO_UINT:
     case THECHOROUTING_ECHO_INT:
     case THECHOROUTING_ECHO_LONG:
     case THECHOROUTING_ECHO_ENUM:
     case THECHOROUTING_ECHO_DOUBLE:
     case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
       LOG_FATAL("wrong echo received!!");
       stop();
       break;
@@ -568,25 +610,26 @@ GCFEvent::TResult EchoTest::test7(GCFEvent& e, GCFPortInterface& p)
     case F_ENTRY:
     {
       LOG_TRACE_FLOW("EchoTest::test7(F_ENTRY)");
-      THEchoRoutingPingUintEvent ping;
+      THEchoPingIntArrayEvent ping;
       ping.seqnr = _seqnr;
-      ping.uintParam = 123456789;
-      _send(ping,_routingClient);
+      for(int i=0;i<10;i++)
+        ping.intArrayParam[i]=i;
+      _send(ping,_client);
       break;
     }
       
-    case THECHOROUTING_ECHO_UINT:
+    case THECHO_ECHO_INT_ARRAY:
     {
-      LOG_TRACE_FLOW("EchoTest::test7(THECHOROUTING_ECHO_UINT)");
-      if(!_isServer(p))
+      LOG_TRACE_FLOW("EchoTest::test7(THECHO_ECHO_INT_ARRAY)");
+      if(!_isClient(p))
       {
         LOG_FATAL("reply received on wrong port!!");
         stop();
       }
       else
       {
-        THEchoRoutingEchoUintEvent echo(e);
-        LOG_INFO(formatString("ECHO_UINT received on port %s (seqnr=%d, uintParam=%d)",p.getName().c_str(),echo.seqnr,echo.uintParam));
+        THEchoEchoIntArrayEvent echo(e);
+        LOG_INFO(formatString("ECHO_INT_ARRAY received on port %s (seqnr=%d, intArrayParam=[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d])",p.getName().c_str(),echo.seqnr,echo.intArrayParam[0],echo.intArrayParam[1],echo.intArrayParam[2],echo.intArrayParam[3],echo.intArrayParam[4],echo.intArrayParam[5],echo.intArrayParam[6],echo.intArrayParam[7],echo.intArrayParam[8],echo.intArrayParam[9]));
         if(_seqnr != echo.seqnr)
         {
           LOG_FATAL("wrong seqnr received!!");
@@ -607,11 +650,18 @@ GCFEvent::TResult EchoTest::test7(GCFEvent& e, GCFPortInterface& p)
     case THECHO_ECHO_ENUM:
     case THECHO_ECHO_DOUBLE:
     case THECHO_ECHO_STRING:
+//    case THECHO_ECHO_INT_ARRAY:
+    case THECHOROUTING_ECHO_UINT:
     case THECHOROUTING_ECHO_INT:
     case THECHOROUTING_ECHO_LONG:
     case THECHOROUTING_ECHO_ENUM:
     case THECHOROUTING_ECHO_DOUBLE:
     case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
       LOG_FATAL("wrong echo received!!");
       stop();
       break;
@@ -639,16 +689,16 @@ GCFEvent::TResult EchoTest::test8(GCFEvent& e, GCFPortInterface& p)
     case F_ENTRY:
     {
       LOG_TRACE_FLOW("EchoTest::test8(F_ENTRY)");
-      THEchoRoutingPingIntEvent ping;
+      THEchoRoutingPingUintEvent ping;
       ping.seqnr = _seqnr;
-      ping.intParam = 123456789;
+      ping.uintParam = 123456789;
       _send(ping,_routingClient);
       break;
     }
       
-    case THECHOROUTING_ECHO_INT:
+    case THECHOROUTING_ECHO_UINT:
     {
-      LOG_TRACE_FLOW("EchoTest::test8(THECHOROUTING_ECHO_INT)");
+      LOG_TRACE_FLOW("EchoTest::test8(THECHOROUTING_ECHO_UINT)");
       if(!_isServer(p))
       {
         LOG_FATAL("reply received on wrong port!!");
@@ -656,8 +706,8 @@ GCFEvent::TResult EchoTest::test8(GCFEvent& e, GCFPortInterface& p)
       }
       else
       {
-        THEchoRoutingEchoIntEvent echo(e);
-        LOG_INFO(formatString("ECHO_INT received on port %s (seqnr=%d, intParam=%d)",p.getName().c_str(),echo.seqnr,echo.intParam));
+        THEchoRoutingEchoUintEvent echo(e);
+        LOG_INFO(formatString("ECHO_UINT received on port %s (seqnr=%d, uintParam=%d)",p.getName().c_str(),echo.seqnr,echo.uintParam));
         if(_seqnr != echo.seqnr)
         {
           LOG_FATAL("wrong seqnr received!!");
@@ -678,11 +728,18 @@ GCFEvent::TResult EchoTest::test8(GCFEvent& e, GCFPortInterface& p)
     case THECHO_ECHO_ENUM:
     case THECHO_ECHO_DOUBLE:
     case THECHO_ECHO_STRING:
-    case THECHOROUTING_ECHO_UINT:
+    case THECHO_ECHO_INT_ARRAY:
+//    case THECHOROUTING_ECHO_UINT:
+    case THECHOROUTING_ECHO_INT:
     case THECHOROUTING_ECHO_LONG:
     case THECHOROUTING_ECHO_ENUM:
     case THECHOROUTING_ECHO_DOUBLE:
     case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
       LOG_FATAL("wrong echo received!!");
       stop();
       break;
@@ -710,16 +767,16 @@ GCFEvent::TResult EchoTest::test9(GCFEvent& e, GCFPortInterface& p)
     case F_ENTRY:
     {
       LOG_TRACE_FLOW("EchoTest::test9(F_ENTRY)");
-      THEchoRoutingPingLongEvent ping;
+      THEchoRoutingPingIntEvent ping;
       ping.seqnr = _seqnr;
-      ping.longParam = 123456789;
+      ping.intParam = 123456789;
       _send(ping,_routingClient);
       break;
     }
       
-    case THECHOROUTING_ECHO_LONG:
+    case THECHOROUTING_ECHO_INT:
     {
-      LOG_TRACE_FLOW("EchoTest::test9(THECHOROUTING_ECHO_LONG)");
+      LOG_TRACE_FLOW("EchoTest::test9(THECHOROUTING_ECHO_INT)");
       if(!_isServer(p))
       {
         LOG_FATAL("reply received on wrong port!!");
@@ -727,8 +784,8 @@ GCFEvent::TResult EchoTest::test9(GCFEvent& e, GCFPortInterface& p)
       }
       else
       {
-        THEchoRoutingEchoLongEvent echo(e);
-        LOG_INFO(formatString("ECHO_LONG received on port %s (seqnr=%d, longParam=%d)",p.getName().c_str(),echo.seqnr,echo.longParam));
+        THEchoRoutingEchoIntEvent echo(e);
+        LOG_INFO(formatString("ECHO_INT received on port %s (seqnr=%d, intParam=%d)",p.getName().c_str(),echo.seqnr,echo.intParam));
         if(_seqnr != echo.seqnr)
         {
           LOG_FATAL("wrong seqnr received!!");
@@ -749,11 +806,18 @@ GCFEvent::TResult EchoTest::test9(GCFEvent& e, GCFPortInterface& p)
     case THECHO_ECHO_ENUM:
     case THECHO_ECHO_DOUBLE:
     case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
     case THECHOROUTING_ECHO_UINT:
-    case THECHOROUTING_ECHO_INT:
+//    case THECHOROUTING_ECHO_INT:
+    case THECHOROUTING_ECHO_LONG:
     case THECHOROUTING_ECHO_ENUM:
     case THECHOROUTING_ECHO_DOUBLE:
     case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
       LOG_FATAL("wrong echo received!!");
       stop();
       break;
@@ -781,16 +845,16 @@ GCFEvent::TResult EchoTest::test10(GCFEvent& e, GCFPortInterface& p)
     case F_ENTRY:
     {
       LOG_TRACE_FLOW("EchoTest::test10(F_ENTRY)");
-      THEchoRoutingPingEnumEvent ping;
+      THEchoRoutingPingLongEvent ping;
       ping.seqnr = _seqnr;
-      ping.enumParam = ECHOROUTING_ENUM_SECOND;
+      ping.longParam = 123456789;
       _send(ping,_routingClient);
       break;
     }
       
-    case THECHOROUTING_ECHO_ENUM:
+    case THECHOROUTING_ECHO_LONG:
     {
-      LOG_TRACE_FLOW("EchoTest::test10(THECHOROUTING_ECHO_ENUM)");
+      LOG_TRACE_FLOW("EchoTest::test10(THECHOROUTING_ECHO_LONG)");
       if(!_isServer(p))
       {
         LOG_FATAL("reply received on wrong port!!");
@@ -798,8 +862,8 @@ GCFEvent::TResult EchoTest::test10(GCFEvent& e, GCFPortInterface& p)
       }
       else
       {
-        THEchoRoutingEchoEnumEvent echo(e);
-        LOG_INFO(formatString("ECHO_ENUM received on port %s (seqnr=%d, enumParam=%d)",p.getName().c_str(),echo.seqnr,echo.enumParam));
+        THEchoRoutingEchoLongEvent echo(e);
+        LOG_INFO(formatString("ECHO_LONG received on port %s (seqnr=%d, longParam=%d)",p.getName().c_str(),echo.seqnr,echo.longParam));
         if(_seqnr != echo.seqnr)
         {
           LOG_FATAL("wrong seqnr received!!");
@@ -820,11 +884,18 @@ GCFEvent::TResult EchoTest::test10(GCFEvent& e, GCFPortInterface& p)
     case THECHO_ECHO_ENUM:
     case THECHO_ECHO_DOUBLE:
     case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
     case THECHOROUTING_ECHO_UINT:
     case THECHOROUTING_ECHO_INT:
-    case THECHOROUTING_ECHO_LONG:
+//    case THECHOROUTING_ECHO_LONG:
+    case THECHOROUTING_ECHO_ENUM:
     case THECHOROUTING_ECHO_DOUBLE:
     case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
       LOG_FATAL("wrong echo received!!");
       stop();
       break;
@@ -852,16 +923,16 @@ GCFEvent::TResult EchoTest::test11(GCFEvent& e, GCFPortInterface& p)
     case F_ENTRY:
     {
       LOG_TRACE_FLOW("EchoTest::test11(F_ENTRY)");
-      THEchoRoutingPingDoubleEvent ping;
+      THEchoRoutingPingEnumEvent ping;
       ping.seqnr = _seqnr;
-      ping.doubleParam = 1234.56789;
+      ping.enumParam = ECHOROUTING_ENUM_SECOND;
       _send(ping,_routingClient);
       break;
     }
       
-    case THECHOROUTING_ECHO_DOUBLE:
+    case THECHOROUTING_ECHO_ENUM:
     {
-      LOG_TRACE_FLOW("EchoTest::test11(THECHOROUTING_ECHO_DOUBLE)");
+      LOG_TRACE_FLOW("EchoTest::test11(THECHOROUTING_ECHO_ENUM)");
       if(!_isServer(p))
       {
         LOG_FATAL("reply received on wrong port!!");
@@ -869,8 +940,8 @@ GCFEvent::TResult EchoTest::test11(GCFEvent& e, GCFPortInterface& p)
       }
       else
       {
-        THEchoRoutingEchoDoubleEvent echo(e);
-        LOG_INFO(formatString("ECHO_DOUBLE received on port %s (seqnr=%d, doubleParam=%f)",p.getName().c_str(),echo.seqnr,echo.doubleParam));
+        THEchoRoutingEchoEnumEvent echo(e);
+        LOG_INFO(formatString("ECHO_ENUM received on port %s (seqnr=%d, enumParam=%d)",p.getName().c_str(),echo.seqnr,echo.enumParam));
         if(_seqnr != echo.seqnr)
         {
           LOG_FATAL("wrong seqnr received!!");
@@ -891,11 +962,18 @@ GCFEvent::TResult EchoTest::test11(GCFEvent& e, GCFPortInterface& p)
     case THECHO_ECHO_ENUM:
     case THECHO_ECHO_DOUBLE:
     case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
     case THECHOROUTING_ECHO_UINT:
     case THECHOROUTING_ECHO_INT:
     case THECHOROUTING_ECHO_LONG:
-    case THECHOROUTING_ECHO_ENUM:
+//    case THECHOROUTING_ECHO_ENUM:
+    case THECHOROUTING_ECHO_DOUBLE:
     case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
       LOG_FATAL("wrong echo received!!");
       stop();
       break;
@@ -923,16 +1001,16 @@ GCFEvent::TResult EchoTest::test12(GCFEvent& e, GCFPortInterface& p)
     case F_ENTRY:
     {
       LOG_TRACE_FLOW("EchoTest::test12(F_ENTRY)");
-      THEchoRoutingPingStringEvent ping;
+      THEchoRoutingPingDoubleEvent ping;
       ping.seqnr = _seqnr;
-      ping.stringParam = "123456789";
+      ping.doubleParam = 1234.56789;
       _send(ping,_routingClient);
       break;
     }
       
-    case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_DOUBLE:
     {
-      LOG_TRACE_FLOW("EchoTest::test12(THECHOROUTING_ECHO_STRING)");
+      LOG_TRACE_FLOW("EchoTest::test12(THECHOROUTING_ECHO_DOUBLE)");
       if(!_isServer(p))
       {
         LOG_FATAL("reply received on wrong port!!");
@@ -940,8 +1018,8 @@ GCFEvent::TResult EchoTest::test12(GCFEvent& e, GCFPortInterface& p)
       }
       else
       {
-        THEchoRoutingEchoStringEvent echo(e);
-        LOG_INFO(formatString("ECHO_STRING received on port %s (seqnr=%d, stringParam=%s)",p.getName().c_str(),echo.seqnr,echo.stringParam.c_str()));
+        THEchoRoutingEchoDoubleEvent echo(e);
+        LOG_INFO(formatString("ECHO_DOUBLE received on port %s (seqnr=%d, doubleParam=%f)",p.getName().c_str(),echo.seqnr,echo.doubleParam));
         if(_seqnr != echo.seqnr)
         {
           LOG_FATAL("wrong seqnr received!!");
@@ -962,11 +1040,18 @@ GCFEvent::TResult EchoTest::test12(GCFEvent& e, GCFPortInterface& p)
     case THECHO_ECHO_ENUM:
     case THECHO_ECHO_DOUBLE:
     case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
     case THECHOROUTING_ECHO_UINT:
     case THECHOROUTING_ECHO_INT:
     case THECHOROUTING_ECHO_LONG:
     case THECHOROUTING_ECHO_ENUM:
-    case THECHOROUTING_ECHO_DOUBLE:
+//    case THECHOROUTING_ECHO_DOUBLE:
+    case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
       LOG_FATAL("wrong echo received!!");
       stop();
       break;
@@ -994,7 +1079,36 @@ GCFEvent::TResult EchoTest::test13(GCFEvent& e, GCFPortInterface& p)
     case F_ENTRY:
     {
       LOG_TRACE_FLOW("EchoTest::test13(F_ENTRY)");
-      TRAN(EchoTest::final);
+      THEchoRoutingPingStringEvent ping;
+      ping.seqnr = _seqnr;
+      ping.stringParam = "123456789";
+      _send(ping,_routingClient);
+      break;
+    }
+      
+    case THECHOROUTING_ECHO_STRING:
+    {
+      LOG_TRACE_FLOW("EchoTest::test13(THECHOROUTING_ECHO_STRING)");
+      if(!_isServer(p))
+      {
+        LOG_FATAL("reply received on wrong port!!");
+        stop();
+      }
+      else
+      {
+        THEchoRoutingEchoStringEvent echo(e);
+        LOG_INFO(formatString("ECHO_STRING received on port %s (seqnr=%d, stringParam=%s)",p.getName().c_str(),echo.seqnr,echo.stringParam.c_str()));
+        if(_seqnr != echo.seqnr)
+        {
+          LOG_FATAL("wrong seqnr received!!");
+          stop();
+        }
+        else
+        {
+          _seqnr++;
+          TRAN(EchoTest::test14);
+        }
+      }
       break;
     }
 
@@ -1004,18 +1118,475 @@ GCFEvent::TResult EchoTest::test13(GCFEvent& e, GCFPortInterface& p)
     case THECHO_ECHO_ENUM:
     case THECHO_ECHO_DOUBLE:
     case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
     case THECHOROUTING_ECHO_UINT:
     case THECHOROUTING_ECHO_INT:
     case THECHOROUTING_ECHO_LONG:
     case THECHOROUTING_ECHO_ENUM:
     case THECHOROUTING_ECHO_DOUBLE:
-    case THECHOROUTING_ECHO_STRING:
+//    case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
       LOG_FATAL("wrong echo received!!");
       stop();
       break;
     
     case F_DISCONNECTED:
       LOG_TRACE_FLOW("EchoTest::test13(F_DISCONNECTED)");
+      TRAN(EchoTest::initial);
+      break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult EchoTest::test14(GCFEvent& e, GCFPortInterface& p)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+
+    case F_ENTRY:
+    {
+      LOG_TRACE_FLOW("EchoTest::test14(F_ENTRY)");
+      THEchoRoutingPingIntArrayEvent ping;
+      ping.seqnr = _seqnr;
+      for(int i=0;i<10;i++)
+        ping.intArrayParam[i]=i;
+      _send(ping,_routingClient);
+      break;
+    }
+      
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    {
+      LOG_TRACE_FLOW("EchoTest::test14(THECHOROUTING_ECHO_INT_ARRAY)");
+      if(!_isServer(p))
+      {
+        LOG_FATAL("reply received on wrong port!!");
+        stop();
+      }
+      else
+      {
+        THEchoRoutingEchoIntArrayEvent echo(e);
+        LOG_INFO(formatString("ECHO_INT_ARRAY received on port %s (seqnr=%d, intArrayParam=[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d])",p.getName().c_str(),echo.seqnr,echo.intArrayParam[0],echo.intArrayParam[1],echo.intArrayParam[2],echo.intArrayParam[3],echo.intArrayParam[4],echo.intArrayParam[5],echo.intArrayParam[6],echo.intArrayParam[7],echo.intArrayParam[8],echo.intArrayParam[9]));
+        if(_seqnr != echo.seqnr)
+        {
+          LOG_FATAL("wrong seqnr received!!");
+          stop();
+        }
+        else
+        {
+          _seqnr++;
+          TRAN(EchoTest::test15);
+        }
+      }
+      break;
+    }
+
+    case THECHO_ECHO_UINT:
+    case THECHO_ECHO_INT:
+    case THECHO_ECHO_LONG:
+    case THECHO_ECHO_ENUM:
+    case THECHO_ECHO_DOUBLE:
+    case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
+    case THECHOROUTING_ECHO_UINT:
+    case THECHOROUTING_ECHO_INT:
+    case THECHOROUTING_ECHO_LONG:
+    case THECHOROUTING_ECHO_ENUM:
+    case THECHOROUTING_ECHO_DOUBLE:
+    case THECHOROUTING_ECHO_STRING:
+//    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
+      LOG_FATAL("wrong echo received!!");
+      stop();
+      break;
+    
+    case F_DISCONNECTED:
+      LOG_TRACE_FLOW("EchoTest::test14(F_DISCONNECTED)");
+      TRAN(EchoTest::initial);
+      break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult EchoTest::test15(GCFEvent& e, GCFPortInterface& p)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+
+    case F_ENTRY:
+    {
+      LOG_TRACE_FLOW("EchoTest::test15(F_ENTRY)");
+      THEchoPingIntArray20Event ping;
+      ping.seqnr = _seqnr;
+      int numInts=20;
+      for(int i=0;i<numInts;i++)
+        ping.intArrayParam[i]=i;
+      _send(ping,_client);
+      break;
+    }
+      
+    case THECHO_ECHO_INT_ARRAY_20:
+    {
+      LOG_TRACE_FLOW("EchoTest::test15(THECHO_ECHO_INT_ARRAY_20)");
+      if(!_isClient(p))
+      {
+        LOG_FATAL("reply received on wrong port!!");
+        stop();
+      }
+      else
+      {
+        THEchoEchoIntArray20Event echo(e);
+
+        int numInts=20;
+        int i;
+        char strTemp[50];
+        string paramDump("[");
+        for(i=0;i<numInts-1;i++)
+        {
+          sprintf(strTemp,"%d,",echo.intArrayParam[i]);
+          paramDump += string(strTemp);
+        }
+        sprintf(strTemp,"%d]",echo.intArrayParam[i]);
+        paramDump += string(strTemp);
+        LOG_INFO(formatString("ECHO_INT_ARRAY_20 received on port %s (seqnr=%d, intArrayParam=%s)",p.getName().c_str(),echo.seqnr,paramDump.c_str()));
+
+        if(_seqnr != echo.seqnr)
+        {
+          LOG_FATAL("wrong seqnr received!!");
+          stop();
+        }
+        else
+        {
+          _seqnr++;
+          TRAN(EchoTest::test16);
+        }
+      }
+      break;
+    }
+
+    case THECHO_ECHO_UINT:
+    case THECHO_ECHO_INT:
+    case THECHO_ECHO_LONG:
+    case THECHO_ECHO_ENUM:
+    case THECHO_ECHO_DOUBLE:
+    case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
+    case THECHOROUTING_ECHO_UINT:
+    case THECHOROUTING_ECHO_INT:
+    case THECHOROUTING_ECHO_LONG:
+    case THECHOROUTING_ECHO_ENUM:
+    case THECHOROUTING_ECHO_DOUBLE:
+    case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+//    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
+      LOG_FATAL("wrong echo received!!");
+      stop();
+      break;
+    
+    case F_DISCONNECTED:
+      LOG_TRACE_FLOW("EchoTest::test15(F_DISCONNECTED)");
+      TRAN(EchoTest::initial);
+      break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult EchoTest::test16(GCFEvent& e, GCFPortInterface& p)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+
+    case F_ENTRY:
+    {
+      LOG_TRACE_FLOW("EchoTest::test16(F_ENTRY)");
+      THEchoPingIntArray61Event ping;
+      ping.seqnr = _seqnr;
+      int numInts=61;
+      for(int i=0;i<numInts;i++)
+        ping.intArrayParam[i]=i;
+      _send(ping,_client);
+      break;
+    }
+      
+    case THECHO_ECHO_INT_ARRAY_61:
+    {
+      LOG_TRACE_FLOW("EchoTest::test16(THECHO_ECHO_INT_ARRAY_61)");
+      if(!_isClient(p))
+      {
+        LOG_FATAL("reply received on wrong port!!");
+        stop();
+      }
+      else
+      {
+        THEchoEchoIntArray61Event echo(e);
+
+        int numInts=61;
+        int i;
+        char strTemp[50];
+        string paramDump("[");
+        for(i=0;i<numInts-1;i++)
+        {
+          sprintf(strTemp,"%d,",echo.intArrayParam[i]);
+          paramDump += string(strTemp);
+        }
+        sprintf(strTemp,"%d]",echo.intArrayParam[i]);
+        paramDump += string(strTemp);
+        LOG_INFO(formatString("ECHO_INT_ARRAY_61 received on port %s (seqnr=%d, intArrayParam=%s)",p.getName().c_str(),echo.seqnr,paramDump.c_str()));
+
+        if(_seqnr != echo.seqnr)
+        {
+          LOG_FATAL("wrong seqnr received!!");
+          stop();
+        }
+        else
+        {
+          _seqnr++;
+          TRAN(EchoTest::test17);
+        }
+      }
+      break;
+    }
+
+    case THECHO_ECHO_UINT:
+    case THECHO_ECHO_INT:
+    case THECHO_ECHO_LONG:
+    case THECHO_ECHO_ENUM:
+    case THECHO_ECHO_DOUBLE:
+    case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
+    case THECHOROUTING_ECHO_UINT:
+    case THECHOROUTING_ECHO_INT:
+    case THECHOROUTING_ECHO_LONG:
+    case THECHOROUTING_ECHO_ENUM:
+    case THECHOROUTING_ECHO_DOUBLE:
+    case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+//    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
+      LOG_FATAL("wrong echo received!!");
+      stop();
+      break;
+    
+    case F_DISCONNECTED:
+      LOG_TRACE_FLOW("EchoTest::test16(F_DISCONNECTED)");
+      TRAN(EchoTest::initial);
+      break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult EchoTest::test17(GCFEvent& e, GCFPortInterface& p)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+
+    case F_ENTRY:
+    {
+      LOG_TRACE_FLOW("EchoTest::test17(F_ENTRY)");
+      THEchoRoutingPingIntArray20Event ping;
+      ping.seqnr = _seqnr;
+      int numInts=20;
+      for(int i=0;i<numInts;i++)
+        ping.intArrayParam[i]=i;
+      _send(ping,_routingClient);
+      break;
+    }
+      
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    {
+      LOG_TRACE_FLOW("EchoTest::test17(THECHOROUTING_ECHO_INT_ARRAY_20)");
+      if(!_isServer(p))
+      {
+        LOG_FATAL("reply received on wrong port!!");
+        stop();
+      }
+      else
+      {
+        THEchoRoutingEchoIntArray20Event echo(e);
+
+        int numInts=20;
+        int i;
+        char strTemp[50];
+        string paramDump("[");
+        for(i=0;i<numInts-1;i++)
+        {
+          sprintf(strTemp,"%d,",echo.intArrayParam[i]);
+          paramDump += string(strTemp);
+        }
+        sprintf(strTemp,"%d]",echo.intArrayParam[i]);
+        paramDump += string(strTemp);
+        LOG_INFO(formatString("ECHO_INT_ARRAY_20 received on port %s (seqnr=%d, intArrayParam=%s)",p.getName().c_str(),echo.seqnr,paramDump.c_str()));
+
+        if(_seqnr != echo.seqnr)
+        {
+          LOG_FATAL("wrong seqnr received!!");
+          stop();
+        }
+        else
+        {
+          _seqnr++;
+          TRAN(EchoTest::test18);
+        }
+      }
+      break;
+    }
+
+    case THECHO_ECHO_UINT:
+    case THECHO_ECHO_INT:
+    case THECHO_ECHO_LONG:
+    case THECHO_ECHO_ENUM:
+    case THECHO_ECHO_DOUBLE:
+    case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
+    case THECHOROUTING_ECHO_UINT:
+    case THECHOROUTING_ECHO_INT:
+    case THECHOROUTING_ECHO_LONG:
+    case THECHOROUTING_ECHO_ENUM:
+    case THECHOROUTING_ECHO_DOUBLE:
+    case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+//    case THECHOROUTING_ECHO_INT_ARRAY_20:
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
+      LOG_FATAL("wrong echo received!!");
+      stop();
+      break;
+    
+    case F_DISCONNECTED:
+      LOG_TRACE_FLOW("EchoTest::test17(F_DISCONNECTED)");
+      TRAN(EchoTest::initial);
+      break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult EchoTest::test18(GCFEvent& e, GCFPortInterface& p)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+
+    case F_ENTRY:
+    {
+      LOG_TRACE_FLOW("EchoTest::test18(F_ENTRY)");
+      THEchoRoutingPingIntArray61Event ping;
+      ping.seqnr = _seqnr;
+      int numInts=61;
+      for(int i=0;i<numInts;i++)
+        ping.intArrayParam[i]=i;
+      _send(ping,_routingClient);
+      break;
+    }
+      
+    case THECHOROUTING_ECHO_INT_ARRAY_61:
+    {
+      LOG_TRACE_FLOW("EchoTest::test18(THECHOROUTING_ECHO_INT_ARRAY_61)");
+      if(!_isServer(p))
+      {
+        LOG_FATAL("reply received on wrong port!!");
+        stop();
+      }
+      else
+      {
+        THEchoRoutingEchoIntArray61Event echo(e);
+
+        int numInts=61;
+        int i;
+        char strTemp[50];
+        string paramDump("[");
+        for(i=0;i<numInts-1;i++)
+        {
+          sprintf(strTemp,"%d,",echo.intArrayParam[i]);
+          paramDump += string(strTemp);
+        }
+        sprintf(strTemp,"%d]",echo.intArrayParam[i]);
+        paramDump += string(strTemp);
+        LOG_INFO(formatString("ECHO_INT_ARRAY_61 received on port %s (seqnr=%d, intArrayParam=%s)",p.getName().c_str(),echo.seqnr,paramDump.c_str()));
+
+        if(_seqnr != echo.seqnr)
+        {
+          LOG_FATAL("wrong seqnr received!!");
+          stop();
+        }
+        else
+        {
+          _seqnr++;
+          TRAN(EchoTest::final);
+        }
+      }
+      break;
+    }
+
+    case THECHO_ECHO_UINT:
+    case THECHO_ECHO_INT:
+    case THECHO_ECHO_LONG:
+    case THECHO_ECHO_ENUM:
+    case THECHO_ECHO_DOUBLE:
+    case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
+    case THECHOROUTING_ECHO_UINT:
+    case THECHOROUTING_ECHO_INT:
+    case THECHOROUTING_ECHO_LONG:
+    case THECHOROUTING_ECHO_ENUM:
+    case THECHOROUTING_ECHO_DOUBLE:
+    case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
+    case THECHO_ECHO_INT_ARRAY_20:
+    case THECHO_ECHO_INT_ARRAY_61:
+    case THECHOROUTING_ECHO_INT_ARRAY_20:
+//    case THECHOROUTING_ECHO_INT_ARRAY_61:
+      LOG_FATAL("wrong echo received!!");
+      stop();
+      break;
+    
+    case F_DISCONNECTED:
+      LOG_TRACE_FLOW("EchoTest::test18(F_DISCONNECTED)");
       TRAN(EchoTest::initial);
       break;
 
@@ -1047,11 +1618,17 @@ GCFEvent::TResult EchoTest::final(GCFEvent& e, GCFPortInterface& /*p*/)
     case THECHO_ECHO_UINT:
     case THECHO_ECHO_INT:
     case THECHO_ECHO_LONG:
+    case THECHO_ECHO_ENUM:
+    case THECHO_ECHO_DOUBLE:
     case THECHO_ECHO_STRING:
+    case THECHO_ECHO_INT_ARRAY:
     case THECHOROUTING_ECHO_UINT:
     case THECHOROUTING_ECHO_INT:
     case THECHOROUTING_ECHO_LONG:
+    case THECHOROUTING_ECHO_ENUM:
+    case THECHOROUTING_ECHO_DOUBLE:
     case THECHOROUTING_ECHO_STRING:
+    case THECHOROUTING_ECHO_INT_ARRAY:
       LOG_FATAL("wrong echo received!!");
       stop();
       break;
