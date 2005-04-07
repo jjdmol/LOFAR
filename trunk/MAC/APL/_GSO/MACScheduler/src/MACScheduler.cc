@@ -445,15 +445,61 @@ string MACScheduler::_getShareLocation() const
     case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;
+
+    case SAS_SCHEDULE:
+    case SAS_CANCELSCHEDULE:
+    case SAS_UPDATESCHEDULE:
+      _handleSASprotocol(event,port);
+      break;
+
+    case LOGICALDEVICE_CONNECT:
+    {
+      LOGICALDEVICEConnectEvent connectEvent(event);
+      TRemotePortPtr portPtr(static_cast<TRemotePort*>(&port));
+      m_connectedVIclientPorts[connectEvent.nodeId] = portPtr;
+      
+      LOGICALDEVICEConnectedEvent connectedEvent;
+      connectedEvent.result = LD_RESULT_NO_ERROR;
+      port.send(connectedEvent);
+      break;
+    }
     
+    case LOGICALDEVICE_SCHEDULED:
+    {
+      LOGICALDEVICEScheduledEvent scheduledEvent(event);
+      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(scheduledEvent.result));
+      break;
+    }
+      
+    case LOGICALDEVICE_SCHEDULECANCELLED:
+    {
+      LOGICALDEVICESchedulecancelledEvent schedulecancelledEvent(event);
+      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(schedulecancelledEvent.result));
+      break;
+    }
+      
+    default:
+      LOG_DEBUG(formatString("MACScheduler(%s)::idle_state, default",getName().c_str()));
+      status = ::GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+void MACScheduler::_handleSASprotocol(::GCFEvent& event, ::GCFPortInterface& port)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
+
+  switch (event.signal)
+  {
     case SAS_SCHEDULE:
     {
-      string shareLocation = _getShareLocation();
-            
       // schedule event received from SAS
       SASScheduleEvent sasScheduleEvent(event);
       SASResponseEvent sasResponseEvent;
       sasResponseEvent.result = SAS_RESULT_NO_ERROR;
+      string shareLocation = _getShareLocation();
       
       try
       {
@@ -499,33 +545,104 @@ string MACScheduler::_getShareLocation() const
       port.send(sasResponseEvent);      
       break;
     }
-
-    case LOGICALDEVICE_CONNECT:
+    case SAS_CANCELSCHEDULE:
     {
-      LOGICALDEVICEConnectEvent connectEvent(event);
-      TRemotePortPtr portPtr(static_cast<TRemotePort*>(&port));
-      m_connectedVIclientPorts[connectEvent.nodeId] = portPtr;
+      // schedule event received from SAS
+      SASCancelscheduleEvent sasCancelScheduleEvent(event);
+      SASResponseEvent sasResponseEvent;
+      sasResponseEvent.result = SAS_RESULT_NO_ERROR;
+      string shareLocation = _getShareLocation();
       
-      LOGICALDEVICEConnectedEvent connectedEvent;
-      connectedEvent.result = LD_RESULT_NO_ERROR;
-      port.send(connectedEvent);
+      // search the port of the VI
+      try
+      {
+        // read the parameterset from the database:
+#ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
+        boost::shared_ptr<ACC::ParameterSet> ps(m_configurationManager->getPS(sasCancelScheduleEvent.VIrootID, "latest");
+#else // ACC_CONFIGURATIONMGR_UNAVAILABLE
+        LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
+        // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
+        ACC::ParameterCollection pc(shareLocation + string("share/") + sasCancelScheduleEvent.VIrootID); // assume VIrootID is a file
+        boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
+        // End of soon to be obsolete code
+#endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+        
+        string viName = ps->getString("name");
+        
+        // send a CANCELSCHEDULE message
+        TStringRemotePortMap::iterator it = m_connectedVIclientPorts.find(viName);
+        if(it != m_connectedVIclientPorts.end())
+        {
+          LOGICALDEVICECancelscheduleEvent cancelScheduleEvent;
+          it->second->send(cancelScheduleEvent);
+        }
+        else
+        {
+          sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+        }        
+      }
+      catch(Exception& e)
+      {
+        LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
+        sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
+      }
+      port.send(sasResponseEvent);      
       break;
     }
     
-    case LOGICALDEVICE_SCHEDULED:
+    case SAS_UPDATESCHEDULE:
     {
-      LOGICALDEVICEScheduledEvent scheduledEvent(event);
-      m_propertySet->setValue(MS_PROPNAME_STATUS,GCFPVInteger(scheduledEvent.result));
+      // schedule event received from SAS
+      SASUpdatescheduleEvent sasUpdateScheduleEvent(event);
+      SASResponseEvent sasResponseEvent;
+      sasResponseEvent.result = SAS_RESULT_NO_ERROR;
+      string shareLocation = _getShareLocation();
+
+      // search the port of the VI
+      try
+      {
+        // read the parameterset from the database:
+#ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
+        boost::shared_ptr<ACC::ParameterSet> ps(m_configurationManager->getPS(sasUpdateScheduleEvent.VIrootID, "latest");
+#else // ACC_CONFIGURATIONMGR_UNAVAILABLE
+        LOG_FATAL("TODO: Use ACC::ConfigurationMgr to access OTDB database");
+        // When the ACC::ConfigurationMgr can be used, then the following code is obsolete:
+        ACC::ParameterCollection pc(shareLocation + string("share/") + sasUpdateScheduleEvent.VIrootID); // assume VIrootID is a file
+        boost::shared_ptr<ACC::ParameterSet> ps(new ACC::ParameterSet(pc));
+        // End of soon to be obsolete code
+#endif // ACC_CONFIGURATIONMGR_UNAVAILABLE
+        
+        string allocatedCCU = ps->getString("allocatedCCU");
+        string viName = ps->getString("name");
+        string psFileName = string("/") + viName + string(".ps");
+        string psFilePath = shareLocation + string("mnt/") + allocatedCCU + string("/") + psFileName;
+        ps->writeFile(psFilePath);
+        
+        // send a SCHEDULE message
+        TStringRemotePortMap::iterator it = m_connectedVIclientPorts.find(viName);
+        if(it != m_connectedVIclientPorts.end())
+        {
+          LOGICALDEVICEScheduleEvent scheduleEvent;
+          scheduleEvent.fileName = psFileName;
+          it->second->send(scheduleEvent);
+        }
+        else
+        {
+          sasResponseEvent.result = SAS_RESULT_ERROR_VI_NOT_FOUND;
+        }        
+      }
+      catch(Exception& e)
+      {
+        LOG_FATAL(formatString("Error reading schedule parameters: %s",e.message().c_str()));
+        sasResponseEvent.result = SAS_RESULT_ERROR_UNSPECIFIED;
+      }
+      port.send(sasResponseEvent);      
       break;
     }
-      
+    
     default:
-      LOG_DEBUG(formatString("MACScheduler(%s)::idle_state, default",getName().c_str()));
-      status = ::GCFEvent::NOT_HANDLED;
       break;
   }
-
-  return status;
 }
 
 

@@ -75,8 +75,8 @@ LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile
   m_propertySet(),
   m_parameterSet(),
   m_serverPortName(string("server")),
-  m_parentPort(),
   m_serverPort(*this, m_serverPortName, ::GCFPortInterface::MSPP, LOGICALDEVICE_PROTOCOL),
+  m_parentPort(),
   m_childPorts(),
   m_connectedChildPorts(),
   m_childStartDaemonPorts(),
@@ -356,6 +356,13 @@ time_t LogicalDevice::_decodeTimeParameter(const string& timeStr) const
 
 void LogicalDevice::_schedule()
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  if(m_prepareTimerId != 0)
+    m_serverPort.cancelTimer(m_prepareTimerId);
+  if(m_startTimerId != 0)
+    m_serverPort.cancelTimer(m_startTimerId);
+  if(m_stopTimerId != 0)
+    m_serverPort.cancelTimer(m_stopTimerId);
   //
   // set timers
   // specified times are in UTC, seconds since 1-1-1970
@@ -373,6 +380,7 @@ void LogicalDevice::_schedule()
 
 void LogicalDevice::_cancelSchedule()
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   m_serverPort.cancelTimer(m_prepareTimerId);
   m_serverPort.cancelTimer(m_startTimerId);
   m_serverPort.cancelTimer(m_stopTimerId);
@@ -381,7 +389,7 @@ void LogicalDevice::_cancelSchedule()
   LOGICALDEVICECancelscheduleEvent cancelEvent;
   _sendToAllChilds(cancelEvent);
   
-  _suspend();
+  _release();
 }
 
 void LogicalDevice::_claim()
@@ -534,6 +542,7 @@ void LogicalDevice::_doStateTransition(const TLogicalDeviceState& newState)
 
 void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   if(event.signal == F_TIMER)
   {
     GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
@@ -607,6 +616,10 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
 
       // keep on polling
       m_retrySendTimerId = m_serverPort.setTimer(static_cast<long int>(retryPeriod));
+    }
+    else
+    {
+      concreteHandleTimers(timerEvent,port);
     }
   }
 }
@@ -893,11 +906,43 @@ string LogicalDevice::_getShareLocation() const
       break;
     }
       
+    case LOGICALDEVICE_SCHEDULE:
+    {
+      LOGICALDEVICEScheduleEvent scheduleEvent(event);
+      m_parameterSet.adoptFile(_getShareLocation() + string("share/") + scheduleEvent.fileName);
+      _schedule();
+      
+      LOGICALDEVICEScheduledEvent scheduledEvent;
+      scheduledEvent.result = LD_RESULT_NO_ERROR;
+      port.send(scheduledEvent);
+      break;
+    }
+      
+    case LOGICALDEVICE_CANCELSCHEDULE:
+    {
+      _cancelSchedule();
+      
+      LOGICALDEVICESchedulecancelledEvent scheduleCancelledEvent;
+      scheduleCancelledEvent.result = LD_RESULT_NO_ERROR;
+      port.send(scheduleCancelledEvent);
+      break;
+    }
+      
     case LOGICALDEVICE_CLAIM:
       TRAN(LogicalDevice::claiming_state);
       concreteClaim(port);
       break;
       
+    case LOGICALDEVICE_RELEASE:  // release in idle state? at the moment necessary for old style VT
+    {
+      // send release event to childs
+      LOGICALDEVICEReleaseEvent releaseEvent;
+      _sendToAllChilds(releaseEvent);
+      TRAN(LogicalDevice::releasing_state);
+      concreteRelease(port);
+      break;
+    }
+    
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::idle_state, default",getName().c_str()));
       status = ::GCFEvent::NOT_HANDLED;
@@ -940,6 +985,26 @@ string LogicalDevice::_getShareLocation() const
       _handleTimers(event,port);
       break;
 
+    case LOGICALDEVICE_CANCELSCHEDULE:
+    {
+      _cancelSchedule();
+      
+      LOGICALDEVICESchedulecancelledEvent scheduleCancelledEvent;
+      scheduleCancelledEvent.result = LD_RESULT_NO_ERROR;
+      port.send(scheduleCancelledEvent);
+      break;
+    }
+      
+    case LOGICALDEVICE_RELEASE:
+    {
+      // send release event to childs
+      LOGICALDEVICEReleaseEvent releaseEvent;
+      _sendToAllChilds(releaseEvent);
+      TRAN(LogicalDevice::releasing_state);
+      concreteRelease(port);
+      break;
+    }
+    
     // the LOGICALDEVICE_CLAIMED event cannot result in a transition to 
     // the claimed state here, because the logical device may have several 
     // children that all send their LOGICALDEVICE_CLAIMED message. 
@@ -989,6 +1054,28 @@ string LogicalDevice::_getShareLocation() const
       _handleTimers(event,port);
       break;
    
+    case LOGICALDEVICE_SCHEDULE:
+    {
+      LOGICALDEVICEScheduleEvent scheduleEvent(event);
+      m_parameterSet.adoptFile(_getShareLocation() + string("share/") + scheduleEvent.fileName);
+      _schedule();
+      
+      LOGICALDEVICEScheduledEvent scheduledEvent;
+      scheduledEvent.result = LD_RESULT_NO_ERROR;
+      port.send(scheduledEvent);
+      break;
+    }
+      
+    case LOGICALDEVICE_CANCELSCHEDULE:
+    {
+      _cancelSchedule();
+      
+      LOGICALDEVICESchedulecancelledEvent scheduleCancelledEvent;
+      scheduleCancelledEvent.result = LD_RESULT_NO_ERROR;
+      port.send(scheduleCancelledEvent);
+      break;
+    }
+      
     case LOGICALDEVICE_PREPARE:
     {
       TRAN(LogicalDevice::preparing_state);
@@ -998,10 +1085,15 @@ string LogicalDevice::_getShareLocation() const
     }
     
     case LOGICALDEVICE_RELEASE:
+    {
+      // send release event to childs
+      LOGICALDEVICEReleaseEvent releaseEvent;
+      _sendToAllChilds(releaseEvent);
       TRAN(LogicalDevice::releasing_state);
       concreteRelease(port);
       break;
-
+    }
+    
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::claimed_state, default",getName().c_str()));
       status = ::GCFEvent::NOT_HANDLED;
@@ -1044,6 +1136,26 @@ string LogicalDevice::_getShareLocation() const
       _handleTimers(event,port);
       break;
 
+    case LOGICALDEVICE_CANCELSCHEDULE:
+    {
+      _cancelSchedule();
+      
+      LOGICALDEVICESchedulecancelledEvent scheduleCancelledEvent;
+      scheduleCancelledEvent.result = LD_RESULT_NO_ERROR;
+      port.send(scheduleCancelledEvent);
+      break;
+    }
+      
+    case LOGICALDEVICE_RELEASE:
+    {
+      // send release event to childs
+      LOGICALDEVICEReleaseEvent releaseEvent;
+      _sendToAllChilds(releaseEvent);
+      TRAN(LogicalDevice::releasing_state);
+      concreteRelease(port);
+      break;
+    }
+    
     // the LOGICALDEVICE_PREPARED event cannot result in a transition to 
     // the suspended state here, because the logical device may have several 
     // children that all send their LOGICALDEVICE_PREPARED message. 
@@ -1093,6 +1205,16 @@ string LogicalDevice::_getShareLocation() const
       _handleTimers(event,port);
       break;
     
+    case LOGICALDEVICE_CANCELSCHEDULE:
+    {
+      _cancelSchedule();
+      
+      LOGICALDEVICESchedulecancelledEvent scheduleCancelledEvent;
+      scheduleCancelledEvent.result = LD_RESULT_NO_ERROR;
+      port.send(scheduleCancelledEvent);
+      break;
+    }
+      
     case LOGICALDEVICE_PREPARE:
     {
       TRAN(LogicalDevice::preparing_state);
@@ -1115,9 +1237,8 @@ string LogicalDevice::_getShareLocation() const
     case LOGICALDEVICE_RELEASE:
     {
       // send release event to childs
-      LOGICALDEVICEResumeEvent releaseEvent;
+      LOGICALDEVICEReleaseEvent releaseEvent;
       _sendToAllChilds(releaseEvent);
-
       TRAN(LogicalDevice::releasing_state);
       concreteRelease(port);
       break;
@@ -1161,6 +1282,16 @@ string LogicalDevice::_getShareLocation() const
       _handleTimers(event,port);
       break;
     
+    case LOGICALDEVICE_CANCELSCHEDULE:
+    {
+      _cancelSchedule();
+      
+      LOGICALDEVICESchedulecancelledEvent scheduleCancelledEvent;
+      scheduleCancelledEvent.result = LD_RESULT_NO_ERROR;
+      port.send(scheduleCancelledEvent);
+      break;
+    }
+      
     case LOGICALDEVICE_PREPARE:
       // invalid message in this state
       LOG_DEBUG(formatString("LogicalDevice(%s)::active_state, PREPARE NOT ALLOWED",getName().c_str()));
@@ -1178,14 +1309,23 @@ string LogicalDevice::_getShareLocation() const
       break;
     }
     
+    case LOGICALDEVICE_RELEASE:
+    {
+      // send release event to childs
+      LOGICALDEVICEReleaseEvent releaseEvent;
+      _sendToAllChilds(releaseEvent);
+      TRAN(LogicalDevice::releasing_state);
+      concreteRelease(port);
+      break;
+    }
+    
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::active_state, default",getName().c_str()));
       status = ::GCFEvent::NOT_HANDLED;
       break;
   }
-  TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
   ::GCFEvent::TResult concreteStatus;
-  concreteStatus = concrete_active_state(event, port, newState);
+  concreteStatus = concrete_active_state(event, port);
   return (status==::GCFEvent::HANDLED||concreteStatus==::GCFEvent::HANDLED?::GCFEvent::HANDLED : ::GCFEvent::NOT_HANDLED);
 }
 
