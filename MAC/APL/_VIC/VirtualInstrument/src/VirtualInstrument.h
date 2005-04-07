@@ -78,7 +78,7 @@ namespace AVI
       /**
       * active state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_active_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState);
+      virtual ::GCFEvent::TResult concrete_active_state(::GCFEvent& e, ::GCFPortInterface& p);
       /**
       * Releasing state additional behaviour must be implemented in the derived classes. 
       */
@@ -112,6 +112,7 @@ namespace AVI
       * Implementation of the Disconnected handler is done in the derived classes. 
       */
       virtual void concreteChildDisconnected(::GCFPortInterface& port);
+      virtual void concreteHandleTimers(::GCFTimerEvent& timerEvent, ::GCFPortInterface& port);
 
     protected:    
 
@@ -119,7 +120,12 @@ namespace AVI
       typedef boost::shared_ptr<GCFExtPropertySet>        TGCFExtPropertySetPtr;
       typedef std::map<std::string,TGCFExtPropertySetPtr> TString2PropsetMap;
       
-      TString2PropsetMap m_vtSchedulerPropertySets;
+      bool _writeScheduleCommand(const string& name, TGCFExtPropertySetPtr& propset);
+    
+      TString2PropsetMap  m_vtSchedulerPropertySets;
+      TString2PropsetMap  m_disconnectedVTSchedulerPropertySets;
+      unsigned long       m_retryPropsetLoadTimerId;
+      
 
       ALLOC_TRACER_CONTEXT  
   };

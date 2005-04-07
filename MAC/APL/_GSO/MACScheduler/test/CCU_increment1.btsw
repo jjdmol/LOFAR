@@ -14,66 +14,74 @@
 
 [statemachines]
 
-Statemachine_MACScheduler (ready, time_is_over) =
+Statemachine_MACScheduler (ready, stopBeamServer, bs_alloc_ack, bs_pointto_ack) =
 {
-VAR a= 0x00000001, b.
-
   s000  : SAS_SCHEDULE ( "VI1.ps" )                             ; s010.
-  
-  s010  : SAS_RESPONSE ( 0x00000000 )                           ; s910. // scheduled ok
+  s010  : SAS_RESPONSE ( 0x00000000 )                           ; s020.
+  s020  : R_SIG ( bs_alloc_ack )                                ; s100.
+  s020  : TIMER(30)																							; timeout.
 
+  s100  : SAS_CANCELSCHEDULE ( "VI1.ps" )                       ; s110.
+  s110  : SAS_RESPONSE ( 0x00000000 )                           ; s200.
 
-//  s900  : R_SIG (time_is_over)                                  ; s910.
-//  s900  : TIMER (0x1)                                           ; s000.  // Re-run after one second
+  s200  : SAS_SCHEDULE ( "VI2.ps" )                             ; s210.
+  s210  : SAS_RESPONSE ( 0x00000000 )                           ; s220.
+  s220  : R_SIG ( bs_alloc_ack )                                ; s300.
+  s220  : TIMER(30)																							; timeout.
 
-  s910  : S_SIG (ready )                                        ; OK.
-  OK    : TIMER(10)                                             ; OK.
+  s300  : SAS_UPDATESCHEDULE ( "VI1.ps" )                       ; s310.
+  s310  : SAS_RESPONSE ( 0x00000000 )                           ; s320.
+  s320  : R_SIG ( bs_alloc_ack )                                ; finish.
+  s320  : TIMER(30)																							; timeout.
+
+  finish : S_SIG ( ready )
+           S_SIG ( stopBeamServer )                             ; OK.
+  OK     : TIMER(60)																						; OK.
+
+  timeout : TERMINATE ; timeout.
+  error   : TERMINATE ; error.
 }
 
-Statemachine_BeamServer  (ready, time_is_over) =
+Statemachine_BeamServer  ( stop, bs_alloc_ack, bs_pointto_ack ) =
 {
 VAR handle.
 
-  s000   : ABS_BEAMALLOC (, ,,,,,,,,,, ,,,,,,,,,, ,,,,,,,,,, ,,,,,,,,,, ,,,,,,,,,, ,,,,,,,,,, ,,,,,,,,,, ,,,,,,,,,, ,,,,,,,,,, ,,,,,,,,,, ,,,,,,,,,, ,,,,,,,,,, ,,,,,,,,)                          ; s010.
+  s000   : ABS_BEAMALLOC (, ,,,,,,,,,, ,,,,,,,,,, 
+                            ,,,,,,,,,, ,,,,,,,,,, 
+                            ,,,,,,,,,, ,,,,,,,,,, 
+                            ,,,,,,,,,, ,,,,,,,,,, 
+                            ,,,,,,,,,, ,,,,,,,,,, 
+                            ,,,,,,,,,, ,,,,,,,,,, 
+                            ,,,,,,,,)                           ; s010.
   s000   : ABS_BEAMFREE  ( handle )                             ; s020.
-  s000   : ABS_BEAMPOINTTO (,,,,)                               ; s000.
-  s000   : ABS_WGSETTINGS (,)                                   ; s030.
+  s000   : ABS_BEAMPOINTTO (,,,,)                               ; s030.
+  s000   : ABS_WGSETTINGS (,)                                   ; s040.
   s000   : ABS_WGENABLE                                         ; s000.
   s000   : ABS_WGDISABLE                                        ; s000.
+  s000   : R_SIG( stop )                                        ; finish.
   
-  s010   : ABS_BEAMALLOC_ACK ( 0x00000001, 0x00000000 )         ; s000.
+  s010   : S_SIG( bs_alloc_ack )
+           ABS_BEAMALLOC_ACK ( 0x00000001, 0x00000000 )         ; s000.
   
   s020   : ABS_BEAMFREE_ACK ( handle, 0x00000000 )              ; s000.
   
-  s030   : ABS_WGSETTINGS_ACK ( 0x00000000 )                    ; s000.
-  
-//  s90   : R_SIG (time_is_over)                                  ; s100.
-//  s90   : TIMER (0x10)                                          ; s110.  // not received the 'sent' in time so quit
-  
-  s900  : S_SIG (ready )                                        ; OK.
-  s910  : TERMINATE.
-  OK    : TIMER(10)                                             ; OK.
+  s030   : S_SIG( bs_pointto_ack )                              ; s000.
+
+  s040   : ABS_WGSETTINGS_ACK ( 0x00000000 )                    ; s000.
+
+  finish : TERMINATE ; finish.
 }
 
-WaitUntilTestEnd (SM1_ready, SM2_ready) =
+WaitUntilTestEnd (SM1_ready) =
 {
-  s01   :   R_SIG (SM1_ready)                                   ; s02.
-  s02   :   R_SIG (SM2_ready)                                   ; s03.
-  s03   :   TERMINATE.
-}
-
-HALF_HOUR_TIMER (half_hour_over_1, half_hour_over_2) =
-{
-  s000 : TIMER (0x057E)                                         ; s010.
-  s010 : S_SIG (half_hour_over_1)                               ; s020.
-  s020 : S_SIG (half_hour_over_2)                               ; s000.
+  s010   :   R_SIG (SM1_ready)                                  ; finish.
+  finish : TERMINATE ; finish.
 }
 
 [testscript]
-VAR     SM1_done, SM2_done, TMO_1, TMO_2.
+VAR     SM1_done, SM2_stop, bs_alloc_ack, bs_pointto_ack.
 
-COM1 :  Statemachine_MACScheduler   (SM1_done, TMO_1)
-        HALF_HOUR_TIMER  (TMO_1, TMO_2)
-        WaitUntilTestEnd (SM1_done, SM2_done).
+COM1 :  Statemachine_MACScheduler (SM1_done, SM2_stop, bs_alloc_ack, bs_pointto_ack)
+        WaitUntilTestEnd (SM1_done).
 
-COM2 :  Statemachine_BeamServer   (SM2_done, TMO_2).
+COM2 :  Statemachine_BeamServer   (SM2_stop, bs_alloc_ack, bs_pointto_ack).

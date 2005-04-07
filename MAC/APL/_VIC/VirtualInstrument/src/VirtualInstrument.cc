@@ -42,7 +42,9 @@ INIT_TRACER_CONTEXT(VirtualInstrument,LOFARLOGGER_PACKAGE);
 
 VirtualInstrument::VirtualInstrument(const string& taskName, const string& parameterFile) :
   LogicalDevice(taskName,parameterFile),
-  m_vtSchedulerPropertySets()
+  m_vtSchedulerPropertySets(),
+  m_disconnectedVTSchedulerPropertySets(),
+  m_retryPropsetLoadTimerId(0)  
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
@@ -77,6 +79,7 @@ VirtualInstrument::VirtualInstrument(const string& taskName, const string& param
   {
     THROW(APLCommon::ParameterNotFoundException,e.message());
   }
+  m_retryPropsetLoadTimerId = m_serverPort.setTimer(10L);
 }
 
 
@@ -117,41 +120,23 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(::GCFEvent& answer)
         {
           if(strstr(pPropAnswer->pScope, it->second->getScope().c_str()) != 0)
           {
-            try
-            {
-              stringstream schedule;
-              schedule << "SCHEDULE ";
-              // SCHEDULE <sch.nr>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
-              //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
-              schedule << "1,";
-              schedule << "VT,";
-              schedule << it->first << ",";
-              
-              string childs = m_parameterSet.getString(it->first + string(".") + string("childs"));
-              vector<string> childsVector;
-              APLUtilities::string2Vector(childs,childsVector);
-              
-              schedule << childsVector[0] << ",";
-              schedule << childsVector[1] << ",";
-              time_t startTime = _decodeTimeParameter(m_parameterSet.getString(it->first + string(".") + string("startTime")));
-              schedule << startTime << ",";
-              time_t stopTime = _decodeTimeParameter(m_parameterSet.getString(it->first + string(".") + string("stopTime")));
-              schedule << stopTime << ",";
-              
-              schedule << m_parameterSet.getString(it->first + string(".") + string("frequency")) << ",";
-              schedule << m_parameterSet.getString(it->first + string(".") + string("subbands")) << ",";
-              schedule << m_parameterSet.getString(it->first + string(".") + string("directionType")) << ",";
-              schedule << m_parameterSet.getString(it->first + string(".") + string("angle1")) << ",";
-              schedule << m_parameterSet.getString(it->first + string(".") + string("angle2")) << ",";
-              
-              GCFPVString pvSchedule(schedule.str());
-              it->second->setValue("command",pvSchedule);
-              scheduleSent = true;
-            }
-            catch(Exception& e)
-            {
-              LOG_FATAL(e.message().c_str());
-            }
+            scheduleSent = _writeScheduleCommand(it->first,it->second);
+          }
+          ++it;
+        }
+      }
+      else
+      {
+        LOG_WARN(formatString("failed to load propertyset %s",pPropAnswer->pScope));
+
+        bool propsetFound=false;
+        TString2PropsetMap::iterator it=m_vtSchedulerPropertySets.begin();
+        while(!propsetFound && it!=m_vtSchedulerPropertySets.end())
+        {
+          if(strstr(pPropAnswer->pScope, it->second->getScope().c_str()) != 0)
+          {
+            m_disconnectedVTSchedulerPropertySets[it->first] = it->second;
+            propsetFound=true;
           }
           ++it;
         }
@@ -230,7 +215,7 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(::GCFEvent& answer)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   ::GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-  newState=LOGICALDEVICE_STATE_NOSTATE;
+  newState=LOGICALDEVICE_STATE_CLAIMED;
   
   return status;
 }
@@ -239,16 +224,15 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(::GCFEvent& answer)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   ::GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-  newState=LOGICALDEVICE_STATE_NOSTATE;
+  newState=LOGICALDEVICE_STATE_SUSPENDED;
   
   return status;
 }
 
-::GCFEvent::TResult VirtualInstrument::concrete_active_state(::GCFEvent& event, ::GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+::GCFEvent::TResult VirtualInstrument::concrete_active_state(::GCFEvent& event, ::GCFPortInterface& /*p*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   ::GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-  newState=LOGICALDEVICE_STATE_NOSTATE;
   
   return status;
 }
@@ -257,7 +241,8 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(::GCFEvent& answer)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   ::GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-  newState=LOGICALDEVICE_STATE_NOSTATE;
+
+  newState=LOGICALDEVICE_STATE_RELEASED;
   
   return status;
 }
@@ -286,6 +271,22 @@ void VirtualInstrument::concreteSuspend(::GCFPortInterface& /*port*/)
 void VirtualInstrument::concreteRelease(::GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
+  // workaround for old style Virtual Telescope: set command property
+  TString2PropsetMap::iterator it;
+  for(it=m_vtSchedulerPropertySets.begin();it!=m_vtSchedulerPropertySets.end();++it)
+  {
+    try
+    {
+      string cancelMessage("CANCEL 1");      
+      GCFPVString pvCancel(cancelMessage);
+      it->second->setValue("command",pvCancel);
+    }
+    catch(Exception& e)
+    {
+      LOG_FATAL(e.message().c_str());
+    }
+  }  
 }
 
 void VirtualInstrument::concreteParentDisconnected(::GCFPortInterface& /*port*/)
@@ -296,6 +297,68 @@ void VirtualInstrument::concreteParentDisconnected(::GCFPortInterface& /*port*/)
 void VirtualInstrument::concreteChildDisconnected(::GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+}
+
+void VirtualInstrument::concreteHandleTimers(::GCFTimerEvent& timerEvent, ::GCFPortInterface& /*port*/)
+{
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  if(timerEvent.id == m_retryPropsetLoadTimerId)
+  {
+    // loop through the buffered events and try to send each one.
+    TString2PropsetMap::iterator it = m_disconnectedVTSchedulerPropertySets.begin();
+    while(it != m_disconnectedVTSchedulerPropertySets.end())
+    {
+      _writeScheduleCommand(it->first,it->second);
+      // remove the event from the map. If the propset cannot be loaded, it will 
+      // be added again later on.
+      m_disconnectedVTSchedulerPropertySets.erase(it);
+      it = m_disconnectedVTSchedulerPropertySets.begin();
+    }
+
+    // keep on polling
+    m_retryPropsetLoadTimerId = m_serverPort.setTimer(10L);
+  }
+}
+
+bool VirtualInstrument::_writeScheduleCommand(const string& name, TGCFExtPropertySetPtr& propset)
+{
+  bool scheduleSent(false);
+  try
+  {
+    stringstream schedule;
+    schedule << "SCHEDULE ";
+    // SCHEDULE <sch.nr>,VT,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
+    //          <frequency>,<subbands>,<directiontype>,<angle1>,<angle2>
+    schedule << "1,";
+    schedule << "VT,";
+    schedule << name << ",";
+    
+    string childs = m_parameterSet.getString(name + string(".") + string("childs"));
+    vector<string> childsVector;
+    APLUtilities::string2Vector(childs,childsVector);
+    
+    schedule << childsVector[0] << ",";
+    schedule << childsVector[1] << ",";
+    time_t startTime = _decodeTimeParameter(m_parameterSet.getString(name + string(".") + string("startTime")));
+    schedule << startTime << ",";
+    time_t stopTime = _decodeTimeParameter(m_parameterSet.getString(name + string(".") + string("stopTime")));
+    schedule << stopTime << ",";
+    
+    schedule << m_parameterSet.getString(name + string(".") + string("frequency")) << ",";
+    schedule << m_parameterSet.getString(name + string(".") + string("subbands")) << ",";
+    schedule << m_parameterSet.getString(name + string(".") + string("directionType")) << ",";
+    schedule << m_parameterSet.getString(name + string(".") + string("angle1")) << ",";
+    schedule << m_parameterSet.getString(name + string(".") + string("angle2")) << ",";
+    
+    GCFPVString pvSchedule(schedule.str());
+    propset->setValue("command",pvSchedule);
+    scheduleSent = true;
+  }
+  catch(Exception& e)
+  {
+    LOG_FATAL(e.message().c_str());
+  }
+  return scheduleSent;
 }
 
 }; // namespace VIC

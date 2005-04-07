@@ -133,6 +133,7 @@ namespace GSO
       bool _isVISDclientPort(const ::GCFPortInterface& port, string& visd) const;
       bool _isVIclientPort(const ::GCFPortInterface& port) const;
       string _getShareLocation() const;
+      void _handleSASprotocol(::GCFEvent& event, ::GCFPortInterface& port);
       
       string                                m_SASserverPortName;
       GCFTCPPort                            m_SASserverPort;      // SAS-MAC communication

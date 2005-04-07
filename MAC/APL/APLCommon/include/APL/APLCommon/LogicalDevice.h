@@ -157,7 +157,7 @@ namespace APLCommon
       virtual ::GCFEvent::TResult concrete_idle_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
       virtual ::GCFEvent::TResult concrete_claiming_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
       virtual ::GCFEvent::TResult concrete_preparing_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
-      virtual ::GCFEvent::TResult concrete_active_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
+      virtual ::GCFEvent::TResult concrete_active_state(::GCFEvent& e, ::GCFPortInterface& p)=0;
       virtual ::GCFEvent::TResult concrete_releasing_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
 
       virtual void concreteClaim(::GCFPortInterface& port)=0;
@@ -167,6 +167,8 @@ namespace APLCommon
       virtual void concreteRelease(::GCFPortInterface& port)=0;
       virtual void concreteParentDisconnected(::GCFPortInterface& port)=0;
       virtual void concreteChildDisconnected(::GCFPortInterface& port)=0;
+      virtual void concreteHandleTimers(::GCFTimerEvent& timerEvent, ::GCFPortInterface& port)=0;
+      
 
     protected:    
       APL_DECLARE_SHARED_POINTER(GCFMyPropertySet)
@@ -174,6 +176,9 @@ namespace APLCommon
       PropertySetAnswer                     m_propertySetAnswer;
       GCFMyPropertySetSharedPtr             m_propertySet;
       ACC::ParameterSet                     m_parameterSet;
+
+      string                                m_serverPortName;
+      TRemotePort                           m_serverPort; // listening port
 
     private:
       void _schedule();
@@ -201,9 +206,7 @@ namespace APLCommon
       typedef map<string,TPortSharedPtr>    TPortMap;
       typedef vector<TBufferedEventInfo>    TEventBufferVector;
       
-      string                                m_serverPortName;
       TRemotePort                           m_parentPort; // connection with parent, if any
-      TRemotePort                           m_serverPort; // listening port
       
       // the vector and map both contain the child ports. The vector is used
       // to cache the port at the moment of the accept. However, at that moment, 
