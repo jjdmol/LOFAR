@@ -31,14 +31,20 @@ set a_root = . #filled in by install
 if (! $?LOFARPATH) then
     set a_path = `echo $LOFARPATH | sed -e 's/\./\\\./g'`
     set a_bin = "$a_path/bin"
-    setenv PATH `echo $PATH | sed -e "s%:$a_bin:%:%g" -e "s%^$a_bin:%%"  -e "s%:$a_bin$%%" -e "s%^$a_bin$%%"`
+    setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
     set a_lib = "$a_path/lib"
-    setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:$a_lib:%:%g" -e "s%^$a_lib:%%"  -e "s%:$a_lib$%%" -e "s%^$a_lib$%%"`
+    setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${a_lib}:%:%g" -e "s%^${a_lib}:%%"  -e "s%:${a_lib}"'$%%' -e "s%^${a_lib}"'$%%'`
 endif
 
 # Now define the new LOFARPATH
-setenv LOFARPATH `dirname $0`
-setenv LOFARPATH `cd $LOFARPATH; pwd`      # make path absolute
+setenv LOFARPATH `cd $a_root; pwd`      # make path absolute
+
+# Also strip this path from the current paths (in case it is contained in it).
+set a_path = `echo $LOFARPATH | sed -e 's/\./\\\./g'`
+set a_bin = "$a_path/bin"
+setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
+set a_lib = "$a_path/lib"
+setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${a_lib}:%:%g" -e "s%^${a_lib}:%%"  -e "s%:${a_lib}"'$%%' -e "s%^${a_lib}"'$%%'`
 
 # Add the path to the standard paths.
 if (! $?PATH) then

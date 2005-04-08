@@ -42,6 +42,15 @@ fi
 LOFARPATH=`cd $a_root; pwd`      # make path absolute
 export LOFARPATH
 
+# Also strip this path from the current paths (in case it is contained in it).
+a_path=`echo $LOFARPATH | sed -e 's/\./\\\./g'`
+a_bin="$a_path/bin"
+PATH=`echo $PATH | sed -e "s%:$a_bin:%:%g" -e "s%^$a_bin:%%"  -e "s%:$a_bin$%%" -e "s%^$a_bin$%%"`
+export PATH
+a_lib="$a_path/lib"
+LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e "s%:$a_lib:%:%g" -e "s%^$a_lib:%%"  -e "s%:$a_lib$%%" -e "s%^$a_lib$%%"`
+export LD_LIBRARY_PATH
+
 # Add the path to the standard paths.
 if [ "$PATH" = "" ]; then
     PATH=$LOFARPATH/bin
