@@ -30,7 +30,7 @@ set a_root = . #filled in by install
 
 # First strip the current LOFARROOT from PATH and LD_LIBRARY_PATH
 # Take care that a possible . is preceeded by a backslash.
-if (! $?LOFARROOT) then
+if ($?LOFARROOT) then
     set a_path = `echo $LOFARROOT | sed -e 's/\./\\\./g'`
     set a_bin = "$a_path/bin"
     setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
