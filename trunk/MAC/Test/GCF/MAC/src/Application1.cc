@@ -8,6 +8,7 @@
 #include <GCF/PAL/GCF_MyProperty.h>
 #include <GCF/PAL/GCF_ExtProperty.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
+#include <GCF/LogSys/GCF_KeyValueLogger.h>
 #include <math.h>
 #include <stdio.h>
 #include "TST_Protocol.ph"
@@ -988,6 +989,7 @@ GCFEvent::TResult Application::test6_4(GCFEvent& e, GCFPortInterface& /*p*/)
       TESTC(receivedVal == expectedVal);
       _counter++;
       cerr << "Received prop. val: " << receivedVal << " Expected prop. val: " << expectedVal << endl;
+      LOG_KEYVALUE_DT(pResponse->pPropName, *pResponse->pValue, KVL_ORIGIN_MAC);
       if (_counter == 100 )
       {
         char propName[] = "J.P00";
@@ -1311,6 +1313,8 @@ using namespace LOFAR::GCF;
 int main(int argc, char* argv[])
 {
   TM::GCFTask::init(argc, argv);
+
+  LOG_INFO("MACProcessScope: GCF.TEST.MAC.App1");
     
   Suite s("GCF Test", &cerr);
   s.addTest(new LOFAR::GCF::Test::Application);

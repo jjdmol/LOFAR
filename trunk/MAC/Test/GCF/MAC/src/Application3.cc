@@ -233,6 +233,8 @@ int main(int argc, char* argv[])
 {
   TM::GCFTask::init(argc, argv);
   
+  LOG_INFO("MACProcessScope: GCF.TEST.MAC.App3");
+
   Suite s("GCF Test", &cerr);
   s.addTest(new LOFAR::GCF::Test::Application);
   s.run();

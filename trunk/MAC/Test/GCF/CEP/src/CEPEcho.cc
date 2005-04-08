@@ -59,6 +59,8 @@ int main (int , const char** )
 {
   INIT_LOGGER("mac.log_prop");
 
+  LOG_INFO("MACProcessScope: GCF.TEST.CEP.CEPEcho");
+
   try 
   {
     Test::echo();

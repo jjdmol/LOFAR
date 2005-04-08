@@ -130,9 +130,9 @@ TGCFResult GCFPVBlob::copy(const GCFPValue& newVal)
     {
       delete [] _value;
     }
-    _length = ((GCFPVBlob *)&newVal)->getLen();
+    _length = ((const GCFPVBlob *)&newVal)->getLen();
     _value = new unsigned char[_length];
-    memcpy(_value, ((GCFPVBlob *)&newVal)->getValue(), _length);   
+    memcpy(_value, ((const GCFPVBlob *)&newVal)->getValue(), _length);   
     _isDataHolder = true;
   }
   else

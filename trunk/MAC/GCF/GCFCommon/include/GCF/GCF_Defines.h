@@ -157,6 +157,15 @@ typedef enum TPSCategory
   // will be loaded automatically right after handled enable request in the PA
   PS_CAT_PERM_AUTOLOAD,  
 };
+
+enum TKVLOrigin 
+{
+  KVL_NO_ORIGIN, 
+  KVL_ORIGIN_MAC,
+  KVL_ORIGIN_SHM,
+  KVL_ORIGIN_OPERATOR
+};
+
   } // namespace Common
  } // namespace GCF
 } // namespace LOFAR

@@ -27,6 +27,8 @@ int main(int argC, char *argV[])
 {
   GCFTask::init(argC, argV);
   
+  LOG_INFO("MACProcessScope: GCF.SB");
+
   LOFAR::GCF::SB::GSBController serviceBroker; 
   
   serviceBroker.start(); // make initial transition

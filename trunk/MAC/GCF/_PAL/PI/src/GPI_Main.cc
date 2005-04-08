@@ -28,6 +28,8 @@ int main(int argc, char *argv[])
 {
 	TM::GCFTask::init(argc, argv);
 
+  LOG_INFO("MACProcessScope: GCF.PI");
+
 	PAL::GPIController propertyInterace;
 
   propertyInterace.start();
