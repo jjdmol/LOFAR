@@ -38,16 +38,16 @@ namespace LOFAR
 namespace APLCommon
 {
 
-  class ::GCFEvent;
+  class GCF::TM::GCFEvent;
   class PropertySetAnswerHandlerInterface;
   
-  class PropertySetAnswer : public ::GCFAnswer
+  class PropertySetAnswer : public GCF::PAL::GCFAnswer
   {
     public:
       explicit PropertySetAnswer(PropertySetAnswerHandlerInterface& handler);
       virtual ~PropertySetAnswer();
   
-      virtual void handleAnswer (::GCFEvent& answer);
+      virtual void handleAnswer (GCF::TM::GCFEvent& answer);
       
     protected:
       PropertySetAnswer();

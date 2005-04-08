@@ -16,8 +16,9 @@
 
 Statemachine_MACScheduler (ready, stopBeamServer, bs_alloc_ack, bs_pointto_ack) =
 {
-  s000  : SAS_SCHEDULE ( "VI1.ps" )                             ; s010.
-  s010  : SAS_RESPONSE ( 0x00000000 )                           ; s020.
+  s000  : F_SAS_SCHEDULE ( "VI1.ps" )                             ; s010.
+  s010  : E_SAS_RESPONSE ( 0x00000000 )                           ; s020.
+  s010  : SAS_RESPONSE (  )                                     ; error.
   s020  : R_SIG ( bs_alloc_ack )                                ; s100.
   s020  : TIMER(30)																							; timeout.
 

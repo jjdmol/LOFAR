@@ -38,6 +38,9 @@
 #include "APLCommon/StartDaemon_Protocol.ph"
 
 using namespace LOFAR::ACC;
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
 
 namespace LOFAR
 {
@@ -69,13 +72,13 @@ const string LogicalDevice::LD_COMMAND_RELEASE          = string("RELEASE");
 INIT_TRACER_CONTEXT(LogicalDevice,LOFARLOGGER_PACKAGE);
 
 LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile) throw (APLCommon::ParameterFileNotFoundException, APLCommon::ParameterNotFoundException) :
-  ::GCFTask((State)&LogicalDevice::initial_state,taskName),
+  GCFTask((State)&LogicalDevice::initial_state,taskName),
   PropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
   m_propertySet(),
   m_parameterSet(),
   m_serverPortName(string("server")),
-  m_serverPort(*this, m_serverPortName, ::GCFPortInterface::MSPP, LOGICALDEVICE_PROTOCOL),
+  m_serverPort(*this, m_serverPortName, GCFPortInterface::MSPP, LOGICALDEVICE_PROTOCOL),
   m_parentPort(),
   m_childPorts(),
   m_connectedChildPorts(),
@@ -162,7 +165,7 @@ LogicalDevice::TLogicalDeviceState LogicalDevice::getLogicalDeviceState() const
   return m_logicalDeviceState;
 }
 
-void LogicalDevice::handlePropertySetAnswer(::GCFEvent& answer)
+void LogicalDevice::handlePropertySetAnswer(GCFEvent& answer)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(answer)).c_str());
   switch(answer.signal)
@@ -422,17 +425,17 @@ void LogicalDevice::_release()
   dispatch(releaseEvent,m_parentPort);
 }
 
-bool LogicalDevice::_isParentPort(::GCFPortInterface& port)
+bool LogicalDevice::_isParentPort(GCFPortInterface& port)
 {
   return (&port == &m_parentPort); // comparing two pointers. yuck?
 }
    
-bool LogicalDevice::_isServerPort(::GCFPortInterface& port)
+bool LogicalDevice::_isServerPort(GCFPortInterface& port)
 {
   return (&port == &m_serverPort); // comparing two pointers. yuck?
 }
    
-bool LogicalDevice::_isChildPort(::GCFPortInterface& port)
+bool LogicalDevice::_isChildPort(GCFPortInterface& port)
 {
   bool found=false;
   TPortVector::iterator it=m_childPorts.begin();
@@ -444,7 +447,7 @@ bool LogicalDevice::_isChildPort(::GCFPortInterface& port)
   return found;
 }
 
-bool LogicalDevice::_isChildStartDaemonPort(::GCFPortInterface& port, string& startDaemonKey)
+bool LogicalDevice::_isChildStartDaemonPort(GCFPortInterface& port, string& startDaemonKey)
 {
   bool found=false;
   TPortMap::iterator it=m_childStartDaemonPorts.begin();
@@ -460,7 +463,7 @@ bool LogicalDevice::_isChildStartDaemonPort(::GCFPortInterface& port, string& st
   return found;
 }
 
-void LogicalDevice::_sendToAllChilds(::GCFEvent& event)
+void LogicalDevice::_sendToAllChilds(GCFEvent& event)
 {
   // send to all childs
   TPortMap::iterator it=m_connectedChildPorts.begin();
@@ -478,7 +481,7 @@ void LogicalDevice::_sendToAllChilds(::GCFEvent& event)
   }
 }
 
-void LogicalDevice::_disconnectedHandler(::GCFPortInterface& port)
+void LogicalDevice::_disconnectedHandler(GCFPortInterface& port)
 {
   port.close();
   if(_isServerPort(port))
@@ -540,7 +543,7 @@ void LogicalDevice::_doStateTransition(const TLogicalDeviceState& newState)
   }
 }
 
-void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
+void LogicalDevice::_handleTimers(GCFEvent& event, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   if(event.signal == F_TIMER)
@@ -649,7 +652,7 @@ vector<string> LogicalDevice::_getChildKeys()
 
 // Send the event to the port. If it fails, the event is added to a buffer
 // The logical device periodically retries to send the events in the buffer
-void LogicalDevice::_sendEvent(::GCFEvent& event, ::GCFPortInterface& port)
+void LogicalDevice::_sendEvent(GCFEvent& event, GCFPortInterface& port)
 {
   ssize_t sentBytes = port.send(event);
   if(sentBytes == 0)
@@ -738,10 +741,10 @@ string LogicalDevice::_getShareLocation() const
   return shareLocation;
 }
 
-::GCFEvent::TResult LogicalDevice::initial_state(::GCFEvent& event, ::GCFPortInterface& port)
+GCFEvent::TResult LogicalDevice::initial_state(GCFEvent& event, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
   {
@@ -751,7 +754,7 @@ string LogicalDevice::_getShareLocation() const
     case F_ENTRY:
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_IDLE;
-      ::GCFPVString status(LD_STATE_STRING_INITIAL);
+      GCFPVString status(LD_STATE_STRING_INITIAL);
       m_propertySet->setValue(LD_PROPNAME_STATUS,status);
       
       // create the childs
@@ -767,7 +770,7 @@ string LogicalDevice::_getShareLocation() const
           string startDaemonTaskName = m_parameterSet.getString((*chIt) + string(".startDaemonTask"));
           string childPsName         = startDaemonHostName + string(":") + m_parameterSet.getString((*chIt) + string(".propertysetName"));
           
-          TPortSharedPtr startDaemonPort(new TRemotePort(*this,startDaemonTaskName,::GCFPortInterface::SAP,0));
+          TPortSharedPtr startDaemonPort(new TRemotePort(*this,startDaemonTaskName,GCFPortInterface::SAP,0));
           TPeerAddr peerAddr;
           peerAddr.taskname = startDaemonTaskName;
           peerAddr.portname = startDaemonPortName;
@@ -795,7 +798,7 @@ string LogicalDevice::_getShareLocation() const
       // connect to parent.
       string parentPortName = m_parameterSet.getString("parentPort");
       string parentTaskName = m_parameterSet.getString("parentTask");
-      m_parentPort.init(*this,parentTaskName,::GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
+      m_parentPort.init(*this,parentTaskName,GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
       TPeerAddr peerAddr;
       peerAddr.taskname = parentTaskName;
       peerAddr.portname = parentPortName;
@@ -841,20 +844,20 @@ string LogicalDevice::_getShareLocation() const
     
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::initial_state, default",getName().c_str()));
-      status = ::GCFEvent::NOT_HANDLED;
+      status = GCFEvent::NOT_HANDLED;
       break;
   }    
   TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
-  ::GCFEvent::TResult concreteStatus;
+  GCFEvent::TResult concreteStatus;
   concreteStatus = concrete_initial_state(event, port, newState);
   _doStateTransition(newState);
-  return (status==::GCFEvent::HANDLED||concreteStatus==::GCFEvent::HANDLED?::GCFEvent::HANDLED : ::GCFEvent::NOT_HANDLED);
+  return (status==GCFEvent::HANDLED||concreteStatus==GCFEvent::HANDLED?GCFEvent::HANDLED : GCFEvent::NOT_HANDLED);
 }
 
-::GCFEvent::TResult LogicalDevice::idle_state(::GCFEvent& event, ::GCFPortInterface& port)
+GCFEvent::TResult LogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -872,7 +875,7 @@ string LogicalDevice::_getShareLocation() const
       scheduledEvent.result=LD_RESULT_NO_ERROR;//OK
       m_parentPort.send(scheduledEvent);
       
-      ::GCFPVString status(LD_STATE_STRING_IDLE);
+      GCFPVString status(LD_STATE_STRING_IDLE);
       m_propertySet->setValue(LD_PROPNAME_STATUS,status);
       break;
     }
@@ -945,20 +948,20 @@ string LogicalDevice::_getShareLocation() const
     
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::idle_state, default",getName().c_str()));
-      status = ::GCFEvent::NOT_HANDLED;
+      status = GCFEvent::NOT_HANDLED;
       break;
   }    
   TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
-  ::GCFEvent::TResult concreteStatus;
+  GCFEvent::TResult concreteStatus;
   concreteStatus = concrete_idle_state(event, port, newState);
   _doStateTransition(newState);
-  return (status==::GCFEvent::HANDLED||concreteStatus==::GCFEvent::HANDLED?::GCFEvent::HANDLED : ::GCFEvent::NOT_HANDLED);
+  return (status==GCFEvent::HANDLED||concreteStatus==GCFEvent::HANDLED?GCFEvent::HANDLED : GCFEvent::NOT_HANDLED);
 }
 
-::GCFEvent::TResult LogicalDevice::claiming_state(::GCFEvent& event, ::GCFPortInterface& port)
+GCFEvent::TResult LogicalDevice::claiming_state(GCFEvent& event, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -968,7 +971,7 @@ string LogicalDevice::_getShareLocation() const
     case F_ENTRY:
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_CLAIMING;
-      ::GCFPVString status(LD_STATE_STRING_CLAIMING);
+      GCFPVString status(LD_STATE_STRING_CLAIMING);
       m_propertySet->setValue(LD_PROPNAME_STATUS,status);
       
       // send claim event to childs
@@ -1014,20 +1017,20 @@ string LogicalDevice::_getShareLocation() const
     
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::claiming_state, default",getName().c_str()));
-      status = ::GCFEvent::NOT_HANDLED;
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
   TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
-  ::GCFEvent::TResult concreteStatus;
+  GCFEvent::TResult concreteStatus;
   concreteStatus = concrete_claiming_state(event, port, newState);
   _doStateTransition(newState);
-  return (status==::GCFEvent::HANDLED||concreteStatus==::GCFEvent::HANDLED?::GCFEvent::HANDLED : ::GCFEvent::NOT_HANDLED);
+  return (status==GCFEvent::HANDLED||concreteStatus==GCFEvent::HANDLED?GCFEvent::HANDLED : GCFEvent::NOT_HANDLED);
 }
 
-::GCFEvent::TResult LogicalDevice::claimed_state(::GCFEvent& event, ::GCFPortInterface& port)
+GCFEvent::TResult LogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -1037,7 +1040,7 @@ string LogicalDevice::_getShareLocation() const
     case F_ENTRY:
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_CLAIMED;
-      ::GCFPVString status(LD_STATE_STRING_CLAIMED);
+      GCFPVString status(LD_STATE_STRING_CLAIMED);
       m_propertySet->setValue(LD_PROPNAME_STATUS,status);
 
       // send claimed message to the parent.
@@ -1096,17 +1099,17 @@ string LogicalDevice::_getShareLocation() const
     
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::claimed_state, default",getName().c_str()));
-      status = ::GCFEvent::NOT_HANDLED;
+      status = GCFEvent::NOT_HANDLED;
       break;
     }
 
   return status;
 }
 
-::GCFEvent::TResult LogicalDevice::preparing_state(::GCFEvent& event, ::GCFPortInterface& port)
+GCFEvent::TResult LogicalDevice::preparing_state(GCFEvent& event, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -1116,7 +1119,7 @@ string LogicalDevice::_getShareLocation() const
     case F_ENTRY:
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_PREPARING;
-      ::GCFPVString status(LD_STATE_STRING_PREPARING);
+      GCFPVString status(LD_STATE_STRING_PREPARING);
       m_propertySet->setValue(LD_PROPNAME_STATUS,status);
 
       // send prepare event to childs
@@ -1165,20 +1168,20 @@ string LogicalDevice::_getShareLocation() const
     
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::preparing_state, default",getName().c_str()));
-      status = ::GCFEvent::NOT_HANDLED;
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
   TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
-  ::GCFEvent::TResult concreteStatus;
+  GCFEvent::TResult concreteStatus;
   concreteStatus = concrete_preparing_state(event, port, newState);
   _doStateTransition(newState);
-  return (status==::GCFEvent::HANDLED||concreteStatus==::GCFEvent::HANDLED?::GCFEvent::HANDLED : ::GCFEvent::NOT_HANDLED);
+  return (status==GCFEvent::HANDLED||concreteStatus==GCFEvent::HANDLED?GCFEvent::HANDLED : GCFEvent::NOT_HANDLED);
 }
 
-::GCFEvent::TResult LogicalDevice::suspended_state(::GCFEvent& event, ::GCFPortInterface& port)
+GCFEvent::TResult LogicalDevice::suspended_state(GCFEvent& event, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -1188,7 +1191,7 @@ string LogicalDevice::_getShareLocation() const
     case F_ENTRY:
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_SUSPENDED;
-      ::GCFPVString status(LD_STATE_STRING_SUSPENDED);
+      GCFPVString status(LD_STATE_STRING_SUSPENDED);
       m_propertySet->setValue(LD_PROPNAME_STATUS,status);
 
       // send to parent
@@ -1246,16 +1249,16 @@ string LogicalDevice::_getShareLocation() const
     
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::suspended_state, default",getName().c_str()));
-      status = ::GCFEvent::NOT_HANDLED;
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
   return status;
 }
 
-::GCFEvent::TResult LogicalDevice::active_state(::GCFEvent& event, ::GCFPortInterface& port)
+GCFEvent::TResult LogicalDevice::active_state(GCFEvent& event, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -1265,7 +1268,7 @@ string LogicalDevice::_getShareLocation() const
     case F_ENTRY:
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_ACTIVE;
-      ::GCFPVString status(LD_STATE_STRING_ACTIVE);
+      GCFPVString status(LD_STATE_STRING_ACTIVE);
       m_propertySet->setValue(LD_PROPNAME_STATUS,status);
 
       // send resumed message to parent.
@@ -1321,18 +1324,18 @@ string LogicalDevice::_getShareLocation() const
     
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::active_state, default",getName().c_str()));
-      status = ::GCFEvent::NOT_HANDLED;
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
-  ::GCFEvent::TResult concreteStatus;
+  GCFEvent::TResult concreteStatus;
   concreteStatus = concrete_active_state(event, port);
-  return (status==::GCFEvent::HANDLED||concreteStatus==::GCFEvent::HANDLED?::GCFEvent::HANDLED : ::GCFEvent::NOT_HANDLED);
+  return (status==GCFEvent::HANDLED||concreteStatus==GCFEvent::HANDLED?GCFEvent::HANDLED : GCFEvent::NOT_HANDLED);
 }
 
-::GCFEvent::TResult LogicalDevice::releasing_state(::GCFEvent& event, ::GCFPortInterface& port)
+GCFEvent::TResult LogicalDevice::releasing_state(GCFEvent& event, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -1342,7 +1345,7 @@ string LogicalDevice::_getShareLocation() const
     case F_ENTRY:
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_RELEASING;
-      ::GCFPVString status(LD_STATE_STRING_RELEASING);
+      GCFPVString status(LD_STATE_STRING_RELEASING);
       m_propertySet->setValue(LD_PROPNAME_STATUS,status);
       break;
     }
@@ -1364,14 +1367,14 @@ string LogicalDevice::_getShareLocation() const
     
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::releasing_state, default",getName().c_str()));
-      status = ::GCFEvent::NOT_HANDLED;
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
   TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
-  ::GCFEvent::TResult concreteStatus;
+  GCFEvent::TResult concreteStatus;
   concreteStatus = concrete_releasing_state(event, port, newState);
   _doStateTransition(newState);
-  return (status==::GCFEvent::HANDLED||concreteStatus==::GCFEvent::HANDLED?::GCFEvent::HANDLED : ::GCFEvent::NOT_HANDLED);
+  return (status==GCFEvent::HANDLED||concreteStatus==GCFEvent::HANDLED?GCFEvent::HANDLED : GCFEvent::NOT_HANDLED);
 }
 
 };

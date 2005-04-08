@@ -53,7 +53,7 @@ namespace AVT
       explicit AVTStationReceptor(string& name,
                                   const string& scope,
                                   const string& APCName,
-                                  const std::list<TPropertyInfo>& requiredResources); 
+                                  const std::list<GCF::Common::TPropertyInfo>& requiredResources); 
       virtual ~AVTStationReceptor();
 
       bool checkQualityRequirements();
@@ -72,35 +72,35 @@ namespace AVT
       /**
       * initializes the SAP and SPP ports
       */
-      virtual GCFEvent::TResult concrete_initial_state(GCFEvent& e, GCFPortInterface& p);
+      virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       /**
       * returns true if claiming has finished
       */
-      virtual GCFEvent::TResult concrete_claiming_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
+      virtual GCF::TM::GCFEvent::TResult concrete_claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, bool& stateFinished);
       /**
       * returns true if the preparing state has finished
       */
-      virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error);
+      virtual GCF::TM::GCFEvent::TResult concrete_preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, bool& stateFinished, bool& error);
       /**
       * concrete implementation of the active state
       */
-      virtual GCFEvent::TResult concrete_active_state(GCFEvent& e, GCFPortInterface& p);
+      virtual GCF::TM::GCFEvent::TResult concrete_active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       /**
       * returns true if the releasing state has finished
       */
-      virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
+      virtual GCF::TM::GCFEvent::TResult concrete_releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, bool& stateFinished);
 
-      virtual void handlePropertySetAnswer(GCFEvent& answer);
+      virtual void handlePropertySetAnswer(GCF::TM::GCFEvent& answer);
 
-      virtual void concreteClaim(GCFPortInterface& port);
-      virtual void concretePrepare(GCFPortInterface& port,string& parameters);
-      virtual void concreteResume(GCFPortInterface& port);
-      virtual void concreteSuspend(GCFPortInterface& port);
-      virtual void concreteRelease(GCFPortInterface& port);
-      virtual void concreteDisconnected(GCFPortInterface& port);
+      virtual void concreteClaim(GCF::TM::GCFPortInterface& port);
+      virtual void concretePrepare(GCF::TM::GCFPortInterface& port,string& parameters);
+      virtual void concreteResume(GCF::TM::GCFPortInterface& port);
+      virtual void concreteSuspend(GCF::TM::GCFPortInterface& port);
+      virtual void concreteRelease(GCF::TM::GCFPortInterface& port);
+      virtual void concreteDisconnected(GCF::TM::GCFPortInterface& port);
 
     private:
-      typedef std::map<std::string,boost::shared_ptr<GCFExtProperty> > TExtPropertyMap;
+      typedef std::map<std::string,boost::shared_ptr<GCF::PAL::GCFExtProperty> > TExtPropertyMap;
 
       time_t            m_startTime;
       time_t            m_stopTime;

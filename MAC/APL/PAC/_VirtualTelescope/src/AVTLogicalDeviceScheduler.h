@@ -52,7 +52,7 @@ namespace AVT
 {
   class AVTStationReceptor;
   
-  class AVTLogicalDeviceScheduler : public GCFTask,
+  class AVTLogicalDeviceScheduler : public GCF::TM::GCFTask,
                                           AVTPropertySetAnswerHandlerInterface
   {
     public:
@@ -71,12 +71,12 @@ namespace AVT
       * @param p The port interface (see @a GCFPortInterface) on which the event
       * was received.
       */
-      GCFEvent::TResult initial_state(GCFEvent& e, GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
 
       /**
       * PropertySet answer handling
       */
-      virtual void handlePropertySetAnswer(GCFEvent& answer);
+      virtual void handlePropertySetAnswer(GCF::TM::GCFEvent& answer);
 
     protected:
       // protected copy constructor
@@ -95,7 +95,7 @@ namespace AVT
                                                 
         boost::shared_ptr<AVTLogicalDevice>     logicalDevice;
         unsigned long                           currentSchedule;
-        boost::shared_ptr<APLInterTaskPort>     clientPort;
+        boost::shared_ptr<APLCommon::APLInterTaskPort>     clientPort;
         bool                                    permanent; // prevents releasing the LD when no more schedules exist
         map<string,LogicalDeviceInfoT>          children; // recursive
       };
@@ -131,7 +131,7 @@ namespace AVT
                                             stopTimerId(0) {};
         
         string                              resource;
-        boost::shared_ptr<GCFExtProperty>   pMaintenanceProperty;
+        boost::shared_ptr<GCF::PAL::GCFExtProperty>   pMaintenanceProperty;
         int                                 startTime;
         int                                 stopTime;
         unsigned long                       startTimerId;
@@ -145,12 +145,12 @@ namespace AVT
       typedef map<unsigned long,MaintenanceScheduleInfoT>     MaintenanceScheduleT;
       typedef MaintenanceScheduleT::iterator                  MaintenanceScheduleIterT;
 
-      boost::shared_ptr<AVTStationReceptor> addReceptor(string srName,const list<TPropertyInfo>& requiredResources);
+      boost::shared_ptr<AVTStationReceptor> addReceptor(string srName,const list<GCF::Common::TPropertyInfo>& requiredResources);
       void addReceptorGroup(string srName,vector<boost::shared_ptr<AVTStationReceptor> >& receptors);
       LogicalDeviceMapIterT findLogicalDevice(const unsigned long scheduleId);
-      LogicalDeviceMapIterT findClientPort(GCFPortInterface& port);
+      LogicalDeviceMapIterT findClientPort(GCF::TM::GCFPortInterface& port);
       LogicalDeviceScheduleIterT findSchedule(const string& deviceName,LogicalDeviceScheduleIterT beginIt);
-      bool submitSchedule(const unsigned long scheduleId,const string& deviceName, const vector<string> scheduleParameters, boost::shared_ptr<APLInterTaskPort> clientPort);
+      bool submitSchedule(const unsigned long scheduleId,const string& deviceName, const vector<string> scheduleParameters, boost::shared_ptr<APLCommon::APLInterTaskPort> clientPort);
       /*
        * returns true if the timerId is a prepareTimer for the given logical device
        * Also sets the current schedule id for the logical device.
@@ -180,18 +180,18 @@ namespace AVT
       void sendWGsettings();
       void sendWGenable();
       void sendWGdisable();
-      void getRequiredResources(list<TPropertyInfo>& requiredResources, int rack, int subrack, int board, int ap, int rcu);
+      void getRequiredResources(list<GCF::Common::TPropertyInfo>& requiredResources, int rack, int subrack, int board, int ap, int rcu);
 
       static string m_schedulerTaskName;
 
 
       AVTPropertySetAnswer  m_propertySetAnswer;
-      GCFMyPropertySet      m_properties;
-      GCFMyPropertySet      m_propertiesWG;
+      GCF::PAL::GCFMyPropertySet      m_properties;
+      GCF::PAL::GCFMyPropertySet      m_propertiesWG;
       bool                  m_propsetConfigured;
       bool                  m_propsetWGConfigured;
-  //    GCFPort               m_beamServer;
-      GCFPort*              m_pBeamServer;
+  //    GCF::TM::GCFPort               m_beamServer;
+      GCF::TM::GCFPort*              m_pBeamServer;
       double                m_WGfrequency;
       unsigned int          m_WGamplitude;
       unsigned int          m_WGsamplePeriod;
@@ -199,7 +199,7 @@ namespace AVT
       LogicalDeviceMapT       m_logicalDeviceMap;
       LogicalDeviceScheduleT  m_logicalDeviceSchedule;
       MaintenanceScheduleT    m_maintenanceSchedule;
-      GCFPort                 m_timerPort;
+      GCF::TM::GCFPort                 m_timerPort;
       
       AVTResourceManagerPtr   m_resourceManager;
 

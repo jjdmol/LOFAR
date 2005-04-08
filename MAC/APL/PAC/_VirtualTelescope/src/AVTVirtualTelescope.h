@@ -72,41 +72,41 @@ namespace AVT
       /**
       * initializes the SAP and SPP ports
       */
-      virtual GCFEvent::TResult concrete_initial_state(GCFEvent& e, GCFPortInterface& p);
+      virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       /**
       * returns true if claiming has finished
       */
-      virtual GCFEvent::TResult concrete_claiming_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
+      virtual GCF::TM::GCFEvent::TResult concrete_claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, bool& stateFinished);
       /**
       * returns true if the preparing state has finished
       */
-      virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error);
+      virtual GCF::TM::GCFEvent::TResult concrete_preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, bool& stateFinished, bool& error);
       /**
       * concrete implementation of the active state
       */
-      virtual GCFEvent::TResult concrete_active_state(GCFEvent& e, GCFPortInterface& p);
+      virtual GCF::TM::GCFEvent::TResult concrete_active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       /**
       * returns true if the releasing state has finished
       */
-      virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
+      virtual GCF::TM::GCFEvent::TResult concrete_releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, bool& stateFinished);
 
-      virtual void handlePropertySetAnswer(GCFEvent& answer);
+      virtual void handlePropertySetAnswer(GCF::TM::GCFEvent& answer);
 
-      virtual void concreteClaim(GCFPortInterface& port);
-      virtual void concretePrepare(GCFPortInterface& port,string& parameters);
-      virtual void concreteResume(GCFPortInterface& port);
-      virtual void concreteSuspend(GCFPortInterface& port);
-      virtual void concreteRelease(GCFPortInterface& port);
-      virtual void concreteDisconnected(GCFPortInterface& port);
+      virtual void concreteClaim(GCF::TM::GCFPortInterface& port);
+      virtual void concretePrepare(GCF::TM::GCFPortInterface& port,string& parameters);
+      virtual void concreteResume(GCF::TM::GCFPortInterface& port);
+      virtual void concreteSuspend(GCF::TM::GCFPortInterface& port);
+      virtual void concreteRelease(GCF::TM::GCFPortInterface& port);
+      virtual void concreteDisconnected(GCF::TM::GCFPortInterface& port);
 
     private:
       /**
       * returns true if the specified port is the BeamFormer logical device SAP
       */
-      bool _isBeamFormerClient(GCFPortInterface& port) const;
-      bool _isStationReceptorGroupClient(GCFPortInterface& port) const;
+      bool _isBeamFormerClient(GCF::TM::GCFPortInterface& port) const;
+      bool _isStationReceptorGroupClient(GCF::TM::GCFPortInterface& port) const;
       
-      bool allInState(GCFPortInterface& port, TLogicalDeviceState state, bool requireSlaveActive) const;
+      bool allInState(GCF::TM::GCFPortInterface& port, TLogicalDeviceState state, bool requireSlaveActive) const;
 
       // The BeamFormer task    
       AVTStationBeamformer&     m_stationBeamformer;
@@ -115,12 +115,12 @@ namespace AVT
       
       // The BeamFormer SAP
   //    GCFPort m_beamFormerClient;
-      APLInterTaskPort    m_beamFormerClient;
+      APLCommon::APLInterTaskPort    m_beamFormerClient;
       bool                m_beamFormerConnected;
-      APLInterTaskPort    m_stationReceptorGroupClient;
+      APLCommon::APLInterTaskPort    m_stationReceptorGroupClient;
       bool                m_stationReceptorGroupConnected;
       long                m_qualityCheckTimerId;
-      GCFPort             m_qualityCheckTimerPort;
+      GCF::TM::GCFPort             m_qualityCheckTimerPort;
       
       
       time_t              m_startTime;

@@ -41,7 +41,10 @@
 #include "ABS_Protocol.ph"
 
 using namespace LOFAR;
-using namespace AVT;
+using namespace LOFAR::AVT;
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
 using namespace std;
 
 INIT_TRACER_CONTEXT(AVTStationBeamformer,LOFARLOGGER_PACKAGE);

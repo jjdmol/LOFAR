@@ -35,11 +35,12 @@
 using namespace std;
 using namespace boost;
 
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
 
 namespace LOFAR
 {
-
-using namespace GCF;
 
 namespace ARA
 {

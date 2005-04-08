@@ -26,12 +26,12 @@ int main(int argc, char* argv[])
 {
   INIT_LOGGER(argv[0]);
   
-  GCFTask::init(argc, argv);
+  LOFAR::GCF::TM::GCFTask::init(argc, argv);
   
   LOFAR::GSO::MACScheduler ms;
   ms.start(); // make initial transition
 
-  GCFTask::run();
+  LOFAR::GCF::TM::GCFTask::run();
     
   return 0;
 }

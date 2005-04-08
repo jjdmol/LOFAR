@@ -32,7 +32,6 @@
 //# VirtualTelescope Includes
 
 // forward declaration
-class GCFEvent;
 
 namespace LOFAR
 {
@@ -42,13 +41,13 @@ namespace AVT
 
   class AVTPropertySetAnswerHandlerInterface;
   
-  class AVTPropertySetAnswer : public GCFAnswer
+  class AVTPropertySetAnswer : public GCF::PAL::GCFAnswer
   {
     public:
       explicit AVTPropertySetAnswer(AVTPropertySetAnswerHandlerInterface& handler);
       virtual ~AVTPropertySetAnswer();
   
-      virtual void handleAnswer(GCFEvent& answer);
+      virtual void handleAnswer(GCF::TM::GCFEvent& answer);
       
     protected:
       AVTPropertySetAnswer();

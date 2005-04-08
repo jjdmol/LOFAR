@@ -48,7 +48,7 @@ namespace APLCommon
       /**
        * PropertySet answer handling is implemented in the derived classes. 
        */
-      virtual void handlePropertySetAnswer(::GCFEvent& answer)=0;
+      virtual void handlePropertySetAnswer(GCF::TM::GCFEvent& answer)=0;
   
     protected:
       // protected copy constructor

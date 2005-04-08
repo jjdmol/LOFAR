@@ -54,7 +54,7 @@ namespace APLCommon
   class LogicalDevice;
   class LogicalDeviceFactory;
   
-  class StartDaemon : public ::GCFTask,
+  class StartDaemon : public GCF::TM::GCFTask,
                              PropertySetAnswerHandlerInterface
   {
     public:
@@ -80,14 +80,14 @@ namespace APLCommon
       * @param p The port interface (see @a GCFPortInterface) on which the event
       * was received.
       */
-      ::GCFEvent::TResult initial_state(::GCFEvent& e, ::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
 
       /**
       * The idle state handler. 
       */
-      ::GCFEvent::TResult idle_state(::GCFEvent& e, ::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult idle_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
 
-      virtual void handlePropertySetAnswer(GCFEvent& answer);
+      virtual void handlePropertySetAnswer(GCF::TM::GCFEvent& answer);
 
     protected:
       // protected copy constructor
@@ -96,21 +96,21 @@ namespace APLCommon
       StartDaemon& operator=(const StartDaemon&);
 
     private:
-      bool _isServerPort(::GCFPortInterface& port);
-      bool _isChildPort(::GCFPortInterface& port);
-      void _disconnectedHandler(::GCFPortInterface& port);
+      bool _isServerPort(GCF::TM::GCFPortInterface& port);
+      bool _isChildPort(GCF::TM::GCFPortInterface& port);
+      void _disconnectedHandler(GCF::TM::GCFPortInterface& port);
 
 #ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
-      typedef GCFTCPPort  TThePortTypeInUse;
+      typedef GCF::TM::GCFTCPPort  TThePortTypeInUse;
 #else      
-      typedef GCFPVSSPort TThePortTypeInUse;
+      typedef GCF::PAL::GCFPVSSPort TThePortTypeInUse;
 #endif
       typedef map<TLogicalDeviceTypes,boost::shared_ptr<LogicalDeviceFactory> > TFactoryMap;
       typedef vector<boost::shared_ptr<LogicalDevice> > TLogicalDeviceVector;
       typedef vector<boost::shared_ptr<TThePortTypeInUse> > TPortVector;
 
       PropertySetAnswer               m_propertySetAnswer;
-      ::GCFMyPropertySet              m_properties;
+      GCF::PAL::GCFMyPropertySet              m_properties;
       string                          m_serverPortName;
       TThePortTypeInUse               m_serverPort; // listening port
       TPortVector                     m_childPorts;    // connected childs

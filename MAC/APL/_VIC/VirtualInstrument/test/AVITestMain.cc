@@ -37,7 +37,10 @@
 using namespace std;
 
 using namespace LOFAR;
-using namespace AVI;
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
+using namespace LOFAR::AVI;
   
 int main(int argc, char* argv[])
 {

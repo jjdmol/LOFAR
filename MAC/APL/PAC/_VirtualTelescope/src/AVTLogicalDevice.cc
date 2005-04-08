@@ -33,6 +33,10 @@
 #define DECLARE_SIGNAL_NAMES
 #include "LogicalDevice_Protocol.ph"
 
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
+using namespace LOFAR::APLCommon;
 using namespace std;
 
 namespace LOFAR

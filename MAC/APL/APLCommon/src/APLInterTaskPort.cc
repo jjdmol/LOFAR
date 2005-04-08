@@ -29,6 +29,8 @@
 #include <APLCommon/APL_Defines.h>
 
 using namespace LOFAR;
+using namespace LOFAR::APLCommon;
+using namespace LOFAR::GCF::TM;
 using namespace std;
 
 INIT_TRACER_CONTEXT(APLInterTaskPort,LOFARLOGGER_PACKAGE);

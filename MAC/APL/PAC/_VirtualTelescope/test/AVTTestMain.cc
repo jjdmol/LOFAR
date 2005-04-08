@@ -29,6 +29,9 @@
 #include <boost/shared_ptr.hpp>
 
 using namespace LOFAR;
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
 using namespace AVT;
 
 int main(int argc, char* argv[])

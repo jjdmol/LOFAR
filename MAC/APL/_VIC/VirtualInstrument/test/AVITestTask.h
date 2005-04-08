@@ -34,15 +34,15 @@
 
 #include "AVITestAnswer.h"
 
-// forward declaration
-class GCFEvent;
-
 namespace LOFAR
 {
 
+// forward declaration
+class GCF::TM::GCFEvent;
+
 namespace AVI
 {
-  class AVITestTask : public GCFTask, public Test
+  class AVITestTask : public GCF::TM::GCFTask, public Test
   {
     public:
       AVITestTask();
@@ -57,18 +57,18 @@ namespace AVI
       
     private: 
       bool isEnabled();
-      GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test1(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test2(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test3(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test4(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test5(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test6(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test7(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test8(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test9(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test10(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult initial(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test1(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test2(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test3(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test4(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test5(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test6(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test7(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test8(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test9(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test10(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult finished(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       
       
       static string m_taskName;
@@ -78,8 +78,8 @@ namespace AVI
       int             m_test_passCounter;
       int             m_propsetLoadedCounter;
       
-      GCFExtPropertySet m_extPropSetCCU1VISD;
-      GCFExtPropertySet m_extPropSetVI1;
+      GCF::PAL::GCFExtPropertySet m_extPropSetCCU1VISD;
+      GCF::PAL::GCFExtPropertySet m_extPropSetVI1;
       
   };  
 };

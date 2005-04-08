@@ -26,8 +26,11 @@
 #include "VirtualInstrumentFactory.h"
 
 using namespace LOFAR;
-using namespace APLCommon;
-using namespace AVI;  // A)pplication layer V)irtual I)nstrument
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
+using namespace LOFAR::APLCommon;
+using namespace LOFAR::AVI;  // A)pplication layer V)irtual I)nstrument
 
 int main(int argc, char* argv[])
 {

@@ -38,7 +38,11 @@
 #include "AVTResourceManager.h"
 
 using namespace LOFAR;
-using namespace AVT;
+using namespace LOFAR::AVT;
+using namespace LOFAR::APLCommon;
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
 using namespace std;
 
 INIT_TRACER_CONTEXT(AVTVirtualTelescope,LOFARLOGGER_PACKAGE);

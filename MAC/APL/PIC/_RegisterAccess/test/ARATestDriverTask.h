@@ -29,25 +29,27 @@
 //# GCF Includes
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/PAL/GCF_ExtPropertySet.h>
+#include <GCF/GCF_PValue.h>
+#include <GCF/GCF_PVUnsigned.h>
+#include <GCF/GCF_PVString.h>
+#include <GCF/GCF_PVBool.h>
+#include <GCF/GCF_PVDouble.h>
 #include <RSP_Protocol.ph>
 #include <boost/shared_ptr.hpp>
 #include <map>
 
 #include "ARATestAnswer.h"
 
-// forward declaration
-class GCFEvent;
-class GCFPVUnsigned;
-class GCFPVBool;
-class GCFPVDouble;
-
 
 namespace LOFAR
 {
 
+// forward declaration
+class GCF::TM::GCFEvent;
+
 namespace ARA
 {
-  class ARATestDriverTask : public GCFTask
+  class ARATestDriverTask : public GCF::TM::GCFTask
   {
     public:
       ARATestDriverTask();
@@ -60,18 +62,18 @@ namespace ARA
       ARATestDriverTask& operator=(const ARATestDriverTask&);
       
     private: 
-      typedef map<string,boost::shared_ptr<GCFExtPropertySet> > TPropertyMap;
+      typedef map<string,boost::shared_ptr<GCF::PAL::GCFExtPropertySet> > TPropertyMap;
     
       void addPropertySet(string scope);
-      void updateETHstatus(string& propName,const GCFPValue* pvalue);
-      void updateAPstatus(string& propName,const GCFPValue* pvalue);
-      void updateBPstatus(string& propName,const GCFPValue* pvalue);
-      void updateRCUstatus(string& propName,const GCFPValue* pvalue);
+      void updateETHstatus(string& propName,const GCF::Common::GCFPValue* pvalue);
+      void updateAPstatus(string& propName,const GCF::Common::GCFPValue* pvalue);
+      void updateBPstatus(string& propName,const GCF::Common::GCFPValue* pvalue);
+      void updateRCUstatus(string& propName,const GCF::Common::GCFPValue* pvalue);
       void updateSystemStatus();
       void updateStats();
       bool isEnabled();
-      GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult initial(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult enabled(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       void getHardwareIndexes(const string& propName,const string& scope, vector<int>& hardwareIndexes);
       
       
@@ -79,7 +81,7 @@ namespace ARA
       static string m_RATestServerName;
       
       ARATestAnswer   m_answer;
-      GCFPort         m_RSPserver;
+      GCF::TM::GCFPort         m_RSPserver;
       TPropertyMap    m_propMap;
       
       RSP_Protocol::SystemStatus m_systemStatus;
