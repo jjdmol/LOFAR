@@ -10,9 +10,9 @@ noinst_HEADERS = $(NOINSTHDRS)
 
 DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
 
-lib_LTLIBRARIES         = libcommon.la
+#lib_LTLIBRARIES         = libtools.la
 
-libcommon_la_SOURCES =
+#libtools_la_SOURCES =
 
 bin_PROGRAMS =
 
@@ -42,6 +42,14 @@ dist_template_DATA  = templates/header.cc_template \
 		      templates/test.sh_template \
 		      templates/test_makefile.am_template
 
+# Install lofarinit without execute permissions.
+# They have to be sourced; fill in the correct path. 
+install-data-local:
+	for FIL in lofarinit.sh lofarinit.csh; do \
+	  echo "FIL=$$FIL $(srcdir) $(prefix)"; \
+	  sed -e "s%\. #filled in by install%$(prefix)%" $(srcdir)/$$FIL > $$FIL.tmp; \
+	  $(INSTALL_DATA) $$FIL.tmp $(prefix)/$$FIL; \
+	done
 
 scriptdir = $(bindir)
 dist_script_SCRIPTS = 
