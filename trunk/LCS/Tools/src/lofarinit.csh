@@ -23,7 +23,9 @@
 #
 # $Id$
 
-# Define correct root here.
+# Define root here.
+# This is a placeholder, so do NOT change the line.
+# The actual value is filled in by make install (see Makefile.am).
 set a_root = . #filled in by install
 
 # First strip the current LOFARPATH from PATH and LD_LIBRARY_PATH
