@@ -108,6 +108,9 @@ using namespace LOFAR::GCF;
 int main (int , const char** )
 {
   INIT_LOGGER("mac.log_prop");
+
+  LOG_INFO("MACProcessScope: GCF.TEST.CEP.CEPPing");
+
   signal(SIGPIPE, SIG_IGN);
   try 
   {

@@ -28,6 +28,8 @@ int main(int argC, char *argV[])
 {
   TM::GCFTask::init(argC, argV);
   
+  LOG_INFO("MACProcessScope: GCF.PA");
+  
   PAL::GPAController propertyAgent; 
   
   propertyAgent.start(); // make initial transition

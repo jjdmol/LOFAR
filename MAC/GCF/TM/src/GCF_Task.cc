@@ -68,13 +68,11 @@ void GCFTask::init(int argc, char** argv)
   _argc = argc;
   _argv = argv;
   
-  ParameterSet* pParamSet = ParameterSet::instance();
   string appName(argv[0]);
-  pParamSet->adoptFile(appName + ".conf");
 
   ifstream    logPropFile;
 
-  //# Try to open the file
+  // Try to open the log_prop file
   string logPropFileName = appName + ".log_prop";
   logPropFile.open(logPropFileName.c_str(), ifstream::in);
   if (!logPropFile) 
@@ -87,6 +85,9 @@ void GCFTask::init(int argc, char** argv)
   }
   
   INIT_LOGGER(logPropFileName.c_str());   
+
+  ParameterSet* pParamSet = ParameterSet::instance();
+  pParamSet->adoptFile(appName + ".conf");
 
   if (_doExit)
     exit(-1);

@@ -266,6 +266,8 @@ int main(int argc, char** argv)
 {
   TM::GCFTask::init(argc, argv);
   
+  LOG_INFO("MACProcessScope: GCF.TEST.RTC.RTPing");
+
   string brdnr("1");
   if (argv != 0)
   {

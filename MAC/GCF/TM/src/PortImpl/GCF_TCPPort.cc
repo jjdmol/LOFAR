@@ -120,10 +120,6 @@ bool GCFTCPPort::open()
   }
   
   setState(S_CONNECTING);
-  if (!_broker)
-  {
-    _broker = GTMServiceBroker::instance();
-  }
   if (SAP == getType()) 
   {
     TPeerAddr fwaddr;
@@ -170,6 +166,7 @@ bool GCFTCPPort::open()
       string remoteServiceName = formatString("%s:%s", 
           _addr.taskname.c_str(), 
           _addr.portname.c_str());
+      _broker = GTMServiceBroker::instance();
       assert(_broker);
       _broker->getServiceinfo(*this, remoteServiceName);
     }
@@ -189,6 +186,7 @@ bool GCFTCPPort::open()
     }
     else
     {
+      _broker = GTMServiceBroker::instance();
       assert(_broker);
       _broker->registerService(*this);
     }

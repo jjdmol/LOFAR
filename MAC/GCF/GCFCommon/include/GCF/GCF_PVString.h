@@ -63,7 +63,7 @@ class GCFPVString : public GCFPValue
     unsigned int packConcrete(char* valBuf) const;
 
     /// @see GCFPValue::getSize()
-    unsigned int getConcreteSize() const { return sizeof(unsigned int) + _value.length(); }
+    unsigned int getConcreteSize() const { return sizeof(uint16) + _value.length(); }
     
   private: // Private attributes
     /** The value*/
