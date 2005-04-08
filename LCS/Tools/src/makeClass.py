@@ -247,14 +247,14 @@ def addTemplates(type,readFile,writeFile,className,packageName,templateList,auto
 
 def makeDefaultClass(lofarDir,className,packageName,srcDir,subDirName):
   # default.h file
-  readFile=openFile(lofarDir+"/templates/header.h_template","r")
+  readFile=openFile(lofarDir+"/LCS/Tools/src/templates/header.h_template","r")
   writeFile=openFile(className+".h","w")
   replacePackageAndClassName(readFile,writeFile,packageName,className,subDirName)
   writeFile.close()
   readFile.close()
   addToMakefile("h",className,srcDir,subDirName)
   #default.cc file
-  readFile=openFile(lofarDir+"/templates/header.cc_template","r")
+  readFile=openFile(lofarDir+"/LCS/Tools/src/templates/header.cc_template","r")
   writeFile=openFile(className+".cc","w")
   replacePackageAndClassName(readFile,writeFile,packageName,className,subDirName)
   writeFile.close()
@@ -263,7 +263,7 @@ def makeDefaultClass(lofarDir,className,packageName,srcDir,subDirName):
 
 def makeTemplatedClass(lofarDir,className,packageName,templateList,autoTemplate,srcDir,subDirName):
   #default h file
-  readFile=openFile(lofarDir+"/templates/templated_header.h_template","r")
+  readFile=openFile(lofarDir+"/LCS/Tools/src/templates/templated_header.h_template","r")
   writeFile=openFile(className+".h","w")
   addTemplates("h",readFile,writeFile,className,packageName,templateList,autoTemplate,subDirName)
   writeFile.close()
@@ -273,7 +273,7 @@ def makeTemplatedClass(lofarDir,className,packageName,templateList,autoTemplate,
 
   if autoTemplate==0:
     #default diy-tcc template file
-    readFile=openFile(lofarDir+"/templates/templated_header.tcc_template","r")
+    readFile=openFile(lofarDir+"/LCS/Tools/src/templates/templated_header.tcc_template","r")
     writeFile=openFile(className+".tcc","w")
     addTemplates("tcc",readFile,writeFile,className,packageName,templateList,autoTemplate,subDirName)
     writeFile.close()
@@ -281,7 +281,7 @@ def makeTemplatedClass(lofarDir,className,packageName,templateList,autoTemplate,
     addToMakefile("tcc",className,srcDir,subDirName)
 
     #default diy-cc template file
-    readFile=openFile(lofarDir+"/templates/templated_header.cc_template","r")
+    readFile=openFile(lofarDir+"/LCS/Tools/src/templates/templated_header.cc_template","r")
     writeFile=openFile(className+".cc","w")
     addTemplates("diy",readFile,writeFile,className,packageName,templateList,autoTemplate,subDirName)
     writeFile.close()
@@ -289,7 +289,7 @@ def makeTemplatedClass(lofarDir,className,packageName,templateList,autoTemplate,
     addToMakefile("diy",className,srcDir,subDirName)
   else:
     #default tcc file
-    readFile=openFile(lofarDir+"/templates/templated_header.tcc_template","r")
+    readFile=openFile(lofarDir+"/LCS/Tools/src/templates/templated_header.tcc_template","r")
     writeFile=openFile(className+".tcc","w")
     addTemplates("tcc",readFile,writeFile,className,packageName,templateList,autoTemplate,subDirName)
     writeFile.close()
@@ -297,7 +297,7 @@ def makeTemplatedClass(lofarDir,className,packageName,templateList,autoTemplate,
     addToMakefile("tcc",className,srcDir,subDirName)
 
 def makeMainClass(lofarDir,className,packageName,srcDir,subDirName):
-  readFile=openFile(lofarDir+"/templates/main.cc_template","r")
+  readFile=openFile(lofarDir+"/LCS/Tools/src/templates/main.cc_template","r")
   writeFile=openFile(className+"Main.cc","w")
   replacePackageAndClassName(readFile,writeFile,packageName,className,subDirName)
   writeFile.close()
@@ -330,6 +330,8 @@ def addToMakefile(type,className,srcDir,subDirName):
         if re.search("[a-zA-Z]",end):
           writeFile.write(front+" = "+extendedClassName+".h \\\n")
           writeFile.write("\t"+end)
+        elif end.find('\\'):
+          writeFile.write(front+" = "+extendedClassName+".h \\\n")
         else :
           writeFile.write(front+" = "+extendedClassName+".h\n")
           
@@ -344,6 +346,8 @@ def addToMakefile(type,className,srcDir,subDirName):
         if re.search("[a-zA-Z]",end):
           writeFile.write(front+" = "+extendedClassName+".cc \\\n")
           writeFile.write("\t\t"+end)
+        elif end.find('\\'):
+          writeFile.write(front+" = "+extendedClassName+".cc \\\n")
         else :
           writeFile.write(front+" = "+extendedClassName+".cc\n")
           
@@ -358,6 +362,9 @@ def addToMakefile(type,className,srcDir,subDirName):
         if re.search("[a-zA-Z]",end):
           writeFile.write(front+" = "+extendedClassName+" \\\n")
           writeFile.write("\t"+end)
+          searchEnd=1
+        elif end.find('\\'):
+          writeFile.write(front+" = "+extendedClassName+" \\\n")
           searchEnd=1
         else :
           writeFile.write(front+" = "+className+"\n")
@@ -382,6 +389,8 @@ def addToMakefile(type,className,srcDir,subDirName):
         if re.search("[a-zA-Z]",end):
           writeFile.write(front+" = "+extendedClassName+".tcc \\\n")
           writeFile.write("\t"+end)
+        elif end.find('\\'):
+          writeFile.write(front+" = "+extendedClassName+".tcc \\\n")
         else :
           writeFile.write(front+" = "+extendenClassName+".tcc\n")
           
