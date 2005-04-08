@@ -29,25 +29,27 @@
 //# GCF Includes
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/PAL/GCF_ExtPropertySet.h>
+#include <GCF/GCF_PValue.h>
+#include <GCF/GCF_PVUnsigned.h>
+#include <GCF/GCF_PVString.h>
+#include <GCF/GCF_PVBool.h>
+#include <GCF/GCF_PVDouble.h>
 #include <RSP_Protocol.ph>
 #include <boost/shared_ptr.hpp>
 #include <map>
 
 #include "AVITestAnswer.h"
 
-// forward declaration
-class GCFEvent;
-class GCFPVUnsigned;
-class GCFPVBool;
-class GCFPVDouble;
-
 
 namespace LOFAR
 {
 
+// forward declaration
+class GCF::TM::GCFEvent;
+
 namespace AVI
 {
-  class AVITestDriverTask : public GCFTask
+  class AVITestDriverTask : public GCF::TM::GCFTask
   {
     public:
       AVITestDriverTask();
@@ -61,14 +63,14 @@ namespace AVI
       
     private: 
       bool isEnabled();
-      GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult initial(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult enabled(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       
       static string m_taskName;
       
       AVITestAnswer     m_answer;
-      GCFExtPropertySet m_extPropSetCCU1VISD;
-      GCFExtPropertySet m_extPropSetVI1;
+      GCF::PAL::GCFExtPropertySet m_extPropSetCCU1VISD;
+      GCF::PAL::GCFExtPropertySet m_extPropSetVI1;
   };  
 };
 

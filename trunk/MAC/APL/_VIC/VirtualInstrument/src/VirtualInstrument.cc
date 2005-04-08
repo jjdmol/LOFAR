@@ -31,6 +31,10 @@
 #include <APLCommon/StartDaemon_Protocol.ph>
 #include "VirtualInstrument.h"
 
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
+
 namespace LOFAR
 {
   using namespace ACC;
@@ -88,7 +92,7 @@ VirtualInstrument::~VirtualInstrument()
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void VirtualInstrument::concrete_handlePropertySetAnswer(::GCFEvent& answer)
+void VirtualInstrument::concrete_handlePropertySetAnswer(GCFEvent& answer)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(answer)).c_str());
   switch(answer.signal)
@@ -168,10 +172,10 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(::GCFEvent& answer)
   }
 }
 
-::GCFEvent::TResult VirtualInstrument::concrete_initial_state(::GCFEvent& event, ::GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+GCFEvent::TResult VirtualInstrument::concrete_initial_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
   newState=LOGICALDEVICE_STATE_NOSTATE;
   switch (event.signal)
   {
@@ -187,10 +191,10 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(::GCFEvent& answer)
   return status;
 }
 
-::GCFEvent::TResult VirtualInstrument::concrete_idle_state(::GCFEvent& event, ::GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+GCFEvent::TResult VirtualInstrument::concrete_idle_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
   newState=LOGICALDEVICE_STATE_NOSTATE;
   switch (event.signal)
   {
@@ -211,64 +215,64 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(::GCFEvent& answer)
   return status;
 }
 
-::GCFEvent::TResult VirtualInstrument::concrete_claiming_state(::GCFEvent& event, ::GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+GCFEvent::TResult VirtualInstrument::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
   newState=LOGICALDEVICE_STATE_CLAIMED;
   
   return status;
 }
 
-::GCFEvent::TResult VirtualInstrument::concrete_preparing_state(::GCFEvent& event, ::GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+GCFEvent::TResult VirtualInstrument::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
   newState=LOGICALDEVICE_STATE_SUSPENDED;
   
   return status;
 }
 
-::GCFEvent::TResult VirtualInstrument::concrete_active_state(::GCFEvent& event, ::GCFPortInterface& /*p*/)
+GCFEvent::TResult VirtualInstrument::concrete_active_state(GCFEvent& event, GCFPortInterface& /*p*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
   
   return status;
 }
 
-::GCFEvent::TResult VirtualInstrument::concrete_releasing_state(::GCFEvent& event, ::GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
+GCFEvent::TResult VirtualInstrument::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*p*/, TLogicalDeviceState& newState)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
   newState=LOGICALDEVICE_STATE_RELEASED;
   
   return status;
 }
 
-void VirtualInstrument::concreteClaim(::GCFPortInterface& /*port*/)
+void VirtualInstrument::concreteClaim(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
 }
 
-void VirtualInstrument::concretePrepare(::GCFPortInterface& /*port*/)
+void VirtualInstrument::concretePrepare(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void VirtualInstrument::concreteResume(::GCFPortInterface& /*port*/)
+void VirtualInstrument::concreteResume(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void VirtualInstrument::concreteSuspend(::GCFPortInterface& /*port*/)
+void VirtualInstrument::concreteSuspend(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void VirtualInstrument::concreteRelease(::GCFPortInterface& /*port*/)
+void VirtualInstrument::concreteRelease(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
@@ -289,17 +293,17 @@ void VirtualInstrument::concreteRelease(::GCFPortInterface& /*port*/)
   }  
 }
 
-void VirtualInstrument::concreteParentDisconnected(::GCFPortInterface& /*port*/)
+void VirtualInstrument::concreteParentDisconnected(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void VirtualInstrument::concreteChildDisconnected(::GCFPortInterface& /*port*/)
+void VirtualInstrument::concreteChildDisconnected(GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
 }
 
-void VirtualInstrument::concreteHandleTimers(::GCFTimerEvent& timerEvent, ::GCFPortInterface& /*port*/)
+void VirtualInstrument::concreteHandleTimers(GCFTimerEvent& timerEvent, GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   if(timerEvent.id == m_retryPropsetLoadTimerId)

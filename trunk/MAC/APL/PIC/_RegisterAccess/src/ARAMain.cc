@@ -29,6 +29,9 @@
 
 using namespace LOFAR;
 using namespace ARA;
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
 using namespace std;
 
 int main(int argc, char* argv[])

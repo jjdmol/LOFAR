@@ -80,6 +80,9 @@ const char SCOPE_VIC_VI1[] = "VIC_VI1";
 #include <bitset>
 #include <time.h>
 
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
 using namespace std;
 
 namespace LOFAR

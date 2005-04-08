@@ -38,8 +38,6 @@
 //# local includes
 
 // forward declaration
-class GCFEvent;
-class GCFPortInterface;
 
 namespace LOFAR
 {

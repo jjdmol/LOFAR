@@ -28,6 +28,9 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
 
 namespace LOFAR
 {

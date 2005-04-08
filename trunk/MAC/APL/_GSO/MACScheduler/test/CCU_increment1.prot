@@ -19,20 +19,32 @@
 //    Notes:
 //    The following diagram shows the connections between the 
 //    Test engine and Lofar
-//     __________                                    _________________
-//    |Testengine|                                  | Lofar           |
-//    |          |                                  | apps            |
-//    |   _______|_    SAS Protocol                _|___________      |
-//    |  | client_1|----------------------------->|MACScheduler |     |
-//    |  |_________|<-----------------------------|_____________|     |
-//    |          |                                  |                 |
-//    |          |                                  |                 |
-//    |          |                                  |                 |
-//    |   _______|_    BeamServer Protocol         _|______________   |
-//    |  | server_2|<-----------------------------|VirtualTelescope|  |
-//    |  |_________|----------------------------->|________________|  |
-//    |          |                                  |                 |
-//    |__________|                                  |_________________|
+//     ____________                                    _________________
+//    |Testengine  |                                  | Lofar           |
+//    |            |                                  | apps            |
+//    |   _________|_    SAS Protocol                _|___________      |
+//    |  | SAS stub  |----------------------------->|MACScheduler |     |
+//    |  |___________|<-----------------------------|_____________|     |
+//    |            |                                  |                 |
+//    |            |                                  |                 |
+//    |            |                                  |                 |
+//    |   _________|_    BeamServer Protocol         _|______________   |
+//    |  | BS stub   |<-----------------------------|VirtualTelescope|  |
+//    |  |___________|----------------------------->|________________|  |
+//    |            |                                  |                 |
+//    |            |                                  |                 |
+//    |   _________|_    StartDaemon Protocol        _|_______________  |
+//    |  | VBSD stub |<-----------------------------|VirtualInstrument| |
+//    |  |___________|----------------------------->|_________________| |
+//    |            |                                  |                 |
+//    |   _________|_    LogicalDevice Protocol      _|_______________  |
+//    |  | VB stub   |<-----------------------------|VirtualInstrument| |
+//    |  |___________|----------------------------->|_________________| |
+//    |            |                                  |                 |
+//    |            |                                  |                 |
+//    |            |                                  |                 |
+//    |            |                                  |                 |
+//    |____________|                                  |_________________|
 //                   
 //    This file contains four sections:
 //    [io]        : I/O configuration
@@ -47,6 +59,8 @@
 [io]
 COM1 = { SOCKET, ccc , "client localhost 27000" }       // The machine running the MACScheduler
 COM2 = { SOCKET, ccc , "server localhost 27001" }       // The TestHarness computer (This machine computer-name/IP-address)
+COM3 = { SOCKET, ccc , "server localhost 27002" }       // The TestHarness computer (This machine computer-name/IP-address)
+COM4 = { SOCKET, ccc , "client localhost 27003" }       // The TestHarness computer (This machine computer-name/IP-address)
 
 // For serial ports: COM1 = { COM1, ccc , "Baud=1200 parity=N data=8 stop=1 octs=on" }
 
@@ -142,6 +156,35 @@ t_ABS_Result          = { 4, 0x00000000, 0x00000003, ENUM,
                              0x00000003 : "ERR_BEAMFREE"
                        }
 
+// LOGICALDEVICE enums
+t_LD_Result           = { 4, 0x00000000, 0x00000003, ENUM,
+                             0x00000000 : "NO_ERROR",
+                             0x00000001 : "FILENOTFOUND",
+                             0x00000002 : "INCORRECT_NUMBER_OF_PARAMETERS",
+                             0x00000003 : "UNKNOWN_COMMAND"
+                       }
+
+t_SD_LogicalDeviceTypes = { 4, 0x00000001, 0x00000007, ENUM,
+                               0x00000001 : "VIRTUALINSTRUMENT",
+                               0x00000002 : "VIRTUALTELESCOPE", 
+                               0x00000003 : "VIRTUALARRAY", 
+                               0x00000004 : "STATIONRECEPTORGROUP", 
+                               0x00000005 : "ARRAYOPERATIONS", 
+                               0x00000006 : "STATIONOPERATIONS", 
+                               0x00000007 : "VIRTUALBACKEND"
+                       }
+
+t_SD_Result             = { 4, 0x00000000, 0x00000006, ENUM,
+                               0x00000000 : "NO_ERROR",
+                               0x00000001 : "UNSPECIFIED_ERROR", 
+                               0x00000002 : "UNSUPPORTED_LD", 
+                               0x00000003 : "FILENOTFOUND",
+                               0x00000004 : "PARAMETERNOTFOUND",
+                               0x00000005 : "INCORRECT_NUMBER_OF_PARAMETERS",
+                               0x00000006 : "UNKNOWN_COMMAND"
+};
+
+
 //
 // Signal ID's
 //
@@ -165,16 +208,45 @@ t_ABS_Result          = { 4, 0x00000000, 0x00000003, ENUM,
 // 0x08   WGENABLE
 // 0x09   WGDISABLE
 //
+// LOGICALDEVICE Protocol
+//
+//  0x01  CONNECT
+//  0x02  CONNECTED
+//  0x03  SCHEDULE
+//  0x04  SCHEDULED
+//  0x05  CANCELSCHEDULE
+//  0x06  SCHEDULECANCELLED
+//  0x07  CLAIM
+//  0x08  CLAIMED
+//  0x09  PREPARE
+//  0x0A  PREPARED
+//  0x0B  RESUME
+//  0x0C  RESUMED
+//  0x0D  SUSPEND
+//  0x0E  SUSPENDED
+//  0x0F  RELEASE
+//  0x10  RELEASED
+//
+// STARTDAEMON Protocol
+//
+//  0x01  SCHEDULE
+//  0x02  SCHEDULED
+//  0x03  STOP
+//
 // direction and protocol definitions:
 //
 //                      IN    OUT   INOUT
 //  SAS (MACScheduler)  0x4D  0x8D  0xCD
 //  ABS (BeamServer)    0x54  0x94  0xD4
+//  LD  (VB)            0x4B  0x8B  0xCB
+//  SD  (VBSD)          0x4C  0x8C  0xCC
 //
 
 [functions]
+// -------------------------------------------------------------------
 // -------------------------------SAS_Protocol------------------------
-SAS_SCHEDULE = 
+// -------------------------------------------------------------------
+F_SAS_SCHEDULE = 
 { 
   0x01, // signal Id
   0x4D, // Direction and protocol
@@ -183,7 +255,7 @@ SAS_SCHEDULE =
   VIrootID                    : t_String50
 }
 
-SAS_UPDATESCHEDULE = 
+F_SAS_UPDATESCHEDULE = 
 { 
   0x02, // signal Id
   0x4D, // Direction and protocol
@@ -192,7 +264,7 @@ SAS_UPDATESCHEDULE =
   VIrootID                    : t_String50
 }
 
-SAS_CANCELSCHEDULE = 
+F_SAS_CANCELSCHEDULE = 
 { 
   0x03, // signal Id
   0x4D, // Direction and protocol
@@ -201,8 +273,10 @@ SAS_CANCELSCHEDULE =
   VIrootID                    : t_String50
 }
 
+// -------------------------------------------------------------------
 // -------------------------------ABS_Protocol------------------------
-ABS_BEAMALLOC_ACK = 
+// -------------------------------------------------------------------
+F_ABS_BEAMALLOC_ACK = 
 { 
   0x02, // signal Id
   0x94, // Direction and protocol
@@ -211,7 +285,7 @@ ABS_BEAMALLOC_ACK =
   status                      : t_ABS_Result
 }
 
-ABS_BEAMFREE_ACK = 
+F_ABS_BEAMFREE_ACK = 
 { 
   0x04, // signal Id
   0x94, // Direction and protocol
@@ -220,7 +294,7 @@ ABS_BEAMFREE_ACK =
   status                      : t_ABS_Result
 }
 
-ABS_WGSETTINGS_ACK = 
+F_ABS_WGSETTINGS_ACK = 
 { 
   0x07, // signal Id
   0x94, // Direction and protocol
@@ -228,11 +302,104 @@ ABS_WGSETTINGS_ACK =
   status                      : t_ABS_Result
 }
 
+// -------------------------------------------------------------------
+// ---------------------LOGICALDEVICE_Protocol------------------------
+// -------------------------------------------------------------------
+F_LOGICALDEVICE_CONNECT =
+{ 
+  0x01, // signal Id
+  0x4B, // Direction and protocol
+  0x36000000, // message payload length. Depends on string length, big endian
+  0x32000000, // string length, big endian
+  nodeId                    : t_String50
+}
+
+F_LOGICALDEVICE_SCHEDULED =
+{
+  0x04, // signal Id
+  0x4B, // Direction and protocol
+  0x04000000, // message payload length, big endian
+  result                    : t_LD_Result
+}
+
+F_LOGICALDEVICE_SCHEDULECANCELLED =
+{
+  0x06, // signal Id
+  0x4B, // Direction and protocol
+  0x04000000, // message payload length, big endian
+  result                    : t_LD_Result
+}
+
+F_LOGICALDEVICE_CLAIMED =
+{
+  0x08, // signal Id
+  0x4B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+} 
+
+F_LOGICALDEVICE_PREPARED =
+{
+  0x0A, // signal Id
+  0x4B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+} 
+
+F_LOGICALDEVICE_RESUMED =
+{
+  0x0C, // signal Id
+  0x4B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+F_LOGICALDEVICE_SUSPENDED =
+{
+  0x0E, // signal Id
+  0x4B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+F_LOGICALDEVICE_RELEASED =
+{
+  0x10, // signal Id
+  0x4B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+// -------------------------------------------------------------------
+// ---------------------STARTDAEMON_Protocol------------------------
+// -------------------------------------------------------------------
+F_STARTDAEMON_SCHEDULED =
+{
+  0x02, // signal Id
+  0x8C, // Direction and protocol
+  0x04000000, // message payload length, big endian
+  result                    : t_SD_Result
+}
+
+E_STARTDAEMON_SCHEDULE =
+{
+  0x01, // signal Id
+  0x4C, // Direction and protocol
+  0x68000000, // message payload length, big endian
+  logicalDeviceType           : t_SD_LogicalDeviceTypes,
+  0x32000000, // string length, big endian
+  taskName                    : t_String50,
+  0x32000000, // string length, big endian
+  fileName                    : t_String50
+}
+
+E_STARTDAEMON_STOP =
+{
+  0x03, // signal Id
+  0x4C, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
 
 [events]
+// -------------------------------------------------------------------
 // -------------------------------SAS_Protocol------------------------
-
-SAS_RESPONSE = 
+// -------------------------------------------------------------------
+E_SAS_RESPONSE = 
 { 
   0x04, // signal Id 
   0x8D, // Direction and protocol 
@@ -240,7 +407,7 @@ SAS_RESPONSE =
   result                      : t_SAS_Result
 }
 
-SAS_REPLACEMENT_REQUEST = 
+E_SAS_REPLACEMENT_REQUEST = 
 { 
   0x05, // signal Id 
   0x8D, // Direction and protocol 
@@ -249,8 +416,10 @@ SAS_REPLACEMENT_REQUEST =
   nodeID                      : t_String50
 }
 
+// -------------------------------------------------------------------
 // -------------------------------ABS_Protocol------------------------
-ABS_BEAMALLOC = 
+// -------------------------------------------------------------------
+E_ABS_BEAMALLOC = 
 { 
   0x01, // signal Id
   0x54, // Direction and protocol
@@ -292,7 +461,7 @@ ABS_BEAMALLOC =
   subband125  : t_Int, subband126  : t_Int, subband127  : t_Int, subband128  : t_Int
 }
 
-ABS_BEAMFREE = 
+E_ABS_BEAMFREE = 
 { 
   0x03, // signal Id
   0x54, // Direction and protocol
@@ -300,7 +469,7 @@ ABS_BEAMFREE =
   handle                      : t_Int
 }
 
-ABS_BEAMPOINTTO = 
+E_ABS_BEAMPOINTTO = 
 { 
   0x05, // signal Id
   0x54, // Direction and protocol
@@ -312,7 +481,7 @@ ABS_BEAMPOINTTO =
   angle2                      : t_Double
 }
 
-ABS_WGSETTINGS = 
+E_ABS_WGSETTINGS = 
 { 
   0x06, // signal Id
   0x54, // Direction and protocol
@@ -321,16 +490,101 @@ ABS_WGSETTINGS =
   amplitude                   : t_uShort
 }
 
-ABS_WGENABLE = 
+E_ABS_WGENABLE = 
 { 
   0x08, // signal Id
   0x54, // Direction and protocol
   0x00000000 // message payload length, big endian
 }
 
-ABS_WGDISABLE = 
+E_ABS_WGDISABLE = 
 { 
   0x09, // signal Id
   0x54, // Direction and protocol
   0x00000000 // message payload length, big endian
 }
+
+// -------------------------------------------------------------------
+// ---------------------LOGICALDEVICE_Protocol------------------------
+// -------------------------------------------------------------------
+E_LOGICALDEVICE_CONNECTED =
+{
+  0x02, // signal Id
+  0x8B, // Direction and protocol
+  0x04000000, // message payload length, big endian
+  result                    : t_LD_Result
+}
+
+E_LOGICALDEVICE_SCHEDULE =
+{
+  0x03, // signal Id
+  0x8B, // Direction and protocol
+  0x36000000, // message payload length. Depends on string length, big endian
+  0x32000000, // string length, big endian
+  fileName                   : t_String50
+}
+
+E_LOGICALDEVICE_CANCELSCHEDULE =
+{
+  0x05, // signal Id
+  0x8B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+E_LOGICALDEVICE_CLAIM =
+{
+  0x07, // signal Id
+  0x8B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+E_LOGICALDEVICE_PREPARE =
+{
+  0x09, // signal Id
+  0x8B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+E_LOGICALDEVICE_RESUME =
+{
+  0x0B, // signal Id
+  0x8B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+E_LOGICALDEVICE_SUSPEND =
+{
+  0x0D, // signal Id
+  0x8B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+E_LOGICALDEVICE_RELEASE =
+{
+  0x0F, // signal Id
+  0x8B, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+
+// -------------------------------------------------------------------
+// ---------------------STARTDAEMON_Protocol------------------------
+// -------------------------------------------------------------------
+E_STARTDAEMON_SCHEDULE =
+{
+  0x01, // signal Id
+  0x4C, // Direction and protocol
+  0x68000000, // message payload length, big endian
+  logicalDeviceType           : t_SD_LogicalDeviceTypes,
+  0x32000000, // string length, big endian
+  taskName                    : t_String50,
+  0x32000000, // string length, big endian
+  fileName                    : t_String50
+}
+
+E_STARTDAEMON_STOP =
+{
+  0x03, // signal Id
+  0x4C, // Direction and protocol
+  0x00000000 // message payload length, big endian
+}
+

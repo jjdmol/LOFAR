@@ -33,6 +33,10 @@
 #define DECLARE_SIGNAL_NAMES
 #include "APLCommon/StartDaemon.h"
 
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
+
 namespace LOFAR
 {
 namespace APLCommon
@@ -47,12 +51,12 @@ const string StartDaemon::SD_COMMAND_STOP("STOP");
 INIT_TRACER_CONTEXT(StartDaemon,LOFARLOGGER_PACKAGE);
 
 StartDaemon::StartDaemon(const string& name) :
-  ::GCFTask((State)&StartDaemon::initial_state,name),
+  GCFTask((State)&StartDaemon::initial_state,name),
   PropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
   m_properties(name.c_str(),PSTYPE_STARTDAEMON.c_str(),PS_CAT_TEMPORARY,&m_propertySetAnswer),
   m_serverPortName(string("server")),
-  m_serverPort(*this, m_serverPortName, ::GCFPortInterface::MSPP, STARTDAEMON_PROTOCOL),
+  m_serverPort(*this, m_serverPortName, GCFPortInterface::MSPP, STARTDAEMON_PROTOCOL),
   m_childPorts(),
   m_factories(),
   m_logicalDevices()
@@ -115,12 +119,12 @@ TSDResult StartDaemon::createLogicalDevice(const TLogicalDeviceTypes ldType, con
   return result;
 }
 
-bool StartDaemon::_isServerPort(::GCFPortInterface& port)
+bool StartDaemon::_isServerPort(GCFPortInterface& port)
 {
   return (&port == &m_serverPort); // comparing two pointers. yuck?
 }
    
-bool StartDaemon::_isChildPort(::GCFPortInterface& port)
+bool StartDaemon::_isChildPort(GCFPortInterface& port)
 {
   bool found=false;
   TPortVector::iterator it=m_childPorts.begin();
@@ -132,7 +136,7 @@ bool StartDaemon::_isChildPort(::GCFPortInterface& port)
   return found;
 }
    
-void StartDaemon::_disconnectedHandler(::GCFPortInterface& port)
+void StartDaemon::_disconnectedHandler(GCFPortInterface& port)
 {
   port.close();
   if(_isServerPort(port))
@@ -157,10 +161,10 @@ void StartDaemon::_disconnectedHandler(::GCFPortInterface& port)
   }
 }
 
-::GCFEvent::TResult StartDaemon::initial_state(::GCFEvent& event, ::GCFPortInterface& port)
+GCFEvent::TResult StartDaemon::initial_state(GCFEvent& event, GCFPortInterface& port)
 {
   LOG_DEBUG(formatString("StartDaemon(%s)::initial_state (%s)",getName().c_str(),evtstr(event)));
-  ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
   {
@@ -182,17 +186,17 @@ void StartDaemon::_disconnectedHandler(::GCFPortInterface& port)
     
     default:
       LOG_DEBUG(formatString("StartDaemon(%s)::initial_state, default",getName().c_str()));
-      status = ::GCFEvent::NOT_HANDLED;
+      status = GCFEvent::NOT_HANDLED;
       break;
   }    
 
   return status;
 }
 
-::GCFEvent::TResult StartDaemon::idle_state(::GCFEvent& event, ::GCFPortInterface& port)
+GCFEvent::TResult StartDaemon::idle_state(GCFEvent& event, GCFPortInterface& port)
 {
   LOG_DEBUG(formatString("StartDaemon(%s)::idle_state (%s)",getName().c_str(),evtstr(event)));
-  ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -232,14 +236,14 @@ void StartDaemon::_disconnectedHandler(::GCFPortInterface& port)
     }
     default:
       LOG_DEBUG(formatString("StartDaemon(%s)::idle_state, default",getName().c_str()));
-      status = ::GCFEvent::NOT_HANDLED;
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
 
   return status;
 }
 
-void StartDaemon::handlePropertySetAnswer(::GCFEvent& answer)
+void StartDaemon::handlePropertySetAnswer(GCFEvent& answer)
 {
   switch(answer.signal)
   {

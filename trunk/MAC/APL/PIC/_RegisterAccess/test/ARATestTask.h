@@ -34,15 +34,15 @@
 
 #include "ARATestAnswer.h"
 
-// forward declaration
-class GCFEvent;
-
 namespace LOFAR
 {
 
+// forward declaration
+class GCF::TM::GCFEvent;
+
 namespace ARA
 {
-  class ARATestTask : public GCFTask, public Test
+  class ARATestTask : public GCF::TM::GCFTask, public Test
   {
     public:
       ARATestTask();
@@ -57,34 +57,34 @@ namespace ARA
       
     private: 
       bool isEnabled();
-      GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test1(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test2(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test3(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test4(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test5(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test6(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test7(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test8(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test9(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test10(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult initial(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test1(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test2(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test3(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test4(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test5(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test6(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test7(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test8(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test9(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test10(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult finished(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       
       
       static string m_taskName;
       static string m_RATestServerName;
       
       ARATestAnswer   m_answer;
-      GCFPort         m_RSPserver;
+      GCF::TM::GCFPort         m_RSPserver;
       
       int             m_test_passCounter;
       int             m_propsetLoadedCounter;
       
-      GCFExtPropertySet m_extPropSetAP1;
-      GCFExtPropertySet m_extPropSetAP1RCUmaintenance;
-      GCFExtPropertySet m_extPropSetBoardAlert;
-      GCFExtPropertySet m_extPropSetStationMaintenance;
-      GCFExtPropertySet m_extPropSetLDS;
+      GCF::PAL::GCFExtPropertySet m_extPropSetAP1;
+      GCF::PAL::GCFExtPropertySet m_extPropSetAP1RCUmaintenance;
+      GCF::PAL::GCFExtPropertySet m_extPropSetBoardAlert;
+      GCF::PAL::GCFExtPropertySet m_extPropSetStationMaintenance;
+      GCF::PAL::GCFExtPropertySet m_extPropSetLDS;
       
   };  
 };

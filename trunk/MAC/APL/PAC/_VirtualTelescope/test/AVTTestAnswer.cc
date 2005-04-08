@@ -25,6 +25,9 @@
 
 using namespace LOFAR;
 using namespace AVT;
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
 
 AVTTestAnswer::AVTTestAnswer() : 
   m_dummyPort(),

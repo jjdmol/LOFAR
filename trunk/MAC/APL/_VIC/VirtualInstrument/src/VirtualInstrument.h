@@ -58,67 +58,67 @@ namespace AVI
       // protected assignment operator
       VirtualInstrument& operator=(const VirtualInstrument&);
 
-      virtual void concrete_handlePropertySetAnswer(::GCFEvent& answer);
+      virtual void concrete_handlePropertySetAnswer(GCF::TM::GCFEvent& answer);
       /**
       * Initial state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_initial_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState);
+      virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState);
       /**
       * Idle state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_idle_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState);
+      virtual GCF::TM::GCFEvent::TResult concrete_idle_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState);
       /**
       * Claiming state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_claiming_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState);
+      virtual GCF::TM::GCFEvent::TResult concrete_claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState);
       /**
       * Preparing state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_preparing_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState);
+      virtual GCF::TM::GCFEvent::TResult concrete_preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState);
       /**
       * active state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_active_state(::GCFEvent& e, ::GCFPortInterface& p);
+      virtual GCF::TM::GCFEvent::TResult concrete_active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       /**
       * Releasing state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_releasing_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState);
+      virtual GCF::TM::GCFEvent::TResult concrete_releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState);
 
       /**
       * Implementation of the Claim method is done in the derived classes. 
       */
-      virtual void concreteClaim(::GCFPortInterface& port);
+      virtual void concreteClaim(GCF::TM::GCFPortInterface& port);
       /**
       * Implementation of the Prepare method is done in the derived classes. 
       */
-      virtual void concretePrepare(::GCFPortInterface& port);
+      virtual void concretePrepare(GCF::TM::GCFPortInterface& port);
       /**
       * Implementation of the Resume method is done in the derived classes. 
       */
-      virtual void concreteResume(::GCFPortInterface& port);
+      virtual void concreteResume(GCF::TM::GCFPortInterface& port);
       /**
       * Implementation of the Suspend method is done in the derived classes. 
       */
-      virtual void concreteSuspend(::GCFPortInterface& port);
+      virtual void concreteSuspend(GCF::TM::GCFPortInterface& port);
       /**
       * Implementation of the Release method is done in the derived classes. 
       */
-      virtual void concreteRelease(::GCFPortInterface& port);
+      virtual void concreteRelease(GCF::TM::GCFPortInterface& port);
       /**
       * Implementation of the Disconnected handler is done in the derived classes. 
       */
-      virtual void concreteParentDisconnected(::GCFPortInterface& port);
+      virtual void concreteParentDisconnected(GCF::TM::GCFPortInterface& port);
       /**
       * Implementation of the Disconnected handler is done in the derived classes. 
       */
-      virtual void concreteChildDisconnected(::GCFPortInterface& port);
-      virtual void concreteHandleTimers(::GCFTimerEvent& timerEvent, ::GCFPortInterface& port);
+      virtual void concreteChildDisconnected(GCF::TM::GCFPortInterface& port);
+      virtual void concreteHandleTimers(GCF::TM::GCFTimerEvent& timerEvent, GCF::TM::GCFPortInterface& port);
 
     protected:    
 
     private:
-      typedef boost::shared_ptr<GCFExtPropertySet>        TGCFExtPropertySetPtr;
-      typedef std::map<std::string,TGCFExtPropertySetPtr> TString2PropsetMap;
+      typedef boost::shared_ptr<GCF::PAL::GCFExtPropertySet>  TGCFExtPropertySetPtr;
+      typedef std::map<std::string,TGCFExtPropertySetPtr>     TString2PropsetMap;
       
       bool _writeScheduleCommand(const string& name, TGCFExtPropertySetPtr& propset);
     

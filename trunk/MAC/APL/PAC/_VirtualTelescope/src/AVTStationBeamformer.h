@@ -51,7 +51,7 @@ namespace AVT
                                     string& beamServerPortName); 
       virtual ~AVTStationBeamformer();
 
-      GCFPort& getBeamServerPort(); // increment 1 only!!! 
+      GCF::TM::GCFPort& getBeamServerPort(); // increment 1 only!!! 
       virtual bool isPrepared(vector<string>& parameters);
       bool checkQualityRequirements();
 
@@ -66,42 +66,42 @@ namespace AVT
       /**
       * initializes the SAP and SPP ports
       */
-      virtual GCFEvent::TResult concrete_initial_state(GCFEvent& e, GCFPortInterface& p);
+      virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       /**
       * returns true if claiming has finished
       */
-      virtual GCFEvent::TResult concrete_claiming_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
+      virtual GCF::TM::GCFEvent::TResult concrete_claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, bool& stateFinished);
       /**
       * returns true if the preparing state has finished
       */
-      virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error);
+      virtual GCF::TM::GCFEvent::TResult concrete_preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, bool& stateFinished, bool& error);
       /**
       * concrete implementation of the active state
       */
-      virtual GCFEvent::TResult concrete_active_state(GCFEvent& e, GCFPortInterface& p);
+      virtual GCF::TM::GCFEvent::TResult concrete_active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       /**
       * returns true if the releasing state has finished
       */
-      virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
+      virtual GCF::TM::GCFEvent::TResult concrete_releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, bool& stateFinished);
 
-      virtual void handlePropertySetAnswer(GCFEvent& answer);
+      virtual void handlePropertySetAnswer(GCF::TM::GCFEvent& answer);
 
-      virtual void concreteClaim(GCFPortInterface& port);
-      virtual void concretePrepare(GCFPortInterface& port,string& parameters);
-      virtual void concreteResume(GCFPortInterface& port);
-      virtual void concreteSuspend(GCFPortInterface& port);
-      virtual void concreteRelease(GCFPortInterface& port);
-      virtual void concreteDisconnected(GCFPortInterface& port);
+      virtual void concreteClaim(GCF::TM::GCFPortInterface& port);
+      virtual void concretePrepare(GCF::TM::GCFPortInterface& port,string& parameters);
+      virtual void concreteResume(GCF::TM::GCFPortInterface& port);
+      virtual void concreteSuspend(GCF::TM::GCFPortInterface& port);
+      virtual void concreteRelease(GCF::TM::GCFPortInterface& port);
+      virtual void concreteDisconnected(GCF::TM::GCFPortInterface& port);
 
     private:
       /**
       * returns true if the specified port is the BeamServer SAP
       */
-      bool _isBeamServerPort(GCFPortInterface& port);
+      bool _isBeamServerPort(GCF::TM::GCFPortInterface& port);
       int convertDirection(const string type) const;
 
       // The BeamServer SAP
-      GCFPort         m_beamServer;
+      GCF::TM::GCFPort         m_beamServer;
       bool            m_beamServerConnected;
       int             m_numAPCsLoaded;
       const int       m_maxAPCs;

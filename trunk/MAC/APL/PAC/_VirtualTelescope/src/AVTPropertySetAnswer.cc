@@ -26,7 +26,10 @@
 #include "AVTPropertySetAnswerHandlerInterface.h"
 
 using namespace LOFAR;
-using namespace AVT;
+using namespace LOFAR::AVT;
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
 
 INIT_TRACER_CONTEXT(AVTPropertySetAnswer,LOFARLOGGER_PACKAGE);
 

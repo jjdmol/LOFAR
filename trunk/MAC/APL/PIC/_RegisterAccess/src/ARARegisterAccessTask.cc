@@ -51,7 +51,10 @@
 #include "ARAPropertyDefines.h"
 #include "ARAPhysicalModel.h"
 
-using namespace GCF;
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
+
 using namespace std;
 using namespace boost::posix_time;
 using namespace boost::gregorian;

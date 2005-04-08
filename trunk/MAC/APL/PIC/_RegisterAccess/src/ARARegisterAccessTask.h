@@ -38,7 +38,7 @@ namespace LOFAR
 
 namespace ARA
 {
-  class RegisterAccessTask : public GCFTask
+  class RegisterAccessTask : public GCF::TM::GCFTask
   {
     public:
       /**
@@ -63,64 +63,64 @@ namespace ARA
        * and board ports. When they are both connected a transition
        * to the enabled state is made.
        */
-      GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+      GCF::TM::GCFEvent::TResult initial(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
       
       /**
        * The myPropSetsLoaded state. In this state the propertysets are loaded and the task 
        * waits for a client to connect
        */
-      GCFEvent::TResult myPropSetsLoaded(GCFEvent& e, GCFPortInterface &p);
+      GCF::TM::GCFEvent::TResult myPropSetsLoaded(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
 
       /**
        * The myAPCsLoaded state. In this state the propertysets are loaded and the task 
        * waits for a client to connect
        */
-      GCFEvent::TResult APCsLoaded(GCFEvent& e, GCFPortInterface &p);
+      GCF::TM::GCFEvent::TResult APCsLoaded(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
 
       /**
        * The connected state. In this state the task can receive
        * commands.
        */
-      GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface &p);
+      GCF::TM::GCFEvent::TResult connected(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
       /**
        * The subscribing states. In each state a SubStats message is sent
        */
-      GCFEvent::TResult subscribingStatsSubbandPower(GCFEvent& e, GCFPortInterface &p);
-      GCFEvent::TResult subscribingStatsBeamletPower(GCFEvent& e, GCFPortInterface &p);
+      GCF::TM::GCFEvent::TResult subscribingStatsSubbandPower(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
+      GCF::TM::GCFEvent::TResult subscribingStatsBeamletPower(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
       /**
        * The operational state. In this state the task can receives
        * status and statistics updates from the rsp driver
        */
-      GCFEvent::TResult operational(GCFEvent& e, GCFPortInterface &p);
+      GCF::TM::GCFEvent::TResult operational(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface &p);
     
     private:
       // action methods
       /**
        * Handle the update status event
        */
-      GCFEvent::TResult handleUpdStatus(GCFEvent& e, GCFPortInterface& port);
+      GCF::TM::GCFEvent::TResult handleUpdStatus(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& port);
       /**
        * Handle the update stats event
        */
-      GCFEvent::TResult handleUpdStats(GCFEvent& e, GCFPortInterface& port);
+      GCF::TM::GCFEvent::TResult handleUpdStats(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& port);
 
       /**
        * Handle a change of the Maintenance status field
        */
-      void handleMaintenance(string propName, const GCFPValue& value);
+      void handleMaintenance(string propName, const GCF::Common::GCFPValue& value);
       
     private:
       // internal types
       // gcf 3.1: needs specific apc's for every resource
       // in gcf4.0, only the top level apc has to be loaded, and links to other
       // apc's are in the apc's themselves
-      typedef map<string,boost::shared_ptr<GCFMyPropertySet> > TMyPropertySetMap;
+      typedef map<string,boost::shared_ptr<GCF::PAL::GCFMyPropertySet> > TMyPropertySetMap;
       typedef map<string,string> TAPCMap;
       
       /**
        * create propertyset object, add it to the map
        */
-      void addMyPropertySet(const char* scope,const char* type, TPSCategory category, const TPropertyConfig propconfig[]);
+      void addMyPropertySet(const char* scope,const char* type, GCF::Common::TPSCategory category, const GCF::Common::TPropertyConfig propconfig[]);
       /**
        * create apc object, add it to the map
        */
@@ -193,7 +193,7 @@ namespace ARA
 
       // ports
       static string     m_RSPserverName;
-      GCFPort           m_RSPclient;
+      GCF::TM::GCFPort           m_RSPclient;
       ARAPhysicalModel  m_physicalModel;
       
       // subscriptions

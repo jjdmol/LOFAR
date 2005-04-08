@@ -23,7 +23,7 @@ autogen definitions protocol;
 
 description = "Protocol for the communication between SAS and MAC";
 prefix = "SAS"; // for the signal names
-id = "(F_APL_PROTOCOL+3)";
+id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+3)";
 
 // specify extra include files
 // e.g.

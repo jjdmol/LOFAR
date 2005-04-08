@@ -25,12 +25,14 @@
 #include "APLCommon/PropertySetAnswerHandlerInterface.h"
 
 using namespace LOFAR;
-using namespace APLCommon;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
+using namespace LOFAR::APLCommon;
 
 INIT_TRACER_CONTEXT(PropertySetAnswer,LOFARLOGGER_PACKAGE);
 
 PropertySetAnswer::PropertySetAnswer(PropertySetAnswerHandlerInterface& handler) :
-  ::GCFAnswer(),
+  GCFAnswer(),
   m_handler(handler)
 {
   LOG_DEBUG(formatString("PropertySetAnswer::PropertySetAnswer"));
@@ -41,7 +43,7 @@ PropertySetAnswer::~PropertySetAnswer()
   LOG_DEBUG(formatString("PropertySetAnswer::~PropertySetAnswer"));
 }
 
-void PropertySetAnswer::handleAnswer(::GCFEvent& answer)
+void PropertySetAnswer::handleAnswer(GCFEvent& answer)
 {
   m_handler.handlePropertySetAnswer(answer);
 }

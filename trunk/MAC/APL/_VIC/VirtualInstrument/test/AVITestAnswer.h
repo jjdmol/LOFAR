@@ -26,26 +26,26 @@
 #include <GCF/PAL/GCF_Answer.h>
 #include <GCF/TM/GCF_Port.h>
 
-class GCFEvent;
-class GCFTask;
-
 namespace LOFAR
 {
 
+class GCF::TM::GCFEvent;
+class GCF::TM::GCFTask;
+
 namespace AVI
 {
-  class AVITestAnswer : public GCFAnswer
+  class AVITestAnswer : public GCF::PAL::GCFAnswer
   {
     public:
       AVITestAnswer();
       ~AVITestAnswer();
   
-      void setTask(GCFTask* t);
-      void handleAnswer(GCFEvent& answer);
+      void setTask(GCF::TM::GCFTask* t);
+      void handleAnswer(GCF::TM::GCFEvent& answer);
       
     private:    
-      GCFPort  m_dummyPort;
-      GCFTask* m_task;
+      GCF::TM::GCFPort  m_dummyPort;
+      GCF::TM::GCFTask* m_task;
   };
   
 };

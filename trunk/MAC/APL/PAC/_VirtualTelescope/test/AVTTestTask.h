@@ -39,15 +39,15 @@
 #include "AVTTestAnswer.h"
 
 // forward declaration
-class GCFEvent;
-class GCFPortInterface;
-
 namespace LOFAR
 {
 namespace AVT
 {
+class GCF::TM::GCFEvent;
+class GCF::TM::GCFPortInterface;
 
-  class AVTTestTask : public GCFTask, public Test
+
+  class AVTTestTask : public GCF::TM::GCFTask, public Test
   {
     public:
       AVTTestTask();
@@ -63,30 +63,30 @@ namespace AVT
       AVTTestTask& operator=(const AVTTestTask&);
       
     private: 
-      GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult propertiesLoaded(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test1(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test2(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test3(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test4(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test5(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test6(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test7(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test8(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test9(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult handleBeamServerEvents(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult beamServer(GCFEvent& e, GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult initial(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult propertiesLoaded(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test1(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test2(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test3(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test4(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test5(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test6(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test7(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test8(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test9(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult finished(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult handleBeamServerEvents(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult beamServer(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       
       
       static string m_taskName;
       
       AVTTestAnswer         m_answer;
-      GCFTCPPort            m_beamserver;
+      GCF::TM::GCFTCPPort            m_beamserver;
   
-      GCFExtPropertySet m_extPropsetLDS;
-      GCFExtPropertySet m_extPropsetLDSWG;
-      GCFExtPropertySet m_extPropsetSBF1;
+      GCF::PAL::GCFExtPropertySet m_extPropsetLDS;
+      GCF::PAL::GCFExtPropertySet m_extPropsetLDSWG;
+      GCF::PAL::GCFExtPropertySet m_extPropsetSBF1;
       bool m_propsetLDloaded;
       bool m_propsetLDWGloaded;
       bool m_propsetSBFloaded;
@@ -100,7 +100,7 @@ namespace AVT
       double m_beamAngle1;
       double m_beamAngle2;
       unsigned int m_seqnr;
-      std::list<GCFPortInterface*> m_client_list;  // list of beamserver clients
+      std::list<GCF::TM::GCFPortInterface*> m_client_list;  // list of beamserver clients
       
   };
 };

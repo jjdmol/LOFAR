@@ -56,7 +56,7 @@ namespace LOFAR
 namespace APLCommon
 {
 
-  class LogicalDevice : public ::GCFTask,
+  class LogicalDevice : public GCF::TM::GCFTask,
                                PropertySetAnswerHandlerInterface
   {
     public:
@@ -106,15 +106,15 @@ namespace APLCommon
       virtual bool isPrepared(vector<string>& parameters);
       TLogicalDeviceState getLogicalDeviceState() const;
       
-      void handlePropertySetAnswer(::GCFEvent& answer);
-      ::GCFEvent::TResult initial_state(::GCFEvent& e, ::GCFPortInterface& p);
-      ::GCFEvent::TResult idle_state(::GCFEvent& e, ::GCFPortInterface& p);
-      ::GCFEvent::TResult claiming_state(::GCFEvent& e, ::GCFPortInterface& p);
-      ::GCFEvent::TResult claimed_state(::GCFEvent& e, ::GCFPortInterface& p);
-      ::GCFEvent::TResult preparing_state(::GCFEvent& e, ::GCFPortInterface& p);
-      ::GCFEvent::TResult suspended_state(::GCFEvent& e, ::GCFPortInterface& p);
-      ::GCFEvent::TResult active_state(::GCFEvent& e, ::GCFPortInterface& p);
-      ::GCFEvent::TResult releasing_state(::GCFEvent& e, ::GCFPortInterface& p);
+      void handlePropertySetAnswer(GCF::TM::GCFEvent& answer);
+      GCF::TM::GCFEvent::TResult initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult idle_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult claimed_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult suspended_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
 
     protected:
       // protected default constructor
@@ -125,9 +125,9 @@ namespace APLCommon
       LogicalDevice& operator=(const LogicalDevice&);
 
 #ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
-      typedef GCFTCPPort  TRemotePort;
+      typedef GCF::TM::GCFTCPPort  TRemotePort;
 #else      
-      typedef GCFPVSSPort TRemotePort;
+      typedef GCF::PAL::GCFPVSSPort TRemotePort;
 #endif
       
       typedef boost::shared_ptr<TRemotePort>  TPortSharedPtr;
@@ -135,43 +135,43 @@ namespace APLCommon
       /**
       * returns true if the specified port is the logicalDevice SPP
       */
-      bool _isParentPort(::GCFPortInterface& port);
-      bool _isServerPort(::GCFPortInterface& port);
-      bool _isChildPort(::GCFPortInterface& port);
-      bool _isChildStartDaemonPort(::GCFPortInterface& port, string& startDaemonKey);
-      void _sendToAllChilds(::GCFEvent& event);
-      void _disconnectedHandler(::GCFPortInterface& port);
+      bool _isParentPort(GCF::TM::GCFPortInterface& port);
+      bool _isServerPort(GCF::TM::GCFPortInterface& port);
+      bool _isChildPort(GCF::TM::GCFPortInterface& port);
+      bool _isChildStartDaemonPort(GCF::TM::GCFPortInterface& port, string& startDaemonKey);
+      void _sendToAllChilds(GCF::TM::GCFEvent& event);
+      void _disconnectedHandler(GCF::TM::GCFPortInterface& port);
       bool _isAPCLoaded() const;
       void _apcLoaded();
       void _doStateTransition(const TLogicalDeviceState& newState);
-      void _handleTimers(::GCFEvent& event, ::GCFPortInterface& port);
+      void _handleTimers(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
       vector<string> _getChildKeys();
-      void _sendEvent(::GCFEvent& event, ::GCFPortInterface& port);
+      void _sendEvent(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
       void _addChildPort(TPortSharedPtr childPort);
       void _sendScheduleToClients();
       string _getShareLocation() const;
       time_t _decodeTimeParameter(const string& timeStr) const;
 
-      virtual void concrete_handlePropertySetAnswer(::GCFEvent& answer)=0;
-      virtual ::GCFEvent::TResult concrete_initial_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
-      virtual ::GCFEvent::TResult concrete_idle_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
-      virtual ::GCFEvent::TResult concrete_claiming_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
-      virtual ::GCFEvent::TResult concrete_preparing_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
-      virtual ::GCFEvent::TResult concrete_active_state(::GCFEvent& e, ::GCFPortInterface& p)=0;
-      virtual ::GCFEvent::TResult concrete_releasing_state(::GCFEvent& e, ::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
+      virtual void concrete_handlePropertySetAnswer(GCF::TM::GCFEvent& answer)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_idle_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
 
-      virtual void concreteClaim(::GCFPortInterface& port)=0;
-      virtual void concretePrepare(::GCFPortInterface& port)=0;
-      virtual void concreteResume(::GCFPortInterface& port)=0;
-      virtual void concreteSuspend(::GCFPortInterface& port)=0;
-      virtual void concreteRelease(::GCFPortInterface& port)=0;
-      virtual void concreteParentDisconnected(::GCFPortInterface& port)=0;
-      virtual void concreteChildDisconnected(::GCFPortInterface& port)=0;
-      virtual void concreteHandleTimers(::GCFTimerEvent& timerEvent, ::GCFPortInterface& port)=0;
+      virtual void concreteClaim(GCF::TM::GCFPortInterface& port)=0;
+      virtual void concretePrepare(GCF::TM::GCFPortInterface& port)=0;
+      virtual void concreteResume(GCF::TM::GCFPortInterface& port)=0;
+      virtual void concreteSuspend(GCF::TM::GCFPortInterface& port)=0;
+      virtual void concreteRelease(GCF::TM::GCFPortInterface& port)=0;
+      virtual void concreteParentDisconnected(GCF::TM::GCFPortInterface& port)=0;
+      virtual void concreteChildDisconnected(GCF::TM::GCFPortInterface& port)=0;
+      virtual void concreteHandleTimers(GCF::TM::GCFTimerEvent& timerEvent, GCF::TM::GCFPortInterface& port)=0;
       
 
     protected:    
-      APL_DECLARE_SHARED_POINTER(GCFMyPropertySet)
+      APL_DECLARE_SHARED_POINTER(GCF::PAL::GCFMyPropertySet)
       
       PropertySetAnswer                     m_propertySetAnswer;
       GCFMyPropertySetSharedPtr             m_propertySet;
@@ -189,10 +189,10 @@ namespace APLCommon
       void _suspend();
       void _release();
 
-      APL_DECLARE_SHARED_POINTER(GCFEvent)
+      APL_DECLARE_SHARED_POINTER(GCF::TM::GCFEvent)
       struct TBufferedEventInfo
       {
-        TBufferedEventInfo(time_t t,GCFPortInterface* p,GCFEvent* e) : 
+        TBufferedEventInfo(time_t t,GCF::TM::GCFPortInterface* p,GCF::TM::GCFEvent* e) : 
           entryTime(t),
           port(static_cast<TRemotePort*>(p)),
           event(e){};

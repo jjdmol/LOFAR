@@ -75,57 +75,57 @@ namespace AVT
       /**
       * initializes the SAP and SPP ports
       */
-      virtual GCFEvent::TResult concrete_initial_state(GCFEvent& e, GCFPortInterface& p);
+      virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       /**
       * returns true if claiming has finished
       */
-      virtual GCFEvent::TResult concrete_claiming_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
+      virtual GCF::TM::GCFEvent::TResult concrete_claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, bool& stateFinished);
       /**
       * returns true if the preparing state has finished
       */
-      virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error);
+      virtual GCF::TM::GCFEvent::TResult concrete_preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, bool& stateFinished, bool& error);
       /**
       * concrete implementation of the active state
       */
-      virtual GCFEvent::TResult concrete_active_state(GCFEvent& e, GCFPortInterface& p);
+      virtual GCF::TM::GCFEvent::TResult concrete_active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       /**
       * returns true if the releasing state has finished
       */
-      virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
+      virtual GCF::TM::GCFEvent::TResult concrete_releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, bool& stateFinished);
 
-      virtual void handlePropertySetAnswer(GCFEvent& answer);
+      virtual void handlePropertySetAnswer(GCF::TM::GCFEvent& answer);
 
-      virtual void concreteClaim(GCFPortInterface& port);
-      virtual void concretePrepare(GCFPortInterface& port,string& parameters);
-      virtual void concreteResume(GCFPortInterface& port);
-      virtual void concreteSuspend(GCFPortInterface& port);
-      virtual void concreteRelease(GCFPortInterface& port);
-      virtual void concreteDisconnected(GCFPortInterface& port);
+      virtual void concreteClaim(GCF::TM::GCFPortInterface& port);
+      virtual void concretePrepare(GCF::TM::GCFPortInterface& port,string& parameters);
+      virtual void concreteResume(GCF::TM::GCFPortInterface& port);
+      virtual void concreteSuspend(GCF::TM::GCFPortInterface& port);
+      virtual void concreteRelease(GCF::TM::GCFPortInterface& port);
+      virtual void concreteDisconnected(GCF::TM::GCFPortInterface& port);
 
     private:
       struct TStationReceptorConnection
       {
         // constructor
         TStationReceptorConnection( boost::shared_ptr<AVTStationReceptor> _rcu,
-                                    GCFTask&                              _containerTask, 
+                                    GCF::TM::GCFTask&                              _containerTask, 
                                     string&                               _name, 
-                                    GCFPort::TPortType                    _type, 
+                                    GCF::TM::GCFPort::TPortType                    _type, 
                                     int                                   _protocol,
                                     bool                                  _connected);
 
         boost::shared_ptr<AVTStationReceptor>   rcu;
-        boost::shared_ptr<APLInterTaskPort>     clientPort;
+        boost::shared_ptr<APLCommon::APLInterTaskPort>     clientPort;
         bool                                    connected;
       };
       typedef std::vector<TStationReceptorConnection>  TStationReceptorVector;
       typedef TStationReceptorVector::iterator         TStationReceptorVectorIter;
       
-      bool isStationReceptorClient(GCFPortInterface& port);
-      bool setReceptorConnected(GCFPortInterface& port, bool connected);
+      bool isStationReceptorClient(GCF::TM::GCFPortInterface& port);
+      bool setReceptorConnected(GCF::TM::GCFPortInterface& port, bool connected);
       bool allReceptorsConnected();
-      bool setReceptorState(GCFPortInterface& port, TLogicalDeviceState state);
+      bool setReceptorState(GCF::TM::GCFPortInterface& port, TLogicalDeviceState state);
       bool allReceptorsInState(TLogicalDeviceState state);
-      void sendToAllReceptors(GCFEvent& event);
+      void sendToAllReceptors(GCF::TM::GCFEvent& event);
 
       // The StationReceptor tasks    
       TStationReceptorVector  m_stationReceptors;

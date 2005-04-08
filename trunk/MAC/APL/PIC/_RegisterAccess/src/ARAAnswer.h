@@ -26,26 +26,27 @@
 #include <GCF/PAL/GCF_Answer.h>
 #include <GCF/TM/GCF_Port.h>
 
-class GCFEvent;
-class GCFTask;
-
 namespace LOFAR
 {
   
+class GCF::TM::GCFEvent;
+class GCF::TM::GCFTask;
+
 namespace ARA
 {
-  class ARAAnswer : public GCFAnswer
+
+  class ARAAnswer : public GCF::PAL::GCFAnswer
   {
     public:
       ARAAnswer();
       ~ARAAnswer();
   
-      void setTask(GCFTask* t);
-      void handleAnswer(GCFEvent& answer);
+      void setTask(GCF::TM::GCFTask* t);
+      void handleAnswer(GCF::TM::GCFEvent& answer);
       
     private:    
-      GCFPort  m_dummyPort;
-      GCFTask* m_task;
+      GCF::TM::GCFPort  m_dummyPort;
+      GCF::TM::GCFTask* m_task;
   };
   
 };

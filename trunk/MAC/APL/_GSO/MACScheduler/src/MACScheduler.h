@@ -57,7 +57,7 @@ namespace LOFAR
 namespace GSO
 {
 
-  class MACScheduler : public ::GCFTask,
+  class MACScheduler : public GCF::TM::GCFTask,
                               APLCommon::PropertySetAnswerHandlerInterface
   {
     public:
@@ -84,7 +84,7 @@ namespace GSO
       /**
       * PropertySetAnswerHandlerInterface method
       */
-      virtual void handlePropertySetAnswer(::GCFEvent& answer);
+      virtual void handlePropertySetAnswer(GCF::TM::GCFEvent& answer);
 
       /**
       * The initial state handler. This handler is passed to the GCFTask constructor
@@ -95,12 +95,12 @@ namespace GSO
       * @param p The port interface (see @a GCFPortInterface) on which the event
       * was received.
       */
-      ::GCFEvent::TResult initial_state(::GCFEvent& e, ::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
 
       /**
       * The idle state handler. 
       */
-      ::GCFEvent::TResult idle_state(::GCFEvent& e, ::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult idle_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
 
     protected:
       // protected copy constructor
@@ -108,35 +108,35 @@ namespace GSO
       // protected assignment operator
       MACScheduler& operator=(const MACScheduler&);
 
-      void _disconnectedHandler(::GCFPortInterface& port);
+      void _disconnectedHandler(GCF::TM::GCFPortInterface& port);
 
     protected:    
       APLCommon::PropertySetAnswer          m_propertySetAnswer;
-      boost::shared_ptr<GCFMyPropertySet>   m_propertySet;
+      boost::shared_ptr<GCF::PAL::GCFMyPropertySet>   m_propertySet;
 
     private:
 
 #ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
-      typedef GCFTCPPort  TRemotePort;
+      typedef GCF::TM::GCFTCPPort  TRemotePort;
 #else      
-      typedef GCFPVSSPort TRemotePort;
+      typedef GCF::PAL::GCFGCFPVSSPort TRemotePort;
 #endif
 
-      typedef boost::shared_ptr<GCFTCPPort>   TTCPPortPtr;
+      typedef boost::shared_ptr<GCF::TM::GCFTCPPort>   TTCPPortPtr;
       typedef boost::shared_ptr<TRemotePort>  TRemotePortPtr;
       typedef vector<TTCPPortPtr>             TTCPPortVector;
       typedef vector<TRemotePortPtr>          TRemotePortVector;
       typedef map<string,TRemotePortPtr>      TStringRemotePortMap;
       
-      bool _isServerPort(const ::GCFPortInterface& server, const ::GCFPortInterface& port) const;
-      bool _isSASclientPort(const ::GCFPortInterface& port) const;
-      bool _isVISDclientPort(const ::GCFPortInterface& port, string& visd) const;
-      bool _isVIclientPort(const ::GCFPortInterface& port) const;
+      bool _isServerPort(const GCF::TM::GCFPortInterface& server, const GCF::TM::GCFPortInterface& port) const;
+      bool _isSASclientPort(const GCF::TM::GCFPortInterface& port) const;
+      bool _isVISDclientPort(const GCF::TM::GCFPortInterface& port, string& visd) const;
+      bool _isVIclientPort(const GCF::TM::GCFPortInterface& port) const;
       string _getShareLocation() const;
-      void _handleSASprotocol(::GCFEvent& event, ::GCFPortInterface& port);
+      void _handleSASprotocol(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
       
       string                                m_SASserverPortName;
-      GCFTCPPort                            m_SASserverPort;      // SAS-MAC communication
+      GCF::TM::GCFTCPPort                   m_SASserverPort;      // SAS-MAC communication
       TTCPPortVector                        m_SASclientPorts;     // connected SAS clients
       TStringRemotePortMap                  m_VISDclientPorts;    // connected VI StartDaemon clients
       string                                m_VIparentPortName;

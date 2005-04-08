@@ -38,6 +38,10 @@
 
 INIT_TRACER_CONTEXT(LOFAR::GSO::MACScheduler,LOFARLOGGER_PACKAGE);
 
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
+
 namespace LOFAR
 {
 using namespace APLCommon;
@@ -60,16 +64,16 @@ const string MACScheduler::MS_COMMAND_UPDATESCHEDULE   = string("UPDATESCHEDULE"
 const string MACScheduler::MS_COMMAND_CANCELSCHEDULE   = string("CANCELSCHEDULE");
 
 MACScheduler::MACScheduler() :
-  ::GCFTask((State)&MACScheduler::initial_state,MS_TASKNAME),
+  GCFTask((State)&MACScheduler::initial_state,MS_TASKNAME),
   PropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
   m_propertySet(),
   m_SASserverPortName(string("SAS_server")),
-  m_SASserverPort(*this, m_SASserverPortName, ::GCFPortInterface::MSPP, SAS_PROTOCOL),
+  m_SASserverPort(*this, m_SASserverPortName, GCFPortInterface::MSPP, SAS_PROTOCOL),
   m_SASclientPorts(),
   m_VISDclientPorts(),
   m_VIparentPortName(string("VIparent_server")),
-  m_VIparentPort(*this, m_VIparentPortName, ::GCFPortInterface::MSPP, LOGICALDEVICE_PROTOCOL),
+  m_VIparentPort(*this, m_VIparentPortName, GCFPortInterface::MSPP, LOGICALDEVICE_PROTOCOL),
   m_VIclientPorts(),
   m_connectedVIclientPorts()
 #ifndef ACC_CONFIGURATIONMGR_UNAVAILABLE
@@ -124,7 +128,7 @@ MACScheduler::~MACScheduler()
   m_propertySet->disable();
 }
 
-void MACScheduler::handlePropertySetAnswer(::GCFEvent& answer)
+void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   switch(answer.signal)
@@ -259,12 +263,12 @@ void MACScheduler::handlePropertySetAnswer(::GCFEvent& answer)
   }  
 }
 
-bool MACScheduler::_isServerPort(const ::GCFPortInterface& server, const ::GCFPortInterface& port) const
+bool MACScheduler::_isServerPort(const GCFPortInterface& server, const GCFPortInterface& port) const
 {
   return (&port == &server); // comparing two pointers. yuck?
 }
    
-bool MACScheduler::_isSASclientPort(const ::GCFPortInterface& port) const
+bool MACScheduler::_isSASclientPort(const GCFPortInterface& port) const
 {
   bool found=false;
   TTCPPortVector::const_iterator it=m_SASclientPorts.begin();
@@ -276,7 +280,7 @@ bool MACScheduler::_isSASclientPort(const ::GCFPortInterface& port) const
   return found;
 }
 
-bool MACScheduler::_isVISDclientPort(const ::GCFPortInterface& port, string& visd) const
+bool MACScheduler::_isVISDclientPort(const GCFPortInterface& port, string& visd) const
 {
   bool found=false;
   TStringRemotePortMap::const_iterator it=m_VISDclientPorts.begin();
@@ -292,7 +296,7 @@ bool MACScheduler::_isVISDclientPort(const ::GCFPortInterface& port, string& vis
   return found;
 }
 
-bool MACScheduler::_isVIclientPort(const ::GCFPortInterface& port) const
+bool MACScheduler::_isVIclientPort(const GCFPortInterface& port) const
 {
   bool found=false;
   TRemotePortVector::const_iterator it=m_VIclientPorts.begin();
@@ -304,7 +308,7 @@ bool MACScheduler::_isVIclientPort(const ::GCFPortInterface& port) const
   return found;
 }
 
-void MACScheduler::_disconnectedHandler(::GCFPortInterface& port)
+void MACScheduler::_disconnectedHandler(GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   string visd;
@@ -344,10 +348,10 @@ string MACScheduler::_getShareLocation() const
   return shareLocation;
 }
 
-::GCFEvent::TResult MACScheduler::initial_state(::GCFEvent& event, ::GCFPortInterface& /*port*/)
+GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
   {
@@ -356,7 +360,7 @@ string MACScheduler::_getShareLocation() const
 
     case F_ENTRY:
     {
-      ::GCFPVString status(MS_STATE_STRING_INITIAL);
+      GCFPVString status(MS_STATE_STRING_INITIAL);
       m_propertySet->setValue(MS_PROPNAME_STATUS,status);
       
       // connect to startdaemon clients
@@ -372,7 +376,7 @@ string MACScheduler::_getShareLocation() const
           string startDaemonPortName = pParamSet->getString(MS_CONFIG_PREFIX + string(ccuName) + string(".startDaemonPort"));
           string startDaemonTaskName = pParamSet->getString(MS_CONFIG_PREFIX + string(ccuName) + string(".startDaemonTask"));
 
-          TRemotePortPtr startDaemonPort(new TRemotePort(*this,startDaemonTaskName,::GCFPortInterface::SAP,STARTDAEMON_PROTOCOL));
+          TRemotePortPtr startDaemonPort(new TRemotePort(*this,startDaemonTaskName,GCFPortInterface::SAP,STARTDAEMON_PROTOCOL));
           TPeerAddr peerAddr;
           peerAddr.taskname = startDaemonTaskName;
           peerAddr.portname = startDaemonPortName;
@@ -393,16 +397,16 @@ string MACScheduler::_getShareLocation() const
   
     default:
       LOG_DEBUG(formatString("MACScheduler(%s)::initial_state, default",getName().c_str()));
-      status = ::GCFEvent::NOT_HANDLED;
+      status = GCFEvent::NOT_HANDLED;
       break;
   }    
   return status;
 }
 
-::GCFEvent::TResult MACScheduler::idle_state(::GCFEvent& event, ::GCFPortInterface& port)
+GCFEvent::TResult MACScheduler::idle_state(GCFEvent& event, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
-  ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
@@ -415,7 +419,7 @@ string MACScheduler::_getShareLocation() const
       m_SASserverPort.open();
       m_VIparentPort.open();
       
-      ::GCFPVString status(MS_STATE_STRING_IDLE);
+      GCFPVString status(MS_STATE_STRING_IDLE);
       m_propertySet->setValue(MS_PROPNAME_STATUS,status);
       break;
     }
@@ -480,14 +484,14 @@ string MACScheduler::_getShareLocation() const
       
     default:
       LOG_DEBUG(formatString("MACScheduler(%s)::idle_state, default",getName().c_str()));
-      status = ::GCFEvent::NOT_HANDLED;
+      status = GCFEvent::NOT_HANDLED;
       break;
   }
 
   return status;
 }
 
-void MACScheduler::_handleSASprotocol(::GCFEvent& event, ::GCFPortInterface& port)
+void MACScheduler::_handleSASprotocol(GCFEvent& event, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
 

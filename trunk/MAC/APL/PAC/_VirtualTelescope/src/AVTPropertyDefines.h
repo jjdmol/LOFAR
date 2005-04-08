@@ -101,7 +101,7 @@ const string TYPE_LCU_PAC_WaveformGenerator       = "TLcuPacWaveformGenerator";
 #define GCF_READWRITE_PROP (GCF_READABLE_PROP | GCF_WRITABLE_PROP)
 
 #define PROPERTYCONFIG_BEGIN(_name_) \
-  const TPropertyConfig _name_[] = \
+  const LOFAR::GCF::Common::TPropertyConfig _name_[] = \
   {
     
 #define PROPERTYCONFIG_ITEM(_propname_,_flags_,_default_) \

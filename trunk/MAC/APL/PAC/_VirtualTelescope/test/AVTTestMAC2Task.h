@@ -37,19 +37,19 @@
 #include "AVTTestAnswer.h"
 
 // forward declaration
-class GCFEvent;
 
 namespace LOFAR
 {
 namespace AVT
 {
+class GCF::TM::GCFEvent;
   
-  class AVTTestMAC2Task : public GCFTask, public Test
+  class AVTTestMAC2Task : public GCF::TM::GCFTask, public Test
   {
     public:
       // as of GCF_Fsm.h version 1.4, the GCFFsm::State typedef is protected.
       // The workaround is simple yet highly undesirable: copy & paste
-      typedef GCFEvent::TResult (AVTTestMAC2Task::*State)(GCFEvent& event, GCFPortInterface& port); // ptr to state handler type
+      typedef GCF::TM::GCFEvent::TResult (AVTTestMAC2Task::*State)(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port); // ptr to state handler type
 
       AVTTestMAC2Task();
       virtual ~AVTTestMAC2Task();
@@ -62,41 +62,41 @@ namespace AVT
       AVTTestMAC2Task& operator=(const AVTTestMAC2Task&);
       
     private: 
-      GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_4_1(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_4_2(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_4_3(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_4_4(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_4_5(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_4_6(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_4_7(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_4_8(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_5_1(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_5_2(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_5_3(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_5_4(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_5_5(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_6_1(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_7_1(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_7_2(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult test_3_2_7_3(GCFEvent& e, GCFPortInterface& p);
-      GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult initial(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_4_1(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_4_2(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_4_3(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_4_4(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_4_5(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_4_6(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_4_7(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_4_8(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_5_1(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_5_2(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_5_3(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_5_4(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_5_5(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_6_1(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_7_1(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_7_2(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult test_3_2_7_3(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult finished(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       
       static string m_taskName;
       
       AVTTestAnswer                       m_answer;
-      GCFPort                             m_timerPort;
+      GCF::TM::GCFPort                             m_timerPort;
       
-      GCFExtPropertySet     m_propertysetLDS;
-      GCFExtPropertySet     m_propertysetBoard1Maintenance;
-      GCFExtPropertySet     m_propertysetAP1RCU1Maintenance;
-      GCFExtPropertySet     m_propertysetAP1RCU2Maintenance;
-      GCFExtPropertySet     m_propertysetAP1RCU1;
-      GCFExtPropertySet     m_propertysetAP2RCU1;
-      GCFExtPropertySet     m_propertysetAP3RCU1;
-      GCFExtPropertySet     m_propertysetVT1;
-      GCFExtPropertySet     m_propertysetVT2;
-      GCFExtPropertySet     m_propertysetVT3;
+      GCF::PAL::GCFExtPropertySet     m_propertysetLDS;
+      GCF::PAL::GCFExtPropertySet     m_propertysetBoard1Maintenance;
+      GCF::PAL::GCFExtPropertySet     m_propertysetAP1RCU1Maintenance;
+      GCF::PAL::GCFExtPropertySet     m_propertysetAP1RCU2Maintenance;
+      GCF::PAL::GCFExtPropertySet     m_propertysetAP1RCU1;
+      GCF::PAL::GCFExtPropertySet     m_propertysetAP2RCU1;
+      GCF::PAL::GCFExtPropertySet     m_propertysetAP3RCU1;
+      GCF::PAL::GCFExtPropertySet     m_propertysetVT1;
+      GCF::PAL::GCFExtPropertySet     m_propertysetVT2;
+      GCF::PAL::GCFExtPropertySet     m_propertysetVT3;
       int                   m_maintenanceChangedCounter;
       int                   m_suspendedCounter;
       int 									m_propsetLoadedCounter;

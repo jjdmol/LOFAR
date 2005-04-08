@@ -106,21 +106,21 @@ const char TYPE_LCU_PIC_LFA[]           = "TLcuPicLFA";
 const char TYPE_LCU_PIC_HFA[]           = "TLcuPicHFA";
 const char TYPE_LCU_PAC_LogicalDeviceScheduler[]  = "TLcuPacLogicalDeviceScheduler";
 
-const TPSCategory PSCAT_LCU_PIC               = PS_CAT_PERMANENT;
-const TPSCategory PSCAT_LCU_PIC_Alert         = PS_CAT_PERM_AUTOLOAD;
-const TPSCategory PSCAT_LCU_PIC_Maintenance   = PS_CAT_PERMANENT;
-const TPSCategory PSCAT_LCU_PIC_Rack          = PS_CAT_PERM_AUTOLOAD;
-const TPSCategory PSCAT_LCU_PIC_SubRack       = PS_CAT_PERM_AUTOLOAD;
-const TPSCategory PSCAT_LCU_PIC_Board         = PS_CAT_PERM_AUTOLOAD;
-const TPSCategory PSCAT_LCU_PIC_MEPStatus     = PS_CAT_TEMPORARY;
-const TPSCategory PSCAT_LCU_PIC_SYNCStatus    = PS_CAT_TEMPORARY;
-const TPSCategory PSCAT_LCU_PIC_BoardRCUStatus= PS_CAT_TEMPORARY;
-const TPSCategory PSCAT_LCU_PIC_Ethernet      = PS_CAT_TEMPORARY;
-const TPSCategory PSCAT_LCU_PIC_FPGA          = PS_CAT_TEMPORARY;
-const TPSCategory PSCAT_LCU_PIC_RCU           = PS_CAT_TEMPORARY;
-const TPSCategory PSCAT_LCU_PIC_ADCStatistics = PS_CAT_TEMPORARY;
-const TPSCategory PSCAT_LCU_PIC_LFA           = PS_CAT_TEMPORARY;
-const TPSCategory PSCAT_LCU_PIC_HFA           = PS_CAT_TEMPORARY;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC               = GCF::Common::PS_CAT_PERMANENT;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_Alert         = GCF::Common::PS_CAT_PERM_AUTOLOAD;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_Maintenance   = GCF::Common::PS_CAT_PERMANENT;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_Rack          = GCF::Common::PS_CAT_PERM_AUTOLOAD;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_SubRack       = GCF::Common::PS_CAT_PERM_AUTOLOAD;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_Board         = GCF::Common::PS_CAT_PERM_AUTOLOAD;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_MEPStatus     = GCF::Common::PS_CAT_TEMPORARY;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_SYNCStatus    = GCF::Common::PS_CAT_TEMPORARY;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_BoardRCUStatus= GCF::Common::PS_CAT_TEMPORARY;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_Ethernet      = GCF::Common::PS_CAT_TEMPORARY;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_FPGA          = GCF::Common::PS_CAT_TEMPORARY;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_RCU           = GCF::Common::PS_CAT_TEMPORARY;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_ADCStatistics = GCF::Common::PS_CAT_TEMPORARY;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_LFA           = GCF::Common::PS_CAT_TEMPORARY;
+const GCF::Common::TPSCategory PSCAT_LCU_PIC_HFA           = GCF::Common::PS_CAT_TEMPORARY;
 
 
 // the following constants cannot be defined as const char because they are used
@@ -163,7 +163,7 @@ const TPSCategory PSCAT_LCU_PIC_HFA           = PS_CAT_TEMPORARY;
 #define GCF_READWRITE_PROP (GCF_READABLE_PROP | GCF_WRITABLE_PROP)
 
 #define PROPERTYCONFIG_BEGIN(_name_) \
-  const TPropertyConfig _name_[] = \
+  const LOFAR::GCF::Common::TPropertyConfig _name_[] = \
   {
     
 #define PROPERTYCONFIG_ITEM(_propname_,_flags_,_default_) \

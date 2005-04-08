@@ -50,7 +50,7 @@ namespace LOFAR
 namespace AVT
 {
 
-  class AVTLogicalDevice : public GCFTask, 
+  class AVTLogicalDevice : public GCF::TM::GCFTask, 
                                   AVTPropertySetAnswerHandlerInterface
   {
     public:
@@ -63,7 +63,7 @@ namespace AVT
       virtual ~AVTLogicalDevice();
 
       string& getServerPortName();
-      void addClientInterTaskPort(APLInterTaskPort* clientPort);
+      void addClientInterTaskPort(APLCommon::APLInterTaskPort* clientPort);
       virtual bool isPrepared(vector<string>& parameters);
       TLogicalDeviceState getLogicalDeviceState() const;
 
@@ -76,36 +76,36 @@ namespace AVT
       * @param p The port interface (see @a GCFPortInterface) on which the event
       * was received.
       */
-      ::GCFEvent::TResult initial_state(GCFEvent& e, GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
 
       /**
       * The idle state handler. 
       */
-      ::GCFEvent::TResult idle_state(GCFEvent& e, GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult idle_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       /**
       * The claiming state handler. 
       */
-      ::GCFEvent::TResult claiming_state(GCFEvent& e, GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       /**
       * The claimed state handler. 
       */
-      ::GCFEvent::TResult claimed_state(GCFEvent& e, GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult claimed_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       /**
       * The preparing state handler. 
       */
-      ::GCFEvent::TResult preparing_state(GCFEvent& e, GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       /**
       * The suspended state handler. 
       */
-      ::GCFEvent::TResult suspended_state(GCFEvent& e, GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult suspended_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       /**
       * The active state handler. 
       */
-      ::GCFEvent::TResult active_state(GCFEvent& e, GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
       /**
       * The releasing state handler. 
       */
-      ::GCFEvent::TResult releasing_state(GCFEvent& e, GCFPortInterface& p);
+      GCF::TM::GCFEvent::TResult releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
 
     protected:
       // protected default constructor
@@ -118,31 +118,31 @@ namespace AVT
       /**
       * returns true if the specified port is the logicalDevice SPP
       */
-      bool _isLogicalDeviceServerPort(GCFPortInterface& port);
-      void _disconnectedHandler(GCFPortInterface& port);
+      bool _isLogicalDeviceServerPort(GCF::TM::GCFPortInterface& port);
+      void _disconnectedHandler(GCF::TM::GCFPortInterface& port);
       bool isAPCLoaded() const;
       void apcLoaded();
 
       /**
       * Initial state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_initial_state(GCFEvent& e, GCFPortInterface& p)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p)=0;
       /**
       * Claiming state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_claiming_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_claiming_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, bool& stateFinished)=0;
       /**
       * Preparing state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_preparing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, bool& stateFinished, bool& error)=0;
       /**
       * active state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_active_state(GCFEvent& e, GCFPortInterface& p)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_active_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p)=0;
       /**
       * Releasing state additional behaviour must be implemented in the derived classes. 
       */
-      virtual ::GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished)=0;
+      virtual GCF::TM::GCFEvent::TResult concrete_releasing_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, bool& stateFinished)=0;
       /**
       * Implementation of the Claim method is done in the derived classes. 
       */
@@ -155,38 +155,38 @@ namespace AVT
   * 
   * ********************************************/
 
-      virtual void concreteClaim(GCFPortInterface& port)=0;
+      virtual void concreteClaim(GCF::TM::GCFPortInterface& port)=0;
       /**
       * Implementation of the Prepare method is done in the derived classes. 
       */
-      virtual void concretePrepare(GCFPortInterface& port,string& parameters)=0;
+      virtual void concretePrepare(GCF::TM::GCFPortInterface& port,string& parameters)=0;
       /**
       * Implementation of the Resume method is done in the derived classes. 
       */
-      virtual void concreteResume(GCFPortInterface& port)=0;
+      virtual void concreteResume(GCF::TM::GCFPortInterface& port)=0;
       /**
       * Implementation of the Suspend method is done in the derived classes. 
       */
-      virtual void concreteSuspend(GCFPortInterface& port)=0;
+      virtual void concreteSuspend(GCF::TM::GCFPortInterface& port)=0;
       /**
       * Implementation of the Release method is done in the derived classes. 
       */
-      virtual void concreteRelease(GCFPortInterface& port)=0;
+      virtual void concreteRelease(GCF::TM::GCFPortInterface& port)=0;
       /**
       * Implementation of the Disconnected handler is done in the derived classes. 
       */
-      virtual void concreteDisconnected(GCFPortInterface& port)=0;
+      virtual void concreteDisconnected(GCF::TM::GCFPortInterface& port)=0;
 
     protected:    
       AVTPropertySetAnswer            m_propertySetAnswer;
-      GCFMyPropertySet                m_properties;
+      GCF::PAL::GCFMyPropertySet                m_properties;
       string                          m_APC;
 
     private:
       string                          m_serverPortName;
       // LogicalDevice SPP
-      GCFPort                         m_logicalDeviceServerPort;
-      std::vector<APLInterTaskPort*>  m_clientInterTaskPorts;
+      GCF::TM::GCFPort                         m_logicalDeviceServerPort;
+      std::vector<APLCommon::APLInterTaskPort*>  m_clientInterTaskPorts;
       bool                            m_apcLoaded;
       TLogicalDeviceState             m_logicalDeviceState;
 

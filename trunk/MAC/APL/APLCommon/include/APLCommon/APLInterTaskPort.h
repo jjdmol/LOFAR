@@ -26,15 +26,20 @@
 #include <set>
 #include <GCF/TM/GCF_RawPort.h>
 
+namespace LOFAR
+{
+  namespace APLCommon
+  {
+    
 // forward declaration
-class GCFTask;
+class GCF::TM::GCFTask;
 
 /**
  * This class represents a protocol port that is used to exchange events defined 
  * in a protocol betweem two tasks in the same process. Events are dispatched
  * to the state machine of the client task.
  */
-class APLInterTaskPort : public GCFRawPort
+class APLInterTaskPort : public GCF::TM::GCFRawPort
 {
   public:
 
@@ -42,8 +47,8 @@ class APLInterTaskPort : public GCFRawPort
     * constructors
     * @param protocol NOT USED
     */
-    APLInterTaskPort(GCFTask& slaveTask, 
-                     GCFTask& containertask, 
+    APLInterTaskPort(GCF::TM::GCFTask& slaveTask, 
+                     GCF::TM::GCFTask& containertask, 
                      string& name, 
                      TPortType type, 
                      int protocol);
@@ -64,14 +69,14 @@ class APLInterTaskPort : public GCFRawPort
     /**
     * send/recv functions
     */
-    virtual ssize_t send (GCFEvent& event);                          
+    virtual ssize_t send (GCF::TM::GCFEvent& event);                          
     virtual ssize_t recv (void* buf, 
                           size_t count);
                            
-    virtual ssize_t sendBack(GCFEvent& e);
+    virtual ssize_t sendBack(GCF::TM::GCFEvent& e);
 
   protected:
-    virtual GCFEvent::TResult   dispatch (GCFEvent& event);
+    virtual GCF::TM::GCFEvent::TResult   dispatch (GCF::TM::GCFEvent& event);
   
   private:
 
@@ -84,10 +89,13 @@ class APLInterTaskPort : public GCFRawPort
 
   private:
 
-    GCFTask&       m_slaveTask;
+    GCF::TM::GCFTask&       m_slaveTask;
     std::set<long> m_toClientTimerId;
     std::set<long> m_toServerTimerId;
 
     ALLOC_TRACER_CONTEXT  
 };
+
+  }; // APL
+}; // LOFAR
 #endif

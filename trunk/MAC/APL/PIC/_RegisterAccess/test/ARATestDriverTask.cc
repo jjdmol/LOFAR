@@ -38,14 +38,11 @@
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <GCF/GCF_PValue.h>
-#include <GCF/GCF_PVUnsigned.h>
-#include <GCF/GCF_PVString.h>
-#include <GCF/GCF_PVBool.h>
-#include <GCF/GCF_PVDouble.h>
 #include <GCF/ParameterSet.h>
 
-using namespace GCF;
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
 using namespace std;
 
 namespace LOFAR
