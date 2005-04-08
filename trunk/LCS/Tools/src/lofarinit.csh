@@ -28,21 +28,21 @@
 # The actual value is filled in by make install (see Makefile.am).
 set a_root = . #filled in by install
 
-# First strip the current LOFARPATH from PATH and LD_LIBRARY_PATH
+# First strip the current LOFARROOT from PATH and LD_LIBRARY_PATH
 # Take care that a possible . is preceeded by a backslash.
-if (! $?LOFARPATH) then
-    set a_path = `echo $LOFARPATH | sed -e 's/\./\\\./g'`
+if (! $?LOFARROOT) then
+    set a_path = `echo $LOFARROOT | sed -e 's/\./\\\./g'`
     set a_bin = "$a_path/bin"
     setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
     set a_lib = "$a_path/lib"
     setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${a_lib}:%:%g" -e "s%^${a_lib}:%%"  -e "s%:${a_lib}"'$%%' -e "s%^${a_lib}"'$%%'`
 endif
 
-# Now define the new LOFARPATH
-setenv LOFARPATH `cd $a_root; pwd`      # make path absolute
+# Now define the new LOFARROOT
+setenv LOFARROOT `cd $a_root; pwd`      # make path absolute
 
 # Also strip this path from the current paths (in case it is contained in it).
-set a_path = `echo $LOFARPATH | sed -e 's/\./\\\./g'`
+set a_path = `echo $LOFARROOT | sed -e 's/\./\\\./g'`
 set a_bin = "$a_path/bin"
 setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
 set a_lib = "$a_path/lib"
@@ -50,12 +50,12 @@ setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${a_lib}:%:%g" -e "s%
 
 # Add the path to the standard paths.
 if (! $?PATH) then
-    setenv PATH $LOFARPATH/bin
+    setenv PATH $LOFARROOT/bin
 else
-    setenv PATH $LOFARPATH/bin:$PATH
+    setenv PATH $LOFARROOT/bin:$PATH
 endif
 if (! $?LD_LIBRARY_PATH) then
-    setenv LD_LIBRARY_PATH $LOFARPATH/lib
+    setenv LD_LIBRARY_PATH $LOFARROOT/lib
 else
-    setenv LD_LIBRARY_PATH $LOFARPATH/lib:$LD_LIBRARY_PATH
+    setenv LD_LIBRARY_PATH $LOFARROOT/lib:$LD_LIBRARY_PATH
 endif

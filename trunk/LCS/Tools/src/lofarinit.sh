@@ -28,10 +28,10 @@
 # The actual value is filled in by make install (see Makefile.am).
 a_root=. #filled in by install
 
-# First strip the current LOFARPATH from PATH and LD_LIBRARY_PATH
+# First strip the current LOFARROOT from PATH and LD_LIBRARY_PATH
 # Take care that a possible . is preceeded by a backslash.
-if [ "$LOFARPATH" != "" ]; then
-    a_path=`echo $LOFARPATH | sed -e 's/\./\\\./g'`
+if [ "$LOFARROOT" != "" ]; then
+    a_path=`echo $LOFARROOT | sed -e 's/\./\\\./g'`
     a_bin="$a_path/bin"
     PATH=`echo $PATH | sed -e "s%:$a_bin:%:%g" -e "s%^$a_bin:%%"  -e "s%:$a_bin$%%" -e "s%^$a_bin$%%"`
     export PATH
@@ -40,12 +40,12 @@ if [ "$LOFARPATH" != "" ]; then
     export LD_LIBRARY_PATH
 fi
 
-# Now define the new LOFARPATH
-LOFARPATH=`cd $a_root; pwd`      # make path absolute
-export LOFARPATH
+# Now define the new LOFARROOT
+LOFARROOT=`cd $a_root; pwd`      # make path absolute
+export LOFARROOT
 
 # Also strip this path from the current paths (in case it is contained in it).
-a_path=`echo $LOFARPATH | sed -e 's/\./\\\./g'`
+a_path=`echo $LOFARROOT | sed -e 's/\./\\\./g'`
 a_bin="$a_path/bin"
 PATH=`echo $PATH | sed -e "s%:$a_bin:%:%g" -e "s%^$a_bin:%%"  -e "s%:$a_bin$%%" -e "s%^$a_bin$%%"`
 export PATH
@@ -55,14 +55,14 @@ export LD_LIBRARY_PATH
 
 # Add the path to the standard paths.
 if [ "$PATH" = "" ]; then
-    PATH=$LOFARPATH/bin
+    PATH=$LOFARROOT/bin
 else
-    PATH=$LOFARPATH/bin:$PATH
+    PATH=$LOFARROOT/bin:$PATH
 fi
 export PATH
 if [ "$LD_LIBRARY_PATH" = "" ]; then
-    LD_LIBRARY_PATH=$LOFARPATH/lib
+    LD_LIBRARY_PATH=$LOFARROOT/lib
 else
-    LD_LIBRARY_PATH=$LOFARPATH/lib:$LD_LIBRARY_PATH
+    LD_LIBRARY_PATH=$LOFARROOT/lib:$LD_LIBRARY_PATH
 fi
 export LD_LIBRARY_PATH
