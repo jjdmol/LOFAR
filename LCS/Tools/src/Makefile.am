@@ -45,9 +45,9 @@ dist_template_DATA  = templates/header.cc_template \
 # Install lofarinit without execute permissions.
 # They have to be sourced; fill in the correct path. 
 install-data-local:
-	for FIL in lofarinit.sh lofarinit.csh; do \
-	  echo "FIL=$$FIL $(srcdir) $(prefix)"; \
+	@for FIL in lofarinit.sh lofarinit.csh; do \
 	  sed -e "s%\. #filled in by install%$(prefix)%" $(srcdir)/$$FIL > $$FIL.tmp; \
+	  echo "$(INSTALL_DATA) $$FIL.tmp $(prefix)/$$FIL"; \
 	  $(INSTALL_DATA) $$FIL.tmp $(prefix)/$$FIL; \
 	done
 
