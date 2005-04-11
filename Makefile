@@ -98,9 +98,7 @@ build_system:
 	      && echo ":::::: DONE BOOTSTRAPPING $$pkg" \
 	      && echo ); \
 	      for var in $(VARIANTS); do \
-		case $$var in gnu3*) inst_var=gcc3;; \
-	                      gnu*)  inst_var=gcc2;; \
-	                      icc*)  inst_var=icc;; \
+		case $$var in *) inst_var=$$var;; \
 	        esac; \
 	        (echo \
 		&& echo ":::::: CONFIGURING VARIANT $$var FOR PACKAGE $$pkg" \
@@ -206,9 +204,7 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 #
 %.variant_configure:
 	variant=`basename $@ .variant_configure`; \
-	case $$variant in gnu3*) inst_var=gcc3;; \
-	                  gnu*)  inst_var=gcc2;; \
-	                  icc*)  inst_var=icc;; \
+	case $$variant in *) inst_var=$$var;; \
 	esac; \
 	(echo \
 	&& echo ":::::: CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
