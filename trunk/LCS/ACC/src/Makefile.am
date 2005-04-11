@@ -3,7 +3,20 @@ INSTHDRS = \
 	ParameterTemplate.h \
 	ParameterUnion.h \
 	TemplateUnion.h \
-	ParameterSet.h 
+	ParameterSet.h  \
+	ACAsyncClient.h \
+	ACCmdImpl.h \
+	ACSyncClient.h \
+	ApplControlClient.h \
+	ApplControlComm.h \
+	ApplControl.h \
+	ApplControlServer.h \
+	DH_ApplControl.h \
+	DH_ProcControl.h \
+	KVpair.h \
+	ProcControlComm.h \
+	ProcControlServer.h \
+	ProcessControl.h
 
 NOINSTHDRS =
 
