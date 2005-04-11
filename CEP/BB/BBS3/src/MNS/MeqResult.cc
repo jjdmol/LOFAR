@@ -81,6 +81,7 @@ void MeqResultRep::show (ostream& os) const
 
 
 MeqResult::MeqResult (int nspid)
+: itsRep (0)
 {
   itsRep = new MeqResultRep(nspid);
   itsRep->link();
@@ -95,10 +96,12 @@ MeqResult::MeqResult (const MeqResult& that)
 }
 MeqResult& MeqResult::operator= (const MeqResult& that)
 {
-  MeqResultRep::unlink (itsRep);
-  itsRep = that.itsRep;
-  if (itsRep != 0) {
-    itsRep->link();
+  if (this != &that) {
+    MeqResultRep::unlink (itsRep);
+    itsRep = that.itsRep;
+    if (itsRep != 0) {
+      itsRep->link();
+    }
   }
   return *this;
 }

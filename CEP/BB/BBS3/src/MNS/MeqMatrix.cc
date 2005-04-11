@@ -116,10 +116,12 @@ MeqMatrix::MeqMatrix (const MeqMatrixTmp& that)
 
 MeqMatrix& MeqMatrix::operator= (const MeqMatrix& that)
 {
-    MeqMatrixRep::unlink (itsRep);
-    itsRep = that.itsRep;
-    if (itsRep != 0) {
-	itsRep->link();
+    if (this != &that) {
+        MeqMatrixRep::unlink (itsRep);
+	itsRep = that.itsRep;
+	if (itsRep != 0) {
+	    itsRep->link();
+	}
     }
     return *this;
 }
