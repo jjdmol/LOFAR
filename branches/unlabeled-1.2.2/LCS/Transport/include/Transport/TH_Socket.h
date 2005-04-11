@@ -56,6 +56,9 @@ public:
     /// Get the type of transport.
     virtual string getType() const;
 
+    /// Is TH_Socket clonable?
+    virtual bool isClonable() const;
+
     /// Read the data.
     virtual bool recvBlocking 		(void* buf, int32 nbytes, int32 tag,
 									 int nBytesRead = 0, DataHolder* dh = 0);
@@ -101,7 +104,9 @@ private:
 	// these fields are filled so that waitForRecv knows what to do.
 	int16		itsLastCmd;
 };
-  
+
+inline bool TH_Socket::isClonable() const
+  { return false; }  
 
 } // namespace LOFAR
 

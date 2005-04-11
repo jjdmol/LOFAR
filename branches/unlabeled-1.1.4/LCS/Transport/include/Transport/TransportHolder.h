@@ -103,6 +103,13 @@ public:
   // The default implementation is true, but TH_ShMem is false.
   virtual bool canDataGrow() const;
 
+  // Can the derived TransportHolder be cloned?
+  virtual bool isClonable() const = 0;
+
+  // Clone the instance of the derived TransportHolder.
+  virtual TransportHolder* clone() const;
+
+
 };
 
 

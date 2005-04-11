@@ -94,6 +94,12 @@ public:
   /// Get the type of transport.
   virtual string getType() const;
 
+  /// Is TH_ShMem clonable?
+  virtual bool isClonable() const;
+
+  /// Return a copy of this transportholder
+  virtual TH_ShMem* clone() const;
+
   // Get the type of BlobString needed from the transport holder.
   virtual BlobStringType blobStringType() const;
 
@@ -205,6 +211,9 @@ public:
 };
 
 inline bool TH_ShMem::init()
+  { return true; }
+
+inline bool TH_ShMem::isClonable() const
   { return true; }
 
 }

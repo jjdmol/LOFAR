@@ -103,6 +103,10 @@ public:
   /// Get the type of transport.
   virtual string getType() const;
 
+  virtual bool isClonable() const;
+
+  virtual TH_Mem* clone() const;
+
   // NB: The following method doesn't do what you expect! It does not
   // guarantee the buffer contents has been safely sent.
   // Your application should make sure write/read are called alternately.
@@ -152,6 +156,10 @@ public:
 
 inline bool TH_Mem::init()
 { return true; }
+
+inline bool TH_Mem::isClonable() const
+{ return true; }
+
 }
 
 #endif

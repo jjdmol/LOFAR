@@ -92,6 +92,10 @@ class Connection
   /// Get its tag.
   int getTag() const;
 
+  /// Change the connection start/end point
+  void setDestinationDH(DataHolder* dest);
+  void setSourceDH(DataHolder* dest);
+
 private:
 
   typedef enum ReadState{Idle, TotalLength, Header, Message};
@@ -141,7 +145,6 @@ inline void Connection::setBlocking(bool block)
 
 inline bool Connection::isConnected() const
   { return (itsTransportHolder->isConnected()); }
-
 
 } // end namespace
 

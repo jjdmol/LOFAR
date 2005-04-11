@@ -54,16 +54,21 @@ public:
   TH_File(string    aFileName, direction aDirection);
   virtual ~TH_File();
 
+  // Initialization
+  virtual bool init();
+
   /**
      Receive the data. If the Direction is defined as Read, this method reads 
      the next DataHolder from file.
   */
-  virtual bool recvBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);
+  virtual bool recvBlocking(void* buf, int nbytes, int tag, 
+			    int nBytesRead=0, DataHolder* dh=0);
 
   /**
      This method calls the blocking receive method.
   */
-  virtual bool recvNonBlocking(void* buf, int nbytes, int tag, DataHolder* dh=0);  
+  virtual bool recvNonBlocking(void* buf, int nbytes, int tag,
+			       int nBytesRead=0, DataHolder* dh=0);  
 
   /**
      Send the data. If the Direction is defined as Write, this method writes 
@@ -85,6 +90,12 @@ public:
   /// Get the type of transport, i.e. "TH_File"
   virtual string getType() const;
 
+  /// Is TH_File clonable?
+  virtual bool isClonable() const;
+
+  /// Return a copy of this transportholder
+  virtual TH_File* clone() const;
+
   static void finalize();
   static int getCurrentRank();
   static int getNumberOfNodes();
@@ -99,6 +110,12 @@ public:
   char      itsSeparator[9];
   int       itsSepLen;
 };
+
+inline bool TH_File::init()
+  { return true; }
+
+inline bool TH_File::isClonable() const
+  { return true; }
 
 }
 

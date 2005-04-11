@@ -60,8 +60,6 @@ public:
   TH_MPI(int sourceNode, int targetNode);
   virtual ~TH_MPI();
 
-  virtual TH_MPI* make() const;
-
   // This method does nothing. Use initMPI(..) once at the start of your application!
   bool init();
 
@@ -90,6 +88,12 @@ public:
 
   /// Get the type of transport.
   virtual string getType() const;
+
+  // Can TH_MPI be cloned?
+  virtual bool isClonable() const;
+
+  // Create a copy
+  virtual TH_MPI* clone() const;
 
   static void initMPI (int argc, const char *argv[]);
   static void finalize();
@@ -139,6 +143,9 @@ private:
 
 inline bool TH_MPI::init()
   { return true;}
+
+inline bool TH_MPI::isClonable()
+  { return true; }
 
 }
 
