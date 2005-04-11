@@ -29,7 +29,7 @@
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
 
-using namespace LOFAR;
+namespace LOFAR {
 
 namespace RSP_Protocol
 {
@@ -84,5 +84,5 @@ namespace RSP_Protocol
       blitz::Array<uint16, 2> m_subbands;
   };
 };
-     
+}; // namespace LOFAR
 #endif /* SUBBANDSELECTION_H_ */

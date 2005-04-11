@@ -30,6 +30,7 @@
 #include <string.h>
 #include <iostream>
 
+namespace LOFAR {
 namespace RSP_Protocol
 {
   class Timestamp
@@ -182,7 +183,9 @@ namespace RSP_Protocol
   /*@}*/
 };
 
-std::ostream& operator<< (std::ostream& os, const RSP_Protocol::Timestamp& ts);
+}; // namespace LOFAR
+
+std::ostream& operator<< (std::ostream& os, const LOFAR::RSP_Protocol::Timestamp& ts);
 
 #define SECONDS(s)  Timestamp((s),0)
 #define USECONDS(u) Timestamp(0,(u))

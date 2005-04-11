@@ -27,6 +27,7 @@
 
 #include <unistd.h>
 
+namespace LOFAR {
 namespace EPA_Protocol
 {
   class MEPData
@@ -65,5 +66,5 @@ namespace EPA_Protocol
       size_t m_count;
   };
 };
-
+};
 #endif /* MEPDATA_H_ */

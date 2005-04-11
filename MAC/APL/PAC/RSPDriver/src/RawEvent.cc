@@ -21,9 +21,9 @@
 //#
 //#  $Id$
 
+#include "EPA_Protocol.ph"
 #include "RawEvent.h"
 #include "MEPHeader.h"
-#include "EPA_Protocol.ph"
 #include <GCF/TM/GCF_ETHRawPort.h>
 
 #undef PACKAGE
@@ -31,8 +31,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-using namespace EPA_Protocol;
 using namespace LOFAR;
+using namespace EPA_Protocol;
 
 /**
  * Lookup table to map MEP message header (addr.[pid,reg]) to GCFEvent signal.

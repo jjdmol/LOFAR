@@ -32,7 +32,7 @@
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
 
-using namespace LOFAR;
+namespace LOFAR {
 
 namespace RSP_Protocol
 {
@@ -82,5 +82,5 @@ namespace RSP_Protocol
   inline blitz::Array<uint8, 1>& Versions::bp()  { return m_bp_versions; }
   inline blitz::Array<uint8, 1>& Versions::ap()  { return m_ap_versions; }
 };
-     
+}; // namespace LOFAR
 #endif /* STATISTICS_H_ */

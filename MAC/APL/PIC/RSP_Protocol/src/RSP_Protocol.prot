@@ -5,7 +5,7 @@ autogen definitions protocol;
 
 description = "Protocol for the RSP driver interface";
 prefix = "RSP"; // for the signal names
-id = "(F_APL_PROTOCOL+12)";
+id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+12)";
 
 // specify extra include files
 // e.g.
@@ -27,13 +27,10 @@ include = '"MEPHeader.h"';
 
 prelude = << PRELUDE_END
 
-namespace RSP_Protocol
-{
   static const int MAX_N_BLPS     = 128;
   static const int MAX_N_RCUS     = MAX_N_BLPS * MEPHeader::N_POL;
   static const int SUCCESS = 1;
   static const int FAILURE = 0;
-};
 
 PRELUDE_END;
 

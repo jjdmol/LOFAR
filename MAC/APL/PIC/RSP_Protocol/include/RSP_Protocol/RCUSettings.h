@@ -29,7 +29,7 @@
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
 
-using namespace LOFAR;
+namespace LOFAR {
 
 namespace RSP_Protocol
 {
@@ -85,5 +85,5 @@ namespace RSP_Protocol
   inline blitz::Array<RCUSettings::RCURegisterType, 1>& RCUSettings::operator()() { return m_registers; }
 
 };
-     
+}; // namespace LOFAR
 #endif /* RCUSETTINGS_H_ */

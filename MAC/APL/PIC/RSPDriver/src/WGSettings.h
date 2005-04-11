@@ -29,7 +29,7 @@
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
 
-using namespace LOFAR;
+namespace LOFAR {
 
 namespace RSP_Protocol
 {
@@ -106,5 +106,5 @@ namespace RSP_Protocol
   inline blitz::Array<WGSettings::WGRegisterType, 1>& WGSettings::operator()() { return m_registers; }
   inline blitz::Array<int16, 2>& WGSettings::waveforms() { return m_waveforms; }
 };
-     
+}; // namespace LOFAR
 #endif /* WGSETTINGS_H_ */
