@@ -1,15 +1,6 @@
 common_top_builddir=@common_top_builddir@
 
-CFLAGS += \
-	-DUSE_PUBLIC_MALLOC_WRAPPERS \
-	-DUSE_DL_PREFIX \
-	-DHAVE_MMAP=0 \
-	-DMORECORE=shmbrk \
-	-DMORECORE_CONTIGUOUS=0 \
-	-DMORECORE_CANNOT_TRIM=1 \
-	-DSHMEM_ALLOC
-
-CXXFLAGS += \
+AM_CPPFLAGS = \
 	-DUSE_PUBLIC_MALLOC_WRAPPERS \
 	-DUSE_DL_PREFIX \
 	-DHAVE_MMAP=0 \
@@ -84,5 +75,3 @@ EXTRA_DIST = 					\
 
 
 include $(lofar_sharedir)/Makefile.common
-
-# AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL
