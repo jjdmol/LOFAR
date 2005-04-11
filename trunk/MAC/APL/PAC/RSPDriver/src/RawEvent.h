@@ -27,14 +27,15 @@
 
 #include <GCF/TM/GCF_Control.h>
 
+namespace LOFAR {
 namespace EPA_Protocol
 {
   class RawEvent
   {
     public:
-      static GCFEvent::TResult dispatch(GCFTask& task,
-					GCFPortInterface& port);
+      static LOFAR::GCF::TM::GCFEvent::TResult dispatch(LOFAR::GCF::TM::GCFTask& task,
+					LOFAR::GCF::TM::GCFPortInterface& port);
   };
 };
-
+};
 #endif /* RAWEVENT_H_ */

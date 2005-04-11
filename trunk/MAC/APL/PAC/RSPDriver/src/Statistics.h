@@ -28,7 +28,7 @@
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
 
-using namespace LOFAR;
+namespace LOFAR {
 
 namespace RSP_Protocol
 {
@@ -95,5 +95,5 @@ namespace RSP_Protocol
   inline blitz::Array<double, 2>& Statistics::operator()() { return m_statistics; }
 
 };
-     
+}; // namespace LOFAR     
 #endif /* STATISTICS_H_ */

@@ -32,6 +32,7 @@
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
 
+namespace LOFAR {
 namespace RSP_Protocol
 {
   class SystemStatus
@@ -89,5 +90,5 @@ namespace RSP_Protocol
     return m_rcu_status;
   }
 };
-
+}; // namespace LOFAR
 #endif /* SYSTEMSTATUS_H_ */

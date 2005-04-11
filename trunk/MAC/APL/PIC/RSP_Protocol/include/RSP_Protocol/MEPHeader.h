@@ -31,6 +31,7 @@
 
 using namespace LOFAR;
 
+namespace LOFAR {
 namespace EPA_Protocol
 {
   class MEPHeader
@@ -309,5 +310,5 @@ namespace EPA_Protocol
       /*@}*/
   };
 };
-
+};
 #endif /* MEPHEADER_H_ */

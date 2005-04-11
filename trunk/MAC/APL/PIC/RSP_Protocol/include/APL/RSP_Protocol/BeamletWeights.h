@@ -29,7 +29,7 @@
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
 
-using namespace LOFAR;
+namespace LOFAR {
 
 namespace RSP_Protocol
 {
@@ -79,5 +79,5 @@ namespace RSP_Protocol
 
   inline blitz::Array<std::complex<int16>, RSP_Protocol::BeamletWeights::NDIM>& BeamletWeights::operator()() { return m_weights; }
 };
-     
+}; //namespace LOFAR
 #endif /* BEAMLETWEIGHTS_H_ */
