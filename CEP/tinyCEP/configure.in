@@ -5,7 +5,7 @@ AC_INIT(src/WorkHolder.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(tinyCEP, 0.1)
+AM_INIT_AUTOMAKE(tinyCEP, 1.0, no-define)
 
 dnl
 dnl Initialize for LOFAR (may set compilers)
