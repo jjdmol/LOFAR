@@ -42,6 +42,8 @@ BUILT_SOURCES = \
 	RSPTest.conf \
 	EPAStub.conf
 
+EXTRA_DIST = $(BUILT_SOURCES)
+
 sysconf_DATA = \
 	EPAStub.conf
 

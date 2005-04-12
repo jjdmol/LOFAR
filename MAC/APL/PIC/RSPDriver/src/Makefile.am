@@ -40,7 +40,8 @@ clean-local:
 
 EXTRA_DIST = \
 	RSP_Protocol.ph \
-	EPA_Protocol.ph
+	EPA_Protocol.ph \
+	$(BUILT_SOURCES)
 
 sysconf_DATA = \
 	RemoteStation.conf \

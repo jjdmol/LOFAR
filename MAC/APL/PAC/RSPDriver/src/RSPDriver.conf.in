@@ -63,7 +63,7 @@ RSPDriver.MAC_ADDR_23=00:00:00:00:00:17
 # Ethernet interface on which to contact the RSP boards.
 # This interface would normally be connected to the switch.
 #
-RSPDriver.IF_NAME=eth0
+RSPDriver.IF_NAME=eth1 # changed to eth1 because eth1 on lofar26 support jumbo (9000) frames
 
 #
 # Make sure that initially the
