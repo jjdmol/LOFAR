@@ -5,7 +5,7 @@ autogen definitions protocol;
 
 description = "Protocol for the Calibration Server";
 prefix = "CAL"; // for the signal names
-id = "(F_APL_PROTOCOL+13)";
+id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+13)";
 
 // specify extra include files
 // e.g.
@@ -13,14 +13,11 @@ id = "(F_APL_PROTOCOL+13)";
 
 prelude = << PRELUDE_END
 
-namespace CAL_Protocol
-{
-	enum {
-	     SUCCESS = 0,
-	     ERR_RANGE,     // range error in message parameters
-	     ERR_CREATE,    // could not allocate beam
-	     ERR_CALIBRATE, // could not free beam
-	};
+enum {
+  SUCCESS = 0,
+  ERR_RANGE,     // range error in message parameters
+  ERR_CREATE,    // could not allocate beam
+  ERR_CALIBRATE, // could not free beam
 };
 
 PRELUDE_END;

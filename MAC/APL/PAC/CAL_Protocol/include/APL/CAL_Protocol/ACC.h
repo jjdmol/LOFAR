@@ -44,7 +44,7 @@ namespace CAL
      * @return The ACM for the specified subband is returned. If an invalid
      * subband is specified an empty array is returned.
      */
-    const blitz::Array<std::complex<double>, 4> getACM(int subband, RSP_Protocol::Timestamp& timestamp) const;
+    const blitz::Array<std::complex<double>, 4> getACM(int subband, LOFAR::RSP_Protocol::Timestamp& timestamp) const;
 
     /**
      * Get the size of the array.
@@ -70,7 +70,7 @@ namespace CAL
     /**
      * m_time is a 1 dimensional array with a timestamp for each subband.
      */
-    blitz::Array<RSP_Protocol::Timestamp, 1> m_time;
+    blitz::Array<LOFAR::RSP_Protocol::Timestamp, 1> m_time;
   };
 
 
