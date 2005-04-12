@@ -27,7 +27,7 @@
 
 using namespace CAL;
 using namespace blitz;
-using namespace RSP_Protocol;
+using namespace LOFAR::RSP_Protocol;
 using namespace std;
 
 ACC::ACC(Array<complex<double>, 5>& acc) : m_acc(acc), m_time(acc.extent(thirdDim))

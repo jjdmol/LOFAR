@@ -31,7 +31,7 @@
 using namespace CAL;
 using namespace blitz;
 using namespace std;
-using namespace RSP_Protocol;
+using namespace LOFAR::RSP_Protocol;
 
 RemoteStationCalibration::RemoteStationCalibration(const SourceCatalog& catalog, const DipoleModel& dipolemodel)
   : CalibrationAlgorithm(catalog, dipolemodel)
