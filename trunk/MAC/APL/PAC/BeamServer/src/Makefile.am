@@ -15,7 +15,6 @@ SUFFIXES = .ph
 
 BUILT_SOURCES = \
 	ABS_Protocol.ph \
-	beamserver.conf \
 	BeamServerPorts.conf \
 	BeamServer.conf
 
@@ -23,7 +22,6 @@ EXTRA_DIST = \
 	ABS_Protocol.ph
 
 sysconf_DATA = \
-	beamserver.conf \
 	BeamServerPorts.conf \
 	BeamServer.conf
 
