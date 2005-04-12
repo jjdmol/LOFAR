@@ -16,10 +16,16 @@ AM_CPPFLAGS = \
 	-DSHMEM_ALLOC \
 	-DHAVE_USR_INCLUDE_MALLOC_H
 
-DOCHDRS	=		 			\
+INSTHDRS	=	 			\
 	segbasemap.h				\
 	dlmalloc.h				\
 	shmem_alloc.h
+
+DOCHDRS	= $(INSTHDRS)
+
+nobase_shmem_HEADERS = $(INSTHDRS)
+
+shmemdir = $(pkgincludedir)/shmem
 
 libshmem_la_SOURCES = 				\
 	$(DOCHDRS)				\
