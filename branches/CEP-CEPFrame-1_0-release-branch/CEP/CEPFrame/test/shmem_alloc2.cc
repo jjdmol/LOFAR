@@ -21,7 +21,7 @@
 //  $Id$
 
 
-#include "Common/shmem/shmem_alloc.h"
+#include <Common/shmem/shmem_alloc.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <signal.h>
