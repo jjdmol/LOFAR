@@ -25,7 +25,7 @@
 #define SOURCE_H_
 
 #include <string>
-#include <vector>
+#include <blitz/array.h>
 
 namespace CAL
 {
@@ -33,15 +33,13 @@ namespace CAL
   {
   public:
 
-    Source(); // default constructor for vector
-
     /**
      * Constructor.
      * @param name Name of the source.
      * @param ra Right ascension of the source (in radians).
      * @param dec Declination of the source (in radians).
      */
-    Source(std::string name, double ra, double dec) : m_name(name), m_ra(ra), m_dec(dec) {}
+    Source(std::string name, double ra, double dec, blitz::Array<double, 2>& flux) : m_name(name), m_ra(ra), m_dec(dec), m_flux(flux) {}
     virtual ~Source();
 
     /**
@@ -70,21 +68,20 @@ namespace CAL
     void getPos(double& ra, double& dec) const;
 
     /**
-     * Get the n-th (freq, flux) point.
+     * Get the n-th (freq, flux) pair.
      * @param n Get n-th flux.
      * @param freq Reference to the location to store the frequency.
      * @param flux Reference to the location to store the flux.
-     * @return true if point exists, false if 0 > n >= nfrequencies.
+     * @return true if point exists, false if 0 > n <= nfrequencies.
      */
     bool getFlux(int n, double& freq, double&) const;
     
   private:
 
-    std::string         m_name;
-    double              m_ra;
-    double              m_dec;
-    std::vector<double> m_freq; // freq array (freq.size() == flux.size())
-    std::vector<double> m_flux; // flux for the corresponding element of the m_freq array.
+    std::string m_name;
+    double      m_ra;
+    double      m_dec;
+    blitz::Array<double, 2> m_flux; // array of frequency, flux pairs, 
   };
 
 };

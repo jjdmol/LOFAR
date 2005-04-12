@@ -25,28 +25,23 @@
 #define CALIBRATIONALGORITHM_H_
 
 #include "CalibrationInterface.h"
+#include "SourceCatalog.h"
+#include "DipoleModel.h"
 
 namespace CAL
 {
   class CalibrationAlgorithm : public CalibrationInterface
   {
-    public:
-      CalibrationAlgorithm() {}
-      virtual ~CalibrationAlgorithm() {}
+  public:
+    CalibrationAlgorithm(const SourceCatalog& catalog, const DipoleModel& dipolemodel);
+    virtual ~CalibrationAlgorithm();
       
-      virtual void setACC();
-      virtual void getACC();
-      virtual void setSourceCatalog();
-      virtual void getSourceCatalog();
-      virtual void setDipoleModel();
-      virtual void getDipoleModel();
+    virtual const SourceCatalog& getSourceCatalog() { return m_catalog;     }
+    virtual const DipoleModel&   getDipoleModel()   { return m_dipolemodel; }
       
-    private:
-      int m_pos;
-      int m_spw;
-      int m_acc;
-      int m_catalog;
-      int m_sens;
+  private:
+    const SourceCatalog& m_catalog;
+    const DipoleModel&   m_dipolemodel;
   };
 };
 

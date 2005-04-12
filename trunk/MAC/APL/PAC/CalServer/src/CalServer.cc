@@ -27,6 +27,8 @@
 
 #include "CalServer.h"
 #include "SpectralWindow.h"
+#include "SubArray.h"
+#include "RemoteStationCalibration.h"
 
 #ifndef CAL_SYSCONF
 #define CAL_SYSCONF "."
@@ -37,6 +39,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <GCF/ParameterSet.h>
+#include <fstream>
+#include <signal.h>
 
 #include <blitz/array.h>
 
@@ -48,7 +52,8 @@ using namespace std;
 using namespace CAL_Protocol;
 
 CalServer::CalServer(string name)
-    : GCFTask((State)&CalServer::initial, name)
+  : GCFTask((State)&CalServer::initial, name),
+    m_dipolemodel(0), m_acc(0), m_catalog(0)
 {
 #if 0
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
@@ -220,19 +225,27 @@ void CalServer::calibrate()
       //
       // load the dipole model
       //
-      ps = ParameterSet(string(CAL_SYSCONF) + "/" + string("DipoleModel.conf"));
-      m_dipolemodel = DipoleModelLoader::loadFromBlitzString("Primary DipoleModel", ps["DipoleModel.sens"]);
+      m_dipolemodel = DipoleModelLoader::loadFromFile("DipoleModel.conf");
 
-      cout << "Dipole model=" << m_dipolemodel->getModel() << endl;
+      //cout << "Dipole model=" << m_dipolemodel->getModel() << endl;
+
+      //
+      // load the source catalog
+      //
+      m_catalog = SourceCatalogLoader::loadFromFile("SourceCatalog.conf");
 
       //
       // Load antenna arrays
       //
-      ps = ParameterSet(string(CAL_SYSCONF) + "/" + string("RemoteStation.conf"));
-      AntennaArray* lba = AntennaArrayLoader::loadFromBlitzString("LBA", ps["RS.LBA_POSITIONS"]);
+      ps = ParameterSet(string(CAL_SYSCONF) + "/" + string("Antennas.conf"));
+
+      AntennaArray* lba = AntennaArrayLoader::loadFromBlitzString("LBA", ps["LBA_POSITIONS"]);
       m_arrays.push_back(*lba);
-      AntennaArray* hba = AntennaArrayLoader::loadFromBlitzString("HBA", ps["RS.HBA_POSITIONS"]);
+      delete lba;
+
+      AntennaArray* hba = AntennaArrayLoader::loadFromBlitzString("HBA", ps["HBA_POSITIONS"]);
       m_arrays.push_back(*hba);
+      delete hba;
 
       //
       // load the ACC
@@ -245,45 +258,131 @@ void CalServer::calibrate()
 	  exit(EXIT_FAILURE);
 	}
 
-      cout << "sizeof(ACC)=" << m_acc->getSize() * sizeof(complex<double>) << endl;
+      //cout << "sizeof(ACC)=" << m_acc->getSize() * sizeof(complex<double>) << endl;
+
+#if 0
+      ofstream accstream("acc.out");
+      if (accstream.is_open())
+	{
+	  accstream << m_acc->getACC();
+	}
+#endif
     }
   catch (Exception e) 
     {
-      cout << "Failed to load configuration files: " << e << endl;
+      LOG_ERROR_STR("Failed to load configuration files: " << e);
       exit(EXIT_FAILURE);
     }
 
+#if 0
   for (unsigned int i = 0; i < m_spws.size(); i++)
     {
       cout << "SPW[" << i << "]=" << m_spws[i].getName() << endl;
     }
+#endif
 
   //
-  // Call the calibration routine.
+  // Dimensions of the antenna array
   //
+  int nantennas = m_arrays[0].getAntennaPos().extent(firstDim);
+  int npol      = m_arrays[0].getAntennaPos().extent(secondDim);
+
+  //
+  // Create the FTS-1 subarray, with spectral window 0 (0 - 80 MHz)
+  // 
+  Array<bool,2> select(nantennas, npol);
+  select = true;
+  SubArray fts1("FTS-1", m_arrays[0].getAntennaPos(), select, m_spws[0]);
+
+  //
+  // Create the calibration algorithm and
+  // call the startCalibration routine of the subarray
+  // with the ACC.
+  //
+  RemoteStationCalibration cal(*m_catalog, *m_dipolemodel);
+  fts1.startCalibration(&cal, *m_acc);
+
+  //
+  // Sanity check on dimensions of the various arrays
+  //
+  // Number of antennas and polarizations must be equal on all related arrays.
+  //
+  ASSERT(m_acc->getACC().extent(firstDim) == nantennas
+	 && m_acc->getACC().extent(secondDim) == nantennas
+	 && m_acc->getACC().extent(thirdDim) == m_spws[0].getNumSubbands()
+	 && m_acc->getACC().extent(fourthDim) == npol
+	 && m_acc->getACC().extent(fifthDim) == npol);
+
+  //
+  // Save the calibration gains and quality matrices
+  //
+  const CalibrationResult* result = 0;
+  if (fts1.getCalibration(result, SubArray::BACK))
+    {
+      // save gains matrix
+      ofstream gains("gains.out");
+      if (gains.is_open())
+	{
+	  gains << result->getGains();
+	}
+      else
+	{
+	  LOG_ERROR("Failed to open output file: gains.out");
+	  exit(EXIT_FAILURE);
+	}
+
+      // save quality matrix
+      ofstream quality("quality.out");
+      if (quality.is_open())
+	{
+	  quality << result->getQuality();
+	}
+      else
+	{
+	  LOG_ERROR("Failed to open output file: quality.out");
+	  exit(EXIT_FAILURE);
+	}
+    }
+  else
+    {
+      LOG_ERROR("Calibration has not yet completed.");
+      exit(EXIT_FAILURE);
+    }
 }
+
+#if 0
+void signalHandler(int sig)
+{
+  if ( (sig == SIGINT) || (sig == SIGTERM) )
+    {
+      LOG_ERROR("exiting on signal");
+      exit(EXIT_FAILURE);
+    }
+}                                        
+#endif
 
 int main(int argc, char** argv)
 {
   GCFTask::init(argc, argv);
 
-  LOG_INFO(formatString("Program %s has started", argv[0]));
+//   signal(SIGINT,  signalHandler);
+//   signal(SIGTERM, signalHandler);
+//   signal(SIGPIPE, SIG_IGN);
 
-  try 
-  {
-    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
-  }
-  catch (Exception e)
-  {
-    cerr << "Failed to load configuration file: " << e.text() << endl;
-    exit(EXIT_FAILURE);
-  }
+  LOG_INFO(formatString("Program %s has started", argv[0]));
 
   CalServer cal("CalServer");
 
+  struct timeval start, end;
+  gettimeofday(&start, 0);
   cal.calibrate(); // temporary entry point for standalone CalServer
+  gettimeofday(&end, 0);
+
+  LOG_INFO_STR("CalServer execution time: " << end.tv_sec - start.tv_sec << " seconds");
 
 #if 0
+  // this code is not used since CalServer is currently a stand-alone program
+
   cal.start(); // make initial transition
 
   try
@@ -292,7 +391,7 @@ int main(int argc, char** argv)
   }
   catch (Exception e)
   {
-    cerr << "Exception: " << e.text() << endl;
+    LOG_ERROR_STR("Exception: " << e.text());
     exit(EXIT_FAILURE);
   }
 #endif

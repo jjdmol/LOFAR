@@ -24,6 +24,7 @@
 #include "Source.h"
 
 using namespace CAL;
+using namespace blitz;
 
 Source::~Source()
 {
@@ -37,7 +38,7 @@ void Source::getPos(double& ra, double& dec) const
 
 bool Source::getFlux(int n, double& freq, double& flux) const
 {
-  if (n < 0 || n >= (int)m_freq.size()) {
+  if (n < 0 || n >= (int)m_flux.size()) {
 
     freq = 0; 
     flux = 0;
@@ -45,9 +46,10 @@ bool Source::getFlux(int n, double& freq, double& flux) const
     return false;
   }
 
-  freq = m_freq[n];
-  flux = m_flux[n];
+  freq = m_flux(n, 0);
+  flux = m_flux(n, 1);
   
   return true;
 }
+
     

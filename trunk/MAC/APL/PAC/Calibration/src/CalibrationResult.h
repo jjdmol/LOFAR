@@ -39,12 +39,12 @@ namespace CAL
       /**
        * Get reference to the result gains array.
        */
-      const blitz::Array<std::complex<double>, 2>& getGains() { return m_gains; }
+      const blitz::Array<std::complex<double>, 3>& getGains() const { return m_gains; }
 
       /**
        * Get reference to the quality array.
        */
-      const blitz::Array<double, 1>& getQuality() { return m_quality; }
+      const blitz::Array<double, 1>& getQuality() const { return m_quality; }
 
       /**
        * has the calibration algorithm producing this result completed?
@@ -57,7 +57,7 @@ namespace CAL
       void setComplete(bool value) { m_complete = value; }
 
     private:
-      blitz::Array<std::complex<double>, 2> m_gains;
+      blitz::Array<std::complex<double>, 3> m_gains;
       blitz::Array<double, 1>               m_quality;
       bool                                  m_complete; // is this calibration complete?
     };

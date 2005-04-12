@@ -35,8 +35,11 @@ CalibrationResult::CalibrationResult(int nantennas, int nsubbands) : m_complete(
       nsubbands = 0;
     }
    
-  m_gains.resize(nantennas, nsubbands);
+  m_gains.resize(nantennas, 2, nsubbands);
+  m_gains = 1;
+
   m_quality.resize(nsubbands);
+  m_quality = 1;
 }
 
 CalibrationResult::~CalibrationResult()

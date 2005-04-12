@@ -21,10 +21,15 @@
 //#
 //#  $Id$
 
-#include <blitz/array.h>
-#include <sstream>
 
 #include "DipoleModel.h"
+
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+#include <fstream>
+#include <blitz/array.h>
 
 using namespace CAL;
 using namespace blitz;
@@ -38,15 +43,23 @@ DipoleModel::~DipoleModel()
 {
 }
 
-/*const*/ DipoleModel* DipoleModelLoader::loadFromBlitzString(string name, string array)
+/*const*/ DipoleModel* DipoleModelLoader::loadFromFile(string filename)
 {
-  DipoleModel* model = new DipoleModel(name);
+  DipoleModel* model = new DipoleModel(filename);
 
-  if (model)
+  if (!model) return 0;
+
+  ifstream modelfile(filename.c_str());
+
+  if (!modelfile)
     {
-      istringstream arraystream(array);
-      arraystream >> model->m_sens;
+      LOG_FATAL_STR("Failed to open dipole model: " << filename);
+      exit(EXIT_FAILURE);
     }
+
+  modelfile >> model->m_sens;
+
+  modelfile.close();
 
   return model;
 }

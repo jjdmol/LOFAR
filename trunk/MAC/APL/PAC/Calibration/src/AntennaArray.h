@@ -69,8 +69,8 @@ namespace CAL
 
     friend class AntennaArrayLoader;
 
-    blitz::Array<double, 3> m_pos;      // three dimensions, Nantennas, Npol, Ncoordinates (x,y,z)
-    blitz::Array<int, 2>    m_rcuindex; // the index of the rcu to which a dipole is connected
+    blitz::Array<double, 3> m_pos;      // three dimensions, Nantennas x Npol x 3 (x,y,z)
+    blitz::Array<int, 2>    m_rcuindex; // the index of the rcu to which a dipole is connected, dimensions Nantennas x Npol
   };
 
   class AntennaArrayLoader

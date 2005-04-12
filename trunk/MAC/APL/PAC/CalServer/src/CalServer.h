@@ -51,6 +51,8 @@ namespace CAL
      * calibration server to call the calibrate method of the RemoteStationCalibration
      * class.
      * It loads all relevant configuration files and calls the calibration routine.
+     * After completing the calibration it writes two result files:
+     *   gains.out and quality.out.
      */
     void calibrate();
 
@@ -79,10 +81,11 @@ namespace CAL
     /**
      * List of defined spectral windows.
      */
-    std::vector<SpectralWindow> m_spws;   // vector of spectral windows (read from config file)
-    std::vector<AntennaArray>   m_arrays; // vector of antenna arrays (read from config file)
-    /*const*/ DipoleModel*          m_dipolemodel;   // dipole model
-    const ACC*                  m_acc;           // ACC matrix
+    std::vector<SpectralWindow> m_spws;        // vector of spectral windows (read from config file)
+    std::vector<AntennaArray>   m_arrays;      // vector of antenna arrays (read from config file)
+    /*const*/ DipoleModel*      m_dipolemodel; // dipole model
+    const ACC*                  m_acc;         // ACC matrix
+    const SourceCatalog*        m_catalog;     // source catalog
 
     /**
      * Client/Server management member variables.
