@@ -125,7 +125,7 @@ prelude = << PRELUDE_END
   /**
    * Output operators for the system status types.
    */ 
-  inline std::ostream& operator<<(std::ostream& s, const EPA_Protocol::BoardStatus&  stat)
+  inline std::ostream& operator<<(std::ostream& s, const BoardStatus&  stat)
   {
     return s << "[" << std::endl
 	     << "voltage_15   =" << int(stat.rsp.voltage_15)    << ", " << std::endl
@@ -256,12 +256,12 @@ event = {
   dir = IN;
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   param = {
     name = "payload";
-    type = "EPA_Protocol::MEPData";
+    type = "MEPData";
     userdefined;
   };
 };
@@ -272,7 +272,7 @@ event = {
   dir = IN;
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
 };
@@ -283,7 +283,7 @@ event = {
   dir = OUT;
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
 };
@@ -294,7 +294,7 @@ event = {
   dir = IN;
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
 };
@@ -305,12 +305,12 @@ event = {
   dir = IN;
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   param = {
     name = "payload";
-    type = "EPA_Protocol::MEPData";
+    type = "MEPData";
     userdefined;
   };
 };
@@ -321,7 +321,7 @@ event = {
   dir = OUT;
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
 };
@@ -336,7 +336,7 @@ event = {
   dir = OUT; // read-only register
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
 
@@ -345,7 +345,7 @@ event = {
    */
   param = {
     name = "board";
-    type = "EPA_Protocol::BoardStatus";
+    type = "BoardStatus";
   };
 };
 
@@ -355,7 +355,7 @@ event = {
   dir = OUT; // read-only register
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   param = {
@@ -378,7 +378,7 @@ event = {
   dir = INOUT; // read-write register
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   param = {
@@ -393,7 +393,7 @@ event = {
   dir = INOUT; // read-write register
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
 };
@@ -404,7 +404,7 @@ event = {
   dir = INOUT; // read-write register
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   // params to be determined
@@ -416,7 +416,7 @@ event = {
   dir = INOUT; // read-write register
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   param = {
@@ -447,12 +447,12 @@ event = {
   dir = INOUT; // read-write register
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   param = {
     name = "samples";
-    type = "int16[EPA_Protocol::N_WAVE_SAMPLES]";
+    type = "int16[N_WAVE_SAMPLES]";
   };
 };
 
@@ -462,7 +462,7 @@ event = {
   dir = INOUT; // read-write register
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   param = {
@@ -477,12 +477,12 @@ event = {
   dir = INOUT; // read-write register
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   param = {
     name = "coef";
-    type = "int16[EPA_Protocol::N_COEF]";
+    type = "int16[N_COEF]";
   };
 };
 
@@ -492,12 +492,12 @@ event = {
   dir = OUT;
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   param = {
     name = "stat";
-    type = "uint32[EPA_Protocol::N_STATS]";
+    type = "uint32[N_STATS]";
   };
 };
 
@@ -507,7 +507,7 @@ event = {
   dir = INOUT; // read-write register
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   param = {
@@ -526,7 +526,7 @@ event = {
   dir = INOUT; // read-write register
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   param = {
@@ -541,7 +541,7 @@ event = {
   dir = INOUT; // read-write register
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   param = {
@@ -556,7 +556,7 @@ event = {
   dir = INOUT; // read-write register
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   param = {
@@ -571,7 +571,7 @@ event = {
   dir = INOUT; // read-write register
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   param = {
@@ -586,7 +586,7 @@ event = {
   dir = INOUT; // read-write register
   param = {
     name = "hdr";
-    type = "EPA_Protocol::MEPHeader";
+    type = "MEPHeader";
     userdefined;
   };
   param = {
