@@ -24,16 +24,17 @@ RSPDriver.SOFTPPS=0
 # Specify the base index of the RSP board ethernet MAC address
 # The RSP boards addresses will be numbered consecutively.
 #
-# RSPDriver.MAC_BASE=1 # Start from address: 00:00:00:00:00:MAC_BASE
+# Start from address: 00:00:00:00:00:MAC_BASE
+# RSPDriver.MAC_BASE=1
 
 #
 # Alternatively specify all MAC addresses explicitly
 # as MAC_ADDR0..MAC_ADDR23
 # In this case you must leave RSPDriver.MAC_BASE unspecified
 #
-RSPDriver.MAC_ADDR_LCU=00:60:97:09:C5:B0 # lofar26 MAC address
-#RSPDriver.MAC_ADDR_0=00:60:97:09:C5:B0 # lofar26 MAC address
-#RSPDriver.MAC_ADDR_0=00:0A:5E:46:5D:ED   # lofar27 MAC address
+
+# MAC_ADDR_LCU is the lofar26 MAC address
+RSPDriver.MAC_ADDR_LCU=00:50:04:32:B8:5C
 RSPDriver.MAC_ADDR_0=00:00:00:00:00:01
 RSPDriver.MAC_ADDR_1=00:00:00:00:00:02
 RSPDriver.MAC_ADDR_2=00:00:00:00:00:03
@@ -63,14 +64,14 @@ RSPDriver.MAC_ADDR_23=00:00:00:00:00:17
 # Ethernet interface on which to contact the RSP boards.
 # This interface would normally be connected to the switch.
 #
-RSPDriver.IF_NAME=eth1 # changed to eth1 because eth1 on lofar26 support jumbo (9000) frames
+RSPDriver.IF_NAME=eth2
 
 #
 # Make sure that initially the
 # beamlet statistics match the subband statistics
 #
 RSPDriver.IDENTITY_WEIGHTS=1
-RSPDriver.FIRST_SUBBAND=300
+RSPDriver.FIRST_SUBBAND=465
 
 #
 # Select LOOPBACK_MODE mode

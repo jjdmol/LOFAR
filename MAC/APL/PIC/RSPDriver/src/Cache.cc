@@ -74,7 +74,7 @@ CacheBuffer::CacheBuffer()
     // Set subbands selection in increasing value
     //
     secondIndex i;
-    m_subbandselection()(Range::all(), Range::all()) = i + GET_CONFIG("RSPDriver.FIRST_SUBBAND", i);
+    m_subbandselection()(Range::all(), Range::all()) = (i + GET_CONFIG("RSPDriver.FIRST_SUBBAND", i) % MEPHeader::N_SUBBANDS);
   }
 
   m_rcusettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
