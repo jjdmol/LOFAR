@@ -91,10 +91,10 @@ BeamServerTask::BeamServerTask(string name, int n_blps)
   m_pos = 0;
   m_spw_refcount = 0;
 
-  istringstream config_positions(GET_CONFIG_STRING("RS.ANTENNA_POSITIONS"));
+  istringstream config_positions(GET_CONFIG_STRING("RS.LBA_POSITIONS"));
   config_positions >> m_pos;
 
-  LOG_INFO_STR("ANTENNA_POSITIONS = " << m_pos);
+  LOG_INFO_STR("RS.LBA_POSITIONS = " << m_pos);
 
   // initialize weight matrix
   m_weights   = complex<W_TYPE>(0,0);
