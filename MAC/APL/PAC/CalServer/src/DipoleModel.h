@@ -42,15 +42,17 @@ namespace CAL
 
     /**
      * Get reference to the dipole model array.
+     * @return The dipole model with dimensions:
+     * 2 (0=phi, 1=theta) x 50 (l) x 50 (m) x 24 (frequency planes)
      */
-    blitz::Array<std::complex<double>, 3>& getModel() { return m_sens; }
+    blitz::Array<std::complex<double>, 4>& getModel() { return m_sens; }
 
   private:
 
     friend class DipoleModelLoader; // to access m_sens
 
     std::string                           m_name;
-    blitz::Array<std::complex<double>, 3> m_sens;
+    blitz::Array<std::complex<double>, 4> m_sens;
   };
 
   class DipoleModelLoader
@@ -62,10 +64,11 @@ namespace CAL
      *
      * File format: Blitz++ array of appropriate dimensions.
      * 
-     * @param filename Name of the input file.
+     * @param name Name of the model.
+     * @param sens 4-dimensional sensitivity array.
      * @return The newly allocated dipole model instance.
      */
-    static /*const*/ DipoleModel* loadFromBlitzString(std::string name, std::string array);
+    static /*const*/ DipoleModel* loadFromFile(std::string filename);
   };
 
 };

@@ -24,25 +24,28 @@
 #ifndef REMOTESTATIONCALIBRATION_H_
 #define REMOTESTATIONCALIBRATION_H_
 
-#include "SubArray.h"
-#include "CalibrationResult.h"
+#include "SourceCatalog.h"
+#include "DipoleModel.h"
 #include "CalibrationAlgorithm.h"
+#include "CalibrationResult.h"
+#include "SubArray.h"
 
 namespace CAL
 {
   class RemoteStationCalibration : public CalibrationAlgorithm
     {
     public:
-      //RemoteStationCalibration() {}
+      RemoteStationCalibration(const SourceCatalog& catalog, const DipoleModel& dipolemodel);
+
       /**
        * Destructor: delete any dynamically allocated member variables
        */
       virtual ~RemoteStationCalibration() {}
 
-      virtual void calibrate(const SubArray& subarray, const ACC& acc, CalibrationResult& result) = 0;
+      virtual void calibrate(const SubArray& subarray, const ACC& acc, CalibrationResult& result);
       
     private:
-      // any member variable needed to store local state
+      // member variables needed to store local state
     };
 };
 

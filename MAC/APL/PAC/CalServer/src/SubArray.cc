@@ -23,6 +23,7 @@
 
 #include "SubArray.h"
 #include "CalibrationInterface.h"
+#include <Common/LofarLogger.h>
 
 using namespace CAL;
 using namespace std;
@@ -33,6 +34,11 @@ SubArray::SubArray(string                 name,
 		   const Array<bool, 2>&  select,
 		   const SpectralWindow&  spw) : AntennaArray(name, pos), m_spw(spw)
 {
+  // assert sizes
+  ASSERT(select.extent(firstDim) == pos.extent(firstDim)
+	 && select.extent(secondDim) == pos.extent(secondDim)
+	 && pos.extent(thirdDim) == 3);
+
   // make array at least big enough
   m_rcuindex.resize(pos.extent(firstDim), pos.extent(secondDim));
 
@@ -65,7 +71,7 @@ void SubArray::startCalibration(CalibrationInterface* cal, const ACC& acc)
   cal->calibrate(*this, acc, *m_result[BACK]);
 }
 
-bool SubArray::getCalibration(const CalibrationResult* cal, int buffer)
+bool SubArray::getCalibration(const CalibrationResult*& cal, int buffer)
 {
   cal = 0;
 

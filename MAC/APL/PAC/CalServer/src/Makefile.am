@@ -18,7 +18,10 @@ BUILT_SOURCES = \
 	CalServer.conf \
 	SpectralWindow.conf \
 	DipoleModel.conf \
-	ACC.conf
+	SourceCatalog.conf \
+	Antennas.conf \
+	ACC.conf \
+	CalServer.log_prop
 
 EXTRA_DIST = \
 	CAL_Protocol.ph
@@ -27,12 +30,15 @@ sysconf_DATA = \
 	CalServer.conf \
 	SpectralWindow.conf \
 	DipoleModel.conf \
-	ACC.conf
+	SourceCatalog.conf \
+	Antennas.conf \
+	ACC.conf \
+	CalServer.log_prop
 
 include_HEADERS = \
 	$(top_builddir)/src/CAL_Protocol.ph
 
-%.properties: %.properties.in
+%.log_prop: %.log_prop.in
 	cp $< $@
 
 %.conf: %.conf.in
@@ -41,6 +47,7 @@ include_HEADERS = \
 lib_LTLIBRARIES = libcal.la
 
 libcal_la_SOURCES = \
+	Documentation.h \
 	$(top_builddir)/src/CAL_Protocol.cc \
 	ACC.h \
 	ACC.cc \

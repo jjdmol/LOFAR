@@ -21,6 +21,8 @@
 //#
 //#  $Id$
 
+#include "SourceCatalog.h"
+#include "DipoleModel.h"
 #include "RemoteStationCalibration.h"
 
 #include <blitz/array.h>
@@ -29,30 +31,41 @@
 using namespace CAL;
 using namespace blitz;
 using namespace std;
+using namespace RSP_Protocol;
+
+RemoteStationCalibration::RemoteStationCalibration(const SourceCatalog& catalog, const DipoleModel& dipolemodel)
+  : CalibrationAlgorithm(catalog, dipolemodel)
+{
+}
 
 void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& acc, CalibrationResult& result)
 {
-  /**
-   * Parameter access:
-   *
-   * this->getACC():           get reference to the ACC matrix
-   * this->getDipoleModel():   get const reference to the dipole sensitivity/gain model
-   * this->getSourceCatalog(): get const reference to the sky model
-   *
-   * subarray.getSPW():        get const reference to the spectral window
-   * subarray.getAntennaPos(): get const reference to the array with dipole positions
-   */
+  const SpectralWindow&   spw = subarray.getSPW();        // get spectral window
+  const Array<double, 3>& pos = subarray.getAntennaPos(); // get antenna positions
 
-  const SpectralWindow&  spw = subarray.getSPW();
-  const Array<double, 3> pos = subarray.getAntennaPos();
+  const DipoleModel&   dipolemodel = getDipoleModel();    // get dipole model
+  const SourceCatalog& sources     = getSourceCatalog();  // get sky model
 
-  cout << "calibrate: spectral_window=" << spw.getName() << endl;
+  cout << "calibrate: spectral window name=" << spw.getName() << endl;
+  cout << "calibrate: subband width=" << spw.getSubbandWidth() << " Hz" << endl;
+  cout << "calibrate: num_subbnads=" << spw.getNumSubbands() << endl;
   cout << "calibrate: subarray name=" << subarray.getName() << endl;
   cout << "calibrate: num_antennas=" << subarray.getNumAntennas() << endl;
-  cout << "calibrate: sizeof(ACC)=" << acc.getSize() * sizeof(complex<double>) << endl;
 
-  // when finished
-  result.setComplete(true);
+  //find_rfi_free_channels();
+  for (int sb = 0; sb < spw.getNumSubbands(); sb++)
+    {
+      Timestamp acmtime;
+      const Array<complex<double>, 4> acm = acc.getACM(sb, acmtime);
+
+      //localsource = make_local_sky_model(sources, acmtime);
+      //R0 = make_model_ACM(localsources, dipolemodel, );
+      //compute_gains(acm, R0, pos, spw.getSubbandFreq(sb), Rtest, result);
+      //compute_quality(Rtest, sb, result);
+    }
+  //interpolate_bad_subbands();
+   
+  result.setComplete(true); // when finished
 }
 
 

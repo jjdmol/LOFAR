@@ -25,27 +25,11 @@
 
 using namespace CAL;
 
-void CalibrationAlgorithm::setACC()
+CalibrationAlgorithm::CalibrationAlgorithm(const SourceCatalog& catalog, const DipoleModel& dipolemodel)
+  : m_catalog(catalog), m_dipolemodel(dipolemodel)
 {
 }
 
-void CalibrationAlgorithm::getACC()
+CalibrationAlgorithm::~CalibrationAlgorithm()
 {
 }
-
-void CalibrationAlgorithm::setSourceCatalog()
-{
-}
-
-void CalibrationAlgorithm::getSourceCatalog()
-{
-}
-
-void CalibrationAlgorithm::setDipoleModel()
-{
-}
-
-void CalibrationAlgorithm::getDipoleModel()
-{
-}
-

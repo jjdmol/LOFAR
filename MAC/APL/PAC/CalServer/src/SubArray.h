@@ -65,7 +65,7 @@ namespace CAL
      * Get calibration result (if available).
      * @param cal Calibration result
      */
-    bool getCalibration(const CalibrationResult* cal, int buffer = FRONT);
+    bool getCalibration(const CalibrationResult*& cal, int buffer = FRONT);
 
     /**
      * Abort background calibration.

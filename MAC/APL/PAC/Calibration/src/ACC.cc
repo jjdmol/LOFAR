@@ -38,7 +38,7 @@ ACC::~ACC()
 {
 }
 
-const Array<complex<double>, 4> ACC::getACM(int subband, Timestamp& timestamp)
+const Array<complex<double>, 4> ACC::getACM(int subband, Timestamp& timestamp) const
 {
   timestamp = Timestamp(0,0);
 

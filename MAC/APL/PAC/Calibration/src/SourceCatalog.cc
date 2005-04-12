@@ -23,6 +23,12 @@
 
 #include "SourceCatalog.h"
 
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+#include <fstream>
+
 using namespace CAL;
 using namespace std;
 using namespace blitz;
@@ -54,7 +60,36 @@ const Array<double, 2> SourceCatalog::getSourcePositions() const
 
 const SourceCatalog* SourceCatalogLoader::loadFromFile(string filename)
 {
-  SourceCatalog* catalog = new SourceCatalog(string("Cambridge Catalog(") + filename + string(")"));
+  SourceCatalog* catalog = new SourceCatalog(filename);
+
+  ifstream catfile(filename.c_str());
+
+  if (!catfile)
+    {
+      LOG_FATAL_STR("Failed to open source catalog: " << filename);
+      exit(EXIT_FAILURE);
+    }
+
+  string name, fluxstring;
+  double ra, dec;
+  Array<double, 2> flux;
+
+  while (!catfile.eof() && !catfile.fail())
+    {
+      getline(catfile, name);
+      if ("" == name) break;
+      catfile >> ra;
+      catfile >> dec;
+      catfile.ignore(80,'\n');
+      getline(catfile, fluxstring);
+
+      istringstream fluxstream(fluxstring);
+      fluxstream >> flux;
+
+      catalog->m_sources.push_back(Source(name, ra, dec, flux));
+    }
+
+  catfile.close();
 
   return catalog;
 }

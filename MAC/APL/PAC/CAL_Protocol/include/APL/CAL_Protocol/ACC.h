@@ -44,13 +44,19 @@ namespace CAL
      * @return The ACM for the specified subband is returned. If an invalid
      * subband is specified an empty array is returned.
      */
-    const blitz::Array<std::complex<double>, 4> getACM(int subband, RSP_Protocol::Timestamp& timestamp);
+    const blitz::Array<std::complex<double>, 4> getACM(int subband, RSP_Protocol::Timestamp& timestamp) const;
 
     /**
      * Get the size of the array.
      */
     int getSize() const { return m_acc.size(); }
-    
+
+    /**
+     * Get a reference to the ACC array.
+     * @return The 5-dimensional ACC array.
+     */
+    const blitz::Array<std::complex<double>, 5>& getACC() const { return m_acc; }
+
   private:
 
     friend class ACCLoader;
