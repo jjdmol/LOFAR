@@ -1,5 +1,5 @@
 
-DOCHDRS		 	= 			\
+INSTHDRS		 	= 			\
 DH_Empty.h					\
 DH_Example.h					\
 DH_Tester.h					\
@@ -21,6 +21,15 @@ CycBufferManager.h				\
 SynchronisityManager.h				\
 DataManager.h					
 
+NOINSTHDRS =
+
+TCCHDRS = 
+
+nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS = $(NOINSTHDRS)
+
+DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 
 lib_LTLIBRARIES 	= libcepframe.la
 
@@ -52,6 +61,3 @@ AM_LFLAGS		= -PSimulatorTokenize
 LEX_OUTPUT_ROOT		= lex.SimulatorTokenize
 
 include $(lofar_sharedir)/Makefile.common
-
-
-AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL

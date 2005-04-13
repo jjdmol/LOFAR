@@ -22,6 +22,8 @@
 #endif
 #define BUFSIZE 256
 
+using namespace LOFAR;
+
        int main()
 
        {
