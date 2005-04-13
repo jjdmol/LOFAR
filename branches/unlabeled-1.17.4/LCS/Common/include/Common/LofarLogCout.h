@@ -194,7 +194,6 @@ public:	\
 //# Note: only THROW needs to be defines here, the others are buiold on THROW
 //# in the LofarLogger.h file.
 
-#undef THROW
 // possible object debug status. 
 #define THROW(exc,msg)  { \
 	constructStream(msg) \

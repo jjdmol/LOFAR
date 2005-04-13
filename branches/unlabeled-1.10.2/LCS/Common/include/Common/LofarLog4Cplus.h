@@ -340,7 +340,6 @@ void	initTraceModule(void);
 //
 // This macro first sends a logrequest to logger <tt>\<module\>.EXCEPTION</tt>
 // before executing the real throw.
-#undef THROW
 #define THROW(exc,stream) { \
 	std::ostringstream	oss;	\
 	oss << stream;				\
