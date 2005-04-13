@@ -1,6 +1,6 @@
 lib_LTLIBRARIES 	= libtinycep.la
 
-DOCHDRS = \
+INSTHDRS = \
 Profiler.h					\
 SimulatorParseClass.h \
 TinyDataManager.h \
@@ -9,6 +9,16 @@ WorkHolder.h \
 Selector.h \
 Sel_Linked.h \
 Sel_RoundRobin.h 
+
+NOINSTHDRS =
+
+TCCHDRS = 
+
+nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS = $(NOINSTHDRS)
+
+DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 
 #bin_PROGRAMS 		= \
 # 			tinyCFmemcpy \
@@ -31,7 +41,7 @@ Sel_RoundRobin.h
 # CFinput_LDADD		= \
 #			libcepframe.la
 
-libtinycep_la_SOURCES = $(DOCHDRS) \
+libtinycep_la_SOURCES =  \
 Profiler.cc			\
 SimulatorParse.yy               \
 SimulatorParse.h                \
@@ -51,5 +61,3 @@ AM_LFLAGS               = -PSimulatorTokenize
 LEX_OUTPUT_ROOT         = lex.SimulatorTokenize
 
 include $(lofar_sharedir)/Makefile.common
-
-AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL

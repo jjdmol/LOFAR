@@ -33,7 +33,7 @@ using namespace LOFAR;
 %union {
 LOFAR::KeyValue* val;
 LOFAR::KeyValueMap* block;
-vector<LOFAR::KeyValue>* vec;
+LOFAR::vector<LOFAR::KeyValue>* vec;
 }
 
 %{
