@@ -57,10 +57,10 @@
 
 
 [io]
-COM1 = { SOCKET, ccc , "client localhost 27000" }       // The machine running the MACScheduler
-COM2 = { SOCKET, ccc , "server localhost 27001" }       // The TestHarness computer (This machine computer-name/IP-address)
-COM3 = { SOCKET, ccc , "server localhost 27002" }       // The TestHarness computer (This machine computer-name/IP-address)
-COM4 = { SOCKET, ccc , "client localhost 27003" }       // The TestHarness computer (This machine computer-name/IP-address)
+COM1 = { SOCKET, ccc , "client localhost 27000" } // MACScheduler
+COM2 = { SOCKET, ccc , "server localhost 27001" } // BeamServer
+COM3 = { SOCKET, ccc , "server localhost 27002" } // VBStartDaemon
+COM4 = { SOCKET, ccc , "client localhost 27003" } // VirtualBackend
 
 // For serial ports: COM1 = { COM1, ccc , "Baud=1200 parity=N data=8 stop=1 octs=on" }
 
@@ -182,8 +182,7 @@ t_SD_Result             = { 4, 0x00000000, 0x00000006, ENUM,
                                0x00000004 : "PARAMETERNOTFOUND",
                                0x00000005 : "INCORRECT_NUMBER_OF_PARAMETERS",
                                0x00000006 : "UNKNOWN_COMMAND"
-};
-
+                          }
 
 //
 // Signal ID's
@@ -376,25 +375,6 @@ F_STARTDAEMON_SCHEDULED =
   result                    : t_SD_Result
 }
 
-E_STARTDAEMON_SCHEDULE =
-{
-  0x01, // signal Id
-  0x4C, // Direction and protocol
-  0x68000000, // message payload length, big endian
-  logicalDeviceType           : t_SD_LogicalDeviceTypes,
-  0x32000000, // string length, big endian
-  taskName                    : t_String50,
-  0x32000000, // string length, big endian
-  fileName                    : t_String50
-}
-
-E_STARTDAEMON_STOP =
-{
-  0x03, // signal Id
-  0x4C, // Direction and protocol
-  0x00000000 // message payload length, big endian
-}
-
 [events]
 // -------------------------------------------------------------------
 // -------------------------------SAS_Protocol------------------------
@@ -569,16 +549,20 @@ E_LOGICALDEVICE_RELEASE =
 // -------------------------------------------------------------------
 // ---------------------STARTDAEMON_Protocol------------------------
 // -------------------------------------------------------------------
+// If a parameter name is followed by an asterisk,
+//    (*), that parameter is used as the array size of the
+//    parameters which have a type followed by [].
+//
 E_STARTDAEMON_SCHEDULE =
 {
   0x01, // signal Id
   0x4C, // Direction and protocol
-  0x68000000, // message payload length, big endian
+  msgLength                   : t_B4,
   logicalDeviceType           : t_SD_LogicalDeviceTypes,
-  0x32000000, // string length, big endian
-  taskName                    : t_String50,
-  0x32000000, // string length, big endian
-  fileName                    : t_String50
+  taskNameLen*                : t_B4,
+  taskName                    : t_B1[],
+  fileNameLen*                : t_B4,
+  fileName                    : t_B1[]
 }
 
 E_STARTDAEMON_STOP =

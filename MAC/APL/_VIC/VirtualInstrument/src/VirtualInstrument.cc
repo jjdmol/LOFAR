@@ -27,6 +27,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <GCF/GCF_PVString.h>
+#include <GCF/GCF_PVDynArr.h>
 #include <APLCommon/APLUtilities.h>
 #include <APLCommon/StartDaemon_Protocol.ph>
 #include "VirtualInstrument.h"
@@ -43,6 +44,9 @@ namespace LOFAR
 namespace AVI
 {
 INIT_TRACER_CONTEXT(VirtualInstrument,LOFARLOGGER_PACKAGE);
+
+const string VirtualInstrument::VI_PROPNAME_CONNECTEDSTATIONS     = string("connectedStations");
+const string VirtualInstrument::VI_PROPNAME_DISCONNECTEDSTATIONS  = string("disconnectedStations");
 
 VirtualInstrument::VirtualInstrument(const string& taskName, const string& parameterFile) :
   LogicalDevice(taskName,parameterFile),
@@ -118,16 +122,21 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(GCFEvent& answer)
       GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
       if(pPropAnswer->result == GCF_NO_ERROR)
       {
-        bool scheduleSent=false;
+        GCFPValueArray stationsVector;
+
         TString2PropsetMap::iterator it=m_vtSchedulerPropertySets.begin();
-        while(!scheduleSent && it!=m_vtSchedulerPropertySets.end())
+        while(it!=m_vtSchedulerPropertySets.end())
         {
           if(strstr(pPropAnswer->pScope, it->second->getScope().c_str()) != 0)
           {
-            scheduleSent = _writeScheduleCommand(it->first,it->second);
+            _writeScheduleCommand(it->first,it->second);
           }
+          GCFPVString newItem(it->first);
+          stationsVector.push_back(&newItem);
           ++it;
         }
+        GCFPVDynArr newStations(LPT_STRING,stationsVector);
+        m_detailsPropertySet->setValue(VI_PROPNAME_CONNECTEDSTATIONS,newStations);
       }
       else
       {
@@ -144,6 +153,17 @@ void VirtualInstrument::concrete_handlePropertySetAnswer(GCFEvent& answer)
           }
           ++it;
         }
+
+        GCFPValueArray stationsVector;
+        it = m_disconnectedVTSchedulerPropertySets.begin();
+        while(it != m_disconnectedVTSchedulerPropertySets.end())
+        {
+          GCFPVString newItem(it->first);
+          stationsVector.push_back(&newItem);
+          ++it;
+        }
+        GCFPVDynArr newStations(LPT_STRING,stationsVector);
+        m_detailsPropertySet->setValue(VI_PROPNAME_DISCONNECTEDSTATIONS,newStations);
       }
       break;
     }

@@ -85,8 +85,13 @@ namespace APLCommon
       static const string LD_STATE_STRING_RELEASED;
 
       // property defines
+      static const string LD_PROPSET_TYPENAME;
       static const string LD_PROPNAME_COMMAND;
       static const string LD_PROPNAME_STATUS;
+      static const string LD_PROPNAME_STATE;
+      static const string LD_PROPNAME_PREPARETIME;
+      static const string LD_PROPNAME_STARTTIME;
+      static const string LD_PROPNAME_STOPTIME;
       static const string LD_PROPNAME_CHILDREFS;
       
       // command defines
@@ -131,6 +136,7 @@ namespace APLCommon
 #endif
       
       typedef boost::shared_ptr<TRemotePort>  TPortSharedPtr;
+      APL_DECLARE_SHARED_POINTER(GCF::TM::GCFEvent)
 
       /**
       * returns true if the specified port is the logicalDevice SPP
@@ -139,18 +145,21 @@ namespace APLCommon
       bool _isServerPort(GCF::TM::GCFPortInterface& port);
       bool _isChildPort(GCF::TM::GCFPortInterface& port);
       bool _isChildStartDaemonPort(GCF::TM::GCFPortInterface& port, string& startDaemonKey);
-      void _sendToAllChilds(GCF::TM::GCFEvent& event);
+      void _sendToAllChilds(GCFEventSharedPtr eventPtr);
       void _disconnectedHandler(GCF::TM::GCFPortInterface& port);
       bool _isAPCLoaded() const;
       void _apcLoaded();
       void _doStateTransition(const TLogicalDeviceState& newState);
       void _handleTimers(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
       vector<string> _getChildKeys();
-      void _sendEvent(GCF::TM::GCFEvent& event, GCF::TM::GCFPortInterface& port);
+      void _sendEvent(GCFEventSharedPtr eventPtr, GCF::TM::GCFPortInterface& port);
       void _addChildPort(TPortSharedPtr childPort);
       void _sendScheduleToClients();
       string _getShareLocation() const;
       time_t _decodeTimeParameter(const string& timeStr) const;
+      time_t getPrepareTime() const;
+      time_t getStartTime() const;
+      time_t getStopTime() const;
 
       virtual void concrete_handlePropertySetAnswer(GCF::TM::GCFEvent& answer)=0;
       virtual GCF::TM::GCFEvent::TResult concrete_initial_state(GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p, TLogicalDeviceState& newState)=0;
@@ -174,7 +183,10 @@ namespace APLCommon
       APL_DECLARE_SHARED_POINTER(GCF::PAL::GCFMyPropertySet)
       
       PropertySetAnswer                     m_propertySetAnswer;
-      GCFMyPropertySetSharedPtr             m_propertySet;
+      GCFMyPropertySetSharedPtr             m_basePropertySet;
+      std::string                           m_basePropertySetName;
+      GCFMyPropertySetSharedPtr             m_detailsPropertySet;
+      std::string                           m_detailsPropertySetName;
       ACC::ParameterSet                     m_parameterSet;
 
       string                                m_serverPortName;
@@ -189,16 +201,15 @@ namespace APLCommon
       void _suspend();
       void _release();
 
-      APL_DECLARE_SHARED_POINTER(GCF::TM::GCFEvent)
       struct TBufferedEventInfo
       {
-        TBufferedEventInfo(time_t t,GCF::TM::GCFPortInterface* p,GCF::TM::GCFEvent* e) : 
+        TBufferedEventInfo(time_t t,GCF::TM::GCFPortInterface* p,GCFEventSharedPtr e) : 
           entryTime(t),
           port(static_cast<TRemotePort*>(p)),
           event(e){};
         
         time_t            entryTime;
-        TPortSharedPtr    port;
+        TRemotePort*      port;
         GCFEventSharedPtr event;
       };
       
@@ -224,6 +235,10 @@ namespace APLCommon
       unsigned long                         m_prepareTimerId; // actually: claim
       unsigned long                         m_startTimerId; // actually: active
       unsigned long                         m_stopTimerId; // actually: suspend
+      
+      time_t                                m_prepareTime; // in UTC, seconds since 1-1-1970
+      time_t                                m_startTime;   // in UTC, seconds since 1-1-1970
+      time_t                                m_stopTime;    // in UTC, seconds since 1-1-1970
 
       unsigned long                         m_retrySendTimerId;
       TEventBufferVector                    m_eventBuffer;

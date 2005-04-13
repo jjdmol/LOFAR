@@ -406,6 +406,11 @@ GCFEvent::TResult AVTLogicalDevice::suspended_state(GCFEvent& event, GCFPortInte
       _disconnectedHandler(port);
       break;
     
+    case LOGICALDEVICE_CLAIM:
+      TRAN(AVTLogicalDevice::claiming_state);
+      concreteClaim(port);
+      break;
+
     case LOGICALDEVICE_PREPARE:
     {
       TRAN(AVTLogicalDevice::preparing_state);

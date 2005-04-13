@@ -3,6 +3,15 @@ mac.ns.CCU1_VIC_VIStartDaemon.server.host=localhost
 mac.ns.CCU2_VIC_VIStartDaemon.server.type=TCP
 mac.ns.CCU2_VIC_VIStartDaemon.server.host=localhost
 
+mac.ns.PAC_VBStartDaemon.server.type=TCP
+mac.ns.PAC_VBStartDaemon.server.host=localhost
+mac.ns.PAC_VBStartDaemon.server.port=27002
+
+mac.top.VI1.PAC_VBStartDaemon.remoteservice=PAC_VBStartDaemon:server
+
+mac.ns.VI1.server.type=TCP
+mac.ns.VI1.server.host=localhost
+mac.ns.VI1.server.port=27003
 
 mac.ns.MACScheduler.VIparent_server.type=TCP
 mac.ns.MACScheduler.VIparent_server.host=localhost
@@ -11,4 +20,6 @@ mac.ns.MACScheduler.VIparent_server.host=localhost
 # because it depends on the VI name
 #
 mac.VirtualInstrument.pvss.cmdline=-proj MAC
+mac.VirtualInstrument.retryTimeout=3600
+mac.VirtualInstrument.retryPeriod=10
 

@@ -14,27 +14,56 @@
 
 [statemachines]
 
-Statemachine_MACScheduler (ready, stopBeamServer, bs_alloc_ack, bs_pointto_ack) =
+Statemachine_MACScheduler (ready, stopBeamServer, bs_alloc_ack, bs_pointto_ack, vbsd_scheduled) =
 {
-  s000  : F_SAS_SCHEDULE ( "VI1.ps" )                             ; s010.
-  s010  : E_SAS_RESPONSE ( 0x00000000 )                           ; s020.
-  s010  : SAS_RESPONSE (  )                                     ; error.
-  s020  : R_SIG ( bs_alloc_ack )                                ; s100.
-  s020  : TIMER(30)																							; timeout.
+// ------------------------------------------------------------------------------
+  s000  : F_SAS_SCHEDULE ( "VI1.ps" )                           ; s010.			// send schedule VI1
+  s010  : E_SAS_RESPONSE ( 0x00000000 )                         ; s020.			// wait for response
+  s010  : E_SAS_RESPONSE (  )                                   ; error.  	// invalid response received
+  s020  : R_SIG ( bs_alloc_ack )                                ; s030.			// wait for beam allocation acknowledge; sync with BeamServer statemachine
+  s020  : R_SIG ( vbsd_scheduled )                              ; s031.    	// or wait for VirtualBackend response; sync with VirtualBackend statemachine
+  s020  : TIMER(30)																							; timeout.	// or timeout
+  s030  : R_SIG ( vbsd_scheduled )                              ; s100.			// wait for VirtualBackend response; sync with VirtualBackend statemachine
+  s030  : TIMER(30)																							; timeout.	// or timeout
+  s031  : R_SIG ( bs_alloc_ack )                                ; s100.			// wait for beam allocation acknowledge; sync with BeamServer statemachine
+  s031  : TIMER(30)																							; timeout.	// or timeout
+// ------------------------------------------------------------------------------
 
-  s100  : SAS_CANCELSCHEDULE ( "VI1.ps" )                       ; s110.
-  s110  : SAS_RESPONSE ( 0x00000000 )                           ; s200.
 
-  s200  : SAS_SCHEDULE ( "VI2.ps" )                             ; s210.
-  s210  : SAS_RESPONSE ( 0x00000000 )                           ; s220.
-  s220  : R_SIG ( bs_alloc_ack )                                ; s300.
-  s220  : TIMER(30)																							; timeout.
+// ------------------------------------------------------------------------------
+  s100  : F_SAS_CANCELSCHEDULE ( "VI1.ps" )                     ; s110.			// cancel schedule VI1
+  s110  : E_SAS_RESPONSE ( 0x00000000 )                         ; s200.			// wait for response
+  s110  : E_SAS_RESPONSE (  )                                   ; error.  	// invalid response received
+// ------------------------------------------------------------------------------
 
-  s300  : SAS_UPDATESCHEDULE ( "VI1.ps" )                       ; s310.
-  s310  : SAS_RESPONSE ( 0x00000000 )                           ; s320.
-  s320  : R_SIG ( bs_alloc_ack )                                ; finish.
-  s320  : TIMER(30)																							; timeout.
+// ------------------------------------------------------------------------------
+  s200  : F_SAS_SCHEDULE ( "VI1.ps" )                           ; s210.			// send schedule VI1
+  s210  : E_SAS_RESPONSE ( 0x00000000 )                         ; s220.			// wait for response
+  s210  : E_SAS_RESPONSE (  )                                   ; error.  	// invalid response received
+  s220  : R_SIG ( bs_alloc_ack )                                ; s230.			// wait for beam allocation acknowledge; sync with BeamServer statemachine
+  s220  : R_SIG ( vbsd_scheduled )                              ; s231.    	// or wait for VirtualBackend response; sync with VirtualBackend statemachine
+  s220  : TIMER(30)																							; timeout.	// or timeout
+  s230  : R_SIG ( vbsd_scheduled )                              ; s300.			// wait for VirtualBackend response; sync with VirtualBackend statemachine
+  s230  : TIMER(30)																							; timeout.	// or timeout
+  s231  : R_SIG ( bs_alloc_ack )                                ; s300.			// wait for beam allocation acknowledge; sync with BeamServer statemachine
+  s231  : TIMER(30)																							; timeout.	// or timeout
+// ------------------------------------------------------------------------------
 
+// ------------------------------------------------------------------------------
+  s300  : F_SAS_UPDATESCHEDULE ( "VI1.ps" )                     ; s310.			// send schedule update VI1
+  s310  : E_SAS_RESPONSE ( 0x00000000 )                         ; s320.			// wait for response
+  s310  : E_SAS_RESPONSE (  )                                   ; error.  	// invalid response received
+  s320  : R_SIG ( bs_alloc_ack )                                ; s230.			// wait for beam allocation acknowledge; sync with BeamServer statemachine
+  s320  : R_SIG ( vbsd_scheduled )                              ; s231.    	// or wait for VirtualBackend response; sync with VirtualBackend statemachine
+  s320  : TIMER(30)																							; timeout.	// or timeout
+  s330  : R_SIG ( vbsd_scheduled )                              ; s400.			// wait for VirtualBackend response; sync with VirtualBackend statemachine
+  s330  : TIMER(30)																							; timeout.	// or timeout
+  s331  : R_SIG ( bs_alloc_ack )                                ; s400.			// wait for beam allocation acknowledge; sync with BeamServer statemachine
+  s331  : TIMER(30)																							; timeout.	// or timeout
+// ------------------------------------------------------------------------------
+
+  s400  : TIMER(1) 																							; finish.		// end of script
+// ------------------------------------------------------------------------------
   finish : S_SIG ( ready )
            S_SIG ( stopBeamServer )                             ; OK.
   OK     : TIMER(60)																						; OK.
@@ -47,30 +76,73 @@ Statemachine_BeamServer  ( stop, bs_alloc_ack, bs_pointto_ack ) =
 {
 VAR handle.
 
-  s000   : ABS_BEAMALLOC (, ,,,,,,,,,, ,,,,,,,,,, 
-                            ,,,,,,,,,, ,,,,,,,,,, 
-                            ,,,,,,,,,, ,,,,,,,,,, 
-                            ,,,,,,,,,, ,,,,,,,,,, 
-                            ,,,,,,,,,, ,,,,,,,,,, 
-                            ,,,,,,,,,, ,,,,,,,,,, 
-                            ,,,,,,,,)                           ; s010.
-  s000   : ABS_BEAMFREE  ( handle )                             ; s020.
-  s000   : ABS_BEAMPOINTTO (,,,,)                               ; s030.
-  s000   : ABS_WGSETTINGS (,)                                   ; s040.
-  s000   : ABS_WGENABLE                                         ; s000.
-  s000   : ABS_WGDISABLE                                        ; s000.
-  s000   : R_SIG( stop )                                        ; finish.
+  s000   : E_ABS_BEAMALLOC (, ,,,,,,,,,, ,,,,,,,,,, 
+           	                 ,,,,,,,,,, ,,,,,,,,,, 
+            	                ,,,,,,,,,, ,,,,,,,,,, 
+              	              ,,,,,,,,,, ,,,,,,,,,, 
+                	            ,,,,,,,,,, ,,,,,,,,,, 
+                  	          ,,,,,,,,,, ,,,,,,,,,, 
+                    	        ,,,,,,,,)                           ; s010.
+  s000   : E_ABS_BEAMFREE  ( handle )                             ; s020.
+  s000   : E_ABS_BEAMPOINTTO (,,,,)                               ; s030.
+  s000   : E_ABS_WGSETTINGS (,)                                   ; s040.
+  s000   : E_ABS_WGENABLE                                         ; s000.
+  s000   : E_ABS_WGDISABLE                                        ; s000.
+  s000   : R_SIG( stop )                                        	; finish.
   
   s010   : S_SIG( bs_alloc_ack )
-           ABS_BEAMALLOC_ACK ( 0x00000001, 0x00000000 )         ; s000.
+           F_ABS_BEAMALLOC_ACK ( 0x00000001, 0x00000000 )         ; s000.
   
-  s020   : ABS_BEAMFREE_ACK ( handle, 0x00000000 )              ; s000.
+  s020   : F_ABS_BEAMFREE_ACK ( handle, 0x00000000 )              ; s000.
   
-  s030   : S_SIG( bs_pointto_ack )                              ; s000.
+  s030   : S_SIG( bs_pointto_ack )                              	; s000.
 
-  s040   : ABS_WGSETTINGS_ACK ( 0x00000000 )                    ; s000.
+  s040   : F_ABS_WGSETTINGS_ACK ( 0x00000000 )                    ; s000.
 
   finish : TERMINATE ; finish.
+}
+
+Statemachine_VBStartDaemon ( stop, vbsd_scheduled, vbsd_connected ) =
+{
+  s000   : E_STARTDAEMON_SCHEDULE (,,,,,)                         ; s010.
+  s000   : E_STARTDAEMON_STOP				                              ; finish.
+  s000   : R_SIG( stop )                                        	; finish.
+  
+  s010   : F_STARTDAEMON_SCHEDULED ( 0x00000000 )         				
+           S_SIG( vbsd_scheduled )
+           S_SIG( vbsd_connected )																; s000.
+  
+  finish : TERMINATE ; finish.
+}
+
+Statemachine_VirtualBackend  ( stop, vbsd_connected ) =
+{
+  s000   : R_SIG( vbsd_connected )																; s010.
+  
+  s010   : F_LOGICALDEVICE_CONNECT( "VB1" )												; s020.
+  
+  s020   : E_LOGICALDEVICE_CONNECTED (0x00000000)                 ; s030.
+  s020   : E_LOGICALDEVICE_CONNECTED ( )                          ; error.
+  
+	s030   : E_LOGICALDEVICE_SCHEDULE ()                           	; s040.
+	s030   : E_LOGICALDEVICE_CANCELSCHEDULE                         ; s050.
+	s030   : E_LOGICALDEVICE_CLAIM                           				; s060.
+	s030   : E_LOGICALDEVICE_PREPARE                           			; s070.
+	s030   : E_LOGICALDEVICE_RESUME                           			; s080.
+	s030   : E_LOGICALDEVICE_SUSPEND                           			; s090.
+	s030   : E_LOGICALDEVICE_RELEASE                           			; s100.
+  s030   : R_SIG( stop )                                        	; finish.
+  
+  s040   : F_LOGICALDEVICE_SCHEDULED ( 0x00000000 )         			; s030.
+  s050   : F_LOGICALDEVICE_SCHEDULECANCELLED ( 0x00000000 )  			; s030.
+  s060   : F_LOGICALDEVICE_CLAIMED 																; s030.
+  s070   : F_LOGICALDEVICE_PREPARED 															; s030.
+  s080   : F_LOGICALDEVICE_RESUMED 																; s030.
+  s090   : F_LOGICALDEVICE_SUSPENDED 															; s030.
+  s100   : F_LOGICALDEVICE_RELEASED 															; s030.
+  
+  finish : TERMINATE ; finish.
+  error  : TERMINATE ; error.
 }
 
 WaitUntilTestEnd (SM1_ready) =
@@ -80,9 +152,14 @@ WaitUntilTestEnd (SM1_ready) =
 }
 
 [testscript]
-VAR     SM1_done, SM2_stop, bs_alloc_ack, bs_pointto_ack.
+VAR     SM1_done, SM2_stop, SM3_stop, SM4_stop, bs_alloc_ack, bs_pointto_ack, vbsd_scheduled, vbsd_connected.
 
-COM1 :  Statemachine_MACScheduler (SM1_done, SM2_stop, bs_alloc_ack, bs_pointto_ack)
+COM1 :  Statemachine_MACScheduler (SM1_done, SM2_stop, bs_alloc_ack, bs_pointto_ack, vbsd_scheduled)
         WaitUntilTestEnd (SM1_done).
 
 COM2 :  Statemachine_BeamServer   (SM2_stop, bs_alloc_ack, bs_pointto_ack).
+
+COM3 :  Statemachine_VBStartDaemon (SM3_stop, vbsd_scheduled, vbsd_connected).
+
+COM4 :  Statemachine_VirtualBackend (SM4_stop, vbsd_connected).
+
