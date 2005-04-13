@@ -26,7 +26,7 @@
 // \file TH_ShMem.h
 // In-memory transport mechanism between different processes
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Needed for shmem
 #define USE_PUBLIC_MALLOC_WRAPPERS

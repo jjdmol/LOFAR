@@ -26,7 +26,7 @@
 // \file Transporter.h
 // Class which handles transport between DataHolders
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
 #include <Transport/TransportHolder.h>

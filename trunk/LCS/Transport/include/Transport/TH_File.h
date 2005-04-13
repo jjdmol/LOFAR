@@ -25,7 +25,7 @@
 
 // \file TH_File.h
 // To/from file transport mechanism
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Transport/TransportHolder.h>
 #include <stdio.h>

@@ -23,7 +23,7 @@
 #ifndef TRANSPORT_BASESIM_H
 #define TRANSPORT_BASESIM_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #define MPI_OPT
 

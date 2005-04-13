@@ -28,7 +28,7 @@
 #define CEPFRAME_CORBA_TRANSPORT_IN_H
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #endif
 
 #include "CEPFrame/Corba/CorbaTransport.h"

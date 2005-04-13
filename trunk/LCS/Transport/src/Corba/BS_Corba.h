@@ -26,7 +26,7 @@
 #define CEPFRAME_BS_CORBA_H
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #endif
 
 #include <pthread.h>
