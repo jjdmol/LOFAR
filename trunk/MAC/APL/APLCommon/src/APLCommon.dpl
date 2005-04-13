@@ -1,0 +1,15 @@
+# ascii dump of database
+
+# DpType
+TypeName
+TAplStartDaemon.TAplStartDaemon	1#1
+	command	25#2
+	status	21#3
+TAplLogicalDevice.TAplLogicalDevice	1#1
+	command	25#2
+	status	21#9
+	state	25#4
+	prepareTime	21#10
+	startTime	21#11
+	stopTime	21#12
+	__childs	9#8
