@@ -55,7 +55,8 @@ ACDaemon::ACDaemon(string	aParamFile) :
 
 	// Try to read in an old administration if it is available.
 	itsACPool = new ACRequestPool(itsParamSet->getInt("ACDaemon.ACpoolport"),
-								  itsParamSet->getInt("ACDaemon.ACpoolsize"));
+								  itsParamSet->getInt("ACDaemon.ACpoolsize"),
+								  itsParamSet->getString("ACDaemon.ACnodeIP"));
 	itsACPool->load(itsParamSet->getString("ACDaemon.adminfile"));
 
 }
@@ -144,6 +145,7 @@ void ACDaemon::handlePingMessage()
 	if (buffer[0] == AC_LEAVING_SIGN) {
 		LOG_DEBUG_STR(&buffer[1] << " leaves ACDaemon pool");
 		itsACPool->remove(&buffer[1]);
+		itsACPool->save(itsParamSet->getString("ACDaemon.adminfile"));
 		return;
 	}
 

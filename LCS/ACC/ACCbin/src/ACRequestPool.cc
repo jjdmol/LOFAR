@@ -34,10 +34,13 @@
 namespace LOFAR {
   namespace ACC {
 
-ACRequestPool::ACRequestPool(uint16	firstPortNr, uint16	nrOfPorts) :
+ACRequestPool::ACRequestPool(uint16			firstPortNr, 
+							 uint16			nrOfPorts,
+							 const string&	firstNodeIP) :
 	itsFirstPort(firstPortNr),
 	itsLastPort (firstPortNr+nrOfPorts-1),
-	itsNextPort (firstPortNr)
+	itsNextPort (firstPortNr),
+	itsFirstNodeIP(firstNodeIP)
 {}
 
 ACRequestPool::~ACRequestPool()
@@ -169,11 +172,7 @@ bool	ACRequestPool::load (const string&		aFilename)
 bool ACRequestPool::assignNewPort(ACRequest*	anACR) 
 {
 	// TODO: Assign a machine in a clever way.
-#if defined (__APPLE__)
-	anACR->itsAddr = htonl(0xA9FE3264);
-#else
-	anACR->itsAddr = htonl(0xC0A80175);
-#endif
+	anACR->itsAddr = inet_addr(itsFirstNodeIP.c_str());
 
 	uint16	startingPort = itsNextPort;
 	uint16	freePort;
@@ -213,7 +212,6 @@ bool ACRequestPool::assignNewPort(ACRequest*	anACR)
 				   " assigned to " << anACR->itsRequester);
 
 	return (true);
-
 }
 
 //

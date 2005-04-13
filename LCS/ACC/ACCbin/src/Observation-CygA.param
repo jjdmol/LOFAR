@@ -28,9 +28,11 @@ AC.process[3].ID = tAnother[1]			# tAnother3
 #
 # metadata about a proces
 testAppl.tPCClient[0].startstoptype = cmdline
+testAppl.tPCClient[0].executable = ./APTest
 testAppl.tPCClient[0].object = Cyg-A
 
 testAppl.tAnother[0].startstoptype = cmdline
+testAppl.tAnother[0].executable = ./APTest
 testAppl.tAnother[0].object = Cyg-A
 
 # Process related parameters

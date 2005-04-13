@@ -1,8 +1,19 @@
-# startAP.sh procID executable paramfile
+# startAP.sh nodename procID executable paramfile
 #
-# start the given executable and creates a corresponding stop script
+# nodename		    hostname[.domain]
+# procID			processname<nr>
+# executable		processname
+# parameterfile		procID.ps
 #
-$2 $3 &
+# start the given executable and creates a corresponding pid file for stopping the process.
+#
+
+# start process
+# TODO: in future something like: rsh $1 start_script $2 $3 $4
+$3 $4 & 
+
+# get its pid
 pid=`echo $!`
-echo "pid=$pid"
-echo "$pid" > $1.pid
+
+# construct pid file for stop shell
+echo "$pid" > $2.pid
