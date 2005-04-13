@@ -338,4 +338,107 @@ source 2
 10 x 2 [ 100e6 10 105e6 12 ]
 \endcode
 
+\section development Developing a calibration algorithm
+
+To develop a new calibration algorithm the
+CAL::RemoteStationCalibration class implementation must completed. A
+skeleton implementation is provided in the source code. To build the
+source the developer needs to have a LOFAR build environment.
+
+\subsection buildenv Setting up the LOFAR build environment
+
+The calibration server software requires the following LOFAR
+packages. The corresponding CVS tag is mentioned in brackets.
+
+\li LOFAR/autoconf_share  (autoconf_share-2_1)
+\li LOFAR/LCS/Common      (LCS-Common-2_1)
+\li LOFAR/LCS/Transport   (LCS-Transport-1_1)
+\li LOFAR/MAC             (MAC-GCF-5_0)
+\li LOFAR/MAC/APL         (HEAD)
+
+To check out these packages from CVS setup CVSROOT for example in
+~/.bashrc.
+\code
+export CVSROOT=:pserver:wierenga@cvs.astron.nl:/cvs/cvsroot
+\endcode
+
+Issue the \c cvs \c login command to login to CVS. Then check out the
+packages using the following command:
+\code
+# general
+cvs co -r <tag> <package>
+# for example
+cvs co -r LCS-Common-2_1 LOFAR/LCS/Common
+\endcode
+
+\subsection compile Compiling the source
+
+Each package is configured and compiled with the same set of
+commands. The following fragment shows how the \c LCS/Common package
+is configured and compiled. The directory in which the command should
+be executed is shown in the prompt.
+
+\code
+# build and install LCS/Common
+LOFAR/LCS/Common > ./bootstrap
+LOFAR/LCS/Common > mkdir -p build/gnu_debug
+LOFAR/LCS/Common/build/gnu_debug > ../../lofarconf && make install
+\endcode
+
+Follow the same pattern to configure and build the all packages in the
+order shown below.
+
+\code
+LOFAR/LCS/Common
+LOFAR/LCS/Transport
+LOFAR/MAC/Test/Suite
+LOFAR/MAC/GCF/GCFCommon
+LOFAR/MAC/GCF/TM
+LOFAR/MAC/GCF/Protocols
+LOFAR/MAC/GCF/PALlight
+LOFAR/MAC/APL/PAC/RSPDriver
+LOFAR/MAC/APL/PAC/Calibration
+\endcode
+
+\subsection running Running the code
+
+The \c make \c install command installs the compiled packages in the
+\c LOFAR/installed/gnu_debug directory. The input configuration files
+are installed in the \c LOFAR/installed/gnu_debug/etc directory. The
+\c CalServer executable is installed in \c
+LOFAR/installed/gnu_debug/bin. To run the CalServer it needs to have
+the \c *.conf files to be in the \c bin directory. The simplest way to
+achieve this is to create symbolic links from the \c etc directory to
+the \c bin directory like this:
+
+\code
+LOFAR/installed/gnu_debug/bin > ln -s ../etc/\*.conf .
+\endcode
+
+An example output of running the CalServer is show below.
+\code
+> cd LOFAR/installed/gnu_debug/bin
+> ./CalServer
+050413 094943,723 [single] TRACE  TRC - TRACE module activated
+13-04-05 09:49:43 INFO  APL.PAC.Calibration - Program ./CalServer has started [tion/src/CalServer.cc:372]
+calibrate: spectral window name="80"
+calibrate: subband width=156250 Hz
+calibrate: num_subbnads=512
+calibrate: subarray name=FTS-1
+calibrate: num_antennas=96
+13-04-05 09:51:08 INFO  APL.PAC.Calibration - CalServer execution time: 85 seconds [tion/src/CalServer.cc:381]
+13-04-05 09:51:08 INFO  APL.PAC.Calibration - Normal termination of program [tion/src/CalServer.cc:399]
+\endcode
+
+\subsection impl Implementing CAL::RemoteStationCalibration::calibrate()
+
+It is now up to you as developer to implement the
+CAL::RemoteStationCalibration::calibrate() method to perform the
+calibration. The source for this class can be found in \c
+LOFAR/MAC/APL/PAC/Calibration/src. To re-build the CalServer go to \c
+LOFAR/MAC/APL/PAC/Calibration/build/gnu_debug and type \c make \c
+install.
+
+That's all!
+
 */
