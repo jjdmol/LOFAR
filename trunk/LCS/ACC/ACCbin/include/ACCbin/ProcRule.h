@@ -44,6 +44,7 @@ class ProcRule
 public:
 	ProcRule(const string&	aNodeName,
 			 const string&  aProcName,
+			 const string&  aExecName,
 			 const string&  aParamfile);
 	virtual ~ProcRule() {};
 
@@ -68,6 +69,7 @@ protected:
 	//# --- Datamembers ---
 	string		itsNodeName;
 	string		itsProcName;
+	string		itsExecName;
 	string		itsParamfile;
 	string		itsStartCmd;
 	string		itsStopCmd;

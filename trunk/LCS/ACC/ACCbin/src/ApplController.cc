@@ -300,11 +300,13 @@ void ApplController::createParSubsets()
 		// II. Save proc ruling info in separate map for later
 		// TODO: make factory!!!!
 		//string procType = procPS.getString(procName+".startstoptype");
-		//itsProcRuler.add(makePR(procType, nodeName, procName, fileName));
-		itsProcRuler.add(PR_Shell(nodeName, procName, fileName));
+		//itsProcRuler.add(makePR(procType, nodeNm, procNm, execNm, fileNm));
+		string execName = procPS.getString(procName+".executable");
+		itsProcRuler.add(PR_Shell(nodeName, procName, execName, fileName));
 
 		// Remove execute type from processes paramlist
 		procPS.remove(procName+".startstoptype");
+		procPS.remove(procName+".executable");
 
 		// Finally write process paramset to a file.
 		procPS.writeFile(fileName);

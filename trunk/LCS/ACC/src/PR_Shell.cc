@@ -32,14 +32,18 @@ namespace LOFAR {
 
 PR_Shell::PR_Shell(const string&  aNodeName,
 				   const string&  aProcName,
+				   const string&  aExecName,
 				   const string&  aParamFile) :
-	ProcRule(aNodeName, aProcName, aParamFile)
+	ProcRule(aNodeName, aProcName, aExecName, aParamFile)
 {
 	// TODO: do something with itsNodeName when ruling the process.
-	itsStartCmd = formatString("./startAP.sh %s ./APTest %s", 
+	itsStartCmd = formatString("./startAP.sh %s %s %s %s", 
+								aNodeName.c_str(),
 								aProcName.c_str(),
+								aExecName.c_str(),
 								aParamFile.c_str());
-	itsStopCmd  = formatString("./stopAP.sh %s", 
+	itsStopCmd  = formatString("./stopAP.sh %s %s", 
+								aNodeName.c_str(),
 								aProcName.c_str());
 }
 

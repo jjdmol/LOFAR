@@ -32,9 +32,11 @@ namespace LOFAR {
 
 ProcRule::ProcRule(const string&  aNodeName,
 				   const string&  aProcName,
+				   const string&  aExecName,
 				   const string&  aParamfile) :
 	itsNodeName (aNodeName),
 	itsProcName (aProcName),
+	itsExecName (aExecName),
 	itsParamfile(aParamfile),
 	itsIsStarted(false)
 {}

@@ -44,6 +44,7 @@ class PR_Shell : public ProcRule
 public:
 	PR_Shell(const string&	aNodeName, 
 			 const string&  aProcName,
+			 const string&  aExecName,
 			 const string&  aParamfile);
 	~PR_Shell() {};
 

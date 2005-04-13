@@ -48,7 +48,9 @@ public:
 	typedef list<ACRequest*>::iterator			iterator;
 	typedef list<ACRequest*>::const_iterator	const_iterator;
 
-	ACRequestPool(uint16	firstPortnr, uint16	nrOfPorts);
+	ACRequestPool(uint16			firstPortnr, 
+				  uint16			nrOfPorts,
+				  const string&		firstNodeIP);
 	~ACRequestPool();
 
 	// Element maintenance
@@ -80,6 +82,7 @@ private:
 	uint16				itsFirstPort;
 	uint16				itsLastPort;
 	uint16				itsNextPort;
+	string				itsFirstNodeIP;	// TODO: version 2.0 issue
 };
 
 
