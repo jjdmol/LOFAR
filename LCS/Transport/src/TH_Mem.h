@@ -26,7 +26,7 @@
 // \file TH_Mem.h
 // In-memory transport mechanism
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Transport/TransportHolder.h>
 #include <Common/lofar_map.h>

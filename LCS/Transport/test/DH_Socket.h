@@ -23,7 +23,7 @@
 #ifndef LIBTRANSPORT_TEST_DH_SOCKET_H
 #define LIBTRANSPORT_TEST_DH_SOCKET_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <Common/LofarTypes.h>
 #include <Transport/DataHolder.h>
 

@@ -26,7 +26,7 @@
 // \file DataBlobExtra.h
 // Extra fields for the blob in the DataHolder
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
 #include <Common/BlobIBufChar.h>

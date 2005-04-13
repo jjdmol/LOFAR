@@ -26,7 +26,7 @@
 // \file TH_Ethernet.h
 // Transport mechanism for Ethernet 
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <Transport/TransportHolder.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>

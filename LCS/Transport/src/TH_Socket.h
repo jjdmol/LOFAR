@@ -28,7 +28,7 @@
 // Socket based TransportHolder. Based on the Socket wrapper class from
 // Common.
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <Common/lofar_string.h>
 #include <Transport/TransportHolder.h>
 #include <Common/Net/Socket.h>
