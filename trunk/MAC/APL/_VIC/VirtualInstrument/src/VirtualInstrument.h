@@ -47,6 +47,10 @@ namespace AVI
   {
     public:
 
+      // property defines
+      static const string VI_PROPNAME_CONNECTEDSTATIONS;
+      static const string VI_PROPNAME_DISCONNECTEDSTATIONS;
+
       explicit VirtualInstrument(const string& taskName, const string& parameterFile);
       virtual ~VirtualInstrument();
 
