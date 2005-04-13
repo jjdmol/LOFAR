@@ -84,6 +84,10 @@ bool Utils::isValidPropName(const char* propName)
     }
     for (unsigned short i = 0; valid && i < length; i++)
     {
+      if (refIndPos > 0 && ((propName + i) == refIndPos))
+      {
+        i += 2; // skip the ref indicator
+      }
       if (!isalnum(propName[i]) && propName[i] != GCF_PROP_NAME_SEP)
       {
         valid = false;
