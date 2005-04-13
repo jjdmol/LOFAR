@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #if (defined __INTEL_COMPILER)
 # define LOFAR_BUILTIN_COMPLEXFP __complex__
 # include <Common/ComplexBuiltinFP.h>

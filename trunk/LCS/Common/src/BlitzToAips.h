@@ -26,7 +26,7 @@
 // \file BlitzToAips.h
 // Conversion methods for Blitz++ and AIPS++ data structures.
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #ifndef HAVE_BLITZ
 #error Blitz support required

@@ -31,7 +31,7 @@
 // It is taken from the DTL implementation.
 // It is not implemented if DTL is used since that has its own implementation.
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #if defined(HAVE_DTL)
 # include <dtl/dtl_config.h>

@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <Common/BlobArrayHeader.h>
 #include <Common/BlobArray.h>
 #include <Common/BlobIStream.h>

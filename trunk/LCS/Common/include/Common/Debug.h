@@ -31,7 +31,7 @@
 To disable this warning use -Wno-deprecated.
 #endif
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_string.h>

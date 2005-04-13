@@ -20,6 +20,9 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <Common/LofarLogger.h>	       // contains the API of the LofarLogger
 #include <Common/hexdump.h>
 

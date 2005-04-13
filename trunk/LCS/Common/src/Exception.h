@@ -27,7 +27,7 @@
 // LCS Exception base class.
 
 //# Includes
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <exception>
 #include <string>
 #include <sstream>

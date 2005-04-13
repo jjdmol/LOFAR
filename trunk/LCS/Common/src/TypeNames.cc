@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 
 //# Includes
 #include <Common/TypeNames.h>

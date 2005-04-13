@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <Common/hexdump.h>
 #include <Common/StringUtil.h>
 

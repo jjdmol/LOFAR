@@ -28,7 +28,7 @@
 
 #include <Common/LofarTypedefs.h>
 #include <Common/lofar_complex.h>
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Make sure we include <sys/types.h> or <qglobal.h> if availabe. These files
 //# contain a number of typedefs for commonly used primitive data types. Some
