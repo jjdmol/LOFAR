@@ -28,9 +28,8 @@
 
 //# Includes
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
+#include <Common/lofar_string.h>
 #include <exception>
-#include <string>
-#include <sstream>
 
 
 namespace LOFAR {
@@ -44,8 +43,8 @@ namespace LOFAR {
   class Exception : public std::exception
   {
   public:
-    Exception(const std::string& text, const std::string& file="",
-	      int line=0, const std::string& func="");
+    Exception(const string& text, const string& file="",
+	      int line=0, const string& func="");
 
     virtual ~Exception() throw();
 
@@ -54,18 +53,18 @@ namespace LOFAR {
     virtual const char* what() const throw();
 
     // Return the class type of the exception.
-    virtual const std::string& type() const {
-      static const std::string itsType("Exception");
+    virtual const string& type() const {
+      static const string itsType("Exception");
       return itsType;
     }
 
     // Return the user-supplied text
-    const std::string& text() const {
+    const string& text() const {
       return itsText;
     }
 
     // Return the name of the file where the exception occurred.
-    const std::string& file() const {
+    const string& file() const {
       return itsFile;
     }
 
@@ -75,19 +74,19 @@ namespace LOFAR {
     }
 
     // Return the function name where the exception occurred.
-    const std::string& function() const {
+    const string& function() const {
       return itsFunction;
     }
 
     // Return exception type, user-supplied text, function name,
     // filename, and line number as a formatted string.
-    const std::string message() const;
+    const string message() const;
     
   private:
-    std::string itsText;
-    std::string itsFile;
+    string itsText;
+    string itsFile;
     int         itsLine;
-    std::string itsFunction;
+    string itsFunction;
 
   };
 
@@ -103,22 +102,6 @@ namespace LOFAR {
 
 
 //
-// \name Useful macros for lazy people
-//@{
-
-//
-//  Define the \c __HERE__ macro, using \c __PRETTY_FUNCTION__ or
-//  \c __FUNCTION__ if available.
-//
-#if defined(HAVE_PRETTY_FUNCTION)
-#define __HERE__ __FILE__,__LINE__,__PRETTY_FUNCTION__
-#elif defined(HAVE_FUNCTION)
-#define __HERE__ __FILE__,__LINE__,__FUNCTION__
-#else
-#define __HERE__ __FILE__,__LINE__
-#endif
-
-//
 // Declare and define an exception class of type \c excp, which is derived
 // from the exception class \c super.
 //
@@ -126,27 +109,14 @@ namespace LOFAR {
 class excp : public super \
 { \
 public: \
-  excp( const std::string& text, const std::string& file="", \
-	int line=0, const std::string& function="" ) : \
+  excp( const LOFAR::string& text, const LOFAR::string& file="", \
+	int line=0, const LOFAR::string& function="" ) : \
     super(text, file, line, function) {} \
-  virtual const std::string& type( void ) const \
+  virtual const LOFAR::string& type( void ) const \
   { \
-    static const std::string itsType(#excp); \
+    static const LOFAR::string itsType(#excp); \
     return itsType; \
   } \
 };
-
-//
-// Throw an exception of type \c excp; use \c strm for the message. 
-// Use this macro to insure that the  \c __HERE__ macro expands properly.
-//
-#define THROW(excp,strm) \
-{ \
-  std::ostringstream oss; \
-  oss << strm; \
-  throw excp(oss.str(),__HERE__); \
-}
-
-//@}
 
 #endif

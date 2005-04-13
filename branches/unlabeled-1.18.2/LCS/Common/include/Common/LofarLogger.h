@@ -68,9 +68,8 @@ EXCEPTION_CLASS(AssertError,Exception);
 # define LOFARLOGGER_FULLPACKAGE LOFARLOGGER_PACKAGE
 #endif
 
-//#
-//# AUTO_FUNCTION_NAME
-//#
+// \def AUTO_FUNCTION_NAME
+//
 // This macro will be resolved by the (pre)compiler to hold the name of the
 // function the macro was used in.
 #if defined(HAVE_PRETTY_FUNCTION)
@@ -80,6 +79,13 @@ EXCEPTION_CLASS(AssertError,Exception);
 #else
 #	define AUTO_FUNCTION_NAME		"??"
 #endif
+
+// \def __HERE__
+//
+// This macro expands to three comma-separated arguments: function name, file
+// name and line number. It is used by the THROW macro which is defined in
+// LofarLogCout.h and LofarLog4Cplus.h.
+#define __HERE__ __FILE__,__LINE__,AUTO_FUNCTION_NAME
 
 //#------------------------ Assert and FailWhen -------------------------------
 //#

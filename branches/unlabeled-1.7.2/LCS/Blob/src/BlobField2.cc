@@ -27,6 +27,7 @@
 #include <Common/BlobField.h>
 #include <Common/BlobIStream.h>
 #include <Common/BlobException.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
