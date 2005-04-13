@@ -1,0 +1,114 @@
+autoconf_share
+--------------
+
+  Version: 2.1; date: 2005/03/16
+
+    required packages:
+      internal: <none>
+      external: autoconf (2.57)
+                automake (1.6.3)
+                libtool  (1.4.3)
+
+    optional packages:
+      internal: <none>
+      external: <none>
+
+
+  Version: 2.0; date: 2004/11/24
+
+    required packages:
+      internal: <none>
+      external: autoconf (2.57)
+                automake (1.6.3)
+                libtool  (1.4.3)
+
+    optional packages:
+      internal: <none>
+      external: <none>
+
+
+
+LCS/Common
+----------
+
+  Version: 2.1; date: 2005/03/16
+
+    required packages:
+      internal: autoconf_share (2.1)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: log4cplus (1.0.x)
+                blitz++ (0.7)
+                mpich (1.2.5.2)
+
+
+  Version: 2.0; date: 2004/11/24
+
+    required packages:
+      internal: autoconf_share (2.0)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: log4cplus (1.0.x)
+                blitz++ (0.7)
+                mpich (1.2.5.2)
+
+
+
+LCS/Tranport
+------------
+
+  Version: 1.1; date: 2005/03/16
+
+    required packages:
+      internal: LCS/Common (2.1)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: <none>
+
+
+  Version: 1.0; date: 2004/11/24
+
+    required packages:
+      internal: LCS/Common (2.0)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: <none>
+
+
+
+CEP/tinyCEP
+-----------
+
+  Version: 1.0; date: 2005/04/11
+
+    required packages:
+      internal: LCS/Transport (1.1)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: <none>
+
+
+
+CEP/CEPFrame
+------------
+
+  Version: 1.0; date: 2005/04/12
+
+    required packages:
+      internal: CEP/tinyCEP (1.0)
+      external: <none>
+
+    optional packages:
+      internal: <none>
+      external: postgresql (7.3.2)
+
