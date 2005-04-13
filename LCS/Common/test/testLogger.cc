@@ -19,6 +19,9 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>			// contains the API of the LofarLogger
 #include <Common/StringUtil.h>

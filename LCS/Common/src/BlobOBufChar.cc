@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <Common/BlobOBufChar.h>
 #include <Common/BlobException.h>
 #include <Common/LofarLogger.h>

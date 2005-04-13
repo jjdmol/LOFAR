@@ -26,8 +26,6 @@
 // \file Profiling/PerfProfile.h
 // Profile class based on MPICH MPE library
 
-#include <lofar_config.h>
-
 #if defined(HAVE_MPICH) && defined(HAVE_MPI_PROFILER)
 #define MPICH_SKIP_MPICXX
 #include <mpe.h>

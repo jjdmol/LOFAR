@@ -27,7 +27,7 @@
 // Class for parsing a key=value line.
 
 //# Includes
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <Common/lofar_complex.h>
 #include <Common/lofar_string.h>
 #include <stdexcept>

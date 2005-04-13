@@ -26,7 +26,7 @@
 // \file LofarLog4Cplus.h
 // Interface to the log4cplus logging package.
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_string.h>
 #include <Common/Exception.h>

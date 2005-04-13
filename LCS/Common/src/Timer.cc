@@ -20,13 +20,16 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <iomanip>
 
-#include "Timer.h"
+#include <Common/Timer.h>
 
 
 using namespace std;

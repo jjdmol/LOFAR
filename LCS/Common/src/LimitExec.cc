@@ -1,40 +1,27 @@
-// LimitExec.cc: program to limit the absolute execution time of a program
-//
-//  Copyright (C) 2000,2001,2002
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//
-//  This program is free software; you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation; either version 2 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-//  $Id$
-//
-//  $Log$
-//  Revision 1.1  2004/03/12 08:45:22  wierenga
-//  %[ER: 70]%
-//
-//  Renamed LimitExec.c to LimitExec.cc to make sure it is compiled with
-//  the c++ compiler.
-//
-//  Revision 1.1  2003/08/21 11:20:32  diepen
-//  Moved Common to LCS
-//
-//  Revision 1.1  2002/05/28 09:35:05  wierenga
-//  %[BugId: 23]%
-//  First version of the LimitExec program.
-//
-//
+//# LimitExec.cc: program to limit the absolute execution time of a program
+//#
+//#  Copyright (C) 2000,2001,2002
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
+
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
 
 #include <stdio.h>
 #include <unistd.h>

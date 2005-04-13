@@ -20,10 +20,13 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <cmath>
 #include <iostream>
 
-#include "Common/Timer.h"
+#include <Common/Timer.h>
 
 double a = 1;
 

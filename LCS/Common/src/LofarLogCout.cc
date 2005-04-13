@@ -20,6 +20,9 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <Common/LofarLogCout.h>
 #include <Common/lofar_fstream.h>
 #include <cstdarg>

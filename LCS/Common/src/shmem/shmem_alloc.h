@@ -27,8 +27,6 @@
 /** \file shmem_alloc.h
  */
 
-#include <lofar_config.h>
-
 #include <Common/shmem/dlmalloc.h>
 #include <stddef.h>
 

@@ -26,7 +26,7 @@
 // \file Lorrays.h
 // Define %Array type to use (Blitz or AIPS++)
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
     
 #ifndef LOFAR_COMMON_LONUMERICS_H
   #include <Common/Lonumerics.h>
