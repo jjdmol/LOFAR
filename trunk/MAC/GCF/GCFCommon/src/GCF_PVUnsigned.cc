@@ -65,6 +65,20 @@ TGCFResult GCFPVUnsigned::setValue(const string& valueData)
   return result;
 }
 
+string GCFPVUnsigned::getValueAsString(const string& format)
+{
+  string retVal;
+  if (format.length() == 0)
+  {
+    retVal = formatString("%d", _value);
+  }
+  else
+  {
+    retVal = formatString(format.c_str(), _value);
+  }
+  return retVal;
+}
+
 GCFPValue* GCFPVUnsigned::clone() const
 {
   GCFPValue* pNewValue = new GCFPVUnsigned(_value);

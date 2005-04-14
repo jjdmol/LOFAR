@@ -167,12 +167,12 @@ protected:
 };
 
 //##ModelId=5571A783FEED
-inline Mutex::Lock::Lock()
+Mutex::Lock::Lock()
   : pmutex(0)
 {
 }
 
-inline Mutex::Lock::Lock(const Mutex::Lock &right)
+Mutex::Lock::Lock(const Mutex::Lock &right)
 {
   if( right.pmutex )
     init(*right.pmutex,0);
@@ -181,7 +181,7 @@ inline Mutex::Lock::Lock(const Mutex::Lock &right)
   
 }
 
-inline Mutex::Lock & Mutex::Lock::operator =(const Mutex::Lock &right)
+Mutex::Lock & Mutex::Lock::operator =(const Mutex::Lock &right)
 {
   if( pmutex ) 
     pthread_mutex_unlock(pmutex); 
@@ -190,26 +190,26 @@ inline Mutex::Lock & Mutex::Lock::operator =(const Mutex::Lock &right)
 }
 
 //##ModelId=3DB935A30335
-inline Mutex::Lock::Lock (pthread_mutex_t &mutex, int options)
+Mutex::Lock::Lock (pthread_mutex_t &mutex, int options)
 {
   init(mutex,options);
 }
 
 //##ModelId=3DB935A40034
-inline Mutex::Lock::Lock (const Thread::Mutex &mutex, int options)
+Mutex::Lock::Lock (const Thread::Mutex &mutex, int options)
 {
   init(mutex.mutex,options);
 }
 
 
 //##ModelId=3DB935A4012E
-inline Mutex::Lock::~Lock()
+Mutex::Lock::~Lock()
 {
   if( pmutex ) 
     pthread_mutex_unlock(pmutex); 
 }
 
-inline void Mutex::Lock::init (const pthread_mutex_t &mtx, int options)
+void Mutex::Lock::init (const pthread_mutex_t &mtx, int options)
 {
   pmutex = const_cast<pthread_mutex_t *>(&mtx);
   if( options == TRY )
@@ -227,25 +227,25 @@ inline void Mutex::Lock::init (const pthread_mutex_t &mtx, int options)
 }
 
 //##ModelId=D5165FA7FEED
-inline bool Mutex::Lock::locked () const
+bool Mutex::Lock::locked () const
 {
   return pmutex != 0;
 }
 
 //##ModelId=18054E53FEED
-inline Mutex::Lock::operator bool () const
+Mutex::Lock::operator bool () const
 {
   return locked();
 }
 
 //##ModelId=E5D40595FEED
-inline bool Mutex::Lock::operator ! () const
+bool Mutex::Lock::operator ! () const
 {
   return !locked();
 }
 
 //##ModelId=E2FBE0C8FEED
-inline int Mutex::Lock::release ()
+int Mutex::Lock::release ()
 {
   LOG_DEBUG(formatString ("release: unlocking mutex @%08X",(int)pmutex));
   int ret = pmutex ? pthread_mutex_unlock(pmutex) : 0;
@@ -254,14 +254,14 @@ inline int Mutex::Lock::release ()
 }
 
 //##ModelId=D8B60901FEED
-inline void Mutex::Lock::release_without_unlock ()
+void Mutex::Lock::release_without_unlock ()
 {
   LOG_DEBUG(formatString ("release: relasing w/o unlock mutex @%08X",(int)pmutex));
   pmutex = 0;
 }
 
 //##ModelId=3D19CF980270
-inline int Mutex::Lock::relock (const Thread::Mutex &mutex, int options)
+int Mutex::Lock::relock (const Thread::Mutex &mutex, int options)
 {
   pthread_mutex_t *old = pmutex;
   init(mutex.mutex,options);
@@ -273,7 +273,7 @@ inline int Mutex::Lock::relock (const Thread::Mutex &mutex, int options)
   return 0;
 }
 
-inline int Mutex::Lock::lock (const Thread::Mutex &mutex, int options)
+int Mutex::Lock::lock (const Thread::Mutex &mutex, int options)
 {
   release();
   init(mutex.mutex,options);
@@ -283,26 +283,26 @@ inline int Mutex::Lock::lock (const Thread::Mutex &mutex, int options)
 // Class Thread::Mutex 
 
 //##ModelId=70B8C5D3FEED
-inline Mutex::Mutex (int kind)
+Mutex::Mutex (int kind)
 {
   init(kind);
 }
 
 //##ModelId=3D10B976039C
-inline Mutex::Mutex (const Mutex &right)
+Mutex::Mutex (const Mutex &right)
 {
   init(right.mutex.__m_kind);
 }
 
 
 //##ModelId=3DB935A5020C
-inline Mutex::~Mutex()
+Mutex::~Mutex()
 {
   pthread_mutex_destroy(&mutex);
 }
 
 //##ModelId=9C882969FEED
-inline void Mutex::init (int kind)
+void Mutex::init (int kind)
 {
   pthread_mutexattr_t attr = { kind  };
   pthread_mutex_init(&mutex,&attr); 
@@ -310,7 +310,7 @@ inline void Mutex::init (int kind)
 }
 
 //##ModelId=3D10BC47035F
-inline Mutex & Mutex::operator = (const Mutex &right)
+Mutex & Mutex::operator = (const Mutex &right)
 {
   pthread_mutex_destroy(&mutex);
   init(right.mutex.__m_kind);
@@ -318,7 +318,7 @@ inline Mutex & Mutex::operator = (const Mutex &right)
 }
 
 //##ModelId=D4F415F7FEED
-inline int Mutex::lock () const
+int Mutex::lock () const
 {
   LOG_DEBUG(formatString ("%d: locking mutex %08x",(int)self().id(),(int)&mutex));
   int ret = pthread_mutex_lock(&mutex); 
@@ -327,7 +327,7 @@ inline int Mutex::lock () const
 }
 
 //##ModelId=4304D0E8FEED
-inline int Mutex::unlock () const
+int Mutex::unlock () const
 {
   int ret = pthread_mutex_unlock(&mutex); 
   LOG_DEBUG(formatString ("%d: unlocked mutex %08x: %d",(int)self().id(),(int)&mutex,ret));
@@ -335,7 +335,7 @@ inline int Mutex::unlock () const
 }
 
 //##ModelId=A4649BF5FEED
-inline int Mutex::trylock () const
+int Mutex::trylock () const
 {
   return pthread_mutex_trylock(&mutex);
 }

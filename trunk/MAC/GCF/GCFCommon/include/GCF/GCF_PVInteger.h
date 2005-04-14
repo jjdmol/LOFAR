@@ -47,7 +47,7 @@ class GCFPVInteger : public GCFPValue
   	virtual ~GCFPVInteger () {;}
     
     /** Changes the value of this object */
-    virtual inline void setValue (const int32 newVal) {_value = newVal;}
+    virtual void setValue (const int32 newVal) {_value = newVal;}
 
     /** 
      * Changes the value of this object by means of a stringbuffer, 
@@ -55,6 +55,9 @@ class GCFPVInteger : public GCFPValue
      * @see GCFPValue::setValue(const string value)
      */
     virtual TGCFResult setValue (const string& value);
+
+    // Returns the value of this object in a string
+    virtual string getValueAsString(const string& format = "");
 
     /** Returns the value of this object*/
     virtual int32 getValue () const {return _value;}

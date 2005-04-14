@@ -55,6 +55,9 @@ class GCFPVBool : public GCFPValue
      */
     virtual TGCFResult setValue (const string& value);
 
+    // Returns the value of this object in a string
+    virtual string getValueAsString(const string& format = "");
+
     /** Returns the value of this object*/
     bool getValue () const {return _value;};
 

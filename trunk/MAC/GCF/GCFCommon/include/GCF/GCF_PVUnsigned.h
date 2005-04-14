@@ -57,6 +57,9 @@ class GCFPVUnsigned : public GCFPValue
      */
     virtual TGCFResult setValue(const string& value);
 
+    // Returns the value of this object in a string
+    virtual string getValueAsString(const string& format = "");
+
     /** Returns the value of this object*/
     virtual uint32 getValue() const {return _value;}
 

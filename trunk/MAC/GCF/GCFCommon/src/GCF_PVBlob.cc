@@ -114,6 +114,10 @@ TGCFResult GCFPVBlob::setValue(const string& value)
   return result;
 }
 
+string GCFPVBlob::getValueAsString(const string& format)
+{
+}
+
 GCFPValue* GCFPVBlob::clone() const
 {
   GCFPValue* pNewValue = new GCFPVBlob(_value, _length, true);

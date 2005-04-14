@@ -44,7 +44,7 @@ class GCFPVChar : public GCFPValue
   	virtual ~GCFPVChar () {;}
 
     /** Changes the value of this object */
-    inline void setValue (const char newVal) {_value = newVal;}
+    void setValue (const char newVal) {_value = newVal;}
 
     /** 
      * Changes the value of this object by means of a stringbuffer, 
@@ -53,8 +53,11 @@ class GCFPVChar : public GCFPValue
      */
     virtual TGCFResult setValue (const string& value);
 
+    // Returns the value of this object in a string
+    virtual string getValueAsString(const string& format = "");
+
     /** Returns the value of this object*/
-    inline char getValue () const {return _value;}
+    char getValue () const {return _value;}
 
     /** @see GCFPValue::clone() */
     virtual GCFPValue* clone () const;

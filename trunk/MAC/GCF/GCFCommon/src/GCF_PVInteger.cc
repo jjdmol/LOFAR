@@ -62,6 +62,20 @@ TGCFResult GCFPVInteger::setValue(const string& valueData)
   return result;
 }
 
+string GCFPVInteger::getValueAsString(const string& format)
+{
+  string retVal;
+  if (format.length() == 0)
+  {
+    retVal = formatString("%d", _value);
+  }
+  else
+  {
+    retVal = formatString(format.c_str(), _value);
+  }
+  return retVal;
+}
+
 GCFPValue* GCFPVInteger::clone() const
 {
   GCFPValue* pNewValue = new GCFPVInteger(_value);

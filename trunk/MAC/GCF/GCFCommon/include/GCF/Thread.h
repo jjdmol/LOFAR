@@ -86,7 +86,7 @@ namespace LOFAR
     int detach ()
     { return pthread_detach(id_); }
     // Sends a signal to a thread
-    inline int kill (int sig)
+    int kill (int sig)
     { return pthread_kill(id_,sig); }
 
     //##ModelId=98935E61FEED
@@ -133,13 +133,13 @@ namespace LOFAR
 
   extern const Attributes _null_attributes;
 
-  inline const Attributes & Attributes::Null ()
+  const Attributes & Attributes::Null ()
   { return _null_attributes; }
         
-  inline Attributes joinable ()
+  Attributes joinable ()
   { return Attributes(Attributes::JOINABLE); }
 
-  inline Attributes detached ()
+  Attributes detached ()
   { return Attributes(Attributes::DETACHED); }
 
   // -----------------------------------------------------------------------
@@ -147,7 +147,7 @@ namespace LOFAR
   // -----------------------------------------------------------------------
 
   // returns thread id of self
-  inline ThrID self ()
+  ThrID self ()
   { 
     return ThrID::self(); 
   }
@@ -156,19 +156,19 @@ namespace LOFAR
   ThrID create (void * (*start)(void*),void *arg=0,const Attributes &attr = Attributes::Null());
 
   // Exits a thread
-  inline void exit (void *value=0)
+  void exit (void *value=0)
   { 
     pthread_exit(value); 
   }
 
   // Sets the sigmask for a thread
-  inline int signalMask (int how,const sigset_t *newmask,sigset_t *oldmask = 0)
+  int signalMask (int how,const sigset_t *newmask,sigset_t *oldmask = 0)
   {
     return pthread_sigmask(how,newmask,oldmask);
   }
 
   // Sets a single signal in a thread's sigmask
-  inline int signalMask (int how,int sig,sigset_t *oldmask = 0)
+  int signalMask (int how,int sig,sigset_t *oldmask = 0)
   {
     sigset_t sset;
     sigemptyset(&sset);
@@ -177,18 +177,18 @@ namespace LOFAR
   }
 
   // sets the thread's cancellation state
-  inline int setCancelState (int state,int &oldstate = dummy_int)
+  int setCancelState (int state,int &oldstate = dummy_int)
   {
     return pthread_setcancelstate(state,&oldstate);
   }
 
   // sets the thread's cancellation type
-  inline int setCancelType (int type,int &oldtype = dummy_int)
+  int setCancelType (int type,int &oldtype = dummy_int)
   {
     return pthread_setcanceltype(type,&oldtype);
   }
 
-  inline void testCancel ()
+  void testCancel ()
   {
     pthread_testcancel();
   }
