@@ -122,41 +122,45 @@ bool GCFTCPPort::open()
   setState(S_CONNECTING);
   if (SAP == getType()) 
   {
-    TPeerAddr fwaddr;
-    if (findAddr(fwaddr))
+    if (_host == "" || _portNumber == 0)
     {
-      setAddr(fwaddr);
-    }
-    else
-    {
-      if (!_addrIsSet)
+      TPeerAddr fwaddr;
+      if (findAddr(fwaddr))
       {
-        LOG_ERROR(formatString (
-            "No remote address info is set for port '%s' of task '%s'.",
-            getRealName().c_str(), _pTask->getName().c_str()));
-        LOG_INFO("See the last log of ParameterSet.cc file or use setAddr method.");
-        setState(S_DISCONNECTED);
-        return false;
-      }
-    }
-    string portNumParam = formatString(PARAM_TCP_PORTNR, 
-        _addr.taskname.c_str(),
-        _addr.portname.c_str());
-    if (ParameterSet::instance()->isDefined(portNumParam))
-    {
-      _portNumber = ParameterSet::instance()->getInt(portNumParam);
-      string hostParam = formatString(PARAM_TCP_HOST, 
-          _addr.taskname.c_str(),
-          _addr.portname.c_str());
-      if (ParameterSet::instance()->isDefined(hostParam))
-      {
-        _host = ParameterSet::instance()->getString(hostParam);
+        setAddr(fwaddr);
       }
       else
       {
-        _host = "localhost";
+        if (!_addrIsSet)
+        {
+          LOG_ERROR(formatString (
+              "No remote address info is set for port '%s' of task '%s'.",
+              getRealName().c_str(), _pTask->getName().c_str()));
+          LOG_INFO("See the last log of ParameterSet.cc file or use setAddr method.");
+          setState(S_DISCONNECTED);
+          return false;
+        }
+      }
+      string portNumParam = formatString(PARAM_TCP_PORTNR, 
+          _addr.taskname.c_str(),
+          _addr.portname.c_str());
+      if (ParameterSet::instance()->isDefined(portNumParam))
+      {
+        _portNumber = ParameterSet::instance()->getInt(portNumParam);
+        string hostParam = formatString(PARAM_TCP_HOST, 
+            _addr.taskname.c_str(),
+            _addr.portname.c_str());
+        if (ParameterSet::instance()->isDefined(hostParam))
+        {
+          _host = ParameterSet::instance()->getString(hostParam);
+        }
+        else
+        {
+          _host = "localhost";
+        }
       }
     }
+
     if (_host != "" && _portNumber > 0)
     {
       serviceInfo(SB_NO_ERROR, _portNumber, _host);

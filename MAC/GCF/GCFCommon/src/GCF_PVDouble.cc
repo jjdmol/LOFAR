@@ -64,6 +64,20 @@ TGCFResult GCFPVDouble::setValue(const string& valueData)
   return result;
 }
 
+string GCFPVDouble::getValueAsString(const string& format)
+{
+  string retVal;
+  if (format.length() == 0)
+  {
+    retVal = formatString("%f", _value);
+  }
+  else
+  {
+    retVal = formatString(format.c_str(), _value);
+  }
+  return retVal;
+}
+
 GCFPValue* GCFPVDouble::clone() const
 {
   GCFPValue* pNewValue = new GCFPVDouble(_value);

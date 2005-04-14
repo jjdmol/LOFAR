@@ -8,6 +8,10 @@ main()
 	handleType(types, "GCFPaPsEnabled", DPEL_STRING);
 	handleType(types, "GCFPaPsIndication", DPEL_STRING);
 	handleType(types, "GCFDistPort", DPEL_BLOB);
+	if (!dpExists("__gcfportAPI_DPAserver"))
+	{
+		dpCreate("__gcfportAPI_DPAserver", "GCFDistPort");
+	}
 	string type = "GCFWatchDog";
 	if (dynContains(types, type))
 	{

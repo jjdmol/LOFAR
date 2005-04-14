@@ -81,6 +81,32 @@ TGCFResult GCFPVBool::setValue(const string& valueData)
   return result;
 }
 
+string GCFPVBool::getValueAsString(const string& format)
+{
+  string retVal;
+  if (format.length() == 0)
+  {
+    retVal = (_value ? "1" : "0");
+  }
+  else if (format == "true/false")
+  {
+    retVal = (_value ? "true" : "false");
+  }
+  else if (format == "on/off")
+  {
+    retVal = (_value ? "on" : "off");
+  }
+  else if (format == "yes/no")
+  {
+    retVal = (_value ? "yes" : "no");
+  }
+  else
+  {
+    retVal = formatString(format.c_str(), _value);
+  }
+  return retVal;
+}
+
 GCFPValue* GCFPVBool::clone() const
 {
   GCFPValue* pNewValue = new GCFPVBool(_value);

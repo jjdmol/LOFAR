@@ -64,6 +64,20 @@ TGCFResult GCFPVString::setValue(const string& value)
   return result;
 }
 
+string GCFPVString::getValueAsString(const string& format)
+{
+  string retVal;
+  if (format.length() == 0)
+  {
+    retVal = _value;
+  }
+  else
+  {
+    retVal = formatString(format.c_str(), _value);
+  }  
+  return retVal;
+}
+
 GCFPValue* GCFPVString::clone() const
 {
   GCFPValue* pNewValue = new GCFPVString(_value);

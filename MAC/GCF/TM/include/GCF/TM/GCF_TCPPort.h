@@ -95,6 +95,10 @@ class GCFTCPPort : public GCFRawPort
     // addr is local address if getType == (M)SPP
     // addr is remote addres if getType == SAP
     void setAddr (const TPeerAddr& addr);
+    void setHostName(const string& hostname);
+    void setPortNumber(unsigned int portNumber);
+    string setHostName();
+    unsigned int getPortNumber();
 
   private: // helper methods
     friend class SB::GTMServiceBroker;
@@ -114,6 +118,25 @@ class GCFTCPPort : public GCFRawPort
     SB::GTMServiceBroker* _broker;
 };
 
+inline void GCFTCPPort::setHostName(const string& hostname)
+{
+  _host = hostname;
+}
+
+inline void GCFTCPPort::setPortNumber(unsigned int portNumber)
+{
+  _portNumber = portNumber;
+}
+
+inline string GCFTCPPort::setHostName()
+{
+  return _host;
+}
+
+inline unsigned int GCFTCPPort::getPortNumber()
+{
+  return _portNumber;
+}
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR

@@ -60,7 +60,10 @@ class GCFPVBlob : public GCFPValue
      */
     virtual TGCFResult setValue(unsigned char* value, uint16 length, bool clone = false);
     virtual TGCFResult setValue(const string& value);
-
+    
+    // Returns the value of this object in a string
+    virtual string getValueAsString(const string& format = "");
+    
     /** Returns the value of this object*/
     virtual unsigned char* getValue() const {return _value;}
     virtual uint16 getLen() const {return _length;}

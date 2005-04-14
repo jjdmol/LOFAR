@@ -46,8 +46,11 @@ class GCFPVString : public GCFPValue
     /** Changes the value of this object */
     virtual TGCFResult setValue(const string& value);
 
+    // Returns the value of this object in a string
+    virtual string getValueAsString(const string& format = "");
+
     /** Returns the value of this object*/
-    virtual inline const string& getValue() const {return _value;}
+    virtual const string& getValue() const {return _value;}
 
     /** @see GCFPValue::clone() */
     virtual GCFPValue* clone() const;

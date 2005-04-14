@@ -89,6 +89,10 @@ class GCFPValue
      */
     virtual TGCFResult setValue (const string& value) = 0;
 
+    // returns the value of the concrete type class in a string
+    // the default format is like the expected format for the setValue(string) method
+    virtual string getValueAsString(const string& format = "") = 0;
+
     /** 
      * Static method
      * Creates a property value object of MAC type <b>type</b>
@@ -144,7 +148,7 @@ class GCFPValue
     
     /// provides the possibility to change the dataformat of a value
     void setDataFormat(LOFAR::DataFormat dfmt = LOFAR::dataFormat()) {_dataFormat = dfmt; }
-     
+         
   protected:
     friend class GCFPVDynArr;
     /**
