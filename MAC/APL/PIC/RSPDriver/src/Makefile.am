@@ -29,6 +29,7 @@ BUILT_SOURCES = \
 	RSPDriver.conf \
 	ViewStats.conf \
 	CaptureStats.conf \
+	Tuner.conf \
 	SetWG.conf
 
 clean-local:
@@ -49,6 +50,7 @@ sysconf_DATA = \
 	RSPDriver.conf \
 	ViewStats.conf \
 	CaptureStats.conf \
+	Tuner.conf \
 	SetWG.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
@@ -109,6 +111,7 @@ bin_PROGRAMS = \
 	RSPDriver \
 	ViewStats \
 	CaptureStats \
+	Tuner \
 	SetWG
 
 RSPDriver_SOURCES = \
@@ -198,6 +201,14 @@ CaptureStats_SOURCES = \
 	CaptureStats.cc
 
 CaptureStats_LDADD = \
+	$(top_builddir)/src/librsp.la \
+	-lsuite
+
+Tuner_SOURCES = \
+	Tuner.h \
+	Tuner.cc
+
+Tuner_LDADD = \
 	$(top_builddir)/src/librsp.la \
 	-lsuite
 
