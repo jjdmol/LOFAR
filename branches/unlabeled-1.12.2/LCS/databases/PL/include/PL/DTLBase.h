@@ -28,13 +28,9 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#if !defined(HAVE_DTL)
-#error "DTL library is required"
-#endif
-
 //# Includes
+#include <PL/PLfwd.h>
 #include <PL/DBRepHolder.h>
-#include <dtl/BoundIO.h>
 
 namespace LOFAR
 {
