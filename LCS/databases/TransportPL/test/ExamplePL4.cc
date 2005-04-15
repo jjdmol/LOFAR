@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <TransportPL/TH_PL.h>
 #include <DH_Example2.h>
 #include <Common/BlobOStream.h>

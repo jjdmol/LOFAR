@@ -23,8 +23,8 @@
 #ifndef LIBTRANSPORT_TEST_DH_EXAMPLE_H
 #define LIBTRANSPORT_TEST_DH_EXAMPLE_H
 
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <lofar_config.h>
 #include <TransportPL/DH_PL.h>
 #include <Common/lofar_complex.h>
 

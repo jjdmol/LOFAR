@@ -20,6 +20,9 @@
 //#
 //# $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include <TransportPL/PO_DH_PL.h>
 #include <PL/TPersistentObject.h>
 #include <Common/BlobOBufString.h>

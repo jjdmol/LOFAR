@@ -23,7 +23,7 @@
 #ifndef LOFAR_PL_DEMO_PERSON_H
 #define LOFAR_PL_DEMO_PERSON_H
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
 #include <PL/PLfwd.h>  // forward declarations for often used PL types.

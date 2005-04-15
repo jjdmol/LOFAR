@@ -20,6 +20,12 @@
 //#
 //#  $Id$
 
+// \file dTransport.cc
+// Demo program showing the use of PL with complex classes.
+
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
 #include "Transport.h"
 #include "PO_Transport.h"
 #include <PL/TPersistentObject.h>
