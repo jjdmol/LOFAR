@@ -41,7 +41,6 @@
 
 #undef PACKAGE
 #undef VERSION
-#define DECLARE_SIGNAL_NAMES
 #include "../src/LogicalDevice_Protocol.ph"
 
 #include <stdio.h>

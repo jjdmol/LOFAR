@@ -24,8 +24,6 @@
 
 int main(int argc, char* argv[])
 {
-  INIT_LOGGER(argv[0]);
-  
   LOFAR::GCF::TM::GCFTask::init(argc, argv);
   
   LOFAR::GSO::MACScheduler ms;

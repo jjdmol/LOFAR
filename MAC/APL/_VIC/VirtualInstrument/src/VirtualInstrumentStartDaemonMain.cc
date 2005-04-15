@@ -34,8 +34,6 @@ using namespace LOFAR::AVI;  // A)pplication layer V)irtual I)nstrument
 
 int main(int argc, char* argv[])
 {
-  INIT_LOGGER(argv[0]);
-
   GCFTask::init(argc, argv);
   
   string ccuName("CCU1");

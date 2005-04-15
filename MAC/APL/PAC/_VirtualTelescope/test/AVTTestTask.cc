@@ -36,7 +36,6 @@
 #include "AVTTestTask.h"
 #include "../src/AVTPropertyDefines.h" 
 
-#define DECLARE_SIGNAL_NAMES
 #include "../src/LogicalDevice_Protocol.ph"
 #include <ABS_Protocol.ph>
 

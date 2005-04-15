@@ -74,7 +74,6 @@ const char SCOPE_PIC_Rack1_SubRack1_Board1_Alert[] = "PIC_Rack1_SubRack1_Board1_
 
 #undef PACKAGE
 #undef VERSION
-#define DECLARE_SIGNAL_NAMES
 #include "RSP_Protocol.ph"
 
 #include <stdio.h>

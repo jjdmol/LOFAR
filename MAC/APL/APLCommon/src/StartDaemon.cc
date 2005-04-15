@@ -30,7 +30,6 @@
 #include "APLCommon/LogicalDevice.h"
 #include "APLCommon/LogicalDeviceFactory.h"
 
-#define DECLARE_SIGNAL_NAMES
 #include "APLCommon/StartDaemon.h"
 
 using namespace LOFAR::GCF::Common;

@@ -31,7 +31,6 @@
 #include "APLCommon/APLUtilities.h"
 #include "MACScheduler.h"
 
-#define DECLARE_SIGNAL_NAMES
 #include "SAS_Protocol.ph"
 #include "APLCommon/LogicalDevice_Protocol.ph"
 #include "APLCommon/StartDaemon_Protocol.ph"
