@@ -97,7 +97,7 @@ class GCFTCPPort : public GCFRawPort
     void setAddr (const TPeerAddr& addr);
     void setHostName(const string& hostname);
     void setPortNumber(unsigned int portNumber);
-    string setHostName();
+    string getHostName();
     unsigned int getPortNumber();
 
   private: // helper methods
@@ -128,7 +128,7 @@ inline void GCFTCPPort::setPortNumber(unsigned int portNumber)
   _portNumber = portNumber;
 }
 
-inline string GCFTCPPort::setHostName()
+inline string GCFTCPPort::getHostName()
 {
   return _host;
 }
