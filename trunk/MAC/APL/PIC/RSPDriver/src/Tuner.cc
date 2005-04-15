@@ -281,12 +281,14 @@ GCFEvent::TResult Tuner::tunein(GCFEvent& e, GCFPortInterface& port)
 	ss.timestamp = Timestamp(0,0);
 
 	ss.blpmask.reset();
-	for (int i = 0; i < GET_CONFIG("RS.N_BLPS", i); i++)
+	for (int i = 0;
+	     i < GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i);
+	     i++)
 	  {
 	    if (m_device_set[i * MEPHeader::N_POL]
 		|| m_device_set[i * MEPHeader::N_POL + 1])
 	    {
-	      LOG_DEBUG_STR("selecting blp " << i);
+	      LOG_INFO_STR("selecting blp " << i);
 	      ss.blpmask.set(i); // only selected blp
 	    }
 	  }
@@ -328,12 +330,14 @@ GCFEvent::TResult Tuner::tunein(GCFEvent& e, GCFPortInterface& port)
 	sw.timestamp = Timestamp(0,0);
 
 	sw.blpmask.reset();
-	for (int i = 0; i < GET_CONFIG("RS.N_BLPS", i); i++)
+	for (int i = 0;
+	     i < GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i);
+	     i++)
 	  {
 	    if (m_device_set[i * MEPHeader::N_POL]
 		|| m_device_set[i * MEPHeader::N_POL + 1])
 	    {
-	      LOG_DEBUG_STR("selecting blp " << i);
+	      LOG_INFO_STR("selecting blp " << i);
 	      sw.blpmask.set(i); // only selected blp
 	    }
 	  }
@@ -523,7 +527,7 @@ int main(int argc, char** argv)
 
   try
     {
-      GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
+      GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RemoteStation.conf");
     }
   catch (Exception e)
     {

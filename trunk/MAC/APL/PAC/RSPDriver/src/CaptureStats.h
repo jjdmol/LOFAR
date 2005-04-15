@@ -25,11 +25,10 @@
 #ifndef CAPTURESTATS_H_
 #define CAPTURESTATS_H_
 
-#include <Suite/test.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 
-class CaptureStats : public GCFTask, public Test
+class CaptureStats : public GCFTask
 {
   public:
     /**
@@ -39,7 +38,7 @@ class CaptureStats : public GCFTask, public Test
      * GTMTopologyService classes.
      */
     CaptureStats(string name, int type, std::bitset<MAX_N_RCUS> device_set, int n_devices = 1,
-		 int duration = 1, int integration = 1, uint8 rcucontrol = 0xB9, bool onfile = false);
+		 int duration = 1, int integration = 1, uint8 rcucontrol = 0xB9, bool onfile = false, bool xinetd_mode = false);
     virtual ~CaptureStats();
 
     // state methods
@@ -52,20 +51,24 @@ class CaptureStats : public GCFTask, public Test
     GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
 
     /**
-     * The test states. This state is reached when the
-     * beam_server port is connected.
+     * This state is used to wait for input (in xinetd_mode)
      */
-    GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
+    GCFEvent::TResult wait4command(GCFEvent& e, GCFPortInterface &p);
+
+    /**
+     * This state is used to perform a command.
+     */
+    GCFEvent::TResult handlecommand(GCFEvent& e, GCFPortInterface &p);
 
     /**
      * Load and integrate statistics
      */
-    void capture_statistics(blitz::Array<double, 2>& stats);
+    bool capture_statistics(blitz::Array<double, 2>& stats);
 
     /**
      * Write statistics to file
      */
-    void write_statistics(blitz::Array<double, 2>& stats);
+    void output_statistics(blitz::Array<double, 2>& stats);
 
     /**
      * Run the tests.
@@ -89,6 +92,10 @@ class CaptureStats : public GCFTask, public Test
     int m_nseconds;
     FILE** m_file;  // array of file descriptors
     bool m_onefile; // output one big file? if false output separate file for each capture
+    bool m_xinetd_mode; // behave as xinetd process, input on stdin, output on stdout
+    string m_format; // format of xinetd output
+    uint32 m_statushandle; // handle for status update subscripton
+    uint32 m_statshandle;  // handle for stats update subscription
 };
      
 #endif /* CAPTURESTATS_H_ */

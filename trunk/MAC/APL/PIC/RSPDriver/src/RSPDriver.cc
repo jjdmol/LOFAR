@@ -70,10 +70,6 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#ifndef RSP_SYSCONF
-#define RSP_SYSCONF "."
-#endif
-
 #define ETHERTYPE_EPA 0x10FA
 
 using namespace RSP;
@@ -1180,9 +1176,9 @@ int main(int argc, char** argv)
   
   try
   {
-    GCF::ParameterSet::instance()->adoptFile("RSPDriverPorts.conf");
-    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
-    GCF::ParameterSet::instance()->adoptFile("RSPDriver.conf");
+    GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RSPDriverPorts.conf");
+    GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RemoteStation.conf");
+    GCF::ParameterSet::instance()->adoptFile(RSP_SYSCONF "/RSPDriver.conf");
   }
   catch (Exception e)
   {

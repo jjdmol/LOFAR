@@ -29,6 +29,7 @@ BUILT_SOURCES = \
 	RSPDriver.conf \
 	ViewStats.conf \
 	CaptureStats.conf \
+	CaptureStats.log_prop \
 	Tuner.conf \
 	SetWG.conf
 
@@ -50,6 +51,7 @@ sysconf_DATA = \
 	RSPDriver.conf \
 	ViewStats.conf \
 	CaptureStats.conf \
+	CaptureStats.log_prop \
 	Tuner.conf \
 	SetWG.conf
 
@@ -57,6 +59,9 @@ sysconf_DATA = \
 	cp $< $@
 
 %.conf: %.conf.in
+	cp $< $@
+
+%.log_prop: %.log_prop.in
 	cp $< $@
 
 %.ns: %.ns.in
